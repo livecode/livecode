@@ -2032,7 +2032,7 @@ bool MCUIDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_
 
 bool MCUIDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle)
 {
-	return NULL;
+	return false;
 }
 
 //

@@ -1996,40 +1996,18 @@ Exec_stat MCStart::exec(MCExecPoint &ep)
             }
             
             // MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCFontLoad
-            if (font->eval(ep) == ES_NORMAL)
-			{
-                Exec_stat t_stat;
-                t_stat = ES_NORMAL;
-                
-                char *t_resolved_path;
-                t_resolved_path = nil;
-                
-                if (t_stat == ES_NORMAL)
-                {
-                    t_resolved_path = MCS_resolvepath(ep . getcstring());
-                    if (!t_resolved_path)
-                    {
-                        MCeerror->add(EE_FONT_BADFILEEXP, line, pos);
-                        return ES_ERROR;
-                    }
-                }
-                
-                if (t_stat == ES_NORMAL)
-                {
-                    t_stat = MCFontLoad(ep, t_resolved_path , is_globally);
-                }
-                
-                if (t_stat != ES_NORMAL)
-                    MCresult -> sets("can't load font file");
-                else
-                    MCresult -> clear();
-                
-            }
-            else
+            if (font->eval(ep) != ES_NORMAL)
             {
-				MCeerror->add(EE_START_BADTARGET, line, pos);
+				MCeerror->add(EE_FONT_BADFILEEXP, line, pos);
 				return ES_ERROR;
 			}
+			
+			MCAutoPointer<char> t_resolved_path;
+			t_resolved_path = MCS_resolvepath(ep . getcstring());
+            if (MCFontLoad(ep, *t_resolved_path , is_globally) != ES_NORMAL)
+				MCresult -> sets("can't load font file");
+			else
+				MCresult -> clear();
         }
         else
         {
@@ -2278,45 +2256,18 @@ Exec_stat MCStop::exec(MCExecPoint &ep)
             if (font != NULL)
             {
                 // MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCFontUnload
-                Exec_stat t_stat;
-                t_stat = ES_NORMAL;
-                
-                char *t_resolved_path;
-                t_resolved_path = nil;
-                
-                if (font->eval(ep) == ES_NORMAL)
-                {
-                    
-                    char *t_resolved_path;
-                    t_resolved_path = nil;
-                    
-                    if (t_stat == ES_NORMAL)
-                    {
-                        t_resolved_path = MCS_resolvepath(ep . getcstring());
-                        if (!t_resolved_path)
-                        {
-                            MCeerror->add(EE_FONT_BADFILEEXP, line, pos);
-                            return ES_ERROR;
-                        }
-                    }
-                    
-                    if (t_stat == ES_NORMAL)
-                    {
-                        t_stat = MCFontUnload(ep, t_resolved_path);
-                    }
-                    
-                    if (t_stat != ES_NORMAL)
-                        MCresult -> sets("can't unload font file");
-                    else
-                        MCresult -> clear();
-                        
-                }
-                else
-                {
-                    MCeerror->add(EE_START_BADTARGET, line, pos);
-                    return ES_ERROR;
-                }
-
+                if (font->eval(ep) != ES_NORMAL)
+				{
+					MCeerror->add(EE_FONT_BADFILEEXP, line, pos);
+					return ES_ERROR;
+				}
+                	
+				MCAutoPointer<char> t_resolved_path;
+				t_resolved_path = MCS_resolvepath(ep . getcstring());
+				if (MCFontUnload(ep, *t_resolved_path) != ES_NORMAL)
+					MCresult -> sets("can't unload font file");
+				else
+					MCresult -> clear();
             }
             else
             {

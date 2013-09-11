@@ -21,9 +21,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "core.h" // TD-2013-05-29: [[ DynamicFonts ]]
-#include "osspec.h" // TD-2013-05-29: [[ DynamicFonts ]]
-
+#include "core.h"
+#include "osspec.h"
 #include "dispatch.h"
 #include "image.h"
 #include "stack.h"

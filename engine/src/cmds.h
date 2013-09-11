@@ -1169,7 +1169,7 @@ class MCStart : public MCStatement
 	MCExpression *stack;
     // TD-2013-06-12: [[ DynamicFonts ]] Property to store font path
     MCExpression *font;
-    bool is_globally;
+    bool is_globally : 1;
 protected:
 	Start_constants mode;
 public:

@@ -2968,10 +2968,9 @@ bool MCStack::recomputefonts(MCFontRef p_parent_font)
 
 void MCStack::purgefonts()
 {
-#ifdef _WINDOWS_DESKTOP
 	recomputefonts(parent -> getfontref());
+	recompute();
 	
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
 	dirtyall();
-#endif
 }
