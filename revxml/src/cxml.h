@@ -19,9 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <libxml/HTMLparser.h>
 // MDW-2013-07-09: [[ RevXmlXPath ]]
 #include <libxml/xpath.h>
-// MDW-2013-09-03: [[ RevXmlXslt ]]
-#include <xsltInternals.h>
-#include <xsltutils.h>
+#include <libxslt/documents.h>
 
 #include <errno.h>
 #include <stdio.h>

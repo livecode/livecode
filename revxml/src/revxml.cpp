@@ -23,9 +23,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <revolution/external.h>
 #include <revolution/support.h>
 #include <libxml/xpath.h>
-#include <transform.h>
-#include <xsltInternals.h>
-#include <xsltutils.h>
+#include <libxslt/transform.h>
+#include <libxslt/xsltutils.h>
 
 #include "cxml.h"
 
