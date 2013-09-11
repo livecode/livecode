@@ -17,6 +17,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		4D1CAFD217E0B08A00E5BF23 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DE75F2A17E0995F00832B1D /* libxslt-mobile.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D7EFD7912E72ABA00D67888 /* xslt */;
+			remoteInfo = xslt;
+		};
 		4D379C911714207A00B9037C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4DA0B91312E82AF100B4F692 /* libxml-mobile.xcodeproj */;
@@ -182,6 +189,7 @@
 			dependencies = (
 				4DA0B94A12E82C1100B4F692 /* PBXTargetDependency */,
 				4D379CAB1714209D00B9037C /* PBXTargetDependency */,
+				4D1CAFD317E0B08A00E5BF23 /* PBXTargetDependency */,
 			);
 			name = revxml;
 			productName = template;
@@ -286,6 +294,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		4D1CAFD317E0B08A00E5BF23 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = xslt;
+			targetProxy = 4D1CAFD217E0B08A00E5BF23 /* PBXContainerItemProxy */;
+		};
 		4D379CAB1714209D00B9037C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = xml;
