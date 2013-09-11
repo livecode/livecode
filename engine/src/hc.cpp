@@ -2405,18 +2405,14 @@ MCStack *MCHcstak::build()
 	return sptr;
 }
 
-/* WRAPPER */ IO_stat hc_import(MCStringRef p_name, IO_handle p_stream, MCStack *&p_stack)
-{
-	return hc_import(MCStringGetCString(p_name), p_stream, *&p_stack);
-}
 
-IO_stat hc_import(const char *name, IO_handle stream, MCStack *&sptr)
+IO_stat hc_import(MCStringRef name, IO_handle stream, MCStack *&sptr)
 {
 	maxid = 0;
 	MCValueAssign(MChcstat, kMCEmptyString);
 
-	MCHcstak *hcstak = new MCHcstak(strclone(name));
-	hcstat_append("Loading stack %s...", name);
+	MCHcstak *hcstak = new MCHcstak(strdup(MCStringGetCString(name)));
+	hcstat_append("Loading stack %@...", name);
 	uint2 startlen = MCStringGetLength(MChcstat);
 	IO_stat stat;
 	if ((stat = hcstak->read(stream)) == IO_NORMAL)
