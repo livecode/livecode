@@ -64,7 +64,7 @@ Exec_stat MCField::sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
 	uint4 itemsize = 0;
 	char *itemtext = NULL;
 	MCParagraph *pgptr;
-	MCString s;
+	MCAutoStringRef s;
 
 	if (flags & F_SHARED_TEXT)
 		parid = 0;
@@ -92,11 +92,12 @@ Exec_stat MCField::sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
 			if ((eptr = strchr(sptr, ep.getitemdel())) != NULL)
 			{
 				*eptr++ = '\0';
-				s.set(sptr, eptr - sptr - 1);
-			}
+                /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *) sptr, eptr - sptr - 1, &s);
+            }
 			else
-				s.set(sptr, strlen(sptr));
-			MCSort::additem(ep, items, nitems, form, s, by);
+                /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *) sptr, strlen(sptr), &s);
+            
+			MCSort::additem(ep, items, nitems, form, *s, by);
 			items[nitems - 1].data = (void *)sptr;
 			sptr = eptr;
 		}
@@ -125,10 +126,10 @@ Exec_stat MCField::sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
 			nitems = 0;
 			do
 			{
-				s.set(tpgptr->gettext(), tpgptr->gettextsize());
+                /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *) tpgptr->gettext(), tpgptr->gettextsize(), &s);
 				if (tpgptr->next() != pgptr || tpgptr->gettextsize())
 				{
-					MCSort::additem(ep, items, nitems, form, s, by);
+					MCSort::additem(ep, items, nitems, form, *s, by);
 					items[nitems - 1].data = (void *)tpgptr;
 				}
 				tpgptr = tpgptr->next();

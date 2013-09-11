@@ -663,11 +663,11 @@ void MCButton::getmacmenuitemtextfromaccelerator(short menuid, uint2 key, uint1 
 //  REFACTORED FROM CMDS.CPP 
 //
 
-char *MCSystemLowercaseInternational(const MCString& p_string)
+char *MCSystemLowercaseInternational(MCStringRef p_string)
 {
 	char *t_lc_string;
-	t_lc_string = p_string . clone();
-	LowercaseText(t_lc_string, p_string . getlength(), smSystemScript);
+	t_lc_string = strdup(MCStringGetCString(p_string));
+	LowercaseText(t_lc_string, MCStringGetLength(p_string), smSystemScript);
 	return t_lc_string;
 }
 

@@ -3772,9 +3772,8 @@ void MCInterfaceExecSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &n
 #if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
 				if (form == ST_INTERNATIONAL)
 				{
-					MCString s = MCStringGetOldString(*t_output);
-					extern char *MCSystemLowercaseInternational(const MCString& s);
-					items[nitems].svalue = MCSystemLowercaseInternational(s);
+					extern char *MCSystemLowercaseInternational(MCStringRef s);
+					items[nitems].svalue = MCSystemLowercaseInternational(*t_output);
 				}
 				else
 #endif

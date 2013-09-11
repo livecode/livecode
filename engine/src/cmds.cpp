@@ -2420,23 +2420,23 @@ Exec_stat MCSort::sort_container(MCExecPoint &p_exec_point, Chunk_term p_type, S
 }
 #endif /* MCSort::sort_container */
 
-void MCSort::additem(MCExecPoint &ep, MCSortnode *&items, uint4 &nitems, Sort_type form, MCString &s, MCExpression *by)
+void MCSort::additem(MCExecPoint &ep, MCSortnode *&items, uint4 &nitems, Sort_type form, MCStringRef s, MCExpression *by)
 {
 	if (by != NULL)
 	{
 		MCerrorlock++;
-		ep.setsvalue(s);
+		ep.setsvalue(MCStringGetOldString(s));
 		MCeach->set(ep);
 		if (by->eval(ep) == ES_NORMAL)
-			s = ep.getsvalue();
+			ep . copyasstringref(s);
 		else
-			s = MCnullmcstring;
+			s = MCValueRetain(kMCEmptyString);
 		MCerrorlock--;
 	}
 	switch (form)
 	{
 	case ST_DATETIME:
-		ep.setsvalue(s);
+		ep.setsvalue(MCStringGetOldString(s));
 		if (MCD_convert(ep, CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED))
 		{
 			if (!MCU_stor8(ep.getsvalue(), items[nitems].nvalue))
@@ -2447,8 +2447,8 @@ void MCSort::additem(MCExecPoint &ep, MCSortnode *&items, uint4 &nitems, Sort_ty
 		break;
 	case ST_NUMERIC:
 		{
-			const char *sptr = s.getstring();
-			uint4 length = s.getlength();
+			const char *sptr = MCStringGetCString(s);
+			uint4 length = MCStringGetLength(s);
 			
 			// MW-2013-03-21: [[ Bug ]] Make sure we skip any whitespace before the
 			//   number starts - making it consistent with string->number conversions
@@ -2463,32 +2463,33 @@ void MCSort::additem(MCExecPoint &ep, MCSortnode *&items, uint4 &nitems, Sort_ty
 				sptr++;
 				length--;
 			}
-			s.setlength(s.getlength() - length);
+            //Is the line below now needed? If yes, how to update s.setlength?
+			//s.setlength(s.getlength()) - length);
 			if (!MCU_stor8(s, items[nitems].nvalue))
 				items[nitems].nvalue = -MAXREAL8;
 		}
 		break;
 	default:
 		if (ep.getcasesensitive() && by == NULL)
-			items[nitems].svalue = (char *)s.getstring();
+			items[nitems].svalue = (char *)MCStringGetCString(s);
 		else
 			if (ep.getcasesensitive())
-				items[nitems].svalue = s.clone();
+				items[nitems].svalue = strdup(MCStringGetCString(s));
 			else
 			{
 #if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
 				if (form == ST_INTERNATIONAL)
 				{
-					extern char *MCSystemLowercaseInternational(const MCString& s);
+					extern char *MCSystemLowercaseInternational(MCStringRef s);
 					items[nitems].svalue = MCSystemLowercaseInternational(s);
 				}
 				else
 #endif
 
 				{
-					items[nitems].svalue = new char[s.getlength() + 1];
-					MCU_lower(items[nitems].svalue, s);
-					items[nitems].svalue[s.getlength()] = '\0';
+					items[nitems].svalue = new char[MCStringGetLength(s) + 1];
+					MCU_lower(items[nitems].svalue, MCStringGetOldString(s));
+					items[nitems].svalue[MCStringGetLength(s)] = '\0';
 				}
 			}
 		break;
