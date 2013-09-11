@@ -87,7 +87,7 @@ public:
 	IO_stat readstartupstack(IO_handle stream, MCStack*& r_stack);
 	
 	// Load the given external from within the app bundle
-	bool loadexternal(const char *p_external);
+	bool loadexternal(MCStringRef p_external);
 
 	void cleanup(IO_handle stream, MCStringRef lname, MCStringRef bname);
 	IO_stat savestack(MCStack *sptr, const MCStringRef);

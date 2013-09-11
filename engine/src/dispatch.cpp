@@ -1625,9 +1625,9 @@ void MCDispatch::removepanel(MCStack *sptr)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCDispatch::loadexternal(const char *p_external)
+bool MCDispatch::loadexternal(MCStringRef p_external)
 {
-	char *t_filename;
+	MCStringRef t_filename;
 #if defined(TARGET_SUBPLATFORM_ANDROID)
 	extern bool revandroid_loadExternalLibrary(const char *p_external, char*& r_filename);
 	if (!revandroid_loadExternalLibrary(p_external, t_filename))
@@ -1640,16 +1640,25 @@ bool MCDispatch::loadexternal(const char *p_external)
 		return true;
 	}
 #elif !defined(_SERVER)
-	if (p_external[0] == '/')
+	if (MCStringBeginsWithCString(p_external, (const char_t *)"/", kMCStringOptionCompareExact))
 	{
-		if (!MCCStringClone(p_external, t_filename))
-			return false;
+		t_filename = MCValueRetain(p_external);
 	}
-	else if (!MCCStringFormat(t_filename, "%.*s/%s", strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd), p_external))
-		return false;
+	else
+	{
+		uindex_t t_separator;
+		MCStringLastIndexOfChar(p_external, '/', 0, kMCStringOptionCompareExact, t_separator);
+		if (!MCStringMutableCopySubstring(MCcmd, MCRangeMake(0, t_separator), t_filename))
+			return false;
+		if (!MCStringAppendFormat(t_filename, "/%@", p_external))
+		{
+			MCValueRelease(t_filename);
+			return false;
+		}
+	}
+
 #else
-	if (!MCCStringClone(p_external, t_filename))
-		return false;
+	t_filename = MCValueRetain(p_external);
 #endif
 	
 	if (m_externals == nil)
@@ -1657,7 +1666,7 @@ bool MCDispatch::loadexternal(const char *p_external)
 	
 	bool t_loaded;
 	t_loaded = m_externals -> Load(t_filename);
-	delete t_filename;
+	MCValueRelease(t_filename);
 	
 	if (m_externals -> IsEmpty())
 	{
