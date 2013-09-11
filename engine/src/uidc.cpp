@@ -2023,6 +2023,18 @@ bool MCUIDC::setclipboard(MCPasteboard *p_pasteboard)
 	return false;
 }
 
+
+// TD-2013-07-01: [[ DynamicFonts ]]
+bool MCUIDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle)
+{
+	return false;
+}
+
+bool MCUIDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle)
+{
+	return false;
+}
+
 //
 
 MCDragAction MCUIDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset)

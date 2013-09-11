@@ -51,6 +51,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "redraw.h"
 #include "ans.h"
+#include "font.h"
 #include "mctheme.h"
 
 #include "globals.h"
@@ -443,6 +444,8 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_RANDOM_SEED:
 	case P_ADDRESS:
 	case P_STACKS_IN_USE:
+    // TD-2013-06-20: [[ DynamicFonts ]] global property for list of font files
+    case P_FONTFILES_IN_USE:
 	case P_RELAYER_GROUPED_CONTROLS:
 	case P_SELECTION_MODE:
 	case P_SELECTION_HANDLE_COLOR:
@@ -3588,8 +3591,14 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 			MCusing[i]->getprop(0, P_SHORT_NAME, ep2, effective);
 			ep.concatmcstring(ep2.getsvalue(), EC_RETURN, i == MCnusing - 1);
 		}
-		break;
-	case P_RELAYER_GROUPED_CONTROLS:
+        break;
+            
+    // TD-2013-06-20: [[ DynamicFonts ]] global property for list of font files
+    case P_FONTFILES_IN_USE:
+        // MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCFontListLoaded
+        return MCFontListLoaded(ep);
+        break;
+    case P_RELAYER_GROUPED_CONTROLS:
 		ep.setboolean(MCrelayergrouped);
 		break;
 	case P_SELECTION_MODE:

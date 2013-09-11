@@ -1962,6 +1962,12 @@ void MCDispatch::freeprinterfonts()
 }
 #endif
 
+void MCDispatch::flushfonts(void)
+{
+	delete fonts;
+	fonts = nil;
+}
+
 MCFontlist *MCFontlistGetCurrent(void)
 {
 	return MCdispatcher -> getfontlist();

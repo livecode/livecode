@@ -1121,6 +1121,9 @@ enum Properties {
     P_ADDRESS,
     P_STACKS_IN_USE,
 	P_NETWORK_INTERFACES,
+    
+  	// TD-2013-06-20: [[ DynamicFonts ]] global property for list of font files
+    P_FONTFILES_IN_USE,
 	
     // window properties
     P_NAME,
@@ -1790,6 +1793,11 @@ enum Sugar_constants {
     
     // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
     SG_RECURSIVELY,
+    
+    // TD-2013-06-14: [[ DynamicFonts ]] start using font theFont [globally]
+    SG_FONT,
+    SG_GLOBALLY,
+    SG_FILE
 };
 
 enum Statements {

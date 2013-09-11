@@ -543,18 +543,17 @@ void MCStacklist::refresh(void)
 #if !defined(_MAC_DESKTOP)
 void MCStacklist::ensureinputfocus(Window window)
 {
-					}
+}
 #endif
 
-void MCStacklist::reopenforprint()
+void MCStacklist::purgefonts()
 {
 	if (stacks != NULL)
 	{
 		MCStacknode *tptr = stacks;
 		do
 		{
-			if (tptr->getstack()->getflag(F_FORMAT_FOR_PRINTING))
-				tptr->getstack()->purgefonts();
+			tptr->getstack()->purgefonts();
 			tptr = tptr->next();
 		}
 		while (tptr != stacks);
