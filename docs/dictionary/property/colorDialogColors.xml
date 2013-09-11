@@ -17,7 +17,7 @@
     <command tag="answer color">answer color Command</command>
   </references>
   <history>
-    <introduced version="6.2">Added.</introduced>
+    <introduced version="6.5">Added.</introduced>
   </history>
   <platforms>
     <windows/>

@@ -19,7 +19,7 @@
   </references>
   <history>
     <introduced version="1.1">Added.</introduced>
-    <introduced version="6.2">Added nested array support.</introduced>
+    <introduced version="6.5">Added nested array support.</introduced>
   </history>
   <platforms>
     <mac/>

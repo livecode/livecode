@@ -17,7 +17,7 @@
     <property tag="fontFilesInUse">fontFilesInUse Property</property>
   </references>
   <history>
-    <introduced version="6.2">Added.</introduced>
+    <introduced version="6.5">Added.</introduced>
   </history>
   <platforms>
     <mac/>
