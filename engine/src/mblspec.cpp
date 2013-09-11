@@ -48,16 +48,11 @@ void MCS_init(void)
 	MCS_common_init();
 }
 
-bool MCS_isnan(double value)
-{
-	return isnan(value);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCS_log(MCStringRef p_message)
 {
-	MCsystem -> Debug(MCStringGetCString(p_message));
+	MCsystem -> Debug(p_message);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
