@@ -244,7 +244,7 @@ static void cache_locale(void)
 	
 
 }
-extern MCDateTimeLocale *g_english_locale;
+
 const MCDateTimeLocale *MCS_getdatetimelocale(void)
 {
 	if (s_datetime_locale == NULL)
@@ -266,8 +266,8 @@ const MCDateTimeLocale *MCS_getdatetimelocale(void)
 
 const MCDateTimeLocale *MCS_getdatetimelocale(void)
 {
-	extern MCDateTimeLocale g_english_locale;
-	return &g_english_locale;
+	extern MCDateTimeLocale *g_basic_locale;
+	return g_basic_locale;
 }
 
 #endif
