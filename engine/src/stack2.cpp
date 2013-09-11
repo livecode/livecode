@@ -2538,11 +2538,11 @@ void MCStack::getstackfiles(MCExecPoint &ep)
 	}
 }
 
-void MCStack::stringtostackfiles(char *d, MCStackfile **sf, uint2 &nf)
+void MCStack::stringtostackfiles(MCStringRef d, MCStackfile **sf, uint2 &nf)
 {
 	MCStackfile *newsf = NULL;
 	uint2 nnewsf = 0;
-	char *eptr = d;
+	char *eptr = strdup(MCStringGetCString(d));
 	while ((eptr = strtok(eptr, "\n")) != NULL)
 	{
 		char *cptr = strchr(eptr, ',');
@@ -2560,7 +2560,7 @@ void MCStack::stringtostackfiles(char *d, MCStackfile **sf, uint2 &nf)
 	nf = nnewsf;
 }
 
-void MCStack::setstackfiles(const MCString &s)
+void MCStack::setstackfiles(MCStringRef s)
 {
 	while (nstackfiles--)
 	{
@@ -2568,9 +2568,9 @@ void MCStack::setstackfiles(const MCString &s)
 		MCValueRelease(stackfiles[nstackfiles].filename);
 	}
 	delete stackfiles;
-	char *d = s.clone();
-	stringtostackfiles(d, &stackfiles, nstackfiles);
-	delete d;
+    MCAutoStringRef t_copy;
+    /* UNCHECKED */ MCStringCopy(s, &t_copy);
+	stringtostackfiles(*t_copy, &stackfiles, nstackfiles);
 }
 
 char *MCStack::getstackfile(const MCString &s)

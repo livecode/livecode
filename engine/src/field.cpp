@@ -1442,15 +1442,15 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 // MW-2012-01-25: [[ ParaStyles ]] Parse the given string as a list of tab-stops.
 // MW-2012-02-11: [[ TabWidths ]] The 'which' parameter determines what style of tabStops to
 //   parse - widths or stops.
-bool MCField::parsetabstops(Properties which, const MCString& data, uint16_t*& r_tabs, uint16_t& r_tab_count)
+bool MCField::parsetabstops(Properties which, MCStringRef data, uint16_t*& r_tabs, uint16_t& r_tab_count)
 {
 	uint2 *newtabs;
 	uint2 newntabs;
 	newtabs = nil;
 	newntabs = 0;
 
-	uint4 l = data.getlength();
-	const char *sptr = data.getstring();
+	uint4 l = MCStringGetLength(data);
+	const char *sptr = MCStringGetCString(data);
 	while (l)
 	{
 		int32_t i1;
@@ -1523,7 +1523,9 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 			// MW-2012-01-25: [[ ParaStyles ]] Use the refactored tabStop parsing method.
 			uint2 *newtabs = NULL;
 			uint2 newntabs = 0;
-			if (!parsetabstops(p, data, newtabs, newntabs))
+            MCAutoStringRef t_data;
+            /* UNCHECKED */ MCStringCreateWithOldString(data, &t_data);
+			if (!parsetabstops(p, *t_data, newtabs, newntabs))
 				return ES_ERROR;
 
 			delete tabs;
