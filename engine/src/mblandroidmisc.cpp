@@ -1261,3 +1261,11 @@ Exec_stat MCHandlePlatformMessage(Handler_type p_type, const MCString& p_message
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
+int MCSystemCompareInternational(const char *p_left, const char *p_right)
+{
+    int32_t t_compare;
+    MCAndroidEngineCall("compareInternational", "iss", &t_compare, p_left, p_right);
+    return t_compare;
+}

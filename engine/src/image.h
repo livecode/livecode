@@ -307,12 +307,6 @@ class MCImage : public MCControl
 	uint32_t m_image_opened;
 
 	MCImageNeed *m_needs;
-
-	bool m_have_control_colors;
-	MCColor *m_control_colors;
-	char **m_control_color_names;
-	uint16_t m_control_color_count;
-	uint16_t m_control_color_flags;
 	
 	int2 xhot;
 	int2 yhot;
@@ -334,6 +328,17 @@ class MCImage : public MCControl
 	static MCCursorRef cursor;
 	static MCCursorRef defaultcursor;
 	static uint2 cmasks[8];
+	
+	// MW-2013-09-05: [[ Bug 11127 ]] These are used when saving / loading an image
+	//   they hold the control's colors, as the ones serialized in MCObject are the
+	//   image colors (for <= 8 color RLE images).
+	static bool s_have_control_colors;
+	static uint16_t s_control_color_count;
+	static MCColor *s_control_colors;
+	static char **s_control_color_names;
+	static uint16_t s_control_pixmap_count;
+	static uint4 *s_control_pixmapids;
+	static uint16_t s_control_color_flags;
 	
 private:
 	void setrep(MCImageRep *p_rep);

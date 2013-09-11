@@ -1296,10 +1296,18 @@ MCFilter::~MCFilter()
 //   pattern matching class.
 char *MCFilter::filterdelimited(char *sstring, char delimiter, MCPatternMatcher *matcher)
 {
+	bool t_success;
+	t_success = true;
+	
+	uint32_t t_length;
+	t_length = MCCStringLength(sstring);
+	
 	uint4 offset = 0;
-	char *dstring = new char[strlen(sstring) + 1];
-	char *chunk;
-
+	char *dstring;
+	dstring = nil;
+	if (t_success)
+		t_success = MCMemoryAllocate(t_length + 1, dstring);
+	
 	// OK-2010-01-11: Bug 7649 - Filter command was incorrectly removing empty lines.
 	// Now does:
 	// 1. Remove terminal delimiter from list
@@ -1308,16 +1316,26 @@ char *MCFilter::filterdelimited(char *sstring, char delimiter, MCPatternMatcher 
 
 	// Duplicate input string because the algorithm needs to change it.
 	char *t_string;
-	t_string = strdup(sstring);
+	t_string = nil;
+	
+	if (t_success)
+		t_success = MCCStringClone(sstring, t_string);
 
+	if (!t_success)
+	{
+		// IM-2013-07-26: [[ Bug 10774 ]] return nil if memory allocation fails
+		MCMemoryDeallocate(dstring);
+		MCCStringFree(t_string);
+		
+		return nil;
+	}
+	
 	// Keep a copy of the original pointer so it can be freed
 	char *t_original_string;
 	t_original_string = t_string;
 
 	// MW-2010-10-05: [[ Bug 9034 ]] If t_string is of zero length, then the next couple
 	//   of lines will cause problems so return empty in this case.
-	uint32_t t_length;
-	t_length = strlen(t_string);
 	if (t_length == 0)
 	{
 		free(t_original_string);
@@ -1340,6 +1358,7 @@ char *MCFilter::filterdelimited(char *sstring, char delimiter, MCPatternMatcher 
 		if (t_return != nil)
 			*t_return = '\0';
 
+		char *chunk;
 		chunk = t_string;
 		if (matcher->match(chunk) != discardmatches)
 		{
@@ -1528,6 +1547,14 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
 	char *dptr = filterdelimited(sptr, delimiter, matcher);
 	delete sptr;
 	delete matcher;
+	
+	// IM-2013-07-26: [[ Bug 10774 ]] if filterlines returns nil throw a "no memory" error
+	if (dptr == nil)
+	{
+		MCeerror->add(EE_NO_MEMORY, line, pos);
+		return ES_ERROR;
+	}
+
 	ep.copysvalue(dptr, strlen(dptr));
 	delete dptr;
 

@@ -58,7 +58,10 @@ MCAdd::~MCAdd()
 {
 	delete source;
 	delete dest;
-	delete destvar;
+	// MW-2013-08-01: [[ Bug 10925 ]] Only delete the destvar varref if dest is NULL,
+	//   otherwise its owned by dest.
+	if (dest == NULL)
+		delete destvar;
 }
 
 Parse_stat MCAdd::parse(MCScriptPoint &sp)
@@ -89,6 +92,10 @@ Parse_stat MCAdd::parse(MCScriptPoint &sp)
 	}
 	else
 		destvar->parsearray(sp);
+	
+	// MW-2013-08-01: [[ Bug 10925 ]] If the dest chunk is just a var, extract the varref.
+	if (dest != NULL && dest -> isvarchunk())
+		destvar = dest -> getrootvarref();
 
 	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
@@ -112,7 +119,7 @@ Exec_stat MCAdd::exec(MCExecPoint &ep)
 
 	if (overlap)
 		ep . grab();
-
+	
 	if (destvar != NULL && destvar -> evalcontainer(ep, t_dst_var, t_dst_ref) != ES_NORMAL)
 	{
 		MCeerror->add(EE_ADD_BADDEST, line, pos);
@@ -178,7 +185,10 @@ MCDivide::~MCDivide()
 {
 	delete source;
 	delete dest;
-	delete destvar;
+	// MW-2013-08-01: [[ Bug 10925 ]] Only delete the destvar varref if dest is NULL,
+	//   otherwise its owned by dest.
+	if (dest == NULL)
+		delete destvar;
 }
 
 Parse_stat MCDivide::parse(MCScriptPoint &sp)
@@ -210,7 +220,11 @@ Parse_stat MCDivide::parse(MCScriptPoint &sp)
 		MCperror->add(PE_DIVIDE_BADEXP, sp);
 		return PS_ERROR;
 	}
-
+	
+	// MW-2013-08-01: [[ Bug 10925 ]] If the dest chunk is just a var, extract the varref.
+	if (dest != NULL && dest -> isvarchunk())
+		destvar = dest -> getrootvarref();
+	
 	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
 	return PS_NORMAL;
@@ -319,7 +333,10 @@ MCMultiply::~MCMultiply()
 {
 	delete source;
 	delete dest;
-	delete destvar;
+	// MW-2013-08-01: [[ Bug 10925 ]] Only delete the destvar varref if dest is NULL,
+	//   otherwise its owned by dest.
+	if (dest == NULL)
+		delete destvar;
 }
 
 Parse_stat MCMultiply::parse(MCScriptPoint &sp)
@@ -354,7 +371,11 @@ Parse_stat MCMultiply::parse(MCScriptPoint &sp)
 		(PE_MULTIPLY_BADEXP, sp);
 		return PS_ERROR;
 	}
-
+	
+	// MW-2013-08-01: [[ Bug 10925 ]] If the dest chunk is just a var, extract the varref.
+	if (dest != NULL && dest -> isvarchunk())
+		destvar = dest -> getrootvarref();
+	
 	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
 	return PS_NORMAL;
@@ -457,7 +478,10 @@ MCSubtract::~MCSubtract()
 {
 	delete source;
 	delete dest;
-	delete destvar;
+	// MW-2013-08-01: [[ Bug 10925 ]] Only delete the destvar varref if dest is NULL,
+	//   otherwise its owned by dest.
+	if (dest == NULL)
+		delete destvar;
 }
 
 Parse_stat MCSubtract::parse(MCScriptPoint &sp)
@@ -492,7 +516,11 @@ Parse_stat MCSubtract::parse(MCScriptPoint &sp)
 	}
 	else
 		destvar->parsearray(sp);
-
+	
+	// MW-2013-08-01: [[ Bug 10925 ]] If the dest chunk is just a var, extract the varref.
+	if (dest != NULL && dest -> isvarchunk())
+		destvar = dest -> getrootvarref();
+	
 	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
 	return PS_NORMAL;

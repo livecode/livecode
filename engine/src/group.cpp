@@ -571,6 +571,8 @@ void MCGroup::munfocus()
 	{
 		MCControl *oldfocused = mfocused;
 		mfocused = NULL;
+		// IM-2013-08-07: [[ Bug 10671 ]] Release grabbed controls when removing focus
+		state &= ~CS_GRAB;
 		oldfocused->munfocus();
 	}
 	else
@@ -878,7 +880,7 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		break;
 	case P_SHARED_BEHAVIOR:
 		// MW-2011-08-09: [[ Groups ]] Returns whether the group is shared.
-		ep.setboolean(isshared());
+		ep.setboolean(isshared() && (parent == nil || parent -> gettype() == CT_CARD));
 		break;
 	case P_BOUNDING_RECT:
 		if (flags & F_BOUNDING_RECT)
@@ -921,37 +923,41 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	case P_CHILD_CONTROL_NAMES:
 	case P_CHILD_CONTROL_IDS:
         {
-			// MERG-2015-05-01: [[ ChildControlProps ]] Add ability to list both
+			// MERG-2013-05-01: [[ ChildControlProps ]] Add ability to list both
 			//   immediate and all descendent controls of a group.
 		
             ep.clear();
 		
-			MCExecPoint t_other_ep(ep);	
-            MCObject *t_object = controls;
-            MCObject *t_start_object = t_object;
-            uint2 i = 0;
-            do
+            // MERG-2013-08-14: [[ ChildControlProps ]] Resolved crash when group contains no controls
+            if (controls != NULL)
             {
-                Properties t_prop;
-                if (which == P_CHILD_CONTROL_NAMES)
-                    t_prop = P_SHORT_NAME;
-                else
-                    t_prop = P_SHORT_ID;
-                
-                t_object->getprop(0, t_prop, t_other_ep, False);
-                
-                ep.concatmcstring(t_other_ep.getsvalue(), EC_RETURN, i++ == 0);
-                
-                if (t_object->gettype() == CT_GROUP && (which == P_CONTROL_IDS || which == P_CONTROL_NAMES))
+                MCExecPoint t_other_ep(ep);
+                MCObject *t_object = controls;
+                MCObject *t_start_object = t_object;
+                uint2 i = 0;
+                do
                 {
-                    t_object->getprop(parid, which, t_other_ep, false);
+                    Properties t_prop;
+                    if (which == P_CHILD_CONTROL_NAMES)
+                        t_prop = P_SHORT_NAME;
+                    else
+                        t_prop = P_SHORT_ID;
+                    
+                    t_object->getprop(0, t_prop, t_other_ep, False);
+                    
                     ep.concatmcstring(t_other_ep.getsvalue(), EC_RETURN, i++ == 0);
+                    
+                    if (t_object->gettype() == CT_GROUP && (which == P_CONTROL_IDS || which == P_CONTROL_NAMES))
+                    {
+                        t_object->getprop(parid, which, t_other_ep, false);
+                        ep.concatmcstring(t_other_ep.getsvalue(), EC_RETURN, i++ == 0);
+                    }
+                    
+                    t_object = t_object -> next();
+                    
                 }
-                
-                t_object = t_object -> next();
-                
+                while (t_object != t_start_object);
             }
-            while (t_object != t_start_object);
         }
         break;
 	case P_SELECT_GROUPED_CONTROLS:

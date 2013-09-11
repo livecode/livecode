@@ -1553,6 +1553,10 @@ bool MCDispatch::loadexternal(const char *p_external)
 	char *t_filename;
 #if defined(TARGET_SUBPLATFORM_ANDROID)
 	extern bool revandroid_loadExternalLibrary(const char *p_external, char*& r_filename);
+	// MW-2013-08-07: [[ ExternalsApiV5 ]] Make sure we only use the leaf name
+	//   of the external when loading.
+	if (strrchr(p_external, '/') != nil)
+		p_external = strrchr(p_external, '/') + 1;
 	if (!revandroid_loadExternalLibrary(p_external, t_filename))
 		return false;
 
