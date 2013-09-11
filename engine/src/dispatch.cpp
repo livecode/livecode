@@ -1629,14 +1629,14 @@ bool MCDispatch::loadexternal(MCStringRef p_external)
 {
 	MCStringRef t_filename;
 #if defined(TARGET_SUBPLATFORM_ANDROID)
-	extern bool revandroid_loadExternalLibrary(const char *p_external, char*& r_filename);
+	extern bool revandroid_loadExternalLibrary(MCStringRef p_external, MCStringRef &r_filename);
 	if (!revandroid_loadExternalLibrary(p_external, t_filename))
 		return false;
 
 	// Don't try and load any drivers as externals.
-	if (strncmp(p_external, "db", 2) == 0)
+	if (MCStringBeginsWithCString(p_external, "db", kMCStringOptionCompareExact))
 	{
-		delete t_filename;
+		MCValueRelease(t_filename);
 		return true;
 	}
 #elif !defined(_SERVER)

@@ -1921,9 +1921,9 @@ bool revandroid_getAssetOffsetAndLength(JNIEnv *env, jobject object, const char 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool revandroid_loadExternalLibrary(const char *p_external, char*& r_path)
+bool revandroid_loadExternalLibrary(MCStringRef p_external, MCStringRef &r_path)
 {
-	MCAndroidEngineRemoteCall("loadExternalLibrary", "ss", &r_path, p_external);
+	MCAndroidEngineRemoteCall("loadExternalLibrary", "xx", &r_path, p_external);
 	return r_path != nil;
 }
 
