@@ -87,6 +87,11 @@ MCPropertyInfo MCGraphic::kProperties[] =
     DEFINE_RW_OBJ_PROPERTY(P_GRADIENT_FILL, Array, MCGraphic, GradientFill)
     DEFINE_RW_OBJ_ARRAY_PROPERTY(P_GRADIENT_STROKE, Any, MCGraphic, GradientStrokeElement)
     DEFINE_RW_OBJ_PROPERTY(P_GRADIENT_STROKE, Array, MCGraphic, GradientStroke)
+    
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_MARKER_POINTS, LinesOfPoint, MCGraphic, MarkerPoints)
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_DASHES, ItemsOfUInt, MCGraphic, Dashes)
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_POINTS, LinesOfPoint, MCGraphic, Points)
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_RELATIVE_POINTS, LinesOfPoint, MCGraphic, RelativePoints)
 };
 
 MCObjectPropertyTable MCGraphic::kPropertyTable =

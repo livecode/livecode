@@ -154,6 +154,8 @@ public:
     void DoSetGradientFillArray(MCExecContext& ctxt, MCGradientFill *p_fill, Draw_index p_di, MCArrayRef p_array);
     void DoGetGradientFillElement(MCExecContext& ctxt, MCGradientFill *p_fill, MCNameRef p_prop, MCValueRef& r_value);
     void DoSetGradientFillElement(MCExecContext& ctxt, MCGradientFill *p_fill, Draw_index p_di, MCNameRef p_prop, MCValueRef p_value);
+    
+    void DoCopyPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points, uindex_t& r_count, MCPoint*& r_points);
 
 	////////// PROPERTY ACCESSORS
 
@@ -218,5 +220,14 @@ public:
     void SetGradientStroke(MCExecContext& ctxt, MCArrayRef p_array);
     void GetGradientStrokeElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value);
     void SetGradientStrokeElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value);
+    
+    void GetMarkerPoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*& r_points);
+    void SetMarkerPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points);
+    void GetDashes(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_points);
+    void SetDashes(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_points);
+    void GetPoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*& r_points);
+    void SetPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points);
+    void GetRelativePoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*& r_points);
+    void SetRelativePoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points);
 };
 #endif

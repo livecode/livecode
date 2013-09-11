@@ -907,6 +907,68 @@ static MCExecEnumTypeInfo _kMCInterfaceInkNamesTypeInfo =
 	_kMCInterfaceInkNamesElementInfo
 };
 
+//////////
+
+void MCInterfaceTriStateParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceTriState& r_output)
+{
+    if (MCStringIsEqualToCString(p_input, "mixed", kMCCompareCaseless))
+    {
+        r_output . mixed = Mixed;
+        r_output . type = kMCInterfaceTriStateMixed;
+    }
+    
+    if (MCU_stob(p_input, r_output . state))
+    {
+        r_output . type = kMCInterfaceTriStateBoolean;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_OBJECT_NAB);
+}
+
+void MCInterfaceTriStateFormat(MCExecContext& ctxt, const MCInterfaceTriState& p_input, MCStringRef& r_output)
+{
+    if (p_input . type == kMCInterfaceTriStateBoolean)
+    {
+        r_output = MCValueRetain(p_input . state ? kMCTrueString : kMCFalseString);
+        return;
+    }
+    
+    if (MCStringCreateWithCString("mixed", r_output))
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCInterfaceTriStateFree(MCExecContext& ctxt, MCInterfaceTriState& p_input)
+{
+}
+
+static MCExecCustomTypeInfo _kMCInterfaceTriStateTypeInfo =
+{
+	"Interface.TriState",
+	sizeof(MCInterfaceTriState),
+	(void *)MCInterfaceTriStateParse,
+	(void *)MCInterfaceTriStateFormat,
+	(void *)MCInterfaceTriStateFree
+};
+
+//////////
+
+MCExecEnumTypeElementInfo _kMCInterfaceEncodingElementInfo[] =
+{
+	{ MCnativestring, 0, true },
+	{ MCunicodestring, 1, true },
+	{ MCmixedstring, 2, true },
+};
+
+MCExecEnumTypeInfo _kMCInterfaceEncodingTypeInfo =
+{
+	"Interface.Encoding",
+	sizeof(_kMCInterfaceEncodingElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCInterfaceEncodingElementInfo
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExecCustomTypeInfo *kMCInterfaceLayerTypeInfo = &_kMCInterfaceLayerTypeInfo;
@@ -915,6 +977,7 @@ MCExecEnumTypeInfo *kMCInterfaceTextAlignTypeInfo = &_kMCInterfaceTextAlignTypeI
 MCExecCustomTypeInfo *kMCInterfaceTextStyleTypeInfo = &_kMCInterfaceTextStyleTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceInkNamesTypeInfo = &_kMCInterfaceInkNamesTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceEncodingTypeInfo = &_kMCInterfaceEncodingTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceTriStateTypeInfo = &_kMCInterfaceTriStateTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3067,86 +3130,54 @@ void MCObject::SetCustomPropertySet(MCExecContext& ctxt, MCStringRef propset)
 	ctxt . Throw();
 }
 
-void MCObject::GetCustomPropertySets(MCExecContext& ctxt, MCStringRef& r_propsets)
+void MCObject::GetCustomPropertySets(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_propsets)
 {
 	bool t_success;
 	t_success = true;
 
 	MCAutoListRef t_propsets;
 	MCObjectPropertySet *p = props;
-
-	if (t_success)
-		t_success = MCListCreateMutable('\n', &t_propsets);
+	
+	MCAutoArray<MCStringRef> t_list;
 
 	while (t_success && p != NULL)
 	{
 		if (!p -> hasname(kMCEmptyName))
-			t_success = MCListAppend(*t_propsets, p -> getname());
+			t_success = t_list . Push(MCNameGetString(p -> getname()));
 		p = p -> getnext();
 	}
 
 	if (t_success)
-		t_success = MCListCopyAsString(*t_propsets, r_propsets);
-
-	if (t_success)
+	{
+		t_list . Take(r_propsets, r_count);
 		return;
-
+	}
+	
 	ctxt . Throw();
 }
 
-void MCObject::SetCustomPropertySets(MCExecContext& ctxt, MCStringRef propsets)
+void MCObject::SetCustomPropertySets(MCExecContext& ctxt, uindex_t p_count, MCStringRef* p_propsets)
 {
-	uindex_t t_length;
-	t_length = MCStringGetLength(propsets);
-	MCAutoStringRef t_propsets_new;
-
+	MCObjectPropertySet *newprops = nil;
+	MCObjectPropertySet *newp = nil;
 	bool t_success;
 	t_success = true;
 
-	if (t_success)
-		t_success = MCStringMutableCopy(propsets, &t_propsets_new);
-
-	if (t_success && t_length != 0 && MCStringGetNativeCharAtIndex(propsets, t_length - 1) != '\n')
-		t_success = MCStringAppendChar(*t_propsets_new, '\n');
-
-	if (t_success)
-		t_success = MCStringAppendChar(*t_propsets_new, '\n');		
-
-	uindex_t t_old_offset;
-	t_old_offset = 0;
-	uindex_t t_new_offset;
-	t_new_offset = 0;
-
-	MCObjectPropertySet *newprops = NULL;
-	MCObjectPropertySet *newp = NULL;
-
-	while (t_success && t_old_offset <= t_length)
-	{
-		MCAutoStringRef t_name_string;
+	for (uindex_t i = 0; i < p_count && t_success; i++)
+	{		
 		MCNewAutoNameRef t_name;
+		t_success = MCNameCreate(p_propsets[i], &t_name);
 		
-		if (!MCStringFirstIndexOfChar(*t_propsets_new, '\n', t_old_offset, kMCCompareCaseless, t_new_offset))
-			t_new_offset = t_length;
-
-		if (t_new_offset > t_old_offset)
-		{
-			t_success = MCStringCopySubstring(*t_propsets_new, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_name_string);
-			if (t_success)
-				t_success = MCNameCreate(*t_name_string, &t_name);
-		}
-		else
-			&t_name = MCValueRetain(kMCEmptyName);
-
 		if (t_success)
 		{
-			MCObjectPropertySet *lp = NULL;
+			MCObjectPropertySet *lp = nil;
 			MCObjectPropertySet *p = props;
-			while (p != NULL && !p->hasname(*t_name))
+			while (p != nil && !p->hasname(*t_name))
 			{
 				lp = p;
 				p = p->getnext();
 			}
-			if (p == NULL)
+			if (p == nil)
 				/* UNCHECKED */ MCObjectPropertySet::createwithname(*t_name, p);
 			else
 			{
@@ -3162,11 +3193,10 @@ void MCObject::SetCustomPropertySets(MCExecContext& ctxt, MCStringRef propsets)
 				newp->setnext(p);
 			newp = p;
 		}
-		t_old_offset = t_new_offset + 1;
 	}
 
 	bool gotdefault = false;
-	while (props != NULL)
+	while (props != nil)
 	{
 		MCObjectPropertySet *sp = props->getnext();
 		if (props->hasname(kMCEmptyName))

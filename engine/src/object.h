@@ -176,6 +176,7 @@ struct MCInterfaceNamedColor;
 struct MCInterfaceLayer;
 struct MCInterfaceShadow;
 struct MCInterfaceTextStyle;
+struct MCInterfaceTriState;
 
 class MCObject : public MCDLlist
 {
@@ -958,9 +959,9 @@ public:
 	void SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef props);
 	void GetCustomPropertySet(MCExecContext& ctxt, MCStringRef& r_propset);
 	void SetCustomPropertySet(MCExecContext& ctxt, MCStringRef propset);
-	void GetCustomPropertySets(MCExecContext& ctxt, MCStringRef& r_propsets);
-	void SetCustomPropertySets(MCExecContext& ctxt, MCStringRef propsets);
-
+	void GetCustomPropertySets(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_propsets);
+	void SetCustomPropertySets(MCExecContext& ctxt, uindex_t p_count, MCStringRef* propsets);
+    
 	void GetInk(MCExecContext& ctxt, intenum_t& r_ink);
 	virtual void SetInk(MCExecContext& ctxt, intenum_t ink);
 	void GetCantSelect(MCExecContext& ctxt, bool& r_setting);

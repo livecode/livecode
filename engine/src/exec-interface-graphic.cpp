@@ -748,3 +748,143 @@ void MCGraphic::SetGradientStrokeElement(MCExecContext& ctxt, MCNameRef p_prop, 
 {
     DoSetGradientFillElement(ctxt, m_stroke_gradient, DI_FORE, p_prop, p_value);
 }
+
+void MCGraphic::DoCopyPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points, uindex_t& r_count, MCPoint*& r_points)
+{
+    MCAutoArray<MCPoint> t_points;
+    
+    for (uindex_t i = 0; i < p_count; i++)
+        t_points . Push(p_points[i]);
+    
+    t_points . Take(r_points, r_count);
+}
+
+void MCGraphic::GetMarkerPoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*& r_points)
+{
+    DoCopyPoints(ctxt, nmarkerpoints, markerpoints, r_count, r_points);
+}
+
+void MCGraphic::SetMarkerPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points)
+{
+    if (p_count == 0)
+        flags &= ~F_MARKER_DRAWN;
+    else
+    {
+        uindex_t t_new_count;
+        DoCopyPoints(ctxt, p_count, p_points, t_new_count, markerpoints);
+        nmarkerpoints = (uint2)t_new_count;
+        flags |= F_MARKER_DRAWN;
+    }
+    
+    if (flags & F_MARKER_DRAWN && flags & F_MARKER_OPAQUE)
+        closepolygon(markerpoints, nmarkerpoints);
+    
+    compute_minrect();
+    Redraw();
+}
+
+void MCGraphic::GetDashes(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_dashes)
+{
+    MCAutoArray<uinteger_t> t_dashes;
+    
+    for (uindex_t i = 0; i < ndashes; i++)
+        t_dashes . Push(dashes[i]);
+    
+    t_dashes . Take(r_dashes, r_count);
+}
+
+void MCGraphic::SetDashes(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_dashes)
+{
+    MCAutoArray<uint1> t_dashes;
+    
+    uint1 *newdashes = nil;
+    uint2 newndashes = 0;
+    uint4 t_dash_length = 0;
+    uindex_t t_new_count;
+    
+    for (uindex_t i = 0; i < p_count; i++)
+    {
+        if (p_dashes[i] >= 256)
+        {
+            ctxt . LegacyThrow(EE_GRAPHIC_NAN);
+            return;
+        }
+        t_dashes . Push((uint1)p_dashes[i]);
+        t_dash_length += p_dashes[i];
+    }
+    
+    t_dashes . Take(newdashes, t_new_count);
+    newndashes = t_new_count;
+    
+    if (newndashes > 0 && t_dash_length == 0)
+    {
+        delete newdashes;
+        newdashes = nil;
+        newndashes = 0;
+    }
+    delete dashes;
+    dashes = newdashes;
+    ndashes = newndashes;
+    if (newndashes == 0)
+        flags &= ~F_DASHES;
+    else
+        flags |= F_DASHES;
+    
+    Redraw();
+}
+
+void MCGraphic::GetPoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*& r_points)
+{
+    DoCopyPoints(ctxt, nrealpoints, realpoints, r_count, r_points);
+}
+
+void MCGraphic::SetPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points)
+{
+    if (oldpoints != nil)
+    {
+        delete oldpoints;
+        oldpoints = nil;
+    }
+    uindex_t t_new_count;
+    DoCopyPoints(ctxt, p_count, p_points, t_new_count, realpoints);
+    nrealpoints = (uint2)t_new_count;
+    
+    if (flags & F_OPAQUE)
+        closepolygon(realpoints, nrealpoints);
+    
+    compute_minrect();
+    Redraw();
+}
+
+void MCGraphic::GetRelativePoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*& r_points)
+{
+    MCRectangle trect = reduce_minrect(rect);
+    MCU_offset_points(realpoints, nrealpoints, -trect.x, -trect.y);
+    
+    DoCopyPoints(ctxt, nrealpoints, realpoints, r_count, r_points);
+    
+    MCU_offset_points(realpoints, nrealpoints, trect.x, trect.y);
+}
+
+void MCGraphic::SetRelativePoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points)
+{
+    if (oldpoints != nil)
+    {
+        delete oldpoints;
+        oldpoints = nil;
+    }
+    MCRectangle trect = reduce_minrect(rect);
+    MCU_offset_points(realpoints, nrealpoints, -trect.x, -trect.y);
+    
+    uindex_t t_new_count;
+    DoCopyPoints(ctxt, p_count, p_points, t_new_count, realpoints);
+    nrealpoints = (uint2)t_new_count;
+    
+    MCU_offset_points(realpoints, nrealpoints, trect.x, trect.y);
+    
+    if (flags & F_OPAQUE)
+        closepolygon(realpoints, nrealpoints);
+    
+    compute_minrect();
+    Redraw();
+}

@@ -179,8 +179,8 @@ MCPropertyInfo MCObject::kProperties[] =
 
 	DEFINE_RW_OBJ_PART_PROPERTY(P_PROPERTIES, Array, MCObject, Properties)
 	DEFINE_RW_OBJ_PROPERTY(P_CUSTOM_PROPERTY_SET, String, MCObject, CustomPropertySet)
-	DEFINE_RW_OBJ_PROPERTY(P_CUSTOM_PROPERTY_SETS, String, MCObject, CustomPropertySets)
-
+	DEFINE_RW_OBJ_LIST_PROPERTY(P_CUSTOM_PROPERTY_SETS, LinesOfString, MCObject, CustomPropertySets)
+    
 	DEFINE_RW_OBJ_ENUM_PROPERTY(P_INK, InterfaceInkNames, MCObject, Ink)
 	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_CANT_SELECT, Bool, MCObject, CantSelect)
 	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_CANT_SELECT, Bool, MCObject, CantSelect)
@@ -1966,6 +1966,230 @@ Exec_stat MCObject::setprops(uint32_t p_parid, MCExecPoint& ep)
 #endif
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool MCPropertyFormatUIntList(uinteger_t *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
+{
+    if (p_count == 0)
+    {
+        r_string = MCValueRetain(kMCEmptyString);
+        return true;
+    }
+    
+	MCAutoStringRef t_list;
+	bool t_success;
+	t_success = MCStringCreateMutable(0, &t_list);
+	
+	for (uindex_t i = 0; i < p_count && t_success; i++)
+	{
+		if (t_success && i != 0)
+			t_success = MCStringAppendNativeChar(*t_list, p_delimiter);
+        
+		t_success = MCStringAppendFormat(*t_list, "%d", p_list[i]);
+	}
+	
+	if (t_success)
+		return MCStringCopy(*t_list, r_string);
+	
+	return false;
+}
+
+static bool MCPropertyFormatStringList(MCStringRef *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
+{
+    if (p_count == 0)
+    {
+        r_string = MCValueRetain(kMCEmptyString);
+        return true;
+    }
+    
+	MCAutoStringRef t_list;
+	bool t_success;
+	t_success = MCStringCreateMutable(0, &t_list);
+	
+	for (uindex_t i = 0; i < p_count && t_success; i++)
+	{
+        if (t_success && i != 0)
+			t_success = MCStringAppendNativeChar(*t_list, p_delimiter);
+        
+		t_success = MCStringAppend(*t_list, p_list[i]);
+	}
+	
+	if (t_success)
+		return MCStringCopy(*t_list, r_string);
+	
+	return false;
+}
+
+static bool MCPropertyFormatPointList(MCPoint *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
+{
+    if (p_count == 0)
+    {
+        r_string = MCValueRetain(kMCEmptyString);
+        return true;
+    }
+    
+	MCAutoStringRef t_list;
+	bool t_success;
+	t_success = MCStringCreateMutable(0, &t_list);
+	
+	for (uindex_t i = 0; i < p_count && t_success; i++)
+	{
+        if (t_success && i != 0)
+			t_success = MCStringAppendNativeChar(*t_list, p_delimiter);
+        
+		t_success = MCStringAppendFormat(*t_list, "%d,%d", p_list[i].x, p_list[i].y);
+	}
+	
+	if (t_success)
+		return MCStringCopy(*t_list, r_string);
+	
+	return false;
+}
+
+static bool MCPropertyParseUIntList(MCStringRef p_input, char_t p_delimiter, uindex_t& r_count, uinteger_t*& r_list)
+{
+    uindex_t t_length;
+	t_length = MCStringGetLength(p_input);
+    
+    if (t_length == 0)
+    {
+        r_count = 0;
+        return true;
+    }
+    
+	MCAutoArray<uinteger_t> t_list;
+	
+    bool t_success;
+    t_success = true;
+    
+	uindex_t t_old_offset;
+	t_old_offset = 0;
+	uindex_t t_new_offset;
+	t_new_offset = 0;
+	
+	while (t_success && t_old_offset <= t_length)
+	{
+		MCAutoStringRef t_uint_string;
+		uinteger_t t_d;
+		
+		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareCaseless, t_new_offset))
+			t_new_offset = t_length;
+		
+        if (t_new_offset <= t_old_offset)
+            break;
+        
+		if (t_success)
+            t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_uint_string);
+		
+		if (t_success)
+			t_success = MCU_stoui4(*t_uint_string, t_d);
+		
+		if (t_success)
+			t_success = t_list . Push(t_d);
+		
+		t_old_offset = t_new_offset + 1;
+	}
+	
+	if (t_success)
+		t_list . Take(r_list, r_count);
+	
+	return t_success;
+}
+
+static bool MCPropertyParseStringList(MCStringRef p_input, char_t p_delimiter, uindex_t& r_count, MCStringRef*& r_list)
+{
+    uindex_t t_length;
+	t_length = MCStringGetLength(p_input);
+    
+    if (t_length == 0)
+    {
+        r_count = 0;
+        return true;
+    }
+    
+	MCAutoArray<MCStringRef> t_list;
+    
+    bool t_success;
+    t_success = true;
+    
+	uindex_t t_old_offset;
+	t_old_offset = 0;
+	uindex_t t_new_offset;
+	t_new_offset = 0;
+	
+	while (t_success && t_old_offset <= t_length)
+	{
+		MCStringRef t_string;
+		
+		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareCaseless, t_new_offset))
+			t_new_offset = t_length;
+		
+        if (t_new_offset <= t_old_offset)
+            break;
+        
+		if (t_success)
+            t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), t_string);
+		
+		if (t_success)
+			t_success = t_list . Push(t_string);
+		
+		t_old_offset = t_new_offset + 1;
+	}
+	
+	if (t_success)
+		t_list . Take(r_list, r_count);
+	
+	return t_success;
+}
+
+static bool MCPropertyParsePointList(MCStringRef p_input, char_t p_delimiter, uindex_t& r_count, MCPoint*& r_list)
+{
+    uindex_t t_length;
+	t_length = MCStringGetLength(p_input);
+    
+    if (t_length == 0)
+    {
+        r_count = 0;
+        return true;
+    }
+    
+	MCAutoArray<MCPoint> t_list;
+    
+    bool t_success;
+    t_success = true;
+    
+	uindex_t t_old_offset;
+	t_old_offset = 0;
+	uindex_t t_new_offset;
+	t_new_offset = 0;
+	
+	while (t_success && t_old_offset <= t_length)
+	{
+		MCAutoStringRef t_point_string;
+        MCPoint t_point;
+		
+		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareCaseless, t_new_offset))
+			t_new_offset = t_length;
+		
+        if (t_new_offset <= t_old_offset)
+            break;
+        
+		if (t_success)
+            t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_point_string);
+
+        if (t_success)
+            MCU_stoi2x2(*t_point_string, t_point . x, t_point . y);
+        
+		if (t_success)
+			t_success = t_list . Push(t_point);
+		
+		t_old_offset = t_new_offset + 1;
+	}
+	
+	if (t_success)
+		t_list . Take(r_list, r_count);
+	
+	return t_success;
+}
+
 static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_table, Properties p_which, bool p_effective, bool p_array_prop)
 {
 	for(uindex_t i = 0; i < p_table -> size; i++)
@@ -2496,7 +2720,60 @@ Exec_stat MCObject::getprop(uint32_t p_part_id, Properties p_which, MCExecPoint&
 				}
 			}
 				break;
-
+                
+            case kMCPropertyTypeLinesOfString:
+            {
+				MCStringRef* t_value;
+                uindex_t t_count;
+				((void(*)(MCExecContext&, MCObjectPtr, uindex_t&, MCStringRef*&))t_info -> getter)(ctxt, t_object, t_count, t_value);
+				if (!ctxt . HasError())
+                {
+                    MCAutoStringRef t_output;
+                    if (MCPropertyFormatStringList(t_value, t_count, '\n', &t_output))
+                    {
+                        ep . setvalueref(*t_output);
+                        return ES_NORMAL;
+                    }
+				}
+			}
+				break;
+                
+            case kMCPropertyTypeLinesOfUInt:
+            case kMCPropertyTypeItemsOfUInt:
+            {
+				uinteger_t* t_value;
+                uindex_t t_count;
+				((void(*)(MCExecContext&, MCObjectPtr, uindex_t&, uinteger_t*&))t_info -> getter)(ctxt, t_object, t_count, t_value);
+				if (!ctxt . HasError())
+                {
+                    MCAutoStringRef t_output;
+                    char_t t_delimiter;
+                    t_delimiter = t_info -> type == kMCPropertyTypeLinesOfUInt ? '\n' : ',';
+                    if (MCPropertyFormatUIntList(t_value, t_count, t_delimiter, &t_output))
+                    {
+                        ep . setvalueref(*t_output);
+                        return ES_NORMAL;
+                    }
+				}
+			}
+				break;
+                
+            case kMCPropertyTypeLinesOfPoint:
+            {
+				MCPoint* t_value;
+                uindex_t t_count;
+				((void(*)(MCExecContext&, MCObjectPtr, uindex_t&, MCPoint*&))t_info -> getter)(ctxt, t_object, t_count, t_value);
+				if (!ctxt . HasError())
+                {
+                    MCAutoStringRef t_output;
+                    if (MCPropertyFormatPointList(t_value, t_count, '\n', &t_output))
+                    {
+                        ep . setvalueref(*t_output);
+                        return ES_NORMAL;
+                    }
+				}
+			}
+				break;
 		}
 		
 		return ctxt . Catch(0, 0);
@@ -2875,7 +3152,53 @@ Exec_stat MCObject::setprop(uint32_t p_part_id, Properties p_which, MCExecPoint&
 				if (!ctxt . HasError())
 					((void(*)(MCExecContext&, MCObjectPtr, MCRectangle*))t_info -> setter)(ctxt, t_object, t_value_ptr);	
 			}
-			break;	
+			break;
+                
+            case kMCPropertyTypeLinesOfString:
+            {
+				MCAutoStringRef t_input;
+                MCStringRef *t_value;
+                uindex_t t_count;
+                
+                if (!ep . copyasstringref(&t_input) || !MCPropertyParseStringList(*t_input, '\n', t_count, t_value))
+                    ctxt . LegacyThrow(EE_PROPERTY_NAS);
+                
+				if (!ctxt . HasError())
+                    ((void(*)(MCExecContext&, MCObjectPtr, uindex_t, MCStringRef*))t_info -> setter)(ctxt, t_object, t_count, t_value);
+			}
+				break;
+                
+            case kMCPropertyTypeLinesOfUInt:
+            case kMCPropertyTypeItemsOfUInt:
+            {
+                MCAutoStringRef t_input;
+				uinteger_t* t_value;
+                uindex_t t_count;
+                
+                char_t t_delimiter;
+                t_delimiter = t_info -> type == kMCPropertyTypeLinesOfUInt ? '\n' : ',';
+
+                if (!ep . copyasstringref(&t_input) || !MCPropertyParseUIntList(*t_input, t_delimiter, t_count, t_value))
+                    ctxt . LegacyThrow(EE_PROPERTY_NAN);
+                
+				if (!ctxt . HasError())
+                    ((void(*)(MCExecContext&, MCObjectPtr, uindex_t, uinteger_t*))t_info -> setter)(ctxt, t_object, t_count, t_value);
+			}
+				break;
+                
+            case kMCPropertyTypeLinesOfPoint:
+            {
+				MCAutoStringRef t_input;
+                MCPoint *t_value;
+                uindex_t t_count;
+                
+                if (!ep . copyasstringref(&t_input) || !MCPropertyParsePointList(*t_input, '\n', t_count, t_value))
+                    ctxt . LegacyThrow(EE_PROPERTY_NAS);
+                
+				if (!ctxt . HasError())
+                    ((void(*)(MCExecContext&, MCObjectPtr, uindex_t, MCPoint*))t_info -> setter)(ctxt, t_object, t_count, t_value);
+			}
+				break;
 
 			default:
 				ctxt . Unimplemented();

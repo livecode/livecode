@@ -724,3 +724,20 @@ void MCPlayer::SetTraversalOn(MCExecContext& ctxt, bool setting)
         qt_enablekeys((flags & F_TRAVERSAL_ON) != 0);
 #endif
 }
+
+void MCPlayer::GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks)
+{
+	if (getstate(CS_PREPARED))
+#ifdef FEATURE_QUICKTIME
+		if (qtstate == QT_INITTED)
+			qt_getenabledtracks(r_count, r_tracks);
+#ifdef TARGET_PLATFORM_WINDOWS
+		else
+			avi_getenabledtracks(r_count, r_tracks);
+#endif
+#elif defined(X11)
+    x11_getenabledtracks(r_count, r_tracks);
+#else
+    r_count = 0;
+#endif
+}

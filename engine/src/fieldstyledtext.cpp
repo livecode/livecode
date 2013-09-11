@@ -378,7 +378,7 @@ bool MCField::exportasstyledtext(uint32_t p_part_id, int32_t p_start_index, int3
 			t_flags |= kMCFieldExportLines;
 		doexport(t_flags, p_part_id, p_start_index, p_finish_index, export_styled_text, &t_context);
 
-		if (MCArrayCopyAndRelease(t_context . paragraphs_array, r_array))
+		if (MCArrayCopy(t_context . paragraphs_array, r_array))
 			return true;
 	}
 
@@ -747,7 +747,7 @@ void MCField::parsestyledtextarray(MCArrayRef p_styled_text, bool p_paragraph_br
 				t_runs_array = nil;
 			
 			// Begin paragraph with style
-			parsestyledtextappendparagraph(MCValueIsArray(t_style_entry) ? (MCArrayRef)t_style_entry : nil, *t_metadata, false, x_paragraphs);
+            parsestyledtextappendparagraph(MCValueIsArray(t_style_entry) ? (MCArrayRef)t_style_entry : nil, *t_metadata, false, x_paragraphs);
 					
 			// Finally, we are a sequence so loop through all the elements.
 			if (t_runs_array != nil)

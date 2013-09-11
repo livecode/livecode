@@ -457,6 +457,8 @@ public:
     virtual void SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting);
     virtual void SetTraversalOn(MCExecContext& ctxt, bool setting);
 
+    void GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks);
+    
 #ifdef FEATURE_QUICKTIME
 	Boolean qt_prepare(void);
 	Boolean qt_playpause(Boolean on);
@@ -483,6 +485,7 @@ public:
 	void qt_setloudness(uint2 loudn);
 	void qt_gettracks(MCExecPoint& ep);
 	void qt_getenabledtracks(MCExecPoint& ep);
+    void qt_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks);
 	Boolean qt_setenabledtracks(const MCString& s);
 	void qt_draw(MCDC *dc, const MCRectangle& dirty);
 	void qt_move(int2 x, int2 y);
@@ -546,6 +549,7 @@ public:
 	MCRectangle x11_getpreferredrect(void) {MCRectangle t_rect; t_rect.x = 0;t_rect.y = 0;t_rect.width=0;t_rect.height=0; return t_rect;}
 	void x11_gettracks(MCExecPoint& ep) {}
 	void x11_getenabledtracks(MCExecPoint& ep) {}
+    void x11_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks) {}
 	Boolean x11_setenabledtracks(const MCString& s) {return False;}
 	void x11_draw(MCDC *dc, const MCRectangle& dirty) {}
 	

@@ -143,9 +143,6 @@ enum MCPropertyType
 	kMCPropertyTypePoint,
 	kMCPropertyTypeInt16X2,
 	kMCPropertyTypeInt16X4,
-    kMCPropertyTypeItemsOfInt8,
-    kMCPropertyTypeLinesOfInt,
-    kMCPropertyTypeLinesOfPoint,
 	kMCPropertyTypeArray,
 	kMCPropertyTypeSet,
 	kMCPropertyTypeEnum,
@@ -156,6 +153,12 @@ enum MCPropertyType
 	kMCPropertyTypeOptionalString,
 	kMCPropertyTypeOptionalRectangle,
 	kMCPropertyTypeOptionalEnum,
+    kMCPropertyTypeLinesOfString,
+    kMCPropertyTypeLinesOfUInt,
+    kMCPropertyTypeLinesOfUIntX2,
+    kMCPropertyTypeLinesOfPoint,
+    kMCPropertyTypeItemsOfUInt,
+
 };
 
 struct MCPropertyInfo
@@ -185,9 +188,15 @@ template<typename O, typename A, void (O::*Method)(MCExecContext&, MCNameRef, A)
 	(static_cast<O *>(obj . object) ->* Method)(ctxt, name, arg);
 }
 
+template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, B, A)> inline void MCPropertyObjectListThunk(MCExecContext& ctxt, MCObjectPtr obj, B count, A arg)
+{
+	(static_cast<O *>(obj . object) ->* Method)(ctxt, count, arg);
+}
+
 #define MCPropertyObjectThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectPtr,typ))MCPropertyObjectThunk<obj,typ,&obj::mth>
 #define MCPropertyObjectPartThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectPtr,typ))MCPropertyObjectPartThunk<obj,typ,&obj::mth>
 #define MCPropertyObjectArrayThunkImp(obj, mth, name, typ) (void(*)(MCExecContext&,MCObjectPtr,MCNameRef,typ))MCPropertyObjectArrayThunk<obj,typ,&obj::mth>
+#define MCPropertyObjectListThunkImp(obj, mth, count, typ) (void(*)(MCExecContext&,MCObjectPtr,count,typ))MCPropertyObjectListThunk<obj,typ,count,&obj::mth>
 
 #define MCPropertyObjectThunkGetAny(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCValueRef&)
 #define MCPropertyObjectThunkGetBool(obj, mth) MCPropertyObjectThunkImp(obj, mth, bool&)
@@ -211,6 +220,11 @@ template<typename O, typename A, void (O::*Method)(MCExecContext&, MCNameRef, A)
 #define MCPropertyObjectThunkGetOptionalEnumType(obj, mth) MCPropertyObjectThunkImp(obj, mth, intenum_t*&)
 #define MCPropertyObjectThunkGetArray(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCArrayRef&)
 
+#define MCPropertyObjectListThunkGetLinesOfString(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, MCStringRef*&)
+#define MCPropertyObjectListThunkGetLinesOfUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, uinteger_t*&)
+#define MCPropertyObjectListThunkGetLinesOfPoint(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, MCPoint*&)
+#define MCPropertyObjectListThunkGetItemsOfUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, uinteger_t*&)
+
 #define MCPropertyObjectThunkSetAny(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCValueRef)
 #define MCPropertyObjectThunkSetBool(obj, mth) MCPropertyObjectThunkImp(obj, mth, bool)
 #define MCPropertyObjectThunkSetInt16(obj, mth) MCPropertyObjectThunkImp(obj, mth, integer_t)
@@ -232,6 +246,11 @@ template<typename O, typename A, void (O::*Method)(MCExecContext&, MCNameRef, A)
 #define MCPropertyObjectThunkSetOptionalCustomType(obj, mth, typ) MCPropertyObjectThunkImp(obj, mth, const typ*&)
 #define MCPropertyObjectThunkSetOptionalEnumType(obj, mth) MCPropertyObjectThunkImp(obj, mth, intenum_t*)
 #define MCPropertyObjectThunkSetArray(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCArrayRef)
+
+#define MCPropertyObjectListThunkSetLinesOfString(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t, MCStringRef*)
+#define MCPropertyObjectListThunkSetLinesOfUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t, uinteger_t*)
+#define MCPropertyObjectListThunkSetLinesOfPoint(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t, MCPoint*)
+#define MCPropertyObjectListThunkSetItemsOfUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t, uinteger_t*)
 
 #define MCPropertyObjectPartThunkGetAny(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCValueRef&)
 #define MCPropertyObjectPartThunkGetBool(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, bool&)
@@ -404,6 +423,12 @@ template<typename O, typename A, void (O::*Method)(MCExecContext&, MCNameRef, A)
 
 #define DEFINE_RW_OBJ_ARRAY_PROPERTY(prop, type, obj, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectArrayThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectArrayThunkSet##type(obj, Set##tag), false, true },
+
+#define DEFINE_RW_OBJ_LIST_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectListThunkSet##type(obj, Set##tag), false, false },
+
+#define DEFINE_RO_OBJ_LIST_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), nil, false, false },
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1053,7 +1078,7 @@ extern MCExecCustomTypeInfo *kMCInterfacePaletteSettingsTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceVisualEffectTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceVisualEffectArgumentTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceButtonIconTypeInfo;
-extern MCExecCustomTypeInfo *kMCInterfaceButtonHiliteTypeInfo;
+extern MCExecCustomTypeInfo *kMCInterfaceTriStateTypeInfo;
 
 extern MCExecMethodInfo *kMCInterfaceMakeCustomImagePaletteSettingsMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceMakeOptimalImagePaletteSettingsMethodInfo;
@@ -2024,6 +2049,7 @@ extern MCExecSetTypeInfo *kMCInterfaceButtonAcceleratorModifiersTypeInfo;
 ///////////
 
 extern MCExecEnumTypeInfo *kMCInterfaceFieldStyleTypeInfo;
+extern MCExecCustomTypeInfo *kMCInterfaceFlaggedRangesTypeInfo;
 
 ///////////
 
