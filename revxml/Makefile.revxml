@@ -9,7 +9,7 @@ CUSTOM_DEFINES=
 
 CUSTOM_INCLUDES=./src
 
-CUSTOM_LIBS=xml external z
+CUSTOM_LIBS=xml xslt external z
 
 CUSTOM_CCFLAGS=
 

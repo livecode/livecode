@@ -168,6 +168,10 @@
 			ReferencedProjectIdentifier="{8E776621-28FF-4FBF-A2F3-F4198EE9F7B7}"
 			RelativePathToProject=".\thirdparty\libxml\libxml.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{8E776621-28FF-4FBF-A2F3-F4598AEAF8B7}"
+			RelativePathToProject=".\thirdparty\libxslt\libxslt.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
