@@ -320,7 +320,7 @@ extern char *strlwr(char *str);
 
 
 // MDW-2013-06-22: [[ RevXmlXPath ]]
-#define REVXML_VERSIONSTRING "6.2.0"
+#define REVXML_VERSIONSTRING "6.5.0"
 
 void REVXML_Version(char *args[], int nargs, char **retstring,
 		   Bool *pass, Bool *error)
@@ -2765,7 +2765,14 @@ void XML_xsltLoadStylesheetFromFile(char *args[], int nargs, char **retstring, B
 
 	if (1 == nargs)
 	{
-		cur = xsltParseStylesheetFile((const xmlChar *)args[0]);
+		// MW-2013-09-11: [[ RevXmlXslt ]] Resolve the input path using the
+		//   standard LiveCode convention.
+		char *t_resolved_path;
+		t_resolved_path = os_path_resolve(args[0]);
+		char *t_native_path;
+		t_native_path = os_path_to_native(t_resolved_path);
+		
+		cur = xsltParseStylesheetFile((const xmlChar *)t_native_path);
 		if (NULL != cur)
 		{
 			CXMLDocument *newdoc = new CXMLDocument(cur);
@@ -2781,6 +2788,9 @@ void XML_xsltLoadStylesheetFromFile(char *args[], int nargs, char **retstring, B
 			// couldn't parse the stylesheet
 			*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
 		}
+		
+		free(t_native_path);
+		free(t_resolved_path);
 	}
 	// only one argument permitted
 	else
@@ -2870,7 +2880,11 @@ void XML_xsltApplyStylesheet(char *args[], int nargs, char **retstring, Bool *pa
 				int docID = atoi(args[1]);
 				CXMLDocument *xsltDocument = doclist.find(docID);
 				
-				cur = xsltDocument->GetXsltContext();
+				// MW-2013-09-11: [[ RevXmlXslt ]] Only try to fetch the xsltContext if
+				//   we found the document.
+				if (xsltDocument != NULL)
+					cur = xsltDocument -> GetXsltContext();
+				
 				if (NULL != cur)
 				{
 					if (nargs > 2)
@@ -2890,9 +2904,6 @@ void XML_xsltApplyStylesheet(char *args[], int nargs, char **retstring, Bool *pa
 
 					// free the xml document - we're done with it
 					xmlFreeDoc(res);
-
-					xsltCleanupGlobals();
-					xmlCleanupParser();
 				}
 				else
 					*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
@@ -2939,7 +2950,14 @@ void XML_xsltApplyStylesheetFile(char *args[], int nargs, char **retstring, Bool
 			xmlDocPtr xmlDoc = xmlDocument->GetDocPtr();
 			if (NULL != xmlDoc)
 			{
-				cur = xsltParseStylesheetFile((const xmlChar *)args[1]);
+				// MW-2013-09-11: [[ RevXmlXslt ]] Resolve the input path using the
+				//   standard LiveCode convention.
+				char *t_resolved_path;
+				t_resolved_path = os_path_resolve(args[1]);
+				char *t_native_path;
+				t_native_path = os_path_to_native(t_resolved_path);
+				
+				cur = xsltParseStylesheetFile((const xmlChar *)t_native_path);
 				if (NULL != cur)
 				{
 					if (nargs > 2)
@@ -2961,13 +2979,13 @@ void XML_xsltApplyStylesheetFile(char *args[], int nargs, char **retstring, Bool
 					xsltFreeStylesheet(cur);
 					// free the xml document - we're done with it
 					xmlFreeDoc(res);
-
-					xsltCleanupGlobals();
-					xmlCleanupParser();
 				}
 				// couldn't dereference the stylesheet document
 				else
 					*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
+				
+				free(t_native_path);
+				free(t_resolved_path);
 			}
 			// couldn't dereference the xml document
 			else
