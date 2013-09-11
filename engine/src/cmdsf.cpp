@@ -1696,14 +1696,21 @@ MCFilter::~MCFilter()
 #define OPEN_BRACKET '['
 #define CLOSE_BRACKET ']'
 
-Boolean MCFilter::match(char *s, char *p, Boolean casesensitive)
+Boolean MCFilter::match(MCStringRef s, MCStringRef p, Boolean casesensitive)
 {
 	uint1 scc, c;
+    uindex_t i_s = 0;
+    uindex_t i_p = 0;
+    MCStringRef t_head_s = nil;
+    MCStringRef t_head_p = nil;
 
-	while (*s)
+	while (!MCStringIsEmpty(s))
 	{
-		scc = *s++;
-		c = *p++;
+        scc = MCStringGetNativeCharAtIndex(s, 0);
+        /* UNCHECKED */ MCStringDivideAtIndex(s, i_s++, t_head_s, s);
+        c = MCStringGetNativeCharAtIndex(p, 0);
+        /* UNCHECKED */ MCStringDivideAtIndex(p, i_p++, t_head_p, p);
+
 		switch (c)
 		{
 		case OPEN_BRACKET:
@@ -1712,20 +1719,23 @@ Boolean MCFilter::match(char *s, char *p, Boolean casesensitive)
 				int lc = -1;
 				int notflag = 0;
 
-				if (*p == '!' )
+				if (MCStringGetNativeCharAtIndex(p, 0) == '!' )
 				{
 					notflag = 1;
-					p++;
+					/* UNCHECKED */ MCStringDivideAtIndex(p, i_p++, t_head_p, p);
 				}
-				while (*p)
+				while (!MCStringIsEmpty(p))
 				{
-					c = *p++;
+					c = MCStringGetNativeCharAtIndex(p, 0);
+                    /* UNCHECKED */ MCStringDivideAtIndex(p, i_p++, t_head_p, p);
 					if (c == CLOSE_BRACKET && lc >= 0)
 						return ok ? match(s, p, casesensitive) : 0;
 					else
-						if (c == '-' && lc >= 0 && *p != CLOSE_BRACKET)
+						if (c == '-' && lc >= 0 && MCStringGetNativeCharAtIndex(p, 0) != CLOSE_BRACKET)
 						{
-							c = *p++;
+							c = MCStringGetNativeCharAtIndex(p, 0);
+                            /* UNCHECKED */ MCStringDivideAtIndex(p, i_p++, t_head_p, p);
+                            
 							if (notflag)
 							{
 								if (lc > scc || scc > c)
@@ -1759,19 +1769,22 @@ Boolean MCFilter::match(char *s, char *p, Boolean casesensitive)
 		case '?':
 			break;
 		case '*':
-			while (*p == '*')
-				p++;
-			if (*p == 0)
+			while (MCStringGetNativeCharAtIndex(p, 0) == '*')
+				/* UNCHECKED */ MCStringDivideAtIndex(p, i_p++, t_head_p, p);
+			if (MCStringGetNativeCharAtIndex(p, 0) == 0)
 				return True;
-			--s;
-			c = *p;
-			while (*s)
-				if ((casesensitive ? c != *s : MCS_tolower(c) != MCS_tolower(*s))
-				        && *p != '?' && *p != OPEN_BRACKET)
-					s++;
+			/* UNCHECKED */ MCStringDivideAtIndex(s, --i_s, t_head_s, s);
+			c = MCStringGetNativeCharAtIndex(p, 0);
+			while (MCStringGetNativeCharAtIndex(s, 0))
+				if ((casesensitive ? c != MCStringGetNativeCharAtIndex(s, 0) : MCS_tolower(c) != MCS_tolower(MCStringGetNativeCharAtIndex(s, 0)))
+				        && MCStringGetNativeCharAtIndex(p, 0) != '?' && MCStringGetNativeCharAtIndex(p, 0) != OPEN_BRACKET)
+					/* UNCHECKED */ MCStringDivideAtIndex(s, i_s++, t_head_s, s);
 				else
-					if (match(s++, p, casesensitive))
+                {
+                    /* UNCHECKED */ MCStringDivideAtIndex(s, i_s++, t_head_s, s);
+					if (match(s, p, casesensitive))
 						return True;
+                }
 			return False;
 		case 0:
 			return scc == 0;
@@ -1787,16 +1800,20 @@ Boolean MCFilter::match(char *s, char *p, Boolean casesensitive)
 			break;
 		}
 	}
-	while (*p == '*')
-		p++;
-	return *p == 0;
+	while (MCStringGetNativeCharAtIndex(p, 0) == '*')
+		/* UNCHECKED */ MCStringDivideAtIndex(p, i_p++, t_head_p, p);
+    
+    MCValueRelease(t_head_p);
+    MCValueRelease(t_head_s);
+    
+	return MCStringGetNativeCharAtIndex(p, 0) == 0;
 }
 
-char *MCFilter::filterlines(char *sstring, char *pstring,
+char *MCFilter::filterlines(MCStringRef sstring, MCStringRef pstring,
                             Boolean casesensitive)
 {
 	uint4 offset = 0;
-	char *dstring = new char[strlen(sstring) + 1];
+	char *dstring = new char[MCStringGetLength(sstring) + 1];
 	char *line;
 
 	// OK-2010-01-11: Bug 7649 - Filter command was incorrectly removing empty lines.
@@ -1807,7 +1824,7 @@ char *MCFilter::filterlines(char *sstring, char *pstring,
 
 	// Duplicate input string because the algorithm needs to change it.
 	char *t_string;
-	t_string = strdup(sstring);
+	t_string = strdup(MCStringGetCString(sstring));
 
 	// Keep a copy of the original pointer so it can be freed
 	char *t_original_string;
@@ -1840,7 +1857,9 @@ char *MCFilter::filterlines(char *sstring, char *pstring,
 			*t_return = '\0';
 
 		line = t_string;
-		if (match(line, pstring, casesensitive) != out)
+        MCAutoStringRef t_line;
+        /* UNCHECKED */ MCStringCreateWithCString(line, &t_line);
+		if (match(*t_line, pstring, casesensitive) != out)
 		{
 			if (offset)
 				dstring[offset++] = '\n';
