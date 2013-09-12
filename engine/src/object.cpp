@@ -2869,7 +2869,9 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 				return stat;
 			if ((stat = IO_read_uint2(&fontstyle, stream)) != IO_NORMAL)
 				return stat;
-			setfontattrs(fontname, fontsize, fontstyle);
+            MCAutoStringRef t_fontname;
+            /* UNCHECKED */ MCStringCreateWithCString(fontname, &t_fontname);
+			setfontattrs(*t_fontname, fontsize, fontstyle);
 			delete fontname;
 		}
 	}
@@ -4443,10 +4445,10 @@ void MCObject::setfontattrs(uint32_t p_which, MCNameRef p_textfont, uint2 p_text
 
 // MW-2012-02-17: [[ LogFonts ]] Set the logical font attrs to the given values
 //   using a c-string for the name.
-void MCObject::setfontattrs(const char *p_textfont, uint2 p_textsize, uint2 p_textstyle)
+void MCObject::setfontattrs(MCStringRef p_textfont, uint2 p_textsize, uint2 p_textstyle)
 {
 	MCAutoNameRef t_textfont_name;
-	/* UNCHECKED */ t_textfont_name . CreateWithCString(p_textfont);
+	/* UNCHECKED */ MCNameCreate(p_textfont, t_textfont_name);
 	setfontattrs(FF_HAS_ALL_FATTR, t_textfont_name, p_textsize, p_textstyle);
 }
 

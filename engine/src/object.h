@@ -553,7 +553,7 @@ public:
 	
 	// MW-2012-02-17: [[ LogFonts ]] Method to set the font-attrs - used to
 	//   set the dispatcher attrs and by the HC import code.
-	void setfontattrs(const char *textfont, uint2 textsize, uint2 textstyle);
+	void setfontattrs(MCStringRef textfont, uint2 textsize, uint2 textstyle);
 
 	// MW-2012-02-17: [[ LogFonts ]] Fetch the (effective) font attrs for the
 	//   object.
