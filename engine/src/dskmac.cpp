@@ -6863,6 +6863,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 //            TextConvert(const void *p_string, uint32_t p_string_length, void *r_buffer, uint32_t p_buffer_length, uint32_t p_from_charset, uint32_t p_to_charset)
             //            (const char *s, uint4 len, char *d, uint4 destbufferlength, uint4 &destlen, uint1 charset)
             char* t_dest_ptr = (char*) r_buffer;
+            char* t_src_ptr = (char*)p_string;
             ScriptCode fscript = MCS_charsettolangid(p_to_charset);
             //we cache unicode convertors for speed
             if (!p_buffer_length)
@@ -6891,7 +6892,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             //   we go into an infinite loop when doing things like uniDecode("abc")
             while(p_string_length > 1)
             {
-                ConvertFromUnicodeToText(unicodeconvertors[fscript], p_string_length, (UniChar *)p_string,
+                ConvertFromUnicodeToText(unicodeconvertors[fscript], p_string_length, (UniChar *)t_src_ptr,
                                          kUnicodeLooseMappingsMask
                                          | kUnicodeStringUnterminatedBit
                                          | kUnicodeUseFallbacksBit, 0, NULL, 0, NULL,
@@ -6906,7 +6907,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 
                 p_string_length -= processedbytes;
                 t_return_size += outlength;
-                p_string_length += processedbytes;
+                t_src_ptr += processedbytes;
                 t_dest_ptr += outlength;
             }
         }
@@ -6933,7 +6934,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 CreateTextToUnicodeInfoByEncoding(scriptEncoding, texttounicodeconvertor);
             }
             ByteCount processedbytes, outlength;
-            ConvertFromTextToUnicode(*texttounicodeconvertor, p_string_length, (LogicalAddress) p_string_length,
+            ConvertFromTextToUnicode(*texttounicodeconvertor, p_string_length, (LogicalAddress) p_string,
                                      kUnicodeLooseMappingsMask
                                      | kUnicodeUseFallbacksMask, 0, NULL, 0, NULL,
                                      p_buffer_length, &processedbytes,
