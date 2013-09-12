@@ -970,6 +970,8 @@ public:
         MClowercasingtable = new uint1[256];
         for(uint4 i = 0; i < 256; ++i)
             MClowercasingtable[i] = (uint1)tolower((uint1)i);
+
+        return true;
     }
 
     virtual void Finalize(void)
@@ -1520,7 +1522,7 @@ public:
         return umask(p_mask);
     }
 
-    virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map, uint32_t p_offset)
+    virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map)
     {
 #ifdef /* MCS_open_dsk_lnx */ LEGACY_SYSTEM
         MCAutoStringRef t_resolved_path;
@@ -1582,11 +1584,11 @@ public:
             struct stat64 t_buf;
             if (t_fd != -1 && !fstat64(t_fd, &t_buf))
             {
-                uint4 t_len = t_buf.st_size - p_offset;
+                uint4 t_len = t_buf.st_size;
                 if (t_len != 0)
                 {
                     char *t_buffer = (char *)mmap(NULL, t_len, PROT_READ, MAP_SHARED,
-                                                t_fd, p_offset);
+                                                t_fd, 0);
                     if ((int)t_buffer != -1)
                     {
                         t_handle = new MCMemoryMappedFileHandle(t_fd, t_buffer, t_len);
@@ -1647,7 +1649,7 @@ public:
         return t_handle;
     }
 
-    virtual IO_handle OpenDevice(MCStringRef p_path, intenum_t p_mode, uint32_t p_offset)
+    virtual IO_handle OpenDevice(MCStringRef p_path, intenum_t p_mode)
     {
         IO_handle t_handle = NULL;
         FILE *t_fptr = NULL;
