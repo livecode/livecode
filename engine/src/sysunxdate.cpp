@@ -250,12 +250,12 @@ const MCDateTimeLocale *MCS_getdatetimelocale(void)
 	if (s_datetime_locale == NULL)
 	{
 		char *old_locale, *stored_locale;
-		old_locale = setlocale(LC_ALL, NULL);		// Query the current locale
+		old_locale = setlocale(LC_TIME, NULL);		// Query the current locale
 		stored_locale = strdup(old_locale);
 	
-		setlocale(LC_ALL, "");						// Set the locale using the LANG environment
+		setlocale(LC_TIME, "");						// Set the locale using the LANG environment
 		cache_locale();
-		setlocale(LC_ALL, stored_locale);			// Restore the locale
+		setlocale(LC_TIME, stored_locale);			// Restore the locale
 		free(stored_locale);
 	}
 	

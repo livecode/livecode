@@ -65,19 +65,19 @@ int main(int argc, char *argv[], char *envp[])
 	}
 	
 	// The C library string functions should obey the $LANG encoding for now
-	setlocale(LC_CTYPE, "");
+	setlocale(LC_ALL, "");
 	
 	// Which encoding was discovered?
 	bool t_is_utf8;
 	if (strcasecmp(encoding, "UTF-8") == 0 || strcasecmp(encoding, "UTF8") == 0)
 		t_is_utf8 = true;
-	else if (strcasecmp(encoding, "ISO-8859-1") == 0)
+	else if (strcasecmp(encoding, "ISO-8859-1") == 0 || strcasecmp(encoding, "ISO8859-1") == 0)
 		t_is_utf8 = false;
 	else
 	{
 		/* TODO */
 		// Support more encodings (if required) via iconv
-		fprintf(stderr, "%s: unknown or unsupported character encoding ($LANG=%s) ($LC_ALL=%)",
+		fprintf(stderr, "%s: unknown or unsupported character encoding ($LANG=%s) ($LC_ALL=%s)\n",
 				argv[0], getenv("LANG"), getenv("LC_ALL"));
 	}
 	

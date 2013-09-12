@@ -4612,7 +4612,13 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (!IsInteractiveConsole(0))
             MCS_mac_nodelay(0);
         
-        setlocale(LC_ALL, MCnullstring);
+		// Internally, LiveCode assumes sorting orders etc are those of en_US.
+		// Additionally, the "native" string encoding for Mac is MacRoman
+		// (even though the BSD components of the system are likely UTF-8).
+		const char *t_internal_locale = "en_US";
+		setlocale(LC_ALL, "");
+		setlocale(LC_CTYPE, t_internal_locale);
+		setlocale(LC_COLLATE, t_internal_locale);
         
         _CurrentRuneLocale->__runetype[202] = _CurrentRuneLocale->__runetype[201];
         

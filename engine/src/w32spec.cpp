@@ -82,8 +82,13 @@ void MCS_init()
 	IO_stderr = new IO_header((MCWinSysHandle)GetStdHandle(STD_ERROR_HANDLE), NULL, 0, 0);
 	IO_stderr -> is_pipe = handle_is_pipe(IO_stderr -> fhandle);
 
-	setlocale(LC_CTYPE, MCnullstring);
-	setlocale(LC_COLLATE, MCnullstring);
+	// Internally, LiveCode assumes sorting orders etc are those of en_US.
+	// Additionally, the "native" string encoding for Linux is CP1252
+	// (even if the Windows system is using something different).
+	const char *t_internal_locale = "English_United States.1252";
+	setlocale(LC_ALL, "");
+	setlocale(LC_CTYPE, t_internal_locale);
+	setlocale(LC_COLLATE, t_internal_locale);
 
 	// MW-2004-11-28: The ctype array seems to have changed in the latest version of VC++
 	((unsigned short *)_pctype)[160] &= ~_SPACE;
