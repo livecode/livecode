@@ -1691,11 +1691,8 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native) = 0;
 	virtual bool PathFromNative(MCStringRef p_native, MCStringRef& r_path) = 0;
 	virtual bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved_path) = 0;
-    
-	///* LEGACY */ char *ResolvePath(const char *p_rev_path);
 	virtual bool ResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved_path) = 0;
-	///* LEGACY */ char *ResolveNativePath(const char *p_rev_path);
-	
+    
 	virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
     {
 #ifdef /* MCS_longfilepath_dsk_w32 */ LEGACY_SYSTEM

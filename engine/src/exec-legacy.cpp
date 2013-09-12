@@ -384,7 +384,11 @@ void MCLegacyExecDoMenu(MCExecContext& ctxt, MCStringRef p_option)
 		}
 	}
 	if (t_success)
-		ctxt . GetObject()->domess(domenu_table[size].command);
+    {
+        MCAutoStringRef t_command;
+        /* UNCHECKED */ MCStringCreateWithCString(domenu_table[size].command, &t_command);
+		ctxt . GetObject()->domess(*t_command);
+    }
 	else
 	{
 		MCAutoStringRef t_result;

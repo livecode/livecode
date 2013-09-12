@@ -220,7 +220,9 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 
 		// Execute the startup script at this point since we have loaded
 		// all stacks.
-		self -> stack -> domess(t_script);
+        MCAutoStringRef t_script_str;
+        /* UNCHECKED */ MCStringCreateWithCString(t_script, &t_script_str);
+		self -> stack -> domess(*t_script_str);
 		
 		delete t_script;
 	}
