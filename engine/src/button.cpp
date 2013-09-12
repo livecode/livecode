@@ -4149,18 +4149,6 @@ void MCButton::switchunicode(bool p_to_unicode)
 		m_font_flags &= ~FF_HAS_UNICODE;
 }
 
-// MW-2012-02-16: [[ IntrinsicUnicode ]] This method returns 'true' if its possible
-//   to convert the given string to native without loss of information.
-static bool canconverttonative(const char *p_chars, uint32_t p_char_count)
-{
-	MCExecPoint ep(nil, nil, nil);
-	ep . setsvalue(MCString(p_chars, p_char_count));
-	ep . utf16tonative();
-	ep . nativetoutf16();
-	return ep . getsvalue() . getlength() == p_char_count &&
-				memcmp(ep . getsvalue() . getstring(), p_chars, p_char_count) == 0;
-}
-
 // MW-2012-02-16: [[ IntrinsicUnicode ]] This method attempts to coerce the text in
 //   button to native, but only if no information is lost as a result.
 void MCButton::trytochangetonative(void)
