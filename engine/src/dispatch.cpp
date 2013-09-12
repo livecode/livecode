@@ -739,13 +739,12 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 			stacks->setparent(this);
 			stacks->setname_cstring("revScript");
 			uint4 size = (uint4)MCS_fsize(stream);
-			char *script = new char[size + 2];
-			script[size] = '\n';
-			script[size + 1] = '\0';
-			if (IO_read(script, size, stream) != IO_NORMAL
-			        || !stacks->setscript(script))
+            MCAutoStringRef t_script;
+            /* UNCHECKED */ MCStringAppendNativeChar(&t_script, '\n');
+			
+			if (IO_read(strdup(MCStringGetCString(*t_script)), size, stream) != IO_NORMAL
+			        || !stacks->setscript(*t_script))
 			{
-				delete script;
 				return IO_ERROR;
 			}
 		}

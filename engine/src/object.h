@@ -587,6 +587,8 @@ public:
 	Exec_stat message_with_args(MCNameRef name, const MCString &v1, const MCString &v2, const MCString& v3, const MCString& v4);
 	Exec_stat message_with_valueref_args(MCNameRef name, MCValueRef v1);
 	Exec_stat message_with_valueref_args(MCNameRef name, MCValueRef v1, MCValueRef v2);
+    Exec_stat message_with_valueref_args(MCNameRef name, MCValueRef v1, MCValueRef v2, MCValueRef v3);
+    Exec_stat message_with_valueref_args(MCNameRef name, MCValueRef v1, MCValueRef v2, MCValueRef v3, MCValueRef v4);
 	Exec_stat message_with_args(MCNameRef name, int4 v1);
 	Exec_stat message_with_args(MCNameRef name, int4 v1, int4 v2);
 	Exec_stat message_with_args(MCNameRef name, int4 v1, int4 v2, int4 v3);
