@@ -66,16 +66,6 @@ bool IO_findfile(MCNameRef p_name, uindex_t& r_index)
 	return IO_findstream(MCfiles, MCnfiles, p_name, r_index);
 }
 
-/* LEGACY */ Boolean IO_findfile(const char *name, uint2 &i)
-{
-	MCNewAutoNameRef t_name;
-	/* UNCHECKED */ MCNameCreateWithCString(name, &t_name);
-	uindex_t t_index;
-	bool t_found = IO_findfile(*t_name, t_index) ? True : False;
-	i = t_index;
-	return t_found;
-}
-
 Boolean IO_closefile(MCNameRef name)
 {
 	uindex_t index;
@@ -106,16 +96,6 @@ bool IO_findprocess(MCNameRef p_name, uindex_t& r_index)
 	/* TODO - update processes to use MCNameRef */
 	IO_cleanprocesses();
 	return IO_findstream(MCprocesses, MCnprocesses, p_name, r_index);
-}
-
-/* LEGACY */ Boolean IO_findprocess(const char *name, uint2 &i)
-{
-	MCNewAutoNameRef t_name;
-	/* UNCHECKED */ MCNameCreateWithCString(name, &t_name);
-	uindex_t t_index;
-	bool t_found = IO_findprocess(*t_name, t_index) ? True : False;
-	i = t_index;
-	return t_found;
 }
 
 void IO_cleanprocesses()
