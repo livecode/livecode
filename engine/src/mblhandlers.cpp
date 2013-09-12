@@ -4923,7 +4923,7 @@ Exec_stat MCHandleBuildInfo(void *context, MCParameter *p_parameters)
 
 //////////////////////////////////////////////////////////////////////////////////////
 
-static MCMediaType MCMediaTypeFromCString(const char *p_string)
+static MCMediaType MCMediaTypeFromCString(MCStringRef p_string)
 {
 #ifdef /* MCMediaTypeFromCString */ LEGACY_EXEC
     const char *t_ptr = p_string;
@@ -5097,10 +5097,10 @@ Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameters)
 	}
 	if (t_media_types == 0)
 	{
-		t_media_types = MCMediaTypeFromCString("podcast, songs, audiobook");;
+		t_media_types = MCMediaTypeFromCString(MCSTR("podcast, songs, audiobook"));;
 #ifdef __IPHONE_5_0
 		if (MCmajorosversion >= 500)
-			t_media_types += MCMediaTypeFromCString("movies, tv, videoPodcasts, musicVideos, videoITunesU");;
+			t_media_types += MCMediaTypeFromCString(MCSTR("movies, tv, videoPodcasts, musicVideos, videoITunesU"));;
 #endif
 	}
     MCExecContext ctxt(ep);

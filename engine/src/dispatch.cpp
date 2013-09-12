@@ -1000,12 +1000,12 @@ void send_relaunch(void)
 #ifdef FEATURE_RELAUNCH_SUPPORT
 	bool t_do_relaunch;
 	t_do_relaunch = false;
-	const char *t_id;
+	MCAutoStringRef t_id;
 
-	t_do_relaunch = MCModeHandleRelaunch(t_id);
+	t_do_relaunch = MCModeHandleRelaunch(&t_id);
 
 	if (t_do_relaunch)
-		if (relaunch_startup(t_id))
+		if (relaunch_startup(MCStringGetCString(*t_id)))
 			exit(0);
 #endif
 }

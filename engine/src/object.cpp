@@ -1813,11 +1813,11 @@ void MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
 		style = m_font_attrs -> style;
 }
 
-void MCObject::getfontattsnew(const char *& fname, uint2 &size, uint2 &style)
+void MCObject::getfontattsnew(MCStringRef & fname, uint2 &size, uint2 &style)
 {
 	MCNameRef t_fname_name;
 	getfontattsnew(t_fname_name, size, style);
-	fname = MCNameGetCString(t_fname_name);
+	fname = MCNameGetString(t_fname_name);
 }
 
 MCNameRef MCObject::gettextfont(void)

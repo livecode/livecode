@@ -77,10 +77,10 @@ struct InitializeFiberContext
 
 static void DisplayStartupErrorAndExit(void)
 {
-	const char *mcap;
-	const char *mtext;
-	MCModeGetStartupErrorMessage(mcap, mtext);
-	MessageBoxA(HWND_DESKTOP, mtext, mcap, MB_APPLMODAL | MB_OK);
+	MCStringRef mcap;
+	MCStringRef mtext;
+	MCModeGetStartupErrorMessage(&mcap, &mtext);
+	MessageBoxA(HWND_DESKTOP, MCStringGetCString(mtext), MCStringGetCString(mcap), MB_APPLMODAL | MB_OK);
 	exit(-1);
 }
 

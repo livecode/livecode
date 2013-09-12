@@ -2449,16 +2449,13 @@ void MCObject::GetTextFont(MCExecContext& ctxt, MCStringRef& r_font)
 {
 	if ((m_font_flags & FF_HAS_TEXTFONT) == 0)
 		return;
-	else
-	{
-		uint2 fontsize, fontstyle;
-		const char *fontname;
-		getfontattsnew(fontname, fontsize, fontstyle);
-		if (MCStringCreateWithCString(fontname, r_font))
-			return;
-	}
 
-	ctxt . Throw();
+    uint2 fontsize, fontstyle;
+    MCAutoStringRef fontname;
+    getfontattsnew(&fontname, fontsize, fontstyle);
+    r_font = MCValueRetain(*fontname);
+		
+	
 }
 
 void MCObject::SetTextFont(MCExecContext& ctxt, MCStringRef font)
@@ -2533,16 +2530,12 @@ void MCObject::GetEffectiveTextFont(MCExecContext& ctxt, MCStringRef& r_font)
 			MCdispatcher -> GetDefaultTextFont(ctxt, r_font);
 		return;
 	}
-	else
-	{
-		uint2 fontsize, fontstyle;
-		const char *fontname;
-		getfontattsnew(fontname, fontsize, fontstyle);
-		if (MCStringCreateWithCString(fontname, r_font))
-			return;
-	}
 
-	ctxt . Throw();
+    uint2 fontsize, fontstyle;
+    MCAutoStringRef fontname;
+    getfontattsnew(&fontname, fontsize, fontstyle);
+    r_font = MCValueRetain(*fontname);
+
 }
 
 void MCObject::GetTextSize(MCExecContext& ctxt, uinteger_t*& r_size)
@@ -2551,8 +2544,8 @@ void MCObject::GetTextSize(MCExecContext& ctxt, uinteger_t*& r_size)
 		return;
 
 	uint2 fontsize, fontstyle;
-	const char *fontname;
-	getfontattsnew(fontname, fontsize, fontstyle);
+	MCAutoStringRef fontname;
+	getfontattsnew(&fontname, fontsize, fontstyle);
 	uinteger_t size;
 	size = (uinteger_t)fontsize;
 	*r_size = size;
@@ -2605,8 +2598,8 @@ void MCObject::GetEffectiveTextSize(MCExecContext& ctxt, uinteger_t& r_size)
 	else
 	{
 		uint2 fontsize, fontstyle;
-		const char *fontname;
-		getfontattsnew(fontname, fontsize, fontstyle);
+		MCAutoStringRef fontname;
+		getfontattsnew(&fontname, fontsize, fontstyle);
 		r_size = (uinteger_t)fontsize;
 	}
 }
@@ -2620,8 +2613,8 @@ void MCObject::GetTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& r_style)
     }
 
 	uint2 fontsize, fontstyle;
-	const char *fontname;
-	getfontattsnew(fontname, fontsize, fontstyle);
+	MCAutoStringRef fontname;
+	getfontattsnew(&fontname, fontsize, fontstyle);
 	r_style . style = fontstyle;
 }
 
@@ -2670,8 +2663,8 @@ void MCObject::GetEffectiveTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& 
 	else
 	{
 		uint2 fontsize, fontstyle;
-		const char *fontname;
-		getfontattsnew(fontname, fontsize, fontstyle);
+		MCAutoStringRef fontname;
+		getfontattsnew(&fontname, fontsize, fontstyle);
 		r_style . style = fontstyle;
 	}
 }
