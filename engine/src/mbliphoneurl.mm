@@ -394,7 +394,7 @@ static void do_post_url(void *p_ctxt)
 	{
 		[t_request setHTTPMethod: @"POST"];
 		[t_request setValue: @"application/x-www-form-urlencoded" forHTTPHeaderField: @"Content-Type"];
-		t_data = [NSData dataWithBytes: ctxt -> data length: ctxt -> length];
+		t_data = [NSData dataWithBytes: (byte_t*)MCStringGetNativeCharPtr(ctxt -> data) length: ctxt -> length];
 		t_success = (t_data != nil);
 		if (t_success)
 			[t_request setHTTPBody: t_data];
@@ -447,6 +447,7 @@ bool MCSystemPostUrl(MCStringRef p_url, MCStringRef p_data, uint32_t p_length, M
 	post_url_t ctxt;
 	ctxt . url = MCStringGetCString(p_url);
 
+    ctxt . data = p_data;
 	ctxt . length = p_length;
 	ctxt . callback = p_callback;
 	ctxt . context = p_context;
@@ -703,16 +704,18 @@ static void do_put_url(void *p_ctxt)
 	ctxt -> success = t_success;
 }
 
-bool MCSystemPutUrl(const char *p_url, const void *p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context)
+bool MCSystemPutUrl(MCStringRef p_url, MCStringRef p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context)
 {
 	put_url_t ctxt;
-	ctxt . url = p_url;
+	ctxt . url = strclone(MCStringGetCString(p_url));
 	ctxt . data = p_data;
 	ctxt . length = p_length;
 	ctxt . callback = p_callback;
 	ctxt . context = p_context;
 	
 	MCIPhoneRunOnMainFiber(do_put_url, &ctxt);
+    
+    delete[] ctxt . url;
 	
 	return ctxt . success;
 }

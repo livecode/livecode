@@ -381,10 +381,9 @@ IO_stat MCDispatch::startup(void)
 	extern IO_handle android_get_mainstack_stream();
 	t_stream = android_get_mainstack_stream();
 #else
-	char *t_path;
-	MCCStringFormat(t_path, "%.*s/iphone_test.rev", strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd));
-	t_stream = MCS_open(t_path, IO_READ_MODE, False, False, 0);
-	MCCStringFree(t_path);
+	MCAutoStringRef t_path;
+	MCStringFormat(&t_path, "%.*s/iphone_test.rev", strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd));
+	t_stream = MCS_open(*t_path, kMCSOpenFileModeRead, False, False, 0);
 #endif
 
 	if (t_stream == NULL)

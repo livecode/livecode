@@ -37,19 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern MCSystemInterface *MCMobileCreateSystem(void);
-
-extern void MCS_common_init(void);
-
-void MCS_init(void)
-{
-	MCsystem = MCMobileCreateSystem();
-
-	MCS_common_init();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCS_log(MCStringRef p_message)
 {
 	MCsystem -> Debug(p_message);
@@ -62,43 +49,46 @@ static bool is_whitespace(char p_char)
 	return p_char == ' ' || p_char == '\n';
 }
 
-bool MCSystemStripUrl(const char *p_url, char *&r_stripped)
+bool MCSystemStripUrl(MCStringRef p_url, MCStringRef &r_stripped)
 {
 	uindex_t t_start = 0;
-	uindex_t t_end = MCCStringLength(p_url);
-	while (t_start < t_end && is_whitespace(p_url[t_start]))
+	uindex_t t_end = MCStringGetLength(p_url);
+	while (t_start < t_end && is_whitespace(MCStringGetNativeCharAtIndex(p_url, t_start)))
 		t_start++;
-	while (t_end > t_start && is_whitespace(p_url[t_end - 1]))
+	while (t_end > t_start && is_whitespace(MCStringGetNativeCharAtIndex(p_url, t_end - 1)))
 		t_end--;
 	
-	return MCCStringCloneSubstring(p_url + t_start, t_end - t_start, r_stripped);
+	return MCStringCopySubstring(p_url, MCRangeMake(t_start, t_end - t_start), r_stripped);
 }
 
-bool MCSystemProcessUrl(const char *p_url, MCSystemUrlOperation p_operations, char *&r_processed_url)
+bool MCSystemProcessUrl(MCStringRef p_url, MCSystemUrlOperation p_operations, MCStringRef &r_processed_url)
 {
 	bool t_success = true;
 	
-	char *t_processed = nil;
+	MCStringRef t_processed;
+    t_processed = nil;
 	
 	if (t_success && (p_operations & kMCSystemUrlOperationStrip))
 	{
-		char *t_stripped = nil;
-		t_success = MCSystemStripUrl(t_processed != nil ? t_processed : p_url, t_stripped);
+		MCAutoStringRef t_stripped;
+		t_success = MCSystemStripUrl(t_processed != nil ? t_processed : p_url, &t_stripped);
 		if (t_success)
 		{
-			MCCStringFree(t_processed);
-			t_processed = t_stripped;
+            if (t_processed != nil)
+                MCValueRelease(t_processed);
+            
+			t_processed = MCValueRetain(*t_stripped);
 		}
 	}
 	
 	// if no processing, just return a copy of the input url
 	if (t_success && t_processed == nil)
-		t_success = MCCStringClone(p_url, t_processed);
+		t_success = MCStringCopy(p_url, t_processed);
 	
 	if (t_success)
 		r_processed_url = t_processed;
 	else
-		MCCStringFree(t_processed);
+		MCValueRelease(t_processed);
 	
 	return t_success;
 }
@@ -284,10 +274,10 @@ static bool MCS_geturl_callback(void *p_context, MCSystemUrlStatus p_status, con
 	return true;
 }
 
-void MCS_geturl(MCObject *p_target, const char *p_url)
+void MCS_geturl(MCObject *p_target, MCStringRef p_url)
 {
 	MCSGetUrlState t_state;
-	t_state . url = p_url;
+	t_state . url = strclone(MCStringGetCString(p_url));
 	t_state . status = kMCSystemUrlStatusNone;
 	t_state . object = p_target -> gethandle();
 	
@@ -315,6 +305,9 @@ void MCS_geturl(MCObject *p_target, const char *p_url)
 	else
         MCresult -> setvalueref(t_state . error);
 
+    if (t_state . url != nil)
+        delete[] t_state . url;
+    
     if (t_state . error != nil)
         MCValueRelease(t_state . error);
 	
@@ -471,35 +464,33 @@ static bool MCS_loadurl_callback(void *p_context, MCSystemUrlStatus p_status, co
 	return true;
 }
 
-void MCS_loadurl(MCObject *p_object, const char *p_url, const char *p_message)
+void MCS_loadurl(MCObject *p_object, MCStringRef p_url, MCNameRef p_message)
 {
 	bool t_success = true;
 	MCSLoadUrlState *t_state = nil;
-	char *t_processed = nil;
-	MCNameRef t_message = nil;
+	MCAutoStringRef t_processed;
 	t_success = MCMemoryNew(t_state) &&
-			MCSystemProcessUrl(p_url, kMCSystemUrlOperationStrip, t_processed) &&
-			MCNameCreateWithCString(p_message, t_message);
+			MCSystemProcessUrl(p_url, kMCSystemUrlOperationStrip, &t_processed);
 	
 	if (t_success)
 	{
-		t_state->url = t_processed;
-		t_state->message = t_message;
+		t_state->url = strclone(MCStringGetCString(*t_processed));
+		t_state->message = p_message;
 		t_state->status = kMCSystemUrlStatusNone;
 		t_state->object = p_object -> gethandle();
 		t_state->data . bytes = nil;
 		t_state->data . size = 0;
 		
-		t_success = MCSystemLoadUrl(t_processed, MCS_loadurl_callback, t_state);
+		t_success = MCSystemLoadUrl(*t_processed, MCS_loadurl_callback, t_state);
 	}
 	
 	if (t_success)
 		MCresult->clear();
 	else
 	{
-		MCCStringFree(t_processed);
-		MCNameDelete(t_message);
-			MCMemoryDelete(t_state);
+        delete[] t_state->url;
+		MCNameDelete(p_message);
+        MCMemoryDelete(t_state);
 		MCurlresult -> clear();
 		MCresult->sets("error: load URL failed");
 	}
@@ -549,27 +540,30 @@ static bool MCS_posturl_callback(void *p_context, MCSystemUrlStatus p_status, co
 	return true;
 }
 
-void MCS_posttourl(MCObject *p_target, const MCString& p_data, const char *p_url)
+void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 {
 	bool t_success = true;
 	
-	char *t_processed = nil;
+	MCAutoStringRef t_processed;
 	MCObjectHandle *t_obj = nil;
 	MCSPostUrlState t_state;
 	
-	t_success = MCSystemProcessUrl(p_url, kMCSystemUrlOperationStrip, t_processed);
+	t_success = MCSystemProcessUrl(p_url, kMCSystemUrlOperationStrip, &t_processed);
 	if (t_success)
 		t_success = nil != (t_obj = p_target->gethandle());
 	
 	if (t_success)
 	{
-		t_state . url = t_processed;
+		t_state . url = strclone(MCStringGetCString(*t_processed));
 		t_state . status = kMCSystemUrlStatusNone;
 		t_state . object = t_obj;
 		t_state . post_sent = 0;
-		t_state . post_length = p_data . getlength();
+		t_state . post_length = MCDataGetLength(p_data);
+        
+        MCAutoStringRef t_string;
+        /* UNCHECKED */ MCStringCreateWithNativeChars(MCDataGetBytePtr(p_data), MCDataGetLength(p_data), &t_string);
 		
-		t_success = MCSystemPostUrl(t_processed, p_data.getstring(), p_data.getlength(), MCS_posturl_callback, &t_state);
+		t_success = MCSystemPostUrl(*t_processed, *t_string, MCStringGetLength(*t_string), MCS_posturl_callback, &t_state);
 	}
 	
 	if (t_success)
@@ -597,7 +591,9 @@ void MCS_posttourl(MCObject *p_target, const MCString& p_data, const char *p_url
     if (t_state . data != nil)
         MCValueRelease(t_state . data);
     
-	MCCStringFree(t_processed);
+    if (t_state . url != nil)
+        delete[] t_state . url;
+    
 	if (t_obj != nil)
 		t_obj -> Release();
 }
@@ -635,27 +631,30 @@ static bool MCS_puturl_callback(void *p_context, MCSystemUrlStatus p_status, con
 	return true;
 }
 
-void MCS_putintourl(MCObject *p_target, const MCString& p_data, const char *p_url)
+void MCS_putintourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 {
 	bool t_success = true;
 	
-	char *t_processed = nil;
+	MCAutoStringRef t_processed;
 	MCObjectHandle *t_obj = nil;
 	MCSPutUrlState t_state;
 	
-	t_success = MCSystemProcessUrl(p_url, kMCSystemUrlOperationStrip, t_processed);
+	t_success = MCSystemProcessUrl(p_url, kMCSystemUrlOperationStrip, &t_processed);
 	if (t_success)
 		t_success = nil != (t_obj = p_target->gethandle());
 	
 	if (t_success)
 	{
-		t_state.url = t_processed;
+		t_state.url = strclone(MCStringGetCString(*t_processed));
 		t_state.status = kMCSystemUrlStatusNone;
 		t_state.object = t_obj;
 		t_state.put_sent = 0;
-		t_state.put_length = p_data.getlength();
+		t_state.put_length = MCDataGetLength(p_data);
+        
+        MCAutoStringRef t_string;
+        /* UNCHECKED */ MCStringCreateWithNativeChars(MCDataGetBytePtr(p_data), MCDataGetLength(p_data), &t_string);
 		
-		t_success = MCSystemPutUrl(t_processed, p_data . getstring(), p_data . getlength(), MCS_puturl_callback, &t_state);
+		t_success = MCSystemPutUrl(*t_processed, *t_string, MCStringGetLength(*t_string), MCS_puturl_callback, &t_state);
 	}
 	
 	if (t_success);
@@ -671,7 +670,8 @@ void MCS_putintourl(MCObject *p_target, const MCString& p_data, const char *p_ur
 			MCresult->sets(MCString(t_state.error));
 	}
 	
-	MCCStringFree(t_processed);
+	if (t_state . url != nil)
+        delete[] t_state . url;
 	if (t_obj != nil)
 		t_obj->Release();
 }
@@ -708,36 +708,36 @@ static bool MCS_downloadurl_callback(void *p_context, MCSystemUrlStatus p_status
 	return true;
 }
 
-void MCS_downloadurl(MCObject *p_target, const char *p_url, const char *p_file)
+void MCS_downloadurl(MCObject *p_target, MCStringRef p_url, MCStringRef p_file)
 {
 	bool t_success = true;
 	
-	char *t_processed = nil;
+	MCAutoStringRef t_processed;
 	MCObjectHandle *t_obj = nil;
 	IO_handle t_output = nil;
 	MCSDownloadUrlState t_state;
 	
-	t_output = MCS_open(p_file, IO_WRITE_MODE, False, False, 0);
+	t_output = MCS_open(p_file, kMCSOpenFileModeWrite, False, False, 0);
 	if (t_output == nil)
 	{
 		MCresult -> sets("can't open that file");
 		return;
 	}
 	
-	t_success = MCSystemProcessUrl(p_url, kMCSystemUrlOperationStrip, t_processed);
+	t_success = MCSystemProcessUrl(p_url, kMCSystemUrlOperationStrip, &t_processed);
 	if (t_success)
 		t_success = nil != (t_obj = p_target->gethandle());
 	
 	if (t_success)
 	{
-		t_state . url = t_processed;
+		t_state . url = strclone(MCStringGetCString(*t_processed));
 		t_state . status = kMCSystemUrlStatusNone;
 		t_state . object = t_obj;
 		t_state . output = t_output;
 		t_state . length = 0;
 		t_state . total = 0;
 		
-		t_success = MCSystemLoadUrl(t_processed, MCS_downloadurl_callback, &t_state);
+		t_success = MCSystemLoadUrl(*t_processed, MCS_downloadurl_callback, &t_state);
 	}
 	
 	if (t_success)
@@ -749,7 +749,8 @@ void MCS_downloadurl(MCObject *p_target, const char *p_url, const char *p_file)
 			MCresult -> clear();
 	}
 
-	MCCStringFree(t_processed);
+	if (t_state . url != nil)
+        delete[] t_state . url;
 	if (t_output != nil)
 		MCS_close(t_output);
 	if (t_obj != nil)
@@ -758,13 +759,13 @@ void MCS_downloadurl(MCObject *p_target, const char *p_url, const char *p_file)
 
 //////////
 
-void MCS_deleteurl(MCObject *p_object, const char *p_url)
+void MCS_deleteurl(MCObject *p_object, MCStringRef p_url)
 {
 	MCurlresult -> clear();
 	MCresult -> sets("not implemented");
 }
 
-void MCS_unloadurl(MCObject *p_object, const char *p_url)
+void MCS_unloadurl(MCObject *p_object, MCStringRef p_url)
 {
 	MCurlresult -> clear();
 	MCresult -> sets("not implemented");
@@ -898,15 +899,6 @@ int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const
 bool MCA_color(MCStringRef title, MCColor initial_color, bool as_sheet, bool& r_chosen, MCColor& r_chosen_color)
 {
 	return true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool MCS_getaddress(MCStringRef& r_address)
-{
-    r_address = MCValueRetain(kMCEmptyString);
-    return true;
-    
 }
 
 ////////////////////////////////////////////////////////////////////////////////

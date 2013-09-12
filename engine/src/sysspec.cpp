@@ -67,6 +67,7 @@ static int *s_mainthread_errno;
 extern MCSystemInterface *MCDesktopCreateMacSystem(void);
 extern MCSystemInterface *MCDesktopCreateWindowsSystem(void);
 extern MCSystemInterface *MCDesktopCreateLinuxSystem(void);
+extern MCSystemInterface *MCMobileCreateIPhoneSystem(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -104,6 +105,10 @@ void MCS_init(void)
     MCsystem = MCDesktopCreateWindowsSystem();
 #elif defined(_LINUX_DESKTOP)
     MCsystem = MCDesktopCreateLinuxSystem();
+#elif defined (_IOS_MOBILE)
+    MCsystem = MCMobileCreateIPhoneSystem();
+#elif defined (_ANDROID_MOBILE)
+    MCsystem = MCMobileCreateAndroidSystem();
 #else
 #error Unknown server platform.
 #endif

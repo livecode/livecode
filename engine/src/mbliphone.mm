@@ -49,6 +49,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+uint1 *MCuppercasingtable;
+uint1 *MClowercasingtable;
+
+////////////////////////////////////////////////////////////////////////////////
+
 @implementation NSString (com_runrev_livecode_NSStringAdditions)
 	- (const char *)nativeCString
 	{
@@ -214,6 +219,17 @@ public:
 		
 		return true;
 	}
+    
+    virtual bool IsExhausted()
+    {
+        return feof(m_stream);
+    }
+    
+    virtual bool TakeBuffer(void *&r_buffer, size_t &r_length)
+    {
+        r_length = 0;
+        return true;
+    }
 	
 	virtual bool Seek(int64_t offset, int p_dir)
 	{
@@ -277,6 +293,17 @@ public:
 	{
 		delete this;
 	}
+    
+    virtual bool IsExhausted()
+    {
+        return false;
+    }
+    
+    virtual bool TakeBuffer(void*& r_buffer, size_t& r_length)
+    {
+        r_length = 0;
+        return true;
+    }
 	
 	virtual bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
 	{
@@ -332,7 +359,7 @@ public:
 	
 };
 
-MCServiceInterface *QueryService(MCServiceType type)
+MCServiceInterface *MCIPhoneSystem::QueryService(MCServiceType type)
 {
     return nil;
 }
@@ -374,6 +401,11 @@ MCNameRef MCIPhoneSystem::GetProcessor(void)
 
 bool MCIPhoneSystem::GetAddress(MCStringRef& r_address)
 {
+//    bool MCS_getaddress(MCStringRef &r_address)
+//    {
+//        r_address = kMCEmptyString;
+//        return true;
+//    }    
 	extern MCStringRef MCcmd;
     return MCStringFormat(r_address, "iphone:%s", MCStringGetCString(MCcmd));
 }
@@ -635,7 +667,7 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
 		t_path = strdup([[t_paths objectAtIndex: 0] cString]);
 	}
     
-    if (t_path == nil || !MCStringCreateWithCStringAndRelease(t_path, r_folder))
+    if (t_path == nil || !MCStringCreateWithCStringAndRelease((char_t*)t_path, r_folder))
         return False;
     
     return True;
@@ -999,7 +1031,6 @@ void MCIPhoneSystem::SetErrno(int p_errno)
     errno = p_errno;
 }
 
-
 //////////////////
 
 bool MCIPhoneSystem::Initialize(void)
@@ -1007,6 +1038,17 @@ bool MCIPhoneSystem::Initialize(void)
     IO_stdin = OpenFd(0, kMCSystemFileModeRead);
     IO_stdout = OpenFd(1, kMCSystemFileModeWrite);
     IO_stderr = OpenFd(2, kMCSystemFileModeWrite);
+    
+    // Initialize our case mapping tables
+    
+    MCuppercasingtable = new uint1[256];
+    for(uint4 i = 0; i < 256; ++i)
+        MCuppercasingtable[i] = (uint1)toupper((uint1)i);
+    
+    MClowercasingtable = new uint1[256];
+    for(uint4 i = 0; i < 256; ++i)
+        MClowercasingtable[i] = (uint1)tolower((uint1)i);
+    
 	return true;
 }
 
@@ -1014,9 +1056,95 @@ void MCIPhoneSystem::Finalize(void)
 {
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+real8 MCIPhoneSystem::GetFreeDiskSpace()
+{
+    return 0.0;
+}
+
+Boolean MCIPhoneSystem::GetDevices(MCStringRef &r_devices)
+{
+    r_devices = MCValueRetain(kMCEmptyString);
+    return True;
+}
+
+Boolean MCIPhoneSystem::GetDrives(MCStringRef& r_devices)
+{
+    r_devices = MCValueRetain(kMCEmptyString);
+    return True;
+}
+
+void MCIPhoneSystem::CheckProcesses(void)
+{
+    return;
+}
+
+uint32_t MCIPhoneSystem::GetSystemError(void)
+{
+    return 0;
+}
+
+bool MCIPhoneSystem::StartProcess(MCNameRef p_name, MCStringRef p_doc, intenum_t p_mode, Boolean p_elevated)
+{
+    return false;
+}
+
+void MCIPhoneSystem::CloseProcess(uint2 p_index)
+{
+    return;
+}
+
+void MCIPhoneSystem::Kill(int4 p_pid, int4 p_sig)
+{
+    return;
+}
+
+void MCIPhoneSystem::KillAll()
+{
+    return;
+}
+
+Boolean MCIPhoneSystem::Poll(real8 p_delay, int p_fd)
+{
+    return True;
+}
+
+Boolean MCIPhoneSystem::IsInteractiveConsole(int p_fd)
+{
+    return False;
+}
+
+void MCIPhoneSystem::LaunchDocument(MCStringRef p_document)
+{
+    return;
+}
+
+void MCIPhoneSystem::LaunchUrl(MCStringRef p_document)
+{
+    return;
+}
+
+void MCIPhoneSystem::DoAlternateLanguage(MCStringRef p_script, MCStringRef p_language)
+{
+    return;
+}
+
+bool MCIPhoneSystem::AlternateLanguages(MCListRef &r_list)
+{
+    r_list = MCValueRetain(kMCEmptyList);
+    return true;
+}
+
+bool MCIPhoneSystem::GetDNSservers(MCListRef &r_list)
+{
+    r_list = MCValueRetain(kMCEmptyList);
+    return true;
+}
+
 //////////////////
 
-MCSystemInterface *MCMobileCreateSystem(void)
+MCSystemInterface *MCMobileCreateIPhoneSystem(void)
 {
 	return new MCIPhoneSystem;
 }
