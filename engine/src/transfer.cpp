@@ -533,33 +533,33 @@ bool MCTransferData::Close(void)
 
 //
 
-MCTransferType MCTransferData::StringToType(const MCString& p_string)
+MCTransferType MCTransferData::StringToType(MCStringRef p_string)
 {
-	if (p_string == "text")
+	if (MCStringIsEqualToCString(p_string, "text", kMCCompareExact))
 		return TRANSFER_TYPE_TEXT;
 
-	if (p_string == "unicode")
+	if (MCStringIsEqualToCString(p_string, "unicode", kMCCompareExact))
 		return TRANSFER_TYPE_UNICODE_TEXT;
 
-	if (p_string == "styles")
+	if (MCStringIsEqualToCString(p_string, "styles", kMCCompareExact))
 		return TRANSFER_TYPE_STYLED_TEXT;
 
-	if (p_string == "rtf")
+	if (MCStringIsEqualToCString(p_string, "rtf", kMCCompareExact))
 		return TRANSFER_TYPE_RTF_TEXT;
 
-	if (p_string == "html")
+	if (MCStringIsEqualToCString(p_string, "html", kMCCompareExact))
 		return TRANSFER_TYPE_HTML_TEXT;
 
-	if (p_string == "files")
+	if (MCStringIsEqualToCString(p_string, "files", kMCCompareExact))
 		return TRANSFER_TYPE_FILES;
 
-	if (p_string == "private")
+	if (MCStringIsEqualToCString(p_string, "private", kMCCompareExact))
 		return TRANSFER_TYPE_PRIVATE;
 
-	if (p_string == "image")
+	if (MCStringIsEqualToCString(p_string, "image", kMCCompareExact))
 		return TRANSFER_TYPE_IMAGE;
 
-	if (p_string == "objects")
+	if (MCStringIsEqualToCString(p_string, "objects", kMCCompareExact))
 		return TRANSFER_TYPE_OBJECTS;
 
 	return TRANSFER_TYPE_NULL;

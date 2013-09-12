@@ -674,7 +674,7 @@ public:
 	RTFFontTable(void);
 	~RTFFontTable(void);
 	
-	RTFStatus Define(uint4 p_index, char *p_name, uint4 p_charset);
+	RTFStatus Define(uint4 p_index, MCStringRef p_name, uint4 p_charset);
 	
 	const char *GetName(uint4 p_index) const;
 	uint4 GetCharset(uint4 p_index) const;
