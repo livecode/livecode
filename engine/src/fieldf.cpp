@@ -2238,7 +2238,7 @@ void MCField::setupmenu(MCStringRef p_string, uint2 fheight, Boolean scrolling)
 	setstate(True, CS_MENUFIELD);
 }
 
-void MCField::setupentry(MCButton *bptr, const MCString &s, Boolean isunicode)
+void MCField::setupentry(MCButton *bptr, MCStringRef p_string)
 {
 	parent = bptr;
 	obj_id = bptr->getid();
@@ -2256,7 +2256,7 @@ void MCField::setupentry(MCButton *bptr, const MCString &s, Boolean isunicode)
 		topmargin = 6;
 	flags = F_VISIBLE | F_SHOW_BORDER | F_3D | F_OPAQUE | F_FIXED_HEIGHT
 		| F_TRAVERSAL_ON | F_AUTO_TAB | F_DONT_WRAP | F_SHARED_TEXT;
-	settext_oldstring(0, s, False, isunicode);
+	settext(0, p_string, False);
 }
 
 void MCField::typetext(const MCString &newtext)

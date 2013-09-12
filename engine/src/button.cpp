@@ -2970,7 +2970,7 @@ void MCButton::createentry()
 		entry = (MCField *)MCtemplatefield->clone(False, OP_NONE, false);
 		// MW-2005-08-16: [[Bug 2820]] If we can't be selected, let us make sure our field can't either!
 		entry->setextraflag(getextraflag(EF_CANT_SELECT), EF_CANT_SELECT);
-		entry->setupentry(this, MCString(MCStringGetCString(label)), hasunicode());
+		entry->setupentry(this, label);
 		entry->open();
 		setrect(rect);
 	}
