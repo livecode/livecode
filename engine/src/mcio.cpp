@@ -183,16 +183,6 @@ bool IO_findsocket(MCNameRef p_name, uindex_t& r_index)
 	return false;
 }
 
-/* LEGACY */ Boolean IO_findsocket(char *name, uint2 &i)
-{
-	MCNewAutoNameRef t_name;
-	/* UNCHECKED */ MCNameCreateWithCString(name, &t_name);
-	uindex_t t_index;
-	bool t_found = IO_findsocket(*t_name, t_index) ? True : False;
-	i = t_index;
-	return t_found;
-}
-
 void IO_freeobject(MCObject *o)
 {
 	IO_cleansockets(MCS_time());

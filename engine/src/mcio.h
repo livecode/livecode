@@ -63,7 +63,6 @@ extern Boolean IO_closefile(MCNameRef name);
 extern bool IO_findprocess(MCNameRef p_name, uindex_t& r_index);
 extern void IO_cleanprocesses();
 extern bool IO_findsocket(MCNameRef p_name, uindex_t& r_index);
-/* LEGACY */ extern Boolean IO_findsocket(char *name, uint2 &i);
 extern real8 IO_cleansockets(real8 ctime);
 extern void IO_freeobject(MCObject *o);
 extern IO_stat IO_read(void *ptr, uint4 byte_size, IO_handle stream);
