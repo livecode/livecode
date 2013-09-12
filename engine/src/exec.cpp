@@ -170,25 +170,6 @@ bool FormatUnsignedInteger(uinteger_t p_integer, MCStringRef& r_output)
 	return MCStringFormat(r_output, "%d", p_integer);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-bool MCExecContext::EncodeStringAsUTF8(MCStringRef self, char*& r_utf8_string)
-{
-	MCExecPoint ep;
-	ep . setsvalue(MCStringGetOldString(self));
-	ep . nativetoutf8();
-	r_utf8_string = ep . getsvalue() . clone();
-	return true;
-}
-
-bool MCExecContext::EncodeUnicodeStringAsUTF8(MCStringRef self, char*& r_utf8_string)
-{
-	MCExecPoint ep;
-	ep . setsvalue(MCStringGetOldString(self));
-	ep . utf16toutf8();
-	r_utf8_string = ep . getsvalue() . clone();
-	return true;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

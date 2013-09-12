@@ -708,11 +708,11 @@ Scroll To Selection, Replace..., Replace Again, Comment, Uncomment,
 Set Checkpoint, Step, Step Into, Trace, Go, Trace Delay..., Abort,
 Variable Watcher, Message Watcher
 */
-const char *MCDoMenu::lookup(const MCString &s)
+const char *MCDoMenu::lookup(MCStringRef s)
 {
 	uint2 size = ELEMENTS(domenu_table);
 	while(size--)
-		if (s == domenu_table[size].token)
+		if (MCStringIsEqualToCString(s, domenu_table[size].token, kMCCompareExact));
 			return domenu_table[size].command;
 	return NULL;
 }

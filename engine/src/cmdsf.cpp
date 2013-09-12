@@ -2643,11 +2643,11 @@ static ST signal_table[] = {
 #endif
                            };
 
-int4 MCKill::lookup(const MCString &s)
+int4 MCKill::lookup(MCStringRef s)
 {
 	uint2 size = ELEMENTS(signal_table);
 	while(size--)
-		if (s == signal_table[size].token)
+		if (MCStringIsEqualToCString(s, signal_table[size].token, kMCCompareExact));
 			return signal_table[size].which;
 	return SIGTERM;
 }

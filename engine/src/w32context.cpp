@@ -1782,7 +1782,7 @@ void MCGDIContext::drawtheme(MCThemeDrawType p_type, MCThemeDrawInfo* p_info_ptr
 	}
 }
 
-void MCGDIContext::drawlink(const char *p_link, const MCRectangle& p_region)
+void MCGDIContext::drawlink(MCSTringRef p_link, const MCRectangle& p_region)
 {
 }
 

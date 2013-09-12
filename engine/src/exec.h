@@ -638,11 +638,7 @@ public:
 	bool FormatLegacyRectangle(MCRectangle value, MCStringRef& r_value);
 	bool FormatLegacyColor(MCColor value, MCStringRef& r_value);
 
-	//////////
 	
-	bool EncodeStringAsUTF8(MCStringRef string, char*& r_cstring);
-	bool EncodeUnicodeStringAsUTF8(MCStringRef string, char*& r_cstring);
-
 	//////////
 
 	// This method evaluates the given expression returning the result in 'result'.

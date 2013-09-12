@@ -702,7 +702,7 @@ void MCAndroidContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int2
 	MCMemoryDeallocate(t_argb_pixels);
 }
 
-void MCAndroidContext::drawlink(const char *link, const MCRectangle& region)
+void MCAndroidContext::drawlink(MCStringRef link, const MCRectangle& region)
 {
 	// This is a no-op as links are irrelevant to rasterized portions. The print
 	// system will iterate through any links and render them directly.
