@@ -230,8 +230,12 @@ void MCS_init()
 	IO_stdout = new IO_header(stdout, NULL, 0, 0, 0);
 	IO_stderr = new IO_header(stderr, NULL, 0, 0, 0);
 
-	setlocale(LC_CTYPE, MCnullstring);
-	setlocale(LC_COLLATE, MCnullstring);
+	// Internally, LiveCode assumes sorting orders etc are those of en_US.
+	// Additionally, the "native" string encoding for Linux is ISO-8859-1
+	// (even if the Linux system is using something different).
+	const char *t_internal_locale = "en_US.ISO-8859-1";
+	setlocale(LC_CTYPE, t_internal_locale);
+	setlocale(LC_COLLATE, t_internal_locale);
 	
 	MCinfinity = HUGE_VAL;
 
