@@ -823,7 +823,7 @@ bool MCS_getDNSservers(MCListRef& r_list)
 	MCAutoListRef t_list;
 
 	MCresult->clear();
-	MCdefaultstackptr->domess(DNS_SCRIPT);
+	MCdefaultstackptr->domess(MCSTR(DNS_SCRIPT));
 
 	return MCListCreateMutable('\n', &t_list) &&
 		MCListAppend(*t_list, MCresult->getvalueref()) &&
@@ -1634,12 +1634,11 @@ void MCS_launch_url(const char *p_document)
 	}
 	else
 	{
-		char *t_handler = nil;
-		/* UNCHECKED */ MCCStringFormat(t_handler, LAUNCH_URL_SCRIPT, p_document);
+		MCAutoStringRef t_handler;
+		/* UNCHECKED */ MCStringFormat(&t_handler, LAUNCH_URL_SCRIPT, p_document);
 		MCExecPoint ep (NULL, NULL, NULL) ;
-		MCdefaultstackptr->domess(t_handler);
+		MCdefaultstackptr->domess(*t_handler);
 		MCresult->eval(ep);	
-		MCCStringFree(t_handler);
 	}
 }
 
@@ -1787,7 +1786,9 @@ Boolean MCS_poll(real8 delay, int fd)
 		char *commands = new char[commandsize + 1];
 		read(MCinputfd, commands, commandsize);
 		commands[commandsize] = '\0';
-		MCdefaultstackptr->getcurcard()->domess(commands);
+        MCAutoStringRef t_commands;
+        /* UNCHECKED */ MCStringCreateWithCString(commands, &t_commands);
+		MCdefaultstackptr->getcurcard()->domess(*t_commands);
 		delete commands;
 	}
 	if (wasalarm)
