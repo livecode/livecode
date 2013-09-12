@@ -61,7 +61,6 @@ extern void IO_set_stream(IO_handle stream, char *newptr);
 extern bool IO_findfile(MCNameRef p_name, uindex_t& r_index);
 /* LEGACY */ extern Boolean IO_findfile(const char *name, uint2 &i);
 extern Boolean IO_closefile(MCNameRef name);
-/* LEGACY */ extern Boolean IO_closefile(const char *name);
 extern bool IO_findprocess(MCNameRef p_name, uindex_t& r_index);
 /* LEGACY */ extern Boolean IO_findprocess(const char *name, uint2 &i);
 extern void IO_cleanprocesses();

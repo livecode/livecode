@@ -101,13 +101,6 @@ Boolean IO_closefile(MCNameRef name)
 	return False;
 }
 
-/* LEGACY */ Boolean IO_closefile(const char *name)
-{
-	MCNewAutoNameRef t_name;
-	/* UNCHECKED */ MCNameCreateWithCString(name, &t_name);
-	return IO_closefile(*t_name);
-}
-
 bool IO_findprocess(MCNameRef p_name, uindex_t& r_index)
 {
 	/* TODO - update processes to use MCNameRef */
