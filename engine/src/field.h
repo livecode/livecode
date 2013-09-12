@@ -384,6 +384,7 @@ public:
 	Exec_stat settext_oldstring(uint4 parid, const MCString &newtext, Boolean formatted, Boolean asunicode = False);
 	// MW-2012-02-23: [[ PutUnicode ]] Added parameter to specify whether 'is' is unicode or native.
 	Exec_stat settextindex(uint4 parid, int4 si, int4 ei, const MCString &s, Boolean undoing, bool asunicode = false);
+	Exec_stat settextindex_stringref(uint4 parid, int4 si, int4 ei, MCStringRef s, Boolean undoing);
 	void getlinkdata(MCRectangle &r, MCBlock *&sb, MCBlock *&eb);
 
 	// MW-2011-11-23: [[ Array TextStyle ]] Setting/getting text attributes can be indexed by
