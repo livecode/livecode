@@ -56,24 +56,26 @@ MCNameRef MCAndroidSystem::GetProcessor(void)
 #endif
 }
 
-char *MCAndroidSystem::GetAddress(void)
+bool MCAndroidSystem::GetAddress(MCStringRef& r_address)
 {
 	extern MCStringRef MCcmd;
-	char *t_address;
-	t_address = new char[MCStringGetLength(MCcmd) + strlen("android:") + 1];
-	sprintf(t_address, "android:%s", MCStringGetCString(MCcmd));
-	return t_address;
+	MCAutoNativeCharArray t_chars;
+    t_chars.New(MCStringGetLength(MCcmd) + strlen("android:") + 1);
+    
+	sprintf(t_chars.Chars(), "android:%s", MCStringGetCString(MCcmd));
+	return t_chars.CreateStringAndRelease(r_address);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCAndroidSystem::SetEnv(const char *name, const char *value)
+void MCAndroidSystem::SetEnv(MCStringRef p_name, MCStringRef p_value)
 {
 }
 
-char *MCAndroidSystem::GetEnv(const char *name)
+bool MCAndroidSystem::GetEnv(MCStringRef p_name, MCStringRef& r_value)
 {
-	return "";
+    r_value = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -95,9 +97,26 @@ void MCAndroidSystem::Sleep(real64_t p_when)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCAndroidSystem::Shell(const char *p_cmd, uint32_t p_cmd_length, void*& r_data, uint32_t& r_data_length, int& r_retcode)
+bool MCAndroidSystem::Shell(MCStringRef filename, MCDataRef& r_data, int& r_retcode)
 {
 	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+int MCAndroidSystem::GetErrno(void)
+{
+    return errno;
+}
+
+void MCAndroidSystem::SetErrno(int p_errno)
+{
+    errno = p_errno;
+}
+
+uint32_t MCAndroidSystem::GetSystemErrno(void)
+{
+    return errno;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

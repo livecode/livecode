@@ -68,6 +68,7 @@ extern MCSystemInterface *MCDesktopCreateMacSystem(void);
 extern MCSystemInterface *MCDesktopCreateWindowsSystem(void);
 extern MCSystemInterface *MCDesktopCreateLinuxSystem(void);
 extern MCSystemInterface *MCMobileCreateIPhoneSystem(void);
+extern MCSystemInterface *MCMobileCreateAndroidSystem(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 

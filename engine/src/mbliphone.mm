@@ -1086,7 +1086,7 @@ void MCIPhoneSystem::CheckProcesses(void)
 
 uint32_t MCIPhoneSystem::GetSystemError(void)
 {
-    return 0;
+    return errno;
 }
 
 bool MCIPhoneSystem::StartProcess(MCNameRef p_name, MCStringRef p_doc, intenum_t p_mode, Boolean p_elevated)
