@@ -275,6 +275,7 @@
 		768D66C51765E11300F203A3 /* exec-pick.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C41765E11300F203A3 /* exec-pick.cpp */; };
 		768D66C61765E11300F203A3 /* exec-pick.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C41765E11300F203A3 /* exec-pick.cpp */; };
 		BE096E8B175CD7CF00F92F90 /* libfoundationmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BE096E85175CD79D00F92F90 /* libfoundationmobile.a */; };
+		BE0A3CD417E1FD2500C2361B /* mblnetwork.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE0A3CD317E1FC9E00C2361B /* mblnetwork.cpp */; };
 		BE4494AE175CDCB900346B49 /* foundation-legacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494AD175CDCB400346B49 /* foundation-legacy.cpp */; };
 		BE4494DD175CDE7400346B49 /* exec-array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494B7175CDE7400346B49 /* exec-array.cpp */; };
 		BE4494DE175CDE7400346B49 /* exec-datetime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494B8175CDE7400346B49 /* exec-datetime.cpp */; };
@@ -890,6 +891,7 @@
 		768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-nativecontrol.cpp"; path = "src/exec-nativecontrol.cpp"; sourceTree = "<group>"; };
 		768D66C41765E11300F203A3 /* exec-pick.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-pick.cpp"; path = "src/exec-pick.cpp"; sourceTree = "<group>"; };
 		BE096E7D175CD79D00F92F90 /* libfoundation-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libfoundation-mobile.xcodeproj"; path = "../libfoundation/libfoundation-mobile.xcodeproj"; sourceTree = SOURCE_ROOT; };
+		BE0A3CD317E1FC9E00C2361B /* mblnetwork.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblnetwork.cpp; path = src/mblnetwork.cpp; sourceTree = "<group>"; };
 		BE4494AD175CDCB400346B49 /* foundation-legacy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-legacy.cpp"; path = "src/foundation-legacy.cpp"; sourceTree = "<group>"; };
 		BE4494B7175CDE7400346B49 /* exec-array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-array.cpp"; path = "src/exec-array.cpp"; sourceTree = "<group>"; };
 		BE4494B8175CDE7400346B49 /* exec-datetime.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-datetime.cpp"; path = "src/exec-datetime.cpp"; sourceTree = "<group>"; };
@@ -1236,22 +1238,23 @@
 				E823E62D14D178BE001F73C4 /* mblcontrol.cpp */,
 				E823E62F14D19886001F73C4 /* mblcontrol.h */,
 				4D01C31613CE36F60041A281 /* mbldc.cpp */,
-				BE449995175D029600346B49 /* mblhandlers.cpp */,
 				4DD3DE731040AD4D00CAC7EF /* mbldc.h */,
 				E89112EB148E73EB00B554CF /* mbldialog.cpp */,
 				E864816E1439BC9400775960 /* mblevent.h */,
 				4DD3DE761040AD4D00CAC7EF /* mblflst.cpp */,
 				4DD3DE751040AD4D00CAC7EF /* mblflst.h */,
+				BE449995175D029600346B49 /* mblhandlers.cpp */,
 				4DD3DE741040AD4D00CAC7EF /* mblmain.cpp */,
+				BE0A3CD317E1FC9E00C2361B /* mblnetwork.cpp */,
 				F6D1C29214BDD6C000FDD15A /* mblnotification.cpp */,
 				E89A45D314EE7603007250AA /* mblnotification.h */,
 				E8C8A774147BC020003780F0 /* mblsensor.cpp */,
 				E8C8A776147BCA60003780F0 /* mblsensor.h */,
+				4C9EAA0414E5900A00CCF92C /* mblsound.cpp */,
 				4DD3DE791040AD4D00CAC7EF /* mblspec.cpp */,
 				4DD3DE781040AD4D00CAC7EF /* mblstack.cpp */,
 				E86481701439BC9400775960 /* mblstore.cpp */,
 				E86481711439BC9400775960 /* mblstore.h */,
-				4C9EAA0414E5900A00CCF92C /* mblsound.cpp */,
 				4C7D1CFA1476863600129F01 /* mblsyntax.h */,
 				F62D52A314DBF68300E7C1CD /* mbltextmessaging.cpp */,
 			);
@@ -2347,6 +2350,7 @@
 				7607CF7C1769BB4D00ADB512 /* exec-interface-vclip.cpp in Sources */,
 				7607CF7D1769BB4D00ADB512 /* exec-interface.cpp in Sources */,
 				7607CF7E1769BB4D00ADB512 /* exec-interface2.cpp in Sources */,
+				BE0A3CD417E1FD2500C2361B /* mblnetwork.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

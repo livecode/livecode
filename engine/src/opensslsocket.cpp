@@ -869,7 +869,7 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 // 'internet gateway' defined - but it isn't clear how one might do that.
 //
 
-char *MCS_hostaddress(void)
+bool MCS_hostaddress(MCStringRef &r_host_address)
 {
 #if defined(_WINDOWS)
 	if (!wsainit())
@@ -888,7 +888,7 @@ char *MCS_hostaddress(void)
 				if ((t_interfaces[i] . iiFlags & IFF_UP) != 0 &&
 					(t_interfaces[i] . iiFlags & IFF_LOOPBACK) == 0 &&
 					t_interfaces[i] . iiAddress . Address . sa_family == AF_INET)
-					return strdup(inet_ntoa(t_interfaces[i] . iiAddress . AddressIn . sin_addr));
+					return MCStringCreateWithCString(inet_ntoa(t_interfaces[i] . iiAddress . AddressIn . sin_addr, r_host_address));
 			}
 		}
 	}
@@ -980,13 +980,14 @@ char *MCS_hostaddress(void)
 	if (t_store != NULL)
 		CFRelease(t_store);
 
-	return t_result;
+	return MCStringCreateWithCString(t_result, r_host_address);
 
 #elif defined(_LINUX)
 #else
 #endif
 
-	return NULL;
+	r_host_address = MCValueRetain(kMCEmptyString);
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

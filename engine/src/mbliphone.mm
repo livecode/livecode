@@ -485,7 +485,7 @@ Boolean MCIPhoneSystem::CreateAlias(MCStringRef p_target, MCStringRef p_alias)
     return True;
 }
 
-Boolean ResolveAlias(MCStringRef p_target, MCStringRef& r_dest)
+Boolean MCIPhoneSystem::ResolveAlias(MCStringRef p_target, MCStringRef& r_dest)
 {
     if (!MCStringCopy(p_target, r_dest))
         return False;
@@ -567,16 +567,20 @@ IO_handle MCIPhoneSystem::OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean
 	static const char *s_modes[] = { "r", "w", "r+", "a" };
     uint1 t_mode;
     
-    switch (t_mode)
+    switch (p_mode)
     {
     case kMCSOpenFileModeRead:
         t_mode = 0;
+        break;
     case kMCSOpenFileModeWrite:
         t_mode = 1;
+        break;
     case kMCSOpenFileModeUpdate:
         t_mode = 2;
+        break;
     case kMCSOpenFileModeAppend:
         t_mode = 3;
+        break;
     }
     
     FILE *t_stream;

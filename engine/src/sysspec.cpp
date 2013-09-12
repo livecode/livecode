@@ -1669,20 +1669,22 @@ bool MCSTextConvertToUnicode(MCTextEncoding p_encoding, const void *p_input, uin
 //	}
 //	return true;
 //}
-
-bool MCS_getDNSservers(MCListRef& r_list)
-{
-    return MCsystem -> GetDNSservers(r_list);
-}
 //
 //void MCS_dnsresolve(MCStringRef p_hostname, MCStringRef& r_dns)
 //{
 //	return;
 //}
+//
+//bool MCS_hostaddress(MCStringRef& r_host_address)
+//{
+//	return false;
+//}
 
-bool MCS_hostaddress(MCStringRef& r_host_address)
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCS_getDNSservers(MCListRef& r_list)
 {
-	return false;
+    return MCsystem -> GetDNSservers(r_list);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
