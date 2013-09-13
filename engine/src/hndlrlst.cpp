@@ -651,16 +651,14 @@ static bool enumerate_handlers(MCExecPoint& ep, MCStringRef p_type, MCHandlerArr
 		t_handler = p_handlers . get()[j];
 
 		MCAutoStringRef t_string;
-		MCAutoStringRef t_old_string;
-		/* UNCHECKED */ ep.copyasstringref(&t_old_string);
-		/* UNCHECKED */ MCStringCreateMutable(0, &t_string);
-		/* UNCHECKED */ MCStringAppendFormat(*t_string, 
-											 "%s%s%@ %@ %d %d", 
-											 p_first ? "" : "\n",
-											 t_handler->isprivate() ? "P" : "",
-											 t_handler->getname(),
-											 t_handler->getstartline(),
-											 t_handler->getendline());
+		/* UNCHECKED */ MCStringFormat(&t_string, 
+										"%s%s%@ %@ %d %d", 
+										p_first ? "" : "\n",
+										t_handler->isprivate() ? "P" : "",
+										p_type,
+										t_handler->getname(),
+										t_handler->getstartline(),
+										t_handler->getendline());
 		
 		ep.concatstringref(*t_string, EC_NONE, p_first);
 
@@ -672,7 +670,7 @@ static bool enumerate_handlers(MCExecPoint& ep, MCStringRef p_type, MCHandlerArr
 			MCExecContext t_ctxt(t_ep);
 			MCAutoStringRef t_long_id;
 			p_object -> getstringprop(t_ctxt, 0, P_LONG_ID, False, &t_long_id);
-			ep.concatstringref(t_long_id, EC_SPACE, false);
+			ep.concatstringref(*t_long_id, EC_SPACE, false);
 		}	
 
 		p_first = false;
