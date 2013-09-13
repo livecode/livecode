@@ -130,21 +130,26 @@ void shutdown()
 {}
 
 //error buf should have a buffer of at least 256 bytes.
-unsigned long SSLError(char *errbuf)
+unsigned long SSLError(MCStringRef errbuf)
 {
 	if (!InitSSLCrypt())
 	{
-		strcpy(errbuf,"ssl library not found");
+		MCStringCopy(MCSTR("ssl library not found"), errbuf);
 		return 0;
 	}
 #ifdef MCSSL
 	unsigned long ecode = ERR_get_error();
-	if (errbuf)
+	if (!MCStringIsEmpty(errbuf))
 	{
 		if (ecode)
-			ERR_error_string_n(ecode,errbuf,255);
+        {
+            char *t_errbuf;
+            t_errbuf = new char[256];
+            ERR_error_string_n(ecode,t_errbuf,255);
+            /* UNCHECKED */ MCStringCreateWithCString(t_errbuf, errbuf);
+        }
 		else
-			errbuf[0] = '\0';
+			errbuf = MCValueRetain(kMCEmptyString);
 	}
 	return ecode;
 #else
@@ -595,9 +600,9 @@ bool SSL_ciphernames(MCListRef& r_list, MCStringRef& r_error)
 
 	if (!InitSSLCrypt())
 	{
-		char sslerrbuf[256];
-		SSLError(sslerrbuf);
-		return MCStringCreateWithCString(sslerrbuf, r_error);
+		MCAutoStringRef sslerrbuf;
+		SSLError(&sslerrbuf);
+        r_error = MCValueRetain(*sslerrbuf);
 	}
 
 	OBJ_NAME_do_all_sorted(OBJ_NAME_TYPE_CIPHER_METH, list_ciphers_cb, &t_context);

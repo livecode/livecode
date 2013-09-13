@@ -212,7 +212,7 @@ public:
 	void SetUnicodeSkip(uint4 p_skip);
 	uint4 GetUnicodeSkip(void) const;
 
-	void SetFontName(const char *p_name);
+	void SetFontName(MCStringRef p_name);
 	const char *GetFontName(void) const;
 	
 	void SetFontStyle(RTFFontStyle p_style);
@@ -355,12 +355,12 @@ inline uint4 RTFState::GetUnicodeSkip(void) const
 	return m_entries -> unicode_skip;
 }
 
-inline void RTFState::SetFontName(const char *p_name)
+inline void RTFState::SetFontName(MCStringRef p_name)
 {
 	if (m_entries == NULL)
 		return;
 
-	m_entries -> font_name = p_name;
+	m_entries -> font_name = MCStringGetCString(p_name);
 }
 
 inline const char *RTFState::GetFontName(void) const

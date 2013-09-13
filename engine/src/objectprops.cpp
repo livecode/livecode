@@ -757,8 +757,9 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 	return t_stat;
 }
 
-static bool string_contains_item(const char *p_string, const char *p_item)
+static bool string_contains_item(MCStringRef p_string, MCStringRef p_item)
 {
+    /*
 	const char *t_offset;
 	t_offset = strstr(p_string, p_item);
 	if (t_offset == nil)
@@ -768,10 +769,22 @@ static bool string_contains_item(const char *p_string, const char *p_item)
 	
 	uint32_t t_length;
 	t_length = strlen(p_item);
-	if (t_offset[t_length] != '\0' && t_offset[t_length] != ',')
+    if (t_offset[t_length] != '\0' && t_offset[t_length] != ',')
 		return false;
 
 	return true;
+     */
+    uindex_t t_offset;
+    if (!MCStringFirstIndexOf(p_string, p_item, 0, kMCCompareExact, t_offset))
+        return false;
+    
+    if (t_offset != 0 && MCStringGetNativeCharAtIndex(p_string, t_offset -1) != ',')
+        return false;
+        
+    if (MCStringGetLength(p_string) - t_offset != MCStringGetLength(p_item) && MCStringGetNativeCharAtIndex(p_string, t_offset + MCStringGetLength(p_item) ) != ',')
+        return false;
+    
+    return true;
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
@@ -797,7 +810,9 @@ Exec_stat MCObject::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 			return ES_ERROR;
 
 		// Check the textstyle string is within the object's textstyle set.
-		ep . setboolean(string_contains_item(ep . getcstring(), MCF_unparsetextstyle(t_style)));
+        MCAutoStringRef t_value;
+        ep . copyasstringref(&t_value);
+		ep . setboolean(string_contains_item(*t_value, MCSTR(MCF_unparsetextstyle(t_style))));
 	}
 	break;
 	case P_CUSTOM_KEYS:

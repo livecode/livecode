@@ -59,7 +59,6 @@ extern void MCU_restoreprops(MCSaveprops &sp);
 extern int4 MCU_any(int4 max);
 extern void MCU_getnumberformat(MCExecPoint &, uint2, uint2, uint2);
 extern bool MCU_getnumberformat(uint2 fw, uint2 trail, uint2 force, MCStringRef& r_string);
-extern void MCU_setnumberformat(const MCString &, uint2 &, uint2 &, uint2 &);
 extern void MCU_setnumberformat(MCStringRef p_input, uint2 &fw, uint2 &trailing, uint2 &force);
 extern real8 MCU_stoIEEE(const char *bytes);
 extern real8 MCU_i4tor8(int4 in);

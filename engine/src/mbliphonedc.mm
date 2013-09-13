@@ -807,10 +807,10 @@ static void do_iphone_font_create(void *p_env)
 	env -> result = t_font;
 }
 
-void *iphone_font_create(const char *p_name, uint32_t p_size, bool p_bold, bool p_italic)
+void *iphone_font_create(MCStringRef p_name, uint32_t p_size, bool p_bold, bool p_italic)
 {
 	do_iphone_font_create_env env;
-	env . name = p_name;
+	env . name = MCStringGetCString(p_name);
 	env . size = p_size;
 	env . bold = p_bold;
 	env . italic = p_italic;

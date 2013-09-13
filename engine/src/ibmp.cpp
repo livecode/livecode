@@ -2043,7 +2043,7 @@ typedef struct
 
 #define xwd_file_header_size 100
 
-bool MCImageDecodeXWD(IO_handle stream, char *&r_name, MCImageBitmap *&r_bitmap)
+bool MCImageDecodeXWD(IO_handle stream, MCStringRef &r_name, MCImageBitmap *&r_bitmap)
 {
 	bool t_success = true;
 
@@ -2167,7 +2167,7 @@ bool MCImageDecodeXWD(IO_handle stream, char *&r_name, MCImageBitmap *&r_bitmap)
 	if (t_success)
 	{
 		r_bitmap = t_bitmap;
-		r_name = newname;
+		/* UNCHECKED */ MCStringCreateWithCString(newname, r_name);
 	}
 	else
 	{

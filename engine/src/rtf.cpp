@@ -792,7 +792,7 @@ RTFStatus RTFReader::ParseDocument(RTFToken p_token, int4 p_value)
 	break;
 
 	case kRTFTokenPlain:
-		m_state . SetFontName(NULL);
+		m_state . SetFontName(nil);
 		m_state . SetFontStyle(kRTFFontStyleNone);
 		m_state . SetFontSize(0);
 		m_attributes_changed = true;
@@ -824,8 +824,8 @@ RTFStatus RTFReader::ParseDocument(RTFToken p_token, int4 p_value)
 				{ -1, kMCTextEncodingUndefined }
 			};
 
-			const char *t_new_font;
-			t_new_font = m_fonts . GetName(p_value);
+			MCAutoStringRef t_new_font;
+			/* UNCHECKED */ MCStringCreateWithCString(m_fonts . GetName(p_value), &t_new_font);
 
 			uint4 t_new_charset;
 			t_new_charset = m_fonts . GetCharset(p_value);
@@ -843,7 +843,7 @@ RTFStatus RTFReader::ParseDocument(RTFToken p_token, int4 p_value)
 			}
 
 			m_state . SetTextEncoding(t_new_encoding);
-			m_state . SetFontName(t_new_font);
+			m_state . SetFontName(*t_new_font);
 			m_attributes_changed = true;
 		}
 	break;
