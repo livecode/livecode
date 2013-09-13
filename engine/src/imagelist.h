@@ -34,6 +34,7 @@ typedef MCPattern *MCPatternRef;
 extern bool MCPatternCreate(MCGImageRef p_image, MCGFloat p_scale, MCPatternRef &r_pattern);
 extern MCPatternRef MCPatternRetain(MCPatternRef p_pattern);
 extern void MCPatternRelease(MCPatternRef p_pattern);
+extern void MCPatternIsOpaque(MCPatternRef p_pattern);
 
 ////////////////////////////////////////////////////////////////////////////////
 

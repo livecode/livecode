@@ -410,6 +410,8 @@ int32_t MCGImageGetHeight(MCGImageRef image);
 
 MCGSize MCImageGetSize(MCGImageRef image);
 
+bool MCGImageIsOpaque(MCGImageRef image);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCGMaskCreateWithInfoAndRelease(const MCGDeviceMaskInfo& info, MCGMaskRef& r_mask);

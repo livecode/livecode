@@ -984,7 +984,7 @@ static bool testtilecache_device_scenery_renderer(void *p_context, MCGContextRef
 	return tilecache_device_renderer(testtilecache_scenery_renderer, p_context, p_target, p_rectangle);
 }
 
-bool MCCard::render_foreground(void *p_context, MCContext *p_target, const MCRectangle& p_dirty)
+bool MCCard::tilecache_render_foreground(void *p_context, MCContext *p_target, const MCRectangle& p_dirty)
 {
 	MCCard *t_card;
 	t_card = (MCCard *)p_context;
@@ -993,23 +993,18 @@ bool MCCard::render_foreground(void *p_context, MCContext *p_target, const MCRec
 	p_target -> setfunction(GXcopy);
 	p_target -> setopacity(255);
 
-	p_target->setlineatts(0, LineDoubleDash, CapButt, JoinBevel);
-	p_target->setforeground(p_target->getblack());
-	p_target->setbackground(p_target->getwhite());
-	p_target->setdashes(0, MCCard::dashlist, 2);
-	p_target->drawrect(t_card -> selrect);
-	p_target->setlineatts(0, LineSolid, CapButt, JoinBevel);
-	p_target->setbackground(MCzerocolor);
+	// IM-2013-09-13: [[ RefactorGraphics ]] Use shared code to render card foreground
+	t_card -> drawselectionrect(p_target);
 
 	return true;
 }
 
 bool device_render_foreground(void *p_context, MCGContextRef p_target, const MCRectangle& p_rectangle)
 {
-	return tilecache_device_renderer(MCCard::render_foreground, p_context, p_target, p_rectangle);
+	return tilecache_device_renderer(MCCard::tilecache_render_foreground, p_context, p_target, p_rectangle);
 }
 
-bool MCCard::render_background(void *p_context, MCContext *p_target, const MCRectangle& p_dirty)
+bool MCCard::tilecache_render_background(void *p_context, MCContext *p_target, const MCRectangle& p_dirty)
 {
 	MCCard *t_card;
 	t_card = (MCCard *)p_context;
@@ -1018,21 +1013,15 @@ bool MCCard::render_background(void *p_context, MCContext *p_target, const MCRec
 	p_target -> setfunction(GXcopy);
 	p_target -> setopacity(255);
 
-	// MW-2011-09-23: Make sure background is rendered consistently with non-tilecache mode.
-	Window_mode wm = t_card -> getstack()->getmode();
-	if (MCcurtheme == nil || !t_card -> getstack() -> ismetal() ||
-		!MCcurtheme -> drawmetalbackground(p_target, p_dirty, t_card -> getrect(), t_card -> parent))
-	{
-		t_card -> setforeground(p_target, DI_BACK, False, MClook == LF_WIN95 && (wm == WM_COMBO || wm == WM_OPTION));
-		p_target -> fillrect(p_dirty);
-	}
+	// IM-2013-09-13: [[ RefactorGraphics ]] Use shared code to render card background
+	t_card -> drawbackground(p_target, p_dirty);
 
 	return true;
 }
 
 bool device_render_background(void *p_context, MCGContextRef p_target, const MCRectangle& p_rectangle)
 {
-	return tilecache_device_renderer(MCCard::render_background, p_context, p_target, p_rectangle);
+	return tilecache_device_renderer(MCCard::tilecache_render_background, p_context, p_target, p_rectangle);
 }
 
 void MCCard::render(void)
