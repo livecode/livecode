@@ -325,12 +325,6 @@ void MCObject::setname_cstring(const char *p_new_name)
 	/* UNCHECKED */ MCNameCreateWithCString(p_new_name, _name);
 }
 
-void MCObject::setname_oldstring(const MCString& p_new_name)
-{
-	MCNameDelete(_name);
-	/* UNCHECKED */ MCNameCreateWithOldString(p_new_name, _name);
-}
-
 void MCObject::open()
 {
 	if (opened++ != 0)

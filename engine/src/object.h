@@ -423,7 +423,6 @@ public:
 	// Set the object's name, interpreting the empty string as unnamed.
 	void setname(MCNameRef new_name);
 	void setname_cstring(const char *p_new_name);
-	void setname_oldstring(const MCString& p_new_name);
 
 	uint1 getopened() const
 	{
