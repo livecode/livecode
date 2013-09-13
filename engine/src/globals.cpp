@@ -936,7 +936,7 @@ bool X_open(int argc, char *argv[], char *envp[])
 	
 	// MW-2012-02-14: [[ FontRefs ]] Open the dispatcher after we have an open
 	//   screen, otherwise we don't have a root fontref!
-	MCdispatcher -> setfontattrs(DEFAULT_TEXT_FONT, DEFAULT_TEXT_SIZE, FA_DEFAULT_STYLE);
+	MCdispatcher -> setfontattrs(MCSTR(DEFAULT_TEXT_FONT), DEFAULT_TEXT_SIZE, FA_DEFAULT_STYLE);
 	MCdispatcher -> open();
 
 	// This is here because it relies on MCscreen being initialized.
