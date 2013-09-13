@@ -1854,22 +1854,23 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 				r_style . space_below = atoi(t_value);
 			break;
 			case kImportHtmlAttrTabStops:
+            {
 				if (r_style . has_tabs)
 				{
 					delete r_style . tabs;
 					r_style . tabs = nil;
 					r_style . has_tabs = false;
 				}
-                MCStringRef t_value_str;
-                /* UNCHECKED */ MCStringCreateWithCString(t_value, t_value_str);
-				if (MCField::parsetabstops(P_TAB_STOPS, t_value_str, r_style . tabs, r_style . tab_count))
+                MCAutoStringRef t_value_str;
+                /* UNCHECKED */ MCStringCreateWithCString(t_value, &t_value_str);
+				if (MCField::parsetabstops(P_TAB_STOPS, *t_value_str, r_style . tabs, r_style . tab_count))
                 {
 					r_style . has_tabs = true;
-                    MCValueRelease(t_value_str);
                 }
+            }
 			break;
 			case kImportHtmlAttrBgColor:
-			{
+            {
 				MCAutoStringRef t_value_str;
 				/* UNCHECKED */ MCStringCreateWithCString(t_value, &t_value_str);
 				MCColor t_color;
@@ -1879,15 +1880,15 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 					r_style . has_background_color = true;
 					r_style . background_color = t_color . pixel;
 				}
-			}
+            }
 			break;
 			case kImportHtmlAttrBorderWidth:
+            
 				r_style . has_border_width = true;
 				r_style . border_width = atoi(t_value);
-            
 			break;
 			case kImportHtmlAttrBorderColor:
-			{
+            {
 				MCAutoStringRef t_value_str;
 				/* UNCHECKED */ MCStringCreateWithCString(t_value, &t_value_str);
 				MCColor t_color;
@@ -1897,7 +1898,7 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 					r_style . has_border_color = true;
 					r_style . border_color = t_color . pixel;
 				}
-			}
+            }
 			break;
 			case kImportHtmlAttrPadding:
 				r_style . has_padding = true;

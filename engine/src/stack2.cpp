@@ -2538,11 +2538,14 @@ void MCStack::getstackfiles(MCExecPoint &ep)
 	}
 }
 
-void MCStack::stringtostackfiles(MCStringRef d, MCStackfile **sf, uint2 &nf)
+void MCStack::stringtostackfiles(MCStringRef d_strref, MCStackfile **sf, uint2 &nf)
 {
 	MCStackfile *newsf = NULL;
 	uint2 nnewsf = 0;
-	char *eptr = strdup(MCStringGetCString(d));
+    // This ensures the coy is freed when the method ends
+    MCAutoPointer<char> d;
+    /* UNCHECKED */ d = strdup(MCStringGetCString(d_strref));
+	char *eptr = *d;
 	while ((eptr = strtok(eptr, "\n")) != NULL)
 	{
 		char *cptr = strchr(eptr, ',');
@@ -2568,9 +2571,7 @@ void MCStack::setstackfiles(MCStringRef s)
 		MCValueRelease(stackfiles[nstackfiles].filename);
 	}
 	delete stackfiles;
-    MCAutoStringRef t_copy;
-    /* UNCHECKED */ MCStringCopy(s, &t_copy);
-	stringtostackfiles(*t_copy, &stackfiles, nstackfiles);
+	stringtostackfiles(s, &stackfiles, nstackfiles);
 }
 
 char *MCStack::getstackfile(const MCString &s)
