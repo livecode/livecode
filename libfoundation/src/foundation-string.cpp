@@ -429,15 +429,20 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 			MCValueRef t_value;
 			t_value = va_arg(p_args, MCValueRef);
 			
-			MCStringRef t_string;
+			MCAutoStringRef t_string;
 			if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeString)
-				t_string = (MCStringRef)t_value;
+				t_string = MCValueRetain((MCStringRef)t_value);
 			else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeName)
-				t_string = MCNameGetString((MCNameRef)t_value);
+				t_string = MCValueRetain(MCNameGetString((MCNameRef)t_value));
+			else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeNumber)
+				if (MCNumberIsInteger((MCNumberRef)t_value))
+					/* UNCHECKED */ MCStringFormat(&t_string, "%d", MCNumberFetchAsInteger((MCNumberRef)t_value));
+				else
+					/* UNCHECKED */ MCStringFormat(&t_string, "%f", MCNumberFetchAsReal((MCNumberRef)t_value));
 			else
 				MCAssert(false);
 
-			t_success = MCStringAppend(t_buffer, t_string);
+			t_success = MCStringAppend(t_buffer, *t_string);
 		}
 	}
 	
