@@ -555,12 +555,12 @@ void MCStack::mode_destroy(void)
 {
 }
 
-Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &carray, Boolean effective)
+Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
 }
 
-Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &cprop, const MCString &carray, Boolean effective)
+Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef cprop, MCStringRef carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
 }
@@ -647,7 +647,7 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 //  Implementation of MCObject::mode_get/setprop for STANDALONE mode.
 //
 
-Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &carray, Boolean effective)
+Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
 }
