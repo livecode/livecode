@@ -560,10 +560,7 @@ void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 		t_state . post_sent = 0;
 		t_state . post_length = MCDataGetLength(p_data);
         
-        MCAutoStringRef t_string;
-        /* UNCHECKED */ MCStringCreateWithNativeChars(MCDataGetBytePtr(p_data), MCDataGetLength(p_data), &t_string);
-		
-		t_success = MCSystemPostUrl(*t_processed, *t_string, MCStringGetLength(*t_string), MCS_posturl_callback, &t_state);
+		t_success = MCSystemPostUrl(*t_processed, p_data, MCDataGetLength(p_data), MCS_posturl_callback, &t_state);
 	}
 	
 	if (t_success)
@@ -651,10 +648,7 @@ void MCS_putintourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 		t_state.put_sent = 0;
 		t_state.put_length = MCDataGetLength(p_data);
         
-        MCAutoStringRef t_string;
-        /* UNCHECKED */ MCStringCreateWithNativeChars(MCDataGetBytePtr(p_data), MCDataGetLength(p_data), &t_string);
-		
-		t_success = MCSystemPutUrl(*t_processed, *t_string, MCStringGetLength(*t_string), MCS_puturl_callback, &t_state);
+		t_success = MCSystemPutUrl(*t_processed, p_data, MCDataGetLength(p_data), MCS_puturl_callback, &t_state);
 	}
 	
 	if (t_success);
