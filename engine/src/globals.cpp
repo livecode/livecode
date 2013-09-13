@@ -824,10 +824,10 @@ bool X_open(int argc, char *argv[], char *envp[])
 {
 	MCperror = new MCError();
 	MCeerror = new MCError();
-	/* UNCHECKED */ MCVariable::createwithname_cstring("MCresult", MCresult);
+	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCresult"), MCresult);
 
-	/* UNCHECKED */ MCVariable::createwithname_cstring("MCurlresult", MCurlresult);
-	/* UNCHECKED */ MCVariable::createwithname_cstring("MCdialogdata", MCdialogdata);
+	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCurlresult"), MCurlresult);
+	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCdialogdata"), MCdialogdata);
 	
 	////
 
