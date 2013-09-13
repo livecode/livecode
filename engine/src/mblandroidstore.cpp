@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 
 #include "mblandroidutil.h"
+#include "mblandroidjava.h"
 #include "mblstore.h"
 
 #include <jni.h>
@@ -151,7 +152,7 @@ bool MCPurchaseFindByProductId(MCStringRef p_product_id, MCPurchase *&r_purchase
     for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != nil; t_purchase = t_purchase->next)
     {
         MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)t_purchase->platform_data;
-        if (MCStringIsEqualTo(p_product_id, t_android_data->product_id))
+        if (MCStringIsEqualTo(p_product_id, t_android_data->product_id, kMCCompareExact))
         {
             r_purchase = t_purchase;
             return true;
@@ -538,12 +539,12 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPurchaseStateChanged(JNI
     MCAutoStringRef t_signed_data;
     MCAutoStringRef t_signature;
     
-    t_success = MCCStringFromJava(env, notificationId, &t_notification_id) && \
-    MCCStringFromJava(env, productId, &t_product_id) && \
-    MCCStringFromJava(env, orderId, &t_order_id) && \
-    MCCStringFromJava(env, developerPayload, &t_developer_payload) && \
-    MCCStringFromJava(env, signedData, &t_signed_data) && \
-    MCCStringFromJava(env, signature, &t_signature);
+    t_success = MCJavaStringToStringRef(env, notificationId, &t_notification_id) && \
+    MCJavaStringToStringRef(env, productId, &t_product_id) && \
+    MCJavaStringToStringRef(env, orderId, &t_order_id) && \
+    MCJavaStringToStringRef(env, developerPayload, &t_developer_payload) && \
+    MCJavaStringToStringRef(env, signedData, &t_signed_data) && \
+    MCJavaStringToStringRef(env, signature, &t_signature);
     
     MCLog("doPurchaseStateChanged(verified=%s, purchaseState=%d, productId=%s, ...)", verified?"TRUE":"FALSE", purchaseState, MCStringGetCString(*t_product_id));
     
@@ -589,16 +590,6 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPurchaseStateChanged(JNI
                 purchase_confirm(t_purchase);
             }
         }
-    }
-    
-    if (!t_success);
-    {
-        MCValueRelease(t_notification_id);
-        MCValueRelease(t_product_id);
-        MCValueRelease(t_order_id);
-        MCValueRelease(t_developer_payload);
-        MCValueRelease(t_signed_data);
-        MCValueRelease(t_signature);
     }
 }
 

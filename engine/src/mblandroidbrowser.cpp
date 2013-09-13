@@ -560,7 +560,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_BrowserControl_doJS
     char *t_tag = nil;
     MCJavaStringToNative(MCJavaGetThreadEnv(), tag, t_tag);
 	
-    if (t_tag == nil || MCStringIsEqualTo(MCAndroidBrowserControl::s_js_tag, kMCEmptyString, kMCCompareExact) || !MCStringIsEqualToCString(s_js_tag, t_tag))
+    if (t_tag == nil || MCStringIsEqualTo(MCAndroidBrowserControl::s_js_tag, kMCEmptyString, kMCCompareExact) || !MCStringIsEqualToCString(MCAndroidBrowserControl::s_js_tag, t_tag, kMCCompareExact))
         t_match = false;
     
     if (t_match)

@@ -38,7 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool path_to_apk_path(const char * p_path, const char *&r_apk_path);
+bool path_to_apk_path(MCStringRef p_path, MCStringRef &r_apk_path);
 
 static bool s_video_playing = false;
 
@@ -49,24 +49,30 @@ bool MCSystemPlayVideo(const char *p_file)
 
 	//MCLog("MCSystemplayVideo(\"%s\")", p_file);
 	bool t_success;
-	const char *t_video_path = nil;
+	MCAutoStringRef t_video_path;
 
-	char *t_resolved_path = nil;
+	MCAutoStringRef t_resolved_path;
+    MCAutoStringRef t_file;
+    
+    /* UNCHECKED */ MCStringCreateWithCString(p_file, &t_file);
 
 	bool t_is_url = false;
 	bool t_is_asset = false;
 
 
-	if (MCCStringBeginsWith(p_file, "http://") || MCCStringBeginsWith(p_file, "https://"))
+	if (MCStringBeginsWithCString(*t_file, (const char_t*)"http://", kMCCompareExact) || MCStringBeginsWithCString(*t_file, (const char_t*)"https://", kMCCompareExact))
 	{
 		t_is_url = true;
-		t_video_path = p_file;
+		t_video_path = *t_file;
 	}
 	else
 	{
-		t_resolved_path = MCS_resolvepath(p_file);
-		t_video_path = t_resolved_path;
-		t_is_asset = path_to_apk_path(t_resolved_path, t_video_path);
+		/* UNCHECKED */ MCS_resolvepath(*t_file, &t_resolved_path);
+        
+        if (path_to_apk_path(*t_resolved_path, &t_video_path))
+            t_is_asset = true;
+        else
+            t_video_path = *t_resolved_path;
 	}
 
 	bool t_looping, t_show_controller;
@@ -75,7 +81,7 @@ bool MCSystemPlayVideo(const char *p_file)
 	t_show_controller = MCtemplateplayer -> getflag(F_SHOW_CONTROLLER) == True;
 
 	s_video_playing = true;
-	MCAndroidEngineRemoteCall("playVideo", "bsbbbb", &t_success, t_video_path, t_is_asset, t_is_url, t_looping, t_show_controller);
+	MCAndroidEngineRemoteCall("playVideo", "bsbbbb", &t_success, MCStringGetCString(*t_video_path), t_is_asset, t_is_url, t_looping, t_show_controller);
 
 	if (!t_success)
 		s_video_playing = false;
@@ -85,8 +91,7 @@ bool MCSystemPlayVideo(const char *p_file)
 			break;
 
 	s_video_playing = false;
-
-	MCCStringFree(t_resolved_path);
+    
 	return t_success;
 }
 

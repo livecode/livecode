@@ -112,6 +112,11 @@ public:
     {
         return false;
     }
+    
+    virtual bool IsExhausted(void)
+    {
+        return feof(m_stream);
+    }
 	
 private:
 	FILE *m_stream;
@@ -120,10 +125,10 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCStringRef MCcmd;
-bool path_to_apk_path(const char * p_path, const char *&r_apk_path);
-bool apk_file_exists(const char *p_apk_path);
-bool apk_get_file_length(const char *p_apk_path, int32_t &r_length);
-bool apk_get_file_offset(const char *p_apk_path, int32_t &r_offset);
+bool path_to_apk_path(MCStringRef p_path, MCStringRef &r_apk_path);
+bool apk_file_exists(MCStringRef p_apk_path);
+bool apk_get_file_length(MCStringRef p_apk_path, int32_t &r_length);
+bool apk_get_file_offset(MCStringRef p_apk_path, int32_t &r_offset);
 
 class MCAssetFileHandle: public MCSystemFileHandle
 {
@@ -158,7 +163,7 @@ public:
 		return true;
 	}
 	
-	virtual bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
+	virtual bool Write(const void *p_buffer, uint32_t p_length)
 	{
 		return false;
 	}
@@ -227,6 +232,11 @@ public:
     {
         return false;
     }
+    
+    virtual bool IsExhausted(void)
+    {
+        return m_position >= m_size;
+    }
 	
 private:
 	FILE *m_stream;
@@ -250,7 +260,7 @@ IO_handle MCAndroidSystem::OpenFile(MCStringRef p_path, intenum_t p_mode, Boolea
     case kMCSOpenFileModeWrite:
         t_mode = 1;
         break;
-    case kMCSOpenFileModeUdpate:
+    case kMCSOpenFileModeUpdate:
         t_mode = 2;
         break;
     case kMCSOpenFileModeAppend:

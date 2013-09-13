@@ -892,18 +892,12 @@ IO_handle android_get_mainstack_stream(void)
 	// I.M.  01/06/2011
 	// open main stack through asset path rather than apk file + offset
 
-	char *t_asset_filename;
-	t_asset_filename = nil;
+	MCAutoStringRef t_asset_filename;
 
-	if (!MCCStringFormat(t_asset_filename, "%s/revandroidmain.rev", MCStringGetCString(MCcmd)))
+	if (!MCStringFormat(&t_asset_filename, "%s/revandroidmain.rev", MCStringGetCString(MCcmd)))
 		return nil;
 
-	IO_handle t_stream;
-	t_stream = MCS_open(t_asset_filename, IO_READ_MODE, False, False, 0);
-
-	MCCStringFree(t_asset_filename);
-
-	return t_stream;
+	return MCS_open(*t_asset_filename, kMCSOpenFileModeRead, False, False, 0);
 }
 
 static void empty_signal_handler(int)
@@ -2080,7 +2074,7 @@ bool MCAndroidLoadDeviceConfiguration()
 
 	MCAndroidDeviceConfiguration *t_configuration = NULL;
 
-	char *t_config_file_path = NULL;
+	MCAutoStringRef t_config_file_path;
 
 	uint32_t t_filesize;
 	t_filesize = 0;
@@ -2095,11 +2089,11 @@ bool MCAndroidLoadDeviceConfiguration()
 		t_success = MCAndroidInitBuildInfo();
 
 	if (t_success)
-		t_success = MCCStringFormat(t_config_file_path, "%s/lc_device_config.txt", MCStringGetCString(MCcmd));
+		t_success = MCStringFormat(&t_config_file_path, "%s/lc_device_config.txt", MCStringGetCString(MCcmd));
 
 	if (t_success)
 	{
-		t_filehandle = MCS_open(t_config_file_path, IO_READ_MODE, false, false, 0);
+		t_filehandle = MCS_open(*t_config_file_path, kMCSOpenFileModeRead, false, false, 0);
 		t_success = t_filehandle != NULL;
 	}
 
@@ -2152,8 +2146,6 @@ bool MCAndroidLoadDeviceConfiguration()
 	}
 	if (t_filehandle != NULL)
 		MCS_close(t_filehandle);
-	if (t_config_file_path != NULL)
-		MCCStringFree(t_config_file_path);
 	if (t_file_buffer != NULL)
 		MCMemoryDeallocate(t_file_buffer);
 

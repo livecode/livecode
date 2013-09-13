@@ -41,6 +41,11 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 
+#ifdef _ANDROID_MOBILE
+#include <unistd.h>
+#include <sys/socket.h>
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool MCS_mbl_hostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context)

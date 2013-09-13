@@ -1069,14 +1069,12 @@ real8 MCIPhoneSystem::GetFreeDiskSpace()
 
 Boolean MCIPhoneSystem::GetDevices(MCStringRef &r_devices)
 {
-    r_devices = MCValueRetain(kMCEmptyString);
-    return True;
+    return False;
 }
 
 Boolean MCIPhoneSystem::GetDrives(MCStringRef& r_devices)
 {
-    r_devices = MCValueRetain(kMCEmptyString);
-    return True;
+    return False;
 }
 
 void MCIPhoneSystem::CheckProcesses(void)
@@ -1111,7 +1109,7 @@ void MCIPhoneSystem::KillAll()
 
 Boolean MCIPhoneSystem::Poll(real8 p_delay, int p_fd)
 {
-    return True;
+    return False;
 }
 
 Boolean MCIPhoneSystem::IsInteractiveConsole(int p_fd)
@@ -1136,14 +1134,12 @@ void MCIPhoneSystem::DoAlternateLanguage(MCStringRef p_script, MCStringRef p_lan
 
 bool MCIPhoneSystem::AlternateLanguages(MCListRef &r_list)
 {
-    r_list = MCValueRetain(kMCEmptyList);
-    return true;
+    return False;
 }
 
 bool MCIPhoneSystem::GetDNSservers(MCListRef &r_list)
 {
-    r_list = MCValueRetain(kMCEmptyList);
-    return true;
+    return False;
 }
 
 //////////////////

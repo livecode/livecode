@@ -62,7 +62,7 @@ bool MCAndroidSystem::GetAddress(MCStringRef& r_address)
 	MCAutoNativeCharArray t_chars;
     t_chars.New(MCStringGetLength(MCcmd) + strlen("android:") + 1);
     
-	sprintf(t_chars.Chars(), "android:%s", MCStringGetCString(MCcmd));
+	sprintf((char*)t_chars.Chars(), "android:%s", MCStringGetCString(MCcmd));
 	return t_chars.CreateStringAndRelease(r_address);
 }
 
@@ -114,7 +114,7 @@ void MCAndroidSystem::SetErrno(int p_errno)
     errno = p_errno;
 }
 
-uint32_t MCAndroidSystem::GetSystemErrno(void)
+uint32_t MCAndroidSystem::GetSystemError(void)
 {
     return errno;
 }

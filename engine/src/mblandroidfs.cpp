@@ -38,34 +38,32 @@ bool is_apk_path(MCStringRef p_path)
 {
 	int32_t t_cmdlen;
 	t_cmdlen = MCStringGetLength(MCcmd);
-	return MCStringBeginsWith(p_path, MCcmd, kMCCompareExact) && (MCStringGetNativeAtIndex(p_path, t_cmdlen) == '/' || MCStringGetNativeCharAtIndex(p_path, t_cmdlen) == '\0');
+	return MCStringBeginsWith(p_path, MCcmd, kMCCompareExact) && (MCStringGetNativeCharAtIndex(p_path, t_cmdlen) == '/' || MCStringGetNativeCharAtIndex(p_path, t_cmdlen) == '\0');
 }
 
 bool path_to_apk_path(MCStringRef p_path, MCStringRef &r_apk_path)
-{
-	MCNativeCharArray t_path;
-    
+{    
 	if (!is_apk_path(p_path))
 		return false;
     
     uint32_t t_start;
     t_start = MCStringGetLength(MCcmd);
     
-    if (MCStringGetNativeAtIndex(p_path, MCStringGetLength(MCcmd)) == '/')
+    if (MCStringGetNativeCharAtIndex(p_path, MCStringGetLength(MCcmd)) == '/')
         t_start += + 1;    
         
-    return MCStringCopySubstring(p_path, MCRangeMake(t_start, MCStringGetlength(p_path) - t_start), r_apk_path);
+    return MCStringCopySubstring(p_path, MCRangeMake(t_start, MCStringGetLength(p_path) - t_start), r_apk_path);
 }
 
-bool path_from_apk_path(const char *p_apk_path, char *&r_path)
+bool path_from_apk_path(MCStringRef p_apk_path, MCStringRef& r_path)
 {
-	return MCCStringFormat(r_path, "%s/%s", MCStringGetCString(MCcmd), p_apk_path);
+	return MCStringFormat(r_path, "%s/%s", MCStringGetCString(MCcmd), MCStringGetCString(p_apk_path));
 }
 
-bool apk_folder_exists(const char *p_apk_path)
+bool apk_folder_exists(MCStringRef p_apk_path)
 {
 	bool t_exists = false;
-	MCAndroidEngineCall("isAssetFolder", "bs", &t_exists, p_apk_path);
+	MCAndroidEngineCall("isAssetFolder", "bx", &t_exists, p_apk_path);
 	return t_exists;
 }
 
@@ -76,7 +74,7 @@ bool apk_file_exists(MCStringRef p_apk_path)
 	return t_exists;
 }
 
-bool apk_get_file_length(MCStringRef& p_apk_path, int32_t &r_length)
+bool apk_get_file_length(MCStringRef p_apk_path, int32_t &r_length)
 {
 	if (!apk_file_exists(p_apk_path))
 		return false;
@@ -84,7 +82,7 @@ bool apk_get_file_length(MCStringRef& p_apk_path, int32_t &r_length)
 	return true;
 }
 
-bool apk_get_file_offset(MCStringRef& p_apk_path, int32_t &r_offset)
+bool apk_get_file_offset(MCStringRef p_apk_path, int32_t &r_offset)
 {
 	if (!apk_file_exists(p_apk_path))
 		return false;
@@ -92,11 +90,11 @@ bool apk_get_file_offset(MCStringRef& p_apk_path, int32_t &r_offset)
 	return true;
 }
 
-const char *apk_get_current_folder()
+bool apk_get_current_folder(MCStringRef r_folder)
 {
 	if (s_current_apk_folder != nil)
-		return MCStringGetCString(s_current_apk_folder);
-	return nil;
+		return MCStringCopy(s_current_apk_folder, r_folder);
+	return false;
 }
 
 bool apk_set_current_folder(MCStringRef p_apk_path)
@@ -120,8 +118,13 @@ bool apk_set_current_folder(MCStringRef p_apk_path)
 bool apk_list_folder_entries(MCSystemListFolderEntriesCallback p_callback, void *p_context)
 {
 	bool t_success = true;
-	char *t_list = nil;
-	MCAndroidEngineCall("getAssetFolderEntryList", "ss", &t_list, apk_get_current_folder());
+	char* t_list = nil;
+    MCAutoStringRef t_current_folder;
+    
+    if (!apk_get_current_folder(&t_current_folder))
+        return false;
+    
+	MCAndroidEngineCall("getAssetFolderEntryList", "sx", &t_list, &(&t_current_folder));
 
 	t_success = t_list != nil;
 
@@ -198,7 +201,7 @@ bool apk_list_folder_entries(MCSystemListFolderEntriesCallback p_callback, void 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCAndroidSystem::CreateFolder(MCStringRef p_path)
+Boolean MCAndroidSystem::CreateFolder(MCStringRef p_path)
 {
 	if (is_apk_path(p_path))
 		return false;
@@ -206,7 +209,7 @@ bool MCAndroidSystem::CreateFolder(MCStringRef p_path)
 	return mkdir(MCStringGetCString(p_path), 0777) == 0;
 }
 
-bool MCAndroidSystem::DeleteFolder(MCStringRef p_path)
+Boolean MCAndroidSystem::DeleteFolder(MCStringRef p_path)
 {
 	if (is_apk_path(p_path))
 		return false;
@@ -214,7 +217,7 @@ bool MCAndroidSystem::DeleteFolder(MCStringRef p_path)
 	return rmdir(MCStringGetCString(p_path)) == 0;
 }
 
-bool MCAndroidSystem::DeleteFile(MCStringRef p_path)
+Boolean MCAndroidSystem::DeleteFile(MCStringRef p_path)
 {
 	if (is_apk_path(p_path))
 		return false;
@@ -222,7 +225,7 @@ bool MCAndroidSystem::DeleteFile(MCStringRef p_path)
 	return unlink(MCStringGetCString(p_path)) == 0;
 }
 
-bool MCAndroidSystem::RenameFileOrFolder(MCStringRef p_old_name, MCStringRef p_new_name)
+Boolean MCAndroidSystem::RenameFileOrFolder(MCStringRef p_old_name, MCStringRef p_new_name)
 {
 	if (is_apk_path(p_old_name) || is_apk_path(p_new_name))
 		return false;
@@ -232,19 +235,19 @@ bool MCAndroidSystem::RenameFileOrFolder(MCStringRef p_old_name, MCStringRef p_n
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCAndroidSystem::BackupFile(MCStringRef p_old_name, MCStringRef p_new_name)
+Boolean MCAndroidSystem::BackupFile(MCStringRef p_old_name, MCStringRef p_new_name)
 {
 	return RenameFileOrFolder(p_old_name, p_new_name);
 }
 
-bool MCAndroidSystem::UnbackupFile(MCStringRef p_old_name, MCStringRef p_new_name)
+Boolean MCAndroidSystem::UnbackupFile(MCStringRef p_old_name, MCStringRef p_new_name)
 {
 	return RenameFileOrFolder(p_old_name, p_new_name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCAndroidSystem::CreateAlias(MCStringRef p_target, MCStringRef p_alias)
+Boolean MCAndroidSystem::CreateAlias(MCStringRef p_target, MCStringRef p_alias)
 {
 	if (is_apk_path(p_target) || is_apk_path(p_alias))
 		return false;
@@ -252,7 +255,7 @@ bool MCAndroidSystem::CreateAlias(MCStringRef p_target, MCStringRef p_alias)
 	return symlink(MCStringGetCString(p_target), MCStringGetCString(p_alias)) == 0;
 }
 
-bool MCAndroidSystem::ResolveAlias(MCStringRef p_target, MCStringRef& r_dest)
+Boolean MCAndroidSystem::ResolveAlias(MCStringRef p_target, MCStringRef& r_dest)
 {
 	if (is_apk_path(p_target))
 		return false;
@@ -264,21 +267,22 @@ bool MCAndroidSystem::ResolveAlias(MCStringRef p_target, MCStringRef& r_dest)
 
 bool MCAndroidSystem::GetCurrentFolder(MCStringRef& r_path)
 {
-	MCAutoPointer<char> t_folder;
-	if (apk_get_current_folder() != nil)
+    MCAutoStringRef t_folder;
+	if (apk_get_current_folder(&t_folder))
 	{
-		if (!path_from_apk_path(apk_get_current_folder(), &t_folder))
-			return false;
+		return path_from_apk_path(*t_folder, r_path);
 	}
 	else
 	{
-		if (!MCMemoryAllocate(PATH_MAX + 1, &t_folder))
-			return false;
+        MCAutoNativeCharArray t_folder_char;
+        if (!t_folder_char . New (PATH_MAX + 1))
+            return false;
 
-		if (NULL == getcwd(*t_folder, PATH_MAX + 1))
+		if (NULL == getcwd((char*)t_folder_char . Chars(), PATH_MAX + 1))
 			return false;
-	}
-	return MCStringCreateWithCString(*t_folder, r_path);
+        
+        return t_folder_char.CreateString(r_path);
+    }
 }
 
 Boolean MCAndroidSystem::SetCurrentFolder(MCStringRef p_path)
@@ -286,7 +290,7 @@ Boolean MCAndroidSystem::SetCurrentFolder(MCStringRef p_path)
 	MCLog("SetCurrentFolder(%s)", MCStringGetCString(p_path));
 	MCAutoStringRef t_apk_path;
 	if (path_to_apk_path(p_path, &t_apk_path))
-		return apk_set_current_folder(t_apk_path);
+		return apk_set_current_folder(*t_apk_path);
 	else
 	{
 		bool t_success = chdir(MCStringGetCString(p_path)) == 0;
@@ -298,7 +302,7 @@ Boolean MCAndroidSystem::SetCurrentFolder(MCStringRef p_path)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCAndroidSystem::FileExists(MCStringRef p_path)
+Boolean MCAndroidSystem::FileExists(MCStringRef p_path)
 {
 	MCAutoStringRef t_apk_path;
 	if (path_to_apk_path(p_path, &t_apk_path))
@@ -314,7 +318,7 @@ bool MCAndroidSystem::FileExists(MCStringRef p_path)
 	return false;
 }
 
-bool MCAndroidSystem::FolderExists(MCStringRef p_path)
+Boolean MCAndroidSystem::FolderExists(MCStringRef p_path)
 {
 	MCAutoStringRef t_apk_path;
 	if (path_to_apk_path(p_path, &t_apk_path))
@@ -330,7 +334,7 @@ bool MCAndroidSystem::FolderExists(MCStringRef p_path)
 	return false;
 }
 
-bool MCAndroidSystem::FileNotAccessible(MCStringRef p_path)
+Boolean MCAndroidSystem::FileNotAccessible(MCStringRef p_path)
 {
 	MCAutoStringRef t_apk_path;
 	if (path_to_apk_path(p_path, &t_apk_path))
@@ -349,7 +353,7 @@ bool MCAndroidSystem::FileNotAccessible(MCStringRef p_path)
 	return false;
 }
 
-bool MCAndroidSystem::ChangePermissions(MCStringRef p_path, uint2 p_mask)
+Boolean MCAndroidSystem::ChangePermissions(MCStringRef p_path, uint2 p_mask)
 {
 	if (is_apk_path(p_path))
 		return false;
@@ -369,17 +373,17 @@ bool MCAndroidSystem::GetTemporaryFileName(MCStringRef &r_tmp_name)
 	return MCStringCreateWithCString(tmpnam(NULL), r_tmp_name);
 }
 
-bool MCAndroidSystem::GetStandardFolder(MCStringRef p_folder, MCStringRef &r_folder)
+Boolean MCAndroidSystem::GetStandardFolder(MCNameRef p_folder, MCStringRef &r_folder)
 {
 	MCAutoStringRef t_stdfolder;
-	if (MCStringIsEqualToCString(p_folder, "engine", kMCCompareExact))
+	if (MCNameIsEqualToCString(p_folder, "engine", kMCCompareExact))
 		MCStringCopy(MCcmd, &t_stdfolder);
 	else
-		MCAndroidEngineCall("getSpecialFolderPath", "xx", &(&t_stdfolder), p_folder);
+		MCAndroidEngineCall("getSpecialFolderPath", "xx", &(&t_stdfolder), MCNameGetString(p_folder));
 
-	MCLog("GetStandardFolder(\"%s\") -> \"%s\"", MCStringGetCString(p_folder), *t_stdfolder == nil ? "" : MCStringGetCString(t_stdfolder));
+	MCLog("GetStandardFolder(\"%s\") -> \"%s\"", MCNameGetCString(p_folder), *t_stdfolder == nil ? "" : MCStringGetCString(*t_stdfolder));
     
-	return MCStringCopy(t_stdfolder, r_folder);
+	return MCStringCopy(*t_stdfolder, r_folder);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -443,7 +447,8 @@ bool MCAndroidSystem::ResolvePath(MCStringRef p_path, MCStringRef& r_resolved)
 
 bool MCAndroidSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *p_context)
 {
-	if (apk_get_current_folder() != nil)
+    MCAutoStringRef t_folder;
+	if (apk_get_current_folder(&t_folder))
 		return apk_list_folder_entries(p_callback, p_context);
 
 	DIR *t_dir;
