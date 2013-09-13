@@ -194,62 +194,75 @@ void MCSecuritySetSslCertificates(MCExecContext& ctxt, MCStringRef p_value)
 
 void MCSecurityEvalEncrypt(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_dest)
 {
+	ctxt . Unimplemented();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCSecurityEvalCipherNames(MCExecContext& ctxt, MCStringRef& r_names)
 {
+	ctxt . Unimplemented();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCSecurityEvalRandomBytes(MCExecContext& ctxt, uinteger_t p_byte_count, MCStringRef& r_bytes)
+void MCSecurityEvalRandomBytes(MCExecContext& ctxt, uinteger_t p_byte_count, MCDataRef& r_bytes)
 {
+	ctxt . Unimplemented();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCSecurityExecRsaOperation(MCExecContext& ctxt, bool p_is_decrypt, MCStringRef p_data, bool p_is_public, MCStringRef p_key, MCStringRef p_passphrase)
 {
+	ctxt . Unimplemented();
 }
 
 void MCSecurityExecRsaEncrypt(MCExecContext& ctxt, MCStringRef p_data, bool p_is_public, MCStringRef p_key, MCStringRef p_passphrase)
 {
+	ctxt . Unimplemented();
 }
 
 void MCSecurityExecRsaDecrypt(MCExecContext& ctxt, MCStringRef p_data, bool p_is_public, MCStringRef p_key, MCStringRef p_passphrase)
 {
+	ctxt . Unimplemented();
 }
 
 void MCSecurityExecBlockOperation(MCExecContext& ctxt, bool p_is_decrypt, MCStringRef p_data, MCNameRef p_cipher, MCStringRef p_key, bool p_is_password, MCStringRef p_salt, MCStringRef p_iv, uint2 p_bit_rate)
 {
+	ctxt . Unimplemented();
 }
 
 void MCSecurityExecBlockEncryptWithPassword(MCExecContext& ctxt, MCStringRef p_data, MCNameRef p_cipher, MCStringRef p_password, MCStringRef p_salt, MCStringRef p_iv, uint2 p_bit_rate)
 {
+	ctxt . Unimplemented();
 }
 
 void MCSecurityExecBlockEncryptWithKey(MCExecContext& ctxt, MCStringRef p_data, MCNameRef p_cipher, MCStringRef p_key, MCStringRef p_iv, uint2 p_bit_rate)
 {
+	ctxt . Unimplemented();
 }
 
 void MCSecurityExecBlockDecryptWithPassword(MCExecContext& ctxt, MCStringRef p_data, MCNameRef p_cipher, MCStringRef p_password, MCStringRef p_salt, MCStringRef p_iv, uint2 p_bit_rate)
 {
+	ctxt . Unimplemented();
 }
 
 void MCSecurityExecBlockDecryptWithKey(MCExecContext& ctxt, MCStringRef p_data, MCNameRef p_cipher, MCStringRef p_key, MCStringRef p_iv, uint2 p_bit_rate)
 {
+	ctxt . Unimplemented();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCSecurityGetSslCertificates(MCExecContext& ctxt, MCStringRef& r_value)
 {
+	ctxt . Unimplemented();
 }
 
 void MCSecuritySetSslCertificates(MCExecContext& ctxt, MCStringRef p_value)
 {
+	ctxt . Unimplemented();
 }
 
 #endif
