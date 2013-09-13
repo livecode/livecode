@@ -692,7 +692,7 @@ struct MCS_getentries_state
 {
 	bool files;
 	bool details;
-	MCAutoListRef list;
+	MCListRef list;
 };
 
 bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
@@ -736,11 +736,11 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 	}
 	if (t_state -> details)
 	{
-		/* UNCHECKED */ MCListAppend(*(t_state->list), t_detailed_string);
+		/* UNCHECKED */ MCListAppend(t_state->list, t_detailed_string);
 		MCValueRelease(t_detailed_string);
 	}
 	else
-    /* UNCHECKED */ MCListAppendCString(*(t_state->list), p_entry->name);
+    /* UNCHECKED */ MCListAppendCString(t_state->list, p_entry->name);
 	
 	return true;
 }
@@ -749,15 +749,15 @@ bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
 {    
 	MCAutoListRef t_list;
     
-	if (!MCListCreateMutable('\n', &(t_list)))
+	if (!MCListCreateMutable('\n', &t_list))
 		return false;
 
 	MCS_getentries_state t_state;	
 	t_state.files = p_files;
 	t_state.details = p_detailed;
-	t_state.list = (*t_list);
+	t_state.list = *t_list;
 	
-	if (!MCsystem -> ListFolderEntries(MCS_getentries_callback, (void*)&(t_state)))
+	if (!MCsystem -> ListFolderEntries(MCS_getentries_callback, (void*)&t_state))
 		return false;
     
 	if (!MCListCopy(*t_list, r_list))
