@@ -661,6 +661,8 @@ static bool enumerate_handlers(MCExecPoint& ep, MCStringRef p_type, MCHandlerArr
 											 t_handler->getname(),
 											 t_handler->getstartline(),
 											 t_handler->getendline());
+		
+		ep.concatstringref(*t_string, EC_NONE, p_first);
 
 		// OK-2008-07-23 : Add the object long id to the first handler from each object. This will
 		// allow the script editor to look up handlers faster.
@@ -670,7 +672,7 @@ static bool enumerate_handlers(MCExecPoint& ep, MCStringRef p_type, MCHandlerArr
 			MCExecContext t_ctxt(t_ep);
 			MCAutoStringRef t_long_id;
 			p_object -> getstringprop(t_ctxt, 0, P_LONG_ID, False, &t_long_id);
-			/* UNCHECKED */ MCStringAppendFormat(*t_string, " %@", *t_long_id);
+			ep.concatstringref(t_long_id, EC_SPACE, false);
 		}	
 
 		p_first = false;
