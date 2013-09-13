@@ -428,7 +428,7 @@ bool MCAndroidSystem::ResolvePath(MCStringRef p_path, MCStringRef& r_resolved)
 		t_absolute_path = (MCStringRef)MCValueRetain(p_path);
     
 	char *t_absolute_cstring;
-	t_absolute_cstring = strdup((const char *)MCStringGetNativeCharPtr(*t_absolute_path));
+	t_absolute_cstring = strdup((const char *)MCStringGetCString(*t_absolute_path));
 	
 	// IM-2012-10-09 - [[ BZ 10432 ]] strip out extra slashes from paths
 	uindex_t t_length = MCCStringLength(t_absolute_cstring);

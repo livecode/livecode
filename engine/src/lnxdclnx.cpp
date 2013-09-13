@@ -893,23 +893,14 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 				// If I don't own the clipboard at this point, then something has gone wrong	
 				if ( ownsclipboard() ) 
 				{
-#ifdef SHARED_STRING
-					MCSharedString * t_data; 
-					if (m_Clipboard_store -> Fetch(  new MCMIMEtype(dpy, srevent -> target), t_data, None, None, DNULL, DNULL, MCeventtime ))
-					{
-						XChangeProperty(dpy, srevent -> requestor, srevent -> property,
-					                srevent -> target, 8, PropModeReplace,
-					                (const unsigned char *)t_data -> Get() . getstring(),
-					                t_data -> Get() . getlength());
-#else
-					MCAutoStringRef t_data; 
+					MCAutoDataRef t_data; 
 					if (m_Clipboard_store -> Fetch(  new MCMIMEtype(dpy, srevent -> target), &t_data, None, None, DNULL, DNULL, MCeventtime ))
 					{
 						XChangeProperty(dpy, srevent -> requestor, srevent -> property,
 					                srevent -> target, 8, PropModeReplace,
-					                (const unsigned char *)MCStringGetCString(*t_data),
-					                MCStringGetLength(*t_data));
-#endif
+					                (const unsigned char *)MCDataGetBytePtr(*t_data),
+					                MCDataGetLength(*t_data));
+						
 						if (srevent->property != None)
 							sendevent.property = srevent->property;
 						else

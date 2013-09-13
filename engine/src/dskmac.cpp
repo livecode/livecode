@@ -467,15 +467,17 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 				sptr[rSize] = '\0';
 				AEGetParamPtr(aePtr, keyDirectObject, typeChar, &rType, sptr, rSize, &rSize);
 				MCExecPoint ep(MCdefaultstackptr->getcard(), NULL, NULL);
+                MCAutoStringRef t_sptr;
+                /* UNCHECKED */ MCStringCreateWithCString(sptr, &t_sptr);
 				if (aeid == kAEDoScript)
 				{
-					MCdefaultstackptr->getcard()->domess(sptr);
+					MCdefaultstackptr->getcard()->domess(*t_sptr);
 					MCresult->eval(ep);
 					AEPutParamPtr(reply, '----', typeChar, ep.getsvalue().getstring(), ep.getsvalue().getlength());
 				}
 				else
 				{
-					MCdefaultstackptr->getcard()->eval(sptr, ep);
+					MCdefaultstackptr->getcard()->eval(*t_sptr, ep);
 					AEPutParamPtr(reply, '----', typeChar, ep.getsvalue().getstring(), ep.getsvalue().getlength());
 				}
 				delete sptr;
@@ -1809,7 +1811,7 @@ OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
 	memset(fspec, 0, sizeof(FSSpec));
     
 	char *f2 = strrchr(MCStringGetCString(*t_resolved_path), '/');
-	if (f2 != NULL && f2 != (const char*)MCStringGetNativeCharPtr(*t_resolved_path))
+	if (f2 != NULL && f2 != (const char*)MCStringGetCString(*t_resolved_path))
 		*f2++ = '\0';
 	char *fspecname = strclone(f2);
     if (!t_utf_path.Lock(*t_resolved_path))
@@ -2417,7 +2419,7 @@ public:
 	virtual bool Seek(int64_t p_offset, int p_dir)
     {
         off_t t_new_pos;
-        t_new_pos = lseek(m_serial_port, p_offset, p_dir);
+        t_new_pos = lseek(m_serial_port, p_offset, p_dir < 0 ? SEEK_END : (p_dir > 0 ? SEEK_SET : SEEK_CUR));
         
         if (t_new_pos == (off_t)-1)
             return false;
@@ -5531,7 +5533,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         t_found_folder = true;
     else if (MCStringGetLength(p_type) == 4)
     {
-        t_mac_folder = MCSwapInt32NetworkToHost(*((uint32_t*)MCStringGetBytePtr(p_type)));
+        t_mac_folder = MCSwapInt32NetworkToHost(*((uint32_t*)MCStringGetNativeCharPtr(p_type)));
         
         uindex_t t_i;
         for (t_i = 0 ; t_i < ELEMENTS(sysfolderlist); t_i++)
@@ -5570,7 +5572,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             t_found_folder = true;
         else if (MCStringGetLength(MCNameGetString(p_type)) == 4)
         {
-            t_mac_folder = MCSwapInt32NetworkToHost(*((uint32_t*)MCStringGetBytePtr(MCNameGetString(p_type))));
+            t_mac_folder = MCSwapInt32NetworkToHost(*((uint32_t*)MCStringGetNativeCharPtr(MCNameGetString(p_type))));
 			
             uindex_t t_i;
             for (t_i = 0 ; t_i < ELEMENTS(sysfolderlist); t_i++)
@@ -8015,7 +8017,7 @@ delete last char of it; return it"
         MCAutoListRef t_list;
         
         MCresult->clear();
-        MCdefaultstackptr->domess(DNS_SCRIPT);
+        MCdefaultstackptr->domess(MCSTR(DNS_SCRIPT));
         
         return MCListCreateMutable('\n', &t_list) &&
             MCListAppend(*t_list, MCresult->getvalueref()) &&

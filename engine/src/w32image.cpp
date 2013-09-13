@@ -393,11 +393,7 @@ bool MCImageBitmapToMetafile(MCImageBitmap *p_bitmap, MCWinSysMetafileHandle &r_
 	return t_success;
 }
 
-#ifdef SHARED_STRING
-bool MCImageBitmapToDragImage(MCImageBitmap *p_bitmap, MCSharedString *&r_dragimage)
-#else
-bool MCImageBitmapToDragImage(MCImageBitmap *p_bitmap, MCStringRef &r_dragimage)
-#endif
+bool MCImageBitmapToDragImage(MCImageBitmap *p_bitmap, MCDataRef &r_dragimage)
 {
 	uint32_t t_header_size;
 	if (MCmajorosversion <= 0x0500)
@@ -412,16 +408,11 @@ bool MCImageBitmapToDragImage(MCImageBitmap *p_bitmap, MCStringRef &r_dragimage)
 	t_data_size = t_header_size + t_image_size;
 
 	char *t_data = nil;
-#ifdef SHARED_STRING
-	if (!MCMemoryAllocate(t_data_size, t_data))
-		return false;
-#else
-	MCAutoNativeCharArray t_buffer;
+	MCAutoByteArray t_buffer;
 	if (!t_buffer.New(t_data_size))
 		return false;
 
-	t_data = (char*)t_buffer.Chars();
-#endif
+	t_data = (char*)t_buffer.Bytes();
 
 	// Location of the bits in the DIB data we are producing
 	char *t_out_bits;
@@ -491,36 +482,10 @@ bool MCImageBitmapToDragImage(MCImageBitmap *p_bitmap, MCStringRef &r_dragimage)
 		t_header -> bV4CSType = LCS_WINDOWS_COLOR_SPACE;
 	}
 
-#ifdef SHARED_STRING
-	r_dragimage = MCSharedString::CreateNoCopy(MCString(t_data, t_data_size));
-
-	if (r_dragimage != nil)
-		return true;
-
-	MCMemoryDeallocate(t_data);
-	return false;
-#else
-	return t_buffer.CreateStringAndRelease(r_dragimage);
-#endif
+	return t_buffer.CreateDataAndRelease(r_dragimage);
 }
 
-#ifdef SHARED_STRING
-MCSharedString *MCImage::converttodragimage(void)
-{
-	MCImageBitmap *t_bitmap = nil;
-	if (!lockbitmap(t_bitmap))
-		return NULL;
-
-	MCSharedString *t_result = nil;
-
-	/* UNCHECKED */ MCImageBitmapToDragImage(t_bitmap, t_result);
-
-	unlockbitmap(t_bitmap);
-
-	return t_result;
-}
-#else
-void MCImage::converttodragimage(MCStringRef& r_output)
+void MCImage::converttodragimage(MCDataRef& r_output)
 {
 	MCImageBitmap *t_bitmap = nil;
 	if (!lockbitmap(t_bitmap))
@@ -530,4 +495,3 @@ void MCImage::converttodragimage(MCStringRef& r_output)
 
 	unlockbitmap(t_bitmap);
 }
-#endif

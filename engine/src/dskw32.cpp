@@ -860,7 +860,7 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
             DWORD t_type;
             t_type = MCS_registry_type_from_string(p_type);
             
-            const BYTE *t_byte_ptr = MCStringGetBytePtr(p_value);
+            const BYTE *t_byte_ptr = MCStringGetNativeCharPtr(p_value);
             uint32_t t_length = MCStringGetLength(p_value);
             if (t_type == REG_SZ && t_byte_ptr[t_length - 1] != '\0')
                 t_length++;

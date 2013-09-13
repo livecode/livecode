@@ -172,24 +172,13 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 			//   stack title will be UTF-8 already.
 			if (strncmp(version, "5.5", 3) >= 0)
 			{
-				if ((stat = IO_read_string(title, stream)) != IO_NORMAL)
+				if ((stat = IO_read_stringref_utf8(title, stream)) != IO_NORMAL)
 					return stat;
 			}
 			else
 			{
-				// MW-2007-07-06: [[ Bug 3226 ]] Updated to take into account 'title' being
-				//   stored as a UTF-8 string.
-				char *t_native_title;
-
-				if ((stat = IO_read_string(t_native_title, stream)) != IO_NORMAL)
+				if ((stat = IO_read_stringref(title, stream, false)) != IO_NORMAL)
 					return stat;
-
-				MCExecPoint ep;
-				ep . setsvalue(t_native_title);
-				ep . nativetoutf8();
-				title = ep . getsvalue() . clone();
-
-				delete t_native_title;
 			}
 		}
 		if (flags & F_DECORATIONS)
@@ -218,7 +207,7 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 		if (maxwidth == 1280 && maxheight == 1024)
 			maxwidth = maxheight = MAXUINT2;
 	}
-	if ((stat = IO_read_string(externalfiles, stream)) != IO_NORMAL)
+	if ((stat = IO_read_stringref(externalfiles, stream, false)) != IO_NORMAL)
 		return stat;
 	if (strncmp(version, "1.3", 3) > 0)
 	{
@@ -492,6 +481,11 @@ IO_stat MCStack::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		flags |= F_LINK_ATTS;
 	else
 		flags &= ~F_LINK_ATTS;
+	
+	if (!MCStringIsEmpty(title))
+		flags |= F_TITLE;
+	else
+		flags &= ~F_TITLE;
 
 	// MW-2013-03-28: Make sure we never save a stack with F_CANT_STANDALONE set.
 	flags &= ~F_CANT_STANDALONE;
@@ -555,26 +549,13 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 		//   write out UTF-8 directly.
 		if (MCstackfileversion >= 5500)
 		{
-			if ((stat = IO_write_string(title, stream)) != IO_NORMAL)
+			if ((stat = IO_write_stringref_utf8(title, stream)) != IO_NORMAL)
 				return stat;
 		}
 		else
 		{
-			// MW-2007-07-06: [[ Bug 3226 ]] Updated to take into account 'title' being
-			//   stored as a UTF-8 string.
-			MCExecPoint ep;
-			char *t_native_title;
-			ep . setsvalue(title);
-			ep . utf8tonative();
-			t_native_title = ep . getsvalue() . clone();
-
-			if ((stat = IO_write_string(t_native_title, stream)) != IO_NORMAL)
-			{
-				delete t_native_title;
+			if ((stat = IO_write_stringref(title, stream, false)) != IO_NORMAL)
 				return stat;
-			}
-
-			delete t_native_title;
 		}
 	}
 	if (flags & F_DECORATIONS)
@@ -596,7 +577,7 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_uint2(maxheight, stream)) != IO_NORMAL)
 			return stat;
 	}
-	if ((stat = IO_write_string(externalfiles, stream)) != IO_NORMAL)
+	if ((stat = IO_write_stringref(externalfiles, stream, false)) != IO_NORMAL)
 		return stat;
 
 	// MW-2012-02-17: [[ LogFonts ]] Save the stack's logical font table.
@@ -901,14 +882,14 @@ MCControl *MCStack::getcontrolid(Chunk_term type, uint4 inid, bool p_recurse)
 	return NULL;
 }
 
-MCControl *MCStack::getcontrolname(Chunk_term type, const MCString &s)
+MCControl *MCStack::getcontrolname(Chunk_term type, MCStringRef s)
 {
 	if (controls == NULL)
 		return NULL;
 	MCControl *tobj = controls;
 	do
 	{
-		MCControl *foundobj = tobj->findname(type, s);
+		MCControl *foundobj = tobj->findname(type, MCStringGetOldString(s));
 		if (foundobj != NULL)
 			return foundobj;
 		tobj = (MCControl *)tobj->next();
@@ -937,10 +918,10 @@ MCObject *MCStack::getAVid(Chunk_term type, uint4 inid)
 	return NULL;
 }
 
-/* LEGACY */ MCObject *MCStack::getAVname(Chunk_term type, const MCString &s)
+/* LEGACY */ MCObject *MCStack::getAVname(Chunk_term type, MCStringRef s)
 {
 	MCNewAutoNameRef t_name;
-	/* UNCHECKED */ MCNameCreateWithOldString(s, &t_name);
+	/* UNCHECKED */ MCNameCreate(s, &t_name);
 	MCObject *t_object;
 	if (!getAVname(type, *t_name, t_object))
 		return nil;
@@ -1429,7 +1410,7 @@ MCObject *MCStack::getobjid(Chunk_term type, uint4 inid)
 		return MCdispatcher->getobjid(type, inid);
 }
 
-MCObject *MCStack::getsubstackobjname(Chunk_term type, const MCString &s)
+MCObject *MCStack::getsubstackobjname(Chunk_term type, MCStringRef s)
 {
 	MCStack *sptr = this;
 	MCObject *optr = NULL;
@@ -1459,12 +1440,8 @@ MCObject *MCStack::getsubstackobjname(Chunk_term type, const MCString &s)
 	return NULL;
 }
 
-/* WRAPPER */ MCObject *MCStack::getobjname(Chunk_term type, MCStringRef p_name)
-{
-	return getobjname(type, MCStringGetOldString(p_name));
-}
 
-MCObject *MCStack::getobjname(Chunk_term type, const MCString& s)
+MCObject *MCStack::getobjname(Chunk_term type, MCStringRef s)
 {
 	MCObject *optr = NULL;
 	uint4 iid;
@@ -1804,10 +1781,9 @@ Exec_stat MCStack::sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
 	return ES_NORMAL;
 }
 
-void MCStack::breakstring(const MCString &source, MCString **dest,
-                          uint2 &nstrings, Find_mode fmode)
+void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uint2 &nstrings, Find_mode fmode)
 {
-	MCString *tdest = NULL;
+    MCStringRef *tdest_str = nil;
 	nstrings = 0;
 	switch (fmode)
 	{
@@ -1816,8 +1792,8 @@ void MCStack::breakstring(const MCString &source, MCString **dest,
 	case FM_WORD:
 		{
 			// MW-2007-07-05: [[ Bug 110 ]] - Break string only breaks at spaces, rather than space charaters
-			const char *sptr = source.getstring();
-			uint4 l = source.getlength();
+			const char *sptr = MCStringGetCString(source);
+			uint4 l = MCStringGetLength(source);
 			MCU_skip_spaces(sptr, l);
 			const char *startptr = sptr;
 			while(l != 0)
@@ -1825,8 +1801,8 @@ void MCStack::breakstring(const MCString &source, MCString **dest,
 				while(l != 0 && !isspace(*sptr))
 					sptr += 1, l -= 1;
 
-				MCU_realloc((char **)&tdest, nstrings, nstrings + 1, sizeof(MCString));
-				tdest[nstrings].set(startptr, sptr - startptr);
+				MCU_realloc((char **)&tdest_str, nstrings, nstrings + 1, sizeof(MCStringRef));
+                /* UNCHECKED */ MCStringCreateWithNativeChars ((const char_t *) startptr, sptr - startptr, tdest_str[nstrings]);
 				nstrings++;
 				MCU_skip_spaces(sptr, l);
 				startptr = sptr;
@@ -1840,15 +1816,14 @@ void MCStack::breakstring(const MCString &source, MCString **dest,
 	}
 	if (nstrings == 0)
 	{
-		tdest = new MCString;
-		tdest[0] = source;
+		tdest_str[0] = MCValueRetain(source);
 		nstrings = 1;
 	}
-	*dest = tdest;
+	dest = tdest_str;
 }
 
 Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
-                         const MCString *strings, uint2 nstrings,
+                         MCStringRef *strings, uint2 nstrings,
                          MCChunk *field, Boolean firstcard)
 {
 	Boolean firstword = True;
@@ -1896,18 +1871,13 @@ Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
 		return True;
 	}
 }
-/* WRAPPER */
-void MCStack::find(MCExecPoint &ep, int p_mode, MCStringRef p_needle, MCChunk *p_target)
-{
-	find(ep, (Find_mode)p_mode, MCStringGetOldString(p_needle), p_target);
-}
 
 void MCStack::find(MCExecPoint &ep, Find_mode fmode,
-                   const MCString &tofind, MCChunk *field)
+                   MCStringRef tofind, MCChunk *field)
 {
-	MCString *strings = NULL;
+	MCStringRef *strings = NULL;
 	uint2 nstrings;
-	breakstring(tofind, &strings, nstrings, fmode);
+	breakstring(tofind, strings, nstrings, fmode);
 	MCCard *ocard = curcard;
 	Boolean firstcard = MCfoundfield != NULL;
 	MCField *oldfound = MCfoundfield;
@@ -1944,18 +1914,20 @@ void MCStack::find(MCExecPoint &ep, Find_mode fmode,
 	curcard = ocard;
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
 	dirtyall();
+    for (int i = 0 ; i < nstrings ; i++)
+        MCValueRelease(strings[i]);
 	delete strings;
 	MCresult->sets(MCnotfoundstring);
 }
 
 void MCStack::markfind(MCExecPoint &ep, Find_mode fmode,
-                       const MCString &tofind, MCChunk *field, Boolean mark)
+                       MCStringRef tofind, MCChunk *field, Boolean mark)
 {
 	if (MCfoundfield != NULL)
 		MCfoundfield->clearfound();
-	MCString *strings = NULL;
+	MCStringRef *strings = NULL;
 	uint2 nstrings;
-	breakstring(tofind, &strings, nstrings, fmode);
+	breakstring(tofind, strings, nstrings, fmode);
 	MCCard *ocard = curcard;
 	do
 	{
@@ -1967,6 +1939,8 @@ void MCStack::markfind(MCExecPoint &ep, Find_mode fmode,
 		curcard = (MCCard *)curcard->next();
 	}
 	while (curcard != ocard);
+    for (uint i = 0 ; i < nstrings ; i++)
+        MCValueRelease(strings[i]);
 	delete strings;
 	if (MCfoundfield != NULL)
 		MCfoundfield->clearfound();

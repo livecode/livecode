@@ -597,7 +597,7 @@ MCPrinterResult MCPSPrinterDevice::Bookmark(const char *title, double x, double 
 char * getdefaultprinter(void)
 {
 	MCExecPoint ep ( NULL, NULL, NULL ) ;
-	MCdefaultstackptr->domess(DEFAULT_PRINTER_SCRIPT);
+	MCdefaultstackptr->domess(MCSTR(DEFAULT_PRINTER_SCRIPT));
 	MCresult->eval(ep);
 	return strdup(ep.getcstring());
 }
@@ -635,23 +635,23 @@ void MCPSPrinter::DoFinalize(void)
 }
 
 
-bool MCPSPrinter::DoReset(const char *p_name)
+bool MCPSPrinter::DoReset(MCStringRef p_name)
 {
-	if ( p_name != NULL ) 
-		m_printersettings . printername = strdup(p_name);
+	if (!MCStringIsEmpty(p_name)) 
+		m_printersettings . printername = strdup(MCStringGetCString(p_name));
 	
 	FlushSettings();
 }
 
 
-bool MCPSPrinter::DoResetSettings(const MCString& p_settings)
+bool MCPSPrinter::DoResetSettings(MCDataRef p_settings)
 {
 	bool t_success;
 	t_success = true;
 
 	MCDictionary t_dictionary;
 	if (t_success)	
-		t_success = t_dictionary . Unpickle(p_settings . getstring(), p_settings . getlength());
+		t_success = t_dictionary . Unpickle(MCDataGetBytePtr(p_settings), MCDataGetLength(p_settings));
 
 	MCString t_name;
 	if (t_success)
@@ -716,7 +716,7 @@ MCPrinterDialogResult MCPSPrinter::DoPageSetup(bool p_window_modal, Window p_own
 
 
 
-MCPrinterResult MCPSPrinter::DoBeginPrint(const char *p_document, MCPrinterDevice*& r_device)
+MCPrinterResult MCPSPrinter::DoBeginPrint(MCStringRef p_document, MCPrinterDevice*& r_device)
 {
 	MCPSPrinterDevice *t_device = new MCPSPrinterDevice ;
 	
@@ -734,7 +734,7 @@ MCPrinterResult MCPSPrinter::DoBeginPrint(const char *p_document, MCPrinterDevic
 	PSwrite("%!PS-Adobe-3.0\n");
 	sprintf(buffer, "%%%%Creator: Revolution %s\n", MCNameGetCString(MCN_version_string)); PSwrite(buffer);
 	PSwrite("%%DocumentData: Clean8Bit\n");
-	sprintf(buffer, "%%%%Title: %s\n", p_document ) ; PSwrite(buffer ) ;
+	sprintf(buffer, "%%%%Title: %s\n", MCStringGetCString(p_document) ) ; PSwrite(buffer ) ;
 	PSwrite("%%MCOrientation Portrait\n");
 	PSwrite("%%EndComments\n");
 	
@@ -1205,7 +1205,6 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
 	memcpy(text, p_mark -> text . data , l);
 	
 	uint2 w = MCscreen->textwidth(f, text, l);
-	
 	
 	text[l] = '\0';
 	const char *sptr = text;

@@ -176,6 +176,7 @@ struct MCInterfaceNamedColor;
 struct MCInterfaceLayer;
 struct MCInterfaceShadow;
 struct MCInterfaceTextStyle;
+struct MCInterfaceTriState;
 
 class MCObject : public MCDLlist
 {
@@ -186,10 +187,10 @@ protected:
 	uint4 flags;
 	MCRectangle rect;
 	MCColor *colors;
-	char **colornames;
+	MCStringRef *colornames;
 	uint4 *pixmapids;
 	Pixmap *pixmaps;
-	char *script;
+	MCStringRef _script;
 	MCHandlerlist *hlist;
 	MCObjectPropertySet *props;
 	uint4 state;
@@ -304,9 +305,9 @@ public:
 
 	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat getarrayprop(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
+	virtual Exec_stat getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
 	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setarrayprop(uint4 parid, Properties which, MCExecPoint&, MCNameRef key, Boolean effective);
+	virtual Exec_stat setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint&, MCNameRef key, Boolean effective);
 
 	virtual void select();
 	virtual void deselect();
@@ -333,6 +334,8 @@ public:
 	// MW-2012-02-14: [[ FontRefs ]] Returns the current concrete fontref of the object.
 	MCFontRef getfontref(void) const { return m_font; }
 
+    Exec_stat getarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective);
+    Exec_stat setarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective);
 	Exec_stat getprop(uint32_t part_id, Properties which, MCExecPoint& ep, Boolean effective);
 	Exec_stat setprop(uint32_t part_id, Properties which, MCExecPoint& ep, Boolean effective);
 	
@@ -445,9 +448,9 @@ public:
 	{
 		return flags;
 	}
-	char *getscript(void)
+	MCStringRef _getscript(void)
 	{
-		return script;
+		return _script;
 	}
 	MCHandlerlist *gethandlers(void)
 	{
@@ -524,7 +527,7 @@ public:
 	// This method searches for the image with the given id, taking into account
 	// the containment and behavior hierarchy of this object.
 	MCImage *resolveimageid(uint4 image_id);
-	MCImage *resolveimagename(const MCString& name);
+	MCImage *resolveimagename(MCStringRef name);
 	
 	Boolean isvisible();
 	Boolean resizeparent();
@@ -533,8 +536,8 @@ public:
 	void setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite = False);
 	Boolean setcolor(uint2 index, const MCString &eptr);
 	Boolean setcolors(const MCString &data);
-	Boolean setpattern(uint2 newpixmap, const MCString &);
-	Boolean setpatterns(const MCString &data);
+	Boolean setpattern(uint2 newpixmap, MCStringRef);
+	Boolean setpatterns(MCStringRef data);
 	Boolean getcindex(uint2 di, uint2 &i);
 	uint2 createcindex(uint2 di);
 	void destroycindex(uint2 di, uint2 i);
@@ -604,9 +607,9 @@ public:
 	            Etch style, uint2 bwidth);
 	void drawborder(MCDC *dc, const MCRectangle &drect, uint2 bwidth);
 	void positionrel(const MCRectangle &dptr, Object_pos xpos, Object_pos ypos);
-	Exec_stat domess(const char *sptr);
+	Exec_stat domess(MCStringRef sptr);
 	void eval(MCExecContext& ctxt, MCStringRef p_script, MCValueRef& r_value);
-	Exec_stat eval(const char *sptr, MCExecPoint &ep);
+	Exec_stat eval(MCStringRef sptr, MCExecPoint &ep);
 	void editscript();
 	void removefrom(MCObjectList *l);
 	Boolean attachmenu(MCStack *sptr);
@@ -653,15 +656,10 @@ public:
 	//   of the objects will be included.
 	static MCPickleContext *startpickling(bool include_2700);
 	static void continuepickling(MCPickleContext *p_context, MCObject *p_object, uint4 p_part);
-#ifdef SHARED_STRING
-	static MCSharedString *stoppickling(MCPickleContext *p_context);
-	static MCSharedString *pickle(MCObject *p_object, uint4 p_part);
-	static MCObject *unpickle(MCSharedString *p_object, MCStack *p_stack);
-#else
-	static void pickle(MCObject *p_object, uint4 p_part, MCStringRef& r_string);
-	static void stoppickling(MCPickleContext *p_context, MCStringRef& r_string);
-	static MCObject *unpickle(MCStringRef p_data, MCStack *p_stack);
-#endif
+	static void pickle(MCObject *p_object, uint4 p_part, MCDataRef& r_string);
+	static void stoppickling(MCPickleContext *p_context, MCDataRef& r_string);
+	static MCObject *unpickle(MCDataRef p_data, MCStack *p_stack);
+	
 	// in DLList overrides
 	MCObject *next()
 	{
@@ -956,9 +954,9 @@ public:
 	void SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef props);
 	void GetCustomPropertySet(MCExecContext& ctxt, MCStringRef& r_propset);
 	void SetCustomPropertySet(MCExecContext& ctxt, MCStringRef propset);
-	void GetCustomPropertySets(MCExecContext& ctxt, MCStringRef& r_propsets);
-	void SetCustomPropertySets(MCExecContext& ctxt, MCStringRef propsets);
-
+	void GetCustomPropertySets(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_propsets);
+	void SetCustomPropertySets(MCExecContext& ctxt, uindex_t p_count, MCStringRef* propsets);
+    
 	void GetInk(MCExecContext& ctxt, intenum_t& r_ink);
 	virtual void SetInk(MCExecContext& ctxt, intenum_t ink);
 	void GetCantSelect(MCExecContext& ctxt, bool& r_setting);
@@ -1022,6 +1020,18 @@ public:
 
 	void GetEncoding(MCExecContext& ctxt, intenum_t& r_encoding);
 
+    void GetCustomKeys(MCExecContext& ctxt, MCStringRef& r_string);
+    void SetCustomKeys(MCExecContext& ctxt, MCStringRef p_string);
+    
+	////////// ARRAY PROPS
+    
+    void GetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool& r_element);
+    void SetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool p_element);
+    void GetCustomKeysElement(MCExecContext& ctxt, MCNameRef p_index, MCStringRef& r_string);
+    void GetCustomProperties(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_array);
+    void SetCustomKeysElement(MCExecContext& ctxt, MCNameRef p_index, MCStringRef p_string);
+    void SetCustomProperties(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_array);
+    
 //////////
 				
 protected:
@@ -1039,6 +1049,8 @@ protected:
 	// MW-2012-02-14: [[ FontRefs ]] Called by open/close to map/unmap the concrete font.
 	void mapfont(void);
 	void unmapfont(void);
+	
+	void setscript_cstring(const char *script);
 	
 private:
 #ifdef OLD_EXEC
@@ -1090,7 +1102,7 @@ private:
 	bool needtosavefontflags(void) const;
 
 	// MW-2013-03-06: [[ Bug 10695 ]] New method used by resolveimage* - if name is nil, then id search.
-	MCImage *resolveimage(const MCString& name, uint4 image_id);
+	MCImage *resolveimage(MCStringRef name, uint4 image_id);
 	
 	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, const MCString &carray, Boolean effective);
 

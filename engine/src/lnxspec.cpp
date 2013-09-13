@@ -1264,7 +1264,7 @@ uint1 *MCuppercasingtable = NULL;
 //
 //	return IO_NORMAL;
 //}
-
+//
 //IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
 //{
 //	if (MCabortscript || ptr == NULL)

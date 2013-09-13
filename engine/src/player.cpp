@@ -147,7 +147,7 @@ static Boolean IsQTVRInstalled(void);
 extern bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP& r_bitmap, void*& r_bits);
 #endif
 
-extern bool MCFiltersBase64Encode(MCStringRef p_src, MCStringRef& r_dst);
+extern bool MCFiltersBase64Encode(MCDataRef p_src, MCStringRef& r_dst);
 
 //-----------------------------------------------------------------------------
 // Control Implementation
@@ -185,6 +185,7 @@ MCPropertyInfo MCPlayer::kProperties[] =
 	DEFINE_RO_OBJ_PROPERTY(P_NODES, String, MCPlayer, Nodes)
 	DEFINE_RO_OBJ_PROPERTY(P_HOT_SPOTS, String, MCPlayer, HotSpots)
 	DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_CONSTRAINTS, MultimediaQTVRConstraints, MCPlayer, Constraints)
+    DEFINE_RO_OBJ_LIST_PROPERTY(P_ENABLED_TRACKS, LinesOfUInt, MCPlayer, EnabledTracks)
 };
 
 MCObjectPropertyTable MCPlayer::kPropertyTable =
@@ -2662,10 +2663,9 @@ Boolean MCPlayer::qt_prepare(void)
 #if defined(TARGET_PLATFORM_MACOS_X)
 		// OK-2009-01-09: [[Bug 1161]] - File resolving code standardized between image and player
         MCAutoStringRef t_filename_str;
-        /* UNCHECKED */ MCStringCreateWithCString(getstack() -> resolve_filename(MCStringGetCString(filename)), &t_filename_str);
+        /* UNCHECKED */ getstack() -> resolve_filename(filename, &t_filename_str);
 		
         MCAutoStringRef t_resolved_filename_str;
-		
 		CFStringRef t_cf_filename;
 		t_cf_filename = NULL;
 		if (MCS_resolvepath(*t_filename_str, &t_resolved_filename_str))
@@ -3163,6 +3163,25 @@ void MCPlayer::qt_getenabledtracks(MCExecPoint& ep)
 			first = false;
 		}
 	}
+}
+
+void MCPlayer::qt_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks)
+{
+    MCAutoArray<uinteger_t> t_tracks;
+    
+	uint2 trackcount = (uint2)GetMovieTrackCount((Movie)theMovie);
+	uint2 i;
+    
+	for (i = 1 ; i <= trackcount ; i++)
+	{
+		Track trak = GetMovieIndTrack((Movie)theMovie,i);
+		if (trak == nil)
+			break;
+		if (GetTrackEnabled(trak))
+			t_tracks . Push(GetTrackID(trak));
+	}
+    
+    t_tracks . Take(r_tracks, r_count);
 }
 
 Boolean MCPlayer::qt_setenabledtracks(const MCString& s)
@@ -3695,6 +3714,11 @@ void MCPlayer::avi_getenabledtracks(MCExecPoint& ep)
 {
 }
 
+void MCPlayer::avi_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks)
+{
+    r_count = 0;
+}
+
 Boolean MCPlayer::avi_setenabledtracks(const MCString& s)
 {
 	return True;
@@ -3855,7 +3879,9 @@ static pascal void userMovieCallbacks(QTCallBack mcb, long index)
 //	int4 tdiff = callbacktable[index].calledAtTime - tplayer->getmoviecurtime();
 //	uint4 ztime = tplayer->gettimescale();
 //	if (MCU_abs(tdiff) < (ztime / 15) )
-		MCscreen->delaymessage(callbacktable[index].playerObj, callbacktable[index].msg, strclone(callbacktable[index].param), NULL);
+	MCAutoStringRef t_param;
+	/* UNCHECKED */ MCStringCreateWithCString(callbacktable[index].param, &t_param);
+		MCscreen->delaymessage(callbacktable[index].playerObj, callbacktable[index].msg, *t_param);
 }
 
 // This callback is triggered when the end of the movie is reached.
@@ -3968,10 +3994,11 @@ static pascal Boolean controllerMsgFilter(MovieController mc, short action, void
 	case mcActionShowMessageString:
 		if (params != NULL)
 		{
-			char *m = strclone(p2cstr((unsigned char *)params));
-			c2pstr((char *)params);
+			MCAutoStringRef t_string;
+			/* UNCHECKED */ MCStringCreateWithCString(p2cstr((unsigned char *)params), &t_string);
+			
 			MCParameter *p = new MCParameter;
-			p->setbuffer(m, strlen(m));
+			p->setvalueref_argument(*t_string);
 			MCscreen->addmessage(tplayer, MCM_qtdebugstr, MCS_time(), p);
 		}
 		break;
@@ -3997,10 +4024,8 @@ static pascal Boolean controllerMsgFilter(MovieController mc, short action, void
 static pascal OSErr enterNodeCallback(QTVRInstance theInstance, UInt32 nodeid, SInt32 player)
 {
 	OSErr err = noErr;
-	char *m = new char[U2L];
-	sprintf(m, "%u", (unsigned int)nodeid);
 	MCParameter *p = new MCParameter;
-	p->setbuffer(m, strlen(m));
+	p->setn_argument(nodeid);
 	MCscreen->addmessage((MCPlayer*)player, MCM_node_changed, MCS_time(), p);
 	return err;
 }
@@ -4013,12 +4038,8 @@ static pascal void clickHotSpotCallback(QTVRInstance qtvr, QTVRInterceptPtr qtvr
 	{
 	case kQTVRTriggerHotSpotSelector:
 		{
-			char *m = new char[U2L];
-			
-			// MW-2005-04-26: [[Tiger]] Seems to complain about the conversion to uint2... 
-			sprintf(m, "%d", (uint4)(qtvrMsg->parameter[0]));
 			MCParameter *p = new MCParameter;
-			p->setbuffer(m, strlen(m));
+			p->setn_argument((uint4)qtvrMsg->parameter[0]);
 			MCscreen->addmessage((MCPlayer*)player, MCM_hot_spot_clicked, MCS_time(), p);
 		}
 		break;
@@ -4208,11 +4229,11 @@ bool MCPlayer::stdeffectdlg(MCStringRef &r_value, MCStringRef &r_result)
 	HLock((Handle)effectdesc);
 	uint4 datasize = GetHandleSize(effectdesc) + sizeof(long) * 2;
 
-	MCAutoNativeCharArray t_buffer;
+	MCAutoByteArray t_buffer;
 	if (!t_buffer.New(datasize))
 		return false;
 
-	long *aLong = (long *)t_buffer.Chars();
+	long *aLong = (long *)t_buffer.Bytes();
 	HLock((Handle)effectdesc);
 	aLong[0] = EndianU32_NtoB(datasize);
 	aLong[1] = EndianU32_NtoB('qtfx');
@@ -4222,8 +4243,8 @@ bool MCPlayer::stdeffectdlg(MCStringRef &r_value, MCStringRef &r_result)
 	QTDisposeAtomContainer(effectdesc);
 	QTDisposeAtomContainer(effectlist);
 
-	MCAutoStringRef t_data;
-	return t_buffer.CreateStringAndRelease(&t_data) &&
+	MCAutoDataRef t_data;
+	return t_buffer.CreateDataAndRelease(&t_data) &&
 		MCFiltersBase64Encode(*t_data, r_value);
 #endif
 

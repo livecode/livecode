@@ -80,7 +80,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 //////////
 
-bool MCFiltersDecompress(MCStringRef p_source, MCStringRef& r_result);
+bool MCFiltersDecompress(MCDataRef p_source, MCDataRef& r_result);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -243,13 +243,13 @@ IO_stat MCDispatch::startup(void)
 	else
 		*enginedir = '\0';
 
-	MCStringRef t_decompressed;
-	MCStringRef t_compressed;
-	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)MCstartupstack, MCstartupstack_length, t_compressed);
+	MCDataRef t_decompressed;
+	MCDataRef t_compressed;
+	/* UNCHECKED */ MCDataCreateWithBytes((const char_t*)MCstartupstack, MCstartupstack_length, t_compressed);
 	/* UNCHECKED */ MCFiltersDecompress(t_compressed, t_decompressed);
 	MCValueRelease(t_compressed);
     
-	IO_handle stream = MCS_fakeopen(MCStringGetOldString(t_decompressed));
+	IO_handle stream = MCS_fakeopen(MCDataGetOldString(t_decompressed));
 	if ((stat = MCdispatcher -> readfile(NULL, NULL, stream, sptr)) != IO_NORMAL)
 	{
 		MCS_close(stream);
@@ -258,7 +258,7 @@ IO_stat MCDispatch::startup(void)
 
 	MCS_close(stream);
 
-	/* FRAGILE */ memset((void *)MCStringGetNativeCharPtr(t_decompressed), 0, MCStringGetLength(t_decompressed));
+	/* FRAGILE */ memset((void *)MCDataGetBytePtr(t_decompressed), 0, MCDataGetLength(t_decompressed));
 	MCValueRelease(t_decompressed);
 
 	// Temporary fix to make sure environment stack doesn't get lost behind everything.
@@ -270,7 +270,7 @@ IO_stat MCDispatch::startup(void)
 #endif
 	
 	MCenvironmentactive = True;
-	sptr -> setfilename(strdup(MCStringGetCString(MCcmd)));
+	sptr -> setfilename(MCcmd);
 	MCdefaultstackptr = MCstaticdefaultstackptr = stacks;
 
 	{
@@ -297,8 +297,9 @@ IO_stat MCDispatch::startup(void)
 				return IO_NORMAL;
 		}
 
-		if (sptr -> getscript() != NULL)
-			memset(sptr -> getscript(), 0, strlen(sptr -> getscript()));
+		// TODO: Script Wiping
+		// if (sptr -> getscript() != NULL)
+		//	memset(sptr -> getscript(), 0, strlen(sptr -> getscript()));
 
 		destroystack(sptr, True);
 		MCtopstackptr = NULL;
@@ -356,9 +357,9 @@ bool MCDispatch::isolatedsend(const char *p_stack_data, uint32_t p_stack_data_le
 	MCfrontscripts = nil;
 	
 	// Load the stack
-	MCStringRef t_decompressed;
-	MCStringRef t_compressed;
-	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_stack_data, p_stack_data_length, t_compressed);
+	MCDataRef t_decompressed;
+	MCDataRef t_compressed;
+	/* UNCHECKED */ MCDataCreateWithBytes((const char_t *)p_stack_data, p_stack_data_length, t_compressed);
 	/* UNCHECKED */ MCFiltersDecompress(t_compressed, t_decompressed);
 	MCValueRelease(t_compressed);
 
@@ -367,7 +368,7 @@ bool MCDispatch::isolatedsend(const char *p_stack_data, uint32_t p_stack_data_le
 	IO_handle t_stream;
 	t_success = false;
 	t_stack = nil;
-	t_stream = MCS_fakeopen(MCStringGetOldString(t_decompressed));
+	t_stream = MCS_fakeopen(MCDataGetOldString(t_decompressed));
 
 	if (MCdispatcher -> readfile(NULL, NULL, t_stream, t_stack) == IO_NORMAL)
 	{
@@ -384,7 +385,7 @@ bool MCDispatch::isolatedsend(const char *p_stack_data, uint32_t p_stack_data_le
 
 	MCS_close(t_stream);
 
-	/* FRAGILE */ memset((void *)MCStringGetNativeCharPtr(t_decompressed), 0, MCStringGetLength(t_decompressed));
+	/* FRAGILE */ memset((void *)MCDataGetBytePtr(t_decompressed), 0, MCDataGetLength(t_decompressed));
 	MCValueRelease(t_decompressed);
 
 	MCtopstackptr = t_old_topstackptr;
@@ -554,11 +555,6 @@ void MCStack::mode_takewindow(MCStack *other)
 void MCStack::mode_takefocus(void)
 {
 	MCscreen->setinputfocus(window);
-}
-
-char *MCStack::mode_resolve_filename(const char *filename)
-{
-	return NULL;
 }
 
 bool MCStack::mode_needstoopen(void)
@@ -1295,7 +1291,7 @@ Window MCModeGetParentWindow(void)
 	return t_window;
 }
 
-bool MCModeCanAccessDomain(const char *p_name)
+bool MCModeCanAccessDomain(MCStringRef p_name)
 {
 	return false;
 }

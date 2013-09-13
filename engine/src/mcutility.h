@@ -186,7 +186,7 @@ public:
 	MCDictionary(void);
 	~MCDictionary(void);
 
-	void Set(uint4 p_id, const MCString& p_value);
+	void Set(uint4 p_id, MCString p_value);
 	bool Get(uint4 p_id, MCString& r_value);
 
 	bool Unpickle(const void *p_buffer, uint4 p_length);

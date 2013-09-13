@@ -330,7 +330,7 @@ Exec_stat MCBase64Decode::eval(MCExecPoint &ep)
 	MCAutoStringRef t_source;
 	/* UNCHECKED */ ep . copyasstringref(&t_source);
 
-	MCAutoStringRef t_result;
+	MCAutoDataRef t_result;
 	MCFiltersEvalBase64Decode(ctxt, *t_source, &t_result);
 
 	if (!ctxt . HasError())
@@ -377,8 +377,8 @@ Exec_stat MCBase64Encode::eval(MCExecPoint &ep)
 	}
 
 	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
+	MCAutoDataRef t_source;
+	/* UNCHECKED */ ep . copyasdataref(&t_source);
 
 	MCAutoStringRef t_result;
 	MCFiltersEvalBase64Encode(ctxt, *t_source, &t_result);
@@ -933,7 +933,7 @@ Exec_stat MCBinaryDecode::eval(MCExecPoint &ep)
 
 	MCExecContext ctxt(ep);
 	MCAutoStringRef t_format;
-	MCAutoStringRef t_data;
+	MCAutoDataRef t_data;
 	MCParameter *t_params = nil;
 
 	if (params->eval(ep) != ES_NORMAL)
@@ -950,7 +950,7 @@ Exec_stat MCBinaryDecode::eval(MCExecPoint &ep)
 			MCeerror->add(EE_BINARYD_BADPARAM, line, pos);
 			return ES_ERROR;
 		}
-		/* UNCHECKED */ ep.copyasstringref(&t_data);
+		/* UNCHECKED */ ep.copyasdataref(&t_data);
 		t_params = params->getnext()->getnext();
 	}
 
@@ -1388,7 +1388,7 @@ Exec_stat MCBinaryEncode::eval(MCExecPoint &ep)
 		t_params = t_params->getnext();
 	}
 
-	MCAutoStringRef t_result;
+	MCAutoDataRef t_result;
 	MCFiltersEvalBinaryEncode(ctxt, *t_format, *t_values, t_value_count, &t_result);
 
 	if (!ctxt.HasError())
@@ -2157,10 +2157,10 @@ Exec_stat MCCompress::eval(MCExecPoint &ep)
 	}
 
 	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
+	MCAutoDataRef t_source;
+	/* UNCHECKED */ ep . copyasdataref(&t_source);
 
-	MCAutoStringRef t_result;
+	MCAutoDataRef t_result;
 	MCFiltersEvalCompress(ctxt, *t_source, &t_result);
 
 	if (!ctxt . HasError())
@@ -2334,10 +2334,10 @@ Exec_stat MCDecompress::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
+	MCAutoDataRef t_source;
+	/* UNCHECKED */ ep . copyasdataref(&t_source);
 
-	MCAutoStringRef t_result;
+	MCAutoDataRef t_result;
 	MCFiltersEvalDecompress(ctxt, *t_source, &t_result);
 
 	if (!ctxt . HasError())
@@ -4471,10 +4471,10 @@ Exec_stat MCIsoToMac::eval(MCExecPoint &ep)
 	}
 
 	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
+	MCAutoDataRef t_source;
+	/* UNCHECKED */ ep . copyasdataref(&t_source);
 
-	MCAutoStringRef t_result;
+	MCAutoDataRef t_result;
 	MCFiltersEvalIsoToMac(ctxt, *t_source, &t_result);
 
 	if (!ctxt.HasError())
@@ -4940,10 +4940,10 @@ Exec_stat MCMacToIso::eval(MCExecPoint &ep)
 	}
 
 	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
+	MCAutoDataRef t_source;
+	/* UNCHECKED */ ep . copyasdataref(&t_source);
 
-	MCAutoStringRef t_result;
+	MCAutoDataRef t_result;
 	MCFiltersEvalMacToIso(ctxt, *t_source, &t_result);
 
 	if (!ctxt.HasError())
@@ -10445,7 +10445,7 @@ Exec_stat MCRandomBytes::eval(MCExecPoint &ep)
 	MCExecContext ctxt(ep);
 
 	uinteger_t t_count;
-	MCAutoStringRef t_result;
+	MCAutoDataRef t_result;
 
 	if (byte_count->eval(ep) != ES_NORMAL && ep.ton() != ES_NORMAL)
 	{

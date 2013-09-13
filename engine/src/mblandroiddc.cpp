@@ -340,7 +340,7 @@ void MCScreenDC::setbeep(uint4 property, int4 beep)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname)
+MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef displayname)
 {
 	return NULL;
 }
