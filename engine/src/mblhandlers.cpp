@@ -6718,10 +6718,10 @@ static void invoke_platform(void *p_context)
 
 extern void MCIPhoneCallOnMainFiber(void (*)(void *), void *);
 
-Exec_stat MCHandlePlatformMessage(MCStringRef p_message, MCParameter *p_parameters)
+Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters)
 {
 	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
-		if (MCStringIsEqualToCString(p_message, s_platform_messages[i] . message, kMCCompareExact))
+		if (MCNameIsEqualToCString(p_message, s_platform_messages[i] . message, kMCCompareExact))
 		{
 			// MW-2012-07-31: [[ Fibers ]] If the method doesn't need script / wait, then
 			//   jump to the main fiber for it.
@@ -6743,11 +6743,11 @@ Exec_stat MCHandlePlatformMessage(MCStringRef p_message, MCParameter *p_paramete
 	return ES_NOT_HANDLED;
 }
 #else // Android
-Exec_stat MCHandlePlatformMessage(MCStringRef p_message, MCParameter *p_parameters)
+Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters)
 {
 	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
     {
-		if (MCStringIsEqualToCString(p_message, s_platform_messages[i] . message, kMCCompareExact))
+		if (MCNameIsEqualToCString(p_message, s_platform_messages[i] . message, kMCCompareExact))
 			return s_platform_messages[i] . handler(s_platform_messages[i] . context, p_parameters);
     }
 	

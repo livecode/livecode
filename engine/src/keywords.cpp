@@ -1597,7 +1597,7 @@ Exec_stat MCThrowKeyword::exec(MCExecPoint &ep)
     {
         MCAutoStringRef t_value;
         ep . copyasstringref(&t_value);
-		MCeerror->copysvalue(*t_value, True);
+		MCeerror->copystringref(*t_value, True);
     }
 	return ES_ERROR;
 }
@@ -1833,7 +1833,7 @@ Exec_stat MCTry::exec(MCExecPoint &ep)
 				errorvar->evalvar(ep)->eval(ep);
                 MCAutoStringRef t_value;
                 ep . copyasstringref(&t_value);
-				MCeerror->copysvalue(*t_value, False);
+				MCeerror->copystringref(*t_value, False);
 				MCeerror->add(EE_TRY_BADSTATEMENT, line, pos);
 				stat = ES_ERROR;
 			}

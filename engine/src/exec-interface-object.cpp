@@ -2451,9 +2451,9 @@ void MCObject::GetTextFont(MCExecContext& ctxt, MCStringRef& r_font)
 		return;
 
     uint2 fontsize, fontstyle;
-    MCAutoStringRef fontname;
-    getfontattsnew(&fontname, fontsize, fontstyle);
-    r_font = MCValueRetain(*fontname);
+    MCNameRef fontname;
+    getfontattsnew(fontname, fontsize, fontstyle);
+    r_font = MCNameGetString(fontname);
 		
 	
 }
@@ -2532,9 +2532,9 @@ void MCObject::GetEffectiveTextFont(MCExecContext& ctxt, MCStringRef& r_font)
 	}
 
     uint2 fontsize, fontstyle;
-    MCAutoStringRef fontname;
-    getfontattsnew(&fontname, fontsize, fontstyle);
-    r_font = MCValueRetain(*fontname);
+    MCNameRef fontname;
+    getfontattsnew(fontname, fontsize, fontstyle);
+    r_font = MCNameGetString(fontname);
 
 }
 
@@ -2544,8 +2544,8 @@ void MCObject::GetTextSize(MCExecContext& ctxt, uinteger_t*& r_size)
 		return;
 
 	uint2 fontsize, fontstyle;
-	MCAutoStringRef fontname;
-	getfontattsnew(&fontname, fontsize, fontstyle);
+	MCNameRef fontname;
+	getfontattsnew(fontname, fontsize, fontstyle);
 	uinteger_t size;
 	size = (uinteger_t)fontsize;
 	*r_size = size;
@@ -2598,8 +2598,8 @@ void MCObject::GetEffectiveTextSize(MCExecContext& ctxt, uinteger_t& r_size)
 	else
 	{
 		uint2 fontsize, fontstyle;
-		MCAutoStringRef fontname;
-		getfontattsnew(&fontname, fontsize, fontstyle);
+		MCNameRef fontname;
+		getfontattsnew(fontname, fontsize, fontstyle);
 		r_size = (uinteger_t)fontsize;
 	}
 }
@@ -2613,8 +2613,8 @@ void MCObject::GetTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& r_style)
     }
 
 	uint2 fontsize, fontstyle;
-	MCAutoStringRef fontname;
-	getfontattsnew(&fontname, fontsize, fontstyle);
+	MCNameRef fontname;
+	getfontattsnew(fontname, fontsize, fontstyle);
 	r_style . style = fontstyle;
 }
 
@@ -2663,8 +2663,8 @@ void MCObject::GetEffectiveTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& 
 	else
 	{
 		uint2 fontsize, fontstyle;
-		MCAutoStringRef fontname;
-		getfontattsnew(&fontname, fontsize, fontstyle);
+		MCNameRef fontname;
+		getfontattsnew(fontname, fontsize, fontstyle);
 		r_style . style = fontstyle;
 	}
 }

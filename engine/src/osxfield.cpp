@@ -571,14 +571,14 @@ private:
 
 Exec_stat MCField::getparagraphmacunicodestyles(MCExecPoint& ep, MCParagraph *p_start, MCParagraph *p_end)
 {
-	MCAutoStringRef origname;
+	MCNameRef origname;
 	uint2 origsize;
 	uint2 origstyle;
-	getfontattsnew(&origname, origsize, origstyle);
+	getfontattsnew(origname, origsize, origstyle);
 	
-	MCAutoStringRef fontname;
+	MCNameRef fontname;
 	uint2 fontsize, fontstyle;
-	getfontattsnew(&fontname, fontsize, fontstyle);
+	getfontattsnew(fontname, fontsize, fontstyle);
 	
 	uint4 t_offset;
 	t_offset = 0;
@@ -637,7 +637,7 @@ Exec_stat MCField::getparagraphmacunicodestyles(MCExecPoint& ep, MCParagraph *p_
 				
 				// MW-2012-02-17: [[ SplitTextAttrs ]] Get any font attrs the block has.
 				if (!t_block -> gettextfont(t_font_name))
-					t_font_name = MCStringGetCString(*origname);
+					t_font_name = MCNameGetCString(origname);
 				if (!t_block -> gettextsize(t_font_size))
 					t_font_size = origsize;
 				if (!t_block -> gettextstyle(t_font_style))

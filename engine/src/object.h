@@ -558,7 +558,7 @@ public:
 	// MW-2012-02-17: [[ LogFonts ]] Fetch the (effective) font attrs for the
 	//   object.
 	void getfontattsnew(MCNameRef& fname, uint2& fsize, uint2& fstyle);
-	void getfontattsnew(MCStringRef& fname, uint2& fsize, uint2& fstyle);
+	//void getfontattsnew(MCStringRef& fname, uint2& fsize, uint2& fstyle);
 
 	// MW-2012-02-16: [[ LogFonts ]] Return the (effective) textFont setting. 
 	MCNameRef gettextfont(void);
