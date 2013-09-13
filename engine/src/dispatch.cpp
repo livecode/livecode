@@ -751,13 +751,13 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 		}
 		else
 		{
-			char *tname = strclone(inname);
+			MCAutoStringRef tname;
+            /* UNCHECKED */ MCStringCreateWithCString(inname, &tname);
 			
 			// MW-2008-06-12: [[ Bug 6476 ]] Media won't open HC stacks
-			if (!MCdispatcher->cut(True) || hc_import(tname, stream, sptr) != IO_NORMAL)
+			if (!MCdispatcher->cut(True) || hc_import(*tname, stream, sptr) != IO_NORMAL)
 			{
 				MCresult->sets("file is not a stack");
-				delete tname;
 				return IO_ERROR;
 			}
 		}

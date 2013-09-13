@@ -485,7 +485,7 @@ void MCMultimediaExecPlayAudioClip(MCExecContext& ctxt, MCStack *p_target, int p
 		}
 		MCacptr = new MCAudioClip;
 		MCacptr->setdisposable();
-		if (!MCacptr->import(MCStringGetCString(p_clip), stream))
+		if (!MCacptr->import(p_clip, stream))
 		{
 			MCS_close(stream);
 			MCresult->sets("error reading audioClip");
