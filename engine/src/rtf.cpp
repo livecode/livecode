@@ -1054,9 +1054,7 @@ RTFStatus RTFReader::ParseFontTable(RTFToken p_token, int4 p_value)
 			{
 				if (p_value == ';')
 				{
-                    MCAutoStringRef tmp_m_font_name;
-                    /* UNCHECKED */ MCStringCreateWithCString(m_font_name, &tmp_m_font_name);
-					t_status = m_fonts . Define(m_font_index, *tmp_m_font_name, m_font_charset);
+					t_status = m_fonts . Define(m_font_index, m_font_name, m_font_charset);
 					if (t_status == kRTFStatusSuccess)
 					{
 						m_font_started = false;

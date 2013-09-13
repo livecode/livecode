@@ -179,13 +179,13 @@ RTFFontTable::~RTFFontTable(void)
 	delete m_entries;
 }
 
-RTFStatus RTFFontTable::Define(uint4 p_index, MCStringRef p_name, uint4 p_charset)
+RTFStatus RTFFontTable::Define(uint4 p_index, char *p_name, uint4 p_charset)
 {
 	if (!Extend())
 		return kRTFStatusNoMemory;
 		
 	m_entries[m_entry_count] . index = p_index;
-	m_entries[m_entry_count] . name = (char*) MCStringGetCString(p_name);
+	m_entries[m_entry_count] . name = p_name;
 	m_entries[m_entry_count] . charset = p_charset;
 	
 	m_entry_count += 1;

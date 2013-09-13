@@ -53,7 +53,7 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 	font -> charset = 0;
 	
 	char *t_comma;
-	t_comma = strchr(reqname, ',');
+	t_comma = strchr(MCNameGetCString(*reqname), ',');
 
 	uint1 t_charset;
 	t_charset = LCH_ENGLISH;

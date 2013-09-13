@@ -535,31 +535,31 @@ bool MCTransferData::Close(void)
 
 MCTransferType MCTransferData::StringToType(MCStringRef p_string)
 {
-	if (MCStringIsEqualToCString(p_string, "text", kMCCompareExact))
+	if (MCStringIsEqualToCString(p_string, "text", kMCCompareCaseless))
 		return TRANSFER_TYPE_TEXT;
 
-	if (MCStringIsEqualToCString(p_string, "unicode", kMCCompareExact))
+	if (MCStringIsEqualToCString(p_string, "unicode", kMCCompareCaseless))
 		return TRANSFER_TYPE_UNICODE_TEXT;
 
-	if (MCStringIsEqualToCString(p_string, "styles", kMCCompareExact))
+	if (MCStringIsEqualToCString(p_string, "styles", kMCCompareCaseless))
 		return TRANSFER_TYPE_STYLED_TEXT;
 
-	if (MCStringIsEqualToCString(p_string, "rtf", kMCCompareExact))
+	if (MCStringIsEqualToCString(p_string, "rtf", kMCCompareCaseless))
 		return TRANSFER_TYPE_RTF_TEXT;
 
-	if (MCStringIsEqualToCString(p_string, "html", kMCCompareExact))
+	if (MCStringIsEqualToCString(p_string, "html", kMCCompareCaseless))
 		return TRANSFER_TYPE_HTML_TEXT;
 
-	if (MCStringIsEqualToCString(p_string, "files", kMCCompareExact))
+	if (MCStringIsEqualToCString(p_string, "files", kMCCompareCaseless))
 		return TRANSFER_TYPE_FILES;
 
-	if (MCStringIsEqualToCString(p_string, "private", kMCCompareExact))
+	if (MCStringIsEqualToCString(p_string, "private", kMCCompareCaseless))
 		return TRANSFER_TYPE_PRIVATE;
 
-	if (MCStringIsEqualToCString(p_string, "image", kMCCompareExact))
+	if (MCStringIsEqualToCString(p_string, "image", kMCCompareCaseless))
 		return TRANSFER_TYPE_IMAGE;
 
-	if (MCStringIsEqualToCString(p_string, "objects", kMCCompareExact))
+	if (MCStringIsEqualToCString(p_string, "objects", kMCCompareCaseless))
 		return TRANSFER_TYPE_OBJECTS;
 
 	return TRANSFER_TYPE_NULL;
