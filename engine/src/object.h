@@ -548,7 +548,8 @@ public:
 	void positionrel(const MCRectangle &dptr, Object_pos xpos, Object_pos ypos);
 	Exec_stat domess(const char *sptr);
 	Exec_stat eval(const char *sptr, MCExecPoint &ep);
-	void editscript();
+	// MERG 2013-9-13: [[ EditScriptChunk ]] Added at expression that's passed through as a second parameter to editScript
+    void editscript(MCString p_at = NULL);
 	void removefrom(MCObjectList *l);
 	Boolean attachmenu(MCStack *sptr);
 	void alloccolors();

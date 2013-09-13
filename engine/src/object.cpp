@@ -2523,11 +2523,15 @@ Exec_stat MCObject::eval(const char *sptr, MCExecPoint &ep)
 	return stat;
 }
 
-void MCObject::editscript()
+// MERG 2013-9-13: [[ EditScriptChunk ]] Added at expression that's passed through as a second parameter to editScript
+void MCObject::editscript(MCString p_at)
 {
 	MCExecPoint ep(this, NULL, NULL);
 	getprop(0, P_LONG_ID, ep, False);
-	getcard()->message_with_args(MCM_edit_script, ep.getsvalue());
+    if (p_at != NULL)
+        getcard()->message_with_args(MCM_edit_script, ep.getsvalue(), p_at);
+    else
+        getcard()->message_with_args(MCM_edit_script, ep.getsvalue());
 }
 
 void MCObject::removefrom(MCObjectList *l)
