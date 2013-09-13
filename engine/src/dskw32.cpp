@@ -4488,7 +4488,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 	}
 #endif /* MCS_doalternatelanguage_dsk_w32 */
 		MCScriptEnvironment *t_environment;
-		t_environment = MCscreen -> createscriptenvironment(MCStringGetCString(p_language));
+		t_environment = MCscreen -> createscriptenvironment(p_language);
 		if (t_environment == NULL)
 			MCresult -> sets("alternate language not found");
 		else

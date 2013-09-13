@@ -508,6 +508,7 @@ public:
 	void avi_setloudness(uint2 loudn);
 	void avi_gettracks(MCExecPoint& ep);
 	void avi_getenabledtracks(MCExecPoint& ep);
+	void avi_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks);
 	Boolean avi_setenabledtracks(const MCString& s);
 	void avi_draw(MCDC *dc, const MCRectangle& dirty);
 

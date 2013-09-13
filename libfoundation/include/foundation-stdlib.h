@@ -180,6 +180,7 @@ extern "C" time_t time(time_t *);
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
+#include <ctype.h>
 
 #endif
 

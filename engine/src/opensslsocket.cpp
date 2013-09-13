@@ -888,7 +888,7 @@ bool MCS_hostaddress(MCStringRef &r_host_address)
 				if ((t_interfaces[i] . iiFlags & IFF_UP) != 0 &&
 					(t_interfaces[i] . iiFlags & IFF_LOOPBACK) == 0 &&
 					t_interfaces[i] . iiAddress . Address . sa_family == AF_INET)
-					return MCStringCreateWithCString(inet_ntoa(t_interfaces[i] . iiAddress . AddressIn . sin_addr, r_host_address));
+					return MCStringCreateWithCString(inet_ntoa(t_interfaces[i] . iiAddress . AddressIn . sin_addr), r_host_address);
 			}
 		}
 	}
@@ -1170,17 +1170,17 @@ void MCSocket::acceptone()
 	if (newfd > 0)
 	{
 		char *t = inet_ntoa(addr.sin_addr);
-		char *n = new char[strlen(t) + I4L];
-		sprintf(n, "%s:%d", t, newfd);
+		MCAutoStringRef n;
+		MCStringFormat(&n, "%s:%d", t, newfd);
 		MCU_realloc((char **)&MCsockets, MCnsockets,
 		            MCnsockets + 1, sizeof(MCSocket *));
 		MCNameRef t_name;
-		MCNameCreateWithCString(n, t_name);
+		MCNameCreate(*n, t_name);
 		MCsockets[MCnsockets] = new MCSocket(t_name, object, NULL,
 		                                     False, newfd, False, False,False);
 		MCsockets[MCnsockets]->connected = True;
 		MCsockets[MCnsockets++]->setselect();
-		MCscreen->delaymessage(object, message, strclone(n), strclone(MCNameGetCString(name)));
+		MCscreen->delaymessage(object, message, *n, MCNameGetString(name));
 		added = True;
 	}
 }

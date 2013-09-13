@@ -190,15 +190,12 @@ Boolean MCScreenDC::open()
 	MCS_query_registry(ep);
 	if (ep.getsvalue().getlength())
 	{
-		char *cstring = ep.getsvalue().clone();
-		char *sptr = cstring;
-		do
-		{
-			if (*sptr == ' ')
-				*sptr = ',';
-		}
-		while (*++sptr);
-		parsecolor(cstring, &MChilitecolor, nil);
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ ep.copyasstringref(&t_string);
+		MCAutoStringRef t_string_mutable;
+		MCStringMutableCopy(*t_string, &t_string_mutable);
+		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_string_mutable, ' ', ',', kMCCompareExact);
+		/* UNCHECKED */ parsecolor(*t_string_mutable, MChilitecolor);
 	}
 	alloccolor(MChilitecolor);
 	
@@ -215,15 +212,12 @@ Boolean MCScreenDC::open()
 	MCS_query_registry(ep);
 	if (ep.getsvalue().getlength())
 	{
-		char *cstring = ep.getsvalue().clone();
-		char *sptr = cstring;
-		do
-		{
-			if (*sptr == ' ')
-				*sptr = ',';
-		}
-		while (*++sptr);
-		parsecolor(cstring, &background_pixel, nil);
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ ep.copyasstringref(&t_string);
+		MCAutoStringRef t_string_mutable;
+		MCStringMutableCopy(*t_string, &t_string_mutable);
+		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_string_mutable, ' ', ',', kMCCompareExact);
+		/* UNCHECKED */ parsecolor(*t_string_mutable, background_pixel);
 	}
 	alloccolor(background_pixel);
 
