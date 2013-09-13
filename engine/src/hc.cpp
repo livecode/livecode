@@ -799,7 +799,9 @@ MCControl *MCHcfield::build(MCHcstak *hcsptr, MCStack *sptr)
 			fontname = HC_DEFAULT_TEXT_FONT;
 
 		// MW-2012-02-17: [[ LogFonts ]] Set the font attributes of the object.
-		fptr -> setfontattrs(fontname, tsize, tstyle);
+        MCAutoStringRef t_fontname;
+        /* UNCHECKED */ MCStringCreateWithCString(fontname, &t_fontname);
+		fptr -> setfontattrs(*t_fontname, tsize, tstyle);
 	}
 	fptr->flags &= ~(F_STYLE | F_DISPLAY_STYLE | F_SHOW_LINES | F_LOCK_TEXT
 	                 | F_AUTO_TAB | F_SHARED_TEXT
@@ -1069,7 +1071,7 @@ MCControl *MCHcbutton::build(MCHcstak *hcsptr, MCStack *sptr)
 		bptr->flags |= F_SHOW_ICON;
 
 		// MW-2012-02-17: [[ LogFonts ]] Set the font attributes of the object.
-		bptr -> setfontattrs("textfont", 9, FA_DEFAULT_STYLE);
+		bptr -> setfontattrs(MCSTR("textfont"), 9, FA_DEFAULT_STYLE);
 		bptr -> fontheight = 12;
 	}
 	else
@@ -1083,7 +1085,9 @@ MCControl *MCHcbutton::build(MCHcstak *hcsptr, MCStack *sptr)
 				fontname = HC_DEFAULT_TEXT_FONT;
 
 			// MW-2012-02-17: [[ LogFonts ]] Set the font attributes of the object.
-			bptr -> setfontattrs(fontname, tsize, tstyle);
+            MCAutoStringRef t_fontname;
+            /* UNCHECKED */ MCStringCreateWithCString(fontname, &t_fontname);
+			bptr -> setfontattrs(*t_fontname, tsize, tstyle);
 		}
 	}
 	if (hctstyle & HC_TSTYLE_OUTLINE)
@@ -2252,7 +2256,7 @@ MCStack *MCHcstak::build()
 	name = script = NULL;
 	sptr->rect = rect;
 	// MW-2012-02-17: [[ LogFonts ]] Set the font attributes of the object.
-	sptr -> setfontattrs(HC_DEFAULT_TEXT_FONT, HC_DEFAULT_TEXT_SIZE, FA_DEFAULT_STYLE);
+	sptr -> setfontattrs(MCSTR(HC_DEFAULT_TEXT_FONT), HC_DEFAULT_TEXT_SIZE, FA_DEFAULT_STYLE);
 	sptr->fontheight = heightfromsize(HC_DEFAULT_TEXT_SIZE);
 	uint4 i;
 	for (i = 0 ; i < npbuffers ; i++)

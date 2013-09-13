@@ -100,6 +100,18 @@ static MCSoundPlayerDelegate *s_sound_player_delegate = nil;
 static float s_sound_loudness = 1.0;
 static MCStringRef s_sound_file = nil;
 
+bool MCSystemSoundInitialize()
+{
+	s_sound_file = MCValueRetain(kMCEmptyString);
+	return true;
+}
+
+bool MCSystemSoundFinalize()
+{
+	MCValueRelease(s_sound_file);
+	return true;
+}
+
 @implementation MCSoundPlayerDelegate
 
 -(id)init
@@ -143,16 +155,12 @@ static MCStringRef s_sound_file = nil;
 // MM-2012-02-29: [[ BUG 10021 ]] Make sure we clear out the sound file if playback stops for any reason
 - (void)audioPlayerFailedToReachEnd:(NSNotification *)notification
 {
-	if (s_sound_file != nil)
-    {
-        MCValueRelease(s_sound_file);
-        s_sound_file = nil;
-    }
+	MCValueAssign(s_sound_file, kMCEmptyString);
 }
 
 - (void)audioPlayerDidReachEnd:(NSNotification *)notification
 {
-	if (s_sound_file != nil)
+	if (!MCStringIsEmpty(s_sound_file))
     {
         // MM-2012-02-29: [[ BUG 10039 ]] Audio looping does not work on iOS
         if (m_looping)
@@ -162,8 +170,7 @@ static MCStringRef s_sound_file = nil;
             // HC-2012-02-01: [[ Bug 9983 ]] - Added "playStopped" message to "play" so users can track when their tracks have finished playing
             // Send a message to indicate that we have finished playing a track.
             MCIHandleFinishedPlayingSound (MCStringGetCString(s_sound_file));
-            MCValueRelease(s_sound_file);
-            s_sound_file = nil;
+            MCValueAssign(s_sound_file, kMCEmptyString);
         }
     }
 }
@@ -175,11 +182,7 @@ static MCStringRef s_sound_file = nil;
     {
         if ([m_player status] == AVPlayerStatusFailed || [m_player_item status] == AVPlayerItemStatusFailed)
         {
-            if (s_sound_file != nil)
-            {
-                MCValueRelease(s_sound_file);
-                s_sound_file = nil;
-            }
+            MCValueAssign(s_sound_file, kMCEmptyString);
         }
     }
 }
@@ -285,7 +288,7 @@ bool MCSystemGetPlayLoudness(uint2& r_loudness)
 	return true;
 }
 
-bool MCSystemPlaySound(const char *p_file, bool p_looping)
+bool MCSystemPlaySound(MCStringRef p_sound, bool p_looping)
 {
 	if (s_sound_player_delegate != nil)
 	{
@@ -293,13 +296,9 @@ bool MCSystemPlaySound(const char *p_file, bool p_looping)
 		s_sound_player_delegate = nil;
 	}
 	
-	if (s_sound_file != nil)
-	{
-		MCValueRelease(s_sound_file);
-		s_sound_file = nil;
-	}
+	MCValueRelease(s_sound_file);
 	
-	if (p_file == nil || *p_file == '\0')
+	if (MCStringIsEmpty(p_sound))
 		return true;
 	
     bool t_success;
@@ -309,16 +308,14 @@ bool MCSystemPlaySound(const char *p_file, bool p_looping)
     if (t_success)
     {
         // Check if we are playing an ipod file or a resource file.
-        if (strncmp(p_file, "ipod-library://", 15) == 0)
+		if (MCStringBeginsWithCString(p_sound, (const char_t *)"ipod-library://", kMCStringOptionCompareExact))
         {
-            /* UNCHECKED */ MCStringCreateWithCString(p_file, s_sound_file);
+            s_sound_file = MCValueRetain(p_sound);
             t_url = [NSURL URLWithString: [NSString stringWithCString: MCStringGetCString(s_sound_file) encoding: NSMacOSRomanStringEncoding]];
         }
         else
         {
-			MCAutoStringRef t_file;
-			/* UNCHECKED */ MCStringCreateWithCString(p_file, &t_file);
-			/* UNCHECKED */ MCS_resolvepath(*t_file, s_sound_file);
+			/* UNCHECKED */ MCS_resolvepath(p_sound, s_sound_file);
             t_url = [NSURL fileURLWithPath: [NSString stringWithCString: MCStringGetCString(s_sound_file) encoding: NSUTF8StringEncoding]];
         }
         t_success = t_url != nil;
@@ -340,21 +337,16 @@ bool MCSystemPlaySound(const char *p_file, bool p_looping)
         MCresult->clear();
     else
     {
-        MCValueRelease(s_sound_file);
-		s_sound_file = nil;
+        MCValueAssign(s_sound_file, kMCEmptyString);
         MCresult->sets("could not play sound");
     }
     
 	return true;		
 }
 
-bool MCSystemGetPlayingSound(const char *& r_sound)
+void MCSystemGetPlayingSound(MCStringRef &r_sound)
 {
-	if (s_sound_file != nil)
-		r_sound = MCStringGetCString(s_sound_file);
-	else
-		r_sound = nil;
-	return true;
+	r_sound = MCValueRetain(s_sound_file);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

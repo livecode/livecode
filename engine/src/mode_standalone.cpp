@@ -198,7 +198,9 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 			return false;
 		}
 		
-		if (!MCdispatcher -> loadexternal(t_external))
+		MCAutoStringRef t_external_str;
+		/* UNCHECKED */ MCStringCreateWithCString(t_external, &t_external_str);
+		if (!MCdispatcher -> loadexternal(*t_external_str))
 		{
 			delete t_external;
 			MCresult -> sets("failed to load external");
@@ -406,14 +408,14 @@ IO_stat MCDispatch::startup(void)
 	MCImage::init();
 	
 #ifdef TARGET_SUBPLATFORM_ANDROID
-	MCdispatcher -> loadexternal("revzip");
-	MCdispatcher -> loadexternal("revdb");
-	MCdispatcher -> loadexternal("revxml");
-	MCdispatcher -> loadexternal("dbsqlite");
-	MCdispatcher -> loadexternal("dbmysql");
+	MCdispatcher -> loadexternal(MCSTR("revzip"));
+	MCdispatcher -> loadexternal(MCSTR("revdb"));
+	MCdispatcher -> loadexternal(MCSTR("revxml"));
+	MCdispatcher -> loadexternal(MCSTR("dbsqlite"));
+	MCdispatcher -> loadexternal(MCSTR("dbmysql"));
 #else
-	MCdispatcher -> loadexternal("revzip.dylib");
-	MCdispatcher -> loadexternal("revdb.dylib");
+	MCdispatcher -> loadexternal(MCSTR("revzip.dylib"));
+	MCdispatcher -> loadexternal(MCSTR("revdb.dylib"));
 #endif
 	
 	// MW-2010-12-18: Startup message / stack init now down in 'main'

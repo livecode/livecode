@@ -1875,16 +1875,14 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMediaCanceled(JNIEnv *en
 	MCAndroidMediaCanceled();
 }
 
-void MCNotificationPostUrlWakeUp(MCString t_url);
+void MCNotificationPostUrlWakeUp(MCStringRef t_url);
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLaunchFromUrl(JNIEnv *env, jobject object, jstring url) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLaunchFromUrl(JNIEnv *env, jobject object, jstring url)
 {
-    char *t_url = nil;
-    if (MCJavaStringToNative(env, url, t_url))
-        MCNotificationPostUrlWakeUp(MCString(t_url));
-
-    MCCStringFree(t_url);
+	MCAutoStringRef t_url_str;
+    if (MCJavaStringToStringRef(env, url, &t_url_str))
+        MCNotificationPostUrlWakeUp(*t_url_str);
 }
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1915,9 +1913,9 @@ bool revandroid_getAssetOffsetAndLength(JNIEnv *env, jobject object, const char 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool revandroid_loadExternalLibrary(const char *p_external, char*& r_path)
+bool revandroid_loadExternalLibrary(MCStringRef p_external, MCStringRef &r_path)
 {
-	MCAndroidEngineRemoteCall("loadExternalLibrary", "ss", &r_path, p_external);
+	MCAndroidEngineRemoteCall("loadExternalLibrary", "xx", &r_path, p_external);
 	return r_path != nil;
 }
 
