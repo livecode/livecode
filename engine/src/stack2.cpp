@@ -71,8 +71,8 @@ void MCStack::setidlefunc(void (*newfunc)())
 
 Boolean MCStack::setscript(MCStringRef newscript)
 {
-	setscript_cstring(MCStringGetCString(newscript));
-	MCValueRelease(newscript);
+	MCValueAssign(_script, newscript);
+    MCValueRelease(newscript);
 	parsescript(False);
 	if (hlist == NULL)
 	{
