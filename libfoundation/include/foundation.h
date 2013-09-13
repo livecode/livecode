@@ -1161,6 +1161,9 @@ extern MCNumberRef kMCMinusOne;
 //  NAME DEFINITIONS
 //
 
+// Like MCSTR but for NameRefs
+MCNameRef MCNAME(const char *);
+
 // Create a name using the given string.
 bool MCNameCreate(MCStringRef string, MCNameRef& r_name);
 // Create a name using native chars.
