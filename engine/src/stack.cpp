@@ -2925,7 +2925,7 @@ void MCStack::loadexternals(void)
 	for (uindex_t i = 0; i < t_count; i++)
 	{
 		MCValueRef t_val;
-		/* UNCHECKED */ MCArrayFetchValueAtIndex(*t_array, i, t_val);
+		/* UNCHECKED */ MCArrayFetchValueAtIndex(*t_array, i + 1, t_val);
 		m_externals->Load((MCStringRef)t_val);
 	}
 
