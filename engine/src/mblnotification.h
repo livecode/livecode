@@ -19,10 +19,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mblsyntax.h"
 
-void MCNotificationPostLocalNotificationEvent(MCString pPayload);
-void MCNotificationPostPushNotificationEvent(MCString p_payload);
-void MCNotificationPostPushRegistered (MCString p_registration_text);
-void MCNotificationPostPushRegistrationError (MCString p_error_text);
-void MCNotificationPostUrlWakeUp (MCString p_url_wake_up_text);
+void MCNotificationPostLocalNotificationEvent(MCStringRef p_payload);
+void MCNotificationPostPushNotificationEvent(MCStringRef p_payload);
+void MCNotificationPostPushRegistered (MCStringRef p_registration_text);
+void MCNotificationPostPushRegistrationError (MCStringRef p_error_text);
+void MCNotificationPostUrlWakeUp (MCStringRef p_url_wake_up_text);
 
 #endif

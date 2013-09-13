@@ -165,10 +165,9 @@ bool MCSystemGetLaunchUrl (MCStringRef& r_launch_url)
 extern "C" JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doLocalNotification(JNIEnv *env, jobject object, jstring user_info) __attribute__((visibility("default")));
 JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doLocalNotification(JNIEnv *env, jobject object, jstring user_info)
 {
-    char *t_user_info = nil;
-    if (MCJavaStringToNative(env, user_info, t_user_info))
-        MCNotificationPostLocalNotificationEvent(MCString(t_user_info));
-    MCCStringFree(t_user_info);
+    MCAutoStringRef t_user_info;
+	if (MCJavaStringToStringRef(env, user_info, &t_user_info))
+        MCNotificationPostLocalNotificationEvent(*t_user_info);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -176,10 +175,9 @@ JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doLocalNot
 extern "C" JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doRemoteNotification(JNIEnv *env, jobject object, jstring user_info) __attribute__((visibility("default")));
 JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doRemoteNotification(JNIEnv *env, jobject object, jstring user_info)
 {
-    char *t_user_info = nil;
-    if (MCJavaStringToNative(env, user_info, t_user_info))
-        MCNotificationPostPushNotificationEvent(MCString(t_user_info));
-    MCCStringFree(t_user_info);
+    MCAutoStringRef t_user_info;
+	if (MCJavaStringToStringRef(env, user_info, &t_user_info)
+        MCNotificationPostPushNotificationEvent(*t_user_info);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doRemoteRegistrationError(JNIEnv *env, jobject object, jstring error) __attribute__((visibility("default")));
