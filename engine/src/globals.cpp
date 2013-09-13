@@ -477,6 +477,8 @@ Boolean MCmainstackschanged = False;
 //   UDP sockets.
 Boolean MCallowdatagrambroadcasts = False;
 
+char *MCsysencoding = nil;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCUIDC *MCCreateScreenDC(void);
@@ -1178,6 +1180,9 @@ int X_close(void)
 #endif
 	
 	MCU_finalize_names();
+	
+	if (MCsysencoding != nil)
+		MCMemoryDelete(MCsysencoding);
 
 	return MCretcode;
 }
