@@ -1226,7 +1226,7 @@ void MCObject::setstate(Boolean on, uint4 newstate)
 Exec_stat MCObject::setsprop(Properties which, MCStringRef s)
 {
 	MCExecPoint ep(this, NULL, NULL);
-	ep.setsvalue(MCStringGetOldString(s));
+	ep.setvalueref(s);
 	return setprop(0, which, ep, False);
 }
 

@@ -134,7 +134,7 @@ unsigned long SSLError(MCStringRef errbuf)
 {
 	if (!InitSSLCrypt())
 	{
-		MCStringCopy(MCSTR("ssl library not found"), errbuf);
+		errbuf = MCSTR("ssl library not found");
 		return 0;
 	}
 #ifdef MCSSL
@@ -143,10 +143,10 @@ unsigned long SSLError(MCStringRef errbuf)
 	{
 		if (ecode)
         {
-            char *t_errbuf;
+            MCAutoPointer<char> t_errbuf;
             t_errbuf = new char[256];
-            ERR_error_string_n(ecode,t_errbuf,255);
-            /* UNCHECKED */ MCStringCreateWithCString(t_errbuf, errbuf);
+            ERR_error_string_n(ecode,&t_errbuf,255);
+            /* UNCHECKED */ MCStringCreateWithCString(*t_errbuf, errbuf);
         }
 		else
 			errbuf = MCValueRetain(kMCEmptyString);

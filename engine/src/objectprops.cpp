@@ -812,7 +812,9 @@ Exec_stat MCObject::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 		// Check the textstyle string is within the object's textstyle set.
         MCAutoStringRef t_value;
         ep . copyasstringref(&t_value);
-		ep . setboolean(string_contains_item(*t_value, MCSTR(MCF_unparsetextstyle(t_style))));
+        MCAutoStringRef t_textstyle;
+        /* UNCHECKED */ MCStringCreateWithCString(MCF_unparsetextstyle(t_style), &t_textstyle);
+		ep . setboolean(string_contains_item(*t_value, *t_textstyle));
 	}
 	break;
 	case P_CUSTOM_KEYS:
