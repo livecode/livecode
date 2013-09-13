@@ -2513,7 +2513,7 @@ void MCInterfaceExecHideGroups(MCExecContext& ctxt)
 
 void MCInterfaceExecHideObject(MCExecContext& ctxt, MCObjectPtr p_target)
 {
-	p_target . object -> setsprop(P_VISIBLE, MCfalsemcstring);
+	p_target . object -> setsprop(P_VISIBLE, MCSTR(MCfalsestring));
 }
 
 void MCInterfaceExecHideObjectWithEffect(MCExecContext& ctxt, MCObjectPtr p_target, MCVisualEffect *p_effect)
@@ -2547,7 +2547,7 @@ void MCInterfaceExecHideObjectWithEffect(MCExecContext& ctxt, MCObjectPtr p_targ
 		
 		// MW-2011-11-15: [[ Bug 9846 ]] Make sure we use the same mechanism to
 		//   set visibility as the non-effect case.
-		p_target . object->setsprop(P_VISIBLE, MCfalsemcstring);
+		p_target . object->setsprop(P_VISIBLE, MCSTR(MCfalsestring));
 		
 		MCRedrawUnlockScreen();
 		

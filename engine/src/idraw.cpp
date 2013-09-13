@@ -166,20 +166,20 @@ void MCImage::startmag(int2 x, int2 y)
 	MCmagimage = this;
 	state |= CS_MAGNIFY;
 
-	char buffer[U2L];
-	sprintf(buffer, "%d", rect.width * MCmagnification);
-	sptr->setsprop(P_MAX_WIDTH, buffer);
+	MCAutoStringRef buffer;
+	MCStringFormat(&buffer, "%d", rect.width * MCmagnification);
+	sptr->setsprop(P_MAX_WIDTH, *buffer);
 
-	sprintf(buffer, "%d", rect.width * MCmagnification);
-	sptr->setsprop(P_MAX_HEIGHT, buffer);
+	MCStringFormat(&buffer, "%d", rect.width * MCmagnification);
+	sptr->setsprop(P_MAX_HEIGHT, *buffer);
 
 	uint2 ssize = MCU_min(32, rect.width);
-	sprintf(buffer, "%d", ssize * MCmagnification);
-	sptr->setsprop(P_WIDTH, buffer);
+	MCStringFormat(&buffer, "%d", ssize * MCmagnification);
+	sptr->setsprop(P_WIDTH, *buffer);
 
 	ssize = MCU_min(32, rect.height);
-	sprintf(buffer, "%d", ssize * MCmagnification);
-	sptr->setsprop(P_HEIGHT, buffer);
+	MCStringFormat(&buffer, "%d", ssize * MCmagnification);
+	sptr->setsprop(P_HEIGHT, *buffer);
 
 	MCRectangle drect = sptr->getrect();
 	magrect.width = drect.width / MCmagnification;

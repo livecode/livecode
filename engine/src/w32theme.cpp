@@ -737,29 +737,27 @@ uint2 MCNativeTheme::getthemeid()
 	return LF_NATIVEWIN; //it's a native windows theme
 }
 
-char *MCNativeTheme::getthemecolor(const MCWidgetInfo &winfo,Widget_Color ctype,char *colorbuf)
+void MCNativeTheme::getthemecolor(const MCWidgetInfo &winfo, Widget_Color ctype, MCStringRef &r_colorbuf)
 {
 	if (winfo.type == WTHEME_TYPE_MENU)
 	{
 		switch (ctype)
 		{
 		case WCOLOR_TEXT:
-			sprintf(colorbuf, menucolors[0] != NULL? menucolors[0]: "0,0,0");
+			MCStringFormat(r_colorbuf, menucolors[0] != NULL? menucolors[0]: "0,0,0");
 			break;
 		case WCOLOR_HILIGHT:
-			sprintf(colorbuf, menucolors[1] != NULL? menucolors[1]: "255,0,0");
+			MCStringFormat(r_colorbuf, menucolors[1] != NULL? menucolors[1]: "255,0,0");
 			break;
 		case WCOLOR_BACK:
-			sprintf(colorbuf, menucolors[2] != NULL? menucolors[2]: "255,255,255");
+			MCStringFormat((r_colorbuf, menucolors[2] != NULL? menucolors[2]: "255,255,255");
 			break;
 		case WCOLOR_BORDER:
-			sprintf(colorbuf, menucolors[3] != NULL? menucolors[3]: "155,155,155");
+			MCStringFormat(r_colorbuf, menucolors[3] != NULL? menucolors[3]: "155,155,155");
 			break;
 		}
-		return colorbuf;
+		
 	}
-	return NULL;
-
 }
 
 

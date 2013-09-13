@@ -414,7 +414,7 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 		tmpfile = True;
 	}
 	tptr = (MCPlayer *)MCtemplateplayer->clone(False, OP_NONE, false);
-	tptr->setsprop(P_SHOW_BORDER, MCfalsemcstring);
+	tptr->setsprop(P_SHOW_BORDER, MCSTR(MCfalsestring));
 	tptr->setfilename(*t_video_name, *t_temp, tmpfile);
 	tptr->open();
 	if (p_prepare)

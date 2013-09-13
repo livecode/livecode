@@ -1221,15 +1221,12 @@ void MCObject::setstate(Boolean on, uint4 newstate)
 		state &= ~newstate;
 }
 
-/* WRAPPER */ Exec_stat MCObject::setsprop(Properties which, MCStringRef p_string)
-{
-	return setsprop(which, MCStringGetOldString(p_string));
-}
 
-Exec_stat MCObject::setsprop(Properties which, const MCString &s)
+
+Exec_stat MCObject::setsprop(Properties which, MCStringRef s)
 {
 	MCExecPoint ep(this, NULL, NULL);
-	ep.setsvalue(s);
+	ep.setsvalue(MCStringGetOldString(s));
 	return setprop(0, which, ep, False);
 }
 

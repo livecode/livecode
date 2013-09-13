@@ -72,9 +72,9 @@ Boolean MCTheme::getthemepropbool(Widget_ThemeProps themeprop)
 		{
 	return False;
 		}
-char *MCTheme::getthemecolor(const MCWidgetInfo &winfo,Widget_Color ctype,char *colorbuf)
+void MCTheme::getthemecolor(const MCWidgetInfo &winfo,Widget_Color ctype, MCStringRef &r_themecolor )
 {
-	return NULL;
+	return;
 	}
 
 void MCTheme::unload()
