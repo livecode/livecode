@@ -1197,12 +1197,12 @@ void MCUIDC::siguser()
 
 #include "rgb.cpp"
 
-Boolean MCUIDC::lookupcolor(const MCString &s, MCColor *color)
+Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
 {
-	uint4 slength = s.getlength();
+	uint4 slength = MCStringGetLength(s);
 	char *startptr = new char[slength + 1];
 	char *sptr = startptr;
-	MCU_lower(sptr, s);
+	MCU_lower(sptr, MCStringGetOldString(s));
 	sptr[slength] = '\0';
 	if (*sptr == '#')
 	{
@@ -1356,7 +1356,7 @@ Boolean MCUIDC::parsecolor(MCStringRef s, MCColor& color, MCStringRef *cname)
 	i1 = MCU_strtol(sptr, l, ',', done);
 	if (!done)
 	{
-		if (lookupcolor(MCStringGetOldString(s), &color))
+		if (lookupcolor(s, &color))
 		{
 			if (cname)
 				*cname = MCValueRetain(s);
