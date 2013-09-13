@@ -2798,18 +2798,19 @@ int MCS_windows_elevation_bootstrap_main(HINSTANCE hInstance, HINSTANCE hPrevIns
 
 	// Post the pipe handles to the parent
 	if (t_success)
-		PostThreadMessageA(t_parent_thread_id, WM_USER + 10, (WPARAM)t_parent_data_read, (LPARAM)t_parent_data_write);
+		PostThreadMessageW(t_parent_thread_id, WM_USER + 10, (WPARAM)t_parent_data_read, (LPARAM)t_parent_data_write);
 
 	// Now we must read the command line and env strings
+	// NOTE: these are UTF-16 encoded strings
 	uint32_t t_cmd_line_length;
-	void *t_cmd_line;
+	LPCWSTR t_cmd_line;
 	t_cmd_line_length = 0;
 	t_cmd_line = nil;
 	if (t_success)
 		t_success = read_blob_from_pipe(t_fromparent_read, t_cmd_line, t_cmd_line_length);
 
 	uint32_t t_env_strings_length;
-	void *t_env_strings;
+	LPCWSTR t_env_strings;
 	t_env_strings_length = 0;
 	t_env_strings = nil;
 	if (t_success)
@@ -2824,15 +2825,15 @@ int MCS_windows_elevation_bootstrap_main(HINSTANCE hInstance, HINSTANCE hPrevIns
 	if (t_success)
 	{
 		PROCESS_INFORMATION piProcInfo;
-		STARTUPINFOA siStartInfo;
-		memset(&siStartInfo, 0, sizeof(STARTUPINFOA));
-		siStartInfo.cb = sizeof(STARTUPINFOA);
+		STARTUPINFOW siStartInfo;
+		memset(&siStartInfo, 0, sizeof(STARTUPINFOW));
+		siStartInfo.cb = sizeof(STARTUPINFOW);
 		siStartInfo.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
 		siStartInfo.wShowWindow = SW_HIDE;
 		siStartInfo.hStdInput = t_fromparent_read;
 		siStartInfo.hStdOutput = t_toparent_write;
 		siStartInfo.hStdError = t_toparent_write_dup;
-		if (CreateProcessA(NULL, (LPSTR)t_cmd_line, NULL, NULL, TRUE, CREATE_NEW_CONSOLE | CREATE_SUSPENDED, t_env_strings, NULL, &siStartInfo, &piProcInfo))
+		if (CreateProcessW(NULL, t_cmd_line, NULL, NULL, TRUE, CREATE_NEW_CONSOLE | CREATE_SUSPENDED, t_env_strings, NULL, &siStartInfo, &piProcInfo))
 		{
 			t_process_handle = piProcInfo . hProcess;
 			t_process_id = piProcInfo . dwProcessId;
