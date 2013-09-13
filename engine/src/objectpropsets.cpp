@@ -126,6 +126,7 @@ bool MCObjectPropertySet::store(MCArrayRef p_array)
 {
 	MCValueRelease(m_props);
     m_props = MCValueRetain(p_array);
+	return true;
 }
 
 bool MCObjectPropertySet::fetchelement(MCExecPoint& ep, MCNameRef p_name)
