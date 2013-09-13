@@ -57,19 +57,26 @@ bool MCSystemGetPlayLoudness(uint2& r_loudness)
 
 static MCStringRef s_sound_file = nil;
 
-bool MCSystemPlaySound(const char *p_file, bool p_looping)
+bool MCSystemSoundInitialize()
+{
+	s_sound_file = MCValueRetain(kMCEmptyString);
+	return true;
+}
+
+bool MCSystemSoundFinalize()
+{
+	MCValueRelease(s_sound_file);
+	return true;
+}
+
+bool MCSystemPlaySound(MCStringRef p_file, bool p_looping)
 {
 	//MCLog("MCSystemPlaySound(%s, %s)", p_file, p_looping?"true":"false");
 	bool t_success;
-	if (s_sound_file != nil)
-	{
-		MCValueRelease(s_sound_file);
-		s_sound_file = nil;
-	}
-    
-	MCAutoStringRef t_file;
-	/* UNCHECKED */ MCStringCreateWithCString(p_file, &t_file);
-	/* UNCHECKED */ MCS_resolvepath(*t_file, s_sound_file);
+	
+	MCValueRelease(s_sound_file);
+	
+	/* UNCHECKED */ MCS_resolvepath(p_file, s_sound_file);
     
 	const char *t_apk_file = nil;
 	if (path_to_apk_path(MCStringGetCString(s_sound_file), t_apk_file))
@@ -78,17 +85,15 @@ bool MCSystemPlaySound(const char *p_file, bool p_looping)
 		MCAndroidEngineCall("playSound", "bxbb", &t_success, s_sound_file, false, p_looping);
 	if (!t_success)
 	{
-		MCValueRelease(s_sound_file);
-		s_sound_file = nil;
+		MCValueAssign(s_sound_file, kMCEmptyString);
 	}
     
 	return t_success;
 }
 
-bool MCSystemGetPlayingSound(const char *& r_sound)
+void MCSystemGetPlayingSound(MCStringRef &r_sound)
 {
-	r_sound = MCStringGetCString(s_sound_file);
-	return true;
+	r_sound = MCValueRetain(s_sound_file);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -237,11 +242,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_SoundModule_doSoundSto
 JNIEXPORT void JNICALL Java_com_runrev_android_SoundModule_doSoundStopped(JNIEnv *env, jobject object)
 {
 	//MCLog("doSoundStopped", nil);
-	if (s_sound_file != nil)
-	{
-		MCValueRelease(s_sound_file);
-		s_sound_file = nil;
-	}
+	MCValueAssign(s_sound_file, kMCEmptyString);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
