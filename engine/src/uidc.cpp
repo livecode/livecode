@@ -1200,8 +1200,9 @@ void MCUIDC::siguser()
 Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
 {
 	uint4 slength = MCStringGetLength(s);
-	char *startptr = new char[slength + 1];
-	char *sptr = startptr;
+	MCAutoPointer<char> startptr;
+    startptr = new char[slength + 1];
+	char *sptr = *startptr;
 	MCU_lower(sptr, MCStringGetOldString(s));
 	sptr[slength] = '\0';
 	if (*sptr == '#')
@@ -1229,10 +1230,7 @@ Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
 					if (c >= 'a' && c <= 'f')
 						b |= c - ('a' - 10);
 					else
-					{
-						delete startptr;
 						return False;
-					}
 			}
 		}
 		while (*sptr != '\0');
@@ -1256,7 +1254,6 @@ Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
 			shiftbits -= goodbits;
 		}
 		color->flags = DoRed | DoGreen | DoBlue;
-		delete startptr;
 		return True;
 	}
 	char *tptr = sptr;
@@ -1283,11 +1280,9 @@ Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
 				color->green = (color_table[mid].green << 8) + color_table[mid].green;
 				color->blue = (color_table[mid].blue << 8) + color_table[mid].blue;
 				color->flags = DoRed | DoGreen | DoBlue;
-				delete startptr;
 				return True;
 			}
 	}
-	delete startptr;
 	return False;
 }
 
