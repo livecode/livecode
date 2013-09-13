@@ -67,7 +67,7 @@ void MCPatternRelease(MCPatternRef p_pattern)
 
 bool MCPatternIsOpaque(MCPatternRef p_pattern)
 {
-	return p_pattern != nil && MCGImageIsOpaque(p_pattern->image));
+	return p_pattern != nil && MCGImageIsOpaque(p_pattern->image);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
