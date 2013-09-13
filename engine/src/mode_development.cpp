@@ -1154,7 +1154,7 @@ bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 	else
 	{
 		if (MCmbstackptr == nil)
-			MCmbstackptr = MCdispatcher->findstackname(MCNAME(MCmessagenamestring));
+			MCmbstackptr = MCdispatcher->findstackname(MCN_messagename);
 		t_msg_box = MCmbstackptr;
 	}
 	
