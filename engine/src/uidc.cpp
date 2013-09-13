@@ -1387,7 +1387,7 @@ Boolean MCUIDC::parsecolor(MCStringRef s, MCColor& color, MCStringRef *cname)
 }
 
 
-#ifdef LEGACY EXEC
+#ifdef LEGACY_EXEC
 Boolean MCUIDC::parsecolors(const MCString &s, MCColor *colors,
                             char *cnames[], uint2 ncolors)
 {
@@ -1439,7 +1439,7 @@ Boolean MCUIDC::getcolors(MCExecPoint &ep)
 		return True;
 }
 
-#ifdef LEGACY EXEC
+#ifdef LEGACY_EXEC
 Boolean MCUIDC::setcolors(const MCString &values)
 {
 		return False;

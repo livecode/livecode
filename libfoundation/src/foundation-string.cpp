@@ -101,7 +101,7 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
         break;
         case kMCStringEncodingUTF32:
             break;
-#ifndef __LINUX__
+#if !defined(__LINUX__) && !defined(__ANDROID__)
         case kMCStringEncodingISO8859_1:
             break;
 #endif
@@ -109,7 +109,7 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
         case kMCStringEncodingWindows1252:
             break;
 #endif
-#ifndef __MAC__
+#if !defined(__MAC__) && !defined(__IOS__)
         case kMCStringEncodingMacRoman:
             break;
 #endif
@@ -692,7 +692,7 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
         return MCStringConvertToUTF8(self, (char*&)r_bytes, r_byte_count);
     case kMCStringEncodingUTF32:
         break;
-#ifndef __LINUX__
+#if !defined(__LINUX__) && !defined(__ANDROID__)
     case kMCStringEncodingISO8859_1:
         break;
 #endif
@@ -700,7 +700,7 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
     case kMCStringEncodingWindows1252:
         break;
 #endif
-#ifndef __MAC__
+#if !defined(__MAC__) && !defined(__IOS__)
     case kMCStringEncodingMacRoman:
         break;
 #endif

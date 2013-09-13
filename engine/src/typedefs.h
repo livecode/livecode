@@ -19,9 +19,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 // IEEE floating-point limits
 
+#ifndef DBL_EPSILON
+#define DBL_EPSILON     2.2204460492503131e-016 /* smallest such that 1.0+DBL_EPSILON != 1.0 */
+#endif
+
 #ifndef DBL_DIG
 #define DBL_DIG         15                      /* # of decimal digits of precision */
-#define DBL_EPSILON     2.2204460492503131e-016 /* smallest such that 1.0+DBL_EPSILON != 1.0 */
 #define DBL_MANT_DIG    53                      /* # of bits in mantissa */
 #define DBL_MAX         1.7976931348623158e+308 /* max value */
 #define DBL_MAX_10_EXP  308                     /* max decimal exponent */
