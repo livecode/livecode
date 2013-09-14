@@ -574,7 +574,7 @@ Parse_stat MCEdit::parse(MCScriptPoint &sp)
 	{
 		if (sp.parseexp(False, True, &m_at) != PS_NORMAL)
         {
-            MCperror->add(PE_EDIT_NOTARGET, sp);
+            MCperror->add(PE_EDIT_NOAT, sp);
             return PS_ERROR;
         }
 	}
@@ -600,7 +600,7 @@ Exec_stat MCEdit::exec(MCExecPoint &ep)
         if (m_at->eval(ep) != ES_NORMAL)
         {
             MCeerror->add
-            (EE_FIND_BADSTRING, line, pos);
+            (EE_EDIT_BADAT, line, pos);
             return ES_ERROR;
         }
         t_at = ep.getsvalue();

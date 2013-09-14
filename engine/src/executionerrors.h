@@ -2416,6 +2416,10 @@ enum Exec_errors
 	
 	// {EE-0796} group: object cannot be grouped
 	EE_GROUP_NOTGROUPABLE,
+    
+    // {EE-0797} edit script: bad at expression
+	EE_EDIT_BADAT,
+    
 };
 
 extern const char *MCexecutionerrors;
