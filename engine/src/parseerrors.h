@@ -1618,6 +1618,10 @@ enum Parse_errors
 
 	// {PE-0530} variance: bad parameters
 	PE_VARIANCE_BADPARAM,
+    
+    // {EE-0531} edit script: no at expression
+	PE_EDIT_NOAT,
+
 };
 
 extern const char *MCparsingerrors;

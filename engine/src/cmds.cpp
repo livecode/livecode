@@ -546,6 +546,7 @@ Exec_stat MCDoMenu::exec(MCExecPoint &ep)
 MCEdit::~MCEdit()
 {
 	delete target;
+    delete m_at;
 }
 
 Parse_stat MCEdit::parse(MCScriptPoint &sp)
@@ -568,6 +569,15 @@ Parse_stat MCEdit::parse(MCScriptPoint &sp)
 		MCperror->add(PE_EDIT_NOTARGET, sp);
 		return PS_ERROR;
 	}
+    // MERG 2013-9-13: [[ EditScriptChunk ]] Added line and column
+    if (sp.skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
+	{
+		if (sp.parseexp(False, True, &m_at) != PS_NORMAL)
+        {
+            MCperror->add(PE_EDIT_NOAT, sp);
+            return PS_ERROR;
+        }
+	}
 	return PS_NORMAL;
 }
 
@@ -581,12 +591,27 @@ Exec_stat MCEdit::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 
-	// MW-2010-10-13: [[ Bug 7476 ]] Make sure we temporarily turn off lock messages
+    // MERG 2013-9-13: [[ EditScriptChunk ]] Added at expression that's passed through as a second parameter to editScript
+    MCString t_at;
+    t_at = NULL;
+    
+    if (m_at != NULL)
+    {
+        if (m_at->eval(ep) != ES_NORMAL)
+        {
+            MCeerror->add
+            (EE_EDIT_BADAT, line, pos);
+            return ES_ERROR;
+        }
+        t_at = ep.getsvalue();
+    }
+    
+    // MW-2010-10-13: [[ Bug 7476 ]] Make sure we temporarily turn off lock messages
 	//   before invoking the method - since it requires message sending to work!
 	Boolean t_old_lock;
 	t_old_lock = MClockmessages;
 	MClockmessages = False;
-	optr->editscript();
+	optr->editscript(t_at);
 	MClockmessages = t_old_lock;
 
 	return ES_NORMAL;
