@@ -250,7 +250,7 @@ Boolean MCF_setweightstring(uint2 &style, MCStringRef data)
 {
 	uint2 w;
 	for (w = MCFW_UNDEFINED ; w <= MCFW_ULTRABOLD ; w++)
-		if (MCStringIsEqualToCString(data, weightstrings[w], kMCCompareExact))
+		if (MCStringIsEqualToCString(data, weightstrings[w], kMCCompareCaseless))
 			break;
 	if (w <= MCFW_ULTRABOLD)
 	{
@@ -278,7 +278,7 @@ Boolean MCF_setexpandstring(uint2 &style, MCStringRef data)
 {
 	uint2 w;
 	for (w = FE_UNDEFINED ; w <= FE_ULTRAEXPANDED ; w++)
-		if (MCStringIsEqualToCString(data, expandstrings[w], kMCCompareExact))
+		if (MCStringIsEqualToCString(data, expandstrings[w], kMCCompareCaseless))
 			break;
 	if (w <= FE_ULTRAEXPANDED)
 	{
@@ -309,12 +309,12 @@ const char *MCF_getslantlongstring(uint2 style)
 
 Boolean MCF_setslantlongstring(uint2 &style, MCStringRef data)
 {
-	if (MCStringIsEqualToCString(data, "oblique", kMCCompareExact))
+	if (MCStringIsEqualToCString(data, "oblique", kMCCompareCaseless))
 	{
 		style |= FA_OBLIQUE;
 		return True;
 	}
-	if (MCStringIsEqualToCString(data, "italic", kMCCompareExact))
+	if (MCStringIsEqualToCString(data, "italic", kMCCompareCaseless))
 	{
 		style |= FA_ITALIC;
 		return True;
@@ -331,16 +331,16 @@ Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
 	{
 	case P_TEXT_ALIGN:
 		flags &= ~F_ALIGNMENT;
-		if (MCStringIsEqualToCString(data, MCleftstring, kMCCompareExact) || MCStringIsEmpty(data))
+		if (MCStringIsEqualToCString(data, MCleftstring, kMCCompareCaseless) || MCStringIsEmpty(data))
 			flags |= F_ALIGN_LEFT;
 		else
-			if (MCStringIsEqualToCString(data, MCcenterstring, kMCCompareExact))
+			if (MCStringIsEqualToCString(data, MCcenterstring, kMCCompareCaseless))
 				flags |= F_ALIGN_CENTER;
 			else
-				if (MCStringIsEqualToCString(data, MCrightstring, kMCCompareExact))
+				if (MCStringIsEqualToCString(data, MCrightstring, kMCCompareCaseless))
 					flags |= F_ALIGN_RIGHT;
 				else
-					if (MCStringIsEqualToCString(data, MCjustifystring, kMCCompareExact))
+					if (MCStringIsEqualToCString(data, MCjustifystring, kMCCompareCaseless))
 						flags |= F_ALIGN_JUSTIFY;
 					else
 					{
@@ -410,40 +410,40 @@ Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
 						continue;
 					if (MCF_setslantlongstring(style, *tdata))
 						continue;
-					if (MCStringIsEqualToCString(*tdata, MCplainstring, kMCCompareExact))
+					if (MCStringIsEqualToCString(*tdata, MCplainstring, kMCCompareCaseless))
 					{
 						style = FA_DEFAULT_STYLE;
 						continue;
 					}
-					if (MCStringIsEqualToCString(*tdata, MCmixedstring, kMCCompareExact))
+					if (MCStringIsEqualToCString(*tdata, MCmixedstring, kMCCompareCaseless))
 					{
 						style = FA_DEFAULT_STYLE;
 						continue;
 					}
-					if (MCStringIsEqualToCString(*tdata, MCboxstring, kMCCompareExact))
+					if (MCStringIsEqualToCString(*tdata, MCboxstring, kMCCompareCaseless))
 					{
 						style &= ~FA_3D_BOX;
 						style |= FA_BOX;
 						continue;
                     }
                 
-					if (MCStringIsEqualToCString(*tdata, MCthreedboxstring, kMCCompareExact))
+					if (MCStringIsEqualToCString(*tdata, MCthreedboxstring, kMCCompareCaseless))
 					{
 						style &= ~FA_BOX;
 						style |= FA_3D_BOX;
 						continue;
 					}
-					if (MCStringIsEqualToCString(*tdata, MCunderlinestring, kMCCompareExact))
+					if (MCStringIsEqualToCString(*tdata, MCunderlinestring, kMCCompareCaseless))
 					{
 						style |= FA_UNDERLINE;
 						continue;
 					}
-					if (MCStringIsEqualToCString(*tdata, MCstrikeoutstring, kMCCompareExact))
+					if (MCStringIsEqualToCString(*tdata, MCstrikeoutstring, kMCCompareCaseless))
 					{
 						style |= FA_STRIKEOUT;
 						continue;
 					}
-					if (MCStringIsEqualToCString(*tdata, MCgroupstring, kMCCompareExact) || MCStringIsEqualToCString(*tdata, MClinkstring, kMCCompareExact))
+					if (MCStringIsEqualToCString(*tdata, MCgroupstring, kMCCompareCaseless) || MCStringIsEqualToCString(*tdata, MClinkstring, kMCCompareCaseless))
 					{
 						style |= FA_LINK;
 						continue;
@@ -530,25 +530,25 @@ Exec_stat MCF_unparsetextatts(Properties which, MCExecPoint &ep, uint4 flags, MC
 // MW-2011-11-23: [[ Array TextStyle ]] Convert a textStyle name into the enum.
 Exec_stat MCF_parsetextstyle(MCStringRef data, Font_textstyle &style)
 {
-	if (MCStringIsEqualToCString(data, "bold", kMCCompareExact))
+	if (MCStringIsEqualToCString(data, "bold", kMCCompareCaseless))
 		style = FTS_BOLD;
-	else if (MCStringIsEqualToCString(data, "condensed", kMCCompareExact))
+	else if (MCStringIsEqualToCString(data, "condensed", kMCCompareCaseless))
 		style = FTS_CONDENSED;
-	else if (MCStringIsEqualToCString(data, "expanded", kMCCompareExact))
+	else if (MCStringIsEqualToCString(data, "expanded", kMCCompareCaseless))
 		style = FTS_EXPANDED;
-	else if (MCStringIsEqualToCString(data, "italic", kMCCompareExact))
+	else if (MCStringIsEqualToCString(data, "italic", kMCCompareCaseless))
 		style = FTS_ITALIC;
-	else if (MCStringIsEqualToCString(data, "oblique", kMCCompareExact))
+	else if (MCStringIsEqualToCString(data, "oblique", kMCCompareCaseless))
 		style = FTS_OBLIQUE;
-	else if (MCStringIsEqualToCString(data, MCboxstring, kMCCompareExact))
+	else if (MCStringIsEqualToCString(data, MCboxstring, kMCCompareCaseless))
 		style = FTS_BOX;
-	else if (MCStringIsEqualToCString(data, MCthreedboxstring, kMCCompareExact))
+	else if (MCStringIsEqualToCString(data, MCthreedboxstring, kMCCompareCaseless))
 		style = FTS_3D_BOX;
-	else if (MCStringIsEqualToCString(data, MCunderlinestring, kMCCompareExact))
+	else if (MCStringIsEqualToCString(data, MCunderlinestring, kMCCompareCaseless))
 		style = FTS_UNDERLINE;
-	else if (MCStringIsEqualToCString(data, MCstrikeoutstring, kMCCompareExact))
+	else if (MCStringIsEqualToCString(data, MCstrikeoutstring, kMCCompareCaseless))
 		style = FTS_STRIKEOUT;
-	else if (MCStringIsEqualToCString(data, MCgroupstring, kMCCompareExact) || MCStringIsEqualToCString(data, MClinkstring, kMCCompareExact))
+	else if (MCStringIsEqualToCString(data, MCgroupstring, kMCCompareCaseless) || MCStringIsEqualToCString(data, MClinkstring, kMCCompareCaseless))
 		style = FTS_LINK;
 	else
 	{
