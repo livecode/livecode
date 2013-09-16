@@ -1127,6 +1127,28 @@ bool MCStringRemove(MCStringRef self, MCRange p_range)
 	return true;
 }
 
+bool MCStringSubstring(MCStringRef self, MCRange p_range)
+{
+	MCAssert(MCStringIsMutable(self));
+    
+	__MCStringClampRange(self, p_range);
+    
+	// Remove the surrounding chars.
+    // On the left if necessary
+    if (p_range . offset != 0)
+    {
+        __MCStringShrinkAt(self, 0, p_range . offset);
+        p_range . offset = 0;
+    }
+    
+    // And on the right if necessary
+    if (p_range . offset + p_range . length != self -> char_count)
+        __MCStringShrinkAt(self, p_range . length, self -> char_count - p_range . length);
+    
+	// We succeeded.
+	return true;
+}
+
 bool MCStringReplace(MCStringRef self, MCRange p_range, MCStringRef p_replacement)
 {
 	MCAssert(MCStringIsMutable(self));

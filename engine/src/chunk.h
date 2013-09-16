@@ -62,6 +62,8 @@ public:
 
 	Parse_stat parse(MCScriptPoint &spt, Boolean the);
 	Exec_stat eval(MCExecPoint &);
+    Exec_stat evaltextchunk(MCExecPoint &ep, MCCRef *ref, Chunk_term p_chunk_type, MCStringRef& x_text);
+    
 	MCVarref *getrootvarref(void);
 	
 	void compile(MCSyntaxFactoryRef factory);

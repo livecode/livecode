@@ -1408,6 +1408,11 @@ bool MCStringInsert(MCStringRef string, uindex_t at, MCStringRef new_string);
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
 bool MCStringRemove(MCStringRef string, MCRange range);
 
+// Retain only 'range' characters from 'string'.
+//
+// Note that 'string' must be mutable, it is a fatal runtime error if it is not.
+bool MCStringSubstring(MCStringRef string, MCRange range);
+
 // Replace 'range' characters in 'string' with 'replacement'.
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.

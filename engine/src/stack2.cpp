@@ -1612,6 +1612,22 @@ MCCard *MCStack::getchildbyname(MCNameRef p_name)
 	else
 		cptr = cards;
     
+    uint2 t_num = 0;
+    if (MCU_stoui2(MCNameGetString(p_name), t_num))
+    {
+        if (t_num < 1)
+            return nil;
+        t_num--;
+        
+        do
+        {
+            if (cptr->countme(backgroundid, (state & CS_MARKED) != 0) && t_num-- == 0)
+                return cptr;
+            cptr = cptr->next();
+        }
+        while (cptr != cards);
+        return nil;
+    }
     MCCard *found = nil;
     do
     {
@@ -1839,22 +1855,41 @@ MCGroup *MCStack::getbackgroundbyid(uinteger_t p_id)
 MCGroup *MCStack::getbackgroundbyname(MCNameRef p_name)
 {
 	MCControl *cptr;
-	if (editing != NULL)
+	if (editing != nil)
 		cptr = savecontrols;
 	else
 		cptr = controls;
 	MCControl *startcptr = cptr;
-	if (cptr == NULL)
-		return NULL;
+	if (cptr == nil)
+		return nil;
+    
+    uint2 t_num = 0;
+    if (MCU_stoui2(MCNameGetString(p_name), t_num))
+    {
+        if (t_num < 1)
+            return nil;
+        t_num--;
+        
+        do
+        {
+            MCControl *foundobj = cptr->findnum(CT_GROUP, t_num);
+            if (foundobj != nil)
+                return (MCGroup *)foundobj;
+            cptr = cptr->next();
+        }
+        while (cptr != startcptr);
+        return nil;
+    }
+    
     do
     {
         MCControl *found = cptr->findname(CT_GROUP, MCNameGetOldString(p_name));
-        if (found != NULL)
+        if (found != nil)
             return (MCGroup *)found;
         cptr = cptr->next();
     }
     while (cptr != startcptr);
-    return NULL;
+    return nil;
 }
 
 void MCStack::addmnemonic(MCButton *button, uint1 key)

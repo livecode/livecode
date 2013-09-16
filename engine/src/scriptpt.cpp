@@ -123,6 +123,23 @@ MCScriptPoint::MCScriptPoint(const MCString &s)
 	token_nameref = nil;
 }
 
+MCScriptPoint::MCScriptPoint(MCStringRef p_string)
+{
+	MCCStringClone(MCStringGetCString(p_string), script);
+	curobj = NULL;
+	curhlist = NULL;
+	curhandler = NULL;
+	curptr = tokenptr = backupptr = (uint1 *)script;
+	lowered = NULL;
+	loweredsize = 0;
+	line = pos = 0;
+	escapes = False;
+	tagged = False;
+	in_tag = False;
+	was_in_tag = False;
+	token_nameref = nil;
+}
+
 MCScriptPoint::~MCScriptPoint()
 {
 	MCNameDelete(token_nameref);

@@ -26,6 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "handler.h"
 
 #include "scriptpt.h"
+#include "util.h"
 
 #include "exec.h"
 
@@ -1331,3 +1332,290 @@ void MCStringsExecFilter(MCExecContext& ctxt, MCStringRef p_source, MCStringRef 
 	MCStringCopy(MCStringsExecFilterLines(p_source, p_pattern, p_without, ctxt . GetCaseSensitive() ? kMCStringOptionCompareExact: kMCStringOptionCompareCaseless), r_result);
 }
 ////////////////////////////////////////////////////////////////////////////////
+
+int4 MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCStringRef p_string)
+{
+    if (MCStringGetLength(p_string) == 0)
+        return 0;
+
+    int4 nchunks = 0;
+    char_t t_line_delimiter = ctxt . GetLineDelimiter();
+    char_t t_item_delimiter = ctxt . GetItemDelimiter();
+    uindex_t t_offset = 0;
+    uindex_t t_old_offset = 0;
+    uindex_t t_end_index = MCStringGetLength(p_string) - 1;
+    
+    switch (p_chunk_type)
+    {
+        case CT_LINE:
+        case CT_ITEM:
+        {
+            char_t t_delimiter;
+            t_delimiter = p_chunk_type == CT_LINE ? t_line_delimiter : t_item_delimiter;
+            nchunks++;
+            while (MCStringFirstIndexOfChar(p_string, t_delimiter, t_offset, kMCCompareExact, t_offset))
+            {
+                if (t_offset < t_end_index)
+                    nchunks++;
+                t_offset++;
+            }
+        }
+            break;
+
+        case CT_WORD:
+        {
+            uindex_t t_quote_offset;
+            uindex_t t_end_quote_offset;
+            uindex_t t_end_line_offset;
+            while (MCStringFirstIndexOfChar(p_string, ' ', t_old_offset, kMCCompareExact, t_offset))
+            {
+                // if spaces are consecutive, ignore them
+                if (t_offset == t_old_offset)
+                {
+                    t_old_offset++;
+                    continue;
+                }
+                
+                // otherwise we have a word
+                nchunks++;
+                
+                // if the next space we found was within a quotation mark
+                if (MCStringFirstIndexOfChar(p_string, '"', t_old_offset, kMCCompareExact, t_quote_offset) &&
+                    t_quote_offset < t_offset)
+                {
+                    // then bump old offset up to the next quotation mark + 1, or the beginning of the next line
+                    // if neither of these are present then we are done.
+                    if (!MCStringFirstIndexOfChar(p_string, '"', t_quote_offset + 1, kMCCompareExact, t_end_quote_offset) &&
+                        !MCStringFirstIndexOfChar(p_string, t_line_delimiter, t_quote_offset + 1, kMCCompareExact, t_end_line_offset))
+                        return nchunks;
+                    else
+                        t_old_offset = MCU_min(t_end_quote_offset, t_old_offset) + 1;
+                    
+                }
+                else
+                    t_old_offset = t_offset + 1;
+            }
+        }
+            break;
+            
+        case CT_TOKEN:
+        {
+            // TODO (Unicode)
+            MCScriptPoint sp(p_string);
+            Parse_stat ps = sp.nexttoken();
+            while (ps != PS_ERROR && ps != PS_EOF)
+            {
+                nchunks++;
+                ps = sp.nexttoken();
+            }
+        }
+            break;
+            
+        case CT_CHARACTER:
+            nchunks = MCStringGetLength(p_string);
+            break;
+    }
+    
+    return nchunks;
+}
+
+void MCStringsGetExtents(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t& r_first, integer_t& r_chunk_count, Chunk_term p_ordinal_type, MCStringRef p_string)
+{
+    if (MCStringGetLength(p_string) == 0)
+    {
+        r_first = 0;
+        r_chunk_count = 0;
+        return;
+    }
+    
+    switch (p_ordinal_type)
+    {
+        case CT_ANY:
+            r_first = MCU_any(MCStringsCountChunks(ctxt, p_chunk_type, p_string));
+            break;
+        case CT_FIRST:
+        case CT_SECOND:
+        case CT_THIRD:
+        case CT_FOURTH:
+        case CT_FIFTH:
+        case CT_SIXTH:
+        case CT_SEVENTH:
+        case CT_EIGHTH:
+        case CT_NINTH:
+        case CT_TENTH:
+            r_first = p_ordinal_type - CT_FIRST;
+            break;
+        case CT_LAST:
+            r_first = MCStringsCountChunks(ctxt, p_chunk_type, p_string) - 1;
+            break;
+        case CT_MIDDLE:
+            r_first = MCStringsCountChunks(ctxt, p_chunk_type, p_string) / 2;
+            break;
+        default:
+            fprintf(stderr, "MCChunk: ERROR bad extents\n");
+	}
+    
+    if (r_first < 0)
+    {
+        r_chunk_count = 0;
+        r_first = 0;
+        return;
+    }
+    else
+        r_chunk_count = 1;
+}
+
+void MCStringsMarkTextChunk(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, integer_t p_count, integer_t& r_start, integer_t& r_end, bool p_force, bool p_whole_chunk, bool p_further_chunks, bool p_include_chars, MCStringRef p_string)
+{
+/*
+    if (p_count == 0)
+    {
+        r_start = 0;
+        r_end = 0;
+        return;
+    }
+    
+    uindex_t t_length = MCStringGetLength(p_string);
+    
+    if (t_length == 0)
+    {
+        r_start = 0;
+        r_end = 0;
+        return;
+    }
+    
+    uindex_t t_offset = 0;
+    uint4 add = 0;
+     
+    switch (p_chunk_type)
+    {
+        case CT_LINE:
+        {
+            char_t t_delimiter = ctxt . GetLineDelimiter();
+            
+            // calculate the start of the (p_first)th line
+            while (p_first-- && MCStringFirstIndexOfChar(p_string, t_delimiter, t_offset, kMCCompareExact, t_offset))
+            {
+                //add++;
+                t_offset++;
+            }
+            
+            r_start = t_offset;
+            
+            // calculate the length of the next p_count lines
+            while (p_count--)
+            {
+                if (!MCStringFirstIndexOfChar(p_string, t_delimiter, t_offset, kMCCompareExact, t_offset))
+                {
+                    r_end = MCStringGetLength(p_string);
+                    break;
+                }
+                if (p_count == 0)
+                    r_end = t_offset;
+                else
+                    t_offset++;
+            }
+            
+            if (p_whole_chunk && !p_further_chunks)
+            {
+                if (r_start < r_end)
+                    r_end++;
+                else if (r_start > 0 && !add)
+                    r_start--;
+                return;
+            }
+            if (p_force && add)
+            {
+                
+            }
+        }
+    }
+    */
+}
+
+void MCStringsGetTextChunk(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, integer_t p_count, MCStringRef& x_string)
+{
+    // if there are no chunks then the string should be empty.
+    if (p_count == 0)
+    {
+        MCStringRemove(x_string, MCRangeMake(0, MCStringGetLength(x_string)));
+        return;
+    }
+    
+    // otherwise, calculate the substring.
+    integer_t t_start;
+    integer_t t_end;
+    
+    MCStringsMarkTextChunk(ctxt, p_chunk_type, p_first, p_count, t_start, t_end, false, false, false, false, x_string);
+    
+    MCStringSubstring(x_string, MCRangeMake(t_start, t_end - t_start));
+}
+
+void MCStringsEvalTextChunkByRange(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, MCStringRef& x_string)
+{
+    if (MCStringGetLength(x_string) == 0)
+        return;
+
+    int4 t_chunk_count;
+    
+    if (p_first < 0 || p_last < 0)
+    {
+        t_chunk_count = MCStringsCountChunks(ctxt, p_chunk_type, x_string);
+        
+        if (p_first < 0)
+            p_first += t_chunk_count;
+        else
+            p_first--;
+        
+        if (p_last < 0)
+            p_last += t_chunk_count + 1;
+    }
+    else
+        p_first--;
+    
+    t_chunk_count = p_last - p_first;
+    
+    if (p_first < 0)
+    {
+        t_chunk_count += p_first;
+        p_first = 0;
+    }
+    
+    if (t_chunk_count < 0)
+        t_chunk_count = 0;
+    
+    MCStringsGetTextChunk(ctxt, p_chunk_type, p_first, t_chunk_count, x_string);
+}
+
+void MCStringsEvalTextChunkByExpression(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, MCStringRef &x_string)
+{
+    if (MCStringGetLength(x_string) == 0)
+        return;
+    
+    int4 t_chunk_count;
+    
+    if (p_first < 0)
+        p_first += MCStringsCountChunks(ctxt, p_chunk_type, x_string);
+    else
+        p_first--;
+    
+    if (p_first < 0)
+    {
+        t_chunk_count += p_first;
+        p_first = 0;
+    }
+    
+    if (t_chunk_count < 0)
+        t_chunk_count = 0;
+    
+    MCStringsGetTextChunk(ctxt, p_chunk_type, p_first, 1, x_string);
+}
+
+void MCStringsEvalTextChunkByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_type, Chunk_term p_ordinal_type, MCStringRef& x_string)
+{
+    int4 t_first;
+    int4 t_chunk_count;
+    
+    MCStringsGetExtents(ctxt, p_chunk_type, t_first, t_chunk_count, p_ordinal_type, x_string);
+    MCStringsGetTextChunk(ctxt, p_chunk_type, t_first, t_chunk_count, x_string);
+}

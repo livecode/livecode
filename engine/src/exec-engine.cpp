@@ -1580,7 +1580,7 @@ bool MCEngineEvalValueAsObject(MCValueRef p_value, bool p_strict, MCObjectPtr& r
 void MCEngineEvalValueAsObject(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_object)
 {
     bool t_parse_error;
-    if (MCEngineEvalValueAsObject(p_value, true, r_object, t_parse_error))
+    if (!MCEngineEvalValueAsObject(p_value, true, r_object, t_parse_error))
         ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP);
 }
 
@@ -1668,14 +1668,13 @@ void MCEngineEvalMeAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
     else
         t_object = ctxt . GetObject();
 
-    if (t_object != nil)
-    {
         r_object . object = t_object;
         r_object . part_id = 0;
-        return;
-    }
     
-    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+    if (t_object != nil)
+        return;
+    
+  //  ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
 }
 
 void MCEngineEvalMenuObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)

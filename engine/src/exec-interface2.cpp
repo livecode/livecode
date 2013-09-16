@@ -2302,7 +2302,7 @@ void MCInterfaceEvalDefaultStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_obj
     ctxt . LegacyThrow(EE_CHUNK_NOSTACK);
 }
 
-void MCInterfaceEvalStackOfStackByName(MCExecContext& ctxt, MCNameRef p_name, MCObjectPtr p_parent, MCObjectPtr& r_stack)
+void MCInterfaceEvalStackOfStackByName(MCExecContext& ctxt, MCObjectPtr p_parent, MCNameRef p_name, MCObjectPtr& r_stack)
 {
     MCStack *t_stack;
     t_stack = static_cast<MCStack *>(p_parent . object) -> findstackname(p_name);
@@ -2543,7 +2543,52 @@ void MCInterfaceEvalBackgroundOfStackByName(MCExecContext& ctxt, MCObjectPtr p_s
         return;
     }
     
-    ctxt . LegacyThrow(EE_CHUNK_NOSTACK);
+    ctxt . LegacyThrow(EE_CHUNK_NOBACKGROUND);
+}
+
+void MCInterfaceEvalStackWithBackgroundByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, Chunk_term p_ordinal_type, MCObjectPtr& r_stack)
+{
+    MCGroup *t_background;
+    MCStack *t_stack;
+    t_stack =  static_cast<MCStack *>(p_stack . object);
+    t_background = t_stack -> getbackgroundbyordinal(p_ordinal_type);
+    
+    if (t_background != nil)
+    {
+        t_stack -> setbackground(t_background);
+        r_stack . object = t_stack;
+        r_stack . part_id = p_stack . part_id;
+    }
+}
+
+void MCInterfaceEvalStackWithBackgroundById(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_id, MCObjectPtr& r_stack)
+{
+    MCGroup *t_background;
+    MCStack *t_stack;
+    t_stack =  static_cast<MCStack *>(p_stack . object);
+    t_background = t_stack -> getbackgroundbyid(p_id);
+    
+    if (t_background != nil)
+    {
+        t_stack -> setbackground(t_background);
+        r_stack . object = t_stack;
+        r_stack . part_id = p_stack . part_id;
+    }
+}
+
+void MCInterfaceEvalStackWithBackgroundByName(MCExecContext& ctxt, MCObjectPtr p_stack, MCNameRef p_name, MCObjectPtr& r_stack)
+{
+    MCGroup *t_background;
+    MCStack *t_stack;
+    t_stack =  static_cast<MCStack *>(p_stack . object);
+    t_background = t_stack -> getbackgroundbyname(p_name);
+    
+    if (t_background != nil)
+    {
+        t_stack -> setbackground(t_background);
+        r_stack . object = t_stack;
+        r_stack . part_id = p_stack . part_id;
+    }
 }
 
 void MCInterfaceEvalCardOfStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, bool p_marked, Chunk_term p_ordinal_type, MCObjectPtr& r_card)
@@ -2558,7 +2603,7 @@ void MCInterfaceEvalCardOfStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stac
         t_stack = static_cast<MCStack *>(p_stack . object);
         if (p_marked)
             t_stack -> setmark();
-        t_card = t_stack -> getchild(CT_ID, kMCEmptyString, p_ordinal_type);
+        t_card = t_stack -> getchild(p_ordinal_type, kMCEmptyString, CT_CARD);
         t_stack -> clearmark();
     }
     
@@ -2574,6 +2619,16 @@ void MCInterfaceEvalCardOfStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stac
 
 void MCInterfaceEvalThisCardOfStack(MCExecContext& ctxt, MCObjectPtr p_stack, MCObjectPtr& r_card)
 {
+    // if a target object has been evaluated, then this method should not be called.
+    // Since this is run-time information, instead we call the method but return the
+    // previously evaluated object.
+    if (p_stack . object -> gettype() == CT_CARD || p_stack . object -> gettype() == CT_GROUP)
+    {
+        r_card . object = p_stack . object;
+        r_card . part_id = p_stack . object -> getid();
+        return;
+    }
+    
     MCInterfaceEvalCardOfStackByOrdinal(ctxt, p_stack, false, CT_THIS, r_card);
 }
 
@@ -2612,7 +2667,7 @@ void MCInterfaceEvalCardOfStackByName(MCExecContext& ctxt, MCObjectPtr p_stack, 
     
     if (p_marked)
         t_stack -> setmark();
-    r_card . object = t_stack -> getchildbyname(p_name);
+    t_card = t_stack -> getchildbyname(p_name);
     t_stack -> clearmark();
     
     if (t_card != nil)
@@ -2625,7 +2680,7 @@ void MCInterfaceEvalCardOfStackByName(MCExecContext& ctxt, MCObjectPtr p_stack, 
     ctxt . LegacyThrow(EE_CHUNK_NOCARD);
 }
 
-void MCInterfaceEvalCardOfBackgroundByOrdinal(MCExecContext& ctxt, MCObjectPtr p_background, bool p_marked, Chunk_term p_ordinal_type, MCObjectPtr& r_card)
+void MCInterfaceEvalCardOfBackgroundByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack_with_background, bool p_marked, Chunk_term p_ordinal_type, MCObjectPtr& r_card)
 {
     MCCard *t_card;
     t_card = nil;
@@ -2635,11 +2690,10 @@ void MCInterfaceEvalCardOfBackgroundByOrdinal(MCExecContext& ctxt, MCObjectPtr p
     else
     {
         MCStack *t_stack;
-        t_stack = p_background . object -> getstack();
+        t_stack = static_cast<MCStack *>(p_stack_with_background . object);
         
         if (t_stack != nil)
         {
-            t_stack -> setbackground(static_cast<MCGroup *>(p_background . object));
             MCObjectPtr t_objptr;
             t_objptr . object = t_stack;
             t_objptr . part_id = 0;
@@ -2659,14 +2713,13 @@ void MCInterfaceEvalCardOfBackgroundByOrdinal(MCExecContext& ctxt, MCObjectPtr p
     ctxt . LegacyThrow(EE_CHUNK_NOCARD);
 }
 
-void MCInterfaceEvalCardOfBackgroundById(MCExecContext& ctxt, MCObjectPtr p_background, bool p_marked, uinteger_t p_id, MCObjectPtr& r_card)
+void MCInterfaceEvalCardOfBackgroundById(MCExecContext& ctxt, MCObjectPtr p_stack_with_background, bool p_marked, uinteger_t p_id, MCObjectPtr& r_card)
 {
     MCStack *t_stack;
-    t_stack = p_background . object -> getstack();
+    t_stack = static_cast<MCStack *>(p_stack_with_background . object);
     
     if (t_stack != nil)
     {
-        t_stack -> setbackground(static_cast<MCGroup *>(p_background . object));
         MCObjectPtr t_objptr;
         t_objptr . object = t_stack;
         t_objptr . part_id = 0;
@@ -2678,14 +2731,13 @@ void MCInterfaceEvalCardOfBackgroundById(MCExecContext& ctxt, MCObjectPtr p_back
     ctxt . LegacyThrow(EE_CHUNK_NOCARD);
 }
 
-void MCInterfaceEvalCardOfBackgroundByName(MCExecContext& ctxt, MCObjectPtr p_background, bool p_marked, MCNameRef p_name, MCObjectPtr& r_card)
+void MCInterfaceEvalCardOfBackgroundByName(MCExecContext& ctxt, MCObjectPtr p_stack_with_background, bool p_marked, MCNameRef p_name, MCObjectPtr& r_card)
 {
     MCStack *t_stack;
-    t_stack = p_background . object -> getstack();
+    t_stack = static_cast<MCStack *>(p_stack_with_background . object);
     
     if (t_stack != nil)
     {
-        t_stack -> setbackground(static_cast<MCGroup *>(p_background . object));
         MCObjectPtr t_objptr;
         t_objptr . object = t_stack;
         t_objptr . part_id = 0;
@@ -2847,6 +2899,7 @@ void MCInterfaceEvalObjectOfGroupByOrdinal(MCExecContext& ctxt, MCObjectPtr p_gr
     {
         r_object . object = t_object;
         r_object . part_id = p_group . part_id;
+        return;
     }
     
     ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
@@ -2861,6 +2914,7 @@ void MCInterfaceEvalObjectOfGroupById(MCExecContext& ctxt, MCObjectPtr p_group, 
     {
         r_object . object = t_object;
         r_object . part_id = p_group . part_id;
+        return;
     }
     
     ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
@@ -2875,6 +2929,7 @@ void MCInterfaceEvalObjectOfGroupByName(MCExecContext& ctxt, MCObjectPtr p_group
     {
         r_object . object = t_object;
         r_object . part_id = p_group . part_id;
+        return;
     }
     
     ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
@@ -2936,6 +2991,7 @@ void MCInterfaceEvalObjectOfCardOrStackById(MCExecContext& ctxt, MCObjectPtr p_c
     {
         r_object . object = t_object;
         r_object . part_id = t_part_id;
+        return;
     }
     
     ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
