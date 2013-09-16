@@ -2795,28 +2795,33 @@ Boolean MCStack::del()
 
 void MCStack::paste(void)
 {
-	char *t_new_name;
-	if (MCdispatcher -> findstackname(getname_oldstring()) != NULL)
+	MCAutoStringRef t_new_name;
+	if (MCdispatcher -> findstackname(getname()) != NULL)
 	{
 		unsigned int t_index;
 		t_index = 1;
 
-		const char *t_old_name;
-		t_old_name = !isunnamed() ? getname_cstring() : "Unnamed";
+		MCStringRef t_old_name;
+		t_old_name = !isunnamed() ? MCNameGetString(getname()) : MCSTR("Unnamed");
 
+		MCNameRef t_name;
+		t_name = MCValueRetain(kMCEmptyName);
+		
 		for(;;)
 		{
-			t_new_name = new char[strlen(t_old_name) + 8 + 16];
 			if (t_index == 1)
-				sprintf(t_new_name, "Copy of %s", t_old_name);
+				/* UNCHECKED */ MCStringFormat(&t_new_name, "Copy of %@", t_old_name);
 			else
-				sprintf(t_new_name, "Copy (%d) of %s", t_index, t_old_name);
-			if (MCdispatcher -> findstackname(t_new_name) == NULL)
+				/* UNCHECKED */ MCStringFormat(&t_new_name, "Copy (%d) of %@", t_index, *t_new_name);
+			
+			MCValueRelease(t_name);
+			/* UNCHECKED */ MCNameCreate(*t_new_name, t_name);
+			
+			if (MCdispatcher -> findstackname(t_name) == NULL)
 				break;
 			t_index += 1;
-			delete t_new_name;
 		}
-		setname_cstring(t_new_name);
+		setname(t_name);
 	}
 
 	// MW-2007-12-11: [[ Bug 5441 ]] When we paste a stack, it should be parented to the home

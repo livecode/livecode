@@ -1926,7 +1926,9 @@ void MCInterfaceExecRevert(MCExecContext& ctxt)
 	MClockmessages = oldlock;
 	MCtodestroy->add
 	(t_sptr);
-	t_sptr = MCdispatcher->findstackname(MCStringGetOldString(*t_filename));
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreate(*t_filename, &t_name);
+	t_sptr = MCdispatcher->findstackname(*t_name);
 	if (t_sptr != NULL)
 		t_sptr->openrect(oldrect, oldmode, NULL, WP_DEFAULT, OP_NONE);
 }

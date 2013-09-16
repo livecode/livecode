@@ -537,7 +537,7 @@ static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply
 		else
 		{
 			MCStack *stkptr;  //stack pointer
-			if (MCdispatcher->loadfile(MCStringGetCString(*t_full_path_name), stkptr) == IO_NORMAL)
+			if (MCdispatcher->loadfile(*t_full_path_name, stkptr) == IO_NORMAL)
 				stkptr->open();
 		}
 	}
