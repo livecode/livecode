@@ -1220,7 +1220,7 @@ static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObje
             else
                 tptr = MCNameGetString(*t_message);
             
-			if ((stat = optr->domess(&tptr)) == ES_ERROR)
+			if ((stat = optr->domess(*tptr)) == ES_ERROR)
 				ctxt . LegacyThrow(EE_STATEMENT_BADCOMMAND, *t_message);
 		}
 	}
