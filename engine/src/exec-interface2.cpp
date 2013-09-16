@@ -1446,19 +1446,21 @@ void MCInterfaceSetDefaultStack(MCExecContext& ctxt, MCStringRef p_value)
 	MCdefaultstackptr = MCstaticdefaultstackptr = sptr;
 }
 
-void MCInterfaceGetDefaultMenubar(MCExecContext& ctxt, MCStringRef& r_value)
+void MCInterfaceGetDefaultMenubar(MCExecContext& ctxt, MCNameRef& r_value)
 {	
 	if (MCdefaultmenubar == nil)
 	{
-		r_value = MCValueRetain(kMCEmptyString);
+		r_value = MCValueRetain(kMCEmptyName);
 		return;
 	}
 	else
 	{
 		MCAutoValueRef t_value;
+		MCAutoStringRef t_string;
 		if (MCdefaultmenubar->names(P_LONG_NAME, &t_value))
-			if (ctxt.ConvertToString(*t_value, r_value))
-			return;
+			if (ctxt.ConvertToString(*t_value, &t_string))
+				if (MCNameCreate(*t_string, r_value))
+					return;
 	}
 
 	ctxt . Throw();
