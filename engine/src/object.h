@@ -599,7 +599,7 @@ public:
 	
 	// New method for returning the various 'names' of an object. This should really
 	// return an 'MCValueRef' at some point, but as it stands that causes issues.
-	bool names(Properties which, MCStringRef& r_name);
+	bool names(Properties which, MCValueRef& r_name);
 	// Wrapper for 'names()' working in the old way (for convenience).
 	Exec_stat names_old(Properties which, MCExecPoint& ep, uint32_t parid);
 

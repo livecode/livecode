@@ -365,7 +365,7 @@ bool MCDispatch::getmainstacknames(MCListRef& r_list)
 	MCStack *tstk = stacks;
 	do
 	{
-		MCAutoStringRef t_string;
+		MCAutoValueRef t_string;
 		if (!tstk->names(P_SHORT_NAME, &t_string))
 			return false;
 		if (!MCListAppend(*t_list, *t_string))
@@ -1503,7 +1503,7 @@ MCObject *MCDispatch::getobjid(Chunk_term type, uint4 inid)
 	return NULL;
 }
 
-MCObject *MCDispatch::getobjname(Chunk_term type, MCStringRef s)
+MCObject *MCDispatch::getobjname(Chunk_term type, MCNameRef p_name)
 {
 	if (stacks != NULL)
 	{
@@ -1511,7 +1511,7 @@ MCObject *MCDispatch::getobjname(Chunk_term type, MCStringRef s)
 		do
 		{
 			MCObject *optr;
-			if ((optr = tstk->getsubstackobjname(type, s)) != NULL)
+			if ((optr = tstk->getsubstackobjname(type, p_name)) != NULL)
 				return optr;
 			tstk = (MCStack *)tstk->next();
 		}
@@ -1520,12 +1520,12 @@ MCObject *MCDispatch::getobjname(Chunk_term type, MCStringRef s)
 
 	if (type == CT_IMAGE)
 	{
-		const char *sptr = MCStringGetCString(s);
-		uint4 l = MCStringGetLength(s);
+		const char *sptr = MCNameGetCString(p_name);
+		uint4 l = MCStringGetLength(MCNameGetString((p_name)));
 
-		MCAutoNameRef t_image_name;
+		MCNewAutoNameRef t_image_name;
 		if (MCU_strchr(sptr, l, ':'))
-			/* UNCHECKED */ MCNameCreate(s, t_image_name);
+			/* UNCHECKED */ t_image_name = MCValueRetain(p_name);
 		
 		MCImage *iptr = imagecache;
 		if (iptr != NULL)
@@ -1533,7 +1533,7 @@ MCObject *MCDispatch::getobjname(Chunk_term type, MCStringRef s)
 			do
 			{
 check:
-				if (t_image_name != nil && iptr -> hasname(t_image_name))
+				if (!MCNameIsEmpty(*t_image_name) && iptr -> hasname(*t_image_name))
 					return iptr;
 				if (!iptr->getopened())
 				{
@@ -1554,14 +1554,14 @@ check:
 			MCresult->clear(False);
 			MCExecPoint ep(MCdefaultstackptr, NULL, NULL);
 			MCExecPoint *epptr = MCEPptr == NULL ? &ep : MCEPptr;
-			epptr->setvalueref(s);
+			epptr->setvalueref(p_name);
 			MCU_geturl(*epptr);
 			if (MCresult->isempty())
 			{
 				iptr = new MCImage;
 				iptr->appendto(imagecache);
 				iptr->setprop(0, P_TEXT, *epptr, False);
-				iptr->setname(t_image_name);
+				iptr->setname(*t_image_name);
 				return iptr;
 			}
 		}

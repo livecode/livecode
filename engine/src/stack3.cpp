@@ -890,14 +890,14 @@ MCControl *MCStack::getcontrolid(Chunk_term type, uint4 inid, bool p_recurse)
 	return NULL;
 }
 
-MCControl *MCStack::getcontrolname(Chunk_term type, MCStringRef s)
+MCControl *MCStack::getcontrolname(Chunk_term type, MCNameRef p_name)
 {
 	if (controls == NULL)
 		return NULL;
 	MCControl *tobj = controls;
 	do
 	{
-		MCControl *foundobj = tobj->findname(type, MCStringGetOldString(s));
+		MCControl *foundobj = tobj->findname(type, p_name);
 		if (foundobj != NULL)
 			return foundobj;
 		tobj = (MCControl *)tobj->next();
@@ -924,17 +924,6 @@ MCObject *MCStack::getAVid(Chunk_term type, uint4 inid)
 	}
 	while (tobj != objs);
 	return NULL;
-}
-
-/* LEGACY */ MCObject *MCStack::getAVname(Chunk_term type, MCStringRef s)
-{
-	MCNewAutoNameRef t_name;
-	/* UNCHECKED */ MCNameCreate(s, &t_name);
-	MCObject *t_object;
-	if (!getAVname(type, *t_name, t_object))
-		return nil;
-    
-	return t_object;
 }
 
 bool MCStack::getAVname(Chunk_term type, MCNameRef p_name, MCObject*& r_object)
@@ -1201,7 +1190,7 @@ MCStack *MCStack::findstackname(MCNameRef p_name)
 
 MCStack *MCStack::findsubstackname(MCNameRef p_name)
 {
-	if (findname(CT_STACK, MCNameGetOldString(p_name)) != nil)
+	if (findname(CT_STACK, p_name) != nil)
 		return this;
     
 	MCStack *sptr = this;
@@ -1224,7 +1213,7 @@ MCStack *MCStack::findsubstackname(MCNameRef p_name)
 		else
 			do
 			{
-				if (tptr->findname(CT_STACK, MCNameGetOldString(p_name)) != NULL)
+				if (tptr->findname(CT_STACK, p_name) != NULL)
 					return tptr;
 				tptr = (MCStack *)tptr->next();
 			}
@@ -1417,16 +1406,18 @@ MCObject *MCStack::getobjid(Chunk_term type, uint4 inid)
 		return MCdispatcher->getobjid(type, inid);
 }
 
-MCObject *MCStack::getsubstackobjname(Chunk_term type, MCStringRef s)
+MCObject *MCStack::getsubstackobjname(Chunk_term type, MCNameRef p_name)
 {
 	MCStack *sptr = this;
 	MCObject *optr = NULL;
 	if (!MCdispatcher->ismainstack(this))
 		sptr = parent->getstack();
 	if (type == CT_AUDIO_CLIP || type == CT_VIDEO_CLIP)
-		optr = sptr->getAVname(type, s);
+	{
+		/* UNCHECKED */ sptr->getAVname(type, p_name, optr);
+	}
 	else
-		optr = sptr->getcontrolname(type, s);
+		optr = sptr->getcontrolname(type, p_name);
 	if (optr != NULL)
 		return optr;
 	if (sptr->substacks != NULL)
@@ -1435,9 +1426,11 @@ MCObject *MCStack::getsubstackobjname(Chunk_term type, MCStringRef s)
 		do
 		{
 			if (type == CT_AUDIO_CLIP || type == CT_VIDEO_CLIP)
-				optr = tptr->getAVname(type, s);
+			{
+				/* UNCHECKED */ sptr->getAVname(type, p_name, optr);
+			}
 			else
-				optr = tptr->getcontrolname(type, s);
+				optr = tptr->getcontrolname(type, p_name);
 			if (optr != NULL)
 				return optr;
 			tptr = (MCStack *)tptr->next();
@@ -1448,28 +1441,30 @@ MCObject *MCStack::getsubstackobjname(Chunk_term type, MCStringRef s)
 }
 
 
-MCObject *MCStack::getobjname(Chunk_term type, MCStringRef s)
+MCObject *MCStack::getobjname(Chunk_term type, MCNameRef p_name)
 {
 	MCObject *optr = NULL;
 	uint4 iid;
-	if (MCU_stoui4(s, iid))
+	if (MCU_stoui4(MCNameGetString(p_name), iid))
 	{
 		optr = getobjid(type, iid);
 		if (optr != NULL)
 			return optr;
 	}
 	if (type == CT_AUDIO_CLIP || type == CT_VIDEO_CLIP)
-		optr = getAVname(type, s);
+	{
+		/* UNCHECKED */ getAVname(type, p_name, optr);
+	}
 	else
 	{
-		optr = getcontrolname(type, s);
+		optr = getcontrolname(type, p_name);
 	}
 	if (optr != NULL)
 		return optr;
-	if ((optr = getsubstackobjname(type, s)) != NULL)
+	if ((optr = getsubstackobjname(type, p_name)) != NULL)
 		return optr;
 	else
-		return MCdispatcher->getobjname(type, s);
+		return MCdispatcher->getobjname(type, p_name);
 }
 
 

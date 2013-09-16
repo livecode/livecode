@@ -1424,7 +1424,12 @@ void MCInterfaceSetDefaultCursor(MCExecContext& ctxt, uinteger_t p_value)
 }
 void MCInterfaceGetDefaultStack(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	MCdefaultstackptr -> names(P_NAME, r_value);
+	MCAutoValueRef t_value;
+	if (MCdefaultstackptr -> names(P_NAME, &t_value))
+		if (ctxt.ConvertToString(*t_value, r_value))
+			return;
+	
+	ctxt.Throw();
 }
 
 void MCInterfaceSetDefaultStack(MCExecContext& ctxt, MCStringRef p_value)
@@ -1445,19 +1450,21 @@ void MCInterfaceGetDefaultMenubar(MCExecContext& ctxt, MCStringRef& r_value)
 {	
 	if (MCdefaultmenubar == nil)
 	{
-		r_value = (MCStringRef)MCValueRetain(kMCEmptyString);
+		r_value = MCValueRetain(kMCEmptyString);
 		return;
 	}
 	else
 	{
-		if (MCdefaultmenubar->names(P_LONG_NAME, r_value))
+		MCAutoValueRef t_value;
+		if (MCdefaultmenubar->names(P_LONG_NAME, &t_value))
+			if (ctxt.ConvertToString(*t_value, r_value))
 			return;
 	}
 
 	ctxt . Throw();
 }
 
-void MCInterfaceSetDefaultMenubar(MCExecContext& ctxt, MCStringRef p_value)
+void MCInterfaceSetDefaultMenubar(MCExecContext& ctxt, MCNameRef p_value)
 {
 	MCGroup *gptr = (MCGroup *)MCdefaultstackptr->getobjname(CT_GROUP, p_value);
 																	 

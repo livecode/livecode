@@ -1873,7 +1873,11 @@ void MCBlock::openimage()
 		if (MCU_stoui4(MCStringGetOldString(atts->imagesource), t_image_id))
 			atts -> image = t_field -> resolveimageid(t_image_id);
 		else
-			atts->image = (MCImage *)t_field->getstack()->getobjname(CT_IMAGE, atts->imagesource);
+		{
+			MCNewAutoNameRef t_name;
+			/* UNCHECKED */ MCNameCreate(atts->imagesource, &t_name);
+			atts->image = (MCImage *)t_field->getstack()->getobjname(CT_IMAGE, *t_name);
+		}
 
 		if (atts->image != NULL)
 		{

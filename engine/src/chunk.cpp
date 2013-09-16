@@ -1020,11 +1020,11 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 				MCeerror->add(EE_CHUNK_BADOBJECTEXP, line, pos);
 				return ES_ERROR;
 			}
-            MCAutoStringRef t_value;
-            ep2 . copyasstringref(&t_value);
-			objptr = sptr->getAV(object->etype, *t_value, object->otype);
+            MCNewAutoNameRef t_name;
+            ep2 . copyasnameref(&t_name);
+			objptr = sptr->getAV(object->etype, MCNameGetString(*t_name), object->otype);
 			if (objptr == NULL)
-				objptr = sptr->getobjname(object->otype, *t_value);
+				objptr = sptr->getobjname(object->otype, *t_name);
 		}
 		if (objptr == NULL)
 		{
@@ -1072,7 +1072,7 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 		switch (ct_class(background->etype))
 		{
 		case CT_ORDINAL:
-			bptr = (MCGroup *)sptr->getbackground(background->etype, MCnullmcstring,
+			bptr = (MCGroup *)sptr->getbackground(background->etype, kMCEmptyString,
 			                                      CT_GROUP);
 			break;
 		case CT_ID:
@@ -1082,8 +1082,11 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 				MCeerror->add(EE_CHUNK_BADBACKGROUNDEXP, line, pos);
 				return ES_ERROR;
 			}
-			bptr = (MCGroup *)sptr->getbackground(background->etype,
-			                                      ep2.getsvalue(), CT_GROUP);
+			{
+				MCAutoStringRef t_string;
+				/* UNCHECKED */ ep.copyasstringref(&t_string);
+				bptr = (MCGroup *)sptr->getbackground(background->etype, *t_string, CT_GROUP);
+			}
 			break;
 		default:
 			MCeerror->add(EE_CHUNK_BADBACKGROUNDEXP, line, pos);

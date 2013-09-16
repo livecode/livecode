@@ -130,7 +130,9 @@ void MCDebuggingGetTraceStack(MCExecContext& ctxt, MCStringRef& r_value)
 		return;
 	}
 
-	if (MCtracestackptr -> names(P_NAME, r_value))
+	MCAutoValueRef t_value;
+	if (MCtracestackptr -> names(P_NAME, &t_value))
+		if (ctxt.ConvertToString(*t_value, r_value))
 		return;
 
 	ctxt . Throw();
@@ -207,7 +209,7 @@ void MCDebuggingGetDebugContext(MCExecContext& ctxt, MCStringRef& r_value)
 
 	if (t_success)
 	{
-		MCAutoStringRef t_context_id;
+		MCAutoValueRef t_context_id;
 		t_success = MCexecutioncontexts[MCdebugcontext]->getobj()->names(P_LONG_ID, &t_context_id) &&
 					MCListAppend(*t_list, *t_context_id);
 	}
@@ -305,7 +307,7 @@ void MCDebuggingGetExecutionContexts(MCExecContext& ctxt, MCStringRef& r_value)
 			
 			if (t_success)
 			{
-				MCAutoStringRef t_context_id;
+				MCAutoValueRef t_context_id;
 				t_success = MCexecutioncontexts[i]->getobj()->names(P_LONG_ID, &t_context_id) &&
 							MCListAppend(*t_context, *t_context_id);
 			}
@@ -322,7 +324,7 @@ void MCDebuggingGetExecutionContexts(MCExecContext& ctxt, MCStringRef& r_value)
 			
 			if (t_success && MCexecutioncontexts[i] -> getparentscript() != NULL)
 			{
-				MCAutoStringRef t_parent;
+				MCAutoValueRef t_parent;
 				t_success = MCexecutioncontexts[i] -> getparentscript() -> GetParent() -> GetObject() -> names(P_LONG_ID, &t_parent) &&
 							MCListAppend(*t_context, *t_parent);
 			}

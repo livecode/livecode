@@ -1599,8 +1599,10 @@ void MCInterfaceEvalControlAtScreenLoc(MCExecContext& ctxt, MCPoint p_location, 
 	MCObject *t_object;
 	t_object = MCInterfaceEvalControlAtLocInStack(MCdefaultstackptr, p_location);
 
-	if (t_object -> names(P_LONG_ID, r_control))
-		return;
+	MCAutoValueRef t_control;
+	if (t_object -> names(P_LONG_ID, &t_control))
+		if (ctxt.ConvertToString(*t_control, r_control))
+			return;
 
 	ctxt . Throw();
 }
@@ -1746,9 +1748,11 @@ void MCInterfaceExecPopToLast(MCExecContext& ctxt)
 void MCInterfaceExecPop(MCExecContext& ctxt, MCStringRef& r_element)
 {
 	MCCard *cptr = MCcstack->popcard();
-	if (cptr -> names(P_LONG_ID, r_element))
-		return;
-
+	MCAutoValueRef t_element;
+	if (cptr -> names(P_LONG_ID, &t_element))
+		if (ctxt.ConvertToString(*t_element, r_element))
+			return;
+	
 	ctxt.Throw();
 }
 
@@ -2112,7 +2116,7 @@ void MCInterfaceProcessToContainer(MCExecContext& ctxt, MCObjectPtr *p_objects, 
 
 	if (t_new_object != NULL)
 	{
-		MCAutoStringRef t_id;
+		MCAutoValueRef t_id;
 		if (t_new_object -> names(P_LONG_ID, &t_id))
 			ctxt . SetItToValue(*t_id);
 	}
@@ -2896,7 +2900,7 @@ void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCObject *p_object, MCStrin
 	}
 	else if (p_object != nil)
 	{
-		MCAutoStringRef t_name;
+		MCAutoValueRef t_name;
 		p_object->names(P_NAME, &t_name);
 		ctxt . GetEP() . setvalueref(*t_name);
 		if (MCdefaultstackptr->setprop(0, P_MAIN_STACK, ctxt . GetEP(), False) != ES_NORMAL)
@@ -2916,7 +2920,7 @@ void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCObject *p_object, MCStrin
 		ctxt . GetEP() . setvalueref(p_new_name);
 		t_object->setprop(0, P_NAME, ctxt . GetEP(), False);
 	}
-	MCAutoStringRef t_id;
+	MCAutoValueRef t_id;
 	t_object->names(P_LONG_ID, &t_id);
 	ctxt . SetItToValue(*t_id);
 }
@@ -2949,7 +2953,7 @@ void MCInterfaceExecCreateCard(MCExecContext& ctxt, MCStringRef p_new_name, bool
 		t_object->setprop(0, P_NAME, ctxt . GetEP(), False);
 	}
 
-	MCAutoStringRef t_id;
+	MCAutoValueRef t_id;
 	t_object->names(P_LONG_ID, &t_id);
 	ctxt . SetItToValue(*t_id);
 }
@@ -3017,7 +3021,7 @@ void MCInterfaceExecCreateControl(MCExecContext& ctxt, MCStringRef p_new_name, i
 		t_object->setprop(0, P_NAME, ctxt . GetEP(), False);
 	}
 
-	MCAutoStringRef t_id;
+	MCAutoValueRef t_id;
 	t_object->names(P_LONG_ID, &t_id);
 	ctxt . SetItToValue(*t_id);
 }
@@ -3037,10 +3041,12 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 			t_object = t_stack->clone();
 			if (p_new_name == nil)
 			{
-				MCStringRef t_short_name;
-				t_stack->names(P_SHORT_NAME, t_short_name);
+				MCAutoValueRef t_short_name;
+				MCAutoStringRef t_short_name_str;
+				t_stack->names(P_SHORT_NAME, &t_short_name);
+				/* UNCHECKED */ ctxt.ConvertToString(*t_short_name, &t_short_name_str);
 				MCAutoStringRef t_new_name;
-				MCStringMutableCopyAndRelease(t_short_name, &t_new_name);
+				MCStringMutableCopyAndRelease(*t_short_name_str, &t_new_name);
 				MCStringPrependNativeChars(*t_new_name, (const char_t *)MCcopystring, strlen(MCcopystring));
 				ctxt . GetEP() . setvalueref(*t_new_name);
 				t_object->setprop(0, P_NAME, ctxt . GetEP(), False);
@@ -3119,7 +3125,7 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 		ctxt . GetEP() . setvalueref(p_new_name);
 		t_object->setprop(0, P_NAME, ctxt . GetEP(), False);
 	}
-	MCAutoStringRef t_id;
+	MCAutoValueRef t_id;
 	t_object->names(P_LONG_ID, &t_id);
 	ctxt . SetItToValue(*t_id);
 
