@@ -72,10 +72,10 @@ typedef GtkWidget* (*gtk_file_chooser_dialog_newPTR )  (const gchar *title,  Gtk
 extern gtk_file_chooser_dialog_newPTR gtk_file_chooser_dialog_new_ptr;
 
 extern void MCRemoteFileDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char * const p_types[], uint32_t p_type_count, const char *p_initial_folder, const char *p_initial_file, bool p_save, bool p_files);
-extern void MCRemoteFolderDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial);
-extern void MCRemoteColorDialog(MCExecPoint& ep, const char *p_title, uint32_t p_r, uint32_t p_g, uint32_t p_b);
-extern void MCRemotePrintSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size);
-extern void MCRemotePageSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size);
+extern void MCRemoteFolderDialog(MCExecPoint& ep, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial);
+extern void MCRemoteColorDialog(MCExecPoint& ep, MCStringRef p_title, uint32_t p_r, uint32_t p_g, uint32_t p_b);
+extern void MCRemotePrintSetupDialog(MCStringRef &r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, MCStringRef p_config_data, uint32_t p_config_data_size);
+extern void MCRemotePageSetupDialog(MCStringRef &r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, MCStringRef p_config_data, uint32_t p_config_data_size);
 
 bool G_init = false ;
 
@@ -779,25 +779,22 @@ MCPrinterDialogResult MCA_gtk_printer_setup ( PSPrinterSettings &p_settings )
 		t_result = PRINTER_DIALOG_RESULT_ERROR;
 		if (t_success)
 		{
-			char *t_data_out;
+			MCStringRef t_data_out;
 			uint32_t t_data_out_size;
-			t_data_out = nil;
-			t_data_out_size = 0;
+            t_data_out_size = 0;
 
-			MCRemotePrintSetupDialog(t_data_out, t_data_out_size, t_result, (const char *)t_data_in, t_data_in_size);
+			MCRemotePrintSetupDialog(&t_data_out, t_data_out_size, t_result, (MCStringRef)t_data_in, t_data_in_size);
 
 			if (t_result == PRINTER_DIALOG_RESULT_OKAY)
 			{
-				if (MCLinuxPrintSetupDecode(t_data_out, t_data_out_size, t_setup))
+				if (MCLinuxPrintSetupDecode(MCStringGetCString(*t_data_out), t_data_out_size, t_setup))
 				{
 				}
 				else
 					t_result = PRINTER_DIALOG_RESULT_ERROR;
 
 			}
-
-			free(t_data_out);
-		}
+        }
 
 		MCMemoryDeallocate(t_data_in);
 
@@ -945,16 +942,15 @@ MCPrinterDialogResult MCA_gtk_page_setup (PSPrinterSettings &p_settings)
 		t_result = PRINTER_DIALOG_RESULT_ERROR;
 		if (t_success)
 		{
-			char *t_data_out;
+			MCAutoStringRef t_data_out;
 			uint32_t t_data_out_size;
-			t_data_out = nil;
 			t_data_out_size = 0;
 
-			MCRemotePageSetupDialog(t_data_out, t_data_out_size, t_result, (const char *)t_data_in, t_data_in_size);
+			MCRemotePageSetupDialog(&t_data_out, t_data_out_size, t_result, (MCStringRef)t_data_in, t_data_in_size);
 
 			if (t_result == PRINTER_DIALOG_RESULT_OKAY)
 			{
-				if (MCLinuxPageSetupDecode(t_data_out, t_data_out_size, t_setup))
+				if (MCLinuxPageSetupDecode(MCStringGetCString(*t_data_out), t_data_out_size, t_setup))
 				{
 					p_settings . paper_size_width = t_setup . paper_width;
 					p_settings . paper_size_height = t_setup . paper_height;
@@ -964,8 +960,6 @@ MCPrinterDialogResult MCA_gtk_page_setup (PSPrinterSettings &p_settings)
 					t_result = PRINTER_DIALOG_RESULT_ERROR;
 
 			}
-
-			free(t_data_out);
 		}
 
 		MCMemoryDeallocate(t_data_in);

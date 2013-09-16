@@ -873,7 +873,7 @@ void MCStringsEvalIsAmongTheTokensOf(MCExecContext& ctxt, MCStringRef p_token, M
 
 	MCCompareOptions t_options = ctxt.GetCaseSensitive() ? kMCCompareExact : kMCCompareCaseless;
 
-	MCScriptPoint sp(MCStringGetOldString(p_string));
+	MCScriptPoint sp(p_string);
 	Parse_stat ps = sp.nexttoken();
 	while (ps != PS_ERROR && ps != PS_EOF)
 	{

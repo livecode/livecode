@@ -232,7 +232,7 @@ void MCOldFonttablenode::addfont()
 	Boolean italic = False;
 	char *sptr;
 
-	if ((sptr = MCU_strtok(NULL, "-")) == NULL)
+	if ((sptr = MCU_strtok(nil, MCSTR("-"))) == NULL)
 		return;
 	if (strequal(sptr, "bold") || strequal(sptr, "demibold")
 	        || strequal(sptr, "demi"))
@@ -245,12 +245,12 @@ void MCOldFonttablenode::addfont()
 		}
 	}
 
-	if ((sptr = MCU_strtok(NULL, "-")) == NULL)
+	if ((sptr = MCU_strtok(nil, MCSTR("-"))) == NULL)
 		return;
 	if (strequal(sptr, "i") || strequal(sptr, "o"))
 		italic = True;
-	if (MCU_strtok(NULL, "-") == NULL || (sptr = MCU_strtok(NULL, "-")) == NULL
-	        || (sptr = MCU_strtok(NULL, "-")) == NULL)
+	if (MCU_strtok(nil, MCSTR("-")) == NULL || (sptr = MCU_strtok(nil, MCSTR("-"))) == NULL
+	        || (sptr = MCU_strtok(nil, MCSTR("-"))) == NULL)
 		return;
 	uint2 size = strtol(sptr, NULL, 10);
 	if (bold)
@@ -263,11 +263,12 @@ void MCOldFonttablenode::addfont()
 			registersize(size, isizes, nitalic);
 		else
 			registersize(size, psizes, nplain);
-	if (MCU_strtok(NULL, "-") == NULL
-	        || MCU_strtok(NULL, "-") == NULL
-	        || MCU_strtok(NULL, "-") == NULL
-	        || MCU_strtok(NULL, "-") == NULL
-	        || (sptr = MCU_strtok(NULL, "-")) == NULL)
+    // Are all these || needed?
+	if (MCU_strtok(nil, MCSTR("-")) == NULL
+	        || MCU_strtok(nil, MCSTR("-")) == NULL
+	        || MCU_strtok(nil, MCSTR("-")) == NULL
+	        || MCU_strtok(nil, MCSTR("-")) == NULL
+	        || (sptr = MCU_strtok(nil, MCSTR("-"))) == NULL)
 		return;
 	sptr += strlen(sptr) + 1;
 	if (charset == NULL)
@@ -486,9 +487,11 @@ void MCOldFontnode::buildtable()
 	{
 		char *sptr = allnames[i];
 		sptr++;
-		if (MCU_strtok(sptr, "-") == NULL)
+        MCAutoStringRef sptr_str;
+        /* UNCHECKED */ MCStringCreateWithCString(sptr, &sptr_str);
+		if (MCU_strtok(*sptr_str, MCSTR("-")) == NULL)
 			continue;
-		if ((sptr = MCU_strtok(NULL, "-")) == NULL)
+		if ((sptr = MCU_strtok(nil, MCSTR("-"))) == NULL)
 			continue;
 		MCOldFonttablenode *fnptr = findtablenode(sptr);
 		if (fnptr == NULL)

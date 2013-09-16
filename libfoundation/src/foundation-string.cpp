@@ -1354,7 +1354,7 @@ bool MCStringUppercase(MCStringRef self)
 {
 	MCAssert(MCStringIsMutable(self));
 
-	// Otherwise, we just lowercase all the chars in the string (when we move to
+	// Otherwise, we just uppercase all the chars in the string (when we move to
 	// unicode this gets significantly more complicated!).
 	MCNativeCharsUppercase(self -> chars, self -> char_count);
 

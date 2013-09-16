@@ -40,8 +40,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "malloc.h"
 
 extern void MCRemoteFileDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char * const p_types[], uint32_t p_type_count, const char *p_initial_folder, const char *p_initial_file, bool p_save, bool p_files);
-extern void MCRemoteFolderDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial);
-extern void MCRemoteColorDialog(MCExecPoint& ep, const char *p_title, uint32_t p_r, uint32_t p_g, uint32_t p_b);
+extern void MCRemoteFolderDialog(MCExecPoint& ep, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial);
+extern void MCRemoteColorDialog(MCExecPoint& ep, MCStringRef p_title, uint32_t p_r, uint32_t p_g, uint32_t p_b);
 
 static const char *getfilter(const MCString &s)
 {
@@ -768,7 +768,12 @@ int MCA_folder(MCExecPoint &ep, const char *p_title, const char *p_prompt, const
 
 	if (!MCModeMakeLocalWindows())
 	{
-		MCRemoteFolderDialog(ep, p_title, p_prompt, t_native_filename);
+        MCAutoStringRef t_title, t_prompt, t_native_filename_str;
+        
+        /* UNCHECKED */ MCStringCreateWithCString(p_title, &t_title);
+        /* UNCHECKED */ MCStringCreateWithCString(p_prompt, &t_prompt);
+        /* UNCHECKED */ MCStringCreateWithCString(t_native_filename, &t_native_filename_str);
+        MCRemoteFolderDialog(ep, *t_title, *t_prompt, *t_native_filename_str);
 		if (!ep.isempty())
 		{
 			if (s_last_folder != NULL)

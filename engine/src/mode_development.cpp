@@ -1295,19 +1295,19 @@ void MCRemoteFileDialog(MCExecPoint& ep, const char *p_title, const char *p_prom
 {
 }
 
-void MCRemoteColorDialog(MCExecPoint& ep, const char *p_title, uint32_t p_red, uint32_t p_green, uint32_t p_blue)
+void MCRemoteColorDialog(MCExecPoint& ep, MCStringRef p_title, uint32_t p_red, uint32_t p_green, uint32_t p_blue)
 {
 }
 
-void MCRemoteFolderDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial)
+void MCRemoteFolderDialog(MCExecPoint& ep, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial)
 {
 }
 
-void MCRemotePrintSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size)
+void MCRemotePrintSetupDialog(MCStringRef &r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, MCStringRef p_config_data, uint32_t p_config_data_size)
 {
 }
 
-void MCRemotePageSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size)
+void MCRemotePageSetupDialog(MCStringRef &r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, MCStringRef p_config_data, uint32_t p_config_data_size)
 {
 }
 

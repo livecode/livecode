@@ -72,7 +72,7 @@ extern Boolean MCU_comparechar(const char *sptr, char target,
 extern Boolean MCU_strchr(const char *&, uint4 &, char,
 	                          Boolean isunicode = False);
 inline uint1 MCU_charsize(Boolean isunicode = False);
-extern char *MCU_strtok(char *, const char *);
+extern char *MCU_strtok(MCStringRef , MCStringRef);
 /* WRAPPER */ extern bool MCU_strtol(MCStringRef p_string, int4& r_l);
 extern int4 MCU_strtol(const char *&, uint4 &, int1, Boolean &done,
 	                       Boolean reals = False, Boolean octals = False);

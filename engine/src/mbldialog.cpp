@@ -151,10 +151,12 @@ bool StringArrayToIndexesArray (const_cstring_array_t **p_expression, const_cstr
     return t_success;
 }
 
-bool StringArrayToString (const_cstring_array_t *p_indexes, char *&r_result, MCChunkType p_chunk_type = kMCWords)
+bool StringArrayToString (const_cstring_array_t *p_indexes, MCStringRef &r_result, MCChunkType p_chunk_type = kMCWords)
 {
     bool t_success = true;
 	char t_delimiter[2] = {'\0','\0'};
+    char *t_result;
+    t_result = NULL;
 
     if (p_chunk_type == kMCWords)
         sprintf (t_delimiter, "%s", ",");
@@ -166,20 +168,21 @@ bool StringArrayToString (const_cstring_array_t *p_indexes, char *&r_result, MCC
         t_string_length += strlen(p_indexes->elements[i]) + 1;
     if (t_string_length)
     {
-        t_success = MCMemoryAllocate(sizeof (char) * t_string_length, r_result);
+        t_success = MCMemoryAllocate(sizeof (char) * t_string_length, t_result);
         if (t_success)
         {
-            strcpy (r_result, p_indexes->elements[0]);
+            strcpy (t_result, p_indexes->elements[0]);
             for (int i = 1; i < p_indexes->length; i++)
             {
-                strcat (r_result, t_delimiter);
-                strcat (r_result, p_indexes->elements[i]);
+                strcat (t_result, t_delimiter);
+                strcat (t_result, p_indexes->elements[i]);
             }
         }
+        /* UNCHECKED */ MCStringCreateWithCString(t_result, r_result);
     }
     if (!t_success)
     {
-        free (r_result);
+        MCValueRelease(r_result);
         r_result = nil;
     }
     return t_success;
@@ -320,7 +323,7 @@ void MCDialogExecPickOption(MCExecContext &p_ctxt, MCChunkType p_chunk_type, con
     const_int32_array_t *t_option_result = nil;
     uint32_t t_option_lists_count, t_initial_choices_array_count;
 
-    char *t_return_string;
+    MCAutoStringRef t_return_string;
         
     // Convert the initil choices string into a const_cstring_array_t
     t_success = MCMemoryNew(t_initial_choices);
@@ -353,13 +356,13 @@ void MCDialogExecPickOption(MCExecContext &p_ctxt, MCChunkType p_chunk_type, con
             t_success = IndexesArrayToStringArray (t_option_lists, t_option_result, t_result_choices_array);
                 
         if (t_success)
-            t_success = StringArrayToString (t_result_choices_array, t_return_string, p_chunk_type);
+            t_success = StringArrayToString (t_result_choices_array, &t_return_string, p_chunk_type);
 
         p_ctxt.SetTheResultToEmpty();
 
         if (t_success)
         {
-            p_ctxt.GetEP().setcstring(t_return_string);
+            p_ctxt.GetEP().setvalueref(*t_return_string);
             // make execpoint take ownership of result string
             p_ctxt.GetEP().grabsvalue();
         }
