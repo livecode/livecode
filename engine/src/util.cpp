@@ -2566,6 +2566,17 @@ void MCU_unicodetomultibyte(const char *p_ucstring, uint4 p_uclength,
 
 //////////
 
+bool MCU_multibytetounicode(MCDataRef p_input, MCDataRef &r_output)
+{
+    MCAutoStringRef t_string;
+
+    if (!MCStringDecode(p_input, kMCStringEncodingUTF8, false, &t_string))
+        return false;
+
+    if (!MCStringEncode(*t_string, kMCStringEncodingUTF16, false, r_output))
+        return false;
+}
+
 bool MCU_multibytetounicode(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_unicode)
 {
 	const char *startptr = (const char*)p_src . getstring();
@@ -2586,6 +2597,17 @@ bool MCU_multibytetounicode(const MCString& p_src, uinteger_t p_charset, MCStrin
 bool MCU_multibytetounicode(MCStringRef p_src, uinteger_t p_charset, MCStringRef& r_unicode)
 {
 	return MCU_multibytetounicode(MCStringGetOldString(p_src), p_charset, r_unicode);
+}
+
+bool MCU_unicodetomultibyte(MCDataRef p_input, MCDataRef& r_output)
+{
+    MCAutoStringRef t_string;
+
+    if (!MCStringDecode(p_input, kMCStringEncodingUTF16, false, &t_string))
+        return false;
+
+    if (!MCStringEncode(*t_string, kMCStringEncodingUTF8, false, r_output))
+        return false;
 }
 
 bool MCU_unicodetomultibyte(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_multibyte)

@@ -392,20 +392,29 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 			t_format_ptr += 1;
 		}
 		
-		if (t_format_start_ptr != t_format_ptr)
-		{
-			char *t_format;
-			/* UNCHECKED */ t_format = (char *)malloc(t_format_ptr - t_format_start_ptr + 1);
-			if (t_format == nil)
-				t_success = false;
-			
-			char_t *t_string;
-			uindex_t t_size;
-			t_string = nil;	
+        if (t_format_start_ptr != t_format_ptr)
+        {
+            char *t_format;
+            uint32_t t_format_size;
+
+            // [[ vsnprintf ]] On Linux, the trailing '%' from '%@' placeholder causes vsprintf to fail
+            // and return -1 in MCNativeCharsFormat (and thus creates a 0-byte sized array).
+            if (*t_format_ptr == '@' && *(t_format_ptr - 1) == '%')
+                t_format_size = t_format_ptr - t_format_start_ptr - 1;
+            else
+                t_format_size = t_format_ptr - t_format_start_ptr;
+
+            /* UNCHECKED */ t_format = (char *)malloc(t_format_size + 1);
+            if (t_format == nil)
+                t_success = false;
+
+            char_t *t_string;
+            uindex_t t_size;
+            t_string = nil;
 			if (t_success)
-			{
-				memcpy(t_format, t_format_start_ptr, t_format_ptr - t_format_start_ptr);
-				t_format[t_format_ptr - t_format_start_ptr] = '\0';
+            {
+                memcpy(t_format, t_format_start_ptr, t_format_size);
+                t_format[t_format_size] = '\0';
 				t_success = MCNativeCharsFormatV(t_string, t_size, t_format, p_args);
 			}
 			

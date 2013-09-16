@@ -5066,13 +5066,12 @@ Boolean MCPlayer::x11_prepare(void)
 	
 	// OK-2009-01-09: [[Bug 1161]] - File resolving code standardized between image and player.
 	// MCPlayer::init appears to duplicate the filename buffer, so freeing it after the call should be ok.
-	char *t_filename;
-    t_filename = getstack() -> resolve_filename(MCStringGetCString(filename));
+    MCAutoStringRef t_filename;
+    getstack() -> resolve_filename(filename, &t_filename);
 
 	Boolean t_success;
-	t_success = (m_player -> init(t_filename, getstack(), rect));
+    t_success = (m_player -> init(MCStringGetCString(*t_filename), getstack(), rect));
 
-	delete t_filename;
 	return t_success;
 }
 

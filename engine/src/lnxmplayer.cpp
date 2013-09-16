@@ -209,7 +209,7 @@ bool MPlayer::launch_player(void)
 
 
 
-bool MPlayer::init( char * p_filename, MCStack *p_stack, MCRectangle p_rect )
+bool MPlayer::init(const char * p_filename, MCStack *p_stack, MCRectangle p_rect )
 {
 	
 	// Are we already running a movie? If we are, then stop.

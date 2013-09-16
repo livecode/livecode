@@ -333,7 +333,7 @@ static iconv_t fetch_converter(const char *p_encoding)
 if word 1 of l is \"nameserver\" then put word 2 of l & cr after it; end repeat;\
 delete last char of it; return it"
 
-#define LAUNCH_URL_SCRIPT		"put \"%s\" into tFilename; " \
+#define LAUNCH_URL_SCRIPT		"put \"%@\" into tFilename; " \
                                 "put empty into tCmd; " \
                                 "if tCmd is empty and shell(\"which xdg-open\") is not empty then; " \
                                 "	put \"xdg-open\" into tCmd; "\
@@ -3021,11 +3021,14 @@ public:
         {
             int commandsize;
             ioctl(MCinputfd, FIONREAD, (char *)&commandsize);
-            char *commands = new char[commandsize + 1];
-            read(MCinputfd, commands, commandsize);
-            commands[commandsize] = '\0';
-            MCdefaultstackptr->getcurcard()->domess(commands);
-            delete commands;
+            MCAutoNativeCharArray t_commands;
+            MCAutoStringRef t_cmd_string;
+
+            t_commands.New(commandsize + 1);
+            read(MCinputfd, t_commands.Chars(), commandsize);
+            t_commands.Chars()[commandsize] = '\0';
+            /* UNCHECKED */ t_commands.CreateString(&t_cmd_string);
+            MCdefaultstackptr->getcurcard()->domess(*t_cmd_string);
         }
         if (wasalarm)
             Alarm(CHECK_INTERVAL);
@@ -3140,12 +3143,11 @@ public:
         }
         else
         {
-            char *t_handler = nil;
-            /* UNCHECKED */ MCCStringFormat(t_handler, LAUNCH_URL_SCRIPT, MCStringGetCString(p_document));
+            MCAutoStringRef t_handler;
+            /* UNCHECKED */ MCStringFormat(&t_handler, LAUNCH_URL_SCRIPT, p_document);
             MCExecPoint ep (NULL, NULL, NULL) ;
-            MCdefaultstackptr->domess(t_handler);
+            MCdefaultstackptr->domess(*t_handler);
             MCresult->eval(ep);
-            MCCStringFree(t_handler);
         }
     }
 
@@ -3182,7 +3184,7 @@ public:
         MCAutoListRef t_list;
 
         MCresult->clear();
-        MCdefaultstackptr->domess(DNS_SCRIPT);
+        MCdefaultstackptr->domess(MCSTR(DNS_SCRIPT));
 
         return MCListCreateMutable('\n', &t_list) &&
             MCListAppend(*t_list, MCresult->getvalueref()) &&
