@@ -2588,6 +2588,9 @@ bool MCImage::getsourcegeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)
 	
 	r_pixwidth = r_pixwidth / m_scale_factor;
 	r_pixheight = r_pixheight / m_scale_factor;
+	
+	// MM-2013-09-16: [[ Bug 11178 ]] Missing return statement.
+	return true;
 }
 
 void MCImage::getgeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)
