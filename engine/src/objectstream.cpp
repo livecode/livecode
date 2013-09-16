@@ -194,14 +194,11 @@ IO_stat MCObjectInputStream::ReadS16(int16_t& r_value)
 
 //
 
-IO_stat MCObjectInputStream::ReadCString(char*& r_value)
+IO_stat MCObjectInputStream::ReadStringRef(MCStringRef &r_value)
 {
-	uint32_t t_length;
-	t_length = 0;
-
-	char *t_output;
-	t_output = NULL;
-
+	MCStringRef t_string;
+	/* UNCHECKED */ MCStringCreateMutable(0, t_string);
+	
 	bool t_finished;
 	t_finished = false;
 
@@ -211,7 +208,7 @@ IO_stat MCObjectInputStream::ReadCString(char*& r_value)
 		{
 			IO_stat t_stat;
 			t_stat = Fill();
-			if (t_stat != IO_NORMAL)
+			if (t_stat != IO_NORMAL) 
 				return t_stat;
 		}
 
@@ -224,69 +221,27 @@ IO_stat MCObjectInputStream::ReadCString(char*& r_value)
 				break;
 			}
 
-		uint32_t t_new_length;
-		t_new_length = t_length + t_offset;
-
-		char *t_new_output;
-		t_new_output = (char *)realloc(t_output, t_new_length);
-		if (t_new_output == NULL)
-		{
-			free(t_output);
-			return IO_ERROR;
-		}
-
-		memcpy(t_new_output + t_length, (char *)m_buffer + m_frontier, t_offset);
-
-		t_output = t_new_output;
-		t_length = t_new_length;
+		/* UNCHECKED */ MCStringAppendNativeChars(t_string, (const byte_t*)m_buffer + m_frontier, t_offset);
 
 		m_frontier += t_offset;
 	}
 
-	if (t_output != NULL)
-	{
-		if (t_output[0] == '\0')
-		{
-			r_value = NULL;
-			free(t_output);
-		}
-		else
-			r_value = t_output;
-	}
-	else
-		r_value = NULL;
+	/* UNCHECKED */ MCStringCopyAndRelease(t_string, r_value);
 
 	return IO_NORMAL;
 }
 
 IO_stat MCObjectInputStream::ReadNameRef(MCNameRef& r_value)
 {
-	char *t_name_cstring;
-	t_name_cstring = nil;
+	MCAutoStringRef t_name_string;
 
 	IO_stat t_stat;
-	t_stat = ReadCString(t_name_cstring);
-	if (t_stat == IO_NORMAL &&
-		!MCNameCreateWithCString(t_name_cstring != nil ? t_name_cstring : MCnullstring, r_value))
-		t_stat = IO_ERROR;
-
-	free(t_name_cstring);
-
-	return t_stat;
-}
-
-IO_stat MCObjectInputStream::ReadStringRef(MCStringRef& r_value)
-{
-	char *t_name_cstring;
-	t_name_cstring = nil;
-
-	IO_stat t_stat;
-	t_stat = ReadCString(t_name_cstring);
-	if (t_stat == IO_NORMAL &&
-		!MCStringCreateWithCString(t_name_cstring != nil ? t_name_cstring : MCnullstring, r_value))
-		t_stat = IO_ERROR;
-
-	free(t_name_cstring);
+	t_stat = ReadStringRef(&t_name_string);
+	if (t_stat == IO_NORMAL)
+		if (MCNameCreate(*t_name_string, r_value))
+			return IO_NORMAL;
+		else
+			t_stat = IO_ERROR;
 
 	return t_stat;
 }
@@ -443,19 +398,25 @@ IO_stat MCObjectOutputStream::WriteU64(uint64_t p_value)
 	return Write(&p_value, 8);
 }
 
-IO_stat MCObjectOutputStream::WriteCString(const char *p_value)
+IO_stat MCObjectOutputStream::WriteStringRef(MCStringRef p_value)
 {
-	if (p_value == NULL)
+	if (p_value == NULL || MCStringIsEmpty(p_value))
 		return WriteU8(0);
 
+	// Warning: StringRefs don't necessarily have a trailing '\0' 
+	// included in the character count...
+	IO_stat t_stat;
 	uint32_t t_length;
-	t_length = strlen(p_value) + 1;
-	return Write(p_value, t_length);
+	t_length = strlen(MCStringGetCString(p_value));
+	t_stat = Write(MCStringGetCString(p_value), t_length);
+	if (t_stat == IO_NORMAL)
+		t_stat = WriteU8(0);
+	return t_stat;
 }
 
 IO_stat MCObjectOutputStream::WriteNameRef(MCNameRef p_value)
 {
-	return WriteCString(MCNameGetCString(p_value));
+	return WriteStringRef(MCNameGetString(p_value));
 }
 
 IO_stat MCObjectOutputStream::WriteColor(const MCColor &p_value)

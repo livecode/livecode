@@ -1417,17 +1417,16 @@ IO_stat MCArrayLoadFromStream(MCArrayRef self, MCObjectInputStream& p_stream)
 		if (t_stat == IO_NORMAL)
 			t_stat = p_stream . ReadU32(t_length);
 
-		char *t_key;
-		t_key = nil;
+		MCAutoStringRef t_key;
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . ReadCString(t_key);
+			t_stat = p_stream . ReadStringRef(&t_key);
 
 		MCNewAutoNameRef t_key_name;
 		if (t_stat == IO_NORMAL)
 		{
-			if (t_key != nil)
+			if (!MCStringIsEmpty(*t_key))
 			{
-				if (!MCNameCreateWithCString(t_key, &t_key_name))
+				if (!MCNameCreate(*t_key, &t_key_name))
 					t_stat = IO_ERROR;
 			}
 			else
@@ -1505,7 +1504,6 @@ IO_stat MCArrayLoadFromStream(MCArrayRef self, MCObjectInputStream& p_stream)
 			if (!MCArrayStoreValue(self, true, *t_key_name, t_value))
 				t_stat = IO_ERROR;
 
-		free(t_key);
 		MCValueRelease(t_value);
 	}
 
@@ -1673,7 +1671,7 @@ static bool save_array_to_stream(void *p_context, MCArrayRef p_array, MCNameRef 
 	if (t_stat == IO_NORMAL)
 		t_stat = ctxt -> stream -> WriteU32(measure_array_entry(p_key, p_value) - 1);
 	if (t_stat == IO_NORMAL)
-		t_stat = ctxt -> stream -> WriteCString(MCStringGetCString(MCNameGetString(p_key)));
+		t_stat = ctxt -> stream -> WriteStringRef(MCNameGetString(p_key));
 	if (t_stat == IO_NORMAL)
 		switch((Value_format)t_type)
 		{

@@ -331,12 +331,9 @@ void MCObject::setname_oldstring(const MCString& p_new_name)
 	/* UNCHECKED */ MCNameCreateWithOldString(p_new_name, _name);
 }
 
-void MCObject::setscript_cstring(const char *cstring)
+void MCObject::setscript(MCStringRef p_script)
 {
-	MCStringRef t_script;
-	/* UNCHECKED */ MCStringCreateWithCString(cstring, t_script);
-	
-	MCValueAssign(_script, t_script);
+	MCValueAssign(_script, p_script);
 }
 
 void MCObject::open()
@@ -3012,25 +3009,33 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 			/* UNCHECKED */ MCStackSecurityCreateObjectInputStream(stream, t_length, t_stream);
 			t_length -= 1;
 			
-			char *t_script_cstring;
-			stat = t_stream -> ReadCString(t_script_cstring);
+			MCStringRef t_script_string;
+			stat = t_stream -> ReadStringRef(t_script_string);
 			if (stat == IO_NORMAL)
 			{
-				if (MCtranslatechars && t_script_cstring != NULL)
-				{
-#ifdef __MACROMAN__
-					IO_iso_to_mac(t_script_cstring, strlen(t_script_cstring));
-#else
-					IO_mac_to_iso(t_script_cstring, strlen(t_script_cstring));
-#endif
-				}
-				t_length -= t_script_cstring == NULL ? 1 : strlen(t_script_cstring) + 1;
+				// Adjust the remaining length based on the length of the string read
+				if (MCStringIsEmpty(t_script_string))
+					t_length -= 1;
+				else
+					t_length -= MCStringGetLength(t_script_string);
 				
-				if (t_script_cstring != nil)
+				if (MCtranslatechars && !MCStringIsEmpty(t_script_string) && MCStringIsNative(t_script_string))
+				{
+					char *t_xlate = strclone(MCStringGetCString(t_script_string));
+#ifdef __MACROMAN__
+					IO_iso_to_mac(t_xlate, strlen(t_xlate));
+#else
+					IO_mac_to_iso(t_xlate, strlen(t_xlate));
+#endif
+					MCValueRelease(t_script_string);
+					/* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)t_xlate, t_script_string);
+				}
+
+				if (!MCStringIsEmpty(t_script_string))
 					getstack() -> securescript(this);
 				
-				setscript_cstring(t_script_cstring);
-				delete t_script_cstring;
+				setscript(t_script_string);
+				MCValueRelease(t_script_string);
 			}
 
 			if (stat == IO_NORMAL && t_length > 0)
@@ -3057,12 +3062,11 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 	}
 	else if (addflags & AF_LONG_SCRIPT)
 	{
-		char *t_script_cstring;
-		if ((stat = IO_read_string(t_script_cstring, stream, 4)) != IO_NORMAL)
+		MCAutoStringRef t_script_string;
+		if ((stat = IO_read_stringref(&t_script_string, stream, false, 4)) != IO_NORMAL)
 			return stat;
 		
-		setscript_cstring(t_script_cstring);
-		delete t_script_cstring;
+		setscript(*t_script_string);
 		
 		getstack() -> securescript(this);
 	}
@@ -3192,7 +3196,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (flags & F_SCRIPT && !(addflags & AF_LONG_SCRIPT))
 	{
 		getstack() -> unsecurescript(this);
-		stat = IO_write_string(MCStringGetCString(_script), stream, false);
+		stat = IO_write_stringref(_script, stream, false);
 		getstack() -> securescript(this);
 		if (stat != IO_NORMAL)
 			return stat;
@@ -3308,7 +3312,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			MCObjectOutputStream *t_stream = nil;
 			/* UNCHECKED */ MCStackSecurityCreateObjectOutputStream(stream, t_stream);
 			getstack() -> unsecurescript(this);
-			stat = t_stream -> WriteCString(MCStringGetCString(_script));
+			stat = t_stream -> WriteStringRef(_script);
 			getstack() -> securescript(this);
 			if (stat == IO_NORMAL)
 				stat = extendedsave(*t_stream, p_part);
@@ -3489,7 +3493,7 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 		if (t_stat == IO_NORMAL)
 			t_stat = p_stream . WriteNameRef(parent_script -> GetParent() -> GetObjectStack());
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . WriteCString(nil); // was mainstack reference
+			t_stat = p_stream . WriteStringRef(kMCEmptyString); // was mainstack reference
 	}
 
 	if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_BITMAPEFFECTS) != 0)
@@ -3546,10 +3550,9 @@ IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, const char *p_vers
 			t_stat = p_stream . ReadNameRef(t_stack);
 
 		// This is no longer used, but might remain in older stackfiles.
-		char *t_mainstack;
-		t_mainstack = NULL;
+		MCAutoStringRef t_mainstack;
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . ReadCString(t_mainstack);
+			t_stat = p_stream . ReadStringRef(&t_mainstack);
 
 		if (t_stat == IO_NORMAL)
 		{
@@ -3561,7 +3564,6 @@ IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, const char *p_vers
 		}
 
 		MCNameDelete(t_stack);
-		delete t_mainstack;
 	}
 	
 	if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_BITMAPEFFECTS) != 0)

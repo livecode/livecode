@@ -1052,7 +1052,13 @@ protected:
 	void mapfont(void);
 	void unmapfont(void);
 	
-	void setscript_cstring(const char *script);
+	void setscript(MCStringRef);
+	void setscript_cstring(const char *script)
+	{
+		MCAutoStringRef t_script;
+		/* UNCHECKED */ MCStringCreateWithCString(script, &t_script);
+		setscript(*t_script);
+	}
 	
 private:
 #ifdef OLD_EXEC
