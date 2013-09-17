@@ -379,7 +379,7 @@ public:
 	void getstackfiles(MCExecPoint &);
 	void stringtostackfiles(char *d, MCStackfile **sf, uint2 &nf);
 	void setstackfiles(const MCString &);
-	char *getstackfile(const MCString &);
+	void getstackfile(MCStringRef p_name, MCStringRef &r_name);
 	void setfilename(MCStringRef f);
 
 	virtual IO_stat load(IO_handle stream, const char *version, uint1 type);
@@ -391,7 +391,7 @@ public:
 	IO_stat save_stack(IO_handle stream, uint4 p_part, bool p_force_ext);
 	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
 
-	Exec_stat resubstack(char *data);
+	Exec_stat resubstack(MCStringRef p_data);
 	MCCard *getcardid(uint4 inid);
 	MCCard *findcardbyid(uint4 p_id);
 
@@ -401,7 +401,7 @@ public:
 	/* LEGACY */ MCObject *getAVname(Chunk_term type, MCStringRef);
     bool getAVname(Chunk_term type, MCNameRef p_name, MCObject*& r_object);
 	Exec_stat setcard(MCCard *card, Boolean recent, Boolean dynamic);
-	MCStack *findstackfile_oldstring(const MCString &s);
+	//MCStack *findstackfile_oldstring(const MCString &s);
 	MCStack *findstackname_oldstring(const MCString &);
 	MCStack *findsubstackname_oldstring(const MCString &);
 	MCStack *findstackfile(MCNameRef name);

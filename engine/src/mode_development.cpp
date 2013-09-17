@@ -308,9 +308,11 @@ IO_stat MCDispatch::startup(void)
 
 		send_relaunch();
 
-		sptr = findstackname(ep . getsvalue());
+		MCNewAutoNameRef t_name;
+		/* UNCHECKED */ ep.copyasnameref(&t_name);
+		sptr = findstackname(*t_name);
 
-		if (sptr == NULL && (stat = loadfile(ep . getsvalue() . getstring(), sptr)) != IO_NORMAL)
+		if (sptr == NULL && (stat = loadfile(MCNameGetString(*t_name), sptr)) != IO_NORMAL)
 			return stat;
 	}
 
@@ -1080,7 +1082,7 @@ bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 	else
 	{
 		if (MCmbstackptr == nil)
-			MCmbstackptr = MCdispatcher->findstackname(MCmessagenamestring);
+			MCmbstackptr = MCdispatcher->findstackname(MCN_messagename);
 		t_msg_box = MCmbstackptr;
 	}
 	
