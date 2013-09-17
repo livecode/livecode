@@ -992,7 +992,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 }
 
 #ifdef FEATURE_RELAUNCH_SUPPORT
-extern bool relaunch_startup(const char *p_id);
+extern bool relaunch_startup(MCStringRef p_id);
 #endif
 
 void send_relaunch(void)
@@ -1005,7 +1005,7 @@ void send_relaunch(void)
 	t_do_relaunch = MCModeHandleRelaunch(&t_id);
 
 	if (t_do_relaunch)
-		if (relaunch_startup(MCStringGetCString(*t_id)))
+		if (relaunch_startup(*t_id))
 			exit(0);
 #endif
 }

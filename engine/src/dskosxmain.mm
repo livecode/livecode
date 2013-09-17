@@ -75,7 +75,7 @@ int main(int argc, char *argv[], char *envp[])
 		MCAutoStringRef t_caption;
 		MCAutoStringRef t_text;
 		MCModeGetStartupErrorMessage(&t_caption, &t_text);
-		fprintf(stderr, "%@ - %@\n", t_caption, t_text);
+		fprintf(stderr, "%s - %s\n", MCStringGetCString(*t_caption), MCStringGetCString(*t_text));
 		exit(-1);
 	}
 
