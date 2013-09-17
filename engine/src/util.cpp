@@ -899,15 +899,6 @@ void MCU_lower(char *dptr, const MCString &s)
 		*dptr++ = MCS_tolower(*sptr++);
 }
 
-void MCU_upper(char *dptr, const MCString &s)
-{
-	uint4 length = s.getlength();
-	const uint1 *sptr = (uint1 *)s.getstring();
-	uint4 i;
-	for (i = 0 ; i < length ; i++)
-		*dptr++ = MCS_toupper(*sptr++);
-}
-
 Boolean MCU_offset(const MCString &part, const MCString &whole,
                    uint4 &offset, Boolean casesensitive)
 {
