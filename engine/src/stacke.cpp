@@ -252,7 +252,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 				{
 					acptr = new MCAudioClip;
 					acptr->setdisposable();
-					if (!acptr->import(t_effects->sound, stream))
+					if (!acptr->import(*t_sound, stream))
 					{
 						delete acptr;
 						acptr = NULL;

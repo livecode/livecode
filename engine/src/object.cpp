@@ -769,25 +769,25 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 		Exec_stat stat = message(mptr, params, True, True);
 		if (stat == ES_NOT_HANDLED && !handler.getpass())
 		{
-			char *tptr = NULL;
-			const char *t_mptr_cstring;
-			t_mptr_cstring = MCNameGetCString(mptr);
-			if (params != NULL)
+			MCAutoStringRef tptr;
+			MCAutoStringRef t_mptr_string;
+			
+			if (params != nil)
 			{
 				MCExecPoint ep(this, NULL, NULL);
 				params->eval(ep);
-				char *p = ep.getsvalue().clone();
-				tptr = new char[strlen(t_mptr_cstring) + ep.getsvalue().getlength() + 2];
-				sprintf(tptr, "%s %s", t_mptr_cstring, p);
-				delete p;
+                MCAutoStringRef t_value;
+				ep . copyasstringref(&t_value);
+				MCStringFormat(&tptr, "%@ %@", *t_mptr_string, *t_value);
 			}
+            else
+                t_mptr_string = MCNameGetString(mptr);
 			
 			MCHandler *t_handler;
 			t_handler = findhandler(HT_MESSAGE, mptr);
 			if (t_handler == NULL || !t_handler -> isprivate())
-				domess(params == NULL ? t_mptr_cstring : tptr);
+				domess(params == NULL ? *t_mptr_string : *tptr);
 
-			delete tptr;
 		}
 		if (stat == ES_ERROR && !MCNameIsEqualTo(mptr, MCM_error_dialog, kMCCompareCaseless))
 			senderror();
@@ -1445,7 +1445,7 @@ void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite)
 	}
 }
 
-#ifdef  LEGACY EXEC 
+#ifdef LEGACY_EXEC 
 Boolean MCObject::setcolor(uint2 index, const MCString &data)
 {
 	uint2 i, j;
@@ -2041,6 +2041,29 @@ Exec_stat MCObject::message_with_valueref_args(MCNameRef mess, MCValueRef v1, MC
 	return message(mess, &p1);
 }
 
+Exec_stat MCObject::message_with_valueref_args(MCNameRef mess, MCValueRef v1, MCValueRef v2, MCValueRef v3)
+{
+	MCParameter p1, p2, p3;
+	p1.setvalueref_argument(v1);
+	p1.setnext(&p2);
+	p2.setvalueref_argument(v2);
+	p2.setnext(&p3);
+	p3.setvalueref_argument(v3);
+	return message(mess, &p1);
+}
+
+Exec_stat MCObject::message_with_valueref_args(MCNameRef mess, MCValueRef v1, MCValueRef v2, MCValueRef v3, MCValueRef v4)
+{
+	MCParameter p1, p2, p3, p4;
+	p1.setvalueref_argument(v1);
+	p1.setnext(&p2);
+	p2.setvalueref_argument(v2);
+	p2.setnext(&p3);
+	p3.setvalueref_argument(v3);
+	p3.setnext(&p4);
+	p4.setvalueref_argument(v4);
+	return message(mess, &p1);
+}
 Exec_stat MCObject::message_with_args(MCNameRef mess, int4 v1)
 {
 	MCParameter p1;
@@ -2529,10 +2552,10 @@ void MCObject::positionrel(const MCRectangle &drect,
 	}
 }
 
-Exec_stat MCObject::domess(const char *sptr)
+Exec_stat MCObject::domess(MCStringRef sptr)
 {
 	MCAutoStringRef t_temp_script;
-	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on message\n%s\nend message\n", sptr);
+	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on message\n%@\nend message\n", sptr);
 	
 	MCHandlerlist *handlist = new MCHandlerlist;
 	// SMR 1947, suppress parsing errors
@@ -2564,10 +2587,10 @@ Exec_stat MCObject::domess(const char *sptr)
 	}
 }
 
-Exec_stat MCObject::eval(const char *sptr, MCExecPoint &ep)
+Exec_stat MCObject::eval(MCStringRef sptr, MCExecPoint &ep)
 {
 	MCAutoStringRef t_temp_script;
-	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on eval\nreturn %s\nend eval\n", sptr);
+	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on eval\nreturn %@\nend eval\n", sptr);
 	
 	MCHandlerlist *handlist = new MCHandlerlist;
 	if (handlist->parse(this, *t_temp_script) != PS_NORMAL)
@@ -2608,7 +2631,7 @@ Exec_stat MCObject::eval(const char *sptr, MCExecPoint &ep)
 /* WRAPPER */ void MCObject::eval(MCExecContext& ctxt, MCStringRef p_script, MCValueRef& r_value)
 {
 	MCExecPoint ep(ctxt.GetEP());
-	Exec_stat stat = eval(MCStringGetCString(p_script), ep);
+	Exec_stat stat = eval(p_script, ep);
 	/* UNCHECKED */ ep.copyasvalueref(r_value);
 	if (stat != ES_ERROR)
 		return;
@@ -2869,7 +2892,9 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 				return stat;
 			if ((stat = IO_read_uint2(&fontstyle, stream)) != IO_NORMAL)
 				return stat;
-			setfontattrs(fontname, fontsize, fontstyle);
+            MCAutoStringRef t_fontname;
+            /* UNCHECKED */ MCStringCreateWithCString(fontname, &t_fontname);
+			setfontattrs(*t_fontname, fontsize, fontstyle);
 			delete fontname;
 		}
 	}
@@ -4443,10 +4468,10 @@ void MCObject::setfontattrs(uint32_t p_which, MCNameRef p_textfont, uint2 p_text
 
 // MW-2012-02-17: [[ LogFonts ]] Set the logical font attrs to the given values
 //   using a c-string for the name.
-void MCObject::setfontattrs(const char *p_textfont, uint2 p_textsize, uint2 p_textstyle)
+void MCObject::setfontattrs(MCStringRef p_textfont, uint2 p_textsize, uint2 p_textstyle)
 {
 	MCAutoNameRef t_textfont_name;
-	/* UNCHECKED */ t_textfont_name . CreateWithCString(p_textfont);
+	/* UNCHECKED */ MCNameCreate(p_textfont, t_textfont_name);
 	setfontattrs(FF_HAS_ALL_FATTR, t_textfont_name, p_textsize, p_textstyle);
 }
 

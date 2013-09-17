@@ -1197,12 +1197,13 @@ void MCUIDC::siguser()
 
 #include "rgb.cpp"
 
-Boolean MCUIDC::lookupcolor(const MCString &s, MCColor *color)
+Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
 {
-	uint4 slength = s.getlength();
-	char *startptr = new char[slength + 1];
-	char *sptr = startptr;
-	MCU_lower(sptr, s);
+	uint4 slength = MCStringGetLength(s);
+	MCAutoPointer<char> startptr;
+    startptr = new char[slength + 1];
+	char *sptr = *startptr;
+	MCU_lower(sptr, MCStringGetOldString(s));
 	sptr[slength] = '\0';
 	if (*sptr == '#')
 	{
@@ -1229,10 +1230,7 @@ Boolean MCUIDC::lookupcolor(const MCString &s, MCColor *color)
 					if (c >= 'a' && c <= 'f')
 						b |= c - ('a' - 10);
 					else
-					{
-						delete startptr;
 						return False;
-					}
 			}
 		}
 		while (*sptr != '\0');
@@ -1256,7 +1254,6 @@ Boolean MCUIDC::lookupcolor(const MCString &s, MCColor *color)
 			shiftbits -= goodbits;
 		}
 		color->flags = DoRed | DoGreen | DoBlue;
-		delete startptr;
 		return True;
 	}
 	char *tptr = sptr;
@@ -1283,11 +1280,9 @@ Boolean MCUIDC::lookupcolor(const MCString &s, MCColor *color)
 				color->green = (color_table[mid].green << 8) + color_table[mid].green;
 				color->blue = (color_table[mid].blue << 8) + color_table[mid].blue;
 				color->flags = DoRed | DoGreen | DoBlue;
-				delete startptr;
 				return True;
 			}
 	}
-	delete startptr;
 	return False;
 }
 
@@ -1356,7 +1351,7 @@ Boolean MCUIDC::parsecolor(MCStringRef s, MCColor& color, MCStringRef *cname)
 	i1 = MCU_strtol(sptr, l, ',', done);
 	if (!done)
 	{
-		if (lookupcolor(MCStringGetOldString(s), &color))
+		if (lookupcolor(s, &color))
 		{
 			if (cname)
 				*cname = MCValueRetain(s);
@@ -1387,7 +1382,7 @@ Boolean MCUIDC::parsecolor(MCStringRef s, MCColor& color, MCStringRef *cname)
 }
 
 
-#ifdef LEGACY EXEC
+#ifdef LEGACY_EXEC
 Boolean MCUIDC::parsecolors(const MCString &s, MCColor *colors,
                             char *cnames[], uint2 ncolors)
 {
@@ -1439,7 +1434,7 @@ Boolean MCUIDC::getcolors(MCExecPoint &ep)
 		return True;
 }
 
-#ifdef LEGACY EXEC
+#ifdef LEGACY_EXEC
 Boolean MCUIDC::setcolors(const MCString &values)
 {
 		return False;
