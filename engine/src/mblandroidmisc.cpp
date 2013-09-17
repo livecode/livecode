@@ -347,7 +347,7 @@ uint32_t MCAndroidSystem::TextConvert(const void *p_string, uint32_t p_string_le
 	}
 }
 
-bool MCAndroidSystem::TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4 p_output_length, uint4& r_used)
+bool MCAndroidSystem::TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4& p_output_length, uint4& r_used)
 {
 	return false;
 }

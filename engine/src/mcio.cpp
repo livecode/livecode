@@ -66,16 +66,6 @@ bool IO_findfile(MCNameRef p_name, uindex_t& r_index)
 	return IO_findstream(MCfiles, MCnfiles, p_name, r_index);
 }
 
-/* LEGACY */ Boolean IO_findfile(const char *name, uint2 &i)
-{
-	MCNewAutoNameRef t_name;
-	/* UNCHECKED */ MCNameCreateWithCString(name, &t_name);
-	uindex_t t_index;
-	bool t_found = IO_findfile(*t_name, t_index) ? True : False;
-	i = t_index;
-	return t_found;
-}
-
 Boolean IO_closefile(MCNameRef name)
 {
 	uindex_t index;
@@ -101,28 +91,11 @@ Boolean IO_closefile(MCNameRef name)
 	return False;
 }
 
-/* LEGACY */ Boolean IO_closefile(const char *name)
-{
-	MCNewAutoNameRef t_name;
-	/* UNCHECKED */ MCNameCreateWithCString(name, &t_name);
-	return IO_closefile(*t_name);
-}
-
 bool IO_findprocess(MCNameRef p_name, uindex_t& r_index)
 {
 	/* TODO - update processes to use MCNameRef */
 	IO_cleanprocesses();
 	return IO_findstream(MCprocesses, MCnprocesses, p_name, r_index);
-}
-
-/* LEGACY */ Boolean IO_findprocess(const char *name, uint2 &i)
-{
-	MCNewAutoNameRef t_name;
-	/* UNCHECKED */ MCNameCreateWithCString(name, &t_name);
-	uindex_t t_index;
-	bool t_found = IO_findprocess(*t_name, t_index) ? True : False;
-	i = t_index;
-	return t_found;
 }
 
 void IO_cleanprocesses()
@@ -191,7 +164,7 @@ real8 IO_cleansockets(real8 ctime)
 					s->revents->timeout = ctime + MCsockettimeout;
 				if (s->wevents != NULL)
 					s->wevents->timeout = ctime + MCsockettimeout;
-				MCscreen->delaymessage(s->object, MCM_socket_timeout, strclone(MCNameGetCString(s->name)));
+				MCscreen->delaymessage(s->object, MCM_socket_timeout, MCNameGetString(s->name));
 			}
 			if (s->wevents != NULL && s->wevents->timeout < etime)
 				etime = s->wevents->timeout;
@@ -208,16 +181,6 @@ bool IO_findsocket(MCNameRef p_name, uindex_t& r_index)
 		if (MCNameIsEqualTo(p_name, MCsockets[r_index]->name))
 			return true;
 	return false;
-}
-
-/* LEGACY */ Boolean IO_findsocket(char *name, uint2 &i)
-{
-	MCNewAutoNameRef t_name;
-	/* UNCHECKED */ MCNameCreateWithCString(name, &t_name);
-	uindex_t t_index;
-	bool t_found = IO_findsocket(*t_name, t_index) ? True : False;
-	i = t_index;
-	return t_found;
 }
 
 void IO_freeobject(MCObject *o)

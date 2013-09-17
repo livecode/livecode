@@ -284,7 +284,7 @@ MCPropertyInfo MCButton::kProperties[] =
 	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_VISITED_ICON, InterfaceButtonIcon, MCButton, VisitedIcon)
 	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_HOVER_ICON, InterfaceButtonIcon, MCButton, HoverIcon)
     
-    DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(P_HILITE, InterfaceButtonHilite, MCButton, Hilite)
+    DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(P_HILITE, InterfaceTriState, MCButton, Hilite)
     DEFINE_RW_OBJ_ENUM_PROPERTY(P_MENU_MODE, InterfaceButtonMenuMode, MCButton, MenuMode)
 };
 
@@ -3061,8 +3061,8 @@ void MCButton::makemenu(sublist *bstack, int2 &stackdepth, uint2 menuflags, MCFo
 	uint2 pwidth = 0;
 	if (stackdepth > 0)
 	{
-		MCString lastname = bstack[stackdepth].parent->getname_oldstring();
-		pwidth = MCFontMeasureText(fontref, lastname . getstring(), lastname . getlength(), false) + 16;
+		MCStringRef t_lastname = MCNameGetString(bstack[stackdepth].parent->getname());
+		pwidth = MCFontMeasureText(fontref, t_lastname) + 16;
 	}
 	sublist *m = &bstack[stackdepth--];
 

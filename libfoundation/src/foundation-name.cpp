@@ -35,6 +35,24 @@ static void __MCNameShrinkTable(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCNameRef MCNAME(const char *p_string)
+{
+	MCStringRef t_string;
+	t_string = MCSTR(p_string);
+	
+	MCNameRef t_name;
+	/* UNCHECKED */ MCNameCreate(t_string, t_name);
+	
+	MCValueRef t_name_unique;
+	/* UNCHECKED */ MCValueInter(t_name, t_name_unique);
+	
+	MCValueRelease(t_name);
+	
+	return (MCNameRef)t_name_unique;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCNameCreate(MCStringRef p_string, MCNameRef& r_name)
 {
 	MCAssert(p_string != nil);

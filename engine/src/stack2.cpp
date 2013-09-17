@@ -69,11 +69,9 @@ void MCStack::setidlefunc(void (*newfunc)())
 	MCscreen->addtimer(this, MCM_idle, MCidleRate);
 }
 
-Boolean MCStack::setscript(char *newscript)
+Boolean MCStack::setscript(MCStringRef newscript)
 {
-	delete script;
-	script = newscript;
-	flags |= F_SCRIPT;
+	MCValueAssign(_script, newscript);
 	parsescript(False);
 	if (hlist == NULL)
 	{
@@ -230,12 +228,6 @@ void MCStack::uniconify()
 		resetcursor(True);
 		dirtywindowname();
 	}
-}
-
-void MCStack::position(const char *geom)
-{
-	if (MCscreen->position(geom, rect))
-		state |= CS_BEEN_MOVED;
 }
 
 Window_mode MCStack::getmode()
@@ -875,7 +867,7 @@ void MCStack::updatemenubar()
 		        || gettool(this) != T_BROWSE && MCdefaultmenubar != NULL)
 			MCmenubar = NULL;
 		else
-			MCmenubar = (MCGroup *)getobjname(CT_GROUP, MCNameGetOldString(getmenubar()));
+			MCmenubar = (MCGroup *)getobjname(CT_GROUP, MCNameGetString(getmenubar()));
 		MCscreen->updatemenubar(False);
 	}
 }
@@ -1135,7 +1127,7 @@ void MCStack::renumber(MCCard *card, uint4 newnumber)
 	dirtywindowname();
 }
 
-MCObject *MCStack::getAV(Chunk_term etype, const MCString &s, Chunk_term otype)
+MCObject *MCStack::getAV(Chunk_term etype, MCStringRef s, Chunk_term otype)
 {
 	uint2 num = 0;
 
@@ -1931,30 +1923,24 @@ void MCStack::setwindowname()
 	else
 		tptr = title;
 
-	char *newname = NULL;
+	MCAutoStringRef newname;
 	if (editing != NULL)
 	{
-		MCExecPoint ep;
-		editing->names_old(P_SHORT_NAME, ep, 0);
-		ep.nativetoutf8();
-		char *bgname = ep.getsvalue().clone();
-		newname = new char[MCStringGetLength(tptr) + strlen(MCbackgroundstring)
-		                   + strlen(bgname) + 7];
-		sprintf(newname, "%s (%s \"%s\")", MCStringGetCString(tptr), MCbackgroundstring, bgname);
-		delete bgname;
+		MCAutoStringRef bgname;
+		/* UNCHECKED */ editing->names(P_SHORT_NAME, &bgname);
+		/* UNCHECKED */ MCStringFormat(&newname, "%@ (%s \"%@\")", tptr, MCbackgroundstring, *bgname);
 	}
 	else
 	{
-		newname = new char[MCStringGetLength(tptr) + U4L + 6];
 		if (MCStringIsEmpty(title) && mode == WM_TOP_LEVEL && MCdispatcher->cut(True))
 		{
 			if ((cards->next()) == cards)
-				sprintf(newname, "%s *", MCStringGetCString(tptr));
+				/* UNCHECKED */ MCStringFormat(&newname, "%@ *", tptr);
 			else
 			{
 				uint2 num;
 				count(CT_CARD, CT_UNDEFINED, curcard, num);
-				sprintf(newname, "%s (%d) *", MCStringGetCString(tptr), num);
+				/* UNCHECKED */ MCStringFormat(&newname, "%@ (%d) *", tptr, num);
 			}
 		}
 		else
@@ -1963,24 +1949,18 @@ void MCStack::setwindowname()
 			{
 				uint2 num;
 				count(CT_CARD, CT_UNDEFINED, curcard, num);
-				sprintf(newname, "%s (%d)", MCStringGetCString(tptr), num);
+				/* UNCHECKED */ MCStringFormat(&newname, "%@ (%d)", tptr, num);
 			}
 			else
-				strcpy(newname, MCStringGetCString(tptr));
+				newname = tptr;
 	}
-	if (!strequal(newname, MCStringGetCString(titlestring)))
+	if (!MCStringIsEqualTo(*newname, titlestring, kMCStringOptionCompareExact))
 	{
-		MCAutoStringRef t_newname;
-		/* UNCHECKED */ MCStringCreateWithCString(newname, &t_newname);
-		MCValueAssign(titlestring, *t_newname);
+		MCValueAssign(titlestring, *newname);
 		MCscreen->setname(window, titlestring);
 	}
-	else
-		delete newname;
+	
 	state &= ~CS_TITLE_CHANGED;
-
-	if (t_utf8_name != NULL)
-		delete t_utf8_name;
 }
 
 void MCStack::reopenwindow()

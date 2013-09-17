@@ -2852,7 +2852,7 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 				return PS_ERROR;
 			}
 
-			destination = sp . gettoken() . clone();
+			destination = sp . gettoken_oldstring() . clone();
 
 			if (sp . parseexp(False, True, &fname) != PS_NORMAL)
 			{

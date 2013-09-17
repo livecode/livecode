@@ -190,7 +190,7 @@ Exec_stat MCField::sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
 }
 
 Boolean MCField::find(MCExecPoint &ep, uint4 cardid, Find_mode mode,
-                      const MCString &tofind, Boolean first)
+                      MCStringRef tofind, Boolean first)
 {
 	if (fdata == NULL || flags & F_F_DONT_SEARCH)
 		return False;
@@ -205,7 +205,7 @@ Boolean MCField::find(MCExecPoint &ep, uint4 cardid, Find_mode mode,
 		{
 			MCParagraph *paragraphptr = tptr->getparagraphs();
 			MCParagraph *tpgptr = paragraphptr;
-			uint2 flength = tofind.getlength();
+			uint2 flength = MCStringGetLength(tofind);
 			int4 toffset, oldoffset;
 			if (first && foundlength != 0)
 			{
@@ -221,7 +221,7 @@ Boolean MCField::find(MCExecPoint &ep, uint4 cardid, Find_mode mode,
 				uint2 length = tpgptr->gettextsize();
 				uint4 offset;
 				MCString tosearch(&text[oldoffset], length - oldoffset);
-				while (MCU_offset(tofind, tosearch, offset, ep.getcasesensitive()))
+				while (MCU_offset(MCStringGetOldString(tofind), tosearch, offset, ep.getcasesensitive()))
 				{
 					offset += oldoffset;
 					switch (mode)
@@ -259,7 +259,7 @@ Boolean MCField::find(MCExecPoint &ep, uint4 cardid, Find_mode mode,
 								if (MCfoundfield != NULL && MCfoundfield != this)
 									MCfoundfield->clearfound();
 								foundoffset = toffset + offset;
-								foundlength = tofind.getlength();
+								foundlength = MCStringGetLength(tofind);
 								MCfoundfield = this;
 							}
 							return True;
@@ -273,7 +273,7 @@ Boolean MCField::find(MCExecPoint &ep, uint4 cardid, Find_mode mode,
 							if (MCfoundfield != NULL && MCfoundfield != this)
 								MCfoundfield->clearfound();
 							foundoffset = toffset + offset;
-							foundlength = tofind.getlength();
+							foundlength = MCStringGetLength(tofind);
 							MCfoundfield = this;
 						}
 					default:
@@ -506,12 +506,10 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid)
 
 Exec_stat MCField::settext(uint4 parid, MCStringRef p_text, Boolean p_formatted)
 {
-	const char *t_bytes = (const char*)MCStringGetNativeCharPtr(p_text);
-	uindex_t t_length = MCStringGetLength(p_text);
-	if (t_bytes != nil)
-		return settext_oldstring(parid, MCString(t_bytes, t_length), p_formatted, false);
-	else
-		return settext_oldstring(parid, MCString((const char*)MCStringGetCharPtr(p_text), t_length * sizeof(unichar_t)), p_formatted, true);
+	if (MCStringGetCharPtr(p_text) != nil)
+		return settext_oldstring(parid, MCString((const char*)MCStringGetCharPtr(p_text), MCStringGetLength(p_text) * sizeof(unichar_t)), p_formatted, true);
+		
+	return settext_oldstring(parid, MCStringGetOldString(p_text), p_formatted, false);
 }
 
 Exec_stat MCField::settext_oldstring(uint4 parid, const MCString &s, Boolean formatted, Boolean isunicode)

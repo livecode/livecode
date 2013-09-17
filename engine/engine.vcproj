@@ -38,7 +38,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="src;&quot;$(SolutionDir)libcore\src&quot;"
+				AdditionalIncludeDirectories="src"
 				PreprocessorDefinitions="MODE_DEVELOPMENT"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -116,7 +116,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="src;&quot;$(SolutionDir)libcore\src&quot;"
+				AdditionalIncludeDirectories="src"
 				PreprocessorDefinitions="MODE_DEVELOPMENT"
 				UsePrecompiledHeader="0"
 				DebugInformationFormat="3"
@@ -286,7 +286,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Encoding environment..."
-					CommandLine="$(SolutionDir)prebuilt\bin\Revolution.exe &quot;$(InputDir)compress_data.rev&quot; &quot;$(InputDir)Environment.rev&quot; &quot;$(InputDir)startupstack.cpp&quot; &quot;MCstartupstack&quot;&#x0D;&#x0A;"
+					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(InputDir)compress_data.rev&quot; &quot;$(InputDir)Environment.rev&quot; &quot;$(InputDir)startupstack.cpp&quot; &quot;MCstartupstack&quot;&#x0D;&#x0A;"
 					Outputs="$(InputDir)startupstack.cpp"
 				/>
 			</FileConfiguration>

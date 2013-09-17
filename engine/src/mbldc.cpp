@@ -1134,7 +1134,7 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard *p_pasteboard, MCDragActionSet 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCScriptEnvironment *MCScreenDC::createscriptenvironment(const char *p_language)
+MCScriptEnvironment *MCScreenDC::createscriptenvironment(MCStringRef p_language)
 {
 	return NULL;
 }
