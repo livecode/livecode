@@ -21,11 +21,31 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "system.h"
 #include "mblandroid.h"
+#include "filedefs.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+uint1 *MClowercasingtable;
+uint1 *MCuppercasingtable;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCAndroidSystem::Initialize(void)
 {
+    IO_stdin = MCsystem -> OpenFd(0, kMCSOpenFileModeRead);
+    IO_stdout = MCsystem -> OpenFd(1, kMCSOpenFileModeWrite);
+    IO_stderr = MCsystem -> OpenFd(2, kMCSOpenFileModeWrite);
+    
+    // Initialize our case mapping tables
+    
+    MCuppercasingtable = new uint1[256];
+    for(uint4 i = 0; i < 256; ++i)
+        MCuppercasingtable[i] = (uint1)toupper((uint1)i);
+    
+    MClowercasingtable = new uint1[256];
+    for(uint4 i = 0; i < 256; ++i)
+        MClowercasingtable[i] = (uint1)tolower((uint1)i);
+    
 	return true;
 }
 
@@ -35,36 +55,115 @@ void MCAndroidSystem::Finalize(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCAndroidSystem::Debug(const char *p_cstring)
+MCServiceInterface *MCAndroidSystem::QueryService(MCServiceType type)
 {
-	__android_log_print(ANDROID_LOG_INFO, "LiveCode", "%s", p_cstring);
+    return nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void *MCAndroidSystem::LoadModule(MCStringRef p_path)
+void MCAndroidSystem::Debug(MCStringRef p_string)
+{
+	__android_log_print(ANDROID_LOG_INFO, "LiveCode", "%s", MCStringGetCString(p_string));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCSysModuleHandle MCAndroidSystem::LoadModule(MCStringRef p_path)
 {
 	void *t_result;
 	t_result = dlopen(MCStringGetCString(p_path), RTLD_LAZY);
 	MCLog("LoadModule(%s) - %p\n", MCStringGetCString(p_path), t_result);
-	return t_result;
+	return (MCSysModuleHandle)t_result;
 }
 
-void *MCAndroidSystem::ResolveModuleSymbol(void *p_module, MCStringRef p_symbol)
+MCSysModuleHandle MCAndroidSystem::ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
 {
-	return dlsym(p_module, MCStringGetCString(p_symbol));
+	return (MCSysModuleHandle)dlsym((void*)p_module, MCStringGetCString(p_symbol));
 }
 
-void MCAndroidSystem::UnloadModule(void *p_module)
+void MCAndroidSystem::UnloadModule(MCSysModuleHandle p_module)
 {
-	dlclose(p_module);
+	dlclose((void*)p_module);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCSystemInterface *MCMobileCreateSystem(void)
+MCSystemInterface *MCMobileCreateAndroidSystem(void)
 {
 	return new MCAndroidSystem;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Boolean MCAndroidSystem::GetDevices(MCStringRef& r_devices)
+{
+    return False;
+}
+
+Boolean MCAndroidSystem::GetDrives(MCStringRef& r_drives)
+{
+    return False;
+}
+
+void MCAndroidSystem::CheckProcesses(void)
+{
+    return;
+}
+
+bool MCAndroidSystem::StartProcess(MCNameRef p_name, MCStringRef p_doc, intenum_t p_mode, Boolean p_elevated)
+{
+    return false;
+}
+
+void MCAndroidSystem::CloseProcess(uint2 p_index)
+{
+    return;
+}
+
+void MCAndroidSystem::Kill(int4 p_pid, int4 p_sig)
+{
+    return;
+}
+
+void MCAndroidSystem::KillAll(void)
+{
+    return;
+}
+
+Boolean MCAndroidSystem::Poll(real8 p_delay, int p_fd)
+{
+    return False;
+}
+
+Boolean MCAndroidSystem::IsInteractiveConsole(int p_fd)
+{
+    return False;
+}
+
+void MCAndroidSystem::LaunchDocument(MCStringRef p_document)
+{
+    return;
+}
+
+void MCAndroidSystem::LaunchUrl(MCStringRef p_document)
+{
+    return;
+}
+
+void MCAndroidSystem::DoAlternateLanguage(MCStringRef p_script, MCStringRef p_language)
+{
+    return;
+}
+
+bool MCAndroidSystem::AlternateLanguages(MCListRef& r_list)
+{
+    return false;
+}
+
+bool MCAndroidSystem::GetDNSservers(MCListRef& r_list)
+{
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

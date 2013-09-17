@@ -491,7 +491,7 @@ void MCAudioClip::setlooping(Boolean loop)
 	looping = loop;
 }
 
-Boolean MCAudioClip::import(const char *fname, IO_handle stream)
+Boolean MCAudioClip::import(MCStringRef fname, IO_handle stream)
 {
 	size = (uint4)MCS_fsize(stream);
 	if (size == 0)
@@ -606,11 +606,11 @@ Boolean MCAudioClip::import(const char *fname, IO_handle stream)
 				rate = 11000;
 			}
 	}
-	const char *tname = strrchr(fname, PATH_SEPARATOR);
+	const char *tname = strrchr(MCStringGetCString(fname), PATH_SEPARATOR);
 	if (tname != NULL)
 		tname += 1;
 	else
-		tname = fname;
+		tname = MCStringGetCString(fname);
 	setname_cstring(tname);
 	return True;
 }

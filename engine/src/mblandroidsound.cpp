@@ -31,12 +31,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mblandroid.h"
 #include "mblandroidutil.h"
+#include "mblandroidjava.h"
 
 #include "mblsyntax.h"
 
 #include <jni.h>
 
-bool path_to_apk_path(const char * p_path, const char *&r_apk_path);
+bool path_to_apk_path(MCStringRef p_path, MCStringRef &r_apk_path);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -57,38 +58,43 @@ bool MCSystemGetPlayLoudness(uint2& r_loudness)
 
 static MCStringRef s_sound_file = nil;
 
-bool MCSystemPlaySound(const char *p_file, bool p_looping)
+bool MCSystemSoundInitialize()
+{
+	s_sound_file = MCValueRetain(kMCEmptyString);
+	return true;
+}
+
+bool MCSystemSoundFinalize()
+{
+	MCValueRelease(s_sound_file);
+	return true;
+}
+
+bool MCSystemPlaySound(MCStringRef p_file, bool p_looping)
 {
 	//MCLog("MCSystemPlaySound(%s, %s)", p_file, p_looping?"true":"false");
 	bool t_success;
-	if (s_sound_file != nil)
-	{
-		MCValueRelease(s_sound_file);
-		s_sound_file = nil;
-	}
+	
+	MCValueRelease(s_sound_file);
+	
+	/* UNCHECKED */ MCS_resolvepath(p_file, s_sound_file);
     
-	MCAutoStringRef t_file;
-	/* UNCHECKED */ MCStringCreateWithCString(p_file, &t_file);
-	/* UNCHECKED */ MCS_resolvepath(*t_file, s_sound_file);
-    
-	const char *t_apk_file = nil;
-	if (path_to_apk_path(MCStringGetCString(s_sound_file), t_apk_file))
-		MCAndroidEngineCall("playSound", "bsbb", &t_success, t_apk_file, true, p_looping);
+	MCAutoStringRef t_apk_file;
+	if (path_to_apk_path(s_sound_file, &t_apk_file))
+		MCAndroidEngineCall("playSound", "bxbb", &t_success, *t_apk_file, true, p_looping);
 	else
 		MCAndroidEngineCall("playSound", "bxbb", &t_success, s_sound_file, false, p_looping);
 	if (!t_success)
 	{
-		MCValueRelease(s_sound_file);
-		s_sound_file = nil;
+		MCValueAssign(s_sound_file, kMCEmptyString);
 	}
     
 	return t_success;
 }
 
-bool MCSystemGetPlayingSound(const char *& r_sound)
+void MCSystemGetPlayingSound(MCStringRef &r_sound)
 {
-	r_sound = MCStringGetCString(s_sound_file);
-	return true;
+	r_sound = MCValueRetain(s_sound_file);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,12 +103,12 @@ bool MCSystemPlaySoundOnChannel(MCStringRef p_channel, MCStringRef p_file, MCSou
 {
     bool t_success;
     t_success = true;    
-    const char *t_apk_file = nil;;
+    MCAutoStringRef t_apk_file;
     if (t_success)
-        if (path_to_apk_path(MCStringGetCString(p_file), t_apk_file))
-            MCAndroidEngineRemoteCall("playSoundOnChannel", "bxsxibj", &t_success, p_channel, t_apk_file, p_file, (int32_t) p_type, true, (long) p_object);
+        if (path_to_apk_path(p_file, &t_apk_file))
+            MCAndroidEngineRemoteCall("playSoundOnChannel", "bxxxibj", &t_success, p_channel, *t_apk_file, p_file, (int32_t) p_type, true, (long) p_object);
         else
-            MCAndroidEngineRemoteCall("playSoundOnChannel", "bxsxibj", &t_success, p_channel, p_file, p_file, (int32_t) p_type, false, (long) p_object);
+            MCAndroidEngineRemoteCall("playSoundOnChannel", "bxxxibj", &t_success, p_channel, p_file, p_file, (int32_t) p_type, false, (long) p_object);
     return t_success;
 }
 
@@ -208,21 +214,18 @@ bool MCSystemSetAudioCategory(intenum_t p_category)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern void MCSoundPostSoundFinishedOnChannelMessage(const char *p_channel, const char *p_sound, MCObjectHandle *p_object);
+extern void MCSoundPostSoundFinishedOnChannelMessage(MCStringRef p_channel, MCStringRef p_sound, MCObjectHandle *p_object);
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_SoundModule_doSoundFinishedOnChannel(JNIEnv *env, jobject object, jstring channel, jstring sound, jlong object_handle) __attribute__((visibility("default")));
 
 JNIEXPORT void JNICALL Java_com_runrev_android_SoundModule_doSoundFinishedOnChannel(JNIEnv *env, jobject object, jstring channel, jstring sound, jlong object_handle)
 {
-    const char *t_channel = nil;
-    t_channel = env->GetStringUTFChars(channel, nil);
-    const char *t_sound = nil;
-    t_sound = env->GetStringUTFChars(sound, nil);
-
-    MCSoundPostSoundFinishedOnChannelMessage(t_channel, t_sound, (MCObjectHandle*) object_handle);
-
-    env->ReleaseStringUTFChars(channel, t_channel);
-    env->ReleaseStringUTFChars(sound, t_sound);
+	MCAutoStringRef t_channel;
+	MCAutoStringRef t_sound;
+	/* UNCHECKED */ MCJavaStringToStringRef(env, channel, &t_channel);
+	/* UNCHECKED */ MCJavaStringToStringRef(env, sound, &t_sound);
+	
+    MCSoundPostSoundFinishedOnChannelMessage(*t_channel, *t_sound, (MCObjectHandle*) object_handle);
 }
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_SoundModule_doSoundReleaseCallbackHandle(JNIEnv *env, jobject object, jlong object_handle) __attribute__((visibility("default")));
@@ -240,11 +243,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_SoundModule_doSoundSto
 JNIEXPORT void JNICALL Java_com_runrev_android_SoundModule_doSoundStopped(JNIEnv *env, jobject object)
 {
 	//MCLog("doSoundStopped", nil);
-	if (s_sound_file != nil)
-	{
-		MCValueRelease(s_sound_file);
-		s_sound_file = nil;
-	}
+	MCValueAssign(s_sound_file, kMCEmptyString);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

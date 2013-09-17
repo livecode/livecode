@@ -971,7 +971,6 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
 				t_success = ctxt.ForceToString(t_value, &t_string);
 				if (!t_success)
 					break;
-				const byte_t *t_byte_ptr = MCStringGetBytePtr(*t_string);
 				const char_t *t_char_ptr = MCStringGetNativeCharPtr(*t_string);
 				uindex_t length = MCStringGetLength(*t_string);
 				switch (cmd)
@@ -986,10 +985,10 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
 							if (count == BINARY_NOCOUNT)
 								count = 1;
 						if (length >= count)
-							t_success = append_to_array(t_buffer, t_byte_ptr, count);
+							t_success = append_to_array(t_buffer, t_char_ptr, count);
 						else
 						{
-							t_success = append_to_array(t_buffer, t_byte_ptr, length) &&
+							t_success = append_to_array(t_buffer, t_char_ptr, length) &&
 								pad_array(t_buffer, pad, count - length);
 						}
 						break;
@@ -1067,12 +1066,12 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
 						for (offset = 0 ; offset < count ; offset++)
 						{
 							value = t_bigendian ? (value << 4) : (value >> 4);
-							if (!isxdigit(t_byte_ptr[offset]))
+							if (!isxdigit(t_char_ptr[offset]))
 							{
 								ctxt.LegacyThrow(EE_BINARYE_BADFORMAT, t_value);
 								return;
 							}
-							c = t_byte_ptr[offset] - '0';
+							c = t_char_ptr[offset] - '0';
 							if (c > 9)
 								c += ('0' - 'A') + 10;
 							if (c > 16)

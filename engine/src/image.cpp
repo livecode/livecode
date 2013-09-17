@@ -1509,7 +1509,10 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 		t_length += sizeof(uint16_t) + sizeof(uint16_t);
 		t_length += m_control_color_count * 3 * sizeof(uint16_t);
 		for (uint16_t i = 0; i < m_control_color_count; i++)
-			t_length += MCCStringLength(m_control_color_names[i]) + 1;
+			if (m_control_color_names[i] != nil)
+				t_length += MCStringGetLength(m_control_color_names[i]) + 1;
+			else
+				t_length += 1;
 	}
 
 	if (t_stat == IO_NORMAL)
@@ -1524,7 +1527,7 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 		for (uint16_t i = 0; t_stat == IO_NORMAL && i < m_control_color_count; i++)
 			t_stat = p_stream . WriteColor(m_control_colors[i]);
 		for (uint16_t i = 0; t_stat == IO_NORMAL && i < m_control_color_count; i++)
-			t_stat = p_stream . WriteCString(m_control_color_names[i]);
+			t_stat = p_stream . WriteCString(m_control_color_names[i] != nil ? MCStringGetCString(m_control_color_names[i]) : "");
 	}
 
 	if (t_stat == IO_NORMAL)
@@ -1569,7 +1572,14 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 			for (uint32_t i = 0; t_stat == IO_NORMAL && i < m_control_color_count; i++)
 				t_stat = p_stream . ReadColor(m_control_colors[i]);
 			for (uint32_t i = 0; t_stat == IO_NORMAL && i < m_control_color_count; i++)
-				t_stat = p_stream . ReadCString(m_control_color_names[i]);
+			{
+				t_stat = p_stream . ReadStringRef(m_control_color_names[i]);
+				if (t_stat == IO_NORMAL && MCStringIsEmpty(m_control_color_names[i]))
+				{
+					MCValueRelease(m_control_color_names[i]);
+					m_control_color_names[i] = nil;
+				}
+			}
 		}
 
 		if (t_stat == IO_NORMAL)
@@ -1875,7 +1885,8 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 	{
 		MCMemoryDeallocate(colors);
 		for (uint32_t i = 0; i < ncolors; i++)
-			MCCStringFree(colornames[i]);
+			if (colornames[i] != nil)
+				MCValueRelease(colornames[i]);
 		MCMemoryDeallocate(colornames);
 
 		colors = m_control_colors;
@@ -1900,39 +1911,8 @@ bool MCImage::recomputefonts(MCFontRef p_parent_font)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-#ifdef SHARED_STRING
-MCSharedString *MCImage::getclipboardtext(void)
-{
-	MCSharedString *t_data = nil;
-	recompress();
-	if (getcompression() == F_RLE)
-	{
-		bool t_success = true;
 
-		MCImageBitmap *t_bitmap = nil;
-
-		t_success = lockbitmap(t_bitmap);
-		if (t_success)
-			t_success = MCImageCreateClipboardData(t_bitmap, t_data);
-		unlockbitmap(t_bitmap);
-	}
-	else if (m_rep != nil)
-	{
-		MCImageRepType t_type = m_rep->GetType();
-		void *t_bytes = nil;
-		uindex_t t_size = 0;
-		if (t_type == kMCImageRepResident)
-			static_cast<MCResidentImageRep*>(m_rep)->GetData(t_bytes, t_size);
-		else if (t_type == kMCImageRepVector)
-			static_cast<MCVectorImageRep*>(m_rep)->GetData(t_bytes, t_size);
-
-		t_data = MCSharedString::Create(t_bytes, t_size);
-	}
-
-	return t_data;
-}
-#else
-bool MCImage::getclipboardtext(MCStringRef& r_data)
+bool MCImage::getclipboardtext(MCDataRef& r_data)
 {
 	bool t_success = true;
 	
@@ -1959,14 +1939,13 @@ bool MCImage::getclipboardtext(MCStringRef& r_data)
 			t_success = false;
 		
 		if (t_success)
-			t_success = MCStringCreateWithNativeChars((const char_t *)t_bytes, t_size, r_data);
+			t_success = MCDataCreateWithBytes((const char_t *)t_bytes, t_size, r_data);
 	}
 	else
 		t_success = false;
 	
 	return t_success;
 }
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -2141,20 +2120,14 @@ bool MCImage::setfilename(MCStringRef p_filename)
 		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
 		return true;
 	}
-
-	char *t_resolved = nil;
+	
+	MCAutoStringRef t_resolved_str;
+	if (t_success)
+		t_success = getstack() -> resolve_filename(p_filename, &t_resolved_str);
+	
 	MCImageRep *t_rep = nil;
-
 	if (t_success)
-		t_success = nil != (t_resolved = getstack() -> resolve_filename(MCStringGetCString(p_filename)));
-	if (t_success)
-	{
-		MCAutoStringRef t_resolved_string;
-		/* UNCHECKED */ MCStringCreateWithCString(t_resolved, &t_resolved_string);
-		t_success = MCImageRepGetReferenced(*t_resolved_string, t_rep);
-	}
-
-	MCCStringFree(t_resolved);
+		t_success = MCImageRepGetReferenced(*t_resolved_str, t_rep);
 
 	if (t_success)
 	{

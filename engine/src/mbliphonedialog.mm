@@ -147,18 +147,20 @@ static void dopopupanswerdialog_postwait(void *p_context)
 	[ctxt -> alert_view release];
 }
 
-int32_t MCScreenDC::popupanswerdialog(const char *p_buttons[], uint32_t p_button_count, uint32_t p_type, const char *p_title, const char *p_message)
+int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message)
 {
 	// MW-2010-12-18: You cannot nest alertviews on iOS, so we return an immediate cancel if we are in one
 	if (s_in_modal)
 		return -1;
 
 	popupanswerdialog_t ctxt;
-	ctxt . buttons = p_buttons;
+	ctxt . buttons = (const char **) p_buttons;
+	for (uindex_t i = 0; i < p_button_count; i++)
+		ctxt . buttons[i] = MCStringGetCString(p_buttons[i]);
 	ctxt . button_count = p_button_count;
 	ctxt . type = p_type;
-	ctxt . title = p_title;
-	ctxt . message = p_message;
+	ctxt . title = MCStringGetCString(p_title);
+	ctxt . message = MCStringGetCString(p_message);
 	
 	MCIPhoneRunOnMainFiber(dopopupanswerdialog_prewait, &ctxt);
 	
@@ -482,16 +484,16 @@ static void dopopupaskdialog_postwait(void *p_context)
 }
 
 // MM-2011-09-20: [[ BZ 9730 ]] Updated ask dialogs for iOS 5 to use updated UIALertView features. Fixes layout bug in iOS 5.
-bool MCScreenDC::popupaskdialog(uint32_t p_type, const char *p_title, const char *p_message, const char *p_initial, bool p_hint, MCStringRef& r_result)
+bool MCScreenDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result)
 {
 	if (s_in_modal)
 		return nil;
 	
 	popupaskdialog_t ctxt;
 	ctxt . type = p_type;
-	ctxt . title = p_title;
-	ctxt . message = p_message;
-	ctxt . initial = p_initial;
+	ctxt . title = MCStringGetCString(p_title);
+	ctxt . message = MCStringGetCString(p_message);
+	ctxt . initial = MCStringGetCString(p_initial);
 	ctxt . hint = p_hint;
  
 	MCIPhoneRunOnMainFiber(dopopupaskdialog_prewait, &ctxt);

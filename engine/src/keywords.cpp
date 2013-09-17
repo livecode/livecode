@@ -134,7 +134,7 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 				}
 
 		MCVarref *tvar = NULL;
-		MCString init;
+		MCAutoStringRef init;
 		bool initialised = false;
 		if (sp.skip_token(SP_FACTOR, TT_BINOP, O_EQ) == PS_NORMAL)
 		{
@@ -149,7 +149,6 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 			}
 			if (type == ST_MIN)
 			{ // negative initializer
-				const char *sptr = sp.gettoken().getstring();
 				if (sp.next(type) != PS_NORMAL || type != ST_NUM)
 				{
 					if (constant)
@@ -158,11 +157,10 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 						MCperror->add(PE_LOCAL_BADINIT, sp);
 					return PS_ERROR;
 				}
-				uint4 l = sp.gettoken().getstring() + sp.gettoken().getlength() - sptr;
-				init.set(sptr, l);
+				/* UNCHECKED */ MCStringFormat(&init, "-%s", MCStringGetCString(sp.gettoken_stringref()));
 			}
 			else
-				init = sp.gettoken();
+				init = sp.gettoken_stringref();
 
 			initialised = true;
 		}
@@ -171,20 +169,18 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 				MCperror->add(PE_CONSTANT_NOINIT, sp);
 				return PS_ERROR;
 			}
-			else
-				init = NULL;
 
-		MCAutoNameRef t_init_name;
+		MCNewAutoNameRef t_init_name;
 		if (initialised)
-			/* UNCHECKED */ t_init_name . CreateWithOldString(init);
+			/* UNCHECKED */ MCNameCreate(*init, &t_init_name);
 		else
-			t_init_name . Clone(kMCEmptyName);
+			t_init_name = kMCEmptyName;
 
 		if (sp.gethandler() == NULL)
 		{
 			if (constant)
-				sp.gethlist()->newconstant(t_token_name, t_init_name);
-			else if (sp.gethlist()->newvar(t_token_name, t_init_name, &tvar, initialised) != PS_NORMAL)
+				sp.gethlist()->newconstant(t_token_name, *t_init_name);
+			else if (sp.gethlist()->newvar(t_token_name, *t_init_name, &tvar, initialised) != PS_NORMAL)
 				{
 					MCperror->add(PE_LOCAL_BADNAME, sp);
 					return PS_ERROR;
@@ -192,8 +188,8 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 
 		}
 		else if (constant)
-			sp.gethandler()->newconstant(t_token_name, t_init_name);
-		else if (sp.gethandler()->newvar(t_token_name, t_init_name, &tvar) != PS_NORMAL)
+			sp.gethandler()->newconstant(t_token_name, *t_init_name);
+		else if (sp.gethandler()->newvar(t_token_name, *t_init_name, &tvar) != PS_NORMAL)
 				{
 					MCperror->add(PE_LOCAL_BADNAME, sp);
 					return PS_ERROR;
@@ -629,7 +625,7 @@ Parse_stat MCRepeat::parse(MCScriptPoint &sp)
 					}
 					if (sp.lookup(SP_FACTOR, te) != PS_NORMAL)
 					{
-						if (sp.gettoken() != "down")
+						if (!sp.token_is_cstring("down"))
 						{
 							MCperror->add
 							(PE_REPEAT_NOWITHTO, sp);
@@ -977,7 +973,7 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 						MCU_skip_spaces(sptr, l);
 						break;
 					case FU_TOKEN:
-						s = sp->gettoken();
+						s = sp->gettoken_oldstring();
 						ps = sp->nexttoken();
 						if (ps == PS_ERROR || ps == PS_EOF)
 							l = 0;

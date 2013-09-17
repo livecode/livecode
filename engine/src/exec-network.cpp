@@ -211,7 +211,7 @@ void MCNetworkEvalHostAddressToName(MCExecContext& ctxt, MCStringRef p_address, 
 
 	// We only allow an address to name lookup if the resulting is the secure domain
 	// unless we have network access.
-	if (!MCSecureModeCanAccessNetwork() && !MCModeCanAccessDomain(MCStringGetCString(r_name)))
+	if (!MCSecureModeCanAccessNetwork() && !MCModeCanAccessDomain(r_name))
 	{
 		MCValueRelease(r_name);
 		r_name = nil;
@@ -224,7 +224,7 @@ void MCNetworkEvalHostAddressToName(MCExecContext& ctxt, MCStringRef p_address, 
 void MCNetworkEvalHostNameToAddress(MCExecContext& ctxt, MCStringRef p_hostname, MCNameRef p_message, MCStringRef& r_string)
 {
 	// We only allow an name to address lookup to occur for the secure domain.
-	if (!MCSecureModeCanAccessNetwork() && !MCModeCanAccessDomain(MCStringGetCString(p_hostname)))
+	if (!MCSecureModeCanAccessNetwork() && !MCModeCanAccessDomain(p_hostname))
 	{
 		ctxt.LegacyThrow(EE_NETWORK_NOPERM);
 		return;
@@ -336,7 +336,7 @@ void MCNetworkEvalHTTPProxyForURLWithPAC(MCExecContext& ctxt, MCStringRef p_url,
 
 	if (MCStringGetLength(p_pac) > 0)
 	{
-		s_pac_engine = MCscreen -> createscriptenvironment("javascript");
+		s_pac_engine = MCscreen -> createscriptenvironment(MCSTR("javascript"));
 		if (s_pac_engine != NULL)
 		{
 			bool t_success;
@@ -424,7 +424,7 @@ void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target)
 
 void MCNetworkExecPerformOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, bool p_datagram, bool p_secure, bool p_ssl)
 {
-	if (!ctxt . EnsureNetworkAccessIsAllowed() && !MCModeCanAccessDomain(MCNameGetCString(p_name)))
+	if (!ctxt . EnsureNetworkAccessIsAllowed() && !MCModeCanAccessDomain(MCNameGetString(p_name)))
 		return;
 
 	uindex_t t_index;

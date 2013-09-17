@@ -131,11 +131,7 @@ bool MCImageExport(MCImageBitmap *p_bitmap, Export_format p_format, MCImagePalet
 bool MCImageDecode(IO_handle p_stream, MCImageFrame *&r_frames, uindex_t &r_frame_count);
 bool MCImageDecode(const uint8_t *p_data, uindex_t p_size, MCImageFrame *&r_frames, uindex_t &r_frame_count);
 
-#ifdef SHARED_STRING
-bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCSharedString *&r_data);
-#else
-bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCStringRef &r_data);
-#endif
+bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCDataRef &r_data);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -315,7 +311,7 @@ class MCImage : public MCControl
 
 	bool m_have_control_colors;
 	MCColor *m_control_colors;
-	char **m_control_color_names;
+	MCStringRef *m_control_color_names;
 	uint16_t m_control_color_count;
 	uint16_t m_control_color_flags;
 	
@@ -491,11 +487,8 @@ public:
 	// publishing to the clipboard. For PNG, GIF, JPEG images this is the text 
 	// property of the image. For RAW images, the data will be compressed and
 	// returned as PNG.
-#ifdef SHARED_STRING
-	MCSharedString *getclipboardtext(void);
-#else
-	bool getclipboardtext(MCStringRef& r_data);
-#endif
+	bool getclipboardtext(MCDataRef& r_data);
+	
 	// MW-2011-09-13: [[ Masks ]] Updated to return a 'MCWindowMask'
 	MCWindowShape *makewindowshape(void);
 	
@@ -504,11 +497,7 @@ public:
 	CGImageRef converttodragimage(void);
 #elif defined(_WINDOWS_DESKTOP)
 	MCWinSysIconHandle makeicon(uint4 p_width, uint4 p_height);
-#ifdef SHARED_STRING
-	MCSharedString *converttodragimage(void);
-#else
-	void converttodragimage(MCStringRef& r_output);
-#endif
+	void converttodragimage(MCDataRef& r_output);
 #elif defined(_LINUX_DESKTOP)
 	Pixmap makewindowregion();
 #else

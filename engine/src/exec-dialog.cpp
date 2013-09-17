@@ -425,12 +425,7 @@ void MCDialogExecAnswerNotify(MCExecContext &ctxt, integer_t p_type, MCStringRef
 	}
 
 	int32_t t_result;
-	if (!MCscreen->popupanswerdialog(p_buttons, p_button_count, t_type, p_title, p_prompt, t_result))
-	{
-		ctxt.Throw();
-		return;
-	}
-	
+	t_result = MCscreen->popupanswerdialog(p_buttons, p_button_count, t_type, p_title, p_prompt);
 	if (t_result == -1)
 		ctxt.SetTheResultToValue(MCN_cancel);
 	else if (p_button_count == 0)
@@ -516,7 +511,7 @@ void MCDialogExecAskQuestion(MCExecContext& ctxt, int p_type, MCStringRef p_prom
 
 #else
 	MCAutoStringRef t_result;
-	if (MCscreen -> popupaskdialog(AT_QUESTION, MCStringGetCString(p_title), MCStringGetCString(p_prompt), MCStringGetCString(p_answer), p_hint_answer, &t_result))
+	if (MCscreen -> popupaskdialog(AT_QUESTION, p_title, p_prompt, p_answer, p_hint_answer, &t_result))
 	{
 		ctxt . SetItToValue(*t_result);
 		ctxt . SetTheResultToEmpty();
@@ -556,7 +551,7 @@ void MCDialogExecAskPassword(MCExecContext& ctxt, bool p_clear, MCStringRef p_pr
 	
 #else
 	MCAutoStringRef t_result;
-	if (MCscreen -> popupaskdialog(AT_PASSWORD, MCStringGetCString(p_title), MCStringGetCString(p_prompt), MCStringGetCString(p_answer), p_hint_answer, &t_result))
+	if (MCscreen -> popupaskdialog(AT_PASSWORD, p_title, p_prompt, p_answer, p_hint_answer, &t_result))
 	{
 		ctxt . SetItToValue(*t_result);
 		ctxt . SetTheResultToEmpty();
