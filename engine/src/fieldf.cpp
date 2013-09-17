@@ -1690,7 +1690,7 @@ void MCField::finsertnew(Field_translations function, MCStringRef p_string, KeyS
 	selectedmark(False, si, ei, False, False);
 
 	// Defer to the paragraph method to insert the text.
-	focusedparagraph -> finsertnew(MCStringGetCString(p_string), !MCStringIsNative(p_string));
+	focusedparagraph -> finsertnew(p_string, !MCStringIsNative(p_string));
 
 	// Compute the end of the selection.
 	int4 ti;
@@ -2259,19 +2259,23 @@ void MCField::setupentry(MCButton *bptr, MCStringRef p_string)
 	settext(0, p_string, False);
 }
 
-void MCField::typetext(const MCString &newtext)
+void MCField::typetext(MCStringRef newtext)
 {
-	if (newtext . getlength() == 0)
+	if (MCStringIsEmpty(newtext))
 		return;
 
 	if (MCactivefield == this)
 		unselect(False, True);
-	if (newtext.getlength() < MAX_PASTE_MESSAGES)
+    
+    MCAutoStringRef t_newtext;
+	if (MCStringGetLength(newtext) < MAX_PASTE_MESSAGES)
 	{
 		char string[2];
 		string[1] = '\0';
-		char *sptr = (char *)newtext.getstring();
-		const char *eptr = sptr + newtext.getlength();
+        MCAutoNativeCharArray t_array;
+        char *sptr = (char *)t_array . Chars();
+		memcpy(sptr, MCStringGetNativeCharPtr(newtext), MCStringGetLength(newtext));
+		const char *eptr = sptr + MCStringGetLength(newtext);
 		while (sptr < eptr)
 		{
 			string[0] = *sptr;
@@ -2281,14 +2285,15 @@ void MCField::typetext(const MCString &newtext)
 				sptr++;
 			message_with_args(MCM_key_up, string);
 		}
+        t_array . CreateString(&t_newtext);
 	}
 	uint2 oldfocused;
 	focusedparagraph->getselectionindex(oldfocused, oldfocused);
 	state |= CS_CHANGED;
-	if (newtext.getlength() && focusedparagraph->finsertnew(newtext, false))
+	if (!MCStringIsEmpty(*t_newtext) && focusedparagraph->finsertnew(*t_newtext, false))
 	{
 		recompute();
-		int4 endindex = oldfocused + newtext.getlength();
+		int4 endindex = oldfocused + MCStringGetLength(*t_newtext);
 		int4 junk;
 		MCParagraph *newfocused = indextoparagraph(focusedparagraph, endindex, junk);
 		while (focusedparagraph != newfocused)
@@ -2302,7 +2307,6 @@ void MCField::typetext(const MCString &newtext)
 	}
 	else
 		updateparagraph(True, False);
-	delete (char *)newtext.getstring();
 }
 
 void MCField::startcomposition()
