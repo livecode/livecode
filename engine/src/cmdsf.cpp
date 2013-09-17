@@ -1699,18 +1699,15 @@ MCFilter::~MCFilter()
 Boolean MCFilter::match(MCStringRef s, MCStringRef p, Boolean casesensitive)
 {
 	uint1 scc, c;
-    uindex_t i_s = 0;
-    uindex_t i_p = 0;
-    MCStringRef t_head_s = nil;
-    MCStringRef t_head_p = nil;
+    uindex_t s_pos = 0;
+    uindex_t p_pos = 0;
 
-	while (!MCStringIsEmpty(s))
+	while (s_pos < MCStringGetLength(s))
 	{
-        scc = MCStringGetNativeCharAtIndex(s, 0);
-        /* UNCHECKED */ MCStringDivideAtIndex(s, i_s++, t_head_s, s);
-        c = MCStringGetNativeCharAtIndex(p, 0);
-        /* UNCHECKED */ MCStringDivideAtIndex(p, i_p++, t_head_p, p);
-
+        scc = MCStringGetNativeCharAtIndex(s, s_pos);
+        s_pos++;
+        c = MCStringGetNativeCharAtIndex(p, p_pos);
+        p_pos++;
 		switch (c)
 		{
 		case OPEN_BRACKET:
@@ -1719,22 +1716,27 @@ Boolean MCFilter::match(MCStringRef s, MCStringRef p, Boolean casesensitive)
 				int lc = -1;
 				int notflag = 0;
 
-				if (MCStringGetNativeCharAtIndex(p, 0) == '!' )
+				if (MCStringGetNativeCharAtIndex(p, p_pos) == '!' )
 				{
 					notflag = 1;
-					/* UNCHECKED */ MCStringDivideAtIndex(p, i_p++, t_head_p, p);
+					p_pos++;
 				}
-				while (!MCStringIsEmpty(p))
+				while (p_pos < MCStringGetLength(p))
 				{
-					c = MCStringGetNativeCharAtIndex(p, 0);
-                    /* UNCHECKED */ MCStringDivideAtIndex(p, i_p++, t_head_p, p);
+					c = MCStringGetNativeCharAtIndex(p, p_pos);
+                    p_pos++;
 					if (c == CLOSE_BRACKET && lc >= 0)
-						return ok ? match(s, p, casesensitive) : 0;
+                    {
+                        MCAutoStringRef t_s_substring, t_p_substring;
+                        /* UNCHECKED */ MCStringCopySubstring(s, MCRangeMake(s_pos, MCStringGetLength(s) - s_pos), &t_s_substring);
+                        /* UNCHECKED */ MCStringCopySubstring(p, MCRangeMake(p_pos, MCStringGetLength(p) - p_pos), &t_p_substring);
+						return ok ? match(*t_s_substring, *t_p_substring, casesensitive) : 0;
+                    }
 					else
-						if (c == '-' && lc >= 0 && MCStringGetNativeCharAtIndex(p, 0) != CLOSE_BRACKET)
+						if (c == '-' && lc >= 0 && MCStringGetNativeCharAtIndex(p, p_pos) != CLOSE_BRACKET)
 						{
-							c = MCStringGetNativeCharAtIndex(p, 0);
-                            /* UNCHECKED */ MCStringDivideAtIndex(p, i_p++, t_head_p, p);
+							c = MCStringGetNativeCharAtIndex(p, p_pos);
+                            p_pos++;
                             
 							if (notflag)
 							{
@@ -1769,20 +1771,22 @@ Boolean MCFilter::match(MCStringRef s, MCStringRef p, Boolean casesensitive)
 		case '?':
 			break;
 		case '*':
-			while (MCStringGetNativeCharAtIndex(p, 0) == '*')
-				/* UNCHECKED */ MCStringDivideAtIndex(p, i_p++, t_head_p, p);
-			if (MCStringGetNativeCharAtIndex(p, 0) == 0)
+			while (MCStringGetNativeCharAtIndex(p, p_pos) == '*')
+				p_pos++;
+			if (MCStringGetNativeCharAtIndex(p, p_pos) == 0)
 				return True;
-			/* UNCHECKED */ MCStringDivideAtIndex(s, --i_s, t_head_s, s);
-			c = MCStringGetNativeCharAtIndex(p, 0);
-			while (MCStringGetNativeCharAtIndex(s, 0))
-				if ((casesensitive ? c != MCStringGetNativeCharAtIndex(s, 0) : MCS_tolower(c) != MCS_tolower(MCStringGetNativeCharAtIndex(s, 0)))
-				        && MCStringGetNativeCharAtIndex(p, 0) != '?' && MCStringGetNativeCharAtIndex(p, 0) != OPEN_BRACKET)
-					/* UNCHECKED */ MCStringDivideAtIndex(s, i_s++, t_head_s, s);
+			--s_pos;
+			c = MCStringGetNativeCharAtIndex(p, p_pos);
+			while (s_pos < MCStringGetLength(s))
+				if ((casesensitive ? c != MCStringGetNativeCharAtIndex(s, s_pos) : MCS_tolower(c) != MCS_tolower(MCStringGetNativeCharAtIndex(s, s_pos)))
+				        && MCStringGetNativeCharAtIndex(p, p_pos) != '?' && MCStringGetNativeCharAtIndex(p, p_pos) != OPEN_BRACKET)
+					s_pos++;
 				else
                 {
-                    /* UNCHECKED */ MCStringDivideAtIndex(s, i_s++, t_head_s, s);
-					if (match(s, p, casesensitive))
+                    MCAutoStringRef t_s_substring, t_p_substring;
+                    /* UNCHECKED */ MCStringCopySubstring(s, MCRangeMake(s_pos, MCStringGetLength(s) - s_pos), &t_s_substring);
+                    /* UNCHECKED */ MCStringCopySubstring(p, MCRangeMake(p_pos, MCStringGetLength(p) - p_pos), &t_p_substring);
+                    if (match(*t_s_substring, *t_p_substring, casesensitive))
 						return True;
                 }
 			return False;
@@ -1800,13 +1804,10 @@ Boolean MCFilter::match(MCStringRef s, MCStringRef p, Boolean casesensitive)
 			break;
 		}
 	}
-	while (MCStringGetNativeCharAtIndex(p, 0) == '*')
-		/* UNCHECKED */ MCStringDivideAtIndex(p, i_p++, t_head_p, p);
+	while (MCStringGetNativeCharAtIndex(p, p_pos) == '*')
+		p_pos++;
     
-    MCValueRelease(t_head_p);
-    MCValueRelease(t_head_s);
-    
-	return MCStringGetNativeCharAtIndex(p, 0) == 0;
+	return MCStringGetNativeCharAtIndex(p, p_pos) == 0;
 }
 
 char *MCFilter::filterlines(MCStringRef sstring, MCStringRef pstring,
@@ -1823,17 +1824,17 @@ char *MCFilter::filterlines(MCStringRef sstring, MCStringRef pstring,
 	// 3. If the filtered list is non-empty and had a terminal delimiter, put a return after it.
 
 	// Duplicate input string because the algorithm needs to change it.
-	char *t_string;
-	t_string = strdup(MCStringGetCString(sstring));
+	MCAutoStringRef t_string;
+	t_string = MCValueRetain(sstring);
 
 	// Keep a copy of the original pointer so it can be freed
 	char *t_original_string;
-	t_original_string = t_string;
+	t_original_string = strdup(MCStringGetCString(*t_string));
 
 	// MW-2010-10-05: [[ Bug 9034 ]] If t_string is of zero length, then the next couple
 	//   of lines will cause problems so return empty in this case.
 	uint32_t t_length;
-	t_length = strlen(t_string);
+	t_length = MCStringGetLength(*t_string);
 	if (t_length == 0)
 	{
 		free(t_original_string);
@@ -1844,22 +1845,18 @@ char *MCFilter::filterlines(MCStringRef sstring, MCStringRef pstring,
 	// Record whether or not the string was terminated with a trailing delimiter,
 	// if it was, then remove this trailing delimiter.
 	bool t_was_terminated;
-	t_was_terminated = (t_string[t_length - 1] == '\n');
+	t_was_terminated = (MCStringGetNativeCharAtIndex(*t_string, t_length - 1) == '\n');
 	if (t_was_terminated)
-		t_string[t_length - 1] = '\0';
+        /* UNCHECKED */ MCStringCopySubstringAndRelease(*t_string, MCRangeMake(0, MCStringGetLength(*t_string) -1), &t_string);
+            
 
 	for(;;)
 	{
-		char *t_return;
-		t_return = strchr(t_string, '\n');
+        MCAutoStringRef t_head, t_tail;
+        /* UNCHECKED */ MCStringDivideAtChar(*t_string, '\n', kMCCompareExact, &t_head, &t_tail);
 
-		if (t_return != nil)
-			*t_return = '\0';
-
-		line = t_string;
-        MCAutoStringRef t_line;
-        /* UNCHECKED */ MCStringCreateWithCString(line, &t_line);
-		if (match(*t_line, pstring, casesensitive) != out)
+		line = strdup(MCStringGetCString(*t_string));
+        if (match(*t_head, pstring, casesensitive) != out)
 		{
 			if (offset)
 				dstring[offset++] = '\n';
@@ -1870,10 +1867,11 @@ char *MCFilter::filterlines(MCStringRef sstring, MCStringRef pstring,
 			offset += length;
 		}
 
-		if (t_return == nil)
+		if (MCStringIsEmpty(*t_tail))
 			break;
 
-		t_string = t_return + 1;
+		
+        MCValueAssign(&t_string, *t_tail);
 	}
 
 	if (offset != 0 && t_was_terminated)
