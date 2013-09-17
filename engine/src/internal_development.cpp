@@ -943,7 +943,11 @@ public:
                 t_found_image = t_relative_object -> resolveimageid(p_ep . getuint4());
             }
             else
-                t_found_image = t_relative_object -> resolveimagename(p_ep . getsvalue());
+            {
+                MCAutoStringRef t_value;
+                p_ep . copyasstringref(&t_value);
+                t_found_image = t_relative_object -> resolveimagename(*t_value);
+            }
             
             if (t_found_image != nil)
                 t_stat = t_found_image -> getprop(0, P_LONG_ID, p_ep, False);

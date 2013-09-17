@@ -190,7 +190,7 @@ public:
 	virtual bool hasfeature(MCPlatformFeature p_feature);
 
 	// in w32dcs.cc
-	virtual void setstatus(const char *status);
+	virtual void setstatus(MCStringRef status);
 
 	virtual Boolean open();
 	virtual Boolean close(Boolean force);
@@ -277,7 +277,7 @@ public:
 	virtual uint2 getpad();
 	virtual Window getroot();
 	virtual MCBitmap *snapshot(MCRectangle &r, uint4 window,
-	                           const char *displayname);
+	                           MCStringRef displayname);
 
 	virtual HRGN PixmapToRegion(Pixmap p);
 
@@ -307,8 +307,8 @@ public:
 	virtual void assignbackdrop(enum Window_mode p_mode, Window p_window);
 
 	virtual void seticon(uint4 p_icon);
-	virtual void seticonmenu(const char *p_menu);
-	virtual void configurestatusicon(uint32_t icon_id, const char *menu, const char *tooltip);
+	virtual void seticonmenu(MCStringRef p_menu);
+	virtual void configurestatusicon(uint32_t icon_id, MCStringRef menu, MCStringRef tooltip);
 
 	virtual void enactraisewindows(void);
 	
@@ -335,7 +335,7 @@ public:
 
 	//
 
-	virtual MCScriptEnvironment *createscriptenvironment(const char *p_language);
+	virtual MCScriptEnvironment *createscriptenvironment(MCStringRef p_language);
 
 	//
 

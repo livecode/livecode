@@ -1281,7 +1281,7 @@ bool cgi_initialize()
 	MCExecPoint ep;
 	
 	// Construct the _SERVER variable
-	/* UNCHECKED */ MCVariable::createwithname_cstring("$_SERVER", s_cgi_server);
+	/* UNCHECKED */ MCVariable::createwithname(MCNAME("$_SERVER", s_cgi_server);
 	s_cgi_server -> setnext(MCglobals);
 	MCglobals = s_cgi_server;
 	
@@ -1363,43 +1363,43 @@ bool cgi_initialize()
 	
 	// Construct the GET variables by parsing the QUERY_STRING
 	
-	/* UNCHECKED */ MCDeferredVariable::createwithname_cstring("$_GET_RAW", cgi_compute_get_raw_var, nil, s_cgi_get_raw);
+	/* UNCHECKED */ MCDeferredVariable::createwithname(MCNAME("$_GET_RAW"), cgi_compute_get_raw_var, nil, s_cgi_get_raw);
 	s_cgi_get_raw -> setnext(MCglobals);
 	MCglobals = s_cgi_get_raw;	
-	/* UNCHECKED */ MCDeferredVariable::createwithname_cstring("$_GET", cgi_compute_get_var, nil, s_cgi_get);
+	/* UNCHECKED */ MCDeferredVariable::createwithname(MCNAME("$_GET"), cgi_compute_get_var, nil, s_cgi_get);
 	s_cgi_get -> setnext(MCglobals);
 	MCglobals = s_cgi_get;
-	/* UNCHECKED */ MCDeferredVariable::createwithname_cstring("$_GET_BINARY", cgi_compute_get_binary_var, nil, s_cgi_get_binary);
+	/* UNCHECKED */ MCDeferredVariable::createwithname(MCNAME("$_GET_BINARY"), cgi_compute_get_binary_var, nil, s_cgi_get_binary);
 	s_cgi_get_binary -> setnext(MCglobals);
 	MCglobals = s_cgi_get_binary;	
 	
 	// Construct the _POST variables by reading stdin.
 	
-	/* UNCHECKED */ MCDeferredVariable::createwithname_cstring("$_POST_RAW", cgi_compute_post_raw_var, nil, s_cgi_post_raw);
+	/* UNCHECKED */ MCDeferredVariable::createwithname(MCNAME("$_POST_RAW"), cgi_compute_post_raw_var, nil, s_cgi_post_raw);
 	s_cgi_post_raw -> setnext(MCglobals);
 	MCglobals = s_cgi_post_raw;
-	/* UNCHECKED */ MCDeferredVariable::createwithname_cstring("$_POST", cgi_compute_post_var, nil, s_cgi_post);
+	/* UNCHECKED */ MCDeferredVariable::createwithname(MCNAME("$_POST"), cgi_compute_post_var, nil, s_cgi_post);
 	s_cgi_post -> setnext(MCglobals);
 	MCglobals = s_cgi_post;
-	/* UNCHECKED */ MCDeferredVariable::createwithname_cstring("$_POST_BINARY", cgi_compute_post_binary_var, nil, s_cgi_post_binary);
+	/* UNCHECKED */ MCDeferredVariable::createwithname(MCNAME("$_POST_BINARY"), cgi_compute_post_binary_var, nil, s_cgi_post_binary);
 	s_cgi_post_binary -> setnext(MCglobals);
 	MCglobals = s_cgi_post_binary;	
 	
 	// Construct the FILES variable by reading stdin
 
-	/* UNCHECKED */ MCDeferredVariable::createwithname_cstring("$_FILES", cgi_compute_files_var, nil, s_cgi_files);
+	/* UNCHECKED */ MCDeferredVariable::createwithname(MCNAME("$_FILES"), cgi_compute_files_var, nil, s_cgi_files);
 	s_cgi_files -> setnext(MCglobals);
 	MCglobals = s_cgi_files;
 	
 	// Construct the COOKIES variable by parsing HTTP_COOKIE
-	/* UNCHECKED */ MCDeferredVariable::createwithname_cstring("$_COOKIE", cgi_compute_cookie_var, nil, s_cgi_cookie);
+	/* UNCHECKED */ MCDeferredVariable::createwithname(MCNAME("$_COOKIE"), cgi_compute_cookie_var, nil, s_cgi_cookie);
 	s_cgi_cookie -> setnext(MCglobals);
 	MCglobals = s_cgi_cookie;
 	
 	// Create the $_SESSION variable explicitly, to be populated upon calls to "start session"
 	// required as implicit references to "$_SESSION" will result in its creation as an env var
 	MCVariable *t_session_var = NULL;
-	/* UNCHECKED */ MCVariable::createwithname_cstring("$_SESSION", t_session_var);
+	/* UNCHECKED */ MCVariable::createwithname(MCNAME("$_SESSION"), t_session_var);
 	t_session_var->setnext(MCglobals);
 	MCglobals = t_session_var;
 
@@ -1546,7 +1546,7 @@ bool MCServerStartSession()
 		t_session_var = MCVariable::lookupglobal_cstring("$_SESSION");
 		if (t_session_var == NULL)
 		{
-			t_success = MCVariable::createwithname_cstring("$_SESSION", t_session_var);
+			t_success = MCVariable::createwithname(MCNAME("$_SESSION"), t_session_var);
 			if (t_success)
 			{
 				t_session_var->setnext(MCglobals);

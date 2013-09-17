@@ -175,8 +175,7 @@ int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_uni
 				}
 			}
 
-
-			cfstring = CFStringCreateWithCharactersNoCopy(NULL, (UniChar *)(tempbuffer != NULL? tempbuffer: s), (tempbuffer != NULL? len + 2:len) >> 1,
+			cfstring = CFStringCreateWithCharactersNoCopy(NULL, (UniChar *)(tempbuffer != NULL? tempbuffer : s), (tempbuffer != NULL? len + 2:len) >> 1,
 					   kCFAllocatorNull);
 			Point dimensions = {0, 0};
 			GetThemeTextDimensions(cfstring, kThemeCurrentPortFont, kThemeStateActive, false, &dimensions, &baseline);
@@ -213,12 +212,15 @@ int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_uni
 		}
 		else
 		{
-		int4 iwidth = 0;
-		while (len--)
-			iwidth += f->widths[(uint1)*s++];
-		return iwidth;
-	}
-}
+            int4 iwidth = 0;
+            while (len--)
+            {
+                iwidth += f->widths[(uint1)*s++];
+                
+            }
+            return iwidth;
+        }
+    }
 }
 
 MCContext *MCScreenDC::createcontext(Drawable p_drawable, MCBitmap *p_alpha)

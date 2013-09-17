@@ -139,14 +139,14 @@ void MCScreenDC::setupcolors()
 {
 	ncolors = MCU_min(vis->colormap_size, MAX_CELLS);
 	colors = new MCColor[ncolors];
-	colornames = new char *[ncolors];
+    colornames = new MCStringRef[ncolors];
 	allocs = new int2[ncolors];
 	int2 i;
 	for (i = 0 ; i < ncolors ; i++)
 	{
 		colors[i].flags = DoRed | DoGreen | DoBlue;
 		colors[i].pixel = i;
-		colornames[i] = NULL;
+        colornames[i] = MCValueRetain(kMCEmptyString);
 		allocs[i] = 0;
 	}
 }

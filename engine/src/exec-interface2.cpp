@@ -631,6 +631,7 @@ void MCInterfaceGetDialogData(MCExecContext& ctxt, MCValueRef& r_value)
 {
 	r_value = MCValueRetain(MCdialogdata -> getvalueref());
 }
+
 void MCInterfaceSetDialogData(MCExecContext& ctxt, MCValueRef p_value)
 {
 	MCdialogdata -> setvalueref(p_value);
@@ -1197,9 +1198,8 @@ void MCInterfaceGetIconMenu(MCExecContext& ctxt, MCStringRef& r_menu)
 
 void MCInterfaceSetIconMenu(MCExecContext& ctxt, MCStringRef p_menu)
 {
-	MCValueRelease(MCiconmenu);
-	MCiconmenu = (MCStringRef)MCValueRetain(p_menu);
-	MCscreen -> seticonmenu(MCStringGetCString(MCiconmenu));
+	MCValueAssign(MCiconmenu, p_menu);
+	MCscreen -> seticonmenu(MCiconmenu);
 }
 
 void MCInterfaceGetStatusIcon(MCExecContext& ctxt, uinteger_t& r_icon)
@@ -1213,7 +1213,7 @@ void MCInterfaceSetStatusIcon(MCExecContext& ctxt, uinteger_t p_icon)
 		return;
 		
 	MCstatusiconid = p_icon;
-	MCscreen -> configurestatusicon(MCstatusiconid, MCStringGetCString(MCstatusiconmenu), MCStringGetCString(MCstatusicontooltip));
+	MCscreen -> configurestatusicon(MCstatusiconid, MCstatusiconmenu, MCstatusicontooltip);
 }
 
 void MCInterfaceGetStatusIconToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip)
@@ -1223,9 +1223,8 @@ void MCInterfaceGetStatusIconToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip
 
 void MCInterfaceSetStatusIconToolTip(MCExecContext& ctxt, MCStringRef p_tooltip)
 {
-	MCValueRelease(MCstatusicontooltip);
-	MCstatusicontooltip = (MCStringRef)MCValueRetain(p_tooltip);
-	MCscreen -> configurestatusicon(MCstatusiconid, MCStringGetCString(MCstatusiconmenu), MCStringGetCString(MCstatusicontooltip));
+	MCValueAssign(MCstatusicontooltip, p_tooltip);
+	MCscreen -> configurestatusicon(MCstatusiconid, MCstatusiconmenu, MCstatusicontooltip);
 }
 
 void MCInterfaceGetStatusIconMenu(MCExecContext& ctxt, MCStringRef& r_icon_menu)
@@ -1235,9 +1234,8 @@ void MCInterfaceGetStatusIconMenu(MCExecContext& ctxt, MCStringRef& r_icon_menu)
 
 void MCInterfaceSetStatusIconMenu(MCExecContext& ctxt, MCStringRef p_icon_menu)
 {
-	MCValueRelease(MCstatusiconmenu);
-	MCstatusiconmenu = (MCStringRef)MCValueRetain(p_icon_menu);
-	MCscreen -> configurestatusicon(MCstatusiconid, MCStringGetCString(MCstatusiconmenu), MCStringGetCString(MCstatusicontooltip));
+	MCValueAssign(MCstatusiconmenu, p_icon_menu);
+	MCscreen -> configurestatusicon(MCstatusiconid, MCstatusiconmenu, MCstatusicontooltip);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2386,7 +2384,7 @@ void MCInterfaceEvalSubstackOfStackById(MCExecContext& ctxt, MCObjectPtr p_paren
 void MCInterfaceEvalAudioClipOfStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_ordinal_type, MCObjectPtr& r_clip)
 {
     MCObject *t_clip;
-    t_clip = static_cast<MCStack *>(p_stack . object) -> getAV((Chunk_term)p_ordinal_type, MCnullmcstring, CT_AUDIO_CLIP);
+    t_clip = static_cast<MCStack *>(p_stack . object) -> getAV((Chunk_term)p_ordinal_type, kMCEmptyString, CT_AUDIO_CLIP);
     
     if (t_clip != nil)
     {
@@ -2434,7 +2432,7 @@ void MCInterfaceEvalAudioClipOfStackByName(MCExecContext& ctxt, MCObjectPtr p_st
 void MCInterfaceEvalVideoClipOfStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_ordinal_type, MCObjectPtr& r_clip)
 {
     MCObject *t_clip;
-    t_clip = static_cast<MCStack *>(p_stack . object) -> getAV((Chunk_term)p_ordinal_type, MCnullmcstring, CT_VIDEO_CLIP);
+    t_clip = static_cast<MCStack *>(p_stack . object) -> getAV((Chunk_term)p_ordinal_type, kMCEmptyString, CT_VIDEO_CLIP);
     
     if (t_clip != nil)
     {

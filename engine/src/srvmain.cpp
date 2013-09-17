@@ -527,7 +527,7 @@ void X_main_loop(void)
 #endif
 	
 	MCExecPoint ep;
-	if (!MCserverscript -> Include(ep, MCStringGetCString(MCserverinitialscript), false) &&
+	if (!MCserverscript -> Include(ep, MCserverinitialscript, false) &&
 		MCS_get_errormode() != kMCSErrorModeDebugger)
 	{
 		char *t_eerror, *t_efiles;
@@ -551,7 +551,7 @@ void X_main_loop(void)
 			MCHandler *t_handler;
 			t_handler = new MCHandler(HT_MESSAGE, true);
 			
-			MCScriptPoint sp(MCserverscript, t_handlerlist, s_default_error_handler);
+			MCScriptPoint sp(MCserverscript, t_handlerlist, MCSTR(s_default_error_handler));
 			
 			Parse_stat t_parse_stat;
 			t_parse_stat = t_handler -> parse(sp, false);
