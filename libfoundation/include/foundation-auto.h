@@ -56,6 +56,8 @@ public:
 
 private:
 	T m_value;
+    
+    MCAutoValueRefBase<T>& operator = (MCAutoValueRefBase<T>& x);
 };
 
 typedef MCAutoValueRefBase<MCValueRef> MCAutoValueRef;
@@ -745,6 +747,98 @@ public:
 private:
 	char_t *m_chars;
 	uindex_t m_char_count;
+};
+
+class MCAutoByteArray
+{
+public:
+	MCAutoByteArray(void)
+	{
+		m_bytes = nil;
+		m_byte_count = 0;
+	}
+	
+	~MCAutoByteArray(void)
+	{
+		MCMemoryDeleteArray(m_bytes);
+	}
+	
+	//////////
+	
+	byte_t *Bytes(void) const
+	{
+		return m_bytes;
+	}
+	
+	size_t ByteCount(void) const
+	{
+		return m_byte_count;
+	}
+	
+	//////////
+	
+	void Give(byte_t *p_bytes, uindex_t p_byte_count)
+	{
+		MCAssert(m_bytes == nil);
+		m_bytes = p_bytes;
+		m_byte_count = p_byte_count;
+	}
+	
+	//////////
+	
+	bool New(uindex_t p_size)
+	{
+		MCAssert(m_bytes == nil);
+		return MCMemoryNewArray(p_size, m_bytes, m_byte_count);
+	}
+	
+	void Delete(void)
+	{
+		MCMemoryDeleteArray(m_bytes);
+		m_bytes = nil;
+		m_byte_count = 0;
+	}
+	
+	//////////
+	
+	bool Resize(uindex_t p_new_size)
+	{
+		return MCMemoryResizeArray(p_new_size, m_bytes, m_byte_count);
+	}
+	
+	bool Extend(uindex_t p_new_size)
+	{
+		MCAssert(p_new_size >= m_byte_count);
+		return Resize(p_new_size);
+	}
+	
+	void Shrink(uindex_t p_new_size)
+	{
+		MCAssert(p_new_size <= m_byte_count);
+		Resize(p_new_size);
+	}
+	
+	//////////
+	
+	bool CreateData(MCDataRef& r_data)
+	{
+		return MCDataCreateWithBytes(m_bytes, m_byte_count, r_data);
+	}
+	
+	bool CreateDataAndRelease(MCDataRef& r_data)
+	{
+		if (MCDataCreateWithBytesAndRelease(m_bytes, m_byte_count, r_data))
+		{
+			m_bytes = nil;
+			m_byte_count = 0;
+			return true;
+		}
+		return false;
+	}
+	
+private:
+	char_t *m_bytes;
+	uindex_t m_byte_count;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

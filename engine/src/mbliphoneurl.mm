@@ -361,7 +361,7 @@ bool MCSystemLoadUrl(MCStringRef p_url, MCSystemUrlCallback p_callback, void *p_
 struct post_url_t
 {
 	const char *url;
-	MCStringRef data;
+	MCDataRef data;
 	uint32_t length;
 	MCSystemUrlCallback callback;
 	void *context;
@@ -394,7 +394,7 @@ static void do_post_url(void *p_ctxt)
 	{
 		[t_request setHTTPMethod: @"POST"];
 		[t_request setValue: @"application/x-www-form-urlencoded" forHTTPHeaderField: @"Content-Type"];
-		t_data = [NSData dataWithBytes: ctxt -> data length: ctxt -> length];
+		t_data = [NSData dataWithBytes: MCDataGetBytePtr(ctxt -> data) length: ctxt -> length];
 		t_success = (t_data != nil);
 		if (t_success)
 			[t_request setHTTPBody: t_data];
@@ -442,11 +442,12 @@ static void do_post_url(void *p_ctxt)
 	ctxt -> success = t_success;
 }
 
-bool MCSystemPostUrl(MCStringRef p_url, MCStringRef p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context)
+bool MCSystemPostUrl(MCStringRef p_url, MCDataRef p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context)
 {
 	post_url_t ctxt;
 	ctxt . url = MCStringGetCString(p_url);
 
+    ctxt . data = p_data;
 	ctxt . length = p_length;
 	ctxt . callback = p_callback;
 	ctxt . context = p_context;
@@ -458,7 +459,7 @@ bool MCSystemPostUrl(MCStringRef p_url, MCStringRef p_data, uint32_t p_length, M
 
 struct launch_url_t
 {
-	const char *url;
+	MCStringRef url;
 	bool success;
 };
 
@@ -472,8 +473,11 @@ static void do_launch_url(void *p_ctxt)
 	NSURL *t_url;
 	if (t_success)
 	{
-		t_url = [NSURL URLWithString: [NSString stringWithCString: ctxt -> url encoding: NSMacOSRomanStringEncoding]];
+		CFStringRef cfurl = nil;
+		/* UNCHECKED */ MCStringConvertToCFStringRef(ctxt->url, cfurl);
+		t_url = [NSURL URLWithString: (NSString *)cfurl];
 		t_success = (t_url != nil);
+		CFRelease(cfurl);
 	}
 	
 	if (t_success)
@@ -485,7 +489,7 @@ static void do_launch_url(void *p_ctxt)
 	ctxt -> success = t_success;
 }
 
-bool MCSystemLaunchUrl(const char *p_url)
+bool MCSystemLaunchUrl(MCStringRef p_url)
 {
 	launch_url_t ctxt;
 	ctxt . url = p_url;
@@ -670,7 +674,7 @@ bool MCSystemPutFTPUrl(NSURL *p_url, const void *p_data, uint32_t p_length, MCSy
 struct put_url_t
 {
 	const char *url;
-	const void *data;
+	MCDataRef data;
 	uint32_t length;
 	MCSystemUrlCallback callback;
 	void *context;
@@ -692,7 +696,7 @@ static void do_put_url(void *p_ctxt)
 		NSString *t_scheme;
 		t_scheme = [t_url scheme];
 		if ([[t_url scheme] isEqualToString: @"ftp"])
-			t_success = MCSystemPutFTPUrl(t_url, ctxt -> data, ctxt -> length, ctxt -> callback, ctxt -> context);
+			t_success = MCSystemPutFTPUrl(t_url, MCDataGetBytePtr(ctxt -> data), MCDataGetLength(ctxt -> data), ctxt -> callback, ctxt -> context);
 		else
 			t_success = false;
 	}
@@ -700,16 +704,18 @@ static void do_put_url(void *p_ctxt)
 	ctxt -> success = t_success;
 }
 
-bool MCSystemPutUrl(const char *p_url, const void *p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context)
+bool MCSystemPutUrl(MCStringRef p_url, MCDataRef p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context)
 {
 	put_url_t ctxt;
-	ctxt . url = p_url;
+	ctxt . url = strclone(MCStringGetCString(p_url));
 	ctxt . data = p_data;
 	ctxt . length = p_length;
 	ctxt . callback = p_callback;
 	ctxt . context = p_context;
 	
 	MCIPhoneRunOnMainFiber(do_put_url, &ctxt);
+    
+    delete[] ctxt . url;
 	
 	return ctxt . success;
 }

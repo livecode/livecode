@@ -393,11 +393,7 @@ static bool MCCapsuleReadBuckets(MCCapsuleRef self, void *p_buffer, uint32_t p_b
 				return false;
 
 			// Read the data we require.
-			if (MCS_read(t_buffer, 1, t_amount_read, self -> buckets -> data_file) == IO_ERROR)
-				return false;
-
-			// If the amount we require isn't available, its an error.
-			if (t_amount != t_amount_read)
+			if (MCS_readfixed(t_buffer, t_amount_read, self -> buckets -> data_file) == IO_ERROR)
 				return false;
 		}
 		
@@ -788,7 +784,7 @@ bool MCCapsuleProcess(MCCapsuleRef self)
 			{
 				// If we haven't got all the data, then we have all data buffered
 				// so can use a regular variety fake stream.
-				t_stream = MCS_fakeopen(MCString((char *)(self -> output_buffer + t_header_size), t_length));
+				t_stream = MCS_fakeopen(MCString((const char *)self -> output_buffer + t_header_size, t_length));
 			}
 			else
 			{

@@ -3806,7 +3806,7 @@ Parse_stat MCSelect::parse(MCScriptPoint &sp)
 			(PE_SELECT_NOTARGET, sp);
 			return PS_ERROR;
 		}
-		if (sp.gettoken() == "empty")
+		if (sp.token_is_cstring("empty"))
 			return PS_NORMAL;
 		if (sp.lookup(SP_FACTOR, te) == PS_NORMAL && te->type == TT_PREP)
 		{

@@ -288,38 +288,12 @@ void MCImage::cutimage()
 	layer_redrawall();
 }
 
-#ifdef SHARED_STRING
-void MCImage::copyimage()
-{
-	bool t_success = true;
-
-	MCImageBitmap *t_bitmap = nil;
-	MCSharedString *t_data = nil;
-	
-	if (isediting())
-	{
-		MCImageBitmap *t_bitmap = nil;
-		t_success = static_cast<MCMutableImageRep*>(m_rep)->copy_selection(t_bitmap);
-		if (t_success)
-			t_success = MCImageCreateClipboardData(t_bitmap, t_data);
-		MCImageFreeBitmap(t_bitmap);
-	}
-	else
-		t_data = getclipboardtext();
-
-	if (t_data != NULL)
-	{
-		MCclipboarddata -> Store(TRANSFER_TYPE_IMAGE, t_data);
-		t_data -> Release();
-	}
-}
-#else
 void MCImage::copyimage()
 {
 	bool t_success = true;
 	
 	MCImageBitmap *t_bitmap = nil;
-	MCAutoStringRef t_image_data;
+	MCAutoDataRef t_image_data;
 	
 	if (isediting())
 	{
@@ -335,7 +309,6 @@ void MCImage::copyimage()
 	if (*t_image_data != NULL)
 		MCclipboarddata -> Store(TRANSFER_TYPE_IMAGE, *t_image_data);
 }
-#endif
 
 void MCImage::delimage()
 {
@@ -1493,46 +1466,12 @@ void MCImageFreeCompressedBitmap(MCImageCompressedBitmap *p_compressed)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef SHARED_STRING
-bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCSharedString *&r_data)
-{
-	bool t_success = true;
-
-	MCImageBitmap *t_bitmap = nil;
-	IO_handle t_stream = nil;
-	MCSharedString *t_data = nil;
-
-	char *t_bytes = nil;
-	uindex_t t_byte_count = 0;
-
-	t_success = nil != (t_stream = MCS_fakeopenwrite());
-
-	if (t_success)
-		t_success = MCImageEncodePNG(p_bitmap, t_stream, t_byte_count);
-
-	if (t_stream != nil && IO_NORMAL != MCS_fakeclosewrite(t_stream, t_bytes, t_byte_count))
-		t_success = false;
-
-	if (t_success)
-	{
-		t_success = nil != (t_data = MCSharedString::CreateNoCopy(t_bytes, t_byte_count));
-	}
-
-	if (t_success)
-		r_data = t_data;
-	else
-		MCMemoryDeallocate(t_bytes);
-
-	return t_success;
-}
-#else
-bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCStringRef &r_data)
+bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCDataRef &r_data)
 {
 	bool t_success = true;
 	
 	MCImageBitmap *t_bitmap = nil;
 	IO_handle t_stream = nil;
-	MCAutoStringRef t_image_data;
 	
 	char *t_bytes = nil;
 	uindex_t t_byte_count = 0;
@@ -1542,17 +1481,16 @@ bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCStringRef &r_data)
 	if (t_success)
 		t_success = MCImageEncodePNG(p_bitmap, t_stream, t_byte_count);
 	
-	if (t_stream != nil && IO_NORMAL != MCS_fakeclosewrite(t_stream, t_bytes, t_byte_count))
+	if (t_stream != nil && IO_NORMAL != MCS_closetakingbuffer(t_stream, reinterpret_cast<void*&>(t_bytes), reinterpret_cast<size_t&>(t_byte_count)))
 		t_success = false;
 	
 	if (t_success)
-		t_success = MCStringCreateWithNativeCharsAndRelease((char_t*)t_bytes, t_byte_count, r_data);
+		t_success = MCDataCreateWithBytesAndRelease((char_t*)t_bytes, t_byte_count, r_data);
 	
 	if (!t_success)
 		MCMemoryDeallocate(t_bytes);
 	
 	return t_success;
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////

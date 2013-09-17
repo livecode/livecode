@@ -212,7 +212,7 @@ extern MCScriptEnvironment *MCMacOSXCreateOldJavaScriptEnvironment(void);
 #define GET_JSC_SYMBOL(sym) \
 	sym = (sym##Ptr)NSAddressOfSymbol(NSLookupSymbolInImage((const mach_header *)JavaScriptCoreLibrary, "_"#sym, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND));
 
-MCScriptEnvironment *MCScreenDC::createscriptenvironment(const char *p_language)
+MCScriptEnvironment *MCScreenDC::createscriptenvironment(MCStringRef p_language)
 {
 	MCScriptEnvironment *t_environment;
 	if (MCmajorosversion >= 0x1050)

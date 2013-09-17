@@ -79,6 +79,10 @@ bool MCStringToDouble(MCStringRef string, double& r_double);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCString MCDataGetOldString(MCDataRef data);
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCNameCreateWithCString(const char *cstring, MCNameRef& r_name);
 bool MCNameCreateWithOldString(const MCString& oldstring, MCNameRef& r_name);
 void MCNameDelete(MCNameRef name);
@@ -108,8 +112,8 @@ enum IO_stat
     IO_TIMEOUT
 };
 
-class IO_header;
-typedef IO_header * IO_handle;
+struct MCSystemFileHandle;
+typedef MCSystemFileHandle * IO_handle;
 class MCObjectInputStream;
 class MCObjectOutputStream;
 

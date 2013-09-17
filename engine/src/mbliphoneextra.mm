@@ -469,7 +469,7 @@ static CFStringEncoding lookup_text_encoding(uint32_t encoding)
 }
 
 // MW-2012-02-01: [[ Bug 9974 ]] This method is needed to ensure RTF import works.
-bool MCIPhoneSystem::TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4 p_output_length, uint4& r_used)
+bool MCIPhoneSystem::TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4& p_output_length, uint4& r_used)
 {
 	if (p_input_length == 0)
 	{

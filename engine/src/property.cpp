@@ -348,8 +348,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_BREAK_POINTS, String, Debugging, Breakpoints)
 	DEFINE_RW_PROPERTY(P_WATCHED_VARIABLES, String, Debugging, WatchedVariables)
 
-	DEFINE_RW_PROPERTY(P_CLIPBOARD_DATA, String, Pasteboard, ClipboardData)
-	DEFINE_RW_PROPERTY(P_DRAG_DATA, String, Pasteboard, DragData)
+	//DEFINE_RW_PROPERTY(P_CLIPBOARD_DATA, String, Pasteboard, ClipboardData)
+	//DEFINE_RW_PROPERTY(P_DRAG_DATA, String, Pasteboard, DragData)
 };
 
 static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, const MCPropertyInfo*& r_info)
@@ -2989,6 +2989,33 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCProperty::set */
+	if (which == P_CLIPBOARD_DATA || which == P_DRAG_DATA)
+	{
+        MCAutoDataRef t_data;
+        MCAutoStringRef t_type;
+        
+        ep . copyasdataref(&t_data);
+		if (customindex != nil)
+        {
+			if (customindex -> eval(ep) != ES_NORMAL)
+			{
+				MCeerror -> add(EE_PROPERTY_BADEXPRESSION, line, pos);
+				return ES_ERROR;
+			}
+			ep . copyasstringref(&t_type);
+		}
+        
+        MCExecContext ctxt(ep);
+        if (which == P_CLIPBOARD_DATA)
+            MCPasteboardSetClipboardData(ctxt, *t_type, *t_data);
+        else
+            MCPasteboardSetDragData(ctxt, *t_type, *t_data);
+        
+        if (!ctxt . HasError())
+            return ES_NORMAL;
+        
+        return ES_ERROR;
+	}
 	
 	if (destvar != NULL && which != P_CUSTOM_VAR)
 		return set_variable(ep);
@@ -4759,7 +4786,36 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCProperty::eval */
-	
+	if (which == P_CLIPBOARD_DATA || which == P_DRAG_DATA)
+	{
+        MCAutoDataRef t_data;
+        MCAutoStringRef t_type;
+        
+		if (customindex != nil)
+        {
+			if (customindex -> eval(ep) != ES_NORMAL)
+			{
+				MCeerror -> add(EE_PROPERTY_BADEXPRESSION, line, pos);
+				return ES_ERROR;
+			}
+			ep . copyasstringref(&t_type);
+		}
+        
+        MCExecContext ctxt(ep);
+        if (which == P_CLIPBOARD_DATA)
+            MCPasteboardGetClipboardData(ctxt, *t_type, &t_data);
+        else
+            MCPasteboardGetDragData(ctxt, *t_type, &t_data);
+        
+        if (!ctxt . HasError())
+        {
+            ep . setvalueref(*t_data);
+            return ES_NORMAL;
+        }
+        
+        return ES_ERROR;
+	}
+    
 	ep . setline(line);
 
 	if (destvar != nil && which != P_CUSTOM_VAR)
