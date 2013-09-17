@@ -1058,9 +1058,9 @@ void MCStringsExecReplace(MCExecContext& ctxt, MCStringRef p_pattern, MCStringRe
 
 void MCStringsExecFilter(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, MCStringRef &r_result);
 
-void MCStringsEvalTextChunkByRange(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, MCStringRef& x_string);
-void MCStringsEvalTextChunkByExpression(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, MCStringRef &x_string);
-void MCStringsEvalTextChunkByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_type, Chunk_term p_ordinal_type, MCStringRef& x_string);
+void MCStringsEvalTextChunkByRange(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, MCStringRef& x_string);
+void MCStringsEvalTextChunkByExpression(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, MCStringRef &x_string);
+void MCStringsEvalTextChunkByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, Chunk_term p_ordinal_type, MCStringRef& x_string);
 
 ///////////
 
@@ -2071,6 +2071,13 @@ void MCInterfaceEvalObjectOfCardById(MCExecContext& ctxt, MCObjectPtr p_card, Ch
 void MCInterfaceEvalObjectOfCardOrStackById(MCExecContext& ctxt, MCObjectPtr p_card, Chunk_term p_object_type, Chunk_term p_parent_type, uinteger_t p_id, MCObjectPtr& r_object);
 void MCInterfaceEvalObjectOfCardByName(MCExecContext& ctxt, MCObjectPtr p_card, Chunk_term p_object_type, Chunk_term p_parent_type, MCNameRef p_name, MCObjectPtr& r_object);
 
+void MCInterfaceEvalFieldTextChunkByRange(MCExecContext& ctxt, MCObjectPtr p_field, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, bool p_function, MCStringRef& r_result);
+void MCInterfaceEvalFieldTextChunkByExpression(MCExecContext& ctxt, MCObjectPtr p_field, Chunk_term p_chunk_type, integer_t p_first, bool p_function, MCStringRef& r_result);
+void MCInterfaceEvalFieldTextChunkByOrdinal(MCExecContext& ctxt, MCObjectPtr p_field, Chunk_term p_chunk_type, Chunk_term p_ordinal_type, bool p_function, MCStringRef& r_result);
+
+void MCInterfaceMarkField(MCField *fptr, int4 &start, int4 &end, Functions p_function, Boolean wholechunk);
+void MCInterfaceEvalTextOfContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCStringRef &r_text);
+void MCInterfaceEvalFieldChunk(MCExecContext& ctxt, MCObjectPtr p_field, Functions p_function, MCStringRef& r_text);
 ///////////
 
 struct MCInterfaceLayer;

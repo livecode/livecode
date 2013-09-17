@@ -955,6 +955,7 @@ Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recu
                     /* UNCHECKED */ ep2 . copyasnameref(&t_expression);
                     MCInterfaceEvalSubstackOfStackByName(ctxt,  t_object, *t_expression,  t_object);
                 }
+                    break;
                 case CT_ID:
                 {
                     if (stack->next->startpos->eval(ep2) != ES_NORMAL)
@@ -1255,6 +1256,10 @@ Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recu
                         }
                         MCNewAutoNameRef t_expression;
                         /* UNCHECKED */ ep2 . copyasnameref(&t_expression);
+                        if (MCNameIsEqualToCString(*t_expression, "Login", kMCCompareCaseless))
+                        {
+                            bool t_true = true;
+                        }
 //                        if (toptr == object && group == nil)
                         if (t_object . object -> gettype() == CT_CARD)
                             MCInterfaceEvalObjectOfCardByName(ctxt,  t_object, toptr -> otype, toptr -> ptype, *t_expression,  t_object);
@@ -2341,6 +2346,7 @@ Exec_stat MCChunk::gets(MCExecPoint &ep)
 
 Exec_stat MCChunk::eval(MCExecPoint &ep)
 {
+#ifdef OLD_EXEC
 	if (source != NULL && url == NULL && stack == NULL && background == NULL && card == NULL
 	        && group == NULL && object == NULL)
 	{
@@ -2455,6 +2461,7 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
 			}
 		}
 	}
+
 	if (cline != NULL || item != NULL || word != NULL || token != NULL
 	        || character != NULL)
 	{
@@ -2469,7 +2476,10 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
-#ifdef NEW_EXEC
+#endif
+    MCAutoStringRef t_text;
+    MCExecContext ctxt(ep);
+    
  	if (source != NULL && url == NULL && stack == NULL && background == NULL && card == NULL
         && group == NULL && object == NULL)
 	{
@@ -2480,25 +2490,22 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
 				MCeerror->add(EE_CHUNK_CANTGETSOURCE, line, pos);
 				return ES_ERROR;
 			}
+            ep . copyasstringref(&t_text);
 		}
 		else
 		{
 			// MW-2008-11-05: [[ Owner Reference ]] This case handles the syntax:
 			//     <text chunk> of the owner of ...
 			//   In this case we evaluate the owner property of the resolved object.
-			MCObject *t_object;
-			uint4 t_part;
-			MCExecPoint ep2(ep);
-			if (static_cast<MCChunk *>(source) -> getobj(ep, t_object, t_part, True) != ES_NORMAL)
+            MCObjectPtr t_object;
+            MCExecPoint ep2(ep);
+			if (static_cast<MCChunk *>(source) -> getobj(ep, t_object, True) != ES_NORMAL)
 			{
 				MCeerror -> add(EE_CHUNK_BADOBJECTEXP, line, pos);
 				return ES_ERROR;
 			}
 			
-			if (t_object -> gettype() == CT_STACK && MCdispatcher -> ismainstack(static_cast<MCStack *>(t_object)))
-				ep . clear();
-			else if (t_object -> getparent() -> getprop(t_part, P_OWNER, ep, False) != ES_NORMAL)
-				return ES_ERROR;
+			MCEngineEvalOwner(ctxt, t_object, &t_text);
 		}
 	}
 	else if (destvar != NULL)
@@ -2508,6 +2515,7 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
 			MCeerror->add(EE_CHUNK_CANTGETDEST, line, pos);
 			return ES_ERROR;
 		}
+        ep . copyasstringref(&t_text);
 	}
 	else
 	{
@@ -2520,95 +2528,98 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
 			}
 			MCU_geturl(ep);
 		}
-		MCObject *objptr;
-		uint4 parid;
-		if (getobj(ep, objptr, parid, True) != ES_NORMAL)
+		MCObjectPtr t_object;
+		if (getobj(ep, t_object, True) != ES_NORMAL)
 		{
-			if (url == NULL
-                || stack != NULL || background != NULL || card != NULL
-                || group != NULL || object != NULL)
+			if (url == NULL || stack != NULL || background != NULL ||
+                card != NULL || group != NULL || object != NULL)
 			{
 				MCeerror->add(EE_CHUNK_CANTFINDOBJECT, line, pos);
 				return ES_ERROR;
 			}
+            ep . copyasstringref(&t_text);
 		}
 		else
 		{
-			switch (objptr->gettype())
-			{
-                case CT_BUTTON:
-                case CT_IMAGE:
-                case CT_AUDIO_CLIP:
-                case CT_VIDEO_CLIP:
-                    objptr->getprop(parid, P_TEXT, ep, False);
-                    break;
-                case CT_FIELD:
-				{
-					MCField *fptr = (MCField *)objptr;
-					int4 start, end;
-					switch (function)
-					{
-                        case F_CLICK_CHUNK:
-                        case F_CLICK_CHAR_CHUNK:
-                        case F_CLICK_LINE:
-                        case F_CLICK_TEXT:
-                        case F_SELECTED_CHUNK:
-                        case F_SELECTED_LINE:
-                        case F_SELECTED_TEXT:
-                        case F_FOUND_CHUNK:
-                        case F_FOUND_LINE:
-                        case F_FOUND_TEXT:
-                        case F_MOUSE_CHUNK:
-                        case F_MOUSE_LINE:
-                        case F_MOUSE_CHAR_CHUNK:
-                        case F_MOUSE_TEXT:
-                            // MW-2012-12-13: [[ Bug 10592 ]] We are eval'ing so don't want the whole
-                            //   chunk in this case.
-                            fmark(fptr, start, end, False);
-                            fptr->returntext(ep, start, end);
+            if (t_object . object -> gettype() == CT_FIELD)
+            {
+                switch (function)
+                {
+                    case F_CLICK_CHUNK:
+                    case F_CLICK_CHAR_CHUNK:
+                    case F_CLICK_LINE:
+                    case F_CLICK_TEXT:
+                    case F_SELECTED_CHUNK:
+                    case F_SELECTED_LINE:
+                    case F_SELECTED_TEXT:
+                    case F_FOUND_CHUNK:
+                    case F_FOUND_LINE:
+                    case F_FOUND_TEXT:
+                    case F_MOUSE_CHUNK:
+                    case F_MOUSE_LINE:
+                    case F_MOUSE_CHAR_CHUNK:
+                    case F_MOUSE_TEXT:
+                        // MW-2012-12-13: [[ Bug 10592 ]] We are eval'ing so don't want the whole
+                        //   chunk in this case.
+                        MCInterfaceEvalFieldChunk(ctxt, t_object, function, &t_text);
+                        break;
+                    default:
+                    {
+                        if (desttype == DT_FUNCTION)
+                        {
+                            MCInterfaceEvalFieldChunk(ctxt, t_object, function, &t_text);
                             break;
-                        default:
-                            // MW-2012-01-27: [[ UnicodeChunks ]] Defer to the 'fieldmark' routine
-                            //   to fetch the string - notice we set keeptext to True as we want the
-                            //   real content.
-                            return fieldmark(ep, fptr, parid, start, end, False, False, True);
-					}
-				}
-                    break;
-                default:
-                    MCeerror->add(EE_CHUNK_OBJECTNOTCONTAINER, line, pos);
-                    return ES_ERROR;
-			}
+                        }
+                        integer_t t_start, t_end;
+                        MCField *t_field = static_cast<MCField *>(t_object . object);
+                        t_field -> nativizetext(t_object . part_id, ep, true);
+                        ep . copyasstringref(&t_text);
+                    }
+                }
+                
+            }
+            else
+                MCInterfaceEvalTextOfContainer(ctxt, t_object, &t_text);
 		}
 	}
-    
-    // at this point we have evaluated some text. we might then have "line 1 of..." etc.
     
     if (cline != nil || item != nil || word != nil || token != nil
         || character != nil)
 	{
-		// MW-2007-11-28: [[ Bug 5610 ]] If we have an array, force a conversion to string (empty)
+/*		// MW-2007-11-28: [[ Bug 5610 ]] If we have an array, force a conversion to string (empty)
 		//   for backwards compatibility.
 		if (ep . isarray())
-			ep . clear();
+			ep . clear(); 
+         
+        if (ep . tos() != ES_NORMAL)
+        {
+            MCeerror->add(EE_CHUNK_CANTGETSUBSTRING, line, pos, ep.getsvalue());
+            return ES_ERROR;
+        }
+        
+        // at this point we should have evaluated some text.
+        
+        MCAutoStringRef t_text;
+        ep . copyasstringref(&t_text); */
+        
+        MCAutoStringRef t_lines, t_items, t_words, t_tokens, t_chars;
+        if (evaltextchunk(ep, cline, *t_text, CT_LINE, &t_lines) != ES_NORMAL ||
+            evaltextchunk(ep, item, *t_lines,  CT_ITEM, &t_items) != ES_NORMAL ||
+            evaltextchunk(ep, word, *t_items, CT_WORD, &t_words) != ES_NORMAL ||
+            evaltextchunk(ep, token, *t_words, CT_TOKEN, &t_tokens) != ES_NORMAL ||
+            evaltextchunk(ep, character, *t_tokens, CT_CHARACTER, &t_chars) != ES_NORMAL)
+        {
+            MCeerror->add(EE_CHUNK_CANTGETSUBSTRING, line, pos, ep.getsvalue());
+            return ES_ERROR;
+        }
+        
+        ep . setvalueref(*t_chars);
     }
-
-    MCStringRef t_mutable_text;
-    ep . copyasmutablestringref(t_mutable_text);
-
-    if (evaltextchunk(ep, cline, CT_LINE, t_mutable_text) != ES_NORMAL ||
-        evaltextchunk(ep, item, CT_ITEM, t_mutable_text) != ES_NORMAL ||
-        evaltextchunk(ep, word, CT_WORD, t_mutable_text) != ES_NORMAL ||
-        evaltextchunk(ep, token, CT_TOKEN, t_mutable_text) != ES_NORMAL ||
-        evaltextchunk(ep, character, CT_CHARACTER, t_mutable_text) != ES_NORMAL)
-    {
-        MCeerror->add(EE_CHUNK_CANTGETSUBSTRING, line, pos, ep.getsvalue());
-        return ES_ERROR;
-    }
-#endif
+    
+    return ES_NORMAL;
 }
 
-Exec_stat MCChunk::evaltextchunk(MCExecPoint &ep, MCCRef *ref, Chunk_term p_chunk_type, MCStringRef& x_text)
+Exec_stat MCChunk::evaltextchunk(MCExecPoint &ep, MCCRef *ref, MCStringRef p_source, Chunk_term p_chunk_type, MCStringRef& r_text)
 {
 	if (ref != nil)
     {
@@ -2631,7 +2642,7 @@ Exec_stat MCChunk::evaltextchunk(MCExecPoint &ep, MCCRef *ref, Chunk_term p_chun
             }
             t_end = ep.getint4();
             
-            MCStringsEvalTextChunkByRange(ctxt, p_chunk_type, t_start, t_end, x_text);
+            MCStringsEvalTextChunkByRange(ctxt, p_source, p_chunk_type, t_start, t_end, r_text);
         }
         else if (ref -> etype == CT_EXPRESSION)
         {
@@ -2642,14 +2653,17 @@ Exec_stat MCChunk::evaltextchunk(MCExecPoint &ep, MCCRef *ref, Chunk_term p_chun
             }
             t_start = ep . getint4();
             
-            MCStringsEvalTextChunkByExpression(ctxt, p_chunk_type, t_start, x_text);
+            MCStringsEvalTextChunkByExpression(ctxt, p_source, p_chunk_type, t_start, r_text);
         }
         else
-            MCStringsEvalTextChunkByOrdinal(ctxt, p_chunk_type, ref -> etype, x_text);
+            MCStringsEvalTextChunkByOrdinal(ctxt, p_source, p_chunk_type, ref -> etype, r_text);
+    }
+    else
+    {
+        r_text = MCValueRetain(p_source);
     }
     return ES_NORMAL;
 }
-
 
 Exec_stat MCChunk::set(MCExecPoint &ep, Preposition_type ptype)
 {
@@ -3375,6 +3389,10 @@ Exec_stat MCChunk::setprop(Properties which, MCExecPoint &ep, MCNameRef index, B
 	MCObject *objptr;
 	uint4 parid;
 
+//    if (which == P_FORE_COLOR)
+//    {
+//        bool t_true = true;
+//    }
 	if (url != NULL)
 	{
 		if (url->startpos == NULL || url->startpos->eval(ep) != ES_NORMAL)

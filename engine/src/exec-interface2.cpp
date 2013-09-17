@@ -3262,3 +3262,201 @@ void MCInterfaceEvalCardOfOptionalStackByName(MCExecContext& ctxt, MCObjectPtr p
     r_card . object = t_card;
     r_card . part_id = t_card != nil ? t_card -> getid() : p_stack . part_id;
 }
+
+void MCInterfaceMarkField(MCField *fptr, int4 &start, int4 &end, Functions p_function, Boolean wholechunk)
+{
+// MW-2012-12-13: [[ Bug 10592 ]] If wholechunk is False then we don't expand
+//   line chunks to include the CR at the end.
+
+	Boolean wholeline = True;
+	Boolean wholeword = True;
+	switch (p_function)
+	{
+        case F_CLICK_CHAR_CHUNK:
+            wholeword = False;
+        case F_CLICK_CHUNK:
+        case F_CLICK_TEXT:
+            wholeline = False;
+        case F_CLICK_LINE:
+            if (!fptr->locmark(wholeline, wholeword, True, True, wholechunk, start, end))
+                start = end = 0;
+            break;
+        case F_FOUND_CHUNK:
+        case F_FOUND_TEXT:
+            wholeline = False;
+        case F_FOUND_LINE:
+            if (!fptr->foundmark(wholeline, wholechunk, start, end))
+                start = end = 0;
+            break;
+        case F_SELECTED_CHUNK:
+        case F_SELECTED_TEXT:
+            wholeline = False;
+        case F_SELECTED_LINE:
+            if (!fptr->selectedmark(wholeline, start, end, False, wholechunk))
+                start = end = 0;
+            break;
+        case F_MOUSE_CHAR_CHUNK:
+            wholeword = False;
+        case F_MOUSE_CHUNK:
+        case F_MOUSE_TEXT:
+            wholeline = False;
+        case F_MOUSE_LINE:
+            if (!fptr->locmark(wholeline, wholeword, False, True, wholechunk, start, end))
+                start = end = 0;
+            break;
+        default:
+            start = 0;
+            end = fptr->getpgsize(NULL);
+            break;
+	}
+}
+/*
+void MCInterfaceMarkTextOfField(MCField *fptr, uinteger_t part_id, integer_t &r_start, integer_t &r_end, bool p_whole_chunk, bool p_force, bool p_keep_text)
+{
+	if (desttype == DT_FUNCTION)
+	{
+		// MW-2012-09-20: [[ Bug 10229 ]] If 'keeptext' is true, make sure we leave with
+		//   the ep containing the field's content between start and end.
+		// MW-2012-12-13: [[ Bug 10592 ]] Pass through wholechunk to ensure we only get the CR
+		//   included when we need it.
+		fmark(fptr, r_start, r_end, p_whole_chunk);
+		if (cline != NULL || item != NULL || word != NULL || token != NULL || character != NULL)
+		{
+			fptr->returntext(ep, start, end);
+			int4 si, ei;
+			if (mark(ep, si, ei, force, wholechunk, false) != ES_NORMAL)
+			{
+				MCeerror->add(EE_CHUNK_BADTEXT, line, pos);
+				return ES_ERROR;
+			}
+			
+			end = start + ei;
+			start += si;
+			
+			if (character != nil)
+				if (markcharactersinfield(parid, ep, start, end, fptr) != ES_NORMAL)
+				{
+					MCeerror->add(EE_CHUNK_BADTEXT, line, pos);
+					return ES_ERROR;
+				}
+			
+		}
+		else if (keeptext)
+			fptr -> returntext(ep, start, end);
+	}
+	else
+	{
+		// We can make do with ASCII content if the delimiters (if needed) are
+		// ASCII chars.
+		bool t_ascii_only;
+		t_ascii_only = (cline == nil || (unsigned)ep . getlinedel() <= 127) && (item == nil || (unsigned)ep . getitemdel() <= 127);
+		
+		// Fetch the nativized text - the method returns true if it had to
+		// coecre unicode.
+		bool t_has_unicode;
+		t_has_unicode = fptr->nativizetext(parid, ep, t_ascii_only);
+		
+		// Perform the 'mark' operation.
+		MCString oldstring = ep.getsvalue();
+		if (mark(ep, start, end, force, wholechunk, !t_has_unicode) != ES_NORMAL)
+		{
+			MCeerror->add(EE_CHUNK_BADTEXT, line, pos);
+			return ES_ERROR;
+		}
+		
+		// If the ep got changed, mutate the field appropriately.
+		if (ep.getsvalue() != oldstring)
+		{
+			MCExecPoint ep2(ep);
+			fptr->nativizetext(parid, ep2, t_ascii_only);
+			int4 si = 0;
+			int4 sei = ep.getsvalue().getlength() - 1;
+			int4 oei = ep2.getsvalue().getlength() - 1;
+			const char *sref = ep.getsvalue().getstring();
+			const char *oref = ep2.getsvalue().getstring();
+			while (si <= oei && sref[si] == oref[si])
+				si++;
+			while (oei >= si && sref[sei] == oref[oei])
+			{
+				sei--;
+				oei--;
+			}
+			sei++;
+			MCString newstring;
+			newstring.set(&sref[si], sei - si);
+			fptr->settextindex(parid, si, si, newstring, False);
+		}
+		
+		if (t_has_unicode && character != nil)
+			if (markcharactersinfield(parid, ep, start, end, fptr) != ES_NORMAL)
+			{
+				MCeerror->add(EE_CHUNK_BADTEXT, line, pos);
+				return ES_ERROR;
+			}
+		
+		// MW-2012-01-29: [[ Bug ]] If keeptext is true make sure we substring, remembering
+		//   to refetch the text if unicode.
+		if (keeptext)
+		{
+			// MW-2012-02-21: [[ FieldExport ]] If the buffer doesn't have native text in it
+			//   (due to unicode being involved) then fetch the appropriate range as native.
+			//   Otherwise, just trim the buffer.
+			if (t_has_unicode)
+				fptr -> exportastext(parid, ep, start, end, false);
+			else
+				ep . substring(start, end);
+		}
+	}
+	return ES_NORMAL;
+}
+*/
+
+void MCInterfaceEvalFieldTextChunkByRange(MCExecContext& ctxt, MCObjectPtr p_field, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, bool p_function, MCStringRef& r_result)
+{
+    int4 t_first;
+    int4 t_chunk_count;
+    //MCStringsGetExtentsByRange(ctxt, p_chunk_type, p_first, p_last, p_source, t_first, t_chunk_count);
+    
+    //MCStringsGetTextChunk(ctxt, p_source, p_chunk_type, t_first, t_chunk_count, r_result);
+}
+
+void MCInterfaceEvalFieldTextChunkByExpression(MCExecContext& ctxt, MCObjectPtr p_field, Chunk_term p_chunk_type, integer_t p_first, bool p_function, MCStringRef& r_result)
+{
+    int4 t_first;
+    int4 t_chunk_count;
+    // MCStringsGetExtentsByExpression(ctxt, p_chunk_type, p_first, p_source, t_first, t_chunk_count);
+    
+    //MCStringsGetTextChunk(ctxt, p_source, p_chunk_type, t_first, t_chunk_count, r_result);
+}
+
+void MCInterfacveEvalFieldTextChunkByOrdinal(MCExecContext& ctxt, MCObjectPtr p_field, Chunk_term p_chunk_type, Chunk_term p_ordinal_type, bool p_function, MCStringRef& r_result)
+{
+    int4 t_first;
+    int4 t_chunk_count;
+    // MCStringsGetExtentsByOrdinal(ctxt, p_chunk_type, t_first, t_chunk_count, p_ordinal_type, p_source);
+    
+    // MCStringsGetTextChunk(ctxt, p_source, p_chunk_type, t_first, t_chunk_count, r_result);
+}
+
+void MCInterfaceEvalFieldChunk(MCExecContext& ctxt, MCObjectPtr p_field, Functions p_function, MCStringRef& r_text)
+{
+    integer_t t_start, t_end;
+    MCField *t_field = static_cast<MCField *>(p_field . object);
+    MCInterfaceMarkField(t_field, t_start, t_end, p_function, False);
+    t_field -> returntext(t_start, t_end, r_text);
+}
+
+void MCInterfaceEvalTextOfContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCStringRef &r_text)
+{
+    switch (p_container . object -> gettype())
+    {
+        case CT_BUTTON:
+        case CT_IMAGE:
+        case CT_AUDIO_CLIP:
+        case CT_VIDEO_CLIP:
+            p_container . object -> getstringprop(ctxt, p_container . part_id, P_TEXT, False, r_text);
+            return;
+        default:
+            ctxt . LegacyThrow(EE_CHUNK_OBJECTNOTCONTAINER);
+    }
+}
