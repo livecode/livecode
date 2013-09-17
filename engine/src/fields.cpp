@@ -190,7 +190,7 @@ Exec_stat MCField::sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
 }
 
 Boolean MCField::find(MCExecPoint &ep, uint4 cardid, Find_mode mode,
-                      const MCString &tofind, Boolean first)
+                      MCStringRef tofind, Boolean first)
 {
 	if (fdata == NULL || flags & F_F_DONT_SEARCH)
 		return False;
@@ -205,7 +205,7 @@ Boolean MCField::find(MCExecPoint &ep, uint4 cardid, Find_mode mode,
 		{
 			MCParagraph *paragraphptr = tptr->getparagraphs();
 			MCParagraph *tpgptr = paragraphptr;
-			uint2 flength = tofind.getlength();
+			uint2 flength = MCStringGetLength(tofind);
 			int4 toffset, oldoffset;
 			if (first && foundlength != 0)
 			{
@@ -221,7 +221,7 @@ Boolean MCField::find(MCExecPoint &ep, uint4 cardid, Find_mode mode,
 				uint2 length = tpgptr->gettextsize();
 				uint4 offset;
 				MCString tosearch(&text[oldoffset], length - oldoffset);
-				while (MCU_offset(tofind, tosearch, offset, ep.getcasesensitive()))
+				while (MCU_offset(MCStringGetOldString(tofind), tosearch, offset, ep.getcasesensitive()))
 				{
 					offset += oldoffset;
 					switch (mode)
@@ -259,7 +259,7 @@ Boolean MCField::find(MCExecPoint &ep, uint4 cardid, Find_mode mode,
 								if (MCfoundfield != NULL && MCfoundfield != this)
 									MCfoundfield->clearfound();
 								foundoffset = toffset + offset;
-								foundlength = tofind.getlength();
+								foundlength = MCStringGetLength(tofind);
 								MCfoundfield = this;
 							}
 							return True;
@@ -273,7 +273,7 @@ Boolean MCField::find(MCExecPoint &ep, uint4 cardid, Find_mode mode,
 							if (MCfoundfield != NULL && MCfoundfield != this)
 								MCfoundfield->clearfound();
 							foundoffset = toffset + offset;
-							foundlength = tofind.getlength();
+							foundlength = MCStringGetLength(tofind);
 							MCfoundfield = this;
 						}
 					default:
