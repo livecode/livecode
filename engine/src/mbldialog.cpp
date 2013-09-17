@@ -155,7 +155,7 @@ bool StringArrayToString (const_cstring_array_t *p_indexes, MCStringRef &r_resul
 {
     bool t_success = true;
 	char t_delimiter[2] = {'\0','\0'};
-    char *t_result;
+    MCAutoNativeCharArray t_array;
     t_result = NULL;
 
     if (p_chunk_type == kMCWords)
@@ -168,21 +168,20 @@ bool StringArrayToString (const_cstring_array_t *p_indexes, MCStringRef &r_resul
         t_string_length += strlen(p_indexes->elements[i]) + 1;
     if (t_string_length)
     {
-        t_success = MCMemoryAllocate(sizeof (char) * t_string_length, t_result);
+        t_success = t_array . New (sizeof (char) * t_string_length);
         if (t_success)
         {
-            strcpy (t_result, p_indexes->elements[0]);
+            strcpy ((char *)t_array . Chars(), p_indexes->elements[0]);
             for (int i = 1; i < p_indexes->length; i++)
             {
-                strcat (t_result, t_delimiter);
-                strcat (t_result, p_indexes->elements[i]);
+                strcat ((char *)t_array . Chars(), t_delimiter);
+                strcat ((char *)t_array . Chars(), p_indexes->elements[i]);
             }
         }
-        /* UNCHECKED */ MCStringCreateWithCString(t_result, r_result);
+        t_success = t_array . CreateString(r_result);
     }
     if (!t_success)
     {
-        MCValueRelease(r_result);
         r_result = nil;
     }
     return t_success;

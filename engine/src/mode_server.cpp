@@ -387,11 +387,11 @@ void MCRemoteFolderDialog(MCExecPoint& ep, MCStringRef p_title, MCStringRef p_pr
 {
 }
 
-void MCRemotePrintSetupDialog(MCStringRef &r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, MCStringRef p_config_data, uint32_t p_config_data_size)
+void MCRemotePrintSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result)
 {
 }
 
-void MCRemotePageSetupDialog(MCStringRef &r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, MCStringRef p_config_data, uint32_t p_config_data_size)
+void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result)
 {
 }
 

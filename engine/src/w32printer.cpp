@@ -41,8 +41,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 extern void Windows_RenderMetaFile(HDC p_color_dc, HDC p_mask_dc, uint1 *p_data, uint4 p_length, const MCRectangle& p_dst_rect);
 
-extern void MCRemotePrintSetupDialog(MCStringRef &r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, MCStringRef p_config_data, uint32_t p_config_data_size);
-extern void MCRemotePageSetupDialog(MCStringref &r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, MCStringRef p_config_data, uint32_t p_config_data_size);
+extern void MCRemotePrintSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result);
+extern void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result);
 
 extern bool serialize_bytes(char *&r_stream, uint32_t &r_stream_size, uint32_t &r_offset, const void *p_data, uint32_t p_data_size);
 extern bool deserialize_bytes(const char *p_stream, uint32_t p_stream_size, uint32_t &r_offset, void *p_dest, uint32_t p_size);
@@ -1341,16 +1341,15 @@ MCPrinterDialogResult MCWindowsPrinter::DoPrinterSetup(bool p_window_modal, Wind
 			uint32_t t_databuffer_size = 0;
 			if (serialize_printdlg_data(t_databuffer, t_databuffer_size, t_dlg))
 			{
-				MCStringRef t_replydata;
-				uint32_t t_replysize;
+				MCAutoDataRef t_replydata;
 				uint32_t t_replyresult;
 
-                MCAutoStringRef t_databuffer_str;
-                /* UNCHECKED */ MCStringCreateWithCStringAndRelease(t_databuffer, &t_databuffer_str);
-				MCRemotePrintSetupDialog(&t_replydata, t_replysize, t_replyresult, *t_databuffer_str, t_databuffer_size);
+                MCAutoDataRef t_databuffer_str;
+                 /* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_databuffer, t_databuffer_size, &t_databuffer_str);
+                MCRemotePrintSetupDialog(*t_databuffer_str, &t_replydata, t_replyresult);
 
 				PRINTDLGEXA *t_dlg_ptr = &t_dlg;
-				deserialize_printdlg_data(MCStringGetCString(*t_replydata), t_replysize, t_dlg_ptr);
+				deserialize_printdlg_data((const char *)MCDataGetBytePtr(*t_replydata), MCDataGetLength(*t_replydata), t_dlg_ptr);
 				t_dialog_result = (HRESULT)t_replyresult;
 			}
 		}
@@ -1497,27 +1496,26 @@ MCPrinterDialogResult MCWindowsPrinter::DoPageSetup(bool p_window_modal, Window 
 	
 	bool t_apply;
 	t_apply = false;
+    
 	if (!MCModeMakeLocalWindows())
 	{
 		char *t_databuffer = NULL;
 		uint32_t t_databuffer_size = 0;
 		if (serialize_pagedlg_data(t_databuffer, t_databuffer_size, t_dlg))
 		{
-			MCAutoStringRef t_replydata;
-			uint32_t t_replysize;
-			uint32_t t_replyresult;
+			MCAutoDataRef t_replydata;
+            uint32_t t_replyresult;
 
-            MCAutoStringRef t_databuffer_str;
-            /* UNCHECKED */ MCStringCreateWithCStringAndRelease(t_databuffer, &t_databuffer_str);
-			MCRemotePageSetupDialog(&t_replydata, t_replysize, t_replyresult, *t_databuffer_str, t_databuffer_size);
+            MCAutoDataRef t_databuffer_str;
+            /* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_databuffer, t_databuffer_size, &t_databuffer_str);
+			MCRemotePageSetupDialog(*t_databuffer_str, &t_replydata, t_replyresult);
 
 			PAGESETUPDLGA *t_dlg_ptr = &t_dlg;
-			deserialize_pagedlg_data(MCStringGetCString(*t_replydata), t_replysize, t_dlg_ptr);
+			deserialize_pagedlg_data((const char *)MCDataGetBytePtr(*t_replydata), MCDataGetLength(*t_replydata), t_dlg_ptr);
 			t_result = (MCPrinterDialogResult) t_replyresult;
 			if (t_result == PRINTER_DIALOG_RESULT_OKAY)
 				t_apply = true;
 
-			free(t_replydata);
 		}
 	}
 	else
