@@ -332,7 +332,7 @@ Boolean MCGraphic::mdown(uint2 which)
 		switch (getstack()->gettool(this))
 		{
 		case T_BROWSE:
-			if (message_with_args(MCM_mouse_down, "1") != ES_NORMAL && m_edit_tool != NULL)
+			if (message_with_valueref_args(MCM_mouse_down, MCSTR("1")) != ES_NORMAL && m_edit_tool != NULL)
 			{
 				if (m_edit_tool->mdown(mx, my, which))
 					return True;
@@ -375,9 +375,9 @@ Boolean MCGraphic::mup(uint2 which)
 			if (m_edit_tool != NULL)
 				m_edit_tool->mup(mx, my, which);
 			if (MCU_point_in_rect(rect, mx, my))
-				message_with_args(MCM_mouse_up, "1");
+				message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 			else
-				message_with_args(MCM_mouse_release, "1");
+				message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
 			break;
 		case T_GRAPHIC:
 		case T_POINTER:

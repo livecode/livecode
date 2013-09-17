@@ -581,15 +581,15 @@ void MCInternalObjectListenerMessagePendingListeners(void)
 							{
 								// MM-2012-11-06: Added resizeControl(Started/Ended) and gradientEdit(Started/Ended) messages.
 								if (t_properties_changed & kMCPropertyChangedMessageTypePropertyChanged)								
-									t_target -> target -> Get() -> message_with_args(MCM_property_changed, ep . getsvalue());
+									t_target -> target -> Get() -> message_with_valueref_args(MCM_property_changed, ep . getvalueref());
 								if (t_properties_changed & kMCPropertyChangedMessageTypeResizeControlStarted)								
-									t_target -> target -> Get() -> message_with_args(MCM_resize_control_started, ep . getsvalue());
+									t_target -> target -> Get() -> message_with_valueref_args(MCM_resize_control_started, ep . getvalueref());
 								if (t_properties_changed & kMCPropertyChangedMessageTypeResizeControlEnded)								
-									t_target -> target -> Get() -> message_with_args(MCM_resize_control_ended, ep . getsvalue());
+									t_target -> target -> Get() -> message_with_valueref_args(MCM_resize_control_ended, ep . getvalueref());
 								if (t_properties_changed & kMCPropertyChangedMessageTypeGradientEditStarted)								
-									t_target -> target -> Get() -> message_with_args(MCM_gradient_edit_started, ep . getsvalue());
+									t_target -> target -> Get() -> message_with_valueref_args(MCM_gradient_edit_started, ep . getvalueref());
 								if (t_properties_changed & kMCPropertyChangedMessageTypeGradientEditEnded)								
-									t_target -> target -> Get() -> message_with_args(MCM_gradient_edit_ended, ep . getsvalue());
+									t_target -> target -> Get() -> message_with_valueref_args(MCM_gradient_edit_ended, ep . getvalueref());
 								
 								t_prev_target = t_target;					
 							}

@@ -334,7 +334,7 @@ OSStatus MCScreenDC::handleiconmenuevent(EventHandlerCallRef p_ref, EventRef p_e
 		if (build_pick_string(t_result, t_menu, t_command . commandID))
 		{
 			if (MCdefaultstackptr != NULL)
-				MCdefaultstackptr -> getcard() -> message_with_args(MCM_icon_menu_pick, t_result . getsvalue());
+				MCdefaultstackptr -> getcard() -> message_with_valueref_args(MCM_icon_menu_pick, t_result . getvalueref());
 			
 			return noErr;
 		}

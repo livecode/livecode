@@ -407,15 +407,15 @@ void MCObject::kunfocus()
 
 Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
 {
-	char kstring[U4L];
-	sprintf(kstring, "%d", (int)key);
-	if (message_with_args(MCM_raw_key_down, kstring) == ES_NORMAL)
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCStringFormat(&t_string, "%d", key);
+	if (message_with_valueref_args(MCM_raw_key_down, *t_string) == ES_NORMAL)
 		return True;
 	if (key >= XK_F1 && key <= XK_F35)
 	{
-		char cstring[U2L];
-		sprintf(cstring, "%d", (int)(key - XK_F1 + 1));
-		if (message_with_args(MCM_function_key, cstring) == ES_NORMAL)
+		MCAutoStringRef t_cstring;
+		/* UNCHECKED */ MCStringFormat(&t_cstring, "%d", key - XK_F1 + 1);
+		if (message_with_valueref_args(MCM_function_key, *t_cstring) == ES_NORMAL)
 			return True;
 		if (key == XK_F1 && message_with_valueref_args(MCM_help, p_string) == ES_NORMAL)
 			return True;
@@ -498,19 +498,19 @@ Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
 			}
 		break;
 	case XK_Left:
-		if (message_with_args(MCM_arrow_key, "left") == ES_NORMAL)
+		if (message_with_valueref_args(MCM_arrow_key, MCSTR("left")) == ES_NORMAL)
 			return True;
 		break;
 	case XK_Right:
-		if (message_with_args(MCM_arrow_key, "right") == ES_NORMAL)
+		if (message_with_valueref_args(MCM_arrow_key, MCSTR("right")) == ES_NORMAL)
 			return True;
 		break;
 	case XK_Up:
-		if (message_with_args(MCM_arrow_key, "up") == ES_NORMAL)
+		if (message_with_valueref_args(MCM_arrow_key, MCSTR("up")) == ES_NORMAL)
 			return True;
 		break;
 	case XK_Down:
-		if (message_with_args(MCM_arrow_key, "down") == ES_NORMAL)
+		if (message_with_valueref_args(MCM_arrow_key, MCSTR("down")) == ES_NORMAL)
 			return True;
 		break;
 	default:
@@ -605,9 +605,9 @@ Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
 
 Boolean MCObject::kup(MCStringRef p_string, KeySym key)
 {
-	char kstring[U4L];
-	sprintf(kstring, "%d", (int)key);
-	if (message_with_args(MCM_raw_key_up, kstring) == ES_NORMAL)
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCStringFormat(&t_string, "%d", key);
+	if (message_with_valueref_args(MCM_raw_key_up, *t_string) == ES_NORMAL)
 		return True;
 
 	// MW-2005-08-31: We need an unsigned comparison here - otherwise accented characters
@@ -1966,46 +1966,6 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	return stat;
 }
 
-Exec_stat MCObject::message_with_args(MCNameRef mess, const MCString &v1)
-{
-	MCParameter p1;
-	p1.sets_argument(v1);
-	return message(mess, &p1);
-}
-
-Exec_stat MCObject::message_with_args(MCNameRef mess, const MCString &v1, const MCString &v2)
-{
-	MCParameter p1, p2;
-	p1.sets_argument(v1);
-	p1.setnext(&p2);
-	p2.sets_argument(v2);
-	return message(mess, &p1);
-}
-
-Exec_stat MCObject::message_with_args(MCNameRef mess, const MCString &v1, const MCString &v2, const MCString& v3)
-{
-	MCParameter p1, p2, p3;
-	p1.sets_argument(v1);
-	p1.setnext(&p2);
-	p2.sets_argument(v2);
-	p2.setnext(&p3);
-	p3.sets_argument(v3);
-	return message(mess, &p1);
-}
-
-Exec_stat MCObject::message_with_args(MCNameRef mess, const MCString &v1, const MCString &v2, const MCString& v3, const MCString& v4)
-{
-	MCParameter p1, p2, p3, p4;
-	p1.sets_argument(v1);
-	p1.setnext(&p2);
-	p2.sets_argument(v2);
-	p2.setnext(&p3);
-	p3.sets_argument(v3);
-	p3.setnext(&p4);
-	p4.sets_argument(v4);
-	return message(mess, &p1);
-}
-
 Exec_stat MCObject::message_with_valueref_args(MCNameRef mess, MCValueRef v1)
 {
 	MCParameter p1;
@@ -2117,9 +2077,9 @@ void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)
 	MCresult->eval(ep);
 
 	if (h)
-		message_with_args(MCM_message_handled, htypes[htype], MCNameGetOldString(m));
+		message_with_valueref_args(MCM_message_handled, MCSTR(htypes[htype]), m);
 	else
-		message_with_args(MCM_message_not_handled, htypes[htype], MCNameGetOldString(m));
+		message_with_valueref_args(MCM_message_not_handled, MCSTR(htypes[htype]), m);
 
 	MCresult->set(ep);
 
@@ -2276,7 +2236,9 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 					MCExecPoint ep(this, NULL, NULL);
 					getprop(0, P_LONG_ID, ep, False);
 					MCperror->add(PE_OBJECT_NAME, 0, 0, ep.getsvalue());
-					message_with_args(MCM_script_error, MCperror->getsvalue());
+					MCAutoStringRef t_string;
+					/* UNCHECKED */ MCperror->copyasstringref(&t_string);
+					message_with_valueref_args(MCM_script_error, *t_string);
 					MCperror->clear();
 				}
 				delete hlist;
@@ -2624,7 +2586,7 @@ void MCObject::editscript()
 {
 	MCExecPoint ep(this, NULL, NULL);
 	getprop(0, P_LONG_ID, ep, False);
-	getcard()->message_with_args(MCM_edit_script, ep.getsvalue());
+	getcard()->message_with_valueref_args(MCM_edit_script, ep.getvalueref());
 }
 
 void MCObject::removefrom(MCObjectList *l)

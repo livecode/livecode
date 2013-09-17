@@ -1924,7 +1924,7 @@ void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool)
 		MCstacks->restartidle();
 	if (MCtopstackptr != NULL)
 		MCtopstackptr->updatemenubar();
-	ctxt . GetObject()->message_with_args(MCM_new_tool, MCStringGetOldString(*t_tool_name));
+	ctxt . GetObject()->message_with_valueref_args(MCM_new_tool, *t_tool_name);
 }
 
 Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool, uint2 line, uint2 pos)
@@ -1978,7 +1978,7 @@ Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool, uint2 line, uint2 pos)
 		MCstacks->restartidle();
 	if (MCtopstackptr != NULL)
 		MCtopstackptr->updatemenubar();
-	ep.getobj()->message_with_args(MCM_new_tool, ep.getsvalue());
+	ep.getobj()->message_with_valueref_args(MCM_new_tool, ep.getvalueref());
 	return ES_NORMAL;
 }
 

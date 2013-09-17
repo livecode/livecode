@@ -330,7 +330,7 @@ Boolean MCStacklist::doaccelerator(KeySym key)
 		{
 			if (key == accelerators[i] . key && (MCmodifierstate & t_mod_mask) == (accelerators[i].mods & t_mod_mask) && accelerators[i] . button -> getparent() == t_menubar)
 			{
-				t_menubar -> message_with_args(MCM_mouse_down, "");
+				t_menubar -> message_with_valueref_args(MCM_mouse_down, kMCEmptyString);
 
 				// We now need to re-search for the accelerator, since it could have gone/been deleted in the mouseDown
 				for(uint2 i = 0; i < naccelerators; i++)

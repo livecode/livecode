@@ -205,7 +205,7 @@ Boolean MCControl::kdown(MCStringRef p_string, KeySym key)
 	case XK_space:
 	case XK_Return:
 	case XK_KP_Enter:
-		message_with_args(MCM_mouse_up, "1");
+		message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 		return True;
 	default:
 		break;
@@ -328,7 +328,7 @@ Boolean MCControl::doubledown(uint2 which)
 		case T_IMAGE:
 		case T_GRAPHIC:
 		case T_POINTER:
-			message_with_args(MCM_mouse_double_down, "1");
+			message_with_valueref_args(MCM_mouse_double_down, MCSTR("1"));
 			break;
 		default:
 			return False;
@@ -359,7 +359,7 @@ Boolean MCControl::doubleup(uint2 which)
 			// MW-2010-10-15: [[ Bug 9055 ]] Pass false here to prevent 'mouseUp' being sent.
 			end(false);
 		case T_BROWSE:
-			message_with_args(MCM_mouse_double_up, "1");
+			message_with_valueref_args(MCM_mouse_double_up, MCSTR("1"));
 			break;
 		default:
 			return False;
@@ -1461,7 +1461,7 @@ uint2 MCControl::sizehandles()
 
 void MCControl::start(Boolean canclone)
 {
-	if (message_with_args(MCM_mouse_down, "1") == ES_NORMAL && !MCexitall)
+	if (message_with_valueref_args(MCM_mouse_down, MCSTR("1")) == ES_NORMAL && !MCexitall)
 		return;
 	MCexitall = False;
 	getstack()->kfocusset(NULL);
@@ -1534,7 +1534,7 @@ void MCControl::end(bool p_send_mouse_up)
 	layer_redrawall();
 	
 	if (p_send_mouse_up)
-		message_with_args(MCM_mouse_up, "1");
+		message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 	
 	// MM-2012-11-06: [[ Property Listener ]]
 	if (oldstate & CS_SIZE)
