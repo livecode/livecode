@@ -28,8 +28,9 @@ char *MCS_getcurdir(void)
 {
 	MCAutoStringRef t_current;
 	char *t_cstring;
-	if (MCS_getcurdir(&t_current) && 
-		MCCStringClone(MCStringGetCString(*t_current), t_cstring))
+    MCS_getcurdir(&t_current);
+	if (MCStringGetLength(*t_current) &&
+        MCCStringClone(MCStringGetCString(*t_current), t_cstring))
 		return t_cstring;
 	return NULL;
 }
@@ -60,8 +61,8 @@ const char *MCS_tmpnam()
 	}
 
 	MCAutoStringRef t_tmpname;
-	if (MCS_tmpnam(&t_tmpname))
-		fname = strclone(MCStringGetCString(*t_tmpname));
+	MCS_tmpnam(&t_tmpname);
+    fname = strclone(MCStringGetCString(*t_tmpname));
 
 	return fname;
 }
@@ -69,10 +70,10 @@ const char *MCS_tmpnam()
 void MCS_getspecialfolder(MCExecPoint &ep)
 {
 	MCExecContext ctxt(ep);
-	MCAutoStringRef t_path;
+	MCNewAutoNameRef t_path;
 	MCAutoStringRef t_special_folder_path;
-	/* UNCHECKED */ ep.copyasstring(&t_path);
-	if (!MCS_getspecialfolder(ctxt, *t_path, &t_special_folder_path))
+	/* UNCHECKED */ ep.copyasnameref(&t_path);
+	if (!MCS_getspecialfolder(*t_path, &t_special_folder_path))
 	{
 		MCresult->sets("folder not found");
 		ep.clear();

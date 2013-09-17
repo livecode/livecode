@@ -767,10 +767,10 @@ char *MCWindowsActiveScriptEnvironment::Call(const char *p_method, const char **
 	return t_return_value;
 }
 
-MCScriptEnvironment *MCScreenDC::createscriptenvironment(const char *p_language)
+MCScriptEnvironment *MCScreenDC::createscriptenvironment(MCStringRef p_language)
 {
 	LPOLESTR t_ole_language;
-	t_ole_language = ConvertUTF8ToOLESTR(p_language);
+	t_ole_language = ConvertUTF8ToOLESTR(MCStringGetCString(p_language));
 
 	MCWindowsActiveScriptEnvironment *t_environment;
 	t_environment = new MCWindowsActiveScriptEnvironment;

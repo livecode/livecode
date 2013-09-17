@@ -733,8 +733,11 @@ Exec_stat MCPrint::exec(MCExecPoint &ep)
 			return ES_ERROR;
 		}
 
-		MCAutoStringRef t_title;
-		/* UNCHECKED */ ep . copyasstringref(&t_title);
+		MCAutoValueRef t_title;
+		if (mode != PM_UNICODE_BOOKMARK)
+			/* UNCHECKED */ ep . copyasstringref((MCStringRef&)&t_title);
+		else
+			/* UNCHECKED */ ep . copyasdataref((MCDataRef&)&t_title);
 
 		uint32_t t_level;
 		t_level = 0;
@@ -787,9 +790,9 @@ Exec_stat MCPrint::exec(MCExecPoint &ep)
 
 
 		if (mode != PM_UNICODE_BOOKMARK)
-			MCPrintingExecPrintNativeBookmark(ctxt, *t_title, t_location, t_level, t_initially_closed);
+			MCPrintingExecPrintBookmark(ctxt, (MCStringRef)*t_title, t_location, t_level, t_initially_closed);
 		else
-			MCPrintingExecPrintUnicodeBookmark(ctxt, *t_title, t_location, t_level, t_initially_closed);
+			MCPrintingExecPrintUnicodeBookmark(ctxt, (MCDataRef)*t_title, t_location, t_level, t_initially_closed);
 	}
 	else if (mode == PM_BREAK)
 	{

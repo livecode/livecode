@@ -699,7 +699,7 @@ bool MCSessionGenerateID(MCStringRef &r_id)
 	time_t t_time;
 	time(&t_time);
 	
-	MCAutoStringRef t_randombytes;
+	MCAutoDataRef t_randombytes;
 	/* UNCHECKED */ MCCrypt_random_bytes(64, &t_randombytes);
 	
 	md5_state_t t_state;
@@ -708,7 +708,7 @@ bool MCSessionGenerateID(MCStringRef &r_id)
 	if (t_remote_addr != NULL)
 		md5_append(&t_state, (md5_byte_t *)t_remote_addr, MCCStringLength(t_remote_addr));
 	md5_append(&t_state, (md5_byte_t *)&t_time, sizeof(t_time));
-	md5_append(&t_state, (md5_byte_t *)MCStringGetBytePtr(*t_randombytes), 64);
+	md5_append(&t_state, (md5_byte_t *)MCDataGetBytePtr(*t_randombytes), 64);
 	md5_finish(&t_state, t_digest);
 	
 	return byte_to_hex((uint8_t*)t_digest, 16, r_id);

@@ -225,7 +225,7 @@ bool MCSystemOpenElevatedProcess(const char *p_command, int32_t& r_pid, int32_t&
 		char *t_escaped_cmd;
 		t_escaped_cmd = nil;
 		if (t_success)
-			t_success = MCMemoryNewArray(MCStringLength(MCcmd) * 2 + 1, t_escaped_cmd);
+            t_success = MCMemoryNewArray(MCStringGetLength(MCcmd) * 2 + 1, t_escaped_cmd);
 
 		if (t_success)
 		{

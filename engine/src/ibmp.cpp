@@ -531,8 +531,9 @@ bool bmp_read_color_table(IO_handle p_stream, uindex_t &x_bytes_read, uint32_t p
 	for (uindex_t i = 0; t_success && i < p_color_count; i++)
 	{
 		uindex_t t_byte_count = t_color_size;
-		t_success = IO_NORMAL == MCS_read(t_color, sizeof(uint8_t), t_byte_count, p_stream);
-		*t_dst_ptr++ = t_color[0] | (t_color[1] << 8) | (t_color[2] << 16) | 0xFF000000;
+		t_success = IO_NORMAL == MCS_readfixed(t_color, t_byte_count, p_stream);
+        if (t_success)
+            *t_dst_ptr++ = t_color[0] | (t_color[1] << 8) | (t_color[2] << 16) | 0xFF000000;
 	}
 
 	if (t_success)
@@ -569,7 +570,7 @@ bool bmp_read_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitmap *p
 
 	for (uindex_t y = 0; t_success && y < p_bitmap->height; y++)
 	{
-		t_success = IO_NORMAL == MCS_read(t_src_buffer, sizeof(uint8_t), t_src_stride, p_stream);
+		t_success = IO_NORMAL == MCS_readfixed(t_src_buffer, t_src_stride, p_stream);
 		if (t_success)
 		{
 			uint8_t *t_src_row = t_src_buffer;
@@ -689,7 +690,7 @@ bool bmp_read_bitfield_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImage
 
 	for (uindex_t y = 0; t_success && y < p_bitmap->height; y++)
 	{
-		t_success = IO_NORMAL == MCS_read(t_src_buffer, sizeof(uint8_t), t_src_stride, p_stream);
+		t_success = IO_NORMAL == MCS_readfixed(t_src_buffer, t_src_stride, p_stream);
 		if (t_success)
 			bmp_convert_bitfield_row((uint32_t*)t_dst_ptr, t_src_buffer, p_bitmap->width, p_depth, p_a_mask, p_r_mask, p_g_mask, p_b_mask);
 
@@ -1028,7 +1029,7 @@ private:
 			m_start = 0;
 		}
 
-		if (IO_NORMAL != MCS_read(m_buffer + m_end, sizeof(uint8_t), p_count, m_stream))
+		if (IO_NORMAL != MCS_readfixed(m_buffer + m_end, p_count, m_stream))
 			return false;
 
 		m_end += p_count;
@@ -1620,7 +1621,9 @@ static bool xpm_parse_color(const char *p_line, uindex_t p_color_start, uindex_t
 	if (p_color_end - p_color_start != 7 || p_line[p_color_start] != '#')
 	{
 		MCColor t_color;
-		if (MCscreen->lookupcolor(MCString(p_line + p_color_start, p_color_end - p_color_start), &t_color))
+        MCAutoStringRef t_s;
+        /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *) p_line + p_color_start, p_color_end - p_color_start, &t_s);
+		if (MCscreen->lookupcolor(*t_s, &t_color))
 		{
 			r_color = 0xFF000000 |
 				((t_color.red & 0xFF00) << 8) |
@@ -2070,7 +2073,7 @@ bool MCImageDecodeXWD(IO_handle stream, char *&r_name, MCImageBitmap *&r_bitmap)
 
 	if (t_success)
 		t_success = nil != (newname = new char[namesize]) &&
-		IO_read(newname, sizeof(char), namesize, stream) == IO_NORMAL;
+		IO_read(newname, namesize, stream) == IO_NORMAL;
 
 	for (i = 0 ; t_success && i < (uint2)fh.ncolors ; i++)
 	{
@@ -2095,7 +2098,7 @@ bool MCImageDecodeXWD(IO_handle stream, char *&r_name, MCImageBitmap *&r_bitmap)
 			bytes *= fh.pixmap_depth;
 		t_newimage_data = new char[bytes];
 		t_success = t_newimage_data != nil &&
-			IO_read(t_newimage_data, sizeof(uint1), bytes, stream) == IO_NORMAL;
+			IO_read(t_newimage_data, bytes, stream) == IO_NORMAL;
 	}
 
 	MCImageBitmap *t_bitmap = nil;

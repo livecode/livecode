@@ -50,7 +50,9 @@ bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataR
 		t_success = MCMemoryNewArray(p_byte_count, self -> bytes);
     
 	if (t_success)
-	{        
+	{
+        MCMemoryCopy(self -> bytes, p_bytes, p_byte_count);
+        self -> byte_count = p_byte_count;
 		r_data = self;
 	}
 	else
@@ -73,6 +75,11 @@ bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCD
     }
     
     return false;
+}
+
+bool MCDataIsEmpty(MCDataRef p_data)
+{
+	return p_data -> byte_count == 0;
 }
 
 uindex_t MCDataGetLength(MCDataRef p_data)
@@ -435,4 +442,21 @@ static bool __MCDataExpandAt(MCDataRef r_data, uindex_t p_at, uindex_t p_count)
     
 	// We succeeded.
 	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCDataRef kMCEmptyData;
+
+bool __MCDataInitialize(void)
+{
+    if (!MCDataCreateWithBytes(nil, 0, kMCEmptyData))
+        return false;
+    
+    return true;
+}
+
+void __MCDataFinalize(void)
+{
+    MCValueRelease(kMCEmptyData);
 }

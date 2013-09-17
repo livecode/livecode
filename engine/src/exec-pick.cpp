@@ -539,8 +539,8 @@ void MCPickExecPickPhotoAndResize(MCExecContext& ctxt, intenum_t p_source, uinte
     MCtemplateimage->setparent(NULL);
     iptr -> attach(OP_CENTER, false);
     
-    MCAutoStringRef t_text;
-    MCStringCreateWithCString((char *)t_image_data, &t_text);
+    MCAutoDataRef t_text;
+    MCDataCreateWithBytes((const byte_t *)t_image_data, t_image_data_size, &t_text);
     iptr -> SetText(ctxt, *t_text);
 }
 

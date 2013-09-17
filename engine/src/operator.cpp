@@ -1849,7 +1849,7 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 	}
 	if (type != ST_ID || sp.lookup(SP_FACTOR, te) != PS_NORMAL)
 	{
-		if (sp.lookup(SP_VALIDATION, te) != PS_NORMAL)
+		if (type != ST_ID || sp.lookup(SP_VALIDATION, te) != PS_NORMAL)
 		{
 			sp.backup();
 			return PS_NORMAL;

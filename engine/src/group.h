@@ -38,8 +38,7 @@ class MCGroup : public MCControl
 	int4 scrollx;
 	int4 scrolly;
 	uint2 scrollbarwidth;
-	uint2 labelsize;
-	char *label;
+	MCStringRef label;
 	MCRectangle minrect;
 	uint2 number;
 	Boolean mgrabbed;
@@ -129,6 +128,10 @@ public:
 #ifdef OLD_EXEC
 	MCControl *getchild(Chunk_term etype, const MCString &,Chunk_term otype, Chunk_term ptype);
 #endif
+    MCControl *getchildbyordinal(Chunk_term p_ordinal, Chunk_term o);
+    MCControl *getchildbyid(uinteger_t p_id, Chunk_term o);
+    MCControl *getchildbyname(MCNameRef p_name, Chunk_term o);
+    
 	void makegroup(MCControl *newcontrols, MCObject *newparent);
 	MCControl *getcontrols();
 	void setcontrols(MCControl *newcontrols);
@@ -212,10 +215,9 @@ public:
 	
 	////////// PROPERTY SUPPORT METHODS
 
-	void DoGetLabel(MCExecContext& ctxt, bool to_unicode, MCStringRef r_string);
-	void DoSetLabel(MCExecContext& ctxt, bool to_unicode, MCStringRef p_label);
-
 	void SetChildDisabled(MCExecContext& ctxt, uint32_t part, bool setting);
+    
+    void UpdateMargins(void);
 
 	////////// PROPERTY ACCESSORS
 
@@ -239,8 +241,8 @@ public:
 	void SetShowName(MCExecContext& ctxt, bool setting);
 	void GetLabel(MCExecContext& ctxt, MCStringRef& r_label);
 	void SetLabel(MCExecContext& ctxt, MCStringRef p_label);
-	void GetUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label);
-	void SetUnicodeLabel(MCExecContext& ctxt, MCStringRef p_label);
+	void GetUnicodeLabel(MCExecContext& ctxt, MCDataRef& r_label);
+	void SetUnicodeLabel(MCExecContext& ctxt, MCDataRef p_label);
 	void GetHScroll(MCExecContext& ctxt, integer_t& r_scroll);
 	void SetHScroll(MCExecContext& ctxt, integer_t p_scroll);
 	void GetVScroll(MCExecContext& ctxt, integer_t& r_scroll);
@@ -270,7 +272,18 @@ public:
 	void SetBackSize(MCExecContext& ctxt, MCPoint p_size);
 	void GetSelectGroupedControls(MCExecContext& ctxt, bool& r_setting);
 	void SetSelectGroupedControls(MCExecContext& ctxt, bool setting);
+    
 	virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
 	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);
+    virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
+    virtual void SetTextHeight(MCExecContext& ctxt, uinteger_t* height);
+    virtual void SetTextSize(MCExecContext& ctxt, uinteger_t* size);
+    virtual void SetBorderWidth(MCExecContext& ctxt, uinteger_t width);
+    
+    virtual void SetLeftMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetRightMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetTopMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetBottomMargin(MCExecContext& ctxt, integer_t p_margin);
+    virtual void SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins);
 };
 #endif

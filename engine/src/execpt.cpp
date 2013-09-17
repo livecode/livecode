@@ -31,6 +31,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "uidc.h"
 
+#include "osxprefix-legacy.h"
+
 //////////
 
 bool MCExecPoint::isempty(void) const
@@ -737,14 +739,14 @@ void MCExecPoint::dounicodetomultibyte(bool p_native, bool p_reverse)
 	if (p_reverse)
 	{
 		if (p_native)
-			MCS_multibytetounicode(t_input, t_input_length, NULL, 0, t_output_length, LCH_ROMAN);
+            MCU_multibytetounicode(t_input, t_input_length, NULL, 0, t_output_length, LCH_ROMAN);
 		else
 			t_output_length = UTF8ToUnicode(t_input, t_input_length, NULL, 0);
 	}
 	else
 	{
 		if (p_native)
-			MCS_unicodetomultibyte(t_input, t_input_length, NULL, 0, t_output_length, LCH_ROMAN);
+            MCU_unicodetomultibyte(t_input, t_input_length, NULL, 0, t_output_length, LCH_ROMAN);
 		else
 			t_output_length = UnicodeToUTF8((uint2 *)t_input, t_input_length, NULL, 0);
 	}
@@ -757,14 +759,14 @@ void MCExecPoint::dounicodetomultibyte(bool p_native, bool p_reverse)
 	if (p_reverse)
 	{
 		if (p_native)
-			MCS_multibytetounicode(t_input, t_input_length, t_buffer, t_output_length, t_output_length, LCH_ROMAN);
+            MCU_multibytetounicode(t_input, t_input_length, t_buffer, t_output_length, t_output_length, LCH_ROMAN);
 		else
 			t_output_length = UTF8ToUnicode(t_input, t_input_length, (uint2 *)t_buffer, t_output_length);
 	}
 	else
 	{
 		if (p_native)
-			MCS_unicodetomultibyte(t_input, t_input_length, t_buffer, t_output_length, t_output_length, LCH_ROMAN);
+            MCU_unicodetomultibyte(t_input, t_input_length, t_buffer, t_output_length, t_output_length, LCH_ROMAN);
 		else
 			t_output_length = UnicodeToUTF8((uint2 *)t_input, t_input_length, t_buffer, t_output_length);
 	}
@@ -1211,6 +1213,8 @@ bool MCExecPoint::convertvaluereftostring(MCValueRef p_value, MCStringRef& r_str
 		return true;
 	case kMCValueTypeCodeString:
 		return MCStringCopy((MCStringRef)p_value, r_string);
+    case kMCValueTypeCodeData:
+            return MCStringCreateWithNativeChars((const char_t *)MCDataGetBytePtr((MCDataRef)p_value), MCDataGetLength((MCDataRef)p_value), r_string);
 	case kMCValueTypeCodeNumber:
 	{
 		if (MCNumberIsInteger((MCNumberRef)p_value))

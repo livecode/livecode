@@ -50,7 +50,7 @@ typedef enum
 } MCAndroidMediaStatus;
 
 static MCAndroidMediaStatus s_media_status = kMCAndroidMediaWaiting;
-static char *s_media_content = NULL;
+static MCStringRef s_media_content = MCValueRetain(kMCEmptyString);
 
 bool MCSystemPickMedia(MCMediaType p_types, bool p_multiple, MCStringRef& r_result)
 {
@@ -75,18 +75,18 @@ bool MCSystemPickMedia(MCMediaType p_types, bool p_multiple, MCStringRef& r_resu
     
     while (s_media_status == kMCAndroidMediaWaiting)
         MCscreen->wait(60.0, False, True);
-    /* UNCHECKED */ MCStringCreateWithCString(s_media_content, r_result);
+    /* UNCHECKED */ MCStringCopy(s_media_content, r_result);
     //    MCLog("Media Types Returned: %s", s_media_content);
 }
 
-void MCAndroidMediaDone(char *p_media_content)
+void MCAndroidMediaDone(MCStringRef p_media_content)
 {
 #ifdef /* MCAndroidMediaDone */ LEGACY_EXEC
     s_media_content = p_media_content;
     //    MCLog("MCAndroidMediaDone() called %s", p_media_content);
 	s_media_status = kMCAndroidMediaDone;
 #endif /* MCAndroidMediaDone */
-    s_media_content = p_media_content;
+    MCStringCopy(p_media_content, s_media_content);
     //    MCLog("MCAndroidMediaDone() called %s", p_media_content);
 	s_media_status = kMCAndroidMediaDone;
 }

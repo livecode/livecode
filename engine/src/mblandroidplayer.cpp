@@ -41,7 +41,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool path_to_apk_path(const char *p_path, const char *&r_apk_path);
+bool path_to_apk_path(MCStringRef p_path, MCStringRef &r_apk_path);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -164,16 +164,17 @@ void MCAndroidPlayerControl::SetContent(MCExecContext& ctxt, MCStringRef p_conte
     }
     else
     {
-        char *t_resolved_path = nil;
+        MCAutoStringRef t_resolved_path;
+        MCAutoStringRef t_path;
         bool t_is_asset = false;
-        const char *t_asset_path = nil;
+        MCAutoStringRef t_asset_path;
         
-        t_resolved_path = MCS_resolvepath(m_path);
-        t_is_asset = path_to_apk_path(t_resolved_path, t_asset_path);
+        /* UNCHECKED */ MCStringCreateWithCString(m_path, &t_path);
         
-        MCAndroidObjectRemoteCall(t_view, "setFile", "bsb", &t_success, t_is_asset ? t_asset_path : t_resolved_path, t_is_asset);
+        /* UNCHECKED */ MCS_resolvepath(*t_path, &t_resolved_path);
+        t_is_asset = path_to_apk_path(*t_resolved_path, &t_asset_path);
         
-        MCCStringFree(t_resolved_path);
+        MCAndroidObjectRemoteCall(t_view, "setFile", "bsb", &t_success, t_is_asset ? MCStringGetCString(*t_asset_path) : MCStringGetCString(*t_resolved_path), t_is_asset);
     }
 }
 
