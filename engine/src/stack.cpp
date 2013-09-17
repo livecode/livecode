@@ -2795,7 +2795,6 @@ Boolean MCStack::del()
 
 void MCStack::paste(void)
 {
-	MCAutoStringRef t_new_name;
 	if (MCdispatcher -> findstackname(getname()) != NULL)
 	{
 		unsigned int t_index;
@@ -2809,6 +2808,7 @@ void MCStack::paste(void)
 		
 		for(;;)
 		{
+			MCAutoStringRef t_new_name;
 			if (t_index == 1)
 				/* UNCHECKED */ MCStringFormat(&t_new_name, "Copy of %@", t_old_name);
 			else
@@ -2821,7 +2821,9 @@ void MCStack::paste(void)
 				break;
 			t_index += 1;
 		}
+		
 		setname(t_name);
+		MCValueRelease(t_name);
 	}
 
 	// MW-2007-12-11: [[ Bug 5441 ]] When we paste a stack, it should be parented to the home
