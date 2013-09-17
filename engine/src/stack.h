@@ -239,7 +239,7 @@ public:
 	void external_idle();
 	void loadwindowshape();
 	void setidlefunc(void (*newfunc)());
-	Boolean setscript(char *newscript);
+	Boolean setscript(MCStringRef newscript);
 	void checkdestroy();
 	IO_stat print(Print_mode mode, uint2 num, MCCard *card,
 	              const MCRectangle *srect, const MCRectangle *drect);
@@ -433,13 +433,13 @@ public:
 	void flip(uint2 count);
 	Exec_stat sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
 	               MCExpression *by, Boolean marked);
-	void breakstring(const MCString &, MCString **dest, uint2 &nstrings,
+	void breakstring(MCStringRef, MCStringRef*& dest, uint2 &nstrings,
 	                 Find_mode fmode);
-	Boolean findone(MCExecPoint &ep, Find_mode mode, const MCString *strings,
+	Boolean findone(MCExecPoint &ep, Find_mode mode, MCStringRef *strings,
 	                uint2 nstrings, MCChunk *field, Boolean firstcard);
 	void find(MCExecPoint &ep, int p_mode, MCStringRef p_needle, MCChunk *p_target);
-	void find(MCExecPoint &ep, Find_mode mode, const MCString &, MCChunk *field);
-	void markfind(MCExecPoint &ep, Find_mode mode, const MCString &,
+	void find(MCExecPoint &ep, Find_mode mode, MCStringRef, MCChunk *field);
+	void markfind(MCExecPoint &ep, Find_mode mode, MCStringRef,
 	              MCChunk *, Boolean mark);
 	void mark(MCExecPoint &ep, MCExpression *where, Boolean mark);
 	Linkatts *getlinkatts();

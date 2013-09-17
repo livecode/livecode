@@ -2031,11 +2031,9 @@ Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filenam
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
 			const char *t_engine_dir_end;
 			t_engine_dir_end = strrchr(MCStringGetCString(MCcmd), '/');
-			char *t_module_path;
-			t_module_path = nil;
-			MCCStringFormat(t_module_path, "%.*s/revpdfprinter.dylib", t_engine_dir_end - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd));
-			t_module = MCS_loadmodule(t_module_path);
-			MCCStringFree(t_module_path);
+			MCAutoStringRef t_module_path;            
+			MCStringFormat(&t_module_path, "%.*s/revpdfprinter.dylib", t_engine_dir_end - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd));
+			t_module = MCS_loadmodule(*t_module_path);
 #elif defined(_SERVER)
 			
 			t_module = nil;
