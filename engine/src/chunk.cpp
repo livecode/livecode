@@ -693,9 +693,8 @@ void MCChunk::take_components(MCChunk *tchunk)
 
 Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recurse)
 {
-#ifdef LEGACY_EXEC
 	return getobj(ep, r_object . object, r_object . part_id, p_recurse);
-#endif
+    
     MCExecPoint ep2(ep);
     MCExecContext ctxt(ep);
     
@@ -856,8 +855,33 @@ Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recu
 			MCeerror->add(EE_CHUNK_NOTARGET, line, pos);
 			return ES_ERROR;
 		}
+        if (background == nil && card == nil && group == nil && object == nil)
+        {
+            r_object . object = t_object . object;
+            r_object . part_id = t_object . part_id;
+            return ES_NORMAL;
+        }
         switch (t_object . object -> gettype())
 		{
+            case CT_STACK:
+                break;
+            case CT_CARD:
+                if (stack != nil || background != nil || card != nil)
+                    t_object . object = t_object . object -> getstack();
+                break;
+            case CT_GROUP:
+                if (stack != nil || background != nil)
+                {
+                    t_object . object = t_object . object -> getstack();
+                }
+                else if (card != nil)
+                {
+                    MCGroup *t_bg = static_cast<MCGroup *>(t_object . object);
+                    MCStack *t_stack = t_bg -> getstack();
+                    t_stack -> setbackground(t_bg);
+                    t_object . object = t_stack;
+                }
+                break;
             case CT_AUDIO_CLIP:
             case CT_VIDEO_CLIP:
             case CT_LAYER:
@@ -1125,7 +1149,7 @@ Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recu
                 return ES_ERROR;
 		}
 	}
-	else if (background == nil && (group != nil || object != nil))
+	else if (group != nil || object != nil)
 	{
 		MCInterfaceEvalThisCardOfStack(ctxt,  t_object,  t_object);
 	}
@@ -1256,10 +1280,7 @@ Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recu
                         }
                         MCNewAutoNameRef t_expression;
                         /* UNCHECKED */ ep2 . copyasnameref(&t_expression);
-                        if (MCNameIsEqualToCString(*t_expression, "Login", kMCCompareCaseless))
-                        {
-                            bool t_true = true;
-                        }
+                        
 //                        if (toptr == object && group == nil)
                         if (t_object . object -> gettype() == CT_CARD)
                             MCInterfaceEvalObjectOfCardByName(ctxt,  t_object, toptr -> otype, toptr -> ptype, *t_expression,  t_object);
@@ -1289,7 +1310,6 @@ Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recu
 Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
                           uint4 &parid, Boolean recurse)
 {
-#ifdef LEGACY_EXEC
 	objptr = NULL;
 	parid = 0;
 	MCStack *sptr = MCdefaultstackptr;
@@ -1933,7 +1953,6 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 	}
 
 	return ES_NORMAL;
-#endif
 
     objptr = nil;
 	parid = 0;
@@ -2476,7 +2495,8 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
-#endif
+#endif 
+    
     MCAutoStringRef t_text;
     MCExecContext ctxt(ep);
     
@@ -3389,10 +3409,6 @@ Exec_stat MCChunk::setprop(Properties which, MCExecPoint &ep, MCNameRef index, B
 	MCObject *objptr;
 	uint4 parid;
 
-//    if (which == P_FORE_COLOR)
-//    {
-//        bool t_true = true;
-//    }
 	if (url != NULL)
 	{
 		if (url->startpos == NULL || url->startpos->eval(ep) != ES_NORMAL)

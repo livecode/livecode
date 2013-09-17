@@ -2229,6 +2229,7 @@ void MCInterfaceEvalMouseControlAsObject(MCExecContext& ctxt, MCObjectPtr& r_obj
     {
         r_object . object = MCmousestackptr->getcard()->getmousecontrol();
         r_object . part_id = 0;
+        return;
     }
     
     ctxt . LegacyThrow(EE_CHUNK_NOTARGET);

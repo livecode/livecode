@@ -1290,7 +1290,6 @@ MCCard *MCStack::getchild(Chunk_term etype, MCStringRef p_expression, Chunk_term
 		uint4 inid;
 		if (MCU_stoui4(p_expression, inid))
 		{
-		
 			// OK-2008-06-27: <Bug where looking up a card by id when in edit group mode could cause an infinite loop>
 			MCCard *t_cards;
 			if (editing != NULL && savecards != NULL)
@@ -1435,7 +1434,6 @@ MCCard *MCStack::getchild(Chunk_term etype, const MCString &s, Chunk_term otype)
 		uint4 inid;
 		if (MCU_stoui4(s, inid))
 		{
-		
 			// OK-2008-06-27: <Bug where looking up a card by id when in edit group mode could cause an infinite loop>
 			MCCard *t_cards;
 			if (editing != NULL && savecards != NULL)
@@ -1575,25 +1573,26 @@ MCCard *MCStack::getchildbyid(uinteger_t p_id)
 {
     // OK-2007-04-09 : Allow cards to be found by ID when in edit group mode.
     MCCard *cptr;
-    if (editing != NULL && savecards != NULL)
+    if (editing != nil && savecards != nil)
         cptr = savecards;
     else
         cptr = cards;
     
-    MCCard *found = NULL;
+    MCCard *found = nil;
 
     // OK-2008-06-27: <Bug where looking up a card by id when in edit group mode could cause an infinite loop>
     MCCard *t_cards = cptr;
     
     // OK-2007-04-09 : Allow cards to be found by ID when in edit group mode.
-    if (editing == NULL)
+    if (editing == nil)
         found = curcard -> findid(CT_CARD, p_id, True);
-    else
+    
+    if (found == nil)
     {
         do
         {
             found = cptr->findid(CT_CARD, p_id, True);
-            if (found != NULL
+            if (found != nil
                 && found->countme(backgroundid, (state & CS_MARKED) != 0))
                 break;
             cptr = cptr->next();

@@ -1694,11 +1694,6 @@ void MCStringsEvalTextChunkByRange(MCExecContext& ctxt, MCStringRef p_source, Ch
 
 void MCStringsEvalTextChunkByExpression(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, MCStringRef& r_result)
 {
-    if (p_chunk_type == CT_WORD && p_first == 2)
-    {
-        bool t_true = true;
-    }
-    
     int4 t_first;
     int4 t_chunk_count;
     MCStringsGetExtentsByExpression(ctxt, p_chunk_type, p_first, p_source, t_first, t_chunk_count);
