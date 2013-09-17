@@ -2266,34 +2266,41 @@ void MCField::typetext(MCStringRef newtext)
 
 	if (MCactivefield == this)
 		unselect(False, True);
-    
-    MCAutoStringRef t_newtext;
+	
+	MCStringRef t_remaining;
+	/* UNCHECKED */ MCStringCreateMutable(0, t_remaining);
 	if (MCStringGetLength(newtext) < MAX_PASTE_MESSAGES)
 	{
-		char string[2];
-		string[1] = '\0';
-        MCAutoNativeCharArray t_array;
-        char *sptr = (char *)t_array . Chars();
-		memcpy(sptr, MCStringGetNativeCharPtr(newtext), MCStringGetLength(newtext));
-		const char *eptr = sptr + MCStringGetLength(newtext);
-		while (sptr < eptr)
+		uindex_t t_index = 0;
+		uindex_t t_length = MCStringGetLength(newtext);
+		while (t_index < t_length)
 		{
-			string[0] = *sptr;
-			if (message_with_args(MCM_key_down, string) == ES_NORMAL)
-				strcpy(sptr, sptr + 1);
-			else
-				sptr++;
-			message_with_args(MCM_key_up, string);
-		}
-        t_array . CreateString(&t_newtext);
+			// Send the next character in the buffer as a key down event
+			MCAutoStringRef t_string;
+			/* UNCHECKED */ MCStringCopySubstring(newtext, MCRangeMake(t_index, t_length-t_index), &t_string);
+			if (!message_with_valueref_args(MCM_key_down, *t_string))
+			{
+				// Nothing responded to the key; keep it as text
+				/* UNCHECKED */ MCStringAppendChar(t_remaining, MCStringGetCharAtIndex(newtext, t_index));
+			}
+			
+			// Key up event then move on
+			message_with_valueref_args(MCM_key_up, *t_string);
+			t_index++;
+		}	
+		
+		// Only the non-handled keypresses should be processed further
+		MCValueRelease(newtext);
+		MCStringCopyAndRelease(t_remaining, newtext);
 	}
 	uint2 oldfocused;
 	focusedparagraph->getselectionindex(oldfocused, oldfocused);
 	state |= CS_CHANGED;
-	if (!MCStringIsEmpty(*t_newtext) && focusedparagraph->finsertnew(*t_newtext, false))
+
+	if (!MCStringIsEmpty(newtext) && focusedparagraph->finsertnew(newtext, !MCStringIsNative(newtext)))
 	{
 		recompute();
-		int4 endindex = oldfocused + MCStringGetLength(*t_newtext);
+		int4 endindex = oldfocused + MCStringGetLength(newtext);
 		int4 junk;
 		MCParagraph *newfocused = indextoparagraph(focusedparagraph, endindex, junk);
 		while (focusedparagraph != newfocused)
