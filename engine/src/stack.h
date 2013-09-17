@@ -239,7 +239,7 @@ public:
 	void external_idle();
 	void loadwindowshape();
 	void setidlefunc(void (*newfunc)());
-	Boolean setscript(char *newscript);
+	Boolean setscript(MCStringRef newscript);
 	void checkdestroy();
 	IO_stat print(Print_mode mode, uint2 num, MCCard *card,
 	              const MCRectangle *srect, const MCRectangle *drect);

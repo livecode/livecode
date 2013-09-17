@@ -28,7 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 Exec_stat MCConstant::eval(MCExecPoint &ep)
 {
 	if (nvalue == BAD_NUMERIC)
-		ep.setsvalue(svalue);
+		ep.setvalueref(svalue);
 	else
 		ep.setnvalue(nvalue);
 	return ES_NORMAL;
@@ -39,7 +39,7 @@ void MCConstant::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
 	
 	if (nvalue == BAD_NUMERIC)
-		MCSyntaxFactoryEvalConstantOldString(ctxt, svalue);
+		MCSyntaxFactoryEvalConstant(ctxt, svalue);
 	else
 		MCSyntaxFactoryEvalConstantDouble(ctxt, nvalue);
 	

@@ -158,6 +158,9 @@ struct MCFieldExportEventData
 //   a run. The callback should return 'false' if it wants to terminate.
 typedef bool (*MCFieldExportCallback)(void *context, MCFieldExportEventType event_type, const MCFieldExportEventData& event_data);
 
+struct MCInterfaceFlaggedRanges;
+struct MCInterfaceFlaggedRange;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCField : public MCControl
@@ -568,6 +571,9 @@ public:
     void UpdateScrollbars(void);
     
     void DoSetInputControl(MCExecContext& ctxt, Properties which, bool setting);
+    void DoGetTextState(MCExecContext& ctxt, Properties which, uint32_t part, MCInterfaceTriState& r_state);
+    void DoSetTabStops(MCExecContext& ctxt, bool is_relative, uindex_t p_count, uinteger_t *p_tabs);
+    
 	////////// PROPERTY ACCESSORS
 
 	void GetAutoTab(MCExecContext& ctxt, bool& r_flag);
@@ -644,9 +650,17 @@ public:
 	void GetThreeDHilite(MCExecContext& ctxt, bool& r_setting);
 	void SetThreeDHilite(MCExecContext& ctxt, bool setting);
 	void GetEncoding(MCExecContext& ctxt, uint32_t part, intenum_t& r_encoding);
+    void GetFlagged(MCExecContext& ctxt, uint32_t part, MCInterfaceTriState& r_flagged);
     
-    void GetHilitedLines(MCExecContext& ctxt, MCStringRef& r_lines); // List type
-    void SetHilitedLines(MCExecContext& ctxt, MCStringRef p_lines); // List type
+    void GetHilitedLines(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_lines);
+    void SetHilitedLines(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_lines);
+    void GetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, MCInterfaceFlaggedRanges& r_ranges);
+    void SetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceFlaggedRanges& p_ranges); 
+    void SetTabStops(MCExecContext& ctxt, uindex_t p_count, uinteger_t *p_tabs);
+    void GetTabStops(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tabs);
+    void SetTabWidths(MCExecContext& ctxt, uindex_t p_count, uinteger_t *p_tabs);
+    void GetTabWidths(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tabs);
+    void GetPageHeights(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_heights);
     
     virtual void SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow);
     virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
