@@ -42,39 +42,37 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 class MCSoundFinishedOnChannelEvent: public MCCustomEvent
 {
 public:
-	MCSoundFinishedOnChannelEvent(MCObjectHandle *p_object, const char *p_channel, const char *p_sound)
+	MCSoundFinishedOnChannelEvent(MCObjectHandle *p_object, MCStringRef p_channel, MCStringRef p_sound)
 	{
 		m_object = nil;
-		m_channel = nil;
-		m_sound = nil;
+		m_channel = MCValueRetain(p_channel);
+		m_sound = MCValueRetain(p_sound);
 		
 		m_object = p_object;
 		m_object -> Retain();
-		MCCStringClone(p_channel, m_channel);
-		MCCStringClone(p_sound, m_sound);
 	}
 	
 	void Destroy(void)
 	{
 		m_object -> Release();
-		MCCStringFree(m_channel);
-		MCCStringFree(m_sound);
+		MCValueRelease(m_channel);
+		MCValueRelease(m_sound);
 		delete this;
 	}
 	
 	void Dispatch(void)
 	{
 		if (m_object -> Exists())
-			m_object -> Get() -> message_with_args(MCM_sound_finished_on_channel, m_channel, m_sound);
+			m_object -> Get() -> message_with_valueref_args(MCM_sound_finished_on_channel, m_channel, m_sound);
 	}
 	
 private:
 	MCObjectHandle *m_object;
-	char *m_channel;
-	char *m_sound;
+	MCStringRef m_channel;
+	MCStringRef m_sound;
 };
 
-void MCSoundPostSoundFinishedOnChannelMessage(const char *p_channel, const char *p_sound, MCObjectHandle *p_object)
+void MCSoundPostSoundFinishedOnChannelMessage(MCStringRef p_channel, MCStringRef p_sound, MCObjectHandle *p_object)
 {
     MCCustomEvent *t_event = nil;
     t_event = new MCSoundFinishedOnChannelEvent(p_object, p_channel, p_sound);

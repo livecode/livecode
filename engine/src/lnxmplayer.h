@@ -26,7 +26,7 @@ class MPlayer
 	
 		// Initilize the mplayer process and load in the specified media file.
 		// This also creates a new child window of the given stack
-		bool init ( char * p_filename, MCStack *p_stack, MCRectangle p_rect );
+        bool init (const char *p_filename, MCStack *p_stack, MCRectangle p_rect );
 		bool shutdown ( void ) ;
 	
 		// Basic commands for manipulating the media

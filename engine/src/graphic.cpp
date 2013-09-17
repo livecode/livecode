@@ -83,6 +83,16 @@ MCPropertyInfo MCGraphic::kProperties[] =
 	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_UNICODE_TEXT, BinaryString, MCGraphic, UnicodeLabel)
 	DEFINE_RW_OBJ_PROPERTY(P_FILLED, Bool, MCGraphic, Filled)
 	DEFINE_RW_OBJ_PROPERTY(P_OPAQUE, Bool, MCGraphic, Filled)
+    
+    DEFINE_RW_OBJ_ARRAY_PROPERTY(P_GRADIENT_FILL, Any, MCGraphic, GradientFillElement)
+    DEFINE_RW_OBJ_PROPERTY(P_GRADIENT_FILL, Array, MCGraphic, GradientFill)
+    DEFINE_RW_OBJ_ARRAY_PROPERTY(P_GRADIENT_STROKE, Any, MCGraphic, GradientStrokeElement)
+    DEFINE_RW_OBJ_PROPERTY(P_GRADIENT_STROKE, Array, MCGraphic, GradientStroke)
+    
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_MARKER_POINTS, LinesOfPoint, MCGraphic, MarkerPoints)
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_DASHES, ItemsOfUInt, MCGraphic, Dashes)
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_POINTS, LinesOfPoint, MCGraphic, Points)
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_RELATIVE_POINTS, LinesOfPoint, MCGraphic, RelativePoints)
 };
 
 MCObjectPropertyTable MCGraphic::kPropertyTable =
@@ -710,7 +720,7 @@ Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& 
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-Exec_stat MCGraphic::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
+Exec_stat MCGraphic::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
 	switch(which)
 	{
@@ -721,7 +731,7 @@ Exec_stat MCGraphic::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 		return MCGradientFillGetProperty(m_stroke_gradient, ep, key);
 	break;
 	default:
-		return MCControl::getarrayprop(parid, which, ep, key, effective);
+		return MCControl::getarrayprop_legacy(parid, which, ep, key, effective);
 	}
 	return ES_NORMAL;
 }
@@ -1236,8 +1246,7 @@ Exec_stat MCGraphic::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, 
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-
-Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
+Exec_stat MCGraphic::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
 	Boolean dirty;
 	dirty = False;
@@ -1272,7 +1281,7 @@ Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 	}
 	break;
 	default:
-		return MCControl::setarrayprop(parid, which, ep, key, effective);
+		return MCControl::setarrayprop_legacy(parid, which, ep, key, effective);
 	}
 
 	if (dirty && opened)
@@ -1280,7 +1289,6 @@ Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
 	}
-	
 	return ES_NORMAL;
 }
 
