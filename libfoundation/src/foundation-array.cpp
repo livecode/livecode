@@ -506,6 +506,13 @@ bool MCArrayStoreValueAtIndex(MCArrayRef self, index_t p_index, MCValueRef p_val
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCArrayIsEmpty(MCArrayRef self)
+{
+	return self == kMCEmptyArray;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void __MCArrayDestroy(__MCArray *self)
 {
 	if (__MCArrayIsIndirect(self))

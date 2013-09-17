@@ -659,3 +659,64 @@ void MCPlayer::GetHotSpots(MCExecContext& ctxt, MCStringRef& r_spots)
 		MCMultimediaQTVRHotSpotFree(ctxt, t_spot_array[i]);
 #endif
 }
+
+void MCPlayer::SetShowBorder(MCExecContext& ctxt, bool setting)
+{
+    MCControl::SetShowBorder(ctxt, setting);
+    setrect(rect);
+    Redraw();
+}
+
+void MCPlayer::SetBorderWidth(MCExecContext& ctxt, uinteger_t width)
+{
+    MCObject::SetBorderWidth(ctxt, width);
+    setrect(rect);
+    Redraw();
+}
+
+void MCPlayer::SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, bool visible)
+{
+    uint4 oldflags = flags;
+    MCObject::SetVisibility(ctxt, part, setting, visible);
+    if (flags != oldflags && !(flags & F_VISIBLE))
+        playstop();
+#ifdef FEATURE_QUICKTIME
+    if (theMC != NULL)
+        qt_setcontrollervisible();
+#endif
+}
+
+void MCPlayer::SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting)
+{
+    SetVisibility(ctxt, part, setting, true);
+}
+
+void MCPlayer::SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting)
+{
+    SetVisibility(ctxt, part, setting, false);
+}
+
+void MCPlayer::SetTraversalOn(MCExecContext& ctxt, bool setting)
+{
+    MCObject::SetTraversalOn(ctxt, setting);
+#ifdef FEATURE_QUICKTIME
+    if (qtstate == QT_INITTED && getstate(CS_PREPARED))
+        qt_enablekeys((flags & F_TRAVERSAL_ON) != 0);
+#endif
+}
+void MCPlayer::GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks)
+{
+	if (getstate(CS_PREPARED))
+#ifdef FEATURE_QUICKTIME
+		if (qtstate == QT_INITTED)
+			qt_getenabledtracks(r_count, r_tracks);
+#ifdef TARGET_PLATFORM_WINDOWS
+		else
+			avi_getenabledtracks(r_count, r_tracks);
+#endif
+#elif defined(X11)
+    x11_getenabledtracks(r_count, r_tracks);
+#else
+    r_count = 0;
+#endif
+}

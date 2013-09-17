@@ -88,6 +88,14 @@ bool MCObjectPropertySet::list(MCExecPoint& ep)
 	return ep . listarraykeys(m_props, '\n');
 }
 
+bool MCObjectPropertySet::list(MCStringRef& r_keys)
+{
+    if (MCArrayListKeys(m_props, '\n', r_keys))
+		return true;
+    
+	return false;
+}
+
 bool MCObjectPropertySet::clear(void)
 {
 	MCValueRelease(m_props);
@@ -99,6 +107,11 @@ bool MCObjectPropertySet::fetch(MCExecPoint& ep)
 	return ep . setvalueref(m_props);
 }
 
+bool MCObjectPropertySet::fetch(MCArrayRef& r_array)
+{
+    return MCArrayCopy(m_props, r_array);
+}
+
 bool MCObjectPropertySet::store(MCExecPoint& ep)
 {
 	MCArrayRef t_new_props;
@@ -106,6 +119,13 @@ bool MCObjectPropertySet::store(MCExecPoint& ep)
 		return false;
 	MCValueRelease(m_props);
 	m_props = t_new_props;
+	return true;
+}
+
+bool MCObjectPropertySet::store(MCArrayRef p_array)
+{
+	MCValueRelease(m_props);
+    m_props = MCValueRetain(p_array);
 	return true;
 }
 
@@ -137,6 +157,13 @@ bool MCObjectPropertySet::restrict(MCExecPoint& ep)
 	MCValueRelease(m_props);
 	m_props = t_new_props;
 	return true;
+}
+
+/* WRAPPER */ bool MCObjectPropertySet::restrict(MCStringRef p_string)
+{
+    MCExecPoint ep(nil,nil,nil);
+    ep . setvalueref(p_string);
+    return restrict(ep);
 }
 
 //////////

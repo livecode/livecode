@@ -165,7 +165,7 @@ void MCGraphicsExecRotateSelection(MCExecContext& ctxt, integer_t angle)
 
 void MCGraphicsExecRotateImage(MCExecContext& ctxt, MCImage *image, integer_t angle)
 {
-	if (image->getflag(F_HAS_FILENAME))
+	if (!image->iseditable())
 	{
 		ctxt . LegacyThrow(EE_ROTATE_NOTIMAGE);
 		return;
@@ -180,7 +180,7 @@ void MCGraphicsExecCropImage(MCExecContext& ctxt, MCImage *p_image, MCRectangle 
 {
 	if (p_image != nil)
 	{
-		if (p_image->getflag(F_HAS_FILENAME))
+		if (!p_image -> iseditable())
 		{
 			ctxt . LegacyThrow(EE_CROP_NOTIMAGE);
 			return;

@@ -383,6 +383,7 @@ public:
 	////////// PROPERTY SUPPORT METHODS
 
 	void Redraw(void);
+    void SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, bool visible);
 
 	////////// PROPERTY ACCESSORS
 
@@ -441,7 +442,15 @@ public:
 	void GetConstraints(MCExecContext& ctxt, MCMultimediaQTVRConstraints& r_constraints);
 	void GetNodes(MCExecContext& ctxt, MCStringRef& r_nodes);
 	void GetHotSpots(MCExecContext& ctxt, MCStringRef& r_spots);
+    
+    virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
+    virtual void SetBorderWidth(MCExecContext& ctxt, uinteger_t width);
+    virtual void SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting);
+    virtual void SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting);
+    virtual void SetTraversalOn(MCExecContext& ctxt, bool setting);
 
+    void GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks);
+    
 #ifdef FEATURE_QUICKTIME
 	Boolean qt_prepare(void);
 	Boolean qt_playpause(Boolean on);
@@ -459,6 +468,8 @@ public:
 	void qt_showbadge(Boolean show);
 	void qt_editmovie(Boolean edit);
 	void qt_playselection(Boolean play);
+    void qt_enablekeys(Boolean enable);
+    void qt_setcontrollervisible();
 	Boolean qt_ispaused(void);
 	void qt_showcontroller(Boolean show);
 	MCRectangle qt_getpreferredrect(void);
@@ -466,6 +477,7 @@ public:
 	void qt_setloudness(uint2 loudn);
 	void qt_gettracks(MCExecPoint& ep);
 	void qt_getenabledtracks(MCExecPoint& ep);
+    void qt_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks);
 	Boolean qt_setenabledtracks(const MCString& s);
 	void qt_draw(MCDC *dc, const MCRectangle& dirty);
 	void qt_move(int2 x, int2 y);
@@ -496,6 +508,7 @@ public:
 	void avi_setloudness(uint2 loudn);
 	void avi_gettracks(MCExecPoint& ep);
 	void avi_getenabledtracks(MCExecPoint& ep);
+	void avi_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks);
 	Boolean avi_setenabledtracks(const MCString& s);
 	void avi_draw(MCDC *dc, const MCRectangle& dirty);
 
@@ -529,6 +542,7 @@ public:
 	MCRectangle x11_getpreferredrect(void) {MCRectangle t_rect; t_rect.x = 0;t_rect.y = 0;t_rect.width=0;t_rect.height=0; return t_rect;}
 	void x11_gettracks(MCExecPoint& ep) {}
 	void x11_getenabledtracks(MCExecPoint& ep) {}
+    void x11_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks) {}
 	Boolean x11_setenabledtracks(const MCString& s) {return False;}
 	void x11_draw(MCDC *dc, const MCRectangle& dirty) {}
 	

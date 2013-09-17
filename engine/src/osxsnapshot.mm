@@ -204,7 +204,7 @@ static Rect rect_from_points(CGPoint x, CGPoint y)
 
 @end
 
-MCBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, uint32_t p_window, const char *p_display_name)
+MCBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, uint32_t p_window, MCStringRef p_display_name)
 {
 	// Compute the rectangle to grab in screen co-ords.
 	MCRectangle t_screen_rect;

@@ -78,6 +78,22 @@ void MCGroup::SetChildDisabled(MCExecContext& ctxt, uint32_t part, bool setting)
 	MCRedrawUnlockScreen();
 }
 
+void MCGroup::UpdateMargins()
+{
+    if (leftmargin == defaultmargin && rightmargin == defaultmargin
+        && topmargin == defaultmargin && bottommargin == defaultmargin)
+        flags &= ~F_MARGINS;
+    else
+        flags |= F_MARGINS;
+    
+    bool t_dirty;
+    t_dirty = computeminrect(False);
+    resetscrollbars(False);
+    
+    if (t_dirty)
+        Redraw();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCGroup::GetCantDelete(MCExecContext& ctxt, bool& r_setting)
@@ -258,76 +274,39 @@ void MCGroup::SetShowName(MCExecContext& ctxt, bool setting)
 	}
 }
 
-void MCGroup::DoGetLabel(MCExecContext& ctxt, bool to_unicode, MCStringRef r_string)
-{
-	// Fetch the label, taking note of its encoding.
-	MCString slabel;
-	bool is_unicode;
-
-	if (label == NULL)
-	{
-		r_string = MCValueRetain(kMCEmptyString);
-		return;
-	}
-
-	slabel.set(label,labelsize), is_unicode = hasunicode();
-
-	// If the label's encoding doesn't match the request, map.
-	if (MCU_mapunicode(slabel, is_unicode, to_unicode, r_string))
-		return;
-
-	ctxt . Throw();
-}
-
-void MCGroup::DoSetLabel(MCExecContext& ctxt, bool to_unicode, MCStringRef p_label)
-{
-	if (label == NULL || p_label == nil ||
-		MCStringIsEqualToOldString(p_label, MCString(label, labelsize), kMCCompareExact) ||
-		to_unicode != hasunicode())
-	{
-		delete label;
-		label = NULL;
-		if (p_label != nil)
-		{
-			labelsize = MCStringGetLength(p_label);
-			label = new char[labelsize];
-			memcpy(label, MCStringGetCString(p_label), labelsize);
-			flags |= F_LABEL;
-
-			// If we are setting the unicode label we become unicode; else we revert
-			// to native.
-			if (to_unicode)
-				m_font_flags |= FF_HAS_UNICODE;
-			else
-				m_font_flags &= ~FF_HAS_UNICODE;
-		}
-		else
-		{
-			labelsize = 0;
-			flags &= ~F_LABEL;
-		}
-		Redraw();
-	}
-}
-
 void MCGroup::GetLabel(MCExecContext& ctxt, MCStringRef& r_label)
 {
-	DoGetLabel(ctxt, false, r_label);
+	r_label = MCValueRetain(label);
 }
 
 void MCGroup::SetLabel(MCExecContext& ctxt, MCStringRef p_label)
 {
-	DoSetLabel(ctxt, false, p_label);
+	MCValueAssign(label, p_label);
+	Redraw();
 }
 
-void MCGroup::GetUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label)
+void MCGroup::GetUnicodeLabel(MCExecContext& ctxt, MCDataRef& r_label)
 {
-	DoGetLabel(ctxt, true, r_label);
+	MCDataRef t_data;
+	if (MCStringEncode(label, kMCStringEncodingUTF16, false, t_data))
+	{
+		r_label = t_data;
+		return;
+	}
+
+	ctxt.Throw();
 }
 
-void MCGroup::SetUnicodeLabel(MCExecContext& ctxt, MCStringRef p_label)
+void MCGroup::SetUnicodeLabel(MCExecContext& ctxt, MCDataRef p_label)
 {
-	DoSetLabel(ctxt, true, p_label);
+	MCStringRef t_string;
+	if (MCStringDecode(p_label, kMCStringEncodingUTF16, false, t_string))
+	{
+		MCValueAssign(label, t_string);
+		return;
+	}
+	
+	ctxt.Throw();
 }
 
 void MCGroup::GetHScroll(MCExecContext& ctxt, integer_t& r_scroll)
@@ -632,4 +611,61 @@ void MCGroup::SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting)
 		SetChildDisabled(ctxt, part, setting);
 		Redraw();
 	}
+}
+
+void MCGroup::SetShowBorder(MCExecContext& ctxt, bool setting)
+{
+    MCControl::SetShowBorder(ctxt, setting);
+    if (computeminrect(False))
+        Redraw();
+}
+
+void MCGroup::SetTextHeight(MCExecContext& ctxt, uinteger_t* height)
+{
+    MCObject::SetTextHeight(ctxt, height);
+    resetscrollbars(False);
+}
+
+void MCGroup::SetTextSize(MCExecContext& ctxt, uinteger_t* size)
+{
+    MCObject::SetTextSize(ctxt, size);
+    if (computeminrect(False))
+        Redraw();
+}
+
+void MCGroup::SetBorderWidth(MCExecContext& ctxt, uinteger_t width)
+{
+    MCObject::SetBorderWidth(ctxt, width);
+    if (computeminrect(False))
+        Redraw();
+}
+
+void MCGroup::SetLeftMargin(MCExecContext& ctxt, integer_t p_margin)
+{
+    MCControl::SetLeftMargin(ctxt, p_margin);
+    UpdateMargins();
+}
+
+void MCGroup::SetRightMargin(MCExecContext& ctxt, integer_t p_margin)
+{
+    MCControl::SetRightMargin(ctxt, p_margin);
+    UpdateMargins();
+}
+
+void MCGroup::SetTopMargin(MCExecContext& ctxt, integer_t p_margin)
+{
+    MCControl::SetTopMargin(ctxt, p_margin);
+    UpdateMargins();
+}
+
+void MCGroup::SetBottomMargin(MCExecContext& ctxt, integer_t p_margin)
+{
+    MCControl::SetBottomMargin(ctxt, p_margin);
+    UpdateMargins();
+}
+
+void MCGroup::SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins)
+{
+    MCControl::SetMargins(ctxt, p_margins);
+    UpdateMargins();
 }

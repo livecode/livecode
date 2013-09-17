@@ -323,9 +323,9 @@ struct MCPosixSystem: public MCSystemInterface
 		return rmdir(MCStringGetCString(p_path)) == 0;
 	}
 	
-	virtual bool DeleteFile(const char *p_path)
+	virtual bool DeleteFile(MCStringRef p_path)
 	{
-		return unlink(p_path) == 0;
+		return unlink(MCStringGetCString(p_path)) == 0;
 	}
 	
 	virtual bool RenameFileOrFolder(MCStringRef p_old_name, MCStringRef p_new_name)

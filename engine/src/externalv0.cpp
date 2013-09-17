@@ -136,16 +136,16 @@ bool MCExternalV0::Prepare(void)
 	// as it is used to determine if its a V0 external!).
 
 	GETXTABLE t_getter;
-	t_getter = (GETXTABLE)MCS_resolvemodulesymbol(m_module, "getXtable");
+	t_getter = (GETXTABLE)MCS_resolvemodulesymbol(m_module, MCSTR("getXtable"));
 	t_getter(MCcbs, deleter, &m_name, &m_table, &m_free);
 	
 	CONFIGURESECURITY t_conf_security;
-	t_conf_security = (CONFIGURESECURITY)MCS_resolvemodulesymbol(m_module, "configureSecurity");
+	t_conf_security = (CONFIGURESECURITY)MCS_resolvemodulesymbol(m_module, MCSTR("configureSecurity"));
 	if (t_conf_security != nil)
 		t_conf_security(MCsecuritycbs);
 
 	SHUTDOWNXTABLE t_shutdown;
-	t_shutdown = (SHUTDOWNXTABLE)MCS_resolvemodulesymbol(m_module, "shutdownXtable");
+	t_shutdown = (SHUTDOWNXTABLE)MCS_resolvemodulesymbol(m_module, MCSTR("shutdownXtable"));
 	if (t_shutdown != nil)
 		m_shutdown = t_shutdown;
 
@@ -337,7 +337,9 @@ static char *card_message(const char *arg1, const char *arg2,
 	MCStack *s = MCdefaultstackptr;
 	Boolean oldcheck = MCcheckstack;
 	MCcheckstack = False;
-	*retval = trans_stat(s->getcurcard()->domess(arg1));
+    MCAutoStringRef t_arg1;
+    /* UNCHECKED */ MCStringCreateWithCString(arg1, &t_arg1);
+	*retval = trans_stat(s->getcurcard()->domess(*t_arg1));
 	MCcheckstack = oldcheck;
 	return NULL;
 }
@@ -789,7 +791,9 @@ static int can_access_host(const char *p_host)
 {
 	if (MCSecureModeCanAccessNetwork())
 		return true;
-	return MCModeCanAccessDomain(p_host);
+    MCAutoStringRef t_host;
+    /* UNCHECKED */ MCStringCreateWithCString(p_host, &t_host);
+	return MCModeCanAccessDomain(*t_host);
 }
 
 static int can_access_library(const char *p_host)
@@ -800,6 +804,6 @@ static int can_access_library(const char *p_host)
 SECURITYHANDLER MCsecuritycbs[] =
 {
 	can_access_file,
-	can_access_host,
+    can_access_host,
 	can_access_library
 };

@@ -275,6 +275,22 @@ IO_stat MCObjectInputStream::ReadNameRef(MCNameRef& r_value)
 	return t_stat;
 }
 
+IO_stat MCObjectInputStream::ReadStringRef(MCStringRef& r_value)
+{
+	char *t_name_cstring;
+	t_name_cstring = nil;
+
+	IO_stat t_stat;
+	t_stat = ReadCString(t_name_cstring);
+	if (t_stat == IO_NORMAL &&
+		!MCStringCreateWithCString(t_name_cstring != nil ? t_name_cstring : MCnullstring, r_value))
+		t_stat = IO_ERROR;
+
+	free(t_name_cstring);
+
+	return t_stat;
+}
+
 IO_stat MCObjectInputStream::ReadColor(MCColor &r_color)
 {
 	IO_stat t_stat = IO_NORMAL;
@@ -345,10 +361,7 @@ IO_stat MCObjectInputStream::Fill(void)
 	uint32_t t_available;
 	t_available = MCU_min(m_remaining, 16384 - m_bound);
 
-	uint32_t t_count;
-	t_count = 1;
-
-	t_stat = IO_read((char *)m_buffer + m_bound, t_available, t_count, m_stream);
+	t_stat = MCS_readfixed((char *)m_buffer + m_bound, t_available, m_stream);
 	if (t_stat != IO_NORMAL)
 		return t_stat;
 

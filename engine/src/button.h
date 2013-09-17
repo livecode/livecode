@@ -456,6 +456,9 @@ public:
     void SetHoverIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
     void GetHoverIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
     virtual void SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins);
+    void GetHilite(MCExecContext& ctxt, uint32_t p_part, MCInterfaceTriState& r_hilite);
+    void SetHilite(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceTriState& p_hilite);
+    
 private:
 	int4 formattedtabwidth(void);
 

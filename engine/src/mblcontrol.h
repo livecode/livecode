@@ -406,12 +406,13 @@ enum MCNativeControlIndicatorStyle
 enum MCNativeControlLoadState
 {
     kMCNativeControlLoadStateNoneBit,
-    kMCNativeControlLoadStateNone = 1 << kMCNativeControlLoadStateNoneBit,
     kMCNativeControlLoadStatePlayableBit,
-    kMCNativeControlLoadStatePlayable = 1 << kMCNativeControlLoadStatePlayableBit,
     kMCNativeControlLoadStatePlaythroughOKBit,
-    kMCNativeControlLoadStatePlaythroughOK = 1 << kMCNativeControlLoadStatePlaythroughOKBit,
     kMCNativeControlLoadStateStalledBit,
+	
+    kMCNativeControlLoadStateNone = 1 << kMCNativeControlLoadStateNoneBit,
+    kMCNativeControlLoadStatePlayable = 1 << kMCNativeControlLoadStatePlayableBit,
+    kMCNativeControlLoadStatePlaythroughOK = 1 << kMCNativeControlLoadStatePlaythroughOKBit,
     kMCNativeControlLoadStateStalled = 1 << kMCNativeControlLoadStateStalledBit
 };
 
@@ -485,16 +486,17 @@ enum MCNativeControlInputDataDetectorType
 {
     kMCNativeControlInputDataDetectorTypeNone = 0,
     kMCNativeControlInputDataDetectorTypeWebUrlBit,
-    kMCNativeControlInputDataDetectorTypeWebUrl = 1 << kMCNativeControlInputDataDetectorTypeWebUrlBit,
     kMCNativeControlInputDataDetectorTypeEmailAddressBit,
-    kMCNativeControlInputDataDetectorTypeEmailAddress = 1 << kMCNativeControlInputDataDetectorTypeEmailAddressBit,
     kMCNativeControlInputDataDetectorTypePhoneNumberBit,
-    kMCNativeControlInputDataDetectorTypePhoneNumber = 1 << kMCNativeControlInputDataDetectorTypePhoneNumberBit,
     kMCNativeControlInputDataDetectorTypeMapAddressBit,
-    kMCNativeControlInputDataDetectorTypeMapAddress = 1 << kMCNativeControlInputDataDetectorTypeMapAddressBit,
     kMCNativeControlInputDataDetectorTypeCalendarEventBit,
-    kMCNativeControlInputDataDetectorTypeCalendarEvent = 1 << kMCNativeControlInputDataDetectorTypeCalendarEventBit,
     kMCNativeControlInputDataDetectorTypeAllBit,
+	
+    kMCNativeControlInputDataDetectorTypeWebUrl = 1 << kMCNativeControlInputDataDetectorTypeWebUrlBit,
+    kMCNativeControlInputDataDetectorTypeEmailAddress = 1 << kMCNativeControlInputDataDetectorTypeEmailAddressBit,
+    kMCNativeControlInputDataDetectorTypePhoneNumber = 1 << kMCNativeControlInputDataDetectorTypePhoneNumberBit,
+    kMCNativeControlInputDataDetectorTypeMapAddress = 1 << kMCNativeControlInputDataDetectorTypeMapAddressBit,
+    kMCNativeControlInputDataDetectorTypeCalendarEvent = 1 << kMCNativeControlInputDataDetectorTypeCalendarEventBit,
     kMCNativeControlInputDataDetectorTypeAll = 1 << kMCNativeControlInputDataDetectorTypeAllBit
 };
 

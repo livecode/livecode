@@ -142,13 +142,8 @@ public:
 		~MCXTransferStore();
 	
 	// Adding data and types to the store
-#ifdef SHARED_STRING
-		void addType ( MCMIMEtype *p_mime, MCTransferType p_type, MCSharedString * p_data  ) ;
-		void addRevType ( MCTransferType p_type, MCSharedString * p_data ) ;
-#else
-		void addType ( MCMIMEtype *p_mime, MCTransferType p_type, MCStringRef p_data  ) ;
-		void addRevType ( MCTransferType p_type, MCStringRef p_data ) ;
-#endif
+		void addType ( MCMIMEtype *p_mime, MCTransferType p_type, MCDataRef p_data  ) ;
+		void addRevType ( MCTransferType p_type, MCDataRef p_data ) ;
 		void addAtom ( Atom p_atom ) ;
 		void cleartypes ( void ) ;
 		
@@ -160,13 +155,8 @@ public:
 	
 	// Interface with MCXPasteboard
 		bool 	Query(MCTransferType*& r_types, unsigned int& r_type_count) ;
-#ifdef SHARED_STRING
-		bool 	Fetch(MCTransferType p_type, MCSharedString*& r_data, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time) ;
-		bool 	Fetch(MCMIMEtype* p_mime_type, MCSharedString*& r_data, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time) ;
-#else
-		bool 	Fetch(MCTransferType p_type, MCStringRef& r_data, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time) ;
-		bool 	Fetch(MCMIMEtype* p_mime_type, MCStringRef& r_data, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time) ;
-#endif
+		bool 	Fetch(MCTransferType p_type, MCDataRef& r_data, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time) ;
+		bool 	Fetch(MCMIMEtype* p_mime_type, MCDataRef& r_data, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time) ;
 
 	// Interface with clipboard 
 		Atom 	* QueryAtoms (uint4 & r_count);
@@ -206,31 +196,19 @@ private:
 	
 	
 	// Conversion of the DATA between different types
-#ifdef SHARED_STRING
-	    MCSharedString * Convert_MIME_to_REV ( MCSharedString * p_in, MCMIMEtype * p_mime ) ;
-		MCSharedString * Convert_REV_to_MIME ( MCSharedString * p_in, MCTransferType p_type,  MCMIMEtype * p_mime ) ;
-#else	
-		bool Convert_MIME_to_REV ( MCStringRef p_input, MCMIMEtype * p_mime, MCStringRef& r_output ) ;
-		bool Convert_REV_to_MIME ( MCStringRef p_input, MCTransferType p_type,  MCMIMEtype * p_mime, MCStringRef& r_output ) ;
-#endif
+        bool Convert_MIME_to_REV ( MCDataRef p_input, MCMIMEtype * p_mime, MCDataRef& r_output ) ;
+        bool Convert_REV_to_MIME ( MCDataRef p_input, MCTransferType p_type,  MCMIMEtype * p_mime, MCDataRef& r_output ) ;
+	
 	// Interface with the XSelection
 		bool 			WaitForEventCompletion(XEvent &p_xevent);
 		char *			GetSelection ( Window w, Atom property, uint4& p_count ) ; 
-#ifdef SHARED_STRING
-		MCSharedString * GetExternalData ( MCTransferType p_type, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time)  ;
-#else
-		bool GetExternalData ( MCTransferType p_type, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time, MCStringRef& r_output)  ;
-#endif
+		bool GetExternalData ( MCTransferType p_type, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time, MCDataRef& r_output)  ;
 	
 		struct Entry
 		{
 			MCTransferType 	type;
 			MCMIMEtype		*format ;
-#ifdef SHARED_STRING
-			MCSharedString 	*data;
-#else
-			MCStringRef data;
-#endif
+			MCDataRef data;
 		};
 
 		
@@ -249,52 +227,28 @@ private:
 } ;
 
 
+typedef bool (*MCConverterToRev)(MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output ) ;
+typedef bool (*MCConverterToMIME)(MCDataRef p_input, MCTransferType p_type, MCDataRef& r_output ) ;
 
-#ifdef SHARED_STRING
-typedef MCSharedString * (*MCConverterToRev)(MCSharedString *p_in, MCMIMEtype * p_MIME ) ;
-typedef MCSharedString * (*MCConverterToMIME)(MCSharedString *p_in, MCTransferType p_type ) ;
-#else
-typedef bool (*MCConverterToRev)(MCStringRef p_input, MCMIMEtype * p_MIME, MCStringRef& r_output ) ;
-typedef bool (*MCConverterToMIME)(MCStringRef p_input, MCTransferType p_type, MCStringRef& r_output ) ;
-#endif
 ////////////////////////////////////////////////////////////////////////////////
 //
 // Conversion routines in our table
 
-#ifdef SHARED_STRING
-MCSharedString * ConvertFile_rev_to_MIME ( MCSharedString * p_in, MCTransferType p_type ) ;
-MCSharedString * ConvertStyled_rev_to_HTML ( MCSharedString * p_in, MCTransferType p_type ) ;
-MCSharedString * ConvertStyled_rev_to_RTF ( MCSharedString * p_in, MCTransferType p_type ) ;
-MCSharedString * ConvertStyled_rev_to_TEXT ( MCSharedString * p_in, MCTransferType p_type ) ;
+bool ConvertFile_rev_to_MIME ( MCDataRef p_input, MCTransferType p_type, MCDataRef& r_output ) ;
+bool ConvertStyled_rev_to_HTML ( MCDataRef p_input, MCTransferType p_type, MCDataRef& r_output ) ;
+bool ConvertStyled_rev_to_RTF ( MCDataRef p_input, MCTransferType p_type, MCDataRef& r_output ) ;
+bool ConvertStyled_rev_to_TEXT ( MCDataRef p_input, MCTransferType p_type, MCDataRef& r_output ) ;
 
-MCSharedString * ConvertTextToUnicode ( MCSharedString * p_in, MCTransferType p_type ) ;
-MCSharedString * ConvertStyledToUnicode ( MCSharedString * p_in, MCTransferType p_type ) ;
+bool ConvertTextToUnicode ( MCDataRef p_input, MCTransferType p_type, MCDataRef& r_output ) ;
+bool ConvertStyledToUnicode ( MCDataRef p_input, MCTransferType p_type, MCDataRef& r_output ) ;
 
-MCSharedString * ConvertFile_MIME_to_rev ( MCSharedString * p_in, MCMIMEtype * p_MIME )  ;
-MCSharedString * ConvertStyled_RTF_to_rev ( MCSharedString * p_in, MCMIMEtype * p_MIME )  ;
-MCSharedString * ConvertStyled_HTML_to_rev ( MCSharedString * p_in, MCMIMEtype * p_MIME )  ;
-MCSharedString * ConvertStyled_Text_to_rev ( MCSharedString * p_in, MCMIMEtype * p_MIME ) ;
+bool ConvertFile_MIME_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output )  ;
+bool ConvertStyled_RTF_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output )  ;
+bool ConvertStyled_HTML_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output )  ;
+bool ConvertStyled_Text_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output ) ;
 
-MCSharedString * ConvertUnicodeToText ( MCSharedString * p_in, MCMIMEtype * p_MIME ) ;
-MCSharedString * ConvertUnicodeToStyled ( MCSharedString * p_in, MCMIMEtype * p_MIME ) ;
-#else
-bool ConvertFile_rev_to_MIME ( MCStringRef p_input, MCTransferType p_type, MCStringRef& r_output ) ;
-bool ConvertStyled_rev_to_HTML ( MCStringRef p_input, MCTransferType p_type, MCStringRef& r_output ) ;
-bool ConvertStyled_rev_to_RTF ( MCStringRef p_input, MCTransferType p_type, MCStringRef& r_output ) ;
-bool ConvertStyled_rev_to_TEXT ( MCStringRef p_input, MCTransferType p_type, MCStringRef& r_output ) ;
-
-bool ConvertTextToUnicode ( MCStringRef p_input, MCTransferType p_type, MCStringRef& r_output ) ;
-bool ConvertStyledToUnicode ( MCStringRef p_input, MCTransferType p_type, MCStringRef& r_output ) ;
-
-bool ConvertFile_MIME_to_rev ( MCStringRef p_input, MCMIMEtype * p_MIME, MCStringRef& r_output )  ;
-bool ConvertStyled_RTF_to_rev ( MCStringRef p_input, MCMIMEtype * p_MIME, MCStringRef& r_output )  ;
-bool ConvertStyled_HTML_to_rev ( MCStringRef p_input, MCMIMEtype * p_MIME, MCStringRef& r_output )  ;
-bool ConvertStyled_Text_to_rev ( MCStringRef p_input, MCMIMEtype * p_MIME, MCStringRef& r_output ) ;
-
-bool ConvertUnicodeToText ( MCStringRef p_input, MCMIMEtype * p_MIME, MCStringRef& r_output ) ;
-bool ConvertUnicodeToStyled ( MCStringRef p_input, MCMIMEtype * p_MIME, MCStringRef& r_output ) ;
-#endif
-
+bool ConvertUnicodeToText ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output ) ;
+bool ConvertUnicodeToStyled ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output ) ;
 	
 
 #define XDND_TYPE_TABLE_SIZE	14

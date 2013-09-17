@@ -23,7 +23,7 @@ struct Breakpoint
 {
 	MCObject *object;
 	uint4 line;
-	char *info;
+	MCStringRef info;
 };
 
 // set the breakpoints to "button 1, 3"
@@ -64,7 +64,7 @@ extern Boolean MCmessagemessages;
 
 extern void MCB_setmsg(MCExecPoint &ep);
 extern void MCB_message(MCExecPoint &ep, MCNameRef message, MCParameter *p);
-extern void MCB_prepmessage(MCExecPoint &ep, MCNameRef message, uint2 line, uint2 pos, uint2 id, const char *info = NULL);
+extern void MCB_prepmessage(MCExecPoint &ep, MCNameRef message, uint2 line, uint2 pos, uint2 id, MCStringRef p_info = kMCEmptyString);
 extern void MCB_break(MCExecPoint &ep, uint2 line, uint2 pos);
 extern void MCB_trace(MCExecPoint &ep, uint2 line, uint2 pos);
 extern void MCB_error(MCExecPoint &ep, uint2 line, uint2 pos, uint2 id);

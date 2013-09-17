@@ -821,7 +821,6 @@ public:
 
 	/* CAN FAIL */ static bool create(MCVariable*& r_var);
 	/* CAN FAIL */ static bool createwithname(MCNameRef name, MCVariable*& r_var);
-	/* CAN FAIL */ static bool createwithname_cstring(const char *name, MCVariable*& r_var);
 
 	/* CAN FAIL */ static bool createcopy(MCVariable& other, MCVariable*& r_var);
 };
@@ -1043,7 +1042,7 @@ protected:
 	void *m_context;
 
 public:
-	static bool createwithname_cstring(const char *name, MCDeferredVariableComputeCallback callback, void *context, MCVariable*& r_var);
+	static bool createwithname(MCNameRef p_name, MCDeferredVariableComputeCallback callback, void *context, MCVariable*& r_var);
 
 	Exec_stat compute(void);
 };

@@ -427,11 +427,11 @@ Parse_stat MCIdeScriptConfigure::parse(MCScriptPoint& p_script)
 	if (t_status == PS_NORMAL && (p_script . next(t_type) != PS_NORMAL || t_type != ST_ID))
 		t_status = PS_ERROR;
 
-	if (t_status == PS_NORMAL && p_script . gettoken() == "classes")
+	if (t_status == PS_NORMAL && p_script . token_is_cstring("classes"))
 		f_type = TYPE_CLASSES;
-	else if (t_status == PS_NORMAL && p_script . gettoken() == "operators")
+	else if (t_status == PS_NORMAL && p_script . token_is_cstring("operators"))
 		f_type = TYPE_OPERATORS;
-	else if (t_status == PS_NORMAL && p_script . gettoken() == "keywords")
+	else if (t_status == PS_NORMAL && p_script . token_is_cstring("keywords"))
 		f_type = TYPE_KEYWORDS;
 	else if (t_status == PS_NORMAL)
 		t_status = PS_ERROR;
@@ -521,7 +521,11 @@ Exec_stat MCIdeScriptConfigure::exec(MCExecPoint& p_exec)
 
 				t_value . setstringf("%s color", s_script_class_names[t_class]);
 				if (t_value . fetcharrayelement_oldstring(*t_settings, t_value . getsvalue()) == ES_NORMAL)
-					MCscreen -> parsecolor(t_value . getsvalue(), &t_style . colour, nil);
+                {
+                    MCAutoStringRef t_value_str;
+                    t_value . copyasstringref(&t_value_str);
+					MCscreen -> parsecolor(*t_value_str, t_style . colour, nil);
+                }
 
 				s_script_class_styles[t_class] = commit_style(t_style);
 			}
@@ -563,7 +567,11 @@ Exec_stat MCIdeScriptConfigure::exec(MCExecPoint& p_exec)
 				t_value . setstringf("%s color", s_script_keywords[t_keyword]);
 				if (t_value . fetcharrayelement_oldstring(*t_settings, t_value . getsvalue()) == ES_NORMAL)
 				{
-					if (MCscreen -> parsecolor(t_value . getsvalue(), &t_style . colour, nil))
+                    
+                    MCAutoStringRef t_value_str;
+                    t_value . copyasstringref(&t_value_str);
+                    
+					if (MCscreen -> parsecolor(*t_value_str, t_style . colour, nil))
 						t_changed = true;
 				}
 
@@ -1197,21 +1205,21 @@ Parse_stat MCIdeScriptDescribe::parse(MCScriptPoint& p_script)
 	if (t_status == PS_NORMAL && (p_script . next(t_type) != PS_NORMAL || t_type != ST_ID))
 		t_status = PS_ERROR;
 
-	if (t_status == PS_NORMAL && p_script . gettoken() == "classes")
+	if (t_status == PS_NORMAL && p_script . token_is_cstring("classes"))
 		f_type = TYPE_CLASSES;
-	else if (t_status == PS_NORMAL && p_script . gettoken() == "operators")
+	else if (t_status == PS_NORMAL && p_script . token_is_cstring("operators"))
 		f_type = TYPE_OPERATORS;
-	else if (t_status == PS_NORMAL && p_script . gettoken() == "keywords")
+	else if (t_status == PS_NORMAL && p_script . token_is_cstring("keywords"))
 		f_type = TYPE_KEYWORDS;
-	else if (t_status == PS_NORMAL && p_script . gettoken() == "styles")
+	else if (t_status == PS_NORMAL && p_script . token_is_cstring("styles"))
 		f_type = TYPE_STYLES;
 	else if (t_status == PS_NORMAL)
 	{
-		if (p_script . gettoken() == "class")
+		if (p_script . token_is_cstring("class"))
 			f_type = TYPE_CLASS_STYLES;
-		else if (p_script . gettoken() == "keyword")
+		else if (p_script . token_is_cstring("keyword"))
 			f_type = TYPE_KEYWORD_STYLES;
-		else if (p_script . gettoken() == "operator")
+		else if (p_script . token_is_cstring("operator"))
 			f_type = TYPE_OPERATOR_STYLES;
 		else
 			t_status = PS_ERROR;
@@ -1220,7 +1228,7 @@ Parse_stat MCIdeScriptDescribe::parse(MCScriptPoint& p_script)
 			t_status = PS_ERROR;
 
 		if (t_status == PS_NORMAL)
-			t_status = (p_script . gettoken() == "styles") ? PS_NORMAL : PS_ERROR;
+			t_status = (p_script . token_is_cstring("styles")) ? PS_NORMAL : PS_ERROR;
 	}
 	else if (t_status == PS_NORMAL)
 		t_status = PS_ERROR;
@@ -1451,7 +1459,7 @@ Exec_stat MCIdeScriptTokenize::exec(MCExecPoint& ep)
 			// Otherwise we have a normal token - if it is a literal though, we need
 			// to adjust so we get the quotes back.
 			MCString t_token;
-			t_token = sp . gettoken();
+			t_token = sp . gettoken_oldstring();
 			if (t_type == ST_LIT)
 				t_token . set(t_token . getstring() - 1, t_token . getlength() + 2);
 
@@ -1460,7 +1468,7 @@ Exec_stat MCIdeScriptTokenize::exec(MCExecPoint& ep)
 			// At present I believe it is enough to look for the sequence:
 			//   ( "format" | "matchChunk" | "matchText" ) "("
 			// This is because the only place these id's can exist is as a function.
-			if (!t_in_escapes && t_type == ST_ID && (sp . gettoken() == "format" || sp . gettoken() == "matchChunk" || sp . gettoken() == "matchText"))
+			if (!t_in_escapes && t_type == ST_ID && (sp . token_is_cstring("format") || sp . token_is_cstring("matchChunk") || sp . token_is_cstring("matchText")))
 			{
 				Parse_stat t_next_stat;
 				Symbol_type t_next_type;
@@ -2026,7 +2034,7 @@ Exec_stat MCIdeSyntaxCompile::exec(MCExecPoint& ep)
 	
 	MCHandlerlist *t_hlist;
 	t_hlist = new MCHandlerlist;
-	if (t_hlist -> parse(optr, optr -> getscript()) == PS_NORMAL)
+	if (t_hlist -> parse(optr, optr -> _getscript()) == PS_NORMAL)
 	{
 		MCSyntaxFactoryRef t_factory;
 		MCSyntaxFactoryCreate(t_factory);
@@ -2077,9 +2085,9 @@ struct MCIdeFilterControlsVisitor: public MCObjectVisitor
 		{
 			case kMCIdeFilterPropertyScriptLines:
 			{
-				char *t_script;
+				const char *t_script;
 				uindex_t t_count;
-				t_script = p_object -> getscript();
+				t_script = MCStringGetCString(p_object -> _getscript());
 				t_count = 0;
 				if (t_script != nil)
 				{
@@ -2201,13 +2209,13 @@ Parse_stat MCIdeFilterControls::parse(MCScriptPoint& sp)
 	
 	if (t_stat == PS_NORMAL)
 	{
-		if (sp . gettoken() == "scriptlines")
+		if (sp . token_is_cstring("scriptlines"))
 			m_property = kMCIdeFilterPropertyScriptLines;
-		else if (sp . gettoken() == "name")
+		else if (sp . token_is_cstring("name"))
 			m_property = kMCIdeFilterPropertyName;
-		else if (sp . gettoken() == "visible")
+		else if (sp . token_is_cstring("visible"))
 			m_property = kMCIdeFilterPropertyVisible;
-		else if (sp . gettoken() == "type")
+		else if (sp . token_is_cstring("type"))
 			m_property = kMCIdeFilterPropertyType;
 		else
 			t_stat = PS_ERROR;
