@@ -36,7 +36,7 @@ public:
 	void ListFiles(MCExecPoint& ep);
 	
 	uint32_t GetIncludeDepth(void);
-	bool Include(MCExecPoint& context, const char *p_filename, bool p_require);
+	bool Include(MCExecPoint& context, MCStringRef p_filename, bool p_require);
 
 	uint4 GetFileIndexForContext(MCExecPoint& ep);
 	
@@ -44,7 +44,7 @@ public:
 	
 	// Lookup the file index for the given filename. If <p_add> is true then
 	// add new entry and return its index.
-	uint4 FindFileIndex(const char *p_filename, bool p_add);
+	uint4 FindFileIndex(MCStringRef p_filename, bool p_add);
 	
 private:
 	// A File record stores information about an included file.
@@ -73,7 +73,7 @@ private:
 	
 	// Locate the given file in the list of files, adding it if not present and
 	// 'add' is true.
-	File *FindFile(const char *p_filename, bool p_add);
+	File *FindFile(MCStringRef p_filename, bool p_add);
 
 	// Return the next statement in the script point, processing any definitions
 	// that occur before it.

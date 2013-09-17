@@ -144,7 +144,7 @@ int32_t MCFontMeasureText(MCFontRef p_font, MCStringRef p_text)
 		return MCFontMeasureText(p_font, (const char *)t_native_text, MCStringGetLength(p_text), false);
 	
 	// Not native text, must be unicode
-	return MCFontMeasureText(p_font, (const char *)MCStringGetCharPtr(p_text), MCStringGetLength(p_text), true);
+	return MCFontMeasureText(p_font, (const char *)MCStringGetNativeCharPtr(p_text), MCStringGetLength(p_text), true);
 }
 
 int32_t MCFontMeasureText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode)
@@ -154,12 +154,10 @@ int32_t MCFontMeasureText(MCFontRef font, const char *chars, uint32_t char_count
 
 void MCFontDrawText(MCFontRef font, MCStringRef p_text, MCContext *context, int32_t x, int32_t y, bool image)
 {
-	const char_t *t_native_text;
-	t_native_text = MCStringGetNativeCharPtr(p_text);
-	if (t_native_text != nil)
-		return MCFontDrawText(font, (const char *)t_native_text, MCStringGetLength(p_text), false, context, x, y, image);
+	if (MCStringGetCharPtr(p_text) != nil)
+		return MCFontDrawText(font, (const char *)MCStringGetCharPtr(p_text), MCStringGetLength(p_text), true, context, x, y, image);
 	
-	return MCFontDrawText(font, (const char *)t_native_text, MCStringGetLength(p_text), true, context, x, y, image);
+	return MCFontDrawText(font, (const char *)MCStringGetNativeCharPtr(p_text), MCStringGetLength(p_text), false, context, x, y, image);
 }
 
 void MCFontDrawText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode, MCContext *context, int32_t x, int32_t y, bool image)

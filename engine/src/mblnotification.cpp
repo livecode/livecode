@@ -50,52 +50,52 @@ class MCNotificationEvent: public MCCustomEvent
 {
 private:
     MCNameRef m_message;
-	char *m_notification;
-    uint32_t m_notification_length;
+	MCStringRef m_notification;
     
 public:
-	MCNotificationEvent (MCNameRef p_message, const MCString &p_notification)
+	MCNotificationEvent (MCNameRef p_message, MCStringRef p_notification)
 	{
         m_message = p_message;
-        char *t_notification = nil;
-        MCMemoryAllocateCopy(p_notification.getstring(), p_notification.getlength(), t_notification);
-        m_notification = t_notification;
-        m_notification_length = p_notification.getlength();
+        m_notification = MCValueRetain(p_notification);
+	}
+	
+	~MCNotificationEvent()
+	{
+		MCValueRelease(m_notification);
 	}
 	
 	void Destroy(void)
 	{
-        MCMemoryDeallocate(m_notification);
 		delete this;
 	}
 	
 	void Dispatch(void)
 	{
-		MCdefaultstackptr -> getcurcard() -> message_with_args (m_message, MCString(m_notification, m_notification_length));
+		MCdefaultstackptr -> getcurcard() -> message_with_valueref_args (m_message, m_notification);
 	}
 };
 
-void MCNotificationPostLocalNotificationEvent(MCString pPayload)
+void MCNotificationPostLocalNotificationEvent(MCStringRef p_payload)
 {
-	MCEventQueuePostCustom(new MCNotificationEvent(MCM_local_notification_received, pPayload));
+	MCEventQueuePostCustom(new MCNotificationEvent(MCM_local_notification_received, p_payload));
 }
 
-void MCNotificationPostPushNotificationEvent(MCString p_payload)
+void MCNotificationPostPushNotificationEvent(MCStringRef p_payload)
 {
 	MCEventQueuePostCustom(new MCNotificationEvent (MCM_push_notification_received, p_payload));
 }
 
-void MCNotificationPostPushRegistered (MCString p_registration_text)
+void MCNotificationPostPushRegistered (MCStringRef p_registration_text)
 {
 	MCEventQueuePostCustom(new MCNotificationEvent (MCM_push_notification_registered, p_registration_text));
 }
 
-void MCNotificationPostPushRegistrationError (MCString p_error_text)
+void MCNotificationPostPushRegistrationError (MCStringRef p_error_text)
 {
 	MCEventQueuePostCustom(new MCNotificationEvent (MCM_push_notification_registration_error, p_error_text));
 }
 
-void MCNotificationPostUrlWakeUp (MCString p_url_wake_up_text)
+void MCNotificationPostUrlWakeUp (MCStringRef p_url_wake_up_text)
 {
 	MCEventQueuePostCustom(new MCNotificationEvent (MCM_url_wake_up, p_url_wake_up_text));
 }

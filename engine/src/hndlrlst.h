@@ -123,7 +123,7 @@ public:
 	void appendglobalnames(MCExecPoint &ep, bool first);
 	void newglobal(MCNameRef name);
 	
-	Parse_stat parse(MCObject *, const char *);
+	Parse_stat parse(MCObject *, MCStringRef);
 	void compile(MCSyntaxFactoryRef ctxt);
 	
 	Exec_stat findhandler(Handler_type, MCNameRef name, MCHandler *&);

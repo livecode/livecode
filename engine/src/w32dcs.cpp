@@ -68,7 +68,7 @@ static MCColor vgapalette[16] =
         {14, 0x0000, 0xFFFF, 0xFFFF, 0, 0}, {15, 0xFFFF, 0xFFFF, 0xFFFF, 0, 0},
     };
 
-void MCScreenDC::setstatus(const char *status)
+void MCScreenDC::setstatus(MCStringRef status)
 { //No action
 }
 
@@ -190,15 +190,12 @@ Boolean MCScreenDC::open()
 	MCS_query_registry(ep);
 	if (ep.getsvalue().getlength())
 	{
-		char *cstring = ep.getsvalue().clone();
-		char *sptr = cstring;
-		do
-		{
-			if (*sptr == ' ')
-				*sptr = ',';
-		}
-		while (*++sptr);
-		parsecolor(cstring, &MChilitecolor, nil);
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ ep.copyasstringref(&t_string);
+		MCAutoStringRef t_string_mutable;
+		MCStringMutableCopy(*t_string, &t_string_mutable);
+		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_string_mutable, ' ', ',', kMCCompareExact);
+		/* UNCHECKED */ parsecolor(*t_string_mutable, MChilitecolor);
 	}
 	alloccolor(MChilitecolor);
 	
@@ -215,15 +212,12 @@ Boolean MCScreenDC::open()
 	MCS_query_registry(ep);
 	if (ep.getsvalue().getlength())
 	{
-		char *cstring = ep.getsvalue().clone();
-		char *sptr = cstring;
-		do
-		{
-			if (*sptr == ' ')
-				*sptr = ',';
-		}
-		while (*++sptr);
-		parsecolor(cstring, &background_pixel, nil);
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ ep.copyasstringref(&t_string);
+		MCAutoStringRef t_string_mutable;
+		MCStringMutableCopy(*t_string, &t_string_mutable);
+		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_string_mutable, ' ', ',', kMCCompareExact);
+		/* UNCHECKED */ parsecolor(*t_string_mutable, background_pixel);
 	}
 	alloccolor(background_pixel);
 
@@ -1177,7 +1171,7 @@ static bool WindowsIsCompositionEnabled(void)
 }
 
 MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window,
-                               const char *displayname)
+                               MCStringRef displayname)
 {
 	bool t_is_composited;
 	t_is_composited = WindowsIsCompositionEnabled();

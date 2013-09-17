@@ -467,15 +467,17 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 				sptr[rSize] = '\0';
 				AEGetParamPtr(aePtr, keyDirectObject, typeChar, &rType, sptr, rSize, &rSize);
 				MCExecPoint ep(MCdefaultstackptr->getcard(), NULL, NULL);
+                MCAutoStringRef t_sptr;
+                /* UNCHECKED */ MCStringCreateWithCString(sptr, &t_sptr);
 				if (aeid == kAEDoScript)
 				{
-					MCdefaultstackptr->getcard()->domess(sptr);
+					MCdefaultstackptr->getcard()->domess(*t_sptr);
 					MCresult->eval(ep);
 					AEPutParamPtr(reply, '----', typeChar, ep.getsvalue().getstring(), ep.getsvalue().getlength());
 				}
 				else
 				{
-					MCdefaultstackptr->getcard()->eval(sptr, ep);
+					MCdefaultstackptr->getcard()->eval(*t_sptr, ep);
 					AEPutParamPtr(reply, '----', typeChar, ep.getsvalue().getstring(), ep.getsvalue().getlength());
 				}
 				delete sptr;
@@ -1809,7 +1811,7 @@ OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
 	memset(fspec, 0, sizeof(FSSpec));
     
 	char *f2 = strrchr(MCStringGetCString(*t_resolved_path), '/');
-	if (f2 != NULL && f2 != (const char*)MCStringGetNativeCharPtr(*t_resolved_path))
+	if (f2 != NULL && f2 != (const char*)MCStringGetCString(*t_resolved_path))
 		*f2++ = '\0';
 	char *fspecname = strclone(f2);
     if (!t_utf_path.Lock(*t_resolved_path))
@@ -1949,185 +1951,12 @@ private:
 
 class MCStdioFileHandle: public MCSystemFileHandle
 {
-public:    
-	static MCStdioFileHandle *OpenFile(MCStringRef p_path, intenum_t p_mode)
-	{
-#ifdef /* MCS_open_dsk_mac */ LEGACY_SYSTEM
-        IO_handle handle = NULL;
-		//opening regular files
-		//set the file type and it's creator. These are 2 global variables
-		char *oldpath = strclone(path);
-		
-		// OK-2008-01-10 : Bug 5764. Check here that MCS_resolvepath does not return NULL
-		char *t_resolved_path;
-		t_resolved_path = MCS_resolvepath(path);
-		if (t_resolved_path == NULL)
-			return NULL;
-		
-		char *newpath = path2utf(t_resolved_path);
-		FILE *fptr;
-        
-		if (driver)
-		{
-			fptr = fopen(newpath,  mode );
-			if (fptr != NULL)
-			{
-				int val;
-				val = fcntl(fileno(fptr), F_GETFL, val);
-				val |= O_NONBLOCK |  O_NOCTTY;
-				fcntl(fileno(fptr), F_SETFL, val);
-				configureSerialPort((short)fileno(fptr));
-			}
-		}
-		else
-		{
-			fptr = fopen(newpath, IO_READ_MODE);
-			if (fptr == NULL)
-				fptr = fopen(oldpath, IO_READ_MODE);
-			Boolean created = True;
-			if (fptr != NULL)
-			{
-				created = False;
-				if (mode != IO_READ_MODE)
-				{
-					fclose(fptr);
-					fptr = NULL;
-				}
-			}
-			if (fptr == NULL)
-				fptr = fopen(newpath, mode);
-            
-			if (fptr == NULL && !strequal(mode, IO_READ_MODE))
-				fptr = fopen(newpath, IO_CREATE_MODE);
-			if (fptr != NULL && created)
-				MCS_setfiletype(oldpath);
-		}
-        
-		delete newpath;
-		delete oldpath;
-		if (fptr != NULL)
-		{
-			handle = new IO_header(fptr, 0, 0, 0, NULL, 0, 0);
-			if (offset > 0)
-				fseek(handle->fptr, offset, SEEK_SET);
-            
-			if (strequal(mode, IO_APPEND_MODE))
-				handle->flags |= IO_SEEKED;
-		}
-        
-        return handle;
-#endif /* MCS_open_dsk_mac */
-		FILE *fptr;
-        MCStdioFileHandle *t_handle;
-        t_handle = NULL;
-		//opening regular files
-		//set the file type and it's creator. These are 2 global variables
-        
-        MCAutoStringRefAsUTF8String t_path_utf;
-        if (!t_path_utf.Lock(p_path))
-            return NULL;
-        
-        fptr = fopen(*t_path_utf, IO_READ_MODE);
-        
-        Boolean created = True;
-        
-        if (fptr != NULL)
-        {
-            created = False;
-            if (p_mode != kMCSystemFileModeRead)
-            {
-                fclose(fptr);
-                fptr = NULL;
-            }
-        }
-        
-        if (fptr == NULL)
-        {
-            switch(p_mode)
-            {
-                case kMCSystemFileModeRead:
-                    fptr = fopen(*t_path_utf, IO_READ_MODE);
-                    break;
-                case kMCSystemFileModeUpdate:
-                    fptr = fopen(*t_path_utf, IO_UPDATE_MODE);
-                    break;
-                case kMCSystemFileModeAppend:
-                    fptr = fopen(*t_path_utf, IO_APPEND_MODE);
-                    break;
-                case kMCSystemFileModeWrite:
-                    fptr = fopen(*t_path_utf, IO_WRITE_MODE);
-                    break;
-                default:
-                    fptr = NULL;
-            }
-        }
-        
-        if (fptr == NULL && p_mode != kMCSystemFileModeRead)
-            fptr = fopen(*t_path_utf, IO_CREATE_MODE);
-        
-        if (fptr != NULL && created)
-            MCS_mac_setfiletype(p_path);
-        
-		if (fptr != NULL)
-        {
-            t_handle = new MCStdioFileHandle;
-            t_handle -> m_stream = fptr;
-            t_handle -> m_is_eof = false;
-        }
-        
-        return t_handle;
-	}
-	
-	static MCStdioFileHandle *OpenFd(uint32_t fd, intenum_t p_mode)
-	{
-#ifdef /* MCS_dopen_dsk_mac */ LEGACY_SYSTEM
-	IO_handle handle = NULL;
-	FILE *fptr = fdopen(fd, mode);
-	
-	if (fptr != NULL)
-	{
-		// MH-2007-05-17: [[Bug 3196]] Opening the write pipe to a process should not be buffered.
-		if (mode[0] == 'w')
-			setvbuf(fptr, NULL, _IONBF, 0);
-
-		handle = new IO_header(fptr, 0, 0, NULL, NULL, 0, 0);
-	}	
-	return handle;
-#endif /* MCS_dopen_dsk_mac */
-		FILE *t_stream;
-        t_stream = NULL;
-        
-        switch (p_mode)
-        {
-            case kMCSystemFileModeAppend:
-                t_stream = fdopen(fd, IO_APPEND_MODE);
-                break;
-            case kMCSystemFileModeRead:
-                t_stream = fdopen(fd, IO_READ_MODE);
-                break;
-            case kMCSystemFileModeUpdate:
-                t_stream = fdopen(fd, IO_UPDATE_MODE);
-                break;
-            case kMCSystemFileModeWrite:
-                t_stream = fdopen(fd, IO_WRITE_MODE);
-                break;
-            default:
-                break;
-        }
-		if (t_stream == NULL)
-			return NULL;
-		
-		// MH-2007-05-17: [[Bug 3196]] Opening the write pipe to a process should not be buffered.
-		if (p_mode == kMCSystemFileModeWrite)
-			setvbuf(t_stream, NULL, _IONBF, 0);
-		
-		MCStdioFileHandle *t_handle;
-		t_handle = new MCStdioFileHandle;
-		t_handle -> m_stream = t_stream;
-        t_handle -> m_is_eof = false;
-		
-		return t_handle;
-	}
+public:
+    
+    MCStdioFileHandle(FILE *p_fptr)
+    {
+        m_stream = p_fptr;
+    }
 	
 	virtual void Close(void)
 	{
@@ -2465,7 +2294,7 @@ public:
 	
 	virtual void *GetFilePointer(void)
 	{
-		return NULL;
+		return m_stream;
 	}
 	
 	FILE *GetStream(void)
@@ -2486,38 +2315,12 @@ private:
 class MCSerialPortFileHandle: public MCSystemFileHandle
 {
 public:
-    static MCSerialPortFileHandle *OpenDevice(MCStringRef p_path)
+    
+    MCSerialPortFileHandle(int p_serial_port)
     {
-		FILE *fptr;
-        MCSerialPortFileHandle *t_handle;
-        t_handle = NULL;
-		//opening regular files
-		//set the file type and it's creator. These are 2 global variables
-        
-        MCAutoStringRefAsUTF8String t_path_utf;
-        if (!t_path_utf.Lock(p_path))
-            return NULL;
-        
-        fptr = fopen(*t_path_utf, IO_READ_MODE);
-        
-		if (fptr != NULL)
-        {
-            int val;
-            int t_serial_in;
-            
-            t_serial_in = fileno(fptr);
-            val = fcntl(t_serial_in, F_GETFL, val);
-            val |= O_NONBLOCK |  O_NOCTTY;
-            fcntl(t_serial_in, F_SETFL, val);
-            configureSerialPort((short)t_serial_in);
-            
-            t_handle = new MCSerialPortFileHandle;
-            t_handle -> m_serial_port = t_serial_in;
-            t_handle -> m_is_eof = false;
-            t_handle -> m_cur_pos = 0;
-        }
-        
-        return t_handle;
+        m_serial_port = p_serial_port;
+        m_cur_pos = 0;
+        m_is_eof = false;
     }
     
 	virtual void Close(void)
@@ -4816,7 +4619,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	
     virtual MCServiceInterface *QueryService(MCServiceType p_type)
     {
-        if ((p_type & kMCServiceTypeMacSystem) == kMCServiceTypeMacSystem)
+        if (p_type == kMCServiceTypeMacSystem)
             return (MCMacSystemServiceInterface *)this;
         return nil;
     }
@@ -5964,7 +5767,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     }
     
 #define CATALOG_MAX_ENTRIES 16
-	virtual bool ListFolderEntries(bool p_files, bool p_detailed, MCListRef& r_list)
+	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context)
     {
 #ifdef /* MCS_getentries_dsk_mac */ LEGACY_SYSTEM
 	MCAutoListRef t_list;
@@ -6116,11 +5919,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	
 	FSCloseIterator(t_catalog_iterator);
 	return MCListCopy(*t_list, r_list);
-#endif /* MCS_getentries_dsk_mac */
-        MCAutoListRef t_list;
-        if (!MCListCreateMutable('\n', &t_list))
-            return false;
-        
+#endif /* MCS_getentries_dsk_mac */  
         OSStatus t_os_status;
         
         Boolean t_is_folder;
@@ -6139,11 +5938,12 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         uint4 t_entry_count;
         t_entry_count = 0;
         
-        if (!p_files)
-        {
-            t_entry_count++;
-            /* UNCHECKED */ MCListAppendCString(*t_list, "..");
-        }
+        // Add ".." folder on Mac, for now impossible since there is no direct access to MCS_getentries_state type
+//        if (!p_files)
+//        {
+//            t_entry_count++;
+//            /* UNCHECKED */ MCListAppendCString(*t_list, "..");
+//        }
         
         ItemCount t_max_objects, t_actual_objects;
         t_max_objects = CATALOG_MAX_ENTRIES;
@@ -6173,100 +5973,79 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             
             for(uint4 t_i = 0; t_i < (uint4)t_actual_objects; t_i++)
             {
-                // folders
-                UInt16 t_is_folder;
-                t_is_folder = t_catalog_infos[t_i] . nodeFlags & kFSNodeIsDirectoryMask;
-                if ( (!p_files && t_is_folder) || (p_files && !t_is_folder))
+                MCSystemFolderEntry t_entry;
+                
+                char t_native_name[256];
+                uint4 t_native_length;
+                t_native_length = 256;
+                MCS_utf16tonative((const unsigned short *)t_names[t_i] . unicode, t_names[t_i] . length, t_native_name, t_native_length);
+                // MCS_utf16tonative return a non nul-terminated string
+                t_native_name[t_native_length] = '\0';
+                
+                // MW-2008-02-27: [[ Bug 5920 ]] Make sure we convert Finder to POSIX style paths
+                for(uint4 i = 0; i < t_native_length; ++i)
+                    if (t_native_name[i] == '/')
+                        t_native_name[i] = ':';                
+
+                FSPermissionInfo *t_permissions;
+                t_permissions = (FSPermissionInfo *)&(t_catalog_infos[t_i] . permissions);
+                
+                uint32_t t_creator;
+                uint32_t t_type;
+                
+                t_creator = 0;
+                t_type = 0;
+                
+                if (!t_is_folder)
                 {
-                    char t_native_name[256];
-                    uint4 t_native_length;
-                    t_native_length = 256;
-                    MCS_utf16tonative((const unsigned short *)t_names[t_i] . unicode, t_names[t_i] . length, t_native_name, t_native_length);
-                    
-                    // MW-2008-02-27: [[ Bug 5920 ]] Make sure we convert Finder to POSIX style paths
-                    for(uint4 i = 0; i < t_native_length; ++i)
-                        if (t_native_name[i] == '/')
-                            t_native_name[i] = ':';
-                    
-                    char t_buffer[512];
-                    if (p_detailed)
-                    { // the detailed|long files
-                        FSPermissionInfo *t_permissions;
-                        t_permissions = (FSPermissionInfo *)&(t_catalog_infos[t_i] . permissions);
-                        
-                        t_tmp_context . copysvalue(t_native_name, t_native_length);
-                        MCU_urlencode(t_tmp_context);
-                        
-                        char t_filetype[9];
-                        if (!t_is_folder)
-                        {
-                            FileInfo *t_file_info;
-                            t_file_info = (FileInfo *) &t_catalog_infos[t_i] . finderInfo;
-                            uint4 t_creator;
-                            t_creator = MCSwapInt32NetworkToHost(t_file_info -> fileCreator);
-                            uint4 t_type;
-                            t_type = MCSwapInt32NetworkToHost(t_file_info -> fileType);
-                            
-                            if (t_file_info != NULL)
-                            {
-                                memcpy(t_filetype, (char*)&t_creator, 4);
-                                memcpy(&t_filetype[4], (char *)&t_type, 4);
-                                t_filetype[8] = '\0';
-                            }
-                            else
-                                t_filetype[0] = '\0';
-                        } else
-                            strcpy(t_filetype, "????????"); // this is what the "old" getentries did
-                        
-                        CFAbsoluteTime t_creation_time;
-                        UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . createDate, &t_creation_time);
-                        t_creation_time += kCFAbsoluteTimeIntervalSince1970;
-                        
-                        CFAbsoluteTime t_modification_time;
-                        UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . contentModDate, &t_modification_time);
-                        t_modification_time += kCFAbsoluteTimeIntervalSince1970;
-                        
-                        CFAbsoluteTime t_access_time;
-                        UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . accessDate, &t_access_time);
-                        t_access_time += kCFAbsoluteTimeIntervalSince1970;
-                        
-                        CFAbsoluteTime t_backup_time;
-                        if (t_catalog_infos[t_i] . backupDate . highSeconds == 0 && t_catalog_infos[t_i] . backupDate . lowSeconds == 0 && t_catalog_infos[t_i] . backupDate . fraction == 0)
-                            t_backup_time = 0;
-                        else
-                        {
-                            UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . backupDate, &t_backup_time);
-                            t_backup_time += kCFAbsoluteTimeIntervalSince1970;
-                        }
-                        
-                        sprintf(t_buffer, "%*.*s,%llu,%llu,%.0lf,%.0lf,%.0lf,%.0lf,%d,%d,%03o,%.8s",
-                                t_tmp_context . getsvalue() . getlength(),  
-                                t_tmp_context . getsvalue() . getlength(),  
-                                t_tmp_context . getsvalue() . getstring(),
-                                t_catalog_infos[t_i] . dataLogicalSize,
-                                t_catalog_infos[t_i] . rsrcLogicalSize,
-                                t_creation_time,
-                                t_modification_time,
-                                t_access_time,
-                                t_backup_time,
-                                t_permissions -> userID,
-                                t_permissions -> groupID,
-                                t_permissions -> mode & 0777,
-                                t_filetype);
-						
-                        /* UNCHECKED */ MCListAppendCString(*t_list, t_buffer);
-                    }
-                    else
-					/* UNCHECKED */ MCListAppendNativeChars(*t_list, (const char_t *)t_native_name, t_native_length);
-					
-                    t_entry_count += 1;		
+                    FileInfo *t_file_info;
+                    t_file_info = (FileInfo *) &t_catalog_infos[t_i] . finderInfo;
+                    t_creator = MCSwapInt32NetworkToHost(t_file_info -> fileCreator);
+                    t_type = MCSwapInt32NetworkToHost(t_file_info -> fileType);
                 }
-            }	
+                
+                CFAbsoluteTime t_creation_time;
+                UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . createDate, &t_creation_time);
+                t_creation_time += kCFAbsoluteTimeIntervalSince1970;
+                
+                CFAbsoluteTime t_modification_time;
+                UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . contentModDate, &t_modification_time);
+                t_modification_time += kCFAbsoluteTimeIntervalSince1970;
+                
+                CFAbsoluteTime t_access_time;
+                UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . accessDate, &t_access_time);
+                t_access_time += kCFAbsoluteTimeIntervalSince1970;
+                
+                CFAbsoluteTime t_backup_time;
+                if (t_catalog_infos[t_i] . backupDate . highSeconds == 0 && t_catalog_infos[t_i] . backupDate . lowSeconds == 0 && t_catalog_infos[t_i] . backupDate . fraction == 0)
+                    t_backup_time = 0;
+                else
+                {
+                    UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . backupDate, &t_backup_time);
+                    t_backup_time += kCFAbsoluteTimeIntervalSince1970;
+                }
+                
+                t_entry.name = t_native_name;
+                t_entry.data_size = t_catalog_infos[t_i] . dataLogicalSize;
+                t_entry.resource_size = t_catalog_infos[t_i] . rsrcLogicalSize;
+                t_entry.creation_time = (uint32_t)t_creation_time;
+                t_entry.modification_time = (uint32_t) t_modification_time;
+                t_entry.access_time = (uint32_t) t_access_time;
+                t_entry.backup_time = (uint32_t) t_backup_time;
+                t_entry.user_id = (uint32_t) t_permissions -> userID;
+                t_entry.group_id = (uint32_t) t_permissions -> groupID;
+                t_entry.permissions = (uint32_t) t_permissions->mode & 0777;
+                t_entry.file_creator = t_creator;
+                t_entry.file_type = t_type;
+                t_entry.is_folder = t_catalog_infos[t_i] . nodeFlags & kFSNodeIsDirectoryMask;
+            
+                p_callback(x_context, &t_entry);
+            }
         } while(t_oserror != errFSNoMoreItems);
         
         FSCloseIterator(t_catalog_iterator);
-        return MCListCopy(*t_list, r_list);
         
+        return true;
     }
     
     virtual real8 GetFreeDiskSpace()
@@ -6703,41 +6482,208 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             return MCStringCopy(*t_newname, r_resolved_path);
     }
 	
-	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map, uint32_t p_offset)
+	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map)
     {
-        MCStdioFileHandle *t_handle;
-        t_handle = MCStdioFileHandle::OpenFile(p_path, p_mode);
+#ifdef /* MCS_open_dsk_mac */ LEGACY_SYSTEM
+        IO_handle handle = NULL;
+		//opening regular files
+		//set the file type and it's creator. These are 2 global variables
+		char *oldpath = strclone(path);
+		
+		// OK-2008-01-10 : Bug 5764. Check here that MCS_resolvepath does not return NULL
+		char *t_resolved_path;
+		t_resolved_path = MCS_resolvepath(path);
+		if (t_resolved_path == NULL)
+			return NULL;
+		
+		char *newpath = path2utf(t_resolved_path);
+		FILE *fptr;
         
-        if (t_handle == nil)
-            return nil;
+		if (driver)
+		{
+			fptr = fopen(newpath,  mode );
+			if (fptr != NULL)
+			{
+				int val;
+				val = fcntl(fileno(fptr), F_GETFL, val);
+				val |= O_NONBLOCK |  O_NOCTTY;
+				fcntl(fileno(fptr), F_SETFL, val);
+				configureSerialPort((short)fileno(fptr));
+			}
+		}
+		else
+		{
+			fptr = fopen(newpath, IO_READ_MODE);
+			if (fptr == NULL)
+				fptr = fopen(oldpath, IO_READ_MODE);
+			Boolean created = True;
+			if (fptr != NULL)
+			{
+				created = False;
+				if (mode != IO_READ_MODE)
+				{
+					fclose(fptr);
+					fptr = NULL;
+				}
+			}
+			if (fptr == NULL)
+				fptr = fopen(newpath, mode);
+            
+			if (fptr == NULL && !strequal(mode, IO_READ_MODE))
+				fptr = fopen(newpath, IO_CREATE_MODE);
+			if (fptr != NULL && created)
+				MCS_setfiletype(oldpath);
+		}
         
-        if (p_offset > 0)
-            t_handle -> Seek(p_offset, 1);
+		delete newpath;
+		delete oldpath;
+		if (fptr != NULL)
+		{
+			handle = new IO_header(fptr, 0, 0, 0, NULL, 0, 0);
+			if (offset > 0)
+				fseek(handle->fptr, offset, SEEK_SET);
+            
+			if (strequal(mode, IO_APPEND_MODE))
+				handle->flags |= IO_SEEKED;
+		}
+        
+        return handle;
+#endif /* MCS_open_dsk_mac */
+		FILE *fptr;
+        IO_handle t_handle;
+        t_handle = NULL;
+		//opening regular files
+		//set the file type and it's creator. These are 2 global variables
+        
+        MCAutoStringRefAsUTF8String t_path_utf;
+        if (!t_path_utf.Lock(p_path))
+            return NULL;
+        
+        fptr = fopen(*t_path_utf, IO_READ_MODE);
+        
+        Boolean created = True;
+        
+        if (fptr != NULL)
+        {
+            created = False;
+            if (p_mode != kMCSystemFileModeRead)
+            {
+                fclose(fptr);
+                fptr = NULL;
+            }
+        }
+        
+        if (fptr == NULL)
+        {
+            switch(p_mode)
+            {
+                case kMCSystemFileModeRead:
+                    fptr = fopen(*t_path_utf, IO_READ_MODE);
+                    break;
+                case kMCSystemFileModeUpdate:
+                    fptr = fopen(*t_path_utf, IO_UPDATE_MODE);
+                    break;
+                case kMCSystemFileModeAppend:
+                    fptr = fopen(*t_path_utf, IO_APPEND_MODE);
+                    break;
+                case kMCSystemFileModeWrite:
+                    fptr = fopen(*t_path_utf, IO_WRITE_MODE);
+                    break;
+                default:
+                    fptr = NULL;
+            }
+        }
+        
+        if (fptr == NULL && p_mode != kMCSystemFileModeRead)
+            fptr = fopen(*t_path_utf, IO_CREATE_MODE);
+        
+        if (fptr != NULL && created)
+            MCS_mac_setfiletype(p_path);
+        
+		if (fptr != NULL)
+            t_handle = new MCStdioFileHandle(fptr);
         
         return t_handle;
     }
     
-	virtual IO_handle OpenFd(uint32_t fd, intenum_t mode)
+	virtual IO_handle OpenFd(uint32_t p_fd, intenum_t p_mode)
     {
-        MCStdioFileHandle *t_handle;
-        t_handle = MCStdioFileHandle::OpenFd(fd, mode);
+#ifdef /* MCS_dopen_dsk_mac */ LEGACY_SYSTEM
+        IO_handle handle = NULL;
+        FILE *fptr = fdopen(fd, mode);
         
-        if (t_handle == nil)
-            return nil;
+        if (fptr != NULL)
+        {
+            // MH-2007-05-17: [[Bug 3196]] Opening the write pipe to a process should not be buffered.
+            if (mode[0] == 'w')
+                setvbuf(fptr, NULL, _IONBF, 0);
+            
+            handle = new IO_header(fptr, 0, 0, NULL, NULL, 0, 0);
+        }
+        return handle;
+#endif /* MCS_dopen_dsk_mac */
+		FILE *t_stream;
+        t_stream = NULL;
         
-        return t_handle;
+        switch (p_mode)
+        {
+            case kMCSystemFileModeAppend:
+                t_stream = fdopen(p_fd, IO_APPEND_MODE);
+                break;
+            case kMCSystemFileModeRead:
+                t_stream = fdopen(p_fd, IO_READ_MODE);
+                break;
+            case kMCSystemFileModeUpdate:
+                t_stream = fdopen(p_fd, IO_UPDATE_MODE);
+                break;
+            case kMCSystemFileModeWrite:
+                t_stream = fdopen(p_fd, IO_WRITE_MODE);
+                break;
+            default:
+                break;
+        }
+        
+		if (t_stream == NULL)
+			return NULL;
+		
+		// MH-2007-05-17: [[Bug 3196]] Opening the write pipe to a process should not be buffered.
+		if (p_mode == kMCSystemFileModeWrite)
+			setvbuf(t_stream, NULL, _IONBF, 0);
+		
+		IO_handle t_handle;
+		t_handle = new MCStdioFileHandle(t_stream);
+		
+		return t_handle;
     }
     
-	virtual IO_handle OpenDevice(MCStringRef p_path, uint32_t p_offset)
+	virtual IO_handle OpenDevice(MCStringRef p_path, intenum_t p_mode)
     {
-        MCSerialPortFileHandle *t_handle;
-        t_handle = MCSerialPortFileHandle::OpenDevice(p_path);
+		FILE *fptr;
         
-        if (t_handle == nil)
-            return nil;
+        IO_handle t_handle;
+        t_handle = NULL;
+		//opening regular files
+		//set the file type and it's creator. These are 2 global variables
         
-        if (p_offset > 0)
-            t_handle -> Seek(p_offset, 1);
+        MCAutoStringRefAsUTF8String t_path_utf;
+        if (!t_path_utf.Lock(p_path))
+            return NULL;
+        
+        fptr = fopen(*t_path_utf, IO_READ_MODE);
+        
+		if (fptr != NULL)
+        {
+            int val;
+            int t_serial_in;
+            
+            t_serial_in = fileno(fptr);
+            val = fcntl(t_serial_in, F_GETFL, val);
+            val |= O_NONBLOCK |  O_NOCTTY;
+            fcntl(t_serial_in, F_SETFL, val);
+            configureSerialPort((short)t_serial_in);
+            
+            t_handle = new MCSerialPortFileHandle(t_serial_in);
+        }
         
         return t_handle;
     }
@@ -6919,6 +6865,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 //            TextConvert(const void *p_string, uint32_t p_string_length, void *r_buffer, uint32_t p_buffer_length, uint32_t p_from_charset, uint32_t p_to_charset)
             //            (const char *s, uint4 len, char *d, uint4 destbufferlength, uint4 &destlen, uint1 charset)
             char* t_dest_ptr = (char*) r_buffer;
+            char* t_src_ptr = (char*)p_string;
             ScriptCode fscript = MCS_charsettolangid(p_to_charset);
             //we cache unicode convertors for speed
             if (!p_buffer_length)
@@ -6947,7 +6894,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             //   we go into an infinite loop when doing things like uniDecode("abc")
             while(p_string_length > 1)
             {
-                ConvertFromUnicodeToText(unicodeconvertors[fscript], p_string_length, (UniChar *)p_string,
+                ConvertFromUnicodeToText(unicodeconvertors[fscript], p_string_length, (UniChar *)t_src_ptr,
                                          kUnicodeLooseMappingsMask
                                          | kUnicodeStringUnterminatedBit
                                          | kUnicodeUseFallbacksBit, 0, NULL, 0, NULL,
@@ -6962,7 +6909,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 
                 p_string_length -= processedbytes;
                 t_return_size += outlength;
-                p_string_length += processedbytes;
+                t_src_ptr += processedbytes;
                 t_dest_ptr += outlength;
             }
         }
@@ -6989,7 +6936,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 CreateTextToUnicodeInfoByEncoding(scriptEncoding, texttounicodeconvertor);
             }
             ByteCount processedbytes, outlength;
-            ConvertFromTextToUnicode(*texttounicodeconvertor, p_string_length, (LogicalAddress) p_string_length,
+            ConvertFromTextToUnicode(*texttounicodeconvertor, p_string_length, (LogicalAddress) p_string,
                                      kUnicodeLooseMappingsMask
                                      | kUnicodeUseFallbacksMask, 0, NULL, 0, NULL,
                                      p_buffer_length, &processedbytes,
@@ -7404,7 +7351,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         return IO_NORMAL;
     }
     
-    virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, Open_mode p_mode, Boolean p_elevated)
+    virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, intenum_t p_mode, Boolean p_elevated)
     {
 #ifdef /* MCS_startprocess_dsk_mac */ LEGACY_SYSTEM
 	if (MCStringEndsWithCString(MCNameGetString(name), (const char_t *)".app", kMCStringOptionCompareCaseless) || MCStringGetLength(docname) != 0))
@@ -7413,9 +7360,9 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	  MCS_startprocess_unix(name, kMCEmptyString, mode, elevated);
 #endif /* MCS_startprocess_dsk_mac */
         if (MCStringEndsWithCString(MCNameGetString(p_name), (const char_t *)".app", kMCStringOptionCompareCaseless) || (p_doc != nil && MCStringGetLength(p_doc) != 0))
-            MCS_startprocess_launch(p_name, p_doc, p_mode);
+            MCS_startprocess_launch(p_name, p_doc, (Open_mode)p_mode);
         else
-            MCS_startprocess_unix(p_name, kMCEmptyString, p_mode, p_elevated);
+            MCS_startprocess_unix(p_name, kMCEmptyString, (Open_mode)p_mode, p_elevated);
     }
     
     virtual bool ProcessTypeIsForeground(void)
@@ -8070,7 +8017,7 @@ delete last char of it; return it"
         MCAutoListRef t_list;
         
         MCresult->clear();
-        MCdefaultstackptr->domess(DNS_SCRIPT);
+        MCdefaultstackptr->domess(MCSTR(DNS_SCRIPT));
         
         return MCListCreateMutable('\n', &t_list) &&
             MCListAppend(*t_list, MCresult->getvalueref()) &&

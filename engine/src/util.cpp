@@ -39,6 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 #include "exec.h"
+#include "system.h"
 
 #define QA_NPOINTS 10
 
@@ -573,6 +574,27 @@ real8 MCU_fwrap(real8 p_x, real8 p_y)
 	else
 		return -(fmod(-p_x - 1, t_y) + 1);
 		
+}
+
+bool MCU_r8tos(real8 n, uint2 fw, uint2 trailing, uint2 force, MCStringRef &r_string)
+{
+	char *t_str = nil;
+	uint4 t_s = 0;
+	if (MCU_r8tos(t_str, t_s, n, fw, trailing, force) == 0)
+	{
+		delete[] t_str;
+		return false;
+	}
+	
+	MCStringRef t_string;
+	if (!MCStringCreateWithCStringAndRelease((char_t *)t_str, t_string))
+	{
+		delete[] t_str;
+		return false;
+	}
+	
+	r_string = t_string;
+	return true;
 }
 
 uint4 MCU_r8tos(char *&d, uint4 &s, real8 n,
@@ -1242,33 +1264,6 @@ void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize, const 
 	*data = ndata;
 }
 #endif
-
-Boolean MCU_matchflags(const MCString &s, uint4 &flags, uint4 w, Boolean &c)
-{
-	if (s == MCtruestring)
-	{
-		if (!(flags & w))
-		{
-			flags |= w;
-			c = True;
-		}
-		else
-			c = False;
-		return True;
-	}
-	if (s == MCfalsestring)
-	{
-		if (flags & w)
-		{
-			flags &= ~w;
-			c = True;
-		}
-		else
-			c = False;
-		return True;
-	}
-	return False;
-}
 
 /* WRAPPER */ bool MCU_matchname(MCNameRef p_name, Chunk_term type, MCNameRef name)
 {
@@ -2556,7 +2551,7 @@ void MCU_multibytetounicode(const char *p_mbstring, uint4 p_mblength,
 	if (p_mbcharset == LCH_UTF8)
 		r_used = UTF8ToUnicode(p_mbstring, p_mblength, (uint2 *)p_buffer, p_capacity);
 	else
-		MCS_multibytetounicode(p_mbstring, p_mblength, p_buffer, p_capacity, r_used, p_mbcharset);
+        r_used = MCsystem ->TextConvert((const void*)p_mbstring, p_mblength, (void*)p_buffer, p_capacity, p_mbcharset, LCH_UNICODE);
 }
 
 // MW-2005-02-08: New implementation of unicodetomultibyte
@@ -2566,10 +2561,21 @@ void MCU_unicodetomultibyte(const char *p_ucstring, uint4 p_uclength,
 	if (p_mbcharset == LCH_UTF8)
 		r_used = UnicodeToUTF8((uint2 *)p_ucstring, p_uclength, p_buffer, p_capacity);
 	else
-		MCS_unicodetomultibyte(p_ucstring, p_uclength, p_buffer, p_capacity, r_used, p_mbcharset);
+        r_used = MCsystem ->TextConvert((const void*)p_ucstring, p_uclength, (void*)p_buffer, p_capacity, LCH_UNICODE, p_mbcharset);
 }
 
 //////////
+
+bool MCU_multibytetounicode(MCDataRef p_input, MCDataRef &r_output)
+{
+    MCAutoStringRef t_string;
+
+    if (!MCStringDecode(p_input, kMCStringEncodingUTF8, false, &t_string))
+        return false;
+
+    if (!MCStringEncode(*t_string, kMCStringEncodingUTF16, false, r_output))
+        return false;
+}
 
 bool MCU_multibytetounicode(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_unicode)
 {
@@ -2591,6 +2597,17 @@ bool MCU_multibytetounicode(const MCString& p_src, uinteger_t p_charset, MCStrin
 bool MCU_multibytetounicode(MCStringRef p_src, uinteger_t p_charset, MCStringRef& r_unicode)
 {
 	return MCU_multibytetounicode(MCStringGetOldString(p_src), p_charset, r_unicode);
+}
+
+bool MCU_unicodetomultibyte(MCDataRef p_input, MCDataRef& r_output)
+{
+    MCAutoStringRef t_string;
+
+    if (!MCStringDecode(p_input, kMCStringEncodingUTF16, false, &t_string))
+        return false;
+
+    if (!MCStringEncode(*t_string, kMCStringEncodingUTF8, false, r_output))
+        return false;
 }
 
 bool MCU_unicodetomultibyte(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_multibyte)
@@ -2796,7 +2813,7 @@ MCDictionary::~MCDictionary(void)
 	}
 }
 
-void MCDictionary::Set(uint4 p_id, const MCString& p_value)
+void MCDictionary::Set(uint4 p_id, MCString p_value)
 {
 	Node *t_node;
 	t_node = Find(p_id);
@@ -2821,8 +2838,7 @@ bool MCDictionary::Get(uint4 p_id, MCString& r_value)
 	if (t_node == NULL)
 		return false;
 
-	r_value . set((char *)t_node -> buffer, t_node -> length);
-	
+	r_value . set((const char *)t_node -> buffer, t_node -> length);
 	return true;
 }
 
@@ -2899,7 +2915,7 @@ bool MCDictionary::Unpickle(const void* p_buffer, uint4 p_length)
 
 		if (t_size < t_node_size)
 			return false;
-
+		
 		Set(t_node_key, MCString(t_buffer, t_node_size));
 
 		t_buffer += (t_node_size + 3) & ~3;

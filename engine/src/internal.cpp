@@ -75,7 +75,7 @@ Parse_stat MCInternal::parse(MCScriptPoint& sp)
 
 	// Get the first token
 	MCString t_first_token;
-	t_first_token = sp . gettoken();
+	t_first_token = sp . gettoken_oldstring();
 
 	// Look for a match on the first token.
 	for(uint32_t i = 0; MCinternalverbs[i] . first_token != nil; i++)
@@ -91,7 +91,7 @@ Parse_stat MCInternal::parse(MCScriptPoint& sp)
 				// If the next token isn't an id, or doesn't match try
 				// the next entry
 				if (t_type != ST_ID ||
-					sp . gettoken() != MCinternalverbs[i] . second_token)
+					sp . gettoken_oldstring() != MCinternalverbs[i] . second_token)
 				{
 					sp . backup();
 					continue;

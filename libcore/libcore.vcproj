@@ -38,6 +38,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="$(SolutionDir)libcore\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -211,6 +212,10 @@
 			</File>
 			<File
 				RelativePath=".\include\module.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\sserialize.h"
 				>
 			</File>
 			<File

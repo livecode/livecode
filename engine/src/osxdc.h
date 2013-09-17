@@ -284,7 +284,7 @@ public:
 	virtual bool hasfeature(MCPlatformFeature p_feature);
 	
 			// in macdcs.cc   Screen routines
-	virtual void setstatus(const char *status);
+	virtual void setstatus(MCStringRef status);
 	
 	virtual Boolean open();
 	virtual Boolean close(Boolean force);
@@ -368,7 +368,7 @@ public:
 	virtual uint2 getpad();
 	virtual Window getroot();
 	virtual MCBitmap *snapshot(MCRectangle &r, uint4 window,
-	                           const char *displayname);
+	                           MCStringRef displayname);
 
 	virtual void enablebackdrop(bool p_hard);
 	virtual void disablebackdrop(bool p_hard);
@@ -415,7 +415,7 @@ public:
 
 	//
 	
-	virtual MCScriptEnvironment *createscriptenvironment(const char *p_language);
+	virtual MCScriptEnvironment *createscriptenvironment(MCStringRef p_language);
 
 	//
 
@@ -459,8 +459,8 @@ public:
 	void setdnddata(DragReference theDrag);
 	
 	void seticon(uint4 p_icon);
-	void seticonmenu(const char *p_menu);
-	virtual void configurestatusicon(uint32_t icon_id, const char *menu, const char *tooltip);
+	void seticonmenu(MCStringRef p_menu);
+	virtual void configurestatusicon(uint32_t icon_id, MCStringRef menu, MCStringRef tooltip);
 	
 	void enactraisewindows(void);
 	

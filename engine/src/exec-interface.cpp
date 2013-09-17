@@ -3297,7 +3297,7 @@ void MCInterfaceExecImportSnapshot(MCExecContext& ctxt, MCStringRef p_display, M
 		t_rect = *p_region;
 	
 	MCBitmap *t_bitmap = nil;
-	t_bitmap = MCscreen->snapshot(t_rect, p_window, p_display == nil ? nil : MCStringGetCString(p_display));
+	t_bitmap = MCscreen->snapshot(t_rect, p_window, p_display);
 	
 	if (t_bitmap != nil)
 	{
@@ -3372,7 +3372,7 @@ void MCInterfaceExecImportAudioClip(MCExecContext& ctxt, MCStringRef p_filename)
 	if (t_stream != NULL)
 	{
 		MCAudioClip *aptr = new MCAudioClip;
-		if (!aptr->import(MCStringGetCString(p_filename), t_stream))
+		if (!aptr->import(p_filename, t_stream))
 		{
 			ctxt . LegacyThrow(EE_IMPORT_CANTREAD);
 			delete aptr;
@@ -3398,7 +3398,7 @@ void MCInterfaceExecImportVideoClip(MCExecContext& ctxt, MCStringRef p_filename)
 	if (t_stream != NULL)
 	{
 		MCVideoClip *vptr = new MCVideoClip;
-		if (!vptr->import(MCStringGetCString(p_filename), t_stream))
+		if (!vptr->import(p_filename, t_stream))
 		{
 			ctxt . LegacyThrow(EE_IMPORT_CANTREAD);
 			delete vptr;
@@ -3567,7 +3567,7 @@ MCImageBitmap* MCInterfaceGetSnapshotBitmap(MCExecContext &ctxt, MCStringRef p_d
 	MCBitmap *t_bitmap = nil;
 	MCImageBitmap *t_image_bitmap = nil;
 	
-	t_bitmap = MCscreen->snapshot(t_rect, p_window, p_display == nil ? nil : MCStringGetCString(p_display));
+	t_bitmap = MCscreen->snapshot(t_rect, p_window, p_display);
 	if (t_bitmap == nil)
 	{
 		ctxt . LegacyThrow(EE_EXPORT_NOSELECTED);
@@ -3944,7 +3944,7 @@ void MCInterfaceExecFind(MCExecContext& ctxt, int p_mode, MCStringRef p_needle, 
 		ctxt .SetTheResultToCString(MCnotfoundstring);
 		return;
 	}
-	MCdefaultstackptr->find(ctxt . GetEP(), p_mode, p_needle, p_target);
+	MCdefaultstackptr->find(ctxt . GetEP(), (Find_mode)p_mode, p_needle, p_target);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

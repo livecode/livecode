@@ -418,7 +418,7 @@ void MCField::gettabs(uint2 *&t, uint2 &n, Boolean &fixed)
 		// MW-2012-02-17: If we aren't opened, then just use a default value.
 		int4 t_space_width;
 		if (opened)
-			t_space_width = MCFontMeasureText(m_font, " ", 1, false);
+			t_space_width = MCFontMeasureText(m_font, MCSTR(" "));
 		else
 			t_space_width = 8;
 		 
@@ -2233,7 +2233,7 @@ void MCField::setupmenu(const MCString &s, uint2 fheight,
 	if (scrolling)
 	{
 		Boolean dirty;
-		setsbprop(P_VSCROLLBAR, MCtruemcstring, 0, 0,
+		setsbprop(P_VSCROLLBAR, true, 0, 0,
 							scrollbarwidth, hscrollbar, vscrollbar, dirty);
 	}
 	fontheight = fheight;

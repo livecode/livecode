@@ -915,7 +915,7 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet 
 						
 						MCAutoDataRef t_string ;
 						if ( t_pasteboard->Fetch_MIME ( t_mime_type, &t_string ) )
-							xdnd_selection_send( &xevent.xselectionrequest, MCDataGetBytePtr(*t_string), MCDataGetLength(*t_string) ) ;
+                            xdnd_selection_send( &xevent.xselectionrequest, (char*)MCDataGetBytePtr(*t_string), MCDataGetLength(*t_string) ) ;
 						
 						xdnd_stage = XDND_STAGE_WAITING ;
 					}

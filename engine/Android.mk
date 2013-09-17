@@ -50,7 +50,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	mblandroidio.cpp mblandroidjava.cpp mblandroidmail.cpp mblandroidmediapick.cpp mblandroidmisc.cpp mblandroidmm.cpp \
 	mblandroidnetwork.cpp mblandroidnotification.cpp mblandroidorientation.cpp mblandroidplayer.cpp \
 	mblandroidprocess.cpp mblandroidscroller.cpp mblandroidsensor.cpp mblandroidstore.cpp mblandroidsound.cpp \
-	mblandroidtextlayout.cpp mblandroidtextmessaging.cpp mblandroidurl.cpp \
+	mblandroidtextlayout.cpp mblandroidtextmessaging.cpp mblandroidurl.cpp mblnetwork.cpp\
 	exec-ad.cpp exec-addressbook.cpp exec-busyindicator.cpp exec-calendar.cpp exec-idletimer.cpp exec-mail.cpp exec-misc.cpp \
 	exec-nativecontrol.cpp exec-notification.cpp exec-orientation.cpp exec-pick.cpp \
 	exec-sensor.cpp exec-sound.cpp exec-store.cpp exec-textmessaging.cpp \

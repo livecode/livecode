@@ -171,7 +171,7 @@ Window MCModeGetParentWindow(void);
 
 // This hook is used to determine whether a network resource can be accessed
 // while security limitations are in effect
-bool MCModeCanAccessDomain(const char *p_name);
+bool MCModeCanAccessDomain(MCStringRef p_name);
 
 #ifdef _LINUX
 void MCModePreSelectHook(int& maxfd, fd_set& rfds, fd_set& wfds, fd_set& efds);

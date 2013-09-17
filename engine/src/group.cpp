@@ -68,7 +68,7 @@ MCPropertyInfo MCGroup::kProperties[] =
 	DEFINE_RW_OBJ_PART_PROPERTY(P_HILITED_BUTTON_NAME, String, MCGroup, HilitedButtonName)
 	DEFINE_RW_OBJ_PROPERTY(P_SHOW_NAME, Bool, MCGroup, ShowName)
 	DEFINE_RW_OBJ_PROPERTY(P_LABEL, String, MCGroup, Label)
-	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_LABEL, String, MCGroup, UnicodeLabel)
+	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_LABEL, BinaryString, MCGroup, UnicodeLabel)
 	DEFINE_RW_OBJ_PROPERTY(P_HSCROLL, Int32, MCGroup, HScroll)
 	DEFINE_RW_OBJ_PROPERTY(P_VSCROLL, Int32, MCGroup, VScroll)
 	DEFINE_RW_OBJ_PROPERTY(P_UNBOUNDED_HSCROLL, Bool, MCGroup, UnboundedHScroll)
@@ -101,8 +101,7 @@ MCGroup::MCGroup()
 {
 	flags |= F_TRAVERSAL_ON | F_RADIO_BEHAVIOR | F_GROUP_ONLY;
 	flags &= ~(F_SHOW_BORDER | F_OPAQUE);
-	label = NULL;
-	labelsize = 0;
+	label = MCValueRetain(kMCEmptyString);
 	controls = NULL;
 	kfocused = mfocused = NULL;
 	newkfocused = oldkfocused = NULL;
@@ -121,14 +120,7 @@ MCGroup::MCGroup(const MCGroup &gref) : MCControl(gref)
 
 MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
 {
-	label = NULL;
-	labelsize = 0;
-	if (gref.label)
-	{
-		labelsize = gref.labelsize;
-		label = new char[labelsize];
-		memcpy(label, gref.label, labelsize);
-	}
+	label = MCValueRetain(gref.label);
 	controls = NULL;
 	if (gref.controls != NULL)
 	{
@@ -186,7 +178,7 @@ MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
 
 MCGroup::~MCGroup()
 {
-	delete label;
+	MCValueRelease(label);
 	while (controls != NULL)
 	{
 		MCControl *cptr = controls->remove
@@ -2747,9 +2739,9 @@ void MCGroup::drawthemegroup(MCDC *dc, const MCRectangle &dirty, Boolean drawfra
 	        flags & F_SHOW_BORDER && borderwidth && flags & F_3D &&
 	        MCcurtheme->iswidgetsupported(WTHEME_TYPE_GROUP_FRAME))
 	{
-		Boolean showtextlabel = flags & F_SHOW_NAME && (!isunnamed() || label != NULL);
+		Boolean showtextlabel = flags & F_SHOW_NAME && (!isunnamed() || !MCStringIsEmpty(label));
 		MCRectangle textrect;
-		MCString slabel;
+		MCStringRef t_label;
 		bool isunicode;
 		MCWidgetInfo winfo;
 		int32_t fascent;
@@ -2761,11 +2753,11 @@ void MCGroup::drawthemegroup(MCDC *dc, const MCRectangle &dirty, Boolean drawfra
 			textrect.x = rect.x + labeloffset + borderwidth;
 			textrect.y = rect.y + (borderwidth >> 1) - 2;
 			textrect.height = fascent + MCFontGetDescent(m_font);
-			if (label != NULL)
-				slabel.set(label,labelsize), isunicode = hasunicode();
+			if (!MCStringIsEmpty(label))
+				t_label = label;
 			else
-				slabel = getname_oldstring(), isunicode = false;
-			textrect.width = MCFontMeasureText(m_font, slabel.getstring(), slabel.getlength(), isunicode) + 4;
+				t_label = MCNameGetString(getname());
+			textrect.width = MCFontMeasureText(m_font, t_label) + 4;
 			//exclude text area from widget drawing region for those themes that draw text on top of frame.
 			winfo.datatype = WTHEME_DATA_RECT;
 			winfo.data = &textrect;
@@ -2781,7 +2773,7 @@ void MCGroup::drawthemegroup(MCDC *dc, const MCRectangle &dirty, Boolean drawfra
 		if (showtextlabel && drawframe)
 		{
 			setforeground(dc, DI_FORE, False);
-			MCFontDrawText(m_font, slabel.getstring(), slabel.getlength(), isunicode,dc, textrect.x + 2, textrect.y + fascent, False);
+			MCFontDrawText(m_font, t_label, dc, textrect.x + 2, textrect.y + fascent, False);
 		}
 	}
 }
@@ -2811,13 +2803,12 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 			textrect.y = rect.y + (borderwidth >> 1) - 2;
 			textrect.height = fascent + fdescent;
 
-			MCString slabel;
-			bool isunicode;
-			if (label != NULL)
-				slabel.set(label,labelsize), isunicode = hasunicode();
+			MCStringRef t_label;
+			if (!MCStringIsEmpty(label))
+				t_label = label;
 			else
-				slabel = getname_oldstring(), isunicode = false;
-			textrect.width = MCFontMeasureText(m_font, slabel.getstring(), slabel.getlength(), isunicode) + 4;
+				t_label = MCNameGetString(getname());
+			textrect.width = MCFontMeasureText(m_font, t_label) + 4;
 
 			if (flags & F_SHOW_BORDER)
 			{
@@ -2901,7 +2892,7 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 				}
 			}
 			setforeground(dc, DI_FORE, False);
-			MCFontDrawText(m_font, slabel.getstring(), slabel.getlength(), isunicode, dc, textrect.x + 2, textrect.y + fascent, False);
+			MCFontDrawText(m_font, t_label, dc, textrect.x + 2, textrect.y + fascent, False);
 		}
 		else
 		{
@@ -2935,13 +2926,19 @@ IO_stat MCGroup::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 {
 	IO_stat stat;
-
+	
+	// Update the "has label" flag
+	if (!MCStringIsEmpty(label))
+		flags |= F_LABEL;
+	else
+		flags &= ~F_LABEL;
+	
 	if ((stat = IO_write_uint1(OT_GROUP, stream)) != IO_NORMAL)
 		return stat;
 	if ((stat = MCObject::save(stream, p_part, p_force_ext)) != IO_NORMAL)
 		return stat;
 	if (flags & F_LABEL)
-		if ((stat = IO_write_string(label, labelsize, stream, hasunicode())) != IO_NORMAL)
+		if ((stat = IO_write_stringref(label, stream, hasunicode())) != IO_NORMAL)
 			return stat;
 	if (flags & F_MARGINS)
 	{
@@ -3015,7 +3012,7 @@ IO_stat MCGroup::load(IO_handle stream, const char *version)
 	//   if it is a background.
 	if (isbackground())
 		setflag(True, F_GROUP_SHARED);
-
+	
 	// MW-2012-02-17: [[ IntrinsicUnicode ]] If the unicode tag is set, then we are unicode.
 	if ((m_font_flags & FF_HAS_UNICODE_TAG) != 0)
 		m_font_flags |= FF_HAS_UNICODE;
@@ -3023,9 +3020,8 @@ IO_stat MCGroup::load(IO_handle stream, const char *version)
 	if (flags & F_LABEL)
 	{
 		uint4 tlabelsize;
-		if ((stat = IO_read_string(label, tlabelsize, stream, hasunicode())) != IO_NORMAL)
+		if ((stat = IO_read_stringref(label, stream, hasunicode())) != IO_NORMAL)
 			return stat;
-		labelsize = tlabelsize;
 	}
 	if (flags & F_MARGINS)
 	{
@@ -3348,7 +3344,7 @@ bool MCGroup::recomputefonts(MCFontRef p_parent_font)
 	// The group's font only has an effect in isolation if the group is
 	// showing a label.
 	bool t_changed;
-	t_changed = (flags & F_SHOW_NAME && (!isunnamed() || label != NULL));
+	t_changed = (flags & F_SHOW_NAME && (!isunnamed() || !MCStringIsEmpty(label)));
 
 	// Now loop through all controls owned by the group and update
 	// those.

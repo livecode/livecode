@@ -265,7 +265,7 @@ public:
 
 	virtual bool hasfeature(MCPlatformFeature p_feature);
 
-	virtual void setstatus(const char *status);
+	virtual void setstatus(MCStringRef status);
 
 	virtual int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
 
@@ -363,7 +363,7 @@ public:
 	virtual uint2 getpad();
 	virtual Window getroot();
 	virtual MCBitmap *snapshot(MCRectangle &r, uint4 window,
-	                           const char *displayname);
+	                           MCStringRef displayname);
 
 	virtual void enablebackdrop(bool p_hard = false);
 	virtual void disablebackdrop(bool p_hard = false);
@@ -390,7 +390,7 @@ public:
 	virtual Boolean getmouse(uint2 button, Boolean& r_abort);
 	virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
 	virtual void addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
-	virtual void delaymessage(MCObject *optr, MCNameRef name, char *p1 = NULL, char *p2 = NULL);
+	virtual void delaymessage(MCObject *optr, MCNameRef name, MCStringRef p1 = nil, MCStringRef p2 = nil);
 	
 	// Wait for at most 'duration' seconds. If 'dispatch' is true then event
 	// dispatch will occur. If 'anyevent' is true then the call will return
@@ -417,8 +417,8 @@ public:
 	virtual void closeIME();
 
 	virtual void seticon(uint4 p_icon);
-	virtual void seticonmenu(const char *p_menu);
-	virtual void configurestatusicon(uint32_t icon_id, const char *menu, const char *tooltip);
+	virtual void seticonmenu(MCStringRef p_menu);
+	virtual void configurestatusicon(uint32_t icon_id, MCStringRef menu, MCStringRef tooltip);
 	virtual void enactraisewindows(void);
 
 	//
@@ -510,13 +510,12 @@ public:
 	
 	//
 
-	virtual MCScriptEnvironment *createscriptenvironment(const char *p_language);
+	virtual MCScriptEnvironment *createscriptenvironment(MCStringRef p_language);
 
 	//
 
-	/* WRAPPER */ virtual bool popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, int32_t &r_choice);
-	virtual int32_t popupanswerdialog(const char **p_buttons, uint32_t p_button_count, uint32_t p_type, const char *p_title, const char *p_message);
-	virtual bool popupaskdialog(uint32_t p_type, const char *p_title, const char *p_message, const char *p_initial, bool p_hint, MCStringRef& r_result);
+	virtual int32_t popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message);
+	virtual bool popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result);
 	
 	//
 
@@ -537,7 +536,7 @@ public:
 	void stopmove(MCObject *optr, Boolean finish);
 	void handlemoves(real8 &curtime, real8 &eventtime);
 	void siguser();
-	Boolean lookupcolor(const MCString &s, MCColor *color);
+	Boolean lookupcolor(MCStringRef s, MCColor *color);
 	void dropper(Drawable d, int2 mx, int2 my, MCColor *cptr);
 	bool parsecolor(MCStringRef p_string, MCColor& r_color);
 	Boolean parsecolor(MCStringRef s, MCColor& r_color, MCStringRef *cname);
@@ -552,7 +551,6 @@ public:
 	uint4 getpixel(MCBitmap *image, int2 x, int2 y);
 	void getfixed(uint2 &rs, uint2 &gs, uint2 &bs,
 	              uint2 &rb, uint2 &gb, uint2 &bb);
-	Boolean position(const char *geom, MCRectangle &rect);
 	void setpixel(MCBitmap *image, int2 x, int2 y, uint4 pixel);
 	Boolean hasmessages()
 	{

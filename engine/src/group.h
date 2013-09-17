@@ -38,8 +38,7 @@ class MCGroup : public MCControl
 	int4 scrollx;
 	int4 scrolly;
 	uint2 scrollbarwidth;
-	uint2 labelsize;
-	char *label;
+	MCStringRef label;
 	MCRectangle minrect;
 	uint2 number;
 	Boolean mgrabbed;
@@ -216,9 +215,6 @@ public:
 	
 	////////// PROPERTY SUPPORT METHODS
 
-	void DoGetLabel(MCExecContext& ctxt, bool to_unicode, MCStringRef r_string);
-	void DoSetLabel(MCExecContext& ctxt, bool to_unicode, MCStringRef p_label);
-
 	void SetChildDisabled(MCExecContext& ctxt, uint32_t part, bool setting);
     
     void UpdateMargins(void);
@@ -245,8 +241,8 @@ public:
 	void SetShowName(MCExecContext& ctxt, bool setting);
 	void GetLabel(MCExecContext& ctxt, MCStringRef& r_label);
 	void SetLabel(MCExecContext& ctxt, MCStringRef p_label);
-	void GetUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label);
-	void SetUnicodeLabel(MCExecContext& ctxt, MCStringRef p_label);
+	void GetUnicodeLabel(MCExecContext& ctxt, MCDataRef& r_label);
+	void SetUnicodeLabel(MCExecContext& ctxt, MCDataRef p_label);
 	void GetHScroll(MCExecContext& ctxt, integer_t& r_scroll);
 	void SetHScroll(MCExecContext& ctxt, integer_t p_scroll);
 	void GetVScroll(MCExecContext& ctxt, integer_t& r_scroll);
