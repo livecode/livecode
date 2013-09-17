@@ -69,10 +69,9 @@ void MCStack::setidlefunc(void (*newfunc)())
 	MCscreen->addtimer(this, MCM_idle, MCidleRate);
 }
 
-Boolean MCStack::setscript(char *newscript)
+Boolean MCStack::setscript(MCStringRef newscript)
 {
-	setscript_cstring(newscript);
-	delete newscript;
+	MCValueAssign(_script, newscript);
 	parsescript(False);
 	if (hlist == NULL)
 	{

@@ -453,7 +453,8 @@ public:
 	// MW-2012-02-24: [[ FieldChars ]] Pass in the part_id so the paragraph can map
 	//   field indices to char indices.
 	void getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, uint2 si, uint2 ei, int32_t p_delta);
-
+    void getflaggedranges(uint32_t p_part_id, uint2 si, uint2 ei, int32_t p_delta, MCInterfaceFlaggedRanges& r_ranges);
+    
 	// Return true if the paragraph completely fits in theight. Otherwise, return
 	// false and set lastline to the line that would be clipped.
 	// Called by:

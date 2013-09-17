@@ -176,6 +176,7 @@ struct MCInterfaceNamedColor;
 struct MCInterfaceLayer;
 struct MCInterfaceShadow;
 struct MCInterfaceTextStyle;
+struct MCInterfaceTriState;
 
 class MCObject : public MCDLlist
 {
@@ -304,9 +305,9 @@ public:
 
 	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat getarrayprop(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
+	virtual Exec_stat getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
 	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setarrayprop(uint4 parid, Properties which, MCExecPoint&, MCNameRef key, Boolean effective);
+	virtual Exec_stat setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint&, MCNameRef key, Boolean effective);
 
 	virtual void select();
 	virtual void deselect();
@@ -333,6 +334,8 @@ public:
 	// MW-2012-02-14: [[ FontRefs ]] Returns the current concrete fontref of the object.
 	MCFontRef getfontref(void) const { return m_font; }
 
+    Exec_stat getarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective);
+    Exec_stat setarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective);
 	Exec_stat getprop(uint32_t part_id, Properties which, MCExecPoint& ep, Boolean effective);
 	Exec_stat setprop(uint32_t part_id, Properties which, MCExecPoint& ep, Boolean effective);
 	
@@ -550,7 +553,7 @@ public:
 	
 	// MW-2012-02-17: [[ LogFonts ]] Method to set the font-attrs - used to
 	//   set the dispatcher attrs and by the HC import code.
-	void setfontattrs(const char *textfont, uint2 textsize, uint2 textstyle);
+	void setfontattrs(MCStringRef textfont, uint2 textsize, uint2 textstyle);
 
 	// MW-2012-02-17: [[ LogFonts ]] Fetch the (effective) font attrs for the
 	//   object.
@@ -584,6 +587,8 @@ public:
 	Exec_stat message_with_args(MCNameRef name, const MCString &v1, const MCString &v2, const MCString& v3, const MCString& v4);
 	Exec_stat message_with_valueref_args(MCNameRef name, MCValueRef v1);
 	Exec_stat message_with_valueref_args(MCNameRef name, MCValueRef v1, MCValueRef v2);
+    Exec_stat message_with_valueref_args(MCNameRef name, MCValueRef v1, MCValueRef v2, MCValueRef v3);
+    Exec_stat message_with_valueref_args(MCNameRef name, MCValueRef v1, MCValueRef v2, MCValueRef v3, MCValueRef v4);
 	Exec_stat message_with_args(MCNameRef name, int4 v1);
 	Exec_stat message_with_args(MCNameRef name, int4 v1, int4 v2);
 	Exec_stat message_with_args(MCNameRef name, int4 v1, int4 v2, int4 v3);
@@ -604,9 +609,9 @@ public:
 	            Etch style, uint2 bwidth);
 	void drawborder(MCDC *dc, const MCRectangle &drect, uint2 bwidth);
 	void positionrel(const MCRectangle &dptr, Object_pos xpos, Object_pos ypos);
-	Exec_stat domess(const char *sptr);
+	Exec_stat domess(MCStringRef sptr);
 	void eval(MCExecContext& ctxt, MCStringRef p_script, MCValueRef& r_value);
-	Exec_stat eval(const char *sptr, MCExecPoint &ep);
+	Exec_stat eval(MCStringRef sptr, MCExecPoint &ep);
 	void editscript();
 	void removefrom(MCObjectList *l);
 	Boolean attachmenu(MCStack *sptr);
@@ -951,9 +956,9 @@ public:
 	void SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef props);
 	void GetCustomPropertySet(MCExecContext& ctxt, MCStringRef& r_propset);
 	void SetCustomPropertySet(MCExecContext& ctxt, MCStringRef propset);
-	void GetCustomPropertySets(MCExecContext& ctxt, MCStringRef& r_propsets);
-	void SetCustomPropertySets(MCExecContext& ctxt, MCStringRef propsets);
-
+	void GetCustomPropertySets(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_propsets);
+	void SetCustomPropertySets(MCExecContext& ctxt, uindex_t p_count, MCStringRef* propsets);
+    
 	void GetInk(MCExecContext& ctxt, intenum_t& r_ink);
 	virtual void SetInk(MCExecContext& ctxt, intenum_t ink);
 	void GetCantSelect(MCExecContext& ctxt, bool& r_setting);
@@ -1017,6 +1022,18 @@ public:
 
 	void GetEncoding(MCExecContext& ctxt, intenum_t& r_encoding);
 
+    void GetCustomKeys(MCExecContext& ctxt, MCStringRef& r_string);
+    void SetCustomKeys(MCExecContext& ctxt, MCStringRef p_string);
+    
+	////////// ARRAY PROPS
+    
+    void GetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool& r_element);
+    void SetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool p_element);
+    void GetCustomKeysElement(MCExecContext& ctxt, MCNameRef p_index, MCStringRef& r_string);
+    void GetCustomProperties(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_array);
+    void SetCustomKeysElement(MCExecContext& ctxt, MCNameRef p_index, MCStringRef p_string);
+    void SetCustomProperties(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_array);
+    
 //////////
 				
 protected:

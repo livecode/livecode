@@ -38,7 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mctheme.h"
 
 #include "context.h"
-
+#include "exec-interface.h"
 
 const char *ER_reverse[256] =
     {
@@ -3414,6 +3414,80 @@ void MCParagraph::getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, uint2 si
 		bptr = bptr -> next();
 		bptr -> getindex(i, l);
 	}
+}
+
+// This method accumulates the ranges of the paragraph that have 'flagged' set
+// to true. The output is placed in the uinteger_t array, with indices
+// adjusted by the 'delta'.
+void MCParagraph::getflaggedranges(uint32_t p_part_id, uint2 si, uint2 ei, int32_t p_delta, MCInterfaceFlaggedRanges& r_ranges)
+{
+	// If the paragraph is empty, there is nothing to do.
+	if (textsize == 0)
+		return;
+	
+	if (ei > textsize)
+		ei = textsize;
+    
+	// Get the block and make appropriate adjustments to ensure we are looking
+	// at the right one.
+	MCBlock *bptr = indextoblock(si, False);
+	uint2 i, l;
+	bptr->getindex(i, l);
+	if (si == ei && si == i && l != 0 && bptr != blocks)
+	{
+		bptr = bptr -> prev();
+		bptr -> getindex(i, l);
+	}
+    
+    MCAutoArray<MCInterfaceFlaggedRange> t_ranges;
+    
+	// Now loop through all the blocks until we reach the end.
+	int32_t t_flagged_start, t_flagged_end;
+	t_flagged_start = -1;
+	t_flagged_end = -1;
+	for(;;)
+	{
+        MCInterfaceFlaggedRange t_range;
+		// Ignore any blocks of zero width;
+		if (bptr -> getsize() != 0)
+		{
+			// If this block is flagged, update the start/end.
+			if (bptr -> getflagged())
+			{
+				// If we don't have a start, take the start of this block.
+				if (t_flagged_start == -1)
+					t_flagged_start = MCMax(si, i);
+                
+				// Always extend to the end.
+				t_flagged_end = MCMin(ei, i + l);
+			}
+            
+			// If we have a flagged range and we are reaching the end or have a block
+			// which is not flagged then append the range.
+			if (t_flagged_start != -1 && (!bptr -> getflagged() || i + l >= ei))
+			{				
+				// MW-2012-02-24: [[ FieldChars ]] Map the field indices back to char indices.
+				int32_t t_start, t_end;
+				t_start = t_flagged_start;
+				t_end = t_flagged_end;
+				parent -> unresolvechars(p_part_id, t_start, t_end);
+                t_range . start = t_start + p_delta + 1;
+                t_range . end = t_end + p_delta;
+                t_ranges . Push(t_range);
+                
+				t_flagged_start = t_flagged_end = -1;
+			}
+            
+			// If we have reached the end, break.
+			if (i + l >= ei)
+				break;
+		}
+		
+		// Advance to the end of the block.
+		bptr = bptr -> next();
+		bptr -> getindex(i, l);
+	}
+    t_ranges . Take(r_ranges . ranges, r_ranges . count);
 }
 
 void MCParagraph::setvisited(uint2 si, uint2 ei, Boolean v)

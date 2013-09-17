@@ -64,6 +64,17 @@ MCPropertyInfo MCControl::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_TOOL_TIP, BinaryString, MCControl, UnicodeToolTip)
 	DEFINE_RW_OBJ_NON_EFFECTIVE_ENUM_PROPERTY(P_LAYER_MODE, InterfaceLayerMode, MCControl, LayerMode)
 	DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(P_LAYER_MODE, InterfaceLayerMode, MCControl, LayerMode)
+    
+    DEFINE_RW_OBJ_ARRAY_PROPERTY(P_BITMAP_EFFECT_DROP_SHADOW, Any, MCControl, DropShadowElement)
+    DEFINE_RW_OBJ_PROPERTY(P_BITMAP_EFFECT_DROP_SHADOW, Array, MCControl, DropShadow)
+    DEFINE_RW_OBJ_ARRAY_PROPERTY(P_BITMAP_EFFECT_INNER_SHADOW, Any, MCControl, InnerShadowElement)
+    DEFINE_RW_OBJ_PROPERTY(P_BITMAP_EFFECT_INNER_SHADOW, Array, MCControl, InnerShadow)
+    DEFINE_RW_OBJ_ARRAY_PROPERTY(P_BITMAP_EFFECT_OUTER_GLOW, Any, MCControl, OuterGlowElement)
+    DEFINE_RW_OBJ_PROPERTY(P_BITMAP_EFFECT_OUTER_GLOW, Array, MCControl, OuterGlow)
+    DEFINE_RW_OBJ_ARRAY_PROPERTY(P_BITMAP_EFFECT_INNER_GLOW, Any, MCControl, InnerGlowElement)
+    DEFINE_RW_OBJ_PROPERTY(P_BITMAP_EFFECT_INNER_GLOW, Array, MCControl, InnerGlow)
+    DEFINE_RW_OBJ_ARRAY_PROPERTY(P_BITMAP_EFFECT_COLOR_OVERLAY, Any, MCControl, ColorOverlayElement)
+    DEFINE_RW_OBJ_PROPERTY(P_BITMAP_EFFECT_COLOR_OVERLAY, Array, MCControl, ColorOverlay)
 };
 
 MCObjectPropertyTable MCControl::kPropertyTable =
@@ -482,7 +493,7 @@ Exec_stat MCControl::getprop_legacy(uint4 parid, Properties which, MCExecPoint& 
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-Exec_stat MCControl::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
+Exec_stat MCControl::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
 	switch(which)
 	{
@@ -494,7 +505,7 @@ Exec_stat MCControl::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 	case P_BITMAP_EFFECT_COLOR_OVERLAY:
 		return MCBitmapEffectsGetProperties(m_bitmap_effects, which, ep, key);
 	default:
-		return MCObject::getarrayprop(parid, which, ep, key, effective);
+		return MCObject::getarrayprop_legacy(parid, which, ep, key, effective);
 	}
 	return ES_NORMAL;
 }
@@ -650,7 +661,7 @@ Exec_stat MCControl::setprop_legacy(uint4 parid, Properties which, MCExecPoint &
 	return ES_NORMAL;
 }
 
-Exec_stat MCControl::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
+Exec_stat MCControl::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
 	Boolean dirty;
 	dirty = False;
@@ -680,8 +691,7 @@ Exec_stat MCControl::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 	default:
 		break;
 	}
-
-	return MCObject::setarrayprop(parid, which, ep, key, effective);
+	return MCObject::setarrayprop_legacy(parid, which, ep, key, effective);
 }
 
 void MCControl::select()

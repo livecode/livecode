@@ -87,7 +87,7 @@ public:
 	IO_stat readstartupstack(IO_handle stream, MCStack*& r_stack);
 	
 	// Load the given external from within the app bundle
-	bool loadexternal(const char *p_external);
+	bool loadexternal(MCStringRef p_external);
 
 	void cleanup(IO_handle stream, MCStringRef lname, MCStringRef bname);
 	IO_stat savestack(MCStack *sptr, const MCStringRef);
@@ -169,10 +169,6 @@ public:
 
 	// This method installs the given stack as the new home stack
 	void changehome(MCStack *stack);
-
-	// This method executes the given message in the given encoded stack in an isolated
-	// environment.
-	bool isolatedsend(const char *p_stack_data, uint32_t p_stack_data_length, const char *p_message, MCParameter *p_parameters);
 
 #ifdef _WINDOWS_DESKTOP
 	void freeprinterfonts();
