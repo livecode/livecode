@@ -2422,21 +2422,24 @@ Exec_stat MCSort::sort_container(MCExecPoint &p_exec_point, Chunk_term p_type, S
 
 void MCSort::additem(MCExecPoint &ep, MCSortnode *&items, uint4 &nitems, Sort_type form, MCStringRef s, MCExpression *by)
 {
+    MCAutoStringRef t_s;
 	if (by != NULL)
 	{
 		MCerrorlock++;
-		ep.setsvalue(MCStringGetOldString(s));
+		ep.setvalueref(s);
 		MCeach->set(ep);
 		if (by->eval(ep) == ES_NORMAL)
-			ep . copyasstringref(s);
+			ep . copyasstringref(&t_s);
 		else
-			s = MCValueRetain(kMCEmptyString);
+			t_s = MCValueRetain(kMCEmptyString);
 		MCerrorlock--;
 	}
+    else
+        /* UNCHECKED */ MCStringCopy(s, &t_s);
 	switch (form)
 	{
 	case ST_DATETIME:
-		ep.setsvalue(MCStringGetOldString(s));
+		ep.setvalueref(*t_s);
 		if (MCD_convert(ep, CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED))
 		{
 			if (!MCU_stor8(ep.getsvalue(), items[nitems].nvalue))
@@ -2465,7 +2468,9 @@ void MCSort::additem(MCExecPoint &ep, MCSortnode *&items, uint4 &nitems, Sort_ty
 			}
             //Is the line below now needed? If yes, how to update s.setlength?
 			//s.setlength(s.getlength()) - length);
-			if (!MCU_stor8(s, items[nitems].nvalue))
+            MCAutoStringRef t_s_substring;
+            /* UNCHECKED */ MCStringCopySubstring(s, MCRangeMake(*sptr, length), &t_s_substring);
+			if (!MCU_stor8(*t_s_substring, items[nitems].nvalue))
 				items[nitems].nvalue = -MAXREAL8;
 		}
 		break;
