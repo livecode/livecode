@@ -597,7 +597,7 @@ MCPrinterResult MCPSPrinterDevice::Bookmark(const char *title, double x, double 
 char * getdefaultprinter(void)
 {
 	MCExecPoint ep ( NULL, NULL, NULL ) ;
-	MCdefaultstackptr->domess(DEFAULT_PRINTER_SCRIPT);
+	MCdefaultstackptr->domess(MCSTR(DEFAULT_PRINTER_SCRIPT));
 	MCresult->eval(ep);
 	return strdup(ep.getcstring());
 }
@@ -724,9 +724,12 @@ MCPrinterResult MCPSPrinter::DoBeginPrint(MCStringRef p_document, MCPrinterDevic
 	if (GetDeviceOutputType() == PRINTER_OUTPUT_FILE)
 		t_output_file = GetDeviceOutputLocation();
 	else
-		t_output_file = C_FNAME;
+        t_output_file = C_FNAME;
 
-	stream = MCS_open(t_output_file, IO_CREATE_MODE, False, False, 0);
+    MCAutoStringRef t_path;
+    /* UNCHECKED */ MCStringCreateWithCString(t_output_file, &t_path);
+
+    stream = MCS_open(*t_path, kMCSOpenFileModeWrite, False, False, 0);
 
 	PSwrite("%!PS-Adobe-3.0\n");
 	sprintf(buffer, "%%%%Creator: Revolution %s\n", MCNameGetCString(MCN_version_string)); PSwrite(buffer);
@@ -809,8 +812,12 @@ void MCPSPrinter::FlushSettings ( void )
 	SetJobCopies ( m_printersettings . copies ) ;
 	SetJobCollate ( m_printersettings . collate ) ;
 	
-	if ( m_printersettings . outputfilename != NULL ) 
-		SetDeviceOutput( m_printersettings . printertype, m_printersettings . outputfilename ) ;
+    if ( m_printersettings . outputfilename != NULL )
+    {
+        MCAutoStringRef t_string;
+        /* UNCHECKED */ MCStringCreateWithCString(m_printersettings.outputfilename, &t_string);
+        SetDeviceOutput( m_printersettings . printertype, *t_string);
+    }
 	
 	if ( m_printersettings . page_range_count > 0 )
 		SetJobRanges ( m_printersettings . page_range_count, m_printersettings . page_ranges ) ;
@@ -1564,15 +1571,16 @@ void MCPSMetaContext::create_pattern ( Pixmap p_pattern )
 
 void exec_command ( char * command ) 
 {
-	MCExecPoint ep;
-	ep.copysvalue(command);
-	if (MCS_runcmd(ep) != IO_NORMAL)
+    MCAutoStringRef t_command;
+    MCAutoStringRef t_output;
+    /* UNCHECKED */ MCStringCreateWithCString(command, &t_command);
+
+    if (MCS_runcmd(*t_command, &t_output) != IO_NORMAL)
 	{
 		MCeerror->add(EE_PRINT_ERROR, 0, 0);
 	}
 	else
-		MCresult->sets(ep.getsvalue());
-	
+        MCresult->setvalueref(*t_output);
 }
 
 

@@ -270,35 +270,35 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doGetCalendarEventData(JNI
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doUpdateCalendarEventDone(JNIEnv *env, jobject object, jstring p_calendar_event_id)
 {
     MCAutoStringRef t_mcstring;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
+    MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
     MCAndroidUpdateCalendarEventDone(*t_mcstring);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doUpdateCalendarEventCanceled(JNIEnv *env, jobject object, jstring p_calendar_event_id)
 {
     MCAutoStringRef t_mcstring;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
+    MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
     MCAndroidUpdateCalendarEventCanceled(*t_mcstring);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreateCalendarEventDone(JNIEnv *env, jobject object, jstring p_calendar_event_id)
 {
     MCAutoStringRef t_mcstring;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
+    MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
     MCAndroidCreateCalendarEventDone(*t_mcstring);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreateCalendarEventCanceled(JNIEnv *env, jobject object, jstring p_calendar_event_id)
 {
     MCAutoStringRef t_mcstring;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
+    MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
     MCAndroidCreateCalendarEventCanceled(*t_mcstring);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doShowCalendarEventDone(JNIEnv *env, jobject object, jstring p_calendar_event_id)
 {
     MCAutoStringRef t_mcstring;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
+    MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
     MCAndroidShowCalendarEventDone(*t_mcstring);
 }
 
