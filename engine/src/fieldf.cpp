@@ -2276,11 +2276,15 @@ void MCField::typetext(MCStringRef newtext)
 
 	if (MCactivefield == this)
 		unselect(False, True);
+    
+    MCAutoStringRef t_newtext;
 	if (MCStringGetLength(newtext) < MAX_PASTE_MESSAGES)
 	{
 		char string[2];
 		string[1] = '\0';
-		char *sptr = (char *)MCStringGetCString(newtext);
+        MCAutoNativeCharArray t_array;
+        char *sptr = (char *)t_array . Chars();
+		memcpy(sptr, MCStringGetNativeCharPtr(newtext), MCStringGetLength(newtext));
 		const char *eptr = sptr + MCStringGetLength(newtext);
 		while (sptr < eptr)
 		{
@@ -2291,14 +2295,15 @@ void MCField::typetext(MCStringRef newtext)
 				sptr++;
 			message_with_args(MCM_key_up, string);
 		}
+        t_array . CreateString(&t_newtext);
 	}
 	uint2 oldfocused;
 	focusedparagraph->getselectionindex(oldfocused, oldfocused);
 	state |= CS_CHANGED;
-	if (!MCStringIsEmpty(newtext) && focusedparagraph->finsertnew(newtext, false))
+	if (!MCStringIsEmpty(*t_newtext) && focusedparagraph->finsertnew(*t_newtext, false))
 	{
 		recompute();
-		int4 endindex = oldfocused + MCStringGetLength(newtext);
+		int4 endindex = oldfocused + MCStringGetLength(*t_newtext);
 		int4 junk;
 		MCParagraph *newfocused = indextoparagraph(focusedparagraph, endindex, junk);
 		while (focusedparagraph != newfocused)
@@ -2312,7 +2317,6 @@ void MCField::typetext(MCStringRef newtext)
 	}
 	else
 		updateparagraph(True, False);
-	delete (char *)MCStringGetCString(newtext);
 }
 
 void MCField::startcomposition()
