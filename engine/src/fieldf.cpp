@@ -2277,6 +2277,56 @@ void MCField::typetext(MCStringRef newtext)
 	if (MCactivefield == this)
 		unselect(False, True);
     
+///////////////////////////////  FRASER  /////////////////////////////////////////////////////////////////////////////
+    /*
+    MCStringRef t_remaining;
+    /* UNCHECKED / MCStringCreateMutable(0, t_remaining);
+    if (MCStringGetLength(newtext) < MAX_PASTE_MESSAGES)
+	{
+        uindex_t t_index = 0;
+        uindex_t t_length = MCStringGetLength(newtext);
+        while (t_index < t_length)
+        {
+            //Send the next character in the buffer as a keydown event
+            MCAutoStringRef t_string;
+            /* UNCHECKED / MCStringCopySubstring(newtext, MCRangeMake(t_index, t_length - t_index), &t_string);
+            if (!message_with_valueref_args(MCM_key_down, *t_string))
+            {
+                //Nothing responded to the key, keep it as text
+                /* UNCHECKED / MCStringAppendChar(t_remaining, MCStringGetCharAtIndex(newtext, t_index));
+            }
+            
+            // Key up event then move on
+            message_with_valueref_args(MCM_key_up, *t_string);
+            t_index++;
+        }
+        // Only the non-handled keypresses should be processed further
+        MCValueRelease(newtext);
+        MCStringCopyAndRelease(t_remaining, newtext);
+    }
+    uint2 oldfocused;
+	focusedparagraph->getselectionindex(oldfocused, oldfocused);
+	state |= CS_CHANGED;
+	if (!MCStringIsEmpty(newtext) && focusedparagraph->finsertnew(newtext, !MCStringIsNative(newtext)))
+	{
+		recompute();
+		int4 endindex = oldfocused + MCStringGetLength(newtext);
+		int4 junk;
+		MCParagraph *newfocused = indextoparagraph(focusedparagraph, endindex, junk);
+		while (focusedparagraph != newfocused)
+		{
+			focusedy += focusedparagraph->getheight(fixedheight);
+			focusedparagraph = focusedparagraph->next();
+		}
+        
+		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
+		layer_redrawall();
+	}
+	else
+		updateparagraph(True, False);
+    */
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     MCAutoStringRef t_newtext;
 	if (MCStringGetLength(newtext) < MAX_PASTE_MESSAGES)
 	{
@@ -2297,6 +2347,7 @@ void MCField::typetext(MCStringRef newtext)
 		}
         t_array . CreateString(&t_newtext);
 	}
+ 
 	uint2 oldfocused;
 	focusedparagraph->getselectionindex(oldfocused, oldfocused);
 	state |= CS_CHANGED;
@@ -2317,6 +2368,8 @@ void MCField::typetext(MCStringRef newtext)
 	}
 	else
 		updateparagraph(True, False);
+ 
+ 
 }
 
 void MCField::startcomposition()
