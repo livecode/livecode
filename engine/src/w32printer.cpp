@@ -1558,7 +1558,7 @@ MCPrinterResult MCWindowsPrinter::DoBeginPrint(MCStringRef p_document_name, MCPr
 	t_device = new MCWindowsPrinterDevice;
 
 	MCPrinterResult t_result;
-	t_result = t_device -> Start(t_dc, p_document_name, GetDeviceOutputLocation());
+	t_result = t_device -> Start(t_dc, MCStringGetCString(p_document_name), GetDeviceOutputLocation());
 
 
 	r_device = t_device;
@@ -1819,8 +1819,8 @@ void MCWindowsPrinter::StoreDialogData(HGLOBAL p_devmode_handle, HGLOBAL p_devna
 
 	char *t_printer_name;
 	t_printer_name = NULL;
-	char *t_output_file;
-	t_output_file = NULL;
+	MCAutoStringRef t_output_file;
+	
 	if (t_success)
 	{
 		if (p_devnames_handle != NULL)
@@ -1830,7 +1830,7 @@ void MCWindowsPrinter::StoreDialogData(HGLOBAL p_devmode_handle, HGLOBAL p_devna
 			t_printer_name = strdup((char *)t_devnames + t_devnames -> wDeviceOffset);
 
 			if (strcmp((char *)t_devnames + t_devnames -> wOutputOffset, "FILE:") == 0)
-				t_output_file = strdup("");
+				/* UNCHECKED */ t_output_file = MCValueRetain(kMCEmptyString);
 
 			GlobalUnlock(p_devnames_handle);
 			GlobalFree(p_devnames_handle);
@@ -1870,17 +1870,13 @@ void MCWindowsPrinter::StoreDialogData(HGLOBAL p_devmode_handle, HGLOBAL p_devna
 		}
 
 		Reset(t_printer_name, t_devmode);
-		if (t_output_file != NULL)
-		{
-			SetDeviceOutput(PRINTER_OUTPUT_FILE, t_output_file);
-			delete t_output_file;
-		}
+		if (*t_output_file != NULL)
+			SetDeviceOutput(PRINTER_OUTPUT_FILE, *t_output_file);
 	}
 	else
 	{
 		delete t_devmode;
 		delete t_printer_name;
-		delete t_output_file;
 	}
 }
 

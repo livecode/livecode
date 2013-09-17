@@ -142,7 +142,7 @@ public:
 	MCObjptr *newcontrol(MCControl *cptr, Boolean needredraw);
 	void resetid(uint4 oldid, uint4 newid);
 	Boolean checkid(uint4 controlid);
-	Boolean find(MCExecPoint &ep, Find_mode mode, const MCString &,
+	Boolean find(MCExecPoint &ep, Find_mode mode, MCStringRef,
 	             Boolean firstcard, Boolean firstword);
 	MCObjptr *getrefs();
 	void clean();

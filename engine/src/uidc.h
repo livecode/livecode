@@ -539,7 +539,7 @@ public:
 	void stopmove(MCObject *optr, Boolean finish);
 	void handlemoves(real8 &curtime, real8 &eventtime);
 	void siguser();
-	Boolean lookupcolor(const MCString &s, MCColor *color);
+	Boolean lookupcolor(MCStringRef s, MCColor *color);
 	void dropper(Drawable d, int2 mx, int2 my, MCColor *cptr);
 	bool parsecolor(MCStringRef p_string, MCColor& r_color);
 	Boolean parsecolor(MCStringRef s, MCColor& r_color, MCStringRef *cname);

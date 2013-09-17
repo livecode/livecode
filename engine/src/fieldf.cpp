@@ -2225,7 +2225,7 @@ void MCField::setupmenu(MCStringRef p_string, uint2 fheight, Boolean scrolling)
 	if (scrolling)
 	{
 		Boolean dirty;
-		setsbprop(P_VSCROLLBAR, kMCTrue, 0, 0,
+		setsbprop(P_VSCROLLBAR, true, 0, 0,
 							scrollbarwidth, hscrollbar, vscrollbar, dirty);
 	}
 	fontheight = fheight;

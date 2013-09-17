@@ -283,7 +283,7 @@ MCPropertyInfo MCButton::kProperties[] =
 	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_VISITED_ICON, InterfaceButtonIcon, MCButton, VisitedIcon)
 	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_HOVER_ICON, InterfaceButtonIcon, MCButton, HoverIcon)
     
-    DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(P_HILITE, InterfaceButtonHilite, MCButton, Hilite)
+    DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(P_HILITE, InterfaceTriState, MCButton, Hilite)
     DEFINE_RW_OBJ_ENUM_PROPERTY(P_MENU_MODE, InterfaceButtonMenuMode, MCButton, MenuMode)
 };
 
@@ -4149,18 +4149,6 @@ void MCButton::switchunicode(bool p_to_unicode)
 		m_font_flags |= FF_HAS_UNICODE;
 	else
 		m_font_flags &= ~FF_HAS_UNICODE;
-}
-
-// MW-2012-02-16: [[ IntrinsicUnicode ]] This method returns 'true' if its possible
-//   to convert the given string to native without loss of information.
-static bool canconverttonative(const char *p_chars, uint32_t p_char_count)
-{
-	MCExecPoint ep(nil, nil, nil);
-	ep . setsvalue(MCString(p_chars, p_char_count));
-	ep . utf16tonative();
-	ep . nativetoutf16();
-	return ep . getsvalue() . getlength() == p_char_count &&
-				memcmp(ep . getsvalue() . getstring(), p_chars, p_char_count) == 0;
 }
 
 // MW-2012-02-16: [[ IntrinsicUnicode ]] This method attempts to coerce the text in

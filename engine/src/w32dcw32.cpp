@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "w32prefix.h"
+#include "w32dsk-legacy.h"
 
 #include "globdefs.h"
 #include "filedefs.h"

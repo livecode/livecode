@@ -3373,7 +3373,7 @@ void MCInterfaceExecImportAudioClip(MCExecContext& ctxt, MCStringRef p_filename)
 	if (t_stream != NULL)
 	{
 		MCAudioClip *aptr = new MCAudioClip;
-		if (!aptr->import(MCStringGetCString(p_filename), t_stream))
+		if (!aptr->import(p_filename, t_stream))
 		{
 			ctxt . LegacyThrow(EE_IMPORT_CANTREAD);
 			delete aptr;
@@ -3399,7 +3399,7 @@ void MCInterfaceExecImportVideoClip(MCExecContext& ctxt, MCStringRef p_filename)
 	if (t_stream != NULL)
 	{
 		MCVideoClip *vptr = new MCVideoClip;
-		if (!vptr->import(MCStringGetCString(p_filename), t_stream))
+		if (!vptr->import(p_filename, t_stream))
 		{
 			ctxt . LegacyThrow(EE_IMPORT_CANTREAD);
 			delete vptr;
@@ -3945,7 +3945,7 @@ void MCInterfaceExecFind(MCExecContext& ctxt, int p_mode, MCStringRef p_needle, 
 		ctxt .SetTheResultToCString(MCnotfoundstring);
 		return;
 	}
-	MCdefaultstackptr->find(ctxt . GetEP(), p_mode, p_needle, p_target);
+	MCdefaultstackptr->find(ctxt . GetEP(), (Find_mode)p_mode, p_needle, p_target);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

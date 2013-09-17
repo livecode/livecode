@@ -2786,7 +2786,7 @@ Boolean MCCard::checkid(uint4 controlid)
 	return False;
 }
 
-Boolean MCCard::find(MCExecPoint &ep, Find_mode mode, const MCString &tofind,
+Boolean MCCard::find(MCExecPoint &ep, Find_mode mode, MCStringRef tofind,
                      Boolean firstcard, Boolean firstword)
 {
 	if (flags & F_C_DONT_SEARCH)

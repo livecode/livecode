@@ -38,7 +38,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="src;$(SolutionDir)libcore/src"
+				AdditionalIncludeDirectories="src"
 				PreprocessorDefinitions="MODE_STANDALONE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
