@@ -95,16 +95,23 @@ static MCStringRef s_cgi_temp_dir = nil;
 
 bool MCS_get_temporary_folder(MCStringRef &r_temp_folder);
 
-static MCStringRef cgi_get_upload_temp_dir()
+static void cgi_get_upload_temp_dir(MCStringRef &r_tmp_dir)
 {
 	if (s_cgi_upload_temp_dir != NULL)
-		return s_cgi_upload_temp_dir;
+	{
+		r_tmp_dir = MCValueRetain(s_cgi_upload_temp_dir);
+		return;
+	}
 	
 	if (s_cgi_temp_dir != NULL)
-		return s_cgi_temp_dir;
+	{
+		r_tmp_dir = MCValueRetain(s_cgi_temp_dir);
+		return;
+	}
 
 	/* UNCHECKED */ MCS_get_temporary_folder(s_cgi_temp_dir);
-	return s_cgi_temp_dir;
+	r_tmp_dir = MCValueRetain(s_cgi_temp_dir);
+	return;
 	
 }
 
@@ -335,7 +342,9 @@ bool MCStreamCache::AppendToCache(void *p_buffer, uint32_t p_length, uint32_t &r
 	{
 		if (m_cache_file == NULL)
 		{
-			t_success = MCMultiPartCreateTempFile(cgi_get_upload_temp_dir(), m_cache_file, m_cache_filename);
+			MCAutoStringRef t_temp_dir;
+			cgi_get_upload_temp_dir(&t_temp_dir);
+			t_success = MCMultiPartCreateTempFile(*t_temp_dir, m_cache_file, m_cache_filename);
 			if (t_success && m_cache_buffer != NULL)
 				t_success = (IO_NORMAL == MCS_write(m_cache_buffer, 1, m_cache_length, m_cache_file));
 			
@@ -1088,16 +1097,17 @@ static bool cgi_multipart_header_callback(void *p_context, MCMultiPartHeader *p_
 		}
 		else if (cgi_context_is_file(t_context))
 		{
-			const MCStringRef t_temp_dir = cgi_get_upload_temp_dir();
+			MCAutoStringRef t_temp_dir;
+			cgi_get_upload_temp_dir(&t_temp_dir);
 			const char *t_error = NULL;
             MCAutoStringRef t_temp_name;
-			if (t_temp_dir == NULL || !MCS_exists(t_temp_dir, False))
+			if (*t_temp_dir == NULL || !MCS_exists(*t_temp_dir, False))
 			{
 				t_context->file_status = kMCFileStatusNoUploadFolder;
 			}
 			else if (MCStringCreateWithCString(t_context->temp_name, &t_temp_name))
 			{
-                if (MCMultiPartCreateTempFile(cgi_get_upload_temp_dir(), t_context->file_handle, *t_temp_name)
+                if (MCMultiPartCreateTempFile(*t_temp_dir, t_context->file_handle, *t_temp_name)
                    t_context->temp_name = strdup(MCStringgetCString(*t_temp_name));
                 else
 				   t_context->file_status = kMCFileStatusIOError;
