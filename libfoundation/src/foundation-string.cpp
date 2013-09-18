@@ -74,7 +74,7 @@ MCStringRef MCSTR(const char *p_cstring)
 // the specified encoding.
 bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef& r_string)
 {
-    assert(!p_is_external_rep);
+    MCAssert(!p_is_external_rep);
     
     switch (p_encoding)
     {
@@ -101,7 +101,7 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
         break;
         case kMCStringEncodingUTF32:
             break;
-#ifndef __LINUX__
+#if !defined(__LINUX__) && !defined(__ANDROID__)
         case kMCStringEncodingISO8859_1:
             break;
 #endif
@@ -109,7 +109,7 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
         case kMCStringEncodingWindows1252:
             break;
 #endif
-#ifndef __MAC__
+#if !defined(__MAC__) && !defined(__IOS__)
         case kMCStringEncodingMacRoman:
             break;
 #endif
@@ -319,81 +319,146 @@ static bool __MCStringFormatSupportedForUnicode(const char *p_format)
 	return true;
 }
 
+#if defined(__32_BIT__)
+#define FORMAT_ARG_32_BIT 1
+#define FORMAT_ARG_64_BIT 2
+#elif defined(__64_BIT__)
+#define FORMAT_ARG_32_BIT 2
+#define FORMAT_ARG_64_BIT 2
+#endif
+
 bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args)
 {
-	if (__MCStringFormatSupportedForUnicode(p_format))
+	MCStringRef t_buffer;
+	if (!MCStringCreateMutable(0, t_buffer))
+		return false;
+	
+	bool t_success;
+	t_success = true;
+	
+	const char *t_format_ptr;
+	t_format_ptr = p_format;
+	while(t_success && *t_format_ptr != '\0')
 	{
-		MCStringRef t_buffer;
-		if (!MCStringCreateMutable(0, t_buffer))
-			return false;
+		const char *t_format_start_ptr;
+		t_format_start_ptr = t_format_ptr;
 		
-		bool t_success;
-		t_success = true;
-		
-		while(t_success && *p_format != '\0')
+		int t_arg_count;
+		t_arg_count = 0;
+		while(*t_format_ptr != '\0')
 		{
-			if (*p_format == '\\')
+			if (*t_format_ptr == '%')
 			{
-				p_format++;
-				if (*p_format == 'n')
-					t_success = MCStringAppendNativeChar(t_buffer, '\n');
-				else if (*p_format == '"')
-					t_success = MCStringAppendNativeChar(t_buffer, '"');
+				t_format_ptr++;
+				
+				if (*t_format_ptr == '@')
+					break;
+				
+				if (*t_format_ptr == '*')
+				{
+					t_arg_count += FORMAT_ARG_32_BIT;
+					t_format_ptr++;
+				}
 				else
-					MCAssert(false);
-			}
-			else if (*p_format == '%')
-			{
-				p_format++;
-				if (*p_format == 's')
 				{
-					const char *t_cstring;
-					t_cstring = va_arg(p_args, const char *);
-					t_success = MCStringAppendNativeChars(t_buffer, (const char_t *)t_cstring, strlen(t_cstring));
+					while(*t_format_ptr != '\0' && isdigit(*t_format_ptr))
+						t_format_ptr++;
 				}
-				else if (*p_format == 'd')
+				
+				if (*t_format_ptr == '.')
 				{
-					char t_cnumber[16];
-					sprintf(t_cnumber, "%d", va_arg(p_args, int));
-					t_success = MCStringAppendNativeChars(t_buffer, (const char_t *)t_cnumber, strlen(t_cnumber));
-				}
-				else if (*p_format == '@')
-				{
-					MCValueRef t_value;
-					t_value = va_arg(p_args, MCValueRef);
-					
-					MCStringRef t_string;
-					if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeString)
-						t_string = (MCStringRef)t_value;
-					else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeName)
-						t_string = MCNameGetString((MCNameRef)t_value);
+					t_format_ptr++;
+					if (*t_format_ptr == '*')
+					{
+						t_arg_count += FORMAT_ARG_32_BIT;
+						t_format_ptr++;
+					}
 					else
-						MCAssert(false);
-
-					t_success = MCStringAppend(t_buffer, t_string);
+					{
+						while(*t_format_ptr != '\0' && isdigit(*t_format_ptr))
+							t_format_ptr++;
+					}
 				}
+				
+				if (strncmp(t_format_ptr, "lld", 3) == 0 ||
+					strncmp(t_format_ptr, "llu", 3) == 0 ||
+					strncmp(t_format_ptr, "lf", 2) == 0 ||
+					strncmp(t_format_ptr, "f", 1) == 0)
+					t_arg_count += FORMAT_ARG_64_BIT;
+				else
+					t_arg_count += FORMAT_ARG_32_BIT;
 			}
-			else
-				t_success = MCStringAppendNativeChar(t_buffer, *p_format);
 			
-			p_format++;
+			t_format_ptr += 1;
 		}
 		
-		if (t_success)
-			t_success = MCStringCopyAndRelease(t_buffer, r_string);
+        if (t_format_start_ptr != t_format_ptr)
+        {
+            char *t_format;
+            uint32_t t_format_size;
+
+            // [[ vsnprintf ]] On Linux, the trailing '%' from '%@' placeholder causes vsprintf to fail
+            // and return -1 in MCNativeCharsFormat (and thus creates a 0-byte sized array).
+            if (*t_format_ptr == '@' && *(t_format_ptr - 1) == '%')
+                t_format_size = t_format_ptr - t_format_start_ptr - 1;
+            else
+                t_format_size = t_format_ptr - t_format_start_ptr;
+
+            /* UNCHECKED */ t_format = (char *)malloc(t_format_size + 1);
+            if (t_format == nil)
+                t_success = false;
+
+            char_t *t_string;
+            uindex_t t_size;
+            t_string = nil;
+			if (t_success)
+            {
+                memcpy(t_format, t_format_start_ptr, t_format_size);
+                t_format[t_format_size] = '\0';
+				t_success = MCNativeCharsFormatV(t_string, t_size, t_format, p_args);
+			}
+			
+			if (t_success)
+				t_success = MCStringAppendNativeChars(t_buffer, t_string, t_size);
+
+			if (t_success)
+				while(t_arg_count > 0)
+				{
+					va_arg(p_args, int);
+					t_arg_count -= 1;
+				}
+					
+			free(t_format);
+		}
 		
-		return t_success;
+		if (t_success && *t_format_ptr == '@')
+		{
+			t_format_ptr += 1;
+		
+			MCValueRef t_value;
+			t_value = va_arg(p_args, MCValueRef);
+			
+			MCAutoStringRef t_string;
+			if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeString)
+				t_string = MCValueRetain((MCStringRef)t_value);
+			else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeName)
+				t_string = MCValueRetain(MCNameGetString((MCNameRef)t_value));
+			else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeNumber)
+				if (MCNumberIsInteger((MCNumberRef)t_value))
+					/* UNCHECKED */ MCStringFormat(&t_string, "%d", MCNumberFetchAsInteger((MCNumberRef)t_value));
+				else
+					/* UNCHECKED */ MCStringFormat(&t_string, "%f", MCNumberFetchAsReal((MCNumberRef)t_value));
+			else
+				MCAssert(false);
+
+			t_success = MCStringAppend(t_buffer, *t_string);
+		}
 	}
 	
-	char_t *t_string;
-	uindex_t t_size;
-	if (!MCNativeCharsFormatV(t_string, t_size, p_format, p_args))
-		return false;
-
-	if (MCStringCreateWithNativeCharsAndRelease(t_string, t_size, r_string))
-		return true;
-	MCMemoryDeallocate(t_string);
-	return false;
+	if (t_success)
+		t_success = MCStringCopyAndRelease(t_buffer, r_string);
+	
+	return t_success;
 }
 
 bool MCStringFormat(MCStringRef& r_string, const char *p_format, ...)
@@ -628,7 +693,7 @@ bool MCStringIsNative(MCStringRef string)
 
 bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool p_is_external_rep, byte_t*& r_bytes, uindex_t& r_byte_count)
 {
-    assert(!p_is_external_rep);
+    MCAssert(!p_is_external_rep);
     
     switch(p_encoding)
     {
@@ -641,7 +706,7 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
         return MCStringConvertToUTF8(self, (char*&)r_bytes, r_byte_count);
     case kMCStringEncodingUTF32:
         break;
-#ifndef __LINUX__
+#if !defined(__LINUX__) && !defined(__ANDROID__)
     case kMCStringEncodingISO8859_1:
         break;
 #endif
@@ -649,7 +714,7 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
     case kMCStringEncodingWindows1252:
         break;
 #endif
-#ifndef __MAC__
+#if !defined(__MAC__) && !defined(__IOS__)
     case kMCStringEncodingMacRoman:
         break;
 #endif

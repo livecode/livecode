@@ -53,7 +53,7 @@ public:
 	{
 		return scale;
 	}
-	Boolean import(const char *fname, IO_handle stream);
+	Boolean import(MCStringRef fname, IO_handle stream);
 	
 	IO_stat load(IO_handle stream, const char *version);
 	IO_stat extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length);

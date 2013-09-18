@@ -1781,10 +1781,9 @@ Exec_stat MCStack::sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
 	return ES_NORMAL;
 }
 
-void MCStack::breakstring(const MCString &source, MCString **dest,
-                          uint2 &nstrings, Find_mode fmode)
+void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uint2 &nstrings, Find_mode fmode)
 {
-	MCString *tdest = NULL;
+    MCStringRef *tdest_str = nil;
 	nstrings = 0;
 	switch (fmode)
 	{
@@ -1793,8 +1792,8 @@ void MCStack::breakstring(const MCString &source, MCString **dest,
 	case FM_WORD:
 		{
 			// MW-2007-07-05: [[ Bug 110 ]] - Break string only breaks at spaces, rather than space charaters
-			const char *sptr = source.getstring();
-			uint4 l = source.getlength();
+			const char *sptr = MCStringGetCString(source);
+			uint4 l = MCStringGetLength(source);
 			MCU_skip_spaces(sptr, l);
 			const char *startptr = sptr;
 			while(l != 0)
@@ -1802,8 +1801,8 @@ void MCStack::breakstring(const MCString &source, MCString **dest,
 				while(l != 0 && !isspace(*sptr))
 					sptr += 1, l -= 1;
 
-				MCU_realloc((char **)&tdest, nstrings, nstrings + 1, sizeof(MCString));
-				tdest[nstrings].set(startptr, sptr - startptr);
+				MCU_realloc((char **)&tdest_str, nstrings, nstrings + 1, sizeof(MCStringRef));
+                /* UNCHECKED */ MCStringCreateWithNativeChars ((const char_t *) startptr, sptr - startptr, tdest_str[nstrings]);
 				nstrings++;
 				MCU_skip_spaces(sptr, l);
 				startptr = sptr;
@@ -1817,15 +1816,14 @@ void MCStack::breakstring(const MCString &source, MCString **dest,
 	}
 	if (nstrings == 0)
 	{
-		tdest = new MCString;
-		tdest[0] = source;
+		tdest_str[0] = MCValueRetain(source);
 		nstrings = 1;
 	}
-	*dest = tdest;
+	dest = tdest_str;
 }
 
 Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
-                         const MCString *strings, uint2 nstrings,
+                         MCStringRef *strings, uint2 nstrings,
                          MCChunk *field, Boolean firstcard)
 {
 	Boolean firstword = True;
@@ -1873,18 +1871,13 @@ Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
 		return True;
 	}
 }
-/* WRAPPER */
-void MCStack::find(MCExecPoint &ep, int p_mode, MCStringRef p_needle, MCChunk *p_target)
-{
-	find(ep, (Find_mode)p_mode, MCStringGetOldString(p_needle), p_target);
-}
 
 void MCStack::find(MCExecPoint &ep, Find_mode fmode,
-                   const MCString &tofind, MCChunk *field)
+                   MCStringRef tofind, MCChunk *field)
 {
-	MCString *strings = NULL;
+	MCStringRef *strings = NULL;
 	uint2 nstrings;
-	breakstring(tofind, &strings, nstrings, fmode);
+	breakstring(tofind, strings, nstrings, fmode);
 	MCCard *ocard = curcard;
 	Boolean firstcard = MCfoundfield != NULL;
 	MCField *oldfound = MCfoundfield;
@@ -1921,18 +1914,20 @@ void MCStack::find(MCExecPoint &ep, Find_mode fmode,
 	curcard = ocard;
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
 	dirtyall();
+    for (int i = 0 ; i < nstrings ; i++)
+        MCValueRelease(strings[i]);
 	delete strings;
 	MCresult->sets(MCnotfoundstring);
 }
 
 void MCStack::markfind(MCExecPoint &ep, Find_mode fmode,
-                       const MCString &tofind, MCChunk *field, Boolean mark)
+                       MCStringRef tofind, MCChunk *field, Boolean mark)
 {
 	if (MCfoundfield != NULL)
 		MCfoundfield->clearfound();
-	MCString *strings = NULL;
+	MCStringRef *strings = NULL;
 	uint2 nstrings;
-	breakstring(tofind, &strings, nstrings, fmode);
+	breakstring(tofind, strings, nstrings, fmode);
 	MCCard *ocard = curcard;
 	do
 	{
@@ -1944,6 +1939,8 @@ void MCStack::markfind(MCExecPoint &ep, Find_mode fmode,
 		curcard = (MCCard *)curcard->next();
 	}
 	while (curcard != ocard);
+    for (uint4 i = 0 ; i < nstrings ; i++)
+        MCValueRelease(strings[i]);
 	delete strings;
 	if (MCfoundfield != NULL)
 		MCfoundfield->clearfound();

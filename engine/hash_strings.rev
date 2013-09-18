@@ -57,7 +57,8 @@ on generate pSource, pTarget, pPerfect
    put (item 1 to -2 of it) & "/perfect" into tPerfectCmd
    switch the platform
       case "win32"
-         put tPerfectCmd & ".exe" into tPerfectCmd
+		 put quote & item 1 to -2 of it & quote & ";" before $PATH
+         put "perfect" & ".exe" into tPerfectCmd
       break
       case "macos"
          put pPerfect into tPerfectCmd
