@@ -595,6 +595,10 @@ public:
 	// Make an immutable copy of the content of the variable (nested key).
 	bool copyasvalueref(MCNameRef *path, uindex_t length, bool case_sensitive, MCValueRef& r_value);
 
+	// Equivalent to set but for valuerefs (i.e includes synchronization)
+	bool set(MCExecContext& ctxt, MCNameRef *path, uindex_t length, bool case_sensitive, MCValueRef value);
+	bool set(MCExecContext& ctxt, MCValueRef value);
+	
 	// Evaluate the contents of the variable (nested key) into the ep.
 	Exec_stat eval(MCExecPoint& ep, MCNameRef *path, uindex_t length);
 	// Evalue the contents of the variable (nested key) into r_value.
@@ -767,6 +771,7 @@ public:
 	// i.e. if it is an environment variable or the msg variable
 	// (ep is just used for local context vars)
 	void synchronize(MCExecPoint& ep, Boolean notify = False);
+	void synchronize(MCExecContext &ctxt, Boolean notify = False);
 
 	void setnext(MCVariable *n)
 	{

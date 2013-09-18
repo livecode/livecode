@@ -270,6 +270,11 @@ Exec_stat MCVariable::eval(MCExecPoint& ep, MCNameRef *p_path, uindex_t p_length
 	return ES_ERROR;
 }
 
+bool MCVariable::set(MCExecContext &ctxt, MCValueRef p_value)
+{
+	return set(ctxt, nil, 0, false, p_value);
+}
+
 Exec_stat MCVariable::set(MCExecPoint& ep)
 {
 	return set(ep, nil, 0);
@@ -281,13 +286,22 @@ Exec_stat MCVariable::set(MCExecPoint& ep, MCNameRef *p_path, uindex_t p_length)
 	if (!ep . copyasvalueref(&t_value))
 		return ES_ERROR;
 
-	if (setvalueref(p_path, p_length, ep . getcasesensitive() == True, *t_value))
-	{
-		synchronize(ep, True);
+	MCExecContext ctxt(ep);
+	if (set(ctxt, p_path, p_length, ep.getcasesensitive(), *t_value))
 		return ES_NORMAL;
-	}
-
+	
 	return ES_ERROR;
+}
+
+bool MCVariable::set(MCExecContext &ctxt, MCNameRef *p_path, uindex_t p_length, bool p_is_case_sensitive, MCValueRef p_value)
+{
+	if (setvalueref(p_path, p_length, p_is_case_sensitive, p_value))
+	{
+		synchronize(ctxt, True);
+		return true;
+	}
+	
+	return false;
 }
 
 Exec_stat MCVariable::append(MCExecPoint& ep)
@@ -497,6 +511,11 @@ bool MCVariable::ensureglobal(MCNameRef p_name, MCVariable*& r_var)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCVariable::synchronize(MCExecContext &ctxt, Boolean notify)
+{
+	synchronize(ctxt.GetEP(), notify);
+}
 
 void MCVariable::synchronize(MCExecPoint& ep, Boolean notify)
 {
