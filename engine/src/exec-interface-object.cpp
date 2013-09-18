@@ -3704,7 +3704,7 @@ void MCObject::GetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool&
         t_style_set = gettextstyle();
     
     Font_textstyle t_style;
-    if (MCF_parsetextstyle(MCNameGetOldString(p_index), t_style) == ES_NORMAL)
+    if (MCF_parsetextstyle(MCNameGetString(p_index), t_style) == ES_NORMAL)
     {
         r_setting = MCF_istextstyleset(t_style_set, t_style);
         return;
@@ -3716,7 +3716,7 @@ void MCObject::GetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool&
 void MCObject::SetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool p_setting)
 {
     Font_textstyle t_style;
-    if (MCF_parsetextstyle(MCNameGetOldString(p_index), t_style) == ES_NORMAL)
+    if (MCF_parsetextstyle(MCNameGetString(p_index), t_style) == ES_NORMAL)
     {
         uint2 t_style_set;
 		if ((m_font_flags & FF_HAS_TEXTSTYLE) == 0)

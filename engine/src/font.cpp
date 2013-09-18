@@ -353,7 +353,7 @@ Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
 			// MW-2012-02-17: [[ IntrinsicUnicode ]] Strip any lang tag from the
 			//   fontname.
 			char *t_tag;
-			t_tag = strchr(MCStringGetCString(fname), ',');
+			t_tag = strchr(strdup(MCStringGetCString(fname)), ',');
 			if (t_tag != nil)
 				t_tag[0] = '\0';
 		}
