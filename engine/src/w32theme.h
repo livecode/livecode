@@ -74,7 +74,7 @@ public:
 	virtual bool drawmenuitembackground(MCContext *context, const MCRectangle& dirty, MCButton *button);
 
 protected:
-	virtual void getthemecolor(const MCWidgetInfo &winfo, Widget_Color ctype, MCStringRef r_colorbuf);
+	virtual void getthemecolor(const MCWidgetInfo &winfo, Widget_Color ctype, MCStringRef &r_colorbuf);
 	MCWinSysHandle GetTheme(Widget_Type wtype);
 	void CloseData();
 	Boolean GetThemePartAndState(const MCWidgetInfo &winfo, int4& aPart, int4& aState);
