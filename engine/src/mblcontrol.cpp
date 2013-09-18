@@ -365,10 +365,10 @@ bool MCNativeControl::LookupType(MCStringRef p_type, MCNativeControlType& r_type
 
 bool MCNativeControl::FindByNameOrId(MCStringRef p_name, MCNativeControl*& r_control)
 {
-	uint32_t t_id;
-
-	/* UNCHECKED */ MCStringToInteger(p_name, t_id);
-	if (!MCStringIsEmpty(p_name))
+	//uint32_t t_id;
+	MCNumberRef t_id;
+	//if (MCStringToInteger(p_name, t_id))
+	if (MCNumberParse(p_name, t_id)
 		return FindById(t_id, r_control);
 	
 	for(MCNativeControl *t_control = s_native_controls; t_control != nil; t_control = t_control -> m_next)
