@@ -284,33 +284,38 @@ bool read_quoted_string(MCStringRef p_header, MCStringRef &r_string_end, MCStrin
 	bool t_success = true;
 	char *t_string = NULL;
 	uint32_t t_strlen = 0;
+	uint32 t_pos;
+	t_pos = 0;
 	
 	if (MCStringGetNativeCharAtIndex(p_header, 0) != '"')
 		return false;
 	
-	MCAutoStringRef t_head;
-	MCStringDivideAtIndex(p_header, 0, &t_head, p_header);
-
+	//MCAutoStringRef t_head;
+	//MCStringDivideAtIndex(p_header, 0, &t_head, p_header);
+	t_pos += 1;
 	while (t_success && MCStringGetNativeCharAtIndex(p_header, 0) != '"')
 	{
 		char t_char;
 		if (is_folded_lwsp(p_header))
 		{
-			t_char = MCStringGetNativeCharAtIndex(p_header, 2);
-			MCAutoStringRef t_head;
-			MCStringDivideAtIndex(p_header, 2, &t_head, p_header);
+			t_char = MCStringGetNativeCharAtIndex(p_header, t_pos + 2);
+			//MCAutoStringRef t_head;
+			//MCStringDivideAtIndex(p_header, 2, &t_head, p_header);
+			t_pos += 3;
 		}
-		else if (MCStringGetNativeCharAtIndex(p_header, 0) == '\\')
+		else if (MCStringGetNativeCharAtIndex(p_header, t_pos) == '\\')
 		{
-			t_char = MCStringGetNativeCharAtIndex(p_header, 1);
-			MCAutoStringRef t_head;
-			MCStringDivideAtIndex(p_header, 1, &t_head, p_header);
+			t_char = MCStringGetNativeCharAtIndex(p_header, t_pos + 1);
+			t_pos += 2;
+			//MCAutoStringRef t_head;
+			//MCStringDivideAtIndex(p_header, 1, &t_head, p_header);
 		}
-		else if (is_qtext(MCStringGetNativeCharAtIndex(p_header, 0)))
+		else if (is_qtext(MCStringGetNativeCharAtIndex(p_header, t_pos)))
 		{
-			t_char = MCStringGetNativeCharAtIndex(p_header, 0);
-			MCAutoStringRef t_head;
-			MCStringDivideAtIndex(p_header, 0, &t_head, p_header);
+			t_char = MCStringGetNativeCharAtIndex(p_header, t_pos);
+			t_pos += 1;
+			//MCAutoStringRef t_head;
+			//MCStringDivideAtIndex(p_header, 0, &t_head, p_header);
 		}
 		else
 			t_success = false;
@@ -326,8 +331,9 @@ bool read_quoted_string(MCStringRef p_header, MCStringRef &r_string_end, MCStrin
 	{
 		if (t_string != NULL)
 			t_string[t_strlen] = '\0';
+
 		/* UNCHECKED */ MCStringCreateWithCString(t_string, r_string);
-		/* UNCHECKED */ MCStringCopySubstring(p_header, MCRangeMake(1, MCStringGetLength(p_header) - 1), r_string_end);
+		/* UNCHECKED */ MCStringCopySubstring(p_header, MCRangeMake(t_pos +1 , MCStringGetLength(p_header) - (t_pos + 1)), r_string_end);
 	}
 	else
 		MCCStringFree(t_string);
