@@ -1336,6 +1336,7 @@ bool MCD_convert_from_datetime(MCExecPoint &p_context, Convert_form p_primary_to
 		}
 		
 		p_context . setvalueref(t_buffer);
+		MCValueRelease(t_buffer);
 	}
     
     return t_success;
