@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "object.h"
 #include "globals.h"
 #include "param.h"
@@ -97,23 +98,31 @@ MCSErrorMode MCS_get_errormode(void)
 	return kMCSErrorModeNone;
 }
 
-bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, MCStringRef p_data)
+bool MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_data)
 {
-	ep . setvalueref(p_data);
-
-	switch(p_kind)
+	ctxt . SetTheResultToValue(p_data);
+	
+	switch (p_kind)
 	{
-	case kMCSPutOutput:
+	case kMCSPutOutput:	
+	case kMCSPutUnicodeOutput:
 	case kMCSPutBeforeMessage:
 	case kMCSPutIntoMessage:
-		return MCmb -> set(ep, nil, 0) == ES_NORMAL;
+		return MCmb -> set(ctxt, p_data);
 	case kMCSPutAfterMessage:
-		return MCmb -> append(ep, nil, 0) == ES_NORMAL;
-
+		{
+			MCAutoStringRef t_existing;
+			MCAutoStringRef t_new;
+			MCValueRef t_val = MCmb -> getvalueref();
+			if (ctxt . ConvertToString(t_val, &t_existing))
+				if (MCStringFormat(&t_new, "%@%@", *t_existing, p_data))
+					return MCmb -> set(ctxt, *t_new);
+			break;
+		}
 	default:
 		break;
 	}
-
+	
 	// MW-2012-02-23: [[ PutUnicode ]] If we don't understand the kind
 	//   then return false (caller can then throw an error).
 	return false;

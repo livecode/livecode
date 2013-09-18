@@ -1562,15 +1562,15 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 			MCServerExecPutCookie(ctxt, *t_name, *t_string, t_expires, *t_path, *t_domain, is_secure, is_httponly);
 		}
 		else if (prep == PT_UNDEFINED)
-			MCEngineExecPutOutput(ctxt, *t_string, is_unicode);
+			MCEngineExecPutOutput(ctxt, *t_string);
 		else if (prep == PT_INTO || prep == PT_AFTER || prep == PT_BEFORE)
 			MCIdeExecPutIntoMessage(ctxt, *t_string, prep);
 		else if (prep == PT_HEADER || prep == PT_NEW_HEADER)
 			MCServerExecPutHeader(ctxt, *t_string, prep == PT_NEW_HEADER);
 		else if (prep == PT_CONTENT)
-			MCServerExecPutContent(ctxt, *t_string, is_unicode);
+			MCServerExecPutContent(ctxt, *t_string);
 		else if (prep == PT_MARKUP)
-			MCServerExecPutMarkup(ctxt, *t_string, is_unicode);
+			MCServerExecPutMarkup(ctxt, *t_string);
 		else if (prep == PT_BINARY)
 			MCServerExecPutBinaryOutput(ctxt, *t_string);
 	}

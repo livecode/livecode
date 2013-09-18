@@ -2355,7 +2355,7 @@ void MCEngineEvalErrorObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 
 void MCEngineExecGet(MCExecContext& ctxt, MCValueRef value);
 void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef value, int where, MCVariableChunkPtr t_target);
-void MCEngineExecPutOutput(MCExecContext& ctxt, MCStringRef value, bool unicode);
+void MCEngineExecPutOutput(MCExecContext& ctxt, MCStringRef value);
 
 void MCEngineExecDo(MCExecContext& ctxt, MCStringRef p_script, int p_line, int p_pos);
 void MCEngineExecInsertScriptOfObjectInto(MCExecContext& ctxt, MCObject *p_script, bool p_in_front);
@@ -3449,8 +3449,8 @@ extern MCExecMethodInfo *kMCServerSetSessionIdMethodInfo;
 
 void MCServerExecPutHeader(MCExecContext& ctxt, MCStringRef value, bool as_new);
 void MCServerExecPutBinaryOutput(MCExecContext& ctxt, MCStringRef value);
-void MCServerExecPutContent(MCExecContext& ctxt, MCStringRef value, bool is_unicode);
-void MCServerExecPutMarkup(MCExecContext& ctxt, MCStringRef value, bool is_unicode);
+void MCServerExecPutContent(MCExecContext& ctxt, MCStringRef value);
+void MCServerExecPutMarkup(MCExecContext& ctxt, MCStringRef value);
 void MCServerExecPutCookie(MCExecContext& ctxt, MCStringRef name, MCStringRef value, uinteger_t expires, MCStringRef path, MCStringRef domain, bool is_secure, bool http_only);
 
 void MCServerExecDeleteSession(MCExecContext& ctxt);
