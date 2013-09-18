@@ -2333,9 +2333,10 @@ void MCField::typetext(MCStringRef newtext)
 		char string[2];
 		string[1] = '\0';
         MCAutoNativeCharArray t_array;
+        /* UNCHECHED */ t_array . New(MCStringGetLength(newtext));
+        memcpy(t_array . Chars(), MCStringGetCString(newtext), MCStringGetLength(newtext));
         char *sptr = (char *)t_array . Chars();
-		memcpy(sptr, MCStringGetNativeCharPtr(newtext), MCStringGetLength(newtext));
-		const char *eptr = sptr + MCStringGetLength(newtext);
+        const char *eptr = sptr + MCStringGetLength(newtext);
 		while (sptr < eptr)
 		{
 			string[0] = *sptr;
@@ -2347,6 +2348,8 @@ void MCField::typetext(MCStringRef newtext)
 		}
         t_array . CreateString(&t_newtext);
 	}
+    else
+        MCStringCopy(newtext, &t_newtext);
  
 	uint2 oldfocused;
 	focusedparagraph->getselectionindex(oldfocused, oldfocused);
