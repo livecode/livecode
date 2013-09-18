@@ -504,7 +504,7 @@ bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expir
 		MCU_urlencode(ep);
 		MCAutoStringRef t_encoded;
 		t_success = ep .copyasstringref(&t_encoded);
-		MCValueAssign(p_value, *t_encoded);
+	//	p_value = MCValueRetain(*t_encoded);
 
 	}	
 	
@@ -525,7 +525,7 @@ bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expir
 	if (t_success)
 	{
 		MCservercgicookies[t_index].name = strdup(MCStringGetCString(p_name));
-		MCservercgicookies[t_index].value = strdup(MCStringGetCString(p_value));
+		MCservercgicookies[t_index].value = strdup(MCStringGetCString(*t_encoded));
 		MCservercgicookies[t_index].path = strdup(MCStringGetCString(p_path));
 		MCservercgicookies[t_index].domain = strdup(MCStringGetCString(p_domain));
 
