@@ -610,6 +610,7 @@ public:
 	bool ConvertToUnsignedInteger(MCValueRef value, uinteger_t& r_integer);
 	bool ConvertToReal(MCValueRef value, real64_t& r_real);
 	bool ConvertToArray(MCValueRef value, MCArrayRef& r_array);
+	bool ConvertToBinary(MCValueRef value, MCDataRef& r_data);
 	bool ConvertToLegacyPoint(MCValueRef value, MCPoint& r_point);
 	bool ConvertToLegacyRectangle(MCValueRef value, MCRectangle& r_rectangle);
 	bool ConvertToLegacyColor(MCValueRef value, MCColor& r_color);

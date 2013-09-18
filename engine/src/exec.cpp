@@ -85,6 +85,24 @@ bool MCExecContext::ConvertToBoolean(MCValueRef p_value, MCBooleanRef &r_boolean
 	return m_ep . convertvaluereftoboolean(p_value, r_boolean);
 }
 
+bool MCExecContext::ConvertToBinary(MCValueRef p_value, MCDataRef &r_data)
+{
+	// Don't try to convert to a string if it is already binary
+	if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeData)
+	{
+		r_data = MCValueRetain((MCDataRef)p_value);
+		return true;
+	}
+	
+	// Convert to a string and then to binary data
+	MCAutoStringRef t_as_string;
+	if (ConvertToString(p_value, &t_as_string))
+		if (MCDataCreateWithBytes(MCStringGetNativeCharPtr(*t_as_string), MCStringGetLength(*t_as_string), r_data))
+			return true;
+	
+	return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCExecContext::FormatUnsignedInteger(uinteger_t p_integer, MCStringRef& r_value)
