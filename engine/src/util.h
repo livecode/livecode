@@ -174,6 +174,7 @@ extern void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 	                       real8 tn, real8 oldn, MCSortnode *titems);
 extern void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output);
 extern void MCU_geturl(MCExecPoint &ep);
+extern void MCU_puturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef p_data);
 extern void MCU_puturl(MCExecPoint &ep, MCExecPoint &data);
 extern uint1 MCU_unicodetocharset(uint2 uchar);
 extern uint1 MCU_languagetocharset(MCNameRef langname);
