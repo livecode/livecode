@@ -187,7 +187,8 @@ bool StringArrayToString (const_cstring_array_t *p_indexes, char *&r_result, MCC
 
 static bool contains_char(MCStringRef p_string, char p_char)
 {
-	return p_char != '\0' && strchr(MCStringGetCString(p_string), p_char) != nil;
+    uindex_t t_offset;
+	return p_char != '\0' && MCStringFirstIndexOfChar(p_string, p_char, 0, kMCCompareExact, t_offset);
 }
 
 bool StringTokenize(MCStringRef p_string, MCStringRef p_delimiters, MCStringRef *& r_elements, uint32_t& r_element_count)
@@ -203,47 +204,43 @@ bool StringTokenize(MCStringRef p_string, MCStringRef p_delimiters, MCStringRef 
 	
 	if (p_string != nil)
 	{
-		const char *t_ptr;
-		t_ptr = MCStringGetCString(p_string);
-		
-		const char *t_token;
-		t_token = nil;
+        uindex_t t_start;
+        uindex_t t_end;
+        t_end = 0;
 		
 		while(t_success)
 		{
 			// Skip spaces
-			while(contains_char(p_delimiters, *t_ptr))
-				t_ptr += 1;
+			while(contains_char(p_delimiters, MCStringGetNativeCharAtIndex(p_string, t_end))
+				t_end += 1;
 			
-			t_token = t_ptr;
+			t_start = t_end;
 			
 			// If we find a quote, start a quoted token, else loop until whitespace
-			if (*t_ptr == '"')
+			if (MCStringGetNativeCharAtIndex(p_string, t_end) == '"')
 			{
-				t_ptr += 1;
-				while(*t_ptr != '\0' && *t_ptr != '"')
-					t_ptr += 1;
+				t_end += 1;
+				while(MCStringGetNativeCharAtIndex(p_string, t_end) != '\0' && MCStringGetNativeCharAtIndex(p_string, t_end) != '"')
+					t_end += 1;
 				
-				if (*t_ptr == '"')
-					t_ptr += 1;
+				if (MCStringGetNativeCharAtIndex(p_string, t_end) == '"')
+					t_end += 1;
 			}
 			else
 			{
-				while(*t_ptr != '\0' && !contains_char(p_delimiters, *t_ptr))
-					t_ptr += 1;
+				while(MCStringGetNativeCharAtIndex(p_string, t_end) != '\0' && !contains_char(p_delimiters, MCStringGetNativeCharAtIndex(p_string, t_end)))
+					t_end += 1;
 			}
 			
-			// If ptr and token are the same, we have exhausted the string
-			if (t_ptr == t_token)
+			// If t_end and t_start are the same, we have exhausted the string
+			if (t_end == t_start)
 				break;
 			
 			// Add a new element to the array, and clone the substring
 			t_success = MCMemoryResizeArray(t_element_count + 1, t_elements, t_element_count);
 			if (t_success)
             {
-                MCAutoStringRef t_token_str;
-                /* UNCHECKED */ MCStringCreateWithCString(t_token, &t_token_str);
-				t_success = MCStringCopySubstring(*t_token_str, MCRangeMake(0, t_ptr - t_token), t_elements[t_element_count - 1]);
+				t_success = MCStringCopySubstring(p_string, MCRangeMake(t_start, t_end - t_start), t_elements[t_element_count - 1]);
             }
 		}
 	}
@@ -300,8 +297,20 @@ bool SplitOptionListsByChunk(MCChunkType p_chunk_type, const_cstring_array_t *p_
 		{
             MCAutoStringRef t_string;
             /* UNCHECKED */ MCStringCreateWithCString(p_option_lists->elements[t_element_count], &t_string);
-            // I don't know how to update the 3rd arg of the method below!
-            t_success = SplitStringByChunk(p_chunk_type, *t_string, r_option_lists[t_element_count]->elements, r_option_lists[t_element_count]->length, p_itemdelimter);
+            MCStringRef *t_chunks;
+            t_chunks = nil;
+            
+            t_success = SplitStringByChunk(p_chunk_type, *t_string, t_chunks, r_option_lists[t_element_count]->length, p_itemdelimter);
+            char **t_array = (char **)malloc(r_option_lists[t_element_count]->length * sizeof(MCStringRef*));
+            for (uint32_t i = 0; i < r_option_lists[t_element_count]->length; i++)
+            {
+                t_array[i] = strdup(MCStringGetCString(t_chunks[i]));
+                MCValueRelease(t_chunks[i]);
+            }
+            
+            r_option_lists[t_element_count]->elements = t_array;
+            free(t_array);
+            
 		}
 	}
 
