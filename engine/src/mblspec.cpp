@@ -768,9 +768,9 @@ void MCS_unloadurl(MCObject *p_object, MCStringRef p_url)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, MCStringRef p_data)
+bool MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_data)
 {
-	/* UNCHECKED */ ep . setvalueref(p_data);
+	/* UNCHECKED */ ctxt . SetTheResultToValue(p_data);
 
 	switch(p_kind)
 	{
