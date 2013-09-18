@@ -1494,7 +1494,7 @@ void MCStack::createmenu(MCControl *nc, uint2 width, uint2 height)
 			if (IsMacLF() || nc->gettype() == CT_FIELD || MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN)
 				curcard->setsprop(P_3D, MCSTR(MCfalsestring));
 		}
-	MCAutoStringRef colorbuf;
+	
 	MCWidgetInfo wmenu;
 	wmenu.type = WTHEME_TYPE_MENU;
 	if ( nc->gettype() != CT_FIELD && (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN))
@@ -1504,21 +1504,25 @@ void MCStack::createmenu(MCControl *nc, uint2 width, uint2 height)
 
 		if  (!tparent->getcindex(DI_BACK, i) && !tparent->getpindex(DI_BACK,i))
         {
+            MCAutoStringRef colorbuf;
             MCcurtheme->getthemecolor(wmenu, WCOLOR_BACK, &colorbuf);
 			setsprop(P_BACK_COLOR, *colorbuf);
         }
 		if  (!tparent->getcindex(DI_BORDER, i) && !tparent->getpindex(DI_BORDER,i))
         {
+            MCAutoStringRef colorbuf;
             MCcurtheme->getthemecolor(wmenu, WCOLOR_BORDER, &colorbuf);
 			setsprop(P_BORDER_COLOR, *colorbuf);
         }
 		if  (!tparent->getcindex(DI_FORE, i) && !tparent->getpindex(DI_FORE,i))
         {
+            MCAutoStringRef colorbuf;
             MCcurtheme->getthemecolor(wmenu, WCOLOR_TEXT, &colorbuf);
 			setsprop(P_FORE_COLOR, *colorbuf);
         }
 		if  (!tparent->getcindex( DI_HILITE, i) && !tparent->getpindex( DI_HILITE,i))
         {
+            MCAutoStringRef colorbuf;
             MCcurtheme->getthemecolor(wmenu, WCOLOR_HILIGHT, &colorbuf);
 			setsprop(P_HILITE_COLOR, *colorbuf);
         }
