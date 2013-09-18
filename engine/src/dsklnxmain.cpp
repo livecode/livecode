@@ -165,7 +165,7 @@ static bool do_iconv(iconv_t fd, const char *in, size_t in_len, char * &out, siz
 		else
 		{
 			// No error, conversion should be complete.
-			assert(in_len == 0);
+			MCAssert(in_len == 0);
 		}
 	}
 	
