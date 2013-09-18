@@ -180,7 +180,7 @@ static bool match_number(MCStringRef p_input, uindex_t &x_offset, int4& r_number
 
 	int4 t_number;
 	t_number = 0;
-	while(x_offset < t_length && isdigit(t_char))
+	while(x_offset <= t_length && isdigit(t_char))
 	{
 		t_number = t_number * 10 + t_char - '0';
 		t_char = MCStringGetCharAtIndex(p_input, x_offset++);
