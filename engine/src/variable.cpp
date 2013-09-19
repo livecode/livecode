@@ -79,23 +79,6 @@ bool MCVariable::createwithname(MCNameRef p_name, MCVariable*& r_var)
 	return true;
 }
 
-bool MCVariable::createwithname_cstring(const char *p_name, MCVariable*& r_var)
-{
-	MCVariable *self;
-	if (!create(self))
-		return false;
-
-	if (!MCNameCreateWithCString(p_name, self -> name))
-	{
-		delete self;
-		return false;
-	}
-
-	r_var = self;
-
-	return true;
-}
-
 // This is only called by MCObject to create copies of prop sets.
 bool MCVariable::createcopy(MCVariable& p_var, MCVariable*& r_new_var)
 {
@@ -1456,7 +1439,7 @@ Exec_stat MCVarref::resolve(MCExecPoint& ep, MCVariable*& r_var, MCVariableValue
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCDeferredVariable::createwithname_cstring(const char *p_name, MCDeferredVariableComputeCallback p_callback, void *p_context, MCVariable*& r_var)
+bool MCDeferredVariable::createwithname(MCNameRef p_name, MCDeferredVariableComputeCallback p_callback, void *p_context, MCVariable*& r_var)
 {
 	MCDeferredVariable *self;
 	self = new MCDeferredVariable;
@@ -1464,7 +1447,7 @@ bool MCDeferredVariable::createwithname_cstring(const char *p_name, MCDeferredVa
 		return false;
 
 	self -> next = nil;
-	/* UNCHECKED */ MCNameCreateWithCString(p_name, self -> name);
+	self -> name = MCValueRetain(p_name);
 
 	self -> value = nil;
 	self -> is_msg = false;

@@ -164,13 +164,13 @@ enum MCPropertyType
 struct MCPropertyInfo
 {
 	Properties property;
-	bool effective : 1;
+	bool effective;
 	MCPropertyType type;
 	void *type_info;
 	void *getter;
 	void *setter;
-	bool has_effective : 1;
-    bool is_array_prop : 1;
+	bool has_effective;
+    bool is_array_prop;
 };
 
 template<typename O, typename A, void (O::*Method)(MCExecContext&, A)> inline void MCPropertyObjectThunk(MCExecContext& ctxt, MCObjectPtr obj, A arg)

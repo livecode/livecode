@@ -83,8 +83,8 @@ MCScreenDC::~MCScreenDC()
 		int2 i;
 		for (i = 0 ; i < ncolors ; i++)
 		{
-			if (colornames[i] != NULL)
-				delete colornames[i];
+            if (colornames[i] != NULL)
+                MCValueRelease(colornames[i]);
 		}
 		delete colors;
 		delete colornames;
@@ -433,7 +433,7 @@ uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
 
 bool MCScreenDC::listprinters(MCStringRef& r_printers)
 {
-	MCdefaultstackptr->domess(LIST_PRINTER_SCRIPT);
+	MCdefaultstackptr->domess(MCSTR(LIST_PRINTER_SCRIPT));
 	MCresult->eval(false, (MCValueRef&)r_printers);
 	return true;
 }
