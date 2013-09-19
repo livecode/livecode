@@ -65,6 +65,7 @@ public:
 	MCScriptPoint(MCObject *, MCHandlerlist *, MCStringRef script);
 	MCScriptPoint(MCExecPoint &ep);
 	MCScriptPoint(const MCString &s);
+	MCScriptPoint(MCStringRef p_string);
 	~MCScriptPoint();
 	MCScriptPoint& operator=(const MCScriptPoint& sp);
 	

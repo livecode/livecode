@@ -1484,7 +1484,7 @@ bool MCStringPrependSubstring(MCStringRef self, MCStringRef p_prefix, MCRange p_
 {
 	MCAssert(MCStringIsMutable(self));
 
-	// Only do the append now if self != prefix.
+	// Only do the prepend now if self != prefix.
 	if (self != p_prefix)
 	{
 		__MCStringClampRange(p_prefix, p_range);
@@ -1500,7 +1500,7 @@ bool MCStringPrependSubstring(MCStringRef self, MCStringRef p_prefix, MCRange p_
 		return true;
 	}
 
-	// Otherwise copy substring and append.
+	// Otherwise copy substring and prepend.
 	MCAutoStringRef t_prefix_substring;
 	return MCStringCopySubstring(p_prefix, p_range, &t_prefix_substring) &&
 		MCStringPrepend(self, *t_prefix_substring);
@@ -1519,6 +1519,32 @@ bool MCStringPrependNativeChars(MCStringRef self, const char_t *p_chars, uindex_
 
 	// We succeeded.
 	return true;
+}
+
+bool MCStringPrependChars(MCStringRef self, const unichar_t *p_chars, uindex_t p_char_count)
+{
+	MCAssert(MCStringIsMutable(self));
+    
+	// Ensure we have enough room in self - with the gap at the beginning.
+	if (!__MCStringExpandAt(self, 0, p_char_count))
+		return false;
+    
+	// Now copy the chars across (including the NUL).
+	uindex_t t_nchar_count;
+	/* FRAGILE */ MCUnicodeCharsMapToNative(p_chars, p_char_count, self -> chars, t_nchar_count, '?');
+    
+	// We succeeded.
+	return true;
+}
+
+bool MCStringPrependNativeChar(MCStringRef self, char_t p_char)
+{
+	return MCStringPrependNativeChars(self, &p_char, 1);
+}
+
+bool MCStringPrependChar(MCStringRef self, unichar_t p_char)
+{
+	return MCStringPrependChars(self, &p_char, 1);
 }
 
 bool MCStringInsert(MCStringRef self, uindex_t p_at, MCStringRef p_substring)
@@ -1556,6 +1582,28 @@ bool MCStringRemove(MCStringRef self, MCRange p_range)
 	// NUL.
 	__MCStringShrinkAt(self, p_range . offset, p_range . length);
 
+	// We succeeded.
+	return true;
+}
+
+bool MCStringSubstring(MCStringRef self, MCRange p_range)
+{
+	MCAssert(MCStringIsMutable(self));
+    
+	__MCStringClampRange(self, p_range);
+    
+	// Remove the surrounding chars.
+    // On the left if necessary
+    if (p_range . offset != 0)
+    {
+        __MCStringShrinkAt(self, 0, p_range . offset);
+        p_range . offset = 0;
+    }
+    
+    // And on the right if necessary
+    if (p_range . offset + p_range . length != self -> char_count)
+        __MCStringShrinkAt(self, p_range . length, self -> char_count - p_range . length);
+    
 	// We succeeded.
 	return true;
 }
