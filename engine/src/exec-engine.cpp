@@ -686,7 +686,7 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
 				return;
 			}
 			
-			/* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(0, 0), *t_value_string);
+			/* UNCHECKED */ MCStringPrepend(*t_string, *t_value_string);
 			
 			ep . setvalueref(*t_string);
 			p_var . variable -> set(ep, False);

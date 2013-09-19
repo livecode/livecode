@@ -1396,7 +1396,10 @@ bool MCStringAppendNativeChar(MCStringRef string, char_t p_char);
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
 bool MCStringPrepend(MCStringRef string, MCStringRef prefix);
 bool MCStringPrependSubstring(MCStringRef string, MCStringRef suffix, MCRange range);
+bool MCStringPrependChars(MCStringRef string, const unichar_t *chars, uindex_t count);
 bool MCStringPrependNativeChars(MCStringRef string, const char_t *chars, uindex_t count);
+bool MCStringPrependChar(MCStringRef string, unichar_t p_char);
+bool MCStringPrependNativeChar(MCStringRef string, char_t p_char);
 
 // Insert new_string into string at offset 'at'.
 //
