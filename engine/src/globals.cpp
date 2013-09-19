@@ -482,6 +482,8 @@ Boolean MCmainstackschanged = False;
 //   UDP sockets.
 Boolean MCallowdatagrambroadcasts = False;
 
+char *MCsysencoding = nil;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCUIDC *MCCreateScreenDC(void);
@@ -830,7 +832,7 @@ void X_clear_globals(void)
 #endif
 }
 
-bool X_open(int argc, char *argv[], char *envp[])
+bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 {
 	MCperror = new MCError();
 	MCeerror = new MCError();
@@ -853,28 +855,37 @@ bool X_open(int argc, char *argv[], char *envp[])
 	/* UNCHECKED */ MCVariable::ensureglobal(MCN_each, MCeach);
 
 	if (envp != nil)
-		for (uint32_t i = 0 ; envp[i] != NULL ; i++)
+		for (uint32_t i = 0 ; envp[i] != nil ; i++)
 		{
-			char *sptr = envp[i];
-			if (isupper((uint1)sptr[0]))
+			MCStringRef t_env_var = envp[i];
+			if (isupper(MCStringGetCharAtIndex(t_env_var, 0)))
 			{
-				sptr = strchr(sptr, '=');
-				uint2 length = sptr - envp[i];
-				char *vname = new char[length + 2];
-				vname[0] = '$';
-				strncpy(&vname[1], envp[i], length);
-				vname[length + 1] = '\0';
+				uindex_t t_equal;
+				/* UNCHECKED */ MCStringFirstIndexOfChar(t_env_var, '=', 0, kMCStringOptionCompareExact, t_equal);
+
+				MCAutoStringRef t_vname;
+				/* UNCHECKED */ MCStringCreateMutable(0, &t_vname);
+				/* UNCHECKED */ MCStringAppendChar(*t_vname, '$');
+				/* UNCHECKED */ MCStringAppendSubstring(*t_vname, t_env_var, MCRangeMake(0, t_equal));
+
+				MCNewAutoNameRef t_name;
+				/* UNCHECKED */ MCNameCreate(*t_vname, &t_name);
 
 				MCVariable *tvar;
-				/* UNCHECKED */ MCVariable::ensureglobal_cstring(vname, tvar);
-				if (strequal(vname, "$MCNOFILES") && *(sptr + 1) != '0')
+				/* UNCHECKED */ MCVariable::ensureglobal(*t_name, tvar);
+				if (MCStringIsEqualToCString(*t_vname, "$MCNOFILES", kMCCompareExact) 
+					&& MCStringGetCharAtIndex(t_env_var, t_equal + 1) != '0')
 				{
 					MCnofiles = True;
 					MCsecuremode = MC_SECUREMODE_ALL;
 				}
-				tvar->copysvalue(sptr + 1);
-
-				delete vname;
+				
+				MCAutoStringRef t_value;
+				/* UNCHECKED */ MCStringCopySubstring(t_env_var, 
+													  MCRangeMake(t_equal + 1, MCStringGetLength(t_env_var) - t_equal - 1),
+													  &t_value);
+				
+				tvar->setvalueref(*t_value);
 			}
 		}
 
@@ -1184,6 +1195,9 @@ int X_close(void)
 #endif
 	
 	MCU_finalize_names();
+	
+	if (MCsysencoding != nil)
+		MCMemoryDelete(MCsysencoding);
 
 	return MCretcode;
 }

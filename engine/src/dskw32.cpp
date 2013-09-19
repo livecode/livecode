@@ -1567,9 +1567,14 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	IO_stdout -> is_pipe = handle_is_pipe(IO_stdout -> fhandle);
 	IO_stderr = new IO_header((MCWinSysHandle)GetStdHandle(STD_ERROR_HANDLE), NULL, 0, 0);
 	IO_stderr -> is_pipe = handle_is_pipe(IO_stderr -> fhandle);
-
-	setlocale(LC_CTYPE, MCnullstring);
-	setlocale(LC_COLLATE, MCnullstring);
+		
+	// Internally, LiveCode assumes sorting orders etc are those of en_US.
+	// Additionally, the "native" string encoding for Linux is CP1252
+	// (even if the Windows system is using something different).
+	const char *t_internal_locale = "English_United States.1252";
+	setlocale(LC_ALL, "");
+	setlocale(LC_CTYPE, t_internal_locale);
+	setlocale(LC_COLLATE, t_internal_locale);
 
 	// MW-2004-11-28: The ctype array seems to have changed in the latest version of VC++
 	((unsigned short *)_pctype)[160] &= ~_SPACE;
@@ -3990,10 +3995,8 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
         if (created)
         {
             MCAutoStringRef t_cmdline;
-            if (p_doc != nil && MCStringGetNativeCharAtIndex(p_doc, 0) != '\0')
-			{
-				/* UNCHECKED */ MCStringFormat(&t_cmdline, "%s \"%s\"", MCNameGetCString(p_name), MCStringGetCString(p_doc));
-			}
+            if (doc != nil && *doc != '\0')
+				/* UNCHECKED */ MCStringFormat(&t_cmdline, "%@ \"%s\"", p_name, doc);
             else
                 t_cmdline = (MCStringRef) MCValueRetain(MCNameGetString(p_name));
             
@@ -4020,9 +4023,9 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
                 if (created)
                 {
                     PROCESS_INFORMATION piProcInfo;
-                    STARTUPINFOA siStartInfo;
-                    memset(&siStartInfo, 0, sizeof(STARTUPINFOA));
-                    siStartInfo.cb = sizeof(STARTUPINFOA);
+                    STARTUPINFOW siStartInfo;
+                    memset(&siStartInfo, 0, sizeof(STARTUPINFOW));
+                    siStartInfo.cb = sizeof(STARTUPINFOW);
                     siStartInfo.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
                     if (MChidewindows)
                         siStartInfo.wShowWindow = SW_HIDE;
@@ -4031,7 +4034,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
                     siStartInfo.hStdInput = hChildStdinRd;
                     siStartInfo.hStdOutput = hChildStdoutWr;
                     siStartInfo.hStdError = hChildStderrWr;
-                    if (CreateProcessA(NULL, (LPSTR)MCStringGetCString(*t_cmdline), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &siStartInfo, &piProcInfo))
+                    if (CreateProcessW(NULL, (LPWSTR)MCStringGetCharPtr(*t_cmdline), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &siStartInfo, &piProcInfo))
                     {
                         t_process_handle = piProcInfo . hProcess;
                         t_process_id = piProcInfo . dwProcessId;
@@ -4059,23 +4062,23 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
                 //   5) Carry on with the handles we were given to start with
                 // If the launched process vanished before (4) it is treated as failure.
                 
-                char t_parameters[64];
-                sprintf(t_parameters, "-elevated-slave%08x", GetCurrentThreadId());
+                unichar_t t_parameters[64];
+                wsprintf(t_parameters, L"-elevated-slave%08x", GetCurrentThreadId());
                 
-                SHELLEXECUTEINFOA t_info;
-                memset(&t_info, 0, sizeof(SHELLEXECUTEINFO));
-                t_info . cbSize = sizeof(SHELLEXECUTEINFO);
+                SHELLEXECUTEINFOW t_info;
+                memset(&t_info, 0, sizeof(SHELLEXECUTEINFOW));
+                t_info . cbSize = sizeof(SHELLEXECUTEINFOW);
                 t_info . fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_FLAG_NO_UI | SEE_MASK_NO_CONSOLE ;
                 t_info . hwnd = (HWND)MCdefaultstackptr -> getrealwindow();
-                t_info . lpVerb = "runas";
-                t_info . lpFile = (LPCSTR)MCStringGetCString(MCcmd);
+                t_info . lpVerb = L"runas";
+                t_info . lpFile = MCStringGetCharPtr(MCcmd);
                 t_info . lpParameters = t_parameters;
                 t_info . nShow = SW_HIDE;
-                if (ShellExecuteExA(&t_info) && (uintptr_t)t_info . hInstApp > 32)
+                if (ShellExecuteExW(&t_info) && (uintptr_t)t_info . hInstApp > 32)
                 {
                     MSG t_msg;
                     t_msg . message = WM_QUIT;
-                    while(!PeekMessageA(&t_msg, (HWND)-1, WM_USER + 10, WM_USER + 10, PM_REMOVE))
+                    while(!PeekMessageW(&t_msg, (HWND)-1, WM_USER + 10, WM_USER + 10, PM_REMOVE))
                         if (MsgWaitForMultipleObjects(1, &t_info . hProcess, FALSE, INFINITE, QS_POSTMESSAGE) == WAIT_OBJECT_0)
                         {
                             created = False;
@@ -4089,23 +4092,20 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
                         t_output_pipe = (HANDLE)t_msg . lParam;
                         
                         // Get the environment strings to send across
-                        char *t_env_strings;
-                        uint32_t t_env_length;
-#undef GetEnvironmentStrings
-                        t_env_strings = GetEnvironmentStrings();
+						LPCWSTR lpEnvStrings;
+						lpEnvStrings = GetEnvironmentStringsW();
+						size_t t_env_length;
                         if (t_env_strings != nil)
                         {
                             t_env_length = 0;
-                            while(t_env_strings[t_env_length] != '\0' || t_env_strings[t_env_length + 1] != '\0')
+                            while(lpEnvStrings[t_env_length] != '\0' || lpEnvStrings[t_env_length + 1] != '\0')
                                 t_env_length += 1;
                             t_env_length += 2;
                         }
                         
                         // Write out the cmd line and env strings
-                        const char *cmdline;
-                        cmdline = MCStringGetCString(*t_cmdline);
-                        if (write_blob_to_pipe(t_output_pipe, strlen(cmdline) + 1, cmdline) &&
-                            write_blob_to_pipe(t_output_pipe, t_env_length, t_env_strings))
+                        if (write_blob_to_pipe(t_output_pipe, sizeof(wchar_t) * (wstrlen(*t_cmdline) + 1), MCStringGetCharPtr(*t_cmdline)) &&
+                            write_blob_to_pipe(t_output_pipe, sizeof(wchar_t) * t_env_length, lpEnvStrings))
                         {
                             // Now we should have a process id and handle waiting for us.
                             MSG t_msg;
@@ -4128,7 +4128,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
                         else
                             created = False;
                         
-                        FreeEnvironmentStringsA(t_env_strings);
+                        FreeEnvironmentStringsW(lpEnvStrings);
                         
                         hChildStdinWr = t_output_pipe;
                         hChildStdoutRd = t_input_pipe;

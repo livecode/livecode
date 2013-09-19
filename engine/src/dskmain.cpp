@@ -42,24 +42,25 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 static uint2 nvars;
 
-static void create_var(char *v)
+static void create_var(MCStringRef p_var)
 {
-	char vname[U2L + 1];
-	sprintf(vname, "$%d", nvars);
-	nvars++;
+	MCAutoStringRef t_vname;
+	/* UNCHECKED */ MCStringFormat(&t_vname, "$%d", nvars++);
 	
 	MCVariable *tvar;
-	/* UNCHECKED */ MCVariable::ensureglobal_cstring(vname, tvar);
-	tvar->copysvalue(v);
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreate(*t_vname, &t_name);
+	/* UNCHECKED */ MCVariable::ensureglobal(*t_name, tvar);
+	tvar->setvalueref(p_var);
 
 	MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(MCStringRef));
-	/* UNCHECKED */ MCStringCreateWithCString(v, MCstacknames[MCnstacks++]);
+	MCstacknames[MCnstacks++] = MCValueRetain(p_var);
 }
 
 static void create_var(uint4 p_v)
 {
 	MCVariable *tvar;
-	/* UNCHECKED */ MCVariable::ensureglobal_cstring("$#", tvar);
+	/* UNCHECKED */ MCVariable::ensureglobal(MCNAME("$#"), tvar);
 	tvar->setnvalue(p_v);
 }
 
@@ -71,13 +72,13 @@ static Boolean byte_swapped()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool X_open(int argc, char *argv[], char *envp[]);
+bool X_open(int argc, MCStringRef argv[], MCStringRef envp[]);
 extern void X_clear_globals(void);
 extern void MCU_initialize_names();
 
 static char apppath[PATH_MAX];
 
-bool X_init(int argc, char *argv[], char *envp[])
+bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 {
 	int i;
 	MCstackbottom = (char *)&i;
@@ -137,11 +138,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 	delete MCresult;
 #endif
 	
-	/* UNCHECKED */ MCStringCreateWithCString(argv[0], MCcmd);
-
-#if defined(_MAC_DESKTOP)
-	/* UNCHECKED */ MCStringCreateWithBytes((byte_t*)argv[0], strlen(argv[0]), kMCStringEncodingUTF8, false, MCcmd);
-#endif
+	MCcmd = MCValueRetain(argv[0]);
 		
 #if defined(_LINUX_DESKTOP) || defined(_MAC_DESKTOP)   //get fullpath
 	{
@@ -156,26 +153,29 @@ bool X_init(int argc, char *argv[], char *envp[])
 
 	for (int i = 1; i < argc; i++)
 	{
-		if (strnequal(argv[i], "-d", 2) && strlen(argv[i]) == 2
-		        || strnequal(argv[i], "-display", 8) && strlen(argv[i]) == 8)
+		if (MCStringIsEqualToCString(argv[i], "-d", kMCCompareExact)
+		   || MCStringIsEqualToCString(argv[i], "-display", kMCCompareExact))
 		{
-			if (++i >= argc || *argv[i] == '-')
+			if (++i >= argc || MCStringGetCharAtIndex(argv[i], 0) == '-')
 			{
 				fprintf(stderr, "%s: bad display name\n", MCStringGetCString(MCcmd));
 				return False;
 			}
-			MCdisplayname = argv[i];
+			MCdisplayname = strclone((const char *)MCStringGetNativeCharPtr(argv[i]));
 			continue;
 		}
-		if (strnequal(argv[i], "-f", 2) && strlen(argv[i]) == 2
-		        || strnequal(argv[i], "-files", 6) && strlen(argv[i]) == 6)
+		
+		if (MCStringIsEqualToCString(argv[i], "-f", kMCCompareExact)
+			|| MCStringIsEqualToCString(argv[i], "-files", kMCCompareExact))
+
 		{
 			MCnofiles = True;
 			MCsecuremode = MC_SECUREMODE_ALL;
 			continue;
 		}
-		if (strnequal(argv[i], "-g", 2) && strlen(argv[i]) == 2
-		        || strnequal(argv[i], "-geometry", 9) && strlen(argv[i]) == 9)
+		
+		if (MCStringIsEqualToCString(argv[i], "-g", kMCCompareExact)
+			|| MCStringIsEqualToCString(argv[i], "-geometry", kMCCompareExact))
 		{
 			char *geometry = NULL;
 			if (++i >= argc)
@@ -183,60 +183,64 @@ bool X_init(int argc, char *argv[], char *envp[])
 				fprintf(stderr, "%s: bad geometry\n", MCStringGetCString(MCcmd));
 				return False;
 			}
-			geometry = argv[i];
+			geometry = strclone((const char *)MCStringGetNativeCharPtr(argv[i]));
 			continue;
 		}
-		if (strnequal(argv[i], "-m", 2) && strlen(argv[i]) == 2
-		        || strnequal(argv[i], "-mmap", 5) && strlen(argv[i]) == 5)
+		
+		if (MCStringIsEqualToCString(argv[i], "-m", kMCCompareExact)
+			|| MCStringIsEqualToCString(argv[i], "-mmap", kMCCompareExact))
 		{
 			MCmmap = False;
 			continue;
 		}
-		if (strnequal(argv[i], "-n", 2) && strlen(argv[i]) == 2
-		        || strnequal(argv[i], "-nopixmaps", 10) && strlen(argv[i]) == 10)
+		
+		if (MCStringIsEqualToCString(argv[i], "-n", kMCCompareExact)
+			|| MCStringIsEqualToCString(argv[i], "-nopixmaps", kMCCompareExact))
 		{
 			MCnopixmaps = True;
 			continue;
 		}
-		if (strnequal(argv[i], "-x", 2) && strlen(argv[i]) == 2
-		        || strnequal(argv[i], "-xftoff", 7) && strlen(argv[i]) == 7)
+			
+		if (MCStringIsEqualToCString(argv[i], "-x", kMCCompareExact)
+			|| MCStringIsEqualToCString(argv[i], "-xftoff", kMCCompareExact))
 		{
 			MCuseXft = False;
 			continue;
 		}
 		
 #ifdef _MAC_DESKTOP
-		if (strnequal(argv[i], "-psn", 4))
+		if (MCStringIsEqualToCString(argv[i], "-psn", kMCCompareExact))
 		{
 			// psn passed, skip it
 			continue;
 		}
 #endif
 
-		if (strnequal(argv[i], "-s", 2) && strlen(argv[i]) == 2
-		        || strnequal(argv[i], "-sharedoff", 10) && strlen(argv[i]) == 10)
+		if (MCStringIsEqualToCString(argv[i], "-s", kMCCompareExact)
+			|| MCStringIsEqualToCString(argv[i], "-sharedoff", kMCCompareExact))
 		{
 			MCshmoff = True;
 			continue;
 		}
-		if (strnequal(argv[i], "+s", 2) && strlen(argv[i]) == 2
-		        || strnequal(argv[i], "+sharedon", 9) && strlen(argv[i]) == 9)
+		
+		if (MCStringIsEqualToCString(argv[i], "+s", kMCCompareExact)
+			|| MCStringIsEqualToCString(argv[i], "+sharedon", kMCCompareExact))
 		{
 			MCshmon = True;
 			continue;
 		}
 
-		if (strnequal(argv[i], "-u", 2) && strlen(argv[i]) == 2
-		        || strnequal(argv[i], "-ui", 3) && strlen(argv[i]) == 3)
-		{
+		if (MCStringIsEqualToCString(argv[i], "-u", kMCCompareExact)
+			|| MCStringIsEqualToCString(argv[i], "-ui", kMCCompareExact))		{
 			MCnoui = True;
 			continue;
 		}
-		if (strnequal(argv[i], "-v", 2) && strlen(argv[i]) == 2
-		        || strnequal(argv[i], "-visualed", 9) && strlen(argv[i]) == 9)
+		
+		if (MCStringIsEqualToCString(argv[i], "-v", kMCCompareExact)
+			|| MCStringIsEqualToCString(argv[i], "-visualed", kMCCompareExact))
 		{
 			uint4 visualid = 0;
-			if (++i >= argc || *argv[i] == '-' || !MCU_stoui4(argv[i], visualid))
+			if (++i >= argc || MCStringGetCharAtIndex(argv[i], 0) == '-' || !MCU_stoui4(argv[i], visualid))
 			{
 				fprintf(stderr, "%s: bad visual id\n", MCStringGetCString(MCcmd));
 				return False;
@@ -244,8 +248,9 @@ bool X_init(int argc, char *argv[], char *envp[])
 			MCvisualid = visualid;
 			continue;
 		}
-		if (strnequal(argv[i], "-h", 2) && strlen(argv[i]) == 2
-		        && MCglobals == NULL)
+		
+		if (MCStringIsEqualToCString(argv[i], "-h", kMCCompareExact)
+			&& MCglobals == NULL)
 		{
 			fprintf(stderr, "Revolution %s Copyright 2003-2008 Runtime Revolution Ltd\n\
 			        Usage: %s [-d[isplay] displayname] \n\
@@ -263,8 +268,8 @@ bool X_init(int argc, char *argv[], char *envp[])
 			        [stackname(s) | argument(s)]\n", MCNameGetCString(MCN_version_string), MCStringGetCString(MCcmd));
 			return False;
 		}
-		if (argv[i] != NULL && strlen(argv[i]) > 0)
-			create_var(argv[i]);
+		
+		create_var(argv[i]);
 	}
 	create_var(nvars);
 

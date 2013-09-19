@@ -151,6 +151,7 @@ extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStri
 //	//   so it *should* be unnecessary but Win9x plays with the FP control word.
 //	signal(SIGFPE, handle_fp_exception);
 //}
+>>>>>>> refactor-syntax_unicode
 //
 //void MCS_shutdown()
 //{
@@ -2876,5 +2877,6 @@ bool MCS_generate_uuid(char p_buffer[128])
 //
 //	return 0;
 //}
+>>>>>>> refactor-syntax_unicode
 
 ////////////////////////////////////////////////////////////////////////////////

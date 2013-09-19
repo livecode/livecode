@@ -4415,7 +4415,13 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (!IsInteractiveConsole(0))
             MCS_mac_nodelay(0);
         
-        setlocale(LC_ALL, MCnullstring);
+		// Internally, LiveCode assumes sorting orders etc are those of en_US.
+		// Additionally, the "native" string encoding for Mac is MacRoman
+		// (even though the BSD components of the system are likely UTF-8).
+		const char *t_internal_locale = "en_US";
+		setlocale(LC_ALL, "");
+		setlocale(LC_CTYPE, t_internal_locale);
+		setlocale(LC_COLLATE, t_internal_locale);
         
         _CurrentRuneLocale->__runetype[202] = _CurrentRuneLocale->__runetype[201];
         
@@ -9019,12 +9025,14 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 		if (t_status == noErr)
 		{
 			char *t_name_dup;
-			t_name_dup = strdup(MCNameGetCString(name));
+			/* UNCHECKED */ MCStringConvertToUTF8String(MCNameGetString(name), t_name_dup);
 			
 			// Split the arguments
 			uint32_t t_argc;
 			char **t_argv;
-			startprocess_create_argv(t_name_dup, const_cast<char *>(MCStringGetCString(doc)), t_argc, t_argv);
+			char *t_doc;
+			/* UNCHECKED */ MCStringConvertToUTF8String(doc, t_doc);
+			startprocess_create_argv(t_name_dup, t_doc, t_argc, t_argv);
 			startprocess_write_uint32_to_fd(fileno(t_stream), t_argc);
 			for(uint32_t i = 0; i < t_argc; i++)
 				startprocess_write_cstring_to_fd(fileno(t_stream), t_argv[i]);
@@ -9032,6 +9040,7 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 				t_status = errAuthorizationToolExecuteFailure;
 			
 			delete t_name_dup;
+			delete t_doc;
 			delete[] t_argv;
 		}
 		

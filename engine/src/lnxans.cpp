@@ -113,6 +113,8 @@ void gtk_init(void)
 		// We need to reset the locale to the C portable one here, as GTK
 		// breaks numbers for French systems.
 		
+		/* TODO */
+		// Revisit this as it is not ideal in a Unicode world...
 		setlocale(LC_ALL, "C");
 		//NOTE: Should this be :
 		//		setlocale(LC_NUMERIC, "C")
