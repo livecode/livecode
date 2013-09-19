@@ -496,13 +496,13 @@ bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expir
 	
 	if (t_success && MCStringGetLength(p_name) != 0 && MCStringGetLength(p_path) != 0 && MCStringGetLength(p_domain) != 0)
 		t_success = true;
-		
+	
+	MCAutoStringRef t_encoded;
 	if (t_success && MCStringGetLength(p_value) != 0)
 	{
 		MCExecPoint ep;
 		ep.setsvalue(MCStringGetCString(p_value));
 		MCU_urlencode(ep);
-		MCAutoStringRef t_encoded;
 		t_success = ep .copyasstringref(&t_encoded);
 	//	p_value = MCValueRetain(*t_encoded);
 

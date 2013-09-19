@@ -1519,14 +1519,14 @@ bool MCServerStartSession()
 
 	MCAutoStringRef t_session_id;
 	MCAutoStringRef t_cookie_id;
-	
-	/* UNCHECKED */ MCStringCreateWithCString(MCsessionid, &t_session_id);
-	
-	if (*t_session_id == nil)
+
+	if (MCsessionid == nil)
 	{
 		t_success = MCServerGetSessionIdFromCookie(&t_cookie_id);
-		t_session_id = t_cookie_id;
+		t_session_id = *t_cookie_id;
 	}
+	else
+		/* UNCHECKED */ MCStringCreateWithCString(MCsessionid, &t_session_id);
 	
 	if (t_success)
 	{
