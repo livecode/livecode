@@ -2918,24 +2918,16 @@ void MCStack::loadexternals(void)
 
 	m_externals = new MCExternalHandlerList;
 
-	char *ename = strdup(MCStringGetCString(externalfiles));
-	char *sptr = ename;
-	while (*sptr)
+	MCAutoArrayRef t_array;
+	/* UNCHECKED */ MCStringSplit(externalfiles, MCSTR("\n"), nil, kMCStringOptionCompareExact, &t_array);
+	uindex_t t_count;
+	t_count = MCArrayGetCount(*t_array);
+	for (uindex_t i = 0; i < t_count; i++)
 	{
-		char *tptr;
-		if ((tptr = strchr(sptr, '\n')) != NULL)
-			*tptr++ = '\0';
-		else
-			tptr = &sptr[strlen(sptr)];
-
-		if (strlen(sptr) != 0)
-		{
-			uint4 offset = 0;
-			m_externals -> Load(sptr);
-			sptr = tptr;
-		}
+		MCValueRef t_val;
+		/* UNCHECKED */ MCArrayFetchValueAtIndex(*t_array, i + 1, t_val);
+		m_externals->Load((MCStringRef)t_val);
 	}
-	delete ename;
 
 	// If the handler list is empty, then delete the object - thus preventing
 	// its use in MCStack::handle.

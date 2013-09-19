@@ -180,6 +180,8 @@ extern MCNameRef MCU_charsettolanguage(uint1 charset);
 /* LEGACY */ extern uint1 MCU_languagetocharset(MCStringRef langname);
 extern uint1 MCU_wincharsettocharset(uint2 wincharset);
 extern uint1 MCU_charsettowincharset(uint1 charset);
+extern bool MCU_multibytetounicode(MCDataRef p_input, MCDataRef &r_output);
+extern bool MCU_unicodetomultibyte(MCDataRef p_input, MCDataRef& r_output);
 extern bool MCU_multibytetounicode(MCStringRef p_src, uinteger_t p_charset, MCStringRef& r_unicode);
 extern bool MCU_unicodetomultibyte(MCStringRef p_src, uinteger_t p_charset, MCStringRef& r_multibyte);
 extern bool MCU_multibytetounicode(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_unicode);

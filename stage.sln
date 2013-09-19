@@ -1,5 +1,5 @@
 Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual Studio 2005
+# Visual C++ Express 2005
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libz", "thirdparty\libz\libz.vcproj", "{81FB1E54-0DBF-4D7D-92F5-A7774E531CE2}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libjpeg", "thirdparty\libjpeg\libjpeg.vcproj", "{E6239DF5-EDC5-4B5F-8848-98DC19299D4B}"
@@ -61,8 +61,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kernel", "engine\kernel.vcp
 		{E6239DF5-EDC5-4B5F-8848-98DC19299D4B} = {E6239DF5-EDC5-4B5F-8848-98DC19299D4B}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcore", "libcore\libcore.vcproj", "{6899CD7E-BE16-44CE-A28B-27304F42E127}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcairo", "thirdparty\libcairo\libcairo.vcproj", "{5F1837C3-649E-4F70-B157-243BF819D1F8}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "revpdfprinter", "revpdfprinter\revpdfprinter.vcproj", "{2473A7B1-AEA0-4406-9ED9-883009CEA171}"
@@ -74,8 +72,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libexternalv1", "libexternalv1\libexternalv1.vcproj", "{A9FF8A8E-0A4D-43C4-B1C0-EDBB47681AC8}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "revandroid", "revmobile\revandroid.vcproj", "{1B9ADC87-EB90-4E50-BC80-C1C7D2F40BD4}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libfoundation", "libfoundation\libfoundation.vcproj", "{8862ADC2-BEB0-4765-A1E4-0E3493718999}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgif", "thirdparty\libgif\libgif.vcproj", "{09751ABE-310B-4324-BACE-F7FFDA2299DE}"
 EndProject
@@ -90,6 +86,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kernel-standalone", "engine
 	ProjectSection(ProjectDependencies) = postProject
 		{36960D7E-AD16-47BB-BA13-3770A224EC41} = {36960D7E-AD16-47BB-BA13-3770A224EC41}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libfoundation", "libfoundation\libfoundation.vcproj", "{8862ADC2-BEB0-4765-A1E4-0E3493718999}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -193,10 +191,6 @@ Global
 		{36960D7E-AD16-47BB-BA13-3770A224EC41}.Debug|Win32.Build.0 = Debug|Win32
 		{36960D7E-AD16-47BB-BA13-3770A224EC41}.Release|Win32.ActiveCfg = Debug|Win32
 		{36960D7E-AD16-47BB-BA13-3770A224EC41}.Release|Win32.Build.0 = Debug|Win32
-		{6899CD7E-BE16-44CE-A28B-27304F42E127}.Debug|Win32.ActiveCfg = Debug|Win32
-		{6899CD7E-BE16-44CE-A28B-27304F42E127}.Debug|Win32.Build.0 = Debug|Win32
-		{6899CD7E-BE16-44CE-A28B-27304F42E127}.Release|Win32.ActiveCfg = Debug|Win32
-		{6899CD7E-BE16-44CE-A28B-27304F42E127}.Release|Win32.Build.0 = Debug|Win32
 		{5F1837C3-649E-4F70-B157-243BF819D1F8}.Debug|Win32.ActiveCfg = Debug|Win32
 		{5F1837C3-649E-4F70-B157-243BF819D1F8}.Debug|Win32.Build.0 = Debug|Win32
 		{5F1837C3-649E-4F70-B157-243BF819D1F8}.Release|Win32.ActiveCfg = Debug|Win32
@@ -221,10 +215,6 @@ Global
 		{1B9ADC87-EB90-4E50-BC80-C1C7D2F40BD4}.Debug|Win32.Build.0 = Debug|Win32
 		{1B9ADC87-EB90-4E50-BC80-C1C7D2F40BD4}.Release|Win32.ActiveCfg = Debug|Win32
 		{1B9ADC87-EB90-4E50-BC80-C1C7D2F40BD4}.Release|Win32.Build.0 = Debug|Win32
-		{8862ADC2-BEB0-4765-A1E4-0E3493718999}.Debug|Win32.ActiveCfg = Debug|Win32
-		{8862ADC2-BEB0-4765-A1E4-0E3493718999}.Debug|Win32.Build.0 = Debug|Win32
-		{8862ADC2-BEB0-4765-A1E4-0E3493718999}.Release|Win32.ActiveCfg = Release|Win32
-		{8862ADC2-BEB0-4765-A1E4-0E3493718999}.Release|Win32.Build.0 = Release|Win32
 		{09751ABE-310B-4324-BACE-F7FFDA2299DE}.Debug|Win32.ActiveCfg = Debug|Win32
 		{09751ABE-310B-4324-BACE-F7FFDA2299DE}.Debug|Win32.Build.0 = Debug|Win32
 		{09751ABE-310B-4324-BACE-F7FFDA2299DE}.Release|Win32.ActiveCfg = Debug|Win32
@@ -241,6 +231,10 @@ Global
 		{0491E47C-B096-4DBF-8D26-C28364DF6176}.Debug|Win32.Build.0 = Debug|Win32
 		{0491E47C-B096-4DBF-8D26-C28364DF6176}.Release|Win32.ActiveCfg = Debug|Win32
 		{0491E47C-B096-4DBF-8D26-C28364DF6176}.Release|Win32.Build.0 = Debug|Win32
+		{8862ADC2-BEB0-4765-A1E4-0E3493718999}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8862ADC2-BEB0-4765-A1E4-0E3493718999}.Debug|Win32.Build.0 = Debug|Win32
+		{8862ADC2-BEB0-4765-A1E4-0E3493718999}.Release|Win32.ActiveCfg = Release|Win32
+		{8862ADC2-BEB0-4765-A1E4-0E3493718999}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
