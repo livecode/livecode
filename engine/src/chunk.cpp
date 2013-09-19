@@ -2969,6 +2969,7 @@ Exec_stat MCChunk::gets(MCExecPoint &ep)
 
 Exec_stat MCChunk::eval(MCExecPoint &ep)
 {
+#ifdef LEGACY_EXEC
 	if (source != NULL && url == NULL && stack == NULL && background == NULL && card == NULL
 	        && group == NULL && object == NULL)
 	{
@@ -3098,8 +3099,8 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
-    
-#if 0
+#endif
+
     MCAutoStringRef t_text;
     MCExecContext ctxt(ep);
     
@@ -3164,138 +3165,417 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
 		}
 		else
 		{
-            if (t_object . object -> gettype() == CT_FIELD)
+            switch (function)
             {
-                switch (function)
-                {
-                    case F_CLICK_CHUNK:
-                    case F_CLICK_CHAR_CHUNK:
-                    case F_CLICK_LINE:
-                    case F_CLICK_TEXT:
-                    case F_SELECTED_CHUNK:
-                    case F_SELECTED_LINE:
-                    case F_SELECTED_TEXT:
-                    case F_FOUND_CHUNK:
-                    case F_FOUND_LINE:
-                    case F_FOUND_TEXT:
-                    case F_MOUSE_CHUNK:
-                    case F_MOUSE_LINE:
-                    case F_MOUSE_CHAR_CHUNK:
-                    case F_MOUSE_TEXT:
-                        // MW-2012-12-13: [[ Bug 10592 ]] We are eval'ing so don't want the whole
-                        //   chunk in this case.
-                        MCInterfaceEvalFieldChunk(ctxt, t_object, function, &t_text);
-                        break;
-                    default:
-                    {
-                        if (desttype == DT_FUNCTION)
-                        {
-                            MCInterfaceEvalFieldChunk(ctxt, t_object, function, &t_text);
-                            break;
-                        }
-                        integer_t t_start, t_end;
-                        MCField *t_field = static_cast<MCField *>(t_object . object);
-                        t_field -> nativizetext(t_object . part_id, ep, true);
-                        ep . copyasstringref(&t_text);
-                    }
-                }
-                
+                case F_CLICK_CHUNK:
+                    MCInterfaceEvalClickChunk(ctxt, &t_text);
+                    break;
+                case F_CLICK_CHAR_CHUNK:
+                    MCInterfaceEvalClickCharChunk(ctxt, &t_text);
+                    break;
+                case F_CLICK_LINE:
+                    MCInterfaceEvalClickLine(ctxt, &t_text);
+                    break;
+                case F_CLICK_TEXT:
+                    MCInterfaceEvalClickText(ctxt, &t_text);
+                    break;
+                case F_SELECTED_CHUNK:
+                    MCInterfaceEvalSelectedChunk(ctxt, &t_text);
+                    break;
+                case F_SELECTED_LINE:
+                    MCInterfaceEvalSelectedLine(ctxt, &t_text);
+                    break;
+                case F_SELECTED_TEXT:
+                    MCInterfaceEvalSelectedText(ctxt, &t_text);
+                    break;
+                case F_FOUND_CHUNK:
+                    MCInterfaceEvalFoundChunk(ctxt, &t_text);
+                    break;
+                case F_FOUND_LINE:
+                    MCInterfaceEvalFoundLine(ctxt, &t_text);
+                    break;
+                case F_FOUND_TEXT:
+                    MCInterfaceEvalFoundText(ctxt, &t_text);
+                    break;
+                case F_MOUSE_CHUNK:
+                    MCInterfaceEvalMouseChunk(ctxt, &t_text);
+                    break;
+                case F_MOUSE_LINE:
+                    MCInterfaceEvalMouseLine(ctxt, &t_text);
+                    break;
+                case F_MOUSE_CHAR_CHUNK:
+                    MCInterfaceEvalMouseCharChunk(ctxt, &t_text);
+                    break;
+                case F_MOUSE_TEXT:
+                    MCInterfaceEvalMouseText(ctxt, &t_text);
+                    break;
+                default:
+                    MCInterfaceEvalTextOfContainer(ctxt, t_object, &t_text);
+                    break;
             }
-            else
-                MCInterfaceEvalTextOfContainer(ctxt, t_object, &t_text);
 		}
 	}
     
-    if (cline != nil || item != nil || word != nil || token != nil
-        || character != nil)
-	{
-/*		// MW-2007-11-28: [[ Bug 5610 ]] If we have an array, force a conversion to string (empty)
-		//   for backwards compatibility.
-		if (ep . isarray())
-			ep . clear(); 
-         
-        if (ep . tos() != ES_NORMAL)
-        {
-            MCeerror->add(EE_CHUNK_CANTGETSUBSTRING, line, pos, ep.getsvalue());
-            return ES_ERROR;
-        }
-        
-        // at this point we should have evaluated some text.
-        
-        MCAutoStringRef t_text;
-        ep . copyasstringref(&t_text); */
-        
-        MCAutoStringRef t_lines, t_items, t_words, t_tokens, t_chars;
-        if (evaltextchunk(ep, cline, *t_text, CT_LINE, &t_lines) != ES_NORMAL ||
-            evaltextchunk(ep, item, *t_lines,  CT_ITEM, &t_items) != ES_NORMAL ||
-            evaltextchunk(ep, word, *t_items, CT_WORD, &t_words) != ES_NORMAL ||
-            evaltextchunk(ep, token, *t_words, CT_TOKEN, &t_tokens) != ES_NORMAL ||
-            evaltextchunk(ep, character, *t_tokens, CT_CHARACTER, &t_chars) != ES_NORMAL)
-        {
-            MCeerror->add(EE_CHUNK_CANTGETSUBSTRING, line, pos, ep.getsvalue());
-            return ES_ERROR;
-        }
-        
-        ep . setvalueref(*t_chars);
-    }
+    MCAutoStringRef t_lines, t_items, t_words, t_tokens, t_chars;
+    int4 t_start;
+    int4 t_end;
     
-    return ES_NORMAL;
-#endif
-}
-
-Exec_stat MCChunk::evaltextchunk(MCExecPoint &ep, MCCRef *ref, MCStringRef p_source, Chunk_term p_chunk_type, MCStringRef& r_text)
-{
-    MCExecContext ctxt(ep); 
-	if (ref != nil)
+	if (cline != nil)
     {
-        int4 t_start;
-        int4 t_end;
-        if (ref -> etype == CT_RANGE)
+        if (cline -> etype == CT_RANGE)
         {
-            if (ref->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            if (cline->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
             {
                 MCeerror->add(EE_CHUNK_BADRANGESTART, line, pos);
                 return ES_ERROR;
             }
             t_start = ep . getint4();
             
-            if (ref->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            if (cline->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
             {
                 MCeerror->add(EE_CHUNK_BADRANGEEND, line, pos);
                 return ES_ERROR;
             }
             t_end = ep.getint4();
             
-            MCStringsEvalTextChunkByRange(ctxt, p_source, p_chunk_type, t_start, t_end, false, r_text);
+            MCStringsEvalLinesOfTextByRange(ctxt, *t_text, t_start, t_end, &t_lines);
         }
-        else if (ref -> etype == CT_EXPRESSION)
+        else if (cline -> etype == CT_EXPRESSION)
         {
-            if (ref->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            if (cline->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
             {
                 MCeerror->add(EE_CHUNK_BADEXPRESSION, line, pos);
                 return ES_ERROR;
             }
             t_start = ep . getint4();
             
-            MCStringsEvalTextChunkByExpression(ctxt, p_source, p_chunk_type, t_start, false, r_text);
+            MCStringsEvalLinesOfTextByExpression(ctxt, *t_text, t_start, &t_lines);
         }
         else
-            MCStringsEvalTextChunkByOrdinal(ctxt, p_source, p_chunk_type, ref -> etype, false, r_text);
+            MCStringsEvalLinesOfTextByOrdinal(ctxt, *t_text, cline -> etype, &t_lines);
     }
     else
+        MCStringCopy(*t_text, &t_lines);
+    
+    if (item != nil)
     {
-        r_text = MCValueRetain(p_source);
+        if (item -> etype == CT_RANGE)
+        {
+            if (item->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGESTART, line, pos);
+                return ES_ERROR;
+            }
+            t_start = ep . getint4();
+            
+            if (item->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGEEND, line, pos);
+                return ES_ERROR;
+            }
+            t_end = ep.getint4();
+            
+            MCStringsEvalItemsOfTextByRange(ctxt, *t_lines, t_start, t_end, &t_items);
+        }
+        else if (item -> etype == CT_EXPRESSION)
+        {
+            if (item->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADEXPRESSION, line, pos);
+                return ES_ERROR;
+            }
+            t_start = ep . getint4();
+            
+            MCStringsEvalItemsOfTextByExpression(ctxt, *t_lines, t_start, &t_items);
+        }
+        else
+            MCStringsEvalItemsOfTextByOrdinal(ctxt, *t_lines, item -> etype, &t_items);
+    }
+    else
+        MCStringCopy(*t_lines, &t_items);
+    
+    if (word != nil)
+    {
+        if (word -> etype == CT_RANGE)
+        {
+            if (word->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGESTART, line, pos);
+                return ES_ERROR;
+            }
+            t_start = ep . getint4();
+            
+            if (word->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGEEND, line, pos);
+                return ES_ERROR;
+            }
+            t_end = ep.getint4();
+            
+            MCStringsEvalWordsOfTextByRange(ctxt, *t_items, t_start, t_end, &t_words);
+        }
+        else if (word -> etype == CT_EXPRESSION)
+        {
+            if (word->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADEXPRESSION, line, pos);
+                return ES_ERROR;
+            }
+            t_start = ep . getint4();
+            
+            MCStringsEvalWordsOfTextByExpression(ctxt, *t_items, t_start, &t_words);
+        }
+        else
+            MCStringsEvalWordsOfTextByOrdinal(ctxt, *t_items, word -> etype, &t_words);
+    }
+    else
+        MCStringCopy(*t_items, &t_words);
+    
+    if (token != nil)
+    {
+        if (token -> etype == CT_RANGE)
+        {
+            if (token->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGESTART, line, pos);
+                return ES_ERROR;
+            }
+            t_start = ep . getint4();
+            
+            if (token->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGEEND, line, pos);
+                return ES_ERROR;
+            }
+            t_end = ep.getint4();
+            
+            MCStringsEvalTokensOfTextByRange(ctxt, *t_words, t_start, t_end, &t_tokens);
+        }
+        else if (token -> etype == CT_EXPRESSION)
+        {
+            if (token->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADEXPRESSION, line, pos);
+                return ES_ERROR;
+            }
+            t_start = ep . getint4();
+            
+            MCStringsEvalTokensOfTextByExpression(ctxt, *t_words, t_start, &t_tokens);
+        }
+        else
+            MCStringsEvalTokensOfTextByOrdinal(ctxt, *t_words, token -> etype, &t_tokens);
+    }
+    else
+        MCStringCopy(*t_words, &t_tokens);
+    
+    if (character != nil)
+    {
+        if (character -> etype == CT_RANGE)
+        {
+            if (character->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGESTART, line, pos);
+                return ES_ERROR;
+            }
+            t_start = ep . getint4();
+            
+            if (character->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGEEND, line, pos);
+                return ES_ERROR;
+            }
+            t_end = ep.getint4();
+            
+            MCStringsEvalCharsOfTextByRange(ctxt, *t_tokens, t_start, t_end, &t_chars);
+        }
+        else if (character -> etype == CT_EXPRESSION)
+        {
+            if (character->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADEXPRESSION, line, pos);
+                return ES_ERROR;
+            }
+            t_start = ep . getint4();
+            
+            MCStringsEvalCharsOfTextByExpression(ctxt, *t_tokens, t_start, &t_chars);
+        }
+        else
+            MCStringsEvalCharsOfTextByOrdinal(ctxt, *t_tokens, character -> etype, &t_chars);
+    }
+    else
+        MCStringCopy(*t_tokens, &t_chars);
+    
+    /* UNCHECKED */ ep . setvalueref(*t_chars);
+    
+    return ES_NORMAL;
+}
+
+#if 0
+Exec_stat MCChunk::evalranges(MCExecPoint &ep, int4& r_line_start, int4& r_line_end, int4& r_item_start, int4& r_item_end, int4& r_word_start, int4& r_word_end, int4& r_token_start, int4& r_token_end, int4& r_char_start, int4& r_char_end)
+{
+    MCExecContext ctxt(ep);
+    
+    r_line_start = 0;
+    r_line_end = 0;
+    r_item_start = 0;
+    r_item_end = 0;
+    r_word_start = 0;
+    r_word_end = 0;
+    r_token_start = 0;
+    r_token_end = 0;
+    r_char_start = 0;
+    r_char_end = 0;
+
+	if (cline != nil)
+    {
+        if (cline -> etype == CT_RANGE)
+        {
+            if (cline->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGESTART, line, pos);
+                return ES_ERROR;
+            }
+            r_line_start = ep . getint4();
+            
+            if (cline->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGEEND, line, pos);
+                return ES_ERROR;
+            }
+            r_line_end = ep.getint4();
+        }
+        else if (cline -> etype == CT_EXPRESSION)
+        {
+            if (cline->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADEXPRESSION, line, pos);
+                return ES_ERROR;
+            }
+            r_line_start = r_line_end = ep . getint4();
+        }
     }
     
-    if (!ctxt . HasError())
-        return ES_NORMAL;
+    if (item != nil)
+    {
+        if (item -> etype == CT_RANGE)
+        {
+            if (item->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGESTART, line, pos);
+                return ES_ERROR;
+            }
+            r_item_start = ep . getint4();
+            
+            if (item->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGEEND, line, pos);
+                return ES_ERROR;
+            }
+            r_item_end = ep.getint4();
+        }
+        else if (item -> etype == CT_EXPRESSION)
+        {
+            if (item->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADEXPRESSION, line, pos);
+                return ES_ERROR;
+            }
+            r_item_start = r_item_end = ep . getint4();
+        }
+    }
     
-    ctxt . LegacyThrow(EE_CHUNK_CANTMARK);
-    return ES_ERROR;
+    if (word != nil)
+    {
+        if (word -> etype == CT_RANGE)
+        {
+            if (word->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGESTART, line, pos);
+                return ES_ERROR;
+            }
+            r_word_start = ep . getint4();
+            
+            if (word->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGEEND, line, pos);
+                return ES_ERROR;
+            }
+            r_word_end = ep.getint4();
+        }
+        else if (word -> etype == CT_EXPRESSION)
+        {
+            if (word->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADEXPRESSION, line, pos);
+                return ES_ERROR;
+            }
+            r_word_start = r_word_end = ep . getint4();
+        }
+    }
+    
+    if (token != nil)
+    {
+        if (token -> etype == CT_RANGE)
+        {
+            if (token->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGESTART, line, pos);
+                return ES_ERROR;
+            }
+            r_token_start = ep . getint4();
+            
+            if (token->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGEEND, line, pos);
+                return ES_ERROR;
+            }
+            r_token_end = ep.getint4();
+        }
+        else if (token -> etype == CT_EXPRESSION)
+        {
+            if (token->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADEXPRESSION, line, pos);
+                return ES_ERROR;
+            }
+            r_token_start = r_token_end = ep . getint4();
+        }
+    }
+    
+    if (character != nil)
+    {
+        if (character -> etype == CT_RANGE)
+        {
+            if (character->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGESTART, line, pos);
+                return ES_ERROR;
+            }
+            r_char_start = ep . getint4();
+            
+            if (character->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGEEND, line, pos);
+                return ES_ERROR;
+            }
+            r_char_end = ep.getint4();
+        }
+        else if (character -> etype == CT_EXPRESSION)
+        {
+            if (character->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADEXPRESSION, line, pos);
+                return ES_ERROR;
+            }
+            r_char_start = r_char_end = ep . getint4();
+        }
+    }
 }
+#endif
 
 Exec_stat MCChunk::set(MCExecPoint &ep, Preposition_type ptype)
 {
+#ifdef LEGACY_EXEC
 	MCObject *objptr = NULL;
 	MCField *fptr = NULL;
 	uint4 parid;
@@ -3488,9 +3768,9 @@ Exec_stat MCChunk::set(MCExecPoint &ep, Preposition_type ptype)
 					return ES_ERROR;
 				}
 	return ES_NORMAL;
+#endif
+
     
-    
-#if 0
     MCExecContext ctxt(ep);
     MCAutoValueRef t_value;
     
@@ -3601,7 +3881,6 @@ Exec_stat MCChunk::set(MCExecPoint &ep, Preposition_type ptype)
         return ES_NORMAL;
     
     return ES_ERROR;
-#endif
 }
 
 Exec_stat MCChunk::setunicode(MCExecPoint& ep, Preposition_type p_prep)
@@ -4748,7 +5027,192 @@ Exec_stat MCChunk::changeprop(MCExecPoint &ep, Properties prop, Boolean value)
 void MCChunk::compile(MCSyntaxFactoryRef ctxt)
 {
 	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	MCSyntaxFactoryEvalUnimplemented(ctxt);
+    
+ 	if (source != NULL && url == NULL && stack == NULL && background == NULL && card == NULL
+        && group == NULL && object == NULL)
+	{
+		if (desttype != DT_OWNER)
+		{
+			source -> compile(ctxt);
+		}
+		else
+		{
+            MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+            static_cast<MCChunk *>(source) -> compile_object_ptr(ctxt);
+			MCSyntaxFactoryEvalMethod(ctxt, kMCEngineEvalOwnerMethodInfo);
+		}
+	}
+	else if (destvar != NULL)
+	{
+		destvar -> compile(ctxt);
+	}
+	else
+	{
+		if (url != NULL)
+		{
+            //(is MCU_geturl implicit here?)
+            url -> startpos -> compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCEngineEvalValueAsObjectMethodInfo);
+
+            // what if url compiles as text?
+		}
+        else
+        {
+            this -> compile_object_ptr(ctxt);
+        }
+
+        MCExecMethodInfo *t_method = nil;
+        switch (function)
+        {
+            case F_CLICK_CHUNK:
+                t_method = kMCInterfaceEvalClickChunkMethodInfo;
+                break;
+            case F_CLICK_CHAR_CHUNK:
+                t_method = kMCInterfaceEvalClickCharChunkMethodInfo;
+                break;
+            case F_CLICK_LINE:
+                t_method = kMCInterfaceEvalClickLineMethodInfo;
+                break;
+            case F_CLICK_TEXT:
+                t_method = kMCInterfaceEvalClickTextMethodInfo;
+                break;
+            case F_SELECTED_CHUNK:
+                t_method = kMCInterfaceEvalSelectedChunkMethodInfo;
+                break;
+            case F_SELECTED_LINE:
+                t_method = kMCInterfaceEvalSelectedLineMethodInfo;
+                break;
+            case F_SELECTED_TEXT:
+                t_method = kMCInterfaceEvalSelectedTextMethodInfo;
+                break;
+            case F_FOUND_CHUNK:
+                t_method = kMCInterfaceEvalFoundChunkMethodInfo;
+                break;
+            case F_FOUND_LINE:
+                t_method = kMCInterfaceEvalFoundLineMethodInfo;
+                break;
+            case F_FOUND_TEXT:
+                t_method = kMCInterfaceEvalFoundTextMethodInfo;
+                break;
+            case F_MOUSE_CHUNK:
+                t_method = kMCInterfaceEvalMouseChunkMethodInfo;
+                break;
+            case F_MOUSE_LINE:
+                t_method = kMCInterfaceEvalMouseLineMethodInfo;
+                break;
+            case F_MOUSE_CHAR_CHUNK:
+                t_method = kMCInterfaceEvalMouseCharChunkMethodInfo;
+                break;
+            case F_MOUSE_TEXT:
+                t_method = kMCInterfaceEvalMouseTextMethodInfo;
+                break;
+            default:
+                t_method = kMCInterfaceEvalTextOfContainerMethodInfo;
+                break;
+        }
+        MCSyntaxFactoryEvalMethod(ctxt, t_method);
+	}
+
+	if (cline != nil)
+    {
+        if (cline -> etype == CT_RANGE)
+        {
+            cline->startpos->compile(ctxt);
+            cline->endpos->compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalLinesOfTextByRangeMethodInfo);
+        }
+        else if (cline -> etype == CT_EXPRESSION)
+        {
+            cline->startpos->compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalLinesOfTextByExpressionMethodInfo);
+        }
+        else
+        {
+            MCSyntaxFactoryEvalConstantInt(ctxt, cline -> etype);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalLinesOfTextByOrdinalMethodInfo);
+        }
+    }
+
+	if (item != nil)
+    {
+        if (item -> etype == CT_RANGE)
+        {
+            item->startpos->compile(ctxt);
+            item->endpos->compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalItemsOfTextByRangeMethodInfo);
+        }
+        else if (cline -> etype == CT_EXPRESSION)
+        {
+            item->startpos->compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalItemsOfTextByExpressionMethodInfo);
+        }
+        else
+        {
+            MCSyntaxFactoryEvalConstantInt(ctxt, item -> etype);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalItemsOfTextByOrdinalMethodInfo);
+        }
+    }
+    
+    if (word != nil)
+    {
+        if (word -> etype == CT_RANGE)
+        {
+            word->startpos->compile(ctxt);
+            word->endpos->compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalWordsOfTextByRangeMethodInfo);
+        }
+        else if (word -> etype == CT_EXPRESSION)
+        {
+            word->startpos->compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalWordsOfTextByExpressionMethodInfo);
+        }
+        else
+        {
+            MCSyntaxFactoryEvalConstantInt(ctxt, word -> etype);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalWordsOfTextByOrdinalMethodInfo);
+        }
+    }
+    
+    if (token != nil)
+    {
+        if (token -> etype == CT_RANGE)
+        {
+            token->startpos->compile(ctxt);
+            token->endpos->compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalTokensOfTextByRangeMethodInfo);
+        }
+        else if (token -> etype == CT_EXPRESSION)
+        {
+            token->startpos->compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalTokensOfTextByExpressionMethodInfo);
+        }
+        else
+        {
+            MCSyntaxFactoryEvalConstantInt(ctxt, token -> etype);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalTokensOfTextByOrdinalMethodInfo);
+        }
+    }
+    
+    if (character != nil)
+    {
+        if (character -> etype == CT_RANGE)
+        {
+            character->startpos->compile(ctxt);
+            character->endpos->compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalCharsOfTextByRangeMethodInfo);
+        }
+        else if (character -> etype == CT_EXPRESSION)
+        {
+            character->startpos->compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalCharsOfTextByExpressionMethodInfo);
+        }
+        else
+        {
+            MCSyntaxFactoryEvalConstantInt(ctxt, character -> etype);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalCharsOfTextByOrdinalMethodInfo);
+        }
+    }
+    
 	MCSyntaxFactoryEndExpression(ctxt);
 }
 

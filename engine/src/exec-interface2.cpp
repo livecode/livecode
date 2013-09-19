@@ -328,6 +328,8 @@ MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfOptionalStackById, 4)
 MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfOptionalStackByName, 4)
 MC_EXEC_DEFINE_EVAL_METHOD(Interface, ThisCardOfOptionalStack, 2)
 
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, TextOfContainer, 2)
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCInterfaceNamedColorParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceNamedColor& r_output)
@@ -3439,18 +3441,11 @@ void MCInterfacveEvalFieldTextChunkByOrdinal(MCExecContext& ctxt, MCObjectPtr p_
     // MCStringsGetTextChunk(ctxt, p_source, p_chunk_type, t_first, t_chunk_count, r_result);
 }
 
-void MCInterfaceEvalFieldChunk(MCExecContext& ctxt, MCObjectPtr p_field, Functions p_function, MCStringRef& r_text)
-{
-    integer_t t_start, t_end;
-    MCField *t_field = static_cast<MCField *>(p_field . object);
-    MCInterfaceMarkField(t_field, t_start, t_end, p_function, False);
-    t_field -> returntext(t_start, t_end, r_text);
-}
-
 void MCInterfaceEvalTextOfContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCStringRef &r_text)
 {
     switch (p_container . object -> gettype())
     {
+        case CT_FIELD:
         case CT_BUTTON:
         case CT_IMAGE:
         case CT_AUDIO_CLIP:
@@ -3458,6 +3453,8 @@ void MCInterfaceEvalTextOfContainer(MCExecContext& ctxt, MCObjectPtr p_container
             p_container . object -> getstringprop(ctxt, p_container . part_id, P_TEXT, False, r_text);
             return;
         default:
-            ctxt . LegacyThrow(EE_CHUNK_OBJECTNOTCONTAINER);
+            break;
     }
+    
+    ctxt . LegacyThrow(EE_CHUNK_OBJECTNOTCONTAINER);
 }

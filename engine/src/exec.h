@@ -1014,6 +1014,22 @@ extern MCExecMethodInfo *kMCStringsEvalOffsetMethodInfo;
 extern MCExecMethodInfo *kMCStringsExecReplaceMethodInfo;
 extern MCExecMethodInfo *kMCStringsExecFilterMethodInfo;
 
+extern MCExecMethodInfo *kMCStringsEvalLinesOfTextByRangeMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalLinesOfTextByExpressionMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalLinesOfTextByOrdinalMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalItemsOfTextByRangeMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalItemsOfTextByExpressionMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalItemsOfTextByOrdinalMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalWordsOfTextByRangeMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalWordsOfTextByExpressionMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalWordsOfTextByOrdinalMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalTokensOfTextByRangeMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalTokensOfTextByExpressionMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalTokensOfTextByOrdinalMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalCharsOfTextByRangeMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalCharsOfTextByExpressionMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalCharsOfTextByOrdinalMethodInfo;
+
 void MCStringsEvalToLower(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_lower);
 void MCStringsEvalToUpper(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_lower);
 
@@ -1065,6 +1081,22 @@ void MCStringsEvalTextChunkByOrdinal(MCExecContext& ctxt, MCStringRef p_source, 
 void MCStringsSetTextChunkByRange(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, MCStringRef& x_target);
 void MCStringsSetTextChunkByExpression(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, Chunk_term p_chunk_type, integer_t p_first, MCStringRef& x_target);
 void MCStringsSetTextChunkByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, Chunk_term p_chunk_type, Chunk_term p_ordinal_type, MCStringRef& x_target);
+
+void MCStringsEvalLinesOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, MCStringRef& r_result);
+void MCStringsEvalLinesOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_line, MCStringRef& r_result);
+void MCStringsEvalLinesOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, MCStringRef& r_result);
+void MCStringsEvalItemsOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, MCStringRef& r_result);
+void MCStringsEvalItemsOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_item, MCStringRef& r_result);
+void MCStringsEvalItemsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, MCStringRef& r_result);
+void MCStringsEvalWordsOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, MCStringRef& r_result);
+void MCStringsEvalWordsOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_word, MCStringRef& r_result);
+void MCStringsEvalWordsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, MCStringRef& r_result);
+void MCStringsEvalTokensOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, MCStringRef& r_result);
+void MCStringsEvalTokensOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_token, MCStringRef& r_result);
+void MCStringsEvalTokensOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, MCStringRef& r_result);
+void MCStringsEvalCharsOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, MCStringRef& r_result);
+void MCStringsEvalCharsOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_char, MCStringRef& r_result);
+void MCStringsEvalCharsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, MCStringRef& r_result);
 
 ///////////
 
@@ -1547,6 +1579,8 @@ extern MCExecMethodInfo *kMCInterfaceEvalCardOfOptionalStackByOrdinalMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceEvalCardOfOptionalStackByIdMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceEvalCardOfOptionalStackByNameMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceEvalThisCardOfOptionalStackMethodInfo;
+
+extern MCExecMethodInfo *kMCInterfaceEvalTextOfContainerMethodInfo;
 
 void MCInterfaceInitialize(MCExecContext& ctxt);
 void MCInterfaceFinalize(MCExecContext& ctxt);
@@ -2082,6 +2116,8 @@ void MCInterfaceEvalFieldTextChunkByOrdinal(MCExecContext& ctxt, MCObjectPtr p_f
 void MCInterfaceMarkField(MCField *fptr, int4 &start, int4 &end, Functions p_function, Boolean wholechunk);
 void MCInterfaceEvalTextOfContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCStringRef &r_text);
 void MCInterfaceEvalFieldChunk(MCExecContext& ctxt, MCObjectPtr p_field, Functions p_function, MCStringRef& r_text);
+
+void MCInterfaceEvalTextOfContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCStringRef &r_text);
 ///////////
 
 struct MCInterfaceLayer;

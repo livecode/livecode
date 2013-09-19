@@ -63,6 +63,7 @@ public:
 	Parse_stat parse(MCScriptPoint &spt, Boolean the);
 	Exec_stat eval(MCExecPoint &);
     Exec_stat evaltextchunk(MCExecPoint &ep, MCCRef *ref, MCStringRef p_source, Chunk_term p_chunk_type, MCStringRef& x_text);
+
     Exec_stat setmutabletextchunk(MCExecPoint &ep, MCCRef *ref, MCStringRef p_to_insert, Preposition_type p_type, Chunk_term p_chunk_type, MCStringRef& x_text);
     Exec_stat evalmutabletextchunk(MCExecPoint &ep, MCCRef *ref, MCStringRef p_source, Chunk_term p_chunk_type, MCStringRef& r_text);
 	MCVarref *getrootvarref(void);
