@@ -1503,7 +1503,7 @@ static bool cgi_send_headers(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCServerGetSessionIdFromCookie(char *&r_id);
+bool MCServerGetSessionIdFromCookie(MCStringRef &r_id);
 
 MCSession *s_current_session = NULL;
 
@@ -1517,19 +1517,21 @@ bool MCServerStartSession()
 	if (s_current_session != NULL)
 		return true;
 
-	const char *t_session_id = NULL;
-	char *t_cookie_id = NULL;
-	
-	t_session_id = MCsessionid;
-	
-	if (t_session_id == NULL)
+	MCAutoStringRef t_session_id;
+	MCAutoStringRef t_cookie_id;
+
+	if (MCsessionid == nil)
 	{
-		t_success = MCServerGetSessionIdFromCookie(t_cookie_id);
-		t_session_id = t_cookie_id;
+		t_success = MCServerGetSessionIdFromCookie(&t_cookie_id);
+		t_session_id = *t_cookie_id;
 	}
+	else
+		/* UNCHECKED */ MCStringCreateWithCString(MCsessionid, &t_session_id);
 	
 	if (t_success)
-		t_success = MCSessionStart(t_session_id, s_current_session);
+	{
+		t_success = MCSessionStart(*t_session_id, s_current_session);
+	}
 	
 	MCVariable *t_session_var = NULL;
 	
@@ -1568,8 +1570,6 @@ bool MCServerStartSession()
 		MCSessionDiscard(s_current_session);
 		s_current_session = NULL;
 	}
-	
-	MCCStringFree(t_cookie_id);
 	
 	return t_success;
 }
@@ -1613,7 +1613,7 @@ bool MCServerDeleteSession()
 	t_success = MCS_get_session_id(&t_id);
 
 	if (t_success)
-		t_success = MCSessionExpire(MCStringGetCString(*t_id));
+		t_success = MCSessionExpire(*t_id);
 	
 	if (s_current_session != NULL)
 	{
@@ -1733,14 +1733,14 @@ bool MCS_get_session_id(MCStringRef& r_id)
 	return MCStringCreateWithCString(MCsessionid, r_id);
 }
 
-bool MCServerGetSessionIdFromCookie(char *&r_id)
+bool MCServerGetSessionIdFromCookie(MCStringRef &r_id)
 {
 	MCVariable *t_cookie_array;
 	t_cookie_array = MCVariable::lookupglobal_cstring("$_COOKIE");
 	
 	if (t_cookie_array == NULL)
 	{
-		r_id = NULL;
+		r_id = nil;
 		return true;
 	}
 	
@@ -1755,9 +1755,9 @@ bool MCServerGetSessionIdFromCookie(char *&r_id)
 	
 	// retrieve ID from cookie value
 	if (ep.isempty())
-		r_id = NULL;
+		r_id = nil;
 	else
-		r_id = ep.getsvalue().clone();
+		ep.copyasstringref(r_id);
 	
 	return true;
 }
