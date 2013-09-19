@@ -2469,7 +2469,7 @@ void MCSort::additem(MCExecPoint &ep, MCSortnode *&items, uint4 &nitems, Sort_ty
             //Is the line below now needed? If yes, how to update s.setlength?
 			//s.setlength(s.getlength()) - length);
             MCAutoStringRef t_s_substring;
-            /* UNCHECKED */ MCStringCopySubstring(s, MCRangeMake(*sptr, length), &t_s_substring);
+            /* UNCHECKED */ MCStringCopySubstring(s, MCRangeMake(sptr - MCStringGetCString(s), length), &t_s_substring);
 			if (!MCU_stor8(*t_s_substring, items[nitems].nvalue))
 				items[nitems].nvalue = -MAXREAL8;
 		}
