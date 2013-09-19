@@ -289,13 +289,11 @@ bool read_quoted_string(MCStringRef p_header, MCStringRef &r_string_end, MCStrin
 	uint32 t_pos;
 	t_pos = 0;
 	
-	if (MCStringGetNativeCharAtIndex(p_header, 0) != '"')
+	if (MCStringGetNativeCharAtIndex(p_header, t_pos) != '"')
 		return false;
 	
-	//MCAutoStringRef t_head;
-	//MCStringDivideAtIndex(p_header, 0, &t_head, p_header);
 	t_pos += 1;
-	while (t_success && MCStringGetNativeCharAtIndex(p_header, 0) != '"')
+	while (t_success && MCStringGetNativeCharAtIndex(p_header, t_pos) != '"')
 	{
 		char t_char;
 		if (is_folded_lwsp(p_header))
@@ -334,8 +332,8 @@ bool read_quoted_string(MCStringRef p_header, MCStringRef &r_string_end, MCStrin
 		if (t_string != NULL)
 			t_string[t_strlen] = '\0';
 
-		/* UNCHECKED */ MCStringCreateWithCString(t_string, r_string);
-		/* UNCHECKED */ MCStringCopySubstring(p_header, MCRangeMake(t_pos +1 , MCStringGetLength(p_header) - (t_pos + 1)), r_string_end);
+		/* UNCHECKED */ MCStringCreateWithCStringAndRelease(t_string, r_string);
+		/* UNCHECKED */ MCStringCopySubstring(p_header, MCRangeMake(t_pos + 1 , MCStringGetLength(p_header) - (t_pos + 1)), r_string_end);
 	}
 	else
 		MCCStringFree(t_string);
@@ -347,20 +345,20 @@ bool MCMultiPartParseHeaderParams(MCStringRef p_params, MCStringRef *&r_names, M
 {
 	bool t_success = true;
 	
-	const char *t_next_param = NULL;
+	MCStringRef t_next_param;
 	MCStringRef t_name = NULL;
 	MCStringRef t_value = NULL;
 	uint32_t t_index = 0;
 	
-	t_next_param = MCStringGetCString(p_params);
+	t_next_param = MCValueRetain(p_params);
 	
 	r_names = NULL;
 	r_values = NULL;
 	r_param_count = NULL;
 	
-	while (t_success && t_next_param != NULL)
+	while (t_success && !MCStringIsEmpty(t_next_param))
 	{
-		/* UNCHECKED */ MCStringCreateWithCString(t_next_param, p_params);
+		MCValueAssign(p_params, t_next_param)
 		consume_whitespace(p_params);
 		
 		bool t_has_value = false;
@@ -383,11 +381,11 @@ bool MCMultiPartParseHeaderParams(MCStringRef p_params, MCStringRef *&r_names, M
 			consume_whitespace(p_params);
 			if (MCStringFirstIndexOfChar(p_params, ';', 0, kMCCompareExact, t_index))
 			{
-				t_next_param = MCStringGetCString(p_params) + t_index + 1;
+				/* UNCHECKED */ MCStringCopySubstring(p_params, MCRangeMake(t_index + 1, MCStringGetLength(p_params) - (t_index + 1)), t_next_param);
 			}
 			else
 			{
-				t_next_param = NULL;
+				t_next_param = MCValueRetain(kMCEmptyString);
 			}
 			
 			t_success = MCMemoryResizeArray(r_param_count + 1, r_names, r_param_count) &&
