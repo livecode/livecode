@@ -1632,6 +1632,7 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             
         case CT_TOKEN:
         {
+            // TODO (Unicode)
             MCScriptPoint sp(p_string);
             MCerrorlock++;
             

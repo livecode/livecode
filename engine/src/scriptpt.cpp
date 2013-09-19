@@ -133,9 +133,7 @@ MCScriptPoint::MCScriptPoint(MCStringRef p_string)
 	curobj = NULL;
 	curhlist = NULL;
 	curhandler = NULL;
-	curptr = tokenptr = backupptr = (uint1 *)script;
-	lowered = NULL;
-	loweredsize = 0;
+	curptr = tokenptr = backupptr = (const uint1 *)MCDataGetBytePtr(script);
 	line = pos = 0;
 	escapes = False;
 	tagged = False;
