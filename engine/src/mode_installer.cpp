@@ -242,24 +242,26 @@ public:
 			else
 			{
 #ifdef _DEBUG
-				ep . setsvalue(getenv("TEST_PAYLOAD"));
-				MCS_loadfile(ep, True);
-				if (ep . getsvalue() . getlength() == 0)
+				MCAutoStringRef t_payload_file;
+				MCAutoDataRef t_payload_dataref;
+				/* UNCHECKED */ MCStringCreateWithCString(getenv("TEST_PAYLOAD"), &t_payload_file);
+				/* UNCHECKED */ MCS_loadbinaryfile(*t_payload_file, &t_payload_dataref);
+				if (MCDataGetLength(*t_payload_dataref) == 0)
 				{
 					MCresult -> sets("could not load payload");
 					return ES_NORMAL;
 				}
 
-				if (!MCMemoryAllocate(ep . getsvalue() . getlength(), s_payload_data))
+				if (!MCMemoryAllocate(MCDataGetLength(*t_payload_dataref), s_payload_data))
 				{
 					MCresult -> sets("out of memory while loading payload");
 					return ES_NORMAL;
 				}
 
-				MCMemoryCopy(s_payload_data, ep .  getsvalue() . getstring(), ep . getsvalue() . getlength());
+				MCMemoryCopy(s_payload_data, (void*)MCDataGetBytePtr(*t_payload_dataref), MCDataGetLength(*t_payload_dataref));
 
 				t_payload_data = s_payload_data;
-				t_payload_size = ep . getsvalue() . getlength();
+				t_payload_size = MCDataGetLength(*t_payload_dataref);
 #else
 				MCresult -> sets("could not find payload");
 				return ES_NORMAL;
@@ -454,12 +456,12 @@ public:
 	}
 
 private:
-	static bool list_items(void *p_context, const char *p_item)
+	static bool list_items(void *p_context, MCStringRef p_item)
 	{
 		MCExecPoint *ep;
 		ep = (MCExecPoint *)p_context;
 
-		ep -> concatcstring(p_item, EC_RETURN, ep -> getsvalue() . getlength() == 0);
+		ep -> concatcstring(MCStringGetCString(p_item), EC_RETURN, ep -> getsvalue() . getlength() == 0);
 
 		return true;
 	}
@@ -506,8 +508,10 @@ public:
 
 		if (s_payload_minizip != nil)
 		{
+			MCAutoStringRef t_name;
 			MCMiniZipItemInfo t_info;
-			if (MCMiniZipDescribeItem(s_payload_minizip, ep . getcstring(), t_info))
+			/* UNCHECKED */ ep.copyasstring(&t_name);
+			if (MCMiniZipDescribeItem(s_payload_minizip, *t_name, t_info))
 			{
 				ep . setstringf(",%u,%u,,%u,", t_info . checksum, t_info . uncompressed_size, t_info . compressed_size);
 				m_it_var -> set(ep, False);
@@ -566,41 +570,38 @@ public:
 
 	Exec_stat exec(MCExecPoint& ep)
 	{
-		char *t_item;
-		t_item = nil;
+		MCAutoStringRef t_item;
 		if (m_item_expr -> eval(ep) != ES_NORMAL)
 		{
 			MCeerror -> add(EE_PUT_BADEXP, line, pos);
 			return ES_ERROR;
 		}
-		t_item = ep . getsvalue() . clone();
-
-		char *t_file;
-		t_file = nil;
+		/* UNCHECKED */ ep.copyasstring(&t_item);
+		
+		MCAutoStringRef t_file;
 		if (m_file_expr != nil)
 		{
 			if (m_file_expr -> eval(ep) != ES_NORMAL)
 			{
-				delete t_item;
 				MCeerror -> add(EE_PUT_BADEXP, line, pos);
 				return ES_ERROR;
 			}
-			t_file = ep . getsvalue() . clone();
+			/* UNCHECKED */ ep.copyasstring(&t_item);
 		}
 
 		if (s_payload_minizip != nil)
 		{
 			ExtractContext t_context;
 			t_context . target = MCtargetptr -> gethandle();
-			t_context . name = t_item;
+			t_context . name = *t_item;
 			t_context . var = m_it_var -> evalvar(ep);
 			t_context . stream = nil;
 
-			if (t_file != nil)
-				t_context . stream = MCS_open(t_file, IO_WRITE_MODE, False, False, 0);
+			if (!MCStringIsEmpty(*t_file))
+				t_context . stream = MCS_open(*t_file, kMCSOpenFileModeWrite, False, False, 0);
 
 			t_context . var -> clear();
-			if (t_file == nil || t_context . stream != nil)
+			if (MCStringIsEmpty(*t_file) || t_context . stream != nil)
 			{
 				if (MCMiniZipExtractItem(s_payload_minizip, t_context . name, extract_item, &t_context))
 					MCresult -> clear();
@@ -618,9 +619,6 @@ public:
 		else
 			MCresult -> sets("payload not open");
 
-		delete t_item;
-		delete t_file;
-
 		return ES_NORMAL;
 	}
 
@@ -628,7 +626,7 @@ private:
 	struct ExtractContext
 	{
 		MCObjectHandle *target;
-		char *name;
+		MCStringRef name;
 		IO_handle stream;
 		MCVariable *var;
 	};
@@ -658,7 +656,7 @@ private:
 			MCParameter p1, p2, p3;
 			p1 . setnext(&p2);
 			p2 . setnext(&p3);
-			p1 . sets_argument(context -> name);
+			p1 . setvalueref_argument(context -> name);
 			p2 . setn_argument(p_data_offset + p_data_length);
 			p3 . setn_argument(p_data_total);
 
@@ -715,24 +713,21 @@ public:
 		bool t_success;
 		t_success = true;
 
-		char *t_patch_item;
-		t_patch_item = nil;
+		MCAutoStringRef t_patch_item;
 		if (t_success && m_patch_item_expr -> eval(ep) == ES_NORMAL)
-			t_patch_item = ep . getsvalue() . clone();
+			t_success = ep.copyasstring(&t_patch_item);
 		else
 			t_success = false;
 
-		char *t_base_item;
-		t_base_item = nil;
+		MCAutoStringRef t_base_item;
 		if (t_success && m_base_item_expr -> eval(ep) == ES_NORMAL)
-			t_base_item = ep . getsvalue() . clone();
+			t_success = ep.copyasstring(&t_base_item);
 		else
 			t_success = false;
 
-		char *t_output_filename;
-		t_output_filename = nil;
+		MCAutoStringRef t_output_filename;
 		if (t_success && m_output_file_expr -> eval(ep) == ES_NORMAL)
-			t_output_filename = ep . getsvalue() . clone();
+			t_success = ep.copyasstring(&t_output_filename);
 		else
 			t_success = false;
 
@@ -742,19 +737,19 @@ public:
 			uint32_t t_patch_data_size;
 			t_patch_data = nil;
 			if (t_success)
-				t_success = MCMiniZipExtractItemToMemory(s_payload_minizip, t_patch_item, t_patch_data, t_patch_data_size);
+				t_success = MCMiniZipExtractItemToMemory(s_payload_minizip, *t_patch_item, t_patch_data, t_patch_data_size);
 
 			void *t_base_data;
 			uint32_t t_base_data_size;
 			t_base_data = nil;
 			if (t_success)
-				t_success = MCMiniZipExtractItemToMemory(s_payload_minizip, t_base_item, t_base_data, t_base_data_size);
+				t_success = MCMiniZipExtractItemToMemory(s_payload_minizip, *t_base_item, t_base_data, t_base_data_size);
 
 			IO_handle t_output_handle;
 			t_output_handle = nil;
 			if (t_success)
 			{
-				t_output_handle = MCS_open(t_output_filename, IO_WRITE_MODE, False, False, 0);
+				t_output_handle = MCS_open(*t_output_filename, kMCSOpenFileModeWrite, False, False, 0);
 				if (t_output_handle == nil)
 					t_success = false;
 			}
@@ -784,10 +779,6 @@ public:
 		}
 		else
 			MCresult -> sets("payload not open");
-
-		delete t_patch_item;
-		delete t_base_item;
-		delete t_output_filename;
 
 		return ES_NORMAL;
 	}
@@ -1641,7 +1632,7 @@ Window MCModeGetParentWindow(void)
 	return t_window;
 }
 
-bool MCModeCanAccessDomain(const char *p_name)
+bool MCModeCanAccessDomain(MCStringRef p_name)
 {
 	return false;
 }

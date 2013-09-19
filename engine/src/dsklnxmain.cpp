@@ -122,7 +122,7 @@ static bool do_iconv(iconv_t fd, const char *in, size_t in_len, char * &out, siz
 	// space. This is probably wrong but the array is grown as needed.
 	size_t t_status;
 	uindex_t t_alloc_remain;
-	const char * t_out_base;
+	char * t_out_base;
 	const char * t_out_cursor;
 	alloc_remain = in_len;
 	/* UNCHECKED */ MCMemoryNewArray(alloc_remain, t_out_base);
@@ -179,7 +179,7 @@ bool MCStringCreateWithSysString(const char *p_system_string, size_t p_len, MCSt
 {
 	// Create the pseudo-FD that iconv uses for character conversion. The most
 	// convenient form is UTF-16 as StringRefs can be constructed directly from that.
-	iconv_t t_fd = iconv_create("UTF-16", MCsysencoding);
+	iconv_t t_fd = iconv_open("UTF-16", MCsysencoding);
 	
 	// Convert the string
 	const char *t_utf16_bytes;
@@ -213,20 +213,20 @@ bool MCStringConvertToSysString(MCStringRef p_string, const char * &r_system_str
 	size_t t_mc_len;
 	if (MCStringIsNative(p_string) && MCStringGetNativeCharPtr(p_string) != nil)
 	{
-		t_fd = iconv_create(MCsysencoding, "ISO-8859-1");
+		t_fd = iconv_open(MCsysencoding, "ISO-8859-1");
 		t_mc_string = (const char *)MCStringGetNativeCharPtr(p_string);
 		t_mc_len = MCStringGetLength(p_string);
 	}
 	else
 	{
-		t_fd = iconv_create(MCsysencoding, "UTF-16");
+		t_fd = iconv_open(MCsysencoding, "UTF-16");
 		t_mc_string = (const char *)MCStringGetCharPtr(p_string);
 		t_mc_len = MCStringGetLength(p_string) * sizeof(unichar_t);
 	}
 	
 	// Perform the conversion
 	bool t_success;
-	const char *t_sys_string;
+	char *t_sys_string;
 	size_t t_sys_len;
 	t_success = do_iconv(t_fd, t_mc_string, t_mc_len, t_sys_string, t_sys_len);
 	iconv_close(t_fd);
@@ -234,7 +234,7 @@ bool MCStringConvertToSysString(MCStringRef p_string, const char * &r_system_str
 	if (!t_success)
 		return false;
 	
-	r_system_string = t_string;
+	r_system_string = t_sys_string;
 	r_len = t_sys_len;
 	return true;
 }

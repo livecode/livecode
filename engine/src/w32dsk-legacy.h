@@ -14,15 +14,12 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#ifndef __MOBILE_NOTIFICATION__
-#define __MOBILE_NOTIFICATION__
+extern unsigned char MCS_langidtocharset(unsigned short langid);
+extern unsigned short MCS_charsettolangid(unsigned char charset);
 
-#include "mblsyntax.h"
-
-void MCNotificationPostLocalNotificationEvent(MCStringRef p_payload);
-void MCNotificationPostPushNotificationEvent(MCStringRef p_payload);
-void MCNotificationPostPushRegistered (MCStringRef p_registration_text);
-void MCNotificationPostPushRegistrationError (MCStringRef p_error_text);
-void MCNotificationPostUrlWakeUp (MCStringRef p_url_wake_up_text);
-
-#endif
+extern void MCS_unicodetomultibyte(const char *s, unsigned int len, char *d,
+                            unsigned int destbufferlength, unsigned int &destlen,
+                            unsigned char charset);
+extern void MCS_multibytetounicode(const char *s, unsigned int len, char *d,
+                            unsigned int destbufferlength, unsigned int &destlen,
+                            unsigned char charset);

@@ -106,8 +106,9 @@ bool X_init(int argc, char *argv[], char *envp[])
 	MCLogicalFontTableInitialize();
 	
 	////
-	
-	/* UNCHECKED */ MCStringCreateWithCString(MCsystem -> PathFromNative(argv[0]), MCcmd);
+	MCAutoStringRef t_argv;
+    /* UNCHECKED */ MCStringCreateWithCString(argv[0], &t_argv);
+	/* UNCHECKED */ MCsystem -> PathFromNative(*t_argv, MCcmd);
 	
 	// Create the $<n> variables.
 	for(uint32_t i = 2; i < argc; ++i)

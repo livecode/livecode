@@ -168,7 +168,7 @@ void MCServerExecInclude(MCExecContext& ctxt, MCStringRef p_filename, bool p_is_
 		return;
 	}
 	
-	if (!t_script -> Include(ctxt . GetEP(), MCStringGetCString(p_filename), p_is_require))
+	if (!t_script -> Include(ctxt . GetEP(), p_filename, p_is_require))
 	{
 		ctxt . LegacyThrow(EE_SCRIPT_ERRORPOS);
 		return;

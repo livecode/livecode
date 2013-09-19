@@ -102,7 +102,7 @@ public:
 	Boolean issupported();
 	void setdisposable();
 	void setlooping(Boolean loop);
-	Boolean import(const char *fname, IO_handle stream);
+	Boolean import(MCStringRef fname, IO_handle stream);
 	Boolean open_audio();
 	Boolean play();
 	void stop(Boolean abort);

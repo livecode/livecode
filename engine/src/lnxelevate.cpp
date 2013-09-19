@@ -190,7 +190,7 @@ static bool read_int32_from_fd(int fd, int32_t& r_value)
 // This method attempts to launch the given process with the permissions of an
 // administrator. At the moment we require libgksu, but should be able to extend
 // this to any platform with a suitably configured 'sudo' in the future.
-bool MCSystemOpenElevatedProcess(const char *p_command, int32_t& r_pid, int32_t& r_input_fd, int32_t& r_output_fd)
+bool MCSystemOpenElevatedProcess(MCStringRef p_command, int32_t& r_pid, int32_t& r_input_fd, int32_t& r_output_fd)
 {
 	bool t_success;
 	t_success = true;
@@ -198,7 +198,7 @@ bool MCSystemOpenElevatedProcess(const char *p_command, int32_t& r_pid, int32_t&
 	// Convert the command string into UTF-8 so that we can pass Unicode
 	// through unscathed (note that because both the parent and the child
 	// are ourselves, we can ignore the system character encoding here)
-	const char *t_command;
+	char *t_command;
 	/* UNCHECKED */ MCStringConvertToUTF8String(p_command, t_command);
 	
 	// First split the command args into the argc/argv array we need.
@@ -253,7 +253,7 @@ bool MCSystemOpenElevatedProcess(const char *p_command, int32_t& r_pid, int32_t&
 				}
 				else
 					t_escaped_cmd[t_escaped_len++] = t_unescaped_cmd[i];
-			*t_escaped_cmd[t_escaped_len] = '\0';
+			t_escaped_cmd[t_escaped_len] = '\0';
 		}
 		MCMemoryDelete(t_unescaped_cmd);
 
@@ -270,13 +270,6 @@ bool MCSystemOpenElevatedProcess(const char *p_command, int32_t& r_pid, int32_t&
 		// incorrectly encoded. This will happen if the path to LiveCode 
 		// contains pretty much any accented or non-Roman character on an
 		// ISO-8859-1 system...
-		
-		// The t_command_line variable is UTF-8 encoded - this may not match
-		// the system character encoding so convert it.
-		iconv_t t_iconv_fd;
-		t_iconv_fd = iconv_open(MCsysencoding, "UTF-8");
-		// ... convert ...
-		iconv_close(t_iconv_fd);
 		
 		// We exec to gksu with appropriate parameters.
 		// This causes the child to request password from the user and then

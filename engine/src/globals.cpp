@@ -79,6 +79,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblad.h"
 #include "mblcontrol.h"
 #include "mblsensor.h"
+#include "mblsyntax.h"
+#endif
+
+#ifdef _IOS_MOBILE
+#include "mblsyntax.h"
 #endif
 
 #include "exec.h"
@@ -819,6 +824,11 @@ void X_clear_globals(void)
     MCNativeControlInitialize();
     MCSensorInitialize();
     MCAndroidCustomFontsInitialize();
+	MCSystemSoundInitialize();
+#endif
+	
+#ifdef _IOS_MOBILE
+	MCSystemSoundInitialize();
 #endif
 }
 
@@ -947,7 +957,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	
 	// MW-2012-02-14: [[ FontRefs ]] Open the dispatcher after we have an open
 	//   screen, otherwise we don't have a root fontref!
-	MCdispatcher -> setfontattrs(DEFAULT_TEXT_FONT, DEFAULT_TEXT_SIZE, FA_DEFAULT_STYLE);
+	MCdispatcher -> setfontattrs(MCSTR(DEFAULT_TEXT_FONT), DEFAULT_TEXT_SIZE, FA_DEFAULT_STYLE);
 	MCdispatcher -> open();
 
 	// This is here because it relies on MCscreen being initialized.
@@ -1177,6 +1187,11 @@ int X_close(void)
     MCNativeControlFinalize();
     MCSensorFinalize();
     MCAndroidCustomFontsFinalize();
+	MCSystemSoundFinalize();
+#endif
+	
+#ifdef _IOS_MOBILE
+	MCSystemSoundInitialize();
 #endif
 	
 	MCU_finalize_names();
