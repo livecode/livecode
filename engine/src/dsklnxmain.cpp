@@ -142,7 +142,7 @@ static bool do_iconv(iconv_t fd, const char *in, size_t in_len, char * &out, siz
 				// Increase the size of the output array
 				uindex_t t_offset;
 				t_offset = t_out_cursor - t_out_base;
-				/* UNCHECKED */ MCMemoryResizeArray(t_offset + 1, t_out_base, t_alloc_remain);
+				/* UNCHECKED */ MCMemoryResizeArray(t_offset + t_alloc_remain + 1, t_out_base, t_alloc_remain);
 				
 				// Adjust the pointers because the output buffer may have moved
 				t_out_cursor = t_out_base + t_offset;
