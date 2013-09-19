@@ -208,28 +208,21 @@ enum
 extern bool MCDateTimeInitialize();
 extern bool MCDateTimeFinalize();
 
-extern bool MCD_date(MCExecContext& ctxt, Properties p_format, MCStringRef& r_date);
-extern bool MCD_time(MCExecContext& ctxt, Properties p_format, MCStringRef& r_time);
+extern void MCD_date(MCExecContext& ctxt, Properties p_format, MCStringRef& r_date);
+extern void MCD_time(MCExecContext& ctxt, Properties p_format, MCStringRef& r_time);
 extern bool MCD_monthnames(MCExecContext& ctxt, Properties p_format, MCListRef& r_list);
 extern bool MCD_weekdaynames(MCExecContext& ctxt, Properties p_format, MCListRef& r_list);
-extern bool MCD_dateformat(MCExecContext& ctxt, Properties p_format, MCStringRef& r_dateformat);
-extern void MCD_date(Properties length, MCExecPoint &);
-extern void MCD_time(Properties length, MCExecPoint &);
-extern void MCD_monthnames(Properties length, MCExecPoint &ep);
-extern void MCD_weekdaynames(Properties length, MCExecPoint &ep);
-extern void MCD_dateformat(Properties length, MCExecPoint &ep);
+extern void MCD_dateformat(MCExecContext& ctxt, Properties p_format, MCStringRef& r_dateformat);
+
 extern bool MCD_convert(MCExecContext& ctxt, MCStringRef p_string,
 						Convert_form p_primary_from, Convert_form p_secondary_from,
 						Convert_form p_primary_to, Convert_form p_secondary_to,
 						MCStringRef& r_converted);
-extern Boolean MCD_convert(MCExecPoint &, Convert_form f, Convert_form fs,
+extern Boolean MCD_convert(MCExecPoint &ep, Convert_form f, Convert_form fs,
 						   Convert_form p, Convert_form s);
 
-extern bool MCD_convert_to_datetime(MCExecPoint &ep, Convert_form p_primary_from, Convert_form p_secondary_from, MCDateTime &r_datetime);
-extern bool MCD_convert_from_datetime(MCExecPoint &ep, Convert_form p_primary_to, Convert_form p_secondary_to, MCDateTime &p_datetime);
-
-/* WRAPPER */ extern bool MCD_convert_to_datetime(MCExecContext& ctxt, MCStringRef p_input, Convert_form p_primary_from, Convert_form p_secondary_from, MCDateTime &r_datetime);
-/* WRAPPER */ extern bool MCD_convert_from_datetime(MCExecContext& ctxt, MCDateTime p_datetime, Convert_form p_primary_from, Convert_form p_secondary_from, MCStringRef &r_output);
+extern bool MCD_convert_to_datetime(MCExecContext& ctxt, MCValueRef p_input, Convert_form p_primary_from, Convert_form p_secondary_from, MCDateTime &r_datetime);
+extern bool MCD_convert_from_datetime(MCExecContext& ctxt, MCDateTime p_datetime, Convert_form p_primary_from, Convert_form p_secondary_from, MCValueRef &r_output);
 
 extern void MCD_getlocaleformats();
 

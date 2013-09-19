@@ -37,6 +37,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 bool MCSystemCreateLocalNotification (MCStringRef p_alert_body, MCStringRef p_alert_action, MCStringRef p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value, int32_t &r_id)
 {
     MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(ep);
     int t_message_id = 1;
 	Class t_cls = NSClassFromString (@"UILocalNotification");
     if (t_cls == nil)
@@ -78,9 +79,13 @@ bool MCSystemCreateLocalNotification (MCStringRef p_alert_body, MCStringRef p_al
     }
     t_local_notification.applicationIconBadgeNumber = p_badge_value;
     // Convert the current datatime to an NSDate
-    if (!MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, p_date))
+	MCAutoValueRef t_date;
+    if (!MCD_convert_from_datetime(ctxt, p_date, CF_SECONDS, CF_SECONDS, &t_date))
         return false;
-    t_local_notification.fireDate = [NSDate dateWithTimeIntervalSince1970:ep.getnvalue()];
+	integer_t t_date_secs;
+	if (!ctxt.ConvertToInteger(*t_date, t_date_secs))
+		return false;
+    t_local_notification.fireDate = [NSDate dateWithTimeIntervalSince1970:t_date_secs];
 	[[UIApplication sharedApplication] scheduleLocalNotification: t_local_notification];
 	[t_local_notification release];
     r_id = t_message_id;

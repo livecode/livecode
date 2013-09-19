@@ -2639,14 +2639,14 @@ Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters)
     bool t_success = true;
     const char *r_result = NULL;
     MCExecPoint ep(nil, nil, nil);
-	ep . clear();
+	MCExecContext ctxt(ep);
     // Handle parameters.
     if (p_parameters)
     {
         p_parameters->eval(ep);
         if (!ep.isempty())
         {
-            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_start_date);
+			t_success = MCD_convert_to_datetime(ctxt, ep.getvalueref(), CF_UNDEFINED, CF_UNDEFINED, t_start_date);
         }
         p_parameters = p_parameters->getnext();
     }
@@ -2655,10 +2655,10 @@ Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters)
         p_parameters->eval(ep);
         if (!ep.isempty())
         {
-            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_end_date);
+			t_success = MCD_convert_to_datetime(ctxt, ep.getvalueref(), CF_UNDEFINED, CF_UNDEFINED, t_end_date);
         }
     }
-    MCExecContext ctxt(ep);
+
     ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
 //    MCCalendarExecFindEvent(ctxt, t_start_date, t_end_date);
@@ -2727,7 +2727,7 @@ Exec_stat MCHandleCreateLocalNotification (void *context, MCParameter *p_paramet
         p_parameters->eval(ep);
         if (!ep.isempty())
         {
-            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_date);
+            t_success = MCD_convert_to_datetime(ctxt, ep.getvalueref(), CF_UNDEFINED, CF_UNDEFINED, t_date);
         }
         p_parameters = p_parameters->getnext();
     }
