@@ -122,12 +122,12 @@ bool MCNumberParse(MCStringRef p_string, MCNumberRef &r_number)
 
     bool t_success;
 
-    const char* t_chars = MCStringCString(p_string);
+    const char* t_chars = (const char*)MCStringGetNativeCharPtr(p_string);
 
     if (MCStringGetLength(p_string) > 2 &&
             t_chars[0] == '0' &&
             (t_chars[1] == 'x' || t_chars[1] == 'X'))
-        t_success = MCNumberCreateWithInteger(strtoul(t_chars + 2, 16), r_number);
+        t_success = MCNumberCreateWithInteger(strtoul(t_chars + 2, nil, 16), r_number);
     else
     {
         char *t_end;
