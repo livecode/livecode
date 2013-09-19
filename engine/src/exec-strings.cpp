@@ -381,11 +381,10 @@ void MCStringsEvalReplaceText(MCExecContext& ctxt, MCStringRef p_string, MCStrin
     
     uindex_t t_source_length = MCStringGetLength(p_string);
     uindex_t t_source_offset = 0;
-	MCStringRef t_head, t_tail;
-	t_head = nil;
-	t_tail = nil;
+	MCStringRef t_substring;
+	t_substring = nil;
     
-    while (t_success && t_source_offset < t_source_length && MCR_exec(t_compiled, t_tail, t_source_length - t_source_offset) && MCStringDivideAtIndex(p_string, t_source_offset, t_head, t_tail))
+    while (t_success && t_source_offset < t_source_length && MCStringCopySubstring(p_string, MCRangeMake(t_source_offset + 1, MCStringGetLength(p_string) - (t_source_offset + 1)), t_substring) && MCR_exec(t_compiled, t_substring, t_source_length - t_source_offset))
     {
         uindex_t t_start = t_compiled->matchinfo[0].rm_so;
         uindex_t t_end = t_compiled->matchinfo[0].rm_eo;
@@ -406,13 +405,12 @@ void MCStringsEvalReplaceText(MCExecContext& ctxt, MCStringRef p_string, MCStrin
         // Begin searching again after the end of the match
         t_source_offset += t_end;
 
-		if (t_head != nil)
-			MCValueRelease(t_head);
-			t_head = nil;
+		if (t_substring != nil)
+		{
+			MCValueRelease(t_substring);
+			t_substring = nil;
+		}
 
-		if (t_tail != nil)
-			MCValueRelease(t_tail);
-			t_tail = nil;
         
         if (MCStringGetCharAtIndex(p_pattern, 0) == '^')
             break;
