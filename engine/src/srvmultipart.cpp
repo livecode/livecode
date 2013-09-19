@@ -209,15 +209,17 @@ bool is_token_char(char p_char)
 
 static bool skip_whitespace(MCStringRef &x_header)
 {
-	MCAutoStringRef t_head;
+	MCAutoStringRef t_head, t_tail;
 	if (is_whitespace(MCStringGetNativeCharAtIndex(x_header, 0)))
 	{	
-		MCStringDivideAtIndex(x_header, 0, &t_head, x_header);
+		MCStringDivideAtIndex(x_header, 0, &t_head, &t_tail);
+		MCValueAssign(x_header, *t_tail);
 		return true;
 	}
 	else if (is_folded_lwsp(x_header))
 	{
-		MCStringDivideAtIndex(x_header, 2, &t_head, x_header);
+		MCStringDivideAtIndex(x_header, 2, &t_head, &t_tail);
+		MCValueAssign(x_header, *t_tail);
 		return true;
 	}
 	
@@ -368,8 +370,9 @@ bool MCMultiPartParseHeaderParams(MCStringRef p_params, MCStringRef *&r_names, M
 		{
 			consume_whitespace(p_params);
 			t_has_value = (MCStringGetNativeCharAtIndex(p_params, 0) == '=');
-			MCAutoStringRef t_head;
-			/* UNCHEKED */ MCStringDivideAtIndex(p_params, 0, &t_head, p_params);
+			MCAutoStringRef t_head, t_tail;
+			/* UNCHEKED */ MCStringDivideAtIndex(p_params, 0, &t_head, &t_tail);
+			MCValueAssign(p_params, *t_tail);
 		}
 		if (t_success && t_has_value)
 		{
