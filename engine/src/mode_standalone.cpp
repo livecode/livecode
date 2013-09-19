@@ -756,15 +756,12 @@ bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 }
 
 // The standalone mode causes a relaunch message.
-bool MCModeHandleRelaunch(MCStringRef & r_id)
+bool MCModeHandleRelaunch(MCStringRef &r_id)
 {
 #ifdef _WINDOWS
 	bool t_do_relaunch;
-	const char *t_id;
-
 	t_do_relaunch = MCdefaultstackptr -> hashandler(HT_MESSAGE, MCM_relaunch) == True;
-	t_id = MCdefaultstackptr -> getname_cstring();
-	/* UNCHECKED */ MCStringCreateWithCString(t_id, r_id);
+	/* UNCHECKED */ MCStringCopy(MCNameGetString(MCdefaultstackptr -> getname()), r_id);
 	return t_do_relaunch;
 #else
 	return false;
