@@ -347,15 +347,13 @@ Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
 					}
 		break;
 	case P_TEXT_FONT:
-		{
-			fname = MCValueRetain(data);
-			
-			// MW-2012-02-17: [[ IntrinsicUnicode ]] Strip any lang tag from the
+		{// MW-2012-02-17: [[ IntrinsicUnicode ]] Strip any lang tag from the
 			//   fontname.
-			char *t_tag;
-			t_tag = strchr(strdup(MCStringGetCString(fname)), ',');
-			if (t_tag != nil)
-				t_tag[0] = '\0';
+			uindex_t t_offset;
+			if (MCStringFirstIndexOfChar(data, ',', 0, kMCCompareExact, t_offset))
+				/* UNCHECKED */ MCStringCopySubstring(data, MCRangeMake(t_offset + 1, MCStringGetLength(data) - (t_offset + 1)), fname);
+			else
+				fname = MCValueRetain(data);
 		}
 		break;
 	case P_TEXT_HEIGHT:
