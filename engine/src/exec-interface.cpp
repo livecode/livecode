@@ -2160,15 +2160,17 @@ void MCInterfaceExecDeleteObjectChunks(MCExecContext& ctxt, MCObjectChunkPtr *p_
 	{
 		if (p_chunks[i] . object -> gettype() == CT_BUTTON)
 		{
-			p_chunks[i] . object -> getprop(p_chunks[i] . part_id, P_UNICODE_TEXT, ctxt . GetEP(), False);
+			MCAutoStringRef t_value; 
+			p_chunks[i] . object -> getstringprop(ctxt, p_chunks[i] . part_id, P_UNICODE_TEXT, False, &t_value);
+			//p_chunks[i] . object -> getprop(p_chunks[i] . part_id, P_UNICODE_TEXT, ctxt . GetEP(), False);
 
 			ctxt . GetEP() . utf16toutf8();
 
 			ctxt . GetEP() . insert(MCnullmcstring, p_chunks[i] . start, p_chunks[i] . finish);
 
 			ctxt . GetEP() . utf8toutf16();
-
-			p_chunks[i] . object -> setprop(p_chunks[i] . part_id, P_UNICODE_TEXT, ctxt . GetEP(), False);
+			
+			p_chunks[i] . object -> setstringprop(ctxt, p_chunks[i] . part_id, P_UNICODE_TEXT, False, *t_value);
 		}
 		else if (p_chunks[i] . object -> gettype() == CT_FIELD)
 			static_cast<MCField *>(p_chunks[i] . object) -> settextindex(p_chunks[i] . part_id, p_chunks[i] . start, p_chunks[i] . finish, MCnullmcstring, False);

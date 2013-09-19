@@ -537,6 +537,14 @@ public:
 	{
 		return m_ep . getcutoff();
 	}
+
+	void GetNumberFormat(uint2& r_fw, uint2& r_trailing, uint2& r_force)
+	{
+		r_fw = m_ep . getnffw();
+		r_trailing = m_ep . getnftrailing();
+		r_force = m_ep . getnfforce();
+	}
+
 	//////////
 
 	void SetCaseSensitive(bool p_value)
@@ -587,6 +595,11 @@ public:
 	void SetRowDelimiter(char_t p_value)
 	{
 		m_ep . setrowdel(p_value);
+	}
+
+	void SetNumberFormat(uint2 p_fw, uint2 p_trailing, uint2 p_force)
+	{
+		m_ep . setnumberformat(p_fw, p_trailing, p_force);
 	}
 	//////////
 	

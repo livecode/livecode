@@ -712,12 +712,6 @@ void MCFilesEvalShell(MCExecContext& ctxt, MCStringRef p_command, MCStringRef& r
 		return;
 	}
 
-	if (!ctxt . GetEP() . setvalueref(p_command))
-	{
-		ctxt . Throw();
-		return;
-	}
-
 	if (MCS_runcmd(p_command, r_output) != IO_NORMAL)
 	{
 		ctxt . LegacyThrow(EE_SHELL_BADCOMMAND);
