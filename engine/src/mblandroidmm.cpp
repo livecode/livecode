@@ -38,7 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool path_to_apk_path(const char * p_path, const char *&r_apk_path);
+bool path_to_apk_path(MCStringRef p_path, MCStringRef &r_apk_path);
 
 static bool s_video_playing = false;
 
@@ -55,11 +55,11 @@ bool MCSystemPlayVideo(MCStringRef p_video)
 	bool t_is_url = false;
 	bool t_is_asset = false;
 
-	if (MCStringBeginsWithCString(p_video, "http://", kMCStringOptionCompareExact)
-		|| MCStringBeginsWithCString(p_video, "https://", kMCStringOptionCompareExact)
+	if (MCStringBeginsWithCString(p_video, (const char_t *)"http://", kMCStringOptionCompareExact)
+		|| MCStringBeginsWithCString(p_video, (const char_t *)"https://", kMCStringOptionCompareExact))
 	{
 		t_is_url = true;
-		t_video_path = p_file;
+		t_video_path = p_video;
 	}
 	else
 	{
@@ -74,7 +74,7 @@ bool MCSystemPlayVideo(MCStringRef p_video)
 	t_show_controller = MCtemplateplayer -> getflag(F_SHOW_CONTROLLER) == True;
 
 	s_video_playing = true;
-	MCAndroidEngineRemoteCall("playVideo", "bxbbbb", &t_success, MCStringGetCString(t_video_path), t_is_asset, t_is_url, t_looping, t_show_controller);
+	MCAndroidEngineRemoteCall("playVideo", "bxbbbb", &t_success, t_video_path, t_is_asset, t_is_url, t_looping, t_show_controller);
 
 	if (!t_success)
 		s_video_playing = false;
@@ -84,9 +84,9 @@ bool MCSystemPlayVideo(MCStringRef p_video)
 			break;
 
 	s_video_playing = false;
-
 	if (t_resolved_path != nil)
 		MCValueRelease(t_resolved_path);
+		
 	return t_success;
 }
 

@@ -101,8 +101,6 @@ MCStringRef MCSensorTypeToStringRef(MCSensorType p_sensor)
         default:
 			return MCSTR("unknown");
     }
-    
-    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

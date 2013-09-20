@@ -106,10 +106,10 @@ MCScriptPoint::MCScriptPoint(MCExecPoint &ep)
 	token_nameref = nil;
 }
 
-MCScriptPoint::MCScriptPoint(MCStringRef s)
+MCScriptPoint::MCScriptPoint(MCStringRef p_string)
 {
 	char *t_utf8_string;
-	/* UNCHECKED */ MCStringConvertToUTF8String(s, t_utf8_string);
+	/* UNCHECKED */ MCStringConvertToUTF8String(p_string, t_utf8_string);
 	/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_utf8_string, strlen(t_utf8_string) + 1, script);
 	curobj = NULL;
 	curhlist = NULL;
@@ -631,7 +631,7 @@ Parse_stat MCScriptPoint::lookup(Script_point t, const LT *&dlt)
 		{
 			// Both the table and the token are encoded in UTF-8
 			uint2 mid = low + ((high - low) >> 1);
-			cond = strncasecmp(token.getstring(), table[mid].token, token.getlength());
+			cond = MCU_strncasecmp(token.getstring(), table[mid].token, token.getlength());
 			if (cond == 0)
 				cond -= table[mid].token[token.getlength()];
 			if (cond < 0)
@@ -664,7 +664,7 @@ Parse_stat MCScriptPoint::lookupconstant(MCExpression **dest)
 	{
 		// Both the table and the token are encoded in UTF-8
 		uint2 mid = low + ((high - low) >> 1);
-		cond = strncasecmp(token.getstring(), constant_table[mid].token, token.getlength());
+		cond = MCU_strncasecmp(token.getstring(), constant_table[mid].token, token.getlength());
 		if (cond == 0)
 			cond -= constant_table[mid].token[token.getlength()];
 		if (cond < 0)
@@ -674,7 +674,7 @@ Parse_stat MCScriptPoint::lookupconstant(MCExpression **dest)
 				low = mid + 1;
 			else
 			{
-				if (token.getlength() == 4 && strncasecmp(token.getstring(), "null", 4) == 0)
+				if (token.getlength() == 4 && MCU_strncasecmp(token.getstring(), "null", 4) == 0)
 				{
 					*dest = new MCConstant(kMCEmptyString, BAD_NUMERIC);
 				}

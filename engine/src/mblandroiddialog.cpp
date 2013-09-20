@@ -66,7 +66,7 @@ int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button
 	if (s_in_popup_dialog)
 		return -1;
 
-	MCAutoStringRef t_ok_button, *t_cancel_button, *t_other_button;
+	MCAutoStringRef t_ok_button, t_cancel_button, t_other_button;
 	
 	if (p_button_count == 0)
 		t_ok_button = MCSTR("OK");
@@ -82,7 +82,7 @@ int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button
 
 	s_in_popup_dialog = true;
 	s_popup_dialog_action = -1;
-	MCAndroidEngineRemoteCall("popupAnswerDialog", "vxxxxx", nil, *p_title, *p_message, *t_ok_button, *t_cancel_button, *t_other_button);
+	MCAndroidEngineRemoteCall("popupAnswerDialog", "vxxxxx", nil, p_title, p_message, *t_ok_button, *t_cancel_button, *t_other_button);
 
 	while(s_in_popup_dialog)
 		MCscreen -> wait(60.0, True, True);

@@ -196,8 +196,8 @@ private:
 	
 	
 	// Conversion of the DATA between different types
-		bool Convert_MIME_to_REV ( MCDataRef p_input, MCMIMEtype * p_mime, MCStringRef& r_output ) ;
-		bool Convert_REV_to_MIME ( MCDataRef p_input, MCTransferType p_type,  MCMIMEtype * p_mime, MCStringRef& r_output ) ;
+        bool Convert_MIME_to_REV ( MCDataRef p_input, MCMIMEtype * p_mime, MCDataRef& r_output ) ;
+        bool Convert_REV_to_MIME ( MCDataRef p_input, MCTransferType p_type,  MCMIMEtype * p_mime, MCDataRef& r_output ) ;
 	
 	// Interface with the XSelection
 		bool 			WaitForEventCompletion(XEvent &p_xevent);

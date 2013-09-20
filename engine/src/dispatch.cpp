@@ -1635,7 +1635,7 @@ bool MCDispatch::loadexternal(MCStringRef p_external)
 		return false;
 
 	// Don't try and load any drivers as externals.
-	if (MCStringBeginsWithCString(p_external, "db", kMCStringOptionCompareExact))
+	if (MCStringBeginsWithCString(p_external, (const char_t *)"db", kMCStringOptionCompareExact))
 	{
 		MCValueRelease(t_filename);
 		return true;

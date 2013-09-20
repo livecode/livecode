@@ -83,8 +83,8 @@ MCScreenDC::~MCScreenDC()
 		int2 i;
 		for (i = 0 ; i < ncolors ; i++)
 		{
-			if (colornames[i] != NULL)
-				delete colornames[i];
+            if (colornames[i] != NULL)
+                MCValueRelease(colornames[i]);
 		}
 		delete colors;
 		delete colornames;

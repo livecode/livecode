@@ -549,6 +549,7 @@ bool MCNativeControl::ParseColor(MCExecPoint &ep, uint16_t &r_red, uint16_t &r_g
 {
     uint8_t t_r8, t_g8, t_b8, t_a8;
     MCColor t_color;
+
     char *t_name = nil;
     MCAutoStringRef t_value;
     ep . copyasstringref(&t_value);
@@ -560,9 +561,8 @@ bool MCNativeControl::ParseColor(MCExecPoint &ep, uint16_t &r_red, uint16_t &r_g
         r_alpha = (t_a8 << 8) | t_a8;
         return true;
     }
-    else if (MCscreen->parsecolor(ep.getsvalue(), &t_color, &t_name))
+    else if (MCscreen->parsecolor(*t_value, t_color, NULL))
     {
-        delete t_name;
         r_red = t_color.red;
         r_green = t_color.green;
         r_blue = t_color.blue;
