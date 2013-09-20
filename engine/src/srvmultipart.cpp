@@ -37,8 +37,7 @@ class MCBoundaryReader
 {
 public:
 	IO_handle m_stream;
-	const char *m_boundary;
-	uint32_t m_boundary_length;
+	MCStringRef m_boundary;
 	int32_t *m_table;
 	
 	uint32_t m_match_index;
@@ -47,12 +46,12 @@ public:
 	char m_match_char;
 	bool m_have_char;
 	
-	MCBoundaryReader(IO_handle p_stream, MCStringRef p_boundary, uint32_t p_boundary_length)
+	MCBoundaryReader(IO_handle p_stream, MCStringRef p_boundary)
 	{
 		m_stream = p_stream;
 		m_table = NULL;
 		
-		setBoundary(p_boundary, p_boundary_length);
+		setBoundary(p_boundary);
 		
 		m_have_char = false;
 	}
@@ -62,10 +61,9 @@ public:
 		MCMemoryDeleteArray(m_table);
 	}
 	
-	void setBoundary(MCStringRef p_boundary, uint32_t p_boundary_length)
+	void setBoundary(MCStringRef p_boundary)
 	{
-		m_boundary = MCStringGetCString(p_boundary);
-		m_boundary_length = p_boundary_length;
+		MCValueAssign(m_boundary, p_boundary);
 		
 		m_match_index = 0;
 		m_match_frontier = 0;
@@ -78,7 +76,7 @@ public:
 		create_table();
 	}
 	
-	IO_stat read(MCStringRef p_buffer, uint32_t p_buffer_size, uint32_t &r_bytes_read, uint32_t &r_bytes_consumed, bool &r_boundary_reached)
+	IO_stat read(char *r_buffer, uint32_t p_buffer_size, uint32_t &r_bytes_read, uint32_t &r_bytes_consumed, bool &r_boundary_reached)
 	{
 		IO_stat t_status = IO_NORMAL;
 		
@@ -97,11 +95,11 @@ public:
 				r_bytes_consumed++;
 				m_have_char = true;
 			}
-			if (m_boundary[m_match_index] == m_match_char)
+			if (MCStringGetNativeCharAtIndex(m_boundary, m_match_index) == m_match_char)
 			{
 				m_match_index++;
 				m_have_char = false;
-				if (m_match_index == m_boundary_length)
+				if (m_match_index == MCStringgetLength(m_boundary))
 				{
 					m_match_index = 0;
 					r_boundary_reached = true;
@@ -109,11 +107,9 @@ public:
 			}
 			else
 			{
-                char *t_buffer = strdup(MCStringGetCString(p_buffer));
 				if (m_match_index == 0)
 				{
-					t_buffer[r_bytes_read++] = m_match_char;
-                    /* UNCHECKED */ MCStringCreateWithCString(t_buffer, p_buffer);
+					r_buffer[r_bytes_read++] = m_match_char;
 					m_have_char = false;
 				}
 				else
@@ -123,8 +119,7 @@ public:
 					{
 						uint32_t t_out = MCMin(t_diff - m_match_frontier, p_buffer_size - r_bytes_read);
                         
-						MCMemoryCopy(t_buffer + r_bytes_read, m_boundary + m_match_frontier, t_out);
-                        /* UNCHECKED */ MCStringCreateWithCString(t_buffer, p_buffer);
+						MCMemoryCopy(r_buffer + r_bytes_read, MCStringGetCString(m_boundary) + m_match_frontier, t_out);
 						m_match_frontier += t_out;
 						r_bytes_read += t_out;
 					}
@@ -134,7 +129,6 @@ public:
 						m_match_index = m_table[m_match_index];
 					}
 				}
-                delete t_buffer;
 			}
 		}
 		
@@ -147,16 +141,16 @@ private:
 	// based on KMP algorithm (see http://en.wikipedia.org/wiki/Knuth–Morris–Pratt_algorithm)
 	void create_table()
 	{
-		MCMemoryNewArray(m_boundary_length, m_table);
+		MCMemoryNewArray(MCStringGetLength(m_boundary), m_table);
 		m_table[0] = -1;
-		if (m_boundary_length > 1)
+		if (MCStringGetLength(m_boundary) > 1)
 			m_table[1] = 0;
 		
 		uint32_t t_candidate = 0;
 		uint32_t pos = 2;
-		while (pos < m_boundary_length)
+		while (pos < MCStringGetLength(m_boundary))
 		{
-			if (m_boundary[pos - 1] == m_boundary[t_candidate])
+			if (MCStringGetNativeCharAtIndex(m_boundary, pos - 1) == MCStringGetNativeCharAtIndex(m_boundary, t_candidate))
 				m_table[pos++] = ++t_candidate;
 			else if (t_candidate > 0)
 				t_candidate = m_table[t_candidate];
@@ -460,7 +454,7 @@ bool MCMultiPartReadHeaders(IO_handle p_stream, uint32_t &r_bytes_read, MCMultiP
 	bool t_success = true;
 	
 	MCBoundaryReader *t_reader;
-	t_reader = new MCBoundaryReader(p_stream, MCSTR("\r\n"), 2);
+	t_reader = new MCBoundaryReader(p_stream, MCSTR("\r\n"));
 	
 	r_bytes_read = 0;
 	
@@ -483,9 +477,7 @@ bool MCMultiPartReadHeaders(IO_handle p_stream, uint32_t &r_bytes_read, MCMultiP
 				t_success = t_max_bytes > 0;
 				if (t_success)
 				{
-                    MCAutoStringRef t_buffer_str;
-                    /* UNCHECKED */ MCStringCreateWithCString(t_line_buffer + t_frontier, &t_buffer_str);
-					IO_stat t_status = t_reader->read(*t_buffer_str, t_max_bytes, t_line_size, t_line_bytes_read, t_have_line);
+					IO_stat t_status = t_reader->read(t_line_buffer + t_frontier, t_max_bytes, t_line_size, t_line_bytes_read, t_have_line);
 					r_bytes_read += t_line_bytes_read;
 					t_frontier += t_line_size;
 					t_success = (t_status == IO_NORMAL);
@@ -552,7 +544,7 @@ bool MCMultiPartReadMessageFromStream(IO_handle p_stream, MCStringRef p_boundary
 	{
         MCAutoStringRef t_boundary_head, t_boundary_tail;
         /* UNCHECKED */ MCStringDivideAtIndex(t_boundary, 2, &t_boundary_head, &t_boundary_tail);
-		t_reader = new MCBoundaryReader(p_stream, *t_boundary_tail, t_boundary_length + 2);
+		t_reader = new MCBoundaryReader(p_stream, *t_boundary_tail);
 		t_success = t_reader != NULL;
 	}
 	
@@ -560,9 +552,7 @@ bool MCMultiPartReadMessageFromStream(IO_handle p_stream, MCStringRef p_boundary
 	
 	while (t_success && !t_boundary_reached)
 	{
-        MCAutoStringRef t_buffer_str;
-        /* UNCHECKED */ MCStringCreateWithCString(t_buffer, &t_buffer_str);
-		t_success = IO_NORMAL == t_reader->read(*t_buffer_str, t_buffer_size, t_bytes_read, t_bytes_consumed, t_boundary_reached);
+		t_success = IO_NORMAL == t_reader->read(t_buffer, t_buffer_size, t_bytes_read, t_bytes_consumed, t_boundary_reached);
 		r_total_bytes_read += t_bytes_consumed;
 		if (t_success)
 		{
@@ -587,7 +577,7 @@ bool MCMultiPartReadMessageFromStream(IO_handle p_stream, MCStringRef p_boundary
 	
 	if (t_success)
 	{
-		t_reader->setBoundary(t_boundary, t_boundary_length + 4);
+		t_reader->setBoundary(t_boundary);
 		bool t_message_ended = false;
 		while (t_success && (!t_message_ended))
 		{
@@ -628,10 +618,8 @@ bool MCMultiPartReadMessageFromStream(IO_handle p_stream, MCStringRef p_boundary
 			
 			while (t_success && !t_boundary_reached)
 			{
-                MCAutoStringRef t_buffer_str;
-                /* UNCHECKED */ MCStringCreateWithCString(t_buffer, &t_buffer_str);
 				IO_stat t_state;
-				t_state = t_reader->read(*t_buffer_str, t_buffer_size, t_bytes_read, t_bytes_consumed, t_boundary_reached);
+				t_state = t_reader->read(t_buffer, t_buffer_size, t_bytes_read, t_bytes_consumed, t_boundary_reached);
 				r_total_bytes_read += t_bytes_consumed;
 
 				t_success = p_body_callback(p_context, t_buffer, t_bytes_read, t_boundary_reached, t_state == IO_EOF);
