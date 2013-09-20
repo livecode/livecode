@@ -3163,7 +3163,7 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
 			}
             ep . copyasstringref(&t_text);
 		}
-		else
+		else 
 		{
             switch (function)
             {
@@ -3216,11 +3216,22 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
 		}
 	}
     
+    MCAutoStringRef t_string;
+    if (evaltextchunk(ep, *t_text, &t_string) != ES_NORMAL)
+        return ES_ERROR;
+    
+    /* UNCHECKED */ ep . setvalueref(*t_string);
+    return ES_NORMAL;
+}
+
+Exec_stat MCChunk::evaltextchunk(MCExecPoint& ep, MCStringRef p_source, MCStringRef& r_result)
+{
+    MCExecContext ctxt(ep);
     MCAutoStringRef t_lines, t_items, t_words, t_tokens, t_chars;
     int4 t_start;
     int4 t_end;
     
-	if (cline != nil)
+    if (cline != nil)
     {
         if (cline -> etype == CT_RANGE)
         {
@@ -3238,7 +3249,7 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
             }
             t_end = ep.getint4();
             
-            MCStringsEvalLinesOfTextByRange(ctxt, *t_text, t_start, t_end, &t_lines);
+            MCStringsEvalLinesOfTextByRange(ctxt, p_source, t_start, t_end, &t_lines);
         }
         else if (cline -> etype == CT_EXPRESSION)
         {
@@ -3249,13 +3260,13 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
             }
             t_start = ep . getint4();
             
-            MCStringsEvalLinesOfTextByExpression(ctxt, *t_text, t_start, &t_lines);
+            MCStringsEvalLinesOfTextByExpression(ctxt, p_source, t_start, &t_lines);
         }
         else
-            MCStringsEvalLinesOfTextByOrdinal(ctxt, *t_text, cline -> etype, &t_lines);
+            MCStringsEvalLinesOfTextByOrdinal(ctxt, p_source, cline -> etype, &t_lines);
     }
     else
-        MCStringCopy(*t_text, &t_lines);
+        MCStringCopy(p_source, &t_lines);
     
     if (item != nil)
     {
@@ -3386,7 +3397,7 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
             }
             t_end = ep.getint4();
             
-            MCStringsEvalCharsOfTextByRange(ctxt, *t_tokens, t_start, t_end, &t_chars);
+            MCStringsEvalCharsOfTextByRange(ctxt, *t_tokens, t_start, t_end, r_result);
         }
         else if (character -> etype == CT_EXPRESSION)
         {
@@ -3397,15 +3408,302 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
             }
             t_start = ep . getint4();
             
-            MCStringsEvalCharsOfTextByExpression(ctxt, *t_tokens, t_start, &t_chars);
+            MCStringsEvalCharsOfTextByExpression(ctxt, *t_tokens, t_start, r_result);
         }
         else
-            MCStringsEvalCharsOfTextByOrdinal(ctxt, *t_tokens, character -> etype, &t_chars);
+            MCStringsEvalCharsOfTextByOrdinal(ctxt, *t_tokens, character -> etype, r_result);
     }
     else
-        MCStringCopy(*t_tokens, &t_chars);
+        MCStringCopy(*t_tokens, r_result);
     
-    /* UNCHECKED */ ep . setvalueref(*t_chars);
+    return ES_NORMAL;
+}
+
+Exec_stat MCChunk::settextchunk(MCExecPoint& ep, MCStringRef p_to_set, Preposition_type p_where, MCStringRef& x_text)
+{
+    MCExecContext ctxt(ep);
+    MCStringRef t_lines, t_items, t_words, t_tokens, t_chars;
+    int4 t_line_start, t_line_end, t_item_start, t_item_end, t_word_start, t_word_end, t_token_start, t_token_end, t_char_start, t_char_end;
+    
+// get mutable copies of each of the chunks
+    
+    if (cline != nil)
+    {
+        if (cline -> etype == CT_RANGE)
+        {
+            if (cline->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGESTART, line, pos);
+                return ES_ERROR;
+            }
+            t_line_start = ep . getint4();
+            
+            if (cline->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGEEND, line, pos);
+                return ES_ERROR;
+            }
+            t_line_end = ep.getint4();
+            
+            MCStringsEvalMutableLinesOfTextByRange(ctxt, x_text, t_line_start, t_line_end, t_lines);
+        }
+        else if (cline -> etype == CT_EXPRESSION)
+        {
+            if (cline->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADEXPRESSION, line, pos);
+                return ES_ERROR;
+            }
+            t_line_start = ep . getint4();
+            
+            MCStringsEvalMutableLinesOfTextByExpression(ctxt, x_text, t_line_start, t_lines);
+        }
+        else
+            MCStringsEvalMutableLinesOfTextByOrdinal(ctxt, x_text, cline -> etype, t_lines);
+    }
+    else
+        MCStringMutableCopy(x_text, t_lines);
+    
+    if (item != nil)
+    {
+        if (item -> etype == CT_RANGE)
+        {
+            if (item->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGESTART, line, pos);
+                return ES_ERROR;
+            }
+            t_item_start = ep . getint4();
+            
+            if (item->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGEEND, line, pos);
+                return ES_ERROR;
+            }
+            t_item_end = ep.getint4();
+            
+            MCStringsEvalMutableItemsOfTextByRange(ctxt, t_lines, t_item_start, t_item_end, t_items);
+        }
+        else if (item -> etype == CT_EXPRESSION)
+        {
+            if (item->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADEXPRESSION, line, pos);
+                return ES_ERROR;
+            }
+            t_item_start = ep . getint4();
+            
+            MCStringsEvalMutableItemsOfTextByExpression(ctxt, t_lines, t_item_start, t_items);
+        }
+        else
+            MCStringsEvalMutableItemsOfTextByOrdinal(ctxt, t_lines, item -> etype, t_items);
+    }
+    else
+        MCStringMutableCopy(t_lines, t_items);
+    
+    if (word != nil)
+    {
+        if (word -> etype == CT_RANGE)
+        {
+            if (word->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGESTART, line, pos);
+                return ES_ERROR;
+            }
+            t_word_start = ep . getint4();
+            
+            if (word->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGEEND, line, pos);
+                return ES_ERROR;
+            }
+            t_word_end = ep.getint4();
+            
+            MCStringsEvalMutableWordsOfTextByRange(ctxt, t_items, t_word_start, t_word_end, t_words);
+        }
+        else if (word -> etype == CT_EXPRESSION)
+        {
+            if (word->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADEXPRESSION, line, pos);
+                return ES_ERROR;
+            }
+            t_word_start = ep . getint4();
+            
+            MCStringsEvalMutableWordsOfTextByExpression(ctxt, t_items, t_word_start, t_words);
+        }
+        else
+            MCStringsEvalMutableWordsOfTextByOrdinal(ctxt, t_items, word -> etype, t_words);
+    }
+    else
+        MCStringMutableCopy(t_items, t_words);
+    
+    if (token != nil)
+    {
+        if (token -> etype == CT_RANGE)
+        {
+            if (token->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGESTART, line, pos);
+                return ES_ERROR;
+            }
+            t_token_start = ep . getint4();
+            
+            if (token->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGEEND, line, pos);
+                return ES_ERROR;
+            }
+            t_token_end = ep.getint4();
+            
+            MCStringsEvalMutableTokensOfTextByRange(ctxt, t_words, t_token_start, t_token_end, t_tokens);
+        }
+        else if (token -> etype == CT_EXPRESSION)
+        {
+            if (token->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADEXPRESSION, line, pos);
+                return ES_ERROR;
+            }
+            t_token_start = ep . getint4();
+            
+            MCStringsEvalMutableTokensOfTextByExpression(ctxt, t_words, t_token_start, t_tokens);
+        }
+        else
+            MCStringsEvalMutableTokensOfTextByOrdinal(ctxt, t_words, token -> etype, t_tokens);
+    }
+    else
+        MCStringMutableCopy(t_words, t_tokens);
+
+// and set them appropriately
+    
+    Preposition_type t_type;
+    
+    if (character != nil)
+    {
+        if (getlastchunktype() == CT_CHARACTER)
+            t_type = p_where;
+        else
+            t_type = PT_INTO;
+        
+        if (character -> etype == CT_RANGE)
+        {
+            if (character->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGESTART, line, pos);
+                return ES_ERROR;
+            }
+            t_char_start = ep . getint4();
+            
+            if (character->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGEEND, line, pos);
+                return ES_ERROR;
+            }
+            t_char_end = ep.getint4();
+            
+            MCStringsExecSetCharsOfTextByRange(ctxt, p_to_set, t_type, t_char_start, t_char_end, t_tokens);
+        }
+        else if (character -> etype == CT_EXPRESSION)
+        {
+            if (character->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADEXPRESSION, line, pos);
+                return ES_ERROR;
+            }
+            t_char_start = ep . getint4();
+            
+            MCStringsExecSetCharsOfTextByExpression(ctxt, p_to_set, t_type, t_char_start, t_tokens);
+        }
+        else
+            MCStringsExecSetCharsOfTextByOrdinal(ctxt, p_to_set, t_type, character -> etype, t_tokens);
+    }
+    else
+        MCStringMutableCopy(p_to_set, t_tokens);
+    
+    if (token != nil)
+    {
+        if (getlastchunktype() == CT_TOKEN)
+            t_type = p_where;
+        else
+            t_type = PT_INTO;
+        
+        if (token -> etype == CT_RANGE)
+        {
+            MCStringsExecSetCharsOfTextByRange(ctxt, t_tokens, t_type, t_token_start, t_token_end, t_words);
+        }
+        else if (token -> etype == CT_EXPRESSION)
+        {
+            MCStringsExecSetCharsOfTextByExpression(ctxt, t_tokens, t_type, t_token_start, t_words);
+        }
+        else
+            MCStringsExecSetCharsOfTextByOrdinal(ctxt, t_tokens, t_type, token -> etype, t_words);
+    }
+    else
+        MCStringMutableCopy(t_tokens, t_words);
+    
+    if (word != nil)
+    {
+        if (getlastchunktype() == CT_WORD)
+            t_type = p_where;
+        else
+            t_type = PT_INTO;
+        
+        if (word -> etype == CT_RANGE)
+        {
+            MCStringsExecSetCharsOfTextByRange(ctxt, t_words, t_type, t_word_start, t_word_end, t_items);
+        }
+        else if (word -> etype == CT_EXPRESSION)
+        {
+            MCStringsExecSetCharsOfTextByExpression(ctxt, t_words, t_type, t_word_start, t_items);
+        }
+        else
+            MCStringsExecSetCharsOfTextByOrdinal(ctxt, t_words, t_type, word -> etype, t_items);
+    }
+    else
+        MCStringMutableCopy(t_words, t_items);
+    
+    if (item != nil)
+    {
+        if (getlastchunktype() == CT_ITEM)
+            t_type = p_where;
+        else
+            t_type = PT_INTO;
+        
+        if (item -> etype == CT_RANGE)
+        {
+            MCStringsExecSetCharsOfTextByRange(ctxt, t_items, t_type, t_item_start, t_item_end, t_lines);
+        }
+        else if (item -> etype == CT_EXPRESSION)
+        {
+            MCStringsExecSetCharsOfTextByExpression(ctxt, t_items, t_type, t_item_start, t_lines);
+        }
+        else
+            MCStringsExecSetCharsOfTextByOrdinal(ctxt, t_items, t_type, item -> etype, t_lines);
+    }
+    else
+        MCStringMutableCopy(t_items, t_lines);
+    
+    if (cline != nil)
+    {
+        if (getlastchunktype() == CT_LINE)
+            t_type = p_where;
+        else
+            t_type = PT_INTO;
+        
+        if (cline -> etype == CT_RANGE)
+        {
+            MCStringsExecSetCharsOfTextByRange(ctxt, t_lines, t_type, t_line_start, t_line_end, x_text);
+        }
+        else if (cline -> etype == CT_EXPRESSION)
+        {
+            MCStringsExecSetCharsOfTextByExpression(ctxt, t_lines, t_type, t_line_start, x_text);
+        }
+        else
+            MCStringsExecSetCharsOfTextByOrdinal(ctxt, t_lines, t_type, cline -> etype, x_text);
+    }
+    else
+        MCStringMutableCopy(t_lines, x_text);
     
     return ES_NORMAL;
 }
@@ -3769,113 +4067,88 @@ Exec_stat MCChunk::set(MCExecPoint &ep, Preposition_type ptype)
 				}
 	return ES_NORMAL;
 #endif
-
     
     MCExecContext ctxt(ep);
     MCAutoValueRef t_value;
     
+  	MCObjectPtr t_object;
+    MCStringRef t_string;
+    
+    if (issubstringchunk())
+    {
+        // MW-2007-11-28: [[ Bug 5610 ]] If we have an array, force a conversion to string (empty)
+        //   for backwards compatibility.
+        if (ep . isarray())
+            ep . clear();
+        else if (ep.tos() != ES_NORMAL)
+        {
+            MCeerror->add(EE_CHUNK_CANTSETDEST, line, pos);
+            return ES_ERROR;
+        }
+    }
     ep . copyasvalueref(&t_value);
     
     if (destvar != nil)
     {
-        MCVariableChunkPtr t_var_chunk;
-        if (evalvarchunk(ep, false, true, t_var_chunk) != ES_NORMAL)
+        MCAutoValueRef t_var;
+        if (destvar->eval(ep) != ES_NORMAL)
+        {
+            MCeerror->add(EE_CHUNK_SETCANTGETDEST, line, pos);
             return ES_ERROR;
+        }
+        ep . copyasvalueref(&t_var);
         
-        MCEngineExecPutIntoVariable(ctxt, *t_value, ptype, t_var_chunk);
+        if (issubstringchunk())
+        {
+            MCStringMutableCopy((MCStringRef)*t_var, t_string);
+            settextchunk(ep, (MCStringRef)*t_value, ptype, t_string);
+            MCEngineExecSetVariableToString(ctxt, t_string, destvar);
+        }
+        else
+            MCEngineExecSetVariable(ctxt, *t_value, ptype, destvar);
     }
     else if (url != nil)
     {
-        MCAutoStringRef t_string;
-        if (!ctxt . ConvertToString(*t_value, &t_string))
+        MCAutoStringRef t_url;
+        if (url->startpos->eval(ep) != ES_NORMAL)
         {
-            MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
+            MCeerror->add(EE_CHUNK_BADEXPRESSION, line, pos);
             return ES_ERROR;
         }
-        
-        MCUrlChunkPtr t_url_chunk;
-        t_url_chunk . url = nil;
-        if (evalurlchunk(ep, false, true, t_url_chunk) != ES_NORMAL)
-            return ES_ERROR;
-        
-        MCNetworkExecPutIntoUrl(ctxt, *t_string, ptype, t_url_chunk);
-        
-        MCValueRelease(t_url_chunk . url);
+        ep . copyasstringref(&t_url);
+    
+        if (issubstringchunk())
+        {
+            MCAutoStringRef t_contents;
+            MCU_geturl(ctxt, *t_url, &t_contents);
+            MCStringMutableCopy(*t_contents, t_string);
+            settextchunk(ep, (MCStringRef)*t_value, ptype, t_string);
+            MCNetworkExecSetUrlToString(ctxt, *t_url, t_string);
+        }
+        else
+            MCNetworkExecSetUrl(ctxt, (MCStringRef)*t_value, ptype, *t_url);
     }
     else
     {
-        MCAutoStringRef t_string;
-        if (!ctxt . ConvertToString(*t_value, &t_string))
-        {
-            MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
-            return ES_ERROR;
-        }
-        
-        MCObjectChunkPtr t_obj_chunk;
-        if (evalobjectchunk(ep, false, true, t_obj_chunk) != ES_NORMAL)
-            return ES_ERROR;
-        
-        if (t_obj_chunk . object -> gettype() == CT_FIELD)
-            MCInterfaceExecPutIntoField(ctxt, *t_string, ptype, t_obj_chunk, /* is_unicode */ true);
-        else
-            MCInterfaceExecPutIntoObject(ctxt, *t_string, ptype, t_obj_chunk);
-    }
-    
-#if 0
-    MCStringRef t_to_insert;
-    ep . copyasstringref(t_to_insert);
-    
-    MCStringRef t_lines, t_items, t_words, t_tokens;
-    
-    if (evalmutabletextchunk(ep, cline, t_text, CT_LINE, t_lines) != ES_NORMAL ||
-        evalmutabletextchunk(ep, item, t_lines,  CT_ITEM, t_items) != ES_NORMAL ||
-        evalmutabletextchunk(ep, word, t_items, CT_WORD, t_words) != ES_NORMAL ||
-        evalmutabletextchunk(ep, token, t_words, CT_TOKEN, t_tokens) != ES_NORMAL)
-    {
-        MCeerror->add(EE_CHUNK_CANTMARK, line, pos, ep.getsvalue());
-        return ES_ERROR;
-    }
-
-    if (setmutabletextchunk(ep, character, t_to_insert, ptype, CT_CHARACTER, t_tokens) != ES_NORMAL ||
-        setmutabletextchunk(ep, token, t_tokens, ptype, CT_TOKEN, t_words) != ES_NORMAL ||
-        setmutabletextchunk(ep, word, t_words, ptype, CT_WORD, t_items) != ES_NORMAL ||
-        setmutabletextchunk(ep, item, t_items, ptype,  CT_ITEM, t_lines) != ES_NORMAL ||
-        setmutabletextchunk(ep, cline, t_lines, ptype, CT_LINE, t_text) != ES_NORMAL )
-    {
-        MCeerror->add(EE_CHUNK_CANTMARK, line, pos, ep.getsvalue());
-        return ES_ERROR;
-    }
-
-    ep . setvalueref(t_text);
-    
-	if (destvar != NULL)
-	{
-		if (destvar->set(ep2) != ES_NORMAL)
+		if (getobj(ep, t_object, True) != ES_NORMAL)
 		{
-			MCeerror->add(EE_CHUNK_CANTSETDEST, line, pos);
+			MCeerror->add(EE_CHUNK_SETCANTGETBOJECT, line, pos);
 			return ES_ERROR;
 		}
-	}
-	else
-		if (url != NULL)
-		{
-			ep.setsvalue(desturl);
-			MCU_puturl(ep, ep2);
-			delete desturl;
-		}
-		else
-			if (t_field != NULL)
-			{
-				if (t_field->settext(t_object . part_id, ep . getsvalue(), False, true) != ES_NORMAL)
-				{
-					MCeerror->add(EE_CHUNK_CANTSETDEST, line, pos);
-					return ES_ERROR;
-				}
-			}
-			else
-				t_object . object -> setstringprop(ctxt, t_object . part_id, P_TEXT, False, t_text);
+        
+        if (issubstringchunk())
+        {
+            MCAutoStringRef t_container;
+            MCInterfaceEvalTextOfContainer(ctxt, t_object, &t_container);
+            MCStringMutableCopy(*t_container, t_string);
+            settextchunk(ep, (MCStringRef)*t_value, ptype, t_string);
+        }
+        else
+            t_object . object -> setstringprop(ctxt, t_object . part_id, P_TEXT, False, (MCStringRef)*t_value);
+    }
 
-#endif
+    if (issubstringchunk())
+        MCValueRelease(t_string);
     
     if (!ctxt . HasError())
         return ES_NORMAL;

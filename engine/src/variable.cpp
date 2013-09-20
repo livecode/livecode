@@ -947,6 +947,28 @@ Exec_stat MCVarref::eval(MCExecPoint& ep)
 	return t_container -> eval(ep);
 }
 
+bool MCVarref::eval(MCExecContext& ctxt, MCValueRef& r_value)
+{
+	if (dimensions == 0)
+	{
+		MCVariable *t_resolved_ref;
+		
+		t_resolved_ref = fetchvar(ctxt);
+        
+		t_resolved_ref -> eval(ctxt . GetCaseSensitive(), r_value);
+        
+        return true;
+	}
+    
+	MCAutoPointer<MCContainer> t_container;
+	if (!resolve(ctxt, &t_container))
+		return false;
+    
+	t_container -> eval(ctxt . GetCaseSensitive(), r_value);
+    
+    return true;
+}
+
 Exec_stat MCVarref::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
 {
 	if (dimensions == 0)

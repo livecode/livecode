@@ -803,3 +803,34 @@ void MCNetworkSetAllowDatagramBroadcasts(MCExecContext& ctxt, bool p_value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCNetworkExecSetUrlToString(MCExecContext& ctxt, MCStringRef p_value, MCStringRef p_url)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecPoint ep2(nil, nil, nil);
+    
+    ep . setvalueref(p_url);
+    ep2 . setvalueref(p_value);
+    
+	MCU_puturl(ep, ep2);
+}
+
+void MCNetworkExecSetUrl(MCExecContext& ctxt, MCStringRef p_value, int p_where, MCStringRef p_url)
+{
+    if (p_where == PT_INTO)
+        MCNetworkExecSetUrlToString(ctxt, p_value, p_url);
+    else
+    {
+        MCAutoStringRef t_string;
+        MCU_geturl(ctxt, p_url, &t_string);
+        
+        MCAutoStringRef t_new_value;
+        MCStringMutableCopy(*t_string, &t_new_value);
+        
+        if (p_where == PT_AFTER)
+            MCStringAppend(*t_new_value, p_value);
+        else
+            MCStringPrepend(*t_new_value, p_value);
+        MCNetworkExecSetUrlToString(ctxt, *t_new_value, p_url);
+    }
+}

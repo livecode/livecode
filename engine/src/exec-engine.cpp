@@ -1712,3 +1712,43 @@ void MCEngineEvalErrorObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
     
     ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
 }
+
+void MCEngineExecSetVariableToString(MCExecContext& ctxt, MCStringRef p_value, MCVarref *p_variable)
+{	
+	p_variable -> clearuql();
+    p_variable -> set(ctxt, p_value, false);
+}
+
+void MCEngineExecSetVariable(MCExecContext& ctxt, MCValueRef p_value, int p_where, MCVarref *p_variable)
+{	
+	p_variable -> clearuql();
+	
+    if (p_where == PT_INTO)
+    {
+        p_variable -> set(ctxt, p_value, false);
+    }
+    else if (p_where == PT_AFTER)
+    {
+        p_variable -> set(ctxt, p_value, true);
+    }
+    else
+    {
+        MCAutoValueRef t_value;
+        if (!p_variable -> eval(ctxt, &t_value))
+            return;
+        
+        MCAutoStringRef t_string;
+        MCStringMutableCopy((MCStringRef)*t_value, &t_string);
+        
+        MCAutoStringRef t_value_string;
+        if (!ctxt . ConvertToString(p_value, &t_value_string))
+        {
+            ctxt . Throw();
+            return;
+        }
+        
+        /* UNCHECKED */ MCStringPrepend(*t_string, *t_value_string);
+        
+        p_variable -> set(ctxt, *t_string, false);
+    }
+}
