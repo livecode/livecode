@@ -63,6 +63,9 @@ extern "C"
 	typedef UInt32 (*SwapQDTextFlagsPtr)(UInt32 newFlags);
 }
 
+extern void MCS_alternate_shell(MCString &s, const char *langname);
+
+
 #include "ports.cpp"
 
 #define keyReplyErr 'errn'
@@ -2873,9 +2876,12 @@ void MCS_doalternatelanguage(MCString &s, const char *langname)
 			break;
 		}
 	}
+	// MDW 2013-07-05 : allow alternate languages
+	// by opening a new process and capturing the output
+	// NOTE: MCS_alternate_shell is in dskspec.cpp.
 	if (posacomp == NULL)
 	{
-		MCresult->sets("alternate language not found");
+		MCS_alternate_shell(s, langname);
 		return;
 	}
 	if (posacomp->compinstance == NULL)

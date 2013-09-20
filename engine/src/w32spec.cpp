@@ -47,6 +47,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <float.h>
 #include <iphlpapi.h>
 
+extern void MCS_alternate_shell(MCString &s, const char *langname);
+
 int *g_mainthread_errno;
 
 // MW-2004-11-28: A null FPE signal handler.
@@ -2076,12 +2078,15 @@ void MCS_resolvealias(MCExecPoint &ep)
 	}
 }
 
+// MDW 2013-07-05 : allow alternate languages
+// by opening a new process and capturing the output
+// NOTE: MCS_alternate_shell is in dskspec.cpp.
 void MCS_doalternatelanguage(MCString &s, const char *langname)
 {
 	MCScriptEnvironment *t_environment;
 	t_environment = MCscreen -> createscriptenvironment(langname);
 	if (t_environment == NULL)
-		MCresult -> sets("alternate language not found");
+		MCS_alternate_shell(x, langname);
 	else
 	{
 		MCExecPoint ep(NULL, NULL, NULL);

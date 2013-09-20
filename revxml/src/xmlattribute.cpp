@@ -34,7 +34,8 @@ Bool CXMLAttribute::GoNext()
 Bool CXMLAttribute::GoPrev()
 {
 	if (!isinited()) return False;
-		Bool retval = attribute->next != NULL;
+		// MDW 2013-06-22 : fixed (was attribute->next)
+		Bool retval = attribute->prev != NULL;
 		if (attribute->prev) attribute = attribute->prev;
 		return retval;
 }

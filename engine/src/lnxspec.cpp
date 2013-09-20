@@ -83,6 +83,7 @@ extern "C" void __attribute__ ((noreturn)) __stack_chk_fail (void)
 {
 }
 
+extern void MCS_alternate_shell(MCString &s, const char *langname);
 
 
 
@@ -2035,9 +2036,12 @@ void MCS_alternatelanguages(MCExecPoint &ep)
 	ep.clear();
 }
 
+// MDW 2013-07-05 : allow alternate languages
+// by opening a new process and capturing the output
+// NOTE: MCS_alternate_shell is in dskspec.cpp.
 void MCS_doalternatelanguage(MCString &s, const char *langname)
 {
-	MCresult->sets("alternate language not found");
+	MCS_alternate_shell(s, langname);
 }
 
 void abbrevdatefmt(char *sptr)
