@@ -679,6 +679,17 @@ public:
 	
 	//////////
 
+	void Utf16ToUtf8()
+	{
+		return m_ep . utf16toutf8();
+	}
+
+	void Utf8ToUtf16()
+	{
+		return m_ep . utf8toutf16();
+	}
+	/////////
+
     MCHandler *GetHandler(void)
     {
         return m_ep . gethandler();
