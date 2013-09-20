@@ -29,6 +29,12 @@ bool MCUnicodeCharsMapToNative(const unichar_t *p_uchars, uindex_t p_uchar_count
 
 	for(uindex_t i = 0; i < p_uchar_count; i++)
 	{
+		// Check for a UTF-16 byte order mark (BOM) at the beginning of the string
+		if (i == 0 && *p_uchars == 0xFEFF)
+			continue;		// Skip a correct BOM
+		else if (i == 0 && *p_uchars == 0xFFFE)
+			continue;		/* TODO */ /* Should byte-swap the UTF-16 chars */
+		
 		uint8_t t_native_char;
 		if (!MCUnicodeCharMapToNative(p_uchars[i], t_native_char))
 		{
