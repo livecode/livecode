@@ -174,14 +174,14 @@ static inline bool is_ctl(char p_char)
 	return p_char >= 0 && p_char <= 31;
 }
 
-static inline bool is_crlf(MCStringRef p_str)
+static inline bool is_crlf(MCStringRef p_str, uint32_t p_offset)
 {
-	return MCStringGetNativeCharAtIndex(p_str, 0) == '\r' && MCStringGetNativeCharAtIndex(p_str, 1) == '\n';
+	return MCStringGetNativeCharAtIndex(p_str, p_offset) == '\r' && MCStringGetNativeCharAtIndex(p_str, p_offset + 1) == '\n';
 }
 
-static inline bool is_folded_lwsp(MCStringRef p_str)
+static inline bool is_folded_lwsp(MCStringRef p_str, uint32_t p_offset)
 {
-	return is_crlf(p_str) && is_whitespace(MCStringGetNativeCharAtIndex(p_str, 2));
+	return is_crlf(p_str, p_offset) && is_whitespace(MCStringGetNativeCharAtIndex(p_str, p_offset + 2));
 }
 
 static inline bool is_field_name_char(char p_char)
@@ -207,48 +207,45 @@ bool is_token_char(char p_char)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool skip_whitespace(MCStringRef &x_header)
+static bool skip_whitespace(MCStringRef p_header, uint32_t &x_offset)
 {
-	MCAutoStringRef t_head, t_tail;
-	if (is_whitespace(MCStringGetNativeCharAtIndex(x_header, 0)))
+	if (is_whitespace(MCStringGetNativeCharAtIndex(p_header, x_offset)))
 	{	
-		MCStringDivideAtIndex(x_header, 0, &t_head, &t_tail);
-		MCValueAssign(x_header, *t_tail);
+		x_offset += 1;
 		return true;
 	}
-	else if (is_folded_lwsp(x_header))
+	else if (is_folded_lwsp(p_header, x_offset))
 	{
-		MCStringDivideAtIndex(x_header, 2, &t_head, &t_tail);
-		MCValueAssign(x_header, *t_tail);
+		x_offset += 3;
 		return true;
 	}
 	
 	return false;
 }
 
-void consume_whitespace(MCStringRef &x_header)
+void consume_whitespace(MCStringRef p_header. uint32_t &x_offset)
 {
-	while (skip_whitespace(x_header))
+	while (skip_whitespace(p_header, x_offset))
 		;
 }
 
-bool read_name(MCStringRef p_header, MCStringRef &r_name_end, MCStringRef &r_name)
+bool read_name(MCStringRef p_header, uint32_t &x_offset, MCStringRef &r_name)
 {
 	bool t_success = true;
 	
 	MCAutoStringRef t_name;
-	uint32_t t_index = 0;
+	uint32_t t_index = x_offset;
 	
 	while (t_success && is_field_name_char(MCStringGetNativeCharAtIndex(p_header, t_index)))
 	{
 		t_index++;
 	}
 	if (t_success)
-		t_success = MCStringCopySubstring(p_header, MCRangeMake(0, t_index-1), &t_name);
+		t_success = MCStringCopySubstring(p_header, MCRangeMake(x_offset, t_index-1), &t_name);
 	if (t_success)
 	{
 		r_name = MCValueRetain(*t_name);
-		/* UNCHECKED */ MCStringCopySubstring(p_header, MCRangeMake(t_index, MCStringGetLength(p_header) - t_index), r_name_end);
+		x_offset = t_index;
 	}
 	else
 		MCValueRelease(*t_name);
@@ -256,12 +253,12 @@ bool read_name(MCStringRef p_header, MCStringRef &r_name_end, MCStringRef &r_nam
 	return t_success;
 }
 
-bool read_token(MCStringRef p_header, MCStringRef &r_token_end, MCStringRef &r_token)
+bool read_token(MCStringRef p_header, uint32_t &x_offset, MCStringRef &r_token)
 {
 	bool t_success = true;
 	
 	MCAutoStringRef t_token;
-	uint32_t t_index = 0;
+	uint32_t t_index = x_offset;
 	
 	while (t_success && is_token_char(MCStringGetNativeCharAtIndex(p_header, t_index)))
 		t_index++;
@@ -270,7 +267,7 @@ bool read_token(MCStringRef p_header, MCStringRef &r_token_end, MCStringRef &r_t
 		t_success = MCStringCopySubstring(p_header, MCRangeMake(0, t_index - 1), &t_token);
 	if (t_success)
 	{
-		MCStringCopySubstring(p_header, MCRangeMake(t_index, MCStringGetLength(p_header) - t_index), r_token_end); 
+		x_offset = t_index;
 		r_token = MCValueRetain(*t_token);
 	}
 	return t_success;
@@ -281,13 +278,12 @@ static inline bool is_qtext(char p_char)
 	return (p_char != '"') && (p_char != '\\') && (p_char != '\r');
 }
 
-bool read_quoted_string(MCStringRef p_header, MCStringRef &r_string_end, MCStringRef &r_string)
+bool read_quoted_string(MCStringRef p_header, uint32_t &x_offset, MCStringRef &r_string)
 {
 	bool t_success = true;
 	char *t_string = NULL;
 	uint32_t t_strlen = 0;
-	uint32 t_pos;
-	t_pos = 0;
+	uint32 t_pos = x_offset;
 	
 	if (MCStringGetNativeCharAtIndex(p_header, t_pos) != '"')
 		return false;
@@ -296,7 +292,7 @@ bool read_quoted_string(MCStringRef p_header, MCStringRef &r_string_end, MCStrin
 	while (t_success && MCStringGetNativeCharAtIndex(p_header, t_pos) != '"')
 	{
 		char t_char;
-		if (is_folded_lwsp(p_header))
+		if (is_folded_lwsp(p_header, t_pos))
 		{
 			t_char = MCStringGetNativeCharAtIndex(p_header, t_pos + 2);
 			//MCAutoStringRef t_head;
@@ -333,7 +329,7 @@ bool read_quoted_string(MCStringRef p_header, MCStringRef &r_string_end, MCStrin
 			t_string[t_strlen] = '\0';
 
 		/* UNCHECKED */ MCStringCreateWithCStringAndRelease(t_string, r_string);
-		/* UNCHECKED */ MCStringCopySubstring(p_header, MCRangeMake(t_pos + 1 , MCStringGetLength(p_header) - (t_pos + 1)), r_string_end);
+		x_offset = t_pos + 1;
 	}
 	else
 		MCCStringFree(t_string);
@@ -345,56 +341,43 @@ bool MCMultiPartParseHeaderParams(MCStringRef p_params, MCStringRef *&r_names, M
 {
 	bool t_success = true;
 	
-	MCStringRef t_next_param;
 	MCStringRef t_name = NULL;
 	MCStringRef t_value = NULL;
 	uint32_t t_index = 0;
-	
-	t_next_param = MCValueRetain(p_params);
 	
 	r_names = NULL;
 	r_values = NULL;
 	r_param_count = NULL;
 	
-	while (t_success && !MCStringIsEmpty(t_next_param))
+	while (t_success && t_index < MCStringGetLength(p_params))
 	{
-		MCValueAssign(p_params, t_next_param)
-		consume_whitespace(p_params);
+		consume_whitespace(p_params, t_index);
 		
 		bool t_has_value = false;
-		MCAutoStringRef tmp;
-		t_success = read_token(p_params, &tmp, t_name);
-		MCValueAssign(p_params, *tmp);
+		t_success = read_token(p_params, t_index, t_name);
 		if (t_success)
 		{
-			consume_whitespace(p_params);
-			t_has_value = (MCStringGetNativeCharAtIndex(p_params, 0) == '=');
-			MCAutoStringRef t_head, t_tail;
-			/* UNCHEKED */ MCStringDivideAtIndex(p_params, 0, &t_head, &t_tail);
-			MCValueAssign(p_params, *t_tail);
+			consume_whitespace(p_params, t_index);
+			t_has_value = (MCStringGetNativeCharAtIndex(p_params, t_index) == '=');
+			t_index++:
 		}
 		if (t_success && t_has_value)
 		{
-			MCAutoStringRef tmp2;
-			t_success = read_token(p_params, &tmp2, t_value);
-			MCValueAssign(p_params, *tmp2);
+			t_success = read_token(p_params, t_index, t_value);
 			if (!t_success)
-			{
-				MCAutoStringRef tmp3;
-				t_success = read_quoted_string(p_params, &tmp3, t_value);
-				MCValueAssign(p_params, *tmp3);
-			}
+				t_success = read_quoted_string(p_params, t_index, t_value);
 		}
 		if (t_success)
 		{
-			consume_whitespace(p_params);
-			if (MCStringFirstIndexOfChar(p_params, ';', 0, kMCCompareExact, t_index))
+			uint32_t t_colon_index;
+			consume_whitespace(p_params, t_index);
+			if (MCStringFirstIndexOfChar(p_params, ';', t_index, kMCCompareExact, t_colon_index))
 			{
-				/* UNCHECKED */ MCStringCopySubstring(p_params, MCRangeMake(t_index + 1, MCStringGetLength(p_params) - (t_index + 1)), t_next_param);
+				t_index = t_colon_index;
 			}
 			else
 			{
-				t_next_param = MCValueRetain(kMCEmptyString);
+				t_index = MCStrinGetLength(p_params);
 			}
 			
 			t_success = MCMemoryResizeArray(r_param_count + 1, r_names, r_param_count) &&
@@ -425,23 +408,23 @@ bool MCMultiPartParseHeader(MCStringRef p_header, MCMultiPartHeaderCallback p_ca
 	uint32_t t_index = 0;
 	const char *t_next_param = NULL;
 	
-	t_success = read_name(p_header, p_header, t_header.name);
+	t_success = read_name(p_header, t_index, t_header.name);
 	if (t_success)
 	{
-		consume_whitespace(p_header);
-		t_success = MCStringGetNativeCharAtIndex(p_header, 0) == ':';
-		MCAutoStringRef t_head;
-		/* UNCHECKED */ MCStringDivideAtIndex(p_header, 0, &t_head, p_header);
+		consume_whitespace(p_header, t_index);
+		t_success = MCStringGetNativeCharAtIndex(p_header, t_index) == ':';
+		t_index++;
 			
 	}
 
 	if (t_success)
 	{
-		consume_whitespace(p_header);
+		uint32_t t_colon_index = 0;
+		consume_whitespace(p_header, t_index);
 
-		if (MCStringFirstIndexOfChar(p_header, ';', 0, kMCCompareExact, t_index))
+		if (MCStringFirstIndexOfChar(p_header, ';', t_index, kMCCompareExact, t_colon_index))
 		{
-			t_next_param = MCStringGetCString(p_header) + t_index + 1;
+			t_index = t_colon_index;
 		}
 		else
 			t_index = MCStringGetLength(p_header);
@@ -452,11 +435,11 @@ bool MCMultiPartParseHeader(MCStringRef p_header, MCMultiPartHeaderCallback p_ca
 		
 		t_success = MCStringCopySubstring(p_header, MCRangeMake(t_index, MCStringGetLength(p_header) - t_index) , t_header.value);
 		
-		if (t_success && t_next_param != NULL)
+		if (t_success && t_colon_index != 0)
 		{
-			MCAutoStringRef t_next_param_str;
-			/* UNCHECKED */ MCStringCreateWithCString(t_next_param, &t_next_param_str);
-			t_success = MCMultiPartParseHeaderParams(*t_next_param_str, t_header.param_name, t_header.param_value, t_header.param_count);
+			MCAutoStringRef t_next_param;
+			/* UNCHECKED */ MCStringCopySubtring(p_header, MCRangeMake(t_colon_index + 1, MCStringGetLength(p_header) - (t_colon_index + 1)), &t_next_param);
+			t_success = MCMultiPartParseHeaderParams(*t_next_param, t_header.param_name, t_header.param_value, t_header.param_count);
 		}
 	}
 	
