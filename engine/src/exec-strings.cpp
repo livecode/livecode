@@ -384,7 +384,7 @@ void MCStringsEvalReplaceText(MCExecContext& ctxt, MCStringRef p_string, MCStrin
 	MCStringRef t_substring;
 	t_substring = nil;
     
-    while (t_success && t_source_offset < t_source_length && MCStringCopySubstring(p_string, MCRangeMake(t_source_offset + 1, MCStringGetLength(p_string) - (t_source_offset + 1)), t_substring) && MCR_exec(t_compiled, t_substring, t_source_length - t_source_offset))
+    while (t_success && t_source_offset < t_source_length && MCStringCopySubstring(p_string, MCRangeMake(t_source_offset, MCStringGetLength(p_string) - (t_source_offset)), t_substring) && MCR_exec(t_compiled, t_substring, t_source_length - t_source_offset))
     {
         uindex_t t_start = t_compiled->matchinfo[0].rm_so;
         uindex_t t_end = t_compiled->matchinfo[0].rm_eo;

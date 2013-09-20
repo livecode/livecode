@@ -56,7 +56,7 @@ typedef struct _regexp
 }
 regexp;
 
-const char *MCR_geterror();
+void MCR_geterror(MCStringRef &r_error);
 regexp *MCR_compile(MCStringRef exp);
 int MCR_exec(regexp *prog, MCStringRef string, uint4 len);
 void MCR_free(regexp *prog);

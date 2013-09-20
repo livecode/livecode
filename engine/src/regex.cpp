@@ -149,7 +149,7 @@ static const char *pstring[] =
 *************************************************/
 
 size_t
-regerror(int errcode, const regex_t *preg, MCStringRef errbuf, size_t errbuf_size)
+regerror(int errcode, const regex_t *preg, MCStringRef &errbuf)
 {
 	const char *message, *addmessage;
 	size_t length, addlength;
@@ -162,14 +162,18 @@ regerror(int errcode, const regex_t *preg, MCStringRef errbuf, size_t errbuf_siz
 	addlength = (preg != NULL && (int)preg->re_erroffset != -1)
 	            ? strlen(addmessage) + 6 : 0;
 
-	if (errbuf_size > 0)
+	if (MCStringGetLength(errbuf) > 0)
 	{
-		if (addlength > 0 && errbuf_size >= length + addlength)
+
+		if (addlength > 0 && MCStringGetLength(errbuf) >= length + addlength)
 			MCStringFormat(errbuf, "%s%s%-6d", message, addmessage, (int)preg->re_erroffset);
 		else
 		{
-			/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *) message, errbuf_size - 1, errbuf);
-			/* UNCHECKED */ MCStringAppendNativeChars(errbuf, (const char_t)0, 1);
+			/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *) message, MCStringGetLength(errbuf) - 1, errbuf);
+            MCAutoStringRef t_errbuf_copy;
+            MCStringMutableCopy(errbuf, &t_errbuf_copy);
+			/* UNCHECKED */ MCStringAppendNativeChars(*t_errbuf_copy, (const char_t)0, 1);
+            MCValueAssign(errbuf, *t_errbuf_copy);
 		}
 	}
 	return length + addlength;
@@ -294,11 +298,11 @@ int regexec(regex_t *preg, MCStringRef string, int len, size_t nmatch,
 	}
 }
 
-static char regexperror[100];
+static MCStringRef regexperror;
 
-const char *MCR_geterror()
+void MCR_geterror(MCStringRef &r_error)
 {
-	return regexperror;
+	r_error = MCValueRetain(regexperror);
 }
 
 regexp *MCR_compile(MCStringRef exp)
@@ -309,9 +313,7 @@ regexp *MCR_compile(MCStringRef exp)
 	status = regcomp(&re->rexp, exp, flags);
 	if (status != REG_OKAY)
 	{
-		MCAutoStringRef t_regexperror;
-		/* UNCHECKED */ MCStringCreateWithCString(regexperror, &t_regexperror);
-		regerror(status, NULL, *t_regexperror, sizeof(regexperror));
+		regerror(status, NULL, regexperror);
 		delete re;
 		return(NULL);
 	}
@@ -329,9 +331,8 @@ int MCR_exec(regexp *prog, MCStringRef string, uint4 len)
 		{
 			return (0);
 		}
-		MCAutoStringRef t_regexperror;
-		/* UNCHECKED */ MCStringCreateWithCString(regexperror, &t_regexperror);
-		regerror(status, NULL, *t_regexperror, sizeof(regexperror));
+		MCValueRelease(regexperror);
+		regerror(status, NULL, regexperror);
 		return(0);
 	}
 	return (1);
