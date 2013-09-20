@@ -189,7 +189,7 @@ Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
 	
 	MCAutoStringRef license_token_string;
 	/* UNCHECKED */ MCStringCreateWithCString(MClicenseparameters . license_token, &license_token_string);
-	if (!MCS_unlink(*license_token_string));
+	if (!MCS_unlink(*license_token_string))
 	{
 		MCresult -> sets("token deletion failed");
 		return ES_NORMAL;
@@ -327,78 +327,6 @@ IO_stat MCDispatch::startup(void)
 	}
 
 	return IO_NORMAL;
-}
-
-bool MCDispatch::isolatedsend(const char *p_stack_data, uint32_t p_stack_data_length, const char *p_message, MCParameter *p_parameters)
-{
-	Boolean t_old_allow_interrupts;
-	MCStack *t_old_stacks;
-	MCObjectList *t_old_frontscripts, *t_old_backscripts;
-	MCStack **t_old_using;
-	uint2 t_old_nusing;
-	MCStack *t_old_defaultstack;
-	MCStack *t_old_staticdefaultstack;
-	MCStack *t_old_topstackptr;
-	t_old_allow_interrupts = MCallowinterrupts;
-	t_old_stacks = stacks;
-	t_old_frontscripts = MCfrontscripts;
-	t_old_backscripts = MCbackscripts;
-	t_old_using = MCusing;
-	t_old_nusing = MCnusing;
-	t_old_defaultstack = MCdefaultstackptr;
-	t_old_staticdefaultstack = MCstaticdefaultstackptr;
-	t_old_topstackptr = MCtopstackptr;
-
-	MCallowinterrupts = False;
-	stacks = nil;
-	MCnusing = 0;
-	MCusing = nil;
-	MCbackscripts = nil;
-	MCfrontscripts = nil;
-	
-	// Load the stack
-	MCDataRef t_decompressed;
-	MCDataRef t_compressed;
-	/* UNCHECKED */ MCDataCreateWithBytes((const char_t *)p_stack_data, p_stack_data_length, t_compressed);
-	/* UNCHECKED */ MCFiltersDecompress(t_compressed, t_decompressed);
-	MCValueRelease(t_compressed);
-
-	bool t_success;
-	MCStack *t_stack;
-	IO_handle t_stream;
-	t_success = false;
-	t_stack = nil;
-	t_stream = MCS_fakeopen(MCDataGetOldString(t_decompressed));
-
-	if (MCdispatcher -> readfile(NULL, NULL, t_stream, t_stack) == IO_NORMAL)
-	{
-		MCdefaultstackptr = MCstaticdefaultstackptr = MCtopstackptr = stacks;
-
-		MCAutoNameRef t_message_name;
-		/* UNCHECKED */ t_message_name . CreateWithCString(p_message);
-
-		if (t_stack -> message(t_message_name, p_parameters, True, True, False) == ES_NORMAL)
-			t_success = true;
-
-		destroystack(t_stack, True);
-	}
-
-	MCS_close(t_stream);
-
-	/* FRAGILE */ memset((void *)MCDataGetBytePtr(t_decompressed), 0, MCDataGetLength(t_decompressed));
-	MCValueRelease(t_decompressed);
-
-	MCtopstackptr = t_old_topstackptr;
-	MCstaticdefaultstackptr = t_old_staticdefaultstack;
-	MCdefaultstackptr = t_old_defaultstack;
-	MCnusing = t_old_nusing;
-	MCusing = t_old_using;
-	MCbackscripts = t_old_backscripts;
-	MCfrontscripts = t_old_frontscripts;
-	stacks = t_old_stacks;
-	MCallowinterrupts = t_old_allow_interrupts;
-
-	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

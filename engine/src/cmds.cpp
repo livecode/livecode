@@ -1302,7 +1302,7 @@ Parse_stat MCPut::parse(MCScriptPoint &sp)
 	// Parse: put [ unicode ] ( header | content | markup ) <expr>	
 	if (sp.next(type) == PS_NORMAL)
 	{
-		if (sp.lookup(SP_SERVER, te) == PS_NORMAL && te -> type == TT_PREP)
+		if (type == ST_ID && sp.lookup(SP_SERVER, te) == PS_NORMAL && te -> type == TT_PREP)
 		{
 			prep = (Preposition_type)te -> which;
 			if (is_unicode && (prep == PT_HEADER || prep == PT_BINARY))

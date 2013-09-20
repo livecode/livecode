@@ -151,7 +151,8 @@
 			RelativePathToProject=".\thirdparty\libpng\libpng.vcproj"
 		/>
 		<ProjectReference
-			ReferencedProjectIdentifier="{91B9D78C-55C2-4717-8702-BDE4A906E3AA}"
+			ReferencedProjectIdentifier="{8862ADC2-BEB0-4765-A1E4-0E3493718999}"
+			RelativePathToProject=".\libfoundation\libfoundation.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{81FB1E54-0DBF-4D7D-92F5-A7774E531CE2}"
@@ -1440,6 +1441,10 @@
 			</File>
 			<File
 				RelativePath=".\src\dskspec.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\dskw32.cpp"
 				>
 			</File>
 			<File
@@ -3125,6 +3130,10 @@
 				</File>
 				<File
 					RelativePath="src\w32dnd.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\w32dsk-legacy.h"
 					>
 				</File>
 				<File
@@ -6127,7 +6136,6 @@
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -6232,28 +6240,6 @@
 			</File>
 			<File
 				RelativePath=".\src\sysw32region.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PrecompiledHeaderThrough="w32prefix.h"
-						PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PrecompiledHeaderThrough="w32prefix.h"
-						PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\src\sysw32registry.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"

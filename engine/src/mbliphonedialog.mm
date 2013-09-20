@@ -492,7 +492,7 @@ bool MCScreenDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRe
 	popupaskdialog_t ctxt;
 	ctxt . type = p_type;
 	ctxt . title = MCStringGetCString(p_title);
-	ctxt . message = MCStringGetCStrng(p_message);
+	ctxt . message = MCStringGetCString(p_message);
 	ctxt . initial = MCStringGetCString(p_initial);
 	ctxt . hint = p_hint;
  

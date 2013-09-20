@@ -47,6 +47,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "property.h"
 #include "osspec.h"
 
+#include "system.h"
 #include "globals.h"
 #include "license.h"
 #include "mode.h"
@@ -197,7 +198,9 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 			return false;
 		}
 		
-		if (!MCdispatcher -> loadexternal(t_external))
+		MCAutoStringRef t_external_str;
+		/* UNCHECKED */ MCStringCreateWithCString(t_external, &t_external_str);
+		if (!MCdispatcher -> loadexternal(*t_external_str))
 		{
 			delete t_external;
 			MCresult -> sets("failed to load external");
@@ -220,7 +223,9 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 
 		// Execute the startup script at this point since we have loaded
 		// all stacks.
-		self -> stack -> domess(t_script);
+        MCAutoStringRef t_script_str;
+        /* UNCHECKED */ MCStringCreateWithCString(t_script, &t_script_str);
+		self -> stack -> domess(*t_script_str);
 		
 		delete t_script;
 	}
@@ -376,10 +381,9 @@ IO_stat MCDispatch::startup(void)
 	extern IO_handle android_get_mainstack_stream();
 	t_stream = android_get_mainstack_stream();
 #else
-	char *t_path;
-	MCCStringFormat(t_path, "%.*s/iphone_test.rev", strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd));
-	t_stream = MCS_open(t_path, IO_READ_MODE, False, False, 0);
-	MCCStringFree(t_path);
+	MCAutoStringRef t_path;
+	MCStringFormat(&t_path, "%.*s/iphone_test.rev", strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd));
+	t_stream = MCS_open(*t_path, kMCSOpenFileModeRead, False, False, 0);
 #endif
 
 	if (t_stream == NULL)
@@ -404,14 +408,14 @@ IO_stat MCDispatch::startup(void)
 	MCImage::init();
 	
 #ifdef TARGET_SUBPLATFORM_ANDROID
-	MCdispatcher -> loadexternal("revzip");
-	MCdispatcher -> loadexternal("revdb");
-	MCdispatcher -> loadexternal("revxml");
-	MCdispatcher -> loadexternal("dbsqlite");
-	MCdispatcher -> loadexternal("dbmysql");
+	MCdispatcher -> loadexternal(MCSTR("revzip"));
+	MCdispatcher -> loadexternal(MCSTR("revdb"));
+	MCdispatcher -> loadexternal(MCSTR("revxml"));
+	MCdispatcher -> loadexternal(MCSTR("dbsqlite"));
+	MCdispatcher -> loadexternal(MCSTR("dbmysql"));
 #else
-	MCdispatcher -> loadexternal("revzip.dylib");
-	MCdispatcher -> loadexternal("revdb.dylib");
+	MCdispatcher -> loadexternal(MCSTR("revzip.dylib"));
+	MCdispatcher -> loadexternal(MCSTR("revdb.dylib"));
 #endif
 	
 	// MW-2010-12-18: Startup message / stack init now down in 'main'
@@ -447,7 +451,9 @@ IO_stat MCDispatch::startup(void)
 	{
 		MCStack *t_stack;
 		IO_handle t_stream;
-		t_stream = MCS_open(getenv("TEST_STACK"), IO_READ_MODE, False, False, 0);
+		MCAutoStringRef t_env;
+		/* UNCHECKED */ MCS_getenv(MCSTR("TEST_STACK"), &t_env);
+		t_stream = MCS_open(*t_env, kMCSystemFileModeRead, False, False, 0);
 		if (MCdispatcher -> readstartupstack(t_stream, t_stack) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read standalone stack");

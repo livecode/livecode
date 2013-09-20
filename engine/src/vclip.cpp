@@ -216,13 +216,13 @@ char *MCVideoClip::getfile()
 	return NULL;
 }
 
-Boolean MCVideoClip::import(const char *fname, IO_handle fstream)
+Boolean MCVideoClip::import(MCStringRef fname, IO_handle fstream)
 {
-	const char *tname = strrchr(fname, PATH_SEPARATOR);
+	const char *tname = strrchr(MCStringGetCString(fname), PATH_SEPARATOR);
 	if (tname != NULL)
 		tname += 1;
 	else
-		tname = fname;
+		tname = MCStringGetCString(fname);
 	setname_cstring(tname);
 	size = (uint4)MCS_fsize(fstream);
 	frames = new uint1[size];
