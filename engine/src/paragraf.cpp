@@ -1491,7 +1491,9 @@ void MCParagraph::join()
 
 	if (gettextsizecr() + pgptr->textsize > buffersize)
 	{
-		buffersize += pgptr->gettextsizecr() + PG_PAD;
+		// FG-2013-09-20 [[ Bugfix 11191 ]]
+		// Buffer was being set to wrong size (didn't include size of existing text)
+		buffersize = textsize + pgptr->gettextsizecr() + PG_PAD;
 		buffersize &= PG_MASK;
 		text = new char[buffersize];
 		memcpy(text, oldtext, textsize);
