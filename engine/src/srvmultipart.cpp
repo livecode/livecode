@@ -362,8 +362,9 @@ bool MCMultiPartParseHeaderParams(MCStringRef p_params, MCStringRef *&r_names, M
 		consume_whitespace(p_params);
 		
 		bool t_has_value = false;
-		
-		t_success = read_token(p_params, p_params, t_name);
+		MCAutoStringRef tmp;
+		t_success = read_token(p_params, &tmp, t_name);
+		MCValueAssign(p_params, *tmp);
 		if (t_success)
 		{
 			consume_whitespace(p_params);
@@ -374,7 +375,15 @@ bool MCMultiPartParseHeaderParams(MCStringRef p_params, MCStringRef *&r_names, M
 		}
 		if (t_success && t_has_value)
 		{
-			t_success = read_token(p_params, p_params, t_value) || read_quoted_string(p_params, p_params, t_value);
+			MCAutoStringRef tmp2;
+			t_success = read_token(p_params, &tmp2, t_value);
+			MCValueAssign(p_params, *tmp2);
+			if (!t_success)
+			{
+				MCAutoStringRef tmp3;
+				t_success = read_quoted_string(p_params, &tmp3, t_value);
+				MCValueAssign(p_params, *tmp3);
+			}
 		}
 		if (t_success)
 		{
