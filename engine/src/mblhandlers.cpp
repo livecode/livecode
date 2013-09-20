@@ -4969,25 +4969,24 @@ static MCMediaType MCMediaTypeFromString(MCStringRef p_string)
         if (MCStringGetNativeCharAtIndex(p_string, t_pos) == '\0')
             break;
     	// HC-2012-02-01: [[ Bug 9983 ]] - This fix is related as the implementation in the new syntax does not produce a result
-        MCAutoStringRef t_substring;
-        /* UNCHECKED */ MCStringCopySubstring(p_string, MCRangeMake(t_pos, MCStringGetLength(p_string) - t_pos), &t_substring);
-        if (MCStringSubstringIsEqualTo(*t_substring, MCRAngeMake(0, 7), MCSTR("podcasts"), kMCCompareCaseless))
+        
+        if (MCStringSubstringIsEqualTo(p_string, MCRangeMake(t_pos, 7), MCSTR("podcasts"), kMCCompareCaseless))
             t_media_type = t_media_type | kMCMediaTypePodcasts;
-        else if (MCStringSubstringIsEqualTo(*t_substring, MCRAngeMake(0, 4), MCSTR("songs"), kMCCompareCaseless))
+        else if (MCStringSubstringIsEqualTo(p_string, MCRangeMake(t_pos, 4), MCSTR("songs"), kMCCompareCaseless))
             t_media_type = t_media_type | kMCMediaTypeSongs;
-        else if (MCStringSubstringIsEqualTo(*t_substring, MCRAngeMake(0, 9), MCSTR("audiobooks"), kMCCompareCaseless))
+        else if (MCStringSubstringIsEqualTo(p_string, MCRangeMake(t_pos, 9), MCSTR("audiobooks"), kMCCompareCaseless))
             t_media_type = t_media_type | kMCMediaTypeAudiobooks;
-        else if (MCStringSubstringIsEqualTo(*t_substring, MCRAngeMake(0, 5), MCSTR("movies"), kMCCompareCaseless))
+        else if (MCStringSubstringIsEqualTo(p_string, MCRangeMake(t_pos, 5), MCSTR("movies"), kMCCompareCaseless))
             t_media_type = t_media_type | kMCMediaTypeMovies;
-        else if (MCStringSubstringIsEqualTo(*t_substring, MCRAngeMake(0, 10), MCSTR("musicvideos"), kMCCompareCaseless))
+        else if (MCStringSubstringIsEqualTo(p_string, MCRangeMake(t_pos, 10), MCSTR("musicvideos"), kMCCompareCaseless))
             t_media_type = t_media_type | kMCMediaTypeMusicVideos;
-        else if (MCStringSubstringIsEqualTo(*t_substring, MCRAngeMake(0, 2), MCSTR("tv"), kMCCompareCaseless))
+        else if (MCStringSubstringIsEqualTo(p_string, MCRangeMake(t_pos, 2), MCSTR("tv"), kMCCompareCaseless))
             t_media_type = t_media_type | kMCMediaTypeTv;
-        else if (MCStringSubstringIsEqualTo(*t_substring, MCRAngeMake(0, 12), MCSTR("videopodcasts"), kMCCompareCaseless))
+        else if (MCStringSubstringIsEqualTo(p_string, MCRangeMake(t_pos, 12), MCSTR("videopodcasts"), kMCCompareCaseless))
             t_media_type = t_media_type | kMCMediaTypeVideoPodcasts;
-        else if (MCStringSubstringIsEqualTo(*t_substring, MCRAngeMake(0, 12), MCSTR("anyAudio"), kMCCompareCaseless))
+        else if (MCStringSubstringIsEqualTo(p_string, MCRangeMake(t_pos, 12), MCSTR("anyAudio"), kMCCompareCaseless))
             t_media_type = t_media_type | kMCMediaTypeAnyAudio;
-        else if (MCStringSubstringIsEqualTo(*t_substring, MCRAngeMake(0, 12), MCSTR("anyVideo"), kMCCompareCaseless))
+        else if (MCStringSubstringIsEqualTo(p_string, MCRangeMake(t_pos, 12), MCSTR("anyVideo"), kMCCompareCaseless))
             t_media_type = t_media_type | kMCMediaTypeAnyVideo;
         while (MCStringGetNativeCharAtIndex(p_string, t_pos) != ' ' && MCStringGetNativeCharAtIndex(p_string, t_pos) != ',' && MCStringGetNativeCharAtIndex(p_string, t_pos) != '\0')
             t_pos += 1;
