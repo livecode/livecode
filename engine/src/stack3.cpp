@@ -133,9 +133,15 @@ IO_stat MCStack::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 IO_stat MCStack::load(IO_handle stream, const char *version, uint1 type)
 {
 	IO_stat stat;
-
+	
+	// FG-2013-09-20 [[ Bugfix 10846 ]]
+	// Community edition cannot read encrypted stacks
 	if (type != OT_STACK)
+	{
+		if (MCresult->isclear() && type == OT_ENCRYPT_STACK)
+			MCresult->sets("Encrypted stacks cannot be opened in Community Edition");
 		return IO_ERROR;
+	}
 	
 	uint32_t t_reserved = 0;
 	
