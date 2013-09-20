@@ -68,7 +68,7 @@ int main(int argc, char *argv[], char *envp[])
 	
 	// Convert the envp array to StringRefs
 	int envc = 0;
-	MCStringRef* t_envp;
+	MCStringRef* t_envp = nil;
 	while (envp[envc] != NULL)
 	{
 		uindex_t t_count = envc + 1;
@@ -122,12 +122,12 @@ static bool do_iconv(iconv_t fd, const char *in, size_t in_len, char * &out, siz
 	// Begin conversion. As a start, assume both encodings take the same
 	// space. This is probably wrong but the array is grown as needed.
 	size_t t_status = 0;
-	uindex_t t_alloc_remain;
-	char * t_out_base;
+	uindex_t t_alloc_remain = 0;
+	MCAutoArray<char> t_out;
 	char * t_out_cursor;
-	t_alloc_remain = in_len;
-	/* UNCHECKED */ MCMemoryNewArray(t_alloc_remain, t_out_base);
-	t_out_cursor = t_out_base;
+	t_out.New(in_len);
+	t_alloc_remain = t_out.Size();
+	t_out_cursor = t_out.Ptr();
 	while (in_len > 0)
 	{
 		// Resize the destination array if it has been exhausted
@@ -141,12 +141,12 @@ static bool do_iconv(iconv_t fd, const char *in, size_t in_len, char * &out, siz
 			{
 				// Increase the size of the output array
 				uindex_t t_offset;
-				t_offset = t_out_cursor - t_out_base;
-				/* UNCHECKED */ MCMemoryResizeArray(t_offset + t_alloc_remain + 1, t_out_base, t_alloc_remain);
+				t_offset = t_out_cursor - t_out.Ptr();
+				t_out.Extend(t_offset + t_alloc_remain + 1);
 				
 				// Adjust the pointers because the output buffer may have moved
-				t_out_cursor = t_out_base + t_offset;
-				t_alloc_remain -= t_offset;				// Remaining size, not total size
+				t_out_cursor = t_out.Ptr() + t_offset;
+				t_alloc_remain = t_out.Size() - t_offset;		// Remaining size, not total size
 				
 				// Try the conversion again
 				continue;
@@ -158,7 +158,6 @@ static bool do_iconv(iconv_t fd, const char *in, size_t in_len, char * &out, siz
 				//	EINVAL	-	incomplete multibyte character at end of input
 				//	EBADF	-	invalid conversion file descriptor
 				// None of these are recoverable so abort
-				MCMemoryDeleteArray(t_out_base);
 				return false;
 			}
 		}
@@ -170,8 +169,7 @@ static bool do_iconv(iconv_t fd, const char *in, size_t in_len, char * &out, siz
 	}
 	
 	// Conversion has been completed
-	out = t_out_base;
-	out_len = t_out_cursor - t_out_base;
+	t_out.Take(out, out_len);
 	return true;
 }
 
