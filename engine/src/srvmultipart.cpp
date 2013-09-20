@@ -99,7 +99,7 @@ public:
 			{
 				m_match_index++;
 				m_have_char = false;
-				if (m_match_index == MCStringgetLength(m_boundary))
+				if (m_match_index == MCStringGetLength(m_boundary))
 				{
 					m_match_index = 0;
 					r_boundary_reached = true;
@@ -533,7 +533,7 @@ bool MCMultiPartReadMessageFromStream(IO_handle p_stream, MCStringRef p_boundary
 	t_boundary_length = MCStringGetLength(p_boundary);
 	// typical boundary == CRLF & "--" & p_boundary
 	if (t_success)
-		t_success = MCStringFormat(t_boundary, "\r\n--%s", MCStringGetCString(p_boundary));
+		t_success = MCStringFormat(t_boundary, "\r\n--%@", p_boundary);
 	
 	if (t_success)
 		t_success = MCMemoryAllocate(t_buffer_size, t_buffer);
