@@ -816,10 +816,10 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 		exportasstyledtext(parid, ep, si, ei, which == P_FORMATTED_STYLED_TEXT, effective == True);
 		return ES_NORMAL;
 	}
-
-	if (flags & F_SHARED_TEXT)
-		parid = 0;
-	MCParagraph *pgptr = getcarddata(fdata, parid, True)->getparagraphs();
+	
+	// MW-2013-08-27: [[ Bug 11129 ]] Use 'resolveparagraphs()' so we get the same
+	//   behavior as if exporting the content in various ways.
+	MCParagraph *pgptr = resolveparagraphs(parid);
 
 	// MW-2012-02-08: [[ Field Indices ]] If we pass a pointer to indextoparagraph
 	//   then it computes the index of the paragraph (1-based).
@@ -982,7 +982,13 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 
 				// Reduce ei until we get to zero, advancing through the paras.
 				ei -= sptr->gettextsizecr();
+				
 				sptr = sptr->next();
+				
+				// MW-2013-08-27: [[ Bug 11129 ]] If we reach the end of the paragraphs
+				//   then set ei to 0 as we are done.
+				if (sptr == pgptr)
+					ei = 0;
 			}
 			while(ei > 0);
 			
@@ -1004,26 +1010,31 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 			// Start with an empty result.
 			ep . clear();
 
-			// The ranges are adjusted by the index of the first char (i.e. they are
-			// relative to the start of the range.
-			int32_t t_index_offset;
-			t_index_offset = -countchars(parid, 0, si);
-
+			// MW-2013-07-31: [[ Bug 10957 ]] Keep track of the byte index of the start
+			//   of the paragraph.
+			int32_t t_paragraph_offset;
+			t_paragraph_offset = 0;
+			
 			// Loop through the paragraphs until the range is exhausted.
 			do
 			{
 				// Fetch the flagged ranges into ep between si and ei (sptr relative)
 				// making sure the ranges are adjusted to the start of the range.
-				sptr -> getflaggedranges(parid, ep, si, ei, t_index_offset);
-
-				// MW-2013-05-22: [[ Bug 10908 ]] Increment the offset by the size of the
-				//   paragraph in codepoints not bytes.
-				t_index_offset += sptr -> gettextlength() + 1;
-
+				sptr -> getflaggedranges(parid, ep, si, ei, t_paragraph_offset);
+				
+				// MW-2013-07-31: [[ Bug 10957 ]] Update the paragraph (byte) offset.
+				t_paragraph_offset += sptr -> gettextsizecr();
+				
 				// Reduce ei until we get to zero, advancing through the paras.
 				si = 0;
 				ei -= sptr -> gettextsizecr();
+				
 				sptr = sptr -> next();
+				
+				// MW-2013-08-27: [[ Bug 11129 ]] If we reach the end of the paragraphs
+				//   then set ei to 0 as we are done.
+				if (sptr == pgptr)
+					ei = 0;
 			}
 			while(ei > 0);
 		}
@@ -1076,6 +1087,11 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 
 				ei -= sptr->gettextsizecr();
 				sptr = sptr->next();
+				
+				// MW-2013-08-27: [[ Bug 11129 ]] If we reach the end of the paragraphs
+				//   then set ei to 0 as we are done.
+				if (sptr == pgptr)
+					ei = 0;
 			}
 			while(ei > 0);
 			break;
@@ -1187,6 +1203,11 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 			ei -= sptr->gettextsizecr();
 			si = 0;
 			sptr = sptr->next();
+			
+			// MW-2013-08-27: [[ Bug 11129 ]] If we reach the end of the paragraphs
+			//   then set ei to 0 as we are done.
+			if (sptr == pgptr)
+				ei = 0;
 		}
 		while (ei > 0);
 
@@ -1275,7 +1296,7 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 //   values can be used.
 // MW-2012-01-25: [[ ParaStyles ]] The 'is_line_chunk' parameter is true if the prop
 //   is being set on a line directly.
-Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef index, int4 si, int4 ei, bool is_line_chunk)
+Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef index, int4 si, int4 ei, bool is_line_chunk, bool dont_layout)
 {
 	// Fetch the string value of the ep as 's' for compatibility with pre-ep taking
 	// code.
@@ -1387,7 +1408,9 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 
 		// First ensure the flagged property is false along the whole range.
 		ep2 . setboolean(False);
-		settextatts(parid, P_FLAGGED, ep2, nil, si, ei, false);
+		
+		// MW-2013-08-01: [[ Bug 10932 ]] Don't layout this operation.
+		settextatts(parid, P_FLAGGED, ep2, nil, si, ei, false, true);
 
 		// All remaining ranges will have flagged set to true.
 		ep2 . setboolean(True);
@@ -1417,18 +1440,23 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 				
 				// MW-2012-03-23: [[ Bug 10118 ]] Both range_start and range_end are already
 				//   offset from the start of the field.
-				settextatts(parid, P_FLAGGED, ep2, nil, MCU_max(si, t_range_start), MCU_min(ei, t_range_end), false);
+				// MW-2013-08-01: [[ Bug 10932 ]] Don't layout this operation.
+				settextatts(parid, P_FLAGGED, ep2, nil, MCU_max(si, t_range_start), MCU_min(ei, t_range_end), false, true);
 			}
 		}
+		// MW-2013-08-01: [[ Bug 10932 ]] Force a full relayout.
+		settextatts(parid, P_UNDEFINED, ep2, nil, 0, 0, false, false);
 		return ES_NORMAL;
 	}
 
-	MCParagraph *pgptr = getcarddata(fdata, parid, True)->getparagraphs();
+	// MW-2013-08-27: [[ Bug 11129 ]] Use 'resolveparagraphs()' so we get the same behavior
+	//   as elsewhere.
+	MCParagraph *pgptr = resolveparagraphs(parid);
 
 	// MW-2013-03-20: [[ Bug 10764 ]] We only need to layout if the paragraphs
 	//   are attached to the current card.
 	bool t_need_layout;
-	if (opened)
+	if (opened && !dont_layout)
 		t_need_layout = pgptr == paragraphs;
 	else
 		t_need_layout = false;
@@ -1461,6 +1489,9 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 
 	switch (which)
 	{
+	case P_UNDEFINED:
+		all = True;
+		break;
 	case P_BACK_COLOR:
 		// If we are a line chunk, then make sure we set the paragraph
 		// level value.
@@ -1633,18 +1664,21 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		{
 			pgptr->setparent(this);
 
-			if (!t_is_para_attr)
-				pgptr->setatts(si, MCU_min(ei, pgptr->gettextsize()), which, t_value);
-			else
+			if (which != P_UNDEFINED)
 			{
-				// MW-2012-01-25: [[ ParaStyles ]] If we are a paragraph style then we
-				//   set on the first para, then copy from the first on all subsequent.
-				if (pgptr == t_first_pgptr)
-					t_stat = pgptr->setparagraphattr(which, ep);
+				if (!t_is_para_attr)
+					pgptr->setatts(si, MCU_min(ei, pgptr->gettextsize()), which, t_value);
 				else
-					pgptr -> copysingleattr(which, t_first_pgptr);
+				{
+					// MW-2012-01-25: [[ ParaStyles ]] If we are a paragraph style then we
+					//   set on the first para, then copy from the first on all subsequent.
+					if (pgptr == t_first_pgptr)
+						t_stat = pgptr->setparagraphattr(which, ep);
+					else
+						pgptr -> copysingleattr(which, t_first_pgptr);
+				}
 			}
-
+				
 			if (t_need_layout && !all)
 			{
 				// MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
@@ -1655,6 +1689,11 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		si = MCU_max(0, si - l);
 		ei -= l;
 		pgptr = pgptr->next();
+		
+		// MW-2013-08-27: [[ Bug 11129 ]] If we reach the end of the paragraphs
+		//   then set ei to 0 as we are done.
+		if (pgptr == t_first_pgptr)
+			ei = 0;
 	}
 	while(ei > 0 && t_stat == ES_NORMAL);
 	delete cname;

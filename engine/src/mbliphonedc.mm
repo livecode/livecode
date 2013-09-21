@@ -590,6 +590,10 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	
 	do
 	{
+		// MW-2013-08-18: [[ XPlatNotify ]] Handle any pending notifications
+		if (MCNotifyDispatch(dispatch == True) && anyevent)
+			break;
+		
 		real8 eventtime = exittime;
 		if (handlepending(curtime, eventtime, dispatch))
 		{
@@ -1093,11 +1097,12 @@ bool iphone_run_on_main_thread(void *p_callback, void *p_callback_state, int p_o
 		return true;
 	}
 
+	// MW-2013-06-18: [[ XPlatNotify ]] Make sure we check whether either fiber is the
+	//   current thread, rather than is the current fiber (otherwise calls from aux. threads
+	//   don't work!).
 	// If we aren't on one of the fibers, then post a selector to the main fiber's
 	// thread.
-	MCFiberRef t_current_fiber;
-	t_current_fiber = MCFiberGetCurrent();
-	if (t_current_fiber != s_script_fiber && t_current_fiber != s_main_fiber)
+	if (!MCFiberIsCurrentThread(s_script_fiber) && !MCFiberIsCurrentThread(s_main_fiber))
 	{
 		com_runrev_livecode_MCRunOnMainThreadHelper *t_helper;
 		t_helper = [[com_runrev_livecode_MCRunOnMainThreadHelper alloc] initWithCallback: p_callback state: p_callback_state options: p_options];
@@ -1643,10 +1648,15 @@ static void MCIPhoneDoBreakWait(void *)
 	if (s_wait_depth > 0)
 	{
 		NSArray *t_modes;
-		t_modes = [[NSArray alloc] initWithObject: NSRunLoopCommonModes];
+		t_modes = [[NSArray alloc] initWithObjects: NSRunLoopCommonModes, nil];
 		[s_break_wait_helper performSelector: @selector(breakWait) withObject: nil afterDelay: 0 inModes: t_modes];
 		[t_modes release];
 	}
+}
+
+static void MCIPhoneDoBreakWaitOnCorrectThread(void *context)
+{
+	MCFiberCall(s_main_fiber, MCIPhoneDoBreakWait, nil);
 }
 
 void MCIPhoneBreakWait(void)
@@ -1657,7 +1667,7 @@ void MCIPhoneBreakWait(void)
 	if (s_break_wait_helper == nil)
 		s_break_wait_helper = [[com_runrev_livecode_MCIPhoneBreakWaitHelper alloc] init];
 
-	MCFiberCall(s_main_fiber, MCIPhoneDoBreakWait, nil);
+	iphone_run_on_main_thread((void *)MCIPhoneDoBreakWaitOnCorrectThread, nil, kMCExternalRunOnMainThreadUnsafe | kMCExternalRunOnMainThreadImmediate);
 }
 
 static void MCIPhoneDoScheduleWait(void *p_ctxt)

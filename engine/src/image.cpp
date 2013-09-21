@@ -67,6 +67,8 @@ MCImage::MCImage()
 	m_transformed = nil;
 	m_image_opened = false;
 
+	m_locked_frame = nil;
+
 	m_have_control_colors = false;
 	m_control_colors = nil;
 	m_control_color_names = nil;
@@ -87,6 +89,8 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 	m_rep = nil;
 	m_transformed = nil;
 	m_image_opened = false;
+
+	m_locked_frame = nil;
 
 	m_have_control_colors = false;
 	m_control_colors = nil;
@@ -1696,7 +1700,10 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 					                     t_compressed->plane_sizes[i], stream)) != IO_NORMAL)
 						return stat;
 				}
-
+			}
+			// IM-2013-07-29: [[ Bugfix 11073 ]] If compressed data has a mask make sure we write it out
+			if (t_compressed != nil)
+			{
 				t_mask_data = t_compressed->mask;
 				t_mask_size = t_compressed->mask_size;
 			}
