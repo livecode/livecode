@@ -154,7 +154,7 @@ UIViewController *MCIPhoneGetViewController(void);
     {
         integer_t t_secs;
 		/* UNCHECKED */ ctxt.ConvertToInteger(*t_end, t_secs);
-		r_event.endDate = [NSDate dateWithTimeIntervalSince1970:ep.getnvalue()];
+		r_event.endDate = [NSDate dateWithTimeIntervalSince1970:t_secs];
     }
 
     // Set up the alerts
