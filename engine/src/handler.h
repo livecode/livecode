@@ -110,7 +110,7 @@ public:
 	uint4 linecount();
 	void deletestatements(MCStatement *statements);
 	void doscript(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line = 0, uinteger_t p_pos = 0);
-	Exec_stat doscript(MCExecPoint &ep, uint2 line, uint2 pos);
+	//Exec_stat doscript(MCExecPoint &ep, uint2 line, uint2 pos);
 
 	// Used by the externals API, this method returns the current incarnation of
 	// the 'it' variable in this handler - if any.

@@ -106,6 +106,12 @@ MCScriptPoint::MCScriptPoint(MCExecPoint &ep)
 	token_nameref = nil;
 }
 
+MCScriptPoint::MCScriptPoint(MCExecContext &ctxt)
+{
+	// Placement new because constructors can't be delegated without C++11
+	new (this) MCScriptPoint(ctxt.GetEP());
+}
+
 MCScriptPoint::MCScriptPoint(const MCString &s)
 {
 	MCAutoStringRef t_string_script;
