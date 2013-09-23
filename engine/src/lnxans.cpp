@@ -659,7 +659,7 @@ int MCA_folder(MCExecPoint& ep, MCStringRef p_title, MCStringRef p_prompt, MCStr
 	if (!MCModeMakeLocalWindows())
 	{
 		MCAutoStringRef t_resolved_initial_path;
-        /* UNCHECKED */ MCS_resolvepath(p_initial, &t_resolved_initial_path);
+        	/* UNCHECKED */ MCS_resolvepath(p_initial, &t_resolved_initial_path);
 		
 		MCRemoteFolderDialog(ep, p_title, p_prompt, *t_resolved_initial_path);
 		return 0;
@@ -670,10 +670,14 @@ int MCA_folder(MCExecPoint& ep, MCStringRef p_title, MCStringRef p_prompt, MCStr
 	GtkWidget *dialog ;
 	
 	
-	dialog = create_open_dialog( p_title == NULL  ? p_prompt : p_title, GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER );
+	dialog = create_open_dialog( p_title == nil  ? MCStringGetCString(p_prompt) : MCStringGetCString(p_title), GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER );
 
-	if ( p_initial != NULL ) 
-		gtk_file_chooser_set_current_folder ( GTK_FILE_CHOOSER ( dialog ) , MCS_resolvepath(p_initial) );
+	if ( p_initial != nil ) 
+	{
+		MCAutoStringRef t_resolved_initial_path;
+        	/* UNCHECKED */ MCS_resolvepath(p_initial, &t_resolved_initial_path);
+		gtk_file_chooser_set_current_folder ( GTK_FILE_CHOOSER ( dialog ) , MCStringGetCString(*t_resolved_initial_path));
+	}
 	
 	run_dialog ( dialog, ep) ;
 	close_dialog ( dialog ) ;
@@ -792,7 +796,6 @@ MCPrinterDialogResult MCA_gtk_printer_setup ( PSPrinterSettings &p_settings )
 			}
         }
 
-		MCMemoryDeallocate(t_data_in);
 
 		return (MCPrinterDialogResult)t_result;
 	}
