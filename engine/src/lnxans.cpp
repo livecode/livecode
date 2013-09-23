@@ -427,29 +427,34 @@ const char * get_current_filter_name ( GtkWidget * dialog )
 
 
 
-bool file_has_path ( const char * p_file) 
+bool file_has_path ( MCStringRef p_file)
 {
-	return (  ( *p_file == '/' ) || ( *p_file == '~' ) || ( *p_file == '.' ) );
+	return (   MCStringBeginsWith(p_file, MCSTR("/"), kMCCompareExact) || MCStringBeginsWith(p_file, MCSTR("~"), kMCCompareExact) || MCStringBeginsWith(p_file, MCSTR("."), kMCCompareExact) );
 }
 
 
 
-void set_initial_file ( GtkWidget *dialog, const char * p_initial, char * p_last_path ) 
+void set_initial_file ( GtkWidget *dialog, MCStringRef p_initial, MCStringRef p_last_path )
 {
-	char *t_filename ;
+	MCAutoStringRef t_filename ;
 
-	if ( p_initial != NULL ) 
+	if ( p_initial != NULL )
 	{
-		if ( file_has_path (p_initial)  )
-			t_filename =  MCS_resolvepath ( p_initial );
+		if ( file_has_path (p_initial) )
+			/* UNCHECKED */ MCS_resolvepath (p_initial, &t_filename);
 		else
-			t_filename = strcat ( strcat(MCS_resolvepath ( NULL ), "/") , p_initial );
-			
-		gtk_file_chooser_set_filename ( GTK_FILE_CHOOSER ( dialog ) , MCS_resolvepath ( t_filename ) );
+        {
+            MCAutoStringRef t_resolved;
+            /* UNCHECKED */ MCS_resolvepath (nil, &t_resolved);
+            MCStringFormat(&t_filename, "%@%@%@", *t_resolved, MCSTR("/"), p_initial);
+        }
+		MCAutoStringRef t_resolved;
+        MCS_resolvepath (*t_filename, &t_resolved);
+		gtk_file_chooser_set_filename ( GTK_FILE_CHOOSER ( dialog ) , MCStringGetCString(*t_resolved));
 	}
 	else
-		if ( p_last_path != NULL )
-		  gtk_file_chooser_set_current_folder  ( GTK_FILE_CHOOSER ( dialog ) , p_last_path );
+		if ( p_last_path != nil )
+		  gtk_file_chooser_set_current_folder  ( GTK_FILE_CHOOSER ( dialog ) , MCStringGetCString(p_last_path));
 }
 
 
@@ -510,14 +515,15 @@ int MCA_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prom
 	if (!MCModeMakeLocalWindows())
 	{
 		bool t_plural = (p_options & MCA_OPTION_PLURAL) != 0;
-		char *t_resolved_path = MCS_resolvepath(p_initial);
+		MCAutoStringRef t_initial_str, t_resolved_path;
+        /* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_initial_str);
+        /* UNCHECKED */ MCS_resolvepath(*t_initial_str, &t_resolved_path);
 		char **t_rtypes;
 		if (types_to_remote_types(p_types, p_type_count, t_rtypes))
 		{
-			MCRemoteFileDialog(ep, p_title, p_prompt, t_rtypes, p_type_count * 2, NULL, t_resolved_path, false, t_plural);
+			MCRemoteFileDialog(ep, p_title, p_prompt, t_rtypes, p_type_count * 2, NULL, MCStringGetCString(*t_resolved_path), false, t_plural);
 			MCCStringArrayFree(t_rtypes, p_type_count * 2);
 		}
-		delete t_resolved_path;
 		return 1;
 	}
 
@@ -538,7 +544,9 @@ int MCA_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prom
 		gtk_file_chooser_set_select_multiple ( GTK_FILE_CHOOSER ( dialog ) ,true );
 	
 	// If we have an initial file/folder then set it.
-	set_initial_file ( dialog, p_initial, G_last_opened_path ) ;
+    MCAutoStringRef t_initial_str;
+    /* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_initial_str);
+	set_initial_file ( dialog, *t_initial_str, G_last_opened_path ) ;
 
 	// Run the dialog ... this will be replaced with our own loop which will call the REV event handler too.
 
@@ -573,14 +581,15 @@ int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_
 	if (!MCModeMakeLocalWindows())
 	{
 		bool t_plural = (p_options & MCA_OPTION_PLURAL) != 0;
-		char *t_resolved_path = MCS_resolvepath(p_initial);
+		MCAutoStringRef t_initial_str, t_resolved_path;
+        /* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_initial_str);
+        /* UNCHECKED */ MCS_resolvepath(*t_initial_str, &t_resolved_path);
 		char **t_rtypes;
 		if (types_to_remote_types(p_types, p_type_count, t_rtypes))
 		{
-			MCRemoteFileDialog(ep, p_title, p_prompt, t_rtypes, p_type_count * 2, NULL, t_resolved_path, true, t_plural);
+			MCRemoteFileDialog(ep, p_title, p_prompt, t_rtypes, p_type_count * 2, NULL, MCStringGetCString(*t_resolved_path), true, t_plural);
 			MCCStringArrayFree(t_rtypes, p_type_count * 2);
 		}
-		delete t_resolved_path;
 		return 1;
 	}
 
@@ -592,14 +601,14 @@ int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_
 		add_dialog_filters ( dialog, p_types , p_type_count );
 
 	// If we are given an initial
-	if (p_initial != nil)
+	if (p_initial != NULL)
 	{
 		if (MCS_exists(p_initial, True))
 		{
-			char *t_path;
-			t_path = MCS_resolvepath(p_initial);
-			gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog), t_path);
-			delete t_path;
+			MCAutoStringRef t_initial, t_path;
+            /* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_initial);
+			/* UNCHECKED */ MCS_resolvepath(*t_initial, &t_path);
+			gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog), MCStringGetCString(*t_path));
 		}
 		else
 		{
@@ -617,10 +626,10 @@ int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_
 				t_name = strrchr(p_initial, '/') + 1;
 				if (MCS_exists(t_folder, False))
 				{
-					char *t_new_folder;
-					t_new_folder = MCS_resolvepath(t_folder);
-					delete t_folder;
-					t_folder = t_new_folder;
+					MCAutoStringRef t_folder_str, t_new_folder;
+                    /* UNCHECKED */ MCStringCreateWithCString(t_folder, &t_folder_str);
+					/* UNCHECKED */ MCS_resolvepath(*t_folder_str, &t_new_folder);
+                    t_folder = strdup(MCStringGetCString(*t_new_folder));
 				}
 				else
 					t_folder = NULL;
@@ -654,14 +663,18 @@ int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_
 
 
 
-int MCA_folder(MCExecPoint& ep, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, unsigned int p_options)
+int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial, unsigned int p_options)
 {
 	if (!MCModeMakeLocalWindows())
 	{
-		MCAutoStringRef t_resolved_initial_path;
-        	/* UNCHECKED */ MCS_resolvepath(p_initial, &t_resolved_initial_path);
-		
-		MCRemoteFolderDialog(ep, p_title, p_prompt, *t_resolved_initial_path);
+		MCAutoStringRef t_initial_str, t_resolved_initial_path;
+        /* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_initial_str);
+        /* UNCHECKED */ MCS_resolvepath(*t_initial_str, &t_resolved_initial_path);
+        
+        MCAutoStringRef t_title_str, t_prompt_str;
+        /* UNCHECKED */ MCStringCreateWithCString(p_title, &t_title_str);
+        /* UNCHECKED */ MCStringCreateWithCString(p_prompt, &t_prompt_str);
+		MCRemoteFolderDialog(ep, *t_title_str, *t_prompt_str, *t_resolved_initial_path);
 		return 0;
 	}
 	
@@ -670,12 +683,13 @@ int MCA_folder(MCExecPoint& ep, MCStringRef p_title, MCStringRef p_prompt, MCStr
 	GtkWidget *dialog ;
 	
 	
-	dialog = create_open_dialog( p_title == nil  ? MCStringGetCString(p_prompt) : MCStringGetCString(p_title), GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER );
+	dialog = create_open_dialog( p_title == nil  ? p_prompt : p_title, GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER );
 
 	if ( p_initial != nil ) 
 	{
-		MCAutoStringRef t_resolved_initial_path;
-        	/* UNCHECKED */ MCS_resolvepath(p_initial, &t_resolved_initial_path);
+		MCAutoStringRef t_initial_str, t_resolved_initial_path;
+        /* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_initial_str);
+        /* UNCHECKED */ MCS_resolvepath(*t_initial_str, &t_resolved_initial_path);
 		gtk_file_chooser_set_current_folder ( GTK_FILE_CHOOSER ( dialog ) , MCStringGetCString(*t_resolved_initial_path));
 	}
 	
