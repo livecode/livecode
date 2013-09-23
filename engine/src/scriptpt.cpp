@@ -125,6 +125,23 @@ MCScriptPoint::MCScriptPoint(const MCString &s)
 	token_nameref = nil;
 }
 
+MCScriptPoint::MCScriptPoint(MCStringRef p_string)
+{
+	char *t_utf8_string;
+	/* UNCHECKED */ MCStringConvertToUTF8String(p_string, t_utf8_string);
+	/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_utf8_string, strlen(t_utf8_string) + 1, script);
+	curobj = NULL;
+	curhlist = NULL;
+	curhandler = NULL;
+	curptr = tokenptr = backupptr = (const uint1 *)MCDataGetBytePtr(script);
+	line = pos = 0;
+	escapes = False;
+	tagged = False;
+	in_tag = False;
+	was_in_tag = False;
+	token_nameref = nil;
+}
+
 MCScriptPoint& MCScriptPoint::operator =(const MCScriptPoint& sp)
 {
 	script = MCValueRetain(sp . script);

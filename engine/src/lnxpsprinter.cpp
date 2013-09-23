@@ -812,8 +812,12 @@ void MCPSPrinter::FlushSettings ( void )
 	SetJobCopies ( m_printersettings . copies ) ;
 	SetJobCollate ( m_printersettings . collate ) ;
 	
-	if ( m_printersettings . outputfilename != NULL ) 
-		SetDeviceOutput( m_printersettings . printertype, m_printersettings . outputfilename ) ;
+    if ( m_printersettings . outputfilename != NULL )
+    {
+        MCAutoStringRef t_string;
+        /* UNCHECKED */ MCStringCreateWithCString(m_printersettings.outputfilename, &t_string);
+        SetDeviceOutput( m_printersettings . printertype, *t_string);
+    }
 	
 	if ( m_printersettings . page_range_count > 0 )
 		SetJobRanges ( m_printersettings . page_range_count, m_printersettings . page_ranges ) ;
