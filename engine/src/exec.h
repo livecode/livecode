@@ -2138,6 +2138,9 @@ void MCInterfaceEvalObjectOfCardById(MCExecContext& ctxt, MCObjectPtr p_card, Ch
 void MCInterfaceEvalObjectOfCardOrStackById(MCExecContext& ctxt, MCObjectPtr p_card, Chunk_term p_object_type, Chunk_term p_parent_type, uinteger_t p_id, MCObjectPtr& r_object);
 void MCInterfaceEvalObjectOfCardByName(MCExecContext& ctxt, MCObjectPtr p_card, Chunk_term p_object_type, Chunk_term p_parent_type, MCNameRef p_name, MCObjectPtr& r_object);
 
+void MCInterfaceEvalStackOfObject(MCExecContext& ctxt, MCObjectPtr p_object, MCObjectPtr& r_object);
+void MCInterfaceEvalStackWithOptionalBackground(MCExecContext& ctxt, MCObjectPtr p_object, MCObjectPtr& r_object);
+
 void MCInterfaceEvalFieldTextChunkByRange(MCExecContext& ctxt, MCObjectPtr p_field, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, bool p_function, MCStringRef& r_result);
 void MCInterfaceEvalFieldTextChunkByExpression(MCExecContext& ctxt, MCObjectPtr p_field, Chunk_term p_chunk_type, integer_t p_first, bool p_function, MCStringRef& r_result);
 void MCInterfaceEvalFieldTextChunkByOrdinal(MCExecContext& ctxt, MCObjectPtr p_field, Chunk_term p_chunk_type, Chunk_term p_ordinal_type, bool p_function, MCStringRef& r_result);
@@ -2572,8 +2575,7 @@ void MCEngineSetRecursionLimit(MCExecContext& ctxt, uinteger_t p_value);
 void MCEngineGetAddress(MCExecContext& ctxt, MCStringRef &r_value);
 void MCEngineGetStacksInUse(MCExecContext& ctxt, MCStringRef &r_value);
 
-void MCEngineExecSetVariableToString(MCExecContext& ctxt, MCStringRef p_value, MCVarref *p_variable);
-void MCEngineExecSetVariable(MCExecContext& ctxt, MCValueRef p_value, int p_where, MCVarref *p_variable);
+void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_where, MCVarref *p_variable);
 
 ///////////
 
@@ -3001,8 +3003,8 @@ void MCNetworkGetNetworkInterfaces(MCExecContext& ctxt, MCStringRef& r_value);
 void MCNetworkGetAllowDatagramBroadcasts(MCExecContext& ctxt, bool& r_value);
 void MCNetworkSetAllowDatagramBroadcasts(MCExecContext& ctxt, bool p_value);
 
-void MCNetworkExecSetUrlToString(MCExecContext& ctxt, MCStringRef p_value, MCStringRef p_url);
-void MCNetworkExecSetUrl(MCExecContext& ctxt, MCStringRef p_value, int p_where, MCStringRef p_url);
+void MCNetworkExecSetUrl(MCExecContext& ctxt, MCStringRef p_value, MCStringRef p_url);
+void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCStringRef p_value, int p_where, MCStringRef p_url);
 
 ///////////
 

@@ -1635,7 +1635,7 @@ if (var != NULL)
 				MCeerror -> add(EE_CLIPBOARD_BADMIX, line, pos);
 				return ES_ERROR;
 			}
-
+            
 			MCVariableChunkPtr t_var_chunk;
 			if (t_chunk -> evalvarchunk(ep, true, false, t_var_chunk) != ES_NORMAL)
 				return ES_ERROR;
@@ -1646,7 +1646,7 @@ if (var != NULL)
 				break;
 			}
 		}
-
+ 
 		MCEngineExecDeleteVariableChunks(ctxt, t_chunks . Ptr(), t_chunks . Size());
 	}
 	else if (targets != nil && targets -> istextchunk())
@@ -1659,7 +1659,7 @@ if (var != NULL)
 				MCeerror -> add(EE_CLIPBOARD_BADMIX, line, pos);
 				return ES_ERROR;
 			}
-
+            
 			MCObjectChunkPtr t_obj_chunk;
 			if (t_chunk -> evalobjectchunk(ep, true, false, t_obj_chunk) != ES_NORMAL)
 				return ES_ERROR;

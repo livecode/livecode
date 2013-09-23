@@ -1013,7 +1013,6 @@ MCVarref *MCVarref::getrootvarref(void)
 	return this;
 }
 
-
 bool MCVarref::rootmatches(MCVarref *p_other) const
 {
 	if (this == p_other)
@@ -1296,7 +1295,7 @@ bool MCVarref::resolve(MCExecContext& ctxt, MCContainer*& r_container)
 	Exec_stat t_stat;
 	t_stat = ES_NORMAL;
     
-	MCExecPoint ep(nil, nil, nil);
+	MCExecPoint& ep = ctxt . GetEP();
 	for(uindex_t i = 0; i < dimensions && t_stat == ES_NORMAL; i++)
 	{
 		t_stat = t_dimensions[i] -> eval(ep);

@@ -1604,7 +1604,7 @@ void MCEngineEvalTemplateAsObject(MCExecContext& ctxt, uinteger_t p_template_typ
     switch ((Dest_type) p_template_type)
     {
         case DT_STACK:
-            t_object = MCtemplatestack;
+            t_object = (MCObject *)MCtemplatestack;
             break;
         case DT_AUDIO_CLIP:
             t_object = (MCObject *)MCtemplateaudio;
@@ -1713,13 +1713,7 @@ void MCEngineEvalErrorObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
     ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
 }
 
-void MCEngineExecSetVariableToString(MCExecContext& ctxt, MCStringRef p_value, MCVarref *p_variable)
-{	
-	p_variable -> clearuql();
-    p_variable -> set(ctxt, p_value, false);
-}
-
-void MCEngineExecSetVariable(MCExecContext& ctxt, MCValueRef p_value, int p_where, MCVarref *p_variable)
+void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_where, MCVarref *p_variable)
 {	
 	p_variable -> clearuql();
 	

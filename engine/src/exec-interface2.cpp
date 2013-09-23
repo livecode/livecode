@@ -3015,6 +3015,42 @@ void MCInterfaceEvalObjectOfCardByName(MCExecContext& ctxt, MCObjectPtr p_card, 
     ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
 }
 
+void MCInterfaceEvalStackOfObject(MCExecContext& ctxt, MCObjectPtr p_object, MCObjectPtr& r_object)
+{
+    if (p_object . object -> gettype() == CT_STACK)
+    {
+        r_object . object = p_object . object;
+        r_object . part_id = p_object . part_id;
+        return;
+    }
+    
+    MCCard *t_card;
+    t_card = p_object . object -> getcard();
+    
+    r_object . object = t_card -> getstack();
+    r_object . part_id = p_object . part_id;
+}
+
+void MCInterfaceEvalStackWithOptionalBackground(MCExecContext& ctxt, MCObjectPtr p_object, MCObjectPtr& r_object)
+{
+    if (p_object . object -> gettype() == CT_GROUP)
+    {
+        MCStack *sptr;
+        MCGroup *bptr;
+        bptr = static_cast<MCGroup *>(p_object . object);
+        sptr = bptr -> getcard() -> getstack();
+        sptr -> setbackground(bptr);
+        r_object . object = sptr;
+        r_object . part_id = p_object . part_id;
+        return;
+    }
+
+    r_object . object = p_object . object;
+    r_object . part_id = p_object . part_id;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // The following are used by MCGo, and do not throw any errors. If the incoming object pointer is nil, they return nil.
 
 void MCInterfaceEvalDefaultStackAsOptionalObject(MCExecContext& ctxt, MCObjectPtr& r_object)
