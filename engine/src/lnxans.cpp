@@ -429,7 +429,7 @@ const char * get_current_filter_name ( GtkWidget * dialog )
 
 bool file_has_path ( MCStringRef p_file)
 {
-	return (   MCStringBeginsWith(p_file, MCSTR("/"), kMCCompareExact) || MCStringBeginsWith(p_file, MCSTR("~"), kMCCompareExact) || MCStringBeginsWith(p_file, MCSTR("."), kMCCompareExact) );
+	return (MCStringGetNativeCharAtIndex(p_file, 0) == '/' || MCStringGetNativeCharAtIndex(p_file, 0) == '~' || MCStringGetNativeCharAtIndex(p_file, 0) == '.');
 }
 
 
@@ -445,7 +445,7 @@ void set_initial_file ( GtkWidget *dialog, MCStringRef p_initial, MCStringRef p_
 		else
         {
             MCAutoStringRef t_resolved;
-            /* UNCHECKED */ MCS_resolvepath (nil, &t_resolved);
+            /* UNCHECKED */ MCS_resolvepath (kMCEmptyString, &t_resolved);
             MCStringFormat(&t_filename, "%@%@%@", *t_resolved, MCSTR("/"), p_initial);
         }
 		MCAutoStringRef t_resolved;
