@@ -1298,21 +1298,7 @@ bool MCD_convert_from_datetime(MCExecContext &ctxt, MCDateTime p_datetime, Conve
     return t_success;
 }
 
-Boolean MCD_convert(MCExecPoint& ep, Convert_form p_primary_from, Convert_form p_secondary_from, Convert_form p_primary_to, Convert_form p_secondary_to)
-{
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_input;
-	MCAutoStringRef t_result;
-	if (!ep.copyasstringref(&t_input))
-		return false;
-	
-	if (!MCD_convert(ctxt, *t_input, p_primary_from, p_secondary_from, p_primary_to, p_secondary_to, &t_result))
-		return false;
-	
-	return (ep.setvalueref(*t_result) == ES_NORMAL);
-}
-
-bool MCD_convert(MCExecContext &ctxt, MCStringRef p_string, Convert_form p_primary_from, Convert_form p_secondary_from, Convert_form p_primary_to, Convert_form p_secondary_to, MCStringRef &r_converted)
+bool MCD_convert(MCExecContext &ctxt, MCValueRef p_input, Convert_form p_primary_from, Convert_form p_secondary_from, Convert_form p_primary_to, Convert_form p_secondary_to, MCStringRef &r_converted)
 {
 	bool t_success;
 	t_success = true;
@@ -1320,7 +1306,7 @@ bool MCD_convert(MCExecContext &ctxt, MCStringRef p_string, Convert_form p_prima
 	// MM-2012-03-01: [[ BUG 10006]] Primaries and secondaries mixed up
 	MCDateTime t_datetime;
 
-	t_success = MCD_convert_to_datetime(ctxt, p_string, p_primary_from, p_secondary_from, t_datetime);
+	t_success = MCD_convert_to_datetime(ctxt, p_input, p_primary_from, p_secondary_from, t_datetime);
 
 	MCAutoValueRef t_output;
     if (t_success)

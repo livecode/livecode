@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "stack.h"
 #include "aclip.h"
 #include "vclip.h"
@@ -1708,6 +1709,7 @@ Exec_stat MCStack::sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
 		return ES_ERROR;
 	if (editing != NULL)
 		stopedit();
+	MCExecContext ctxt(ep);
 	MCStack *olddefault = MCdefaultstackptr;
 	MCdefaultstackptr = this;
 	MCCard *cptr = curcard;
@@ -1721,12 +1723,15 @@ Exec_stat MCStack::sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
 		switch (form)
 		{
 		case ST_DATETIME:
-			if (marked && !curcard->getmark()
-			        || by->eval(ep) != ES_NORMAL
-			        || !MCD_convert(ep, CF_UNDEFINED, CF_UNDEFINED,
-			                        CF_SECONDS, CF_UNDEFINED)
-			        || !MCU_stor8(ep.getsvalue(), items[nitems].nvalue))
-				items[nitems].nvalue = -MAXREAL8;
+			if (!marked || curcard->getmark() && by->eval(ep) == ES_NORMAL)
+			{
+				MCAutoStringRef t_out;
+				if (MCD_convert(ctxt, ep.getvalueref(), CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_out))
+					if (ctxt.ConvertToReal(*t_out, items[nitems].nvalue))
+						break;
+			}
+
+			items[nitems].nvalue = -MAXREAL8;
 			break;
 		case ST_NUMERIC:
 			if ((!marked || curcard->getmark())

@@ -2422,6 +2422,8 @@ Exec_stat MCSort::sort_container(MCExecPoint &p_exec_point, Chunk_term p_type, S
 
 void MCSort::additem(MCExecPoint &ep, MCSortnode *&items, uint4 &nitems, Sort_type form, MCString &s, MCExpression *by)
 {
+	MCExecContext ctxt(ep);
+	
 	if (by != NULL)
 	{
 		MCerrorlock++;
@@ -2436,15 +2438,18 @@ void MCSort::additem(MCExecPoint &ep, MCSortnode *&items, uint4 &nitems, Sort_ty
 	switch (form)
 	{
 	case ST_DATETIME:
-		ep.setsvalue(s);
-		if (MCD_convert(ep, CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED))
 		{
-			if (!MCU_stor8(ep.getsvalue(), items[nitems].nvalue))
-				items[nitems].nvalue = -MAXREAL8;
-		}
-		else
+			MCAutoStringRef t_in, t_out;
+			/* UNCHECKED */ MCStringCreateWithOldString(s, &t_in);
+			if (MCD_convert(ctxt, *t_in, CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_out))
+			{
+				if (ctxt.ConvertToReal(*t_out, items[nitems].nvalue))
+					break;
+			}
+
 			items[nitems].nvalue = -MAXREAL8;
-		break;
+			break;
+		}
 	case ST_NUMERIC:
 		{
 			const char *sptr = s.getstring();
