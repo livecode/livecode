@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "stack.h"
 #include "aclip.h"
 #include "vclip.h"
@@ -1822,7 +1823,7 @@ void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uint2 &nstring
 	dest = tdest_str;
 }
 
-Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
+Boolean MCStack::findone(MCExecContext &ctxt, Find_mode fmode,
                          MCStringRef *strings, uint2 nstrings,
                          MCChunk *field, Boolean firstcard)
 {
@@ -1833,14 +1834,13 @@ Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
 		MCObject *optr;
 		uint4 parid;
 		MCerrorlock++;
-		MCExecPoint ep1(ep);
-		if (field->getobj(ep1, optr, parid, True) == ES_NORMAL)
+		if (field->getobj(ctxt.GetEP(), optr, parid, True) == ES_NORMAL)
 		{
 			if (optr->gettype() == CT_FIELD)
 			{
 				MCField *searchfield = (MCField *)optr;
 				while (i < nstrings)
-					if (!searchfield->find(ep, curcard->getid(), fmode,
+					if (!searchfield->find(ctxt, curcard->getid(), fmode,
 					                       strings[i], firstword))
 					{
 						MCerrorlock--;
@@ -1861,7 +1861,7 @@ Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
 	else
 	{
 		while (i < nstrings)
-			if (!curcard->find(ep, fmode, strings[i], firstcard, firstword))
+			if (!curcard->find(ctxt, fmode, strings[i], firstcard, firstword))
 				return False;
 			else
 			{
@@ -1872,7 +1872,7 @@ Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
 	}
 }
 
-void MCStack::find(MCExecPoint &ep, Find_mode fmode,
+void MCStack::find(MCExecContext &ctxt, Find_mode fmode,
                    MCStringRef tofind, MCChunk *field)
 {
 	MCStringRef *strings = NULL;
@@ -1883,7 +1883,7 @@ void MCStack::find(MCExecPoint &ep, Find_mode fmode,
 	MCField *oldfound = MCfoundfield;
 	do
 	{
-		if (findone(ep, fmode, strings, nstrings, field, firstcard))
+		if (findone(ctxt, fmode, strings, nstrings, field, firstcard))
 		{
 			delete strings;
 			MCField *newfound = MCfoundfield;
@@ -1920,7 +1920,7 @@ void MCStack::find(MCExecPoint &ep, Find_mode fmode,
 	MCresult->sets(MCnotfoundstring);
 }
 
-void MCStack::markfind(MCExecPoint &ep, Find_mode fmode,
+void MCStack::markfind(MCExecContext &ctxt, Find_mode fmode,
                        MCStringRef tofind, MCChunk *field, Boolean mark)
 {
 	if (MCfoundfield != NULL)
@@ -1931,7 +1931,7 @@ void MCStack::markfind(MCExecPoint &ep, Find_mode fmode,
 	MCCard *ocard = curcard;
 	do
 	{
-		if (findone(ep, fmode, strings, nstrings, field, False))
+		if (findone(ctxt, fmode, strings, nstrings, field, False))
 		{
 			MCfoundfield->clearfound();
 			curcard->setmark(mark);

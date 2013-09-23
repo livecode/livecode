@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "sellst.h"
 #include "undolst.h"
 #include "stack.h"
@@ -189,7 +190,7 @@ Exec_stat MCField::sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
 	return ES_NORMAL;
 }
 
-Boolean MCField::find(MCExecPoint &ep, uint4 cardid, Find_mode mode,
+Boolean MCField::find(MCExecContext &ctxt, uint4 cardid, Find_mode mode,
                       MCStringRef tofind, Boolean first)
 {
 	if (fdata == NULL || flags & F_F_DONT_SEARCH)
@@ -221,7 +222,7 @@ Boolean MCField::find(MCExecPoint &ep, uint4 cardid, Find_mode mode,
 				uint2 length = tpgptr->gettextsize();
 				uint4 offset;
 				MCString tosearch(&text[oldoffset], length - oldoffset);
-				while (MCU_offset(MCStringGetOldString(tofind), tosearch, offset, ep.getcasesensitive()))
+				while (MCU_offset(MCStringGetOldString(tofind), tosearch, offset, ctxt.GetCaseSensitive()))
 				{
 					offset += oldoffset;
 					switch (mode)
