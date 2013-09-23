@@ -1618,6 +1618,12 @@ enum Parse_errors
 
 	// {PE-0530} variance: bad parameters
 	PE_VARIANCE_BADPARAM,
+    
+    // {PE-0531} resolve image: bad image reference
+	PE_RESOLVE_BADIMAGE,
+
+    // {PE-0532} resolve image: bad object reference
+	PE_RESOLVE_BADOBJECT,
 };
 
 extern const char *MCparsingerrors;

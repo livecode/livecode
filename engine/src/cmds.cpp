@@ -2005,3 +2005,101 @@ Exec_stat MCEcho::exec(MCExecPoint& ep)
 
 	return ES_NORMAL;
 }
+
+MCResolveImage::~MCResolveImage(void)
+{
+    delete m_relative_object;
+    delete m_id_or_name;
+    delete m_it;
+}
+
+Parse_stat MCResolveImage::parse(MCScriptPoint &p_sp)
+{
+    Parse_stat t_stat;
+    t_stat = PS_NORMAL;
+    
+    // Fetch a reference to 'it'
+    getit(p_sp, m_it);
+    
+    if (t_stat == PS_NORMAL)
+        t_stat =  p_sp.skip_token(SP_FACTOR, TT_CHUNK, CT_IMAGE);
+        
+        // Parse the optional 'id' token
+    m_is_id = (PS_NORMAL == p_sp . skip_token(SP_FACTOR, TT_PROPERTY, P_ID));
+    
+    // Parse the id_or_name expression
+    if (t_stat == PS_NORMAL)
+        t_stat = p_sp . parseexp(False, True, &m_id_or_name);
+    
+    if (t_stat != PS_NORMAL)
+    {
+        MCperror->add
+        (PE_RESOLVE_BADIMAGE, p_sp);
+        return PS_ERROR;
+    }
+    
+    // Parse the 'relative to' tokens
+    if (t_stat == PS_NORMAL)
+        t_stat = p_sp . skip_token(SP_FACTOR, TT_TO, PT_RELATIVE);
+    
+    if (t_stat == PS_NORMAL)
+        t_stat = p_sp . skip_token(SP_FACTOR, TT_TO, PT_TO);
+    
+    // Parse the target object clause
+    if (t_stat == PS_NORMAL)
+    {
+        m_relative_object = new MCChunk(false);
+        t_stat = m_relative_object -> parse(p_sp, False);
+    }
+    else
+    {
+        MCperror->add
+        (PE_RESOLVE_BADOBJECT, p_sp);
+        return PS_ERROR;
+    }
+    return t_stat;
+}
+
+Exec_stat MCResolveImage::exec(MCExecPoint &p_ep)
+{
+    Exec_stat t_stat;
+    t_stat = ES_NORMAL;
+    
+    uint4 t_part_id;
+    MCObject *t_relative_object;
+    if (t_stat == ES_NORMAL)
+        t_stat = m_relative_object -> getobj(p_ep, t_relative_object, t_part_id, True);
+    
+    if (t_stat == ES_NORMAL)
+        t_stat = m_id_or_name -> eval(p_ep);
+    
+    MCImage *t_found_image;
+    t_found_image = nil;
+    if (t_stat == ES_NORMAL)
+    {
+        if (m_is_id)
+        {
+            if (p_ep . ton() == ES_ERROR)
+            {
+                MCeerror -> add(EE_VARIABLE_NAN, line, pos);
+                return ES_ERROR;
+            }
+            
+            t_found_image = t_relative_object -> resolveimageid(p_ep . getuint4());
+        }
+        else
+            t_found_image = t_relative_object -> resolveimagename(p_ep . getsvalue());
+        
+        if (t_found_image != nil)
+            t_stat = t_found_image -> getprop(0, P_LONG_ID, p_ep, False);
+        else
+            p_ep . clear();
+    }
+    
+    if (t_stat == ES_NORMAL)
+        t_stat = m_it -> set(p_ep);
+    
+    return t_stat;
+    
+}
+
