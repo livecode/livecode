@@ -150,7 +150,7 @@ uint32_t MCNativeControl::GetId(void)
 	return m_id;
 }
 
-const char *MCNativeControl::GetName(void)
+MCStringRef MCNativeControl::GetName(void)
 {
 	return m_name;
 }
@@ -171,12 +171,12 @@ bool MCNativeControl::SetName(MCStringRef p_name)
 {
 	if (m_name != nil)
 	{
-		MCCStringFree(m_name);
+		MCValueRelease(m_name);
 		m_name = nil;
 	}
 	
-	if (p_name != nil) 
-		return MCCStringClone(MCStringGetCString(p_name), m_name);
+	if (p_name != nil)
+		MCValueAssign(m_name, p_name);
 	
 	return true;
 }
@@ -372,7 +372,7 @@ bool MCNativeControl::FindByNameOrId(MCStringRef p_name, MCNativeControl*& r_con
 		return FindById(MCNumberFetchAsUnsignedInteger(*t_id), r_control);
 	
 	for(MCNativeControl *t_control = s_native_controls; t_control != nil; t_control = t_control -> m_next)
-		if (!t_control -> m_deleted && t_control -> GetName() != nil && MCStringIsEqualToCString(p_name, t_control -> GetName(), kMCCompareCaseless))
+		if (!t_control -> m_deleted && t_control -> GetName() != nil && MCStringIsEqualTo(p_name, t_control -> GetName(), kMCCompareCaseless))
 		{
 			r_control = t_control;
 			return true;
@@ -426,7 +426,7 @@ bool MCNativeControl::GetControlList(MCStringRef& r_list)
     {
         MCAutoStringRef t_control_string;
         if (t_control -> GetName() != nil)
-            t_success = MCStringCreateWithCString(t_control -> GetName(), &t_control_string);
+            t_control_string = MCValueRetain(t_control -> GetName());
         else
             t_success = MCStringFormat(&t_control_string, "%u");
         
