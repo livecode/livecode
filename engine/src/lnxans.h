@@ -23,7 +23,7 @@ extern int MCA_ask_file(MCExecPoint& ep, const char *p_title, const char *p_prom
 extern int MCA_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options);
 extern int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options);
 
-extern int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial, unsigned int p_options);
+extern int MCA_folder(MCExecPoint& ep, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, unsigned int p_options);
 
 extern MCPrinterDialogResult MCA_gtk_page_setup (PSPrinterSettings &p_settings) ;
 extern MCPrinterDialogResult MCA_gtk_printer_setup ( PSPrinterSettings &p_settings ) ;

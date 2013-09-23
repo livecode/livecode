@@ -654,15 +654,14 @@ int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_
 
 
 
-int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial, unsigned int p_options)
+int MCA_folder(MCExecPoint& ep, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, unsigned int p_options)
 {
 	if (!MCModeMakeLocalWindows())
 	{
-		char *t_resolved_initial_path = MCS_resolvepath(p_initial);
+		MCAutoStringRef t_resolved_initial_path;
+        /* UNCHECKED */ MCS_resolvepath(p_initial, &t_resolved_initial_path);
 		
-		MCRemoteFolderDialog(ep, p_title, p_prompt, t_resolved_initial_path);
-		if (t_resolved_initial_path != NULL)
-			free(t_resolved_initial_path);
+		MCRemoteFolderDialog(ep, p_title, p_prompt, *t_resolved_initial_path);
 		return 0;
 	}
 	
