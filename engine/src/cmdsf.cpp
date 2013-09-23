@@ -1825,20 +1825,15 @@ char *MCFilter::filterlines(MCStringRef sstring, MCStringRef pstring,
 
 	// Duplicate input string because the algorithm needs to change it.
 	MCAutoStringRef t_string;
-	t_string = MCValueRetain(sstring);
-
-	// Keep a copy of the original pointer so it can be freed
-	char *t_original_string;
-	t_original_string = strdup(MCStringGetCString(*t_string));
-
+    /* UNCHECKED */ MCStringMutableCopy(sstring, &t_string);
+	
 	// MW-2010-10-05: [[ Bug 9034 ]] If t_string is of zero length, then the next couple
 	//   of lines will cause problems so return empty in this case.
 	uint32_t t_length;
 	t_length = MCStringGetLength(*t_string);
 	if (t_length == 0)
 	{
-		free(t_original_string);
-		*dstring = '\0';
+        *dstring = '\0';
 		return dstring;
 	}
 
@@ -1847,9 +1842,8 @@ char *MCFilter::filterlines(MCStringRef sstring, MCStringRef pstring,
 	bool t_was_terminated;
 	t_was_terminated = (MCStringGetNativeCharAtIndex(*t_string, t_length - 1) == '\n');
 	if (t_was_terminated)
-        /* UNCHECKED */ MCStringCopySubstringAndRelease(*t_string, MCRangeMake(0, MCStringGetLength(*t_string) -1), &t_string);
-            
-
+        /* UNCHECKED */ MCStringRemove(*t_string, MCRangeMake(t_length - 1, 1));
+    
 	for(;;)
 	{
         MCAutoStringRef t_head, t_tail;
@@ -1876,9 +1870,6 @@ char *MCFilter::filterlines(MCStringRef sstring, MCStringRef pstring,
 
 	if (offset != 0 && t_was_terminated)
 		dstring[offset++] = '\n';
-
-
-	free(t_original_string);
 
 	dstring[offset] = '\0';
 	return dstring;
