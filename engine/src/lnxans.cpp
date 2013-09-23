@@ -544,9 +544,10 @@ int MCA_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prom
 		gtk_file_chooser_set_select_multiple ( GTK_FILE_CHOOSER ( dialog ) ,true );
 	
 	// If we have an initial file/folder then set it.
-    MCAutoStringRef t_initial_str;
-    /* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_initial_str);
-	set_initial_file ( dialog, *t_initial_str, G_last_opened_path ) ;
+    	MCAutoStringRef t_initial_str, t_last_opened_path;
+    	/* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_initial_str);
+	/* UNCHECKED */ MCStringCreateWithCString(G_last_opened_path, &t_last_opened_path);
+	set_initial_file ( dialog, *t_initial_str, *t_last_opened_path ) ;
 
 	// Run the dialog ... this will be replaced with our own loop which will call the REV event handler too.
 
