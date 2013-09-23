@@ -63,7 +63,7 @@ uint2 MCnbreakpoints = 0;
 Watchvar *MCwatchedvars = nil;
 uint2 MCnwatchedvars = 0;
 
-MCExecPoint *MCexecutioncontexts[MAX_CONTEXTS];
+MCExecContext *MCexecutioncontexts[MAX_CONTEXTS];
 uint2 MCnexecutioncontexts = 0;
 uint2 MCdebugcontext = MAXUINT2;
 Boolean MCmessagemessages = False;
@@ -76,12 +76,8 @@ static int2 depth;
 
 #include "srvdebug.h"
 
-void MCB_setmsg(MCStringRef p_msg)
-{
-    
-}
 
-void MCB_setmsg(MCExecPoint& ep)
+void MCB_setmsg(MCExecContext& ctxt, MCStringRef p_string)
 {
 	// At some point we will add the ability to manipulate/look at the 'message box' in a
 	// remote debugging session.
@@ -110,38 +106,25 @@ void MCB_done(MCExecPoint &ep)
 {
 }
 
-void MCB_setvar(MCExecPoint &ep, MCNameRef name)
-{
-	MCServerDebugVariableChanged(ep, name);
-}
-
 void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name)
 {
-    
+	MCServerDebugVariableChanged(ctxt, p_value, name);
 }
 
 #else
 
-void MCB_setmsg(MCStringRef p_msg)
-{
-    MCExecPoint ep(nil, nil, nil);
-    ep . setvalueref(p_msg);
-    MCB_setmsg(ep);
-}
-
-void MCB_setmsg(MCExecPoint &ep)
+void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_string)
 {
 	if (MCnoui)
 	{
-		MCS_write(ep.getsvalue().getstring(), sizeof(char),
-		          ep.getsvalue().getlength(), IO_stdout);
-		uint4 length = ep.getsvalue().getlength();
-		if (length && ep.getsvalue().getstring()[length - 1] != '\n')
+		MCS_write(MCStringGetCString(p_string), sizeof(char), MCStringGetLength(p_string), IO_stdout);
+		uint4 length = MCStringGetLength(p_string);
+		if (length && MCStringGetCharAtIndex(p_string, length - 1) != '\n')
 			MCS_write("\n", sizeof(char), 1, IO_stdout);
 		return;
 	}
 	
-	if (!MCModeHandleMessageBoxChanged(ep))
+	if (!MCModeHandleMessageBoxChanged(ctxt, p_string))
 	{
 		// MW-2004-11-17: Now use global 'MCmbstackptr' instead
 		if (MCmbstackptr == NULL)
@@ -163,12 +146,12 @@ void MCB_setmsg(MCExecPoint &ep)
 			MCCard *cptr = MCmbstackptr->getchild(CT_THIS, kMCEmptyString, CT_CARD);
 			MCField *fptr = (MCField *)cptr->getchild(CT_FIRST, kMCEmptyString, CT_FIELD, CT_CARD);
 			if (fptr != NULL)
-				fptr->settext_oldstring(0, ep.getsvalue(), False);
+				fptr->settext(0, p_string, False);
 		}
 	}
 }
 
-void MCB_message(MCExecPoint &ep, MCNameRef mess, MCParameter *p)
+void MCB_message(MCExecContext &ctxt, MCNameRef mess, MCParameter *p)
 {
 	Boolean exitall = MCexitall;
 	MCSaveprops sp;
@@ -179,7 +162,7 @@ void MCB_message(MCExecPoint &ep, MCNameRef mess, MCParameter *p)
 	if (MCtracestackptr != NULL)
 		MCtracewindow = MCtracestackptr->getw();
 	else
-		MCtracewindow = ep.getobj()->getw();
+		MCtracewindow = ctxt.GetObject()->getw();
 	MCVariable *oldresult = MCresult;
 	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCdebugresult"), MCresult);
 	MCtracereturn = False;
@@ -194,7 +177,7 @@ void MCB_message(MCExecPoint &ep, MCNameRef mess, MCParameter *p)
 
 	// OK-2008-11-28: [[Bug 7491]] - It seems that using the "send" parameter causes problems with the MetaCard debugger
 	// So instead of doing that, I've added a new optional parameter to MCObject::send, called p_force, and used this instead.
-	if (ep . getobj() -> message(mess, p, True, False, True) == ES_NORMAL)
+	if (ctxt.GetObject() -> message(mess, p, True, False, True) == ES_NORMAL)
 	{
 		MCcheckstack = oldcheck;
 		//  if (depth++ > 1)
@@ -206,7 +189,7 @@ void MCB_message(MCExecPoint &ep, MCNameRef mess, MCParameter *p)
 		}
 		//  depth--;
 		if (MCtracedobject == NULL)
-			MCtracedobject = ep.getobj();
+			MCtracedobject = ctxt.GetObject();
 		if (MCtraceabort)
 		{
 			MCtraceabort = False;
@@ -224,17 +207,17 @@ void MCB_message(MCExecPoint &ep, MCNameRef mess, MCParameter *p)
 	 MCexitall = exitall;
 }
 
-void MCB_prepmessage(MCExecPoint &ep, MCNameRef mess, uint2 line, uint2 pos, uint2 id, MCStringRef p_info)
+void MCB_prepmessage(MCExecContext &ctxt, MCNameRef mess, uint2 line, uint2 pos, uint2 id, MCStringRef p_info)
 {
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
-		ep.setline(line);
-		MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+		ctxt.GetEP().setline(line);
+		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
 	MCParameter p1, p2, p3, p4;
-	p1.setvalueref_argument(ep.gethandler()->getname());
+	p1.setvalueref_argument(ctxt.GetHandler()->getname());
 	p1.setnext(&p2);
 	p2.setn_argument((real8)line);
 	p2.setnext(&p3);
@@ -244,8 +227,9 @@ void MCB_prepmessage(MCExecPoint &ep, MCNameRef mess, uint2 line, uint2 pos, uin
 		p3.setnext(&p4);
 		MCeerror->add(id, line, pos);
 
-		ep.getobj()->getprop(0, P_LONG_ID, ep, False);
-		MCeerror->add(EE_OBJECT_NAME, 0, 0, ep.getsvalue());
+		MCAutoValueRef t_val;
+		ctxt.GetObject()->getvariantprop(ctxt, 0, P_LONG_ID, False, &t_val);
+		MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_val);
 		p4.sets_argument(MCeerror->getsvalue());
 	}
 	else if (!MCStringIsEmpty(p_info))
@@ -253,21 +237,21 @@ void MCB_prepmessage(MCExecPoint &ep, MCNameRef mess, uint2 line, uint2 pos, uin
 		p3.setnext(&p4);
 		p4.setvalueref_argument(p_info);
 	}
-	MCB_message(ep, mess, &p1);
+	MCB_message(ctxt, mess, &p1);
 	if (id != 0)
 		MCeerror->clear();
 	if (added)
 		MCnexecutioncontexts--;
 }
 
-void MCB_trace(MCExecPoint &ep, uint2 line, uint2 pos)
+void MCB_trace(MCExecContext &ctxt, uint2 line, uint2 pos)
 {
 	uint2 i;
 
 	if (MCtrace && (MCtraceuntil == MAXUINT2 || MCnexecutioncontexts == MCtraceuntil))
 	{
 		MCtraceuntil = MAXUINT2;
-		MCB_prepmessage(ep, MCM_trace, line, pos, 0);
+		MCB_prepmessage(ctxt, MCM_trace, line, pos, 0);
 	}
 	else
 	{
@@ -278,22 +262,22 @@ void MCB_trace(MCExecPoint &ep, uint2 line, uint2 pos)
 			if (MCbreakpoints[i].line == line)
 			{
 				MCParentScriptUse *t_parentscript;
-				t_parentscript = ep . getparentscript();
-				if (t_parentscript == NULL && MCbreakpoints[i].object == ep.getobj() ||
+				t_parentscript = ctxt . GetParentScript();
+				if (t_parentscript == NULL && MCbreakpoints[i].object == ctxt.GetObject() ||
 					t_parentscript != NULL && MCbreakpoints[i].object == t_parentscript -> GetParent() -> GetObject())
-				MCB_prepmessage(ep, MCM_trace_break, line, pos, 0, MCbreakpoints[i].info);
+				MCB_prepmessage(ctxt, MCM_trace_break, line, pos, 0, MCbreakpoints[i].info);
 			}
 	}
 }
 
-void MCB_break(MCExecPoint &ep, uint2 line, uint2 pos)
+void MCB_break(MCExecContext &ctxt, uint2 line, uint2 pos)
 {
-	MCB_prepmessage(ep, MCM_trace_break, line, pos, 0);
+	MCB_prepmessage(ctxt, MCM_trace_break, line, pos, 0);
 }
 
 bool s_in_trace_error = false;
 
-void MCB_error(MCExecPoint &ep, uint2 line, uint2 pos, uint2 id)
+void MCB_error(MCExecContext &ctxt, uint2 line, uint2 pos, uint2 id)
 {
 	// OK-2009-03-25: [[Bug 7517]] - The crash described in this bug report is probably caused by a stack overflow. This overflow is due to
 	// errors being thrown in the IDE (or in this case GLX2) component of the debugger. This should prevent traceError from recursing.
@@ -301,52 +285,32 @@ void MCB_error(MCExecPoint &ep, uint2 line, uint2 pos, uint2 id)
 		return;
 	
 	s_in_trace_error = true;
-	MCB_prepmessage(ep, MCM_trace_error, line, pos, id);
+	MCB_prepmessage(ctxt, MCM_trace_error, line, pos, id);
 	MCerrorlock++; // suppress errors as stack unwinds
 	s_in_trace_error = false;
 }
 
-void MCB_done(MCExecPoint &ep)
+void MCB_done(MCExecContext &ctxt)
 {
-	MCB_message(ep, MCM_trace_done, NULL);
-}
-
-void MCB_setvar(MCExecPoint &ep, MCNameRef name)
-{
-	Boolean added = False;
-	if (MCnexecutioncontexts < MAX_CONTEXTS)
-	{
-		MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
-		added = True;
-	}
-	MCParameter p1, p2, p3;
-	p1.setn_argument(ep.getline());
-	p1.setnext(&p2);
-	p2.setvalueref_argument(name);
-	p2.setnext(&p3);
-	p3.sets_argument(ep.getsvalue());
-	MCB_message(ep, MCM_update_var, &p1);
-	if (added)
-		MCnexecutioncontexts--;
+	MCB_message(ctxt, MCM_trace_done, NULL);
 }
 
 void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name)
 {
-    MCExecPoint& ep = ctxt . GetEP();
-    
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
-		MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
+
 	MCParameter p1, p2, p3;
-	p1.setn_argument(ep.getline());
+	p1.setn_argument(ctxt.GetEP().getline());
 	p1.setnext(&p2);
 	p2.setvalueref_argument(name);
 	p2.setnext(&p3);
 	p3.setvalueref_argument(p_value);
-	MCB_message(ep, MCM_update_var, &p1);
+	MCB_message(ctxt, MCM_update_var, &p1);
 	if (added)
 		MCnexecutioncontexts--;
 }

@@ -695,8 +695,9 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 		{
 			tptr -> clear_argument();
 			Exec_stat stat;
+			MCExecContext ctxt(ep);
 			while ((stat = tptr->eval(ep)) != ES_NORMAL && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-				MCB_error(ep, line, pos, EE_FUNCTION_BADSOURCE);
+				MCB_error(ctxt, line, pos, EE_FUNCTION_BADSOURCE);
 			if (stat != ES_NORMAL)
 			{
 				MCeerror->add(EE_FUNCTION_BADSOURCE, line, pos);
@@ -722,10 +723,11 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 	MCEPptr = &ep;
 	Exec_stat stat = ES_NOT_HANDLED;
 	Boolean added = False;
+	MCExecContext ctxt(ep);
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
 		ep.setline(line);
-		MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
 	

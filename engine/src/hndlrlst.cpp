@@ -240,10 +240,10 @@ Parse_stat MCHandlerlist::findvar(MCNameRef p_name, bool p_ignore_uql, MCVarref 
 
 	if (MCdebugcontext != MAXUINT2)
 	{
-		MCExecPoint *epptr = MCexecutioncontexts[MCdebugcontext];
-		if (epptr->gethlist() != this)
-			if (epptr->gethandler()->findvar(p_name, dptr) != PS_NORMAL)
-				return epptr->gethlist()->findvar(p_name, false, dptr);
+		MCExecContext *ctxtptr = MCexecutioncontexts[MCdebugcontext];
+		if (ctxtptr->GetEP().gethlist() != this)
+			if (ctxtptr->GetHandler()->findvar(p_name, dptr) != PS_NORMAL)
+				return ctxtptr->GetEP().gethlist()->findvar(p_name, false, dptr);
 			else
 				return PS_NORMAL;
 	}

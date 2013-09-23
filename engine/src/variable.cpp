@@ -625,6 +625,7 @@ bool MCVariable::ensureglobal(MCNameRef p_name, MCVariable*& r_var)
 
 void MCVariable::synchronize(MCExecPoint& ep, Boolean notify)
 {
+	MCExecContext ctxt(ep);
 	if (is_env)
 	{
 		if (!isdigit(MCNameGetCharAtIndex(name, 1)) && MCNameGetCharAtIndex(name, 1) != '#')
@@ -641,7 +642,9 @@ void MCVariable::synchronize(MCExecPoint& ep, Boolean notify)
 	else if (is_msg)
 	{
 		eval(ep);
-		MCB_setmsg(ep);
+		MCAutoStringRef t_string;
+		/* UNCHECPED */ ep.copyasstringref(&t_string);
+		MCB_setmsg(ctxt, *t_string);
 	}
 
 	if (notify && MCnwatchedvars)
@@ -662,16 +665,18 @@ void MCVariable::synchronize(MCExecPoint& ep, Boolean notify)
 
 				// Otherwise, trigger the setvar message.
 				eval(ep);
+				MCAutoStringRef t_string;
+				/* UNCHECKED */ ep.copyasstringref(&t_string);
 				if (*MCwatchedvars[i].expression)
 				{
 					MCExecPoint ep2(ep);
 					ep2.setsvalue(MCwatchedvars[i].expression);
 					Boolean d;
 					if (ep.gethandler()->eval(ep2) == ES_NORMAL && MCU_stob(ep2.getsvalue(), d) && d)
-						MCB_setvar(ep, name);
+						MCB_setvar(ctxt, *t_string, name);
 				}
 				else
-					MCB_setvar(ep, name);
+					MCB_setvar(ctxt, *t_string, name);
 
 				break;
 			}
@@ -701,7 +706,7 @@ void MCVariable::synchronize(MCExecContext& ctxt, MCValueRef p_value, bool p_not
         
         MCAutoStringRef t_msg;
         if (ctxt . ConvertToString(*t_value, &t_msg))
-            MCB_setmsg(*t_msg);
+            MCB_setmsg(ctxt, *t_msg);
 	}
     
 	if (p_notify && MCnwatchedvars)

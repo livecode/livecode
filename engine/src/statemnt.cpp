@@ -434,6 +434,7 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
     }
 #endif
     
+	MCExecContext ctxt(ep);
 	Exec_stat stat;
 	MCParameter *tptr = params;
 	while (tptr != NULL)
@@ -445,7 +446,7 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 		{
 			tptr -> clear_argument();
 			while ((stat = tptr->eval(ep)) != ES_NORMAL && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-				MCB_error(ep, line, pos, EE_STATEMENT_BADPARAM);
+				MCB_error(ctxt, line, pos, EE_STATEMENT_BADPARAM);
 			if (stat != ES_NORMAL)
 			{
 				MCeerror->add(EE_STATEMENT_BADPARAM, line, pos);
@@ -467,7 +468,7 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
 		ep.setline(line);
-		MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
 

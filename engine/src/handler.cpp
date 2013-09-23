@@ -391,9 +391,10 @@ Exec_stat MCHandler::exec(MCExecPoint &ep, MCParameter *plist)
 	Exec_stat stat = ES_NORMAL;
 	MCStatement *tspr = statements;
 
+	MCExecContext ctxt(ep);
 	if ((MCtrace || MCnbreakpoints) && tspr != NULL)
 	{
-		MCB_trace(ep, firstline, 0);
+		MCB_trace(ctxt, firstline, 0);
 
 		// OK-2008-09-05: [[Bug 7115]] - Debugger doesn't stop if traceAbort is set following a breakpoint on the first line of a handler.
 		if (MCexitall)
@@ -403,7 +404,7 @@ Exec_stat MCHandler::exec(MCExecPoint &ep, MCParameter *plist)
 	{
 		if (MCtrace || MCnbreakpoints)
 		{
-			MCB_trace(ep, tspr->getline(), tspr->getpos());
+			MCB_trace(ctxt, tspr->getline(), tspr->getpos());
 			if (MCexitall)
 				break;
 		}
@@ -428,7 +429,7 @@ Exec_stat MCHandler::exec(MCExecPoint &ep, MCParameter *plist)
 			if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
 				do
 				{
-					MCB_error(ep, tspr->getline(), tspr->getpos(), EE_HANDLER_BADSTATEMENT);
+					MCB_error(ctxt, tspr->getline(), tspr->getpos(), EE_HANDLER_BADSTATEMENT);
 				}
 				while (MCtrace && (stat = tspr->exec(ep)) != ES_NORMAL);
 			if (stat != ES_NORMAL)
@@ -465,7 +466,7 @@ Exec_stat MCHandler::exec(MCExecPoint &ep, MCParameter *plist)
 		stat = ES_NORMAL;
 
 	if (!MCexitall && (MCtrace || MCnbreakpoints))
-		MCB_trace(ep, lastline, 0);
+		MCB_trace(ctxt, lastline, 0);
 
 	executing--;
 	if (params != NULL)
@@ -877,11 +878,11 @@ Exec_stat MCHandler::doscript(MCExecPoint &ep, uint2 line, uint2 pos)
 	return ES_NORMAL;
 }
 
-/* WRAPPER */ void MCHandler::doscript(MCExecContext& ctxt, MCStringRef p_script)
+/* WRAPPER */ void MCHandler::doscript(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos)
 {
 	MCExecPoint ep(ctxt.GetEP());
 	/* UNCHECKED */ ep.setvalueref(p_script);
-	Exec_stat stat = doscript(ep, 0, 0);
+	Exec_stat stat = doscript(ep, p_line, p_pos);
 	if (stat != ES_ERROR)
 		return;
 
