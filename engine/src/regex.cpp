@@ -172,11 +172,7 @@ regerror(int errcode, const regex_t *preg, MCStringRef &errbuf)
     }
     else
     {
-        /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *) message, MCStringGetLength(errbuf) - 1, errbuf);
-        MCAutoStringRef t_errbuf_copy;
-        MCStringMutableCopy(errbuf, &t_errbuf_copy);
-        /* UNCHECKED */ MCStringAppendNativeChars(*t_errbuf_copy, (const char_t)0, 1);
-        MCValueAssign(errbuf, *t_errbuf_copy);
+        /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *) message, strlen(message), errbuf);
     }
 	
 	return length + addlength;
