@@ -1956,7 +1956,7 @@ void MCStack::markfind(MCExecPoint &ep, Find_mode fmode,
 		curcard = (MCCard *)curcard->next();
 	}
 	while (curcard != ocard);
-    for (uint i = 0 ; i < nstrings ; i++)
+    for (uint4 i = 0 ; i < nstrings ; i++)
         MCValueRelease(strings[i]);
 	delete strings;
 	if (MCfoundfield != NULL)

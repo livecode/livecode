@@ -39,6 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 #include "exec.h"
+#include "system.h"
 
 #define QA_NPOINTS 10
 
@@ -2546,7 +2547,7 @@ void MCU_multibytetounicode(const char *p_mbstring, uint4 p_mblength,
 	if (p_mbcharset == LCH_UTF8)
 		r_used = UTF8ToUnicode(p_mbstring, p_mblength, (uint2 *)p_buffer, p_capacity);
 	else
-		MCS_multibytetounicode(p_mbstring, p_mblength, p_buffer, p_capacity, r_used, p_mbcharset);
+        r_used = MCsystem ->TextConvert((const void*)p_mbstring, p_mblength, (void*)p_buffer, p_capacity, p_mbcharset, LCH_UNICODE);
 }
 
 // MW-2005-02-08: New implementation of unicodetomultibyte
@@ -2556,10 +2557,21 @@ void MCU_unicodetomultibyte(const char *p_ucstring, uint4 p_uclength,
 	if (p_mbcharset == LCH_UTF8)
 		r_used = UnicodeToUTF8((uint2 *)p_ucstring, p_uclength, p_buffer, p_capacity);
 	else
-		MCS_unicodetomultibyte(p_ucstring, p_uclength, p_buffer, p_capacity, r_used, p_mbcharset);
+        r_used = MCsystem ->TextConvert((const void*)p_ucstring, p_uclength, (void*)p_buffer, p_capacity, LCH_UNICODE, p_mbcharset);
 }
 
 //////////
+
+bool MCU_multibytetounicode(MCDataRef p_input, MCDataRef &r_output)
+{
+    MCAutoStringRef t_string;
+
+    if (!MCStringDecode(p_input, kMCStringEncodingUTF8, false, &t_string))
+        return false;
+
+    if (!MCStringEncode(*t_string, kMCStringEncodingUTF16, false, r_output))
+        return false;
+}
 
 bool MCU_multibytetounicode(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_unicode)
 {
@@ -2581,6 +2593,17 @@ bool MCU_multibytetounicode(const MCString& p_src, uinteger_t p_charset, MCStrin
 bool MCU_multibytetounicode(MCStringRef p_src, uinteger_t p_charset, MCStringRef& r_unicode)
 {
 	return MCU_multibytetounicode(MCStringGetOldString(p_src), p_charset, r_unicode);
+}
+
+bool MCU_unicodetomultibyte(MCDataRef p_input, MCDataRef& r_output)
+{
+    MCAutoStringRef t_string;
+
+    if (!MCStringDecode(p_input, kMCStringEncodingUTF16, false, &t_string))
+        return false;
+
+    if (!MCStringEncode(*t_string, kMCStringEncodingUTF8, false, r_output))
+        return false;
 }
 
 bool MCU_unicodetomultibyte(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_multibyte)

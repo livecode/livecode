@@ -1621,7 +1621,9 @@ static bool xpm_parse_color(const char *p_line, uindex_t p_color_start, uindex_t
 	if (p_color_end - p_color_start != 7 || p_line[p_color_start] != '#')
 	{
 		MCColor t_color;
-		if (MCscreen->lookupcolor(MCString(p_line + p_color_start, p_color_end - p_color_start), &t_color))
+        MCAutoStringRef t_s;
+        /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *) p_line + p_color_start, p_color_end - p_color_start, &t_s);
+		if (MCscreen->lookupcolor(*t_s, &t_color))
 		{
 			r_color = 0xFF000000 |
 				((t_color.red & 0xFF00) << 8) |

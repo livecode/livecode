@@ -2823,7 +2823,8 @@ Exec_stat MCObject::setprop(uint32_t p_part_id, Properties p_which, MCExecPoint&
 			case kMCPropertyTypeAny:
 			{
 				MCAutoValueRef t_value;
-				/* UNCHECKED */ ep . copyasvalueref(&t_value);
+				if (!ep . copyasvalueref(&t_value))
+					return ES_ERROR;
 				((void(*)(MCExecContext&, MCObjectPtr, MCValueRef))t_info -> setter)(ctxt, t_object, *t_value);
 			}
 			break;

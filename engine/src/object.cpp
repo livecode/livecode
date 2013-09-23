@@ -1442,7 +1442,7 @@ void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite)
 	}
 }
 
-#ifdef  LEGACY EXEC 
+#ifdef LEGACY_EXEC 
 Boolean MCObject::setcolor(uint2 index, const MCString &data)
 {
 	uint2 i, j;
@@ -2038,6 +2038,29 @@ Exec_stat MCObject::message_with_valueref_args(MCNameRef mess, MCValueRef v1, MC
 	return message(mess, &p1);
 }
 
+Exec_stat MCObject::message_with_valueref_args(MCNameRef mess, MCValueRef v1, MCValueRef v2, MCValueRef v3)
+{
+	MCParameter p1, p2, p3;
+	p1.setvalueref_argument(v1);
+	p1.setnext(&p2);
+	p2.setvalueref_argument(v2);
+	p2.setnext(&p3);
+	p3.setvalueref_argument(v3);
+	return message(mess, &p1);
+}
+
+Exec_stat MCObject::message_with_valueref_args(MCNameRef mess, MCValueRef v1, MCValueRef v2, MCValueRef v3, MCValueRef v4)
+{
+	MCParameter p1, p2, p3, p4;
+	p1.setvalueref_argument(v1);
+	p1.setnext(&p2);
+	p2.setvalueref_argument(v2);
+	p2.setnext(&p3);
+	p3.setvalueref_argument(v3);
+	p3.setnext(&p4);
+	p4.setvalueref_argument(v4);
+	return message(mess, &p1);
+}
 Exec_stat MCObject::message_with_args(MCNameRef mess, int4 v1)
 {
 	MCParameter p1;
@@ -2866,7 +2889,9 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 				return stat;
 			if ((stat = IO_read_uint2(&fontstyle, stream)) != IO_NORMAL)
 				return stat;
-			setfontattrs(fontname, fontsize, fontstyle);
+            MCAutoStringRef t_fontname;
+            /* UNCHECKED */ MCStringCreateWithCString(fontname, &t_fontname);
+			setfontattrs(*t_fontname, fontsize, fontstyle);
 			delete fontname;
 		}
 	}
@@ -4440,10 +4465,10 @@ void MCObject::setfontattrs(uint32_t p_which, MCNameRef p_textfont, uint2 p_text
 
 // MW-2012-02-17: [[ LogFonts ]] Set the logical font attrs to the given values
 //   using a c-string for the name.
-void MCObject::setfontattrs(const char *p_textfont, uint2 p_textsize, uint2 p_textstyle)
+void MCObject::setfontattrs(MCStringRef p_textfont, uint2 p_textsize, uint2 p_textstyle)
 {
 	MCAutoNameRef t_textfont_name;
-	/* UNCHECKED */ t_textfont_name . CreateWithCString(p_textfont);
+	/* UNCHECKED */ MCNameCreate(p_textfont, t_textfont_name);
 	setfontattrs(FF_HAS_ALL_FATTR, t_textfont_name, p_textsize, p_textstyle);
 }
 

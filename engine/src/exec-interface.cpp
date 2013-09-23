@@ -3372,7 +3372,7 @@ void MCInterfaceExecImportAudioClip(MCExecContext& ctxt, MCStringRef p_filename)
 	if (t_stream != NULL)
 	{
 		MCAudioClip *aptr = new MCAudioClip;
-		if (!aptr->import(MCStringGetCString(p_filename), t_stream))
+		if (!aptr->import(p_filename, t_stream))
 		{
 			ctxt . LegacyThrow(EE_IMPORT_CANTREAD);
 			delete aptr;
@@ -3398,7 +3398,7 @@ void MCInterfaceExecImportVideoClip(MCExecContext& ctxt, MCStringRef p_filename)
 	if (t_stream != NULL)
 	{
 		MCVideoClip *vptr = new MCVideoClip;
-		if (!vptr->import(MCStringGetCString(p_filename), t_stream))
+		if (!vptr->import(p_filename, t_stream))
 		{
 			ctxt . LegacyThrow(EE_IMPORT_CANTREAD);
 			delete vptr;
