@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "sellst.h"
 #include "undolst.h"
 #include "stack.h"
@@ -56,10 +57,11 @@ const char *MCliststylestrings[] =
 	nil
 };
 
-Exec_stat MCField::sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
+Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
                         Sort_type dir, Sort_type form, MCExpression *by)
 {
-	MCSortnode *items = NULL;
+	MCExecPoint &ep = ctxt.GetEP();
+	MCAutoArray<MCSortnode> items;
 	uint4 nitems = 0;
 	uint4 itemsize = 0;
 	char *itemtext = NULL;
@@ -84,7 +86,7 @@ Exec_stat MCField::sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
 			nitems++;
 			sptr = eptr + 1;
 		}
-		items = new MCSortnode[nitems + 1];
+		items.Extend(nitems + 1);
 		nitems = 0;
 		sptr = itemtext;
 		do
@@ -96,7 +98,9 @@ Exec_stat MCField::sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
 			}
 			else
 				s.set(sptr, strlen(sptr));
-			MCSort::additem(ep, items, nitems, form, s, by);
+			MCAutoStringRef t_string;
+			/* UNCHECKED */ MCStringCreateWithOldString(s, &t_string);
+			MCSort::additem(ctxt, items.Ptr(), nitems, form, *t_string, by);
 			items[nitems - 1].data = (void *)sptr;
 			sptr = eptr;
 		}
@@ -121,14 +125,16 @@ Exec_stat MCField::sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
 				tpgptr = tpgptr->next();
 			}
 			while (tpgptr != pgptr);
-			items = new MCSortnode[nitems];
+			items.Extend(nitems);
 			nitems = 0;
 			do
 			{
 				s.set(tpgptr->gettext(), tpgptr->gettextsize());
 				if (tpgptr->next() != pgptr || tpgptr->gettextsize())
 				{
-					MCSort::additem(ep, items, nitems, form, s, by);
+					MCAutoStringRef t_string;
+					/* UNCHECKED */ MCStringCreateWithOldString(s, &t_string);
+					MCSort::additem(ctxt, items.Ptr(), nitems, form, *t_string, by);
 					items[nitems - 1].data = (void *)tpgptr;
 				}
 				tpgptr = tpgptr->next();
@@ -136,7 +142,7 @@ Exec_stat MCField::sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
 			while (tpgptr != pgptr);
 		}
 	}
-	MCU_sort(items, nitems, dir, form);
+	MCU_sort(items.Ptr(), nitems, dir, form);
 	if (type == CT_ITEM)
 	{
 		char *newtext = new char[itemsize + 1];
@@ -148,9 +154,7 @@ Exec_stat MCField::sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
 			uint4 length = strlen((const char *)items[i].data);
 			strncpy(&newtext[tlength], (const char *)items[i].data, length);
 			tlength += length;
-			if ((form == ST_INTERNATIONAL || form == ST_TEXT)
-			        && (!ep.getcasesensitive() || by != NULL))
-				delete items[i].svalue;
+
 			if (i < nitems - 1)
 				newtext[tlength++] = ep.getitemdel();
 			newtext[tlength] = '\0';
@@ -168,9 +172,7 @@ Exec_stat MCField::sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
 			MCParagraph *tpgptr = (MCParagraph *)items[i].data;
 			tpgptr->remove(pgptr);
 			tpgptr->appendto(newparagraphs);
-			if ((form == ST_INTERNATIONAL || form == ST_TEXT)
-			        && (!ep.getcasesensitive() || by != NULL))
-				delete items[i].svalue;
+
 		}
 		if (pgptr != NULL)
 			pgptr->appendto(newparagraphs);
@@ -185,7 +187,7 @@ Exec_stat MCField::sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
 			layer_redrawall();
 		}
 	}
-	delete items;
+	
 	return ES_NORMAL;
 }
 

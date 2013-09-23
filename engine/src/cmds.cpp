@@ -2420,82 +2420,54 @@ Exec_stat MCSort::sort_container(MCExecPoint &p_exec_point, Chunk_term p_type, S
 }
 #endif /* MCSort::sort_container */
 
-void MCSort::additem(MCExecPoint &ep, MCSortnode *&items, uint4 &nitems, Sort_type form, MCString &s, MCExpression *by)
+void MCSort::additem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, Sort_type form, MCValueRef p_value, MCExpression *by)
 {
-	MCExecContext ctxt(ep);
-	
+	MCAutoValueRef t_value;
 	if (by != NULL)
 	{
 		MCerrorlock++;
-		ep.setsvalue(s);
-		MCeach->set(ep);
-		if (by->eval(ep) == ES_NORMAL)
-			s = ep.getsvalue();
+		ctxt.GetEP().setvalueref(p_value);
+		MCeach->set(ctxt.GetEP());
+		if (by->eval(ctxt.GetEP()) == ES_NORMAL)
+			t_value = ctxt.GetEP().getvalueref();
 		else
-			s = MCnullmcstring;
+			t_value = MCValueRetain(kMCEmptyString);
 		MCerrorlock--;
 	}
+	else
+		t_value = MCValueRetain(p_value);
+		
 	switch (form)
 	{
 	case ST_DATETIME:
 		{
-			MCAutoStringRef t_in, t_out;
-			/* UNCHECKED */ MCStringCreateWithOldString(s, &t_in);
-			if (MCD_convert(ctxt, *t_in, CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_out))
+			MCAutoStringRef t_out;
+			if (MCD_convert(ctxt, *t_value, CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_out))
 			{
-				if (ctxt.ConvertToReal(*t_out, items[nitems].nvalue))
+				if (ctxt.ConvertToNumber(*t_out, items[nitems].nvalue))
 					break;
 			}
 
-			items[nitems].nvalue = -MAXREAL8;
+			/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
 			break;
 		}
 	case ST_NUMERIC:
 		{
-			const char *sptr = s.getstring();
-			uint4 length = s.getlength();
-			
-			// MW-2013-03-21: [[ Bug ]] Make sure we skip any whitespace before the
-			//   number starts - making it consistent with string->number conversions
-			//   elsewhere.
-			MCU_skip_spaces(sptr, length);
-			
-		    // REVIEW - at the moment the numeric prefix of the string is used to
-			//   derive the sort key e.g. 1000abc would get processed as 1000.
-			while (length && (isdigit((uint1)*sptr) ||
-			                  *sptr == '.' || *sptr == '-' || *sptr == '+'))
-			{
-				sptr++;
-				length--;
-			}
-			s.setlength(s.getlength() - length);
-			if (!MCU_stor8(s, items[nitems].nvalue))
-				items[nitems].nvalue = -MAXREAL8;
+			if (!ctxt.ConvertToNumber(*t_value, items[nitems].nvalue))
+				/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
 		}
 		break;
 	default:
-		if (ep.getcasesensitive() && by == NULL)
-			items[nitems].svalue = (char *)s.getstring();
+		if (ctxt.GetCaseSensitive())
+			/* UNCHECKED */ ctxt.ConvertToString(*t_value, items[nitems].svalue);
 		else
-			if (ep.getcasesensitive())
-				items[nitems].svalue = s.clone();
-			else
-			{
-#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
-				if (form == ST_INTERNATIONAL)
-				{
-					extern char *MCSystemLowercaseInternational(const MCString& s);
-					items[nitems].svalue = MCSystemLowercaseInternational(s);
-				}
-				else
-#endif
-
-				{
-					items[nitems].svalue = new char[s.getlength() + 1];
-					MCU_lower(items[nitems].svalue, s);
-					items[nitems].svalue[s.getlength()] = '\0';
-				}
-			}
+		{
+			MCStringRef t_fixed, t_mutable;
+			/* UNCHECKED */ ctxt.ConvertToString(*t_value, t_fixed);
+			/* UNCHECKED */ MCStringMutableCopyAndRelease(t_fixed, t_mutable);
+			/* UNCHECKED */ MCStringLowercase(t_mutable);
+			/* UNCHECKED */ MCStringCopyAndRelease(t_fixed, items[nitems].svalue);
+		}
 		break;
 	}
 	nitems++;

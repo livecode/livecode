@@ -3710,81 +3710,53 @@ void MCInterfaceExecExportImageToFile(MCExecContext& ctxt, MCImage *p_target, in
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCInterfaceExecSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, int form, MCStringRef p_string, MCExpression *by)
+void MCInterfaceExecSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, int form, MCValueRef p_input, MCExpression *by)
 {
-	MCAutoStringRef t_output;
+	MCAutoValueRef t_output;
 	if (by != NULL)
 	{
 		MCerrorlock++;
-		ctxt . GetEP() . setvalueref(p_string);
+		ctxt . GetEP() . setvalueref(p_input);
 		MCeach->set(ctxt . GetEP());
 		if (by->eval(ctxt . GetEP()) == ES_NORMAL)
-			ctxt . GetEP() . copyasmutablestringref(&t_output);
+			t_output = MCValueRetain(ctxt.GetEP().getvalueref());
 		else
-			MCStringMutableCopy(kMCEmptyString, &t_output);
+			t_output = MCValueRetain(kMCEmptyString);
 		MCerrorlock--;
 	}
 	else
-		MCStringMutableCopy(p_string, &t_output);
+		t_output = MCValueRetain(p_input);
+	
 	MCAutoStringRef t_converted;
 	switch (form)
 	{
 	case ST_DATETIME:
 		if (MCD_convert(ctxt, *t_output, CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_converted))
-		{
-			if (!MCU_stor8(*t_converted, items[nitems].nvalue))
-				items[nitems].nvalue = -MAXREAL8;
-		}
-		else
-			items[nitems].nvalue = -MAXREAL8;
+			if (ctxt.ConvertToNumber(*t_converted, items[nitems].nvalue))
+				break;
+	
+		/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
 		break;
+			
 	case ST_NUMERIC:
-		{
-			const char *sptr = MCStringGetCString(*t_output);
-			uint4 length = MCStringGetLength(*t_output);
+		if (ctxt.ConvertToNumber(*t_output, items[nitems].nvalue))
+			break;
 			
-			// MW-2013-03-21: [[ Bug ]] Make sure we skip any whitespace before the
-			//   number starts - making it consistent with string->number conversions
-			//   elsewhere.
-			MCU_skip_spaces(sptr, length);
-			
-		    // REVIEW - at the moment the numeric prefix of the string is used to
-			//   derive the sort key e.g. 1000abc would get processed as 1000.
-			while (length && (isdigit((uint1)*sptr) ||
-			                  *sptr == '.' || *sptr == '-' || *sptr == '+'))
-			{
-				sptr++;
-				length--;
-			}
-			MCStringRemove(*t_output, MCRangeMake((MCStringGetLength(*t_output) -  length), length));
-			if (!MCU_stor8(*t_output, items[nitems].nvalue))
-				items[nitems].nvalue = -MAXREAL8;
-		}
+		/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
 		break;
+			
 	default:
-		if (ctxt . GetCaseSensitive() && by == NULL)
-			items[nitems].svalue = strclone(MCStringGetCString(*t_output));
+		if (ctxt . GetCaseSensitive())
+			/* UNCHECKED */ ctxt.ConvertToString(*t_output, items[nitems].svalue);
 		else
-			if (ctxt . GetCaseSensitive())
-				items[nitems].svalue = strclone(MCStringGetCString(*t_output));
-			else
-			{
-#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
-				if (form == ST_INTERNATIONAL)
-				{
-					MCString s = MCStringGetOldString(*t_output);
-					extern char *MCSystemLowercaseInternational(const MCString& s);
-					items[nitems].svalue = MCSystemLowercaseInternational(s);
-				}
-				else
-#endif
-
-				{
-					items[nitems].svalue = new char[MCStringGetLength(*t_output) + 1];
-					MCU_lower(items[nitems].svalue, MCStringGetOldString(*t_output));
-					items[nitems].svalue[MCStringGetLength(*t_output)] = '\0';
-				}
-			}
+		{
+			MCStringRef t_fixed, t_mutable;
+			/* UNCHECKED */ ctxt.ConvertToString(*t_output, t_fixed);
+			/* UNCHECKED */ MCStringMutableCopyAndRelease(t_fixed, t_mutable);
+			/* UNCHECKED */ MCStringLowercase(t_mutable);
+			/* UNCHECKED */ MCStringCopyAndRelease(t_mutable, items[nitems].svalue);
+		}
+			
 		break;
 	}
 	nitems++;
@@ -3848,8 +3820,8 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
 	}
 
 	// Now we know the item count, we can allocate an array of MCSortnodes to store them.
-	MCAutoPointer<MCSortnode> t_items;
-	t_items = new MCSortnode[t_item_count + 1];
+	MCAutoArray<MCSortnode> t_items;
+	t_items.Extend(t_item_count + 1);
 	t_item_count = 0;
 	t_string_pointer = *t_item_text;
 
@@ -3865,15 +3837,15 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
 		else
 			MCStringCreateWithNativeChars((const char_t *)t_string_pointer, strlen(t_string_pointer), &t_string);
 
-		MCInterfaceExecSortAddItem(ctxt, *t_items, t_item_count, p_form, *t_string, p_by);
+		MCInterfaceExecSortAddItem(ctxt, t_items.Ptr(), t_item_count, p_form, *t_string, p_by);
 
-		(*t_items)[t_item_count - 1] . data = (void *)t_string_pointer;
+		t_items[t_item_count - 1] . data = (void *)t_string_pointer;
 		t_string_pointer = t_end_pointer;
 	}
 	while(t_end_pointer != NULL);
 
 	// Sort the array
-	MCU_sort(*t_items, t_item_count, p_direction, (Sort_type)p_form);
+	MCU_sort(t_items.Ptr(), t_item_count, p_direction, (Sort_type)p_form);
 
 	// Build the output string
 	MCAutoPointer<char> t_output;
@@ -3886,12 +3858,9 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
 	for (unsigned int i = 0; i < t_item_count; i++)
 	{
 		uint4 t_item_length;
-		t_item_length = strlen((const char *)(*t_items)[i] . data);
-		strncpy(&(*t_output)[t_length], (const char *)(*t_items)[i] . data, t_item_length);
+		t_item_length = strlen((const char *)t_items[i] . data);
+		strncpy(&(*t_output)[t_length], (const char *)t_items[i] . data, t_item_length);
 		t_length = t_length + t_item_length;
-
-		if ((p_form == ST_INTERNATIONAL || p_form == ST_TEXT) && (!ctxt . GetCaseSensitive() || p_by != NULL))
-			delete (*t_items)[i] . svalue;
 
 		if (t_trailing_delim || i < t_item_count - 1)
 			(*t_output)[t_length++] = t_delimiter;
@@ -3909,14 +3878,14 @@ void MCInterfaceExecSortCardsOfStack(MCExecContext &ctxt, MCStack *p_target, boo
 	if (p_target == nil)
 		p_target = MCdefaultstackptr;
 
-	if (p_target->sort(ctxt . GetEP(), p_ascending ? ST_ASCENDING : ST_DESCENDING, (Sort_type)p_format, p_by, p_only_marked) != ES_NORMAL)
+	if (p_target->sort(ctxt, p_ascending ? ST_ASCENDING : ST_DESCENDING, (Sort_type)p_format, p_by, p_only_marked) != ES_NORMAL)
 		ctxt . LegacyThrow(EE_SORT_CANTSORT);
 }
 
 void MCInterfaceExecSortField(MCExecContext &ctxt, MCObjectPtr p_target, int p_chunk_type, bool p_ascending, int p_format, MCExpression *p_by)
 {
 	MCField *t_field =(MCField *)p_target . object;
-	if (t_field->sort(ctxt . GetEP(), p_target . part_id, (Chunk_term)p_chunk_type, p_ascending ? ST_ASCENDING : ST_DESCENDING, (Sort_type)p_format, p_by) != ES_NORMAL)
+	if (t_field->sort(ctxt, p_target . part_id, (Chunk_term)p_chunk_type, p_ascending ? ST_ASCENDING : ST_DESCENDING, (Sort_type)p_format, p_by) != ES_NORMAL)
 		ctxt . LegacyThrow(EE_SORT_CANTSORT);
 }
 

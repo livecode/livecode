@@ -1702,60 +1702,63 @@ void MCStack::flip(uint2 count)
 	}
 }
 
-Exec_stat MCStack::sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
+bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
                         MCExpression *by, Boolean marked)
 {
 	if (by == NULL)
-		return ES_ERROR;
+		return false;
 	if (editing != NULL)
 		stopedit();
-	MCExecContext ctxt(ep);
+	
 	MCStack *olddefault = MCdefaultstackptr;
 	MCdefaultstackptr = this;
 	MCCard *cptr = curcard;
-	MCSortnode *items = NULL;
+	MCAutoArray<MCSortnode> items;
 	uint4 nitems = 0;
 	MCerrorlock++;
 	do
 	{
-		MCU_realloc((char **)&items, nitems, nitems + 1, sizeof(MCSortnode));
+		items.Extend(nitems + 1);
 		items[nitems].data = (void *)curcard;
 		switch (form)
 		{
 		case ST_DATETIME:
-			if (!marked || curcard->getmark() && by->eval(ep) == ES_NORMAL)
+			if (!marked || curcard->getmark() && by->eval(ctxt.GetEP()) == ES_NORMAL)
 			{
 				MCAutoStringRef t_out;
-				if (MCD_convert(ctxt, ep.getvalueref(), CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_out))
-					if (ctxt.ConvertToReal(*t_out, items[nitems].nvalue))
+				if (MCD_convert(ctxt, ctxt.GetEP().getvalueref(), CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_out))
+					if (ctxt.ConvertToNumber(*t_out, items[nitems].nvalue))
 						break;
 			}
 
-			items[nitems].nvalue = -MAXREAL8;
+			/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
 			break;
 		case ST_NUMERIC:
 			if ((!marked || curcard->getmark())
-			        && by->eval(ep) == ES_NORMAL && ep.ton() == ES_NORMAL)
-				items[nitems].nvalue = ep.getnvalue();
+			        && by->eval(ctxt.GetEP()) == ES_NORMAL 
+					&& ctxt.ConvertToNumber(ctxt.GetEP().getvalueref(), items[nitems].nvalue))
+				break;
 
-			else
-				items[nitems].nvalue = -MAXREAL8;
+			/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
 			break;
 		case ST_INTERNATIONAL:
 		case ST_TEXT:
-			if ((!marked || curcard->getmark()) && by->eval(ep) == ES_NORMAL)
+			if ((!marked || curcard->getmark()) && by->eval(ctxt.GetEP()) == ES_NORMAL)
 			{
-				if (ep.getcasesensitive())
-					items[nitems].svalue = ep.getsvalue().clone();
+				MCStringRef t_string;
+				/* UNCHECKED */ ctxt.ConvertToString(ctxt.GetEP().getvalueref(), t_string);
+				if (ctxt.GetCaseSensitive())
+					items[nitems].svalue = t_string;
 				else
 				{
-					items[nitems].svalue = new char[ep.getsvalue().getlength() + 1];
-					MCU_lower(items[nitems].svalue, ep.getsvalue());
-					items[nitems].svalue[ep.getsvalue().getlength()] = '\0';
+					MCStringRef t_mutable;
+					/* UNCHECKED */ MCStringMutableCopyAndRelease(t_string, t_mutable);
+					/* UNCHECKED */ MCStringLowercase(t_mutable);
+					/* UNCHECKED */ MCStringCopyAndRelease(t_mutable, items[nitems].svalue);
 				}
 			}
 			else
-				items[nitems].svalue = MCU_empty();
+				items[nitems].svalue = MCValueRetain(kMCEmptyString);
 			break;
 		default:
 			break;
@@ -1766,13 +1769,11 @@ Exec_stat MCStack::sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
 	while (curcard != cptr);
 	MCerrorlock--;
 	if (nitems > 1)
-		MCU_sort(items, nitems, dir, form);
+		MCU_sort(items.Ptr(), nitems, dir, form);
 	MCCard *newcards = NULL;
 	uint4 i;
 	for (i = 0 ; i < nitems ; i++)
 	{
-		if (form == ST_INTERNATIONAL || form == ST_TEXT)
-			delete items[i].svalue;
 		const MCCard *tcptr = (const MCCard *)items[i].data;
 		cptr = (MCCard *)tcptr;
 		cptr->remove(cards);
@@ -1781,7 +1782,6 @@ Exec_stat MCStack::sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
 	cards = newcards;
 	setcard(cards, True, False);
 	dirtywindowname();
-	delete items;
 	MCdefaultstackptr = olddefault;
 	return ES_NORMAL;
 }
