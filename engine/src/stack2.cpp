@@ -69,11 +69,9 @@ void MCStack::setidlefunc(void (*newfunc)())
 	MCscreen->addtimer(this, MCM_idle, MCidleRate);
 }
 
-Boolean MCStack::setscript(char *newscript)
+Boolean MCStack::setscript(MCStringRef newscript)
 {
-	delete script;
-	script = newscript;
-	flags |= F_SCRIPT;
+	MCValueAssign(_script, newscript);
 	parsescript(False);
 	if (hlist == NULL)
 	{
@@ -230,12 +228,6 @@ void MCStack::uniconify()
 		resetcursor(True);
 		dirtywindowname();
 	}
-}
-
-void MCStack::position(const char *geom)
-{
-	if (MCscreen->position(geom, rect))
-		state |= CS_BEEN_MOVED;
 }
 
 Window_mode MCStack::getmode()
@@ -875,7 +867,7 @@ void MCStack::updatemenubar()
 		        || gettool(this) != T_BROWSE && MCdefaultmenubar != NULL)
 			MCmenubar = NULL;
 		else
-			MCmenubar = (MCGroup *)getobjname(CT_GROUP, MCNameGetOldString(getmenubar()));
+			MCmenubar = (MCGroup *)getobjname(CT_GROUP, MCNameGetString(getmenubar()));
 		MCscreen->updatemenubar(False);
 	}
 }
@@ -1135,7 +1127,7 @@ void MCStack::renumber(MCCard *card, uint4 newnumber)
 	dirtywindowname();
 }
 
-MCObject *MCStack::getAV(Chunk_term etype, const MCString &s, Chunk_term otype)
+MCObject *MCStack::getAV(Chunk_term etype, MCStringRef s, Chunk_term otype)
 {
 	uint2 num = 0;
 
@@ -1289,7 +1281,6 @@ MCCard *MCStack::getchild(Chunk_term etype, MCStringRef p_expression, Chunk_term
 		uint4 inid;
 		if (MCU_stoui4(p_expression, inid))
 		{
-		
 			// OK-2008-06-27: <Bug where looking up a card by id when in edit group mode could cause an infinite loop>
 			MCCard *t_cards;
 			if (editing != NULL && savecards != NULL)
@@ -1434,7 +1425,6 @@ MCCard *MCStack::getchild(Chunk_term etype, const MCString &s, Chunk_term otype)
 		uint4 inid;
 		if (MCU_stoui4(s, inid))
 		{
-		
 			// OK-2008-06-27: <Bug where looking up a card by id when in edit group mode could cause an infinite loop>
 			MCCard *t_cards;
 			if (editing != NULL && savecards != NULL)
@@ -1574,25 +1564,26 @@ MCCard *MCStack::getchildbyid(uinteger_t p_id)
 {
     // OK-2007-04-09 : Allow cards to be found by ID when in edit group mode.
     MCCard *cptr;
-    if (editing != NULL && savecards != NULL)
+    if (editing != nil && savecards != nil)
         cptr = savecards;
     else
         cptr = cards;
     
-    MCCard *found = NULL;
+    MCCard *found = nil;
 
     // OK-2008-06-27: <Bug where looking up a card by id when in edit group mode could cause an infinite loop>
     MCCard *t_cards = cptr;
     
     // OK-2007-04-09 : Allow cards to be found by ID when in edit group mode.
-    if (editing == NULL)
+    if (editing == nil)
         found = curcard -> findid(CT_CARD, p_id, True);
-    else
+    
+    if (found == nil)
     {
         do
         {
             found = cptr->findid(CT_CARD, p_id, True);
-            if (found != NULL
+            if (found != nil
                 && found->countme(backgroundid, (state & CS_MARKED) != 0))
                 break;
             cptr = cptr->next();
@@ -1611,6 +1602,22 @@ MCCard *MCStack::getchildbyname(MCNameRef p_name)
 	else
 		cptr = cards;
     
+    uint2 t_num = 0;
+    if (MCU_stoui2(MCNameGetString(p_name), t_num))
+    {
+        if (t_num < 1)
+            return nil;
+        t_num--;
+        
+        do
+        {
+            if (cptr->countme(backgroundid, (state & CS_MARKED) != 0) && t_num-- == 0)
+                return cptr;
+            cptr = cptr->next();
+        }
+        while (cptr != cards);
+        return nil;
+    }
     MCCard *found = nil;
     do
     {
@@ -1838,22 +1845,41 @@ MCGroup *MCStack::getbackgroundbyid(uinteger_t p_id)
 MCGroup *MCStack::getbackgroundbyname(MCNameRef p_name)
 {
 	MCControl *cptr;
-	if (editing != NULL)
+	if (editing != nil)
 		cptr = savecontrols;
 	else
 		cptr = controls;
 	MCControl *startcptr = cptr;
-	if (cptr == NULL)
-		return NULL;
+	if (cptr == nil)
+		return nil;
+    
+    uint2 t_num = 0;
+    if (MCU_stoui2(MCNameGetString(p_name), t_num))
+    {
+        if (t_num < 1)
+            return nil;
+        t_num--;
+        
+        do
+        {
+            MCControl *foundobj = cptr->findnum(CT_GROUP, t_num);
+            if (foundobj != nil)
+                return (MCGroup *)foundobj;
+            cptr = cptr->next();
+        }
+        while (cptr != startcptr);
+        return nil;
+    }
+    
     do
     {
         MCControl *found = cptr->findname(CT_GROUP, MCNameGetOldString(p_name));
-        if (found != NULL)
+        if (found != nil)
             return (MCGroup *)found;
         cptr = cptr->next();
     }
     while (cptr != startcptr);
-    return NULL;
+    return nil;
 }
 
 void MCStack::addmnemonic(MCButton *button, uint1 key)
@@ -1931,30 +1957,24 @@ void MCStack::setwindowname()
 	else
 		tptr = title;
 
-	char *newname = NULL;
+	MCAutoStringRef newname;
 	if (editing != NULL)
 	{
-		MCExecPoint ep;
-		editing->names_old(P_SHORT_NAME, ep, 0);
-		ep.nativetoutf8();
-		char *bgname = ep.getsvalue().clone();
-		newname = new char[MCStringGetLength(tptr) + strlen(MCbackgroundstring)
-		                   + strlen(bgname) + 7];
-		sprintf(newname, "%s (%s \"%s\")", MCStringGetCString(tptr), MCbackgroundstring, bgname);
-		delete bgname;
+		MCAutoStringRef bgname;
+		/* UNCHECKED */ editing->names(P_SHORT_NAME, &bgname);
+		/* UNCHECKED */ MCStringFormat(&newname, "%@ (%s \"%@\")", tptr, MCbackgroundstring, *bgname);
 	}
 	else
 	{
-		newname = new char[MCStringGetLength(tptr) + U4L + 6];
 		if (MCStringIsEmpty(title) && mode == WM_TOP_LEVEL && MCdispatcher->cut(True))
 		{
 			if ((cards->next()) == cards)
-				sprintf(newname, "%s *", MCStringGetCString(tptr));
+				/* UNCHECKED */ MCStringFormat(&newname, "%@ *", tptr);
 			else
 			{
 				uint2 num;
 				count(CT_CARD, CT_UNDEFINED, curcard, num);
-				sprintf(newname, "%s (%d) *", MCStringGetCString(tptr), num);
+				/* UNCHECKED */ MCStringFormat(&newname, "%@ (%d) *", tptr, num);
 			}
 		}
 		else
@@ -1963,24 +1983,18 @@ void MCStack::setwindowname()
 			{
 				uint2 num;
 				count(CT_CARD, CT_UNDEFINED, curcard, num);
-				sprintf(newname, "%s (%d)", MCStringGetCString(tptr), num);
+				/* UNCHECKED */ MCStringFormat(&newname, "%@ (%d)", tptr, num);
 			}
 			else
-				strcpy(newname, MCStringGetCString(tptr));
+				newname = tptr;
 	}
-	if (!strequal(newname, MCStringGetCString(titlestring)))
+	if (!MCStringIsEqualTo(*newname, titlestring, kMCStringOptionCompareExact))
 	{
-		MCAutoStringRef t_newname;
-		/* UNCHECKED */ MCStringCreateWithCString(newname, &t_newname);
-		MCValueAssign(titlestring, *t_newname);
+		MCValueAssign(titlestring, *newname);
 		MCscreen->setname(window, titlestring);
 	}
-	else
-		delete newname;
+	
 	state &= ~CS_TITLE_CHANGED;
-
-	if (t_utf8_name != NULL)
-		delete t_utf8_name;
 }
 
 void MCStack::reopenwindow()

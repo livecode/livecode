@@ -51,15 +51,15 @@ extern const uint4 command_table_size;
 extern LT factor_table[];
 extern const uint4 factor_table_size;
 
-MCScriptPoint::MCScriptPoint(MCObject *o, MCHandlerlist *hl, const char *s)
+MCScriptPoint::MCScriptPoint(MCObject *o, MCHandlerlist *hl, MCStringRef s)
 {
-	script = NULL;
+	char *t_utf8_string;
+	/* UNCHECKED */ MCStringConvertToUTF8String(s, t_utf8_string);
+	/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_utf8_string, strlen(t_utf8_string) + 1, script);
 	curobj = o;
 	curhlist = hl;
 	curhandler = NULL;
-	curptr = tokenptr = backupptr = (const uint1 *)s;
-	lowered = NULL;
-	loweredsize = 0;
+	curptr = tokenptr = backupptr = (const uint1 *)MCDataGetBytePtr(script);
 	line = pos = 1;
 	escapes = False;
 	tagged = False;
@@ -70,7 +70,7 @@ MCScriptPoint::MCScriptPoint(MCObject *o, MCHandlerlist *hl, const char *s)
 
 MCScriptPoint::MCScriptPoint(MCScriptPoint &sp)
 {
-	script = NULL;
+	script = MCValueRetain(sp . script);
 	curobj = sp.curobj;
 	curhlist = sp.curhlist;
 	curhandler = sp.curhandler;
@@ -78,8 +78,6 @@ MCScriptPoint::MCScriptPoint(MCScriptPoint &sp)
 	tokenptr = sp.tokenptr;
 	backupptr = sp.backupptr;
 	token = sp.token;
-	lowered = NULL;
-	loweredsize = 0;
 	line = sp.line;
 	pos = sp.pos;
 	escapes = sp.escapes;
@@ -91,13 +89,15 @@ MCScriptPoint::MCScriptPoint(MCScriptPoint &sp)
 
 MCScriptPoint::MCScriptPoint(MCExecPoint &ep)
 {
-	script = ep.getsvalue().clone();
+	MCAutoStringRef t_string_script;
+	/* UNCHECKED */ ep . copyasstringref(&t_string_script);
+	char *t_utf8_string;
+	/* UNCHECKED */ MCStringConvertToUTF8String(*t_string_script, t_utf8_string);
+	/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_utf8_string, strlen(t_utf8_string) + 1, script);
 	curobj = ep.getobj();
 	curhlist = ep.gethlist();
 	curhandler = ep.gethandler();
-	curptr = tokenptr = backupptr = (uint1 *)script;
-	lowered = NULL;
-	loweredsize = 0;
+	curptr = tokenptr = backupptr = (const uint1 *)MCDataGetBytePtr(script);
 	line = pos = 0;
 	escapes = False;
 	tagged = False;
@@ -108,13 +108,15 @@ MCScriptPoint::MCScriptPoint(MCExecPoint &ep)
 
 MCScriptPoint::MCScriptPoint(const MCString &s)
 {
-	script = s.clone();
+	MCAutoStringRef t_string_script;
+	/* UNCHECKED */ MCStringCreateWithOldString(s, &t_string_script);
+	char *t_utf8_string;
+	/* UNCHECKED */ MCStringConvertToUTF8String(*t_string_script, t_utf8_string);
+	/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_utf8_string, strlen(t_utf8_string) + 1, script);
 	curobj = NULL;
 	curhlist = NULL;
 	curhandler = NULL;
-	curptr = tokenptr = backupptr = (uint1 *)script;
-	lowered = NULL;
-	loweredsize = 0;
+	curptr = tokenptr = backupptr = (const uint1 *)MCDataGetBytePtr(script);
 	line = pos = 0;
 	escapes = False;
 	tagged = False;
@@ -123,11 +125,42 @@ MCScriptPoint::MCScriptPoint(const MCString &s)
 	token_nameref = nil;
 }
 
+MCScriptPoint::MCScriptPoint(MCStringRef p_string)
+{
+	char *t_utf8_string;
+	/* UNCHECKED */ MCStringConvertToUTF8String(p_string, t_utf8_string);
+	/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_utf8_string, strlen(t_utf8_string) + 1, script);
+	curobj = NULL;
+	curhlist = NULL;
+	curhandler = NULL;
+	curptr = tokenptr = backupptr = (const uint1 *)MCDataGetBytePtr(script);
+	line = pos = 0;
+	escapes = False;
+	tagged = False;
+	in_tag = False;
+	was_in_tag = False;
+	token_nameref = nil;
+}
+
+MCScriptPoint& MCScriptPoint::operator =(const MCScriptPoint& sp)
+{
+	script = MCValueRetain(sp . script);
+	curobj = sp.curobj;
+	curhlist = sp.curhlist;
+	curhandler = sp.curhandler;
+	curptr = sp.curptr;
+	tokenptr = sp.tokenptr;
+	backupptr = sp.backupptr;
+	token = sp.token;
+	line = sp.line;
+	pos = sp.pos;
+	return *this;
+}
+
 MCScriptPoint::~MCScriptPoint()
 {
 	MCNameDelete(token_nameref);
-	delete script;
-	delete lowered;
+	MCValueRelease(script);
 }
 
 void MCScriptPoint::cleartoken(void)
@@ -137,11 +170,30 @@ void MCScriptPoint::cleartoken(void)
 	token_nameref = nil;
 }
 
+bool MCScriptPoint::token_is_cstring(const char *p_cstring)
+{
+	return MCStringIsEqualToCString(gettoken_stringref(), p_cstring, kMCCompareCaseless);
+}
+
+MCString MCScriptPoint::gettoken_oldstring(void)
+{
+	return token;
+}
+
 MCNameRef MCScriptPoint::gettoken_nameref(void)
 {
+	MCAutoStringRef t_string_token;
+	/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)token . getstring(), token . getlength(), kMCStringEncodingUTF8, false, &t_string_token);
 	if (token_nameref == nil)
-		/* UNCHECKED */ MCNameCreateWithOldString(token, token_nameref);
+		/* UNCHECKED */ MCNameCreate(*t_string_token, token_nameref);
 	return token_nameref;
+}
+
+MCStringRef MCScriptPoint::gettoken_stringref(void)
+{
+	MCNameRef t_name_token;
+	t_name_token = gettoken_nameref();
+	return MCNameGetString(t_name_token);
 }
 
 Parse_stat MCScriptPoint::skip_space()
@@ -482,44 +534,26 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 	if (type == ST_LIT)
 		curptr++;
 	token.setstring((const char *)curptr);
-	if (lowered == NULL)
-	{
-		lowered = new char[LOWERED_PAD];
-		loweredsize = LOWERED_PAD;
-	}
-	char *lptr = lowered;
+
 	switch (type)
 	{
 	case ST_ID:
 		if (curptr[0] == '$' && curptr[1] == '#')
 		{
 			curptr += 2;
-			*lptr++ = '$';
-			*lptr++ = '#';
-			*lptr = '\0';
 		}
 		else
 		{
 			while (True)
 			{
 				Symbol_type newtype = type_table[*curptr];
-				// MW-2010-09-08: [[Bug 8946]] Crash caused by appending a NUL byte when there is no space for it.
-				if (lptr - lowered == loweredsize)
-				{
-					MCU_realloc((char **)&lowered, loweredsize, loweredsize + LOWERED_PAD, sizeof(uint1));
-					lptr = lowered + loweredsize;
-					loweredsize += LOWERED_PAD;
-				}
 				if (newtype != ST_ID && newtype != ST_NUM)
 				{
 					// Anything other than TAG or TAG> causes the token to finish.
 					if (newtype != ST_TAG || (tagged && curptr[1] == '>'))
-					{
-						*lptr = '\0';
 						break;
-					}
 				}
-				*lptr++ = MCS_tolower(*curptr++);
+				curptr++;
 			}
 		}
 		break;
@@ -548,18 +582,8 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 		{
 			Symbol_type newtype = type_table[*curptr];
 			if (newtype != type)
-			{
-				*lptr = '\0';
 				break;
-			}
-			if (lptr - lowered == loweredsize)
-			{
-				MCU_realloc((char **)&lowered, loweredsize,
-				            loweredsize + LOWERED_PAD, sizeof(uint1));
-				lptr = lowered + loweredsize;
-				loweredsize += LOWERED_PAD;
-			}
-			*lptr++ = *curptr++;
+			curptr++;
 		}
 		break;
 	case ST_NUM:
@@ -582,8 +606,7 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 		}
 		break;
 	default:
-		*lptr++ = *curptr++;
-		*lptr = '\0';
+		curptr++;
 		break;
 	}
 	if (type == ST_LIT && type_table[*curptr] == ST_LIT)
@@ -594,6 +617,8 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 	else
 		token.setlength(curptr - tokenptr);
 	pos += curptr - startptr;
+
+	m_type = type;
 	return PS_NORMAL;
 }
 
@@ -611,6 +636,9 @@ Parse_stat MCScriptPoint::nexttoken()
 
 Parse_stat MCScriptPoint::lookup(Script_point t, const LT *&dlt)
 {
+	if (m_type == ST_LIT)
+		return PS_NO_MATCH;
+	
 	if (token.getlength())
 	{
 		const LT *table = table_pointers[t];
@@ -620,8 +648,12 @@ Parse_stat MCScriptPoint::lookup(Script_point t, const LT *&dlt)
 
 		while (low < high)
 		{
+			// Both the table and the token are encoded in UTF-8
 			uint2 mid = low + ((high - low) >> 1);
-			if ((cond = strcmp(lowered, table[mid].token)) < 0)
+			cond = MCU_strncasecmp(token.getstring(), table[mid].token, token.getlength());
+			if (cond == 0)
+				cond -= table[mid].token[token.getlength()];
+			if (cond < 0)
 				high = mid;
 			else
 				if (cond > 0)
@@ -638,6 +670,9 @@ Parse_stat MCScriptPoint::lookup(Script_point t, const LT *&dlt)
 
 Parse_stat MCScriptPoint::lookupconstant(MCExpression **dest)
 {
+	if (m_type == ST_LIT)
+		return PS_NO_MATCH;
+	
 	if (gethandler() != NULL
 	        && gethandler()->findconstant(gettoken_nameref(), dest) == PS_NORMAL)
 		return PS_NORMAL;
@@ -646,21 +681,24 @@ Parse_stat MCScriptPoint::lookupconstant(MCExpression **dest)
 	int4 cond;
 	while (low < high)
 	{
+		// Both the table and the token are encoded in UTF-8
 		uint2 mid = low + ((high - low) >> 1);
-		if ((cond = strcmp(lowered, constant_table[mid].token)) < 0)
+		cond = MCU_strncasecmp(token.getstring(), constant_table[mid].token, token.getlength());
+		if (cond == 0)
+			cond -= constant_table[mid].token[token.getlength()];
+		if (cond < 0)
 			high = mid;
 		else
 			if (cond > 0)
 				low = mid + 1;
 			else
 			{
-				if (strequal(lowered, "null"))
+				if (token.getlength() == 4 && MCU_strncasecmp(token.getstring(), "null", 4) == 0)
 				{
-					MCString s("", 1);
-					*dest = new MCConstant(s, BAD_NUMERIC);
+					*dest = new MCConstant(kMCEmptyString, BAD_NUMERIC);
 				}
 				else
-					*dest = new MCConstant(constant_table[mid].svalue,
+					*dest = new MCConstant(MCSTR(constant_table[mid].svalue),
 					                       constant_table[mid].nvalue);
 				return PS_NORMAL;
 			}
@@ -804,7 +842,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 		{
 		case ST_NUM:
 			real8 nvalue;
-			if (!MCU_stor8(gettoken(), nvalue))
+			if (!MCU_stor8(gettoken_oldstring(), nvalue))
 			{
 				MCperror->add(PE_EXPRESSION_NOTLITERAL, *this);
 				return PS_ERROR;
@@ -1028,7 +1066,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 						*this = thesp;
 						MCerrorlock--;
 
-						if (gettoken().getlength() == 0)
+						if (gettoken_oldstring().getlength() == 0)
 						{
 							MCperror->add(PE_EXPRESSION_NOTFACT, *this);
 							return PS_ERROR;

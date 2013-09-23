@@ -239,7 +239,7 @@ public:
 	void external_idle();
 	void loadwindowshape();
 	void setidlefunc(void (*newfunc)());
-	Boolean setscript(char *newscript);
+	Boolean setscript(MCStringRef newscript);
 	void checkdestroy();
 	IO_stat print(Print_mode mode, uint2 num, MCCard *card,
 	              const MCRectangle *srect, const MCRectangle *drect);
@@ -247,7 +247,6 @@ public:
 	void configure(Boolean user);
 	void iconify();
 	void uniconify();
-	void position(const char *geometry);
 	Window_mode getmode();
 	Window_mode getrealmode()
 	{
@@ -351,7 +350,7 @@ public:
 	void clipmenu(MCContext *context, MCRectangle &crect);
 	Boolean count(Chunk_term otype, Chunk_term ptype, MCObject *, uint2 &num);
 	void renumber(MCCard *card, uint4 newnumber);
-	MCObject *getAV(Chunk_term etype, const MCString &, Chunk_term otype);
+	MCObject *getAV(Chunk_term etype, MCStringRef, Chunk_term otype);
 	MCCard *getchild(Chunk_term etype, MCStringRef p_expression, Chunk_term otype);
 #ifdef OLD_EXEC
 	MCCard *getchild(Chunk_term etype, const MCString &, Chunk_term otype);
@@ -397,9 +396,9 @@ public:
 	MCCard *findcardbyid(uint4 p_id);
 
 	MCControl *getcontrolid(Chunk_term type, uint4 inid, bool p_recurse = false);
-	MCControl *getcontrolname(Chunk_term type, const MCString &);
+	MCControl *getcontrolname(Chunk_term type, MCStringRef);
 	MCObject *getAVid(Chunk_term type, uint4 inid);
-	/* LEGACY */ MCObject *getAVname(Chunk_term type, const MCString &);
+	/* LEGACY */ MCObject *getAVname(Chunk_term type, MCStringRef);
     bool getAVname(Chunk_term type, MCNameRef p_name, MCObject*& r_object);
 	Exec_stat setcard(MCCard *card, Boolean recent, Boolean dynamic);
 	MCStack *findstackfile_oldstring(const MCString &s);
@@ -422,9 +421,8 @@ public:
 	void removecard(MCCard *cptr);
 	MCObject *getsubstackobjid(Chunk_term type, uint4 inid);
 	MCObject *getobjid(Chunk_term type, uint4 inid);
-	MCObject *getsubstackobjname(Chunk_term type, const MCString &);
+	MCObject *getsubstackobjname(Chunk_term type, MCStringRef);
 	MCObject *getobjname(Chunk_term type, MCStringRef p_name);
-	MCObject *getobjname(Chunk_term type, const MCString &);
 	void createmenu(MCControl *nc, uint2 width, uint2 height);
 	void menuset(uint2 button, uint2 defy);
 	void menumup(uint2 which, MCString &s, uint2 &selline);
@@ -436,13 +434,13 @@ public:
 	void flip(uint2 count);
 	Exec_stat sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
 	               MCExpression *by, Boolean marked);
-	void breakstring(const MCString &, MCString **dest, uint2 &nstrings,
+	void breakstring(MCStringRef, MCStringRef*& dest, uint2 &nstrings,
 	                 Find_mode fmode);
-	Boolean findone(MCExecPoint &ep, Find_mode mode, const MCString *strings,
+	Boolean findone(MCExecPoint &ep, Find_mode mode, MCStringRef *strings,
 	                uint2 nstrings, MCChunk *field, Boolean firstcard);
 	void find(MCExecPoint &ep, int p_mode, MCStringRef p_needle, MCChunk *p_target);
-	void find(MCExecPoint &ep, Find_mode mode, const MCString &, MCChunk *field);
-	void markfind(MCExecPoint &ep, Find_mode mode, const MCString &,
+	void find(MCExecPoint &ep, Find_mode mode, MCStringRef, MCChunk *field);
+	void markfind(MCExecPoint &ep, Find_mode mode, MCStringRef,
 	              MCChunk *, Boolean mark);
 	void mark(MCExecPoint &ep, MCExpression *where, Boolean mark);
 	Linkatts *getlinkatts();

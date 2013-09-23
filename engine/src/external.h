@@ -32,7 +32,7 @@ public:
 	virtual bool ListHandlers(MCExternalListHandlersCallback callback, void *state) = 0;
 	virtual Exec_stat Handle(MCObject *p_context, Handler_type p_type, uint32_t p_index, MCParameter *p_parameters) = 0;
 	
-	static MCExternal *Load(const char *p_filename);
+	static MCExternal *Load(MCStringRef p_filename);
 	static void Unload(MCExternal *p_external);
 
 	// Called on exit to cleanup all external instances.
@@ -90,7 +90,7 @@ public:
 	bool HasHandler(MCNameRef handler, Handler_type type);
 	
 	// Attempt to load the external with the given path.
-	bool Load(const char *p_external);
+	bool Load(MCStringRef p_external);
 
 	// Attempt to handle the given message.
 	Exec_stat Handle(MCObject *p_object, Handler_type type, MCNameRef p_message, MCParameter *p_parameters);

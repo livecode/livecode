@@ -118,7 +118,7 @@ static uint4 cmap_scale[17] =
         16,     8,     4,    2,   1
     };
 
-void MCScreenDC::setstatus(const char *status)
+void MCScreenDC::setstatus(MCStringRef status)
 {
 }
 
@@ -583,7 +583,6 @@ void MCScreenDC::setname(Window window, MCStringRef newname)
 	XSetIconName(dpy, window, *t_newname_utf8);
 
 	XChangeProperty(dpy, window, XInternAtom(dpy, "_NET_WM_NAME", false), XInternAtom(dpy, "UTF8_STRING", false), 8, PropModeReplace, (unsigned char *)*t_newname_utf8, strlen(*t_newname_utf8));
-
 }
 
 void MCScreenDC::setcmap(MCStack *sptr)
@@ -1035,7 +1034,7 @@ Window MCScreenDC::getroot()
 }
 
 MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window,
-                               const char *displayname)
+                               MCStringRef displayname)
 {
 	Display *olddpy = dpy;
 	Colormap oldcmap = cmap;
@@ -1043,7 +1042,7 @@ MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window,
 	uint2 screen = getscreen();
 	if (displayname != NULL)
 	{
-		if ((dpy = XOpenDisplay(displayname)) == NULL)
+		if ((dpy = XOpenDisplay(MCStringGetCString(displayname))) == NULL)
 		{
 			dpy = olddpy;
 			return NULL;

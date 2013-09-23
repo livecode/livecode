@@ -739,25 +739,26 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 			stacks->setparent(this);
 			stacks->setname_cstring("revScript");
 			uint4 size = (uint4)MCS_fsize(stream);
-			char *script = new char[size + 2];
-			script[size] = '\n';
-			script[size + 1] = '\0';
-			if (IO_read(script, size, stream) != IO_NORMAL
-			        || !stacks->setscript(script))
-			{
-				delete script;
-				return IO_ERROR;
-			}
+            MCAutoPointer<char> script;
+            script = new char[size + 2];
+            (*script)[size] = '\n';
+            (*script)[size + 1] = '\0';
+            if (IO_read(*script, size, stream) != IO_NORMAL)
+                return IO_ERROR;
+            MCAutoStringRef t_script_str;
+            /* UNCHECKED */ MCStringCreateWithCString(*script, &t_script_str);
+            if (!stacks -> setscript(*t_script_str))
+                return IO_ERROR;
 		}
 		else
 		{
-			char *tname = strclone(inname);
+			MCAutoStringRef tname;
+            /* UNCHECKED */ MCStringCreateWithCString(inname, &tname);
 			
 			// MW-2008-06-12: [[ Bug 6476 ]] Media won't open HC stacks
-			if (!MCdispatcher->cut(True) || hc_import(tname, stream, sptr) != IO_NORMAL)
+			if (!MCdispatcher->cut(True) || hc_import(*tname, stream, sptr) != IO_NORMAL)
 			{
 				MCresult->sets("file is not a stack");
-				delete tname;
 				return IO_ERROR;
 			}
 		}
@@ -1508,7 +1509,7 @@ MCObject *MCDispatch::getobjid(Chunk_term type, uint4 inid)
 	return NULL;
 }
 
-MCObject *MCDispatch::getobjname(Chunk_term type, const MCString &s)
+MCObject *MCDispatch::getobjname(Chunk_term type, MCStringRef s)
 {
 	if (stacks != NULL)
 	{
@@ -1525,13 +1526,13 @@ MCObject *MCDispatch::getobjname(Chunk_term type, const MCString &s)
 
 	if (type == CT_IMAGE)
 	{
-		const char *sptr = s.getstring();
-		uint4 l = s.getlength();
+		const char *sptr = MCStringGetCString(s);
+		uint4 l = MCStringGetLength(s);
 
 		MCAutoNameRef t_image_name;
 		if (MCU_strchr(sptr, l, ':'))
-			/* UNCHECKED */ t_image_name . CreateWithOldString(s);
-
+			/* UNCHECKED */ MCNameCreate(s, t_image_name);
+		
 		MCImage *iptr = imagecache;
 		if (iptr != NULL)
 		{
@@ -1559,7 +1560,7 @@ check:
 			MCresult->clear(False);
 			MCExecPoint ep(MCdefaultstackptr, NULL, NULL);
 			MCExecPoint *epptr = MCEPptr == NULL ? &ep : MCEPptr;
-			epptr->setsvalue(s);
+			epptr->setvalueref(s);
 			MCU_geturl(*epptr);
 			if (MCresult->isempty())
 			{
@@ -1625,31 +1626,40 @@ void MCDispatch::removepanel(MCStack *sptr)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCDispatch::loadexternal(const char *p_external)
+bool MCDispatch::loadexternal(MCStringRef p_external)
 {
-	char *t_filename;
+	MCStringRef t_filename;
 #if defined(TARGET_SUBPLATFORM_ANDROID)
-	extern bool revandroid_loadExternalLibrary(const char *p_external, char*& r_filename);
+	extern bool revandroid_loadExternalLibrary(MCStringRef p_external, MCStringRef &r_filename);
 	if (!revandroid_loadExternalLibrary(p_external, t_filename))
 		return false;
 
 	// Don't try and load any drivers as externals.
-	if (strncmp(p_external, "db", 2) == 0)
+	if (MCStringBeginsWithCString(p_external, (const char_t *)"db", kMCStringOptionCompareExact))
 	{
-		delete t_filename;
+		MCValueRelease(t_filename);
 		return true;
 	}
 #elif !defined(_SERVER)
-	if (p_external[0] == '/')
+	if (MCStringBeginsWithCString(p_external, (const char_t *)"/", kMCStringOptionCompareExact))
 	{
-		if (!MCCStringClone(p_external, t_filename))
-			return false;
+		t_filename = MCValueRetain(p_external);
 	}
-	else if (!MCCStringFormat(t_filename, "%.*s/%s", strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd), p_external))
-		return false;
+	else
+	{
+		uindex_t t_separator;
+		MCStringLastIndexOfChar(MCcmd, '/', 0, kMCStringOptionCompareExact, t_separator);
+		if (!MCStringMutableCopySubstring(MCcmd, MCRangeMake(0, t_separator), t_filename))
+			return false;
+		if (!MCStringAppendFormat(t_filename, "/%@", p_external))
+		{
+			MCValueRelease(t_filename);
+			return false;
+		}
+	}
+
 #else
-	if (!MCCStringClone(p_external, t_filename))
-		return false;
+	t_filename = MCValueRetain(p_external);
 #endif
 	
 	if (m_externals == nil)
@@ -1657,7 +1667,7 @@ bool MCDispatch::loadexternal(const char *p_external)
 	
 	bool t_loaded;
 	t_loaded = m_externals -> Load(t_filename);
-	delete t_filename;
+	MCValueRelease(t_filename);
 	
 	if (m_externals -> IsEmpty())
 	{

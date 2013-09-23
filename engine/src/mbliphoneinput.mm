@@ -736,7 +736,7 @@ void MCiOSInputControl::SetKeyboardType(MCExecContext& ctxt, MCNativeControlInpu
                 t_type = UIKeyboardTypeEmailAddress;
                 break;
         }
-        [t_field setKeyboardAppearance: t_type];
+        [t_field setKeyboardType: t_type];
     }
 }
 

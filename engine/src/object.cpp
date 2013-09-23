@@ -108,7 +108,7 @@ MCObject::MCObject()
 	pixmapids = NULL;
 	pixmaps = NULL;
 	opened = 0;
-	script = NULL;
+	_script = MCValueRetain(kMCEmptyString);
 	hlist = NULL;
 	scriptdepth = 0;
 	state = CS_CLEAR;
@@ -201,7 +201,7 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 		pixmaps = NULL;
 	}
 	opened = 0;
-	script = strclone(oref.script);
+	_script = MCValueRetain(oref._script);
 	m_script_encrypted = oref.m_script_encrypted;
 	hlist = NULL;
 	scriptdepth = 0;
@@ -285,7 +285,7 @@ MCObject::~MCObject()
 	}
 	delete pixmapids;
 	delete pixmaps;
-	delete script;
+	MCValueRelease(_script);
 	deletepropsets();
 	MCValueRelease(tooltip);
 	
@@ -329,6 +329,14 @@ void MCObject::setname_oldstring(const MCString& p_new_name)
 {
 	MCNameDelete(_name);
 	/* UNCHECKED */ MCNameCreateWithOldString(p_new_name, _name);
+}
+
+void MCObject::setscript_cstring(const char *cstring)
+{
+	MCStringRef t_script;
+	/* UNCHECKED */ MCStringCreateWithCString(cstring, t_script);
+	
+	MCValueAssign(_script, t_script);
 }
 
 void MCObject::open()
@@ -761,25 +769,25 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 		Exec_stat stat = message(mptr, params, True, True);
 		if (stat == ES_NOT_HANDLED && !handler.getpass())
 		{
-			char *tptr = NULL;
-			const char *t_mptr_cstring;
-			t_mptr_cstring = MCNameGetCString(mptr);
-			if (params != NULL)
+			MCAutoStringRef tptr;
+			MCAutoStringRef t_mptr_string;
+			
+			if (params != nil)
 			{
 				MCExecPoint ep(this, NULL, NULL);
 				params->eval(ep);
-				char *p = ep.getsvalue().clone();
-				tptr = new char[strlen(t_mptr_cstring) + ep.getsvalue().getlength() + 2];
-				sprintf(tptr, "%s %s", t_mptr_cstring, p);
-				delete p;
+                MCAutoStringRef t_value;
+				ep . copyasstringref(&t_value);
+				MCStringFormat(&tptr, "%@ %@", *t_mptr_string, *t_value);
 			}
+            else
+                t_mptr_string = MCNameGetString(mptr);
 			
 			MCHandler *t_handler;
 			t_handler = findhandler(HT_MESSAGE, mptr);
 			if (t_handler == NULL || !t_handler -> isprivate())
-				domess(params == NULL ? t_mptr_cstring : tptr);
+				domess(params == NULL ? *t_mptr_string : *tptr);
 
-			delete tptr;
 		}
 		if (stat == ES_ERROR && !MCNameIsEqualTo(mptr, MCM_error_dialog, kMCCompareCaseless))
 			senderror();
@@ -1437,7 +1445,7 @@ void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite)
 	}
 }
 
-#ifdef  LEGACY EXEC 
+#ifdef LEGACY_EXEC 
 Boolean MCObject::setcolor(uint2 index, const MCString &data)
 {
 	uint2 i, j;
@@ -1533,12 +1541,12 @@ Boolean MCObject::setcolors(const MCString &data)
 }
 #endif
 
-Boolean MCObject::setpattern(uint2 newpixmap, const MCString &data)
+Boolean MCObject::setpattern(uint2 newpixmap, MCStringRef data)
 {
 	uint2 i;
 	bool t_isopened;
 	t_isopened = (opened != 0) || (gettype() == CT_STACK && static_cast<MCStack*>(this)->getextendedstate(ECS_ISEXTRAOPENED));
-	if (data.getlength() == 0)
+	if (MCStringIsEmpty(data))
 	{
 		if (getpindex(newpixmap, i))
 		{
@@ -1572,9 +1580,9 @@ Boolean MCObject::setpattern(uint2 newpixmap, const MCString &data)
 	return True;
 }
 
-Boolean MCObject::setpatterns(const MCString &data)
+Boolean MCObject::setpatterns(MCStringRef data)
 {
-	char *string = data.clone();
+	char *string = strdup(MCStringGetCString(data));
 	char *sptr = string;
 	uint2 p;
 	Boolean done = False;
@@ -1585,7 +1593,10 @@ Boolean MCObject::setpatterns(const MCString &data)
 			*eptr++ = '\0';
 		else
 			eptr = &sptr[strlen(sptr)];
-		if (!setpattern(p - P_FORE_PATTERN, sptr))
+        
+        MCAutoStringRef t_sptr;
+        /* UNCHECKED */ MCStringCreateWithCString(sptr, &t_sptr);
+		if (!setpattern(p - P_FORE_PATTERN, *t_sptr))
 		{
 			delete string;
 			return False;
@@ -2030,6 +2041,29 @@ Exec_stat MCObject::message_with_valueref_args(MCNameRef mess, MCValueRef v1, MC
 	return message(mess, &p1);
 }
 
+Exec_stat MCObject::message_with_valueref_args(MCNameRef mess, MCValueRef v1, MCValueRef v2, MCValueRef v3)
+{
+	MCParameter p1, p2, p3;
+	p1.setvalueref_argument(v1);
+	p1.setnext(&p2);
+	p2.setvalueref_argument(v2);
+	p2.setnext(&p3);
+	p3.setvalueref_argument(v3);
+	return message(mess, &p1);
+}
+
+Exec_stat MCObject::message_with_valueref_args(MCNameRef mess, MCValueRef v1, MCValueRef v2, MCValueRef v3, MCValueRef v4)
+{
+	MCParameter p1, p2, p3, p4;
+	p1.setvalueref_argument(v1);
+	p1.setnext(&p2);
+	p2.setvalueref_argument(v2);
+	p2.setnext(&p3);
+	p3.setvalueref_argument(v3);
+	p3.setnext(&p4);
+	p4.setvalueref_argument(v4);
+	return message(mess, &p1);
+}
 Exec_stat MCObject::message_with_args(MCNameRef mess, int4 v1)
 {
 	MCParameter p1;
@@ -2072,19 +2106,21 @@ Exec_stat MCObject::message_with_args(MCNameRef mess, int4 v1, int4 v2, int4 v3,
 
 void MCObject::senderror()
 {
-	char *perror = NULL;
+	MCAutoStringRef t_perror;
 	if (!MCperror->isempty())
 	{
 		MCExecPoint ep(this, NULL, NULL);
 		MCerrorptr->getprop(0, P_LONG_ID, ep, False);
 		MCperror->add
 		(PE_OBJECT_NAME, 0, 0, ep.getsvalue());
-		perror = MCperror->getsvalue().clone();
+		/* UNCHECKED */ MCperror->copyasstringref(&t_perror);
 		MCperror->clear();
 	}
 	if (MCerrorptr == NULL)
 		MCerrorptr = this;
-	MCscreen->delaymessage(MCerrorlockptr == NULL ? MCerrorptr : MCerrorlockptr, MCM_error_dialog, MCeerror->getsvalue().clone(), perror);
+	MCAutoStringRef t_eerror;
+	/* UNCHECKED */ MCeerror->copyasstringref(&t_eerror);
+	MCscreen->delaymessage(MCerrorlockptr == NULL ? MCerrorptr : MCerrorlockptr, MCM_error_dialog, *t_eerror, *t_perror);
 	MCeerror->clear();
 	MCerrorptr = NULL;
 }
@@ -2234,7 +2270,7 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 {
 	if (!force && hashandlers & HH_DEAD_SCRIPT)
 		return False;
-	if (script == NULL || parent == NULL)
+	if (MCStringIsEmpty(_script) || parent == NULL)
 		hashandlers = 0;
 	else
 		if (force || hlist == NULL)
@@ -2247,7 +2283,7 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 			getstack() -> unsecurescript(this);
 			
 			Parse_stat t_stat;
-			t_stat = hlist -> parse(this, script);
+			t_stat = hlist -> parse(this, _script);
 			
 			getstack() -> securescript(this);
 			
@@ -2516,19 +2552,18 @@ void MCObject::positionrel(const MCRectangle &drect,
 	}
 }
 
-Exec_stat MCObject::domess(const char *sptr)
+Exec_stat MCObject::domess(MCStringRef sptr)
 {
-	const char *temp = "on message\n%s\nend message\n";
-	char *tscript = new char[strlen(temp) + strlen(sptr) - 1];
-	sprintf(tscript, temp, sptr);
+	MCAutoStringRef t_temp_script;
+	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on message\n%@\nend message\n", sptr);
+	
 	MCHandlerlist *handlist = new MCHandlerlist;
 	// SMR 1947, suppress parsing errors
 	MCerrorlock++;
-	if (handlist->parse(this, tscript) != PS_NORMAL)
+	if (handlist->parse(this, *t_temp_script) != PS_NORMAL)
 	{
 		MCerrorlock--;
 		delete handlist;
-		delete tscript;
 		return ES_ERROR;
 	}
 	MCerrorlock--;
@@ -2542,7 +2577,6 @@ Exec_stat MCObject::domess(const char *sptr)
 	Exec_stat stat = hptr->exec(ep, NULL);
 	MClockerrors = oldlock;
 	delete handlist;
-	delete tscript;
 	MCtargetptr = oldtargetptr;
 	if (stat == ES_NORMAL)
 		return ES_NORMAL;
@@ -2553,17 +2587,16 @@ Exec_stat MCObject::domess(const char *sptr)
 	}
 }
 
-Exec_stat MCObject::eval(const char *sptr, MCExecPoint &ep)
+Exec_stat MCObject::eval(MCStringRef sptr, MCExecPoint &ep)
 {
-	const char *temp = "on eval\nreturn %s\nend eval\n";
-	char *tscript = new char[strlen(temp) + strlen(sptr) - 1];
-	sprintf(tscript, temp, sptr);
+	MCAutoStringRef t_temp_script;
+	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on eval\nreturn %@\nend eval\n", sptr);
+	
 	MCHandlerlist *handlist = new MCHandlerlist;
-	if (handlist->parse(this, tscript) != PS_NORMAL)
+	if (handlist->parse(this, *t_temp_script) != PS_NORMAL)
 	{
 		ep.setstaticcstring("Error parsing expression\n");
 		delete handlist;
-		delete tscript;
 		return ES_ERROR;
 	}
 	MCObject *oldtargetptr = MCtargetptr;
@@ -2591,7 +2624,6 @@ Exec_stat MCObject::eval(const char *sptr, MCExecPoint &ep)
 	MCtargetptr = oldtargetptr;
 	ep.sethlist(oldhlist);
 	ep.sethandler(oldhandler);
-	delete tscript;
 	delete handlist;
 	return stat;
 }
@@ -2599,7 +2631,7 @@ Exec_stat MCObject::eval(const char *sptr, MCExecPoint &ep)
 /* WRAPPER */ void MCObject::eval(MCExecContext& ctxt, MCStringRef p_script, MCValueRef& r_value)
 {
 	MCExecPoint ep(ctxt.GetEP());
-	Exec_stat stat = eval(MCStringGetCString(p_script), ep);
+	Exec_stat stat = eval(p_script, ep);
 	/* UNCHECKED */ ep.copyasvalueref(r_value);
 	if (stat != ES_ERROR)
 		return;
@@ -2860,7 +2892,9 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 				return stat;
 			if ((stat = IO_read_uint2(&fontstyle, stream)) != IO_NORMAL)
 				return stat;
-			setfontattrs(fontname, fontsize, fontstyle);
+            MCAutoStringRef t_fontname;
+            /* UNCHECKED */ MCStringCreateWithCString(fontname, &t_fontname);
+			setfontattrs(*t_fontname, fontsize, fontstyle);
 			delete fontname;
 		}
 	}
@@ -2869,7 +2903,7 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 
 	if (flags & F_SCRIPT)
 	{
-		if ((stat = IO_read_string(script, stream)) != IO_NORMAL)
+		if ((stat = IO_read_stringref(_script, stream, false)) != IO_NORMAL)
 			return stat;
 		
 		getstack() -> securescript(this);
@@ -2977,22 +3011,26 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 			MCObjectInputStream *t_stream = nil;
 			/* UNCHECKED */ MCStackSecurityCreateObjectInputStream(stream, t_length, t_stream);
 			t_length -= 1;
-
-			stat = t_stream -> ReadCString(script);
+			
+			char *t_script_cstring;
+			stat = t_stream -> ReadCString(t_script_cstring);
 			if (stat == IO_NORMAL)
 			{
-				if (MCtranslatechars && script != NULL)
+				if (MCtranslatechars && t_script_cstring != NULL)
 				{
 #ifdef __MACROMAN__
-					IO_iso_to_mac(script, strlen(script));
+					IO_iso_to_mac(t_script_cstring, strlen(t_script_cstring));
 #else
-					IO_mac_to_iso(script, strlen(script));
+					IO_mac_to_iso(t_script_cstring, strlen(t_script_cstring));
 #endif
 				}
-				t_length -= script == NULL ? 1 : strlen(script) + 1;
+				t_length -= t_script_cstring == NULL ? 1 : strlen(t_script_cstring) + 1;
 				
-				if (script != nil)
+				if (t_script_cstring != nil)
 					getstack() -> securescript(this);
+				
+				setscript_cstring(t_script_cstring);
+				delete t_script_cstring;
 			}
 
 			if (stat == IO_NORMAL && t_length > 0)
@@ -3016,15 +3054,15 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 		
 		if (stat != IO_NORMAL)
 			return stat;
-
-		if (script != NULL)
-			flags |= F_SCRIPT;
 	}
 	else if (addflags & AF_LONG_SCRIPT)
 	{
-		if ((stat = IO_read_string(script, stream, 4)) != IO_NORMAL)
+		char *t_script_cstring;
+		if ((stat = IO_read_string(t_script_cstring, stream, 4)) != IO_NORMAL)
 			return stat;
-		flags |= F_SCRIPT;
+		
+		setscript_cstring(t_script_cstring);
+		delete t_script_cstring;
 		
 		getstack() -> securescript(this);
 	}
@@ -3113,6 +3151,9 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if ((stat = IO_write_nameref(_name, stream)) != IO_NORMAL)
 		return stat;
 
+	if (!MCStringIsEmpty(_script))
+		flags |= F_SCRIPT;
+	
 	uint32_t t_old_flags;
 	t_old_flags = flags;
 
@@ -3123,13 +3164,14 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	uint2 addflags = npixmaps;
 	if (t_extended)
 		addflags |= AF_EXTENDED;
-	if (flags & F_SCRIPT && strlen(script) >= MAXUINT2 || t_extended)
+	if (flags & F_SCRIPT && MCStringGetLength(_script) >= MAXUINT2 || t_extended)
 	{
 		addflags |= AF_LONG_SCRIPT;
 		flags &= ~F_SCRIPT;
 	}
 	stat = IO_write_uint4(flags, stream);
-	if (addflags & AF_LONG_SCRIPT && script != NULL)
+	
+	if (addflags & AF_LONG_SCRIPT && !MCStringIsEmpty(_script))
 		flags |= F_SCRIPT;
 
 	flags = t_old_flags;
@@ -3150,7 +3192,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (flags & F_SCRIPT && !(addflags & AF_LONG_SCRIPT))
 	{
 		getstack() -> unsecurescript(this);
-		stat = IO_write_string(script, stream);
+		stat = IO_write_string(MCStringGetCString(_script), stream, false);
 		getstack() -> securescript(this);
 		if (stat != IO_NORMAL)
 			return stat;
@@ -3266,7 +3308,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			MCObjectOutputStream *t_stream = nil;
 			/* UNCHECKED */ MCStackSecurityCreateObjectOutputStream(stream, t_stream);
 			getstack() -> unsecurescript(this);
-			stat = t_stream -> WriteCString(script);
+			stat = t_stream -> WriteCString(MCStringGetCString(_script));
 			getstack() -> securescript(this);
 			if (stat == IO_NORMAL)
 				stat = extendedsave(*t_stream, p_part);
@@ -3294,7 +3336,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	else if (addflags & AF_LONG_SCRIPT)
 	{
 		getstack() -> unsecurescript(this);
-		stat = IO_write_string(script, stream, 4);
+		stat = IO_write_string(MCStringGetCString(_script), stream, false, 4);
 		getstack() -> securescript(this);
 		if (stat != IO_NORMAL)
 			return stat;
@@ -3619,12 +3661,12 @@ bool MCObject::resolveparentscript(void)
 // the behavior hierarchy. We first search the behavior chain's for successive ancestors
 // of the object, up to and including its stack. If this fails, fall back to the original
 // search.
-MCImage *MCObject::resolveimage(const MCString& p_name, uint4 p_image_id)
+MCImage *MCObject::resolveimage(MCStringRef p_name, uint4 p_image_id)
 {
 	// If the name string ptr is nil, then this is an id search.
 	bool t_is_id;
 	t_is_id = false;
-	if (p_name . getstring() == nil)
+	if (p_name == nil)
 		t_is_id = true;
 
 	MCControl *t_control;
@@ -3697,10 +3739,10 @@ MCImage *MCObject::resolveimage(const MCString& p_name, uint4 p_image_id)
 
 MCImage *MCObject::resolveimageid(uint32_t p_id)
 {
-	return resolveimage(MCString(nil, 0), p_id);
+	return resolveimage(nil, p_id);
 }
 
-MCImage *MCObject::resolveimagename(const MCString& p_name)
+MCImage *MCObject::resolveimagename(MCStringRef p_name)
 {
 	return resolveimage(p_name, 0);
 }
@@ -4426,10 +4468,10 @@ void MCObject::setfontattrs(uint32_t p_which, MCNameRef p_textfont, uint2 p_text
 
 // MW-2012-02-17: [[ LogFonts ]] Set the logical font attrs to the given values
 //   using a c-string for the name.
-void MCObject::setfontattrs(const char *p_textfont, uint2 p_textsize, uint2 p_textstyle)
+void MCObject::setfontattrs(MCStringRef p_textfont, uint2 p_textsize, uint2 p_textstyle)
 {
 	MCAutoNameRef t_textfont_name;
-	/* UNCHECKED */ t_textfont_name . CreateWithCString(p_textfont);
+	/* UNCHECKED */ MCNameCreate(p_textfont, t_textfont_name);
 	setfontattrs(FF_HAS_ALL_FATTR, t_textfont_name, p_textsize, p_textstyle);
 }
 

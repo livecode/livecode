@@ -2057,6 +2057,7 @@ class MCEcho: public MCStatement
 public:
 	MCEcho(void)
 	{
+		data = nil;
 	}
 	
 	virtual ~MCEcho(void);
@@ -2065,7 +2066,7 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 
 private:
-	MCString data;
+	MCStringRef data;
 };
 
 #endif

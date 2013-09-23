@@ -20,7 +20,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 #include "filedefs.h"
-
 #include "execpt.h"
 #include "stack.h"
 #include "card.h"
@@ -94,7 +93,7 @@ void MCMacOSXPrinter::DoInitialize(void)
 	m_settings = NULL;
 	m_paper = NULL;
 	
-	Reset(NULL, NULL, NULL);
+	Reset(kMCEmptyString, NULL, NULL);
 }
 
 void MCMacOSXPrinter::DoFinalize(void)
@@ -135,22 +134,22 @@ void MCMacOSXPrinter::DoFinalize(void)
 	m_valid = false;
 }
 
-bool MCMacOSXPrinter::DoReset(const char *p_name)
+bool MCMacOSXPrinter::DoReset(MCStringRef p_name)
 {
 	return Reset(p_name, NULL, NULL);
 }
 
-bool MCMacOSXPrinter::DoResetSettings(const MCString& p_settings)
+bool MCMacOSXPrinter::DoResetSettings(MCDataRef p_settings)
 {
-	if (p_settings . getlength() == 0)
-		return Reset(NULL, NULL, NULL);
+	if (MCDataIsEmpty(p_settings))
+		return Reset(kMCEmptyString, NULL, NULL);
 
 	bool t_success;
 	t_success = true;
 
 	MCDictionary t_dictionary;
 	if (t_success)	
-		t_success = t_dictionary . Unpickle(p_settings . getstring(), p_settings . getlength());
+		t_success = t_dictionary . Unpickle(MCDataGetBytePtr(p_settings), MCDataGetLength(p_settings));
 
 	MCString t_name;
 	if (t_success)
@@ -184,7 +183,7 @@ bool MCMacOSXPrinter::DoResetSettings(const MCString& p_settings)
 	if (t_success)
 	{
 		Handle t_handle;
-		if (PtrToHand(t_page_format_data . getstring(), &t_handle, t_page_format_data . getlength()) == noErr)
+		if (PtrToHand(t_settings_data . getstring(), &t_handle, t_settings_data . getlength()) == noErr)
 		{
 			if (PMUnflattenPageFormat(t_handle, &t_page_format) != noErr)
 				t_success = false;
@@ -194,8 +193,12 @@ bool MCMacOSXPrinter::DoResetSettings(const MCString& p_settings)
 			t_success = false;
 	}
 
+	MCAutoStringRef t_name_string;
 	if (t_success)
-		t_success = Reset(t_name . getstring(), t_settings, t_page_format);
+		t_success = MCStringCreateWithNativeChars((const char_t *)t_name . getstring(), t_name . getlength(), &t_name_string);
+	
+	if (t_success)
+		t_success = Reset(*t_name_string, t_settings, t_page_format);
 	else
 	{
 		PMRelease(t_settings);
@@ -296,7 +299,7 @@ MCPrinterDialogResult MCMacOSXPrinter::DoPageSetup(bool p_window_modal, Window p
 	return DoDialog(p_window_modal, p_owner, false);
 }
 
-MCPrinterResult MCMacOSXPrinter::DoBeginPrint(const char *p_document_name, MCPrinterDevice*& r_device)
+MCPrinterResult MCMacOSXPrinter::DoBeginPrint(MCStringRef p_document_name, MCPrinterDevice*& r_device)
 {
 	if (!m_valid)
 		return PRINTER_RESULT_ERROR;
@@ -325,25 +328,18 @@ MCPrinterResult MCMacOSXPrinter::DoEndPrint(MCPrinterDevice* p_device)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCMacOSXPrinter::Reset(const char *p_name, PMPrintSettings p_settings, PMPageFormat p_page_format)
+bool MCMacOSXPrinter::Reset(MCStringRef p_name, PMPrintSettings p_settings, PMPageFormat p_page_format)
 {
 	bool t_success;
 	t_success = true;
-
-	if (p_name != NULL && *p_name == '\0')
-		p_name = NULL;
 
 	// Convert the name to a core-foundation string - this is because the
 	// PMPrinter object returns names in this form.
 	//
 	CFStringRef t_name;
 	t_name = NULL;
-	if (t_success && p_name != NULL)
-	{
-		t_name = CFStringCreateWithCString(kCFAllocatorDefault, p_name, kCFStringEncodingMacRoman);
-		if (t_name == NULL)
-			t_success = false;
-	}
+	if (t_success && !MCStringIsEmpty(p_name))
+		t_success = MCStringConvertToCFStringRef(p_name, t_name);
 
 	// Fetch the list of available PMPrinters on the current system.
 	//
@@ -690,7 +686,9 @@ void MCMacOSXPrinter::SetProperties(bool p_include_output)
 			t_output_location = NULL;
 		}
 
-		SetDeviceOutput(t_output_type, t_output_location);
+		MCAutoStringRef t_output_location_str;
+		/* UNCHECKED */ MCStringCreateWithCString(t_output_location, &t_output_location_str);
+		SetDeviceOutput(t_output_type, *t_output_location_str);
 
 		delete t_output_location;
 

@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "dispatch.h"
 #include "stack.h"
 #include "util.h"
+#include "osspec.h"
 
 #include "mcio.h"
 
@@ -1155,17 +1156,16 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 		return true;
 	}
 
-	MCAutoStringRef t_out_data;
+	MCAutoDataRef t_out_data;
 
 	FormatData t_in_data(m_data_object, m_entries[t_entry] . format);
 	if (!t_in_data . Valid())
 		return false;
 
-	MCAutoDataRef t_in_string;
+	MCAutoStringRef t_in_string;
 	t_in_data . Get(&t_in_string);
 
-	const char *t_in_ptr = MCDataGetBytePtr(*t_in_string);
-	uint4 t_in_length = MCDataGetLength(*t_in_string);
+	uint4 t_in_length = MCStringGetLength(*t_in_string);
 
 	switch(m_entries[t_entry] . format)
 	{
@@ -1173,10 +1173,10 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 	{
 		MCExecPoint ep(NULL, NULL, NULL);
 
-		if (t_in_length > 0 && t_in_ptr[t_in_length - 1] == '\0')
+		if (t_in_length > 0 && MCStringGetNativeCharAtIndex(*t_in_string, t_in_length - 1) == '\0')
 			t_in_length -= 1;
 
-		ep . setsvalue(MCString(t_in_ptr, t_in_length));
+		ep . setsvalue(MCString(MCStringGetCString(*t_in_string), t_in_length));
 		ep . texttobinary();
 		ep . copyasdataref(&t_out_data);
 	}
@@ -1185,10 +1185,10 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 	{
 		MCExecPoint ep(NULL, NULL, NULL);
 
-		if (t_in_length > 1 && t_in_ptr[t_in_length - 1] == '\0' && t_in_ptr[t_in_length - 2] == '\0')
+		if (t_in_length > 1 && MCStringGetNativeCharAtIndex(*t_in_string, t_in_length - 1) == '\0' && MCStringGetNativeCharAtIndex(*t_in_string, t_in_length - 2) == '\0')
 			t_in_length -= 2;
 
-		ep . setsvalue(MCString(t_in_ptr, t_in_length));
+		ep . setsvalue(MCString(MCStringGetCString(*t_in_string), t_in_length));
 		ep . utf16toutf8();
 		ep . texttobinary();
 		ep . utf8toutf16();
@@ -1207,12 +1207,9 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 		uindex_t t_byte_count = 0;
 		char *t_buffer = nil;
 		uint32_t t_length = 0;
-        MCAutoDataRef t_data;
-        
-        t_success = MCDataCreateWithBytes((byte_t*)t_in_ptr, t_in_length, &t_data);
 
         if (t_success)
-            t_success = nil != (t_stream = MCS_fakeopen(*t_data));
+            t_success = nil != (t_stream = MCS_fakeopen(MCStringGetOldString(*t_in_string)));
 
 		if (t_success)
 			t_success = MCImageDecodeBMPStruct(t_stream, t_byte_count, t_bitmap);
@@ -1228,13 +1225,10 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 			t_success = MCImageEncodePNG(t_bitmap, t_stream, t_byte_count);
 
 		if (t_success)
-			t_success = IO_NORMAL == MCS_fakeclosewrite(t_stream, t_buffer, t_length);
+			t_success = IO_NORMAL == MCS_closetakingbuffer(t_stream, *(void**)(&t_buffer), t_length);
 
 		if (t_success)
 			t_success = MCDataCreateWithBytesAndRelease((char_t*)t_buffer, t_length, &t_out_data);
-
-		if (!t_success)
-			MCMemoryDeallocate(t_buffer);
 
 		MCImageFreeBitmap(t_bitmap);
 	}
@@ -1330,7 +1324,7 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 
 			MCImageEncodePNG(&t_bitmap, t_stream, t_byte_count);
 
-			MCS_fakeclosewrite(t_stream, t_bytes, t_byte_count);
+			/* UNCHECKED */ MCS_closetakingbuffer(t_stream, *(void**)(&t_bytes), t_byte_count);
 
 			/* UNCHECKED */ MCDataCreateWithBytes((char_t*)t_bytes, t_byte_count, &t_out_data);
 			MCMemoryDeallocate(t_bytes);
@@ -1365,7 +1359,13 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 			if (t_file != NULL)
 			{
 				DragQueryFileA(t_hdrop, i, t_file, t_size + 1);
-				MCU_path2native(t_file);
+				MCAutoStringRef t_std_path;
+				MCAutoStringRef t_native_path;
+
+				/* UNCHECKED */ MCStringCreateWithCString(t_file, &t_std_path);
+				/* UNCHECKED */ MCS_pathtonative(*t_std_path, &t_native_path);
+				/* UNCHECKED */ t_file = strclone(MCStringGetCString(*t_native_path));
+				//MCU_path2native(t_file);
 				ep . concatcstring(t_file, EC_RETURN, i == 0);
 				delete t_file;
 			}
@@ -1375,18 +1375,23 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 	}
 	break;
 	default:
+	{
+		MCAutoDataRef t_in_dataref;
+		/* UNCHECKED */ MCDataCreateWithBytes(MCStringGetNativeCharPtr(*t_in_string), MCStringGetLength(*t_in_string), &t_in_dataref);
+
 		if (m_entries[t_entry] . format == CF_RTF())
-			MCConvertRTFToStyledText(*t_in_string, &t_out_data);
+			/* UNCHECKED */ MCConvertRTFToStyledText(*t_in_dataref, &t_out_data);
 		else if (m_entries[t_entry] . format == CF_GIF())
-			&t_out_data = MCValueRetain(*t_in_string);
+			t_out_data = *t_in_dataref;
 		else if (m_entries[t_entry] . format == CF_PNG())
-			&t_out_data = MCValueRetain(*t_in_string);
+			t_out_data = *t_in_dataref;
 		else if (m_entries[t_entry] . format == CF_JFIF())
-			&t_out_data = MCValueRetain(*t_in_string);
+			t_out_data = *t_in_dataref;
 		else if (m_entries[t_entry] . format == CF_REVOLUTION_STYLED_TEXT())
-			&t_out_data = MCValueRetain(*t_in_string);
+			t_out_data = *t_in_dataref;
 		else if (m_entries[t_entry] . format == CF_REVOLUTION_OBJECTS())
-			&t_out_data = MCValueRetain(*t_in_string);
+			t_out_data = *t_in_dataref;
+	}
 	break;
 	}
 

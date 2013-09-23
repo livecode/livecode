@@ -311,23 +311,23 @@ Parse_stat MCIdeDeploy::parse(MCScriptPoint& sp)
 	Symbol_type t_type;
 	if (sp . next(t_type) == PS_NORMAL && t_type == ST_ID)
 	{
-		if (sp . gettoken() == "windows")
+		if (sp . token_is_cstring("windows"))
 			m_platform = PLATFORM_WINDOWS;
-		else if (sp . gettoken() == "linux")
+		else if (sp . token_is_cstring("linux"))
 			m_platform = PLATFORM_LINUX;
-		else if (sp . gettoken() == "macosx")
+		else if (sp . token_is_cstring("macosx"))
 			m_platform = PLATFORM_MACOSX;
-		else if (sp . gettoken() == "ios")
+		else if (sp . token_is_cstring("ios"))
 			m_platform = PLATFORM_IOS;
-		else if (sp . gettoken() == "android")
+		else if (sp . token_is_cstring("android"))
 			m_platform = PLATFORM_ANDROID;
-		else if (sp . gettoken() == "winmobile")
+		else if (sp . token_is_cstring("winmobile"))
 			m_platform = PLATFORM_WINMOBILE;
-		else if (sp . gettoken() == "linuxmobile")
+		else if (sp . token_is_cstring("linuxmobile"))
 			m_platform = PLATFORM_LINUXMOBILE;
-		else if (sp . gettoken() == "iosembedded")
+		else if (sp . token_is_cstring("iosembedded"))
 			m_platform = PLATFORM_IOS_EMBEDDED;
-		else if (sp . gettoken() == "androidembedded")
+		else if (sp . token_is_cstring("androidembedded"))
 			m_platform = PLATFORM_ANDROID_EMBEDDED;
 		else
 			return PS_ERROR;
@@ -504,11 +504,11 @@ Parse_stat MCIdeSign::parse(MCScriptPoint& sp)
 
 	if (sp . next(t_type) == PS_NORMAL && t_type == ST_ID)
 	{
-		if (sp . gettoken() == "windows")
+		if (sp . token_is_cstring("windows"))
 			m_platform = PLATFORM_WINDOWS;
-		else if (sp . gettoken() == "linux")
+		else if (sp . token_is_cstring("linux"))
 			m_platform = PLATFORM_LINUX;
-		else if (sp . gettoken() == "macosx")
+		else if (sp . token_is_cstring("macosx"))
 			m_platform = PLATFORM_MACOSX;
 		else
 			return PS_ERROR;
@@ -617,11 +617,11 @@ Parse_stat MCIdeDiet::parse(MCScriptPoint& sp)
 
 	if (sp . next(t_type) == PS_NORMAL && t_type == ST_ID)
 	{
-		if (sp . gettoken() == "windows")
+		if (sp . token_is_cstring("windows"))
 			m_platform = PLATFORM_WINDOWS;
-		else if (sp . gettoken() == "linux")
+		else if (sp . token_is_cstring("linux"))
 			m_platform = PLATFORM_LINUX;
-		else if (sp . gettoken() == "macosx")
+		else if (sp . token_is_cstring("macosx"))
 			m_platform = PLATFORM_MACOSX;
 		else
 			return PS_ERROR;
