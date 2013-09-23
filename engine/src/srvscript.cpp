@@ -72,22 +72,22 @@ void MCServerScript::ListFiles(MCExecPoint& ep)
 		ep . concatcstring(t_file -> filename, EC_RETURN, t_file == m_files);
 }
 
-uint4 MCServerScript::GetFileIndexForContext(MCExecPoint& ep)
+uint4 MCServerScript::GetFileIndexForContext(MCExecContext &ctxt)
 {
 	uint32_t t_file_index;
-	if (ep . gethandler() != NULL)
-		t_file_index = ep . gethandler() -> getfileindex();
+	if (ctxt.GetHandler() != NULL)
+		t_file_index = ctxt.GetHandler() -> getfileindex();
 	else
 		t_file_index = m_current_file == nil ? 0 : m_current_file -> index;
 	
 	return t_file_index;
 }
 
-const char *MCServerScript::GetFileForContext(MCExecPoint& ep)
+const char *MCServerScript::GetFileForContext(MCExecContext &ctxt)
 {
 	uint32_t t_file_index;
-	if (ep . gethandler() != NULL)
-		t_file_index = ep . gethandler() -> getfileindex();
+	if (ctxt.GetHandler() != NULL)
+		t_file_index = ctxt.GetHandler() -> getfileindex();
 	else
 		t_file_index = m_current_file == nil ? 0 : m_current_file -> index;
 	

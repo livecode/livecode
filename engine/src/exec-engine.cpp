@@ -728,20 +728,15 @@ void MCEngineExecReturnValue(MCExecContext& ctxt, MCValueRef p_value)
 
 void MCEngineExecDo(MCExecContext& ctxt, MCStringRef p_script, int p_line, int p_pos)
 {
-	MCExecPoint& ep = ctxt . GetEP();
-
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
-		ep.setline(p_line);
+		ctxt.GetEP().setline(p_line);
 		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
 
-	ep . setvalueref(p_script);
-
-	if (ep . gethandler() -> doscript(ep, p_line, p_pos) != ES_NORMAL)
-		ctxt . Throw();
+	ctxt.GetHandler() -> doscript(ctxt, p_script, p_line, p_pos);
 
 	if (added)
 		MCnexecutioncontexts--;

@@ -39,7 +39,7 @@ extern void IreviamDebuggerDisconnect(void);
 extern bool IreviamDebuggerUpdate(uint32_t p_until);
 extern bool IreviamDebuggerRun(const char *p_reason, const char *p_file, uint32_t line, uint32_t pos);
 
-extern void MCVariableViewEnter(MCExecPoint* ep);
+extern void MCVariableViewEnter(MCExecContext &ctxt);
 extern void MCVariableViewLeave(void);
 
 ////////
@@ -116,10 +116,10 @@ static uint4 BreakpointsSearch(uint4 p_file, uint4 p_row)
 //  UTILITIES
 //
 
-static const char *GetFileForContext(MCExecPoint& ep)
+static const char *GetFileForContext(MCExecContext &ctxt)
 {
 	const char *t_file;
-	t_file = MCserverscript -> GetFileForContext(ep);
+	t_file = MCserverscript -> GetFileForContext(ctxt);
 	
 	if (strncmp(t_file, MCservercgidocumentroot, strlen(MCservercgidocumentroot)) != 0)
 		return t_file;
@@ -167,7 +167,7 @@ void MCServerDebugInterrupt(void)
 #endif
 }
 
-void MCServerDebugTrace(MCExecPoint& ep, uint2 p_row, uint2 p_col)
+void MCServerDebugTrace(MCExecContext &ctxt, uint2 p_row, uint2 p_col)
 {
 #ifdef _IREVIAM
 	if (!s_debugging)
@@ -219,8 +219,8 @@ void MCServerDebugTrace(MCExecPoint& ep, uint2 p_row, uint2 p_col)
 			// We are pausing, so run the debugger
 			MCS_flush(IO_stdout);
 			
-			MCVariableViewEnter(&ep);
-			s_debugging = IreviamDebuggerRun("pause", GetFileForContext(ep), p_row, p_col);
+			MCVariableViewEnter(ctxt);
+			s_debugging = IreviamDebuggerRun("pause", GetFileForContext(ctxt), p_row, p_col);
 			MCVariableViewLeave();
 			break;
 			
@@ -229,8 +229,8 @@ void MCServerDebugTrace(MCExecPoint& ep, uint2 p_row, uint2 p_col)
 			s_action = kMCDebugActionNone;
 			MCS_flush(IO_stdout);
 			
-			MCVariableViewEnter(&ep);
-			s_debugging = IreviamDebuggerRun("step", GetFileForContext(ep), p_row, p_col);
+			MCVariableViewEnter(ctxt);
+			s_debugging = IreviamDebuggerRun("step", GetFileForContext(ctxt), p_row, p_col);
 			MCVariableViewLeave();
 			break;
 			
@@ -241,8 +241,8 @@ void MCServerDebugTrace(MCExecPoint& ep, uint2 p_row, uint2 p_col)
 				s_action = kMCDebugActionNone;
 				MCS_flush(IO_stdout);
 
-				MCVariableViewEnter(&ep);
-				s_debugging = IreviamDebuggerRun("step", GetFileForContext(ep), p_row, p_col);
+				MCVariableViewEnter(ctxt);
+				s_debugging = IreviamDebuggerRun("step", GetFileForContext(ctxt), p_row, p_col);
 				MCVariableViewLeave();
 			}
 			break;
@@ -254,8 +254,8 @@ void MCServerDebugTrace(MCExecPoint& ep, uint2 p_row, uint2 p_col)
 				s_action = kMCDebugActionNone;
 				MCS_flush(IO_stdout);
 				
-				MCVariableViewEnter(&ep);
-				s_debugging = IreviamDebuggerRun("step", GetFileForContext(ep), p_row, p_col);
+				MCVariableViewEnter(ctxt);
+				s_debugging = IreviamDebuggerRun("step", GetFileForContext(ctxt), p_row, p_col);
 				MCVariableViewLeave();
 			}
 			break;
@@ -266,7 +266,7 @@ void MCServerDebugTrace(MCExecPoint& ep, uint2 p_row, uint2 p_col)
 			MCS_flush(IO_stdout);
 			
 			MCVariableViewEnter(&ep);
-			s_debugging = IreviamDebuggerRun("break", GetFileForContext(ep), p_row, p_col);
+			s_debugging = IreviamDebuggerRun("break", GetFileForContext(ctxt), p_row, p_col);
 			MCVariableViewLeave();
 			break;
 	}
@@ -283,7 +283,7 @@ void MCServerDebugTrace(MCExecPoint& ep, uint2 p_row, uint2 p_col)
 #endif
 }
 
-void MCServerDebugBreak(MCExecPoint& ep, uint2 p_row, uint2 p_col)
+void MCServerDebugBreak(MCExecContext &ctxt, uint2 p_row, uint2 p_col)
 {
 #ifdef _IREVIAM
 	if (!s_debugging)
@@ -291,7 +291,7 @@ void MCServerDebugBreak(MCExecPoint& ep, uint2 p_row, uint2 p_col)
 	
 	// Check that we are in something we can debug
 	const char *t_file;
-	t_file = GetFileForContext(ep);
+	t_file = GetFileForContext(ctxt);
 	if (t_file == NULL)
 		return;
 
@@ -301,7 +301,7 @@ void MCServerDebugBreak(MCExecPoint& ep, uint2 p_row, uint2 p_col)
 	// Run the debugger with due to a 'break'
 	MCS_flush(IO_stdout);
 	
-	MCVariableViewEnter(&ep);
+	MCVariableViewEnter(ctxt);
 	s_debugging = IreviamDebuggerRun("break", t_file, p_row, p_col);
 	MCVariableViewLeave();
 
@@ -316,7 +316,7 @@ void MCServerDebugBreak(MCExecPoint& ep, uint2 p_row, uint2 p_col)
 #endif
 }
 
-void MCServerDebugError(MCExecPoint& ep, uint2 p_row, uint2 p_col, uint2 p_id)
+void MCServerDebugError(MCExecContext& ctxt, uint2 p_row, uint2 p_col, uint2 p_id)
 {
 #ifdef _IREVIAM
 	if (!s_debugging)
@@ -324,14 +324,14 @@ void MCServerDebugError(MCExecPoint& ep, uint2 p_row, uint2 p_col, uint2 p_id)
 	
 	// Check that we are in something we can debug
 	const char *t_file;
-	t_file = GetFileForContext(ep);
+	t_file = GetFileForContext(ctxt);
 	if (t_file == NULL)
 		return;
 	
 	// Run the debugger due to an error
 	MCS_flush(IO_stdout);
 	
-	MCVariableViewEnter(&ep);
+	MCVariableViewEnter(ctxt);
 	s_debugging = IreviamDebuggerRun("error", t_file, p_row, p_col);
 	MCVariableViewLeave();
 	
@@ -342,7 +342,7 @@ void MCServerDebugError(MCExecPoint& ep, uint2 p_row, uint2 p_col, uint2 p_id)
 #endif
 }
 
-void MCServerDebugVariableChanged(MCExecPoint& ep, MCNameRef p_name)
+void MCServerDebugVariableChanged(MCExecContext& ctxt, MCNameRef p_name)
 {
 }
 

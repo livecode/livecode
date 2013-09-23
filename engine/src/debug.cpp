@@ -83,17 +83,17 @@ void MCB_setmsg(MCExecContext& ctxt, MCStringRef p_string)
 	// remote debugging session.
 }
 
-void MCB_trace(MCExecPoint &ep, uint2 line, uint2 pos)
+void MCB_trace(MCExecContext &ctxt, uint2 line, uint2 pos)
 {
 	MCServerDebugTrace(ep, line, pos);
 }
 
-void MCB_break(MCExecPoint &ep, uint2 line, uint2 pos)
+void MCB_break(MCExecContext &ctxt, uint2 line, uint2 pos)
 {
 	MCServerDebugBreak(ep, line, pos);
 }
 
-void MCB_error(MCExecPoint &ep, uint2 line, uint2 pos, uint2 id)
+void MCB_error(MCExecContext &ctxt, uint2 line, uint2 pos, uint2 id)
 {
 	MCServerDebugError(ep, line, pos, id);
 	
