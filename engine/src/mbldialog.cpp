@@ -211,7 +211,7 @@ bool StringTokenize(MCStringRef p_string, MCStringRef p_delimiters, MCStringRef 
 		while(t_success)
 		{
 			// Skip spaces
-			while(contains_char(p_delimiters, MCStringGetNativeCharAtIndex(p_string, t_end))
+			while(contains_char(p_delimiters, MCStringGetNativeCharAtIndex(p_string, t_end)))
 				t_end += 1;
 			
 			t_start = t_end;
@@ -220,7 +220,7 @@ bool StringTokenize(MCStringRef p_string, MCStringRef p_delimiters, MCStringRef 
 			if (MCStringGetNativeCharAtIndex(p_string, t_end) == '"')
 			{
 				t_end += 1;
-				while(MCStringGetNativeCharAtIndex(p_string, t_end) != '\0' && MCStringGetNativeCharAtIndex(p_string, t_end) != '"')
+				while(t_end < MCStringGetLength(p_string) && MCStringGetNativeCharAtIndex(p_string, t_end) != '"')
 					t_end += 1;
 				
 				if (MCStringGetNativeCharAtIndex(p_string, t_end) == '"')
@@ -228,7 +228,7 @@ bool StringTokenize(MCStringRef p_string, MCStringRef p_delimiters, MCStringRef 
 			}
 			else
 			{
-				while(MCStringGetNativeCharAtIndex(p_string, t_end) != '\0' && !contains_char(p_delimiters, MCStringGetNativeCharAtIndex(p_string, t_end)))
+				while(t_end < MCStringGetLength(p_string) && !contains_char(p_delimiters, MCStringGetNativeCharAtIndex(p_string, t_end)))
 					t_end += 1;
 			}
 			
@@ -301,7 +301,7 @@ bool SplitOptionListsByChunk(MCChunkType p_chunk_type, const_cstring_array_t *p_
             t_chunks = nil;
             
             t_success = SplitStringByChunk(p_chunk_type, *t_string, t_chunks, r_option_lists[t_element_count]->length, p_itemdelimter);
-            char **t_array = (char **)malloc(r_option_lists[t_element_count]->length * sizeof(MCStringRef*));
+            char **t_array = (char **)malloc(r_option_lists[t_element_count]->length * sizeof(char*));
             for (uint32_t i = 0; i < r_option_lists[t_element_count]->length; i++)
             {
                 t_array[i] = strdup(MCStringGetCString(t_chunks[i]));
@@ -309,7 +309,6 @@ bool SplitOptionListsByChunk(MCChunkType p_chunk_type, const_cstring_array_t *p_
             }
             
             r_option_lists[t_element_count]->elements = t_array;
-            free(t_array);
             
 		}
 	}
