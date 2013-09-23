@@ -1641,25 +1641,15 @@ Exec_stat MCDeployToMacOSX(const MCDeployParameters& p_params)
 	MCDeployFileClose(t_engine_ppc);
 	
 	// OK-2010-02-22: [[Bug 8624]] - Standalones not being made executable if they contain accented chars in path.
-	char *t_path;
-	t_path = nil;
-#if defined(_MACOSX)
-	if (t_success)
-		t_success = MCCStringFromNative((const char *)MCStringGetNativeCharPtr(p_params . output), t_path);
-#else
-	t_path = p_params . output;
-#endif
+	MCStringRef t_path;
+	t_path = p_params.output;
 	
 	// If on Mac OS X or Linux, make the file executable
 #if defined(_MACOSX) || defined(_LINUX)
 	if (t_success)
-		chmod(t_path, 0755);
+		chmod(MCStringGetCString(t_path), 0755);
 #endif
-	
-#if defined(_MACOSX)
-	MCCStringFree(t_path);
-#endif
-	
+
 	return t_success ? ES_NORMAL : ES_ERROR;
 }
 
@@ -1795,23 +1785,13 @@ Exec_stat MCDeployToIOS(const MCDeployParameters& p_params, bool p_embedded)
 	MCDeployFileClose(t_engine);
 	
 	// OK-2010-02-22: [[Bug 8624]] - Standalones not being made executable if they contain accented chars in path.
-	char *t_path;
-#if defined(_MACOSX)
-	t_path = nil;
-	if (t_success)
-		t_success = MCCStringFromNative((const char *)MCStringGetNativeCharPtr(p_params . output), t_path);
-#else
-	t_path = p_params . output;
-#endif
+	MCStringRef t_path;
+	t_path = p_params.output;
 	
 	// If on Mac OS X or Linux, make the file executable
 #if defined(_MACOSX) || defined(_LINUX)
 	if (t_success)
-		chmod(t_path, 0755);
-#endif
-	
-#if defined(_MACOSX)
-	MCCStringFree(t_path);
+		chmod(MCStringGetCString(t_path), 0755);
 #endif
 	
 	return t_success ? ES_NORMAL : ES_ERROR;

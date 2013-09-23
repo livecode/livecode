@@ -816,23 +816,13 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	MCDeployFileClose(t_output);
 
 	// OK-2010-02-22: [[Bug 8624]] - Standalones not being made executable if they contain accented chars in path.
-	char *t_path;
-	t_path = nil;
-#if defined(_MACOSX)
-	if (t_success)
-		t_success = MCCStringFromNative((const char *)MCStringGetNativeCharPtr(p_params . output), t_path);
-#else
-	t_path = p_params . output;
-#endif
+	MCStringRef t_path;
+	t_path = p_params.output;
 	
 	// If on Mac OS X or Linux, make the file executable
 #if defined(_MACOSX) || defined(_LINUX)
 	if (t_success)
-		chmod(t_path, 0755);
-#endif
-	
-#if defined(_MACOSX)
-	MCCStringFree(t_path);
+		chmod(MCStringGetCString(t_path), 0755);
 #endif
 	
 	return t_success ? ES_NORMAL : ES_ERROR;
