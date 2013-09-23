@@ -61,6 +61,20 @@ inline MCRectangle MCGRectangleGetIntegerInterior(MCGRectangle p_rect)
 	return t_rect;
 }
 
+static inline MCPoint MCPointMake(int16_t x, int16_t y)
+{
+	MCPoint t_point;
+	t_point.x = x;
+	t_point.y = y;
+
+	return t_point;
+}
+
+static inline MCPoint MCGPointToMCPoint(const MCGPoint &p_point)
+{
+	return MCPointMake(p_point.x, p_point.y);
+}
+
 inline MCGPoint MCPointToMCGPoint(MCPoint p_point)
 {
 	MCGPoint t_point;

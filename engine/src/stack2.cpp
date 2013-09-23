@@ -1852,6 +1852,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 			MCscreen->querymouse(trect.x, trect.y);
 		else
 		{
+			/* OVERHAUL - REVISIT [[ FullscreenMode ]] */
 			//WEBREV
 			MCRectangle srect = MCmousestackptr->getrect();
 			trect.x = MCmousex + srect.x;
@@ -2499,7 +2500,7 @@ void MCStack::device_redrawwindow(MCStackSurface *p_surface, MCRegionRef p_regio
 			t_scale = MCResGetDeviceScale();
 			MCGContextScaleCTM(t_context, t_scale, t_scale);
 			
-			render(t_context, t_rect);
+			view_render(t_context, t_rect);
 			
 			p_surface -> UnlockGraphics();
 		}
@@ -2617,18 +2618,7 @@ void MCStack::render(MCContext *p_context, const MCRectangle& p_dirty)
 
 void MCStack::updatewindow(MCRegionRef p_region)
 {
-	MCRectangle t_update_rect;
-	t_update_rect = MCRegionGetBoundingBox(p_region);
-	
-	// IM-2013-08-01: [[ ResIndependence ]] Scale update region to device coords
-	MCRegionRef t_dev_region;
-	t_dev_region = nil;
-	/* UNCHECKED */ MCRegionCreate(t_dev_region);
-	MCRegionSetRect(t_dev_region, MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_update_rect)));
-	
-	device_updatewindow(t_dev_region);
-	
-	MCRegionDestroy(t_dev_region);
+	view_updatestack(p_region);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

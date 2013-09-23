@@ -292,6 +292,17 @@ public:
 	virtual uint2 getrealdepth(void);
 
 ////////////////////////////////////////////////////////////////////////////////
+
+	// IM-2013-09-23: [[ FullscreenMode ]] Part of view abstraction
+	// get/set mouse location in view coordinates, translating to/from stack coordinates
+	void setmouseloc(MCStack *p_target, MCPoint p_loc);
+	void getmouseloc(MCStack *&r_target, MCPoint &r_loc);
+
+	// get/set click location in view coordinates, translating to/from stack coordinates
+	void setclickloc(MCStack *p_target, MCPoint p_loc);
+	void getclickloc(MCStack *&r_target, MCPoint &r_loc);
+
+////////////////////////////////////////////////////////////////////////////////
 	
 	// IM-2013-07-31: [[ ResIndependence ]] refactor logical coordinate based methods
 	uint2 getwidth();

@@ -49,6 +49,7 @@ static PropList stackprops[] =
         {"forePattern", P_FORE_PATTERN},
         {"formatForPrinting", P_FORMAT_FOR_PRINTING},
         {"fullscreen", P_FULLSCREEN},
+		{"fullscreenmode", P_FULLSCREENMODE},
         {"hcAddressing", P_HC_ADDRESSING},
         {"hiliteColor", P_HILITE_COLOR},
         {"hilitePattern", P_HILITE_PATTERN},

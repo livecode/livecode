@@ -1264,6 +1264,7 @@ MCStack *MCStack::findsubstackid(uint4 fid)
 
 void MCStack::translatecoords(MCStack *dest, int2 &x, int2 &y)
 {
+	/* OVERHAUL - REVISIT [[ Fullscreen Mode ]] - redo using view_stacktoviewrect, etc */
 	// WEBREV
 	MCRectangle srect;
 	

@@ -142,6 +142,8 @@ MCStack::MCStack()
 	cursoroverride = false ;
 	old_rect.x = old_rect.y = old_rect.width = old_rect.height = 0 ;
 
+	view_init();
+
 	mode_create();
 }
 
@@ -327,6 +329,8 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	
 	// MW-2010-11-17: [[ Valgrind ]] Uninitialized value.
 	cursoroverride = false;
+
+	view_copy(sref);
 
 	mode_copy(sref);
 }
@@ -1008,17 +1012,9 @@ void MCStack::setrect(const MCRectangle &nrect)
 		return;
 #endif
 
-	// MW-2012-10-04: [[ Bug 10436 ]] Make sure we constrain stack size to screen size
-	//   if in fullscreen mode.
+	// IM-2013-09-23: [[ FullscreenMode ]] Use view to determine adjusted stack size
 	MCRectangle t_new_rect;
-	if (getextendedstate(ECS_FULLSCREEN))
-	{
-		const MCDisplay *t_display;
-		t_display = MCscreen -> getnearestdisplay(rect);
-		t_new_rect = t_display -> viewport;
-	}
-	else
-		t_new_rect = nrect;
+	t_new_rect = view_setstackrect(nrect);
 	
 	if (rect.x != t_new_rect.x || rect.y != t_new_rect.y)
 		state |= CS_BEEN_MOVED;
@@ -1068,6 +1064,11 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	case P_FULLSCREEN:
 			ep.setsvalue( MCU_btos(getextendedstate(ECS_FULLSCREEN)));
 	break;
+
+	// IM-2013-09-23: [[ FullscreenMode ]] Add stack fullscreenMode property
+	case P_FULLSCREENMODE:
+		ep.setsvalue(MCStackFullscreenModeToString(view_getfullscreenmode()));
+		break;
 		
 	case P_LONG_ID:
 	case P_LONG_NAME:
@@ -1593,6 +1594,7 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			if ( v_changed)
 			{
 				setextendedstate(t_bval, ECS_FULLSCREEN);
+				view_setfullscreen(t_bval);
 				
 				// MW-2012-10-04: [[ Bug 10436 ]] Use 'setrect' to change the rect
 				//   field.
@@ -1607,6 +1609,24 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		}
 	break;
 		
+	// IM-2013-09-23: [[ FullscreenMode ]] Add stack fullscreenMode property
+	case P_FULLSCREENMODE:
+		{
+			MCStackFullscreenMode t_mode;
+			if (!MCStackFullscreenModeFromString(ep.getcstring(), t_mode))
+			{
+				MCeerror->add(EE_STACK_BADFULLSCREENMODE, 0, 0, data);
+				return ES_ERROR;
+			}
+
+			if (t_mode != view_getfullscreenmode())
+			{
+				view_setfullscreenmode(t_mode);
+				if (view_getfullscreen() && opened > 0)
+					reopenwindow();
+			}
+		}
+		break;
 	case P_NAME:
 		{
 			// MW-2008-10-28: [[ ParentScripts ]] If this stack has its 'has parentscripts'

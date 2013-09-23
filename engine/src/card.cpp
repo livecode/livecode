@@ -672,7 +672,11 @@ Boolean MCCard::mdown(uint2 which)
 				cptr = new MCImage(*MCtemplateimage);
 				break;
 			case T_DROPPER:
-				MCscreen->dropper(getw(), MCmousex, MCmousey, NULL);
+				// IM-2013-09-23: [[ FullscreenMode ]] Get mouse loc in view coordinates
+				MCStack *t_mousestack;
+				MCPoint t_mouseloc;
+				MCscreen->getmouseloc(t_mousestack, t_mouseloc);
+				MCscreen->dropper(getw(), t_mouseloc.x, t_mouseloc.y, NULL);
 				message(MCM_color_changed);
 				break;
 			case T_BRUSH:

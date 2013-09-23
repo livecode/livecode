@@ -56,6 +56,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "font.h"
 #include "stacksecurity.h"
 
+#include "graphics_util.h"
+
 #define UNLICENSED_TIME 6.0
 #ifdef _DEBUG_MALLOC_INC
 #define LICENSED_TIME 1.0
@@ -1011,12 +1013,20 @@ void MCDispatch::wkup(Window w, const char *string, KeySym key)
 
 void MCDispatch::wmfocus_stack(MCStack *target, int2 x, int2 y)
 {
+	// IM-2013-09-23: [[ FullscreenMode ]] transform view -> stack coordinates
+	MCPoint t_stackloc;
 	if (menu != NULL)
-		menu->mfocus(x, y);
+	{
+		t_stackloc = menu->getstack()->view_viewtostackloc(MCPointMake(x, y));
+		menu->mfocus(t_stackloc.x, t_stackloc.y);
+	}
 	else
 	{
 		if (target != NULL)
-			target->mfocus(x, y);
+		{
+			t_stackloc = target->view_viewtostackloc(MCPointMake(x, y));
+			target->mfocus(t_stackloc.x, t_stackloc.y);
+		}
 	}
 }
 
@@ -1195,6 +1205,7 @@ MCDragAction MCDispatch::wmdragmove(Window w, int2 x, int2 y)
 	// changes.
 	static uint4 s_old_modifiers = 0;
 
+	/* OVERHAUL - REVISIT [[ FullscreenMode ]] - mouse loc view -> stack? */
 	MCStack *target = findstackd(w);
 	if (MCmousex != x || MCmousey != y || MCmodifierstate != s_old_modifiers)
 	{
