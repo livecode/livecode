@@ -161,21 +161,24 @@ regerror(int errcode, const regex_t *preg, MCStringRef &errbuf)
 	addmessage = " at offset ";
 	addlength = (preg != NULL && (int)preg->re_erroffset != -1)
 	            ? strlen(addmessage) + 6 : 0;
+	
+	
+    if (addlength > 0)
+    {
+        MCAutoStringRef t_error_string;
+        MCStringFormat(&t_error_string, "%s%s%-6d", message, addmessage, (int)preg->re_erroffset);
+        MCValueAssign(errbuf, *t_error_string);
 
-	if (MCStringGetLength(errbuf) > 0)
-	{
-
-		if (addlength > 0 && MCStringGetLength(errbuf) >= length + addlength)
-			MCStringFormat(errbuf, "%s%s%-6d", message, addmessage, (int)preg->re_erroffset);
-		else
-		{
-			/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *) message, MCStringGetLength(errbuf) - 1, errbuf);
-            MCAutoStringRef t_errbuf_copy;
-            MCStringMutableCopy(errbuf, &t_errbuf_copy);
-			/* UNCHECKED */ MCStringAppendNativeChars(*t_errbuf_copy, (const char_t)0, 1);
-            MCValueAssign(errbuf, *t_errbuf_copy);
-		}
-	}
+    }
+    else
+    {
+        /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *) message, MCStringGetLength(errbuf) - 1, errbuf);
+        MCAutoStringRef t_errbuf_copy;
+        MCStringMutableCopy(errbuf, &t_errbuf_copy);
+        /* UNCHECKED */ MCStringAppendNativeChars(*t_errbuf_copy, (const char_t)0, 1);
+        MCValueAssign(errbuf, *t_errbuf_copy);
+    }
+	
 	return length + addlength;
 }
 
@@ -302,7 +305,10 @@ static MCStringRef regexperror;
 
 void MCR_geterror(MCStringRef &r_error)
 {
-	r_error = MCValueRetain(regexperror);
+    if (regexperror == nil)
+        r_error = MCValueRetain(kMCEmptyString);
+    else
+        r_error = MCValueRetain(regexperror);
 }
 
 regexp *MCR_compile(MCStringRef exp)
@@ -331,7 +337,7 @@ int MCR_exec(regexp *prog, MCStringRef string, uint4 len)
 		{
 			return (0);
 		}
-		MCValueRelease(regexperror);
+		//MCValueRelease(regexperror);
 		regerror(status, NULL, regexperror);
 		return(0);
 	}
