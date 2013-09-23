@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "handler.h"
 #include "scriptpt.h"
 #include "variable.h"
@@ -893,8 +894,8 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 		t_success = i2d(i2d_SpcTimeStampRequest, t_request, t_request_data, t_request_length);
 
 	// Convert the request to base64
-	extern MCExecPoint *MCEPptr;
-	MCExecPoint ep(*MCEPptr);
+	extern MCExecContext *MCECptr;
+	MCExecPoint ep(MCECptr->GetEP());
 	if (t_success)
 	{
 		ep . setstaticbytes(t_request_data, t_request_length);

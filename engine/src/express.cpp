@@ -650,6 +650,7 @@ Parse_stat MCFuncref::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCFuncref::eval(MCExecPoint &ep)
 {
+	MCExecContext ctxt(ep);
 	if (MCscreen->abortkey())
 	{
 		MCeerror->add(EE_HANDLER_ABORT, line, pos);
@@ -719,11 +720,10 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 	// MW-2008-12-17: [[ Bug 7463 ]] Make sure we use the object from the execpoint, rather
 	//   than the 'parent' field in this.
 	MCObject *p = ep.getobj();
-	MCExecPoint *oldep = MCEPptr;
-	MCEPptr = &ep;
+	MCExecContext *oldctxt = MCECptr;
+	MCECptr = &ctxt;
 	Exec_stat stat = ES_NOT_HANDLED;
 	Boolean added = False;
-	MCExecContext ctxt(ep);
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
 		ep.setline(line);
@@ -760,7 +760,7 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
                 break;
         }
         
-		MCEPptr = oldep;
+		MCECptr = oldctxt;
 		if (added)
 			MCnexecutioncontexts--;
 	}
@@ -777,7 +777,7 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 			if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
 				stat = ES_PASS;
 		}
-		MCEPptr = oldep;
+		MCECptr = oldctxt;
 		MCdynamicpath = olddynamic;
 		if (added)
 			MCnexecutioncontexts--;

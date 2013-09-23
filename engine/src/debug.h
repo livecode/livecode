@@ -40,7 +40,7 @@ struct Watchvar
 
 #define MAX_CONTEXTS 100
 
-extern MCExecPoint *MCEPptr;
+extern MCExecContext *MCECptr;
 extern MCStack *MCtracestackptr;
 extern Window MCtracewindow;
 extern Boolean MCtrace;

@@ -294,8 +294,8 @@ void MCExecContext::LegacyThrow(Exec_errors p_error, uint32_t p_hint)
 
 MCObjectHandle *MCExecContext::GetObjectHandle(void)
 {
-    extern MCExecPoint *MCEPptr;
-	return MCEPptr->getobj()->gethandle();
+    extern MCExecContext *MCECptr;
+	return MCECptr->GetObject()->gethandle();
 }
 
 Exec_stat MCExecContext::Catch(uint2 p_line, uint2 p_pos)

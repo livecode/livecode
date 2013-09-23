@@ -1559,7 +1559,7 @@ check:
 		{
 			MCresult->clear(False);
 			MCExecPoint ep(MCdefaultstackptr, NULL, NULL);
-			MCExecPoint *epptr = MCEPptr == NULL ? &ep : MCEPptr;
+			MCExecPoint *epptr = MCECptr == NULL ? &ep : &MCECptr->GetEP();
 			epptr->setvalueref(s);
 			MCU_geturl(*epptr);
 			if (MCresult->isempty())

@@ -44,7 +44,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCExecPoint *MCEPptr;
+MCExecContext *MCECptr;
 MCStack *MCtracestackptr;
 Window MCtracewindow;
 Boolean MCtrace;
@@ -85,17 +85,17 @@ void MCB_setmsg(MCExecContext& ctxt, MCStringRef p_string)
 
 void MCB_trace(MCExecContext &ctxt, uint2 line, uint2 pos)
 {
-	MCServerDebugTrace(ep, line, pos);
+	MCServerDebugTrace(ctxt, line, pos);
 }
 
 void MCB_break(MCExecContext &ctxt, uint2 line, uint2 pos)
 {
-	MCServerDebugBreak(ep, line, pos);
+	MCServerDebugBreak(ctxt, line, pos);
 }
 
 void MCB_error(MCExecContext &ctxt, uint2 line, uint2 pos, uint2 id)
 {
-	MCServerDebugError(ep, line, pos, id);
+	MCServerDebugError(ctct, line, pos, id);
 	
 	// Increasing the error lock means that more MCB_error invocations won't occur as
 	// we step back up the (script) call stack.

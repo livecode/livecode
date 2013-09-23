@@ -461,8 +461,8 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 
 	}
 	MCObject *p = ep.getobj();
-	MCExecPoint *oldep = MCEPptr;
-	MCEPptr = &ep;
+	MCExecContext *oldctxt = MCECptr;
+	MCECptr = &ctxt;
 	stat = ES_NOT_HANDLED;
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
@@ -522,7 +522,7 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 			}
 		MCdynamicpath = olddynamic;
 	}
-	MCEPptr = oldep;
+	MCECptr = oldctxt;
 	if (added)
 		MCnexecutioncontexts--;
 	return stat;

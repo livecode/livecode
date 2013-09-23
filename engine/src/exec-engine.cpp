@@ -1045,8 +1045,8 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	MClockmessages = False;
 	
 	// Add a new entry in the execution contexts
-	MCExecPoint *oldep = MCEPptr;
-	MCEPptr = &ctxt . GetEP();
+	MCExecContext *oldctxt = MCECptr;
+	MCECptr = &ctxt;
 	Exec_stat t_stat;
 	t_stat = ES_NOT_HANDLED;
 	Boolean added = False;
@@ -1108,7 +1108,7 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	MClockmessages = t_old_lock;
 	
 	// Remove our entry from the contexts list
-	MCEPptr = oldep;
+	MCECptr = oldctxt;
 	if (added)
 		MCnexecutioncontexts--;
 }

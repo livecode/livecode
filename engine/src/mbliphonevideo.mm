@@ -169,8 +169,8 @@ static NSObject *s_movie_player_delegate = nil;
 
 - (void)movieWindowTouched: (UIControl*) p_sender
 {
-	extern MCExecPoint *MCEPptr;
-	MCEventQueuePostCustom(new MCMovieTouchedEvent(MCEPptr -> getobj()));
+	extern MCExecContext *MCECptr;
+	MCEventQueuePostCustom(new MCMovieTouchedEvent(MCECptr -> GetObject()));
 }
 
 @end
