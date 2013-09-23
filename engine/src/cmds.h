@@ -1984,4 +1984,45 @@ private:
 	MCString data;
 };
 
+// Feature:
+//   resolve-image
+//
+// Contributor:
+//   Monte Goulding (2013-04-17)
+//
+// Syntax:
+//   resolve image [id] <id or name> relative to <object reference>
+//
+// Action:
+//   This command resolves a short id or name of an image as would be used for
+//   an icon and sets it to the long ID of the image according to the documented
+//   rules for resolving icons.
+//
+//   it is set empty if the command fails to resolve the image which means it's
+//   not on any stack in memory.
+
+class MCResolveImage : public MCStatement
+{
+public:
+    MCResolveImage(void)
+    {
+        m_relative_object = nil;
+        m_id_or_name  = nil;
+        m_it = nil;
+    }
+	
+    virtual ~MCResolveImage(void);
+    
+    virtual Parse_stat parse(MCScriptPoint &p_sp);
+    
+    virtual Exec_stat exec(MCExecPoint &p_ep);
+    
+private:
+    MCChunk *m_relative_object;
+    MCExpression *m_id_or_name;
+    MCVarref *m_it;
+    bool m_is_id : 1;
+};
+
+
 #endif
