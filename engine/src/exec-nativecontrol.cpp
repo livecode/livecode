@@ -646,7 +646,9 @@ void MCNativeControlGetTarget(MCExecContext& ctxt, MCNativeControlIdentifier& r_
 	t_target = MCNativeControl::CurrentTarget();
 	if (t_target != nil)
 	{
-		if (t_target -> GetName() != nil)
+        MCAutoStringRef t_name;
+        t_target -> GetName(&t_name);
+		if (!MCStringIsEmpty(*t_name))
         {
             r_target . type = kMCNativeControlIdentifierName;
 			t_target -> GetName(ctxt, r_target . name);
