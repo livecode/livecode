@@ -3241,7 +3241,7 @@ public:
 		/* UNCHECKED */ MCStringMutableCopy(p_menuitem.label, t_label);
 		/* UNCHECKED */ MCStringFindAndReplaceChar(t_label, '\t', ' ', kMCStringOptionCompareExact);
 		MCValueRelease(p_menuitem.label);
-		/* UNCHECKED */ MCStringCopyAndRelease(t_label, p_menuitem.label);
+		/* UNCHECKED */ MCStringCopyAndRelease(t_label, p_menuitem->label);
 #endif
 
 		newbutton->menubutton = parent->menubutton;
