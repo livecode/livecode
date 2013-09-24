@@ -200,7 +200,7 @@ Parse_stat MCVisualEffect::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCVisualEffect::exec(MCExecPoint &ep)
+Exec_stat MCVisualEffect::exec(MCExecContext &ctxt)
 {
 #if 0	
 	MCEffectList *effectptr = MCcur_effects;
@@ -300,26 +300,26 @@ Exec_stat MCVisualEffect::exec(MCExecPoint &ep)
 
 	MCAutoStringRef t_name;
 
-	if (nameexp -> eval(ep) != ES_NORMAL)
+	if (nameexp -> eval(ctxt.GetEP()) != ES_NORMAL)
 	{
 		MCeerror -> add(EE_VISUAL_BADEXP, line, pos);
 		return ES_ERROR;
 	}
-	/* UNCHECKED */ ep . copyasstringref(&t_name);
+	/* UNCHECKED */ ctxt.GetEP() . copyasstringref(&t_name);
 
 	MCAutoStringRef t_sound;
 
 	if (soundexp != NULL)
 	{
-		if (soundexp->eval(ep) != ES_NORMAL)
+		if (soundexp->eval(ctxt.GetEP()) != ES_NORMAL)
 		{
 			MCeerror->add(EE_VISUAL_BADEXP, line, pos);
 			return ES_ERROR;
 		}
-		/* UNCHECKED */ ep.copyasstringref(&t_sound);
+		/* UNCHECKED */ ctxt.GetEP().copyasstringref(&t_sound);
 	}
 
-	MCScriptPoint spt(ep);
+	MCScriptPoint spt(ctxt);
 	MCerrorlock++;
 
 	// reset values so expression parsing can proceed
@@ -342,19 +342,18 @@ Exec_stat MCVisualEffect::exec(MCExecPoint &ep)
 	
 	MCerrorlock--;
 
-	MCExecContext ctxt(ep);	
 	MCAutoArray<MCInterfaceVisualEffectArgument> t_args_array;
 
 	for(KeyValue *t_parameter = parameters; t_parameter != nil; t_parameter = t_parameter -> next)
 	{
 		MCInterfaceVisualEffectArgument t_argument;
 		MCAutoStringRef t_value;
-		if (t_parameter -> value -> eval(ep) != ES_NORMAL)
+		if (t_parameter -> value -> eval(ctxt.GetEP()) != ES_NORMAL)
 		{
 			MCeerror -> add(EE_VISUAL_BADEXP, line, pos);
 			return ES_ERROR;
 		}
-		/* UNCHECKED */ ep . copyasstringref(&t_value);
+		/* UNCHECKED */ ctxt.GetEP() . copyasstringref(&t_value);
 
 		MCAutoStringRef t_key;
 		/* UNCHECKED */ MCStringCreateWithCString(t_parameter -> key, &t_key);
