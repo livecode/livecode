@@ -589,6 +589,12 @@ public:
 		m_ep . setrowdel(p_value);
 	}
 	//////////
+
+	bool SetValueRef(MCValueRef p_value)
+	{
+		return m_ep . setvalueref(p_value);
+	}
+
 	
 	// Convert the given valueref to a string. If the type is not convertable
 	// to a string, the empty string is returned.

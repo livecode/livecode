@@ -2896,13 +2896,13 @@ void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCObject *p_object, MCStrin
 	{
 		MCAutoStringRef t_name;
 		p_object->names(P_NAME, &t_name);
-		ctxt . GetEP() . setvalueref(*t_name);
-		if (MCdefaultstackptr->setprop(0, P_MAIN_STACK, ctxt . GetEP(), False) != ES_NORMAL)
-		{
+		ctxt . SetValueRef(*t_name);
+		MCdefaultstackptr->setstringprop(ctxt, 0, P_MAIN_STACK, False, *t_name);
+		/*{
 			delete MCdefaultstackptr;
 			ctxt . LegacyThrow(EE_CREATE_BADBGORCARD);
 			return;
-		}
+		}*/
 	}
 
 	MCtemplatestack->setflag(wasvisible, F_VISIBLE);
@@ -2911,8 +2911,8 @@ void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCObject *p_object, MCStrin
 
 	if (p_new_name != nil)
 	{
-		ctxt . GetEP() . setvalueref(p_new_name);
-		t_object->setprop(0, P_NAME, ctxt . GetEP(), False);
+		ctxt . SetValueRef(p_new_name);
+		t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
 	}
 	MCAutoStringRef t_id;
 	t_object->names(P_LONG_ID, &t_id);
@@ -2943,8 +2943,8 @@ void MCInterfaceExecCreateCard(MCExecContext& ctxt, MCStringRef p_new_name, bool
 
 	if (p_new_name != nil)
 	{
-		ctxt . GetEP() . setvalueref(p_new_name);
-		t_object->setprop(0, P_NAME, ctxt . GetEP(), False);
+		ctxt . SetValueRef(p_new_name);
+		t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
 	}
 
 	MCAutoStringRef t_id;
@@ -3011,8 +3011,8 @@ void MCInterfaceExecCreateControl(MCExecContext& ctxt, MCStringRef p_new_name, i
 
 	if (p_new_name != nil)
 	{
-		ctxt . GetEP() . setvalueref(p_new_name);
-		t_object->setprop(0, P_NAME, ctxt . GetEP(), False);
+		ctxt . SetValueRef(p_new_name);
+		t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
 	}
 
 	MCAutoStringRef t_id;
@@ -3040,8 +3040,8 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 				MCAutoStringRef t_new_name;
 				MCStringMutableCopyAndRelease(t_short_name, &t_new_name);
 				MCStringPrependNativeChars(*t_new_name, (const char_t *)MCcopystring, strlen(MCcopystring));
-				ctxt . GetEP() . setvalueref(*t_new_name);
-				t_object->setprop(0, P_NAME, ctxt . GetEP(), False);
+				ctxt . SetValueRef(*t_new_name);
+				t_object->setstringprop(ctxt, 0, P_NAME, False, *t_new_name);
 			}
 			MCdefaultstackptr = (MCStack *)t_object;
 
@@ -3114,8 +3114,8 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 
 	if (p_new_name != nil)
 	{
-		ctxt . GetEP() . setvalueref(p_new_name);
-		t_object->setprop(0, P_NAME, ctxt . GetEP(), False);
+		ctxt . SetValueRef(p_new_name);
+		t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
 	}
 	MCAutoStringRef t_id;
 	t_object->names(P_LONG_ID, &t_id);
