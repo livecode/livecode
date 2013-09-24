@@ -59,6 +59,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "revbuild.h"
 #include "parentscript.h"
 
+#include "group.h"
+
 #if defined(_WINDOWS_DESKTOP)
 #include "w32prefix.h"
 #include "w32dc.h"
@@ -619,6 +621,33 @@ static bool enumerate_handlers_for_object(MCObject *p_object, MCExecPoint &ep, b
 	t_handlers = p_object -> gethandlers();
 	if (t_handlers != NULL && p_object -> getstack() -> iskeyed())
 		p_first = t_handlers -> enumerate(ep, p_first);
+	
+	if (p_object -> gettype() == CT_CARD)
+	{
+		MCCard *t_card;
+		t_card = (MCCard *) p_object;
+		
+		MCObjptr *t_card_objs;
+		t_card_objs = t_card -> getobjptrs();		
+		
+		if (t_card_objs != NULL)
+		{
+			MCObjptr *t_object_ptr;
+			t_object_ptr = t_card_objs -> prev();
+			do
+			{
+				MCGroup *t_group;
+				t_group = t_object_ptr -> getrefasgroup();
+				if (t_group != NULL && t_group -> isbackground())
+				{
+					t_group -> parsescript(False);
+					p_first = enumerate_handlers_for_object(t_group, ep, p_first);
+				}
+				t_object_ptr = t_object_ptr -> prev();
+			}
+			while (t_object_ptr != t_card_objs -> prev());
+		}
+	}
 	
 	if (p_object -> getparentscript() != NULL)
 	{
