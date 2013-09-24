@@ -53,7 +53,6 @@
 
 	<references>
 		<function tag="md5Digest">md5Digest Function</function>
-		<message tag=""></message>
 	</references>
 
 	<description>
