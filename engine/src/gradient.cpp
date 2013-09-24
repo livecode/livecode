@@ -90,6 +90,7 @@ inline int32 fast_floor(double val) {
 #define STOP_INT_PRECISION 16
 #define STOP_INT_MAX ((1 << STOP_INT_PRECISION) - 1)
 #define STOP_INT_MIRROR_MAX ((2 << STOP_INT_PRECISION) - 1)
+#define GRADIENT_ROUND_EPSILON (float)0.000005
 
 #define GRADIENT_AA_SCALE (2)
 
@@ -618,10 +619,10 @@ Boolean MCGradientFillRampParse(MCGradientFillStop* &r_stops, uint1 &r_stop_coun
 	{
 		Boolean done1, done2;
 		uint4 offset;
-		offset = (uint4) (STOP_INT_MAX * MCU_fmin(1.0,MCU_fmax(0.0,MCU_strtor8(sptr, l, ',', done1))));
+        offset = (uint4) (STOP_INT_MAX * (GRADIENT_ROUND_EPSILON + MCU_fmin(1.0,MCU_fmax(0.0,MCU_strtor8(sptr, l, ',', done1)))));
 		uint1 r, g, b, a;
 		r = MCU_max(0, MCU_min(255, MCU_strtol(sptr, l, ',', done2)));
-		done1 &= done2;
+		done1 &= done2;	
 		g = MCU_max(0, MCU_min(255, MCU_strtol(sptr, l, ',', done2)));
 		done1 &= done2;
 		b = MCU_max(0, MCU_min(255, MCU_strtol(sptr, l, ',', done2)));
@@ -683,9 +684,9 @@ void MCGradientFillRampUnparse(MCGradientFillStop* p_stops, uint1 p_stop_count, 
 		
 		// MW-2008-08-07: Adjusting the precision of the stop value since we have at most 65535 values
 		//   which therefore need no more than 100000 decimal values.
-		t_strlen = sprintf(buf, "%.5f,%d,%d,%d", p_stops[i].offset * (1.0 / STOP_INT_MAX), r, g, b);
+		t_strlen = sprintf(buf, "%.5f,%d,%d,%d", (p_stops[i].offset * (1.0 / STOP_INT_MAX) + GRADIENT_ROUND_EPSILON), r, g, b);
 		if (a!=255)
-			sprintf(buf+t_strlen, ",%d", a);
+			sprintf(buf+t_strlen, ",%d", a);	
 		p_ep.concatcstring(buf, EC_RETURN, i==0);
 	}
 
