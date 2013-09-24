@@ -109,7 +109,7 @@ void MCStoreGetPurchaseList(MCExecContext& ctxt, MCStringRef& r_list)
         ctxt.Throw();
     else
     {
-        /* UNCHECKED */ ctxt.GetEP().copyasstringref(r_list);
+        /* UNCHECKED */ ctxt.CopyAsStringRef(r_list);
     }
 }
 

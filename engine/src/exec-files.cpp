@@ -1436,14 +1436,16 @@ void MCFilesExecReadComplete(MCExecContext& ctxt, MCStringRef p_output, IO_stat 
 		ctxt . SetTheResultToEmpty();
 		break;
 	}
+	MCAutoStringRef t_output_mutable_copy;
+	/* UNCHECKED */ MCStringMutableCopy(p_output, &t_output_mutable_copy);
 	if (t_textmode)
 	{
-		ctxt.GetEP().setvalueref(p_output);
-		ctxt.GetEP().texttobinary();
-		ctxt.GetEP().copyasstringref(p_output);
+		ctxt.SetValueRef(*t_output_mutable_copy);
+		ctxt.TextToBinary();
+		ctxt.CopyAsStringRef(&t_output_mutable_copy);
 	}
 	
-	ctxt . SetItToValue(p_output);
+	ctxt . SetItToValue(*t_output_mutable_copy);
 }
 
 void MCFilesExecReadUntil(MCExecContext& ctxt, IO_handle p_stream, index_t p_index, MCStringRef p_sentinel, double p_max_wait, int p_time_units, bool p_is_text, MCStringRef &r_output, IO_stat &r_stat)
@@ -1856,9 +1858,9 @@ void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStr
 	if (t_textmode)
 	{
 		MCAutoStringRef t_text_data;
-		ctxt.GetEP().setvalueref(p_data);
-		ctxt.GetEP().binarytotext();
-		ctxt.GetEP().copyasstringref(&t_text_data);
+		ctxt.SetValueRef(p_data);
+		ctxt.BinaryToText();
+		ctxt.CopyAsStringRef(&t_text_data);
 		MCFilesExecWriteToStream(ctxt, t_stream, *t_text_data, p_unit_type, t_stat);
 	}
 	else
@@ -1918,15 +1920,15 @@ void MCFilesExecWriteToProcess(MCExecContext& ctxt, MCNameRef p_process, MCStrin
 	if (t_textmode)
 	{
 		MCAutoStringRef t_text_data;
-		ctxt.GetEP().setvalueref(p_data);
-		ctxt.GetEP().binarytotext();
+		ctxt.SetValueRef(p_data);
+		ctxt.BinaryToText();
 		// MW-2004-11-17: EOD should only happen when writing to processes in text-mode
-		if (MCU_offset("\004", ctxt.GetEP().getsvalue(), offset, True))
+		if (MCU_offset("\004", ctxt.GetOldStringValue(), offset, True))
 		{
-			ctxt.GetEP().substring(0, offset);
+			ctxt.Substring(0, offset);
 			haseof = True;
 		}
-		ctxt.GetEP().copyasstringref(&t_text_data);
+		ctxt.CopyAsStringRef(&t_text_data);
 		MCFilesExecWriteToStream(ctxt, t_stream, *t_text_data, p_unit_type, t_stat);
 	}
 	else
