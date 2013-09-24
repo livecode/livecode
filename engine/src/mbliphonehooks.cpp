@@ -629,10 +629,24 @@ static uint8_t s_mov_4000c_prefix[] =
 	0xb8, 0x0c, 0x00, 0x08, 0x00
 };
 
+// MM-2013-09-23: [[ iOS7 Support ]] Tweaked fopen for iOS7.
 static trampoline_info_t s_trampolines[] =
 {
-
-#if defined(__IPHONE_6_0)
+#if defined(__IPHONE_7_0)
+	{ (void *)open, (void *)open_wrapper, (void **)&open_trampoline, s_push_mov_sub_18_prefix },
+	{ (void *)fopen, (void *)fopen_wrapper, (void **)&fopen_trampoline, s_push_mov_push_ebx_push_edi_prefix },
+	
+	{ (void *)stat, (void *)stat_wrapper, (void **)&stat_trampoline, s_push_mov_sub_18_prefix },
+	{ (void *)lstat, (void *)lstat_wrapper, (void **)&lstat_trampoline, s_push_mov_sub_18_prefix },
+	
+	{ (void *)opendir, (void *)opendir_wrapper, (void **)&opendir_trampoline, s_push_mov_sub_8_prefix },
+	{ (void *)readdir, (void *)readdir_wrapper, (void **)&readdir_trampoline, s_push_mov_push_push_prefix },
+	{ (void *)readdir_r, (void *)readdir_r_wrapper, (void **)&readdir_r_trampoline, s_push_mov_push_push_prefix },
+	{ (void *)closedir, (void *)closedir_wrapper, (void **)&closedir_trampoline, s_push_mov_push_push_prefix },
+	{ (void *)rewinddir, (void *)rewinddir_wrapper, (void **)&rewinddir_trampoline, s_push_mov_push_sub_14_prefix },
+	{ (void *)seekdir, (void *)seekdir_wrapper, (void **)&seekdir_trampoline, s_push_mov_push_push_prefix },
+	{ (void *)telldir, (void *)telldir_wrapper, (void **)&telldir_trampoline, s_push_mov_push_ebx_push_edi_prefix },
+#elif defined(__IPHONE_6_0)
 	{ (void *)open, (void *)open_wrapper, (void **)&open_trampoline, s_push_mov_sub_18_prefix },
 	{ (void *)fopen, (void *)fopen_wrapper, (void **)&fopen_trampoline, s_push_mov_sub_18_prefix },
 	

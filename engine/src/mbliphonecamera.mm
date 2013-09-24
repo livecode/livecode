@@ -38,7 +38,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface MCIPhoneImagePickerDialog : UIImagePickerController
+// MM-2013-09-23: [[ iOS7 Support ]] Added missing delegates implemented in order to appease llvm 5.0.
+@interface MCIPhoneImagePickerDialog : UIImagePickerController<UIImagePickerControllerDelegate, UIPopoverControllerDelegate, UINavigationControllerDelegate>
 {
 	bool m_cancelled;
 	bool m_running;

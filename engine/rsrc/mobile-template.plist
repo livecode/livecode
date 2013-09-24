@@ -51,6 +51,8 @@
 	</array>
 	<key>UIStatusBarHidden</key>
 		${STATUS_BAR_HIDDEN}
+	<key>UIStatusBarHidden~ipad</key>
+		${IPAD_STATUS_BAR_HIDDEN}
 	<key>UIStatusBarStyle</key>
 		${STATUS_BAR_STYLE}
 	<key>UIFileSharingEnabled</key>
