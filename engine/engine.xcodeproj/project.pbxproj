@@ -559,7 +559,6 @@
 		4DFFC7E013DD8A91006233A4 /* syscfdate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC7DE13DD8A91006233A4 /* syscfdate.cpp */; };
 		4DFFC7E113DD8A91006233A4 /* sysunxnetwork.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC7DF13DD8A91006233A4 /* sysunxnetwork.cpp */; };
 		4DFFC7E713DD8AB9006233A4 /* objectpropsets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC7E613DD8AB9006233A4 /* objectpropsets.cpp */; };
-		723E683A17EB41A1000CE804 /* dsklnx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 723E683917EB41A1000CE804 /* dsklnx.cpp */; };
 		A71F80540F4F178C003012FD /* Standalone.icns in Resources */ = {isa = PBXBuildFile; fileRef = A71F80530F4F178C003012FD /* Standalone.icns */; };
 		A71F80550F4F17C1003012FD /* LiveCode.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885610B80DEAC00200116 /* LiveCode.icns */; };
 		A71F80620F4F17F9003012FD /* StandaloneDoc.icns in Resources */ = {isa = PBXBuildFile; fileRef = A71F80610F4F17F9003012FD /* StandaloneDoc.icns */; };
@@ -1778,7 +1777,6 @@
 		4D587DCC0B8096B000200116 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				723E683917EB41A1000CE804 /* dsklnx.cpp */,
 				E864B42215BDABB400F5361C /* Legacy */,
 				4D838B06167B92FD003BEC7C /* Syntax */,
 				4DE3B0EE15888AA1008EB6B5 /* Exec */,
@@ -2022,6 +2020,7 @@
 		4D6F92F012AA5C8000026A72 /* Desktop - Linux */ = {
 			isa = PBXGroup;
 			children = (
+				723E683917EB41A1000CE804 /* dsklnx.cpp */,
 				4DFECF6613CEED7300288995 /* lnximage.cpp */,
 				4DFECF6713CEED7300288995 /* lnxmisc.cpp */,
 				4D7740F21226B930001C9150 /* lnxans.cpp */,
@@ -3524,7 +3523,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D221F46171D632600E7E557 /* startupstack.cpp in Sources */,
-				723E683A17EB41A1000CE804 /* dsklnx.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
