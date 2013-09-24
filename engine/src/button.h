@@ -279,8 +279,8 @@ public:
 	
 	void openmenu(Boolean grab);
 	void freemenu(Boolean force);
-	void docascade(MCStringRef &x_pick);
 	MCRange getmenurange();
+	void docascade(MCStringRef t_pick);
 	void setupmenu();
 	bool selectedchunk(MCStringRef& r_string);
 	bool selectedline(MCStringRef& r_string);

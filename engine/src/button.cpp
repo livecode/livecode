@@ -736,7 +736,7 @@ Boolean MCButton::kdown(const char *string, KeySym key)
 				else
 				{
 					if (!(state & CS_IGNORE_MENU))
-						docascade(&t_pick);
+						docascade(*t_pick);
 				}
 			}
 			else
@@ -1321,7 +1321,7 @@ Boolean MCButton::mup(uint2 which)
 					if (entry != NULL)
 						entry->settext(0, *t_pick, False);
 				}
-				docascade(&t_pick);
+				docascade(*t_pick);
 			}
 			else
 				message_with_args(MCM_mouse_release, which);
@@ -3504,11 +3504,9 @@ void MCButton::openmenu(Boolean grab)
 			if (t_is_unicode)
 				ep . utf8toutf16();
 			// update the label text
-			delete label;
-			labelsize = ep . getsvalue() . getlength();
-			label = new char[labelsize];
-			memcpy(label, ep . getsvalue() . getstring(), labelsize);
-			flags |= F_LABEL;
+			MCAutoStringRef t_label;
+			/* UNCHECKED */ MCStringCreateWithCString(t_newlabel, &t_label);
+			MCValueAssign(label, *t_label);
 			message_with_args(MCM_menu_pick, ep . getsvalue());
 		}
 		return;
@@ -3636,8 +3634,9 @@ void MCButton::freemenu(Boolean force)
 			}
 }
 
-void MCButton::docascade(MCStringRef &x_pick)
+void MCButton::docascade(MCStringRef p_pick)
 {
+	MCAutoStringRef t_pick;
 	MCButton *pptr = this;
 	if (MCNameIsEmpty(menuname) && MCStringIsEmpty(menustring))
 	{
@@ -3653,28 +3652,26 @@ void MCButton::docascade(MCStringRef &x_pick)
 			else
 				t_label = pptr->getlabeltext();
 			
-			MCStringRef t_pick = nil;
-			/* UNCHECKED */ MCStringCreateMutable(0, t_pick);
-			/* UNCHECKED */ MCStringAppend(t_pick, t_label);
-			/* UNCHECKED */ MCStringAppendFormat(t_pick, "|");
-			/* UNCHECKED */ MCStringAppend(t_pick, x_pick);
-			
-			MCValueRelease(x_pick);
-			MCStringCopyAndRelease(t_pick, x_pick);
+			/* UNCHECKED */ MCStringFormat(&t_pick, "%@|%@", t_label, p_pick);
 
 			pptr = (MCButton *)pptr->parent->getparent()->getparent();
 			pptr->state |= CS_IGNORE_MENU;
 		}
 	}
+	else
+	{
+			t_pick = p_pick;
+	}	
+	
 	if (pptr != this)
 	{
 		MCParameter *param = new MCParameter;
-		param->setvalueref_argument(x_pick);
+		param->setvalueref_argument(*t_pick);
 		MCscreen->addmessage(pptr, MCM_menu_pick, MCS_time(), param);
 	}
 	else
 	{
-		Exec_stat es = pptr->message_with_valueref_args(MCM_menu_pick, x_pick);
+		Exec_stat es = pptr->message_with_valueref_args(MCM_menu_pick, *t_pick);
 		if (es == ES_NOT_HANDLED || es == ES_PASS)
 			pptr->message_with_args(MCM_mouse_up, menubutton);
 	}
