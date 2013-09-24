@@ -2166,12 +2166,13 @@ void MCInterfaceExecDeleteObjectChunks(MCExecContext& ctxt, MCObjectChunkPtr *p_
 			//p_chunks[i] . object -> getprop(p_chunks[i] . part_id, P_UNICODE_TEXT, ctxt . GetEP(), False);
 
 			ctxt . Utf16ToUtf8();
-
-			/* UNCHECKED */ MCStringReplace(t_value, MCRangeMake(p_chunks[i] . start, p_chunks[i] . finish), kMCEmptyString);
+			MCAutoStringRef t_value_mutable_copy;
+			MCStringMutableCopy(t_value, &t_value_mutable_copy);
+			/* UNCHECKED */ MCStringReplace(*t_value_mutable_copy, MCRangeMake(p_chunks[i] . start, p_chunks[i] . finish - p_chunks[i] . start), kMCEmptyString);
 
 			ctxt . Utf8ToUtf16();
 			
-			p_chunks[i] . object -> setstringprop(ctxt, p_chunks[i] . part_id, P_UNICODE_TEXT, False, t_value);
+			p_chunks[i] . object -> setstringprop(ctxt, p_chunks[i] . part_id, P_UNICODE_TEXT, False, *t_value_mutable_copy);
 			MCValueRelease(t_value);
 		}
 		else if (p_chunks[i] . object -> gettype() == CT_FIELD)
@@ -2187,6 +2188,8 @@ static void MCInterfaceExecChangeChunkOfButton(MCExecContext& ctxt, MCObjectChun
 	p_target . object -> getstringprop(ctxt, p_target . part_id, P_UNICODE_TEXT, False, t_value);
 
 	ctxt . Utf16ToUtf8();
+	MCAutoStringRef t_value_mutable_copy;
+	MCStringMutableCopy(t_value, &t_value_mutable_copy);
 
 	int4 start, end;
 	start = p_target . start;
@@ -2197,40 +2200,40 @@ static void MCInterfaceExecChangeChunkOfButton(MCExecContext& ctxt, MCObjectChun
 	if (p_prop == P_DISABLED)
 		if (p_value)
 		{
-			if (MCStringGetNativeCharAtIndex(t_value, start) != '(')
-				/* UNCHECKED */ MCStringInsert(t_value, start, MCSTR("(")), t_changed = true;
+			if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start) != '(')
+				/* UNCHECKED */ MCStringInsert(*t_value_mutable_copy, start, MCSTR("(")), t_changed = true;
 		}
 		else
 		{
-			if (MCStringGetNativeCharAtIndex(t_value, start) == '(')
-				/* UNCHECKED */ MCStringReplace(t_value, MCRangeMake(start, start + 1), kMCEmptyString), t_changed = true;
+			if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start) == '(')
+				/* UNCHECKED */ MCStringReplace(*t_value_mutable_copy, MCRangeMake(start, 1), kMCEmptyString), t_changed = true;
 		}
 	else
 	{
-		if (MCStringGetNativeCharAtIndex(t_value, start) == '(')
+		if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start) == '(')
 			start++;
 		if (p_value)
 		{
-			if (MCStringGetNativeCharAtIndex(t_value, start + 1) == 'n')
-				/* UNCHECKED */ MCStringReplace(t_value, MCRangeMake(start + 1, start + 2), MCSTR("c")), t_changed = true;
+			if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start + 1) == 'n')
+				/* UNCHECKED */ MCStringReplace(*t_value_mutable_copy, MCRangeMake(start + 1, 1), MCSTR("c")), t_changed = true;
 			else
-				if (MCStringGetNativeCharAtIndex(t_value, start + 1) == 'u')
-					/* UNCHECKED */ MCStringReplace(t_value, MCRangeMake(start + 1, start + 2), MCSTR("r")), t_changed = true;
+				if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start + 1) == 'u')
+					/* UNCHECKED */ MCStringReplace(*t_value_mutable_copy, MCRangeMake(start + 1, 1), MCSTR("r")), t_changed = true;
 		}
 		else
 		{
-			if (MCStringGetNativeCharAtIndex(t_value, start + 1) == 'c')
-				/* UNCHECKED */ MCStringReplace(t_value, MCRangeMake(start + 1, start + 2), MCSTR("n")), t_changed = true;
+			if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start + 1) == 'c')
+				/* UNCHECKED */ MCStringReplace(*t_value_mutable_copy, MCRangeMake(start + 1, 1), MCSTR("n")), t_changed = true;
 			else
-				if (MCStringGetNativeCharAtIndex(t_value, start + 1) == 'r')
-					/* UNCHECKED */ MCStringReplace(t_value, MCRangeMake(start + 1, start + 2), MCSTR("u")), t_changed = true;
+				if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start + 1) == 'r')
+					/* UNCHECKED */ MCStringReplace(*t_value_mutable_copy, MCRangeMake(start + 1, 1), MCSTR("u")), t_changed = true;
 		}
 	}
 
 	if (t_changed)
 	{
 		ctxt . Utf16ToUtf8();
-		p_target . object->setstringprop(ctxt, p_target . part_id, P_UNICODE_TEXT, False, t_value);		
+		p_target . object->setstringprop(ctxt, p_target . part_id, P_UNICODE_TEXT, False, *t_value_mutable_copy);		
 	}
 	MCValueRelease(t_value);
 }
