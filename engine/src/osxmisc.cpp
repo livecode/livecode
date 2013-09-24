@@ -386,7 +386,7 @@ static void getmacmenuitemtext(MenuHandle mh, uint2 mitem, MCStringRef &r_string
 		MCStringRef t_titlestr;
 		CopyMenuTitleAsCFString(mh, &cftitlestr);
 		/* UNCHECKED */ MCStringCreateWithCFString(cftitlestr, t_titlestr);
-		CFRelease(t_menupick);
+		MCValueRelease(t_menupick);
 		
 		/* UNCHECKED */ MCStringCreateMutable(0, t_menupick);
 		/* UNCHECKED */ MCStringAppend(t_menupick, t_titlestr);
