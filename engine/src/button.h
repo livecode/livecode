@@ -281,7 +281,7 @@ public:
 	
 	void openmenu(Boolean grab);
 	void freemenu(Boolean force);
-	void docascade(MCStringRef &x_pick);
+	void docascade(MCStringRef t_pick);
 	void getmenuptrs(const char *&sptr, const char *&eptr);
 	void setupmenu();
 	bool selectedchunk(MCStringRef& r_string);
