@@ -58,6 +58,13 @@ struct MCSortnode
 		if (svalue != nil)
 			MCValueRelease(svalue);
 	}
+	
+	MCSortnode& operator= (const MCSortnode& s)
+	{
+		MCValueAssign(svalue, s.svalue);
+		data = s.data;
+		return *this;
+	}
 };
 
 extern void MCU_play();

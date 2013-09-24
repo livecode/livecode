@@ -1239,9 +1239,10 @@ static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean
 			n2--;
 		}
 	}
-	if (n1 > 0)
-		memcpy(tmp, b1, n1 * sizeof(MCSortnode));
-	memcpy(b, t, (n - n2) * sizeof(MCSortnode));
+	for (uindex_t i = 0; i < n1; i++)
+		tmp[i] = b1[i];
+	for (uindex_t i = 0; i < (n - n2); i++)
+		b[i] = t[i];
 }
 
 void MCU_sort(MCSortnode *items, uint4 nitems,
@@ -1251,7 +1252,7 @@ void MCU_sort(MCSortnode *items, uint4 nitems,
 		return;
 	MCSortnode *tmp = new MCSortnode[nitems];
 	msort(items, nitems, tmp, form, dir == ST_DESCENDING);
-	delete tmp;
+	delete[] tmp;
 }
 
 #if !defined(_DEBUG_MEMORY)
