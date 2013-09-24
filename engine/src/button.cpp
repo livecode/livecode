@@ -3524,11 +3524,9 @@ void MCButton::openmenu(Boolean grab)
 			if (t_is_unicode)
 				ep . utf8toutf16();
 			// update the label text
-			delete label;
-			labelsize = ep . getsvalue() . getlength();
-			label = new char[labelsize];
-			memcpy(label, ep . getsvalue() . getstring(), labelsize);
-			flags |= F_LABEL;
+			MCAutoStringRef t_label;
+			/* UNCHECKED */ MCStringCreateWithCString(t_newlabel, &t_label);
+			MCValueAssign(label, *t_label);
 			message_with_args(MCM_menu_pick, ep . getsvalue());
 		}
 		return;
