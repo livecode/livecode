@@ -3443,7 +3443,7 @@ Boolean MCButton::findmenu(bool p_just_for_accel)
 	return menu != NULL;
 }
 
-bool MCSystemPick(const char *p_options, bool p_is_unicode, bool p_use_checkmark, uint32_t p_initial_index, uint32_t& r_chosen_index, MCRectangle p_button_rect);
+bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initial_index, uint32_t& r_chosen_index, MCRectangle p_button_rect);
 
 void MCButton::openmenu(Boolean grab)
 {
@@ -3467,47 +3467,28 @@ void MCButton::openmenu(Boolean grab)
 		MCButton *pptr;
 		pptr = this;
 		// get the label and menu item strings
-		MCString t_menustring;
-		pptr->getmenustring(t_menustring);
-		// test if we are processing unicode
-		bool t_is_unicode = hasunicode();
-		MCExecPoint ep(nil, nil, nil);
-		if (t_is_unicode)
-		{
-			// convert unicode to binary 
-			ep . setsvalue(t_menustring);
-			ep . utf16toutf8();
-			t_menustring = ep . getsvalue();
-		}
-		
-		// MW-2012-10-08: [[ Bug 10254 ]] MCSystemPick expects a C-string so make sure we give it one.
-		char *t_menustring_cstring;
-		t_menustring_cstring = t_menustring . clone();
+		MCStringRef t_menustring;
+		t_menustring = getmenustring();
 		
 		// process data using the pick wheel
 		t_selected = menuhistory;
-		t_result = MCSystemPick(t_menustring_cstring, t_is_unicode, false, t_selected, t_chosen_option, rect);
-		
-		free(t_menustring_cstring);
+		t_result = MCSystemPick(t_menustring, false, t_selected, t_chosen_option, rect);
 		
 		// populate the label with the value returned from the pick wheel if the user changed the selection
 		if (t_result && t_chosen_option > 0)
 		{
 			setmenuhistoryprop(t_chosen_option);
-			t_menustringcopy = t_menustring.clone();
-			char *t_newlabel;
-			t_newlabel = strtok((char *)t_menustringcopy.getstring(), "\n");
-			for (i = 1; i < t_chosen_option; i++)
-				t_newlabel = strtok(NULL, "\n");
-			// ensure processing takes care of unicode
-			ep . setsvalue(t_newlabel);
-			if (t_is_unicode)
-				ep . utf8toutf16();
-			// update the label text
+			
+			uindex_t t_offset = 0;
+			for (uindex_t i = 0; i < t_chosen_option; i++)
+				/* UNCHECKED */ MCStringFirstIndexOfChar(t_menustring, '\n', t_offset, kMCStringOptionCompareExact, t_offset);
+			
 			MCAutoStringRef t_label;
-			/* UNCHECKED */ MCStringCreateWithCString(t_newlabel, &t_label);
+			/* UNCHECKED */ MCStringCopySubstring(t_menustring, 
+												  MCRangeMake(t_offset, MCStringGetLength(t_menustring) - t_offset),
+												  &t_label);
 			MCValueAssign(label, *t_label);
-			message_with_args(MCM_menu_pick, ep . getsvalue());
+			message_with_valueref_args(MCM_menu_pick, *t_label);
 		}
 		return;
 	}
