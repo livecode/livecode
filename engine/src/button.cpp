@@ -3310,8 +3310,8 @@ public:
 							/* UNCHECKED */ MCStringAppendFormat(t_acceltext, "Alt+");
 						if (t_mods & MS_SHIFT)
 							/* UNCHECKED */ MCStringAppendFormat(t_acceltext, "Shift+");
-						if (t_keyname != NULL)
-							/* UNCHECKED */ MCStringAppendFormat(t_acceltext, "%s", t_keyname);
+						if (t_keyname != NULL && !MCStringIsEmpty(t_keyname))
+							/* UNCHECKED */ MCStringAppend(t_acceltext, t_keyname);
 						else
 							/* UNCHECKED */ MCStringAppendFormat(t_acceltext, "%c", t_key);
 
