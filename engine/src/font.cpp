@@ -175,7 +175,7 @@ void MCFontDrawTextSubstring(MCFontRef font, MCStringRef p_text, MCRange p_range
 	if (t_native_text != nil)
 		return MCFontDrawText(font, (const char *)(t_native_text + p_range.offset), p_range.length, false, context, x, y, image);
 	
-	return MCFontDrawText(font, (const char *)(t_native_text + p_range.offset), p_range.length, true, context, x, y, image);
+	return MCFontDrawText(font, (const char *)(MCStringGetCharPtr(p_text) + p_range.offset), p_range.length, true, context, x, y, image);
 }
 
 MCFontStyle MCFontStyleFromTextStyle(uint2 p_text_style)
