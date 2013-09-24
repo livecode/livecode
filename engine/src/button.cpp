@@ -1319,6 +1319,7 @@ Boolean MCButton::mup(uint2 which)
 			{
 				if (menumode == WM_OPTION || menumode == WM_COMBO)
 				{
+					MCValueAssign(label, *t_pick);
 					if (entry != NULL)
 						entry->settext(0, *t_pick, False);
 				}
@@ -2956,7 +2957,7 @@ void MCButton::getentrytext()
 	MCExecPoint ep;
 	entry->exportasplaintext(0, ep, 0, INT32_MAX, hasunicode());
 	MCStringRef t_label = nil;
-	/* UNCHECKED */ MCStringCreateWithCString(ep.getsvalue().getstring(), t_label);
+	/* UNCHECKED */ MCStringCreateWithOldString(ep.getsvalue(), t_label);
 	MCValueAssign(label, t_label);
 	MCValueRelease(t_label);
 }
@@ -3726,6 +3727,8 @@ bool MCButton::selectedtext(MCStringRef& r_string)
 
 MCStringRef MCButton::getlabeltext()
 {
+	if (entry != nil)
+		getentrytext();
 	if (!MCStringIsEmpty(label))
 		return label;
 	else
@@ -3752,23 +3755,22 @@ bool MCButton::resetlabel()
 		{
 			MCRange t_range;
 			t_range = getmenurange();
-			MCStringRef t_label = nil;
+			MCAutoStringRef t_label;
 			if (t_range.length == 0)
 			{
 				setmenuhistoryprop(1);
-				t_label = MCValueRetain(kMCEmptyString);
+				t_label = kMCEmptyString;
 			}
 			else
 			{
-				/* UNCHECKED */ MCStringCopySubstring(menustring, t_range, t_label);
+				/* UNCHECKED */ MCStringCopySubstring(menustring, t_range, &t_label);
 			}
 			if (entry != NULL)
 				entry->settext(0, label, False);
 
-			if (!MCStringIsEqualTo(label, t_label, kMCStringOptionCompareExact))
+			if (!MCStringIsEqualTo(label, *t_label, kMCStringOptionCompareExact))
 			{
-				MCValueAssign(label, t_label);
-				MCValueRelease(t_label);
+				MCValueAssign(label, *t_label);
 				changed = true;
 			}
 		}
