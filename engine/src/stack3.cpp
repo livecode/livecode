@@ -1816,6 +1816,7 @@ void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uint2 &nstring
 	}
 	if (nstrings == 0)
 	{
+        tdest_str = new MCStringRef;
 		tdest_str[0] = MCValueRetain(source);
 		nstrings = 1;
 	}
