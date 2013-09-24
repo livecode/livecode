@@ -4,16 +4,15 @@
 	<type>property</type>
 
 	<syntax>
-		<example>set the padding [of line <i>lineNumber</i>] of <i>field</i> to <i>pixels</i></example>
+		<example>set the padding of line <i>lineNumber</i> of <i>fieldReference</i> to <i>pixels</i></example>
 	</syntax>
 
 	<synonyms>
 	</synonyms>
 
-	<summary>Determines the padding of a the cells of a table in a <keyword tag="field">field</keyword>.</summary>
+	<summary>Determines the padding of the cells of a table in a <keyword tag="field">field</keyword>.</summary>
 
 	<examples>
-<example>set the padding of field 1 to 10</example>
 <example>set the padding of line 5 of field 1 to 10</example>
 	</examples>
 
