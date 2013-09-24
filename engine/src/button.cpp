@@ -1327,6 +1327,7 @@ Boolean MCButton::mup(uint2 which)
 			{
 				if (menumode == WM_OPTION || menumode == WM_COMBO)
 				{
+					MCValueAssign(label, *t_pick);
 					if (entry != NULL)
 						entry->settext(0, *t_pick, False);
 				}
@@ -2959,7 +2960,7 @@ void MCButton::getentrytext()
 	MCExecPoint ep;
 	entry->exportasplaintext(0, ep, 0, INT32_MAX, hasunicode());
 	MCStringRef t_label = nil;
-	/* UNCHECKED */ MCStringCreateWithCString(ep.getsvalue().getstring(), t_label);
+	/* UNCHECKED */ MCStringCreateWithOldString(ep.getsvalue(), t_label);
 	MCValueAssign(label, t_label);
 	MCValueRelease(t_label);
 }
@@ -2973,7 +2974,7 @@ void MCButton::createentry()
 		entry = (MCField *)MCtemplatefield->clone(False, OP_NONE, false);
 		// MW-2005-08-16: [[Bug 2820]] If we can't be selected, let us make sure our field can't either!
 		entry->setextraflag(getextraflag(EF_CANT_SELECT), EF_CANT_SELECT);
-		entry->setupentry(this, MCString(MCStringGetCString(label)), hasunicode());
+		entry->setupentry(this, MCStringGetOldString(label), hasunicode());
 		entry->open();
 		setrect(rect);
 	}
@@ -3327,10 +3328,10 @@ public:
 				bstack[stackdepth].maxaccelwidth = MCU_max(bstack[stackdepth].maxaccelwidth, MCFontMeasureText(fontref, newbutton->acceltext));
 			if (width > bstack[stackdepth].maxwidth)
 				bstack[stackdepth].maxwidth = width;
-			MCStringRef t_label = nil;
-			if (!MCStringCreateWithCString(p_menuitem->label.getstring(), t_label))
+			MCAutoStringRef t_label;
+			if (!MCStringCreateWithOldString(p_menuitem->label, &t_label))
 				return false;
-			MCValueAssign(newbutton->label, t_label);
+			MCValueAssign(newbutton->label, *t_label);
 			if (p_menuitem -> is_unicode)
 				newbutton->m_font_flags |= FF_HAS_UNICODE;
 
@@ -3744,6 +3745,8 @@ bool MCButton::selectedtext(MCStringRef& r_string)
 
 MCStringRef MCButton::getlabeltext()
 {
+	if (entry != nil)
+		getentrytext();
 	if (!MCStringIsEmpty(label))
 		return label;
 	else
@@ -3771,23 +3774,22 @@ bool MCButton::resetlabel()
 			const char *sptr;
 			const char *eptr;
 			getmenuptrs(sptr, eptr);
-			MCStringRef t_label = nil;
+			MCAutoStringRef t_label;
 			if (eptr - sptr == 0)
 			{
 				setmenuhistoryprop(1);
-				t_label = MCValueRetain(kMCEmptyString);
+				t_label = kMCEmptyString;
 			}
 			else
 			{
-				/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)sptr, eptr - sptr, t_label);
+				/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)sptr, eptr - sptr, &t_label);
 			}
 			if (entry != NULL)
 				entry->settext(0, label, False);
 
-			if (!MCStringIsEqualTo(label, t_label, kMCStringOptionCompareExact))
+			if (!MCStringIsEqualTo(label, *t_label, kMCStringOptionCompareExact))
 			{
-				MCValueAssign(label, t_label);
-				MCValueRelease(t_label);
+				MCValueAssign(label, *t_label);
 				changed = true;
 			}
 		}
