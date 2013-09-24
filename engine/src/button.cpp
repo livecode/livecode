@@ -738,7 +738,7 @@ Boolean MCButton::kdown(MCStringRef p_string, KeySym key)
 				else
 				{
 					if (!(state & CS_IGNORE_MENU))
-						docascade(&t_pick);
+						docascade(*t_pick);
 				}
 			}
 			else
@@ -1323,7 +1323,7 @@ Boolean MCButton::mup(uint2 which)
 					if (entry != NULL)
 						entry->settext(0, *t_pick, False);
 				}
-				docascade(&t_pick);
+				docascade(*t_pick);
 			}
 			else
 				message_with_args(MCM_mouse_release, which);
@@ -3312,8 +3312,8 @@ public:
 							/* UNCHECKED */ MCStringAppendFormat(t_acceltext, "Alt+");
 						if (t_mods & MS_SHIFT)
 							/* UNCHECKED */ MCStringAppendFormat(t_acceltext, "Shift+");
-						if (t_keyname != NULL)
-							/* UNCHECKED */ MCStringAppendFormat(t_acceltext, "%s", t_keyname);
+						if (t_keyname != NULL && !MCStringIsEmpty(t_keyname))
+							/* UNCHECKED */ MCStringAppend(t_acceltext, t_keyname);
 						else
 							/* UNCHECKED */ MCStringAppendFormat(t_acceltext, "%c", t_key);
 
@@ -3445,7 +3445,7 @@ Boolean MCButton::findmenu(bool p_just_for_accel)
 	return menu != NULL;
 }
 
-bool MCSystemPick(const char *p_options, bool p_is_unicode, bool p_use_checkmark, uint32_t p_initial_index, uint32_t& r_chosen_index, MCRectangle p_button_rect);
+bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initial_index, uint32_t& r_chosen_index, MCRectangle p_button_rect);
 
 void MCButton::openmenu(Boolean grab)
 {
@@ -3469,49 +3469,28 @@ void MCButton::openmenu(Boolean grab)
 		MCButton *pptr;
 		pptr = this;
 		// get the label and menu item strings
-		MCString t_menustring;
-		pptr->getmenustring(t_menustring);
-		// test if we are processing unicode
-		bool t_is_unicode = hasunicode();
-		MCExecPoint ep(nil, nil, nil);
-		if (t_is_unicode)
-		{
-			// convert unicode to binary 
-			ep . setsvalue(t_menustring);
-			ep . utf16toutf8();
-			t_menustring = ep . getsvalue();
-		}
-		
-		// MW-2012-10-08: [[ Bug 10254 ]] MCSystemPick expects a C-string so make sure we give it one.
-		char *t_menustring_cstring;
-		t_menustring_cstring = t_menustring . clone();
+		MCStringRef t_menustring;
+		t_menustring = getmenustring();
 		
 		// process data using the pick wheel
 		t_selected = menuhistory;
-		t_result = MCSystemPick(t_menustring_cstring, t_is_unicode, false, t_selected, t_chosen_option, rect);
-		
-		free(t_menustring_cstring);
+		t_result = MCSystemPick(t_menustring, false, t_selected, t_chosen_option, rect);
 		
 		// populate the label with the value returned from the pick wheel if the user changed the selection
 		if (t_result && t_chosen_option > 0)
 		{
 			setmenuhistoryprop(t_chosen_option);
-			t_menustringcopy = t_menustring.clone();
-			char *t_newlabel;
-			t_newlabel = strtok((char *)t_menustringcopy.getstring(), "\n");
-			for (i = 1; i < t_chosen_option; i++)
-				t_newlabel = strtok(NULL, "\n");
-			// ensure processing takes care of unicode
-			ep . setsvalue(t_newlabel);
-			if (t_is_unicode)
-				ep . utf8toutf16();
-			// update the label text
-			delete label;
-			labelsize = ep . getsvalue() . getlength();
-			label = new char[labelsize];
-			memcpy(label, ep . getsvalue() . getstring(), labelsize);
-			flags |= F_LABEL;
-			message_with_args(MCM_menu_pick, ep . getsvalue());
+			
+			uindex_t t_offset = 0;
+			for (uindex_t i = 0; i < t_chosen_option; i++)
+				/* UNCHECKED */ MCStringFirstIndexOfChar(t_menustring, '\n', t_offset, kMCStringOptionCompareExact, t_offset);
+			
+			MCAutoStringRef t_label;
+			/* UNCHECKED */ MCStringCopySubstring(t_menustring, 
+												  MCRangeMake(t_offset, MCStringGetLength(t_menustring) - t_offset),
+												  &t_label);
+			MCValueAssign(label, *t_label);
+			message_with_valueref_args(MCM_menu_pick, *t_label);
 		}
 		return;
 	}
@@ -3638,8 +3617,9 @@ void MCButton::freemenu(Boolean force)
 			}
 }
 
-void MCButton::docascade(MCStringRef &x_pick)
+void MCButton::docascade(MCStringRef p_pick)
 {
+	MCAutoStringRef t_pick;
 	MCButton *pptr = this;
 	if (MCNameIsEmpty(menuname) && MCStringIsEmpty(menustring))
 	{
@@ -3655,28 +3635,26 @@ void MCButton::docascade(MCStringRef &x_pick)
 			else
 				t_label = pptr->getlabeltext();
 			
-			MCStringRef t_pick = nil;
-			/* UNCHECKED */ MCStringCreateMutable(0, t_pick);
-			/* UNCHECKED */ MCStringAppend(t_pick, t_label);
-			/* UNCHECKED */ MCStringAppendFormat(t_pick, "|");
-			/* UNCHECKED */ MCStringAppend(t_pick, x_pick);
-			
-			MCValueRelease(x_pick);
-			MCStringCopyAndRelease(t_pick, x_pick);
+			/* UNCHECKED */ MCStringFormat(&t_pick, "%@|%@", t_label, p_pick);
 
 			pptr = (MCButton *)pptr->parent->getparent()->getparent();
 			pptr->state |= CS_IGNORE_MENU;
 		}
 	}
+	else
+	{
+			t_pick = p_pick;
+	}	
+	
 	if (pptr != this)
 	{
 		MCParameter *param = new MCParameter;
-		param->setvalueref_argument(x_pick);
+		param->setvalueref_argument(*t_pick);
 		MCscreen->addmessage(pptr, MCM_menu_pick, MCS_time(), param);
 	}
 	else
 	{
-		Exec_stat es = pptr->message_with_valueref_args(MCM_menu_pick, x_pick);
+		Exec_stat es = pptr->message_with_valueref_args(MCM_menu_pick, *t_pick);
 		if (es == ES_NOT_HANDLED || es == ES_PASS)
 			pptr->message_with_args(MCM_mouse_up, menubutton);
 	}
