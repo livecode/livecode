@@ -1143,17 +1143,19 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
 					sptr++;
 			if (*sptr)
 				*sptr++ = '\0';
-			MCString pdata = startptr;
-			ctxt . GetEP() . setsvalue(pdata);
+			MCAutoStringRef t_expression;
+			/* UNCHECKED */ MCStringCreateWithCString(startptr, &t_expression);
 			
 			MCParameter *newparam = new MCParameter;
 
 			// MW-2011-08-11: [[ Bug 9668 ]] Make sure we copy 'pdata' if we use it, since
 			//   mptr (into which it points) only lasts as long as this method call.
-			if (ctxt . GetEP() . gethandler() -> eval(ctxt . GetEP()) == ES_NORMAL)
-				newparam->set_argument(ctxt . GetEP());
+			MCAutoValueRef t_return;
+			ctxt.GetHandler() -> eval(ctxt, *t_expression, &t_return);
+			if (!ctxt.HasError())
+				newparam->setvalueref_argument(*t_return);
 			else
-				newparam->copysvalue_argument(pdata);
+				newparam->setvalueref_argument(*t_expression);
 
 			if (tparam == NULL)
 				params = tparam = newparam;

@@ -667,12 +667,15 @@ void MCVariable::synchronize(MCExecPoint& ep, Boolean notify)
 				eval(ep);
 				MCAutoStringRef t_string;
 				/* UNCHECKED */ ep.copyasstringref(&t_string);
-				if (*MCwatchedvars[i].expression)
+				if (MCwatchedvars[i].expression != nil && !MCStringIsEmpty(MCwatchedvars[i].expression))
 				{
 					MCExecPoint ep2(ep);
-					ep2.setsvalue(MCwatchedvars[i].expression);
-					Boolean d;
-					if (ep.gethandler()->eval(ep2) == ES_NORMAL && MCU_stob(ep2.getsvalue(), d) && d)
+					MCExecContext ctxt(ep2);
+					MCAutoValueRef t_val;
+					ctxt.GetHandler()->eval(ctxt, MCwatchedvars[i].expression, &t_val);
+					
+					MCAutoBooleanRef t_bool;
+					if (!ctxt.HasError() && ctxt.ConvertToBoolean(*t_val, &t_bool) && *t_bool == kMCTrue)
 						MCB_setvar(ctxt, *t_string, name);
 				}
 				else
@@ -729,15 +732,13 @@ void MCVariable::synchronize(MCExecContext& ctxt, MCValueRef p_value, bool p_not
                 MCAutoValueRef t_value;
                 eval(ctxt . GetCaseSensitive(), &t_value);
                 
-				if (*MCwatchedvars[i].expression)
+				if (MCwatchedvars[i].expression != nil && !MCStringIsEmpty(MCwatchedvars[i].expression))
 				{
-					MCAutoStringRef t_expression;
-                    MCStringCreateWithCString(MCwatchedvars[i].expression, &t_expression);
-					MCAutoValueRef t_bool_value;
+                    MCAutoValueRef t_val;
+					ctxt.GetHandler() -> eval(ctxt, MCwatchedvars[i].expression, &t_val);
                     
-                    ctxt . GetHandler() -> eval(ctxt, *t_expression, &t_bool_value);
-                    
-					if (!ctxt . HasError() && (MCBooleanRef)*t_bool_value == kMCTrue)
+					MCAutoBooleanRef t_bool;
+					if (!ctxt.HasError() && ctxt.ConvertToBoolean(*t_val, &t_bool) && *t_bool == kMCTrue)
 						MCB_setvar(ctxt, p_value, name);
 				}
 				else
