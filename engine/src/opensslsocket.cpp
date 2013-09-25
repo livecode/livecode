@@ -26,7 +26,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "card.h"
 #include "mcerror.h"
+#include "exec.h"
 #include "execpt.h"
+
 #include "param.h"
 #include "handler.h"
 #include "util.h"
@@ -614,18 +616,19 @@ void MCS_close_socket(MCSocket *s)
 	s->closing = True;
 }
 
-void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, const char *until, MCNameRef mptr)
+void MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char *until, MCNameRef mptr)
 {
-	ep.clear();
+	ctxt.GetEP().clear();
 	if (s->datagram)
 	{
 		MCNameDelete(s->message);
 		/* UNCHECKED */ MCNameClone(mptr, s -> message);
-		s->object = ep.getobj();
+		
+		s->object = ctxt . GetEP() . getobj();
 	}
 	else
 	{
-		MCSocketread *eptr = new MCSocketread(length, until != nil ? strdup(until) : nil, ep.getobj(), mptr);
+		MCSocketread *eptr = new MCSocketread(length, until != nil ? strdup(until) : nil, ctxt . GetEP() . getobj(), mptr);
 		eptr->appendto(s->revents);
 		s->setselect();
 		if (s->accepting)
@@ -668,7 +671,7 @@ void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, const char *unt
 					if (until != NULL && *until == '\n' && !*(until + 1)
 					        && size && s->rbuffer[size - 1] == '\r')
 						size--;
-					ep.copysvalue(s->rbuffer, size);
+					ctxt . GetEP () . copysvalue(s->rbuffer, size);
 					s->nread -= eptr->size;
 					// MW-2010-11-19: [[ Bug 9182 ]] This should be a memmove (I think)
 					memmove(s->rbuffer, s->rbuffer + eptr->size, s->nread);
