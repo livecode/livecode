@@ -352,7 +352,7 @@ bool MCJavaStringToStringRef(JNIEnv *env, jstring p_java_string, MCStringRef &r_
 	char *t_native;
 	if (MCJavaStringToNative(env, p_java_string, t_native))
 	{
-		if (MCStringCreateWithCStringAndRelease(t_native, r_string))
+		if (MCStringCreateWithCStringAndRelease((char_t*)t_native, r_string))
 			return true;
 		MCCStringFree(t_native);
 	}

@@ -176,24 +176,22 @@ extern "C" JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule
 JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doRemoteNotification(JNIEnv *env, jobject object, jstring user_info)
 {
     MCAutoStringRef t_user_info;
-	if (MCJavaStringToStringRef(env, user_info, &t_user_info)
+	if (MCJavaStringToStringRef(env, user_info, &t_user_info))
         MCNotificationPostPushNotificationEvent(*t_user_info);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doRemoteRegistrationError(JNIEnv *env, jobject object, jstring error) __attribute__((visibility("default")));
 JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doRemoteRegistrationError(JNIEnv *env, jobject object, jstring error)
 {
-    char *t_error = nil;
-    if (MCJavaStringToNative(env, error, t_error))
-        MCNotificationPostPushRegistrationError(MCString(t_error));
-    MCCStringFree(t_error);
+	MCAutoStringRef t_error_str;
+    if (MCJavaStringToStringRef(env, error, &t_error_str))
+        MCNotificationPostPushRegistrationError(*t_error_str);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doRemoteRegistration(JNIEnv *env, jobject object, jstring registration_id) __attribute__((visibility("default")));
 JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doRemoteRegistration(JNIEnv *env, jobject object, jstring registration_id)
 {
-    char *t_registration_id = nil;
-    if (MCJavaStringToNative(env, registration_id, t_registration_id))
-        MCNotificationPostPushRegistered(MCString(t_registration_id));
-    MCCStringFree(t_registration_id);
+	MCAutoStringRef t_id_str;
+    if (MCJavaStringToStringRef(env, registration_id, &t_id_str))
+        MCNotificationPostPushRegistered(*t_id_str);
 }

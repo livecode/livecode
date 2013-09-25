@@ -2077,6 +2077,25 @@ MCControl *MCGroup::getchildbyname(MCNameRef p_name, Chunk_term p_object_type)
     MCControl *cptr = controls;
     if (cptr == nil)
         return nil;
+    
+    uint2 t_num = 0;
+    if (MCU_stoui2(MCNameGetString(p_name), t_num))
+    {
+        if (t_num < 1)
+            return nil;
+        t_num--;
+        
+        do
+        {
+            MCControl *foundobj;
+            if ((foundobj = cptr->findnum(p_object_type, t_num)) != nil)
+                return foundobj;
+            cptr = cptr->next();
+        }
+        while (cptr != controls);
+        return nil;
+    }
+    
     do
     {
         MCControl *foundobj;

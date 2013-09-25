@@ -180,6 +180,33 @@ extern "C" time_t time(time_t *);
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
+#include <ctype.h>
+
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
+#ifdef __ANDROID__
+
+#include <stdarg.h>
+#include <string.h>
+#include <stdlib.h>
+#include <math.h>
+#include <stdio.h>
+#include <ctype.h>
+
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
+#ifdef __IOS__
+
+#include <stdarg.h>
+#include <string.h>
+#include <stdlib.h>
+#include <math.h>
+#include <stdio.h>
+#include <ctype.h>
 
 #endif
 

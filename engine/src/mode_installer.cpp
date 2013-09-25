@@ -242,24 +242,26 @@ public:
 			else
 			{
 #ifdef _DEBUG
-				ep . setsvalue(getenv("TEST_PAYLOAD"));
-				MCS_loadfile(ep, True);
-				if (ep . getsvalue() . getlength() == 0)
+				MCAutoStringRef t_payload_file;
+				MCAutoDataRef t_payload_dataref;
+				/* UNCHECKED */ MCStringCreateWithCString(getenv("TEST_PAYLOAD"), &t_payload_file);
+				/* UNCHECKED */ MCS_loadbinaryfile(*t_payload_file, &t_payload_dataref);
+				if (MCDataGetLength(*t_payload_dataref) == 0)
 				{
 					MCresult -> sets("could not load payload");
 					return ES_NORMAL;
 				}
 
-				if (!MCMemoryAllocate(ep . getsvalue() . getlength(), s_payload_data))
+				if (!MCMemoryAllocate(MCDataGetLength(*t_payload_dataref), s_payload_data))
 				{
 					MCresult -> sets("out of memory while loading payload");
 					return ES_NORMAL;
 				}
 
-				MCMemoryCopy(s_payload_data, ep .  getsvalue() . getstring(), ep . getsvalue() . getlength());
+				MCMemoryCopy(s_payload_data, (void*)MCDataGetBytePtr(*t_payload_dataref), MCDataGetLength(*t_payload_dataref));
 
 				t_payload_data = s_payload_data;
-				t_payload_size = ep . getsvalue() . getlength();
+				t_payload_size = MCDataGetLength(*t_payload_dataref);
 #else
 				MCresult -> sets("could not find payload");
 				return ES_NORMAL;

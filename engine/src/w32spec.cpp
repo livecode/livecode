@@ -54,109 +54,103 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 extern bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
 extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
 
-bool MCS_getcurdir_native(MCStringRef& r_path);
-bool MCS_path_append(MCStringRef p_base, MCStringRef p_component, codepoint_t p_separator, MCStringRef& r_path);
-
-// MW-2004-11-28: A null FPE signal handler.
-static void handle_fp_exception(int p_signal)
-{
-	p_signal = p_signal;
-}
-
-static bool handle_is_pipe(MCWinSysHandle p_handle)
-{
-	DWORD t_flags;
-
-	int t_result;
-	t_result = GetNamedPipeInfo((HANDLE)p_handle, &t_flags, NULL, NULL, NULL);
-
-	return t_result != 0;
-}
-
-void MCS_init()
-{
-	IO_stdin = new IO_header((MCWinSysHandle)GetStdHandle(STD_INPUT_HANDLE), NULL, 0, 0);
-	IO_stdin -> is_pipe = handle_is_pipe(IO_stdin -> fhandle);
-	IO_stdout = new IO_header((MCWinSysHandle)GetStdHandle(STD_OUTPUT_HANDLE), NULL, 0, 0);
-	IO_stdout -> is_pipe = handle_is_pipe(IO_stdout -> fhandle);
-	IO_stderr = new IO_header((MCWinSysHandle)GetStdHandle(STD_ERROR_HANDLE), NULL, 0, 0);
-	IO_stderr -> is_pipe = handle_is_pipe(IO_stderr -> fhandle);
-
-	setlocale(LC_CTYPE, MCnullstring);
-	setlocale(LC_COLLATE, MCnullstring);
-
-	// MW-2004-11-28: The ctype array seems to have changed in the latest version of VC++
-	((unsigned short *)_pctype)[160] &= ~_SPACE;
-
-	MCinfinity = HUGE_VAL;
-	MCS_time(); // force init
-	if (timeBeginPeriod(1) == TIMERR_NOERROR)
-		MCS_reset_time();
-	else
-		MClowrestimers = True;
-	MCExecPoint ep;
-	ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyEnable");
-	MCS_query_registry(ep);
-	if (ep.getsvalue().getlength() && ep.getsvalue().getstring()[0])
-	{
-		ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyServer");
-		MCS_query_registry(ep);
-		if (ep.getsvalue().getlength())
-		{
-			MCAutoStringRef t_http_proxy;
-			/* UNCHECKED */ ep . copyasstringref(&t_http_proxy);
-			MCValueAssign(MChttpproxy, *t_http_proxy);
-		}
-	}
-	else
-	{
-		ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_Proxy");
-		MCS_query_registry(ep);
-		if (ep.getsvalue().getlength())
-		{
-			char *t_host;
-			int4 t_port;
-			t_host = ep.getsvalue().clone();
-			ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_ProxyPort");
-			MCS_query_registry(ep);
-			ep.ston();
-			t_port = ep.getint4();
-			ep.setstringf("%s:%d", t_host, t_port);
-			MCAutoStringRef t_http_proxy;
-			/* UNCHECKED */ ep . copyasstringref(&t_http_proxy);
-			MCValueAssign(MChttpproxy, *t_http_proxy);
-			delete t_host;
-		}
-	}
-
-	// On NT systems 'cmd.exe' is the command processor
-	MCValueAssign(MCshellcmd, MCSTR("cmd.exe"));
-
-	// MW-2005-05-26: Store a global variable containing major OS version...
-	OSVERSIONINFOA osv;
-	memset(&osv, 0, sizeof(OSVERSIONINFOA));
-	osv.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
-	GetVersionExA(&osv);
-	MCmajorosversion = osv . dwMajorVersion << 8 | osv . dwMinorVersion;
-
-	// MW-2012-09-19: [[ Bug ]] Adjustment to tooltip metrics for Windows.
-	if (MCmajorosversion >= 0x0500)
-	{
-		MCttsize = 11;
-		MCValueAssign(MCttfont, MCSTR("Tahoma"));
-	}
-	else if (MCmajorosversion >= 0x0600)
-	{
-		MCttsize = 11;
-		MCValueAssign(MCttfont, MCSTR("Segoe UI"));
-	}
-
-	OleInitialize(NULL); //for drag & drop
-
-	// MW-2004-11-28: Install a signal handler for FP exceptions - these should be masked
-	//   so it *should* be unnecessary but Win9x plays with the FP control word.
-	signal(SIGFPE, handle_fp_exception);
-}
+//bool MCS_getcurdir_native(MCStringRef& r_path);
+//bool MCS_path_append(MCStringRef p_base, MCStringRef p_component, codepoint_t p_separator, MCStringRef& r_path);
+//
+//// MW-2004-11-28: A null FPE signal handler.
+//static void handle_fp_exception(int p_signal)
+//{
+//	p_signal = p_signal;
+//}
+//
+//static bool handle_is_pipe(MCWinSysHandle p_handle)
+//{
+//	DWORD t_flags;
+//
+//	int t_result;
+//	t_result = GetNamedPipeInfo((HANDLE)p_handle, &t_flags, NULL, NULL, NULL);
+//
+//	return t_result != 0;
+//}
+//
+//void MCS_init()
+//{
+//	IO_stdin = new IO_header((MCWinSysHandle)GetStdHandle(STD_INPUT_HANDLE), NULL, 0, 0);
+//	IO_stdin -> is_pipe = handle_is_pipe(IO_stdin -> fhandle);
+//	IO_stdout = new IO_header((MCWinSysHandle)GetStdHandle(STD_OUTPUT_HANDLE), NULL, 0, 0);
+//	IO_stdout -> is_pipe = handle_is_pipe(IO_stdout -> fhandle);
+//	IO_stderr = new IO_header((MCWinSysHandle)GetStdHandle(STD_ERROR_HANDLE), NULL, 0, 0);
+//	IO_stderr -> is_pipe = handle_is_pipe(IO_stderr -> fhandle);
+//
+//	setlocale(LC_CTYPE, MCnullstring);
+//	setlocale(LC_COLLATE, MCnullstring);
+//
+//	// MW-2004-11-28: The ctype array seems to have changed in the latest version of VC++
+//	((unsigned short *)_pctype)[160] &= ~_SPACE;
+//
+//	MCinfinity = HUGE_VAL;
+//	MCS_time(); // force init
+//	if (timeBeginPeriod(1) == TIMERR_NOERROR)
+//		MCS_reset_time();
+//	else
+//		MClowrestimers = True;
+//	MCExecPoint ep;
+//	ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyEnable");
+//	MCS_query_registry(ep);
+//	if (ep.getsvalue().getlength() && ep.getsvalue().getstring()[0])
+//	{
+//		ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyServer");
+//		MCS_query_registry(ep);
+//		if (ep.getsvalue().getlength())
+//			MChttpproxy = ep . getsvalue() . clone();
+//	}
+//	else
+//	{
+//		ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_Proxy");
+//		MCS_query_registry(ep);
+//		if (ep.getsvalue().getlength())
+//		{
+//			char *t_host;
+//			int4 t_port;
+//			t_host = ep.getsvalue().clone();
+//			ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_ProxyPort");
+//			MCS_query_registry(ep);
+//			ep.ston();
+//			t_port = ep.getint4();
+//			ep.setstringf("%s:%d", t_host, t_port);
+//			MChttpproxy = ep . getsvalue() . clone();
+//			delete t_host;
+//		}
+//	}
+//
+//	// On NT systems 'cmd.exe' is the command processor
+//	MCshellcmd = strclone("cmd.exe");
+//
+//	// MW-2005-05-26: Store a global variable containing major OS version...
+//	OSVERSIONINFOA osv;
+//	memset(&osv, 0, sizeof(OSVERSIONINFOA));
+//	osv.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
+//	GetVersionExA(&osv);
+//	MCmajorosversion = osv . dwMajorVersion << 8 | osv . dwMinorVersion;
+//
+//	// MW-2012-09-19: [[ Bug ]] Adjustment to tooltip metrics for Windows.
+//	if (MCmajorosversion >= 0x0500)
+//	{
+//		MCttsize = 11;
+//		MCttfont = "Tahoma";
+//	}
+//	else if (MCmajorosversion >= 0x0600)
+//	{
+//		MCttsize = 11;
+//		MCttfont = "Segoe UI";
+//	}
+//
+//	OleInitialize(NULL); //for drag & drop
+//
+//	// MW-2004-11-28: Install a signal handler for FP exceptions - these should be masked
+//	//   so it *should* be unnecessary but Win9x plays with the FP control word.
+//	signal(SIGFPE, handle_fp_exception);
+//}
 //
 //void MCS_shutdown()
 //{
@@ -310,16 +304,16 @@ void MCS_init()
 //	starttime = timebuffer.time + timebuffer.millitm / 1000.0;
 //	return starttime;
 //}
-
-void MCS_reset_time()
-{
-	if (!MClowrestimers)
-	{
-		startcount = 0;
-		MCS_time();
-		startcount = timeGetTime();
-	}
-}
+//
+//void MCS_reset_time()
+//{
+//	if (!MClowrestimers)
+//	{
+//		startcount = 0;
+//		MCS_time();
+//		startcount = timeGetTime();
+//	}
+//}
 //
 //void MCS_sleep(real8 delay)
 //{
@@ -420,92 +414,92 @@ void MCS_reset_time()
 //		MCStringAppendFormat(*t_tmp_name, "/%s", t_ptr + 1) &&
 //		MCStringCopy(*t_tmp_name, r_string);
 //}
-
-// returns in native path format
-bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved_path)
-{
-	if (MCStringGetLength(p_path) == 0)
-		return MCS_getcurdir_native(r_resolved_path);
-
-	return MCU_path2native(p_path, r_resolved_path);
-}
-
-static inline bool is_legal_drive(char p_char)
-{
-	return (p_char >= 'a' && p_char <= 'z') || (p_char >= 'A' && p_char <= 'Z');
-}
-
-char *MCS_get_canonical_path(const char *path)
-{
-	char *t_path = NULL;
-	char *t_curdir = NULL;
-
-	if (path == NULL)
-		return NULL;
-
-	if (path[0] == '/' && path[1] != '/')
-	{
-		// path in root of current drive
-		t_curdir = MCS_getcurdir();
-
-		int t_path_len;
-		t_path_len = strlen(path);
-		while (path[0] == '/')
-		{
-			path ++;
-			t_path_len --;
-		}
-		
-		t_path = (char*)malloc(3 + t_path_len + 1);
-		t_path[0] = t_curdir[0]; t_path[1] = ':'; t_path[2] = '/';
-		strcpy(t_path + 3, path);
-	}
-	else if (is_legal_drive(path[0]) && path[1] == ':')
-	{
-		// absolute path
-		t_path = strclone(path);
-	}
-	else
-	{
-		// relative to current folder
-		t_curdir = MCS_getcurdir();
-		int t_curdir_len;
-		t_curdir_len = strlen(t_curdir);
-
-		while (t_curdir_len > 0 && t_curdir[t_curdir_len - 1] == '/')
-			t_curdir_len--;
-
-		int t_path_len;
-		t_path_len = strlen(path);
-
-		while (t_path_len > 0 && path[0] == '/')
-		{
-			path ++;
-			t_path_len --;
-		}
-
-		t_path = (char*)malloc(t_curdir_len + 1 + t_path_len + 1);
-		memcpy(t_path, t_curdir, t_curdir_len);
-		t_path[t_curdir_len] = '/';
-		memcpy(t_path + t_curdir_len + 1, path, t_path_len + 1);
-	}
-
-	MCU_fix_path(t_path);
-	return t_path;
-}
-
-bool MCS_getcurdir_native(MCStringRef& r_path)
-{
-	MCAutoNativeCharArray t_buffer;
-	DWORD t_path_len = GetCurrentDirectoryA(0, NULL);
-	if (t_path_len == 0 || !t_buffer.New(t_path_len))
-		return false;
-	if (t_path_len - 1 != GetCurrentDirectoryA(t_path_len, (LPSTR)t_buffer.Chars()))
-		return false;
-
-	t_buffer.Shrink(t_path_len - 1);
-	return t_buffer.CreateStringAndRelease(r_path);
-}
+//
+//// returns in native path format
+//bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved_path)
+//{
+//	if (MCStringGetLength(p_path) == 0)
+//		return MCS_getcurdir_native(r_resolved_path);
+//
+//	return MCU_path2native(p_path, r_resolved_path);
+//}
+//
+//static inline bool is_legal_drive(char p_char)
+//{
+//	return (p_char >= 'a' && p_char <= 'z') || (p_char >= 'A' && p_char <= 'Z');
+//}
+//
+//char *MCS_get_canonical_path(const char *path)
+//{
+//	char *t_path = NULL;
+//	char *t_curdir = NULL;
+//
+//	if (path == NULL)
+//		return NULL;
+//
+//	if (path[0] == '/' && path[1] != '/')
+//	{
+//		// path in root of current drive
+//		t_curdir = MCS_getcurdir();
+//
+//		int t_path_len;
+//		t_path_len = strlen(path);
+//		while (path[0] == '/')
+//		{
+//			path ++;
+//			t_path_len --;
+//		}
+//		
+//		t_path = (char*)malloc(3 + t_path_len + 1);
+//		t_path[0] = t_curdir[0]; t_path[1] = ':'; t_path[2] = '/';
+//		strcpy(t_path + 3, path);
+//	}
+//	else if (is_legal_drive(path[0]) && path[1] == ':')
+//	{
+//		// absolute path
+//		t_path = strclone(path);
+//	}
+//	else
+//	{
+//		// relative to current folder
+//		t_curdir = MCS_getcurdir();
+//		int t_curdir_len;
+//		t_curdir_len = strlen(t_curdir);
+//
+//		while (t_curdir_len > 0 && t_curdir[t_curdir_len - 1] == '/')
+//			t_curdir_len--;
+//
+//		int t_path_len;
+//		t_path_len = strlen(path);
+//
+//		while (t_path_len > 0 && path[0] == '/')
+//		{
+//			path ++;
+//			t_path_len --;
+//		}
+//
+//		t_path = (char*)malloc(t_curdir_len + 1 + t_path_len + 1);
+//		memcpy(t_path, t_curdir, t_curdir_len);
+//		t_path[t_curdir_len] = '/';
+//		memcpy(t_path + t_curdir_len + 1, path, t_path_len + 1);
+//	}
+//
+//	MCU_fix_path(t_path);
+//	return t_path;
+//}
+//
+//bool MCS_getcurdir_native(MCStringRef& r_path)
+//{
+//	MCAutoNativeCharArray t_buffer;
+//	DWORD t_path_len = GetCurrentDirectoryA(0, NULL);
+//	if (t_path_len == 0 || !t_buffer.New(t_path_len))
+//		return false;
+//	if (t_path_len - 1 != GetCurrentDirectoryA(t_path_len, (LPSTR)t_buffer.Chars()))
+//		return false;
+//
+//	t_buffer.Shrink(t_path_len - 1);
+//	return t_buffer.CreateStringAndRelease(r_path);
+//}
 //
 //bool MCS_getcurdir(MCStringRef& r_path)
 //{
@@ -791,61 +785,61 @@ bool MCS_getdrives(MCListRef& r_list)
 //
 //	return MCS_native_path_exists(*t_resolved, p_is_file);
 //}
-
-int64_t MCS_fsize(IO_handle stream)
-{
-	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
-		return MCS_fake_fsize(stream);
-
-	if (stream->flags & IO_FAKE)
-		return stream->len;
-	else
-	{
-		DWORD t_high_word, t_low_word;
-		t_low_word = GetFileSize(stream -> fhandle, &t_high_word);
-		if (t_low_word != INVALID_FILE_SIZE || GetLastError() == NO_ERROR)
-			return (int64_t)t_low_word | (int64_t)t_high_word << 32;
-	}
-	return 0;
-}
+//
+//int64_t MCS_fsize(IO_handle stream)
+//{
+//	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+//		return MCS_fake_fsize(stream);
+//
+//	if (stream->flags & IO_FAKE)
+//		return stream->len;
+//	else
+//	{
+//		DWORD t_high_word, t_low_word;
+//		t_low_word = GetFileSize(stream -> fhandle, &t_high_word);
+//		if (t_low_word != INVALID_FILE_SIZE || GetLastError() == NO_ERROR)
+//			return (int64_t)t_low_word | (int64_t)t_high_word << 32;
+//	}
+//	return 0;
+//}
 
 Boolean MCS_nodelay(int4 fd)
 {
 	return True;
 }
-
-IO_handle MCS_fakeopen(const MCString &data)
-{
-	return new IO_header(NULL, (char *)data.getstring(), data.getlength(), IO_FAKE);
-}
-
-IO_handle MCS_fakeopenwrite(void)
-{
-	return new IO_header(NULL, NULL, 0, IO_FAKEWRITE);
-}
-
-IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
-{
-	return new IO_header(NULL, (char *)p_state, (uint32_t)p_callbacks, IO_FAKECUSTOM);
-}
-
-IO_stat MCS_fakeclosewrite(IO_handle& stream, char*& r_buffer, uint4& r_length)
-{
-	if ((stream -> flags & IO_FAKEWRITE) != IO_FAKEWRITE)
-	{
-		r_buffer = NULL;
-		r_length = 0;
-		MCS_close(stream);
-		return IO_ERROR;
-	}
-
-	r_buffer = (char *)realloc(stream -> buffer, stream -> len);
-	r_length = stream -> len;
-
-	MCS_close(stream);
-
-	return IO_NORMAL;
-}
+//
+//IO_handle MCS_fakeopen(const MCString &data)
+//{
+	//return new IO_header(NULL, (char *)data.getstring(), data.getlength(), IO_FAKE);
+//}
+//
+//IO_handle MCS_fakeopenwrite(void)
+//{
+//	return new IO_header(NULL, NULL, 0, IO_FAKEWRITE);
+//}
+//
+//IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
+//{
+//	return new IO_header(NULL, (char *)p_state, (uint32_t)p_callbacks, IO_FAKECUSTOM);
+//}
+//
+//IO_stat MCS_fakeclosewrite(IO_handle& stream, char*& r_buffer, uint4& r_length)
+//{
+//	if ((stream -> flags & IO_FAKEWRITE) != IO_FAKEWRITE)
+//	{
+//		r_buffer = NULL;
+//		r_length = 0;
+//		MCS_close(stream);
+//		return IO_ERROR;
+//	}
+//
+//	r_buffer = (char *)realloc(stream -> buffer, stream -> len);
+//	r_length = stream -> len;
+//
+//	MCS_close(stream);
+//
+//	return IO_NORMAL;
+//}
 //
 //IO_handle MCS_open(const char *path, const char *mode,
 //                   Boolean map, Boolean driver, uint4 offset)
@@ -977,78 +971,78 @@ IO_stat MCS_fakeclosewrite(IO_handle& stream, char*& r_buffer, uint4& r_length)
 //
 //	return handle;
 //}
-
-void MCS_close(IO_handle &stream)
-{
-	if (stream->buffer != NULL)
-	{ //memory map file
-		if (stream->mhandle != NULL)
-		{
-			UnmapViewOfFile(stream->buffer);
-			CloseHandle(stream->mhandle);
-		}
-	}
-	if (!(stream->flags & IO_FAKE))
-		CloseHandle(stream->fhandle);
-	delete stream;
-	stream = NULL;
-}
-
-/* thread created to read data from child process's pipe */
-static bool s_finished_reading = false;
-
-static void readThreadDone(void *param)
-{
-	s_finished_reading = true;
-}
-
-static DWORD readThread(Streamnode *process)
-{
-	IO_handle ihandle;
-	ihandle = process -> ihandle;
-
-	DWORD nread;
-	ihandle->buffer = new char[READ_PIPE_SIZE];
-	uint4 bsize = READ_PIPE_SIZE;
-	ihandle->ioptr = ihandle->buffer;   //set ioptr member
-	ihandle->len = 0; //set len member
-	while (ihandle->fhandle != NULL)
-	{
-		if (!PeekNamedPipe(ihandle->fhandle, NULL, 0, NULL, &nread, NULL))
-			break;
-		if (nread == 0)
-		{
-			if (WaitForSingleObject(process -> phandle, 0) != WAIT_TIMEOUT)
-				break;
-			Sleep(100);
-			continue;
-		}
-		if (ihandle->len + nread >= bsize)
-		{
-			uint4 newsize = ihandle->len + nread + READ_PIPE_SIZE;
-			MCU_realloc(&ihandle->buffer, bsize, newsize, 1);
-			bsize = newsize;
-			ihandle->ioptr = ihandle->buffer;
-		}
-		if (!ReadFile(ihandle->fhandle, (LPVOID)&ihandle->buffer[ihandle->len],
-		              nread, &nread, NULL)
-		        || nread == 0)
-		{
-			ihandle->len += nread;
-			break;
-		}
-		ihandle->len += nread;
-		ihandle->flags = 0;
-		if (ihandle->ioptr != ihandle->buffer)
-		{
-			ihandle->len -= ihandle->ioptr - ihandle->buffer;
-			memcpy(ihandle->buffer, ihandle->ioptr, ihandle->len);
-			ihandle->ioptr = ihandle->buffer;
-		}
-	}
-	MCNotifyPush(readThreadDone, nil, false, false);
-	return 0;
-}
+//
+//void MCS_close(IO_handle &stream)
+//{
+//	if (stream->buffer != NULL)
+//	{ //memory map file
+//		if (stream->mhandle != NULL)
+//		{
+//			UnmapViewOfFile(stream->buffer);
+//			CloseHandle(stream->mhandle);
+//		}
+//	}
+//	if (!(stream->flags & IO_FAKE))
+//		CloseHandle(stream->fhandle);
+//	delete stream;
+//	stream = NULL;
+//}
+//
+///* thread created to read data from child process's pipe */
+//static bool s_finished_reading = false;
+//
+//static void readThreadDone(void *param)
+//{
+//	s_finished_reading = true;
+//}
+//
+//static DWORD readThread(Streamnode *process)
+//{
+//	IO_handle ihandle;
+//	ihandle = process -> ihandle;
+//
+//	DWORD nread;
+//	ihandle->buffer = new char[READ_PIPE_SIZE];
+//	uint4 bsize = READ_PIPE_SIZE;
+//	ihandle->ioptr = ihandle->buffer;   //set ioptr member
+//	ihandle->len = 0; //set len member
+//	while (ihandle->fhandle != NULL)
+//	{
+//		if (!PeekNamedPipe(ihandle->fhandle, NULL, 0, NULL, &nread, NULL))
+//			break;
+//		if (nread == 0)
+//		{
+//			if (WaitForSingleObject(process -> phandle, 0) != WAIT_TIMEOUT)
+//				break;
+//			Sleep(100);
+//			continue;
+//		}
+//		if (ihandle->len + nread >= bsize)
+//		{
+//			uint4 newsize = ihandle->len + nread + READ_PIPE_SIZE;
+//			MCU_realloc(&ihandle->buffer, bsize, newsize, 1);
+//			bsize = newsize;
+//			ihandle->ioptr = ihandle->buffer;
+//		}
+//		if (!ReadFile(ihandle->fhandle, (LPVOID)&ihandle->buffer[ihandle->len],
+//		              nread, &nread, NULL)
+//		        || nread == 0)
+//		{
+//			ihandle->len += nread;
+//			break;
+//		}
+//		ihandle->len += nread;
+//		ihandle->flags = 0;
+//		if (ihandle->ioptr != ihandle->buffer)
+//		{
+//			ihandle->len -= ihandle->ioptr - ihandle->buffer;
+//			memcpy(ihandle->buffer, ihandle->ioptr, ihandle->len);
+//			ihandle->ioptr = ihandle->buffer;
+//		}
+//	}
+//	MCNotifyPush(readThreadDone, nil, false, false);
+//	return 0;
+//}
 //
 //IO_stat MCS_runcmd(MCExecPoint &ep)
 //{
@@ -1231,35 +1225,35 @@ static DWORD readThread(Streamnode *process)
 //	delete tpath;
 //	return result;
 //}
-
-IO_stat MCS_flush(IO_handle stream)
-{  //flush output buffer
-	if (FlushFileBuffers(stream->fhandle) != NO_ERROR)
-		return IO_ERROR;
-	return IO_NORMAL;
-}
-
-IO_stat MCS_sync(IO_handle stream)
-{
-	//get the current file position pointer
-	LONG fph;
-	fph = 0;
-	DWORD fp = SetFilePointer(stream->fhandle, 0, &fph, FILE_CURRENT);
-	if (fp == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
-		return IO_ERROR;
-	DWORD nfp = SetFilePointer(stream->fhandle, fp, &fph, FILE_BEGIN);
-	if (nfp == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
-		return IO_ERROR;
-	else
-		return IO_NORMAL;
-}
-
-Boolean MCS_eof(IO_handle stream)
-{
-	if (stream->buffer != NULL)
-		return stream->ioptr - stream->buffer >= (int4)stream->len;
-	return (stream->flags & IO_ATEOF) != 0;
-}
+//
+//IO_stat MCS_flush(IO_handle stream)
+//{  //flush output buffer
+//	if (FlushFileBuffers(stream->fhandle) != NO_ERROR)
+//		return IO_ERROR;
+//	return IO_NORMAL;
+//}
+//
+//IO_stat MCS_sync(IO_handle stream)
+//{
+//	//get the current file position pointer
+//	LONG fph;
+//	fph = 0;
+//	DWORD fp = SetFilePointer(stream->fhandle, 0, &fph, FILE_CURRENT);
+//	if (fp == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
+//		return IO_ERROR;
+//	DWORD nfp = SetFilePointer(stream->fhandle, fp, &fph, FILE_BEGIN);
+//	if (nfp == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
+//		return IO_ERROR;
+//	else
+//		return IO_NORMAL;
+//}
+//
+//Boolean MCS_eof(IO_handle stream)
+//{
+//	if (stream->buffer != NULL)
+//		return stream->ioptr - stream->buffer >= (int4)stream->len;
+//	return (stream->flags & IO_ATEOF) != 0;
+//}
 
 static IO_stat MCS_seek_do(HANDLE p_file, int64_t p_offset, DWORD p_type)
 {
@@ -1272,271 +1266,271 @@ static IO_stat MCS_seek_do(HANDLE p_file, int64_t p_offset, DWORD p_type)
 		return IO_ERROR;
 	return IO_NORMAL;
 }
-
-IO_stat MCS_seek_cur(IO_handle stream, int64_t offset)
-{
-	IO_stat is = IO_NORMAL;
-
-	// MW-2009-06-25: If this is a custom stream, call the appropriate callback.
-	// MW-2009-06-30: Refactored to common implementation in mcio.cpp.
-	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
-		return MCS_fake_seek_cur(stream, offset);
-
-	if (stream->buffer != NULL)
-		IO_set_stream(stream, stream->ioptr + offset);
-	else
-		is = MCS_seek_do(stream -> fhandle, offset, FILE_CURRENT);
-	return is;
-}
-
-IO_stat MCS_seek_set(IO_handle stream, int64_t offset)
-{
-	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
-	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
-		return MCS_fake_seek_set(stream, offset);
-
-	IO_stat is = IO_NORMAL;
-	if (stream->buffer != NULL)
-		IO_set_stream(stream, stream->buffer + offset);
-	else
-		is = MCS_seek_do(stream -> fhandle, offset, FILE_BEGIN);
-	return is;
-}
-
-IO_stat MCS_seek_end(IO_handle stream, int64_t offset)
-{
-	IO_stat is = IO_NORMAL;
-	if (stream->buffer != NULL)
-		IO_set_stream(stream, stream->buffer + stream->len + offset);
-	else
-		is = MCS_seek_do(stream -> fhandle, offset, FILE_END);
-	return is;
-}
-
-int64_t MCS_tell(IO_handle stream)
-{
-	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
-	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
-		return MCS_fake_tell(stream);
-
-	if (stream->buffer != NULL)
-		return stream->ioptr - stream->buffer;
-
-	DWORD low;
-	LONG high;
-	high = 0;
-	low = SetFilePointer(stream -> fhandle, 0, &high, FILE_CURRENT);
-	return low | ((int64_t)high << 32);
-}
-
-IO_stat MCS_putback(char c, IO_handle stream)
-{
-	if (stream -> buffer != NULL)
-		return MCS_seek_cur(stream, -1);
-
-	if (stream -> putback != -1)
-		return IO_ERROR;
-		
-	stream -> putback = c;
-	
-	return IO_NORMAL;
-}
-
-IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
-{
-	if (MCabortscript || ptr == NULL || stream == NULL)
-		return IO_ERROR;
-
-	if ((stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
-		return IO_ERROR;
-
-	// MW-2009-06-25: If this is a custom stream, call the appropriate callback.
-	// MW-2009-06-30: Refactored to common (platform-independent) implementation
-	//   in mcio.cpp
-	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
-		return MCS_fake_read(ptr, size, n, stream);
-
-	LPVOID sptr = ptr;
-	DWORD nread;
-	Boolean result = False;
-	IO_stat istat = IO_NORMAL;
-
-	if (stream->buffer != NULL)
-	{ //memory map file or process with a thread
-		uint4 nread = size * n;     //into the IO_handle's buffer
-		if (nread > stream->len - (stream->ioptr - stream->buffer))
-		{
-			n = (stream->len - (stream->ioptr - stream->buffer)) / size;
-			nread = size * n;
-			istat = IO_EOF;
-		}
-		if (nread == 1)
-		{
-			char *tptr = (char *)ptr;
-			*tptr = *stream->ioptr++;
-		}
-		else
-		{
-			memcpy(ptr, stream->ioptr, nread);
-			stream->ioptr += nread;
-		}
-		return istat;
-	}
-	
-	if (stream -> fhandle == 0)
-	{
-		MCS_seterrno(GetLastError());
-		n = 0;
-		return IO_ERROR;
-	}
-	
-	// If this is named pipe, handle things differently -- we first peek to see how
-	// much is available to read.
-	// MW-2012-09-10: [[ Bug 10230 ]] If this stream is a pipe then handle that case.
-	if (stream -> is_pipe)
-	{
-		// See how much data is available - if this fails then return eof or an error
-		// depending on 'GetLastError()'.
-		uint32_t t_available;
-		if (!PeekNamedPipe(stream -> fhandle, NULL, 0, NULL, (DWORD *)&t_available, NULL))
-		{
-			n = 0;
-
-			DWORD t_error;
-			t_error = GetLastError();
-			if (t_error == ERROR_HANDLE_EOF || t_error == ERROR_BROKEN_PIPE)
-			{
-				stream -> flags |= IO_ATEOF;
-				return IO_EOF;
-			}
-
-			MCS_seterrno(GetLastError());
-			return IO_ERROR;
-		}
-
-		// Adjust for putback
-		int32_t t_adjust;
-		t_adjust = 0;
-		if (stream -> putback != -1)
-			t_adjust = 1;
-
-		// Calculate how many elements we can read, and how much we need to read
-		// to make them.
-		uint32_t t_count, t_byte_count;
-		t_count = MCU_min((t_available + t_adjust) / size, n);
-		t_byte_count = t_count * size;
-
-		// Copy in the putback char if any
-		uint1 *t_dst_ptr;
-		t_dst_ptr = (uint1*)sptr;
-		if (stream -> putback != -1)
-		{
-			*t_dst_ptr++ = (uint1)stream -> putback;
-			stream -> putback = -1;
-		}
-
-		// Now read all the data we can - here we check for EOF also.
-		uint32_t t_amount_read;
-		IO_stat t_stat;
-		t_stat = IO_NORMAL;
-		t_amount_read = 0;
-		if (t_byte_count - t_adjust > 0)
-			if (!ReadFile(stream -> fhandle, (LPVOID)t_dst_ptr, t_byte_count - t_adjust, (DWORD *)&t_amount_read, NULL))
-			{
-				if (GetLastError() == ERROR_HANDLE_EOF)
-				{
-					stream -> flags |= IO_ATEOF;
-					t_stat = IO_EOF;
-				}
-				else
-				{
-					MCS_seterrno(GetLastError());
-					t_stat = IO_ERROR;
-				}
-			}
-
-		// Return the number of objects of 'size' bytes that were read.
-		n = (t_amount_read + t_adjust) / size;
-
-		return t_stat;
-	}
-
-	if (stream -> putback != -1)
-	{
-		*((uint1 *)sptr) = (uint1)stream -> putback;
-		stream -> putback = -1;
-		
-		if (!ReadFile(stream -> fhandle, (LPVOID)((char *)sptr + 1), (DWORD)size * n - 1, &nread, NULL))
-		{
-			MCS_seterrno(GetLastError());
-			n = (nread + 1) / size;
-			return IO_ERROR;
-		}
-		
-		nread += 1;
-	}
-	else if (!ReadFile(stream->fhandle, (LPVOID)sptr, (DWORD)size * n, &nread, NULL))
-	{
-		MCS_seterrno(GetLastError());
-		n = nread / size;
-		return IO_ERROR;
-	}
-
-	if (nread < size * n)
-	{
-		stream->flags |= IO_ATEOF;
-		n = nread / size;
-		return IO_EOF;
-	}
-	else
-		stream->flags &= ~IO_ATEOF;
-
-	n = nread / size;
-	return IO_NORMAL;
-}
-
-
-IO_stat MCS_write(const void *ptr, uint4 size, uint4 n, IO_handle stream)
-{
-	if (stream == IO_stdin)
-		return IO_NORMAL;
-
-	if (stream == NULL)
-		return IO_ERROR;
-
-	if ((stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
-		return MCU_dofakewrite(stream -> buffer, stream -> len, ptr, size, n);
-
-	if (stream -> fhandle == 0)
-		return IO_ERROR;
-
-	DWORD nwrote;
-	if (!WriteFile(stream->fhandle, (LPVOID)ptr, (DWORD)size * n,
-	               &nwrote, NULL))
-	{
-		MCS_seterrno(GetLastError());
-		return IO_ERROR;
-	}
-	if (nwrote != size * n)
-		return IO_ERROR;
-	return IO_NORMAL;
-}
-
-bool MCS_isfake(IO_handle stream)
-{
-	return (stream -> flags & IO_FAKEWRITE) != 0;
-}
-
-uint4 MCS_faketell(IO_handle stream)
-{
-	return stream -> len;
-}
-
-void MCS_fakewriteat(IO_handle stream, uint4 p_pos, const void *p_buffer, uint4 p_size)
-{
-	memcpy(stream -> buffer + p_pos, p_buffer, p_size);
-}
-
+//
+//IO_stat MCS_seek_cur(IO_handle stream, int64_t offset)
+//{
+//	IO_stat is = IO_NORMAL;
+//
+//	// MW-2009-06-25: If this is a custom stream, call the appropriate callback.
+//	// MW-2009-06-30: Refactored to common implementation in mcio.cpp.
+//	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+//		return MCS_fake_seek_cur(stream, offset);
+//
+//	if (stream->buffer != NULL)
+//		IO_set_stream(stream, stream->ioptr + offset);
+//	else
+//		is = MCS_seek_do(stream -> fhandle, offset, FILE_CURRENT);
+//	return is;
+//}
+//
+//IO_stat MCS_seek_set(IO_handle stream, int64_t offset)
+//{
+//	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
+//	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+//		return MCS_fake_seek_set(stream, offset);
+//
+//	IO_stat is = IO_NORMAL;
+//	if (stream->buffer != NULL)
+//		IO_set_stream(stream, stream->buffer + offset);
+//	else
+//		is = MCS_seek_do(stream -> fhandle, offset, FILE_BEGIN);
+//	return is;
+//}
+//
+//IO_stat MCS_seek_end(IO_handle stream, int64_t offset)
+//{
+//	IO_stat is = IO_NORMAL;
+//	if (stream->buffer != NULL)
+//		IO_set_stream(stream, stream->buffer + stream->len + offset);
+//	else
+//		is = MCS_seek_do(stream -> fhandle, offset, FILE_END);
+//	return is;
+//}
+//
+//int64_t MCS_tell(IO_handle stream)
+//{
+//	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
+//	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+//		return MCS_fake_tell(stream);
+//
+//	if (stream->buffer != NULL)
+//		return stream->ioptr - stream->buffer;
+//
+//	DWORD low;
+//	LONG high;
+//	high = 0;
+//	low = SetFilePointer(stream -> fhandle, 0, &high, FILE_CURRENT);
+//	return low | ((int64_t)high << 32);
+//}
+//
+//IO_stat MCS_putback(char c, IO_handle stream)
+//{
+//	if (stream -> buffer != NULL)
+//		return MCS_seek_cur(stream, -1);
+//
+//	if (stream -> putback != -1)
+//		return IO_ERROR;
+//		
+//	stream -> putback = c;
+//	
+//	return IO_NORMAL;
+//}
+//
+//IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
+//{
+//	if (MCabortscript || ptr == NULL || stream == NULL)
+//		return IO_ERROR;
+//
+//	if ((stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
+//		return IO_ERROR;
+//
+//	// MW-2009-06-25: If this is a custom stream, call the appropriate callback.
+//	// MW-2009-06-30: Refactored to common (platform-independent) implementation
+//	//   in mcio.cpp
+//	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+//		return MCS_fake_read(ptr, size, n, stream);
+//
+//	LPVOID sptr = ptr;
+//	DWORD nread;
+//	Boolean result = False;
+//	IO_stat istat = IO_NORMAL;
+//
+//	if (stream->buffer != NULL)
+//	{ //memory map file or process with a thread
+//		uint4 nread = size * n;     //into the IO_handle's buffer
+//		if (nread > stream->len - (stream->ioptr - stream->buffer))
+//		{
+//			n = (stream->len - (stream->ioptr - stream->buffer)) / size;
+//			nread = size * n;
+//			istat = IO_EOF;
+//		}
+//		if (nread == 1)
+//		{
+//			char *tptr = (char *)ptr;
+//			*tptr = *stream->ioptr++;
+//		}
+//		else
+//		{
+//			memcpy(ptr, stream->ioptr, nread);
+//			stream->ioptr += nread;
+//		}
+//		return istat;
+//	}
+//	
+//	if (stream -> fhandle == 0)
+//	{
+//		MCS_seterrno(GetLastError());
+//		n = 0;
+//		return IO_ERROR;
+//	}
+//	
+//	// If this is named pipe, handle things differently -- we first peek to see how
+//	// much is available to read.
+//	// MW-2012-09-10: [[ Bug 10230 ]] If this stream is a pipe then handle that case.
+//	if (stream -> is_pipe)
+//	{
+//		// See how much data is available - if this fails then return eof or an error
+//		// depending on 'GetLastError()'.
+//		uint32_t t_available;
+//		if (!PeekNamedPipe(stream -> fhandle, NULL, 0, NULL, (DWORD *)&t_available, NULL))
+//		{
+//			n = 0;
+//
+//			DWORD t_error;
+//			t_error = GetLastError();
+//			if (t_error == ERROR_HANDLE_EOF || t_error == ERROR_BROKEN_PIPE)
+//			{
+//				stream -> flags |= IO_ATEOF;
+//				return IO_EOF;
+//			}
+//
+//			MCS_seterrno(GetLastError());
+//			return IO_ERROR;
+//		}
+//
+//		// Adjust for putback
+//		int32_t t_adjust;
+//		t_adjust = 0;
+//		if (stream -> putback != -1)
+//			t_adjust = 1;
+//
+//		// Calculate how many elements we can read, and how much we need to read
+//		// to make them.
+//		uint32_t t_count, t_byte_count;
+//		t_count = MCU_min((t_available + t_adjust) / size, n);
+//		t_byte_count = t_count * size;
+//
+//		// Copy in the putback char if any
+//		uint1 *t_dst_ptr;
+//		t_dst_ptr = (uint1*)sptr;
+//		if (stream -> putback != -1)
+//		{
+//			*t_dst_ptr++ = (uint1)stream -> putback;
+//			stream -> putback = -1;
+//		}
+//
+//		// Now read all the data we can - here we check for EOF also.
+//		uint32_t t_amount_read;
+//		IO_stat t_stat;
+//		t_stat = IO_NORMAL;
+//		t_amount_read = 0;
+//		if (t_byte_count - t_adjust > 0)
+//			if (!ReadFile(stream -> fhandle, (LPVOID)t_dst_ptr, t_byte_count - t_adjust, (DWORD *)&t_amount_read, NULL))
+//			{
+//				if (GetLastError() == ERROR_HANDLE_EOF)
+//				{
+//					stream -> flags |= IO_ATEOF;
+//					t_stat = IO_EOF;
+//				}
+//				else
+//				{
+//					MCS_seterrno(GetLastError());
+//					t_stat = IO_ERROR;
+//				}
+//			}
+//
+//		// Return the number of objects of 'size' bytes that were read.
+//		n = (t_amount_read + t_adjust) / size;
+//
+//		return t_stat;
+//	}
+//
+//	if (stream -> putback != -1)
+//	{
+//		*((uint1 *)sptr) = (uint1)stream -> putback;
+//		stream -> putback = -1;
+//		
+//		if (!ReadFile(stream -> fhandle, (LPVOID)((char *)sptr + 1), (DWORD)size * n - 1, &nread, NULL))
+//		{
+//			MCS_seterrno(GetLastError());
+//			n = (nread + 1) / size;
+//			return IO_ERROR;
+//		}
+//		
+//		nread += 1;
+//	}
+//	else if (!ReadFile(stream->fhandle, (LPVOID)sptr, (DWORD)size * n, &nread, NULL))
+//	{
+//		MCS_seterrno(GetLastError());
+//		n = nread / size;
+//		return IO_ERROR;
+//	}
+//
+//	if (nread < size * n)
+//	{
+//		stream->flags |= IO_ATEOF;
+//		n = nread / size;
+//		return IO_EOF;
+//	}
+//	else
+//		stream->flags &= ~IO_ATEOF;
+//
+//	n = nread / size;
+//	return IO_NORMAL;
+//}
+//
+//
+//IO_stat MCS_write(const void *ptr, uint4 size, uint4 n, IO_handle stream)
+//{
+//	if (stream == IO_stdin)
+//		return IO_NORMAL;
+//
+//	if (stream == NULL)
+//		return IO_ERROR;
+//
+//	if ((stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
+//		return MCU_dofakewrite(stream -> buffer, stream -> len, ptr, size, n);
+//
+//	if (stream -> fhandle == 0)
+//		return IO_ERROR;
+//
+//	DWORD nwrote;
+//	if (!WriteFile(stream->fhandle, (LPVOID)ptr, (DWORD)size * n,
+//	               &nwrote, NULL))
+//	{
+//		MCS_seterrno(GetLastError());
+//		return IO_ERROR;
+//	}
+//	if (nwrote != size * n)
+//		return IO_ERROR;
+//	return IO_NORMAL;
+//}
+//
+//bool MCS_isfake(IO_handle stream)
+//{
+//	return (stream -> flags & IO_FAKEWRITE) != 0;
+//}
+//
+//uint4 MCS_faketell(IO_handle stream)
+//{
+//	return stream -> len;
+//}
+//
+//void MCS_fakewriteat(IO_handle stream, uint4 p_pos, const void *p_buffer, uint4 p_size)
+//{
+//	memcpy(stream -> buffer + p_pos, p_buffer, p_size);
+//}
+//
 // MW-2005-02-22: Make these global for opensslsocket.cpp
 static Boolean wsainited = False;
 HWND sockethwnd;
@@ -1590,21 +1584,21 @@ Boolean wsainit()
 //{
 //	return MCN_x86;
 //}
-
-real8 MCS_getfreediskspace(void)
-{
-	DWORD sc, bs, fc, tc;
-	GetDiskFreeSpace(NULL, &sc, &bs, &fc, &tc);
-	return ((real8)bs * (real8)sc * (real8)fc);
-}
+//
+//real8 MCS_getfreediskspace(void)
+//{
+//	DWORD sc, bs, fc, tc;
+//	GetDiskFreeSpace(NULL, &sc, &bs, &fc, &tc);
+//	return ((real8)bs * (real8)sc * (real8)fc);
+//}
 //
 //bool MCS_getsystemversion(MCStringRef& r_string)
 //{
-	return MCStringFormat(r_string, "NT %d.%d", (MCmajorosversion >> 8) & 0xFF, MCmajorosversion & 0xFF);
+	//return MCStringFormat(r_string, "NT %d.%d", (MCmajorosversion >> 8) & 0xFF, MCmajorosversion & 0xFF);
 //}
 
 
-
+#ifdef /* MCS_loadfile_dsk_w32 */ LEGACY_SYSTEM
 void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 {
 	if (!MCSecureModeCanAccessDisk())
@@ -1651,6 +1645,7 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 		CloseHandle(hf);
 	}
 }
+#endif /* MCS_loadfile_dsk_w32 */
 
 void MCS_loadresfile(MCExecPoint &ep)
 {
@@ -1702,129 +1697,129 @@ void MCS_saveresfile(const MCString &s, const MCString data)
 {
 	MCresult->sets("not supported");
 }
-
-Boolean MCS_poll(real8 delay, int fd)
-{
-	Boolean handled = False;
-	int4 n;
-	uint2 i;
-	fd_set rmaskfd, wmaskfd, emaskfd;
-	FD_ZERO(&rmaskfd);
-	FD_ZERO(&wmaskfd);
-	FD_ZERO(&emaskfd);
-	uint4 maxfd = 0;
-	if (!MCnoui)
-	{
-		FD_SET(fd, &rmaskfd);
-		maxfd = fd;
-	}
-	for (i = 0 ; i < MCnsockets ; i++)
-	{
-		if (MCsockets[i]->doread)
-		{
-			MCsockets[i]->readsome();
-			i = 0;
-		}
-	}
-	for (i = 0 ; i < MCnsockets ; i++)
-	{
-		if (MCsockets[i]->connected && !MCsockets[i]->closing
-		        && !MCsockets[i]->shared || MCsockets[i]->accepting)
-			FD_SET(MCsockets[i]->fd, &rmaskfd);
-		if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
-			FD_SET(MCsockets[i]->fd, &wmaskfd);
-		FD_SET(MCsockets[i]->fd, &emaskfd);
-		if (MCsockets[i]->fd > maxfd)
-			maxfd = MCsockets[i]->fd;
-		if (MCsockets[i]->added)
-		{
-			delay = 0.0;
-			MCsockets[i]->added = False;
-			handled = True;
-		}
-	}
-	struct timeval timeoutval;
-	timeoutval.tv_sec = (long)delay;
-	timeoutval.tv_usec = (long)((delay - floor(delay)) * 1000000.0);
-	n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
-	if (n <= 0)
-		return handled;
-	for (i = 0 ; i < MCnsockets ; i++)
-	{
-		if (FD_ISSET(MCsockets[i]->fd, &emaskfd))
-		{
-			if (!MCsockets[i]->waiting)
-			{
-				MCsockets[i]->error = strclone("select error");
-				MCsockets[i]->doclose();
-			}
-		}
-		else
-		{
-			if (FD_ISSET(MCsockets[i]->fd, &wmaskfd))
-				MCsockets[i]->writesome();
-			if (FD_ISSET(MCsockets[i]->fd, &rmaskfd) && !MCsockets[i]->shared)
-				MCsockets[i]->readsome();
-		}
-	}
-	return n != 0;
-}
+//
+//Boolean MCS_poll(real8 delay, int fd)
+//{
+//	Boolean handled = False;
+//	int4 n;
+//	uint2 i;
+//	fd_set rmaskfd, wmaskfd, emaskfd;
+//	FD_ZERO(&rmaskfd);
+//	FD_ZERO(&wmaskfd);
+//	FD_ZERO(&emaskfd);
+//	uint4 maxfd = 0;
+//	if (!MCnoui)
+//	{
+//		FD_SET(fd, &rmaskfd);
+//		maxfd = fd;
+//	}
+//	for (i = 0 ; i < MCnsockets ; i++)
+//	{
+//		if (MCsockets[i]->doread)
+//		{
+//			MCsockets[i]->readsome();
+//			i = 0;
+//		}
+//	}
+//	for (i = 0 ; i < MCnsockets ; i++)
+//	{
+//		if (MCsockets[i]->connected && !MCsockets[i]->closing
+//		        && !MCsockets[i]->shared || MCsockets[i]->accepting)
+//			FD_SET(MCsockets[i]->fd, &rmaskfd);
+//		if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
+//			FD_SET(MCsockets[i]->fd, &wmaskfd);
+//		FD_SET(MCsockets[i]->fd, &emaskfd);
+//		if (MCsockets[i]->fd > maxfd)
+//			maxfd = MCsockets[i]->fd;
+//		if (MCsockets[i]->added)
+//		{
+//			delay = 0.0;
+//			MCsockets[i]->added = False;
+//			handled = True;
+//		}
+//	}
+//	struct timeval timeoutval;
+//	timeoutval.tv_sec = (long)delay;
+//	timeoutval.tv_usec = (long)((delay - floor(delay)) * 1000000.0);
+//	n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
+//	if (n <= 0)
+//		return handled;
+//	for (i = 0 ; i < MCnsockets ; i++)
+//	{
+//		if (FD_ISSET(MCsockets[i]->fd, &emaskfd))
+//		{
+//			if (!MCsockets[i]->waiting)
+//			{
+//				MCsockets[i]->error = strclone("select error");
+//				MCsockets[i]->doclose();
+//			}
+//		}
+//		else
+//		{
+//			if (FD_ISSET(MCsockets[i]->fd, &wmaskfd))
+//				MCsockets[i]->writesome();
+//			if (FD_ISSET(MCsockets[i]->fd, &rmaskfd) && !MCsockets[i]->shared)
+//				MCsockets[i]->readsome();
+//		}
+//	}
+//	return n != 0;
+//}
 
 
 
 //FILE and APPLEEVENT
-void MCS_send(const MCString &message, const char *program,
-              const char *eventtype, Boolean reply)
-{
-	MCresult->sets("not supported");
-}
-
-void MCS_reply(const MCString &message, const char *keyword, Boolean error)
-{
-	MCresult->sets("not supported");
-}
-
-char *MCS_request_ae(const MCString &message, uint2 ae)
-{
-	MCresult->sets("not supported");
-	return NULL;
-}
-
-char *MCS_request_program(const MCString &message, const char *program)
-{
-	MCresult->sets("not supported");
-	return NULL;
-}
-
-void MCS_copyresourcefork(MCStringRef source, MCStringRef dest)
-{}
-
-bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_type,
-					  MCStringRef p_name, MCStringRef p_newid, MCStringRef& r_error)
-{
-	return MCStringCreateWithCString("not supported", r_error);
-}
-
-bool MCS_deleteresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_error)
-{
-	return MCStringCreateWithCString("not supported", r_error);
-}
-
-bool MCS_getresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_value, MCStringRef& r_error)
-{
-	return MCStringCreateWithCString("not supported", r_error);
-}
-
-bool MCS_getresources(MCStringRef p_source, MCStringRef p_type, MCListRef& r_list, MCStringRef& r_error)
-{
-	return MCStringCreateWithCString("not supported", r_error);
-}
-
-extern bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id, MCStringRef p_name,
-							MCStringRef p_flags, MCStringRef p_value, MCStringRef& r_error)
-{
-	return MCStringCreateWithCString("not supported", r_error);
-}
+//void MCS_send(const MCString &message, const char *program,
+//              const char *eventtype, Boolean reply)
+//{
+//	MCresult->sets("not supported");
+//}
+//
+//void MCS_reply(const MCString &message, const char *keyword, Boolean error)
+//{
+//	MCresult->sets("not supported");
+//}
+//
+//char *MCS_request_ae(const MCString &message, uint2 ae)
+//{
+//	MCresult->sets("not supported");
+//	return NULL;
+//}
+//
+//char *MCS_request_program(const MCString &message, const char *program)
+//{
+//	MCresult->sets("not supported");
+//	return NULL;
+//}
+//
+//void MCS_copyresourcefork(MCStringRef source, MCStringRef dest)
+//{}
+//
+//bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_type,
+//					  MCStringRef p_name, MCStringRef p_newid, MCStringRef& r_error)
+//{
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
+//
+//bool MCS_deleteresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_error)
+//{
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
+//
+//bool MCS_getresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_value, MCStringRef& r_error)
+//{
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
+//
+//bool MCS_getresources(MCStringRef p_source, MCStringRef p_type, MCListRef& r_list, MCStringRef& r_error)
+//{
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
+//
+//extern bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id, MCStringRef p_name,
+//							MCStringRef p_flags, MCStringRef p_value, MCStringRef& r_error)
+//{
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
 //
 //typedef struct
 //{
@@ -1857,21 +1852,21 @@ extern bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRe
 //
 //	return false;
 //}
-
-// OK-2009-01-28: [[Bug 7452]] - SpecialFolderPath not working with redirected My Documents folder on Windows.
-bool MCS_getlongfilepath(MCStringRef p_short_path, MCStringRef& r_long_path)
-{
-	// If the path conversion was not succesful, then
-	// we revert back to using the original path.
-	MCAutoStringRef t_long_path;
-	if (MCS_longfilepath(p_short_path, &t_long_path) && MCStringGetLength(*t_long_path) > 0)
-	{
-		r_long_path = MCValueRetain(*t_long_path);
-		return true;
-	}
-
-	return MCStringCopy(p_short_path, r_long_path);
-}
+//
+//// OK-2009-01-28: [[Bug 7452]] - SpecialFolderPath not working with redirected My Documents folder on Windows.
+//bool MCS_getlongfilepath(MCStringRef p_short_path, MCStringRef& r_long_path)
+//{
+//	// If the path conversion was not succesful, then
+//	// we revert back to using the original path.
+//	MCAutoStringRef t_long_path;
+//	if (MCS_longfilepath(p_short_path, &t_long_path) && MCStringGetLength(*t_long_path) > 0)
+//	{
+//		r_long_path = MCValueRetain(*t_long_path);
+//		return true;
+//	}
+//
+//	return MCStringCopy(p_short_path, r_long_path);
+//}
 //
 //// return kMCEmptyString if path not found
 //bool MCS_getspecialfolder(MCExecContext& ctxt, MCStringRef p_special, MCStringRef& r_path)
@@ -2126,86 +2121,86 @@ bool MCS_getlongfilepath(MCStringRef p_short_path, MCStringRef& r_long_path)
 //		return MCStringCreateWithCString("can't get", r_error);
 //	}
 //}
-
-void MCS_doalternatelanguage(MCStringRef p_script, MCStringRef p_language)
-{
-	MCScriptEnvironment *t_environment;
-	t_environment = MCscreen -> createscriptenvironment(p_language);
-	if (t_environment == NULL)
-		MCresult -> sets("alternate language not found");
-	else
-	{
-		MCExecPoint ep(NULL, NULL, NULL);
-		ep . setsvalue(MCStringGetOldString(p_script));
-		ep . nativetoutf8();
-		
-		char *t_result;
-		t_result = t_environment -> Run(ep . getcstring());
-		t_environment -> Release();
-
-		if (t_result != NULL)
-		{
-			ep . setsvalue(t_result);
-			ep . utf8tonative();
-			MCresult -> copysvalue(ep . getsvalue());
-		}
-		else
-			MCresult -> sets("execution error");
-	}
-}
-
-#define DEFINE_GUID_(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
-        EXTERN_C const GUID DECLSPEC_SELECTANY name \
-                = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
-// {F0B7A1A2-9847-11cf-8F20-00805F2CD064}
-DEFINE_GUID_(CATID_ActiveScriptParse, 0xf0b7a1a2, 0x9847, 0x11cf, 0x8f, 0x20, 0x00, 0x80, 0x5f, 0x2c, 0xd0, 0x64);
-
-bool MCS_alternatelanguages(MCListRef& r_list)
-{
-	MCAutoListRef t_list;
-	
-	if (!MCListCreateMutable('\n', &t_list))
-		return false;
-
-	bool t_success = true;
-	HRESULT t_result;
-	t_result = S_OK;
-
-	ICatInformation *t_cat_info;
-	t_cat_info = NULL;
-	if (t_result == S_OK)
-		t_result = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC_SERVER, IID_ICatInformation, (void **)&t_cat_info);
-	
-	IEnumCLSID *t_cls_enum;
-	t_cls_enum = NULL;
-	if (t_result == S_OK)
-		t_result = t_cat_info -> EnumClassesOfCategories(1, &CATID_ActiveScriptParse, (ULONG)-1, NULL, &t_cls_enum);
-
-	if (t_result == S_OK)
-	{
-		GUID t_cls_uuid;
-
-		while(t_success && t_cls_enum -> Next(1, &t_cls_uuid, NULL) == S_OK)
-		{
-			LPOLESTR t_prog_id;
-			if (ProgIDFromCLSID(t_cls_uuid, &t_prog_id) == S_OK)
-			{
-				MCAutoStringRef t_string;
-				t_success = MCStringCreateWithChars(t_prog_id, wcslen(t_prog_id), &t_string) && MCListAppend(*t_list, *t_string);
-
-				CoTaskMemFree(t_prog_id);
-			}
-		}
-	}
-
-	if (t_cls_enum != NULL)
-		t_cls_enum -> Release();
-
-	if (t_cat_info != NULL)
-		t_cat_info -> Release();
-	
-	return t_success && MCListCopy(*t_list, r_list);
-}
+//
+//void MCS_doalternatelanguage(MCStringRef p_script, MCStringRef p_language)
+//{
+//	MCScriptEnvironment *t_environment;
+//	t_environment = MCscreen -> createscriptenvironment(MCStringGetCString(p_language));
+//	if (t_environment == NULL)
+//		MCresult -> sets("alternate language not found");
+//	else
+//	{
+//		MCExecPoint ep(NULL, NULL, NULL);
+//		ep . setsvalue(MCStringGetOldString(p_script));
+//		ep . nativetoutf8();
+//		
+//		char *t_result;
+//		t_result = t_environment -> Run(ep . getcstring());
+//		t_environment -> Release();
+//
+//		if (t_result != NULL)
+//		{
+//			ep . setsvalue(t_result);
+//			ep . utf8tonative();
+//			MCresult -> copysvalue(ep . getsvalue());
+//		}
+//		else
+//			MCresult -> sets("execution error");
+//	}
+//}
+//
+//#define DEFINE_GUID_(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
+//        EXTERN_C const GUID DECLSPEC_SELECTANY name \
+//                = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
+//// {F0B7A1A2-9847-11cf-8F20-00805F2CD064}
+//DEFINE_GUID_(CATID_ActiveScriptParse, 0xf0b7a1a2, 0x9847, 0x11cf, 0x8f, 0x20, 0x00, 0x80, 0x5f, 0x2c, 0xd0, 0x64);
+//
+//bool MCS_alternatelanguages(MCListRef& r_list)
+//{
+//	MCAutoListRef t_list;
+//	
+//	if (!MCListCreateMutable('\n', &t_list))
+//		return false;
+//
+//	bool t_success = true;
+//	HRESULT t_result;
+//	t_result = S_OK;
+//
+//	ICatInformation *t_cat_info;
+//	t_cat_info = NULL;
+//	if (t_result == S_OK)
+//		t_result = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC_SERVER, IID_ICatInformation, (void **)&t_cat_info);
+//	
+//	IEnumCLSID *t_cls_enum;
+//	t_cls_enum = NULL;
+//	if (t_result == S_OK)
+//		t_result = t_cat_info -> EnumClassesOfCategories(1, &CATID_ActiveScriptParse, (ULONG)-1, NULL, &t_cls_enum);
+//
+//	if (t_result == S_OK)
+//	{
+//		GUID t_cls_uuid;
+//
+//		while(t_success && t_cls_enum -> Next(1, &t_cls_uuid, NULL) == S_OK)
+//		{
+//			LPOLESTR t_prog_id;
+//			if (ProgIDFromCLSID(t_cls_uuid, &t_prog_id) == S_OK)
+//			{
+//				MCAutoStringRef t_string;
+//				t_success = MCStringCreateWithChars(t_prog_id, wcslen(t_prog_id), &t_string) && MCListAppend(*t_list, *t_string);
+//
+//				CoTaskMemFree(t_prog_id);
+//			}
+//		}
+//	}
+//
+//	if (t_cls_enum != NULL)
+//		t_cls_enum -> Release();
+//
+//	if (t_cat_info != NULL)
+//		t_cat_info -> Release();
+//	
+//	return t_success && MCListCopy(*t_list, r_list);
+//}
 
 struct  LangID2Charset
 {
@@ -2249,34 +2244,34 @@ uint2 MCS_charsettolangid(uint1 charset)
 			return langidtocharsets[i].langid;
 	return 0;
 }
-
-void MCS_multibytetounicode(const char *s, uint4 len, char *d,
-                            uint4 destbufferlength, uint4 &destlen,
-                            uint1 charset)
-{
-	char szLocaleData[6];
-	uint2 codepage = 0;
-	GetLocaleInfoA(MAKELCID(MCS_charsettolangid(charset), SORT_DEFAULT) ,
-	               LOCALE_IDEFAULTANSICODEPAGE, szLocaleData, 6);
-	codepage = (uint2)strtoul(szLocaleData, NULL, 10);
-	uint4 dsize = MultiByteToWideChar( codepage, 0, s, len, (LPWSTR)d,
-	                                   destbufferlength >> 1);
-	destlen = dsize << 1;
-}
-
-void MCS_unicodetomultibyte(const char *s, uint4 len, char *d,
-                            uint4 destbufferlength, uint4 &destlen,
-                            uint1 charset)
-{
-	char szLocaleData[6];
-	uint2 codepage = 0;
-	GetLocaleInfoA(MAKELCID(MCS_charsettolangid(charset), SORT_DEFAULT)
-	               , LOCALE_IDEFAULTANSICODEPAGE, szLocaleData, 6);
-	codepage = (uint2)strtoul(szLocaleData, NULL, 10);
-	uint4 dsize = WideCharToMultiByte( codepage, 0, (LPCWSTR)s, len >> 1,
-	                                   d, destbufferlength, NULL, NULL);
-	destlen = dsize;
-}
+//
+//void MCS_multibytetounicode(const char *s, uint4 len, char *d,
+//                            uint4 destbufferlength, uint4 &destlen,
+//                            uint1 charset)
+//{
+//	char szLocaleData[6];
+//	uint2 codepage = 0;
+//	GetLocaleInfoA(MAKELCID(MCS_charsettolangid(charset), SORT_DEFAULT) ,
+//	               LOCALE_IDEFAULTANSICODEPAGE, szLocaleData, 6);
+//	codepage = (uint2)strtoul(szLocaleData, NULL, 10);
+//	uint4 dsize = MultiByteToWideChar( codepage, 0, s, len, (LPWSTR)d,
+//	                                   destbufferlength >> 1);
+//	destlen = dsize << 1;
+//}
+//
+//void MCS_unicodetomultibyte(const char *s, uint4 len, char *d,
+//                            uint4 destbufferlength, uint4 &destlen,
+//                            uint1 charset)
+//{
+//	char szLocaleData[6];
+//	uint2 codepage = 0;
+//	GetLocaleInfoA(MAKELCID(MCS_charsettolangid(charset), SORT_DEFAULT)
+//	               , LOCALE_IDEFAULTANSICODEPAGE, szLocaleData, 6);
+//	codepage = (uint2)strtoul(szLocaleData, NULL, 10);
+//	uint4 dsize = WideCharToMultiByte( codepage, 0, (LPCWSTR)s, len >> 1,
+//	                                   d, destbufferlength, NULL, NULL);
+//	destlen = dsize;
+//}
 
 Boolean MCS_isleadbyte(uint1 charset, char *s)
 {
@@ -2288,65 +2283,65 @@ Boolean MCS_isleadbyte(uint1 charset, char *s)
 	uint2 codepage = (uint2)strtoul(szLocaleData, NULL, 10);
 	return IsDBCSLeadByteEx(codepage, *s);
 }
-
-static void MCS_do_launch(const char *p_document)
-{
-	// MW-2011-02-01: [[ Bug 9332 ]] Adjust the 'show' hint to normal to see if that makes
-	//   things always appear on top...
-	int t_result;
-	t_result = (int)ShellExecuteA(NULL, "open", p_document, NULL, NULL, SW_SHOWNORMAL);
-
-	if (t_result < 32)
-	{
-		switch(t_result)
-		{
-		case ERROR_BAD_FORMAT:
-		case SE_ERR_ACCESSDENIED:
-		case SE_ERR_FNF:
-		case SE_ERR_PNF:
-		case SE_ERR_SHARE:
-		case SE_ERR_DLLNOTFOUND:
-			MCresult -> sets("can't open file");
-		break;
-
-		case SE_ERR_ASSOCINCOMPLETE:
-		case SE_ERR_NOASSOC:
-			MCresult -> sets("no association");
-		break;
-
-		case SE_ERR_DDEBUSY:
-		case SE_ERR_DDEFAIL:
-		case SE_ERR_DDETIMEOUT:
-			MCresult -> sets("request failed");
-		break;
-
-		case 0:
-		case SE_ERR_OOM:
-			MCresult -> sets("no memory");
-		break;
-		}
-	}
-	else
-		MCresult -> clear();
-}
-
-void MCS_launch_document(const char *p_document)
-{
-	char *t_native_document;
-
-	t_native_document = MCS_resolvepath(p_document);
-
-	// MW-2007-12-13: [[ Bug 5680 ]] Might help if we actually passed the correct
-	//   pointer to do_launch!
-	MCS_do_launch(t_native_document);
-
-	delete t_native_document;
-}
-
-void MCS_launch_url(const char *p_document)
-{
-	MCS_do_launch(p_document);
-}
+//
+//static void MCS_do_launch(const char *p_document)
+//{
+//	// MW-2011-02-01: [[ Bug 9332 ]] Adjust the 'show' hint to normal to see if that makes
+//	//   things always appear on top...
+//	int t_result;
+//	t_result = (int)ShellExecuteA(NULL, "open", p_document, NULL, NULL, SW_SHOWNORMAL);
+//
+//	if (t_result < 32)
+//	{
+//		switch(t_result)
+//		{
+//		case ERROR_BAD_FORMAT:
+//		case SE_ERR_ACCESSDENIED:
+//		case SE_ERR_FNF:
+//		case SE_ERR_PNF:
+//		case SE_ERR_SHARE:
+//		case SE_ERR_DLLNOTFOUND:
+//			MCresult -> sets("can't open file");
+//		break;
+//
+//		case SE_ERR_ASSOCINCOMPLETE:
+//		case SE_ERR_NOASSOC:
+//			MCresult -> sets("no association");
+//		break;
+//
+//		case SE_ERR_DDEBUSY:
+//		case SE_ERR_DDEFAIL:
+//		case SE_ERR_DDETIMEOUT:
+//			MCresult -> sets("request failed");
+//		break;
+//
+//		case 0:
+//		case SE_ERR_OOM:
+//			MCresult -> sets("no memory");
+//		break;
+//		}
+//	}
+//	else
+//		MCresult -> clear();
+//}
+//
+//void MCS_launch_document(const char *p_document)
+//{
+//	char *t_native_document;
+//
+//	t_native_document = MCS_resolvepath(p_document);
+//
+//	// MW-2007-12-13: [[ Bug 5680 ]] Might help if we actually passed the correct
+//	//   pointer to do_launch!
+//	MCS_do_launch(t_native_document);
+//
+//	delete t_native_document;
+//}
+//
+//void MCS_launch_url(const char *p_document)
+//{
+//	MCS_do_launch(p_document);
+//}
 //
 //MCSysModuleHandle MCS_loadmodule(const char *p_filename)
 //{
@@ -2379,33 +2374,33 @@ void MCS_launch_url(const char *p_document)
 //{
 //	return GetProcAddress((HMODULE)p_module, p_symbol);
 //}
-
-bool MCS_processtypeisforeground(void)
-{
-	return true;
-}
-
-bool MCS_changeprocesstype(bool to_foreground)
-{
-	if (!to_foreground)
-		return false;
-	return true;
-}
-
-bool MCS_isatty(int fd)
-{
-	return _isatty(fd) != 0;
-}
-
-bool MCS_isnan(double v)
-{
-	return _isnan(v) != 0;
-}
-
-uint32_t MCS_getsyserror(void)
-{
-	return GetLastError();
-}
+//
+//bool MCS_processtypeisforeground(void)
+//{
+//	return true;
+//}
+//
+//bool MCS_changeprocesstype(bool to_foreground)
+//{
+//	if (!to_foreground)
+//		return false;
+//	return true;
+//}
+//
+//bool MCS_isatty(int fd)
+//{
+//	return _isatty(fd) != 0;
+//}
+//
+//bool MCS_isnan(double v)
+//{
+//	return _isnan(v) != 0;
+//}
+//
+//uint32_t MCS_getsyserror(void)
+//{
+//	return GetLastError();
+//}
 
 //bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_error)
 //{
@@ -2440,65 +2435,65 @@ bool MCS_generate_uuid(char p_buffer[128])
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-static bool read_blob_from_pipe(HANDLE p_pipe, void*& r_data, uint32_t& r_data_length)
-{
-	uint32_t t_amount;
-	DWORD t_read;
-	if (!ReadFile(p_pipe, &t_amount, sizeof(uint32_t), &t_read, NULL) ||
-		t_read != sizeof(uint32_t))
-		return false;
-
-	void *t_buffer;
-	t_buffer = malloc(t_amount);
-	if (t_buffer == nil)
-		return false;
-
-	if (!ReadFile(p_pipe, t_buffer, t_amount, &t_read, NULL) ||
-		t_read != t_amount)
-		return false;
-
-	r_data = t_buffer;
-	r_data_length = t_amount;
-
-	return true;
-}
-
-static bool write_blob_to_pipe(HANDLE p_pipe, uint32_t p_count, const void *p_data)
-{
-	DWORD t_written;
-	if (!WriteFile(p_pipe, &p_count, sizeof(p_count), &t_written, NULL) ||
-		t_written != 4)
-		return false;
-	if (!WriteFile(p_pipe, p_data, p_count, &t_written, NULL) ||
-		t_written != p_count)
-		return false;
-	return true;
-}
-
-// MW-2010-05-11: This call is only present on Vista and above, which is the place we
-//   need it - so weakly bind.
-typedef DWORD (APIENTRY *GetProcessIdOfThreadPtr)(HANDLE thread);
-static DWORD DoGetProcessIdOfThread(HANDLE p_thread)
-{
-	// We can safely assume that the kernel dll is loaded!
-	HMODULE t_module;
-	t_module = GetModuleHandleA("Kernel32.dll");
-	if (t_module == NULL)
-		return -1;
-
-	// Resolve the symbol
-	void *t_ptr;
-	t_ptr = GetProcAddress(t_module, "GetProcessIdOfThread");
-	if (t_ptr == NULL)
-		return -1;
-
-	// Call it
-	return ((GetProcessIdOfThreadPtr)t_ptr)(p_thread);
-}
-
+//
+//static bool read_blob_from_pipe(HANDLE p_pipe, void*& r_data, uint32_t& r_data_length)
+//{
+//	uint32_t t_amount;
+//	DWORD t_read;
+//	if (!ReadFile(p_pipe, &t_amount, sizeof(uint32_t), &t_read, NULL) ||
+//		t_read != sizeof(uint32_t))
+//		return false;
+//
+//	void *t_buffer;
+//	t_buffer = malloc(t_amount);
+//	if (t_buffer == nil)
+//		return false;
+//
+//	if (!ReadFile(p_pipe, t_buffer, t_amount, &t_read, NULL) ||
+//		t_read != t_amount)
+//		return false;
+//
+//	r_data = t_buffer;
+//	r_data_length = t_amount;
+//
+//	return true;
+//}
+//
+//static bool write_blob_to_pipe(HANDLE p_pipe, uint32_t p_count, const void *p_data)
+//{
+//	DWORD t_written;
+//	if (!WriteFile(p_pipe, &p_count, sizeof(p_count), &t_written, NULL) ||
+//		t_written != 4)
+//		return false;
+//	if (!WriteFile(p_pipe, p_data, p_count, &t_written, NULL) ||
+//		t_written != p_count)
+//		return false;
+//	return true;
+//}
+//
+//// MW-2010-05-11: This call is only present on Vista and above, which is the place we
+////   need it - so weakly bind.
+//typedef DWORD (APIENTRY *GetProcessIdOfThreadPtr)(HANDLE thread);
+//static DWORD DoGetProcessIdOfThread(HANDLE p_thread)
+//{
+//	// We can safely assume that the kernel dll is loaded!
+//	HMODULE t_module;
+//	t_module = GetModuleHandleA("Kernel32.dll");
+//	if (t_module == NULL)
+//		return -1;
+//
+//	// Resolve the symbol
+//	void *t_ptr;
+//	t_ptr = GetProcAddress(t_module, "GetProcessIdOfThread");
+//	if (t_ptr == NULL)
+//		return -1;
+//
+//	// Call it
+//	return ((GetProcessIdOfThreadPtr)t_ptr)(p_thread);
+//}
+//
 ////////////////////////////////////////////////////////////////////////////////
-
+//
 //// MW-2010-05-09: Updated to add 'elevated' parameter for executing binaries
 ////   at increased privilege level.
 //void MCS_startprocess(MCNameRef p_name, const char *doc, Open_mode mode, Boolean elevated)
@@ -2716,170 +2711,170 @@ static DWORD DoGetProcessIdOfThread(HANDLE p_thread)
 //		MCprocesses[MCnprocesses++].phandle = (MCWinSysHandle)t_process_handle;
 //	}
 //}
-
-// MW-2010-05-09: This is bootstrap 'main' that effectively implemented a CreateProcess
-//   via 'ShellExecute' 'runas'.
-int MCS_windows_elevation_bootstrap_main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-{
-	bool t_success;
-	t_success = true;
-
-	// Fetch the thread id (present immediately after '-elevated-slave' as hex).
-	uint32_t t_parent_thread_id;
-	if (t_success)
-	{
-		char *t_end;
-		t_parent_thread_id = strtoul(lpCmdLine + 15, &t_end, 16);
-		if (t_end != lpCmdLine + strlen(lpCmdLine))
-			t_success = false;
-	}
-
-	// Open the parent's thread
-	HANDLE t_parent_thread;
-	t_parent_thread = nil;
-	if (t_success)
-	{
-		t_parent_thread = OpenThread(SYNCHRONIZE | THREAD_QUERY_INFORMATION, FALSE, t_parent_thread_id);
-		if (t_parent_thread == nil)
-			t_success = false;
-	}
-
-	// Open the parent's process
-	HANDLE t_parent_process;
-	t_parent_process = nil;
-	if (t_success)
-	{
-		t_parent_process = OpenProcess(SYNCHRONIZE | PROCESS_DUP_HANDLE, FALSE, DoGetProcessIdOfThread(t_parent_thread));
-		if (t_parent_process == nil)
-			t_success = false;
-	}
-
-	// Create a pipe the write end of which we will give to the parent
-	HANDLE t_fromparent_read, t_fromparent_write;
-	HANDLE t_toparent_read, t_toparent_write;
-	HANDLE t_toparent_write_dup;
-	t_fromparent_read = t_fromparent_write = nil;
-	t_toparent_read = t_toparent_write = nil;
-	t_toparent_write_dup = nil;
-	if (t_success)
-	{
-		SECURITY_ATTRIBUTES t_attr;
-		t_attr . nLength = sizeof(SECURITY_ATTRIBUTES);
-		t_attr . bInheritHandle = TRUE;
-		t_attr . lpSecurityDescriptor = NULL;
-		if (!CreatePipe(&t_fromparent_read, &t_fromparent_write, &t_attr, 0) ||
-			!CreatePipe(&t_toparent_read, &t_toparent_write, &t_attr, 0) ||
-			!DuplicateHandle(GetCurrentProcess(), t_toparent_write, GetCurrentProcess(), &t_toparent_write_dup, 0, TRUE, DUPLICATE_SAME_ACCESS))
-			t_success = false;
-	}
-
-	// Make sure the ends we are duplicating are not inheritable
-	if (t_success)
-	{
-		SetHandleInformation(t_fromparent_write, HANDLE_FLAG_INHERIT, 0);
-		SetHandleInformation(t_toparent_read, HANDLE_FLAG_INHERIT, 0);
-	}
-
-	// Duplicate the appropriate ends into the parent
-	HANDLE t_parent_data_write, t_parent_data_read;
-	t_parent_data_write = nil;
-	t_parent_data_read = nil;
-	if (t_success)
-	{
-		if (!DuplicateHandle(GetCurrentProcess(), t_fromparent_write, t_parent_process, &t_parent_data_write, 0, FALSE, DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE) ||
-			!DuplicateHandle(GetCurrentProcess(), t_toparent_read, t_parent_process, &t_parent_data_read, 0, FALSE, DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE))
-			t_success = false;
-	}
-
-	// Post the pipe handles to the parent
-	if (t_success)
-		PostThreadMessageA(t_parent_thread_id, WM_USER + 10, (WPARAM)t_parent_data_read, (LPARAM)t_parent_data_write);
-
-	// Now we must read the command line and env strings
-	uint32_t t_cmd_line_length;
-	void *t_cmd_line;
-	t_cmd_line_length = 0;
-	t_cmd_line = nil;
-	if (t_success)
-		t_success = read_blob_from_pipe(t_fromparent_read, t_cmd_line, t_cmd_line_length);
-
-	uint32_t t_env_strings_length;
-	void *t_env_strings;
-	t_env_strings_length = 0;
-	t_env_strings = nil;
-	if (t_success)
-		t_success = read_blob_from_pipe(t_fromparent_read, t_env_strings, t_env_strings_length);
-
-	// If we succeeded in reading those, we are all set to create the process
-	HANDLE t_process_handle, t_thread_handle;
-	DWORD t_process_id;
-	t_thread_handle = NULL;
-	t_process_handle = NULL;
-	t_process_id = 0;
-	if (t_success)
-	{
-		PROCESS_INFORMATION piProcInfo;
-		STARTUPINFOA siStartInfo;
-		memset(&siStartInfo, 0, sizeof(STARTUPINFOA));
-		siStartInfo.cb = sizeof(STARTUPINFOA);
-		siStartInfo.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
-		siStartInfo.wShowWindow = SW_HIDE;
-		siStartInfo.hStdInput = t_fromparent_read;
-		siStartInfo.hStdOutput = t_toparent_write;
-		siStartInfo.hStdError = t_toparent_write_dup;
-		if (CreateProcessA(NULL, (LPSTR)t_cmd_line, NULL, NULL, TRUE, CREATE_NEW_CONSOLE | CREATE_SUSPENDED, t_env_strings, NULL, &siStartInfo, &piProcInfo))
-		{
-			t_process_handle = piProcInfo . hProcess;
-			t_process_id = piProcInfo . dwProcessId;
-			t_thread_handle = piProcInfo . hThread;
-		}
-		else
-		{
-			DWORD t_error;
-			t_error = GetLastError();
-			t_success = false;
-		}
-	}
-
-	// If the process started, then try to duplicate its handle into the parent
-	HANDLE t_parent_process_handle;
-	t_parent_process_handle = NULL;
-	if (t_success)
-	{
-		if (!DuplicateHandle(GetCurrentProcess(), t_process_handle, t_parent_process, &t_parent_process_handle, 0, FALSE, DUPLICATE_SAME_ACCESS))
-			t_success = false;
-	}
-
-	// Now tell the parent process about the handle and id
-	if (t_success)
-		PostThreadMessage(t_parent_thread_id, WM_USER + 10, (WPARAM)t_process_id, (LPARAM)t_parent_process_handle);
-
-	// If everything happened as we expected, resume the process. Otherwise we
-	// terminate it.
-	if (t_success)
-		ResumeThread(t_thread_handle);
-	else
-		TerminateProcess(t_process_handle, 0);
-
-	// Free up our resources
-	free(t_env_strings);
-	free(t_cmd_line);
-	if (t_thread_handle != nil)
-		CloseHandle(t_thread_handle);
-	if (t_process_handle != nil)
-		CloseHandle(t_process_handle);
-	if (t_fromparent_read != nil)
-		CloseHandle(t_fromparent_read);
-	if (t_toparent_write != nil)
-		CloseHandle(t_toparent_write);
-	if (t_toparent_write_dup != nil)
-		CloseHandle(t_toparent_write_dup);
-	if (t_parent_thread != nil)
-		CloseHandle(t_parent_thread);
-	if (t_parent_process != nil)
-		CloseHandle(t_parent_process);
-
-	return 0;
-}
+//
+//// MW-2010-05-09: This is bootstrap 'main' that effectively implemented a CreateProcess
+////   via 'ShellExecute' 'runas'.
+//int MCS_windows_elevation_bootstrap_main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+//{
+//	bool t_success;
+//	t_success = true;
+//
+//	// Fetch the thread id (present immediately after '-elevated-slave' as hex).
+//	uint32_t t_parent_thread_id;
+//	if (t_success)
+//	{
+//		char *t_end;
+//		t_parent_thread_id = strtoul(lpCmdLine + 15, &t_end, 16);
+//		if (t_end != lpCmdLine + strlen(lpCmdLine))
+//			t_success = false;
+//	}
+//
+//	// Open the parent's thread
+//	HANDLE t_parent_thread;
+//	t_parent_thread = nil;
+//	if (t_success)
+//	{
+//		t_parent_thread = OpenThread(SYNCHRONIZE | THREAD_QUERY_INFORMATION, FALSE, t_parent_thread_id);
+//		if (t_parent_thread == nil)
+//			t_success = false;
+//	}
+//
+//	// Open the parent's process
+//	HANDLE t_parent_process;
+//	t_parent_process = nil;
+//	if (t_success)
+//	{
+//		t_parent_process = OpenProcess(SYNCHRONIZE | PROCESS_DUP_HANDLE, FALSE, DoGetProcessIdOfThread(t_parent_thread));
+//		if (t_parent_process == nil)
+//			t_success = false;
+//	}
+//
+//	// Create a pipe the write end of which we will give to the parent
+//	HANDLE t_fromparent_read, t_fromparent_write;
+//	HANDLE t_toparent_read, t_toparent_write;
+//	HANDLE t_toparent_write_dup;
+//	t_fromparent_read = t_fromparent_write = nil;
+//	t_toparent_read = t_toparent_write = nil;
+//	t_toparent_write_dup = nil;
+//	if (t_success)
+//	{
+//		SECURITY_ATTRIBUTES t_attr;
+//		t_attr . nLength = sizeof(SECURITY_ATTRIBUTES);
+//		t_attr . bInheritHandle = TRUE;
+//		t_attr . lpSecurityDescriptor = NULL;
+//		if (!CreatePipe(&t_fromparent_read, &t_fromparent_write, &t_attr, 0) ||
+//			!CreatePipe(&t_toparent_read, &t_toparent_write, &t_attr, 0) ||
+//			!DuplicateHandle(GetCurrentProcess(), t_toparent_write, GetCurrentProcess(), &t_toparent_write_dup, 0, TRUE, DUPLICATE_SAME_ACCESS))
+//			t_success = false;
+//	}
+//
+//	// Make sure the ends we are duplicating are not inheritable
+//	if (t_success)
+//	{
+//		SetHandleInformation(t_fromparent_write, HANDLE_FLAG_INHERIT, 0);
+//		SetHandleInformation(t_toparent_read, HANDLE_FLAG_INHERIT, 0);
+//	}
+//
+//	// Duplicate the appropriate ends into the parent
+//	HANDLE t_parent_data_write, t_parent_data_read;
+//	t_parent_data_write = nil;
+//	t_parent_data_read = nil;
+//	if (t_success)
+//	{
+//		if (!DuplicateHandle(GetCurrentProcess(), t_fromparent_write, t_parent_process, &t_parent_data_write, 0, FALSE, DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE) ||
+//			!DuplicateHandle(GetCurrentProcess(), t_toparent_read, t_parent_process, &t_parent_data_read, 0, FALSE, DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE))
+//			t_success = false;
+//	}
+//
+//	// Post the pipe handles to the parent
+//	if (t_success)
+//		PostThreadMessageA(t_parent_thread_id, WM_USER + 10, (WPARAM)t_parent_data_read, (LPARAM)t_parent_data_write);
+//
+//	// Now we must read the command line and env strings
+//	uint32_t t_cmd_line_length;
+//	void *t_cmd_line;
+//	t_cmd_line_length = 0;
+//	t_cmd_line = nil;
+//	if (t_success)
+//		t_success = read_blob_from_pipe(t_fromparent_read, t_cmd_line, t_cmd_line_length);
+//
+//	uint32_t t_env_strings_length;
+//	void *t_env_strings;
+//	t_env_strings_length = 0;
+//	t_env_strings = nil;
+//	if (t_success)
+//		t_success = read_blob_from_pipe(t_fromparent_read, t_env_strings, t_env_strings_length);
+//
+//	// If we succeeded in reading those, we are all set to create the process
+//	HANDLE t_process_handle, t_thread_handle;
+//	DWORD t_process_id;
+//	t_thread_handle = NULL;
+//	t_process_handle = NULL;
+//	t_process_id = 0;
+//	if (t_success)
+//	{
+//		PROCESS_INFORMATION piProcInfo;
+//		STARTUPINFOA siStartInfo;
+//		memset(&siStartInfo, 0, sizeof(STARTUPINFOA));
+//		siStartInfo.cb = sizeof(STARTUPINFOA);
+//		siStartInfo.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+//		siStartInfo.wShowWindow = SW_HIDE;
+//		siStartInfo.hStdInput = t_fromparent_read;
+//		siStartInfo.hStdOutput = t_toparent_write;
+//		siStartInfo.hStdError = t_toparent_write_dup;
+//		if (CreateProcessA(NULL, (LPSTR)t_cmd_line, NULL, NULL, TRUE, CREATE_NEW_CONSOLE | CREATE_SUSPENDED, t_env_strings, NULL, &siStartInfo, &piProcInfo))
+//		{
+//			t_process_handle = piProcInfo . hProcess;
+//			t_process_id = piProcInfo . dwProcessId;
+//			t_thread_handle = piProcInfo . hThread;
+//		}
+//		else
+//		{
+//			DWORD t_error;
+//			t_error = GetLastError();
+//			t_success = false;
+//		}
+//	}
+//
+//	// If the process started, then try to duplicate its handle into the parent
+//	HANDLE t_parent_process_handle;
+//	t_parent_process_handle = NULL;
+//	if (t_success)
+//	{
+//		if (!DuplicateHandle(GetCurrentProcess(), t_process_handle, t_parent_process, &t_parent_process_handle, 0, FALSE, DUPLICATE_SAME_ACCESS))
+//			t_success = false;
+//	}
+//
+//	// Now tell the parent process about the handle and id
+//	if (t_success)
+//		PostThreadMessage(t_parent_thread_id, WM_USER + 10, (WPARAM)t_process_id, (LPARAM)t_parent_process_handle);
+//
+//	// If everything happened as we expected, resume the process. Otherwise we
+//	// terminate it.
+//	if (t_success)
+//		ResumeThread(t_thread_handle);
+//	else
+//		TerminateProcess(t_process_handle, 0);
+//
+//	// Free up our resources
+//	free(t_env_strings);
+//	free(t_cmd_line);
+//	if (t_thread_handle != nil)
+//		CloseHandle(t_thread_handle);
+//	if (t_process_handle != nil)
+//		CloseHandle(t_process_handle);
+//	if (t_fromparent_read != nil)
+//		CloseHandle(t_fromparent_read);
+//	if (t_toparent_write != nil)
+//		CloseHandle(t_toparent_write);
+//	if (t_toparent_write_dup != nil)
+//		CloseHandle(t_toparent_write_dup);
+//	if (t_parent_thread != nil)
+//		CloseHandle(t_parent_thread);
+//	if (t_parent_process != nil)
+//		CloseHandle(t_parent_process);
+//
+//	return 0;
+//}
 
 ////////////////////////////////////////////////////////////////////////////////

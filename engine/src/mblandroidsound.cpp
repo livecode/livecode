@@ -31,12 +31,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mblandroid.h"
 #include "mblandroidutil.h"
+#include "mblandroidjava.h"
 
 #include "mblsyntax.h"
 
 #include <jni.h>
 
-bool path_to_apk_path(const char * p_path, const char *&r_apk_path);
+bool path_to_apk_path(MCStringRef p_path, MCStringRef &r_apk_path);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -78,9 +79,9 @@ bool MCSystemPlaySound(MCStringRef p_file, bool p_looping)
 	
 	/* UNCHECKED */ MCS_resolvepath(p_file, s_sound_file);
     
-	const char *t_apk_file = nil;
-	if (path_to_apk_path(MCStringGetCString(s_sound_file), t_apk_file))
-		MCAndroidEngineCall("playSound", "bsbb", &t_success, t_apk_file, true, p_looping);
+	MCAutoStringRef t_apk_file;
+	if (path_to_apk_path(s_sound_file, &t_apk_file))
+		MCAndroidEngineCall("playSound", "bxbb", &t_success, *t_apk_file, true, p_looping);
 	else
 		MCAndroidEngineCall("playSound", "bxbb", &t_success, s_sound_file, false, p_looping);
 	if (!t_success)
@@ -102,12 +103,12 @@ bool MCSystemPlaySoundOnChannel(MCStringRef p_channel, MCStringRef p_file, MCSou
 {
     bool t_success;
     t_success = true;    
-    const char *t_apk_file = nil;;
+    MCAutoStringRef t_apk_file;
     if (t_success)
-        if (path_to_apk_path(MCStringGetCString(p_file), t_apk_file))
-            MCAndroidEngineRemoteCall("playSoundOnChannel", "bxsxibj", &t_success, p_channel, t_apk_file, p_file, (int32_t) p_type, true, (long) p_object);
+        if (path_to_apk_path(p_file, &t_apk_file))
+            MCAndroidEngineRemoteCall("playSoundOnChannel", "bxxxibj", &t_success, p_channel, *t_apk_file, p_file, (int32_t) p_type, true, (long) p_object);
         else
-            MCAndroidEngineRemoteCall("playSoundOnChannel", "bxsxibj", &t_success, p_channel, p_file, p_file, (int32_t) p_type, false, (long) p_object);
+            MCAndroidEngineRemoteCall("playSoundOnChannel", "bxxxibj", &t_success, p_channel, p_file, p_file, (int32_t) p_type, false, (long) p_object);
     return t_success;
 }
 

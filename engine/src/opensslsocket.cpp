@@ -869,7 +869,7 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 // 'internet gateway' defined - but it isn't clear how one might do that.
 //
 
-char *MCS_hostaddress(void)
+bool MCS_hostaddress(MCStringRef &r_host_address)
 {
 #if defined(_WINDOWS)
 	if (!wsainit())
@@ -888,7 +888,7 @@ char *MCS_hostaddress(void)
 				if ((t_interfaces[i] . iiFlags & IFF_UP) != 0 &&
 					(t_interfaces[i] . iiFlags & IFF_LOOPBACK) == 0 &&
 					t_interfaces[i] . iiAddress . Address . sa_family == AF_INET)
-					return strdup(inet_ntoa(t_interfaces[i] . iiAddress . AddressIn . sin_addr));
+					return MCStringCreateWithCString(inet_ntoa(t_interfaces[i] . iiAddress . AddressIn . sin_addr), r_host_address);
 			}
 		}
 	}
@@ -980,13 +980,14 @@ char *MCS_hostaddress(void)
 	if (t_store != NULL)
 		CFRelease(t_store);
 
-	return t_result;
+	return MCStringCreateWithCString(t_result, r_host_address);
 
 #elif defined(_LINUX)
 #else
 #endif
 
-	return NULL;
+	r_host_address = MCValueRetain(kMCEmptyString);
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1169,15 +1170,17 @@ void MCSocket::acceptone()
 	if (newfd > 0)
 	{
 		char *t = inet_ntoa(addr.sin_addr);
-		char *n = new char[strlen(t) + I4L];
-		sprintf(n, "%s:%d", t, newfd);
+		MCAutoStringRef n;
+		MCStringFormat(&n, "%s:%d", t, newfd);
 		MCU_realloc((char **)&MCsockets, MCnsockets,
 		            MCnsockets + 1, sizeof(MCSocket *));
-		MCsockets[MCnsockets] = new MCSocket(n, object, NULL,
+		MCNameRef t_name;
+		MCNameCreate(*n, t_name);
+		MCsockets[MCnsockets] = new MCSocket(t_name, object, NULL,
 		                                     False, newfd, False, False,False);
 		MCsockets[MCnsockets]->connected = True;
 		MCsockets[MCnsockets++]->setselect();
-		MCscreen->delaymessage(object, message, strclone(n), strclone(name));
+		MCscreen->delaymessage(object, message, *n, MCNameGetString(name));
 		added = True;
 	}
 }
