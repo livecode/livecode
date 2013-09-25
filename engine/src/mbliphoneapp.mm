@@ -669,8 +669,9 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	
 	// MW-2011-10-24: [[ Bug ]] The status bar only clips the display if actually
 	//   hidden, or on iPhone with black translucent style.
+    // MM-2013-09-25: [[ iOS7Support ]] The status bar is always overlaid ontop of the view, irrespective of its style.
 	CGFloat t_status_bar_size;
-	if (m_status_bar_hidden || ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone && m_status_bar_style == UIStatusBarStyleBlackTranslucent))
+	if (m_status_bar_hidden || MCmajorosversion >= 700 || ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone && m_status_bar_style == UIStatusBarStyleBlackTranslucent))
 		t_status_bar_size = 0.0f;
 	else
 		t_status_bar_size = 20.0f;
