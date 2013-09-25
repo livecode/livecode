@@ -445,6 +445,7 @@ public:
 	void markfind(MCExecPoint &ep, Find_mode mode, const MCString &,
 	              MCChunk *, Boolean mark);
 	void mark(MCExecPoint &ep, MCExpression *where, Boolean mark);
+    void mark(MCExecContext& ctxt, MCExpression *p_where, bool p_mark);
 	Linkatts *getlinkatts();
 	Boolean cantabort()
 	{

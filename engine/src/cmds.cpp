@@ -1131,6 +1131,7 @@ Parse_stat MCMarking::parse(MCScriptPoint &sp)
 
 Exec_stat MCMarking::exec(MCExecPoint &ep)
 {
+#ifdef /* MCMarking */ LEGACY_EXEC
 	if (card != NULL)
 	{
 		MCObject *optr;
@@ -1156,6 +1157,56 @@ Exec_stat MCMarking::exec(MCExecPoint &ep)
 			return ES_ERROR;
 		}
 		MCdefaultstackptr->markfind(ep, mode, ep.getsvalue(), field, mark);
+	}
+	return ES_NORMAL;
+#endif /* MCPut */
+    
+    MCExecContext ctxt(ep);
+    if (card != nil)
+	{
+		MCObjectPtr t_object;
+		if (card->getobj(ep, t_object, True) != ES_NORMAL || t_object . object->gettype() != CT_CARD)
+		{
+			MCeerror->add(EE_MARK_BADCARD, line, pos);
+			return ES_ERROR;
+		}
+        
+        if (mark)
+            MCInterfaceExecMarkCard(ctxt, t_object);
+        else
+            MCInterfaceExecUnmarkCard(ctxt, t_object);
+
+	}
+	if (tofind == nil)
+    {
+        if (mark)
+        {
+            if (where != nil)
+                MCInterfaceExecMarkCardsConditional(ctxt, where);
+            else
+                MCInterfaceExecMarkAllCards(ctxt);
+        }
+        else
+        {
+            if (where != nil)
+                MCInterfaceExecUnmarkCardsConditional(ctxt, where);
+            else
+                MCInterfaceExecUnmarkAllCards(ctxt);
+        }
+    }
+	else
+	{
+        MCAutoStringRef t_needle;
+		if (tofind->eval(ep) != ES_NORMAL)
+		{
+			MCeerror->add(EE_MARK_BADSTRING, line, pos);
+			return ES_ERROR;
+		}
+        ep . copyasstringref(&t_needle);
+        if (mark)
+            MCInterfaceExecMarkFind(ctxt, mode, *t_needle, field);
+        else
+            MCInterfaceExecUnmarkFind(ctxt, mode, *t_needle, field);
 	}
 	return ES_NORMAL;
 }

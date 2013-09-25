@@ -3458,3 +3458,47 @@ void MCInterfaceEvalTextOfContainer(MCExecContext& ctxt, MCObjectPtr p_container
     
     ctxt . LegacyThrow(EE_CHUNK_OBJECTNOTCONTAINER);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCInterfaceExecMarkCard(MCExecContext& ctxt, MCObjectPtr t_object)
+{
+    t_object . object -> setboolprop(ctxt, t_object . part_id, P_MARKED, false, true);
+}
+
+void MCInterfaceExecUnmarkCard(MCExecContext& ctxt, MCObjectPtr t_object)
+{
+    t_object . object -> setboolprop(ctxt, t_object . part_id, P_MARKED, false, false);
+}
+
+void MCInterfaceExecMarkCardsConditional(MCExecContext& ctxt, MCExpression *p_where)
+{
+    MCdefaultstackptr -> mark(ctxt, p_where, true);
+}
+
+void MCInterfaceExecMarkAllCards(MCExecContext& ctxt)
+{
+    MCdefaultstackptr -> mark(ctxt, nil, true);
+}
+
+void MCInterfaceExecUnmarkCardsConditional(MCExecContext& ctxt, MCExpression *p_where)
+{
+    MCdefaultstackptr -> mark(ctxt, p_where, false);
+}
+
+void MCInterfaceExecUnmarkAllCards(MCExecContext& ctxt)
+{
+    MCdefaultstackptr -> mark(ctxt, nil, false);
+}
+
+void MCInterfaceExecMarkFind(MCExecContext& ctxt, Find_mode p_mode, MCStringRef p_needle, MCChunk *p_field)
+{
+    MCdefaultstackptr -> markfind(ctxt . GetEP(), p_mode, MCStringGetOldString(p_needle), p_field, true);
+}
+
+void MCInterfaceExecUnmarkFind(MCExecContext& ctxt, Find_mode p_mode, MCStringRef p_needle, MCChunk *p_field)
+{
+    MCdefaultstackptr -> markfind(ctxt . GetEP(), p_mode, MCStringGetOldString(p_needle), p_field, false);
+}
+
+////////////////////////////////////////////////////////////////////////////////

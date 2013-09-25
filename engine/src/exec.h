@@ -2147,6 +2147,16 @@ void MCInterfaceEvalTextOfContainer(MCExecContext& ctxt, MCObjectPtr p_container
 void MCInterfaceEvalFieldChunk(MCExecContext& ctxt, MCObjectPtr p_field, Functions p_function, MCStringRef& r_text);
 
 void MCInterfaceEvalTextOfContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCStringRef &r_text);
+
+void MCInterfaceExecMarkCard(MCExecContext& ctxt, MCObjectPtr t_object);
+void MCInterfaceExecUnmarkCard(MCExecContext& ctxt, MCObjectPtr t_object);
+void MCInterfaceExecMarkCardsConditional(MCExecContext& ctxt, MCExpression *p_where);
+void MCInterfaceExecMarkAllCards(MCExecContext& ctxt);
+void MCInterfaceExecUnmarkCardsConditional(MCExecContext& ctxt, MCExpression *p_where);
+void MCInterfaceExecUnmarkAllCards(MCExecContext& ctxt);
+void MCInterfaceExecMarkFind(MCExecContext& ctxt, Find_mode p_mode, MCStringRef p_needle, MCChunk *p_field);
+void MCInterfaceExecUnmarkFind(MCExecContext& ctxt, Find_mode p_mode, MCStringRef p_needle, MCChunk *p_field);
+
 ///////////
 
 struct MCInterfaceLayer;

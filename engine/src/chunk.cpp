@@ -2969,7 +2969,6 @@ Exec_stat MCChunk::gets(MCExecPoint &ep)
 
 Exec_stat MCChunk::eval(MCExecPoint &ep)
 {
-#ifdef LEGACY_EXEC
 	if (source != NULL && url == NULL && stack == NULL && background == NULL && card == NULL
 	        && group == NULL && object == NULL)
 	{
@@ -3099,7 +3098,6 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
-#endif
 
     MCAutoStringRef t_text;
     MCExecContext ctxt(ep);
@@ -3873,7 +3871,6 @@ Exec_stat MCChunk::evalranges(MCExecPoint &ep, int4& r_line_start, int4& r_line_
 
 Exec_stat MCChunk::set(MCExecPoint &ep, Preposition_type ptype)
 {
-#ifdef LEGACY_EXEC
 	MCObject *objptr = NULL;
 	MCField *fptr = NULL;
 	uint4 parid;
@@ -4066,7 +4063,6 @@ Exec_stat MCChunk::set(MCExecPoint &ep, Preposition_type ptype)
 					return ES_ERROR;
 				}
 	return ES_NORMAL;
-#endif
     
     MCExecContext ctxt(ep);
     MCAutoValueRef t_value;
