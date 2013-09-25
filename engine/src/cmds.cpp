@@ -2620,6 +2620,7 @@ Exec_stat MCSort::exec(MCExecPoint &ep)
 			/* UNCHECKED */ ep . setvalueref(t_sorted_target);
 			MCValueRelease(t_sorted_target);
 		}
+        of -> set(ep, PT_INTO);
 	}
 	else
 	{
