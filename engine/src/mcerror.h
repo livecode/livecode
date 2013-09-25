@@ -52,7 +52,7 @@ public:
 	void append(MCError& string);
 	const MCString &getsvalue();
 	void copysvalue(const MCString &s, Boolean t);
-	bool copyasstring(MCStringRef &r_string);
+	bool copyasstringref(MCStringRef &r_string);
 	void clear();
 	Boolean isempty()
 	{

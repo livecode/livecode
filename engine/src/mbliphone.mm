@@ -49,6 +49,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+uint1 *MCuppercasingtable;
+uint1 *MClowercasingtable;
+
+////////////////////////////////////////////////////////////////////////////////
+
 @implementation NSString (com_runrev_livecode_NSStringAdditions)
 	- (const char *)nativeCString
 	{
@@ -180,33 +185,11 @@ static char *my_strndup(const char *s, uint32_t l)
 class MCStdioFileHandle: public MCSystemFileHandle
 {
 public:
-	static MCStdioFileHandle *Open(const char *p_path, const char *p_mode)
-	{
-		FILE *t_stream;
-		t_stream = fopen(p_path, p_mode);
-		if (t_stream == NULL)
-			return NULL;
-		
-		MCStdioFileHandle *t_handle;
-		t_handle = new MCStdioFileHandle;
-		t_handle -> m_stream = t_stream;
-		
-		return t_handle;
-	}
-
-    static MCStdioFileHandle *OpenFd(int fd, const char *p_mode)
-	{
-		FILE *t_stream;
-		t_stream = fdopen(fd, p_mode);
-		if (t_stream == NULL)
-			return NULL;
-		
-		MCStdioFileHandle *t_handle;
-		t_handle = new MCStdioFileHandle;
-		t_handle -> m_stream = t_stream;
-		
-		return t_handle;
-	}
+    
+    MCStdioFileHandle(FILE *p_fptr)
+    {
+        m_stream = p_fptr;
+    }
 	
 	virtual void Close(void)
 	{
@@ -226,17 +209,27 @@ public:
 		return true;
 	}
 	
-	virtual bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
+	virtual bool Write(const void *p_buffer, uint32_t p_length)
 	{
 		size_t t_amount;
 		t_amount = fwrite(p_buffer, 1, p_length, m_stream);
-		r_written = t_amount;
 		
 		if (t_amount < p_length)
 			return false;
 		
 		return true;
 	}
+    
+    virtual bool IsExhausted()
+    {
+        return feof(m_stream);
+    }
+    
+    virtual bool TakeBuffer(void *&r_buffer, size_t &r_length)
+    {
+        r_length = 0;
+        return true;
+    }
 	
 	virtual bool Seek(int64_t offset, int p_dir)
 	{
@@ -291,24 +284,26 @@ private:
 class MCStdioFileDescriptorHandle: public MCSystemFileHandle
 {
 public:
-    static MCStdioFileDescriptorHandle *Open(const char *p_path, const char *p_mode)
-	{
-		MCStdioFileDescriptorHandle *t_handle;
-		t_handle = new MCStdioFileDescriptorHandle;
-		return t_handle;
-	}
     
-	static MCStdioFileDescriptorHandle *OpenFd(int fd, const char *p_mode)
-	{
-		MCStdioFileDescriptorHandle *t_handle;
-		t_handle = new MCStdioFileDescriptorHandle;
-		return t_handle;
-	}
+    MCStdioFileDescriptorHandle()
+    {
+    }
 	
 	virtual void Close(void)
 	{
 		delete this;
 	}
+    
+    virtual bool IsExhausted()
+    {
+        return false;
+    }
+    
+    virtual bool TakeBuffer(void*& r_buffer, size_t& r_length)
+    {
+        r_length = 0;
+        return true;
+    }
 	
 	virtual bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
 	{
@@ -316,9 +311,8 @@ public:
 		return true;
 	}
 	
-	virtual bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
+	virtual bool Write(const void *p_buffer, uint32_t p_length)
 	{
-        r_written = p_length;
         NSLog(@"%s", p_buffer);
 		return true;
 	}
@@ -365,6 +359,11 @@ public:
 	
 };
 
+MCServiceInterface *MCIPhoneSystem::QueryService(MCServiceType type)
+{
+    return nil;
+}
+
 real64_t MCIPhoneSystem::GetCurrentTime(void)
 {
 	struct timeval tv;
@@ -400,13 +399,15 @@ MCNameRef MCIPhoneSystem::GetProcessor(void)
 #endif
 }
 
-char *MCIPhoneSystem::GetAddress(void)
+bool MCIPhoneSystem::GetAddress(MCStringRef& r_address)
 {
+//    bool MCS_getaddress(MCStringRef &r_address)
+//    {
+//        r_address = kMCEmptyString;
+//        return true;
+//    }    
 	extern MCStringRef MCcmd;
-	char *t_address;
-	t_address = new char[MCStringGetLength(MCcmd) + strlen("iphone:") + 1];
-	sprintf(t_address, "iphone:%s", MCStringGetCString(MCcmd));
-	return t_address;
+    return MCStringFormat(r_address, "iphone:%s", MCStringGetCString(MCcmd));
 }
 
 void MCIPhoneSystem::Alarm(real64_t p_when)
@@ -418,54 +419,78 @@ void MCIPhoneSystem::Sleep(real64_t p_when)
 	usleep((uint32_t)(p_when * 1000000.0));
 }
 
-void MCIPhoneSystem::SetEnv(const char *name, const char *value)
+void MCIPhoneSystem::SetEnv(MCStringRef p_name, MCStringRef p_value)
 {
-	setenv(name, value, 1);
+	setenv(MCStringGetCString(p_name), MCStringGetCString(p_value), 1);
 }
 
-void MCIPhoneSystem::GetEnv(MCStringRef p_name, MCStringRef& r_env)
+bool MCIPhoneSystem::GetEnv(MCStringRef p_name, MCStringRef& r_env)
 {
-	/*UNCHECKED*/ MCStringCreateWithCString(getenv(MCStringGetCString(p_name)), r_env);
+    return MCStringCreateWithCString(getenv(MCStringGetCString(p_name)), r_env);
 }
 
-bool MCIPhoneSystem::CreateFolder(MCStringRef p_path)
+Boolean MCIPhoneSystem::CreateFolder(MCStringRef p_path)
 {
-	return mkdir(MCStringGetCString(p_path), 0777) == 0;
+	if (mkdir(MCStringGetCString(p_path), 0777) != 0)
+        return False;
+    
+    return True;
 }
 
-bool MCIPhoneSystem::DeleteFolder(MCStringRef p_path)
+Boolean MCIPhoneSystem::DeleteFolder(MCStringRef p_path)
 {
-	return rmdir(MCStringGetCString(p_path)) == 0;
+	if (rmdir(MCStringGetCString(p_path)) != 0)
+        return False;
+    
+    return True;
 }
 
-bool MCIPhoneSystem::DeleteFile(MCStringRef p_path)
+Boolean MCIPhoneSystem::DeleteFile(MCStringRef p_path)
 {
-	return unlink(MCStringGetCString(p_path)) == 0;
+	if (unlink(MCStringGetCString(p_path)) != 0)
+        return False;
+    
+    return True;
 }
 
-bool MCIPhoneSystem::RenameFileOrFolder(MCStringRef p_old_name, MCStringRef p_new_name)
+Boolean MCIPhoneSystem::RenameFileOrFolder(MCStringRef p_old_name, MCStringRef p_new_name)
 {
-	return rename(MCStringGetCString(p_old_name), MCStringGetCString(p_new_name)) == 0;
+	if (rename(MCStringGetCString(p_old_name), MCStringGetCString(p_new_name)) != 0)
+        return False;
+    
+    return True;
 }
 
-bool MCIPhoneSystem::BackupFile(MCStringRef p_old_name, MCStringRef p_new_name)
+Boolean MCIPhoneSystem::BackupFile(MCStringRef p_old_name, MCStringRef p_new_name)
 {
-	return rename(MCStringGetCString(p_old_name), MCStringGetCString(p_new_name)) == 0;
+	if (rename(MCStringGetCString(p_old_name), MCStringGetCString(p_new_name)) != 0)
+        return False;
+    
+    return True;
 }
 
-bool MCIPhoneSystem::UnbackupFile(MCStringRef p_old_name, MCStringRef p_new_name)
+Boolean MCIPhoneSystem::UnbackupFile(MCStringRef p_old_name, MCStringRef p_new_name)
 {
-	return rename(MCSTringGetCString(p_old_name), MCStringGetCString(p_new_name)) == 0;
+	if (rename(MCStringGetCString(p_old_name), MCStringGetCString(p_new_name)) != 0)
+        return False;
+    
+    return True;
 }
 
-bool MCIPhoneSystem::CreateAlias(MCStringRef p_target, MCStringRef p_alias)
+Boolean MCIPhoneSystem::CreateAlias(MCStringRef p_target, MCStringRef p_alias)
 {
-	return symlink(MCStringGetCString(p_target), MCStringGetCString(p_alias)) == 0;
+	if (symlink(MCStringGetCString(p_target), MCStringGetCString(p_alias)) != 0)
+        return False;
+    
+    return True;
 }
 
-char *MCIPhoneSystem::ResolveAlias(const char *p_target)
+Boolean MCIPhoneSystem::ResolveAlias(MCStringRef p_target, MCStringRef& r_dest)
 {
-	return strdup(p_target);
+    if (!MCStringCopy(p_target, r_dest))
+        return False;
+    
+    return True;
 }
 
 bool MCIPhoneSystem::GetCurrentFolder(MCStringRef& r_path)
@@ -477,36 +502,39 @@ bool MCIPhoneSystem::GetCurrentFolder(MCStringRef& r_path)
 	return MCStringCreateWithCString(*t_folder, r_path);
 }
 
-bool MCIPhoneSystem::SetCurrentFolder(MCStringRef p_path)
+Boolean MCIPhoneSystem::SetCurrentFolder(MCStringRef p_path)
 {
-	return chdir(MCStringGetCString(p_path)) == 0;
+	if (chdir(MCStringGetCString(p_path)) != 0)
+        return False;
+    
+    return True;
 }
 
-bool MCIPhoneSystem::FileExists(const char *p_path) 
+Boolean MCIPhoneSystem::FileExists(MCStringRef p_path)
 {
 	struct stat t_info;
 	
 	bool t_found;
-	t_found = stat(p_path, &t_info) == 0;
+	t_found = stat(MCStringGetCString(p_path), &t_info) == 0;
 	if (t_found && (t_info.st_mode & S_IFDIR) == 0)
-		return true;
+		return True;
 	
-	return false;
+	return False;
 }
 
-bool MCIPhoneSystem::FolderExists(const char *p_path)
+Boolean MCIPhoneSystem::FolderExists(MCStringRef p_path)
 {
 	struct stat t_info;
 	
 	bool t_found;
-	t_found = stat(p_path, &t_info) == 0;
+	t_found = stat(MCStringGetCString(p_path), &t_info) == 0;
 	if (t_found && (t_info.st_mode & S_IFDIR) != 0)
-		return true;
+		return True;
 	
-	return false;
+	return False;
 }
 
-bool MCIPhoneSystem::FileNotAccessible(MCStringRef p_path)
+Boolean MCIPhoneSystem::FileNotAccessible(MCStringRef p_path)
 {
 	struct stat t_info;
 	if (stat(MCStringGetCString(p_path), &t_info) != 0)
@@ -521,9 +549,12 @@ bool MCIPhoneSystem::FileNotAccessible(MCStringRef p_path)
 	return false;
 }
 
-bool MCIPhoneSystem::ChangePermissions(MCStringRef p_path, uint2 p_mask)
+Boolean MCIPhoneSystem::ChangePermissions(MCStringRef p_path, uint2 p_mask)
 {
-	return chmod(MCStringGetCString(p_path), p_mask) == 0;
+	if (chmod(MCStringGetCString(p_path), p_mask) != 0)
+        return False;
+    
+    return True;
 }
 
 uint2 MCIPhoneSystem::UMask(uint2 p_mask)
@@ -531,44 +562,79 @@ uint2 MCIPhoneSystem::UMask(uint2 p_mask)
 	return umask(p_mask);
 }
 
-MCSystemFileHandle *MCIPhoneSystem::OpenFile(MCStringRef p_path, uint32_t p_mode, bool p_map)
+IO_handle MCIPhoneSystem::OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map)
 {
 	static const char *s_modes[] = { "r", "w", "r+", "a" };
-
-	MCSystemFileHandle *t_handle;
-	t_handle = MCStdioFileHandle::Open(MCStringGetCString(p_path), s_modes[p_mode & 0xff]);
-	if (t_handle == NULL && p_mode == kMCSystemFileModeUpdate)
-		t_handle = MCStdioFileHandle::Open(MCStringGetCString(p_path), "w+");
-	
-	return t_handle;
+    uint1 t_mode;
+    
+    switch (p_mode)
+    {
+    case kMCSOpenFileModeRead:
+        t_mode = 0;
+        break;
+    case kMCSOpenFileModeWrite:
+        t_mode = 1;
+        break;
+    case kMCSOpenFileModeUpdate:
+        t_mode = 2;
+        break;
+    case kMCSOpenFileModeAppend:
+        t_mode = 3;
+        break;
+    }
+    
+    FILE *t_stream;
+    t_stream = fopen(MCStringGetCString(p_path), s_modes[t_mode]);
+    
+	if (t_stream == NULL && p_mode == kMCSystemFileModeUpdate)
+		t_stream = fopen(MCStringGetCString(p_path), "w+");
+    
+    if (t_stream == NULL)
+        return NULL;
+    
+    IO_handle t_handle;
+    t_handle = new MCStdioFileHandle(t_stream);
+    
+    return t_handle;
 }
 
-MCSystemFileHandle *MCIPhoneSystem::OpenStdFile(uint32_t i)
+IO_handle MCIPhoneSystem::OpenFd(uint32_t p_fd, intenum_t p_mode)
 {
 	static const char *s_modes[] = { "r", "w", "w" };
+    
+    FILE *t_stream;
+    t_stream = fdopen(p_fd, s_modes[p_fd]);
+    
+    if (t_stream == NULL)
+        return NULL;
+    
+    IO_handle t_handle;
+    
     // MM-2012-11-22: [[ Bug 10540 ]] - For iOS 6, use MCStdioFileDescriptorHandle for stdio streams.
     //  This just wraps NSLog for output.  No input supported.
     if (MCmajorosversion < 600)
-        return MCStdioFileHandle::OpenFd(i, s_modes[i]);
+        t_handle = new MCStdioFileHandle(t_stream);
     else
-        return MCStdioFileDescriptorHandle::OpenFd(i, s_modes[i]);
+        t_handle = new MCStdioFileDescriptorHandle();
+    
+    return t_handle;
 }
 
-MCSystemFileHandle *MCIPhoneSystem::OpenDevice(MCStringRef p_path, uint32_t p_mode, MCStringRef p_control_string)
+IO_handle MCIPhoneSystem::OpenDevice(MCStringRef p_path, intenum_t p_mode)
 {
 	return NULL;
 }
 
-char *MCIPhoneSystem::GetTemporaryFileName(void)
+bool MCIPhoneSystem::GetTemporaryFileName(MCStringRef& r_tmp_name)
 {
-	return strdup(tmpnam(NULL));
+	return MCStringCreateWithCString(tmpnam(NULL), r_tmp_name);
 }
 
-char *MCIPhoneSystem::GetStandardFolder(const char *p_folder)
+Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folder)
 {
 	char *t_path;
 	t_path = nil;
-	if (strcasecmp(p_folder, "temporary") == 0)
+	if (MCNameIsEqualToCString(p_type, "temporary", kMCCompareExact))
 	{
 		t_path = strdup([NSTemporaryDirectory() cStringUsingEncoding: NSMacOSRomanStringEncoding]);
 		
@@ -577,67 +643,69 @@ char *MCIPhoneSystem::GetStandardFolder(const char *p_folder)
 		if (t_path[strlen(t_path) - 1] == '/')
 			t_path[strlen(t_path) - 1] = '\0';
 	}
-	else if (strcasecmp(p_folder, "documents") == 0)
+	else if (MCNameIsEqualToCString(p_type, "documents", kMCCompareExact))
 	{
 		NSArray *t_paths;
 		t_paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
 		t_path = strdup([[t_paths objectAtIndex: 0] cString]);
 	}
-	else if (strcasecmp(p_folder, "home") == 0)
+	else if (MCNameIsEqualToCString(p_type, "home", kMCCompareExact))
 	{
 		t_path = strdup([NSHomeDirectory() cStringUsingEncoding: NSMacOSRomanStringEncoding]);
 	}
-	else if (strcasecmp(p_folder, "cache") == 0)
+	else if (MCNameIsEqualToCString(p_type, "cache", kMCCompareExact))
 	{
 		NSArray *t_paths;
 		t_paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
 		t_path = strdup([[t_paths objectAtIndex: 0] cString]);
 	}
-	else if (strcasecmp(p_folder, "engine") == 0)
+	else if (MCNameIsEqualToCString(p_type, "engine", kMCCompareExact))
 	{
 		extern MCStringRef MCcmd;
 		t_path = my_strndup(MCStringGetCString(MCcmd), strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd));
 	}
-	else if (strcasecmp(p_folder, "library") == 0)
+	else if (MCNameIsEqualToCString(p_type, "library", kMCCompareExact))
 	{
 		NSArray *t_paths;
 		t_paths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);
 		t_path = strdup([[t_paths objectAtIndex: 0] cString]);
 	}
-	return t_path;
+    
+    if (t_path == nil || !MCStringCreateWithCStringAndRelease((char_t*)t_path, r_folder))
+        return False;
+    
+    return True;
 }
 
 //////////
 
-void *MCIPhoneSystem::LoadModule(MCStringRef p_path)
+MCSysModuleHandle MCIPhoneSystem::LoadModule(MCStringRef p_path)
 {
     
 	void *t_module;
 	t_module = load_module(MCStringGetCString(p_path));
 	if (t_module != NULL)
-		return t_module;
+		return (MCSysModuleHandle)t_module;
     
-	MCAutoStringRef t_resolved_path;
-	/* UNCHECKED */ ResolveNativePath(p_path, &t_resolved_path);
-    t_module = dlopen(MCStringGetCString(*t_resolved_path), RTLD_LAZY);
+    t_module = dlopen(MCStringGetCString(p_path), RTLD_LAZY);
     
-	return t_module;
+	return (MCSysModuleHandle)t_module;
 }
 
-void *MCIPhoneSystem::ResolveModuleSymbol(void *p_module, MCStringRef p_symbol)
+MCSysModuleHandle MCIPhoneSystem::ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
 {
-	if (is_static_module(p_module))
-		return resolve_symbol(p_module, MCStringGetCString(p_symbol));
+	if (is_static_module((void*)p_module))
+		return (MCSysModuleHandle)resolve_symbol((void*)p_module, MCStringGetCString(p_symbol));
 
-	return dlsym(p_module, MCStringGetCString(p_symbol));
+	return (MCSysModuleHandle)dlsym(p_module, MCStringGetCString(p_symbol));
 }
 
-void MCIPhoneSystem::UnloadModule(void *p_module)
+void MCIPhoneSystem::UnloadModule(MCSysModuleHandle p_module)
 {
-	if (is_static_module(p_module))
+	if (is_static_module((void*)p_module))
 		return;
 		
-	dlclose(p_module);
+	dlclose((void*)p_module);
 }
 
 ////
@@ -664,29 +732,46 @@ bool MCIPhoneSystem::PathFromNative(MCStringRef p_native, MCStringRef& r_path)
 
 bool MCIPhoneSystem::ResolvePath(MCStringRef p_path, MCStringRef& r_resolved)
 {
-	return ResolveNativePath(p_path, r_resolved);
-}
-
-bool MCIPhoneSystem::ResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved)
-{
-	char *t_absolute_path;
+    char *t_absolute_path;
 	if (MCStringGetCharAtIndex(p_path, 0) != '/')
 	{
 		MCAutoStringRef t_folder;
 		if (!GetCurrentFolder(&t_folder))
 			return false;
-
+        
 		MCAutoStringRef t_resolved;
 		if (!MCStringMutableCopy(*t_folder, &t_resolved) ||
 			!MCStringAppendChar(*t_resolved, '/') ||
 			!MCStringAppend(*t_resolved, p_path))
 			return false;
-
+        
 		return MCStringCopy(*t_resolved, r_resolved);
 	}
 	else
 		return MCStringCopy(p_path, r_resolved);
 }
+
+// Moved to ResolvePath as the path is always native on MCSystemInterface functions
+//bool MCIPhoneSystem::ResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved)
+//{
+//	char *t_absolute_path;
+//	if (MCStringGetCharAtIndex(p_path, 0) != '/')
+//	{
+//		MCAutoStringRef t_folder;
+//		if (!GetCurrentFolder(&t_folder))
+//			return false;
+//
+//		MCAutoStringRef t_resolved;
+//		if (!MCStringMutableCopy(*t_folder, &t_resolved) ||
+//			!MCStringAppendChar(*t_resolved, '/') ||
+//			!MCStringAppend(*t_resolved, p_path))
+//			return false;
+//
+//		return MCStringCopy(*t_resolved, r_resolved);
+//	}
+//	else
+//		return MCStringCopy(p_path, r_resolved);
+//}
 
 
 bool MCIPhoneSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *p_context)
@@ -732,7 +817,7 @@ bool MCIPhoneSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_callb
 	return t_success;
 }
 
-bool MCIPhoneSystem::Shell(MCStringRef p_cmd, uint32_t p_cmd_length, MCDataRef & r_data, int& r_retcode)
+bool MCIPhoneSystem::Shell(MCStringRef filename, MCDataRef& r_data, int& r_retcode)
 {
 	int t_to_parent[2];
 	pid_t t_pid;
@@ -777,7 +862,7 @@ bool MCIPhoneSystem::Shell(MCStringRef p_cmd, uint32_t p_cmd_length, MCDataRef &
 			// Close the reading side of the pipe <parent -> child>
 			close(t_to_child[0]);
 			// Write the command to it
-			write(t_to_child[1], MCStringGetCString(p_cmd), MCStringGetLength(p_cmd));
+			write(t_to_child[1], MCStringGetCString(MCcmd), MCStringGetLength(MCcmd));
 			write(t_to_child[1], "\n", 1);
 			
 			// Close the writing side of the pipe <parent -> child>
@@ -884,66 +969,90 @@ bool MCIPhoneSystem::Shell(MCStringRef p_cmd, uint32_t p_cmd_length, MCDataRef &
 	return t_success;
 }
 
-char *MCIPhoneSystem::GetHostName(void)
-{
-	char t_hostname[256];
-	gethostname(t_hostname, 256);
-	return strdup(t_hostname);
-}
+//char *MCIPhoneSystem::GetHostName(void)
+//{
+//	char t_hostname[256];
+//	gethostname(t_hostname, 256);
+//	return strdup(t_hostname);
+//}
+//
+//bool MCIPhoneSystem::HostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context)
+//{
+//	struct hostent *he;
+//	he = gethostbyname(MCStringGetCString(p_hostname));
+//	if (he == NULL)
+//		return false;
+//	
+//	struct in_addr **ptr;
+//	ptr = (struct in_addr **)he -> h_addr_list;
+//	
+//	for(uint32_t i = 0; ptr[i] != NULL; i++)
+//	{
+//		MCAutoStringRef t_address;
+//		MCAutoPointer<char> t_addr_str;
+//        t_addr_str = inet_ntoa(*ptr[i]);
+//		if (!MCStringCreateWithCString(*t_addr_str, &t_address))
+//			return false;
+//		if (!p_callback(p_context, *t_address))
+//			return false;
+//	}
+//	
+//	return true;
+//}
+//
+//bool MCIPhoneSystem::AddressToHostName(MCStringRef p_address, MCSystemHostResolveCallback p_callback, void *p_context)
+//{
+//	struct in_addr addr;
+//	if (!inet_aton(MCStringGetCString(p_address), &addr))
+//		return false;
+//		
+//	struct hostent *he;
+//	he = gethostbyaddr((char *)&addr, sizeof(addr), AF_INET);
+//	if (he == NULL)
+//		return false;
+//	
+//	MCAutoStringRef t_name;
+//	return MCStringCreateWithNativeChars((char_t*)he->h_name, MCCStringLength(he->h_name), &t_name) &&
+//		p_callback(p_context, *t_name);
+//}
 
-bool MCIPhoneSystem::HostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context)
-{
-	struct hostent *he;
-	he = gethostbyname(MCStringGetCString(p_hostname));
-	if (he == NULL)
-		return false;
-	
-	struct in_addr **ptr;
-	ptr = (struct in_addr **)he -> h_addr_list;
-	
-	for(uint32_t i = 0; ptr[i] != NULL; i++)
-	{
-		MCAutoStringRef t_address;
-		MCAutoPointer<char> t_addr_str;
-        t_addr_str = inet_ntoa(*ptr[i]);
-		if (!MCStringCreateWithCString(*t_addr_str, &t_address))
-			return false;
-		if (!p_callback(p_context, *t_address))
-			return false;
-	}
-	
-	return true;
-}
-
-bool MCIPhoneSystem::AddressToHostName(MCStringRef p_address, MCSystemHostResolveCallback p_callback, void *p_context)
-{
-	struct in_addr addr;
-	if (!inet_aton(MCStringGetCString(p_address), &addr))
-		return false;
-		
-	struct hostent *he;
-	he = gethostbyaddr((char *)&addr, sizeof(addr), AF_INET);
-	if (he == NULL)
-		return false;
-	
-	MCAutoStringRef t_name;
-	return MCStringCreateWithNativeChars((char_t*)he->h_name, MCCStringLength(he->h_name), &t_name) &&
-		p_callback(p_context, *t_name);
-}
-
-void MCIPhoneSystem::Debug(const char *p_msg)
+void MCIPhoneSystem::Debug(MCStringRef p_string)
 {
     // MM-2012-09-07: [[ Bug 10320 ]] put does not write to console on Mountain Lion
     NSString *t_msg;
-    t_msg = [[NSString alloc] initWithCString: p_msg encoding: NSMacOSRomanStringEncoding];
+    t_msg = [[NSString alloc] initWithCString: MCStringGetCString(p_string) encoding: NSMacOSRomanStringEncoding];
     NSLog(@"%@", t_msg);
     [t_msg release];
+}
+
+int MCIPhoneSystem::GetErrno(void)
+{
+    return errno;
+}
+
+void MCIPhoneSystem::SetErrno(int p_errno)
+{
+    errno = p_errno;
 }
 
 //////////////////
 
 bool MCIPhoneSystem::Initialize(void)
 {
+    IO_stdin = OpenFd(0, kMCSystemFileModeRead);
+    IO_stdout = OpenFd(1, kMCSystemFileModeWrite);
+    IO_stderr = OpenFd(2, kMCSystemFileModeWrite);
+    
+    // Initialize our case mapping tables
+    
+    MCuppercasingtable = new uint1[256];
+    for(uint4 i = 0; i < 256; ++i)
+        MCuppercasingtable[i] = (uint1)toupper((uint1)i);
+    
+    MClowercasingtable = new uint1[256];
+    for(uint4 i = 0; i < 256; ++i)
+        MClowercasingtable[i] = (uint1)tolower((uint1)i);
+    
 	return true;
 }
 
@@ -951,9 +1060,91 @@ void MCIPhoneSystem::Finalize(void)
 {
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+real8 MCIPhoneSystem::GetFreeDiskSpace()
+{
+    return 0.0;
+}
+
+Boolean MCIPhoneSystem::GetDevices(MCStringRef &r_devices)
+{
+    return False;
+}
+
+Boolean MCIPhoneSystem::GetDrives(MCStringRef& r_devices)
+{
+    return False;
+}
+
+void MCIPhoneSystem::CheckProcesses(void)
+{
+    return;
+}
+
+uint32_t MCIPhoneSystem::GetSystemError(void)
+{
+    return errno;
+}
+
+bool MCIPhoneSystem::StartProcess(MCNameRef p_name, MCStringRef p_doc, intenum_t p_mode, Boolean p_elevated)
+{
+    return false;
+}
+
+void MCIPhoneSystem::CloseProcess(uint2 p_index)
+{
+    return;
+}
+
+void MCIPhoneSystem::Kill(int4 p_pid, int4 p_sig)
+{
+    return;
+}
+
+void MCIPhoneSystem::KillAll()
+{
+    return;
+}
+
+Boolean MCIPhoneSystem::Poll(real8 p_delay, int p_fd)
+{
+    return False;
+}
+
+Boolean MCIPhoneSystem::IsInteractiveConsole(int p_fd)
+{
+    return False;
+}
+
+void MCIPhoneSystem::LaunchDocument(MCStringRef p_document)
+{
+    return;
+}
+
+void MCIPhoneSystem::LaunchUrl(MCStringRef p_document)
+{
+    return;
+}
+
+void MCIPhoneSystem::DoAlternateLanguage(MCStringRef p_script, MCStringRef p_language)
+{
+    return;
+}
+
+bool MCIPhoneSystem::AlternateLanguages(MCListRef &r_list)
+{
+    return False;
+}
+
+bool MCIPhoneSystem::GetDNSservers(MCListRef &r_list)
+{
+    return False;
+}
+
 //////////////////
 
-MCSystemInterface *MCMobileCreateSystem(void)
+MCSystemInterface *MCMobileCreateIPhoneSystem(void)
 {
 	return new MCIPhoneSystem;
 }

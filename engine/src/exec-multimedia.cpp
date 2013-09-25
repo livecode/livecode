@@ -207,13 +207,15 @@ void MCMultimediaEvalMCISendString(MCExecContext& ctxt, MCStringRef p_command, M
 void MCMultimediaEvalSound(MCExecContext& ctxt, MCStringRef& r_sound)
 {
 #ifdef _MOBILE
-	extern bool MCSystemGetPlayingSound(const char *& r_sound);
-	const char *t_sound;
-	if (MCSystemGetPlayingSound(t_sound))
+	extern void MCSystemGetPlayingSound(MCStringRef &r_sound);
+	MCStringRef t_sound;
+	MCSystemGetPlayingSound(t_sound);
+	if (MCStringIsEmpty(t_sound))
 	{
-		/* UNCHECKED */ MCStringCreateWithCString(t_sound != nil ? t_sound : "done", r_sound);
-		return;
+		MCValueAssign(t_sound, MCSTR("done"));
 	}
+	r_sound = t_sound;
+	return;
 #else
 	MCU_play();
 	if (MCacptr != nil)
@@ -360,8 +362,8 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 
 	sptr = p_target != nil ? p_target : MCdefaultstackptr;
 
-	if ((vcptr = (MCVideoClip *)p_target->getAV((Chunk_term)p_chunk_type, MCStringGetOldString(p_filename), CT_VIDEO_CLIP)) == NULL && 
-		(vcptr = (MCVideoClip *)p_target->getobjname(CT_VIDEO_CLIP, MCStringGetOldString(p_filename))) == NULL)
+	if ((vcptr = (MCVideoClip *)p_target->getAV((Chunk_term)p_chunk_type, p_filename, CT_VIDEO_CLIP)) == NULL && 
+		(vcptr = (MCVideoClip *)p_target->getobjname(CT_VIDEO_CLIP, p_filename)) == NULL)
 	{
 		MCAutoStringRef t_file;
 		bool t_url = true;
@@ -459,14 +461,14 @@ void MCMultimediaExecPlayAudioClip(MCExecContext& ctxt, MCStack *p_target, int p
 	if (!MCtemplateaudio->issupported())
 	{
 #ifdef _MOBILE
-		extern bool MCSystemPlaySound(const char *p_filename, bool p_looping);
-		if (!MCSystemPlaySound(MCStringGetCString(p_clip), p_looping))
+		extern bool MCSystemPlaySound(MCStringRef p_string, bool p_looping);
+		if (!MCSystemPlaySound(p_clip, p_looping))
 		MCresult->sets("no sound support");
 #endif
 		return;
 	}
-	if ((MCacptr = (MCAudioClip *)(sptr->getAV((Chunk_term)p_chunk_type, MCStringGetOldString(p_clip), CT_AUDIO_CLIP))) == NULL && 
-		(MCacptr = (MCAudioClip *)sptr->getobjname(CT_AUDIO_CLIP, MCStringGetOldString(p_clip))) == NULL)
+	if ((MCacptr = (MCAudioClip *)(sptr->getAV((Chunk_term)p_chunk_type, p_clip, CT_AUDIO_CLIP))) == NULL && 
+		(MCacptr = (MCAudioClip *)sptr->getobjname(CT_AUDIO_CLIP, p_clip)) == NULL)
 	{
 		IO_handle stream;
 		
@@ -481,12 +483,11 @@ void MCMultimediaExecPlayAudioClip(MCExecContext& ctxt, MCStack *p_target, int p
 				ctxt . SetTheResultToStaticCString("no data in audioClip");
 				return;
 			}
-            /* UNCHECKED */ MCDataCreateWithBytes(MCStringGetBytePtr(*t_url), MCStringGetLength(*t_url), &t_data);
 			stream = MCS_fakeopen(MCStringGetOldString(*t_url));
 		}
 		MCacptr = new MCAudioClip;
 		MCacptr->setdisposable();
-		if (!MCacptr->import(MCStringGetCString(p_clip), stream))
+		if (!MCacptr->import(p_clip, stream))
 		{
 			MCS_close(stream);
 			MCresult->sets("error reading audioClip");
@@ -546,8 +547,8 @@ void MCMultimediaExecPlayOperation(MCExecContext& ctxt, MCPlayer *p_player, int 
 void MCMultimediaExecPlayVideoClip(MCExecContext& ctxt, MCStack *p_target, int p_chunk_type, MCStringRef p_clip, bool p_looping, MCPoint *p_at, MCStringRef p_options)
 {
 #ifdef _MOBILE
-		extern bool MCSystemPlayVideo(const char *p_filename);
-		if (!MCSystemPlayVideo(MCStringGetCString(p_clip)))
+		extern bool MCSystemPlayVideo(MCStringRef p_video);
+		if (!MCSystemPlayVideo(p_clip))
 			MCresult->sets("no video support");
 		return;
 #endif

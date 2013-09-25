@@ -376,9 +376,11 @@ static bool setparagraphattr_color(MCExecPoint& ep, MCParagraphAttrs*& attrs, ui
 	}
 
 	MCColor t_color;
-	if (!MCscreen -> parsecolor(ep . getsvalue(), &t_color, nil))
+	MCAutoStringRef t_value;
+	ep.copyasstringref(&t_value);
+	if (!MCscreen -> parsecolor(*t_value, t_color, nil))
 	{
-		MCeerror->add(EE_OBJECT_BADCOLOR, 0, 0, ep . getsvalue());
+		MCeerror->add(EE_OBJECT_BADCOLOR, 0, 0, *t_value);
 		return false;
 	}
 
@@ -1491,7 +1493,7 @@ int32_t MCParagraph::getlistindent(void) const
 	if (attrs != nil && (attrs -> flags & PA_HAS_LIST_INDENT) != 0)
 		return MCAbs(attrs -> first_indent);
 
-	return 8 * MCFontMeasureText(parent -> getfontref(), " ", 1, false);
+	return 8 * MCFontMeasureText(parent -> getfontref(), MCSTR(" "));
 }
 
 void MCParagraph::gettabs(uint16_t*& r_tabs, uint16_t& r_tab_count, Boolean& r_fixed) const

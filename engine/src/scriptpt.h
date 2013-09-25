@@ -37,20 +37,19 @@ struct Cvalue
 
 class MCScriptPoint
 {
-	char *script;
+	MCDataRef script;
 	MCObject *curobj;
 	MCHandlerlist *curhlist;
 	MCHandler *curhandler;
 	const uint1 *curptr;
 	const uint1 *tokenptr;
 	const uint1 *backupptr;
-	char *lowered;
 	MCString token;
 	MCNameRef token_nameref;
-	uint2 loweredsize;
 	uint2 line;
 	uint2 pos;
 	Boolean escapes;
+	Symbol_type m_type;
 	
 	// MW-2011-06-23: If this is true, then we parse the script in 'tag' mode.
 	Boolean tagged;
@@ -62,23 +61,13 @@ class MCScriptPoint
 
 public:
 	MCScriptPoint(MCScriptPoint &sp);
-	MCScriptPoint(MCObject *, MCHandlerlist *, const char *);
+	MCScriptPoint(MCObject *, MCHandlerlist *, MCStringRef script);
 	MCScriptPoint(MCExecPoint &ep);
 	MCScriptPoint(const MCString &s);
+	MCScriptPoint(MCStringRef p_string);
 	~MCScriptPoint();
-	MCScriptPoint& operator=(const MCScriptPoint& sp)
-	{
-		curobj = sp.curobj;
-		curhlist = sp.curhlist;
-		curhandler = sp.curhandler;
-		curptr = sp.curptr;
-		tokenptr = sp.tokenptr;
-		backupptr = sp.backupptr;
-		token = sp.token;
-		line = sp.line;
-		pos = sp.pos;
-		return *this;
-	}
+	MCScriptPoint& operator=(const MCScriptPoint& sp);
+	
 	void allowescapes(Boolean which)
 	{
 		escapes = which;
@@ -104,16 +93,15 @@ public:
 		return pos > (curptr - backupptr)
 		       ?  pos - (curptr - backupptr) : 1;
 	}
-	MCString &gettoken()
-	{
-		return token;
-	}
+	bool token_is_cstring(const char *p_cstring);
 
+	MCString gettoken_oldstring(void);
 	MCNameRef gettoken_nameref(void);
+	MCStringRef gettoken_stringref(void);
 
 	const char *getscript()
 	{
-		return script;
+		return (const char *)MCDataGetBytePtr(script);
 	}
 	MCObject *getobj()
 	{

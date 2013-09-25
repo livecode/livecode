@@ -540,8 +540,10 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 
 	MCStack *t_stack = nil;
 	/* UNCHECKED */ MCStackSecurityCreateStack(t_stack);
+
 	t_stack -> setparent(this);
-	t_stack -> setfilename(strdup(MCStringGetCString(MCcmd)));
+	t_stack -> setfilename(MCcmd);
+
 	if (IO_read_uint1(&type, stream) != IO_NORMAL
 	        || type != OT_STACK && type != OT_ENCRYPT_STACK
 	        || t_stack->load(stream, version, type) != IO_NORMAL)
@@ -626,7 +628,10 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 			sptr->setparent(this);
 		else
 			sptr->setparent(stacks);
-		sptr->setfilename(strclone(openpath));
+			
+		MCAutoStringRef t_openpath;
+		/* UNCHECKED */ MCStringCreateWithCString(openpath, &t_openpath);
+		sptr->setfilename(*t_openpath);
 
 		if (MCModeCanLoadHome() && type == OT_HOME)
 		{
@@ -678,8 +683,8 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 
 					delete sptr;
 					sptr = NULL;
-
-					if (strequal(tstk->getfilename(), openpath))
+					
+					if (MCStringIsEqualTo(tstk -> getfilename(), *t_openpath, kMCStringOptionCompareExact))
 						sptr = tstk;
 					else
 					{
@@ -734,25 +739,26 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 			stacks->setparent(this);
 			stacks->setname_cstring("revScript");
 			uint4 size = (uint4)MCS_fsize(stream);
-			char *script = new char[size + 2];
-			script[size] = '\n';
-			script[size + 1] = '\0';
-			if (IO_read(script, size, stream) != IO_NORMAL
-			        || !stacks->setscript(script))
-			{
-				delete script;
-				return IO_ERROR;
-			}
+            MCAutoPointer<char> script;
+            script = new char[size + 2];
+            (*script)[size] = '\n';
+            (*script)[size + 1] = '\0';
+            if (IO_read(*script, size, stream) != IO_NORMAL)
+                return IO_ERROR;
+            MCAutoStringRef t_script_str;
+            /* UNCHECKED */ MCStringCreateWithCString(*script, &t_script_str);
+            if (!stacks -> setscript(*t_script_str))
+                return IO_ERROR;
 		}
 		else
 		{
-			char *tname = strclone(inname);
+			MCAutoStringRef tname;
+            /* UNCHECKED */ MCStringCreateWithCString(inname, &tname);
 			
 			// MW-2008-06-12: [[ Bug 6476 ]] Media won't open HC stacks
-			if (!MCdispatcher->cut(True) || hc_import(tname, stream, sptr) != IO_NORMAL)
+			if (!MCdispatcher->cut(True) || hc_import(*tname, stream, sptr) != IO_NORMAL)
 			{
 				MCresult->sets("file is not a stack");
-				delete tname;
 				return IO_ERROR;
 			}
 		}
@@ -883,8 +889,8 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 
 	if (!MCStringIsEmpty(p_fname))
 		t_linkname = p_fname;
-	else if (sptr -> getfilename() != NULL)
-		 /* UNCHECKED */ MCStringCreateWithCString(sptr -> getfilename(), &t_linkname);
+	else if (!MCStringIsEmpty(sptr -> getfilename()))
+		t_linkname = sptr -> getfilename();
 	else
 	{
 		MCresult -> sets("stack does not have filename");
@@ -975,17 +981,13 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	MCS_setumask(oldmask);
 	
 	MCS_chmod(*t_linkname, newmask);
-
-	MCAutoStringRef t_filename;
-	if (sptr -> getfilename() != nil)
-		/* UNCHECKED */ MCStringCreateWithCString(sptr->getfilename(), &t_filename);
-
-	if (*t_filename != nil && (*t_linkname == nil || !MCStringIsEqualTo(*t_filename, *t_linkname, kMCCompareExact)))
-		MCS_copyresourcefork(*t_filename, *t_linkname);
-	else if (*t_filename != nil)
+	
+	if (!MCStringIsEmpty(sptr -> getfilename()) && !MCStringIsEqualTo(sptr -> getfilename(), *t_linkname, kMCCompareExact))
+		MCS_copyresourcefork(sptr -> getfilename(), *t_linkname);
+	else if (!MCStringIsEmpty(sptr -> getfilename()))
 		MCS_copyresourcefork(*t_backup, *t_linkname);
 
-	sptr->setfilename(strdup(MCStringGetCString(*t_linkname)));
+	sptr->setfilename(*t_linkname);
 	MCS_unlink(*t_backup);
 	return IO_NORMAL;
 }
@@ -1507,7 +1509,7 @@ MCObject *MCDispatch::getobjid(Chunk_term type, uint4 inid)
 	return NULL;
 }
 
-MCObject *MCDispatch::getobjname(Chunk_term type, const MCString &s)
+MCObject *MCDispatch::getobjname(Chunk_term type, MCStringRef s)
 {
 	if (stacks != NULL)
 	{
@@ -1524,13 +1526,13 @@ MCObject *MCDispatch::getobjname(Chunk_term type, const MCString &s)
 
 	if (type == CT_IMAGE)
 	{
-		const char *sptr = s.getstring();
-		uint4 l = s.getlength();
+		const char *sptr = MCStringGetCString(s);
+		uint4 l = MCStringGetLength(s);
 
 		MCAutoNameRef t_image_name;
 		if (MCU_strchr(sptr, l, ':'))
-			/* UNCHECKED */ t_image_name . CreateWithOldString(s);
-
+			/* UNCHECKED */ MCNameCreate(s, t_image_name);
+		
 		MCImage *iptr = imagecache;
 		if (iptr != NULL)
 		{
@@ -1558,7 +1560,7 @@ check:
 			MCresult->clear(False);
 			MCExecPoint ep(MCdefaultstackptr, NULL, NULL);
 			MCExecPoint *epptr = MCEPptr == NULL ? &ep : MCEPptr;
-			epptr->setsvalue(s);
+			epptr->setvalueref(s);
 			MCU_geturl(*epptr);
 			if (MCresult->isempty())
 			{
@@ -1624,31 +1626,40 @@ void MCDispatch::removepanel(MCStack *sptr)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCDispatch::loadexternal(const char *p_external)
+bool MCDispatch::loadexternal(MCStringRef p_external)
 {
-	char *t_filename;
+	MCStringRef t_filename;
 #if defined(TARGET_SUBPLATFORM_ANDROID)
-	extern bool revandroid_loadExternalLibrary(const char *p_external, char*& r_filename);
+	extern bool revandroid_loadExternalLibrary(MCStringRef p_external, MCStringRef &r_filename);
 	if (!revandroid_loadExternalLibrary(p_external, t_filename))
 		return false;
 
 	// Don't try and load any drivers as externals.
-	if (strncmp(p_external, "db", 2) == 0)
+	if (MCStringBeginsWithCString(p_external, (const char_t *)"db", kMCStringOptionCompareExact))
 	{
-		delete t_filename;
+		MCValueRelease(t_filename);
 		return true;
 	}
 #elif !defined(_SERVER)
-	if (p_external[0] == '/')
+	if (MCStringBeginsWithCString(p_external, (const char_t *)"/", kMCStringOptionCompareExact))
 	{
-		if (!MCCStringClone(p_external, t_filename))
-			return false;
+		t_filename = MCValueRetain(p_external);
 	}
-	else if (!MCCStringFormat(t_filename, "%.*s/%s", strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd), p_external))
-		return false;
+	else
+	{
+		uindex_t t_separator;
+		MCStringLastIndexOfChar(MCcmd, '/', 0, kMCStringOptionCompareExact, t_separator);
+		if (!MCStringMutableCopySubstring(MCcmd, MCRangeMake(0, t_separator), t_filename))
+			return false;
+		if (!MCStringAppendFormat(t_filename, "/%@", p_external))
+		{
+			MCValueRelease(t_filename);
+			return false;
+		}
+	}
+
 #else
-	if (!MCCStringClone(p_external, t_filename))
-		return false;
+	t_filename = MCValueRetain(p_external);
 #endif
 	
 	if (m_externals == nil)
@@ -1656,7 +1667,7 @@ bool MCDispatch::loadexternal(const char *p_external)
 	
 	bool t_loaded;
 	t_loaded = m_externals -> Load(t_filename);
-	delete t_filename;
+	MCValueRelease(t_filename);
 	
 	if (m_externals -> IsEmpty())
 	{
@@ -1709,31 +1720,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 	
 	if (MCactiveimage != NULL && MCclipboarddata -> HasImage())
 	{
-#ifdef SHARED_STRING
-		MCSharedString *t_data;
-		t_data = MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE);
-		if (t_data != NULL)
-		{
-			MCExecPoint ep(NULL, NULL, NULL);
-			ep . setsvalue(t_data -> Get());
-
-			MCImage *t_image;
-			t_image = new MCImage;
-			t_image -> open();
-			t_image -> openimage();
-			t_image -> setprop(0, P_TEXT, ep, False);
-			MCactiveimage -> pasteimage(t_image);
-			t_image -> closeimage();
-			t_image -> close();
-
-			delete t_image;
-
-			t_data -> Release();
-		}
-
-		return true;
-#else
-		MCAutoStringRef t_data;
+		MCAutoDataRef t_data;
 		if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
 		{
 			MCExecPoint ep(NULL, NULL, NULL);
@@ -1753,7 +1740,6 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 		}
 
 		return false;
-#endif
 	}
 	
 	if (MCdefaultstackptr != NULL && (p_explicit || MCdefaultstackptr -> gettool(MCdefaultstackptr) == T_POINTER))
@@ -1765,39 +1751,13 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 			return false;
 		if (MCclipboarddata -> HasObjects())
 		{
-#ifdef SHARED_STRING
-			MCSharedString *t_data;
-			t_data = MCclipboarddata -> Fetch(TRANSFER_TYPE_OBJECTS);
-			if (t_data != NULL)
-			{
-				t_objects = MCObject::unpickle(t_data, MCdefaultstackptr);
-				t_data -> Release();
-			}
-#else
-			MCAutoStringRef t_data;
+			MCAutoDataRef t_data;
 			if (MCclipboarddata -> Fetch(TRANSFER_TYPE_OBJECTS, &t_data))
 				t_objects = MCObject::unpickle(*t_data, MCdefaultstackptr);
-#endif
 		}
 		else if (MCclipboarddata -> HasImage())
 		{
-#ifdef SHARED_STRING
-			MCSharedString *t_data;
-			t_data = MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE);
-			if (t_data != NULL)
-			{
-				MCExecPoint ep(NULL, NULL, NULL);
-				ep . setsvalue(t_data -> Get());
-
-				t_objects = new MCImage(*MCtemplateimage);
-				t_objects -> open();
-				t_objects -> setprop(0, P_TEXT, ep, False);
-				t_objects -> close();
-
-				t_data -> Release();
-			}
-#else
-			MCAutoStringRef t_data;
+			MCAutoDataRef t_data;
 			if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
 			{
 				MCExecPoint ep(NULL, NULL, NULL);
@@ -1807,7 +1767,6 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 				t_objects -> setprop(0, P_TEXT, ep, False);
 				t_objects -> close();
 			}
-#endif
 		}
 		MCclipboarddata -> Unlock();
 

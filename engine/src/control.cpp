@@ -64,6 +64,17 @@ MCPropertyInfo MCControl::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_TOOL_TIP, BinaryString, MCControl, UnicodeToolTip)
 	DEFINE_RW_OBJ_NON_EFFECTIVE_ENUM_PROPERTY(P_LAYER_MODE, InterfaceLayerMode, MCControl, LayerMode)
 	DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(P_LAYER_MODE, InterfaceLayerMode, MCControl, LayerMode)
+    
+    DEFINE_RW_OBJ_ARRAY_PROPERTY(P_BITMAP_EFFECT_DROP_SHADOW, Any, MCControl, DropShadowElement)
+    DEFINE_RW_OBJ_PROPERTY(P_BITMAP_EFFECT_DROP_SHADOW, Array, MCControl, DropShadow)
+    DEFINE_RW_OBJ_ARRAY_PROPERTY(P_BITMAP_EFFECT_INNER_SHADOW, Any, MCControl, InnerShadowElement)
+    DEFINE_RW_OBJ_PROPERTY(P_BITMAP_EFFECT_INNER_SHADOW, Array, MCControl, InnerShadow)
+    DEFINE_RW_OBJ_ARRAY_PROPERTY(P_BITMAP_EFFECT_OUTER_GLOW, Any, MCControl, OuterGlowElement)
+    DEFINE_RW_OBJ_PROPERTY(P_BITMAP_EFFECT_OUTER_GLOW, Array, MCControl, OuterGlow)
+    DEFINE_RW_OBJ_ARRAY_PROPERTY(P_BITMAP_EFFECT_INNER_GLOW, Any, MCControl, InnerGlowElement)
+    DEFINE_RW_OBJ_PROPERTY(P_BITMAP_EFFECT_INNER_GLOW, Array, MCControl, InnerGlow)
+    DEFINE_RW_OBJ_ARRAY_PROPERTY(P_BITMAP_EFFECT_COLOR_OVERLAY, Any, MCControl, ColorOverlayElement)
+    DEFINE_RW_OBJ_PROPERTY(P_BITMAP_EFFECT_COLOR_OVERLAY, Array, MCControl, ColorOverlay)
 };
 
 MCObjectPropertyTable MCControl::kPropertyTable =
@@ -482,7 +493,7 @@ Exec_stat MCControl::getprop_legacy(uint4 parid, Properties which, MCExecPoint& 
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-Exec_stat MCControl::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
+Exec_stat MCControl::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
 	switch(which)
 	{
@@ -494,7 +505,7 @@ Exec_stat MCControl::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 	case P_BITMAP_EFFECT_COLOR_OVERLAY:
 		return MCBitmapEffectsGetProperties(m_bitmap_effects, which, ep, key);
 	default:
-		return MCObject::getarrayprop(parid, which, ep, key, effective);
+		return MCObject::getarrayprop_legacy(parid, which, ep, key, effective);
 	}
 	return ES_NORMAL;
 }
@@ -650,7 +661,7 @@ Exec_stat MCControl::setprop_legacy(uint4 parid, Properties which, MCExecPoint &
 	return ES_NORMAL;
 }
 
-Exec_stat MCControl::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
+Exec_stat MCControl::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
 	Boolean dirty;
 	dirty = False;
@@ -680,8 +691,7 @@ Exec_stat MCControl::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 	default:
 		break;
 	}
-
-	return MCObject::setarrayprop(parid, which, ep, key, effective);
+	return MCObject::setarrayprop_legacy(parid, which, ep, key, effective);
 }
 
 void MCControl::select()
@@ -1759,37 +1769,22 @@ Boolean MCControl::sbdoubleup(uint2 which, MCScrollbar *hsb, MCScrollbar *vsb)
 	return False;
 }
 
-Exec_stat MCControl::setsbprop(Properties which, const MCString &data,
+Exec_stat MCControl::setsbprop(Properties which, bool p_enable,
                                int4 tx, int4 ty, uint2 &sbw,
                                MCScrollbar *&hsb, MCScrollbar *&vsb,
                                Boolean &dirty)
 {
-	int4 newscroll;
-	int2 newwidth;
 	dirty = False;
 	Exec_stat stat = ES_NORMAL;
 	switch (which)
 	{
-	case P_HSCROLL:
-	case P_VSCROLL:
-		if (!MCU_stoi4(data, newscroll))
-			return ES_ERROR;
-		if (opened)
-		{
-			if (which == P_HSCROLL)
-				stat = hscroll(newscroll - tx, True);
-			else
-				stat = vscroll(newscroll - ty, True);
-			resetscrollbars(True);
-		}
-		break;
 	case P_HSCROLLBAR:
-		if (!MCU_matchflags(data, flags, F_HSCROLLBAR, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
+		dirty = getflag(F_HSCROLLBAR) != p_enable;
+		if (p_enable)
+			flags |= F_HSCROLLBAR;
+		else
+			flags &= ~F_HSCROLLBAR;
+	
 		if (dirty)
 		{
 			if (flags & F_HSCROLLBAR)
@@ -1828,11 +1823,12 @@ Exec_stat MCControl::setsbprop(Properties which, const MCString &data,
 		}
 		break;
 	case P_VSCROLLBAR:
-		if (!MCU_matchflags(data, flags, F_VSCROLLBAR, dirty))
-		{
-			MCeerror->add(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
+		dirty = getflag(F_VSCROLLBAR) != p_enable;
+		if (p_enable)
+			flags |= F_VSCROLLBAR;
+		else
+			flags &= ~F_VSCROLLBAR;
+		
 		if (dirty)
 		{
 			if (flags & F_VSCROLLBAR)
@@ -1867,19 +1863,7 @@ Exec_stat MCControl::setsbprop(Properties which, const MCString &data,
 			m_layer_attr_changed = true;
 		}
 		break;
-	case P_SCROLLBAR_WIDTH:
-		if (!MCU_stoi2(data, newwidth))
-		{
-			MCeerror->add(EE_FIELD_SCROLLBARWIDTHNAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		if (sbw != newwidth)
-		{
-			sbw = newwidth;
-			setsbrects();
-			dirty = True;
-		}
-		break;
+			
 	default:
 		break;
 	}

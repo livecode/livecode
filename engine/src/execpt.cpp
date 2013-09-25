@@ -739,14 +739,14 @@ void MCExecPoint::dounicodetomultibyte(bool p_native, bool p_reverse)
 	if (p_reverse)
 	{
 		if (p_native)
-			MCS_multibytetounicode(t_input, t_input_length, NULL, 0, t_output_length, LCH_ROMAN);
+            MCU_multibytetounicode(t_input, t_input_length, NULL, 0, t_output_length, LCH_ROMAN);
 		else
 			t_output_length = UTF8ToUnicode(t_input, t_input_length, NULL, 0);
 	}
 	else
 	{
 		if (p_native)
-			MCS_unicodetomultibyte(t_input, t_input_length, NULL, 0, t_output_length, LCH_ROMAN);
+            MCU_unicodetomultibyte(t_input, t_input_length, NULL, 0, t_output_length, LCH_ROMAN);
 		else
 			t_output_length = UnicodeToUTF8((uint2 *)t_input, t_input_length, NULL, 0);
 	}
@@ -759,14 +759,14 @@ void MCExecPoint::dounicodetomultibyte(bool p_native, bool p_reverse)
 	if (p_reverse)
 	{
 		if (p_native)
-			MCS_multibytetounicode(t_input, t_input_length, t_buffer, t_output_length, t_output_length, LCH_ROMAN);
+            MCU_multibytetounicode(t_input, t_input_length, t_buffer, t_output_length, t_output_length, LCH_ROMAN);
 		else
 			t_output_length = UTF8ToUnicode(t_input, t_input_length, (uint2 *)t_buffer, t_output_length);
 	}
 	else
 	{
 		if (p_native)
-			MCS_unicodetomultibyte(t_input, t_input_length, t_buffer, t_output_length, t_output_length, LCH_ROMAN);
+            MCU_unicodetomultibyte(t_input, t_input_length, t_buffer, t_output_length, t_output_length, LCH_ROMAN);
 		else
 			t_output_length = UnicodeToUTF8((uint2 *)t_input, t_input_length, t_buffer, t_output_length);
 	}

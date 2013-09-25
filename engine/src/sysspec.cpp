@@ -65,6 +65,10 @@ static int *s_mainthread_errno;
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCSystemInterface *MCDesktopCreateMacSystem(void);
+extern MCSystemInterface *MCDesktopCreateWindowsSystem(void);
+extern MCSystemInterface *MCDesktopCreateLinuxSystem(void);
+extern MCSystemInterface *MCMobileCreateIPhoneSystem(void);
+extern MCSystemInterface *MCMobileCreateAndroidSystem(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -73,12 +77,9 @@ void MCS_common_init(void)
 	MCsystem -> Initialize();    
     MCsystem -> SetErrno(errno);
 	
-	IO_stdin = MCsystem -> OpenFd(0, kMCSystemFileModeRead) ;
-	IO_stdout = MCsystem -> OpenFd(1, kMCSystemFileModeWrite);
-	IO_stderr = MCsystem -> OpenFd(2, kMCSystemFileModeWrite);
-	
 	MCinfinity = HUGE_VAL;
     
+#if !defined(_WINDOWS_DESKTOP) && !defined(_WINDOWS_SERVER)
 	MCuppercasingtable = new uint1[256];
 	for(uint4 i = 0; i < 256; ++i)
 		MCuppercasingtable[i] = (uint1)toupper((uint1)i);
@@ -88,6 +89,7 @@ void MCS_common_init(void)
 		MClowercasingtable[i] = (uint1)tolower((uint1)i);
 	
 	MCStackSecurityInit();
+#endif
 }
 
 void MCS_init(void)
@@ -104,6 +106,10 @@ void MCS_init(void)
     MCsystem = MCDesktopCreateWindowsSystem();
 #elif defined(_LINUX_DESKTOP)
     MCsystem = MCDesktopCreateLinuxSystem();
+#elif defined (_IOS_MOBILE)
+    MCsystem = MCMobileCreateIPhoneSystem();
+#elif defined (_ANDROID_MOBILE)
+    MCsystem = MCMobileCreateAndroidSystem();
 #else
 #error Unknown server platform.
 #endif
@@ -146,11 +152,6 @@ void MCS_shutdown(void)
 real8 MCS_time(void)
 {
 	return MCsystem -> GetCurrentTime();
-}
-
-void MCS_reset_time(void)
-{
-    MCsystem -> ResetTime();
 }
 
 void MCS_setenv(MCStringRef p_name_string, MCStringRef p_value_string)
@@ -310,6 +311,19 @@ bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_err
 	return MCStringCreateWithCString("not supported", r_error);
 }
 
+void MCS_reset_time(void)
+{
+    MCWindowsSystemServiceInterface *t_service;
+    t_service = (MCWindowsSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeWindowsSystem);
+    
+    if (t_service != nil)
+    {
+		t_service -> ResetTime();
+	}
+
+//	MCresult -> sets("not supported");
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCS_getsystemversion(MCStringRef& r_string)
@@ -347,6 +361,8 @@ Boolean MCS_mkdir(MCStringRef p_path)
     
 	if (MCsystem -> CreateFolder(*t_native_path) == False)
         return False;
+
+	return True;
 }
 
 Boolean MCS_rmdir(MCStringRef p_path)
@@ -384,7 +400,7 @@ bool MCS_unlink(const char *p_path)
 	if (!MCStringCreateWithCString(p_path, &t_resolved_path))
         return false;
 	
-	return MCS_unlink(*t_resolved_path);
+	return MCS_unlink(*t_resolved_path) == True;
 }
 
 Boolean MCS_unlink(MCStringRef p_path)
@@ -522,6 +538,8 @@ void MCS_copyresourcefork(MCStringRef p_source, MCStringRef p_dst)
             return;
         
         t_service -> CopyResourceFork(*t_native_source, *t_native_dest);
+		
+		return;
     }
     
     MCresult -> sets("not supported");
@@ -574,6 +592,8 @@ void MCS_loadresfile(MCStringRef p_filename, MCStringRef& r_data)
             return;
         
         t_service -> LoadResFile(*t_native_path, r_data);
+		
+		return;
     }
     
     MCresult -> sets("not supported");
@@ -592,6 +612,8 @@ void MCS_saveresfile(MCStringRef p_path, MCDataRef p_data)
             return;
         
         t_service -> SaveResFile(*t_native_path, p_data);
+		
+		return;
     }
     
     MCresult -> sets("not supported");
@@ -666,78 +688,82 @@ void MCS_getcurdir(MCStringRef& r_path)
         r_path = MCValueRetain(kMCEmptyString);
 }
 
-//struct MCS_getentries_state
-//{
-//	bool files;
-//	bool details;
-//	MCAutoListRef list;
-//};
+struct MCS_getentries_state
+{
+	bool files;
+	bool details;
+	MCListRef list;
+};
 
-//bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
+bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
 
-//static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *p_entry)
-//{
-//	MCS_getentries_state *t_state;
-//	t_state = static_cast<MCS_getentries_state *>(p_context);
-//	
-//	if (!t_state -> files != p_entry -> is_folder)
-//		return true;
-//	
-//	MCStringRef t_detailed_string;
-//	if (t_state -> details)
-//	{
-//		MCStringRef t_filename_string;
-//		/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_entry->name, MCCStringLength(p_entry->name), t_filename_string);
-//		MCStringRef t_urlencoded_string;
-//		/* UNCHECKED */ MCFiltersUrlEncode(t_filename_string, t_urlencoded_string);
-//		MCValueRelease(t_filename_string);
-//#ifdef _WIN32
-//		/* UNCHECKED */ MCStringFormat(t_detailed_string,
-//                                       "%*.*s,%I64d,,%ld,%ld,%ld,,,,%03o,",
-//                                       MCStringGetLength(t_urlencoded_string), MCStringGetLength(t_urlencoded_string),
-//                                       MCStringGetNativeCharPtr(t_urlencoded_string),
-//                                       p_entry -> data_size,
-//                                       p_entry -> creation_time,
-//                                       p_entry -> modification_time,
-//                                       p_entry -> access_time,
-//                                       p_entry -> permissions);
-//#else
-//		/* UNCHECKED */ MCStringFormat(t_detailed_string,
-//                                       "%*.*s,%lld,,,%u,%u,,%d,%d,%03o,",
-//                                       MCStringGetLength(t_urlencoded_string), MCStringGetLength(t_urlencoded_string),
-//                                       MCStringGetNativeCharPtr(t_urlencoded_string),
-//                                       p_entry -> data_size,
-//                                       p_entry -> modification_time, p_entry -> access_time,
-//                                       p_entry -> user_id, p_entry -> group_id,
-//                                       p_entry -> permissions);
-//#endif
-//		MCValueRelease(t_urlencoded_string);
-//	}
-//	if (t_state -> details)
-//	{
-//		/* UNCHECKED */ MCListAppend(*(t_state->list), t_detailed_string);
-//		MCValueRelease(t_detailed_string);
-//	}
-//	else
-//    /* UNCHECKED */ MCListAppendCString(*(t_state->list), p_entry->name);
-//	
-//	return true;
-//}
+static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *p_entry)
+{
+	MCS_getentries_state *t_state;
+	t_state = static_cast<MCS_getentries_state *>(p_context);
+	
+	if (!t_state -> files != p_entry -> is_folder)
+		return true;
+	
+	MCStringRef t_detailed_string;
+	if (t_state -> details)
+	{
+		MCAutoStringRef t_filename_string;
+		/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_entry->name, MCCStringLength(p_entry->name), &t_filename_string);
+		MCAutoStringRef t_urlencoded_string;
+		/* UNCHECKED */ MCFiltersUrlEncode(*t_filename_string, &t_urlencoded_string);
+		
+#ifdef _WIN32
+		/* UNCHECKED */ MCStringFormat(t_detailed_string,
+                                       "%*.*s,%I64d,,%ld,%ld,%ld,,,,%03o,",
+                                       MCStringGetLength(*t_urlencoded_string), MCStringGetLength(*t_urlencoded_string),
+                                       MCStringGetNativeCharPtr(*t_urlencoded_string),
+                                       p_entry -> data_size,
+                                       p_entry -> creation_time,
+                                       p_entry -> modification_time,
+                                       p_entry -> access_time,
+                                       p_entry -> permissions);
+#else
+		/* UNCHECKED */ MCStringFormat(t_detailed_string,
+                                       "%*.*s,%lld,,,%u,%u,,%d,%d,%03o,",
+                                       MCStringGetLength(*t_urlencoded_string), MCStringGetLength(*t_urlencoded_string),
+                                       MCStringGetNativeCharPtr(*t_urlencoded_string),
+                                       p_entry -> data_size,
+                                       p_entry -> modification_time, p_entry -> access_time,
+                                       p_entry -> user_id, p_entry -> group_id,
+                                       p_entry -> permissions);
+#endif
+	}
+	if (t_state -> details)
+	{
+		/* UNCHECKED */ MCListAppend(t_state->list, t_detailed_string);
+		MCValueRelease(t_detailed_string);
+	}
+	else
+    /* UNCHECKED */ MCListAppendCString(t_state->list, p_entry->name);
+	
+	return true;
+}
 
 bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
 {    
 	MCAutoListRef t_list;
     
-	if (!MCListCreateMutable('\n', &(t_list)))
-		return False;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
+	MCS_getentries_state t_state;	
+	t_state.files = p_files;
+	t_state.details = p_detailed;
+	t_state.list = *t_list;
 	
-	if (!MCsystem -> ListFolderEntries(p_files, p_detailed, &t_list))
-		return False;
+	if (!MCsystem -> ListFolderEntries(MCS_getentries_callback, (void*)&t_state))
+		return false;
     
 	if (!MCListCopy(*t_list, r_list))
-        return False;
+        return false;
     
-    return True;
+    return true;
 }
 
 Boolean MCS_chmod(MCStringRef p_path, uint2 p_mask)
@@ -778,7 +804,7 @@ Boolean MCS_exists(MCStringRef p_path, bool p_is_file)
 	if (!(MCS_resolvepath(p_path, &t_resolved) && MCS_pathtonative(*t_resolved, &t_native)))
 		return False;
     
-    bool t_success;
+    Boolean t_success;
 	if (p_is_file)
 		t_success = MCsystem->FileExists(*t_native);
 	else
@@ -901,18 +927,17 @@ IO_stat MCS_closetakingbuffer(IO_handle& p_stream, void*& r_buffer, size_t& r_le
 IO_stat MCS_writeat(const void *p_buffer, uint32_t p_size, uint32_t p_pos, IO_handle p_stream)
 {
     uint64_t t_old_pos;
-    uint32_t t_written;
     bool t_success;
     
     t_old_pos = p_stream -> Tell();
     
-    t_success = p_stream -> Seek(p_pos, SEEK_SET);
+    t_success = p_stream -> Seek(p_pos, 1);
     
     if (t_success)
         t_success = p_stream -> Write(p_buffer, p_size);
     
     if (t_success)
-        t_success = p_stream -> Seek(t_old_pos, SEEK_SET);
+        t_success = p_stream -> Seek(t_old_pos, 1);
     
     if (!t_success)
         return IO_ERROR;
@@ -983,21 +1008,28 @@ IO_handle MCS_open(MCStringRef path, intenum_t p_mode, Boolean p_map, Boolean p_
 	
 	IO_handle t_handle;
 	if (!p_driver)
-		t_handle = MCsystem -> OpenFile(*t_native, p_mode, p_map && MCmmap, p_offset);
+    {
+		t_handle = MCsystem -> OpenFile(*t_native, p_mode, p_map && MCmmap);
+    }
 	else
 	{
-		t_handle = MCsystem -> OpenDevice(*t_native, p_offset);
+        t_handle = MCsystem -> OpenDevice(*t_native, p_mode);
 	}
 	
 	// MW-2011-06-12: Fix memory leak - make sure we delete the resolved path.
     //	delete t_resolved_path;
-	
+
 	if (t_handle == NULL)
 		return NULL;
 #ifdef OLD_IO_HANDLE
     if (p_mode == kMCSystemFileModeAppend)
         t_handle -> flags |= IO_SEEKED;
 #endif
+
+    if (p_mode == kMCSystemFileModeAppend)
+        t_handle -> Seek(0, SEEK_END);
+    else if (p_offset > 0)
+        t_handle -> Seek(p_offset, SEEK_SET);
 	
 	return t_handle;
 }
@@ -1016,76 +1048,24 @@ IO_stat MCS_putback(char p_char, IO_handle p_stream)
 
 IO_stat MCS_seek_cur(IO_handle p_stream, int64_t p_offset)
 {
-	if (!p_stream -> Seek(p_offset, 0))
-		return IO_ERROR;
-	return IO_NORMAL;
+    if (!p_stream -> Seek(p_offset, 0))
+        return IO_ERROR;
+    return IO_NORMAL;
 }
 
 IO_stat MCS_seek_set(IO_handle p_stream, int64_t p_offset)
 {
-	if (!p_stream -> Seek(p_offset, 1))
-		return IO_ERROR;
-	return IO_NORMAL;
+    if (!p_stream -> Seek(p_offset, 1))
+        return IO_ERROR;
+    return IO_NORMAL;
 }
 
 IO_stat MCS_seek_end(IO_handle p_stream, int64_t p_offset)
 {
-	if (!p_stream -> Seek(p_offset, -1))
-		return IO_ERROR;
-	return IO_NORMAL;
+    if (!p_stream -> Seek(p_offset, -1))
+        return IO_ERROR;
+    return IO_NORMAL;
 }
-
-#if 0
-void MCS_loadfile(MCExecPoint& ep, Boolean p_binary)
-{
-	MCAutoStringRef t_resolved_path;
-	MCAutoStringRef t_filename_string;
-	ep . copyasstringref(&t_filename_string);
-	
-	MCS_resolvepath(*t_filename_string, &t_resolved_path);
-	
-	MCSystemFileHandle *t_file;
-	t_file = MCsystem -> OpenFile(*t_resolved_path, kMCSystemFileModeRead, false);
-	
-	if (t_file == NULL)
-	{
-		// MW-2011-05-23: [[ Bug 9549 ]] Make sure we empty the result if opening the file
-		//   failed.
-		ep . clear();
-		MCresult -> sets("can't open file");
-		return;
-	}
-	
-	uint32_t t_size;
-	t_size = (uint32_t)t_file -> GetFileSize();
-	
-	MCAutoNativeCharArray t_buffer;
-	/* UNCHECKED */ t_buffer . New(t_size);
-	//t_buffer = ep . getbuffer(t_size);
-	
-	uint32_t t_read;
-	if (t_buffer.Chars() != NULL &&
-		t_file -> Read(t_buffer.Chars(), t_size, t_read) &&
-		t_read == t_size)
-	{
-		MCAutoStringRef t_string;
-		t_buffer . Shrink(t_size);
-		t_buffer . CreateStringAndRelease(&t_string);
-		ep . setvalueref(*t_string);
-        
-		if (!p_binary)
-			ep . texttobinary();
-		MCresult -> clear(False);
-	}
-	else
-	{
-		ep . clear();
-		MCresult -> sets("error reading file");
-	}
-    
-	t_file -> Close();
-}
-#endif // 0
 
 bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
 {
@@ -1102,7 +1082,7 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
         return false;
 	
 	IO_handle t_file;
-	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeRead, false, 0);
+	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeRead, false);
 	
 	if (t_file == NULL)
 	{
@@ -1117,7 +1097,6 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
 	MCAutoNativeCharArray t_buffer;
 	t_success = t_buffer . New(t_size);
 	
-	uint32_t t_read;
 	if (t_success)
         t_success = MCS_readfixed(t_buffer.Chars(), t_size, t_file) == IO_NORMAL;
 
@@ -1163,7 +1142,7 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
         return false;
 	
 	IO_handle t_file;
-	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeRead, false, 0);
+	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeRead, false);
 	
 	if (t_file == NULL)
 	{
@@ -1175,19 +1154,16 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
 	uint32_t t_size;
 	t_size = (uint32_t)t_file -> GetFileSize();
 	
-	MCAutoNativeCharArray t_buffer;
+	MCAutoByteArray t_buffer;
 	t_success = t_buffer . New(t_size);
 	
-	uint32_t t_read;
 	if (t_success)
-        t_success = MCS_readfixed(t_buffer.Chars(), t_size, t_file) == IO_NORMAL;
+        t_success = MCS_readfixed(t_buffer.Bytes(), t_size, t_file) == IO_NORMAL;
     
     if (t_success)
     {
-        MCAutoStringRef t_string;
 		t_buffer . Shrink(t_size);
-        t_success = t_buffer.CreateString(&t_string) &&
-                    MCDataCreateWithBytes(MCStringGetBytePtr(*t_string), MCStringGetLength(*t_string), r_data);
+        t_success = t_buffer.CreateData(r_data);
     }
     
     if (t_success)
@@ -1215,7 +1191,7 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
         return false;
 	
 	IO_handle t_file;
-	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeWrite, false, 0);
+	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeWrite, false);
 	
 	if (t_file == NULL)
 	{
@@ -1224,13 +1200,13 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
 	}
     
     // Need to convert the string to a binary string
-    MCAutoStringRef t_string;
+    MCAutoDataRef t_data;
     MCExecPoint ep(nil, nil, nil);
     /* UNCHECKED */ ep . setvalueref(p_string);
     ep . binarytotext();
-    /* UNCHECKED */ ep . copyasstring(&t_string);
+    /* UNCHECKED */ ep . copyasdataref(&t_data);
     
-	if (!t_file -> Write(MCStringGetBytePtr(*t_string), MCStringGetLength(*t_string)))
+	if (!t_file -> Write(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data)))
 		MCresult -> sets("error writing file");
 	
 	t_file -> Close();
@@ -1250,7 +1226,7 @@ bool MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
         return false;
 	
 	IO_handle t_file;
-	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeWrite, false, 0);
+	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeWrite, false);
 	
 	if (t_file == NULL)
 	{
@@ -1258,7 +1234,6 @@ bool MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
 		return false;
 	}
     
-	uint32_t t_written;
 	if (!t_file -> Write(MCDataGetBytePtr(p_data), MCDataGetLength(p_data)))
 		MCresult -> sets("error writing file");
 	
@@ -1357,7 +1332,6 @@ IO_stat MCS_write(const void *p_ptr, uint32_t p_size, uint32_t p_count, IO_handl
 	uint32_t t_to_write;
 	t_to_write = p_size * p_count;
 	
-	uint32_t t_written;
 	if (!p_stream -> Write(p_ptr, t_to_write))
 		return IO_ERROR;
 	
@@ -1415,7 +1389,10 @@ void MCS_send(MCStringRef p_message, MCStringRef p_program, MCStringRef p_eventt
     t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
     
     if (t_service != nil)
-        t_service -> Send(p_message, p_program, p_eventtype, reply);
+    {
+	    t_service -> Send(p_message, p_program, p_eventtype, reply);
+		return;
+	}
     
 	MCresult->sets("not supported");
 }
@@ -1426,7 +1403,10 @@ void MCS_reply(MCStringRef p_message, MCStringRef p_keyword, Boolean p_error)
     t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
     
     if (t_service != nil)
+	{
         t_service -> Reply(p_message, p_keyword, p_error);
+		return;
+	}
     
 	MCresult->sets("not supported");
 }
@@ -1437,7 +1417,10 @@ void MCS_request_ae(MCStringRef p_message, uint2 p_ae, MCStringRef& r_value)
     t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
     
     if (t_service != nil)
-        t_service -> RequestAE(p_message, p_ae, r_value);
+    {
+	    t_service -> RequestAE(p_message, p_ae, r_value);
+		return;
+	}
     
 	MCresult->sets("not supported");
 }
@@ -1448,9 +1431,10 @@ bool MCS_request_program(MCStringRef p_message, MCStringRef p_program, MCStringR
     t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
     
     if (t_service != nil)
-        t_service -> RequestProgram(p_message, p_program, r_result);
+        return t_service -> RequestProgram(p_message, p_program, r_result);
     
 	MCresult->sets("not supported");
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1493,7 +1477,7 @@ IO_stat MCS_runcmd(MCStringRef p_command, MCStringRef& r_output)
     return IO_NORMAL;
 }
 
-void MCS_startprocess(MCNameRef p_app, MCStringRef p_doc, Open_mode p_mode, Boolean p_elevated)
+void MCS_startprocess(MCNameRef p_app, MCStringRef p_doc, intenum_t p_mode, Boolean p_elevated)
 {
     MCsystem -> StartProcess(p_app, p_doc, p_mode, p_elevated);
 }
@@ -1647,20 +1631,22 @@ bool MCSTextConvertToUnicode(MCTextEncoding p_encoding, const void *p_input, uin
 //	}
 //	return true;
 //}
-
-bool MCS_getDNSservers(MCListRef& r_list)
-{
-    return MCsystem -> GetDNSservers(r_list);
-}
 //
 //void MCS_dnsresolve(MCStringRef p_hostname, MCStringRef& r_dns)
 //{
 //	return;
 //}
+//
+//bool MCS_hostaddress(MCStringRef& r_host_address)
+//{
+//	return false;
+//}
 
-bool MCS_hostaddress(MCStringRef& r_host_address)
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCS_getDNSservers(MCListRef& r_list)
 {
-	return false;
+    return MCsystem -> GetDNSservers(r_list);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1682,9 +1668,9 @@ bool MCS_isinteractiveconsole(int p_fd)
 bool MCS_isnan(double p_number)
 {
 #ifdef _WIN32
-    return _isnan(p_number);
+    return (_isnan(p_number) != 0);
 #else
-    return isnan(p_number);
+    return (isnan(p_number) != 0);
 #endif
 }
 

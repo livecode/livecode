@@ -59,14 +59,10 @@ enum MCSOpenFileMode
 
 extern void IO_set_stream(IO_handle stream, char *newptr);
 extern bool IO_findfile(MCNameRef p_name, uindex_t& r_index);
-/* LEGACY */ extern Boolean IO_findfile(const char *name, uint2 &i);
 extern Boolean IO_closefile(MCNameRef name);
-/* LEGACY */ extern Boolean IO_closefile(const char *name);
 extern bool IO_findprocess(MCNameRef p_name, uindex_t& r_index);
-/* LEGACY */ extern Boolean IO_findprocess(const char *name, uint2 &i);
 extern void IO_cleanprocesses();
 extern bool IO_findsocket(MCNameRef p_name, uindex_t& r_index);
-/* LEGACY */ extern Boolean IO_findsocket(char *name, uint2 &i);
 extern real8 IO_cleansockets(real8 ctime);
 extern void IO_freeobject(MCObject *o);
 extern IO_stat IO_read(void *ptr, uint4 byte_size, IO_handle stream);
@@ -115,8 +111,8 @@ extern IO_stat IO_read_nameref(MCNameRef& r_name, IO_handle stream, uint1 size =
 extern IO_stat IO_write_nameref(MCNameRef name, IO_handle stream, uint1 size = 2);
 
 // MW-2012-05-02: [[ Values ]] New methods for reading/writing value types.
-//extern IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, uint1 size = 2);
-//extern IO_stat IO_write_stringref(MCStringRef string, IO_handle stream, uint1 size = 2);
+extern IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, uint1 size = 2);
+extern IO_stat IO_write_stringref(MCStringRef string, IO_handle stream, uint1 size = 2);
 
 // String IO requesting explicit Unicode or native encoding
 extern IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, bool as_unicode, uint1 size = 2);

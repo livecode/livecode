@@ -2529,6 +2529,9 @@ MCControl *MCCard::getchildbyid(uinteger_t p_id, Chunk_term p_object_type, Chunk
 
 MCControl *MCCard::getchildbyname(MCNameRef p_name, Chunk_term p_object_type, Chunk_term p_parent_type)
 {
+    if (p_object_type <= CT_CARD)
+        return nil;
+    
 	// MM-2012-12-02: [[ Bug ]] Make sure we clean the object list before checking if null.
 	if (!opened)
 		clean();
@@ -2540,6 +2543,16 @@ MCControl *MCCard::getchildbyname(MCNameRef p_name, Chunk_term p_object_type, Ch
 	if (p_object_type != CT_LAYER && p_object_type != CT_MENU && p_parent_type == CT_UNDEFINED
         && getstack()->hcaddress())
 		p_parent_type = p_object_type == CT_FIELD ? CT_BACKGROUND : CT_CARD;
+    
+    uint2 t_num = 0;
+    if (MCU_stoui2(MCNameGetString(p_name), t_num))
+    {
+        if (t_num < 1)
+            return nil;
+        t_num--;
+        
+        return getnumberedchild(t_num + 1, p_object_type, p_parent_type);
+    }
     
     do
     {
@@ -2786,7 +2799,7 @@ Boolean MCCard::checkid(uint4 controlid)
 	return False;
 }
 
-Boolean MCCard::find(MCExecPoint &ep, Find_mode mode, const MCString &tofind,
+Boolean MCCard::find(MCExecPoint &ep, Find_mode mode, MCStringRef tofind,
                      Boolean firstcard, Boolean firstword)
 {
 	if (flags & F_C_DONT_SEARCH)

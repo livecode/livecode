@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 void MCError::add(uint2 id, MCScriptPoint &sp)
 {
-	add(id, sp.getline(), sp.getpos(), sp.gettoken());
+	add(id, sp.getline(), sp.getpos(), sp.gettoken_stringref());
 }
 
 void MCError::add(uint2 id, uint2 line, uint2 pos)
@@ -121,7 +121,7 @@ void MCError::copysvalue(const MCString &s, Boolean t)
 		svalue.set(buffer, strlen(buffer));
 }
 
-bool MCError::copyasstring(MCStringRef &r_string)
+bool MCError::copyasstringref(MCStringRef &r_string)
 {
 	return MCStringCreateWithCString(buffer, r_string);
 }

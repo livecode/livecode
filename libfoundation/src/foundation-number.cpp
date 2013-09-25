@@ -115,6 +115,34 @@ compare_t MCNumberCompareTo(MCNumberRef self, MCNumberRef p_other_self)
 	return 0;
 }
 
+bool MCNumberParse(MCStringRef p_string, MCNumberRef &r_number)
+{
+    if (!MCStringIsNative(p_string))
+        return MCNumberParseUnicodeChars(MCStringGetCharPtr(p_string), MCStringGetLength(p_string), r_number);
+
+    bool t_success;
+
+    const char* t_chars = (const char*)MCStringGetNativeCharPtr(p_string);
+
+    if (MCStringGetLength(p_string) > 2 &&
+            t_chars[0] == '0' &&
+            (t_chars[1] == 'x' || t_chars[1] == 'X'))
+        t_success = MCNumberCreateWithInteger(strtoul(t_chars + 2, nil, 16), r_number);
+    else
+    {
+        char *t_end;
+        integer_t t_integer;
+        t_integer = strtoul(t_chars, &t_end, 10);
+
+        if (*t_end == '\0')
+            t_success = MCNumberCreateWithInteger(t_integer, r_number);
+        else
+            t_success = MCNumberCreateWithReal(strtod(t_chars, &t_end), r_number);
+    }
+
+    return t_success;
+}
+
 bool MCNumberParseUnicodeChars(const unichar_t *p_chars, uindex_t p_char_count, MCNumberRef& r_number)
 {
 	char *t_native_chars;

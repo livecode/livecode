@@ -146,6 +146,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\foundation-data.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\foundation-debug.cpp"
 				>
 			</File>
