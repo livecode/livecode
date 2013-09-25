@@ -180,7 +180,7 @@ void MCServerExecInclude(MCExecContext& ctxt, MCStringRef p_filename, bool p_is_
 
 void MCServerExecEcho(MCExecContext& ctxt, MCStringRef p_data)
 {
-	if (!MCS_put(ctxt . GetEP(), kMCSPutBinaryOutput, p_data) != IO_NORMAL)
+	if (!MCS_put(ctxt, kMCSPutBinaryOutput, p_data) != IO_NORMAL)
 		MCexitall = True;
 }
 
@@ -188,25 +188,25 @@ void MCServerExecEcho(MCExecContext& ctxt, MCStringRef p_data)
 
 void MCServerExecPutHeader(MCExecContext& ctxt, MCStringRef p_value, bool p_as_new)
 {
-	if (!MCS_put(ctxt . GetEP(), p_as_new ? kMCSPutNewHeader : kMCSPutHeader, p_value))
+	if (!MCS_put(ctxt, p_as_new ? kMCSPutNewHeader : kMCSPutHeader, p_value))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
 void MCServerExecPutBinaryOutput(MCExecContext& ctxt, MCStringRef p_value)
 {
-	if (!MCS_put(ctxt . GetEP(), kMCSPutBinaryOutput, p_value))
+	if (!MCS_put(ctxt, kMCSPutBinaryOutput, p_value))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
 void MCServerExecPutContent(MCExecContext& ctxt, MCStringRef p_value, bool is_unicode)
 {
-	if (!MCS_put(ctxt . GetEP(), is_unicode ? kMCSPutUnicodeContent : kMCSPutContent, p_value))
+	if (!MCS_put(ctxt, is_unicode ? kMCSPutUnicodeContent : kMCSPutContent, p_value))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
 void MCServerExecPutMarkup(MCExecContext& ctxt, MCStringRef p_value, bool is_unicode)
 {
-	if (!MCS_put(ctxt . GetEP(), is_unicode ? kMCSPutUnicodeMarkup : kMCSPutMarkup, p_value))
+	if (!MCS_put(ctxt, is_unicode ? kMCSPutUnicodeMarkup : kMCSPutMarkup, p_value))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 

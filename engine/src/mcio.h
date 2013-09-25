@@ -67,7 +67,7 @@ extern real8 IO_cleansockets(real8 ctime);
 extern void IO_freeobject(MCObject *o);
 extern IO_stat IO_read(void *ptr, uint4 byte_size, IO_handle stream);
 extern IO_stat IO_write(const void *ptr, uint4 s, uint4 n, IO_handle stream);
-extern IO_stat IO_read_to_eof(IO_handle stream, MCExecPoint &ep);
+extern IO_stat IO_read_to_eof(IO_handle stream, MCExecContext& ctxt);
 extern IO_stat IO_fgets(char *ptr, uint4 length, IO_handle stream);
 
 extern IO_stat IO_read_real8(real8 *dest, IO_handle stream);

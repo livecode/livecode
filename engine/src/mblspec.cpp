@@ -26,6 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "param.h"
 #include "mcerror.h"
 #include "execpt.h"
+#include "exec.h"
 #include "util.h"
 #include "object.h"
 #include "socket.h"
@@ -768,9 +769,9 @@ void MCS_unloadurl(MCObject *p_object, MCStringRef p_url)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, MCStringRef p_data)
+bool MCS_put(MCExecContext& ctxt, MCSPutKind p_kind, MCStringRef p_data)
 {
-	/* UNCHECKED */ ep . setvalueref(p_data);
+	/* UNCHECKED */ ctxt . GetEP() . setvalueref(p_data);
 
 	switch(p_kind)
 	{

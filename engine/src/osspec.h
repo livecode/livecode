@@ -197,7 +197,7 @@ enum MCSPutKind
 	kMCSPutUnicodeMarkup
 };
 
-bool MCS_put(MCExecPoint& ep, MCSPutKind kind, MCStringRef data);
+bool MCS_put(MCExecContext& ctxt, MCSPutKind kind, MCStringRef data);
 
 ///////////////////////////////////////////////////////////////////////////////
 
