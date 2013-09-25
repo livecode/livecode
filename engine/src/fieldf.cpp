@@ -1690,7 +1690,10 @@ void MCField::finsertnew(Field_translations function, MCStringRef p_string, KeyS
 	selectedmark(False, si, ei, False, False);
 
 	// Defer to the paragraph method to insert the text.
-	focusedparagraph -> finsertnew(MCStringGetCString(p_string), !MCStringIsNative(p_string));
+	if (!MCStringIsNative(p_string))
+		focusedparagraph -> finsertnew((const char*)MCStringGetCharPtr(p_string), true);
+	else
+		focusedparagraph -> finsertnew((const char*)MCStringGetNativeCharPtr(p_string), false);
 
 	// Compute the end of the selection.
 	int4 ti;

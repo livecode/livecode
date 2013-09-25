@@ -164,18 +164,35 @@ enum ks {
 
 KeySym MCScreenDC::getkeysym(WPARAM wParam, LPARAM lParam)
 {
+	// Behaviour:
+	//	If no control keys accumulated and this is a left Ctrl, then add LCTRL
+	//	Else, if accumulated an LCTRL and receive a right Alt, switch to RALT
+	//	Else, if accumulated a RALT or ALTGR, switch to ALTGR
+	//  Else, clear accumulated keys.
+	//
+	//  If accumulated an ALTGR and modifier state holds Ctrl+Alt, clear Ctrl-Alt
+	//	Else, clear an accumulated ALTGR
+	//
+	// So, what this is doing is:
+	//	All control keys are passed unmodified, except:
+	//		Right Alt has special behaviour after Left Ctrl: act as AltGr on subsequent keys
+
 	static int curks;
-	if (curks == KS_UNDEFINED && lParam == 0x001d0001)
+	if (curks == KS_UNDEFINED && wParam == VK_CONTROL && !(lParam & 0x01000000))
 		curks = KS_LCTRL;
 	else
-		if (curks == KS_LCTRL && lParam == 0x21380001)
+	{
+		if (curks == KS_LCTRL && wParam == VK_MENU && (lParam == 0x01000000))
 			curks = KS_RALT;
 		else
+		{
 			if (curks == KS_RALT || curks == KS_ALTGR)
 				curks = KS_ALTGR;
 			else
 				curks = KS_UNDEFINED;
-	uint2 keysym;
+		}
+	}
+	KeySym keysym;
 	setmods();
 	if (curks == KS_ALTGR)
 		if (MCmodifierstate & MS_CONTROL && MCmodifierstate & MS_MOD1)
@@ -234,7 +251,7 @@ extern HANDLE g_notify_wakeup;
 Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
                            Boolean &abort, Boolean &reset)
 {
-	MSG msg, tmsg;
+	MSG msg;
 	stateinfo oldinfo = *curinfo;
 	curinfo->abort = curinfo->reset = False;
 	curinfo->dispatch = dispatch;
@@ -271,30 +288,9 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 				if (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN
 				        || msg.message == WM_KEYUP || msg.message == WM_SYSKEYUP)
 					curinfo->keysym = getkeysym(msg.wParam, msg.lParam);
-				TranslateMessage(&msg);
-
-				bool t_char_found;
-				if ((MCruntimebehaviour & RTB_ACCURATE_UNICODE_INPUT) != 0)
-					t_char_found = PeekMessageW(&tmsg, NULL, WM_CHAR, WM_CHAR, PM_REMOVE) ||
-				                 PeekMessageW(&tmsg, NULL, WM_SYSCHAR, WM_SYSCHAR, PM_REMOVE);
-				else
-					t_char_found = PeekMessageA(&tmsg, NULL, WM_CHAR, WM_CHAR, PM_REMOVE) ||
-				                 PeekMessageA(&tmsg, NULL, WM_SYSCHAR, WM_SYSCHAR, PM_REMOVE);
-				if (t_char_found)
-				{
-					_Drawable _dw;
-					Drawable dw = &_dw;
-					dw->type = DC_WINDOW;
-					dw->handle.window = (MCSysWindowHandle)msg.hwnd;
-					if (MCdispatcher->findstackd(dw) == NULL)
-					{
-						if ((MCruntimebehaviour & RTB_ACCURATE_UNICODE_INPUT) != 0)
-							DispatchMessageW(&msg);
-						else
-							DispatchMessageA(&msg);
-					}
-					memcpy(&msg, &tmsg, sizeof(MSG));
-				}
+				
+				// Translation of keystroke messages to char messages is now done by the
+				// window proc, depending on whether a shortcut was triggered.
 				if ((MCruntimebehaviour & RTB_ACCURATE_UNICODE_INPUT) != 0)
 					DispatchMessageW(&msg);
 				else
@@ -650,99 +646,109 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		}
 		break;
 
-	case WM_SYSKEYDOWN:
-	case WM_SYSCHAR:
 	case WM_CHAR:
+	case WM_SYSCHAR:
+	case WM_IME_CHAR:
+	{
+		// Don't bother processing if we're not dispatching
+		if (!curinfo->dispatch)
+		{
+			MCEventnode *tptr = new MCEventnode(hwnd, msg, wParam, lParam, 0,
+			                                    MCmodifierstate, MCeventtime);
+			pms->appendevent(tptr);
+			break;
+		}
+		
+		// UTF-16 or ANSI character has been received
+		WCHAR t_char;
+		t_char = LOWORD(wParam);
+
+		lastchar = wParam;
+
+		MCAutoStringRef t_input;
+
+		// No need to send control characters as text
+		if (iswcntrl(t_char))
+			break;
+
+		// MW-2010-11-17: [[ Bug 3892 ]] Ctrl+Alt can be the same as AltGr.
+		//   If we have Ctrl+Alt set, we discard the modifiers
+		if ((MCmodifierstate & (MS_CONTROL | MS_ALT)) == (MS_CONTROL | MS_ALT))
+			MCmodifierstate = 0;
+
+		if (IsWindowUnicode(hwnd))
+		{
+			// Window is Unicode; received characters are UTF-16
+			/* UNCHECKED */ MCStringCreateWithChars((const unichar_t*)&t_char, 1, &t_input);
+		}
+		else if (msg == WM_IME_CHAR)
+		{
+			// The window isn't Unicode and the character came from an IME
+			// Translate the characters to UTF-16
+			unichar_t t_utf16[2] = {0, 0};
+			uindex_t t_len;
+			char multibytechar[3];
+			multibytechar[0] =  HIBYTE((WORD)wParam) ;
+			multibytechar[1] =  LOBYTE((WORD)wParam) ;
+			multibytechar[2] = '\0';
+			MCU_multibytetounicode(multibytechar, 2, (char *)&t_utf16, 4,
+				                     t_len,  MCS_langidtocharset(LOWORD(GetKeyboardLayout(0))));
+			/* UNCHECKED */ MCStringCreateWithChars(t_utf16, 2, &t_input);
+		}
+		else
+		{
+			// Window isn't Unicode and the character came from something that wasn't an IME
+			// Translate the characters to UTF-16
+			WCHAR t_utf16;
+			MultiByteToWideChar(pms->input_codepage, 0, (const char *)&t_char, 1, &t_utf16, 1);
+			/* UNCHECKED */ MCStringCreateWithChars((const unichar_t*)&t_utf16, 1, &t_input);
+		}
+
+		// Translate the input character into its corresponding keysym
+		// TODO: surrogate pairs?
+		codepoint_t t_codepoint = MCStringGetCodepointAtIndex(*t_input, 0);
+		KeySym t_keysym;
+		if (t_codepoint > 0x7F)
+		{
+			// This is a non-ASCII codepoint
+			t_keysym = t_codepoint | XK_Class_codepoint;
+		}
+		else
+		{
+			// The keysym is ASCII; send as a compat keysym
+			t_keysym = t_codepoint;
+		}
+
+		if (MCtracewindow == DNULL || hwnd != (HWND)MCtracewindow->handle.window)
+		{
+			// Submit the character as both text and a key stroke
+			uint16_t count = LOWORD(lParam);
+			while (count--)
+			{
+				// Key down and key up
+				MCdispatcher->wkdown(dw, *t_input, t_keysym);
+				MCdispatcher->wkup(dw, *t_input, t_keysym);
+			}
+
+			curinfo->handled = curinfo->reset = true;
+		}
+		break;
+	}
+
 	case WM_KEYDOWN:
+	case WM_SYSKEYDOWN:
 	{
 		if (wParam == VK_CONTROL)
 			break;
 
-		char t_input_char;
-		t_input_char = (char)wParam;
-
-		if (IsWindowUnicode(hwnd))
-		{
-			if (wParam >= 128)
-			{
-				bool t_is_unicode;
-				WCHAR t_wide[1];
-			
-				// MW-2012-07-25: [[ Bug 9200 ]] Make sure we roundtrip the input character
-				//   through 1252 *not* the active code page (which could be anything).
-				t_wide[0] = (WCHAR)wParam;
-				t_is_unicode = (WideCharToMultiByte(1252, 0, t_wide, 1, &t_input_char, 1, NULL, NULL) == 0);
-				if (!t_is_unicode)
-				{
-					WCHAR t_reverse_wide[1];
-					t_is_unicode = MultiByteToWideChar(1252, 0, &t_input_char, 1, t_reverse_wide, 1) == 0;
-					if (!t_is_unicode)
-						t_is_unicode = t_reverse_wide[0] != t_wide[0];
-				}
-
-				if (t_is_unicode && (msg == WM_CHAR || msg == WM_SYSCHAR))
-				{
-					if (MCactivefield)
-					{
-						MCString t_unicode_string;
-						t_unicode_string . set((char *)t_wide, 2);
-
-						// MW-2012-02-03: [[ Unicode Block ]] Use the new finsert method to insert
-						//   text in unicode mode.
-						MCactivefield -> finsertnew(FT_IMEINSERT, t_unicode_string, LCH_UNICODE, true);
-					}
-					break;
-				}
-			}
-		}
-		else if (wParam >= 128 && (((MCScreenDC *)MCscreen) -> system_codepage) != (((MCScreenDC *)MCscreen) -> input_codepage))
-		{
-			WCHAR t_unicode_char;
-			MultiByteToWideChar((((MCScreenDC *)MCscreen) -> input_codepage), 0, &t_input_char, 1, &t_unicode_char, 1);
-
-			bool t_is_unicode;
-			t_is_unicode = (WideCharToMultiByte((((MCScreenDC *)MCscreen) -> system_codepage), 0, &t_unicode_char, 1, &t_input_char, 1, NULL, NULL) == 0);
-			if (!t_is_unicode)
-			{
-				WCHAR t_reverse_unicode_char;
-				t_is_unicode = MultiByteToWideChar((((MCScreenDC *)MCscreen) -> system_codepage), 0, &t_input_char, 1, &t_reverse_unicode_char, 1) == 0;
-				if (!t_is_unicode)
-					t_is_unicode = t_reverse_unicode_char != t_unicode_char;
-			}
-
-			if (t_is_unicode)
-			{
-				if (MCactivefield)
-				{
-					MCString t_unicode_string;
-					t_unicode_string . set((char *)&t_unicode_char, 2);
-
-					// MW-2012-02-03: [[ Unicode Block ]] Use the new finsert method to insert
-					//   text in unicode mode.
-					MCactivefield -> finsertnew(FT_IMEINSERT, t_unicode_string, LCH_UNICODE, true);
-				}
-				break;
-			}
-		}
-
-		if (msg == WM_CHAR || msg == WM_SYSCHAR)
-			wParam = t_input_char;
-
-		buffer[0] = buffer[1] = 0;
-
-		if (msg == WM_CHAR || msg == WM_SYSCHAR)
-			buffer[0] = lastchar = wParam;
-
-		// MW-2010-11-17: [[ Bug 3892 ]] Ctrl+Alt can be the same as AltGr.
-		//   If we are a CHAR message *and* have a non-control character *and* have Ctrl+Alt set, we discard the modifiers
-		if ((msg == WM_CHAR || msg == WM_SYSCHAR) && wParam >= 32 && (MCmodifierstate & (MS_CONTROL | MS_ALT)) == (MS_CONTROL | MS_ALT))
-			MCmodifierstate = 0;
-
+		// Did the event come via MCScreenDC::handle?
 		if (curinfo->keysym == 0) // event came from some other dispatch
 			keysym = pms->getkeysym(wParam, lParam);
 		else
 			keysym = curinfo->keysym;
+
 		lastkeysym = keysym;
+
 		if (MCmodifierstate & MS_CONTROL)
 			if (wParam == VK_CANCEL || keysym == '.')
 			{
@@ -754,24 +760,46 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			else
 				if (msg == WM_KEYDOWN)
 					buffer[0] = lastchar = wParam;
+
 		if (curinfo->dispatch)
 		{
 			if (MCtracewindow == DNULL || hwnd != (HWND)MCtracewindow->handle.window)
 			{
+				// The low word contains the repeat count
 				uint2 count = LOWORD(lParam);
 				while (count--)
 				{
-					if (!MCdispatcher->wkdown(dw, buffer, keysym)
-					        && (msg == WM_SYSKEYDOWN || msg == WM_SYSCHAR))
+					// This is (effectively) equivalent to TranslateAccerator. If the key gets
+					// handled at this stage, nothing further happens with it. Otherwise, it
+					// gets re-dispatched as a character input message.
+					//
+					// Parts of the engine that care about keystrokes examine the keysym member.
+					// Parts that want text only care about the string. Dispatch as stroke-only here.
+					bool t_handled;
+					t_handled = MCdispatcher->wkdown(dw, kMCEmptyString, keysym);
+
+					// Translate to and dispatch as a character message
+					MSG t_msg;
+					t_msg.hwnd = hwnd;
+					t_msg.message = msg;
+					t_msg.wParam = wParam;
+					t_msg.lParam = lParam;
+					TranslateMessage(&t_msg);
+
+					// Some system key strokes have special behaviour provided by DefWindowProc
+					if (!t_handled && msg == WM_SYSKEYDOWN)
 						return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
+					
+					// If the repeat count was >1, simulate the corresponding key up messages
 					if (count || lParam & 0x40000000)
-						MCdispatcher->wkup(dw, buffer, keysym);
+						MCdispatcher->wkup(dw, kMCEmptyString, keysym);
 				}
 				curinfo->handled = curinfo->reset = True;
 			}
 		}
 		else
 		{
+			// Dispatch isn't currently enabled; accumulate to the event queue.
 			MCEventnode *tptr = new MCEventnode(hwnd, msg, wParam, lParam, keysym,
 			                                    MCmodifierstate, MCeventtime);
 			pms->appendevent(tptr);
@@ -785,22 +813,20 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			keysym = pms->getkeysym(wParam, lParam);
 		else
 			keysym = curinfo->keysym;
-		if (keysym == lastkeysym)
-			buffer[0] = lastchar;
-		else
-			buffer[0] = 0;
-		buffer[1] = 0;
+
 		if (curinfo->dispatch)
 		{
 			if (MCtracewindow == DNULL || hwnd != (HWND)MCtracewindow->handle.window)
 			{
+				// Character messages handle the text keyup themselves
 				MCeventtime = GetMessageTime(); //krevent->time;
-				MCdispatcher->wkup(dw, buffer, keysym);
+				MCdispatcher->wkup(dw, kMCEmptyString, keysym);
 				curinfo->handled = curinfo->reset = True;
 			}
 		}
 		else
 		{
+			// Add to the event queue
 			MCEventnode *tptr = new MCEventnode(hwnd, msg, wParam, lParam, 0,
 			                                    MCmodifierstate, MCeventtime);
 			pms->appendevent(tptr);
@@ -815,68 +841,73 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		if (!MCinlineinput)
 			return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
 		break;
-	case WM_IME_CHAR:
-		{
-			if (!MCactivefield)
-				break;
-			uint2 unicodekey = MAXUINT2;
-			uint4 destlen;
-			if (IsWindowUnicode(hwnd))
-			{
-				unicodekey = wParam;
-				destlen = 2;
-			}
-			else
-			{
-				char multibytechar[3];
-				multibytechar[0] =  HIBYTE((WORD)wParam) ;
-				multibytechar[1] =  LOBYTE((WORD)wParam) ;
-				multibytechar[2] = '\0';
-				MCU_multibytetounicode(multibytechar, 2, (char *)&unicodekey, 2,
-					                     destlen,  MCS_langidtocharset(LOWORD(GetKeyboardLayout(0))));
-			}
-			MCString unicodestr;
-			unicodestr.set((char *)&unicodekey, destlen);
-
-			// MW-2012-02-03: [[ Unicode Block ]] Use the new finsert method to insert
-			//   text in unicode mode.
-			MCactivefield->finsertnew(FT_IMEINSERT, unicodestr, 0, true);
-		}
-		break;
 	case WM_IME_COMPOSITION:
 		{
+			// Because the Win32-provided controls are not in use, proper display of IME
+			// text is the responsibility of the engine instead of the operating system.
 			if (!MCinlineinput)
 				return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
+			
+			// No point doing any IME work if there isn't an active field (IME is not
+			// allowed for shortcuts, accelerators, etc)
 			if (!MCactivefield)
 				break;
-			DWORD dwindex = 0;
+
+			// On Windows, IME input can be divided into three parts:
+			//	Composition string
+			//	Result string
+			//	Cursor
+			//
+			// The composition string is the text that the IME system has provisionally
+			// guessed to be the desired text. It is normally displayed with an underline.
+			//
+			// The results string is the text that has been accepted as correct.
+			//
+			// The cursor specifies where in the text the insertion cursor should appear.
+			//
+			// Note that the Windows IME model allows both the result string and the
+			// composition string to be presented simultaneously.
+			HIMC hIMC;
+			uint16_t t_cursorpos;
+			hIMC = ImmGetContext(hwnd);
+
+			// Update the compose cursor position
+			// TODO: pay attention to the CS_INSERTCHAR and CS_NOMOVECARET flags
+			if (!hIMC)
+				break;
+			t_cursorpos = LOWORD(ImmGetCompositionStringW(hIMC, GCS_CURSORPOS, NULL, 0));
+			MCactivefield->setcompositioncursoroffset(t_cursorpos << 1);
+
 			if (lParam & GCS_RESULTSTR)
 			{
-				MCactivefield->stopcomposition(True,False);
-				dwindex = GCS_RESULTSTR;
+				// A result string has been provided. Stop composition and display it.
+				MCactivefield->stopcomposition(True, False);
+				
+				LONG t_reslen;
+				unichar_t *t_resstr;
+				MCAutoStringRef t_string;
+				t_reslen = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, NULL, 0);
+				t_resstr = new unichar_t[t_reslen/sizeof(unichar_t) + 1];
+				/* UNCHECKED */ ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, t_resstr, t_reslen);
+				/* UNCHECKED */ MCStringCreateWithCharsAndRelease(t_resstr, t_reslen/2, &t_string);
+				MCactivefield->finsertnew(FT_IMEINSERT, *t_string, 0);
 			}
-			else if (lParam & GCS_COMPSTR)
-			{
-				MCactivefield->startcomposition();
-				dwindex = GCS_COMPSTR;
-			}
-			HIMC hIMC = ImmGetContext(hwnd);
-			if (!hIMC || !dwindex)
-				break;
-			int2 cursorpos = LOWORD(ImmGetCompositionStringA(hIMC, GCS_CURSORPOS,
-			                        NULL, 0));
-			MCactivefield->setcompositioncursoroffset(cursorpos << 1);
-			uint2 compstrsize = 0;
-			char *compstring = NULL;
-			compstrsize = (uint2)ImmGetCompositionStringW(hIMC, dwindex, NULL, 0);
-			compstring = new char[compstrsize+sizeof(WCHAR)];
-			ImmGetCompositionStringW(hIMC, dwindex, compstring, compstrsize);
-			MCString unicodestr(compstring, compstrsize);
 
-			// MW-2012-02-03: [[ Unicode Block ]] Use the new finsert method to insert
-			//   text in unicode mode.
-			MCactivefield->finsertnew(FT_IMEINSERT, unicodestr, 0, true);
-			delete compstring;
+			if (lParam & GCS_COMPSTR)
+			{
+				// A composition string has been provided. Start composition
+				MCactivefield->startcomposition();
+				
+				LONG t_complen;
+				unichar_t *t_compstr;
+				MCAutoStringRef t_string;
+				t_complen = ImmGetCompositionStringW(hIMC, GCS_COMPSTR, NULL, 0);
+				t_compstr = new unichar_t[t_complen/sizeof(unichar_t) + 1];
+				/* UNCHECKED */ ImmGetCompositionStringW(hIMC, GCS_COMPSTR, t_compstr, t_complen);
+				/* UNCHECKED */ MCStringCreateWithCharsAndRelease(t_compstr, t_complen/2, &t_string);
+				MCactivefield->finsertnew(FT_IMEINSERT, *t_string, 0);
+			}
+
 			ImmReleaseContext(hwnd, hIMC);
 		}
 		break;
@@ -1167,12 +1198,10 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 	case WM_CANCELMODE:
 		if (pms->isgrabbed())
 		{
-			buffer[0] = 0x1B;
-			buffer[1] = '\0';
 			Boolean oldlock = MClockmessages;
 			MClockmessages = True;
-			MCdispatcher->wkdown(dw, buffer, XK_Escape);
-			MCdispatcher->wkup(dw, buffer, XK_Escape);
+			MCdispatcher->wkdown(dw, MCSTR("\x1B"), XK_Escape);
+			MCdispatcher->wkup(dw, MCSTR("\x1B"), XK_Escape);
 			MClockmessages = oldlock;
 			curinfo->handled = True;
 			pms->setgrabbed(False);
