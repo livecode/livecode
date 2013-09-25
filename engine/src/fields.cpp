@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "sellst.h"
 #include "undolst.h"
 #include "stack.h"
@@ -2263,9 +2264,10 @@ Boolean MCField::selectedmark(Boolean whole, int4 &si, int4 &ei,
 bool MCField::returnchunk(int4 p_si, int4 p_ei, MCStringRef& r_chunk)
 {
 	MCExecPoint ep(nil, nil, nil);
-	getprop(0, P_NUMBER, ep, False);
-	ep.ton();
-	uint2 number = ep.getuint2();
+	MCExecContext ctxt(ep);
+	MCAutoNumberRef t_number;
+	getnumberprop(ctxt, 0, P_NUMBER, False, &t_number);
+	uint2 number = (uint2) MCNumberFetchAsUnsignedInteger(*t_number);
 
 	// MW-2012-02-23: [[ CharChunk ]] Map the internal field indices (si, ei) to
 	//   char indices.
@@ -2279,9 +2281,10 @@ bool MCField::returnchunk(int4 p_si, int4 p_ei, MCStringRef& r_chunk)
 bool MCField::returnline(int4 si, int4 ei, MCStringRef& r_string)
 {
 	MCExecPoint ep(nil, nil, nil);
-	/* UNCHECKED */ getprop(0, P_NUMBER, ep, False);
-	/* UNCHECKED */ ep.ton();
-	uint2 number = ep.getuint2();
+	MCExecContext ctxt(ep);
+	MCAutoNumberRef t_number;
+	getnumberprop(ctxt, 0, P_NUMBER, False, &t_number);
+	uint2 number = (uint2) MCNumberFetchAsUnsignedInteger(*t_number);
 	uint4 line = 0;
 	int4 offset = 0;
 	MCParagraph *pgptr = paragraphs;

@@ -3782,9 +3782,11 @@ void MCButton::setupmenu()
 bool MCButton::selectedchunk(MCStringRef& r_string)
 {
 	MCExecPoint ep(nil, nil, nil);
-	/* UNCHECKED */ getprop(0, P_NUMBER, ep, False);
-	/* UNCHECKED */ ep.ton();
-	uint4 number = ep.getuint4();
+	MCExecContext ctxt(ep);
+	MCAutoNumberRef t_number;
+	getnumberprop(ctxt, 0, P_NUMBER, False, &t_number);
+	uint4 number = (uint4) MCNumberFetchAsUnsignedInteger(*t_number);
+	
 	const char *sptr;
 	const char *eptr;
 	getmenuptrs(sptr, eptr);
@@ -3794,10 +3796,10 @@ bool MCButton::selectedchunk(MCStringRef& r_string)
 bool MCButton::selectedline(MCStringRef& r_string)
 {
 	MCExecPoint ep(nil, nil, nil);
-	/* UNCHECKED */ getprop(0, P_NUMBER, ep, False);
-	/* UNCHECKED */ ep.ton();
-	uint2 number;
-	ep.getuint2(number, 0, 0, EE_UNDEFINED);
+	MCExecContext ctxt(ep);
+	MCAutoNumberRef t_number;
+	getnumberprop(ctxt, 0, P_NUMBER, False, &t_number);
+	uint2 number = (uint2) MCNumberFetchAsUnsignedInteger(*t_number);
 	return MCStringFormat(r_string, "line %d of button %d", menuhistory, number);
 }
 
