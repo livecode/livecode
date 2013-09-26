@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "image.h"
 #include "dispatch.h"
 #include "util.h"
+#include "exec.h"
 #include "execpt.h"
 #include "globals.h"
 #include "mctheme.h"
@@ -545,19 +546,21 @@ bool MCMacOSXPasteboard::AddEntry(MCTransferType p_type, ScrapFlavorType p_flavo
 bool MCConvertTextToMacPlain(MCDataRef p_input, MCDataRef& r_output)
 {
 	MCExecPoint ep(NULL, NULL, NULL);
-	ep . setvalueref(p_input);
-	ep . binarytotext();
-	return ep . copyasdataref(r_output);
+	MCExecContext ctxt(ep);
+	ctxt . SetValueRef(p_input);
+	ctxt . BinaryToText();
+	return ctxt . CopyAsDataRef(r_output);
 }
 
 bool MCConvertUnicodeToMacUnicode(MCDataRef p_input, MCDataRef& r_output)
 {
 	MCExecPoint ep(NULL, NULL, NULL);
-	ep . setvalueref(p_input);
-	ep . utf16toutf8();
-	ep . binarytotext();
-	ep . utf8toutf16();
-	return ep . copyasdataref(r_output);
+	MCExecContext ctxt(ep);
+	ctxt . SetValueRef(p_input);
+	ctxt . Utf16ToUtf8();
+	ctxt . BinaryToText();
+	ctxt . Utf8ToUtf16();
+	return ctxt . CopyAsDataRef(r_output);
 }
 
 bool MCConvertStyledTextToMacUnicode(MCDataRef p_input, MCDataRef& r_output)
