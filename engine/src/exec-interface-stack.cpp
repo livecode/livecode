@@ -201,8 +201,21 @@ static void MCInterfaceDecorationParse(MCExecContext& ctxt, MCStringRef p_input,
     r_output . decorations = decorations;
 }
 
+static void concat(const char *p_cstring, bool p_first, char_t p_del, MCStringRef &r_string)
+{
+	if (p_first)
+		/* UNCHECKED */ MCStringAppendNativeChars(r_string, (const char_t *)p_cstring, strlen(p_cstring));
+	else
+	{	
+		/* UNCHECKED */MCStringAppendNativeChars(r_string, &p_del, 1);
+		/* UNCHECKED */MCStringAppendNativeChars(r_string, (const char_t *)p_cstring, strlen(p_cstring));
+	}
+	
+}
+
 static void MCInterfaceDecorationFormat(MCExecContext& ctxt, const MCInterfaceDecoration& p_input, MCStringRef& r_output)
 {
+
     if (p_input . has_decorations)
     {
         if (p_input . decorations & WD_WDEF)
@@ -212,28 +225,60 @@ static void MCInterfaceDecorationFormat(MCExecContext& ctxt, const MCInterfaceDe
         }
         else
         {
-            uindex_t j = 0;
-            MCExecPoint ep(nil, nil, nil);
+			MCStringRef t_output;
+			/* UNCHECKED */ MCStringCreateMutable(0, t_output);
+			char_t t_del;
+			t_del = ',';
+            bool first;
+			first = true;
+            
             if (p_input . decorations & WD_TITLE)
-                ep.concatcstring(MCtitlestring, EC_COMMA, j++ == 0);
+			{
+				concat(MCtitlestring, first, t_del, t_output);
+				first = false;
+			}
             if (p_input . decorations & WD_MENU)
-                ep.concatcstring(MCmenustring, EC_COMMA, j++ == 0);
+			{	
+				concat(MCmenustring, first, t_del, t_output);
+				first = false;
+			}
             if (p_input . decorations & WD_MINIMIZE)
-                ep.concatcstring(MCminimizestring, EC_COMMA, j++ == 0);
+			{
+				concat(MCminimizestring, first, t_del, t_output);
+				first = false;
+			}
             if (p_input . decorations & WD_MAXIMIZE)
-                ep.concatcstring(MCmaximizestring, EC_COMMA, j++ == 0);
+			{
+				concat(MCmaximizestring, first, t_del, t_output);
+				first = false;
+			}
             if (p_input . decorations & WD_CLOSE)
-                ep.concatcstring(MCclosestring, EC_COMMA, j++ == 0);
+			{
+				concat(MCclosestring, first, t_del, t_output);
+				first = false;
+			}
             if (p_input . decorations & WD_METAL)
-                ep.concatcstring(MCmetalstring, EC_COMMA, j++ == 0);
+			{
+				concat(MCmetalstring, first, t_del, t_output);
+				first = false;
+			}
             if (p_input . decorations & WD_UTILITY)
-                ep.concatcstring(MCutilitystring, EC_COMMA, j++ == 0);
+			{
+				concat(MCutilitystring, first, t_del, t_output);
+				first = false;
+			}
             if (p_input . decorations & WD_NOSHADOW)
-                ep.concatcstring(MCnoshadowstring, EC_COMMA, j++ == 0);
+			{
+				concat(MCnoshadowstring, first, t_del, t_output);
+				first = false;
+			}
             if (p_input . decorations & WD_FORCETASKBAR)
-                ep.concatcstring(MCforcetaskbarstring, EC_COMMA, j++ == 0);
-            if (ep . copyasstringref(r_output))
-                return;
+			{
+				concat(MCforcetaskbarstring, first, t_del, t_output);
+				first = false;
+			}
+            r_output = MCValueRetain(t_output);
+			return;
         }
     }
     else
