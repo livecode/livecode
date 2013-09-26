@@ -39,10 +39,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "menuparse.h"
 
 void ParseMenuItemString(MCStringRef p_string, MCStringRef p_mutable, MCMenuItem *p_menuitem);
-void ParseMenuItemTabs(MCStringRef p_string, uindex_t &x_offset, MCStringRef p_mutable, MCMenuItem *p_menuitem);
+void ParseMenuItemTabs(MCStringRef p_string, uindex_t &x_offset, MCMenuItem *p_menuitem);
 void ParseMenuItemSwitches(MCStringRef p_string, uindex_t &x_offset, MCStringRef p_mutable, MCMenuItem *p_menuitem);
 void ParseMenuItemLabel(MCStringRef p_string, uindex_t &x_offset, MCStringRef p_mutable, MCMenuItem *p_menuitem);
-void ParseMenuItemAccelerator(MCStringRef p_string, uindex_t &x_offset, MCStringRef p_mutable, MCMenuItem *p_menuitem);
+void ParseMenuItemAccelerator(MCStringRef p_string, uindex_t &x_offset, MCMenuItem *p_menuitem);
 bool IsEscapeChar(MCStringRef p_string, uindex_t p_offset, uint1 p_menumod);
 
 static Keynames accelerator_keys[] =
@@ -209,15 +209,15 @@ static ModKeyToken modifier_tokens[] =
 void MCMenuItem::assignFrom(MCMenuItem *p_other)
 {
 	depth = p_other->depth;
-	label = MCValueRetain(p_other->label);
+	MCValueAssign(label, p_other->label);
 	is_disabled = p_other->is_disabled;
 	is_radio = p_other->is_radio;
 	is_hilited = p_other->is_hilited;
 	accelerator = p_other->accelerator;
-	accelerator_name = MCValueRetain(p_other->accelerator_name);
+	MCValueAssign(accelerator_name, p_other->accelerator_name);
 	modifiers = p_other->modifiers;
 	mnemonic = p_other->mnemonic;
-	tag = MCValueRetain(p_other->tag);
+	MCValueAssign(tag, p_other->tag);
 	menumode = p_other->menumode;
 }
 
@@ -245,23 +245,19 @@ const char *MCLookupAcceleratorName(uint4 p_keysym)
 	return NULL;
 }
 
-void MCParseMenuString(MCStringRef &x_string, IParseMenuCallback *p_callback, uint1 p_menumode)
+void MCParseMenuString(MCStringRef p_string, IParseMenuCallback *p_callback, uint1 p_menumode)
 {
-	MCStringRef p_string = x_string;
 	MCAutoArrayRef t_lines;
 	uindex_t t_nlines = 0;
-	MCMenuItem t_menuitem;
 	/* UNCHECKED */ MCStringSplit(p_string, MCSTR("\n"), nil, kMCStringOptionCompareExact, &t_lines);
+	t_nlines = MCArrayGetCount(*t_lines);
 	bool t_hastags = false;
-	
-	MCStringRef t_new_string = nil;
-	/* UNCHECKED */ MCStringCreateMutable(0, t_new_string);
 	
 	p_callback->Start();
 	
 	for (uindex_t i=0; i<t_nlines; i++)
 	{
-		memset(&t_menuitem, 0, sizeof(MCMenuItem));
+		MCMenuItem t_menuitem;
 		t_menuitem.menumode = p_menumode;
 
 		MCValueRef t_lineval = nil;
@@ -270,10 +266,10 @@ void MCParseMenuString(MCStringRef &x_string, IParseMenuCallback *p_callback, ui
 		t_line = (MCStringRef)t_lineval;
 		
 		MCStringRef t_new_line = nil;
+		/* UNCHECKED */ MCStringCreateMutable(0, t_new_line);
 		ParseMenuItemString(t_line, t_new_line, &t_menuitem);
-		MCStringAppend(t_new_string, t_new_line);
 		MCValueRelease(t_new_line);
-
+		
 		p_callback->ProcessItem(&t_menuitem);
 
 		if (!MCStringIsEmpty(t_menuitem.tag))
@@ -282,10 +278,6 @@ void MCParseMenuString(MCStringRef &x_string, IParseMenuCallback *p_callback, ui
 			t_hastags = true;
 		}
 	}
-	
-	// Pass the reference out
-	MCValueRelease(x_string);
-	/* UNCHECKED */ MCStringCopyAndRelease(t_new_string, x_string);
 	
 	p_callback->End(t_hastags);
 }
@@ -359,10 +351,13 @@ void ParseMenuItemSwitches(MCStringRef p_string, uindex_t &x_offset, MCStringRef
 			case '\t':
 				if (p_menuitem->depth == 0 && p_menuitem->menumode != WM_OPTION && p_menuitem->menumode != WM_COMBO)
 				{
-					ParseMenuItemTabs(p_string, x_offset, p_mutable, p_menuitem);
+					ParseMenuItemTabs(p_string, x_offset, p_menuitem);
 				}
 				else
+				{
 					/* UNCHECKED */ MCStringAppendFormat(p_mutable, "\t");
+					x_offset++;
+				}
 				break;
 			default:
 				t_done = true;
@@ -403,15 +398,21 @@ void ParseMenuItemLabel(MCStringRef p_string, uindex_t &x_offset, MCStringRef p_
 			MCValueAssign(p_menuitem->label, t_label);
 			MCValueRelease(t_label);
 			
-			ParseMenuItemAccelerator(p_string, x_offset, p_mutable, p_menuitem);
+			ParseMenuItemAccelerator(p_string, ++x_offset, p_menuitem);
 			return;
 		}
 		else
 		{
 			// Copy this character to the output
 			/* UNCHECKED */ MCStringAppendSubstring(p_mutable, p_string, MCRangeMake(x_offset, 1));
+			x_offset++;
 		}
 	}
+	
+	MCStringRef t_label = nil;
+	/* UNCHECKED */ MCStringCopy(p_mutable, t_label);
+	MCValueAssign(p_menuitem->label, t_label);
+	MCValueRelease(t_label);
 }
 
 bool IsEscapeChar(MCStringRef p_string, uindex_t p_offset, uint1 p_menumode)
@@ -440,7 +441,7 @@ bool IsEscapeChar(MCStringRef p_string, uindex_t p_offset, uint1 p_menumode)
 	return false;
 }
 										   
-void ParseMenuItemAccelerator(MCStringRef p_string, uindex_t &x_offset, MCStringRef p_mutable, MCMenuItem *p_menuitem)
+void ParseMenuItemAccelerator(MCStringRef p_string, uindex_t &x_offset, MCMenuItem *p_menuitem)
 {
 	uint1 t_mods = 0;
 	unichar_t t_key = 0;
@@ -451,28 +452,27 @@ void ParseMenuItemAccelerator(MCStringRef p_string, uindex_t &x_offset, MCString
 	uindex_t t_length;
 	t_length = MCStringGetLength(p_string);
 	
-	if (MCStringFirstIndexOfChar(p_string, '|', x_offset, kMCStringOptionCompareExact, t_tag)
+	if (MCStringLastIndexOfChar(p_string, '|', x_offset, kMCStringOptionCompareExact, t_tag)
 		&& (t_length - t_tag) > 1)
 	{
 		MCStringRef t_tag_str = nil;
-		/* UNCHECKED */ MCStringCopySubstring(p_string, MCRangeMake(t_tag, t_length - t_tag), t_tag_str);
+		/* UNCHECKED */ MCStringCopySubstring(p_string, MCRangeMake(t_tag + 1, t_length - t_tag - 1), t_tag_str);
 		MCValueAssign(p_menuitem->tag, t_tag_str);
 		MCValueRelease(t_tag_str);
 		
-		// Don't do any further processing of the string beyond the '|'
-		t_length = t_tag;
+		// Don't do any further processing of the string before the '|'
+		x_offset = t_tag;
 	}
 	
 	if (p_menuitem->menumode == WM_PULLDOWN || p_menuitem->menumode == WM_TOP_LEVEL)
 	{
-		if (t_length == 1)
+		if (t_length - x_offset == 1)
 			t_mods |= MS_CONTROL;
 		
 		while (t_length - x_offset > 1)
 		{
 			if (MCStringGetCharAtIndex(p_string, x_offset) == ' ')
 			{
-				/* UNCHECKED */ MCStringAppendFormat(p_mutable, " ");
 				x_offset++;
 			}
 			else
@@ -489,12 +489,13 @@ void ParseMenuItemAccelerator(MCStringRef p_string, uindex_t &x_offset, MCString
 					if (MCStringSubstringIsEqualTo(p_string, t_range, *t_tok_str, kMCStringOptionCompareCaseless))
 					{
 						t_mods |= modifier_tokens[i].modifier;
-						/* UNCHECKED */ MCStringAppendSubstring(p_mutable, p_string, t_range);
+						x_offset += modifier_tokens[i].token_length;
 						t_token_found = true;
+						
+						if (modifier_tokens[i].token_length == 1)
+							break;
 					}
 	
-					if (modifier_tokens[i].token_length == 1)
-						break;
 					i++;
 				}
 				if (!t_token_found)
@@ -529,9 +530,9 @@ void ParseMenuItemAccelerator(MCStringRef p_string, uindex_t &x_offset, MCString
 	}
 }
 	
-void ParseMenuItemTabs(MCStringRef p_string, uindex_t &x_offset, MCStringRef p_mutable, MCMenuItem *p_menuitem)
+void ParseMenuItemTabs(MCStringRef p_string, uindex_t &x_offset, MCMenuItem *p_menuitem)
 {
 	// Eat all consecutive tab characters in the input string
-	while (MCStringGetCharAtIndex(p_string, x_offset++) == '\t')
-		p_menuitem->depth++;
+	while (MCStringGetCharAtIndex(p_string, x_offset) == '\t')
+		x_offset++, p_menuitem->depth++;
 }

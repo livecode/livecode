@@ -107,7 +107,6 @@ class MCButton : public MCControl
 	MCField *entry;
 	MCStack *menu;
 	MCStringRef acceltext;
-	char *seltext;
 	MCArrayRef tabs;
 	uint2 menuhistory;
 	uint2 menulines;
@@ -241,10 +240,6 @@ public:
 	{
 		return menustring;
 	}
-	void setmenustring(MCStringRef p_string)
-	{
-		MCValueAssign(menustring, p_string);
-	}
 	uint1 getmenumode()
 	{
 		return menumode;
@@ -284,8 +279,8 @@ public:
 	
 	void openmenu(Boolean grab);
 	void freemenu(Boolean force);
-	void docascade(MCStringRef &x_pick);
 	MCRange getmenurange();
+	void docascade(MCStringRef t_pick);
 	void setupmenu();
 	bool selectedchunk(MCStringRef& r_string);
 	bool selectedline(MCStringRef& r_string);
@@ -451,6 +446,9 @@ public:
     void SetHoverIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
     void GetHoverIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
     virtual void SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins);
+    void GetHilite(MCExecContext& ctxt, uint32_t p_part, MCInterfaceTriState& r_hilite);
+    void SetHilite(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceTriState& p_hilite);
+    
 private:
 	int4 formattedtabwidth(void);
 

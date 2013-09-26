@@ -32,6 +32,28 @@ struct MCMenuItem
 	MCStringRef tag;
 	uint1 menumode;
 	
+	MCMenuItem()
+	{
+		depth = 0;
+		label = MCValueRetain(kMCEmptyString);
+		is_disabled = 0;
+		is_radio = 0;
+		is_hilited = 0;
+		accelerator = 0;
+		accelerator_name = MCValueRetain(kMCEmptyString);
+		modifiers = 0;
+		mnemonic = 0;
+		tag = MCValueRetain(kMCEmptyString);
+		menumode = 0;
+	}
+	
+	~MCMenuItem()
+	{
+		MCValueRelease(label);
+		MCValueRelease(accelerator_name);
+		MCValueRelease(tag);
+	}
+	
 	void assignFrom(MCMenuItem *p_from);
 };
 
@@ -43,7 +65,7 @@ public:
 	virtual bool End(bool p_has_tags) {return false;}
 };
 
-extern void MCParseMenuString(MCStringRef &x_string, IParseMenuCallback *p_callback, uint1 p_menumode);
+extern void MCParseMenuString(MCStringRef p_string, IParseMenuCallback *p_callback, uint1 p_menumode);
 extern uint4 MCLookupAcceleratorKeysym(MCStringRef p_name);
 extern const char *MCLookupAcceleratorName(uint4 p_keysym);
 

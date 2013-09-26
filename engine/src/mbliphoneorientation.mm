@@ -103,7 +103,7 @@ uint32_t get_iphone_orientations(uint32_t p_orientations)
 
 void MCSystemGetDeviceOrientation(MCOrientation& r_orientation)
 {
-	r_orientation = get_orientation([[UIDevice currentDevice] orientation]);
+	r_orientation = get_orientation((UIInterfaceOrientation)[[UIDevice currentDevice] orientation]);
 }
 
 void MCSystemGetOrientation(MCOrientation& r_orientation)

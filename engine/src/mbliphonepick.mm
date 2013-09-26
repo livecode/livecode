@@ -712,7 +712,7 @@ bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initia
 	// convert the \n delimited item string into a pick wheel array
 	t_option_list_array = [NSArray arrayWithObject: [(NSString *)t_options componentsSeparatedByString:@"\n"]];
 	CFRelease(t_options);
-	
+
 	// convert the initial index for each component into an array entry
 	t_initial_index_array = [NSArray arrayWithObject: [NSNumber numberWithInt: p_initial_index]];
 	// get the maximum number of digits needed for the entry column that was just added
@@ -722,9 +722,10 @@ bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initia
 	if (t_success)
 		t_success = MCSystemPickN(t_option_list_array, p_use_checkmark, false, false, false, t_initial_index_array, t_return_index, p_button_rect);
 	
-	// HC-30-2011-30 [[ Bug 9773 ]] Changed using char* to NSString* 
+	MCAutoStringRef t_result;
+	/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_return_index, &t_result);
 	if (t_success)
-		MCresult -> sets ([t_return_index cStringUsingEncoding:NSMacOSRomanStringEncoding]);
+		MCresult -> setvalueref (*t_result);
 	r_chosen_index = atoi ([t_return_index cStringUsingEncoding:NSMacOSRomanStringEncoding]);
 	
 	return ES_NORMAL;

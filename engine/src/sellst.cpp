@@ -325,7 +325,7 @@ void MCSellist::group()
 		gptr->message(MCM_selected_object_changed);
 	}
 }
-#ifdef SHARED_STRING
+
 bool MCSellist::clipboard(bool p_is_cut)
 {
 	if (objects != NULL)
@@ -363,123 +363,7 @@ bool MCSellist::clipboard(bool p_is_cut)
 		bool t_success;
 		t_success = true;
 
-		MCSharedString *t_pickle;
-		t_pickle = MCObject::stoppickling(t_context);
-		if (t_pickle == NULL)
-			t_success = false;
-
-		// OK-2008-08-06: [[Bug 6794]] - Return here before writing to the clipboard to preserve the message in the result.
-		if (!t_objects_were_copied)
-		{
-			// MW-2008-08-08: Make sure we release the pickle even if its empty (otherwise we will
-			//   have a memory leak).
-			if (t_pickle != NULL)
-				t_pickle -> Release();
-			return false;
-		}
-
-		// Now attempt to write it to the clipboard
-		MCclipboarddata -> Open();
-
-		if (t_success)
-		{
-			if (!MCclipboarddata -> Store(TRANSFER_TYPE_OBJECTS, t_pickle))
-				t_success = false;
-		}
-
-		// If its just a single image object, put image data on the clipboard too
-		if (t_success)
-			if (objects == objects -> next() && objects -> ref -> gettype() == CT_IMAGE)
-			{
-				MCSharedString *t_data;
-				t_data = static_cast<MCImage *>(objects -> ref) -> getclipboardtext();
-				if (t_data != NULL)
-				{
-					MCclipboarddata -> Store(TRANSFER_TYPE_IMAGE, t_data);
-					t_data -> Release();
-				}
-			}
-		
-		if (!MCclipboarddata -> Close())
-			t_success = false;
-
-		// If we succeeded remove the objects if it's a cut operation
-		if (t_success)
-		{
-			if (p_is_cut)
-			{
-				MCStack *sptr = objects->ref->getstack();
-				while (objects != NULL)
-				{
-					MCSelnode *tptr = objects->remove(objects);
-					
-					// MW-2008-06-12: [[ Bug 6466 ]] Make sure we don't still delete an
-					//   object if the stack is protected.
-					if (tptr -> ref -> getstack() -> iskeyed())
-					{
-						if (tptr -> ref -> del())
-						{
-							if (tptr -> ref -> gettype() == CT_STACK)
-								MCtodestroy -> remove(static_cast<MCStack *>(tptr -> ref));
-							tptr -> ref -> scheduledelete();
-						}
-					}
-
-					delete tptr;
-				}
-				sptr->message(MCM_selected_object_changed);
-			}
-		}
-		else
-			MCresult -> sets("can't write to clipboard");
-
-		if (t_pickle != NULL)
-			t_pickle -> Release();
-
-		return true;
-	}
-
-	return false;
-}
-#else
-bool MCSellist::clipboard(bool p_is_cut)
-{
-	if (objects != NULL)
-	{
-		// First we construct the pickle of the list of selected objects
-		MCPickleContext *t_context;
-		
-		// MW-2012-03-04: [[ StackFile5500 ]] When pickling for the clipboard, make sure it
-		//   includes both 2.7 and 5.5 stackfile formats.
-		t_context = MCObject::startpickling(true);
-
-		MCSelnode *t_node;
-		t_node = objects;
-
-		// OK-2008-08-06: [[Bug 6794]] - If no objects were copied because the stack was password protected,
-		// then don't write anything to the clipboard. Otherwise the MCClipboard function returns "objects",
-		// yet the clipboardData["objects"] will be empty.
-		bool t_objects_were_copied;
-		t_objects_were_copied = false;
-
-		do
-		{
-			if (!t_node -> ref -> getstack() -> iskeyed())
-				MCresult -> sets("can't cut object (stack is password protected)");
-			else
-			{
-				MCObject::continuepickling(t_context, t_node -> ref, t_node -> ref -> getcard() -> getid());
-				t_objects_were_copied = true;
-			}
-
-			t_node = t_node -> next();
-		}
-		while(t_node != objects);
-
-		bool t_success;
-		t_success = true;
-
-		MCAutoStringRef t_pickle;
+		MCAutoDataRef t_pickle;
 		MCObject::stoppickling(t_context, &t_pickle);
 		if (*t_pickle == nil)
 			t_success = false;
@@ -501,7 +385,7 @@ bool MCSellist::clipboard(bool p_is_cut)
 		if (t_success)
 			if (objects == objects -> next() && objects -> ref -> gettype() == CT_IMAGE)
 			{
-				MCAutoStringRef t_data;
+				MCAutoDataRef t_data;
 				static_cast<MCImage *>(objects -> ref) -> getclipboardtext(&t_data);
 				if (*t_data != nil)
 					MCclipboarddata -> Store(TRANSFER_TYPE_IMAGE, *t_data);
@@ -545,7 +429,6 @@ bool MCSellist::clipboard(bool p_is_cut)
 
 	return false;
 }
-#endif
 
 Boolean MCSellist::copy()
 {

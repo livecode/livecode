@@ -216,10 +216,10 @@ static MCExecCustomTypeInfo _kMCInterfaceButtonIconTypeInfo =
 
 //////////
 
-
 MCExecEnumTypeInfo *kMCInterfaceButtonStyleTypeInfo = &_kMCInterfaceButtonStyleTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceButtonMenuModeTypeInfo = &_kMCInterfaceButtonMenuModeTypeInfo;
 MCExecSetTypeInfo *kMCInterfaceButtonAcceleratorModifiersTypeInfo = &_kMCInterfaceButtonAcceleratorModifiersTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceButtonIconTypeInfo = &_kMCInterfaceButtonIconTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -430,7 +430,7 @@ void MCButton::DoSetIcon(MCExecContext& ctxt, Current_icon which, const MCInterf
 	{
 		// MW-2013-03-06: [[ Bug 10695 ]] When searching for the image to resolve to an id,
 		//   make sure we use the behavior aware search function.
-		MCImage *ticon = resolveimagename(MCStringGetOldString(p_icon . custom));
+		MCImage *ticon = resolveimagename(p_icon . custom);
 		if (ticon != NULL)
 			t_id = ticon->getid();
 		else
@@ -463,6 +463,8 @@ void MCButton::DoSetIcon(MCExecContext& ctxt, Current_icon which, const MCInterf
 			reseticon();
 		}
 	}
+	
+	Redraw();
 }
 
 void MCButton::SetArmedIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon)
@@ -750,7 +752,7 @@ void MCButton::SetMenuName(MCExecContext& ctxt, MCNameRef p_name)
 
 void MCButton::SetShowBorder(MCExecContext& ctxt, bool setting)
 {
-	MCObject::SetShowBorder(ctxt, setting);
+	MCControl::SetShowBorder(ctxt, setting);
 	if (MCaqua && menumode == WM_PULLDOWN)
 	{
 		freemenu(False);
@@ -866,7 +868,7 @@ void MCButton::GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width)
 			uint2 fwidth;
 			
 			MCStringRef t_label = getlabeltext();
-			if (MCStringIsEmpty)
+			if (MCStringIsEmpty(t_label))
 				fwidth = 0;
 			else 
 				fwidth = leftmargin + rightmargin + MCFontMeasureText(m_font, t_label);
@@ -1036,7 +1038,10 @@ void MCButton::GetText(MCExecContext& ctxt, MCStringRef& r_text)
 void MCButton::SetText(MCExecContext& ctxt, MCStringRef p_text)
 {
 	if (MCStringIsEqualTo(menustring, p_text, kMCStringOptionCompareExact))
+	{
+		resetlabel();
 		return;
+	}
 	
 	freemenu(False);
 	MCValueAssign(menustring, p_text);
@@ -1092,4 +1097,45 @@ void MCButton::SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margi
     
     if (entry != nil)
         entry -> SetMargins(ctxt, p_margins);
+}
+
+void MCButton::GetHilite(MCExecContext& ctxt, uint32_t p_part, MCInterfaceTriState& r_hilite)
+{
+    uint2 t_hilite;
+    t_hilite = gethilite(p_part);
+    
+    if (t_hilite == Mixed)
+    {
+        r_hilite . type = kMCInterfaceTriStateMixed;
+        r_hilite . mixed = t_hilite;
+        return;
+    }
+
+    r_hilite . type = kMCInterfaceTriStateBoolean;
+    r_hilite . state = (Boolean)t_hilite == True;
+}
+
+void MCButton::SetHilite(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceTriState& p_hilite)
+{
+    Boolean t_new_state;
+    if (p_hilite . type == kMCInterfaceTriStateMixed)
+        t_new_state = p_hilite . mixed;
+    else
+        t_new_state = (Boolean)p_hilite . state;
+    
+    if (sethilite(p_part, t_new_state))
+    {
+        if (state & CS_HILITED)
+        {
+            // MH-2007-03-20: [[ Bug 4035 ]] If the hilite of a radio button is set programmatically, other radio buttons were not unhilited if the radiobehavior of the group is set.
+            if (getstyleint(flags) == F_RADIO && parent -> gettype() == CT_GROUP)
+            {
+                MCGroup *gptr = (MCGroup *)parent;
+                gptr->radio(p_part, this);
+            }
+            radio();
+        }
+        reseticon();
+        Redraw();
+    }
 }

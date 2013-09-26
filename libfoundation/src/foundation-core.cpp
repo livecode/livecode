@@ -40,6 +40,9 @@ bool MCInitialize(void)
 
 	if (!__MCSetInitialize())
 		return false;
+    
+    if (!__MCDataInitialize())
+        return false;
 
 	return true;
 }
@@ -51,6 +54,7 @@ void MCFinalize(void)
 	__MCArrayFinalize();
 	__MCNameFinalize();
 	__MCStringFinalize();
+    __MCDataFinalize();
 	__MCValueFinalize();
 }
 

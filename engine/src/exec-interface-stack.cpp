@@ -108,15 +108,141 @@ static MCExecEnumTypeInfo _kMCInterfaceCompositorTypeTypeInfo =
 
 struct MCInterfaceDecoration
 {
-	uint2 decoration;
+    bool has_decorations;
+	uint2 decorations;
 };
 
 static void MCInterfaceDecorationParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceDecoration& r_output)
 {
+    // TODO
+    uint2 decorations;
+    uint4 flags;
+    decorations = WD_CLEAR;
+    
+    if (MCStringIsEqualToCString(p_input, MCdefaultstring, kMCCompareCaseless))
+        r_output . has_decorations = false;
+    else
+    {
+        r_output . has_decorations = true;
+        uint2 i1;
+        if (MCU_stoui2(p_input, i1))
+            decorations = i1 | WD_WDEF;
+        else
+        {
+            uint4 l = MCStringGetLength(p_input);
+            const char *sptr = MCStringGetCString(p_input);
+            MCU_skip_spaces(sptr, l);
+            if (decorations & WD_WDEF)
+                decorations |= ~WD_WDEF;
+            else
+            {
+                while (l != 0)
+                {
+                    const char *startptr = sptr;
+                    if (!MCU_strchr(sptr, l, ','))
+                    {
+                        sptr += l;
+                        l = 0;
+                    }
+                    MCString tdata(startptr, sptr - startptr);
+                    MCU_skip_char(sptr, l);
+                    MCU_skip_spaces(sptr, l);
+                    if (tdata == MCtitlestring)
+                    {
+                        decorations |= WD_TITLE;
+                        continue;
+                    }
+                    if (tdata == MCmenustring)
+                    {
+                        decorations |= WD_MENU | WD_TITLE;
+                        continue;
+                    }
+                    if (tdata == MCminimizestring)
+                    {
+                        decorations |= WD_MINIMIZE | WD_TITLE;
+                        continue;
+                    }
+                    if (tdata == MCmaximizestring)
+                    {
+                        decorations |= WD_MAXIMIZE | WD_TITLE;
+                        continue;
+                    }
+                    if (tdata == MCclosestring)
+                    {
+                        decorations |= WD_CLOSE | WD_TITLE;
+                        continue;
+                    }
+                    if (tdata == MCmetalstring)
+                    {
+                        decorations |= WD_METAL; //metal can not have title
+                        continue;
+                    }
+                    if (tdata == MCutilitystring)
+                    {
+                        decorations |= WD_UTILITY;
+                        continue;
+                    }
+                    if (tdata == MCnoshadowstring)
+                    {
+                        decorations |= WD_NOSHADOW;
+                        continue;
+                    }
+                    if (tdata == MCforcetaskbarstring)
+                    {
+                        decorations |= WD_FORCETASKBAR;
+                        continue;
+                    }
+                    ctxt . LegacyThrow(EE_STACK_BADDECORATION);
+                    return;
+                }
+            }
+        }
+    }
+    r_output . decorations = decorations;
 }
 
 static void MCInterfaceDecorationFormat(MCExecContext& ctxt, const MCInterfaceDecoration& p_input, MCStringRef& r_output)
 {
+    if (p_input . has_decorations)
+    {
+        if (p_input . decorations & WD_WDEF)
+        {
+            if (MCStringFormat(r_output, "%d", (p_input . decorations & ~WD_WDEF)))
+                return;
+        }
+        else
+        {
+            uindex_t j = 0;
+            MCExecPoint ep(nil, nil, nil);
+            if (p_input . decorations & WD_TITLE)
+                ep.concatcstring(MCtitlestring, EC_COMMA, j++ == 0);
+            if (p_input . decorations & WD_MENU)
+                ep.concatcstring(MCmenustring, EC_COMMA, j++ == 0);
+            if (p_input . decorations & WD_MINIMIZE)
+                ep.concatcstring(MCminimizestring, EC_COMMA, j++ == 0);
+            if (p_input . decorations & WD_MAXIMIZE)
+                ep.concatcstring(MCmaximizestring, EC_COMMA, j++ == 0);
+            if (p_input . decorations & WD_CLOSE)
+                ep.concatcstring(MCclosestring, EC_COMMA, j++ == 0);
+            if (p_input . decorations & WD_METAL)
+                ep.concatcstring(MCmetalstring, EC_COMMA, j++ == 0);
+            if (p_input . decorations & WD_UTILITY)
+                ep.concatcstring(MCutilitystring, EC_COMMA, j++ == 0);
+            if (p_input . decorations & WD_NOSHADOW)
+                ep.concatcstring(MCnoshadowstring, EC_COMMA, j++ == 0);
+            if (p_input . decorations & WD_FORCETASKBAR)
+                ep.concatcstring(MCforcetaskbarstring, EC_COMMA, j++ == 0);
+            if (ep . copyasstringref(r_output))
+                return;
+        }
+    }
+    else
+    {
+        if (MCStringCreateWithCString(MCdefaultstring, r_output))
+            return;
+    }
+    
+    ctxt . Throw();
 }
 
 static void MCInterfaceDecorationFree(MCExecContext& ctxt, MCInterfaceDecoration& p_input)
@@ -310,18 +436,11 @@ void MCStack::GetLayer(MCExecContext& ctxt, integer_t& r_layer)
 
 void MCStack::GetFileName(MCExecContext& ctxt, MCStringRef& r_file_name)
 {
-	if (filename == NULL)
-		return;
-
-	if (MCStringCreateWithCString(filename, r_file_name))
-		return;
-
-	ctxt . Throw();
+	r_file_name = MCValueRetain(filename);
 }
 
 void MCStack::SetFileName(MCExecContext& ctxt, MCStringRef p_file_name)
-{
-	delete filename;
+{	
 	// MW-2007-03-15: [[ Bug 616 ]] Throw an error if you try and set the filename of a substack
 	if (!MCdispatcher->ismainstack(this))
 	{
@@ -329,10 +448,7 @@ void MCStack::SetFileName(MCExecContext& ctxt, MCStringRef p_file_name)
 		return;
 	}
 	
-	if (p_file_name == nil)
-		filename = NULL;
-	else
-		filename = strclone(MCStringGetCString(p_file_name));
+	MCValueAssign(filename, p_file_name);
 }
 
 void MCStack::GetEffectiveFileName(MCExecContext& ctxt, MCStringRef& r_file_name)
@@ -345,10 +461,7 @@ void MCStack::GetEffectiveFileName(MCExecContext& ctxt, MCStringRef& r_file_name
 		return;
 	}
 
-	if (MCStringCreateWithCString(filename, r_file_name))
-		return;
-
-	ctxt . Throw();
+	r_file_name = MCValueRetain(filename);
 }
 
 void MCStack::GetSaveCompressed(MCExecContext& ctxt, bool& r_setting)
@@ -503,88 +616,29 @@ void MCStack::SetAlwaysBuffer(MCExecContext& ctxt, bool setting)
 
 void MCStack::GetLabel(MCExecContext& ctxt, MCStringRef& r_label)
 {
-	if (title == nil)
-		return;
-
-	MCAutoStringRef t_title;
-	if (MCStringCreateWithCString(title, &t_title) && MCU_utf8tonative(*t_title, r_label))
-		return;
-
-	ctxt . Throw();
+	r_label = MCValueRetain(title);
 }
 
 void MCStack::SetLabel(MCExecContext& ctxt, MCStringRef p_label)
 {
-	// MW-2007-07-06: [[ Bug 3226 ]] Updated to take into account 'title' being
-	//   stored as a UTF-8 string.
-	delete title;
-	title = NULL;
+	MCValueAssign(title, p_label);
+	dirtywindowname();
+}
 
-	bool t_success;
-	t_success = true;
-
-	if (p_label != nil)
-	{
-		MCAutoStringRef t_title;
-		if (t_success)
-			t_success = MCU_nativetoutf8(p_label, &t_title);
-		if (t_success)
-		{
-			title = strclone(MCStringGetCString(*t_title));
-			flags |= F_TITLE;
-		}
-	}
-	else
-		flags &= ~F_TITLE;
-
-	if (t_success)
-	{
-		dirtywindowname();
+void MCStack::GetUnicodeLabel(MCExecContext& ctxt, MCDataRef& r_label)
+{
+	if (MCStringEncode(title, kMCStringEncodingUTF16, false, r_label))
 		return;
-	}
-
+		
 	ctxt . Throw();
 }
 
-void MCStack::GetUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label)
+void MCStack::SetUnicodeLabel(MCExecContext& ctxt, MCDataRef p_label)
 {
-	if (title == nil)
-		return;
-
-	MCAutoStringRef t_title;
-	if (MCStringCreateWithCString(title, &t_title) && MCU_multibytetounicode(*t_title, LCH_UTF8, r_label))
-		return;
-
-	ctxt . Throw();
-}
-
-void MCStack::SetUnicodeLabel(MCExecContext& ctxt, MCStringRef p_label)
-{
-	// MW-2007-07-06: [[ Bug 3226 ]] Updated to take into account 'title' being
-	//   stored as a UTF-8 string.
-	delete title;
-	title = NULL;
-	
-	bool t_success;
-	t_success = true;
-
-	if (p_label != nil)
+	MCAutoStringRef t_new_label;
+	if (MCStringDecode(p_label, kMCStringEncodingUTF16, false, &t_new_label))
 	{
-		MCAutoStringRef t_title;
-		if (t_success)
-			t_success = MCU_unicodetomultibyte(p_label, LCH_UTF8, &t_title);
-		if (t_success)
-		{
-			title = strclone(MCStringGetCString(*t_title));
-			flags |= F_TITLE;
-		}
-	}
-	else
-		flags &= ~F_TITLE;
-
-	if (t_success)
-	{
-		dirtywindowname();
+		SetLabel(ctxt, *t_new_label);
 		return;
 	}
 
@@ -1278,20 +1332,12 @@ void MCStack::GetExternals(MCExecContext& ctxt, MCStringRef& r_externals)
 	if (externalfiles == nil)
 		return;
 
-	if (MCStringCreateWithCString(externalfiles, r_externals))
-		return;
-
-	ctxt . Throw();
+	r_externals = MCValueRetain(externalfiles);
 }
 
 void MCStack::SetExternals(MCExecContext& ctxt, MCStringRef p_externals)
 {
-	delete externalfiles;
-
-	if (p_externals != nil)
-		externalfiles = strclone(MCStringGetCString(p_externals));
-	else
-		externalfiles = NULL;
+	MCValueAssign(externalfiles, p_externals);
 }
 
 void MCStack::GetExternalCommands(MCExecContext& ctxt, MCStringRef& r_commands)
@@ -1396,7 +1442,7 @@ void MCStack::GetStackFiles(MCExecContext& ctxt, MCStringRef& r_files)
 		MCAutoStringRef t_filename;
 
 		if (t_success)
-			t_success = MCStringFormat(&t_filename, "%s,%s", stackfiles[i].stackname, stackfiles[i].filename);
+			t_success = MCStringFormat(&t_filename, "%s,%s", MCStringGetCString(stackfiles[i].stackname), MCStringGetCString(stackfiles[i].filename));
 
 		if (t_success)
 			t_success = MCListAppend(*t_file_list, *t_filename);
@@ -1415,8 +1461,8 @@ void MCStack::SetStackFiles(MCExecContext& ctxt, MCStringRef p_files)
 {
 	while (nstackfiles--)
 	{
-		delete stackfiles[nstackfiles].stackname;
-		delete stackfiles[nstackfiles].filename;
+		MCValueRelease(stackfiles[nstackfiles].stackname);
+		MCValueRelease(stackfiles[nstackfiles].filename);
 	}
 	delete stackfiles;
 
@@ -1452,8 +1498,8 @@ void MCStack::SetStackFiles(MCExecContext& ctxt, MCStringRef p_files)
 			if (t_success && MCStringGetLength(*t_file_name) != 0)
 			{
 				MCU_realloc((char **)&newsf, nnewsf, nnewsf + 1, sizeof(MCStackfile));
-				newsf[nnewsf].stackname = strclone(MCStringGetCString(*t_stack_name));
-				newsf[nnewsf].filename = strclone(MCStringGetCString(*t_file_name));
+				newsf[nnewsf].stackname = MCValueRetain(*t_stack_name);
+				newsf[nnewsf].filename = MCValueRetain(*t_file_name);
 				nnewsf++;
 			}
 		}
@@ -1889,7 +1935,253 @@ void MCStack::GetEffectiveDeferScreenUpdates(MCExecContext& ctxt, bool& r_value)
 	r_value = m_defer_updates && m_tilecache != nil;
 }
 
-/*
-void MCStack::Set: uint/GetCompositorTileSize: optional-uint
-void MCStack::Set: uint/GetCompositorCacheLimit: optional-uint
-*/
+void MCStack::SetDecorations(MCExecContext& ctxt, const MCInterfaceDecoration& p_value)
+{
+    uint2 olddec = decorations;
+    uint4 oldflags = flags;
+    
+    if (p_value . has_decorations)
+        flags |= F_DECORATIONS;
+    else
+        flags &= ~F_DECORATIONS;
+    
+    decorations = p_value . decorations;
+    
+    if (flags != oldflags || decorations != olddec)
+    {
+        if (opened)
+            reopenwindow();
+        else
+        {
+            if (window != DNULL)
+            {
+                stop_externals();
+                MCscreen->destroywindow(window);
+				MCValueAssign(titlestring, kMCEmptyString);
+            }
+        }
+    }
+}
+
+void MCStack::GetDecorations(MCExecContext& ctxt, MCInterfaceDecoration& r_value)
+{
+    r_value . has_decorations = (flags & F_DECORATIONS) == True;
+    r_value . decorations = decorations;
+}
+
+void MCStack::SetCompositorTileSize(MCExecContext& ctxt, uinteger_t *p_value)
+{
+    if (m_tilecache == nil)
+        return;
+    
+    if (MCIsPowerOfTwo(*p_value) && *p_value >= 16 && *p_value <= 256)
+    {
+        MCTileCacheSetTileSize(m_tilecache, *p_value);
+        dirtyall();
+        return;
+    }
+
+    ctxt . LegacyThrow(EE_COMPOSITOR_INVALIDTILESIZE);
+}
+
+void MCStack::GetCompositorTileSize(MCExecContext& ctxt, uinteger_t*& r_value)
+{
+    if (m_tilecache == nil)
+        r_value = nil;
+    else
+    {
+        uint32_t t_value;
+        t_value = MCTileCacheGetTileSize(m_tilecache);
+        *r_value = t_value;
+    }
+}
+
+void MCStack::SetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t *p_value)
+{
+    if (m_tilecache == nil)
+        return;
+    
+    MCTileCacheSetCacheLimit(m_tilecache, *p_value);
+    dirtyall();
+}
+
+void MCStack::GetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t*& r_value)
+{
+    if (m_tilecache == nil)
+        r_value = nil;
+    else
+    {
+        uint32_t t_value;
+        t_value = MCTileCacheGetCacheLimit(m_tilecache);
+        *r_value = t_value;
+    }
+}
+
+void MCStack::SetForePixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetForePixel(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetBackPixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetBackPixel(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetHilitePixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetHilitePixel(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetBorderPixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetBorderPixel(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetTopPixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetTopPixel(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetBottomPixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetBottomPixel(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetShadowPixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetShadowPixel(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetFocusPixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetFocusPixel(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetForeColor(ctxt, r_color);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetBackColor(ctxt, r_color);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetHiliteColor(ctxt, r_color);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetBorderColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetBorderColor(ctxt, r_color);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetTopColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetTopColor(ctxt, r_color);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetBottomColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetBottomColor(ctxt, r_color);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetShadowColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetShadowColor(ctxt, r_color);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetFocusColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetFocusColor(ctxt, r_color);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetForePattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetForePattern(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetBackPattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetBackPattern(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetHilitePattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetHilitePattern(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetBorderPattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetBorderPattern(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetTopPattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetTopPattern(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetBottomPattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetBottomPattern(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetShadowPattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetShadowPattern(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetFocusPattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetFocusPattern(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetTextHeight(MCExecContext& ctxt, uinteger_t* height)
+{
+    MCObject::SetTextHeight(ctxt, height);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetTextFont(MCExecContext& ctxt, MCStringRef font)
+{
+    MCObject::SetTextFont(ctxt, font);
+    if (!ctxt . HasError())
+        MCRedrawDirtyScreen();
+}
+
+void MCStack::SetTextSize(MCExecContext& ctxt, uinteger_t* size)
+{
+    MCObject::SetTextSize(ctxt, size);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style)
+{
+    MCObject::SetTextStyle(ctxt, p_style);
+    MCRedrawDirtyScreen();
+}

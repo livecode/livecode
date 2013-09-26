@@ -1237,7 +1237,11 @@ MCGradientShader::MCGradientShader(SkFlattenableReadBuffer &p_read_buffer)
 	t_buffer = malloc(t_length);
 	p_read_buffer.read(t_buffer, t_buffer_size);
 
-	IO_handle t_fake_io = MCS_fakeopen(MCString((char*)t_buffer, t_length));
+//    MCAutoDataRef t_data;
+//    /* UNCHECKED */ MCDataCreateWithBytes((byte_t*)t_buffer, t_length, &t_data);
+//    
+//	IO_handle t_fake_io = MCS_fakeopen(*t_data);
+    IO_handle t_fake_io = MCS_fakeopen(MCString((const char*)t_buffer, t_length));
 	MCObjectInputStream t_input(t_fake_io, t_length);
 	m_gradient = new MCGradientFill;
 	MCGradientFillUnserialize(m_gradient, t_input);
@@ -1253,7 +1257,7 @@ void MCGradientShader::flatten(SkFlattenableWriteBuffer &p_write_buffer)
 	MCGradientFillSerialize(m_gradient, t_output);
 
 	uint32_t t_bytes_written;
-	t_bytes_written = MCS_faketell(t_fake_io);
+	t_bytes_written = MCS_tell(t_fake_io);
 
 	uint32_t t_padding = t_bytes_written & 0x03;
 	// pad to multiple of 4 bytes
@@ -1265,7 +1269,7 @@ void MCGradientShader::flatten(SkFlattenableWriteBuffer &p_write_buffer)
 
 	uint32_t t_length = 0;
 	char *t_buffer = NULL;
-	MCS_fakeclosewrite(t_fake_io, t_buffer, t_length);
+	MCS_closetakingbuffer(t_fake_io, (void*&)*t_buffer, t_length);
 
 	p_write_buffer.write32(t_bytes_written);
 	p_write_buffer.writeMul4(t_buffer, t_length);

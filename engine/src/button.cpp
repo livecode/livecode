@@ -275,11 +275,21 @@ MCPropertyInfo MCButton::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_DEFAULT, Bool, MCButton, Default)
 	DEFINE_RW_OBJ_PROPERTY(P_TEXT, String, MCButton, Text)
 	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_TEXT, String, MCButton, Text)
+	
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_ICON, InterfaceButtonIcon, MCButton, Icon)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_ARMED_ICON, InterfaceButtonIcon, MCButton, ArmedIcon)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_DISABLED_ICON, InterfaceButtonIcon, MCButton, DisabledIcon)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_HILITED_ICON, InterfaceButtonIcon, MCButton, HiliteIcon)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_VISITED_ICON, InterfaceButtonIcon, MCButton, VisitedIcon)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_HOVER_ICON, InterfaceButtonIcon, MCButton, HoverIcon)
+    
+    DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(P_HILITE, InterfaceTriState, MCButton, Hilite)
+    DEFINE_RW_OBJ_ENUM_PROPERTY(P_MENU_MODE, InterfaceButtonMenuMode, MCButton, MenuMode)
 };
 
 MCObjectPropertyTable MCButton::kPropertyTable =
 {
-	&MCObject::kPropertyTable,
+	&MCControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
 };
@@ -517,7 +527,7 @@ void MCButton::close()
 		getcard()->freedefbutton(this);
 		
 		clearmnemonic();
-		MCValueRelease(tabs);
+		MCValueAssign(tabs, kMCEmptyArray);
 		freemenu(False);
 		if (entry != NULL)
 		{
@@ -726,7 +736,7 @@ Boolean MCButton::kdown(const char *string, KeySym key)
 				else
 				{
 					if (!(state & CS_IGNORE_MENU))
-						docascade(&t_pick);
+						docascade(*t_pick);
 				}
 			}
 			else
@@ -1307,10 +1317,11 @@ Boolean MCButton::mup(uint2 which)
 			{
 				if (menumode == WM_OPTION || menumode == WM_COMBO)
 				{
+					MCValueAssign(label, *t_pick);
 					if (entry != NULL)
 						entry->settext(0, *t_pick, False);
 				}
-				docascade(&t_pick);
+				docascade(*t_pick);
 			}
 			else
 				message_with_args(MCM_mouse_release, which);
@@ -2944,7 +2955,7 @@ void MCButton::getentrytext()
 	MCExecPoint ep;
 	entry->exportasplaintext(0, ep, 0, INT32_MAX, hasunicode());
 	MCStringRef t_label = nil;
-	/* UNCHECKED */ MCStringCreateWithCString(ep.getsvalue().getstring(), t_label);
+	/* UNCHECKED */ MCStringCreateWithOldString(ep.getsvalue(), t_label);
 	MCValueAssign(label, t_label);
 	MCValueRelease(t_label);
 }
@@ -2958,7 +2969,7 @@ void MCButton::createentry()
 		entry = (MCField *)MCtemplatefield->clone(False, OP_NONE, false);
 		// MW-2005-08-16: [[Bug 2820]] If we can't be selected, let us make sure our field can't either!
 		entry->setextraflag(getextraflag(EF_CANT_SELECT), EF_CANT_SELECT);
-		entry->setupentry(this, MCString(MCStringGetCString(label)), hasunicode());
+		entry->setupentry(this, MCStringGetOldString(label), hasunicode());
 		entry->open();
 		setrect(rect);
 	}
@@ -3021,8 +3032,8 @@ void MCButton::makemenu(sublist *bstack, int2 &stackdepth, uint2 menuflags, MCFo
 	uint2 pwidth = 0;
 	if (stackdepth > 0)
 	{
-		MCString lastname = bstack[stackdepth].parent->getname_oldstring();
-		pwidth = MCFontMeasureText(fontref, lastname . getstring(), lastname . getlength(), false) + 16;
+		MCStringRef t_lastname = MCNameGetString(bstack[stackdepth].parent->getname());
+		pwidth = MCFontMeasureText(fontref, t_lastname) + 16;
 	}
 	sublist *m = &bstack[stackdepth--];
 
@@ -3226,13 +3237,11 @@ public:
 		MCValueRelease(t_name);
 
 #ifndef TARGET_PLATFORM_MACOS_X
-		const char *t_tabptr = p_menuitem->label.getstring();
-		uint4 t_labelsize = p_menuitem->label.getlength();
-		// replace any tabs, as these don't display in button menus
-		while (MCU_strchr(t_tabptr, t_labelsize, '\t', p_menuitem->is_unicode))
-		{
-			MCU_copychar(' ', (char*)t_tabptr, p_menuitem->is_unicode);
-		}
+		MCStringRef t_label;
+		/* UNCHECKED */ MCStringMutableCopy(p_menuitem->label, t_label);
+		/* UNCHECKED */ MCStringFindAndReplaceChar(t_label, '\t', ' ', kMCStringOptionCompareExact);
+		MCValueRelease(p_menuitem->label);
+		/* UNCHECKED */ MCStringCopyAndRelease(t_label, p_menuitem->label);
 #endif
 
 		newbutton->menubutton = parent->menubutton;
@@ -3301,8 +3310,8 @@ public:
 							/* UNCHECKED */ MCStringAppendFormat(t_acceltext, "Alt+");
 						if (t_mods & MS_SHIFT)
 							/* UNCHECKED */ MCStringAppendFormat(t_acceltext, "Shift+");
-						if (t_keyname != NULL)
-							/* UNCHECKED */ MCStringAppendFormat(t_acceltext, "%s", t_keyname);
+						if (t_keyname != NULL && !MCStringIsEmpty(t_keyname))
+							/* UNCHECKED */ MCStringAppend(t_acceltext, t_keyname);
 						else
 							/* UNCHECKED */ MCStringAppendFormat(t_acceltext, "%c", t_key);
 
@@ -3341,7 +3350,7 @@ Boolean MCButton::findmenu(bool p_just_for_accel)
 		if (menu == NULL)
 		{
 			MCerrorlock++;
-			/* UNCHECKED */ getstack()->findstackname(menuname, menu);
+			menu = getstack()->findstackname(menuname);
 			MCerrorlock--;
 			if (menu != NULL)
 				menu->addneed(this);
@@ -3466,19 +3475,18 @@ void MCButton::openmenu(Boolean grab)
 		// populate the label with the value returned from the pick wheel if the user changed the selection
 		if (t_result && t_chosen_option > 0)
 		{
+			setmenuhistoryprop(t_chosen_option);
+			
 			uindex_t t_offset = 0;
-			uindex_t t_term = 0;
-			for (int i = 0; i < t_chosen_option; i++)
+			for (uindex_t i = 0; i < t_chosen_option; i++)
 				/* UNCHECKED */ MCStringFirstIndexOfChar(t_menustring, '\n', t_offset, kMCStringOptionCompareExact, t_offset);
-			/* UNCHECKED */ MCStringFirstIndexOfChar(t_menustring, '\n', t_offset, kMCStringOptionCompareExact, t_term);
 			
-			// update the label text
-			MCStringRef t_label = nil;
-			/* UNCHECKED */ MCStringCopySubstring(t_menustring, MCRangeMake(t_offset, t_term-t_offset), t_label);
-			MCValueRelease(label);
-			label = t_label;
-			
-			message_with_valueref_args(MCM_menu_pick, t_label);
+			MCAutoStringRef t_label;
+			/* UNCHECKED */ MCStringCopySubstring(t_menustring, 
+												  MCRangeMake(t_offset, MCStringGetLength(t_menustring) - t_offset),
+												  &t_label);
+			MCValueAssign(label, *t_label);
+			message_with_valueref_args(MCM_menu_pick, *t_label);
 		}
 		return;
 	}
@@ -3605,8 +3613,9 @@ void MCButton::freemenu(Boolean force)
 			}
 }
 
-void MCButton::docascade(MCStringRef &x_pick)
+void MCButton::docascade(MCStringRef p_pick)
 {
+	MCAutoStringRef t_pick;
 	MCButton *pptr = this;
 	if (MCNameIsEmpty(menuname) && MCStringIsEmpty(menustring))
 	{
@@ -3622,28 +3631,26 @@ void MCButton::docascade(MCStringRef &x_pick)
 			else
 				t_label = pptr->getlabeltext();
 			
-			MCStringRef t_pick = nil;
-			/* UNCHECKED */ MCStringCreateMutable(0, t_pick);
-			/* UNCHECKED */ MCStringAppend(t_pick, t_label);
-			/* UNCHECKED */ MCStringAppendFormat(t_pick, "|");
-			/* UNCHECKED */ MCStringAppend(t_pick, x_pick);
-			
-			MCValueRelease(x_pick);
-			MCStringCopyAndRelease(t_pick, x_pick);
+			/* UNCHECKED */ MCStringFormat(&t_pick, "%@|%@", t_label, p_pick);
 
 			pptr = (MCButton *)pptr->parent->getparent()->getparent();
 			pptr->state |= CS_IGNORE_MENU;
 		}
 	}
+	else
+	{
+			t_pick = p_pick;
+	}	
+	
 	if (pptr != this)
 	{
 		MCParameter *param = new MCParameter;
-		param->setvalueref_argument(x_pick);
+		param->setvalueref_argument(*t_pick);
 		MCscreen->addmessage(pptr, MCM_menu_pick, MCS_time(), param);
 	}
 	else
 	{
-		Exec_stat es = pptr->message_with_valueref_args(MCM_menu_pick, x_pick);
+		Exec_stat es = pptr->message_with_valueref_args(MCM_menu_pick, *t_pick);
 		if (es == ES_NOT_HANDLED || es == ES_PASS)
 			pptr->message_with_args(MCM_mouse_up, menubutton);
 	}
@@ -3694,6 +3701,8 @@ bool MCButton::selectedtext(MCStringRef& r_string)
 
 MCStringRef MCButton::getlabeltext()
 {
+	if (entry != nil)
+		getentrytext();
 	if (!MCStringIsEmpty(label))
 		return label;
 	else
@@ -3708,7 +3717,7 @@ bool MCButton::resetlabel()
 		if (MCStringIsEmpty(menustring))
 		{
 			if (entry != NULL)
-				entry->settext_oldstring(0, MCnullmcstring, False, hasunicode());
+				entry->settext(0, kMCEmptyString, False);
 
 			if (!MCStringIsEmpty(label))
 			{
@@ -3720,23 +3729,22 @@ bool MCButton::resetlabel()
 		{
 			MCRange t_range;
 			t_range = getmenurange();
-			MCStringRef t_label = nil;
+			MCAutoStringRef t_label;
 			if (t_range.length == 0)
 			{
 				setmenuhistoryprop(1);
-				t_label = MCValueRetain(kMCEmptyString);
+				t_label = kMCEmptyString;
 			}
 			else
 			{
-				/* UNCHECKED */ MCStringCopySubstring(menustring, t_range, t_label);
+				/* UNCHECKED */ MCStringCopySubstring(menustring, t_range, &t_label);
 			}
 			if (entry != NULL)
 				entry->settext(0, label, False);
 
-			if (!MCStringIsEqualTo(label, t_label, kMCStringOptionCompareExact))
+			if (!MCStringIsEqualTo(label, *t_label, kMCStringOptionCompareExact))
 			{
-				MCValueAssign(label, t_label);
-				MCValueRelease(t_label);
+				MCValueAssign(label, *t_label);
 				changed = true;
 			}
 		}
@@ -4109,28 +4117,6 @@ void MCButton::freeicons()
 	closeicon(macrbhilitetrack);
 }
 
-// MW-2012-02-16: [[ IntrinsicUnicode ]] This utility method changes the encoding
-//   of the given string either to unicode (if to_unicode is true) or to native
-//   otherwise.
-static void switchunicodeofstring(bool p_to_unicode, char*& x_string, uint2& x_length)
-{
-	if (x_string == nil)
-		return;
-
-	MCExecPoint ep(nil, nil, nil);
-	ep . setsvalue(MCString(x_string, x_length));
-	if (p_to_unicode)
-		ep . nativetoutf16();
-	else
-		ep . utf16tonative();
-	
-	delete x_string;
-
-	x_length = ep . getsvalue() . getlength();
-	x_string = new char[x_length];
-	memcpy(x_string, ep . getsvalue() . getstring(), x_length);
-}
-
 // MW-2012-02-16: [[ IntrinsicUnicode ]] This method switches all the text in
 //   the button to or from unicode (to unicode if 'to_unicode' is set).
 void MCButton::switchunicode(bool p_to_unicode)
@@ -4139,18 +4125,6 @@ void MCButton::switchunicode(bool p_to_unicode)
 		m_font_flags |= FF_HAS_UNICODE;
 	else
 		m_font_flags &= ~FF_HAS_UNICODE;
-}
-
-// MW-2012-02-16: [[ IntrinsicUnicode ]] This method returns 'true' if its possible
-//   to convert the given string to native without loss of information.
-static bool canconverttonative(const char *p_chars, uint32_t p_char_count)
-{
-	MCExecPoint ep(nil, nil, nil);
-	ep . setsvalue(MCString(p_chars, p_char_count));
-	ep . utf16tonative();
-	ep . nativetoutf16();
-	return ep . getsvalue() . getlength() == p_char_count &&
-				memcmp(ep . getsvalue() . getstring(), p_chars, p_char_count) == 0;
 }
 
 // MW-2012-02-16: [[ IntrinsicUnicode ]] This method attempts to coerce the text in

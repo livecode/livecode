@@ -133,8 +133,8 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 	
     m_pending_push_notification = nil;
     m_pending_local_notification = nil;
-    m_device_token.set("", 1);
-    m_launch_url.set("", 1);
+    m_device_token = MCValueRetain(kMCEmptyString);
+    m_launch_url = MCValueRetain(kMCEmptyString);
     m_pending_launch_url = false;
     m_did_become_active = false;
    
@@ -266,9 +266,10 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     NSURL *t_launch_url = [p_launchOptions objectForKey: UIApplicationLaunchOptionsURLKey];
     if (t_launch_url)
     {    
-        MCString t_url_text;
-        t_url_text.set ([[t_launch_url absoluteString] cStringUsingEncoding:NSMacOSRomanStringEncoding], [[t_launch_url absoluteString] length]);
-        m_launch_url = t_url_text.clone();
+        MCAutoStringRef t_url_text;
+		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[t_launch_url absoluteString], &t_url_text);
+        MCValueAssign(m_launch_url, *t_url_text);
+		
         // HSC-2012-03-13 [[ Bug 10076 ]] Prevent Push Notification crashing when applicationDidBecomeActive is called multiple times
         m_pending_launch_url = true;
     }    
@@ -312,21 +313,12 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 {
     MCLog("application:didReceiveLocalNotification:");
     UIApplicationState t_state = [p_application applicationState];
-    MCString t_mc_reminder_text;
+    MCAutoStringRef t_mc_reminder_text;
     NSString *t_reminder_text = [p_notification.userInfo objectForKey:@"payload"];
-    t_mc_reminder_text.set ([t_reminder_text cStringUsingEncoding:NSMacOSRomanStringEncoding], [t_reminder_text length]);
+	/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_reminder_text, &t_mc_reminder_text);
     if (m_did_become_active)
     {
-        if (t_state == UIApplicationStateInactive)
-        {
-            // The application is running the in the background, so launch the reminder text.
-            MCNotificationPostLocalNotificationEvent (t_mc_reminder_text);
-        }
-        else
-        {
-            // Send a message to indicate that we have received a Local Notification. Include the reminder text.
-            MCNotificationPostLocalNotificationEvent (t_mc_reminder_text);
-        }
+		MCNotificationPostLocalNotificationEvent(*t_mc_reminder_text);
     }
 }
 
@@ -334,22 +326,12 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 {
     MCLog("application:didReceiveRemoteNotification:");
     UIApplicationState t_state = [p_application applicationState];
-    MCString t_mc_push_notification_text;
+    MCAutoStringRef t_mc_push_notification_text;
     NSString *t_reminder_text = [p_dictionary objectForKey:@"payload"];
-    if (t_reminder_text != nil)
-        t_mc_push_notification_text.set ([t_reminder_text cStringUsingEncoding:NSMacOSRomanStringEncoding], [t_reminder_text length]);
+    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_reminder_text, &t_mc_push_notification_text);
     if (m_did_become_active)
     {
-        if (t_state == UIApplicationStateInactive)
-        {
-            // The application is running the in the background, so launch the reminder text.
-            MCNotificationPostPushNotificationEvent(t_mc_push_notification_text);
-        }
-        else
-        {
-            // Send a message to indicate that we have received a Local Notification. Include the reminder text.
-            MCNotificationPostPushNotificationEvent (t_mc_push_notification_text);
-        }
+		MCNotificationPostPushNotificationEvent(*t_mc_push_notification_text);
     }
 }
 
@@ -359,9 +341,9 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     NSString *t_registration_text = [NSString stringWithFormat:@"%@", p_device_token];
     if (t_registration_text != nil)
     {
-        MCString t_device_token;
-        t_device_token.set ([t_registration_text cStringUsingEncoding:NSMacOSRomanStringEncoding], [t_registration_text length]);
-        m_device_token = t_device_token.clone();
+        MCAutoStringRef t_device_token;
+		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_registration_text, &t_device_token);
+		MCValueAssign(m_device_token, *t_device_token);
         MCLog("%s\n", [t_to_log cStringUsingEncoding: NSMacOSRomanStringEncoding]);
         MCNotificationPostPushRegistered(m_device_token);
     }
@@ -373,10 +355,10 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     NSString *t_error_text = [NSString stringWithFormat:@"%@", p_error];
     if (t_error_text != nil)
     {
-        MCString t_mc_error_text;
-        t_mc_error_text.set ([t_error_text cStringUsingEncoding:NSMacOSRomanStringEncoding], [t_error_text length]);
+        MCAutoStringRef t_mc_error_text;
+		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_error_text, &t_mc_error_text);
         MCLog("%s\n", [t_to_log cStringUsingEncoding: NSMacOSRomanStringEncoding]);
-        MCNotificationPostPushRegistrationError(t_mc_error_text);
+        MCNotificationPostPushRegistrationError(*t_mc_error_text);
     }
 }
 
@@ -387,9 +369,9 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     BOOL t_result = NO;
     if (p_url != nil)
     {
-        MCString t_url_text;
-        t_url_text.set ([[p_url absoluteString] cStringUsingEncoding:NSMacOSRomanStringEncoding], [[p_url absoluteString] length]);
-        m_launch_url = t_url_text.clone();
+        MCAutoStringRef t_url_text;
+		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[p_url absoluteString], &t_url_text);
+		MCValueAssign(m_launch_url, *t_url_text);
         if (m_did_become_active)
             MCNotificationPostUrlWakeUp(m_launch_url);
         t_result = YES;
@@ -467,23 +449,25 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	//   notifications.
     if (m_pending_local_notification != nil)
     {
-        MCString t_mc_reminder_text = nil;
-        t_mc_reminder_text.set ([m_pending_local_notification cStringUsingEncoding:NSMacOSRomanStringEncoding], [m_pending_local_notification length]);
-        MCNotificationPostLocalNotificationEvent(t_mc_reminder_text);
-        // HSC-2012-03-13 [[ Bug 10076 ]] Prevent Push Notification crashing when applicationDidBecomeActive is called multiple times
+        MCAutoStringRef t_mc_reminder_text;
+		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)m_pending_local_notification, &t_mc_reminder_text);
+		MCNotificationPostLocalNotificationEvent(*t_mc_reminder_text);
+		
+		// HSC-2012-03-13 [[ Bug 10076 ]] Prevent Push Notification crashing when applicationDidBecomeActive is called multiple times
         [m_pending_local_notification release];
         m_pending_local_notification = nil;
     }
     if (m_pending_push_notification != nil)
     {
-        MCString t_mc_reminder_text = nil;
-        t_mc_reminder_text.set ([m_pending_push_notification cStringUsingEncoding:NSMacOSRomanStringEncoding], [m_pending_push_notification length]);
-        MCNotificationPostPushNotificationEvent(t_mc_reminder_text);
-        // HSC-2012-03-13 [[ Bug 10076 ]] Prevent Push Notification crashing when applicationDidBecomeActive is called multiple times
+        MCAutoStringRef t_mc_reminder_text;
+		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)m_pending_push_notification, &t_mc_reminder_text);
+        MCNotificationPostPushNotificationEvent(*t_mc_reminder_text);
+       
+		// HSC-2012-03-13 [[ Bug 10076 ]] Prevent Push Notification crashing when applicationDidBecomeActive is called multiple times
         [m_pending_push_notification release];
         m_pending_push_notification = nil;
     }
-    if (m_pending_launch_url == true && m_launch_url.getlength() > 1)
+    if (m_pending_launch_url == true && !MCStringIsEmpty(m_launch_url))
     {
         MCNotificationPostUrlWakeUp(m_launch_url);
         // HSC-2012-03-13 [[ Bug 10076 ]] Prevent Push Notification crashing when applicationDidBecomeActive is called multiple times
@@ -706,14 +690,14 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	return m_main_controller;
 }
 
-- (const char *)fetchDeviceToken
+- (MCStringRef)fetchDeviceToken
 {
-    return m_device_token.getstring ();
+    return m_device_token;
 }
 
-- (const char *)fetchLaunchUrl
+- (MCStringRef)fetchLaunchUrl
 {
-	return m_launch_url.getstring ();
+	return m_launch_url;
 }
 
 - (void)activateKeyboard

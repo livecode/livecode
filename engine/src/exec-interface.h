@@ -114,22 +114,6 @@ void MCInterfaceLayerFree(MCExecContext& ctxt, MCInterfaceLayer& p_input);
 
 //////////
 
-static MCExecEnumTypeElementInfo _kMCInterfaceEncodingElementInfo[] =
-{	
-	{ MCnativestring, 0, true },
-	{ MCunicodestring, 1, true },
-	{ MCmixedstring, 2, true },
-};
-
-static MCExecEnumTypeInfo _kMCInterfaceEncodingTypeInfo =
-{
-	"Interface.Encoding",
-	sizeof(_kMCInterfaceEncodingElementInfo) / sizeof(MCExecEnumTypeElementInfo),
-	_kMCInterfaceEncodingElementInfo
-};
-
-//////////
-
 enum MCInterfaceMarginsType
 {
     kMCInterfaceMarginsTypeSingle,
@@ -176,3 +160,43 @@ struct MCMultimediaQTVRConstraints
 	real4 mintilt, maxtilt;
 	real4 minzoom, maxzoom;
 };
+
+//////////
+
+enum MCInterfaceTriStateType
+{
+    kMCInterfaceTriStateMixed,
+    kMCInterfaceTriStateBoolean
+};
+
+struct MCInterfaceTriState
+{
+    MCInterfaceTriStateType type;
+    
+    union
+    {
+        bool state;
+        uint2 mixed;
+    };
+    
+};
+
+void MCInterfaceTriStateParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceTriState& r_output);
+void MCInterfaceTriStateFormat(MCExecContext& ctxt, const MCInterfaceTriState& p_input, MCStringRef& r_output);
+void MCInterfaceTriStateFree(MCExecContext& ctxt, MCInterfaceTriState& p_input);
+
+//////////
+
+struct MCInterfaceFlaggedRange
+{
+    uint32_t start;
+    uint32_t end;
+};
+
+struct MCInterfaceFlaggedRanges
+{
+    MCInterfaceFlaggedRange *ranges;
+    uindex_t count;
+};
+
+//////////

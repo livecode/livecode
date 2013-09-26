@@ -117,7 +117,7 @@ bool MCExternalHandlerList::ListHandlers(Handler_type p_type, MCStringRef& r_lis
 	return t_success;
 }
 
-bool MCExternalHandlerList::Load(const char *p_external)
+bool MCExternalHandlerList::Load(MCStringRef p_external)
 {
 	bool t_success;
 	t_success = true;
@@ -258,7 +258,7 @@ MCExternal::~MCExternal(void)
 {
 }
 
-MCExternal *MCExternal::Load(const char *p_filename)
+MCExternal *MCExternal::Load(MCStringRef p_filename)
 {
 	bool t_success;
 	t_success = true;
@@ -268,9 +268,7 @@ MCExternal *MCExternal::Load(const char *p_filename)
 	t_module = nil;
 	if (t_success)
 	{
-		MCAutoStringRef t_filename_string;
-		/* UNCHECKED */ MCStringCreateWithCString(p_filename, &t_filename_string);
-		t_module = MCS_loadmodule(*t_filename_string);
+		t_module = MCS_loadmodule(p_filename);
 		if (t_module == NULL)
 			t_success = false;
 	}
@@ -288,9 +286,9 @@ MCExternal *MCExternal::Load(const char *p_filename)
 	{
 		// First try and load it as a new style external.
 	
-		if (MCS_resolvemodulesymbol(t_module, "MCExternalDescribe") != nil)
+		if (MCS_resolvemodulesymbol(t_module, MCSTR("MCExternalDescribe")) != nil)
 			t_external = MCExternalCreateV1();
-		else if (MCS_resolvemodulesymbol(t_module, "getXtable") != nil)
+		else if (MCS_resolvemodulesymbol(t_module, MCSTR("getXtable")) != nil)
 			t_external = MCExternalCreateV0();
 		
 		if (t_external != nil)

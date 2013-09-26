@@ -55,10 +55,15 @@ class MCDispatch : public MCObject
 
 	static MCImage *imagecache;
 
+    static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
 public:
 	MCDispatch();
 	// virtual functions from MCObject
 	virtual ~MCDispatch();
+    
+    virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    
 	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	// dummy cut function for checking licensing
@@ -82,7 +87,7 @@ public:
 	IO_stat readstartupstack(IO_handle stream, MCStack*& r_stack);
 	
 	// Load the given external from within the app bundle
-	bool loadexternal(const char *p_external);
+	bool loadexternal(MCStringRef p_external);
 
 	void cleanup(IO_handle stream, MCStringRef lname, MCStringRef bname);
 	IO_stat savestack(MCStack *sptr, const MCStringRef);
@@ -165,10 +170,6 @@ public:
 	// This method installs the given stack as the new home stack
 	void changehome(MCStack *stack);
 
-	// This method executes the given message in the given encoded stack in an isolated
-	// environment.
-	bool isolatedsend(const char *p_stack_data, uint32_t p_stack_data_length, const char *p_message, MCParameter *p_parameters);
-
 #ifdef _WINDOWS_DESKTOP
 	void freeprinterfonts();
 #endif
@@ -183,7 +184,7 @@ public:
 	MCStack *findstackd(Window w);
 	MCStack *findchildstackd(Window w,uint2 index);
 	MCObject *getobjid(Chunk_term type, uint4 inid);
-	MCObject *getobjname(Chunk_term type, const MCString &);
+	MCObject *getobjname(Chunk_term type, MCStringRef);
 	MCStack *gethome();
 	Boolean ismainstack(MCStack *sptr);
 	void addmenu(MCObject *target);
@@ -209,7 +210,18 @@ public:
 	void GetDefaultTextFont(MCExecContext& ctxt, MCStringRef& r_font);
 	void GetDefaultTextSize(MCExecContext& ctxt, uinteger_t& r_size);
 	void GetDefaultTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& r_style);
+    void GetDefaultTextAlign(MCExecContext& ctxt, intenum_t& r_align);
+    void GetDefaultTextHeight(MCExecContext& ctxt, uinteger_t& r_height);
+    
+    void GetDefaultForePixel(MCExecContext& ctxt, uinteger_t& r_pixel);
+	void GetDefaultBackPixel(MCExecContext& ctxt, uinteger_t& r_pixel);
+	void GetDefaultTopPixel(MCExecContext& ctxt, uinteger_t& r_pixel);
 
+	void GetDefaultForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void GetDefaultBackColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+    
+	void GetDefaultPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
+    
 private:
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a load stack. This
 	//   is wrapped by readfile to handle logical font table.

@@ -87,11 +87,7 @@ bool MCMacOSXDragPasteboard::QueryFlavors(ScrapFlavorType*& r_types, uint4& r_ty
 	return t_success;
 }
 
-#ifdef SHARED_STRING
-bool MCMacOSXDragPasteboard::FetchFlavor(ScrapFlavorType p_type, MCSharedString*& r_data)
-#else
-bool MCMacOSXDragPasteboard::FetchFlavor(ScrapFlavorType p_type, MCStringRef &r_data)
-#endif
+bool MCMacOSXDragPasteboard::FetchFlavor(ScrapFlavorType p_type, MCDataRef &r_data)
 {
 	bool t_success;
 	t_success = true;
@@ -132,11 +128,7 @@ bool MCMacOSXDragPasteboard::FetchFlavor(ScrapFlavorType p_type, MCStringRef &r_
 		if (t_success)
 		{
 			t_data = realloc(t_data, sizeof(HFSFlavor) * t_count);
-#ifdef SHARED_STRING
-			t_success = nil != (r_data = MCSharedString::CreateNoCopy(t_data, sizeof(HFSFlavor) * t_count));
-#else
-			t_success = MCStringCreateWithNativeCharsAndRelease((char_t *)t_data, sizeof(HFSFlavor) * t_count, r_data);
-#endif
+			t_success = MCDataCreateWithBytesAndRelease((byte_t *)t_data, sizeof(HFSFlavor) * t_count, r_data);
 		}
 		
 		if (!t_success)
@@ -175,11 +167,7 @@ bool MCMacOSXDragPasteboard::FetchFlavor(ScrapFlavorType p_type, MCStringRef &r_
 	}
 
 	if (t_success)
-#ifdef SHARED_STRING
-		t_success = nil != (r_data = MCSharedString::CreateNoCopy(t_data, t_data_size));
-#else
-		t_success = MCStringCreateWithNativeCharsAndRelease((char_t *)t_data, t_data_size, r_data);
-#endif
+		t_success = MCDataCreateWithBytesAndRelease((char_t *)t_data, t_data_size, r_data);
 	
 	if (!t_success)
 	{
@@ -196,24 +184,12 @@ static bool PublishDragFlavor(MCMacOSXTransferData *p_data, ScrapFlavorType p_ty
 {
 	if (p_type == flavorTypeHFS)
 	{
-#ifdef SHARED_STRING
-		MCSharedString *t_files;
-		t_files = p_data -> Subscribe(flavorTypeHFS);
-		if (t_files == NULL)
-			return false;
-			
-		for(uint4 i = 0; i < t_files -> GetLength() / sizeof(HFSFlavor); ++i)
-			AddDragItemFlavor((DragRef)p_context, (DragItemRef)(i + 1), p_type, &((HFSFlavor *)t_files -> GetBuffer())[i], sizeof(HFSFlavor), 0L);
-			
-		t_files -> Release();
-#else
-		MCAutoStringRef t_files;
+		MCAutoDataRef t_files;
 		if (!p_data -> Subscribe(flavorTypeHFS, &t_files))
 			return false;
 		
-		for(uint4 i = 0; i < MCStringGetLength(*t_files) / sizeof(HFSFlavor); ++i)
-			AddDragItemFlavor((DragRef)p_context, (DragItemRef)(i + 1), p_type, &((HFSFlavor *)MCStringGetCString(*t_files))[i], sizeof(HFSFlavor), 0L);
-#endif
+		for(uint4 i = 0; i < MCDataGetLength(*t_files) / sizeof(HFSFlavor); ++i)
+			AddDragItemFlavor((DragRef)p_context, (DragItemRef)(i + 1), p_type, &((HFSFlavor *)MCDataGetBytePtr(*t_files))[i], sizeof(HFSFlavor), 0L);
 		
 		return true;
 	}
@@ -231,26 +207,13 @@ static OSErr SubscribeDragFlavor(FlavorType p_type, void *p_context, DragItemRef
 	OSStatus t_status;
 	t_status = noErr;
 
-#ifdef SHARED_STRING
-	MCSharedString *t_string;
-	t_string = t_data -> Subscribe(p_type);
-	if (t_string == NULL)
-		t_status = cantGetFlavorErr;
-
-	if (t_status == noErr)
-		t_status = SetDragItemFlavorData(p_drag, p_item, p_type, t_string -> GetBuffer(), t_string -> GetLength(), 0);
-
-	if (t_string != NULL)
-		t_string -> Release();
-#else
-	MCAutoStringRef t_string;
+	MCAutoDataRef t_string;
 	if (!t_data -> Subscribe(p_type, &t_string))
 		t_status = cantGetFlavorErr;
 
 	if (t_status == noErr)
-		t_status = SetDragItemFlavorData(p_drag, p_item, p_type, MCStringGetCString(*t_string), MCStringGetLength(*t_string), 0);
-#endif
-
+		t_status = SetDragItemFlavorData(p_drag, p_item, p_type, MCDataGetBytePtr(*t_string), MCDataGetLength(*t_string), 0);
+	
 	return t_status;
 }
 

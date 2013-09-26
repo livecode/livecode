@@ -246,6 +246,9 @@ bool __MCSetIsEqualTo(__MCSet *set, __MCSet *other_set);
 bool __MCSetCopyDescription(__MCSet *set, MCStringRef& r_string);
 bool __MCSetImmutableCopy(__MCSet *set, bool release, __MCSet*& r_immutable_value);
 
+bool __MCDataInitialize(void);
+void __MCDataFinalize(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 hash_t MCNativeCharsHashExact(const char_t *chars, uindex_t char_count);

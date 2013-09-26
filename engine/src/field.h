@@ -158,6 +158,9 @@ struct MCFieldExportEventData
 //   a run. The callback should return 'false' if it wants to terminate.
 typedef bool (*MCFieldExportCallback)(void *context, MCFieldExportEventType event_type, const MCFieldExportEventData& event_data);
 
+struct MCInterfaceFlaggedRanges;
+struct MCInterfaceFlaggedRange;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCField : public MCControl
@@ -364,7 +367,7 @@ public:
 	void insertparagraph(MCParagraph *newtext);
 	// MCField selection functions in fields.cc
 	Boolean find(MCExecPoint &ep, uint4 cardid,
-	             Find_mode mode, const MCString &, Boolean first);
+	             Find_mode mode, MCStringRef, Boolean first);
 	Exec_stat sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
 	               Sort_type dir, Sort_type form, MCExpression *by);
 	// MW-2012-02-08: [[ Field Indices ]] The 'index' parameter, if non-nil, will contain
@@ -436,10 +439,7 @@ public:
 	void linestoparagraphs(int4 si, int4 ei, MCParagraph*& sp, MCParagraph*& ep);
 
 	MCParagraph *cloneselection();
-#ifdef SHARED_STRING
-	MCSharedString *pickleselection(void);
-#endif
-	bool pickleselection(MCStringRef& r_string);
+	bool pickleselection(MCDataRef& r_string);
 
 	void cuttext();
 	void copytext();
@@ -568,7 +568,12 @@ public:
 	////////// PROPERTY SUPPORT METHODS
 
 	void Redraw(bool reset = false, int4 xoffset = 0, int4 yoffset = 0);
-
+    void UpdateScrollbars(void);
+    
+    void DoSetInputControl(MCExecContext& ctxt, Properties which, bool setting);
+    void DoGetTextState(MCExecContext& ctxt, Properties which, uint32_t part, MCInterfaceTriState& r_state);
+    void DoSetTabStops(MCExecContext& ctxt, bool is_relative, uindex_t p_count, uinteger_t *p_tabs);
+    
 	////////// PROPERTY ACCESSORS
 
 	void GetAutoTab(MCExecContext& ctxt, bool& r_flag);
@@ -581,6 +586,7 @@ public:
 	void SetFixedHeight(MCExecContext& ctxt, bool flag);
 	void GetLockText(MCExecContext& ctxt, bool& r_flag);
 	void SetLockText(MCExecContext& ctxt, bool flag);
+    virtual void SetTraversalOn(MCExecContext& ctxt, bool setting);
 	void GetSharedText(MCExecContext& ctxt, bool& r_flag);
 	void SetSharedText(MCExecContext& ctxt, bool flag);
 	void GetShowLines(MCExecContext& ctxt, bool& r_flag);
@@ -644,5 +650,40 @@ public:
 	void GetThreeDHilite(MCExecContext& ctxt, bool& r_setting);
 	void SetThreeDHilite(MCExecContext& ctxt, bool setting);
 	void GetEncoding(MCExecContext& ctxt, uint32_t part, intenum_t& r_encoding);
+    void GetFlagged(MCExecContext& ctxt, uint32_t part, MCInterfaceTriState& r_flagged);
+    
+    void GetHilitedLines(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_lines);
+    void SetHilitedLines(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_lines);
+    void GetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, MCInterfaceFlaggedRanges& r_ranges);
+    void SetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceFlaggedRanges& p_ranges); 
+    void SetTabStops(MCExecContext& ctxt, uindex_t p_count, uinteger_t *p_tabs);
+    void GetTabStops(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tabs);
+    void SetTabWidths(MCExecContext& ctxt, uindex_t p_count, uinteger_t *p_tabs);
+    void GetTabWidths(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tabs);
+    void GetPageHeights(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_heights);
+    
+    virtual void SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow);
+    virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
+    virtual void SetTextHeight(MCExecContext& ctxt, uinteger_t* height);
+    virtual void SetTextFont(MCExecContext& ctxt, MCStringRef font);
+    virtual void SetTextSize(MCExecContext& ctxt, uinteger_t* size);
+    virtual void SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style);
+    virtual void SetBorderWidth(MCExecContext& ctxt, uinteger_t width);
+    virtual void Set3D(MCExecContext& ctxt, bool setting);
+    virtual void SetOpaque(MCExecContext& ctxt, bool setting);
+    virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
+	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);
+    
+	virtual void SetLeftMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetRightMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetTopMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetBottomMargin(MCExecContext& ctxt, integer_t p_margin);
+    virtual void SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins);
+	virtual void SetWidth(MCExecContext& ctxt, uinteger_t value);
+	virtual void SetHeight(MCExecContext& ctxt, uinteger_t value);
+    virtual void SetEffectiveWidth(MCExecContext& ctxt, uinteger_t value);
+	virtual void SetEffectiveHeight(MCExecContext& ctxt, uinteger_t value);
+    virtual void SetRectangle(MCExecContext& ctxt, MCRectangle p_rect);
+    virtual void SetEffectiveRectangle(MCExecContext& ctxt, MCRectangle p_rect);
 };
 #endif

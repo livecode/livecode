@@ -86,24 +86,21 @@ MCSensorType MCSensorTypeFromCString(const char *p_string)
     return kMCSensorTypeUnknown;
 }
 
-bool MCSensorTypeToCString(MCSensorType p_sensor, char *&r_string)
+MCStringRef MCSensorTypeToStringRef(MCSensorType p_sensor)
 {
     switch (p_sensor)
     {
         case kMCSensorTypeLocation:
-            return MCCStringClone("location", r_string);
+            return MCSTR("location");
         case kMCSensorTypeHeading:
-            return MCCStringClone("heading", r_string);
-            break;
+            return MCSTR("heading");
         case kMCSensorTypeAcceleration:
-            return MCCStringClone("acceleration", r_string);
+            return MCSTR("acceleration");
         case kMCSensorTypeRotationRate:
-            return MCCStringClone("rotation rate", r_string);
+            return MCSTR("rotation rate");
         default:
-           return MCCStringClone("unknown", r_string);
+			return MCSTR("unknown");
     }
-    
-    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -111,35 +108,33 @@ bool MCSensorTypeToCString(MCSensorType p_sensor, char *&r_string)
 class MCSensorErrorEvent: public MCCustomEvent
 {
 public:
-	MCSensorErrorEvent(MCSensorType p_sensor, const char *p_error)
+	MCSensorErrorEvent(MCSensorType p_sensor, MCStringRef p_error)
 	{
         m_sensor = p_sensor;
-        /* UNCHECKED */ MCCStringClone(p_error, m_error);
+        m_error = MCValueRetain(p_error);
+	}
+	
+	~MCSensorErrorEvent()
+	{
+		MCValueRelease(m_error);
 	}
 	
 	void Destroy(void)
 	{
-        MCCStringFree(m_error);
 		delete this;
 	}
 	
 	void Dispatch(void)
 	{
-        char *t_sensor_name = nil;
-        /* UNCHECKED */ MCSensorTypeToCString(m_sensor, t_sensor_name);   
+		MCStringRef t_sensor;
+        t_sensor = MCSensorTypeToStringRef(m_sensor);   
         
-        MCParameter p1, p2;
-        p1.sets_argument(t_sensor_name);
-        p1.setnext(&p2);
-        p2.sets_argument(m_error);        
-        
-        MCdefaultstackptr->getcurcard()->message(MCM_tracking_error, &p1);
-        /* UNCHECKED */ MCCStringFree(t_sensor_name);
+        MCdefaultstackptr->getcurcard()->message_with_valueref_args(MCM_tracking_error, t_sensor, m_error);
 	}
 	
 private:
     MCSensorType m_sensor;
-    char *m_error;
+    MCStringRef m_error;
 };
 
 static bool location_reading_changed(MCSensorLocationReading p_current_reading, MCSensorLocationReading p_last_reading, double p_range)
@@ -321,7 +316,7 @@ void MCSensorPostChangeMessage(MCSensorType p_sensor)
         MCEventQueuePostCustom(t_event);
 }
 
-void MCSensorPostErrorMessage(MCSensorType p_sensor, const char *p_error)
+void MCSensorPostErrorMessage(MCSensorType p_sensor, MCStringRef p_error)
 {
     MCCustomEvent *t_event = nil;
 	t_event = new MCSensorErrorEvent(p_sensor, p_error);

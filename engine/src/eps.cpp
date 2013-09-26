@@ -571,7 +571,7 @@ IO_stat MCEPS::load(IO_handle stream, const char *version)
 	if ((stat = IO_read_uint4(&size, stream)) != IO_NORMAL)
 		return stat;
 	postscript = new char[size + 1];
-	if ((stat = IO_read(postscript, sizeof(char), size, stream)) != IO_NORMAL)
+	if ((stat = IO_read(postscript, size, stream)) != IO_NORMAL)
 		return stat;
 	postscript[size] = '\0';
 	if ((stat = IO_read_string(prolog, stream)) != IO_NORMAL)
@@ -721,23 +721,20 @@ void MCEPS::resetscale()
 		yscale = xscale;
 	}
 }
-/* WRAPPER */ bool MCEPS::import(MCStringRef p_filename, IO_handle p_stream)
-{
-	return True == import(MCStringGetCString(p_filename), p_stream);
-}
-Boolean MCEPS::import(const char *fname, IO_handle stream)
+
+Boolean MCEPS::import(MCStringRef fname, IO_handle stream)
 {
 	size = (uint4)MCS_fsize(stream);
 	delete postscript;
 	postscript = new char[size + 1];
-	if (IO_read(postscript, sizeof(char), size, stream) != IO_NORMAL)
+	if (IO_read(postscript, size, stream) != IO_NORMAL)
 		return False;
 	postscript[size] = '\0';
-	const char *tname = strrchr(fname, PATH_SEPARATOR);
+	const char *tname = strrchr(MCStringGetCString(fname), PATH_SEPARATOR);
 	if (tname != NULL)
 		tname += 1;
 	else
-		tname = fname;
+		tname = MCStringGetCString(fname);
 	setname_cstring(tname);
 	setextents();
 	rect.width = (uint2)(ex * xscale / xf);

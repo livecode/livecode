@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxprefix.h"
+#include "osxprefix-legacy.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -526,12 +527,12 @@ static void domenu(short menu, short item)
 			isunicode &= !t_menuhastags;
 			char *menuitemname;
 			uint2 menuitemlen;
-			MCString t_tag;
-			extern bool MCMacGetMenuItemTag(MenuHandle menu, uint2 mitem, MCString &s);
-			if (t_menuhastags && MCMacGetMenuItemTag(mhandle, item, t_tag))
+			MCAutoStringRef t_tag_ref;
+			extern bool MCMacGetMenuItemTag(MenuHandle menu, uint2 mitem, MCStringRef &r_string);
+			if (t_menuhastags && MCMacGetMenuItemTag(mhandle, item, &t_tag_ref))
 			{
-				menuitemname = (char*)t_tag.getstring();
-				menuitemlen = t_tag.getlength();
+				menuitemname = strclone(MCStringGetCString(*t_tag_ref));
+				menuitemlen = strlen(menuitemname);
 			}
 			else
 			{
@@ -1520,6 +1521,20 @@ struct OSXMenuItem : public MCMenuItem
 	char mark;
 	uint2 glyph;
 	uint2 after; //insert new menu item after this number
+	
+	OSXMenuItem() :
+		MCMenuItem()
+	{
+		mh = nil;
+		mark = 0;
+		glyph = 0;
+		after = 0;
+	}
+	
+	~OSXMenuItem()
+	{
+		;
+	}
 };
 
 static void SetMacMenuItemText(MenuHandle mh, uint2 mitem, char *mitemtext, uint2 mitemlength, bool isunicode)
@@ -1582,7 +1597,6 @@ public:
 		isunicode = p_menubutton -> hasunicode();
 		firstTime = true;
 		mainMenuID = p_mainmenu_id;
-		memset(curMenuStruct, 0, sizeof(curMenuStruct));
 		curMenuLevel = 0;
 		firstitem = 0;
 		curMenuStruct[0].after = firstitem;
@@ -1808,7 +1822,6 @@ Boolean MCScreenDC::addMenuItemsAndSubMenu(uint2 mainMenuID, MenuHandle mainMenu
 	MCStringRef t_string;
 	t_string = p_menubutton->getmenustring();
 	MCParseMenuString(t_string, &t_callback, menumode);
-	p_menubutton->setmenustring(t_string);
 
 	return True;
 }
@@ -2150,11 +2163,11 @@ pascal OSErr TSMUpdateHandler(const AppleEvent *theAppleEvent,
 	//  return paramErr; //pass event if script is english
 	if (!MCactivefield)
 		return noErr;
-	//get updated IME text
-	if (MCS_imeisunicode())
-		err = AEGetParamDesc(theAppleEvent, keyAETheData, typeUnicodeText, &text);
-	else
-		err = AEGetParamDesc(theAppleEvent, keyAETheData, typeChar, &text);
+	//get updated IME text -- always true
+//	if (MCS_imeisunicode())
+    err = AEGetParamDesc(theAppleEvent, keyAETheData, typeUnicodeText, &text);
+//	else
+//		err = AEGetParamDesc(theAppleEvent, keyAETheData, typeChar, &text);
 	if (err != noErr)
 		return err;
 	err = AEGetParamPtr(theAppleEvent, keyAEFixLength, typeLongInteger,
@@ -2180,55 +2193,55 @@ pascal OSErr TSMUpdateHandler(const AppleEvent *theAppleEvent,
 		hiliterangeptr = (TextRangeArray *)new char[hiliterangesize];
 		AEGetDescData(&hiliterange, (void *) hiliterangeptr, hiliterangesize);
 	}
-	if (!MCS_imeisunicode())
-	{
-		uint4 unicodelen;
-		char *unicodeimetext = new char[imetextsize << 1];
-		uint2 charset = MCS_langidtocharset(GetScriptManagerVariable(smKeyScript));;
-		if (commitedLen != 0)
-		{
-			if (!charset)
-			{
-				MCactivefield->stopcomposition(False, True);
-				//user switched keyboard to english so we end composition and clear IME
-				fixLength = -1;
-			}
-			MCactivefield->stopcomposition(True,False);
-			MCU_multibytetounicode(imetext, commitedLen, unicodeimetext,
-			                       imetextsize << 1, unicodelen, charset);
-			MCString unicodestr(unicodeimetext, unicodelen);
-			MCactivefield->finsertnew( FT_IMEINSERT, unicodestr, 0, true);
-		}
-		if (fixLength != -1)
-			if (imetextsize != fixLength)
-			{
-				MCactivefield->startcomposition();
-				MCU_multibytetounicode(&imetext[commitedLen], imetextsize-commitedLen,
-				                       unicodeimetext, imetextsize << 1,
-				                       unicodelen, charset);
-				MCString unicodestr(unicodeimetext, unicodelen);
-				MCactivefield->finsertnew(FT_IMEINSERT, unicodestr, 0, true);
-			}
-			else if (imetextsize == 0 && fixLength == 0)
-				MCactivefield->stopcomposition(True,False);
-		if (hiliterangeptr)
-		{
-			uint2 i;
-			for (i = 0; i < hiliterangeptr->fNumOfRanges; i++)
-				if (hiliterangeptr->fRange[i].fHiliteStyle == kTSMHiliteCaretPosition)
-				{
-					MCU_multibytetounicode(&imetext[hiliterangeptr->fRange[i].fStart],
-					                       imetextsize-hiliterangeptr->fRange[i].fStart,
-					                       unicodeimetext, imetextsize << 1,
-					                       unicodelen, charset);
-					MCactivefield->setcompositioncursoroffset(unicodelen);
-				}
-			MCactivefield->setcompositionconvertingrange(0,0);
-		}
-		delete unicodeimetext;
-	}
-	else
-	{
+//	if (!MCS_imeisunicode())
+//	{
+//		uint4 unicodelen;
+//		char *unicodeimetext = new char[imetextsize << 1];
+//		uint2 charset = MCS_langidtocharset(GetScriptManagerVariable(smKeyScript));;
+//		if (commitedLen != 0)
+//		{
+//			if (!charset)
+//			{
+//				MCactivefield->stopcomposition(False, True);
+//				//user switched keyboard to english so we end composition and clear IME
+//				fixLength = -1;
+//			}
+//			MCactivefield->stopcomposition(True,False);
+//			MCU_multibytetounicode(imetext, commitedLen, unicodeimetext,
+//			                       imetextsize << 1, unicodelen, charset);
+//			MCString unicodestr(unicodeimetext, unicodelen);
+//			MCactivefield->finsertnew( FT_IMEINSERT, unicodestr, 0, true);
+//		}
+//		if (fixLength != -1)
+//			if (imetextsize != fixLength)
+//			{
+//				MCactivefield->startcomposition();
+//				MCU_multibytetounicode(&imetext[commitedLen], imetextsize-commitedLen,
+//				                       unicodeimetext, imetextsize << 1,
+//				                       unicodelen, charset);
+//				MCString unicodestr(unicodeimetext, unicodelen);
+//				MCactivefield->finsertnew(FT_IMEINSERT, unicodestr, 0, true);
+//			}
+//			else if (imetextsize == 0 && fixLength == 0)
+//				MCactivefield->stopcomposition(True,False);
+//		if (hiliterangeptr)
+//		{
+//			uint2 i;
+//			for (i = 0; i < hiliterangeptr->fNumOfRanges; i++)
+//				if (hiliterangeptr->fRange[i].fHiliteStyle == kTSMHiliteCaretPosition)
+//				{
+//					MCU_multibytetounicode(&imetext[hiliterangeptr->fRange[i].fStart],
+//					                       imetextsize-hiliterangeptr->fRange[i].fStart,
+//					                       unicodeimetext, imetextsize << 1,
+//					                       unicodelen, charset);
+//					MCactivefield->setcompositioncursoroffset(unicodelen);
+//				}
+//			MCactivefield->setcompositionconvertingrange(0,0);
+//		}
+//		delete unicodeimetext;
+//	}
+//	else
+//	{
 		// printf("fixlength %d, imetextsize %d, commitedlen %d\n",fixLength,imetextsize,commitedLen);
 		if (hiliterangeptr)
 		{
@@ -2269,6 +2282,7 @@ pascal OSErr TSMUpdateHandler(const AppleEvent *theAppleEvent,
 		}
 		
 		if (fixLength != -1)
+        {
 			if (imetextsize != fixLength)
 			{
 				MCactivefield->startcomposition();
@@ -2277,7 +2291,8 @@ pascal OSErr TSMUpdateHandler(const AppleEvent *theAppleEvent,
 			}
 			else if (imetextsize == 0 && fixLength == 0)
 				MCactivefield->stopcomposition(True,False);
-	}
+        }
+//	}
 	if (hiliterangeptr)
 		delete hiliterangeptr;
 	delete imetext;

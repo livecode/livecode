@@ -80,6 +80,7 @@ extern real8 MCU_strtor8(const char *&, uint4 &, int1, Boolean &r_done,
 						Boolean convertoctals = False);
 extern void MCU_strip(char *sptr, uint2 trailing, uint2 force);
 extern uint4 MCU_r8tos(char *&sptr, uint4 &s, real8 n,uint2 fw, uint2 trailing, uint2 force);
+extern bool MCU_r8tos(real8 n, uint2 fw, uint2 trailing, uint2 force, MCStringRef &r_string);
 extern bool MCU_stor8(MCStringRef, real8& r_d, bool co = false);
 extern Boolean MCU_stor8(const MCString&, real8& d, Boolean co = False);
 extern bool MCU_stoi2(MCStringRef, int2 &r_d);
@@ -97,7 +98,7 @@ extern Boolean MCU_stoi4(const MCString&, int4& d);
 extern bool MCU_stoui4(MCStringRef p_string, uint4 &r_d);
 extern Boolean MCU_stoui4(const MCString&, uint4& d);
 extern bool MCU_stoui4x2(MCStringRef p_string, uint4 &r_d1, uint4 &r_d2);
-extern bool MCU_stob(MCStringRef p_string, bool r_condition);
+extern bool MCU_stob(MCStringRef p_string, bool& r_condition);
 extern Boolean MCU_stob(const MCString&, Boolean& condition);
 extern void MCU_lower(char *sptr, const MCString& s);
 extern void MCU_upper(char *sptr, const MCString& s);
@@ -115,7 +116,7 @@ extern void MCU_sort(MCSortnode *items, uint4 nitems,
 #ifndef _DEBUG_MEMORY
 extern void MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize);
 #endif
-extern Boolean MCU_matchflags(const MCString &, uint4 &, uint4, Boolean &);
+extern bool MCU_matchname(MCNameRef p_name, Chunk_term type, MCNameRef name);
 extern Boolean MCU_matchname(const MCString &, Chunk_term type, MCNameRef name);
 extern void MCU_snap(int2 &p);
 extern void MCU_roundrect(MCPoint *&, uint2 &npoints,
@@ -154,10 +155,10 @@ extern void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool);
 extern Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool,
 	                                 uint2 line, uint2 pos);
 extern Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef message, MCParameter *params);
-extern bool MCU_path2std(MCStringRef p_path, MCStringRef& r_std_path);
-extern void MCU_path2std(char *dptr);
-extern bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path);
-extern void MCU_path2native(char *dptr);
+//extern bool MCU_path2std(MCStringRef p_path, MCStringRef& r_std_path);
+//extern void MCU_path2std(char *dptr);
+//extern bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path);
+//extern void MCU_path2native(char *dptr);
 extern void MCU_fix_path(MCStringRef in, MCStringRef& r_out);
 extern void MCU_base64encode(MCExecPoint &ep);
 extern void MCU_base64decode(MCExecPoint &ep);
@@ -165,7 +166,7 @@ extern void MCU_urlencode(MCExecPoint &ep);
 extern void MCU_urldecode(MCExecPoint &ep);
 extern Boolean MCU_freeinserted(MCObjectList *&l);
 extern void MCU_cleaninserted();
-extern Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep, uint2 line, uint2 pos);
+//extern Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep, uint2 line, uint2 pos);
 extern Exec_stat MCU_change_color(MCColor &c, MCStringRef&n, MCExecPoint &ep, uint2 line, uint2 pos);
 extern void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c);
 extern void MCU_get_color(MCExecPoint &ep, MCStringRef name, MCColor &c);
@@ -180,6 +181,8 @@ extern MCNameRef MCU_charsettolanguage(uint1 charset);
 /* LEGACY */ extern uint1 MCU_languagetocharset(const char *langname);
 extern uint1 MCU_wincharsettocharset(uint2 wincharset);
 extern uint1 MCU_charsettowincharset(uint1 charset);
+extern bool MCU_multibytetounicode(MCDataRef p_input, MCDataRef &r_output);
+extern bool MCU_unicodetomultibyte(MCDataRef p_input, MCDataRef& r_output);
 extern bool MCU_multibytetounicode(MCStringRef p_src, uinteger_t p_charset, MCStringRef& r_unicode);
 extern bool MCU_unicodetomultibyte(MCStringRef p_src, uinteger_t p_charset, MCStringRef& r_multibyte);
 extern bool MCU_multibytetounicode(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_unicode);

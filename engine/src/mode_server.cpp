@@ -130,11 +130,6 @@ void MCStack::mode_takefocus(void)
 {
 }
 
-char *MCStack::mode_resolve_filename(const char *filename)
-{
-	return NULL;
-}
-
 bool MCStack::mode_needstoopen(void)
 {
 	return true;
@@ -322,7 +317,7 @@ Window MCModeGetParentWindow(void)
 	return NULL;
 }
 
-bool MCModeCanAccessDomain(const char *p_name)
+bool MCModeCanAccessDomain(MCStringRef p_name)
 {
 	return false;
 }

@@ -403,6 +403,5 @@ public:
 #endif
 };
 
-extern IO_stat hc_import(MCStringRef p_name, IO_handle p_stream, MCStack *&p_stack);
-extern IO_stat hc_import(const char *name, IO_handle stream, MCStack *&sptr);
+extern IO_stat hc_import(MCStringRef p_name, IO_handle p_stream, MCStack *&p_sptr);
 
