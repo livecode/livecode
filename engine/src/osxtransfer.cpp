@@ -1016,7 +1016,9 @@ bool MCConvertMacHFSToFiles(MCDataRef p_data, MCDataRef& r_output)
 	uint32_t t_count;
 	t_count = MCDataGetLength(p_data) / sizeof(HFSFlavor);
 	
-	MCExecPoint ep(NULL, NULL, NULL);
+	MCAutoStringRef t_output;
+	char_t t_del;
+	/* UNCHECKED */ MCStringCreateMutable(0, &t_output);
 	for(uint32_t i = 0; i < t_count; ++i)
 	{
 		FSRef t_fs_ref;
@@ -1027,9 +1029,17 @@ bool MCConvertMacHFSToFiles(MCDataRef p_data, MCDataRef& r_output)
 		
 		if (!MCS_mac_fsref_to_path(t_fs_ref, &t_filename))
 			continue;
-			
-		/* UNCHECKED */ ep . concatstringref(*t_filename, EC_RETURN, i == 0);
+		
+		if (i == 0)
+			MCStringAppendNativeChars(*t_output, (const char_t *)MCStringGetCString(*t_filename), MCStringGetLength(*t_filename));
+		else
+		{
+			t_del = '\n';
+			MCStringAppendNativeChars(*t_output, &t_del, 1);
+			MCStringAppendNativeChars(*t_output, (const char_t *)MCStringGetCString(*t_filename), MCStringGetLength(*t_filename));
+		}
+		
 	}
 	
-	return ep . copyasdataref(r_output);
+	return MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_output), MCStringGetLength(*t_output), r_output);
 }
