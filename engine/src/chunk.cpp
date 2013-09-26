@@ -2300,7 +2300,7 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 			}
 			{
 				MCAutoStringRef t_string;
-				/* UNCHECKED */ ep.copyasstringref(&t_string);
+				/* UNCHECKED */ ep2.copyasstringref(&t_string);
 				bptr = (MCGroup *)sptr->getbackground(background->etype, *t_string, CT_GROUP);
 			}
 			break;

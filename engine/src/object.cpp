@@ -2157,9 +2157,8 @@ Exec_stat MCObject::names_old(Properties which, MCExecPoint& ep, uint32_t parid)
 
 bool MCObject::names(Properties which, MCValueRef& r_name_val)
 {
-	// Nasty type manipulation but the compiler doesn't know that a StringRef
-	// can be assigned into a ValueRef (because the types are opaque).
-	MCStringRef &r_name = *(MCStringRef*)&r_name_val;
+	MCStringRef &r_name = (MCStringRef&)
+	r_name_val;
 	
 	const char *itypestring = gettypestring();
 	MCAutoPointer<char> tmptypestring;

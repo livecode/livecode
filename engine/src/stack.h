@@ -400,7 +400,6 @@ public:
 	MCObject *getAVid(Chunk_term type, uint4 inid);
     bool getAVname(Chunk_term type, MCNameRef p_name, MCObject*& r_object);
 	Exec_stat setcard(MCCard *card, Boolean recent, Boolean dynamic);
-	//MCStack *findstackfile_oldstring(const MCString &s);
 	MCStack *findstackname_oldstring(const MCString &);
 	MCStack *findsubstackname_oldstring(const MCString &);
 	MCStack *findstackfile(MCNameRef name);
