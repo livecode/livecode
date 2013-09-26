@@ -756,7 +756,7 @@ bool MCModeShouldCheckCantStandalone(void)
 }
 
 // The standalone mode doesn't have a message box redirect feature
-bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt)
+bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_msg)
 {
 	return false;
 }
