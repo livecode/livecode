@@ -1507,7 +1507,7 @@ Exec_stat MCIdeScriptTokenize::exec(MCExecPoint& ep)
 		}
 
 		// We have our output, so now set the chunk back to it
-		t_stat = m_script -> set(ep, PT_INTO);
+		t_stat = m_script -> set_legacy(ep, PT_INTO);
 	}
 
 	return t_stat;

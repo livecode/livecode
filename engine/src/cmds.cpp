@@ -360,7 +360,7 @@ Exec_stat MCConvert::exec(MCExecPoint &ep)
 	{
 		MCDateTimeExecConvert(ctxt, *t_input, fform, fsform, pform, sform, &t_output);
 		ep . setvalueref(*t_output);
-		if (container -> set(ep, PT_INTO) != ES_NORMAL)
+		if (container -> set_legacy(ep, PT_INTO) != ES_NORMAL)
 		{
 			MCeerror->add(EE_CONVERT_CANTSET, line, pos);
 			return ES_ERROR;

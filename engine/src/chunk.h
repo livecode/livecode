@@ -62,7 +62,8 @@ public:
 
 	Parse_stat parse(MCScriptPoint &spt, Boolean the);
 	Exec_stat eval(MCExecPoint &);
-    
+    Exec_stat eval_legacy(MCExecPoint &ep);
+        
     Exec_stat evaltextchunk(MCExecPoint &ep, MCStringRef p_source, MCStringRef& r_text);
     Exec_stat settextchunk(MCExecPoint& ep, MCStringRef p_to_set, Preposition_type p_where, MCStringRef& x_text);
     
@@ -86,17 +87,25 @@ public:
 	                  MCExecPoint &ep, const char *sptr, const char *eptr,
 	                  int4 (*count)(MCExecPoint &ep, const char *sptr,
 	                                const char *eptr));
-	Exec_stat mark(MCExecPoint &, int4 &start, int4 &end, Boolean force, Boolean wholechunk, bool include_characters = true);
+    
+    Exec_stat mark(MCExecPoint &ep, MCStringRef p_source, int4 &start, int4 &end, Boolean force, Boolean wholechunk, bool includechars = true, bool wholestring = false);
+	Exec_stat mark_legacy(MCExecPoint &, int4 &start, int4 &end, Boolean force, Boolean wholechunk, bool include_characters = true);
+
 	// MW-2012-02-23: [[ CharChunk ]] Compute the start and end field indices corresponding
 	//   to the field char chunk in 'field'.
 	Exec_stat markcharactersinfield(uint32_t part_id, MCExecPoint& ep, int32_t& start, int32_t& end, MCField *field);
+    
+    Exec_stat set(MCExecPoint& ep, Preposition_type p_type, MCValueRef p_text);
 
 	Exec_stat gets(MCExecPoint &);
-	Exec_stat set(MCExecPoint &, Preposition_type ptype);
 
+	Exec_stat set_legacy(MCExecPoint &, Preposition_type ptype);
+#ifdef LEGACY_EXEC    
 	// MW-2012-02-23: [[ PutUnicode ]] Set the chunk to the UTF-16 encoded text in ep.
 	Exec_stat setunicode(MCExecPoint& ep, Preposition_type ptype);
+#endif
 	Exec_stat count(Chunk_term tocount, Chunk_term ptype, MCExecPoint &);
+
 	Exec_stat fmark(MCField *fptr, int4 &start, int4 &end, Boolean wholechunk);
 	
 	// MW-2012-01-27: [[ UnicodeChunks ]] Added the 'keeptext' parameter, if True then on exit the
@@ -106,6 +115,8 @@ public:
 	// MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
 	Exec_stat getprop(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
 	Exec_stat setprop(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
+	Exec_stat getprop_legacy(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
+	Exec_stat setprop_legacy(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
 	Exec_stat getobjforprop(MCExecPoint& ep, MCObject*& r_object, uint4& r_parid);
 
 	// REMOVE: Exec_stat select(MCExecPoint &, Preposition_type where, Boolean text, Boolean first);

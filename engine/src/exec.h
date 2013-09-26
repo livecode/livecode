@@ -1127,6 +1127,27 @@ void MCStringsExecSetCharsOfTextByRange(MCExecContext& ctxt, MCStringRef p_sourc
 void MCStringsExecSetCharsOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, integer_t p_char, MCStringRef& r_result);
 void MCStringsExecSetCharsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, Chunk_term p_ordinal_type, MCStringRef& r_result);
 
+int4 MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCStringRef p_string);
+///////////
+
+void MCStringsGetTextChunk(MCExecContext& ctxt, MCStringRef p_source, integer_t p_start, integer_t p_end, MCStringRef& r_result);
+
+void MCStringsEvalLinesOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalLinesOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_line, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalLinesOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalItemsOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalItemsOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_item, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalItemsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalWordsOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalWordsOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_word, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalWordsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalTokensOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalTokensOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_token, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalTokensOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalCharsOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalCharsOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_char, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalCharsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+
 ///////////
 
 struct MCInterfaceBackdrop;
@@ -1819,7 +1840,7 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 void MCInterfaceExecFind(MCExecContext& ctxt, int p_mode, MCStringRef p_needle, MCChunk *p_target);
 
 void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCStringRef value, int where, MCObjectChunkPtr target);
-void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef value, int where, MCObjectChunkPtr target, bool is_unicode);
+void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef value, int where, MCObjectChunkPtr target, bool is_unicode = false);
 
 void MCInterfaceExecLockCursor(MCExecContext& ctxt);
 void MCInterfaceExecLockMenus(MCExecContext& ctxt);
@@ -2303,10 +2324,10 @@ void MCPasteboardEvalDragDestinationAsObject(MCExecContext& ctxt, MCObjectPtr& r
 void MCPasteboardExecPaste(MCExecContext& ctxt);
 
 void MCPasteboardExecCopy(MCExecContext& ctxt);
-void MCPasteboardExecCopyTextToClipboard(MCExecContext& ctxt, MCChunk *p_target);
+void MCPasteboardExecCopyTextToClipboard(MCExecContext& ctxt, MCObjectChunkPtr p_target);
 void MCPasteboardExecCopyObjectsToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets, uindex_t p_target_count);
 void MCPasteboardExecCut(MCExecContext& ctxt);
-void MCPasteboardExecCutTextToClipboard(MCExecContext& ctxt, MCChunk *p_target);
+void MCPasteboardExecCutTextToClipboard(MCExecContext& ctxt, MCObjectChunkPtr p_target);
 void MCPasteboardExecCutObjectsToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets, uindex_t p_target_count);
 
 void MCPasteboardGetAcceptDrop(MCExecContext& ctxt, bool& r_value);

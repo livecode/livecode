@@ -1573,7 +1573,7 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 	if (*t_return_data != nil)
 	{
 		ep . setvalueref(*t_return_data);
-		if (dest->set(ep, PT_INTO) != ES_NORMAL)
+		if (dest->set_legacy(ep, PT_INTO) != ES_NORMAL)
 		{
 			MCeerror->add(EE_EXPORT_CANTWRITE, line, pos);
 			return ES_ERROR;
@@ -1953,7 +1953,7 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
 	MCStringsExecFilter(ctxt, *t_source, *t_pattern, out == True, &t_output);
 
 	ep . setvalueref(*t_output);
-	if (container->set(ep, PT_INTO) != ES_NORMAL)
+	if (container->set_legacy(ep, PT_INTO) != ES_NORMAL)
 	{
 		MCeerror->add(EE_FILTER_CANTSET, line, pos);
 		return ES_ERROR;
