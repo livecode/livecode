@@ -288,20 +288,22 @@ bool MCMacOSXPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 	case kScrapFlavorTypeText:
 	{
 		MCExecPoint ep;
-		ep . setvalueref(*t_in_data);
-		ep . texttobinary();
-		ep . copyasdataref(&t_out_data);
+        MCExecContext ctxt(ep);
+        ctxt . SetValueRef(*t_in_data);
+		ctxt . TextToBinary();
+		ctxt . CopyAsDataRef(&t_out_data);
 	}
 	break;
 
 	case kScrapFlavorTypeUnicode:
 	{
 		MCExecPoint ep;
-		ep . setvalueref(*t_in_data);
-		ep . utf16toutf8();
-		ep . texttobinary();
-		ep . utf8toutf16();
-		ep . copyasdataref(&t_out_data);
+        MCExecContext ctxt(ep);
+		ctxt . SetValueRef(*t_in_data);
+		ctxt . Utf16ToUtf8();
+		ctxt . TextToBinary();
+		ctxt . Utf8ToUtf16();
+		ctxt . CopyAsDataRef(&t_out_data);
 	}
 	break;
 

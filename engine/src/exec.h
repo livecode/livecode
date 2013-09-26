@@ -599,6 +599,11 @@ public:
 	{
 		return m_ep . binarytotext();
 	}
+    
+    void TextToBinary()
+	{
+		return m_ep . texttobinary();
+	}
 	
 	void Utf16ToUtf8()
 	{
