@@ -693,8 +693,8 @@ void MCChunk::take_components(MCChunk *tchunk)
 
 Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recurse)
 {
-	return getobj(ep, r_object . object, r_object . part_id, p_recurse);
-#if 0
+	return getobj_legacy(ep, r_object . object, r_object . part_id, p_recurse);
+
     MCExecPoint ep2(ep);
     MCExecContext ctxt(ep);
     
@@ -1305,10 +1305,25 @@ Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recu
     }
     
     return ES_ERROR;
-#endif
 }
 
-Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
+Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr, uint4 &parid, Boolean recurse)
+{
+    objptr = nil;
+    parid = 0;
+    
+    MCObjectPtr t_object;
+    if (getobj(ep, t_object, recurse) == ES_NORMAL)
+    {
+        objptr = t_object . object;
+        parid = t_object . part_id;
+        return ES_NORMAL;
+    }
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCChunk::getobj_legacy(MCExecPoint &ep, MCObject *&objptr,
                           uint4 &parid, Boolean recurse)
 {
 	objptr = NULL;
@@ -1954,19 +1969,6 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 	}
 
 	return ES_NORMAL;
-
-    objptr = nil;
-	parid = 0;
-    
-    MCObjectPtr t_object;
-    if (getobj(ep, t_object, recurse) == ES_NORMAL)
-    {
-        objptr = t_object . object;
-        parid = t_object . part_id;
-        return ES_NORMAL;
-    }
-    
-    return ES_ERROR;
 }
 
 Exec_stat MCChunk::extents(MCCRef *ref, int4 &start, int4 &number,
@@ -2570,7 +2572,6 @@ Exec_stat MCChunk::gets(MCExecPoint &ep)
 	ep.substring(start, end);
 	return ES_NORMAL;
 }
-
 
 Exec_stat MCChunk::eval_legacy(MCExecPoint &ep)
 {
@@ -3843,7 +3844,7 @@ Exec_stat MCChunk::getprop_legacy(Properties which, MCExecPoint &ep, MCNameRef i
 		}
 		MCU_geturl(ep);
 	}
-	if (getobj(ep, objptr, parid, True) != ES_NORMAL)
+	if (getobj_legacy(ep, objptr, parid, True) != ES_NORMAL)
 	{
 		MCeerror->add(EE_CHUNK_CANTFINDOBJECT, line, pos);
 		return ES_ERROR;

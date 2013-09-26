@@ -83,6 +83,9 @@ public:
 	void take_components(MCChunk *tchunk);
 	Exec_stat getobj(MCExecPoint &, MCObject *&, uint4 &parid, Boolean recurse);
 	Exec_stat getobj(MCExecPoint&, MCObjectPtr&, Boolean recurse);
+    
+    Exec_stat getobj_legacy(MCExecPoint &ep, MCObject *&objptr, uint4 &parid, Boolean recurse);
+    
 	Exec_stat extents(MCCRef *ref, int4 &start, int4 &number,
 	                  MCExecPoint &ep, const char *sptr, const char *eptr,
 	                  int4 (*count)(MCExecPoint &ep, const char *sptr,
@@ -97,8 +100,8 @@ public:
     
     Exec_stat set(MCExecPoint& ep, Preposition_type p_type, MCValueRef p_text);
 	Exec_stat gets(MCExecPoint &);
-
 	Exec_stat set_legacy(MCExecPoint &, Preposition_type ptype);
+    
 #ifdef LEGACY_EXEC    
 	// MW-2012-02-23: [[ PutUnicode ]] Set the chunk to the UTF-16 encoded text in ep.
 	Exec_stat setunicode(MCExecPoint& ep, Preposition_type ptype);
