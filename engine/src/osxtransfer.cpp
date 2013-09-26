@@ -584,11 +584,12 @@ bool MCConvertStyledTextToMacUnicodeStyled(MCDataRef p_input, MCDataRef& r_outpu
 	t_paragraphs = ((MCStyledText *)t_object) -> getparagraphs();
 	
 	MCExecPoint ep(NULL, NULL, NULL);
-	/* UNCHECKED */ MCtemplatefield -> getparagraphmacunicodestyles(ep, t_paragraphs, t_paragraphs -> prev());
+	MCExecContext ctxt(ep);
+	/* UNCHECKED */ MCtemplatefield -> getparagraphmacunicodestyles(ctxt, t_paragraphs, t_paragraphs -> prev());
 	
 	delete t_object;
 	
-	return ep . copyasdataref(r_output);
+	return ctxt . CopyAsDataRef(r_output);
 }
 
 bool MCConvertStyledTextToMacPlain(MCDataRef p_input, MCDataRef& r_output)

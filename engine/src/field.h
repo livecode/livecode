@@ -466,7 +466,7 @@ public:
 
 #ifdef _MACOSX
 	Exec_stat getparagraphmacstyles(MCExecPoint &ep, MCParagraph *start, MCParagraph *end, Boolean isunicode);
-	Exec_stat getparagraphmacunicodestyles(MCExecPoint &ep, MCParagraph *start, MCParagraph *end);
+	Exec_stat getparagraphmacunicodestyles(MCExecContaxt &ctxt, MCParagraph *start, MCParagraph *end);
 	MCParagraph *macstyletexttoparagraphs(const MCString &textdata, const MCString &styledata, Boolean isunicode);
 	MCParagraph *macunicodestyletexttoparagraphs(const MCString& p_text, const MCString& p_styles);
 	static bool macmatchfontname(const char *p_font_name, char p_derived_font_name[]);
