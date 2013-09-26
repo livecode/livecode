@@ -1831,7 +1831,7 @@ Boolean MCParagraph::finsertnew(MCStringRef p_text, bool p_is_unicode)
 			// We didn't find a line-break, so insert the string into the current paragraph and
 			// we must be done.
             MCAutoStringRef t_text;
-            /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)t_start, t_finish - t_start, &t_text);
+            /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)t_start, t_length, &t_text);
 			t_paragraph -> finsertnobreak(*t_text, p_is_unicode);
 			t_length = 0;
 		}
