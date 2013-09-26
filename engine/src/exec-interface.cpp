@@ -3949,9 +3949,9 @@ void MCInterfaceExecFind(MCExecContext& ctxt, int p_mode, MCStringRef p_needle, 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCInterfaceExecChooseTool(MCExecContext& ctxt, int p_tool)
+void MCInterfaceExecChooseTool(MCExecContext& ctxt, MCStringRef p_input, int p_tool)
 {
-	MCU_choose_tool(ctxt, (Tool)p_tool);
+	MCU_choose_tool(ctxt, p_input, (Tool)p_tool);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

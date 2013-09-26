@@ -151,7 +151,7 @@ extern MCRectangle MCU_offset_rect(const MCRectangle& r, int2 ox, int2 oy);
 
 extern MCRectangle MCU_recttoroot(MCStack *sptr, const MCRectangle &o);
 extern void MCU_getshift(uint4 mask, uint2 &shift, uint2 &outmask);
-extern void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool);
+extern void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_string, Tool p_tool);
 extern Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool,
 	                                 uint2 line, uint2 pos);
 extern Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef message, MCParameter *params);
