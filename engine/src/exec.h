@@ -586,8 +586,65 @@ public:
 
 	void SetRowDelimiter(char_t p_value)
 	{
-		m_ep . setrowdel(p_value);
-	}
+        m_ep . setrowdel(p_value);
+    }
+
+    bool SetValueRef(MCValueRef value)
+    {
+        return m_ep . setvalueref(value);
+    }
+
+    void NativeToUtf16()
+    {
+        return m_ep . nativetoutf16();
+    }
+
+    void Utf16ToNative()
+    {
+        return m_ep . utf16tonative();
+    }
+
+    void BinaryToText()
+    {
+        return m_ep . binarytotext();
+    }
+
+    void TextToBinary()
+    {
+        return m_ep . texttobinary();
+    }
+
+    void Utf16ToUtf8()
+    {
+        return m_ep . utf16toutf8();
+    }
+
+    void Utf8ToUtf16()
+    {
+        return m_ep . utf8toutf16();
+    }
+
+    bool CopyAsDataRef(MCDataRef &r_data)
+    {
+        return m_ep . copyasdataref(r_data);
+    }
+
+    bool CopyAsStringRef(MCStringRef &r_value)
+    {
+        return m_ep . copyasstringref(r_value);
+    }
+
+    bool Reserve(uindex_t p_capacity, char*& r_buffer)
+    {
+        return m_ep . reserve(p_capacity, r_buffer);
+    }
+
+    void Commit(uindex_t p_size)
+    {
+        return m_ep . commit(p_size);
+    }
+
+
 	//////////
 	
 	// Convert the given valueref to a string. If the type is not convertable
