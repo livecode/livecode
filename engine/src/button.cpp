@@ -527,7 +527,7 @@ void MCButton::close()
 		getcard()->freedefbutton(this);
 		
 		clearmnemonic();
-		MCValueRelease(tabs);
+		MCValueAssign(tabs, kMCEmptyArray);
 		freemenu(False);
 		if (entry != NULL)
 		{
