@@ -592,7 +592,7 @@ Boolean MCObject::kdown(const char *string, KeySym key)
 	if (state & CS_MENU_ATTACHED && attachedmenu != NULL)
 	{
 		MCStack *oldmenu = attachedmenu;
-		MCString pick;
+		MCAutoStringRef t_pick;
 		uint2 mh;
 		switch (key)
 		{
@@ -603,8 +603,7 @@ Boolean MCObject::kdown(const char *string, KeySym key)
 		case XK_Return:
 		case XK_KP_Enter:
 			closemenu(False, True);
-			oldmenu->menukdown(string, key, pick, mh);
-			delete (char *)pick.getstring();
+			oldmenu->menukdown(string, key, &t_pick, mh);
 			message_with_args(MCM_mouse_up, Button1);
 			return True;
 		default:
@@ -612,7 +611,7 @@ Boolean MCObject::kdown(const char *string, KeySym key)
 			if (mbptr != NULL)
 			{
 				closemenu(False, True);
-				oldmenu->menukdown(string, key, pick, mh);
+				oldmenu->menukdown(string, key, &t_pick, mh);
 				mbptr->activate(False, string[0]);
 				message_with_args(MCM_mouse_up, Button1);
 				return True;
@@ -728,12 +727,11 @@ Boolean MCObject::mup(uint2 which)
 		{
 			MCStack *oldmenu = attachedmenu;
 			closemenu(True, True);
-			MCString pick;
+			MCAutoStringRef t_pick;
 			uint2 menuhistory;
 			MCmenupoppedup = true;
-			oldmenu->menumup(which, pick, menuhistory);
+			oldmenu->menumup(which, &t_pick, menuhistory);
 			MCmenupoppedup = false;
-			delete (char *)pick.getstring();
 		}
 		return True;
 	}

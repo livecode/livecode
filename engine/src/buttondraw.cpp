@@ -364,16 +364,15 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		if (getflag(F_OPAQUE))
 			t_was_opaque = dc -> changeopaque(true);
 
-		MCString slabel;
-		bool isunicode;
-		getlabeltext(slabel, isunicode);
+		MCStringRef t_label = getlabeltext();
 		Boolean icondrawed = False;
-		if (flags & F_SHOW_NAME && slabel.getlength() && menucontrol != MENUCONTROL_SEPARATOR)
+		if (flags & F_SHOW_NAME && !MCStringIsEmpty(t_label) && menucontrol != MENUCONTROL_SEPARATOR)
 		{
-			MCString *lines = NULL;
-			uint2 nlines = 0;
-			MCU_break_string(slabel, lines, nlines, isunicode);
-
+			// Split the string on the newlines
+			MCAutoArrayRef lines;
+			/* UNCHECKED */ MCStringSplit(t_label, MCSTR("\n"), nil, kMCCompareExact, &lines);
+			uindex_t nlines = MCArrayGetCount(*lines);
+			
 			uint2 fheight;
 			fheight = gettextheight();
 
@@ -417,9 +416,21 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			
 			dc -> setclip(MCU_intersect_rect(dirty, t_content_rect));
 			
+			uindex_t t_totallen = 0;
 			for (i = 0 ; i < nlines ; i++)
 			{
-				twidth = MCFontMeasureText(m_font, lines[i].getstring(), lines[i].getlength(), isunicode);
+				// Note: 'lines' is an array of strings
+				MCValueRef lineval = nil;
+				/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i + 1, lineval);
+				MCStringRef line = (MCStringRef)(lineval);
+				twidth = MCFontMeasureText(m_font, line);
+				
+				// Mnemonic position calculation
+				uindex_t t_mnemonic = 0;
+				uindex_t t_linelen = MCStringGetLength(line);
+				if (mnemonic > t_totallen && mnemonic <= t_totallen + t_linelen)
+					t_mnemonic = mnemonic - t_totallen;
+				
 				switch (flags & F_ALIGNMENT)
 				{
 				case F_ALIGN_LEFT:
@@ -464,7 +475,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				fontstyle = gettextstyle();
 				if ((flags & F_DISABLED) != 0 && !t_themed_menu && MClook == LF_WIN95)
 				{
-					drawlabel(dc, sx + 1 + loff, sy + 1 + loff, twidth, shadowrect, lines[i], isunicode, fontstyle);
+					drawlabel(dc, sx + 1 + loff, sy + 1 + loff, twidth, shadowrect, line, fontstyle, t_mnemonic);
 					if (getstyleint(flags) == F_MENU && menumode == WM_CASCADE)
 					{
 						shadowrect.x++;
@@ -475,22 +486,22 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 					}
 					setforeground(dc, DI_BOTTOM, False);
 				}
-				drawlabel(dc, sx + loff, sy + loff, twidth, shadowrect, lines[i], isunicode, fontstyle);
+				drawlabel(dc, sx + loff, sy + loff, twidth, shadowrect, line, fontstyle, t_mnemonic);
 				if (getstyleint(flags) == F_MENU && menumode == WM_CASCADE && !t_themed_menu)
 					drawcascade(dc, shadowrect); // draw arrow in text color
 				if (flags & F_DISABLED && MClook == LF_WIN95 || t_themed_menu)
 					setforeground(dc, DI_TOP, False);
 				sy += fheight;
+				
+				t_totallen += t_linelen;
 			}
 
 			dc -> setclip(dirty);
 
-			delete lines;
 			if (labelwidth != 0 && !isunnamed())
 			{
-				MCString t_name_oldstring;
-				t_name_oldstring = getname_oldstring();
-				MCFontDrawText(m_font, t_name_oldstring . getstring(), t_name_oldstring . getlength(), false, dc, rect.x + leftmargin, starty, False);
+				MCStringRef t_name = MCNameGetString(getname());
+				MCFontDrawText(m_font, t_name, dc, rect.x + leftmargin, starty, False);
 			}
 
 			// MW-2012-01-27: [[ Bug 9432 ]] Native GTK handles focus borders itself
@@ -562,7 +573,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	}
 }
 
-void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, const MCString &s, bool isunicode, uint2 fstyle)
+void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, MCStringRef p_label, uint2 fstyle, uindex_t p_mnemonic)
 {
 	if (getstyleint(flags) == F_MENU && menumode == WM_OPTION
 	        && MClook != LF_WIN95)
@@ -571,15 +582,17 @@ void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectan
 	        && (getstyleint(flags) == F_STANDARD  || getstyleint(flags) == F_MENU
 	            && menumode == WM_OPTION))
 		sy--;
-	MCFontDrawText(m_font, s.getstring(), s.getlength(), isunicode, dc, sx, sy, False);
-	if (acceltext != NULL)
+	MCFontDrawText(m_font, p_label, dc, sx, sy, False);
+	
+	if (!MCStringIsEmpty(acceltext))
 	{
-		uint2 awidth = MCFontMeasureText(m_font, acceltext, acceltextsize, isunicode);
+		uint2 awidth = MCFontMeasureText(m_font, acceltext);
 		if (rightmargin == defaultmargin || menucontrol == MENUCONTROL_ITEM)
-			MCFontDrawText(m_font, acceltext, acceltextsize, hasunicode(), dc, srect.x + srect.width - rightmargin - awidth, sy, False);
+			MCFontDrawText(m_font, acceltext, dc, srect.x + srect.width - rightmargin - awidth, sy, False);
 		else
-			MCFontDrawText(m_font, acceltext, acceltextsize, hasunicode(), dc, srect.x + srect.width - rightmargin, sy, False);
+			MCFontDrawText(m_font, acceltext, dc, srect.x + srect.width - rightmargin, sy, False);
 	}
+
 	if (fstyle & FA_UNDERLINE)
 		dc->drawline(sx, sy + 1, sx + twidth, sy + 1);
 	if (fstyle & FA_STRIKEOUT)
@@ -590,16 +603,13 @@ void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectan
 	}
 	if (!IsMacLF() && mnemonic)
 	{
-		MCString slabel;
-		bool isunicode;
-		getlabeltext(slabel, isunicode);
-		const char *lptr = slabel.getstring();
-		if (mnemonic > (uint1)(s.getstring() - lptr) &&
-		        mnemonic <= (uint1)(s.getstring() + s.getlength() - lptr))
+		if (p_mnemonic > 0)
 		{
-			uint2 moffset = mnemonic - (s.getstring() - lptr) - 1;
-			uint2 mstart = sx + MCFontMeasureText(m_font, s.getstring(), moffset, isunicode);
-			uint2 mwidth = MCFontMeasureText(m_font, s.getstring() + moffset, 1, isunicode);
+			MCRange t_before = MCRangeMake(0, mnemonic - 1);
+			MCRange t_letter = MCRangeMake(mnemonic - 1, 1);
+			
+			int32_t mstart = sx + MCFontMeasureTextSubstring(m_font, p_label, t_before);
+			int32_t mwidth = MCFontMeasureTextSubstring(m_font, p_label, t_letter);
 			sy += mnemonicoffset;
 			dc->drawline(mstart, sy, mstart + mwidth, sy);
 		}
