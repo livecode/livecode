@@ -986,21 +986,31 @@ bool ConvertStyled_Text_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataR
 bool ConvertFile_rev_to_MIME ( MCDataRef p_input, MCTransferType p_type, MCDataRef& r_output )  
 {
 	MCString *t_strings = NULL ;
-	MCExecPoint ep(NULL, NULL, NULL );
 	uint2 	 n_strings ;
+	MCAutoStringRef t_output;
+	char_t t_del;
+	/* UNCHECKED */ MCStringCreateMutable(0, &t_output);
 
 	MCU_break_string( MCDataGetOldString(p_input) , t_strings, n_strings, false);
 	
 	for (uint4 a=0; a < n_strings; a++)
 	{
-		ep.concatcstring("file://", EC_RETURN, (a==0) );
-		ep.concatmcstring(t_strings[a], EC_NONE, false ); 
+		if (a == 0)
+			MCStringAppendNativeChars(*t_output, (const char_t *)"file://", strlen("file://"));
+		else
+		{
+			t_del = '\n';
+			MCStringAppendNativeChars(*t_output, &t_del, 1);
+			MCStringAppendNativeChars(*t_output, (const char_t *)"file://", strlen("file://"));
+		}
+
+		MCStringAppendNativeChars(*t_output, (const char_t *)t_strings[a] . getstring(), t_strings[a] . getlength());
 	}
 	
 	delete t_strings;
 
 	//MCU_urlencode(ep);
-	return ep . copyasdataref(r_output);
+	return MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_output), MCStringGetLength(*t_output), r_output);
 }
 
 bool ConvertFile_MIME_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output )  
