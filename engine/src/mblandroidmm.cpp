@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+#include "exec.h"
 #include "globals.h"
 #include "stack.h"
 #include "system.h"
@@ -107,7 +107,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMovieTouched(
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMovieTouched(JNIEnv *env, jobject object)
 {
 	MCLog("doMovieTouched", nil);
-	extern MCExecPoint *MCECptr;
+	extern MCExecContext *MCECptr;
 	MCEventQueuePostCustom(new MCMovieTouchedEvent(MCECptr -> GetObject()));
 }
 
