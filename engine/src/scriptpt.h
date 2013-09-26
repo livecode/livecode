@@ -44,13 +44,12 @@ class MCScriptPoint
 	const uint1 *curptr;
 	const uint1 *tokenptr;
 	const uint1 *backupptr;
-	char *lowered;
 	MCString token;
 	MCNameRef token_nameref;
-	uint2 loweredsize;
 	uint2 line;
 	uint2 pos;
 	Boolean escapes;
+	Symbol_type m_type;
 	
 	// MW-2011-06-23: If this is true, then we parse the script in 'tag' mode.
 	Boolean tagged;
@@ -65,6 +64,7 @@ public:
 	MCScriptPoint(MCObject *, MCHandlerlist *, MCStringRef script);
 	MCScriptPoint(MCExecPoint &ep);
 	MCScriptPoint(const MCString &s);
+	MCScriptPoint(MCStringRef p_string);
 	~MCScriptPoint();
 	MCScriptPoint& operator=(const MCScriptPoint& sp);
 	

@@ -104,7 +104,7 @@ protected:
 	void DoInitialize(void);
 	void DoFinalize(void);
 
-	bool DoReset(const char *p_name);
+    bool DoReset(MCStringRef p_name);
 	bool DoResetSettings(MCDataRef p_settings);
 
 	void DoFetchSettings(void*& r_buffer, uint4& r_length);

@@ -98,7 +98,7 @@ const char *MCServerScript::GetFileForContext(MCExecPoint& ep)
 	return NULL;
 }
 
-uint4 MCServerScript::FindFileIndex(const char *p_filename, bool p_add)
+uint4 MCServerScript::FindFileIndex(MCStringRef p_filename, bool p_add)
 {
 	File *t_file;
 	t_file = FindFile(p_filename, p_add);
@@ -109,14 +109,12 @@ uint4 MCServerScript::FindFileIndex(const char *p_filename, bool p_add)
 	return t_file -> index;
 }
 
-MCServerScript::File *MCServerScript::FindFile(const char *p_filename, bool p_add)
+MCServerScript::File *MCServerScript::FindFile(MCStringRef p_filename, bool p_add)
 {
 	// First resolve the filename.
-	MCAutoStringRef t_filename_string;
-	/* UNCHECKED */ MCStringCreateWithCString(p_filename, &t_filename_string);
 
 	MCAutoStringRef t_resolved_filename;
-	MCsystem -> ResolvePath(*t_filename_string, &t_resolved_filename);
+	MCsystem -> ResolvePath(p_filename, &t_resolved_filename);
 	
 	// Look through the file list...
 	File *t_file;
@@ -303,9 +301,9 @@ Parse_stat MCServerScript::ParseNextStatement(MCScriptPoint& sp, MCStatement*& r
 }
 
 // MW-2009-06-02: Add support for 'require' style includes.
-bool MCServerScript::Include(MCExecPoint& outer_ep, const char *p_filename, bool p_require)
+bool MCServerScript::Include(MCExecPoint& outer_ep, MCStringRef p_filename, bool p_require)
 {
-	if (p_filename == NULL || p_filename[0] == '\0')
+	if (MCStringIsEmpty(p_filename))
 	{
 		MCeerror->add(EE_INCLUDE_BADFILENAME, 0, 0, p_filename);
 		return false;
@@ -362,7 +360,7 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, const char *p_filename, bool
 		MCAutoStringRef t_filename_string;
 		/* UNCHECKED */ MCStringCreateWithCString(t_file -> filename, &t_filename_string);
 
-		t_handle = MCsystem -> OpenFile(*t_filename_string, kMCSystemFileModeRead | kMCSystemFileModeNulTerminate, true);
+		t_handle = MCsystem -> OpenFile(p_filename, kMCSystemFileModeRead | kMCSystemFileModeNulTerminate, true);
 		if (t_handle == NULL)
 		{
 			MCeerror -> add(EE_INCLUDE_FILENOTFOUND, 0, 0, t_file -> filename);
@@ -403,7 +401,10 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, const char *p_filename, bool
 	// Note that script point does not copy 'script' and requires it to be NUL-
 	// terminated. Indeed, this string *has* to persist until termination as
 	// constants, handler names and variable names use substrings of it directly.
-	MCScriptPoint sp(this, hlist, t_file -> script);
+    
+    MCAutoStringRef t_file_script;
+    /* UNCHECKED */ MCStringCreateWithCString(t_file -> script, &t_file_script);
+	MCScriptPoint sp(this, hlist, *t_file_script);
 	sp . allowtags(True);
 	
 	// The statement chain that will executed.

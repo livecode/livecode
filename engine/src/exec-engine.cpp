@@ -686,7 +686,7 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
 				return;
 			}
 			
-			/* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(0, 0), *t_value_string);
+			/* UNCHECKED */ MCStringPrepend(*t_string, *t_value_string);
 			
 			ep . setvalueref(*t_string);
 			p_var . variable -> set(ep, False);
@@ -1207,19 +1207,21 @@ static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObje
 			ctxt . LegacyThrow(EE_SEND_BADEXP, *t_message);
 		else
 		{
-			char *tptr = (char *)MCNameGetCString(*t_message);
+            MCAutoStringRef tptr;
+
 			if (t_params != NULL)
 			{
 				t_params->eval(ctxt . GetEP());
-				char *p = ctxt . GetEP() . getsvalue() . clone();
-				tptr = new char[strlen(MCNameGetCString(*t_message)) + ctxt . GetEP() . getsvalue() . getlength() + 2];
-				sprintf(tptr, "%s %s", MCNameGetCString(*t_message), p);
-				delete p;
+                MCAutoStringRef t_value;
+				ctxt . GetEP() . copyasstringref(&t_value);
+                MCStringFormat(&tptr, "%@ %@", *t_message, *t_value);
+				
 			}
-			if ((stat = optr->domess(tptr)) == ES_ERROR)
+            else
+                tptr = MCNameGetString(*t_message);
+            
+			if ((stat = optr->domess(*tptr)) == ES_ERROR)
 				ctxt . LegacyThrow(EE_STATEMENT_BADCOMMAND, *t_message);
-			if (tptr != MCNameGetCString(*t_message))
-				delete tptr;
 		}
 	}
 	else if (stat == ES_PASS)
@@ -1580,7 +1582,7 @@ bool MCEngineEvalValueAsObject(MCValueRef p_value, bool p_strict, MCObjectPtr& r
 void MCEngineEvalValueAsObject(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_object)
 {
     bool t_parse_error;
-    if (MCEngineEvalValueAsObject(p_value, true, r_object, t_parse_error))
+    if (!MCEngineEvalValueAsObject(p_value, true, r_object, t_parse_error))
         ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP);
 }
 
@@ -1668,14 +1670,13 @@ void MCEngineEvalMeAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
     else
         t_object = ctxt . GetObject();
 
-    if (t_object != nil)
-    {
         r_object . object = t_object;
         r_object . part_id = 0;
-        return;
-    }
     
-    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+    if (t_object != nil)
+        return;
+    
+  //  ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
 }
 
 void MCEngineEvalMenuObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)

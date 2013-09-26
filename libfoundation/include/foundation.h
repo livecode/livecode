@@ -18,6 +18,16 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __MC_FOUNDATION__
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#ifdef __ANDROID__
+#define __PLATFORM_IS_ANDROID__
+#endif
+
+#ifdef __APPLE__
+#include "TargetConditionals.h"
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
 //
 //  MACRO UNDEFINITIONS
 //
@@ -134,7 +144,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  CONFIGURE DEFINITIONS FOR MAC
 //
 
-#if defined(__GNUC__) && defined(__APPLE__)
+#if defined(__GNUC__) && defined(__APPLE__) && !defined(TARGET_OS_IPHONE)
 
 // Compiler
 #define __GCC__ 1
@@ -176,7 +186,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  CONFIGURE DEFINITIONS FOR LINUX
 //
 
-#if defined(__GNUC__) && !defined(__APPLE__)
+#if defined(__GNUC__) && !defined(__APPLE__) && !defined(__PLATFORM_IS_ANDROID__)
 
 // Compiler
 #define __GCC__
@@ -215,10 +225,81 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  CONFIGURE DEFINITIONS FOR IOS
 //
 
+#if defined(__GNUC__) && defined(__APPLE__) && defined(TARGET_OS_IPHONE)
+
+// Compiler
+#define __GCC__ 1
+
+// Platform
+#define __IOS__ 1
+
+// Architecture
+#if defined(__i386)
+#define __32_BIT__ 1
+#define __LITTLE_ENDIAN__ 1
+#define __I386__ 1
+#define __SMALL__ 1
+#elif defined(__ppc__)
+#define __32_BIT__ 1 
+#define __BIG_ENDIAN__ 1 
+#define __PPC__ 1
+#define __SMALL__ 1
+#elif defined(__x86_64__)
+#define __64_BIT__ 1
+#define __LITTLE_ENDIAN__ 1
+#define __X86_64__ 1
+#define __HUGE__ 1 
+#endif
+
+// Native char set
+#define __MACROMAN__ 1
+
+// Native line endings
+#define __CR__ 1
+
+// Presence of CoreFoundation
+#define __HAS_CORE_FOUNDATION__
+
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  CONFIGURE DEFINITIONS FOR ANDROID
 //
+
+#if defined(__GNUC__) && !defined(__APPLE__) && defined(__PLATFORM_IS_ANDROID__)
+
+// Compiler
+#define __GCC__
+
+// Platform
+#define __ANDROID__
+
+// Architecture
+#if defined(__i386)
+#define __32_BIT__
+#define __LITTLE_ENDIAN__
+#define __I386__
+#define __SMALL__
+#elif defined(__x86_64__)
+#define __64_BIT__
+#define __LITTLE_ENDIAN__
+#define __X86_64__
+#define __HUGE__
+#elif defined(__arm__)
+#define __32_BIT__
+#define __LITTLE_ENDIAN__
+#define __ARM__
+#define __SMALL__
+#endif
+
+// Native char set
+#define __ISO_8859_1__
+
+// Native line endings
+#define __LF__
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -285,6 +366,10 @@ typedef signed int intptr_t;
 typedef unsigned int uintptr_t;
 typedef unsigned int size_t;
 #elif defined(__LINUX__)
+typedef signed int intptr_t;
+typedef unsigned int uintptr_t;
+typedef unsigned int size_t;
+#elif defined(__ANDROID__)
 typedef signed int intptr_t;
 typedef unsigned int uintptr_t;
 typedef unsigned int size_t;
@@ -484,7 +569,7 @@ inline compare_t MCCompare(uint32_t a, uint32_t b) { return a < b ? -1 : (a > b 
 inline compare_t MCCompare(int64_t a, int64_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
 inline compare_t MCCompare(uint64_t a, uint64_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
 
-#if !defined(__WINDOWS__) && !defined(__LINUX__)
+#if !defined(__WINDOWS__) && !defined(__LINUX__) && !defined(__ANDROID__)
 inline compare_t MCCompare(intptr_t a, intptr_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
 inline compare_t MCCompare(uintptr_t a, uintptr_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
 #endif
@@ -1464,7 +1549,10 @@ bool MCStringAppendNativeChar(MCStringRef string, char_t p_char);
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
 bool MCStringPrepend(MCStringRef string, MCStringRef prefix);
 bool MCStringPrependSubstring(MCStringRef string, MCStringRef suffix, MCRange range);
+bool MCStringPrependChars(MCStringRef string, const unichar_t *chars, uindex_t count);
 bool MCStringPrependNativeChars(MCStringRef string, const char_t *chars, uindex_t count);
+bool MCStringPrependChar(MCStringRef string, unichar_t p_char);
+bool MCStringPrependNativeChar(MCStringRef string, char_t p_char);
 
 // Insert new_string into string at offset 'at'.
 //
@@ -1475,6 +1563,11 @@ bool MCStringInsert(MCStringRef string, uindex_t at, MCStringRef new_string);
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
 bool MCStringRemove(MCStringRef string, MCRange range);
+
+// Retain only 'range' characters from 'string'.
+//
+// Note that 'string' must be mutable, it is a fatal runtime error if it is not.
+bool MCStringSubstring(MCStringRef string, MCRange range);
 
 // Replace 'range' characters in 'string' with 'replacement'.
 //
@@ -1624,6 +1717,9 @@ bool MCArrayApply(MCArrayRef array, MCArrayApplyCallback callback, void *context
 // A return value of 'false' means no further elements. Do not modify the array
 // inbetween calls to Iterate as this will cause undefined behavior.
 bool MCArrayIterate(MCArrayRef array, uintptr_t& iterator, MCNameRef& r_key, MCValueRef& r_value);
+
+// Returns true if the given array is the empty array.
+bool MCArrayIsEmpty(MCArrayRef self);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

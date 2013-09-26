@@ -317,7 +317,7 @@ Window MCModeGetParentWindow(void)
 	return NULL;
 }
 
-bool MCModeCanAccessDomain(const char *p_name)
+bool MCModeCanAccessDomain(MCStringRef p_name)
 {
 	return false;
 }
