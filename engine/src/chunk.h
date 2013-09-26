@@ -96,7 +96,6 @@ public:
 	Exec_stat markcharactersinfield(uint32_t part_id, MCExecPoint& ep, int32_t& start, int32_t& end, MCField *field);
     
     Exec_stat set(MCExecPoint& ep, Preposition_type p_type, MCValueRef p_text);
-
 	Exec_stat gets(MCExecPoint &);
 
 	Exec_stat set_legacy(MCExecPoint &, Preposition_type ptype);

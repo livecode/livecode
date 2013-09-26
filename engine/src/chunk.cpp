@@ -2558,7 +2558,6 @@ Exec_stat MCChunk::mark_legacy(MCExecPoint &ep, int4 &start, int4 &end, Boolean 
 	return ES_NORMAL;
 }
 
-
 Exec_stat MCChunk::gets(MCExecPoint &ep)
 {
 	int4 start, end;

@@ -359,6 +359,7 @@ Exec_stat MCConvert::exec(MCExecPoint &ep)
 	else
 	{
 		MCDateTimeExecConvert(ctxt, *t_input, fform, fsform, pform, sform, &t_output);
+
 		ep . setvalueref(*t_output);
 		if (container -> set_legacy(ep, PT_INTO) != ES_NORMAL)
 		{
@@ -1419,58 +1420,7 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 
 	if (dest != nil)
 	{
-		if (dest -> isvarchunk())
-		{
-			MCVariableChunkPtr t_var_chunk;
-			if (dest -> evalvarchunk(ep, false, true, t_var_chunk) != ES_NORMAL)
-				return ES_ERROR;
-			
-			MCEngineExecPutIntoVariable(ctxt, *t_value, prep, t_var_chunk);
-		}
-		else if (dest -> isurlchunk())
-		{
-			MCAutoStringRef t_string;
-			if (!ctxt . ConvertToString(*t_value, &t_string))
-			{
-				MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
-				return ES_ERROR;
-			}
-			
-			MCUrlChunkPtr t_url_chunk;
-			t_url_chunk . url = nil;
-			if (dest -> evalurlchunk(ep, false, true, t_url_chunk) != ES_NORMAL)
-				return ES_ERROR;
-			
-			MCNetworkExecPutIntoUrl(ctxt, *t_string, prep, t_url_chunk);
-			
-			MCValueRelease(t_url_chunk . url);
-		}
-		else
-		{
-			MCAutoStringRef t_string;
-			if (!ctxt . ConvertToString(*t_value, &t_string))
-			{
-				MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
-				return ES_ERROR;
-			}
-			
-			MCObjectChunkPtr t_obj_chunk;
-			if (dest -> evalobjectchunk(ep, false, true, t_obj_chunk) != ES_NORMAL)
-				return ES_ERROR;
-			
-			if (t_obj_chunk . object -> gettype() == CT_FIELD)
-				MCInterfaceExecPutIntoField(ctxt, *t_string, prep, t_obj_chunk, is_unicode);
-			else
-			{
-				if (is_unicode)
-				{
-					MCeerror -> add(EE_CHUNK_CANTSETUNICODEDEST, line, pos);
-					return ES_ERROR;
-				}
-				
-				MCInterfaceExecPutIntoObject(ctxt, *t_string, prep, t_obj_chunk);
-			}
-		}
+        dest -> set(ep, prep, *t_value);
 	}
 	else
 	{
