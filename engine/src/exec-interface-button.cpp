@@ -870,7 +870,7 @@ void MCButton::GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width)
 			uint2 fwidth;
 			
 			MCStringRef t_label = getlabeltext();
-			if (MCStringIsEmpty)
+			if (MCStringIsEmpty(t_label))
 				fwidth = 0;
 			else 
 				fwidth = leftmargin + rightmargin + MCFontMeasureText(m_font, t_label);

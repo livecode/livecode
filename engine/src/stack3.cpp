@@ -1554,16 +1554,17 @@ void MCStack::menumup(uint2 which, MCStringRef &r_string, uint2 &selline)
 
 		MCExecPoint ep(this, NULL, NULL);
 		MCExecContext ctxt(ep);
+		MCAutoStringRef t_label;
 		MCStringRef t_name = nil;
-		MCStringRef t_label = nil;
-		focused->getstringprop(ctxt, 0, P_LABEL, true, t_label);
-		t_name = MCNameGetString(getname());
+		focused->getstringprop(ctxt, 0, P_LABEL, true, &t_label);
+		t_name = MCNameGetString(focused->getname());
 		if (!MCStringIsEmpty(t_name))
 		{
-			if (t_has_tags && !MCStringIsEqualTo(t_label, t_name, kMCStringOptionCompareExact))
+			// If the name exists, use it in preference to the label
+			if (t_has_tags && !MCStringIsEqualTo(*t_label, t_name, kMCStringOptionCompareExact))
 				r_string = MCValueRetain(t_name);
 			else 
-				r_string = t_label;
+				r_string = MCValueRetain(*t_label);
 		}
 			
 		if (focused->gettype() == CT_FIELD)
