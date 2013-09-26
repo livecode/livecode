@@ -2266,7 +2266,7 @@ bool MCField::returnchunk(int4 p_si, int4 p_ei, MCStringRef& r_chunk)
 	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
 	MCAutoNumberRef t_number;
-	getnumberprop(ctxt, 0, P_NUMBER, False, &t_number);
+	/* UNCHECKED */ getnumberprop(ctxt, 0, P_NUMBER, False, &t_number);
 	uint2 number = (uint2) MCNumberFetchAsUnsignedInteger(*t_number);
 
 	// MW-2012-02-23: [[ CharChunk ]] Map the internal field indices (si, ei) to
@@ -2283,7 +2283,7 @@ bool MCField::returnline(int4 si, int4 ei, MCStringRef& r_string)
 	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
 	MCAutoNumberRef t_number;
-	getnumberprop(ctxt, 0, P_NUMBER, False, &t_number);
+	/* UNCHECKED */ getnumberprop(ctxt, 0, P_NUMBER, False, &t_number);
 	uint2 number = (uint2) MCNumberFetchAsUnsignedInteger(*t_number);
 	uint4 line = 0;
 	int4 offset = 0;
