@@ -2324,10 +2324,10 @@ void MCPasteboardEvalDragDestinationAsObject(MCExecContext& ctxt, MCObjectPtr& r
 void MCPasteboardExecPaste(MCExecContext& ctxt);
 
 void MCPasteboardExecCopy(MCExecContext& ctxt);
-void MCPasteboardExecCopyTextToClipboard(MCExecContext& ctxt, MCObjectChunkPtr p_target);
+void MCPasteboardExecCopyTextToClipboard(MCExecContext& ctxt, MCChunk *p_target);
 void MCPasteboardExecCopyObjectsToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets, uindex_t p_target_count);
 void MCPasteboardExecCut(MCExecContext& ctxt);
-void MCPasteboardExecCutTextToClipboard(MCExecContext& ctxt, MCObjectChunkPtr p_target);
+void MCPasteboardExecCutTextToClipboard(MCExecContext& ctxt, MCChunk *p_target);
 void MCPasteboardExecCutObjectsToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets, uindex_t p_target_count);
 
 void MCPasteboardGetAcceptDrop(MCExecContext& ctxt, bool& r_value);

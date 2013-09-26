@@ -462,19 +462,11 @@ Exec_stat MCClipboardCmd::exec(MCExecPoint& ep)
 			MCeerror -> add(EE_CLIPBOARD_BADMIX, line, pos);
 			return ES_ERROR;
 		}
-        
-        MCObjectChunkPtr t_obj_chunk;
-        if (targets -> evalobjectchunk(ep, true, false, t_obj_chunk) != ES_NORMAL)
-        {
-            MCeerror -> add(EE_CLIPBOARD_BADTEXT, line, pos);
-            return ES_ERROR;
-        }
-        
 		if (iscut())
-			MCPasteboardExecCutTextToClipboard(ctxt, t_obj_chunk);
+			MCPasteboardExecCutTextToClipboard(ctxt, targets);
 		else
-			MCPasteboardExecCopyTextToClipboard(ctxt, t_obj_chunk);
-	}
+			MCPasteboardExecCopyTextToClipboard(ctxt, targets);
+	}	
 	else
 	{
 		// Explicit form (2)/(3) - object chunks
@@ -3434,7 +3426,8 @@ Exec_stat MCReplace::exec(MCExecPoint &ep)
 
 	if (!ctxt . HasError())
 	{
-		return container -> set(ep, PT_INTO, *t_target);
+		ep . setvalueref(*t_target);
+		return container -> set_legacy(ep, PT_INTO);
 	}
 
 	return ctxt . Catch(line, pos);

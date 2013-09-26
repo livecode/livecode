@@ -693,7 +693,7 @@ void MCChunk::take_components(MCChunk *tchunk)
 
 Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recurse)
 {
-	return getobj_legacy(ep, r_object . object, r_object . part_id, p_recurse);
+	//return getobj_legacy(ep, r_object . object, r_object . part_id, p_recurse);
 
     MCExecPoint ep2(ep);
     MCExecContext ctxt(ep);
@@ -870,18 +870,7 @@ Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recu
                    t_object . object = t_object . object -> getstack();
                 break;
             case CT_GROUP:
-                if (stack != nil || background != nil)
-                {
-                   t_object . object = t_object . object -> getstack();
-                }
-                else if (card != nil)
-                {
-                    MCGroup *t_bg = static_cast<MCGroup *>(t_object . object);
-                    MCStack *t_stack = t_bg -> getstack();
-                    t_stack -> setbackground(t_bg);
-                   t_object . object = t_stack;
-                }
-                break;
+                return getobj_legacy(ep, r_object . object, r_object . part_id, p_recurse);
             case CT_AUDIO_CLIP:
             case CT_VIDEO_CLIP:
             case CT_LAYER:
@@ -1309,6 +1298,7 @@ Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recu
 
 Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr, uint4 &parid, Boolean recurse)
 {
+//    return getobj_legacy(ep, objptr, parid, recurse);
     objptr = nil;
     parid = 0;
     
@@ -2708,6 +2698,8 @@ Exec_stat MCChunk::eval_legacy(MCExecPoint &ep)
 
 Exec_stat MCChunk::eval(MCExecPoint &ep)
 {
+    //return eval_legacy(ep);
+    
     MCAutoStringRef t_text;
     MCExecContext ctxt(ep);
     
@@ -3143,7 +3135,6 @@ Exec_stat MCChunk::settextchunk(MCExecPoint& ep, MCStringRef p_to_set, Prepositi
     return ES_NORMAL;
 }
 
-
 Exec_stat MCChunk::set_legacy(MCExecPoint &ep, Preposition_type ptype)
 {
 	MCObject *objptr = NULL;
@@ -3343,8 +3334,8 @@ Exec_stat MCChunk::set_legacy(MCExecPoint &ep, Preposition_type ptype)
 
 Exec_stat MCChunk::set(MCExecPoint& ep, Preposition_type p_type, MCValueRef p_value)
 {
-    ep . setvalueref(p_value);
-    return set_legacy(ep, p_type);
+    //ep . setvalueref(p_value);
+    //return set_legacy(ep, p_type);
     
     MCExecContext ctxt(ep);
     
@@ -3911,7 +3902,7 @@ Exec_stat MCChunk::setprop_legacy(Properties which, MCExecPoint &ep, MCNameRef i
 		}
 		MCU_geturl(ep);
 	}
-	if (getobj(ep, objptr, parid, True) != ES_NORMAL)
+	if (getobj_legacy(ep, objptr, parid, True) != ES_NORMAL)
 	{
 		MCeerror->add(EE_CHUNK_CANTFINDOBJECT, line, pos);
 		return ES_ERROR;
@@ -3992,7 +3983,7 @@ Exec_stat MCChunk::setprop_legacy(Properties which, MCExecPoint &ep, MCNameRef i
 // MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
 Exec_stat MCChunk::getprop(Properties which, MCExecPoint &ep, MCNameRef index, Boolean effective)
 {
-    return getprop_legacy(which, ep, index, effective);
+    //return getprop_legacy(which, ep, index, effective);
     
     if (url != NULL)
 	{
@@ -4003,7 +3994,7 @@ Exec_stat MCChunk::getprop(Properties which, MCExecPoint &ep, MCNameRef index, B
 		}
 		MCU_geturl(ep);
 	}
-    
+
     MCObjectChunkPtr t_obj_chunk;
     if (evalobjectchunk(ep, false, false, t_obj_chunk) != ES_NORMAL)
         return ES_ERROR;
@@ -4048,7 +4039,7 @@ Exec_stat MCChunk::getprop(Properties which, MCExecPoint &ep, MCNameRef index, B
 // MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
 Exec_stat MCChunk::setprop(Properties which, MCExecPoint &ep, MCNameRef index, Boolean effective)
 {
-    return setprop_legacy(which, ep, index, effective);
+    //return setprop_legacy(which, ep, index, effective);
         
     if (url != NULL)
     {
@@ -4061,7 +4052,8 @@ Exec_stat MCChunk::setprop(Properties which, MCExecPoint &ep, MCNameRef index, B
     }
     
     MCObjectChunkPtr t_obj_chunk;
-    if (evalobjectchunk(ep, false, false, t_obj_chunk) != ES_NORMAL)
+    MCExecPoint ep2(ep);
+    if (evalobjectchunk(ep2, false, false, t_obj_chunk) != ES_NORMAL)
         return ES_ERROR;
     
     if (t_obj_chunk . chunk == CT_UNDEFINED)
@@ -4104,23 +4096,14 @@ Exec_stat MCChunk::setprop(Properties which, MCExecPoint &ep, MCNameRef index, B
                 MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
                 return ES_ERROR;
             }
-            
-            // MW-2011-11-23: [[ Array TextStyle ]] Pass the 'index' along to method to
-            //   handle specific styles.
-            MCField *fptr;
-            fptr = static_cast<MCField *>(t_obj_chunk . object);
-            if (fptr->gettextatts(t_obj_chunk . part_id, which, ep, index, effective, t_obj_chunk . start, t_obj_chunk . finish, islinechunk()) != ES_NORMAL)
-            {
-                MCeerror->add(EE_CHUNK_CANTGETATTS, line, pos);
-                return ES_ERROR;
-            }
-            
             // MW-2011-11-23: [[ Array TextStyle ]] Pass the 'index' along to method to
             //   handle specific styles.
             // MW-2011-12-08: [[ StyledText ]] Pass the ep, rather than the svalue of
             //   the ep.
             // MW-2012-01-25: [[ ParaStyles ]] Pass whether this was an explicit line chunk
             //   or not. This is used to disambiguate the setting of 'backColor'.
+            MCField *fptr;
+            fptr = static_cast<MCField *>(t_obj_chunk . object);
             if (fptr->settextatts(t_obj_chunk . part_id, which, ep, index, t_obj_chunk . start, t_obj_chunk . finish, islinechunk()) != ES_NORMAL)
             {
                 MCeerror->add(EE_CHUNK_CANTSETATTS, line, pos);
@@ -4283,6 +4266,140 @@ Exec_stat MCChunk::evalobjectchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_f
     return ES_NORMAL;
 }
 
+#if 0
+Exec_stat MCChunk::evalvarchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_force, MCVariableChunkPtr& r_chunk)
+{
+	if (destvar == nil)
+	{
+		MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
+		return ES_ERROR;
+	}
+    
+	if (destvar->eval(ep) != ES_NORMAL)
+	{
+		MCeerror->add(EE_CHUNK_SETCANTGETDEST, line, pos);
+		return ES_ERROR;
+	}
+    
+	int4 start, end;
+	if (mark_legacy(ep, start, end, p_force, p_whole_chunk) != ES_NORMAL)
+	{
+		MCeerror->add(EE_CHUNK_CANTMARK, line, pos);
+		return ES_ERROR;
+	}
+    
+	r_chunk . variable = destvar;
+	r_chunk . chunk = getlastchunktype();
+	r_chunk . start = start;
+	r_chunk . finish = end;
+    
+	return ES_NORMAL;
+}
+
+Exec_stat MCChunk::evalurlchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_force, MCUrlChunkPtr& r_chunk)
+{
+	if (url->startpos->eval(ep) != ES_NORMAL)
+	{
+		MCeerror->add(EE_CHUNK_BADEXPRESSION, line, pos);
+		return ES_ERROR;
+	}
+	
+	MCAutoStringRef t_url;
+	/* UNCHECKED */ ep . copyasstringref(&t_url);
+	
+	MCU_geturl(ep);
+    
+	int4 start, end;
+	if (mark_legacy(ep, start, end, p_force, p_whole_chunk) != ES_NORMAL)
+	{
+		MCeerror->add(EE_CHUNK_CANTMARK, line, pos);
+		return ES_ERROR;
+	}
+	
+	r_chunk . url = MCValueRetain(*t_url);
+	r_chunk . chunk = getlastchunktype();
+	r_chunk . start = start;
+	r_chunk . finish = end;
+	
+	return ES_NORMAL;
+}
+
+Exec_stat MCChunk::evalobjectchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_force, MCObjectChunkPtr& r_chunk)
+{
+	MCObject *objptr;
+	uint4 parid;
+	if (getobj(ep, objptr, parid, True) != ES_NORMAL)
+	{
+		MCeerror->add(EE_CHUNK_CANTFINDOBJECT, line, pos);
+		return ES_ERROR;
+	}
+    
+	Boolean tfunction = False;
+	if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
+        && function != F_SELECTED_FIELD && function != F_FOUND_FIELD
+        && function != F_MOUSE_CONTROL && function != F_FOCUSED_OBJECT
+        && function != F_SELECTED_IMAGE
+        && function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
+		tfunction = True;
+    
+	if (!tfunction && cline == NULL && item == NULL
+        && token == NULL && word == NULL && character == NULL)
+	{
+		r_chunk . object = objptr;
+		r_chunk . part_id = parid;
+		r_chunk . chunk = CT_UNDEFINED;
+		r_chunk . start = 0;
+		r_chunk . finish = 0;
+		return ES_NORMAL;
+	}
+    
+	if (objptr -> gettype() == CT_BUTTON && ((MCButton *)objptr) -> getentry() == nil)
+	{
+		// MW-2012-02-16: [[ IntrinsicUnicode ]] For simplicity, always process the
+		//   button text in utf-8.
+		objptr->getprop(parid, P_UNICODE_TEXT, ep, False);
+        
+		ep . utf16toutf8();
+        
+		int4 start, end;
+		if (mark_legacy(ep, start, end, p_force, p_whole_chunk) != ES_NORMAL)
+		{
+			MCeerror->add(EE_CHUNK_CANTMARK, line, pos);
+			return ES_ERROR;
+		}
+        
+		r_chunk . object = objptr;
+		r_chunk . part_id = parid;
+		r_chunk . chunk = getlastchunktype();
+		r_chunk . start = start;
+		r_chunk . finish = end;
+		return ES_NORMAL;
+	}
+    
+	if (objptr -> gettype() == CT_BUTTON || objptr -> gettype() == CT_FIELD)
+	{
+		MCField *t_field;
+		if (objptr -> gettype() == CT_FIELD)
+			t_field = (MCField *)objptr;
+		else
+			t_field = ((MCButton *)objptr) -> getentry();
+		
+		int4 start, end;
+		if (fieldmark(ep, t_field, 0, start, end, p_whole_chunk, p_force) != ES_NORMAL)
+			return ES_ERROR;
+        
+		r_chunk . object = objptr;
+		r_chunk . part_id = parid;
+		r_chunk . chunk = getlastchunktype();
+		r_chunk . start = start;
+		r_chunk . finish = end;
+		return ES_NORMAL;
+	}
+    
+	MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
+	return ES_ERROR;
+}
+#endif
 #ifdef TO_REMOVE
 Exec_stat MCChunk::select(MCExecPoint &ep, Preposition_type where, Boolean text, Boolean first)
 {
@@ -4448,7 +4565,6 @@ bool MCChunk::issubstringchunk(void) const
 	return false;
 }
 
-#ifdef LEGACY_EXEC
 // This method works out the start and end points of the text chunk in the
 // given field.
 //
@@ -4479,7 +4595,6 @@ Exec_stat MCChunk::marktextchunk(MCExecPoint& ep, MCField*& r_field, uint4& r_pa
 
 	return ES_NORMAL;
 }
-#endif
 
 #if TO_REMOVE
 Exec_stat MCChunk::del(MCExecPoint &ep)

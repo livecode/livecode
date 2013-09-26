@@ -1370,14 +1370,14 @@ void MCStringsSkipWord(MCExecContext& ctxt, MCStringRef p_string, bool p_skip_sp
     }
     else
     {
-        while (!isspace(MCStringGetNativeCharAtIndex(p_string, x_offset)))
+        while (!isspace(MCStringGetNativeCharAtIndex(p_string, x_offset)) && x_offset < t_length)
             x_offset++;
     }
         
     if (p_skip_spaces)
     {
-        while (isspace(MCStringGetNativeCharAtIndex(p_string, x_offset)))
-                    x_offset++;
+        while (isspace(MCStringGetNativeCharAtIndex(p_string, x_offset)) && x_offset < t_length)
+            x_offset++;
     }
 }
 
@@ -2007,17 +2007,6 @@ void MCStringsGetTextChunk(MCExecContext& ctxt, MCStringRef p_source, integer_t 
     MCStringCopySubstring(p_source, MCRangeMake(p_start, p_end - p_start), r_result);
 }
 
-void MCStringsEvalIndices(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, integer_t p_chunk_count, integer_t& x_start, integer_t& x_end, integer_t& r_add)
-{
-    integer_t t_start;
-    integer_t t_end;
-    MCStringsMarkTextChunk(ctxt, p_source, p_chunk_type, p_first, p_chunk_count, t_start, t_end, false, false, true, r_add);
-    
-    x_end = x_start + t_end;
-    x_start += t_start;
-    
-}
-
 void MCStringsEvalTextChunkByRange(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, integer_t& x_start, integer_t& x_end, MCStringRef& r_result)
 {
     int4 t_first;
@@ -2025,9 +2014,12 @@ void MCStringsEvalTextChunkByRange(MCExecContext& ctxt, MCStringRef p_source, Ch
     MCStringsGetExtentsByRange(ctxt, p_chunk_type, p_first, p_last, p_source, t_first, t_chunk_count);
 
     int4 t_add;
-    MCStringsEvalIndices(ctxt, p_source, p_chunk_type, t_first, t_chunk_count, x_start, x_end, t_add);
+    int4 t_start, t_end;
+    MCStringsMarkTextChunk(ctxt, p_source, p_chunk_type, t_first, t_chunk_count, t_start, t_end, false, false, true, t_add);
+    MCStringsGetTextChunk(ctxt, p_source, t_start, t_end, r_result);
     
-    MCStringsGetTextChunk(ctxt, p_source, t_first, t_chunk_count, r_result);
+    x_end = x_start + t_end;
+    x_start += t_start;
 }
 
 void MCStringsEvalTextChunkByExpression(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, integer_t& x_start, integer_t& x_end, MCStringRef& r_result)
@@ -2037,9 +2029,12 @@ void MCStringsEvalTextChunkByExpression(MCExecContext& ctxt, MCStringRef p_sourc
     MCStringsGetExtentsByExpression(ctxt, p_chunk_type, p_first, p_source, t_first, t_chunk_count);
     
     int4 t_add;
-    MCStringsEvalIndices(ctxt, p_source, p_chunk_type, t_first, t_chunk_count, x_start, x_end, t_add);
+    int4 t_start, t_end;
+    MCStringsMarkTextChunk(ctxt, p_source, p_chunk_type, t_first, t_chunk_count, t_start, t_end, false, false, true, t_add);
+    MCStringsGetTextChunk(ctxt, p_source, t_start, t_end, r_result);
     
-    MCStringsGetTextChunk(ctxt, p_source, t_first, t_chunk_count, r_result);
+    x_end = x_start + t_end;
+    x_start += t_start;
 }
 
 void MCStringsEvalTextChunkByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, Chunk_term p_ordinal_type, integer_t& x_start, integer_t& x_end, MCStringRef& r_result)
@@ -2049,9 +2044,12 @@ void MCStringsEvalTextChunkByOrdinal(MCExecContext& ctxt, MCStringRef p_source, 
     MCStringsGetExtentsByOrdinal(ctxt, p_chunk_type, p_ordinal_type, p_source, t_first, t_chunk_count);
     
     int4 t_add;
-    MCStringsEvalIndices(ctxt, p_source, p_chunk_type, t_first, t_chunk_count, x_start, x_end, t_add);
+    int4 t_start, t_end;
+    MCStringsMarkTextChunk(ctxt, p_source, p_chunk_type, t_first, t_chunk_count, t_start, t_end, false, false, true, t_add);
+    MCStringsGetTextChunk(ctxt, p_source, t_start, t_end, r_result);
     
-    MCStringsGetTextChunk(ctxt, p_source, t_first, t_chunk_count, r_result);
+    x_end = x_start + t_end;
+    x_start += t_start;
 }
 
 void MCStringsEvalLinesOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, integer_t& x_start, integer_t& x_end, MCStringRef& r_result)
