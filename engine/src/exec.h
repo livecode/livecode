@@ -595,6 +595,16 @@ public:
 		return m_ep . setvalueref(value);
 	}
 
+	void NativeToUtf16()
+	{
+		return m_ep . nativetoutf16();
+	}
+
+	void Utf16ToNative()
+	{
+		return m_ep . utf16tonative();
+	}
+
 	void BinaryToText()
 	{
 		return m_ep . binarytotext();
@@ -618,6 +628,11 @@ public:
 	bool CopyAsDataRef(MCDataRef &r_data)
 	{
 		return m_ep . copyasdataref(r_data);
+	}
+
+	bool CopyAsStringRef(MCStringRef &r_value)
+	{
+		return m_ep . copyasstringref(r_value);
 	}
 
 	bool Reserve(uindex_t p_capacity, char*& r_buffer)

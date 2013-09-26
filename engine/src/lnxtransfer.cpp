@@ -996,12 +996,12 @@ bool ConvertFile_rev_to_MIME ( MCDataRef p_input, MCTransferType p_type, MCDataR
 	for (uint4 a=0; a < n_strings; a++)
 	{
 		if (a == 0)
-			MCStringAppendNativeChars(*t_output, (const char_t *)"file://", strlen("file://"));
+			/* UNCHECKED */MCStringAppendNativeChars(*t_output, (const char_t *)"file://", strlen("file://"));
 		else
 		{
 			t_del = '\n';
-			MCStringAppendNativeChars(*t_output, &t_del, 1);
-			MCStringAppendNativeChars(*t_output, (const char_t *)"file://", strlen("file://"));
+			/* UNCHECKED */MCStringAppendNativeChars(*t_output, &t_del, 1);
+			/* UNCHECKED */MCStringAppendNativeChars(*t_output, (const char_t *)"file://", strlen("file://"));
 		}
 
 		MCStringAppendNativeChars(*t_output, (const char_t *)t_strings[a] . getstring(), t_strings[a] . getlength());
@@ -1017,28 +1017,46 @@ bool ConvertFile_MIME_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef
 {
 	MCString *t_strings = NULL ;
 	MCExecPoint ep(NULL, NULL, NULL );
+	MCExecContext ctxt(ep);
 	uint2 	 n_strings ;
 	char * t_part ;
 	bool first = true ;
 	
-	ep.setvalueref(p_input);
-	ep.texttobinary() ;
-	MCU_urldecode(ep);
-	MCU_break_string( ep.getsvalue(), t_strings, n_strings, false);
+	ctxt . SetValueRef(p_input);
+	ctxt . TextToBinary() ;
+	MCU_urldecode(ctxt);
+	MCAutoStringRef t_value;
+	ctxt . CopyAsStringRef(&t_value);
+	MCU_break_string(MCStringGetOldString(*t_value), t_strings, n_strings, false);
 	
-	ep.clear() ;
+	//ep.clear() ;
+	MCAutoStringRef t_output;
+	char_t t_del;
+	/* UNCHECKED */ MCStringCreateMutable(0, &t_output);
 	
 	for (uint4 a=0; a < n_strings; a++)
 	{
 		t_part = (char*)t_strings[a].clone();
 		if ( strstr(t_part, "file://") != NULL)
 		{
-			ep.concatcstring((t_part + 7), EC_RETURN, first );
-			first=false;
+			if (first)
+			{
+				/* UNCHECKED */ MCStringAppendNativeChars(*t_output, (const char_t *)(t_part + 7), strlen(t_part + 7));
+				first=false;
+			}
+			else
+			{
+				t_del = '\n';
+				/* UNCHECKED */MCStringAppendNativeChars(*t_output, &t_del, 1);
+				/* UNCHECKED */MCStringAppendNativeChars(*t_output, (const char_t *)(t_part + 7), strlen(t_part + 7));
+			}
+			//ep.concatcstring((t_part + 7), EC_RETURN, first );
+			
 		}
 		delete t_part;
 	}
 	delete t_strings ;
 	
-	return ep . copyasdataref(r_output);
+	return MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_output), MCStringGetLength(*t_output), r_output);
+	//return ep . copyasdataref(r_output);
 }

@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "transfer.h"
 #include "execpt.h"
+#include "exec.h"
 #include "image.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -1172,27 +1173,29 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 	case CF_TEXT:
 	{
 		MCExecPoint ep(NULL, NULL, NULL);
+		MCExecContext ctxt(ep);
 
 		if (t_in_length > 0 && MCStringGetNativeCharAtIndex(*t_in_string, t_in_length - 1) == '\0')
 			t_in_length -= 1;
 
-		ep . setsvalue(MCString(MCStringGetCString(*t_in_string), t_in_length));
-		ep . texttobinary();
-		ep . copyasdataref(&t_out_data);
+		//ep . setsvalue(MCString(MCStringGetCString(*t_in_string), t_in_length));
+		ctxt . SetValueRef(*t_in_string);
+		ctxt . TextToBinary();
+		ctxt . CopyAsDataRef(&t_out_data);
 	}
 	break;
 	case CF_UNICODETEXT:
 	{
 		MCExecPoint ep(NULL, NULL, NULL);
-
+		MCExecContext ctxt(ep);
 		if (t_in_length > 1 && MCStringGetNativeCharAtIndex(*t_in_string, t_in_length - 1) == '\0' && MCStringGetNativeCharAtIndex(*t_in_string, t_in_length - 2) == '\0')
 			t_in_length -= 2;
 
-		ep . setsvalue(MCString(MCStringGetCString(*t_in_string), t_in_length));
-		ep . utf16toutf8();
-		ep . texttobinary();
-		ep . utf8toutf16();
-		ep . copyasdataref(&t_out_data);
+		ctxt . SetValueRef(*t_in_string);
+		ctxt . Utf16ToUtf8();
+		ctxt . TextToBinary();
+		ctxt . Utf8ToUtf16();
+		ctxt . CopyAsDataRef(&t_out_data);	
 	}
 	break;
 	case CF_DIB:
@@ -1349,6 +1352,9 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 		UINT t_count;
 		t_count = DragQueryFileA(t_hdrop, 0xFFFFFFFF, NULL, 0);
 		
+		MCAutoStringRef t_output;
+		char_t t_del;
+		/* UNCHECKED */ MCStringCreateMutable(0, &t_output);
 		for(unsigned int i = 0; i < t_count; ++i)
 		{
 			UINT t_size;
@@ -1364,14 +1370,20 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 
 				/* UNCHECKED */ MCStringCreateWithCString(t_file, &t_std_path);
 				/* UNCHECKED */ MCS_pathtonative(*t_std_path, &t_native_path);
-				/* UNCHECKED */ t_file = strclone(MCStringGetCString(*t_native_path));
-				//MCU_path2native(t_file);
-				ep . concatcstring(t_file, EC_RETURN, i == 0);
+				
+				if (i == 0)
+					MCStringAppendNativeChars(*t_output, (const char_t *)MCStringGetCString(*t_native_path), MCStringGetLength(*t_native_path));
+				else
+				{
+					t_del = '\n';
+					MCStringAppendNativeChars(*t_output, &t_del, 1);
+					MCStringAppendNativeChars(*t_output, (const char_t *)MCStringGetCString(*t_native_path), MCStringGetLength(*t_native_path));
+				}
 				delete t_file;
 			}
 		}
 
-		ep . copyasdataref(&t_out_data);
+		/*UNCHECKED */ MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_output), MCStringGetLength(*t_output), &t_out_data);
 	}
 	break;
 	default:
@@ -1446,17 +1458,25 @@ static bool CloneStringToStorage(MCDataRef p_string, STGMEDIUM& r_storage)
 bool MCConvertTextToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage)
 {
 	MCExecPoint ep(NULL, NULL, NULL);
-	ep . setvalueref(p_input);
-	ep . binarytotext();
+	MCExecContext ctxt(ep);
+	ctxt . SetValueRef(p_input);
+	ctxt . BinaryToText();
 
-	MCString t_value;
-	t_value = ep . getsvalue();
+	MCAutoStringRef t_value;
+	ctxt . CopyAsStringRef(&t_value);
+	MCAutoStringRef t_value_mutable_copy;
+	MCStringMutableCopy(*t_value, &t_value_mutable_copy);
 
-	if (t_value . getlength() == 0 || t_value . getstring()[t_value . getlength() - 1] != '\0')
-		ep . pad('\0', 1);
+	if (MCStringIsEmpty(*t_value_mutable_copy) || MCStringGetNativeCharAtIndex(*t_value_mutable_copy, MCStringGetLength(*t_value_mutable_copy) - 1) != '\0')
+	{
+		char_t t_end= '\0';
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)&t_end, 1, &t_string);
+		/* UNCHECKED */ MCStringPad(*t_value_mutable_copy, MCStringGetLength(*t_value_mutable_copy), 1, *t_string);
+	}
 
 	MCAutoDataRef t_storage;
-	ep . copyasdataref(&t_storage);
+	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_value_mutable_copy), MCStringGetLength(*t_value_mutable_copy), &t_storage);
 	return CloneStringToStorage(*t_storage, r_storage);
 }
 
@@ -1467,51 +1487,76 @@ bool MCConvertTextToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage)
 bool MCConvertTextToWindowsWide(MCDataRef p_input, STGMEDIUM& r_storage)
 {
 	MCExecPoint ep(NULL, NULL, NULL);
-	ep . setvalueref(p_input);
-	ep . binarytotext();
-	ep . nativetoutf16();
+	MCExecContext ctxt(ep);
+	ctxt . SetValueRef(p_input);
+	ctxt . BinaryToText();
+	ctxt . NativeToUtf16();
 
-	MCString t_value;
-	t_value = ep . getsvalue();
+	MCAutoStringRef t_value;
+	/* UNCHECKED */ ctxt . CopyAsStringRef(&t_value);
+	MCAutoStringRef t_value_mutable_copy;
+	/* UNCHECKED */ MCStringMutableCopy(*t_value, &t_value_mutable_copy);
 
-	if (t_value . getlength() < 2 || (t_value . getstring()[t_value . getlength() - 2] != '\0' || t_value . getstring()[t_value . getlength() - 1] != '\0'))
-		ep . pad('\0', 2);
+	if (MCStringGetLength(*t_value_mutable_copy) < 2 || MCStringGetNativeCharAtIndex(*t_value_mutable_copy, MCStringGetLength(*t_value_mutable_copy) - 2) != '\0' || MCStringGetNativeCharAtIndex(*t_value_mutable_copy, MCStringGetLength(*t_value_mutable_copy) - 1) != '\0')
+	{
+		char_t t_end= '\0';
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)&t_end, 1, &t_string);
+		/* UNCHECKED */ MCStringPad(*t_value_mutable_copy, MCStringGetLength(*t_value_mutable_copy), 2, *t_string);
+	}
 
-	return CloneStringToStorage(ep . getsvalue(), r_storage);
+	return CloneStringToStorage(MCStringGetOldString(*t_value_mutable_copy), r_storage);
 }
 
 bool MCConvertUnicodeToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage)
 {
 	MCExecPoint ep(NULL, NULL, NULL);
+	MCExecContext ctxt(ep);
 
-	ep . setvalueref(p_input);
-	ep . utf16tonative();
-	ep . binarytotext();
+	ctxt . SetValueRef(p_input);
+	ctxt . Utf16ToNative();
+	ctxt . BinaryToText();
 	
-	MCString t_value;
-	t_value = ep . getsvalue();
+	MCAutoStringRef t_value;
+	/* UNCHECKED */ ctxt . CopyAsStringRef(&t_value);
+	MCAutoStringRef t_value_mutable_copy;
+	/* UNCHECKED */ MCStringMutableCopy(*t_value, &t_value_mutable_copy); 
 
-	if (t_value . getlength() == 0 || t_value . getstring()[t_value . getlength() - 1] != '\0')
-		ep . pad('\0', 1);
+	if (MCStringIsEmpty(*t_value_mutable_copy) || MCStringGetNativeCharAtIndex(*t_value_mutable_copy, MCStringGetLength(*t_value_mutable_copy) - 1) != '\0')
+	{
+		char_t t_end= '\0';
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)&t_end, 1, &t_string);
+		/* UNCHECKED */ MCStringPad(*t_value_mutable_copy, MCStringGetLength(*t_value_mutable_copy), 1, *t_string);
+	}
 
-	return CloneStringToStorage(ep . getsvalue(), r_storage);
+	return CloneStringToStorage(MCStringGetOldString(*t_value_mutable_copy), r_storage);
 }
 
 bool MCConvertUnicodeToWindowsWide(MCDataRef p_input, STGMEDIUM& r_storage)
 {
 	MCExecPoint ep(NULL, NULL, NULL);
-	ep . setvalueref(p_input);
-	ep . utf16toutf8();
-	ep . binarytotext();
-	ep . utf8toutf16();
+	MCExecContext ctxt(ep);
 
-	MCString t_value;
-	t_value = ep . getsvalue();
+	ctxt . SetValueRef(p_input);
+	ctxt . Utf16ToUtf8();
+	ctxt . BinaryToText();
+	ctxt . Utf8ToUtf16();
 
-	if (t_value . getlength() < 2 || (t_value . getstring()[t_value . getlength() - 2] != '\0' || t_value . getstring()[t_value . getlength() - 1] != '\0'))
-		ep . pad('\0', 2);
+	MCAutoStringRef t_value;
+	/* UNCHECKED */ ctxt . CopyAsStringRef(&t_value);
+	MCAutoStringRef t_value_mutable_copy;
+	/* UNCHECKED */ MCStringMutableCopy(*t_value, &t_value_mutable_copy);
 
-	return CloneStringToStorage(ep . getsvalue(), r_storage);
+	if (MCStringGetLength(*t_value_mutable_copy) < 2 || MCStringGetNativeCharAtIndex(*t_value_mutable_copy, MCStringGetLength(*t_value_mutable_copy) - 2) != '\0' || MCStringGetNativeCharAtIndex(*t_value_mutable_copy, MCStringGetLength(*t_value_mutable_copy) - 1) != '\0')
+	{
+		char_t t_end= '\0';
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)&t_end, 1, &t_string);
+		/* UNCHECKED */ MCStringPad(*t_value_mutable_copy, MCStringGetLength(*t_value_mutable_copy), 2, *t_string);
+	}
+
+	return CloneStringToStorage(MCStringGetOldString(*t_value_mutable_copy), r_storage);
 }
 
 bool MCConvertStyledTextToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage)
