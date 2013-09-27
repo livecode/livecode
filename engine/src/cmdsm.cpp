@@ -1140,7 +1140,7 @@ Exec_stat MCArrayOp::exec(MCExecPoint &ep)
 				if (key != NULL)
 				{
 					if (key->eval(ep) != ES_NORMAL ||
-						!ep . copyasstringref(&t_key_del))
+						!ctxt . GetEP() . copyasstringref(&t_key_del))
 					{
 						MCeerror->add(EE_ARRAYOP_BADEXP, line, pos);
 						return ES_ERROR;
@@ -1154,19 +1154,19 @@ Exec_stat MCArrayOp::exec(MCExecPoint &ep)
 	}
 
 	MCAutoPointer<MCContainer> t_container;
-	if (destvar -> evalcontainer(ep, &t_container) != ES_NORMAL)
+	if (destvar -> evalcontainer(ctxt . GetEP(), &t_container) != ES_NORMAL)
 	{
 		MCeerror -> add(EE_ARRAYOP_BADEXP, line, pos);
 		return ES_ERROR;
 	}
 
-	if (t_container -> eval(ep) != ES_NORMAL)
+	if (t_container -> eval(ctxt . GetEP()) != ES_NORMAL)
 		return ES_ERROR;
 
 	if (is_combine)
 	{
 		MCAutoArrayRef t_array;
-		if (!ep . copyasarrayref(&t_array))
+		if (!ctxt . GetEP() . copyasarrayref(&t_array))
 			return ES_ERROR;
 
 		MCAutoStringRef t_string;
@@ -1184,14 +1184,14 @@ Exec_stat MCArrayOp::exec(MCExecPoint &ep)
 
 		if (!ctxt . HasError())
 		{
-			ep . setvalueref(*t_string);
-			return t_container -> set(ep);
+			ctxt . GetEP() . setvalueref(*t_string);
+			return t_container -> set(ctxt . GetEP());
 		}
 	}
 	else
 	{
 		MCAutoStringRef t_string;
-		if (!ep . copyasstringref(&t_string))
+		if (!ctxt . GetEP() . copyasstringref(&t_string))
 			return ES_ERROR;
 
 		MCAutoArrayRef t_array;
@@ -1209,8 +1209,8 @@ Exec_stat MCArrayOp::exec(MCExecPoint &ep)
 
 		if (!ctxt . HasError())
 		{
-			ep . setvalueref(*t_array);
-			return t_container -> set(ep);
+			ctxt . GetEP() . setvalueref(*t_array);
+			return t_container -> set(ctxt . GetEP());
 		}
 	}
 
