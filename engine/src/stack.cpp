@@ -2822,6 +2822,7 @@ void MCStack::paste(void)
 			t_index += 1;
 		}
 		setname(t_name);
+		MCValueRelease(t_name);
 	}
 
 	// MW-2007-12-11: [[ Bug 5441 ]] When we paste a stack, it should be parented to the home
