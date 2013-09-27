@@ -545,6 +545,7 @@ public:
         r_force = m_ep . getnfforce();
     }
 
+
 	//////////
 
 	void SetCaseSensitive(bool p_value)
@@ -658,6 +659,15 @@ public:
         return m_ep . commit(p_size);
     }
 
+    void Substring(uint32_t p_start, uint32_t p_finish)
+    {
+        return m_ep . substring(p_start, p_finish);
+    }
+
+    MCString GetOldStringValue(void)
+    {
+        return m_ep . getsvalue();
+    }
 
 	//////////
 	
