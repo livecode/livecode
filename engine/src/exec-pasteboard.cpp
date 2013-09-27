@@ -543,20 +543,14 @@ void MCPasteboardProcessToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets,
 }
 #endif
 
-void MCPasteboardProcessTextToClipboard(MCExecContext &ctxt, MCChunk *p_target, bool p_cut)
+void MCPasteboardProcessTextToClipboard(MCExecContext &ctxt, MCObjectChunkPtr p_target, bool p_cut)
 {
-	MCField* t_field;
-	uint4 t_part, t_start;
-	uint4 t_end;
-	if (p_target -> marktextchunk(ctxt . GetEP(), t_field, t_part, t_start, t_end) != ES_NORMAL)
-	{
-		ctxt . LegacyThrow(EE_CLIPBOARD_BADTEXT);
-		return;
-	}
+    MCField *t_field;
+    t_field = static_cast<MCField *>(p_target . object);
 	if (p_cut)
-		t_field -> cuttextindex(t_part, t_start, t_end);
+		t_field -> cuttextindex(p_target . part_id, p_target . start, p_target . finish);
 	else
-		t_field -> copytextindex(t_part, t_start, t_end);
+		t_field -> copytextindex(p_target . part_id, p_target . start, p_target . finish);
 }
 
 void MCPasteboardExecCopy(MCExecContext& ctxt)
@@ -569,7 +563,7 @@ void MCPasteboardExecCopy(MCExecContext& ctxt)
 		MCselected -> copy();
 }
 
-void MCPasteboardExecCopyTextToClipboard(MCExecContext& ctxt, MCChunk *p_target)
+void MCPasteboardExecCopyTextToClipboard(MCExecContext& ctxt, MCObjectChunkPtr p_target)
 {
 	MCPasteboardProcessTextToClipboard(ctxt, p_target, false);
 }
@@ -589,7 +583,7 @@ void MCPasteboardExecCut(MCExecContext& ctxt)
 		MCselected -> cut();
 }
 
-void MCPasteboardExecCutTextToClipboard(MCExecContext& ctxt, MCChunk *p_target)
+void MCPasteboardExecCutTextToClipboard(MCExecContext& ctxt, MCObjectChunkPtr p_target)
 {
 	MCPasteboardProcessTextToClipboard(ctxt, p_target, true);
 }
