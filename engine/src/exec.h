@@ -537,6 +537,15 @@ public:
 	{
 		return m_ep . getcutoff();
 	}
+
+    void GetNumberFormat(uint2& r_fw, uint2& r_trailing, uint2& r_force)
+    {
+        r_fw = m_ep . getnffw();
+        r_trailing = m_ep . getnftrailing();
+        r_force = m_ep . getnfforce();
+    }
+
+
 	//////////
 
 	void SetCaseSensitive(bool p_value)
@@ -586,10 +595,104 @@ public:
 
 	void SetRowDelimiter(char_t p_value)
 	{
-		m_ep . setrowdel(p_value);
-	}
-	//////////
+        m_ep . setrowdel(p_value);
+    }
 
+    bool SetValueRef(MCValueRef value)
+    {
+        return m_ep . setvalueref(value);
+    }
+
+
+    void SetNumberFormat(uint2 p_fw, uint2 p_trailing, uint2 p_force)
+    {
+        m_ep . setnumberformat(p_fw, p_trailing, p_force);
+    }
+
+    void NativeToUtf16()
+    {
+        return m_ep . nativetoutf16();
+    }
+
+    void Utf16ToNative()
+    {
+        return m_ep . utf16tonative();
+    }
+
+    void BinaryToText()
+    {
+        return m_ep . binarytotext();
+    }
+
+    void TextToBinary()
+    {
+        return m_ep . texttobinary();
+    }
+
+    void Utf16ToUtf8()
+    {
+        return m_ep . utf16toutf8();
+    }
+
+    void Utf8ToUtf16()
+    {
+        return m_ep . utf8toutf16();
+    }
+
+    bool CopyAsDataRef(MCDataRef &r_data)
+    {
+        return m_ep . copyasdataref(r_data);
+    }
+
+	bool CopyAsArrayRef(MCArrayRef &r_array)
+	{
+		return m_ep . copyasarrayref(r_array);
+	}
+
+    bool CopyAsStringRef(MCStringRef &r_value)
+    {
+        return m_ep . copyasstringref(r_value);
+    }
+
+    bool Reserve(uindex_t p_capacity, char*& r_buffer)
+    {
+        return m_ep . reserve(p_capacity, r_buffer);
+    }
+
+    void Commit(uindex_t p_size)
+    {
+        return m_ep . commit(p_size);
+    }
+
+    void Substring(uint32_t p_start, uint32_t p_finish)
+    {
+        return m_ep . substring(p_start, p_finish);
+    }
+
+    MCString GetOldStringValue(void)
+    {
+        return m_ep . getsvalue();
+    }
+
+    //////////
+
+    void SetHandler(MCHandler *p_handler)
+    {
+        m_ep.sethandler(p_handler);
+    }
+
+    MCHandlerlist *GetHandlerList()
+    {
+        return m_ep.gethlist();
+    }
+
+    void SetHandlerList(MCHandlerlist *p_list)
+    {
+        m_ep.sethlist(p_list);
+    }
+
+    //////////
+	
 	// Convert the given valueref to a string. If the type is not convertable
 	// to a string, the empty string is returned.
 	// This method should be used in cases where a string is required and
