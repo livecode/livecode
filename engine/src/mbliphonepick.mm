@@ -664,8 +664,6 @@ static void do_pickn_postwait(void *p_context)
 // HC-2011-09-30 [[ Bug 9773 ]] Changed using char*& argument to NSString*& for return value
 bool MCSystemPickN(NSArray *p_option_list_array, bool p_use_checkmark, bool p_use_cancel, bool p_use_done, bool p_use_picker, NSArray *p_initial_index_array, NSString*& r_return_index, MCRectangle p_button_rect)
 {
-	MCExecPoint ep(nil, nil, nil);
-	
 	// ensure that the options list array and initial index array are populated and have the same number of elements
 	if (p_option_list_array == nil || p_initial_index_array == nil || ([p_option_list_array count] != [p_initial_index_array count]))
 		return false;
