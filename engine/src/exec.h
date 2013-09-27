@@ -610,7 +610,7 @@ public:
     }
 
     void NativeToUtf16()
-    {`
+    {
         return m_ep . nativetoutf16();
     }
 
