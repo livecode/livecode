@@ -1765,12 +1765,17 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			t_is_unicode = p_mark -> text . font -> unicode || p_mark -> text . unicode_override;
 							
 			MCExecPoint text_ep(NULL, NULL, NULL);
-			text_ep . setsvalue(MCString((const char *)s, len));
+			MCExecContext ctxt(test_ep);
+			MCAutoStringRef t_string;
+			/* UNCHECKED */ MCStringCreateWithCString((const char *)s, &t_string);
+			/* UNCHECKED */ ctxt . SetValueRef(*t_string);
 			if (!t_is_unicode)
 			{
-				text_ep . nativetoutf16();
-				s = (void *)text_ep . getsvalue() . getstring();
-				len = text_ep . getsvalue() . getlength();
+				ctxt . NativeToUtf16();
+				MCAutoStringRef t_new_string;
+				/* UNCHECKED */ ctxt . CopyAsStringRef(&t_new_string);
+				s = (void *)MCStringGetCString(*t_new_string);
+				len = MCStringGetLength(*t_new_string);
 			}
 			
 			OSStatus t_err;

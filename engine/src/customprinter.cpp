@@ -26,6 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "globals.h"
 #include "execpt.h"
+#include "exec.h"
 #include "metacontext.h"
 #include "printer.h"
 #include "customprinter.h"
@@ -902,14 +903,19 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 	// Note we can use 'setstaticbytes' here because the execpoint is immediately
 	// modified.
 	MCExecPoint ep(nil, nil, nil);
-	ep . setstaticbytes((const char *)p_span -> chars, p_span -> char_count * 2);
-	ep . utf16toutf8();
+	MCExecContext ctxt(ep);
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCStringCreateWithCString((const char *)p_span -> chars, &t_string);
+	/* UNCHECKED */ ctxt . SetValueRef(*t_string);
+	ctxt . Utf16ToUtf8();
 	
 	// Get the UTF-8 string pointer and length
 	const uint8_t *t_bytes;
 	uint32_t t_byte_count;
-	t_bytes = (const uint8_t *)ep . getcstring();
-	t_byte_count = ep . getsvalue() . getlength();
+	MCAutoStringRef t_new_string;
+	/* UNCHECKED */ ctxt . CopyAsStringRef(&t_new_string);
+	t_bytes = (const uint8_t *)MCStringGetCString(*t_new_string);
+	t_byte_count = MCStringGetLength(*t_new_string);
 	
 	// Allocate a cluster index for every UTF-8 byte
 	uint32_t *t_clusters;
@@ -983,17 +989,21 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 
 void MCCustomMetaContext::dotextmark(MCMark *p_mark)
 {
-	// Note we can use 'setstaticbytes' here because the ep is just being used
-	// for conversion.
 	MCExecPoint ep(nil, nil, nil);
-	ep . setstaticbytes(p_mark -> text . data, p_mark -> text . length);
+	MCExecContext ctxt(ep);
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCStringCreateWithCString((const char *)p_mark -> text . data, &t_string);
+	/* UNCHECKED */ ctxt . SetValueRef(*t_string);
+
 	if (!p_mark -> text . font -> unicode && !p_mark -> text . unicode_override)
-		ep . nativetoutf16();
+		ctxt . NativeToUtf16();
 
 	const unichar_t *t_chars;
 	uint32_t t_char_count;
-	t_chars = (const unichar_t *)ep . getsvalue() . getstring();
-	t_char_count = ep . getsvalue() . getlength() / 2;
+	MCAutoStringRef t_new_string;
+	/* UNCHECKED */ ctxt . CopyAsStringRef(&t_new_string);
+	t_chars = (const unichar_t *)MCStringGetCString(*t_new_string);
+	t_char_count = MCStringGetLength(*t_new_string);
 
 	dotextmark_callback_state t_state;
 	t_state . device = m_device;

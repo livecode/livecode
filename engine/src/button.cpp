@@ -4238,17 +4238,22 @@ static void switchunicodeofstring(bool p_to_unicode, char*& x_string, uint2& x_l
 		return;
 
 	MCExecPoint ep(nil, nil, nil);
-	ep . setsvalue(MCString(x_string, x_length));
+	MCExecContext ctxt(ep);
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCStringCreateWithCString(x_string, &t_string);
+	/* UNCHECKED */ ctxt . SetValueRef(*t_string);
 	if (p_to_unicode)
-		ep . nativetoutf16();
+		ctxt . NativeToUtf16();
 	else
-		ep . utf16tonative();
+		ctxt . Utf16ToNative();
 	
 	delete x_string;
 
-	x_length = ep . getsvalue() . getlength();
+	MCAutoStringRef t_new_string;
+	/* UNCHECKED */ ctxt . CopyAsStringRef(&t_new_string);
+	x_length = MCStringGetLength(*t_new_string);
 	x_string = new char[x_length];
-	memcpy(x_string, ep . getsvalue() . getstring(), x_length);
+	memcpy(x_string, MCStringGetCString(*t_new_string), x_length);
 }
 
 // MW-2012-02-16: [[ IntrinsicUnicode ]] This method switches all the text in
