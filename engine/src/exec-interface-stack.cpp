@@ -201,18 +201,6 @@ static void MCInterfaceDecorationParse(MCExecContext& ctxt, MCStringRef p_input,
     r_output . decorations = decorations;
 }
 
-static void concat(const char *p_cstring, bool p_first, char_t p_del, MCStringRef &r_string)
-{
-	if (p_first)
-		/* UNCHECKED */ MCStringAppendNativeChars(r_string, (const char_t *)p_cstring, strlen(p_cstring));
-	else
-	{	
-		/* UNCHECKED */MCStringAppendNativeChars(r_string, &p_del, 1);
-		/* UNCHECKED */MCStringAppendNativeChars(r_string, (const char_t *)p_cstring, strlen(p_cstring));
-	}
-	
-}
-
 static void MCInterfaceDecorationFormat(MCExecContext& ctxt, const MCInterfaceDecoration& p_input, MCStringRef& r_output)
 {
 
@@ -225,8 +213,8 @@ static void MCInterfaceDecorationFormat(MCExecContext& ctxt, const MCInterfaceDe
         }
         else
         {
-			MCStringRef t_output;
-			/* UNCHECKED */ MCStringCreateMutable(0, t_output);
+			MCAutoStringRef t_output;
+			/* UNCHECKED */ MCStringCreateMutable(0, &t_output);
 			char_t t_del;
 			t_del = ',';
             bool first;
@@ -234,50 +222,55 @@ static void MCInterfaceDecorationFormat(MCExecContext& ctxt, const MCInterfaceDe
             
             if (p_input . decorations & WD_TITLE)
 			{
-				concat(MCtitlestring, first, t_del, t_output);
+				MCStringAppendFormat(*t_output, "%s,", MCtitlestring);
 				first = false;
 			}
             if (p_input . decorations & WD_MENU)
 			{	
-				concat(MCmenustring, first, t_del, t_output);
+				MCStringAppendFormat(*t_output, "%s,", MCmenustring);
 				first = false;
 			}
             if (p_input . decorations & WD_MINIMIZE)
 			{
-				concat(MCminimizestring, first, t_del, t_output);
+				MCStringAppendFormat(*t_output, "%s,", MCminimizestring);
 				first = false;
 			}
             if (p_input . decorations & WD_MAXIMIZE)
 			{
-				concat(MCmaximizestring, first, t_del, t_output);
+				MCStringAppendFormat(*t_output, "%s,", MCmaximizestring);
 				first = false;
 			}
             if (p_input . decorations & WD_CLOSE)
 			{
-				concat(MCclosestring, first, t_del, t_output);
+				MCStringAppendFormat(*t_output, "%s,", MCclosestring);
 				first = false;
 			}
             if (p_input . decorations & WD_METAL)
 			{
-				concat(MCmetalstring, first, t_del, t_output);
+				MCStringAppendFormat(*t_output, "%s,", MCmetalstring);
 				first = false;
 			}
             if (p_input . decorations & WD_UTILITY)
 			{
-				concat(MCutilitystring, first, t_del, t_output);
+				MCStringAppendFormat(*t_output, "%s,", MCutilitystring);
 				first = false;
 			}
             if (p_input . decorations & WD_NOSHADOW)
 			{
-				concat(MCnoshadowstring, first, t_del, t_output);
+				MCStringAppendFormat(*t_output, "%s,", MCnoshadowstring);
 				first = false;
 			}
             if (p_input . decorations & WD_FORCETASKBAR)
 			{
-				concat(MCforcetaskbarstring, first, t_del, t_output);
+				MCStringAppendFormat(*t_output, "%s,", MCforcetaskbarstring);
 				first = false;
 			}
-            r_output = MCValueRetain(t_output);
+
+			// Remove the last comma, if any.
+			if (!first)
+				MCStringRemove(*t_output, MCRangeMake(MCStringGetLength(*t_output) - 1, 1));
+
+            r_output = MCValueRetain(*t_output);
 			return;
         }
     }
