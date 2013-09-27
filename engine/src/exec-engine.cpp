@@ -1149,7 +1149,9 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
 			if (*sptr)
 				*sptr++ = '\0';
 			MCString pdata = startptr;
-			ctxt . GetEP() . setsvalue(pdata);
+			MCAutoStringRef t_temp_value;
+			/* UNCHECKED */ MCStringCreateWithOldString(pdata, &t_temp_value);
+			ctxt . SetValueRef(*t_temp_value);
 			
 			MCParameter *newparam = new MCParameter;
 
@@ -1217,7 +1219,7 @@ static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObje
 			{
 				t_params->eval(ctxt . GetEP());
                 MCAutoStringRef t_value;
-				ctxt . GetEP() . copyasstringref(&t_value);
+				ctxt . CopyAsStringRef(&t_value);
                 MCStringFormat(&tptr, "%@ %@", *t_message, *t_value);
 				
 			}
