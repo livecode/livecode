@@ -721,6 +721,7 @@ Exec_stat MCHandler::getvarnames(MCExecPoint& ep, Boolean all)
 
 void MCHandler::eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &r_value)
 {
+	ctxt.GetEP().setvalueref(p_expression);
 	MCScriptPoint sp(ctxt);
 	sp.sethandler(this);
 	MCExpression *exp = NULL;
@@ -730,7 +731,7 @@ void MCHandler::eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &
 		stat = exp->eval(ctxt.GetEP());
 
 	delete exp;
-	r_value = MCValueRetain(ctxt.GetEP().getvalueref());
+	/* UNCHECKED */ ctxt.GetEP().copyasvalueref(r_value);
 	if (stat != ES_ERROR)
 		return;
 	
@@ -761,6 +762,7 @@ void MCHandler::deletestatements(MCStatement *statements)
 
 void MCHandler::doscript(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos)
 {
+	ctxt.GetEP().setvalueref(p_script);
 	MCScriptPoint sp(ctxt);
 	MCStatement *curstatement = NULL;
 	MCStatement *statements = NULL;
