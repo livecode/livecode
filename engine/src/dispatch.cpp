@@ -1352,7 +1352,7 @@ MCFontStruct *MCDispatch::loadfont(MCNameRef fname, uint2 &size, uint2 style, Bo
 
 MCStack *MCDispatch::findstackname(MCNameRef p_name)
 {
-	if (MCNameIsEmpty(p_name))
+	if (p_name == nil || MCNameIsEmpty(p_name))
 		return NULL;
 
 	MCStack *tstk = stacks;
@@ -1380,7 +1380,7 @@ MCStack *MCDispatch::findstackname(MCNameRef p_name)
 		}
 		while (tstk != stacks);
 	}
-;
+
 	if (loadfile(MCNameGetString(p_name), tstk) != IO_NORMAL)
 	{
 		MCAutoStringRef t_name;
@@ -1388,7 +1388,7 @@ MCStack *MCDispatch::findstackname(MCNameRef p_name)
 		/* UNCHECKED */ MCStringLowercase(*t_name);
 		
 		// Remove all special characters from the input string
-		// TODO: what about the other special chars added by unicode?
+		// TODO: what about other 'special' chars added by unicode?
 		MCStringRef t_replace = MCSTR("\r\n\t *?<>/\\()[]{}|'`\"");
 		MCRange t_range = MCRangeMake(0, MCStringGetLength(t_replace));
 		for (uindex_t i = 0; i < MCStringGetLength(*t_name); i++)
