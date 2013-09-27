@@ -644,6 +644,11 @@ public:
         return m_ep . copyasdataref(r_data);
     }
 
+	bool CopyAsArrayRef(MCArrayRef &r_array)
+	{
+		return m_ep . copyasarrayref(r_array);
+	}
+
     bool CopyAsStringRef(MCStringRef &r_value)
     {
         return m_ep . copyasstringref(r_value);
