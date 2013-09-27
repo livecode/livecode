@@ -598,6 +598,11 @@ public:
         m_ep . setrowdel(p_value);
     }
 
+	void SetOldStringValue(const MCString& p_string)
+	{
+		return m_ep . setsvalue(p_string);
+	}
+
     bool SetValueRef(MCValueRef value)
     {
         return m_ep . setvalueref(value);
