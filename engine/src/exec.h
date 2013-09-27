@@ -669,7 +669,24 @@ public:
         return m_ep . getsvalue();
     }
 
-	//////////
+    //////////
+
+    void SetHandler(MCHandler *p_handler)
+    {
+        m_ep.sethandler(p_handler);
+    }
+
+    MCHandlerlist *GetHandlerList()
+    {
+        return m_ep.gethlist();
+    }
+
+    void SetHandlerList(MCHandlerlist *p_list)
+    {
+        m_ep.sethlist(p_list);
+    }
+
+    //////////
 	
 	// Convert the given valueref to a string. If the type is not convertable
 	// to a string, the empty string is returned.
