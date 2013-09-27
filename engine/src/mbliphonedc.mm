@@ -1302,9 +1302,10 @@ static void MCIPhoneDoDidBecomeActive(void *)
 	
 	if (!t_init_success)
 	{
-		MCExecPoint ep(nil, nil, nil);
-        ep . setvalueref(MCresult -> getvalueref());
-		NSLog(@"Startup error: %s\n", ep . getcstring());
+		MCStringRef t_value;
+		t_value = (MCStringRef) MCValueRetain(MCresult -> getvalueref());
+		NSLog(@"Startup error: %s\n", MCStringGetCString(t_value));
+		MCValueRelease(t_value);
 		abort();
 		return;
 	}
