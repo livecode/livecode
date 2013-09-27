@@ -744,7 +744,8 @@ void MCFilesExecLaunchUrl(MCExecContext& ctxt, MCStringRef p_url)
 
 	// MW-2008-04-02: [[ Bug 6306 ]] Make sure we escape invalid URL characters to save
 	//   the user having to do so.
-	MCExecPoint t_new_ep(NULL, NULL, NULL);
+	MCAutoStringRef t_mutable_string;
+	/* UNCHECKED */ MCStringCreateMutable(0, &t_mutable_string);
 	while(*t_url != '\0')
 	{
 		// MW-2008-08-14: [[ Bug 6898 ]] Interpreting this as a signed char causes sprintf
@@ -756,23 +757,26 @@ void MCFilesExecLaunchUrl(MCExecContext& ctxt, MCStringRef p_url)
 		// MW-2008-06-12: [[ Bug 6446 ]] We must not escape '#' because this breaks URL
 		//   anchors.
 		if (t_char < 128 && (isalnum(t_char) || strchr("$-_.+!*'%(),;/?:@&=#", t_char) != NULL))
-			t_new_ep . appendchar(t_char);
+			/* UNCHECKED */ MCStringAppendNativeChar(*t_mutable_string, t_char); 
 		else
-			t_new_ep . appendstringf("%%%02X", t_char);
+			MCStringAppendFormat(*t_mutable_string, "%%%02X", t_char); 
+			//t_new_ep . appendstringf("%%%02X", t_char);
 
 		t_url += 1;
 	}
 
-	MCAutoStringRef t_new_url;
-	/* UNCHECKED */ t_new_ep . copyasstringref(&t_new_url);
+	MCStringRef t_new_url;
+	t_new_url = MCValueRetain(*t_mutable_string);
 
 
 	if (ctxt . EnsureProcessIsAllowed())
 	{
-		MCS_launch_url(*t_new_url);
+		MCS_launch_url(t_new_url);
+		MCValueRelease(t_new_url);
 		return;
 	}
 
+	MCValueRelease(t_new_url);
 	ctxt . LegacyThrow(EE_PROCESS_NOPERM);
 }
 
