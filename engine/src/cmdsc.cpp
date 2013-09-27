@@ -4091,7 +4091,7 @@ void MCUngroup::compile(MCSyntaxFactoryRef ctxt)
 MCRelayer::MCRelayer(void)
 {
 	form = kMCRelayerFormNone;
-	relation = kMCRelayerRelationNone;
+	relation = RR_NONE;
 	control = nil;
 	layer = nil;
 }
@@ -4119,9 +4119,9 @@ Parse_stat MCRelayer::parse(MCScriptPoint& sp)
 	if (sp . skip_token(SP_FACTOR, TT_TO, PT_TO) == PS_NORMAL)
 	{
 		if (sp . skip_token(SP_INSERT, TT_UNDEFINED, IP_FRONT) == PS_NORMAL)
-			relation = kMCRelayerRelationFront;
+			relation = RR_FRONT;
 		else if (sp . skip_token(SP_INSERT, TT_UNDEFINED, IP_BACK) == PS_NORMAL)
-			relation = kMCRelayerRelationBack;
+			relation = RR_BACK;
 		else
 		{
 			MCperror -> add(PE_RELAYER_BADRELATION, sp);
@@ -4129,12 +4129,12 @@ Parse_stat MCRelayer::parse(MCScriptPoint& sp)
 		}
 	}
 	else if (sp . skip_token(SP_FACTOR, TT_PREP, PT_BEFORE) == PS_NORMAL)
-		relation = kMCRelayerRelationBefore;
+		relation = RR_BEFORE;
 	else if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AFTER) == PS_NORMAL)
-		relation = kMCRelayerRelationAfter;
+		relation = RR_AFTER;
 
-	if (relation == kMCRelayerRelationFront ||
-		relation == kMCRelayerRelationBack)
+	if (relation == RR_FRONT ||
+		relation == RR_BACK)
 	{
 		if (sp . skip_token(SP_FACTOR, TT_OF, PT_OF) != PS_NORMAL)
 		{
@@ -4170,6 +4170,7 @@ Parse_stat MCRelayer::parse(MCScriptPoint& sp)
 
 Exec_stat MCRelayer::exec(MCExecPoint& ep)
 {
+#ifdef /* MCRelayer */ LEGACY_EXEC
 	// Fetch the source object.
 	MCObject *t_source;
 	uint32_t t_source_partid;
@@ -4388,6 +4389,57 @@ Exec_stat MCRelayer::exec(MCExecPoint& ep)
 	}
 
 	return t_success ? ES_NORMAL : ES_ERROR;
+#endif /* MCRelayer */
+    
+    // Fetch the source object.
+	MCObjectPtr t_source;
+	if (control -> getobj(ep, t_source, True) != ES_NORMAL)
+	{
+		MCeerror -> add(EE_RELAYER_NOSOURCE, line, pos);
+		return ES_ERROR;
+	}
+    
+    MCExecContext ctxt(ep);
+    
+	switch(form)
+	{
+        case kMCRelayerFormRelativeToLayer:
+            uint4 t_layer;
+            if (layer -> eval(ep) != ES_NORMAL)
+            {
+                MCeerror -> add(EE_RELAYER_BADLAYER, line, pos);
+                return ES_ERROR;
+            }
+            if (ep . ton() != ES_NORMAL)
+            {
+                MCeerror -> add(EE_RELAYER_LAYERNAN, line, pos);
+                return ES_ERROR;
+            }
+            t_layer = ep . getuint4();
+            
+            MCInterfaceExecRelayer(ctxt, relation, t_source, t_layer);
+            break;
+        case kMCRelayerFormRelativeToControl:
+            MCObjectPtr t_target;
+            if (target -> getobj(ep, t_target, True) != ES_NORMAL)
+            {
+                MCeerror -> add(EE_RELAYER_NOTARGET, line, pos);
+                return ES_ERROR;
+            }
+            MCInterfaceExecRelayerRelativeToControl(ctxt, relation, t_source, t_target);
+            break;
+        case kMCRelayerFormRelativeToOwner:
+            MCInterfaceExecRelayerRelativeToOwner(ctxt, relation, t_source);
+            break;
+        default:
+            break;
+	}
+    
+    if (!ctxt . HasError())
+        return ES_NORMAL;
+    
+    return ctxt . Catch(line, pos);
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////

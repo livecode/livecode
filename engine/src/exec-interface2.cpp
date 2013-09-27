@@ -59,6 +59,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "pxmaplst.h"
 #include "mctheme.h"
 
+#include "objptr.h"
+
 #include "exec-interface.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3502,3 +3504,212 @@ void MCInterfaceExecUnmarkFind(MCExecContext& ctxt, Find_mode p_mode, MCStringRe
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCInterfaceDoRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_source, MCObjectPtr p_target)
+{
+    // Fetch the card of the source.
+	MCCard *t_card;
+	t_card = p_source . object -> getstack() -> getcard(p_source . part_id);
+    
+    
+	// Ensure the source object is a control (group etc.)
+	if (p_source . object -> gettype() < CT_GROUP)
+	{
+		ctxt . LegacyThrow(EE_RELAYER_SOURCENOTCONTROL);
+		return;
+	}
+    
+	// If the relation is front or back, then ensure the target is a card or
+	// group.
+	if ((p_relation == RR_FRONT || p_relation == RR_BACK) &&
+		(p_target . object -> gettype() != CT_CARD && p_target . object -> gettype() != CT_GROUP))
+	{
+		ctxt . LegacyThrow(EE_RELAYER_TARGETNOTCONTAINER);
+		return;
+	}
+    
+	// If the relation is before or after, make sure the target is a control.
+	if ((p_relation == RR_BEFORE || p_relation == RR_AFTER) &&
+		p_target . object -> gettype() < CT_GROUP)
+	{
+		ctxt . LegacyThrow(EE_RELAYER_TARGETNOTCONTROL);
+		return;
+	}
+    
+	// Make sure source and target objects are on the same card.
+	if (p_source . object -> getstack() != p_target . object -> getstack() ||
+		t_card != p_target . object -> getstack() -> getcard(p_target . part_id))
+	{
+		ctxt . LegacyThrow(EE_RELAYER_CARDNOTSAME);
+		return;
+	}
+    
+	// Next resolve everything in terms of before.
+	MCObject *t_new_owner;
+	MCControl *t_new_target;
+	if (p_relation == RR_FRONT || p_relation == RR_BACK)
+	{
+		// The new owner is just the target.
+		t_new_owner = p_target . object;
+        
+		if (t_new_owner -> gettype() == CT_CARD)
+		{
+			MCObjptr *t_ptrs;
+			t_ptrs = static_cast<MCCard *>(t_new_owner) -> getobjptrs();
+			if (t_ptrs != nil && p_relation == RR_BACK)
+				t_new_target = t_ptrs -> getref();
+			else
+				t_new_target = nil;
+		}
+		else
+		{
+			MCControl *t_controls;
+			t_controls = static_cast<MCGroup *>(t_new_owner) -> getcontrols();
+			if (t_controls != nil && p_relation == RR_BACK)
+				t_new_target = t_controls;
+			else
+				t_new_target = nil;
+		}
+	}
+	else
+	{
+		// The new owner is the owner of the target.
+		t_new_owner = p_target . object -> getparent();
+        
+		if (t_new_owner -> gettype() == CT_CARD)
+		{
+			MCObjptr *t_target_objptr;
+			t_target_objptr = t_card -> getobjptrforcontrol(static_cast<MCControl *>(p_target . object));
+            
+			MCObjptr *t_ptrs;
+			t_ptrs = static_cast<MCCard *>(t_new_owner) -> getobjptrs();
+			if (p_relation == RR_AFTER)
+				t_new_target = t_target_objptr -> next() != t_ptrs ? t_target_objptr -> next() -> getref() : nil;
+			else
+				t_new_target = static_cast<MCControl *>(p_target . object);
+		}
+		else
+		{
+			MCControl *t_controls;
+			t_controls = static_cast<MCGroup *>(t_new_owner) -> getcontrols();
+			if (p_relation == RR_AFTER)
+				t_new_target = p_target . object -> next() != t_controls ? static_cast<MCControl *>(p_target . object -> next()) : nil;
+			else
+				t_new_target = static_cast<MCControl *>(p_target . object);
+		}
+	}
+    
+	// At this point the operation is couched entirely in terms of new owner and
+	// object that should follow this one - or nil if it should go at end of the
+	// owner. We must now check that we aren't trying to put a control into a
+	// descendent - i.e. that source is not an ancestor of new target.
+	if (t_new_owner -> gettype() == CT_GROUP)
+	{
+		MCObject *t_ancestor;
+		t_ancestor = t_new_owner -> getparent();
+		while(t_ancestor -> gettype() != CT_CARD)
+		{
+			if (t_ancestor == p_source . object)
+			{
+				ctxt . LegacyThrow(EE_RELAYER_ILLEGALMOVE);
+				return;
+			}
+			t_ancestor = t_ancestor -> getparent();
+		}
+	}
+    
+	// Perform the relayering.
+	bool t_success;
+	t_success = true;
+	if (t_new_owner == p_source . object -> getparent())
+	{
+		t_new_owner -> relayercontrol(static_cast<MCControl *>(p_source . object), t_new_target);
+        
+		// MW-2013-04-29: [[ Bug 10861 ]] Make sure we trigger a property update as 'layer'
+		//   is changing.
+		p_source . object -> signallisteners(P_LAYER);
+        
+		if (t_card -> getstack() == MCmousestackptr && MCU_point_in_rect(p_source . object->getrect(), MCmousex, MCmousey))
+			t_card -> mfocus(MCmousex, MCmousey);
+	}
+	else
+	{
+		// As we call handlers that might invoke messages, we need to take
+		// object handles here.
+		MCObjectHandle *t_source_handle, *t_new_owner_handle, *t_new_target_handle;
+		t_source_handle = p_source . object -> gethandle();
+		t_new_owner_handle = t_new_owner -> gethandle();
+		t_new_target_handle = t_new_target != nil ? t_new_target -> gethandle() : nil;
+        
+		// Make sure we remove focus from the control.
+		bool t_was_mfocused, t_was_kfocused;
+		t_was_mfocused = t_card -> getstate(CS_MFOCUSED) == True;
+		t_was_kfocused = t_card -> getstate(CS_KFOCUSED) == True;
+		if (t_was_mfocused)
+			t_card -> munfocus();
+		if (t_was_kfocused)
+			t_card -> kunfocus();
+        
+		// Check the source and new owner objects exist, and if we have a target object
+		// that that exists and is still a child of new owner.
+		if (t_source_handle -> Exists() &&
+			t_new_owner_handle -> Exists() &&
+			(t_new_target == nil || t_new_target_handle -> Exists() && t_new_target -> getparent() == t_new_owner))
+		{
+			p_source . object -> getparent() -> relayercontrol_remove(static_cast<MCControl *>(p_source . object));
+			t_new_owner -> relayercontrol_insert(static_cast<MCControl *>(p_source . object), t_new_target);
+			
+			// MW-2013-04-29: [[ Bug 10861 ]] Make sure we trigger a property update as 'layer'
+			//   is changing.
+			p_source . object -> signallisteners(P_LAYER);
+		}
+		else
+		{
+			ctxt . LegacyThrow(EE_RELAYER_OBJECTSVANISHED);
+			t_success = false;
+		}
+        
+		if (t_was_kfocused)
+			t_card -> kfocus();
+		if (t_was_mfocused)
+			t_card -> mfocus(MCmousex, MCmousey);
+        
+		t_source_handle -> Release();
+		t_new_owner_handle -> Release();
+		if (t_new_target != nil)
+			t_new_target_handle -> Release();
+	}
+    
+	if (t_success)
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCInterfaceExecRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_source, uinteger_t p_layer)
+{
+    MCObjectPtr t_target;
+    t_target . object = p_source . object -> getstack() -> getcard(p_source . part_id) -> getobjbylayer(p_layer);
+    if (t_target . object == nil)
+    {
+        ctxt . LegacyThrow(EE_RELAYER_NOTARGET);
+        return;
+    }
+    t_target. part_id = p_source . part_id;
+    
+    MCInterfaceDoRelayer(ctxt, p_relation, p_source, t_target);
+}
+
+void MCInterfaceExecRelayerRelativeToControl(MCExecContext& ctxt, int p_relation, MCObjectPtr p_source, MCObjectPtr p_target)
+{
+    MCInterfaceDoRelayer(ctxt, p_relation, p_source, p_target);
+}
+
+void MCInterfaceExecRelayerRelativeToOwner(MCExecContext& ctxt, int p_relation, MCObjectPtr p_source)
+{
+    MCObjectPtr t_target;
+    t_target . object = p_source . object -> getparent();
+    t_target . part_id = p_source . part_id;
+    
+    MCInterfaceDoRelayer(ctxt, p_relation, p_source, t_target);
+}

@@ -329,19 +329,10 @@ enum MCRelayerForm
 	kMCRelayerFormRelativeToOwner,
 };
 
-enum MCRelayerRelation
-{
-	kMCRelayerRelationNone,
-	kMCRelayerRelationBefore,
-	kMCRelayerRelationAfter,
-	kMCRelayerRelationFront,
-	kMCRelayerRelationBack
-};
-
 class MCRelayer : public MCStatement
 {
 	MCRelayerForm form : 3;
-	MCRelayerRelation relation : 4;
+	Relayer_relation relation : 4;
 	MCChunk *control;
 	union
 	{

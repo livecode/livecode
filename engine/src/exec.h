@@ -2157,6 +2157,10 @@ void MCInterfaceExecUnmarkAllCards(MCExecContext& ctxt);
 void MCInterfaceExecMarkFind(MCExecContext& ctxt, Find_mode p_mode, MCStringRef p_needle, MCChunk *p_field);
 void MCInterfaceExecUnmarkFind(MCExecContext& ctxt, Find_mode p_mode, MCStringRef p_needle, MCChunk *p_field);
 
+void MCInterfaceExecRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_source, uinteger_t p_layer);
+void MCInterfaceExecRelayerRelativeToControl(MCExecContext& ctxt, int p_relation, MCObjectPtr p_source, MCObjectPtr p_target);
+void MCInterfaceExecRelayerRelativeToOwner(MCExecContext& ctxt, int p_relation, MCObjectPtr p_source);
+
 ///////////
 
 struct MCInterfaceLayer;
