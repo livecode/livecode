@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "filedefs.h"
 #include "execpt.h"
+#include "exec.h"
 #include "stack.h"
 #include "card.h"
 #include "mcerror.h"
@@ -1765,7 +1766,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			t_is_unicode = p_mark -> text . font -> unicode || p_mark -> text . unicode_override;
 							
 			MCExecPoint text_ep(NULL, NULL, NULL);
-			MCExecContext ctxt(test_ep);
+			MCExecContext ctxt(text_ep);
 			MCAutoStringRef t_string;
 			/* UNCHECKED */ MCStringCreateWithCString((const char *)s, &t_string);
 			/* UNCHECKED */ ctxt . SetValueRef(*t_string);
