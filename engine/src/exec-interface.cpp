@@ -2163,7 +2163,6 @@ void MCInterfaceExecDeleteObjectChunks(MCExecContext& ctxt, MCObjectChunkPtr *p_
 			MCStringRef t_value; 
 			t_value = nil;
 			p_chunks[i] . object -> getstringprop(ctxt, p_chunks[i] . part_id, P_UNICODE_TEXT, False, t_value);
-			//p_chunks[i] . object -> getprop(p_chunks[i] . part_id, P_UNICODE_TEXT, ctxt . GetEP(), False);
 
 			ctxt . Utf16ToUtf8();
 			MCAutoStringRef t_value_mutable_copy;

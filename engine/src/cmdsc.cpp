@@ -1619,7 +1619,7 @@ if (var != NULL)
 			return ES_ERROR;
 		}
 		MCAutoStringRef t_target;
-		/* UNCHECKED */ ctxt . GetEP().copyasstringref(&t_target);
+		/* UNCHECKED */ ctxt . CopyAsStringRef(&t_target);
 		if (url)
 			MCNetworkExecDeleteUrl(ctxt, *t_target);
 		else

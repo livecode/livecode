@@ -6336,7 +6336,7 @@ Exec_stat MCParams::eval(MCExecPoint &ep)
     
     if (!ctxt . HasError())
     {
-        /* UNCHECKED */ ctxt . GetEP() . setvalueref(*t_result);
+        /* UNCHECKED */ ctxt . SetValueRef(*t_result);
         return ES_NORMAL;
     }
     
@@ -7628,7 +7628,7 @@ if (source->eval(ep) != ES_NORMAL)
 	}
 
 	MCAutoStringRef t_command;
-	/* UNCHECKED */ ctxt . GetEP() . copyasstringref(&t_command);
+	/* UNCHECKED */ ctxt . CopyAsStringRef(&t_command);
 
 	MCAutoStringRef t_output;
 	MCFilesEvalShell(ctxt, *t_command, &t_output);
