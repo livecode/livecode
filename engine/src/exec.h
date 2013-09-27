@@ -692,6 +692,13 @@ public:
     }
 
     //////////
+
+    void Clear()
+    {
+        m_ep.clear();
+    }
+
+    //////////
 	
 	// Convert the given valueref to a string. If the type is not convertable
 	// to a string, the empty string is returned.
