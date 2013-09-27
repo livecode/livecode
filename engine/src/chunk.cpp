@@ -864,11 +864,7 @@ Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recu
         switch (t_object . object -> gettype())
 		{
             case CT_STACK:
-                break;
             case CT_CARD:
-                if (stack != nil || background != nil || card != nil)
-                   t_object . object = t_object . object -> getstack();
-                break;
             case CT_GROUP:
                 return getobj_legacy(ep, r_object . object, r_object . part_id, p_recurse);
             case CT_AUDIO_CLIP:
@@ -2835,17 +2831,6 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
     return ctxt . Catch(line, pos);
 }
 
-Exec_stat MCChunk::evaltextchunk(MCExecPoint& ep, MCStringRef p_source, MCStringRef& r_result)
-{
-    MCExecContext ctxt(ep);
-    MCAutoStringRef t_lines, t_items, t_words, t_tokens, t_chars;
-    int4 t_start;
-    int4 t_end;
-    
-    
-    return ES_NORMAL;
-}
-
 Exec_stat MCChunk::settextchunk(MCExecPoint& ep, MCStringRef p_to_set, Preposition_type p_where, MCStringRef& x_text)
 {
     MCExecContext ctxt(ep);
@@ -4076,18 +4061,30 @@ Exec_stat MCChunk::setprop(Properties which, MCExecPoint &ep, MCNameRef index, B
     {
         if (t_obj_chunk . object -> gettype() == CT_BUTTON)
         {
-            Boolean value;
-            if (!MCU_stob(ep.getsvalue(), value))
+            MCExecContext ctxt(ep);
+            bool t_value;
+            if (ep . copyasbool(t_value))
             {
                 MCeerror->add(EE_OBJECT_NAB, 0, 0, ep.getsvalue());
                 return ES_ERROR;
             }
-            if (which == P_ENABLED)
+			switch (which)
             {
-                which = P_DISABLED;
-                value = !value;
-            }
-            return changeprop(ep, which, value);
+                case P_DISABLED:
+                    if (t_value)
+                        MCInterfaceExecDisableChunkOfButton(ctxt, t_obj_chunk);
+                    else
+                        MCInterfaceExecEnableChunkOfButton(ctxt, t_obj_chunk);
+                    break;
+                case P_HILITE:
+                    if (t_value)
+                        MCInterfaceExecHiliteChunkOfButton(ctxt, t_obj_chunk);
+                    else
+                        MCInterfaceExecUnhiliteChunkOfButton(ctxt, t_obj_chunk);
+                    break;
+                default:
+                    break;
+			}
         }
         else
         {
