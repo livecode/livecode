@@ -1965,7 +1965,7 @@ void MCStack::SetDecorations(MCExecContext& ctxt, const MCInterfaceDecoration& p
 
 void MCStack::GetDecorations(MCExecContext& ctxt, MCInterfaceDecoration& r_value)
 {
-    r_value . has_decorations = (flags & F_DECORATIONS) == True;
+    r_value . has_decorations = (flags & F_DECORATIONS) != False;
     r_value . decorations = decorations;
 }
 
