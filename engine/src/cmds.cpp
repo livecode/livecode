@@ -1457,7 +1457,7 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 			MCObjectChunkPtr t_obj_chunk;
 			if (dest -> evalobjectchunk(ep, false, true, t_obj_chunk) != ES_NORMAL)
 				return ES_ERROR;
-			
+            
 			if (t_obj_chunk . object -> gettype() == CT_FIELD)
 				MCInterfaceExecPutIntoField(ctxt, *t_string, prep, t_obj_chunk, is_unicode);
 			else

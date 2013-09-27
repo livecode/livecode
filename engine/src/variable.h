@@ -1040,7 +1040,8 @@ public:
 	void clear();
 	void clearuql();
 	Exec_stat dofree(MCExecPoint &);
-	
+    bool dofree(MCExecContext& ctxt);
+    
 	bool getisplain(void) const { return isplain; }
 	
 private:

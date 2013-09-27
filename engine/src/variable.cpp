@@ -314,7 +314,10 @@ bool MCVariable::set(MCExecContext& ctxt, MCValueRef p_value)
 
 bool MCVariable::set(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length)
 {
-    if (setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), p_value))
+    MCAutoValueRef t_value;
+    MCValueCopy(p_value, &t_value);
+    
+    if (setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), *t_value))
     {
         synchronize(ctxt, p_value, true);
         return true;
@@ -1173,6 +1176,24 @@ Exec_stat MCVarref::dofree(MCExecPoint &ep)
 		return ES_ERROR;
 
 	return t_container -> remove(ep);
+}
+
+bool MCVarref::dofree(MCExecContext& ctxt)
+{
+	if (dimensions == 0)
+	{
+		MCVariable *t_var;
+		
+		t_var = fetchvar(ctxt);
+        
+		return t_var -> remove(ctxt);
+	}
+	
+	MCAutoPointer<MCContainer> t_container;
+	if (resolve(ctxt, &t_container) != ES_NORMAL)
+		return ES_ERROR;
+    
+	return t_container -> remove(ctxt);
 }
 
 //

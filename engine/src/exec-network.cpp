@@ -629,15 +629,16 @@ void MCNetworkExecReturnValueAndUrlResult(MCExecContext& ctxt, MCValueRef p_resu
 
 void MCNetworkExecReturnValueAndUrlResultFromVar(MCExecContext& ctxt, MCValueRef p_result, MCVarref *p_variable)
 {
-	if (p_variable -> eval(ctxt . GetEP()) != ES_NORMAL)
+    MCAutoValueRef t_value;
+	if (!p_variable -> eval(ctxt, &t_value))
 	{
 		ctxt . LegacyThrow(EE_RETURN_BADEXP);
 		return;
 	}
 	
 	ctxt . SetTheResultToValue(p_result);
-	MCurlresult -> set(ctxt . GetEP());
-	p_variable -> dofree(ctxt . GetEP());
+	MCurlresult -> set(ctxt, *t_value);
+	p_variable -> dofree(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

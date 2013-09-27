@@ -462,10 +462,18 @@ Exec_stat MCClipboardCmd::exec(MCExecPoint& ep)
 			MCeerror -> add(EE_CLIPBOARD_BADMIX, line, pos);
 			return ES_ERROR;
 		}
+        
+        MCObjectChunkPtr t_obj_chunk;
+        if (targets -> evalobjectchunk(ep, true, false, t_obj_chunk) != ES_NORMAL)
+		{
+			MCeerror -> add(EE_CLIPBOARD_BADTEXT, line, pos);
+			return ES_ERROR;
+		}
+        
 		if (iscut())
-			MCPasteboardExecCutTextToClipboard(ctxt, targets);
+			MCPasteboardExecCutTextToClipboard(ctxt, t_obj_chunk);
 		else
-			MCPasteboardExecCopyTextToClipboard(ctxt, targets);
+			MCPasteboardExecCopyTextToClipboard(ctxt, t_obj_chunk);
 	}	
 	else
 	{

@@ -4038,7 +4038,7 @@ Exec_stat MCChunk::setprop(Properties which, MCExecPoint &ep, MCNameRef index, B
     
     MCObjectChunkPtr t_obj_chunk;
     MCExecPoint ep2(ep);
-    if (evalobjectchunk(ep2, false, false, t_obj_chunk) != ES_NORMAL)
+    if (evalobjectchunk(ep2, false, true, t_obj_chunk) != ES_NORMAL)
         return ES_ERROR;
     
     if (t_obj_chunk . chunk == CT_UNDEFINED)
