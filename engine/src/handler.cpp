@@ -841,9 +841,11 @@ void MCHandler::doscript(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p
 		return;
 	}
 
+	MCExecPoint ep2(ctxt.GetEP());
+	MCExecContext ctxt2(ep2);
 	while (statements != NULL)
 	{
-		Exec_stat stat = statements->exec(ctxt.GetEP());
+		Exec_stat stat = statements->exec(ctxt2.GetEP());
 		if (stat == ES_ERROR)
 		{
 			deletestatements(statements);

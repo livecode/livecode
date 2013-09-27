@@ -1156,6 +1156,9 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
 				newparam->setvalueref_argument(*t_return);
 			else
 				newparam->setvalueref_argument(*t_expression);
+			
+			// Not being able to evaluate the parameter doesn't cause an error at this stage
+			ctxt.IgnoreLastError();
 
 			if (tparam == NULL)
 				params = tparam = newparam;
