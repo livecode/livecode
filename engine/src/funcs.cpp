@@ -10751,8 +10751,8 @@ Exec_stat MCUuidFunc::eval(MCExecPoint& ep)
 	}
 	
 	// If it is not of random type, then evaluate the other params.
-	MCUuid t_namespace_id;
-	MCString t_name;
+	MCAutoStringRef t_namespace_id;
+	MCAutoStringRef t_name;
 	if (t_type != kMCUuidTypeRandom)
 	{
 		// If there aren't namespace_id and name exprs, its an error.
@@ -10768,44 +10768,32 @@ Exec_stat MCUuidFunc::eval(MCExecPoint& ep)
 			MCeerror -> add(EE_UUID_BADNAMESPACEID, line, pos);
 			return ES_ERROR;
 		}
-		
-		// Attempt to convert it to a uuid.
-		if (!MCUuidFromCString(ep . getcstring(), t_namespace_id))
-		{
-			MCeerror -> add(EE_UUID_NAMESPACENOTAUUID, line, pos);
-			return ES_ERROR;
-		}
-		
+		/* UNCHECKED */ ep . copyasstringref(&t_namespace_id);
+        
 		// Evaluate the name parameter.
 		if (name -> eval(ep) != ES_NORMAL)
 		{
 			MCeerror -> add(EE_UUID_BADNAME, line, pos);
 			return ES_ERROR;
 		}
-		
-		// Borrow the value from the ep - this is okay in this instance because
-		// ep isn't used again until the name has been utilised.
-		t_name = ep . getsvalue();
+		/* UNCHECKED */ ep . copyasstringref(&t_name);
 	}
 	
+    MCExecContext ctxt(ep);
 	// Generate the uuid.
-	MCUuid t_uuid;
+	MCAutoStringRef t_uuid;
 	switch(t_type)
 	{
         case kMCUuidTypeRandom:
-            if (!MCUuidGenerateRandom(t_uuid))
-            {
-                MCeerror -> add(EE_UUID_NORANDOMNESS, line, pos);
-                return ES_ERROR;
-            }
+            MCEngineEvalRandomUuid(ctxt, &t_uuid);
             break;
             
         case kMCUuidTypeMD5:
-            MCUuidGenerateMD5(t_namespace_id, t_name, t_uuid);
+            MCEngineEvalMD5Uuid(ctxt, *t_namespace_id, *t_name, &t_uuid);
             break;
             
         case kMCUuidTypeSHA1:
-            MCUuidGenerateSHA1(t_namespace_id, t_name, t_uuid);
+            MCEngineEvalSHA1Uuid(ctxt, *t_namespace_id, *t_name, &t_uuid);
             break;
             
         default:
@@ -10813,12 +10801,11 @@ Exec_stat MCUuidFunc::eval(MCExecPoint& ep)
             break;
 	}
 	
-	// Convert the uuid to a string.
-	char t_uuid_buffer[kMCUuidCStringLength];
-	MCUuidToCString(t_uuid, t_uuid_buffer);
+    if (!ctxt . HasError())
+    {
+        ep . setvalueref(*t_uuid);
+        return ES_NORMAL;
+    }
 	
-	// And set it as the return value (in the ep).
-	ep . copysvalue(t_uuid_buffer);
-	
-	return ES_NORMAL;
+	return ctxt . Catch(line, pos);
 }

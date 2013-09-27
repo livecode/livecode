@@ -2589,6 +2589,10 @@ void MCEngineGetStacksInUse(MCExecContext& ctxt, MCStringRef &r_value);
 void MCEngineExecSetVariableToString(MCExecContext& ctxt, MCStringRef p_value, MCVarref *p_variable);
 void MCEngineExecSetVariable(MCExecContext& ctxt, MCValueRef p_value, int p_where, MCVarref *p_variable);
 
+void MCEngineEvalRandomUuid(MCExecContext& ctxt, MCStringRef& r_uuid);
+void MCEngineEvalMD5Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStringRef p_name, MCStringRef& r_uuid);
+void MCEngineEvalSHA1Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStringRef p_name, MCStringRef& r_uuid);
+
 ///////////
 
 extern MCExecMethodInfo *kMCFilesEvalDirectoriesMethodInfo;

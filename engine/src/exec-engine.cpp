@@ -45,6 +45,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "securemode.h"
 #include "dispatch.h"
 
+#include "uuid.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EVAL_METHOD(Engine, Version, 1)
@@ -1751,4 +1753,61 @@ void MCEngineExecSetVariable(MCExecContext& ctxt, MCValueRef p_value, int p_wher
         
         p_variable -> set(ctxt, *t_string, false);
     }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+static bool MCEngineUuidToStringRef(MCUuid p_uuid, MCStringRef& r_string)
+{
+    // Convert the uuid to a string.
+	char t_uuid_buffer[kMCUuidCStringLength];
+	MCUuidToCString(p_uuid, t_uuid_buffer);
+    
+    return MCStringCreateWithNativeChars((const char_t *)t_uuid_buffer, kMCUuidCStringLength, r_string);
+}
+
+void MCEngineEvalRandomUuid(MCExecContext& ctxt, MCStringRef& r_uuid)
+{
+    MCUuid t_uuid;
+    if (!MCUuidGenerateRandom(t_uuid))
+    {
+        ctxt . LegacyThrow(EE_UUID_NORANDOMNESS);
+        return;
+    }
+    
+    if (MCEngineUuidToStringRef(t_uuid, r_uuid))
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCEngineDoEvalUuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStringRef p_name, bool p_is_md5, MCStringRef& r_uuid)
+{
+    MCUuid t_namespace, t_uuid;
+    // Attempt to convert it to a uuid.
+    if (!MCUuidFromCString(MCStringGetCString(p_namespace_id), t_namespace))
+    {
+        ctxt . LegacyThrow(EE_UUID_NAMESPACENOTAUUID);
+        return;
+    }
+    
+    if (p_is_md5)
+        MCUuidGenerateMD5(t_namespace, MCStringGetOldString(p_name), t_uuid);
+    else
+        MCUuidGenerateSHA1(t_namespace, MCStringGetOldString(p_name), t_uuid);
+    
+    if (MCEngineUuidToStringRef(t_uuid, r_uuid))
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCEngineEvalMD5Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStringRef p_name, MCStringRef& r_uuid)
+{
+    MCEngineDoEvalUuid(ctxt, p_namespace_id, p_name, true, r_uuid);
+}
+
+void MCEngineEvalSHA1Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStringRef p_name, MCStringRef& r_uuid)
+{
+    MCEngineDoEvalUuid(ctxt, p_namespace_id, p_name, false, r_uuid);
 }
