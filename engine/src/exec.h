@@ -590,36 +590,6 @@ public:
 	}
 	//////////
 
-	void Substring(uint32_t p_start, uint32_t p_finish)
-	{
-		return m_ep . substring(p_start, p_finish);
-	}
-
-	MCString GetOldStringValue(void)
-	{
-		return m_ep . getsvalue();
-	}
-
-	bool CopyAsStringRef(MCStringRef &r_value)
-	{
-		return m_ep . copyasstringref(r_value);
-	}
-	
-	bool SetValueRef(MCStringRef p_value)
-	{
-		return m_ep . setvalueref(p_value);
-	}
-
-	void TextToBinary(void)
-	{
-		return m_ep . texttobinary();
-	}
-
-	void BinaryToText(void)
-	{
-		return m_ep . binarytotext();
-	}
-
 	// Convert the given valueref to a string. If the type is not convertable
 	// to a string, the empty string is returned.
 	// This method should be used in cases where a string is required and
