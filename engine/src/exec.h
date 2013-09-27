@@ -639,6 +639,16 @@ public:
         return m_ep . utf8toutf16();
     }
 
+	Exec_stat GetReal8(real8& d, uint2 l, uint2 p, Exec_errors e)
+	{
+		return m_ep . getreal8(d, l, p, e);
+	}
+
+	bool CopyAsNameRef(MCNameRef &r_name)
+	{
+		return m_ep . copyasnameref(r_name);
+	}
+
     bool CopyAsDataRef(MCDataRef &r_data)
     {
         return m_ep . copyasdataref(r_data);
@@ -689,6 +699,13 @@ public:
     void SetHandlerList(MCHandlerlist *p_list)
     {
         m_ep.sethlist(p_list);
+    }
+
+    //////////
+
+    void Clear()
+    {
+        m_ep.clear();
     }
 
     //////////
