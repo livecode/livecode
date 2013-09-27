@@ -692,7 +692,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 						sptr = tstk;
 					else
 					{
-						MCdefaultstackptr->getcard()->message_with_valueref_args(MCM_reload_stack, MCNameGetString(tstk->getname()), p_openpath);
+						MCdefaultstackptr->getcard()->message_with_valueref_args(MCM_reload_stack, tstk->getname(), p_openpath);
 						tstk = stacks;
 						do
 						{
@@ -1398,7 +1398,14 @@ MCStack *MCDispatch::findstackname(MCNameRef p_name)
 		/* UNCHECKED */ MCStringLowercase(*t_name);
 		
 		// Remove all special characters from the input string
-		/* TODO */
+		// TODO: what about the other special chars added by unicode?
+		MCStringRef t_replace = MCSTR("\r\n\t *?<>/\\()[]{}|'`\"");
+		MCRange t_range = MCRangeMake(0, MCStringGetLength(t_replace));
+		for (uindex_t i = 0; i < MCStringGetLength(*t_name); i++)
+		{
+			if (MCStringCountChar(t_replace, t_range, MCStringGetCharAtIndex(*t_name, i), kMCStringOptionCompareExact))
+				/* UNCHECKED */ MCStringReplace(*t_name, MCRangeMake(i, 1), MCSTR("_"));
+		}
 		
 		MCAutoStringRef t_name_mc;
 		/* UNCHECKED */ MCStringFormat(&t_name_mc, "%@.mc", *t_name);

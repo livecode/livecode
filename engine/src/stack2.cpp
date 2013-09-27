@@ -2616,14 +2616,14 @@ void MCStack::getstackfile(MCStringRef p_name, MCStringRef &r_name)
 			{
 				if (filename == NULL || MCStringGetCharAtIndex(stackfiles[i].filename, 0) == '/' || MCStringGetCharAtIndex(stackfiles[i].filename, 1) == ':')
 				{
-					r_name = stackfiles[i].filename;
+					r_name = MCValueRetain(stackfiles[i].filename);
 					return;
 				}
 
 				uindex_t t_index;
 				if (!MCStringLastIndexOfChar(filename, PATH_SEPARATOR, -1, kMCStringOptionCompareExact, t_index))
 				{
-					r_name = filename;
+					r_name = MCValueRetain(filename);
 					return;
 				}
 				
