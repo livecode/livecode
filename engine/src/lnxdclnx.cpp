@@ -445,6 +445,14 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 			break;
 		case KeyPress:
 			{
+				// Translate the keypress event into a keysym. There is no point in
+				// getting the text string; it is locale-dependent and we can get all
+				// the information we need from the keysym itself.
+				//
+				// This is done this way instead of via XLookupKeysym so that the X
+				// server will do the handling of modifier keys for us.
+				/* UNCHECKED */ XLookupString(kpevent, NULL, 0, &keysym, NULL);
+				
 				// Some vendor-specific keysyms exist and, where possible, these are
 				// translated into generic keysyms.
 				keysym = translatekeysym(keysym, kpevent->keycode);
@@ -517,6 +525,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 			{
 				// See KeyPressed for details on keysym -> codepoint conversion
 				uint32_t t_codepoint;
+				/* UNCHECKED */ XLookupString(kpevent, NULL, 0, &keysym, NULL);
 				keysym = translatekeysym(keysym, kpevent->keycode);
 				t_codepoint = keyval_to_unicode(keysym);
 				if (t_codepoint != 0 && keysym > 0x7F)
