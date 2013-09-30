@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "handler.h"
 #include "scriptpt.h"
 #include "variable.h"
@@ -1081,17 +1082,26 @@ static uint64_t MCWindowsVersionInfoParseVersion(const char *p_string)
 static bool add_version_info_entry(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
 {
 	MCExecPoint ep(NULL, NULL, NULL);
-
-	if (!ep . setvalueref(p_value))
+	MCExecContext ctxt(ep);
+	if (!ctxt . SetValueRef(p_value))
 		return false;
 
 	MCWindowsVersionInfo *t_string;
-	
-	if (ep . getsvalue() . getstring()[ep . getsvalue() . getlength() - 1] != '\0')
-		ep . appendchar('\0');
-	ep . nativetoutf16();
-	swap_uint16s((uint16_t *)ep . getsvalue() . getstring(), ep . getsvalue() . getlength() / 2);
-	return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, MCStringGetCString(MCNameGetString(p_key)), true, ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_string);
+	MCAutoStringRef t_value;
+	/* UNCHECKED */ ctxt . CopyAsStringRef(&t_value);
+	if (MCStringGetNativeCharAtIndex(*t_value, MCStringGetLength(*t_value) - 1) != '\0')
+	{
+		MCAutoStringRef t_value_mutable_copy;
+		/* UNCHECKED */ MCStringMutableCopy(*t_value, &t_value_mutable_copy);
+		MCStringAppendNativeChar(*t_value_mutable_copy, '\0');
+		ctxt . SetValueRef(*t_value_mutable_copy);
+	}
+	ctxt . NativeToUtf16();
+	MCAutoStringRef t_new_value;
+	/* UNCHECKED */ ctxt . CopyAsStringRef(&t_new_value);
+
+	swap_uint16s((uint16_t *)MCStringGetCString(*t_new_value), MCStringGetLength(*t_new_value) / 2);
+	return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, MCStringGetCString(MCNameGetString(p_key)), true, MCStringGetCString(*t_new_value), MCStringGetLength(*t_new_value), t_string);
 }
 
 static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCArrayRef p_info)
@@ -1105,10 +1115,18 @@ static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCArrayRe
 	t_file_version = t_product_version = 0;
 	if (t_success)
 	{
-		if (ep . fetcharrayelement_cstring(p_info, "FileVersion") == ES_NORMAL)
-			t_file_version = MCWindowsVersionInfoParseVersion(ep . getcstring());
-		if (ep . fetcharrayelement_cstring(p_info, "ProductVersion") == ES_NORMAL)
-			t_product_version = MCWindowsVersionInfoParseVersion(ep . getcstring());
+		MCNewAutoNameRef t_key1, t_key2;
+        MCNameCreateWithCString("FileVersion", &t_key1);
+		MCNameCreateWithCString("ProductVersion", &t_key2);
+            
+        MCValueRef t_value1, t_value2;
+            
+        if (MCArrayFetchValue(p_info, false, *t_key1, t_value1))
+            t_file_version = MCWindowsVersionInfoParseVersion(MCStringGetCString((MCStringRef)t_value1));   
+		if (MCArrayFetchValue(p_info, false, *t_key2, t_value2))
+            t_product_version = MCWindowsVersionInfoParseVersion(MCStringGetCString((MCStringRef)t_value2));
+		MCValueRelease(t_value1);
+		MCValueRelease(t_value2);
 	}
 	
 	MCWindowsVersionInfo *t_version_info;

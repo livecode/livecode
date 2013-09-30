@@ -1137,7 +1137,7 @@ static bool convert_options_array(void *p_context, MCArrayRef p_array, MCNameRef
 	convert_options_array_t *ctxt;
 	ctxt = (convert_options_array_t *)p_context;
 
-	MCExecPoint ep(nil, nil, nil);
+	//MCExecPoint ep(nil, nil, nil);
 	if (!MCCStringClone(MCStringGetCString(MCNameGetString(p_key)), ctxt -> option_keys[ctxt -> index]))
 		return false;
 	MCStringRef t_value;
