@@ -1071,10 +1071,10 @@ static void MCWindowsVersionInfoDestroy(MCWindowsVersionInfo *self)
 	delete self;
 }
 
-static uint64_t MCWindowsVersionInfoParseVersion(const char *p_string)
+static uint64_t MCWindowsVersionInfoParseVersion(MCStringRef p_string)
 {
 	uint32_t a, b, c, d;
-	if (sscanf(p_string, "%u.%u.%u.%u", &a, &b, &c, &d) != 4)
+	if (sscanf(MCStringGetCString(p_string), "%u.%u.%u.%u", &a, &b, &c, &d) != 4)
 		return 0;
 	return 0ULL | ((uint64_t)a << 48) | ((uint64_t)b << 32) | (c << 16) | d;
 }
@@ -1116,15 +1116,15 @@ static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCArrayRe
 	if (t_success)
 	{
 		MCNewAutoNameRef t_key1, t_key2;
-        MCNameCreateWithCString("FileVersion", &t_key1);
-		MCNameCreateWithCString("ProductVersion", &t_key2);
+        /* UNCHECKED */ MCNameCreateWithCString("FileVersion", &t_key1);
+		/* UNCHECKED */ MCNameCreateWithCString("ProductVersion", &t_key2);
             
         MCValueRef t_value1, t_value2;
             
         if (MCArrayFetchValue(p_info, false, *t_key1, t_value1))
-            t_file_version = MCWindowsVersionInfoParseVersion(MCStringGetCString((MCStringRef)t_value1));   
+            t_file_version = MCWindowsVersionInfoParseVersion((MCStringRef)t_value1);   
 		if (MCArrayFetchValue(p_info, false, *t_key2, t_value2))
-            t_product_version = MCWindowsVersionInfoParseVersion(MCStringGetCString((MCStringRef)t_value2));
+            t_product_version = MCWindowsVersionInfoParseVersion((MCStringRef)t_value2);
 		MCValueRelease(t_value1);
 		MCValueRelease(t_value2);
 	}
