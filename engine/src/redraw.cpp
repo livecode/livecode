@@ -452,12 +452,13 @@ void MCControl::layer_contentoriginchanged(int32_t p_dx, int32_t p_dy)
 	// Scroll the sprite - note that this method is only called if
 	// layer_isscrolling() is true, which is only possible if we have a tilecache.
 	// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
-	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
+	// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
 	
+	MCGPoint t_device_point;
+	t_device_point = MCGPointApplyAffineTransform(MCGPointMake(p_dx, p_dy), getstack()->getdevicetransform());
 	MCGFloat t_dx, t_dy;
-	t_dx = p_dx * t_scale;
-	t_dy = p_dy * t_scale;
+	t_dx = t_device_point.x;
+	t_dy = t_device_point.y;
 	MCTileCacheScrollSprite(t_tilecache, m_layer_id, t_dx, t_dy);
 }
 
@@ -504,9 +505,13 @@ void MCControl::layer_dirtycontentrect(const MCRectangle& p_updated_rect, bool p
 	if (m_layer_id != 0)
 	{
 		// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+		// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+		MCGAffineTransform t_transform;
+		t_transform = getstack()->getdevicetransform();
+		
 		MCRectangle t_device_updated_rect, t_device_content_rect;
-		t_device_updated_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(p_updated_rect));
-		t_device_content_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_content_rect));
+		t_device_updated_rect = MCRectangleGetTransformedBounds(p_updated_rect, t_transform);
+		t_device_content_rect = MCRectangleGetTransformedBounds(t_content_rect, t_transform);
 		MCTileCacheUpdateSprite(t_tilecache, m_layer_id, MCU_offset_rect(t_device_updated_rect, -t_device_content_rect . x, -t_device_content_rect . y));
 	}
 		
@@ -554,8 +559,12 @@ void MCControl::layer_dirtyeffectiverect(const MCRectangle& p_effective_rect, bo
 	t_tilecache = t_control -> getstack() -> gettilecache();
 
 	// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+	// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+	MCGAffineTransform t_transform;
+	t_transform = getstack()->getdevicetransform();
+	
 	MCRectangle t_device_rect;
-	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_dirty_rect));
+	t_device_rect = MCRectangleGetTransformedBounds(t_dirty_rect, t_transform);
 	
 	// Notify any tilecache of the changes.
 	if (t_tilecache != nil)
@@ -580,7 +589,8 @@ void MCControl::layer_dirtyeffectiverect(const MCRectangle& p_effective_rect, bo
 			t_offset_rect = MCU_offset_rect(t_dirty_rect, -t_control -> rect . x, -t_control -> rect . y);
 			
 			// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
-			t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_offset_rect));
+			// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+			t_device_rect = MCRectangleGetTransformedBounds(t_offset_rect, t_transform);
 			MCTileCacheUpdateSprite(t_tilecache, t_control -> m_layer_id, t_device_rect);
 		}
 	}
@@ -656,9 +666,13 @@ void MCControl::layer_changeeffectiverect(const MCRectangle& p_old_effective_rec
 		// that 'force_update' has no effect here as reshaping a scenery layer
 		// implicitly invalidates all tiles it touches.
 		// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+		// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+		MCGAffineTransform t_transform;
+		t_transform = getstack()->getdevicetransform();
+		
 		MCRectangle t_old_device_rect, t_new_device_rect;
-		t_old_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(p_old_effective_rect));
-		t_new_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_new_effective_rect));
+		t_old_device_rect = MCRectangleGetTransformedBounds(p_old_effective_rect, t_transform);
+		t_new_device_rect = MCRectangleGetTransformedBounds(t_new_effective_rect, t_transform);
 		
 		MCTileCacheReshapeScenery(t_tilecache, m_layer_id, t_old_device_rect, t_new_device_rect);
 	}
@@ -683,8 +697,12 @@ void MCControl::layer_changeeffectiverect(const MCRectangle& p_old_effective_rec
 			t_rect . x = t_rect . y = 0;
 			
 			// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+			// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+			MCGAffineTransform t_transform;
+			t_transform = getstack()->getdevicetransform();
+			
 			MCRectangle t_device_rect;
-			t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_rect));
+			t_device_rect = MCRectangleGetTransformedBounds(t_rect, t_transform);
 			MCTileCacheUpdateSprite(t_tilecache, m_layer_id, t_device_rect);
 		}
 	}
@@ -736,8 +754,9 @@ void MCCard::layer_added(MCControl *p_control, MCObjptr *p_previous, MCObjptr *p
 		
 		// Now insert the scenery.
 		// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+		// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
 		MCRectangle t_device_rect;
-		t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(p_control->geteffectiverect()));
+		t_device_rect = MCRectangleGetTransformedBounds(p_control->geteffectiverect(), getstack()->getdevicetransform());
 		MCTileCacheInsertScenery(t_tilecache, t_before_layer_id, t_device_rect);
 
 		// Finally, set the id of the layer to that of the one before. This causes
@@ -778,8 +797,9 @@ void MCCard::layer_removed(MCControl *p_control, MCObjptr *p_previous, MCObjptr 
 
 		// Remove the scenery.
 		// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+		// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
 		MCRectangle t_device_rect;
-		t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(p_control->geteffectiverect()));
+		t_device_rect = MCRectangleGetTransformedBounds(p_control->geteffectiverect(), getstack()->getdevicetransform());
 		MCTileCacheRemoveScenery(t_tilecache, p_control -> layer_getid(), t_device_rect);
 		
 		// MW-2012-10-11: [[ Bug ]] Redraw glitch caused by resetting the layer id
@@ -833,9 +853,10 @@ void MCCard::layer_setviewport(int32_t p_x, int32_t p_y, int32_t p_width, int32_
 	if (t_tilecache != nil)
 	{
 		// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+		// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
 		MCRectangle t_user_rect, t_device_rect;
 		t_user_rect = MCRectangleMake(p_x, p_y, p_width, p_height);
-		t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_user_rect));
+		t_device_rect = MCRectangleGetTransformedBounds(t_user_rect, getstack()->getdevicetransform());
 		MCTileCacheSetViewport(t_tilecache, t_device_rect);
 	}
 
@@ -869,9 +890,13 @@ void MCCard::layer_selectedrectchanged(const MCRectangle& p_old_rect, const MCRe
 	if (t_tilecache != nil)
 	{
 		// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+		// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+		MCGAffineTransform t_transform;
+		t_transform = getstack()->getdevicetransform();
+		
 		MCRectangle t_new_device_rect, t_old_device_rect;
-		t_new_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(p_new_rect));
-		t_old_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(p_old_rect));
+		t_new_device_rect = MCRectangleGetTransformedBounds(p_new_rect, t_transform);
+		t_old_device_rect = MCRectangleGetTransformedBounds(p_old_rect, t_transform);
 		MCTileCacheReshapeScenery(t_tilecache, m_fg_layer_id, t_old_device_rect, t_new_device_rect);
 	}
 
@@ -891,17 +916,21 @@ void MCCard::layer_dirtyrect(const MCRectangle& p_dirty_rect)
 typedef bool (*MCTileCacheDeviceRenderCallback)(void *context, MCContext *target, const MCRectangle& region);
 static bool tilecache_device_renderer(MCTileCacheDeviceRenderCallback p_callback, void *p_context, MCGContextRef p_target, const MCRectangle &p_rectangle)
 {
-	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
+	MCControl *t_control;
+	t_control = static_cast<MCControl*>(p_context);
 	
+	// IM-2013-09-30: [[ FullscreenMode ]] Apply stack transform to device context
+	MCGAffineTransform t_transform;
+	t_transform = t_control->getstack()->getdevicetransform();
+
 	MCGContextSave(p_target);
-	MCGContextScaleCTM(p_target, t_scale, t_scale);
+	MCGContextConcatCTM(p_target, t_transform);
 	
 	MCGraphicsContext *t_gfx_context;
 	/* UNCHECKED */ t_gfx_context = new MCGraphicsContext(p_target);
 	
 	MCRectangle t_user_rect;
-	t_user_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(p_rectangle));
+	t_user_rect = MCRectangleGetTransformedBounds(p_rectangle, MCGAffineTransformInvert(t_transform));
 	
 	bool t_success;
 	t_success = p_callback(p_context, t_gfx_context, t_user_rect);
@@ -1048,6 +1077,10 @@ void MCCard::render(void)
 	else
 		m_fg_layer_id = 0;
 
+	// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+	MCGAffineTransform t_transform;
+	t_transform = getstack()->getdevicetransform();
+	
 	MCObjptr *t_objptrs;
 	t_objptrs = getobjptrs();
 	if (t_objptrs != nil)
@@ -1103,8 +1136,9 @@ void MCCard::render(void)
 			}
 
 			// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
-			t_layer . region = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_layer . region));
-			t_layer . clip = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_layer . clip));
+			// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+			t_layer . region = MCRectangleGetTransformedBounds(t_layer . region, t_transform);
+			t_layer . clip = MCRectangleGetTransformedBounds(t_layer . clip, t_transform);
 			
 			// Now render the layer - what method we use depends on whether the
 			// layer is a sprite or not.
@@ -1115,8 +1149,9 @@ void MCCard::render(void)
 				if (!t_old_is_sprite && t_layer . id != 0)
 				{
 					// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+					// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
 					MCRectangle t_device_rect;
-					t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_control -> geteffectiverect()));
+					t_device_rect = MCRectangleGetTransformedBounds(t_control -> geteffectiverect(), t_transform);
 					MCTileCacheRemoveScenery(t_tiler, t_layer . id, t_device_rect);
 					t_layer . id = 0;
 				}
@@ -1223,9 +1258,13 @@ void MCStack::setacceleratedrendering(bool p_value)
 		t_tile_size = 64, t_cache_limit = 64 * 1024 * 1024;
 #endif
 
+	MCGAffineTransform t_transform;
+	t_transform = getdevicetransform();
+	
 	// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+	// IM-2013-09-30: [[ FullscreenMode ]] Use view rect when setting the size of the tilecache
 	MCRectangle t_device_rect;
-	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(curcard->getrect()));
+	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(view_getrect()));
 	MCTileCacheCreate(t_tile_size, t_cache_limit, m_tilecache);
 	MCTileCacheSetViewport(m_tilecache, t_device_rect);
 	MCTileCacheSetCompositor(m_tilecache, t_compositor_type);

@@ -326,6 +326,16 @@ void MCUIDC::getclickloc(MCStack *&r_target, MCPoint &r_loc)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCUIDC::fullscreenwindows(void)
+{
+	return false;
+}
+
+MCRectangle MCUIDC::fullscreenrect(const MCDisplay *p_display)
+{
+	return p_display->viewport;
+}
+
 uint2 MCUIDC::getwidth()
 {
 	MCGFloat t_scale;

@@ -162,7 +162,14 @@ void MCStack::configure(Boolean user)
 #endif
 	Boolean beenchanged = False;
 	MCRectangle trect;
-	mode_getrealrect(trect);
+	// IM-2013-09-30: [[ FullscreenMode ]] Use view methods for fullscreen stacks
+	if (view_getfullscreen())
+	{
+		trect = view_setstackrect(old_rect);
+		view_setgeom(trect);
+	}
+	else
+		mode_getrealrect(trect);
 	if (trect.width != 0 && trect.height != 0
 	        && (trect.width != rect.width || trect.height != rect.height))
 	{
@@ -1627,6 +1634,10 @@ void MCStack::reopenwindow()
 	if (getstyleint(flags) != 0)
 		mode = (Window_mode)(getstyleint(flags) + WM_TOP_LEVEL_LOCKED);
 
+	// IM-2013-09-30: [[ FullscreenMode ]] Restore old rect when changing fullscreen modes
+	if (view_getfullscreen())
+		rect = old_rect;
+	
 	// MW-2011-08-18: [[ Redraw ]] Use global screen lock
 	MCRedrawLockScreen();
 	realize();
@@ -2408,8 +2419,9 @@ bool MCStack::snapshottilecache(MCRectangle p_area, MCGImageRef& r_pixmap)
 		return false;
 	
 	// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+	// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
 	MCRectangle t_device_rect;
-	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(p_area));
+	t_device_rect = MCRectangleGetTransformedBounds(p_area, getdevicetransform());
 	return MCTileCacheSnapshot(m_tilecache, t_device_rect, r_pixmap);
 }
 
@@ -2555,8 +2567,12 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 
 		// IM-2013-07-18: [[ ResIndependence ]] take stack snapshot at device resolution
 		// IM-2013-08-21: [[ ResIndependence ]] Align snapshots to device pixel boundaries
-		MCRectangle t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_effect_area));
-		MCRectangle t_user_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_device_rect));
+		// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+		MCGAffineTransform t_transform = getdevicetransform();
+		
+		MCRectangle t_device_rect, t_user_rect;
+		t_device_rect = MCRectangleGetTransformedBounds(t_effect_area, t_transform);
+		t_user_rect = MCRectangleGetTransformedBounds(t_device_rect, MCGAffineTransformInvert(t_transform));
 		
 		if (t_success)
 			t_success = MCGContextCreate(t_device_rect.width, t_device_rect.height, true, t_context);
@@ -2565,10 +2581,8 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 		{
 			MCGContextTranslateCTM(t_context, -t_device_rect.x, -t_device_rect.y);
 			
-			MCGFloat t_scale;
-			t_scale = MCResGetDeviceScale();
-			
-			MCGContextScaleCTM(t_context, t_scale, t_scale);
+			// IM-2013-09-30: [[ FullscreenMode ]] Apply stack transform to snapshot context
+			MCGContextConcatCTM(t_context, t_transform);
 			
 			t_success = nil != (t_gfxcontext = new MCGraphicsContext(t_context));
 		}
@@ -2619,6 +2633,18 @@ void MCStack::render(MCContext *p_context, const MCRectangle& p_dirty)
 void MCStack::updatewindow(MCRegionRef p_region)
 {
 	view_updatestack(p_region);
+}
+
+MCGAffineTransform MCStack::getdevicetransform(void) const
+{
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
+	MCGAffineTransform t_transform;
+	t_transform = MCGAffineTransformMakeScale(t_scale, t_scale);
+	t_transform = MCGAffineTransformConcat(t_transform, view_getviewtransform());
+	
+	return t_transform;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -83,6 +83,16 @@ inline MCGPoint MCPointToMCGPoint(MCPoint p_point)
 	return t_point;
 }
 
+inline MCRectangle MCRectangleGetTransformedBounds(const MCRectangle &p_rect, const MCGAffineTransform &p_transform)
+{
+	return MCGRectangleGetIntegerBounds(MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(p_rect), p_transform));
+}
+
+inline MCPoint MCPointTransform(const MCPoint &p_point, const MCGAffineTransform &p_transform)
+{
+	return MCGPointToMCPoint(MCGPointApplyAffineTransform(MCPointToMCGPoint(p_point), p_transform));
+}
+
 #if defined(TARGET_SUBPLATFORM_ANDROID)
 
 #include "mblandroidtypeface.h"

@@ -1005,12 +1005,8 @@ MCRectangle MCStack::getrectangle(bool p_effective) const
 
 void MCStack::setrect(const MCRectangle &nrect)
 {
-#ifdef _MOBILE
-	// MW-2012-11-14: [[ Bug 10514 ]] If on mobile and this stack is currently
-	//   being displayed, don't let its rect be set.
-	if (((MCScreenDC *)MCscreen) -> get_current_window() == (Window)this)
-		return;
-#endif
+	// IM-2013-09-30: [[ FullscreenMode ]] allow setrect on mobile,
+	// which now has an effect on fullscreen scaled stacks
 
 	// IM-2013-09-23: [[ FullscreenMode ]] Use view to determine adjusted stack size
 	MCRectangle t_new_rect;
@@ -1020,7 +1016,8 @@ void MCStack::setrect(const MCRectangle &nrect)
 		state |= CS_BEEN_MOVED;
 
 	MCRectangle oldrect = rect;
-	rect = t_new_rect;
+	// IM-2013-09-30: [[ FullscreenMode ]] update old_rect when modifying the stack rect
+	old_rect = rect = t_new_rect;
 	
 	menuy = menuheight = 0;
 	if (opened && mode_haswindow())
@@ -2537,8 +2534,9 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			{
 				MCTileCacheCreate(32, 4096 * 1024, m_tilecache);
 				// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+				// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
 				MCRectangle t_device_rect;
-				t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(curcard->getrect()));
+				t_device_rect = MCRectangleGetTransformedBounds(curcard->getrect(), getdevicetransform());
 				MCTileCacheSetViewport(m_tilecache, t_device_rect);
 			}
 		
@@ -3012,7 +3010,8 @@ MCRectangle MCStack::getwindowrect(void) const
 	MCRectangle t_rect;
 	t_rect = device_getwindowrect();
 	
-	return MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_rect));
+	// IM-2013-09-30: [[ FullscreenMode ]] Use inverse stack transform to get stack coords
+	return MCRectangleGetTransformedBounds(t_rect, MCGAffineTransformInvert(getdevicetransform()));
 }
 
 //////////

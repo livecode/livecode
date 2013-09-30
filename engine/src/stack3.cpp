@@ -146,6 +146,9 @@ IO_stat MCStack::load(IO_handle stream, const char *version, uint1 type)
 	
 	stat = load_stack(stream, version);
 	
+	// IM-2013-09-30: [[ FullscreenMode ]] ensure old_rect is initialized for fullscreen stacks
+	old_rect = rect;
+	
 	return stat;
 }
 

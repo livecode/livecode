@@ -333,6 +333,13 @@ public:
 	
 ////////////////////////////////////////////////////////////////////////////////
 	
+	// IM-2013-09-30: [[ FullscreenMode ]] Returns true if windows on this display are 
+	// always fullscreen (i.e. on mobile devices)
+	virtual bool fullscreenwindows(void);
+
+	// IM-2013-09-30: [[ FullscreenMode ]] Return the rect that will be occupied by
+	// fullscreen windows on the given display
+	virtual MCRectangle fullscreenrect(const MCDisplay *p_display);
 
 	virtual void openwindow(Window w, Boolean override);
 	virtual void closewindow(Window window);

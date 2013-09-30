@@ -215,6 +215,8 @@ protected:
 	MCRectangle m_view_stack_rect;
 	MCRectangle m_view_screen_rect;
 
+	bool m_view_redraw;
+	
 	MCGAffineTransform m_view_transform;
 
 public:
@@ -305,6 +307,9 @@ public:
 	// Update view geometry for the specified stack rect.
 	MCRectangle view_setgeom(const MCRectangle &p_rect);
 
+	// return the rect of the view
+	MCRectangle view_getrect(void);
+
 	// Set view to fullscreen 
 	void view_setfullscreen(bool p_fullscreen);
 	// Return whether this view is fullscreen or not
@@ -325,8 +330,16 @@ public:
 	// Translate view coords to local stack space
 	MCPoint view_stacktoviewloc(const MCPoint &p_loc);
 
+	// Return the stack -> view coordinates transform
+	MCGAffineTransform view_getviewtransform(void) const;
+	
 	//////////
-
+	
+	// Return the stack -> device coordinate transform
+	MCGAffineTransform getdevicetransform(void) const;
+	
+	//////////
+	
     // IM-2012-05-15: [[ Effective Rect ]] get the rect of the window (including decorations)
     MCRectangle getwindowrect() const;
 	

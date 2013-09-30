@@ -376,6 +376,16 @@ void MCScreenDC::handle_touch(MCEventTouchPhase p_phase, void *p_touch, int32_t 
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCScreenDC::fullscreenwindows(void)
+{
+	return true;
+}
+
+MCRectangle MCScreenDC::fullscreenrect(const MCDisplay *p_display)
+{
+	return p_display->workarea;
+}
+
 void MCScreenDC::openwindow(Window p_window, Boolean override)
 {
 	if (p_window == nil)

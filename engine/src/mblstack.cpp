@@ -107,9 +107,32 @@ void MCStack::destroywindowshape(void)
 {
 }
 
+MCRectangle MCStack::device_setgeom(const MCRectangle &p_rect)
+{
+	return p_rect;
+}
+
+// IM-2013-09-30: [[ FullscreenMode ]] Mobile version of setgeom now calls view_setgeom
 void MCStack::setgeom(void)
 {
+	if (MCnoui || !opened)
+		return;
+	
+	// IM-2013-08-08: [[ ResIndependence ]] Scale stack rect to device space
+	MCRectangle t_old_device_rect;
+	t_old_device_rect = view_setgeom(rect);
+	
 	state &= ~CS_NEED_RESIZE;
+	
+	// IM-2013-08-08: [[ ResIndependence ]] Scale old window rect to user space for comparison
+	MCRectangle t_old_user_rect;
+	t_old_user_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_old_device_rect));
+	
+	if (t_old_user_rect.x != rect.x || t_old_user_rect.y != rect.y || t_old_user_rect.width != rect.width || t_old_user_rect.height != rect.height)
+	{
+		resize(t_old_user_rect.width, t_old_user_rect.height);
+	}
+	
 }
 
 void MCStack::start_externals()

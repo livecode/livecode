@@ -330,8 +330,9 @@ protected:
 	CGContextScaleCTM(t_cgcontext, 1.0 / t_scale, 1.0 / t_scale);
 	
 	// IM-2013-08-23: [[ RefactorGraphics ]] pass scaled surface height to stack surface constructor
+	// IM-2013-09-30: [[ FullscreenMode ]] Use the stack transform to get the device rect
 	MCRectangle t_device_rect;
-	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_stack->getrect()));
+	t_device_rect = MCRectangleGetTransformedBounds(t_stack->getrect(), t_stack->getdevicetransform());
 	
 	MCUIKitStackSurface t_surface(t_dirty_rgn, t_device_rect.height, t_cgcontext);
 	
