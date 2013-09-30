@@ -39,7 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "malloc.h"
 
-extern void MCRemoteFileDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char * const p_types[], uint32_t p_type_count, const char *p_initial_folder, const char *p_initial_file, bool p_save, bool p_files);
+extern void MCRemoteFileDialog(MCExecContext &ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint32_t p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file, bool p_save, bool p_files);
 extern void MCRemoteFolderDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial);
 extern void MCRemoteColorDialog(MCExecPoint& ep, const char *p_title, uint32_t p_r, uint32_t p_g, uint32_t p_b);
 
@@ -700,7 +700,7 @@ int MCA_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prom
 }
 
 // MW-2005-05-15: Updated for new answer command restructuring
-int MCA_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options)
+int MCA_file(MCExecContext& ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options)
 {
 	return MCA_do_file_dialog(ep, p_title == NULL ? "" : p_title, p_prompt == NULL ? "" : p_prompt, getfilter(p_filter == NULL ? "" : p_filter), p_initial == NULL ? "" : p_initial, p_options);
 }

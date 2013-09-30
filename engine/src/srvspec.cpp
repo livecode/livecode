@@ -741,7 +741,7 @@ bool MCTextLayout(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int MCA_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options)
+int MCA_file(MCExecContext& ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options)
 {
 	return 0;
 }
@@ -761,7 +761,7 @@ int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_
 	return 0;
 }
 
-int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial, unsigned int p_options)
+int MCA_folder(MCExecContext &ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, unsigned int p_options)
 {
 	return 0;
 }

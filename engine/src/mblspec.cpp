@@ -865,7 +865,7 @@ bool MCS_get_session_id(MCStringRef &r_id)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int MCA_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options)
+int MCA_file(MCExecContext& ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options)
 {
 	return 0;
 }

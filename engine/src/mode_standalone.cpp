@@ -889,7 +889,7 @@ bool MCModeHasHomeStack(void)
 //  Implementation of remote dialog methods
 //
 
-void MCRemoteFileDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char * const p_types[], uint32_t p_type_count, const char *p_initial_folder, const char *p_initial_file, bool p_save, bool p_files)
+void MCRemoteFileDialog(MCExecContext& ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint32_t p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file, bool p_save, bool p_files)
 {
 }
 
@@ -897,7 +897,7 @@ void MCRemoteColorDialog(MCExecPoint& ep, const char *p_title, uint32_t p_red, u
 {
 }
 
-void MCRemoteFolderDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial)
+void MCRemoteFolderDialog(MCExecContext& ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial)
 {
 }
 

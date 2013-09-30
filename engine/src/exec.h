@@ -729,6 +729,13 @@ public:
     }
 
     //////////
+
+    void ConcatStringRef(MCStringRef p_string, Exec_concat p_ec, bool p_first)
+    {
+        m_ep.concatstringref(p_string, p_ec, p_first);
+    }
+
+    //////////
 	
 	// Convert the given valueref to a string. If the type is not convertable
 	// to a string, the empty string is returned.

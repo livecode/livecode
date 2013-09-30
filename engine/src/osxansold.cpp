@@ -46,7 +46,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern void MCRemoteFileDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char * const p_types[], uint32_t p_type_count, const char *p_initial_folder, const char *p_initial_file, bool p_save, bool p_files);
+extern void MCRemoteFileDialog(MCExecContext &ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint32_t p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file, bool p_save, bool p_files);
 extern void MCRemoteFolderDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial);
 extern void MCRemoteColorDialog(MCExecPoint& ep, const char *p_title, uint32_t p_r, uint32_t p_g, uint32_t p_b);
 
@@ -559,30 +559,34 @@ static void build_types_from_filter_records(FilterRecord* p_filter_records, unsi
 		r_types[t_filter_index] = strclone(*p_filter_records[t_filter_index].tag);
 }
 
-int MCA_file_tiger(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options)
+int MCA_file_tiger(MCExecContext &ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options)
 {
 	int t_result;
 	FilterRecord *t_filters = NULL;
 	unsigned int t_filter_count = 0;
-	if (p_filter != NULL && strlen(p_filter) >= 4)
+    if (p_filter != NULL && MCStringGetLength(p_filter) >= 4)
 	{
 		unsigned int t_filetype_count;
-		t_filetype_count = strlen(p_filter) / 4;
+        t_filetype_count = MCStringGetLength(p_filter) / 4;
 		
-		char *t_filetypes = (char *)alloca(t_filetype_count * 5);
+        MCAutoNativeCharArray t_filetypes;
+        /* UNCHECKED */ t_filetype . New(t_filetype_count * 5);
+        const char *t_filter_pos;
+        t_filter_pos = MCStringGetCString(p_filter);
 		for(unsigned int t_index = 0; t_index < t_filetype_count; t_index += 1)
 		{
-			strncpy(&t_filetypes[t_index * 5], &p_filter[t_index * 4], 4);
-			t_filetypes[t_index * 5 + 4] = ',';
+            strncpy(t_filetypes . Chars() + (t_index * 5), t_filter_pos, 4);
+            t_filetypes.Chars() + (t_index * 5 + 4) = ',';
+            t_filter_pos += 4;
 		}
-		t_filetypes[t_filetype_count * 5 - 1] = '\0';
+        t_filetypes.Chars() + (t_filetype_count * 5 - 1) = '\0';
 		
 		t_filters = new FilterRecord[1];
 		t_filters[0] . tag = "";
-		t_filters[0] . file_types . assign(t_filetypes, t_filetype_count * 5 - 1, ',');
+        t_filters[0] . file_types . assign(t_filetype.Chars(), t_filetype_count * 5 - 1, ',');
 		t_filter_count = 1;
 	}
-	t_result = MCA_do_file_dialog_tiger(ep, p_title == NULL ? "" : p_title, p_prompt == NULL ? "" : p_prompt, t_filters, t_filter_count, p_initial, p_options);
+    t_result = MCA_do_file_dialog_tiger(ctxt, p_title, p_prompt, t_filters, t_filter_count, p_initial, p_options);
 	delete[] t_filters;
 	return t_result;
 }
