@@ -2160,19 +2160,15 @@ void MCInterfaceExecDeleteObjectChunks(MCExecContext& ctxt, MCObjectChunkPtr *p_
 	{
 		if (p_chunks[i] . object -> gettype() == CT_BUTTON)
 		{
-			MCStringRef t_value; 
-			t_value = nil;
-			p_chunks[i] . object -> getstringprop(ctxt, p_chunks[i] . part_id, P_UNICODE_TEXT, False, t_value);
+			p_chunks[i] . object -> getprop(p_chunks[i] . part_id, P_UNICODE_TEXT, ctxt . GetEP(), False);
 
-			ctxt . Utf16ToUtf8();
-			MCAutoStringRef t_value_mutable_copy;
-			MCStringMutableCopy(t_value, &t_value_mutable_copy);
-			/* UNCHECKED */ MCStringReplace(*t_value_mutable_copy, MCRangeMake(p_chunks[i] . start, p_chunks[i] . finish - p_chunks[i] . start), kMCEmptyString);
+			ctxt . GetEP() . utf16toutf8();
 
-			ctxt . Utf8ToUtf16();
-			
-			p_chunks[i] . object -> setstringprop(ctxt, p_chunks[i] . part_id, P_UNICODE_TEXT, False, *t_value_mutable_copy);
-			MCValueRelease(t_value);
+			ctxt . GetEP() . insert(MCnullmcstring, p_chunks[i] . start, p_chunks[i] . finish);
+
+			ctxt . GetEP() . utf8toutf16();
+
+			p_chunks[i] . object -> setprop(p_chunks[i] . part_id, P_UNICODE_TEXT, ctxt . GetEP(), False);
 		}
 		else if (p_chunks[i] . object -> gettype() == CT_FIELD)
 			static_cast<MCField *>(p_chunks[i] . object) -> settextindex(p_chunks[i] . part_id, p_chunks[i] . start, p_chunks[i] . finish, MCnullmcstring, False);
@@ -2182,13 +2178,12 @@ void MCInterfaceExecDeleteObjectChunks(MCExecContext& ctxt, MCObjectChunkPtr *p_
 ////////////////////////////////////////////////////////////////////////////////
 
 static void MCInterfaceExecChangeChunkOfButton(MCExecContext& ctxt, MCObjectChunkPtr p_target, Properties p_prop, bool p_value)
-{	
-	MCStringRef t_value;
-	p_target . object -> getstringprop(ctxt, p_target . part_id, P_UNICODE_TEXT, False, t_value);
+{
+	MCExecPoint& ep = ctxt . GetEP();
+	
+	p_target . object -> getprop(p_target . part_id, P_UNICODE_TEXT, ep, False);
 
-	ctxt . Utf16ToUtf8();
-	MCAutoStringRef t_value_mutable_copy;
-	MCStringMutableCopy(t_value, &t_value_mutable_copy);
+	ep . utf16toutf8();
 
 	int4 start, end;
 	start = p_target . start;
@@ -2199,42 +2194,45 @@ static void MCInterfaceExecChangeChunkOfButton(MCExecContext& ctxt, MCObjectChun
 	if (p_prop == P_DISABLED)
 		if (p_value)
 		{
-			if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start) != '(')
-				/* UNCHECKED */ MCStringInsert(*t_value_mutable_copy, start, MCSTR("(")), t_changed = true;
+			if (ep.getsvalue().getstring()[start] != '(')
+				ep.insert("(", start, start), t_changed = true;
 		}
 		else
 		{
-			if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start) == '(')
-				/* UNCHECKED */ MCStringReplace(*t_value_mutable_copy, MCRangeMake(start, 1), kMCEmptyString), t_changed = true;
+			if (ep.getsvalue().getstring()[start] == '(')
+				ep.insert(MCnullmcstring, start, start + 1), t_changed = true;
 		}
 	else
 	{
-		if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start) == '(')
+		if (ep.getsvalue().getstring()[start] == '(')
 			start++;
 		if (p_value)
 		{
-			if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start + 1) == 'n')
-				/* UNCHECKED */ MCStringReplace(*t_value_mutable_copy, MCRangeMake(start + 1, 1), MCSTR("c")), t_changed = true;
+			if (ep.getsvalue().getstring()[start + 1] == 'n')
+				ep.insert("c", start + 1, start + 2), t_changed = true;
 			else
-				if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start + 1) == 'u')
-					/* UNCHECKED */ MCStringReplace(*t_value_mutable_copy, MCRangeMake(start + 1, 1), MCSTR("r")), t_changed = true;
+				if (ep.getsvalue().getstring()[start + 1] == 'u')
+					ep.insert("r", start + 1, start + 2), t_changed = true;
 		}
 		else
 		{
-			if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start + 1) == 'c')
-				/* UNCHECKED */ MCStringReplace(*t_value_mutable_copy, MCRangeMake(start + 1, 1), MCSTR("n")), t_changed = true;
+			if (ep.getsvalue().getstring()[start + 1] == 'c')
+				ep.insert("n", start + 1, start + 2), t_changed = true;
 			else
-				if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start + 1) == 'r')
-					/* UNCHECKED */ MCStringReplace(*t_value_mutable_copy, MCRangeMake(start + 1, 1), MCSTR("u")), t_changed = true;
+				if (ep.getsvalue().getstring()[start + 1] == 'r')
+					ep.insert("u", start + 1, start + 2), t_changed = true;
 		}
 	}
 
 	if (t_changed)
 	{
-		ctxt . Utf16ToUtf8();
-		p_target . object->setstringprop(ctxt, p_target . part_id, P_UNICODE_TEXT, False, *t_value_mutable_copy);		
+		ep . utf8toutf16();
+		if (p_target . object->setprop(p_target . part_id, P_UNICODE_TEXT, ep, False) != ES_NORMAL)
+		{
+			ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
+			return;
+		}
 	}
-	MCValueRelease(t_value);
 }
 
 void MCInterfaceExecEnableObject(MCExecContext& ctxt, MCObjectPtr p_target)

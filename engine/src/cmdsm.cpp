@@ -1130,8 +1130,8 @@ Exec_stat MCArrayOp::exec(MCExecPoint &ep)
 		case TYPE_USER:
 			if (element != NULL)
 			{
-				if (element->eval(ctxt . GetEP()) != ES_NORMAL || 
-					!ctxt . CopyAsStringRef(&t_element_del))
+				if (element->eval(ep) != ES_NORMAL || 
+					!ep . copyasstringref(&t_element_del))
 				{
 					MCeerror->add(EE_ARRAYOP_BADEXP, line, pos);
 					return ES_ERROR;
@@ -1139,8 +1139,8 @@ Exec_stat MCArrayOp::exec(MCExecPoint &ep)
 
 				if (key != NULL)
 				{
-					if (key->eval(ctxt . GetEP()) != ES_NORMAL ||
-						!ctxt . CopyAsStringRef(&t_key_del))
+					if (key->eval(ep) != ES_NORMAL ||
+						!ep . copyasstringref(&t_key_del))
 					{
 						MCeerror->add(EE_ARRAYOP_BADEXP, line, pos);
 						return ES_ERROR;
@@ -1154,19 +1154,19 @@ Exec_stat MCArrayOp::exec(MCExecPoint &ep)
 	}
 
 	MCAutoPointer<MCContainer> t_container;
-	if (destvar -> evalcontainer(ctxt . GetEP(), &t_container) != ES_NORMAL)
+	if (destvar -> evalcontainer(ep, &t_container) != ES_NORMAL)
 	{
 		MCeerror -> add(EE_ARRAYOP_BADEXP, line, pos);
 		return ES_ERROR;
 	}
 
-	if (t_container -> eval(ctxt . GetEP()) != ES_NORMAL)
+	if (t_container -> eval(ep) != ES_NORMAL)
 		return ES_ERROR;
 
 	if (is_combine)
 	{
 		MCAutoArrayRef t_array;
-		if (!ctxt . CopyAsArrayRef(&t_array))
+		if (!ep . copyasarrayref(&t_array))
 			return ES_ERROR;
 
 		MCAutoStringRef t_string;
@@ -1184,14 +1184,14 @@ Exec_stat MCArrayOp::exec(MCExecPoint &ep)
 
 		if (!ctxt . HasError())
 		{
-			ctxt . SetValueRef(*t_string);
-			return t_container -> set(ctxt . GetEP());
+			ep . setvalueref(*t_string);
+			return t_container -> set(ep);
 		}
 	}
 	else
 	{
 		MCAutoStringRef t_string;
-		if (!ctxt . CopyAsStringRef(&t_string))
+		if (!ep . copyasstringref(&t_string))
 			return ES_ERROR;
 
 		MCAutoArrayRef t_array;
@@ -1209,8 +1209,8 @@ Exec_stat MCArrayOp::exec(MCExecPoint &ep)
 
 		if (!ctxt . HasError())
 		{
-			ctxt . SetValueRef(*t_array);
-			return t_container -> set(ctxt . GetEP());
+			ep . setvalueref(*t_array);
+			return t_container -> set(ep);
 		}
 	}
 

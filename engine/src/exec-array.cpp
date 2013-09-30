@@ -153,7 +153,7 @@ void MCArraysExecCombine(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef p_
 void MCArraysExecCombineByRow(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_string)
 {
 	char_t t_row_char;
-	t_row_char = ctxt . GetRowDelimiter();
+	t_row_char = ctxt . GetEP() . getrowdel();
 
 	MCAutoStringRef t_row_del;
 	MCStringCreateWithNativeChars(&t_row_char, 1, &t_row_del);
@@ -184,7 +184,7 @@ void MCArraysExecSplit(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_
 void MCArraysExecSplitByRow(MCExecContext& ctxt, MCStringRef p_string, MCArrayRef& r_array)
 {
 	char_t t_row_char;
-	t_row_char = ctxt . GetRowDelimiter();
+	t_row_char = ctxt . GetEP() . getrowdel();
 
 	MCAutoStringRef t_row_del;
 	MCStringCreateWithNativeChars(&t_row_char, 1, &t_row_del);

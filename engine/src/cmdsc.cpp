@@ -1613,13 +1613,13 @@ if (var != NULL)
 		MCEngineExecDeleteVariable(ctxt, var);
 	else if (file != NULL)
 	{
-		if (file->eval(ctxt . GetEP()) != ES_NORMAL)
+		if (file->eval(ep) != ES_NORMAL)
 		{
 			MCeerror->add(EE_DELETE_BADFILEEXP, line, pos);
 			return ES_ERROR;
 		}
 		MCAutoStringRef t_target;
-		/* UNCHECKED */ ctxt . CopyAsStringRef(&t_target);
+		/* UNCHECKED */ ep.copyasstringref(&t_target);
 		if (url)
 			MCNetworkExecDeleteUrl(ctxt, *t_target);
 		else
