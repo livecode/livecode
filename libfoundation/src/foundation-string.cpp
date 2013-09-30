@@ -100,6 +100,39 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
         }
         break;
         case kMCStringEncodingUTF32:
+		{
+			// Round the byte count to a multiple of UTF-32 units
+			p_byte_count = ((p_byte_count + sizeof(uint32_t) - 1) & ~(sizeof(uint32_t) - 1));
+			
+			// Convert the string to UTF-16 first. The UTF-16 string cannot be longer than the UTF-32 string
+			MCAutoArray<unichar_t> t_buffer;
+			t_buffer.Extend(p_byte_count / sizeof(uint32_t));
+			uindex_t t_in_offset;
+			uindex_t t_out_offset = 0;
+			for (t_in_offset = 0; t_in_offset < p_byte_count; t_in_offset += sizeof(uint32_t))
+			{
+				// BMP characters are output unchanged, non-BMP requires surrogate pairs
+				codepoint_t t_codepoint;
+				t_codepoint = *(uint32_t*)&p_bytes[t_in_offset];
+				if (t_codepoint < 0x10000)
+				{
+					t_buffer[t_out_offset] = unichar_t(t_codepoint);
+					t_out_offset += 1;
+				}
+				else
+				{
+					// Split to surrogate pairs
+					unichar_t t_lead, t_trail;
+					t_lead =  unichar_t((t_codepoint - 0x10000) >> 10) + 0xD800;
+					t_trail = unichar_t((t_codepoint - 0x10000) & 0x3FF) + 0xDC00;
+					t_buffer[t_out_offset] = t_lead;
+					t_buffer[t_out_offset + 1] = t_trail;
+					t_out_offset += 2;
+				}
+			}
+			
+			return MCStringCreateWithChars(t_buffer.Ptr(), t_out_offset, r_string);
+		}
             break;
 #if !defined(__LINUX__) && !defined(__ANDROID__)
         case kMCStringEncodingISO8859_1:
