@@ -445,44 +445,46 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 			break;
 		case KeyPress:
 			{
-				int t_len ;
-				MCExecPoint utf_ep ;
-				uint4 t_unicode ;
-					
-		
-				
-				t_len = XLookupString(kpevent, buffer, XLOOKUPSTRING_SIZE, &keysym, NULL) ;
-				t_unicode = keyval_to_unicode ( keysym ) ;
-			
-				if (t_unicode != 0)
-				{
-					uint1 t_char;
-					unsigned short t_utf16_buffer[2];
-					uint4 t_utf16_length;
-					t_utf16_length = utf32_to_utf16(t_unicode, t_utf16_buffer);
-					if (MCUnicodeMapToNative(t_utf16_buffer, t_utf16_length, t_char))
-					{
-						buffer[0] = t_char;
-						buffer[1] = 0;
-						t_len = 1;
-					}
-					else
-					{
-						if (MCactivefield)
-						{
-							MCactivefield -> finsertnew(FT_IMEINSERT, MCString((char*)t_utf16_buffer, t_utf16_length * 2), LCH_UNICODE, true);
-							break;
-						}
-					}
-				}
-				else
-					buffer[1] = 0, t_len = 1;
-				
-				
-				if (t_len == 0)
-					buffer[0] = 0;
-								
+				// Some vendor-specific keysyms exist and, where possible, these are
+				// translated into generic keysyms.
 				keysym = translatekeysym(keysym, kpevent->keycode);
+				
+				// Since X11R6.9, the X protocol specifies that all Unicode codepoints
+				// with values >= 0x100 are assigned keysym values of codepoint|0x01000000
+				//
+				// Keysyms in the range [0x20,0x7E] and [0xA0,0xFF] are Latin-1, which
+				// also matches their Unicode codepoints (but not their UTF-8 encoding).
+				//
+				// Keysyms in the ranges [0x0100,0x13FF] and [0x2000,0x20FF] are legacy
+				// non-Latin-1 keysyms.
+				//
+				// XLookupString converts a keysym to its text encoding in the current
+				// locale... as the engine uses "en_US.ISO-8859-1" for its LC_COLLATE
+				// setting it isn't useful for converting the legacy non-Unicode syms.
+				//
+				// The more modern replacement Xutf8LookupString requires an input
+				// context to be used, something the engine currently doesn't deal with.
+				//
+				// Instead, the engine has a keysym_to_unicode function that uses a
+				// table lookup to deal with these legacy keysyms. (As of 30/09/2013,
+				// the table supports keysets 1 to 14, lacking Latin-{5..9})
+				uint32_t t_codepoint;
+				t_codepoint = keyval_to_unicode(keysym);
+				
+				// If the keysym was mapped to a Unicode codepoint and that codepoint
+				// isn't ASCII, the keysym used by the engine is a codepoint keysym.
+				// (This is done because the architecture-independent parts of the
+				// engine should not have to deal with legacy X11 issues and would
+				// rather just have a Unicode codepoint instead)
+				if (t_codepoint != 0 && keysym > 0x7F)
+					keysym = t_codepoint | XK_Class_codepoint;
+				
+				// Convert the UTF-32 character/codepoint to a StringRef
+				MCAutoStringRef t_string;
+				/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)&t_codepoint, sizeof(t_codepoint), 
+														  kMCStringEncodingUTF32, false, &t_string);
+				
+				// Update the modifier state
 				setmods(kpevent->state, keysym, 0, False);
 				if (MCmodifierstate & MS_CONTROL)
 					if (keysym == XK_Break || keysym == '.')
@@ -492,12 +494,14 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 						else
 							MCinterrupt = True;
 					}
+				
+				// Dispatch the event, if possible
 				if (dispatch)
 				{
 					if (kpevent->window != MCtracewindow)
 					{
 						MCeventtime = kpevent->time;
-						MCdispatcher->wkdown(kpevent->window, buffer, keysym);
+						MCdispatcher->wkdown(kpevent->window, *t_string, keysym);
 						reset = True;
 					}
 				}
@@ -510,26 +514,36 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 				break;
 			}
 		case KeyRelease:
-			buffer[0] = buffer[1] = 0;
-			XLookupString(krevent, buffer, XLOOKUPSTRING_SIZE, &keysym, NULL);
-			keysym = translatekeysym(keysym, krevent->keycode);
-			setmods(krevent->state, keysym, 0, False);
-			if (dispatch)
 			{
-				if (krevent->window != MCtracewindow)
+				// See KeyPressed for details on keysym -> codepoint conversion
+				uint32_t t_codepoint;
+				keysym = translatekeysym(keysym, kpevent->keycode);
+				t_codepoint = keyval_to_unicode(keysym);
+				if (t_codepoint != 0 && keysym > 0x7F)
+					keysym = t_codepoint | XK_Class_codepoint;
+				
+				MCAutoStringRef t_string;
+				/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)&t_codepoint, sizeof(t_codepoint), 
+														kMCStringEncodingUTF32, false, &t_string);
+				
+				setmods(kpevent->state, keysym, 0, False);
+				if (dispatch)
 				{
-					MCeventtime = krevent->time;
-					MCdispatcher->wkup(krevent->window, buffer, keysym);
-					reset = True;
+					if (krevent->window != MCtracewindow)
+					{
+						MCeventtime = krevent->time;
+						MCdispatcher->wkup(krevent->window, *t_string, keysym);
+						reset = True;
+					}
 				}
+				else
+				{
+					MCEventnode *tptr = new MCEventnode(event);
+					tptr->appendto(pendingevents);
+				}
+				handled = True;
+				break;
 			}
-			else
-			{
-				MCEventnode *tptr = new MCEventnode(event);
-				tptr->appendto(pendingevents);
-			}
-			handled = True;
-			break;
 		case EnterNotify:
 		case LeaveNotify:
 			if (event.type == EnterNotify)
