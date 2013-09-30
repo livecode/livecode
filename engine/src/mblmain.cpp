@@ -83,7 +83,7 @@ MCTheme *MCThemeCreateNative(void)
 	return nil;
 }
 
-bool X_init(int argc, char *argv[], char *envp[])
+bool X_init(int argc, MCStringRef argv[], int envc, MCStringRef envp[])
 {
 	X_clear_globals();
 	
@@ -105,15 +105,12 @@ bool X_init(int argc, char *argv[], char *envp[])
 	// MW-2012-02-23: [[ FontRefs ]] Initialize the logical font table module.
 	MCLogicalFontTableInitialize();
 	
-	////
-	MCAutoStringRef t_argv;
-    /* UNCHECKED */ MCStringCreateWithCString(argv[0], &t_argv);
-	/* UNCHECKED */ MCsystem -> PathFromNative(*t_argv, MCcmd);
+	/* UNCHECKED */ MCsystem -> PathFromNative(argv[0], MCcmd);
 	
 	// Create the $<n> variables.
 	for(uint32_t i = 2; i < argc; ++i)
 		if (argv[i] != nil)
-		create_var(argv[i]);
+			create_var(argv[i]);
 	create_var(nvars);
 
 	////
