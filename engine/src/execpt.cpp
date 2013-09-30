@@ -466,10 +466,10 @@ void MCExecPoint::lower(void)
 
 void MCExecPoint::upper(void)
 {
-	char *s;
-	uint32_t l;
-	modify(s, l);
-	MCU_upper(s, MCString(s, l));
+	MCAutoStringRef t_string;
+	if (copyasmutablestringref(&t_string))
+		if(MCStringUppercase(*t_string))
+			setvalueref(*t_string);
 }
 
 // MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
