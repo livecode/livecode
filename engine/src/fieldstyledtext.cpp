@@ -657,18 +657,28 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 	// We'll need an ep for processing.
 	MCExecPoint ep(nil, nil, nil);
 	
-	// Fetch the style array.
-	MCAutoArrayRef t_style_entry;
-	/* UNCHECKED */ ep . fetcharrayelement_cstring(p_block_value, "style");
-	if (!ep . isempty())
-		/* UNCHECKED */ ep . copyasarrayref(&t_style_entry);
+	MCValueRef t_valueref;
+	t_valueref = MCValueRetain(kMCEmptyString);
 
+	// Set foreground
+	MCNewAutoNameRef t_key1;
+    /* UNCHECKED */ MCNameCreateWithCString("style", &t_key1);
+         
+    // Fetch the style array.
+	MCAutoArrayRef t_style_entry;        
+    if (MCArrayFetchValue(p_block_value, false, *t_key1, t_valueref))
+	{
+		/* UNCHECKED */ MCArrayCopyAndRelease((MCArrayRef)t_valueref, &t_style_entry);	
+	}
 	// Get the metadata (if any)
-	MCAutoStringRef t_metadata;
-	/* UNCHECKED */ ep . fetcharrayelement_cstring(p_block_value, "metadata");
-	if (!ep . isempty())
-		/* UNCHECKED */ ep . copyasstringref(&t_metadata);
-		
+	MCNewAutoNameRef t_key2;
+    /* UNCHECKED */ MCNameCreateWithCString("metadata", &t_key2);
+	MCStringRef t_metadata;
+	if (MCArrayFetchValue(p_block_value, false, *t_key2, t_valueref))
+	{
+		t_metadata = (MCStringRef)MCValueRetain(t_valueref);
+		MCValueRelease(t_valueref);
+	}	
 	// If there are no paragraphs yet, create one.
 	MCParagraph *t_paragraph;
 	t_paragraph = x_paragraphs -> prev();
@@ -681,17 +691,22 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 	// appropriately.
 	bool t_is_unicode;
 	t_is_unicode = false;
-	/* UNCHECKED */ ep . fetcharrayelement_cstring(p_block_value, "text");
-	if (ep . isempty())
+
+	MCNewAutoNameRef t_key3;
+    /* UNCHECKED */ MCNameCreateWithCString("text", &t_key3);
+	/* UNCHECKED */ ;
+	if (!MCArrayFetchValue(p_block_value, false, *t_key3, t_valueref))
 	{
-		/* UNCHECKED */ ep . fetcharrayelement_cstring(p_block_value, "unicodeText");
+		MCNewAutoNameRef t_key4;
+		/* UNCHECKED */ MCNameCreateWithCString("unicodeText", &t_key4);
+		/* UNCKECKED */ MCArrayFetchValue(p_block_value, false, *t_key3, t_valueref);
 		t_is_unicode = true;
 	}
-	if (ep . isempty() || ep . isarray())
+	if (MCStringIsEmpty((MCStringRef)t_valueref) || MCValueGetTypeCode(t_valueref) == kMCValueTypeCodeArray)
 		return;
 	
-	t_text_ptr = ep . getsvalue() . getstring();
-	t_text_length = ep . getsvalue() . getlength();
+	t_text_ptr = MCStringGetCString((MCStringRef)t_valueref);
+	t_text_length = MCStringGetLength((MCStringRef)t_valueref);
 	while(t_text_length != 0)
 	{
 		bool t_add_paragraph;
@@ -717,8 +732,12 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 		}
 
 		// We now add the range initial...final as a block.
-		parsestyledtextappendblock(t_paragraph, *t_style_entry, t_text_initial_ptr, t_text_final_ptr, *t_metadata, t_is_unicode);
+		parsestyledtextappendblock(t_paragraph, *t_style_entry, t_text_initial_ptr, t_text_final_ptr, t_metadata, t_is_unicode);
 		
+		MCValueRelease(t_metadata);
+		if (!MCStringIsEmpty((MCStringRef)t_valueref))
+			MCValueRelease(t_valueref);
+
 		// And, if we need a new paragraph, add it.
 		if (t_add_paragraph)
 			t_paragraph = parsestyledtextappendparagraph(nil, nil, true, x_paragraphs);
