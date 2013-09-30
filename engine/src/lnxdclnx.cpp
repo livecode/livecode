@@ -444,6 +444,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 			handled = True;
 			break;
 		case KeyPress:
+		case KeyRelease:
 			{
 				// Translate the keypress event into a keysym. There is no point in
 				// getting the text string; it is locale-dependent and we can get all
@@ -494,7 +495,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 				
 				// Update the modifier state
 				setmods(kpevent->state, keysym, 0, False);
-				if (MCmodifierstate & MS_CONTROL)
+				if (event.type == KeyPress && MCmodifierstate & MS_CONTROL)
 					if (keysym == XK_Break || keysym == '.')
 					{
 						if (MCallowinterrupts && !MCdefaultstackptr->cantabort())
@@ -509,39 +510,10 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 					if (kpevent->window != MCtracewindow)
 					{
 						MCeventtime = kpevent->time;
-						MCdispatcher->wkdown(kpevent->window, *t_string, keysym);
-						reset = True;
-					}
-				}
-				else
-				{
-					MCEventnode *tptr = new MCEventnode(event);
-					tptr->appendto(pendingevents);
-				}
-				handled = True;
-				break;
-			}
-		case KeyRelease:
-			{
-				// See KeyPressed for details on keysym -> codepoint conversion
-				uint32_t t_codepoint;
-				/* UNCHECKED */ XLookupString(kpevent, NULL, 0, &keysym, NULL);
-				keysym = translatekeysym(keysym, kpevent->keycode);
-				t_codepoint = keyval_to_unicode(keysym);
-				if (t_codepoint != 0 && keysym > 0x7F)
-					keysym = t_codepoint | XK_Class_codepoint;
-				
-				MCAutoStringRef t_string;
-				/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)&t_codepoint, sizeof(t_codepoint), 
-														kMCStringEncodingUTF32, false, &t_string);
-				
-				setmods(kpevent->state, keysym, 0, False);
-				if (dispatch)
-				{
-					if (krevent->window != MCtracewindow)
-					{
-						MCeventtime = krevent->time;
-						MCdispatcher->wkup(krevent->window, *t_string, keysym);
+						if (event.type == KeyPress)
+							MCdispatcher->wkdown(kpevent->window, *t_string, keysym);
+						else
+							MCdispatcher->wkup(kpevent->window, *t_string, keysym);
 						reset = True;
 					}
 				}
