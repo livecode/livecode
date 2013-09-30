@@ -41,6 +41,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "handler.h"
 #include "scriptpt.h"
 #include "newobj.h"
@@ -558,8 +559,9 @@ void MCInternalObjectListenerMessagePendingListeners(void)
 				if (t_properties_changed != kMCPropertyChangedMessageTypeNone)
 				{			
 					MCExecPoint ep(nil, nil, nil);
-					t_listener -> object -> Get() -> getprop(0, P_LONG_ID, ep, False);			
-					
+					MCExecContext ctxt(ep);
+					MCAutoStringRef t_string;
+					t_listener -> object -> Get() -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_string);			
 					MCObjectListenerTarget *t_target;
 					t_target = nil;
 					MCObjectListenerTarget *t_prev_target;
@@ -579,15 +581,15 @@ void MCInternalObjectListenerMessagePendingListeners(void)
 							{
 								// MM-2012-11-06: Added resizeControl(Started/Ended) and gradientEdit(Started/Ended) messages.
 								if (t_properties_changed & kMCPropertyChangedMessageTypePropertyChanged)								
-									t_target -> target -> Get() -> message_with_args(MCM_property_changed, ep . getsvalue());
+									t_target -> target -> Get() -> message_with_args(MCM_property_changed, ctxt . GetOldStringValue());
 								if (t_properties_changed & kMCPropertyChangedMessageTypeResizeControlStarted)								
-									t_target -> target -> Get() -> message_with_args(MCM_resize_control_started, ep . getsvalue());
+									t_target -> target -> Get() -> message_with_args(MCM_resize_control_started, ctxt . GetOldStringValue());
 								if (t_properties_changed & kMCPropertyChangedMessageTypeResizeControlEnded)								
-									t_target -> target -> Get() -> message_with_args(MCM_resize_control_ended, ep . getsvalue());
+									t_target -> target -> Get() -> message_with_args(MCM_resize_control_ended, ctxt . GetOldStringValue());
 								if (t_properties_changed & kMCPropertyChangedMessageTypeGradientEditStarted)								
-									t_target -> target -> Get() -> message_with_args(MCM_gradient_edit_started, ep . getsvalue());
+									t_target -> target -> Get() -> message_with_args(MCM_gradient_edit_started, ctxt . GetOldStringValue());
 								if (t_properties_changed & kMCPropertyChangedMessageTypeGradientEditEnded)								
-									t_target -> target -> Get() -> message_with_args(MCM_gradient_edit_ended, ep . getsvalue());
+									t_target -> target -> Get() -> message_with_args(MCM_gradient_edit_ended, ctxt . GetOldStringValue());
 								
 								t_prev_target = t_target;					
 							}
