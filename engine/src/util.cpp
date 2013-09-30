@@ -1396,25 +1396,13 @@ void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &ep)
 	}
 }
 
-/* WRAPPER */ bool MCU_parsepoints(MCPoint *&r_points, uindex_t &r_noldpoints, MCStringRef p_data)
-{
-	uint2 t_noldpoints;
-	t_noldpoints = r_noldpoints;
- 
-	bool t_result;
-	t_result = (True == MCU_parsepoints(r_points, t_noldpoints, MCStringGetOldString(p_data)));
- 
-	r_noldpoints = t_noldpoints;
- 
-	return t_result;
-}
 
-Boolean MCU_parsepoints(MCPoint *&points, uint2 &noldpoints, const MCString &data)
+Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data)
 {
 	Boolean allvalid = True;
 	uint2 npoints = 0;
-	uint4 l = data.getlength();
-	const char *sptr = data.getstring();
+	uint4 l = MCStringGetLength(data);
+	const char *sptr = MCStringGetCString(data);
 	while (l)
 	{
 		Boolean done1, done2;
@@ -1434,7 +1422,7 @@ Boolean MCU_parsepoints(MCPoint *&points, uint2 &noldpoints, const MCString &dat
 			MCU_realloc((char **)&points, npoints, npoints + 1, sizeof(MCPoint));
 		points[npoints].x = i1;
 		points[npoints++].y = i2;
-		if (data.getlength() - l > 2 && *(sptr - 1) == '\n'
+		if (MCStringGetLength(data) - l > 2 && *(sptr - 1) == '\n'
 		        && *(sptr - 2) == '\n')
 		{
 			if (npoints + 1 > noldpoints)
@@ -1448,10 +1436,10 @@ Boolean MCU_parsepoints(MCPoint *&points, uint2 &noldpoints, const MCString &dat
 	return allvalid;
 }
 
-Boolean MCU_parsepoint(MCPoint &point, const MCString &data)
+Boolean MCU_parsepoint(MCPoint &point, MCStringRef data)
 {
-	const char *sptr = data.getstring();
-	uint4 l = data.getlength();
+	const char *sptr = MCStringGetCString(data);
+	uint4 l = MCStringGetLength(data);
 	Boolean done1, done2;
 	int2 i1= MCU_strtol(sptr, l, ',', done1);
 	int2 i2 = MCU_strtol(sptr, l, ',', done2);
@@ -2279,11 +2267,12 @@ void MCU_get_color(MCExecPoint& ep, MCStringRef name, MCColor& c)
 	ep.setcolor(c, name != nil ? MCStringGetCString(name) : nil);
 }
 
+/*
 void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c)
 {
 	ep.setcolor(c, name);
 }
-
+*/
 void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
                 real8 tn, real8 oldn, MCSortnode *titems)
 {
@@ -2469,10 +2458,10 @@ uint1 MCU_languagetocharset(MCNameRef p_language)
 	return 0;
 }
 
-/* LEGACY */ uint1 MCU_languagetocharset(const char *langname)
+/* LEGACY */ uint1 MCU_languagetocharset(MCStringRef langname)
 {
 	MCNewAutoNameRef t_langname;
-	/* UNCHECKED */ MCNameCreateWithCString(langname, &t_langname);
+	/* UNCHECKED */  MCNameCreate(langname, &t_langname);
 	return MCU_languagetocharset(*t_langname);
 }
 
