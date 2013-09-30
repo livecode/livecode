@@ -1140,10 +1140,11 @@ static bool convert_options_array(void *p_context, MCArrayRef p_array, MCNameRef
 	MCExecPoint ep(nil, nil, nil);
 	if (!MCCStringClone(MCStringGetCString(MCNameGetString(p_key)), ctxt -> option_keys[ctxt -> index]))
 		return false;
-	if (!ep . setvalueref(p_value))
-		return false;
-	if (!MCCStringClone(ep . getcstring(), ctxt -> option_values[ctxt -> index]))
-		return false;
+	MCStringRef t_value;
+	t_value = (MCStringRef) MCValueRetain(p_value);
+	
+    ctxt -> option_values[ctxt -> index] = strdup(MCStringGetCString(t_value));
+	MCValueRelease(t_value);
 	ctxt -> index += 1;
 	return true;
 }
