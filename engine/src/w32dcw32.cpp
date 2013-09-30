@@ -55,7 +55,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define WM_MOUSEHWHEEL                  0x020E
 #endif
 
-#define MSH_MOUSEWHEEL "MSWHEEL_ROLLMSG"
+#define MSH_MOUSEWHEEL L"MSWHEEL_ROLLMSG"
 static UINT mousewheel;
 
 #ifndef WM_THEMECHANGED
@@ -259,13 +259,13 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 	curinfo->keysym = 0;
 	curinfo->live = True;
 	if (mousewheel == 0)
-		mousewheel = RegisterWindowMessageA(MSH_MOUSEWHEEL);
+		mousewheel = RegisterWindowMessageW(MSH_MOUSEWHEEL);
 	if (dispatch && pendingevents != NULL
-	        || PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)
+	        || PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)
 	        || sleep != 0
 	        && MsgWaitForMultipleObjects(1, &g_notify_wakeup, False,
 	                                     (DWORD)(sleep * 1000.0), QS_ALLINPUT)
-	        != WAIT_TIMEOUT && PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE))
+	        != WAIT_TIMEOUT && PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
 	{
 		if (dispatch && pendingevents != NULL)
 		{
@@ -289,12 +289,8 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 				        || msg.message == WM_KEYUP || msg.message == WM_SYSKEYUP)
 					curinfo->keysym = getkeysym(msg.wParam, msg.lParam);
 				
-				// Translation of keystroke messages to char messages is now done by the
-				// window proc, depending on whether a shortcut was triggered.
-				if ((MCruntimebehaviour & RTB_ACCURATE_UNICODE_INPUT) != 0)
-					DispatchMessageW(&msg);
-				else
-					DispatchMessageA(&msg);
+				TranslateMessage(&msg);
+				DispatchMessageW(&msg);
 			}
 		}
 	}
@@ -777,14 +773,6 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					// Parts that want text only care about the string. Dispatch as stroke-only here.
 					bool t_handled;
 					t_handled = MCdispatcher->wkdown(dw, kMCEmptyString, keysym);
-
-					// Translate to and dispatch as a character message
-					MSG t_msg;
-					t_msg.hwnd = hwnd;
-					t_msg.message = msg;
-					t_msg.wParam = wParam;
-					t_msg.lParam = lParam;
-					TranslateMessage(&t_msg);
 
 					// Some system key strokes have special behaviour provided by DefWindowProc
 					if (!t_handled && msg == WM_SYSKEYDOWN)
