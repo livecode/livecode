@@ -1132,7 +1132,9 @@ bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 			else
 				t_msg_stack -> raise();
 
-			((MCField *)MCmessageboxredirect) -> settext_oldstring(0, ep . getsvalue(), False);
+			MCAutoStringRef t_string;
+			ep . copyasstringref(&t_string);
+			((MCField *)MCmessageboxredirect) -> settext(0, *t_string, False);
 		}
 		else
 		{
