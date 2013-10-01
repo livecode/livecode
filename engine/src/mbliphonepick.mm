@@ -692,12 +692,12 @@ bool MCSystemPickN(NSArray *p_option_list_array, bool p_use_checkmark, bool p_us
 	return true;
 }
 
-bool MCSystemPick(const char *p_options, bool p_is_unicode, bool p_use_checkmark, uint32_t p_initial_index, uint32_t& r_chosen_index, MCRectangle p_button_rect)
+bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initial_index, uint32_t& r_chosen_index, MCRectangle p_button_rect)
 {
 	bool t_success;
 	t_success = true;
 	
-	NSString *t_options;
+	CFStringRef cfoptions;
 	NSArray *t_option_list_array;
 	
 	NSArray *t_initial_index_array;
@@ -707,15 +707,10 @@ bool MCSystemPick(const char *p_options, bool p_is_unicode, bool p_use_checkmark
 	NSString *t_return_index = nil;
 	
 	// provide the correct encoding for the options list
-	t_options = [NSString stringWithCString: p_options encoding: p_is_unicode ? NSUTF8StringEncoding : NSMacOSRomanStringEncoding];
-	// for some reason could not convert to the unicode string
-	if (t_options == nil)
-	{
-		r_chosen_index = p_initial_index;
-		return true;
-	}
+	/* UNCHECKED */ MCStringConvertToCFStringRef(p_options, cfoptions);
+
 	// convert the \n delimited item string into a pick wheel array
-	t_option_list_array = [NSArray arrayWithObject: [t_options componentsSeparatedByString:@"\n"]];
+	t_option_list_array = [NSArray arrayWithObject: [(NSString*)cfoptions componentsSeparatedByString:@"\n"]];
 	// convert the initial index for each component into an array entry
 	t_initial_index_array = [NSArray arrayWithObject: [NSNumber numberWithInt: p_initial_index]];
 	// get the maximum number of digits needed for the entry column that was just added
@@ -725,9 +720,10 @@ bool MCSystemPick(const char *p_options, bool p_is_unicode, bool p_use_checkmark
 	if (t_success)
 		t_success = MCSystemPickN(t_option_list_array, p_use_checkmark, false, false, false, t_initial_index_array, t_return_index, p_button_rect);
 	
-	// HC-30-2011-30 [[ Bug 9773 ]] Changed using char* to NSString* 
+	MCAutoStringRef t_result;
+	/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_return_index, &t_result);
 	if (t_success)
-		MCresult -> sets ([t_return_index cStringUsingEncoding:NSMacOSRomanStringEncoding]);
+		MCresult -> setvalueref (*t_result);
 	r_chosen_index = atoi ([t_return_index cStringUsingEncoding:NSMacOSRomanStringEncoding]);
 	
 	return ES_NORMAL;

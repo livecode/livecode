@@ -735,7 +735,7 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 	default:
 		{
 			Exec_stat t_stat;
-			t_stat = mode_getprop(parid, which, ep, MCnullmcstring, effective);
+			t_stat = mode_getprop(parid, which, ep, kMCEmptyString, effective);
 			if (t_stat == ES_NOT_HANDLED)
 			{
 				MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
@@ -748,7 +748,7 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 	return ES_NORMAL;
 #endif /* MCObject::getprop */
 	Exec_stat t_stat;
-	t_stat = mode_getprop(parid, which, ep, MCnullmcstring, effective);
+	t_stat = mode_getprop(parid, which, ep, kMCEmptyString, effective);
 	if (t_stat == ES_NOT_HANDLED)
 	{
 		MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
@@ -793,7 +793,7 @@ Exec_stat MCObject::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 
 		// Parse the requested text style.
 		Font_textstyle t_style;
-		if (MCF_parsetextstyle(MCNameGetOldString(key), t_style) != ES_NORMAL)
+		if (MCF_parsetextstyle(MCNameGetString(key), t_style) != ES_NORMAL)
 			return ES_ERROR;
 
 		// Check the textstyle string is within the object's textstyle set.
@@ -818,7 +818,7 @@ Exec_stat MCObject::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 	default:
 		{
 			Exec_stat t_stat;
-			t_stat = mode_getprop(parid, which, ep, MCNameGetOldString(key), False);
+			t_stat = mode_getprop(parid, which, ep, MCNameGetString(key), False);
 			if (t_stat == ES_NOT_HANDLED)
 			{
 				MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
@@ -1860,7 +1860,7 @@ Exec_stat MCObject::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 
 		// Parse the requested text style.
 		Font_textstyle t_style;
-		if (MCF_parsetextstyle(MCNameGetOldString(key), t_style) != ES_NORMAL)
+		if (MCF_parsetextstyle(MCNameGetString(key), t_style) != ES_NORMAL)
 			return ES_ERROR;
 
 		// MW-2012-02-19: [[ SplitTextAttrs ]] If we have no textStyle set then
@@ -1918,7 +1918,7 @@ Exec_stat MCObject::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 	default:
 		{
 			Exec_stat t_stat;
-			t_stat = mode_getprop(parid, which, ep, MCNameGetOldString(key), False);
+			t_stat = mode_getprop(parid, which, ep, MCNameGetString(key), False);
 			if (t_stat == ES_NOT_HANDLED)
 			{
 				MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
@@ -2278,7 +2278,7 @@ Exec_stat MCObject::getarrayprop(uint32_t p_part_id, Properties p_which, MCExecP
     }
     
     Exec_stat t_stat;
-    t_stat = mode_getprop(p_part_id, p_which, ep, MCNameGetOldString(p_index), False);
+    t_stat = mode_getprop(p_part_id, p_which, ep, MCNameGetString(p_index), False);
     if (t_stat == ES_NOT_HANDLED)
     {
         MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
@@ -2358,7 +2358,7 @@ Exec_stat MCObject::setarrayprop(uint32_t p_part_id, Properties p_which, MCExecP
 	}
     
     Exec_stat t_stat;
-    t_stat = mode_getprop(p_part_id, p_which, ep, MCNameGetOldString(p_index), False);
+    t_stat = mode_getprop(p_part_id, p_which, ep, MCNameGetString(p_index), False);
     if (t_stat == ES_NOT_HANDLED)
     {
         MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
@@ -2470,6 +2470,18 @@ Exec_stat MCObject::getprop(uint32_t p_part_id, Properties p_which, MCExecPoint&
 				if (!ctxt . HasError())
 				{
 					ep . setvalueref(*t_value);
+					return ES_NORMAL;
+				}
+			}
+				break;
+				
+			case kMCPropertyTypeName:
+			{
+				MCNewAutoNameRef t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, MCNameRef&))t_info->getter)(ctxt, t_object, &t_value);
+				if (!ctxt.HasError())
+				{
+					ep.setvalueref(*t_value);
 					return ES_NORMAL;
 				}
 			}
@@ -2892,6 +2904,16 @@ Exec_stat MCObject::setprop(uint32_t p_part_id, Properties p_which, MCExecPoint&
 					ctxt . LegacyThrow(EE_PROPERTY_NAC);
 				if (!ctxt . HasError())
 					((void(*)(MCExecContext&, MCObjectPtr, MCStringRef))t_info -> setter)(ctxt, t_object, *t_value);	
+			}
+			break;
+				
+			case kMCPropertyTypeName:
+			{
+				MCNewAutoNameRef t_value;
+				if (!ep.copyasnameref(&t_value))
+					ctxt.LegacyThrow(EE_PROPERTY_NAC);
+				if (!ctxt.HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, MCNameRef))t_info->setter)(ctxt, t_object, *t_value);
 			}
 			break;
 				

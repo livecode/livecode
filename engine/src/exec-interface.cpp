@@ -3142,7 +3142,7 @@ void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef p_string, int 
 		else /* PT_BEFORE */
 			t_start = t_finish = p_chunk . start;
 		
-		if (((MCField *)p_chunk . object) -> settextindex(p_chunk . part_id, t_start, t_finish, MCStringGetOldString(p_string), False, p_is_unicode) != ES_NORMAL)
+		if (((MCField *)p_chunk . object) -> settextindex_stringref(p_chunk . part_id, t_start, t_finish, p_string, False) != ES_NORMAL)
 		{
 			ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
 			return;
@@ -3949,9 +3949,9 @@ void MCInterfaceExecFind(MCExecContext& ctxt, int p_mode, MCStringRef p_needle, 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCInterfaceExecChooseTool(MCExecContext& ctxt, int p_tool)
+void MCInterfaceExecChooseTool(MCExecContext& ctxt, MCStringRef p_input, int p_tool)
 {
-	MCU_choose_tool(ctxt, (Tool)p_tool);
+	MCU_choose_tool(ctxt, p_input, (Tool)p_tool);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -250,7 +250,7 @@ bool MCStringsCachePattern(MCStringRef p_pattern, regexp* p_compiled)
 
 bool MCStringsCompilePattern(MCStringRef p_pattern, regexp*& r_compiled)
 {
-    r_compiled = MCR_compile(MCStringGetCString(p_pattern));
+    r_compiled = MCR_compile(p_pattern);
     return r_compiled != nil;    
 }
 
@@ -274,7 +274,7 @@ void MCStringsEvalMatchText(MCExecContext& ctxt, MCStringRef p_string, MCStringR
     }
     
     bool t_success = true;
-    r_match = 0 != MCR_exec(t_compiled, MCStringGetCString(p_string), MCStringGetLength(p_string));
+    r_match = 0 != MCR_exec(t_compiled, p_string, MCStringGetLength(p_string));
     uindex_t t_match_index = 1;
     
     for (uindex_t i = 0; t_success && i < p_result_count; i++)
@@ -320,7 +320,7 @@ void MCStringsEvalMatchChunk(MCExecContext& ctxt, MCStringRef p_string, MCString
     }
     
     bool t_success = true;
-    r_match = 0 != MCR_exec(t_compiled, MCStringGetCString(p_string), MCStringGetLength(p_string));
+    r_match = 0 != MCR_exec(t_compiled, p_string, MCStringGetLength(p_string));
     uindex_t t_match_index = 1;
     
     for (uindex_t i = 0; t_success && i + 1 < p_result_count; i += 2)
@@ -380,8 +380,10 @@ void MCStringsEvalReplaceText(MCExecContext& ctxt, MCStringRef p_string, MCStrin
     
     uindex_t t_source_length = MCStringGetLength(p_string);
     uindex_t t_source_offset = 0;
+	MCStringRef t_substring;
+	t_substring = nil;
     
-    while (t_success && t_source_offset < t_source_length && MCR_exec(t_compiled, MCStringGetCString(p_string) + t_source_offset, t_source_length - t_source_offset))
+    while (t_success && t_source_offset < t_source_length && MCStringCopySubstring(p_string, MCRangeMake(t_source_offset, MCStringGetLength(p_string) - (t_source_offset)), t_substring) && MCR_exec(t_compiled, t_substring, t_source_length - t_source_offset))
     {
         uindex_t t_start = t_compiled->matchinfo[0].rm_so;
         uindex_t t_end = t_compiled->matchinfo[0].rm_eo;
@@ -401,6 +403,13 @@ void MCStringsEvalReplaceText(MCExecContext& ctxt, MCStringRef p_string, MCStrin
         
         // Begin searching again after the end of the match
         t_source_offset += t_end;
+
+		if (t_substring != nil)
+		{
+			MCValueRelease(t_substring);
+			t_substring = nil;
+		}
+
         
         if (MCStringGetCharAtIndex(p_pattern, 0) == '^')
             break;

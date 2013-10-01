@@ -127,7 +127,9 @@ Exec_stat MCChoose::exec(MCExecPoint &ep)
 			MCeerror->add(EE_CHOOSE_BADEXP, line, pos);
 			return ES_ERROR;
 		}
-	MCInterfaceExecChooseTool(ctxt, littool);
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ ep.copyasstringref(&t_string);
+	MCInterfaceExecChooseTool(ctxt, *t_string, littool);
 	
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -2599,6 +2601,7 @@ Exec_stat MCSort::exec(MCExecPoint &ep)
 		if (!ctxt . HasError())
 		{
 			/* UNCHECKED */ ep . setvalueref(t_sorted_target);
+            of -> set(ep, PT_INTO);
 			MCValueRelease(t_sorted_target);
 		}
 	}
