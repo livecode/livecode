@@ -4966,7 +4966,7 @@ static MCMediaType MCMediaTypeFromString(MCStringRef p_string)
     {
         while (MCStringGetNativeCharAtIndex(p_string, t_pos) == ' ' || MCStringGetNativeCharAtIndex(p_string, t_pos) == ',')
             t_pos += 1;
-        if (MCStringGetNativeCharAtIndex(p_string, t_pos) == '\0')
+        if (MCStringGetLength(p_string) == t_pos)
             break;
     	// HC-2012-02-01: [[ Bug 9983 ]] - This fix is related as the implementation in the new syntax does not produce a result
         
@@ -6724,7 +6724,7 @@ extern void MCIPhoneCallOnMainFiber(void (*)(void *), void *);
 Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters)
 {
 	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
-		if (MCNameIsEqualToCString(p_message, s_platform_messages[i] . message, kMCCompareExact))
+		if (MCNameIsEqualToCString(p_message, s_platform_messages[i] . message, kMCCompareCaseless))
 		{
 			// MW-2012-07-31: [[ Fibers ]] If the method doesn't need script / wait, then
 			//   jump to the main fiber for it.
@@ -6750,7 +6750,7 @@ Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters
 {
 	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
     {
-		if (MCNameIsEqualToCString(p_message, s_platform_messages[i] . message, kMCCompareExact))
+		if (MCNameIsEqualToCString(p_message, s_platform_messages[i] . message, kMCCompareCaseless))
 			return s_platform_messages[i] . handler(s_platform_messages[i] . context, p_parameters);
     }
 	
