@@ -464,8 +464,6 @@ Bool MCButton::macfindmenu(bool p_just_for_accel)
 			/* UNCHECKED */ MCStringConvertToCFStringRef(t_menu_name, t_menu_title);
 			SetMenuTitleWithCFString(mh, t_menu_title);
 			
-			MCString s;
-			getmenustring(s);
 			if (pms->addMenuItemsAndSubMenu(newMenuID, mh, this, menumode))
 			{
 				bMenuID = newMenuID;
