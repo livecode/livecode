@@ -6379,9 +6379,10 @@ bool list_native_controls(void *context, MCNativeControl* p_control)
 {
 	MCExecPoint *ep;
 	ep = (MCExecPoint *)context;
-	
-	if (p_control -> GetName() != nil)
-		ep -> concatcstring(p_control -> GetName(), EC_RETURN, ep -> isempty());
+    MCAutoStringRef t_name;
+	p_control -> GetName(&t_name);
+	if (!MCStringIsEmpty(*t_name))
+		ep -> concatcstring(MCStringGetCString(*t_name), EC_RETURN, ep -> isempty());
 	else
 		ep -> concatuint(p_control -> GetId(), EC_RETURN, ep -> isempty());
 	
@@ -6395,7 +6396,6 @@ Exec_stat MCHandleControlList(void *context, MCParameter *p_parameters)
     
 	MCExecContext ctxt(ep);
 	MCAutoStringRef t_value;
-    ep . copyasstringref(&t_value);
 	/* UNCHECKED */ ep . copyasstringref(&t_value);
     ctxt . SetTheResultToValue(*t_value);
     
