@@ -5040,7 +5040,9 @@ Exec_stat MCMatch::eval(MCExecPoint &ep)
     
 	if (compiled == NULL)
 	{
-		MCeerror->add(EE_MATCH_BADPATTERN, line, pos, MCR_geterror());
+        MCAutoStringRef t_error;
+        MCR_geterror(&t_error);
+		MCeerror->add(EE_MATCH_BADPATTERN, line, pos, *t_error);
 		return ES_ERROR;
 	}
 	if (params->eval(ep) != ES_NORMAL)
@@ -6622,7 +6624,9 @@ Exec_stat MCReplaceText::eval(MCExecPoint &ep)
 	if (compiled == NULL)
 	{
 		delete rstring;
-		MCeerror->add(EE_REPLACETEXT_BADPATTERN, line, pos, MCR_geterror());
+        MCAutoStringRef t_error;
+        MCR_geterror(&t_error);
+		MCeerror->add(EE_REPLACETEXT_BADPATTERN, line, pos, *t_error);
 		return ES_ERROR;
 	}
 	if (source->eval(ep) != ES_NORMAL)

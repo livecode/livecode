@@ -1388,6 +1388,9 @@ const unichar_t *MCStringGetCharPtr(MCStringRef string);
 // in native encoding.
 const char_t *MCStringGetNativeCharPtr(MCStringRef string);
 
+// Returns the Unicode codepoint at the given codepoint index
+codepoint_t MCStringGetCodepointAtIndex(MCStringRef string, uindex_t index);
+
 // Returns the char at the given index.
 unichar_t MCStringGetCharAtIndex(MCStringRef string, uindex_t index);
 

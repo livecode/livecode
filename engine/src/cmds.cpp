@@ -127,7 +127,9 @@ Exec_stat MCChoose::exec(MCExecPoint &ep)
 			MCeerror->add(EE_CHOOSE_BADEXP, line, pos);
 			return ES_ERROR;
 		}
-	MCInterfaceExecChooseTool(ctxt, littool);
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ ep.copyasstringref(&t_string);
+	MCInterfaceExecChooseTool(ctxt, *t_string, littool);
 	
 	if (!ctxt . HasError())
 		return ES_NORMAL;
