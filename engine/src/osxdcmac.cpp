@@ -2170,8 +2170,7 @@ pascal OSErr TSMUpdateHandler(const AppleEvent *theAppleEvent,
 	TextRangeArray *hiliterangeptr = NULL;
 	long fixLength;
 	AEDesc slr;
-	if (MCactivefield == NULL)
-		return paramErr;
+
 	ScriptLanguageRecord scriptLangRec;
 	err = AEGetParamDesc(theAppleEvent, keyAETSMScriptTag,
 	                     typeIntlWritingCode, &slr);
@@ -2182,15 +2181,12 @@ pascal OSErr TSMUpdateHandler(const AppleEvent *theAppleEvent,
 	ScriptCode scriptcode = scriptLangRec.fScript;
 	AEDisposeDesc(&slr);
 
-	//  if (!charset)
-	//  return paramErr; //pass event if script is english
 	if (!MCactivefield)
 		return noErr;
-	//get updated IME text -- always true
-//	if (MCS_imeisunicode())
-    err = AEGetParamDesc(theAppleEvent, keyAETheData, typeUnicodeText, &text);
-//	else
-//		err = AEGetParamDesc(theAppleEvent, keyAETheData, typeChar, &text);
+
+    // Get the text from the IME
+	err = AEGetParamDesc(theAppleEvent, keyAETheData, typeUnicodeText, &text);
+
 	if (err != noErr)
 		return err;
 	err = AEGetParamPtr(theAppleEvent, keyAEFixLength, typeLongInteger,
@@ -2210,118 +2206,84 @@ pascal OSErr TSMUpdateHandler(const AppleEvent *theAppleEvent,
 	//get hilite range
 	err = AEGetParamDesc(theAppleEvent, keyAEHiliteRange,
 	                     typeTextRangeArray, &hiliterange);
+	
+	// If there is a range to be highlighted, retrieve it
 	if (err == noErr)
 	{
 		uint4 hiliterangesize = AEGetDescDataSize(&hiliterange);
 		hiliterangeptr = (TextRangeArray *)new char[hiliterangesize];
 		AEGetDescData(&hiliterange, (void *) hiliterangeptr, hiliterangesize);
 	}
-//	if (!MCS_imeisunicode())
-//	{
-//		uint4 unicodelen;
-//		char *unicodeimetext = new char[imetextsize << 1];
-//		uint2 charset = MCS_langidtocharset(GetScriptManagerVariable(smKeyScript));;
-//		if (commitedLen != 0)
-//		{
-//			if (!charset)
-//			{
-//				MCactivefield->stopcomposition(False, True);
-//				//user switched keyboard to english so we end composition and clear IME
-//				fixLength = -1;
-//			}
-//			MCactivefield->stopcomposition(True,False);
-//			MCU_multibytetounicode(imetext, commitedLen, unicodeimetext,
-//			                       imetextsize << 1, unicodelen, charset);
-//			MCString unicodestr(unicodeimetext, unicodelen);
-//			MCactivefield->finsertnew( FT_IMEINSERT, unicodestr, 0, true);
-//		}
-//		if (fixLength != -1)
-//			if (imetextsize != fixLength)
-//			{
-//				MCactivefield->startcomposition();
-//				MCU_multibytetounicode(&imetext[commitedLen], imetextsize-commitedLen,
-//				                       unicodeimetext, imetextsize << 1,
-//				                       unicodelen, charset);
-//				MCString unicodestr(unicodeimetext, unicodelen);
-//				MCactivefield->finsertnew(FT_IMEINSERT, unicodestr, 0, true);
-//			}
-//			else if (imetextsize == 0 && fixLength == 0)
-//				MCactivefield->stopcomposition(True,False);
-//		if (hiliterangeptr)
-//		{
-//			uint2 i;
-//			for (i = 0; i < hiliterangeptr->fNumOfRanges; i++)
-//				if (hiliterangeptr->fRange[i].fHiliteStyle == kTSMHiliteCaretPosition)
-//				{
-//					MCU_multibytetounicode(&imetext[hiliterangeptr->fRange[i].fStart],
-//					                       imetextsize-hiliterangeptr->fRange[i].fStart,
-//					                       unicodeimetext, imetextsize << 1,
-//					                       unicodelen, charset);
-//					MCactivefield->setcompositioncursoroffset(unicodelen);
-//				}
-//			MCactivefield->setcompositionconvertingrange(0,0);
-//		}
-//		delete unicodeimetext;
-//	}
-//	else
-//	{
-		// printf("fixlength %d, imetextsize %d, commitedlen %d\n",fixLength,imetextsize,commitedLen);
-		if (hiliterangeptr)
-		{
-			uint2 i;
-			for (i = 0; i < hiliterangeptr->fNumOfRanges; i++)
-				if (hiliterangeptr->fRange[i].fHiliteStyle == kTSMHiliteCaretPosition)
-					MCactivefield->setcompositioncursoroffset(hiliterangeptr
-					        ->fRange[i].fStart);
-			for (i = 0; i < hiliterangeptr->fNumOfRanges; i++)
-				if (hiliterangeptr->fRange[i].fHiliteStyle == kTSMHiliteSelectedConvertedText)
-					MCactivefield->setcompositionconvertingrange(hiliterangeptr->fRange[i].fStart,hiliterangeptr->fRange[i].fEnd);
-		}
+
+	if (hiliterangeptr)
+	{
+		// Update the position(s) of the compose cursor(s)
+		for (int i = 0; i < hiliterangeptr->fNumOfRanges; i++)
+			if (hiliterangeptr->fRange[i].fHiliteStyle == kTSMHiliteCaretPosition)
+				MCactivefield->setcompositioncursoroffset(hiliterangeptr
+				        ->fRange[i].fStart);
 		
-		// MW-2012-10-01: [[ Bug 10425 ]] Make sure we only use down/up messages if the input
-		//   text is 1 Unicode char long, and maps to MacRoman.
-		uint1 t_char;
-		if (commitedLen == 2 && MCUnicodeMapToNative((const uint2 *)imetext, 1, t_char))
-		{
-			// MW-2012-10-30: [[ Bug 10501 ]] Make sure we stop composing
+		// Update the range(s) marked as under-composition
+		for (int i = 0; i < hiliterangeptr->fNumOfRanges; i++)
+			if (hiliterangeptr->fRange[i].fHiliteStyle == kTSMHiliteSelectedConvertedText)
+				MCactivefield->setcompositionconvertingrange(hiliterangeptr->fRange[i].fStart,hiliterangeptr->fRange[i].fEnd);
+	}
+	
+	// With StringRef support, all characters can be send as key up/down events
+	if (commitedLen != 0)
+	{
+		// MW-2012-10-30: [[ Bug 10501 ]] Make sure we stop composing
+		if (MCactivefield)
 			MCactivefield->stopcomposition(True,False);
-				
-			// MW-2008-08-21: [[ Bug 6700 ]] Make sure we generate synthentic keyUp/keyDown events
-			//   for MacRoman characters entered using the default IME.
-			MCStringRef t_buf;
-			/* UNCHECKED */ MCStringFormat(t_buf, "%c", t_char); 
-			MCdispatcher->wkdown(MCactivefield -> getstack() -> getwindow(), t_buf, t_char);
-			MCdispatcher->wkup(MCactivefield -> getstack() -> getwindow(), t_buf, t_char);
-			MCValueRelease(t_buf);
-		}
-		else
-		{
-			if (commitedLen != 0)
-			{
-				MCactivefield->stopcomposition(True,False);
-				MCStringRef t_string = nil;
-				/* UNCHECKED */ MCStringCreateWithChars((const unichar_t *)imetext, commitedLen/sizeof(unichar_t), t_string);
-				MCactivefield->finsertnew(FT_IMEINSERT, t_string, 0);
-				MCValueRelease(t_string);
-				
-			}
-		}
 		
-		if (fixLength != -1)
-        {
-			if (imetextsize != fixLength)
+		// Convert the committed text to a stringref
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ MCStringCreateWithChars((const unichar_t*)imetext, commitedLen/sizeof(unichar_t), &t_string);
+		
+		// MW-2008-08-21: [[ Bug 6700 ]] Make sure we generate synthentic keyUp/keyDown events
+		//   for MacRoman characters entered using the default IME.
+		// FG-2013-09-30: All characters now have sythesised key events
+		/* TODO: should use MCStringGetCodepointLength */
+		MCScreenDC* screen = (MCScreenDC*)MCscreen;
+		Window activewindow = screen->getactivewindow();
+		for (uindex_t i = 0; i < MCStringGetLength(*t_string); i++)
+		{
+			KeySym keysym;
+			keysym = MCStringGetCodepointAtIndex(*t_string, i);
+			if (keysym > 0x7F)
+				keysym |= XK_Class_codepoint;
+			
+			// Text is only sent for the first event
+			if (i == 0)
 			{
-				MCactivefield->startcomposition();
-				MCStringRef t_string = nil;
-				/* UNCHECKED */ MCStringCreateWithChars((const unichar_t *)(imetext + commitedLen), 
-														(imetextsize - commitedLen)/sizeof(unichar_t), t_string);
-				MCactivefield->finsertnew(FT_IMEINSERT, t_string, 0);
-				MCValueRelease(t_string);
+				MCdispatcher->wkdown(activewindow, *t_string, keysym);
+				MCdispatcher->wkup(activewindow, *t_string, keysym);
 			}
-			else if (imetextsize == 0 && fixLength == 0)
-				MCactivefield->stopcomposition(True,False);
-        }
-//	}
+			else
+			{
+				MCdispatcher->wkdown(activewindow, kMCEmptyString, keysym);
+				MCdispatcher->wkup(activewindow, kMCEmptyString, keysym);
+			}
+		}
+	}
+	
+	// Handle any under-composition text that has been received (currently,
+	// only fields care about this sort of input).
+	if (fixLength != -1)
+    {
+		if (imetextsize != fixLength)
+		{
+			MCactivefield->startcomposition();
+			MCStringRef t_string = nil;
+			/* UNCHECKED */ MCStringCreateWithChars((const unichar_t *)(imetext + commitedLen), 
+													(imetextsize - commitedLen)/sizeof(unichar_t), t_string);
+			MCactivefield->finsertnew(FT_IMEINSERT, t_string, 0);
+			MCValueRelease(t_string);
+		}
+		else if (imetextsize == 0 && fixLength == 0)
+			MCactivefield->stopcomposition(True,False);
+    }
+
 	if (hiliterangeptr)
 		delete hiliterangeptr;
 	delete imetext;
