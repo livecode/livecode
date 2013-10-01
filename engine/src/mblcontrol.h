@@ -608,7 +608,7 @@ public:
 	uint32_t GetId(void);
 	
 	// Get the native control's name (if any)
-	MCStringRef GetName(void);
+	void GetName(MCStringRef &r_name);
 	
 	// Set the native control's name
 	bool SetName(MCStringRef name);

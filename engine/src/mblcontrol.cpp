@@ -150,9 +150,12 @@ uint32_t MCNativeControl::GetId(void)
 	return m_id;
 }
 
-MCStringRef MCNativeControl::GetName(void)
+void MCNativeControl::GetName(MCStringRef &r_name)
 {
-	return m_name;
+    if (m_name == nil)
+        r_name = MCValueRetain(kMCEmptyString);
+    else
+        r_name = MCValueRetain(m_name);
 }
 
 MCObject *MCNativeControl::GetOwner(void)
@@ -370,11 +373,15 @@ bool MCNativeControl::FindByNameOrId(MCStringRef p_name, MCNativeControl*& r_con
 		return FindById(t_id, r_control);
 	
 	for(MCNativeControl *t_control = s_native_controls; t_control != nil; t_control = t_control -> m_next)
-		if (!t_control -> m_deleted && !MCStringIsEmpty(t_control -> GetName()) && MCStringIsEqualTo(p_name, t_control -> GetName(), kMCCompareCaseless))
+    {
+        MCAutoStringRef t_name;
+        t_control -> GetName(&t_name);
+		if (!t_control -> m_deleted && !MCStringIsEmpty(*t_name) && MCStringIsEqualTo(p_name, *t_name, kMCCompareCaseless))
 		{
 			r_control = t_control;
 			return true;
 		}
+    }
 	
 	return false;
 }
@@ -422,9 +429,10 @@ bool MCNativeControl::GetControlList(MCStringRef& r_list)
     MCListCreateMutable('\n', &t_list);
 	for(MCNativeControl *t_control = s_native_controls; t_success && t_control != nil; t_control = t_control -> m_next)
     {
-        MCAutoStringRef t_control_string;
-        if (t_control -> GetName() != nil)
-            t_control_string = MCValueRetain(t_control -> GetName());
+        MCAutoStringRef t_name, t_control_string;
+        t_control -> GetName(&t_name);
+        if (!MCStringIsEmpty(*t_name))
+            t_control_string = MCValueRetain(*t_name);
         else
             t_success = MCStringFormat(&t_control_string, "%u");
         
