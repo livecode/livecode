@@ -57,7 +57,7 @@ int main(int argc, char *argv[], char *envp[])
 	// format. To do this, the system locale needs to be retrieved.
 	setlocale(LC_ALL, "");
 	MCsysencoding = strclone(nl_langinfo(CODESET));
-fprintf(stderr, "1\n");	
+	
 	// Convert the argv array to StringRefs
 	MCStringRef* t_argv;
 	/* UNCHECKED */ MCMemoryNewArray(argc, t_argv);
@@ -65,7 +65,7 @@ fprintf(stderr, "1\n");
 	{
 		/* UNCHECKED */ MCStringCreateWithSysString(argv[i], strlen(argv[i]), t_argv[i]);
 	}
-fprintf(stderr, "2\n");
+	
 	// Convert the envp array to StringRefs
 	int envc = 0;
 	MCStringRef* t_envp = nil;
@@ -76,7 +76,7 @@ fprintf(stderr, "2\n");
 		/* UNCHECKED */ MCStringCreateWithSysString(envp[envc], strlen(envp[envc]), t_envp[envc]);
 		envc++;
 	}
-fprintf(stderr, "3\n");
+	
 	// Terminate the envp array
 	t_envp[envc] = nil;
 	
@@ -86,7 +86,7 @@ fprintf(stderr, "3\n");
 	
 	if (!MCInitialize())
 		exit(-1);
-fprintf(stderr, "4\n");
+	
 	if (!X_init(argc, t_argv, t_envp))
 	{
 		MCExecPoint ep;
@@ -97,7 +97,7 @@ fprintf(stderr, "4\n");
 		}
 		exit(-1);
 	}
-fprintf(stderr, "5\n");
+	
 	// Clean up the created argv/envp StringRefs
 	for (int i = 0; i < argc; i++)
 		MCValueRelease(t_argv[i]);
@@ -105,9 +105,9 @@ fprintf(stderr, "5\n");
 		MCValueRelease(t_envp[i]);
 	MCMemoryDeleteArray(t_argv);
 	MCMemoryDeleteArray(t_envp);
-fprintf(stderr, "6\n");
+	
 	X_main_loop();
-fprintf(stderr, "7\n");
+	
 	int t_exit_code = X_close();
 
 	MCFinalize();
@@ -119,7 +119,6 @@ fprintf(stderr, "7\n");
 
 static bool do_iconv(iconv_t fd, const char *in, size_t in_len, char * &out, size_t &out_len)
 {
-fprintf(stderr, "orig: %d \"%s\"\n", in_len, in);
 	// Begin conversion. As a start, assume both encodings take the same
 	// space. This is probably wrong but the array is grown as needed.
 	size_t t_status = 0;
@@ -169,8 +168,6 @@ fprintf(stderr, "orig: %d \"%s\"\n", in_len, in);
 		}
 	}
 
-	fprintf(stderr, "strlen = %d; 0 = %d; str = \"%ls\"", t_out.Size(), *(unichar_t*)t_out.Ptr(), t_out.Ptr());
-	
 	// Conversion has been completed
 	t_out.Take(out, out_len);
 	return true;
@@ -191,15 +188,15 @@ bool MCStringCreateWithSysString(const char *p_system_string, size_t p_len, MCSt
 	
 	if (!t_success)
 		return false;
-fprintf(stderr, "a");	
+	
 	// Create the StringRef
 	MCStringRef t_string;
 	t_success = MCStringCreateWithBytes((const byte_t*)t_utf16_bytes, t_utf16_byte_len, kMCStringEncodingUTF16, false, t_string);
 	MCMemoryDeleteArray(t_utf16_bytes);
-fprintf(stderr, "b");
+	
 	if (!t_success)
 		return false;
-fprintf(stderr, "c strlen=%d str=%s\n", MCStringGetLength(t_string), MCStringGetNativeCharPtr(t_string));
+	
 	r_string = t_string;
 	return true;
 }
