@@ -172,6 +172,8 @@ regerror(int errcode, const regex_t *preg, MCStringRef &errbuf)
     }
     else
     {
+		if (errbuf != nil)
+			MCValueRelease(errbuf);
         /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *) message, strlen(message), errbuf);
     }
 	
