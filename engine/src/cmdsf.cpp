@@ -4935,12 +4935,12 @@ Exec_stat MCWrite::exec(MCExecPoint &ep)
 	MCresult->clear(False);
 	
 	MCAutoStringRef t_data;
-	if (source->eval(ctxt . GetEP()) != ES_NORMAL)
+	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_WRITE_BADEXP, line, pos);
 		return ES_ERROR;
 	}
-	/* UNCHECKED */ ctxt . CopyAsStringRef(&t_data);
+	/* UNCHECKED */ ep . copyasstringref(&t_data);
 
 	if (arg == OA_STDERR)
 		MCFilesExecWriteToStderr(ctxt, *t_data, unit);
@@ -4950,31 +4950,29 @@ Exec_stat MCWrite::exec(MCExecPoint &ep)
 		else
 		{
 			MCNewAutoNameRef t_target;
-			if (fname->eval(ctxt . GetEP()) != ES_NORMAL)
+			if (fname->eval(ep) != ES_NORMAL)
 			{
 				MCeerror->add(EE_WRITE_BADEXP, line, pos);
 				return ES_ERROR;
 			}
-			/* UNCHECKED */ ctxt . CopyAsNameRef(&t_target);
+			/* UNCHECKED */ ep . copyasnameref(&t_target);
 			switch (arg)
 			{
 			case OA_DRIVER:
 			case OA_FILE:
 				if (at != NULL)
 				{
-					if (at->eval(ctxt . GetEP()) != ES_NORMAL)
+					if (at->eval(ep) != ES_NORMAL)
 					{
 						MCeerror->add(EE_WRITE_BADEXP, line, pos);
 						return ES_ERROR;
 					}
-					MCAutoStringRef t_value;
-					ctxt . CopyAsStringRef(&t_value);
-					if ((MCStringGetNativeCharAtIndex(*t_value, 0) == '\004') || MCStringIsEqualToCString(*t_value, "eof", kMCCompareCaseless))
+					if (ep.getsvalue().getstring()[0] == '\004' || ep.getsvalue() == "eof")
 						MCFilesExecWriteToFileOrDriverAtEnd(ctxt, *t_target, *t_data, unit);
 					else
 					{
 						double n;
-						if (ctxt . GetReal8(n, line, pos, EE_WRITE_BADEXP) != ES_NORMAL)
+						if (ep.getreal8(n, line, pos, EE_WRITE_BADEXP) != ES_NORMAL)
 						{
 							MCresult->sets("error seeking in file");
 							return ES_NORMAL;
@@ -4993,12 +4991,12 @@ Exec_stat MCWrite::exec(MCExecPoint &ep)
 				MCNewAutoNameRef t_message;
 				if (at != NULL)
 				{
-					if (at->eval(ctxt . GetEP()) != ES_NORMAL)
+					if (at->eval(ep) != ES_NORMAL)
 					{
 						MCeerror->add(EE_WRITE_BADEXP, line, pos);
 						return ES_ERROR;
 					}
-					/* UNCHECKED */ ctxt . CopyAsNameRef(&t_message);
+					/* UNCHECKED */ ep . copyasnameref(&t_message);
 				}
 				MCNetworkExecWriteToSocket(ctxt, *t_target, *t_data, *t_message);
 				}
