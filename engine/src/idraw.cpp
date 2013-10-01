@@ -167,28 +167,19 @@ void MCImage::startmag(int2 x, int2 y)
 	MCmagimage = this;
 	state |= CS_MAGNIFY;
 
-	//MCAutoStringRef buffer;
-	//MCStringFormat(&buffer, "%d", rect.width * MCmagnification);
-    //sptr->setsprop(P_MAX_WIDTH, *buffer);
     MCExecPoint ep(this, NULL, NULL);
     MCExecContext ctxt(ep);
     
     sptr->setintprop(ctxt, 0, P_MAX_WIDTH, False, rect.width * MCmagnification);
 
-	//MCStringFormat(&buffer, "%d", rect.width * MCmagnification);
-	//sptr->setsprop(P_MAX_HEIGHT, *buffer);
     sptr->setintprop(ctxt, 0, P_MAX_HEIGHT, False, rect.width * MCmagnification);
 
-
 	uint2 ssize = MCU_min(32, rect.width);
-	//MCStringFormat(&buffer, "%d", ssize * MCmagnification);
-	//sptr->setsprop(P_WIDTH, *buffer);
+	
     sptr->setintprop(ctxt, 0, P_WIDTH, False, ssize * MCmagnification);
 
-
 	ssize = MCU_min(32, rect.height);
-//	MCStringFormat(&buffer, "%d", ssize * MCmagnification);
-//	sptr->setsprop(P_HEIGHT, *buffer);
+
     sptr->setintprop(ctxt, 0, P_HEIGHT, False, ssize * MCmagnification);
 
 
