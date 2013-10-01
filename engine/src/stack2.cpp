@@ -2614,7 +2614,7 @@ void MCStack::getstackfile(MCStringRef p_name, MCStringRef &r_name)
 		for (i = 0 ; i < nstackfiles ; i++)
 			if (MCStringIsEqualTo(stackfiles[i].stackname, p_name, kMCStringOptionCompareCaseless))
 			{
-				if (filename == NULL || MCStringGetCharAtIndex(stackfiles[i].filename, 0) == '/' || MCStringGetCharAtIndex(stackfiles[i].filename, 1) == ':')
+				if (MCStringIsEmpty(filename) || MCStringGetCharAtIndex(stackfiles[i].filename, 0) == '/' || MCStringGetCharAtIndex(stackfiles[i].filename, 1) == ':')
 				{
 					r_name = MCValueRetain(stackfiles[i].filename);
 					return;
