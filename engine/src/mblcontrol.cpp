@@ -364,7 +364,7 @@ bool MCNativeControl::LookupType(MCStringRef p_type, MCNativeControlType& r_type
 
 bool MCNativeControl::FindByNameOrId(MCStringRef p_name, MCNativeControl*& r_control)
 {
-	uint32_t t_id;
+	integer_t t_id;
 	if (/* CTXT */ MCStringToInteger(p_name, t_id))
 		return FindById(t_id, r_control);
 	
