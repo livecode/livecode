@@ -214,15 +214,6 @@ bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expir
 void MCServerExecPutCookie(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_value, uinteger_t p_expires, MCStringRef p_path, MCStringRef p_domain, bool p_is_secure, bool p_http_only)
 {
 #ifdef _SERVER
-	if(p_name == nil)
-		p_name = MCValueRetain(kMCEmptyString);
-	if(p_value == nil)
-		p_value = MCValueRetain(kMCEmptyString);
-	if(p_path == nil)
-		p_path = MCValueRetain(kMCEmptyString);
-	if(p_domain == nil)
-		p_domain = MCValueRetain(kMCEmptyString);
-	
 	MCServerSetCookie(p_name, p_value, p_expires, p_path, p_domain, p_is_secure, p_http_only);
 #endif
 }

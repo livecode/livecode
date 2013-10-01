@@ -1547,6 +1547,8 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 				}
 				/* UNCHECKED */ ep . copyasstringref(&t_path);
 			}
+			else
+				t_path = kMCEmptyString;
 			
 			MCAutoStringRef t_domain;
 			if (domain != nil)
@@ -1558,6 +1560,8 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 				}
 				/* UNCHECKED */ ep . copyasstringref(&t_domain);
 			}
+			else
+				t_domain = kMCEmptyString;
 			
 			MCServerExecPutCookie(ctxt, *t_name, *t_string, t_expires, *t_path, *t_domain, is_secure, is_httponly);
 		}

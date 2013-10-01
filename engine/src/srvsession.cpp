@@ -404,7 +404,7 @@ bool MCSessionCreateSession(MCSessionIndexRef p_index, MCStringRef p_session_id,
 
 	if (t_success)
 	{
-		if (p_session_id != nil && MCStringGetNativeCharAtIndex(p_session_id, 0) != '\0')
+		if (p_session_id != nil && !MCStringIsEmpty(p_session_id))
 		{
 			t_session->id = strdup(MCStringGetCString(p_session_id));
 			t_success = true;
