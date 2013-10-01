@@ -533,33 +533,33 @@ bool MCTransferData::Close(void)
 
 //
 
-MCTransferType MCTransferData::StringToType(const MCString& p_string)
+MCTransferType MCTransferData::StringToType(MCStringRef p_string)
 {
-	if (p_string == "text")
+	if (MCStringIsEqualToCString(p_string, "text", kMCCompareCaseless))
 		return TRANSFER_TYPE_TEXT;
 
-	if (p_string == "unicode")
+	if (MCStringIsEqualToCString(p_string, "unicode", kMCCompareCaseless))
 		return TRANSFER_TYPE_UNICODE_TEXT;
 
-	if (p_string == "styles")
+	if (MCStringIsEqualToCString(p_string, "styles", kMCCompareCaseless))
 		return TRANSFER_TYPE_STYLED_TEXT;
 
-	if (p_string == "rtf")
+	if (MCStringIsEqualToCString(p_string, "rtf", kMCCompareCaseless))
 		return TRANSFER_TYPE_RTF_TEXT;
 
-	if (p_string == "html")
+	if (MCStringIsEqualToCString(p_string, "html", kMCCompareCaseless))
 		return TRANSFER_TYPE_HTML_TEXT;
 
-	if (p_string == "files")
+	if (MCStringIsEqualToCString(p_string, "files", kMCCompareCaseless))
 		return TRANSFER_TYPE_FILES;
 
-	if (p_string == "private")
+	if (MCStringIsEqualToCString(p_string, "private", kMCCompareCaseless))
 		return TRANSFER_TYPE_PRIVATE;
 
-	if (p_string == "image")
+	if (MCStringIsEqualToCString(p_string, "image", kMCCompareCaseless))
 		return TRANSFER_TYPE_IMAGE;
 
-	if (p_string == "objects")
+	if (MCStringIsEqualToCString(p_string, "objects", kMCCompareCaseless))
 		return TRANSFER_TYPE_OBJECTS;
 
 	return TRANSFER_TYPE_NULL;
@@ -883,7 +883,7 @@ bool MCConvertStyledTextToText(MCDataRef p_input, MCDataRef& r_output)
 	// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
 	MCAutoStringRef t_text;
 	if (t_success)
-		t_success = MCtemplatefield -> exportasplaintext(t_paragraphs, 0, INT32_MAX, false, &t_text);
+		t_success = MCtemplatefield -> exportasplaintext(t_paragraphs, 0, INT32_MAX, &t_text);
 	
 	if (t_success)
 		t_success = MCStringEncode(*t_text, kMCStringEncodingNative, false, r_output);
@@ -910,7 +910,7 @@ bool MCConvertStyledTextToUnicode(MCDataRef p_input, MCDataRef& r_output)
 	// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
 	MCAutoStringRef t_text;
 	if (t_success)
-		t_success = MCtemplatefield -> exportasplaintext(t_paragraphs, 0, INT32_MAX, true, &t_text);
+		t_success = MCtemplatefield -> exportasplaintext(t_paragraphs, 0, INT32_MAX, &t_text);
 	
 	if (t_success)
 		t_success = MCStringEncode(*t_text, kMCStringEncodingUTF16, false, r_output);

@@ -4318,7 +4318,7 @@ Exec_stat MCChunk::evalobjectchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_f
 		r_chunk . part_id = parid;
 		r_chunk . chunk = CT_UNDEFINED;
 		r_chunk . start = 0;
-		r_chunk . finish = 0;
+		r_chunk . finish = INDEX_MAX;
 		return ES_NORMAL;
 	}
 

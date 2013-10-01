@@ -1820,6 +1820,7 @@ public:
             p_entry.group_id = buf.st_uid;
             p_entry.user_id = buf.st_uid;
             p_entry.permissions = buf.st_mode & 0777;
+            p_entry.is_folder = S_ISDIR(buf.st_mode);
 
             t_success = p_callback(x_context, &p_entry);
         }
