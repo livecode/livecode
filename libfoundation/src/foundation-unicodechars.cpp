@@ -66,7 +66,7 @@ bool MCUnicodeCharsEqualExact(const unichar_t *p_left, uindex_t p_left_length, c
 	if (p_left == p_right)
 		return true;
 	
-	return MCUnicodeCharsCompareCaseless(p_left, p_left_length, p_right, p_right_length) == 0;
+	return MCUnicodeCharsCompareExact(p_left, p_left_length, p_right, p_right_length) == 0;
 }
 
 bool MCUnicodeCharsEqualCaseless(const unichar_t *p_left, uindex_t p_left_length, const unichar_t *p_right, uindex_t p_right_length)
