@@ -39,40 +39,37 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "malloc.h"
 
-extern void MCRemoteFileDialog(MCExecContext &ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint32_t p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file, bool p_save, bool p_files);
-extern void MCRemoteFolderDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial);
+extern void MCRemoteFileDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint32_t p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file, bool p_save, bool p_files, MCStringRef &r_value);
+extern void MCRemoteFolderDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef &r_value);
 extern void MCRemoteColorDialog(MCExecPoint& ep, const char *p_title, uint32_t p_r, uint32_t p_g, uint32_t p_b);
 
-static const char *getfilter(const MCString &s)
+extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
+
+static void getfilter(MCStringRef p_filter, MCStringRef &r_filter)
 {
-	uint4 flength = s.getlength();
-	if (flength != 0)
+	if (p_filter != nil && MCStringGetLength(p_filter) != 0)
 	{
-		static char *filterstring;
-		if (filterstring != NULL)
-			delete filterstring;
-		filterstring = new char[flength * 2 + 3];
-		memcpy(filterstring, s.getstring(), flength);
-		filterstring[flength] = '\0';
-		if (strchr(filterstring, '\n') == NULL
-		        && strchr(filterstring, ',') == NULL)
-		{
-			memcpy(&filterstring[flength + 1], s.getstring(), flength);
-			flength *= 2;
-			filterstring[++flength] = '\0';
-		}
-		filterstring[++flength] = '\0';
-		char *str = filterstring;
-		while (*str)
-		{
-			if (*str == '\n' ||  *str == ',')
-				*str = '\0'; // replace \n with a \0 to meet the MS requirement
-			str++;
-		}
-		return filterstring;
+		static MCAutoStringRef t_filterstring;
+
+		if (*t_filterstring != nil)
+			MCValueRelease(*t_filterstring);
+
+		/* UNCHECKED */ MCStringMutableCopy(p_filter, &t_filterstring);
+		
+		uindex_t t_offset;
+
+		if (!MCStringFirstIndexOfChar(*t_filterstring, '\n', UINDEX_MAX, kMCStringOptionCompareCaseless, t_offset) &&
+				!MCStringFirstIndexOfChar(*t_filterstring, ',', UINDEX_MAX, kMCStringOptionCompareCaseless, t_offset))
+			MCStringAppendFormat(*t_filterstring, "\0%@", p_filter);
+
+		/* UNCHECKED */ MCStringAppendNativeChar(*t_filterstring, '\0');
+		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_filterstring, '\n', '\0', kMCStringOptionCompareCaseless);
+		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_filterstring, ',', '\0', kMCStringOptionCompareCaseless);
+
+		/* UNCHECKED */ MCStringCopy(*t_filterstring, r_filter);
 	}
 	else
-		return "All Files (*.*)\0*.*\0\0";
+		r_filter = MCSTR("All Files (*.*)\0*.*\0\0");
 }
 
 static void waitonbutton()
@@ -131,10 +128,13 @@ static UINT_PTR CALLBACK open_dialog_hook(HWND p_dialog, UINT p_message, WPARAM 
 //   the selected folder.
 // MW-2008-03-18: [[ Bug 6116 ]] Make sure that we don't add an extra slash if there's already
 //   one at the end of the folder path.
-static void build_path(MCExecPoint& ep, const char *p_folder, const MCString& p_file)
+static void build_path(const char *p_folder, const MCString& p_file, MCStringRef x_path)
 {
+	MCAutoStringRef t_path;
+	MCStringCreateMutable(0, &t_path);
+
 	MCAutoStringRef t_std_path, t_native_path;
-	/* UNCHECKED */ MCStringCreateWithCString(p_file.getstring(), &t_native_path);
+	MCStringCreateWithCString(p_file.getstring(), &t_native_path);
 	MCS_pathfromnative(*t_native_path, &t_std_path);
 
 	bool t_use_folder;
@@ -147,18 +147,21 @@ static void build_path(MCExecPoint& ep, const char *p_folder, const MCString& p_
 
 	if (t_use_folder)
 	{
-		ep.appendcstring(p_folder);
+		MCStringAppendFormat(*t_path, "%s", p_folder);
 		if (p_folder[strlen(p_folder) - 1] != '/')
-			ep.appendchar('/');
+			MCStringAppendChar(*t_path, '/');
 	}
 
-	ep . appendmcstring(MCStringGetOldString(*t_std_path));
+	MCStringAppend(*t_path, *t_std_path);
+
+	if (*t_path != nil)
+		MCStringAppend(*t_path, x_path);
 }
 
-static void build_paths(MCExecPoint& ep)
+static void build_paths(MCStringRef &r_path)
 {
-	ep . clear();
-
+	MCAutoStringRef t_path;
+	/* UNCHECKED */ MCStringCreateMutable(0, &t_path);
 	MCAutoStringRef t_std_path;
 	MCAutoStringRef t_native_path;
 	/* UNCHECKED */ MCStringCreateWithCString(*sg_chosen_folder, &t_native_path);
@@ -173,18 +176,21 @@ static void build_paths(MCExecPoint& ep)
 		for(unsigned int t_index = 0; t_index < t_items . count(); ++t_index)
 		{
 			if (t_index != 0)
-				ep.appendnewline();
-			build_path(ep, *sg_chosen_folder, t_items[t_index]);
+				/* UNCHECKED */ MCStringAppendChar(*t_path, '\n');
+
+			build_path(*sg_chosen_folder, t_items[t_index], *t_path);
 		}
 	}
 	else
-		build_path(ep, *sg_chosen_folder, *sg_chosen_files);
+		build_path(*sg_chosen_folder, *sg_chosen_files, *t_path);
 
 	sg_chosen_files . clear();
 	sg_chosen_folder . clear();
+
+	/* UNCHECKED */ MCStringCopy(*t_path, r_path);
 }
 
-static HRESULT append_shellitem_path_and_release(MCExecPoint& ep, IShellItem *p_item, bool p_first)
+static HRESULT append_shellitem_path_and_release(IShellItem *p_item, bool p_first, MCStringRef &x_string)
 {
 	HRESULT t_hresult;
 	t_hresult = S_OK;
@@ -202,12 +208,21 @@ static HRESULT append_shellitem_path_and_release(MCExecPoint& ep, IShellItem *p_
 	
 	if (t_succeeded)
 	{
+		if (x_string == nil)
+			MCStringCreateMutable(0, x_string);
+		else if (!MCStringIsMutable(x_string))
+		{
+			MCStringRef t_clone;
+			MCStringMutableCopy(x_string, t_clone);
+			MCValueAssign(x_string, t_clone);
+		}
+
 		MCAutoStringRef t_rev_filename;
 		MCAutoStringRef t_native_filename;
 
 		/* UNCHECKED */ MCStringCreateWithCString(AnsiCString(t_filename), &t_native_filename);
 		/* UNCHECKED */ MCS_pathfromnative(*t_native_filename, &t_rev_filename);
-		ep.concatcstring(MCStringGetCString(*t_rev_filename), EC_RETURN, p_first);
+		/* UNCHECKED */ MCStringAppendFormat(x_string, p_first ? "%@" : "\n%@", *t_rev_filename);
 	}
 
 	if (t_filename != NULL)
@@ -294,96 +309,75 @@ void MCU_w32path2std(char *p_path)
 	} while (*++p_path);
 }
 
-static int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options)
+static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	int t_result = 0;
 
-	char *t_initial_file;
-	t_initial_file = NULL;
+	MCAutoStringRef t_initial_file;
+	MCAutoStringRef t_initial_folder;
 
-	char *t_initial_folder;
-	t_initial_folder = NULL;
-
-	ep . clear();
-
-	if (*p_initial != '\0')
+	if (p_initial != nil && MCStringGetLength(p_initial) != 0)
 	{
-		MCAutoStringRef t_initial_clone;
 		MCAutoStringRef t_std_path;
 		MCAutoStringRef t_fixed_path;
-		char* t_initial_char_clone;
-		/* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_initial_clone);
-		/* UNCHECKED */ MCS_pathfromnative(*t_initial_clone, &t_std_path);
+
+		/* UNCHECKED */ MCS_pathfromnative(p_initial, &t_std_path);
 		/* UNCHECKED */ MCU_fix_path(*t_std_path, &t_fixed_path);
 
-		t_initial_char_clone = strclone(MCStringGetCString(*t_fixed_path));
-
 		if (MCS_exists(*t_fixed_path, False))
-			t_initial_folder = t_initial_char_clone;
+			t_initial_folder = *t_fixed_path;
 		else if ((p_options & MCA_OPTION_SAVE_DIALOG) != 0)
 		{
-			t_initial_file = strrchr(t_initial_char_clone, '/');
-			if (t_initial_file == NULL)
+			uindex_t t_last_slash;
+			if (!MCStringLastIndexOfChar(*t_fixed_path, '/', UINDEX_MAX, kMCStringOptionCompareCaseless, t_last_slash))
 			{
-				if (strlen(t_initial_char_clone) != 0)
-					t_initial_file = t_initial_char_clone;
+				if (MCStringGetLength(*t_fixed_path) != 0)
+					t_initial_folder = *t_fixed_path;
 			}
 			else
 			{
-				*t_initial_file = '\0';
-				t_initial_file++;
-				
-				if (t_initial_file[0] == '\0')
-					t_initial_file = NULL;
+				if (t_last_slash < MCStringGetLength(*t_fixed_path) - 1)
+					/* UNCHECKED */ MCStringCopySubstring(*t_fixed_path, MCRangeMake(t_last_slash + 1, MCStringGetLength(*t_fixed_path) - (t_last_slash + 1)), &t_initial_file);
 
-				if (MCS_exists(*t_fixed_path, False))
-					t_initial_folder = t_initial_char_clone;
+				MCAutoStringRef t_folder_split;
+				/* UNCHECKED */ MCStringCopySubstring(*t_fixed_path, MCRangeMake(0, t_last_slash - 1), &t_folder_split);
+				if (MCS_exists(*t_folder_split, False))
+					t_initial_folder = *t_folder_split;
 			}
 		}
 		else
 		{
-			char *t_leaf;
-			t_leaf = strrchr(t_initial_char_clone, '/');
-			if (t_leaf != NULL)
+			uindex_t t_last_slash;
+
+			if (MCStringLastIndexOfChar(*t_fixed_path, '/', UINDEX_MAX, kMCStringOptionCompareCaseless, t_last_slash))
 			{
-				*t_leaf = '\0';
-				if (MCS_exists(*t_fixed_path, False))
-					t_initial_folder = t_initial_char_clone;
+				MCAutoStringRef t_folder_split;
+				/* UNCHECKED */ MCStringCopySubstring(*t_fixed_path, MCRangeMake(0, t_last_slash - 1), &t_folder_split);
+				
+				if (MCS_exists(*t_folder_split, False))
+					t_initial_folder = *t_folder_split;
 			}
 		}
-
-		t_initial_file = strdup(t_initial_file);
-		t_initial_folder = MCS_resolvepath(t_initial_folder);
-
-		delete[] t_initial_char_clone;
 	}
 
 	if (!MCModeMakeLocalWindows())
 	{
-		char ** t_filters = NULL;
-		uint32_t t_filter_count = 0;
+		MCAutoStringRefArray t_filters;
 
 		if (p_filter != NULL)
 		{
-			const char *t_strptr = p_filter;
-			while (t_strptr[0] != '\0')
-			{
-				t_filter_count++;
-				t_filters = (char**)realloc(t_filters, t_filter_count * sizeof(char*));
-				t_filters[t_filter_count - 1] = (char *)t_strptr;
-				t_strptr += strlen(t_strptr) + 1;
-			}
+			/* UNCHECKED */ MCStringsSplit(p_filter, '\0', t_filters.PtrRef(), t_filters.CountRef());
 		}
 
-		MCRemoteFileDialog(ep, p_title, p_prompt, t_filters, t_filter_count, t_initial_folder, t_initial_file, (p_options & MCA_OPTION_SAVE_DIALOG) != 0, (p_options & MCA_OPTION_PLURAL) != 0);
+		MCRemoteFileDialog(p_title, p_prompt, *t_filters, t_filters.Count(), *t_initial_folder, *t_initial_file, (p_options & MCA_OPTION_SAVE_DIALOG) != 0, (p_options & MCA_OPTION_PLURAL) != 0, r_value);
 
-		free(t_filters);
 		return 0;
 	}
 
 	Window t_window;
 	t_window = MCModeGetParentWindow();
 
+	MCAutoStringRef t_value;
 	bool t_succeeded;
 	int t_filter_index;
 
@@ -438,11 +432,11 @@ static int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *
 			t_succeeded = SUCCEEDED(t_hresult);
 		}
 
-		if (t_succeeded && t_initial_folder != NULL)
+		if (t_succeeded && *t_initial_folder != NULL)
 		{
 			IShellItem *t_initial_folder_shellitem;
 			t_initial_folder_shellitem = NULL;
-			t_hresult = s_shcreateitemfromparsingname(WideCString(t_initial_folder), NULL, __uuidof(IShellItem), (LPVOID *)&t_initial_folder_shellitem);
+			t_hresult = s_shcreateitemfromparsingname(WideCString(MCStringGetCString(*t_initial_folder)), NULL, __uuidof(IShellItem), (LPVOID *)&t_initial_folder_shellitem);
 			if (SUCCEEDED(t_hresult))
 				t_file_dialog -> SetFolder(t_initial_folder_shellitem);
 			if (t_initial_folder_shellitem != NULL)
@@ -450,18 +444,18 @@ static int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *
 			t_succeeded = SUCCEEDED(t_hresult);
 		}
 
-		if (t_succeeded && t_initial_file != NULL)
+		if (t_succeeded && *t_initial_file != NULL)
 		{
-			t_hresult = t_file_dialog -> SetFileName(WideCString(t_initial_file));
+			t_hresult = t_file_dialog -> SetFileName(WideCString(MCStringGetCString(*t_initial_file)));
 			t_succeeded = SUCCEEDED(t_hresult);
 		}
 
 		if (t_succeeded && p_filter != NULL && (p_options & MCA_OPTION_FOLDER_DIALOG) == 0)
 		{
 			uint4 t_filter_length, t_filter_count;
-			measure_filter(p_filter, t_filter_length, t_filter_count);
+			measure_filter(MCStringGetCString(p_filter), t_filter_length, t_filter_count);
 
-			WideCString t_filters(p_filter, t_filter_length);
+			WideCString t_filters(MCStringGetCString(p_filter), t_filter_length);
 			COMDLG_FILTERSPEC *t_filter_spec;
 
 			filter_to_spec(t_filters, t_filter_count, t_filter_spec);
@@ -479,7 +473,7 @@ static int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *
 		}
 
 		if (t_succeeded)
-			t_hresult = t_file_dialog -> SetTitle(WideCString(p_prompt));
+			t_hresult = t_file_dialog -> SetTitle(WideCString(MCStringGetCString(p_prompt)));
 
 		if (t_succeeded)
 		{
@@ -506,7 +500,6 @@ static int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *
 
 			if (t_succeeded)
 			{
-				ep . clear();
 				for(uint4 t_index = 0; t_index < t_file_item_count && t_succeeded; ++t_index)
 				{
 					IShellItem *t_file_item;
@@ -519,7 +512,7 @@ static int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *
 
 					if (t_succeeded)
 					{
-						t_hresult = append_shellitem_path_and_release(ep, t_file_item, t_index == 0);
+						t_hresult = append_shellitem_path_and_release(t_file_item, t_index == 0, &t_value);
 						t_succeeded = SUCCEEDED(t_hresult);
 					}
 				}
@@ -540,8 +533,7 @@ static int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *
 
 			if (t_succeeded)
 			{
-				ep . clear();
-				t_hresult = append_shellitem_path_and_release(ep, t_file_item, true);
+				t_hresult = append_shellitem_path_and_release(t_file_item, true, &t_value);
 				t_succeeded = SUCCEEDED(t_hresult);
 			}
 		}
@@ -571,17 +563,17 @@ static int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *
 		t_open_dialog . lStructSize = sizeof(OPENFILENAMEA);
 
 		char *t_initial_file_buffer = new char[MAX_PATH];
-		if (t_initial_file != NULL)
-			strcpy(t_initial_file_buffer, t_initial_file);
+		if (*t_initial_file != NULL)
+			strcpy(t_initial_file_buffer, MCStringGetCString(*t_initial_file));
 		else
 			*t_initial_file_buffer = '\0';
 
-		t_open_dialog . lpstrFilter = p_filter;
+		t_open_dialog . lpstrFilter = MCStringGetCString(p_filter);
 		t_open_dialog . nFilterIndex = 1;
 		t_open_dialog . lpstrFile = t_initial_file_buffer;
 		t_open_dialog . nMaxFile = MAX_PATH;
-		t_open_dialog . lpstrInitialDir = t_initial_folder;
-		t_open_dialog . lpstrTitle = p_prompt;
+		t_open_dialog . lpstrInitialDir = MCStringGetCString(*t_initial_folder);
+		t_open_dialog . lpstrTitle = MCStringGetCString(p_prompt);
 		t_open_dialog . Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_NOCHANGEDIR |
 														OFN_LONGNAMES | OFN_PATHMUSTEXIST | OFN_EXPLORER |
 														OFN_ENABLEHOOK | OFN_ENABLESIZING;
@@ -592,7 +584,7 @@ static int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *
 		if (p_options & MCA_OPTION_SAVE_DIALOG)
 			t_open_dialog . Flags |= OFN_OVERWRITEPROMPT;
 
-		t_open_dialog . lpstrFilter = p_filter;
+		t_open_dialog . lpstrFilter = MCStringGetCString(p_filter);
 		t_open_dialog . lpfnHook = open_dialog_hook;
 		t_open_dialog . hwndOwner = t_window != NULL ? (HWND)t_window -> handle . window : NULL;
 
@@ -625,7 +617,7 @@ static int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *
 
 		if (t_succeeded)
 		{
-			build_paths(ep);
+			build_paths(&t_value);
 			t_filter_index = t_open_dialog . nFilterIndex;
 		}
 
@@ -636,73 +628,88 @@ static int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *
 	{
 		if (p_options & MCA_OPTION_RETURN_FILTER)
 		{
-			const char *t_type = p_filter;
-			const char *t_types = p_filter;
+			const char *t_type = MCStringGetCString(p_filter);
+			const char *t_types = MCStringGetCString(p_filter);
 			for(int t_index = t_filter_index * 2 - 1; t_index > 1; t_types += 1)
 				if (*t_types == '\0')
 					t_type = t_types + 1, t_index -= 1;
-			MCresult -> copysvalue(t_type);
+
+			/* UNCHECKED */ MCStringCreateWithCString(t_type, r_result);
 		}
 
 		t_result = 0;
+		r_value = MCValueRetain(*t_value);
 	}
 
 	waitonbutton();
 
-	if (t_initial_folder != NULL)
-		delete t_initial_folder;
-
-	if (t_initial_file != NULL)
-		delete t_initial_file;
-
 	return t_result;
 }
 
-static void get_new_filter(MCExecPoint& ep, char * const p_types[], uint4 p_type_count)
+static void get_new_filter(MCStringRef *p_types, uint4 p_type_count, MCStringRef &r_filters)
 {
-	ep . clear();
+	MCAutoStringRef t_filters;
+	/* UNCHECKED */ MCStringCreateMutable(0, &t_filters);
+
 	for(uint4 t_type_index = 0; t_type_index < p_type_count; ++t_type_index)
 	{
-		Meta::itemised_string t_type(p_types[t_type_index], '|');
-		if (t_type . count() < 1)
+		MCAutoStringRefArray t_split;
+		/* UNCHECKED */ MCStringsSplit(p_types[t_type_index], '|', t_split.PtrRef(), t_split.CountRef());
+
+		if (t_split.Count() < 1)
 			continue;
-		ep . concatmcstring(t_type[0], EC_NULL, t_type_index == 0);
-		if (t_type . count() < 2)
-			ep . concatcstring("*.*", EC_NULL, false);
+
+		if (t_type_index == 0)
+			/* UNCHECKED */ MCStringAppend(*t_filters, t_split[0]);
+		else
+			/* UNCHECKED */ MCStringAppendFormat(*t_filters, "\0%@", t_split[0]);
+
+		if (t_split.Count() < 2)
+			/* UNCHECKED */ MCStringAppendFormat(*t_filters, "\0*.*");
 		else
 		{
-			Meta::itemised_string t_extensions(t_type[1], ',');
-			if (t_extensions . count() == 0)
-				ep . concatcstring("*.*", EC_NULL, false);
+			MCAutoStringRefArray t_extensions;
+			/* UNCHECKED */ MCStringsSplit(t_split[1], ',', t_extensions.PtrRef(), t_extensions.CountRef());
+			if (t_extensions.Count() == 0)
+				/* UNCHECKED */ MCStringAppendFormat(*t_filters, "\0*.*");
 			else
-				for(unsigned int t_extension = 0; t_extension < t_extensions . count(); ++t_extension)
+			{
+				for (unsigned int i = 0; i < t_extensions.Count(); ++i)
 				{
-					ep . appendchar(t_extension != 0 ? ';' : '\0');
-					ep . appendcstring("*.");
-					ep . appendmcstring(t_extensions[t_extension]);
+					char t_del;
+					if (i != 0)
+						t_del = ';';
+					else
+						t_del = '\0';
+
+					/* UNCHECKED */ MCStringAppendFormat(*t_filters, "%c*.%@", t_del, t_extensions[i]);
 				}
+			}
 		}
 	}
-	if (ep . getsvalue() == MCnullmcstring)
-		ep . appendchars("All Files\0*.*\0", 14);
-	ep . appendchar('\0');
+
+	if (*t_filters == nil)
+		/* UNCHECKED */ MCStringAppendFormat(*t_filters, "All Files\0*.*");
+
+	/* UNCHECKED */ MCStringAppendChar(*t_filters, '\0');
+	/* UNCHECKED */ MCStringCopy(*t_filters, r_filters);
 }
 
 // MW-2005-05-15: New answer file with types call
-int MCA_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options)
+int MCA_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
-	get_new_filter(ep, p_types, p_type_count);
+	MCAutoStringRef t_filters;
+	get_new_filter(p_types, p_type_count, &t_filters);
 
-	Meta::cstring_value t_filters;
-	t_filters = ep;
-
-	return MCA_do_file_dialog(ep, p_title == NULL ? "" : p_title, p_prompt == NULL ? "" : p_prompt, *t_filters, p_initial == NULL ? "" : p_initial, p_options | MCA_OPTION_RETURN_FILTER);
+	return MCA_do_file_dialog(p_title == NULL ? kMCEmptyString : p_title, p_prompt == NULL ? kMCEmptyString : p_prompt, *t_filters, p_initial, p_options | MCA_OPTION_RETURN_FILTER, r_value, r_result);
 }
 
 // MW-2005-05-15: Updated for new answer command restructuring
-int MCA_file(MCExecContext& ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options)
+int MCA_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
-	return MCA_do_file_dialog(ep, p_title == NULL ? "" : p_title, p_prompt == NULL ? "" : p_prompt, getfilter(p_filter == NULL ? "" : p_filter), p_initial == NULL ? "" : p_initial, p_options);
+	MCAutoStringRef t_filter;
+	getfilter(p_filter, &t_filter);
+	return MCA_do_file_dialog(p_title == NULL ? kMCEmptyString : p_title, p_prompt == NULL ? kMCEmptyString : p_prompt, *t_filter, p_initial, p_options, r_value, r_result);
 }
 
 
@@ -751,49 +758,40 @@ static unsigned int get_dll_version(const char *p_dll)
 }
 
 // MW-2005-05-15: Updated for new answer command restructuring
-int MCA_folder(MCExecPoint &ep, const char *p_title, const char *p_prompt, const char *p_initial, unsigned int p_options)
+int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	if (MCmajorosversion >= 0x0600 && MCModeMakeLocalWindows())
-		return MCA_file(ep, p_title, p_prompt, nil, p_initial, p_options | MCA_OPTION_FOLDER_DIALOG);
+		return MCA_file(p_title, p_prompt, nil, p_initial, p_options | MCA_OPTION_FOLDER_DIALOG, r_value, r_result);
 
 // MW-2005-05-27: We'll use a static (I know bad me) to store the version
 //   of the shell dll.
 	static int s_shell_version = -1;
-	static char *s_last_folder = NULL;
+	static MCStringRef s_last_folder = NULL;
 
-	char *t_native_filename;
-	unsigned int t_native_filename_length;
+	MCAutoStringRef t_native_filename;
 
 	if (p_initial != NULL)
 	{
-		MCAutoStringRef t_native_path;
 		MCAutoStringRef t_std_path;
 
-		/* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_native_path);
-		/* UNCHECKED */ MCS_pathfromnative(*t_native_path, &t_std_path);
-		t_native_filename = strclone(MCStringGetCString(*t_std_path));
-		t_native_filename_length = strlen(t_native_filename);
+		/* UNCHECKED */ MCS_pathfromnative(p_initial, &t_std_path);
+		t_native_filename = *t_std_path;
 	}
 	else
-	{
-		t_native_filename = s_last_folder;
-		t_native_filename_length = 0;
-	}
+		t_native_filename = MCValueRetain(s_last_folder);
 
 	if (!MCModeMakeLocalWindows())
 	{
-		MCRemoteFolderDialog(ep, p_title, p_prompt, t_native_filename);
-		if (!ep.isempty())
+		MCAutoStringRef t_answer_path;
+		MCRemoteFolderDialog(p_title, p_prompt, *t_native_filename, &t_answer_path);
+		if (*t_answer_path != nil)
 		{
-			if (s_last_folder != NULL)
-				delete s_last_folder;
 			MCAutoStringRef t_std_path;
-			MCAutoStringRef t_native_path;
 
-			/* UNCHECKED */ ep. copyasstringref(&t_std_path);
-			/* UNCHECKED */ MCS_pathfromnative(*t_std_path, &t_native_path);
-			s_last_folder = strclone(MCStringGetCString(*t_native_path));
+			/* UNCHECKED */ MCS_pathfromnative(*t_answer_path, &t_std_path);
+			MCValueAssign(s_last_folder, *t_std_path);
 		}
+		r_value = MCValueRetain(*t_answer_path);
 		return 0;
 	}
 
@@ -802,8 +800,6 @@ int MCA_folder(MCExecPoint &ep, const char *p_title, const char *p_prompt, const
 
 	bool sheet = (p_options & MCA_OPTION_SHEET) != 0;
 	char *prompt = (char *)p_prompt;
-	
-	ep . clear();
 
 	BROWSEINFOA bi;
 	memset(&bi, 0, sizeof(BROWSEINFO));
@@ -819,10 +815,10 @@ int MCA_folder(MCExecPoint &ep, const char *p_title, const char *p_prompt, const
 	bi.ulFlags = BIF_RETURNONLYFSDIRS;
 	if (s_shell_version >= 500)
 		bi.ulFlags |= BIF_NEWDIALOGSTYLE;
-	if (t_native_filename != NULL)
+	if (*t_native_filename != NULL)
 	{
 		bi . lpfn = BrowseCallbackProc;
-		bi . lParam = (LPARAM)t_native_filename;
+		bi . lParam = (LPARAM)MCStringGetCString(*t_native_filename);
 	}
 	else
 	{
@@ -842,28 +838,21 @@ int MCA_folder(MCExecPoint &ep, const char *p_title, const char *p_prompt, const
 	}
 	
 	char *buf;
-	ep.reserve(PATH_MAX, buf);
 	if (lpiil != NULL && SHGetPathFromIDListA(lpiil, buf))
 	{
 		if (s_last_folder != NULL)
-			delete s_last_folder;
-
-		s_last_folder = strclone(buf);
+			MCValueRelease(s_last_folder);
+		/* UNCHECKED */ MCStringCreateWithCString(buf, s_last_folder);
 
 		MCAutoStringRef t_std_path;
-		MCAutoStringRef t_native_path;
-
-		/* UNCHECKED */ MCStringCreateWithCString(buf, &t_native_path);
-		/* UNCHECKED */ MCS_pathfromnative(*t_native_path, &t_std_path);
+		/* UNCHECKED */ MCS_pathfromnative(s_last_folder, &t_std_path);
 		buf = strclone(MCStringGetCString(*t_std_path));
-		//MCS_pathfromnative(buf);
-		ep.commit(strlen(buf));
+
+		r_result = MCValueRetain(*t_std_path);
 	}
 	else
-	{
-		ep.clear();
-		MCresult->sets(MCcancelstring);
-	}
+		/* UNCHECKED */ MCStringCreateWithCString(MCcancelstring, r_result);
+
 	//  SMR 1880 clear shift and button state
 	waitonbutton();
 
@@ -874,7 +863,7 @@ int MCA_folder(MCExecPoint &ep, const char *p_title, const char *p_prompt, const
 }
 
 /* WRAPPER */
-bool MCA_folder(bool p_plural, MCStringRef p_prompt, MCStringRef p_initial,
+/*bool MCA_folder(bool p_plural, MCStringRef p_prompt, MCStringRef p_initial,
 				MCStringRef p_title, bool p_sheet,
 				MCStringRef &r_value, MCStringRef &r_result)
 {
@@ -895,7 +884,7 @@ bool MCA_folder(bool p_plural, MCStringRef p_prompt, MCStringRef p_initial,
 		return MCStringCreateWithCString(MCcancelstring, r_result);
 	else
 		return ep.copyasstringref(r_value);
-}
+}*/
 
 // MW-2005-05-15: Updated for new answer command restructuring
 bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bool& r_chosen, MCColor& r_chosen_color)
@@ -937,18 +926,19 @@ bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bo
 	return t_success;
 }
 
-int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options)
+int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
-	get_new_filter(ep, p_types, p_type_count);
+	MCAutoStringRef t_filters;
+	get_new_filter(p_types, p_type_count, &t_filters);
 
-	Meta::cstring_value t_filters;
-	t_filters = ep;
-
-	return MCA_do_file_dialog(ep, p_title == NULL ? "" : p_title, p_prompt == NULL ? "" : p_prompt, *t_filters, p_initial == NULL ? "" : p_initial, p_options | MCA_OPTION_RETURN_FILTER | MCA_OPTION_SAVE_DIALOG);
+	return MCA_do_file_dialog(p_title == NULL ? kMCEmptyString : p_title, p_prompt == NULL ? kMCEmptyString : p_prompt, *t_filters, p_initial, p_options | MCA_OPTION_RETURN_FILTER | MCA_OPTION_SAVE_DIALOG, r_value, r_result);
 }
 
 // Mw-2005-06-02: Updated to use new answer file prototype
-int MCA_ask_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options)
+int MCA_ask_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
-	return MCA_do_file_dialog(ep, p_title == NULL ? "" : p_title, p_prompt == NULL ? "" : p_prompt, getfilter(p_filter == NULL ? "" : p_filter), p_initial == NULL ? "" : p_initial, p_options | MCA_OPTION_SAVE_DIALOG);
+	MCAutoStringRef t_filters;
+	getfilter(p_filter, &t_filters);
+
+	return MCA_do_file_dialog(p_title == NULL ? kMCEmptyString: p_title, p_prompt == NULL ? kMCEmptyString : p_prompt, *t_filters, p_initial, p_options | MCA_OPTION_SAVE_DIALOG, r_value, r_result);
 }

@@ -2667,6 +2667,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		char *t_char_ptr;
 		HANDLE t_file_handle = NULL;
 		IO_handle t_handle;
+		t_handle = NULL;
 
 		bool t_device = false;
 		bool t_serial_device = false;

@@ -193,12 +193,7 @@ void MCDialogExecAnswerFileWithFilter(MCExecContext &ctxt, bool p_plural, MCStri
         if (p_sheet)
             t_options |= MCA_OPTION_SHEET;
 
-        MCA_file(ctxt, p_title, p_prompt, p_filter, p_initial, t_options);
-
-        if (ctxt.IsEmpty())
-            /* UNCHECKED */ MCStringCreateWithCString(MCcancelstring, &t_result);
-        else
-            /* UNCHECKED */ ctxt.CopyAsStringRef(&t_value);
+        MCA_file(p_title, p_prompt, p_filter, p_initial, t_options, &t_value, &t_result);
 	}
 	else
 	{
@@ -255,12 +250,7 @@ void MCDialogExecAnswerFileWithTypes(MCExecContext &ctxt, bool p_plural, MCStrin
             t_options |= MCA_OPTION_SHEET;
 
         int error;
-        error = MCA_file_with_types(ctxt, p_title, p_prompt, *t_types, t_types.Count(), p_initial, t_options);
-
-        if (ctxt.IsEmpty())
-            /* UNCHECKED */ MCStringCreateWithCString(MCcancelstring, &t_result);
-        else
-            /* UNCHECKED */ ctxt.CopyAsStringRef(&t_value);
+        error = MCA_file_with_types(p_title, p_prompt, *t_types, t_types.Count(), p_initial, t_options, &t_value, &t_result);
 	}
 	else
 	{
@@ -344,12 +334,7 @@ void MCDialogExecAnswerFolder(MCExecContext &ctxt, bool p_plural, MCStringRef p_
             t_options |= MCA_OPTION_SHEET;
 
         int t_error;
-        t_error = MCA_folder(ctxt, p_title, p_prompt, p_initial, t_options);
-
-        if (ctxt.IsEmpty())
-            /* UNCHECKED */ MCStringCreateWithCString(MCcancelstring, &t_result);
-        else
-            /* UNCHECKED */ ctxt.CopyAsStringRef(&t_value);
+        t_error = MCA_folder(p_title, p_prompt, p_initial, t_options, &t_value, &t_result);
 	}
 	else
 	{
@@ -589,6 +574,7 @@ void MCDialogExecAskFile(MCExecContext& ctxt, MCStringRef prompt, MCStringRef in
 
 void MCDialogExecAskFileWithFilter(MCExecContext& ctxt, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef p_filter, MCStringRef p_title, bool p_as_sheet)
 {
+	MCAutoStringRef t_value, t_result;
 	if (!MCSecureModeCanAccessDisk())
 	{
 		ctxt.LegacyThrow(EE_DISK_NOPERM);
@@ -596,7 +582,6 @@ void MCDialogExecAskFileWithFilter(MCExecContext& ctxt, MCStringRef p_prompt, MC
 	}
 	
 	bool t_cancelled;
-	MCAutoStringRef t_filename;
 	if (MCsystemFS && MCscreen -> hasfeature(PLATFORM_FEATURE_OS_FILE_DIALOGS))
     {
         uint32_t t_options = 0;
@@ -604,15 +589,9 @@ void MCDialogExecAskFileWithFilter(MCExecContext& ctxt, MCStringRef p_prompt, MC
             t_options |= MCA_OPTION_SHEET;
 
         int t_error;
-        t_error = MCA_ask_file(ctxt, p_title, p_prompt, p_filter, p_initial, t_options);
+        t_error = MCA_ask_file(p_title, p_prompt, p_filter, p_initial, t_options, &t_value, &t_result);
 
-        if (!ctxt.IsEmpty())
-        {
-            t_cancelled = false;
-            ctxt.CopyAsStringRef(&t_filename);
-        }
-        else
-            t_cancelled = true;
+		t_cancelled = *t_result != nil;
     }
 	else
 	{
@@ -624,14 +603,14 @@ void MCDialogExecAskFileWithFilter(MCExecContext& ctxt, MCStringRef p_prompt, MC
 		t_args[3] = p_initial;
 		t_args[4] = nil;
 		
-		MCDialogExecCustomAskDialog(ctxt, MCN_file_selector, MCN_file, p_as_sheet, t_args, t_arg_count, t_cancelled, &t_filename);
+		MCDialogExecCustomAskDialog(ctxt, MCN_file_selector, MCN_file, p_as_sheet, t_args, t_arg_count, t_cancelled, &t_value);
 		if (ctxt.HasError())
 			return;
 	}
 	
 	if (!t_cancelled)
 	{
-		ctxt . SetItToValue(*t_filename);
+		ctxt . SetItToValue(*t_value);
 		ctxt . SetTheResultToEmpty();
 	}
 	else
@@ -696,8 +675,7 @@ void MCDialogExecAskFileWithTypes(MCExecContext& ctxt, MCStringRef p_prompt, MCS
 	}
 	
 	bool t_cancelled;
-	MCAutoStringRef t_filename;
-	MCAutoStringRef t_chosen_type;
+	MCAutoStringRef t_value, t_result;
 	if (MCsystemFS && MCscreen -> hasfeature(PLATFORM_FEATURE_OS_FILE_DIALOGS))
 	{
         uint32_t t_options = 0;
@@ -705,17 +683,10 @@ void MCDialogExecAskFileWithTypes(MCExecContext& ctxt, MCStringRef p_prompt, MCS
             t_options |= MCA_OPTION_SHEET;
 
         int t_error;
-        t_error = MCA_ask_file_with_types(ctxt, p_title, p_prompt, *t_types, t_types.Count(), p_initial, t_options);
+		// t_value contains the filename, t_result the chosen type
+        t_error = MCA_ask_file_with_types(p_title, p_prompt, *t_types, t_types.Count(), p_initial, t_options, &t_value, &t_result);
 
-        if (!ctxt.IsEmpty())
-        {
-            t_cancelled = false;
-            /* UNCHECKED */ ctxt.CopyAsStringRef(&t_filename);
-            MCresult->eval(ctxt.GetEP());
-            /* UNCHECKED */ ctxt.CopyAsStringRef(&t_chosen_type);
-        }
-        else
-            t_cancelled = true;
+		t_cancelled = *t_value == nil;
 	}
 	else
 	{
@@ -734,15 +705,15 @@ void MCDialogExecAskFileWithTypes(MCExecContext& ctxt, MCStringRef p_prompt, MCS
 		t_args[2] = nil;
 		t_args[3] = p_initial;
 		t_args[4] = *t_types_string;
-		MCDialogExecCustomAskDialog(ctxt, MCN_file_selector, MCN_file, p_as_sheet, t_args, t_arg_count, t_cancelled, &t_filename);
+		MCDialogExecCustomAskDialog(ctxt, MCN_file_selector, MCN_file, p_as_sheet, t_args, t_arg_count, t_cancelled, &t_value);
 		if (ctxt . HasError())
 			return;
 	}
 
 	if (!t_cancelled)
 	{
-		ctxt . SetItToValue(*t_filename);
-		ctxt . SetTheResultToValue(*t_chosen_type);
+		ctxt . SetItToValue(*t_value);
+		ctxt . SetTheResultToValue(*t_result);
 	}
 	else
 	{
