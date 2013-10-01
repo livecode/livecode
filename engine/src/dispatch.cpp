@@ -688,11 +688,12 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 					delete sptr;
 					sptr = NULL;
 					
-					if (MCStringIsEqualTo(tstk -> getfilename(), p_openpath, kMCStringOptionCompareExact))
+					
+					if (MCStringIsEqualTo(tstk -> getfilename(), p_openpath, kMCStringOptionCompareCaseless))
 						sptr = tstk;
 					else
 					{
-						MCdefaultstackptr->getcard()->message_with_valueref_args(MCM_reload_stack, MCNameGetString(tstk->getname()), p_openpath);
+						MCdefaultstackptr->getcard()->message_with_valueref_args(MCM_reload_stack, tstk->getname(), p_openpath);
 						tstk = stacks;
 						do
 						{
@@ -770,18 +771,13 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 {
 	IO_handle stream;
-	char *openpath = NULL;
-
 	MCAutoStringRef t_open_path;
-
-	MCAutoStringRef t_fname_string;
-	t_fname_string = MCValueRetain(p_name);
 
 	bool t_found;
 	t_found = false;
 	if (!t_found)
 	{
-		if ((stream = MCS_open(*t_fname_string, kMCSOpenFileModeRead, True, False, 0)) != NULL)
+		if ((stream = MCS_open(p_name, kMCSOpenFileModeRead, True, False, 0)) != NULL)
 		{
 			// This should probably use resolvepath().
 			if (MCStringGetCharAtIndex(p_name, 0) != PATH_SEPARATOR 
@@ -790,10 +786,10 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 				MCAutoStringRef t_curpath;
 				
 				/* UNCHECKED */ MCS_getcurdir(&t_curpath);
-				/* UNCHECKED */ MCStringFormat(&t_open_path, "%s/%s", MCStringGetCString(*t_curpath), MCStringGetCString(*t_fname_string)); 
+				/* UNCHECKED */ MCStringFormat(&t_open_path, "@s/%@", *t_curpath, p_name); 
 			}
 			else
-				t_open_path = *t_fname_string;
+				t_open_path = p_name;
 
 			t_found = true;
 		}
@@ -803,28 +799,24 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 	{
 		MCAutoStringRef t_leaf_name;
 		uindex_t t_leaf_index;
-		if (MCStringLastIndexOfChar(*t_fname_string, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareCaseless, t_leaf_index))
-			/* UNCHECKED */ MCStringCopySubstring(*t_fname_string, MCRangeMake(t_leaf_index + 1, MCStringGetLength(*t_fname_string) - (t_leaf_index + 1)), &t_leaf_name);
+		if (MCStringLastIndexOfChar(p_name, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareCaseless, t_leaf_index))
+			/* UNCHECKED */ MCStringCopySubstring(p_name, MCRangeMake(t_leaf_index + 1, MCStringGetLength(p_name) - (t_leaf_index + 1)), &t_leaf_name);
 		else
-			t_leaf_name = *t_fname_string;
+			t_leaf_name = p_name;
 		if ((stream = MCS_open(*t_leaf_name, kMCSOpenFileModeRead, True, False, 0)) != NULL)
 		{
 			MCAutoStringRef t_curpath;
-		
 			/* UNCHECKED */ MCS_getcurdir(&t_curpath);
-			
-		
-			/* UNCHECKED */ MCStringFormat(&t_open_path, "%s/%s", MCStringGetCString(*t_curpath), MCStringGetCString(*t_fname_string)); 
-	
+			/* UNCHECKED */ MCStringFormat(&t_open_path, "%@/%@", *t_curpath, p_name); 
 			t_found = true;
 		}
 	}
 
 	if (!t_found)
 	{
-		if (openstartup(*t_fname_string, &t_open_path, stream) ||
-		        openenv(*t_fname_string, MCSTR("MCPATH"), &t_open_path, stream, 0) ||
-		        openenv(*t_fname_string, MCSTR("PATH"), &t_open_path, stream, 0))
+		if (openstartup(p_name, &t_open_path, stream) ||
+		        openenv(p_name, MCSTR("MCPATH"), &t_open_path, stream, 0) ||
+		        openenv(p_name, MCSTR("PATH"), &t_open_path, stream, 0))
 			t_found = true;
 	}
 
@@ -832,24 +824,22 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 	{
 
 		MCAutoStringRef t_homename;
-
-			
 		if (MCS_getenv(MCSTR("HOME"), &t_homename))
 		{
 			MCAutoStringRef t_trimmed_homename;
-			if (MCStringGetNativeCharAtIndex(*t_homename, MCStringGetLength(*t_homename) - 1) == '/')
+			if (MCStringGetCharAtIndex(*t_homename, MCStringGetLength(*t_homename) - 1) == '/')
 				/* UNCHECKED */ MCStringCopySubstring(*t_homename, MCRangeMake(0, MCStringGetLength(*t_homename) - 1), &t_trimmed_homename);
 			else
 				t_trimmed_homename = *t_homename;
 
 			if (!t_found)
-				t_found = attempt_to_loadfile(stream, &t_open_path, "%s/%s", MCStringGetCString(*t_trimmed_homename), MCStringGetCString(*t_fname_string));
+				t_found = attempt_to_loadfile(stream, &t_open_path, "%@/%@", *t_trimmed_homename, p_name);
 
 			if (!t_found)
-				t_found = attempt_to_loadfile(stream, &t_open_path, "%s/stacks/%s", MCStringGetCString(*t_trimmed_homename), MCStringGetCString(*t_fname_string));
+				t_found = attempt_to_loadfile(stream, &t_open_path, "%@/stacks/%@", *t_trimmed_homename, p_name);
 
 			if (!t_found)
-				t_found = attempt_to_loadfile(stream, &t_open_path, "%s/components/%s", MCStringGetCString(*t_trimmed_homename), MCStringGetCString(*t_fname_string));
+				t_found = attempt_to_loadfile(stream, &t_open_path, "%@/components/%@", *t_trimmed_homename, p_name);
 		}
 	}
 
@@ -1362,7 +1352,7 @@ MCFontStruct *MCDispatch::loadfont(MCNameRef fname, uint2 &size, uint2 style, Bo
 
 MCStack *MCDispatch::findstackname(MCNameRef p_name)
 {
-	if (MCNameIsEmpty(p_name))
+	if (p_name == nil || MCNameIsEmpty(p_name))
 		return NULL;
 
 	MCStack *tstk = stacks;
@@ -1390,7 +1380,7 @@ MCStack *MCDispatch::findstackname(MCNameRef p_name)
 		}
 		while (tstk != stacks);
 	}
-;
+
 	if (loadfile(MCNameGetString(p_name), tstk) != IO_NORMAL)
 	{
 		MCAutoStringRef t_name;
@@ -1398,7 +1388,14 @@ MCStack *MCDispatch::findstackname(MCNameRef p_name)
 		/* UNCHECKED */ MCStringLowercase(*t_name);
 		
 		// Remove all special characters from the input string
-		/* TODO */
+		// TODO: what about other 'special' chars added by unicode?
+		MCStringRef t_replace = MCSTR("\r\n\t *?<>/\\()[]{}|'`\"");
+		MCRange t_range = MCRangeMake(0, MCStringGetLength(t_replace));
+		for (uindex_t i = 0; i < MCStringGetLength(*t_name); i++)
+		{
+			if (MCStringCountChar(t_replace, t_range, MCStringGetCharAtIndex(*t_name, i), kMCStringOptionCompareExact))
+				/* UNCHECKED */ MCStringReplace(*t_name, MCRangeMake(i, 1), MCSTR("_"));
+		}
 		
 		MCAutoStringRef t_name_mc;
 		/* UNCHECKED */ MCStringFormat(&t_name_mc, "%@.mc", *t_name);

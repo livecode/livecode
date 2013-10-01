@@ -673,6 +673,7 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return IO_NORMAL;
 }
 
+// I don't think this gets called from anywhere...
 Exec_stat MCStack::resubstack(MCStringRef p_data)
 {
 	Boolean iserror = False;
@@ -1815,6 +1816,7 @@ void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uint2 &nstring
 	}
 	if (nstrings == 0)
 	{
+        tdest_str = new MCStringRef;
 		tdest_str[0] = MCValueRetain(source);
 		nstrings = 1;
 	}

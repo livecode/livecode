@@ -1281,7 +1281,6 @@ MCCard *MCStack::getchild(Chunk_term etype, MCStringRef p_expression, Chunk_term
 		uint4 inid;
 		if (MCU_stoui4(p_expression, inid))
 		{
-		
 			// OK-2008-06-27: <Bug where looking up a card by id when in edit group mode could cause an infinite loop>
 			MCCard *t_cards;
 			if (editing != NULL && savecards != NULL)
@@ -1426,7 +1425,6 @@ MCCard *MCStack::getchild(Chunk_term etype, const MCString &s, Chunk_term otype)
 		uint4 inid;
 		if (MCU_stoui4(s, inid))
 		{
-		
 			// OK-2008-06-27: <Bug where looking up a card by id when in edit group mode could cause an infinite loop>
 			MCCard *t_cards;
 			if (editing != NULL && savecards != NULL)
@@ -1566,25 +1564,26 @@ MCCard *MCStack::getchildbyid(uinteger_t p_id)
 {
     // OK-2007-04-09 : Allow cards to be found by ID when in edit group mode.
     MCCard *cptr;
-    if (editing != NULL && savecards != NULL)
+    if (editing != nil && savecards != nil)
         cptr = savecards;
     else
         cptr = cards;
     
-    MCCard *found = NULL;
+    MCCard *found = nil;
 
     // OK-2008-06-27: <Bug where looking up a card by id when in edit group mode could cause an infinite loop>
     MCCard *t_cards = cptr;
     
     // OK-2007-04-09 : Allow cards to be found by ID when in edit group mode.
-    if (editing == NULL)
+    if (editing == nil)
         found = curcard -> findid(CT_CARD, p_id, True);
-    else
+    
+    if (found == nil)
     {
         do
         {
             found = cptr->findid(CT_CARD, p_id, True);
-            if (found != NULL
+            if (found != nil
                 && found->countme(backgroundid, (state & CS_MARKED) != 0))
                 break;
             cptr = cptr->next();
@@ -1603,6 +1602,22 @@ MCCard *MCStack::getchildbyname(MCNameRef p_name)
 	else
 		cptr = cards;
     
+    uint2 t_num = 0;
+    if (MCU_stoui2(MCNameGetString(p_name), t_num))
+    {
+        if (t_num < 1)
+            return nil;
+        t_num--;
+        
+        do
+        {
+            if (cptr->countme(backgroundid, (state & CS_MARKED) != 0) && t_num-- == 0)
+                return cptr;
+            cptr = cptr->next();
+        }
+        while (cptr != cards);
+        return nil;
+    }
     MCCard *found = nil;
     do
     {
@@ -1830,22 +1845,41 @@ MCGroup *MCStack::getbackgroundbyid(uinteger_t p_id)
 MCGroup *MCStack::getbackgroundbyname(MCNameRef p_name)
 {
 	MCControl *cptr;
-	if (editing != NULL)
+	if (editing != nil)
 		cptr = savecontrols;
 	else
 		cptr = controls;
 	MCControl *startcptr = cptr;
-	if (cptr == NULL)
-		return NULL;
+	if (cptr == nil)
+		return nil;
+    
+    uint2 t_num = 0;
+    if (MCU_stoui2(MCNameGetString(p_name), t_num))
+    {
+        if (t_num < 1)
+            return nil;
+        t_num--;
+        
+        do
+        {
+            MCControl *foundobj = cptr->findnum(CT_GROUP, t_num);
+            if (foundobj != nil)
+                return (MCGroup *)foundobj;
+            cptr = cptr->next();
+        }
+        while (cptr != startcptr);
+        return nil;
+    }
+    
     do
     {
         MCControl *found = cptr->findname(CT_GROUP, MCNameGetOldString(p_name));
-        if (found != NULL)
+        if (found != nil)
             return (MCGroup *)found;
         cptr = cptr->next();
     }
     while (cptr != startcptr);
-    return NULL;
+    return nil;
 }
 
 void MCStack::addmnemonic(MCButton *button, KeySym p_key)
@@ -2587,16 +2621,16 @@ void MCStack::getstackfile(MCStringRef p_name, MCStringRef &r_name)
 		for (i = 0 ; i < nstackfiles ; i++)
 			if (MCStringIsEqualTo(stackfiles[i].stackname, p_name, kMCStringOptionCompareCaseless))
 			{
-				if (filename == NULL || MCStringGetCharAtIndex(stackfiles[i].filename, 0) == '/' || MCStringGetCharAtIndex(stackfiles[i].filename, 1) == ':')
+				if (MCStringIsEmpty(filename) || MCStringGetCharAtIndex(stackfiles[i].filename, 0) == '/' || MCStringGetCharAtIndex(stackfiles[i].filename, 1) == ':')
 				{
-					r_name = stackfiles[i].filename;
+					r_name = MCValueRetain(stackfiles[i].filename);
 					return;
 				}
 
 				uindex_t t_index;
 				if (!MCStringLastIndexOfChar(filename, PATH_SEPARATOR, -1, kMCStringOptionCompareExact, t_index))
 				{
-					r_name = filename;
+					r_name = MCValueRetain(filename);
 					return;
 				}
 				
