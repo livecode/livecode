@@ -895,15 +895,6 @@ void MCU_lower(char *dptr, const MCString &s)
 		*dptr++ = MCS_tolower(*sptr++);
 }
 
-void MCU_upper(char *dptr, const MCString &s)
-{
-	uint4 length = s.getlength();
-	const uint1 *sptr = (uint1 *)s.getstring();
-	uint4 i;
-	for (i = 0 ; i < length ; i++)
-		*dptr++ = MCS_toupper(*sptr++);
-}
-
 Boolean MCU_offset(const MCString &part, const MCString &whole,
                    uint4 &offset, Boolean casesensitive)
 {
@@ -1392,25 +1383,13 @@ void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &ep)
 	}
 }
 
-/* WRAPPER */ bool MCU_parsepoints(MCPoint *&r_points, uindex_t &r_noldpoints, MCStringRef p_data)
-{
-	uint2 t_noldpoints;
-	t_noldpoints = r_noldpoints;
- 
-	bool t_result;
-	t_result = (True == MCU_parsepoints(r_points, t_noldpoints, MCStringGetOldString(p_data)));
- 
-	r_noldpoints = t_noldpoints;
- 
-	return t_result;
-}
 
-Boolean MCU_parsepoints(MCPoint *&points, uint2 &noldpoints, const MCString &data)
+Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data)
 {
 	Boolean allvalid = True;
 	uint2 npoints = 0;
-	uint4 l = data.getlength();
-	const char *sptr = data.getstring();
+	uint4 l = MCStringGetLength(data);
+	const char *sptr = MCStringGetCString(data);
 	while (l)
 	{
 		Boolean done1, done2;
@@ -1430,7 +1409,7 @@ Boolean MCU_parsepoints(MCPoint *&points, uint2 &noldpoints, const MCString &dat
 			MCU_realloc((char **)&points, npoints, npoints + 1, sizeof(MCPoint));
 		points[npoints].x = i1;
 		points[npoints++].y = i2;
-		if (data.getlength() - l > 2 && *(sptr - 1) == '\n'
+		if (MCStringGetLength(data) - l > 2 && *(sptr - 1) == '\n'
 		        && *(sptr - 2) == '\n')
 		{
 			if (npoints + 1 > noldpoints)
@@ -1444,10 +1423,10 @@ Boolean MCU_parsepoints(MCPoint *&points, uint2 &noldpoints, const MCString &dat
 	return allvalid;
 }
 
-Boolean MCU_parsepoint(MCPoint &point, const MCString &data)
+Boolean MCU_parsepoint(MCPoint &point, MCStringRef data)
 {
-	const char *sptr = data.getstring();
-	uint4 l = data.getlength();
+	const char *sptr = MCStringGetCString(data);
+	uint4 l = MCStringGetLength(data);
 	Boolean done1, done2;
 	int2 i1= MCU_strtol(sptr, l, ',', done1);
 	int2 i2 = MCU_strtol(sptr, l, ',', done2);
@@ -1863,7 +1842,7 @@ void MCU_getshift(uint4 mask, uint2 &shift, uint2 &outmask)
 	outmask = j;
 }
 
-void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool)
+void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 {
 	Tool t_new_tool;
 	MColdtool = MCcurtool;
@@ -1875,7 +1854,7 @@ void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool)
 	}
 	else
 	{
-		/* UNCHECKED */ ctxt . GetEP() . copyasstringref(&t_tool_name);
+		t_tool_name = p_input;
 		if (MCStringGetLength(*t_tool_name) < 3)
 		{
 			ctxt . LegacyThrow(EE_CHOOSE_BADTOOL);
@@ -1916,7 +1895,7 @@ void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool)
 		MCstacks->restartidle();
 	if (MCtopstackptr != NULL)
 		MCtopstackptr->updatemenubar();
-	ctxt . GetObject()->message_with_args(MCM_new_tool, MCStringGetOldString(*t_tool_name));
+	ctxt . GetObject()->message_with_valueref_args(MCM_new_tool, *t_tool_name);
 }
 
 Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool, uint2 line, uint2 pos)
@@ -2275,11 +2254,12 @@ void MCU_get_color(MCExecPoint& ep, MCStringRef name, MCColor& c)
 	ep.setcolor(c, name != nil ? MCStringGetCString(name) : nil);
 }
 
+/*
 void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c)
 {
 	ep.setcolor(c, name);
 }
-
+*/
 void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
                 real8 tn, real8 oldn, MCSortnode *titems)
 {
@@ -2465,10 +2445,10 @@ uint1 MCU_languagetocharset(MCNameRef p_language)
 	return 0;
 }
 
-/* LEGACY */ uint1 MCU_languagetocharset(const char *langname)
+/* LEGACY */ uint1 MCU_languagetocharset(MCStringRef langname)
 {
 	MCNewAutoNameRef t_langname;
-	/* UNCHECKED */ MCNameCreateWithCString(langname, &t_langname);
+	/* UNCHECKED */  MCNameCreate(langname, &t_langname);
 	return MCU_languagetocharset(*t_langname);
 }
 

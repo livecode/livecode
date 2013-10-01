@@ -234,35 +234,43 @@ void MCExecPoint::grabbuffer(char *p_buffer, uindex_t p_length)
 
 bool MCExecPoint::reserve(uindex_t p_capacity, char*& r_buffer)
 {
-	MCStringRef t_string;
-	if (!MCStringCreateMutable(p_capacity, t_string))
+	MCDataRef t_string;
+	if (!MCDataCreateMutable(p_capacity, t_string))
 		return false;
 
+	MCDataPad(t_string, 0, p_capacity);
+	
 	MCValueRelease(value);
 	value = t_string;
-	r_buffer = (char *)MCStringGetNativeCharPtr(t_string);
+	r_buffer = (char *)MCDataGetBytePtr(t_string);
 	return true;
 }
 
 void MCExecPoint::commit(uindex_t p_size)
 {
-	MCStringRemove((MCStringRef)value, MCRangeMake(p_size, UINDEX_MAX));
+	MCDataRemove((MCDataRef)value, MCRangeMake(p_size, UINDEX_MAX));
 }
 
-bool MCExecPoint::modify(char*& r_buffer, uindex_t& r_length)
+/*bool MCExecPoint::modify(char*& r_buffer, uindex_t& r_length)
 {
-	converttomutablestring();
+	converttostring();
+	
+	MCDataRef t_data;
+	MCDataCreateWithBytes(MCStringGetNativeCharPtr((MCStringRef)value), MCStringGetLength((MCStringRef)value), t_data);
 
-	r_buffer = (char *)MCStringGetNativeCharPtr((MCStringRef)value);
-	r_length = MCStringGetLength((MCStringRef)value);
+	MCValueRelease(value);
+	MCDataMutableCopyAndRelease(t_data, (MCDataRef&)value);
+	
+	r_buffer = (char *)MCDataGetBytePtr((MCDataRef)value);
+	r_length = MCDataGetLength((MCDataRef)value);
 
 	return true;
 }
 
 void MCExecPoint::resize(uindex_t p_size)
 {
-	MCStringRemove((MCStringRef)value, MCRangeMake(p_size, UINDEX_MAX));
-}
+	MCDataRemove((MCDataRef)value, MCRangeMake(p_size, UINDEX_MAX));
+}*/
 
 //////////
 
@@ -456,22 +464,6 @@ Exec_stat MCExecPoint::ston(void)
 	return ES_NORMAL;
 }
 
-void MCExecPoint::lower(void)
-{
-	char *s;
-	uint32_t l;
-	modify(s, l);
-	MCU_lower(s, MCString(s, l));
-}
-
-void MCExecPoint::upper(void)
-{
-	char *s;
-	uint32_t l;
-	modify(s, l);
-	MCU_upper(s, MCString(s, l));
-}
-
 // MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
 Exec_stat MCExecPoint::setitemdel(uint2 l, uint2 p)
 {
@@ -635,9 +627,15 @@ void MCExecPoint::concat(int4 n, Exec_concat ec, Boolean first)
 
 void MCExecPoint::texttobinary(void)
 {
+	MCDataRef t_data;
+	copyasdataref(t_data);
+	
+	MCDataMutableCopyAndRelease(t_data, t_data);
+	
 	char *s;
 	uint32_t l;
-	modify(s, l);
+	s = (char *)MCDataGetBytePtr(t_data);
+	l = MCDataGetLength(t_data);
 
 	char *sptr, *dptr, *eptr;
 	sptr = s;
@@ -664,7 +662,9 @@ void MCExecPoint::texttobinary(void)
 				*dptr++ = *sptr++;
 	}
 
-	resize(l);
+	MCDataRemove(t_data, MCRangeMake(l, UINDEX_MAX));
+	
+	setvalueref(t_data);
 }
 
 void MCExecPoint::binarytotext(void)
@@ -697,15 +697,22 @@ void MCExecPoint::binarytotext(void)
 		}
 	}
 #elif defined(__CR__)
+	MCDataRef t_data;
+	copyasdataref(t_data);
+	
+	MCDataMutableCopyAndRelease(t_data, t_data);
+	
 	char *sptr;
 	uint32_t l;
-	modify(sptr, l);
+	sptr = (char *)MCDataGetBytePtr(t_data);
+	l = MCDataGetLength(t_data);
 	for (uint32_t i = 0 ; i < l ; i++)
 	{
 		if (*sptr == '\n')
 			*sptr = '\r';
 		sptr++;
 	}
+	setvalueref(t_data);
 #endif
 }
 
@@ -1025,18 +1032,6 @@ void MCExecPoint::concatreal(double p_value, Exec_concat p_sep, bool p_first)
 	concat(MCString(t_buffer, t_length), p_sep, p_first);
 
 	delete[] t_buffer;
-}
-
-/////////
-
-void MCExecPoint::replacechar(char p_from, char p_to)
-{
-	char *s;
-	uint32_t l;
-	modify(s, l);
-	for(uint32_t i = 0; i < l; i++)
-		if (s[i] == p_from)
-			s[i] = p_to;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

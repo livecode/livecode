@@ -271,10 +271,9 @@ void MCImage::prepareimage()
 
 void MCImage::openimage()
 {
-	if (!m_image_opened && m_rep != nil)
+	uindex_t t_width, t_height;
+	if (!m_image_opened && m_rep != nil && m_rep->GetGeometry(t_width, t_height))
 	{
-		uindex_t t_width, t_height;
-		/* UNCHECKED */ m_rep->GetGeometry(t_width, t_height);
 		MCRectangle t_old_rect;
 		t_old_rect = rect;
 		if (t_width != rect.width || t_height != rect.height)

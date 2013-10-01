@@ -2034,8 +2034,7 @@ void MCInterfaceGetTool(MCExecContext& ctxt, MCStringRef& r_value)
 
 void MCInterfaceSetTool(MCExecContext& ctxt, MCStringRef p_value)
 {
-	ctxt . GetEP() . setvalueref(p_value);
-	MCU_choose_tool(ctxt, T_UNDEFINED);
+	MCU_choose_tool(ctxt, p_value, T_UNDEFINED);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
