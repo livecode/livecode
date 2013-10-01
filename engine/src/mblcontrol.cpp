@@ -113,7 +113,6 @@ MCNativeControl::~MCNativeControl(void)
 	if (!MCStringIsEmpty(m_name))
 	{
 		MCValueRelease(m_name);
-		m_name = MCValueRetain(kMCEmptyString);
 	}
     
 	if (s_native_controls == this)
