@@ -31,20 +31,21 @@ use objc on mac,ios
 
 command revTestExternalTestWait
 
-command revTestExternalTestPost
-
 command revTestExternalTestArrays
+
+use java on android
+command revTestExternalTestPostAndSend
 
 use none on linux, windows, android
 use objc on mac, ios
 
-command revTestExternalTestObjcArrays
+/*command revTestExternalTestObjcArrays
 	in array as objc-array
 	return objc-array
 
 command revTestExternalTestObjcDictionaries
 	in dict as objc-dictionary
-	return objc-dictionary
+	return objc-dictionary*/
 
 use none on mac, linux, windows, android, ios
 use java on android
@@ -55,5 +56,3 @@ tail command revTestExternalAndroidButtonDestroy
 function revTestExternalRunActivity return c-string
 
 command revTestExternalRunOnSystemThread
-
-command revTestExternalObjectPostAndSend

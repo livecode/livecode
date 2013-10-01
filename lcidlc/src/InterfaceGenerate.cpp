@@ -687,6 +687,7 @@ static int64_t InterfaceResolveEnumElement(InterfaceRef self, NameRef p_name, Va
 	return 0;
 }
 
+#if NOT_USED
 static void InterfaceGenerateMethodStubContext(InterfaceRef self, CoderRef p_coder, Handler *p_handler, bool p_in)
 {
 	NameRef t_name;
@@ -831,7 +832,6 @@ static void InterfaceGenerateJavaMethodStub(InterfaceRef self, CoderRef p_coder,
 	CoderWriteLine(p_coder, "}");
 }
 
-#ifdef NOT_READY
 static void InterfaceGenerateNativeMethodStub(InterfaceRef self, CoderRef p_coder, Handler *p_handler)
 {
 	NameRef t_name;
@@ -918,7 +918,6 @@ static void InterfaceGenerateNativeMethodStub(InterfaceRef self, CoderRef p_code
 	
 	MCCStringFree(t_native_name);
 }
-#endif
 
 static void InterfaceGenerateJavaHandlerStubParameters(InterfaceRef self, CoderRef p_coder, Handler *p_handler, HandlerVariant *p_variant)
 {
@@ -932,18 +931,6 @@ static void InterfaceGenerateJavaHandlerStubParameters(InterfaceRef self, CoderR
 		
 		CoderWrite(p_coder, "%s p_param_%d", t_type, i);
 	}
-}
-
-static char *InterfaceGenerateJavaHandlerStubSignature(InterfaceRef self, Handler *p_handler, HandlerVariant *p_variant)
-{
-	char *t_signature;
-	t_signature = nil;
-	MCCStringAppend(t_signature, "(");
-	for(uindex_t i = 0; i < p_variant -> parameter_count; i++)
-		MCCStringAppend(t_signature, native_type_to_java_sig(NativeTypeFromName(p_variant -> parameters[i] . type)));
-	MCCStringAppend(t_signature, ")");
-	MCCStringAppend(t_signature, p_variant -> return_type != nil ? native_type_to_java_sig(NativeTypeFromName(p_variant -> return_type)) : "V");
-	return t_signature;
 }
 
 static void InterfaceGenerateJavaHandlerStub(InterfaceRef self, CoderRef p_coder, Handler *p_handler, HandlerVariant *p_variant)
@@ -1025,6 +1012,20 @@ static void InterfaceGenerateJavaHandlerStub(InterfaceRef self, CoderRef p_coder
 		
 	CoderWriteLine(p_coder, "}");
 
+}
+
+#endif
+
+static char *InterfaceGenerateJavaHandlerStubSignature(InterfaceRef self, Handler *p_handler, HandlerVariant *p_variant)
+{
+	char *t_signature;
+	t_signature = nil;
+	MCCStringAppend(t_signature, "(");
+	for(uindex_t i = 0; i < p_variant -> parameter_count; i++)
+		MCCStringAppend(t_signature, native_type_to_java_sig(NativeTypeFromName(p_variant -> parameters[i] . type)));
+	MCCStringAppend(t_signature, ")");
+	MCCStringAppend(t_signature, p_variant -> return_type != nil ? native_type_to_java_sig(NativeTypeFromName(p_variant -> return_type)) : "V");
+	return t_signature;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1252,10 +1253,10 @@ static void InterfaceGenerateVariant(InterfaceRef self, CoderRef p_coder, Handle
         
         for(uint32_t k = 0; k < p_variant -> parameter_count; k++)
         {
-            if (k != 0)
-                CoderWrite(p_coder, ", ", t_mapped_params[k] . var_name);
+			if (k > 0 || t_variant -> return_type_indirect)
+				CoderWrite(p_coder, ", ");
             CoderWrite(p_coder, "%s", t_mapped_params[k] . var_name);
-        }
+		}
 			
         CoderWrite(p_coder, ")");
 		
@@ -1301,11 +1302,7 @@ static void InterfaceGenerateVariant(InterfaceRef self, CoderRef p_coder, Handle
 			CoderWrite(p_coder, "__java_env -> CallStaticVoidMethod(s_java_class, s_method");
 		
         for(uint32_t k = 0; k < p_variant -> parameter_count; k++)
-		{
-			HandlerParameter *t_parameter;
-			t_parameter = &p_variant -> parameters[k];
-			CoderWrite(p_coder, ", param__%s", NameGetCString(t_parameter -> name));
-		}
+			CoderWrite(p_coder, ", %s", t_mapped_params[k] . var_name);
         
 		CoderWrite(p_coder, ")");
 		CoderEndStatement(p_coder);
