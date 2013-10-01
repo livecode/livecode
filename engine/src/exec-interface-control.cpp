@@ -266,85 +266,46 @@ void MCControl::SetBottomMargin(MCExecContext& ctxt, integer_t p_margin)
 	Redraw();
 }
 
-void MCControl::SetToolTip(MCExecContext& ctxt, MCStringRef p_tooltip, bool is_unicode)
+void MCControl::SetToolTip(MCExecContext& ctxt, MCStringRef p_tooltip)
 {
-	bool t_dirty;
-	t_dirty = true;
-
-	bool t_success;
-	t_success = true;
-
-	if (tooltip != MCtooltip->gettip())
-		t_dirty = false;
-	delete tooltip;
-
-	if (p_tooltip == nil)
-		tooltip = nil;
-	else
-	{
-		// MW-2012-03-13: [[ UnicodeToolTip ]] Convert the value to UTF-8 - either
-		//   from native or UTF-16 depending on what prop was set.
-
-		MCAutoStringRef t_tooltip;
-		
-		if (is_unicode)
-			t_success = MCU_unicodetomultibyte(p_tooltip, LCH_UTF8, &t_tooltip);
-		else
-			t_success = MCU_nativetoutf8(p_tooltip, &t_tooltip);
-
-		if (t_success)
-		{
-			tooltip = strclone(MCStringGetCString(*t_tooltip));
-			if (t_dirty && focused == this)
-			{
-				MCtooltip->settip(tooltip);
-				t_dirty = false;
-			}
-		}
-	}
-
-	if (t_success)
-	{
-		if (t_dirty)
-			Redraw();
+	if (MCStringIsEqualTo(tooltip, p_tooltip, kMCStringOptionCompareExact))
 		return;
-	}
-
-	ctxt . Throw();
+	
+	MCValueAssign(tooltip, p_tooltip);
+	
+	if (focused == this)
+		MCtooltip->settip(tooltip);
 }
 
 void MCControl::GetToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip)
 {
-	if (tooltip == nil)
-		return;
+	r_tooltip = MCValueRetain(tooltip);
+}
 
-	MCAutoStringRef t_tooltip;
-	if (MCStringCreateWithCString(tooltip, &t_tooltip) && MCU_utf8tonative(*t_tooltip, r_tooltip))
+void MCControl::GetUnicodeToolTip(MCExecContext& ctxt, MCDataRef& r_tooltip)
+{
+	// Convert the tooltip string into UTF-16 data
+	MCDataRef t_tooltip = nil;
+	if (MCStringEncode(tooltip, kMCStringEncodingUTF16, false, t_tooltip))
+	{
+		r_tooltip = t_tooltip;
 		return;
+	}
 	
-	ctxt . Throw();
+	ctxt.Throw();
 }
 
-void MCControl::SetToolTip(MCExecContext& ctxt, MCStringRef p_tooltip)
+void MCControl::SetUnicodeToolTip(MCExecContext& ctxt, MCDataRef p_tooltip)
 {
-	SetToolTip(ctxt, p_tooltip, false);
-}
-
-void MCControl::GetUnicodeToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip)
-{
-	if (tooltip == nil)
+	// Convert the supplied UTF-16 data into a string
+	MCStringRef t_tooltip = nil;
+	if (MCStringDecode(p_tooltip, kMCStringEncodingUTF16, false, t_tooltip))
+	{
+		MCValueAssign(tooltip, t_tooltip);
 		return;
-
-	MCAutoStringRef t_tooltip;
-	if (MCStringCreateWithCString(tooltip, &t_tooltip) && MCU_multibytetounicode(*t_tooltip, LCH_UTF8, r_tooltip))
-		return;
+	}
 	
-	ctxt . Throw();
-}
-
-void MCControl::SetUnicodeToolTip(MCExecContext& ctxt, MCStringRef p_tooltip)
-{
-	SetToolTip(ctxt, p_tooltip, true);
+	ctxt.Throw();
 }
 
 void MCControl::GetLayerMode(MCExecContext& ctxt, intenum_t& r_mode)

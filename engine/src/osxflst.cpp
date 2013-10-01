@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //
 
 #include "osxprefix.h"
+#include "osxprefix-legacy.h"
 
 #include "globdefs.h"
 #include "filedefs.h"

@@ -1001,6 +1001,14 @@ template<typename T> inline T MCValueRetain(T value)
 	return (T)MCValueRetain((MCValueRef)value);
 }
 
+// Utility function for assigning to MCValueRef vars.
+template<typename T> inline void MCValueAssign(T& dst, T src)
+{
+	MCValueRetain(src);
+	MCValueRelease(dst);
+	dst = src;
+}
+
 template<typename T> inline bool MCValueInter(T value, T& r_value)
 {
 	MCValueRef t_unique_value;
@@ -1070,6 +1078,8 @@ extern MCNumberRef kMCMinusOne;
 
 // Create a name using the given string.
 bool MCNameCreate(MCStringRef string, MCNameRef& r_name);
+// Create a name using chars.
+bool MCNameCreateWithChars(const unichar_t *chars, uindex_t count, MCNameRef& r_name);
 // Create a name using native chars.
 bool MCNameCreateWithNativeChars(const char_t *chars, uindex_t count, MCNameRef& r_name);
 
@@ -1174,29 +1184,52 @@ extern MCStringRef kMCFalseString;
 
 /////////
 
+// Creates an MCStringRef wrapping the given constant c-string. Note that
+// the c-string must be a C static string.
+MCStringRef MCSTR(const char *string);
+
 // Create an immutable string from the given bytes, interpreting them using
 // the specified encoding.
-bool MCStringCreateWithBytes(const byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, MCStringRef& r_string);
+bool MCStringCreateWithBytes(const byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
+bool MCStringCreateWithBytesAndRelease(byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
 
 // Create an immutable string from the given unicode char sequence.
 bool MCStringCreateWithChars(const unichar_t *chars, uindex_t char_count, MCStringRef& r_string);
+bool MCStringCreateWithCharsAndRelease(unichar_t *chars, uindex_t char_count, MCStringRef& r_string);
 
 // Create an immutable string from the given NUL terminated unicode char sequence.
 bool MCStringCreateWithWString(const unichar_t *wstring, MCStringRef& r_string);
+bool MCStringCreateWithWStringAndRelease(unichar_t *wstring, MCStringRef& r_string);
 
 // Create an immutable string from the given native char sequence.
 bool MCStringCreateWithNativeChars(const char_t *chars, uindex_t char_count, MCStringRef& r_string);
 bool MCStringCreateWithNativeCharsAndRelease(char_t *chars, uindex_t char_count, MCStringRef& r_string);
 
+// Create an immutable string from the given (native) c-string.
+bool MCStringCreateWithCString(const char_t *cstring, MCStringRef& r_string);
+bool MCStringCreateWithCStringAndRelease(char_t *cstring, MCStringRef& r_string);
+
 #ifdef __HAS_CORE_FOUNDATION__
 // Create a string from a CoreFoundation string object.
 bool MCStringCreateWithCFString(CFStringRef cf_string, MCStringRef& r_string);
+bool MCStringCreateWithCFStringAndRelease(CFStringRef cf_string, MCStringRef& r_string);
 #endif
 
 // Create a mutable string with the given initial capacity. Note that the
 // initial capacity is only treated as a hint, the string will extend itself
 // as necessary.
 bool MCStringCreateMutable(uindex_t initial_capacity, MCStringRef& r_string);
+
+/////////
+
+// Encode the given string with the specified encoding. Characters which cannot
+// be represented in the target encoding are replaced by '?'.
+bool MCStringEncode(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, MCDataRef& r_data);
+bool MCStringEncodeAndRelease(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, MCDataRef& r_data);
+
+// Decode the given data, intepreting in the given encoding.
+bool MCStringDecode(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
+bool MCStringDecodeAndRelease(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
 
 /////////
 
@@ -1238,6 +1271,15 @@ bool MCStringMutableCopyAndRelease(MCStringRef string, MCRange range, MCStringRe
 // Returns true if the string is mutable
 bool MCStringIsMutable(const MCStringRef string);
 
+// Returns true if the string is the empty string.
+bool MCStringIsEmpty(MCStringRef string);
+
+// Returns true if the the string only requires native characters to represent.
+bool MCStringIsNative(MCStringRef string);
+
+// Returns true if the string only requires BMP characters to represent.
+bool MCStringIsSimple(MCStringRef string);
+
 /////////
 
 // Returns the number of chars that make up the string. Note that a char is
@@ -1258,10 +1300,6 @@ const unichar_t *MCStringGetCharPtr(MCStringRef string);
 // in native encoding.
 const char_t *MCStringGetNativeCharPtr(MCStringRef string);
 
-// Return a pointer to the byte backing-store if possible. For this method to
-// succeed the string must be binary (native), otherwise nil will be returned.
-const byte_t *MCStringGetBytePtr(MCStringRef string);
-
 // Returns the char at the given index.
 unichar_t MCStringGetCharAtIndex(MCStringRef string, uindex_t index);
 
@@ -1278,7 +1316,13 @@ uindex_t MCStringGetChars(MCStringRef string, MCRange range, unichar_t *chars);
 // that would be generated is returned. Any unmappable chars get generated as '?'.
 uindex_t MCStringGetNativeChars(MCStringRef string, MCRange range, char_t *chars);
 
+
 /////////
+
+// Converts the contents of the string to bytes using the given encoding. The caller
+// takes ownership of the byte array. Note that the returned array is NUL terminated,
+// but this is not reflected in the byte count.
+bool MCStringConvertToBytes(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, byte_t*& r_bytes, uindex_t& r_byte_count);
 
 // Converts the contents of the string to unicode. The caller takes ownership of the
 // char array. Note that the returned array is NUL terminated, but this is not
@@ -1289,6 +1333,29 @@ bool MCStringConvertToUnicode(MCStringRef string, unichar_t*& r_chars, uindex_t&
 // The caller takes ownership of the char array. Note that the returned array is NUL
 // terminated, but this is not reflected in the char count.
 bool MCStringConvertToNative(MCStringRef string, char_t*& r_chars, uindex_t& r_char_count);
+
+// Converts the contents of the string to UTF-8. The caller takes ownership of the
+// char array. Note that the returned array is NUL terminated but this is not
+// reflected in the char count.
+bool MCStringConvertToUTF8(MCStringRef string, char*& r_chars, uindex_t& r_char_count);
+
+// Converts the content to char_t*
+bool MCStringConvertToCString(MCStringRef string, char*& r_cstring);
+
+// Converts the content to wchar_t*
+bool MCStringConvertToWString(MCStringRef string, unichar_t*& r_wstring);
+
+// Converts the content to unicode_t*
+bool MCStringConvertToUTF8String(MCStringRef string, char*& r_utf8string);
+
+#if defined(__MAC__) || defined (__IOS__)
+// Converts the content to CFStringRef
+bool MCStringConvertToCFStringRef(MCStringRef string, CFStringRef& r_cfstring);
+#endif
+
+#ifdef __WINDOWS__
+bool MCStringConvertToBSTR(MCStringRef string, BSTR& r_bstr);
+#endif
 
 /////////
 
@@ -1431,7 +1498,7 @@ bool MCStringPad(MCStringRef string, uindex_t at, uindex_t count, MCStringRef va
 //
 // Note that 'string' must be mutable.
 bool MCStringFindAndReplace(MCStringRef string, MCStringRef pattern, MCStringRef replacement, MCStringOptions options);
-bool MCStringFindAndReplaceChar(MCStringRef string, char_t pattern, char_t replacement, MCStringOptions options);
+bool MCStringFindAndReplaceChar(MCStringRef string, codepoint_t pattern, codepoint_t replacement, MCStringOptions options);
 
 /////////
 
@@ -1453,8 +1520,12 @@ bool MCStringSplitColumn(MCStringRef string, MCStringRef col_del, MCStringRef ro
 //
 // Immutable data methods
 
+extern MCDataRef kMCEmptyData;
+
 bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
 bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
+
+bool MCDataIsEmpty(MCDataRef p_data);
 
 uindex_t MCDataGetLength(MCDataRef p_data);
 const byte_t *MCDataGetBytePtr(MCDataRef p_data);
@@ -1488,6 +1559,8 @@ bool MCDataPrependByte(MCDataRef r_data, byte_t p_byte);
 bool MCDataInsert(MCDataRef r_data, uindex_t p_at, MCDataRef p_new_data);
 bool MCDataRemove(MCDataRef r_data, MCRange p_range);
 bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data);
+
+bool MCDataPad(MCDataRef data, byte_t byte, uindex_t count);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

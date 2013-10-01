@@ -172,24 +172,13 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 			//   stack title will be UTF-8 already.
 			if (strncmp(version, "5.5", 3) >= 0)
 			{
-				if ((stat = IO_read_string(title, stream)) != IO_NORMAL)
+				if ((stat = IO_read_stringref_utf8(title, stream)) != IO_NORMAL)
 					return stat;
 			}
 			else
 			{
-				// MW-2007-07-06: [[ Bug 3226 ]] Updated to take into account 'title' being
-				//   stored as a UTF-8 string.
-				char *t_native_title;
-
-				if ((stat = IO_read_string(t_native_title, stream)) != IO_NORMAL)
+				if ((stat = IO_read_stringref(title, stream, false)) != IO_NORMAL)
 					return stat;
-
-				MCExecPoint ep;
-				ep . setsvalue(t_native_title);
-				ep . nativetoutf8();
-				title = ep . getsvalue() . clone();
-
-				delete t_native_title;
 			}
 		}
 		if (flags & F_DECORATIONS)
@@ -218,7 +207,7 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 		if (maxwidth == 1280 && maxheight == 1024)
 			maxwidth = maxheight = MAXUINT2;
 	}
-	if ((stat = IO_read_string(externalfiles, stream)) != IO_NORMAL)
+	if ((stat = IO_read_stringref(externalfiles, stream, false)) != IO_NORMAL)
 		return stat;
 	if (strncmp(version, "1.3", 3) > 0)
 	{
@@ -257,13 +246,13 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 		linkatts = new Linkatts;
 		memset(linkatts, 0, sizeof(Linkatts));
 		if ((stat = IO_read_mccolor(linkatts->color, stream)) != IO_NORMAL
-		        || (stat = IO_read_stringref(linkatts->colorname, stream)) != IO_NORMAL)
+		        || (stat = IO_read_stringref(linkatts->colorname, stream, false)) != IO_NORMAL)
 			return stat;
 		if ((stat = IO_read_mccolor(linkatts->hilitecolor, stream)) != IO_NORMAL
-		        || (stat=IO_read_stringref(linkatts->hilitecolorname, stream))!=IO_NORMAL)
+		        || (stat=IO_read_stringref(linkatts->hilitecolorname, stream, false))!=IO_NORMAL)
 			return stat;
 		if ((stat = IO_read_mccolor(linkatts->visitedcolor, stream)) != IO_NORMAL
-		        || (stat=IO_read_stringref(linkatts->visitedcolorname, stream))!=IO_NORMAL)
+		        || (stat=IO_read_stringref(linkatts->visitedcolorname, stream, false))!=IO_NORMAL)
 			return stat;
 		if ((stat = IO_read_uint1(&linkatts->underline, stream)) != IO_NORMAL)
 			return stat;
@@ -492,6 +481,11 @@ IO_stat MCStack::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		flags |= F_LINK_ATTS;
 	else
 		flags &= ~F_LINK_ATTS;
+	
+	if (!MCStringIsEmpty(title))
+		flags |= F_TITLE;
+	else
+		flags &= ~F_TITLE;
 
 	// MW-2013-03-28: Make sure we never save a stack with F_CANT_STANDALONE set.
 	flags &= ~F_CANT_STANDALONE;
@@ -555,26 +549,13 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 		//   write out UTF-8 directly.
 		if (MCstackfileversion >= 5500)
 		{
-			if ((stat = IO_write_string(title, stream)) != IO_NORMAL)
+			if ((stat = IO_write_stringref_utf8(title, stream)) != IO_NORMAL)
 				return stat;
 		}
 		else
 		{
-			// MW-2007-07-06: [[ Bug 3226 ]] Updated to take into account 'title' being
-			//   stored as a UTF-8 string.
-			MCExecPoint ep;
-			char *t_native_title;
-			ep . setsvalue(title);
-			ep . utf8tonative();
-			t_native_title = ep . getsvalue() . clone();
-
-			if ((stat = IO_write_string(t_native_title, stream)) != IO_NORMAL)
-			{
-				delete t_native_title;
+			if ((stat = IO_write_stringref(title, stream, false)) != IO_NORMAL)
 				return stat;
-			}
-
-			delete t_native_title;
 		}
 	}
 	if (flags & F_DECORATIONS)
@@ -596,7 +577,7 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_uint2(maxheight, stream)) != IO_NORMAL)
 			return stat;
 	}
-	if ((stat = IO_write_string(externalfiles, stream)) != IO_NORMAL)
+	if ((stat = IO_write_stringref(externalfiles, stream, false)) != IO_NORMAL)
 		return stat;
 
 	// MW-2012-02-17: [[ LogFonts ]] Save the stack's logical font table.
@@ -618,13 +599,13 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (flags & F_LINK_ATTS)
 	{
 		if ((stat = IO_write_mccolor(linkatts->color, stream)) != IO_NORMAL
-		        || (stat = IO_write_stringref(linkatts->colorname, stream)) != IO_NORMAL)
+		        || (stat = IO_write_stringref(linkatts->colorname, stream, false)) != IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_mccolor(linkatts->hilitecolor, stream)) != IO_NORMAL
-		        || (stat=IO_write_stringref(linkatts->hilitecolorname, stream))!=IO_NORMAL)
+		        || (stat=IO_write_stringref(linkatts->hilitecolorname, stream, false))!=IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_mccolor(linkatts->visitedcolor, stream)) != IO_NORMAL
-		        || (stat=IO_write_stringref(linkatts->visitedcolorname, stream))!=IO_NORMAL)
+		        || (stat=IO_write_stringref(linkatts->visitedcolorname, stream, false))!=IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_uint1(linkatts->underline, stream)) != IO_NORMAL)
 			return stat;
@@ -901,14 +882,14 @@ MCControl *MCStack::getcontrolid(Chunk_term type, uint4 inid, bool p_recurse)
 	return NULL;
 }
 
-MCControl *MCStack::getcontrolname(Chunk_term type, const MCString &s)
+MCControl *MCStack::getcontrolname(Chunk_term type, MCStringRef s)
 {
 	if (controls == NULL)
 		return NULL;
 	MCControl *tobj = controls;
 	do
 	{
-		MCControl *foundobj = tobj->findname(type, s);
+		MCControl *foundobj = tobj->findname(type, MCStringGetOldString(s));
 		if (foundobj != NULL)
 			return foundobj;
 		tobj = (MCControl *)tobj->next();
@@ -937,10 +918,10 @@ MCObject *MCStack::getAVid(Chunk_term type, uint4 inid)
 	return NULL;
 }
 
-/* LEGACY */ MCObject *MCStack::getAVname(Chunk_term type, const MCString &s)
+/* LEGACY */ MCObject *MCStack::getAVname(Chunk_term type, MCStringRef s)
 {
 	MCNewAutoNameRef t_name;
-	/* UNCHECKED */ MCNameCreateWithOldString(s, &t_name);
+	/* UNCHECKED */ MCNameCreate(s, &t_name);
 	MCObject *t_object;
 	if (!getAVname(type, *t_name, t_object))
 		return nil;
@@ -1429,7 +1410,7 @@ MCObject *MCStack::getobjid(Chunk_term type, uint4 inid)
 		return MCdispatcher->getobjid(type, inid);
 }
 
-MCObject *MCStack::getsubstackobjname(Chunk_term type, const MCString &s)
+MCObject *MCStack::getsubstackobjname(Chunk_term type, MCStringRef s)
 {
 	MCStack *sptr = this;
 	MCObject *optr = NULL;
@@ -1459,12 +1440,8 @@ MCObject *MCStack::getsubstackobjname(Chunk_term type, const MCString &s)
 	return NULL;
 }
 
-/* WRAPPER */ MCObject *MCStack::getobjname(Chunk_term type, MCStringRef p_name)
-{
-	return getobjname(type, MCStringGetOldString(p_name));
-}
 
-MCObject *MCStack::getobjname(Chunk_term type, const MCString& s)
+MCObject *MCStack::getobjname(Chunk_term type, MCStringRef s)
 {
 	MCObject *optr = NULL;
 	uint4 iid;

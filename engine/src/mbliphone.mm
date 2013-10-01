@@ -402,10 +402,10 @@ MCNameRef MCIPhoneSystem::GetProcessor(void)
 
 char *MCIPhoneSystem::GetAddress(void)
 {
-	extern char *MCcmd;
+	extern MCStringRef MCcmd;
 	char *t_address;
-	t_address = new char[strlen(MCcmd) + strlen("iphone:") + 1];
-	sprintf(t_address, "iphone:%s", MCcmd);
+	t_address = new char[MCStringGetLength(MCcmd) + strlen("iphone:") + 1];
+	sprintf(t_address, "iphone:%s", MCStringGetCString(MCcmd));
 	return t_address;
 }
 
@@ -423,44 +423,44 @@ void MCIPhoneSystem::SetEnv(const char *name, const char *value)
 	setenv(name, value, 1);
 }
 
-char *MCIPhoneSystem::GetEnv(const char *name)
+void MCIPhoneSystem::GetEnv(MCStringRef p_name, MCStringRef& r_env)
 {
-	return getenv(name);
+	/*UNCHECKED*/ MCStringCreateWithCString(getenv(MCStringGetCString(p_name)), r_env);
 }
 
-bool MCIPhoneSystem::CreateFolder(const char *p_path)
+bool MCIPhoneSystem::CreateFolder(MCStringRef p_path)
 {
-	return mkdir(p_path, 0777) == 0;
+	return mkdir(MCStringGetCString(p_path), 0777) == 0;
 }
 
-bool MCIPhoneSystem::DeleteFolder(const char *p_path)
+bool MCIPhoneSystem::DeleteFolder(MCStringRef p_path)
 {
-	return rmdir(p_path) == 0;
+	return rmdir(MCStringGetCString(p_path)) == 0;
 }
 
-bool MCIPhoneSystem::DeleteFile(const char *p_path)
+bool MCIPhoneSystem::DeleteFile(MCStringRef p_path)
 {
-	return unlink(p_path) == 0;
+	return unlink(MCStringGetCString(p_path)) == 0;
 }
 
-bool MCIPhoneSystem::RenameFileOrFolder(const char *p_old_name, const char *p_new_name)
+bool MCIPhoneSystem::RenameFileOrFolder(MCStringRef p_old_name, MCStringRef p_new_name)
 {
-	return rename(p_old_name, p_new_name) == 0;
+	return rename(MCStringGetCString(p_old_name), MCStringGetCString(p_new_name)) == 0;
 }
 
-bool MCIPhoneSystem::BackupFile(const char *p_old_name, const char *p_new_name)
+bool MCIPhoneSystem::BackupFile(MCStringRef p_old_name, MCStringRef p_new_name)
 {
-	return rename(p_old_name, p_new_name) == 0;
+	return rename(MCStringGetCString(p_old_name), MCStringGetCString(p_new_name)) == 0;
 }
 
-bool MCIPhoneSystem::UnbackupFile(const char *p_old_name, const char *p_new_name)
+bool MCIPhoneSystem::UnbackupFile(MCStringRef p_old_name, MCStringRef p_new_name)
 {
-	return rename(p_old_name, p_new_name) == 0;
+	return rename(MCSTringGetCString(p_old_name), MCStringGetCString(p_new_name)) == 0;
 }
 
-bool MCIPhoneSystem::CreateAlias(const char *p_target, const char *p_alias)
+bool MCIPhoneSystem::CreateAlias(MCStringRef p_target, MCStringRef p_alias)
 {
-	return symlink(p_target, p_alias) == 0;
+	return symlink(MCStringGetCString(p_target), MCStringGetCString(p_alias)) == 0;
 }
 
 char *MCIPhoneSystem::ResolveAlias(const char *p_target)
@@ -477,9 +477,9 @@ bool MCIPhoneSystem::GetCurrentFolder(MCStringRef& r_path)
 	return MCStringCreateWithCString(*t_folder, r_path);
 }
 
-bool MCIPhoneSystem::SetCurrentFolder(const char *p_path)
+bool MCIPhoneSystem::SetCurrentFolder(MCStringRef p_path)
 {
-	return chdir(p_path) == 0;
+	return chdir(MCStringGetCString(p_path)) == 0;
 }
 
 bool MCIPhoneSystem::FileExists(const char *p_path) 
@@ -506,10 +506,10 @@ bool MCIPhoneSystem::FolderExists(const char *p_path)
 	return false;
 }
 
-bool MCIPhoneSystem::FileNotAccessible(const char *p_path)
+bool MCIPhoneSystem::FileNotAccessible(MCStringRef p_path)
 {
 	struct stat t_info;
-	if (stat(p_path, &t_info) != 0)
+	if (stat(MCStringGetCString(p_path), &t_info) != 0)
 		return false;
 	
 	if ((t_info . st_mode & S_IFDIR) != 0)
@@ -521,9 +521,9 @@ bool MCIPhoneSystem::FileNotAccessible(const char *p_path)
 	return false;
 }
 
-bool MCIPhoneSystem::ChangePermissions(const char *p_path, uint2 p_mask)
+bool MCIPhoneSystem::ChangePermissions(MCStringRef p_path, uint2 p_mask)
 {
-	return chmod(p_path, p_mask) == 0;
+	return chmod(MCStringGetCString(p_path), p_mask) == 0;
 }
 
 uint2 MCIPhoneSystem::UMask(uint2 p_mask)
@@ -531,14 +531,14 @@ uint2 MCIPhoneSystem::UMask(uint2 p_mask)
 	return umask(p_mask);
 }
 
-MCSystemFileHandle *MCIPhoneSystem::OpenFile(const char *p_path, uint32_t p_mode, bool p_map)
+MCSystemFileHandle *MCIPhoneSystem::OpenFile(MCStringRef p_path, uint32_t p_mode, bool p_map)
 {
 	static const char *s_modes[] = { "r", "w", "r+", "a" };
 
 	MCSystemFileHandle *t_handle;
-	t_handle = MCStdioFileHandle::Open(p_path, s_modes[p_mode & 0xff]);
+	t_handle = MCStdioFileHandle::Open(MCStringGetCString(p_path), s_modes[p_mode & 0xff]);
 	if (t_handle == NULL && p_mode == kMCSystemFileModeUpdate)
-		t_handle = MCStdioFileHandle::Open(p_path, "w+");
+		t_handle = MCStdioFileHandle::Open(MCStringGetCString(p_path), "w+");
 	
 	return t_handle;
 }
@@ -554,7 +554,7 @@ MCSystemFileHandle *MCIPhoneSystem::OpenStdFile(uint32_t i)
         return MCStdioFileDescriptorHandle::OpenFd(i, s_modes[i]);
 }
 
-MCSystemFileHandle *MCIPhoneSystem::OpenDevice(const char *p_path, uint32_t p_mode, const char *p_control_string)
+MCSystemFileHandle *MCIPhoneSystem::OpenDevice(MCStringRef p_path, uint32_t p_mode, MCStringRef p_control_string)
 {
 	return NULL;
 }
@@ -595,8 +595,8 @@ char *MCIPhoneSystem::GetStandardFolder(const char *p_folder)
 	}
 	else if (strcasecmp(p_folder, "engine") == 0)
 	{
-		extern char *MCcmd;
-		t_path = my_strndup(MCcmd, strrchr(MCcmd, '/') - MCcmd);
+		extern MCStringRef MCcmd;
+		t_path = my_strndup(MCStringGetCString(MCcmd), strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd));
 	}
 	else if (strcasecmp(p_folder, "library") == 0)
 	{
@@ -609,29 +609,27 @@ char *MCIPhoneSystem::GetStandardFolder(const char *p_folder)
 
 //////////
 
-void *MCIPhoneSystem::LoadModule(const char *p_cstring_path)
+void *MCIPhoneSystem::LoadModule(MCStringRef p_path)
 {
-    MCAutoStringRef t_path;
-    /* UNCHECKED */ MCStringCreateWithCString(p_cstring_path, &t_path);
     
 	void *t_module;
-	t_module = load_module(MCStringGetCString(*t_path));
+	t_module = load_module(MCStringGetCString(p_path));
 	if (t_module != NULL)
 		return t_module;
     
 	MCAutoStringRef t_resolved_path;
-	/* UNCHECKED */ ResolveNativePath(*t_path, &t_resolved_path);
+	/* UNCHECKED */ ResolveNativePath(p_path, &t_resolved_path);
     t_module = dlopen(MCStringGetCString(*t_resolved_path), RTLD_LAZY);
     
 	return t_module;
 }
 
-void *MCIPhoneSystem::ResolveModuleSymbol(void *p_module, const char *p_symbol)
+void *MCIPhoneSystem::ResolveModuleSymbol(void *p_module, MCStringRef p_symbol)
 {
 	if (is_static_module(p_module))
-		return resolve_symbol(p_module, p_symbol);
+		return resolve_symbol(p_module, MCStringGetCString(p_symbol));
 
-	return dlsym(p_module, p_symbol);
+	return dlsym(p_module, MCStringGetCString(p_symbol));
 }
 
 void MCIPhoneSystem::UnloadModule(void *p_module)
@@ -734,7 +732,7 @@ bool MCIPhoneSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_callb
 	return t_success;
 }
 
-bool MCIPhoneSystem::Shell(const char *p_cmd, uint32_t p_cmd_length, void*& r_data, uint32_t& r_data_length, int& r_retcode)
+bool MCIPhoneSystem::Shell(MCStringRef p_cmd, uint32_t p_cmd_length, MCDataRef & r_data, int& r_retcode)
 {
 	int t_to_parent[2];
 	pid_t t_pid;
@@ -779,7 +777,7 @@ bool MCIPhoneSystem::Shell(const char *p_cmd, uint32_t p_cmd_length, void*& r_da
 			// Close the reading side of the pipe <parent -> child>
 			close(t_to_child[0]);
 			// Write the command to it
-			write(t_to_child[1], p_cmd, p_cmd_length);
+			write(t_to_child[1], MCStringGetCString(p_cmd), MCStringGetLength(p_cmd));
 			write(t_to_child[1], "\n", 1);
 			
 			// Close the writing side of the pipe <parent -> child>
@@ -873,8 +871,8 @@ bool MCIPhoneSystem::Shell(const char *p_cmd, uint32_t p_cmd_length, void*& r_da
 	
 	if (t_success)
 	{
-		r_data = realloc(t_data, t_length);
-		r_data_length = t_length;
+		/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)realloc(t_data, t_length), t_length, r_data);
+		
 		r_retcode = WEXITSTATUS(t_wait_stat);
 	}
 	else

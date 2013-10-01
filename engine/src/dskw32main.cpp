@@ -278,6 +278,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	//   errno pointer (we're executing script on a different fiber than before).
 	void *t_bottom;
 	MCstackbottom = (char *)&t_bottom;
+	
 	g_mainthread_errno = _errno();
 	int r = X_close();
 

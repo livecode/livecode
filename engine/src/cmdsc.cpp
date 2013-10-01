@@ -1627,7 +1627,7 @@ if (var != NULL)
 			return ES_ERROR;
 		}
 		MCAutoStringRef t_target;
-		/*UNCHECKED*/ ep.copyasstringref(&t_target);
+		/* UNCHECKED */ ep.copyasstringref(&t_target);
 		if (url)
 			MCNetworkExecDeleteUrl(ctxt, *t_target);
 		else
@@ -2509,8 +2509,8 @@ Exec_stat MCPost::exec(MCExecPoint &ep)
 		MCeerror->add(EE_POST_BADSOURCEEXP, line, pos);
 		return ES_ERROR;
 	}
-	MCAutoStringRef t_data;
-	/* UNCHECKED */ ep . copyasstringref(&t_data);
+	MCAutoDataRef t_data;
+	/* UNCHECKED */ ep . copyasdataref(&t_data);
 
 	if (dest->eval(ep) != ES_NORMAL)
 	{
@@ -2871,7 +2871,7 @@ if (MCsecuremode & MC_SECUREMODE_PRIVACY)
 		return ES_ERROR;
 	}
 	char *soundfile = MCS_get_canonical_path(ep.getcstring());
-	MCtemplateplayer->recordsound(soundfile);
+-   MCtemplateplayer->recordsound(soundfile);
 	return ES_NORMAL;
 #endif /* MCRecord */
 
@@ -3814,7 +3814,7 @@ Parse_stat MCSelect::parse(MCScriptPoint &sp)
 			(PE_SELECT_NOTARGET, sp);
 			return PS_ERROR;
 		}
-		if (sp.gettoken() == "empty")
+		if (sp.token_is_cstring("empty"))
 			return PS_NORMAL;
 		if (sp.lookup(SP_FACTOR, te) == PS_NORMAL && te->type == TT_PREP)
 		{

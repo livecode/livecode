@@ -125,15 +125,15 @@ uint32_t MCEncodedImageRep::GetDataCompression()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCReferencedImageRep::MCReferencedImageRep(const char *p_file_name)
+MCReferencedImageRep::MCReferencedImageRep(MCStringRef p_file_name)
 {
-	/* UNCHECKED */ MCCStringClone(p_file_name, m_file_name);
+	m_file_name = MCValueRetain(p_file_name);
 	m_url_data = nil;
 }
 
 MCReferencedImageRep::~MCReferencedImageRep()
 {
-	MCCStringFree(m_file_name);
+	MCValueRelease(m_file_name);
 	MCMemoryDeallocate(m_url_data);
 }
 
@@ -141,14 +141,14 @@ bool MCReferencedImageRep::GetDataStream(IO_handle &r_stream)
 {
 	IO_handle t_stream = nil;
 	if (MCSecureModeCanAccessDisk())
-		t_stream = MCS_open(m_file_name, IO_READ_MODE, false, false, 0);
+		t_stream = MCS_open(m_file_name, kMCSOpenFileModeRead, false, false, 0);
 
 	if (t_stream == nil)
 	{
 		if (m_url_data == nil)
 		{
 			MCExecPoint ep(MCdefaultstackptr, nil, nil);
-			ep.setsvalue(m_file_name);
+			ep.setvalueref(m_file_name);
 			MCU_geturl(ep);
 			if (ep.getsvalue().getlength() == 0)
 				return false;
@@ -157,7 +157,7 @@ bool MCReferencedImageRep::GetDataStream(IO_handle &r_stream)
 			m_url_data_size = ep.getsvalue().getlength();
 		}
 
-		t_stream = MCS_fakeopen(MCString((char*)m_url_data, m_url_data_size));
+		t_stream = MCS_fakeopen(MCString((const char *)m_url_data, m_url_data_size));
 	}
 
 	if (t_stream != nil)
@@ -181,7 +181,7 @@ MCResidentImageRep::~MCResidentImageRep()
 
 bool MCResidentImageRep::GetDataStream(IO_handle &r_stream)
 {
-	r_stream = MCS_fakeopen(MCString((char*)m_data, m_size));
+	r_stream = MCS_fakeopen(MCString((const char *)m_data, m_size));
 	return r_stream != nil;
 }
 
@@ -215,9 +215,11 @@ bool MCVectorImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_fram
 bool MCVectorImageRep::CalculateGeometry(uindex_t &r_width, uindex_t &r_height)
 {
 	bool t_success = true;
+    MCAutoDataRef t_data;
 
 	IO_handle t_stream = nil;
-	t_success = nil != (t_stream = MCS_fakeopen(MCString((char*)m_data, m_size)));
+    if (t_success)
+        t_success = nil != (t_stream = MCS_fakeopen(MCString((const char *)m_data, m_size)));
 
 	if (t_success)
 		t_success = MCImageGetMetafileGeometry(t_stream, r_width, r_height);

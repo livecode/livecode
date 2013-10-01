@@ -894,7 +894,7 @@ void MCStringsEvalIsAmongTheTokensOf(MCExecContext& ctxt, MCStringRef p_token, M
 	Parse_stat ps = sp.nexttoken();
 	while (ps != PS_ERROR && ps != PS_EOF)
 	{
-		if (MCStringIsEqualToOldString(p_token, sp.gettoken(), t_options))
+		if (MCStringIsEqualToOldString(p_token, sp.gettoken_oldstring(), t_options))
 		{
 			r_result = true;
 			return;
@@ -1429,8 +1429,7 @@ int4 MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCString
             
         case CT_TOKEN:
         {
-            // TODO (Unicode)
-            MCScriptPoint sp(p_string);
+            MCScriptPoint sp(MCStringGetOldString(p_string));
             Parse_stat ps = sp.nexttoken();
             while (ps != PS_ERROR && ps != PS_EOF)
             {
@@ -1648,17 +1647,16 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             
         case CT_TOKEN:
         {
-            MCScriptPoint sp(p_string);
+            MCScriptPoint sp(MCStringGetOldString(p_string));
             MCerrorlock++;
             
             Parse_stat ps = sp.nexttoken();
             while (p_first-- && ps != PS_ERROR && ps != PS_EOF)
                 ps = sp.nexttoken();
-            r_start = sp.gettoken().getstring() - sp.getscript();
+            r_start = sp.getpos();
             while (--p_count && ps != PS_ERROR && ps != PS_EOF)
                 ps = sp.nexttoken();
-            r_end = sp.gettoken().getstring() + sp.gettoken().getlength()
-            - sp.getscript();
+            r_end = sp.getpos() + MCStringGetLength(sp.gettoken_stringref());
             MCerrorlock--;
         }
             return;

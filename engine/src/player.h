@@ -81,7 +81,7 @@ enum
 class MCPlayer : public MCControl
 {
 	MCPlayer *nextplayer;
-	char *filename;
+	MCStringRef filename;
 	uint2 framerate;
 	Boolean disposable;
 	Boolean istmpfile;
@@ -89,7 +89,7 @@ class MCPlayer : public MCControl
 	real8 rate;
 	uint4 starttime;
 	uint4 endtime;
-	char *userCallbackStr;  //string contains user movie callbacks
+	MCStringRef userCallbackStr;  //string contains user movie callbacks
 	uint2 formattedwidth;
 	uint2 formattedheight;
 	uint2 loudness;
@@ -107,8 +107,8 @@ class MCPlayer : public MCControl
 	static QTEffect *qteffects;
 	static uint2 neffects;
 	static void *sgSoundComp;
-	static const char  *recordtempfile;
-	static char  *recordexportfile;
+	static MCStringRef recordtempfile;
+	static MCStringRef recordexportfile;
 	static long sgSndDriver;
 	static MCPlayer *s_ephemeral_player;
 
@@ -216,11 +216,11 @@ public:
 	void setloudness();
 	void gettracks(MCExecPoint &ep);
 	void getenabledtracks(MCExecPoint &ep);
-	Boolean setenabledtracks(const MCString &s);
+	Boolean setenabledtracks(MCStringRef s);
 	void getnodes(MCExecPoint &ep);
 	void gethotspots(MCExecPoint &ep);
 	bool geteffectlist(MCStringRef& r_string);
-	void recordsound(char *fname);
+	void recordsound(MCStringRef fname);
 	bool getrecordloudness(integer_t& r_loudness);
 	bool getrecordcompressionlist(MCStringRef& r_string);
 
@@ -347,22 +347,14 @@ public:
 	{
 		scale = s;
 	}
-	Boolean prepare(const char *options);
-	bool prepare(MCStringRef p_options)
-	{
-		return True == prepare(MCStringGetCString(p_options));
-	}
-	Boolean playstart(const char *options);
-	bool playstart(MCStringRef p_options)
-	{
-		return True == playstart(MCStringGetCString(p_options));
-	}
+	Boolean prepare(MCStringRef options);
+	Boolean playstart(MCStringRef options);
 	Boolean playpause(Boolean on);
 	void playstepforward();
 	void playstepback();
 	Boolean playstop();
 	void setvolume(uint2 tloudness);
-	void setfilename(const char *vcname, char *fname, Boolean istmp);
+	void setfilename(MCStringRef vcname, MCStringRef fname, Boolean istmp);
 	uint4 getstarttime()
 	{
 		return starttime;

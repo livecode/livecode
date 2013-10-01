@@ -235,7 +235,7 @@ void MCMultimediaEvalSound(MCExecContext& ctxt, MCStringRef& r_sound)
 
 void MCMultimediaExecStartPlayer(MCExecContext& ctxt, MCPlayer *p_target)
 {
-	p_target->playstart(MCnullstring);
+	p_target->playstart(kMCEmptyString);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -269,9 +269,9 @@ void MCMultimediaExecRecord(MCExecContext& ctxt, MCStringRef p_filename)
 	if (!ctxt . EnsurePrivacyIsAllowed())
 		return;
 
-	char *soundfile;
-	soundfile = MCS_get_canonical_path(MCStringGetCString(p_filename));
-	MCtemplateplayer->recordsound(soundfile);
+	MCAutoStringRef soundfile;
+    MCS_resolvepath(p_filename, &soundfile);
+	MCtemplateplayer->recordsound(*soundfile);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -360,8 +360,8 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 
 	sptr = p_target != nil ? p_target : MCdefaultstackptr;
 
-	if ((vcptr = (MCVideoClip *)p_target->getAV((Chunk_term)p_chunk_type, MCStringGetOldString(p_filename), CT_VIDEO_CLIP)) == NULL && 
-		(vcptr = (MCVideoClip *)p_target->getobjname(CT_VIDEO_CLIP, MCStringGetOldString(p_filename))) == NULL)
+	if ((vcptr = (MCVideoClip *)p_target->getAV((Chunk_term)p_chunk_type, p_filename, CT_VIDEO_CLIP)) == NULL && 
+		(vcptr = (MCVideoClip *)p_target->getobjname(CT_VIDEO_CLIP, p_filename)) == NULL)
 	{
 		MCAutoStringRef t_file;
 		bool t_url = true;
@@ -386,7 +386,8 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 		{
 			/* UNCHECKED */ MCS_tmpnam(&t_temp);
 			IO_handle t_stream;
-			if ((t_stream = MCS_open(MCStringGetCString(*t_temp), IO_WRITE_MODE, False, False, 0)) == NULL)
+			
+			if ((t_stream = MCS_open(*t_temp, kMCSOpenFileModeWrite, False, False, 0)) == NULL)
 			{
 				ctxt . SetTheResultToStaticCString("error opening temp file");
 				return;
@@ -395,7 +396,7 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 			MCS_close(t_stream);
 			if (stat != IO_NORMAL)
 			{
-				MCS_unlink(MCStringGetCString(*t_temp));
+				MCS_unlink(*t_temp);
 				ctxt . SetTheResultToStaticCString("error writing videoClip");
 				return;
 			}
@@ -414,7 +415,7 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 	}
 	tptr = (MCPlayer *)MCtemplateplayer->clone(False, OP_NONE, false);
 	tptr->setsprop(P_SHOW_BORDER, MCfalsemcstring);
-	tptr->setfilename(MCStringGetCString(*t_video_name), strclone(MCStringGetCString(*t_temp)), tmpfile);
+	tptr->setfilename(*t_video_name, *t_temp, tmpfile);
 	tptr->open();
 	if (p_prepare)
 		tptr->setflag(False, F_VISIBLE);
@@ -464,14 +465,16 @@ void MCMultimediaExecPlayAudioClip(MCExecContext& ctxt, MCStack *p_target, int p
 #endif
 		return;
 	}
-	if ((MCacptr = (MCAudioClip *)(sptr->getAV((Chunk_term)p_chunk_type, MCStringGetOldString(p_clip), CT_AUDIO_CLIP))) == NULL && 
-		(MCacptr = (MCAudioClip *)sptr->getobjname(CT_AUDIO_CLIP, MCStringGetOldString(p_clip))) == NULL)
+	if ((MCacptr = (MCAudioClip *)(sptr->getAV((Chunk_term)p_chunk_type, p_clip, CT_AUDIO_CLIP))) == NULL && 
+		(MCacptr = (MCAudioClip *)sptr->getobjname(CT_AUDIO_CLIP, p_clip)) == NULL)
 	{
 		IO_handle stream;
+		
 		if (!MCS_exists(p_clip, True)
-		        || (stream = MCS_open(MCStringGetCString(p_clip), IO_READ_MODE, True, False, 0)) == NULL)
+		        || (stream = MCS_open(p_clip, kMCSOpenFileModeRead, True, False, 0)) == NULL)
 		{
 			MCAutoStringRef t_url;
+            MCAutoDataRef t_data;
 			MCU_geturl(ctxt, p_clip, &t_url);
 			if (MCStringGetLength(*t_url) == 0)
 			{

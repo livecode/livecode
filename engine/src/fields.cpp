@@ -156,7 +156,7 @@ Exec_stat MCField::sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
 			newtext[tlength] = '\0';
 		}
 		delete itemtext;
-		settext(parid, newtext, False);
+		settext_oldstring(parid, newtext, False);
 		delete newtext;
 	}
 	else if (nitems > 0)
@@ -504,7 +504,15 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid)
 		fptr->setparagraphs(newpgptr);
 }
 
-Exec_stat MCField::settext(uint4 parid, const MCString &s, Boolean formatted, Boolean isunicode)
+Exec_stat MCField::settext(uint4 parid, MCStringRef p_text, Boolean p_formatted)
+{
+	if (MCStringGetCharPtr(p_text) != nil)
+		return settext_oldstring(parid, MCString((const char*)MCStringGetCharPtr(p_text), MCStringGetLength(p_text) * sizeof(unichar_t)), p_formatted, true);
+		
+	return settext_oldstring(parid, MCStringGetOldString(p_text), p_formatted, false);
+}
+
+Exec_stat MCField::settext_oldstring(uint4 parid, const MCString &s, Boolean formatted, Boolean isunicode)
 {
 	state &= ~CS_CHANGED;
 	if (opened)
@@ -622,6 +630,13 @@ MCParagraph *MCField::verifyindices(MCParagraph *p_top, int4& si, int4& ei)
 	ei = (ei - t_new_ei) + t_end_block -> verifyindex(t_new_ei, true);
 	
 	return t_start_pg;
+}
+
+Exec_stat MCField::settextindex_stringref(uint4 parid, int4 si, int4 ei, MCStringRef s, Boolean undoing)
+{
+	if (MCStringIsNative(s))
+		return settextindex(parid, si, ei, MCStringGetOldString(s), undoing, false);
+	return settextindex(parid, si, ei, MCString((const char *)MCStringGetCharPtr(s), MCStringGetLength(s) * 2), undoing, true);
 }
 
 Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s, Boolean undoing, bool p_as_unicode)
@@ -1276,7 +1291,9 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 {
 	// Fetch the string value of the ep as 's' for compatibility with pre-ep taking
 	// code.
-	const MCString& s = ep . getsvalue();
+	
+	MCAutoStringRef s;
+	ep . copyasstringref(&s);
 	
 	if (flags & F_SHARED_TEXT)
 		parid = 0;
@@ -1312,10 +1329,10 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		switch (which)
 		{
 		case P_HTML_TEXT:
-			sethtml(parid, s);
+			sethtml(parid, MCStringGetOldString(*s));
 			break;
 		case P_RTF_TEXT:
-			setrtf(parid, s);
+			setrtf(parid, MCStringGetOldString(*s));
 			break;
 		// MW-2011-12-08: [[ StyledText ]] Import the styled text.
 		case P_STYLED_TEXT:
@@ -1323,7 +1340,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 			break;
 		case P_UNICODE_TEXT:
 		case P_TEXT:
-			setpartialtext(parid, s, which == P_UNICODE_TEXT);
+			setpartialtext(parid, MCStringGetOldString(*s), which == P_UNICODE_TEXT);
 			break;
 		default:
 			break;
@@ -1468,9 +1485,9 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 			break;
 		}
 	case P_FORE_COLOR:
-		if (!s.getlength())
+		if (!MCStringGetLength(*s))
 			color = NULL;
-		else if (!MCscreen->parsecolor(s, &tcolor, nil))
+		else if (!MCscreen->parsecolor(*s, tcolor, nil))
 			return ES_ERROR;
 		t_value = color;
 		break;
@@ -1485,9 +1502,9 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 				return ES_ERROR;
 
 			Boolean t_new_state;
-			if (!MCU_stob(s, t_new_state))
+			if (!MCU_stob(MCStringGetOldString(*s), t_new_state))
 			{
-				MCeerror->add(EE_OBJECT_NAB, 0, 0, s);
+				MCeerror->add(EE_OBJECT_NAB, 0, 0, *s);
 				return ES_ERROR;
 			}
 
@@ -1502,7 +1519,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		// Fall through for default (non-array) handling.
 	case P_TEXT_FONT:
 	case P_TEXT_SIZE:
-		if (MCF_parsetextatts(which, s, flags, fname, fontheight, size, style) != ES_NORMAL)
+		if (MCF_parsetextatts(which, MCStringGetOldString(*s), flags, fname, fontheight, size, style) != ES_NORMAL)
 			return ES_ERROR;
 		all = True;
 		if (which == P_TEXT_FONT)
@@ -1513,7 +1530,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 			t_value = (void *)style;
 		break;
 	case P_TEXT_SHIFT:
-		if (!MCU_stoi2(s, shift))
+		if (!MCU_stoi2(*s, shift))
 		{
 			MCeerror->add(EE_FIELD_SHIFTNAN, 0, 0);
 			return ES_ERROR;
@@ -1538,18 +1555,18 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		break;
 	// MW-2012-01-26: [[ FlaggedField ]] Set the flagged status of the range.
 	case P_FLAGGED:
-		if (!MCU_stob(s, newstate))
+		if (!MCU_stob(MCStringGetOldString(*s), newstate))
 		{
-			MCeerror->add(EE_OBJECT_NAB, 0, 0, s);
+			MCeerror->add(EE_OBJECT_NAB, 0, 0, *s);
 			return ES_ERROR;
 		}
 		t_value = (void *)(Boolean)newstate;
 		t_value = (void *)newstate;
 		break;
 	case P_VISITED:
-		if (!MCU_stob(s, newstate))
+		if (!MCU_stob(MCStringGetOldString(*s), newstate))
 		{
-			MCeerror->add(EE_OBJECT_NAB, 0, 0, s);
+			MCeerror->add(EE_OBJECT_NAB, 0, 0, *s);
 			return ES_ERROR;
 		}
 		pgptr->setvisited(si, MCU_min(ei, pgptr->gettextsize()), newstate);
@@ -2332,7 +2349,7 @@ void MCField::returntext(MCExecPoint &ep, int4 si, int4 ei)
 
 bool MCField::returntext(int4 p_si, int4 p_ei, MCStringRef& r_string)
 {
-	return exportastext(0, p_si, p_ei, false, r_string);
+	return exportastext(0, p_si, p_ei, r_string);
 }
 
 void MCField::charstoparagraphs(int4 si, int4 ei, MCParagraph*& rsp, MCParagraph*& rep, uint4& rsl, uint4& rel)
@@ -2450,19 +2467,8 @@ MCParagraph *MCField::cloneselection()
 	return cutptr;
 }
 
-#ifdef SHARED_STRING
-MCSharedString *MCField::pickleselection(void)
-{
-	// MW-2012-02-17: [[ SplitTextAttrs ]] When pickling in the field, make the
-	//   styledtext's parent the field so that font attr inheritence works.
-	MCStyledText t_styled_text;
-	t_styled_text . setparent(this);
-	t_styled_text . setparagraphs(cloneselection());
-	return MCObject::pickle(&t_styled_text, 0);
-}
-#endif
 
-bool MCField::pickleselection(MCStringRef& r_string)
+bool MCField::pickleselection(MCDataRef& r_string)
 {
 	// MW-2012-02-17: [[ SplitTextAttrs ]] When pickling in the field, make the
 	//   styledtext's parent the field so that font attr inheritence works.
@@ -2500,32 +2506,16 @@ void MCField::cuttext()
 	textchanged();
 }
 
-#ifdef SHARED_STRING
 void MCField::copytext()
 {
 	if (!focusedparagraph->isselection() && firstparagraph == lastparagraph)
 		return;
 
-	MCSharedString *t_data;
-	t_data = pickleselection();
-	if (t_data != NULL)
-	{
-		MCclipboarddata -> Store(TRANSFER_TYPE_STYLED_TEXT, t_data);
-		t_data -> Release();
-	}
-}
-#else
-void MCField::copytext()
-{
-	if (!focusedparagraph->isselection() && firstparagraph == lastparagraph)
-		return;
-
-	MCAutoStringRef t_data;
+	MCAutoDataRef t_data;
 	/* UNCHECKED */ pickleselection(&t_data);
 	if (*t_data != nil)
 		MCclipboarddata -> Store(TRANSFER_TYPE_STYLED_TEXT, *t_data);
 }
-#endif
 
 void MCField::cuttextindex(uint4 parid, int4 si, int4 ei)
 {

@@ -58,34 +58,31 @@ typedef enum
 
 static bool s_in_popup_dialog = false;
 static int s_popup_dialog_action = -1;
-static char *s_popup_dialog_text = nil;
+static MCStringRef s_popup_dialog_text = nil;
 static MCDialogResult s_dialog_result;
 
-int32_t MCScreenDC::popupanswerdialog(const char *p_buttons[], uint32_t p_button_count, uint32_t p_type, const char *p_title, const char *p_message)
+int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message)
 {
 	if (s_in_popup_dialog)
 		return -1;
 
-	const char *t_ok_button, *t_cancel_button, *t_other_button;
-	t_ok_button = nil;
-	t_cancel_button = nil;
-	t_other_button = nil;
-
+	MCAutoStringRef t_ok_button, *t_cancel_button, *t_other_button;
+	
 	if (p_button_count == 0)
-		t_ok_button = "OK";
+		t_ok_button = MCSTR("OK");
 	
 	if (p_button_count >= 1)
-		t_ok_button = p_buttons[0];
+		t_ok_button = MCValueRetain(p_buttons[0]);
 
 	if (p_button_count >= 3)
-		t_other_button = p_buttons[1];
+		t_other_button = MCValueRetain(p_buttons[1]);
 
 	if (p_button_count >= 2)
-		t_cancel_button = p_buttons[p_button_count - 1];
+		t_cancel_button = MCValueRetain(p_buttons[p_button_count - 1]);
 
 	s_in_popup_dialog = true;
 	s_popup_dialog_action = -1;
-	MCAndroidEngineRemoteCall("popupAnswerDialog", "vsssss", nil, p_title, p_message, t_ok_button, t_cancel_button, t_other_button);
+	MCAndroidEngineRemoteCall("popupAnswerDialog", "vxxxxx", nil, *p_title, *p_message, *t_ok_button, *t_cancel_button, *t_other_button);
 
 	while(s_in_popup_dialog)
 		MCscreen -> wait(60.0, True, True);
@@ -108,26 +105,23 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAnswerDialogDone(JNIEnv 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCScreenDC::popupaskdialog(uint32_t p_type, const char *p_title, const char *p_message, const char *p_initial, bool p_hint, MCStringRef& r_result)
+bool MCScreenDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result)
 {
 	if (s_in_popup_dialog)
 		return nil;
 
 	s_in_popup_dialog = true;
-	MCAndroidEngineRemoteCall("popupAskDialog", "vbsssb", nil, p_type == AT_PASSWORD, p_title, p_message, p_initial, p_hint);
+	MCAndroidEngineRemoteCall("popupAskDialog", "vbxxxb", nil, p_type == AT_PASSWORD, p_title, p_message, p_initial, p_hint);
 
 	while(s_in_popup_dialog)
 		MCscreen -> wait(60.0, True, True);
-
-	bool t_success;
-    t_success = false;
     
 	if (s_popup_dialog_text != nil)
 	{
-		t_success = MCStringCreateWithCString(s_popup_dialog_text, r_result);
+		r_result = s_popup_dialog_text;
 		s_popup_dialog_text = nil;
 	}
-	return t_success;
+	return true;
 }
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAskDialogDone(JNIEnv *env, jobject object, jstring result) __attribute__((visibility("default")));
@@ -137,18 +131,14 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAskDialogDone(JNIEnv *en
 
 	if (s_popup_dialog_text != nil)
 	{
-		MCCStringFree(s_popup_dialog_text);
+		MCValueRelease(s_popup_dialog_text);
 		s_popup_dialog_text = nil;
 	}
 
 	if (result != nil)
 	{
-		// TODO - java -> native string conversion
-		const char *t_utfchars = nil;
-		t_utfchars = env->GetStringUTFChars(result, nil);
-		if (t_utfchars != nil)
-			MCCStringClone(t_utfchars, s_popup_dialog_text);
-		env->ReleaseStringUTFChars(result, t_utfchars);
+		MCJavaStringToStringRef(env, result, s_popup_dialog_text);
+		// TODO - java -> stringref conversion
 	}
 	MCAndroidBreakWait();
 }

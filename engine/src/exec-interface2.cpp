@@ -334,31 +334,23 @@ MC_EXEC_DEFINE_EVAL_METHOD(Interface, TextOfContainer, 2)
 
 void MCInterfaceNamedColorParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceNamedColor& r_output)
 {
-	if (MCStringGetLength(p_input) == 0)
+	if (MCStringIsEmpty(p_input))
 	{
 		r_output . name = MCValueRetain(kMCEmptyString);
 		return;
 	}
 
 	MCColor t_color;
-	MCAutoPointer<char> t_color_name;
-	if (!MCscreen -> parsecolor(MCStringGetOldString(p_input), &t_color, &(&t_color_name)))
+	MCStringRef t_color_name;
+	t_color_name = nil;
+	if (!MCscreen -> parsecolor(p_input, t_color, &t_color_name))
 	{
 		 ctxt . LegacyThrow(EE_PROPERTY_BADCOLOR);
 		 return;
 	}
 	
-	MCStringRef t_color_name_ref;
-	t_color_name_ref = nil;
-	if (*t_color_name != nil &&
-		!MCStringCreateWithCString(*t_color_name, t_color_name_ref))
-	{
-		ctxt . Throw();
-		return;
-	}
-
 	r_output . color = t_color;
-	r_output . name = t_color_name_ref;
+	r_output . name = t_color_name;
 }
 
 void MCInterfaceNamedColorFormat(MCExecContext& ctxt, const MCInterfaceNamedColor& p_input, MCStringRef& r_output)
@@ -641,6 +633,7 @@ void MCInterfaceGetDialogData(MCExecContext& ctxt, MCValueRef& r_value)
 {
 	r_value = MCValueRetain(MCdialogdata -> getvalueref());
 }
+
 void MCInterfaceSetDialogData(MCExecContext& ctxt, MCValueRef p_value)
 {
 	MCdialogdata -> setvalueref(p_value);
@@ -820,7 +813,8 @@ void get_interface_color(const MCColor& p_color, MCStringRef p_color_name, MCInt
 
 void set_interface_color(MCColor& x_color, MCStringRef& x_color_name, const MCInterfaceNamedColor& p_color)
 {
-	MCValueRelease(x_color_name);
+	if (x_color_name != nil)
+		MCValueRelease(x_color_name);
 	x_color_name = p_color . name != nil ? (MCStringRef)MCValueRetain(p_color . name) : nil;
 	x_color = p_color . color;
 }
@@ -1206,9 +1200,8 @@ void MCInterfaceGetIconMenu(MCExecContext& ctxt, MCStringRef& r_menu)
 
 void MCInterfaceSetIconMenu(MCExecContext& ctxt, MCStringRef p_menu)
 {
-	MCValueRelease(MCiconmenu);
-	MCiconmenu = (MCStringRef)MCValueRetain(p_menu);
-	MCscreen -> seticonmenu(MCStringGetCString(MCiconmenu));
+	MCValueAssign(MCiconmenu, p_menu);
+	MCscreen -> seticonmenu(MCiconmenu);
 }
 
 void MCInterfaceGetStatusIcon(MCExecContext& ctxt, uinteger_t& r_icon)
@@ -1222,7 +1215,7 @@ void MCInterfaceSetStatusIcon(MCExecContext& ctxt, uinteger_t p_icon)
 		return;
 		
 	MCstatusiconid = p_icon;
-	MCscreen -> configurestatusicon(MCstatusiconid, MCStringGetCString(MCstatusiconmenu), MCStringGetCString(MCstatusicontooltip));
+	MCscreen -> configurestatusicon(MCstatusiconid, MCstatusiconmenu, MCstatusicontooltip);
 }
 
 void MCInterfaceGetStatusIconToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip)
@@ -1232,9 +1225,8 @@ void MCInterfaceGetStatusIconToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip
 
 void MCInterfaceSetStatusIconToolTip(MCExecContext& ctxt, MCStringRef p_tooltip)
 {
-	MCValueRelease(MCstatusicontooltip);
-	MCstatusicontooltip = (MCStringRef)MCValueRetain(p_tooltip);
-	MCscreen -> configurestatusicon(MCstatusiconid, MCStringGetCString(MCstatusiconmenu), MCStringGetCString(MCstatusicontooltip));
+	MCValueAssign(MCstatusicontooltip, p_tooltip);
+	MCscreen -> configurestatusicon(MCstatusiconid, MCstatusiconmenu, MCstatusicontooltip);
 }
 
 void MCInterfaceGetStatusIconMenu(MCExecContext& ctxt, MCStringRef& r_icon_menu)
@@ -1244,9 +1236,8 @@ void MCInterfaceGetStatusIconMenu(MCExecContext& ctxt, MCStringRef& r_icon_menu)
 
 void MCInterfaceSetStatusIconMenu(MCExecContext& ctxt, MCStringRef p_icon_menu)
 {
-	MCValueRelease(MCstatusiconmenu);
-	MCstatusiconmenu = (MCStringRef)MCValueRetain(p_icon_menu);
-	MCscreen -> configurestatusicon(MCstatusiconid, MCStringGetCString(MCstatusiconmenu), MCStringGetCString(MCstatusicontooltip));
+	MCValueAssign(MCstatusiconmenu, p_icon_menu);
+	MCscreen -> configurestatusicon(MCstatusiconid, MCstatusiconmenu, MCstatusicontooltip);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1273,16 +1264,12 @@ void MCInterfaceSetDragDelta(MCExecContext& ctxt, uinteger_t p_value)
 
 void MCInterfaceGetStackFileType(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	if (MCStringCreateWithCString(MCstackfiletype, r_value))
-		return;
-
-	ctxt . Throw();
+	r_value = MCValueRetain(MCstackfiletype);
 }
 
 void MCInterfaceSetStackFileType(MCExecContext& ctxt, MCStringRef p_value)
 {
-	delete MCstackfiletype;
-	MCstackfiletype = strclone(MCStringGetCString(p_value));
+	MCValueAssign(MCstackfiletype, p_value);
 }
 
 
@@ -2400,7 +2387,7 @@ void MCInterfaceEvalSubstackOfStackById(MCExecContext& ctxt, MCObjectPtr p_paren
 void MCInterfaceEvalAudioClipOfStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_ordinal_type, MCObjectPtr& r_clip)
 {
     MCObject *t_clip;
-    t_clip = static_cast<MCStack *>(p_stack . object) -> getAV((Chunk_term)p_ordinal_type, MCnullmcstring, CT_AUDIO_CLIP);
+    t_clip = static_cast<MCStack *>(p_stack . object) -> getAV((Chunk_term)p_ordinal_type, kMCEmptyString, CT_AUDIO_CLIP);
     
     if (t_clip != nil)
     {
@@ -2448,7 +2435,7 @@ void MCInterfaceEvalAudioClipOfStackByName(MCExecContext& ctxt, MCObjectPtr p_st
 void MCInterfaceEvalVideoClipOfStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_ordinal_type, MCObjectPtr& r_clip)
 {
     MCObject *t_clip;
-    t_clip = static_cast<MCStack *>(p_stack . object) -> getAV((Chunk_term)p_ordinal_type, MCnullmcstring, CT_VIDEO_CLIP);
+    t_clip = static_cast<MCStack *>(p_stack . object) -> getAV((Chunk_term)p_ordinal_type, kMCEmptyString, CT_VIDEO_CLIP);
     
     if (t_clip != nil)
     {

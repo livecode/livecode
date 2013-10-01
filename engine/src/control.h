@@ -181,7 +181,7 @@ public:
 	Boolean sbup(uint2 which, MCScrollbar *hsb, MCScrollbar *vsb);
 	Boolean sbdoubledown(uint2 which, MCScrollbar *hsb, MCScrollbar *vsb);
 	Boolean sbdoubleup(uint2 which, MCScrollbar *hsb, MCScrollbar *vsb);
-	Exec_stat setsbprop(Properties which, const MCString &data, int4 tx, int4 ty,
+	Exec_stat setsbprop(Properties which, bool p_enable, int4 tx, int4 ty,
 	                    uint2 &sbw, MCScrollbar *&hsb, MCScrollbar *&vsb,
 	                    Boolean &dirty);
 
@@ -348,8 +348,8 @@ public:
 	virtual void SetBottomMargin(MCExecContext& ctxt, integer_t p_margin);
 	void GetToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip);
 	void SetToolTip(MCExecContext& ctxt, MCStringRef p_tooltip);
-	void GetUnicodeToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip);
-	void SetUnicodeToolTip(MCExecContext& ctxt, MCStringRef p_tooltip);
+	void GetUnicodeToolTip(MCExecContext& ctxt, MCDataRef& r_tooltip);
+	void SetUnicodeToolTip(MCExecContext& ctxt, MCDataRef p_tooltip);
 	void GetLayerMode(MCExecContext& ctxt, intenum_t& r_mode);
 	void SetLayerMode(MCExecContext& ctxt, intenum_t p_mode);
 	void GetEffectiveLayerMode(MCExecContext& ctxt, intenum_t& r_mode);

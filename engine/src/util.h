@@ -80,6 +80,7 @@ extern real8 MCU_strtor8(const char *&, uint4 &, int1, Boolean &r_done,
 						Boolean convertoctals = False);
 extern void MCU_strip(char *sptr, uint2 trailing, uint2 force);
 extern uint4 MCU_r8tos(char *&sptr, uint4 &s, real8 n,uint2 fw, uint2 trailing, uint2 force);
+extern bool MCU_r8tos(real8 n, uint2 fw, uint2 trailing, uint2 force, MCStringRef &r_string);
 extern bool MCU_stor8(MCStringRef, real8& r_d, bool co = false);
 extern Boolean MCU_stor8(const MCString&, real8& d, Boolean co = False);
 extern bool MCU_stoi2(MCStringRef, int2 &r_d);
@@ -115,7 +116,6 @@ extern void MCU_sort(MCSortnode *items, uint4 nitems,
 #ifndef _DEBUG_MEMORY
 extern void MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize);
 #endif
-extern Boolean MCU_matchflags(const MCString &, uint4 &, uint4, Boolean &);
 extern bool MCU_matchname(MCNameRef p_name, Chunk_term type, MCNameRef name);
 extern Boolean MCU_matchname(const MCString &, Chunk_term type, MCNameRef name);
 extern void MCU_snap(int2 &p);
@@ -155,18 +155,18 @@ extern void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool);
 extern Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool,
 	                                 uint2 line, uint2 pos);
 extern Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef message, MCParameter *params);
-extern bool MCU_path2std(MCStringRef p_path, MCStringRef& r_std_path);
-extern void MCU_path2std(char *dptr);
-extern bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path);
-extern void MCU_path2native(char *dptr);
-extern void MCU_fix_path(char *cstr);
+//extern bool MCU_path2std(MCStringRef p_path, MCStringRef& r_std_path);
+//extern void MCU_path2std(char *dptr);
+//extern bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path);
+//extern void MCU_path2native(char *dptr);
+extern void MCU_fix_path(MCStringRef in, MCStringRef& r_out);
 extern void MCU_base64encode(MCExecPoint &ep);
 extern void MCU_base64decode(MCExecPoint &ep);
 extern void MCU_urlencode(MCExecPoint &ep);
 extern void MCU_urldecode(MCExecPoint &ep);
 extern Boolean MCU_freeinserted(MCObjectList *&l);
 extern void MCU_cleaninserted();
-extern Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep, uint2 line, uint2 pos);
+//extern Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep, uint2 line, uint2 pos);
 extern Exec_stat MCU_change_color(MCColor &c, MCStringRef&n, MCExecPoint &ep, uint2 line, uint2 pos);
 extern void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c);
 extern void MCU_get_color(MCExecPoint &ep, MCStringRef name, MCColor &c);

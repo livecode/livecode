@@ -21,6 +21,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		1D17A9C317BE673E0024CCA8 /* osxans.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880190B80A4F800200116 /* osxans.mm */; };
 		3C03ED921134205A009DE406 /* socket_resolve.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3C03ED911134205A009DE406 /* socket_resolve.cpp */; };
 		3C0A3CC410BAF6120074D630 /* iquantization.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3C0A3CC310BAF6120074D630 /* iquantization.cpp */; };
 		4C6F241E1529B33000C5AFB6 /* osxsnapshot.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4C6F241D1529B33000C5AFB6 /* osxsnapshot.mm */; };
@@ -308,6 +309,7 @@
 		4D4F9E3B13CDF24A00B9B15D /* osximage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4F9E3913CDF24A00B9B15D /* osximage.cpp */; };
 		4D4F9E3C13CDF24A00B9B15D /* osxmisc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4F9E3A13CDF24A00B9B15D /* osxmisc.cpp */; };
 		4D4F9E6713CDFB8100B9B15D /* osxfield.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4F9E6613CDFB8100B9B15D /* osxfield.cpp */; };
+		4D56632017D9CD1E00C4A0B1 /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7FA7BB1594E0FA00EEF440 /* libfoundation.a */; };
 		4D5880860B80BDF000200116 /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5880850B80BDF000200116 /* QuickTime.framework */; };
 		4D5881210B80BF1E00200116 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881200B80BF1E00200116 /* IOKit.framework */; };
 		4D58856B0B80DEAC00200116 /* da.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D58854C0B80DEAB00200116 /* da.lproj */; };
@@ -497,7 +499,6 @@
 		4DEE2AD60FDE42710009423C /* objptr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E7C0B8096FD00200116 /* objptr.cpp */; };
 		4DEE2AD70FDE42710009423C /* opensslsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E3B0B8096FD00200116 /* opensslsocket.cpp */; };
 		4DEE2AD80FDE42710009423C /* operator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E340B8096FD00200116 /* operator.cpp */; };
-		4DEE2AD90FDE42710009423C /* osxans.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880190B80A4F800200116 /* osxans.mm */; };
 		4DEE2ADA0FDE42710009423C /* osxcoreimage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880140B80A4F800200116 /* osxcoreimage.cpp */; };
 		4DEE2ADB0FDE42710009423C /* osxclipboard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D61BD980CCF74C800D74FDB /* osxclipboard.cpp */; };
 		4DEE2ADC0FDE42710009423C /* osxcontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880170B80A4F800200116 /* osxcontext.cpp */; };
@@ -561,6 +562,8 @@
 		A71F80540F4F178C003012FD /* Standalone.icns in Resources */ = {isa = PBXBuildFile; fileRef = A71F80530F4F178C003012FD /* Standalone.icns */; };
 		A71F80550F4F17C1003012FD /* LiveCode.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885610B80DEAC00200116 /* LiveCode.icns */; };
 		A71F80620F4F17F9003012FD /* StandaloneDoc.icns in Resources */ = {isa = PBXBuildFile; fileRef = A71F80610F4F17F9003012FD /* StandaloneDoc.icns */; };
+		BEFD23CD17B5233800B9310D /* sysspec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFD486613BA28DA008DB91F /* sysspec.cpp */; };
+		BEFE81D417B2B32800C9D14F /* dskmac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEFE81D317B2B32800C9D14F /* dskmac.cpp */; };
 		E8189EB615D17E8000194F25 /* exec-logic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8189EB515D17E8000194F25 /* exec-logic.cpp */; };
 		E864B42115BDAB5200F5361C /* legacy_spec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E864B41F15BDAB3F00F5361C /* legacy_spec.cpp */; };
 		E875FD8F17293B4F005A69F4 /* exec-interface-aclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E875FD8117293B4F005A69F4 /* exec-interface-aclip.cpp */; };
@@ -1542,6 +1545,9 @@
 		A04643F60BAAA63A0030A830 /* w32theme.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = w32theme.cpp; path = src/w32theme.cpp; sourceTree = "<group>"; };
 		A71F80530F4F178C003012FD /* Standalone.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = Standalone.icns; path = rsrc/Standalone.icns; sourceTree = "<group>"; };
 		A71F80610F4F17F9003012FD /* StandaloneDoc.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = StandaloneDoc.icns; path = rsrc/StandaloneDoc.icns; sourceTree = "<group>"; };
+		BEF2C0EF17BA493A00E96459 /* socket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = socket.h; path = src/socket.h; sourceTree = "<group>"; };
+		BEF3110417C217C30073D70F /* dskw32.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dskw32.cpp; path = src/dskw32.cpp; sourceTree = "<group>"; };
+		BEFE81D317B2B32800C9D14F /* dskmac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dskmac.cpp; path = src/dskmac.cpp; sourceTree = "<group>"; };
 		E8189EB515D17E8000194F25 /* exec-logic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-logic.cpp"; path = "src/exec-logic.cpp"; sourceTree = "<group>"; };
 		E864B41F15BDAB3F00F5361C /* legacy_spec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = legacy_spec.cpp; path = src/legacy_spec.cpp; sourceTree = "<group>"; };
 		E86A04F6142A49EF005ECD82 /* srvsession.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = srvsession.cpp; path = src/srvsession.cpp; sourceTree = "<group>"; };
@@ -1606,6 +1612,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D56632017D9CD1E00C4A0B1 /* libfoundation.a in Frameworks */,
 				4D2A57C41198634300135143 /* libkernel.a in Frameworks */,
 				4D1F9C53171C662D0091C6CB /* libsecurity-community.a in Frameworks */,
 				4DB384BE1714420A00D3F102 /* libz.a in Frameworks */,
@@ -2377,11 +2384,13 @@
 		4DE7ED0B13B33B4E002634F5 /* Desktop */ = {
 			isa = PBXGroup;
 			children = (
+				BEFE81D317B2B32800C9D14F /* dskmac.cpp */,
 				4D05B90C13E06AAB001CD82A /* dsklnxmain.cpp */,
 				4D05B90D13E06AAB001CD82A /* dskmain.cpp */,
 				4D05B90E13E06AAC001CD82A /* dskosxmain.mm */,
 				4D05B90F13E06AAC001CD82A /* dskw32main.cpp */,
 				4DE7ED0D13B33B7F002634F5 /* dskspec.cpp */,
+				BEF3110417C217C30073D70F /* dskw32.cpp */,
 			);
 			name = Desktop;
 			sourceTree = "<group>";
@@ -2730,6 +2739,7 @@
 				4D587E3E0B8096FD00200116 /* mcstring.cpp */,
 				4D587E060B8096E600200116 /* mcstring.h */,
 				4DB98625130C09D6008A03DC /* mcutility.cpp */,
+				BEF2C0EF17BA493A00E96459 /* socket.h */,
 				4D587DD80B8096E600200116 /* mcutility.h */,
 				4DAB7D270FF3A0100009F91E /* md5.cpp */,
 				4DFECEFF13CEE55B00288995 /* md5.h */,
@@ -2980,6 +2990,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = NO;
+				LastUpgradeCheck = 0460;
 			};
 			buildConfigurationList = 4D587D950B80944100200116 /* Build configuration list for PBXProject "engine" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -3274,7 +3285,7 @@
 		};
 		4D22200E171D72A500E7E557 /* Encode Version */ = {
 			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
+			buildActionMask = 12;
 			files = (
 			);
 			inputPaths = (
@@ -3597,7 +3608,6 @@
 				4DEE2AD60FDE42710009423C /* objptr.cpp in Sources */,
 				4DEE2AD70FDE42710009423C /* opensslsocket.cpp in Sources */,
 				4DEE2AD80FDE42710009423C /* operator.cpp in Sources */,
-				4DEE2AD90FDE42710009423C /* osxans.mm in Sources */,
 				4DEE2ADA0FDE42710009423C /* osxcoreimage.cpp in Sources */,
 				4DEE2ADB0FDE42710009423C /* osxclipboard.cpp in Sources */,
 				4DEE2ADC0FDE42710009423C /* osxcontext.cpp in Sources */,
@@ -3740,6 +3750,9 @@
 				E875FD9917293B4F005A69F4 /* exec-interface-scrollbar.cpp in Sources */,
 				E875FD9A17293B4F005A69F4 /* exec-interface-stack.cpp in Sources */,
 				E875FD9B17293B4F005A69F4 /* exec-interface-vclip.cpp in Sources */,
+				BEFE81D417B2B32800C9D14F /* dskmac.cpp in Sources */,
+				BEFD23CD17B5233800B9310D /* sysspec.cpp in Sources */,
+				1D17A9C317BE673E0024CCA8 /* osxans.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4032,8 +4045,6 @@
 					"$(inherited)",
 					MODE_INSTALLER,
 				);
-				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"../libcore/src\"";
-				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\"$(SYMROOT)/$(CONFIGURATION)/headers\"";
 				INFOPLIST_FILE = "rsrc/Installer-Info.plist";
 				PRODUCT_NAME = Installer;
 			};

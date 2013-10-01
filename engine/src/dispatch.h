@@ -76,9 +76,8 @@ public:
 	void appendstack(MCStack *sptr);
 	void removestack(MCStack *sptr);
 	void destroystack(MCStack *sptr, Boolean needremove);
-	Boolean openstartup(const char *name, char **outpath, IO_handle &stream);
-	Boolean openenv(const char *name, const char *env,
-	                char **outpath, IO_handle &stream, uint4 offset);
+	Boolean openstartup(MCStringRef name, MCStringRef& r_outpath, IO_handle &r_stream);
+	Boolean openenv(MCStringRef name, MCStringRef env, MCStringRef& r_outpath, IO_handle& r_stream, uint4 offset);
 
 	IO_stat readfile(const char *openpath, const char *inname, IO_handle &stream, MCStack *&sptr);
 	IO_stat loadfile(const char *fname, MCStack *&sptr);
@@ -90,7 +89,7 @@ public:
 	// Load the given external from within the app bundle
 	bool loadexternal(const char *p_external);
 
-	void cleanup(IO_handle stream, char *lname, char *bname);
+	void cleanup(IO_handle stream, MCStringRef lname, MCStringRef bname);
 	IO_stat savestack(MCStack *sptr, const MCStringRef);
 	IO_stat startup(void);
 
@@ -189,7 +188,7 @@ public:
 	MCStack *findstackd(Window w);
 	MCStack *findchildstackd(Window w,uint2 index);
 	MCObject *getobjid(Chunk_term type, uint4 inid);
-	MCObject *getobjname(Chunk_term type, const MCString &);
+	MCObject *getobjname(Chunk_term type, MCStringRef);
 	MCStack *gethome();
 	Boolean ismainstack(MCStack *sptr);
 	void addmenu(MCObject *target);

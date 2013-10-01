@@ -893,23 +893,14 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 				// If I don't own the clipboard at this point, then something has gone wrong	
 				if ( ownsclipboard() ) 
 				{
-#ifdef SHARED_STRING
-					MCSharedString * t_data; 
-					if (m_Clipboard_store -> Fetch(  new MCMIMEtype(dpy, srevent -> target), t_data, None, None, DNULL, DNULL, MCeventtime ))
-					{
-						XChangeProperty(dpy, srevent -> requestor, srevent -> property,
-					                srevent -> target, 8, PropModeReplace,
-					                (const unsigned char *)t_data -> Get() . getstring(),
-					                t_data -> Get() . getlength());
-#else
-					MCAutoStringRef t_data; 
+					MCAutoDataRef t_data; 
 					if (m_Clipboard_store -> Fetch(  new MCMIMEtype(dpy, srevent -> target), &t_data, None, None, DNULL, DNULL, MCeventtime ))
 					{
 						XChangeProperty(dpy, srevent -> requestor, srevent -> property,
 					                srevent -> target, 8, PropModeReplace,
-					                (const unsigned char *)MCStringGetCString(*t_data),
-					                MCStringGetLength(*t_data));
-#endif
+					                (const unsigned char *)MCDataGetBytePtr(*t_data),
+					                MCDataGetLength(*t_data));
+						
 						if (srevent->property != None)
 							sendevent.property = srevent->property;
 						else
@@ -965,11 +956,11 @@ int xerror(Display *dpy, XErrorEvent *ev)
 		{
 			if (ev->request_code == 53)
 				fprintf(stderr,
-						"%s: XCreatePixmap failed, X server is out of memory --- oops\n", MCcmd);
+						"%s: XCreatePixmap failed, X server is out of memory --- oops\n", MCStringGetCString(MCcmd));
 			else
 				fprintf(stderr,
 						"%s: X error major code %d minor code %d error was %d\n",
-						MCcmd, ev->request_code, ev->minor_code, ev->error_code);
+						MCStringGetCString(MCcmd), ev->request_code, ev->minor_code, ev->error_code);
 		}
 	}
 	return 0;

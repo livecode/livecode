@@ -34,6 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacksecurity.h"
 
 #if !defined(_MOBILE) && !defined(_SERVER)
+#if 0
 void IO_set_stream(IO_handle stream, char *newptr)
 {
 	if (newptr < stream->buffer)
@@ -44,6 +45,7 @@ void IO_set_stream(IO_handle stream, char *newptr)
 		else
 			stream->ioptr = newptr;
 }
+#endif // 0
 #endif
 
 bool IO_findstream(Streamnode *p_nodes, uindex_t p_node_count, MCNameRef p_name, uindex_t& r_index)
@@ -83,9 +85,11 @@ Boolean IO_closefile(MCNameRef name)
 			MCS_close(MCfiles[index].ihandle);
 		else
 		{
+#ifdef OLD_IO_HANDLE
 			if (MCfiles[index].ohandle->flags & IO_WRITTEN
 			        && !(MCfiles[index].ohandle->flags & IO_SEEKED))
 				MCS_trunc(MCfiles[index].ohandle);
+#endif
 			MCS_close(MCfiles[index].ohandle);
 		}
 		MCValueRelease(MCfiles[index].name);
@@ -187,7 +191,7 @@ real8 IO_cleansockets(real8 ctime)
 					s->revents->timeout = ctime + MCsockettimeout;
 				if (s->wevents != NULL)
 					s->wevents->timeout = ctime + MCsockettimeout;
-				MCscreen->delaymessage(s->object, MCM_socket_timeout, strclone(s->name));
+				MCscreen->delaymessage(s->object, MCM_socket_timeout, MCNameGetString(s->name));
 			}
 			if (s->wevents != NULL && s->wevents->timeout < etime)
 				etime = s->wevents->timeout;
@@ -199,10 +203,9 @@ real8 IO_cleansockets(real8 ctime)
 
 bool IO_findsocket(MCNameRef p_name, uindex_t& r_index)
 {
-	/* TODO - update MCSocket to use MCNameRef */
 	IO_cleansockets(MCS_time());
 	for (r_index = 0 ; r_index < MCnsockets ; r_index++)
-		if (MCStringIsEqualToCString(MCNameGetString(p_name), MCsockets[r_index]->name, kMCCompareExact))
+		if (MCNameIsEqualTo(p_name, MCsockets[r_index]->name))
 			return true;
 	return false;
 }
@@ -242,9 +245,9 @@ void IO_freeobject(MCObject *o)
 #endif
 }
 
-IO_stat IO_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
+IO_stat IO_read(void *ptr, uint4 byte_size, IO_handle stream)
 {
-	return MCS_read(ptr, size, n, stream);
+	return MCS_readfixed(ptr, byte_size, stream);
 }
 
 IO_stat IO_write(const void *ptr, uint4 size, uint4 n, IO_handle stream)
@@ -258,7 +261,7 @@ IO_stat IO_read_to_eof(IO_handle stream, MCExecPoint &ep)
 	nread = (uint4)MCS_fsize(stream) - (uint4)MCS_tell(stream);
 	char *dptr;
 	/* UNCHECKED */ ep.reserve(nread, dptr);
-	MCS_read(dptr, 1, nread, stream);
+	/* UNCHECKED */ MCS_readall(dptr, nread, stream, nread);
 	ep.commit(nread);
 	return IO_NORMAL;
 }
@@ -266,7 +269,7 @@ IO_stat IO_read_to_eof(IO_handle stream, MCExecPoint &ep)
 IO_stat IO_fgets(char *ptr, uint4 length, IO_handle stream)
 {
 	uint4 bytes = length;
-	if (MCS_read(ptr, sizeof(uint1), bytes, stream) == IO_ERROR)
+	if (MCS_readall(ptr, bytes, stream, bytes) == IO_ERROR)
 		return IO_ERROR;
 	ptr[bytes - 1] = '\0';
 	strtok(ptr, "\n");
@@ -279,20 +282,17 @@ IO_stat IO_fgets(char *ptr, uint4 length, IO_handle stream)
 
 IO_stat IO_read_real8(real8 *dest, IO_handle stream)
 {
-	uint4 n = 1;
-	return MCS_read(dest, sizeof(real8), n, stream);
+	return MCS_readfixed(dest, sizeof(real8), stream);
 }
 
 IO_stat IO_read_real4(real4 *dest, IO_handle stream)
 {
-	uint4 n = 1;
-	return MCS_read(dest, sizeof(real4), n, stream);
+	return MCS_readfixed(dest, sizeof(real4), stream);
 }
 
 IO_stat IO_read_uint4(uint4 *dest, IO_handle stream)
 {
-	uint4 n = 1;
-	IO_stat stat = MCS_read(dest, sizeof(uint4), n, stream);
+	IO_stat stat = MCS_readfixed(dest, sizeof(uint4), stream);
 	if (stat != IO_ERROR)
 		swap_uint4(dest);
 	return stat;
@@ -300,8 +300,7 @@ IO_stat IO_read_uint4(uint4 *dest, IO_handle stream)
 
 IO_stat IO_read_int4(int4 *dest, IO_handle stream)
 {
-	uint4 n = 1;
-	IO_stat stat = MCS_read(dest, sizeof(uint4), n, stream);
+	IO_stat stat = MCS_readfixed(dest, sizeof(uint4), stream);
 	if (stat != IO_ERROR)
 		swap_int4(dest);
 	return stat;
@@ -309,8 +308,7 @@ IO_stat IO_read_int4(int4 *dest, IO_handle stream)
 
 IO_stat IO_read_uint2(uint2 *dest, IO_handle stream)
 {
-	uint4 n = 1;
-	IO_stat stat = MCS_read(dest, sizeof(uint2), n, stream);
+	IO_stat stat = MCS_readfixed(dest, sizeof(uint2), stream);
 	if (stat != IO_ERROR)
 		swap_uint2(dest);
 	return stat;
@@ -318,8 +316,7 @@ IO_stat IO_read_uint2(uint2 *dest, IO_handle stream)
 
 IO_stat IO_read_int2(int2 *dest, IO_handle stream)
 {
-	uint4 n = 1;
-	IO_stat stat = MCS_read(dest, sizeof(int2), n, stream);
+	IO_stat stat = MCS_readfixed(dest, sizeof(int2), stream);
 	if (stat != IO_ERROR)
 		swap_int2(dest);
 	return stat;
@@ -327,14 +324,12 @@ IO_stat IO_read_int2(int2 *dest, IO_handle stream)
 
 IO_stat IO_read_uint1(uint1 *dest, IO_handle stream)
 {
-	uint4 n = 1;
-	return MCS_read(dest, sizeof(uint1), n, stream);
+	return MCS_readfixed(dest, sizeof(uint1), stream);
 }
 
 IO_stat IO_read_int1(int1 *dest, IO_handle stream)
 {
-	uint4 n = 1;
-	return MCS_read(dest, sizeof(int1), n, stream);
+	return MCS_readfixed(dest, sizeof(int1), stream);
 }
 
 IO_stat IO_write_real8(real8 dest, IO_handle stream)
@@ -579,18 +574,6 @@ IO_stat IO_write_string(const char *string, uint4 outlen, IO_handle stream,
 	return stat;
 }
 
-// MW-2009-06-30: New IO method reads a block of bytes and fails if there is
-//   not enough to satisfy the request.
-IO_stat IO_read_bytes(void *ptr, uint4 size, IO_handle stream)
-{
-	uint4 n;
-	n = 1;
-	if (MCS_read(ptr, size, n, stream) != IO_NORMAL ||
-		n != 1)
-		return IO_ERROR;
-	return IO_NORMAL;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 IO_stat IO_read_mccolor(MCColor& r_color, IO_handle p_stream)
@@ -740,8 +723,74 @@ IO_stat IO_write_stringref(MCStringRef p_string, IO_handle stream, uint1 size)
 	return IO_write_string(t_length != nil ? MCStringGetCString(p_string) : nil, t_length, stream, size);
 }
 
+IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, bool as_unicode, uint1 size)
+{
+	IO_stat stat = IO_NORMAL;
+	MCStringEncoding t_encoding = as_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative;
+	
+	uint4 t_length;
+	char *t_bytes;
+	if ((stat = IO_read_string(t_bytes, t_length, stream, as_unicode, size)) != IO_NORMAL)
+		return stat;
+		
+	if (!MCStringCreateWithBytesAndRelease((byte_t *)t_bytes, t_length, t_encoding, false, r_string))
+	{
+		delete t_bytes;
+		return IO_ERROR;
+	}
+		
+	return IO_NORMAL;
+}
+
+IO_stat IO_write_stringref(MCStringRef p_string, IO_handle stream, bool as_unicode, uint1 size)
+{	
+	IO_stat stat = IO_NORMAL;
+	MCStringEncoding t_encoding = as_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative;
+	
+	MCDataRef t_data = nil;
+	if (!MCStringEncode(p_string, t_encoding, false, t_data))
+		return IO_ERROR;
+	
+	uindex_t t_length = MCDataGetLength(t_data);
+	const char *t_bytes = (const char *)MCDataGetBytePtr(t_data);
+	stat = IO_write_string(t_bytes, t_length, stream, as_unicode, size);
+	MCValueRelease(t_data);
+	return stat;
+}
+
+IO_stat IO_read_stringref_utf8(MCStringRef& r_string, IO_handle stream, uint1 size)
+{
+	// Read in the UTF-8 string and create a StringRef
+	IO_stat stat = IO_NORMAL;
+	char *t_bytes = nil;
+	uint4 t_length = 0;
+	if ((stat = IO_read_string_no_translate(t_bytes, stream, size)) != IO_NORMAL)
+		return stat;
+	if (!MCStringCreateWithBytesAndRelease((byte_t *)t_bytes, t_bytes != nil ? strlen(t_bytes) : 0, kMCStringEncodingUTF8, false, r_string))
+	{
+		delete[] t_bytes;
+		return IO_ERROR;
+	}
+	
+	return IO_NORMAL;
+}
+
+IO_stat IO_write_stringref_utf8(MCStringRef p_string, IO_handle stream, uint1 size)
+{
+	// Convert the string to UTF-8 encoding before writing it out
+	IO_stat stat;
+	char *t_bytes = nil;
+	uindex_t t_length = 0;
+	if (!MCStringConvertToUTF8(p_string, t_bytes, t_length))
+		return IO_ERROR;
+	stat = IO_write_string(t_bytes, stream, size);
+	MCMemoryDeleteArray(t_bytes);
+	return stat;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
+#if OLD_SYSTEM
 int64_t MCS_fake_fsize(IO_handle stream)
 {
 	return 0;
@@ -800,5 +849,6 @@ IO_stat MCS_fake_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
 
 	return t_stat;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////

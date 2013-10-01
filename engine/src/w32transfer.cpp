@@ -361,24 +361,15 @@ TransferData::~TransferData(void)
 {
 	for(unsigned int i = 0; i < m_entry_count; ++i)
 	{
-#ifdef SHARED_STRING
-		if (m_entries[i] . data != NULL)
-			m_entries[i] . data -> Release();
-#else
 		if (m_entries[i] . data != nil)
 			MCValueRelease(m_entries[i] . data);
-#endif
 		ReleaseStgMedium(&m_entries[i] . storage);
 	}
 
 	delete m_entries;
 }
 
-#ifdef SHARED_STRING
-bool TransferData::Publish(FORMATETC *p_format, MCSharedString *p_data, MCWindowsConversionCallback p_converter)
-#else
-bool TransferData::Publish(FORMATETC *p_format, MCStringRef p_data, MCWindowsConversionCallback p_converter)
-#endif
+bool TransferData::Publish(FORMATETC *p_format, MCDataRef p_data, MCWindowsConversionCallback p_converter)
 {
 	Entry *t_new_entries;
 	t_new_entries = (Entry *)realloc(m_entries, sizeof(Entry) * (m_entry_count + 1));
@@ -386,12 +377,7 @@ bool TransferData::Publish(FORMATETC *p_format, MCStringRef p_data, MCWindowsCon
 		return false;
 
 	t_new_entries[m_entry_count] . format = *p_format;
-#ifdef SHARED_STRING
-	t_new_entries[m_entry_count] . data = p_data;
-	p_data -> Retain();
-#else
 	t_new_entries[m_entry_count] . data = MCValueRetain(p_data);
-#endif
 	t_new_entries[m_entry_count] . converter = p_converter;
 	t_new_entries[m_entry_count] . storage . tymed = TYMED_NULL;
 	t_new_entries[m_entry_count] . storage . pUnkForRelease = NULL;
@@ -402,11 +388,7 @@ bool TransferData::Publish(FORMATETC *p_format, MCStringRef p_data, MCWindowsCon
 	return true;
 }
 
-#ifdef SHARED_STRING
-bool TransferData::Publish(CLIPFORMAT p_clip_format, TYMED p_storage, MCSharedString* p_data, MCWindowsConversionCallback p_converter)
-#else
-bool TransferData::Publish(CLIPFORMAT p_clip_format, TYMED p_storage, MCStringRef p_data, MCWindowsConversionCallback p_converter)           
-#endif
+bool TransferData::Publish(CLIPFORMAT p_clip_format, TYMED p_storage, MCDataRef p_data, MCWindowsConversionCallback p_converter)       
 {
 	FORMATETC t_format;
 	t_format . cfFormat = p_clip_format;
@@ -418,11 +400,7 @@ bool TransferData::Publish(CLIPFORMAT p_clip_format, TYMED p_storage, MCStringRe
 	return Publish(&t_format, p_data, p_converter);
 }
 
-#ifdef SHARED_STRING
-bool TransferData::Publish(MCTransferType p_type, MCSharedString *p_data)
-#else
-bool TransferData::Publish(MCTransferType p_type, MCStringRef p_data)
-#endif
+bool TransferData::Publish(MCTransferType p_type, MCDataRef p_data)
 {
 	bool t_success;
 	t_success = true;
@@ -439,13 +417,9 @@ bool TransferData::Publish(MCTransferType p_type, MCStringRef p_data)
 			// map to a code page of 1252.
 			unsigned int t_locale_id;
 			t_locale_id = 1033;
-#ifdef SHARED_STRING
-			t_success = Publish(CF_LOCALE, TYMED_HGLOBAL, MCSharedString::Create(MCString((char *)&t_locale_id, 4)), NULL);
-#else
-			MCAutoStringRef t_locale_id_string;
-			/* UNCHECKED */ MCStringCreateWithNativeChars((char_t *)&t_locale_id, 4, &t_locale_id_string);
+			MCAutoDataRef t_locale_id_string;
+			/* UNCHECKED */ MCDataCreateWithBytes((char_t *)&t_locale_id, 4, &t_locale_id_string);
 			t_success = Publish(CF_LOCALE, TYMED_HGLOBAL, *t_locale_id_string, NULL);
-#endif
 		}
 	break;
 	case TRANSFER_TYPE_UNICODE_TEXT:
@@ -474,13 +448,9 @@ bool TransferData::Publish(MCTransferType p_type, MCStringRef p_data)
 					// map to a code page of 1252.
 					unsigned int t_locale_id;
 					t_locale_id = 1033;
-#ifdef SHARED_STRING
-					t_success = Publish(CF_LOCALE, TYMED_HGLOBAL, MCSharedString::Create(MCString((char *)&t_locale_id, 4)), NULL);
-#else
-					MCAutoStringRef t_locale_id_string;
-					/* UNCHECKED */ MCStringCreateWithNativeChars((char_t *)&t_locale_id, 4, &t_locale_id_string);
+					MCAutoDataRef t_locale_id_string;
+					/* UNCHECKED */ MCDataCreateWithBytes((char_t *)&t_locale_id, 4, &t_locale_id_string);
 					t_success = Publish(CF_LOCALE, TYMED_HGLOBAL, *t_locale_id_string, NULL);
-#endif
 				}
 			}
 		}
@@ -531,27 +501,13 @@ bool TransferData::Publish(MCPasteboard *p_pasteboard)
 	{
 		for(uint4 i = 0; i < t_type_count && t_success; ++i)
 		{
-#ifdef SHARED_STRING
-			MCSharedString *t_data;
-
-			// Note that data is fetched from the pasteboard with copy semantics
-			// so ensure we release the object if successful.
-			if (p_pasteboard -> Fetch(t_types[i], t_data))
-			{
-				t_success = Publish(t_types[i], t_data);
-				t_data -> Release();
-			}
-			else
-				t_success = false;
-#else
 			// Note that data is fetched from the pasteboard with copy semantics
 			// so use MCAutoStringRef to release the value afterwards.
-			MCAutoStringRef t_data;
+			MCAutoDataRef t_data;
 			if (p_pasteboard -> Fetch(t_types[i], &t_data))
 				t_success = Publish(t_types[i], *t_data);
 			else
 				t_success = false;
-#endif
 		}
 	}
 
@@ -590,13 +546,8 @@ HRESULT TransferData::Subscribe(TransferData::Entry *p_entry)
 	{
 		if (p_entry -> converter == NULL)
 		{
-#ifdef SHARED_STRING
-			const char_t *t_data_ptr = p_entry -> data -> Get() . getstring();
-			uint32_t t_data_len = p_entry -> data -> Get() . getlength();
-#else
-			const char_t *t_data_ptr = MCStringGetNativeCharPtr(p_entry->data);
-			uint32_t t_data_len = MCStringGetLength(p_entry->data);
-#endif
+			const char_t *t_data_ptr = MCDataGetBytePtr(p_entry->data);
+			uint32_t t_data_len = MCDataGetLength(p_entry->data);
 			HGLOBAL t_handle;
 			t_handle = GlobalAlloc(GMEM_FIXED, t_data_len);
 			if (t_handle == NULL)
@@ -612,11 +563,8 @@ HRESULT TransferData::Subscribe(TransferData::Entry *p_entry)
 
 		p_entry -> storage . pUnkForRelease = NULL;
 
-#ifdef SHARED_STRING
-		p_entry -> data -> Release();
-#else
 		MCValueRelease(p_entry -> data);
-#endif
+		
 		p_entry -> data = NULL;
 		p_entry -> converter = NULL;
 	}
@@ -887,13 +835,9 @@ MCWindowsPasteboard::~MCWindowsPasteboard(void)
 {
 	// Release any cached shared strings.
 	for(unsigned int i = 0; i < m_entry_count; ++i)
-#ifdef SHARED_STRING
-		if (m_entries[i] . data != NULL)
-			m_entries[i] . data -> Release();
-#else
 		if (m_entries[i] . data != NULL)
 			MCValueRelease(m_entries[i] . data);
-#endif
+	
 	// Release the system object
 	m_data_object -> Release();
 
@@ -1192,11 +1136,7 @@ static inline uint32_t packed_scale_bounded(uint32_t x, uint8_t a)
 	return u + v;
 }
 
-#ifdef SHARED_STRING
-bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCSharedString*& r_data)
-#else
-bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCStringRef& r_data)
-#endif
+bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 {
 	if (!m_valid)
 		return false;
@@ -1211,36 +1151,21 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCStringRef& r_data)
 
 	if (m_entries[t_entry] . data != NULL)
 	{
-#ifdef SHARED_STRING
-		m_entries[t_entry] . data -> Retain();
-		r_data = m_entries[t_entry] . data;
-#else
 		r_data = MCValueRetain(m_entries[t_entry] . data);
-#endif
 		return true;
 	}
 
-#ifdef SHARED_STRING
-	MCSharedString *t_out_data;
-	t_out_data = NULL;
-#else
 	MCAutoStringRef t_out_data;
-#endif
 
 	FormatData t_in_data(m_data_object, m_entries[t_entry] . format);
 	if (!t_in_data . Valid())
 		return false;
 
-#ifdef SHARED_STRING
-	const char *t_in_ptr = t_in_data . Get() . getstring();
-	uint4 t_in_length = t_in_data . Get() . getlength();
-#else
-	MCAutoStringRef t_in_string;
+	MCAutoDataRef t_in_string;
 	t_in_data . Get(&t_in_string);
 
-	const char *t_in_ptr = MCStringGetCString(*t_in_string);
-	uint4 t_in_length = MCStringGetLength(*t_in_string);
-#endif
+	const char *t_in_ptr = MCDataGetBytePtr(*t_in_string);
+	uint4 t_in_length = MCDataGetLength(*t_in_string);
 
 	switch(m_entries[t_entry] . format)
 	{
@@ -1253,11 +1178,7 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCStringRef& r_data)
 
 		ep . setsvalue(MCString(t_in_ptr, t_in_length));
 		ep . texttobinary();
-#ifdef SHARED_STRING
-		t_out_data = MCSharedString::Create(ep . getsvalue());
-#else
-		ep . copyasstringref(&t_out_data);
-#endif
+		ep . copyasdataref(&t_out_data);
 	}
 	break;
 	case CF_UNICODETEXT:
@@ -1271,11 +1192,7 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCStringRef& r_data)
 		ep . utf16toutf8();
 		ep . texttobinary();
 		ep . utf8toutf16();
-#ifdef SHARED_STRING
-		t_out_data = MCSharedString::Create(ep . getsvalue());
-#else
-		ep . copyasstringref(&t_out_data);
-#endif
+		ep . copyasdataref(&t_out_data);
 	}
 	break;
 	case CF_DIB:
@@ -1290,8 +1207,12 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCStringRef& r_data)
 		uindex_t t_byte_count = 0;
 		char *t_buffer = nil;
 		uint32_t t_length = 0;
+        MCAutoDataRef t_data;
+        
+        t_success = MCDataCreateWithBytes((byte_t*)t_in_ptr, t_in_length, &t_data);
 
-		t_success = nil != (t_stream = MCS_fakeopen(MCString(t_in_ptr, t_in_length)));
+        if (t_success)
+            t_success = nil != (t_stream = MCS_fakeopen(*t_data));
 
 		if (t_success)
 			t_success = MCImageDecodeBMPStruct(t_stream, t_byte_count, t_bitmap);
@@ -1310,18 +1231,10 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCStringRef& r_data)
 			t_success = IO_NORMAL == MCS_fakeclosewrite(t_stream, t_buffer, t_length);
 
 		if (t_success)
-		{
-#ifdef SHARED_STRING
-			t_success = nil != (t_out_data = MCSharedString::CreateNoCopy(t_buffer, t_length));
-#else
-			t_success = MCStringCreateWithNativeCharsAndRelease((char_t*)t_buffer, t_length, &t_out_data);
-#endif
-		}
+			t_success = MCDataCreateWithBytesAndRelease((char_t*)t_buffer, t_length, &t_out_data);
 
 		if (!t_success)
-		{
 			MCMemoryDeallocate(t_buffer);
-		}
 
 		MCImageFreeBitmap(t_bitmap);
 	}
@@ -1419,11 +1332,7 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCStringRef& r_data)
 
 			MCS_fakeclosewrite(t_stream, t_bytes, t_byte_count);
 
-#ifdef SHARED_STRING
-			t_out_data = MCSharedString::Create(t_bytes, t_byte_count);
-#else
-			/* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)t_bytes, t_byte_count, &t_out_data);
-#endif
+			/* UNCHECKED */ MCDataCreateWithBytes((char_t*)t_bytes, t_byte_count, &t_out_data);
 			MCMemoryDeallocate(t_bytes);
 		}
 
@@ -1462,28 +1371,10 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCStringRef& r_data)
 			}
 		}
 
-#ifdef SHARED_STRING
-		t_out_data = MCSharedString::Create(ep . getsvalue());
-#else
-		ep . copyasstringref(&t_out_data);
-#endif
+		ep . copyasdataref(&t_out_data);
 	}
 	break;
 	default:
-#ifdef SHARED_STRING
-		if (m_entries[t_entry] . format == CF_RTF())
-			t_out_data = MCConvertRTFToStyledText(t_in_data . Get());
-		else if (m_entries[t_entry] . format == CF_GIF())
-			t_out_data = MCSharedString::Create(t_in_data . Get());
-		else if (m_entries[t_entry] . format == CF_PNG())
-			t_out_data = MCSharedString::Create(t_in_data . Get());
-		else if (m_entries[t_entry] . format == CF_JFIF())
-			t_out_data = MCSharedString::Create(t_in_data . Get());
-		else if (m_entries[t_entry] . format == CF_REVOLUTION_STYLED_TEXT())
-			t_out_data = MCSharedString::Create(t_in_data . Get());
-		else if (m_entries[t_entry] . format == CF_REVOLUTION_OBJECTS())
-			t_out_data = MCSharedString::Create(t_in_data . Get());
-#else
 		if (m_entries[t_entry] . format == CF_RTF())
 			MCConvertRTFToStyledText(*t_in_string, &t_out_data);
 		else if (m_entries[t_entry] . format == CF_GIF())
@@ -1496,25 +1387,14 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCStringRef& r_data)
 			&t_out_data = MCValueRetain(*t_in_string);
 		else if (m_entries[t_entry] . format == CF_REVOLUTION_OBJECTS())
 			&t_out_data = MCValueRetain(*t_in_string);
-#endif
 	break;
 	}
 
-#ifdef SHARED_STRING
-	if (t_out_data == NULL)
-		return false;
-
-	m_entries[t_entry] . data = t_out_data;
-	t_out_data -> Retain();
-
-	r_data = t_out_data;
-#else
 	if (*t_out_data == nil)
 		return false;
 
 	m_entries[t_entry] . data = MCValueRetain(*t_out_data);
 	r_data = MCValueRetain(*t_out_data);
-#endif
 
 	return true;
 }
@@ -1538,13 +1418,13 @@ static bool CloneStringToStorage(const MCString& p_string, STGMEDIUM& r_storage)
 	return t_handle != NULL;
 }
 
-static bool CloneStringToStorage(MCStringRef p_string, STGMEDIUM& r_storage)
+static bool CloneStringToStorage(MCDataRef p_string, STGMEDIUM& r_storage)
 {
 	HGLOBAL t_handle;
-	t_handle = GlobalAlloc(GMEM_FIXED, MCStringGetLength(p_string));
+	t_handle = GlobalAlloc(GMEM_FIXED, MCDataGetLength(p_string));
 	if (t_handle != NULL)
 	{
-		memcpy(t_handle, MCStringGetCString(p_string), MCStringGetLength(p_string));
+		memcpy(t_handle, MCDataGetBytePtr(p_string), MCDataGetLength(p_string));
 		r_storage . tymed = TYMED_HGLOBAL;
 		r_storage . hGlobal = t_handle;
 	}
@@ -1558,23 +1438,7 @@ static bool CloneStringToStorage(MCStringRef p_string, STGMEDIUM& r_storage)
 //
 // The line separator is always CRLF.
 //
-#ifdef SHARED_STRING
-bool MCConvertTextToWindowsAnsi(MCSharedString *p_input, STGMEDIUM& r_storage)
-{
-	MCExecPoint ep(NULL, NULL, NULL);
-	ep . setsvalue(p_input -> Get());
-	ep . binarytotext();
-
-	MCString t_value;
-	t_value = ep . getsvalue();
-
-	if (t_value . getlength() == 0 || t_value . getstring()[t_value . getlength() - 1] != '\0')
-		ep . pad('\0', 1);
-
-	return CloneStringToStorage(ep . getsvalue(), r_storage);
-}
-#else
-bool MCConvertTextToWindowsAnsi(MCStringRef p_input, STGMEDIUM& r_storage)
+bool MCConvertTextToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage)
 {
 	MCExecPoint ep(NULL, NULL, NULL);
 	ep . setvalueref(p_input);
@@ -1586,99 +1450,16 @@ bool MCConvertTextToWindowsAnsi(MCStringRef p_input, STGMEDIUM& r_storage)
 	if (t_value . getlength() == 0 || t_value . getstring()[t_value . getlength() - 1] != '\0')
 		ep . pad('\0', 1);
 
-	MCAutoStringRef t_storage;
-	ep . copyasstringref(&t_storage);
+	MCAutoDataRef t_storage;
+	ep . copyasdataref(&t_storage);
 	return CloneStringToStorage(*t_storage, r_storage);
 }
-#endif
+
 // Windows Wide Text format is a NUL terminated string of UTF-16 codepoints.
 //
 // The line separator is always CRLF.
 //
-#ifdef SHARED_STRING
-bool MCConvertTextToWindowsWide(MCSharedString *p_input, STGMEDIUM& r_storage)
-{
-	MCExecPoint ep(NULL, NULL, NULL);
-	ep . setsvalue(p_input -> Get());
-	ep . binarytotext();
-	ep . nativetoutf16();
-
-	MCString t_value;
-	t_value = ep . getsvalue();
-
-	if (t_value . getlength() < 2 || (t_value . getstring()[t_value . getlength() - 2] != '\0' || t_value . getstring()[t_value . getlength() - 1] != '\0'))
-		ep . pad('\0', 2);
-
-	return CloneStringToStorage(ep . getsvalue(), r_storage);
-}
-
-bool MCConvertUnicodeToWindowsAnsi(MCSharedString *p_input, STGMEDIUM& r_storage)
-{
-	MCExecPoint ep(NULL, NULL, NULL);
-
-	ep . setsvalue(p_input -> Get());
-	ep . utf16tonative();
-	ep . binarytotext();
-	
-	MCString t_value;
-	t_value = ep . getsvalue();
-
-	if (t_value . getlength() == 0 || t_value . getstring()[t_value . getlength() - 1] != '\0')
-		ep . pad('\0', 1);
-
-	return CloneStringToStorage(ep . getsvalue(), r_storage);
-}
-
-bool MCConvertUnicodeToWindowsWide(MCSharedString *p_input, STGMEDIUM& r_storage)
-{
-	MCExecPoint ep(NULL, NULL, NULL);
-	ep . setsvalue(p_input -> Get());
-	ep . utf16toutf8();
-	ep . binarytotext();
-	ep . utf8toutf16();
-
-	MCString t_value;
-	t_value = ep . getsvalue();
-
-	if (t_value . getlength() < 2 || (t_value . getstring()[t_value . getlength() - 2] != '\0' || t_value . getstring()[t_value . getlength() - 1] != '\0'))
-		ep . pad('\0', 2);
-
-	return CloneStringToStorage(ep . getsvalue(), r_storage);
-}
-
-bool MCConvertStyledTextToWindowsAnsi(MCSharedString *p_input, STGMEDIUM& r_storage)
-{
-	bool t_result;
-	t_result = false;
-
-	MCSharedString *t_text;
-	t_text = MCConvertStyledTextToText(p_input);
-	if (t_text != NULL)
-	{
-		t_result = MCConvertTextToWindowsAnsi(t_text, r_storage);
-		t_text -> Release();
-	}
-
-	return t_result;
-}
-
-bool MCConvertStyledTextToWindowsWide(MCSharedString *p_input, STGMEDIUM& r_storage)
-{
-	bool t_result;
-	t_result = false;
-
-	MCSharedString *t_text;
-	t_text = MCConvertStyledTextToUnicode(p_input);
-	if (t_text != NULL)
-	{
-		t_result = MCConvertUnicodeToWindowsWide(t_text, r_storage);
-		t_text -> Release();
-	}
-
-	return t_result;
-}
-#else
-bool MCConvertTextToWindowsWide(MCStringRef p_input, STGMEDIUM& r_storage)
+bool MCConvertTextToWindowsWide(MCDataRef p_input, STGMEDIUM& r_storage)
 {
 	MCExecPoint ep(NULL, NULL, NULL);
 	ep . setvalueref(p_input);
@@ -1694,7 +1475,7 @@ bool MCConvertTextToWindowsWide(MCStringRef p_input, STGMEDIUM& r_storage)
 	return CloneStringToStorage(ep . getsvalue(), r_storage);
 }
 
-bool MCConvertUnicodeToWindowsAnsi(MCStringRef p_input, STGMEDIUM& r_storage)
+bool MCConvertUnicodeToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage)
 {
 	MCExecPoint ep(NULL, NULL, NULL);
 
@@ -1711,7 +1492,7 @@ bool MCConvertUnicodeToWindowsAnsi(MCStringRef p_input, STGMEDIUM& r_storage)
 	return CloneStringToStorage(ep . getsvalue(), r_storage);
 }
 
-bool MCConvertUnicodeToWindowsWide(MCStringRef p_input, STGMEDIUM& r_storage)
+bool MCConvertUnicodeToWindowsWide(MCDataRef p_input, STGMEDIUM& r_storage)
 {
 	MCExecPoint ep(NULL, NULL, NULL);
 	ep . setvalueref(p_input);
@@ -1728,12 +1509,12 @@ bool MCConvertUnicodeToWindowsWide(MCStringRef p_input, STGMEDIUM& r_storage)
 	return CloneStringToStorage(ep . getsvalue(), r_storage);
 }
 
-bool MCConvertStyledTextToWindowsAnsi(MCStringRef p_input, STGMEDIUM& r_storage)
+bool MCConvertStyledTextToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage)
 {
 	bool t_result;
 	t_result = false;
 
-	MCAutoStringRef t_text;
+	MCAutoDataRef t_text;
 	MCConvertStyledTextToText(p_input, &t_text);
 	if (*t_text != nil)
 		t_result = MCConvertTextToWindowsAnsi(*t_text, r_storage);
@@ -1741,31 +1522,23 @@ bool MCConvertStyledTextToWindowsAnsi(MCStringRef p_input, STGMEDIUM& r_storage)
 	return t_result;
 }
 
-bool MCConvertStyledTextToWindowsWide(MCStringRef p_input, STGMEDIUM& r_storage)
+bool MCConvertStyledTextToWindowsWide(MCDataRef p_input, STGMEDIUM& r_storage)
 {
 	bool t_result;
 	t_result = false;
 
-	MCAutoStringRef t_text;
+	MCAutoDataRef t_text;
 	MCConvertStyledTextToUnicode(p_input, &t_text);
 	if (*t_text != nil)
 		t_result = MCConvertUnicodeToWindowsWide(*t_text, r_storage);
 
 	return t_result;
 }
-#endif
 
-#ifdef SHARED_STRING
-bool MCConvertImageToWindowsBitmap(MCSharedString *p_input, STGMEDIUM& r_storage)
+bool MCConvertImageToWindowsBitmap(MCDataRef p_input, STGMEDIUM& r_storage)
 {
-	const uint8_t *t_data = (const uint8_t*)p_input->GetBuffer();
-	uint32_t t_length = p_input->GetLength();
-#else
-bool MCConvertImageToWindowsBitmap(MCStringRef p_input, STGMEDIUM& r_storage)
-{
-	const uint8_t *t_data = MCStringGetBytePtr(p_input);
-	uint32_t t_length = MCStringGetLength(p_input);
-#endif
+	const uint8_t *t_data = MCDataGetBytePtr(p_input);
+	uint32_t t_length = MCDataGetLength(p_input);
 
 	bool t_success = true;
 
@@ -1787,17 +1560,10 @@ bool MCConvertImageToWindowsBitmap(MCStringRef p_input, STGMEDIUM& r_storage)
 	return t_success;
 }
 
-#ifdef SHARED_STRING
-bool MCConvertImageToWindowsV5Bitmap(MCSharedString *p_input, STGMEDIUM& r_storage)
+bool MCConvertImageToWindowsV5Bitmap(MCDataRef p_input, STGMEDIUM& r_storage)
 {
-	const uint8_t *t_data = (const uint8_t*)p_input->GetBuffer();
-	uint32_t t_length = p_input->GetLength();
-#else
-bool MCConvertImageToWindowsV5Bitmap(MCStringRef p_input, STGMEDIUM& r_storage)
-{
-	const uint8_t *t_data = MCStringGetBytePtr(p_input);
-	uint32_t t_length = MCStringGetLength(p_input);
-#endif
+	const uint8_t *t_data = MCDataGetBytePtr(p_input);
+	uint32_t t_length = MCDataGetLength(p_input);	
 
 	bool t_success = true;
 
@@ -1819,17 +1585,10 @@ bool MCConvertImageToWindowsV5Bitmap(MCStringRef p_input, STGMEDIUM& r_storage)
 	return t_success;
 }
 
-#ifdef SHARED_STRING
-bool MCConvertImageToWindowsMetafile(MCSharedString *p_input, STGMEDIUM& r_storage)
+bool MCConvertImageToWindowsMetafile(MCDataRef p_input, STGMEDIUM& r_storage)
 {
-	const uint8_t *t_data = (const uint8_t*)p_input->GetBuffer();
-	uint32_t t_length = p_input->GetLength();
-#else
-bool MCConvertImageToWindowsMetafile(MCStringRef p_input, STGMEDIUM& r_storage)
-{
-	const uint8_t *t_data = MCStringGetBytePtr(p_input);
-	uint32_t t_length = MCStringGetLength(p_input);
-#endif
+	const uint8_t *t_data = MCDataGetBytePtr(p_input);
+	uint32_t t_length = MCDataGetLength(p_input);	
 
 	bool t_success = true;
 
@@ -1851,18 +1610,11 @@ bool MCConvertImageToWindowsMetafile(MCStringRef p_input, STGMEDIUM& r_storage)
 	return t_success;
 }
 
-#ifdef SHARED_STRING
-bool MCConvertFilesToWindowsHDROP(MCSharedString *p_input, STGMEDIUM& r_storage)
+bool MCConvertFilesToWindowsHDROP(MCDataRef p_input, STGMEDIUM& r_storage)
 {
-	const uint8_t *t_data = (const uint8_t*)p_input->GetBuffer();
-	uint32_t t_length = p_input->GetLength();
-#else
-bool MCConvertFilesToWindowsHDROP(MCStringRef p_input, STGMEDIUM& r_storage)
-{
-	const uint8_t *t_data = MCStringGetBytePtr(p_input);
-	uint32_t t_length = MCStringGetLength(p_input);
-#endif
-
+	const uint8_t *t_data = MCDataGetBytePtr(p_input);
+	uint32_t t_length = MCDataGetLength(p_input);
+	
 	HGLOBAL t_handle;
 	t_handle = GlobalAlloc(GMEM_DDESHARE | GMEM_MOVEABLE, sizeof(DROPFILES) + t_length + 2);
 	if (t_handle == NULL)
@@ -1907,31 +1659,12 @@ bool MCConvertFilesToWindowsHDROP(MCStringRef p_input, STGMEDIUM& r_storage)
 	return true;
 }
 
-#ifdef SHARED_STRING
-bool MCConvertStyledTextToWindowsRTF(MCSharedString* p_input, STGMEDIUM& r_storage)
+bool MCConvertStyledTextToWindowsRTF(MCDataRef p_input, STGMEDIUM& r_storage)
 {
 	bool t_success;
 	t_success = true;
 
-	MCSharedString *t_rtf;
-	t_rtf = MCConvertStyledTextToRTF(p_input);
-	if (t_rtf != NULL)
-	{
-		t_success = CloneStringToStorage(t_rtf -> Get(), r_storage);
-		t_rtf -> Release();
-	}
-	else
-		t_success = false;
-
-	return t_success;
-}
-#else
-bool MCConvertStyledTextToWindowsRTF(MCStringRef p_input, STGMEDIUM& r_storage)
-{
-	bool t_success;
-	t_success = true;
-
-	MCAutoStringRef t_rtf;
+	MCAutoDataRef t_rtf;
 	MCConvertStyledTextToRTF(p_input, &t_rtf);
 	if (*t_rtf != nil)
 		t_success = CloneStringToStorage(*t_rtf, r_storage);
@@ -1940,5 +1673,3 @@ bool MCConvertStyledTextToWindowsRTF(MCStringRef p_input, STGMEDIUM& r_storage)
 
 	return t_success;
 }
-#endif
-

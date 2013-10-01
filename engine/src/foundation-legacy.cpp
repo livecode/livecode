@@ -647,6 +647,17 @@ bool MCStringCreateWithCString(const char* p_cstring, MCStringRef& r_string)
 	return MCStringCreateWithNativeChars((const char_t*)p_cstring, MCCStringLength(p_cstring), r_string);
 }
 
+
+bool MCStringCreateWithOldString(const MCString& p_old_string, MCStringRef& r_string)
+{
+	return MCStringCreateWithNativeChars((const char_t *)p_old_string . getstring(), p_old_string . getlength(), r_string);
+}
+
+bool MCStringCreateWithCStringAndRelease(char_t* p_cstring, MCStringRef& r_string)
+{
+	return MCStringCreateWithNativeCharsAndRelease(p_cstring, MCCStringLength((const char *)p_cstring), r_string);
+}
+
 const char *MCStringGetCString(MCStringRef p_string)
 {
     if (p_string == nil)
@@ -676,6 +687,41 @@ bool MCStringIsEqualToCString(MCStringRef p_string, const char *p_cstring, MCCom
 bool MCStringIsEqualToOldString(MCStringRef p_string, const MCString& p_oldstring, MCCompareOptions p_options)
 {
 	return MCStringIsEqualToNativeChars(p_string, (const char_t *)p_oldstring . getstring(), p_oldstring . getlength(), p_options);
+}
+
+bool MCStringToInteger(MCStringRef p_string, integer_t& r_integer)
+{
+	char *t_end;
+	t_end = nil;
+	
+	integer_t t_value;
+	t_value = strtol(MCStringGetCString(p_string), &t_end, 10);
+	
+	if (t_end != MCStringGetCString(p_string) + strlen(MCStringGetCString(p_string)))
+		return false;
+	
+	r_integer = t_value;
+	return true;
+}
+
+bool MCStringToDouble(MCStringRef p_string, double& r_real)
+{
+	char *t_end;
+	t_end = nil;
+	
+	double t_value;
+	t_value = strtod(MCStringGetCString(p_string), &t_end);
+	
+	if (t_end != MCStringGetCString(p_string) + strlen(MCStringGetCString(p_string)))
+		return false;
+	
+	r_real = t_value;
+	return true;
+}
+
+MCString MCDataGetOldString(MCDataRef p_data)
+{
+	return MCString((const char *)MCDataGetBytePtr(p_data), MCDataGetLength(p_data));
 }
 
 #if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)

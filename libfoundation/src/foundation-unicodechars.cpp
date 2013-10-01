@@ -20,6 +20,202 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+compare_t MCUnicodeCharsCompareExact(const unichar_t *p_left, uindex_t p_left_length, const unichar_t *p_right, uindex_t p_right_length)
+{
+	for(;;)
+	{
+		if (p_left_length == 0 || p_right_length == 0)
+			break;
+		
+		compare_t d;
+		d = *p_left++ - *p_right++;
+		if (d != 0)
+			return d;
+		
+		p_left_length -= 1;
+		p_right_length -= 1;
+	}
+	
+	return p_left_length - p_right_length;
+}
+
+compare_t MCUnicodeCharsCompareCaseless(const unichar_t *p_left, uindex_t p_left_length, const unichar_t *p_right, uindex_t p_right_length)
+{
+	for(;;)
+	{
+		if (p_left_length == 0 || p_right_length == 0)
+			break;
+		
+		compare_t d;
+		d = MCUnicodeCharFold(*p_left++) - MCUnicodeCharFold(*p_right++);
+		if (d != 0)
+			return d;
+		
+		p_left_length -= 1;
+		p_right_length -= 1;
+	}
+	
+	return p_left_length - p_right_length;
+}
+
+bool MCUnicodeCharsEqualExact(const unichar_t *p_left, uindex_t p_left_length, const unichar_t *p_right, uindex_t p_right_length)
+{
+	if (p_left_length != p_right_length)
+		return false;
+	
+	if (p_left == p_right)
+		return true;
+	
+	return MCUnicodeCharsCompareCaseless(p_left, p_left_length, p_right, p_right_length) == 0;
+}
+
+bool MCUnicodeCharsEqualCaseless(const unichar_t *p_left, uindex_t p_left_length, const unichar_t *p_right, uindex_t p_right_length)
+{
+	if (p_left_length != p_right_length)
+		return false;
+	
+	if (p_left == p_right)
+		return true;
+	
+	return MCUnicodeCharsCompareCaseless(p_left, p_left_length, p_right, p_right_length) == 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+uindex_t MCUnicodeCharsSharedPrefixExact(const unichar_t *p_string, uindex_t p_string_length, const unichar_t *p_prefix, uindex_t p_prefix_length)
+{
+	uindex_t t_count;
+	t_count = 0;
+	for(;;)
+	{
+		if (p_string_length == 0 || p_prefix_length == 0)
+			break;
+		
+		compare_t d;
+		d = *p_string++ - *p_prefix++;
+		if (d != 0)
+			break;
+		
+		t_count += 1;
+		
+		p_string_length -= 1;
+		p_prefix_length -= 1;
+	}
+	
+	return t_count;
+}
+
+uindex_t MCUnicodeCharsSharedPrefixCaseless(const unichar_t *p_string, uindex_t p_string_length, const unichar_t *p_prefix, uindex_t p_prefix_length)
+{
+	uindex_t t_count;
+	t_count = 0;
+	for(;;)
+	{
+		if (p_string_length == 0 || p_prefix_length == 0)
+			break;
+		
+		compare_t d;
+		d = MCUnicodeCharFold(*p_string++) - MCUnicodeCharFold(*p_prefix++);
+		if (d != 0)
+			break;
+		
+		t_count += 1;
+		
+		p_string_length -= 1;
+		p_prefix_length -= 1;
+	}
+	
+	return t_count;
+}
+
+uindex_t MCUnicodeCharsSharedSuffixExact(const unichar_t *p_string, uindex_t p_string_length, const unichar_t *p_suffix, uindex_t p_suffix_length)
+{
+	p_string += p_string_length;
+	p_suffix += p_suffix_length;
+	
+	uindex_t t_count;
+	t_count = 0;
+	for(;;)
+	{
+		if (p_string_length == 0 || p_suffix_length == 0)
+			break;
+		
+		compare_t d;
+		d = *--p_string - *--p_suffix;
+		if (d != 0)
+			break;
+		
+		t_count += 1;
+		
+		p_string_length -= 1;
+		p_suffix_length -= 1;
+	}
+	
+	return t_count;
+}
+
+uindex_t MCUnicodeCharsSharedSuffixCaseless(const unichar_t *p_string, uindex_t p_string_length, const unichar_t *p_suffix, uindex_t p_suffix_length)
+{
+	p_string += p_string_length;
+	p_suffix += p_suffix_length;
+	
+	uindex_t t_count;
+	t_count = 0;
+	for(;;)
+	{
+		if (p_string_length == 0 || p_suffix_length == 0)
+			break;
+		
+		compare_t d;
+		d = MCUnicodeCharFold(*--p_string) - MCUnicodeCharFold(*--p_suffix);
+		if (d != 0)
+			break;
+		
+		t_count += 1;
+		
+		p_string_length -= 1;
+		p_suffix_length -= 1;
+	}
+	
+	return t_count;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+hash_t MCUnicodeCharsHashExact(const unichar_t *p_chars, uindex_t p_char_count)
+{
+	hash_t t_value;
+	t_value = 0;
+	while(p_char_count--)
+		t_value += (t_value << 3) + *p_chars++;
+	return t_value;
+}
+
+hash_t MCUnicodeCharsHashCaseless(const unichar_t *p_chars, uindex_t p_char_count)
+{
+	hash_t t_value;
+	t_value = 0;
+	while(p_char_count--)
+		t_value += (t_value << 3) + MCUnicodeCharFold(*p_chars++);
+	return t_value;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCUnicodeCharsLowercase(unichar_t *p_chars, uindex_t p_char_count)
+{
+	for(uindex_t i = 0; i < p_char_count; i++)
+		p_chars[i] = MCUnicodeCharFold(p_chars[i]);
+}
+
+void MCUnicodeCharsUppercase(unichar_t *p_chars, uindex_t p_char_count)
+{
+	for(uindex_t i = 0; i < p_char_count; i++)
+		p_chars[i] = MCUnicodeCharUppercase(p_chars[i]);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCUnicodeCharsMapToNative(const unichar_t *p_uchars, uindex_t p_uchar_count, char_t *p_nchars, uindex_t& r_nchar_count, char_t p_invalid)
 {
 	bool t_lossy;
@@ -49,6 +245,252 @@ void MCUnicodeCharsMapFromNative(const char_t *p_chars, uindex_t p_char_count, u
 
 ////////////////////////////////////////////////////////////////////////////////
 
+unichar_t MCUnicodeCharFold(unichar_t p_char)
+{
+	char_t t_native_char;
+	if (MCUnicodeCharMapToNative(p_char, t_native_char))
+		return MCUnicodeCharMapFromNative(MCNativeCharFold(t_native_char));
+	return p_char;
+}
+
+unichar_t MCUnicodeCharUppercase(unichar_t p_char)
+{
+	char_t t_native_char;
+	if (MCUnicodeCharMapToNative(p_char, t_native_char))
+		return MCUnicodeCharMapFromNative(MCNativeCharUppercase(t_native_char));
+	return p_char;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Convert the given UTF-8 string to Unicode. Both counts are in bytes.
+// Returns the number of bytes used.
+static int32_t UTF8ToUnicode(const byte_t *p_src, int32_t p_src_count, uint16_t *p_dst, int32_t p_dst_count)
+{
+	int32_t t_made;
+	t_made = 0;
+	
+	for(;;)
+	{
+		if (p_src_count == 0)
+			break;
+		
+		uint32_t t_consumed;
+		t_consumed = 0;
+		
+		uint32_t t_codepoint;
+		if ((p_src[0] & 0x80) == 0)
+		{
+			t_codepoint = p_src[0];
+			t_consumed = 1;
+		}
+		else if ((p_src[0] & 0x40) == 0)
+		{
+			// This is an error
+		}
+		else if ((p_src[0] & 0x20) == 0)
+		{
+			if (p_src_count >= 2)
+			{
+				t_codepoint = (p_src[0] & 0x1f) << 6;
+				if ((p_src[1] & 0xc0) == 0x80)
+				{
+					t_codepoint |= (p_src[1] & 0x3f);
+					t_consumed = 2;
+				}
+			}
+		}
+		else if ((p_src[0] & 0x10) == 0)
+		{
+			if (p_src_count >= 3)
+			{
+				t_codepoint = (p_src[0] & 0x0f) << 12;
+				if ((p_src[1] & 0xc0) == 0x80)
+				{
+					t_codepoint |= (p_src[1] & 0x3f) << 6;
+					if ((p_src[2] & 0xc0) == 0x80)
+					{
+						t_codepoint |= (p_src[2] & 0x3f);
+						t_consumed = 3;
+					}
+				}
+			}
+		}
+		else if ((p_src[0] & 0x08) == 0)
+		{
+			if (p_src_count >= 4)
+			{
+				t_codepoint = (p_src[0] & 0x07) << 18;
+				if ((p_src[1] & 0xc0) == 0x80)
+				{
+					t_codepoint |= (p_src[1] & 0x3f) << 12;
+					if ((p_src[2] & 0xc0) == 0x80)
+					{
+						t_codepoint |= (p_src[2] & 0x3f) << 6;
+						if ((p_src[3] & 0xc0) == 0x80)
+						{
+							t_codepoint |= p_src[3] & 0x3f;
+							t_consumed = 4;
+						}
+					}
+				}
+			}
+		}
+		
+		if (t_consumed != 0)
+		{
+			if (t_codepoint < 65536)
+			{
+				if (p_dst_count != 0)
+				{
+					if ((t_made + 1) * 2 > p_dst_count)
+						break;
+					
+					p_dst[t_made] = t_codepoint;
+					
+				}
+				t_made += 1;
+			}
+			else
+			{
+				if (p_dst_count != 0)
+				{
+					if ((t_made + 2) * 2 > p_dst_count)
+						break;
+					
+					t_codepoint -= 0x10000;
+					
+					p_dst[t_made + 0] = 0xD800 + (t_codepoint >> 10);
+					p_dst[t_made + 1] = 0xDC00 + (t_codepoint & 0x03ff);
+				}
+				
+				t_made += 2;
+			}
+		}
+		else
+			t_consumed = 1;
+		
+		p_src += t_consumed;
+		p_src_count -= t_consumed;
+	}
+	
+	return t_made * 2;
+}
+
+// Converts the given UTF-16 string to UTF-8. Both counts are in bytes.
+// Returns the number of bytes generated.
+static int32_t UnicodeToUTF8(const uint16_t *p_src, int32_t p_src_count, byte_t *p_dst, int32_t p_dst_count)
+{
+	int32_t t_made;
+	t_made = 0;
+	
+	for(;;)
+	{
+		if (p_src_count < 2)
+			break;
+		
+		uint32_t t_codepoint;
+		t_codepoint = p_src[0];
+		if (t_codepoint < 0xD800 ||
+			t_codepoint >= 0xDC00 ||
+			p_src_count < 4 ||
+			p_src[1] < 0xDC00 ||
+			p_src[1] >= 0xE000)
+		{
+			p_src_count -= 2;
+			p_src += 1;
+		}
+		else
+		{
+			t_codepoint = 0x10000 + ((t_codepoint - 0xD800) << 10) + (p_src[1] - 0xDC00);
+			p_src_count -= 4;
+			p_src += 2;
+		}
+		
+		if (t_codepoint < 128)
+		{
+			if (p_dst_count != 0)
+			{
+				if (t_made + 1 > p_dst_count)
+					break;
+				
+				p_dst[t_made] = t_codepoint;
+			}
+			
+			t_made += 1;
+		}
+		else if (t_codepoint < 0x0800)
+		{
+			if (p_dst_count != 0)
+			{
+				if (t_made + 2 > p_dst_count)
+					break;
+				
+				p_dst[t_made + 0] = 0xc0 | (t_codepoint >> 6);
+				p_dst[t_made + 1] = 0x80 | (t_codepoint & 0x3f);
+			}
+			
+			t_made += 2;
+		}
+		else if (t_codepoint < 0x10000)
+		{
+			if (p_dst_count != 0)
+			{
+				if (t_made + 3 > p_dst_count)
+					break;
+				
+				p_dst[t_made + 0] = 0xe0 | (t_codepoint >> 12);
+				p_dst[t_made + 1] = 0x80 | ((t_codepoint >> 6) & 0x3f);
+				p_dst[t_made + 2] = 0x80 | (t_codepoint & 0x3f);
+			}
+			
+			t_made += 3;
+		}
+		else
+		{
+			if (p_dst_count != 0)
+			{
+				if (t_made + 4 > p_dst_count)
+					break;
+				
+				p_dst[t_made + 0] = 0xf0 | (t_codepoint >> 18);
+				p_dst[t_made + 1] = 0x80 | ((t_codepoint >> 12) & 0x3f);
+				p_dst[t_made + 2] = 0x80 | ((t_codepoint >> 6) & 0x3f);
+				p_dst[t_made + 3] = 0x80 | (t_codepoint & 0x3f);
+			}
+			
+			t_made += 4;
+		}
+	}
+	
+	return t_made;
+}
+
+// If utf8bytes is nil, returns the number of bytes needed to convert the chars
+// If utf8bytes is not nil, does the conversion
+uindex_t MCUnicodeCharsMapToUTF8(const unichar_t *wchars, uindex_t wchar_count, byte_t *utf8bytes, uindex_t utf8byte_count)
+{
+    return UnicodeToUTF8(wchars, wchar_count * 2, utf8bytes, utf8byte_count);
+}
+
+// If wchars is nil, returns the size of the buffer (in wchars needed)
+// If wchars is not nil, does the conversion into wchars
+uindex_t MCUnicodeCharsMapFromUTF8(const byte_t *utf8bytes, uindex_t utf8byte_count, unichar_t *wchars, uindex_t wchar_count)
+{
+    return UTF8ToUnicode(utf8bytes, utf8byte_count, wchars, wchar_count * 2) / 2;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+char_t MCUnicodeCharMapToNativeLossy(unichar_t p_uchar)
+{
+	char_t t_char;
+	if (MCUnicodeCharMapToNative(p_uchar, t_char))
+		return t_char;
+	return '?';
+}
+		
+	
 bool MCUnicodeCharMapToNative(unichar_t p_uchar, char_t& r_nchar)
 {
 #if defined(__WINDOWS_1252__)

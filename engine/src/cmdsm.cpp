@@ -989,9 +989,10 @@ Parse_stat MCArrayOp::parse(MCScriptPoint &sp)
 	}
 	
 	if (sp . next(type) == PS_NORMAL && type == ST_ID && 
-		  (sp . gettoken() == "column" || sp . gettoken() == "row"))
+		  (sp . token_is_cstring("column") ||
+		   sp . token_is_cstring("row")))
 	{
-		if (sp . gettoken() == "column")
+		if (sp . token_is_cstring("column"))
 			mode = TYPE_COLUMN;
 		else
 			mode = TYPE_ROW;

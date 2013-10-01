@@ -1626,7 +1626,7 @@ Exec_stat MCChunk::getobj_legacy(MCExecPoint &ep, MCObject *&objptr,
 	if (object != NULL && (object->otype == CT_AUDIO_CLIP || object->otype == CT_VIDEO_CLIP))
 	{
 		if (ct_class(object->etype) == CT_ORDINAL)
-			objptr = sptr->getAV(object->etype, MCnullmcstring, object->otype);
+			objptr = sptr->getAV(object->etype, kMCEmptyString, object->otype);
 		else
 		{
 			if (object->startpos->eval(ep2) != ES_NORMAL)
@@ -1634,9 +1634,11 @@ Exec_stat MCChunk::getobj_legacy(MCExecPoint &ep, MCObject *&objptr,
 				MCeerror->add(EE_CHUNK_BADOBJECTEXP, line, pos);
 				return ES_ERROR;
 			}
-			objptr = sptr->getAV(object->etype, ep2.getsvalue(), object->otype);
+            MCAutoStringRef t_value;
+            ep2 . copyasstringref(&t_value);
+			objptr = sptr->getAV(object->etype, *t_value, object->otype);
 			if (objptr == NULL)
-				objptr = sptr->getobjname(object->otype, ep2.getsvalue());
+				objptr = sptr->getobjname(object->otype, *t_value);
 		}
 		if (objptr == NULL)
 		{
@@ -2464,10 +2466,10 @@ Exec_stat MCChunk::mark_legacy(MCExecPoint &ep, int4 &start, int4 &end, Boolean 
 		Parse_stat ps = sp.nexttoken();
 		while (s-- && ps != PS_ERROR && ps != PS_EOF)
 			ps = sp.nexttoken();
-		start = sp.gettoken().getstring() - sp.getscript() + offset;
+		start = sp.gettoken_oldstring().getstring() - sp.getscript() + offset;
 		while (--n && ps != PS_ERROR && ps != PS_EOF)
 			ps = sp.nexttoken();
-		end = sp.gettoken().getstring() + sp.gettoken().getlength()
+		end = sp.gettoken_oldstring().getstring() + sp.gettoken_oldstring().getlength()
 		      - sp.getscript() + offset;
 		MCerrorlock--;
 		sptr = startptr + start;
@@ -4257,7 +4259,7 @@ Exec_stat MCChunk::evalobjectchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_f
 		r_chunk . part_id = parid;
 		r_chunk . chunk = CT_UNDEFINED;
 		r_chunk . start = 0;
-		r_chunk . finish = 0;
+		r_chunk . finish = INDEX_MAX;
 		return ES_NORMAL;
 	}
     

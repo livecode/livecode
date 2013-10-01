@@ -113,7 +113,7 @@ typedef struct ssl_ctx_st SSL_CTX;
 class MCSocket
 {
 public:
-	char *name;
+	MCNameRef name;
 	Boolean closing;
 	Boolean waiting;
 	Boolean datagram;
@@ -133,7 +133,7 @@ public:
 	char *error;
 	real8 timeout;
 	MCSocketHandle fd;
-	MCSocket(char *n, MCObject *o, MCNameRef m, Boolean d, MCSocketHandle sock, Boolean a, Boolean s, Boolean issecure);
+	MCSocket(MCNameRef n, MCObject *o, MCNameRef m, Boolean d, MCSocketHandle sock, Boolean a, Boolean s, Boolean issecure);
 	void setselect();
 	void setselect(uint2 sflags);
 
@@ -185,23 +185,6 @@ protected:
 };
 
 
-
-extern bool MCS_init_sockets();
-extern bool MCS_compare_host_domain(const char *p_host_a, const char *p_host_b);
-extern MCSocket *MCS_open_socket(char *name, Boolean datagram, MCObject *o, MCNameRef m, Boolean secure, Boolean sslverify, char *sslcertfile);
-extern void MCS_close_socket(MCSocket *s);
-extern void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, const char *until, MCNameRef m);
-extern void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRef m);
-extern MCSocket *MCS_accept(uint2 p, MCObject *o, MCNameRef m, Boolean datagram,Boolean secure,Boolean sslverify,char *sslcertfile);
-extern bool MCS_ha(MCSocket *s, MCStringRef& r_string);
-extern bool MCS_hn(MCStringRef& r_string);
-extern bool MCS_aton(MCStringRef p_address, MCStringRef& r_name);
-extern bool MCS_ntoa(MCStringRef p_hostname, MCObject *p_target, MCNameRef p_message, MCListRef& r_addr);
-extern bool MCS_pa(MCSocket *s, MCStringRef& r_string);
-
-
-
-
 typedef bool (*MCHostNameResolveCallback)(void *p_context, bool p_resolved, bool p_final, struct sockaddr *p_addr, int p_addrlen);
 typedef void (*MCSockAddrToStringCallback)(void *p_context, bool p_resolved, const char *p_hostname);
 
@@ -210,9 +193,9 @@ bool MCSocketHostNameResolve(const char *p_name, const char *p_port, int p_sockt
 bool MCSocketAddrToString(struct sockaddr *p_sockaddr, int p_addrlen, bool p_lookup_hostname, bool p_blocking,
 						MCSockAddrToStringCallback p_callback, void *p_context);
 
-bool MCS_name_to_sockaddr(const char *p_name_in, struct sockaddr_in *r_addr,
+bool MCS_name_to_sockaddr(MCStringRef p_name_in, struct sockaddr_in *r_addr,
 						  MCHostNameResolveCallback p_callback, void *p_context);
-bool MCS_name_to_sockaddr(const char *p_name_in, struct sockaddr_in &r_addr);
+
 bool MCS_name_to_sockaddr(MCStringRef p_name, struct sockaddr_in &r_addr);
 
 
@@ -222,7 +205,7 @@ bool sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_ho
 
 bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_hostname, bool p_blocking,
 							MCSockAddrToStringCallback p_callback, void *p_context);
-bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_hostname, char *&r_string);
+bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_hostname, MCStringRef &r_string);
 bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_hostname, MCStringRef& r_string);
 
 #endif // SOCKET_H

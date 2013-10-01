@@ -25,20 +25,20 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <dirent.h>
 #include <unistd.h>
 
-extern char *MCcmd;
+extern MCStringRef MCcmd;
 
 Boolean MCU_stoi4(const MCString&, int4& d);
 Boolean MCU_stob(const MCString &s, Boolean &condition);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static char *s_current_apk_folder = nil;
+static MCStringRef s_current_apk_folder = nil;
 
 bool is_apk_path(const char *p_path)
 {
 	int32_t t_cmdlen;
-	t_cmdlen = MCCStringLength(MCcmd);
-	return MCCStringBeginsWith(p_path, MCcmd) && (p_path[t_cmdlen] == '/' || p_path[t_cmdlen] == '\0');
+	t_cmdlen = MCStringGetLength(MCcmd);
+	return MCCStringBeginsWith(p_path, MCStringGetCString(MCcmd)) && (p_path[t_cmdlen] == '/' || p_path[t_cmdlen] == '\0');
 }
 
 bool path_to_apk_path(const char * p_path, const char *&r_apk_path)
@@ -46,7 +46,7 @@ bool path_to_apk_path(const char * p_path, const char *&r_apk_path)
 	char *t_path = nil;
 	if (!is_apk_path(p_path))
 		return false;
-	r_apk_path = &p_path[MCCStringLength(MCcmd)];
+	r_apk_path = &p_path[MCStringGetLength(MCcmd)];
 	if (r_apk_path[0] == '/')
 		r_apk_path += 1;
 	return true;
@@ -54,7 +54,7 @@ bool path_to_apk_path(const char * p_path, const char *&r_apk_path)
 
 bool path_from_apk_path(const char *p_apk_path, char *&r_path)
 {
-	return MCCStringFormat(r_path, "%s/%s", MCcmd, p_apk_path);
+	return MCCStringFormat(r_path, "%s/%s", MCStringGetCString(MCcmd), p_apk_path);
 }
 
 bool apk_folder_exists(const char *p_apk_path)
@@ -89,14 +89,16 @@ bool apk_get_file_offset(const char *p_apk_path, int32_t &r_offset)
 
 const char *apk_get_current_folder()
 {
-	return s_current_apk_folder;
+	if (s_current_apk_folder != nil)
+		return MCStringGetCString(s_current_apk_folder);
+	return nil;
 }
 
 bool apk_set_current_folder(const char *p_apk_path)
 {
 	if (p_apk_path == nil)
 	{
-		MCCStringFree(s_current_apk_folder);
+		MCValueRelease(s_current_apk_folder);
 		s_current_apk_folder = nil;
 		return true;
 	}
@@ -104,11 +106,11 @@ bool apk_set_current_folder(const char *p_apk_path)
 	if (!apk_folder_exists(p_apk_path))
 		return false;
 
-	char *t_new_path = nil;
-	if (!MCCStringClone(p_apk_path, t_new_path))
+	MCStringRef t_new_path;
+	if (!MCStringCreateWithCString(p_apk_path, t_new_path))
 		return false;
-
-	MCCStringFree(s_current_apk_folder);
+	if (s_current_apk_folder != nil)
+		MCValueRelease(s_current_apk_folder);
 	s_current_apk_folder = t_new_path;
 	return true;
 }
@@ -135,7 +137,7 @@ bool apk_list_folder_entries(MCSystemListFolderEntriesCallback p_callback, void 
 
 	// get stat info from bundle file
 	struct stat t_stat;
-	stat(MCcmd, &t_stat);
+	stat(MCStringGetCString(MCcmd), &t_stat);
 	
 	t_entry . modification_time = t_stat . st_mtime;
 	t_entry . access_time = t_stat . st_atime;
@@ -369,7 +371,7 @@ char *MCAndroidSystem::GetStandardFolder(const char *p_folder)
 {
 	char *t_stdfolder = NULL;
 	if (MCCStringEqualCaseless(p_folder, "engine"))
-		MCCStringClone(MCcmd, t_stdfolder);
+		MCCStringClone(MCStringGetCString(MCcmd), t_stdfolder);
 	else
 		MCAndroidEngineCall("getSpecialFolderPath", "ss", &t_stdfolder, p_folder);
 
@@ -424,7 +426,7 @@ bool MCAndroidSystem::ResolveNativePath(MCStringRef p_path, MCStringRef& r_resol
 		t_absolute_path = (MCStringRef)MCValueRetain(p_path);
 
 	char *t_absolute_cstring;
-	t_absolute_cstring = strdup((const char *)MCStringGetNativeCharPtr(*t_absolute_path));
+	t_absolute_cstring = strdup((const char *)MCStringGetCString(*t_absolute_path));
 	
 	// IM-2012-10-09 - [[ BZ 10432 ]] strip out extra slashes from paths
 	uindex_t t_length = MCCStringLength(t_absolute_cstring);

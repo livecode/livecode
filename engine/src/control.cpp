@@ -60,9 +60,8 @@ MCPropertyInfo MCControl::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_TOP_MARGIN, Int16, MCControl, TopMargin)
 	DEFINE_RW_OBJ_PROPERTY(P_BOTTOM_MARGIN, Int16, MCControl, BottomMargin)
     DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_MARGINS, InterfaceMargins, MCControl, Margins)
-	DEFINE_RW_OBJ_PROPERTY(P_TOOL_TIP, OptionalString, MCControl, ToolTip)
-	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_TOOL_TIP, OptionalString, MCControl, UnicodeToolTip)
-
+	DEFINE_RW_OBJ_PROPERTY(P_TOOL_TIP, String, MCControl, ToolTip)
+	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_TOOL_TIP, BinaryString, MCControl, UnicodeToolTip)
 	DEFINE_RW_OBJ_NON_EFFECTIVE_ENUM_PROPERTY(P_LAYER_MODE, InterfaceLayerMode, MCControl, LayerMode)
 	DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(P_LAYER_MODE, InterfaceLayerMode, MCControl, LayerMode)
     
@@ -1770,37 +1769,22 @@ Boolean MCControl::sbdoubleup(uint2 which, MCScrollbar *hsb, MCScrollbar *vsb)
 	return False;
 }
 
-Exec_stat MCControl::setsbprop(Properties which, const MCString &data,
+Exec_stat MCControl::setsbprop(Properties which, bool p_enable,
                                int4 tx, int4 ty, uint2 &sbw,
                                MCScrollbar *&hsb, MCScrollbar *&vsb,
                                Boolean &dirty)
 {
-	int4 newscroll;
-	int2 newwidth;
 	dirty = False;
 	Exec_stat stat = ES_NORMAL;
 	switch (which)
 	{
-	case P_HSCROLL:
-	case P_VSCROLL:
-		if (!MCU_stoi4(data, newscroll))
-			return ES_ERROR;
-		if (opened)
-		{
-			if (which == P_HSCROLL)
-				stat = hscroll(newscroll - tx, True);
-			else
-				stat = vscroll(newscroll - ty, True);
-			resetscrollbars(True);
-		}
-		break;
 	case P_HSCROLLBAR:
-		if (!MCU_matchflags(data, flags, F_HSCROLLBAR, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
+		dirty = getflag(F_HSCROLLBAR) != p_enable;
+		if (p_enable)
+			flags |= F_HSCROLLBAR;
+		else
+			flags &= ~F_HSCROLLBAR;
+	
 		if (dirty)
 		{
 			if (flags & F_HSCROLLBAR)
@@ -1839,11 +1823,12 @@ Exec_stat MCControl::setsbprop(Properties which, const MCString &data,
 		}
 		break;
 	case P_VSCROLLBAR:
-		if (!MCU_matchflags(data, flags, F_VSCROLLBAR, dirty))
-		{
-			MCeerror->add(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
+		dirty = getflag(F_VSCROLLBAR) != p_enable;
+		if (p_enable)
+			flags |= F_VSCROLLBAR;
+		else
+			flags &= ~F_VSCROLLBAR;
+		
 		if (dirty)
 		{
 			if (flags & F_VSCROLLBAR)
@@ -1878,19 +1863,7 @@ Exec_stat MCControl::setsbprop(Properties which, const MCString &data,
 			m_layer_attr_changed = true;
 		}
 		break;
-	case P_SCROLLBAR_WIDTH:
-		if (!MCU_stoi2(data, newwidth))
-		{
-			MCeerror->add(EE_FIELD_SCROLLBARWIDTHNAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		if (sbw != newwidth)
-		{
-			sbw = newwidth;
-			setsbrects();
-			dirty = True;
-		}
-		break;
+			
 	default:
 		break;
 	}

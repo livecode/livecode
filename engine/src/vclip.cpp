@@ -198,16 +198,17 @@ char *MCVideoClip::getfile()
 	if (frames != NULL)
 	{
         MCAutoStringRef t_tmpfile;
-        /* UNCHECKED */ MCS_tmpnam(&t_tmpfile);
+        MCS_tmpnam(&t_tmpfile);
 		//char *tmpfile = strclone(MCS_tmpnam());
+		
 		IO_handle tstream;
-		if ((tstream = MCS_open(MCStringGetCString(*t_tmpfile), IO_WRITE_MODE, False, False, 0)) == NULL)
+		if ((tstream = MCS_open(*t_tmpfile, kMCSOpenFileModeWrite, False, False, 0)) == NULL)
 			return NULL;
 		IO_stat stat = IO_write(frames, sizeof(int1), size, tstream);
 		MCS_close(tstream);
 		if (stat != IO_NORMAL)
 		{
-			MCS_unlink(MCStringGetCString(*t_tmpfile));
+			MCS_unlink(*t_tmpfile);
 			return NULL;
 		}
 		return strclone(MCStringGetCString(*t_tmpfile));
@@ -225,7 +226,7 @@ Boolean MCVideoClip::import(const char *fname, IO_handle fstream)
 	setname_cstring(tname);
 	size = (uint4)MCS_fsize(fstream);
 	frames = new uint1[size];
-	if (MCS_read(frames, sizeof(int1), size, fstream) != IO_NORMAL)
+	if (MCS_readfixed(frames, size, fstream) != IO_NORMAL)
 		return False;
 	return True;
 }
@@ -272,7 +273,7 @@ IO_stat MCVideoClip::load(IO_handle stream, const char *version)
 	if (size != 0)
 	{
 		frames = new uint1[size];
-		if ((stat = IO_read(frames, sizeof(uint1), size, stream)) != IO_NORMAL)
+		if ((stat = IO_read(frames, size, stream)) != IO_NORMAL)
 			return stat;
 	}
 	if (flags & F_FRAME_RATE)

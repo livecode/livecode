@@ -51,13 +51,15 @@ extern const uint4 command_table_size;
 extern LT factor_table[];
 extern const uint4 factor_table_size;
 
-MCScriptPoint::MCScriptPoint(MCObject *o, MCHandlerlist *hl, const char *s)
+MCScriptPoint::MCScriptPoint(MCObject *o, MCHandlerlist *hl, MCStringRef s)
 {
-	script = NULL;
+	char *t_utf8_string;
+	/* UNCHECKED */ MCStringConvertToUTF8String(s, t_utf8_string);
+	/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_utf8_string, strlen(t_utf8_string) + 1, script);
 	curobj = o;
 	curhlist = hl;
 	curhandler = NULL;
-	curptr = tokenptr = backupptr = (const uint1 *)s;
+	curptr = tokenptr = backupptr = (const uint1 *)MCDataGetBytePtr(script);
 	lowered = NULL;
 	loweredsize = 0;
 	line = pos = 1;
@@ -70,7 +72,7 @@ MCScriptPoint::MCScriptPoint(MCObject *o, MCHandlerlist *hl, const char *s)
 
 MCScriptPoint::MCScriptPoint(MCScriptPoint &sp)
 {
-	script = NULL;
+	script = MCValueRetain(sp . script);
 	curobj = sp.curobj;
 	curhlist = sp.curhlist;
 	curhandler = sp.curhandler;
@@ -91,11 +93,15 @@ MCScriptPoint::MCScriptPoint(MCScriptPoint &sp)
 
 MCScriptPoint::MCScriptPoint(MCExecPoint &ep)
 {
-	script = ep.getsvalue().clone();
+	MCAutoStringRef t_string_script;
+	/* UNCHECKED */ ep . copyasstringref(&t_string_script);
+	char *t_utf8_string;
+	/* UNCHECKED */ MCStringConvertToUTF8String(*t_string_script, t_utf8_string);
+	/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_utf8_string, strlen(t_utf8_string) + 1, script);
 	curobj = ep.getobj();
 	curhlist = ep.gethlist();
 	curhandler = ep.gethandler();
-	curptr = tokenptr = backupptr = (uint1 *)script;
+	curptr = tokenptr = backupptr = (const uint1 *)MCDataGetBytePtr(script);
 	lowered = NULL;
 	loweredsize = 0;
 	line = pos = 0;
@@ -108,11 +114,15 @@ MCScriptPoint::MCScriptPoint(MCExecPoint &ep)
 
 MCScriptPoint::MCScriptPoint(const MCString &s)
 {
-	script = s.clone();
+	MCAutoStringRef t_string_script;
+	/* UNCHECKED */ MCStringCreateWithOldString(s, &t_string_script);
+	char *t_utf8_string;
+	/* UNCHECKED */ MCStringConvertToUTF8String(*t_string_script, t_utf8_string);
+	/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_utf8_string, strlen(t_utf8_string) + 1, script);
 	curobj = NULL;
 	curhlist = NULL;
 	curhandler = NULL;
-	curptr = tokenptr = backupptr = (uint1 *)script;
+	curptr = tokenptr = backupptr = (const uint1 *)MCDataGetBytePtr(script);
 	lowered = NULL;
 	loweredsize = 0;
 	line = pos = 0;
@@ -123,27 +133,25 @@ MCScriptPoint::MCScriptPoint(const MCString &s)
 	token_nameref = nil;
 }
 
-MCScriptPoint::MCScriptPoint(MCStringRef p_string)
+MCScriptPoint& MCScriptPoint::operator =(const MCScriptPoint& sp)
 {
-	MCCStringClone(MCStringGetCString(p_string), script);
-	curobj = NULL;
-	curhlist = NULL;
-	curhandler = NULL;
-	curptr = tokenptr = backupptr = (uint1 *)script;
-	lowered = NULL;
-	loweredsize = 0;
-	line = pos = 0;
-	escapes = False;
-	tagged = False;
-	in_tag = False;
-	was_in_tag = False;
-	token_nameref = nil;
+	script = MCValueRetain(sp . script);
+	curobj = sp.curobj;
+	curhlist = sp.curhlist;
+	curhandler = sp.curhandler;
+	curptr = sp.curptr;
+	tokenptr = sp.tokenptr;
+	backupptr = sp.backupptr;
+	token = sp.token;
+	line = sp.line;
+	pos = sp.pos;
+	return *this;
 }
 
 MCScriptPoint::~MCScriptPoint()
 {
 	MCNameDelete(token_nameref);
-	delete script;
+	MCValueRelease(script);
 	delete lowered;
 }
 
@@ -154,11 +162,30 @@ void MCScriptPoint::cleartoken(void)
 	token_nameref = nil;
 }
 
+bool MCScriptPoint::token_is_cstring(const char *p_cstring)
+{
+	return MCStringIsEqualToCString(gettoken_stringref(), p_cstring, kMCCompareCaseless);
+}
+
+MCString MCScriptPoint::gettoken_oldstring(void)
+{
+	return token;
+}
+
 MCNameRef MCScriptPoint::gettoken_nameref(void)
 {
+	MCAutoStringRef t_string_token;
+	/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)token . getstring(), token . getlength(), kMCStringEncodingUTF8, false, &t_string_token);
 	if (token_nameref == nil)
-		/* UNCHECKED */ MCNameCreateWithOldString(token, token_nameref);
+		/* UNCHECKED */ MCNameCreate(*t_string_token, token_nameref);
 	return token_nameref;
+}
+
+MCStringRef MCScriptPoint::gettoken_stringref(void)
+{
+	MCNameRef t_name_token;
+	t_name_token = gettoken_nameref();
+	return MCNameGetString(t_name_token);
 }
 
 Parse_stat MCScriptPoint::skip_space()
@@ -821,7 +848,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 		{
 		case ST_NUM:
 			real8 nvalue;
-			if (!MCU_stor8(gettoken(), nvalue))
+			if (!MCU_stor8(gettoken_oldstring(), nvalue))
 			{
 				MCperror->add(PE_EXPRESSION_NOTLITERAL, *this);
 				return PS_ERROR;
@@ -1045,7 +1072,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 						*this = thesp;
 						MCerrorlock--;
 
-						if (gettoken().getlength() == 0)
+						if (gettoken_oldstring().getlength() == 0)
 						{
 							MCperror->add(PE_EXPRESSION_NOTFACT, *this);
 							return PS_ERROR;

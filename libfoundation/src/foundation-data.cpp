@@ -50,7 +50,9 @@ bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataR
 		t_success = MCMemoryNewArray(p_byte_count, self -> bytes);
     
 	if (t_success)
-	{        
+	{
+        MCMemoryCopy(self -> bytes, p_bytes, p_byte_count);
+        self -> byte_count = p_byte_count;
 		r_data = self;
 	}
 	else
@@ -75,6 +77,11 @@ bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCD
     return false;
 }
 
+bool MCDataIsEmpty(MCDataRef p_data)
+{
+	return p_data -> byte_count == 0;
+}
+
 uindex_t MCDataGetLength(MCDataRef p_data)
 {
     return p_data->byte_count;
@@ -95,7 +102,7 @@ bool MCDataIsEqualTo(MCDataRef p_left, MCDataRef p_right)
 {
     bool t_success = true;
     
-    for (int i = 0 ; i < p_left->byte_count && i < p_right->byte_count && t_success ; ++i)
+    for (uindex_t i = 0 ; i < p_left->byte_count && i < p_right->byte_count && t_success ; ++i)
         t_success = p_left->bytes[i] == p_right->bytes[i];
     
     return t_success;
@@ -286,7 +293,7 @@ bool MCDataPrependBytes(MCDataRef r_data, const byte_t *p_bytes, uindex_t p_byte
 
 bool MCDataPrependByte(MCDataRef r_data, byte_t p_byte)
 {
-    MCDataPrependBytes(r_data, &p_byte, 1);
+    return MCDataPrependBytes(r_data, &p_byte, 1);
 }
 
 bool MCDataInsert(MCDataRef r_data, uindex_t p_at, MCDataRef p_new_data)
@@ -370,6 +377,15 @@ bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data)
     return true;
 }
 
+bool MCDataPad(MCDataRef p_data, byte_t p_byte, uindex_t p_count)
+{
+	if (!__MCDataExpandAt(p_data, p_data -> byte_count, p_count))
+		return false;
+	
+	memset(p_data -> bytes + p_data -> byte_count - p_count, p_byte, p_count);
+	return true;
+}
+
 static void __MCDataClampRange(MCDataRef p_data, MCRange& x_range)
 {
 	uindex_t t_left, t_right;
@@ -435,4 +451,21 @@ static bool __MCDataExpandAt(MCDataRef r_data, uindex_t p_at, uindex_t p_count)
     
 	// We succeeded.
 	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCDataRef kMCEmptyData;
+
+bool __MCDataInitialize(void)
+{
+    if (!MCDataCreateWithBytes(nil, 0, kMCEmptyData))
+        return false;
+    
+    return true;
+}
+
+void __MCDataFinalize(void)
+{
+    MCValueRelease(kMCEmptyData);
 }

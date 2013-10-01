@@ -187,10 +187,10 @@ protected:
 	uint4 flags;
 	MCRectangle rect;
 	MCColor *colors;
-	char **colornames;
+	MCStringRef *colornames;
 	uint4 *pixmapids;
 	Pixmap *pixmaps;
-	char *script;
+	MCStringRef _script;
 	MCHandlerlist *hlist;
 	MCObjectPropertySet *props;
 	uint4 state;
@@ -224,7 +224,7 @@ protected:
 	// IM-2013-04-16: [[ BZ 10848 ]] // flag to record encrypted state of object script
 	bool m_script_encrypted : 1;
 	
-	char *tooltip;
+	MCStringRef tooltip;
 	
 	// MW-2008-10-20: Pointer to the parent script's weak object reference.
 	MCParentScriptUse *parent_script;
@@ -448,9 +448,9 @@ public:
 	{
 		return flags;
 	}
-	char *getscript(void)
+	MCStringRef _getscript(void)
 	{
-		return script;
+		return _script;
 	}
 	MCHandlerlist *gethandlers(void)
 	{
@@ -527,7 +527,7 @@ public:
 	// This method searches for the image with the given id, taking into account
 	// the containment and behavior hierarchy of this object.
 	MCImage *resolveimageid(uint4 image_id);
-	MCImage *resolveimagename(const MCString& name);
+	MCImage *resolveimagename(MCStringRef name);
 	
 	Boolean isvisible();
 	Boolean resizeparent();
@@ -656,15 +656,10 @@ public:
 	//   of the objects will be included.
 	static MCPickleContext *startpickling(bool include_2700);
 	static void continuepickling(MCPickleContext *p_context, MCObject *p_object, uint4 p_part);
-#ifdef SHARED_STRING
-	static MCSharedString *stoppickling(MCPickleContext *p_context);
-	static MCSharedString *pickle(MCObject *p_object, uint4 p_part);
-	static MCObject *unpickle(MCSharedString *p_object, MCStack *p_stack);
-#else
-	static void pickle(MCObject *p_object, uint4 p_part, MCStringRef& r_string);
-	static void stoppickling(MCPickleContext *p_context, MCStringRef& r_string);
-	static MCObject *unpickle(MCStringRef p_data, MCStack *p_stack);
-#endif
+	static void pickle(MCObject *p_object, uint4 p_part, MCDataRef& r_string);
+	static void stoppickling(MCPickleContext *p_context, MCDataRef& r_string);
+	static MCObject *unpickle(MCDataRef p_data, MCStack *p_stack);
+	
 	// in DLList overrides
 	MCObject *next()
 	{
@@ -1055,6 +1050,8 @@ protected:
 	void mapfont(void);
 	void unmapfont(void);
 	
+	void setscript_cstring(const char *script);
+	
 private:
 #ifdef OLD_EXEC
 	Exec_stat setvisibleprop(uint4 parid, Properties which, MCExecPoint& ep);
@@ -1105,7 +1102,7 @@ private:
 	bool needtosavefontflags(void) const;
 
 	// MW-2013-03-06: [[ Bug 10695 ]] New method used by resolveimage* - if name is nil, then id search.
-	MCImage *resolveimage(const MCString& name, uint4 image_id);
+	MCImage *resolveimage(MCStringRef name, uint4 image_id);
 	
 	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, const MCString &carray, Boolean effective);
 

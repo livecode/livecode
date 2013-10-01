@@ -47,6 +47,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define ENV_SEPARATOR ':'
 #endif
 
+enum MCSOpenFileMode
+{
+	kMCSOpenFileModeRead,
+	kMCSOpenFileModeWrite,
+	kMCSOpenFileModeUpdate,
+	kMCSOpenFileModeAppend
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern void IO_set_stream(IO_handle stream, char *newptr);
@@ -61,7 +69,7 @@ extern bool IO_findsocket(MCNameRef p_name, uindex_t& r_index);
 /* LEGACY */ extern Boolean IO_findsocket(char *name, uint2 &i);
 extern real8 IO_cleansockets(real8 ctime);
 extern void IO_freeobject(MCObject *o);
-extern IO_stat IO_read(void *ptr, uint4 size, uint4 &n, IO_handle stream);
+extern IO_stat IO_read(void *ptr, uint4 byte_size, IO_handle stream);
 extern IO_stat IO_write(const void *ptr, uint4 s, uint4 n, IO_handle stream);
 extern IO_stat IO_read_to_eof(IO_handle stream, MCExecPoint &ep);
 extern IO_stat IO_fgets(char *ptr, uint4 length, IO_handle stream);
@@ -110,9 +118,13 @@ extern IO_stat IO_write_nameref(MCNameRef name, IO_handle stream, uint1 size = 2
 extern IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, uint1 size = 2);
 extern IO_stat IO_write_stringref(MCStringRef string, IO_handle stream, uint1 size = 2);
 
-// MW-2009-06-30: This method reads the given number of bytes and fails
-//   if that is not possible.
-extern IO_stat IO_read_bytes(void *ptr, uint4 size, IO_handle stream);
+// String IO requesting explicit Unicode or native encoding
+extern IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, bool as_unicode, uint1 size = 2);
+extern IO_stat IO_write_stringref(MCStringRef string, IO_handle stream, bool as_unicode, uint1 size = 2);
+
+// String IO for UTF-8 formatted strings
+extern IO_stat IO_read_stringref_utf8(MCStringRef& r_string, IO_handle stream, uint1 size = 2);
+extern IO_stat IO_write_stringref_utf8(MCStringRef p_string, IO_handle stream, uint1 size = 2);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -125,19 +137,21 @@ struct MCFakeOpenCallbacks
 };
 extern IO_handle MCS_fakeopencustom(struct MCFakeOpenCallbacks *callbacks, void *state);
 
-extern IO_handle MCS_fakeopen(const MCString &data);
+extern IO_handle MCS_fakeopen(const MCString& data);
 extern IO_handle MCS_fakeopenwrite(void);
-extern IO_stat MCS_fakeclosewrite(IO_handle &stream, char*& r_buffer, uint4& r_length);
+///* LEGACY */ extern IO_stat MCS_fakeclosewrite(IO_handle &stream, char*& r_buffer, uint4& r_length);
+extern IO_stat MCS_closetakingbuffer(IO_handle& p_stream, void*& r_buffer, size_t& r_length);
 
-extern bool MCS_isfake(IO_handle stream);
-extern uint4 MCS_faketell(IO_handle stream);
-extern void MCS_fakewriteat(IO_handle stream, uint4 p_pos, const void *p_buffer, uint4 p_size);
+/* LEGACY */ extern IO_handle MCS_open(const char *path, const char *mode, Boolean map, Boolean driver, uint4 offset);
+extern IO_handle MCS_open(MCStringRef path, intenum_t mode, Boolean map, Boolean driver, uint4 offset);
+extern void MCS_close(IO_handle &stream);
 
-extern IO_handle MCS_open(const char *path, const char *mode, Boolean map, Boolean driver, uint4 offset);
-extern IO_stat MCS_close(IO_handle &stream);
-
-extern IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream);
+///* LEGACY */ extern IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream);
+extern IO_stat MCS_readfixed(void *p_ptr, uint32_t p_byte_size, IO_handle p_stream);
+extern IO_stat MCS_readall(void *p_ptr, uint32_t p_max_bytes, IO_handle p_stream, uint32_t& r_bytes_read);
 extern IO_stat MCS_write(const void *ptr, uint4 size, uint4 n, IO_handle stream);
+extern IO_stat MCS_writeat(const void *buffer, uint32_t size, uint32_t pos, IO_handle stream);
+
 
 // MW-2008-08-15: Put the given character back at the head of the stream.
 extern IO_stat MCS_putback(char p_char, IO_handle stream);

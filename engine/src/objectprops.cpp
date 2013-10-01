@@ -1040,7 +1040,6 @@ Exec_stat MCObject::setscriptprop(MCExecPoint& ep)
 			
 		getstack() -> securescript(this);
 		
-		flags |= F_SCRIPT;
 		if (MCModeCanSetObjectScript(obj_id))
 		{ // not template object
 			hashandlers = 0;

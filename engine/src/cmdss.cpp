@@ -191,7 +191,7 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 					        || te->type != TT_STATEMENT)
 					{
 						uint2 newmode;
-						if (!MCU_stoui2(sp.gettoken(), newmode)
+						if (!MCU_stoui2(sp.gettoken_oldstring(), newmode)
 						        || newmode < 1 || newmode >= WM_LAST)
 						{
 							MCperror->add

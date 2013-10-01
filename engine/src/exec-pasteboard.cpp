@@ -388,7 +388,6 @@ void MCPasteboardExecPaste(MCExecContext& ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef SHARED_STRING
 void MCPasteboardProcessToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets, uindex_t p_object_count, bool p_cut)
 {
 	// Pickle the list of objects. The only reason this could fail is due to lack of
@@ -407,87 +406,7 @@ void MCPasteboardProcessToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets,
 	for(uindex_t i = 0; i < p_object_count; ++i)
 		MCObject::continuepickling(t_context, p_targets[i] . object, p_targets[i] . part_id);
 
-	MCSharedString *t_pickle;
-	t_pickle = MCObject::stoppickling(t_context);
-	if (t_pickle == NULL)
-	{
-		ctxt . LegacyThrow(EE_NO_MEMORY);
-		return;
-	}
-
-	bool t_success;
-	t_success = true;
-
-	// Open the clipboard ready for storing data
-	MCclipboarddata -> Open();
-
-	// Attempt to store the objects onto the clipboard
-	if (t_success)
-		if (!MCclipboarddata -> Store(TRANSFER_TYPE_OBJECTS, t_pickle))
-			t_success = false;
-
-	// If we've managed to store objects, and we are only copying/cutting one
-	// image object, attempt to copy the image data.
-	// Note that we don't care if this doesn't succeed as its not critical.
-	if (t_success)
-		if (p_object_count == 1 && p_targets[0] . object -> gettype() == CT_IMAGE)
-		{
-			// MW-2011-02-26: [[ Bug 9403 ]] If no image data is fetched, then don't try
-			//   and store anything!
-			MCSharedString *t_image_data;
-			t_image_data = static_cast<MCImage *>(p_targets[0] . object) -> getclipboardtext();
-			if (t_image_data != nil)
-			{
-				MCclipboarddata -> Store(TRANSFER_TYPE_IMAGE, t_image_data);
-				t_image_data -> Release();
-			}
-		}
-
-	// Close the clipboard. If this returns false, then it means the
-	// writing was unsuccessful.
-	if (!MCclipboarddata -> Close())
-		t_success = false;
-
-	// If all is well, delete the original objects.
-	if (t_success)
-	{
-		if (p_cut)
-		{
-			for(uint4 i = 0; i < p_object_count; ++i)
-			{
-				p_targets[i] . object -> del();
-				if (p_targets[i] . object -> gettype() == CT_STACK)
-					MCtodestroy -> remove(static_cast<MCStack *>(p_targets[i] . object));
-				p_targets[i] . object -> scheduledelete();
-			}
-		}
-	}
-	else
-		ctxt . SetTheResultToStaticCString("unable to write to clipboard");
-
-	if (t_pickle != NULL)
-		t_pickle -> Release();
-}
-#else
-void MCPasteboardProcessToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets, uindex_t p_object_count, bool p_cut)
-{
-	// Pickle the list of objects. The only reason this could fail is due to lack of
-	// memory.
-	MCPickleContext *t_context;
-
-	// MW-2012-03-04: [[ StackFile5500 ]] When pickling for the clipboard, make sure it
-	//   includes both 2.7 and 5.5 stackfile formats.
-	t_context = MCObject::startpickling(true);
-	if (t_context == NULL)
-	{
-		ctxt . LegacyThrow(EE_NO_MEMORY);
-		return;
-	}
-
-	for(uindex_t i = 0; i < p_object_count; ++i)
-		MCObject::continuepickling(t_context, p_targets[i] . object, p_targets[i] . part_id);
-
-	MCAutoStringRef t_pickle;
+	MCAutoDataRef t_pickle;
 	MCObject::stoppickling(t_context, &t_pickle);
 	if (*t_pickle == nil)
 	{
@@ -514,7 +433,7 @@ void MCPasteboardProcessToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets,
 		{
 			// MW-2011-02-26: [[ Bug 9403 ]] If no image data is fetched, then don't try
 			//   and store anything!
-			MCAutoStringRef t_image_data;
+			MCAutoDataRef t_image_data;
 			if (static_cast<MCImage *>(p_targets[0] . object) -> getclipboardtext(&t_image_data))
 				MCclipboarddata -> Store(TRANSFER_TYPE_IMAGE, *t_image_data);
 		}
@@ -541,7 +460,6 @@ void MCPasteboardProcessToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets,
 	else
 		ctxt . SetTheResultToStaticCString("unable to write to clipboard");
 }
-#endif
 
 void MCPasteboardProcessTextToClipboard(MCExecContext &ctxt, MCObjectChunkPtr p_target, bool p_cut)
 {
@@ -648,7 +566,7 @@ void MCPasteboardSetAllowableDragActions(MCExecContext& ctxt, intset_t p_value)
 	MCallowabledragactions = (MCDragActionSet)p_value;
 }
 
-void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCStringRef p_index, bool p_is_clipboard, MCStringRef& r_data)
+void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCStringRef p_index, bool p_is_clipboard, MCDataRef& r_data)
 {
 	MCTransferData *t_pasteboard;
 	if (p_is_clipboard)
@@ -674,7 +592,7 @@ void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCStringRef p_index
 		}
 		else
 		{
-			r_data = MCValueRetain(kMCEmptyString);
+			r_data = MCValueRetain(kMCEmptyData);
 			ctxt . SetTheResultToStaticCString("format not available");
 		}
 		
@@ -685,12 +603,12 @@ void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCStringRef p_index
 	
 	if (!t_success)
 	{
-		r_data = MCValueRetain(kMCEmptyString);
+		r_data = MCValueRetain(kMCEmptyData);
 		ctxt . SetTheResultToStaticCString("unable to query clipboard");
 	}
 }
 
-void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCStringRef p_index, bool p_is_clipboard, MCStringRef p_data)
+void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCStringRef p_index, bool p_is_clipboard, MCDataRef p_data)
 {
 	MCTransferData *t_pasteboard;
 	if (p_is_clipboard)
@@ -715,22 +633,22 @@ void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCStringRef p_index
 	ctxt . Throw();
 }
 
-void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef& r_data)
+void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCDataRef& r_data)
 {
 	MCPasteboardGetClipboardOrDragData(ctxt, p_index, true, r_data);
 }
 
-void MCPasteboardSetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef p_data)
+void MCPasteboardSetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCDataRef p_data)
 {
 	MCPasteboardSetClipboardOrDragData(ctxt, p_index, true, p_data);
 }
 
-void MCPasteboardGetDragData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef& r_data)
+void MCPasteboardGetDragData(MCExecContext& ctxt, MCStringRef p_index, MCDataRef& r_data)
 {
 	MCPasteboardGetClipboardOrDragData(ctxt, p_index, false, r_data);
 }
 
-void MCPasteboardSetDragData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef p_data)
+void MCPasteboardSetDragData(MCExecContext& ctxt, MCStringRef p_index, MCDataRef p_data)
 {
 	MCPasteboardSetClipboardOrDragData(ctxt, p_index, false, p_data);
 }

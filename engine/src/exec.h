@@ -209,6 +209,7 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, B
 #define MCPropertyObjectThunkGetOptionalUInt32(obj, mth) MCPropertyObjectThunkImp(obj, mth, uinteger_t*&)
 #define MCPropertyObjectThunkGetDouble(obj, mth) MCPropertyObjectThunkImp(obj, mth, double&)
 #define MCPropertyObjectThunkGetString(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCStringRef&)
+#define MCPropertyObjectThunkGetBinaryString(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCDataRef&)
 #define MCPropertyObjectThunkGetOptionalString(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCStringRef&)
 #define MCPropertyObjectThunkGetRectangle(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCRectangle&)
 #define MCPropertyObjectThunkGetOptionalRectangle(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCRectangle*&)
@@ -236,6 +237,7 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, B
 #define MCPropertyObjectThunkSetOptionalUInt32(obj, mth) MCPropertyObjectThunkImp(obj, mth, uinteger_t*)
 #define MCPropertyObjectThunkSetDouble(obj, mth) MCPropertyObjectThunkImp(obj, mth, double)
 #define MCPropertyObjectThunkSetString(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCStringRef)
+#define MCPropertyObjectThunkSetBinaryString(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCDataRef)
 #define MCPropertyObjectThunkSetOptionalString(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCStringRef)
 #define MCPropertyObjectThunkSetRectangle(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCRectangle)
 #define MCPropertyObjectThunkSetOptionalRectangle(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCRectangle*)
@@ -263,6 +265,7 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, B
 #define MCPropertyObjectPartThunkGetOptionalUInt32(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, uinteger_t*&)
 #define MCPropertyObjectPartThunkGetDouble(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, double&)
 #define MCPropertyObjectPartThunkGetString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCStringRef&)
+#define MCPropertyObjectPartThunkGetBinaryString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCDataRef&)
 #define MCPropertyObjectPartThunkGetOptionalString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCStringRef&)
 #define MCPropertyObjectPartThunkGetRectangle(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCRectangle&)
 #define MCPropertyObjectPartThunkGetOptionalRectangle(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCRectangle*&)
@@ -285,6 +288,7 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, B
 #define MCPropertyObjectPartThunkSetOptionalUInt32(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, uinteger_t*)
 #define MCPropertyObjectPartThunkSetDouble(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, double)
 #define MCPropertyObjectPartThunkSetString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCStringRef)
+#define MCPropertyObjectPartThunkSetBinaryString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCDataRef)
 #define MCPropertyObjectPartThunkSetOptionalString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCStringRef)
 #define MCPropertyObjectPartThunkSetRectangle(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCRectangle)
 #define MCPropertyObjectPartThunkSetOptionalRectangle(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCRectangle*)
@@ -964,20 +968,20 @@ extern MCExecMethodInfo *kMCFiltersEvalUniDecodeMethodInfo;
 extern MCExecMethodInfo *kMCFiltersEvalMD5DigestMethodInfo;
 extern MCExecMethodInfo *kMCFiltersEvalSHA1DigestMethodInfo;
 
-void MCFiltersEvalBase64Encode(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result);
-void MCFiltersEvalBase64Decode(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result);
-void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValueRef *p_params, uindex_t p_param_count, MCStringRef& r_string);
-void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCStringRef p_data, MCValueRef *r_results, uindex_t p_result_count, integer_t& r_done);
-void MCFiltersEvalCompress(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result);
-void MCFiltersEvalDecompress(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result);
-void MCFiltersEvalIsoToMac(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result);
-void MCFiltersEvalMacToIso(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result);
+void MCFiltersEvalBase64Encode(MCExecContext& ctxt, MCDataRef p_source, MCStringRef& r_result);
+void MCFiltersEvalBase64Decode(MCExecContext& ctxt, MCStringRef p_source, MCDataRef& r_result);
+void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValueRef *p_params, uindex_t p_param_count, MCDataRef& r_string);
+void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCDataRef p_data, MCValueRef *r_results, uindex_t p_result_count, integer_t& r_done);
+void MCFiltersEvalCompress(MCExecContext& ctxt, MCDataRef p_source, MCDataRef& r_result);
+void MCFiltersEvalDecompress(MCExecContext& ctxt, MCDataRef p_source, MCDataRef& r_result);
+void MCFiltersEvalIsoToMac(MCExecContext& ctxt, MCDataRef p_source, MCDataRef& r_result);
+void MCFiltersEvalMacToIso(MCExecContext& ctxt, MCDataRef p_source, MCDataRef& r_result);
 void MCFiltersEvalUrlEncode(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result);
 void MCFiltersEvalUrlDecode(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result);
 void MCFiltersEvalUniEncode(MCExecContext& ctxt, MCStringRef p_src, MCNameRef p_lang, MCStringRef& r_dest);
 void MCFiltersEvalUniDecode(MCExecContext& ctxt, MCStringRef p_src, MCNameRef p_lang, MCStringRef& r_dest);
-void MCFiltersEvalMD5Digest(MCExecContext& ctxt, MCStringRef p_src, MCStringRef& r_digest);
-void MCFiltersEvalSHA1Digest(MCExecContext& ctxt, MCStringRef p_src, MCStringRef& r_digest);
+void MCFiltersEvalMD5Digest(MCExecContext& ctxt, MCDataRef p_src, MCDataRef& r_digest);
+void MCFiltersEvalSHA1Digest(MCExecContext& ctxt, MCDataRef p_src, MCDataRef& r_digest);
 
 ///////////
 
@@ -2348,10 +2352,10 @@ void MCPasteboardSetDragImageOffset(MCExecContext& ctxt, MCPoint *p_value);
 void MCPasteboardGetAllowableDragActions(MCExecContext& ctxt, intset_t& r_value);
 void MCPasteboardSetAllowableDragActions(MCExecContext& ctxt, intset_t p_value);
 
-void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef& r_data);
-void MCPasteboardSetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef p_data);
-void MCPasteboardGetDragData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef& r_data);
-void MCPasteboardSetDragData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef p_data);
+void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCDataRef& r_data);
+void MCPasteboardSetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCDataRef p_data);
+void MCPasteboardGetDragData(MCExecContext& ctxt, MCStringRef p_index, MCDataRef& r_data);
+void MCPasteboardSetDragData(MCExecContext& ctxt, MCStringRef p_index, MCDataRef p_data);
 
 ///////////
 
@@ -2997,7 +3001,7 @@ void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_
 void MCNetworkExecOpenSecureSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, bool p_with_verification);
 void MCNetworkExecOpenDatagramSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message);
 
-void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCStringRef p_data, MCStringRef p_url);
+void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCDataRef p_data, MCStringRef p_url);
 
 void MCNetworkExecAcceptConnectionsOnPort(MCExecContext& ctxt, uint2 p_port, MCNameRef p_message);
 void MCNetworkExecAcceptDatagramConnectionsOnPort(MCExecContext& ctxt, uint2 p_port, MCNameRef p_message);
@@ -3132,7 +3136,7 @@ extern MCExecMethodInfo *kMCSecuritySetSslCertificatesMethodInfo;
 
 void MCSecurityEvalEncrypt(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_dest);
 void MCSecurityEvalCipherNames(MCExecContext& ctxt, MCStringRef& r_names);
-void MCSecurityEvalRandomBytes(MCExecContext& ctxt, uinteger_t p_byte_count, MCStringRef& r_bytes);
+void MCSecurityEvalRandomBytes(MCExecContext& ctxt, uinteger_t p_byte_count, MCDataRef& r_bytes);
 
 void MCSecurityExecRsaEncrypt(MCExecContext& ctxt, MCStringRef p_data, bool p_is_public, MCStringRef p_key, MCStringRef p_passphrase);
 void MCSecurityExecRsaDecrypt(MCExecContext& ctxt, MCStringRef p_data, bool p_is_public, MCStringRef p_key, MCStringRef p_passphrase);
@@ -3515,8 +3519,8 @@ void MCPrintingExecCancelPrinting(MCExecContext& ctxt);
 void MCPrintingExecResetPrinting(MCExecContext& ctxt);
 void MCPrintingExecPrintAnchor(MCExecContext& ctxt, MCStringRef name, MCPoint location);
 void MCPrintingExecPrintLink(MCExecContext& ctxt, int type, MCStringRef target, MCRectangle area);
-void MCPrintingExecPrintNativeBookmark(MCExecContext& ctxt, MCStringRef title, MCPoint location, integer_t level, bool initially_closed);
-void MCPrintingExecPrintUnicodeBookmark(MCExecContext& ctxt, MCStringRef title, MCPoint location, integer_t level, bool initially_closed);
+void MCPrintingExecPrintBookmark(MCExecContext& ctxt, MCStringRef title, MCPoint location, integer_t level, bool initially_closed);
+void MCPrintingExecPrintUnicodeBookmark(MCExecContext& ctxt, MCDataRef title, MCPoint location, integer_t level, bool initially_closed);
 void MCPrintingExecPrintBreak(MCExecContext& ctxt);
 void MCPrintingExecPrintAllCards(MCExecContext& ctxt, MCStack *stack, bool only_marked);
 void MCPrintingExecPrintRectOfAllCards(MCExecContext& ctxt, MCStack *stack, bool p_only_marked, MCPoint from, MCPoint to);
@@ -3540,8 +3544,8 @@ void MCPrintingSetPrintDeviceOutput(MCExecContext& ctxt, const MCPrintingPrintDe
 void MCPrintingGetPrintDeviceOutput(MCExecContext& ctxt, MCPrintingPrintDeviceOutput& r_output);
 void MCPrintingGetPrintDeviceRectangle(MCExecContext& ctxt, MCRectangle &r_rectangle);
 void MCPrintingGetPrintDeviceRectangle(MCExecContext& ctxt, MCRectangle &r_rectangle);
-void MCPrintingGetPrintDeviceSettings(MCExecContext& ctxt, MCStringRef &r_settings);
-void MCPrintingSetPrintDeviceSettings(MCExecContext& ctxt, MCStringRef p_settings);
+void MCPrintingGetPrintDeviceSettings(MCExecContext& ctxt, MCDataRef &r_settings);
+void MCPrintingSetPrintDeviceSettings(MCExecContext& ctxt, MCDataRef p_settings);
 void MCPrintingGetPrintDeviceName(MCExecContext& ctxt, MCStringRef &r_name);
 void MCPrintingSetPrintDeviceName(MCExecContext& ctxt, MCStringRef p_name);
 

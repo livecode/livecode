@@ -144,7 +144,7 @@ static bool MCA_file_with_types(bool p_plural, MCStringRef p_prompt, MCStringRef
 {
 	const char *t_title = p_title == nil ? "" : MCStringGetCString(p_title);
 	const char *t_prompt = p_prompt == nil ? "" : MCStringGetCString(p_prompt);
-	const char *t_initial = p_initial == nil ? "" : MCStringGetCString(p_initial);
+	const char *t_initial = p_initial == nil ? nil : MCStringGetCString(p_initial);
 	
 	char **t_types = nil;
 	if (!MCMemoryNewArray(p_type_count, t_types))
@@ -516,7 +516,7 @@ void MCDialogExecAskQuestion(MCExecContext& ctxt, int p_type, MCStringRef p_prom
 
 #else
 	MCAutoStringRef t_result;
-	if (MCscreen -> popupaskdialog(AT_QUESTION, MCStringGetCString(p_title), MCStringGetCString(p_prompt), MCStringGetCString(p_answer), p_hint_answer, &t_result))
+	if (MCscreen -> popupaskdialog(AT_QUESTION, p_title, p_prompt, p_answer, p_hint_answer, &t_result))
 	{
 		ctxt . SetItToValue(*t_result);
 		ctxt . SetTheResultToEmpty();
@@ -556,7 +556,7 @@ void MCDialogExecAskPassword(MCExecContext& ctxt, bool p_clear, MCStringRef p_pr
 	
 #else
 	MCAutoStringRef t_result;
-	if (MCscreen -> popupaskdialog(AT_PASSWORD, MCStringGetCString(p_title), MCStringGetCString(p_prompt), MCStringGetCString(p_answer), p_hint_answer, &t_result))
+	if (MCscreen -> popupaskdialog(AT_PASSWORD, p_title, p_prompt, p_answer, p_hint_answer, &t_result))
 	{
 		ctxt . SetItToValue(*t_result);
 		ctxt . SetTheResultToEmpty();

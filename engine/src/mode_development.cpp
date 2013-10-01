@@ -80,7 +80,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 //////////
 
-bool MCFiltersDecompress(MCStringRef p_source, MCStringRef& r_result);
+bool MCFiltersDecompress(MCDataRef p_source, MCDataRef& r_result);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -133,23 +133,23 @@ public:
 	virtual Exec_stat exec(MCExecPoint &);
 };
 
-static char *s_command_path = NULL;
+static MCStringRef s_command_path = nil;
 
 static void restart_revolution(void)
 {
 #if defined(TARGET_PLATFORM_WINDOWS)
-	_spawnl(_P_NOWAIT, s_command_path, s_command_path, NULL);
+	_spawnl(_P_NOWAIT, MCStringGetCString(s_command_path), MCStringGetCString(s_command_path), NULL);
 #elif defined(TARGET_PLATFORM_MACOS_X)
 	if (fork() == 0)
 	{
 		usleep(250000);
-		execl(MCcmd, MCcmd, NULL);
+		execl(MCStringGetCString(MCcmd), MCStringGetCString(MCcmd), NULL);
 	}
 #elif defined(TARGET_PLATFORM_LINUX)
 	if (fork() == 0)
 	{
 		usleep(250000);
-		execl(MCcmd, MCcmd, NULL);
+		execl(MCStringGetCString(MCcmd), MCStringGetCString(MCcmd), NULL);
 	}
 #else
 #error restart not defined
@@ -187,7 +187,9 @@ Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
 		return ES_NORMAL;
 	}
 	
-	if (!MCS_unlink(MClicenseparameters . license_token))
+	MCAutoStringRef license_token_string;
+	/* UNCHECKED */ MCStringCreateWithCString(MClicenseparameters . license_token, &license_token_string);
+	if (!MCS_unlink(*license_token_string));
 	{
 		MCresult -> sets("token deletion failed");
 		return ES_NORMAL;
@@ -199,8 +201,11 @@ Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
 	MCtracestackptr = NULL;
 	MCtraceabort = True;
 	MCtracereturn = True;
+    
+    MCAutoStringRef t_command_path;
+    MCS_resolvepath(MCcmd, &t_command_path);
 	
-	s_command_path = MCS_resolvepath(MCcmd);
+	s_command_path = MCValueRetain(*t_command_path);
 
 	atexit(restart_revolution);
 	
@@ -225,9 +230,11 @@ IO_stat MCDispatch::startup(void)
 
 	// set up image cache before the first stack is opened
 	MCCachedImageRep::init();
+    MCAutoStringRef t_startdir;
+    MCS_getcurdir(&t_startdir);
 	
-	startdir = MCS_getcurdir();
-	enginedir = strclone(MCcmd);
+	startdir = strdup(MCStringGetCString(*t_startdir));
+	enginedir = strdup(MCStringGetCString(MCcmd));
 
 	char *eptr;
 	eptr = strrchr(enginedir, PATH_SEPARATOR);
@@ -236,13 +243,13 @@ IO_stat MCDispatch::startup(void)
 	else
 		*enginedir = '\0';
 
-	MCStringRef t_decompressed;
-	MCStringRef t_compressed;
-	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)MCstartupstack, MCstartupstack_length, t_compressed);
+	MCDataRef t_decompressed;
+	MCDataRef t_compressed;
+	/* UNCHECKED */ MCDataCreateWithBytes((const char_t*)MCstartupstack, MCstartupstack_length, t_compressed);
 	/* UNCHECKED */ MCFiltersDecompress(t_compressed, t_decompressed);
 	MCValueRelease(t_compressed);
-
-	IO_handle stream = MCS_fakeopen(MCStringGetOldString(t_decompressed));
+    
+	IO_handle stream = MCS_fakeopen(MCDataGetOldString(t_decompressed));
 	if ((stat = MCdispatcher -> readfile(NULL, NULL, stream, sptr)) != IO_NORMAL)
 	{
 		MCS_close(stream);
@@ -251,7 +258,7 @@ IO_stat MCDispatch::startup(void)
 
 	MCS_close(stream);
 
-	/* FRAGILE */ memset((void *)MCStringGetNativeCharPtr(t_decompressed), 0, MCStringGetLength(t_decompressed));
+	/* FRAGILE */ memset((void *)MCDataGetBytePtr(t_decompressed), 0, MCDataGetLength(t_decompressed));
 	MCValueRelease(t_decompressed);
 
 	// Temporary fix to make sure environment stack doesn't get lost behind everything.
@@ -263,7 +270,7 @@ IO_stat MCDispatch::startup(void)
 #endif
 	
 	MCenvironmentactive = True;
-	sptr -> setfilename(strclone(MCcmd));
+	sptr -> setfilename(MCcmd);
 	MCdefaultstackptr = MCstaticdefaultstackptr = stacks;
 
 	{
@@ -290,8 +297,9 @@ IO_stat MCDispatch::startup(void)
 				return IO_NORMAL;
 		}
 
-		if (sptr -> getscript() != NULL)
-			memset(sptr -> getscript(), 0, strlen(sptr -> getscript()));
+		// TODO: Script Wiping
+		// if (sptr -> getscript() != NULL)
+		//	memset(sptr -> getscript(), 0, strlen(sptr -> getscript()));
 
 		destroystack(sptr, True);
 		MCtopstackptr = NULL;
@@ -349,9 +357,9 @@ bool MCDispatch::isolatedsend(const char *p_stack_data, uint32_t p_stack_data_le
 	MCfrontscripts = nil;
 	
 	// Load the stack
-	MCStringRef t_decompressed;
-	MCStringRef t_compressed;
-	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_stack_data, p_stack_data_length, t_compressed);
+	MCDataRef t_decompressed;
+	MCDataRef t_compressed;
+	/* UNCHECKED */ MCDataCreateWithBytes((const char_t *)p_stack_data, p_stack_data_length, t_compressed);
 	/* UNCHECKED */ MCFiltersDecompress(t_compressed, t_decompressed);
 	MCValueRelease(t_compressed);
 
@@ -360,7 +368,7 @@ bool MCDispatch::isolatedsend(const char *p_stack_data, uint32_t p_stack_data_le
 	IO_handle t_stream;
 	t_success = false;
 	t_stack = nil;
-	t_stream = MCS_fakeopen(MCStringGetOldString(t_decompressed));
+	t_stream = MCS_fakeopen(MCDataGetOldString(t_decompressed));
 
 	if (MCdispatcher -> readfile(NULL, NULL, t_stream, t_stack) == IO_NORMAL)
 	{
@@ -377,7 +385,7 @@ bool MCDispatch::isolatedsend(const char *p_stack_data, uint32_t p_stack_data_le
 
 	MCS_close(t_stream);
 
-	/* FRAGILE */ memset((void *)MCStringGetNativeCharPtr(t_decompressed), 0, MCStringGetLength(t_decompressed));
+	/* FRAGILE */ memset((void *)MCDataGetBytePtr(t_decompressed), 0, MCDataGetLength(t_decompressed));
 	MCValueRelease(t_decompressed);
 
 	MCtopstackptr = t_old_topstackptr;
@@ -547,11 +555,6 @@ void MCStack::mode_takewindow(MCStack *other)
 void MCStack::mode_takefocus(void)
 {
 	MCscreen->setinputfocus(window);
-}
-
-char *MCStack::mode_resolve_filename(const char *filename)
-{
-	return NULL;
 }
 
 bool MCStack::mode_needstoopen(void)
@@ -1201,7 +1204,9 @@ bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 			else
 				t_msg_stack -> raise();
 
-			((MCField *)MCmessageboxredirect) -> settext(0, ep . getsvalue(), False);
+			MCAutoStringRef t_string;
+			ep . copyasstringref(&t_string);
+			((MCField *)MCmessageboxredirect) -> settext(0, *t_string, False);
 		}
 		else
 		{
@@ -1330,7 +1335,7 @@ void MCModeConfigureIme(MCStack *p_stack, bool p_enabled, int32_t x, int32_t y)
 		MCscreen -> clearIME(p_stack -> getwindow());
 }
 
-void MCModeShowToolTip(int32_t x, int32_t y, uint32_t text_size, uint32_t bg_color, const char *text_font, const char *message)
+void MCModeShowToolTip(int32_t x, int32_t y, uint32_t text_size, uint32_t bg_color, MCStringRef text_font, MCStringRef message)
 {
 }
 

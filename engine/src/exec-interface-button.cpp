@@ -427,7 +427,7 @@ void MCButton::DoSetIcon(MCExecContext& ctxt, Current_icon which, const MCInterf
 	{
 		// MW-2013-03-06: [[ Bug 10695 ]] When searching for the image to resolve to an id,
 		//   make sure we use the behavior aware search function.
-		MCImage *ticon = resolveimagename(MCStringGetOldString(p_icon . custom));
+		MCImage *ticon = resolveimagename(p_icon . custom);
 		if (ticon != NULL)
 			t_id = ticon->getid();
 		else
@@ -611,9 +611,9 @@ void MCButton::DoSetLabel(MCExecContext& ctxt, MCStringRef p_label)
 
 		if (entry != NULL)
 			if (label == NULL)
-				entry->settext(0, MCnullmcstring, False, False);
+				entry->settext_oldstring(0, MCnullmcstring, False, False);
 			else
-				entry->settext(0, MCString(label, labelsize), False, hasunicode());
+				entry->settext_oldstring(0, MCString(label, labelsize), False, hasunicode());
 
 		clearmnemonic();
 		setupmnemonic();

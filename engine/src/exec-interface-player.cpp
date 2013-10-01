@@ -15,14 +15,12 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 #include "mcio.h"
 #include "sysdefs.h"
-
 #include "globals.h"
 #include "object.h"
 #include "stack.h"
@@ -34,7 +32,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 #include "exec.h"
 #include "player.h"
-
 #include "exec-interface.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -245,24 +242,21 @@ void MCPlayer::GetFileName(MCExecContext& ctxt, MCStringRef& r_name)
 	if (filename == nil)
 		return;
 	
-	if (MCStringCreateWithCString(filename, r_name))
-		return;
-
-	ctxt . Throw();
+	r_name = MCValueRetain(filename);
 }
 
 void MCPlayer::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
 {
-	if (filename == NULL || p_name == nil ||
-		!MCStringIsEqualToCString(p_name, filename, kMCCompareExact))
+	if (filename == nil || p_name == nil ||
+		!MCStringIsEqualTo(p_name, filename, kMCCompareExact))
 	{
-		delete filename;
+		MCValueRelease(filename);
 		filename = NULL;
 		playstop();
 		starttime = MAXUINT4; //clears the selection
 		endtime = MAXUINT4;
 		if (p_name != nil)
-			filename = strclone(MCStringGetCString(p_name));
+			filename = MCValueRetain(p_name);
 		prepare(kMCEmptyString);
 		Redraw();
 	}
@@ -456,16 +450,7 @@ void MCPlayer::SetShowSelection(MCExecContext& ctxt, bool setting)
 
 void MCPlayer::GetCallbacks(MCExecContext& ctxt, MCStringRef& r_callbacks)
 {
-	if (userCallbackStr == nil)
-	{
-		r_callbacks = MCValueRetain(kMCEmptyString);
-		return;
-	}
-
-	if (MCStringCreateWithCString(userCallbackStr, r_callbacks))
-		return;
-
-	ctxt . Throw();
+	r_callbacks = MCValueRetain(userCallbackStr);
 }
 
 void MCPlayer::SetCallbacks(MCExecContext& ctxt, MCStringRef p_callbacks)
@@ -473,16 +458,11 @@ void MCPlayer::SetCallbacks(MCExecContext& ctxt, MCStringRef p_callbacks)
 #ifdef FEATURE_QUICKTIME
 	deleteUserCallbacks(); //delete all callbacks for this player
 #endif
-	delete userCallbackStr;
-	if (MCStringGetLength(p_callbacks) == 0)
-		userCallbackStr = NULL;
-	else
-	{
-		userCallbackStr = strclone(MCStringGetCString(p_callbacks));
+		MCValueAssign(userCallbackStr, p_callbacks);
 #ifdef FEATURE_QUICKTIME
 		installUserCallbacks(); //install all callbacks for this player
 #endif
-	}
+	
 }
 
 void MCPlayer::GetTimeScale(MCExecContext& ctxt, uinteger_t& r_scale)
