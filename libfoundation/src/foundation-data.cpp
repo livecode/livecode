@@ -377,6 +377,15 @@ bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data)
     return true;
 }
 
+bool MCDataPad(MCDataRef p_data, byte_t p_byte, uindex_t p_count)
+{
+	if (!__MCDataExpandAt(p_data, p_data -> byte_count, p_count))
+		return false;
+	
+	memset(p_data -> bytes + p_data -> byte_count - p_count, p_byte, p_count);
+	return true;
+}
+
 static void __MCDataClampRange(MCDataRef p_data, MCRange& x_range)
 {
 	uindex_t t_left, t_right;

@@ -150,7 +150,7 @@ MCScriptPoint::MCScriptPoint(MCStringRef p_string)
 
 MCScriptPoint& MCScriptPoint::operator =(const MCScriptPoint& sp)
 {
-	script = MCValueRetain(sp . script);
+	MCValueAssign(script, sp . script);
 	curobj = sp.curobj;
 	curhlist = sp.curhlist;
 	curhandler = sp.curhandler;

@@ -369,7 +369,7 @@ public:
 	bool Close(void);
 
 	// Convert the given string to a transfer type.
-	static MCTransferType StringToType(const MCString& p_string);
+	static MCTransferType StringToType(MCStringRef p_string);
 
 	// Conver the given type to a constant string.
 	static const char *TypeToString(MCTransferType p_type);

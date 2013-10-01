@@ -101,7 +101,6 @@ extern bool MCU_stoui4x2(MCStringRef p_string, uint4 &r_d1, uint4 &r_d2);
 extern bool MCU_stob(MCStringRef p_string, bool& r_condition);
 extern Boolean MCU_stob(const MCString&, Boolean& condition);
 extern void MCU_lower(char *sptr, const MCString& s);
-extern void MCU_upper(char *sptr, const MCString& s);
 extern int4 MCU_strncasecmp(const char *one, const char *two, size_t n);
 extern Boolean MCU_offset(const MCString &p, const MCString &w,
 	                          uint4 &offset, Boolean casesensitive = False);
@@ -122,9 +121,8 @@ extern void MCU_snap(int2 &p);
 extern void MCU_roundrect(MCPoint *&, uint2 &npoints,
 	                          const MCRectangle &, uint2 radius);
 extern void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &);
-extern bool MCU_parsepoints(MCPoint *&r_points, uindex_t &r_noldpoints, MCStringRef p_data);
-extern Boolean MCU_parsepoints(MCPoint *&oldpoints, uint2 &n, const MCString &);
-extern Boolean MCU_parsepoint(MCPoint &r_point, const MCString &);
+extern Boolean MCU_parsepoints(MCPoint *&oldpoints, uindex_t &n, MCStringRef p_data);
+extern Boolean MCU_parsepoint(MCPoint &r_point, MCStringRef);
 extern void MCU_querymouse(int2 &x, int2 &y);
 extern void MCU_resetcursors();
 extern void MCU_set_rect(MCRectangle &rect, int2 x, int2 y, uint2 w, uint2 h);
@@ -168,7 +166,7 @@ extern Boolean MCU_freeinserted(MCObjectList *&l);
 extern void MCU_cleaninserted();
 //extern Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep, uint2 line, uint2 pos);
 extern Exec_stat MCU_change_color(MCColor &c, MCStringRef&n, MCExecPoint &ep, uint2 line, uint2 pos);
-extern void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c);
+//extern void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c);
 extern void MCU_get_color(MCExecPoint &ep, MCStringRef name, MCColor &c);
 extern void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 	                       real8 tn, real8 oldn, MCSortnode *titems);
@@ -178,7 +176,7 @@ extern void MCU_puturl(MCExecPoint &ep, MCExecPoint &data);
 extern uint1 MCU_unicodetocharset(uint2 uchar);
 extern uint1 MCU_languagetocharset(MCNameRef langname);
 extern MCNameRef MCU_charsettolanguage(uint1 charset);
-/* LEGACY */ extern uint1 MCU_languagetocharset(const char *langname);
+/* LEGACY */ extern uint1 MCU_languagetocharset(MCStringRef langname);
 extern uint1 MCU_wincharsettocharset(uint2 wincharset);
 extern uint1 MCU_charsettowincharset(uint1 charset);
 extern bool MCU_multibytetounicode(MCDataRef p_input, MCDataRef &r_output);
