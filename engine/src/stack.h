@@ -431,7 +431,7 @@ public:
 	void raise();
 	void enter();
 	void flip(uint2 count);
-	Exec_stat sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
+	bool sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 	               MCExpression *by, Boolean marked);
 	void breakstring(MCStringRef, MCStringRef*& dest, uint2 &nstrings,
 	                 Find_mode fmode);
