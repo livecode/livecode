@@ -735,7 +735,11 @@ Boolean MCButton::kdown(const char *string, KeySym key)
 		case XK_KP_Enter:
 			closemenu(False, True);
 			menu->menukdown(string, key, &t_pick, menuhistory);
-			if (!MCStringIsEmpty(*t_pick))
+			
+			// This check must be for null (not empty) because an empty pick
+			// indicates that the function succeeded while a null pick means
+			// that no menu responded to the event.
+			if (*t_pick != nil)
 			{
 				if (menumode == WM_OPTION || menumode == WM_COMBO)
 				{
@@ -1323,7 +1327,9 @@ Boolean MCButton::mup(uint2 which)
 		closemenu(True, True);
 		if (!(state & CS_IGNORE_MENU))
 		{
-			if (!MCStringIsEmpty(*t_pick))
+			// An empty string means something handled the menumup while the
+			// null string means nothing responded to it.
+			if (*t_pick != nil)
 			{
 				if (menumode == WM_OPTION || menumode == WM_COMBO)
 				{

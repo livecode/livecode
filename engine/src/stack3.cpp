@@ -1541,8 +1541,13 @@ void MCStack::menuset(uint2 button, uint2 defy)
 
 void MCStack::menumup(uint2 which, MCStringRef &r_string, uint2 &selline)
 {
+	// The original behaviour of this function interprets an empty string and
+	// the null string as different things: the empty string means that the
+	// function succeeded but there is no text while the null string indicates
+	// that no menu handled the key event.
+	r_string = nil;
+	
 	MCControl *focused = curcard->getmfocused();
-	r_string = MCValueRetain(kMCEmptyString);
 	if (focused == NULL)
 		focused = curcard->getkfocused();
 	MCButton *bptr = (MCButton *)focused;
