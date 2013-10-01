@@ -537,6 +537,22 @@ public:
 	{
 		return m_ep . getcutoff();
 	}
+	
+	uinteger_t GetNumberFormatWidth() const
+	{
+		return m_ep.getnffw();
+	}
+	
+	uinteger_t GetNumberFormatTrailing() const
+	{
+		return m_ep.getnftrailing();	
+	}
+	
+	uinteger_t GetNumberFormatForce() const
+	{
+		return m_ep.getnfforce();
+	}
+	
 	//////////
 
 	void SetCaseSensitive(bool p_value)

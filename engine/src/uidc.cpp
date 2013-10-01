@@ -874,6 +874,7 @@ bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 		{
 			MCAutoListRef t_msg_info;
 			MCAutoStringRef t_id_string;
+			MCAutoStringRef t_time_string;
 
 			if (!MCListCreateMutable(',', &t_msg_info))
 				return false;
@@ -881,7 +882,8 @@ bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 			if (!MCListAppendInteger(*t_msg_info, messages[i].id))
 				return false;
 
-			if (!MCListAppendInteger(*t_msg_info, messages[i].time))
+			if (!ctxt.FormatReal(messages[i].time, &t_time_string)
+				|| !MCListAppend(*t_msg_info, *t_time_string))
 				return false;
 
 			if (!MCListAppend(*t_msg_info, messages[i].message))
