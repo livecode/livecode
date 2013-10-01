@@ -96,7 +96,7 @@ MCNativeControl::MCNativeControl(void)
 {
 	m_references = 1;
 	m_id = ++s_last_native_control_id;
-	m_name = nil;
+	m_name = MCValueRetain(kMCEmptyString);
 	m_object = nil;
 	m_next = nil;
     m_deleted = false;
@@ -110,10 +110,10 @@ MCNativeControl::~MCNativeControl(void)
 		m_object = nil;
 	}
 	
-	if (m_name != nil)
+	if (!MCStringIsEmpty(m_name))
 	{
 		MCValueRelease(m_name);
-		m_name = nil;
+		m_name = MCValueRetain(kMCEmptyString);
 	}
     
 	if (s_native_controls == this)
@@ -169,10 +169,10 @@ void MCNativeControl::SetOwner(MCObject *p_owner)
 
 bool MCNativeControl::SetName(MCStringRef p_name)
 {
-	if (m_name != nil)
+	if (!MCStringIsEmpty(m_name))
 	{
 		MCValueRelease(m_name);
-		m_name = nil;
+		m_name = MCValueRetain(kMCEmptyString);
 	}
 	
 	if (p_name != nil)
@@ -365,14 +365,12 @@ bool MCNativeControl::LookupType(MCStringRef p_type, MCNativeControlType& r_type
 
 bool MCNativeControl::FindByNameOrId(MCStringRef p_name, MCNativeControl*& r_control)
 {
-	//uint32_t t_id;
-	MCAutoNumberRef t_id;
-	//if (MCStringToInteger(p_name, t_id))
-	if (MCNumberParse(p_name, &t_id))
-		return FindById(MCNumberFetchAsUnsignedInteger(*t_id), r_control);
+	uint32_t t_id;
+	if (/* CTXT */ MCStringToInteger(p_name, t_id))
+		return FindById(t_id, r_control);
 	
 	for(MCNativeControl *t_control = s_native_controls; t_control != nil; t_control = t_control -> m_next)
-		if (!t_control -> m_deleted && t_control -> GetName() != nil && MCStringIsEqualTo(p_name, t_control -> GetName(), kMCCompareCaseless))
+		if (!t_control -> m_deleted && !MCStringIsEmpty(t_control -> GetName()) && MCStringIsEqualTo(p_name, t_control -> GetName(), kMCCompareCaseless))
 		{
 			r_control = t_control;
 			return true;
@@ -1028,7 +1026,7 @@ void MCNativeControl::GetId(MCExecContext& ctxt, uinteger_t& r_id)
 
 void MCNativeControl::GetName(MCExecContext& ctxt, MCStringRef& r_name)
 {
-    if (m_name != nil)
+    if (!MCStringIsEmpty(m_name))
         r_name = MCValueRetain(m_name);
       
     return;  
@@ -1036,10 +1034,10 @@ void MCNativeControl::GetName(MCExecContext& ctxt, MCStringRef& r_name)
 
 void MCNativeControl::SetName(MCExecContext& ctxt, MCStringRef p_name)
 {
-    if (m_name != nil)
+    if (!MCStringIsEmpty(m_name))
 	{
 		MCValueRelease(m_name);
-		m_name = nil;
+		m_name = MCValueRetain(kMCEmptyString);
 	}
 	
 	if (p_name != nil)
