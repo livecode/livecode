@@ -882,6 +882,8 @@ Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recu
                     return ES_ERROR;
 
                 t_object . part_id = t_card -> getid();
+                r_object . object = t_object . object;
+                r_object . part_id = t_object . part_id;
                 return ES_NORMAL;
             default:
                 break;
@@ -1210,6 +1212,12 @@ Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recu
         tgptr = tgptr -> next;
     }
     
+	// Stack override handles the case of 'control id ...' where there is no card
+	// reference. It enables access to top-level objects in the stack via id.
+    
+    if (card == nil)
+        t_stack_override = true;
+    
 	// MW-2011-08-08: [[ Bug ]] Loop through chain of object chunks. This allows
 	//   things like field ... of control ... of.
     if (object != nil)
@@ -1281,7 +1289,7 @@ Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recu
             toptr = toptr -> next;
         }
     }
-    
+
     if (!ctxt . HasError())
     {
         r_object . object = t_object . object;
@@ -3933,7 +3941,7 @@ Exec_stat MCChunk::getprop(Properties which, MCExecPoint &ep, MCNameRef index, B
 		}
 		MCU_geturl(ep);
 	}
-
+    
     MCObjectChunkPtr t_obj_chunk;
     if (evalobjectchunk(ep, false, false, t_obj_chunk) != ES_NORMAL)
         return ES_ERROR;
@@ -4148,25 +4156,22 @@ Exec_stat MCChunk::evalobjectchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_f
     MCExecContext ctxt(ep);
     if (t_function)
         MCInterfaceMarkFunction(ctxt, t_object, function, p_whole_chunk, r_chunk . mark);
-    else
+    else if (cline != nil || item != nil || token != nil || word != nil || character!= nil)
         MCInterfaceMarkObject(ctxt, t_object, p_whole_chunk, r_chunk . mark);
-    
-    if (!t_function && cline == NULL && item == NULL
-        && token == NULL && word == NULL && character == NULL)
-    {
-        if (mark(ep, p_force, p_whole_chunk, r_chunk . mark, true) != ES_NORMAL)
-        {
-            MCeerror->add(EE_CHUNK_CANTMARK, line, pos);
-            return ES_ERROR;
-        }
-    }
     else
     {
-        if (mark(ep, p_force, p_whole_chunk, r_chunk . mark) != ES_NORMAL)
-        {
-            MCeerror->add(EE_CHUNK_CANTMARK, line, pos);
-            return ES_ERROR;
-        }
+        r_chunk . chunk = CT_UNDEFINED;
+        r_chunk . object = t_object . object;
+        r_chunk . part_id = t_object . part_id;
+        r_chunk . mark . start = 0;
+        r_chunk . mark . finish = MAXUINT4;
+        return ES_NORMAL;
+    }
+
+    if (mark(ep, p_force, p_whole_chunk, r_chunk . mark) != ES_NORMAL)
+    {
+        MCeerror->add(EE_CHUNK_CANTMARK, line, pos);
+        return ES_ERROR;
     }
 
     r_chunk . object = t_object . object;
