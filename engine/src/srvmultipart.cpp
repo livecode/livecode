@@ -927,7 +927,7 @@ bool MCMultiPartCreateTempFile(MCStringRef p_temp_folder, IO_handle &r_file_hand
 
 	if (t_success)
 	{
-		t_list_item->file_name = strdup(MCStringgetCString(*t_temp_name_string));
+		t_list_item->file_name = strdup(MCStringGetCString(*t_temp_name_string));
 		t_list_item->next = s_temp_files;
 		s_temp_files = t_list_item;
 		
