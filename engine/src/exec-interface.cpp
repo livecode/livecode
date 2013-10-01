@@ -3150,7 +3150,7 @@ void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef p_string, int 
 		else /* PT_BEFORE */
 			t_start = t_finish = p_chunk . start;
 		
-		if (((MCField *)p_chunk . object) -> settextindex(p_chunk . part_id, t_start, t_finish, MCStringGetOldString(p_string), False, p_is_unicode) != ES_NORMAL)
+		if (((MCField *)p_chunk . object) -> settextindex_stringref(p_chunk . part_id, t_start, t_finish, p_string, False) != ES_NORMAL)
 		{
 			ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
 			return;
