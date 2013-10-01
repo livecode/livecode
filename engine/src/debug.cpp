@@ -76,6 +76,11 @@ static int2 depth;
 
 #include "srvdebug.h"
 
+void MCB_setmsg(MCStringRef p_msg)
+{
+    
+}
+
 void MCB_setmsg(MCExecPoint& ep)
 {
 	// At some point we will add the ability to manipulate/look at the 'message box' in a
@@ -110,7 +115,19 @@ void MCB_setvar(MCExecPoint &ep, MCNameRef name)
 	MCServerDebugVariableChanged(ep, name);
 }
 
+void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name)
+{
+    
+}
+
 #else
+
+void MCB_setmsg(MCStringRef p_msg)
+{
+    MCExecPoint ep(nil, nil, nil);
+    ep . setvalueref(p_msg);
+    MCB_setmsg(ep);
+}
 
 void MCB_setmsg(MCExecPoint &ep)
 {
@@ -146,7 +163,11 @@ void MCB_setmsg(MCExecPoint &ep)
 			MCCard *cptr = MCmbstackptr->getchild(CT_THIS, kMCEmptyString, CT_CARD);
 			MCField *fptr = (MCField *)cptr->getchild(CT_FIRST, kMCEmptyString, CT_FIELD, CT_CARD);
 			if (fptr != NULL)
-				fptr->settext_oldstring(0, ep.getsvalue(), False);
+			{
+				MCAutoStringRef t_string;
+				ep . copyasstringref(&t_string);
+				fptr->settext(0, *t_string, False);
+			}
 		}
 	}
 }
@@ -308,6 +329,27 @@ void MCB_setvar(MCExecPoint &ep, MCNameRef name)
 	p2.setvalueref_argument(name);
 	p2.setnext(&p3);
 	p3.sets_argument(ep.getsvalue());
+	MCB_message(ep, MCM_update_var, &p1);
+	if (added)
+		MCnexecutioncontexts--;
+}
+
+void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name)
+{
+    MCExecPoint& ep = ctxt . GetEP();
+    
+	Boolean added = False;
+	if (MCnexecutioncontexts < MAX_CONTEXTS)
+	{
+		MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+		added = True;
+	}
+	MCParameter p1, p2, p3;
+	p1.setn_argument(ep.getline());
+	p1.setnext(&p2);
+	p2.setvalueref_argument(name);
+	p2.setnext(&p3);
+	p3.setvalueref_argument(p_value);
 	MCB_message(ep, MCM_update_var, &p1);
 	if (added)
 		MCnexecutioncontexts--;

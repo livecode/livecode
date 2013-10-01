@@ -617,25 +617,31 @@ static bool export_formatted_text(void *p_context, MCFieldExportEventType p_even
 void MCField::exportastext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode)
 {
 	MCAutoStringRef t_string;
-	if (exportastext(p_part_id, p_start_index, p_finish_index, p_as_unicode, &t_string))
-		/* UNCHECKED */ ep . setvalueref(*t_string);
+	if (exportastext(p_part_id, p_start_index, p_finish_index, &t_string))
+	{
+		if (p_as_unicode)
+		{
+			MCAutoDataRef t_data;
+			/* UNCHECKED */ MCStringEncode(*t_string, kMCStringEncodingUTF16, false, &t_data);
+			/* UNCHECKED */
+			ep . setvalueref(*t_data);
+		}
+		else
+			/* UNCHECKED */ ep . setvalueref(*t_string);
+	}
 	else
 		ep . clear();
 }
 
-/* UNSAFE */ bool MCField::exportastext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode, MCStringRef& r_string)
+/* UNSAFE */ bool MCField::exportastext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string)
 {
 	uint32_t t_char_count;
 	t_char_count = 0;
 	doexport(kMCFieldExportParagraphs | kMCFieldExportRuns, p_part_id, p_start_index, p_finish_index, estimate_char_count, &t_char_count);
-	
-	if (p_as_unicode)
-		t_char_count *= 2;
 
 	text_buffer_t t_buffer;
-	t_buffer . setasunicode(p_as_unicode);
-
-	if (t_buffer . ensure(t_char_count))
+	t_buffer . setasunicode(true);
+	if (t_buffer . ensure(t_char_count * 2))
 		doexport(kMCFieldExportParagraphs | kMCFieldExportRuns, p_part_id, p_start_index, p_finish_index, export_text, &t_buffer);
 	
 	return t_buffer . takeasstringref(r_string);
@@ -646,8 +652,18 @@ void MCField::exportastext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_
 void MCField::exportasplaintext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode)
 {
 	MCAutoStringRef t_string;
-	if (exportasplaintext(p_paragraphs, p_start_index, p_finish_index, p_as_unicode, &t_string))
-		/* UNCHECKED */ ep . setvalueref(*t_string);
+	if (exportasplaintext(p_paragraphs, p_start_index, p_finish_index, &t_string))
+	{
+		if (p_as_unicode)
+		{
+			MCAutoDataRef t_data;
+			/* UNCHECKED */ MCStringEncode(*t_string, kMCStringEncodingUTF16, false, &t_data);
+			/* UNCHECKED */
+			ep . setvalueref(*t_data);
+		}
+		else
+			/* UNCHECKED */ ep . setvalueref(*t_string);
+	}
 	else
 		ep . clear();
 }
@@ -657,27 +673,23 @@ void MCField::exportasplaintext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_s
 	exportasplaintext(ep, resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_as_unicode);
 }
 
-bool MCField::exportasplaintext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode, MCStringRef& r_string)
+bool MCField::exportasplaintext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string)
 {
 	uint32_t t_char_count;
 	t_char_count = 0;
 	doexport(kMCFieldExportParagraphs | kMCFieldExportRuns, p_paragraphs, p_start_index, p_finish_index, estimate_char_count, &t_char_count);
 
-	if (p_as_unicode)
-		t_char_count *= 2;
-
 	text_buffer_t t_buffer;
-	t_buffer . setasunicode(p_as_unicode);
-
-	if (t_buffer . ensure(t_char_count))
+	t_buffer . setasunicode(true);
+	if (t_buffer . ensure(t_char_count * 2))
 		doexport(kMCFieldExportParagraphs | kMCFieldExportRuns | kMCFieldExportParagraphStyles | kMCFieldExportNumbering, p_paragraphs, p_start_index, p_finish_index, export_plain_text, &t_buffer);
 
 	return t_buffer . takeasstringref(r_string);
 }
 
-bool MCField::exportasplaintext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode, MCStringRef& r_string)
+bool MCField::exportasplaintext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string)
 {
-	return exportasplaintext(resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_as_unicode, r_string);
+	return exportasplaintext(resolveparagraphs(p_part_id), p_start_index, p_finish_index, r_string);
 }
 
 // MW-2012-02-21: [[ FieldExport ]] This method exports the content of the
@@ -686,25 +698,31 @@ bool MCField::exportasplaintext(uint32_t p_part_id, int32_t p_start_index, int32
 void MCField::exportasformattedtext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode)
 {
 	MCAutoStringRef t_string;
-	if (exportasformattedtext(p_part_id, p_start_index, p_finish_index, p_as_unicode, &t_string))
-		/* UNCHECKED */ ep . setvalueref(*t_string);
+	if (exportasformattedtext(p_part_id, p_start_index, p_finish_index, &t_string))
+	{
+		if (p_as_unicode)
+		{
+			MCAutoDataRef t_data;
+			/* UNCHECKED */ MCStringEncode(*t_string, kMCStringEncodingUTF16, false, &t_data);
+			/* UNCHECKED */
+			ep . setvalueref(*t_data);
+		}
+		else
+			/* UNCHECKED */ ep . setvalueref(*t_string);
+	}
 	else
 		ep . clear();
 }
 
-bool MCField::exportasformattedtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode, MCStringRef& r_string)
+bool MCField::exportasformattedtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string)
 {
 	uint32_t t_char_count;
 	t_char_count = 0;
 	doexport(kMCFieldExportParagraphs | kMCFieldExportRuns, p_part_id, p_start_index, p_finish_index, estimate_char_count, &t_char_count);
 
-	if (p_as_unicode)
-		t_char_count *= 2;
-
 	text_buffer_t t_buffer;
-	t_buffer . setasunicode(p_as_unicode);
-
-	if (t_buffer . ensure(t_char_count))
+	t_buffer . setasunicode(true);
+	if (t_buffer . ensure(t_char_count * 2))
 		doexport(kMCFieldExportParagraphs | kMCFieldExportLines | kMCFieldExportRuns | kMCFieldExportParagraphStyles | kMCFieldExportNumbering, p_part_id, p_start_index, p_finish_index, export_formatted_text, &t_buffer);
 
 	return t_buffer . takeasstringref(r_string);

@@ -735,7 +735,7 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 	default:
 		{
 			Exec_stat t_stat;
-			t_stat = mode_getprop(parid, which, ep, MCnullmcstring, effective);
+			t_stat = mode_getprop(parid, which, ep, kMCEmptyString, effective);
 			if (t_stat == ES_NOT_HANDLED)
 			{
 				MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
@@ -748,7 +748,7 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 	return ES_NORMAL;
 #endif /* MCObject::getprop */
 	Exec_stat t_stat;
-	t_stat = mode_getprop(parid, which, ep, MCnullmcstring, effective);
+	t_stat = mode_getprop(parid, which, ep, kMCEmptyString, effective);
 	if (t_stat == ES_NOT_HANDLED)
 	{
 		MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
@@ -818,7 +818,7 @@ Exec_stat MCObject::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 	default:
 		{
 			Exec_stat t_stat;
-			t_stat = mode_getprop(parid, which, ep, MCNameGetOldString(key), False);
+			t_stat = mode_getprop(parid, which, ep, MCNameGetString(key), False);
 			if (t_stat == ES_NOT_HANDLED)
 			{
 				MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
@@ -1918,7 +1918,7 @@ Exec_stat MCObject::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 	default:
 		{
 			Exec_stat t_stat;
-			t_stat = mode_getprop(parid, which, ep, MCNameGetOldString(key), False);
+			t_stat = mode_getprop(parid, which, ep, MCNameGetString(key), False);
 			if (t_stat == ES_NOT_HANDLED)
 			{
 				MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
@@ -2278,7 +2278,7 @@ Exec_stat MCObject::getarrayprop(uint32_t p_part_id, Properties p_which, MCExecP
     }
     
     Exec_stat t_stat;
-    t_stat = mode_getprop(p_part_id, p_which, ep, MCNameGetOldString(p_index), False);
+    t_stat = mode_getprop(p_part_id, p_which, ep, MCNameGetString(p_index), False);
     if (t_stat == ES_NOT_HANDLED)
     {
         MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
@@ -2358,7 +2358,7 @@ Exec_stat MCObject::setarrayprop(uint32_t p_part_id, Properties p_which, MCExecP
 	}
     
     Exec_stat t_stat;
-    t_stat = mode_getprop(p_part_id, p_which, ep, MCNameGetOldString(p_index), False);
+    t_stat = mode_getprop(p_part_id, p_which, ep, MCNameGetString(p_index), False);
     if (t_stat == ES_NOT_HANDLED)
     {
         MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);

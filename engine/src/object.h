@@ -1106,7 +1106,7 @@ private:
 	// MW-2013-03-06: [[ Bug 10695 ]] New method used by resolveimage* - if name is nil, then id search.
 	MCImage *resolveimage(MCStringRef name, uint4 image_id);
 	
-	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, const MCString &carray, Boolean effective);
+	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, MCStringRef carray, Boolean effective);
 
 	friend class MCObjectHandle;
 	friend class MCEncryptedStack;

@@ -377,8 +377,8 @@ public:
 	Exec_stat openrect(const MCRectangle &rel, Window_mode wm, MCStack *parentwindow,
 	                   Window_position wpos,  Object_pos walign);
 	void getstackfiles(MCExecPoint &);
-	void stringtostackfiles(char *d, MCStackfile **sf, uint2 &nf);
-	void setstackfiles(const MCString &);
+	void stringtostackfiles(MCStringRef d, MCStackfile **sf, uint2 &nf);
+	void setstackfiles(MCStringRef);
 	char *getstackfile(const MCString &);
 	void setfilename(MCStringRef f);
 
@@ -884,8 +884,8 @@ private:
 
 	void mode_load(void);
 
-	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, const MCString &carray, Boolean effective);
-	Exec_stat mode_setprop(uint4 parid, Properties which, MCExecPoint &, const MCString &cprop, const MCString &carray, Boolean effective);
+	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, MCStringRef carray, Boolean effective);
+	Exec_stat mode_setprop(uint4 parid, Properties which, MCExecPoint &, MCStringRef cprop, MCStringRef carray, Boolean effective);
 
 	void mode_getrealrect(MCRectangle& r_rect);
 	void mode_takewindow(MCStack *other);

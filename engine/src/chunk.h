@@ -62,6 +62,9 @@ public:
 
 	Parse_stat parse(MCScriptPoint &spt, Boolean the);
 	Exec_stat eval(MCExecPoint &);
+    Exec_stat evaltextchunk(MCExecPoint &ep, MCCRef *ref, MCStringRef p_source, Chunk_term p_chunk_type, MCStringRef& x_text);
+    Exec_stat setmutabletextchunk(MCExecPoint &ep, MCCRef *ref, MCStringRef p_to_insert, Preposition_type p_type, Chunk_term p_chunk_type, MCStringRef& x_text);
+    Exec_stat evalmutabletextchunk(MCExecPoint &ep, MCCRef *ref, MCStringRef p_source, Chunk_term p_chunk_type, MCStringRef& r_text);
 	MCVarref *getrootvarref(void);
 	
 	void compile(MCSyntaxFactoryRef factory);
@@ -86,8 +89,10 @@ public:
 	// MW-2012-02-23: [[ CharChunk ]] Compute the start and end field indices corresponding
 	//   to the field char chunk in 'field'.
 	Exec_stat markcharactersinfield(uint32_t part_id, MCExecPoint& ep, int32_t& start, int32_t& end, MCField *field);
+
 	Exec_stat gets(MCExecPoint &);
 	Exec_stat set(MCExecPoint &, Preposition_type ptype);
+
 	// MW-2012-02-23: [[ PutUnicode ]] Set the chunk to the UTF-16 encoded text in ep.
 	Exec_stat setunicode(MCExecPoint& ep, Preposition_type ptype);
 	Exec_stat count(Chunk_term tocount, Chunk_term ptype, MCExecPoint &);

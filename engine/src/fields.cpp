@@ -632,6 +632,13 @@ MCParagraph *MCField::verifyindices(MCParagraph *p_top, int4& si, int4& ei)
 	return t_start_pg;
 }
 
+Exec_stat MCField::settextindex_stringref(uint4 parid, int4 si, int4 ei, MCStringRef s, Boolean undoing)
+{
+	if (MCStringIsNative(s))
+		return settextindex(parid, si, ei, MCStringGetOldString(s), undoing, false);
+	return settextindex(parid, si, ei, MCString((const char *)MCStringGetCharPtr(s), MCStringGetLength(s) * 2), undoing, true);
+}
+
 Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s, Boolean undoing, bool p_as_unicode)
 {
 	state &= ~CS_CHANGED;
@@ -2342,7 +2349,7 @@ void MCField::returntext(MCExecPoint &ep, int4 si, int4 ei)
 
 bool MCField::returntext(int4 p_si, int4 p_ei, MCStringRef& r_string)
 {
-	return exportastext(0, p_si, p_ei, false, r_string);
+	return exportastext(0, p_si, p_ei, r_string);
 }
 
 void MCField::charstoparagraphs(int4 si, int4 ei, MCParagraph*& rsp, MCParagraph*& rep, uint4& rsl, uint4& rel)
