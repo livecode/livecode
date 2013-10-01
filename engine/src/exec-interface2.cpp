@@ -2615,7 +2615,7 @@ void MCInterfaceEvalThisCardOfStack(MCExecContext& ctxt, MCObjectPtr p_stack, MC
     if (p_stack . object -> gettype() == CT_CARD || p_stack . object -> gettype() == CT_GROUP)
     {
         r_card . object = p_stack . object;
-        r_card . part_id = p_stack . object -> getid();
+        r_card . part_id = p_stack . part_id;
         return;
     }
     
@@ -3029,6 +3029,12 @@ void MCInterfaceEvalStackWithOptionalBackground(MCExecContext& ctxt, MCObjectPtr
         sptr -> setbackground(bptr);
         r_object . object = sptr;
         r_object . part_id = p_object . part_id;
+        return;
+    }
+    else if (p_object . object -> gettype() == CT_CARD)
+    {
+        r_object . object = p_object . object -> getstack();
+        r_object . part_id = 0;
         return;
     }
 

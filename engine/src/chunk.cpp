@@ -884,7 +884,7 @@ Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recu
                 t_object . part_id = t_card -> getid();
                 return ES_NORMAL;
             default:
-                return getobj_legacy(ep, r_object . object, r_object . part_id, p_recurse);
+                break;
         }
 	}
 	else if (stack == nil && background == nil && card == nil && group == nil && object == nil)
