@@ -2812,7 +2812,7 @@ void MCStack::paste(void)
 			if (t_index == 1)
 				/* UNCHECKED */ MCStringFormat(&t_new_name, "Copy of %@", t_old_name);
 			else
-				/* UNCHECKED */ MCStringFormat(&t_new_name, "Copy (%d) of %@", t_index, *t_new_name);
+				/* UNCHECKED */ MCStringFormat(&t_new_name, "Copy (%d) of %@", t_index, t_old_name);
 			
 			MCValueRelease(t_name);
 			/* UNCHECKED */ MCNameCreate(*t_new_name, t_name);
