@@ -152,9 +152,6 @@ uint32_t MCNativeControl::GetId(void)
 
 void MCNativeControl::GetName(MCStringRef &r_name)
 {
-    if (m_name == nil)
-        r_name = MCValueRetain(kMCEmptyString);
-    else
         r_name = MCValueRetain(m_name);
 }
 
