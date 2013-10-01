@@ -51,9 +51,11 @@ int32_t MCFontGetDescent(MCFontRef font);
 
 int32_t MCFontMeasureText(MCFontRef font, MCStringRef p_text);
 int32_t MCFontMeasureText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode);
+int32_t MCFontMeasureTextSubstring(MCFontRef font, MCStringRef p_text, MCRange p_range);
 
 void MCFontDrawText(MCFontRef font, MCStringRef p_text, MCContext *context, int32_t x, int32_t y, bool image);
 void MCFontDrawText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode, MCContext *context, int32_t x, int32_t y, bool image);
+void MCFontDrawTextSubstring(MCFontRef font, MCStringRef p_text, MCRange p_range, MCContext *context, int32_t x, int32_t y, bool image);
 
 MCFontStyle MCFontStyleFromTextStyle(uint2 text_style);
 uint16_t MCFontStyleToTextStyle(MCFontStyle font_style);
