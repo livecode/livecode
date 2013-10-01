@@ -652,7 +652,7 @@ void MCEngineExecPutOutput(MCExecContext& ctxt, MCStringRef p_value, bool p_is_u
 	if (p_is_unicode)
 	{
 		MCAutoDataRef t_data;
-		/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)MCStringGetCString(p_value), &t_data)
+		/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)MCStringGetCString(p_value), MCStringGetLength(p_value), &t_data);
 		if (!MCS_put_binary(ctxt . GetEP(), kMCSPutUnicodeOutput, *t_data))
 			ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 	}

@@ -181,7 +181,7 @@ void MCServerExecInclude(MCExecContext& ctxt, MCStringRef p_filename, bool p_is_
 void MCServerExecEcho(MCExecContext& ctxt, MCStringRef p_data)
 {
 	MCAutoDataRef t_data;
-	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)MCStringGetCString(p_data), &t_data)
+	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)MCStringGetCString(p_data), MCStringGetLength(p_data), &t_data);
 	if (!MCS_put_binary(ctxt . GetEP(), kMCSPutBinaryOutput, *t_data) != IO_NORMAL)
 		MCexitall = True;
 }
@@ -197,7 +197,7 @@ void MCServerExecPutHeader(MCExecContext& ctxt, MCStringRef p_value, bool p_as_n
 void MCServerExecPutBinaryOutput(MCExecContext& ctxt, MCStringRef p_value)
 {
 	MCAutoDataRef t_data;
-	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)MCStringGetCString(p_value), &t_data)
+	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)MCStringGetCString(p_value), MCStringGetLength(p_value), &t_data);
 	if (!MCS_put_binary(ctxt . GetEP(), kMCSPutBinaryOutput, *t_data))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
@@ -207,7 +207,7 @@ void MCServerExecPutContent(MCExecContext& ctxt, MCStringRef p_value, bool is_un
 	if (is_unicode)
 	{
 		MCAutoDataRef t_data;
-		/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)MCStringGetCString(p_value), &t_data)
+		/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)MCStringGetCString(p_value), MCStringGetLength(p_value), &t_data);
 		if (!MCS_put_binary(ctxt . GetEP(), kMCSPutUnicodeContent, *t_data))
 			ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 	}
@@ -221,7 +221,7 @@ void MCServerExecPutMarkup(MCExecContext& ctxt, MCStringRef p_value, bool is_uni
 	if (is_unicode)
 	{
 		MCAutoDataRef t_data;
-		/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)MCStringGetCString(p_value), &t_data)
+		/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)MCStringGetCString(p_value), MCStringGetLength(p_value), &t_data);
 		if (!MCS_put_binary(ctxt . GetEP(), kMCSPutUnicodeMarkup, *t_data))
 			ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 	}
