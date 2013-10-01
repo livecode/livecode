@@ -227,11 +227,11 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 
 	if (flags & F_STACK_FILES)
 	{
-		char *sf;
-		if ((stat = IO_read_string(sf, stream)) != IO_NORMAL)
+		MCAutoStringRef sf;
+		if ((stat = IO_read_stringref(&sf, stream)) != IO_NORMAL)
 			return stat;
-		setstackfiles(sf);
-		delete sf;
+		setstackfiles(*sf);
+		
 	}
 	if (flags & F_MENU_BAR)
 	{

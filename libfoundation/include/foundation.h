@@ -1166,6 +1166,8 @@ MCNameRef MCNAME(const char *);
 
 // Create a name using the given string.
 bool MCNameCreate(MCStringRef string, MCNameRef& r_name);
+// Create a name using chars.
+bool MCNameCreateWithChars(const unichar_t *chars, uindex_t count, MCNameRef& r_name);
 // Create a name using native chars.
 bool MCNameCreateWithNativeChars(const char_t *chars, uindex_t count, MCNameRef& r_name);
 
@@ -1584,7 +1586,7 @@ bool MCStringPad(MCStringRef string, uindex_t at, uindex_t count, MCStringRef va
 //
 // Note that 'string' must be mutable.
 bool MCStringFindAndReplace(MCStringRef string, MCStringRef pattern, MCStringRef replacement, MCStringOptions options);
-bool MCStringFindAndReplaceChar(MCStringRef string, char_t pattern, char_t replacement, MCStringOptions options);
+bool MCStringFindAndReplaceChar(MCStringRef string, codepoint_t pattern, codepoint_t replacement, MCStringOptions options);
 
 /////////
 
@@ -1645,6 +1647,8 @@ bool MCDataPrependByte(MCDataRef r_data, byte_t p_byte);
 bool MCDataInsert(MCDataRef r_data, uindex_t p_at, MCDataRef p_new_data);
 bool MCDataRemove(MCDataRef r_data, MCRange p_range);
 bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data);
+
+bool MCDataPad(MCDataRef data, byte_t byte, uindex_t count);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

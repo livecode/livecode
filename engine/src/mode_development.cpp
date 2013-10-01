@@ -386,7 +386,7 @@ void MCStack::mode_destroy(void)
 	delete m_mode_data;
 }
 
-Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &carray, Boolean effective)
+Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 	switch(which)
 	{
@@ -431,7 +431,7 @@ Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, 
 	return ES_NORMAL;
 }
 
-Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &cprop, const MCString &carray, Boolean effective)
+Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef cprop, MCStringRef carray, Boolean effective)
 {
 	switch(which)
 	{
@@ -551,7 +551,7 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 //  Implementation of MCObject::getmodeprop for DEVELOPMENT mode.
 //
 
-Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &carray, Boolean effective)
+Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 	switch(which)
 	{
@@ -678,7 +678,7 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 		}
 
 		char *t_key;
-		t_key = carray . clone();
+		t_key = strdup(MCStringGetCString(carray));
 		if (t_key == NULL)
 			return ES_NORMAL;
 
@@ -1134,7 +1134,9 @@ bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 			else
 				t_msg_stack -> raise();
 
-			((MCField *)MCmessageboxredirect) -> settext_oldstring(0, ep . getsvalue(), False);
+			MCAutoStringRef t_string;
+			ep . copyasstringref(&t_string);
+			((MCField *)MCmessageboxredirect) -> settext(0, *t_string, False);
 		}
 		else
 		{

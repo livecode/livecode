@@ -589,7 +589,7 @@ void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCStringRef p_index
 		if (p_index == nil)
 			t_type = TRANSFER_TYPE_TEXT;
 		else
-			t_type = MCTransferData::StringToType(MCStringGetOldString(p_index));
+			t_type = MCTransferData::StringToType(p_index);
 			
 		if (t_type != TRANSFER_TYPE_NULL && t_pasteboard -> Contains(t_type, true))
 		{
@@ -626,7 +626,7 @@ void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCStringRef p_index
 	if (p_index == nil)
 		t_type = TRANSFER_TYPE_TEXT;
 	else
-		t_type = MCTransferData::StringToType(MCStringGetOldString(p_index));
+		t_type = MCTransferData::StringToType(p_index);
 		
 	if (t_type != TRANSFER_TYPE_NULL && p_data != nil)
 	{
