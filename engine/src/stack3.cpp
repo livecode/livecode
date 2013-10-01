@@ -1592,12 +1592,11 @@ void MCStack::menukdown(const char *string, KeySym key, MCStringRef &r_string, u
 		}
 		else
 		{
-			MCStringRef t_string = nil;
+			MCAutoStringRef t_string;
 			MCExecPoint ep(this, NULL, NULL);
 			MCExecContext ctxt(ep);
-			kfocused->getstringprop(ctxt, 0, P_LABEL, True, t_string);
-			MCValueAssign(r_string, t_string);
-			MCValueRelease(t_string);
+			kfocused->getstringprop(ctxt, 0, P_LABEL, True, &t_string);
+			MCValueAssign(r_string, *t_string);
 		}
 		curcard->count(CT_LAYER, CT_UNDEFINED, kfocused, selline, True);
 	}
