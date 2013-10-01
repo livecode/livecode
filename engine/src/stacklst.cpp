@@ -30,6 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "sellst.h"
 #include "util.h"
+#include <wchar.h>
 
 #include "globals.h"
 #include "exec.h"
@@ -304,7 +305,7 @@ Boolean MCStacklist::doaccelerator(KeySym key)
 	uint2 t_mod_mask = MS_CONTROL | MS_MAC_CONTROL | MS_MOD1;
 
 	// The shift state is important for lower-case letters and special keys
-	if (islower(t_char) || t_char == 0)
+	if (iswlower(t_char) || t_char == 0)
 		t_mod_mask |= MS_SHIFT;
 	
 	// There are numerous issues with menu accelerators at the moment. I belive these

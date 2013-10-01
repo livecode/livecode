@@ -473,6 +473,11 @@ public:
 		return owndnd;
 	}
 	
+	Window getactivewindow() const
+	{
+		return activewindow;
+	}
+	
 	// This routine converts a UTF-8 string into a CFString suitable for passing
 	// to Carbon APIs. The caller is responsible for CFRelease'ing the string.
 	static CFStringRef convertutf8tocf(const char *p_utf8_string);

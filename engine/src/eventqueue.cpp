@@ -413,7 +413,7 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 			MCactivefield -> setcompositioncursoroffset(t_event -> ime . compose . offset * 2);
 
 			MCAutoStringRef t_unichars;
-			MCStringCreateWithChars(t_event->ime.compose.chars, t_event->ime.compose.char_count, &t_unichars);
+			MCStringCreateWithChars((const unichar_t *)t_event->ime.compose.chars, t_event->ime.compose.char_count, &t_unichars);
 			
 			// MW-2012-02-13: [[ Block Unicode ]] Use the new 'finsert' method in
 			//   unicode mode.
