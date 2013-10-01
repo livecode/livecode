@@ -299,7 +299,7 @@ int regexec(regex_t *preg, MCStringRef string, int len, size_t nmatch,
 
 static MCStringRef regexperror;
 
-void MCR_geterror(MCStringRef &r_error)
+void MCR_copyerror(MCStringRef &r_error)
 {
     if (regexperror == nil)
         r_error = MCValueRetain(kMCEmptyString);
