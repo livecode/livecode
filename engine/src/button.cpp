@@ -720,7 +720,11 @@ Boolean MCButton::kdown(const char *string, KeySym key)
 		case XK_KP_Enter:
 			closemenu(False, True);
 			menu->menukdown(string, key, &t_pick, menuhistory);
-			if (!MCStringIsEmpty(*t_pick))
+			
+			// This check must be for null (not empty) because an empty pick
+			// indicates that the function succeeded while a null pick means
+			// that no menu responded to the event.
+			if (*t_pick != nil)
 			{
 				if (menumode == WM_OPTION || menumode == WM_COMBO)
 				{
@@ -1313,7 +1317,9 @@ Boolean MCButton::mup(uint2 which)
 		closemenu(True, True);
 		if (!(state & CS_IGNORE_MENU))
 		{
-			if (!MCStringIsEmpty(*t_pick))
+			// An empty string means something handled the menumup while the
+			// null string means nothing responded to it.
+			if (*t_pick != nil)
 			{
 				if (menumode == WM_OPTION || menumode == WM_COMBO)
 				{
@@ -2747,15 +2753,15 @@ void MCButton::activate(Boolean notify, uint2 key)
 	if (findmenu(true))
 	{
 		bool t_disabled;
-		MCStringRef t_pick = nil;
+		MCAutoStringRef t_pick;
 		
 		if (menu != NULL)
-			menu->findaccel(key, t_pick, t_disabled);
+			menu->findaccel(key, &t_pick, t_disabled);
 #ifdef _MAC_DESKTOP
 		else if (bMenuID != 0)
-			getmacmenuitemtextfromaccelerator(bMenuID, key, MCmodifierstate, t_pick, false);
+			getmacmenuitemtextfromaccelerator(bMenuID, key, MCmodifierstate, &t_pick, false);
 #endif
-		if (!MCStringIsEmpty(t_pick))
+		if (MCStringIsEmpty(*t_pick))
 		{
 			if (MCmodifierstate & MS_MOD1)
 			{
@@ -2767,7 +2773,7 @@ void MCButton::activate(Boolean notify, uint2 key)
 		else
 		{
 			if (!t_disabled)
-				message_with_valueref_args(MCM_menu_pick, t_pick);
+				message_with_valueref_args(MCM_menu_pick, *t_pick);
 		}
 	}
 	else
@@ -2821,12 +2827,12 @@ void MCButton::setupmnemonic()
 	if (opened && mnemonic != 0)
 	{
 		MCStringRef t_label = getlabeltext();
-		if (!isdisabled() && !MCStringIsEmpty(t_label) && mnemonic < MCStringGetLength(t_label))
+		if (!isdisabled() && !MCStringIsEmpty(t_label) && mnemonic <= MCStringGetLength(t_label))
 		{
-			unichar_t t_mnemonic_char = MCStringGetCharAtIndex(t_label, mnemonic - 1);
-			getstack()->addmnemonic(this, t_mnemonic_char);
+			codepoint_t t_codepoint = MCStringGetCodepointAtIndex(t_label, mnemonic - 1);
+			getstack()->addmnemonic(this, t_codepoint);
 			if (!MCStringIsEmpty(menustring) || !MCNameIsEmpty(menuname))
-				MCstacks->addmenu(this, t_mnemonic_char);
+				MCstacks->addmenu(this, t_codepoint);
 		}
 	}
 }
@@ -2954,10 +2960,9 @@ void MCButton::getentrytext()
 	// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
 	MCExecPoint ep;
 	entry->exportasplaintext(0, ep, 0, INT32_MAX, hasunicode());
-	MCStringRef t_label = nil;
-	/* UNCHECKED */ MCStringCreateWithOldString(ep.getsvalue(), t_label);
-	MCValueAssign(label, t_label);
-	MCValueRelease(t_label);
+	MCAutoStringRef t_label;
+	/* UNCHECKED */ MCStringCreateWithOldString(ep.getsvalue(), &t_label);
+	MCValueAssign(label, *t_label);
 }
 
 void MCButton::createentry()
@@ -2969,7 +2974,7 @@ void MCButton::createentry()
 		entry = (MCField *)MCtemplatefield->clone(False, OP_NONE, false);
 		// MW-2005-08-16: [[Bug 2820]] If we can't be selected, let us make sure our field can't either!
 		entry->setextraflag(getextraflag(EF_CANT_SELECT), EF_CANT_SELECT);
-		entry->setupentry(this, MCStringGetOldString(label), hasunicode());
+		entry->setupentry(this, MCStringGetOldString(label), !MCStringIsNative(label));
 		entry->open();
 		setrect(rect);
 	}
@@ -3628,7 +3633,7 @@ void MCButton::docascade(MCStringRef p_pick)
 		while(pptr->menumode == WM_CASCADE && pptr->parent->getparent()->getparent()->gettype() == CT_BUTTON)
 		{
 			MCStringRef t_label = nil;
-			if (t_has_tags && !MCStringIsEmpty(MCNameGetString(pptr->getname())))
+			if (t_has_tags && !MCNameIsEmpty(pptr->getname()))
 				t_label = MCNameGetString(pptr->getname());
 			else
 				t_label = pptr->getlabeltext();

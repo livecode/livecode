@@ -1541,8 +1541,13 @@ void MCStack::menuset(uint2 button, uint2 defy)
 
 void MCStack::menumup(uint2 which, MCStringRef &r_string, uint2 &selline)
 {
+	// The original behaviour of this function interprets an empty string and
+	// the null string as different things: the empty string means that the
+	// function succeeded but there is no text while the null string indicates
+	// that no menu handled the key event.
+	r_string = nil;
+	
 	MCControl *focused = curcard->getmfocused();
-	r_string = MCValueRetain(kMCEmptyString);
 	if (focused == NULL)
 		focused = curcard->getkfocused();
 	MCButton *bptr = (MCButton *)focused;
@@ -1581,23 +1586,22 @@ void MCStack::menumup(uint2 which, MCStringRef &r_string, uint2 &selline)
 void MCStack::menukdown(const char *string, KeySym key, MCStringRef &r_string, uint2 &selline)
 {
 	MCControl *kfocused = curcard->getkfocused();
-	r_string = MCValueRetain(kMCEmptyString);
+	r_string = nil;
 	if (kfocused != NULL)
 	{
 		// OK-2010-03-08: [[Bug 8650]] - Check its actually a button before casting, 
 		// with combo boxes on OS X this will be a field.
 		if (kfocused ->gettype() == CT_BUTTON && ((MCButton*)kfocused)->getmenuhastags())
 		{
-			MCValueAssign(r_string, MCNameGetString(kfocused->getname()));
+			r_string = MCValueRetain(MCNameGetString(kfocused->getname()));
 		}
 		else
 		{
-			MCStringRef t_string = nil;
+			MCAutoStringRef t_string;
 			MCExecPoint ep(this, NULL, NULL);
 			MCExecContext ctxt(ep);
-			kfocused->getstringprop(ctxt, 0, P_LABEL, True, t_string);
-			MCValueAssign(r_string, t_string);
-			MCValueRelease(t_string);
+			kfocused->getstringprop(ctxt, 0, P_LABEL, True, &t_string);
+			r_string = MCValueRetain(*t_string);
 		}
 		curcard->count(CT_LAYER, CT_UNDEFINED, kfocused, selline, True);
 	}
