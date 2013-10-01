@@ -1586,14 +1586,14 @@ void MCStack::menumup(uint2 which, MCStringRef &r_string, uint2 &selline)
 void MCStack::menukdown(const char *string, KeySym key, MCStringRef &r_string, uint2 &selline)
 {
 	MCControl *kfocused = curcard->getkfocused();
-	r_string = MCValueRetain(kMCEmptyString);
+	r_string = nil;
 	if (kfocused != NULL)
 	{
 		// OK-2010-03-08: [[Bug 8650]] - Check its actually a button before casting, 
 		// with combo boxes on OS X this will be a field.
 		if (kfocused ->gettype() == CT_BUTTON && ((MCButton*)kfocused)->getmenuhastags())
 		{
-			MCValueAssign(r_string, MCNameGetString(kfocused->getname()));
+			r_string = MCValueRetain(MCNameGetString(kfocused->getname()));
 		}
 		else
 		{
@@ -1601,7 +1601,7 @@ void MCStack::menukdown(const char *string, KeySym key, MCStringRef &r_string, u
 			MCExecPoint ep(this, NULL, NULL);
 			MCExecContext ctxt(ep);
 			kfocused->getstringprop(ctxt, 0, P_LABEL, True, &t_string);
-			MCValueAssign(r_string, *t_string);
+			r_string = MCValueRetain(*t_string);
 		}
 		curcard->count(CT_LAYER, CT_UNDEFINED, kfocused, selline, True);
 	}
