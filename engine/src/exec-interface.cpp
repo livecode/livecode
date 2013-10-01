@@ -2167,7 +2167,7 @@ void MCInterfaceExecDeleteObjectChunks(MCExecContext& ctxt, MCObjectChunkPtr *p_
 			ctxt . GetEP(). utf16toutf8();
 			MCAutoStringRef t_value_mutable_copy;
 			MCStringMutableCopy(t_value, &t_value_mutable_copy);
-			/* UNCHECKED */ MCStringReplace(*t_value_mutable_copy, MCRangeMake(p_chunks[i] . start, p_chunks[i] . finish - p_chunks[i] . start), kMCEmptyString);
+			/* UNCHECKED */ MCStringRemove(*t_value_mutable_copy, MCRangeMake(p_chunks[i] . start, p_chunks[i] . finish - p_chunks[i] . start));
 			
 			ctxt . GetEP() . utf8toutf16();
     
@@ -2206,7 +2206,7 @@ static void MCInterfaceExecChangeChunkOfButton(MCExecContext& ctxt, MCObjectChun
 		else
 		{
 			 if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start) == '(')
-		        /* UNCHECKED */ MCStringReplace(*t_value_mutable_copy, MCRangeMake(start, 1), kMCEmptyString), t_changed = true;
+		        /* UNCHECKED */ MCStringRemove(*t_value_mutable_copy, MCRangeMake(start, 1)), t_changed = true;
 		}
 	else
 	{
