@@ -2599,6 +2599,7 @@ Exec_stat MCSort::exec(MCExecPoint &ep)
 		if (!ctxt . HasError())
 		{
 			/* UNCHECKED */ ep . setvalueref(t_sorted_target);
+            of -> set(ep, PT_INTO);
 			MCValueRelease(t_sorted_target);
 		}
 	}
