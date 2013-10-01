@@ -571,15 +571,27 @@ void MCButton::SetShowName(MCExecContext& ctxt, bool setting)
 
 void MCButton::GetLabel(MCExecContext& ctxt, MCStringRef& r_label)
 {
-	r_label = MCValueRetain(label);
+	if (entry != NULL)
+		r_label = MCValueRetain(getlabeltext());
+	else
+		r_label = MCValueRetain(label);
 }
 
 void MCButton::SetLabel(MCExecContext& ctxt, MCStringRef p_label)
 {
+	// Make sure the label is up to date
+	if (entry != NULL)
+		getentrytext();
+	
+	// Don't make any changes if it isn't necessary
 	if (MCStringIsEqualTo(p_label, label, kMCStringOptionCompareExact))
 		return;
 	
 	MCValueAssign(label, p_label);
+
+	if (entry != NULL)
+		entry->settext(0, label, False);
+	
 	clearmnemonic();
 	setupmnemonic();
 	Redraw();
