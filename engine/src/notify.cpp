@@ -213,6 +213,10 @@ bool MCNotifyInitialize(void)
 		return true;
 
 	s_initialized = true;
+	
+	// MW-2013-10-01: [[ Bug 11166 ]] Make sure we reset the shutdown flag (Android
+	//   reinitialization).
+	s_shutting_down = false;
 
 	// MW-2013-06-25: [[ DesktopPingWait ]] Initialize the main thread references
 	//   needed by 'MCNotifyIsMainThread()'.
@@ -233,6 +237,7 @@ bool MCNotifyInitialize(void)
 	pthread_mutex_init(&s_notify_lock, NULL);
 	s_main_thread = pthread_self();
 #endif
+	
 	return true;
 }
 
@@ -265,6 +270,10 @@ void MCNotifyFinalize(void)
 {
 	// Mark the notification system as shutting down.
 	s_shutting_down = true;
+	
+	// MW-2013-10-01: [[ Bug 11166 ]] Make sure we reset the initialized flag (Android
+	//   reinitialization).
+	s_initialized = false;
 
 	// Make sure all pending notifications are eradicated.
 	MCNotifyLock();
