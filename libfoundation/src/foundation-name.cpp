@@ -35,6 +35,24 @@ static void __MCNameShrinkTable(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCNameRef MCNAME(const char *p_string)
+{
+	MCStringRef t_string;
+	t_string = MCSTR(p_string);
+	
+	MCNameRef t_name;
+	/* UNCHECKED */ MCNameCreate(t_string, t_name);
+	
+	MCValueRef t_name_unique;
+	/* UNCHECKED */ MCValueInter(t_name, t_name_unique);
+	
+	MCValueRelease(t_name);
+	
+	return (MCNameRef)t_name_unique;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCNameCreate(MCStringRef p_string, MCNameRef& r_name)
 {
 	MCAssert(p_string != nil);
@@ -152,6 +170,14 @@ bool MCNameCreateWithNativeChars(const char_t *p_chars, uindex_t p_count, MCName
 {
 	MCStringRef t_string;
 	if (!MCStringCreateWithNativeChars(p_chars, p_count, t_string))
+		return false;
+	return MCNameCreateAndRelease(t_string, r_name);
+}
+
+bool MCNameCreateWithChars(const unichar_t *p_chars, uindex_t p_count, MCNameRef& r_name)
+{
+	MCStringRef t_string;
+	if (!MCStringCreateWithChars(p_chars, p_count, t_string))
 		return false;
 	return MCNameCreateAndRelease(t_string, r_name);
 }

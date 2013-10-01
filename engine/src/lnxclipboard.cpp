@@ -60,31 +60,6 @@ MCPasteboard *MCScreenDC::getselection(void)
 	return t_pasteboard ;
 }
 
-#ifdef SHARED_STRING
-bool MCScreenDC::setselection(MCPasteboard *p_pasteboard)
-{
-	MCTransferType *t_ttypes ;
-	MCSharedString *t_data ;
-	uint4 ntypes ;
-	
-	if ( p_pasteboard != NULL)
-	{
-		m_Selection_store -> cleartypes() ;
-
-		p_pasteboard -> Query ( t_ttypes, ntypes ) ;
-		
-		for ( uint4 a = 0 ; a < ntypes ; a++)
-			if ( p_pasteboard -> Fetch ( t_ttypes[a], t_data ) )
-				m_Selection_store -> addRevType ( t_ttypes[a], t_data) ;
-		
-		if ( NULLWindow > 0 ) 
-			XSetSelectionOwner(dpy, XA_PRIMARY, NULLWindow, MCeventtime);
-		
-		return true;
-	}
-	return false ;
-}
-#else
 bool MCScreenDC::setselection(MCPasteboard *p_pasteboard)
 {
 	MCTransferType *t_ttypes ;
@@ -98,7 +73,7 @@ bool MCScreenDC::setselection(MCPasteboard *p_pasteboard)
 		
 		for ( uint4 a = 0 ; a < ntypes ; a++)
 		{
-			MCAutoStringRef t_data;
+			MCAutoDataRef t_data;
 			if ( p_pasteboard -> Fetch ( t_ttypes[a], &t_data ) )
 				m_Selection_store -> addRevType ( t_ttypes[a], *t_data) ;
 		}
@@ -110,8 +85,6 @@ bool MCScreenDC::setselection(MCPasteboard *p_pasteboard)
 	}
 	return false ;
 }
-#endif
-
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -250,31 +223,8 @@ void MCScreenDC::make_clipboard_persistant(void)
 					{
 						property = target = atoms[a] ;
 						a++;
-						
-#ifdef SHARED_STRING
-						MCSharedString * t_data; 
-						
-						if ( ( target != make_atom("TARGETS") ) &&
-							 ( target != make_atom("TIMESTAMP") ) &&
-							 ( target != make_atom("SAVE_TARGETS") ))
-						{
-							if (m_Clipboard_store -> Fetch(  new MCMIMEtype(dpy, target), t_data, None, None, DNULL, DNULL, MCeventtime ))
-							{
-								XChangeProperty(dpy, srevent -> requestor, property,
-											XA_STRING, 8, PropModeReplace,
-											(const unsigned char *)t_data -> Get() . getstring(),
-											t_data -> Get() . getlength());
-								
-							}
-							else 
-							{
-								XChangeProperty(dpy, srevent -> requestor, property,
-											XInternAtom(dpy, "None", false), 8, PropModeReplace,
-											(const unsigned char *)NULL, 0 );
-							}
-						}
-#else
-						MCAutoStringRef t_data; 
+
+						MCAutoDataRef t_data; 
 						
 						if ( ( target != make_atom("TARGETS") ) &&
 							 ( target != make_atom("TIMESTAMP") ) &&
@@ -284,8 +234,8 @@ void MCScreenDC::make_clipboard_persistant(void)
 							{
 								XChangeProperty(dpy, srevent -> requestor, property,
 											XA_STRING, 8, PropModeReplace,
-											(const unsigned char *)MCStringGetCString(*t_data),
-											MCStringGetLength(*t_data));
+											(const unsigned char *)MCDataGetBytePtr(*t_data),
+											MCDataGetLength(*t_data));
 								
 							}
 							else 
@@ -295,7 +245,6 @@ void MCScreenDC::make_clipboard_persistant(void)
 											(const unsigned char *)NULL, 0 );
 							}
 						}
-#endif
 					}
 							
 						
@@ -372,15 +321,9 @@ bool MCScreenDC::setclipboard(MCPasteboard *p_pasteboard)
 	
 	for ( uint4 a = 0 ; a < ntypes ; a++)
 	{
-#ifdef SHARED_STRING
-		MCSharedString *t_data ;
-		if ( p_pasteboard -> Fetch ( t_ttypes[a], t_data ) )
-			m_Clipboard_store -> addRevType ( t_ttypes[a], t_data) ;
-#else
-		MCAutoStringRef t_data;
+		MCAutoDataRef t_data;
 		if ( p_pasteboard -> Fetch ( t_ttypes[a], &t_data ) )
 			m_Clipboard_store -> addRevType ( t_ttypes[a], *t_data) ;
-#endif
 	}
 	
 	if ( NULLWindow > 0 ) 

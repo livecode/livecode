@@ -719,6 +719,11 @@ bool MCStringToDouble(MCStringRef p_string, double& r_real)
 	return true;
 }
 
+MCString MCDataGetOldString(MCDataRef p_data)
+{
+	return MCString((const char *)MCDataGetBytePtr(p_data), MCDataGetLength(p_data));
+}
+
 #if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 bool MCCStringToCFString(const char *p_cstring, CFStringRef& r_cfstring)
 {
@@ -1247,7 +1252,7 @@ static uint32_t measure_array_entry(MCNameRef p_key, MCValueRef p_value)
 	//   * bytes - C string of key
 
 	uint32_t t_size;
-	t_size = 1 + 4 + MCCStringLength(MCStringGetCString(MCNameGetString(p_key)));
+	t_size = 1 + 4 + MCCStringLength(MCStringGetCString(MCNameGetString(p_key))) + 1;
 	switch(MCValueGetTypeCode(p_value))
 	{
 	case kMCValueTypeCodeNull:
@@ -1547,13 +1552,6 @@ static bool save_array_to_handle(void *p_context, MCArrayRef p_array, MCNameRef 
 
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
-
-	uint8_t t_klen;
-	if (t_stat == IO_NORMAL)
-	{
-		t_klen = MCU_min(MCCStringLength(MCStringGetCString(MCNameGetString(p_key))) + 1, MAXUINT1);
-		t_stat = IO_write_uint1(t_klen, t_stream);
-	}
 
 	if (t_stat == IO_NORMAL)
 	{

@@ -550,7 +550,7 @@ void MCClipboardCmd::compile(MCSyntaxFactoryRef ctxt)
 		uindex_t t_count;
 		t_count = 0;
 
-		for (MCChunk *chunkptr = targets; chunkptr != nil; chunkptr -> next)
+		for (MCChunk *chunkptr = targets; chunkptr != nil; chunkptr = chunkptr -> next)
 		{
 			chunkptr -> compile_object_ptr(ctxt);
 			t_count++;
@@ -3806,7 +3806,7 @@ Parse_stat MCSelect::parse(MCScriptPoint &sp)
 			(PE_SELECT_NOTARGET, sp);
 			return PS_ERROR;
 		}
-		if (sp.gettoken() == "empty")
+		if (sp.token_is_cstring("empty"))
 			return PS_NORMAL;
 		if (sp.lookup(SP_FACTOR, te) == PS_NORMAL && te->type == TT_PREP)
 		{

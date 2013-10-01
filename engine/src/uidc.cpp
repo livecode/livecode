@@ -49,8 +49,8 @@ protected:
 	void DoInitialize(void) {}
 	void DoFinalize(void) {}
 
-	bool DoReset(const char *p_name) {return false;}
-	bool DoResetSettings(const MCString& p_settings) {return false;}
+	bool DoReset(MCStringRef p_name) {return false;}
+	bool DoResetSettings(MCDataRef p_settings) {return false;}
 
 	const char *DoFetchName(void) {return "";}
 	void DoFetchSettings(void*& r_buffer, uint4& r_length) {r_buffer = NULL; r_length = 0;}
@@ -60,7 +60,7 @@ protected:
 	MCPrinterDialogResult DoPrinterSetup(bool p_window_modal, Window p_owner) {return PRINTER_DIALOG_RESULT_ERROR;}
 	MCPrinterDialogResult DoPageSetup(bool p_window_modal, Window p_owner) {return PRINTER_DIALOG_RESULT_ERROR;}
 
-	MCPrinterResult DoBeginPrint(const char *p_document, MCPrinterDevice*& r_device) {return PRINTER_RESULT_ERROR;}
+	MCPrinterResult DoBeginPrint(MCStringRef p_document, MCPrinterDevice*& r_device) {return PRINTER_RESULT_ERROR;}
 	MCPrinterResult DoEndPrint(MCPrinterDevice* p_device) {return PRINTER_RESULT_ERROR;}
 };
 
@@ -193,7 +193,7 @@ MCUIDC::MCUIDC()
 	ncolors = 0;
 	colors = NULL;
 	allocs = NULL;
-	colornames = NULL;
+	colornames = nil;
 	lockmods = False;
 
 	m_sound_internal = NULL ;
@@ -236,7 +236,7 @@ bool MCUIDC::hasfeature(MCPlatformFeature p_feature)
 	return false;
 }
 
-void MCUIDC::setstatus(const char *status)
+void MCUIDC::setstatus(MCStringRef status)
 { }
 Boolean MCUIDC::open()
 {
@@ -344,7 +344,7 @@ void MCUIDC::iconifywindow(Window window)
 { }
 void MCUIDC::uniconifywindow(Window window)
 { }
-void MCUIDC::setname(Window window, const char *newname)
+void MCUIDC::setname(Window window, MCStringRef newname)
 { }
 void MCUIDC::setcmap(MCStack *sptr)
 { }
@@ -585,7 +585,7 @@ Window MCUIDC::getroot()
 }
 
 MCBitmap *MCUIDC::snapshot(MCRectangle &r, uint4 window,
-                           const char *displayname)
+                           MCStringRef displayname)
 {
 	return NULL;
 }
@@ -678,7 +678,7 @@ Boolean MCUIDC::getmouseclick(uint2 button, Boolean& r_abort)
 	return False;
 }
 
-void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, char *p1, char *p2)
+void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, MCStringRef p1, MCStringRef p2)
 {
 	if (nmessages == maxmessages)
 	{
@@ -693,11 +693,11 @@ void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, char *p1, char *p2)
 	if (p1 != NULL)
 	{
 		params = new MCParameter;
-		params->setbuffer(p1, strlen(p1));
+		params->setvalueref_argument(p1);
 		if (p2 != NULL)
 		{
 			params->setnext(new MCParameter);
-			params->getnext()->setbuffer(p2, strlen(p2));
+			params->getnext()->setvalueref_argument(p2);
 		}
 	}
 	messages[nmessages++].params = params;
@@ -1197,12 +1197,13 @@ void MCUIDC::siguser()
 
 #include "rgb.cpp"
 
-Boolean MCUIDC::lookupcolor(const MCString &s, MCColor *color)
+Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
 {
-	uint4 slength = s.getlength();
-	char *startptr = new char[slength + 1];
-	char *sptr = startptr;
-	MCU_lower(sptr, s);
+	uint4 slength = MCStringGetLength(s);
+	MCAutoPointer<char> startptr;
+    startptr = new char[slength + 1];
+	char *sptr = *startptr;
+	MCU_lower(sptr, MCStringGetOldString(s));
 	sptr[slength] = '\0';
 	if (*sptr == '#')
 	{
@@ -1229,10 +1230,7 @@ Boolean MCUIDC::lookupcolor(const MCString &s, MCColor *color)
 					if (c >= 'a' && c <= 'f')
 						b |= c - ('a' - 10);
 					else
-					{
-						delete startptr;
 						return False;
-					}
 			}
 		}
 		while (*sptr != '\0');
@@ -1256,7 +1254,6 @@ Boolean MCUIDC::lookupcolor(const MCString &s, MCColor *color)
 			shiftbits -= goodbits;
 		}
 		color->flags = DoRed | DoGreen | DoBlue;
-		delete startptr;
 		return True;
 	}
 	char *tptr = sptr;
@@ -1283,11 +1280,9 @@ Boolean MCUIDC::lookupcolor(const MCString &s, MCColor *color)
 				color->green = (color_table[mid].green << 8) + color_table[mid].green;
 				color->blue = (color_table[mid].blue << 8) + color_table[mid].blue;
 				color->flags = DoRed | DoGreen | DoBlue;
-				delete startptr;
 				return True;
 			}
 	}
-	delete startptr;
 	return False;
 }
 
@@ -1337,29 +1332,29 @@ void MCUIDC::dropper(Drawable d, int2 mx, int2 my, MCColor *cptr)
 /* WRAPPER */
 bool MCUIDC::parsecolor(MCStringRef p_string, MCColor& r_color)
 {
-	return True == parsecolor(MCStringGetOldString(p_string), &r_color, nil);
+	return True == parsecolor(p_string, r_color, nil);
 }
 
-Boolean MCUIDC::parsecolor(const MCString &s, MCColor *color, char **cname)
+Boolean MCUIDC::parsecolor(MCStringRef s, MCColor& color, MCStringRef *cname)
 {
-	if (cname)
+	if (cname != nil)
 	{
-		delete *cname;
-		*cname = NULL;
+		MCValueRelease(*cname);
+		*cname = nil;
 	}
 	int2 i1, i2, i3;
 	Boolean done;
-	const char *sptr = s.getstring();
-	uint4 l = s.getlength();
+	const char *sptr = MCStringGetCString(s);
+	uint4 l = MCStringGetLength(s);
 	
 	
 	i1 = MCU_strtol(sptr, l, ',', done);
 	if (!done)
 	{
-		if (lookupcolor(s, color))
+		if (lookupcolor(s, &color))
 		{
 			if (cname)
-				*cname = s.clone();
+				*cname = MCValueRetain(s);
 			return True;
 		}
 		return False;
@@ -1378,16 +1373,16 @@ Boolean MCUIDC::parsecolor(const MCString &s, MCColor *color, char **cname)
 		if (!done)
 			return False;
 	}
-	color->red = (uint2)(i1 << 8) + i1;
-	color->green = (uint2)(i2 << 8) + i2;
-	color->blue = (uint2)(i3 << 8) + i3;
+	color.red = (uint2)(i1 << 8) + i1;
+	color.green = (uint2)(i2 << 8) + i2;
+	color.blue = (uint2)(i3 << 8) + i3;
 	
 	
 	return True;
 }
 
 
-
+#ifdef LEGACY_EXEC
 Boolean MCUIDC::parsecolors(const MCString &s, MCColor *colors,
                             char *cnames[], uint2 ncolors)
 {
@@ -1431,17 +1426,20 @@ Boolean MCUIDC::parsecolors(const MCString &s, MCColor *colors,
 	delete data;
 	return True;
 }
+#endif
 
 Boolean MCUIDC::getcolors(MCExecPoint &ep)
 {
 		ep.setstaticcstring("fixed");
 		return True;
-	}
+}
 
+#ifdef LEGACY_EXEC
 Boolean MCUIDC::setcolors(const MCString &values)
 {
 		return False;
-		}
+}
+#endif
 
 bool MCUIDC::getcolornames(MCStringRef& r_string)
 {
@@ -1566,102 +1564,6 @@ void MCUIDC::getfixed(uint2 &rs, uint2 &gs, uint2 &bs,
 	rb = redbits;
 	gb = greenbits;
 	bb = bluebits;
-}
-
-static int ReadInteger(const char *string, const char **NextString)
-{
-	int Result = 0;
-	int Sign = 1;
-	if (*string == '+')
-		string++;
-	else
-		if (*string == '-')
-		{
-			string++;
-			Sign = -1;
-		}
-	for (; (*string >= '0') && (*string <= '9'); string++)
-		Result = (Result * 10) + (*string - '0');
-	*NextString = string;
-	if (Sign >= 0)
-		return Result;
-	else
-		return -Result;
-}
-
-Boolean MCUIDC::position(const char *geom, MCRectangle &rect)
-{
-	unsigned int tempWidth, tempHeight;
-	int tempX, tempY;
-	const char *nextCharacter;
-
-	if (geom == NULL || *geom == '\0')
-		return False;
-	if (*geom == '=')
-		geom++;  /* ignore possible '=' at beg of geometry spec */
-
-	if (*geom != '+' && *geom != '-' && *geom != 'x')
-	{
-		tempWidth = ReadInteger(geom, &nextCharacter);
-		if (geom == nextCharacter)
-			return False;
-		geom = nextCharacter;
-		rect.width = tempWidth;
-	}
-	if (*geom == 'x' || *geom == 'X')
-	{
-		geom++;
-		tempHeight = ReadInteger(geom, &nextCharacter);
-		if (geom == nextCharacter)
-			return False;
-		geom = nextCharacter;
-		rect.height = tempHeight;
-	}
-	if (*geom == '+' || *geom == '-')
-	{
-		if (*geom == '-')
-		{
-			geom++;
-			tempX = -ReadInteger(geom, &nextCharacter);
-			if (geom == nextCharacter)
-				return False;
-			geom = nextCharacter;
-			rect.x = MCscreen->getwidth() - rect.width + tempX;
-		}
-		else
-		{
-			geom++;
-			tempX = ReadInteger(geom, &nextCharacter);
-			if (geom == nextCharacter)
-				return False;
-			geom = nextCharacter;
-			rect.x = tempX;
-		}
-		if (*geom == '+' || *geom == '-')
-		{
-			if (*geom == '-')
-			{
-				geom++;
-				tempY = -ReadInteger(geom, &nextCharacter);
-				if (geom == nextCharacter)
-					return False;
-				geom = nextCharacter;
-				rect.y = MCscreen->getheight() - rect.height + tempY;
-			}
-			else
-			{
-				geom++;
-				tempY = ReadInteger(geom, &nextCharacter);
-				if (geom == nextCharacter)
-					return False;
-				geom = nextCharacter;
-				rect.y = tempY;
-			}
-		}
-	}
-	if (*geom != '\0')
-		return False;
-	return True;
 }
 
 static void scaleline1(uint1 *s, uint1 *d, uint2 sw, uint2 dw)
@@ -1951,11 +1853,11 @@ void MCUIDC::seticon(uint4 p_icon)
 {
 }
 
-void MCUIDC::seticonmenu(const char *p_menu)
+void MCUIDC::seticonmenu(MCStringRef p_menu)
 {
 }
 
-void MCUIDC::configurestatusicon(uint32_t icon_id, const char *menu, const char *tooltip)
+void MCUIDC::configurestatusicon(uint32_t icon_id, MCStringRef menu, MCStringRef tooltip)
 {
 }
 
@@ -2034,7 +1936,7 @@ MCDragAction MCUIDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet p_al
 
 //
 
-MCScriptEnvironment *MCUIDC::createscriptenvironment(const char *p_language)
+MCScriptEnvironment *MCUIDC::createscriptenvironment(MCStringRef p_language)
 {
 	return NULL;
 }
@@ -2045,28 +1947,14 @@ void MCUIDC::enactraisewindows(void)
 }
 //
 
-int32_t MCUIDC::popupanswerdialog(const char **p_buttons, uint32_t p_button_count, uint32_t p_type, const char *p_title, const char *p_message)
+int32_t MCUIDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message)
 {
 	return 0;
 }
 
-bool MCUIDC::popupaskdialog(uint32_t p_type, const char *p_title, const char *p_message, const char *p_initial, bool p_hint, MCStringRef& r_result)
+bool MCUIDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result)
 {
 	return false;
-}
-
-bool MCUIDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, int32_t &r_choice)
-{
-	const char **t_buttons = nil;
-	if (!MCMemoryNewArray(p_button_count, t_buttons))
-		return false;
-	for (uindex_t i = 0; i < p_button_count; i++)
-		t_buttons[i] = MCStringGetCString(p_buttons[i]);
-
-	r_choice = popupanswerdialog(t_buttons, p_button_count, p_type, MCStringGetCString(p_title), MCStringGetCString(p_message));
-
-	MCMemoryDelete(t_buttons);
-	return true;
 }
 
 //

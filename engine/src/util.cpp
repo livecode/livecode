@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
+#include "osxprefix-legacy.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -38,6 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 #include "exec.h"
+#include "system.h"
 
 #define QA_NPOINTS 10
 
@@ -574,6 +576,27 @@ real8 MCU_fwrap(real8 p_x, real8 p_y)
 		
 }
 
+bool MCU_r8tos(real8 n, uint2 fw, uint2 trailing, uint2 force, MCStringRef &r_string)
+{
+	char *t_str = nil;
+	uint4 t_s = 0;
+	if (MCU_r8tos(t_str, t_s, n, fw, trailing, force) == 0)
+	{
+		delete[] t_str;
+		return false;
+	}
+	
+	MCStringRef t_string;
+	if (!MCStringCreateWithCStringAndRelease((char_t *)t_str, t_string))
+	{
+		delete[] t_str;
+		return false;
+	}
+	
+	r_string = t_string;
+	return true;
+}
+
 uint4 MCU_r8tos(char *&d, uint4 &s, real8 n,
                 uint2 fw, uint2 trailing, uint2 force)
 {
@@ -834,7 +857,7 @@ bool MCU_stoui4x2(MCStringRef p_string, uint4 &r_d1, uint4 &r_d2)
 	return true;
 }
 
-/* WRAPPER */ bool MCU_stob(MCStringRef p_string, bool r_condition)
+/* WRAPPER */ bool MCU_stob(MCStringRef p_string, bool& r_condition)
 {
 	Boolean t_condition;
 	bool t_success;
@@ -874,15 +897,6 @@ void MCU_lower(char *dptr, const MCString &s)
 	uint4 i;
 	for (i = 0 ; i < length ; i++)
 		*dptr++ = MCS_tolower(*sptr++);
-}
-
-void MCU_upper(char *dptr, const MCString &s)
-{
-	uint4 length = s.getlength();
-	const uint1 *sptr = (uint1 *)s.getstring();
-	uint4 i;
-	for (i = 0 ; i < length ; i++)
-		*dptr++ = MCS_toupper(*sptr++);
 }
 
 Boolean MCU_offset(const MCString &part, const MCString &whole,
@@ -1242,31 +1256,9 @@ void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize, const 
 }
 #endif
 
-Boolean MCU_matchflags(const MCString &s, uint4 &flags, uint4 w, Boolean &c)
+/* WRAPPER */ bool MCU_matchname(MCNameRef p_name, Chunk_term type, MCNameRef name)
 {
-	if (s == MCtruestring)
-	{
-		if (!(flags & w))
-		{
-			flags |= w;
-			c = True;
-		}
-		else
-			c = False;
-		return True;
-	}
-	if (s == MCfalsestring)
-	{
-		if (flags & w)
-		{
-			flags &= ~w;
-			c = True;
-		}
-		else
-			c = False;
-		return True;
-	}
-	return False;
+    return MCU_matchname(MCNameGetOldString(p_name), type, name) == True;
 }
 
 Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
@@ -1395,25 +1387,13 @@ void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &ep)
 	}
 }
 
-/* WRAPPER */ bool MCU_parsepoints(MCPoint *&r_points, uindex_t &r_noldpoints, MCStringRef p_data)
-{
-	uint2 t_noldpoints;
-	t_noldpoints = r_noldpoints;
- 
-	bool t_result;
-	t_result = (True == MCU_parsepoints(r_points, t_noldpoints, MCStringGetOldString(p_data)));
- 
-	r_noldpoints = t_noldpoints;
- 
-	return t_result;
-}
 
-Boolean MCU_parsepoints(MCPoint *&points, uint2 &noldpoints, const MCString &data)
+Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data)
 {
 	Boolean allvalid = True;
 	uint2 npoints = 0;
-	uint4 l = data.getlength();
-	const char *sptr = data.getstring();
+	uint4 l = MCStringGetLength(data);
+	const char *sptr = MCStringGetCString(data);
 	while (l)
 	{
 		Boolean done1, done2;
@@ -1433,7 +1413,7 @@ Boolean MCU_parsepoints(MCPoint *&points, uint2 &noldpoints, const MCString &dat
 			MCU_realloc((char **)&points, npoints, npoints + 1, sizeof(MCPoint));
 		points[npoints].x = i1;
 		points[npoints++].y = i2;
-		if (data.getlength() - l > 2 && *(sptr - 1) == '\n'
+		if (MCStringGetLength(data) - l > 2 && *(sptr - 1) == '\n'
 		        && *(sptr - 2) == '\n')
 		{
 			if (npoints + 1 > noldpoints)
@@ -1447,10 +1427,10 @@ Boolean MCU_parsepoints(MCPoint *&points, uint2 &noldpoints, const MCString &dat
 	return allvalid;
 }
 
-Boolean MCU_parsepoint(MCPoint &point, const MCString &data)
+Boolean MCU_parsepoint(MCPoint &point, MCStringRef data)
 {
-	const char *sptr = data.getstring();
-	uint4 l = data.getlength();
+	const char *sptr = MCStringGetCString(data);
+	uint4 l = MCStringGetLength(data);
 	Boolean done1, done2;
 	int2 i1= MCU_strtol(sptr, l, ',', done1);
 	int2 i2 = MCU_strtol(sptr, l, ',', done2);
@@ -2011,62 +1991,62 @@ Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef mess, MCParameter *pa
 
 	return stat;
 }
-
-bool MCU_path2std(MCStringRef p_path, MCStringRef& r_stdpath)
-{
-	uindex_t t_length = MCStringGetLength(p_path);
-	if (t_length == 0)
-		return MCStringCopy(p_path, r_stdpath);
-
-	MCAutoNativeCharArray t_path;
-	if (!t_path.New(t_length))
-		return false;
-
-	const char_t *t_src = MCStringGetNativeCharPtr(p_path);
-	char_t *t_dst = t_path.Chars();
-
-	for (uindex_t i = 0; i < t_length; i++)
-	{
-#ifdef _MACOSX
-		if (t_src[i] == '/')
-			t_dst[i] = ':';
-		else if (t_src[i] == ':')
-			t_dst[i] = '/';
-		else
-			t_dst[i] = t_src[i];
-#else
-		if (t_src[i] == '/')
-			t_dst[i] = '\\';
-		else if (t_src[i] == '\\')
-			t_dst[i] = '/';
-		else
-			t_dst[i] = t_src[i];
-#endif
-	}
-
-	return t_path.CreateStringAndRelease(r_stdpath);
-}
-
-void MCU_path2std(char *dptr)
-{
-	if (dptr == NULL || !*dptr)
-		return;
-	do
-	{
-#ifdef _MACOSX
-		if (*dptr == '/')
-			*dptr = ':';
-		else if (*dptr == ':')
-			*dptr = '/';
-#else
-		if (*dptr == '/')
-			*dptr = '\\';
-		else if (*dptr == '\\')
-			*dptr = '/';
-#endif
-	}
-	while (*++dptr);
-}
+//
+//bool MCU_path2std(MCStringRef p_path, MCStringRef& r_stdpath)
+//{
+//	uindex_t t_length = MCStringGetLength(p_path);
+//	if (t_length == 0)
+//		return MCStringCopy(p_path, r_stdpath);
+//
+//	MCAutoNativeCharArray t_path;
+//	if (!t_path.New(t_length))
+//		return false;
+//
+//	const char_t *t_src = MCStringGetNativeCharPtr(p_path);
+//	char_t *t_dst = t_path.Chars();
+//
+//	for (uindex_t i = 0; i < t_length; i++)
+//	{
+//#ifdef _MACOSX
+//		if (t_src[i] == '/')
+//			t_dst[i] = ':';
+//		else if (t_src[i] == ':')
+//			t_dst[i] = '/';
+//		else
+//			t_dst[i] = t_src[i];
+//#else
+//		if (t_src[i] == '/')
+//			t_dst[i] = '\\';
+//		else if (t_src[i] == '\\')
+//			t_dst[i] = '/';
+//		else
+//			t_dst[i] = t_src[i];
+//#endif
+//	}
+//
+//	return t_path.CreateStringAndRelease(r_stdpath);
+//}
+//
+//void MCU_path2std(char *dptr)
+//{
+//	if (dptr == NULL || !*dptr)
+//		return;
+//	do
+//	{
+//#ifdef _MACOSX
+//		if (*dptr == '/')
+//			*dptr = ':';
+//		else if (*dptr == ':')
+//			*dptr = '/';
+//#else
+//		if (*dptr == '/')
+//			*dptr = '\\';
+//		else if (*dptr == '\\')
+//			*dptr = '/';
+//#endif
+//	}
+//	while (*++dptr);
+//}
 
 bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 {
@@ -2166,30 +2146,30 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 				else
 					fptr++;
 	}
-	/* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t *)fptr, r_out);
+	/* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t *)cstr, r_out);
 
 }
 
-bool MCFiltersBase64Encode(MCStringRef p_src, MCStringRef& r_dst);
+bool MCFiltersBase64Encode(MCDataRef p_src, MCStringRef& r_dst);
 
 void MCU_base64encode(MCExecPoint &ep)
 {
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
+	MCAutoDataRef t_source;
+	/* UNCHECKED */ ep . copyasdataref(&t_source);
 
 	MCAutoStringRef t_result;
 	/* UNCHECKED */ MCFiltersBase64Encode(*t_source, &t_result);
 	/* UNCHECKED */ ep.setvalueref(*t_result);
 }
 
-bool MCFiltersBase64Decode(MCStringRef p_src, MCStringRef& r_dst);
+bool MCFiltersBase64Decode(MCStringRef p_src, MCDataRef& r_dst);
 
 void MCU_base64decode(MCExecPoint &ep)
 {
 	MCAutoStringRef t_source;
 	/* UNCHECKED */ ep . copyasstringref(&t_source);
 
-	MCAutoStringRef t_result;
+	MCAutoDataRef t_result;
 	/* UNCHECKED */ MCFiltersBase64Decode(*t_source, &t_result);
 	/* UNCHECKED */ ep.setvalueref(*t_result);
 }
@@ -2247,43 +2227,29 @@ void MCU_cleaninserted()
 		;
 }
 
-Exec_stat MCU_change_color(MCColor& c, MCStringRef& n, MCExecPoint& ep, uint2 line, uint2 pos)
-{
-	char *t_name;
-	t_name = nil;
-	if (MCU_change_color(c, t_name, ep, line, pos) != ES_NORMAL)
-		return ES_ERROR;
-	
-	MCStringRef t_name_ref;
-	if (!MCStringCreateWithCString(t_name, t_name_ref))
-	{
-		MCeerror -> add(EE_NO_MEMORY, line, pos);
-		return ES_ERROR;
-	}
-
-	MCValueRelease(n);
-	n = t_name_ref;
-	
-	return ES_NORMAL;
-}
-
-Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep,
+Exec_stat MCU_change_color(MCColor &c, MCStringRef &n, MCExecPoint &ep,
                            uint2 line, uint2 pos)
 {
 	MCColor color;
-	char *name = NULL;
-	char *cstring = ep.getsvalue().clone();
-	if (!MCscreen->parsecolor(cstring, &color, &name))
+	MCStringRef t_name;
+	MCAutoStringRef string;
+	ep . copyasstringref(&string);
+
+	t_name = nil;
+	if (!MCscreen->parsecolor(*string, color, &t_name))
 	{
-		MCeerror->add(EE_PROPERTY_BADCOLOR, line, pos, ep.getsvalue());
-		delete cstring;
+		MCeerror->add(EE_PROPERTY_BADCOLOR, line, pos, *string);
 		return ES_ERROR;
 	}
-	delete cstring;
+
 	MCscreen->alloccolor(color);
 	c = color;
-	delete n;
-	n = name;
+	if (n != nil)
+		MCValueRelease(n);
+	if (t_name != nil)
+		n = t_name;
+	else
+		n = nil;
 	return ES_NORMAL;
 }
 
@@ -2292,11 +2258,12 @@ void MCU_get_color(MCExecPoint& ep, MCStringRef name, MCColor& c)
 	ep.setcolor(c, name != nil ? MCStringGetCString(name) : nil);
 }
 
+/*
 void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c)
 {
 	ep.setcolor(c, name);
 }
-
+*/
 void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
                 real8 tn, real8 oldn, MCSortnode *titems)
 {
@@ -2341,20 +2308,28 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output
 	if (MCStringGetLength(p_target) > 5 && MCStringBeginsWithCString(p_target, (const char_t*)"file:", kMCCompareCaseless))
 	{
 		MCStringCopySubstring(p_target, MCRangeMake(5, MCStringGetLength(p_target)-5), &t_filename);
-		ep . setvalueref(*t_filename);
-		MCS_loadfile(ep, False);
+		if (!MCS_loadtextfile(*t_filename, r_output))
+            r_output = MCValueRetain(kMCEmptyString);
 	}
 	else if (MCStringGetLength(p_target) > 8 && MCStringBeginsWithCString(p_target, (const char_t*)"binfile:", kMCCompareCaseless))
 	{
+        MCAutoDataRef t_data;
 		MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);
-		ep . setvalueref(*t_filename);
-		MCS_loadfile(ep, True);
+		if (!MCS_loadbinaryfile(*t_filename, &t_data))
+        {
+            r_output = MCValueRetain(kMCEmptyString);
+            return;
+        }
+        
+        MCExecPoint ep(nil, nil, nil);
+        ep . setvalueref(*t_data);
+        r_output = (MCStringRef) MCValueRetain(ep . getvalueref());
 	}
 	else if (MCStringGetLength(p_target) > 8 && MCStringBeginsWithCString(p_target, (const char_t*)"resfile:", kMCCompareCaseless))
 	{
-		MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);
-		ep . setvalueref(*t_filename);		
-		MCS_loadresfile(ep);
+		MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);	
+		MCS_loadresfile(*t_filename, r_output);
+        /* UNCHECKED */ ep . copyasstringref(r_output);
 	}
 	else
 	{
@@ -2365,57 +2340,25 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output
 			MCS_geturl(ctxt . GetObject(), p_target);
 			MCurlresult->eval(ep);
 		}
+        /* UNCHECKED */ ep . copyasstringref(r_output);
 	}
-	/* UNCHECKED */ ep . copyasstringref(r_output);
 }
 
 void MCU_geturl(MCExecPoint &ep)
 {
-	if (ep.getsvalue().getlength() > 5
-	        && !MCU_strncasecmp(ep.getsvalue().getstring(), "file:", 5))
-	{
-		ep.tail(5);
-		MCS_loadfile(ep, False);
-	}
-	else
-		if (ep.getsvalue().getlength() > 8
-		        && !MCU_strncasecmp(ep.getsvalue().getstring(), "binfile:", 8))
-		{
-			ep.tail(8);
-			MCS_loadfile(ep, True);
-		}
-		else
-			if (ep.getsvalue().getlength() > 8
-			        && !MCU_strncasecmp(ep.getsvalue().getstring(), "resfile:", 8))
-			{
-				ep.tail(8);
-				MCS_loadresfile(ep);
-			}
-			else
-			{
-				// MW-2013-03-12: [[ Bug 10731 ]] Make sure that if we aren't looking at something
-				//   that looks like a URL, we clear the EP.
-				const char *sptr = ep.getsvalue().getstring();
-				uint4 l = ep.getsvalue().getlength();
-				if (sptr != NULL && sptr[1] != ':' && MCU_strchr(sptr, l, ':'))
-				{
-					MCAutoStringRef p_url;
-					/* UNCHECKED */ ep . copyasstringref(&p_url);
-					MCS_geturl(ep . getobj(), *p_url);
-					MCurlresult->eval(ep);
-				}
-				else
-					ep . clear();
-			}
+    MCAutoStringRef t_filename, t_output;
+    MCStringCreateWithOldString(ep.getsvalue(), &t_filename);
+    
+    MCExecContext ctxt(ep);
+    
+    MCU_geturl(ctxt, *t_filename, &t_output);
+    
+    ep.setvalueref(*t_output);
 }
 
 
 void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
 {
-	MCAutoStringRef f;
-	MCStringCreateWithOldString(dest.getsvalue(), &f);
-
-
 	if (dest.getsvalue().getlength() > 5
 	        && !MCU_strncasecmp(dest.getsvalue().getstring(), "file:", 5))
 	{
@@ -2423,7 +2366,9 @@ void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
 		data . texttobinary();
 		MCAutoDataRef t_data_ref;
 		/* UNCHECKED */ data . copyasdataref(&t_data_ref);
-		MCS_savebinaryfile(*f, *t_data_ref);
+		MCAutoStringRef t_filename;
+		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &t_filename);
+		MCS_savebinaryfile(*t_filename, *t_data_ref);
 	}
 	else if (dest.getsvalue().getlength() > 8
 		        && !MCU_strncasecmp(dest.getsvalue().getstring(), "binfile:", 8))
@@ -2431,19 +2376,25 @@ void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
 		dest.tail(8);
 		MCAutoDataRef t_data_ref;
 		/* UNCHECKED */ data . copyasdataref(&t_data_ref);
-		MCS_savebinaryfile(*f, *t_data_ref);
+		MCAutoStringRef t_filename;
+		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &t_filename);
+		MCS_savebinaryfile(*t_filename, *t_data_ref);
 	}
 	else if (dest.getsvalue().getlength() > 8
 		        && !MCU_strncasecmp(dest.getsvalue().getstring(), "resfile:", 8))
 	{
 		dest.tail(8);
-		MCS_saveresfile(dest.getsvalue(), data.getsvalue());
+		MCAutoStringRef t_filename;
+		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &t_filename);
+		/* UNCHECKED */ MCS_saveresfile(*t_filename, (MCDataRef)data.getvalueref());
 	}
 	else
 	{
 		MCAutoStringRef p_url;
-		/* UNCHECKED */ dest . copyasstringref(&p_url);
-		MCS_putintourl(dest . getobj(), data . getsvalue(), *p_url);
+        MCAutoDataRef t_data;
+		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &p_url);
+        /* UNCHECKED */ MCDataCreateWithBytes((byte_t*)data.getcstring(), data.getsvalue().getlength(), &t_data);
+		MCS_putintourl(dest . getobj(), *t_data, *p_url);
 	}
 }
 
@@ -2498,10 +2449,10 @@ uint1 MCU_languagetocharset(MCNameRef p_language)
 	return 0;
 }
 
-/* LEGACY */ uint1 MCU_languagetocharset(const char *langname)
+/* LEGACY */ uint1 MCU_languagetocharset(MCStringRef langname)
 {
 	MCNewAutoNameRef t_langname;
-	/* UNCHECKED */ MCNameCreateWithCString(langname, &t_langname);
+	/* UNCHECKED */  MCNameCreate(langname, &t_langname);
 	return MCU_languagetocharset(*t_langname);
 }
 
@@ -2580,7 +2531,7 @@ void MCU_multibytetounicode(const char *p_mbstring, uint4 p_mblength,
 	if (p_mbcharset == LCH_UTF8)
 		r_used = UTF8ToUnicode(p_mbstring, p_mblength, (uint2 *)p_buffer, p_capacity);
 	else
-		MCS_multibytetounicode(p_mbstring, p_mblength, p_buffer, p_capacity, r_used, p_mbcharset);
+        r_used = MCsystem ->TextConvert((const void*)p_mbstring, p_mblength, (void*)p_buffer, p_capacity, p_mbcharset, LCH_UNICODE);
 }
 
 // MW-2005-02-08: New implementation of unicodetomultibyte
@@ -2590,10 +2541,21 @@ void MCU_unicodetomultibyte(const char *p_ucstring, uint4 p_uclength,
 	if (p_mbcharset == LCH_UTF8)
 		r_used = UnicodeToUTF8((uint2 *)p_ucstring, p_uclength, p_buffer, p_capacity);
 	else
-		MCS_unicodetomultibyte(p_ucstring, p_uclength, p_buffer, p_capacity, r_used, p_mbcharset);
+        r_used = MCsystem ->TextConvert((const void*)p_ucstring, p_uclength, (void*)p_buffer, p_capacity, LCH_UNICODE, p_mbcharset);
 }
 
 //////////
+
+bool MCU_multibytetounicode(MCDataRef p_input, MCDataRef &r_output)
+{
+    MCAutoStringRef t_string;
+
+    if (!MCStringDecode(p_input, kMCStringEncodingUTF8, false, &t_string))
+        return false;
+
+    if (!MCStringEncode(*t_string, kMCStringEncodingUTF16, false, r_output))
+        return false;
+}
 
 bool MCU_multibytetounicode(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_unicode)
 {
@@ -2615,6 +2577,17 @@ bool MCU_multibytetounicode(const MCString& p_src, uinteger_t p_charset, MCStrin
 bool MCU_multibytetounicode(MCStringRef p_src, uinteger_t p_charset, MCStringRef& r_unicode)
 {
 	return MCU_multibytetounicode(MCStringGetOldString(p_src), p_charset, r_unicode);
+}
+
+bool MCU_unicodetomultibyte(MCDataRef p_input, MCDataRef& r_output)
+{
+    MCAutoStringRef t_string;
+
+    if (!MCStringDecode(p_input, kMCStringEncodingUTF16, false, &t_string))
+        return false;
+
+    if (!MCStringEncode(*t_string, kMCStringEncodingUTF8, false, r_output))
+        return false;
 }
 
 bool MCU_unicodetomultibyte(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_multibyte)
@@ -2820,7 +2793,7 @@ MCDictionary::~MCDictionary(void)
 	}
 }
 
-void MCDictionary::Set(uint4 p_id, const MCString& p_value)
+void MCDictionary::Set(uint4 p_id, MCString p_value)
 {
 	Node *t_node;
 	t_node = Find(p_id);
@@ -2845,8 +2818,7 @@ bool MCDictionary::Get(uint4 p_id, MCString& r_value)
 	if (t_node == NULL)
 		return false;
 
-	r_value . set((char *)t_node -> buffer, t_node -> length);
-	
+	r_value . set((const char *)t_node -> buffer, t_node -> length);
 	return true;
 }
 
@@ -2923,7 +2895,7 @@ bool MCDictionary::Unpickle(const void* p_buffer, uint4 p_length)
 
 		if (t_size < t_node_size)
 			return false;
-
+		
 		Set(t_node_key, MCString(t_buffer, t_node_size));
 
 		t_buffer += (t_node_size + 3) & ~3;

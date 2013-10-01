@@ -690,6 +690,12 @@ static void MCInterfaceTextStyleFormat(MCExecContext& ctxt, const MCInterfaceTex
 		return;
 	}
 
+    if (p_input . style == 0)
+    {
+        r_output = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    
 	bool t_success;
 	t_success = true;
 
@@ -901,6 +907,68 @@ static MCExecEnumTypeInfo _kMCInterfaceInkNamesTypeInfo =
 	_kMCInterfaceInkNamesElementInfo
 };
 
+//////////
+
+void MCInterfaceTriStateParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceTriState& r_output)
+{
+    if (MCStringIsEqualToCString(p_input, "mixed", kMCCompareCaseless))
+    {
+        r_output . mixed = Mixed;
+        r_output . type = kMCInterfaceTriStateMixed;
+    }
+    
+    if (MCU_stob(p_input, r_output . state))
+    {
+        r_output . type = kMCInterfaceTriStateBoolean;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_OBJECT_NAB);
+}
+
+void MCInterfaceTriStateFormat(MCExecContext& ctxt, const MCInterfaceTriState& p_input, MCStringRef& r_output)
+{
+    if (p_input . type == kMCInterfaceTriStateBoolean)
+    {
+        r_output = MCValueRetain(p_input . state ? kMCTrueString : kMCFalseString);
+        return;
+    }
+    
+    if (MCStringCreateWithCString("mixed", r_output))
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCInterfaceTriStateFree(MCExecContext& ctxt, MCInterfaceTriState& p_input)
+{
+}
+
+static MCExecCustomTypeInfo _kMCInterfaceTriStateTypeInfo =
+{
+	"Interface.TriState",
+	sizeof(MCInterfaceTriState),
+	(void *)MCInterfaceTriStateParse,
+	(void *)MCInterfaceTriStateFormat,
+	(void *)MCInterfaceTriStateFree
+};
+
+//////////
+
+MCExecEnumTypeElementInfo _kMCInterfaceEncodingElementInfo[] =
+{
+	{ MCnativestring, 0, true },
+	{ MCunicodestring, 1, true },
+	{ MCmixedstring, 2, true },
+};
+
+MCExecEnumTypeInfo _kMCInterfaceEncodingTypeInfo =
+{
+	"Interface.Encoding",
+	sizeof(_kMCInterfaceEncodingElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCInterfaceEncodingElementInfo
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExecCustomTypeInfo *kMCInterfaceLayerTypeInfo = &_kMCInterfaceLayerTypeInfo;
@@ -909,6 +977,7 @@ MCExecEnumTypeInfo *kMCInterfaceTextAlignTypeInfo = &_kMCInterfaceTextAlignTypeI
 MCExecCustomTypeInfo *kMCInterfaceTextStyleTypeInfo = &_kMCInterfaceTextStyleTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceInkNamesTypeInfo = &_kMCInterfaceInkNamesTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceEncodingTypeInfo = &_kMCInterfaceEncodingTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceTriStateTypeInfo = &_kMCInterfaceTriStateTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1177,14 +1246,9 @@ void MCObject::GetScript(MCExecContext& ctxt, MCStringRef& r_script)
 
 	bool t_success = true;
 	
-	if (script == nil)
-		r_script = MCValueRetain(kMCEmptyString);
-	else
-	{
-		getstack() -> unsecurescript(this);
-		t_success = MCStringCreateWithCString(script, r_script);
-		getstack() -> securescript(this);
-	}
+	getstack() -> unsecurescript(this);
+	r_script = MCValueRetain(_script);
+	getstack() -> securescript(this);
 	
 	if (t_success)
 		return;
@@ -1216,18 +1280,20 @@ void MCObject::SetScript(MCExecContext& ctxt, MCStringRef new_script)
 	uint4 length;
 	length = MCStringGetLength(new_script);
 
-	if (length == 0)
+	if (MCStringIsEmpty(new_script))
 	{
 		delete hlist;
 		hlist = NULL;
-		delete script;
-		script = NULL;
-		flags &= ~F_SCRIPT;
+		MCValueRelease(_script);
+		_script = MCValueRetain(kMCEmptyString);
 		hashandlers = 0;
 	}
 	else
 	{
-		char *oldscript = script;
+		MCAutoStringRef t_old_script;
+		t_old_script = _script;
+		
+		MCAutoStringRef t_new_script;
 		if (MCStringGetNativeCharAtIndex(new_script, length - 1) != '\n')
 		{
 			MCAutoStringRef t_script;
@@ -1236,18 +1302,17 @@ void MCObject::SetScript(MCExecContext& ctxt, MCStringRef new_script)
 			if (t_success)
 				t_success = MCStringAppendChar(*t_script, '\n');
 			if (t_success)
-				t_success = MCStringAppendChar(*t_script, '\0');
-			if (t_success)
-				script = strclone(MCStringGetCString(*t_script));
+				/* UNCHECKED */ MCStringCopy(*t_script, &t_new_script);
 		}
 		else
-			script = strclone(MCStringGetCString(new_script));
+			t_new_script = new_script;
+		
+		MCValueAssign(_script, *t_new_script);
 
 		getstack() -> securescript(this);
 		
 		if (t_success)
 		{
-			flags |= F_SCRIPT;
 			if (MCModeCanSetObjectScript(obj_id))
 			{ // not template object
 				hashandlers = 0;
@@ -1256,11 +1321,7 @@ void MCObject::SetScript(MCExecContext& ctxt, MCStringRef new_script)
 				{
 					delete hlist;
 					hlist = NULL;
-					delete script;
-					script = oldscript;
-					oldscript = NULL;
-					if (script == NULL)
-						flags &= ~F_SCRIPT;
+					MCValueAssign(_script, *t_old_script);
 					MCperror->add(PE_OBJECT_NOTLICENSED, 0, 0);
 				}
 				if (!MCperror->isempty())
@@ -1272,7 +1333,6 @@ void MCObject::SetScript(MCExecContext& ctxt, MCStringRef new_script)
 					ctxt . SetTheResultToEmpty();
 			}
 		}
-		delete oldscript;
 	}
 
 	if (t_success)
@@ -1462,9 +1522,12 @@ void MCObject::SetPixel(MCExecContext& ctxt, Properties which, uinteger_t pixel)
 
 	colors[i] . pixel = pixel;
 	MCscreen -> querycolor(colors[i]);
-	delete colornames[i];
-	colornames[i] = NULL;
-
+	if (colornames[i] != nil)
+	{
+		MCValueRelease(colornames[i]);
+		colornames[i] = nil;
+	}
+	
 	Redraw();
 }
 
@@ -1644,7 +1707,7 @@ void MCObject::SetBrushBackColor(MCExecContext& ctxt, MCValueRef r_value)
 void MCObject::SetColor(MCExecContext& ctxt, int index, const MCInterfaceNamedColor& p_color)
 {
 	uint2 i, j;
-	if (p_color . name != nil && MCStringGetLength(p_color . name) == 0)
+	if (p_color . name != nil && MCStringIsEmpty(p_color . name))
 	{
 		if (getcindex(index, i))
 			destroycindex(index, i);
@@ -1658,12 +1721,8 @@ void MCObject::SetColor(MCExecContext& ctxt, int index, const MCInterfaceNamedCo
 			if (opened)
 				MCscreen->alloccolor(colors[i]);
 		}
-		MCColor oldcolor = colors[i];
-		MCAutoStringRef t_color_name;
-		set_interface_color(colors[i], &t_color_name, p_color);
+		set_interface_color(colors[i], colornames[i], p_color);
 
-		if (*t_color_name != nil)
-			colornames[i] = strclone(MCStringGetCString(*t_color_name)); 
 		j = i;
 		if (getpindex(index, j))
 		{
@@ -1681,12 +1740,8 @@ bool MCObject::GetColor(MCExecContext& ctxt, Properties which, bool effective, M
 	uint2 i;
 	if (getcindex(which - P_FORE_COLOR, i))
 	{
-		MCAutoStringRef t_color_name;
-		if (MCStringCreateWithCString(colornames[i], &t_color_name))
-		{
-			get_interface_color(colors[i], *t_color_name, r_color);
-			return true;
-		}
+		get_interface_color(colors[i], colornames[i], r_color);
+		return true;	
 	}
 	else if (effective && parent != NULL)
 		return parent -> GetColor(ctxt, which, effective, r_color);
@@ -1935,20 +1990,24 @@ void MCObject::SetColors(MCExecContext& ctxt, MCStringRef p_input)
 						colors[i] = t_color . color;
 						if (opened)
 							MCscreen->alloccolor(colors[i]);
-						colornames[i] = t_color . name == nil ? NULL : strclone(MCStringGetCString(t_color . name));
+						colornames[i] = t_color . name == nil ? nil : MCValueRetain(t_color . name);
 					}
 				}
 				else
 				{
 					if (t_color . color . flags)
 					{
-						delete colornames[i];
+						if (colornames[i] != nil)
+						{
+							MCValueRelease(colornames[i]);
+							colornames[i] = nil;
+						}
 						if (opened)
 						{
 							colors[i] = t_color . color;
 							MCscreen->alloccolor(colors[i]);
 						}
-						colornames[i] = t_color . name == nil ? NULL : strclone(MCStringGetCString(t_color . name));
+						colornames[i] = t_color . name == nil ? nil : MCValueRetain(t_color . name);
 					}
 					else
 						destroycindex(index, i);
@@ -2555,7 +2614,10 @@ void MCObject::GetEffectiveTextSize(MCExecContext& ctxt, uinteger_t& r_size)
 void MCObject::GetTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& r_style)
 {
 	if ((m_font_flags & FF_HAS_TEXTSTYLE) == 0)
+    {
+        r_style . style = 0;
 		return;
+    }
 
 	uint2 fontsize, fontstyle;
 	const char *fontname;
@@ -3058,86 +3120,54 @@ void MCObject::SetCustomPropertySet(MCExecContext& ctxt, MCStringRef propset)
 	ctxt . Throw();
 }
 
-void MCObject::GetCustomPropertySets(MCExecContext& ctxt, MCStringRef& r_propsets)
+void MCObject::GetCustomPropertySets(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_propsets)
 {
 	bool t_success;
 	t_success = true;
 
 	MCAutoListRef t_propsets;
 	MCObjectPropertySet *p = props;
-
-	if (t_success)
-		t_success = MCListCreateMutable('\n', &t_propsets);
+	
+	MCAutoArray<MCStringRef> t_list;
 
 	while (t_success && p != NULL)
 	{
 		if (!p -> hasname(kMCEmptyName))
-			t_success = MCListAppend(*t_propsets, p -> getname());
+			t_success = t_list . Push(MCNameGetString(p -> getname()));
 		p = p -> getnext();
 	}
 
 	if (t_success)
-		t_success = MCListCopyAsString(*t_propsets, r_propsets);
-
-	if (t_success)
+	{
+		t_list . Take(r_propsets, r_count);
 		return;
-
+	}
+	
 	ctxt . Throw();
 }
 
-void MCObject::SetCustomPropertySets(MCExecContext& ctxt, MCStringRef propsets)
+void MCObject::SetCustomPropertySets(MCExecContext& ctxt, uindex_t p_count, MCStringRef* p_propsets)
 {
-	uindex_t t_length;
-	t_length = MCStringGetLength(propsets);
-	MCAutoStringRef t_propsets_new;
-
+	MCObjectPropertySet *newprops = nil;
+	MCObjectPropertySet *newp = nil;
 	bool t_success;
 	t_success = true;
 
-	if (t_success)
-		t_success = MCStringMutableCopy(propsets, &t_propsets_new);
-
-	if (t_success && t_length != 0 && MCStringGetNativeCharAtIndex(propsets, t_length - 1) != '\n')
-		t_success = MCStringAppendChar(*t_propsets_new, '\n');
-
-	if (t_success)
-		t_success = MCStringAppendChar(*t_propsets_new, '\n');		
-
-	uindex_t t_old_offset;
-	t_old_offset = 0;
-	uindex_t t_new_offset;
-	t_new_offset = 0;
-
-	MCObjectPropertySet *newprops = NULL;
-	MCObjectPropertySet *newp = NULL;
-
-	while (t_success && t_old_offset <= t_length)
-	{
-		MCAutoStringRef t_name_string;
+	for (uindex_t i = 0; i < p_count && t_success; i++)
+	{		
 		MCNewAutoNameRef t_name;
+		t_success = MCNameCreate(p_propsets[i], &t_name);
 		
-		if (!MCStringFirstIndexOfChar(*t_propsets_new, '\n', t_old_offset, kMCCompareCaseless, t_new_offset))
-			t_new_offset = t_length;
-
-		if (t_new_offset > t_old_offset)
-		{
-			t_success = MCStringCopySubstring(*t_propsets_new, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_name_string);
-			if (t_success)
-				t_success = MCNameCreate(*t_name_string, &t_name);
-		}
-		else
-			&t_name = MCValueRetain(kMCEmptyName);
-
 		if (t_success)
 		{
-			MCObjectPropertySet *lp = NULL;
+			MCObjectPropertySet *lp = nil;
 			MCObjectPropertySet *p = props;
-			while (p != NULL && !p->hasname(*t_name))
+			while (p != nil && !p->hasname(*t_name))
 			{
 				lp = p;
 				p = p->getnext();
 			}
-			if (p == NULL)
+			if (p == nil)
 				/* UNCHECKED */ MCObjectPropertySet::createwithname(*t_name, p);
 			else
 			{
@@ -3153,11 +3183,10 @@ void MCObject::SetCustomPropertySets(MCExecContext& ctxt, MCStringRef propsets)
 				newp->setnext(p);
 			newp = p;
 		}
-		t_old_offset = t_new_offset + 1;
 	}
 
 	bool gotdefault = false;
-	while (props != NULL)
+	while (props != nil)
 	{
 		MCObjectPropertySet *sp = props->getnext();
 		if (props->hasname(kMCEmptyName))
@@ -3665,3 +3694,115 @@ void MCObject::GetEncoding(MCExecContext& ctxt, intenum_t& r_encoding)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCObject::GetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool& r_setting)
+{
+    uint2 t_style_set;
+    if ((m_font_flags & FF_HAS_TEXTSTYLE) == 0)
+        t_style_set = FA_DEFAULT_STYLE;
+    else
+        t_style_set = gettextstyle();
+    
+    Font_textstyle t_style;
+    if (MCF_parsetextstyle(MCNameGetOldString(p_index), t_style) == ES_NORMAL)
+    {
+        r_setting = MCF_istextstyleset(t_style_set, t_style);
+        return;
+    }
+    
+    ctxt . Throw();
+}
+
+void MCObject::SetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool p_setting)
+{
+    Font_textstyle t_style;
+    if (MCF_parsetextstyle(MCNameGetOldString(p_index), t_style) == ES_NORMAL)
+    {
+        uint2 t_style_set;
+		if ((m_font_flags & FF_HAS_TEXTSTYLE) == 0)
+			t_style_set = FA_DEFAULT_STYLE;
+		else
+			t_style_set = gettextstyle();
+        
+        MCF_changetextstyle(t_style_set, t_style, p_setting);
+        return;
+    }
+    
+    ctxt . Throw();
+}
+
+void MCObject::GetCustomKeysElement(MCExecContext& ctxt, MCNameRef p_index, MCStringRef& r_string)
+{
+    MCObjectPropertySet *t_propset;
+    if (findpropset(p_index, true, t_propset))
+    {
+        if (t_propset -> list(r_string))
+            return;
+    }
+    else
+    {
+        r_string = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    
+    ctxt . Throw();
+}
+
+void MCObject::GetCustomProperties(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_array)
+{
+    MCObjectPropertySet *t_propset;
+    if (findpropset(p_index, true, t_propset))
+    {
+        MCAutoArrayRef t_array;
+        if (t_propset -> fetch(&t_array))
+        {
+            r_array = MCValueRetain(*t_array);
+            return;
+        }
+    }
+    else
+    {
+        r_array = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    
+    ctxt . Throw();
+}
+
+void MCObject::SetCustomKeysElement(MCExecContext& ctxt, MCNameRef p_index, MCStringRef p_string)
+{
+    MCObjectPropertySet *t_propset;
+    if (MCStringIsEqualTo(p_string, kMCEmptyString, kMCCompareCaseless))
+    {
+        if (findpropset(p_index, true, t_propset))
+            t_propset -> clear();
+        return;
+    }
+
+    /* UNCHECKED */ ensurepropset(p_index, true, t_propset);
+    /* UNCHECKED */ t_propset -> restrict(p_string);
+}
+
+void MCObject::SetCustomProperties(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_array)
+{
+    MCObjectPropertySet *t_propset;
+    if  (!MCValueIsArray(p_array))
+    {
+        if (findpropset(p_index, true, t_propset))
+            t_propset -> clear();
+        return;
+    }
+    
+    /* UNCHECKED */ ensurepropset(p_index, true, t_propset);
+    t_propset -> store((MCArrayRef)p_array);
+}
+
+void MCObject::GetCustomKeys(MCExecContext& ctxt, MCStringRef& r_string)
+{
+    GetCustomKeysElement(ctxt, kMCEmptyName, r_string);
+}
+
+void MCObject::SetCustomKeys(MCExecContext& ctxt, MCStringRef p_string)
+{
+    SetCustomKeysElement(ctxt, kMCEmptyName, p_string);
+}

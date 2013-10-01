@@ -1131,6 +1131,7 @@ Parse_stat MCMarking::parse(MCScriptPoint &sp)
 
 Exec_stat MCMarking::exec(MCExecPoint &ep)
 {
+#ifdef LEGACY_EXEC
 	if (card != NULL)
 	{
 		MCObject *optr;
@@ -1155,7 +1156,38 @@ Exec_stat MCMarking::exec(MCExecPoint &ep)
 			(EE_MARK_BADSTRING, line, pos);
 			return ES_ERROR;
 		}
+        
 		MCdefaultstackptr->markfind(ep, mode, ep.getsvalue(), field, mark);
+	}
+	return ES_NORMAL;
+#endif
+    if (card != NULL)
+	{
+		MCObject *optr;
+		uint4 parid;
+		if (card->getobj(ep, optr, parid, True) != ES_NORMAL
+            || optr->gettype() != CT_CARD)
+		{
+			MCeerror->add
+			(EE_MARK_BADCARD, line, pos);
+			return ES_ERROR;
+		}
+		ep.setboolean(mark);
+		return optr->setprop(0, P_MARKED, ep, False);
+	}
+	if (tofind == NULL)
+		MCdefaultstackptr->mark(ep, where, mark);
+	else
+	{
+		if (tofind->eval(ep) != ES_NORMAL)
+		{
+			MCeerror->add
+			(EE_MARK_BADSTRING, line, pos);
+			return ES_ERROR;
+		}
+        MCAutoStringRef t_value;
+        ep . copyasstringref(&t_value);
+		MCdefaultstackptr->markfind(ep, mode, *t_value, field, mark);
 	}
 	return ES_NORMAL;
 }
@@ -1270,7 +1302,7 @@ Parse_stat MCPut::parse(MCScriptPoint &sp)
 	// Parse: put [ unicode ] ( header | content | markup ) <expr>	
 	if (sp.next(type) == PS_NORMAL)
 	{
-		if (sp.lookup(SP_SERVER, te) == PS_NORMAL && te -> type == TT_PREP)
+		if (type == ST_ID && sp.lookup(SP_SERVER, te) == PS_NORMAL && te -> type == TT_PREP)
 		{
 			prep = (Preposition_type)te -> which;
 			if (is_unicode && (prep == PT_HEADER || prep == PT_BINARY))
@@ -2567,6 +2599,7 @@ Exec_stat MCSort::exec(MCExecPoint &ep)
 		if (!ctxt . HasError())
 		{
 			/* UNCHECKED */ ep . setvalueref(t_sorted_target);
+            of -> set(ep, PT_INTO);
 			MCValueRelease(t_sorted_target);
 		}
 	}
@@ -2904,12 +2937,14 @@ void MCInclude::compile(MCSyntaxFactoryRef ctxt)
 
 MCEcho::~MCEcho(void)
 {
+	if (data != nil)
+		MCValueRelease(data);
 }
 
 Parse_stat MCEcho::parse(MCScriptPoint& sp)
 {
 	initpoint(sp);
-	data = sp . gettoken();
+	data = MCValueRetain(sp . gettoken_stringref());
 	return PS_NORMAL;
 }
 
@@ -2922,11 +2957,8 @@ Exec_stat MCEcho::exec(MCExecPoint& ep)
 	return ES_NORMAL;
 #endif /* MCEcho */
 
-	MCAutoStringRef t_data;
-	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)data . getstring(), data . getlength(), &t_data);
-
 	MCExecContext ctxt(ep);
-	MCServerExecEcho(ctxt, *t_data);
+	MCServerExecEcho(ctxt, data);
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 	
@@ -2937,7 +2969,7 @@ void MCEcho::compile(MCSyntaxFactoryRef ctxt)
 {
 	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
 
-	MCSyntaxFactoryEvalConstantOldString(ctxt, data);
+	MCSyntaxFactoryEvalConstant(ctxt, data);
 
 	MCSyntaxFactoryExecMethod(ctxt, kMCServerExecEchoMethodInfo);
 

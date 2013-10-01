@@ -50,7 +50,7 @@ public:
 	uint32_t GetId(void);
 	
 	// Get the ad's name (if any)
-	const char *GetName(void);
+	MCStringRef GetName();
 	
 	// Set the native ad's name
 	bool SetName(MCStringRef name);
@@ -98,7 +98,7 @@ private:
 	// The id of the instance
 	uint32_t m_id;
 	// The name of the instance
-	char *m_name;
+	MCStringRef m_name;
 	// The instance's owning object (handle)
 	MCObjectHandle *m_object;
 };

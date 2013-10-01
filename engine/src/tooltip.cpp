@@ -140,7 +140,7 @@ void MCTooltip::opentip()
 	if (!MCModeMakeLocalWindows())
 	{
 		MCColor t_color;
-		MCscreen -> parsecolor(MCStringGetCString(MCttbgcolor),&t_color, nil);
+		MCscreen -> parsecolor(MCttbgcolor, t_color, nil);
 		MCModeShowToolTip(trect . x, trect . y + 16,
 				MCttsize, (t_color . red >> 8) | (t_color . green & 0xFF00) | ((t_color . blue & 0xFF00) << 8), MCttfont,
 				tip);
@@ -181,7 +181,6 @@ void MCTooltip::opentip()
 		t_line = (MCStringRef)t_lineval;
 		rect.width = MCU_max(MCFontMeasureText(m_font, t_line) + 8, rect.width);
 		rect.height += t_fheight +3;
-		MCValueRelease(t_line);
 	}
 
 	openrect(trect, WM_TOOLTIP, NULL, WP_DEFAULT,OP_NONE);
@@ -238,7 +237,6 @@ void MCTooltip::render(MCContext *dc, const MCRectangle &dirty)
 		t_line = (MCStringRef)t_lineval;
 		MCFontDrawText(m_font, t_line, dc, 4, t_y + t_fheight, False);
 		t_y += t_fheight + 3;
-		MCValueRelease(t_line);
 	}
 
 	if (!MCaqua && !t_themed)

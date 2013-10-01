@@ -1873,7 +1873,7 @@ void MCBlock::openimage()
 		if (MCU_stoui4(MCStringGetOldString(atts->imagesource), t_image_id))
 			atts -> image = t_field -> resolveimageid(t_image_id);
 		else
-			atts->image = (MCImage *)t_field->getstack()->getobjname(CT_IMAGE, MCStringGetOldString(atts->imagesource));
+			atts->image = (MCImage *)t_field->getstack()->getobjname(CT_IMAGE, atts->imagesource);
 
 		if (atts->image != NULL)
 		{

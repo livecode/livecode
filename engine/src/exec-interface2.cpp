@@ -262,35 +262,93 @@ MC_EXEC_DEFINE_SET_METHOD(Interface, Tool, 1)
 MC_EXEC_DEFINE_GET_METHOD(Interface, ScreenRect, 3)
 MC_EXEC_DEFINE_GET_METHOD(Interface, ScreenRects, 3)
 
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, HomeStackAsObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, HelpStackAsObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, SelectedObjectAsObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, TopStackAsObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, ClickStackAsObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, MouseStackAsObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, ClickFieldAsObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, SelectedFieldAsObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, SelectedImageAsObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, FoundFieldAsObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, MouseControlAsObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, FocusedObjectAsObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, BinaryStackAsObject, 2)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, DefaultStackAsObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, StackOfStackByName, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, StackOfStackById, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, SubstackOfStackByName, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, SubstackOfStackById, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, AudioClipOfStackByOrdinal, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, AudioClipOfStackById, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, AudioClipOfStackByName, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, VideoClipOfStackByOrdinal, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, VideoClipOfStackById, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, VideoClipOfStackByName, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, BackgroundOfStackByOrdinal, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, BackgroundOfStackById, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, BackgroundOfStackByName, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfStackByOrdinal, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfStackById, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfStackByName, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, ThisCardOfStack, 2)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfBackgroundByOrdinal, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfBackgroundById, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfBackgroundByName, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, GroupOfCardByOrdinal, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, GroupOfCardById, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, GroupOfCardByName, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, GroupOfCardOrStackById, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, GroupOfGroupByOrdinal, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, GroupOfGroupById, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, GroupOfGroupByName, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, MenubarAsObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfGroupByOrdinal, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfGroupById, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfGroupByName, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfCardByOrdinal, 5)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfCardById, 5)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfCardByName, 5)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfCardOrStackById, 5)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, StackByValue, 2)
+
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, HomeStackAsOptionalObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, HelpStackAsOptionalObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, DefaultStackAsOptionalObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, StackOfOptionalStackByName, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, StackOfOptionalStackById, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, SubstackOfOptionalStackByName, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, SubstackOfOptionalStackById, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, OptionalStackWithBackgroundByOrdinal, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, OptionalStackWithBackgroundById, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, OptionalStackWithBackgroundByName, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfOptionalStackByOrdinal, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfOptionalStackById, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfOptionalStackByName, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, ThisCardOfOptionalStack, 2)
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCInterfaceNamedColorParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceNamedColor& r_output)
 {
-	if (MCStringGetLength(p_input) == 0)
+	if (MCStringIsEmpty(p_input))
 	{
 		r_output . name = MCValueRetain(kMCEmptyString);
 		return;
 	}
 
 	MCColor t_color;
-	MCAutoPointer<char> t_color_name;
-	if (!MCscreen -> parsecolor(MCStringGetOldString(p_input), &t_color, &(&t_color_name)))
+	MCStringRef t_color_name;
+	t_color_name = nil;
+	if (!MCscreen -> parsecolor(p_input, t_color, &t_color_name))
 	{
 		 ctxt . LegacyThrow(EE_PROPERTY_BADCOLOR);
 		 return;
 	}
 	
-	MCStringRef t_color_name_ref;
-	t_color_name_ref = nil;
-	if (*t_color_name != nil &&
-		!MCStringCreateWithCString(*t_color_name, t_color_name_ref))
-	{
-		ctxt . Throw();
-		return;
-	}
-
 	r_output . color = t_color;
-	r_output . name = t_color_name_ref;
+	r_output . name = t_color_name;
 }
 
 void MCInterfaceNamedColorFormat(MCExecContext& ctxt, const MCInterfaceNamedColor& p_input, MCStringRef& r_output)
@@ -573,6 +631,7 @@ void MCInterfaceGetDialogData(MCExecContext& ctxt, MCValueRef& r_value)
 {
 	r_value = MCValueRetain(MCdialogdata -> getvalueref());
 }
+
 void MCInterfaceSetDialogData(MCExecContext& ctxt, MCValueRef p_value)
 {
 	MCdialogdata -> setvalueref(p_value);
@@ -752,7 +811,8 @@ void get_interface_color(const MCColor& p_color, MCStringRef p_color_name, MCInt
 
 void set_interface_color(MCColor& x_color, MCStringRef& x_color_name, const MCInterfaceNamedColor& p_color)
 {
-	MCValueRelease(x_color_name);
+	if (x_color_name != nil)
+		MCValueRelease(x_color_name);
 	x_color_name = p_color . name != nil ? (MCStringRef)MCValueRetain(p_color . name) : nil;
 	x_color = p_color . color;
 }
@@ -1138,9 +1198,8 @@ void MCInterfaceGetIconMenu(MCExecContext& ctxt, MCStringRef& r_menu)
 
 void MCInterfaceSetIconMenu(MCExecContext& ctxt, MCStringRef p_menu)
 {
-	MCValueRelease(MCiconmenu);
-	MCiconmenu = (MCStringRef)MCValueRetain(p_menu);
-	MCscreen -> seticonmenu(MCStringGetCString(MCiconmenu));
+	MCValueAssign(MCiconmenu, p_menu);
+	MCscreen -> seticonmenu(MCiconmenu);
 }
 
 void MCInterfaceGetStatusIcon(MCExecContext& ctxt, uinteger_t& r_icon)
@@ -1154,7 +1213,7 @@ void MCInterfaceSetStatusIcon(MCExecContext& ctxt, uinteger_t p_icon)
 		return;
 		
 	MCstatusiconid = p_icon;
-	MCscreen -> configurestatusicon(MCstatusiconid, MCStringGetCString(MCstatusiconmenu), MCStringGetCString(MCstatusicontooltip));
+	MCscreen -> configurestatusicon(MCstatusiconid, MCstatusiconmenu, MCstatusicontooltip);
 }
 
 void MCInterfaceGetStatusIconToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip)
@@ -1164,9 +1223,8 @@ void MCInterfaceGetStatusIconToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip
 
 void MCInterfaceSetStatusIconToolTip(MCExecContext& ctxt, MCStringRef p_tooltip)
 {
-	MCValueRelease(MCstatusicontooltip);
-	MCstatusicontooltip = (MCStringRef)MCValueRetain(p_tooltip);
-	MCscreen -> configurestatusicon(MCstatusiconid, MCStringGetCString(MCstatusiconmenu), MCStringGetCString(MCstatusicontooltip));
+	MCValueAssign(MCstatusicontooltip, p_tooltip);
+	MCscreen -> configurestatusicon(MCstatusiconid, MCstatusiconmenu, MCstatusicontooltip);
 }
 
 void MCInterfaceGetStatusIconMenu(MCExecContext& ctxt, MCStringRef& r_icon_menu)
@@ -1176,9 +1234,8 @@ void MCInterfaceGetStatusIconMenu(MCExecContext& ctxt, MCStringRef& r_icon_menu)
 
 void MCInterfaceSetStatusIconMenu(MCExecContext& ctxt, MCStringRef p_icon_menu)
 {
-	MCValueRelease(MCstatusiconmenu);
-	MCstatusiconmenu = (MCStringRef)MCValueRetain(p_icon_menu);
-	MCscreen -> configurestatusicon(MCstatusiconid, MCStringGetCString(MCstatusiconmenu), MCStringGetCString(MCstatusicontooltip));
+	MCValueAssign(MCstatusiconmenu, p_icon_menu);
+	MCscreen -> configurestatusicon(MCstatusiconid, MCstatusiconmenu, MCstatusicontooltip);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1373,7 +1430,7 @@ void MCInterfaceGetDefaultStack(MCExecContext& ctxt, MCStringRef& r_value)
 void MCInterfaceSetDefaultStack(MCExecContext& ctxt, MCStringRef p_value)
 {
 	MCStack *sptr;
-	sptr = MCdefaultstackptr->findstackname(MCStringGetOldString(p_value));
+	sptr = MCdefaultstackptr->findstackname_oldstring(MCStringGetOldString(p_value));
 	
 	if (sptr == nil)
 	{
@@ -2021,4 +2078,1373 @@ void MCInterfaceGetScreenRects(MCExecContext& ctxt, bool p_working, bool p_effec
 		return;
 
 	ctxt.Throw();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCInterfaceEvalHelpStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    MCStack *t_stack;
+    t_stack = MCdefaultstackptr->findstackname(MCM_help);
+    
+    if (t_stack != nil)
+    {
+        r_object . object = t_stack;
+        r_object . part_id = 0;
+		return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+
+void MCInterfaceEvalHomeStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    MCStack *t_stack;
+    t_stack = MCdispatcher -> gethome();
+    
+    if (t_stack != nil)
+    {
+        r_object . object = t_stack;
+        r_object . part_id = 0;
+		return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+
+void MCInterfaceEvalSelectedObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    MCObject *t_object;
+    t_object = MCselected -> getfirst();
+    
+    if (t_object != nil)
+    {
+        r_object . object = t_object;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+
+void MCInterfaceEvalTopStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    if (MCtopstackptr != nil)
+    {
+        r_object . object = MCtopstackptr;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+
+void MCInterfaceEvalClickStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    if (MCclickstackptr != nil)
+    {
+        r_object . object = MCclickstackptr;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+
+void MCInterfaceEvalMouseStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    if (MCmousestackptr != nil)
+    {
+        r_object . object = MCmousestackptr;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+
+void MCInterfaceEvalClickFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    if (MCclickfield != nil)
+    {
+        r_object . object = MCclickfield;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+
+void MCInterfaceEvalSelectedFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    if (MCactivefield != nil)
+    {
+        r_object . object = MCactivefield;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+void MCInterfaceEvalSelectedImageAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    if (MCactiveimage != nil)
+    {
+        r_object . object = MCactiveimage;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+void MCInterfaceEvalFoundFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    if (MCfoundfield != nil)
+    {
+        r_object . object = MCfoundfield;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+
+void MCInterfaceEvalMouseControlAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    // OK-2009-01-19: Refactored to ensure behaviour is the same as the mouseControl.
+    if (MCmousestackptr != nil)
+    {
+        r_object . object = MCmousestackptr->getcard()->getmousecontrol();
+        r_object . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+
+void MCInterfaceEvalFocusedObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    MCObject *t_object;
+    t_object = MCdefaultstackptr->getcard()->getkfocused();
+    
+    if (t_object == nil)
+        t_object = MCdefaultstackptr->getcard();
+    
+    if (t_object != nil)
+    {
+        r_object . object = t_object;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+
+static MCStack *MCInterfaceTryToEvalBinaryStack(MCStringRef p_data, bool& r_binary_fail)
+{
+    uint4 offset;
+    MCStack *t_stack;
+    bool t_binary_fail;
+    
+    t_stack = nil;
+    t_binary_fail = false;
+    
+    if (MCU_offset(SIGNATURE, MCStringGetCString(p_data), offset) && (MCStringGetLength(p_data) > 8 && strncmp(MCStringGetCString(p_data), "REVO", 4) == 0))
+    {
+        IO_handle stream = MCS_fakeopen(MCStringGetOldString(p_data));
+        /* UNCHECKED */ MCdispatcher->readfile(NULL, NULL, stream, t_stack);
+        MCS_close(stream);
+        t_binary_fail = t_stack == nil;
+    }
+
+    r_binary_fail = t_binary_fail;
+    return t_stack;
+}
+                                           
+void MCInterfaceEvalBinaryStackAsObject(MCExecContext& ctxt, MCStringRef p_data, MCObjectPtr& r_object)
+{
+    MCStack *t_stack;
+    bool t_binary_fail;
+    
+    t_stack = MCInterfaceTryToEvalBinaryStack(p_data, t_binary_fail);
+    
+    if (t_stack != nil)
+    {
+        r_object . object = t_stack;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOSTACK);
+}
+
+void MCInterfaceEvalDefaultStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    if (MCdefaultstackptr != nil)
+    {
+        r_object . object = MCdefaultstackptr;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOSTACK);
+}
+
+void MCInterfaceEvalStackOfStackByName(MCExecContext& ctxt, MCObjectPtr p_parent, MCNameRef p_name, MCObjectPtr& r_stack)
+{
+    MCStack *t_stack;
+    t_stack = static_cast<MCStack *>(p_parent . object) -> findstackname(p_name);
+    if (t_stack != nil)
+    {
+        r_stack . object = t_stack;
+        r_stack . part_id = p_parent . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOSTACK);
+}
+
+void MCInterfaceEvalStackOfStackById(MCExecContext& ctxt, MCObjectPtr p_parent, uinteger_t p_id, MCObjectPtr& r_stack)
+{
+    MCStack *t_stack;
+    t_stack = static_cast<MCStack *>(p_parent . object) -> findstackid(p_id);
+    
+    if (t_stack != nil)
+    {
+        r_stack . object = t_stack;
+        r_stack . part_id = p_parent . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOSTACK);
+}
+
+void MCInterfaceEvalStackByValue(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_stack)
+{
+    uint4 offset;
+    if (MCU_offset(SIGNATURE, MCStringGetCString((MCStringRef)p_value), offset) && (MCStringGetLength((MCStringRef)p_value) > 8 && strncmp(MCStringGetCString((MCStringRef)p_value), "REVO", 4) == 0))
+    {
+        MCInterfaceEvalBinaryStackAsObject(ctxt, (MCStringRef)p_value, r_stack);
+        return;
+    }
+    
+    MCStack *t_stack;
+    
+    integer_t t_id;                            
+    if (MCU_stoi4((MCStringRef)p_value, t_id))
+    {
+        t_stack = MCdefaultstackptr -> findstackid(t_id);
+        if (t_stack != nil)
+        {
+            r_stack . object = t_stack;
+            r_stack . part_id = 0;
+            return;
+        }
+    }
+    
+	t_stack = MCdefaultstackptr -> findstackname((MCNameRef)p_value);
+	if (t_stack != nil)
+    {
+        r_stack . object = t_stack;
+        r_stack . part_id = 0;
+        return;
+    }
+
+    MCEngineEvalValueAsObject(ctxt, p_value, r_stack);
+}
+
+void MCInterfaceEvalSubstackOfStackByName(MCExecContext& ctxt, MCObjectPtr p_parent, MCNameRef p_name, MCObjectPtr& r_stack)
+{
+    MCStack *t_stack;
+	t_stack = static_cast<MCStack *>(p_parent . object) -> findsubstackname(p_name);
+    if (t_stack != nil)
+    {
+        r_stack . object = t_stack;
+        r_stack . part_id = p_parent . part_id;
+        return;
+    }
+
+    ctxt . LegacyThrow(EE_CHUNK_NOSTACK);
+}
+
+void MCInterfaceEvalSubstackOfStackById(MCExecContext& ctxt, MCObjectPtr p_parent, uinteger_t p_id, MCObjectPtr& r_stack)
+{
+    MCStack *t_stack;
+    t_stack = static_cast<MCStack *>(p_parent . object) -> findsubstackid(p_id);
+    
+    if (t_stack != nil)
+    {
+        r_stack . object = t_stack;
+        r_stack . part_id = p_parent . part_id;
+        return;
+    }
+
+    ctxt . LegacyThrow(EE_CHUNK_NOSTACK);
+}
+
+void MCInterfaceEvalAudioClipOfStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_ordinal_type, MCObjectPtr& r_clip)
+{
+    MCObject *t_clip;
+    t_clip = static_cast<MCStack *>(p_stack . object) -> getAV((Chunk_term)p_ordinal_type, kMCEmptyString, CT_AUDIO_CLIP);
+    
+    if (t_clip != nil)
+    {
+        r_clip . object = t_clip;
+        r_clip . part_id = p_stack . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
+}
+
+void MCInterfaceEvalAudioClipOfStackById(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_id, MCObjectPtr& r_clip)
+{
+    MCObject *t_clip;
+    t_clip = static_cast<MCStack *>(p_stack . object) -> getAVid(CT_AUDIO_CLIP, p_id);
+    
+    if (t_clip != nil)
+    {
+        r_clip . object = t_clip;
+        r_clip . part_id = p_stack . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
+}
+
+void MCInterfaceEvalAudioClipOfStackByName(MCExecContext& ctxt, MCObjectPtr p_stack, MCNameRef p_name, MCObjectPtr& r_clip)
+{
+    MCObject *t_clip;
+    
+    if (!static_cast<MCStack *>(p_stack . object) -> getAVname(CT_AUDIO_CLIP, p_name, t_clip) &&
+        (MCacptr != NULL && MCacptr -> hasname(p_name)))
+            t_clip = MCacptr;
+    
+    if (t_clip != nil)
+    {
+        r_clip . object = t_clip;
+        r_clip . part_id = p_stack . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
+}
+
+void MCInterfaceEvalVideoClipOfStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_ordinal_type, MCObjectPtr& r_clip)
+{
+    MCObject *t_clip;
+    t_clip = static_cast<MCStack *>(p_stack . object) -> getAV((Chunk_term)p_ordinal_type, kMCEmptyString, CT_VIDEO_CLIP);
+    
+    if (t_clip != nil)
+    {
+        r_clip . object = t_clip;
+        r_clip . part_id = p_stack . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
+}
+
+void MCInterfaceEvalVideoClipOfStackById(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_id, MCObjectPtr& r_clip)
+{
+    MCObject *t_clip;
+    t_clip = static_cast<MCStack *>(p_stack . object) -> getAVid(CT_VIDEO_CLIP, p_id);
+    
+    if (t_clip != nil)
+    {
+        r_clip . object = t_clip;
+        r_clip . part_id = p_stack . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
+}
+
+void MCInterfaceEvalVideoClipOfStackByName(MCExecContext& ctxt, MCObjectPtr p_stack, MCNameRef p_name, MCObjectPtr& r_clip)
+{
+    MCObject *t_clip;
+    
+    if (!static_cast<MCStack *>(p_stack . object) -> getAVname(CT_VIDEO_CLIP, p_name, t_clip))
+    {
+        IO_cleanprocesses();
+        MCPlayer *tptr = MCplayers;
+        while (tptr != NULL)
+        {
+            if (tptr -> hasname(p_name))
+            {
+                t_clip = tptr;
+                break;
+            }
+            tptr = tptr->getnextplayer();
+        }
+    }
+    
+    if (t_clip != nil)
+    {
+        r_clip . object = t_clip;
+        r_clip . part_id = p_stack . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
+}
+
+void MCInterfaceEvalBackgroundOfStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, Chunk_term p_ordinal_type, MCObjectPtr& r_bg)
+{
+    MCGroup *t_background;
+    t_background = static_cast<MCStack *>(p_stack . object) -> getbackgroundbyordinal(p_ordinal_type);
+    
+    if (t_background != nil)
+    {
+        r_bg . object = t_background;
+        r_bg . part_id = p_stack . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOBACKGROUND);
+}
+
+void MCInterfaceEvalBackgroundOfStackById(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_id, MCObjectPtr& r_bg)
+{
+    MCGroup *t_background;
+    t_background =  static_cast<MCStack *>(p_stack . object) -> getbackgroundbyid(p_id);
+    
+    if (t_background != nil)
+    {
+        r_bg . object = t_background;
+        r_bg . part_id = p_stack . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOBACKGROUND);
+}
+
+void MCInterfaceEvalBackgroundOfStackByName(MCExecContext& ctxt, MCObjectPtr p_stack, MCNameRef p_name, MCObjectPtr& r_bg)
+{
+    MCGroup *t_background;
+    t_background = static_cast<MCStack *>(p_stack . object) -> getbackgroundbyname(p_name);
+    
+    if (t_background != nil)
+    {
+        r_bg . object = t_background;
+        r_bg . part_id = p_stack . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOBACKGROUND);
+}
+
+void MCInterfaceEvalStackWithBackgroundByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, Chunk_term p_ordinal_type, MCObjectPtr& r_stack)
+{
+    MCGroup *t_background;
+    MCStack *t_stack;
+    t_stack =  static_cast<MCStack *>(p_stack . object);
+    t_background = t_stack -> getbackgroundbyordinal(p_ordinal_type);
+    
+    if (t_background != nil)
+    {
+        t_stack -> setbackground(t_background);
+        r_stack . object = t_stack;
+        r_stack . part_id = p_stack . part_id;
+    }
+}
+
+void MCInterfaceEvalStackWithBackgroundById(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_id, MCObjectPtr& r_stack)
+{
+    MCGroup *t_background;
+    MCStack *t_stack;
+    t_stack =  static_cast<MCStack *>(p_stack . object);
+    t_background = t_stack -> getbackgroundbyid(p_id);
+    
+    if (t_background != nil)
+    {
+        t_stack -> setbackground(t_background);
+        r_stack . object = t_stack;
+        r_stack . part_id = p_stack . part_id;
+    }
+}
+
+void MCInterfaceEvalStackWithBackgroundByName(MCExecContext& ctxt, MCObjectPtr p_stack, MCNameRef p_name, MCObjectPtr& r_stack)
+{
+    MCGroup *t_background;
+    MCStack *t_stack;
+    t_stack =  static_cast<MCStack *>(p_stack . object);
+    t_background = t_stack -> getbackgroundbyname(p_name);
+    
+    if (t_background != nil)
+    {
+        t_stack -> setbackground(t_background);
+        r_stack . object = t_stack;
+        r_stack . part_id = p_stack . part_id;
+    }
+}
+
+void MCInterfaceEvalCardOfStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, bool p_marked, Chunk_term p_ordinal_type, MCObjectPtr& r_card)
+{
+    MCCard *t_card;
+    
+    if (p_ordinal_type == CT_RECENT)
+        t_card = MCrecent->getrel(-1);
+    else
+    {
+        MCStack *t_stack;
+        t_stack = static_cast<MCStack *>(p_stack . object);
+        if (p_marked)
+            t_stack -> setmark();
+        t_card = t_stack -> getchild(p_ordinal_type, kMCEmptyString, CT_CARD);
+        t_stack -> clearmark();
+    }
+    
+    if (t_card != nil)
+    {
+        r_card . object = t_card;
+        r_card . part_id = t_card -> getid();
+        return;
+    }
+
+    ctxt . LegacyThrow(EE_CHUNK_NOCARD);
+}
+
+void MCInterfaceEvalThisCardOfStack(MCExecContext& ctxt, MCObjectPtr p_stack, MCObjectPtr& r_card)
+{
+    // if a target object has been evaluated, then this method should not be called.
+    // Since this is run-time information, instead we call the method but return the
+    // previously evaluated object.
+    if (p_stack . object -> gettype() == CT_CARD || p_stack . object -> gettype() == CT_GROUP)
+    {
+        r_card . object = p_stack . object;
+        r_card . part_id = p_stack . object -> getid();
+        return;
+    }
+    
+    MCInterfaceEvalCardOfStackByOrdinal(ctxt, p_stack, false, CT_THIS, r_card);
+}
+
+void MCInterfaceEvalCardOfStackById(MCExecContext& ctxt, MCObjectPtr p_stack, bool p_marked, uinteger_t p_id, MCObjectPtr& r_card)
+{
+    MCCard *t_card;
+    MCStack *t_stack;
+    t_stack = static_cast<MCStack *>(p_stack . object);
+    
+    if (p_marked)
+        t_stack -> setmark();
+    t_card = t_stack -> getchildbyid(p_id);
+    t_stack -> clearmark();
+    
+    if (t_card != nil)
+    {
+        r_card . object = t_card;
+        r_card . part_id = t_card -> getid();
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOCARD);
+}
+
+void MCInterfaceEvalCardOfStackByName(MCExecContext& ctxt, MCObjectPtr p_stack, bool p_marked, MCNameRef p_name, MCObjectPtr& r_card)
+{
+    if (MCStringIsEqualToCString(MCNameGetString(p_name), "window", kMCCompareExact))
+    {
+        MCInterfaceEvalThisCardOfStack(ctxt, p_stack, r_card);
+        return;
+    }
+    
+    MCCard *t_card;
+    MCStack *t_stack;
+    t_stack = static_cast<MCStack *>(p_stack . object);
+    
+    if (p_marked)
+        t_stack -> setmark();
+    t_card = t_stack -> getchildbyname(p_name);
+    t_stack -> clearmark();
+    
+    if (t_card != nil)
+    {
+        r_card . object = t_card;
+        r_card . part_id = t_card -> getid();
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOCARD);
+}
+
+void MCInterfaceEvalCardOfBackgroundByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack_with_background, bool p_marked, Chunk_term p_ordinal_type, MCObjectPtr& r_card)
+{
+    MCCard *t_card;
+    t_card = nil;
+    
+    if (p_ordinal_type == CT_RECENT)
+        t_card = MCrecent->getrel(-1);
+    else
+    {
+        MCStack *t_stack;
+        t_stack = static_cast<MCStack *>(p_stack_with_background . object);
+        
+        if (t_stack != nil)
+        {
+            MCObjectPtr t_objptr;
+            t_objptr . object = t_stack;
+            t_objptr . part_id = 0;
+            MCInterfaceEvalCardOfStackByOrdinal(ctxt, t_objptr, p_marked, p_ordinal_type, r_card);
+            t_stack -> clearbackground();
+            return;
+        }
+    }
+    
+    if (t_card != nil)
+    {
+        r_card . object = t_card;
+        r_card . part_id = t_card -> getid();
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOCARD);
+}
+
+void MCInterfaceEvalCardOfBackgroundById(MCExecContext& ctxt, MCObjectPtr p_stack_with_background, bool p_marked, uinteger_t p_id, MCObjectPtr& r_card)
+{
+    MCStack *t_stack;
+    t_stack = static_cast<MCStack *>(p_stack_with_background . object);
+    
+    if (t_stack != nil)
+    {
+        MCObjectPtr t_objptr;
+        t_objptr . object = t_stack;
+        t_objptr . part_id = 0;
+        MCInterfaceEvalCardOfStackById(ctxt, t_objptr, p_marked, p_id, r_card);
+        t_stack -> clearbackground();
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOCARD);
+}
+
+void MCInterfaceEvalCardOfBackgroundByName(MCExecContext& ctxt, MCObjectPtr p_stack_with_background, bool p_marked, MCNameRef p_name, MCObjectPtr& r_card)
+{
+    MCStack *t_stack;
+    t_stack = static_cast<MCStack *>(p_stack_with_background . object);
+    
+    if (t_stack != nil)
+    {
+        MCObjectPtr t_objptr;
+        t_objptr . object = t_stack;
+        t_objptr . part_id = 0;
+        MCInterfaceEvalCardOfStackByName(ctxt, t_objptr, p_marked, p_name, r_card);
+        t_stack -> clearbackground();
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOCARD);
+}
+
+void MCInterfaceEvalGroupOfCardByOrdinal(MCExecContext& ctxt, MCObjectPtr p_card, Chunk_term p_parent_type, Chunk_term p_ordinal_type, MCObjectPtr& r_group)
+{
+    MCControl *t_group;
+    t_group = static_cast<MCCard *>(p_card . object) -> getchildbyordinal(p_ordinal_type, CT_GROUP, p_parent_type);
+    
+    if (t_group != nil)
+    {
+        r_group . object = t_group;
+        r_group . part_id = p_card . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOBACKGROUND);
+}
+
+void MCInterfaceEvalGroupOfCardById(MCExecContext& ctxt, MCObjectPtr p_card, Chunk_term p_parent_type, uinteger_t p_id, MCObjectPtr& r_group)
+{
+    MCControl *t_group;
+    t_group = static_cast<MCCard *>(p_card . object) -> getchildbyid(p_id, CT_GROUP, p_parent_type);
+    
+    if (t_group != nil)
+    {
+        r_group . object = t_group;
+        r_group . part_id = p_card . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOBACKGROUND);
+}
+
+
+void MCInterfaceEvalGroupOfCardByName(MCExecContext& ctxt, MCObjectPtr p_card, Chunk_term p_parent_type, MCNameRef p_name, MCObjectPtr& r_group)
+{
+    MCControl *t_group;
+    t_group = static_cast<MCCard *>(p_card . object) -> getchildbyname(p_name, CT_GROUP, p_parent_type);
+    
+    if (t_group != nil)
+    {
+        r_group . object = t_group;
+        r_group . part_id = p_card . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOBACKGROUND);
+}
+
+void MCInterfaceEvalGroupOfCardOrStackById(MCExecContext& ctxt, MCObjectPtr p_card, Chunk_term p_parent_type, uinteger_t p_id, MCObjectPtr& r_group)
+{
+    MCControl *t_group;
+    uinteger_t t_part_id;
+    MCCard *t_card;
+    t_card = static_cast<MCCard *>(p_card . object);
+    
+    t_group = t_card -> getchildbyid(p_id, CT_GROUP, p_parent_type);
+    
+    if (t_group == nil)
+    {
+        MCStack *t_stack;
+        t_stack = t_card -> getstack();
+        if (t_stack != nil)
+            t_group = t_stack -> getcontrolid(CT_GROUP, p_id, true);
+        
+        t_part_id = 0;
+    }
+    else
+        t_part_id = t_card -> getid();
+    
+    
+    if (t_group != nil)
+    {
+        r_group . object = t_group;
+        r_group . part_id = t_part_id;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOBACKGROUND);
+}
+
+void MCInterfaceEvalGroupOfGroupByOrdinal(MCExecContext& ctxt, MCObjectPtr p_group, Chunk_term p_ordinal_type, MCObjectPtr& r_group)
+{
+    MCControl *t_group;
+    t_group = static_cast<MCGroup *>(p_group . object) -> getchildbyordinal(p_ordinal_type, CT_GROUP);
+    
+    if (t_group != nil)
+    {
+        r_group . object = t_group;
+        r_group . part_id = p_group . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOBACKGROUND);
+}
+
+void MCInterfaceEvalGroupOfGroupById(MCExecContext& ctxt, MCObjectPtr p_group, uinteger_t p_id, MCObjectPtr& r_group)
+{
+    MCControl *t_group;
+    t_group = static_cast<MCGroup *>(p_group . object) -> getchildbyid(p_id, CT_GROUP);
+    
+    if (t_group != nil)
+    {
+        r_group . object = t_group;
+        r_group . part_id = p_group . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOBACKGROUND);
+}
+
+void MCInterfaceEvalGroupOfGroupByName(MCExecContext& ctxt, MCObjectPtr p_group, MCNameRef p_name, MCObjectPtr& r_group)
+{
+    MCControl *t_group;
+    t_group = static_cast<MCGroup *>(p_group.  object) -> getchildbyname(p_name, CT_GROUP);
+    
+    if (t_group != nil)
+    {
+        r_group . object = t_group;
+        r_group . part_id = p_group . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOBACKGROUND);
+}
+
+void MCInterfaceEvalMenubarAsObject(MCExecContext& ctxt, MCObjectPtr& r_menubar)
+{
+    if (MCmenubar != nil)
+    {
+        r_menubar . object = MCmenubar;
+        r_menubar . part_id = 0;
+        return;
+    }
+    
+    if (MCdefaultmenubar != nil)
+    {
+        r_menubar . object = MCdefaultmenubar;
+        r_menubar . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOBACKGROUND);
+}
+
+void MCInterfaceEvalObjectOfGroupByOrdinal(MCExecContext& ctxt, MCObjectPtr p_group, Chunk_term p_object_type, Chunk_term p_ordinal_type, MCObjectPtr& r_object)
+{
+    MCObject *t_object;
+    t_object = static_cast<MCGroup *>(p_group.  object) -> getchildbyordinal(p_ordinal_type, p_object_type);
+    
+    if (t_object != nil)
+    {
+        r_object . object = t_object;
+        r_object . part_id = p_group . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
+}
+
+void MCInterfaceEvalObjectOfGroupById(MCExecContext& ctxt, MCObjectPtr p_group, Chunk_term p_object_type, uinteger_t p_id, MCObjectPtr& r_object)
+{
+    MCObject *t_object;
+    t_object = static_cast<MCGroup *>(p_group.  object) -> getchildbyid(p_id, p_object_type);
+    
+    if (t_object != nil)
+    {
+        r_object . object = t_object;
+        r_object . part_id = p_group . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
+}
+
+void MCInterfaceEvalObjectOfGroupByName(MCExecContext& ctxt, MCObjectPtr p_group, Chunk_term p_object_type, MCNameRef p_name, MCObjectPtr& r_object)
+{
+    MCObject *t_object;
+    t_object = static_cast<MCGroup *>(p_group.  object) -> getchildbyname(p_name, p_object_type);
+    
+    if (t_object != nil)
+    {
+        r_object . object = t_object;
+        r_object . part_id = p_group . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
+}
+
+void MCInterfaceEvalObjectOfCardByOrdinal(MCExecContext& ctxt, MCObjectPtr p_card, Chunk_term p_object_type, Chunk_term p_parent_type, Chunk_term p_ordinal_type, MCObjectPtr& r_object)
+{
+    MCObject *t_object;
+    t_object = static_cast<MCCard *>(p_card . object) -> getchildbyordinal(p_ordinal_type, p_object_type, p_parent_type);
+    
+    if (t_object != nil)
+    {
+        r_object . object = t_object;
+        r_object . part_id = p_card . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
+}
+
+void MCInterfaceEvalObjectOfCardById(MCExecContext& ctxt, MCObjectPtr p_card, Chunk_term p_object_type, Chunk_term p_parent_type, uinteger_t p_id, MCObjectPtr& r_object)
+{
+    MCObject *t_object;
+    t_object = static_cast<MCCard *>(p_card . object) -> getchildbyid(p_id, p_object_type, p_parent_type);
+    
+    if (t_object != nil)
+    {
+        r_object . object = t_object;
+        r_object . part_id = p_card . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
+}
+
+void MCInterfaceEvalObjectOfCardOrStackById(MCExecContext& ctxt, MCObjectPtr p_card, Chunk_term p_object_type, Chunk_term p_parent_type, uinteger_t p_id, MCObjectPtr& r_object)
+{
+    MCObject *t_object;
+    uinteger_t t_part_id;
+    MCCard *t_card;
+    t_card = static_cast<MCCard *>(p_card . object);
+    
+    t_object = t_card -> getchildbyid(p_id, p_object_type, p_parent_type);
+    
+    if (t_object == nil)
+    {
+        MCStack *t_stack;
+        t_stack = t_card -> getstack();
+        if (t_stack != nil)
+            t_object = t_stack -> getcontrolid(p_object_type, p_id, true);
+        
+        t_part_id = 0;
+    }
+    else
+        t_part_id = t_card -> getid();
+    
+    
+    if (t_object != nil)
+    {
+        r_object . object = t_object;
+        r_object . part_id = t_part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
+}
+
+void MCInterfaceEvalObjectOfCardByName(MCExecContext& ctxt, MCObjectPtr p_card, Chunk_term p_object_type, Chunk_term p_parent_type, MCNameRef p_name, MCObjectPtr& r_object)
+{
+    MCObject *t_object;
+    t_object = static_cast<MCCard *>(p_card . object) -> getchildbyname(p_name, p_object_type, p_parent_type);
+    
+    if (t_object != nil)
+    {
+        r_object . object = t_object;
+        r_object . part_id = p_card . part_id;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
+}
+
+// The following are used by MCGo, and do not throw any errors. If the incoming object pointer is nil, they return nil.
+
+void MCInterfaceEvalDefaultStackAsOptionalObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    ctxt . SetTheResultToEmpty();
+    r_object . object = MCdefaultstackptr;
+    r_object . part_id = 0;
+}
+
+void MCInterfaceEvalHomeStackAsOptionalObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    ctxt . SetTheResultToEmpty();
+    r_object . object = MCdispatcher -> gethome();
+    r_object . part_id = 0;
+}
+
+void MCInterfaceEvalHelpStackAsOptionalObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    ctxt . SetTheResultToEmpty();
+    r_object . object = MCdefaultstackptr->findstackname(MCM_help);
+    r_object . part_id = 0;
+}
+
+void MCInterfaceEvalStackOfOptionalStackByName(MCExecContext& ctxt, MCNameRef p_name, MCObjectPtr p_parent, MCObjectPtr& r_stack)
+{
+    MCStack *t_stack;
+    t_stack = nil;
+    
+    if (p_parent . object != nil)
+    {
+        t_stack = static_cast<MCStack *>(p_parent . object) -> findstackname(p_name);
+    }
+    
+    r_stack . object = t_stack;
+    r_stack . part_id = p_parent . part_id;
+}
+
+void MCInterfaceEvalStackOfOptionalStackById(MCExecContext& ctxt, MCObjectPtr p_parent, uinteger_t p_id, MCObjectPtr& r_stack)
+{
+    MCStack *t_stack;
+    t_stack = nil;
+    
+    if (p_parent . object != nil)
+        t_stack = static_cast<MCStack *>(p_parent . object) -> findstackid(p_id);
+    
+    r_stack . object = t_stack;
+    r_stack . part_id = p_parent . part_id;
+}
+
+void MCInterfaceEvalOptionalStackOrCardByValue(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_object)
+{
+    ctxt . SetTheResultToEmpty();
+    
+    MCStack *t_stack;
+    bool t_binary_fail;
+    
+    t_stack = MCInterfaceTryToEvalBinaryStack((MCStringRef)p_value, t_binary_fail);
+    
+    if (t_binary_fail)
+    {
+        ctxt . SetTheResultToStaticCString("can't build stack from string");
+        r_object . object = nil;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    if (t_stack == nil)
+    {
+        integer_t t_id;
+        if (MCU_stoi4((MCStringRef)p_value, t_id))
+            t_stack = MCdefaultstackptr -> findstackid(t_id);
+    }
+    
+    if (t_stack == nil)
+        t_stack = MCdefaultstackptr -> findstackname((MCNameRef)p_value);
+    
+    if (t_stack != nil)
+    {
+        r_object . object = t_stack;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    bool t_parse_error;
+    
+    if (!MCEngineEvalValueAsObject(p_value, false, r_object, t_parse_error))
+    {
+        if (t_parse_error)
+            ctxt . SetTheResultToStaticCString("no such card");
+        r_object . object = nil;
+        r_object . part_id = 0;
+    }
+}
+
+void MCInterfaceEvalSubstackOfOptionalStackByName(MCExecContext& ctxt, MCObjectPtr p_parent, MCNameRef p_name, MCObjectPtr& r_stack)
+{
+    MCStack *t_stack;
+    t_stack = nil;
+    
+    if (p_parent . object != nil)
+        t_stack = static_cast<MCStack *>(p_parent . object) -> findsubstackname(p_name);
+
+    r_stack . object = t_stack;
+    r_stack . part_id = p_parent . part_id;
+
+}
+
+void MCInterfaceEvalSubstackOfOptionalStackById(MCExecContext& ctxt, MCObjectPtr p_parent, uinteger_t p_id, MCObjectPtr& r_stack)
+{
+    MCStack *t_stack;
+    t_stack = nil;
+    
+    if (p_parent . object != nil)
+        t_stack = static_cast<MCStack *>(p_parent . object) -> findsubstackid(p_id);
+    
+    r_stack . object = t_stack;
+    r_stack . part_id = p_parent . part_id;
+    return;
+}
+
+void MCInterfaceEvalOptionalStackWithBackgroundByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, Chunk_term p_ordinal_type, MCObjectPtr& r_stack)
+{
+    MCStack *t_stack;
+    t_stack = nil;
+    
+    if (p_stack . object != nil)
+    {
+        MCGroup *t_background;
+        
+        t_stack = static_cast<MCStack *>(p_stack . object);
+        t_background = t_stack -> getbackgroundbyordinal(p_ordinal_type);
+        t_stack -> setbackground(t_background);
+    }
+    
+    r_stack . object = t_stack;
+    r_stack . part_id = p_stack . part_id;
+}
+
+void MCInterfaceEvalOptionalStackWithBackgroundById(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_id, MCObjectPtr& r_stack)
+{
+    MCStack *t_stack;
+    t_stack = nil;
+    
+    if (p_stack . object != nil)
+    {
+        MCGroup *t_background;
+        
+        t_stack = static_cast<MCStack *>(p_stack . object);
+        t_background =  t_stack -> getbackgroundbyid(p_id);
+        t_stack -> setbackground(t_background);
+    }
+    
+    r_stack . object = t_stack;
+    r_stack . part_id = p_stack . part_id;
+}
+
+void MCInterfaceEvalOptionalStackWithBackgroundByName(MCExecContext& ctxt, MCObjectPtr p_stack, MCNameRef p_name, MCObjectPtr& r_stack)
+{
+    MCStack *t_stack;
+    t_stack = nil;
+    
+    if (p_stack . object != nil)
+    {
+        MCGroup *t_background;
+        
+        t_stack = static_cast<MCStack *>(p_stack . object);
+        t_background = t_stack -> getbackgroundbyname(p_name);
+    }
+        
+    r_stack . object = t_stack;
+    r_stack . part_id = p_stack . part_id;
+}
+
+void MCInterfaceEvalCardOfOptionalStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, bool p_marked, Chunk_term p_ordinal_type, MCObjectPtr& r_card)
+{
+    MCCard *t_card;
+    t_card = nil;
+    
+    if (p_stack . object != nil)
+    {
+        if (p_ordinal_type == CT_RECENT)
+            t_card = MCrecent->getrel(-1);
+        else
+        {
+            MCStack *t_stack;
+            t_stack = static_cast<MCStack *>(p_stack . object);
+            if (p_marked)
+                t_stack -> setmark();
+            t_card = t_stack -> getchild(CT_ID, kMCEmptyString, p_ordinal_type);
+            t_stack -> clearmark();
+            t_stack -> clearbackground();
+        }
+    }
+    
+    r_card . object = t_card;
+    r_card . part_id = t_card != nil ? t_card -> getid() : p_stack . part_id;
+}
+
+void MCInterfaceEvalThisCardOfOptionalStack(MCExecContext& ctxt, MCObjectPtr p_stack, MCObjectPtr& r_card)
+{
+    MCInterfaceEvalCardOfOptionalStackByOrdinal(ctxt, p_stack, false, CT_THIS, r_card);
+}
+
+void MCInterfaceEvalCardOfOptionalStackById(MCExecContext& ctxt, MCObjectPtr p_stack, bool p_marked, uinteger_t p_id, MCObjectPtr& r_card)
+{
+    MCCard *t_card;
+    t_card = nil;
+    
+    if (p_stack . object != nil)
+    {
+        MCStack *t_stack;
+        t_stack = static_cast<MCStack *>(p_stack . object);
+        
+        if (p_marked)
+            t_stack -> setmark();
+        t_card = t_stack -> getchildbyid(p_id);
+        t_stack -> clearmark();
+        t_stack -> clearbackground();
+    }
+    
+    r_card . object = t_card;
+    r_card . part_id = t_card != nil ? t_card -> getid() : p_stack . part_id;
+}
+
+void MCInterfaceEvalCardOfOptionalStackByName(MCExecContext& ctxt, MCObjectPtr p_stack, bool p_marked, MCNameRef p_name, MCObjectPtr& r_card)
+{
+    if (MCStringIsEqualToCString(MCNameGetString(p_name), "window", kMCCompareExact))
+    {
+        MCInterfaceEvalThisCardOfOptionalStack(ctxt, p_stack, r_card);
+        return;
+    }
+    
+    MCCard *t_card;
+    t_card = nil;
+    
+    if (p_stack . object != nil)
+    {
+        MCStack *t_stack;
+        t_stack = static_cast<MCStack *>(p_stack . object);
+        
+        if (p_marked)
+            t_stack -> setmark();
+        r_card . object = t_stack -> getchildbyname(p_name);
+        t_stack -> clearmark();
+        t_stack -> clearbackground();
+    }
+
+    r_card . object = t_card;
+    r_card . part_id = t_card != nil ? t_card -> getid() : p_stack . part_id;
+}
+
+void MCInterfaceMarkField(MCField *fptr, int4 &start, int4 &end, Functions p_function, Boolean wholechunk)
+{
+// MW-2012-12-13: [[ Bug 10592 ]] If wholechunk is False then we don't expand
+//   line chunks to include the CR at the end.
+
+	Boolean wholeline = True;
+	Boolean wholeword = True;
+	switch (p_function)
+	{
+        case F_CLICK_CHAR_CHUNK:
+            wholeword = False;
+        case F_CLICK_CHUNK:
+        case F_CLICK_TEXT:
+            wholeline = False;
+        case F_CLICK_LINE:
+            if (!fptr->locmark(wholeline, wholeword, True, True, wholechunk, start, end))
+                start = end = 0;
+            break;
+        case F_FOUND_CHUNK:
+        case F_FOUND_TEXT:
+            wholeline = False;
+        case F_FOUND_LINE:
+            if (!fptr->foundmark(wholeline, wholechunk, start, end))
+                start = end = 0;
+            break;
+        case F_SELECTED_CHUNK:
+        case F_SELECTED_TEXT:
+            wholeline = False;
+        case F_SELECTED_LINE:
+            if (!fptr->selectedmark(wholeline, start, end, False, wholechunk))
+                start = end = 0;
+            break;
+        case F_MOUSE_CHAR_CHUNK:
+            wholeword = False;
+        case F_MOUSE_CHUNK:
+        case F_MOUSE_TEXT:
+            wholeline = False;
+        case F_MOUSE_LINE:
+            if (!fptr->locmark(wholeline, wholeword, False, True, wholechunk, start, end))
+                start = end = 0;
+            break;
+        default:
+            start = 0;
+            end = fptr->getpgsize(NULL);
+            break;
+	}
+}
+/*
+void MCInterfaceMarkTextOfField(MCField *fptr, uinteger_t part_id, integer_t &r_start, integer_t &r_end, bool p_whole_chunk, bool p_force, bool p_keep_text)
+{
+	if (desttype == DT_FUNCTION)
+	{
+		// MW-2012-09-20: [[ Bug 10229 ]] If 'keeptext' is true, make sure we leave with
+		//   the ep containing the field's content between start and end.
+		// MW-2012-12-13: [[ Bug 10592 ]] Pass through wholechunk to ensure we only get the CR
+		//   included when we need it.
+		fmark(fptr, r_start, r_end, p_whole_chunk);
+		if (cline != NULL || item != NULL || word != NULL || token != NULL || character != NULL)
+		{
+			fptr->returntext(ep, start, end);
+			int4 si, ei;
+			if (mark(ep, si, ei, force, wholechunk, false) != ES_NORMAL)
+			{
+				MCeerror->add(EE_CHUNK_BADTEXT, line, pos);
+				return ES_ERROR;
+			}
+			
+			end = start + ei;
+			start += si;
+			
+			if (character != nil)
+				if (markcharactersinfield(parid, ep, start, end, fptr) != ES_NORMAL)
+				{
+					MCeerror->add(EE_CHUNK_BADTEXT, line, pos);
+					return ES_ERROR;
+				}
+			
+		}
+		else if (keeptext)
+			fptr -> returntext(ep, start, end);
+	}
+	else
+	{
+		// We can make do with ASCII content if the delimiters (if needed) are
+		// ASCII chars.
+		bool t_ascii_only;
+		t_ascii_only = (cline == nil || (unsigned)ep . getlinedel() <= 127) && (item == nil || (unsigned)ep . getitemdel() <= 127);
+		
+		// Fetch the nativized text - the method returns true if it had to
+		// coecre unicode.
+		bool t_has_unicode;
+		t_has_unicode = fptr->nativizetext(parid, ep, t_ascii_only);
+		
+		// Perform the 'mark' operation.
+		MCString oldstring = ep.getsvalue();
+		if (mark(ep, start, end, force, wholechunk, !t_has_unicode) != ES_NORMAL)
+		{
+			MCeerror->add(EE_CHUNK_BADTEXT, line, pos);
+			return ES_ERROR;
+		}
+		
+		// If the ep got changed, mutate the field appropriately.
+		if (ep.getsvalue() != oldstring)
+		{
+			MCExecPoint ep2(ep);
+			fptr->nativizetext(parid, ep2, t_ascii_only);
+			int4 si = 0;
+			int4 sei = ep.getsvalue().getlength() - 1;
+			int4 oei = ep2.getsvalue().getlength() - 1;
+			const char *sref = ep.getsvalue().getstring();
+			const char *oref = ep2.getsvalue().getstring();
+			while (si <= oei && sref[si] == oref[si])
+				si++;
+			while (oei >= si && sref[sei] == oref[oei])
+			{
+				sei--;
+				oei--;
+			}
+			sei++;
+			MCString newstring;
+			newstring.set(&sref[si], sei - si);
+			fptr->settextindex(parid, si, si, newstring, False);
+		}
+		
+		if (t_has_unicode && character != nil)
+			if (markcharactersinfield(parid, ep, start, end, fptr) != ES_NORMAL)
+			{
+				MCeerror->add(EE_CHUNK_BADTEXT, line, pos);
+				return ES_ERROR;
+			}
+		
+		// MW-2012-01-29: [[ Bug ]] If keeptext is true make sure we substring, remembering
+		//   to refetch the text if unicode.
+		if (keeptext)
+		{
+			// MW-2012-02-21: [[ FieldExport ]] If the buffer doesn't have native text in it
+			//   (due to unicode being involved) then fetch the appropriate range as native.
+			//   Otherwise, just trim the buffer.
+			if (t_has_unicode)
+				fptr -> exportastext(parid, ep, start, end, false);
+			else
+				ep . substring(start, end);
+		}
+	}
+	return ES_NORMAL;
+}
+*/
+
+void MCInterfaceEvalFieldTextChunkByRange(MCExecContext& ctxt, MCObjectPtr p_field, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, bool p_function, MCStringRef& r_result)
+{
+    int4 t_first;
+    int4 t_chunk_count;
+    //MCStringsGetExtentsByRange(ctxt, p_chunk_type, p_first, p_last, p_source, t_first, t_chunk_count);
+    
+    //MCStringsGetTextChunk(ctxt, p_source, p_chunk_type, t_first, t_chunk_count, r_result);
+}
+
+void MCInterfaceEvalFieldTextChunkByExpression(MCExecContext& ctxt, MCObjectPtr p_field, Chunk_term p_chunk_type, integer_t p_first, bool p_function, MCStringRef& r_result)
+{
+    int4 t_first;
+    int4 t_chunk_count;
+    // MCStringsGetExtentsByExpression(ctxt, p_chunk_type, p_first, p_source, t_first, t_chunk_count);
+    
+    //MCStringsGetTextChunk(ctxt, p_source, p_chunk_type, t_first, t_chunk_count, r_result);
+}
+
+void MCInterfacveEvalFieldTextChunkByOrdinal(MCExecContext& ctxt, MCObjectPtr p_field, Chunk_term p_chunk_type, Chunk_term p_ordinal_type, bool p_function, MCStringRef& r_result)
+{
+    int4 t_first;
+    int4 t_chunk_count;
+    // MCStringsGetExtentsByOrdinal(ctxt, p_chunk_type, t_first, t_chunk_count, p_ordinal_type, p_source);
+    
+    // MCStringsGetTextChunk(ctxt, p_source, p_chunk_type, t_first, t_chunk_count, r_result);
+}
+
+void MCInterfaceEvalFieldChunk(MCExecContext& ctxt, MCObjectPtr p_field, Functions p_function, MCStringRef& r_text)
+{
+    integer_t t_start, t_end;
+    MCField *t_field = static_cast<MCField *>(p_field . object);
+    MCInterfaceMarkField(t_field, t_start, t_end, p_function, False);
+    t_field -> returntext(t_start, t_end, r_text);
+}
+
+void MCInterfaceEvalTextOfContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCStringRef &r_text)
+{
+    switch (p_container . object -> gettype())
+    {
+        case CT_BUTTON:
+        case CT_IMAGE:
+        case CT_AUDIO_CLIP:
+        case CT_VIDEO_CLIP:
+            p_container . object -> getstringprop(ctxt, p_container . part_id, P_TEXT, False, r_text);
+            return;
+        default:
+            ctxt . LegacyThrow(EE_CHUNK_OBJECTNOTCONTAINER);
+    }
 }

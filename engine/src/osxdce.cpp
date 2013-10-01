@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxprefix.h"
+#include "osxprefix-legacy.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -506,7 +507,7 @@ uint1 MCScreenDC::fontnametocharset(MCStringRef p_fontname)
 {
 	// MW-2006-06-09: [[ Bug 3670 ]] Fixed length buffer can cause a crash
 	char fname[256];
-	strncpy(fname, (const char *)MCStringGetNativeCharPtr(p_fontname), 255);
+	strncpy(fname, (const char *)MCStringGetCString(p_fontname), 255);
 	fname[255] = '\0';
 	
 	char *sptr = fname;
@@ -545,10 +546,8 @@ void MCScreenDC::openIME()
 	if (tsmdocument)
 		return;
 	InterfaceTypeList supportedTypes;
-	if (MCS_imeisunicode())
-		supportedTypes[0] = kUnicodeDocument;
-	else
-		supportedTypes[0] = kTextService;
+    supportedTypes[0] = kUnicodeDocument;
+    
 	NewTSMDocument(1, supportedTypes, &tsmdocument, NULL);
 }
 

@@ -95,7 +95,7 @@ PixMapHandle GetPortPixMap(CGrafPtr port)
 #define LoWord LOWORD
 #endif
 
-static OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec);
+static OSErr MCS_path2FSSpec(MCStringRef fname, FSSpec *fspec);
 #endif
 
 #define QTMFORMATS 6
@@ -147,7 +147,7 @@ static Boolean IsQTVRInstalled(void);
 extern bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP& r_bitmap, void*& r_bits);
 #endif
 
-extern bool MCFiltersBase64Encode(MCStringRef p_src, MCStringRef& r_dst);
+extern bool MCFiltersBase64Encode(MCDataRef p_src, MCStringRef& r_dst);
 
 //-----------------------------------------------------------------------------
 // Control Implementation
@@ -185,11 +185,12 @@ MCPropertyInfo MCPlayer::kProperties[] =
 	DEFINE_RO_OBJ_PROPERTY(P_NODES, String, MCPlayer, Nodes)
 	DEFINE_RO_OBJ_PROPERTY(P_HOT_SPOTS, String, MCPlayer, HotSpots)
 	DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_CONSTRAINTS, MultimediaQTVRConstraints, MCPlayer, Constraints)
+    DEFINE_RO_OBJ_LIST_PROPERTY(P_ENABLED_TRACKS, LinesOfUInt, MCPlayer, EnabledTracks)
 };
 
 MCObjectPropertyTable MCPlayer::kPropertyTable =
 {
-	&MCObject::kPropertyTable,
+	&MCControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
 };
@@ -202,7 +203,7 @@ MCPlayer::MCPlayer()
 	flags |= F_TRAVERSAL_ON;
 	nextplayer = NULL;
 	rect.width = rect.height = 128;
-	filename = NULL;
+	filename = MCValueRetain(kMCEmptyString);
 	istmpfile = False;
 	scale = 1.0;
 	rate = 1.0;
@@ -241,7 +242,7 @@ MCPlayer::MCPlayer()
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 {
 	nextplayer = NULL;
-	filename = strclone(sref.filename);
+	filename = MCValueRetain(sref.filename);
 	istmpfile = False;
 	scale = 1.0;
 	rate = sref.rate;
@@ -249,7 +250,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	starttime = sref.starttime;
 	endtime = sref.endtime;
 	disposable = istmpfile = False;
-	MCValueAssign(userCallbackStr, sref.userCallbackStr);
+	userCallbackStr = MCValueRetain(sref.userCallbackStr);
 	formattedwidth = formattedheight = 0;
 	loudness = sref.loudness;
 
@@ -323,8 +324,9 @@ MCPlayer::~MCPlayer()
 		delete m_player ;
 #endif
 
-	delete filename;
+	MCValueRelease(filename);
 	MCValueRelease(userCallbackStr);
+
 }
 
 Chunk_term MCPlayer::gettype() const
@@ -346,7 +348,7 @@ void MCPlayer::open()
 {
 	MCControl::open();
 	if (flags & F_ALWAYS_BUFFER && !isbuffering())
-		prepare(MCnullstring);
+		prepare(kMCEmptyString);
 }
 
 void MCPlayer::close()
@@ -1180,7 +1182,7 @@ IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			return stat;
 		if ((stat = MCControl::save(stream, p_part, p_force_ext)) != IO_NORMAL)
 			return stat;
-		if ((stat = IO_write_string(filename, stream)) != IO_NORMAL)
+		if ((stat = IO_write_stringref(filename, stream, false)) != IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_uint4(starttime, stream)) != IO_NORMAL)
 			return stat;
@@ -1201,7 +1203,7 @@ IO_stat MCPlayer::load(IO_handle stream, const char *version)
 
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
 		return stat;
-	if ((stat = IO_read_string(filename, stream)) != IO_NORMAL)
+	if ((stat = IO_read_stringref(filename, stream, false)) != IO_NORMAL)
 		return stat;
 	if ((stat = IO_read_uint4(&starttime, stream)) != IO_NORMAL)
 		return stat;
@@ -1301,11 +1303,8 @@ void MCPlayer::freetmp()
 {
 	if (istmpfile)
 	{
-		MCAutoStringRef t_filename;
-		/* UNCHECKED */ MCStringCreateWithCString(filename, &t_filename);
-		MCS_unlink(*t_filename);
-		delete filename;
-		filename = NULL;
+		MCS_unlink(filename);
+		MCValueAssign(filename, kMCEmptyString);
 	}
 }
 
@@ -1491,11 +1490,11 @@ void MCPlayer::showcontroller(Boolean show)
 #endif
 }
 
-Boolean MCPlayer::prepare(const char *options)
+Boolean MCPlayer::prepare(MCStringRef options)
 {
 	Boolean ok = False;
 
-	if (state & CS_PREPARED || filename == NULL)
+	if (state & CS_PREPARED || MCStringIsEmpty(filename))
 		return True;
 	
 	if (!opened)
@@ -1543,7 +1542,7 @@ Boolean MCPlayer::prepare(const char *options)
 	return ok;
 }
 
-Boolean MCPlayer::playstart(const char *options)
+Boolean MCPlayer::playstart(MCStringRef options)
 {
 	if (!prepare(options))
 		return False;
@@ -1672,11 +1671,11 @@ Boolean MCPlayer::playstop()
 }
 
 
-void MCPlayer::setfilename(const char *vcname,
-                           char *fname, Boolean istmp)
+void MCPlayer::setfilename(MCStringRef vcname,
+                           MCStringRef fname, Boolean istmp)
 {
-	setname_cstring(vcname);
-	filename = fname;
+	setname_cstring(MCStringGetCString(vcname));
+	filename = MCValueRetain(fname);
 	istmpfile = istmp;
 	disposable = True;
 }
@@ -1783,18 +1782,18 @@ void MCPlayer::getenabledtracks(MCExecPoint &ep)
 #endif
 }
 
-Boolean MCPlayer::setenabledtracks(const MCString &s)
+Boolean MCPlayer::setenabledtracks(MCStringRef s)
 {
 	if (getstate(CS_PREPARED))
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED)
-			return qt_setenabledtracks(s);
+			return qt_setenabledtracks(MCStringGetCString(s));
 #ifdef TARGET_PLATFORM_WINDOWS
 		else
-			return avi_setenabledtracks(s);
+			return avi_setenabledtracks(MCStringGetCString(s));
 #endif
 #elif defined(X11)
-		return x11_setenabledtracks(s);
+		return x11_setenabledtracks(MCStringGetCString(s));
 #else
 		0 == 0;
 #endif
@@ -1948,7 +1947,7 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 
 #ifdef FEATURE_QUICKTIME
 	if (!(state & CS_CLOSING))
-		prepare(MCnullstring);
+		prepare(kMCEmptyString);
 
 	if (qtstate == QT_INITTED)
 		qt_draw(dc, dirty);
@@ -2641,15 +2640,19 @@ Boolean MCPlayer::qt_prepare(void)
 	// MW-2010-06-02: [[ Bug 8773 ]] Make sure we pass 'https' urls through to QT's
 	//   URL data handler.
 	theMovie = NULL;
-	if (strnequal(filename, "https:", 6) || strnequal(filename, "http:", 5) || strnequal(filename, "ftp:", 4) || strnequal(filename, "file:", 5) || strnequal(filename, "rtsp:", 5))
+	if (MCStringIsEqualToCString(filename, "https:", kMCCompareExact) ||
+		MCStringIsEqualToCString(filename, "http:", kMCCompareExact) ||
+		MCStringIsEqualToCString(filename, "ftp:", kMCCompareExact) ||
+		MCStringIsEqualToCString(filename, "file:", kMCCompareExact) ||
+		MCStringIsEqualToCString(filename, "rtsp:", kMCCompareExact))
 	{
-		Size mySize = (Size)strlen(filename) + 1;
+		Size mySize = (Size)MCStringGetLength(filename) + 1;
 		if (mySize)
 		{
 			Handle myHandle = NewHandleClear(mySize);
 			if (myHandle != NULL)
 			{
-				BlockMove(filename, *myHandle, mySize);
+				BlockMove(MCStringGetCString(filename), *myHandle, mySize);
 				NewMovieFromDataRef((Movie *)&theMovie, newMovieActive, NULL, myHandle, URLDataHandlerSubType);
 				DisposeHandle(myHandle);
 			}
@@ -2660,10 +2663,9 @@ Boolean MCPlayer::qt_prepare(void)
 #if defined(TARGET_PLATFORM_MACOS_X)
 		// OK-2009-01-09: [[Bug 1161]] - File resolving code standardized between image and player
         MCAutoStringRef t_filename_str;
-        /* UNCHECKED */ MCStringCreateWithCString(getstack() -> resolve_filename(filename), &t_filename_str);
+        /* UNCHECKED */ getstack() -> resolve_filename(filename, &t_filename_str);
 		
         MCAutoStringRef t_resolved_filename_str;
-		
 		CFStringRef t_cf_filename;
 		t_cf_filename = NULL;
 		if (MCS_resolvepath(*t_filename_str, &t_resolved_filename_str))
@@ -2689,11 +2691,11 @@ Boolean MCPlayer::qt_prepare(void)
 
 #elif defined(_WINDOWS_DESKTOP)
 		// OK-2009-01-09: [[Bug 1161]] - File resolving code standardized between image and player
-		char *t_windows_filename;
-		t_windows_filename = getstack() -> resolve_filename(filename);
+		MCAutoStringRef t_windows_filename;
+		getstack() -> resolve_filename(filename, &t_windows_filename);
 
 		FSSpec fspec;
-		MCS_path2FSSpec(t_windows_filename, &fspec);
+		MCS_path2FSSpec(*t_windows_filename, &fspec);
 		short refNum;
 		if (OpenMovieFile(&fspec, &refNum, fsRdPerm) != noErr)
 		{
@@ -2706,9 +2708,6 @@ Boolean MCPlayer::qt_prepare(void)
 		Boolean wasChanged;
 		NewMovieFromFile((Movie *)&theMovie, refNum, &mResID, mName, newMovieActive, &wasChanged);
 		CloseMovieFile(refNum);
-
-		if (t_windows_filename != NULL)
-			delete t_windows_filename;
 #else
 #error qt_prepare not implemented for this platform
 #endif
@@ -3043,6 +3042,16 @@ void MCPlayer::qt_playselection(Boolean play)
 	MCDoAction((MovieController)theMC, mcActionSetPlaySelection, (void *)play);
 }
 
+void MCPlayer::qt_enablekeys(Boolean enable)
+{
+	MCDoAction((MovieController)theMC, mcActionSetKeysEnabled, (void *)enable);
+}
+
+void MCPlayer::qt_setcontrollervisible()
+{
+    MCSetVisible((MovieController)theMC, getflag(F_VISIBLE) && getflag(F_SHOW_CONTROLLER));
+}
+
 Boolean MCPlayer::qt_ispaused(void)
 {
 	if (getstate(CS_PREPARED))
@@ -3151,6 +3160,25 @@ void MCPlayer::qt_getenabledtracks(MCExecPoint& ep)
 			first = false;
 		}
 	}
+}
+
+void MCPlayer::qt_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks)
+{
+    MCAutoArray<uinteger_t> t_tracks;
+    
+	uint2 trackcount = (uint2)GetMovieTrackCount((Movie)theMovie);
+	uint2 i;
+    
+	for (i = 1 ; i <= trackcount ; i++)
+	{
+		Track trak = GetMovieIndTrack((Movie)theMovie,i);
+		if (trak == nil)
+			break;
+		if (GetTrackEnabled(trak))
+			t_tracks . Push(GetTrackID(trak));
+	}
+    
+    t_tracks . Take(r_tracks, r_count);
 }
 
 Boolean MCPlayer::qt_setenabledtracks(const MCString& s)
@@ -3275,7 +3303,7 @@ OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
 				/* UNCHECKED */ MCStringAppendChar(*t_path, '/');
 
 			/* UNCHECKED */ MCStringAppend(*t_path, *t_filename);
-			MCU_path2native(*t_path, &t_native);
+			/* UNCHECKED */ MCS_pathtonative(*t_path, &t_native);
 			nativepath = strclone(MCStringGetCString(*t_native));
 		}
 	}
@@ -3285,13 +3313,6 @@ OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
 	OSErr err = NativePathNameToFSSpec(nativepath, fspec, 0);
 	delete nativepath;
 	return err;
-}
-
-OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec)
-{
-	MCAutoStringRef t_filename;
-	/* UNCHECKED */ MCStringCreateWithCString(fname, &t_filename);
-	return MCS_path2FSSpec(*t_filename, fspec);
 }
 
 #endif
@@ -3321,10 +3342,10 @@ Boolean MCPlayer::avi_prepare(void)
 	mciOpen.lpstrDeviceType = "AVIVideo";
 
 	// OK-2009-01-09: [[Bug 1161]] - File resolving code standardized between image and player
-	char *t_resolved_filename;
-	t_resolved_filename = getstack() -> resolve_filename(filename);
+	MCAutoStringRef t_resolved_filename;
+	getstack() -> resolve_filename(filename, &t_resolved_filename);
 
-	mciOpen.lpstrElementName = t_resolved_filename;
+	mciOpen.lpstrElementName = strclone(MCStringGetCString(*t_resolved_filename));
 	mciOpen.dwStyle = WS_CHILD;
 	mciOpen.hWndParent = (HWND)getstack()->getrealwindow();
 	//if lpstrDeviceType is NULL, then MCI_OPEN_TYPE should not be
@@ -3335,13 +3356,11 @@ Boolean MCPlayer::avi_prepare(void)
 	                   MCI_OPEN_ELEMENT | MCI_DGV_OPEN_PARENT | MCI_DGV_OPEN_WS,
 	                   (DWORD)(LPSTR)&mciOpen) != 0)
 	{
-		delete t_resolved_filename;
 		MCresult->sets("could not open video player");
 		return False;
 	}
 
 	deviceID = mciOpen.wDeviceID;
-	delete t_resolved_filename;
 
 	// Get movie dimensions (cropped from the frame buffer) that is
 	//stretched to fit the destination rectangle on the display
@@ -3683,6 +3702,11 @@ void MCPlayer::avi_getenabledtracks(MCExecPoint& ep)
 {
 }
 
+void MCPlayer::avi_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks)
+{
+    r_count = 0;
+}
+
 Boolean MCPlayer::avi_setenabledtracks(const MCString& s)
 {
 	return True;
@@ -3843,7 +3867,9 @@ static pascal void userMovieCallbacks(QTCallBack mcb, long index)
 //	int4 tdiff = callbacktable[index].calledAtTime - tplayer->getmoviecurtime();
 //	uint4 ztime = tplayer->gettimescale();
 //	if (MCU_abs(tdiff) < (ztime / 15) )
-		MCscreen->delaymessage(callbacktable[index].playerObj, callbacktable[index].msg, strclone(callbacktable[index].param), NULL);
+	MCAutoStringRef t_param;
+	/* UNCHECKED */ MCStringCreateWithCString(callbacktable[index].param, &t_param);
+		MCscreen->delaymessage(callbacktable[index].playerObj, callbacktable[index].msg, *t_param);
 }
 
 // This callback is triggered when the end of the movie is reached.
@@ -3956,10 +3982,11 @@ static pascal Boolean controllerMsgFilter(MovieController mc, short action, void
 	case mcActionShowMessageString:
 		if (params != NULL)
 		{
-			char *m = strclone(p2cstr((unsigned char *)params));
-			c2pstr((char *)params);
+			MCAutoStringRef t_string;
+			/* UNCHECKED */ MCStringCreateWithCString(p2cstr((unsigned char *)params), &t_string);
+			
 			MCParameter *p = new MCParameter;
-			p->setbuffer(m, strlen(m));
+			p->setvalueref_argument(*t_string);
 			MCscreen->addmessage(tplayer, MCM_qtdebugstr, MCS_time(), p);
 		}
 		break;
@@ -3985,10 +4012,8 @@ static pascal Boolean controllerMsgFilter(MovieController mc, short action, void
 static pascal OSErr enterNodeCallback(QTVRInstance theInstance, UInt32 nodeid, SInt32 player)
 {
 	OSErr err = noErr;
-	char *m = new char[U2L];
-	sprintf(m, "%u", (unsigned int)nodeid);
 	MCParameter *p = new MCParameter;
-	p->setbuffer(m, strlen(m));
+	p->setn_argument(nodeid);
 	MCscreen->addmessage((MCPlayer*)player, MCM_node_changed, MCS_time(), p);
 	return err;
 }
@@ -4001,12 +4026,8 @@ static pascal void clickHotSpotCallback(QTVRInstance qtvr, QTVRInterceptPtr qtvr
 	{
 	case kQTVRTriggerHotSpotSelector:
 		{
-			char *m = new char[U2L];
-			
-			// MW-2005-04-26: [[Tiger]] Seems to complain about the conversion to uint2... 
-			sprintf(m, "%d", (uint4)(qtvrMsg->parameter[0]));
 			MCParameter *p = new MCParameter;
-			p->setbuffer(m, strlen(m));
+			p->setn_argument((uint4)qtvrMsg->parameter[0]);
 			MCscreen->addmessage((MCPlayer*)player, MCM_hot_spot_clicked, MCS_time(), p);
 		}
 		break;
@@ -4196,11 +4217,11 @@ bool MCPlayer::stdeffectdlg(MCStringRef &r_value, MCStringRef &r_result)
 	HLock((Handle)effectdesc);
 	uint4 datasize = GetHandleSize(effectdesc) + sizeof(long) * 2;
 
-	MCAutoNativeCharArray t_buffer;
+	MCAutoByteArray t_buffer;
 	if (!t_buffer.New(datasize))
 		return false;
 
-	long *aLong = (long *)t_buffer.Chars();
+	long *aLong = (long *)t_buffer.Bytes();
 	HLock((Handle)effectdesc);
 	aLong[0] = EndianU32_NtoB(datasize);
 	aLong[1] = EndianU32_NtoB('qtfx');
@@ -4210,8 +4231,8 @@ bool MCPlayer::stdeffectdlg(MCStringRef &r_value, MCStringRef &r_result)
 	QTDisposeAtomContainer(effectdesc);
 	QTDisposeAtomContainer(effectlist);
 
-	MCAutoStringRef t_data;
-	return t_buffer.CreateStringAndRelease(&t_data) &&
+	MCAutoDataRef t_data;
+	return t_buffer.CreateDataAndRelease(&t_data) &&
 		MCFiltersBase64Encode(*t_data, r_value);
 #endif
 
@@ -4537,12 +4558,13 @@ void MCPlayer::recordsound(MCStringRef fname)
 	}
 	stoprecording();//just in case
 	FSSpec fspec;
+    
     MCAutoStringRef t_name;
     if (MCS_tmpnam(&t_name)) 
-        recordtempfile = *t_name;
+        recordtempfile = MCValueRetain(*t_name);
     
-	recordexportfile = fname;
-	MCS_path2FSSpec(MCStringGetCString(recordtempfile), &fspec);
+	recordexportfile = (MCStringRef)MCValueRetain(fname);
+	MCS_path2FSSpec(recordtempfile, &fspec);
 	OSType compressionType, inputSource;
 	memcpy(&compressionType, MCrecordcompression, 4);
 	compressionType = EndianU32_NtoB(compressionType);
@@ -5044,13 +5066,12 @@ Boolean MCPlayer::x11_prepare(void)
 	
 	// OK-2009-01-09: [[Bug 1161]] - File resolving code standardized between image and player.
 	// MCPlayer::init appears to duplicate the filename buffer, so freeing it after the call should be ok.
-	char *t_filename;
-	t_filename = getstack() -> resolve_filename(filename);
+    MCAutoStringRef t_filename;
+    getstack() -> resolve_filename(filename, &t_filename);
 
 	Boolean t_success;
-	t_success = (m_player -> init(t_filename, getstack(), rect));
+    t_success = (m_player -> init(MCStringGetCString(*t_filename), getstack(), rect));
 
-	delete t_filename;
 	return t_success;
 }
 

@@ -56,7 +56,7 @@ bool MCBsDiffBuild(MCBsDiffInputStream *p_old_stream, MCBsDiffInputStream *p_new
 
 #define MIN(x,y) (((x)<(y)) ? (x) : (y))
 
-#ifndef __LINUX__
+#if !defined(__LINUX__) && !defined(_OFF_T)
 typedef int32_t off_t;
 #endif
 typedef uint8_t u_char;

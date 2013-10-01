@@ -69,17 +69,22 @@ public:
 
 	// List the props in the property set into the ep.
 	bool list(MCExecPoint& ep);
+    bool list(MCStringRef& r_keys);
 
 	// Clear the contents of the propset.
 	bool clear(void);
 
 	// Remove any props not in the list in ep.
 	bool restrict(MCExecPoint& ep);
-
+    /* WRAPPER */ bool restrict(MCStringRef p_string);
+    
 	// Copy the prop set into the ep.
 	bool fetch(MCExecPoint& ep);
+    bool fetch(MCArrayRef& r_array);
+    
 	// Store the contents of the ep as the prop set.
 	bool store(MCExecPoint& ep);
+    bool store(MCArrayRef p_array);
 
 	// Fetch the given element of the property set into the ep.
 	bool fetchelement(MCExecPoint& ep, MCNameRef name);

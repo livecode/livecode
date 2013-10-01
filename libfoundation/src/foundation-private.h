@@ -75,14 +75,74 @@ enum
 	kMCStringFlagIsUnicode = 1 << 0,
 	// If set then the string is mutable.
 	kMCStringFlagIsMutable = 1 << 1,
+#ifndef NATIVE_STRING
+	// If set then the native and unicode strings are equivalent
+	kMCStringFlagIsNative = 1 << 2,
+#endif
 };
 
+#ifdef NATIVE_STRING
+typedef char_t strchar_t;
+#define MCStrCharFold(x) MCNativeCharFold(x)
+#define MCStrCharLowercase(x) MCNativeCharLowercase(x)
+#define MCStrCharUppercase(x) MCNativeCharUppercase(x)
+#define MCStrCharMapToNative(x) (x)
+#define MCStrCharMapFromNative(x) (x)
+#define MCStrCharMapToUnicode(x) MCNativeCharMapToUnicode(x)
+#define MCStrCharsMapFromUnicode(x, y, z, w) MCUnicodeCharsMapToNative(x, y, z, w, '?')
+#define MCStrCharsMapFromNative(x, y, z) MCMemoryCopy(x, y, z * sizeof(strchar_t))
+#define MCStrCharsHashExact(x, y) MCNativeCharsHashExact(x, y)
+#define MCStrCharsHashCaseless(x, y) MCNativeCharsHashCaseless(x, y)
+#define MCStrCharsEqualExact(x, y, z, w) MCNativeCharsEqualExact(x, y, z, w)
+#define MCStrCharsEqualCaseless(x, y, z, w) MCNativeCharsEqualCaseless(x, y, z, w)
+#define MCStrCharsCompareExact(x, y, z, w) MCNativeCharsCompareExact(x, y, z, w)
+#define MCStrCharsCompareCaseless(x, y, z, w) MCNativeCharsCompareCaseless(x, y, z, w)
+#define MCStrCharsSharedPrefixExact(x, y, z, w) MCNativeCharsSharedPrefixExact(x, y, z, w)
+#define MCStrCharsSharedPrefixCaseless(x, y, z, w) MCNativeCharsSharedPrefixCaseless(x, y, z, w)
+#define MCStrCharsSharedSuffixExact(x, y, z, w) MCNativeCharsSharedSuffixExact(x, y, z, w)
+#define MCStrCharsSharedSuffixCaseless(x, y, z, w) MCNativeCharsSharedSuffixCaseless(x, y, z, w)
+#define MCStrCharsLowercase(x, y) MCNativeCharsLowercase(x, y)
+#define MCStrCharsUppercase(x, y) MCNativeCharsUppercase(x, y)
+#else
+typedef unichar_t strchar_t;
+#define MCStrCharFold(x) MCUnicodeCharFold(x)
+#define MCStrCharLowercase(x) MCUnicodeCharLowercase(x)
+#define MCStrCharUppercase(x) MCUnicodeCharUppercase(x)
+#define MCStrCharMapToNative(x) MCUnicodeCharMapToNativeLossy(x)
+#define MCStrCharMapFromNative(x) MCUnicodeCharMapFromNative(x)
+#define MCStrCharMapToUnicode(x) (x)
+#define MCStrCharsMapFromUnicode(x, y, z, w) (MCMemoryCopy(z, x, y * sizeof(strchar_t)), w = y)
+#define MCStrCharsMapFromNative(x, y, z) MCUnicodeCharsMapFromNative(y, z, x)
+#define MCStrCharsHashExact(x, y) MCUnicodeCharsHashExact(x, y)
+#define MCStrCharsHashCaseless(x, y) MCUnicodeCharsHashCaseless(x, y)
+#define MCStrCharsEqualExact(x, y, z, w) MCUnicodeCharsEqualExact(x, y, z, w)
+#define MCStrCharsEqualCaseless(x, y, z, w) MCUnicodeCharsEqualCaseless(x, y, z, w)
+#define MCStrCharsCompareExact(x, y, z, w) MCUnicodeCharsCompareExact(x, y, z, w)
+#define MCStrCharsCompareCaseless(x, y, z, w) MCUnicodeCharsCompareCaseless(x, y, z, w)
+#define MCStrCharsSharedPrefixExact(x, y, z, w) MCUnicodeCharsSharedPrefixExact(x, y, z, w)
+#define MCStrCharsSharedPrefixCaseless(x, y, z, w) MCUnicodeCharsSharedPrefixCaseless(x, y, z, w)
+#define MCStrCharsSharedSuffixExact(x, y, z, w) MCUnicodeCharsSharedSuffixExact(x, y, z, w)
+#define MCStrCharsSharedSuffixCaseless(x, y, z, w) MCUnicodeCharsSharedSuffixCaseless(x, y, z, w)
+#define MCStrCharsLowercase(x, y) MCUnicodeCharsLowercase(x, y)
+#define MCStrCharsUppercase(x, y) MCUnicodeCharsUppercase(x, y)
+#endif
+
+#ifdef NATIVE_STRING
 struct __MCString: public __MCValue
 {
 	uindex_t char_count;
-	char_t *chars;
+	strchar_t *chars;
 	uindex_t capacity;
 };
+#else
+struct __MCString: public __MCValue
+{
+	uindex_t char_count;
+	strchar_t *chars;
+	char_t *native_chars;
+	uindex_t capacity;
+};
+#endif
 
 //////////
 
@@ -246,6 +306,9 @@ bool __MCSetIsEqualTo(__MCSet *set, __MCSet *other_set);
 bool __MCSetCopyDescription(__MCSet *set, MCStringRef& r_string);
 bool __MCSetImmutableCopy(__MCSet *set, bool release, __MCSet*& r_immutable_value);
 
+bool __MCDataInitialize(void);
+void __MCDataFinalize(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 hash_t MCNativeCharsHashExact(const char_t *chars, uindex_t char_count);
@@ -293,6 +356,28 @@ hash_t MCUnicodeCharsHashCaseless(const unichar_t *chars, uindex_t char_count);
 bool MCUnicodeCharsEqualExact(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
 bool MCUnicodeCharsEqualCaseless(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
 
+compare_t MCUnicodeCharsCompareExact(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
+compare_t MCUnicodeCharsCompareCaseless(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
+
+// Return the number of characters of prefix that are equal to those at the
+// beginning of string.
+uindex_t MCUnicodeCharsSharedPrefixExact(const unichar_t *string, uindex_t left_length, const unichar_t *suffix, uindex_t right_length);
+uindex_t MCUnicodeCharsSharedPrefixCaseless(const unichar_t *string, uindex_t left_length, const unichar_t *suffix, uindex_t right_length);
+
+// Return the number of characters of suffix that are equal to those at the
+// end of string.
+uindex_t MCUnicodeCharsSharedSuffixExact(const unichar_t *string, uindex_t left_length, const unichar_t *suffix, uindex_t right_length);
+uindex_t MCUnicodeCharsSharedSuffixCaseless(const unichar_t *string, uindex_t left_length, const unichar_t *suffix, uindex_t right_length);
+
+// Lowercase all the characters in-place.
+void MCUnicodeCharsLowercase(unichar_t *chars, uindex_t char_count);
+
+// Uppercase all the characters in-place.
+void MCUnicodeCharsUppercase(unichar_t *chars, uindex_t char_count);
+
+bool MCUnicodeCharsEqualExact(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
+bool MCUnicodeCharsEqualCaseless(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
+
 bool MCUnicodeCharsMapToNative(const unichar_t *uchars, uindex_t uchar_count, char_t *nchars, uindex_t& r_nchar_count, char_t invalid);
 void MCUnicodeCharsMapFromNative(const char_t *chars, uindex_t char_count, unichar_t *uchars);
 
@@ -300,7 +385,14 @@ uindex_t MCUnicodeCharsMapToUTF8(const unichar_t *wchars, uindex_t wchar_count, 
 uindex_t MCUnicodeCharsMapFromUTF8(const byte_t *utf8bytes, uindex_t utf8byte_count, unichar_t *wchars, uindex_t wchar_count);
 
 bool MCUnicodeCharMapToNative(unichar_t uchar, char_t& r_nchar);
+char_t MCUnicodeCharMapToNativeLossy(unichar_t nchar);
 unichar_t MCUnicodeCharMapFromNative(char_t nchar);
+
+unichar_t MCUnicodeCharFold(unichar_t);
+
+unichar_t MCUnicodeCharLowercase(unichar_t);
+
+unichar_t MCUnicodeCharUppercase(unichar_t);
 
 ////////////////////////////////////////////////////////////////////////////////
 

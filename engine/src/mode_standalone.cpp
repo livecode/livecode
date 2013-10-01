@@ -47,6 +47,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "property.h"
 #include "osspec.h"
 
+#include "system.h"
 #include "globals.h"
 #include "license.h"
 #include "mode.h"
@@ -60,10 +61,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #elif defined(_MAC_DESKTOP)
 #include "osxprefix.h"
 #endif
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool MCFiltersDecompress(MCStringRef p_source, MCStringRef& r_result);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -153,7 +150,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	case kMCCapsuleSectionTypePrologue:
 	{
 		MCCapsulePrologueSection t_prologue;
-		if (IO_read_bytes(&t_prologue, sizeof(t_prologue), p_stream) != IO_NORMAL)
+		if (IO_read(&t_prologue, sizeof(t_prologue), p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read standalone prologue");
 			return false;
@@ -165,7 +162,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	{
 		char *t_redirect;
 		t_redirect = new char[p_length];
-		if (IO_read_bytes(t_redirect, p_length, p_stream) != IO_NORMAL)
+		if (IO_read(t_redirect, p_length, p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read redirect ref");
 			return false;
@@ -195,13 +192,15 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	{
 		char *t_external;
 		t_external = new char[p_length];
-		if (IO_read_bytes(t_external, p_length, p_stream) != IO_NORMAL)
+		if (IO_read(t_external, p_length, p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read external ref");
 			return false;
 		}
 		
-		if (!MCdispatcher -> loadexternal(t_external))
+		MCAutoStringRef t_external_str;
+		/* UNCHECKED */ MCStringCreateWithCString(t_external, &t_external_str);
+		if (!MCdispatcher -> loadexternal(*t_external_str))
 		{
 			delete t_external;
 			MCresult -> sets("failed to load external");
@@ -216,7 +215,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	{
 		char *t_script;
 		t_script = new char[p_length];
-		if (IO_read_bytes(t_script, p_length, p_stream) != IO_NORMAL)
+		if (IO_read(t_script, p_length, p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read startup script");
 			return false;
@@ -224,7 +223,9 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 
 		// Execute the startup script at this point since we have loaded
 		// all stacks.
-		self -> stack -> domess(t_script);
+        MCAutoStringRef t_script_str;
+        /* UNCHECKED */ MCStringCreateWithCString(t_script, &t_script_str);
+		self -> stack -> domess(*t_script_str);
 		
 		delete t_script;
 	}
@@ -243,7 +244,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 
 	case kMCCapsuleSectionTypeDigest:
 		uint8_t t_read_digest[16];
-		if (IO_read_bytes(t_read_digest, 16, p_stream) != IO_NORMAL)
+		if (IO_read(t_read_digest, 16, p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read standalone checksum");
 			return false;
@@ -380,10 +381,9 @@ IO_stat MCDispatch::startup(void)
 	extern IO_handle android_get_mainstack_stream();
 	t_stream = android_get_mainstack_stream();
 #else
-	char *t_path;
-	MCCStringFormat(t_path, "%.*s/iphone_test.rev", strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd));
-	t_stream = MCS_open(t_path, IO_READ_MODE, False, False, 0);
-	MCCStringFree(t_path);
+	MCAutoStringRef t_path;
+	MCStringFormat(&t_path, "%.*s/iphone_test.rev", strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd));
+	t_stream = MCS_open(*t_path, kMCSOpenFileModeRead, False, False, 0);
 #endif
 
 	if (t_stream == NULL)
@@ -408,14 +408,14 @@ IO_stat MCDispatch::startup(void)
 	MCImage::init();
 	
 #ifdef TARGET_SUBPLATFORM_ANDROID
-	MCdispatcher -> loadexternal("revzip");
-	MCdispatcher -> loadexternal("revdb");
-	MCdispatcher -> loadexternal("revxml");
-	MCdispatcher -> loadexternal("dbsqlite");
-	MCdispatcher -> loadexternal("dbmysql");
+	MCdispatcher -> loadexternal(MCSTR("revzip"));
+	MCdispatcher -> loadexternal(MCSTR("revdb"));
+	MCdispatcher -> loadexternal(MCSTR("revxml"));
+	MCdispatcher -> loadexternal(MCSTR("dbsqlite"));
+	MCdispatcher -> loadexternal(MCSTR("dbmysql"));
 #else
-	MCdispatcher -> loadexternal("revzip.dylib");
-	MCdispatcher -> loadexternal("revdb.dylib");
+	MCdispatcher -> loadexternal(MCSTR("revzip.dylib"));
+	MCdispatcher -> loadexternal(MCSTR("revdb.dylib"));
 #endif
 	
 	// MW-2010-12-18: Startup message / stack init now down in 'main'
@@ -451,7 +451,9 @@ IO_stat MCDispatch::startup(void)
 	{
 		MCStack *t_stack;
 		IO_handle t_stream;
-		t_stream = MCS_open(getenv("TEST_STACK"), IO_READ_MODE, False, False, 0);
+		MCAutoStringRef t_env;
+		/* UNCHECKED */ MCS_getenv(MCSTR("TEST_STACK"), &t_env);
+		t_stream = MCS_open(*t_env, kMCSystemFileModeRead, False, False, 0);
 		if (MCdispatcher -> readstartupstack(t_stream, t_stack) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read standalone stack");
@@ -557,12 +559,12 @@ void MCStack::mode_destroy(void)
 {
 }
 
-Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &carray, Boolean effective)
+Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
 }
 
-Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &cprop, const MCString &carray, Boolean effective)
+Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef cprop, MCStringRef carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
 }
@@ -583,11 +585,6 @@ void MCStack::mode_takewindow(MCStack *other)
 void MCStack::mode_takefocus(void)
 {
 	MCscreen->setinputfocus(window);
-}
-
-char *MCStack::mode_resolve_filename(const char *filename)
-{
-	return NULL;
 }
 
 bool MCStack::mode_needstoopen(void)
@@ -654,7 +651,7 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 //  Implementation of MCObject::mode_get/setprop for STANDALONE mode.
 //
 
-Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &carray, Boolean effective)
+Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
 }
@@ -831,7 +828,7 @@ Window MCModeGetParentWindow(void)
 	return t_window;
 }
 
-bool MCModeCanAccessDomain(const char *p_name)
+bool MCModeCanAccessDomain(MCStringRef p_name)
 {
 	return false;
 }
