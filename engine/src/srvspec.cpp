@@ -621,15 +621,15 @@ void MCS_loadurl(MCObject *p_object, MCStringRef p_url, MCNameRef p_message)
 ////////////////////////////////////////////////////////////////////////////////
 
 extern void MCServerPutOutput(MCStringRef data);
-extern void MCServerPutUnicodeOutput(MCStringRef data);
+extern void MCServerPutUnicodeOutput(MCDataRef data);
 extern void MCServerPutBinaryOutput(MCDataRef data);
 extern void MCServerPutHeader(MCStringRef data, bool add);
 extern void MCServerPutContent(MCStringRef data);
-extern void MCServerPutUnicodeContent(MCStringRef data);
+extern void MCServerPutUnicodeContent(MCDataRef data);
 extern void MCServerPutMarkup(MCStringRef data);
-extern void MCServerPutUnicodeMarkup(MCStringRef data);
+extern void MCServerPutUnicodeMarkup(MCDataRef data);
 
-bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, MCStringRef p_data_ref)
+bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, MCStringRef p_data)
 {
 	
 	switch(p_kind)
@@ -638,42 +638,23 @@ bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, MCStringRef p_data_ref)
 	case kMCSPutBeforeMessage:
 	case kMCSPutIntoMessage:
 	case kMCSPutAfterMessage:
-		MCServerPutOutput(p_data_ref);
-		break;
-			
-	case kMCSPutBinaryOutput:
-		MCDataRef t_data;
-		// This is probably wrong..
-		/* UNCHECKED */ MCStringEncode(p_data_ref, kMCStringEncodingUTF8, false, t_data);
-		MCServerPutBinaryOutput(t_data);
-		break;
-
-	case kMCSPutUnicodeOutput:
-		MCServerPutUnicodeOutput(p_data_ref);
+		MCServerPutOutput(p_data);
 		break;
 			
 	case kMCSPutHeader:
-		MCServerPutHeader(p_data_ref, false);
+		MCServerPutHeader(p_data, false);
 		break;
 
 	case kMCSPutNewHeader:
-		MCServerPutHeader(p_data_ref, true);
+		MCServerPutHeader(p_data, true);
 		break;
 
 	case kMCSPutContent:
-		MCServerPutContent(p_data_ref);
-		break;
-			
-	case kMCSPutUnicodeContent:
-		MCServerPutUnicodeContent(p_data_ref);
+		MCServerPutContent(p_data);
 		break;
 
 	case kMCSPutMarkup:
-		MCServerPutMarkup(p_data_ref);
-		break;
-			
-	case kMCSPutUnicodeMarkup:
-		MCServerPutUnicodeMarkup(p_data_ref);
+		MCServerPutMarkup(p_data);
 		break;
 			
 	default:
@@ -683,6 +664,34 @@ bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, MCStringRef p_data_ref)
 	return true;
 }
 
+
+bool MCS_put_binary(MCExecPoint& ep, MCSPutKind p_kind, MCDataRef p_data)
+{
+	
+	switch(p_kind)
+	{		
+	case kMCSPutBinaryOutput:
+		MCServerPutBinaryOutput(p_data);
+		break;
+
+	case kMCSPutUnicodeOutput:
+		MCServerPutUnicodeOutput(p_data);
+		break;
+			
+	case kMCSPutUnicodeContent:
+		MCServerPutUnicodeContent(p_data);
+		break;
+			
+	case kMCSPutUnicodeMarkup:
+		MCServerPutUnicodeMarkup(p_data);
+		break;
+			
+	default:
+		break;
+	}
+
+	return true;
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCS_set_errormode(MCSErrorMode p_mode)

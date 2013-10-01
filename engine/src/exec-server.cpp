@@ -180,7 +180,9 @@ void MCServerExecInclude(MCExecContext& ctxt, MCStringRef p_filename, bool p_is_
 
 void MCServerExecEcho(MCExecContext& ctxt, MCStringRef p_data)
 {
-	if (!MCS_put(ctxt . GetEP(), kMCSPutBinaryOutput, p_data) != IO_NORMAL)
+	MCAutoDataRef t_data;
+	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)MCStringGetCString(p_data), &t_data)
+	if (!MCS_put_binary(ctxt . GetEP(), kMCSPutBinaryOutput, *t_data) != IO_NORMAL)
 		MCexitall = True;
 }
 
@@ -194,20 +196,38 @@ void MCServerExecPutHeader(MCExecContext& ctxt, MCStringRef p_value, bool p_as_n
 
 void MCServerExecPutBinaryOutput(MCExecContext& ctxt, MCStringRef p_value)
 {
-	if (!MCS_put(ctxt . GetEP(), kMCSPutBinaryOutput, p_value))
+	MCAutoDataRef t_data;
+	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)MCStringGetCString(p_value), &t_data)
+	if (!MCS_put_binary(ctxt . GetEP(), kMCSPutBinaryOutput, *t_data))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
 void MCServerExecPutContent(MCExecContext& ctxt, MCStringRef p_value, bool is_unicode)
 {
-	if (!MCS_put(ctxt . GetEP(), is_unicode ? kMCSPutUnicodeContent : kMCSPutContent, p_value))
-		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
+	if (is_unicode)
+	{
+		MCAutoDataRef t_data;
+		/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)MCStringGetCString(p_value), &t_data)
+		if (!MCS_put_binary(ctxt . GetEP(), kMCSPutUnicodeContent, *t_data))
+			ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
+	}
+	else
+		if (!MCS_put(ctxt . GetEP(), kMCSPutContent, p_value))
+			ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
 void MCServerExecPutMarkup(MCExecContext& ctxt, MCStringRef p_value, bool is_unicode)
 {
-	if (!MCS_put(ctxt . GetEP(), is_unicode ? kMCSPutUnicodeMarkup : kMCSPutMarkup, p_value))
-		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
+	if (is_unicode)
+	{
+		MCAutoDataRef t_data;
+		/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)MCStringGetCString(p_value), &t_data)
+		if (!MCS_put_binary(ctxt . GetEP(), kMCSPutUnicodeMarkup, *t_data))
+			ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
+	}
+	else
+		if (!MCS_put(ctxt . GetEP(), kMCSPutMarkup, p_value))
+			ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
 bool MCServerSetCookie(const MCString &p_name, const MCString &p_value, uint32_t p_expires, const MCString &p_path, const MCString &p_domain, bool p_secure, bool p_http_only);

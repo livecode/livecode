@@ -640,8 +640,18 @@ void MCEngineExecGet(MCExecContext& ctxt, MCValueRef p_value)
 
 void MCEngineExecPutOutput(MCExecContext& ctxt, MCStringRef p_value, bool p_is_unicode)
 {
-	if (!MCS_put(ctxt . GetEP(), p_is_unicode ? kMCSPutUnicodeOutput : kMCSPutOutput, p_value))
-		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
+	if (p_is_unicode)
+	{
+		MCAutoDataRef t_data;
+		/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)MCStringGetCString(p_value), &t_data)
+		if (!MCS_put_binary(ctxt . GetEP(), kMCSPutUnicodeOutput, *t_data))
+			ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
+	}
+	else
+		if (!MCS_put(ctxt . GetEP(), kMCSPutOutput, p_value))
+			ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
+
+	
 }
 
 void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_where, MCVariableChunkPtr p_var)
