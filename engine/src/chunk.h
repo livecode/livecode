@@ -91,7 +91,7 @@ public:
 	                  int4 (*count)(MCExecPoint &ep, const char *sptr,
 	                                const char *eptr));
     
-    Exec_stat mark(MCExecPoint &ep, MCStringRef p_source, int4 &start, int4 &end, Boolean force, Boolean wholechunk, bool includechars = true, bool wholestring = false);
+    Exec_stat mark(MCExecPoint &ep, Boolean force, Boolean wholechunk, MCMarkedText& r_mark, bool includechars = true);
 	Exec_stat mark_legacy(MCExecPoint &, int4 &start, int4 &end, Boolean force, Boolean wholechunk, bool include_characters = true);
 
 	// MW-2012-02-23: [[ CharChunk ]] Compute the start and end field indices corresponding

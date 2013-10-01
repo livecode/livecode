@@ -1789,81 +1789,6 @@ void MCStringsSetTextChunkByOrdinal(MCExecContext& ctxt, MCStringRef p_source, P
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCStringsEvalLinesOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, MCStringRef& r_result)
-{
-    MCStringsEvalTextChunkByRange(ctxt, p_source, CT_LINE, p_first, p_last, false, r_result);
-}
-
-void MCStringsEvalLinesOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_line, MCStringRef& r_result)
-{
-    MCStringsEvalTextChunkByExpression(ctxt, p_source, CT_LINE, p_line, false, r_result);
-}
-
-void MCStringsEvalLinesOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, MCStringRef& r_result)
-{
-     MCStringsEvalTextChunkByOrdinal(ctxt, p_source, CT_LINE, p_ordinal_type, false, r_result);
-}
-
-void MCStringsEvalItemsOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, MCStringRef& r_result)
-{
-    MCStringsEvalTextChunkByRange(ctxt, p_source, CT_ITEM, p_first, p_last, false, r_result);
-}
-
-void MCStringsEvalItemsOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_item, MCStringRef& r_result)
-{
-    MCStringsEvalTextChunkByExpression(ctxt, p_source, CT_ITEM, p_item, false, r_result);
-}
-
-void MCStringsEvalItemsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, MCStringRef& r_result)
-{
-    MCStringsEvalTextChunkByOrdinal(ctxt, p_source, CT_ITEM, p_ordinal_type, false, r_result);
-}
-
-void MCStringsEvalWordsOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, MCStringRef& r_result)
-{
-    MCStringsEvalTextChunkByRange(ctxt, p_source, CT_WORD, p_first, p_last, false, r_result);
-}
-
-void MCStringsEvalWordsOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_word, MCStringRef& r_result)
-{
-    MCStringsEvalTextChunkByExpression(ctxt, p_source, CT_WORD, p_word, false, r_result);
-}
-
-void MCStringsEvalWordsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, MCStringRef& r_result)
-{
-    MCStringsEvalTextChunkByOrdinal(ctxt, p_source, CT_WORD, p_ordinal_type, false, r_result);
-}
-
-void MCStringsEvalTokensOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, MCStringRef& r_result)
-{
-    MCStringsEvalTextChunkByRange(ctxt, p_source, CT_TOKEN, p_first, p_last, false, r_result);
-}
-
-void MCStringsEvalTokensOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_token, MCStringRef& r_result)
-{
-    MCStringsEvalTextChunkByExpression(ctxt, p_source, CT_TOKEN, p_token, false, r_result);
-}
-
-void MCStringsEvalTokensOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, MCStringRef& r_result)
-{
-    MCStringsEvalTextChunkByOrdinal(ctxt, p_source, CT_TOKEN, p_ordinal_type, false, r_result);
-}
-
-void MCStringsEvalCharsOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, MCStringRef& r_result)
-{
-    MCStringsEvalTextChunkByRange(ctxt, p_source, CT_CHARACTER, p_first, p_last, false, r_result);
-}
-
-void MCStringsEvalCharsOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_char, MCStringRef& r_result)
-{
-    MCStringsEvalTextChunkByExpression(ctxt, p_source, CT_CHARACTER, p_char, false, r_result);
-}
-
-void MCStringsEvalCharsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, MCStringRef& r_result)
-{
-    MCStringsEvalTextChunkByOrdinal(ctxt, p_source, CT_CHARACTER, p_ordinal_type, false, r_result);
-}
-
 void MCStringsEvalMutableLinesOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, MCStringRef& r_result)
 {
     MCStringsEvalTextChunkByRange(ctxt, p_source, CT_LINE, p_first, p_last, true, r_result);
@@ -1999,7 +1924,6 @@ void MCStringsExecSetCharsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_sou
     MCStringsSetTextChunkByOrdinal(ctxt, p_source, p_type, CT_CHARACTER, p_ordinal_type, r_result);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCStringsGetTextChunk(MCExecContext& ctxt, MCStringRef p_source, integer_t p_start, integer_t p_end, MCStringRef& r_result)
@@ -2127,5 +2051,88 @@ void MCStringsEvalCharsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source
     MCStringsEvalTextChunkByOrdinal(ctxt, p_source, CT_CHARACTER, p_ordinal_type, x_start, x_end, r_result);
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
+void MCStringsMarkTextChunkByRange(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, MCMarkedText& x_mark)
+{
+    MCAutoStringRef t_string;
+    MCStringCopySubstring(x_mark . text, MCRangeMake(x_mark . start, x_mark . finish - x_mark . start), &t_string);
+    
+    int4 t_first;
+    int4 t_chunk_count;
+    MCStringsGetExtentsByRange(ctxt, p_chunk_type, p_first, p_last, *t_string, t_first, t_chunk_count);
+    
+    int4 t_add;
+    int4 t_start, t_end;
+    MCStringsMarkTextChunk(ctxt, *t_string, p_chunk_type, t_first, t_chunk_count, t_start, t_end, false, false, true, t_add);
+    
+    x_mark . finish = x_mark . start + t_end;
+    x_mark . start += t_start;
+}
 
+void MCStringsMarkTextChunkByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_type, Chunk_term p_ordinal_type, MCMarkedText& x_mark)
+{
+    MCAutoStringRef t_string;
+    MCStringCopySubstring(x_mark . text, MCRangeMake(x_mark . start, x_mark . finish - x_mark . start), &t_string);
+    
+    int4 t_first;
+    int4 t_chunk_count;
+    MCStringsGetExtentsByOrdinal(ctxt, p_chunk_type, p_ordinal_type, *t_string, t_first, t_chunk_count);
+    
+    int4 t_add;
+    int4 t_start, t_end;
+    MCStringsMarkTextChunk(ctxt, *t_string, p_chunk_type, t_first, t_chunk_count, t_start, t_end, false, false, true, t_add);
+    
+    x_mark . finish = x_mark . start + t_end;
+    x_mark . start += t_start;
+}
+
+void MCStringsMarkLinesOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, MCMarkedText& x_mark)
+{
+    MCStringsMarkTextChunkByRange(ctxt, CT_LINE, p_first, p_last, x_mark);
+}
+
+void MCStringsMarkLinesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedText& x_mark)
+{
+    MCStringsMarkTextChunkByOrdinal(ctxt, CT_LINE, p_ordinal_type, x_mark);
+}
+
+void MCStringsMarkItemsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, MCMarkedText& x_mark)
+{
+    MCStringsMarkTextChunkByRange(ctxt, CT_ITEM, p_first, p_last, x_mark);
+}
+
+void MCStringsMarkItemsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedText& x_mark)
+{
+    MCStringsMarkTextChunkByOrdinal(ctxt, CT_ITEM, p_ordinal_type, x_mark);
+}
+
+void MCStringsMarkWordsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, MCMarkedText& x_mark)
+{
+    MCStringsMarkTextChunkByRange(ctxt, CT_WORD, p_first, p_last, x_mark);
+}
+
+void MCStringsMarkWordsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedText& x_mark)
+{
+    MCStringsMarkTextChunkByOrdinal(ctxt, CT_WORD, p_ordinal_type, x_mark);
+}
+
+void MCStringsMarkTokensOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, MCMarkedText& x_mark)
+{
+    MCStringsMarkTextChunkByRange(ctxt, CT_TOKEN, p_first, p_last, x_mark);
+}
+
+void MCStringsMarkTokensOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedText& x_mark)
+{
+    MCStringsMarkTextChunkByOrdinal(ctxt, CT_TOKEN, p_ordinal_type, x_mark);
+}
+
+void MCStringsMarkCharsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, MCMarkedText& x_mark)
+{
+    MCStringsMarkTextChunkByRange(ctxt, CT_CHARACTER, p_first, p_last, x_mark);
+}
+
+void MCStringsMarkCharsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedText& x_mark)
+{
+    MCStringsMarkTextChunkByOrdinal(ctxt, CT_CHARACTER, p_ordinal_type, x_mark);
+}

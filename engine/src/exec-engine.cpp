@@ -703,11 +703,11 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
         }
 		
 		if (p_where == PT_BEFORE)
-			p_var . finish = p_var . start;
+			p_var . mark . finish = p_var . mark . start;
 		else if (p_where == PT_AFTER)
-			p_var . start = p_var . finish;
+			p_var . mark . start = p_var . mark . finish;
         
-		/* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . start, p_var . finish - p_var . start), *t_value_string);
+		/* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
         
 		p_var . variable -> set(ctxt, *t_string, False);
 	}
@@ -927,11 +927,11 @@ void MCEngineExecDeleteVariableChunks(MCExecContext& ctxt, MCVariableChunkPtr *p
 {
 	for(uindex_t i = 0; i < p_chunk_count; i++)
 	{
-        MCAutoValueRef t_value;
-		p_chunks[i] . variable -> eval(ctxt, &t_value);
+        MCValueRef t_value;
+		p_chunks[i] . variable -> eval(ctxt, t_value);
         
         MCAutoStringRef t_string;
-        if (ctxt . ConvertToMutableString(*t_value, &t_string) && MCStringReplace(*t_string, MCRangeMake(p_chunks[i] . start, p_chunks[i] . finish - p_chunks[i] . start), kMCEmptyString))
+        if (ctxt . ConvertToMutableString(t_value, &t_string) && MCStringReplace(*t_string, MCRangeMake(p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start), kMCEmptyString))
         {
             p_chunks[i] . variable -> set(ctxt, *t_string, false);
         }
@@ -1710,4 +1710,28 @@ void MCEngineEvalErrorObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
     }
     
     ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+
+void MCEngineMarkVariable(MCExecContext& ctxt, MCVarref *p_variable, MCMarkedText& r_mark)
+{
+    if (p_variable == nil)
+	{
+		ctxt . LegacyThrow(EE_CHUNK_BADCONTAINER);
+		return;
+	}
+    
+    MCValueRef t_value;
+    if (!p_variable -> eval(ctxt, t_value))
+    {
+        ctxt . LegacyThrow(EE_CHUNK_SETCANTGETDEST);
+        return;
+    }
+    
+    if (!ctxt . ConvertToString(t_value, r_mark . text))
+    {
+        ctxt . LegacyThrow(EE_CHUNK_SETCANTGETDEST);
+        return;
+    }
+    r_mark . start = 0;
+    r_mark . finish = MAXUINT4;
 }

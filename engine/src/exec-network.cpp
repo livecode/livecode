@@ -606,7 +606,7 @@ void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCStringRef p_value, int p_whe
 		MCAutoStringRef t_string;
 		/* UNCHECKED */ ep . copyasmutablestringref(&t_string);
 		
-		/* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_chunk . start, p_chunk . finish - p_chunk . start), p_value);
+		/* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_chunk . mark . start, p_chunk . mark . finish - p_chunk . mark . start), p_value);
 		
 		ep . setvalueref(*t_string);
 	}
@@ -834,4 +834,11 @@ void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCStringRef p_value, int p_whe
             MCStringPrepend(*t_new_value, p_value);
         MCNetworkExecSetUrl(ctxt, *t_new_value, p_url);
     }
+}
+
+void MCNetworkMarkUrl(MCExecContext& ctxt, MCStringRef p_url, MCMarkedText& r_mark)
+{
+    MCU_geturl(ctxt, p_url, r_mark . text);
+    r_mark . start = 0;
+    r_mark . finish = MAXUINT4;
 }

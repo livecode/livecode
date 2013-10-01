@@ -2164,14 +2164,14 @@ void MCInterfaceExecDeleteObjectChunks(MCExecContext& ctxt, MCObjectChunkPtr *p_
 
 			ctxt . GetEP() . utf16toutf8();
 
-			ctxt . GetEP() . insert(MCnullmcstring, p_chunks[i] . start, p_chunks[i] . finish);
+			ctxt . GetEP() . insert(MCnullmcstring, p_chunks[i] . mark . start, p_chunks[i] . mark . finish);
 
 			ctxt . GetEP() . utf8toutf16();
 
 			p_chunks[i] . object -> setprop(p_chunks[i] . part_id, P_UNICODE_TEXT, ctxt . GetEP(), False);
 		}
 		else if (p_chunks[i] . object -> gettype() == CT_FIELD)
-			static_cast<MCField *>(p_chunks[i] . object) -> settextindex(p_chunks[i] . part_id, p_chunks[i] . start, p_chunks[i] . finish, MCnullmcstring, False);
+			static_cast<MCField *>(p_chunks[i] . object) -> settextindex(p_chunks[i] . part_id, p_chunks[i] . mark . start, p_chunks[i] . mark . finish, MCnullmcstring, False);
 	}
 }
 
@@ -2186,8 +2186,8 @@ static void MCInterfaceExecChangeChunkOfButton(MCExecContext& ctxt, MCObjectChun
 	ep . utf16toutf8();
 
 	int4 start, end;
-	start = p_target . start;
-	end = p_target . finish;
+	start = p_target . mark . start;
+	end = p_target . mark . finish;
 
 	bool t_changed;
 	t_changed = false;
@@ -2310,8 +2310,8 @@ void MCInterfaceExecSelectTextOfField(MCExecContext& ctxt, Preposition_type p_ty
 	}
 
 	uindex_t t_start, t_finish;
-	t_start = p_target . start;
-	t_finish = p_target . finish;
+	t_start = p_target . mark . start;
+	t_finish = p_target . mark . finish;
 	switch(p_type)
 	{
 	case PT_AT:
@@ -2351,7 +2351,7 @@ void MCInterfaceExecSelectTextOfButton(MCExecContext& ctxt, Preposition_type p_t
 	if (t_success)
 	{
 		uindex_t t_lines;
-		t_lines = MCStringCountChar(*t_text, MCRangeMake(0, p_target . start), '\n', kMCStringOptionCompareCaseless);
+		t_lines = MCStringCountChar(*t_text, MCRangeMake(0, p_target . mark . start), '\n', kMCStringOptionCompareCaseless);
 		
 		static_cast<MCButton *>(p_target . object) -> setmenuhistory(t_lines + 1);
 	}
@@ -3136,11 +3136,11 @@ void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef p_string, int 
 	{
 		integer_t t_start, t_finish;
 		if (p_where == PT_INTO)
-			t_start = p_chunk . start, t_finish = p_chunk . finish;
+			t_start = p_chunk . mark . start, t_finish = p_chunk . mark . finish;
 		else if (p_where == PT_AFTER)
-			t_start = t_finish = p_chunk . finish;
+			t_start = t_finish = p_chunk . mark . finish;
 		else /* PT_BEFORE */
-			t_start = t_finish = p_chunk . start;
+			t_start = t_finish = p_chunk . mark . start;
 		
 		if (((MCField *)p_chunk . object) -> settextindex(p_chunk . part_id, t_start, t_finish, MCStringGetOldString(p_string), False, p_is_unicode) != ES_NORMAL)
 		{
@@ -3173,11 +3173,11 @@ void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCStringRef p_string, int
 		
 		integer_t t_start, t_finish;
 		if (p_where == PT_INTO)
-			t_start = p_chunk . start, t_finish = p_chunk . finish;
+			t_start = p_chunk . mark . start, t_finish = p_chunk . mark . finish;
 		else if (p_where == PT_AFTER)
-			t_start = t_finish = p_chunk . finish;
+			t_start = t_finish = p_chunk . mark . finish;
 		else /* PT_BEFORE */
-			t_start = t_finish = p_chunk . start;
+			t_start = t_finish = p_chunk . mark . start;
 		
 		if (!MCStringReplace(*t_mutable_current_value, MCRangeMake(t_start, t_finish), p_string))
 		{

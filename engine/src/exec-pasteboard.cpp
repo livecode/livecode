@@ -548,9 +548,9 @@ void MCPasteboardProcessTextToClipboard(MCExecContext &ctxt, MCObjectChunkPtr p_
     MCField *t_field;
     t_field = static_cast<MCField *>(p_target . object);
 	if (p_cut)
-		t_field -> cuttextindex(p_target . part_id, p_target . start, p_target . finish);
+		t_field -> cuttextindex(p_target . part_id, p_target . mark . start, p_target . mark . finish);
 	else
-		t_field -> copytextindex(p_target . part_id, p_target . start, p_target . finish);
+		t_field -> copytextindex(p_target . part_id, p_target . mark . start, p_target . mark . finish);
 }
 
 void MCPasteboardExecCopy(MCExecContext& ctxt)
