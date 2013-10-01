@@ -1846,7 +1846,7 @@ void MCU_getshift(uint4 mask, uint2 &shift, uint2 &outmask)
 	outmask = j;
 }
 
-void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool)
+void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 {
 	Tool t_new_tool;
 	MColdtool = MCcurtool;
@@ -1858,7 +1858,7 @@ void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool)
 	}
 	else
 	{
-		/* UNCHECKED */ ctxt . GetEP() . copyasstringref(&t_tool_name);
+		t_tool_name = p_input;
 		if (MCStringGetLength(*t_tool_name) < 3)
 		{
 			ctxt . LegacyThrow(EE_CHOOSE_BADTOOL);
@@ -1899,7 +1899,7 @@ void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool)
 		MCstacks->restartidle();
 	if (MCtopstackptr != NULL)
 		MCtopstackptr->updatemenubar();
-	ctxt . GetObject()->message_with_args(MCM_new_tool, MCStringGetOldString(*t_tool_name));
+	ctxt . GetObject()->message_with_valueref_args(MCM_new_tool, *t_tool_name);
 }
 
 Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool, uint2 line, uint2 pos)

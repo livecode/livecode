@@ -265,7 +265,7 @@ unichar_t MCUnicodeCharUppercase(unichar_t p_char)
 
 // Convert the given UTF-8 string to Unicode. Both counts are in bytes.
 // Returns the number of bytes used.
-static int32_t UTF8ToUnicode(const byte_t *p_src, int32_t p_src_count, uint16_t *p_dst, int32_t p_dst_count)
+static int32_t UTF8ToUnicode(const byte_t *p_src, int32_t p_src_count, unichar_t *p_dst, int32_t p_dst_count)
 {
 	int32_t t_made;
 	t_made = 0;
@@ -379,7 +379,7 @@ static int32_t UTF8ToUnicode(const byte_t *p_src, int32_t p_src_count, uint16_t 
 
 // Converts the given UTF-16 string to UTF-8. Both counts are in bytes.
 // Returns the number of bytes generated.
-static int32_t UnicodeToUTF8(const uint16_t *p_src, int32_t p_src_count, byte_t *p_dst, int32_t p_dst_count)
+static int32_t UnicodeToUTF8(const unichar_t *p_src, int32_t p_src_count, byte_t *p_dst, int32_t p_dst_count)
 {
 	int32_t t_made;
 	t_made = 0;
