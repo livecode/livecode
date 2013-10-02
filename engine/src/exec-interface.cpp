@@ -2171,7 +2171,16 @@ void MCInterfaceExecDeleteObjectChunks(MCExecContext& ctxt, MCObjectChunkPtr *p_
 			p_chunks[i] . object -> setprop(p_chunks[i] . part_id, P_UNICODE_TEXT, ctxt . GetEP(), False);
 		}
 		else if (p_chunks[i] . object -> gettype() == CT_FIELD)
-			static_cast<MCField *>(p_chunks[i] . object) -> settextindex(p_chunks[i] . part_id, p_chunks[i] . mark . start, p_chunks[i] . mark . finish, MCnullmcstring, False);
+        {
+            MCField *t_field;
+            t_field = static_cast<MCField *>(p_chunks[i] . object);
+            integer_t t_si, t_ei;
+            t_si = 0;
+            t_ei = INDEX_MAX;
+            t_field -> resolvechars(p_chunks[i] . part_id, t_si, t_ei, p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start);
+            
+			t_field -> settextindex_stringref(p_chunks[i] . part_id, t_si, t_ei, kMCEmptyString, False);
+        }
 	}
 }
 
