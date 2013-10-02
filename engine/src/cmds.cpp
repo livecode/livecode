@@ -1453,6 +1453,11 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 				return ES_ERROR;
 			}
 			
+            if (prep == PT_BEFORE)
+            {
+                bool t_true = true;
+            }
+            
 			MCObjectChunkPtr t_obj_chunk;
 			if (dest -> evalobjectchunk(ep, false, true, t_obj_chunk) != ES_NORMAL)
 				return ES_ERROR;

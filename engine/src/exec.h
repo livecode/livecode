@@ -2181,6 +2181,7 @@ void MCInterfaceEvalStackWithOptionalBackground(MCExecContext& ctxt, MCObjectPtr
 void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wholechunk, MCMarkedText& r_mark);
 void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCMarkedText& r_mark);
 void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Functions p_function, bool p_whole_chunk, MCMarkedText& r_mark);
+void MCInterfaceMarkCharsOfField(MCExecContext& ctxt, MCObjectPtr t_field, MCCRef *character, MCMarkedText &x_mark);
 
 ///////////
 

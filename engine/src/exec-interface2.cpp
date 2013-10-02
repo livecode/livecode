@@ -3314,6 +3314,7 @@ void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCMa
     {
         case CT_FIELD:
         case CT_BUTTON:
+            MCInterfaceMarkObject(ctxt, p_container, false, r_mark);
         case CT_IMAGE:
         case CT_AUDIO_CLIP:
         case CT_VIDEO_CLIP:
@@ -3385,4 +3386,98 @@ void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Function
     
     r_mark . start = start;
     r_mark . finish = end;
+}
+
+void MCInterfaceMarkCharsOfField(MCExecContext& ctxt, MCObjectPtr t_field, MCCRef *character, MCMarkedText &x_mark)
+{
+    MCField *p_field = (MCField *)t_field . object;
+    uint32_t p_part_id = t_field . part_id;
+    MCExecPoint ep2(nil, nil, nil);
+	int32_t t_number, t_start;
+	t_start = 0;
+	t_number = 1;
+    int32_t x_start = x_mark . start;
+    int32_t x_end = x_mark . finish;
+	switch(character -> etype)
+	{
+		case CT_ANY:
+			t_start = MCU_any(p_field -> countchars(p_part_id, x_start, x_end));
+			break;
+		case CT_FIRST:
+		case CT_SECOND:
+		case CT_THIRD:
+		case CT_FOURTH:
+		case CT_FIFTH:
+		case CT_SIXTH:
+		case CT_SEVENTH:
+		case CT_EIGHTH:
+		case CT_NINTH:
+		case CT_TENTH:
+			t_start = character -> etype - CT_FIRST;
+			break;
+		case CT_LAST:
+			t_start = p_field -> countchars(p_part_id, x_start, x_end) - 1;
+			break;
+		case CT_MIDDLE:
+			t_start = p_field -> countchars(p_part_id, x_start, x_end) / 2;
+			break;
+		case CT_RANGE:
+		{
+			int32_t t_count = -1, tn;
+			if (character->startpos->eval(ep2) != ES_NORMAL || ep2.ton() != ES_NORMAL)
+			{
+				return;
+			}
+			t_start = ep2.getint4();
+			if (t_start < 0)
+			{
+				t_count = p_field -> countchars(p_part_id, x_start, x_end);
+				t_start += t_count;
+			}
+			else
+				t_start--;
+			
+			if (character->endpos->eval(ep2) != ES_NORMAL || ep2.ton() != ES_NORMAL)
+			{
+				return;
+			}
+			tn = ep2.getint4();
+			if (tn < 0)
+			{
+				if (t_count == -1)
+					t_count = p_field -> countchars(p_part_id, x_start, x_end);
+				tn += t_count + 1;
+			}
+			t_number = tn - t_start;
+		}
+            break;
+		case CT_EXPRESSION:
+			if (character->startpos->eval(ep2) != ES_NORMAL || ep2.ton() != ES_NORMAL)
+			{
+				return;
+			}
+			t_start = ep2.getint4();
+			if (t_start < 0)
+				t_start += p_field -> countchars(p_part_id, x_start, x_end);
+			else
+				t_start--;
+			break;
+		default:
+			MCUnreachable();
+			break;
+	}
+    
+	if (t_start < 0)
+	{
+		t_number += t_start;
+		t_start = 0;
+	}
+	
+	if (t_number < 0)
+		t_number = 0;
+	
+	p_field -> resolvechars(p_part_id, x_start, x_end, t_start, t_number);
+	
+    x_mark . start = x_start;
+    x_mark . finish = x_end;
 }

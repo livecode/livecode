@@ -1632,15 +1632,15 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             
             if (p_whole_chunk && !p_further_chunks)
             {
-                while (r_end < t_length && MCStringGetNativeCharAtIndex(p_string, r_end) == ' ')
+                while (r_end < t_length && isspace(MCStringGetNativeCharAtIndex(p_string, r_end)))
                     r_end++;
-                while (r_start > 0 && MCStringGetNativeCharAtIndex(p_string, r_start - 1) == ' ')
+                while (r_start > 0 && isspace(MCStringGetNativeCharAtIndex(p_string, r_start - 1)))
                     r_start--;
                 return;
             }
             
             // ignore whitespace at the end
-            while (r_end > r_start && MCStringGetNativeCharAtIndex(p_string, r_end - 1) == ' ')
+            while (r_end > r_start && isspace(MCStringGetNativeCharAtIndex(p_string, r_end - 1)))
                 r_end--;
         }
             return;
