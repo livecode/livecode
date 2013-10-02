@@ -693,8 +693,6 @@ void MCChunk::take_components(MCChunk *tchunk)
 
 Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recurse)
 {
-	//return getobj_legacy(ep, r_object . object, r_object . part_id, p_recurse);
-
     MCExecPoint ep2(ep);
     MCExecContext ctxt(ep);
     
@@ -2763,13 +2761,13 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
                 default:
                     MCMarkedText t_mark;
                     MCInterfaceMarkContainer(ctxt, t_object, t_mark);
-                    MCStringCopySubstring(t_mark . text, MCRangeMake(t_mark . start, t_mark . finish), &t_text);
+                    MCStringsEvalTextChunk(ctxt, t_mark, &t_text);
                     MCValueRelease(t_mark . text);
                     break;
             }
 		}
 	}
-    
+
     if (*t_text != nil)
     {
         if (cline != NULL || item != NULL || word != NULL || token != NULL || character != NULL)
@@ -2780,7 +2778,7 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
             t_new_mark . finish = MAXUINT4;
             mark(ep, false, false, t_new_mark);
             MCAutoStringRef t_string;
-            MCStringsGetTextChunk(ctxt, t_new_mark . text, t_new_mark . start, t_new_mark . finish, &t_string);
+            MCStringsEvalTextChunk(ctxt, t_new_mark, &t_string);
             /* UNCHECKED */ ep . setvalueref(*t_string);
         }
         else
@@ -4675,6 +4673,7 @@ if background is not
 
 void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
 {
+#ifdef NEW_CHUNK
 	MCSyntaxFactoryBeginExpression(ctxt, line, pos); 
 
 	if (desttype != DT_UNDEFINED && desttype != DT_ISDEST)
@@ -4822,6 +4821,7 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
 	// (which recuses to findstack on each of them).
 	if (stack != nil)
 	{
+        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalStackOfObjectMethodInfo);
 		switch(stack -> etype)
 		{
 		case CT_EXPRESSION:
@@ -4866,6 +4866,7 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
 	// 
 	if (object != nil && (object -> otype == CT_AUDIO_CLIP || object -> otype == CT_VIDEO_CLIP))
 	{
+        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalStackOfObjectMethodInfo);
         switch (ct_class(object -> etype))
         {
             case CT_ORDINAL:
@@ -4889,6 +4890,7 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
 
 	if (background != nil)
 	{
+        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalStackOfObjectMethodInfo);
 		switch(ct_class(background -> etype))
 		{
 		case CT_ORDINAL:
@@ -4911,6 +4913,7 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
     
 	if (card != nil)
 	{
+        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalStackWithOptionalBackgroundMethodInfo);
 		MCSyntaxFactoryEvalConstantBool(ctxt, marked);
 			
 		switch(ct_class(card -> etype))
@@ -5025,6 +5028,7 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
         }
     }
     MCSyntaxFactoryEndExpression(ctxt);
+#endif
 }
 								  
 ////////////////////////////////////////////////////////////////////////////////

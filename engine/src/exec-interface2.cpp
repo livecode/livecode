@@ -3304,7 +3304,7 @@ void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wh
         r_mark . finish = MAXUINT4;
     	return;
     }
-    
+    r_mark . text = nil;
     ctxt . LegacyThrow(EE_CHUNK_BADCONTAINER);
 }
 
@@ -3315,6 +3315,7 @@ void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCMa
         case CT_FIELD:
         case CT_BUTTON:
             MCInterfaceMarkObject(ctxt, p_container, false, r_mark);
+            return;
         case CT_IMAGE:
         case CT_AUDIO_CLIP:
         case CT_VIDEO_CLIP:
@@ -3326,6 +3327,7 @@ void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCMa
             break;
     }
     
+    r_mark . text = nil;
     ctxt . LegacyThrow(EE_CHUNK_OBJECTNOTCONTAINER);
 }
 

@@ -2060,6 +2060,17 @@ void MCStringsEvalCharsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCStringsEvalTextChunk(MCExecContext& ctxt, MCMarkedText p_source, MCStringRef& r_string)
+{
+    if (p_source . text == nil)
+        return;
+    
+    if (MCStringCopySubstring(p_source . text, MCRangeMake(p_source . start, p_source . finish - p_source . start), r_string))
+        return;
+    
+    ctxt . Throw();
+}
+
 void MCStringsMarkTextChunkByRange(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, MCMarkedText& x_mark)
 {
     MCAutoStringRef t_string;
