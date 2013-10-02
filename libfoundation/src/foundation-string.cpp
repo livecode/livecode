@@ -1640,7 +1640,7 @@ bool MCStringPrependSubstring(MCStringRef self, MCStringRef p_prefix, MCRange p_
 {
 	MCAssert(MCStringIsMutable(self));
 
-	// Only do the prepend now if self != prefix.
+	// Only do the append now if self != prefix.
 	if (self != p_prefix)
 	{
 		__MCStringClampRange(p_prefix, p_range);
@@ -1660,7 +1660,7 @@ bool MCStringPrependSubstring(MCStringRef self, MCStringRef p_prefix, MCRange p_
 		return true;
 	}
 
-	// Otherwise copy substring and prepend.
+	// Otherwise copy substring and append.
 	MCAutoStringRef t_prefix_substring;
 	return MCStringCopySubstring(p_prefix, p_range, &t_prefix_substring) &&
 		MCStringPrepend(self, *t_prefix_substring);
@@ -1792,28 +1792,6 @@ bool MCStringRemove(MCStringRef self, MCRange p_range)
 	__MCStringChanged(self);
 #endif
 	
-	// We succeeded.
-	return true;
-}
-
-bool MCStringSubstring(MCStringRef self, MCRange p_range)
-{
-	MCAssert(MCStringIsMutable(self));
-    
-	__MCStringClampRange(self, p_range);
-    
-	// Remove the surrounding chars.
-    // On the left if necessary
-    if (p_range . offset != 0)
-    {
-        __MCStringShrinkAt(self, 0, p_range . offset);
-        p_range . offset = 0;
-    }
-    
-    // And on the right if necessary
-    if (p_range . offset + p_range . length != self -> char_count)
-        __MCStringShrinkAt(self, p_range . length, self -> char_count - p_range . length);
-    
 	// We succeeded.
 	return true;
 }

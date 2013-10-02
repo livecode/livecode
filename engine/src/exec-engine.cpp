@@ -686,7 +686,7 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
 				return;
 			}
 			
-			/* UNCHECKED */ MCStringPrepend(*t_string, *t_value_string);
+			/* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(0, 0), *t_value_string);
 			
 			ep . setvalueref(*t_string);
 			p_var . variable -> set(ep, False);
@@ -1155,8 +1155,12 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
 
 			// MW-2011-08-11: [[ Bug 9668 ]] Make sure we copy 'pdata' if we use it, since
 			//   mptr (into which it points) only lasts as long as this method call.
-			if (ctxt . GetEP() . gethandler() -> eval(ctxt . GetEP()) == ES_NORMAL)
-				newparam->set_argument(ctxt . GetEP());
+			if (ctxt . GetHandler() -> eval(ctxt . GetEP()) == ES_NORMAL)
+			{  
+				MCAutoStringRef t_value;
+				ctxt.CopyAsStringRef(&t_value);
+				newparam->setvalueref_argument(*t_value);
+			}
 			else
 				newparam->copysvalue_argument(pdata);
 
@@ -1582,7 +1586,7 @@ bool MCEngineEvalValueAsObject(MCValueRef p_value, bool p_strict, MCObjectPtr& r
 void MCEngineEvalValueAsObject(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_object)
 {
     bool t_parse_error;
-    if (!MCEngineEvalValueAsObject(p_value, true, r_object, t_parse_error))
+    if (MCEngineEvalValueAsObject(p_value, true, r_object, t_parse_error))
         ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP);
 }
 
@@ -1670,13 +1674,14 @@ void MCEngineEvalMeAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
     else
         t_object = ctxt . GetObject();
 
+    if (t_object != nil)
+    {
         r_object . object = t_object;
         r_object . part_id = 0;
-    
-    if (t_object != nil)
         return;
+    }
     
-  //  ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
 }
 
 void MCEngineEvalMenuObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
