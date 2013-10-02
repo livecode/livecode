@@ -521,7 +521,6 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 		return;
 
 	MCValueRef t_valueref;
-	t_valueref = MCValueRetain(kMCEmptyString);
 
 	// Set foreground
 	MCNewAutoNameRef t_key1;
@@ -600,11 +599,13 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	if (MCArrayFetchValue(p_style, false, *t_key6, t_valueref))
 	{
 		uint4 flags;
-		char *fname;
+		MCAutoStringRef fname;
 		uint2 height;
 		uint2 size;
 		uint2 style;
-		MCF_parsetextatts(P_TEXT_STYLE, MCStringGetOldString((MCStringRef)t_valueref), flags, fname, height, size, style);
+
+		MCF_parsetextatts(P_TEXT_STYLE, (MCStringRef)t_valueref, flags, &fname, height, size, style);
+
 		t_block -> setatts(P_TEXT_STYLE, (void *)style);
 		MCValueRelease(t_valueref);
 	}

@@ -3880,7 +3880,7 @@ if (targets == NULL)
 			return ES_ERROR;
 		}
 		
-		if (t_chunk . chunk != CT_UNDEFINED)
+		if (t_chunk . chunk != CT_UNDEFINED || where == PT_BEFORE || where == PT_AFTER)
 		{
 			if (t_chunk . object -> gettype() == CT_FIELD)
 				MCInterfaceExecSelectTextOfField(ctxt, where, t_chunk);
