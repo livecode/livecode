@@ -105,7 +105,7 @@ public:
 	bool getglobalnames(MCListRef& r_list);
 	bool getvarnames(bool p_all, MCListRef& r_list);
 	Exec_stat getvarnames(MCExecPoint &, Boolean all);
-	Exec_stat MCHandler::eval_ctxt(MCExecContext& ctxt, MCValueRef& r_value);
+	Exec_stat eval_ctxt(MCExecContext& ctxt, MCValueRef& r_value);
 	void eval(MCExecContext& ctxt, MCStringRef p_expression, MCValueRef& r_value);
 	Exec_stat eval(MCExecPoint &);
 	uint4 linecount();

@@ -1438,9 +1438,9 @@ void MCFilesExecReadComplete(MCExecContext& ctxt, MCStringRef p_output, IO_stat 
 	}
 	if (t_textmode)
 	{
-		ctxt.GetEP().setvalueref(p_output);
-		ctxt.GetEP().texttobinary();
-		ctxt.GetEP().copyasstringref(p_output);
+		MCAutoStringRef t_output;
+		/* UNCHECKED*/ MCStringConvertLineEndingsToLiveCode(p_output, &t_output);
+		MCValueAssign(p_output, *t_output);
 	}
 	
 	ctxt . SetItToValue(p_output);
@@ -1836,8 +1836,10 @@ void MCFilesExecWriteToStderr(MCExecContext& ctxt, MCStringRef p_data, int p_uni
 		ctxt . SetTheResultToEmpty();
 }
 
+//This method causes the program to crash (the call to MCFilesExecWriteToStream(ctxt, t_stream, *t_text_data, p_unit_type, t_stat))
 void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStringRef p_data, bool p_is_end, int p_unit_type, int64_t p_at)
 {
+	
 	IO_handle t_stream = NULL;
 	Boolean t_textmode = False;
 	IO_stat t_stat = IO_NORMAL;
@@ -1856,9 +1858,7 @@ void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStr
 	if (t_textmode)
 	{
 		MCAutoStringRef t_text_data;
-		ctxt.GetEP().setvalueref(p_data);
-		ctxt.GetEP().binarytotext();
-		ctxt.GetEP().copyasstringref(&t_text_data);
+		/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(p_data, &t_text_data);
 		MCFilesExecWriteToStream(ctxt, t_stream, *t_text_data, p_unit_type, t_stat);
 	}
 	else
@@ -1877,6 +1877,7 @@ void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStr
 #if !defined _WIN32 && !defined _MACOSX
 	MCS_flush(t_stream);
 #endif
+	
 }
 
 void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStringRef p_data, int p_unit_type)
@@ -1918,15 +1919,13 @@ void MCFilesExecWriteToProcess(MCExecContext& ctxt, MCNameRef p_process, MCStrin
 	if (t_textmode)
 	{
 		MCAutoStringRef t_text_data;
-		ctxt.GetEP().setvalueref(p_data);
-		ctxt.GetEP().binarytotext();
+		MCStringConvertLineEndingsFromLiveCode(p_data, &t_text_data);
 		// MW-2004-11-17: EOD should only happen when writing to processes in text-mode
-		if (MCU_offset("\004", ctxt.GetEP().getsvalue(), offset, True))
+		if (MCU_offset("\004", MCStringGetOldString(*t_text_data), offset, True))
 		{
 			ctxt.GetEP().substring(0, offset);
 			haseof = True;
 		}
-		ctxt.GetEP().copyasstringref(&t_text_data);
 		MCFilesExecWriteToStream(ctxt, t_stream, *t_text_data, p_unit_type, t_stat);
 	}
 	else

@@ -115,6 +115,21 @@ bool MCPurchaseStateToString(MCPurchaseState p_state, const char *&r_string)
 	return false;
 }
 
+bool MCPurchaseList(MCStringRef& r_string)
+{   
+	MCAutoStringRef t_string;
+	MCStringCreateMutable(0, &t_string);
+	for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != NULL; t_purchase = t_purchase->next)
+		MCStringAppendFormat(*t_string, "%u\n", t_purchase -> id);
+	//remove the last \n character
+    /* UNCHECKED */ MCStringRemove(*t_string, MCRangeMake(MCStringGetLength(*t_string) - 1, 1)); 
+
+	r_string = MCValueRetain(*t_string);
+	
+	return true;
+}
+
+/*
 bool MCPurchaseList(MCExecPoint& ep)
 {    
 	for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != NULL; t_purchase = t_purchase->next)
@@ -122,6 +137,7 @@ bool MCPurchaseList(MCExecPoint& ep)
 	
 	return true;
 }
+*/
 
 bool MCPurchaseInit(MCPurchase *p_purchase, MCStringRef p_product_id, void *p_context);
 bool MCPurchaseCreate(MCStringRef p_product_id, void *p_context, MCPurchase *&r_purchase)

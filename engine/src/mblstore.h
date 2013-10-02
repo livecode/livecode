@@ -174,6 +174,7 @@ bool MCPurchaseLookupProperty(MCStringRef p_property, MCPurchaseProperty &r_prop
 
 bool MCPurchaseFindById(uint32_t p_id, MCPurchase *&r_purchase);
 bool MCPurchaseList(MCExecPoint& ep);
+bool MCPurchaseList(MCStringRef& r_string);
 
 bool MCPurchaseCreate(MCStringRef p_product_id, void *p_context, MCPurchase *&r_purchase);
 
