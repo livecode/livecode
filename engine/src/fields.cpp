@@ -829,10 +829,10 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 		exportasstyledtext(parid, ep, si, ei, which == P_FORMATTED_STYLED_TEXT, effective == True);
 		return ES_NORMAL;
 	}
-
-	if (flags & F_SHARED_TEXT)
-		parid = 0;
-	MCParagraph *pgptr = getcarddata(fdata, parid, True)->getparagraphs();
+	
+	// MW-2013-08-27: [[ Bug 11129 ]] Use 'resolveparagraphs()' so we get the same
+	//   behavior as if exporting the content in various ways.
+	MCParagraph *pgptr = resolveparagraphs(parid);
 
 	// MW-2012-02-08: [[ Field Indices ]] If we pass a pointer to indextoparagraph
 	//   then it computes the index of the paragraph (1-based).
