@@ -117,16 +117,13 @@ bool MCPurchaseStateToString(MCPurchaseState p_state, const char *&r_string)
 
 bool MCPurchaseList(MCStringRef& r_string)
 {   
-	MCAutoStringRef t_string;
-	MCStringCreateMutable(0, &t_string);
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
 	for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != NULL; t_purchase = t_purchase->next)
-		MCStringAppendFormat(*t_string, "%u\n", t_purchase -> id);
-	//remove the last \n character
-    /* UNCHECKED */ MCStringRemove(*t_string, MCRangeMake(MCStringGetLength(*t_string) - 1, 1)); 
-
-	r_string = MCValueRetain(*t_string);
+		MCListAppendInteger(*t_list, t_purchase -> id);
 	
-	return true;
+	return MCListCopyAsString(*t_list, r_string);	
 }
 
 /*
