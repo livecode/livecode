@@ -758,7 +758,7 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 }
 
 static bool string_contains_item(const char *p_string, const char *p_item)
-{
+{ 
 	const char *t_offset;
 	t_offset = strstr(p_string, p_item);
 	if (t_offset == nil)
@@ -768,7 +768,7 @@ static bool string_contains_item(const char *p_string, const char *p_item)
 	
 	uint32_t t_length;
 	t_length = strlen(p_item);
-	if (t_offset[t_length] != '\0' && t_offset[t_length] != ',')
+    if (t_offset[t_length] != '\0' && t_offset[t_length] != ',')
 		return false;
 
 	return true;
@@ -797,7 +797,7 @@ Exec_stat MCObject::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 			return ES_ERROR;
 
 		// Check the textstyle string is within the object's textstyle set.
-		ep . setboolean(string_contains_item(ep . getcstring(), MCF_unparsetextstyle(t_style)));
+        ep . setboolean(string_contains_item(ep . getcstring(), MCF_unparsetextstyle(t_style)));
 	}
 	break;
 	case P_CUSTOM_KEYS:
@@ -3287,6 +3287,14 @@ void MCObject::setuintprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p
 	ctxt . Throw();
 }
 
+void MCObject::setintprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, integer_t p_value)
+{
+	ctxt . GetEP() . setint(p_value);
+	if (setprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL)
+		return;
+	
+	ctxt . Throw();
+}
 //////////
 
 void MCObject::getdoubleprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, double& r_value)

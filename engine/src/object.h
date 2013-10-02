@@ -478,7 +478,7 @@ public:
 	}
 
 	Exec_stat setsprop(Properties which, MCStringRef p_string);
-	Exec_stat setsprop(Properties which, const MCString &);
+
 	void help();
 
 	Boolean getselected() const

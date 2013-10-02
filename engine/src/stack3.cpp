@@ -1478,39 +1478,56 @@ void MCStack::createmenu(MCControl *nc, uint2 width, uint2 height)
 	controls = nc;
 	curcard = cards = MCtemplatecard->clone(False, False);
 	curcard->allowmessages(False);
-	curcard->setsprop(P_SHOW_BORDER, MCtruemcstring);
-	setsprop(P_COLORS, MCnullmcstring);
+	curcard->setsprop(P_SHOW_BORDER, MCSTR(MCtruestring));
+	setsprop(P_COLORS, kMCEmptyString);
 	if (nc->gettype() == CT_FIELD && IsMacLFAM() && MCaqua)
 	{
-		curcard->setsprop(P_BORDER_WIDTH, "0");
+		curcard->setsprop(P_BORDER_WIDTH, MCSTR("0"));
 		uint2 i;
 		MCObject *tparent = getparent();
 		if  (!tparent->getcindex(DI_BACK, i) && !tparent->getpindex(DI_BACK,i))
-			setsprop(P_BACK_COLOR,  "255,255,255");
+			setsprop(P_BACK_COLOR,  MCSTR("255,255,255"));
 	}
 	else
 		if (nc->gettype() == CT_FIELD && MClook != LF_MOTIF
 		        || IsMacLF() || (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN))
 		{
-			curcard->setsprop(P_BORDER_WIDTH, "1");
+			curcard->setsprop(P_BORDER_WIDTH, MCSTR("1"));
 			if (IsMacLF() || nc->gettype() == CT_FIELD || MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN)
-				curcard->setsprop(P_3D, MCfalsemcstring);
+				curcard->setsprop(P_3D, MCSTR(MCfalsestring));
 		}
-	char colorbuf[16];
+	
 	MCWidgetInfo wmenu;
 	wmenu.type = WTHEME_TYPE_MENU;
 	if ( nc->gettype() != CT_FIELD && (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN))
 	{
 		uint2 i;
 		MCObject *tparent = getparent();
+
 		if  (!tparent->getcindex(DI_BACK, i) && !tparent->getpindex(DI_BACK,i))
-			setsprop(P_BACK_COLOR,  MCcurtheme->getthemecolor(wmenu,WCOLOR_BACK,colorbuf));
+        {
+            MCAutoStringRef colorbuf;
+            MCcurtheme->getthemecolor(wmenu, WCOLOR_BACK, &colorbuf);
+			setsprop(P_BACK_COLOR, *colorbuf);
+        }
 		if  (!tparent->getcindex(DI_BORDER, i) && !tparent->getpindex(DI_BORDER,i))
-			setsprop(P_BORDER_COLOR,  MCcurtheme->getthemecolor(wmenu,WCOLOR_BORDER,colorbuf));
+        {
+            MCAutoStringRef colorbuf;
+            MCcurtheme->getthemecolor(wmenu, WCOLOR_BORDER, &colorbuf);
+			setsprop(P_BORDER_COLOR, *colorbuf);
+        }
 		if  (!tparent->getcindex(DI_FORE, i) && !tparent->getpindex(DI_FORE,i))
-			setsprop(P_FORE_COLOR,  MCcurtheme->getthemecolor(wmenu,WCOLOR_TEXT,colorbuf));
+        {
+            MCAutoStringRef colorbuf;
+            MCcurtheme->getthemecolor(wmenu, WCOLOR_TEXT, &colorbuf);
+			setsprop(P_FORE_COLOR, *colorbuf);
+        }
 		if  (!tparent->getcindex( DI_HILITE, i) && !tparent->getpindex( DI_HILITE,i))
-			setsprop(P_HILITE_COLOR,  MCcurtheme->getthemecolor(wmenu,WCOLOR_HILIGHT,colorbuf));
+        {
+            MCAutoStringRef colorbuf;
+            MCcurtheme->getthemecolor(wmenu, WCOLOR_HILIGHT, &colorbuf);
+			setsprop(P_HILITE_COLOR, *colorbuf);
+        }
 	}
 
 
