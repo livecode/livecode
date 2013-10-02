@@ -1319,58 +1319,50 @@ void MCStack::GetSharedGroupIds(MCExecContext& ctxt, MCStringRef& r_ids)
 	GetGroupProps(ctxt, P_SHARED_GROUP_IDS, r_ids);
 }
 
-void MCStack::GetCardProps(MCExecContext& ctxt, Properties which, MCStringRef& r_props)
+void MCStack::GetCardIds(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_ids)
 {
-	MCAutoListRef t_prop_list;
-
-	bool t_success;
-	t_success = true; 
-
-	if (t_success)
-		t_success = MCListCreateMutable('\n', &t_prop_list);
-	
-	if (t_success && cards != nil)
+	MCAutoArray<uinteger_t> t_ids;
+    bool t_success;
+    
+    t_success = true;
+    if (cards != nil)
 	{
 		MCCard *cptr = cards;
 		do
 		{
-			MCAutoStringRef t_property;
-			if (which == P_CARD_NAMES)
-			{
-				cptr -> GetShortName(ctxt, &t_property);
-				t_success = !ctxt . HasError();
-			}
-			else
-			{
-				uint32_t t_id;
-				cptr -> GetId(ctxt, t_id);
-				t_success = MCStringFormat(&t_property, "%d", t_id);
-			}
-			if (t_success)
-				t_success = MCListAppend(*t_prop_list, *t_property);
-
+            uint32_t t_id;
+            t_id = cptr -> getid();
+			t_success = t_ids . Push(t_id);
 			cptr = cptr -> next();
 		}
 		while (cptr != cards && t_success);
 	}
-
-	if (t_success)
-		t_success = MCListCopyAsString(*t_prop_list, r_props);
-
-	if (t_success)
-		return;
-
-	ctxt . Throw();
+    
+    t_ids . Take(r_ids, r_count);
 }
 
-void MCStack::GetCardIds(MCExecContext& ctxt, MCStringRef& r_ids)
+void MCStack::GetCardNames(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_names)
 {
-	GetCardProps(ctxt, P_CARD_IDS, r_ids);
-}
-
-void MCStack::GetCardNames(MCExecContext& ctxt, MCStringRef& r_names)
-{
-	GetCardProps(ctxt, P_CARD_NAMES, r_names);
+	MCAutoArray<MCStringRef> t_names;
+    bool t_success;
+    
+    t_success = true;
+    if (cards != nil)
+	{
+		MCCard *cptr = cards;
+		do
+		{
+            MCStringRef t_name;
+            cptr -> getstringprop(ctxt, 0, P_SHORT_NAME, False, t_name);
+            t_success = !ctxt . HasError();
+            if (t_success)
+                t_success = t_names . Push(t_name);
+			cptr = cptr -> next();
+		}
+		while (cptr != cards && t_success);
+	}
+    
+    t_names . Take(r_names, r_count);
 }
 
 void MCStack::GetEditBackground(MCExecContext& ctxt, bool& r_value)

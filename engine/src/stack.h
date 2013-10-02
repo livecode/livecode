@@ -778,8 +778,8 @@ public:
 	void GetBackgroundIds(MCExecContext& ctxt, MCStringRef& r_ids);
 	void GetSharedGroupNames(MCExecContext& ctxt, MCStringRef& r_names);
 	void GetSharedGroupIds(MCExecContext& ctxt, MCStringRef& r_ids);
-	void GetCardIds(MCExecContext& ctxt, MCStringRef& r_ids);
-	void GetCardNames(MCExecContext& ctxt, MCStringRef& r_names);
+    void GetCardIds(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_ids);
+    void GetCardNames(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_names);
 	void GetEditBackground(MCExecContext& ctxt, bool& r_value);
 	void SetEditBackground(MCExecContext& ctxt, bool p_value);
 	void GetExternals(MCExecContext& ctxt, MCStringRef& r_externals);
