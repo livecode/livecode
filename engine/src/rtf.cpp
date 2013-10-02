@@ -792,7 +792,7 @@ RTFStatus RTFReader::ParseDocument(RTFToken p_token, int4 p_value)
 	break;
 
 	case kRTFTokenPlain:
-		m_state . SetFontName(NULL);
+		m_state . SetFontName(nil);
 		m_state . SetFontStyle(kRTFFontStyleNone);
 		m_state . SetFontSize(0);
 		m_attributes_changed = true;

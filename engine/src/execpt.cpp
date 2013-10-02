@@ -515,7 +515,9 @@ Exec_stat MCExecPoint::setlinedel(uint2 l, uint2 p)
 
 void MCExecPoint::setnumberformat()
 {
-	MCU_setnumberformat(getsvalue(), nffw, nftrailing, nfforce);
+    MCAutoStringRef t_value;
+    copyasstringref(&t_value);
+	MCU_setnumberformat(*t_value, nffw, nftrailing, nfforce);
 }
 
 //////////

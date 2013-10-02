@@ -258,16 +258,12 @@ void MCU_getnumberformat(MCExecPoint &ep, uint2 fw, uint2 trail, uint2 force)
 #endif
 }
 
-void MCU_setnumberformat(MCStringRef p_input, uint2 &fw, uint2 &trailing, uint2 &force)
-{
-	MCU_setnumberformat(MCStringGetOldString(p_input), fw, trailing, force);
-}
 
-void MCU_setnumberformat(const MCString &d, uint2 &fw,
+void MCU_setnumberformat(MCStringRef d, uint2 &fw,
                          uint2 &trailing, uint2 &force)
 {
-	fw = d.getlength();
-	const char *sptr = d.getstring();
+	fw = MCStringGetLength(d);
+	const char *sptr = MCStringGetCString(d);
 	const char *eptr = sptr;
 	while (eptr - sptr < fw && *eptr != '.')
 		eptr++;
