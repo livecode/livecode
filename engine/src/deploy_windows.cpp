@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "scriptpt.h"
 #include "variable.h"
 #include "statemnt.h"
+#include "osspec.h"
 
 #include "deploy.h"
 
@@ -1081,27 +1082,20 @@ static uint64_t MCWindowsVersionInfoParseVersion(MCStringRef p_string)
 
 static bool add_version_info_entry(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
 {
-	MCExecPoint ep(NULL, NULL, NULL);
-	MCExecContext ctxt(ep);
-	if (!ctxt . SetValueRef(p_value))
-		return false;
-
 	MCWindowsVersionInfo *t_string;
-	MCAutoStringRef t_value;
-	/* UNCHECKED */ ctxt . CopyAsStringRef(&t_value);
-	if (MCStringGetNativeCharAtIndex(*t_value, MCStringGetLength(*t_value) - 1) != '\0')
-	{
-		MCAutoStringRef t_value_mutable_copy;
-		/* UNCHECKED */ MCStringMutableCopy(*t_value, &t_value_mutable_copy);
-		MCStringAppendNativeChar(*t_value_mutable_copy, '\0');
-		ctxt . SetValueRef(*t_value_mutable_copy);
-	}
-	ctxt . NativeToUtf16();
-	MCAutoStringRef t_new_value;
-	/* UNCHECKED */ ctxt . CopyAsStringRef(&t_new_value);
-
-	swap_uint16s((uint16_t *)MCStringGetCString(*t_new_value), MCStringGetLength(*t_new_value) / 2);
-	return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, MCStringGetCString(MCNameGetString(p_key)), true, MCStringGetCString(*t_new_value), MCStringGetLength(*t_new_value), t_string);
+	char *t_value;
+	t_value = strdup(MCStringGetCString((MCStringRef)p_value));
+	uint4 t_value_len = strlen(t_value);
+	
+	if (t_value[t_value_len - 1] != '\0')
+		t_value[t_value_len - 1] = '\0';
+	
+	unsigned short *t_value_utf16;
+	uint4 t_value_utf16_length;
+	MCS_nativetoutf16(t_value, strlen(t_value), t_value_utf16, t_value_utf16_length);
+	
+	swap_uint16s(t_value_utf16, t_value_utf16_length / 2);
+	return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, MCStringGetCString(MCNameGetString(p_key)), true, t_value_utf16, t_value_utf16_length, t_string);
 }
 
 static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCArrayRef p_info)

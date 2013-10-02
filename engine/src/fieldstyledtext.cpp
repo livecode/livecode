@@ -655,11 +655,7 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 		return;
 	}
 	
-	// We'll need an ep for processing.
-	MCExecPoint ep(nil, nil, nil);
-	
 	MCValueRef t_valueref;
-	t_valueref = MCValueRetain(kMCEmptyString);
 
 	// Set foreground
 	MCNewAutoNameRef t_key1;
