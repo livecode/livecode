@@ -3281,9 +3281,6 @@ Exec_stat MCChunk::set_legacy(MCExecPoint &ep, Preposition_type ptype)
 
 Exec_stat MCChunk::set(MCExecPoint& ep, Preposition_type p_type, MCValueRef p_value)
 {
-    //ep . setvalueref(p_value);
-    //return set_legacy(ep, p_type);
-    
     MCExecContext ctxt(ep);
     
     if (isvarchunk())
@@ -3330,6 +3327,11 @@ Exec_stat MCChunk::set(MCExecPoint& ep, Preposition_type p_type, MCValueRef p_va
         else
             MCInterfaceExecPutIntoObject(ctxt, *t_string, p_type, t_obj_chunk);
     }
+    
+    if (!ctxt . HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
 }
 
 #ifdef LEGACY_EXEC

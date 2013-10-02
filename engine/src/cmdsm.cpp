@@ -243,8 +243,7 @@ Exec_stat MCAdd::exec(MCExecPoint &ep)
 		}
 		else
 		{
-			ep . setvalueref(*t_result);
-			if (dest->set_legacy(ep, PT_INTO) == ES_NORMAL)
+			if (dest->set(ep, PT_INTO, *t_result) == ES_NORMAL)
 				return ES_NORMAL;
 			ctxt . LegacyThrow(EE_ADD_CANTSET);
 		}
@@ -479,8 +478,7 @@ Exec_stat MCDivide::exec(MCExecPoint &ep)
 		}
 		else
 		{
-			ep . setvalueref(*t_result);
-			if (dest->set_legacy(ep, PT_INTO) == ES_NORMAL)
+			if (dest->set(ep, PT_INTO, *t_result) == ES_NORMAL)
 				return ES_NORMAL;
 			ctxt . LegacyThrow(EE_DIVIDE_CANTSET);
 		}
@@ -712,8 +710,7 @@ Exec_stat MCMultiply::exec(MCExecPoint &ep)
 		}
 		else
 		{
-			ep . setvalueref(*t_result);
-			if (dest->set_legacy(ep, PT_INTO) == ES_NORMAL)
+			if (dest->set(ep, PT_INTO, *t_result) == ES_NORMAL)
 				return ES_NORMAL;
 			ctxt . LegacyThrow(EE_MULTIPLY_CANTSET);
 		}
@@ -928,8 +925,7 @@ Exec_stat MCSubtract::exec(MCExecPoint &ep)
 		}
 		else
 		{
-			ep . setvalueref(*t_result);
-			if (dest->set_legacy(ep, PT_INTO) == ES_NORMAL)
+			if (dest->set(ep, PT_INTO, *t_result) == ES_NORMAL)
 				return ES_NORMAL;
 			ctxt . LegacyThrow(EE_SUBTRACT_CANTSET);
 		}

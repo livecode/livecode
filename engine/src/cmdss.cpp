@@ -1922,8 +1922,7 @@ MCCard *cptr = MCcstack->popcard();
 	{
 		MCAutoStringRef t_element;
 		MCInterfaceExecPop(ctxt, &t_element);
-		ep . setvalueref(*t_element);
-		if (dest->set_legacy(ep, prep) != ES_NORMAL) 
+		if (dest->set(ep, prep, *t_element) != ES_NORMAL)
 		{
 			MCeerror->add(EE_POP_CANTSET, line, pos);
 			return ES_ERROR;
