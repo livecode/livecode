@@ -96,7 +96,7 @@ MCNativeControl::MCNativeControl(void)
 {
 	m_references = 1;
 	m_id = ++s_last_native_control_id;
-	m_name = nil;
+	m_name = MCValueRetain(kMCEmptyString);
 	m_object = nil;
 	m_next = nil;
     m_deleted = false;
@@ -110,10 +110,9 @@ MCNativeControl::~MCNativeControl(void)
 		m_object = nil;
 	}
 	
-	if (m_name != nil)
+	if (!MCStringIsEmpty(m_name))
 	{
-		MCCStringFree(m_name);
-		m_name = nil;
+		MCValueRelease(m_name);
 	}
     
 	if (s_native_controls == this)
@@ -150,9 +149,9 @@ uint32_t MCNativeControl::GetId(void)
 	return m_id;
 }
 
-const char *MCNativeControl::GetName(void)
+void MCNativeControl::GetName(MCStringRef &r_name)
 {
-	return m_name;
+        r_name = MCValueRetain(m_name);
 }
 
 MCObject *MCNativeControl::GetOwner(void)
@@ -169,14 +168,14 @@ void MCNativeControl::SetOwner(MCObject *p_owner)
 
 bool MCNativeControl::SetName(MCStringRef p_name)
 {
-	if (m_name != nil)
+	if (!MCStringIsEmpty(m_name))
 	{
-		MCCStringFree(m_name);
-		m_name = nil;
+		MCValueRelease(m_name);
+		m_name = MCValueRetain(kMCEmptyString);
 	}
 	
-	if (p_name != nil) 
-		return MCCStringClone(MCStringGetCString(p_name), m_name);
+	if (p_name != nil)
+		MCValueAssign(m_name, p_name);
 	
 	return true;
 }
@@ -329,10 +328,10 @@ static struct {const char *name; MCNativeControlAction action;} s_native_control
 	{nil, kMCNativeControlActionUnknown}
 };
 
-bool MCNativeControl::LookupProperty(const char *p_property, MCNativeControlProperty& r_prop)
+bool MCNativeControl::LookupProperty(MCStringRef p_property, MCNativeControlProperty& r_prop)
 {
 	for(uint32_t i = 0; s_native_control_properties[i] . name != nil; i++)
-		if (MCCStringEqualCaseless(p_property, s_native_control_properties[i] . name))
+		if (MCStringIsEqualToCString(p_property, s_native_control_properties[i] . name, kMCCompareCaseless))
 		{
 			r_prop = s_native_control_properties[i] . property;
 			return true;
@@ -341,10 +340,10 @@ bool MCNativeControl::LookupProperty(const char *p_property, MCNativeControlProp
 	return false;
 }
 
-bool MCNativeControl::LookupAction(const char *p_action, MCNativeControlAction& r_action)
+bool MCNativeControl::LookupAction(MCStringRef p_action, MCNativeControlAction& r_action)
 {
 	for(uint32_t i = 0; s_native_control_actions[i] . name != nil; i++)
-		if (MCCStringEqualCaseless(p_action, s_native_control_actions[i] . name))
+		if (MCStringIsEqualToCString(p_action, s_native_control_actions[i] . name, kMCCompareCaseless))
 		{
 			r_action = s_native_control_actions[i] . action;
 			return true;
@@ -352,10 +351,10 @@ bool MCNativeControl::LookupAction(const char *p_action, MCNativeControlAction& 
 	return false;
 }
 
-bool MCNativeControl::LookupType(const char *p_type, MCNativeControlType& r_type)
+bool MCNativeControl::LookupType(MCStringRef p_type, MCNativeControlType& r_type)
 {
 	for(uint32_t i = 0; s_native_control_types[i] . name != nil; i++)
-		if (MCCStringEqualCaseless(p_type, s_native_control_types[i] . name))
+		if (MCStringIsEqualToCString(p_type, s_native_control_types[i] . name, kMCCompareCaseless))
 		{
 			r_type = s_native_control_types[i] . type;
 			return true;
@@ -363,20 +362,22 @@ bool MCNativeControl::LookupType(const char *p_type, MCNativeControlType& r_type
 	return false;
 }
 
-bool MCNativeControl::FindByNameOrId(const char *p_name, MCNativeControl*& r_control)
+bool MCNativeControl::FindByNameOrId(MCStringRef p_name, MCNativeControl*& r_control)
 {
-	char *t_id_end;
-	uint32_t t_id;
-	t_id = strtoul(p_name, &t_id_end, 10);
-	if (t_id_end != p_name)
+	integer_t t_id;
+	if (/* CTXT */ MCStringToInteger(p_name, t_id))
 		return FindById(t_id, r_control);
 	
 	for(MCNativeControl *t_control = s_native_controls; t_control != nil; t_control = t_control -> m_next)
-		if (!t_control -> m_deleted && t_control -> GetName() != nil && MCCStringEqualCaseless(t_control -> GetName(), p_name))
+    {
+        MCAutoStringRef t_name;
+        t_control -> GetName(&t_name);
+		if (!t_control -> m_deleted && !MCStringIsEmpty(*t_name) && MCStringIsEqualTo(p_name, *t_name, kMCCompareCaseless))
 		{
 			r_control = t_control;
 			return true;
 		}
+    }
 	
 	return false;
 }
@@ -424,9 +425,10 @@ bool MCNativeControl::GetControlList(MCStringRef& r_list)
     MCListCreateMutable('\n', &t_list);
 	for(MCNativeControl *t_control = s_native_controls; t_success && t_control != nil; t_control = t_control -> m_next)
     {
-        MCAutoStringRef t_control_string;
-        if (t_control -> GetName() != nil)
-            t_success = MCStringCreateWithCString(t_control -> GetName(), &t_control_string);
+        MCAutoStringRef t_name, t_control_string;
+        t_control -> GetName(&t_name);
+        if (!MCStringIsEmpty(*t_name))
+            t_control_string = MCValueRetain(*t_name);
         else
             t_success = MCStringFormat(&t_control_string, "%u");
         
@@ -549,8 +551,11 @@ bool MCNativeControl::ParseColor(MCExecPoint &ep, uint16_t &r_red, uint16_t &r_g
 {
     uint8_t t_r8, t_g8, t_b8, t_a8;
     MCColor t_color;
-    char *t_name = nil;
-    if (MCParseRGBA(ep.getsvalue(), false, t_r8, t_g8, t_b8, t_a8))
+    
+	MCAutoStringRef t_color_str;
+	/* UNCHECKED */ ep . copyasstringref(&t_color_str);
+	
+    if (MCParseRGBA(MCStringGetOldString(*t_color_str), false, t_r8, t_g8, t_b8, t_a8))
     {
         r_red = (t_r8 << 8) | t_r8;
         r_green = (t_g8 << 8) | t_g8;
@@ -558,9 +563,8 @@ bool MCNativeControl::ParseColor(MCExecPoint &ep, uint16_t &r_red, uint16_t &r_g
         r_alpha = (t_a8 << 8) | t_a8;
         return true;
     }
-    else if (MCscreen->parsecolor(ep.getsvalue(), &t_color, &t_name))
+    else if (MCscreen->parsecolor(*t_color_str, t_color, NULL))
     {
-        delete t_name;
         r_red = t_color.red;
         r_green = t_color.green;
         r_blue = t_color.blue;
@@ -1026,32 +1030,22 @@ void MCNativeControl::GetId(MCExecContext& ctxt, uinteger_t& r_id)
 
 void MCNativeControl::GetName(MCExecContext& ctxt, MCStringRef& r_name)
 {
-    if (m_name != nil)
-    {
-        if (MCStringCreateWithCString(m_name, r_name))
-            return;
-    }
-    else
-        return;
-    
-    ctxt . Throw();
+    if (!MCStringIsEmpty(m_name))
+        r_name = MCValueRetain(m_name);
+      
+    return;  
 }
 
 void MCNativeControl::SetName(MCExecContext& ctxt, MCStringRef p_name)
 {
-    if (m_name != nil)
+    if (!MCStringIsEmpty(m_name))
 	{
-		MCCStringFree(m_name);
-		m_name = nil;
+		MCValueRelease(m_name);
+		m_name = MCValueRetain(kMCEmptyString);
 	}
 	
 	if (p_name != nil)
-    {
-        if (MCCStringClone(MCStringGetCString(p_name), m_name))
-            return;
-	}
-    else
-        return;
-	
-    ctxt . Throw();
+		m_name = MCValueRetain(p_name);
+
+    return;
 }

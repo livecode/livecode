@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
+#include "osxprefix-legacy.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -31,6 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "textbuffer.h"
 #include "uidc.h"
 #include "globals.h"
+#include "util.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -271,7 +273,7 @@ static void export_html_emit_text(text_buffer_t& buffer, const void *p_bytes, ui
 		uint32_t t_char_count;
 		t_chars = new uint16_t[p_byte_count * 2];
 		t_char_count = p_byte_count;
-		MCS_multibytetounicode((const char *)p_bytes, p_byte_count, (char *)t_chars, t_char_count * 2, t_char_count, LCH_ROMAN);
+        MCU_multibytetounicode((const char *)p_bytes, p_byte_count, (char *)t_chars, t_char_count * 2, t_char_count, LCH_ROMAN);
 		t_char_count /= 2;
 		
 		export_html_emit_unicode_text(buffer, t_chars, t_char_count, p_escape);
@@ -1688,7 +1690,9 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 					case kImportHtmlAttrColor:
 						{
 							MCColor t_color;
-							if (p_tag . attrs[i] . value != nil && MCscreen -> parsecolor(p_tag . attrs[i] . value, &t_color, nil))
+							MCAutoStringRef t_value;
+							/* UNCHECKED */ MCStringCreateWithCString(p_tag . attrs[i] . value, &t_value);
+							if (p_tag . attrs[i] . value != nil && MCscreen -> parsecolor(*t_value, t_color, nil))
 							{
 								MCscreen -> alloccolor(t_color);
 								
@@ -1699,8 +1703,10 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 						break;
 					case kImportHtmlAttrBgColor:
 						{
+							MCAutoStringRef t_value;
+							/* UNCHECKED */ MCStringCreateWithCString(p_tag . attrs[i] . value, &t_value);
 							MCColor t_color;
-							if (p_tag . attrs[i] . value != nil && MCscreen -> parsecolor(p_tag . attrs[i] . value, &t_color, nil))
+							if (p_tag . attrs[i] . value != nil && MCscreen -> parsecolor(*t_value, t_color, nil))
 							{
 								MCscreen -> alloccolor(t_color);
 								
@@ -1849,40 +1855,51 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 				r_style . space_below = atoi(t_value);
 			break;
 			case kImportHtmlAttrTabStops:
+            {
 				if (r_style . has_tabs)
 				{
 					delete r_style . tabs;
 					r_style . tabs = nil;
 					r_style . has_tabs = false;
 				}
-				if (MCField::parsetabstops(P_TAB_STOPS, t_value, r_style . tabs, r_style . tab_count))
+                MCAutoStringRef t_value_str;
+                /* UNCHECKED */ MCStringCreateWithCString(t_value, &t_value_str);
+				if (MCField::parsetabstops(P_TAB_STOPS, *t_value_str, r_style . tabs, r_style . tab_count))
+                {
 					r_style . has_tabs = true;
+                }
+            }
 			break;
 			case kImportHtmlAttrBgColor:
-			{
+            {
+				MCAutoStringRef t_value_str;
+				/* UNCHECKED */ MCStringCreateWithCString(t_value, &t_value_str);
 				MCColor t_color;
-				if (MCscreen -> parsecolor(t_value, &t_color, nil))
+				if (MCscreen -> parsecolor(*t_value_str, t_color, nil))
 				{
 					MCscreen -> alloccolor(t_color);
 					r_style . has_background_color = true;
 					r_style . background_color = t_color . pixel;
 				}
-			}
+            }
 			break;
 			case kImportHtmlAttrBorderWidth:
+            
 				r_style . has_border_width = true;
 				r_style . border_width = atoi(t_value);
 			break;
 			case kImportHtmlAttrBorderColor:
-			{
+            {
+				MCAutoStringRef t_value_str;
+				/* UNCHECKED */ MCStringCreateWithCString(t_value, &t_value_str);
 				MCColor t_color;
-				if (MCscreen -> parsecolor(t_value, &t_color, nil))
+				if (MCscreen -> parsecolor(*t_value_str, t_color, nil))
 				{
 					MCscreen -> alloccolor(t_color);
 					r_style . has_border_color = true;
 					r_style . border_color = t_color . pixel;
 				}
-			}
+            }
 			break;
 			case kImportHtmlAttrPadding:
 				r_style . has_padding = true;

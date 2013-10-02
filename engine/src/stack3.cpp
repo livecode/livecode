@@ -58,6 +58,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "license.h"
 #include "stacksecurity.h"
 
+#include "exec.h"
+
 #define STACK_EXTRA_ORIGININFO (1U << 0)
 
 IO_stat MCStack::load_substacks(IO_handle stream, const char *version)
@@ -172,24 +174,13 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 			//   stack title will be UTF-8 already.
 			if (strncmp(version, "5.5", 3) >= 0)
 			{
-				if ((stat = IO_read_string(title, stream)) != IO_NORMAL)
+				if ((stat = IO_read_stringref_utf8(title, stream)) != IO_NORMAL)
 					return stat;
 			}
 			else
 			{
-				// MW-2007-07-06: [[ Bug 3226 ]] Updated to take into account 'title' being
-				//   stored as a UTF-8 string.
-				char *t_native_title;
-
-				if ((stat = IO_read_string(t_native_title, stream)) != IO_NORMAL)
+				if ((stat = IO_read_stringref(title, stream, false)) != IO_NORMAL)
 					return stat;
-
-				MCExecPoint ep;
-				ep . setsvalue(t_native_title);
-				ep . nativetoutf8();
-				title = ep . getsvalue() . clone();
-
-				delete t_native_title;
 			}
 		}
 		if (flags & F_DECORATIONS)
@@ -218,7 +209,7 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 		if (maxwidth == 1280 && maxheight == 1024)
 			maxwidth = maxheight = MAXUINT2;
 	}
-	if ((stat = IO_read_string(externalfiles, stream)) != IO_NORMAL)
+	if ((stat = IO_read_stringref(externalfiles, stream, false)) != IO_NORMAL)
 		return stat;
 	if (strncmp(version, "1.3", 3) > 0)
 	{
@@ -238,11 +229,11 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 
 	if (flags & F_STACK_FILES)
 	{
-		char *sf;
-		if ((stat = IO_read_string(sf, stream)) != IO_NORMAL)
+		MCAutoStringRef sf;
+		if ((stat = IO_read_stringref(&sf, stream)) != IO_NORMAL)
 			return stat;
-		setstackfiles(sf);
-		delete sf;
+		setstackfiles(*sf);
+		
 	}
 	if (flags & F_MENU_BAR)
 	{
@@ -492,6 +483,11 @@ IO_stat MCStack::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		flags |= F_LINK_ATTS;
 	else
 		flags &= ~F_LINK_ATTS;
+	
+	if (!MCStringIsEmpty(title))
+		flags |= F_TITLE;
+	else
+		flags &= ~F_TITLE;
 
 	// MW-2013-03-28: Make sure we never save a stack with F_CANT_STANDALONE set.
 	flags &= ~F_CANT_STANDALONE;
@@ -555,26 +551,13 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 		//   write out UTF-8 directly.
 		if (MCstackfileversion >= 5500)
 		{
-			if ((stat = IO_write_string(title, stream)) != IO_NORMAL)
+			if ((stat = IO_write_stringref_utf8(title, stream)) != IO_NORMAL)
 				return stat;
 		}
 		else
 		{
-			// MW-2007-07-06: [[ Bug 3226 ]] Updated to take into account 'title' being
-			//   stored as a UTF-8 string.
-			MCExecPoint ep;
-			char *t_native_title;
-			ep . setsvalue(title);
-			ep . utf8tonative();
-			t_native_title = ep . getsvalue() . clone();
-
-			if ((stat = IO_write_string(t_native_title, stream)) != IO_NORMAL)
-			{
-				delete t_native_title;
+			if ((stat = IO_write_stringref(title, stream, false)) != IO_NORMAL)
 				return stat;
-			}
-
-			delete t_native_title;
 		}
 	}
 	if (flags & F_DECORATIONS)
@@ -596,7 +579,7 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_uint2(maxheight, stream)) != IO_NORMAL)
 			return stat;
 	}
-	if ((stat = IO_write_string(externalfiles, stream)) != IO_NORMAL)
+	if ((stat = IO_write_stringref(externalfiles, stream, false)) != IO_NORMAL)
 		return stat;
 
 	// MW-2012-02-17: [[ LogFonts ]] Save the stack's logical font table.
@@ -901,14 +884,14 @@ MCControl *MCStack::getcontrolid(Chunk_term type, uint4 inid, bool p_recurse)
 	return NULL;
 }
 
-MCControl *MCStack::getcontrolname(Chunk_term type, const MCString &s)
+MCControl *MCStack::getcontrolname(Chunk_term type, MCStringRef s)
 {
 	if (controls == NULL)
 		return NULL;
 	MCControl *tobj = controls;
 	do
 	{
-		MCControl *foundobj = tobj->findname(type, s);
+		MCControl *foundobj = tobj->findname(type, MCStringGetOldString(s));
 		if (foundobj != NULL)
 			return foundobj;
 		tobj = (MCControl *)tobj->next();
@@ -937,7 +920,18 @@ MCObject *MCStack::getAVid(Chunk_term type, uint4 inid)
 	return NULL;
 }
 
-MCObject *MCStack::getAVname(Chunk_term type, const MCString &s)
+/* LEGACY */ MCObject *MCStack::getAVname(Chunk_term type, MCStringRef s)
+{
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreate(s, &t_name);
+	MCObject *t_object;
+	if (!getAVname(type, *t_name, t_object))
+		return nil;
+    
+	return t_object;
+}
+
+bool MCStack::getAVname(Chunk_term type, MCNameRef p_name, MCObject*& r_object)
 {
 	MCObject *objs;
 	if (type == CT_AUDIO_CLIP)
@@ -945,16 +939,19 @@ MCObject *MCStack::getAVname(Chunk_term type, const MCString &s)
 	else
 		objs = vclips;
 	if (objs == NULL)
-		return NULL;
+		return false;
 	MCObject *tobj = objs;
 	do
 	{
-		if (MCU_matchname(s, type, tobj->getname()))
-			return tobj;
+		if (MCU_matchname(p_name, type, tobj->getname()))
+        {
+			r_object = tobj;
+            return true;
+        }
 		tobj = (MCControl *)tobj->next();
 	}
 	while (tobj != objs);
-	return NULL;
+	return false;
 }
 
 Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
@@ -1151,7 +1148,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 }
 
 
-MCStack *MCStack::findstackfile(const MCString &s)
+MCStack *MCStack::findstackfile_oldstring(const MCString &s)
 {
 	char *fname;
 	if ((fname = getstackfile(s)) != NULL)
@@ -1161,7 +1158,7 @@ MCStack *MCStack::findstackfile(const MCString &s)
 		if (MCdispatcher->loadfile(fname, tstk) == IO_NORMAL)
 		{
 			delete fname;
-			MCStack *stackptr = tstk->findsubstackname(s);
+			MCStack *stackptr = tstk->findsubstackname_oldstring(s);
 			
 			// MW-2007-12-17: [[ Bug 266 ]] The watch cursor must be reset before we
 			//   return back to the caller.
@@ -1181,38 +1178,35 @@ MCStack *MCStack::findstackfile(const MCString &s)
 	return NULL;
 }
 
-bool MCStack::findstackname(MCNameRef p_name, MCStack *&r_stack)
+MCStack *MCStack::findstackname(MCNameRef p_name)
 {
-	if (nil != (r_stack = findsubstackname(MCNameGetOldString(p_name))))
-		return true;
+	MCStack *foundstk;
+	if ((foundstk = findsubstackname(p_name)) != NULL)
+		return foundstk;
 	else
-		return nil != (r_stack = MCdispatcher->findstackname(MCNameGetOldString(p_name)));
+		return MCdispatcher->findstackname(MCNameGetOldString(p_name));
 }
 
-/* LEGACY */ MCStack *MCStack::findstackname(const MCString &s)
+/* LEGACY */ MCStack *MCStack::findstackname_oldstring(const MCString &s)
 {
 	MCNewAutoNameRef t_name;
 	/* UNCHECKED */ MCNameCreateWithOldString(s, &t_name);
-	MCStack *t_stack;
-	if (!findstackname(*t_name, t_stack))
-		return nil;
-
-	return t_stack;
+	return findstackname(*t_name);
 }
 
-MCStack *MCStack::findsubstackname(const MCString &s)
+MCStack *MCStack::findsubstackname(MCNameRef p_name)
 {
-	if (findname(CT_STACK, s) != NULL)
+	if (findname(CT_STACK, MCNameGetOldString(p_name)) != nil)
 		return this;
-
+    
 	MCStack *sptr = this;
 	uint2 num = 0;
-	if (!MCdispatcher->ismainstack(this) && !MCU_stoui2(s, num))
+	if (!MCdispatcher->ismainstack(this) && !MCU_stoui2(MCNameGetString(p_name), num))
 		sptr = parent->getstack();
 	if (sptr->substacks != NULL)
 	{
 		MCStack *tptr = sptr->substacks;
-		if (MCU_stoui2(s, num))
+		if (MCU_stoui2(MCNameGetString(p_name), num))
 		{
 			while (--num)
 			{
@@ -1225,13 +1219,20 @@ MCStack *MCStack::findsubstackname(const MCString &s)
 		else
 			do
 			{
-				if (tptr->findname(CT_STACK, s) != NULL)
+				if (tptr->findname(CT_STACK, MCNameGetOldString(p_name)) != NULL)
 					return tptr;
 				tptr = (MCStack *)tptr->next();
 			}
-			while (tptr != sptr->substacks);
+        while (tptr != sptr->substacks);
 	}
 	return NULL;
+}
+
+/* LEGACY */ MCStack *MCStack::findsubstackname_oldstring(const MCString &s)
+{
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreateWithOldString(s, &t_name);
+	return findsubstackname(*t_name);
 }
 
 MCStack *MCStack::findstackid(uint4 fid)
@@ -1411,7 +1412,7 @@ MCObject *MCStack::getobjid(Chunk_term type, uint4 inid)
 		return MCdispatcher->getobjid(type, inid);
 }
 
-MCObject *MCStack::getsubstackobjname(Chunk_term type, const MCString &s)
+MCObject *MCStack::getsubstackobjname(Chunk_term type, MCStringRef s)
 {
 	MCStack *sptr = this;
 	MCObject *optr = NULL;
@@ -1441,12 +1442,8 @@ MCObject *MCStack::getsubstackobjname(Chunk_term type, const MCString &s)
 	return NULL;
 }
 
-/* WRAPPER */ MCObject *MCStack::getobjname(Chunk_term type, MCStringRef p_name)
-{
-	return getobjname(type, MCStringGetOldString(p_name));
-}
 
-MCObject *MCStack::getobjname(Chunk_term type, const MCString& s)
+MCObject *MCStack::getobjname(Chunk_term type, MCStringRef s)
 {
 	MCObject *optr = NULL;
 	uint4 iid;
@@ -1542,10 +1539,15 @@ void MCStack::menuset(uint2 button, uint2 defy)
 	lasty = trect.y + (trect.height >> 1);
 }
 
-void MCStack::menumup(uint2 which, MCString &s, uint2 &selline)
+void MCStack::menumup(uint2 which, MCStringRef &r_string, uint2 &selline)
 {
+	// The original behaviour of this function interprets an empty string and
+	// the null string as different things: the empty string means that the
+	// function succeeded but there is no text while the null string indicates
+	// that no menu handled the key event.
+	r_string = nil;
+	
 	MCControl *focused = curcard->getmfocused();
-	s.set(NULL, 0);
 	if (focused == NULL)
 		focused = curcard->getkfocused();
 	MCButton *bptr = (MCButton *)focused;
@@ -1556,18 +1558,19 @@ void MCStack::menumup(uint2 which, MCString &s, uint2 &selline)
 		bool t_has_tags = bptr->getmenuhastags();
 
 		MCExecPoint ep(this, NULL, NULL);
-		focused->getprop(0, P_LABEL, ep, True);
-		const char *t_label = ep.getsvalue().getstring();
-		uint4 t_label_len = ep.getsvalue().getlength();
-		const char *t_name = focused->getname_cstring();
-		if (t_name != NULL)
+		MCExecContext ctxt(ep);
+		MCAutoStringRef t_label;
+		MCStringRef t_name = nil;
+		focused->getstringprop(ctxt, 0, P_LABEL, true, &t_label);
+		t_name = MCNameGetString(focused->getname());
+		if (!MCStringIsEmpty(t_name))
 		{
-			uint4 t_name_len = strlen(t_name);
-			//if name is set and differs from label, then use name as menu pick
-			if (t_has_tags && memcmp(t_label, t_name, MCU_max(t_label_len, t_name_len)) != 0)
-				ep.setsvalue(t_name);
+			// If the name exists, use it in preference to the label
+			if (t_has_tags && !MCStringIsEqualTo(*t_label, t_name, kMCStringOptionCompareExact))
+				r_string = MCValueRetain(t_name);
+			else 
+				r_string = MCValueRetain(*t_label);
 		}
-		s.set(ep.getsvalue().clone(),ep.getsvalue().getlength());
 			
 		if (focused->gettype() == CT_FIELD)
 		{
@@ -1580,28 +1583,25 @@ void MCStack::menumup(uint2 which, MCString &s, uint2 &selline)
 	curcard->mup(which);
 }
 
-void MCStack::menukdown(const char *string, KeySym key,
-                        MCString &s, uint2 &selline)
+void MCStack::menukdown(const char *string, KeySym key, MCStringRef &r_string, uint2 &selline)
 {
 	MCControl *kfocused = curcard->getkfocused();
-	s.set(NULL,0);
+	r_string = nil;
 	if (kfocused != NULL)
 	{
-		MCString tlabel;
-		
 		// OK-2010-03-08: [[Bug 8650]] - Check its actually a button before casting, 
 		// with combo boxes on OS X this will be a field.
 		if (kfocused ->gettype() == CT_BUTTON && ((MCButton*)kfocused)->getmenuhastags())
 		{
-			const char *t_name = kfocused->getname_cstring();
-			uint4 t_namelen = strlen(t_name);
-			s.set(strclone(t_name, t_namelen), t_namelen);
+			r_string = MCValueRetain(MCNameGetString(kfocused->getname()));
 		}
 		else
 		{
+			MCAutoStringRef t_string;
 			MCExecPoint ep(this, NULL, NULL);
-			kfocused->getprop(0, P_LABEL, ep, True);
-			s.set(ep.getsvalue().clone(),ep.getsvalue().getlength());
+			MCExecContext ctxt(ep);
+			kfocused->getstringprop(ctxt, 0, P_LABEL, True, &t_string);
+			r_string = MCValueRetain(*t_string);
 		}
 		curcard->count(CT_LAYER, CT_UNDEFINED, kfocused, selline, True);
 	}
@@ -1609,7 +1609,7 @@ void MCStack::menukdown(const char *string, KeySym key,
 	curcard->kunfocus();
 }
 
-void MCStack::findaccel(uint2 key, MCString &tpick, bool &r_disabled)
+void MCStack::findaccel(uint2 key, MCStringRef &r_pick, bool &r_disabled)
 {
 	if (controls != NULL)
 	{
@@ -1619,39 +1619,30 @@ void MCStack::findaccel(uint2 key, MCString &tpick, bool &r_disabled)
 		{
 			if (bptr->getaccelkey() == key && bptr->getaccelmods() == MCmodifierstate)
 			{
-				MCString tlabel;
-				bool isunicode;
 				if (t_menuhastags)
-					tlabel = bptr -> getname_oldstring(), isunicode = false;
-				else
-					bptr->getlabeltext(tlabel, isunicode);
-				tpick.set(tlabel.clone(),tlabel.getlength());
+					r_pick = MCValueRetain(MCNameGetString(bptr->getname()));
+				else 
+					r_pick = MCValueRetain(bptr->getlabeltext());
 				r_disabled = bptr->isdisabled() == True;
 				return;
 			}
 			if (bptr->getmenumode() == WM_CASCADE && bptr->getmenu() != NULL)
 			{
-				MCString taccel;
-				bptr->getmenu()->findaccel(key,taccel, r_disabled);
-				if (taccel.getlength())
+				MCStringRef t_accel = nil;
+				bptr->getmenu()->findaccel(key, t_accel, r_disabled);
+				if (!MCStringIsEmpty(t_accel))
 				{
-					MCString tlabel;
-					bool isunicode;
+					MCStringRef t_label = nil;
+					/* UNCHECKED */ MCStringCreateMutable(0, t_label);
 					if (t_menuhastags)
-						tlabel = bptr -> getname_oldstring(), isunicode = false;
+						/* UNCHECKED */ MCStringAppend(t_label, MCNameGetString(bptr->getname()));
 					else
-						bptr->getlabeltext(tlabel, isunicode);
-					uint4 rptrlength = taccel.getlength() + tlabel.getlength() + MCU_charsize(isunicode);
-					char *rptr = new char[rptrlength];
-					tpick.set(rptr,rptrlength);
-					if (tlabel.getlength())
-						memcpy(rptr,tlabel.getstring(),tlabel.getlength());
-					rptr+=tlabel.getlength();
+						/* UNCHECKED */ MCStringAppend(t_label, bptr->getlabeltext());
+					
+					/* UNCHECKED */ MCStringAppendFormat(t_label, "|");
+					/* UNCHECKED */ MCStringAppend(t_label, t_accel);
 
-					MCU_copychar('|',rptr,isunicode);
-					rptr+=MCU_charsize(isunicode);
-					memcpy(rptr,taccel.getstring(),taccel.getlength());
-					delete (char *)taccel.getstring();
+					MCValueRelease(t_accel);
 					return;
 				}
 			}
@@ -1660,7 +1651,7 @@ void MCStack::findaccel(uint2 key, MCString &tpick, bool &r_disabled)
 		}
 		while (bptr != controls);
 	}
-	tpick.set(NULL,0);
+	r_pick = MCValueRetain(kMCEmptyString);
 }
 
 void MCStack::raise()
@@ -1786,10 +1777,9 @@ Exec_stat MCStack::sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
 	return ES_NORMAL;
 }
 
-void MCStack::breakstring(const MCString &source, MCString **dest,
-                          uint2 &nstrings, Find_mode fmode)
+void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uint2 &nstrings, Find_mode fmode)
 {
-	MCString *tdest = NULL;
+    MCStringRef *tdest_str = nil;
 	nstrings = 0;
 	switch (fmode)
 	{
@@ -1798,8 +1788,8 @@ void MCStack::breakstring(const MCString &source, MCString **dest,
 	case FM_WORD:
 		{
 			// MW-2007-07-05: [[ Bug 110 ]] - Break string only breaks at spaces, rather than space charaters
-			const char *sptr = source.getstring();
-			uint4 l = source.getlength();
+			const char *sptr = MCStringGetCString(source);
+			uint4 l = MCStringGetLength(source);
 			MCU_skip_spaces(sptr, l);
 			const char *startptr = sptr;
 			while(l != 0)
@@ -1807,8 +1797,8 @@ void MCStack::breakstring(const MCString &source, MCString **dest,
 				while(l != 0 && !isspace(*sptr))
 					sptr += 1, l -= 1;
 
-				MCU_realloc((char **)&tdest, nstrings, nstrings + 1, sizeof(MCString));
-				tdest[nstrings].set(startptr, sptr - startptr);
+				MCU_realloc((char **)&tdest_str, nstrings, nstrings + 1, sizeof(MCStringRef));
+                /* UNCHECKED */ MCStringCreateWithNativeChars ((const char_t *) startptr, sptr - startptr, tdest_str[nstrings]);
 				nstrings++;
 				MCU_skip_spaces(sptr, l);
 				startptr = sptr;
@@ -1822,15 +1812,15 @@ void MCStack::breakstring(const MCString &source, MCString **dest,
 	}
 	if (nstrings == 0)
 	{
-		tdest = new MCString;
-		tdest[0] = source;
+        tdest_str = new MCStringRef;
+		tdest_str[0] = MCValueRetain(source);
 		nstrings = 1;
 	}
-	*dest = tdest;
+	dest = tdest_str;
 }
 
 Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
-                         const MCString *strings, uint2 nstrings,
+                         MCStringRef *strings, uint2 nstrings,
                          MCChunk *field, Boolean firstcard)
 {
 	Boolean firstword = True;
@@ -1878,18 +1868,13 @@ Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
 		return True;
 	}
 }
-/* WRAPPER */
-void MCStack::find(MCExecPoint &ep, int p_mode, MCStringRef p_needle, MCChunk *p_target)
-{
-	find(ep, (Find_mode)p_mode, MCStringGetOldString(p_needle), p_target);
-}
 
 void MCStack::find(MCExecPoint &ep, Find_mode fmode,
-                   const MCString &tofind, MCChunk *field)
+                   MCStringRef tofind, MCChunk *field)
 {
-	MCString *strings = NULL;
+	MCStringRef *strings = NULL;
 	uint2 nstrings;
-	breakstring(tofind, &strings, nstrings, fmode);
+	breakstring(tofind, strings, nstrings, fmode);
 	MCCard *ocard = curcard;
 	Boolean firstcard = MCfoundfield != NULL;
 	MCField *oldfound = MCfoundfield;
@@ -1926,18 +1911,20 @@ void MCStack::find(MCExecPoint &ep, Find_mode fmode,
 	curcard = ocard;
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
 	dirtyall();
+    for (int i = 0 ; i < nstrings ; i++)
+        MCValueRelease(strings[i]);
 	delete strings;
 	MCresult->sets(MCnotfoundstring);
 }
 
 void MCStack::markfind(MCExecPoint &ep, Find_mode fmode,
-                       const MCString &tofind, MCChunk *field, Boolean mark)
+                       MCStringRef tofind, MCChunk *field, Boolean mark)
 {
 	if (MCfoundfield != NULL)
 		MCfoundfield->clearfound();
-	MCString *strings = NULL;
+	MCStringRef *strings = NULL;
 	uint2 nstrings;
-	breakstring(tofind, &strings, nstrings, fmode);
+	breakstring(tofind, strings, nstrings, fmode);
 	MCCard *ocard = curcard;
 	do
 	{
@@ -1949,6 +1936,8 @@ void MCStack::markfind(MCExecPoint &ep, Find_mode fmode,
 		curcard = (MCCard *)curcard->next();
 	}
 	while (curcard != ocard);
+    for (uint4 i = 0 ; i < nstrings ; i++)
+        MCValueRelease(strings[i]);
 	delete strings;
 	if (MCfoundfield != NULL)
 		MCfoundfield->clearfound();

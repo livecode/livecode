@@ -40,8 +40,8 @@ Fontcache;
 
 typedef struct
 {
-	char *stackname;
-	char *filename;
+	MCStringRef stackname;
+	MCStringRef filename;
 }
 MCStackfile;
 
@@ -63,6 +63,8 @@ enum MCStackSurfaceTargetType
 	kMCStackSurfaceTargetEAGLContext,
 	kMCStackSurfaceTargetPixmap,
 };
+
+struct MCInterfaceDecoration;
 
 class MCStackSurface
 {
@@ -110,8 +112,8 @@ protected:
 	MCButton **needs;
 
 	// These fields are now UTF8
-	char *title;
-	char *titlestring;
+	MCStringRef title;
+	MCStringRef titlestring;
 	
 	uint4 iconid;
 	uint4 windowshapeid;
@@ -131,8 +133,8 @@ protected:
 	uint1 old_blendlevel;
 	MCStackfile *stackfiles;
 	Linkatts *linkatts;
-	char *externalfiles;
-	char *filename;
+	MCStringRef externalfiles;
+	MCStringRef filename;
 	MCNameRef _menubar;
 	void (*idlefunc)();
 	
@@ -237,7 +239,7 @@ public:
 	void external_idle();
 	void loadwindowshape();
 	void setidlefunc(void (*newfunc)());
-	Boolean setscript(char *newscript);
+	Boolean setscript(MCStringRef newscript);
 	void checkdestroy();
 	IO_stat print(Print_mode mode, uint2 num, MCCard *card,
 	              const MCRectangle *srect, const MCRectangle *drect);
@@ -245,7 +247,6 @@ public:
 	void configure(Boolean user);
 	void iconify();
 	void uniconify();
-	void position(const char *geometry);
 	Window_mode getmode();
 	Window_mode getrealmode()
 	{
@@ -273,7 +274,7 @@ public:
 	void extraopen(bool p_force);
 	void extraclose(bool p_force);
 
-	char *resolve_filename(const char *filename);
+	bool resolve_filename(MCStringRef filename, MCStringRef& r_resolved);
 
 	void setopacity(uint1 p_value);
 	
@@ -349,12 +350,20 @@ public:
 	void clipmenu(MCContext *context, MCRectangle &crect);
 	Boolean count(Chunk_term otype, Chunk_term ptype, MCObject *, uint2 &num);
 	void renumber(MCCard *card, uint4 newnumber);
-	MCObject *getAV(Chunk_term etype, const MCString &, Chunk_term otype);
+	MCObject *getAV(Chunk_term etype, MCStringRef, Chunk_term otype);
 	MCCard *getchild(Chunk_term etype, MCStringRef p_expression, Chunk_term otype);
 #ifdef OLD_EXEC
 	MCCard *getchild(Chunk_term etype, const MCString &, Chunk_term otype);
-#endif
-	MCGroup *getbackground(Chunk_term etype, const MCString &, Chunk_term otype);
+#endif  
+    MCCard *getchildbyordinal(Chunk_term p_ordinal);
+    MCCard *getchildbyid(uinteger_t p_id);
+    MCCard *getchildbyname(MCNameRef p_name);
+    
+	/* LEGACY */ MCGroup *getbackground(Chunk_term etype, const MCString &, Chunk_term otype);
+    
+    MCGroup *getbackgroundbyordinal(Chunk_term otype);
+    MCGroup *getbackgroundbyid(uinteger_t p_id);
+    MCGroup *getbackgroundbyname(MCNameRef p_name);
 	void addneed(MCButton *bptr);
 	void removeneed(MCButton *bptr);
 	void addmnemonic(MCButton *button, uint1 key);
@@ -368,10 +377,10 @@ public:
 	Exec_stat openrect(const MCRectangle &rel, Window_mode wm, MCStack *parentwindow,
 	                   Window_position wpos,  Object_pos walign);
 	void getstackfiles(MCExecPoint &);
-	void stringtostackfiles(char *d, MCStackfile **sf, uint2 &nf);
-	void setstackfiles(const MCString &);
+	void stringtostackfiles(MCStringRef d, MCStackfile **sf, uint2 &nf);
+	void setstackfiles(MCStringRef);
 	char *getstackfile(const MCString &);
-	void setfilename(char *f);
+	void setfilename(MCStringRef f);
 
 	virtual IO_stat load(IO_handle stream, const char *version, uint1 type);
 	IO_stat load_stack(IO_handle stream, const char *version);
@@ -387,14 +396,17 @@ public:
 	MCCard *findcardbyid(uint4 p_id);
 
 	MCControl *getcontrolid(Chunk_term type, uint4 inid, bool p_recurse = false);
-	MCControl *getcontrolname(Chunk_term type, const MCString &);
+	MCControl *getcontrolname(Chunk_term type, MCStringRef);
 	MCObject *getAVid(Chunk_term type, uint4 inid);
-	MCObject *getAVname(Chunk_term type, const MCString &);
+	/* LEGACY */ MCObject *getAVname(Chunk_term type, MCStringRef);
+    bool getAVname(Chunk_term type, MCNameRef p_name, MCObject*& r_object);
 	Exec_stat setcard(MCCard *card, Boolean recent, Boolean dynamic);
-	MCStack *findstackfile(const MCString &s);
-	bool findstackname(MCNameRef p_name, MCStack *&r_stack);
-	/* LEGACY */ MCStack *findstackname(const MCString &);
-	MCStack *findsubstackname(const MCString &);
+	MCStack *findstackfile_oldstring(const MCString &s);
+	MCStack *findstackname_oldstring(const MCString &);
+	MCStack *findsubstackname_oldstring(const MCString &);
+	MCStack *findstackfile(MCNameRef name);
+	MCStack *findstackname(MCNameRef name);
+	MCStack *findsubstackname(MCNameRef name);
 	MCStack *findstackid(uint4 fid);
 	MCStack *findsubstackid(uint4 fid);
 	void translatecoords(MCStack *dest, int2 &x, int2 &y);
@@ -409,27 +421,25 @@ public:
 	void removecard(MCCard *cptr);
 	MCObject *getsubstackobjid(Chunk_term type, uint4 inid);
 	MCObject *getobjid(Chunk_term type, uint4 inid);
-	MCObject *getsubstackobjname(Chunk_term type, const MCString &);
+	MCObject *getsubstackobjname(Chunk_term type, MCStringRef);
 	MCObject *getobjname(Chunk_term type, MCStringRef p_name);
-	MCObject *getobjname(Chunk_term type, const MCString &);
 	void createmenu(MCControl *nc, uint2 width, uint2 height);
 	void menuset(uint2 button, uint2 defy);
-	void menumup(uint2 which, MCString &s, uint2 &selline);
-	void menukdown(const char *string, KeySym key,
-	               MCString &s, uint2 &selline);
-	void findaccel(uint2 key, MCString &tpick, bool &r_disabled);
+	void menumup(uint2 which, MCStringRef &r_string, uint2 &selline);
+	void menukdown(const char *string, KeySym key, MCStringRef &r_string, uint2 &selline);
+	void findaccel(uint2 key, MCStringRef &r_pick, bool &r_disabled);
 	void raise();
 	void enter();
 	void flip(uint2 count);
 	Exec_stat sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
 	               MCExpression *by, Boolean marked);
-	void breakstring(const MCString &, MCString **dest, uint2 &nstrings,
+	void breakstring(MCStringRef, MCStringRef*& dest, uint2 &nstrings,
 	                 Find_mode fmode);
-	Boolean findone(MCExecPoint &ep, Find_mode mode, const MCString *strings,
+	Boolean findone(MCExecPoint &ep, Find_mode mode, MCStringRef *strings,
 	                uint2 nstrings, MCChunk *field, Boolean firstcard);
 	void find(MCExecPoint &ep, int p_mode, MCStringRef p_needle, MCChunk *p_target);
-	void find(MCExecPoint &ep, Find_mode mode, const MCString &, MCChunk *field);
-	void markfind(MCExecPoint &ep, Find_mode mode, const MCString &,
+	void find(MCExecPoint &ep, Find_mode mode, MCStringRef, MCChunk *field);
+	void markfind(MCExecPoint &ep, Find_mode mode, MCStringRef,
 	              MCChunk *, Boolean mark);
 	void mark(MCExecPoint &ep, MCExpression *where, Boolean mark);
 	Linkatts *getlinkatts();
@@ -437,13 +447,15 @@ public:
 	{
 		return (flags & F_CANT_ABORT) != 0;
 	}
-	const char *getfilename()
+	MCStringRef getfilename(void)
 	{
 		return filename;
 	}
-	const char *gettitletext()
+	MCStringRef gettitletext(void)
 	{
-		return title != NULL ? title : MCNameGetCString(_name);
+		if (!MCStringIsEmpty(title))
+			return title;
+		return MCNameGetString(_name);
 	}
 	MCControl *getcontrols()
 	{
@@ -719,8 +731,8 @@ public:
 	void SetAlwaysBuffer(MCExecContext& ctxt, bool setting);
 	void GetLabel(MCExecContext& ctxt, MCStringRef& r_label);
 	void SetLabel(MCExecContext& ctxt, MCStringRef p_label);
-	void GetUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label);
-	void SetUnicodeLabel(MCExecContext& ctxt, MCStringRef p_label);
+	void GetUnicodeLabel(MCExecContext& ctxt, MCDataRef& r_label);
+	void SetUnicodeLabel(MCExecContext& ctxt, MCDataRef p_label);
 	void GetCloseBox(MCExecContext& ctxt, bool& r_setting);
 	void SetCloseBox(MCExecContext& ctxt, bool setting);
 	void GetZoomBox(MCExecContext& ctxt, bool& r_setting);
@@ -822,12 +834,43 @@ public:
 	void GetDeferScreenUpdates(MCExecContext& ctxt, bool& r_value);
 	void SetDeferScreenUpdates(MCExecContext& ctxt, bool p_value);
 	void GetEffectiveDeferScreenUpdates(MCExecContext& ctxt, bool& r_value);
-
+    void SetDecorations(MCExecContext& ctxt, const MCInterfaceDecoration& p_value);
+    void GetDecorations(MCExecContext& ctxt, MCInterfaceDecoration& r_value);
+    
 	void GetCompositorTileSize(MCExecContext& ctxt, uinteger_t*& p_size);
-	void SetCompositorTileSize(MCExecContext& ctxt, uinteger_t p_size);
+	void SetCompositorTileSize(MCExecContext& ctxt, uinteger_t* p_size);
 	void GetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t*& p_size);
-	void SetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t p_size);
+	void SetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t* p_size);
 
+    virtual void SetForePixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetBackPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetHilitePixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetBorderPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetTopPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetBottomPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetShadowPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetFocusPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetBorderColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetTopColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetBottomColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetShadowColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetFocusColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetForePattern(MCExecContext& ctxt, uinteger_t* pattern);
+	virtual void SetBackPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	virtual void SetHilitePattern(MCExecContext& ctxt, uinteger_t* pattern);
+	virtual void SetBorderPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	virtual void SetTopPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	virtual void SetBottomPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	virtual void SetShadowPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	virtual void SetFocusPattern(MCExecContext& ctxt, uinteger_t* pattern);
+    virtual void SetTextHeight(MCExecContext& ctxt, uinteger_t* height);
+    virtual void SetTextFont(MCExecContext& ctxt, MCStringRef font);
+    virtual void SetTextSize(MCExecContext& ctxt, uinteger_t* size);
+    virtual void SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style);
+    
 private:
 	void loadexternals(void);
 	void unloadexternals(void);
@@ -841,10 +884,9 @@ private:
 
 	void mode_load(void);
 
-	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, const MCString &carray, Boolean effective);
-	Exec_stat mode_setprop(uint4 parid, Properties which, MCExecPoint &, const MCString &cprop, const MCString &carray, Boolean effective);
+	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, MCStringRef carray, Boolean effective);
+	Exec_stat mode_setprop(uint4 parid, Properties which, MCExecPoint &, MCStringRef cprop, MCStringRef carray, Boolean effective);
 
-	char *mode_resolve_filename(const char *filename);
 	void mode_getrealrect(MCRectangle& r_rect);
 	void mode_takewindow(MCStack *other);
 	void mode_takefocus(void);

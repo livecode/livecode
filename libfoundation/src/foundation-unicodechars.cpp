@@ -20,6 +20,202 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+compare_t MCUnicodeCharsCompareExact(const unichar_t *p_left, uindex_t p_left_length, const unichar_t *p_right, uindex_t p_right_length)
+{
+	for(;;)
+	{
+		if (p_left_length == 0 || p_right_length == 0)
+			break;
+		
+		compare_t d;
+		d = *p_left++ - *p_right++;
+		if (d != 0)
+			return d;
+		
+		p_left_length -= 1;
+		p_right_length -= 1;
+	}
+	
+	return p_left_length - p_right_length;
+}
+
+compare_t MCUnicodeCharsCompareCaseless(const unichar_t *p_left, uindex_t p_left_length, const unichar_t *p_right, uindex_t p_right_length)
+{
+	for(;;)
+	{
+		if (p_left_length == 0 || p_right_length == 0)
+			break;
+		
+		compare_t d;
+		d = MCUnicodeCharFold(*p_left++) - MCUnicodeCharFold(*p_right++);
+		if (d != 0)
+			return d;
+		
+		p_left_length -= 1;
+		p_right_length -= 1;
+	}
+	
+	return p_left_length - p_right_length;
+}
+
+bool MCUnicodeCharsEqualExact(const unichar_t *p_left, uindex_t p_left_length, const unichar_t *p_right, uindex_t p_right_length)
+{
+	if (p_left_length != p_right_length)
+		return false;
+	
+	if (p_left == p_right)
+		return true;
+	
+	return MCUnicodeCharsCompareExact(p_left, p_left_length, p_right, p_right_length) == 0;
+}
+
+bool MCUnicodeCharsEqualCaseless(const unichar_t *p_left, uindex_t p_left_length, const unichar_t *p_right, uindex_t p_right_length)
+{
+	if (p_left_length != p_right_length)
+		return false;
+	
+	if (p_left == p_right)
+		return true;
+	
+	return MCUnicodeCharsCompareCaseless(p_left, p_left_length, p_right, p_right_length) == 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+uindex_t MCUnicodeCharsSharedPrefixExact(const unichar_t *p_string, uindex_t p_string_length, const unichar_t *p_prefix, uindex_t p_prefix_length)
+{
+	uindex_t t_count;
+	t_count = 0;
+	for(;;)
+	{
+		if (p_string_length == 0 || p_prefix_length == 0)
+			break;
+		
+		compare_t d;
+		d = *p_string++ - *p_prefix++;
+		if (d != 0)
+			break;
+		
+		t_count += 1;
+		
+		p_string_length -= 1;
+		p_prefix_length -= 1;
+	}
+	
+	return t_count;
+}
+
+uindex_t MCUnicodeCharsSharedPrefixCaseless(const unichar_t *p_string, uindex_t p_string_length, const unichar_t *p_prefix, uindex_t p_prefix_length)
+{
+	uindex_t t_count;
+	t_count = 0;
+	for(;;)
+	{
+		if (p_string_length == 0 || p_prefix_length == 0)
+			break;
+		
+		compare_t d;
+		d = MCUnicodeCharFold(*p_string++) - MCUnicodeCharFold(*p_prefix++);
+		if (d != 0)
+			break;
+		
+		t_count += 1;
+		
+		p_string_length -= 1;
+		p_prefix_length -= 1;
+	}
+	
+	return t_count;
+}
+
+uindex_t MCUnicodeCharsSharedSuffixExact(const unichar_t *p_string, uindex_t p_string_length, const unichar_t *p_suffix, uindex_t p_suffix_length)
+{
+	p_string += p_string_length;
+	p_suffix += p_suffix_length;
+	
+	uindex_t t_count;
+	t_count = 0;
+	for(;;)
+	{
+		if (p_string_length == 0 || p_suffix_length == 0)
+			break;
+		
+		compare_t d;
+		d = *--p_string - *--p_suffix;
+		if (d != 0)
+			break;
+		
+		t_count += 1;
+		
+		p_string_length -= 1;
+		p_suffix_length -= 1;
+	}
+	
+	return t_count;
+}
+
+uindex_t MCUnicodeCharsSharedSuffixCaseless(const unichar_t *p_string, uindex_t p_string_length, const unichar_t *p_suffix, uindex_t p_suffix_length)
+{
+	p_string += p_string_length;
+	p_suffix += p_suffix_length;
+	
+	uindex_t t_count;
+	t_count = 0;
+	for(;;)
+	{
+		if (p_string_length == 0 || p_suffix_length == 0)
+			break;
+		
+		compare_t d;
+		d = MCUnicodeCharFold(*--p_string) - MCUnicodeCharFold(*--p_suffix);
+		if (d != 0)
+			break;
+		
+		t_count += 1;
+		
+		p_string_length -= 1;
+		p_suffix_length -= 1;
+	}
+	
+	return t_count;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+hash_t MCUnicodeCharsHashExact(const unichar_t *p_chars, uindex_t p_char_count)
+{
+	hash_t t_value;
+	t_value = 0;
+	while(p_char_count--)
+		t_value += (t_value << 3) + *p_chars++;
+	return t_value;
+}
+
+hash_t MCUnicodeCharsHashCaseless(const unichar_t *p_chars, uindex_t p_char_count)
+{
+	hash_t t_value;
+	t_value = 0;
+	while(p_char_count--)
+		t_value += (t_value << 3) + MCUnicodeCharFold(*p_chars++);
+	return t_value;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCUnicodeCharsLowercase(unichar_t *p_chars, uindex_t p_char_count)
+{
+	for(uindex_t i = 0; i < p_char_count; i++)
+		p_chars[i] = MCUnicodeCharFold(p_chars[i]);
+}
+
+void MCUnicodeCharsUppercase(unichar_t *p_chars, uindex_t p_char_count)
+{
+	for(uindex_t i = 0; i < p_char_count; i++)
+		p_chars[i] = MCUnicodeCharUppercase(p_chars[i]);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCUnicodeCharsMapToNative(const unichar_t *p_uchars, uindex_t p_uchar_count, char_t *p_nchars, uindex_t& r_nchar_count, char_t p_invalid)
 {
 	bool t_lossy;
@@ -49,9 +245,27 @@ void MCUnicodeCharsMapFromNative(const char_t *p_chars, uindex_t p_char_count, u
 
 ////////////////////////////////////////////////////////////////////////////////
 
+unichar_t MCUnicodeCharFold(unichar_t p_char)
+{
+	char_t t_native_char;
+	if (MCUnicodeCharMapToNative(p_char, t_native_char))
+		return MCUnicodeCharMapFromNative(MCNativeCharFold(t_native_char));
+	return p_char;
+}
+
+unichar_t MCUnicodeCharUppercase(unichar_t p_char)
+{
+	char_t t_native_char;
+	if (MCUnicodeCharMapToNative(p_char, t_native_char))
+		return MCUnicodeCharMapFromNative(MCNativeCharUppercase(t_native_char));
+	return p_char;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Convert the given UTF-8 string to Unicode. Both counts are in bytes.
 // Returns the number of bytes used.
-static int32_t UTF8ToUnicode(const byte_t *p_src, int32_t p_src_count, uint16_t *p_dst, int32_t p_dst_count)
+static int32_t UTF8ToUnicode(const byte_t *p_src, int32_t p_src_count, unichar_t *p_dst, int32_t p_dst_count)
 {
 	int32_t t_made;
 	t_made = 0;
@@ -165,7 +379,7 @@ static int32_t UTF8ToUnicode(const byte_t *p_src, int32_t p_src_count, uint16_t 
 
 // Converts the given UTF-16 string to UTF-8. Both counts are in bytes.
 // Returns the number of bytes generated.
-static int32_t UnicodeToUTF8(const uint16_t *p_src, int32_t p_src_count, byte_t *p_dst, int32_t p_dst_count)
+static int32_t UnicodeToUTF8(const unichar_t *p_src, int32_t p_src_count, byte_t *p_dst, int32_t p_dst_count)
 {
 	int32_t t_made;
 	t_made = 0;
@@ -257,37 +471,6 @@ static int32_t UnicodeToUTF8(const uint16_t *p_src, int32_t p_src_count, byte_t 
 uindex_t MCUnicodeCharsMapToUTF8(const unichar_t *wchars, uindex_t wchar_count, byte_t *utf8bytes, uindex_t utf8byte_count)
 {
     return UnicodeToUTF8(wchars, wchar_count * 2, utf8bytes, utf8byte_count);
-#if 0
-    uindex_t t_bytes_needed;
-    t_bytes_needed = 0;
-    
-    uindex_t t_size_in_bytes;
-    
-    for (uindex_t i = 0; i < wchar_count; ++i)
-    {
-        // According to the first byte value, we can determine the number of
-        // bytes a conversion would need
-        if (wchars[i] < 0x80)
-            t_size_in_bytes = 1;
-        
-        else if (wchars[i] < 0xE0)
-            t_size_in_bytes = 2;
-        
-        else if (wchars[i] < 0xF0)
-            t_size_in_bytes = 3;
-        
-        else
-            t_size_in_bytes = 4;
-        
-        // Performs the conversion from the Unicode character to the byte_t array
-        if (utf8bytes != nil)
-            MCMemoryCopy(utf8bytes + t_bytes_needed, wchars + i, t_size_in_bytes);
-        
-        t_bytes_needed += t_size_in_bytes;
-    }
-    
-    return t_bytes_needed;
-#endif
 }
 
 // If wchars is nil, returns the size of the buffer (in wchars needed)
@@ -295,47 +478,19 @@ uindex_t MCUnicodeCharsMapToUTF8(const unichar_t *wchars, uindex_t wchar_count, 
 uindex_t MCUnicodeCharsMapFromUTF8(const byte_t *utf8bytes, uindex_t utf8byte_count, unichar_t *wchars, uindex_t wchar_count)
 {
     return UTF8ToUnicode(utf8bytes, utf8byte_count, wchars, wchar_count * 2) / 2;
-#if 0
-    uindex_t t_wchars_needed;
-    t_wchars_needed = 0;
-    
-    uindex_t t_size_in_bytes;
-    
-    for (index_t i = 0; i < utf8byte_count;)
-    {
-        // According to the first byte value, we can determine the number of
-        // bytes a conversion would need
-        if (utf8bytes[i] < 0x80)
-        {
-            t_size_in_bytes = 1;
-            t_wchars_needed += 1;
-        }
-        else if (wchars[i] < 0xE0)
-        {
-            t_size_in_bytes = 2;
-            t_wchars_needed += 1;
-        }
-        else if (wchars[i] < 0xF0)
-        {
-            t_size_in_bytes = 3;
-        
-        else
-            t_size_in_bytes = 4;
-        
-        if (wchars != nil)
-            // Copy the bytes into the unichar_t array
-            MCMemoryCopy(wchars + t_wchars_needed, utf8bytes + i, t_size_in_bytes);
-
-        t_wchars_needed ++;
-        i += t_size_in_bytes;
-    }
-    
-    return t_wchars_needed;
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+char_t MCUnicodeCharMapToNativeLossy(unichar_t p_uchar)
+{
+	char_t t_char;
+	if (MCUnicodeCharMapToNative(p_uchar, t_char))
+		return t_char;
+	return '?';
+}
+		
+	
 bool MCUnicodeCharMapToNative(unichar_t p_uchar, char_t& r_nchar)
 {
 #if defined(__WINDOWS_1252__)

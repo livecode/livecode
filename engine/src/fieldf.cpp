@@ -418,7 +418,7 @@ void MCField::gettabs(uint2 *&t, uint2 &n, Boolean &fixed)
 		// MW-2012-02-17: If we aren't opened, then just use a default value.
 		int4 t_space_width;
 		if (opened)
-			t_space_width = MCFontMeasureText(m_font, " ", 1, false);
+			t_space_width = MCFontMeasureText(m_font, MCSTR(" "));
 		else
 			t_space_width = 8;
 		 
@@ -1416,24 +1416,14 @@ void MCField::endselection()
 		{
 			MCExecPoint ep;
 			selectedtext(ep);
-#ifdef SHARED_STRING
-			MCSharedString *t_data;
-			t_data = MCSharedString::Create(ep . getsvalue());
-			if (t_data != NULL)
-			{
-				if (MCselectiondata -> Store(TRANSFER_TYPE_TEXT, t_data))
-					MCactivefield = this;
-				t_data -> Release();
-			}
-#else
-			MCAutoStringRef t_data;
-			/* UNCHECKED */ ep . copyasstringref(&t_data);
+			
+			MCAutoDataRef t_data;
+			/* UNCHECKED */ ep . copyasdataref(&t_data);
 			if (*t_data != nil)
 			{
 				if (MCselectiondata -> Store(TRANSFER_TYPE_TEXT, *t_data))
 					MCactivefield = this;
 			}
-#endif
 		}
 
 		if (!(flags & F_LOCK_TEXT) && MCU_point_in_rect(rect, mx, my))
@@ -2234,8 +2224,7 @@ void MCField::fmove(Field_translations function, const char *string, KeySym key)
 	contiguous = True;
 }
 
-void MCField::setupmenu(const MCString &s, uint2 fheight,
-												Boolean scrolling, Boolean isunicode)
+void MCField::setupmenu(MCStringRef p_string, uint2 fheight, Boolean scrolling)
 {
 	flags = F_VISIBLE | F_SHOW_BORDER | F_ALIGN_LEFT
 	| F_TRAVERSAL_ON | F_F_AUTO_ARM | F_SHARED_TEXT | F_FIXED_HEIGHT
@@ -2243,13 +2232,13 @@ void MCField::setupmenu(const MCString &s, uint2 fheight,
 	if (scrolling)
 	{
 		Boolean dirty;
-		setsbprop(P_VSCROLLBAR, MCtruemcstring, 0, 0,
+		setsbprop(P_VSCROLLBAR, true, 0, 0,
 							scrollbarwidth, hscrollbar, vscrollbar, dirty);
 	}
 	fontheight = fheight;
 	topmargin = bottommargin = 6;
 	borderwidth = 0;
-	settext_oldstring(0, s, False, isunicode);
+	settext(0, p_string, False);
 
 	// MW-2008-03-14: [[ Bug 5750 ]] Fix to focus border problem in fields used as menu lists in
 	//   (for example) option menus. Set this as a menufield.

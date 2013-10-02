@@ -139,14 +139,14 @@ void MCScreenDC::setupcolors()
 {
 	ncolors = MCU_min(vis->colormap_size, MAX_CELLS);
 	colors = new MCColor[ncolors];
-	colornames = new char *[ncolors];
+    colornames = new MCStringRef[ncolors];
 	allocs = new int2[ncolors];
 	int2 i;
 	for (i = 0 ; i < ncolors ; i++)
 	{
 		colors[i].flags = DoRed | DoGreen | DoBlue;
 		colors[i].pixel = i;
-		colornames[i] = NULL;
+        colornames[i] = MCValueRetain(kMCEmptyString);
 		allocs[i] = 0;
 	}
 }
@@ -893,23 +893,14 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 				// If I don't own the clipboard at this point, then something has gone wrong	
 				if ( ownsclipboard() ) 
 				{
-#ifdef SHARED_STRING
-					MCSharedString * t_data; 
-					if (m_Clipboard_store -> Fetch(  new MCMIMEtype(dpy, srevent -> target), t_data, None, None, DNULL, DNULL, MCeventtime ))
-					{
-						XChangeProperty(dpy, srevent -> requestor, srevent -> property,
-					                srevent -> target, 8, PropModeReplace,
-					                (const unsigned char *)t_data -> Get() . getstring(),
-					                t_data -> Get() . getlength());
-#else
-					MCAutoStringRef t_data; 
+					MCAutoDataRef t_data; 
 					if (m_Clipboard_store -> Fetch(  new MCMIMEtype(dpy, srevent -> target), &t_data, None, None, DNULL, DNULL, MCeventtime ))
 					{
 						XChangeProperty(dpy, srevent -> requestor, srevent -> property,
 					                srevent -> target, 8, PropModeReplace,
-					                (const unsigned char *)MCStringGetCString(*t_data),
-					                MCStringGetLength(*t_data));
-#endif
+					                (const unsigned char *)MCDataGetBytePtr(*t_data),
+					                MCDataGetLength(*t_data));
+						
 						if (srevent->property != None)
 							sendevent.property = srevent->property;
 						else

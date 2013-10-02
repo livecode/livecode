@@ -18,6 +18,16 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __MC_FOUNDATION__
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#ifdef __ANDROID__
+#define __PLATFORM_IS_ANDROID__
+#endif
+
+#ifdef __APPLE__
+#include "TargetConditionals.h"
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
 //
 //  MACRO UNDEFINITIONS
 //
@@ -134,7 +144,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  CONFIGURE DEFINITIONS FOR MAC
 //
 
-#if defined(__GNUC__) && defined(__APPLE__)
+#if defined(__GNUC__) && defined(__APPLE__) && !defined(TARGET_OS_IPHONE)
 
 // Compiler
 #define __GCC__ 1
@@ -176,7 +186,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  CONFIGURE DEFINITIONS FOR LINUX
 //
 
-#if defined(__GNUC__) && !defined(__APPLE__)
+#if defined(__GNUC__) && !defined(__APPLE__) && !defined(__PLATFORM_IS_ANDROID__)
 
 // Compiler
 #define __GCC__
@@ -215,10 +225,81 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  CONFIGURE DEFINITIONS FOR IOS
 //
 
+#if defined(__GNUC__) && defined(__APPLE__) && defined(TARGET_OS_IPHONE)
+
+// Compiler
+#define __GCC__ 1
+
+// Platform
+#define __IOS__ 1
+
+// Architecture
+#if defined(__i386)
+#define __32_BIT__ 1
+#define __LITTLE_ENDIAN__ 1
+#define __I386__ 1
+#define __SMALL__ 1
+#elif defined(__ppc__)
+#define __32_BIT__ 1 
+#define __BIG_ENDIAN__ 1 
+#define __PPC__ 1
+#define __SMALL__ 1
+#elif defined(__x86_64__)
+#define __64_BIT__ 1
+#define __LITTLE_ENDIAN__ 1
+#define __X86_64__ 1
+#define __HUGE__ 1 
+#endif
+
+// Native char set
+#define __MACROMAN__ 1
+
+// Native line endings
+#define __CR__ 1
+
+// Presence of CoreFoundation
+#define __HAS_CORE_FOUNDATION__
+
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  CONFIGURE DEFINITIONS FOR ANDROID
 //
+
+#if defined(__GNUC__) && !defined(__APPLE__) && defined(__PLATFORM_IS_ANDROID__)
+
+// Compiler
+#define __GCC__
+
+// Platform
+#define __ANDROID__
+
+// Architecture
+#if defined(__i386)
+#define __32_BIT__
+#define __LITTLE_ENDIAN__
+#define __I386__
+#define __SMALL__
+#elif defined(__x86_64__)
+#define __64_BIT__
+#define __LITTLE_ENDIAN__
+#define __X86_64__
+#define __HUGE__
+#elif defined(__arm__)
+#define __32_BIT__
+#define __LITTLE_ENDIAN__
+#define __ARM__
+#define __SMALL__
+#endif
+
+// Native char set
+#define __ISO_8859_1__
+
+// Native line endings
+#define __LF__
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -285,6 +366,10 @@ typedef signed int intptr_t;
 typedef unsigned int uintptr_t;
 typedef unsigned int size_t;
 #elif defined(__LINUX__)
+typedef signed int intptr_t;
+typedef unsigned int uintptr_t;
+typedef unsigned int size_t;
+#elif defined(__ANDROID__)
 typedef signed int intptr_t;
 typedef unsigned int uintptr_t;
 typedef unsigned int size_t;
@@ -484,7 +569,7 @@ inline compare_t MCCompare(uint32_t a, uint32_t b) { return a < b ? -1 : (a > b 
 inline compare_t MCCompare(int64_t a, int64_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
 inline compare_t MCCompare(uint64_t a, uint64_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
 
-#if !defined(__WINDOWS__) && !defined(__LINUX__)
+#if !defined(__WINDOWS__) && !defined(__LINUX__) && !defined(__ANDROID__)
 inline compare_t MCCompare(intptr_t a, intptr_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
 inline compare_t MCCompare(uintptr_t a, uintptr_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
 #endif
@@ -1076,8 +1161,13 @@ extern MCNumberRef kMCMinusOne;
 //  NAME DEFINITIONS
 //
 
+// Like MCSTR but for NameRefs
+MCNameRef MCNAME(const char *);
+
 // Create a name using the given string.
 bool MCNameCreate(MCStringRef string, MCNameRef& r_name);
+// Create a name using chars.
+bool MCNameCreateWithChars(const unichar_t *chars, uindex_t count, MCNameRef& r_name);
 // Create a name using native chars.
 bool MCNameCreateWithNativeChars(const char_t *chars, uindex_t count, MCNameRef& r_name);
 
@@ -1203,6 +1293,10 @@ bool MCStringCreateWithWStringAndRelease(unichar_t *wstring, MCStringRef& r_stri
 bool MCStringCreateWithNativeChars(const char_t *chars, uindex_t char_count, MCStringRef& r_string);
 bool MCStringCreateWithNativeCharsAndRelease(char_t *chars, uindex_t char_count, MCStringRef& r_string);
 
+// Create an immutable string from the given (native) c-string.
+bool MCStringCreateWithCString(const char_t *cstring, MCStringRef& r_string);
+bool MCStringCreateWithCStringAndRelease(char_t *cstring, MCStringRef& r_string);
+
 #ifdef __HAS_CORE_FOUNDATION__
 // Create a string from a CoreFoundation string object.
 bool MCStringCreateWithCFString(CFStringRef cf_string, MCStringRef& r_string);
@@ -1216,8 +1310,12 @@ bool MCStringCreateMutable(uindex_t initial_capacity, MCStringRef& r_string);
 
 /////////
 
+// Encode the given string with the specified encoding. Characters which cannot
+// be represented in the target encoding are replaced by '?'.
 bool MCStringEncode(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, MCDataRef& r_data);
 bool MCStringEncodeAndRelease(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, MCDataRef& r_data);
+
+// Decode the given data, intepreting in the given encoding.
 bool MCStringDecode(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
 bool MCStringDecodeAndRelease(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
 
@@ -1261,6 +1359,15 @@ bool MCStringMutableCopyAndRelease(MCStringRef string, MCRange range, MCStringRe
 // Returns true if the string is mutable
 bool MCStringIsMutable(const MCStringRef string);
 
+// Returns true if the string is the empty string.
+bool MCStringIsEmpty(MCStringRef string);
+
+// Returns true if the the string only requires native characters to represent.
+bool MCStringIsNative(MCStringRef string);
+
+// Returns true if the string only requires BMP characters to represent.
+bool MCStringIsSimple(MCStringRef string);
+
 /////////
 
 // Returns the number of chars that make up the string. Note that a char is
@@ -1281,9 +1388,8 @@ const unichar_t *MCStringGetCharPtr(MCStringRef string);
 // in native encoding.
 const char_t *MCStringGetNativeCharPtr(MCStringRef string);
 
-// Return a pointer to the byte backing-store if possible. For this method to
-// succeed the string must be binary (native), otherwise nil will be returned.
-const byte_t *MCStringGetBytePtr(MCStringRef string);
+// Returns the Unicode codepoint at the given codepoint index
+codepoint_t MCStringGetCodepointAtIndex(MCStringRef string, uindex_t index);
 
 // Returns the char at the given index.
 unichar_t MCStringGetCharAtIndex(MCStringRef string, uindex_t index);
@@ -1301,9 +1407,6 @@ uindex_t MCStringGetChars(MCStringRef string, MCRange range, unichar_t *chars);
 // that would be generated is returned. Any unmappable chars get generated as '?'.
 uindex_t MCStringGetNativeChars(MCStringRef string, MCRange range, char_t *chars);
 
-// Returns true if the the string is stored as native chars internally or false if
-// it is encoded in UTF-16.
-bool MCStringIsNative(MCStringRef string);
 
 /////////
 
@@ -1354,7 +1457,6 @@ hash_t MCStringHash(MCStringRef string, MCStringOptions options);
 // to options.
 bool MCStringIsEqualTo(MCStringRef string, MCStringRef other, MCStringOptions options);
 bool MCStringIsEqualToNativeChars(MCStringRef string, const char_t *chars, uindex_t char_count, MCStringOptions options);
-bool MCStringIsEmpty(MCStringRef string);
 
 // Returns true if the substring is equal to the other, according to options
 bool MCStringSubstringIsEqualTo(MCStringRef string, MCRange other, MCStringRef p_other, MCStringOptions p_options);
@@ -1452,7 +1554,10 @@ bool MCStringAppendNativeChar(MCStringRef string, char_t p_char);
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
 bool MCStringPrepend(MCStringRef string, MCStringRef prefix);
 bool MCStringPrependSubstring(MCStringRef string, MCStringRef suffix, MCRange range);
+bool MCStringPrependChars(MCStringRef string, const unichar_t *chars, uindex_t count);
 bool MCStringPrependNativeChars(MCStringRef string, const char_t *chars, uindex_t count);
+bool MCStringPrependChar(MCStringRef string, unichar_t p_char);
+bool MCStringPrependNativeChar(MCStringRef string, char_t p_char);
 
 // Insert new_string into string at offset 'at'.
 //
@@ -1463,6 +1568,11 @@ bool MCStringInsert(MCStringRef string, uindex_t at, MCStringRef new_string);
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
 bool MCStringRemove(MCStringRef string, MCRange range);
+
+// Retain only 'range' characters from 'string'.
+//
+// Note that 'string' must be mutable, it is a fatal runtime error if it is not.
+bool MCStringSubstring(MCStringRef string, MCRange range);
 
 // Replace 'range' characters in 'string' with 'replacement'.
 //
@@ -1479,7 +1589,7 @@ bool MCStringPad(MCStringRef string, uindex_t at, uindex_t count, MCStringRef va
 //
 // Note that 'string' must be mutable.
 bool MCStringFindAndReplace(MCStringRef string, MCStringRef pattern, MCStringRef replacement, MCStringOptions options);
-bool MCStringFindAndReplaceChar(MCStringRef string, char_t pattern, char_t replacement, MCStringOptions options);
+bool MCStringFindAndReplaceChar(MCStringRef string, codepoint_t pattern, codepoint_t replacement, MCStringOptions options);
 
 /////////
 
@@ -1501,8 +1611,12 @@ bool MCStringSplitColumn(MCStringRef string, MCStringRef col_del, MCStringRef ro
 //
 // Immutable data methods
 
+extern MCDataRef kMCEmptyData;
+
 bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
 bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
+
+bool MCDataIsEmpty(MCDataRef p_data);
 
 uindex_t MCDataGetLength(MCDataRef p_data);
 const byte_t *MCDataGetBytePtr(MCDataRef p_data);
@@ -1536,6 +1650,8 @@ bool MCDataPrependByte(MCDataRef r_data, byte_t p_byte);
 bool MCDataInsert(MCDataRef r_data, uindex_t p_at, MCDataRef p_new_data);
 bool MCDataRemove(MCDataRef r_data, MCRange p_range);
 bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data);
+
+bool MCDataPad(MCDataRef data, byte_t byte, uindex_t count);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -1608,6 +1724,9 @@ bool MCArrayApply(MCArrayRef array, MCArrayApplyCallback callback, void *context
 // A return value of 'false' means no further elements. Do not modify the array
 // inbetween calls to Iterate as this will cause undefined behavior.
 bool MCArrayIterate(MCArrayRef array, uintptr_t& iterator, MCNameRef& r_key, MCValueRef& r_value);
+
+// Returns true if the given array is the empty array.
+bool MCArrayIsEmpty(MCArrayRef self);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

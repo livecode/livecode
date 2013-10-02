@@ -84,10 +84,16 @@ void MCGradientFillInit(MCGradientFill *&r_gradient, MCRectangle p_rect);
 void MCGradientFillFree(MCGradientFill *gradient);
 MCGradientFill *MCGradientFillCopy(const MCGradientFill *p_gradient);
 
+
 Exec_stat MCGradientFillGetProperty(MCGradientFill* p_gradient, MCExecPoint &ep, MCNameRef prop);
 Exec_stat MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCExecPoint &ep, MCNameRef prop, Boolean &dirty, MCRectangle rect);
 
-Boolean MCGradientFillRampParse(MCGradientFillStop* &r_stops, uint1 &r_stop_count, const MCString &r_data);
+bool MCGradientFillGetProperties(MCGradientFill* p_gradient, MCArrayRef& r_array);
+bool MCGradientFillSetProperties(MCGradientFill* &x_gradient, MCRectangle rect, MCArrayRef p_array, bool& r_dirty);
+bool MCGradientFillGetElement(MCGradientFill* p_gradient, MCNameRef p_prop, MCValueRef& r_value);
+bool MCGradientFillSetElement(MCGradientFill* &x_gradient, MCNameRef p_prop, MCRectangle rect, MCValueRef p_value, bool& r_dirty);
+
+Boolean MCGradientFillRampParse(MCGradientFillStop* &r_stops, uint1 &r_stop_count, MCStringRef r_data);
 void MCGradientFillRampUnparse(MCGradientFillStop* p_stops, uint1 p_stop_count, MCExecPoint &p_ep);
 
 MCGradientCombiner *MCGradientFillCreateCombiner(MCGradientFill *p_gradient, MCRectangle &p_clip);

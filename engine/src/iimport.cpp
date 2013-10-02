@@ -41,7 +41,7 @@ bool read_all(IO_handle p_stream, uint8_t *&r_data, uindex_t &r_data_size)
 
 	t_success = MCMemoryAllocate(t_size, t_buffer);
 	if (t_success)
-		t_success = IO_NORMAL == MCS_read(t_buffer, sizeof(uint8_t), t_size, p_stream);
+		t_success = IO_NORMAL == MCS_readfixed(t_buffer, t_size, p_stream);
 
 	if (t_success)
 	{
@@ -65,7 +65,7 @@ bool MCImageGetMetafileGeometry(IO_handle p_stream, uindex_t &r_width, uindex_t 
 	uint8_t t_head[EMF_HEAD_SIZE];
 	uindex_t t_size = META_HEAD_SIZE;
 
-	t_success = IO_NORMAL == MCS_read(t_head, sizeof(uint8_t), t_size, p_stream) &&
+	t_success = IO_NORMAL == MCS_readfixed(t_head, t_size, p_stream) &&
 		t_size == META_HEAD_SIZE;
 
 	if (t_success)
@@ -81,10 +81,9 @@ bool MCImageGetMetafileGeometry(IO_handle p_stream, uindex_t &r_width, uindex_t 
 		// win32 metafile (emf)
 		else if (memcmp(&t_head[40], "\x20\x45\x4D\x46", 4) == 0)
 		{
-			t_size = EMF_HEAD_SIZE;
-			t_success = IO_NORMAL == MCS_seek_set(p_stream, t_stream_pos) &&
-				IO_NORMAL == MCS_read(t_head, sizeof(uint8_t), t_size, p_stream) &&
-				t_size == EMF_HEAD_SIZE;
+			t_success =
+                IO_NORMAL == MCS_seek_set(p_stream, t_stream_pos) &&
+                IO_NORMAL == MCS_readfixed(t_head, EMF_HEAD_SIZE, p_stream);
 
 			if (t_success)
 			{
@@ -100,11 +99,10 @@ bool MCImageGetMetafileGeometry(IO_handle p_stream, uindex_t &r_width, uindex_t 
 			uindex_t t_offset = 0;
 			if (memcmp(t_head, "\0\0\0\0\0\0\0\0", 8) == 0)
 			{
-				t_size = META_HEAD_SIZE;
 				t_offset = 512;
-				t_success = IO_NORMAL == MCS_seek_set(p_stream, t_stream_pos + t_offset) &&
-					IO_NORMAL == MCS_read(t_head, sizeof(uint8_t), t_size, p_stream) &&
-					t_size == META_HEAD_SIZE;
+				t_success =
+                    IO_NORMAL == MCS_seek_set(p_stream, t_stream_pos + t_offset) &&
+                    IO_NORMAL == MCS_readfixed(t_head, META_HEAD_SIZE, p_stream);
 			}
 
 			// PICT file
@@ -191,10 +189,12 @@ bool MCImageDecode(IO_handle p_stream, MCImageFrame *&r_frames, uindex_t &r_fram
 bool MCImageDecode(const uint8_t *p_data, uindex_t p_size, MCImageFrame *&r_frames, uindex_t &r_frame_count)
 {
 	bool t_success = true;
+    MCAutoDataRef t_data;
 
 	IO_handle t_stream = nil;
 
-	t_success = nil != (t_stream = MCS_fakeopen(MCString((const char*)p_data, p_size)));
+    if (t_success)
+        t_success = nil != (t_stream = MCS_fakeopen(MCString((const char *)p_data, p_size)));
 
 	if (t_success)
 		t_success = MCImageDecode(t_stream, r_frames, r_frame_count);
@@ -213,13 +213,12 @@ bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotsp
 	uindex_t t_width = 0, t_height = 0;
 
 	uint8_t t_head[8];
-	uindex_t t_size = 8;
 
 	uint32_t t_compression = F_RLE;
 
 	if (t_success)
-		t_success = MCS_read(t_head, sizeof(uint8_t), t_size, p_stream) == IO_NORMAL &&
-		t_size == 8 && MCS_seek_cur(p_stream, -8) == IO_NORMAL;
+		t_success = MCS_readfixed(t_head, 8, p_stream) == IO_NORMAL &&
+                    MCS_seek_cur(p_stream, -8) == IO_NORMAL;
 
 	if (t_success)
 	{

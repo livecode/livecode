@@ -84,7 +84,7 @@ static MCColor accentcolors[8];
 
 ////////
 
-void MCScreenDC::setstatus(const char *status)
+void MCScreenDC::setstatus(MCStringRef status)
 { //No action
 }
 
@@ -291,7 +291,7 @@ Boolean MCScreenDC::close(Boolean force)
 		for (i = 0 ; i < ncolors ; i++)
 		{
 			if (colornames[i] != NULL)
-				delete colornames[i];
+				MCValueRelease(colornames[i]);
 		}
 		delete colors;
 		delete colornames;
@@ -665,12 +665,11 @@ void MCScreenDC::uniconifywindow(Window window)
 }
 
 // MW-2007-07-09: [[ Bug 3226 ]] Update the call to take 'newname' as UTF-8
-void MCScreenDC::setname(Window w, const char *newname)
+void MCScreenDC::setname(Window w, MCStringRef newname)
 {
-	CFStringRef t_title;
-	t_title = convertutf8tocf(newname);
-	SetWindowTitleWithCFString((WindowPtr)w -> handle . window, t_title);
-	CFRelease(t_title);
+	MCAutoStringRefAsCFString t_newname_cf;
+	/* UNCHECKED */ t_newname_cf . Lock(newname);
+	SetWindowTitleWithCFString((WindowPtr)w -> handle . window, *t_newname_cf);
 }
 
 void MCScreenDC::setcmap(MCStack *sptr)

@@ -158,6 +158,9 @@ struct MCFieldExportEventData
 //   a run. The callback should return 'false' if it wants to terminate.
 typedef bool (*MCFieldExportCallback)(void *context, MCFieldExportEventType event_type, const MCFieldExportEventData& event_data);
 
+struct MCInterfaceFlaggedRanges;
+struct MCInterfaceFlaggedRange;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCField : public MCControl
@@ -346,7 +349,7 @@ public:
 	void fcenter(Field_translations function, const char *string, KeySym key);
 	void fmove(Field_translations function, const char *string, KeySym key);
 	void fscroll(Field_translations function, const char *string, KeySym key);
-	void setupmenu(const MCString &s, uint2 fheight, Boolean scrolling, Boolean isunicode);
+	void setupmenu(MCStringRef p_string, uint2 fheight, Boolean scrolling);
 	void setupentry(MCButton *bptr, const MCString &s, Boolean isunicode);
 	void typetext(const MCString &newtext);
 	void startcomposition();
@@ -364,7 +367,7 @@ public:
 	void insertparagraph(MCParagraph *newtext);
 	// MCField selection functions in fields.cc
 	Boolean find(MCExecPoint &ep, uint4 cardid,
-	             Find_mode mode, const MCString &, Boolean first);
+	             Find_mode mode, MCStringRef, Boolean first);
 	Exec_stat sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
 	               Sort_type dir, Sort_type form, MCExpression *by);
 	// MW-2012-02-08: [[ Field Indices ]] The 'index' parameter, if non-nil, will contain
@@ -384,6 +387,7 @@ public:
 	Exec_stat settext_oldstring(uint4 parid, const MCString &newtext, Boolean formatted, Boolean asunicode = False);
 	// MW-2012-02-23: [[ PutUnicode ]] Added parameter to specify whether 'is' is unicode or native.
 	Exec_stat settextindex(uint4 parid, int4 si, int4 ei, const MCString &s, Boolean undoing, bool asunicode = false);
+	Exec_stat settextindex_stringref(uint4 parid, int4 si, int4 ei, MCStringRef s, Boolean undoing);
 	void getlinkdata(MCRectangle &r, MCBlock *&sb, MCBlock *&eb);
 
 	// MW-2011-11-23: [[ Array TextStyle ]] Setting/getting text attributes can be indexed by
@@ -436,10 +440,7 @@ public:
 	void linestoparagraphs(int4 si, int4 ei, MCParagraph*& sp, MCParagraph*& ep);
 
 	MCParagraph *cloneselection();
-#ifdef SHARED_STRING
-	MCSharedString *pickleselection(void);
-#endif
-	bool pickleselection(MCStringRef& r_string);
+	bool pickleselection(MCDataRef& r_string);
 
 	void cuttext();
 	void copytext();
@@ -498,19 +499,19 @@ public:
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to text, either as unicode
 	//   or native encoding.
 	void exportastext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool as_unicode);
-	bool exportastext(uint32_t p_part_id, int32_t start_index, int32_t finish_index, bool as_unicode, MCStringRef& r_string);
+	bool exportastext(uint32_t p_part_id, int32_t start_index, int32_t finish_index, MCStringRef& r_string);
 
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to text, including any list
 	//   indices. The output is encoded in either unicode or native.
 	void exportasplaintext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool as_unicode);
 	void exportasplaintext(MCExecPoint& ep, MCParagraph *paragraphs, int32_t start_index, int32_t finish_index, bool as_unicode);
-	bool exportasplaintext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode, MCStringRef& r_string);
-	bool exportasplaintext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode, MCStringRef& r_string);
+	bool exportasplaintext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string);
+	bool exportasplaintext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string);
 
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to text, including any list
 	//   indices and line breaks.
 	void exportasformattedtext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool as_unicode);
-	bool exportasformattedtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode, MCStringRef& r_string);
+	bool exportasformattedtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string);
 
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to rtf.
 	void exportasrtftext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index);
@@ -544,7 +545,7 @@ public:
 
 	// MW-2012-02-11: [[ TabWidths ]] The 'which' parameter allows the parsing/formatting
 	//   routine to do both stops and widths.
-	static bool parsetabstops(Properties which, const MCString& data, uint16_t*& r_tabs, uint16_t& r_tab_count);
+	static bool parsetabstops(Properties which, MCStringRef data, uint16_t*& r_tabs, uint16_t& r_tab_count);
 	static void formattabstops(Properties which, MCExecPoint& ep, uint16_t *tabs, uint16_t tab_count);
 	
 	// MW-2012-02-22: [[ FieldChars ]] Count the number of characters (not bytes) between
@@ -568,7 +569,12 @@ public:
 	////////// PROPERTY SUPPORT METHODS
 
 	void Redraw(bool reset = false, int4 xoffset = 0, int4 yoffset = 0);
-
+    void UpdateScrollbars(void);
+    
+    void DoSetInputControl(MCExecContext& ctxt, Properties which, bool setting);
+    void DoGetTextState(MCExecContext& ctxt, Properties which, uint32_t part, MCInterfaceTriState& r_state);
+    void DoSetTabStops(MCExecContext& ctxt, bool is_relative, uindex_t p_count, uinteger_t *p_tabs);
+    
 	////////// PROPERTY ACCESSORS
 
 	void GetAutoTab(MCExecContext& ctxt, bool& r_flag);
@@ -581,6 +587,7 @@ public:
 	void SetFixedHeight(MCExecContext& ctxt, bool flag);
 	void GetLockText(MCExecContext& ctxt, bool& r_flag);
 	void SetLockText(MCExecContext& ctxt, bool flag);
+    virtual void SetTraversalOn(MCExecContext& ctxt, bool setting);
 	void GetSharedText(MCExecContext& ctxt, bool& r_flag);
 	void SetSharedText(MCExecContext& ctxt, bool flag);
 	void GetShowLines(MCExecContext& ctxt, bool& r_flag);
@@ -619,8 +626,8 @@ public:
 	void SetNoncontiguousHilites(MCExecContext& ctxt, bool setting);
 	void GetText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text);
 	void SetText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text);
-	void GetUnicodeText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text);
-	void SetUnicodeText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text);
+	void GetUnicodeText(MCExecContext& ctxt, uint32_t part, MCDataRef& r_text);
+	void SetUnicodeText(MCExecContext& ctxt, uint32_t part, MCDataRef p_text);
 	void GetHtmlText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text);
 	void SetHtmlText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text);
 	void GetEffectiveHtmlText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text);
@@ -632,11 +639,11 @@ public:
 	void GetFormattedStyledText(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_array);
 	void GetEffectiveFormattedStyledText(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_array);
 	void GetPlainText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_string);
-	void GetUnicodePlainText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_string);
+	void GetUnicodePlainText(MCExecContext& ctxt, uint32_t part, MCDataRef& r_string);
 	void GetFormattedText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_string);
 	void SetFormattedText(MCExecContext& ctxt, uint32_t part, MCStringRef p_string);
-	void GetUnicodeFormattedText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_string);
-	void SetUnicodeFormattedText(MCExecContext& ctxt, uint32_t part, MCStringRef p_string);
+	void GetUnicodeFormattedText(MCExecContext& ctxt, uint32_t part, MCDataRef& r_string);
+	void SetUnicodeFormattedText(MCExecContext& ctxt, uint32_t part, MCDataRef p_string);
 	void GetLabel(MCExecContext& ctxt, MCStringRef& r_string);
 	void SetLabel(MCExecContext& ctxt, MCStringRef p_string);
 	void GetToggleHilite(MCExecContext& ctxt, bool& r_setting);
@@ -644,5 +651,40 @@ public:
 	void GetThreeDHilite(MCExecContext& ctxt, bool& r_setting);
 	void SetThreeDHilite(MCExecContext& ctxt, bool setting);
 	void GetEncoding(MCExecContext& ctxt, uint32_t part, intenum_t& r_encoding);
+    void GetFlagged(MCExecContext& ctxt, uint32_t part, MCInterfaceTriState& r_flagged);
+    
+    void GetHilitedLines(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_lines);
+    void SetHilitedLines(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_lines);
+    void GetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, MCInterfaceFlaggedRanges& r_ranges);
+    void SetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceFlaggedRanges& p_ranges); 
+    void SetTabStops(MCExecContext& ctxt, uindex_t p_count, uinteger_t *p_tabs);
+    void GetTabStops(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tabs);
+    void SetTabWidths(MCExecContext& ctxt, uindex_t p_count, uinteger_t *p_tabs);
+    void GetTabWidths(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tabs);
+    void GetPageHeights(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_heights);
+    
+    virtual void SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow);
+    virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
+    virtual void SetTextHeight(MCExecContext& ctxt, uinteger_t* height);
+    virtual void SetTextFont(MCExecContext& ctxt, MCStringRef font);
+    virtual void SetTextSize(MCExecContext& ctxt, uinteger_t* size);
+    virtual void SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style);
+    virtual void SetBorderWidth(MCExecContext& ctxt, uinteger_t width);
+    virtual void Set3D(MCExecContext& ctxt, bool setting);
+    virtual void SetOpaque(MCExecContext& ctxt, bool setting);
+    virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
+	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);
+    
+	virtual void SetLeftMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetRightMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetTopMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetBottomMargin(MCExecContext& ctxt, integer_t p_margin);
+    virtual void SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins);
+	virtual void SetWidth(MCExecContext& ctxt, uinteger_t value);
+	virtual void SetHeight(MCExecContext& ctxt, uinteger_t value);
+    virtual void SetEffectiveWidth(MCExecContext& ctxt, uinteger_t value);
+	virtual void SetEffectiveHeight(MCExecContext& ctxt, uinteger_t value);
+    virtual void SetRectangle(MCExecContext& ctxt, MCRectangle p_rect);
+    virtual void SetEffectiveRectangle(MCExecContext& ctxt, MCRectangle p_rect);
 };
 #endif

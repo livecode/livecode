@@ -785,8 +785,8 @@ MCControl *MCHcfield::build(MCHcstak *hcsptr, MCStack *sptr)
 	fptr->obj_id = ++maxid;
 	if (script != NULL)
 	{
-		fptr->script = script;
-		fptr->flags |= F_SCRIPT;
+		fptr -> setscript_cstring(script);
+		delete script;
 	}
 	name = script = NULL;
 	fptr->rect = rect;
@@ -799,7 +799,9 @@ MCControl *MCHcfield::build(MCHcstak *hcsptr, MCStack *sptr)
 			fontname = HC_DEFAULT_TEXT_FONT;
 
 		// MW-2012-02-17: [[ LogFonts ]] Set the font attributes of the object.
-		fptr -> setfontattrs(fontname, tsize, tstyle);
+        MCAutoStringRef t_fontname;
+        /* UNCHECKED */ MCStringCreateWithCString(fontname, &t_fontname);
+		fptr -> setfontattrs(*t_fontname, tsize, tstyle);
 	}
 	fptr->flags &= ~(F_STYLE | F_DISPLAY_STYLE | F_SHOW_LINES | F_LOCK_TEXT
 	                 | F_AUTO_TAB | F_SHARED_TEXT
@@ -891,8 +893,8 @@ MCControl *MCHcfield::build(MCHcstak *hcsptr, MCStack *sptr)
 		fptr->colors = new MCColor;
 		fptr->colors[0].red = fptr->colors[0].green
 		                      = fptr->colors[0].blue = MAXUINT2;
-		fptr->colornames = new char *[1];
-		fptr->colornames[0] = NULL;
+		fptr->colornames = new MCStringRef[1];
+		fptr->colornames[0] = nil;
 		fptr->dflags |= DF_FORE_COLOR;
 	}
 	while (text != NULL)
@@ -962,8 +964,8 @@ MCControl *MCHcbutton::build(MCHcstak *hcsptr, MCStack *sptr)
 	bptr->rect = rect;
 	if (script != NULL)
 	{
-		bptr->script = script;
-		bptr->flags |= F_SCRIPT;
+		bptr -> setscript_cstring(script);
+		delete script;
 	}
 	name = script = NULL;
 	bptr->flags &= ~(F_STYLE | F_DISPLAY_STYLE | F_ALIGNMENT | F_SHOW_ICON
@@ -991,11 +993,10 @@ MCControl *MCHcbutton::build(MCHcstak *hcsptr, MCStack *sptr)
 		}
 		else
 		{
-			bptr->flags |= F_MENU_STRING;
-			if (bptr->menustring != NULL)
-				delete bptr->menustring;
-			bptr->menustring = tptr->buildm();
-			bptr->menusize = strlen(bptr->menustring);
+			MCStringRef t_menustring = nil;
+			/* UNCHECKED */ MCStringCreateWithCString(tptr->buildm(), t_menustring);
+			MCValueAssign(bptr->menustring, t_menustring);
+			MCValueRelease(t_menustring);
 		}
 		delete tptr;
 	}
@@ -1069,7 +1070,7 @@ MCControl *MCHcbutton::build(MCHcstak *hcsptr, MCStack *sptr)
 		bptr->flags |= F_SHOW_ICON;
 
 		// MW-2012-02-17: [[ LogFonts ]] Set the font attributes of the object.
-		bptr -> setfontattrs("textfont", 9, FA_DEFAULT_STYLE);
+		bptr -> setfontattrs(MCSTR("textfont"), 9, FA_DEFAULT_STYLE);
 		bptr -> fontheight = 12;
 	}
 	else
@@ -1083,7 +1084,9 @@ MCControl *MCHcbutton::build(MCHcstak *hcsptr, MCStack *sptr)
 				fontname = HC_DEFAULT_TEXT_FONT;
 
 			// MW-2012-02-17: [[ LogFonts ]] Set the font attributes of the object.
-			bptr -> setfontattrs(fontname, tsize, tstyle);
+            MCAutoStringRef t_fontname;
+            /* UNCHECKED */ MCStringCreateWithCString(fontname, &t_fontname);
+			bptr -> setfontattrs(*t_fontname, tsize, tstyle);
 		}
 	}
 	if (hctstyle & HC_TSTYLE_OUTLINE)
@@ -1092,8 +1095,8 @@ MCControl *MCHcbutton::build(MCHcstak *hcsptr, MCStack *sptr)
 		bptr->colors = new MCColor;
 		bptr->colors[0].red = bptr->colors[0].green = bptr->colors[0].blue
 		                      = bptr->colors[0].blue = MAXUINT2;
-		bptr->colornames = new char *[1];
-		bptr->colornames[0] = NULL;
+		bptr->colornames = new MCStringRef[1];
+		bptr->colornames[0] = nil;
 		bptr->dflags |= DF_FORE_COLOR;
 	}
 	if (bptr->flags & F_SHARED_HILITE)
@@ -1228,8 +1231,8 @@ MCControl *MCHcbmap::build()
 		iptr->dflags = MCImage::cmasks[1];
 		iptr->colors = new MCColor[1];
 		iptr->colors[0].red = iptr->colors[0].green = iptr->colors[0].blue = 0;
-		iptr->colornames = new char *[1];
-		iptr->colornames[0] = NULL;
+		iptr->colornames = new MCStringRef[1];
+		iptr->colornames[0] = nil;
 		mask = MCscreen->copyimage(data, False);
 	}
 	else
@@ -1265,8 +1268,8 @@ MCControl *MCHcbmap::build()
 		iptr->colors[0].red = iptr->colors[0].green = iptr->colors[0].blue = 0x0;
 		iptr->colors[1].red = iptr->colors[1].green
 		                      = iptr->colors[1].blue = 0xFFFF;
-		iptr->colornames = new char *[2];
-		iptr->colornames[0] = iptr->colornames[1] = NULL;
+		iptr->colornames = new MCStringRef[2];
+		iptr->colornames[0] = iptr->colornames[1] = nil;
 		data2 = MCscreen->copyimage(mask, False);
 		bytes = mask->bytes_per_line * mask->height;
 		sptr = (uint1 *)data->data;
@@ -1433,8 +1436,8 @@ MCCard *MCHccard::build(MCHcstak *hcsptr, MCStack *sptr)
 	delete name;
 	if (script != NULL)
 	{
-		cptr->script = script;
-		cptr->flags |= F_SCRIPT;
+		cptr -> setscript_cstring(script);
+		delete script;
 	}
 	name = script = NULL;
 	if (atts & HC_BC_DONT_SEARCH)
@@ -1649,8 +1652,8 @@ MCGroup *MCHcbkgd::build(MCHcstak *hcsptr, MCStack *sptr)
 	gptr->rect.x = gptr->rect.y = 0;
 	if (script != NULL)
 	{
-		gptr->script = script;
-		gptr->flags |= F_SCRIPT;
+		gptr -> setscript_cstring(script);
+		delete script;
 	}
 	name = script = NULL;
 	if (atts & HC_BC_DONT_SEARCH)
@@ -1883,8 +1886,8 @@ IO_stat MCHcstak::read(IO_handle stream)
 	HC_File_type filetype = HC_RAW;
 	uint4 *uint4buff = (uint4 *)header;
 	uint2 *uint2buff;
-	uint4 size = HC_HEADER_SIZE;
-	if (IO_read(header, sizeof(char), size, stream) != IO_NORMAL)
+	uint4 size;
+	if (IO_read(header, HC_HEADER_SIZE, stream) != IO_NORMAL)
 		return IO_ERROR;
 	swap_uint4(&uint4buff[1]);
 	if (uint4buff[1] == HC_STAK)
@@ -2035,8 +2038,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 			if (type == HC_BUGS)
 				size = 512;
 			fullbuffer = new char[size];
-			uint4 bsize = size - 8;
-			if (IO_read(&fullbuffer[8], sizeof(char), bsize, stream) != IO_NORMAL)
+			if (IO_read(&fullbuffer[8], size - 8, stream) != IO_NORMAL)
 				return IO_ERROR;
 			buffer = fullbuffer;
 			uint2buff = (uint2 *)buffer;
@@ -2159,7 +2161,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 	{
 		fullbuffer = new char[rsize];
 		MCS_seek_set(stream, roffset);
-		if (MCS_read(fullbuffer, sizeof(char), rsize, stream) != IO_NORMAL)
+		if (MCS_readfixed(fullbuffer, rsize, stream) != IO_NORMAL)
 			return IO_ERROR;
 	}
 	else
@@ -2242,20 +2244,18 @@ MCStack *MCHcstak::build()
 	delete name;
 	if (script != NULL)
 	{
-		if (sptr->script != NULL)
-			delete sptr->script;
-		sptr->script = script;
+		sptr -> setscript_cstring(script);
+		delete script;
 		if (sptr->hlist != NULL)
 		{
 			delete sptr->hlist;
 			sptr->hlist = NULL;
 		}
-		sptr->flags |= F_SCRIPT;
 	}
 	name = script = NULL;
 	sptr->rect = rect;
 	// MW-2012-02-17: [[ LogFonts ]] Set the font attributes of the object.
-	sptr -> setfontattrs(HC_DEFAULT_TEXT_FONT, HC_DEFAULT_TEXT_SIZE, FA_DEFAULT_STYLE);
+	sptr -> setfontattrs(MCSTR(HC_DEFAULT_TEXT_FONT), HC_DEFAULT_TEXT_SIZE, FA_DEFAULT_STYLE);
 	sptr->fontheight = heightfromsize(HC_DEFAULT_TEXT_SIZE);
 	uint4 i;
 	for (i = 0 ; i < npbuffers ; i++)
@@ -2408,18 +2408,14 @@ MCStack *MCHcstak::build()
 	return sptr;
 }
 
-/* WRAPPER */ IO_stat hc_import(MCStringRef p_name, IO_handle p_stream, MCStack *&p_stack)
-{
-	return hc_import(MCStringGetCString(p_name), p_stream, *&p_stack);
-}
 
-IO_stat hc_import(const char *name, IO_handle stream, MCStack *&sptr)
+IO_stat hc_import(MCStringRef name, IO_handle stream, MCStack *&sptr)
 {
 	maxid = 0;
 	MCValueAssign(MChcstat, kMCEmptyString);
 
-	MCHcstak *hcstak = new MCHcstak(strclone(name));
-	hcstat_append("Loading stack %s...", name);
+	MCHcstak *hcstak = new MCHcstak(strdup(MCStringGetCString(name)));
+	hcstat_append("Loading stack %@...", name);
 	uint2 startlen = MCStringGetLength(MChcstat);
 	IO_stat stat;
 	if ((stat = hcstak->read(stream)) == IO_NORMAL)
@@ -2428,7 +2424,7 @@ IO_stat hc_import(const char *name, IO_handle stream, MCStack *&sptr)
 	delete hcstak;
 	if (!MClockerrors && MCStringGetLength(MChcstat) != startlen)
 	{
-		MCStack *tptr = MCdefaultstackptr->findstackname(MChcstatnamestring);
+		MCStack *tptr = MCdefaultstackptr->findstackname_oldstring(MChcstatnamestring);
 		if (tptr != NULL)
 		{
 			sptr->open();

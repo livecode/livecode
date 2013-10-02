@@ -191,7 +191,7 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 					        || te->type != TT_STATEMENT)
 					{
 						uint2 newmode;
-						if (!MCU_stoui2(sp.gettoken(), newmode)
+						if (!MCU_stoui2(sp.gettoken_oldstring(), newmode)
 						        || newmode < 1 || newmode >= WM_LAST)
 						{
 							MCperror->add
@@ -518,10 +518,9 @@ MCStack *MCGo::findstack(MCExecPoint &ep, Chunk_term etype, MCCard *&cptr)
 }
 #endif /* MCGo::findstack */
 
-MCStack *MCGo::findstack(MCExecPoint &ep, Chunk_term etype, MCCard *&cptr, bool &binary_fail)
+MCStack *MCGo::findstack(MCExecPoint &ep, Chunk_term etype, MCCard *&cptr)
 {
 	MCStack *sptr = NULL;
-	MCresult->clear(False);
 	uint4 offset;
 	if (MCU_offset(SIGNATURE, ep.getsvalue(), offset) || (ep . getsvalue() . getlength() > 8 && strncmp(ep . getsvalue() . getstring(), "REVO", 4) == 0))
 	{
@@ -529,8 +528,9 @@ MCStack *MCGo::findstack(MCExecPoint &ep, Chunk_term etype, MCCard *&cptr, bool 
 		if (MCdispatcher->readfile(NULL, NULL, stream, sptr) != IO_NORMAL)
 		{
 			MCS_close(stream);
-			binary_fail = true;
-			return NULL;
+			if (MCresult->isclear())
+				MCresult->sets("can't build stack from string");
+            return nil;
 		}
 		MCS_close(stream);
 		return sptr;
@@ -540,7 +540,7 @@ MCStack *MCGo::findstack(MCExecPoint &ep, Chunk_term etype, MCCard *&cptr, bool 
 	if (etype == CT_ID)
 		sptr = MCdefaultstackptr->findstackid(ep.getuint4());
 	else
-		sptr = MCdefaultstackptr->findstackname(ep.getsvalue());
+		sptr = MCdefaultstackptr->findstackname_oldstring(ep.getsvalue());
 	if (sptr != NULL)
 		return sptr;
 	MCObject *objptr;
@@ -573,6 +573,9 @@ MCStack *MCGo::findstack(MCExecPoint &ep, Chunk_term etype, MCCard *&cptr, bool 
 			break;
 		}
 	}
+    else
+		if (MCresult->isclear())
+			MCresult->sets("no such card");
 	return sptr;
 }
 
@@ -979,21 +982,22 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 	MCControl *bptr = NULL;
 	MCCard *cptr = NULL;
 
+    MCresult->clear(False);
+    
 	if (stack == NULL && background == NULL && card == NULL)
 	{
 		MCeerror->add(EE_GO_NODEST, line, pos);
 		return ES_ERROR;
 	}
 
-	bool t_is_home, t_binary_fail;
+	bool t_is_home;
 	t_is_home = false;
-	t_binary_fail = false;
 	if (stack != NULL)
 	{
 		switch (stack->etype)
 		{
 		case CT_HELP:
-			sptr = MCdefaultstackptr->findstackname(MChelpnamestring);
+			sptr = MCdefaultstackptr->findstackname_oldstring(MChelpnamestring);
 			break;
 		case CT_HOME:
 			t_is_home = true;
@@ -1011,7 +1015,7 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 					MCeerror->add(EE_GO_BADSTACKEXP, line, pos);
 					return ES_ERROR;
 				}
-				sptr = findstack(ep, stack->etype, cptr, t_binary_fail);
+				sptr = findstack(ep, stack->etype, cptr);
 			}
 			if (sptr != nil && stack->next != NULL)
 			{
@@ -1027,7 +1031,7 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 					if (stack->next->etype == CT_ID)
 						sptr = sptr->findsubstackid(ep.getuint4());
 					else
-						sptr = sptr->findsubstackname(ep.getsvalue());
+						sptr = sptr->findsubstackname_oldstring(ep.getsvalue());
 					break;
 				default:
 					MCeerror->add(EE_CHUNK_BADSTACKEXP, line, pos);
@@ -1040,11 +1044,8 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 		}
 	}
 	
-	bool t_has_bg;
-	t_has_bg = false;
 	if (background != NULL && sptr != nil)
 	{
-		t_has_bg = true;
 		switch (ct_class(background->etype))
 		{
 		case CT_ORDINAL:
@@ -1064,6 +1065,9 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 		}
 	}
 
+    if (bptr != nil)
+        sptr -> setbackground(bptr);
+    
 	real8 n;
 	bool t_is_recent;
 	t_is_recent = false;
@@ -1072,23 +1076,29 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 		switch (ct_class(card->etype))
 		{
 		case CT_DIRECT:
+            sptr -> clearbackground();
 			t_is_recent = true;
 			switch (card->etype)
 			{
-			case CT_BACKWARD:
-			case CT_FORWARD:
-				if (card->startpos != NULL)
-				{
-					if (card->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-					{
-						MCeerror->add(EE_GO_BADCARDEXP, line, pos);
-						return ES_ERROR;
-					}
-					n = ep.getnvalue();
-				}
-				else
-					n = 1.0;
-				break;
+            case CT_BACKWARD:
+            case CT_FORWARD:
+                if (card->startpos != NULL)
+                {
+                    if (card->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+                    {
+                        MCeerror->add(EE_GO_BADCARDEXP, line, pos);
+                        return ES_ERROR;
+                    }
+                    n = ep.getnvalue();
+                }
+                else
+                    n = 1.0;
+                break;
+            case CT_START:
+            case CT_FINISH:
+                break;
+            default:
+                return ES_ERROR;
 			}
 			break;
 		case CT_ORDINAL:
@@ -1101,6 +1111,7 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 		{
 			if (card->startpos->eval(ep) != ES_NORMAL)
 			{
+                sptr -> clearbackground();
 				MCeerror->add(EE_GO_BADCARDEXP, line, pos);
 				return ES_ERROR;
 			}
@@ -1110,13 +1121,16 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 		}
 			break;
 		default:
+            sptr -> clearbackground();
 			fprintf(stderr, "Go: ERROR no card type %d\n", card->etype);
 			return ES_ERROR;
 		}
+        sptr -> clearbackground();
 	}
-	else if (sptr != nil)
-		cptr = (MCCard *)sptr->getchild(CT_THIS, kMCEmptyString, CT_CARD);
-
+	else
+        if (cptr == nil && sptr != nil)
+            cptr = (MCCard *)sptr->getchild(CT_THIS, kMCEmptyString, CT_CARD);
+    
 	MCAutoStringRef t_window;
 	if (window != NULL && !thisstack)
 	{
@@ -1131,13 +1145,12 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 	ep . setline(line);
 	MCExecContext ctxt(ep);
 	if (t_is_home)
-		MCInterfaceExecGoHome(ctxt, sptr, cptr);
+		MCInterfaceExecGoHome(ctxt, cptr);
 	else if (t_is_recent)
 	{
 		switch (ct_class(card->etype))
 		{
 		case CT_DIRECT:
-			sptr->clearbackground();
 			switch (card->etype)
 			{
 			case CT_BACKWARD:
@@ -1160,14 +1173,192 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 		}
 	}
 	else if (window != nil)
-		MCInterfaceExecGoCardInWindow(ctxt, sptr, cptr, bptr, *t_window, visible == True, t_has_bg, marked == True, thisstack == True, t_binary_fail);
+		MCInterfaceExecGoCardInWindow(ctxt, cptr, *t_window, visible == True, thisstack == True);
 	else
-		MCInterfaceExecGoCardAsMode(ctxt, sptr, cptr, bptr, mode, visible == True, t_has_bg, marked == True, thisstack == True, t_binary_fail);
+		MCInterfaceExecGoCardAsMode(ctxt, cptr, mode, visible == True, thisstack == True);
 
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
 	return ctxt . Catch(line, pos);
+}
+
+void MCGo::compile(MCSyntaxFactoryRef ctxt)
+{
+    MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+    
+    bool t_is_home, t_is_relative;
+    t_is_home = false;
+    t_is_relative = false;
+    
+    if (stack != nil)
+    {
+        switch (stack->etype)
+        {
+            case CT_HELP:
+                MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalHelpStackAsOptionalObjectMethodInfo);
+            case CT_HOME:
+                t_is_home = true;
+                MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalHomeStackAsOptionalObjectMethodInfo);
+            case CT_THIS:
+            case CT_ID:
+            case CT_EXPRESSION:
+                if (stack  -> etype == CT_THIS)
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalDefaultStackAsOptionalObjectMethodInfo);
+                else
+                {
+                    stack -> startpos -> compile(ctxt);
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalStackByValueMethodInfo);
+                }
+                
+                if (stack -> next != nil)
+                {
+                    switch (stack->next->etype)
+                    {
+                        case CT_ID:
+                            stack -> next -> startpos -> compile(ctxt);
+                            MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalSubstackOfOptionalStackByIdMethodInfo);
+                            break;
+                        case CT_EXPRESSION:
+                            stack -> next -> startpos -> compile(ctxt);
+                            MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalSubstackOfOptionalStackByNameMethodInfo);
+                            break;
+                        default:
+                            // ERROR
+                            break;
+                    }
+                    
+                }
+            default:
+                MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalDefaultStackAsOptionalObjectMethodInfo);
+        }
+    }
+    else
+        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalDefaultStackAsOptionalObjectMethodInfo);
+    
+	if (background != nil)
+	{
+		switch(ct_class(background -> etype))
+        {
+            case CT_ORDINAL:
+                MCSyntaxFactoryEvalConstantUInt(ctxt, background -> etype);
+                MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalOptionalStackWithBackgroundByOrdinalMethodInfo);
+                break;
+            case CT_ID:
+                background -> startpos -> compile(ctxt);
+                MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalOptionalStackWithBackgroundByIdMethodInfo);
+                break;
+            case CT_EXPRESSION:
+                background -> startpos -> compile(ctxt);
+                MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalOptionalStackWithBackgroundByNameMethodInfo);
+                break;
+            default:
+                // ERROR
+                break;
+        }
+    }
+    
+    if (card != nil)
+	{
+		switch(ct_class(card -> etype))
+		{
+            case CT_DIRECT:
+                t_is_relative = true;
+                switch (card->etype)
+                {
+                case CT_BACKWARD:
+                case CT_FORWARD:
+                    MCSyntaxFactoryEvalConstantBool(ctxt, card->etype == CT_FORWARD);
+                    if (card -> startpos != nil)
+                        card -> startpos -> compile(ctxt);
+                    else
+                        MCSyntaxFactoryEvalConstantInt(ctxt, 1);
+                    return;
+                case CT_START:
+                case CT_FINISH:
+                    MCSyntaxFactoryEvalConstantBool(ctxt, card->etype == CT_START);
+
+                    break;
+                default:
+                    // ERROR
+                    break;
+                }
+                break;
+            case CT_ORDINAL:
+                if (card -> etype == CT_RECENT)
+                    t_is_relative = true;
+                MCSyntaxFactoryEvalConstantBool(ctxt, marked);
+                MCSyntaxFactoryEvalConstantUInt(ctxt, card -> etype);
+                MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalCardOfOptionalStackByOrdinalMethodInfo);
+                break;
+            case CT_ID:
+                MCSyntaxFactoryEvalConstantBool(ctxt, marked);
+                card -> startpos -> compile(ctxt);
+                MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalCardOfOptionalStackByIdMethodInfo);
+                break;
+            case CT_EXPRESSION:
+                MCSyntaxFactoryEvalConstantBool(ctxt, marked);
+                card -> startpos -> compile(ctxt);
+                MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalCardOfOptionalStackByNameMethodInfo);
+                break;
+            default:
+                // ERROR
+                break;
+		}
+	}
+    else
+		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalThisCardOfOptionalStackMethodInfo);
+    
+	if (stack != nil && t_is_home)
+		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGoHomeMethodInfo); // skip background parameter
+	else if (card != nil && t_is_relative)
+	{
+		switch (ct_class(card->etype))
+		{
+            case CT_DIRECT:
+                switch (card->etype)
+			{
+                case CT_BACKWARD:
+                case CT_FORWARD:
+                    MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGoCardRelativeMethodInfo);
+                    break;
+                case CT_START:
+                case CT_FINISH:
+                    MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGoCardEndMethodInfo);
+                    break;
+                default:
+                    break;
+			}
+                break;
+            case CT_ORDINAL:
+                MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGoRecentCardMethodInfo);
+                break;
+            default:
+                break;
+		}
+	}
+    else
+    {
+        if (window != nil)
+        {
+            if (!thisstack)
+                window -> compile(ctxt);
+            else
+                MCSyntaxFactoryEvalConstantNil(ctxt);
+        }
+        else
+            MCSyntaxFactoryEvalConstantUInt(ctxt, mode);
+
+        MCSyntaxFactoryEvalConstantBool(ctxt, thisstack == True);
+        MCSyntaxFactoryEvalConstantBool(ctxt, visible == True);
+        
+        if (window != nil)
+            MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGoCardInWindowMethodInfo);
+        else
+            MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGoCardAsModeMethodInfo);
+    }
+
+    MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCHide::~MCHide()

@@ -76,6 +76,11 @@ static int2 depth;
 
 #include "srvdebug.h"
 
+void MCB_setmsg(MCStringRef p_msg)
+{
+    
+}
+
 void MCB_setmsg(MCExecPoint& ep)
 {
 	// At some point we will add the ability to manipulate/look at the 'message box' in a
@@ -110,7 +115,19 @@ void MCB_setvar(MCExecPoint &ep, MCNameRef name)
 	MCServerDebugVariableChanged(ep, name);
 }
 
+void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name)
+{
+    
+}
+
 #else
+
+void MCB_setmsg(MCStringRef p_msg)
+{
+    MCExecPoint ep(nil, nil, nil);
+    ep . setvalueref(p_msg);
+    MCB_setmsg(ep);
+}
 
 void MCB_setmsg(MCExecPoint &ep)
 {
@@ -146,7 +163,11 @@ void MCB_setmsg(MCExecPoint &ep)
 			MCCard *cptr = MCmbstackptr->getchild(CT_THIS, kMCEmptyString, CT_CARD);
 			MCField *fptr = (MCField *)cptr->getchild(CT_FIRST, kMCEmptyString, CT_FIELD, CT_CARD);
 			if (fptr != NULL)
-				fptr->settext_oldstring(0, ep.getsvalue(), False);
+			{
+				MCAutoStringRef t_string;
+				ep . copyasstringref(&t_string);
+				fptr->settext(0, *t_string, False);
+			}
 		}
 	}
 }
@@ -164,7 +185,7 @@ void MCB_message(MCExecPoint &ep, MCNameRef mess, MCParameter *p)
 	else
 		MCtracewindow = ep.getobj()->getw();
 	MCVariable *oldresult = MCresult;
-	/* UNCHECKED */ MCVariable::createwithname_cstring("MCdebugresult", MCresult);
+	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCdebugresult"), MCresult);
 	MCtracereturn = False;
 	MCtraceabort = False;
 
@@ -207,7 +228,7 @@ void MCB_message(MCExecPoint &ep, MCNameRef mess, MCParameter *p)
 	 MCexitall = exitall;
 }
 
-void MCB_prepmessage(MCExecPoint &ep, MCNameRef mess, uint2 line, uint2 pos, uint2 id, const char *info)
+void MCB_prepmessage(MCExecPoint &ep, MCNameRef mess, uint2 line, uint2 pos, uint2 id, MCStringRef p_info)
 {
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
@@ -231,10 +252,10 @@ void MCB_prepmessage(MCExecPoint &ep, MCNameRef mess, uint2 line, uint2 pos, uin
 		MCeerror->add(EE_OBJECT_NAME, 0, 0, ep.getsvalue());
 		p4.sets_argument(MCeerror->getsvalue());
 	}
-	else if (info != NULL)
+	else if (!MCStringIsEmpty(p_info))
 	{
 		p3.setnext(&p4);
-		p4.sets_argument(info);
+		p4.setvalueref_argument(p_info);
 	}
 	MCB_message(ep, mess, &p1);
 	if (id != 0)
@@ -313,6 +334,27 @@ void MCB_setvar(MCExecPoint &ep, MCNameRef name)
 		MCnexecutioncontexts--;
 }
 
+void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name)
+{
+    MCExecPoint& ep = ctxt . GetEP();
+    
+	Boolean added = False;
+	if (MCnexecutioncontexts < MAX_CONTEXTS)
+	{
+		MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+		added = True;
+	}
+	MCParameter p1, p2, p3;
+	p1.setn_argument(ep.getline());
+	p1.setnext(&p2);
+	p2.setvalueref_argument(name);
+	p2.setnext(&p3);
+	p3.setvalueref_argument(p_value);
+	MCB_message(ep, MCM_update_var, &p1);
+	if (added)
+		MCnexecutioncontexts--;
+}
+
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -323,8 +365,7 @@ void MCB_clearbreaks(MCObject *p_for_object)
 		if (p_for_object == NULL || MCbreakpoints[n] . object == p_for_object)
 		{
 			MCbreakpoints[n] . object = NULL;
-			delete MCbreakpoints[n] . info;
-			MCbreakpoints[n] . info = NULL;
+			MCValueAssign(MCbreakpoints[n] . info, kMCEmptyString);
 		}
 	
 	if (p_for_object == NULL)
@@ -368,11 +409,9 @@ bool MCB_unparsebreaks(MCStringRef& r_value)
 								MCListAppend(*t_breakpoint, *t_line);
 				}
 				
-				if (t_success && MCbreakpoints[i] . info != NULL)
+				if (t_success && !MCStringIsEmpty(MCbreakpoints[i] . info))
 				{
-					MCAutoStringRef t_info;
-					t_success = MCStringCreateWithCString(MCbreakpoints[i].info, &t_info) &&
-								MCListAppend(*t_breakpoint, *t_info);
+					t_success = MCListAppend(*t_breakpoint, MCbreakpoints[i] . info);
 				}
 
 				if (t_success)
@@ -398,8 +437,8 @@ void MCB_unparsebreaks(MCExecPoint& ep)
 			MCbreakpoints[i].object->getprop(0, P_LONG_ID, ep2, False);
 			ep.concatmcstring(ep2.getsvalue(), EC_RETURN, i == 0);
 			ep.concatuint(MCbreakpoints[i] . line, EC_COMMA, false);
-			if (MCbreakpoints[i].info != NULL)
-				ep.concatcstring(MCbreakpoints[i].info, EC_COMMA, false);
+			if (!MCStringIsEmpty(MCbreakpoints[i].info))
+				ep.concatstringref(MCbreakpoints[i].info, EC_COMMA, false);
 		}
 }
 
@@ -456,10 +495,10 @@ void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input)
 		{
 			for (t_offset = 0; t_offset < t_length; t_offset++)
 			{
-				if (!t_in_quotes && MCStringGetNativeCharAtIndex(*t_break, t_offset) == ',')
+				if (!t_in_quotes && MCStringGetCharAtIndex(*t_break, t_offset) == ',')
 					break;
 
-				if (MCStringGetNativeCharAtIndex(*t_break, t_offset) == '"')
+				if (MCStringGetCharAtIndex(*t_break, t_offset) == '"')
 					t_in_quotes = !t_in_quotes;
 			}
 		}
@@ -496,10 +535,7 @@ void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input)
 					MCbreakpoints = t_new_breakpoints;
 					MCbreakpoints[MCnbreakpoints] . object = t_object . object;
 					MCbreakpoints[MCnbreakpoints] . line = t_line;
-					if (MCStringGetLength(*t_info) == 0)
-						MCbreakpoints[MCnbreakpoints] . info = NULL;
-					else
-						MCbreakpoints[MCnbreakpoints] . info = strdup(MCStringGetCString(*t_info));
+					MCbreakpoints[MCnbreakpoints] . info = MCValueRetain(*t_info);
 					MCnbreakpoints++;
 				}
 			}
@@ -563,10 +599,12 @@ void MCB_parsebreaks(MCExecPoint& ep)
 				MCbreakpoints = t_new_breakpoints;
 				MCbreakpoints[MCnbreakpoints] . object = t_object;
 				MCbreakpoints[MCnbreakpoints] . line = t_line;
+				MCStringRef t_info;
 				if (info_ptr != nil)
-					MCbreakpoints[MCnbreakpoints] . info = strdup(info_ptr);
+					/* UNCHECKED */ MCStringCreateWithCString(info_ptr, t_info);
 				else
-					MCbreakpoints[MCnbreakpoints] . info = NULL;
+					t_info = MCValueRetain(kMCEmptyString);
+				MCbreakpoints[MCnbreakpoints] . info = t_info;
 				MCnbreakpoints++;
 			}
 		}

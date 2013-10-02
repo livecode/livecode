@@ -68,6 +68,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcssl.h"
 #include "stacksecurity.h"
 
+#include "date.h"
+
 #define HOLD_SIZE1 65535
 #define HOLD_SIZE2 16384
 
@@ -79,6 +81,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblad.h"
 #include "mblcontrol.h"
 #include "mblsensor.h"
+#include "mblsyntax.h"
+#endif
+
+#ifdef _IOS_MOBILE
+#include "mblsyntax.h"
 #endif
 
 #include "exec.h"
@@ -495,7 +502,7 @@ void X_clear_globals(void)
 	MCquit = False;
 	MCquitisexplicit = False;
 	MCidleRate = 200;
-	MCcmd = nil;
+	/* FRAGILE */ MCcmd = MCValueRetain(kMCEmptyString);
 	MCfiletype = MCValueRetain(kMCEmptyString);
 	MCstackfiletype = MCValueRetain(kMCEmptyString);
 	MCstacknames = nil;
@@ -817,17 +824,24 @@ void X_clear_globals(void)
     MCNativeControlInitialize();
     MCSensorInitialize();
     MCAndroidCustomFontsInitialize();
+	MCSystemSoundInitialize();
 #endif
+	
+#ifdef _IOS_MOBILE
+	MCSystemSoundInitialize();
+#endif
+	
+	MCDateTimeInitialize();
 }
 
 bool X_open(int argc, char *argv[], char *envp[])
 {
 	MCperror = new MCError();
 	MCeerror = new MCError();
-	/* UNCHECKED */ MCVariable::createwithname_cstring("MCresult", MCresult);
+	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCresult"), MCresult);
 
-	/* UNCHECKED */ MCVariable::createwithname_cstring("MCurlresult", MCurlresult);
-	/* UNCHECKED */ MCVariable::createwithname_cstring("MCdialogdata", MCdialogdata);
+	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCurlresult"), MCurlresult);
+	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCdialogdata"), MCdialogdata);
 	
 	////
 
@@ -901,12 +915,14 @@ bool X_open(int argc, char *argv[], char *envp[])
 #endif
 
 	MCValueAssign(MCfiletype, MCSTR("ttxtTEXT"));
-	const char *tname = strrchr(MCStringGetCString(MCcmd), PATH_SEPARATOR);
-	if (tname == NULL)
-		tname = MCStringGetCString(MCcmd);
+    uindex_t t_last_path_separator;
+    // find the actual command to execute
+     if (!MCStringLastIndexOfChar(MCcmd, PATH_SEPARATOR, MCStringGetLength(MCcmd), kMCStringOptionCompareExact, t_last_path_separator))
+		t_last_path_separator = 0;
 	else
-		tname++;
-	if (MCU_strncasecmp(tname, "rev", 3))
+		t_last_path_separator++;
+    
+	if (MCStringFind(MCcmd, MCRangeMake(t_last_path_separator, 3), MCSTR("rev"), kMCStringOptionCompareExact, nil))
 		MCValueAssign(MCstackfiletype, MCSTR("MCRDMSTK"));
 	else
 		MCValueAssign(MCstackfiletype, MCSTR("RevoRSTK"));
@@ -934,7 +950,7 @@ bool X_open(int argc, char *argv[], char *envp[])
 	
 	// MW-2012-02-14: [[ FontRefs ]] Open the dispatcher after we have an open
 	//   screen, otherwise we don't have a root fontref!
-	MCdispatcher -> setfontattrs(DEFAULT_TEXT_FONT, DEFAULT_TEXT_SIZE, FA_DEFAULT_STYLE);
+	MCdispatcher -> setfontattrs(MCSTR(DEFAULT_TEXT_FONT), DEFAULT_TEXT_SIZE, FA_DEFAULT_STYLE);
 	MCdispatcher -> open();
 
 	// This is here because it relies on MCscreen being initialized.
@@ -1056,9 +1072,9 @@ int X_close(void)
 	delete MCstacks;
 	delete MCcstack;
 	delete MCrecent;
-	delete IO_stdin;
-	delete IO_stdout;
-	delete IO_stderr;
+	MCS_close(IO_stdin);
+	MCS_close(IO_stdout);
+	MCS_close(IO_stderr);
 	delete MCpatterns;
 	delete MCresult;
 	delete MCurlresult;
@@ -1164,7 +1180,14 @@ int X_close(void)
     MCNativeControlFinalize();
     MCSensorFinalize();
     MCAndroidCustomFontsFinalize();
+	MCSystemSoundFinalize();
 #endif
+	
+#ifdef _IOS_MOBILE
+	MCSystemSoundInitialize();
+#endif
+	
+	MCDateTimeFinalize();
 	
 	MCU_finalize_names();
 

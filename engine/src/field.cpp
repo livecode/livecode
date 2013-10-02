@@ -44,6 +44,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 
 #include "exec.h"
+#include "exec-interface.h"
 
 int2 MCField::clickx;
 int2 MCField::clicky;
@@ -89,8 +90,8 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_AUTO_ARM, Bool, MCField, AutoArm)
 	DEFINE_RW_OBJ_PROPERTY(P_FIRST_INDENT, Int16, MCField, FirstIndent)
 	DEFINE_RW_OBJ_PROPERTY(P_WIDE_MARGINS, Bool, MCField, WideMargins)
-	DEFINE_RW_OBJ_PROPERTY(P_HSCROLL, Int16, MCField, HScroll)
-	DEFINE_RW_OBJ_PROPERTY(P_VSCROLL, Int16, MCField, VScroll)
+	DEFINE_RW_OBJ_PROPERTY(P_HSCROLL, Int32, MCField, HScroll)
+	DEFINE_RW_OBJ_PROPERTY(P_VSCROLL, Int32, MCField, VScroll)
 	DEFINE_RW_OBJ_PROPERTY(P_HSCROLLBAR, Bool, MCField, HScrollbar)
 	DEFINE_RW_OBJ_PROPERTY(P_VSCROLLBAR, Bool, MCField, VScrollbar)
 	DEFINE_RW_OBJ_PROPERTY(P_SCROLLBAR_WIDTH, UInt16, MCField, ScrollbarWidth)
@@ -100,7 +101,7 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_MULTIPLE_HILITES, Bool, MCField, MultipleHilites)
 	DEFINE_RW_OBJ_PROPERTY(P_NONCONTIGUOUS_HILITES, Bool, MCField, NoncontiguousHilites)
 	DEFINE_RW_OBJ_PART_PROPERTY(P_TEXT, String, MCField, Text)
-	DEFINE_RW_OBJ_PART_PROPERTY(P_UNICODE_TEXT, String, MCField, UnicodeText)
+	DEFINE_RW_OBJ_PART_PROPERTY(P_UNICODE_TEXT, BinaryString, MCField, UnicodeText)
 	DEFINE_RW_OBJ_PART_NON_EFFECTIVE_PROPERTY(P_HTML_TEXT, String, MCField, HtmlText)
 	DEFINE_RO_OBJ_PART_EFFECTIVE_PROPERTY(P_HTML_TEXT, String, MCField, HtmlText)
 	DEFINE_RW_OBJ_PART_PROPERTY(P_RTF_TEXT, String, MCField, RtfText)
@@ -109,18 +110,24 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RO_OBJ_PART_NON_EFFECTIVE_PROPERTY(P_FORMATTED_STYLED_TEXT, Array, MCField, FormattedStyledText)
 	DEFINE_RO_OBJ_PART_EFFECTIVE_PROPERTY(P_FORMATTED_STYLED_TEXT, Array, MCField, FormattedStyledText)
 	DEFINE_RO_OBJ_PART_PROPERTY(P_PLAIN_TEXT, String, MCField, PlainText)
-	DEFINE_RO_OBJ_PART_PROPERTY(P_UNICODE_PLAIN_TEXT, String, MCField, UnicodePlainText)
+	DEFINE_RO_OBJ_PART_PROPERTY(P_UNICODE_PLAIN_TEXT, BinaryString, MCField, UnicodePlainText)
 	DEFINE_RW_OBJ_PART_PROPERTY(P_FORMATTED_TEXT, String, MCField, FormattedText)
-	DEFINE_RW_OBJ_PART_PROPERTY(P_UNICODE_FORMATTED_TEXT, String, MCField, UnicodeFormattedText)
+	DEFINE_RW_OBJ_PART_PROPERTY(P_UNICODE_FORMATTED_TEXT, BinaryString, MCField, UnicodeFormattedText)
 	DEFINE_RW_OBJ_PROPERTY(P_LABEL, String, MCField, Label)
 	DEFINE_RW_OBJ_PROPERTY(P_TOGGLE_HILITE, Bool, MCField, ToggleHilite)
 	DEFINE_RW_OBJ_PROPERTY(P_3D_HILITE, Bool, MCField, ThreeDHilite)
 	DEFINE_RO_OBJ_PART_ENUM_PROPERTY(P_ENCODING, InterfaceEncoding, MCField, Encoding)
+    
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_HILITED_LINES, ItemsOfUInt, MCField, HilitedLines)
+    DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(P_FLAGGED_RANGES, InterfaceFlaggedRanges, MCField, FlaggedRanges)
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_TAB_STOPS, ItemsOfUInt, MCField, TabStops)
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_TAB_WIDTHS, ItemsOfUInt, MCField, TabWidths)
+    DEFINE_RO_OBJ_LIST_PROPERTY(P_PAGE_HEIGHTS, LinesOfUInt, MCField, PageHeights)
 };
 
 MCObjectPropertyTable MCField::kPropertyTable =
 {
-	&MCObject::kPropertyTable,
+	&MCControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
 };
@@ -848,7 +855,7 @@ void MCField::mdrag(void)
 	if (!getstate(CS_SOURCE_TEXT))
 		return;
 
-	MCAutoStringRef t_data;
+	MCAutoDataRef t_data;
 	pickleselection(&t_data);
 	if (*t_data != nil)
 	{
@@ -1094,26 +1101,14 @@ Boolean MCField::mup(uint2 which)
 		}
 		else if (MCscreen -> hasfeature(PLATFORM_FEATURE_TRANSIENT_SELECTION) && MCselectiondata -> HasText())
 		{
-#ifdef SHARED_STRING
-			MCSharedString *t_text;
-			t_text = MCselectiondata -> Fetch(TRANSFER_TYPE_TEXT);
-			if (t_text != NULL)
-			{
-				extend = extendwords = False;
-				// MW-2012-01-25: [[ FieldMetrics ]] Co-ordinates are now card-based.
-				setfocus(mx, my);
-				typetext(t_text -> Get());
-			}
-#else
-			MCAutoStringRef t_text;
+			MCAutoDataRef t_text;
 			if (MCselectiondata -> Fetch(TRANSFER_TYPE_TEXT, &t_text))
 			{
 				extend = extendwords = False;
 				// MW-2012-01-25: [[ FieldMetrics ]] Co-ordinates are now card-based.
 				setfocus(mx, my);
-				typetext(MCStringGetOldString(*t_text));
+				typetext(MCDataGetOldString(*t_text));
 			}
-#endif
 		}
 		break;
 	case Button3:
@@ -1246,6 +1241,12 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 {
 	switch (which)
 	{
+	// MW-2012-02-11: [[ TabWidths ]] Handle both tabStops and tabWidths by deferring
+	//   to the format method.
+	case P_TAB_STOPS:
+	case P_TAB_WIDTHS:
+		formattabstops(which, ep, tabs, ntabs);
+		break;
 #ifdef /* MCField::getprop */ LEGACY_EXEC
 	case P_AUTO_TAB:
 		ep.setboolean(getflag(F_AUTO_TAB));
@@ -1387,12 +1388,6 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 		else
 			ep.setsvalue(label);
 		break;
-	// MW-2012-02-11: [[ TabWidths ]] Handle both tabStops and tabWidths by deferring
-	//   to the format method.
-	case P_TAB_STOPS:
-	case P_TAB_WIDTHS:
-		formattabstops(which, ep, tabs, ntabs);
-		break;
 	case P_TOGGLE_HILITE:
 		ep.setboolean(getflag(F_TOGGLE_HILITE));
 		break;
@@ -1451,15 +1446,15 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 // MW-2012-01-25: [[ ParaStyles ]] Parse the given string as a list of tab-stops.
 // MW-2012-02-11: [[ TabWidths ]] The 'which' parameter determines what style of tabStops to
 //   parse - widths or stops.
-bool MCField::parsetabstops(Properties which, const MCString& data, uint16_t*& r_tabs, uint16_t& r_tab_count)
+bool MCField::parsetabstops(Properties which, MCStringRef data, uint16_t*& r_tabs, uint16_t& r_tab_count)
 {
 	uint2 *newtabs;
 	uint2 newntabs;
 	newtabs = nil;
 	newntabs = 0;
 
-	uint4 l = data.getlength();
-	const char *sptr = data.getstring();
+	uint4 l = MCStringGetLength(data);
+	const char *sptr = MCStringGetCString(data);
 	while (l)
 	{
 		int32_t i1;
@@ -1524,6 +1519,36 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 	MCExecPoint *oldep;
 	switch (p)
 	{
+	// MW-2012-02-11: [[ TabWidths ]] Handle the new tabWidths property (parsetabstops
+	//   can now do either stops or widths).
+	case P_TAB_WIDTHS:
+	case P_TAB_STOPS:
+		{
+			// MW-2012-01-25: [[ ParaStyles ]] Use the refactored tabStop parsing method.
+			uint2 *newtabs = NULL;
+			uint2 newntabs = 0;
+            MCAutoStringRef t_data;
+            /* UNCHECKED */ MCStringCreateWithOldString(data, &t_data);
+			if (!parsetabstops(p, *t_data, newtabs, newntabs))
+				return ES_ERROR;
+
+			delete tabs;
+			if (newtabs != NULL)
+			{
+				tabs = newtabs;
+				ntabs = newntabs;
+				flags |= F_TABS;
+			}
+			else
+			{
+				tabs = NULL;
+				ntabs = 0;
+				flags &= ~F_TABS;
+			}
+			dirty = True;
+			reset = True;
+		}
+		break;
 #ifdef /* MCField::setprop */ LEGACY_EXEC
 	case P_AUTO_TAB:
 		if (!MCU_matchflags(data, flags, F_AUTO_TAB, dummy))
@@ -1896,34 +1921,6 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 		settext(parid, data, True);
 		dirty = True;
 		reset = True;
-		break;
-	// MW-2012-02-11: [[ TabWidths ]] Handle the new tabWidths property (parsetabstops
-	//   can now do either stops or widths).
-	case P_TAB_WIDTHS:
-	case P_TAB_STOPS:
-		{
-			// MW-2012-01-25: [[ ParaStyles ]] Use the refactored tabStop parsing method.
-			uint2 *newtabs = NULL;
-			uint2 newntabs = 0;
-			if (!parsetabstops(p, data, newtabs, newntabs))
-				return ES_ERROR;
-
-			delete tabs;
-			if (newtabs != NULL)
-			{
-				tabs = newtabs;
-				ntabs = newntabs;
-				flags |= F_TABS;
-			}
-			else
-			{
-				tabs = NULL;
-				ntabs = 0;
-				flags &= ~F_TABS;
-			}
-			dirty = True;
-			reset = True;
-		}
 		break;
 	case P_TOGGLE_HILITE:
 		if (!MCU_matchflags(data, flags, F_TOGGLE_HILITE, dummy))

@@ -174,7 +174,7 @@ Parse_stat MCVisualEffect::parse(MCScriptPoint &sp)
 		bool t_has_id = false;
 	
 		if (sp . next(type) == PS_NORMAL && type == ST_ID)
-			t_key = sp . gettoken() . clone();
+			t_key = sp . gettoken_oldstring() . clone();
 		
 		if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_ID) == PS_NORMAL)
 			t_has_id = true;

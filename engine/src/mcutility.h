@@ -77,29 +77,6 @@ inline uint1 MCU_charsize(Boolean isunicode)
 	return isunicode ? 2 : 1;
 }
 
-inline void MCU_copychar(uint2 source, char *dest, Boolean isunicode)
-{
-	if (!isunicode)
-		*dest = (uint1)source;
-	else
-	{
-		uint2 *d = (uint2 *)dest;
-		*d = source;
-	}
-}
-
-inline void MCU_copychar(const char *source, char *dest, Boolean isunicode)
-{
-	if (!isunicode)
-		*dest = *source;
-	else
-	{
-		uint2 *s = (uint2 *)source;
-		uint2 *d = (uint2 *)dest;
-		*d = *s;
-	}
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCString
@@ -186,7 +163,7 @@ public:
 	MCDictionary(void);
 	~MCDictionary(void);
 
-	void Set(uint4 p_id, const MCString& p_value);
+	void Set(uint4 p_id, MCString p_value);
 	bool Get(uint4 p_id, MCString& r_value);
 
 	bool Unpickle(const void *p_buffer, uint4 p_length);

@@ -436,19 +436,19 @@ static bool load_custom_font_file_into_buffer_from_path(const char *p_path, char
     bool t_success;
     t_success = true;
     
-    char *t_font_path;
-    t_font_path = nil;
-    if (t_success)
-        t_success = MCCStringFormat(t_font_path, "%s/%s%s", MCStringGetCString(MCcmd), s_font_folder, p_path);
+    MCAutoStringRef t_font_path;
     
     if (t_success)
-        t_success = MCS_exists(t_font_path, true);
+        t_success = MCStringFormat(&t_font_path, "%s/%s%s", MCStringGetCString(MCcmd), s_font_folder, p_path);
+    
+    if (t_success)
+        t_success = MCS_exists(*t_font_path, true);
     
     IO_handle t_font_file_handle;
     t_font_file_handle = nil;
     if (t_success)
 	{
-        t_font_file_handle = MCS_open(t_font_path, IO_READ_MODE, false, false, 0);
+        t_font_file_handle = MCS_open(*t_font_path, kMCSOpenFileModeRead, false, false, 0);
 		t_success = t_font_file_handle != nil;
 	}
     
@@ -463,19 +463,8 @@ static bool load_custom_font_file_into_buffer_from_path(const char *p_path, char
 	}
     
 	if (t_success)
-	{
-		IO_stat t_read_stat;
-		uint32_t t_bytes_read;
-        t_bytes_read = 0;
-		while (t_success && t_bytes_read < t_file_size)
-		{
-			uint32_t t_count;
-			t_count = t_file_size - t_bytes_read;
-			t_read_stat = MCS_read(t_buffer + t_bytes_read, 1, t_count, t_font_file_handle);
-			t_bytes_read += t_count;
-			t_success = (t_read_stat == IO_NORMAL || (t_read_stat == IO_EOF && t_bytes_read == t_file_size));
-		}
-	}
+        if (MCS_readfixed(t_buffer, t_file_size, t_font_file_handle) != IO_NORMAL)
+            t_success = false;
     
     if (t_success)
     {
@@ -484,8 +473,6 @@ static bool load_custom_font_file_into_buffer_from_path(const char *p_path, char
     }
     else
         /*UNCHECKED */ MCMemoryDelete(t_buffer);
-    
-    /*UNCHECKED */ MCCStringFree(t_font_path);
     
     return t_success;
 }

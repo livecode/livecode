@@ -227,7 +227,7 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSystemPick(const char *p_options, bool p_is_unicode, bool p_use_checkmark, uint32_t p_initial_index, uint32_t& r_chosen_index, MCRectangle p_button_rect)
+bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initial_index, uint32_t& r_chosen_index, MCRectangle p_button_rect)
 {
 	return false;
 }
@@ -347,7 +347,7 @@ uint32_t MCAndroidSystem::TextConvert(const void *p_string, uint32_t p_string_le
 	}
 }
 
-bool MCAndroidSystem::TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4 p_output_length, uint4& r_used)
+bool MCAndroidSystem::TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4& p_output_length, uint4& r_used)
 {
 	return false;
 }

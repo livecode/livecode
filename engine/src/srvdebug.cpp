@@ -382,16 +382,16 @@ void MCServerDebugBreakpoint(MCStringRef p_action, MCStringRef p_file, uint32_t 
 	t_add = MCStringIsEqualToCString(p_action, "add", kMCCompareExact);
 	
 	// Construct the absolute file path.
-	char *t_filename;
-	t_filename = new char[MCStringGetLength(p_file) + strlen(MCservercgidocumentroot) + 2];
-	strcpy(t_filename, MCservercgidocumentroot);
-	if (MCStringGetNativeCharAtIndex(p_file, 0) != '/')
-		strcat(t_filename, "/");
-	strcat(t_filename, MCStringGetCString(p_file));
-	
+	MCAutoStringRef t_filename;
+    
+	if (p_file[0] != '/')
+        /* UNCHECKED */ MCStringFormat(&t_filename, "%s/%s", MCservercgidocumentroot, p_file);
+    else
+        /* UNCHECKED */ MCStringCreateWithCString(p_file, &t_filename);
+		
 	// Lookup the file's index - creating an entry if we are 'adding' a breakpoint.
 	uint4 t_file;
-	t_file = MCserverscript -> FindFileIndex(t_filename, t_add);
+	t_file = MCserverscript -> FindFileIndex(*t_filename, t_add);
 	
 	// If we didn't find an entry there can't be a breakpoint on it so exit.
 	if (t_file == 0)

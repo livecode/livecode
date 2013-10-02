@@ -89,7 +89,7 @@ private:
 	MCPQComparator compare;
 };
 
-extern bool MCImageParseColourList(const MCString &p_input, uint32_t &r_ncolours, MCColor *&r_colours);
+extern bool MCImageParseColourList(MCStringRef p_input, uint32_t &r_ncolours, MCColor *&r_colours);
 
 extern bool MCImageGenerateOptimalPaletteWithWeightedPixels(MCImageBitmap *p_bitmap, uint32_t p_palette_size, MCColor *&r_colours);
 extern bool MCImageGenerateWebsafePalette(uint32_t &r_palette_size, MCColor *&r_colours);

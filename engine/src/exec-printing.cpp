@@ -454,7 +454,7 @@ void MCPrintingExecPrintAnchor(MCExecContext& ctxt, MCStringRef p_name, MCPoint 
 	if (!ctxt . EnsurePrintingIsAllowed())
 		return;
 
-	MCprinter -> MakeAnchor(MCStringGetCString(p_name), p_location . x, p_location . y);
+	MCprinter -> MakeAnchor(p_name, p_location . x, p_location . y);
 }
 
 void MCPrintingExecPrintLink(MCExecContext& ctxt, int p_type, MCStringRef p_target, MCRectangle p_area)
@@ -462,10 +462,10 @@ void MCPrintingExecPrintLink(MCExecContext& ctxt, int p_type, MCStringRef p_targ
 	if (!ctxt . EnsurePrintingIsAllowed())
 		return;
 		
-	MCprinter -> MakeLink(MCStringGetCString(p_target), p_area, (MCPrinterLinkType)p_type);
+	MCprinter -> MakeLink(p_target, p_area, (MCPrinterLinkType)p_type);
 }
 
-static void MCPrintingExecPrintBookmark(MCExecContext& ctxt, const char *p_title, MCPoint p_location, integer_t p_level, bool p_initially_closed)
+void MCPrintingExecPrintBookmark(MCExecContext& ctxt, MCStringRef p_title, MCPoint p_location, integer_t p_level, bool p_initially_closed)
 {
 	if (!ctxt . EnsurePrintingIsAllowed())
 		return;
@@ -473,22 +473,16 @@ static void MCPrintingExecPrintBookmark(MCExecContext& ctxt, const char *p_title
 	MCprinter -> MakeBookmark(p_title, p_location . x, p_location . y, p_level, p_initially_closed);
 }
 
-void MCPrintingExecPrintNativeBookmark(MCExecContext& ctxt, MCStringRef p_title, MCPoint p_location, integer_t p_level, bool p_initially_closed)
+void MCPrintingExecPrintUnicodeBookmark(MCExecContext& ctxt, MCDataRef p_title, MCPoint p_location, integer_t p_level, bool p_initially_closed)
 {
-	MCAutoPointer<char> t_utf8_title;
-	if (!ctxt . EncodeStringAsUTF8(p_title, &t_utf8_title))
+	MCAutoStringRef t_title_string;
+	if (MCStringDecode(p_title, kMCStringEncodingUTF16, false, &t_title_string))
+	{
+		MCPrintingExecPrintBookmark(ctxt, *t_title_string, p_location, p_level, p_initially_closed);
 		return;
+	}
 	
-	MCPrintingExecPrintBookmark(ctxt, *t_utf8_title, p_location, p_level, p_initially_closed);
-}
-
-void MCPrintingExecPrintUnicodeBookmark(MCExecContext& ctxt, MCStringRef p_title, MCPoint p_location, integer_t p_level, bool p_initially_closed)
-{
-	MCAutoPointer<char> t_utf8_title;
-	if (!ctxt . EncodeUnicodeStringAsUTF8(p_title, &t_utf8_title))
-		return;
-	
-	MCPrintingExecPrintBookmark(ctxt, *t_utf8_title, p_location, p_level, p_initially_closed);
+	ctxt . Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -656,8 +650,8 @@ void MCPrintingExecPrintCardIntoRect(MCExecContext& ctxt, MCCard *p_card, MCRect
 
 void MCPrintingExecOpenPrintingToDestination(MCExecContext& ctxt, MCStringRef p_destination, MCStringRef p_filename, MCArrayRef p_options)
 {
-	extern Exec_stat MCCustomPrinterCreate(const char *, const char *, MCArrayRef , MCPrinter*&);
-	if (MCCustomPrinterCreate(MCStringGetCString(p_destination), MCStringGetCString(p_filename), p_options, MCprinter) == ES_NORMAL)
+	extern Exec_stat MCCustomPrinterCreate(MCStringRef, MCStringRef, MCArrayRef , MCPrinter*&);
+	if (MCCustomPrinterCreate(p_destination, p_filename, p_options, MCprinter) == ES_NORMAL)
 		MCPrintingExecOpenPrinting(ctxt);
 }
 
@@ -773,7 +767,7 @@ void MCPrintingGetPrintDeviceFeatures(MCExecContext& ctxt, unsigned int& r_featu
 
 void MCPrintingSetPrintDeviceOutput(MCExecContext& ctxt, const MCPrintingPrintDeviceOutput& p_output)
 {
-	MCprinter -> SetDeviceOutput(p_output . type, MCStringGetCString(p_output . location));
+	MCprinter -> SetDeviceOutput(p_output . type, p_output . location);
 }
 
 void MCPrintingGetPrintDeviceOutput(MCExecContext& ctxt, MCPrintingPrintDeviceOutput& r_output)
@@ -871,7 +865,7 @@ void MCPrintingGetPrintJobName(MCExecContext& ctxt, MCStringRef &r_value)
 
 void MCPrintingSetPrintJobName(MCExecContext& ctxt, MCStringRef p_value)
 {
-	MCprinter -> SetJobName(MCStringGetCString(p_value));
+	MCprinter -> SetJobName(p_value);
 }
 
 void MCPrintingGetPrintJobCopies(MCExecContext& ctxt, integer_t &r_value)
@@ -928,7 +922,7 @@ void MCPrintingGetPrintDeviceRectangle(MCExecContext& ctxt, MCRectangle &r_recta
 	r_rectangle = MCprinter -> GetDeviceRectangle();
 }
 
-void MCPrintingGetPrintDeviceSettings(MCExecContext& ctxt, MCStringRef &r_settings)
+void MCPrintingGetPrintDeviceSettings(MCExecContext& ctxt, MCDataRef &r_settings)
 {
 	if (MCprinter -> CopyDeviceSettings(r_settings))
 		return;
@@ -936,7 +930,7 @@ void MCPrintingGetPrintDeviceSettings(MCExecContext& ctxt, MCStringRef &r_settin
 	ctxt . Throw();
 }
 
-void MCPrintingSetPrintDeviceSettings(MCExecContext& ctxt, MCStringRef p_settings)
+void MCPrintingSetPrintDeviceSettings(MCExecContext& ctxt, MCDataRef p_settings)
 {
 	MCprinter -> SetDeviceSettings(p_settings);
 }
@@ -951,7 +945,7 @@ void MCPrintingGetPrintDeviceName(MCExecContext& ctxt, MCStringRef &r_name)
 
 void MCPrintingSetPrintDeviceName(MCExecContext& ctxt, MCStringRef p_name)
 {
-	MCprinter -> SetDeviceName(MCStringGetCString(p_name));
+	MCprinter -> SetDeviceName(p_name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1041,7 +1035,7 @@ void MCPrintingGetPrintCommand(MCExecContext& ctxt, MCStringRef &r_command)
 
 void MCPrintingSetPrintCommand(MCExecContext& ctxt, MCStringRef p_command)
 {
-	MCprinter -> SetDeviceCommand(MCStringGetCString(p_command));
+	MCprinter -> SetDeviceCommand(p_command);
 }
 
 void MCPrintingGetPrintFontTable(MCExecContext& ctxt, MCStringRef &r_table)
@@ -1057,7 +1051,7 @@ void MCPrintingGetPrintFontTable(MCExecContext& ctxt, MCStringRef &r_table)
 
 void MCPrintingSetPrintFontTable(MCExecContext& ctxt, MCStringRef p_table)
 {
-	MCprinter -> SetDeviceFontTable(MCStringGetCString(p_table));
+	MCprinter -> SetDeviceFontTable(p_table);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
