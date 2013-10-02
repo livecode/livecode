@@ -223,7 +223,7 @@ bool message_send_with_data(message_t *p_message, unsigned int *r_reply)
 	return true;
 }
 
-bool relaunch_get_current_instance(instance_t& r_instance, const char *p_id)
+bool relaunch_get_current_instance(instance_t& r_instance, MCStringRef p_id)
 {
 	char t_executable_path[4096];
 
@@ -258,7 +258,7 @@ bool relaunch_get_current_instance(instance_t& r_instance, const char *p_id)
 		t_file_id[t_file_id_length++] = 0;
 
 	unsigned int t_stack_id[4];
-	md5_compute(p_id, strlen(p_id), t_stack_id);
+	md5_compute(MCStringGetCString(p_id), MCStringGetLength(p_id), t_stack_id);
 
 	unsigned int t_process_id;
 	t_process_id = GetCurrentProcessId();
@@ -408,7 +408,7 @@ bool relaunch_list_instances(const char *p_instance_folder, const instance_t& p_
 	return true;
 }
 
-bool relaunch_startup(const char *p_stack_name)
+bool relaunch_startup(MCStringRef p_stack_name)
 {
 	bool t_error;
 	t_error = false;

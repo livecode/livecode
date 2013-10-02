@@ -1052,10 +1052,10 @@ bool MCModeShouldLoadStacksOnStartup(void)
 }
 
 // In development mode, we just issue a generic error.
-void MCModeGetStartupErrorMessage(const char*& r_caption, const char *& r_text)
+void MCModeGetStartupErrorMessage(MCStringRef& r_caption, MCStringRef& r_text)
 {
-	r_caption = "Initialization Error";
-	r_text = "Error while initializing development environment";
+	r_caption = MCSTR("Initialization Error");
+	r_text = MCSTR("Error while initializing development environment");
 }
 
 // In development mode, we can set any object's script.
@@ -1160,9 +1160,9 @@ bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 	return false;
 }
 
-bool MCModeHandleRelaunch(const char *& r_id)
+bool MCModeHandleRelaunch(MCStringRef & r_id)
 {
-	r_id = "LiveCodeTools";
+	r_id = MCSTR("LiveCodeTools");
 	return true;
 }
 

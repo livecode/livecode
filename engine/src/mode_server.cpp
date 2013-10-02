@@ -244,13 +244,13 @@ bool MCModeShouldLoadStacksOnStartup(void)
 }
 
 // In standalone mode, we try to work out what went wrong...
-void MCModeGetStartupErrorMessage(const char*& r_caption, const char *& r_text)
+void MCModeGetStartupErrorMessage(MCStringRef& r_caption, MCStringRef& r_text)
 {
-	r_caption = "Initialization Error";
+	r_caption = MCSTR("Initialization Error");
 	if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
-		r_text = strdup(MCStringGetCString((MCStringRef)MCresult -> getvalueref()));
+		r_text = MCValueRetain((MCStringRef)MCresult -> getvalueref());
 	else
-		r_text = "unknown reason";
+		r_text = MCSTR("unknown reason");
 }
 
 // In standalone mode, we can only set an object's script if has non-zero id.
@@ -272,7 +272,7 @@ bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 }
 
 // The standalone mode causes a relaunch message.
-bool MCModeHandleRelaunch(const char *& r_id)
+bool MCModeHandleRelaunch(MCStringRef & r_id)
 {
 	return false;
 }
@@ -345,7 +345,7 @@ void MCModeConfigureIme(MCStack *p_stack, bool p_enabled, int32_t x, int32_t y)
 {
 }
 
-void MCModeShowToolTip(int32_t x, int32_t y, uint32_t text_size, uint32_t bg_color, const char *text_font, const char *message)
+void MCModeShowToolTip(int32_t x, int32_t y, uint32_t text_size, uint32_t bg_color, MCStringRef text_font, MCStringRef message)
 {
 }
 
