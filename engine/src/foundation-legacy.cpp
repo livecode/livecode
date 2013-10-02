@@ -316,105 +316,37 @@ bool MCCStringFromUnicode(const unichar_t *p_unicode_string, char*& r_string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCStringConvertLineEndingsFromLiveCode(MCStringRef input, MCStringRef& r_output)
+bool MCStringConvertLineEndingsFromLiveCode(MCStringRef p_input, MCStringRef& r_output)
 {
 	
 #ifdef __CRLF__
-	MCAutoStringRef t_input_mutable;
-	MCStringMutableCopy(input, &t_input_mutable);
-	
-	char *sptr;
-	uint32_t l;
-	sptr = (char*)MCStringGetCString(*t_input_mutable);
-	l = MCStringGetLength(*t_input_mutable);
-
-	uint32_t pad;
-	pad = 0;
-	for(uint32_t i = 0; i < l; i++)
-		if (*sptr++ == '\n')
-			pad++;
-
-	if (pad != 0)
-	{
-		uint4 newsize;
-		MCStringPad(*t_input_mutable, MCStringGetLength(*t_input_mutable), pad, nil);
-		newsize = MCStringGetLength(*t_input_mutable);
-
-		char *newbuffer = sptr;
-		sptr += l;
-		char *dptr = newbuffer + newsize;
-		while (dptr > sptr)
-		{
-			*--dptr = *--sptr;
-			if (*sptr == '\n')
-				*--dptr = '\r';
-		}
-	}
-	r_output = MCValueRetain(*t_input_mutable);
-
+	MCStringRef t_mutable_input;
+	/* UNCHECKED */ MCStringMutableCopy(p_input, t_mutable_input);
+	/* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\n"), MCSTR("\r\n"), kMCStringOptionCompareExact);
+	/* UNCHECKED */ MCStringCopyAndRelease(t_mutable_input, r_output);
 #elif defined(__CR__)
-	MCAutoStringRef t_input_mutable;
-	MCStringMutableCopy(input, &t_input_mutable);
-	
-	char *sptr;
-	uint32_t l;
-	sptr = (char*)MCStringGetCString(*t_input_mutable);
-	l = MCStringGetLength(*t_input_mutable);
-	for (uint32_t i = 0 ; i < l ; i++)
-	{
-		if (*sptr == '\n')
-			*sptr = '\r';
-		sptr++;
-	}
-	r_output = MCValueRetain(*t_input_mutable);
-	
+	MCStringRef t_mutable_input;
+	/* UNCHECKED */ MCStringMutableCopy(p_input, t_mutable_input);
+	/* UNCHECKED */ MCStringFindAndReplaceChar(t_mutable_input, '\n', '\r', kMCStringOptionCompareExact);
+	/* UNCHECKED */ MCStringCopyAndRelease(t_mutable_input, r_output);
+#else
+	r_output = MCValueRetain(p_input);
 #endif
-	
-	return true;
+
+return true;
 }
 
 
-bool MCStringConvertLineEndingsToLiveCode(MCStringRef input, MCStringRef& r_output)
+bool MCStringConvertLineEndingsToLiveCode(MCStringRef p_input, MCStringRef& r_output)
 {
-	
-	MCAutoStringRef t_input_mutable;
-	MCStringMutableCopy(input, &t_input_mutable);
-	
-	char *s;
-	uint32_t l;
-	s = (char*)MCStringGetCString(*t_input_mutable);
-	l = MCStringGetLength(*t_input_mutable);
-
-	char *sptr, *dptr, *eptr;
-	sptr = s;
-	dptr = s;
-	eptr = s + l;
-
-	while (sptr < eptr)
-	{
-		if (*sptr == '\r')
-		{
-			if (sptr < eptr - 1 &&  *(sptr + 1) == '\n')
-				l--;
-			else
-				*dptr++ = '\n';
-			sptr++;
-		}
-		else
-			if (!*sptr)
-			{
-				*dptr++ = ' ';
-				sptr++;
-			}
-			else
-				*dptr++ = *sptr++;
-	}
-
-	MCStringRemove(*t_input_mutable, MCRangeMake(l, UINDEX_MAX));
-	r_output = MCValueRetain(*t_input_mutable);
-	
+	MCStringRef t_mutable_input;
+	/* UNCHECKED */ MCStringMutableCopy(p_input, t_mutable_input);
+	/* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\r\n"), MCSTR("\n\r"), kMCStringOptionCompareExact);
+	/* UNCHECKED */ MCStringFindAndReplaceChar(t_mutable_input, '\r', '\n', kMCStringOptionCompareExact);
+	/* UNCHECKED */ MCStringCopyAndRelease(t_mutable_input, r_output);
 	return true;
 }
+	
 ////////////////////////////////////////////////////////////////////////////////
 
 // Convert the given UTF-8 string to Unicode. Both counts are in bytes.

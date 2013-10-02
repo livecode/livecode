@@ -1836,7 +1836,7 @@ void MCFilesExecWriteToStderr(MCExecContext& ctxt, MCStringRef p_data, int p_uni
 		ctxt . SetTheResultToEmpty();
 }
 
-//This method causes the program to crash (the call to MCFilesExecWriteToStream(ctxt, t_stream, *t_text_data, p_unit_type, t_stat))
+
 void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStringRef p_data, bool p_is_end, int p_unit_type, int64_t p_at)
 {
 	
@@ -1918,15 +1918,18 @@ void MCFilesExecWriteToProcess(MCExecContext& ctxt, MCNameRef p_process, MCStrin
 
 	if (t_textmode)
 	{
-		MCAutoStringRef t_text_data;
-		MCStringConvertLineEndingsFromLiveCode(p_data, &t_text_data);
+		MCStringRef t_text_data;
+		/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(p_data, t_text_data);
 		// MW-2004-11-17: EOD should only happen when writing to processes in text-mode
-		if (MCU_offset("\004", MCStringGetOldString(*t_text_data), offset, True))
+		if (MCU_offset("\004", MCStringGetOldString(t_text_data), offset, True))
 		{
-			ctxt.GetEP().substring(0, offset);
+			MCAutoStringRef t_substring;
+			MCStringCopySubstring(t_text_data, MCRangeMake(0, offset), &t_substring);
+			MCValueAssign(t_text_data, *t_substring);
 			haseof = True;
 		}
-		MCFilesExecWriteToStream(ctxt, t_stream, *t_text_data, p_unit_type, t_stat);
+		MCFilesExecWriteToStream(ctxt, t_stream, t_text_data, p_unit_type, t_stat);
+		MCValueRelease(t_text_data);
 	}
 	else
 		MCFilesExecWriteToStream(ctxt, t_stream, p_data, p_unit_type, t_stat);
