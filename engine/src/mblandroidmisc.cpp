@@ -440,6 +440,23 @@ static Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_para
 	return ES_NORMAL;
 }
 
+// MW-2013-10-02: [[ MobileSSLVerify ]] Handle libUrlSetSSLVerification for Android.
+static Exec_stat MCHandleLibUrlSetSSLVerification(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+	
+	bool t_enabled;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "b", &t_enabled);
+	
+	extern void MCS_seturlsslverification(bool enabled);
+	if (t_success)
+		MCS_seturlsslverification(t_enabled);
+	
+	return ES_NORMAL;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
@@ -1096,7 +1113,10 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {"mobileAdSetTopLeft", MCHandleAdSetTopLeft, nil},
     {"mobileAds", MCHandleAds, nil},
     
-	{"libUrlDownloadToFile", MCHandleLibUrlDownloadToFile, nil},    
+	{"libUrlDownloadToFile", MCHandleLibUrlDownloadToFile, nil},
+	
+	// MW-2013-10-02: [[ MobileSSLVerify ]] Added support for libUrlSetSSLVerification.
+	{"libUrlSetSSLVerification", MCHandleLibUrlSetSSLVerification, nil},
     
     {"mobileStartTrackingSensor", MCHandleStartTrackingSensor, nil},
     {"mobileStopTrackingSensor", MCHandleStopTrackingSensor, nil},
