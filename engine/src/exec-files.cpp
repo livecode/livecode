@@ -1912,7 +1912,7 @@ void MCFilesExecWriteToProcess(MCExecContext& ctxt, MCNameRef p_process, MCStrin
 
 	IO_handle t_stream = MCprocesses[t_index].ohandle;
 	Boolean t_textmode = MCprocesses[t_index].textmode;
-	uint4 offset;
+	uint4 t_offset;
 	Boolean haseof = False;
 	IO_stat t_stat;
 
@@ -1921,10 +1921,11 @@ void MCFilesExecWriteToProcess(MCExecContext& ctxt, MCNameRef p_process, MCStrin
 		MCStringRef t_text_data;
 		/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(p_data, t_text_data);
 		// MW-2004-11-17: EOD should only happen when writing to processes in text-mode
-		if (MCU_offset("\004", MCStringGetOldString(t_text_data), offset, True))
+		//if (MCU_offset("\004", MCStringGetOldString(t_text_data), offset, True))
+		if (MCStringFirstIndexOf(t_text_data, MCSTR("\004"), 0, kMCCompareExact, t_offset))
 		{
 			MCAutoStringRef t_substring;
-			MCStringCopySubstring(t_text_data, MCRangeMake(0, offset), &t_substring);
+			MCStringCopySubstring(t_text_data, MCRangeMake(0, t_offset), &t_substring);
 			MCValueAssign(t_text_data, *t_substring);
 			haseof = True;
 		}
