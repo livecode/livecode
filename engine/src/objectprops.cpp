@@ -3355,6 +3355,17 @@ void MCObject::getvariantprop(MCExecContext& ctxt, uint32_t p_part_id, Propertie
 	ctxt . Throw();
 }
 
+/////////
+
+void MCObject::setdataprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCDataRef p_value)
+{
+	ctxt . GetEP() . setvalueref(p_value);
+	if (setprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL)
+		return;
+	
+	ctxt . Throw();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "props.cpp"

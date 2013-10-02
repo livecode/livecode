@@ -1729,9 +1729,6 @@ bool MCStringPrependChars(MCStringRef self, const unichar_t *p_chars, uindex_t p
 	// Now copy the chars across.
 	MCMemoryCopy(self -> chars, p_chars, p_char_count * sizeof(unichar_t));
 	
-	// Set the NULL
-	self -> chars[self -> char_count] = '\0';
-	
 	__MCStringChanged(self);
 	
 	// We succeeded.

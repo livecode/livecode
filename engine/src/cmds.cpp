@@ -361,8 +361,7 @@ Exec_stat MCConvert::exec(MCExecPoint &ep)
 	else
 	{
 		MCDateTimeExecConvert(ctxt, *t_input, fform, fsform, pform, sform, &t_output);
-		ep . setvalueref(*t_output);
-		if (container -> set(ep, PT_INTO) != ES_NORMAL)
+		if (container -> set(ep, PT_INTO, *t_output) != ES_NORMAL)
 		{
 			MCeerror->add(EE_CONVERT_CANTSET, line, pos);
 			return ES_ERROR;
@@ -1481,28 +1480,39 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 		}
 		else
 		{
-			MCAutoStringRef t_string;
-			if (!ctxt . ConvertToString(*t_value, &t_string))
-			{
-				MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
-				return ES_ERROR;
-			}
-			
-			MCObjectChunkPtr t_obj_chunk;
+            MCObjectChunkPtr t_obj_chunk;
 			if (dest -> evalobjectchunk(ep, false, true, t_obj_chunk) != ES_NORMAL)
 				return ES_ERROR;
-			
-			if (t_obj_chunk . object -> gettype() == CT_FIELD)
-				MCInterfaceExecPutIntoField(ctxt, *t_string, prep, t_obj_chunk, is_unicode);
-			else
-			{
-				if (is_unicode)
-				{
-					MCeerror -> add(EE_CHUNK_CANTSETUNICODEDEST, line, pos);
-					return ES_ERROR;
-				}
-				
-				MCInterfaceExecPutIntoObject(ctxt, *t_string, prep, t_obj_chunk);
+            
+            if (is_unicode)
+            {
+                if (t_obj_chunk . object -> gettype() != CT_FIELD)
+                {
+                    MCeerror -> add(EE_CHUNK_CANTSETUNICODEDEST, line, pos);
+                    return ES_ERROR;
+                }
+                
+                MCAutoDataRef t_data;
+                if (!ctxt . ConvertToData(*t_value, &t_data))
+                {
+                    MCeerror -> add(EE_CHUNK_CANTSETUNICODEDEST, line, pos);
+                    return ES_ERROR;
+                }
+                MCInterfaceExecPutUnicodeIntoField(ctxt, *t_data, prep, t_obj_chunk);
+            }
+            else
+            {
+                MCAutoStringRef t_string;
+                if (!ctxt . ConvertToString(*t_value, &t_string))
+                {
+                    MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
+                    return ES_ERROR;
+                }
+			            
+                if (t_obj_chunk . object -> gettype() == CT_FIELD)
+                    MCInterfaceExecPutIntoField(ctxt, *t_string, prep, t_obj_chunk);
+                else
+                    MCInterfaceExecPutIntoObject(ctxt, *t_string, prep, t_obj_chunk);
 			}
 		}
 	}
@@ -2600,8 +2610,7 @@ Exec_stat MCSort::exec(MCExecPoint &ep)
 		MCInterfaceExecSortContainer(ctxt, t_sorted_target, chunktype, direction == ST_ASCENDING, format, by);
 		if (!ctxt . HasError())
 		{
-			/* UNCHECKED */ ep . setvalueref(t_sorted_target);
-            of -> set(ep, PT_INTO);
+            of -> set(ep, PT_INTO, t_sorted_target);
 			MCValueRelease(t_sorted_target);
 		}
 	}
