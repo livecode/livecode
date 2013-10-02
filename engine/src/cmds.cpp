@@ -1446,33 +1446,39 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 		}
 		else
 		{
-			MCAutoStringRef t_string;
-			if (!ctxt . ConvertToString(*t_value, &t_string))
-			{
-				MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
-				return ES_ERROR;
-			}
-			
-            if (prep == PT_BEFORE)
-            {
-                bool t_true = true;
-            }
-            
-			MCObjectChunkPtr t_obj_chunk;
+            MCObjectChunkPtr t_obj_chunk;
 			if (dest -> evalobjectchunk(ep, false, true, t_obj_chunk) != ES_NORMAL)
 				return ES_ERROR;
             
-			if (t_obj_chunk . object -> gettype() == CT_FIELD)
-				MCInterfaceExecPutIntoField(ctxt, *t_string, prep, t_obj_chunk, is_unicode);
-			else
-			{
-				if (is_unicode)
-				{
-					MCeerror -> add(EE_CHUNK_CANTSETUNICODEDEST, line, pos);
-					return ES_ERROR;
-				}
-				
-				MCInterfaceExecPutIntoObject(ctxt, *t_string, prep, t_obj_chunk);
+            if (is_unicode)
+            {
+                if (t_obj_chunk . object -> gettype() != CT_FIELD)
+                {
+                    MCeerror -> add(EE_CHUNK_CANTSETUNICODEDEST, line, pos);
+                    return ES_ERROR;
+                }
+                
+                MCAutoDataRef t_data;
+                if (!ctxt . ConvertToData(*t_value, &t_data))
+                {
+                    MCeerror -> add(EE_CHUNK_CANTSETUNICODEDEST, line, pos);
+                    return ES_ERROR;
+                }
+                MCInterfaceExecPutUnicodeIntoField(ctxt, *t_data, prep, t_obj_chunk);
+            }
+            else
+            {
+                MCAutoStringRef t_string;
+                if (!ctxt . ConvertToString(*t_value, &t_string))
+                {
+                    MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
+                    return ES_ERROR;
+                }
+			            
+                if (t_obj_chunk . object -> gettype() == CT_FIELD)
+                    MCInterfaceExecPutIntoField(ctxt, *t_string, prep, t_obj_chunk);
+                else
+                    MCInterfaceExecPutIntoObject(ctxt, *t_string, prep, t_obj_chunk);
 			}
 		}
 	}

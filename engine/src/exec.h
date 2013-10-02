@@ -616,6 +616,7 @@ public:
 	bool ConvertToLegacyRectangle(MCValueRef value, MCRectangle& r_rectangle);
 	bool ConvertToLegacyColor(MCValueRef value, MCColor& r_color);
     bool ConvertToMutableString(MCValueRef p_value, MCStringRef &r_string);
+    bool ConvertToData(MCValueRef p_value, MCDataRef& r_data);
     
 	// These attempt to convert the given value as specified. If conversion
 	// was successful then 'r_converted' is set to true, else 'false'. If
@@ -1856,7 +1857,8 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 void MCInterfaceExecFind(MCExecContext& ctxt, int p_mode, MCStringRef p_needle, MCChunk *p_target);
 
 void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCStringRef value, int where, MCObjectChunkPtr target);
-void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef value, int where, MCObjectChunkPtr target, bool is_unicode = false);
+void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef value, int where, MCObjectChunkPtr target);
+void MCInterfaceExecPutUnicodeIntoField(MCExecContext& ctxt, MCDataRef p_data, int p_where, MCObjectChunkPtr p_chunk);
 
 void MCInterfaceExecLockCursor(MCExecContext& ctxt);
 void MCInterfaceExecLockMenus(MCExecContext& ctxt);

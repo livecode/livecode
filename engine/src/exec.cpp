@@ -85,13 +85,22 @@ bool MCExecContext::ConvertToBoolean(MCValueRef p_value, MCBooleanRef &r_boolean
 	return m_ep . convertvaluereftoboolean(p_value, r_boolean);
 }
 
-bool MCExecContext::ConvertToMutableString(MCValueRef p_value, MCStringRef &r_string)
+bool MCExecContext::ConvertToMutableString(MCValueRef p_value, MCStringRef& r_string)
 {
     MCAutoStringRef t_string;
     if (!ConvertToString(p_value, &t_string))
         return false;
     
     return MCStringMutableCopy(*t_string, r_string);
+}
+
+bool MCExecContext::ConvertToData(MCValueRef p_value, MCDataRef& r_data)
+{
+    MCAutoStringRef t_string;
+    if (!ConvertToString(p_value, &t_string))
+        return false;
+    
+	return MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_string), MCStringGetLength(*t_string), r_data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -3126,14 +3126,16 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef p_string, int p_where, MCObjectChunkPtr p_chunk, bool p_is_unicode)
+void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef p_string, int p_where, MCObjectChunkPtr p_chunk)
 {
 	if (p_chunk . chunk == CT_UNDEFINED && p_where == PT_INTO)
 	{
-		p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, p_is_unicode ? P_UNICODE_TEXT : P_TEXT, False, p_string);
+		p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, P_TEXT, False, p_string);
 	}
 	else
 	{
+        MCField *t_field;
+        t_field = static_cast<MCField *>(p_chunk . object);
 		integer_t t_start, t_finish;
 		if (p_where == PT_INTO)
 			t_start = p_chunk . mark . start, t_finish = p_chunk . mark . finish;
@@ -3141,13 +3143,35 @@ void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef p_string, int 
 			t_start = t_finish = p_chunk . mark . finish;
 		else /* PT_BEFORE */
 			t_start = t_finish = p_chunk . mark . start;
-		
-		if (((MCField *)p_chunk . object) -> settextindex_stringref(p_chunk . part_id, t_start, t_finish, p_string, False) != ES_NORMAL)
+		integer_t t_si, t_ei;
+        t_si = 0;
+        t_ei = INDEX_MAX;
+        t_field -> resolvechars(p_chunk . part_id, t_si, t_ei, t_start, t_finish - t_start);
+		if (t_field -> settextindex_stringref(p_chunk . part_id, t_si, t_ei, p_string, False) != ES_NORMAL)
 		{
 			ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
 			return;
 		}
 	}
+}
+
+void MCInterfaceExecPutUnicodeIntoField(MCExecContext& ctxt, MCDataRef p_data, int p_where, MCObjectChunkPtr p_chunk)
+{
+	if (p_chunk . chunk == CT_UNDEFINED && p_where == PT_INTO)
+	{
+		p_chunk . object -> setdataprop(ctxt, p_chunk . part_id, P_UNICODE_TEXT, False, p_data);
+	}
+	else
+	{
+        MCAutoStringRef t_string;
+        if (MCStringDecode(p_data, kMCStringEncodingUTF16, false, &t_string))
+        {
+            MCInterfaceExecPutIntoField(ctxt, *t_string, p_where, p_chunk);
+            return;
+        }
+        
+        ctxt.Throw();
+   	}
 }
 
 void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCStringRef p_string, int p_where, MCObjectChunkPtr p_chunk)
