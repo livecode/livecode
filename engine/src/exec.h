@@ -436,6 +436,8 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, B
 #define DEFINE_RO_OBJ_LIST_PROPERTY(prop, type, obj, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), nil, false, false },
 
+void MCExecFetchProperty(MCExecContext& ctxt, MCPropertyInfo *prop, void *mark, MCValueRef& r_value);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCExecContext
