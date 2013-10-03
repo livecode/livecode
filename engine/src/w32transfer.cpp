@@ -1174,8 +1174,9 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 	{
 		if (t_in_length > 0 && MCStringGetNativeCharAtIndex(*t_in_string, t_in_length - 1) == '\0')
 			t_in_length -= 1;
-
-		/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_in_string, &t_out_data);
+		MCAutoStringRef t_out_string;
+		/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_in_string, &t_out_string);
+		/* UNCHECKED */ MCDataCreateWithBytes((const byte_t*)MCStringGetCString(*t_out_string), MCStringGetLength(*t_out_string), &t_out_data);
 	}
 	break;
 	case CF_UNICODETEXT:
@@ -1184,6 +1185,7 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 			t_in_length -= 2;
 
 		char *t_utf8;
+		t_utf8 = NULL;
 		int32_t t_count;
 		t_count = UnicodeToUTF8((const uint16_t *)MCStringGetCString(*t_in_string), MCStringGetLength(*t_in_string), t_utf8, 0);
 		MCAutoStringRef t_utf8_string;
@@ -1191,6 +1193,7 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 		MCAutoStringRef t_output;
 		/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_utf8_string, &t_output);
 		uint16_t *t_dst;
+		t_dst = NULL;
 		t_count = UTF8ToUnicode(MCStringGetCString(*t_output), MCStringGetLength(*t_output), t_dst, 0);
 		/* UNCHECKED */ MCDataCreateWithBytes((const byte_t*)t_dst, t_count, &t_out_data);
 	}
@@ -1455,7 +1458,7 @@ static bool CloneStringToStorage(MCDataRef p_string, STGMEDIUM& r_storage)
 bool MCConvertTextToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage)
 {
 	MCAutoStringRef t_input, t_output;
-	/* UNCHECKED */ MCStringCreateWithCString((const char_t*)MCDataGetBytePtr(p_input), &t_input);
+	/* UNCHECKED */ MCStringCreateWithCString((const char*)MCDataGetBytePtr(p_input), &t_input);
 	/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_input, &t_output);
 
 	MCAutoStringRef t_output_mutable_copy;
@@ -1481,14 +1484,15 @@ bool MCConvertTextToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage)
 bool MCConvertTextToWindowsWide(MCDataRef p_input, STGMEDIUM& r_storage)
 {
 	MCAutoStringRef t_input, t_output;
-	/* UNCHECKED */ MCStringCreateWithCString((const char_t*)MCDataGetBytePtr(p_input), &t_input);
+	/* UNCHECKED */ MCStringCreateWithCString((const char*)MCDataGetBytePtr(p_input), &t_input);
 	/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_input, &t_output);
 	unsigned short *t_utf16;
+	t_utf16 = NULL;
 	uint4 t_utf16_length;
 	MCS_nativetoutf16(MCStringGetCString(*t_output), MCStringGetLength(*t_output), t_utf16, t_utf16_length);
 
 	MCAutoStringRef t_value;
-	/* UNCHECKED */ MCStringCreateWithCString((const char_t *)t_utf16, &t_value);
+	/* UNCHECKED */ MCStringCreateWithCString((const char*)t_utf16, &t_value);
 	MCAutoStringRef t_value_mutable_copy;
 	/* UNCHECKED */ MCStringMutableCopy(*t_value, &t_value_mutable_copy);
 
@@ -1506,6 +1510,7 @@ bool MCConvertTextToWindowsWide(MCDataRef p_input, STGMEDIUM& r_storage)
 bool MCConvertUnicodeToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage)
 {
 	char *t_native;
+	t_native = NULL;
 	uint4 t_native_length;
 	MCS_utf16tonative((const unsigned short *)MCDataGetBytePtr(p_input), MCDataGetLength(p_input), t_native, t_native_length);
 	MCAutoStringRef t_native_string, t_value;
@@ -1532,6 +1537,7 @@ bool MCConvertUnicodeToWindowsWide(MCDataRef p_input, STGMEDIUM& r_storage)
 	MCExecContext ctxt(ep);
 
 	char *t_utf8;
+	t_utf8 = NULL;
 	int32_t t_count;
 	t_count = UnicodeToUTF8((const uint16_t *)MCDataGetBytePtr(p_input), MCDataGetLength(p_input), t_utf8, 0);
 	MCAutoStringRef t_utf8_string;
@@ -1539,9 +1545,10 @@ bool MCConvertUnicodeToWindowsWide(MCDataRef p_input, STGMEDIUM& r_storage)
 	MCAutoStringRef t_output;
 	/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_utf8_string, &t_output);
 	uint16_t *t_dst;
+	t_dst = NULL;
 	t_count = UTF8ToUnicode(MCStringGetCString(*t_output), MCStringGetLength(*t_output), t_dst, 0);
 	MCAutoStringRef t_value;
-	/* UNCHECKED */ MCStringCreateWithCString((const char_t*)t_dst, &t_value);
+	/* UNCHECKED */ MCStringCreateWithCString((const char*)t_dst, &t_value);
 
 	MCAutoStringRef t_value_mutable_copy;
 	/* UNCHECKED */ MCStringMutableCopy(*t_value, &t_value_mutable_copy);
