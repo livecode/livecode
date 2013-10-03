@@ -2176,7 +2176,7 @@ void MCInterfaceExecDeleteObjectChunks(MCExecContext& ctxt, MCObjectChunkPtr *p_
             t_field = static_cast<MCField *>(p_chunks[i] . object);
             integer_t t_si, t_ei;
             t_si = 0;
-            t_ei = INDEX_MAX;
+            t_ei = t_field -> getpgsize(nil);
             t_field -> resolvechars(p_chunks[i] . part_id, t_si, t_ei, p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start);
             
 			t_field -> settextindex_stringref(p_chunks[i] . part_id, t_si, t_ei, kMCEmptyString, False);
@@ -2332,7 +2332,15 @@ void MCInterfaceExecSelectTextOfField(MCExecContext& ctxt, Preposition_type p_ty
 		t_start = t_finish;
 		break;
 	}
-	static_cast<MCField *>(p_target . object) -> seltext(t_start, t_finish, True);
+    
+    MCField *t_field;
+    t_field = static_cast<MCField *>(p_target . object);
+    integer_t t_si, t_ei;
+    t_si = 0;
+    t_ei = t_field -> getpgsize(nil);
+    t_field -> resolvechars(p_target . part_id, t_si, t_ei, t_start, t_finish - t_start);
+    
+	static_cast<MCField *>(p_target . object) -> seltext(t_si, t_ei, True);
 }
 
 //////////
