@@ -591,7 +591,7 @@ void MCDialogExecAskFileWithFilter(MCExecContext& ctxt, MCStringRef p_prompt, MC
         int t_error;
         t_error = MCA_ask_file(p_title, p_prompt, p_filter, p_initial, t_options, &t_value, &t_result);
 
-		t_cancelled = *t_result != nil;
+        t_cancelled = *t_value == nil;
     }
 	else
 	{

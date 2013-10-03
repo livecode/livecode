@@ -2666,8 +2666,8 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		MCAutoNativeCharArray t_newpath;
 		char *t_char_ptr;
 		HANDLE t_file_handle = NULL;
-		IO_handle t_handle;
-		t_handle = NULL;
+        IO_handle t_handle;
+        t_handle = nil;
 
 		bool t_device = false;
 		bool t_serial_device = false;

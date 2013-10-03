@@ -634,7 +634,7 @@ int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringR
             {
                 MCAutoStringRef t_tmp_folder;
                 MCStringCopySubstring(p_initial, MCRangeMake(t_last_slash + 1, MCStringGetLength(p_initial) - (t_last_slash+1)), &t_name);
-                MCStringCopySubstring(p_initial, MCRangeMake(0, t_last_slash - 1), &t_tmp_folder);
+                MCStringCopySubstring(p_initial, MCRangeMake(0, t_last_slash), &t_tmp_folder);
 
                 if (MCS_exists(*t_tmp_folder, False))
                     /* UNCHECKED */ MCS_resolvepath(*t_tmp_folder, &t_folder);
