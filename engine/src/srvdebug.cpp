@@ -132,10 +132,10 @@ static const char *GetFileForContext(MCExecPoint& ep)
 //  INTERFACE TO ENGINE
 //
 
-bool MCServerDebugConnect(const char *p_site, const char *p_url)
+bool MCServerDebugConnect(MCStringRef p_site, MCStringRef p_url)
 {
 #ifdef _IREVIAM
-	s_debugging = IreviamDebuggerConnect(p_site, p_url);
+	s_debugging = IreviamDebuggerConnect(MCStringGetCString(p_site), MCStringGetCString(p_url));
 	if (s_debugging)
 	{
 		MCservererrormode = kMCSErrorModeDebugger;
@@ -353,33 +353,33 @@ void MCServerDebugVariableChanged(MCExecPoint& ep, MCNameRef p_name)
 
 typedef bool (*MCServerDebugListVariablesCallback)(void *p_context, uint32_t p_index, uint32_t p_depth, bool p_array, bool p_expanded, const char *p_name, const char *p_value);
 
-void MCServerDebugAction(const char *p_action)
+void MCServerDebugAction(MCStringRef p_action)
 {
-	if (strequal(p_action, "stop"))
+	if (MCStringIsEqualToCString(p_action, "stop", kMCCompareExact))
 		s_action = kMCDebugActionStop;
-	else if (strequal(p_action, "pause"))
+	else if (MCStringIsEqualToCString(p_action, "pause", kMCCompareExact))
 		s_action = kMCDebugActionPause;
-	else if (strequal(p_action, "step over"))
+	else if (MCStringIsEqualToCString(p_action, "step over", kMCCompareExact))
 	{
 		s_action = kMCDebugActionStepOver;
 		s_current_context = MCnexecutioncontexts;
 	}
-	else if (strequal(p_action, "step into"))
+	else if (MCStringIsEqualToCString(p_action, "step into", kMCCompareExact))
 	{
 		s_action = kMCDebugActionStepInto;
 		s_current_context = MCnexecutioncontexts;
 	}
-	else if (strequal(p_action, "step out"))
+	else if (MCStringIsEqualToCString(p_action, "step out", kMCCompareExact))
 	{
 		s_action = kMCDebugActionStepOut;
 		s_current_context = MCnexecutioncontexts;
 	}
 }
 
-void MCServerDebugBreakpoint(const char *p_action, const char *p_file, uint32_t p_row, uint32_t p_column)
+void MCServerDebugBreakpoint(MCStringRef p_action, MCStringRef p_file, uint32_t p_row, uint32_t p_column)
 {
 	bool t_add;
-	t_add = strcmp(p_action, "add") == 0;
+	t_add = MCStringIsEqualToCString(p_action, "add", kMCCompareExact);
 	
 	// Construct the absolute file path.
 	MCAutoStringRef t_filename;
@@ -432,21 +432,21 @@ void MCServerDebugBreakpoint(const char *p_action, const char *p_file, uint32_t 
 	
 }
 
-const char *MCServerDebugGet(const char *p_property)
+void MCServerDebugGet(MCStringRef p_property, MCStringRef& r_result)
 {
 	const char *t_result;
 	t_result = NULL;
 	
-	if (strcmp(p_property, "execution error") == 0)
+	if (MCStringIsEqualToCString(p_property, "execution error", kMCCompareExact))
 		t_result = MCeerror -> getsvalue() . getstring();
-	else if (strcmp(p_property, "parse error") == 0)
+	else if (MCStringIsEqualToCString(p_property, "parse error", kMCCompareExact))
 		t_result = MCperror -> getsvalue() . getstring();
-	else if (strcmp(p_property, "files") == 0)
+	else if (MCStringIsEqualToCString(p_property, "files", kMCCompareExact))
 		t_result = "";
 	
-	return t_result;
+	/* UNCHECKED */  MCStringCreateWithCString(t_result, r_result);
 }
 
-void MCServerDebugPut(const char *p_property, const char *p_value)
+void MCServerDebugPut(MCStringRef p_property, MCStringRef p_value)
 {
 }
