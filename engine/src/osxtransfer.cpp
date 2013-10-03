@@ -547,22 +547,27 @@ bool MCMacOSXPasteboard::AddEntry(MCTransferType p_type, ScrapFlavorType p_flavo
 
 bool MCConvertTextToMacPlain(MCDataRef p_input, MCDataRef& r_output)
 {
-	MCExecPoint ep(NULL, NULL, NULL);
-	MCExecContext ctxt(ep);
-	ctxt . SetValueRef(p_input);
-	ctxt . BinaryToText();
-	return ctxt . CopyAsDataRef(r_output);
+	MCAutoStringRef t_input;
+	/* UNCHECKED */ MCStringCreateWithCString((const char_t *)MCDataGetBytePtr(p_input), &t_input);
+	MCAutoStringRef t_output;
+	/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_input, &t_output);
+	
+	return MCDataCreateWithBytes((const byte_t*)MCStringGetCString(*t_output), MCStringGetLength(*t_output), r_output);
 }
 
 bool MCConvertUnicodeToMacUnicode(MCDataRef p_input, MCDataRef& r_output)
 {
-	MCExecPoint ep(NULL, NULL, NULL);
-	MCExecContext ctxt(ep);
-	ctxt . SetValueRef(p_input);
-	ctxt . Utf16ToUtf8();
-	ctxt . BinaryToText();
-	ctxt . Utf8ToUtf16();
-	return ctxt . CopyAsDataRef(r_output);
+
+	char *t_utf8;
+	int32_t t_count;
+	t_count = UnicodeToUTF8((const uint16_t *)MCDataGetBytePtr(p_input), MCDataGetLength(p_input), t_utf8, 0);
+	MCAutoStringRef t_utf8_string;
+	/* UNCHECKED */ MCStringCreateWithCString(t_utf8, &t_utf8_string);
+	MCAutoStringRef t_output;
+	/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_utf8_string, &t_output);
+	uint16_t *t_dst;
+	t_count = UTF8ToUnicode(MCStringGetCString(*t_output), MCStringGetLength(*t_output), t_dst, 0);
+	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t*)t_dst, t_count, r_output);
 }
 
 bool MCConvertStyledTextToMacUnicode(MCDataRef p_input, MCDataRef& r_output)
@@ -591,7 +596,7 @@ bool MCConvertStyledTextToMacUnicodeStyled(MCDataRef p_input, MCDataRef& r_outpu
 	
 	delete t_object;
 	
-	return ctxt . CopyAsDataRef(r_output);
+	return ctxt . GetEP() .copyasdataref(r_output);
 }
 
 bool MCConvertStyledTextToMacPlain(MCDataRef p_input, MCDataRef& r_output)
@@ -738,12 +743,17 @@ bool MCConvertMacUnicodeStyledToStyledText(MCDataRef p_text_data, MCDataRef p_st
 		t_paragraphs = MCtemplatefield -> macunicodestyletexttoparagraphs(t_text, MCDataGetOldString(p_style_data));
 	else
 	{
-		MCExecPoint ep;
-		ep . setsvalue(t_text);
-		ep . utf16toutf8();
-		ep . texttobinary();
-		ep . utf8toutf16();
-		t_paragraphs = MCtemplatefield -> texttoparagraphs(ep . getsvalue(), true);
+		char *t_utf8;
+		int32_t t_count;
+		t_count = UnicodeToUTF8((const uint16_t *)t_text . getstring(), t_text . getlength(), t_utf8, 0);
+		MCAutoStringRef t_utf8_string;
+		/* UNCHECKED */ MCStringCreateWithCString(t_utf8, &t_utf8_string);
+		MCAutoStringRef t_output;
+		/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_utf8_string, &t_output);
+		uint16_t *t_dst;
+		t_count = UTF8ToUnicode(MCStringGetCString(*t_output), MCStringGetLength(*t_output), t_dst, 0);
+
+		t_paragraphs = MCtemplatefield -> texttoparagraphs(MCString((const char *)t_dst, t_count), true);
 	}
 	
 	MCStyledText t_styled_text;

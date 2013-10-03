@@ -687,12 +687,12 @@ Exec_stat MCField::getparagraphmacunicodestyles(MCExecContext& ctxt, MCParagraph
 	if (ATSUFlattenStyleRunsToStream(kATSUDataStreamUnicodeStyledText, 0, t_run_count, t_runs, t_style_count, t_styles, 0, NULL, &t_stream_size) == noErr)
 	{
 		char *t_stream;
-		/* UNCHECKED */ ctxt . Reserve(t_stream_size, t_stream);
+		/* UNCHECKED */ ctxt . GetEP() . reserve(t_stream_size, t_stream);
 		if (t_stream != NULL)
 		{
 			if (ATSUFlattenStyleRunsToStream(kATSUDataStreamUnicodeStyledText, 0, t_run_count, t_runs, t_style_count, t_styles, t_stream_size, t_stream, &t_stream_size) != noErr)
 				t_stream_size = 0;
-			ctxt . Commit(t_stream_size);
+			ctxt . GetEP() . commit(t_stream_size);
 		}
 	}
 	

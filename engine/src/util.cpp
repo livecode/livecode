@@ -2209,14 +2209,9 @@ void MCU_urlencode(MCExecPoint &ep)
 
 bool MCFiltersUrlDecode(MCStringRef p_source, MCStringRef& r_result);
 
-void MCU_urldecode(MCExecContext &ctxt)
+void MCU_urldecode(MCStringRef p_source, MCStringRef& r_result)
 {
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ctxt . CopyAsStringRef(&t_source);
-
-	MCAutoStringRef t_result;
-	/* UNCHECKED */ MCFiltersUrlDecode(*t_source, &t_result);
-	/* UNCHECKED */ ctxt . SetValueRef(*t_result);
+	/* UNCHECKED */ MCFiltersUrlDecode(p_source, r_result);
 }
 
 Boolean MCU_freeinserted(MCObjectList *&l)
