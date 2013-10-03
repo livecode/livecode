@@ -47,8 +47,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern void MCRemoteFileDialog(MCExecContext &ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint32_t p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file, bool p_save, bool p_files);
-extern void MCRemoteFolderDialog(MCExecContext &ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial);
+extern void MCRemoteFileDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint32_t p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file, bool p_save, bool p_files, MCStringRef &r_value);
+extern void MCRemoteFolderDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef &r_value);
 extern void MCRemoteColorDialog(MCExecPoint& ep, const char *p_title, uint32_t p_r, uint32_t p_g, uint32_t p_b);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -308,7 +308,7 @@ static Boolean navigation_filter_callback(AEDesc *p_item, void *p_info, void *p_
 static void build_types_from_filter_records(FilterRecord* p_filter_records, unsigned int p_filter_record_count, MCStringRef* &p_types, uint4 &r_type_count);
 
 // MW-2005-06-03: New version of answer-file code because old stuff is so bad...
-int MCA_do_file_dialog_tiger(MCExecContext &ctxt, MCStringRef p_title, MCStringRef p_prompt, FilterRecord *p_filters, unsigned int p_filter_count, MCStringRef p_initial, unsigned int p_options)
+int MCA_do_file_dialog_tiger(MCStringRef p_title, MCStringRef p_prompt, FilterRecord *p_filters, unsigned int p_filter_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	if (!MCModeMakeLocalWindows())
 	{
@@ -321,7 +321,7 @@ int MCA_do_file_dialog_tiger(MCExecContext &ctxt, MCStringRef p_title, MCStringR
         MCAutoStringRef t_resolved_path_str;
         MCS_resolvepath(p_initial, &t_resolved_path_str);
         
-		MCRemoteFileDialog(ctxt, p_title, p_prompt, *t_types, t_types.Count(), NULL, *t_resolved_path_str, t_save, t_plural);
+		MCRemoteFileDialog(p_title, p_prompt, *t_types, t_types.Count(), NULL, *t_resolved_path_str, t_save, t_plural, r_value);
 	
 		return noErr;
 	}
@@ -485,16 +485,12 @@ int MCA_do_file_dialog_tiger(MCExecContext &ctxt, MCStringRef p_title, MCStringR
 		
 		NavDialogDispose(t_dialog_ref);
 		
-		if (strlen(*sg_navigation_files) == 0)
-			ctxt . Clear();
-		else
+		if (strlen(*sg_navigation_files) != 0)\
 		{
-            MCAutoStringRef t_navigation_file;
-            /* UNCHECKED */ MCStringCreateWithCString(*sg_navigation_files, &t_navigation_file);
-			ctxt . SetValueRef(*t_navigation_file);
+            /* UNCHECKED */ MCStringCreateWithCString(*sg_navigation_files, r_value);
 			
 			if (p_options & MCA_OPTION_RETURN_FILTER && p_filter_count > 0)
-				MCresult -> copysvalue(p_filters[sg_navigation_filter_record_index] . tag);
+                MCStringCreateWithCString(*p_filters[sg_navigation_filter_record_index] . tag, r_result);
 		}
 	}
 	
@@ -569,7 +565,7 @@ static void build_types_from_filter_records(FilterRecord* p_filter_records, unsi
         t_types.Take(r_types, r_type_count);
 }
 
-int MCA_file_tiger(MCExecContext &ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options)
+int MCA_file_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef r_result)
 {
 	int t_result;
 	FilterRecord *t_filters = NULL;
@@ -593,23 +589,23 @@ int MCA_file_tiger(MCExecContext &ctxt, MCStringRef p_title, MCStringRef p_promp
         t_filters[0] . file_types . assign(MCStringGetCString(*t_filetypes), t_filetype_count * 5 - 1, ',', false);
 		t_filter_count = 1;
 	}
-    t_result = MCA_do_file_dialog_tiger(ctxt, p_title, p_prompt, t_filters, t_filter_count, p_initial, p_options);
+    t_result = MCA_do_file_dialog_tiger(p_title, p_prompt, t_filters, t_filter_count, p_initial, p_options, r_value, r_result);
 	delete[] t_filters;
 	return t_result;
 }
 
-int MCA_file_with_types_tiger(MCExecContext& ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options)
+int MCA_file_with_types_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	int t_result;
 	FilterRecord *t_filters;
 	unsigned int t_filter_count;
 	build_filter_records_from_types(p_types, p_type_count, t_filters, t_filter_count);
-	t_result = MCA_do_file_dialog_tiger(ctxt, p_title, p_prompt, t_filters, t_filter_count, p_initial, p_options | MCA_OPTION_RETURN_FILTER);
+	t_result = MCA_do_file_dialog_tiger(p_title, p_prompt, t_filters, t_filter_count, p_initial, p_options | MCA_OPTION_RETURN_FILTER, r_value, r_result);
 	delete[] t_filters;
 	return t_result;
 }
 
-int MCA_ask_file_tiger(MCExecContext& ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options)
+int MCA_ask_file_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	int t_result;
 	FilterRecord *t_filters = NULL;
@@ -632,18 +628,18 @@ int MCA_ask_file_tiger(MCExecContext& ctxt, MCStringRef p_title, MCStringRef p_p
 		t_filters[0] . file_types . assign(MCStringGetCString(*t_filetypes), t_filetype_count * 5 - 1, ',');
 		t_filter_count = 1;
 	}
-	t_result = MCA_do_file_dialog_tiger(ctxt, nil, p_prompt, t_filters, t_filter_count, p_initial, p_options | MCA_OPTION_SAVE_DIALOG);
+	t_result = MCA_do_file_dialog_tiger(nil, p_prompt, t_filters, t_filter_count, p_initial, p_options | MCA_OPTION_SAVE_DIALOG, r_value, r_result);
 	delete[] t_filters;
 	return t_result;
 }
 
-int MCA_ask_file_with_types_tiger(MCExecContext &ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options)
+int MCA_ask_file_with_types_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	int t_result;
 	FilterRecord *t_filters;
 	unsigned int t_filter_count;
 	build_filter_records_from_types(p_types, p_type_count, t_filters, t_filter_count);
-	t_result = MCA_do_file_dialog_tiger(ctxt, p_title, p_prompt, t_filters, t_filter_count, p_initial, p_options | MCA_OPTION_RETURN_FILTER | MCA_OPTION_SAVE_DIALOG);
+	t_result = MCA_do_file_dialog_tiger(p_title, p_prompt, t_filters, t_filter_count, p_initial, p_options | MCA_OPTION_RETURN_FILTER | MCA_OPTION_SAVE_DIALOG, r_value, r_result);
 	delete[] t_filters;
 	return t_result;
 }
@@ -827,7 +823,7 @@ void navEventProc(NavEventCallbackMessage callBackSelector,
 }
 
 //display Open File dialog through Navigation Services, called by Answer::exec()
-OSErr navAnswerFolder(MCStringRef prompt, Boolean hasDefaultPath, const FSRef *p_default_dir_fsref, MCExecContext &ctxt, Boolean sheet)
+OSErr navAnswerFolder(MCStringRef prompt, Boolean hasDefaultPath, const FSRef *p_default_dir_fsref, Boolean sheet, MCStringRef &r_value, MCStringRef &r_result)
 {
 	NavEventUPP eventProc = NewNavEventUPP(navEventProc);
 	NavDialogCreationOptions dOptions; //dialog options structure
@@ -890,18 +886,9 @@ OSErr navAnswerFolder(MCStringRef prompt, Boolean hasDefaultPath, const FSRef *p
 		}
 		
 		if (navfilepath)
-		{
-            MCAutoStringRef t_nav_str;
-            /* UNCHECKED */ MCStringCreateWithCString(navfilepath, &t_nav_str);
-			ctxt.SetValueRef(*t_nav_str);
-			delete navfilepath;
-			MCresult->clear();
-		}
+            /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)navfilepath, r_value);
 		else
-		{
-			MCresult->sets(MCcancelstring);
-			ctxt.Clear();
-		}
+            MCStringCreateWithCString(MCcancelstring, r_result);
 	}
 	if (hasDefaultPath)
 		AEDisposeDesc(&defaultLoc);
@@ -933,7 +920,7 @@ static void get_default_path(const char *p_initial, Boolean& hasDefaultPath, FSS
 }
 
 // MW-2005-05-23: Update to new API
-int MCA_folder_tiger(MCExecContext &ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, unsigned int p_options)
+int MCA_folder_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	Cursor c;
 	
@@ -942,7 +929,7 @@ int MCA_folder_tiger(MCExecContext &ctxt, MCStringRef p_title, MCStringRef p_pro
         MCAutoStringRef t_resolved_initial_path_str;        
         MCS_resolvepath(p_initial, &t_resolved_initial_path_str);
 		
-		MCRemoteFolderDialog(ctxt, p_title, p_prompt, *t_resolved_initial_path_str);
+		MCRemoteFolderDialog(p_title, p_prompt, *t_resolved_initial_path_str, r_value);
         
 		return 0;
 	}
@@ -963,7 +950,7 @@ int MCA_folder_tiger(MCExecContext &ctxt, MCStringRef p_title, MCStringRef p_pro
 	
 	if (usens)
 	{
-		navAnswerFolder(p_prompt, hasDefaultPath, &t_defaultfolder, ctxt, (p_options & MCA_OPTION_SHEET) != 0);
+		navAnswerFolder(p_prompt, hasDefaultPath, &t_defaultfolder, (p_options & MCA_OPTION_SHEET) != 0, r_value, r_result);
 		MCscreen->expose();
 		EventRecord e;
 		WaitNextEvent(mUpMask, &e, 0, NULL);
