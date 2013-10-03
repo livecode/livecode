@@ -287,23 +287,26 @@ bool MCMacOSXPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 	{
 	case kScrapFlavorTypeText:
 	{
-		MCExecPoint ep;
-        MCExecContext ctxt(ep);
-        ctxt . SetValueRef(*t_in_data);
-		ctxt . TextToBinary();
-		ctxt . CopyAsDataRef(&t_out_data);
+		MCAutoStringRef t_input;
+		/* UNCHECKED */ MCStringCreateWithCString((const char_t *)MCDataGetBytePtr(*t_in_data), &t_input);
+		MCAutoStringRef t_output;
+		/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_input, &t_output);
+		/* UNCHECKED */ MCDataCreateWithBytes((const byte_t*)MCStringGetCString(*t_output), MCStringGetLength(*t_output), &t_out_data);
 	}
 	break;
 
 	case kScrapFlavorTypeUnicode:
 	{
-		MCExecPoint ep;
-        MCExecContext ctxt(ep);
-		ctxt . SetValueRef(*t_in_data);
-		ctxt . Utf16ToUtf8();
-		ctxt . TextToBinary();
-		ctxt . Utf8ToUtf16();
-		ctxt . CopyAsDataRef(&t_out_data);
+		char *t_utf8;
+		int32_t t_count;
+		t_count = UnicodeToUTF8((const uint16_t *)MCDataGetBytePtr(*t_in_data), MCDataGetLength(*t_in_data), t_utf8, 0);
+		MCAutoStringRef t_utf8_string;
+		/* UNCHECKED */ MCStringCreateWithCString(t_utf8, &t_utf8_string);
+		MCAutoStringRef t_output;
+		/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_utf8_string, &t_output);
+		uint16_t *t_dst;
+		t_count = UTF8ToUnicode(MCStringGetCString(*t_output), MCStringGetLength(*t_output), t_dst, 0);
+		/* UNCHECKED */ MCDataCreateWithBytes((const byte_t*)t_dst, t_count, &t_out_data);
 	}
 	break;
 

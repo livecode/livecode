@@ -1023,17 +1023,18 @@ bool ConvertFile_MIME_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef
 	char * t_part ;
 	bool first = true ;
 	
-	ctxt . SetValueRef(p_input);
-	ctxt . TextToBinary() ;
-	MCU_urldecode(ctxt);
-	MCAutoStringRef t_value;
-	ctxt . CopyAsStringRef(&t_value);
-	MCU_break_string(MCStringGetOldString(*t_value), t_strings, n_strings, false);
-	
-	//ep.clear() ;
+	MCAutoStringRef t_input;
+	/* UNCHECKED */ MCStringCreateWithCString((const char_t*)MCDataGetBytePtr(p_input), &t_input);
 	MCAutoStringRef t_output;
+	/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_input, &t_output);
+	MCAutoStringRef t_output_decoded;
+	MCU_urldecode(*t_output, &t_output_decoded);
+	
+	MCU_break_string(MCStringGetOldString(*t_output_decoded), t_strings, n_strings, false);
+	
+	MCAutoStringRef t_output_mutable;
 	char_t t_del;
-	/* UNCHECKED */ MCStringCreateMutable(0, &t_output);
+	/* UNCHECKED */ MCStringCreateMutable(0, &t_output_mutable);
 	
 	for (uint4 a=0; a < n_strings; a++)
 	{
@@ -1042,22 +1043,20 @@ bool ConvertFile_MIME_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef
 		{
 			if (first)
 			{
-				/* UNCHECKED */ MCStringAppendNativeChars(*t_output, (const char_t *)(t_part + 7), strlen(t_part + 7));
+				/* UNCHECKED */ MCStringAppendNativeChars(*t_output_mutable, (const char_t *)(t_part + 7), strlen(t_part + 7));
 				first=false;
 			}
 			else
 			{
 				t_del = '\n';
-				/* UNCHECKED */MCStringAppendNativeChars(*t_output, &t_del, 1);
-				/* UNCHECKED */MCStringAppendNativeChars(*t_output, (const char_t *)(t_part + 7), strlen(t_part + 7));
+				/* UNCHECKED */MCStringAppendNativeChars(*t_output_mutable, &t_del, 1);
+				/* UNCHECKED */MCStringAppendNativeChars(*t_output_mutable, (const char_t *)(t_part + 7), strlen(t_part + 7));
 			}
-			//ep.concatcstring((t_part + 7), EC_RETURN, first );
 			
 		}
 		delete t_part;
 	}
 	delete t_strings ;
 	
-	return MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_output), MCStringGetLength(*t_output), r_output);
-	//return ep . copyasdataref(r_output);
+	return MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_output_mutable), MCStringGetLength(*t_output_mutable), r_output);
 }
