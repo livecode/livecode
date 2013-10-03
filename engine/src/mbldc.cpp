@@ -182,8 +182,7 @@ void MCScreenDC::compact_memory(void)
 	
 	MCStack *t_stack;
 	t_stack = (MCStack *)m_current_window;
-	if (t_stack -> gettilecache())
-		MCTileCacheCompact(t_stack -> gettilecache());
+	t_stack -> view_compacttilecache();
 }
 
 void MCScreenDC::handle_mouse_press(uint32_t p_time, uint32_t p_modifiers, int32_t x, int32_t y, int32_t p_button, MCMousePressState p_state)
@@ -519,8 +518,7 @@ void MCScreenDC::refresh_window(Window p_window)
 		t_new_stack = (MCStack *)p_window;
 		
 		// MW-2011-09-13: [[ TileCache ]] Activate old stack's tilecache.
-		if (t_new_stack -> gettilecache() != nil)
-			MCTileCacheActivate(t_new_stack -> gettilecache());
+		t_new_stack -> view_activatetilecache();
 		
 		t_new_stack -> setextendedstate(false, ECS_DONTDRAW);
 		

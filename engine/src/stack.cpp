@@ -121,9 +121,6 @@ MCStack::MCStack()
 	// MW-2011-08-19: [[ Redraw ]] Initialize the stack's update region
 	m_update_region = nil;
 
-	// MW-2011-08-26: [[ TileCache ]] Stacks start off with no tilecache.
-	m_tilecache = nil;
-	
 	// MW-2011-09-12: [[ MacScroll ]] There is no scroll to start with.
 	m_scroll = 0;
 
@@ -312,9 +309,6 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	// MW-2011-08-19: [[ Redraw ]] Initialize the stack's update region
 	m_update_region = nil;
 
-	// MW-2011-08-26: [[ TileCache ]] Stacks start off with no tilecache.
-	m_tilecache = nil;
-	
 	// MW-2011-09-12: [[ MacScroll ]] There is no scroll to start with.
 	m_scroll = 0;
 	
@@ -448,15 +442,14 @@ MCStack::~MCStack()
 	// MW-2011-08-19: [[ Redraw ]] Destroy the stack's update region.
 	MCRegionDestroy(m_update_region);
 
-	// MW-2011-08-26: [[ TileCache ]] Destroy the stack's tilecache - if any.
-	MCTileCacheDestroy(m_tilecache);
-	
 	// MW-2011-09-13: [[ Redraw ]] If there is snapshot, get rid of it.
 	MCGImageRelease(m_snapshot);
 	m_snapshot = nil;
 	
 	// MW-2012-10-10: [[ IdCache ]] Free the idcache.
 	freeobjectidcache();
+	
+	view_destroy();
 }
 
 Chunk_term MCStack::gettype() const
@@ -1010,7 +1003,7 @@ void MCStack::setrect(const MCRectangle &nrect)
 
 	// IM-2013-09-23: [[ FullscreenMode ]] Use view to determine adjusted stack size
 	MCRectangle t_new_rect;
-	t_new_rect = view_setstackrect(nrect);
+	t_new_rect = view_constrainstackviewport(nrect);
 	
 	if (rect.x != t_new_rect.x || rect.y != t_new_rect.y)
 		state |= CS_BEEN_MOVED;
@@ -1496,56 +1489,53 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	
 	// MW-2011-11-23: [[ AccelRender ]] Return the accelerated rendering state.
 	case P_ACCELERATED_RENDERING:
-		ep . setboolean(getacceleratedrendering());
+		ep . setboolean(view_getacceleratedrendering());
 		break;
 	
 	case P_COMPOSITOR_TYPE:
 	{
-		if (m_tilecache == nil)
-			ep . clear();
-		else
+		switch(view_getcompositortype())
 		{
-			const char *t_type;
-			switch(MCTileCacheGetCompositor(m_tilecache))
-			{
-			case kMCTileCacheCompositorSoftware:
-				t_type = "Software";
-				break;
-			case kMCTileCacheCompositorCoreGraphics:
-				t_type = "CoreGraphics";
-				break;
-			case kMCTileCacheCompositorStaticOpenGL:
-				t_type = "Static OpenGL";
-				break;
-			case kMCTileCacheCompositorDynamicOpenGL:
-				t_type = "Dynamic OpenGL";
-				break;
-			default:
-				assert(false);
-				break;	
-			}
-			ep . setstaticcstring(t_type);
+		case kMCTileCacheCompositorNone:
+			ep . clear();
+			break;
+				
+		case kMCTileCacheCompositorSoftware:
+			ep . setstaticcstring("Software");
+			break;
+		case kMCTileCacheCompositorCoreGraphics:
+			ep . setstaticcstring("CoreGraphics");
+			break;
+		case kMCTileCacheCompositorStaticOpenGL:
+			ep . setstaticcstring("Static OpenGL");
+			break;
+		case kMCTileCacheCompositorDynamicOpenGL:
+			ep . setstaticcstring("Dynamic OpenGL");
+			break;
+		default:
+			assert(false);
+			break;	
 		}
 	}
 	break;
 			
 	case P_COMPOSITOR_TILE_SIZE:
-		if (m_tilecache == nil)
+		if (!view_getacceleratedrendering())
 			ep . clear();
 		else
-			ep . setuint(MCTileCacheGetTileSize(m_tilecache));
+			ep . setuint(view_getcompositortilesize());
 	break;
 
 	case P_COMPOSITOR_CACHE_LIMIT:
-		if (m_tilecache == nil)
+		if (!view_getacceleratedrendering())
 			ep . clear();
 		else
-			ep . setuint(MCTileCacheGetCacheLimit(m_tilecache));
+			ep . setuint(view_getcompositorcachelimit());
 	break;
 		
 	// MW-2011-11-24: [[ UpdateScreen ]] Get the updateScreen properties.
 	case P_DEFER_SCREEN_UPDATES:
-		ep . setboolean(effective ? m_defer_updates && m_tilecache != nil : m_defer_updates);
+		ep . setboolean(effective ? m_defer_updates && view_getacceleratedrendering() : m_defer_updates);
 		break;
 #endif /* MCStack::getprop */
 	default:
@@ -2486,7 +2476,7 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			MCeerror->add(EE_OBJECT_NAB, 0, 0, data);
 			return ES_ERROR;
 		}
-		setacceleratedrendering(t_accel_render == True);
+		view_setacceleratedrendering(t_accel_render == True);
 	}
 	break;
 	
@@ -2523,27 +2513,7 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			return ES_ERROR;
 		}
 		
-		if (t_type == kMCTileCacheCompositorNone)
-		{
-			MCTileCacheDestroy(m_tilecache);
-			m_tilecache = nil;
-		}
-		else
-		{
-			if (m_tilecache == nil)
-			{
-				MCTileCacheCreate(32, 4096 * 1024, m_tilecache);
-				// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
-				// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
-				MCRectangle t_device_rect;
-				t_device_rect = MCRectangleGetTransformedBounds(curcard->getrect(), getdevicetransform());
-				MCTileCacheSetViewport(m_tilecache, t_device_rect);
-			}
-		
-			MCTileCacheSetCompositor(m_tilecache, t_type);
-		}
-		
-		dirtyall();
+		view_setcompositortype(t_type);
 	}
 	break;
 			
@@ -2556,11 +2526,7 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
 			return ES_ERROR;
 		}
-		if (m_tilecache != nil)
-		{
-			MCTileCacheSetCacheLimit(m_tilecache, t_new_cachelimit);
-			dirtyall();
-		}
+		view_setcompositorcachelimit(t_new_cachelimit);
 	}
 	break;
 
@@ -2573,16 +2539,12 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
 			return ES_ERROR;
 		}
-		if (!MCIsPowerOfTwo(t_new_tilesize) || t_new_tilesize < 16 || t_new_tilesize > 256)
+		if (!view_isvalidcompositortilesize(t_new_tilesize))
 		{
 			MCeerror->add(EE_COMPOSITOR_INVALIDTILESIZE, 0, 0, data);
 			return ES_ERROR;
 		}
-		if (m_tilecache != nil)
-		{
-			MCTileCacheSetTileSize(m_tilecache, t_new_tilesize);
-			dirtyall();
-		}
+		view_setcompositortilesize(t_new_tilesize);
 	}
 	break;
 

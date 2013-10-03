@@ -164,10 +164,7 @@ void MCStack::configure(Boolean user)
 	MCRectangle trect;
 	// IM-2013-09-30: [[ FullscreenMode ]] Use view methods for fullscreen stacks
 	if (view_getfullscreen())
-	{
-		trect = view_setstackrect(old_rect);
-		view_setgeom(trect);
-	}
+		trect = view_setstackviewport(old_rect);
 	else
 		mode_getrealrect(trect);
 	if (trect.width != 0 && trect.height != 0
@@ -2355,8 +2352,7 @@ void MCStack::dirtyall(void)
 
 	// MW-2011-09-08: [[ TileCache ]] A 'dirtyall' request means wipe all cached
 	//   data.
-	if (m_tilecache != nil)
-		MCTileCacheFlush(m_tilecache);
+	view_flushtilecache();
 
 	// MW-2011-09-21: [[ Layers ]] Make sure all the layers on the current card
 	//   recompute their id's and other attrs.
@@ -2391,38 +2387,22 @@ void MCStack::dirtywindowname(void)
 // does it on a block.
 void MCStack::updatetilecache(void)
 {
-	if (m_tilecache == nil)
-		return;
-
-	// If the tilecache is not valid, flush it.
-	if (!MCTileCacheIsValid(m_tilecache))
-		MCTileCacheFlush(m_tilecache);
-
-	MCTileCacheBeginFrame(m_tilecache);
-	curcard -> render();
-	MCTileCacheEndFrame(m_tilecache);
+	// IM-2013-10-03: [[ FullsceenMode ]] Move implementation to stackview
+	view_updatetilecache();
 }
 
 // MW-2013-06-26: [[ Bug 10990 ]] For non-iOS, we can run the MCTileCacheDeactivate
 //   method on the main thread.
 void MCStack::deactivatetilecache(void)
 {
-    if (m_tilecache == nil)
-        return;
-    
-    MCTileCacheDeactivate(gettilecache());
+	// IM-2013-10-03: [[ FullsceenMode ]] Move implementation to stackview
+	view_deactivatetilecache();
 }
 
 bool MCStack::snapshottilecache(MCRectangle p_area, MCGImageRef& r_pixmap)
 {
-	if (m_tilecache == nil)
-		return false;
-	
-	// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
-	// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
-	MCRectangle t_device_rect;
-	t_device_rect = MCRectangleGetTransformedBounds(p_area, getdevicetransform());
-	return MCTileCacheSnapshot(m_tilecache, t_device_rect, r_pixmap);
+	// IM-2013-10-03: [[ FullsceenMode ]] Move implementation to stackview
+	return view_snapshottilecache(p_area, r_pixmap);
 }
 
 #endif
@@ -2456,8 +2436,7 @@ void MCStack::applyupdates(void)
 		
 			// MW-2011-09-08: [[ TileCache ]] If we have a tilecache, then attempt to update
 			//   it.
-			if (m_tilecache != nil)
-				updatetilecache();
+			updatetilecache();
 
 			// MW-2011-09-08: [[ TileCache ]] Perform a redraw of the window within
 			//   the update region.
@@ -2493,7 +2472,10 @@ void MCStack::render(MCGContextRef p_context, const MCRectangle &p_rect)
 
 void MCStack::device_redrawwindow(MCStackSurface *p_surface, MCRegionRef p_region)
 {
-	if (m_tilecache == nil || !MCTileCacheIsValid(m_tilecache))
+	MCTileCacheRef t_tilecache;
+	t_tilecache = view_gettilecache();
+	
+	if (t_tilecache == nil || !MCTileCacheIsValid(t_tilecache))
 	{
 		// If there is no tilecache, or the tilecache is invalid then fetch an
 		// MCContext for the surface and render.
@@ -2520,7 +2502,7 @@ void MCStack::device_redrawwindow(MCStackSurface *p_surface, MCRegionRef p_regio
 	else
 	{
 		// We have a valid tilecache, so get it to composite.
-		MCTileCacheComposite(m_tilecache, p_surface, p_region);
+		MCTileCacheComposite(t_tilecache, p_surface, p_region);
 	}
 }
 
@@ -2552,7 +2534,7 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 	t_effect_area . height -= t_effect_area . y;
 	t_effect_area = MCU_intersect_rect(t_effect_area, p_area);
 	
-	if (m_tilecache != nil && getstate(CS_NEED_REDRAW))
+	if (view_getacceleratedrendering() && getstate(CS_NEED_REDRAW))
 	{
 		updatetilecache();
 		setstate(False, CS_NEED_REDRAW);

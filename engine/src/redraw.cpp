@@ -447,7 +447,7 @@ void MCControl::layer_contentoriginchanged(int32_t p_dx, int32_t p_dy)
 
 	// Fetch the tilecache we are using.
 	MCTileCacheRef t_tilecache;
-	t_tilecache = getstack() -> gettilecache();
+	t_tilecache = getstack() -> view_gettilecache();
 
 	// Scroll the sprite - note that this method is only called if
 	// layer_isscrolling() is true, which is only possible if we have a tilecache.
@@ -498,7 +498,7 @@ void MCControl::layer_dirtycontentrect(const MCRectangle& p_updated_rect, bool p
 	t_content_rect = layer_getcontentrect();
 	
 	MCTileCacheRef t_tilecache;
-	t_tilecache = getstack() -> gettilecache();
+	t_tilecache = getstack() -> view_gettilecache();
 
 	// Note that this method is only called if layer_isscrolling() is true, which is only
 	// possible if we have a tilecache.
@@ -556,7 +556,7 @@ void MCControl::layer_dirtyeffectiverect(const MCRectangle& p_effective_rect, bo
 
 	// Fetch the tilecache we are using (if any).
 	MCTileCacheRef t_tilecache;
-	t_tilecache = t_control -> getstack() -> gettilecache();
+	t_tilecache = t_control -> getstack() -> view_gettilecache();
 
 	// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
 	// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
@@ -632,7 +632,7 @@ void MCControl::layer_changeeffectiverect(const MCRectangle& p_old_effective_rec
 	// latter case, this is just a dirty op).
 	MCTileCacheRef t_tilecache;
 	if (parent -> gettype() != CT_GROUP)
-		t_tilecache = getstack() -> gettilecache();
+		t_tilecache = getstack() -> view_gettilecache();
 	else
 		t_tilecache = nil;
 	
@@ -713,7 +713,7 @@ void MCControl::layer_changeeffectiverect(const MCRectangle& p_old_effective_rec
 void MCCard::layer_added(MCControl *p_control, MCObjptr *p_previous, MCObjptr *p_next)
 {
 	MCTileCacheRef t_tilecache;
-	t_tilecache = getstack() -> gettilecache();
+	t_tilecache = getstack() -> view_gettilecache();
 
 	// Add the rects to the update region (for clarity, would prefer this at the end
 	// but there is 'return' fall through in the rest :-( ).
@@ -770,7 +770,7 @@ void MCCard::layer_added(MCControl *p_control, MCObjptr *p_previous, MCObjptr *p
 void MCCard::layer_removed(MCControl *p_control, MCObjptr *p_previous, MCObjptr *p_next)
 {
 	MCTileCacheRef t_tilecache;
-	t_tilecache = getstack() -> gettilecache();
+	t_tilecache = getstack() -> view_gettilecache();
 
 	// Add the rects to the update region (for clarity, would prefer this at the end
 	// but there is 'return' fall through in the rest :-( )
@@ -846,20 +846,6 @@ void MCCard::layer_removed(MCControl *p_control, MCObjptr *p_previous, MCObjptr 
 
 void MCCard::layer_setviewport(int32_t p_x, int32_t p_y, int32_t p_width, int32_t p_height)
 {
-	MCTileCacheRef t_tilecache;
-	t_tilecache = getstack() -> gettilecache();
-
-	// Notify any tilecache of the changes.
-	if (t_tilecache != nil)
-	{
-		// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
-		// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
-		MCRectangle t_user_rect, t_device_rect;
-		t_user_rect = MCRectangleMake(p_x, p_y, p_width, p_height);
-		t_device_rect = MCRectangleGetTransformedBounds(t_user_rect, getstack()->getdevicetransform());
-		MCTileCacheSetViewport(t_tilecache, t_device_rect);
-	}
-
 	// Get the current rect, before updating it.
 	MCRectangle t_old_rect;
 	t_old_rect = rect;
@@ -885,7 +871,7 @@ void MCCard::layer_setviewport(int32_t p_x, int32_t p_y, int32_t p_width, int32_
 void MCCard::layer_selectedrectchanged(const MCRectangle& p_old_rect, const MCRectangle& p_new_rect)
 {
 	MCTileCacheRef t_tilecache;
-	t_tilecache = getstack() -> gettilecache();
+	t_tilecache = getstack() -> view_gettilecache();
 
 	if (t_tilecache != nil)
 	{
@@ -1056,7 +1042,7 @@ bool device_render_background(void *p_context, MCGContextRef p_target, const MCR
 void MCCard::render(void)
 {
 	MCTileCacheRef t_tiler;
-	t_tiler = getstack() -> gettilecache();
+	t_tiler = getstack() -> view_gettilecache();
 
 	bool t_reset_ids;
 	t_reset_ids = MCTileCacheIsClean(t_tiler);
@@ -1196,80 +1182,6 @@ void MCCard::render(void)
 	t_bg_layer . context = this;
 	MCTileCacheRenderScenery(t_tiler, t_bg_layer);
 	m_bg_layer_id = t_bg_layer . id;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool MCStack::getacceleratedrendering(void)
-{
-	return m_tilecache != nil;
-}
-
-void MCStack::setacceleratedrendering(bool p_value)
-{
-	// If we are turning accelerated rendering off, then destroy the tilecache.
-	if (!p_value)
-	{
-		MCTileCacheDestroy(m_tilecache);
-		m_tilecache = nil;
-		
-		// MW-2012-03-15: [[ Bug ]] Make sure we dirty the stack to ensure all the
-		//   layer mode attrs are rest.
-		dirtyall();
-		
-		return;
-	}
-	
-	// If we are turning accelerated rendering on, and we already have a tile-
-	// cache, then do nothing.
-	if (m_tilecache != nil)
-		return;
-		
-	// Otherwise, we configure based on platform settings.
-	int32_t t_tile_size;
-	int32_t t_cache_limit;
-	MCTileCacheCompositorType t_compositor_type;
-#ifdef _MAC_DESKTOP
-	t_compositor_type = kMCTileCacheCompositorCoreGraphics;
-	t_tile_size = 32;
-	t_cache_limit = 32 * 1024 * 1024;
-#elif defined(_WINDOWS_DESKTOP) || defined(_LINUX_DESKTOP)
-	t_compositor_type = kMCTileCacheCompositorSoftware;
-	t_tile_size = 32;
-	t_cache_limit = 32 * 1024 * 1024;
-#elif defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
-	t_compositor_type = kMCTileCacheCompositorStaticOpenGL;
-	
-	const MCDisplay *t_display;
-	MCscreen -> getdisplays(t_display, false);
-	
-	MCRectangle t_viewport;
-	t_viewport = t_display -> device_viewport;
-	
-	bool t_small_screen, t_medium_screen;
-	t_small_screen = MCMin(t_viewport . width, t_viewport . height) <= 480 && MCMax(t_viewport . width, t_viewport . height) <= 640;
-	t_medium_screen = MCMin(t_viewport . width, t_viewport . height) <= 768 && MCMax(t_viewport . width, t_viewport . height) <= 1024;
-
-	if (t_small_screen)
-		t_tile_size = 32, t_cache_limit = 16 * 1024 * 1024;
-	else if (t_medium_screen)
-		t_tile_size = 64, t_cache_limit = 32 * 1024 * 1024;
-	else
-		t_tile_size = 64, t_cache_limit = 64 * 1024 * 1024;
-#endif
-
-	MCGAffineTransform t_transform;
-	t_transform = getdevicetransform();
-	
-	// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
-	// IM-2013-09-30: [[ FullscreenMode ]] Use view rect when setting the size of the tilecache
-	MCRectangle t_device_rect;
-	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(view_getrect()));
-	MCTileCacheCreate(t_tile_size, t_cache_limit, m_tilecache);
-	MCTileCacheSetViewport(m_tilecache, t_device_rect);
-	MCTileCacheSetCompositor(m_tilecache, t_compositor_type);
-	
-	dirtyall();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

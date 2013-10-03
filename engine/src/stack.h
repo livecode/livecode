@@ -25,6 +25,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "uidc.h"
 #endif
 
+#include "tilecache.h"
+
 #define EXTERNAL_WAIT 10.0
 #define MENU_SPACE 8
 #define MENU_ARROW_SIZE 16
@@ -182,9 +184,6 @@ protected:
 	//   drawn to the screen on the next update.
 	MCRegionRef m_update_region;
 
-	// MW-2011-08-26: [[ TileCache ]] The stack's tilecache renderer - if any.
-	MCTileCacheRef m_tilecache;
-
 	// MW-2011-09-12: [[ MacScroll ]] The current y-scroll setting of the stack.
 	int32_t m_scroll;
 	
@@ -213,12 +212,15 @@ protected:
 	MCStackFullscreenMode m_view_fullscreenmode;
 
 	MCRectangle m_view_stack_rect;
-	MCRectangle m_view_screen_rect;
+	MCRectangle m_view_rect;
 
 	bool m_view_redraw;
 	
 	MCGAffineTransform m_view_transform;
 
+	// MW-2011-08-26: [[ TileCache ]] The stack's tilecache renderer - if any.
+	MCTileCacheRef m_view_tilecache;
+	
 public:
 	Boolean menuwindow;
 
@@ -298,16 +300,20 @@ public:
 	
 	//////////
 	// view interface
+
 	void view_init(void);
 	void view_copy(const MCStack &p_view);
+	void view_destroy(void);
 
-	// Notify view of change to stack rect. Returns modified rect if constrained by fullscreen mode
-	MCRectangle view_setstackrect(MCRectangle p_stack_rect);
+	// Get visible stack region
+	MCRectangle view_getstackviewport(void);
+	// Set the visible stack region. Returns modified rect if constrained by fullscreen mode
+	MCRectangle view_setstackviewport(const MCRectangle &p_viewport);
 
-	// Update view geometry for the specified stack rect.
-	MCRectangle view_setgeom(const MCRectangle &p_rect);
-
-	// return the rect of the view
+	// Return the visible stack region constrained by the fullscreen settings
+	MCRectangle view_constrainstackviewport(const MCRectangle &p_viewport);
+	
+	// Return the rect of the view in logical screen coords.
 	MCRectangle view_getrect(void);
 
 	// Set view to fullscreen 
@@ -332,6 +338,39 @@ public:
 
 	// Return the stack -> view coordinates transform
 	MCGAffineTransform view_getviewtransform(void) const;
+	
+	//////////
+	
+	// IM-2013-10-03: [[ FullscreenMode ]] Move implementation of tilecache operations into stackview
+	
+	// MW-2011-11-23: [[ AccelRender ]] Set / get the accelerated rendering derived property.
+	bool view_getacceleratedrendering(void);
+	void view_setacceleratedrendering(bool value);
+	
+	// IM-2013-01-03: [[ FullscreenMode ]] Set / get the compositor type
+	MCTileCacheCompositorType view_getcompositortype(void);
+	void view_setcompositortype(MCTileCacheCompositorType p_type);
+	
+	// IM-2013-01-03: [[ FullscreenMode ]] Set / get the compositor cache limit
+	uint32_t view_getcompositorcachelimit(void);
+	void view_setcompositorcachelimit(uint32_t p_limit);
+	
+	// IM-2013-01-03: [[ FullscreenMode ]] Set / get the compositor tile size
+	uint32_t view_getcompositortilesize(void);
+	void view_setcompositortilesize(uint32_t p_size);
+	// IM-2013-01-03: [[ FullscreenMode ]] Check the validity of the tilesize (accepted tile sizes are powers of two between 16 & 256 pixels)
+	bool view_isvalidcompositortilesize(uint32_t p_size);
+	
+	// MW-2011-08-26: [[ TileCache ]] Fetch the stack's tilecache.
+	MCTileCacheRef view_gettilecache(void) { return m_view_tilecache; }
+	
+	void view_updatetilecache(void);
+	void view_deactivatetilecache(void);
+	bool view_snapshottilecache(const MCRectangle &p_stack_rect, MCGImageRef &r_image);
+	
+	void view_flushtilecache(void);
+	void view_activatetilecache(void);
+	void view_compacttilecache(void);
 	
 	//////////
 	
@@ -631,13 +670,6 @@ public:
 	//   locking screen for a visual effect.
 	void preservescreenforvisualeffect(const MCRectangle& p_rect);
 
-	// MW-2011-08-26: [[ TileCache ]] Fetch the stack's tilecache.
-	MCTileCacheRef gettilecache(void) { return m_tilecache; }
-
-	// MW-2011-11-23: [[ AccelRender ]] Set / get the accelerated rendering derived property.
-	bool getacceleratedrendering(void);
-	void setacceleratedrendering(bool value);
-	
 	// MW-2012-10-10: [[ IdCache ]] Add and remove an object from the id cache.
 	void cacheobjectbyid(MCObject *object);
 	void uncacheobjectbyid(MCObject *object);

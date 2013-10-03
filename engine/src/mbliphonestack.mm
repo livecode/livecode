@@ -612,17 +612,11 @@ void MCStack::effectrect(const MCRectangle& p_rect, Boolean& r_abort)
 
 void MCStack::updatetilecache(void)
 {
-	if (m_tilecache == nil)
+	if (!view_getacceleratedrendering())
 		return;
 
 	MCIPhoneRunBlockOnMainFiber(^(void) {
-		// If the tilecache is not valid, flush it.
-		if (!MCTileCacheIsValid(m_tilecache))
-			MCTileCacheFlush(m_tilecache);
-
-		MCTileCacheBeginFrame(m_tilecache);
-		curcard -> render();
-		MCTileCacheEndFrame(m_tilecache);
+		view_updatetilecache();
 	});
 }
 
@@ -630,25 +624,22 @@ void MCStack::updatetilecache(void)
 //   method on the system thread.
 void MCStack::deactivatetilecache(void)
 {
-	if (m_tilecache == nil)
+	if (!view_getacceleratedrendering())
 		return;
-    
+	
 	MCIPhoneRunBlockOnMainFiber(^(void) {
-		MCTileCacheDeactivate(m_tilecache);
+		view_deactivatetilecache();
 	});
 }
 
 bool MCStack::snapshottilecache(MCRectangle p_area, MCGImageRef& r_image)
 {
-	if (m_tilecache == nil)
+	if (!view_getacceleratedrendering())
 		return false;
 	
-	// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
-	MCRectangle t_device_rect;
-	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(p_area));
 	__block bool t_result;
 	MCIPhoneRunBlockOnMainFiber(^(void) {
-		t_result = MCTileCacheSnapshot(m_tilecache, t_device_rect, r_image);
+		t_result = view_snapshottilecache(p_area, r_image);
 	});
 	
 	return t_result;
