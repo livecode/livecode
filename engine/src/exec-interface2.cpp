@@ -3300,7 +3300,7 @@ void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wh
     {
         p_object . object -> getstringprop(ctxt, p_object . part_id, P_TEXT, False, r_mark . text);
         r_mark . start = 0;
-        r_mark . finish = MAXUINT4;
+        r_mark . finish = INDEX_MAX;
     	return;
     }
     r_mark . text = nil;
@@ -3320,7 +3320,7 @@ void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCMa
         case CT_VIDEO_CLIP:
             p_container . object -> getstringprop(ctxt, p_container . part_id, P_TEXT, False, r_mark . text);
             r_mark . start = 0;
-            r_mark . finish = MAXUINT4;
+            r_mark . finish = INDEX_MAX;
             return;
         default:
             break;

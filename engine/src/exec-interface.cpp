@@ -3154,7 +3154,7 @@ void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef p_string, int 
 			t_start = t_finish = p_chunk . mark . start;
 		integer_t t_si, t_ei;
         t_si = 0;
-        t_ei = INDEX_MAX;
+        t_ei = t_field -> getpgsize(nil);
         t_field -> resolvechars(p_chunk . part_id, t_si, t_ei, t_start, t_finish - t_start);
 		if (t_field -> settextindex_stringref(p_chunk . part_id, t_si, t_ei, p_string, False) != ES_NORMAL)
 		{
