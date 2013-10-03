@@ -73,7 +73,8 @@ MCGraphicsContext::MCGraphicsContext(MCGContextRef p_context)
 	m_gcontext = MCGContextRetain(p_context);
 	m_pattern = nil;
 	m_background = getblack();
-
+	m_fill_style = FillSolid;
+	
 	m_line_width = 0;
 	m_line_style = LineSolid;
 	m_cap_style = CapButt;
@@ -443,6 +444,9 @@ void MCGraphicsContext::setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y
 {
 	MCPatternRelease(m_pattern);
 	m_pattern = nil;
+	
+	// MM-2013-09-30: [[ Bug 11221 ]] Retain the fill style (and return in getfillstyle). Breaks backpatterns in fields otherwise.
+	m_fill_style = style;
 
 	if (style == FillTiled && p != NULL)
 	{
@@ -469,6 +473,7 @@ void MCGraphicsContext::setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y
 
 void MCGraphicsContext::getfillstyle(uint2& style, MCPatternRef& p, int2& x, int2& y)
 {
+	style = m_fill_style;
 	p = m_pattern;
 	x = m_pattern_x;
 	y = m_pattern_y;

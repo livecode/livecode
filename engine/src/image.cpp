@@ -732,12 +732,13 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 					if (t_success)
 					{
 						MCMemoryCopy(t_data_ptr, t_bitmap->data, t_data_size);
-#if (kMCGPixelFormatNative != kMCGPixelFormatBGRA)
+						// IM-2013-09-16: [[ RefactorGraphics ]] [[ Bug 11185 ]] Use correct pixel format (xrgb) for imagedata
+#if (kMCGPixelFormatNative != kMCGPixelFormatARGB)
 						while (t_pixel_count--)
 						{
 							uint8_t t_r, t_g, t_b, t_a;
 							MCGPixelUnpackNative(*t_data_ptr, t_r, t_g, t_b, t_a);
-							*t_data_ptr++ = MCGPixelPack(kMCGPixelFormatBGRA, t_r, t_g, t_b, t_a);
+							*t_data_ptr++ = MCGPixelPack(kMCGPixelFormatARGB, t_r, t_g, t_b, t_a);
 						}
 #endif
 					}
@@ -2587,6 +2588,9 @@ bool MCImage::getsourcegeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)
 	
 	r_pixwidth = r_pixwidth / m_scale_factor;
 	r_pixheight = r_pixheight / m_scale_factor;
+	
+	// MM-2013-09-16: [[ Bug 11178 ]] Missing return statement.
+	return true;
 }
 
 void MCImage::getgeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)

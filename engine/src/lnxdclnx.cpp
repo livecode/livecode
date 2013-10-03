@@ -654,9 +654,10 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 							                                      brevent->button);
 						else
 						{
+							// MM-2013-09-16: [[ Bug 11176 ]] Make sure we calculate the y delta correctly.
 							if (delay < MCdoubletime
 							        && MCU_abs(t_oldclickloc.x - t_clickloc.x) < MCdoubledelta
-							        && MCU_abs(t_oldclickloc.y - t_clickloc.x) < MCdoubledelta)
+							        && MCU_abs(t_oldclickloc.y - t_clickloc.y) < MCdoubledelta)
 							{
 								if (doubleclick)
 								{

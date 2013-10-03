@@ -2390,6 +2390,9 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 
 void MCObject::drawborder(MCDC *dc, const MCRectangle &drect, uint2 bwidth)
 {
+	// MM-2013-09-30: [[ Bug 11241 ]] Make sure we set the foreground color of the dc before drawing.
+	setforeground(dc, DI_BORDER, False);
+	
 	// IM-2013-09-06: [[ RefactorGraphics ]] rewrite to use drawrect with inside line width
 	uint2 t_linesize, t_linestyle, t_capstyle, t_joinstyle;
 	real8 t_miter_limit;
