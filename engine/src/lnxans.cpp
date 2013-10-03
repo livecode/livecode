@@ -312,14 +312,11 @@ static gboolean gtk_idle_callback (gpointer data)
 }
  
 
-void run_dialog(GtkWidget *dialog, MCExecContext &ctxt)
+void run_dialog(GtkWidget *dialog, MCStringRef &r_value)
 {
-    ctxt . Clear();
-
 	// TODO : This needs to be changed to a proper callback function : gdk_event_handler_set()
 	g_timeout_add(100, gtk_idle_callback, NULL);
 
-	bool foo = false ;
 	if (gtk_dialog_run(GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
 	{
         MCAutoStringRef t_filename;
@@ -345,7 +342,8 @@ void run_dialog(GtkWidget *dialog, MCExecContext &ctxt)
             g_free(t_cstr_filename);
 		}
 
-        ctxt.SetValueRef(*t_filename);
+        if (*t_filename != nil)
+            r_value = MCValueRetain(*t_filename);
 	}
 }
 
@@ -450,11 +448,14 @@ void set_initial_file ( GtkWidget *dialog, MCStringRef p_initial, char * p_last_
             MCAutoStringRef t_current_dir;
             MCAutoStringRef t_folder;
             /* UNCHECKED */ MCS_getcurdir(&t_current_dir);
-            /* UNCHECKED */ MCStringFormat(&t_folder, "%@/%@", *t_resolved, p_initial);
+            /* UNCHECKED */ MCStringFormat(&t_folder, "%@/%@", *t_current_dir, p_initial);
             /* UNCHECKED */ MCS_resolvepath(*t_folder, &t_resolved);
         }
 			
-        gtk_file_chooser_set_filename ( GTK_FILE_CHOOSER ( dialog ), MCStringGetCString(*t_resolved));
+        if (MCS_exists(*t_resolved, True)) // file
+            gtk_file_chooser_set_filename ( GTK_FILE_CHOOSER ( dialog ), MCStringGetCString(*t_resolved));
+        else // folder
+            gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), MCStringGetCString(*t_resolved));
 	}
 	else
 		if ( p_last_path != NULL )
@@ -506,16 +507,16 @@ static bool types_to_remote_types(MCStringRef *p_types, uint4 p_type_count, MCSt
 	return true;
 }
 
-int MCA_file(MCExecContext& ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options)
+int MCA_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {	
-    MCA_file_with_types(ctxt, p_title, p_prompt, NULL, 0, p_initial, p_options);
+    MCA_file_with_types(p_title, p_prompt, NULL, 0, p_initial, p_options, r_value, r_result);
     return(1);
 }
 
 
 
 
-int MCA_file_with_types(MCExecContext &ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options)
+int MCA_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 
 {
 	if (!MCModeMakeLocalWindows())
@@ -529,7 +530,7 @@ int MCA_file_with_types(MCExecContext &ctxt, MCStringRef p_title, MCStringRef p_
         uindex_t t_count;
         if (types_to_remote_types(p_types, p_type_count, t_rtypes, t_count))
 		{
-            MCRemoteFileDialog(ctxt, p_title, p_prompt, t_rtypes, t_count, NULL, *t_resolved_path, false, t_plural);
+            MCRemoteFileDialog(p_title, p_prompt, t_rtypes, t_count, NULL, *t_resolved_path, false, t_plural, r_result);
 //			MCCStringArrayFree(t_rtypes, p_type_count * 2);
             MCMemoryDeleteArray(t_rtypes); // memory leak?
         }
@@ -558,11 +559,10 @@ int MCA_file_with_types(MCExecContext &ctxt, MCStringRef p_title, MCStringRef p_
 
 	// Run the dialog ... this will be replaced with our own loop which will call the REV event handler too.
 
-    run_dialog(dialog, ctxt);
-	
-	
-	MCresult -> clear();
-	MCresult -> copysvalue(get_current_filter_name ( dialog ) );
+    run_dialog(dialog, r_value);
+
+    /* UNCHECKED */ MCStringCreateWithCString(get_current_filter_name(dialog), r_result);
+
 	
 	if (G_last_opened_path != nil)
 		g_free(G_last_opened_path);
@@ -576,15 +576,15 @@ int MCA_file_with_types(MCExecContext &ctxt, MCStringRef p_title, MCStringRef p_
 
 
 
-int MCA_ask_file(MCExecContext& ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options)
+int MCA_ask_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	//TODO : This still needs to pass over the p_filter.
-    MCA_ask_file_with_types (ctxt, p_title, p_prompt, NULL, 0, p_initial, p_options);
+    MCA_ask_file_with_types ( p_title, p_prompt, NULL, 0, p_initial, p_options, r_value, r_result);
 	return(1);
 }
 
 
-int MCA_ask_file_with_types(MCExecContext& ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options)
+int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	if (!MCModeMakeLocalWindows())
     {
@@ -596,7 +596,7 @@ int MCA_ask_file_with_types(MCExecContext& ctxt, MCStringRef p_title, MCStringRe
 
         if (types_to_remote_types(p_types, p_type_count, t_rtypes, t_count))
 		{
-            MCRemoteFileDialog(ctxt, p_title, p_prompt, t_rtypes, t_count, NULL, *t_resolved_path, true, t_plural);
+            MCRemoteFileDialog(p_title, p_prompt, t_rtypes, t_count, NULL, *t_resolved_path, true, t_plural, r_result);
             MCMemoryDeleteArray(t_rtypes); // memory leak?
         }
 		return 1;
@@ -653,11 +653,9 @@ int MCA_ask_file_with_types(MCExecContext& ctxt, MCStringRef p_title, MCStringRe
 		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), G_last_saved_path);
 	}
 	
-    run_dialog(dialog, ctxt) ;
+    run_dialog(dialog, r_value) ;
 
-	MCresult -> clear();
-	MCresult -> copysvalue(get_current_filter_name ( dialog ) );
-	
+    MCStringCreateWithCString(get_current_filter_name(dialog), r_result);
 
 	if (G_last_saved_path != NULL)
 		g_free(G_last_saved_path);
@@ -672,14 +670,14 @@ int MCA_ask_file_with_types(MCExecContext& ctxt, MCStringRef p_title, MCStringRe
 
 
 
-int MCA_folder(MCExecContext& ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, unsigned int p_options)
+int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
     MCAutoStringRef t_resolved;
     /* UNCHECKED */ MCS_resolvepath(p_initial, &t_resolved);
 
 	if (!MCModeMakeLocalWindows())
     {
-        MCRemoteFolderDialog(ctxt, p_title, p_prompt, *t_resolved);
+        MCRemoteFolderDialog(p_title, p_prompt, *t_resolved, r_value);
 		return 0;
 	}
 	
@@ -693,7 +691,7 @@ int MCA_folder(MCExecContext& ctxt, MCStringRef p_title, MCStringRef p_prompt, M
     if (p_initial != NULL)
         gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), MCStringGetCString(*t_resolved));
 	
-    run_dialog(dialog, ctxt);
+    run_dialog(dialog, r_value);
     close_dialog(dialog);
         
         return (1);
