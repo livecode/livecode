@@ -371,48 +371,6 @@ int4 MCField::paragraphtoy(MCParagraph *target)
 	return y;
 }
 
-bool MCField::nativizetext(uint4 parid, MCExecPoint& ep, bool p_ascii_only)
-{
-	bool t_has_unicode;
-	t_has_unicode = false;
-	
-	// Resolve the correct collection of paragraphs.
-	MCParagraph *t_paragraphs;
-	t_paragraphs = resolveparagraphs(parid);
-	if (t_paragraphs == nil)
-	{
-		ep . clear();
-		return t_has_unicode;
-	}
-
-	// Ensure there is room in ep for the data. The size of the data is the
-	// same as the original, so just use getpgsize().
-	char *t_data;
-	/* UNCHECKED */ ep . reserve(getpgsize(t_paragraphs), t_data);
-	
-	// Keep track of how much of the buffer we've used.
-	uint32_t t_length;
-	t_length = 0;
-	
-	// Now loop through the paragraphs, converting as appropriate.
-	MCParagraph *t_paragraph;
-	t_paragraph = t_paragraphs;
-	do
-	{
-		if (t_paragraph -> nativizetext(p_ascii_only, t_data, t_length))
-			t_has_unicode = true;
-		t_paragraph = t_paragraph -> next();
-		if (t_paragraph != t_paragraphs)
-			t_data[t_length++] = '\n';
-	}
-	while(t_paragraph != t_paragraphs);
-	
-	// Update the length of the ep.
-	ep . commit(t_length);
-	
-	return t_has_unicode;
-}
-
 #if TO_REMOVE
 int32_t MCField::mapnativeindex(uint4 parid, int32_t p_native_index, bool p_is_end)
 {
