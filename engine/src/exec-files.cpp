@@ -1921,8 +1921,7 @@ void MCFilesExecWriteToProcess(MCExecContext& ctxt, MCNameRef p_process, MCStrin
 		MCStringRef t_text_data;
 		/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(p_data, t_text_data);
 		// MW-2004-11-17: EOD should only happen when writing to processes in text-mode
-		//if (MCU_offset("\004", MCStringGetOldString(t_text_data), offset, True))
-		if (MCStringFirstIndexOf(t_text_data, MCSTR("\004"), 0, kMCCompareExact, t_offset))
+		if (MCStringFirstIndexOfChar(t_text_data, '\004', 0, kMCCompareExact, t_offset))
 		{
 			MCAutoStringRef t_substring;
 			MCStringCopySubstring(t_text_data, MCRangeMake(0, t_offset), &t_substring);

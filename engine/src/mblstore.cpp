@@ -126,16 +126,6 @@ bool MCPurchaseList(MCStringRef& r_string)
 	return MCListCopyAsString(*t_list, r_string);	
 }
 
-/*
-bool MCPurchaseList(MCExecPoint& ep)
-{    
-	for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != NULL; t_purchase = t_purchase->next)
-        ep.concatuint(t_purchase -> id, EC_RETURN, ep.isempty());
-	
-	return true;
-}
-*/
-
 bool MCPurchaseInit(MCPurchase *p_purchase, MCStringRef p_product_id, void *p_context);
 bool MCPurchaseCreate(MCStringRef p_product_id, void *p_context, MCPurchase *&r_purchase)
 {
