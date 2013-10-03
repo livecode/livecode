@@ -208,6 +208,22 @@ bool MCS_alternatelanguages(MCListRef& r_list)
     return MCsystem -> AlternateLanguages(r_list);
 }
 
+void MCS_nativetoutf16(const char *p_native, uint4 p_native_length, unsigned short *p_utf16, uint4& p_utf16_length)
+{
+}
+
+void MCS_utf16tonative(const unsigned short *p_utf16, uint4 p_utf16_length, char *p_native, uint4& p_native_length)
+{
+}
+
+void MCS_nativetoutf8(const char *p_native, uint4 p_native_length, char *p_utf8, uint4& p_utf16_length)
+{
+}
+
+void MCS_utf8tonative(const char *p_utf8, uint4 p_uitf8_length, char *p_native, uint4& p_native_length)
+{
+}
+
 void MCS_seterrno(int value)
 {
 //	*s_mainthread_errno = value;
