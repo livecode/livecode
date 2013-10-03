@@ -1166,6 +1166,8 @@ MCNameRef MCNAME(const char *);
 
 // Create a name using the given string.
 bool MCNameCreate(MCStringRef string, MCNameRef& r_name);
+// Create a name using chars.
+bool MCNameCreateWithChars(const unichar_t *chars, uindex_t count, MCNameRef& r_name);
 // Create a name using native chars.
 bool MCNameCreateWithNativeChars(const char_t *chars, uindex_t count, MCNameRef& r_name);
 
@@ -1386,6 +1388,9 @@ const unichar_t *MCStringGetCharPtr(MCStringRef string);
 // in native encoding.
 const char_t *MCStringGetNativeCharPtr(MCStringRef string);
 
+// Returns the Unicode codepoint at the given codepoint index
+codepoint_t MCStringGetCodepointAtIndex(MCStringRef string, uindex_t index);
+
 // Returns the char at the given index.
 unichar_t MCStringGetCharAtIndex(MCStringRef string, uindex_t index);
 
@@ -1549,7 +1554,10 @@ bool MCStringAppendNativeChar(MCStringRef string, char_t p_char);
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
 bool MCStringPrepend(MCStringRef string, MCStringRef prefix);
 bool MCStringPrependSubstring(MCStringRef string, MCStringRef suffix, MCRange range);
+bool MCStringPrependChars(MCStringRef string, const unichar_t *chars, uindex_t count);
 bool MCStringPrependNativeChars(MCStringRef string, const char_t *chars, uindex_t count);
+bool MCStringPrependChar(MCStringRef string, unichar_t p_char);
+bool MCStringPrependNativeChar(MCStringRef string, char_t p_char);
 
 // Insert new_string into string at offset 'at'.
 //
@@ -1560,6 +1568,11 @@ bool MCStringInsert(MCStringRef string, uindex_t at, MCStringRef new_string);
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
 bool MCStringRemove(MCStringRef string, MCRange range);
+
+// Retain only 'range' characters from 'string'.
+//
+// Note that 'string' must be mutable, it is a fatal runtime error if it is not.
+bool MCStringSubstring(MCStringRef string, MCRange range);
 
 // Replace 'range' characters in 'string' with 'replacement'.
 //
@@ -1576,7 +1589,7 @@ bool MCStringPad(MCStringRef string, uindex_t at, uindex_t count, MCStringRef va
 //
 // Note that 'string' must be mutable.
 bool MCStringFindAndReplace(MCStringRef string, MCStringRef pattern, MCStringRef replacement, MCStringOptions options);
-bool MCStringFindAndReplaceChar(MCStringRef string, char_t pattern, char_t replacement, MCStringOptions options);
+bool MCStringFindAndReplaceChar(MCStringRef string, codepoint_t pattern, codepoint_t replacement, MCStringOptions options);
 
 /////////
 
@@ -1637,6 +1650,8 @@ bool MCDataPrependByte(MCDataRef r_data, byte_t p_byte);
 bool MCDataInsert(MCDataRef r_data, uindex_t p_at, MCDataRef p_new_data);
 bool MCDataRemove(MCDataRef r_data, MCRange p_range);
 bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data);
+
+bool MCDataPad(MCDataRef data, byte_t byte, uindex_t count);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

@@ -268,7 +268,11 @@ bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotsp
 				}
 			}
 			else // if all else fails, assume it's an XWD
-				t_success = MCImageDecodeXWD(p_stream, r_name, t_bitmap);
+            {
+                MCAutoStringRef t_name;
+				t_success = MCImageDecodeXWD(p_stream, &t_name, t_bitmap);
+                r_name = strdup(MCStringGetCString(*t_name));
+            }
 
 			if (t_success)
 				r_bitmap = t_bitmap;

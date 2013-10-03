@@ -2226,8 +2226,7 @@ void MCField::fmove(Field_translations function, const char *string, KeySym key)
 	contiguous = True;
 }
 
-void MCField::setupmenu(const MCString &s, uint2 fheight,
-												Boolean scrolling, Boolean isunicode)
+void MCField::setupmenu(MCStringRef p_string, uint2 fheight, Boolean scrolling)
 {
 	flags = F_VISIBLE | F_SHOW_BORDER | F_ALIGN_LEFT
 	| F_TRAVERSAL_ON | F_F_AUTO_ARM | F_SHARED_TEXT | F_FIXED_HEIGHT
@@ -2241,7 +2240,7 @@ void MCField::setupmenu(const MCString &s, uint2 fheight,
 	fontheight = fheight;
 	topmargin = bottommargin = 6;
 	borderwidth = 0;
-	settext_oldstring(0, s, False, isunicode);
+	settext(0, p_string, False);
 
 	// MW-2008-03-14: [[ Bug 5750 ]] Fix to focus border problem in fields used as menu lists in
 	//   (for example) option menus. Set this as a menufield.

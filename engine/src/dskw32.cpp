@@ -2354,8 +2354,10 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         //}
         else
         {
+            MCAutoPointer<unichar_t> t_autoptr;
+            t_autoptr = new unichar_t[MCStringGetLength(MCNameGetString(p_type))];
 			unichar_t *t_unichar_string;
-			t_unichar_string = new unichar_t[MCStringGetLength(MCNameGetString(p_type))];
+            t_unichar_string = *t_autoptr;
 			MCStringGetChars(MCNameGetString(p_type), MCRangeMake(0, MCStringGetLength(MCNameGetString(p_type))), t_unichar_string);
 			if (MCNumberParseUnicodeChars(t_unichar_string, MCStringGetLength(MCNameGetString(p_type)), &t_special_folder) ||
                 MCS_specialfolder_to_csidl(p_type, &t_special_folder))
@@ -2665,6 +2667,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		char *t_char_ptr;
 		HANDLE t_file_handle = NULL;
 		IO_handle t_handle;
+		t_handle = nil;
 
 		bool t_device = false;
 		bool t_serial_device = false;

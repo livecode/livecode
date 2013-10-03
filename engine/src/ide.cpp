@@ -1515,7 +1515,9 @@ Exec_stat MCIdeScriptTokenize::exec(MCExecPoint& ep)
 		}
 
 		// We have our output, so now set the chunk back to it
-		t_stat = m_script -> set(ep, PT_INTO);
+        MCAutoStringRef t_string;
+        ep . copyasstringref(&t_string);
+		t_stat = m_script -> set(ep, PT_INTO, *t_string);
 	}
 
 	return t_stat;
@@ -2065,10 +2067,10 @@ struct MCIdeFilterControlsVisitor: public MCObjectVisitor
 	
 	uint32_t m_card_id;
 	
-	MCIdeFilterControlsVisitor(MCExecPoint& ep, MCIdeFilterControlsProperty p_property, MCIdeFilterControlsOperator p_operator, const char *p_pattern)
+	MCIdeFilterControlsVisitor(MCExecPoint& ep, MCIdeFilterControlsProperty p_property, MCIdeFilterControlsOperator p_operator, MCStringRef p_pattern)
 		: m_ep(ep), m_property(p_property), m_operator(p_operator)
 	{
-		m_pattern . setstaticcstring(p_pattern);
+		m_pattern . setstaticcstring(MCStringGetCString(p_pattern));
 	}
 	
 	virtual bool OnCard(MCCard *p_card)
@@ -2275,12 +2277,12 @@ Exec_stat MCIdeFilterControls::exec(MCExecPoint& ep)
 	if (t_stat == ES_NORMAL && t_stack -> gettype() != CT_STACK)
 		t_stat = ES_ERROR;
 	
-	MCAutoPointer<char> t_pattern;
+	MCAutoStringRef t_pattern;
 	if (t_stat == ES_NORMAL)
 	{
 		t_stat = m_pattern -> eval(ep);
 		if (t_stat == ES_NORMAL)
-			t_pattern = ep . getsvalue() . clone();
+			ep . copyasstringref(&t_pattern);
 	}
 	
 	if (t_stat == ES_NORMAL)
