@@ -551,10 +551,14 @@ void MCStack::effectrect(const MCRectangle& p_rect, Boolean& r_abort)
 
 		
 		// MW-2011-10-24: [[ Bug 9831 ]] Calculate the area of interest.
-		ctxt . effect_area = curcard -> getrect();
-		ctxt . effect_area . y = getscroll();
-		ctxt . effect_area . height -= ctxt . effect_area . y;
-		ctxt . effect_area = MCU_intersect_rect(ctxt . effect_area, p_rect);
+		// IM-2013-10-03: [[ FullscreenMode ]] transform effect area to logical screen coords
+		MCRectangle t_effect_area;
+		t_effect_area = curcard -> getrect();
+		t_effect_area . y = getscroll();
+		t_effect_area . height -= t_effect_area . y;
+		t_effect_area = MCU_intersect_rect(t_effect_area, p_rect);
+		
+		ctxt . effect_area = MCRectangleGetTransformedBounds(t_effect_area, view_getviewtransform());
 		
 		// MW-2011-09-24: [[ Effects ]] Get the current snapshot as a UIImage
 		// MW-2011-11-18: [[ Bug ]] Make sure we grab a UIImage copy of the snapshot
@@ -572,7 +576,7 @@ void MCStack::effectrect(const MCRectangle& p_rect, Boolean& r_abort)
 		MCscreen->wait(0.0, False, True);
 		
 		// MW-2011-09-24: [[ Effects ]] Take another snapshot, and get as a UIImage.
-		snapshotwindow(ctxt . effect_area);
+		snapshotwindow(t_effect_area);
 		ctxt . snapshot = m_snapshot;
 		MCIPhoneRunOnMainFiber(effectrect_phase_2, &ctxt);
 		
