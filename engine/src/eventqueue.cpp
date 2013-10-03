@@ -366,7 +366,8 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 			MCPoint t_mouseloc;
 			t_mouseloc = MCPointMake(t_event->mouse.position.x, t_event->mouse.position.y);
 			
-			t_mouseloc = t_target->getstack()->view_viewtostackloc(t_mouseloc);
+			// IM-2013-10-03: [[ FullscreenMode ]] Transform mouseloc based on the mousestack
+			t_mouseloc = MCmousestackptr->view_viewtostackloc(t_mouseloc);
 			
 			MCmousex = t_mouseloc.x;
 			MCmousey = t_mouseloc.y;
