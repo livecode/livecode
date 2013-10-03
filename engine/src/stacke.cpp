@@ -279,7 +279,9 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 			/* UNCHECKED */ MCGContextCreate(t_device_rect.width, t_device_rect.height, true, t_context);
 			
 			MCGContextTranslateCTM(t_context, -t_device_rect.x, -t_device_rect.y);
-			MCGContextScaleCTM(t_context, t_scale, t_scale);
+			
+			// IM-2013-10-03: [[ FullscreenMode ]] Apply device transform to context
+			MCGContextConcatCTM(t_context, t_transform);
 			
 			// Configure the context.
 			MCGContextClipToRect(t_context, MCRectangleToMCGRectangle(t_user_rect));
@@ -298,7 +300,6 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 						MCGContextSetBlendMode(t_context, kMCGBlendModeDifference);
 						MCGContextAddRectangle(t_context, MCRectangleToMCGRectangle(t_user_rect));
 						MCGContextFill(t_context);
-						
 					}
 					break;
 					
