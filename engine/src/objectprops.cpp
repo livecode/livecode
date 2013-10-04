@@ -2463,10 +2463,21 @@ Exec_stat MCObject::getprop(uint32_t p_part_id, Properties p_which, MCExecPoint&
 				break;
 				
 			case kMCPropertyTypeString:
-			case kMCPropertyTypeBinaryString:
 			{	
 				MCAutoStringRef t_value;
 				((void(*)(MCExecContext&, MCObjectPtr, MCStringRef&))t_info -> getter)(ctxt, t_object, &t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setvalueref(*t_value);
+					return ES_NORMAL;
+				}
+			}
+				break;
+				
+			case kMCPropertyTypeBinaryString:
+			{	
+				MCAutoDataRef t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, MCDataRef&))t_info -> getter)(ctxt, t_object, &t_value);
 				if (!ctxt . HasError())
 				{
 					ep . setvalueref(*t_value);
@@ -2897,13 +2908,22 @@ Exec_stat MCObject::setprop(uint32_t p_part_id, Properties p_which, MCExecPoint&
 			break;
 				
 			case kMCPropertyTypeString:
-			case kMCPropertyTypeBinaryString:
 			{
 				MCAutoStringRef t_value;
 				if (!ep . copyasstringref(&t_value))
 					ctxt . LegacyThrow(EE_PROPERTY_NAC);
 				if (!ctxt . HasError())
 					((void(*)(MCExecContext&, MCObjectPtr, MCStringRef))t_info -> setter)(ctxt, t_object, *t_value);	
+			}
+			break;
+				
+			case kMCPropertyTypeBinaryString:
+			{
+				MCAutoDataRef t_value;
+				if (!ep . copyasdataref(&t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NAC);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, MCDataRef))t_info -> setter)(ctxt, t_object, *t_value);	
 			}
 			break;
 				
