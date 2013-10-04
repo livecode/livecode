@@ -1458,23 +1458,20 @@ static bool CloneStringToStorage(MCDataRef p_string, STGMEDIUM& r_storage)
 bool MCConvertTextToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage)
 {
 	MCAutoStringRef t_input, t_output;
-	/* UNCHECKED */ MCStringCreateWithCString((const char*)MCDataGetBytePtr(p_input), &t_input);
+	/* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingWindows1252, false, &t_input);
 	/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_input, &t_output);
+	MCAutoDataRef t_output_data;
+	/* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingWindows1252, false, &t_output_data);
 
-	MCAutoStringRef t_output_mutable_copy;
-	MCStringMutableCopy(*t_output, &t_output_mutable_copy);
-
-	if (MCStringIsEmpty(*t_output_mutable_copy) || MCStringGetNativeCharAtIndex(*t_output_mutable_copy, MCStringGetLength(*t_output_mutable_copy) - 1) != '\0')
+	if (MCDataIsEmpty(*t_output_data) || MCDataGetByteAtIndex(*t_output_data, MCDataGetLength(*t_output_data) - 1) != '\0')
 	{
-		char_t t_end= '\0';
-		MCAutoStringRef t_string;
-		/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)&t_end, 1, &t_string);
-		/* UNCHECKED */ MCStringPad(*t_output_mutable_copy, MCStringGetLength(*t_output_mutable_copy), 1, *t_string);
+		MCAutoDataRef t_output_data_mutable;
+		/* UNCHECKED */ MCDataMutableCopy(*t_output_data, &t_output_data_mutable);
+		/* UNCHECKED */ MCDataPad(*t_output_data_mutable, '\0', 1);
+		return CloneStringToStorage(*t_output_data_mutable, r_storage);
 	}
 
-	MCAutoDataRef t_storage;
-	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_output_mutable_copy), MCStringGetLength(*t_output_mutable_copy), &t_storage);
-	return CloneStringToStorage(*t_storage, r_storage);
+	return CloneStringToStorage(*t_output_data, r_storage);
 }
 
 // Windows Wide Text format is a NUL terminated string of UTF-16 codepoints.
@@ -1484,84 +1481,58 @@ bool MCConvertTextToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage)
 bool MCConvertTextToWindowsWide(MCDataRef p_input, STGMEDIUM& r_storage)
 {
 	MCAutoStringRef t_input, t_output;
-	/* UNCHECKED */ MCStringCreateWithCString((const char*)MCDataGetBytePtr(p_input), &t_input);
+	/* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingWindows1252, false, &t_input);
 	/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_input, &t_output);
-	unsigned short *t_utf16;
-	t_utf16 = NULL;
-	uint4 t_utf16_length;
-	MCS_nativetoutf16(MCStringGetCString(*t_output), MCStringGetLength(*t_output), t_utf16, t_utf16_length);
+	MCAutoDataRef t_output_data;
+	/* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingUTF16LE, false, &t_output_data);
 
-	MCAutoStringRef t_value;
-	/* UNCHECKED */ MCStringCreateWithCString((const char*)t_utf16, &t_value);
-	MCAutoStringRef t_value_mutable_copy;
-	/* UNCHECKED */ MCStringMutableCopy(*t_value, &t_value_mutable_copy);
-
-	if (MCStringGetLength(*t_value_mutable_copy) < 2 || MCStringGetNativeCharAtIndex(*t_value_mutable_copy, MCStringGetLength(*t_value_mutable_copy) - 2) != '\0' || MCStringGetNativeCharAtIndex(*t_value_mutable_copy, MCStringGetLength(*t_value_mutable_copy) - 1) != '\0')
+	if (MCDataGetLength(*t_output_data) < 2 || MCDataGetByteAtIndex(*t_output_data, MCDataGetLength(*t_output_data) - 2) != '\0' || MCDataGetByteAtIndex(*t_output_data, MCDataGetLength(*t_output_data) - 1) != '\0')
 	{
-		char_t t_end= '\0';
-		MCAutoStringRef t_string;
-		/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)&t_end, 1, &t_string);
-		/* UNCHECKED */ MCStringPad(*t_value_mutable_copy, MCStringGetLength(*t_value_mutable_copy), 2, *t_string);
+		MCAutoDataRef t_output_data_mutable;
+		/* UNCHECKED */ MCDataMutableCopy(*t_output_data, &t_output_data_mutable);
+		/* UNCHECKED */ MCDataPad(*t_output_data_mutable, '\0', 2);
+		return CloneStringToStorage(*t_output_data_mutable, r_storage);
 	}
 
-	return CloneStringToStorage(MCStringGetOldString(*t_value_mutable_copy), r_storage);
+	return CloneStringToStorage(*t_output_data, r_storage);
 }
 
 bool MCConvertUnicodeToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage)
 {
-	char *t_native;
-	t_native = NULL;
-	uint4 t_native_length;
-	MCS_utf16tonative((const unsigned short *)MCDataGetBytePtr(p_input), MCDataGetLength(p_input), t_native, t_native_length);
-	MCAutoStringRef t_native_string, t_value;
-	/* UNCHECKED */ MCStringCreateWithCString(t_native, &t_native_string);
-	/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_native_string, &t_value);
-	
-	MCAutoStringRef t_value_mutable_copy;
-	/* UNCHECKED */ MCStringMutableCopy(*t_value, &t_value_mutable_copy); 
+	MCAutoStringRef t_input, t_output;
+	/* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingUTF16LE, false, &t_input);
+	/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_input, &t_output);
+	MCAutoDataRef t_output_data;
+	/* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingWindows1252, false, &t_output_data);
 
-	if (MCStringIsEmpty(*t_value_mutable_copy) || MCStringGetNativeCharAtIndex(*t_value_mutable_copy, MCStringGetLength(*t_value_mutable_copy) - 1) != '\0')
+	if (MCDataIsEmpty(*t_output_data) || MCDataGetByteAtIndex(*t_output_data, MCDataGetLength(*t_output_data) - 1) != '\0')
 	{
-		char_t t_end= '\0';
-		MCAutoStringRef t_string;
-		/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)&t_end, 1, &t_string);
-		/* UNCHECKED */ MCStringPad(*t_value_mutable_copy, MCStringGetLength(*t_value_mutable_copy), 1, *t_string);
+		MCAutoDataRef t_output_data_mutable;
+		/* UNCHECKED */ MCDataMutableCopy(*t_output_data, &t_output_data_mutable);
+		/* UNCHECKED */ MCDataPad(*t_output_data_mutable, '\0', 1);
+		return CloneStringToStorage(*t_output_data_mutable, r_storage);
 	}
 
-	return CloneStringToStorage(MCStringGetOldString(*t_value_mutable_copy), r_storage);
+	return CloneStringToStorage(*t_output_data, r_storage);
 }
 
 bool MCConvertUnicodeToWindowsWide(MCDataRef p_input, STGMEDIUM& r_storage)
 {
-	MCExecPoint ep(NULL, NULL, NULL);
-	MCExecContext ctxt(ep);
+	MCAutoStringRef t_input, t_output;
+	/* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingUTF16LE, false, &t_input);
+	/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_input, &t_output);
+	MCAutoDataRef t_output_data;
+	/* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingUTF16LE, false, &t_output_data);
 
-	char *t_utf8;
-	t_utf8 = NULL;
-	int32_t t_count;
-	t_count = UnicodeToUTF8((const uint16_t *)MCDataGetBytePtr(p_input), MCDataGetLength(p_input), t_utf8, 0);
-	MCAutoStringRef t_utf8_string;
-	/* UNCHECKED */ MCStringCreateWithCString(t_utf8, &t_utf8_string);
-	MCAutoStringRef t_output;
-	/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_utf8_string, &t_output);
-	uint16_t *t_dst;
-	t_dst = NULL;
-	t_count = UTF8ToUnicode(MCStringGetCString(*t_output), MCStringGetLength(*t_output), t_dst, 0);
-	MCAutoStringRef t_value;
-	/* UNCHECKED */ MCStringCreateWithCString((const char*)t_dst, &t_value);
-
-	MCAutoStringRef t_value_mutable_copy;
-	/* UNCHECKED */ MCStringMutableCopy(*t_value, &t_value_mutable_copy);
-
-	if (MCStringGetLength(*t_value_mutable_copy) < 2 || MCStringGetNativeCharAtIndex(*t_value_mutable_copy, MCStringGetLength(*t_value_mutable_copy) - 2) != '\0' || MCStringGetNativeCharAtIndex(*t_value_mutable_copy, MCStringGetLength(*t_value_mutable_copy) - 1) != '\0')
+	if (MCDataGetLength(*t_output_data) < 2 || MCDataGetByteAtIndex(*t_output_data, MCDataGetLength(*t_output_data) - 2) != '\0' || MCDataGetByteAtIndex(*t_output_data, MCDataGetLength(*t_output_data) - 1) != '\0')
 	{
-		char_t t_end= '\0';
-		MCAutoStringRef t_string;
-		/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)&t_end, 1, &t_string);
-		/* UNCHECKED */ MCStringPad(*t_value_mutable_copy, MCStringGetLength(*t_value_mutable_copy), 2, *t_string);
+		MCAutoDataRef t_output_data_mutable;
+		/* UNCHECKED */ MCDataMutableCopy(*t_output_data, &t_output_data_mutable);
+		/* UNCHECKED */ MCDataPad(*t_output_data_mutable, '\0', 2);
+		return CloneStringToStorage(*t_output_data_mutable, r_storage);
 	}
 
-	return CloneStringToStorage(MCStringGetOldString(*t_value_mutable_copy), r_storage);
+	return CloneStringToStorage(*t_output_data, r_storage);
 }
 
 bool MCConvertStyledTextToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage)

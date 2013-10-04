@@ -986,77 +986,64 @@ bool ConvertStyled_Text_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataR
 
 bool ConvertFile_rev_to_MIME ( MCDataRef p_input, MCTransferType p_type, MCDataRef& r_output )  
 {
-	MCString *t_strings = NULL ;
-	uint2 	 n_strings ;
-	MCAutoStringRef t_output;
-	char_t t_del;
-	/* UNCHECKED */ MCStringCreateMutable(0, &t_output);
 
-	MCU_break_string( MCDataGetOldString(p_input) , t_strings, n_strings, false);
-	
-	for (uint4 a=0; a < n_strings; a++)
-	{
-		if (a == 0)
-			/* UNCHECKED */MCStringAppendNativeChars(*t_output, (const char_t *)"file://", strlen("file://"));
-		else
-		{
-			t_del = '\n';
-			/* UNCHECKED */MCStringAppendNativeChars(*t_output, &t_del, 1);
-			/* UNCHECKED */MCStringAppendNativeChars(*t_output, (const char_t *)"file://", strlen("file://"));
-		}
+	MCAutoStringRef t_input_files;
+	/* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingMacRoman, false, &t_input_files);
 
-		MCStringAppendNativeChars(*t_output, (const char_t *)t_strings[a] . getstring(), t_strings[a] . getlength());
-	}
-	
-	delete t_strings;
+	// First break the string into chunks using return as the delimiter. This
+	// gives us an array of ranges of the pieces between delimiters.
+	MCAutoPointer<MCRange> t_ranges;
+	uindex_t t_range_count;
+	/* UNCHECKED */ MCStringBreakIntoChunks(*t_input_files, '\n', kMCStringOptionCompareExact, &t_ranges, t_range_count);
 
-	//MCU_urlencode(ep);
-	return MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_output), MCStringGetLength(*t_output), r_output);
+	// Create a mutable list ref.
+	MCListRef t_output_files;
+	/* UNCHECKED */ MCListCreateMutable('\n', t_output_files);
+
+	// Loop through the ranges, using a formatted string and %*@ to append the appropriate portion of t_input_files as an element.
+	for(uindex_t i = 0; i < t_range_count; i++)
+		/* UNCHECKED */ MCListAppendFormat(t_output_files, "file://%*@", &(*t_ranges)[i], *t_input_files);
+
+	// Build the output stringref.
+	MCStringRef t_output_files_string;
+	/* UNCHECKED */ MCListCopyAsStringAndRelease(t_output_files, t_output_files_string);
+
+	// Finally encode as native string and encapsulate in a dataref.
+	/* UNCHECKED */ MCStringEncodeAndRelease(t_output_files_string, kMCStringEncodingNative, false, r_output);
+
+	return true;
 }
 
 bool ConvertFile_MIME_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output )  
 {
-	MCString *t_strings = NULL ;
-	MCExecPoint ep(NULL, NULL, NULL );
-	MCExecContext ctxt(ep);
-	uint2 	 n_strings ;
-	char * t_part ;
-	bool first = true ;
+	MCAutoStringRef t_input_files;
+	/* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingMacRoman, false, &t_input_files);
+	MCAutoStringRef t_input_files_livecode;
+	/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_input_files, &t_input_files_livecode);
+	MCAutoStringRef t_input_files_livecode_decoded;
+	MCU_urldecode(*t_input_files_livecode, &t_input_files_livecode_decoded);
 	
-	MCAutoStringRef t_input;
-	/* UNCHECKED */ MCStringCreateWithCString((const char_t*)MCDataGetBytePtr(p_input), &t_input);
-	MCAutoStringRef t_output;
-	/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_input, &t_output);
-	MCAutoStringRef t_output_decoded;
-	MCU_urldecode(*t_output, &t_output_decoded);
-	
-	MCU_break_string(MCStringGetOldString(*t_output_decoded), t_strings, n_strings, false);
-	
-	MCAutoStringRef t_output_mutable;
-	char_t t_del;
-	/* UNCHECKED */ MCStringCreateMutable(0, &t_output_mutable);
-	
-	for (uint4 a=0; a < n_strings; a++)
+	MCAutoPointer<MCRange> t_ranges;
+	uindex_t t_range_count;
+	/* UNCHECKED */ MCStringBreakIntoChunks(*t_input_files_livecode_decoded, '\n', kMCStringOptionCompareExact, &t_ranges, t_range_count);
+
+	// Create a mutable list ref.
+	MCListRef t_output_files;
+	/* UNCHECKED */ MCListCreateMutable('\n', t_output_files);
+
+	for(uindex_t i = 0; i < t_range_count; i++)
 	{
-		t_part = (char*)t_strings[a].clone();
-		if ( strstr(t_part, "file://") != NULL)
-		{
-			if (first)
-			{
-				/* UNCHECKED */ MCStringAppendNativeChars(*t_output_mutable, (const char_t *)(t_part + 7), strlen(t_part + 7));
-				first=false;
-			}
-			else
-			{
-				t_del = '\n';
-				/* UNCHECKED */MCStringAppendNativeChars(*t_output_mutable, &t_del, 1);
-				/* UNCHECKED */MCStringAppendNativeChars(*t_output_mutable, (const char_t *)(t_part + 7), strlen(t_part + 7));
-			}
-			
-		}
-		delete t_part;
+		MCAutoStringRef t_substring1;
+		MCStringCopySubstring(*t_input_files_livecode_decoded, (*t_ranges)[i], &t_substring1);
+
+		/* UNCHECKED */ MCListAppendSubstring(t_output_files, *t_substring1, MCRangeMake(7, MCStringGetLength(*t_substring1) - 7));
 	}
-	delete t_strings ;
-	
-	return MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_output_mutable), MCStringGetLength(*t_output_mutable), r_output);
+
+	MCStringRef t_output_files_string;
+	/* UNCHECKED */ MCListCopyAsStringAndRelease(t_output_files, t_output_files_string);
+
+	// Finally encode as native string and encapsulate in a dataref.
+	/* UNCHECKED */ MCStringEncodeAndRelease(t_output_files_string, kMCStringEncodingNative, false, r_output);
+
+	return true;
 }

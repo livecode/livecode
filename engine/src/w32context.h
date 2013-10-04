@@ -156,7 +156,7 @@ public:
 
 	void drawimage(const MCImageDescriptor& info, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy);
 
-	void drawlink(const char *link, const MCRectangle& region);
+	void drawlink(MCStringRef link, const MCRectangle& region);
 
 	int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
 

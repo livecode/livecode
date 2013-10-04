@@ -19,6 +19,8 @@ stacksecurity_encrypted.cpp
 
 # Compiled source #
 ###################
+*.i
+*.ii
 *.com
 *.class
 *.dll

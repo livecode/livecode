@@ -454,7 +454,7 @@ void MCContextScaleWrapper::drawimage(const MCImageDescriptor& p_image, int2 sx,
 	MCImageFreeBitmap(t_scaled);
 }
 
-void MCContextScaleWrapper::drawlink(const char *link, const MCRectangle& region)
+void MCContextScaleWrapper::drawlink(MCStringRef link, const MCRectangle& region)
 {
 	// This is a no-op as links are irrelevant to rasterized portions. The print
 	// system will iterate through any links and render them directly.

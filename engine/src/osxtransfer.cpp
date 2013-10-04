@@ -287,26 +287,23 @@ bool MCMacOSXPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 	{
 	case kScrapFlavorTypeText:
 	{
-		MCAutoStringRef t_input;
-		/* UNCHECKED */ MCStringCreateWithCString((const char_t *)MCDataGetBytePtr(*t_in_data), &t_input);
+		MCAutoStringRef t_input_mac;
+		/* UNCHECKED */ MCStringDecode(*t_in_data, kMCStringEncodingMacRoman, false, &t_input_mac);
 		MCAutoStringRef t_output;
-		/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_input, &t_output);
-		/* UNCHECKED */ MCDataCreateWithBytes((const byte_t*)MCStringGetCString(*t_output), MCStringGetLength(*t_output), &t_out_data);
+		/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_input_mac, &t_output);
+		/* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingMacRoman, false, &t_out_data);
 	}
 	break;
 
 	case kScrapFlavorTypeUnicode:
 	{
-		char *t_utf8;
-		int32_t t_count;
-		t_count = UnicodeToUTF8((const uint16_t *)MCDataGetBytePtr(*t_in_data), MCDataGetLength(*t_in_data), t_utf8, 0);
-		MCAutoStringRef t_utf8_string;
-		/* UNCHECKED */ MCStringCreateWithCString(t_utf8, &t_utf8_string);
+
+		MCAutoStringRef t_utf8;
+		/* UNCHECKED */ MCStringDecode(*t_in_data, kMCStringEncodingUTF16LE, false, &t_utf8);
 		MCAutoStringRef t_output;
-		/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_utf8_string, &t_output);
-		uint16_t *t_dst;
-		t_count = UTF8ToUnicode(MCStringGetCString(*t_output), MCStringGetLength(*t_output), t_dst, 0);
-		/* UNCHECKED */ MCDataCreateWithBytes((const byte_t*)t_dst, t_count, &t_out_data);
+		/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_utf8, &t_output);
+		/* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingUTF16LE, false, &t_out_data);
+
 	}
 	break;
 
@@ -550,27 +547,23 @@ bool MCMacOSXPasteboard::AddEntry(MCTransferType p_type, ScrapFlavorType p_flavo
 
 bool MCConvertTextToMacPlain(MCDataRef p_input, MCDataRef& r_output)
 {
-	MCAutoStringRef t_input;
-	/* UNCHECKED */ MCStringCreateWithCString((const char_t *)MCDataGetBytePtr(p_input), &t_input);
+	MCAutoStringRef t_input_mac;
+	/* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingMacRoman, false, &t_input_mac);
 	MCAutoStringRef t_output;
-	/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_input, &t_output);
+	/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_input_mac, &t_output);
 	
-	return MCDataCreateWithBytes((const byte_t*)MCStringGetCString(*t_output), MCStringGetLength(*t_output), r_output);
+	return MCStringEncode(*t_output, kMCStringEncodingMacRoman, false, r_output);
 }
 
 bool MCConvertUnicodeToMacUnicode(MCDataRef p_input, MCDataRef& r_output)
 {
 
-	char *t_utf8;
-	int32_t t_count;
-	t_count = UnicodeToUTF8((const uint16_t *)MCDataGetBytePtr(p_input), MCDataGetLength(p_input), t_utf8, 0);
-	MCAutoStringRef t_utf8_string;
-	/* UNCHECKED */ MCStringCreateWithCString(t_utf8, &t_utf8_string);
+	MCAutoStringRef t_input_mac_unicode;
+	/* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingUTF16LE, false, &t_input_mac_unicode);
 	MCAutoStringRef t_output;
-	/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_utf8_string, &t_output);
-	uint16_t *t_dst;
-	t_count = UTF8ToUnicode(MCStringGetCString(*t_output), MCStringGetLength(*t_output), t_dst, 0);
-	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t*)t_dst, t_count, r_output);
+	/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_input_mac_unicode, &t_output);
+	
+	return MCStringEncode(*t_output, kMCStringEncodingUTF16LE, false, r_output);
 }
 
 bool MCConvertStyledTextToMacUnicode(MCDataRef p_input, MCDataRef& r_output)
@@ -593,13 +586,11 @@ bool MCConvertStyledTextToMacUnicodeStyled(MCDataRef p_input, MCDataRef& r_outpu
 	MCParagraph *t_paragraphs;
 	t_paragraphs = ((MCStyledText *)t_object) -> getparagraphs();
 	
-	MCExecPoint ep(NULL, NULL, NULL);
-	MCExecContext ctxt(ep);
-	/* UNCHECKED */ MCtemplatefield -> getparagraphmacunicodestyles(ctxt, t_paragraphs, t_paragraphs -> prev());
+	/* UNCHECKED */ MCtemplatefield -> getparagraphmacunicodestyles(t_paragraphs, t_paragraphs -> prev(), r_output);
 	
 	delete t_object;
 	
-	return ctxt . GetEP() .copyasdataref(r_output);
+	return true;
 }
 
 bool MCConvertStyledTextToMacPlain(MCDataRef p_input, MCDataRef& r_output)
@@ -746,17 +737,13 @@ bool MCConvertMacUnicodeStyledToStyledText(MCDataRef p_text_data, MCDataRef p_st
 		t_paragraphs = MCtemplatefield -> macunicodestyletexttoparagraphs(t_text, MCDataGetOldString(p_style_data));
 	else
 	{
-		char *t_utf8;
-		int32_t t_count;
-		t_count = UnicodeToUTF8((const uint16_t *)t_text . getstring(), t_text . getlength(), t_utf8, 0);
-		MCAutoStringRef t_utf8_string;
-		/* UNCHECKED */ MCStringCreateWithCString(t_utf8, &t_utf8_string);
+		MCAutoStringRef t_input;
+		/* UNCHECKED */ MCStringCreateWithChars(t_text, t_text . getlength(), &t_input);
 		MCAutoStringRef t_output;
-		/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_utf8_string, &t_output);
-		uint16_t *t_dst;
-		t_count = UTF8ToUnicode(MCStringGetCString(*t_output), MCStringGetLength(*t_output), t_dst, 0);
-
-		t_paragraphs = MCtemplatefield -> texttoparagraphs(MCString((const char *)t_dst, t_count), true);
+		/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_input, &t_output);
+		MCAutoDataRef t_data;
+		/* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingUTF16LE, false, &t_data);
+		t_paragraphs = MCtemplatefield -> texttoparagraphs(MCDataGetOldString(*t_data), true);
 	}
 	
 	MCStyledText t_styled_text;
@@ -1030,10 +1017,11 @@ bool MCConvertMacHFSToFiles(MCDataRef p_data, MCDataRef& r_output)
 	
 	uint32_t t_count;
 	t_count = MCDataGetLength(p_data) / sizeof(HFSFlavor);
+
+	// Create a mutable list ref.
+	MCListRef t_output_files;
+	/* UNCHECKED */ MCListCreateMutable('\n', &t_output_files);
 	
-	MCAutoStringRef t_output;
-	char_t t_del;
-	/* UNCHECKED */ MCStringCreateMutable(0, &t_output);
 	for(uint32_t i = 0; i < t_count; ++i)
 	{
 		FSRef t_fs_ref;
@@ -1045,16 +1033,15 @@ bool MCConvertMacHFSToFiles(MCDataRef p_data, MCDataRef& r_output)
 		if (!MCS_mac_fsref_to_path(t_fs_ref, &t_filename))
 			continue;
 		
-		if (i == 0)
-			MCStringAppendNativeChars(*t_output, (const char_t *)MCStringGetCString(*t_filename), MCStringGetLength(*t_filename));
-		else
-		{
-			t_del = '\n';
-			MCStringAppendNativeChars(*t_output, &t_del, 1);
-			MCStringAppendNativeChars(*t_output, (const char_t *)MCStringGetCString(*t_filename), MCStringGetLength(*t_filename));
-		}
-		
+		/* UNCHECKED */ MCListAppendFormat(t_output_files, "%@", *t_filename);
 	}
-	
-	return MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_output), MCStringGetLength(*t_output), r_output);
+
+	// Build the output stringref.
+	MCStringRef t_output_files_string;
+	/* UNCHECKED */ MCListCopyAsStringAndRelease(t_output_files, t_output_files_string);
+
+	// Finally encode as native string and encapsulate in a dataref.
+	/* UNCHECKED */ MCStringEncodeAndRelease(t_output_files_string, kMCStringEncodingNative, false, r_output);
+
+	return true;
 }

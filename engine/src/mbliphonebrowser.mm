@@ -205,7 +205,7 @@ void MCiOSBrowserControl::SetUrl(MCExecContext& ctxt, MCStringRef p_url)
     if (t_view != nil)
     {
         [m_delegate setPendingRequest: true];
-        [t_view loadRequest: [NSURLRequest requestWithURL: [NSURL URLWithString: [NSString stringWithCString: MCStringGetCString(p_url) encoding: NSMacOSRomanStringEncoding]]]];
+        [t_view loadRequest: [NSURLRequest requestWithURL: [NSURL URLWithString: [NSString stringWithMCStringRef: p_url]]]];
     }
 }
 
@@ -652,7 +652,7 @@ void MCiOSBrowserControl::ExecExecute(MCExecContext& ctxt, MCStringRef p_script)
 	t_view = (UIWebView *)GetView();
     
     NSString *t_result;
-    t_result = [t_view stringByEvaluatingJavaScriptFromString: [NSString stringWithCString: MCStringGetCString(p_script) encoding: NSMacOSRomanStringEncoding]];
+    t_result = [t_view stringByEvaluatingJavaScriptFromString: [NSString stringWithMCStringRef: p_script]];
     
     if (t_result == nil)
     {
@@ -674,7 +674,7 @@ void MCiOSBrowserControl::ExecLoad(MCExecContext& ctxt, MCStringRef p_url, MCStr
     // MW-2012-10-01: [[ Bug 10422 ]] Make sure we mark a pending request so the
     //   HTML loading doesn't divert through a loadRequested message.
     [m_delegate setPendingRequest: true];
-    [t_view loadHTMLString: [NSString stringWithCString: MCStringGetCString(p_html) encoding: NSMacOSRomanStringEncoding] baseURL: [NSURL URLWithString: [NSString stringWithCString: MCStringGetCString(p_url) encoding: NSMacOSRomanStringEncoding]]];
+    [t_view loadHTMLString: [NSString stringWithMCStringRef: p_html] baseURL: [NSURL URLWithString: [NSString stringWithMCStringRef: p_url]]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -208,21 +208,6 @@ bool MCS_alternatelanguages(MCListRef& r_list)
     return MCsystem -> AlternateLanguages(r_list);
 }
 
-void MCS_nativetoutf16(const char *p_native, uint4 p_native_length, unsigned short *p_utf16, uint4& p_utf16_length)
-{
-}
-
-void MCS_utf16tonative(const unsigned short *p_utf16, uint4 p_utf16_length, char *p_native, uint4& p_native_length)
-{
-}
-
-void MCS_nativetoutf8(const char *p_native, uint4 p_native_length, char *p_utf8, uint4& p_utf16_length)
-{
-}
-
-void MCS_utf8tonative(const char *p_utf8, uint4 p_uitf8_length, char *p_native, uint4& p_native_length)
-{
-}
 
 void MCS_seterrno(int value)
 {
@@ -679,18 +664,6 @@ Boolean MCS_setcurdir(MCStringRef p_path)
     return MCsystem -> SetCurrentFolder(*t_native_path);
 }
 
-
-//Boolean MCS_setcurdir(const char *p_folder)
-//{
-//    char *t_resolved_folder;
-//    t_resolved_folder = MCS_resolvepath(p_folder);
-//    
-//    bool t_success;
-//    t_success = MCsystem -> SetCurrentFolder(t_resolved_folder);
-//    delete t_resolved_folder;
-//    return t_success;
-//}
-
 void MCS_getcurdir(MCStringRef& r_path)
 {
 	MCAutoStringRef t_current_native;
@@ -806,11 +779,6 @@ void MCS_setumask(uint2 p_mask)
 {
     MCsystem -> UMask(p_mask);
 }
-//
-//uint2 MCS_umask(uint2 p_mask)
-//{
-//	return MCsystem -> UMask(p_mask);
-//}
 
 /* WRAPPER */
 Boolean MCS_exists(MCStringRef p_path, bool p_is_file)
@@ -897,25 +865,6 @@ IO_handle MCS_fakeopenwrite(void)
 	return t_handle;
 }
 
-//IO_stat MCS_fakeclosewrite(IO_handle& p_stream, char*& r_buffer, uint4& r_length)
-//{
-//	if ((p_stream -> flags & IO_FAKEWRITE) != IO_FAKEWRITE)
-//	{
-//		r_buffer = NULL;
-//		r_length = 0;
-//		MCS_close(p_stream);
-//		return IO_ERROR;
-//	}
-//	
-//	MCMemoryFileHandle *t_handle;
-//	t_handle = static_cast<MCMemoryFileHandle *>(p_stream -> handle);
-//	t_handle -> TakeBuffer(r_buffer, r_length);
-//	
-//	MCS_close(p_stream);
-//	
-//	return IO_NORMAL;
-//}
-
 IO_stat MCS_closetakingbuffer(IO_handle& p_stream, void*& r_buffer, size_t& r_length)
 {
     bool t_success;
@@ -929,16 +878,6 @@ IO_stat MCS_closetakingbuffer(IO_handle& p_stream, void*& r_buffer, size_t& r_le
     
 	return IO_NORMAL;
 }
-//
-//uint32_t MCS_faketell(IO_handle stream)
-//{
-//	return (uint32_t)static_cast<MCSystemFileHandle *>(stream -> handle) -> Tell();
-//}
-//
-//bool MCS_isfake(IO_handle p_stream)
-//{
-//	return (p_stream -> flags & IO_FAKEWRITE) != 0;
-//}
 
 IO_stat MCS_writeat(const void *p_buffer, uint32_t p_size, uint32_t p_pos, IO_handle p_stream)
 {
@@ -1261,53 +1200,10 @@ bool MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
     return true;
 }
 
-//void MCS_loadresfile(MCExecPoint& ep)
-//{
-//	ep . clear();
-//	MCresult -> sets("not supported");
-//}
-
-//void MCS_saveresfile(const MCString& p_filename, const MCString p_data)
-//{
-//	MCresult -> sets("not supported");
-//}
-
 int64_t MCS_fsize(IO_handle p_stream)
 {
 	return p_stream -> GetFileSize();
 }
-
-//IO_stat MCS_read(void *p_ptr, uint4 p_size, uint4& p_count, IO_handle p_stream)
-//{
-//	if (MCabortscript || p_ptr == NULL || p_stream == NULL)
-//		return IO_ERROR;
-//	
-//	if ((p_stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
-//		return IO_ERROR;
-//	
-//	uint32_t t_to_read;
-//	t_to_read = p_size * p_count;
-//	
-//	uint32_t t_read;
-//	if (!p_stream -> handle -> Read(p_ptr, t_to_read, t_read))
-//	{
-//		p_count = t_read / p_size;
-//		return IO_ERROR;
-//	}
-//	
-//	p_count = t_read / p_size;
-//	
-//	if (t_read < t_to_read)
-//	{
-//		p_stream -> flags |= IO_ATEOF;
-//		p_count = t_read / p_size;
-//		return IO_EOF;
-//	}
-//	
-//	p_stream -> flags &= ~IO_ATEOF;
-//	
-//	return IO_NORMAL;
-//}
 
 IO_stat MCS_readfixed(void *p_ptr, uint32_t p_byte_size, IO_handle p_stream)
 {
@@ -1353,18 +1249,6 @@ IO_stat MCS_write(const void *p_ptr, uint32_t p_size, uint32_t p_count, IO_handl
 	
 	return IO_NORMAL;
 }
-
-//IO_handle MCS_writeat(const void *p_buffer, uint32_t p_size, uint32_t p_pos, IO_handle p_stream)
-//{
-//    IO_stat stat;
-//    stat = p_stream -> handle -> Seek(p_pos, SEEK_SET);
-//    if (stat == IO_NORMAL)
-//        stat = p_stream -> handle -> Write(p_buffer, p_size, <#uint32_t &r_written#>)
-//    if (stat == IO_NORMAL)
-//        stat = MCS_seek_set(stream, t_cur_offset);
-//    
-//    return stat;
-//}
 
 IO_stat MCS_flush(IO_handle p_stream)
 {
@@ -1455,27 +1339,6 @@ bool MCS_request_program(MCStringRef p_message, MCStringRef p_program, MCStringR
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//IO_stat MCS_runcmd(MCExecPoint& ep)
-//{
-//	void *t_data;
-//	uint32_t t_data_length;
-//	int t_return_code;
-//    
-//	MCAutoStringRef t_filename_string;
-//	/* UNCHECKED */ MCStringCreateWithCString(ep . getsvalue() . getstring(), &t_filename_string);
-//	if (!MCsystem -> Shell(*t_filename_string,(MCDataRef &) t_data, t_return_code))
-//	{
-//		MCresult -> clear(False);
-//		MCeerror -> add(EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
-//		return IO_ERROR;
-//	}
-//	ep . grabbuffer((char *)t_data, t_data_length);
-//	
-//	MCresult -> setnvalue(t_return_code);
-//	
-//	return IO_NORMAL;
-//}
-
 IO_stat MCS_runcmd(MCStringRef p_command, MCStringRef& r_output)
 {
     // TODO Change to MCDataRef or change Shell to MCStringRef
@@ -1525,141 +1388,6 @@ bool MCSTextConvertToUnicode(MCTextEncoding p_encoding, const void *p_input, uin
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//MCSocket::~MCSocket(void)
-//{
-//}
-//
-//MCSocket::MCSocket(MCNameRef n, MCObject *o, MCNameRef m, Boolean d, MCSocketHandle sock,Boolean a, Boolean s, Boolean issecure)
-//{
-//}
-//
-//void MCSocket::close(void)
-//{
-//}
-//
-//void MCSocket::doclose(void)
-//{
-//}
-//
-//Boolean MCSocket::init(MCSocketHandle newfd)
-//{
-//	return False;
-//}
-//
-//MCSocket *MCS_open_socket(MCNameRef p_name, Boolean p_datagram, MCObject *p_object, MCNameRef p_message, Boolean p_secure, Boolean p_ssl_verify, MCStringRef p_ssl_cert_file)
-//{
-//	return NULL;
-//}
-//
-//void MCS_close_socket(MCSocket *p_socket)
-//{
-//}
-//
-//
-//void MCS_read_socket(MCSocket *p_socket, MCObject *p_object, MCStringRef p_until, MCNameRef p_message, MCDataRef& r_read_data)
-//{
-//}
-//
-//void MCS_write_socket(const MCStringRef p_data, MCSocket *p_socket, MCObject *p_object, MCNameRef p_message)
-//{
-//}
-//
-//MCSocket *MCS_accept(uint2 p_port, MCObject* p_object, MCNameRef p_message, Boolean p_datagram, Boolean p_secure, Boolean p_ssl_verify, MCStringRef p_ssl_cert_file)
-//{
-//	return NULL;
-//}
-//
-//bool MCS_ha(MCSocket *s, MCStringRef& r_string)
-//{
-//	r_string = MCValueRetain(kMCEmptyString);
-//	return true;
-//}
-//
-//bool MCS_pa(MCSocket *p_socket, MCStringRef& r_string)
-//{
-//	r_string = MCValueRetain(kMCEmptyString);
-//	return true;
-//}
-//
-//bool MCS_hn(MCStringRef& r_string)
-//{
-//	char *t_host_name;
-//	t_host_name = MCsystem -> GetHostName();
-//	if (t_host_name == NULL)
-//	{
-//		r_string = MCValueRetain(kMCEmptyString);
-//		return true;
-//	}
-//	
-//	bool t_success;
-//	t_success = MCStringCreateWithCString(t_host_name, r_string);
-//	
-//	delete t_host_name;
-//    
-//	return t_success;
-//}
-//
-//static bool MCS_resolve_callback(void *p_context, MCStringRef p_host)
-//{
-//	MCListRef t_list = (MCListRef)p_context;
-//	return MCListAppend(t_list, p_host);
-//}
-//
-//bool MCS_aton(MCStringRef p_address, MCStringRef& r_name)
-//{
-//	MCAutoListRef t_list;
-//	if (!MCListCreateMutable('\n', &t_list))
-//		return false;
-//	if (!MCsystem -> AddressToHostName(p_address, MCS_resolve_callback, *t_list))
-//	{
-//		r_name = MCValueRetain(kMCEmptyString);
-//		MCresult -> sets("invalid host address");
-//	}
-//	else
-//	{
-//		MCresult -> clear();
-//		return MCListCopyAsString(*t_list, r_name);
-//	}
-//	return true;
-//}
-//
-//bool MCS_ntoa(MCStringRef p_hostname, MCObject *p_target, MCNameRef p_message, MCListRef& r_addr)
-//{
-//	if (!MCNameIsEqualTo(p_message, kMCEmptyName))
-//	{
-//		MCresult -> sets("not supported");
-//		r_addr = MCValueRetain(kMCEmptyList);
-//		return true;
-//	}
-//	
-//	MCAutoListRef t_list;
-//	if (!MCListCreateMutable('\n', &t_list))
-//		return false;
-//	if (!MCsystem -> HostNameToAddress(p_hostname, MCS_resolve_callback, *t_list))
-//	{
-//		r_addr = MCValueRetain(kMCEmptyList);
-//		MCresult -> sets("invalid host name");
-//	}
-//	else
-//	{
-//		MCresult -> clear();
-//		return MCListCopy(*t_list, r_addr);
-//	}
-//	return true;
-//}
-//
-//void MCS_dnsresolve(MCStringRef p_hostname, MCStringRef& r_dns)
-//{
-//	return;
-//}
-//
-//bool MCS_hostaddress(MCStringRef& r_host_address)
-//{
-//	return false;
-//}
-
-////////////////////////////////////////////////////////////////////////////////
-
 bool MCS_getDNSservers(MCListRef& r_list)
 {
     return MCsystem -> GetDNSservers(r_list);
@@ -1669,8 +1397,6 @@ bool MCS_getDNSservers(MCListRef& r_list)
 
 Boolean MCS_poll(real8 p_delay, int p_fd)
 {
-//	MCsystem -> Sleep(p_delay);
-//	return False;
     return MCsystem -> Poll(p_delay, p_fd);
 }
 
@@ -1757,88 +1483,5 @@ bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_err
 	
     return MCStringCreateWithCString("not supported", r_result);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-/* TEMPORARY WRAPPER METHODS */
-/* Should be replaced with native versions that use MCValueRefs */
-
-//void MCSystemInterface::GetTemporaryFileName(MCStringRef &r_path)
-//{
-//	MCAutoPointer<char> t_path;
-//	t_path = GetTemporaryFileName();
-//	return *t_path != nil && MCStringCreateWithCString(*t_path, r_path);
-//}
-
-/* LEGACY COMPATABILITY METHODS */
-//char *MCSystemInterface::PathFromNative(const char *p_native)
-//{
-//	MCAutoStringRef t_native;
-//	MCAutoStringRef t_path;
-//	char *t_cstring = nil;
-//	if (MCStringCreateWithCString(p_native, &t_native) &&
-//		PathFromNative(*t_native, &t_path) &&
-//		MCCStringClone(MCStringGetCString(*t_path), t_cstring))
-//		return t_cstring;
-//	return nil;
-//}
-
-//char *MCSystemInterface::GetCurrentFolder(void)
-//{
-//	MCAutoStringRef t_path;
-//	char *t_cstring = nil;
-//	if (GetCurrentFolder(&t_path) &&
-//		MCCStringClone(MCStringGetCString(*t_path), t_cstring))
-//		return t_cstring;
-//	return nil;
-//}
-
-/*
- char *MCSystemInterface::ResolvePath(const char *p_path)
- {
- MCAutoStringRef t_path;
- MCAutoStringRef t_resolved;
- char *t_cstring = nil;
- bool t_success;
- t_success = true;
- 
- if (t_success)
- t_success = MCStringCreateWithCString(p_path, &t_path);
- 
- if (t_success)
- t_success = ResolvePath(*t_path, &t_resolved);
- 
- if (t_success)
- t_success = MCCStringClone(MCStringGetCString(*t_resolved), t_cstring);
- 
- if (t_success)
- return t_cstring;
- }
- */
-
-/*
- char *MCSystemInterface::ResolveNativePath(const char *p_path)
- {
- MCAutoStringRef t_path;
- MCAutoStringRef t_resolved;
- char *t_cstring = nil;
- bool t_success;
- t_success = true;
- 
- if (t_success)
- t_success = MCStringCreateWithCString(p_path, &t_path);
- 
- if (t_success)
- t_success = ResolveNativePath(*t_path, &t_resolved);
- 
- if (t_success)
- t_success = MCCStringClone(MCStringGetCString(*t_resolved), t_cstring);
- 
- if (t_success)
- return t_cstring;
- 
- return nil;
- }
- */
 
 ////////////////////////////////////////////////////////////////////////////////
