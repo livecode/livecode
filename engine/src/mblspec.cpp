@@ -758,6 +758,13 @@ void MCS_unloadurl(MCObject *p_object, const char *p_url)
 	MCresult -> sets("not implemented");
 }
 
+//////////
+
+void MCS_seturlsslverification(bool p_enabled)
+{
+	MCSystemSetUrlSSLVerification(p_enabled);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, const MCString& p_data)
