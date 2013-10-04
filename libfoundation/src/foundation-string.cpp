@@ -1422,6 +1422,52 @@ bool MCStringDivideAtIndex(MCStringRef self, uindex_t p_offset, MCStringRef& r_h
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCStringBreakIntoChunks(MCStringRef self, codepoint_t p_separator, MCStringOptions p_options, MCRange*& r_ranges, uindex_t& r_range_count)
+{
+	MCAssert(p_separator < 128);
+	
+	uindex_t t_length;
+	t_length = MCStringGetLength(self);
+	
+	// Count the number of chunks, adjusting for an empty trailing chunk.
+	uindex_t t_range_count;
+	t_range_count = MCStringCountChar(self, MCRangeMake(0, MCStringGetLength(self)), p_separator, p_options);
+	if (t_length > 0 && MCStringGetNativeCharAtIndex(self, t_length - 1) == p_separator)
+		t_range_count -= 1;
+	
+	// Allocate the range array.
+	MCRange *t_ranges;
+	if (!MCMemoryNewArray(t_range_count, t_ranges))
+		return false;
+	
+	// Now compute the ranges.
+	uindex_t t_prev_offset, t_offset, t_index;
+	t_prev_offset = 0;
+	t_offset = 0;
+	t_index = 0;
+	for(;;)
+	{
+		if (!MCStringFirstIndexOfChar(self, p_separator, t_prev_offset, p_options, t_offset))
+		{
+			t_ranges[t_index] . offset = t_prev_offset;
+			t_ranges[t_index] . length = t_length - t_prev_offset;
+			break;
+		}
+		
+		t_ranges[t_index] . offset = t_prev_offset;
+		t_ranges[t_index] . length = t_offset - t_prev_offset;
+		
+		t_prev_offset = t_offset + 1;
+	}
+	
+	r_ranges = t_ranges;
+	r_range_count = t_range_count;
+	
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCStringFold(MCStringRef self, MCStringOptions p_options)
 {
 	MCAssert(MCStringIsMutable(self));

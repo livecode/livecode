@@ -1521,6 +1521,13 @@ bool MCStringDivideAtIndex(MCStringRef self, uindex_t p_offset, MCStringRef& r_h
 
 //////////
 
+// Break the string into ranges inbetween the given delimiter char. A trailing
+// empty range is ignored. The caller is responsible for deleting the returned
+// array.
+bool MCStringBreakIntoChunks(MCStringRef string, codepoint_t separator, MCStringOptions options, MCRange*& r_ranges, uindex_t& r_range_count);
+
+//////////
+
 // Transform the string to its folded form as specified by 'options'. The folded
 // form of a string is that which is used to perform comparisons.
 //
