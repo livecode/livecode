@@ -338,7 +338,7 @@ bool MCStringConvertLineEndingsFromLiveCode(MCStringRef p_input, MCStringRef& r_
 
 bool MCStringConvertLineEndingsFromLiveCodeAndRelease(MCStringRef p_input, MCStringRef& r_output)
 {
-	if (MCStringConvertLineEndingsFromLiveCode(p_intput, r_output))
+	if (MCStringConvertLineEndingsFromLiveCode(p_input, r_output))
 	{
 		MCValueRelease(p_input);
 		return true;
@@ -358,7 +358,7 @@ bool MCStringConvertLineEndingsToLiveCode(MCStringRef p_input, MCStringRef& r_ou
 
 bool MCStringConvertLineEndingsToLiveCodeAndRelease(MCStringRef p_input, MCStringRef& r_output)
 {
-	if (MCStringConvertLineEndingsToLiveCode(p_intput, r_output))
+	if (MCStringConvertLineEndingsToLiveCode(p_input, r_output))
 	{
 		MCValueRelease(p_input);
 		return true;

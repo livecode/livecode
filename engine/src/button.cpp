@@ -3698,12 +3698,12 @@ bool MCButton::selectedtext(MCStringRef& r_string)
 	}
 	else
 	{
-		MCStringRef t_text = nil;
 		MCRange t_range;
 		t_range = getmenurange();
-		/* UNCHECKED */ MCStringCopySubstring(menustring, t_range, t_text);
-		return t_text;
+		/* UNCHECKED */ MCStringCopySubstring(menustring, t_range, r_string);
+		return true;
 	}
+	return false;
 }
 
 MCStringRef MCButton::getlabeltext()
