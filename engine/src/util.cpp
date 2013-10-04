@@ -1769,15 +1769,13 @@ Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool, uint2 line, uint2 pos)
 			return ES_ERROR;
 		}
 		uint2 i;
-        char *t_tool_name = new char[ep.getsvalue().getlength() + 1];
-        MCU_lower(t_tool_name, ep.getsvalue().getstring());
 		for (i = 0 ; i <= T_TEXT ; i++)
-			if (strncmp(MCtoolnames[i], t_tool_name, 3) == 0)
+            // SN-13-10-04: [[ Bug 11193 ]] set the tool to Browse fails - case-sensitive
+			if (MCU_strncasecmp(MCtoolnames[i], ep.getsvalue().getstring(), 3) == 0)
 			{
 				t_new_tool = (Tool)i;
 				break;
 			}
-        delete[] t_tool_name;
 		if (i > T_TEXT)
 		{
 			MCeerror->add(EE_CHOOSE_BADTOOL, line, pos, ep.getsvalue());
