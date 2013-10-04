@@ -89,6 +89,8 @@ public:
 	void setprintmode(void);
 		
 private:
+	void init(MCGContextRef p_context);
+
 	MCGContextRef m_gcontext;
 	MCRectangle m_clip;
 	MCColor m_background;
@@ -105,6 +107,10 @@ private:
 	uint16_t m_join_style;
 
 	real64_t m_miter_limit;
+
+	MCGFloat m_dash_phase;
+	MCGFloat *m_dash_lengths;
+	uint32_t m_dash_count;
 };
 
 

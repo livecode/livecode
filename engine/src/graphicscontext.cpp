@@ -68,7 +68,7 @@ static void MCGraphicsContextAngleAndDistanceToXYOffset(int p_angle, int p_dista
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCGraphicsContext::MCGraphicsContext(MCGContextRef p_context)
+void MCGraphicsContext::init(MCGContextRef p_context)
 {
 	m_gcontext = MCGContextRetain(p_context);
 	m_pattern = nil;
@@ -81,26 +81,40 @@ MCGraphicsContext::MCGraphicsContext(MCGContextRef p_context)
 	m_join_style = JoinBevel;
 
 	m_miter_limit = 0.0;
+
+	m_dash_phase = 0.0;
+	m_dash_lengths = nil;
+	m_dash_count = 0;
+}
+
+MCGraphicsContext::MCGraphicsContext(MCGContextRef p_context)
+{
+	init(p_context);
 }
 
 MCGraphicsContext::MCGraphicsContext(uint32_t p_width, uint32_t p_height, bool p_alpha)
 {
-	/* UNCHECKED */ MCGContextCreate(p_width, p_height, p_alpha, m_gcontext);
-	m_pattern = nil;
-	m_background = getblack();
+	MCGContextRef t_context;
+	/* UNCHECKED */ MCGContextCreate(p_width, p_height, p_alpha, t_context);
+
+	init(t_context);
+	MCGContextRelease(t_context);
 }
 
 MCGraphicsContext::MCGraphicsContext(uint32_t p_width, uint32_t p_height, uint32_t p_stride, void *p_pixels, bool p_alpha)
 {
+	MCGContextRef t_context;
 	/* UNCHECKED */ MCGContextCreateWithPixels(p_width, p_height, p_stride, p_pixels, p_alpha, m_gcontext);
-	m_pattern = nil;
-	m_background = getblack();
+
+	init(t_context);
+	MCGContextRelease(t_context);
 }
 
 MCGraphicsContext::~MCGraphicsContext()
 {
 	MCPatternRelease(m_pattern);
 	MCGContextRelease(m_gcontext);
+	MCMemoryDeleteArray(m_dash_lengths);
 }
 
 MCContextType MCGraphicsContext::gettype() const
@@ -430,14 +444,22 @@ void MCGraphicsContext::setbackground(const MCColor& c)
 
 void MCGraphicsContext::setdashes(uint16_t p_offset, const uint8_t *p_dashes, uint16_t p_length)
 {
-	MCGFloat *t_lengths;
-	/* UNCHECKED */ MCMemoryNewArray(p_length, t_lengths);
-	for (uint32_t i = 0; i < p_length; i++)
-		t_lengths[i] = (MCGFloat) p_dashes[i];
-	
-	MCGContextSetStrokeDashes(m_gcontext, (MCGFloat) p_offset, t_lengths, p_length);
-	
-	MCMemoryDeleteArray(t_lengths);	
+	//MCGFloat *t_lengths;
+	MCMemoryDeleteArray(m_dash_lengths);
+	m_dash_lengths = nil;
+	m_dash_count = 0;
+	m_dash_phase = (MCGFloat)p_offset;
+
+	if (p_length > 0)
+	{
+		m_dash_count = p_length;
+		/* UNCHECKED */ MCMemoryNewArray(m_dash_count, m_dash_lengths);
+		for (uint32_t i = 0; i < m_dash_count; i++)
+			m_dash_lengths[i] = (MCGFloat) p_dashes[i];
+	}
+
+	if (m_line_style != LineSolid)
+		MCGContextSetStrokeDashes(m_gcontext, m_dash_phase, m_dash_lengths, m_dash_count);
 }
 
 void MCGraphicsContext::setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y)
@@ -504,10 +526,14 @@ void MCGraphicsContext::setlineatts(uint2 linesize, uint2 linestyle, uint2 capst
 	
 	switch (linestyle)
 	{
-		case LineOnOffDash:
-		{
+		case LineSolid:
+			MCGContextSetStrokeDashes(m_gcontext, 0, nil, 0);
 			break;
-		}
+
+		case LineOnOffDash:
+			MCGContextSetStrokeDashes(m_gcontext, m_dash_phase, m_dash_lengths, m_dash_count);
+			break;
+
 		case LineDoubleDash:
 		{
 			break;
