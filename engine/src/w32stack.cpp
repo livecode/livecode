@@ -528,22 +528,18 @@ void MCStack::setgeom()
 		return;
 	}
 
-	// IM-2013-08-08: [[ ResIndependence ]] Scale stack rect to device space
-	MCRectangle t_device_rect, t_old_device_rect;
-	t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
-
-	t_old_device_rect = view_setgeom(t_device_rect);
-
+	// IM-2013-10-04: [[ FullscreenMode ]] Use view methods to get / set the stack viewport
+	MCRectangle t_old_rect;
+	t_old_rect = view_getstackviewport();
+	
+	rect = view_setstackviewport(rect);
+	
 	state &= ~CS_NEED_RESIZE;
-
-	// IM-2013-08-08: [[ ResIndependence ]] Scale old window rect to user space for comparison
-	MCRectangle t_old_user_rect;
-	t_old_user_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_old_device_rect));
-
-	if (t_old_user_rect.x != rect.x || t_old_user_rect.y != rect.y || t_old_user_rect.width != rect.width || t_old_user_rect.height != rect.height)
-	{
-		resize(t_old_user_rect.width, t_old_user_rect.height);
-	}
+	
+	// IM-2013-10-04: [[ FullscreenMode ]] Return values from view methods are
+	// in stack coords so don't need to transform
+	if (t_old_rect.x != rect.x || t_old_rect.y != rect.y || t_old_rect.width != rect.width || t_old_rect.height != rect.height)
+		resize(t_old_rect.width, t_old_rect.height);
 }
 
 void MCStack::constrain(intptr_t lp)

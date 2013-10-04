@@ -112,7 +112,7 @@ MCRectangle MCStack::device_setgeom(const MCRectangle &p_rect)
 	return p_rect;
 }
 
-// IM-2013-09-30: [[ FullscreenMode ]] Mobile version of setgeom now calls view_setgeom
+// IM-2013-09-30: [[ FullscreenMode ]] Mobile version of setgeom now calls view methods
 void MCStack::setgeom(void)
 {
 	if (MCnoui || !opened)
