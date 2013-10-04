@@ -76,21 +76,3 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <libgnomevfs/gnome-vfs-mime.h>
 #include <libgnomevfs/gnome-vfs-mime-handlers.h>
 
-extern bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
-
-// This is in here so we do not need GLIBC2.4
-extern "C" void __attribute__ ((noreturn)) __stack_chk_fail (void)
-{
-}
-
-
-
-
-static void parseSerialControlStr(char *set
-                                  ,  struct termios *theTermios);
-static void configureSerialPort(int sRefNum);
-
-static Boolean alarmpending;
-
-uint1 *MClowercasingtable = NULL;
-uint1 *MCuppercasingtable = NULL;
