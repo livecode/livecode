@@ -2424,6 +2424,10 @@ enum Exec_errors
     // TD-2013-06-24: [[ DynamicFonts ]]
     // {EE-0798} font: couldn't find font
 	EE_FONT_BADFILEEXP,
+	
+	// MERG-2013-10-04: [[ EditScriptAt ]] edit script of object at.
+    // {EE-0797} edit script: bad at expression
+	EE_EDIT_BADAT,
 };
 
 extern const char *MCexecutionerrors;

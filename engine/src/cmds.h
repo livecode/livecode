@@ -126,11 +126,14 @@ public:
 class MCEdit : public MCStatement
 {
 	MCChunk *target;
+    // MERG 2013-9-13: [[ EditScriptChunk ]] Added at expression that's passed through as a second parameter to editScript
+    MCExpression *m_at;
 public:
 	MCEdit()
 	{
 		target = NULL;
-	}
+        m_at = NULL;
+    }
 	virtual ~MCEdit();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual Exec_stat exec(MCExecPoint &);

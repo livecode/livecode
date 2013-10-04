@@ -1635,6 +1635,10 @@ enum Parse_errors
 
     // {PE-0535} resolve image: bad object reference
 	PE_RESOLVE_BADOBJECT,
+	
+	// MERG-2013-10-04: [[ EditScriptAt ]] edit script of object at.
+    // {EE-0536} edit script: no at expression
+	PE_EDIT_NOAT,
 };
 
 extern const char *MCparsingerrors;
