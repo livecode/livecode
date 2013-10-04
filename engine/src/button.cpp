@@ -3671,22 +3671,23 @@ void MCButton::setupmenu()
 bool MCButton::selectedchunk(MCStringRef& r_string)
 {
 	MCExecPoint ep(nil, nil, nil);
-	/* UNCHECKED */ getprop(0, P_NUMBER, ep, False);
-	/* UNCHECKED */ ep.ton();
-	uint4 number = ep.getuint4();
+	MCExecContext ctxt(ep);
+	integer_t t_number;
+	/* UNCHECKED */ getintprop(ctxt, 0, P_NUMBER, False, t_number);
+	
 	MCRange t_range;
 	t_range = getmenurange();
-	return MCStringFormat(r_string, "char %d to %d of button %d", t_range.offset, t_range.offset + t_range.length, number);
+	return MCStringFormat(r_string, "char %d to %d of button %d", t_range.offset, t_range.offset + t_range.length, t_number);
 }
 
 bool MCButton::selectedline(MCStringRef& r_string)
 {
 	MCExecPoint ep(nil, nil, nil);
-	/* UNCHECKED */ getprop(0, P_NUMBER, ep, False);
-	/* UNCHECKED */ ep.ton();
-	uint2 number;
-	ep.getuint2(number, 0, 0, EE_UNDEFINED);
-	return MCStringFormat(r_string, "line %d of button %d", menuhistory, number);
+	MCExecContext ctxt(ep);
+	integer_t t_number;
+	/* UNCHECKED */ getintprop(ctxt, 0, P_NUMBER, False, t_number);
+	
+	return MCStringFormat(r_string, "line %d of button %d", menuhistory, t_number);
 }
 
 bool MCButton::selectedtext(MCStringRef& r_string)
