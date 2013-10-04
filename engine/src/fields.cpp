@@ -372,48 +372,6 @@ int4 MCField::paragraphtoy(MCParagraph *target)
 	return y;
 }
 
-bool MCField::nativizetext(uint4 parid, MCExecPoint& ep, bool p_ascii_only)
-{
-	bool t_has_unicode;
-	t_has_unicode = false;
-	
-	// Resolve the correct collection of paragraphs.
-	MCParagraph *t_paragraphs;
-	t_paragraphs = resolveparagraphs(parid);
-	if (t_paragraphs == nil)
-	{
-		ep . clear();
-		return t_has_unicode;
-	}
-
-	// Ensure there is room in ep for the data. The size of the data is the
-	// same as the original, so just use getpgsize().
-	char *t_data;
-	/* UNCHECKED */ ep . reserve(getpgsize(t_paragraphs), t_data);
-	
-	// Keep track of how much of the buffer we've used.
-	uint32_t t_length;
-	t_length = 0;
-	
-	// Now loop through the paragraphs, converting as appropriate.
-	MCParagraph *t_paragraph;
-	t_paragraph = t_paragraphs;
-	do
-	{
-		if (t_paragraph -> nativizetext(p_ascii_only, t_data, t_length))
-			t_has_unicode = true;
-		t_paragraph = t_paragraph -> next();
-		if (t_paragraph != t_paragraphs)
-			t_data[t_length++] = '\n';
-	}
-	while(t_paragraph != t_paragraphs);
-	
-	// Update the length of the ep.
-	ep . commit(t_length);
-	
-	return t_has_unicode;
-}
-
 #if TO_REMOVE
 int32_t MCField::mapnativeindex(uint4 parid, int32_t p_native_index, bool p_is_end)
 {
@@ -633,6 +591,13 @@ MCParagraph *MCField::verifyindices(MCParagraph *p_top, int4& si, int4& ei)
 	return t_start_pg;
 }
 
+Exec_stat MCField::settextindex_stringref(uint4 parid, int4 si, int4 ei, MCStringRef s, Boolean undoing)
+{
+	if (MCStringIsNative(s))
+		return settextindex(parid, si, ei, MCStringGetOldString(s), undoing, false);
+	return settextindex(parid, si, ei, MCString((const char *)MCStringGetCharPtr(s), MCStringGetLength(s) * 2), undoing, true);
+}
+
 Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s, Boolean undoing, bool p_as_unicode)
 {
 	state &= ~CS_CHANGED;
@@ -823,10 +788,10 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 		exportasstyledtext(parid, ep, si, ei, which == P_FORMATTED_STYLED_TEXT, effective == True);
 		return ES_NORMAL;
 	}
-
-	if (flags & F_SHARED_TEXT)
-		parid = 0;
-	MCParagraph *pgptr = getcarddata(fdata, parid, True)->getparagraphs();
+	
+	// MW-2013-08-27: [[ Bug 11129 ]] Use 'resolveparagraphs()' so we get the same
+	//   behavior as if exporting the content in various ways.
+	MCParagraph *pgptr = resolveparagraphs(parid);
 
 	// MW-2012-02-08: [[ Field Indices ]] If we pass a pointer to indextoparagraph
 	//   then it computes the index of the paragraph (1-based).
@@ -989,7 +954,13 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 
 				// Reduce ei until we get to zero, advancing through the paras.
 				ei -= sptr->gettextsizecr();
+				
 				sptr = sptr->next();
+				
+				// MW-2013-08-27: [[ Bug 11129 ]] If we reach the end of the paragraphs
+				//   then set ei to 0 as we are done.
+				if (sptr == pgptr)
+					ei = 0;
 			}
 			while(ei > 0);
 			
@@ -1030,6 +1001,11 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 				si = 0;
 				ei -= sptr -> gettextsizecr();
 				sptr = sptr -> next();
+				
+				// MW-2013-08-27: [[ Bug 11129 ]] If we reach the end of the paragraphs
+				//   then set ei to 0 as we are done.
+				if (sptr == pgptr)
+					ei = 0;
 			}
 			while(ei > 0);
 		}
@@ -1082,6 +1058,11 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 
 				ei -= sptr->gettextsizecr();
 				sptr = sptr->next();
+				
+				// MW-2013-08-27: [[ Bug 11129 ]] If we reach the end of the paragraphs
+				//   then set ei to 0 as we are done.
+				if (sptr == pgptr)
+					ei = 0;
 			}
 			while(ei > 0);
 			break;
@@ -1112,7 +1093,7 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 		//   an index, then decode which specific style is being manipulated.
 		if (which == P_TEXT_STYLE && !MCNameIsEmpty(index))
 		{
-			if (MCF_parsetextstyle(MCNameGetOldString(index), t_text_style) != ES_NORMAL)
+			if (MCF_parsetextstyle(MCNameGetString(index), t_text_style) != ES_NORMAL)
 				return ES_ERROR;
 
 			pspecstyle = MCF_istextstyleset(pstyle, t_text_style);
@@ -1193,9 +1174,16 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 			ei -= sptr->gettextsizecr();
 			si = 0;
 			sptr = sptr->next();
+			
+			// MW-2013-08-27: [[ Bug 11129 ]] If we reach the end of the paragraphs
+			//   then set ei to 0 as we are done.
+			if (sptr == pgptr)
+				ei = 0;
 		}
 		while (ei > 0);
 
+        MCAutoStringRef t_fname;
+        /* UNCHECKED */ MCStringCreateWithCString(fname, &t_fname);
 		if (!has)
 		{
 			if (effective)
@@ -1233,13 +1221,13 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 			if (mixed & MIXED_NAMES)
 				ep.setstaticcstring(MCmixedstring);
 			else
-				stat = MCF_unparsetextatts(which, ep, flags, fname, height, size, style);
+				stat = MCF_unparsetextatts(which, ep, flags, *t_fname, height, size, style);
 			break;
 		case P_TEXT_SIZE:
 			if (mixed & MIXED_SIZES)
 				ep.setstaticcstring(MCmixedstring);
 			else
-				stat = MCF_unparsetextatts(which, ep, flags, fname, height, size, style);
+				stat = MCF_unparsetextatts(which, ep, flags, *t_fname, height, size, style);
 			break;
 		case P_TEXT_STYLE:
 			// MW-2011-11-23: [[ Array TextStyle ]] If no textStyle has been specified
@@ -1249,7 +1237,7 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 				if (mixed & MIXED_STYLES)
 					ep.setstaticcstring(MCmixedstring);
 				else
-					stat = MCF_unparsetextatts(which, ep, flags, fname, height, size, style);
+					stat = MCF_unparsetextatts(which, ep, flags, *t_fname, height, size, style);
 			}
 			else
 			{
@@ -1431,7 +1419,9 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		return ES_NORMAL;
 	}
 
-	MCParagraph *pgptr = getcarddata(fdata, parid, True)->getparagraphs();
+	// MW-2013-08-27: [[ Bug 11129 ]] Use 'resolveparagraphs()' so we get the same behavior
+	//   as elsewhere.
+	MCParagraph *pgptr = resolveparagraphs(parid);
 
 	// MW-2013-03-20: [[ Bug 10764 ]] We only need to layout if the paragraphs
 	//   are attached to the current card.
@@ -1451,7 +1441,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 	verifyindex(pgptr, ei, true);
 
 	pgptr = indextoparagraph(pgptr, si, ei);
-	char *fname = NULL;
+	MCAutoStringRef fname;
 	uint2 size = 0;
 	uint2 style = FA_DEFAULT_STYLE;
 	MCColor tcolor;
@@ -1492,7 +1482,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		{
 			Font_textstyle t_text_style;
 
-			if (MCF_parsetextstyle(MCNameGetOldString(index), t_text_style) != ES_NORMAL)
+			if (MCF_parsetextstyle(MCNameGetString(index), t_text_style) != ES_NORMAL)
 				return ES_ERROR;
 
 			Boolean t_new_state;
@@ -1513,11 +1503,11 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		// Fall through for default (non-array) handling.
 	case P_TEXT_FONT:
 	case P_TEXT_SIZE:
-		if (MCF_parsetextatts(which, MCStringGetOldString(*s), flags, fname, fontheight, size, style) != ES_NORMAL)
+		if (MCF_parsetextatts(which, *s, flags, &fname, fontheight, size, style) != ES_NORMAL)
 			return ES_ERROR;
 		all = True;
 		if (which == P_TEXT_FONT)
-			t_value = (void *)fname;
+			t_value = (void *)*fname;
 		else if (which == P_TEXT_SIZE)
 			t_value = (void *)size;
 		else
@@ -1664,9 +1654,13 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		si = MCU_max(0, si - l);
 		ei -= l;
 		pgptr = pgptr->next();
+		
+		// MW-2013-08-27: [[ Bug 11129 ]] If we reach the end of the paragraphs
+		//   then set ei to 0 as we are done.
+		if (pgptr == t_first_pgptr)
+			ei = 0;
 	}
 	while(ei > 0 && t_stat == ES_NORMAL);
-	delete fname;
 	if (t_need_layout)
 	{
 		if (all)
@@ -2344,7 +2338,7 @@ void MCField::returntext(MCExecPoint &ep, int4 si, int4 ei)
 
 bool MCField::returntext(int4 p_si, int4 p_ei, MCStringRef& r_string)
 {
-	return exportastext(0, p_si, p_ei, false, r_string);
+	return exportastext(0, p_si, p_ei, r_string);
 }
 
 void MCField::charstoparagraphs(int4 si, int4 ei, MCParagraph*& rsp, MCParagraph*& rep, uint4& rsl, uint4& rel)

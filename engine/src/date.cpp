@@ -29,27 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 
-MCDateTimeLocale g_english_locale =
-{
-	{"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"},
-	{"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"},
-	{"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"},
-	{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"},
-	{
-		"^%#m/%#d/%y", // DATETIME_FORMAT_SHORT_ENGLISH_DATE
-		"%a, %b %#d, %#Y", // DATETIME_FORMAT_ABBREV_ENGLISH_DATE
-		"%A, %B %#d, %#Y", // DATETIME_FORMAT_LONG_ENGLISH_DATE
-	},
-	{
-		"!%#I:%M %p", // DATETIME_FORMAT_SHORT_ENGLISH_TIME
-		"!%#I:%M:%S %p" // DATETIME_FORMAT_LONG_ENGLISH_TIME
-	},
-	{
-		"!%H:%M", // DATETIME_FORMAT_SHORT_ENGLISH_TIME24
-		"!%H:%M:%S" // DATETIME_FORMAT_LONG_ENGLISH_TIME24
-	},
-	"AM", "PM"
-};
+MCDateTimeLocale *g_basic_locale;
 
 static int1 s_datetime_month_length[] = {31,28,31,30,31,30,31,31,30,31,30,31};
 
@@ -85,143 +65,131 @@ static const char *s_items_date_format = "!%#Y,%#m,%#d,%#H,%#M,%#S,%#w";
 // long english - %A, %B %d, %#Y
 //
 
-static char *append_string(char *p_buffer, const char *p_string, int p_length = -1)
+bool MCDateTimeInitialize()
 {
-	if (p_length == -1)
-		p_length = strlen(p_string);
-
-	memcpy(p_buffer, p_string, p_length);
-
-	return p_buffer + p_length;
-}
-
-static char *append_number(char *p_buffer, int p_number, int p_pad, bool p_sign = false)
-{
-	if (p_number == 0)
-	{
-		if (p_pad == 0)
-			p_pad = 1;
-			
-		int t_index;
-		t_index = 0;
+	g_basic_locale = (MCDateTimeLocale*)malloc(sizeof(MCDateTimeLocale));
 	
-		if (p_sign)
-			p_buffer[t_index++] = '+';
+	g_basic_locale->weekday_names[0] = MCSTR("Sunday");
+	g_basic_locale->weekday_names[1] = MCSTR("Monday");
+	g_basic_locale->weekday_names[2] = MCSTR("Tuesday");
+	g_basic_locale->weekday_names[3] = MCSTR("Wednesday");
+	g_basic_locale->weekday_names[4] = MCSTR("Thursday");
+	g_basic_locale->weekday_names[5] = MCSTR("Friday");
+	g_basic_locale->weekday_names[6] = MCSTR("Saturday");
+	
+	g_basic_locale->abbrev_weekday_names[0] = MCSTR("Sun");
+	g_basic_locale->abbrev_weekday_names[1] = MCSTR("Mon");
+	g_basic_locale->abbrev_weekday_names[2] = MCSTR("Tue");
+	g_basic_locale->abbrev_weekday_names[3] = MCSTR("Wed");
+	g_basic_locale->abbrev_weekday_names[4] = MCSTR("Thu");
+	g_basic_locale->abbrev_weekday_names[5] = MCSTR("Fri");
+	g_basic_locale->abbrev_weekday_names[6] = MCSTR("Sat");
+	
+	g_basic_locale->month_names[0] = MCSTR("January");
+	g_basic_locale->month_names[1] = MCSTR("February");
+	g_basic_locale->month_names[2] = MCSTR("March");
+	g_basic_locale->month_names[3] = MCSTR("April");
+	g_basic_locale->month_names[4] = MCSTR("May");
+	g_basic_locale->month_names[5] = MCSTR("June");
+	g_basic_locale->month_names[6] = MCSTR("July");
+	g_basic_locale->month_names[7] = MCSTR("August");
+	g_basic_locale->month_names[8] = MCSTR("September");
+	g_basic_locale->month_names[9] = MCSTR("October");
+	g_basic_locale->month_names[10]= MCSTR("November");
+	g_basic_locale->month_names[11]= MCSTR("December");
+	
+	g_basic_locale->abbrev_month_names[0] = MCSTR("Jan");
+	g_basic_locale->abbrev_month_names[1] = MCSTR("Feb");
+	g_basic_locale->abbrev_month_names[2] = MCSTR("Mar");
+	g_basic_locale->abbrev_month_names[3] = MCSTR("Apr");
+	g_basic_locale->abbrev_month_names[4] = MCSTR("May");
+	g_basic_locale->abbrev_month_names[5] = MCSTR("Jun");
+	g_basic_locale->abbrev_month_names[6] = MCSTR("Jul");
+	g_basic_locale->abbrev_month_names[7] = MCSTR("Aug");
+	g_basic_locale->abbrev_month_names[8] = MCSTR("Sep");
+	g_basic_locale->abbrev_month_names[9] = MCSTR("Oct");
+	g_basic_locale->abbrev_month_names[10]= MCSTR("Nov");
+	g_basic_locale->abbrev_month_names[11]= MCSTR("Dec");
+	
+	g_basic_locale->date_formats[0] = MCSTR("^%#m/%#d/%#y");
+	g_basic_locale->date_formats[1] = MCSTR("%a, %b %#d %#Y");
+	g_basic_locale->date_formats[2] = MCSTR("%A, %B %#d %#Y");
+	
+	g_basic_locale->time_formats[0] = MCSTR("!%#I:%M %p");
+	g_basic_locale->time_formats[1] = MCSTR("!%#I:%M:%S %p");
+	
+	g_basic_locale->time24_formats[0] = MCSTR("!%#H:%M");
+	g_basic_locale->time24_formats[1] = MCSTR("!%#H:%M:%S");
 
-		for(;p_pad > 0; p_pad -= 1)
-			p_buffer[t_index++] = '0';
-
-		return p_buffer + t_index;
-	}
-
-	int t_abs_number;
-	t_abs_number = MCU_abs(p_number);
-
-	char t_decimal[16];
-	int t_length;
-	t_length = 0;
-
-	while(t_abs_number != 0)
-	{
-		t_decimal[15 - t_length] = '0' + (t_abs_number % 10);
-		t_abs_number /= 10;
-		t_length += 1;
-	}
-
-	if (p_pad != 0)
-		while(t_length < p_pad)
-		{
-			t_decimal[15 - t_length] = '0';
-			t_length += 1;
-		}
-
-	if (p_number < 0)
-	{
-		t_decimal[15 - t_length] = '-';
-		t_length += 1;
-	}
-	else if (p_sign)
-	{
-		t_decimal[15 - t_length] = '+';
-		t_length += 1;
-	}
-
-	memcpy(p_buffer, t_decimal + 16 - t_length, t_length);
-
-	return p_buffer + t_length;
+	g_basic_locale->time_morning_suffix = MCSTR("AM");
+	g_basic_locale->time_evening_suffix = MCSTR("PM");
+	
+	return true;
 }
 
-static bool match_prefix(const char * const *p_table, uint4 p_table_length, const char*& p_input, uint4& p_input_length, int4& r_index)
+bool MCDateTimeFinalize()
+{
+	g_basic_locale->~MCDateTimeLocale();
+	return true;
+}
+
+static bool match_string(MCStringRef p_string, MCStringRef p_input, uindex_t &x_offset)
+{
+	uindex_t t_length;
+	t_length = MCStringGetLength(p_string);
+	MCRange t_range;
+	t_range = MCRangeMake(x_offset, t_length);
+	if (MCStringSubstringContains(p_input, t_range, p_string, kMCStringOptionCompareCaseless))
+	{
+		x_offset += t_length;
+		return true;
+	}
+	
+	return false;
+}
+
+static bool match_prefix(MCStringRef const * p_table, uint4 p_table_length, MCStringRef p_input, uindex_t &x_offset, int4& r_index)
 {
 	for(uint4 t_index = 0; t_index < p_table_length; ++t_index)
 	{
-		uint4 t_length;
-		t_length = strlen(p_table[t_index]);
-		if (t_length <= p_input_length && MCU_strncasecmp(p_table[t_index], p_input, t_length) == 0)
+		if (match_string(p_table[t_index], p_input, x_offset))
 		{
 			r_index = t_index + 1;
-			p_input += t_length;
-			p_input_length -= t_length;
 			return true;
 		}
 	}
-	return false;
-}
-
-static bool match_string(const char *p_string, const char*& p_input, uint4& p_input_length)
-{
-	uint4 t_length;
 	
-	t_length = strlen(p_string);
-	if (t_length > p_input_length)
-		return false;
-
-	if (MCU_strncasecmp(p_string, p_input, t_length) == 0)
-	{
-		p_input += t_length;
-		p_input_length -= t_length;
-		return true;
-	}
-
 	return false;
 }
 
-static bool match_number(const char*& p_input, uint4& p_input_length, int4& r_number)
+static bool match_number(MCStringRef p_input, uindex_t &x_offset, int4& r_number)
 {
-	const char *t_input;
-	t_input = p_input;
+	uindex_t t_length;
+	t_length = MCStringGetLength(p_input);
 
-	uint4 t_input_length;
-	t_input_length = p_input_length;
-
-	if (t_input_length == 0)
-		return false;
-
+	unichar_t t_char;
+	t_char = MCStringGetCharAtIndex(p_input, x_offset++);
+	
 	bool t_negative;
-	t_negative = *t_input == '-';
-	if (*t_input == '-' || *t_input == '+')
-		t_input += 1, t_input_length -= 1;
+	t_negative = t_char == '-';
+	if (t_char == '-' || t_char == '+')
+		t_char = MCStringGetCharAtIndex(p_input, x_offset++);
 
-	if (t_input_length == 0)
-		return false;
-
-	if (!isdigit(*t_input))
+	if (!isdigit(t_char))
 		return false;
 
 	int4 t_number;
 	t_number = 0;
-	while(t_input_length > 0 && isdigit(*t_input))
+	while(x_offset <= t_length && isdigit(t_char))
 	{
-		t_number = t_number * 10 + *t_input - '0';
-		t_input_length -= 1;
-		t_input += 1;
+		t_number = t_number * 10 + t_char - '0';
+		t_char = MCStringGetCharAtIndex(p_input, x_offset++);
 	}
+	
+	x_offset--;
 
 	if (t_negative)
 		t_number = -t_number;
-
-	p_input = t_input;
-	p_input_length = t_input_length;
 
 	r_number = t_number;
 
@@ -245,14 +213,8 @@ static int4 datetime_compute_dayofweek(const MCDateTime& p_datetime)
 	return 1 + (t_day + (2 * t_month) + (6 * (t_month + 1) / 10) + t_year + t_year / 4 - t_year / 100 + t_year / 400 + 1) % 7;
 }
 
-static bool datetime_parse(const MCDateTimeLocale *p_locale, int4 p_century_cutoff, bool p_loose, const char *p_format, const char*& x_input, uint4& x_input_length, MCDateTime& r_datetime, int& r_valid_dateitems)
+static bool datetime_parse(const MCDateTimeLocale *p_locale, int4 p_century_cutoff, bool p_loose, MCStringRef p_format, MCStringRef p_input, uindex_t &x_offset, MCDateTime& r_datetime, int& r_valid_dateitems)
 {
-	const char *t_input;
-	t_input = x_input;
-
-	uint4 t_input_length;
-	t_input_length = x_input_length;
-
 	int4 t_year, t_month, t_day;
 	int4 t_hour, t_minute, t_second;
 	int4 t_bias, t_dayofweek;
@@ -273,17 +235,24 @@ static bool datetime_parse(const MCDateTimeLocale *p_locale, int4 p_century_cuto
 	bool t_loose_components;
 	bool t_loose_separators;
 
-	if (*p_format == '!')
+	uindex_t t_in_offset = x_offset;
+	uindex_t t_offset = 0;
+	uindex_t t_length;
+	uindex_t t_in_length;
+	t_length = MCStringGetLength(p_format);
+	t_in_length = MCStringGetLength(p_input);
+	
+	if (MCStringGetCharAtIndex(p_format, t_offset) == '!')
 	{
 		t_loose_components = false;
 		t_loose_separators = false;
-		p_format++;
+		t_offset++;
 	}
-	else if (*p_format == '^' && p_loose)
+	else if (MCStringGetCharAtIndex(p_format, t_offset) == '^' && p_loose)
 	{
 		t_loose_components = true;
 		t_loose_separators = false;
-		p_format++;
+		t_offset++;
 	}
 	else
 	{
@@ -291,8 +260,14 @@ static bool datetime_parse(const MCDateTimeLocale *p_locale, int4 p_century_cuto
 		t_loose_separators = p_loose;
 	}
 
-	while(*p_format != '\0')
+	while(t_offset < t_length)
 	{
+		unichar_t t_char;
+		t_char = MCStringGetCharAtIndex(p_format, t_offset++);
+		
+		uindex_t t_old_offset;
+		t_old_offset = t_in_offset;
+		
 		// If t_skip is true, we want to skip to the next specifier
 		//
 		bool t_skip;
@@ -301,27 +276,27 @@ static bool datetime_parse(const MCDateTimeLocale *p_locale, int4 p_century_cuto
 		bool t_valid;
 		t_valid = false;
 
-		if (*p_format == '%')
+		if (t_char == '%')
 		{
-			p_format += 1;
-			if (*p_format == '#')
-				p_format += 1;
+			t_char = MCStringGetCharAtIndex(p_format, t_offset++);
+			if (t_char == '#')
+				t_char = MCStringGetCharAtIndex(p_format, t_offset++);
 
-			while(t_input_length > 0 && *t_input == ' ')
-				t_input += 1, t_input_length -= 1;
+			while(t_in_offset < t_in_length && MCStringGetCharAtIndex(p_input, t_in_offset) == ' ')
+				t_in_offset++;
 
 			// MW-2007-09-11: [[ Bug 5293 ]] Fix the problem where you can't mix abbrev/long forms
 			//   of month names and weekday names.
-			switch(*p_format)
+			switch(t_char)
 			{
 			case 'a':
-				if (!match_prefix(p_locale -> abbrev_weekday_names, 7, t_input, t_input_length, t_dayofweek))
+				if (!match_prefix(p_locale -> abbrev_weekday_names, 7, p_input, t_in_offset, t_dayofweek))
 				{
 					// MW-2008-03-24: [[ Bug 6183 ]] Hmmm... Wishful thinking here - there are definitely 7 days of
 					//   the week, not 12 as was previously asserted.
 					if (t_loose_components)
                     {
-						if (!match_prefix(p_locale -> weekday_names, 7, t_input, t_input_length, t_dayofweek))
+						if (!match_prefix(p_locale -> weekday_names, 7, p_input, t_in_offset, t_dayofweek))
 							t_skip = true; // Weekday names are optional, so skip to the next specifier
 						else
 							t_valid = true;
@@ -331,13 +306,13 @@ static bool datetime_parse(const MCDateTimeLocale *p_locale, int4 p_century_cuto
 					t_valid = true;
 			break;
 			case 'A':
-				if (!match_prefix(p_locale -> weekday_names, 7, t_input, t_input_length, t_dayofweek))
+				if (!match_prefix(p_locale -> weekday_names, 7, p_input, t_in_offset, t_dayofweek))
 				{
 					// MW-2008-03-24: [[ Bug 6183 ]] Hmmm... Wishful thinking here - there are definitely 7 days of
 					//   the week, not 12 as was previously asserted.
 					if (t_loose_components)
                     {
-						if (!match_prefix(p_locale -> abbrev_weekday_names, 7, t_input, t_input_length, t_dayofweek))
+						if (!match_prefix(p_locale -> abbrev_weekday_names, 7, p_input, t_in_offset, t_dayofweek))
 							t_skip = true; // Weekday names are optional, so skip to the next specifier
 						else
 							t_valid = true;
@@ -347,32 +322,32 @@ static bool datetime_parse(const MCDateTimeLocale *p_locale, int4 p_century_cuto
 					t_valid = true;
 			break;
 			case 'b':
-				if (!match_prefix(p_locale -> abbrev_month_names, 12, t_input, t_input_length, t_month))
-					if (!t_loose_components || !match_prefix(p_locale -> month_names, 12, t_input, t_input_length, t_month))
+				if (!match_prefix(p_locale -> abbrev_month_names, 12, p_input, t_in_offset, t_month))
+					if (!t_loose_components || !match_prefix(p_locale -> month_names, 12, p_input, t_in_offset, t_month))
 						return false;
 				t_valid_dateitems |= DATETIME_ITEM_MONTH;
 				t_valid = true;
 			break;
 			case 'B':
-				if (!match_prefix(p_locale -> month_names, 12, t_input, t_input_length, t_month))
-					if (!t_loose_components || !match_prefix(p_locale -> abbrev_month_names, 12, t_input, t_input_length, t_month))
+				if (!match_prefix(p_locale -> month_names, 12, p_input, t_in_offset, t_month))
+					if (!t_loose_components || !match_prefix(p_locale -> abbrev_month_names, 12, p_input, t_in_offset, t_month))
 						return false;
 				t_valid_dateitems |= DATETIME_ITEM_MONTH;
 				t_valid = true;
 			break;
 			case 'w':
-				if (!match_number(t_input, t_input_length, t_dayofweek))
+				if (!match_number(p_input, t_in_offset, t_dayofweek))
 					return false;
 				t_valid = true;
 			break;
 			case 'd':
-				if (!match_number(t_input, t_input_length, t_day))
+				if (!match_number(p_input, t_in_offset, t_day))
 					return false;
 				t_valid_dateitems |= DATETIME_ITEM_DAY;
 				t_valid = true;
 			break;
 			case 'm':
-				if (!match_number(t_input, t_input_length, t_month))
+				if (!match_number(p_input, t_in_offset, t_month))
 					return false;
 				t_valid_dateitems |= DATETIME_ITEM_MONTH;
 				t_valid = true;
@@ -380,15 +355,14 @@ static bool datetime_parse(const MCDateTimeLocale *p_locale, int4 p_century_cuto
 			case 'y':
 			case 'Y':
 			{
-				int t_original_length;
-				t_original_length = t_input_length;
-				if (!match_number(t_input, t_input_length, t_year))
+				if (!match_number(p_input, t_in_offset, t_year))
 				{
 					if (t_loose_components)
 						t_skip = true; // Year specification is optional, so skip to the next specifier
 				}
-				else if (t_year < 100 && t_original_length - t_input_length <= 2)
+				else if (t_year < 100 && t_in_offset - t_old_offset <= 2)
 				{
+					// Year was in a two-digit form
 					if (t_year < p_century_cutoff)
 						t_year += 100;
 					t_year += 1900;
@@ -404,13 +378,13 @@ static bool datetime_parse(const MCDateTimeLocale *p_locale, int4 p_century_cuto
 			}
 			break;
 			case 'J':
-				if (!match_number(t_input, t_input_length, t_hour))
+				if (!match_number(p_input, t_in_offset, t_hour))
 					return false;
 				t_valid_dateitems |= DATETIME_ITEM_HOUR;
 				t_valid = true;
 			break;
 			case 'I':
-				if (!match_number(t_input, t_input_length, t_hour))
+				if (!match_number(p_input, t_in_offset, t_hour))
 					return false;
 				if (t_hour == 12)
 					t_hour = 0;
@@ -418,32 +392,32 @@ static bool datetime_parse(const MCDateTimeLocale *p_locale, int4 p_century_cuto
 				t_valid = true;
 			break;
 			case 'H':
-				if (!match_number(t_input, t_input_length, t_hour))
+				if (!match_number(p_input, t_in_offset, t_hour))
 					return false;
 				t_valid_dateitems |= DATETIME_ITEM_HOUR;
 				t_valid = true;
 			break;
 			case 'M':
-				if (!match_number(t_input, t_input_length, t_minute))
+				if (!match_number(p_input, t_in_offset, t_minute))
 					return false;
 				t_valid_dateitems |= DATETIME_ITEM_MINUTE;
 				t_valid = true;
 			break;
 			case 'S':
-				if (!match_number(t_input, t_input_length, t_second))
+				if (!match_number(p_input, t_in_offset, t_second))
 					return false;
 				t_valid_dateitems |= DATETIME_ITEM_SECOND;
 				t_valid = true;
 			break;
 			case 'p':
-				if (p_locale -> time_evening_suffix[0] != '\0' && match_string(p_locale -> time_evening_suffix, t_input, t_input_length))
+				if (!MCStringIsEmpty(p_locale->time_evening_suffix) && match_string(p_locale -> time_evening_suffix, p_input, t_in_offset))
 					t_is_afternoon = true;
-				else if (p_locale -> time_morning_suffix[0] != '\0' && !match_string(p_locale -> time_morning_suffix, t_input, t_input_length))
+				else if (!MCStringIsEmpty(p_locale->time_morning_suffix) && !match_string(p_locale -> time_morning_suffix, p_input, t_in_offset))
 					return false;
 				t_valid = true;
 			break;
 			case 'z':
-				if (!match_number(t_input, t_input_length, t_bias)) // TOO LOOSE!
+				if (!match_number(p_input, t_in_offset, t_bias)) // TOO LOOSE!
 					return false;
 				t_bias = (t_bias / 100) * 60 + (t_bias % 100);
 				t_valid = true;
@@ -451,61 +425,47 @@ static bool datetime_parse(const MCDateTimeLocale *p_locale, int4 p_century_cuto
 			}
 
 		}
-		else if (*p_format != *t_input)
+		else if (t_char != MCStringGetCharAtIndex(p_input, t_in_offset))
 		{
 			// Unrecognised padding is optional, so advance and skip
 			if (t_loose_separators)
 				t_skip = true;
 			else if (t_loose_components)
 			{
-				const char *t_lookahead;
-				t_lookahead = p_format + 1;
-
-				while(*t_lookahead != '\0' && *t_lookahead != '%')
-					t_lookahead += 1;
-
-				if (*t_lookahead == '\0')
+				while (t_offset < t_length && MCStringGetCharAtIndex(p_format, t_offset) != '%')
+					t_offset++;
+				
+				/* ODDITY */
+				// We don't quite understand this bit...
+				index_t t_diff = t_length - t_offset;
+				if (t_diff == 0 || t_diff == 2 || t_diff == 3)
 					t_skip = true;
-				else if (t_lookahead[2] == '\0' || t_lookahead[3] == '\0')
-					t_skip = true;
-			}
-
-			if (t_input_length > 0)
-			{
-				t_input += 1;
-				t_input_length -= 1;
 			}
 		}
 		else
 		{
-			if (t_input_length > 0)
-			{
-				t_input += 1;
-				t_input_length -= 1;
-			}
+			t_in_offset++;
 			t_valid = true;
 		}
 
 		if (t_skip)
 		{
-			while(*p_format != '\0' && *p_format != '%')
-				p_format += 1;
+			while (t_offset < t_length && MCStringGetCharAtIndex(p_format, t_offset) != '%')
+				t_offset++;
 
-			while(t_input_length > 0 && isspace(*t_input))
-				t_input_length -= 1, t_input += 1;
+			while (t_in_offset < t_in_length && isspace(MCStringGetCharAtIndex(p_input, t_in_offset)))
+				t_in_offset++;
 		}
-		else
-			p_format += 1;
 
 		if (!t_valid && !t_skip)
 			return false;
 	}
-
-	if (t_input_length > 0 && !isspace(*t_input))
+	
+	if (t_offset < t_length && !isspace(MCStringGetCharAtIndex(p_input, t_offset)))
 		return false;
-
-	while(t_input_length > 0 && isspace(*t_input))
-		t_input_length -= 1, t_input += 1;
+	
+	while (t_offset < t_length && isspace(MCStringGetCharAtIndex(p_input, t_offset)))
+		t_offset++;
 
 	// Year => Month <=> Day
 	// Second => Minute <=> Hour
@@ -543,14 +503,13 @@ static bool datetime_parse(const MCDateTimeLocale *p_locale, int4 p_century_cuto
 	if ((t_valid_dateitems & DATETIME_ITEM_YEAR) != 0)
 		r_datetime . year = t_year;
 
-	x_input = t_input;
-	x_input_length = t_input_length;
+	x_offset = t_in_offset;
 	r_valid_dateitems |= t_valid_dateitems;
 
 	return true;
 }
 
-static char *datetime_format(const MCDateTimeLocale *p_locale, const char *p_format, const MCDateTime& p_datetime, char *p_buffer)
+static void datetime_format(const MCDateTimeLocale *p_locale, MCStringRef p_format, const MCDateTime& p_datetime, MCStringRef &r_buffer)
 {
 	int4 t_year, t_month, t_day;
 	int4 t_hour, t_minute, t_second;
@@ -565,53 +524,59 @@ static char *datetime_format(const MCDateTimeLocale *p_locale, const char *p_for
 	t_dayofweek = datetime_compute_dayofweek(p_datetime);
 	t_bias = p_datetime . bias;
 
-	if (*p_format == '!' || *p_format == '^')
-		p_format += 1;
+	uindex_t t_offset = 0;
+	unichar_t t_char;
+	t_char = MCStringGetCharAtIndex(p_format, t_offset++);
+	
+	if (t_char == '!' || t_char == '^')
+		t_char = MCStringGetCharAtIndex(p_format, t_offset++);
+	
+	MCStringRef t_buffer;
+	/* UNCHECKED */ MCStringCreateMutable(0, t_buffer);
 
-	while(*p_format != '\0')
+	while(t_char != '\0')
 	{
-		if (*p_format == '%')
+		if (t_char == '%')
 		{
+			t_char = MCStringGetCharAtIndex(p_format, t_offset++);
+			
 			bool t_pad;
-			char t_unit;
-
-			p_format++;
-			if (*p_format == '#')
+			if (t_char == '#')
 			{
 				t_pad = false;
-				p_format += 1;
+				t_char = MCStringGetCharAtIndex(p_format, t_offset++);
 			}
 			else
 				t_pad = true;
 
-			t_unit = *p_format++;
-
-			switch(t_unit)
+			switch(t_char)
 			{
-			case 'a': p_buffer = append_string(p_buffer, p_locale -> abbrev_weekday_names[t_dayofweek - 1]); break; // Abbreviated day of week
-			case 'A': p_buffer = append_string(p_buffer, p_locale -> weekday_names[t_dayofweek - 1]); break; // Full day of week
-			case 'b': p_buffer = append_string(p_buffer, p_locale -> abbrev_month_names[t_month - 1]); break; // Abbreviated month
-			case 'B': p_buffer = append_string(p_buffer, p_locale -> month_names[t_month - 1]); break; // Full month
-			case 'w': p_buffer = append_number(p_buffer, t_dayofweek, 0); break; // Day of week
-			case 'd': p_buffer = append_number(p_buffer, t_day, t_pad ? 2 : 0); break; // Day of month
-			case 'm': p_buffer = append_number(p_buffer, t_month, t_pad ? 2 : 0); break; // Month of year
-			case 'y': p_buffer = append_number(p_buffer, t_year % 100, t_pad ? 2 : 0); break; // 2-digit year
-			case 'Y': p_buffer = append_number(p_buffer, t_year, t_pad ? 4 : 0); break; // 4-digit year
-			case 'I': p_buffer = append_number(p_buffer, (t_hour % 12) == 0 ? 12 : t_hour % 12, t_pad ? 2 : 0); break; // 12-hour hour
-			case 'J': p_buffer = append_number(p_buffer, t_hour % 12, t_pad ? 2 : 0); break; // 12-hour 0-based hour
-			case 'H': p_buffer = append_number(p_buffer, t_hour, t_pad ? 2 : 0); break; // 24-hour hour
-			case 'M': p_buffer = append_number(p_buffer, t_minute, t_pad ? 2 : 0); break; // minutes
-			case 'S': p_buffer = append_number(p_buffer, t_second, t_pad ? 2 : 0); break; // seconds
-			case 'p': p_buffer = append_string(p_buffer, t_hour < 12 ? p_locale -> time_morning_suffix : p_locale -> time_evening_suffix); break; // 12-hour identifier
-			case 'z': p_buffer = append_number(p_buffer, (t_bias / 60) * 100 + t_bias % 60, 4, true); break; // timezone
-			case '%': *p_buffer++ = '%'; break;
+			case 'a': /* UNCHECKED */ MCStringAppend(t_buffer, p_locale -> abbrev_weekday_names[t_dayofweek - 1]); break; // Abbreviated day of week
+			case 'A': /* UNCHECKED */ MCStringAppend(t_buffer, p_locale -> weekday_names[t_dayofweek - 1]); break; // Full day of week
+			case 'b': /* UNCHECKED */ MCStringAppend(t_buffer, p_locale -> abbrev_month_names[t_month - 1]); break; // Abbreviated month
+			case 'B': /* UNCHECKED */ MCStringAppend(t_buffer, p_locale -> month_names[t_month - 1]); break; // Full month
+			case 'w': /* UNCHECKED */ MCStringAppendFormat(t_buffer, "%d", t_dayofweek); break; // Day of week
+			case 'd': /* UNCHECKED */ MCStringAppendFormat(t_buffer, t_pad ? "%02d" : "%d", t_day); break; // Day of month
+			case 'm': /* UNCHECKED */ MCStringAppendFormat(t_buffer, t_pad ? "%02d" : "%d", t_month); break; // Month of year
+			case 'y': /* UNCHECKED */ MCStringAppendFormat(t_buffer, t_pad ? "%02d" : "%d", t_year % 100); break; // 2-digit year
+			case 'Y': /* UNCHECKED */ MCStringAppendFormat(t_buffer, t_pad ? "%04d" : "%d", t_year); break; // 4-digit year
+			case 'I': /* UNCHECKED */ MCStringAppendFormat(t_buffer, t_pad ? "%02d" : "%d", (t_hour % 12) == 0 ? 12 : t_hour % 12); break; // 12-hour hour
+			case 'J': /* UNCHECKED */ MCStringAppendFormat(t_buffer, t_pad ? "%02d" : "%d", t_hour % 12); break; // 12-hour 0-based hour
+			case 'H': /* UNCHECKED */ MCStringAppendFormat(t_buffer, t_pad ? "%02d" : "%d", t_hour); break; // 24-hour hour
+			case 'M': /* UNCHECKED */ MCStringAppendFormat(t_buffer, t_pad ? "%02d" : "%d", t_minute); break; // minutes
+			case 'S': /* UNCHECKED */ MCStringAppendFormat(t_buffer, t_pad ? "%02d" : "%d", t_second); break; // seconds
+			case 'p': /* UNCHECKED */ MCStringAppend(t_buffer, t_hour < 12 ? p_locale -> time_morning_suffix : p_locale -> time_evening_suffix); break; // 12-hour identifier
+			case 'z': /* UNCHECKED */ MCStringAppendFormat(t_buffer, "%+04d", (t_bias / 60) * 100 + t_bias % 60); break; // timezone
+			case '%': /* UNCHECKED */ MCStringAppendChar(t_buffer, '%'); break;
 			}
 		}
 		else
-			*p_buffer++ = *p_format++;
+			/* UNCHECKED */ MCStringAppendChar(t_buffer, t_char);
+		
+		t_char = MCStringGetCharAtIndex(p_format, t_offset++);
 	}
 
-	return p_buffer;
+	/* UNCHECKED */ MCStringCopyAndRelease(t_buffer, r_buffer);
 }
 
 static inline void datetime_normalize_value(int4 p_minimum, int4 p_maximum, int4& x_value, int4& x_overflow)
@@ -760,18 +725,17 @@ void MCD_date(Properties p_format, MCExecPoint& p_output)
 	if (t_use_system && t_length != P_INTERNET)
 		t_locale = MCS_getdatetimelocale();
 	else
-		t_locale = &g_english_locale;
+		t_locale = g_basic_locale;
 
-	const char *t_date_format;
+	MCStringRef t_date_format;
 	if (t_length == P_INTERNET)
-		t_date_format = s_internet_date_format;
+		t_date_format = MCSTR(s_internet_date_format);
 	else
 		t_date_format = t_locale -> date_formats[t_length - P_SHORT];
 
-	char t_buffer[256];
-	uint4 t_buffer_length;
-	t_buffer_length = datetime_format(t_locale, t_date_format, t_datetime, t_buffer) - t_buffer;
-	p_output . copysvalue(t_buffer, t_buffer_length);
+	MCAutoStringRef t_buffer;
+	datetime_format(t_locale, t_date_format, t_datetime, &t_buffer);
+	p_output . setvalueref(*t_buffer);
 }
 
 /* WRAPPER */ bool MCD_time(MCExecContext& ctxt, Properties p_format, MCStringRef& r_time)
@@ -799,20 +763,19 @@ void MCD_time(Properties p_format, MCExecPoint& p_output)
 	if (t_use_system && t_length != P_INTERNET)
 		t_locale = MCS_getdatetimelocale();
 	else
-		t_locale = &g_english_locale;
+		t_locale = g_basic_locale;
 
-	const char *t_date_format;
+	MCStringRef t_date_format;
 	if (t_length == P_INTERNET)
-		t_date_format = s_internet_date_format;
+		t_date_format = MCSTR(s_internet_date_format);
 	else if (MCtwelvetime)
 		t_date_format = t_locale -> time_formats[t_length - P_ABBREVIATE];
 	else
 		t_date_format = t_locale -> time24_formats[t_length - P_ABBREVIATE];
 
-	char t_buffer[256];
-	uint4 t_buffer_length;
-	t_buffer_length = datetime_format(t_locale, t_date_format, t_datetime, t_buffer) - t_buffer;
-	p_output . copysvalue(t_buffer, t_buffer_length);
+	MCAutoStringRef t_buffer;
+	datetime_format(t_locale, t_date_format, t_datetime, &t_buffer);
+	p_output . setvalueref(*t_buffer);
 }
 
 bool MCD_monthnames(MCExecContext& ctxt, Properties p_format, MCListRef& r_list)
@@ -828,7 +791,7 @@ bool MCD_monthnames(MCExecContext& ctxt, Properties p_format, MCListRef& r_list)
 	if (t_use_system && t_length != P_SHORT)
 		t_locale = MCS_getdatetimelocale();
 	else
-		t_locale = &g_english_locale;
+		t_locale = g_basic_locale;
 
 	bool t_success = true;
 
@@ -840,9 +803,9 @@ bool MCD_monthnames(MCExecContext& ctxt, Properties p_format, MCListRef& r_list)
 		if (t_length == P_SHORT)
 			t_success = MCListAppendInteger(*t_list, t_month);
 		else if (t_length == P_ABBREVIATE)
-			t_success = MCListAppendCString(*t_list, t_locale -> abbrev_month_names[t_month - 1]);
+			t_success = MCListAppend(*t_list, t_locale -> abbrev_month_names[t_month - 1]);
 		else
-			t_success = MCListAppendCString(*t_list, t_locale -> month_names[t_month - 1]);
+			t_success = MCListAppend(*t_list, t_locale -> month_names[t_month - 1]);
 	}
 
 	return t_success && MCListCopy(*t_list, r_list);
@@ -871,7 +834,7 @@ bool MCD_weekdaynames(MCExecContext& ctxt, Properties p_format, MCListRef& r_lis
 	if (t_use_system && t_length != P_SHORT)
 		t_locale = MCS_getdatetimelocale();
 	else
-		t_locale = &g_english_locale;
+		t_locale = g_basic_locale;
 
 	bool t_success = true;
 
@@ -883,9 +846,9 @@ bool MCD_weekdaynames(MCExecContext& ctxt, Properties p_format, MCListRef& r_lis
 		if (t_length == P_SHORT)
 			t_success = MCListAppendInteger(*t_list, t_weekday);
 		else if (t_length == P_ABBREVIATE)
-			t_success = MCListAppendCString(*t_list, t_locale -> abbrev_weekday_names[t_weekday - 1]);
+			t_success = MCListAppend(*t_list, t_locale -> abbrev_weekday_names[t_weekday - 1]);
 		else
-			t_success = MCListAppendCString(*t_list, t_locale -> weekday_names[t_weekday - 1]);
+			t_success = MCListAppend(*t_list, t_locale -> weekday_names[t_weekday - 1]);
 	}
 
 	return t_success && MCListCopy(*t_list, r_list);
@@ -921,7 +884,7 @@ void MCD_dateformat(Properties p_length, MCExecPoint& p_output)
 	if (t_length >= CF_ENGLISH)
 	{
 		t_length -= CF_ENGLISH;
-		t_locale = &g_english_locale;
+		t_locale = g_basic_locale;
 	}
 	else
 		t_locale = MCS_getdatetimelocale();
@@ -929,19 +892,25 @@ void MCD_dateformat(Properties p_length, MCExecPoint& p_output)
 	if (t_length != P_SHORT && t_length != P_ABBREVIATE && t_length != P_LONG)
 		t_length = P_SHORT;
 
-	const char *t_format;
-	t_format = t_locale -> date_formats[t_length - P_SHORT];
-	if (*t_format == '!' || *t_format == '^')
-		t_format += 1;
+	MCStringRef t_format;
+	t_format = MCValueRetain(t_locale -> date_formats[t_length - P_SHORT]);
+	unichar_t t_char;
+	t_char = MCStringGetCharAtIndex(t_format, 0);
+	if (t_char == '!' || t_char == '^')
+	{
+		MCAutoStringRef t_new;
+		/* UNCHECKED */ MCStringCopySubstring(t_format, MCRangeMake(1, MCStringGetLength(t_format) - 1), &t_new);
+		MCValueAssign(t_format, *t_new);
+	}
 
 	// Note that as the locales are either static, or cached the format strings
 	// are essentially static.
-	p_output . setstaticcstring(t_format);
+	p_output . setvalueref(t_format);
 }
 
 // This function returns true if the format is a time.
 //
-static bool MCD_decompose_convert_format(MCExecPoint& p_context, int p_form, const MCDateTimeLocale*& r_locale, const char*& r_format)
+static bool MCD_decompose_convert_format(MCExecPoint& p_context, int p_form, const MCDateTimeLocale*& r_locale, MCStringRef &r_format)
 {
 	bool t_use_system;
 
@@ -958,46 +927,46 @@ static bool MCD_decompose_convert_format(MCExecPoint& p_context, int p_form, con
 	else
 		t_use_system = p_context . getusesystemdate() == True;
 
-	r_locale = t_use_system ? MCS_getdatetimelocale() : &g_english_locale;
+	r_locale = t_use_system ? MCS_getdatetimelocale() : g_basic_locale;
 
 	switch(p_form)
 	{
 	case CF_INTERNET:
 	case CF_INTERNET_DATE:
-		r_format = s_internet_date_format;
+		r_format = MCSTR(s_internet_date_format);
 	break;
 	
 	case CF_DATEITEMS:
-		r_format = s_items_date_format;
+		r_format = MCSTR(s_items_date_format);
 	break;
 
 	case CF_TIME:
 	case CF_SHORT_TIME:
 	case CF_ABBREV_TIME:
-		r_format = MCtwelvetime ? r_locale -> time_formats[0] : r_locale -> time24_formats[0];
+		r_format = MCValueRetain(MCtwelvetime ? r_locale -> time_formats[0] : r_locale -> time24_formats[0]);
 		return true;
 		//r_is_date = false;
 	break;
 
 	case CF_LONG_TIME:
-		r_format = MCtwelvetime ? r_locale -> time_formats[1] : r_locale -> time24_formats[1];
+		r_format = MCValueRetain(MCtwelvetime ? r_locale -> time_formats[1] : r_locale -> time24_formats[1]);
 		return true;
 		//r_is_date = false;
 	break;
 
 	case CF_DATE:
 	case CF_SHORT_DATE:
-		r_format = r_locale -> date_formats[0];
+		r_format = MCValueRetain(r_locale -> date_formats[0]);
 		//r_is_date = true;
 	break;
 
 	case CF_ABBREV_DATE:
-		r_format = r_locale -> date_formats[1];
+		r_format = MCValueRetain(r_locale -> date_formats[1]);
 		//r_is_date = true;
 	break;
 
 	case CF_LONG_DATE:
-		r_format = r_locale -> date_formats[2];
+		r_format = MCValueRetain(r_locale -> date_formats[2]);
 		//r_is_date = true;
 	break;
 
@@ -1047,20 +1016,20 @@ static bool MCD_decompose_convert_format(MCExecPoint& p_context, int p_form, con
 // We have to make time parsing more permissive. This is because of the introduction of system
 // times when nobody's scripts are ready for it.
 //
-static bool convert_parse_time(MCExecPoint& p_context, const MCDateTimeLocale *p_locale, const char*& x_input, uint4& x_input_length, MCDateTime& x_datetime, int& x_valid_dateitems)
+static bool convert_parse_time(MCExecPoint& p_context, const MCDateTimeLocale *p_locale, MCStringRef p_input, uindex_t &x_offset, MCDateTime& x_datetime, int& x_valid_dateitems)
 {
-	if (p_locale != &g_english_locale)
-		if (convert_parse_time(p_context, &g_english_locale, x_input, x_input_length, x_datetime, x_valid_dateitems))
+	if (p_locale != g_basic_locale)
+		if (convert_parse_time(p_context, g_basic_locale, p_input, x_offset, x_datetime, x_valid_dateitems))
 			return true;
 
 	for(uint4 t_format = 0; t_format < 4; ++t_format)
 	{
-		const char *t_time_format;
+		MCStringRef t_time_format;
 		if (t_format >= 2)
 			t_time_format = p_locale -> time24_formats[3 - t_format];
 		else
 			t_time_format = p_locale -> time_formats[1 - t_format];
-		if (datetime_parse(p_locale, p_context . getcutoff(), true, t_time_format, x_input, x_input_length, x_datetime, x_valid_dateitems))
+		if (datetime_parse(p_locale, p_context . getcutoff(), true, t_time_format, p_input, x_offset, x_datetime, x_valid_dateitems))
 			return true;
 	}
 
@@ -1082,14 +1051,14 @@ bool MCD_convert_to_datetime(MCExecPoint &p_context, Convert_form p_primary_from
 	// Make sure 'empty' is not a date
 	if (p_context . getsvalue() . getlength() == 0)
 		return false;
+	
+	uindex_t t_offset = 0;
+	MCAutoStringRef t_input;
+	/* UNCHECKED */ p_context.copyasstringref(&t_input);
     
 	if (p_primary_from != CF_UNDEFINED)
 	{
-		const char *t_input;
-		uint4 t_input_length;
-		t_input = p_context . getsvalue() . getstring();
-		t_input_length = p_context . getsvalue() . getlength();
-        
+
 		if (p_primary_from == CF_SECONDS)
 		{
 			if (p_context . ton() != ES_NORMAL)
@@ -1102,7 +1071,7 @@ bool MCD_convert_to_datetime(MCExecPoint &p_context, Convert_form p_primary_from
 			int t_valid_dateitems;
 			t_valid_dateitems = 0;
             
-			if (!datetime_parse(&g_english_locale, p_context . getcutoff(), false, s_items_date_format, t_input, t_input_length, t_datetime, t_valid_dateitems) || t_input_length != 0)
+			if (!datetime_parse(g_basic_locale, p_context . getcutoff(), false, MCSTR(s_items_date_format), *t_input, t_offset, t_datetime, t_valid_dateitems) || !MCStringIsEmpty(*t_input))
 				return false;
             
 			datetime_normalize(t_datetime);
@@ -1114,7 +1083,7 @@ bool MCD_convert_to_datetime(MCExecPoint &p_context, Convert_form p_primary_from
 			int t_valid_dateitems;
 			t_valid_dateitems = 0;
             
-			if (!datetime_parse(&g_english_locale, p_context . getcutoff(), false, s_internet_date_format, t_input, t_input_length, t_datetime, t_valid_dateitems) || t_input_length != 0)
+			if (!datetime_parse(g_basic_locale, p_context . getcutoff(), false, MCSTR(s_internet_date_format), *t_input, t_offset, t_datetime, t_valid_dateitems) || !MCStringIsEmpty(*t_input))
 				return false;
             
 			if (!datetime_validate(t_datetime))
@@ -1128,29 +1097,29 @@ bool MCD_convert_to_datetime(MCExecPoint &p_context, Convert_form p_primary_from
 		else
 		{
 			const MCDateTimeLocale *t_locale;
-			const char *t_date_format;
+			MCStringRef t_date_format;
             
 			int t_valid_dateitems;
 			t_valid_dateitems = 0;
             
 			bool t_is_time;
 			t_is_time = MCD_decompose_convert_format(p_context, p_primary_from, t_locale, t_date_format);
-			if (t_is_time && !convert_parse_time(p_context, t_locale, t_input, t_input_length, t_datetime, t_valid_dateitems))
+			if (t_is_time && !convert_parse_time(p_context, t_locale, *t_input, t_offset, t_datetime, t_valid_dateitems))
 				return false;
-			else if (!t_is_time && !datetime_parse(t_locale, p_context . getcutoff(), true, t_date_format, t_input, t_input_length, t_datetime, t_valid_dateitems))
+			else if (!t_is_time && !datetime_parse(t_locale, p_context . getcutoff(), true, t_date_format, *t_input, t_offset, t_datetime, t_valid_dateitems))
 				return false;
             
 			if (p_secondary_from != CF_UNDEFINED)
 			{
 				t_is_time = MCD_decompose_convert_format(p_context, p_secondary_from, t_locale, t_date_format);
-				if (t_is_time && !convert_parse_time(p_context, t_locale, t_input, t_input_length, t_datetime, t_valid_dateitems))
+				if (t_is_time && !convert_parse_time(p_context, t_locale, *t_input, t_offset, t_datetime, t_valid_dateitems))
 					return false;
-				else if (!t_is_time && !datetime_parse(t_locale, p_context . getcutoff(), true, t_date_format, t_input, t_input_length, t_datetime, t_valid_dateitems))
+				else if (!t_is_time && !datetime_parse(t_locale, p_context . getcutoff(), true, t_date_format, *t_input, t_offset, t_datetime, t_valid_dateitems))
 					return false;
 			}
 			
             
-			if (t_input_length != 0)
+			if (!MCStringIsEmpty(*t_input))
 				return false;
             
 			if ((t_valid_dateitems & DATETIME_ITEM_DATE) != DATETIME_ITEM_DATE)
@@ -1200,12 +1169,7 @@ bool MCD_convert_to_datetime(MCExecPoint &p_context, Convert_form p_primary_from
 		if (p_context . getusesystemdate())
 			t_locale = MCS_getdatetimelocale();
 		else
-			t_locale = &g_english_locale;
-        
-		const char *t_input;
-		uint4 t_input_length;
-		t_input = p_context . getsvalue() . getstring();
-		t_input_length = p_context . getsvalue() . getlength();
+			t_locale = g_basic_locale;
         
 		int t_valid_dateitems;
 		t_valid_dateitems = 0;
@@ -1221,12 +1185,12 @@ bool MCD_convert_to_datetime(MCExecPoint &p_context, Convert_form p_primary_from
 		//   long time 24
 		//   short time 24
         
-		if (datetime_parse(&g_english_locale, p_context . getcutoff(), false, s_items_date_format, t_input, t_input_length, t_datetime, t_valid_dateitems) && t_input_length == 0)
+		if (datetime_parse(g_basic_locale, p_context . getcutoff(), false, MCSTR(s_items_date_format), *t_input, t_offset, t_datetime, t_valid_dateitems) && !MCStringIsEmpty(*t_input))
 		{
 			datetime_normalize(t_datetime);
 			t_success = MCS_datetimetouniversal(t_datetime);
 		}
-		else if (datetime_parse(&g_english_locale, p_context . getcutoff(), false, s_internet_date_format, t_input, t_input_length, t_datetime, t_valid_dateitems) && t_input_length == 0)
+		else if (datetime_parse(g_basic_locale, p_context . getcutoff(), false, MCSTR(s_internet_date_format), *t_input, t_offset, t_datetime, t_valid_dateitems) && MCStringIsEmpty(*t_input))
 		{
 			if (!datetime_validate(t_datetime))
 				return false;
@@ -1244,7 +1208,9 @@ bool MCD_convert_to_datetime(MCExecPoint &p_context, Convert_form p_primary_from
 			t_date_valid = false;
 			t_time_valid = false;
             
-			while(t_input_length > 0 && !(t_date_valid && t_time_valid))
+			uindex_t t_length;
+			t_length = MCStringGetLength(*t_input);
+			while(t_offset < t_length && !(t_date_valid && t_time_valid))
 			{
 				bool t_changed;
 				t_changed = false;
@@ -1252,7 +1218,7 @@ bool MCD_convert_to_datetime(MCExecPoint &p_context, Convert_form p_primary_from
 				if (!t_date_valid)
 				{
 					for(uint4 t_format = 0; t_format < 3; ++t_format)
-						if (datetime_parse(t_locale, p_context . getcutoff(), true, t_locale -> date_formats[2 - t_format], t_input, t_input_length, t_datetime, t_valid_dateitems))
+						if (datetime_parse(t_locale, p_context . getcutoff(), true, t_locale -> date_formats[2 - t_format], *t_input, t_offset, t_datetime, t_valid_dateitems))
 						{
 							t_date_valid = true;
 							t_changed = true;
@@ -1262,7 +1228,7 @@ bool MCD_convert_to_datetime(MCExecPoint &p_context, Convert_form p_primary_from
                 
 				if (!t_time_valid)
 				{
-					if (convert_parse_time(p_context, t_locale, t_input, t_input_length, t_datetime, t_valid_dateitems))
+					if (convert_parse_time(p_context, t_locale, *t_input, t_offset, t_datetime, t_valid_dateitems))
 					{
 						t_time_valid = true;
 						t_changed = true;
@@ -1273,7 +1239,7 @@ bool MCD_convert_to_datetime(MCExecPoint &p_context, Convert_form p_primary_from
 					break;
 			}
             
-			if (t_input_length > 0)
+			if (t_offset < t_length)
 				return false;
             
 			if ((t_valid_dateitems & DATETIME_ITEM_DATE) != DATETIME_ITEM_DATE)
@@ -1348,21 +1314,29 @@ bool MCD_convert_from_datetime(MCExecPoint &p_context, Convert_form p_primary_to
 			return False;
         
 		const MCDateTimeLocale *t_locale;
-		const char *t_date_format;
+		MCAutoStringRef t_date_format;
         
-		char t_buffer[256];
-		int t_buffer_length;
+		MCStringRef t_buffer;
         
-		MCD_decompose_convert_format(p_context, p_primary_to, t_locale, t_date_format);
-		t_buffer_length = datetime_format(t_locale, t_date_format, p_datetime, t_buffer) - t_buffer;
-		p_context . setchars(t_buffer, t_buffer_length);
+		MCD_decompose_convert_format(p_context, p_primary_to, t_locale, &t_date_format);
+		datetime_format(t_locale, *t_date_format, p_datetime, t_buffer);
+		
         
 		if (p_secondary_to != CF_UNDEFINED)
 		{
-			MCD_decompose_convert_format(p_context, p_secondary_to, t_locale, t_date_format);
-			t_buffer_length = datetime_format(t_locale, t_date_format, p_datetime, t_buffer) - t_buffer;
-			p_context . concatchars(t_buffer, t_buffer_length, EC_SPACE, false);
+			MCStringRef t_buffer_secondary;
+			MCD_decompose_convert_format(p_context, p_secondary_to, t_locale, &t_date_format);
+			datetime_format(t_locale, *t_date_format, p_datetime, t_buffer_secondary);
+			
+			MCStringRef t_new;
+			/* UNCHECKED */ MCStringFormat(t_new, "%@ %@", t_buffer, t_buffer_secondary);
+			MCValueRelease(t_buffer);
+			MCValueRelease(t_buffer_secondary);
+			t_buffer = t_new;
 		}
+		
+		p_context . setvalueref(t_buffer);
+		MCValueRelease(t_buffer);
 	}
     
     return t_success;
