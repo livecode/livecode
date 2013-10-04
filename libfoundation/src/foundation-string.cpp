@@ -1927,7 +1927,7 @@ bool MCStringInsertChars(MCStringRef self, uindex_t p_at, const unichar_t *p_cha
 	return true;
 }
 #else
-bool MCStringPrependChars(MCStringRef self, uindex_t p_at, const unichar_t *p_chars, uindex_t p_char_count)
+bool MCStringInsertChars(MCStringRef self, uindex_t p_at, const unichar_t *p_chars, uindex_t p_char_count)
 {
 	MCAssert(MCStringIsMutable(self));
 	
