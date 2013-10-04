@@ -260,9 +260,9 @@ static void MCIPhoneImportUIImage(UIImage *p_image, int32_t p_max_width, int32_t
 
 	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
-	MCAutoStringRef t_data_string;
-	/* UNCHECKED */ MCStringCreateWithOldString(MCString((const char *)[t_data bytes], [t_data length]), &t_data_string);
-	iptr -> setstringprop(ctxt, 0, P_TEXT, false, *t_data_string);	
+	MCAutoDataRef t_dataref;
+	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)[t_data bytes], [t_data length], &t_dataref);
+	iptr -> setdataprop(ctxt, 0, P_TEXT, false, *t_dataref);	
 }
 
 static void content_to_url(const char *p_file, NSURL*& r_url)
