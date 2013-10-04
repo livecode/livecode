@@ -59,6 +59,8 @@
 #include <locale.h>
 #include <io.h> 
 
+#include "w32dc.h"
+
 #ifdef DeleteFile
 #undef DeleteFile
 #endif // DeleteFile
