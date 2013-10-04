@@ -349,7 +349,12 @@ void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name)
 	p1.setnext(&p2);
 	p2.setvalueref_argument(name);
 	p2.setnext(&p3);
-	p3.setvalueref_argument(p_value);
+    
+    MCValueRef t_value;
+    MCValueCopy(p_value, t_value);
+
+	p3.setvalueref_argument(t_value);
+    
 	MCB_message(ep, MCM_update_var, &p1);
 	if (added)
 		MCnexecutioncontexts--;

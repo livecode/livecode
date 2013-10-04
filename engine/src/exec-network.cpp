@@ -613,7 +613,7 @@ void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCStringRef p_value, int p_whe
 		MCAutoStringRef t_string;
 		/* UNCHECKED */ ep . copyasmutablestringref(&t_string);
 		
-		/* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_chunk . start, p_chunk . finish - p_chunk . start), p_value);
+		/* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_chunk . mark . start, p_chunk . mark . finish - p_chunk . mark . start), p_value);
 		
 		ep . setvalueref(*t_string);
 	}
@@ -636,15 +636,16 @@ void MCNetworkExecReturnValueAndUrlResult(MCExecContext& ctxt, MCValueRef p_resu
 
 void MCNetworkExecReturnValueAndUrlResultFromVar(MCExecContext& ctxt, MCValueRef p_result, MCVarref *p_variable)
 {
-	if (p_variable -> eval(ctxt . GetEP()) != ES_NORMAL)
+    MCAutoValueRef t_value;
+	if (!p_variable -> eval(ctxt, &t_value))
 	{
 		ctxt . LegacyThrow(EE_RETURN_BADEXP);
 		return;
 	}
 	
 	ctxt . SetTheResultToValue(p_result);
-	MCurlresult -> set(ctxt . GetEP());
-	p_variable -> dofree(ctxt . GetEP());
+	MCurlresult -> set(ctxt, *t_value);
+	p_variable -> dofree(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -775,3 +776,41 @@ void MCNetworkSetAllowDatagramBroadcasts(MCExecContext& ctxt, bool p_value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCNetworkExecSetUrl(MCExecContext& ctxt, MCStringRef p_value, MCStringRef p_url)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecPoint ep2(nil, nil, nil);
+    
+    ep . setvalueref(p_url);
+    ep2 . setvalueref(p_value);
+    
+	MCU_puturl(ep, ep2);
+}
+
+void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCStringRef p_value, int p_where, MCStringRef p_url)
+{
+    if (p_where == PT_INTO)
+        MCNetworkExecSetUrl(ctxt, p_value, p_url);
+    else
+    {
+        MCAutoStringRef t_string;
+        MCU_geturl(ctxt, p_url, &t_string);
+        
+        MCAutoStringRef t_new_value;
+        MCStringMutableCopy(*t_string, &t_new_value);
+        
+        if (p_where == PT_AFTER)
+            MCStringAppend(*t_new_value, p_value);
+        else
+            MCStringPrepend(*t_new_value, p_value);
+        MCNetworkExecSetUrl(ctxt, *t_new_value, p_url);
+    }
+}
+
+void MCNetworkMarkUrl(MCExecContext& ctxt, MCStringRef p_url, MCMarkedText& r_mark)
+{
+    MCU_geturl(ctxt, p_url, r_mark . text);
+    r_mark . start = 0;
+    r_mark . finish = MAXUINT4;
+}

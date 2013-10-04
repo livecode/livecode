@@ -4923,7 +4923,7 @@ Exec_stat MCHandleBuildInfo(void *context, MCParameter *p_parameters)
 
 //////////////////////////////////////////////////////////////////////////////////////
 
-static MCMediaType MCMediaTypeFromCString(const char *p_string)
+static MCMediaType MCMediaTypeFromString(MCStringRef p_string)
 {
 #ifdef /* MCMediaTypeFromCString */ LEGACY_EXEC
     const char *t_ptr = p_string;
@@ -4957,36 +4957,39 @@ static MCMediaType MCMediaTypeFromCString(const char *p_string)
     }
     return t_media_type;
 #endif /* MCMediaTypeFromCString */
-    const char *t_ptr = p_string;
+
     MCMediaType t_media_type = kMCUnknownMediaType;
     
+    uindex_t t_pos;
+    t_pos = 0;
     while (true)
     {
-        while(*t_ptr == ' ' || *t_ptr == ',')
-            t_ptr += 1;
-        if (*t_ptr == '\0')
+        while (MCStringGetNativeCharAtIndex(p_string, t_pos) == ' ' || MCStringGetNativeCharAtIndex(p_string, t_pos) == ',')
+            t_pos += 1;
+        if (MCStringGetLength(p_string) == t_pos)
             break;
     	// HC-2012-02-01: [[ Bug 9983 ]] - This fix is related as the implementation in the new syntax does not produce a result
-        if (MCCStringEqualSubstringCaseless(t_ptr, "podcasts", 7))
+        
+        if (MCStringSubstringIsEqualTo(p_string, MCRangeMake(t_pos, 7), MCSTR("podcasts"), kMCCompareCaseless))
             t_media_type = t_media_type | kMCMediaTypePodcasts;
-        else if (MCCStringEqualSubstringCaseless(t_ptr, "songs", 4))
+        else if (MCStringSubstringIsEqualTo(p_string, MCRangeMake(t_pos, 4), MCSTR("songs"), kMCCompareCaseless))
             t_media_type = t_media_type | kMCMediaTypeSongs;
-        else if (MCCStringEqualSubstringCaseless(t_ptr, "audiobooks", 9))
+        else if (MCStringSubstringIsEqualTo(p_string, MCRangeMake(t_pos, 9), MCSTR("audiobooks"), kMCCompareCaseless))
             t_media_type = t_media_type | kMCMediaTypeAudiobooks;
-        else if (MCCStringEqualSubstringCaseless(t_ptr, "movies", 5))
+        else if (MCStringSubstringIsEqualTo(p_string, MCRangeMake(t_pos, 5), MCSTR("movies"), kMCCompareCaseless))
             t_media_type = t_media_type | kMCMediaTypeMovies;
-        else if (MCCStringEqualSubstringCaseless(t_ptr, "musicvideos", 10))
+        else if (MCStringSubstringIsEqualTo(p_string, MCRangeMake(t_pos, 10), MCSTR("musicvideos"), kMCCompareCaseless))
             t_media_type = t_media_type | kMCMediaTypeMusicVideos;
-        else if (MCCStringEqualSubstringCaseless(t_ptr, "tv", 2))
+        else if (MCStringSubstringIsEqualTo(p_string, MCRangeMake(t_pos, 2), MCSTR("tv"), kMCCompareCaseless))
             t_media_type = t_media_type | kMCMediaTypeTv;
-        else if (MCCStringEqualSubstringCaseless(t_ptr, "videopodcasts", 12))
+        else if (MCStringSubstringIsEqualTo(p_string, MCRangeMake(t_pos, 12), MCSTR("videopodcasts"), kMCCompareCaseless))
             t_media_type = t_media_type | kMCMediaTypeVideoPodcasts;
-        else if (MCCStringEqualSubstringCaseless(t_ptr, "anyAudio", 12))
+        else if (MCStringSubstringIsEqualTo(p_string, MCRangeMake(t_pos, 12), MCSTR("anyAudio"), kMCCompareCaseless))
             t_media_type = t_media_type | kMCMediaTypeAnyAudio;
-        else if (MCCStringEqualSubstringCaseless(t_ptr, "anyVideo", 12))
+        else if (MCStringSubstringIsEqualTo(p_string, MCRangeMake(t_pos, 12), MCSTR("anyVideo"), kMCCompareCaseless))
             t_media_type = t_media_type | kMCMediaTypeAnyVideo;
-        while(*t_ptr != ' ' && *t_ptr != ',' && *t_ptr != '\0')
-            t_ptr += 1;
+        while (MCStringGetNativeCharAtIndex(p_string, t_pos) != ' ' && MCStringGetNativeCharAtIndex(p_string, t_pos) != ',' && MCStringGetNativeCharAtIndex(p_string, t_pos) != '\0')
+            t_pos += 1;
         
     }
     return t_media_type;
@@ -5097,10 +5100,10 @@ Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameters)
 	}
 	if (t_media_types == 0)
 	{
-		t_media_types = MCMediaTypeFromCString("podcast, songs, audiobook");;
+		t_media_types = MCMediaTypeFromString(MCSTR("podcast, songs, audiobook"));;
 #ifdef __IPHONE_5_0
 		if (MCmajorosversion >= 500)
-			t_media_types += MCMediaTypeFromCString("movies, tv, videoPodcasts, musicVideos, videoITunesU");;
+			t_media_types += MCMediaTypeFromString(MCSTR("movies, tv, videoPodcasts, musicVideos, videoITunesU"));;
 #endif
 	}
     MCExecContext ctxt(ep);
@@ -6718,10 +6721,10 @@ static void invoke_platform(void *p_context)
 
 extern void MCIPhoneCallOnMainFiber(void (*)(void *), void *);
 
-Exec_stat MCHandlePlatformMessage(const MCString& p_message, MCParameter *p_parameters)
+Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters)
 {
 	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
-		if (p_message == s_platform_messages[i] . message)
+		if (MCNameIsEqualToCString(p_message, s_platform_messages[i] . message, kMCCompareCaseless))
 		{
 			// MW-2012-07-31: [[ Fibers ]] If the method doesn't need script / wait, then
 			//   jump to the main fiber for it.
@@ -6743,11 +6746,11 @@ Exec_stat MCHandlePlatformMessage(const MCString& p_message, MCParameter *p_para
 	return ES_NOT_HANDLED;
 }
 #else // Android
-Exec_stat MCHandlePlatformMessage(const MCString& p_message, MCParameter *p_parameters)
+Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters)
 {
 	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
     {
-		if (p_message == s_platform_messages[i] . message)
+		if (MCNameIsEqualToCString(p_message, s_platform_messages[i] . message, kMCCompareCaseless))
 			return s_platform_messages[i] . handler(s_platform_messages[i] . context, p_parameters);
     }
 	

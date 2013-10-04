@@ -795,7 +795,7 @@ void MCStack::startedit(MCGroup *group)
 	// Link the card to the parent, give it the same id as the current card and give it a temporary script
 	curcard->setparent(this);
 	curcard->setid(savecard->getid());
-	curcard->setsprop(P_SCRIPT, ECS);
+	curcard->setsprop(P_SCRIPT, MCSTR(ECS));
 
 	// Now add references for each control in the group being edited to the card
 	if (controls != NULL)

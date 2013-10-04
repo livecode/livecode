@@ -1429,13 +1429,62 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 				ep.concatuint(height - theight, EC_RETURN, j++ == 0);
 		}
 		break;
-	// MW-2012-02-08: [[ FlaggedRanges ]] Return the flaggedRanges of the whole field.
+    // JS-2013-05-15: [[ PageRanges ]] Return the pageRanges of the whole field.
+    case P_PAGE_RANGES:
+        ep.clear();
+        if (opened)
+        {
+            MCParagraph *pgptr = paragraphs;
+            uint2 height = getfheight();
+            uint2 theight = height;
+            uint2 tstart = 1;
+            uint2 tend = 0;
+            MCLine *lastline = NULL;
+            uint2 j = 0;
+            while (True)
+            {
+                MCLine *oldlast = lastline;
+                if (!pgptr->pagerange(fixedheight, theight, tend, lastline))
+                {
+                    if (theight == height)
+                    {
+                        ep.concatuint(tstart, EC_RETURN, j++ == 0);
+                        ep.concatuint(tend, EC_COMMA, false);
+                        tstart = tend + 1;
+                        lastline = NULL;
+                    }
+                    else
+                    {
+                        ep.concatuint(tstart, EC_RETURN, j++ == 0);
+                        ep.concatuint(tend, EC_COMMA, false);
+                        tstart = tend + 1;
+                        theight = height;
+                        if (oldlast == NULL || lastline != NULL)
+                            continue;
+                    }
+                }
+                else
+                    tend += 1;
+
+                pgptr = pgptr->next();
+                if (pgptr == paragraphs)
+                    break;
+            }
+            if (theight != height) {
+                ep.concatuint(tstart, EC_RETURN, j++ == 0);
+                ep.concatuint(tend, EC_COMMA, false);
+            }
+        }
+        break;
+    // MW-2012-02-08: [[ FlaggedRanges ]] Return the flaggedRanges of the whole field.
+	// MW-2013-08-27: [[ Bug 11129 ]] Use INT32_MAX as upper limit.
 	case P_FLAGGED_RANGES:
-		return gettextatts(parid, P_FLAGGED_RANGES, ep, nil, False, 0, getpgsize(nil), false);
+		return gettextatts(parid, P_FLAGGED_RANGES, ep, nil, False, 0, INT32_MAX, false);
 	// MW-2012-02-22: [[ IntrinsicUnicode ]] Fetch the encoding property of the field, this is
 	//   actually the encoding of the content.
 	case P_ENCODING:
-		return gettextatts(parid, P_ENCODING, ep, nil, False, 0, getpgsize(nil), false);
+		// MW-2013-08-27: [[ Bug 11129 ]] Use INT32_MAX as upper limit.
+		return gettextatts(parid, P_ENCODING, ep, nil, False, 0, INT32_MAX, false);
 #endif /* MCField::getprop */
 	default:
 		return MCControl::getprop_legacy(parid, which, ep, effective);
@@ -1971,8 +2020,9 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 		setsbrects();
 		break;
 	// MW-2012-02-08: [[ FlaggedField ]] Set the flaggedRanges of the whole field.
+	// MW-2013-08-27: [[ Bug 11129 ]] Use INT32_MAX as upper limit.
 	case P_FLAGGED_RANGES:
-		return settextatts(parid, P_FLAGGED_RANGES, ep, nil, 0, getpgsize(nil), false);
+		return settextatts(parid, P_FLAGGED_RANGES, ep, nil, 0, INT32_MAX, false);
 #endif /* MCField::setprop */
 	default:
 		return MCControl::setprop_legacy(parid, p, ep, effective);

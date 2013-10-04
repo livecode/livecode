@@ -758,7 +758,7 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 }
 
 static bool string_contains_item(const char *p_string, const char *p_item)
-{
+{ 
 	const char *t_offset;
 	t_offset = strstr(p_string, p_item);
 	if (t_offset == nil)
@@ -768,7 +768,7 @@ static bool string_contains_item(const char *p_string, const char *p_item)
 	
 	uint32_t t_length;
 	t_length = strlen(p_item);
-	if (t_offset[t_length] != '\0' && t_offset[t_length] != ',')
+    if (t_offset[t_length] != '\0' && t_offset[t_length] != ',')
 		return false;
 
 	return true;
@@ -797,7 +797,7 @@ Exec_stat MCObject::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 			return ES_ERROR;
 
 		// Check the textstyle string is within the object's textstyle set.
-		ep . setboolean(string_contains_item(ep . getcstring(), MCF_unparsetextstyle(t_style)));
+        ep . setboolean(string_contains_item(ep . getcstring(), MCF_unparsetextstyle(t_style)));
 	}
 	break;
 	case P_CUSTOM_KEYS:
@@ -2463,10 +2463,21 @@ Exec_stat MCObject::getprop(uint32_t p_part_id, Properties p_which, MCExecPoint&
 				break;
 				
 			case kMCPropertyTypeString:
-			case kMCPropertyTypeBinaryString:
 			{	
 				MCAutoStringRef t_value;
 				((void(*)(MCExecContext&, MCObjectPtr, MCStringRef&))t_info -> getter)(ctxt, t_object, &t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setvalueref(*t_value);
+					return ES_NORMAL;
+				}
+			}
+				break;
+				
+			case kMCPropertyTypeBinaryString:
+			{	
+				MCAutoDataRef t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, MCDataRef&))t_info -> getter)(ctxt, t_object, &t_value);
 				if (!ctxt . HasError())
 				{
 					ep . setvalueref(*t_value);
@@ -2897,13 +2908,22 @@ Exec_stat MCObject::setprop(uint32_t p_part_id, Properties p_which, MCExecPoint&
 			break;
 				
 			case kMCPropertyTypeString:
-			case kMCPropertyTypeBinaryString:
 			{
 				MCAutoStringRef t_value;
 				if (!ep . copyasstringref(&t_value))
 					ctxt . LegacyThrow(EE_PROPERTY_NAC);
 				if (!ctxt . HasError())
 					((void(*)(MCExecContext&, MCObjectPtr, MCStringRef))t_info -> setter)(ctxt, t_object, *t_value);	
+			}
+			break;
+				
+			case kMCPropertyTypeBinaryString:
+			{
+				MCAutoDataRef t_value;
+				if (!ep . copyasdataref(&t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NAC);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, MCDataRef))t_info -> setter)(ctxt, t_object, *t_value);	
 			}
 			break;
 				
@@ -3287,6 +3307,14 @@ void MCObject::setuintprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p
 	ctxt . Throw();
 }
 
+void MCObject::setintprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, integer_t p_value)
+{
+	ctxt . GetEP() . setint(p_value);
+	if (setprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL)
+		return;
+	
+	ctxt . Throw();
+}
 //////////
 
 void MCObject::getdoubleprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, double& r_value)
@@ -3344,6 +3372,17 @@ void MCObject::getvariantprop(MCExecContext& ctxt, uint32_t p_part_id, Propertie
 		ctxt . GetEP() . copyasvariant(r_value))
 		return;
 
+	ctxt . Throw();
+}
+
+/////////
+
+void MCObject::setdataprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCDataRef p_value)
+{
+	ctxt . GetEP() . setvalueref(p_value);
+	if (setprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL)
+		return;
+	
 	ctxt . Throw();
 }
 

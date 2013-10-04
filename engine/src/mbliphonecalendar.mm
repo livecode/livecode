@@ -131,13 +131,13 @@ UIViewController *MCIPhoneGetViewController(void);
         r_event.allDay = p_event_data.mcallday;
     
     if (MCStringGetLength(p_event_data.mctitle) > 0 && t_an_error == NULL && t_did_add == true)
-        r_event.title = [NSString stringWithCString: MCStringGetCString(p_event_data.mctitle) encoding:NSMacOSRomanStringEncoding];
+        r_event.title = [NSString stringWithMCStringRef: p_event_data.mctitle];
 
     if (MCStringGetLength(p_event_data.mcnote) > 0 && t_an_error == NULL && t_did_add == true)
-        r_event.notes = [NSString stringWithCString: MCStringGetCString(p_event_data.mcnote) encoding:NSMacOSRomanStringEncoding];
+        r_event.notes = [NSString stringWithMCStringRef: p_event_data.mcnote];
 
     if (MCStringGetLength(p_event_data.mclocation) > 0 && t_an_error == NULL && t_did_add == true)
-        r_event.location = [NSString stringWithCString: MCStringGetCString(p_event_data.mclocation) encoding:NSMacOSRomanStringEncoding];
+        r_event.location = [NSString stringWithMCStringRef: p_event_data.mclocation];
     
     // Set up the dates
     if (p_event_data.mcstartdateset == true && MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, p_event_data.mcstartdate))
@@ -377,7 +377,7 @@ UIViewController *MCIPhoneGetViewController(void);
     EKEvent *t_event;
     if (MCStringGetLength(p_new_event_data.mceventid) > 0)
     {
-        t_event = [m_event_store eventWithIdentifier:[NSString stringWithCString: MCStringGetCString(p_new_event_data.mceventid) encoding:NSMacOSRomanStringEncoding]];
+        t_event = [m_event_store eventWithIdentifier:[NSString stringWithMCStringRef: p_new_event_data.mceventid]];
         const char *t_temp_string = [((NSString*) t_event.calendar.title) UTF8String];
     }
     else

@@ -853,7 +853,7 @@ void MCField::DoGetTextState(MCExecContext& ctxt, Properties which, uint32_t par
 	t_state = false;
     
 	int4 t_line_index;
-	int4 ei = getpgsize(nil);
+	int4 ei = INT32_MAX;
 	int4 si = 0;
 	MCParagraph *pgptr = getcarddata(fdata, part, True)->getparagraphs();
 	MCParagraph *sptr = indextoparagraph(pgptr, si, ei, &t_line_index);
@@ -951,7 +951,7 @@ void MCField::GetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, MCInterface
     
     int4 t_line_index, t_char_index, si, ei;
     si = 0;
-    ei = getpgsize(nil);
+    ei = INT32_MAX;
     
     if (flags & F_SHARED_TEXT)
 		p_part = 0;
@@ -992,7 +992,7 @@ void MCField::SetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, const MCInt
     // MW-2012-02-08: [[ FlaggedField ]] Special case the 'flaggedRanges' property.
     int4 t_line_index, t_char_index, si, ei;
     si = 0;
-    ei = getpgsize(nil);
+    ei = INT32_MAX;
     
     if (flags & F_SHARED_TEXT)
 		p_part = 0;
