@@ -213,64 +213,36 @@ static void MCInterfaceDecorationFormat(MCExecContext& ctxt, const MCInterfaceDe
         }
         else
         {
-			MCAutoStringRef t_output;
-			/* UNCHECKED */ MCStringCreateMutable(0, &t_output);
-			char_t t_del;
-			t_del = ',';
-            bool first;
-			first = true;
-            
+			MCListRef t_output;
+			/* UNCHECKED */ MCListCreateMutable('\n', t_output);
+			
             if (p_input . decorations & WD_TITLE)
-			{
-				MCStringAppendFormat(*t_output, "%s,", MCtitlestring);
-				first = false;
-			}
+				/* UNCHECKED */ MCListAppendCString(t_output, MCtitlestring);
+				
             if (p_input . decorations & WD_MENU)
-			{	
-				MCStringAppendFormat(*t_output, "%s,", MCmenustring);
-				first = false;
-			}
+				/* UNCHECKED */ MCListAppendCString(t_output, MCmenustring);
             if (p_input . decorations & WD_MINIMIZE)
-			{
-				MCStringAppendFormat(*t_output, "%s,", MCminimizestring);
-				first = false;
-			}
+				/* UNCHECKED */ MCListAppendCString(t_output, MCminimizestring);
+				
             if (p_input . decorations & WD_MAXIMIZE)
-			{
-				MCStringAppendFormat(*t_output, "%s,", MCmaximizestring);
-				first = false;
-			}
+				/* UNCHECKED */ MCListAppendCString(t_output, MCmaximizestring);
+		
             if (p_input . decorations & WD_CLOSE)
-			{
-				MCStringAppendFormat(*t_output, "%s,", MCclosestring);
-				first = false;
-			}
+				/* UNCHECKED */ MCListAppendCString(t_output, MCclosestring);
+				
             if (p_input . decorations & WD_METAL)
-			{
-				MCStringAppendFormat(*t_output, "%s,", MCmetalstring);
-				first = false;
-			}
+				/* UNCHECKED */ MCListAppendCString(t_output, MCmetalstring);
+				
             if (p_input . decorations & WD_UTILITY)
-			{
-				MCStringAppendFormat(*t_output, "%s,", MCutilitystring);
-				first = false;
-			}
+				/* UNCHECKED */ MCListAppendCString(t_output, MCutilitystring);
+			
             if (p_input . decorations & WD_NOSHADOW)
-			{
-				MCStringAppendFormat(*t_output, "%s,", MCnoshadowstring);
-				first = false;
-			}
+				/* UNCHECKED */ MCListAppendCString(t_output, MCnoshadowstring);
+				
             if (p_input . decorations & WD_FORCETASKBAR)
-			{
-				MCStringAppendFormat(*t_output, "%s,", MCforcetaskbarstring);
-				first = false;
-			}
-
-			// Remove the last comma, if any.
-			if (!first)
-				MCStringRemove(*t_output, MCRangeMake(MCStringGetLength(*t_output) - 1, 1));
-
-            r_output = MCValueRetain(*t_output);
+				/* UNCHECKED */ MCListAppendCString(t_output, MCforcetaskbarstring);
+				
+            /* UNCHECKED */ MCListCopyAsStringAndRelease(t_output, r_output);
 			return;
         }
     }
