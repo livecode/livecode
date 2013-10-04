@@ -320,6 +320,7 @@ LT command_table[] =
         {"request", TT_STATEMENT, S_REQUEST},
 		{"require", TT_STATEMENT, S_REQUIRE},
         {"reset", TT_STATEMENT, S_RESET},
+        {"resolve", TT_STATEMENT, S_RESOLVE},
         {"return", TT_STATEMENT, S_RETURN},
         {"revert", TT_STATEMENT, S_REVERT},
 #ifdef MODE_DEVELOPMENT

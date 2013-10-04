@@ -1629,6 +1629,12 @@ enum Parse_errors
     // {PE-0533} measureText: bad mode parameter
     PE_MEASURE_TEXT_BADMODE,
 
+	// MERG-2013-10-04: [[ ResolveImage ]] resolve image relative to object.
+    // {PE-0534} resolve image: bad image reference
+	PE_RESOLVE_BADIMAGE,
+
+    // {PE-0535} resolve image: bad object reference
+	PE_RESOLVE_BADOBJECT,
 };
 
 extern const char *MCparsingerrors;

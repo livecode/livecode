@@ -1900,6 +1900,8 @@ enum Statements {
     S_REQUEST,
 	S_REQUIRE,
     S_RESET,
+    // MERG-2013-09-23: [[ ResolveImage ]] resolve image [id] relative to <object>
+	S_RESOLVE,
     S_RETURN,
     S_REVERT,
 	S_REV_RELICENSE, // DEVELOPMENT only

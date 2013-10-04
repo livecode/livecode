@@ -224,7 +224,9 @@ MCStatement *MCN_new_statement(int2 which)
 		return new MCInclude(true);
 	case S_RESET:
 		return new MCReset;
-	case S_RETURN:
+    case S_RESOLVE:
+        return new MCResolveImage;
+    case S_RETURN:
 		return new MCReturn;
 	case S_REVERT:
 		return new MCRevert;
