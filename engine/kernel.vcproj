@@ -6509,6 +6509,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\exec-strings-chunk.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\exec-strings.cpp"
 				>
 			</File>
