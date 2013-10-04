@@ -1610,7 +1610,9 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			{
 				view_setfullscreenmode(t_mode);
 				if (view_getfullscreen() && opened > 0)
-					reopenwindow();
+					// IM-2013-10-04: [[ FullscreenMode ]] Change the rect back to old_rect,
+					// rather than reopening the window.
+					setrect(old_rect);
 			}
 		}
 		break;

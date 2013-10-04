@@ -304,12 +304,8 @@ void MCStack::realize()
 			if (!((MCScreenDC*)MCscreen)->getmenubarhidden())
 				SetSystemUIMode(kUIModeAllHidden, kUIOptionAutoShowMenuBar);
 
-			const MCDisplay *t_display;
-			t_display = MCscreen -> getnearestdisplay(rect);
-			MCRectangle t_workarea, t_viewport;
-			t_workarea = t_display -> workarea;
-			t_viewport = t_display -> viewport ;
-			setrect(t_viewport);
+			// IM-2013-10-04: [[ FullscreenMode ]] Don't change stack rect if fullscreen
+			/* CODE DELETED */
 		}
 		else
 		{
@@ -559,6 +555,34 @@ void MCStackGetWindowRect(WindowPtr p_window, MCRectangle &r_rect)
 	r_rect.height = t_winrect.bottom - t_winrect.top;
 }
 
+// IM-2013-09-23: [[ FullscreenMode ]] Factor out device-specific window sizing
+MCRectangle MCStack::device_setgeom(const MCRectangle &p_rect)
+{
+	MCRectangle t_win_rect;
+	MCStackGetWindowRect((WindowPtr)window->handle.window, t_win_rect);
+	
+	if (IsWindowVisible((WindowPtr)window->handle.window))
+	{
+		if (mode != WM_SHEET && mode != WM_DRAWER
+			&& (p_rect.x != t_win_rect.x || p_rect.y != t_win_rect.y))
+		{
+			MoveWindow((WindowPtr)window->handle.window, p_rect.x, p_rect.y, False);
+//			state |= CS_BEEN_MOVED;
+		}
+	}
+	else
+	{
+		if (mode != WM_SHEET && mode != WM_DRAWER)
+			MoveWindow((WindowPtr)window->handle.window, p_rect.x, p_rect.y, False);
+//		state &= ~CS_BEEN_MOVED;
+	}
+
+	if (p_rect.width != t_win_rect.width || p_rect.height != t_win_rect.height)
+		SizeWindow((WindowPtr)window->handle.window, p_rect.width, p_rect.height, True);
+	
+	return t_win_rect;
+}
+
 void MCStack::setgeom()
 {
 	//set stack(window) size or position from script
@@ -581,42 +605,18 @@ void MCStack::setgeom()
 	// MW-2011-09-12: [[ MacScroll ]] Make sure we apply the current scroll setting.
 	applyscroll();
 	
-	// IM-2013-08-01: [[ ResIndependence ]] scale to device res when updating window size
-	MCRectangle t_rect_scaled;
-	t_rect_scaled = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
+	// IM-2013-10-03: [[ FullscreenMode ]] Use view methods to get / set the stack viewport
+	MCRectangle t_old_rect;
+	t_old_rect = view_getstackviewport();
 	
-	MCRectangle t_win_rect;
-	MCStackGetWindowRect((WindowPtr)window->handle.window, t_win_rect);
+	rect = view_setstackviewport(rect);
 	
-	MCRectangle t_win_rect_scaled;
-	t_win_rect_scaled = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_win_rect));
+	state &= ~CS_NEED_RESIZE;
 	
-	if (IsWindowVisible((WindowPtr)window->handle.window))
-	{
-		if (mode != WM_SHEET && mode != WM_DRAWER
-		        && (t_rect_scaled.x != t_win_rect.x || t_rect_scaled.y != t_win_rect.y))
-		{
-			MoveWindow((WindowPtr)window->handle.window, t_rect_scaled.x, t_rect_scaled.y, False);
-			state |= CS_BEEN_MOVED;
-		}
-		if (t_rect_scaled.width != t_win_rect.width || t_rect_scaled.height != t_win_rect.height)
-		{
-			SizeWindow((WindowPtr)window->handle.window, t_rect_scaled.width, t_rect_scaled.height, True);
-			resize(t_win_rect_scaled.width, t_win_rect_scaled.height + getscroll());
-		}
-		state &= ~CS_NEED_RESIZE;
-	}
-	else
-	{
-		if (mode != WM_SHEET && mode != WM_DRAWER)
-			MoveWindow((WindowPtr)window->handle.window, t_rect_scaled.x, t_rect_scaled.y, False);
-		if (t_rect_scaled.width != t_win_rect.width || t_rect_scaled.height != t_win_rect.height)
-		{
-			SizeWindow((WindowPtr)window->handle.window, t_rect_scaled.width, t_rect_scaled.height, True);
-			resize(t_win_rect_scaled.width, t_win_rect_scaled.height + getscroll());
-		}
-		state &= ~(CS_BEEN_MOVED | CS_NEED_RESIZE);
-	}
+	// IM-2013-10-03: [[ FullscreenMode ]] Return values from view methods are
+	// in stack coords so don't need to transform
+	if (t_old_rect.x != rect.x || t_old_rect.y != rect.y || t_old_rect.width != rect.width || t_old_rect.height != rect.height)
+		resize(t_old_rect.width, t_old_rect.height);
 }
 
 // MW-2011-09-12: [[ MacScroll ]] This is called to apply the Mac menu scroll. It

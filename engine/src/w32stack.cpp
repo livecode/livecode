@@ -390,15 +390,7 @@ void MCStack::realize()
 		RECT wrect ;
 
 		// IM-2013-09-23: [[ FullscreenMode ]] Don't change stack rect if fullscreen
-		//if ( getextendedstate(ECS_FULLSCREEN) )
-		//{
-		//	const MCDisplay *t_display;
-		//	t_display = MCscreen -> getnearestdisplay(rect);
-		//	MCRectangle t_workarea, t_viewport;
-		//	t_workarea = t_display -> workarea;
-		//	t_viewport = t_display -> viewport ;
-		//	setrect(t_viewport);
-		//}
+		/* CODE DELETED */
 
 		wrect = getwrect(rect, wstyle, exstyle);
 		LONG x = wrect.left;
