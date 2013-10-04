@@ -460,20 +460,23 @@ public:
 		
 		if (m_completion != nil)
 		{
-			MCExecPoint ep(nil, nil, nil);
-			MCresult -> fetch(ep);
+            MCValueRef t_value;
+            MCresult->copyasvalueref(t_value);
 			
 			id t_result;
-			if (ep . isempty())
+            if (t_value == nil)
 				t_result = nil;
-			else if (ep . getformat() == VF_ARRAY)
+
+            else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeArray)
 			{
 				t_result = nil;
 			}
-			else if (ep . getformat() == VF_NUMBER || ep . getformat() == VF_BOTH)
-				t_result = [NSNumber numberWithDouble: ep . getnvalue()];
-			else
-				t_result = [NSString stringWithCString: ep . getcstring() encoding: NSMacOSRomanStringEncoding];
+            else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeNumber)
+                t_result = [NSNumber numberWithDouble: MCNumberFetchAsReal((MCNumberRef)t_value)];
+            else if (MCValueGetTypeCode((t_value) == kMCValueTypeCodeString))
+                t_result = [NSString stringWithCString: MCStringGetCString((MCStringRef)t_value) encoding: NSMacOSRomanStringEncoding];
+            else if (MCValueGetTypeCode((t_value) == kMCValueTypeCodeName))
+                t_result = [NSString stringWithCString: MCStringGetCString(MCNameGetString((MCStringRef)t_value)) encoding: NSMacOSRomanStringEncoding];
 				
 			m_completion(t_result);
 		}
