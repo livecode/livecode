@@ -385,6 +385,7 @@ struct MCFontStruct
 #include <math.h>
 #include <signal.h>
 #include <assert.h>
+#define _CTYPE_H
 
 #define SIGBOGUS 100
 
