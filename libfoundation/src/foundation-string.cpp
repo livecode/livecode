@@ -351,6 +351,9 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 		const char *t_format_start_ptr;
 		t_format_start_ptr = t_format_ptr;
 		
+		bool t_has_range;
+		t_has_range = false;
+		
 		int t_arg_count;
 		t_arg_count = 0;
 		while(*t_format_ptr != '\0')
@@ -366,6 +369,12 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 				{
 					t_arg_count += FORMAT_ARG_32_BIT;
 					t_format_ptr++;
+					
+					if (*t_format_ptr == '@')
+					{
+						t_has_range = true;
+						break;
+					}
 				}
 				else
 				{
@@ -443,6 +452,12 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 		{
 			t_format_ptr += 1;
 		
+			const MCRange *t_range;
+			if (t_has_range)
+				t_range = va_arg(p_args, const MCRange *);
+			else
+				t_range = nil;
+				
 			MCValueRef t_value;
 			t_value = va_arg(p_args, MCValueRef);
 			
@@ -459,7 +474,10 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 			else
 				MCAssert(false);
 
-			t_success = MCStringAppend(t_buffer, *t_string);
+			if (t_range == nil)
+				t_success = MCStringAppend(t_buffer, *t_string);
+			else
+				t_success = MCStringAppendSubstring(t_buffer, *t_string, *t_range);
 		}
 	}
 
