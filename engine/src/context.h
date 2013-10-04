@@ -173,7 +173,7 @@ public:
 	
 	virtual void drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy) = 0;
 
-	virtual void drawlink(const char *link, const MCRectangle& region) = 0;
+	virtual void drawlink(MCStringRef link, const MCRectangle& region) = 0;
 
 	virtual int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false) = 0;
 

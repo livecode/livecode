@@ -1233,7 +1233,7 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
 
 void MCFiltersEvalUniDecode(MCExecContext& ctxt, MCStringRef p_src, MCNameRef p_lang, MCStringRef& r_dest)
 {
-	uinteger_t t_dest_charset = MCU_languagetocharset(p_lang);
+	uinteger_t t_dest_charset = MCU_languagetocharset(MCNameGetString(p_lang));
 
 	if (MCU_unicodetomultibyte(p_src, t_dest_charset, r_dest))
 		return;
@@ -1243,7 +1243,7 @@ void MCFiltersEvalUniDecode(MCExecContext& ctxt, MCStringRef p_src, MCNameRef p_
 
 void MCFiltersEvalUniEncode(MCExecContext& ctxt, MCStringRef p_src, MCNameRef p_lang, MCStringRef& r_dest)
 {
-	uinteger_t t_dest_charset = MCU_languagetocharset(p_lang);
+	uinteger_t t_dest_charset = MCU_languagetocharset(MCNameGetString(p_lang));
 
 	if (MCU_multibytetounicode(p_src, t_dest_charset, r_dest))
 		return;

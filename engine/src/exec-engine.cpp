@@ -653,31 +653,25 @@ void MCEngineExecPutOutput(MCExecContext& ctxt, MCStringRef p_value, bool p_is_u
 }
 
 void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_where, MCVariableChunkPtr p_var)
-{
-	MCExecPoint& ep = ctxt . GetEP();
-	
+{	
 	p_var . variable -> clearuql();
 	
 	if (p_var . chunk == CT_UNDEFINED)
 	{
 		if (p_where == PT_INTO)
-		{
-			ep . setvalueref(p_value);
-			p_var . variable -> set(ep, False);
-		}
+			p_var . variable -> set(ctxt, p_value, false);
 		else if (p_where == PT_AFTER)
-		{
-			ep . setvalueref(p_value);
-			p_var . variable -> set(ep, True);
-		}
+			p_var . variable -> set(ctxt, p_value, true);
 		else
 		{
-			if (p_var . variable -> eval(ep) != ES_NORMAL)
+            MCAutoValueRef t_value;
+			if (!p_var . variable -> eval(ctxt, &t_value))
 				return;
 			
 			MCAutoStringRef t_string;
-			/* UNCHECKED */ ep . copyasmutablestringref(&t_string);
-			
+            if (!ctxt . ConvertToMutableString(*t_value, &t_string))
+                return;
+            
 			MCAutoStringRef t_value_string;
 			if (!ctxt . ConvertToString(p_value, &t_value_string))
 			{
@@ -686,35 +680,34 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
 			}
 			
 			/* UNCHECKED */ MCStringPrepend(*t_string, *t_value_string);
-			
-			ep . setvalueref(*t_string);
-			p_var . variable -> set(ep, False);
+			p_var . variable -> set(ctxt, *t_string, False);
 		}
 	}
 	else
 	{
-		if (p_var . variable -> eval(ep) != ES_NORMAL)
-			return;
+        MCAutoValueRef t_value;
+        if (!p_var . variable -> eval(ctxt, &t_value))
+            return;
 		
-		MCAutoStringRef t_string;
-		/* UNCHECKED */ ep . copyasmutablestringref(&t_string);
-		
-		MCAutoStringRef t_value_string;
-		if (!ctxt . ConvertToString(p_value, &t_value_string))
-		{
-			ctxt . Throw();
-			return;
-		}
+        MCAutoStringRef t_string;
+        if (!ctxt . ConvertToMutableString(*t_value, &t_string))
+            return;
+        
+        MCAutoStringRef t_value_string;
+        if (!ctxt . ConvertToString(p_value, &t_value_string))
+        {
+            ctxt . Throw();
+            return;
+        }
 		
 		if (p_where == PT_BEFORE)
-			p_var . finish = p_var . start;
+			p_var . mark . finish = p_var . mark . start;
 		else if (p_where == PT_AFTER)
-			p_var . start = p_var . finish;
-
-		/* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . start, p_var . finish - p_var . start), *t_value_string);
-		
-		ep . setvalueref(*t_string);
-		p_var . variable -> set(ep, False);
+			p_var . mark . start = p_var . mark . finish;
+        
+		/* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
+        
+		p_var . variable -> set(ctxt, *t_string, False);
 	}
 }
 
@@ -924,7 +917,7 @@ void MCEngineExecWaitWhile(MCExecContext& ctxt, MCExpression *p_condition, bool 
 
 void MCEngineExecDeleteVariable(MCExecContext& ctxt, MCVarref *p_target)
 {
-	if (p_target->dofree(ctxt . GetEP()) != ES_NORMAL)
+	if (!p_target->dofree(ctxt))
 		ctxt . Throw();
 }
 
@@ -932,9 +925,14 @@ void MCEngineExecDeleteVariableChunks(MCExecContext& ctxt, MCVariableChunkPtr *p
 {
 	for(uindex_t i = 0; i < p_chunk_count; i++)
 	{
-		p_chunks[i] . variable -> eval(ctxt . GetEP());
-		ctxt . GetEP() . insert(MCnullmcstring, p_chunks[i] . start, p_chunks[i] . finish);
-		p_chunks[i] .variable -> set(ctxt . GetEP());
+        MCValueRef t_value;
+		p_chunks[i] . variable -> eval(ctxt, t_value);
+        
+        MCAutoStringRef t_string;
+        if (ctxt . ConvertToMutableString(t_value, &t_string) && MCStringReplace(*t_string, MCRangeMake(p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start), kMCEmptyString))
+        {
+            p_chunks[i] . variable -> set(ctxt, *t_string, false);
+        }
 	}
 }
 
@@ -1154,8 +1152,9 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
 
 			// MW-2011-08-11: [[ Bug 9668 ]] Make sure we copy 'pdata' if we use it, since
 			//   mptr (into which it points) only lasts as long as this method call.
-			if (ctxt . GetEP() . gethandler() -> eval(ctxt . GetEP()) == ES_NORMAL)
-				newparam->set_argument(ctxt . GetEP());
+			MCAutoValueRef t_value;
+			if (ctxt . GetHandler() -> eval_ctxt(ctxt, &t_value)  == ES_NORMAL)
+				newparam->setvalueref_argument(*t_value);
 			else
 				newparam->copysvalue_argument(pdata);
 
@@ -1403,7 +1402,9 @@ void MCEngineSetNumberFormat(MCExecContext& ctxt, const MCEngineNumberFormat& p_
 
 void MCEngineGetNumberFormat(MCExecContext& ctxt, MCEngineNumberFormat& r_format)
 {
-	ctxt . GetNumberFormat(r_format . fw, r_format . trailing, r_format . force);
+	r_format . fw = ctxt . GetNumberFormatWidth();
+	r_format . trailing = ctxt . GetNumberFormatTrailing();
+	r_format . force = ctxt . GetNumberFormatForce();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1603,7 +1604,7 @@ void MCEngineEvalTemplateAsObject(MCExecContext& ctxt, uinteger_t p_template_typ
     switch ((Dest_type) p_template_type)
     {
         case DT_STACK:
-            t_object = MCtemplatestack;
+            t_object = (MCObject *)MCtemplatestack;
             break;
         case DT_AUDIO_CLIP:
             t_object = (MCObject *)MCtemplateaudio;
@@ -1710,4 +1711,28 @@ void MCEngineEvalErrorObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
     }
     
     ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+
+void MCEngineMarkVariable(MCExecContext& ctxt, MCVarref *p_variable, MCMarkedText& r_mark)
+{
+    if (p_variable == nil)
+	{
+		ctxt . LegacyThrow(EE_CHUNK_BADCONTAINER);
+		return;
+	}
+    
+    MCValueRef t_value;
+    if (!p_variable -> eval(ctxt, t_value))
+    {
+        ctxt . LegacyThrow(EE_CHUNK_SETCANTGETDEST);
+        return;
+    }
+    
+    if (!ctxt . ConvertToString(t_value, r_mark . text))
+    {
+        ctxt . LegacyThrow(EE_CHUNK_SETCANTGETDEST);
+        return;
+    }
+    r_mark . start = 0;
+    r_mark . finish = MAXUINT4;
 }

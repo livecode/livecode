@@ -2162,21 +2162,25 @@ void MCInterfaceExecDeleteObjectChunks(MCExecContext& ctxt, MCObjectChunkPtr *p_
 		{
 			MCStringRef t_value; 
 			t_value = nil;
-			p_chunks[i] . object -> getstringprop(ctxt, p_chunks[i] . part_id, P_UNICODE_TEXT, False, t_value);
-			
-			ctxt . GetEP(). utf16toutf8();
-			MCAutoStringRef t_value_mutable_copy;
-			MCStringMutableCopy(t_value, &t_value_mutable_copy);
-			/* UNCHECKED */ MCStringRemove(*t_value_mutable_copy, MCRangeMake(p_chunks[i] . start, p_chunks[i] . finish - p_chunks[i] . start));
-			
-			ctxt . GetEP() . utf8toutf16();
-    
-			p_chunks[i] . object -> setstringprop(ctxt, p_chunks[i] . part_id, P_UNICODE_TEXT, False, *t_value_mutable_copy);
-		    MCValueRelease(t_value);
+			p_chunks[i] . object -> getstringprop(ctxt, p_chunks[i] . part_id, P_TEXT, False, t_value);
 
+			/* UNCHECKED */ MCStringMutableCopyAndRelease(t_value, t_value);
+			/* UNCHECKED */ MCStringRemove(t_value, MCRangeMake(p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start));
+			/* UNCHECKED */ MCStringCopyAndRelease(t_value, t_value);
+			p_chunks[i] . object -> setstringprop(ctxt, p_chunks[i] . part_id, P_TEXT, False, t_value);
+			MCValueRelease(t_value);
 		}
 		else if (p_chunks[i] . object -> gettype() == CT_FIELD)
-			static_cast<MCField *>(p_chunks[i] . object) -> settextindex(p_chunks[i] . part_id, p_chunks[i] . start, p_chunks[i] . finish, MCnullmcstring, False);
+        {
+            MCField *t_field;
+            t_field = static_cast<MCField *>(p_chunks[i] . object);
+            integer_t t_si, t_ei;
+            t_si = 0;
+            t_ei = INT32_MAX;
+            t_field -> resolvechars(p_chunks[i] . part_id, t_si, t_ei, p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start);
+            
+			t_field -> settextindex_stringref(p_chunks[i] . part_id, t_si, t_ei, kMCEmptyString, False);
+        }
 	}
 }
 
@@ -2185,55 +2189,52 @@ void MCInterfaceExecDeleteObjectChunks(MCExecContext& ctxt, MCObjectChunkPtr *p_
 static void MCInterfaceExecChangeChunkOfButton(MCExecContext& ctxt, MCObjectChunkPtr p_target, Properties p_prop, bool p_value)
 {
 	MCStringRef t_value;
-	p_target . object -> getstringprop(ctxt, p_target . part_id, P_UNICODE_TEXT, False, t_value);
+	p_target . object -> getstringprop(ctxt, p_target . part_id, P_TEXT, False, t_value);
 
-	ctxt . GetEP() . utf16toutf8();
-	MCAutoStringRef t_value_mutable_copy;
-	MCStringMutableCopy(t_value, &t_value_mutable_copy);
+	/* UNCHECKED */ MCStringMutableCopyAndRelease(t_value, t_value);
 
 	int4 start, end;
-	start = p_target . start;
-	end = p_target . finish;
+	start = p_target . mark . start;
+	end = p_target . mark . finish;
 
 	bool t_changed;
 	t_changed = false;
 	if (p_prop == P_DISABLED)
 		if (p_value)
 		{
-			if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start) != '(')
-		        /* UNCHECKED */ MCStringInsert(*t_value_mutable_copy, start, MCSTR("(")), t_changed = true;
+			if (MCStringGetNativeCharAtIndex(t_value, start) != '(')
+		        /* UNCHECKED */ MCStringInsert(t_value, start, MCSTR("(")), t_changed = true;
 		}
 		else
 		{
-			 if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start) == '(')
-		        /* UNCHECKED */ MCStringRemove(*t_value_mutable_copy, MCRangeMake(start, 1)), t_changed = true;
+			 if (MCStringGetNativeCharAtIndex(t_value, start) == '(')
+		        /* UNCHECKED */ MCStringRemove(t_value, MCRangeMake(start, 1)), t_changed = true;
 		}
 	else
 	{
-		if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start) == '(')
+		if (MCStringGetNativeCharAtIndex(t_value, start) == '(')
 			start++;
 		if (p_value)
 		{
-			if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start + 1) == 'n')
-		        /* UNCHECKED */ MCStringReplace(*t_value_mutable_copy, MCRangeMake(start + 1, 1), MCSTR("c")), t_changed = true;
+			if (MCStringGetNativeCharAtIndex(t_value, start + 1) == 'n')
+		        /* UNCHECKED */ MCStringReplace(t_value, MCRangeMake(start + 1, 1), MCSTR("c")), t_changed = true;
 			else
-				if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start + 1) == 'u')
-					/* UNCHECKED */ MCStringReplace(*t_value_mutable_copy, MCRangeMake(start + 1, 1), MCSTR("r")), t_changed = true;
+				if (MCStringGetNativeCharAtIndex(t_value, start + 1) == 'u')
+					/* UNCHECKED */ MCStringReplace(t_value, MCRangeMake(start + 1, 1), MCSTR("r")), t_changed = true;
 		}
 		else
 		{
-			if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start + 1) == 'c')
-		        /* UNCHECKED */ MCStringReplace(*t_value_mutable_copy, MCRangeMake(start + 1, 1), MCSTR("n")), t_changed = true;
+			if (MCStringGetNativeCharAtIndex(t_value, start + 1) == 'c')
+		        /* UNCHECKED */ MCStringReplace(t_value, MCRangeMake(start + 1, 1), MCSTR("n")), t_changed = true;
 			else
-				if (MCStringGetNativeCharAtIndex(*t_value_mutable_copy, start + 1) == 'r')
-					/* UNCHECKED */ MCStringReplace(*t_value_mutable_copy, MCRangeMake(start + 1, 1), MCSTR("u")), t_changed = true;
+				if (MCStringGetNativeCharAtIndex(t_value, start + 1) == 'r')
+					/* UNCHECKED */ MCStringReplace(t_value, MCRangeMake(start + 1, 1), MCSTR("u")), t_changed = true;
 		}
 	}
 
 	if (t_changed)
 	{
-		ctxt . GetEP() . utf16toutf8();
-		p_target . object->setstringprop(ctxt, p_target . part_id, P_UNICODE_TEXT, False, *t_value_mutable_copy);    
+		p_target . object->setstringprop(ctxt, p_target . part_id, P_TEXT, False, t_value);    
 	}
 	MCValueRelease(t_value);
 }
@@ -2313,8 +2314,8 @@ void MCInterfaceExecSelectTextOfField(MCExecContext& ctxt, Preposition_type p_ty
 	}
 
 	uindex_t t_start, t_finish;
-	t_start = p_target . start;
-	t_finish = p_target . finish;
+	t_start = p_target . mark . start;
+	t_finish = p_target . mark . finish;
 	switch(p_type)
 	{
 	case PT_AT:
@@ -2326,7 +2327,15 @@ void MCInterfaceExecSelectTextOfField(MCExecContext& ctxt, Preposition_type p_ty
 		t_start = t_finish;
 		break;
 	}
-	static_cast<MCField *>(p_target . object) -> seltext(t_start, t_finish, True);
+    
+    MCField *t_field;
+    t_field = static_cast<MCField *>(p_target . object);
+    integer_t t_si, t_ei;
+    t_si = 0;
+    t_ei = INT32_MAX;
+    t_field -> resolvechars(p_target . part_id, t_si, t_ei, t_start, t_finish - t_start);
+    
+	static_cast<MCField *>(p_target . object) -> seltext(t_si, t_ei, True);
 }
 
 //////////
@@ -2354,7 +2363,7 @@ void MCInterfaceExecSelectTextOfButton(MCExecContext& ctxt, Preposition_type p_t
 	if (t_success)
 	{
 		uindex_t t_lines;
-		t_lines = MCStringCountChar(*t_text, MCRangeMake(0, p_target . start), '\n', kMCStringOptionCompareCaseless);
+		t_lines = MCStringCountChar(*t_text, MCRangeMake(0, p_target . mark . start), '\n', kMCStringOptionCompareCaseless);
 		
 		static_cast<MCButton *>(p_target . object) -> setmenuhistory(t_lines + 1);
 	}
@@ -2516,7 +2525,7 @@ void MCInterfaceExecHideGroups(MCExecContext& ctxt)
 
 void MCInterfaceExecHideObject(MCExecContext& ctxt, MCObjectPtr p_target)
 {
-	p_target . object -> setsprop(P_VISIBLE, MCfalsemcstring);
+	p_target . object -> setboolprop(ctxt, 0, P_VISIBLE, False, false);
 }
 
 void MCInterfaceExecHideObjectWithEffect(MCExecContext& ctxt, MCObjectPtr p_target, MCVisualEffect *p_effect)
@@ -2550,7 +2559,7 @@ void MCInterfaceExecHideObjectWithEffect(MCExecContext& ctxt, MCObjectPtr p_targ
 		
 		// MW-2011-11-15: [[ Bug 9846 ]] Make sure we use the same mechanism to
 		//   set visibility as the non-effect case.
-		p_target . object->setsprop(P_VISIBLE, MCfalsemcstring);
+		p_target . object -> setboolprop(ctxt, 0, P_VISIBLE, False, false);
 		
 		MCRedrawUnlockScreen();
 		
@@ -3129,28 +3138,52 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef p_string, int p_where, MCObjectChunkPtr p_chunk, bool p_is_unicode)
+void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef p_string, int p_where, MCObjectChunkPtr p_chunk)
 {
 	if (p_chunk . chunk == CT_UNDEFINED && p_where == PT_INTO)
 	{
-		p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, p_is_unicode ? P_UNICODE_TEXT : P_TEXT, False, p_string);
+		p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, P_TEXT, False, p_string);
 	}
 	else
 	{
+        MCField *t_field;
+        t_field = static_cast<MCField *>(p_chunk . object);
 		integer_t t_start, t_finish;
 		if (p_where == PT_INTO)
-			t_start = p_chunk . start, t_finish = p_chunk . finish;
+			t_start = p_chunk . mark . start, t_finish = p_chunk . mark . finish;
 		else if (p_where == PT_AFTER)
-			t_start = t_finish = p_chunk . finish;
+			t_start = t_finish = p_chunk . mark . finish;
 		else /* PT_BEFORE */
-			t_start = t_finish = p_chunk . start;
-		
-		if (((MCField *)p_chunk . object) -> settextindex(p_chunk . part_id, t_start, t_finish, MCStringGetOldString(p_string), False, p_is_unicode) != ES_NORMAL)
+			t_start = t_finish = p_chunk . mark . start;
+		integer_t t_si, t_ei;
+        t_si = 0;
+        t_ei = INT32_MAX;
+        t_field -> resolvechars(p_chunk . part_id, t_si, t_ei, t_start, t_finish - t_start);
+		if (t_field -> settextindex_stringref(p_chunk . part_id, t_si, t_ei, p_string, False) != ES_NORMAL)
 		{
 			ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
 			return;
 		}
 	}
+}
+
+void MCInterfaceExecPutUnicodeIntoField(MCExecContext& ctxt, MCDataRef p_data, int p_where, MCObjectChunkPtr p_chunk)
+{
+	if (p_chunk . chunk == CT_UNDEFINED && p_where == PT_INTO)
+	{
+		p_chunk . object -> setdataprop(ctxt, p_chunk . part_id, P_UNICODE_TEXT, False, p_data);
+	}
+	else
+	{
+        MCAutoStringRef t_string;
+        if (MCStringDecode(p_data, kMCStringEncodingUTF16, false, &t_string))
+        {
+            MCInterfaceExecPutIntoField(ctxt, *t_string, p_where, p_chunk);
+            return;
+        }
+        
+        ctxt.Throw();
+   	}
 }
 
 void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCStringRef p_string, int p_where, MCObjectChunkPtr p_chunk)
@@ -3176,11 +3209,11 @@ void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCStringRef p_string, int
 		
 		integer_t t_start, t_finish;
 		if (p_where == PT_INTO)
-			t_start = p_chunk . start, t_finish = p_chunk . finish;
+			t_start = p_chunk . mark . start, t_finish = p_chunk . mark . finish;
 		else if (p_where == PT_AFTER)
-			t_start = t_finish = p_chunk . finish;
+			t_start = t_finish = p_chunk . mark . finish;
 		else /* PT_BEFORE */
-			t_start = t_finish = p_chunk . start;
+			t_start = t_finish = p_chunk . mark . start;
 		
 		if (!MCStringReplace(*t_mutable_current_value, MCRangeMake(t_start, t_finish), p_string))
 		{
@@ -3952,9 +3985,9 @@ void MCInterfaceExecFind(MCExecContext& ctxt, int p_mode, MCStringRef p_needle, 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCInterfaceExecChooseTool(MCExecContext& ctxt, int p_tool)
+void MCInterfaceExecChooseTool(MCExecContext& ctxt, MCStringRef p_input, int p_tool)
 {
-	MCU_choose_tool(ctxt, (Tool)p_tool);
+	MCU_choose_tool(ctxt, p_input, (Tool)p_tool);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
