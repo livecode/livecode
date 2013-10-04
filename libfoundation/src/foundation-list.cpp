@@ -138,6 +138,11 @@ bool MCListAppendNativeChars(MCListRef self, const char_t *p_chars, uindex_t p_c
 	return MCStringAppendNativeChars(self -> buffer, p_chars, p_char_count);
 }
 
+bool MCListAppendSubstring(MCListRef self, MCStringRef p_string, MCRange p_range)
+{
+	return MCListAppendFormat(self, "%*@", &p_range, p_string);
+}
+
 bool MCListIsEmpty(MCListRef self)
 {
 	return self -> buffer == nil;

@@ -1751,6 +1751,9 @@ bool MCListCreateMutable(char_t delimiter, MCListRef& r_list);
 // Eventually this will accept any value type, but for now - just strings, names, and booleans.
 bool MCListAppend(MCListRef list, MCValueRef value);
 
+// Append a substring to the list.
+bool MCListAppendSubstring(MCListRef list, MCStringRef value, MCRange range);
+
 // Append a sequence of native chars as an element.
 bool MCListAppendNativeChars(MCListRef list, const char_t *chars, uindex_t char_count);
 
