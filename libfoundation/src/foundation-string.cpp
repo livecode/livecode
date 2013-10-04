@@ -1839,6 +1839,124 @@ bool MCStringInsert(MCStringRef self, uindex_t p_at, MCStringRef p_substring)
 	return MCStringInsert(self, p_at, *t_substring_copy);
 }
 
+bool MCStringInsertSubstring(MCStringRef self, uindex_t p_at, MCStringRef p_substring, MCRange p_range)
+{
+	MCAssert(MCStringIsMutable(self));
+	
+	// Only do the prepend now if self != prefix.
+	if (self != p_substring)
+	{
+		p_at = MCMin(p_at, self -> char_count);
+		
+		// Ensure we have enough room in self - with the gap at the beginning.
+		if (!__MCStringExpandAt(self, p_at, p_range . length))
+			return false;
+		
+		// Now copy the chars across.
+		MCMemoryCopy(self -> chars + p_at, p_substring -> chars + p_range . offset, p_range . length * sizeof(strchar_t));
+		
+#ifndef NATIVE_STRING
+		__MCStringChanged(self);
+#endif
+		
+		// We succeeded.
+		return true;
+	}
+	
+	// Otherwise copy substring and prepend.
+	MCAutoStringRef t_substring_substring;
+	return MCStringCopySubstring(p_substring, p_range, &t_substring_substring) &&
+		MCStringInsert(self, p_at, *t_substring_substring);
+}
+
+#ifdef NATIVE_STRING
+bool MCStringInsertNativeChars(MCStringRef self, uindex_t p_at, const char_t *p_chars, uindex_t p_char_count)
+{
+	MCAssert(MCStringIsMutable(self));
+	
+	p_at = MCMin(p_at, self -> char_count);
+	
+	// Ensure we have enough room in self - with the gap at p_at.
+	if (!__MCStringExpandAt(self, p_at, p_char_count))
+		return false;
+	
+	// Now copy the chars across.
+	MCMemoryCopy(self -> chars + p_at, p_chars, p_char_count);
+	
+	// We succeeded.
+	return true;
+}
+#else
+bool MCStringInsertNativeChars(MCStringRef self, uindex_t p_at, const char_t *p_chars, uindex_t p_char_count)
+{
+	MCAssert(MCStringIsMutable(self));
+	
+	p_at = MCMin(p_at, self -> char_count);
+
+	// Ensure we have enough room in self - with the gap at p_at.
+	if (!__MCStringExpandAt(self, p_at, p_char_count))
+		return false;
+	
+	// Now copy the chars across.
+	for(uindex_t i = 0; i < p_char_count; i++)
+		self -> chars[p_at + i] = MCUnicodeCharMapFromNative(p_chars[i]);
+	
+	__MCStringChanged(self);
+	
+	// We succeeded.
+	return true;
+}
+#endif
+
+#ifdef NATIVE_STRING
+bool MCStringInsertChars(MCStringRef self, uindex_t p_at, const unichar_t *p_chars, uindex_t p_char_count)
+{
+	MCAssert(MCStringIsMutable(self));
+    
+	p_at = MCMin(p_at, self -> char_count);
+	
+	// Ensure we have enough room in self - with the gap at the p_at.
+	if (!__MCStringExpandAt(self, p_at, p_char_count))
+		return false;
+    
+	// Now copy the chars across (including the NUL).
+	uindex_t t_nchar_count;
+	/* FRAGILE */ MCUnicodeCharsMapToNative(p_chars, p_char_count, self -> chars + p_at, t_nchar_count, '?');
+    
+	// We succeeded.
+	return true;
+}
+#else
+bool MCStringPrependChars(MCStringRef self, uindex_t p_at, const unichar_t *p_chars, uindex_t p_char_count)
+{
+	MCAssert(MCStringIsMutable(self));
+	
+	p_at = MCMin(p_at, self -> char_count);
+	
+	// Ensure we have enough room in self - with the gap at the p_at.
+	if (!__MCStringExpandAt(self, p_at, p_char_count))
+		return false;
+	
+	// Now copy the chars across.
+	MCMemoryCopy(self -> chars + p_at, p_chars, p_char_count * sizeof(unichar_t));
+	
+	__MCStringChanged(self);
+	
+	// We succeeded.
+	return true;
+}
+#endif
+
+bool MCStringInsertNativeChar(MCStringRef self, uindex_t p_at, char_t p_char)
+{
+	return MCStringInsertNativeChars(self, p_at, &p_char, 1);
+}
+
+bool MCStringInsertChar(MCStringRef self, uindex_t p_at, unichar_t p_char)
+{
+	return MCStringInsertChars(self, p_at, &p_char, 1);
+}
+
 bool MCStringRemove(MCStringRef self, MCRange p_range)
 {
 	MCAssert(MCStringIsMutable(self));
