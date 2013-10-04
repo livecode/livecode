@@ -60,11 +60,11 @@ private:
 	uint32_t m_flags;
 };
 
-static bool MCAddReachabilityTarget(const char *p_host);
-static bool MCRemoveReachabilityTarget(const char *p_host);
+static bool MCAddReachabilityTarget(MCString p_host);
+static bool MCRemoveReachabilityTarget(MCStringRef p_host);
 
 static SCNetworkReachabilityRef s_reach_ref = nil;
-char *s_reach_target = nil;
+MCAutoStringRef s_reach_target;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -145,57 +145,51 @@ static void reachability_callback(SCNetworkReachabilityRef p_target, SCNetworkRe
 	MCEventQueuePostCustom(t_event);
 }
 
-static bool MCAddReachabilityTarget(const char *p_host)
+static bool MCAddReachabilityTarget(MCString p_host)
 {
 	bool t_success = true;
 	SCNetworkReachabilityRef t_reach = nil;
 	SCNetworkReachabilityContext t_context;
 	
-	char *t_target = nil;
-	
 	if (t_success)
-		t_success = nil != (t_reach = SCNetworkReachabilityCreateWithName(kCFAllocatorDefault, p_host));
-	if (t_success)
-		t_success = MCCStringClone(p_host, t_target);
+        t_success = nil != (t_reach = SCNetworkReachabilityCreateWithName(kCFAllocatorDefault, p_host));
 	if (t_success)
 	{
 		t_context.version = 0;
 		t_context.copyDescription = nil;
 		t_context.retain = nil;
 		t_context.release = nil;
-		t_context.info = t_target;
+        t_context.info = MCStringGetCString(p_host);
 		SCNetworkReachabilitySetCallback(t_reach, reachability_callback, &t_context);
 	}
 	if (t_success)
 	{
 		SCNetworkReachabilityScheduleWithRunLoop(t_reach, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
-		if (s_reach_target != nil)
-			MCRemoveReachabilityTarget(s_reach_target);
+        if (*s_reach_target != nil)
+            MCRemoveReachabilityTarget(*s_reach_target);
 		
 		s_reach_ref = t_reach;
-		s_reach_target = t_target;
+        /* UNCHECKED */ MCStringCopy(p_host, &s_reach_target);
 	}
 	else
 	{
 		if (t_reach != nil)
-			CFRelease(t_reach);
-		if (t_target != nil)
-			MCCStringFree(t_target);
+            CFRelease(t_reach);
 	}
 	return t_success;
 }
 
-static bool MCRemoveReachabilityTarget(const char *p_host)
+static bool MCRemoveReachabilityTarget(MCStringRef p_host)
 {
-	bool t_success = true;
-	if (s_reach_ref == nil || !MCCStringEqualCaseless(p_host, s_reach_target))
+    bool t_success = true;
+    if (*s_reach_ref == nil || !MCStringIsEqualTo(p_host, *s_reach_target, kMCCompareCaseless))
 		return false;
 	
 	SCNetworkReachabilityUnscheduleFromRunLoop(s_reach_ref, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
 	CFRelease(s_reach_ref);
 	s_reach_ref = nil;
-	MCCStringFree(s_reach_target);
-	s_reach_target = nil;
+    MCValueRelease(*s_reach_target);
+    s_reach_target = (MCStringRef) nil;
 	
 	return true;
 }
@@ -204,11 +198,11 @@ bool MCSystemSetReachabilityTarget(MCStringRef p_hostname)
 {
 	if (p_hostname == nil || MCStringGetLength(p_hostname) == 0)
 	{
-		MCRemoveReachabilityTarget(s_reach_target);
+        MCRemoveReachabilityTarget(*s_reach_target);
 		return true;
 	}
 	
-	return MCAddReachabilityTarget(MCStringGetCString(p_hostname));
+    return MCAddReachabilityTarget(p_hostname);
 }
 
 bool MCSystemGetReachabilityTarget(MCStringRef& r_reach_target)
@@ -217,8 +211,8 @@ bool MCSystemGetReachabilityTarget(MCStringRef& r_reach_target)
 	MCresult -> copysvalue(MCReachabilityGetTarget());
 	return ES_NORMAL;
 #endif /* MCHandleReachabilityTarget */
-    if (s_reach_target != nil)
-        return MCStringCreateWithCString(s_reach_target, r_reach_target);
+    if (*s_reach_target != nil)
+        return MCStringCopy(*s_reach_target, r_reach_target);
 
 	return false;
 }
