@@ -14,14 +14,20 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "prefix.h"
-#include "w32dsk-legacy.h"
+#include "w32prefix.h"
 
+#ifdef DeleteFile
+#undef DeleteFile
+#endif // DeleteFile
+#ifdef GetCurrentTime
+#undef GetCurrentTime
+#endif // GetCurrentTime
+
+#include "globdefs.h"
 #include "parsedef.h"
 #include "filedefs.h"
-#include "globdefs.h"
 #include "objdefs.h"
-
+#include "mcio.h"
 #include "system.h"
 
 #include "execpt.h"
@@ -45,6 +51,10 @@
 #include "notify.h"
 
 #include "socket.h"
+
+#include "w32dc.h"
+#include "w32dsk-legacy.h"
+
 #include <locale.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -56,17 +66,7 @@
 #include <Iphlpapi.h>
 #include <process.h>
 #include <signal.h>
-#include <locale.h>
 #include <io.h> 
-
-#include "w32dc.h"
-
-#ifdef DeleteFile
-#undef DeleteFile
-#endif // DeleteFile
-#ifdef GetCurrentTime
-#undef GetCurrentTime
-#endif // GetCurrentTime
 
 //////////////////////////////////////////////////////////////////////////////////
 
