@@ -1267,6 +1267,11 @@ public class Engine extends View implements EngineApi
 	{
         m_network_module.setURLTimeout(p_timeout);
 	}
+	
+	public void setURLSSLVerification(boolean p_enabled)
+	{
+		m_network_module.setURLSSLVerification(p_enabled);
+	}
 
 	public boolean loadURL(int p_id, String p_url, String p_headers)
 	{
