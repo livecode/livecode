@@ -3783,23 +3783,23 @@ bool MCButton::selectedchunk(MCStringRef& r_string)
 {
 	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
-	MCAutoNumberRef t_number;
-	/* UNCHECKED */ getnumberprop(ctxt, 0, P_NUMBER, False, &t_number);
-	uint4 number = (uint4) MCNumberFetchAsUnsignedInteger(*t_number);
+	integer_t t_number;
+	/* UNCHECKED */ getintprop(ctxt, 0, P_NUMBER, False, t_number);
+	
 	const char *sptr;
 	const char *eptr;
 	getmenuptrs(sptr, eptr);
-	return MCStringFormat(r_string, "char %d to %d of button %d", sptr - menustring + 1, eptr - menustring, number);
+	return MCStringFormat(r_string, "char %d to %d of button %d", sptr - menustring + 1, eptr - menustring, t_number);
 }
 
 bool MCButton::selectedline(MCStringRef& r_string)
 {
 	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
-	MCAutoNumberRef t_number;
-	/* UNCHECKED */ getnumberprop(ctxt, 0, P_NUMBER, False, &t_number);
-	uint2 number = (uint2) MCNumberFetchAsUnsignedInteger(*t_number);
-	return MCStringFormat(r_string, "line %d of button %d", menuhistory, number);
+	integer_t t_number;
+	/* UNCHECKED */ getintprop(ctxt, 0, P_NUMBER, False, t_number);
+	
+	return MCStringFormat(r_string, "line %d of button %d", menuhistory, t_number);
 }
 
 bool MCButton::selectedtext(MCStringRef& r_string)

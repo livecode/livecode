@@ -2265,9 +2265,8 @@ bool MCField::returnchunk(int4 p_si, int4 p_ei, MCStringRef& r_chunk)
 {
 	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
-	MCAutoNumberRef t_number;
-	/* UNCHECKED */ getnumberprop(ctxt, 0, P_NUMBER, False, &t_number);
-	uint2 number = (uint2) MCNumberFetchAsUnsignedInteger(*t_number);
+	integer_t t_number;
+	/* UNCHECKED */ getintprop(ctxt, 0, P_NUMBER, False, t_number);
 
 	// MW-2012-02-23: [[ CharChunk ]] Map the internal field indices (si, ei) to
 	//   char indices.
@@ -2275,16 +2274,16 @@ bool MCField::returnchunk(int4 p_si, int4 p_ei, MCStringRef& r_chunk)
 	
 	const char *sptr = parent->gettype() == CT_CARD && getstack()->hcaddress()
 										 ? "char %d to %d of card field %d" : "char %d to %d of field %d";
-	return MCStringFormat(r_chunk, sptr, p_si + 1, p_ei, number);
+	return MCStringFormat(r_chunk, sptr, p_si + 1, p_ei, t_number);
 }
 
 bool MCField::returnline(int4 si, int4 ei, MCStringRef& r_string)
 {
 	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
-	MCAutoNumberRef t_number;
-	/* UNCHECKED */ getnumberprop(ctxt, 0, P_NUMBER, False, &t_number);
-	uint2 number = (uint2) MCNumberFetchAsUnsignedInteger(*t_number);
+	integer_t t_number;
+	/* UNCHECKED */ getintprop(ctxt, 0, P_NUMBER, False, t_number);
+
 	uint4 line = 0;
 	int4 offset = 0;
 	MCParagraph *pgptr = paragraphs;
@@ -2299,7 +2298,7 @@ bool MCField::returnline(int4 si, int4 ei, MCStringRef& r_string)
 	{
 		const char *sptr = parent->gettype() == CT_CARD && getstack()->hcaddress()
 											 ? "line %d of card field %d" : "line %d of field %d";
-		return MCStringFormat(r_string, sptr, line, number);
+		return MCStringFormat(r_string, sptr, line, t_number);
 	}
 	else
 	{
@@ -2313,7 +2312,7 @@ bool MCField::returnline(int4 si, int4 ei, MCStringRef& r_string)
 		while (offset < ei);
 		const char *sptr = parent->gettype() == CT_CARD && getstack()->hcaddress()
 											 ? "line %d to %d of card field %d" : "line %d to %d of field %d";
-		return MCStringFormat(r_string, sptr, line, endline, number);
+		return MCStringFormat(r_string, sptr, line, endline, t_number);
 	}
 }
 
