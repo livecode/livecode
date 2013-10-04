@@ -333,9 +333,18 @@ bool MCStringConvertLineEndingsFromLiveCode(MCStringRef p_input, MCStringRef& r_
 	r_output = MCValueRetain(p_input);
 #endif
 
-return true;
+	return true;
 }
 
+bool MCStringConvertLineEndingsFromLiveCodeAndRelease(MCStringRef p_input, MCStringRef& r_output)
+{
+	if (MCStringConvertLineEndingsFromLiveCode(p_intput, r_output))
+	{
+		MCValueRelease(p_input);
+		return true;
+	}
+	return false;
+}
 
 bool MCStringConvertLineEndingsToLiveCode(MCStringRef p_input, MCStringRef& r_output)
 {
@@ -345,6 +354,16 @@ bool MCStringConvertLineEndingsToLiveCode(MCStringRef p_input, MCStringRef& r_ou
 	/* UNCHECKED */ MCStringFindAndReplaceChar(t_mutable_input, '\r', '\n', kMCStringOptionCompareExact);
 	/* UNCHECKED */ MCStringCopyAndRelease(t_mutable_input, r_output);
 	return true;
+}
+
+bool MCStringConvertLineEndingsToLiveCodeAndRelease(MCStringRef p_input, MCStringRef& r_output)
+{
+	if (MCStringConvertLineEndingsToLiveCode(p_intput, r_output))
+	{
+		MCValueRelease(p_input);
+		return true;
+	}
+	return false;
 }
 	
 ////////////////////////////////////////////////////////////////////////////////
