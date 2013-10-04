@@ -316,6 +316,39 @@ bool MCCStringFromUnicode(const unichar_t *p_unicode_string, char*& r_string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCStringConvertLineEndingsFromLiveCode(MCStringRef p_input, MCStringRef& r_output)
+{
+	
+#ifdef __CRLF__
+	MCStringRef t_mutable_input;
+	/* UNCHECKED */ MCStringMutableCopy(p_input, t_mutable_input);
+	/* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\n"), MCSTR("\r\n"), kMCStringOptionCompareExact);
+	/* UNCHECKED */ MCStringCopyAndRelease(t_mutable_input, r_output);
+#elif defined(__CR__)
+	MCStringRef t_mutable_input;
+	/* UNCHECKED */ MCStringMutableCopy(p_input, t_mutable_input);
+	/* UNCHECKED */ MCStringFindAndReplaceChar(t_mutable_input, '\n', '\r', kMCStringOptionCompareExact);
+	/* UNCHECKED */ MCStringCopyAndRelease(t_mutable_input, r_output);
+#else
+	r_output = MCValueRetain(p_input);
+#endif
+
+return true;
+}
+
+
+bool MCStringConvertLineEndingsToLiveCode(MCStringRef p_input, MCStringRef& r_output)
+{
+	MCStringRef t_mutable_input;
+	/* UNCHECKED */ MCStringMutableCopy(p_input, t_mutable_input);
+	/* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\r\n"), MCSTR("\n\r"), kMCStringOptionCompareExact);
+	/* UNCHECKED */ MCStringFindAndReplaceChar(t_mutable_input, '\r', '\n', kMCStringOptionCompareExact);
+	/* UNCHECKED */ MCStringCopyAndRelease(t_mutable_input, r_output);
+	return true;
+}
+	
+////////////////////////////////////////////////////////////////////////////////
+
 // Convert the given UTF-8 string to Unicode. Both counts are in bytes.
 // Returns the number of bytes used.
 int32_t UTF8ToUnicode(const char *p_src, int32_t p_src_count, uint16_t *p_dst, int32_t p_dst_count)

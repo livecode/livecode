@@ -70,13 +70,13 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
         /* UNCHECKED */ MCStringCopySubstring(*reqname_str, MCRangeMake(0, t_comma - 1), &t_before_comma);
 		font -> unicode = True;
 
-		font -> fid = (MCSysFontHandle)iphone_font_create(MCStringGetCString(*t_before_comma), reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
+		font -> fid = (MCSysFontHandle)iphone_font_create(*t_before_comma, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
 	}
 	else
 	{
 		font -> unicode = False;
 
-		font -> fid = (MCSysFontHandle)iphone_font_create(MCStringGetCString(*reqname_str), reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
+		font -> fid = (MCSysFontHandle)iphone_font_create(*reqname_str, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
 	}
 	
 	if (font -> unicode)
