@@ -1743,7 +1743,12 @@ bool MCListCreateMutable(char_t delimiter, MCListRef& r_list);
 
 // Eventually this will accept any value type, but for now - just strings, names, and booleans.
 bool MCListAppend(MCListRef list, MCValueRef value);
+
+// Append a sequence of native chars as an element.
 bool MCListAppendNativeChars(MCListRef list, const char_t *chars, uindex_t char_count);
+
+// Append a formatted string as an element.
+bool MCListAppendFormat(MCListRef list, const char *format, ...);
 
 // Make an immutable copy of the list.
 // Note that this method is fragile at the moment and should only be used to
