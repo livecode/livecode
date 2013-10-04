@@ -116,12 +116,37 @@ DWORD RegDeleteKeyNT(HKEY hStartKey, const char *pKeyName)
 
 //////////////////////////////////////////////////////////////////////////////////
 
-extern Boolean wsainit();
-
 extern bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
 extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
 
 //////////////////////////////////////////////////////////////////////////////////
+
+// MW-2005-02-22: Make these global for opensslsocket.cpp
+static Boolean wsainited = False;
+HWND sockethwnd;
+
+Boolean wsainit()
+{
+	if (!wsainited)
+	{
+		WORD request = MAKEWORD(1,1);
+		WSADATA wsaData;
+		if (WSAStartup(request, (LPWSADATA)&wsaData))
+			MCresult->sets("can't find a usable winsock.dll");
+		else
+		{
+			wsainited = True;
+			
+			// OK-2009-02-24: [[Bug 7628]]
+			MCresult -> sets("");
+			if (!MCnoui)
+				sockethwnd = CreateWindowA(MC_WIN_CLASS_NAME, "MCsocket", WS_POPUP, 0, 0,
+										   8, 8, NULL, NULL, MChInst, NULL);
+		}
+	}
+	MCS_seterrno(0);
+	return wsainited;
+}
 
 static bool read_blob_from_pipe(HANDLE p_pipe, void*& r_data, uint32_t& r_data_length)
 {
@@ -145,6 +170,8 @@ static bool read_blob_from_pipe(HANDLE p_pipe, void*& r_data, uint32_t& r_data_l
 
 	return true;
 }
+
+//////////////////////////////////////////////////////////////////////////////////
 
 static bool write_blob_to_pipe(HANDLE p_pipe, uint32_t p_count, const void *p_data)
 {
