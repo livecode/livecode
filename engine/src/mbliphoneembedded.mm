@@ -460,23 +460,23 @@ public:
 		
 		if (m_completion != nil)
 		{
-            MCValueRef t_value;
-            MCresult->copyasvalueref(t_value);
+            MCAutoValueRef t_value;
+            MCresult->copyasvalueref(&t_value);
 			
 			id t_result;
-            if (t_value == nil)
+            if (MCValueIsEmpty(*t_value))
 				t_result = nil;
 
-            else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeArray)
+            else if (MCValueGetTypeCode(*t_value) == kMCValueTypeCodeArray)
 			{
 				t_result = nil;
 			}
-            else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeNumber)
-                t_result = [NSNumber numberWithDouble: MCNumberFetchAsReal((MCNumberRef)t_value)];
-            else if (MCValueGetTypeCode((t_value) == kMCValueTypeCodeString))
-                t_result = [NSString stringWithMCStringRef: (MCStringRef)t_value encoding: NSMacOSRomanStringEncoding];
-            else if (MCValueGetTypeCode((t_value) == kMCValueTypeCodeName))
-                t_result = [NSString stringWithMCStringRef: MCNameGetString((MCNameRef)t_value) encoding: NSMacOSRomanStringEncoding];
+            else if (MCValueGetTypeCode(*t_value) == kMCValueTypeCodeNumber)
+                t_result = [NSNumber numberWithDouble: MCNumberFetchAsReal((MCNumberRef)*t_value)];
+            else if (MCValueGetTypeCode((*t_value) == kMCValueTypeCodeString))
+                t_result = [NSString stringWithMCStringRef: (MCStringRef)*t_value encoding: NSMacOSRomanStringEncoding];
+            else if (MCValueGetTypeCode((*t_value) == kMCValueTypeCodeName))
+                t_result = [NSString stringWithMCStringRef: MCNameGetString((MCNameRef)*t_value) encoding: NSMacOSRomanStringEncoding];
 				
 			m_completion(t_result);
 		}
