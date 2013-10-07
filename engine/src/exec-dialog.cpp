@@ -185,7 +185,13 @@ void MCDialogExecAnswerFileWithFilter(MCExecContext &ctxt, bool p_plural, MCStri
 	}
 
 	if (*t_value != nil)
+    {
 		ctxt.SetItToValue(*t_value);
+        if (*t_result != nil)
+            ctxt.SetTheResultToValue(*t_result);
+        else
+            ctxt.SetTheResultToEmpty();
+    }
 	else
 		ctxt.SetTheResultToValue(MCN_cancel);
 }
@@ -252,6 +258,8 @@ void MCDialogExecAnswerFileWithTypes(MCExecContext &ctxt, bool p_plural, MCStrin
 
 		if (*t_result != nil)
 			ctxt.SetTheResultToValue(*t_result);
+        else
+            ctxt.SetTheResultToEmpty();
 	}
 	else
 		ctxt.SetTheResultToValue(MCN_cancel);
@@ -308,6 +316,8 @@ void MCDialogExecAnswerFolder(MCExecContext &ctxt, bool p_plural, MCStringRef p_
 
 		if (*t_result != nil)
 			ctxt.SetTheResultToValue(*t_result);
+        else
+            ctxt.SetTheResultToEmpty();
 	}
 	else
 		ctxt.SetTheResultToValue(MCN_cancel);
@@ -435,7 +445,7 @@ void MCDialogExecAskQuestion(MCExecContext& ctxt, int p_type, MCStringRef p_prom
 	else
 	{
 		ctxt . SetItToEmpty();
-		ctxt . SetTheResultToValue(MCN_cancel);
+        ctxt . SetTheResultToValue(MCN_cancel);
 	}
 
 #else
@@ -537,7 +547,8 @@ void MCDialogExecAskFileWithFilter(MCExecContext& ctxt, MCStringRef p_prompt, MC
 	if (!t_cancelled)
 	{
 		ctxt . SetItToValue(*t_value);
-		ctxt . SetTheResultToEmpty();
+        if (*t_result != nil)
+            ctxt . SetTheResultToEmpty();
 	}
 	else
 	{
@@ -545,42 +556,6 @@ void MCDialogExecAskFileWithFilter(MCExecContext& ctxt, MCStringRef p_prompt, MC
 		ctxt . SetTheResultToValue(MCN_cancel);
 	}
 }
-
-//static bool MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uindex_t p_type_count, MCStringRef p_initial, bool p_as_sheet, bool& r_cancelled, MCStringRef& r_filename, MCStringRef& r_chosen_type)
-//{
-//	unsigned int t_options;
-//	t_options = 0;
-//	if (p_as_sheet)
-//		t_options |= MCA_OPTION_SHEET;
-	
-//	const char *t_title = p_title == nil ? "" : MCStringGetCString(p_title);
-//	const char *t_prompt = p_prompt == nil ? "" : MCStringGetCString(p_prompt);
-//	const char *t_initial = p_initial == nil ? "" : MCStringGetCString(p_initial);
-	
-//	char **t_types = nil;
-//	if (!MCMemoryNewArray(p_type_count, t_types))
-//		return false;
-	
-//	for (uindex_t i = 0; i < p_type_count; i++)
-//		t_types[i] = (char*)MCStringGetCString(p_types[i]);
-	
-//	MCExecPoint ep(nil, nil, nil);
-//	MCA_ask_file_with_types(ep, t_title, t_prompt, t_types, p_type_count, t_initial, t_options);
-//	MCMemoryDelete(t_types);
-	
-//	if (!ep . isempty())
-//	{
-//		r_cancelled = false;
-//		/* UNCHECKED */ ep . copyasstringref(r_filename);
-//		MCresult -> eval(ep);
-//		/* UNCHECKED */ ep . copyasstringref(r_chosen_type);
-//		return true;
-//	}
-	
-//	r_cancelled = true;
-	
-//	return true;
-//}
 
 void MCDialogExecAskFileWithTypes(MCExecContext& ctxt, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef *p_types, uindex_t p_type_count, MCStringRef p_title, bool p_as_sheet)
 {
@@ -639,7 +614,10 @@ void MCDialogExecAskFileWithTypes(MCExecContext& ctxt, MCStringRef p_prompt, MCS
 	if (!t_cancelled)
 	{
 		ctxt . SetItToValue(*t_value);
-		ctxt . SetTheResultToValue(*t_result);
+        if (*t_result != nil)
+            ctxt . SetTheResultToValue(*t_result);
+        else
+            ctxt.SetTheResultToEmpty();
 	}
 	else
 	{
