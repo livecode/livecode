@@ -572,7 +572,7 @@ void MCPasteboardSetAllowableDragActions(MCExecContext& ctxt, intset_t p_value)
 	MCallowabledragactions = (MCDragActionSet)p_value;
 }
 
-void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCStringRef p_index, bool p_is_clipboard, MCDataRef& r_data)
+void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, bool p_is_clipboard, MCDataRef& r_data)
 {
 	MCTransferData *t_pasteboard;
 	if (p_is_clipboard)
@@ -589,7 +589,7 @@ void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCStringRef p_index
 		if (p_index == nil)
 			t_type = TRANSFER_TYPE_TEXT;
 		else
-			t_type = MCTransferData::StringToType(p_index);
+			t_type = MCTransferData::StringToType(MCNameGetString(p_index));
 			
 		if (t_type != TRANSFER_TYPE_NULL && t_pasteboard -> Contains(t_type, true))
 		{
@@ -614,7 +614,7 @@ void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCStringRef p_index
 	}
 }
 
-void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCStringRef p_index, bool p_is_clipboard, MCDataRef p_data)
+void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, bool p_is_clipboard, MCDataRef p_data)
 {
 	MCTransferData *t_pasteboard;
 	if (p_is_clipboard)
@@ -626,7 +626,7 @@ void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCStringRef p_index
 	if (p_index == nil)
 		t_type = TRANSFER_TYPE_TEXT;
 	else
-		t_type = MCTransferData::StringToType(p_index);
+		t_type = MCTransferData::StringToType(MCNameGetString(p_index));
 		
 	if (t_type != TRANSFER_TYPE_NULL && p_data != nil)
 	{
@@ -639,22 +639,22 @@ void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCStringRef p_index
 	ctxt . Throw();
 }
 
-void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCDataRef& r_data)
+void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef& r_data)
 {
 	MCPasteboardGetClipboardOrDragData(ctxt, p_index, true, r_data);
 }
 
-void MCPasteboardSetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCDataRef p_data)
+void MCPasteboardSetClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef p_data)
 {
 	MCPasteboardSetClipboardOrDragData(ctxt, p_index, true, p_data);
 }
 
-void MCPasteboardGetDragData(MCExecContext& ctxt, MCStringRef p_index, MCDataRef& r_data)
+void MCPasteboardGetDragData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef& r_data)
 {
 	MCPasteboardGetClipboardOrDragData(ctxt, p_index, false, r_data);
 }
 
-void MCPasteboardSetDragData(MCExecContext& ctxt, MCStringRef p_index, MCDataRef p_data)
+void MCPasteboardSetDragData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef p_data)
 {
 	MCPasteboardSetClipboardOrDragData(ctxt, p_index, false, p_data);
 }

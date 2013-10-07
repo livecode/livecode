@@ -1268,6 +1268,13 @@ struct MCUrlChunkPtr
 	MCMarkedText mark;
 };
 
+struct MCObjectIndexPtr
+{
+    MCObject *object;
+    uint32_t part_id;
+    MCNameRef index;
+};
+
 //////////////////////////////////////////////////////////////////////
 
 #endif
