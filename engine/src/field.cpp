@@ -1107,7 +1107,9 @@ Boolean MCField::mup(uint2 which)
 				extend = extendwords = False;
 				// MW-2012-01-25: [[ FieldMetrics ]] Co-ordinates are now card-based.
 				setfocus(mx, my);
-				typetext(MCDataGetOldString(*t_text));
+                MCAutoStringRef t_text_str;
+                /* UNCHECKED */ MCStringCreateWithOldString(MCDataGetOldString(*t_text), &t_text_str);
+				typetext(*t_text_str);
 			}
 		}
 		break;

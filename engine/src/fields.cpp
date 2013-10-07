@@ -686,7 +686,11 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 	// MW-2012-02-13: [[ Block Unicode ]] Use the new finsert method in native mode.
 	// MW-2012-02-23: [[ PutUnicode ]] Pass through the encoding to finsertnew.
 	if (s.getlength())
-		t_need_recompute = pgptr->finsertnew(s, p_as_unicode);
+    {
+        MCAutoStringRef t_s;
+        /* UNCHECKED */ MCStringCreateWithOldString(s, &t_s);
+		t_need_recompute = pgptr->finsertnew(*t_s, p_as_unicode);
+    }
 
 	if (opened && fptr == fdata)
 	{

@@ -1142,7 +1142,7 @@ void MCU_break_string(const MCString &s, MCString *&ptrs, uint2 &nptrs,
 }
 
 #if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
-extern compare_t MCSystemCompareInternational(const char *, const char *);
+extern compare_t MCSystemCompareInternational(MCStringRef, MCStringRef);
 #endif
 
 static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean reverse)
@@ -1159,15 +1159,19 @@ static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean
 	msort(b2, n2, t, form, reverse);
 
 	MCSortnode *tmp = t;
+    MCAutoStringRef t_b1_svalue, t_b2_svalue;
+    /* UNCHECKED */ MCStringCreateWithCString(b1 -> svalue, &t_b1_svalue);
+    /* UNCHECKED */ MCStringCreateWithCString(b2 -> svalue, &t_b2_svalue);
 	while (n1 > 0 && n2 > 0)
 	{
+        
 		Boolean first;
 		if (reverse)
 			switch (form)
 			{
 			case ST_INTERNATIONAL:
 #if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
-				first = MCSystemCompareInternational(b1->svalue, b2->svalue) >= 0;
+				first = MCSystemCompareInternational(*t_b1_svalue, *t_b2_svalue) >= 0;
 #else
 				first = strcoll(b1->svalue, b2->svalue) >= 0;
 #endif
@@ -1184,7 +1188,7 @@ static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean
 			{
 			case ST_INTERNATIONAL:
 #if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
-				first = MCSystemCompareInternational(b1->svalue, b2->svalue) <= 0;
+				first = MCSystemCompareInternational(*t_b1_svalue, *t_b2_svalue) <= 0;
 #else
 				first = strcoll(b1->svalue, b2->svalue) <= 0;
 #endif

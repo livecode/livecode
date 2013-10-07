@@ -1690,7 +1690,9 @@ void MCField::finsertnew(Field_translations function, const MCString& p_string, 
 	selectedmark(False, si, ei, False, False);
 
 	// Defer to the paragraph method to insert the text.
-	focusedparagraph -> finsertnew(p_string, p_is_unicode);
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringCreateWithOldString(p_string, &t_string);
+	focusedparagraph -> finsertnew(*t_string, p_is_unicode);
 
 	// Compute the end of the selection.
 	int4 ti;
@@ -2266,19 +2268,74 @@ void MCField::setupentry(MCButton *bptr, const MCString &s, Boolean isunicode)
 	settext_oldstring(0, s, False, isunicode);
 }
 
-void MCField::typetext(const MCString &newtext)
+void MCField::typetext(MCStringRef newtext)
 {
-	if (newtext . getlength() == 0)
+	if (MCStringIsEmpty(newtext))
 		return;
 
 	if (MCactivefield == this)
 		unselect(False, True);
-	if (newtext.getlength() < MAX_PASTE_MESSAGES)
+    
+///////////////////////////////  FRASER  /////////////////////////////////////////////////////////////////////////////
+    /*
+    MCStringRef t_remaining;
+    /* UNCHECKED / MCStringCreateMutable(0, t_remaining);
+    if (MCStringGetLength(newtext) < MAX_PASTE_MESSAGES)
+	{
+        uindex_t t_index = 0;
+        uindex_t t_length = MCStringGetLength(newtext);
+        while (t_index < t_length)
+        {
+            //Send the next character in the buffer as a keydown event
+            MCAutoStringRef t_string;
+            /* UNCHECKED / MCStringCopySubstring(newtext, MCRangeMake(t_index, t_length - t_index), &t_string);
+            if (!message_with_valueref_args(MCM_key_down, *t_string))
+            {
+                //Nothing responded to the key, keep it as text
+                /* UNCHECKED / MCStringAppendChar(t_remaining, MCStringGetCharAtIndex(newtext, t_index));
+            }
+            
+            // Key up event then move on
+            message_with_valueref_args(MCM_key_up, *t_string);
+            t_index++;
+        }
+        // Only the non-handled keypresses should be processed further
+        MCValueRelease(newtext);
+        MCStringCopyAndRelease(t_remaining, newtext);
+    }
+    uint2 oldfocused;
+	focusedparagraph->getselectionindex(oldfocused, oldfocused);
+	state |= CS_CHANGED;
+	if (!MCStringIsEmpty(newtext) && focusedparagraph->finsertnew(newtext, !MCStringIsNative(newtext)))
+	{
+		recompute();
+		int4 endindex = oldfocused + MCStringGetLength(newtext);
+		int4 junk;
+		MCParagraph *newfocused = indextoparagraph(focusedparagraph, endindex, junk);
+		while (focusedparagraph != newfocused)
+		{
+			focusedy += focusedparagraph->getheight(fixedheight);
+			focusedparagraph = focusedparagraph->next();
+		}
+        
+		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
+		layer_redrawall();
+	}
+	else
+		updateparagraph(True, False);
+    */
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    MCAutoStringRef t_newtext;
+	if (MCStringGetLength(newtext) < MAX_PASTE_MESSAGES)
 	{
 		char string[2];
 		string[1] = '\0';
-		char *sptr = (char *)newtext.getstring();
-		const char *eptr = sptr + newtext.getlength();
+        MCAutoNativeCharArray t_array;
+        /* UNCHECHED */ t_array . New(MCStringGetLength(newtext));
+        memcpy(t_array . Chars(), MCStringGetCString(newtext), MCStringGetLength(newtext));
+        char *sptr = (char *)t_array . Chars();
+        const char *eptr = sptr + MCStringGetLength(newtext);
 		while (sptr < eptr)
 		{
 			string[0] = *sptr;
@@ -2288,14 +2345,18 @@ void MCField::typetext(const MCString &newtext)
 				sptr++;
 			message_with_args(MCM_key_up, string);
 		}
+        t_array . CreateString(&t_newtext);
 	}
+    else
+        MCStringCopy(newtext, &t_newtext);
+ 
 	uint2 oldfocused;
 	focusedparagraph->getselectionindex(oldfocused, oldfocused);
 	state |= CS_CHANGED;
-	if (newtext.getlength() && focusedparagraph->finsertnew(newtext, false))
+	if (!MCStringIsEmpty(*t_newtext) && focusedparagraph->finsertnew(*t_newtext, false))
 	{
 		recompute();
-		int4 endindex = oldfocused + newtext.getlength();
+		int4 endindex = oldfocused + MCStringGetLength(*t_newtext);
 		int4 junk;
 		MCParagraph *newfocused = indextoparagraph(focusedparagraph, endindex, junk);
 		while (focusedparagraph != newfocused)
@@ -2309,7 +2370,8 @@ void MCField::typetext(const MCString &newtext)
 	}
 	else
 		updateparagraph(True, False);
-	delete (char *)newtext.getstring();
+ 
+ 
 }
 
 void MCField::startcomposition()

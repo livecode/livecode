@@ -351,7 +351,7 @@ public:
 	void fscroll(Field_translations function, const char *string, KeySym key);
 	void setupmenu(MCStringRef p_string, uint2 fheight, Boolean scrolling);
 	void setupentry(MCButton *bptr, const MCString &s, Boolean isunicode);
-	void typetext(const MCString &newtext);
+	void typetext(MCStringRef newtext);
 	void startcomposition();
 	void stopcomposition(Boolean del, Boolean force);
 	void setcompositioncursoroffset(uint2 coffset);
