@@ -2551,6 +2551,8 @@ bool MCU_multibytetounicode(MCDataRef p_input, MCDataRef &r_output)
 
     if (!MCStringEncode(*t_string, kMCStringEncodingUTF16, false, r_output))
         return false;
+
+	return true;
 }
 
 bool MCU_multibytetounicode(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_unicode)
@@ -2584,6 +2586,8 @@ bool MCU_unicodetomultibyte(MCDataRef p_input, MCDataRef& r_output)
 
     if (!MCStringEncode(*t_string, kMCStringEncodingUTF8, false, r_output))
         return false;
+
+	return true;
 }
 
 bool MCU_unicodetomultibyte(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_multibyte)

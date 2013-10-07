@@ -105,12 +105,8 @@ void MCStoreExecRestorePurchases(MCExecContext& ctxt)
 
 void MCStoreGetPurchaseList(MCExecContext& ctxt, MCStringRef& r_list)
 {
-    if (!MCPurchaseList(ctxt.GetEP()))
+    if (!MCPurchaseList(r_list))
         ctxt.Throw();
-    else
-    {
-        /* UNCHECKED */ ctxt.GetEP().copyasstringref(r_list);
-    }
 }
 
 void MCStoreExecCreatePurchase(MCExecContext& ctxt, MCStringRef p_product_id, uint32_t& r_id)

@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "sellst.h"
 #include "undolst.h"
 #include "stack.h"
@@ -369,48 +370,6 @@ int4 MCField::paragraphtoy(MCParagraph *target)
 		}
 	}
 	return y;
-}
-
-bool MCField::nativizetext(uint4 parid, MCExecPoint& ep, bool p_ascii_only)
-{
-	bool t_has_unicode;
-	t_has_unicode = false;
-	
-	// Resolve the correct collection of paragraphs.
-	MCParagraph *t_paragraphs;
-	t_paragraphs = resolveparagraphs(parid);
-	if (t_paragraphs == nil)
-	{
-		ep . clear();
-		return t_has_unicode;
-	}
-
-	// Ensure there is room in ep for the data. The size of the data is the
-	// same as the original, so just use getpgsize().
-	char *t_data;
-	/* UNCHECKED */ ep . reserve(getpgsize(t_paragraphs), t_data);
-	
-	// Keep track of how much of the buffer we've used.
-	uint32_t t_length;
-	t_length = 0;
-	
-	// Now loop through the paragraphs, converting as appropriate.
-	MCParagraph *t_paragraph;
-	t_paragraph = t_paragraphs;
-	do
-	{
-		if (t_paragraph -> nativizetext(p_ascii_only, t_data, t_length))
-			t_has_unicode = true;
-		t_paragraph = t_paragraph -> next();
-		if (t_paragraph != t_paragraphs)
-			t_data[t_length++] = '\n';
-	}
-	while(t_paragraph != t_paragraphs);
-	
-	// Update the length of the ep.
-	ep . commit(t_length);
-	
-	return t_has_unicode;
 }
 
 #if TO_REMOVE
@@ -2299,9 +2258,9 @@ Boolean MCField::selectedmark(Boolean whole, int4 &si, int4 &ei,
 bool MCField::returnchunk(int4 p_si, int4 p_ei, MCStringRef& r_chunk)
 {
 	MCExecPoint ep(nil, nil, nil);
-	getprop(0, P_NUMBER, ep, False);
-	ep.ton();
-	uint2 number = ep.getuint2();
+	MCExecContext ctxt(ep);
+	integer_t t_number;
+	/* UNCHECKED */ getintprop(ctxt, 0, P_NUMBER, False, t_number);
 
 	// MW-2012-02-23: [[ CharChunk ]] Map the internal field indices (si, ei) to
 	//   char indices.
@@ -2309,15 +2268,16 @@ bool MCField::returnchunk(int4 p_si, int4 p_ei, MCStringRef& r_chunk)
 	
 	const char *sptr = parent->gettype() == CT_CARD && getstack()->hcaddress()
 										 ? "char %d to %d of card field %d" : "char %d to %d of field %d";
-	return MCStringFormat(r_chunk, sptr, p_si + 1, p_ei, number);
+	return MCStringFormat(r_chunk, sptr, p_si + 1, p_ei, t_number);
 }
 
 bool MCField::returnline(int4 si, int4 ei, MCStringRef& r_string)
 {
 	MCExecPoint ep(nil, nil, nil);
-	/* UNCHECKED */ getprop(0, P_NUMBER, ep, False);
-	/* UNCHECKED */ ep.ton();
-	uint2 number = ep.getuint2();
+	MCExecContext ctxt(ep);
+	integer_t t_number;
+	/* UNCHECKED */ getintprop(ctxt, 0, P_NUMBER, False, t_number);
+
 	uint4 line = 0;
 	int4 offset = 0;
 	MCParagraph *pgptr = paragraphs;
@@ -2332,7 +2292,7 @@ bool MCField::returnline(int4 si, int4 ei, MCStringRef& r_string)
 	{
 		const char *sptr = parent->gettype() == CT_CARD && getstack()->hcaddress()
 											 ? "line %d of card field %d" : "line %d of field %d";
-		return MCStringFormat(r_string, sptr, line, number);
+		return MCStringFormat(r_string, sptr, line, t_number);
 	}
 	else
 	{
@@ -2346,7 +2306,7 @@ bool MCField::returnline(int4 si, int4 ei, MCStringRef& r_string)
 		while (offset < ei);
 		const char *sptr = parent->gettype() == CT_CARD && getstack()->hcaddress()
 											 ? "line %d to %d of card field %d" : "line %d to %d of field %d";
-		return MCStringFormat(r_string, sptr, line, endline, number);
+		return MCStringFormat(r_string, sptr, line, endline, t_number);
 	}
 }
 
