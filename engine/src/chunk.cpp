@@ -5334,6 +5334,7 @@ Exec_stat MCChunk::changeprop(MCExecPoint &ep, Properties prop, Boolean value)
 
 void MCChunk::compile(MCSyntaxFactoryRef ctxt)
 {
+#ifdef NEW_CHUNK
 	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
     
  	if (source != NULL && url == NULL && stack == NULL && background == NULL && card == NULL
@@ -5522,6 +5523,7 @@ void MCChunk::compile(MCSyntaxFactoryRef ctxt)
     }
     
 	MCSyntaxFactoryEndExpression(ctxt);
+#endif
 }
 
 void MCChunk::compile_in(MCSyntaxFactoryRef ctxt)

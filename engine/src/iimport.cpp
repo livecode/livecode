@@ -271,7 +271,8 @@ bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotsp
             {
                 MCAutoStringRef t_name;
 				t_success = MCImageDecodeXWD(p_stream, &t_name, t_bitmap);
-                r_name = strdup(MCStringGetCString(*t_name));
+				if (t_success)
+					r_name = strdup(MCStringGetCString(*t_name));
             }
 
 			if (t_success)

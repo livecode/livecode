@@ -1259,6 +1259,7 @@
 		4D8387241678B2F4003BEC7C /* flst.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = flst.h; path = src/flst.h; sourceTree = "<group>"; };
 		4D8387251678B2F4003BEC7C /* image_rep.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = image_rep.h; path = src/image_rep.h; sourceTree = "<group>"; };
 		4D8387261678B2F4003BEC7C /* imagebitmap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imagebitmap.h; path = src/imagebitmap.h; sourceTree = "<group>"; };
+		4D8395DD17FECEB30002D53E /* dsklnx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dsklnx.cpp; path = src/dsklnx.cpp; sourceTree = "<group>"; };
 		4D88B73815F4C66F002CFBD6 /* libgif.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libgif.xcodeproj; path = ../thirdparty/libgif/libgif.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4D8B47960BE7B3240046CD2F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		4D8BEC3F11B9379500DED42A /* osxicon.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = osxicon.cpp; path = src/osxicon.cpp; sourceTree = "<group>"; };
@@ -2388,6 +2389,7 @@
 		4DE7ED0B13B33B4E002634F5 /* Desktop */ = {
 			isa = PBXGroup;
 			children = (
+				4D8395DD17FECEB30002D53E /* dsklnx.cpp */,
 				BEFE81D317B2B32800C9D14F /* dskmac.cpp */,
 				4D05B90C13E06AAB001CD82A /* dsklnxmain.cpp */,
 				4D05B90D13E06AAB001CD82A /* dskmain.cpp */,
