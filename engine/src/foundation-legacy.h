@@ -156,7 +156,9 @@ int UnicodeToUTF8(const uint16_t *lpSrcStr, int cchSrc, char *lpDestStr, int cch
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCStringConvertLineEndingsFromLiveCode(MCStringRef input, MCStringRef& r_output);
+bool MCStringConvertLineEndingsFromLiveCodeAndRelease(MCStringRef input, MCStringRef& r_output);
 bool MCStringConvertLineEndingsToLiveCode(MCStringRef input, MCStringRef& r_output);
+bool MCStringConvertLineEndingsToLiveCodeAndRelease(MCStringRef input, MCStringRef& r_output);
 
 ////////////////////////////////////////////////////////////////////////////////
 bool MCCStringClone(const char *s, char*& r_s);

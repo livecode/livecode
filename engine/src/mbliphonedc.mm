@@ -314,7 +314,7 @@ struct MCScreenDCDoSetBeepSoundEnv
 
 // MW-2012-08-06: [[ Fibers ]] Main fiber callback for system calls.
 static void MCScreenDCDoSetBeepSound(void *p_env)
-	{
+{
 	MCScreenDCDoSetBeepSoundEnv *env;
 	env = (MCScreenDCDoSetBeepSoundEnv *)p_env;
 	
@@ -339,7 +339,7 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 	MCS_resolvepath(*t_env_sound, &t_sound_path);
 	
 	NSURL *t_url;
-	t_url = [NSURL fileURLWithPath: [NSString stringWithCString: MCStringGetCString(*t_sound_path) encoding: NSMacOSRomanStringEncoding]];
+	t_url = [NSURL fileURLWithPath: [NSString stringWithMCStringRef: *t_sound_path]];
 	
 	OSStatus t_status;
 	t_status = AudioServicesCreateSystemSoundID((CFURLRef)t_url, &t_new_sound);
