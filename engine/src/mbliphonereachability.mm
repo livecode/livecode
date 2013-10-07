@@ -50,13 +50,13 @@ enum MCSystemReachability
 class MCReachabilityEvent : public MCCustomEvent
 {
 public:
-	MCReachabilityEvent(const char *p_host, uint32_t p_flags);
+	MCReachabilityEvent(MCStringRef p_host, uint32_t p_flags);
 	
 	void Destroy();
 	void Dispatch();
 	
 private:
-	char *m_target;
+	MCStringRef m_target;
 	uint32_t m_flags;
 };
 
@@ -70,17 +70,19 @@ MCStringRef s_reach_target;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCReachabilityEvent::MCReachabilityEvent(const char *p_target, uint32_t p_flags)
+MCReachabilityEvent::MCReachabilityEvent(MCStringRef p_target, uint32_t p_flags)
 {
-	m_target = nil;
-	MCCStringClone(p_target, m_target);
+    if (p_target != nil)
+        m_target = MCValueRetain(p_target);
+    else
+        m_target = MCValueRetain(kMCEmptyString);
 	m_flags = p_flags;
 }
 
 void MCReachabilityEvent::Destroy()
 {
 	if (m_target != nil)
-		MCCStringFree(m_target);
+		MCValueRelease(m_target);
 	delete this;
 }
 
@@ -88,31 +90,29 @@ void MCReachabilityEvent::Dispatch()
 {
 	bool t_success = true;
 	
-	char *t_reachability = nil;
+	MCAutoStringRef t_reachability;
+    MCStringCreateMutable(0, &t_reachability);
+    
 	if (t_success && m_flags & kMCSystemReachabilityTransient)
-		t_success = MCCStringAppend(t_reachability, "transient,");
+		t_success = MCStringAppendFormat(*t_reachability, "transient,");
 	if (t_success && m_flags & kMCSystemReachabilityReachable)
-		t_success = MCCStringAppend(t_reachability, "reachable,");
+		t_success = MCStringAppendFormat(*t_reachability, "reachable,");
 	if (t_success && m_flags & kMCSystemReachabilityConnectionRequired)
-		t_success = MCCStringAppend(t_reachability, "connection required,");
+		t_success = MCStringAppendFormat(*t_reachability, "connection required,");
 	if (t_success && m_flags & kMCSystemReachabilityConnectionOnTraffic)
-		t_success = MCCStringAppend(t_reachability, "connection on traffic,");
+		t_success = MCStringAppendFormat(*t_reachability, "connection on traffic,");
 	if (t_success && m_flags & kMCSystemReachabilityInterventionRequired)
-		t_success = MCCStringAppend(t_reachability, "intervention required,");
+		t_success = MCStringAppendFormat(*t_reachability, "intervention required,");
 	if (t_success && m_flags & kMCSystemReachabilityIsLocal)
-		t_success = MCCStringAppend(t_reachability, "is local,");
+		t_success = MCStringAppendFormat(*t_reachability, "is local,");
 	if (t_success && m_flags & kMCSystemReachabilityIsDirect)
-		t_success = MCCStringAppend(t_reachability, "is direct,");
+		t_success = MCStringAppendFormat(*t_reachability, "is direct,");
 	if (t_success && m_flags & kMCSystemReachabilityIsWWAN)
-		t_success = MCCStringAppend(t_reachability, "is cell,");
+		t_success = MCStringAppendFormat(*t_reachability, "is cell,");
 	if (t_success)
 	{
-		if (t_reachability != nil)
-			t_reachability[MCCStringLength(t_reachability) - 1] = '\0';
-		MCdefaultstackptr->getcurcard()->message_with_args(MCM_reachability_changed, m_target, t_reachability == nil ? "" : t_reachability);
+		MCdefaultstackptr->getcurcard()->message_with_valueref_args(MCM_reachability_changed, m_target, MCStringIsEmpty(*t_reachability) ? kMCEmptyString : *t_reachability);
 	}
-	
-	MCCStringFree(t_reachability);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -141,7 +141,7 @@ uint32_t MCIPhoneReachabilityToMCFlags(SCNetworkReachabilityFlags p_flags)
 static void reachability_callback(SCNetworkReachabilityRef p_target, SCNetworkReachabilityFlags p_flags, void *p_info)
 {
 	MCCustomEvent *t_event;
-	char *t_host = (char*)p_info;
+	MCStringRef t_host = (MCStringRef)p_info;
 	uint32_t t_flags = MCIPhoneReachabilityToMCFlags(p_flags);
 	t_event = new MCReachabilityEvent(t_host, t_flags);
 	MCEventQueuePostCustom(t_event);
@@ -153,8 +153,9 @@ static bool MCAddReachabilityTarget(MCStringRef p_host)
 	SCNetworkReachabilityRef t_reach = nil;
 	SCNetworkReachabilityContext t_context;
     char* t_host_cstring;
+    t_host_cstring = nil;
     
-    /* UNECHECKED */ MCStringConvertToCString(p_host, t_host_cstring);
+    /* UNCHECKED */ MCStringConvertToCString(p_host, t_host_cstring);
 	
 	if (t_success)
         t_success = nil != (t_reach = SCNetworkReachabilityCreateWithName(kCFAllocatorDefault, t_host_cstring));
@@ -162,9 +163,9 @@ static bool MCAddReachabilityTarget(MCStringRef p_host)
 	{
 		t_context.version = 0;
 		t_context.copyDescription = nil;
-		t_context.retain = nil;
-		t_context.release = nil;
-        t_context.info = t_host_cstring;
+		t_context.retain = MCValueRetain;
+		t_context.release = MCValueRelease;
+        t_context.info = p_host;
 		SCNetworkReachabilitySetCallback(t_reach, reachability_callback, &t_context);
 	}
 	if (t_success)
@@ -179,6 +180,8 @@ static bool MCAddReachabilityTarget(MCStringRef p_host)
 	{
 		if (t_reach != nil)
             CFRelease(t_reach);
+        if (t_host_cstring != nil)
+            MCCStringFree(t_host_cstring);
 	}
 	return t_success;
 }
