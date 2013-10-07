@@ -318,21 +318,24 @@ void run_dialog(GtkWidget *dialog, MCStringRef &r_value)
 	g_timeout_add(100, gtk_idle_callback, NULL);
 
 	if (gtk_dialog_run(GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
-	{
+    {
         MCAutoStringRef t_filename;
 		if ( gtk_file_chooser_get_select_multiple ( GTK_FILE_CHOOSER ( dialog ) ) )
 		{
-            MCStringCreateMutable(0, &t_filename);
-			GSList * t_filename_list ;
-            int t_first = 0;
+            MCAutoListRef t_filenames;
+             /* UNCHECKED */ MCListCreateMutable('\n', &t_filenames);
+
+            GSList * t_filename_list ;
 			
 			t_filename_list = gtk_file_chooser_get_filenames ( GTK_FILE_CHOOSER ( dialog )) ;
 			while ( t_filename_list != NULL )
             {
-                MCStringAppendFormat(*t_filename, (t_first++ == 0) ? "%s" : "\n%s", (char*)t_filename_list->data);
+                /* UNCHECKED */ MCListAppendNativeChars(*t_filenames, (char_t*)t_filename_list -> data, strlen((char*)t_filename_list -> data));
 			
 				t_filename_list = t_filename_list -> next ;
 			}
+
+            /* UNCHECKED */ MCListCopyAsString(*t_filenames, &t_filename);
 		}
 		else
         {
@@ -531,8 +534,10 @@ int MCA_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *
         if (types_to_remote_types(p_types, p_type_count, t_rtypes, t_count))
 		{
             MCRemoteFileDialog(p_title, p_prompt, t_rtypes, t_count, NULL, *t_resolved_path, false, t_plural, r_result);
-//			MCCStringArrayFree(t_rtypes, p_type_count * 2);
-            MCMemoryDeleteArray(t_rtypes); // memory leak?
+            for (uint32_t i = 0; i < t_count; ++i)
+                MCValueRelease(t_rtypes[i]);
+
+            MCMemoryDeleteArray(t_rtypes);
         }
 //		delete t_resolved_path;
 		return 1;
@@ -597,7 +602,10 @@ int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringR
         if (types_to_remote_types(p_types, p_type_count, t_rtypes, t_count))
 		{
             MCRemoteFileDialog(p_title, p_prompt, t_rtypes, t_count, NULL, *t_resolved_path, true, t_plural, r_result);
-            MCMemoryDeleteArray(t_rtypes); // memory leak?
+            for (uint32_t i = 0; i < t_count; ++i)
+                MCValueRelease(t_rtypes[i]);
+
+            MCMemoryDeleteArray(t_rtypes);
         }
 		return 1;
 	}

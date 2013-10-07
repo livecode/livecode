@@ -136,40 +136,6 @@ void MCDialogExecAnswerColor(MCExecContext &ctxt, MCColor *p_initial_color, MCSt
 
 ////////////////////////////////////////////////////////////////////////////////
 
-///* WRAPPER */
-//static bool MCA_file_with_types(bool p_plural, MCStringRef p_prompt, MCStringRef p_initial,
-//						 MCStringRef *p_types, uindex_t p_type_count,
-//						 MCStringRef p_title, bool p_sheet,
-//						 MCStringRef &r_value, MCStringRef &r_result)
-//{
-//	const char *t_title = p_title == nil ? "" : MCStringGetCString(p_title);
-//	const char *t_prompt = p_prompt == nil ? "" : MCStringGetCString(p_prompt);
-//	const char *t_initial = p_initial == nil ? nil : MCStringGetCString(p_initial);
-	
-//	char **t_types = nil;
-//	if (!MCMemoryNewArray(p_type_count, t_types))
-//		return false;
-	
-//	for (uindex_t i = 0; i < p_type_count; i++)
-//		t_types[i] = (char*)MCStringGetCString(p_types[i]);
-	
-//	uint32_t t_options = 0;
-//	if (p_plural)
-//		t_options |= MCA_OPTION_PLURAL;
-//	if (p_sheet)
-//		t_options |= MCA_OPTION_SHEET;
-	
-//	MCExecPoint ep(nil, nil, nil);
-//	int t_error;
-//	t_error = MCA_file_with_types(ep, t_title, t_prompt, t_types, p_type_count, t_initial, t_options);
-	
-//	MCMemoryDelete(t_types);
-//	if (ep.isempty())
-//		return MCStringCreateWithCString(MCcancelstring, r_result);
-//	else
-//		return ep.copyasstringref(r_value);
-//}
-
 void MCDialogExecAnswerFile(MCExecContext &ctxt, bool p_plural, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef p_title, bool p_sheet)
 {
 	MCDialogExecAnswerFileWithFilter(ctxt, p_plural, p_prompt, p_initial, nil, p_title, p_sheet);
@@ -293,27 +259,6 @@ void MCDialogExecAnswerFileWithTypes(MCExecContext &ctxt, bool p_plural, MCStrin
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-//static bool MCA_folder(bool p_plural, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef p_title, bool p_sheet, MCStringRef& r_value, MCStringRef& r_result)
-//{
-//	const char *t_title = p_title == nil ? "" : MCStringGetCString(p_title);
-//	const char *t_prompt = p_prompt == nil ? "" : MCStringGetCString(p_prompt);
-//	const char *t_initial = p_initial == nil ? "" : MCStringGetCString(p_initial);
-	
-//	uint32_t t_options = 0;
-//	if (p_plural)
-//		t_options |= MCA_OPTION_PLURAL;
-//	if (p_sheet)
-//		t_options |= MCA_OPTION_SHEET;
-	
-//	MCExecPoint ep(nil, nil, nil);
-//	int t_error;
-//	t_error = MCA_folder(ep, t_title, t_prompt, t_initial, t_options);
-//	if (ep.isempty())
-//		return MCStringCreateWithCString(MCcancelstring, r_result);
-//	else
-//		return ep.copyasstringref(r_value);
-//}
 
 void MCDialogExecAnswerFolder(MCExecContext &ctxt, bool p_plural, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef p_title, bool p_sheet)
 {
@@ -546,26 +491,6 @@ void MCDialogExecAskPassword(MCExecContext& ctxt, bool p_clear, MCStringRef p_pr
 	}
 #endif
 }
-
-//static bool MCA_ask_file(MCStringRef p_prompt, MCStringRef p_initial, MCStringRef p_filter, MCStringRef p_title, bool p_as_sheet, bool& r_cancelled, MCStringRef& r_filename)
-//{
-//	unsigned int t_options;
-//	t_options = 0;
-//	if (p_as_sheet)
-//		t_options |= MCA_OPTION_SHEET;
-
-//	MCExecPoint ep(nil, nil, nil);
-//	MCA_ask_file(ep, p_title != nil ? MCStringGetCString(p_title) : nil, p_prompt != nil ? MCStringGetCString(p_prompt) : nil, p_filter != nil ? MCStringGetCString(p_filter) : nil, p_initial != nil ? MCStringGetCString(p_initial) : nil, t_options);
-//	if (!ep . isempty())
-//	{
-//		r_cancelled = false;
-//		return ep . copyasstringref(r_filename);
-//	}
-	
-//	r_cancelled = true;
-	
-//	return true;
-//}
 
 void MCDialogExecAskFile(MCExecContext& ctxt, MCStringRef prompt, MCStringRef initial, MCStringRef title, bool as_sheet)
 {
