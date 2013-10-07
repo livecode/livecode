@@ -4124,32 +4124,6 @@ void MCButton::freeicons()
 	closeicon(macrbhilitetrack);
 }
 
-// MW-2012-02-16: [[ IntrinsicUnicode ]] This utility method changes the encoding
-//   of the given string either to unicode (if to_unicode is true) or to native
-//   otherwise.
-static void switchunicodeofstring(bool p_to_unicode, char*& x_string, uint2& x_length)
-{
-	if (x_string == nil)
-		return;
-
-	MCExecPoint ep(nil, nil, nil);
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_string;
-	/* UNCHECKED */ MCStringCreateWithCString(x_string, &t_string);
-	/* UNCHECKED */ ctxt . SetValueRef(*t_string);
-	if (p_to_unicode)
-		ctxt . NativeToUtf16();
-	else
-		ctxt . Utf16ToNative();
-	
-	delete x_string;
-
-	MCAutoStringRef t_new_string;
-	/* UNCHECKED */ ctxt . CopyAsStringRef(&t_new_string);
-	x_length = MCStringGetLength(*t_new_string);
-	x_string = new char[x_length];
-	memcpy(x_string, MCStringGetCString(*t_new_string), x_length);
-}
 
 // MW-2012-02-16: [[ IntrinsicUnicode ]] This method switches all the text in
 //   the button to or from unicode (to unicode if 'to_unicode' is set).

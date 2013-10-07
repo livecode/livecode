@@ -900,22 +900,11 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 	dotextmark_callback_state *context;
 	context = (dotextmark_callback_state *)p_context;
 	
-	// Note we can use 'setstaticbytes' here because the execpoint is immediately
-	// modified.
-	MCExecPoint ep(nil, nil, nil);
-	MCExecContext ctxt(ep);
 	MCAutoStringRef t_string;
 	/* UNCHECKED */ MCStringCreateWithCString((const char *)p_span -> chars, &t_string);
-	/* UNCHECKED */ ctxt . SetValueRef(*t_string);
-	ctxt . Utf16ToUtf8();
-	
-	// Get the UTF-8 string pointer and length
-	const uint8_t *t_bytes;
-	uint32_t t_byte_count;
-	MCAutoStringRef t_new_string;
-	/* UNCHECKED */ ctxt . CopyAsStringRef(&t_new_string);
-	t_bytes = (const uint8_t *)MCStringGetCString(*t_new_string);
-	t_byte_count = MCStringGetLength(*t_new_string);
+	byte_t *t_bytes;
+	uindex_t t_byte_count;
+	/* UNCHECKED */ MCStringConvertToBytes(*t_string, kMCStringEncodingUTF8, false, t_bytes, t_byte_count);
 	
 	// Allocate a cluster index for every UTF-8 byte
 	uint32_t *t_clusters;
@@ -989,22 +978,16 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 
 void MCCustomMetaContext::dotextmark(MCMark *p_mark)
 {
-	MCExecPoint ep(nil, nil, nil);
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_string;
-	/* UNCHECKED */ MCStringCreateWithCString((const char *)p_mark -> text . data, &t_string);
-	/* UNCHECKED */ ctxt . SetValueRef(*t_string);
+	bool t_is_unicode;
+	t_is_unicode = p_mark -> text . font -> unicode || p_mark -> text . unicode_override;
 
-	if (!p_mark -> text . font -> unicode && !p_mark -> text . unicode_override)
-		ctxt . NativeToUtf16();
+	MCAutoStringRef t_text_str;
+	/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)p_mark -> text . data, p_mark -> text . length, t_is_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative, false, &t_text_str);
 
-	const unichar_t *t_chars;
-	uint32_t t_char_count;
-	MCAutoStringRef t_new_string;
-	/* UNCHECKED */ ctxt . CopyAsStringRef(&t_new_string);
-	t_chars = (const unichar_t *)MCStringGetCString(*t_new_string);
-	t_char_count = MCStringGetLength(*t_new_string);
-
+	unichar_t *t_chars;
+	uindex_t t_char_count;
+	/* UNCHECKED */ MCStringConvertToUnicode(*t_text_str, t_chars, t_char_count);
+	
 	dotextmark_callback_state t_state;
 	t_state . device = m_device;
 
