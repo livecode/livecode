@@ -498,10 +498,7 @@ static void effectrect_phase_3(void *p_context)
 	extern bool MCSystemPlaySound(MCStringRef, bool);
 	if (ctxt -> effect -> sound != nil)
 	{
-		MCStringRef t_sound = nil;
-		/* UNCHECKED */ MCStringCreateWithCString(ctxt->effect->sound, t_sound);
-		MCSystemPlaySound(t_sound, false);
-		MCValueRelease(t_sound);
+		MCSystemPlaySound(ctxt->effect->sound, false);
 	}
 }
 

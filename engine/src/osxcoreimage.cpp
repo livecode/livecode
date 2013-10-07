@@ -99,7 +99,7 @@ bool MCCoreImageEffectBegin(const char *p_name, Drawable p_target, Drawable p_so
 		MCEffectArgument *t_argument;
 		
 		for(t_argument = p_arguments; t_argument != NULL; t_argument = t_argument -> next)
-			if (strcasecmp(t_argument -> key, t_info -> parameters[t_parameter] . name) == 0)
+			if (MCStringIsEqualToCString(t_argument -> key, t_info -> parameters[t_parameter] . name, kMCCompareExact))
 			{
 				t_name = t_info -> parameters[t_parameter] . name;
 				t_type = t_info -> parameters[t_parameter] . type;
@@ -115,19 +115,17 @@ bool MCCoreImageEffectBegin(const char *p_name, Drawable p_target, Drawable p_so
 		switch(t_type)
 		{
 			case REI_VISUALEFFECT_PARAMETER_TYPE_NUMBER:
-				t_parameters -> entries[t_index] . value . number = atof(t_argument -> value);
+                /* UNCHECKED */ MCStringToDouble(t_argument -> value, t_parameters -> entries[t_index] . value . number);
 			break;
 			
 			case REI_VISUALEFFECT_PARAMETER_TYPE_STRING:
-				t_parameters -> entries[t_index] . value . string = t_argument -> value;
+				t_parameters -> entries[t_index] . value . string = MCStringGetCString(t_argument -> value);
 			break;
 			
 			case REI_VISUALEFFECT_PARAMETER_TYPE_COLOUR:
 			{
 				MCColor t_colour;
-                MCAutoStringRef t_value;
-                /* UNCHECKED */ MCStringCreateWithCString(t_argument -> value, &t_value);
-				if (MCscreen -> parsecolor(*t_value, t_colour, NULL))
+				if (MCscreen -> parsecolor(t_argument -> value, t_colour, NULL))
 				{
 					t_parameters -> entries[t_index] . value . colour . red = t_colour . red >> 8;
 					t_parameters -> entries[t_index] . value . colour . green = t_colour . green >> 8;
@@ -145,7 +143,7 @@ bool MCCoreImageEffectBegin(const char *p_name, Drawable p_target, Drawable p_so
 				unsigned int t_count = 0;
 				const char *t_string;
 				char *t_next;
-				t_string = t_argument -> value;
+				t_string = MCStringGetCString(t_argument -> value);
 				do
 				{
 					t_vector[t_count] = strtod(t_string, &t_next);
@@ -177,13 +175,17 @@ bool MCCoreImageEffectBegin(const char *p_name, Drawable p_target, Drawable p_so
 			
 			case REI_VISUALEFFECT_PARAMETER_TYPE_IMAGE:
 				MCImage *t_image;
-				if (strncmp(t_argument -> value, "id ", 3) == 0)
-					t_image = (MCImage *)(MCdefaultstackptr -> getobjid(CT_IMAGE, atoi(t_argument -> value + 3)));
+				if (MCStringBeginsWith(t_argument -> value, MCSTR("id "), kMCCompareExact))
+                {
+                    MCAutoStringRef t_id;
+                    /* UNCHECKED */ MCStringCopySubstring(t_argument -> value, MCRangeMake(3, MCStringGetLength(t_argument -> value) - 3), &t_id); 
+                    integer_t t_int;
+                    /* UNCHECKED */ MCStringToInteger(*t_id, t_int);
+					t_image = (MCImage *)(MCdefaultstackptr -> getobjid(CT_IMAGE, t_int));
+                }
 				else
                 {
-                    MCAutoStringRef t_value;
-                    /* UNCHECKED */ MCStringCreateWithCString(t_argument -> value, &t_value);
-					t_image = (MCImage *)(MCdefaultstackptr -> getobjname(CT_IMAGE, *t_value));
+					t_image = (MCImage *)(MCdefaultstackptr -> getobjname(CT_IMAGE, t_argument -> value));
                 }
 				if (t_image != NULL)
 				{
