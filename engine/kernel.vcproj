@@ -6135,13 +6135,6 @@
 				RelativePath=".\src\sysspec.cpp"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
@@ -6506,6 +6499,10 @@
 			</File>
 			<File
 				RelativePath=".\src\exec-store.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-strings-chunk.cpp"
 				>
 			</File>
 			<File

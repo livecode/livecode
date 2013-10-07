@@ -58,9 +58,12 @@ static void getfilter(MCStringRef p_filter, MCStringRef &r_filter)
 		
 		uindex_t t_offset;
 
-		if (!MCStringFirstIndexOfChar(*t_filterstring, '\n', UINDEX_MAX, kMCStringOptionCompareCaseless, t_offset) &&
-				!MCStringFirstIndexOfChar(*t_filterstring, ',', UINDEX_MAX, kMCStringOptionCompareCaseless, t_offset))
-			MCStringAppendFormat(*t_filterstring, "\0%@", p_filter);
+		if (!MCStringFirstIndexOfChar(*t_filterstring, '\n', 0, kMCStringOptionCompareCaseless, t_offset) &&
+				!MCStringFirstIndexOfChar(*t_filterstring, ',', 0, kMCStringOptionCompareCaseless, t_offset))
+		{
+			MCStringAppendNativeChar(*t_filterstring, '\0');
+			MCStringAppend(*t_filterstring, p_filter);
+		}
 
 		/* UNCHECKED */ MCStringAppendNativeChar(*t_filterstring, '\0');
 		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_filterstring, '\n', '\0', kMCStringOptionCompareCaseless);
@@ -69,7 +72,7 @@ static void getfilter(MCStringRef p_filter, MCStringRef &r_filter)
 		/* UNCHECKED */ MCStringCopy(*t_filterstring, r_filter);
 	}
 	else
-		r_filter = MCSTR("All Files (*.*)\0*.*\0\0");
+		/* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)"All Files (*.*)\0*.*\0\0", 21, r_filter);
 }
 
 static void waitonbutton()
@@ -640,6 +643,8 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 		t_result = 0;
 		r_value = MCValueRetain(*t_value);
 	}
+	else
+		MCStringCopy(MCNameGetString(MCN_cancel), r_result);
 
 	waitonbutton();
 
@@ -656,43 +661,45 @@ static void get_new_filter(MCStringRef *p_types, uint4 p_type_count, MCStringRef
 		MCAutoStringRefArray t_split;
 		/* UNCHECKED */ MCStringsSplit(p_types[t_type_index], '|', t_split.PtrRef(), t_split.CountRef());
 
-		if (t_split.Count() < 1)
+		if (t_split.Count() < 1 || 
+			(t_split.Count() == 1 && MCStringIsEmpty(t_split[0])))
 			continue;
 
-		if (t_type_index == 0)
-			/* UNCHECKED */ MCStringAppend(*t_filters, t_split[0]);
-		else
-			/* UNCHECKED */ MCStringAppendFormat(*t_filters, "\0%@", t_split[0]);
+		if (t_type_index != 0)
+			/* UNCHECKED */ MCStringAppendNativeChar(*t_filters, '\0');
+
+		/* UNCHECKED */ MCStringAppend(*t_filters, t_split[0]);
 
 		if (t_split.Count() < 2)
-			/* UNCHECKED */ MCStringAppendFormat(*t_filters, "\0*.*");
+			/* UNCHECKED */ MCStringAppendNativeChars(*t_filters, (char_t*)"\0*.*", 4);
 		else
 		{
 			MCAutoStringRefArray t_extensions;
 			/* UNCHECKED */ MCStringsSplit(t_split[1], ',', t_extensions.PtrRef(), t_extensions.CountRef());
 			if (t_extensions.Count() == 0)
-				/* UNCHECKED */ MCStringAppendFormat(*t_filters, "\0*.*");
+				/* UNCHECKED */ MCStringAppendNativeChars(*t_filters, (char_t*)"\0*.*", 4);
 			else
 			{
 				for (unsigned int i = 0; i < t_extensions.Count(); ++i)
 				{
-					char t_del;
 					if (i != 0)
-						t_del = ';';
+						/* UNCHECKED*/ MCStringAppendNativeChar(*t_filters, ';');
 					else
-						t_del = '\0';
+						/* UNCHECKED*/ MCStringAppendNativeChar(*t_filters, '\0');
 
-					/* UNCHECKED */ MCStringAppendFormat(*t_filters, "%c*.%@", t_del, t_extensions[i]);
+					/* UNCHECKED */ MCStringAppendFormat(*t_filters, "*.%@", t_extensions[i]);
 				}
 			}
 		}
 	}
 
-	if (*t_filters == nil)
-		/* UNCHECKED */ MCStringAppendFormat(*t_filters, "All Files\0*.*");
-
-	/* UNCHECKED */ MCStringAppendChar(*t_filters, '\0');
-	/* UNCHECKED */ MCStringCopy(*t_filters, r_filters);
+	if (MCStringIsEmpty(*t_filters))
+		/* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)"All Files\0*.*\0\0", 15, r_filters);
+	else
+	{
+		/* UNCHECKED */ MCStringAppendChar(*t_filters, '\0');
+		/* UNCHECKED */ MCStringCopy(*t_filters, r_filters);
+	}
 }
 
 // MW-2005-05-15: New answer file with types call

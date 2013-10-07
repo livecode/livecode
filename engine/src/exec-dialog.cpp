@@ -186,11 +186,8 @@ void MCDialogExecAnswerFileWithFilter(MCExecContext &ctxt, bool p_plural, MCStri
 
 	if (*t_value != nil)
 		ctxt.SetItToValue(*t_value);
-
-	if (*t_result != nil && MCStringGetLength(*t_result) > 0)
-		ctxt.SetTheResultToValue(MCN_cancel);
 	else
-		ctxt.SetTheResultToEmpty();
+		ctxt.SetTheResultToValue(MCN_cancel);
 }
 
 bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
@@ -250,12 +247,14 @@ void MCDialogExecAnswerFileWithTypes(MCExecContext &ctxt, bool p_plural, MCStrin
 	}
 
 	if (*t_value != nil)
+	{
 		ctxt.SetItToValue(*t_value);
 
-	if (*t_result != nil && MCStringGetLength(*t_result) > 0)
-		ctxt.SetTheResultToValue(MCN_cancel);
+		if (*t_result != nil)
+			ctxt.SetTheResultToValue(*t_result);
+	}
 	else
-		ctxt.SetTheResultToEmpty();
+		ctxt.SetTheResultToValue(MCN_cancel);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -304,12 +303,14 @@ void MCDialogExecAnswerFolder(MCExecContext &ctxt, bool p_plural, MCStringRef p_
 	}
 
 	if (*t_value != nil)
+	{
 		ctxt.SetItToValue(*t_value);
 
-	if (*t_result != nil && MCStringGetLength(*t_result) > 0)
-		ctxt.SetTheResultToValue(MCN_cancel);
+		if (*t_result != nil)
+			ctxt.SetTheResultToValue(*t_result);
+	}
 	else
-		ctxt.SetTheResultToEmpty();
+		ctxt.SetTheResultToValue(MCN_cancel);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
