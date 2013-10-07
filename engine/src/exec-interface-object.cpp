@@ -3055,14 +3055,13 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
 	MCValueRef t_value;
 	while(MCArrayIterate(props, t_iterator, t_key, t_value))
 	{
-		MCScriptPoint sp(MCStringGetCString(MCNameGetString(t_key)));
+		MCScriptPoint sp(MCNameGetString(t_key));
 		Symbol_type type;
 		const LT *te;
 		if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL
 		        && te->type == TT_PROPERTY && te->which != P_ID)
 		{
-			ctxt . GetEP() . setvalueref(t_value);
-			setprop(part, (Properties)te->which, ctxt . GetEP(), False);
+			setstringprop(ctxt, part, (Properties)te->which, False, (MCStringRef)t_value);
 		}
 	}	
 	MCerrorlock--;
