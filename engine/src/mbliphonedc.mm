@@ -308,7 +308,7 @@ void MCScreenDC::beep(void)
 
 struct MCScreenDCDoSetBeepSoundEnv
 {
-	const char *sound;
+	MCStringRef sound;
 	bool result;
 };
 
@@ -318,7 +318,7 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 	MCScreenDCDoSetBeepSoundEnv *env;
 	env = (MCScreenDCDoSetBeepSoundEnv *)p_env;
 	
-	if (env -> sound == nil || *(env -> sound) == 0)
+	if (env -> sound == nil || MCStringIsEmpty(env -> sound))
 	{
 		if (s_system_sound_name != nil)
 		{
@@ -334,9 +334,7 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 	SystemSoundID t_new_sound;
 	
 	MCAutoStringRef t_sound_path;
-	MCAutoStringRef t_env_sound;
-	/* UNCHECKED */ MCStringCreateWithCString(env -> sound, &t_env_sound);
-	MCS_resolvepath(*t_env_sound, &t_sound_path);
+	MCS_resolvepath(env -> sound, &t_sound_path);
 	
 	NSURL *t_url;
 	t_url = [NSURL fileURLWithPath: [NSString stringWithMCStringRef: *t_sound_path]];
@@ -362,7 +360,7 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 bool MCScreenDC::setbeepsound(MCStringRef p_beep_sound)
 {
 	MCScreenDCDoSetBeepSoundEnv t_env;
-	t_env . sound = MCStringGetCString(p_beep_sound);
+	t_env . sound = MCValueRetain(p_beep_sound);
 
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 	/* REMOTE */ MCFiberCall(s_main_fiber, MCScreenDCDoSetBeepSound, &t_env);
