@@ -1570,6 +1570,11 @@ bool MCStringPrependNativeChar(MCStringRef string, char_t p_char);
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
 bool MCStringInsert(MCStringRef string, uindex_t at, MCStringRef new_string);
+bool MCStringInsertSubstring(MCStringRef string, uindex_t at, MCStringRef new_string, MCRange range);
+bool MCStringInsertChars(MCStringRef string, uindex_t at, const unichar_t *chars, uindex_t count);
+bool MCStringInsertNativeChars(MCStringRef string, uindex_t at, const char_t *chars, uindex_t count);
+bool MCStringInsertChar(MCStringRef string, uindex_t at, unichar_t p_char);
+bool MCStringInsertNativeChar(MCStringRef string, uindex_t at, char_t p_char);
 
 // Remove 'range' characters from 'string'.
 //
