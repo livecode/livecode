@@ -487,7 +487,7 @@ public:
 	
 	// MW-2012-01-27: [[ UnicodeChunks ]] Return the contents of the field in a native
 	//   compatible way.
-	bool nativizetext(uint4 parid, MCExecPoint& ep, bool p_ascii_only);
+	//bool nativizetext(uint4 parid, MCExecPoint& ep, bool p_ascii_only);
 	
 	// MW-2012-02-08: [[ TextChanged ]] This causes a 'textChanged' message to be sent.
 	void textchanged(void);

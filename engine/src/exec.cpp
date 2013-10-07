@@ -85,6 +85,24 @@ bool MCExecContext::ConvertToBoolean(MCValueRef p_value, MCBooleanRef &r_boolean
 	return m_ep . convertvaluereftoboolean(p_value, r_boolean);
 }
 
+bool MCExecContext::ConvertToMutableString(MCValueRef p_value, MCStringRef& r_string)
+{
+    MCAutoStringRef t_string;
+    if (!ConvertToString(p_value, &t_string))
+        return false;
+    
+    return MCStringMutableCopy(*t_string, r_string);
+}
+
+bool MCExecContext::ConvertToData(MCValueRef p_value, MCDataRef& r_data)
+{
+    MCAutoStringRef t_string;
+    if (!ConvertToString(p_value, &t_string))
+        return false;
+    
+	return MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_string), MCStringGetLength(*t_string), r_data);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCExecContext::FormatReal(real64_t p_real, MCStringRef& r_value)
@@ -175,25 +193,6 @@ bool FormatUnsignedInteger(uinteger_t p_integer, MCStringRef& r_output)
 	return MCStringFormat(r_output, "%d", p_integer);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-bool MCExecContext::EncodeStringAsUTF8(MCStringRef self, char*& r_utf8_string)
-{
-	MCExecPoint ep;
-	ep . setsvalue(MCStringGetOldString(self));
-	ep . nativetoutf8();
-	r_utf8_string = ep . getsvalue() . clone();
-	return true;
-}
-
-bool MCExecContext::EncodeUnicodeStringAsUTF8(MCStringRef self, char*& r_utf8_string)
-{
-	MCExecPoint ep;
-	ep . setsvalue(MCStringGetOldString(self));
-	ep . utf16toutf8();
-	r_utf8_string = ep . getsvalue() . clone();
-	return true;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
