@@ -1402,12 +1402,13 @@ void MCPSMetaContext::setfont(MCFontStruct *font)
 	uint2 fontsize;
 	MCFontlistGetCurrent() -> getfontreqs(font, fontname_n, fontsize, fontstyle);
 
-	const char *fontname;
-	fontname = MCStringGetCString(MCNameGetString(fontname_n));
+	MCStringRef fontname;
+	fontname = nil;
+	fontname = MCValueRetain(MCNameGetString(fontname_n));
 
 	while (i < fontcount)
 	{
-		if (strcasecmp(fontname, defaultfonts[i].fontname) == 0 )
+		if (MCStringIsEqualToCString(fontname, defaultfonts[i].fontname, kMCCompareExact))
 		{
 			strcpy(psFont, defaultfonts[i].printerfontname);
 			
@@ -1444,6 +1445,8 @@ void MCPSMetaContext::setfont(MCFontStruct *font)
 	
 	
 	sprintf(buffer, "%d (%s) setFont\n", fontsize, psFont);
+
+	MCValueRelease(fontname);
 
 	PSwrite(buffer);
 }
