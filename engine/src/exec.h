@@ -153,12 +153,12 @@ enum MCPropertyType
 	kMCPropertyTypeOptionalString,
 	kMCPropertyTypeOptionalRectangle,
 	kMCPropertyTypeOptionalEnum,
+	kMCPropertyTypeName,
     kMCPropertyTypeLinesOfString,
     kMCPropertyTypeLinesOfUInt,
     kMCPropertyTypeLinesOfUIntX2,
     kMCPropertyTypeLinesOfPoint,
     kMCPropertyTypeItemsOfUInt,
-
 };
 
 struct MCPropertyInfo
@@ -220,6 +220,7 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, B
 #define MCPropertyObjectThunkGetOptionalCustomType(obj, mth, typ) MCPropertyObjectThunkImp(obj, mth, typ*&)
 #define MCPropertyObjectThunkGetOptionalEnumType(obj, mth) MCPropertyObjectThunkImp(obj, mth, intenum_t*&)
 #define MCPropertyObjectThunkGetArray(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCArrayRef&)
+#define MCPropertyObjectThunkGetName(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCNameRef&)
 
 #define MCPropertyObjectListThunkGetLinesOfString(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, MCStringRef*&)
 #define MCPropertyObjectListThunkGetLinesOfUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, uinteger_t*&)
@@ -248,6 +249,7 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, B
 #define MCPropertyObjectThunkSetOptionalCustomType(obj, mth, typ) MCPropertyObjectThunkImp(obj, mth, const typ*&)
 #define MCPropertyObjectThunkSetOptionalEnumType(obj, mth) MCPropertyObjectThunkImp(obj, mth, intenum_t*)
 #define MCPropertyObjectThunkSetArray(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCArrayRef)
+#define MCPropertyObjectThunkSetName(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCNameRef)
 
 #define MCPropertyObjectListThunkSetLinesOfString(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t, MCStringRef*)
 #define MCPropertyObjectListThunkSetLinesOfUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t, uinteger_t*)
@@ -265,6 +267,7 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, B
 #define MCPropertyObjectPartThunkGetOptionalUInt32(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, uinteger_t*&)
 #define MCPropertyObjectPartThunkGetDouble(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, double&)
 #define MCPropertyObjectPartThunkGetString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCStringRef&)
+#define MCPropertyObjectPartThunkGetBinaryString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCDataRef&)
 #define MCPropertyObjectPartThunkGetOptionalString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCStringRef&)
 #define MCPropertyObjectPartThunkGetRectangle(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCRectangle&)
 #define MCPropertyObjectPartThunkGetOptionalRectangle(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCRectangle*&)
@@ -287,6 +290,7 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, B
 #define MCPropertyObjectPartThunkSetOptionalUInt32(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, uinteger_t*)
 #define MCPropertyObjectPartThunkSetDouble(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, double)
 #define MCPropertyObjectPartThunkSetString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCStringRef)
+#define MCPropertyObjectPartThunkSetBinaryString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCDataRef)
 #define MCPropertyObjectPartThunkSetOptionalString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCStringRef)
 #define MCPropertyObjectPartThunkSetRectangle(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCRectangle)
 #define MCPropertyObjectPartThunkSetOptionalRectangle(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCRectangle*)
@@ -537,6 +541,22 @@ public:
 	{
 		return m_ep . getcutoff();
 	}
+	
+	uinteger_t GetNumberFormatWidth() const
+	{
+		return m_ep.getnffw();
+	}
+	
+	uinteger_t GetNumberFormatTrailing() const
+	{
+		return m_ep.getnftrailing();	
+	}
+	
+	uinteger_t GetNumberFormatForce() const
+	{
+		return m_ep.getnfforce();
+	}
+	
 	//////////
 
 	void SetCaseSensitive(bool p_value)
@@ -613,7 +633,9 @@ public:
 	bool ConvertToLegacyPoint(MCValueRef value, MCPoint& r_point);
 	bool ConvertToLegacyRectangle(MCValueRef value, MCRectangle& r_rectangle);
 	bool ConvertToLegacyColor(MCValueRef value, MCColor& r_color);
-
+    bool ConvertToMutableString(MCValueRef p_value, MCStringRef &r_string);
+    bool ConvertToData(MCValueRef p_value, MCDataRef& r_data);
+    
 	// These attempt to convert the given value as specified. If conversion
 	// was successful then 'r_converted' is set to true, else 'false'. If
 	// an error occurs (such as out-of-memory), false is returned.
@@ -638,11 +660,7 @@ public:
 	bool FormatLegacyRectangle(MCRectangle value, MCStringRef& r_value);
 	bool FormatLegacyColor(MCColor value, MCStringRef& r_value);
 
-	//////////
 	
-	bool EncodeStringAsUTF8(MCStringRef string, char*& r_cstring);
-	bool EncodeUnicodeStringAsUTF8(MCStringRef string, char*& r_cstring);
-
 	//////////
 
 	// This method evaluates the given expression returning the result in 'result'.
@@ -1016,6 +1034,22 @@ extern MCExecMethodInfo *kMCStringsEvalOffsetMethodInfo;
 extern MCExecMethodInfo *kMCStringsExecReplaceMethodInfo;
 extern MCExecMethodInfo *kMCStringsExecFilterMethodInfo;
 
+extern MCExecMethodInfo *kMCStringsEvalLinesOfTextByRangeMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalLinesOfTextByExpressionMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalLinesOfTextByOrdinalMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalItemsOfTextByRangeMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalItemsOfTextByExpressionMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalItemsOfTextByOrdinalMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalWordsOfTextByRangeMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalWordsOfTextByExpressionMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalWordsOfTextByOrdinalMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalTokensOfTextByRangeMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalTokensOfTextByExpressionMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalTokensOfTextByOrdinalMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalCharsOfTextByRangeMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalCharsOfTextByExpressionMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalCharsOfTextByOrdinalMethodInfo;
+
 void MCStringsEvalToLower(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_lower);
 void MCStringsEvalToUpper(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_lower);
 
@@ -1059,6 +1093,76 @@ void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p
 void MCStringsExecReplace(MCExecContext& ctxt, MCStringRef p_pattern, MCStringRef p_replacement, MCStringRef p_target);
 
 void MCStringsExecFilter(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, MCStringRef &r_result);
+
+void MCStringsEvalTextChunkByRange(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, bool p_eval_mutable, MCStringRef& x_string);
+void MCStringsEvalTextChunkByExpression(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, bool p_eval_mutable, MCStringRef &x_string);
+void MCStringsEvalTextChunkByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, Chunk_term p_ordinal_type, bool p_eval_mutable, MCStringRef& x_string);
+
+void MCStringsSetTextChunkByRange(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, MCStringRef& x_target);
+void MCStringsSetTextChunkByExpression(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, Chunk_term p_chunk_type, integer_t p_first, MCStringRef& x_target);
+void MCStringsSetTextChunkByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, Chunk_term p_chunk_type, Chunk_term p_ordinal_type, MCStringRef& x_target);
+
+void MCStringsEvalMutableLinesOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, MCStringRef& r_result);
+void MCStringsEvalMutableLinesOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_line, MCStringRef& r_result);
+void MCStringsEvalMutableLinesOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, MCStringRef& r_result);
+void MCStringsEvalMutableItemsOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, MCStringRef& r_result);
+void MCStringsEvalMutableItemsOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_item, MCStringRef& r_result);
+void MCStringsEvalMutableItemsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, MCStringRef& r_result);
+void MCStringsEvalMutableWordsOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, MCStringRef& r_result);
+void MCStringsEvalMutableWordsOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_word, MCStringRef& r_result);
+void MCStringsEvalMutableWordsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, MCStringRef& r_result);
+void MCStringsEvalMutableTokensOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, MCStringRef& r_result);
+void MCStringsEvalMutableTokensOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_token, MCStringRef& r_result);
+void MCStringsEvalMutableTokensOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, MCStringRef& r_result);
+
+void MCStringsExecSetLinesOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, integer_t p_first, integer_t p_last, MCStringRef& r_result);
+void MCStringsExecSetLinesOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, integer_t p_line, MCStringRef& r_result);
+void MCStringsExecSetLinesOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, Chunk_term p_ordinal_type, MCStringRef& r_result);
+void MCStringsExecSetItemsOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, integer_t p_first, integer_t p_last, MCStringRef& r_result);
+void MCStringsExecSetItemsOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, integer_t p_item, MCStringRef& r_result);
+void MCStringsExecSetItemsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, Chunk_term p_ordinal_type, MCStringRef& r_result);
+void MCStringsExecSetWordsOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, integer_t p_first, integer_t p_last, MCStringRef& r_result);
+void MCStringsExecSetWordsOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, integer_t p_word, MCStringRef& r_result);
+void MCStringsExecSetWordsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, Chunk_term p_ordinal_type, MCStringRef& r_result);
+void MCStringsExecSetTokensOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, integer_t p_first, integer_t p_last, MCStringRef& r_result);
+void MCStringsExecSetTokensOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, integer_t p_token, MCStringRef& r_result);
+void MCStringsExecSetTokensOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, Chunk_term p_ordinal_type, MCStringRef& r_result);
+void MCStringsExecSetCharsOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, integer_t p_first, integer_t p_last, MCStringRef& r_result);
+void MCStringsExecSetCharsOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, integer_t p_char, MCStringRef& r_result);
+void MCStringsExecSetCharsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, Chunk_term p_ordinal_type, MCStringRef& r_result);
+
+void MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCStringRef p_string, uinteger_t& r_count);
+///////////
+
+void MCStringsGetTextChunk(MCExecContext& ctxt, MCStringRef p_source, integer_t p_start, integer_t p_end, MCStringRef& r_result);
+
+void MCStringsEvalLinesOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalLinesOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_line, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalLinesOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalItemsOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalItemsOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_item, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalItemsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalWordsOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalWordsOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_word, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalWordsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalTokensOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalTokensOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_token, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalTokensOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalCharsOfTextByRange(MCExecContext& ctxt, MCStringRef p_source, integer_t p_first, integer_t p_last, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalCharsOfTextByExpression(MCExecContext& ctxt, MCStringRef p_source, integer_t p_char, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+void MCStringsEvalCharsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_ordinal_type, integer_t& x_start, integer_t& x_end, MCStringRef& r_result);
+
+void MCStringsEvalTextChunk(MCExecContext& ctxt, MCMarkedText p_source, MCStringRef& r_string);
+void MCStringsMarkLinesOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, MCMarkedText& x_mark);
+void MCStringsMarkLinesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedText& x_mark);
+void MCStringsMarkItemsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, MCMarkedText& x_mark);
+void MCStringsMarkItemsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedText& x_mark);
+void MCStringsMarkWordsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, MCMarkedText& x_mark);
+void MCStringsMarkWordsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedText& x_mark);
+void MCStringsMarkTokensOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, MCMarkedText& x_mark);
+void MCStringsMarkTokensOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedText& x_mark);
+void MCStringsMarkCharsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, MCMarkedText& x_mark);
+void MCStringsMarkCharsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedText& x_mark);
 
 ///////////
 
@@ -1542,6 +1646,8 @@ extern MCExecMethodInfo *kMCInterfaceEvalCardOfOptionalStackByIdMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceEvalCardOfOptionalStackByNameMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceEvalThisCardOfOptionalStackMethodInfo;
 
+extern MCExecMethodInfo *kMCInterfaceEvalTextOfContainerMethodInfo;
+
 void MCInterfaceInitialize(MCExecContext& ctxt);
 void MCInterfaceFinalize(MCExecContext& ctxt);
 
@@ -1750,7 +1856,8 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 void MCInterfaceExecFind(MCExecContext& ctxt, int p_mode, MCStringRef p_needle, MCChunk *p_target);
 
 void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCStringRef value, int where, MCObjectChunkPtr target);
-void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef value, int where, MCObjectChunkPtr target, bool is_unicode);
+void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef value, int where, MCObjectChunkPtr target);
+void MCInterfaceExecPutUnicodeIntoField(MCExecContext& ctxt, MCDataRef p_data, int p_where, MCObjectChunkPtr p_chunk);
 
 void MCInterfaceExecLockCursor(MCExecContext& ctxt);
 void MCInterfaceExecLockMenus(MCExecContext& ctxt);
@@ -1786,7 +1893,7 @@ void MCInterfaceExecSortCardsOfStack(MCExecContext &ctxt, MCStack *p_target, boo
 void MCInterfaceExecSortField(MCExecContext &ctxt, MCObjectPtr p_target, int p_chunk_type, bool p_ascending, int p_format, MCExpression *p_by);
 void MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef& x_target, int p_chunk_type, bool p_ascending, int p_format, MCExpression *p_by);
 
-void MCInterfaceExecChooseTool(MCExecContext& ctxt, int p_tool);
+void MCInterfaceExecChooseTool(MCExecContext& ctxt, MCStringRef p_input, int p_tool);
 
 void MCInterfaceExecGoCardAsMode(MCExecContext& ctxt, MCCard *p_card, int p_mode, bool p_visible, bool p_this_stack);
 void MCInterfaceExecGoCardInWindow(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window, bool p_visible, bool p_this_stack);
@@ -2015,6 +2122,68 @@ void MCInterfaceSetTool(MCExecContext& ctxt, MCStringRef p_value);
 void MCInterfaceGetScreenRect(MCExecContext& ctxt, bool p_working, bool p_effective, MCRectangle& r_value);
 void MCInterfaceGetScreenRects(MCExecContext& ctxt, bool p_working, bool p_effective, MCStringRef& r_value);
 
+void MCInterfaceEvalHelpStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
+void MCInterfaceEvalHomeStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
+void MCInterfaceEvalSelectedObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
+void MCInterfaceEvalTopStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
+void MCInterfaceEvalClickStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
+void MCInterfaceEvalMouseStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
+void MCInterfaceEvalClickFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
+void MCInterfaceEvalSelectedFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
+void MCInterfaceEvalSelectedImageAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
+void MCInterfaceEvalFoundFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
+void MCInterfaceEvalMouseControlAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
+void MCInterfaceEvalFocusedObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
+void MCInterfaceEvalBinaryStackAsObject(MCExecContext& ctxt, MCStringRef p_data, MCObjectPtr& r_object);
+void MCInterfaceEvalDefaultStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
+void MCInterfaceEvalStackOfStackByName(MCExecContext& ctxt, MCObjectPtr p_parent, MCNameRef p_name, MCObjectPtr& r_stack);
+void MCInterfaceEvalStackOfStackById(MCExecContext& ctxt, MCObjectPtr p_parent, uinteger_t p_id, MCObjectPtr& r_stack);
+void MCInterfaceEvalStackByValue(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_stack);
+void MCInterfaceEvalSubstackOfStackByName(MCExecContext& ctxt, MCObjectPtr p_parent, MCNameRef p_name, MCObjectPtr& r_stack);
+void MCInterfaceEvalSubstackOfStackById(MCExecContext& ctxt, MCObjectPtr p_parent, uinteger_t p_id, MCObjectPtr& r_stack);
+void MCInterfaceEvalAudioClipOfStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_ordinal_type, MCObjectPtr& r_clip);
+void MCInterfaceEvalAudioClipOfStackById(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_id, MCObjectPtr& r_clip);
+void MCInterfaceEvalAudioClipOfStackByName(MCExecContext& ctxt, MCObjectPtr p_stack, MCNameRef p_name, MCObjectPtr& r_clip);
+void MCInterfaceEvalVideoClipOfStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_ordinal_type, MCObjectPtr& r_clip);
+void MCInterfaceEvalVideoClipOfStackById(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_id, MCObjectPtr& r_clip);
+void MCInterfaceEvalVideoClipOfStackByName(MCExecContext& ctxt, MCObjectPtr p_stack, MCNameRef p_name, MCObjectPtr& r_clip);
+void MCInterfaceEvalBackgroundOfStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, Chunk_term p_ordinal_type, MCObjectPtr& r_bg);
+void MCInterfaceEvalBackgroundOfStackById(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_id, MCObjectPtr& r_bg);
+void MCInterfaceEvalBackgroundOfStackByName(MCExecContext& ctxt, MCObjectPtr p_stack, MCNameRef p_name, MCObjectPtr& r_bg);
+void MCInterfaceEvalStackWithBackgroundByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, Chunk_term p_ordinal_type, MCObjectPtr& r_stack);
+void MCInterfaceEvalStackWithBackgroundById(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_id, MCObjectPtr& r_stack);
+void MCInterfaceEvalStackWithBackgroundByName(MCExecContext& ctxt, MCObjectPtr p_stack, MCNameRef p_name, MCObjectPtr& r_stack);
+void MCInterfaceEvalCardOfStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, bool p_marked, Chunk_term p_ordinal_type, MCObjectPtr& r_card);
+void MCInterfaceEvalThisCardOfStack(MCExecContext& ctxt, MCObjectPtr p_stack, MCObjectPtr& r_card);
+void MCInterfaceEvalCardOfStackById(MCExecContext& ctxt, MCObjectPtr p_stack, bool p_marked, uinteger_t p_id, MCObjectPtr& r_card);
+void MCInterfaceEvalCardOfStackByName(MCExecContext& ctxt, MCObjectPtr p_stack, bool p_marked, MCNameRef p_name, MCObjectPtr& r_card);
+void MCInterfaceEvalCardOfBackgroundByOrdinal(MCExecContext& ctxt, MCObjectPtr p_background, bool p_marked, Chunk_term p_ordinal_type, MCObjectPtr& r_card);
+void MCInterfaceEvalCardOfBackgroundById(MCExecContext& ctxt, MCObjectPtr p_background, bool p_marked, uinteger_t p_id, MCObjectPtr& r_card);
+void MCInterfaceEvalCardOfBackgroundByName(MCExecContext& ctxt, MCObjectPtr p_background, bool p_marked, MCNameRef p_name, MCObjectPtr& r_card);
+void MCInterfaceEvalGroupOfCardByOrdinal(MCExecContext& ctxt, MCObjectPtr p_card, Chunk_term p_parent_type, Chunk_term p_ordinal_type, MCObjectPtr& r_group);
+void MCInterfaceEvalGroupOfCardById(MCExecContext& ctxt, MCObjectPtr p_card, Chunk_term p_parent_type, uinteger_t p_id, MCObjectPtr& r_group);
+void MCInterfaceEvalGroupOfCardByName(MCExecContext& ctxt, MCObjectPtr p_card, Chunk_term p_parent_type, MCNameRef p_name, MCObjectPtr& r_group);
+void MCInterfaceEvalGroupOfCardOrStackById(MCExecContext& ctxt, MCObjectPtr p_card, Chunk_term p_parent_type, uinteger_t p_id, MCObjectPtr& r_group);
+void MCInterfaceEvalGroupOfGroupByOrdinal(MCExecContext& ctxt, MCObjectPtr p_group, Chunk_term p_ordinal_type, MCObjectPtr& r_group);
+void MCInterfaceEvalGroupOfGroupById(MCExecContext& ctxt, MCObjectPtr p_group, uinteger_t p_id, MCObjectPtr& r_group);
+void MCInterfaceEvalGroupOfGroupByName(MCExecContext& ctxt, MCObjectPtr p_group, MCNameRef p_name, MCObjectPtr& r_group);
+void MCInterfaceEvalMenubarAsObject(MCExecContext& ctxt, MCObjectPtr& r_menubar);
+void MCInterfaceEvalObjectOfGroupByOrdinal(MCExecContext& ctxt, MCObjectPtr p_group, Chunk_term p_object_type, Chunk_term p_ordinal_type, MCObjectPtr& r_object);
+void MCInterfaceEvalObjectOfGroupById(MCExecContext& ctxt, MCObjectPtr p_group, Chunk_term p_object_type, uinteger_t p_id, MCObjectPtr& r_object);
+void MCInterfaceEvalObjectOfGroupByName(MCExecContext& ctxt, MCObjectPtr p_group, Chunk_term p_object_type, MCNameRef p_name, MCObjectPtr& r_object);
+void MCInterfaceEvalObjectOfCardByOrdinal(MCExecContext& ctxt, MCObjectPtr p_card, Chunk_term p_object_type, Chunk_term p_parent_type, Chunk_term p_ordinal_type, MCObjectPtr& r_object);
+void MCInterfaceEvalObjectOfCardById(MCExecContext& ctxt, MCObjectPtr p_card, Chunk_term p_object_type, Chunk_term p_parent_type, uinteger_t p_id, MCObjectPtr& r_object);
+void MCInterfaceEvalObjectOfCardOrStackById(MCExecContext& ctxt, MCObjectPtr p_card, Chunk_term p_object_type, Chunk_term p_parent_type, uinteger_t p_id, MCObjectPtr& r_object);
+void MCInterfaceEvalObjectOfCardByName(MCExecContext& ctxt, MCObjectPtr p_card, Chunk_term p_object_type, Chunk_term p_parent_type, MCNameRef p_name, MCObjectPtr& r_object);
+
+void MCInterfaceEvalStackOfObject(MCExecContext& ctxt, MCObjectPtr p_object, MCObjectPtr& r_object);
+void MCInterfaceEvalStackWithOptionalBackground(MCExecContext& ctxt, MCObjectPtr p_object, MCObjectPtr& r_object);
+
+void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wholechunk, MCMarkedText& r_mark);
+void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCMarkedText& r_mark);
+void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Functions p_function, bool p_whole_chunk, MCMarkedText& r_mark);
+void MCInterfaceMarkCharsOfField(MCExecContext& ctxt, MCObjectPtr t_field, MCCRef *character, MCMarkedText &x_mark);
+
 ///////////
 
 struct MCInterfaceLayer;
@@ -2168,10 +2337,10 @@ void MCPasteboardEvalDragDestinationAsObject(MCExecContext& ctxt, MCObjectPtr& r
 void MCPasteboardExecPaste(MCExecContext& ctxt);
 
 void MCPasteboardExecCopy(MCExecContext& ctxt);
-void MCPasteboardExecCopyTextToClipboard(MCExecContext& ctxt, MCChunk *p_target);
+void MCPasteboardExecCopyTextToClipboard(MCExecContext& ctxt, MCObjectChunkPtr p_target);
 void MCPasteboardExecCopyObjectsToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets, uindex_t p_target_count);
 void MCPasteboardExecCut(MCExecContext& ctxt);
-void MCPasteboardExecCutTextToClipboard(MCExecContext& ctxt, MCChunk *p_target);
+void MCPasteboardExecCutTextToClipboard(MCExecContext& ctxt, MCObjectChunkPtr p_target);
 void MCPasteboardExecCutObjectsToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets, uindex_t p_target_count);
 
 void MCPasteboardGetAcceptDrop(MCExecContext& ctxt, bool& r_value);
@@ -2439,6 +2608,8 @@ void MCEngineSetRecursionLimit(MCExecContext& ctxt, uinteger_t p_value);
 
 void MCEngineGetAddress(MCExecContext& ctxt, MCStringRef &r_value);
 void MCEngineGetStacksInUse(MCExecContext& ctxt, MCStringRef &r_value);
+
+void MCEngineMarkVariable(MCExecContext& ctxt, MCVarref *p_variable, MCMarkedText& r_mark);
 
 ///////////
 
@@ -2865,6 +3036,11 @@ void MCNetworkGetNetworkInterfaces(MCExecContext& ctxt, MCStringRef& r_value);
 
 void MCNetworkGetAllowDatagramBroadcasts(MCExecContext& ctxt, bool& r_value);
 void MCNetworkSetAllowDatagramBroadcasts(MCExecContext& ctxt, bool p_value);
+
+void MCNetworkExecSetUrl(MCExecContext& ctxt, MCStringRef p_value, MCStringRef p_url);
+void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCStringRef p_value, int p_where, MCStringRef p_url);
+
+void MCNetworkMarkUrl(MCExecContext& ctxt, MCStringRef p_url, MCMarkedText& r_mark);
 
 ///////////
 

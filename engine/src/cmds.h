@@ -119,7 +119,7 @@ public:
 	{
 		source = NULL;
 	}
-	const char *lookup(const MCString &s);
+	const char *lookup(MCStringRef s);
 	virtual ~MCDoMenu();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual Exec_stat exec(MCExecPoint &);
@@ -1441,7 +1441,7 @@ public:
 		sig = NULL;
 		pname = NULL;
 	}
-	int4 lookup(const MCString &s);
+	int4 lookup(MCStringRef s);
 	virtual ~MCKill();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual Exec_stat exec(MCExecPoint &);

@@ -942,7 +942,6 @@ static bool cgi_multipart_get_boundary(char *&r_boundary)
 	uint32_t t_param_count = 0;
 	
 	t_success = MCStringFirstIndexOfChar(*t_content_type, ';', 0, kMCStringOptionCompareExact, t_index);
-	//t_success = MCCStringFirstIndexOf(MCStringGetCString(*t_content_type), ';', t_index);
 
 	if (t_success)
 		t_success = MCMultiPartParseHeaderParams(MCStringGetCString(*t_content_type) + t_index + 1, t_names, t_values, t_param_count);

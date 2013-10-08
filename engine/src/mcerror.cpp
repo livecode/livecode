@@ -112,10 +112,10 @@ const MCString &MCError::getsvalue()
 	return svalue;
 }
 
-void MCError::copysvalue(const MCString &s, Boolean t)
+void MCError::copystringref(MCStringRef s, Boolean t)
 {
 	delete buffer;
-	buffer = s.clone();
+	buffer = strdup(MCStringGetCString(s));
 	thrown = t;
 	if (thrown)
 		svalue.set(buffer, strlen(buffer));
