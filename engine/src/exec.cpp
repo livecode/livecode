@@ -750,7 +750,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 {
                     // THIS MEANS A METHOD HAS RETURNED AN ILLEGAL VALUE
                     MCAssert(false);
-                    return ES_ERROR;
+                    return;
                 }
             }
         }
@@ -783,7 +783,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                     {
                         // THIS MEANS A METHOD HAS RETURNED AN ILLEGAL VALUE
                         MCAssert(false);
-                        return ES_ERROR;
+                        return;
                     }
                 }
             }
@@ -1168,6 +1168,38 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             int2 a, b, c, d;
             if (!MCU_stoi2x4(ep . getsvalue(), a, b, c, d))
+                ctxt . LegacyThrow(EE_PROPERTY_NOTAINTQUAD);
+            if (!ctxt . HasError())
+            {
+                integer_t t_value[4];
+                t_value[0] = a;
+                t_value[1] = b;
+                t_value[2] = c;
+                t_value[3] = d;
+                ((void(*)(MCExecContext&, void *, integer_t[4]))prop -> setter)(ctxt, mark, t_value);
+            }
+        }
+            break;
+            
+        case kMCPropertyTypeInt32X2:
+        {
+            int4 a, b;
+            if (!MCU_stoi4x2(ep . getsvalue(), a, b))
+                ctxt . LegacyThrow(EE_PROPERTY_NOTAINTPAIR);
+            if (!ctxt . HasError())
+            {
+                integer_t t_value[2];
+                t_value[0] = a;
+                t_value[1] = b;
+                ((void(*)(MCExecContext&, void *, integer_t[2]))prop -> setter)(ctxt, mark, t_value);
+            }
+        }
+            break;
+            
+        case kMCPropertyTypeInt32X4:
+        {
+            int4 a, b, c, d;
+            if (!MCU_stoi4x4(ep . getsvalue(), a, b, c, d))
                 ctxt . LegacyThrow(EE_PROPERTY_NOTAINTQUAD);
             if (!ctxt . HasError())
             {

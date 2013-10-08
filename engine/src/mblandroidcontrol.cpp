@@ -41,15 +41,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeControlPropertyInfo MCAndroidControl::kProperties[] =
+MCPropertyInfo MCAndroidControl::kProperties[] =
 {
-    DEFINE_RW_CTRL_PROPERTY(Rectangle, Rectangle, MCAndroidControl, Rect)
-    DEFINE_RW_CTRL_PROPERTY(Visible, Bool, MCAndroidControl, Visible)
-    DEFINE_RW_CTRL_PROPERTY(Alpha, UInt16, MCAndroidControl, Alpha)
-    DEFINE_RW_CTRL_CUSTOM_PROPERTY(BackgroundColor, NativeControlColor, MCAndroidControl, BackgroundColor)
+    DEFINE_RW_CTRL_PROPERTY(P_RECTANGLE, Rectangle, MCAndroidControl, Rect)
+    DEFINE_RW_CTRL_PROPERTY(P_VISIBLE, Bool, MCAndroidControl, Visible)
+    DEFINE_RW_CTRL_PROPERTY(P_ALPHA, UInt16, MCAndroidControl, Alpha)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(P_BACKGROUND_COLOR, NativeControlColor, MCAndroidControl, BackgroundColor)
 };
 
-MCNativeControlPropertyTable MCAndroidControl::kPropertyTable =
+MCObjectPropertyTable MCAndroidControl::kPropertyTable =
 {
 	&MCNativeControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),

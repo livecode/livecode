@@ -82,14 +82,14 @@ bool MCPurchaseGetSignature(MCPurchase *p_purchase, MCStringRef& r_signature);
 
 ////////////////////////////////////////////////////////////////////////
 
-static MCPurchasePropertyInfo kProperties[] =
+static MCPropertyInfo kProperties[] =
 {
-    DEFINE_RO_PROPERTY(kMCPurchasePropertyDeveloperPayload, String, Purchase, DeveloperPayload)
-    DEFINE_RO_PROPERTY(kMCPurchasePropertyProductIdentifier, String, Purchase, ProductIdentifier)
-    DEFINE_RO_PROPERTY(kMCPurchasePropertyTransactionIdentifier, String, Purchase, TransactionIdentifier)
-    DEFINE_RO_PROPERTY(kMCPurchasePropertyPurchaseDate, Int32, Purchase, PurchaseDate)
-    DEFINE_RO_PROPERTY(kMCPurchasePropertySignedData, String, Purchase, SignedData)
-    DEFINE_RO_PROPERTY(kMCPurchasePropertySignature, String, Purchase, Signature)
+    DEFINE_RO_PROPERTY(P_DEVELOPER_PAYLOAD, String, Purchase, DeveloperPayload)
+    DEFINE_RO_PROPERTY(P_PRODUCT_IDENTIFIER, String, Purchase, ProductIdentifier)
+    DEFINE_RO_PROPERTY(P_TRANSACTION_IDENTIFIER, String, Purchase, TransactionIdentifier)
+    DEFINE_RO_PROPERTY(P_PURCHASE_DATE, Int32, Purchase, PurchaseDate)
+    DEFINE_RO_PROPERTY(P_SIGNED_DATA, String, Purchase, SignedData)
+    DEFINE_RO_PROPERTY(P_PROPERTY_SIGNATURE, String, Purchase, Signature)
 };
 
 static MCPurchasePropertyTable kPropertyTable =
