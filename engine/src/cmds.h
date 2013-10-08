@@ -1401,8 +1401,8 @@ public:
 		out = False;
 	}
 	virtual ~MCFilter();
-	Boolean match(char *s, char *p, Boolean casesensitive);
-	char *filterlines(char *sstring, char *pstring, Boolean casesensitive);
+	Boolean match(MCStringRef s, MCStringRef p, Boolean casesensitive);
+	char *filterlines(MCStringRef sstring, MCStringRef pstring, Boolean casesensitive);
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual Exec_stat exec(MCExecPoint &);
 	virtual void compile(MCSyntaxFactoryRef);

@@ -1695,14 +1695,18 @@ MCFilter::~MCFilter()
 #define OPEN_BRACKET '['
 #define CLOSE_BRACKET ']'
 
-Boolean MCFilter::match(char *s, char *p, Boolean casesensitive)
+Boolean MCFilter::match(MCStringRef s, MCStringRef p, Boolean casesensitive)
 {
 	uint1 scc, c;
+    uindex_t s_pos = 0;
+    uindex_t p_pos = 0;
 
-	while (*s)
+	while (s_pos < MCStringGetLength(s))
 	{
-		scc = *s++;
-		c = *p++;
+        scc = MCStringGetNativeCharAtIndex(s, s_pos);
+        s_pos++;
+        c = MCStringGetNativeCharAtIndex(p, p_pos);
+        p_pos++;
 		switch (c)
 		{
 		case OPEN_BRACKET:
@@ -1711,20 +1715,28 @@ Boolean MCFilter::match(char *s, char *p, Boolean casesensitive)
 				int lc = -1;
 				int notflag = 0;
 
-				if (*p == '!' )
+				if (MCStringGetNativeCharAtIndex(p, p_pos) == '!' )
 				{
 					notflag = 1;
-					p++;
+					p_pos++;
 				}
-				while (*p)
+				while (p_pos < MCStringGetLength(p))
 				{
-					c = *p++;
+					c = MCStringGetNativeCharAtIndex(p, p_pos);
+                    p_pos++;
 					if (c == CLOSE_BRACKET && lc >= 0)
-						return ok ? match(s, p, casesensitive) : 0;
+                    {
+                        MCAutoStringRef t_s_substring, t_p_substring;
+                        /* UNCHECKED */ MCStringCopySubstring(s, MCRangeMake(s_pos, MCStringGetLength(s) - s_pos), &t_s_substring);
+                        /* UNCHECKED */ MCStringCopySubstring(p, MCRangeMake(p_pos, MCStringGetLength(p) - p_pos), &t_p_substring);
+						return ok ? match(*t_s_substring, *t_p_substring, casesensitive) : 0;
+                    }
 					else
-						if (c == '-' && lc >= 0 && *p != CLOSE_BRACKET)
+						if (c == '-' && lc >= 0 && MCStringGetNativeCharAtIndex(p, p_pos) != CLOSE_BRACKET)
 						{
-							c = *p++;
+							c = MCStringGetNativeCharAtIndex(p, p_pos);
+                            p_pos++;
+                            
 							if (notflag)
 							{
 								if (lc > scc || scc > c)
@@ -1758,19 +1770,24 @@ Boolean MCFilter::match(char *s, char *p, Boolean casesensitive)
 		case '?':
 			break;
 		case '*':
-			while (*p == '*')
-				p++;
-			if (*p == 0)
+			while (MCStringGetNativeCharAtIndex(p, p_pos) == '*')
+				p_pos++;
+			if (MCStringGetNativeCharAtIndex(p, p_pos) == 0)
 				return True;
-			--s;
-			c = *p;
-			while (*s)
-				if ((casesensitive ? c != *s : MCS_tolower(c) != MCS_tolower(*s))
-				        && *p != '?' && *p != OPEN_BRACKET)
-					s++;
+			--s_pos;
+			c = MCStringGetNativeCharAtIndex(p, p_pos);
+			while (s_pos < MCStringGetLength(s))
+				if ((casesensitive ? c != MCStringGetNativeCharAtIndex(s, s_pos) : MCS_tolower(c) != MCS_tolower(MCStringGetNativeCharAtIndex(s, s_pos)))
+				        && MCStringGetNativeCharAtIndex(p, p_pos) != '?' && MCStringGetNativeCharAtIndex(p, p_pos) != OPEN_BRACKET)
+					s_pos++;
 				else
-					if (match(s++, p, casesensitive))
+                {
+                    MCAutoStringRef t_s_substring, t_p_substring;
+                    /* UNCHECKED */ MCStringCopySubstring(s, MCRangeMake(s_pos, MCStringGetLength(s) - s_pos), &t_s_substring);
+                    /* UNCHECKED */ MCStringCopySubstring(p, MCRangeMake(p_pos, MCStringGetLength(p) - p_pos), &t_p_substring);
+                    if (match(*t_s_substring, *t_p_substring, casesensitive))
 						return True;
+                }
 			return False;
 		case 0:
 			return scc == 0;
@@ -1786,16 +1803,17 @@ Boolean MCFilter::match(char *s, char *p, Boolean casesensitive)
 			break;
 		}
 	}
-	while (*p == '*')
-		p++;
-	return *p == 0;
+	while (MCStringGetNativeCharAtIndex(p, p_pos) == '*')
+		p_pos++;
+    
+	return MCStringGetNativeCharAtIndex(p, p_pos) == 0;
 }
 
-char *MCFilter::filterlines(char *sstring, char *pstring,
+char *MCFilter::filterlines(MCStringRef sstring, MCStringRef pstring,
                             Boolean casesensitive)
 {
 	uint4 offset = 0;
-	char *dstring = new char[strlen(sstring) + 1];
+	char *dstring = new char[MCStringGetLength(sstring) + 1];
 	char *line;
 
 	// OK-2010-01-11: Bug 7649 - Filter command was incorrectly removing empty lines.
@@ -1805,41 +1823,33 @@ char *MCFilter::filterlines(char *sstring, char *pstring,
 	// 3. If the filtered list is non-empty and had a terminal delimiter, put a return after it.
 
 	// Duplicate input string because the algorithm needs to change it.
-	char *t_string;
-	t_string = strdup(sstring);
-
-	// Keep a copy of the original pointer so it can be freed
-	char *t_original_string;
-	t_original_string = t_string;
-
+	MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringMutableCopy(sstring, &t_string);
+	
 	// MW-2010-10-05: [[ Bug 9034 ]] If t_string is of zero length, then the next couple
 	//   of lines will cause problems so return empty in this case.
 	uint32_t t_length;
-	t_length = strlen(t_string);
+	t_length = MCStringGetLength(*t_string);
 	if (t_length == 0)
 	{
-		free(t_original_string);
-		*dstring = '\0';
+        *dstring = '\0';
 		return dstring;
 	}
 
 	// Record whether or not the string was terminated with a trailing delimiter,
 	// if it was, then remove this trailing delimiter.
 	bool t_was_terminated;
-	t_was_terminated = (t_string[t_length - 1] == '\n');
+	t_was_terminated = (MCStringGetNativeCharAtIndex(*t_string, t_length - 1) == '\n');
 	if (t_was_terminated)
-		t_string[t_length - 1] = '\0';
-
+        /* UNCHECKED */ MCStringRemove(*t_string, MCRangeMake(t_length - 1, 1));
+    
 	for(;;)
 	{
-		char *t_return;
-		t_return = strchr(t_string, '\n');
+        MCAutoStringRef t_head, t_tail;
+        /* UNCHECKED */ MCStringDivideAtChar(*t_string, '\n', kMCCompareExact, &t_head, &t_tail);
 
-		if (t_return != nil)
-			*t_return = '\0';
-
-		line = t_string;
-		if (match(line, pstring, casesensitive) != out)
+		line = strdup(MCStringGetCString(*t_string));
+        if (match(*t_head, pstring, casesensitive) != out)
 		{
 			if (offset)
 				dstring[offset++] = '\n';
@@ -1850,17 +1860,15 @@ char *MCFilter::filterlines(char *sstring, char *pstring,
 			offset += length;
 		}
 
-		if (t_return == nil)
+		if (MCStringIsEmpty(*t_tail))
 			break;
 
-		t_string = t_return + 1;
+		
+        MCValueAssign(&t_string, *t_tail);
 	}
 
 	if (offset != 0 && t_was_terminated)
 		dstring[offset++] = '\n';
-
-
-	free(t_original_string);
 
 	dstring[offset] = '\0';
 	return dstring;
