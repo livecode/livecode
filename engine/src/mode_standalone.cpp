@@ -734,13 +734,13 @@ bool MCModeShouldLoadStacksOnStartup(void)
 }
 
 // In standalone mode, we try to work out what went wrong...
-void MCModeGetStartupErrorMessage(const char*& r_caption, const char *& r_text)
+void MCModeGetStartupErrorMessage(MCStringRef& r_caption, MCStringRef& r_text)
 {
-	r_caption = "Initialization Error";
+	r_caption = MCSTR("Initialization Error");
 	if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
-		r_text = strdup(MCStringGetCString((MCStringRef)MCresult -> getvalueref()));
+		r_text = MCValueRetain((MCStringRef)MCresult -> getvalueref());
 	else
-		r_text = "unknown reason";
+		r_text = MCSTR("unknown reason");
 }
 
 // In standalone mode, we can only set an object's script if has non-zero id.
@@ -762,17 +762,12 @@ bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_msg)
 }
 
 // The standalone mode causes a relaunch message.
-bool MCModeHandleRelaunch(const char *& r_id)
+bool MCModeHandleRelaunch(MCStringRef &r_id)
 {
 #ifdef _WINDOWS
 	bool t_do_relaunch;
-	const char *t_id;
-
 	t_do_relaunch = MCdefaultstackptr -> hashandler(HT_MESSAGE, MCM_relaunch) == True;
-	t_id = MCdefaultstackptr -> getname_cstring();
-
-	r_id = t_id;
-
+	/* UNCHECKED */ MCStringCopy(MCNameGetString(MCdefaultstackptr -> getname()), r_id);
 	return t_do_relaunch;
 #else
 	return false;

@@ -258,16 +258,12 @@ void MCU_getnumberformat(MCExecPoint &ep, uint2 fw, uint2 trail, uint2 force)
 #endif
 }
 
-void MCU_setnumberformat(MCStringRef p_input, uint2 &fw, uint2 &trailing, uint2 &force)
-{
-	MCU_setnumberformat(MCStringGetOldString(p_input), fw, trailing, force);
-}
 
-void MCU_setnumberformat(const MCString &d, uint2 &fw,
+void MCU_setnumberformat(MCStringRef d, uint2 &fw,
                          uint2 &trailing, uint2 &force)
 {
-	fw = d.getlength();
-	const char *sptr = d.getstring();
+	fw = MCStringGetLength(d);
+	const char *sptr = MCStringGetCString(d);
 	const char *eptr = sptr;
 	while (eptr - sptr < fw && *eptr != '.')
 		eptr++;
@@ -1846,7 +1842,7 @@ void MCU_getshift(uint4 mask, uint2 &shift, uint2 &outmask)
 	outmask = j;
 }
 
-void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool)
+void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 {
 	Tool t_new_tool;
 	MColdtool = MCcurtool;
@@ -1858,7 +1854,7 @@ void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool)
 	}
 	else
 	{
-		/* UNCHECKED */ ctxt . GetEP() . copyasstringref(&t_tool_name);
+		t_tool_name = p_input;
 		if (MCStringGetLength(*t_tool_name) < 3)
 		{
 			ctxt . LegacyThrow(EE_CHOOSE_BADTOOL);
@@ -1899,7 +1895,7 @@ void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool)
 		MCstacks->restartidle();
 	if (MCtopstackptr != NULL)
 		MCtopstackptr->updatemenubar();
-	ctxt . GetObject()->message_with_args(MCM_new_tool, MCStringGetOldString(*t_tool_name));
+	ctxt . GetObject()->message_with_valueref_args(MCM_new_tool, *t_tool_name);
 }
 
 Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool, uint2 line, uint2 pos)
@@ -2555,6 +2551,8 @@ bool MCU_multibytetounicode(MCDataRef p_input, MCDataRef &r_output)
 
     if (!MCStringEncode(*t_string, kMCStringEncodingUTF16, false, r_output))
         return false;
+
+	return true;
 }
 
 bool MCU_multibytetounicode(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_unicode)
@@ -2588,6 +2586,8 @@ bool MCU_unicodetomultibyte(MCDataRef p_input, MCDataRef& r_output)
 
     if (!MCStringEncode(*t_string, kMCStringEncodingUTF8, false, r_output))
         return false;
+
+	return true;
 }
 
 bool MCU_unicodetomultibyte(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_multibyte)

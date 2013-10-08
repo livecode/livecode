@@ -54,7 +54,7 @@ bool MCSystemCreateLocalNotification (MCStringRef p_alert_body, MCStringRef p_al
     if (p_alert_body == nil || MCStringGetLength(p_alert_body) == 0)
         t_local_notification.alertBody = nil;
     else
-        t_local_notification.alertBody = [NSString stringWithCString: MCStringGetCString(p_alert_body) encoding: NSMacOSRomanStringEncoding];
+        t_local_notification.alertBody = [NSString stringWithMCStringRef: p_alert_body];
     if (p_alert_action == nil || MCStringGetLength(p_alert_action) == 0)
     {
         t_local_notification.alertAction = nil;
@@ -62,13 +62,13 @@ bool MCSystemCreateLocalNotification (MCStringRef p_alert_body, MCStringRef p_al
     }
     else
     {
-        t_local_notification.alertAction = [NSString stringWithCString: MCStringGetCString(p_alert_action) encoding: NSMacOSRomanStringEncoding];
+        t_local_notification.alertAction = [NSString stringWithMCStringRef: p_alert_action];
         t_local_notification.hasAction = YES;
     }
     // Create the dictionary.
     NSDictionary *t_dictionary;
     if (MCStringGetLength(p_user_info) > 0)
-        t_dictionary = [NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithCString: MCStringGetCString(p_user_info) encoding: NSMacOSRomanStringEncoding],@"payload",[NSString stringWithFormat:@"%i", t_message_id],@"notificationId", nil];
+        t_dictionary = [NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithMCStringRef: p_user_info],@"payload",[NSString stringWithFormat:@"%i", t_message_id],@"notificationId", nil];
     else
         t_dictionary = [NSDictionary dictionaryWithObject:[NSString stringWithFormat:@"%i", t_message_id] forKey: @"notificationId"];
     t_local_notification.userInfo = t_dictionary;

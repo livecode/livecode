@@ -226,14 +226,7 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_ty
             if (MCArrayFetchValue(p_meta_data, false, *t_distrib_key, t_value))
                 t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "distribution id", MCStringGetCString((MCStringRef)t_value));
         }        
-//        if (t_success)
-//        {
-//            MCNewAutoNameRef t_eternal_key;
-//            MCNameCreateWithCString("external id", &t_external_key);
-//            
-//            if (MCArrayFetchValue(p_meta_data, false, *t_external_key, t_value))
-//                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "eternal id", MCStringGetCString((MCStringRef)t_value));
-//        }
+		
         if (t_success)
         {
             MCNewAutoNameRef t_gender_key;

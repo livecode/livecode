@@ -732,6 +732,15 @@ Exec_stat MCHandler::eval(MCExecPoint &ep)
 	return stat;
 }
 
+/* WRAPPER */ Exec_stat MCHandler::eval_ctxt(MCExecContext& ctxt, MCValueRef& r_value)
+{
+	Exec_stat t_stat;
+	t_stat = eval(ctxt . GetEP());
+	if (t_stat == ES_NORMAL)
+		/* UNCHECKED */ ctxt . GetEP() . copyasvalueref(r_value);
+	return t_stat;
+}
+
 /*WRAPPER */ void MCHandler::eval(MCExecContext& ctxt, MCStringRef p_expression, MCValueRef& r_value)
 {
 	MCExecPoint ep(ctxt.GetEP());

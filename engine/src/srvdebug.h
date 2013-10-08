@@ -26,7 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //
 
 // Attempt to connect to the server-side debugger for the given site and url
-extern bool MCServerDebugConnect(const char *p_site, const char *p_url);
+extern bool MCServerDebugConnect(MCStringRef p_site, MCStringRef p_url);
 
 // Disconnect from the server-side debugger (this does nothing if we were
 // never connected).
@@ -61,16 +61,16 @@ extern void MCServerDebugVariableValueChanged(MCVariableValue *p_value);
 
 // Perform one of the following actions:
 //   stop, pause, step over, step into, step out
-extern void MCServerDebugAction(const char *p_action);
+extern void MCServerDebugAction(MCStringRef p_action);
 
 // Manipulate the given breakpoint (either add or remove).
-extern void MCServerDebugBreakpoint(const char *p_action, const char *p_file, uint32_t p_row, uint32_t p_column);
+extern void MCServerDebugBreakpoint(MCStringRef p_action, MCStringRef p_file, uint32_t p_row, uint32_t p_column);
 
 // Get one of a handful of current state variables
 const char *MCServerDebugGet(const char *property);
 
 // Set one of a handful of current state variables
-void MCServerDebugPut(const char *property, const char *value);
+void MCServerDebugPut(MCStringRef p_property, MCStringRef value);
 
 // Configure the variable viewing window
 void MCServerDebugConfigureView(uint32_t scroll, uint32_t height);

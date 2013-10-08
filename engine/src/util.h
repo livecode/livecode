@@ -59,7 +59,6 @@ extern void MCU_restoreprops(MCSaveprops &sp);
 extern int4 MCU_any(int4 max);
 extern void MCU_getnumberformat(MCExecPoint &, uint2, uint2, uint2);
 extern bool MCU_getnumberformat(uint2 fw, uint2 trail, uint2 force, MCStringRef& r_string);
-extern void MCU_setnumberformat(const MCString &, uint2 &, uint2 &, uint2 &);
 extern void MCU_setnumberformat(MCStringRef p_input, uint2 &fw, uint2 &trailing, uint2 &force);
 extern real8 MCU_stoIEEE(const char *bytes);
 extern real8 MCU_i4tor8(int4 in);
@@ -149,7 +148,7 @@ extern MCRectangle MCU_offset_rect(const MCRectangle& r, int2 ox, int2 oy);
 
 extern MCRectangle MCU_recttoroot(MCStack *sptr, const MCRectangle &o);
 extern void MCU_getshift(uint4 mask, uint2 &shift, uint2 &outmask);
-extern void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool);
+extern void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_string, Tool p_tool);
 extern Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool,
 	                                 uint2 line, uint2 pos);
 extern Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef message, MCParameter *params);

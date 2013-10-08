@@ -82,7 +82,7 @@ bool MCImageDecodeNetPBM(IO_handle p_stream, MCImageBitmap *&r_bitmap);
 
 bool MCImageDecodeXBM(IO_handle p_stream, MCPoint &r_hotspot, char *&r_name, MCImageBitmap *&r_bitmap);
 bool MCImageDecodeXPM(IO_handle p_stream, MCImageBitmap *&r_bitmap);
-bool MCImageDecodeXWD(IO_handle stream, char *&r_name, MCImageBitmap *&r_bitmap);
+bool MCImageDecodeXWD(IO_handle stream, MCStringRef &r_name, MCImageBitmap *&r_bitmap);
 
 // Legacy Functions
 bool MCImageSplitPixmaps(MCImageBitmap *p_bitmap, Pixmap &r_drawdata, Pixmap &r_drawmask, MCBitmap *&r_maskimagealpha);
