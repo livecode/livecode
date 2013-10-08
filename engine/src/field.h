@@ -366,7 +366,7 @@ public:
 	void indextorect(MCParagraph *top, int4 si, int4 ei, MCRectangle &r);
 	void insertparagraph(MCParagraph *newtext);
 	// MCField selection functions in fields.cc
-	Boolean find(MCExecPoint &ep, uint4 cardid,
+	Boolean find(MCExecContext &ctxt, uint4 cardid,
 	             Find_mode mode, MCStringRef, Boolean first);
 	Exec_stat sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
 	               Sort_type dir, Sort_type form, MCExpression *by);
