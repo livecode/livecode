@@ -214,7 +214,7 @@ static void MCInterfaceDecorationFormat(MCExecContext& ctxt, const MCInterfaceDe
         else
         {
 			MCListRef t_output;
-			/* UNCHECKED */ MCListCreateMutable('\n', t_output);
+			/* UNCHECKED */ MCListCreateMutable(',', t_output);
 			
             if (p_input . decorations & WD_TITLE)
 				/* UNCHECKED */ MCListAppendCString(t_output, MCtitlestring);
