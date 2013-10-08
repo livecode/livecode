@@ -159,24 +159,28 @@ bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
     t_use_max = p_max != nil;
     
     MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(ep);
     
     if (p_current != nil)
     {
-        MCD_convert_from_datetime(ep, CF_SECONDS, CF_UNDEFINED, *p_current);
-        t_current = ep.getint4();
+        MCAutoValueRef t_val;
+		MCD_convert_from_datetime(ctxt, *p_current, CF_SECONDS, CF_UNDEFINED, &t_val);
+		/* UNCHECKED */ ctxt.ConvertToInteger(*t_val, t_current);
     }
     else
         t_current = MCS_time();
     
     if (t_use_min)
     {
-        MCD_convert_from_datetime(ep, CF_SECONDS, CF_UNDEFINED, *p_min);
-        t_min = ep.getint4();
+        MCAutoValueRef t_val;
+		MCD_convert_from_datetime(ctxt, *p_min, CF_SECONDS, CF_UNDEFINED, &t_val);
+        /* UNCHECKED */ ctxt.ConvertToInteger(*t_val, t_min);
     }
     if (t_use_max)
     {
-        MCD_convert_from_datetime(ep, CF_SECONDS, CF_UNDEFINED, *p_max);
-        t_max = ep.getint4();
+        MCAutoValueRef t_val;
+		MCD_convert_from_datetime(ctxt, *p_max, CF_SECONDS, CF_UNDEFINED, &t_val);
+        /* UNCHECKED */ ctxt.ConvertToInteger(*t_val, t_max);
     }
     
     s_in_popup_dialog = true;
@@ -227,14 +231,16 @@ bool MCSystemPickTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
     int32_t t_hour, t_minute;
     
     MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(ep);
     
     MCDateTime t_current;
     if (p_current != nil)
         t_current = *p_current;
     else
     {
-        ep.setnvalue(MCS_time());
-        MCD_convert_to_datetime(ep, CF_SECONDS, CF_UNDEFINED, t_current);
+        MCAutoNumberRef t_time;
+		/* UNCHECKED */ MCNumberCreateWithInteger(MCS_time(), &t_time);
+        MCD_convert_to_datetime(ctxt, *t_time, CF_SECONDS, CF_UNDEFINED, t_current);
     }
     
     // IM-2012-05-09 - make sure we show the correct local hour + minute values
