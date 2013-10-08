@@ -380,7 +380,7 @@ bool MCSystemListFontsForFamily(MCStringRef p_family, MCListRef& r_styles)
 	MCAutoListRef t_list;
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
-	for(NSString *t_font in [UIFont fontNamesForFamilyName: [NSString stringWithCString: MCStringGetCString(p_family) encoding: NSMacOSRomanStringEncoding]])
+	for(NSString *t_font in [UIFont fontNamesForFamilyName: [NSString stringWithMCStringRef: p_family]])
 		if (!MCListAppendCString(*t_list, [t_font cStringUsingEncoding: NSMacOSRomanStringEncoding]))
 			return false;
 

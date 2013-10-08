@@ -1438,9 +1438,9 @@ void MCFilesExecReadComplete(MCExecContext& ctxt, MCStringRef p_output, IO_stat 
 	}
 	if (t_textmode)
 	{
-		ctxt.GetEP().setvalueref(p_output);
-		ctxt.GetEP().texttobinary();
-		ctxt.GetEP().copyasstringref(p_output);
+		MCAutoStringRef t_output;
+		/* UNCHECKED*/ MCStringConvertLineEndingsToLiveCode(p_output, &t_output);
+		MCValueAssign(p_output, *t_output);
 	}
 	
 	ctxt . SetItToValue(p_output);
@@ -1836,8 +1836,10 @@ void MCFilesExecWriteToStderr(MCExecContext& ctxt, MCStringRef p_data, int p_uni
 		ctxt . SetTheResultToEmpty();
 }
 
+
 void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStringRef p_data, bool p_is_end, int p_unit_type, int64_t p_at)
 {
+	
 	IO_handle t_stream = NULL;
 	Boolean t_textmode = False;
 	IO_stat t_stat = IO_NORMAL;
@@ -1856,9 +1858,7 @@ void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStr
 	if (t_textmode)
 	{
 		MCAutoStringRef t_text_data;
-		ctxt.GetEP().setvalueref(p_data);
-		ctxt.GetEP().binarytotext();
-		ctxt.GetEP().copyasstringref(&t_text_data);
+		/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(p_data, &t_text_data);
 		MCFilesExecWriteToStream(ctxt, t_stream, *t_text_data, p_unit_type, t_stat);
 	}
 	else
@@ -1877,6 +1877,7 @@ void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStr
 #if !defined _WIN32 && !defined _MACOSX
 	MCS_flush(t_stream);
 #endif
+	
 }
 
 void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStringRef p_data, int p_unit_type)
@@ -1911,23 +1912,24 @@ void MCFilesExecWriteToProcess(MCExecContext& ctxt, MCNameRef p_process, MCStrin
 
 	IO_handle t_stream = MCprocesses[t_index].ohandle;
 	Boolean t_textmode = MCprocesses[t_index].textmode;
-	uint4 offset;
+	uint4 t_offset;
 	Boolean haseof = False;
 	IO_stat t_stat;
 
 	if (t_textmode)
 	{
-		MCAutoStringRef t_text_data;
-		ctxt.GetEP().setvalueref(p_data);
-		ctxt.GetEP().binarytotext();
+		MCStringRef t_text_data;
+		/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(p_data, t_text_data);
 		// MW-2004-11-17: EOD should only happen when writing to processes in text-mode
-		if (MCU_offset("\004", ctxt.GetEP().getsvalue(), offset, True))
+		if (MCStringFirstIndexOfChar(t_text_data, '\004', 0, kMCCompareExact, t_offset))
 		{
-			ctxt.GetEP().substring(0, offset);
+			MCAutoStringRef t_substring;
+			MCStringCopySubstring(t_text_data, MCRangeMake(0, t_offset), &t_substring);
+			MCValueAssign(t_text_data, *t_substring);
 			haseof = True;
 		}
-		ctxt.GetEP().copyasstringref(&t_text_data);
-		MCFilesExecWriteToStream(ctxt, t_stream, *t_text_data, p_unit_type, t_stat);
+		MCFilesExecWriteToStream(ctxt, t_stream, t_text_data, p_unit_type, t_stat);
+		MCValueRelease(t_text_data);
 	}
 	else
 		MCFilesExecWriteToStream(ctxt, t_stream, p_data, p_unit_type, t_stat);
