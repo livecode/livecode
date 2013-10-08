@@ -387,6 +387,8 @@ struct MCFontStruct
 #include <assert.h>
 #define _CTYPE_H
 
+#define _CTYPE_H
+
 #define SIGBOGUS 100
 
 typedef int MCSocketHandle;
