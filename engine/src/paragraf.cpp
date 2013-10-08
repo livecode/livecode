@@ -3569,10 +3569,21 @@ bool MCParagraph::nativizetext(bool p_ascii_only, char *p_data, uint32_t& x_leng
 				uint16_t t_char;
 				t_char = ((uint16_t *)(text + t_index))[i];
 				if (t_char < 128)
+				{
 					p_data[x_length++] = (char)t_char;
-				else if (p_ascii_only || !MCUnicodeMapToNative(&t_char, 1, ((uint1 *)p_data)[x_length++]))
-					p_data[x_length++] = 127;
-				p_data[x_length++] = 127;
+					p_data[x_length++] = 0x16;
+				}
+				else if (p_ascii_only || !MCUnicodeMapToNative(&t_char, 1, ((uint1 *)p_data)[x_length]))
+				{
+					p_data[x_length++] = 0x1A;
+					p_data[x_length++] = 0x1A;
+				}
+				else
+				{	
+					// UnicodeMapToNative succeeded
+					x_length++;
+					p_data[x_length++] = 0x16;
+				}
 			}
 			t_has_unicode = true;
 		}

@@ -68,6 +68,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcssl.h"
 #include "stacksecurity.h"
 
+#include "date.h"
+
 #define HOLD_SIZE1 65535
 #define HOLD_SIZE2 16384
 
@@ -830,6 +832,8 @@ void X_clear_globals(void)
 #ifdef _IOS_MOBILE
 	MCSystemSoundInitialize();
 #endif
+	
+	MCDateTimeInitialize();
 }
 
 bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
@@ -1193,6 +1197,8 @@ int X_close(void)
 #ifdef _IOS_MOBILE
 	MCSystemSoundInitialize();
 #endif
+	
+	MCDateTimeFinalize();
 	
 	MCU_finalize_names();
 	
