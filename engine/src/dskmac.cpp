@@ -1119,32 +1119,6 @@ static void init_utf8_converters(void)
 	CreateTextToUnicodeInfo(&ucmapping, &texttoutf8info);
 	CreateUnicodeToTextInfo(&ucmapping, &utf8totextinfo);
 }
-
-void MCS_utf8tonative(const char *s, uint4 len, char *d, uint4 &destlen)
-{
-	init_utf8_converters();
-	
-	ByteCount processedbytes, outlength;
-	uint4 destbufferlength;
-	destbufferlength = destlen;
-	ConvertFromUnicodeToText(utf8totextinfo, len, (UniChar *)s,kUnicodeUseFallbacksMask | kUnicodeLooseMappingsMask, 0, NULL, 0, NULL, destbufferlength, &processedbytes, &outlength, (LogicalAddress)d);
-	destlen = outlength;
-}
-
-void MCS_nativetoutf8(const char *s, uint4 len, char *d, uint4 &destlen)
-{
-	init_utf8_converters();
-	
-	ByteCount processedbytes, outlength;
-	uint4 destbufferlength;
-	destbufferlength = destlen;
-	ConvertFromTextToUnicode(texttoutf8info, len, (LogicalAddress)s,
-	                         kUnicodeLooseMappingsMask, 0, NULL, 0, NULL,
-	                         destbufferlength, &processedbytes,
-	                         &outlength, (UniChar *)d);
-	destlen = outlength;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 /* LEGACY */
@@ -8573,19 +8547,6 @@ void MCS_multibytetounicode(const char *s, uint4 len, char *d,
 	                         &outlength, (UniChar *)d);
 	destlen = outlength;
 	oldcharset = charset;
-}
-
-void MCS_nativetoutf16(const char *p_native, uint4 p_native_length, unsigned short *p_utf16, uint4& x_utf16_length)
-{
-	uint4 t_byte_length;
-	t_byte_length = x_utf16_length * sizeof(unsigned short);
-	MCS_multibytetounicode(p_native, p_native_length, (char *)p_utf16, t_byte_length, t_byte_length, LCH_ROMAN);
-	x_utf16_length = t_byte_length / sizeof(unsigned short);
-}
-
-void MCS_utf16tonative(const unsigned short *p_utf16, uint4 p_utf16_length, char *p_native, uint4& p_native_length)
-{
-	MCS_unicodetomultibyte((const char *)p_utf16, p_utf16_length * 2, p_native, p_native_length, p_native_length, LCH_ROMAN);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
