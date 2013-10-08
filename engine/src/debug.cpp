@@ -122,11 +122,10 @@ void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name)
 
 #else
 
-void MCB_setmsg(MCStringRef p_msg)
+void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_msg)
 {
-    MCExecPoint ep(nil, nil, nil);
-    ep . setvalueref(p_msg);
-    MCB_setmsg(ep);
+    ctxt . GetEP() . setvalueref(p_msg);
+    MCB_setmsg(ctxt . GetEP());
 }
 
 void MCB_setmsg(MCExecPoint &ep)

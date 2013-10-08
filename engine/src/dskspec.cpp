@@ -100,7 +100,6 @@ MCSErrorMode MCS_get_errormode(void)
 
 bool MCS_put(MCExecContext& ctxt, MCSPutKind p_kind, MCStringRef p_data)
 {
-	//Program crashes : Unhandled exception at 0x00783ad6 in engine-community.exe: 0xC0000005: Access violation reading location 0x00000060.
 	switch(p_kind)
 	{
 	case kMCSPutOutput:

@@ -219,7 +219,7 @@ IO_stat IO_write(const void *ptr, uint4 size, uint4 n, IO_handle stream)
 	return MCS_write(ptr, size, n, stream);
 }
 
-IO_stat IO_read_to_eof(MCExecContext& ctxt, IO_handle stream, MCDataRef& r_data)
+IO_stat IO_read_to_eof(IO_handle stream, MCDataRef& r_data)
 {
 	uint4 nread;
 	nread = (uint4)MCS_fsize(stream) - (uint4)MCS_tell(stream);
