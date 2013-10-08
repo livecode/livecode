@@ -258,16 +258,12 @@ void MCU_getnumberformat(MCExecPoint &ep, uint2 fw, uint2 trail, uint2 force)
 #endif
 }
 
-void MCU_setnumberformat(MCStringRef p_input, uint2 &fw, uint2 &trailing, uint2 &force)
-{
-	MCU_setnumberformat(MCStringGetOldString(p_input), fw, trailing, force);
-}
 
-void MCU_setnumberformat(const MCString &d, uint2 &fw,
+void MCU_setnumberformat(MCStringRef d, uint2 &fw,
                          uint2 &trailing, uint2 &force)
 {
-	fw = d.getlength();
-	const char *sptr = d.getstring();
+	fw = MCStringGetLength(d);
+	const char *sptr = MCStringGetCString(d);
 	const char *eptr = sptr;
 	while (eptr - sptr < fw && *eptr != '.')
 		eptr++;
@@ -1165,41 +1161,60 @@ static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean
 	MCSortnode *tmp = t;
 	while (n1 > 0 && n2 > 0)
 	{
-		Boolean first;
-		if (reverse)
-			switch (form)
+		// NOTE:
+		//
+		// This code assumes the types in the MCSortnodes are correct for the
+		// requested sort type. Bad things will happen if this isn't true...
+		bool first;
+		switch (form)
+		{
+		case ST_INTERNATIONAL:
 			{
-			case ST_INTERNATIONAL:
+				const char *s1, *s2;
+				s1 = MCStringGetCString(b1->svalue);
+				s2 = MCStringGetCString(b2->svalue);
+				
+				// WARNING: this will *not* work properly on anything other
+				// that OSX or iOS: the LC_COLLATE locale facet is set to the
+				// locale "en_US.<native encoding>"...
+				//
+				// Additionally, UTF-16 strings don't work at all.
 #if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
-				first = MCSystemCompareInternational(b1->svalue, b2->svalue) >= 0;
+				int result = MCSystemCompareInternational(s1, s2);
 #else
-				first = strcoll(b1->svalue, b2->svalue) >= 0;
+				int result = strcoll(s1, s2);
 #endif
-				break;
-			case ST_TEXT:
-				first = strcmp(b1->svalue, b2->svalue) >= 0;
-				break;
-			default:
-				first = b1->nvalue >= b2->nvalue;
+				
+				first = reverse ? result >= 0 : result <= 0;
 				break;
 			}
-		else
-			switch (form)
+
+		case ST_TEXT:
 			{
-			case ST_INTERNATIONAL:
-#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
-				first = MCSystemCompareInternational(b1->svalue, b2->svalue) <= 0;
-#else
-				first = strcoll(b1->svalue, b2->svalue) <= 0;
-#endif
-				break;
-			case ST_TEXT:
-				first = strcmp(b1->svalue, b2->svalue) <= 0;
-				break;
-			default:
-				first = b1->nvalue <= b2->nvalue;
+				const char *s1, *s2;
+				s1 = MCStringGetCString(b1->svalue);
+				s2 = MCStringGetCString(b2->svalue);
+				
+				// WARNING:
+				//
+				// This provides codepoint order sorting (not lexical sorting)
+				// for strings. It will not, however, do the right thing with
+				// UTF-16LE strings (the encoding used on x86 and ARM)...
+				int result = strcmp(s1, s2);
+				
+				first = reverse ? result >= 0 : result <= 0;
 				break;
 			}
+				
+		default:
+			{
+				first = reverse
+							? MCNumberFetchAsReal(b1->nvalue) >= MCNumberFetchAsReal(b2->nvalue)
+							: MCNumberFetchAsReal(b1->nvalue) <= MCNumberFetchAsReal(b2->nvalue);
+				break;
+			}
+		}
+		
 		if (first)
 		{
 			*tmp++ = *b1++;
@@ -1211,9 +1226,10 @@ static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean
 			n2--;
 		}
 	}
-	if (n1 > 0)
-		memcpy(tmp, b1, n1 * sizeof(MCSortnode));
-	memcpy(b, t, (n - n2) * sizeof(MCSortnode));
+	for (uindex_t i = 0; i < n1; i++)
+		tmp[i] = b1[i];
+	for (uindex_t i = 0; i < (n - n2); i++)
+		b[i] = t[i];
 }
 
 void MCU_sort(MCSortnode *items, uint4 nitems,
@@ -1223,7 +1239,7 @@ void MCU_sort(MCSortnode *items, uint4 nitems,
 		return;
 	MCSortnode *tmp = new MCSortnode[nitems];
 	msort(items, nitems, tmp, form, dir == ST_DESCENDING);
-	delete tmp;
+	delete[] tmp;
 }
 
 #if !defined(_DEBUG_MEMORY)
@@ -1846,7 +1862,7 @@ void MCU_getshift(uint4 mask, uint2 &shift, uint2 &outmask)
 	outmask = j;
 }
 
-void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool)
+void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 {
 	Tool t_new_tool;
 	MColdtool = MCcurtool;
@@ -1858,7 +1874,7 @@ void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool)
 	}
 	else
 	{
-		/* UNCHECKED */ ctxt . GetEP() . copyasstringref(&t_tool_name);
+		t_tool_name = p_input;
 		if (MCStringGetLength(*t_tool_name) < 3)
 		{
 			ctxt . LegacyThrow(EE_CHOOSE_BADTOOL);
@@ -1899,7 +1915,7 @@ void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool)
 		MCstacks->restartidle();
 	if (MCtopstackptr != NULL)
 		MCtopstackptr->updatemenubar();
-	ctxt . GetObject()->message_with_args(MCM_new_tool, MCStringGetOldString(*t_tool_name));
+	ctxt . GetObject()->message_with_valueref_args(MCM_new_tool, *t_tool_name);
 }
 
 Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool, uint2 line, uint2 pos)
@@ -2258,48 +2274,6 @@ void MCU_get_color(MCExecPoint& ep, MCStringRef name, MCColor& c)
 	ep.setcolor(c, name != nil ? MCStringGetCString(name) : nil);
 }
 
-/*
-void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c)
-{
-	ep.setcolor(c, name);
-}
-*/
-void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
-                real8 tn, real8 oldn, MCSortnode *titems)
-{
-	switch (func)
-	{
-	case F_AVERAGE:
-		n += tn;
-		nparams++;
-		break;
-	case F_MAX:
-		if (nparams++ == 0 || tn > n)
-			n = tn;
-		break;
-	case F_MIN:
-		if (nparams++ == 0 || tn < n)
-			n = tn;
-		break;
-	case F_SUM:
-		n += tn;
-		break;
-	case F_MEDIAN:
-		titems[nparams].nvalue = tn;
-		nparams++;
-		break;
-	case F_STD_DEV:
-		tn = tn - oldn;
-		n += tn * tn;
-		nparams++;
-		break;
-	case  F_UNDEFINED:
-		nparams++;
-		break;
-	default:
-		break;
-	}
-}
 
 void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output)
 {
@@ -2555,6 +2529,8 @@ bool MCU_multibytetounicode(MCDataRef p_input, MCDataRef &r_output)
 
     if (!MCStringEncode(*t_string, kMCStringEncodingUTF16, false, r_output))
         return false;
+
+	return true;
 }
 
 bool MCU_multibytetounicode(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_unicode)
@@ -2588,6 +2564,8 @@ bool MCU_unicodetomultibyte(MCDataRef p_input, MCDataRef& r_output)
 
     if (!MCStringEncode(*t_string, kMCStringEncodingUTF8, false, r_output))
         return false;
+
+	return true;
 }
 
 bool MCU_unicodetomultibyte(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_multibyte)

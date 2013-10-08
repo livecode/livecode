@@ -77,26 +77,26 @@ MCPropertyInfo MCObject::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_PARENT_SCRIPT, OptionalString, MCObject, ParentScript)
 	DEFINE_RO_OBJ_PART_PROPERTY(P_NUMBER, UInt32, MCObject, Number)
 
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FORE_PIXEL, OptionalUInt16, MCObject, ForePixel)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FORE_PIXEL, UInt16, MCObject, ForePixel)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BACK_PIXEL, OptionalUInt16, MCObject, BackPixel)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BACK_PIXEL, UInt16, MCObject, BackPixel)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_HILITE_PIXEL, OptionalUInt16, MCObject, HilitePixel)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_HILITE_PIXEL, UInt16, MCObject, HilitePixel)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BORDER_PIXEL, OptionalUInt16, MCObject, BorderPixel)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BORDER_PIXEL, UInt16, MCObject, BorderPixel)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_TOP_PIXEL, OptionalUInt16, MCObject, TopPixel)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_TOP_PIXEL, UInt16, MCObject, TopPixel)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BOTTOM_PIXEL, OptionalUInt16, MCObject, BottomPixel)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BOTTOM_PIXEL, UInt16, MCObject, BottomPixel)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_SHADOW_PIXEL, OptionalUInt16, MCObject, ShadowPixel)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_SHADOW_PIXEL, UInt16, MCObject, ShadowPixel)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FOCUS_PIXEL, OptionalUInt16, MCObject, FocusPixel)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FOCUS_PIXEL, UInt16, MCObject, FocusPixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FORE_PIXEL, OptionalUInt32, MCObject, ForePixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FORE_PIXEL, UInt32, MCObject, ForePixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BACK_PIXEL, OptionalUInt32, MCObject, BackPixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BACK_PIXEL, UInt32, MCObject, BackPixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_HILITE_PIXEL, OptionalUInt32, MCObject, HilitePixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_HILITE_PIXEL, UInt32, MCObject, HilitePixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BORDER_PIXEL, OptionalUInt32, MCObject, BorderPixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BORDER_PIXEL, UInt32, MCObject, BorderPixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_TOP_PIXEL, OptionalUInt32, MCObject, TopPixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_TOP_PIXEL, UInt32, MCObject, TopPixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BOTTOM_PIXEL, OptionalUInt32, MCObject, BottomPixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BOTTOM_PIXEL, UInt32, MCObject, BottomPixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_SHADOW_PIXEL, OptionalUInt32, MCObject, ShadowPixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_SHADOW_PIXEL, UInt32, MCObject, ShadowPixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FOCUS_PIXEL, OptionalUInt32, MCObject, FocusPixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FOCUS_PIXEL, UInt32, MCObject, FocusPixel)
 	DEFINE_RW_OBJ_PROPERTY(P_PEN_BACK_COLOR, Any, MCObject, PenBackColor)
 	DEFINE_RW_OBJ_PROPERTY(P_BRUSH_BACK_COLOR, Any, MCObject, PenBackColor)
-	DEFINE_RW_OBJ_PROPERTY(P_PEN_PATTERN, OptionalUInt16, MCObject, PenPattern)
-	DEFINE_RW_OBJ_PROPERTY(P_BRUSH_PATTERN, OptionalUInt16, MCObject, PenPattern)
+	DEFINE_RW_OBJ_PROPERTY(P_PEN_PATTERN, OptionalUInt32, MCObject, PenPattern)
+	DEFINE_RW_OBJ_PROPERTY(P_BRUSH_PATTERN, OptionalUInt32, MCObject, PenPattern)
 
 	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_PEN_COLOR, InterfaceNamedColor, MCObject, ForeColor)
 	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_PEN_COLOR, InterfaceNamedColor, MCObject, ForeColor)
@@ -119,22 +119,22 @@ MCPropertyInfo MCObject::kProperties[] =
 	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_FOCUS_COLOR, InterfaceNamedColor, MCObject, FocusColor)
 	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_FOCUS_COLOR, InterfaceNamedColor, MCObject, FocusColor)
 
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FORE_PATTERN, OptionalUInt16, MCObject, ForePattern)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FORE_PATTERN, UInt16, MCObject, ForePattern)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BACK_PATTERN, OptionalUInt16, MCObject, BackPattern)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BACK_PATTERN, UInt16, MCObject, BackPattern)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_HILITE_PATTERN, OptionalUInt16, MCObject, HilitePattern)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_HILITE_PATTERN, UInt16, MCObject, HilitePattern)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BORDER_PATTERN, OptionalUInt16, MCObject, BorderPattern)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BORDER_PATTERN, UInt16, MCObject, BorderPattern)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_TOP_PATTERN, OptionalUInt16, MCObject, TopPattern)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_TOP_PATTERN, UInt16, MCObject, TopPattern)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BOTTOM_PATTERN, OptionalUInt16, MCObject, BottomPattern)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BOTTOM_PATTERN, UInt16, MCObject, BottomPattern)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_SHADOW_PATTERN, OptionalUInt16, MCObject, ShadowPattern)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_SHADOW_PATTERN, UInt16, MCObject, ShadowPattern)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FOCUS_PATTERN, OptionalUInt16, MCObject, FocusPattern)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FOCUS_PATTERN, UInt16, MCObject, FocusPattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FORE_PATTERN, OptionalUInt32, MCObject, ForePattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FORE_PATTERN, UInt32, MCObject, ForePattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BACK_PATTERN, OptionalUInt32, MCObject, BackPattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BACK_PATTERN, UInt32, MCObject, BackPattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_HILITE_PATTERN, OptionalUInt32, MCObject, HilitePattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_HILITE_PATTERN, UInt32, MCObject, HilitePattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BORDER_PATTERN, OptionalUInt32, MCObject, BorderPattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BORDER_PATTERN, UInt32, MCObject, BorderPattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_TOP_PATTERN, OptionalUInt32, MCObject, TopPattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_TOP_PATTERN, UInt32, MCObject, TopPattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BOTTOM_PATTERN, OptionalUInt32, MCObject, BottomPattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BOTTOM_PATTERN, UInt32, MCObject, BottomPattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_SHADOW_PATTERN, OptionalUInt32, MCObject, ShadowPattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_SHADOW_PATTERN, UInt32, MCObject, ShadowPattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FOCUS_PATTERN, OptionalUInt32, MCObject, FocusPattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FOCUS_PATTERN, UInt32, MCObject, FocusPattern)
 
 	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_COLORS, String, MCObject, Colors)
 	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_COLORS, String, MCObject, Colors)
@@ -758,7 +758,7 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 }
 
 static bool string_contains_item(const char *p_string, const char *p_item)
-{
+{ 
 	const char *t_offset;
 	t_offset = strstr(p_string, p_item);
 	if (t_offset == nil)
@@ -768,7 +768,7 @@ static bool string_contains_item(const char *p_string, const char *p_item)
 	
 	uint32_t t_length;
 	t_length = strlen(p_item);
-	if (t_offset[t_length] != '\0' && t_offset[t_length] != ',')
+    if (t_offset[t_length] != '\0' && t_offset[t_length] != ',')
 		return false;
 
 	return true;
@@ -793,11 +793,11 @@ Exec_stat MCObject::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 
 		// Parse the requested text style.
 		Font_textstyle t_style;
-		if (MCF_parsetextstyle(MCNameGetOldString(key), t_style) != ES_NORMAL)
+		if (MCF_parsetextstyle(MCNameGetString(key), t_style) != ES_NORMAL)
 			return ES_ERROR;
 
 		// Check the textstyle string is within the object's textstyle set.
-		ep . setboolean(string_contains_item(ep . getcstring(), MCF_unparsetextstyle(t_style)));
+        ep . setboolean(string_contains_item(ep . getcstring(), MCF_unparsetextstyle(t_style)));
 	}
 	break;
 	case P_CUSTOM_KEYS:
@@ -1860,7 +1860,7 @@ Exec_stat MCObject::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 
 		// Parse the requested text style.
 		Font_textstyle t_style;
-		if (MCF_parsetextstyle(MCNameGetOldString(key), t_style) != ES_NORMAL)
+		if (MCF_parsetextstyle(MCNameGetString(key), t_style) != ES_NORMAL)
 			return ES_ERROR;
 
 		// MW-2012-02-19: [[ SplitTextAttrs ]] If we have no textStyle set then
@@ -2463,7 +2463,6 @@ Exec_stat MCObject::getprop(uint32_t p_part_id, Properties p_which, MCExecPoint&
 				break;
 				
 			case kMCPropertyTypeString:
-			case kMCPropertyTypeBinaryString:
 			{	
 				MCAutoStringRef t_value;
 				((void(*)(MCExecContext&, MCObjectPtr, MCStringRef&))t_info -> getter)(ctxt, t_object, &t_value);
@@ -2475,6 +2474,18 @@ Exec_stat MCObject::getprop(uint32_t p_part_id, Properties p_which, MCExecPoint&
 			}
 				break;
 				
+			case kMCPropertyTypeBinaryString:
+			{	
+				MCAutoDataRef t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, MCDataRef&))t_info -> getter)(ctxt, t_object, &t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setvalueref(*t_value);
+					return ES_NORMAL;
+				}
+			}
+				break;
+
 			case kMCPropertyTypeName:
 			{
 				MCNewAutoNameRef t_value;
@@ -2897,7 +2908,6 @@ Exec_stat MCObject::setprop(uint32_t p_part_id, Properties p_which, MCExecPoint&
 			break;
 				
 			case kMCPropertyTypeString:
-			case kMCPropertyTypeBinaryString:
 			{
 				MCAutoStringRef t_value;
 				if (!ep . copyasstringref(&t_value))
@@ -2907,6 +2917,16 @@ Exec_stat MCObject::setprop(uint32_t p_part_id, Properties p_which, MCExecPoint&
 			}
 			break;
 				
+			case kMCPropertyTypeBinaryString:
+			{
+				MCAutoDataRef t_value;
+				if (!ep . copyasdataref(&t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NAC);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, MCDataRef))t_info -> setter)(ctxt, t_object, *t_value);	
+			}
+			break;
+
 			case kMCPropertyTypeName:
 			{
 				MCNewAutoNameRef t_value;
@@ -3287,6 +3307,14 @@ void MCObject::setuintprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p
 	ctxt . Throw();
 }
 
+void MCObject::setintprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, integer_t p_value)
+{
+	ctxt . GetEP() . setint(p_value);
+	if (setprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL)
+		return;
+	
+	ctxt . Throw();
+}
 //////////
 
 void MCObject::getdoubleprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, double& r_value)
@@ -3345,6 +3373,37 @@ void MCObject::getvariantprop(MCExecContext& ctxt, uint32_t p_part_id, Propertie
 		return;
 
 	ctxt . Throw();
+}
+
+/////////
+
+void MCObject::setdataprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCDataRef p_value)
+{
+	ctxt . GetEP() . setvalueref(p_value);
+	if (setprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL)
+		return;
+	
+    ctxt . Throw();
+}
+
+//////////
+
+void MCObject::getpointprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCPoint &r_point)
+{
+	if (getprop(p_part_id, p_which, ctxt.GetEP(), p_effective) == ES_NORMAL
+		&& ctxt.GetEP().copyaspoint(r_point))
+		return;
+	
+	ctxt.Throw();
+}
+
+void MCObject::setpointprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, const MCPoint &p_point)
+{
+	ctxt.GetEP().setpoint(p_point);
+	if (setprop(p_part_id, p_which, ctxt.GetEP(), p_effective) == ES_NORMAL)
+		return;
+	
+    ctxt.Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

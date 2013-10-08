@@ -349,7 +349,7 @@ public:
 	void fcenter(Field_translations function, const char *string, KeySym key);
 	void fmove(Field_translations function, const char *string, KeySym key);
 	void fscroll(Field_translations function, const char *string, KeySym key);
-	void setupmenu(const MCString &s, uint2 fheight, Boolean scrolling, Boolean isunicode);
+	void setupmenu(MCStringRef p_string, uint2 fheight, Boolean scrolling);
 	void setupentry(MCButton *bptr, const MCString &s, Boolean isunicode);
 	void typetext(const MCString &newtext);
 	void startcomposition();
@@ -366,9 +366,9 @@ public:
 	void indextorect(MCParagraph *top, int4 si, int4 ei, MCRectangle &r);
 	void insertparagraph(MCParagraph *newtext);
 	// MCField selection functions in fields.cc
-	Boolean find(MCExecPoint &ep, uint4 cardid,
+	Boolean find(MCExecContext &ctxt, uint4 cardid,
 	             Find_mode mode, MCStringRef, Boolean first);
-	Exec_stat sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
+	Exec_stat sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
 	               Sort_type dir, Sort_type form, MCExpression *by);
 	// MW-2012-02-08: [[ Field Indices ]] The 'index' parameter, if non-nil, will contain
 	//   the 1-based index of the returned paragraph (i.e. the one si resides in).
@@ -487,7 +487,7 @@ public:
 	
 	// MW-2012-01-27: [[ UnicodeChunks ]] Return the contents of the field in a native
 	//   compatible way.
-	bool nativizetext(uint4 parid, MCExecPoint& ep, bool p_ascii_only);
+	//bool nativizetext(uint4 parid, MCExecPoint& ep, bool p_ascii_only);
 	
 	// MW-2012-02-08: [[ TextChanged ]] This causes a 'textChanged' message to be sent.
 	void textchanged(void);

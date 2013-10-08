@@ -1285,7 +1285,7 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 	{
 		MCRectangle t_box;
 		MCU_set_rect(t_box, x - 1, y - t_ascent, getwidth(dc, cx) + 3, t_ascent + t_descent);
-		dc -> drawlink(MCStringGetCString(getlinktext()), t_box);
+		dc -> drawlink(getlinktext(), t_box);
 	}
 }
 

@@ -461,20 +461,20 @@ void MCPasteboardProcessToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets,
 		ctxt . SetTheResultToStaticCString("unable to write to clipboard");
 }
 
-void MCPasteboardProcessTextToClipboard(MCExecContext &ctxt, MCChunk *p_target, bool p_cut)
+void MCPasteboardProcessTextToClipboard(MCExecContext &ctxt, MCObjectChunkPtr p_target, bool p_cut)
 {
-	MCField* t_field;
-	uint4 t_part, t_start;
-	uint4 t_end;
-	if (p_target -> marktextchunk(ctxt . GetEP(), t_field, t_part, t_start, t_end) != ES_NORMAL)
-	{
-		ctxt . LegacyThrow(EE_CLIPBOARD_BADTEXT);
-		return;
-	}
+    MCField *t_field;
+    t_field = static_cast<MCField *>(p_target . object);
+    
+    integer_t t_si, t_ei;
+    t_si = 0;
+    t_ei = INT32_MAX;
+    t_field -> resolvechars(p_target . part_id, t_si, t_ei, p_target . mark . start, p_target . mark . finish - p_target . mark . start);
+    
 	if (p_cut)
-		t_field -> cuttextindex(t_part, t_start, t_end);
+		t_field -> cuttextindex(p_target . part_id, t_si, t_ei);
 	else
-		t_field -> copytextindex(t_part, t_start, t_end);
+		t_field -> copytextindex(p_target . part_id, t_si, t_ei);
 }
 
 void MCPasteboardExecCopy(MCExecContext& ctxt)
@@ -487,7 +487,7 @@ void MCPasteboardExecCopy(MCExecContext& ctxt)
 		MCselected -> copy();
 }
 
-void MCPasteboardExecCopyTextToClipboard(MCExecContext& ctxt, MCChunk *p_target)
+void MCPasteboardExecCopyTextToClipboard(MCExecContext& ctxt, MCObjectChunkPtr p_target)
 {
 	MCPasteboardProcessTextToClipboard(ctxt, p_target, false);
 }
@@ -507,7 +507,7 @@ void MCPasteboardExecCut(MCExecContext& ctxt)
 		MCselected -> cut();
 }
 
-void MCPasteboardExecCutTextToClipboard(MCExecContext& ctxt, MCChunk *p_target)
+void MCPasteboardExecCutTextToClipboard(MCExecContext& ctxt, MCObjectChunkPtr p_target)
 {
 	MCPasteboardProcessTextToClipboard(ctxt, p_target, true);
 }

@@ -462,10 +462,18 @@ Exec_stat MCClipboardCmd::exec(MCExecPoint& ep)
 			MCeerror -> add(EE_CLIPBOARD_BADMIX, line, pos);
 			return ES_ERROR;
 		}
+        
+        MCObjectChunkPtr t_obj_chunk;
+        if (targets -> evalobjectchunk(ep, true, false, t_obj_chunk) != ES_NORMAL)
+		{
+			MCeerror -> add(EE_CLIPBOARD_BADTEXT, line, pos);
+			return ES_ERROR;
+		}
+        
 		if (iscut())
-			MCPasteboardExecCutTextToClipboard(ctxt, targets);
+			MCPasteboardExecCutTextToClipboard(ctxt, t_obj_chunk);
 		else
-			MCPasteboardExecCopyTextToClipboard(ctxt, targets);
+			MCPasteboardExecCopyTextToClipboard(ctxt, t_obj_chunk);
 	}	
 	else
 	{
@@ -1635,7 +1643,7 @@ if (var != NULL)
 				MCeerror -> add(EE_CLIPBOARD_BADMIX, line, pos);
 				return ES_ERROR;
 			}
-
+            
 			MCVariableChunkPtr t_var_chunk;
 			if (t_chunk -> evalvarchunk(ep, true, false, t_var_chunk) != ES_NORMAL)
 				return ES_ERROR;
@@ -1646,7 +1654,7 @@ if (var != NULL)
 				break;
 			}
 		}
-
+ 
 		MCEngineExecDeleteVariableChunks(ctxt, t_chunks . Ptr(), t_chunks . Size());
 	}
 	else if (targets != nil && targets -> istextchunk())
@@ -1659,7 +1667,7 @@ if (var != NULL)
 				MCeerror -> add(EE_CLIPBOARD_BADMIX, line, pos);
 				return ES_ERROR;
 			}
-
+            
 			MCObjectChunkPtr t_obj_chunk;
 			if (t_chunk -> evalobjectchunk(ep, true, false, t_obj_chunk) != ES_NORMAL)
 				return ES_ERROR;
@@ -3426,8 +3434,7 @@ Exec_stat MCReplace::exec(MCExecPoint &ep)
 
 	if (!ctxt . HasError())
 	{
-		ep . setvalueref(*t_target);
-		return container -> set(ep, PT_INTO);
+		return container -> set(ep, PT_INTO, *t_target);
 	}
 
 	return ctxt . Catch(line, pos);
@@ -3880,7 +3887,7 @@ if (targets == NULL)
 			return ES_ERROR;
 		}
 		
-		if (t_chunk . chunk != CT_UNDEFINED)
+		if (t_chunk . chunk != CT_UNDEFINED || where == PT_BEFORE || where == PT_AFTER)
 		{
 			if (t_chunk . object -> gettype() == CT_FIELD)
 				MCInterfaceExecSelectTextOfField(ctxt, where, t_chunk);
