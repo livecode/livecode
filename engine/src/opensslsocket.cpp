@@ -618,7 +618,6 @@ void MCS_close_socket(MCSocket *s)
 
 void MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char *until, MCNameRef mptr, MCDataRef& r_data)
 {
-	ctxt.GetEP().clear();
 	if (s->datagram)
 	{
 		MCNameDelete(s->message);
