@@ -527,13 +527,12 @@ void MCNetworkExecReadFromSocket(MCExecContext& ctxt, MCNameRef p_socket, uint4 
 		MCAutoDataRef t_data;
 		
 		if (p_sentinel != nil)
-			MCS_read_socket(MCsockets[t_index], ctxt, p_count, MCStringGetCString(p_sentinel), p_message);
+			MCS_read_socket(MCsockets[t_index], ctxt, p_count, MCStringGetCString(p_sentinel), p_message, &t_data);
 		else
-			MCS_read_socket(MCsockets[t_index], ctxt, 0, nil, p_message);
+			MCS_read_socket(MCsockets[t_index], ctxt, 0, nil, p_message, &t_data);
 
 		if (p_message == NULL)
 		{
-			ctxt . CopyAsDataRef(&t_data);
 			ctxt . SetItToValue(*t_data);
 		}
 	}

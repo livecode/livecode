@@ -616,7 +616,7 @@ void MCS_close_socket(MCSocket *s)
 	s->closing = True;
 }
 
-void MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char *until, MCNameRef mptr)
+void MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char *until, MCNameRef mptr, MCDataRef& r_data)
 {
 	ctxt.GetEP().clear();
 	if (s->datagram)
@@ -671,7 +671,7 @@ void MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char 
 					if (until != NULL && *until == '\n' && !*(until + 1)
 					        && size && s->rbuffer[size - 1] == '\r')
 						size--;
-					ctxt . GetEP () . copysvalue(s->rbuffer, size);
+					/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)s->rbuffer, size, r_data);
 					s->nread -= eptr->size;
 					// MW-2010-11-19: [[ Bug 9182 ]] This should be a memmove (I think)
 					memmove(s->rbuffer, s->rbuffer + eptr->size, s->nread);
