@@ -178,16 +178,19 @@ void MCStoreExecGet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
     MCPurchase *t_purchase = nil;
 	Properties t_property;
     
-    MCPurchaseFindById(p_id, t_purchase) &&
-    MCPurchaseLookupProperty(p_prop_name, t_property);
-
     MCPropertyInfo *t_info;
-    t_info = lookup_purchase_property(getpropertytable(), t_property);
+    t_info = nil;
+    
+    if (MCPurchaseFindById(p_id, t_purchase) && MCPurchaseLookupProperty(p_prop_name, t_property))
+        t_info = lookup_purchase_property(getpropertytable(), t_property);
     
 	if (t_info != nil)
 	{
         MCExecFetchProperty(ctxt, t_info, t_purchase, r_value);
-    } 
+        return;
+    }
+    
+    ctxt .Throw();
 }
 
 void MCStoreExecSet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name, MCValueRef p_value)
@@ -195,16 +198,19 @@ void MCStoreExecSet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
     MCPurchase *t_purchase = nil;
 	Properties t_property;
     
-    MCPurchaseFindById(p_id, t_purchase) &&
-    MCPurchaseLookupProperty(p_prop_name, t_property);
-    
     MCPropertyInfo *t_info;
-    t_info = lookup_purchase_property(getpropertytable(), t_property);
+    t_info = nil;
+    
+    if (MCPurchaseFindById(p_id, t_purchase) && MCPurchaseLookupProperty(p_prop_name, t_property))
+        t_info = lookup_purchase_property(getpropertytable(), t_property);
 	
 	if (t_info != nil)
 	{
         MCExecStoreProperty(ctxt, t_info, t_purchase, p_value);
-	} 
+        return;
+	}
+    
+    ctxt . Throw();
 }
 
 void MCStoreExecSendPurchaseRequest(MCExecContext& ctxt, uint32_t p_id)

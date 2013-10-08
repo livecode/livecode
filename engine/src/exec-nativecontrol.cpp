@@ -615,8 +615,7 @@ void MCNativeControlExecCreateControl(MCExecContext& ctxt, MCStringRef p_type_na
     t_new_control = nil;
     if (MCNativeControl::CreateWithType(t_type, t_new_control))
     {
-        extern MCExecPoint *MCEPptr;
-        t_new_control -> SetOwner(MCEPptr -> getobj());
+        t_new_control -> SetOwner(ctxt . GetObject());
         t_new_control -> SetName(p_control_name);
         ctxt . SetTheResultToNumber(t_new_control -> GetId());
         return;
@@ -788,7 +787,7 @@ void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCSt
             case kMCNativeControlActionEndSeeking:
             case kMCNativeControlActionFocus:
             {
-                ((void(*)(MCExecContext&, MCNativeControlPtr))t_info -> exec_method)(ctxt, t_control);
+                ((void(*)(MCExecContext&, MCNativeControlPtr*))t_info -> exec_method)(ctxt, &t_control);
                 return;
             }
             
@@ -798,7 +797,7 @@ void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCSt
                 {
                     MCAutoStringRef t_string;
                     &t_string = MCValueRetain((MCStringRef)p_arguments[0]);
-                    ((void(*)(MCExecContext&, MCNativeControlPtr, MCStringRef))t_info -> exec_method)(ctxt, t_control, *t_string);
+                    ((void(*)(MCExecContext&, MCNativeControlPtr*, MCStringRef))t_info -> exec_method)(ctxt, &t_control, *t_string);
                     return;
                 }
                 break;
@@ -811,7 +810,7 @@ void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCSt
                     MCAutoStringRef t_text;
                     &t_url = MCValueRetain((MCStringRef)p_arguments[0]);
                     &t_text = MCValueRetain((MCStringRef)p_arguments[1]);
-                    ((void(*)(MCExecContext&, MCNativeControlPtr, MCStringRef, MCStringRef))t_info -> exec_method)(ctxt, t_control, *t_url, *t_text);
+                    ((void(*)(MCExecContext&, MCNativeControlPtr*, MCStringRef, MCStringRef))t_info -> exec_method)(ctxt, &t_control, *t_url, *t_text);
                     return;
                 }
                 break;
@@ -824,7 +823,7 @@ void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCSt
                     integer_t t_end;
                     if (MCU_stoi4((MCStringRef)p_arguments[0], t_start) && MCU_stoi4((MCStringRef)p_arguments[1], t_end))
                     {
-                        ((void(*)(MCExecContext&, MCNativeControlPtr, integer_t, integer_t))t_info -> exec_method)(ctxt, t_control, t_start, t_end);
+                        ((void(*)(MCExecContext&, MCNativeControlPtr*, integer_t, integer_t))t_info -> exec_method)(ctxt, &t_control, t_start, t_end);
                         return;
                     }
                 }
@@ -838,7 +837,7 @@ void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCSt
                 {
                     if (p_argument_count == 1)
                     {
-                        ((void(*)(MCExecContext&, MCNativeControlPtr, integer_t, integer_t*, integer_t*))t_info -> exec_method)(ctxt, t_control, t_time, nil, nil);
+                        ((void(*)(MCExecContext&, MCNativeControlPtr*, integer_t, integer_t*, integer_t*))t_info -> exec_method)(ctxt, &t_control, t_time, nil, nil);
                         return;
                     }
                     else if (p_argument_count == 3)
@@ -847,7 +846,7 @@ void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCSt
                         integer_t t_max_height;
                         if (MCU_stoi4((MCStringRef)p_arguments[1], t_max_width) && MCU_stoi4((MCStringRef)p_arguments[2], t_max_height))
                         {
-                            ((void(*)(MCExecContext&, MCNativeControlPtr, integer_t, integer_t*, integer_t*))t_info -> exec_method)(ctxt, t_control, t_time, &t_max_width, &t_max_height);
+                            ((void(*)(MCExecContext&, MCNativeControlPtr*, integer_t, integer_t*, integer_t*))t_info -> exec_method)(ctxt, &t_control, t_time, &t_max_width, &t_max_height);
                             return;
                         }
                     }
