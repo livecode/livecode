@@ -14,14 +14,20 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "prefix.h"
-#include "w32dsk-legacy.h"
+#include "w32prefix.h"
 
+#ifdef DeleteFile
+#undef DeleteFile
+#endif // DeleteFile
+#ifdef GetCurrentTime
+#undef GetCurrentTime
+#endif // GetCurrentTime
+
+#include "globdefs.h"
 #include "parsedef.h"
 #include "filedefs.h"
-#include "globdefs.h"
 #include "objdefs.h"
-
+#include "mcio.h"
 #include "system.h"
 
 #include "execpt.h"
@@ -45,6 +51,10 @@
 #include "notify.h"
 
 #include "socket.h"
+
+#include "w32dc.h"
+#include "w32dsk-legacy.h"
+
 #include <locale.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -56,15 +66,7 @@
 #include <Iphlpapi.h>
 #include <process.h>
 #include <signal.h>
-#include <locale.h>
 #include <io.h> 
-
-#ifdef DeleteFile
-#undef DeleteFile
-#endif // DeleteFile
-#ifdef GetCurrentTime
-#undef GetCurrentTime
-#endif // GetCurrentTime
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -116,12 +118,37 @@ DWORD RegDeleteKeyNT(HKEY hStartKey, const char *pKeyName)
 
 //////////////////////////////////////////////////////////////////////////////////
 
-extern Boolean wsainit();
-
 extern bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
 extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
 
 //////////////////////////////////////////////////////////////////////////////////
+
+// MW-2005-02-22: Make these global for opensslsocket.cpp
+static Boolean wsainited = False;
+HWND sockethwnd;
+
+Boolean wsainit()
+{
+	if (!wsainited)
+	{
+		WORD request = MAKEWORD(1,1);
+		WSADATA wsaData;
+		if (WSAStartup(request, (LPWSADATA)&wsaData))
+			MCresult->sets("can't find a usable winsock.dll");
+		else
+		{
+			wsainited = True;
+			
+			// OK-2009-02-24: [[Bug 7628]]
+			MCresult -> sets("");
+			if (!MCnoui)
+				sockethwnd = CreateWindowA(MC_WIN_CLASS_NAME, "MCsocket", WS_POPUP, 0, 0,
+										   8, 8, NULL, NULL, MChInst, NULL);
+		}
+	}
+	MCS_seterrno(0);
+	return wsainited;
+}
 
 static bool read_blob_from_pipe(HANDLE p_pipe, void*& r_data, uint32_t& r_data_length)
 {
@@ -145,6 +172,8 @@ static bool read_blob_from_pipe(HANDLE p_pipe, void*& r_data, uint32_t& r_data_l
 
 	return true;
 }
+
+//////////////////////////////////////////////////////////////////////////////////
 
 static bool write_blob_to_pipe(HANDLE p_pipe, uint32_t p_count, const void *p_data)
 {
@@ -2354,8 +2383,10 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         //}
         else
         {
+            MCAutoPointer<unichar_t> t_autoptr;
+            t_autoptr = new unichar_t[MCStringGetLength(MCNameGetString(p_type))];
 			unichar_t *t_unichar_string;
-			t_unichar_string = new unichar_t[MCStringGetLength(MCNameGetString(p_type))];
+            t_unichar_string = *t_autoptr;
 			MCStringGetChars(MCNameGetString(p_type), MCRangeMake(0, MCStringGetLength(MCNameGetString(p_type))), t_unichar_string);
 			if (MCNumberParseUnicodeChars(t_unichar_string, MCStringGetLength(MCNameGetString(p_type)), &t_special_folder) ||
                 MCS_specialfolder_to_csidl(p_type, &t_special_folder))
@@ -2665,6 +2696,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		char *t_char_ptr;
 		HANDLE t_file_handle = NULL;
 		IO_handle t_handle;
+		t_handle = nil;
 
 		bool t_device = false;
 		bool t_serial_device = false;

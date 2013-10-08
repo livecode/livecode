@@ -59,14 +59,6 @@ public:
 	{
 		/* UNCHECKED */ setoldstring_argument(string);
 	}
-
-	// Sets the parameter to the given string, taking ownership of the
-	// buffer.
-	void setbuffer(char *buffer, uint32_t length)
-	{
-		/* UNCHECKED */ setoldstring_argument(MCString(buffer, length));
-		delete buffer;
-	}
 	
 	bool setoldstring_argument(const MCString& string);
 	void setvalueref_argument(MCValueRef name);
