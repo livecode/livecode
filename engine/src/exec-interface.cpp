@@ -2541,7 +2541,7 @@ void MCInterfaceExecHideObjectWithEffect(MCExecContext& ctxt, MCObjectPtr p_targ
 		MCInterfaceExecHideObject(ctxt, p_target);
 	else
 	{	
-		if (p_effect->exec(ctxt . GetEP()) != ES_NORMAL)
+		if (p_effect->exec(ctxt) != ES_NORMAL)
 		{
 			ctxt . LegacyThrow(EE_HIDE_BADEFFECT);
 			return;
@@ -2647,7 +2647,7 @@ void MCInterfaceExecShowObjectWithEffect(MCExecContext& ctxt, MCObjectPtr p_targ
 	if (ctxt.HasError())
 		return;
 
-	if (p_effect->exec(ctxt . GetEP()) != ES_NORMAL)
+	if (p_effect->exec(ctxt) != ES_NORMAL)
 	{
 		ctxt . LegacyThrow(EE_SHOW_BADEFFECT);
 		return;
@@ -3309,7 +3309,7 @@ void MCInterfaceExecUnlockScreen(MCExecContext& ctxt)
 void MCInterfaceExecUnlockScreenWithEffect(MCExecContext& ctxt, MCVisualEffect *p_effect)
 {
 	// MW-2011-08-18: [[ Redraw ]] Update to use redraw.
-	if (p_effect -> exec(ctxt . GetEP()) != ES_NORMAL)
+	if (p_effect -> exec(ctxt) != ES_NORMAL)
 	{
 		ctxt . LegacyThrow(EE_UNLOCK_BADEFFECT);
 		return;
