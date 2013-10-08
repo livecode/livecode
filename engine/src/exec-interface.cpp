@@ -2916,7 +2916,6 @@ void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCObject *p_object, MCStrin
 	{
 		MCAutoStringRef t_name;
 		p_object->names(P_NAME, &t_name);
-		ctxt . SetValueRef(*t_name);
 		MCdefaultstackptr->setstringprop(ctxt, 0, P_MAIN_STACK, False, *t_name);
 		/*{
 			delete MCdefaultstackptr;
@@ -2930,10 +2929,8 @@ void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCObject *p_object, MCStrin
 	MCdefaultstackptr = odefaultstackptr;
 
 	if (p_new_name != nil)
-	{
-		ctxt . SetValueRef(p_new_name);
 		t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
-	}
+	
 	MCAutoStringRef t_id;
 	t_object->names(P_LONG_ID, &t_id);
 	ctxt . SetItToValue(*t_id);
@@ -2962,11 +2959,8 @@ void MCInterfaceExecCreateCard(MCExecContext& ctxt, MCStringRef p_new_name, bool
 	MCObject *t_object = MCtemplatecard->clone(True, False);
 
 	if (p_new_name != nil)
-	{
-		ctxt . SetValueRef(p_new_name);
 		t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
-	}
-
+	
 	MCAutoStringRef t_id;
 	t_object->names(P_LONG_ID, &t_id);
 	ctxt . SetItToValue(*t_id);
@@ -3030,10 +3024,7 @@ void MCInterfaceExecCreateControl(MCExecContext& ctxt, MCStringRef p_new_name, i
 	}
 
 	if (p_new_name != nil)
-	{
-		ctxt . SetValueRef(p_new_name);
 		t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
-	}
 
 	MCAutoStringRef t_id;
 	t_object->names(P_LONG_ID, &t_id);
@@ -3060,7 +3051,6 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 				MCAutoStringRef t_new_name;
 				MCStringMutableCopyAndRelease(t_short_name, &t_new_name);
 				MCStringPrependNativeChars(*t_new_name, (const char_t *)MCcopystring, strlen(MCcopystring));
-				ctxt . SetValueRef(*t_new_name);
 				t_object->setstringprop(ctxt, 0, P_NAME, False, *t_new_name);
 			}
 			MCdefaultstackptr = (MCStack *)t_object;
@@ -3133,10 +3123,8 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 	}
 
 	if (p_new_name != nil)
-	{
-		ctxt . SetValueRef(p_new_name);
 		t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
-	}
+	
 	MCAutoStringRef t_id;
 	t_object->names(P_LONG_ID, &t_id);
 	ctxt . SetItToValue(*t_id);
