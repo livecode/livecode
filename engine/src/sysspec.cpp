@@ -92,9 +92,13 @@ void MCS_shutdown(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// This is needed by opensslsocket.
+real8 curtime;
+
 real8 MCS_time(void)
 {
-	return MCsystem -> GetCurrentTime();
+	curtime = MCsystem -> GetCurrentTime();
+	return curtime;
 }
 
 void MCS_setenv(const char *p_name, const char *p_value)
@@ -1197,6 +1201,7 @@ bool MCSTextConvertToUnicode(MCTextEncoding p_encoding, const void *p_input, uin
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if !defined(TARGET_SUBPLATFORM_IPHONE)
 MCSocket::~MCSocket(void)
 {
 }
@@ -1316,6 +1321,8 @@ char *MCS_hostaddress(void)
 {
 	return NULL;
 }
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

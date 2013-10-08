@@ -90,7 +90,7 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release);
 #include <openssl/ssl.h>
 #include <openssl/x509v3.h>
 
-#if !defined(X11) && (!defined(_MACOSX))
+#if !defined(X11) && (!defined(_MACOSX)) && (!defined(TARGET_SUBPLATFORM_IPHONE))
 #define socklen_t int
 #endif
 
@@ -1809,13 +1809,6 @@ Boolean MCSocket::initsslcontext()
 	return t_success;
 }
 
-#if defined(TARGET_PLATFORM_MACOS_X)
-bool load_ssl_ctx_certs_from_folder(SSL_CTX *p_ssl_ctx, const char *p_path)
-{
-	// on OSX, we're still using the provided version of openSSL so this should still work
-	return SSL_CTX_load_verify_locations(p_ssl_ctx, NULL, p_path);
-}
-#else
 struct cert_folder_load_context_t
 {
 	const char *path;
@@ -1850,7 +1843,6 @@ bool load_ssl_ctx_certs_from_folder(SSL_CTX *p_ssl_ctx, const char *p_path)
 	
 	return t_success;
 }
-#endif
 
 bool load_ssl_ctx_certs_from_file(SSL_CTX *p_ssl_ctx, const char *p_path)
 {
