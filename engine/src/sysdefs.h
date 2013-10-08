@@ -374,7 +374,7 @@ struct MCFontStruct
 #define SECONDS_MIN -32535244799.0
 #define SECONDS_MAX 32535244799.0
 
-#elif defined(_LINUX_DESKTOP)
+#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
 
 #include <stdarg.h>
 #include <errno.h>
@@ -423,54 +423,6 @@ extern uint2 MCctypetable[];
 #define isprint(x) (_ctype(x, 8))
 #define isgraph(x) (_ctype(x, 9))
 #define iscntrl(x) (_ctype(x, 10))
-
-struct MCFontStruct
-{
-	uint2 ascent;
-	uint2 descent;
-	uint1 charset;
-	Boolean unicode;
-};
-
-#define fixmaskrop(a) (a)
-#define fixmaskcolor(a) (a)
-
-#define SECONDS_MIN 0.0
-#define SECONDS_MAX 32535244799.0
-
-#elif defined(_LINUX_SERVER)
-
-#include <stdarg.h>
-#include <errno.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-#include <math.h>
-#include <signal.h>
-#include <assert.h>
-#include <ctype.h>
-
-#define SIGBOGUS 100
-
-typedef int MCSocketHandle;
-
-inline void *operator new(size_t, void *p)
-{
-	return p;
-}
-
-extern uint1 *MClowercasingtable;
-inline uint1 MCS_tolower(uint1 p_char)
-{
-	return MClowercasingtable[p_char];
-}
-
-extern uint1 *MCuppercasingtable;
-inline uint1 MCS_toupper(uint1 p_char)
-{
-	return MCuppercasingtable[p_char];
-}
 
 struct MCFontStruct
 {
