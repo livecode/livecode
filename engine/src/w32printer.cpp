@@ -894,7 +894,11 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 		// Now create a suitable pattern by tiling out the selected pattern to be
 		// at least 32x32
 		BITMAP t_info;
-		GetObject(p_mark -> fill -> pattern -> handle . pixmap, sizeof(BITMAP), &t_info);
+#ifdef UNICODE
+		GetObjectW(p_mark -> fill -> pattern -> handle . pixmap, sizeof(BITMAP), &t_info);
+#else
+		GetObjectA(p_mark -> fill -> pattern -> handle . pixmap, sizeof(BITMAP), &t_info);
+#endif
 
 		int32_t t_width, t_height;
 		t_width = t_info . bmWidth;
