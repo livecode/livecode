@@ -3954,7 +3954,7 @@ void MCInterfaceExecFind(MCExecContext& ctxt, int p_mode, MCStringRef p_needle, 
 		ctxt .SetTheResultToCString(MCnotfoundstring);
 		return;
 	}
-	MCdefaultstackptr->find(ctxt . GetEP(), (Find_mode)p_mode, p_needle, p_target);
+	MCdefaultstackptr->find(ctxt, (Find_mode)p_mode, p_needle, p_target);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

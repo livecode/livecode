@@ -435,11 +435,11 @@ public:
 	               MCExpression *by, Boolean marked);
 	void breakstring(MCStringRef, MCStringRef*& dest, uint2 &nstrings,
 	                 Find_mode fmode);
-	Boolean findone(MCExecPoint &ep, Find_mode mode, MCStringRef *strings,
+	Boolean findone(MCExecContext &ctxt, Find_mode mode, MCStringRef *strings,
 	                uint2 nstrings, MCChunk *field, Boolean firstcard);
 	void find(MCExecPoint &ep, int p_mode, MCStringRef p_needle, MCChunk *p_target);
-	void find(MCExecPoint &ep, Find_mode mode, MCStringRef, MCChunk *field);
-	void markfind(MCExecPoint &ep, Find_mode mode, MCStringRef,
+	void find(MCExecContext &ctxt, Find_mode mode, MCStringRef, MCChunk *field);
+	void markfind(MCExecContext &ctxt, Find_mode mode, MCStringRef,
 	              MCChunk *, Boolean mark);
 	void mark(MCExecPoint &ep, MCExpression *where, Boolean mark);
 	Linkatts *getlinkatts();

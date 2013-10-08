@@ -1188,7 +1188,8 @@ Exec_stat MCMarking::exec(MCExecPoint &ep)
 		}
         MCAutoStringRef t_value;
         ep . copyasstringref(&t_value);
-		MCdefaultstackptr->markfind(ep, mode, *t_value, field, mark);
+		MCExecContext ctxt(ep);
+		MCdefaultstackptr->markfind(ctxt, mode, *t_value, field, mark);
 	}
 	return ES_NORMAL;
 }
