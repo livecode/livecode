@@ -8,7 +8,7 @@ if [ "$SYMBOLS" != "" ]; then
 fi
 
 if [ -e "$SYMBOLS_FILE" ]; then
-SYMBOLS+="-Wl,-exported_symbols_list $SYMBOLS_FILE"
+	SYMBOLS+="-Wl,-exported_symbols_list $SYMBOLS_FILE"
 fi
 
 $PLATFORM_DEVELOPER_BIN_DIR/g++ -dynamiclib $ARCHS -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -dead_strip -Wl,-x $SYMBOLS $STATIC_DEPS

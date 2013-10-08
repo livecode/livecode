@@ -334,6 +334,13 @@
 			remoteGlobalIDString = 4DD3E0171040BB5D00CAC7EF;
 			remoteInfo = pngmobile;
 		};
+		4D76D93D1804281D0091FFE7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DBF5B061802E2F8009CAB2E /* libopenssl-mobile.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DBF5ABE1802C0E7009CAB2E;
+			remoteInfo = revsecurity;
+		};
 		4D7B13AC171418F2006782C1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D88B96415F54C13002CFBD6 /* libgif-mobile.xcodeproj */;
@@ -408,21 +415,21 @@
 			isa = PBXContainerItemProxy;
 			containerPortal = 4DBF5B061802E2F8009CAB2E /* libopenssl-mobile.xcodeproj */;
 			proxyType = 2;
-			remoteGlobalIDString = 4DD3E0181040BB5D00CAC7EF /* libopensslmobile.a */;
+			remoteGlobalIDString = 4DD3E0181040BB5D00CAC7EF;
 			remoteInfo = opensslmobile;
 		};
 		4DBF5B0D1802E2F8009CAB2E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4DBF5B061802E2F8009CAB2E /* libopenssl-mobile.xcodeproj */;
 			proxyType = 2;
-			remoteGlobalIDString = 4DBF5ABF1802C0E7009CAB2E /* librevsecurity.a */;
+			remoteGlobalIDString = 4DBF5ABF1802C0E7009CAB2E;
 			remoteInfo = revsecurity;
 		};
 		4DBF5B0F1802E309009CAB2E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4DBF5B061802E2F8009CAB2E /* libopenssl-mobile.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 4DD3E0171040BB5D00CAC7EF /* opensslmobile */;
+			remoteGlobalIDString = 4DD3E0171040BB5D00CAC7EF;
 			remoteInfo = opensslmobile;
 		};
 		4DE7ED5C13B33C9D002634F5 /* PBXContainerItemProxy */ = {
@@ -1762,12 +1769,13 @@
 				4DD3DD961040AA9A00CAC7EF /* Sources */,
 				4DD3DD971040AA9A00CAC7EF /* Frameworks */,
 				F670DB65147D45A5008FEA1E /* CopyFiles */,
-				4DBF5B5B1802E7C1009CAB2E /* ShellScript */,
+				4DBF5B5B1802E7C1009CAB2E /* Copy revsecurity */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				4D08A0D3138EA52B0081F990 /* PBXTargetDependency */,
+				4D76D93E1804281D0091FFE7 /* PBXTargetDependency */,
 			);
 			name = "standalone-mobile-community";
 			productName = "standalone-mobile";
@@ -1928,20 +1936,21 @@
 			shellScript = "$PLATFORM_DEVELOPER_BIN_DIR/g++ -nodefaultlibs -Wl,-r -Wl,-x -arch ${ARCHS//\\ /\\ -arch\\ } -isysroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,\"$SRCROOT/standalone.ios\" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol\n";
 			showEnvVarsInLog = 0;
 		};
-		4DBF5B5B1802E7C1009CAB2E /* ShellScript */ = {
+		4DBF5B5B1802E7C1009CAB2E /* Copy revsecurity */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
-				"$(BUILT_PRODUCTS_DIR)/revsecurity.dylib",
+				"$(TARGET_BUILD_DIR)/revsecurity.dylib",
 			);
+			name = "Copy revsecurity";
 			outputPaths = (
+				"$(TARGET_BUILD_DIR)/standalone-mobile-community.app/revsecurity.dylib",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "copy \"$(BUILT_PRODUCTS_DIR)/revsecurity.dylib\" \"$(BUILD_PRODUCTS_DIR)/standalone-mobile-community.app/\"";
-			showEnvVarsInLog = 0;
+			shellScript = "cp \"$TARGET_BUILD_DIR/revsecurity.dylib\" \"$TARGET_BUILD_DIR/standalone-mobile-community.app/\"";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -2226,6 +2235,11 @@
 			isa = PBXTargetDependency;
 			name = pngmobile;
 			targetProxy = 4D2220AD171D78FA00E7E557 /* PBXContainerItemProxy */;
+		};
+		4D76D93E1804281D0091FFE7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = revsecurity;
+			targetProxy = 4D76D93D1804281D0091FFE7 /* PBXContainerItemProxy */;
 		};
 		4D7B149017141A3C006782C1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

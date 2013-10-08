@@ -1308,10 +1308,6 @@ void MCS_ntoa(MCExecPoint& ep, MCExecPoint& ep2)
 	delete t_hostname;
 }
 
-void MCS_getDNSservers(MCExecPoint& ep)
-{
-}
-
 char *MCS_dnsresolve(const char *p_hostname)
 {
 	return NULL;
@@ -1323,6 +1319,10 @@ char *MCS_hostaddress(void)
 }
 
 #endif
+
+void MCS_getDNSservers(MCExecPoint& ep)
+{
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
