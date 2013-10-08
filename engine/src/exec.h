@@ -609,7 +609,7 @@ public:
 		m_ep . setrowdel(p_value);
 	}
 	//////////
-	
+
 	// Convert the given valueref to a string. If the type is not convertable
 	// to a string, the empty string is returned.
 	// This method should be used in cases where a string is required and
