@@ -354,6 +354,7 @@ public:
 	void getarrayprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, MCArrayRef& r_value);
 	void getvariantprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, MCValueRef& r_value);
     void getdataprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, MCDataRef& r_value);
+    void getpointprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, MCPoint& r_point);
 	//
 	void setboolprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, bool r_value);
 	void setintprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, integer_t r_value);
@@ -362,8 +363,9 @@ public:
 	void setnumberprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, MCNumberRef r_value);
 	void setstringprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, MCStringRef r_value);
 	void setarrayprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, MCArrayRef r_value);
-	void setvariantprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, MCValueRef r_value);
+    void setvariantprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, MCValueRef r_value);
     void setdataprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, MCDataRef r_value);
+    void setpointprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, const MCPoint& p_point);
 
 	const MCRectangle &getrect() const;
     virtual MCRectangle getrectangle(bool p_effective) const;

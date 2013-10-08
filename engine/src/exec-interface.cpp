@@ -2621,13 +2621,16 @@ void MCInterfaceExecShowCards(MCExecContext& ctxt, uint2 p_count)
 
 void MCInterfaceExecShowObject(MCExecContext& ctxt, MCObjectPtr p_target, MCPoint *p_at)
 {
-	if (p_at != nil && p_target . object -> setprop(p_target . part_id, P_LOCATION, ctxt . GetEP(), False) != ES_NORMAL)
-		{
-			ctxt . LegacyThrow(EE_SHOW_BADLOCATION);
-			return;
-		}
+	if (p_at != nil)
+		p_target.object->setpointprop(ctxt, p_target.part_id, P_LOCATION, False, *p_at);
 
-	p_target . object->setsprop(P_VISIBLE, kMCTrueString);
+	if (!ctxt.HasError())
+	{
+		p_target.object->setboolprop(ctxt, p_target.part_id, P_VISIBLE, False, kMCTrue);
+		return;
+	}
+	
+	ctxt.Throw();
 }
 
 void MCInterfaceExecShowObjectWithEffect(MCExecContext& ctxt, MCObjectPtr p_target, MCPoint *p_at, MCVisualEffect *p_effect)
@@ -2638,11 +2641,11 @@ void MCInterfaceExecShowObjectWithEffect(MCExecContext& ctxt, MCObjectPtr p_targ
 		return;
 	}
 
-	if (p_at != nil && p_target . object -> setprop(p_target . part_id, P_LOCATION, ctxt . GetEP(), False) != ES_NORMAL)
-	{
-		ctxt . LegacyThrow(EE_SHOW_BADLOCATION);
+	if (p_at != nil)
+		p_target.object->setpointprop(ctxt, p_target.part_id, P_LOCATION, False, *p_at);
+		
+	if (ctxt.HasError())
 		return;
-	}
 
 	if (p_effect->exec(ctxt . GetEP()) != ES_NORMAL)
 	{
