@@ -1176,7 +1176,7 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 			 MCStringRemove(t_input, MCRangeMake(MCStringGetLength(t_input) - 1, 1));
 		 }
 		 /* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(t_input, t_output);
-		 /* UNCHECKED */ MCStringEncode(t_output, kMCStringEncodingUTF16LE, false, &t_out_data);
+		 /* UNCHECKED */ MCStringEncode(t_output, kMCStringEncodingUTF16, false, &t_out_data);
 		 MCValueRelease(t_input);
 		 MCValueRelease(t_output);
 	}
@@ -1464,7 +1464,7 @@ bool MCConvertTextToWindowsWide(MCDataRef p_input, STGMEDIUM& r_storage)
 	/* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingWindows1252, false, &t_input);
 	/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_input, &t_output);
 	MCAutoDataRef t_output_data;
-	/* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingUTF16LE, false, &t_output_data);
+	/* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingUTF16, false, &t_output_data);
 
 	if (MCDataGetLength(*t_output_data) < 2 || MCDataGetByteAtIndex(*t_output_data, MCDataGetLength(*t_output_data) - 2) != '\0' || MCDataGetByteAtIndex(*t_output_data, MCDataGetLength(*t_output_data) - 1) != '\0')
 	{
@@ -1480,7 +1480,7 @@ bool MCConvertTextToWindowsWide(MCDataRef p_input, STGMEDIUM& r_storage)
 bool MCConvertUnicodeToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage)
 {
 	MCAutoStringRef t_input, t_output;
-	/* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingUTF16LE, false, &t_input);
+	/* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingUTF16, false, &t_input);
 	/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_input, &t_output);
 	MCAutoDataRef t_output_data;
 	/* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingWindows1252, false, &t_output_data);
@@ -1499,10 +1499,10 @@ bool MCConvertUnicodeToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage)
 bool MCConvertUnicodeToWindowsWide(MCDataRef p_input, STGMEDIUM& r_storage)
 {
 	MCAutoStringRef t_input, t_output;
-	/* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingUTF16LE, false, &t_input);
+	/* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingUTF16, false, &t_input);
 	/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_input, &t_output);
 	MCAutoDataRef t_output_data;
-	/* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingUTF16LE, false, &t_output_data);
+	/* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingUTF16, false, &t_output_data);
 
 	if (MCDataGetLength(*t_output_data) < 2 || MCDataGetByteAtIndex(*t_output_data, MCDataGetLength(*t_output_data) - 2) != '\0' || MCDataGetByteAtIndex(*t_output_data, MCDataGetLength(*t_output_data) - 1) != '\0')
 	{

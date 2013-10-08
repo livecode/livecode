@@ -299,10 +299,10 @@ bool MCMacOSXPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 	{
 
 		MCAutoStringRef t_utf8;
-		/* UNCHECKED */ MCStringDecode(*t_in_data, kMCStringEncodingUTF16LE, false, &t_utf8);
+		/* UNCHECKED */ MCStringDecode(*t_in_data, kMCStringEncodingUTF16, false, &t_utf8);
 		MCAutoStringRef t_output;
 		/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_utf8, &t_output);
-		/* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingUTF16LE, false, &t_out_data);
+		/* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingUTF16, false, &t_out_data);
 
 	}
 	break;
@@ -559,11 +559,11 @@ bool MCConvertUnicodeToMacUnicode(MCDataRef p_input, MCDataRef& r_output)
 {
 
 	MCAutoStringRef t_input_mac_unicode;
-	/* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingUTF16LE, false, &t_input_mac_unicode);
+	/* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingUTF16, false, &t_input_mac_unicode);
 	MCAutoStringRef t_output;
 	/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_input_mac_unicode, &t_output);
 	
-	return MCStringEncode(*t_output, kMCStringEncodingUTF16LE, false, r_output);
+	return MCStringEncode(*t_output, kMCStringEncodingUTF16, false, r_output);
 }
 
 bool MCConvertStyledTextToMacUnicode(MCDataRef p_input, MCDataRef& r_output)
@@ -742,7 +742,7 @@ bool MCConvertMacUnicodeStyledToStyledText(MCDataRef p_text_data, MCDataRef p_st
 		MCAutoStringRef t_output;
 		/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_input, &t_output);
 		MCAutoDataRef t_data;
-		/* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingUTF16LE, false, &t_data);
+		/* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingUTF16, false, &t_data);
 		t_paragraphs = MCtemplatefield -> texttoparagraphs(MCDataGetOldString(*t_data), true);
 	}
 	
