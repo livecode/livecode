@@ -37,6 +37,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osxdc.h"
 #include "osxcontext.h"
 #include "osxprinter.h"
+#include "osspec.h"
 
 #include <cups/ppd.h>
 #include <pwd.h>
@@ -1771,7 +1772,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 				uint4 t_utf16_length;
 				MCS_nativetoutf16((const char *)s, len, t_utf16, t_utf16_length);
 				s = (void *)t_utf16;
-				len = t_utf_16_len;
+				len = t_utf16_length;
 			}
 			
 			OSStatus t_err;
