@@ -94,8 +94,8 @@ Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
 			if ((eptr = strchr(sptr, ep.getitemdel())) != NULL)
 			{
 				*eptr++ = '\0';
-				s.set(sptr, eptr - sptr - 1);
-			}
+                s.set(sptr, eptr - sptr - 1);
+            }
 			else
 				s.set(sptr, strlen(sptr));
 			MCAutoStringRef t_string;
@@ -129,7 +129,7 @@ Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
 			nitems = 0;
 			do
 			{
-				s.set(tpgptr->gettext(), tpgptr->gettextsize());
+                s.set(tpgptr->gettext(), tpgptr->gettextsize());            
 				if (tpgptr->next() != pgptr || tpgptr->gettextsize())
 				{
 					MCAutoStringRef t_string;

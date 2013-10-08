@@ -30,10 +30,10 @@ int32_t MCCustomPrinterComputeFontSize(void *font)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-char *MCSystemLowercaseInternational(const MCString& p_string)
+char *MCSystemLowercaseInternational(MCStringRef p_string)
 {
 	char *t_lc_string;
-	t_lc_string = p_string . clone();
+	t_lc_string = strdup(MCStringGetCString(p_string));
 	for(uindex_t i = 0; t_lc_string[i] != '\0'; i++)
 		t_lc_string[i] = MCS_tolower(t_lc_string[i]);
 	return t_lc_string;
