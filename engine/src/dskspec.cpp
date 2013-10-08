@@ -100,16 +100,15 @@ MCSErrorMode MCS_get_errormode(void)
 
 bool MCS_put(MCExecContext& ctxt, MCSPutKind p_kind, MCStringRef p_data)
 {
-	ctxt . GetEP() . setvalueref(p_data);
-
+	//Program crashes : Unhandled exception at 0x00783ad6 in engine-community.exe: 0xC0000005: Access violation reading location 0x00000060.
 	switch(p_kind)
 	{
 	case kMCSPutOutput:
 	case kMCSPutBeforeMessage:
 	case kMCSPutIntoMessage:
-		return MCmb -> set(ctxt . GetEP(), nil, 0) == ES_NORMAL;
+		return MCmb -> set(ctxt, p_data);
 	case kMCSPutAfterMessage:
-		return MCmb -> append(ctxt . GetEP(), nil, 0) == ES_NORMAL;
+		return MCmb -> append(ctxt, p_data);
 
 	default:
 		break;
