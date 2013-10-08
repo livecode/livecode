@@ -527,7 +527,8 @@ int MCA_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prom
 	
 	
 	// Create the file dialog with the correct prompt
-	dialog = create_open_dialog ( p_title == NULL  ? p_prompt : p_title, GTK_FILE_CHOOSER_ACTION_OPEN );
+	//dialog = create_open_dialog ( p_title == NULL  ? p_prompt : p_title, GTK_FILE_CHOOSER_ACTION_OPEN );
+	dialog = create_open_dialog (p_prompt, GTK_FILE_CHOOSER_ACTION_OPEN );
 	
 	// If we have any filters, add them.
 	if ( p_type_count > 0 ) 
