@@ -795,7 +795,7 @@ void MCStack::startedit(MCGroup *group)
 	// Link the card to the parent, give it the same id as the current card and give it a temporary script
 	curcard->setparent(this);
 	curcard->setid(savecard->getid());
-	curcard->setsprop(P_SCRIPT, ECS);
+	curcard->setsprop(P_SCRIPT, MCSTR(ECS));
 
 	// Now add references for each control in the group being edited to the card
 	if (controls != NULL)
@@ -1281,7 +1281,6 @@ MCCard *MCStack::getchild(Chunk_term etype, MCStringRef p_expression, Chunk_term
 		uint4 inid;
 		if (MCU_stoui4(p_expression, inid))
 		{
-		
 			// OK-2008-06-27: <Bug where looking up a card by id when in edit group mode could cause an infinite loop>
 			MCCard *t_cards;
 			if (editing != NULL && savecards != NULL)
@@ -1426,7 +1425,6 @@ MCCard *MCStack::getchild(Chunk_term etype, const MCString &s, Chunk_term otype)
 		uint4 inid;
 		if (MCU_stoui4(s, inid))
 		{
-		
 			// OK-2008-06-27: <Bug where looking up a card by id when in edit group mode could cause an infinite loop>
 			MCCard *t_cards;
 			if (editing != NULL && savecards != NULL)
@@ -1566,25 +1564,26 @@ MCCard *MCStack::getchildbyid(uinteger_t p_id)
 {
     // OK-2007-04-09 : Allow cards to be found by ID when in edit group mode.
     MCCard *cptr;
-    if (editing != NULL && savecards != NULL)
+    if (editing != nil && savecards != nil)
         cptr = savecards;
     else
         cptr = cards;
     
-    MCCard *found = NULL;
+    MCCard *found = nil;
 
     // OK-2008-06-27: <Bug where looking up a card by id when in edit group mode could cause an infinite loop>
     MCCard *t_cards = cptr;
     
     // OK-2007-04-09 : Allow cards to be found by ID when in edit group mode.
-    if (editing == NULL)
+    if (editing == nil)
         found = curcard -> findid(CT_CARD, p_id, True);
-    else
+    
+    if (found == nil)
     {
         do
         {
             found = cptr->findid(CT_CARD, p_id, True);
-            if (found != NULL
+            if (found != nil
                 && found->countme(backgroundid, (state & CS_MARKED) != 0))
                 break;
             cptr = cptr->next();
@@ -1603,6 +1602,22 @@ MCCard *MCStack::getchildbyname(MCNameRef p_name)
 	else
 		cptr = cards;
     
+    uint2 t_num = 0;
+    if (MCU_stoui2(MCNameGetString(p_name), t_num))
+    {
+        if (t_num < 1)
+            return nil;
+        t_num--;
+        
+        do
+        {
+            if (cptr->countme(backgroundid, (state & CS_MARKED) != 0) && t_num-- == 0)
+                return cptr;
+            cptr = cptr->next();
+        }
+        while (cptr != cards);
+        return nil;
+    }
     MCCard *found = nil;
     do
     {
@@ -1830,22 +1845,41 @@ MCGroup *MCStack::getbackgroundbyid(uinteger_t p_id)
 MCGroup *MCStack::getbackgroundbyname(MCNameRef p_name)
 {
 	MCControl *cptr;
-	if (editing != NULL)
+	if (editing != nil)
 		cptr = savecontrols;
 	else
 		cptr = controls;
 	MCControl *startcptr = cptr;
-	if (cptr == NULL)
-		return NULL;
+	if (cptr == nil)
+		return nil;
+    
+    uint2 t_num = 0;
+    if (MCU_stoui2(MCNameGetString(p_name), t_num))
+    {
+        if (t_num < 1)
+            return nil;
+        t_num--;
+        
+        do
+        {
+            MCControl *foundobj = cptr->findnum(CT_GROUP, t_num);
+            if (foundobj != nil)
+                return (MCGroup *)foundobj;
+            cptr = cptr->next();
+        }
+        while (cptr != startcptr);
+        return nil;
+    }
+    
     do
     {
         MCControl *found = cptr->findname(CT_GROUP, MCNameGetOldString(p_name));
-        if (found != NULL)
+        if (found != nil)
             return (MCGroup *)found;
         cptr = cptr->next();
     }
     while (cptr != startcptr);
-    return NULL;
+    return nil;
 }
 
 void MCStack::addmnemonic(MCButton *button, KeySym p_key)
@@ -2544,11 +2578,14 @@ void MCStack::getstackfiles(MCExecPoint &ep)
 	}
 }
 
-void MCStack::stringtostackfiles(char *d, MCStackfile **sf, uint2 &nf)
+void MCStack::stringtostackfiles(MCStringRef d_strref, MCStackfile **sf, uint2 &nf)
 {
 	MCStackfile *newsf = NULL;
 	uint2 nnewsf = 0;
-	char *eptr = d;
+    // This ensures the coy is freed when the method ends
+    MCAutoPointer<char> d;
+    /* UNCHECKED */ d = strdup(MCStringGetCString(d_strref));
+	char *eptr = *d;
 	while ((eptr = strtok(eptr, "\n")) != NULL)
 	{
 		char *cptr = strchr(eptr, ',');
@@ -2566,7 +2603,7 @@ void MCStack::stringtostackfiles(char *d, MCStackfile **sf, uint2 &nf)
 	nf = nnewsf;
 }
 
-void MCStack::setstackfiles(const MCString &s)
+void MCStack::setstackfiles(MCStringRef s)
 {
 	while (nstackfiles--)
 	{
@@ -2574,9 +2611,7 @@ void MCStack::setstackfiles(const MCString &s)
 		MCValueRelease(stackfiles[nstackfiles].filename);
 	}
 	delete stackfiles;
-	char *d = s.clone();
-	stringtostackfiles(d, &stackfiles, nstackfiles);
-	delete d;
+	stringtostackfiles(s, &stackfiles, nstackfiles);
 }
 
 char *MCStack::getstackfile(const MCString &s)

@@ -1446,6 +1446,24 @@
 			<File
 				RelativePath=".\src\dskw32.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="w32prefix.h"
+						PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="w32prefix.h"
+						PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\dskw32main.cpp"
@@ -6499,6 +6517,10 @@
 			</File>
 			<File
 				RelativePath=".\src\exec-store.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-strings-chunk.cpp"
 				>
 			</File>
 			<File

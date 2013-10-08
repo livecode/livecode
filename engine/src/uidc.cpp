@@ -878,7 +878,6 @@ bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
 
-	MCExecPoint ep(ctxt.GetEP());
 	for (uinteger_t i = 0 ; i < nmessages ; i++)
 	{
 		if (messages[i].id != 0)
@@ -893,10 +892,8 @@ bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 			if (!MCListAppendInteger(*t_msg_info, messages[i].id))
 				return false;
 
-			// TODO - still using the ep to convert real -> string
-			ep.setnvalue(messages[i].time);
-			if (!ep.copyasstringref(&t_time_string) ||
-				!MCListAppend(*t_msg_info, *t_time_string))
+			if (!ctxt.FormatReal(messages[i].time, &t_time_string)
+				|| !MCListAppend(*t_msg_info, *t_time_string))
 				return false;
 
 			if (!MCListAppend(*t_msg_info, messages[i].message))

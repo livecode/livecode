@@ -1673,7 +1673,7 @@ Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 	default:
 	{
 		Exec_stat t_stat;
-		t_stat = mode_getprop(parid, which, ep, MCnullmcstring, effective);
+		t_stat = mode_getprop(parid, which, ep, kMCEmptyString, effective);
 		if (t_stat == ES_NOT_HANDLED)
 			return MCObject::getprop_legacy(parid, which, ep, effective);
 
@@ -2736,7 +2736,7 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 	default:
 	{
 		Exec_stat t_stat;
-		t_stat = mode_setprop(parid, which, ep, MCnullmcstring, MCnullmcstring, effective);
+		t_stat = mode_setprop(parid, which, ep, kMCEmptyString, kMCEmptyString, effective);
 		if (t_stat == ES_NOT_HANDLED)
 			return MCObject::setprop_legacy(parid, which, ep, effective);
 

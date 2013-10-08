@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 Boolean InitSSLCrypt();
 void ShutdownSSL();
 bool SSL_ciphernames(MCListRef& r_list, MCStringRef& r_error);
-unsigned long SSLError(char *errbuf);
+unsigned long SSLError(MCStringRef errbuf);
 char *SSL_encode(Boolean isdecrypt, const char *ciphername,
                  const char *data, uint4 inlen,uint4 &outlen, //data to decrypt, length of that data, and pointer to descypted data length
                  const char *keystr, int4 keystrlen, Boolean ispassword, uint2 keylen,

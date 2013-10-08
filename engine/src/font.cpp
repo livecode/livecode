@@ -257,11 +257,11 @@ const char *MCF_getweightstring(uint2 style)
 	return weightstrings[weight];
 }
 
-Boolean MCF_setweightstring(uint2 &style, const MCString &data)
+Boolean MCF_setweightstring(uint2 &style, MCStringRef data)
 {
 	uint2 w;
 	for (w = MCFW_UNDEFINED ; w <= MCFW_ULTRABOLD ; w++)
-		if (data == weightstrings[w])
+		if (MCStringIsEqualToCString(data, weightstrings[w], kMCCompareCaseless))
 			break;
 	if (w <= MCFW_ULTRABOLD)
 	{
@@ -285,11 +285,11 @@ const char *MCF_getexpandstring(uint2 style)
 	return expandstrings[expand];
 }
 
-Boolean MCF_setexpandstring(uint2 &style, const MCString &data)
+Boolean MCF_setexpandstring(uint2 &style, MCStringRef data)
 {
 	uint2 w;
 	for (w = FE_UNDEFINED ; w <= FE_ULTRAEXPANDED ; w++)
-		if (data == expandstrings[w])
+		if (MCStringIsEqualToCString(data, expandstrings[w], kMCCompareCaseless))
 			break;
 	if (w <= FE_ULTRAEXPANDED)
 	{
@@ -318,14 +318,14 @@ const char *MCF_getslantlongstring(uint2 style)
 	return "";
 }
 
-Boolean MCF_setslantlongstring(uint2 &style, const MCString &data)
+Boolean MCF_setslantlongstring(uint2 &style, MCStringRef data)
 {
-	if (data == "oblique")
+	if (MCStringIsEqualToCString(data, "oblique", kMCCompareCaseless))
 	{
 		style |= FA_OBLIQUE;
 		return True;
 	}
-	if (data == "italic")
+	if (MCStringIsEqualToCString(data, "italic", kMCCompareCaseless))
 	{
 		style |= FA_ITALIC;
 		return True;
@@ -333,8 +333,8 @@ Boolean MCF_setslantlongstring(uint2 &style, const MCString &data)
 	return False;
 }
 
-Exec_stat MCF_parsetextatts(Properties which, const MCString &data,
-                            uint4 &flags, char *&fname, uint2 &height,
+Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
+                            uint4 &flags, MCStringRef &fname, uint2 &height,
                             uint2 &size, uint2 &style)
 {
 	int2 i1;
@@ -342,16 +342,16 @@ Exec_stat MCF_parsetextatts(Properties which, const MCString &data,
 	{
 	case P_TEXT_ALIGN:
 		flags &= ~F_ALIGNMENT;
-		if (data == MCleftstring || data.getlength() == 0)
+		if (MCStringIsEqualToCString(data, MCleftstring, kMCCompareCaseless) || MCStringIsEmpty(data))
 			flags |= F_ALIGN_LEFT;
 		else
-			if (data == MCcenterstring)
+			if (MCStringIsEqualToCString(data, MCcenterstring, kMCCompareCaseless))
 				flags |= F_ALIGN_CENTER;
 			else
-				if (data == MCrightstring)
+				if (MCStringIsEqualToCString(data, MCrightstring, kMCCompareCaseless))
 					flags |= F_ALIGN_RIGHT;
 				else
-					if (data == MCjustifystring)
+					if (MCStringIsEqualToCString(data, MCjustifystring, kMCCompareCaseless))
 						flags |= F_ALIGN_JUSTIFY;
 					else
 					{
@@ -360,15 +360,13 @@ Exec_stat MCF_parsetextatts(Properties which, const MCString &data,
 					}
 		break;
 	case P_TEXT_FONT:
-		{
-			fname = data.clone();
-			
-			// MW-2012-02-17: [[ IntrinsicUnicode ]] Strip any lang tag from the
+		{// MW-2012-02-17: [[ IntrinsicUnicode ]] Strip any lang tag from the
 			//   fontname.
-			char *t_tag;
-			t_tag = strchr(fname, ',');
-			if (t_tag != nil)
-				t_tag[0] = '\0';
+			uindex_t t_offset;
+			if (MCStringFirstIndexOfChar(data, ',', 0, kMCCompareExact, t_offset))
+				/* UNCHECKED */ MCStringCopySubstring(data, MCRangeMake(t_offset + 1, MCStringGetLength(data) - (t_offset + 1)), fname);
+			else
+				fname = MCValueRetain(data);
 		}
 		break;
 	case P_TEXT_HEIGHT:
@@ -381,7 +379,7 @@ Exec_stat MCF_parsetextatts(Properties which, const MCString &data,
 		height = i1;
 		break;
 	case P_TEXT_SIZE:
-		if (data.getlength() == 0)
+		if (MCStringIsEmpty(data))
 			i1 = 0;
 		else
 			if (!MCU_stoi2(data, i1))
@@ -396,8 +394,8 @@ Exec_stat MCF_parsetextatts(Properties which, const MCString &data,
 		{
 			// MW-2012-02-17: [[ SplitTextAttrs ]] If the string is empty, then
 			//   return 0 for the style - indicating to unset the property.
-			uint4 l = data.getlength();
-			const char *sptr = data.getstring();
+			uint4 l = MCStringGetLength(data);
+			const char *sptr = MCStringGetCString(data);
 			if (l == 0)
 				style = 0;
 			else
@@ -411,48 +409,50 @@ Exec_stat MCF_parsetextatts(Properties which, const MCString &data,
 						sptr += l;
 						l = 0;
 					}
-					MCString tdata(startptr, sptr - startptr);
+                    MCAutoStringRef tdata;
+					/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)startptr, sptr - startptr, &tdata);
 					MCU_skip_char(sptr, l);
 					MCU_skip_spaces(sptr, l);
-					if (MCF_setweightstring(style, tdata))
+					if (MCF_setweightstring(style, *tdata))
 						continue;
-					if (MCF_setexpandstring(style, tdata))
+					if (MCF_setexpandstring(style, *tdata))
 						continue;
-					if (MCF_setslantlongstring(style, tdata))
+					if (MCF_setslantlongstring(style, *tdata))
 						continue;
-					if (tdata == MCplainstring)
+					if (MCStringIsEqualToCString(*tdata, MCplainstring, kMCCompareCaseless))
 					{
 						style = FA_DEFAULT_STYLE;
 						continue;
 					}
-					if (tdata == MCmixedstring)
+					if (MCStringIsEqualToCString(*tdata, MCmixedstring, kMCCompareCaseless))
 					{
 						style = FA_DEFAULT_STYLE;
 						continue;
 					}
-					if (tdata == MCboxstring)
+					if (MCStringIsEqualToCString(*tdata, MCboxstring, kMCCompareCaseless))
 					{
 						style &= ~FA_3D_BOX;
 						style |= FA_BOX;
 						continue;
-					}
-					if (tdata == MCthreedboxstring)
+                    }
+                
+					if (MCStringIsEqualToCString(*tdata, MCthreedboxstring, kMCCompareCaseless))
 					{
 						style &= ~FA_BOX;
 						style |= FA_3D_BOX;
 						continue;
 					}
-					if (tdata == MCunderlinestring)
+					if (MCStringIsEqualToCString(*tdata, MCunderlinestring, kMCCompareCaseless))
 					{
 						style |= FA_UNDERLINE;
 						continue;
 					}
-					if (tdata == MCstrikeoutstring)
+					if (MCStringIsEqualToCString(*tdata, MCstrikeoutstring, kMCCompareCaseless))
 					{
 						style |= FA_STRIKEOUT;
 						continue;
 					}
-					if (tdata == MCgroupstring || tdata == MClinkstring)
+					if (MCStringIsEqualToCString(*tdata, MCgroupstring, kMCCompareCaseless) || MCStringIsEqualToCString(*tdata, MClinkstring, kMCCompareCaseless))
 					{
 						style |= FA_LINK;
 						continue;
@@ -469,9 +469,8 @@ Exec_stat MCF_parsetextatts(Properties which, const MCString &data,
 	return ES_NORMAL;
 }
 
-Exec_stat MCF_unparsetextatts(Properties which, MCExecPoint &ep, uint4 flags,
-                              const char *name, uint2 height, uint2 size,
-                              uint2 style)
+    
+Exec_stat MCF_unparsetextatts(Properties which, MCExecPoint &ep, uint4 flags, MCStringRef name, uint2 height, uint2 size, uint2 style)
 {
 	switch (which)
 	{
@@ -493,7 +492,7 @@ Exec_stat MCF_unparsetextatts(Properties which, MCExecPoint &ep, uint4 flags,
 		}
 		break;
 	case P_TEXT_FONT:
-		ep.setsvalue(name);
+		ep.setsvalue(MCStringGetOldString(name));
 		break;
 	case P_TEXT_HEIGHT:
 		ep.setint(height);
@@ -538,27 +537,27 @@ Exec_stat MCF_unparsetextatts(Properties which, MCExecPoint &ep, uint4 flags,
 }
 
 // MW-2011-11-23: [[ Array TextStyle ]] Convert a textStyle name into the enum.
-Exec_stat MCF_parsetextstyle(const MCString &data, Font_textstyle &style)
+Exec_stat MCF_parsetextstyle(MCStringRef data, Font_textstyle &style)
 {
-	if (data == "bold")
+	if (MCStringIsEqualToCString(data, "bold", kMCCompareCaseless))
 		style = FTS_BOLD;
-	else if (data == "condensed")
+	else if (MCStringIsEqualToCString(data, "condensed", kMCCompareCaseless))
 		style = FTS_CONDENSED;
-	else if (data == "expanded")
+	else if (MCStringIsEqualToCString(data, "expanded", kMCCompareCaseless))
 		style = FTS_EXPANDED;
-	else if (data == "italic")
+	else if (MCStringIsEqualToCString(data, "italic", kMCCompareCaseless))
 		style = FTS_ITALIC;
-	else if (data == "oblique")
+	else if (MCStringIsEqualToCString(data, "oblique", kMCCompareCaseless))
 		style = FTS_OBLIQUE;
-	else if (data == MCboxstring)
+	else if (MCStringIsEqualToCString(data, MCboxstring, kMCCompareCaseless))
 		style = FTS_BOX;
-	else if (data == MCthreedboxstring)
+	else if (MCStringIsEqualToCString(data, MCthreedboxstring, kMCCompareCaseless))
 		style = FTS_3D_BOX;
-	else if (data == MCunderlinestring)
+	else if (MCStringIsEqualToCString(data, MCunderlinestring, kMCCompareCaseless))
 		style = FTS_UNDERLINE;
-	else if (data == MCstrikeoutstring)
+	else if (MCStringIsEqualToCString(data, MCstrikeoutstring, kMCCompareCaseless))
 		style = FTS_STRIKEOUT;
-	else if (data == MCgroupstring || data == MClinkstring)
+	else if (MCStringIsEqualToCString(data, MCgroupstring, kMCCompareCaseless) || MCStringIsEqualToCString(data, MClinkstring, kMCCompareCaseless))
 		style = FTS_LINK;
 	else
 	{
@@ -621,13 +620,13 @@ void MCF_changetextstyle(uint2& x_style_set, Font_textstyle p_style, bool p_new_
 	switch(p_style)
 	{
 	case FTS_BOLD:
-		MCF_setweightstring(x_style_set, p_new_state ? "bold" : "medium");
+		MCF_setweightstring(x_style_set, p_new_state ? MCSTR("bold") : MCSTR("medium"));
 		return;
 	case FTS_CONDENSED:
-		MCF_setexpandstring(x_style_set, p_new_state ? "condensed" : "normal");
+		MCF_setexpandstring(x_style_set, p_new_state ? MCSTR("condensed") : MCSTR("normal"));
 		return;
 	case FTS_EXPANDED:
-		MCF_setexpandstring(x_style_set, p_new_state ? "expanded" : "normal");
+		MCF_setexpandstring(x_style_set, p_new_state ? MCSTR("expanded") : MCSTR("normal"));
 		return;
 	case FTS_ITALIC:
 		t_flag = FA_ITALIC;

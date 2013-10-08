@@ -1200,15 +1200,12 @@ void MCObject::setstate(Boolean on, uint4 newstate)
 		state &= ~newstate;
 }
 
-/* WRAPPER */ Exec_stat MCObject::setsprop(Properties which, MCStringRef p_string)
-{
-	return setsprop(which, MCStringGetOldString(p_string));
-}
 
-Exec_stat MCObject::setsprop(Properties which, const MCString &s)
+
+Exec_stat MCObject::setsprop(Properties which, MCStringRef s)
 {
 	MCExecPoint ep(this, NULL, NULL);
-	ep.setsvalue(s);
+	ep.setvalueref(s);
 	return setprop(0, which, ep, False);
 }
 
@@ -1792,12 +1789,6 @@ void MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
 		style = m_font_attrs -> style;
 }
 
-void MCObject::getfontattsnew(const char *& fname, uint2 &size, uint2 &style)
-{
-	MCNameRef t_fname_name;
-	getfontattsnew(t_fname_name, size, style);
-	fname = MCNameGetCString(t_fname_name);
-}
 
 MCNameRef MCObject::gettextfont(void)
 {
@@ -3171,7 +3162,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (flags & F_SCRIPT && !(addflags & AF_LONG_SCRIPT))
 	{
 		getstack() -> unsecurescript(this);
-		stat = IO_write_string(MCStringGetCString(_script), stream, false);
+		stat = IO_write_string(MCStringGetCString(_script), stream);
 		getstack() -> securescript(this);
 		if (stat != IO_NORMAL)
 			return stat;
