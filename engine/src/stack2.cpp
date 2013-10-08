@@ -2630,3 +2630,40 @@ MCGAffineTransform MCStack::getdevicetransform(void) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// IM-2013-10-08: [[ FullscreenMode ]] Ensure rect of resizable stacks is within min/max width & height
+MCRectangle MCStack::constrainstackrect(const MCRectangle &p_rect)
+{
+	if (!getflag(F_RESIZABLE))
+		return p_rect;
+		
+	uint32_t t_width, t_height;
+	t_width = MCMax(p_rect.width, minwidth);
+	t_height = MCMax(p_rect.height, minheight);
+	
+	t_width = MCMin(p_rect.width, maxwidth);
+	t_height = MCMin(p_rect.height, maxheight);
+	
+	return MCRectangleMake(p_rect.x, p_rect.y, t_width, t_height);
+}
+
+// IM-2013-10-08: [[ FullscreenMode ]] Ensure rect of resizable stacks is within screen bounds
+MCRectangle MCStack::constrainstackrecttoscreen(const MCRectangle &p_rect)
+{
+	if (!getflag(F_RESIZABLE))
+		return p_rect;
+		
+	uint32_t t_width, t_height;
+	const MCDisplay *t_display;
+	t_display = MCscreen->getnearestdisplay(p_rect);
+	
+	MCRectangle t_screenrect;
+	t_screenrect = MCscreen->fullscreenrect(t_display);
+		
+	t_width = MCMin(p_rect.width, t_screenrect.width);
+	t_height = MCMin(p_rect.height, t_screenrect.height);
+	
+	return MCRectangleMake(p_rect.x, p_rect.y, t_width, t_height);
+}
+
+////////////////////////////////////////////////////////////////////////////////

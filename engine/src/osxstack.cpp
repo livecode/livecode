@@ -507,19 +507,12 @@ void MCStack::realize()
 	start_externals();
 }
 
-void MCStack::sethints()
+void MCStack::setsizehints()
 {
-	if (!opened || MCnoui || window == DNULL) //not opened or no user interface
-		return;
-	if (flags & F_RESIZABLE)
-	{
-		rect.width = MCU_max(minwidth, rect.width);
-		rect.width = MCU_min(maxwidth, rect.width);
-		rect.width = MCU_min(MCscreen->getwidth(), rect.width);
-		rect.height = MCU_max(minheight, rect.height);
-		rect.height = MCU_min(maxheight, rect.height);
-		rect.height = MCU_min(MCscreen->getheight(), rect.height);
-	}
+}
+
+void MCStack::sethints(void)
+{
 }
 
 MCRectangle MCStack::device_getwindowrect() const

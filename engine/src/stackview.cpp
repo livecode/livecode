@@ -186,13 +186,19 @@ MCRectangle MCStack::view_getrect(void)
 
 MCRectangle MCStack::view_constrainstackviewport(const MCRectangle &p_rect)
 {
+	// IM-2013-10-08: [[ FullscreenMode ]] Constrain resizable stacks here rather than
+	// in MCStack::sethints()
+
+	MCRectangle t_stackrect;
+	t_stackrect = constrainstackrect(p_rect);
+	
 	// MW-2012-10-04: [[ Bug 10436 ]] Make sure we constrain stack size to screen size
 	//   if in fullscreen mode.
 	MCRectangle t_new_rect;
 	if (view_getfullscreen())
 	{
 		const MCDisplay *t_display;
-		t_display = MCscreen -> getnearestdisplay(p_rect);
+		t_display = MCscreen -> getnearestdisplay(t_stackrect);
 
 		switch (m_view_fullscreenmode)
 		{
@@ -203,14 +209,14 @@ MCRectangle MCStack::view_constrainstackviewport(const MCRectangle &p_rect)
 
 		case kMCStackFullscreenNoScale:
 			// center rect on screen
-			t_new_rect = MCU_center_rect(MCscreen->fullscreenrect(t_display), p_rect);
+			t_new_rect = MCU_center_rect(MCscreen->fullscreenrect(t_display), t_stackrect);
 			break;
 
 		case kMCStackFullscreenExactFit:
 		case kMCStackFullscreenShowAll:
 		case kMCStackFullscreenNoBorder:
 			// scaling modes should return the requested stack rect
-			t_new_rect = p_rect;
+			t_new_rect = t_stackrect;
 			break;
 
 		default:
@@ -218,7 +224,7 @@ MCRectangle MCStack::view_constrainstackviewport(const MCRectangle &p_rect)
 		}
 	}
 	else
-		t_new_rect = p_rect;
+		t_new_rect = constrainstackrecttoscreen(t_stackrect);
 
 	return t_new_rect;
 }
@@ -292,6 +298,11 @@ MCRectangle MCStack::view_setstackviewport(const MCRectangle &p_rect)
 		MCRectangle t_device_rect;
 		t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(t_view_rect));
 		
+		// IM-2013-10-08: [[ FullscreenMode ]] Update view rect before calling setsizehints()
+		m_view_rect = t_view_rect;
+
+		// IM-2013-10-08: [[ FullscreenMode ]] Update window size hints when setting the view geometry.
+		setsizehints();
 		device_setgeom(t_device_rect);
 		
 		if (m_view_tilecache != nil)
@@ -300,11 +311,12 @@ MCRectangle MCStack::view_setstackviewport(const MCRectangle &p_rect)
 	
 	// IM-2013-10-03: [[ FullscreenMode ]] if the transform has changed, redraw everything
 	if (!MCGAffineTransformIsEqual(t_transform, m_view_transform))
+	{
+		m_view_transform = t_transform;
 		dirtyall();
+	}
 	
-	m_view_rect = t_view_rect;
 	m_view_stack_rect = t_stack_rect;
-	m_view_transform = t_transform;
 	
 	return m_view_stack_rect;
 }
@@ -328,14 +340,14 @@ void MCStack::view_render(MCGContextRef p_target, MCRectangle p_rect)
 		MCGContextSave(p_target);
 		MCGContextConcatCTM(p_target, m_view_transform);
 		
-		if (m_view_redraw)
+		if (!MCU_rect_in_rect(t_update_rect, m_view_stack_rect))
 		{
-			// IM-2013-09: [[ FullscreenMode ]] draw the view backdrop
+			// IM-2013-10-08: [[ FullscreenMode ]] draw the view backdrop if the render area
+			// falls outside the stack rect
 			/* OVERHAUL - REVISIT: currently just draws black behind the stack area */
 			MCGContextAddRectangle(p_target, MCRectangleToMCGRectangle(t_update_rect));
 			MCGContextSetFillRGBAColor(p_target, 0.0, 0.0, 0.0, 1.0);
 			MCGContextFill(p_target);
-			m_view_redraw = false;
 		}
 
 		t_update_rect = MCU_intersect_rect(t_update_rect, MCRectangleMake(0, 0, m_view_stack_rect.width, m_view_stack_rect.height));
@@ -364,7 +376,13 @@ void MCStack::view_updatestack(MCRegionRef p_region)
 	// IM-2013-09-30: [[ FullscreenMode ]] If view background needs redrawn, add view rect
 	// (in device coords) to redraw region
 	if (view_getfullscreen() && m_view_redraw)
+	{
+		// IM-2013-10-08: [[ FullscreenMode ]] As we're now checking the redraw rect to
+		// determine when to draw the background, we can unset m_view_redraw once we've
+		// added the view rect to the update region.
 		MCRegionIncludeRect(t_view_region, MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(m_view_rect)));
+		m_view_redraw = false;
+	}
 	
 	device_updatewindow(t_view_region);
 

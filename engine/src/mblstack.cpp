@@ -99,6 +99,10 @@ void MCStack::realize(void)
 	setextendedstate(true, ECS_DONTDRAW);
 }
 
+void MCStack::setsizehints(void)
+{
+}
+
 void MCStack::sethints(void)
 {
 }

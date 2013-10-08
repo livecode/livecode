@@ -379,6 +379,11 @@ public:
 	
 	//////////
 	
+	// IM-2013-10-08: [[ FullscreenMode ]] Ensure rect of resizable stacks is within min/max width & height
+	MCRectangle constrainstackrect(const MCRectangle &p_rect);
+	// IM-2013-10-08: [[ FullscreenMode ]] Ensure rect of resizable stacks is within screen bounds
+	MCRectangle constrainstackrecttoscreen(const MCRectangle &p_rect);
+	
     // IM-2012-05-15: [[ Effective Rect ]] get the rect of the window (including decorations)
     MCRectangle getwindowrect() const;
 	
@@ -634,6 +639,8 @@ public:
 	MCStack *findchildstackd(Window w,uint2 &ccount, uint2 cindex);
 	void realize();
 	void sethints();
+	// IM-2013-10-08: [[ FullscreenMode ]] Separate out window sizing hints
+	void setsizehints();
 	void destroywindowshape();
 
 	// MW-2011-08-17: [[ Redraw ]] Mark the whole content area as needing redrawn.
