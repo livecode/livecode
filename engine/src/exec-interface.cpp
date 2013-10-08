@@ -2917,11 +2917,12 @@ void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCObject *p_object, MCStrin
 		MCAutoStringRef t_name;
 		p_object->names(P_NAME, &t_name);
 		MCdefaultstackptr->setstringprop(ctxt, 0, P_MAIN_STACK, False, *t_name);
-		/*{
+		if (ctxt . HasError())
+		{
 			delete MCdefaultstackptr;
 			ctxt . LegacyThrow(EE_CREATE_BADBGORCARD);
 			return;
-		}*/
+		}
 	}
 
 	MCtemplatestack->setflag(wasvisible, F_VISIBLE);
