@@ -147,7 +147,8 @@ static MCIPhoneImagePickerDialog *s_image_picker = nil;
 	
 	// 19/10/2010 IM - fix crash in iOS4.0
 	// UIPopoverController only available on iPad but NSClassFromString returns non-nil in iOS4 phone/pod
-	id t_popover;
+    // AL-2013-10-04 [[ Bug 11255 ]] Uninitialised variable can cause crash in iPhonePickPhoto
+	id t_popover = nil;
 	if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad)
 		t_popover = NSClassFromString(@"UIPopoverController");
 	
