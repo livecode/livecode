@@ -115,12 +115,15 @@ bool MCPurchaseStateToString(MCPurchaseState p_state, const char *&r_string)
 	return false;
 }
 
-bool MCPurchaseList(MCExecPoint& ep)
-{    
+bool MCPurchaseList(MCStringRef& r_string)
+{   
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
 	for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != NULL; t_purchase = t_purchase->next)
-        ep.concatuint(t_purchase -> id, EC_RETURN, ep.isempty());
+		MCListAppendInteger(*t_list, t_purchase -> id);
 	
-	return true;
+	return MCListCopyAsString(*t_list, r_string);	
 }
 
 bool MCPurchaseInit(MCPurchase *p_purchase, MCStringRef p_product_id, void *p_context);

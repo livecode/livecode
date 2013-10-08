@@ -37,6 +37,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 bool MCSystemCreateLocalNotification (MCStringRef p_alert_body, MCStringRef p_alert_action, MCStringRef p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value, int32_t &r_id)
 {
     MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(ep);
     int t_message_id = 1;
 	Class t_cls = NSClassFromString (@"UILocalNotification");
     if (t_cls == nil)
@@ -54,7 +55,7 @@ bool MCSystemCreateLocalNotification (MCStringRef p_alert_body, MCStringRef p_al
     if (p_alert_body == nil || MCStringGetLength(p_alert_body) == 0)
         t_local_notification.alertBody = nil;
     else
-        t_local_notification.alertBody = [NSString stringWithCString: MCStringGetCString(p_alert_body) encoding: NSMacOSRomanStringEncoding];
+        t_local_notification.alertBody = [NSString stringWithMCStringRef: p_alert_body];
     if (p_alert_action == nil || MCStringGetLength(p_alert_action) == 0)
     {
         t_local_notification.alertAction = nil;
@@ -62,13 +63,13 @@ bool MCSystemCreateLocalNotification (MCStringRef p_alert_body, MCStringRef p_al
     }
     else
     {
-        t_local_notification.alertAction = [NSString stringWithCString: MCStringGetCString(p_alert_action) encoding: NSMacOSRomanStringEncoding];
+        t_local_notification.alertAction = [NSString stringWithMCStringRef: p_alert_action];
         t_local_notification.hasAction = YES;
     }
     // Create the dictionary.
     NSDictionary *t_dictionary;
     if (MCStringGetLength(p_user_info) > 0)
-        t_dictionary = [NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithCString: MCStringGetCString(p_user_info) encoding: NSMacOSRomanStringEncoding],@"payload",[NSString stringWithFormat:@"%i", t_message_id],@"notificationId", nil];
+        t_dictionary = [NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithMCStringRef: p_user_info],@"payload",[NSString stringWithFormat:@"%i", t_message_id],@"notificationId", nil];
     else
         t_dictionary = [NSDictionary dictionaryWithObject:[NSString stringWithFormat:@"%i", t_message_id] forKey: @"notificationId"];
     t_local_notification.userInfo = t_dictionary;
@@ -78,9 +79,13 @@ bool MCSystemCreateLocalNotification (MCStringRef p_alert_body, MCStringRef p_al
     }
     t_local_notification.applicationIconBadgeNumber = p_badge_value;
     // Convert the current datatime to an NSDate
-    if (!MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, p_date))
+	MCAutoValueRef t_date;
+    if (!MCD_convert_from_datetime(ctxt, p_date, CF_SECONDS, CF_SECONDS, &t_date))
         return false;
-    t_local_notification.fireDate = [NSDate dateWithTimeIntervalSince1970:ep.getnvalue()];
+	integer_t t_date_secs;
+	if (!ctxt.ConvertToInteger(*t_date, t_date_secs))
+		return false;
+    t_local_notification.fireDate = [NSDate dateWithTimeIntervalSince1970:t_date_secs];
 	[[UIApplication sharedApplication] scheduleLocalNotification: t_local_notification];
 	[t_local_notification release];
     r_id = t_message_id;

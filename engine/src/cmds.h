@@ -119,7 +119,7 @@ public:
 	{
 		source = NULL;
 	}
-	const char *lookup(const MCString &s);
+	const char *lookup(MCStringRef s);
 	virtual ~MCDoMenu();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual Exec_stat exec(MCExecPoint &);
@@ -398,7 +398,7 @@ public:
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual Exec_stat exec(MCExecPoint &);
 	static Exec_stat sort_container(MCExecPoint &p_exec_point, Chunk_term p_type, Sort_type p_direction, Sort_type p_form, MCExpression *p_by);
-	static void additem(MCExecPoint &ep, MCSortnode *&items, uint4 &nitems, Sort_type form, MCString &s, MCExpression *by);
+	static void additem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, Sort_type form, MCValueRef p_value, MCExpression *by);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -1441,7 +1441,7 @@ public:
 		sig = NULL;
 		pname = NULL;
 	}
-	int4 lookup(const MCString &s);
+	int4 lookup(MCStringRef s);
 	virtual ~MCKill();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual Exec_stat exec(MCExecPoint &);
