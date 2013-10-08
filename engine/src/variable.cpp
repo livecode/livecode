@@ -297,7 +297,10 @@ bool MCVariable::set(MCExecContext& ctxt, MCValueRef p_value)
 
 bool MCVariable::set(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length)
 {
-    if (setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), p_value))
+    MCAutoValueRef t_value;
+    MCValueCopy(p_value, &t_value);
+    
+    if (setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), *t_value))
     {
         synchronize(ctxt, p_value, true);
         return true;
@@ -440,11 +443,11 @@ bool MCVariable::remove(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_lengt
 		if (is_env)
 		{
 			if (!isdigit(MCNameGetCharAtIndex(name, 1)) && MCNameGetCharAtIndex(name, 1) != '#')
-            {
-                MCAutoStringRef t_string;
-                MCStringCopySubstring(MCNameGetString(name), MCRangeMake(1, MCStringGetLength(MCNameGetString(name)) - 1), &t_string);
-				MCS_unsetenv(*t_string);
-            }
+			{
+				MCAutoStringRef t_env;
+				/* UNCHECKED */ MCStringCopySubstring(MCNameGetString(name), MCRangeMake(1, MCStringGetLength(MCNameGetString(name))), &t_env);
+				MCS_unsetenv(*t_env);
+			}
 		}
 	}
     
@@ -688,9 +691,9 @@ void MCVariable::synchronize(MCExecContext& ctxt, MCValueRef p_value, bool p_not
 			MCAutoStringRef t_string;
 			if (ctxt . ConvertToString(p_value, &t_string))
             {
-                MCAutoStringRef t_name;
-                MCStringCopySubstring(MCNameGetString(name), MCRangeMake(1, MCStringGetLength(MCNameGetString(name)) - 1), &t_string);
-				MCS_setenv(*t_name, *t_string);
+                MCAutoStringRef t_env;
+				/* UNCHECKED */ MCStringCopySubstring(MCNameGetString(name), MCRangeMake(1, MCStringGetLength(MCNameGetString(name))), &t_env);
+				MCS_setenv(*t_env, *t_string);
             }
 		}
 	}
@@ -946,6 +949,28 @@ Exec_stat MCVarref::eval(MCExecPoint& ep)
 	return t_container -> eval(ep);
 }
 
+bool MCVarref::eval(MCExecContext& ctxt, MCValueRef& r_value)
+{
+	if (dimensions == 0)
+	{
+		MCVariable *t_resolved_ref;
+		
+		t_resolved_ref = fetchvar(ctxt);
+        
+		t_resolved_ref -> eval(ctxt . GetCaseSensitive(), r_value);
+        
+        return true;
+	}
+    
+	MCAutoPointer<MCContainer> t_container;
+	if (!resolve(ctxt, &t_container))
+		return false;
+    
+	t_container -> eval(ctxt . GetCaseSensitive(), r_value);
+    
+    return true;
+}
+
 Exec_stat MCVarref::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
 {
 	if (dimensions == 0)
@@ -989,7 +1014,6 @@ MCVarref *MCVarref::getrootvarref(void)
 {
 	return this;
 }
-
 
 bool MCVarref::rootmatches(MCVarref *p_other) const
 {
@@ -1153,6 +1177,24 @@ Exec_stat MCVarref::dofree(MCExecPoint &ep)
 	return t_container -> remove(ep);
 }
 
+bool MCVarref::dofree(MCExecContext& ctxt)
+{
+	if (dimensions == 0)
+	{
+		MCVariable *t_var;
+		
+		t_var = fetchvar(ctxt);
+        
+		return t_var -> remove(ctxt);
+	}
+	
+	MCAutoPointer<MCContainer> t_container;
+	if (resolve(ctxt, &t_container) != ES_NORMAL)
+		return ES_ERROR;
+    
+	return t_container -> remove(ctxt);
+}
+
 //
 
 Exec_stat MCVarref::resolve(MCExecPoint& ep, MCContainer*& r_container)
@@ -1273,7 +1315,7 @@ bool MCVarref::resolve(MCExecContext& ctxt, MCContainer*& r_container)
 	Exec_stat t_stat;
 	t_stat = ES_NORMAL;
     
-	MCExecPoint ep(nil, nil, nil);
+	MCExecPoint& ep = ctxt . GetEP();
 	for(uindex_t i = 0; i < dimensions && t_stat == ES_NORMAL; i++)
 	{
 		t_stat = t_dimensions[i] -> eval(ep);

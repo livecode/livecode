@@ -284,9 +284,9 @@ bool MCArrayDataToCalendar (MCArrayRef p_array, MCCalendar& r_calendar)
         if (t_success)
         {
             MCExecPoint ep(nil, nil, nil);
-            
-            ep.setint(MCNumberFetchAsInteger((MCNumberRef)*t_int_startdate));
-            t_success = MCD_convert_to_datetime(ep, CF_SECONDS, CF_SECONDS, r_calendar.mcstartdate);
+            MCExecContext ctxt(ep);
+			
+            t_success = MCD_convert_to_datetime(ctxt, (MCNumberRef)*t_int_startdate, CF_SECONDS, CF_SECONDS, r_calendar.mcstartdate);
         }
     }
     
@@ -301,9 +301,9 @@ bool MCArrayDataToCalendar (MCArrayRef p_array, MCCalendar& r_calendar)
         if (t_success)
         {
             MCExecPoint ep(nil, nil, nil);
-            
-            ep.setint(MCNumberFetchAsInteger((MCNumberRef)*t_int_enddate));
-            t_success = MCD_convert_to_datetime(ep, CF_SECONDS, CF_SECONDS, r_calendar.mcenddate);
+            MCExecContext ctxt(ep);
+			
+            t_success = MCD_convert_to_datetime(ctxt, *t_int_enddate, CF_SECONDS, CF_SECONDS, r_calendar.mcenddate);
         }
     }
     
@@ -502,16 +502,14 @@ bool MCCalendarToArrayData (MCExecContext &ctxt, MCCalendar p_calendar, MCArrayR
     if (t_success)
     {
         // Convert the start date to seconds
-        int32_t t_secs;
-        if (MCD_convert_from_datetime(ctxt.GetEP(), CF_SECONDS, CF_SECONDS, p_calendar.mcstartdate))
+		MCAutoValueRef t_time;
+        if (MCD_convert_from_datetime(ctxt, p_calendar.mcstartdate, CF_SECONDS, CF_SECONDS, &t_time))
         {
-            t_secs = ctxt.GetEP().getnvalue();
-            
             MCNewAutoNameRef t_key_startdate;
             MCNameCreateWithCString("startdate", &t_key_startdate);
             MCAutoNumberRef t_int_startdate;
             
-            t_success = MCNumberCreateWithInteger(t_secs, &t_int_startdate);
+            t_success = ctxt.ConvertToNumber(*t_time, &t_int_startdate);
             
             if (t_success)
                 t_success = MCArrayStoreValue(r_result, false, *t_key_startdate, *t_int_startdate);
@@ -521,16 +519,14 @@ bool MCCalendarToArrayData (MCExecContext &ctxt, MCCalendar p_calendar, MCArrayR
     if (t_success)
     {
         // Convert the start date to seconds
-        int32_t t_secs;
-        if (MCD_convert_from_datetime(ctxt.GetEP(), CF_SECONDS, CF_SECONDS, p_calendar.mcenddate))
+		MCAutoValueRef t_time;
+        if (MCD_convert_from_datetime(ctxt, p_calendar.mcenddate, CF_SECONDS, CF_SECONDS, &t_time))
         {
-            t_secs = ctxt.GetEP().getnvalue();
-            
             MCNewAutoNameRef t_key_enddate;
             MCNameCreateWithCString("enddate", &t_key_enddate);
             MCAutoNumberRef t_int_enddate;
             
-            t_success = MCNumberCreateWithInteger(t_secs, &t_int_enddate);
+            t_success = ctxt.ConvertToNumber(*t_time, &t_int_enddate);
             
             if (t_success)
                 t_success = MCArrayStoreValue(r_result, false, *t_key_enddate, *t_int_enddate);

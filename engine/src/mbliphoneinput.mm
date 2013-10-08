@@ -569,7 +569,7 @@ void MCiOSInputControl::SetText(MCExecContext& ctxt, MCStringRef p_string)
     if (t_field)
     {
         NSString *t_string;
-        t_string = [NSString stringWithCString: MCStringGetCString(p_string)];
+        t_string = [NSString stringWithMCStringRef: p_string];
         [t_field setText: t_string];
     }
 }
@@ -595,7 +595,7 @@ void MCiOSInputControl::SetFontName(MCExecContext& ctxt, MCStringRef p_font)
     if (t_field)
     {
         NSString *t_string;
-        t_string = [NSString stringWithCString: MCStringGetCString(p_font)];
+        t_string = [NSString stringWithMCStringRef: p_font];
         [t_field setFont: [UIFont fontWithName: t_string size: [[t_field font] pointSize]]];
     }
 }

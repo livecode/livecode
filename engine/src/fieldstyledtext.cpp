@@ -573,11 +573,13 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	if (!ep . isempty())
 	{
 		uint4 flags;
-		char *fname;
+		MCAutoStringRef fname;
 		uint2 height;
 		uint2 size;
 		uint2 style;
-		MCF_parsetextatts(P_TEXT_STYLE, ep . getsvalue(), flags, fname, height, size, style);
+        MCAutoStringRef t_value;
+        ep . copyasstringref(&t_value);
+		MCF_parsetextatts(P_TEXT_STYLE, *t_value, flags, &fname, height, size, style);
 		t_block -> setatts(P_TEXT_STYLE, (void *)style);
 	}
 

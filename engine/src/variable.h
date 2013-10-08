@@ -1014,6 +1014,7 @@ public:
 	virtual ~MCVarref();
 	
 	virtual Exec_stat eval(MCExecPoint &);
+    bool eval(MCExecContext& ctxt, MCValueRef& r_value);
 	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
 	virtual MCVariable *evalvar(MCExecPoint& ep);
 	
@@ -1038,7 +1039,8 @@ public:
 	void clear();
 	void clearuql();
 	Exec_stat dofree(MCExecPoint &);
-	
+    bool dofree(MCExecContext& ctxt);
+    
 	bool getisplain(void) const { return isplain; }
 	
 private:
