@@ -1332,7 +1332,7 @@ Parse_stat MCIdeScriptStrip::parse(MCScriptPoint& p_script)
 	return t_status;
 }
 
-static MCExecPoint *s_strip_paragraph_ep;
+static MCStringRef s_strip_paragraph;
 
 static void strip_paragraph(void *p_context, MCColourizeClass p_class, uint4 p_index, uint4 t_start, uint4 t_end)
 {
@@ -1340,7 +1340,7 @@ static void strip_paragraph(void *p_context, MCColourizeClass p_class, uint4 p_i
 	t_paragraph = (MCParagraph *)p_context;
 
 	bool t_first;
-	t_first = s_strip_paragraph_ep -> getsvalue() . getlength() == 0;
+	t_first = MCStringIsEmpty(s_strip_paragraph);
 
 	switch(p_class)
 	{
@@ -1352,7 +1352,8 @@ static void strip_paragraph(void *p_context, MCColourizeClass p_class, uint4 p_i
 	break;
 	
 	default:
-		s_strip_paragraph_ep -> concatchars(t_paragraph -> gettext() + t_start, t_end - t_start, EC_SPACE, t_first);
+		/* UNCHECKED */ MCStringAppendFormat(s_strip_paragraph, "%s%.*s", t_first ? "" : " ", 
+											 t_end - t_start, t_paragraph->gettext() + t_start);
 	break;
 	}
 }
@@ -1373,11 +1374,11 @@ Exec_stat MCIdeScriptStrip::exec(MCExecPoint& p_exec)
 		t_state = MCIdeState::Find(t_target);
 
 	if (t_status == ES_NORMAL && t_target -> getparagraphs() != NULL)
-	{
-		MCExecPoint ep(NULL, NULL, NULL);
-		s_strip_paragraph_ep = &ep;
+	{;
+		MCExecContext ctxt(p_exec);
+		/* UNCHECKED */ MCStringCreateMutable(0, s_strip_paragraph);
 		TokenizeField(t_target, t_state, f_type, t_start, t_end, strip_paragraph, false);
-		f_output -> set(ep);
+		f_output -> set(ctxt, s_strip_paragraph);
 	}
 
 	return t_status;
