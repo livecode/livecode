@@ -150,18 +150,12 @@ void MCDateTimeSetTwelveTime(MCExecContext &ctxt, bool p_value)
 
 void MCDateTimeGetDate(MCExecContext &ctxt, Properties p_type, MCStringRef& r_value)
 {
-	if (MCD_date(ctxt, p_type, r_value))
-		return;
-
-	ctxt . Throw();
+	MCD_date(ctxt, p_type, r_value);
 }
 
 void MCDateTimeGetTime(MCExecContext &ctxt, Properties p_type, MCStringRef& r_value)
 {
-	if (MCD_time(ctxt, p_type, r_value))
-		return;
-
-	ctxt . Throw();
+	MCD_time(ctxt, p_type, r_value);
 }
 
 void MCDateTimeGetMilliseconds(MCExecContext &ctxt, double& r_value)
@@ -214,8 +208,5 @@ void MCDateTimeGetWeekDayNames(MCExecContext &ctxt, Properties p_type, MCStringR
 
 void MCDateTimeGetDateFormat(MCExecContext &ctxt, Properties p_type, MCStringRef& r_value)
 {
-	if (MCD_dateformat(ctxt, p_type, r_value))
-		return;
-
-	ctxt.Throw();
+	MCD_dateformat(ctxt, p_type, r_value);
 }

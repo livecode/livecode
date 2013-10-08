@@ -51,9 +51,11 @@ int32_t MCFontGetDescent(MCFontRef font);
 
 int32_t MCFontMeasureText(MCFontRef font, MCStringRef p_text);
 int32_t MCFontMeasureText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode);
+int32_t MCFontMeasureTextSubstring(MCFontRef font, MCStringRef p_text, MCRange p_range);
 
 void MCFontDrawText(MCFontRef font, MCStringRef p_text, MCContext *context, int32_t x, int32_t y, bool image);
 void MCFontDrawText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode, MCContext *context, int32_t x, int32_t y, bool image);
+void MCFontDrawTextSubstring(MCFontRef font, MCStringRef p_text, MCRange p_range, MCContext *context, int32_t x, int32_t y, bool image);
 
 MCFontStyle MCFontStyleFromTextStyle(uint2 text_style);
 uint16_t MCFontStyleToTextStyle(MCFontStyle font_style);
@@ -130,21 +132,21 @@ enum Font_textstyle {
 
 extern uint2 MCF_getweightint(uint2 style);
 extern const char *MCF_getweightstring(uint2 style);
-extern Boolean MCF_setweightstring(uint2 &style, const MCString &data);
+extern Boolean MCF_setweightstring(uint2 &style, MCStringRef data);
 extern uint2 MCF_getexpandint(uint2 style);
 extern const char *MCF_getexpandstring(uint2 style);
-extern Boolean MCF_setexpandstring(uint2 &style, const MCString &data);
+extern Boolean MCF_setexpandstring(uint2 &style, MCStringRef data);
 extern const char *MCF_getslantshortstring(uint2 style);
 extern const char *MCF_getslantlongstring(uint2 style);
-extern Boolean MCF_setslantlongstring(uint2 &style, const MCString &data);
-extern Exec_stat MCF_parsetextatts(Properties which, const MCString &data,
-	                                   uint4 &flags, char *&fname,
+extern Boolean MCF_setslantlongstring(uint2 &style, MCStringRef data);
+extern Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
+	                                   uint4 &flags, MCStringRef &fname,
 	                                   uint2 &height, uint2 &size, uint2 &style);
 extern Exec_stat MCF_unparsetextatts(Properties which, MCExecPoint &ep,
-	                                     uint4 flags, const char *name,
+	                                     uint4 flags, MCStringRef name,
 	                                     uint2 height, uint2 size, uint2 style);
 
-extern Exec_stat MCF_parsetextstyle(const MCString &data, Font_textstyle &style);
+extern Exec_stat MCF_parsetextstyle(MCStringRef data, Font_textstyle &style);
 extern const char *MCF_unparsetextstyle(Font_textstyle style);
 extern void MCF_changetextstyle(uint2& x_style_set, Font_textstyle p_style, bool p_new_state);
 extern bool MCF_istextstyleset(uint2 styleset, Font_textstyle style);
