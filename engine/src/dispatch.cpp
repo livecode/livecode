@@ -1017,14 +1017,14 @@ void MCDispatch::wmfocus_stack(MCStack *target, int2 x, int2 y)
 	MCPoint t_stackloc;
 	if (menu != NULL)
 	{
-		t_stackloc = menu->getstack()->view_viewtostackloc(MCPointMake(x, y));
+		t_stackloc = menu->getstack()->windowtostackloc(MCPointMake(x, y));
 		menu->mfocus(t_stackloc.x, t_stackloc.y);
 	}
 	else
 	{
 		if (target != NULL)
 		{
-			t_stackloc = target->view_viewtostackloc(MCPointMake(x, y));
+			t_stackloc = target->windowtostackloc(MCPointMake(x, y));
 			target->mfocus(t_stackloc.x, t_stackloc.y);
 		}
 	}
@@ -1205,14 +1205,18 @@ MCDragAction MCDispatch::wmdragmove(Window w, int2 x, int2 y)
 	// changes.
 	static uint4 s_old_modifiers = 0;
 
-	/* OVERHAUL - REVISIT [[ FullscreenMode ]] - mouse loc view -> stack? */
 	MCStack *target = findstackd(w);
-	if (MCmousex != x || MCmousey != y || MCmodifierstate != s_old_modifiers)
+	
+	// IM-2013-10-08: [[ FullscreenMode ]] Translate mouse location to stack coords
+	MCPoint t_mouseloc;
+	t_mouseloc = target->windowtostackloc(MCPointMake(x, y));
+	
+	if (MCmousex != t_mouseloc.x || MCmousey != t_mouseloc.y || MCmodifierstate != s_old_modifiers)
 	{
-		MCmousex = x;
-		MCmousey = y;
+		MCmousex = t_mouseloc.x;
+		MCmousey = t_mouseloc.y;
 		s_old_modifiers = MCmodifierstate;
-		target -> mfocus(x, y);
+		target -> mfocus(t_mouseloc.x, t_mouseloc.y);
 	}
 	return MCdragaction;
 }

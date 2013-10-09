@@ -465,13 +465,13 @@ void MCScreenDC::mfocus(EventRecord *event, Point p, Boolean dispatch, bool post
 				//   or not. This seems incorrect as the effect of an event should only be felt
 				//   after its dispatched so moving here.
 				mode_globaltolocal(p);
-				MCmousex = p.h;
-				MCmousey = p.v;
-				// MW-2011-09-12: [[ MacScroll ]] Adjust the y-coord by scroll position.
-				if (MCmousestackptr != nil)
-					MCmousey += MCmousestackptr -> getscroll();
+
+				// IM-2013-10-08: [[ FullscreenMode ]] Update mouseloc with MCscreen getters & setters
+				MCPoint t_mouseloc;
+				t_mouseloc = MCPointMake(p.h, p.v);
+				MCscreen->setmouseloc(MCmousestackptr, t_mouseloc);
 				
-				MCdispatcher->wmfocus(mousewindow, MCmousex, MCmousey);
+				MCdispatcher->wmfocus(mousewindow, t_mouseloc.x, t_mouseloc.y);
 				if (MCbuttonstate != 0 && !m_drag_click && (MCU_abs(MCmousex - MCclicklocx) >= MCdragdelta || MCU_abs(MCmousey - MCclicklocy) >= MCdragdelta))
 				{
 					m_drag_click = true;
@@ -982,16 +982,16 @@ Boolean MCScreenDC::dispatchevent(EventRecord &event, Boolean dispatch,
 						p.h = event.where.h;
 						p.v = event.where.v;
 						mode_globaltolocal(p);
-						MCclicklocx = p.h;
-						MCclicklocy = p.v;
-						// MW-2011-09-12: [[ MacScroll ]] Adjust the y-coord by scroll position.
-						if (MCmousestackptr != nil)
-							MCclicklocy += MCmousestackptr -> getscroll();
-						MCclickstackptr = MCmousestackptr;
+						
+						// IM-2013-10-08: [[ FullscreenMode ]] Update clickloc with MCscreen getters & setters
+						MCPoint t_clickloc;
+						t_clickloc = MCPointMake(p.h, p.v);
+						MCscreen->setclickloc(MCmousestackptr, t_clickloc);
+											  
 						tripleclick = doubleclick = False;
 						m_drag_click = false;
 						m_drag_event = event;
-						MCdispatcher->wmfocus(mousewindow, MCclicklocx, MCclicklocy);
+						MCdispatcher->wmfocus(mousewindow, t_clickloc.x, t_clickloc.y);
 						MCdispatcher->wmdown(mousewindow, mbutton);
 						lastMousePoint = event.where; //for checking the double click msg
 					}
@@ -1030,12 +1030,21 @@ Boolean MCScreenDC::dispatchevent(EventRecord &event, Boolean dispatch,
 			p.v = event.where.v;
 			mode_globaltolocal(p);
 			
-			// MW-2011-09-12: [[ MacScroll ]] Adjust the y-coord by scroll position.
-			if (MCmousestackptr != nil)
-				p . v += MCmousestackptr -> getscroll();	
+			MCPoint t_win_mouseloc;
+			t_win_mouseloc = MCPointMake(p.h, p.v);
 			
-			if (MCmousex != p.h || MCmousey != p.v)
-				MCdispatcher->wmfocus(mousewindow, p.h, p.v);
+			// IM-2013-10-08: [[ FullscreenMode ]] Update mouseloc with MCscreen getters & setters
+			MCPoint t_mouseloc;
+			t_mouseloc = t_win_mouseloc;
+			if (MCmousestackptr != nil)
+				t_mouseloc = MCmousestackptr->windowtostackloc(t_win_mouseloc);
+			
+			if (t_mouseloc.x != MCmousex || t_mouseloc.y != MCmousey)
+			{
+				MCscreen->setmouseloc(MCmousestackptr, t_win_mouseloc);
+				MCdispatcher->wmfocus(mousewindow, t_win_mouseloc.x, t_win_mouseloc.y);
+			}
+			
 			if (activewindow != MCtracewindow)
 			{
 				if (backdrop_active && (WindowPtr)mousewindow->handle.window == backdrop_window)

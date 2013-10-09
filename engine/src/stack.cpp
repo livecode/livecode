@@ -2845,22 +2845,38 @@ char *MCStack::resolve_filename(const char *filename)
 
 MCRectangle MCStack::recttoroot(const MCRectangle& p_rect)
 {
-	MCRectangle drect = p_rect;
-	MCRectangle srect;
-	srect = getrect();
-	drect.x += srect.x;
-	drect.y += srect.y - getscroll();
-	return drect;
+	// IM-2013-10-08: [[ FullscreenMode ]] Use view transform when converting stack -> global coords
+	MCRectangle t_view_rect;
+	t_view_rect = view_getrect();
+	
+	MCRectangle t_rect = p_rect;
+	t_rect.y -= getscroll();
+	
+	MCRectangle t_screen_rect;
+	t_screen_rect = MCRectangleGetTransformedBounds(t_rect, view_getviewtransform());
+	
+	t_screen_rect.x += t_view_rect.x;
+	t_screen_rect.y += t_view_rect.y;
+	
+	return t_screen_rect;
 }
 
 MCRectangle MCStack::rectfromroot(const MCRectangle& p_rect)
 {
-	MCRectangle drect = p_rect;
-	MCRectangle srect;
-	srect = getrect();
-	drect . x -= srect . x;
-	drect . y -= srect . y - getscroll();
-	return drect;
+	// IM-2013-10-08: [[ FullscreenMode ]] Use view transform when converting global -> stack coords
+	MCRectangle t_view_rect;
+	t_view_rect = view_getrect();
+	
+	MCRectangle t_screen_rect;
+	t_screen_rect = p_rect;
+	t_screen_rect.x -= t_view_rect.x;
+	t_screen_rect.y -= t_view_rect.y;
+	
+	MCRectangle t_rect;
+	t_rect = MCRectangleGetTransformedBounds(t_screen_rect, MCGAffineTransformInvert(view_getviewtransform()));
+	t_rect.y += getscroll();
+	
+	return t_rect;
 }
 
 // MW-2011-09-20: [[ Collision ]] The stack's shape is its rect. At some point it

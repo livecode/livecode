@@ -365,10 +365,12 @@ Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 				//   the mouseWindow, otherwise we get phantom mdowns!
 				mfocus(&tptr -> event, tptr -> event.where, False, false);
 				mode_globaltolocal(p);
-				MCmousex = p.h;
-				MCmousey = p.v;
-				if (MCmousestackptr != nil)
-					MCmousey += MCmousestackptr -> getscroll();
+				
+				// IM-2013-10-08: [[ FullscreenMode ]] Update mouseloc with MCscreen getters & setters
+				MCPoint t_mouseloc;
+				t_mouseloc = MCPointMake(p.h, p.v);
+				
+				MCscreen->setmouseloc(MCmousestackptr, t_mouseloc);
 				
 				uint2 mbutton;
 				MCclickstackptr = MCmousestackptr;

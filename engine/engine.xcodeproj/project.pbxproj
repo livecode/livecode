@@ -505,6 +505,7 @@
 		A71F80550F4F17C1003012FD /* LiveCode.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885610B80DEAC00200116 /* LiveCode.icns */; };
 		A71F80620F4F17F9003012FD /* StandaloneDoc.icns in Resources */ = {isa = PBXBuildFile; fileRef = A71F80610F4F17F9003012FD /* StandaloneDoc.icns */; };
 		E8252264174E2BF500055329 /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AF4895174D5563000B2F9E /* libskia.a */; };
+		E8988A8A17FDD5B700F640F4 /* stackview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8988A8917FDD5B700F640F4 /* stackview.cpp */; };
 		E8A554B11785A70600DABC1A /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C10D82916BFADB800D25197 /* libgraphics.a */; };
 		E8A554B21785A70600DABC1A /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AF4895174D5563000B2F9E /* libskia.a */; };
 		E8A554B51785A7C600DABC1A /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C10D82916BFADB800D25197 /* libgraphics.a */; };
@@ -1402,6 +1403,7 @@
 		E86A04F7142A49EF005ECD82 /* srvsession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = srvsession.h; path = src/srvsession.h; sourceTree = "<group>"; };
 		E86D598F170AEE0000060AED /* deploysecurity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = deploysecurity.h; path = src/deploysecurity.h; sourceTree = "<group>"; };
 		E86D59AE170AF0E000060AED /* deploysecurity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = deploysecurity.cpp; path = src/deploysecurity.cpp; sourceTree = "<group>"; };
+		E8988A8917FDD5B700F640F4 /* stackview.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stackview.cpp; path = src/stackview.cpp; sourceTree = "<group>"; };
 		E8A49103170F16D000769C7A /* name.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = name.h; path = src/name.h; sourceTree = "<group>"; };
 		E8A49104170F16D000769C7A /* rawarray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rawarray.h; path = src/rawarray.h; sourceTree = "<group>"; };
 		E8A49106170F179000769C7A /* region.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = region.h; path = src/region.h; sourceTree = "<group>"; };
@@ -2385,6 +2387,7 @@
 				4D587E410B8096FD00200116 /* stacke.cpp */,
 				4D587E6A0B8096FD00200116 /* stacklst.cpp */,
 				4D587E030B8096E600200116 /* stacklst.h */,
+				E8988A8917FDD5B700F640F4 /* stackview.cpp */,
 				4D61BD9C0CCF74C800D74FDB /* styledtext.cpp */,
 				4D61BDAC0CCF74EF00D74FDB /* styledtext.h */,
 				4D3772671507869A000B0EB0 /* textbuffer.h */,
@@ -3441,6 +3444,7 @@
 				E8B5BB1416DF77DF00CA02FB /* imagelist.cpp in Sources */,
 				E8AF465B174CF247000B2F9E /* surface.cpp in Sources */,
 				E8AE876C177B3F5C0041B7E0 /* cgimageutil.cpp in Sources */,
+				E8988A8A17FDD5B700F640F4 /* stackview.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

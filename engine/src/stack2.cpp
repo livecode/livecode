@@ -2667,3 +2667,28 @@ MCRectangle MCStack::constrainstackrecttoscreen(const MCRectangle &p_rect)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+MCPoint MCStack::windowtostackloc(const MCPoint &p_windowloc) const
+{
+	MCPoint t_stackloc;
+	t_stackloc = view_viewtostackloc(p_windowloc);
+	
+	// IM-2013-10-09: [[ FullscreenMode ]] Adjust loc by stack scroll
+	t_stackloc.y += getscroll();
+	
+	return t_stackloc;
+}
+
+MCPoint MCStack::stacktowindowloc(const MCPoint &p_stackloc) const
+{
+	MCPoint t_windowloc;
+	t_windowloc = p_stackloc;
+	
+	// IM-2013-10-09: [[ FullscreenMode ]] Adjust loc by stack scroll
+	t_windowloc.y -= getscroll();
+	t_windowloc = view_stacktoviewloc(t_windowloc);
+	
+	return t_windowloc;
+}
+
+////////////////////////////////////////////////////////////////////////////////

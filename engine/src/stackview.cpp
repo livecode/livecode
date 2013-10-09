@@ -158,7 +158,7 @@ void MCStack::view_setfullscreen(bool p_fullscreen)
 	m_view_fullscreen = p_fullscreen;
 }
 
-bool MCStack::view_getfullscreen(void)
+bool MCStack::view_getfullscreen(void) const
 {
 	// IM-2013-09-30: [[ FullscreenMode ]] return true if windows are always fullscreen on this display
 	return m_view_fullscreen || (MCscreen != nil && MCscreen->fullscreenwindows());
@@ -169,7 +169,7 @@ void MCStack::view_setfullscreenmode(MCStackFullscreenMode p_mode)
 	m_view_fullscreenmode = p_mode;
 }
 
-MCStackFullscreenMode MCStack::view_getfullscreenmode(void)
+MCStackFullscreenMode MCStack::view_getfullscreenmode(void) const
 {
 	return m_view_fullscreenmode;
 }
@@ -389,7 +389,7 @@ void MCStack::view_updatestack(MCRegionRef p_region)
 	MCRegionDestroy(t_view_region);
 }
 
-MCPoint MCStack::view_viewtostackloc(const MCPoint &p_loc)
+MCPoint MCStack::view_viewtostackloc(const MCPoint &p_loc) const
 {
 	if (!view_getfullscreen() || m_view_fullscreenmode == kMCStackFullscreenResize)
 		return p_loc;
@@ -398,7 +398,7 @@ MCPoint MCStack::view_viewtostackloc(const MCPoint &p_loc)
 	return MCGPointToMCPoint(MCGPointApplyAffineTransform(MCPointToMCGPoint(p_loc), t_transform));
 }
 
-MCPoint MCStack::view_stacktoviewloc(const MCPoint &p_loc)
+MCPoint MCStack::view_stacktoviewloc(const MCPoint &p_loc) const
 {
 	if (!view_getfullscreen() || m_view_fullscreenmode == kMCStackFullscreenResize)
 		return p_loc;

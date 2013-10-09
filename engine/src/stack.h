@@ -319,12 +319,12 @@ public:
 	// Set view to fullscreen 
 	void view_setfullscreen(bool p_fullscreen);
 	// Return whether this view is fullscreen or not
-	bool view_getfullscreen(void);
+	bool view_getfullscreen(void) const;
 
 	// Set scaling mode when fullscreen
 	void view_setfullscreenmode(MCStackFullscreenMode p_mode);
 	// Get the fullscreen scaling mode
-	MCStackFullscreenMode view_getfullscreenmode(void);
+	MCStackFullscreenMode view_getfullscreenmode(void) const;
 
 	// Request update of the given stack region
 	void view_updatestack(MCRegionRef p_region);
@@ -332,9 +332,9 @@ public:
 	void view_render(MCGContextRef p_target, MCRectangle p_rect);
 	
 	// Translate local stack coords to view space
-	MCPoint view_viewtostackloc(const MCPoint &p_loc);
+	MCPoint view_viewtostackloc(const MCPoint &p_loc) const;
 	// Translate view coords to local stack space
-	MCPoint view_stacktoviewloc(const MCPoint &p_loc);
+	MCPoint view_stacktoviewloc(const MCPoint &p_loc) const;
 
 	// Return the stack -> view coordinates transform
 	MCGAffineTransform view_getviewtransform(void) const;
@@ -386,6 +386,10 @@ public:
 	
     // IM-2012-05-15: [[ Effective Rect ]] get the rect of the window (including decorations)
     MCRectangle getwindowrect() const;
+	
+	// IM-2013-10-08: [[ FullscreenMode ]] transform to / from stack & window coords, taking stack scroll into account
+	MCPoint stacktowindowloc(const MCPoint &p_stackloc) const;
+	MCPoint windowtostackloc(const MCPoint &p_windowloc) const;
 	
 	void setgeom();
 	//////////
