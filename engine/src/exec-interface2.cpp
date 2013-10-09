@@ -1022,14 +1022,20 @@ void MCInterfaceSetDashes(MCExecContext& ctxt, MCStringRef p_dashes)
 {
 	uint1 *newdashes = NULL;
 	uint2 newndashes = 0;
-	char *svalue = strdup(MCStringGetCString(p_dashes));
-	char *eptr = svalue;
 	uint4 t_dash_len = 0;
-	while ((eptr = strtok(eptr, ",")) != NULL)
+	////////////////////////////////
+	MCAutoArrayRef t_tokens;
+	uindex_t t_ntokens = 0;
+	/* UNCHECKED */ MCStringSplit(p_dashes, MCSTR(","), nil, kMCStringOptionCompareExact, &t_tokens);
+	t_ntokens = MCArrayGetCount(*t_tokens);
+	for (uindex_t i=0; i<t_ntokens; i++)
 	{
+		MCValueRef t_tokenval = nil;
+		/* UNCHECKED */ MCArrayFetchValueAtIndex(*t_tokens, i + 1, t_tokenval);
+		MCStringRef t_token;
+		t_token = (MCStringRef)t_tokenval;
 		int2 i1;
-		MCString e = eptr;
-		if ((!MCU_stoi2(e, i1)) || i1 < 0)
+		if ((!MCU_stoi2(t_token, i1)) || i1 < 0)
 		{
 			ctxt . LegacyThrow(EE_GRAPHIC_NAN);
 			return;
@@ -1037,15 +1043,14 @@ void MCInterfaceSetDashes(MCExecContext& ctxt, MCStringRef p_dashes)
 		t_dash_len += i1;
 		MCU_realloc((char **)&newdashes, newndashes, newndashes + 1, sizeof(uint1));
 		newdashes[newndashes++] = (uint1)i1;
-		eptr = NULL;
 	}
+
 	if (newndashes > 0 && t_dash_len == 0)
 	{
 		delete newdashes;
 		newdashes = NULL;
 		newndashes = 0;
 	}
-	delete svalue;
 	delete MCdashes;
 	MCdashes = newdashes;
 	MCndashes = newndashes;
