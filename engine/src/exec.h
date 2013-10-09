@@ -559,6 +559,11 @@ public:
 	
 	//////////
 
+	void SetNumberFormat(uint2 p_fw, uint2 p_trailing, uint2 p_force)
+    {
+        m_ep . setnumberformat(p_fw, p_trailing, p_force);
+    }
+
 	void SetCaseSensitive(bool p_value)
 	{
 		m_ep . setcasesensitive(p_value);
