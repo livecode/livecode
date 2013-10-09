@@ -1860,12 +1860,13 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 			MCscreen->querymouse(trect.x, trect.y);
 		else
 		{
-			/* OVERHAUL - REVISIT [[ FullscreenMode ]] */
 			//WEBREV
-			MCRectangle srect = MCmousestackptr->getrect();
-			trect.x = MCmousex + srect.x;
-			trect.y = MCmousey + srect.y
-			          - MCmousestackptr->getscroll();
+			// IM-2013-10-09: [[ FullscreenMode ]] Reimplement using MCStack::stacktogloballoc
+			MCPoint t_globalloc;
+			t_globalloc = MCmousestackptr->stacktogloballoc(MCPointMake(MCmousex, MCmousey));
+
+			trect.x = t_globalloc.x;
+			trect.y = t_globalloc.y;
 		}
 		trect.width = trect.height = 1;
 		positionrel(trect, OP_ALIGN_LEFT, OP_ALIGN_TOP);
@@ -2689,6 +2690,36 @@ MCPoint MCStack::stacktowindowloc(const MCPoint &p_stackloc) const
 	t_windowloc = view_stacktoviewloc(t_windowloc);
 	
 	return t_windowloc;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPoint MCStack::globaltostackloc(const MCPoint &p_windowloc) const
+{
+	MCPoint t_loc;
+	t_loc = p_windowloc;
+
+	MCRectangle t_view_rect;
+	t_view_rect = view_getrect();
+
+	t_loc.x -= t_view_rect.x;
+	t_loc.y -= t_view_rect.y;
+	
+	return windowtostackloc(t_loc);
+}
+
+MCPoint MCStack::stacktogloballoc(const MCPoint &p_stackloc) const
+{
+	MCPoint t_loc;
+	t_loc = stacktowindowloc(p_stackloc);
+	
+	MCRectangle t_view_rect;
+	t_view_rect = view_getrect();
+
+	t_loc.x += t_view_rect.x;
+	t_loc.y += t_view_rect.y;
+	
+	return t_loc;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

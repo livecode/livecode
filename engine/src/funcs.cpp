@@ -2620,8 +2620,14 @@ Exec_stat MCGlobalLoc::eval(MCExecPoint &ep)
 		(EE_GLOBALLOC_NAP, line, pos, ep.getsvalue());
 		return ES_ERROR;
 	}
-	MCRectangle trect = MCdefaultstackptr->getrect();
-	ep.setpoint(x + trect.x, y + trect.y - MCdefaultstackptr->getscroll());
+
+	// IM-2013-10-09: [[ FullscreenMode ]] Update to use stack coord conversion methods
+	MCPoint t_loc;
+	t_loc = MCPointMake(x, y);
+	t_loc = MCdefaultstackptr->stacktogloballoc(t_loc);
+
+	ep.setpoint(t_loc.x, t_loc.y);
+
 	return ES_NORMAL;
 #endif /* MCGlobalLoc */
 }
@@ -3264,8 +3270,14 @@ Exec_stat MCLocalLoc::eval(MCExecPoint &ep)
 		(EE_LOCALLOC_NAP, line, pos, ep.getsvalue());
 		return ES_ERROR;
 	}
-	MCRectangle trect = MCdefaultstackptr->getrect();
-	ep.setpoint(x - trect.x, y - trect.y + MCdefaultstackptr->getscroll());
+
+	// IM-2013-10-09: [[ FullscreenMode ]] Update to use stack coord conversion methods
+	MCPoint t_loc;
+	t_loc = MCPointMake(x, y);
+	t_loc = MCdefaultstackptr->globaltostackloc(t_loc);
+
+	ep.setpoint(t_loc.x, t_loc.y);
+
 	return ES_NORMAL;
 #endif /* MCLocalLoc */
 }

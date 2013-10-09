@@ -314,7 +314,7 @@ public:
 	MCRectangle view_constrainstackviewport(const MCRectangle &p_viewport);
 	
 	// Return the rect of the view in logical screen coords.
-	MCRectangle view_getrect(void);
+	MCRectangle view_getrect(void) const;
 
 	// Set view to fullscreen 
 	void view_setfullscreen(bool p_fullscreen);
@@ -391,6 +391,10 @@ public:
 	MCPoint stacktowindowloc(const MCPoint &p_stackloc) const;
 	MCPoint windowtostackloc(const MCPoint &p_windowloc) const;
 	
+	// IM-2013-10-09: [[ FullscreenMode ]] transform to / from stack & global coords, taking stack scroll into account
+	MCPoint stacktogloballoc(const MCPoint &p_stackloc) const;
+	MCPoint globaltostackloc(const MCPoint &p_globalloc) const;
+
 	void setgeom();
 	//////////
 	

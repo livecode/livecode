@@ -179,7 +179,7 @@ MCGAffineTransform MCStack::view_getviewtransform(void) const
 	return m_view_transform;
 }
 
-MCRectangle MCStack::view_getrect(void)
+MCRectangle MCStack::view_getrect(void) const
 {
 	return m_view_rect;
 }
