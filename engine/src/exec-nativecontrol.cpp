@@ -729,7 +729,7 @@ void MCNativeControlExecSet(MCExecContext& ctxt, MCStringRef p_control_name, MCS
     
     if (t_info != nil && t_info -> setter == nil)
     {
-        MCeerror -> add(EE_OBJECT_SETNOPROP, 0, 0);
+        ctxt . LegacyThrow(EE_OBJECT_SETNOPROP);
         return;
     }
     
