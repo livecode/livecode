@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globdefs.h"
 #include "parsedef.h"
 #include "filedefs.h"
+#include "exec.h"
 #include "execpt.h"
 #include "mcerror.h"
 #include "util.h"
@@ -48,18 +49,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern void MCRemoteFileDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char * const p_types[], uint32_t p_type_count, const char *p_initial_folder, const char *p_initial_file, bool p_save, bool p_files);
-extern void MCRemoteFolderDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial);
-extern void MCRemoteColorDialog(MCExecPoint& ep, const char *p_title, uint32_t p_r, uint32_t p_g, uint32_t p_b);
+extern void MCRemoteFileDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint32_t p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file, bool p_save, bool p_files, MCStringRef &r_value);
+extern void MCRemoteFolderDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef &r_value);
+extern void MCRemoteColorDialog(MCStringRef p_title, uint32_t p_red, uint32_t p_green, uint32_t p_blue, bool& r_chosen, MCColor& r_chosen_color);
 
 ////////////////////////////////////////////////////////////////////////////////
 // MM-2012-08-30: [[ Bug 10293 ]] Reinstate old file dialog code for tiger
 
-int MCA_file_tiger(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options);
-int MCA_file_with_types_tiger(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options);
-int MCA_ask_file_tiger(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options);
-int MCA_ask_file_with_types_tiger(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options);
-int MCA_folder_tiger(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial, unsigned int p_options);
+int MCA_file_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef r_result);
+int MCA_file_with_types_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result);
+int MCA_ask_file_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result);
+int MCA_ask_file_with_types_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result);
+int MCA_folder_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -195,42 +196,44 @@ static void resolve_alias(NSString *p_path, NSString *&r_path_resolved)
 		r_path_resolved = [[NSString alloc] initWithString: p_path];
 }
 
-static char *folder_path_from_intial_path(const char *p_path)
+static bool folder_path_from_initial_path(MCStringRef p_path, MCStringRef &r_folder_path)
 {
     MCAutoStringRef t_path_str;
-    if (strrchr(p_path, '/') != nil)
+    uindex_t t_position = 0;
+    if (MCStringFirstIndexOfChar(p_path, '/', 0, kMCStringOptionCompareExact, t_position))
     {
-		MCAutoStringRef t_original_path;
-        /* UNCHECKED */ MCStringCreateWithCString(p_path, &t_original_path);
-        if (*p_path != '/')
-            MCS_resolvepath(*t_original_path, &t_path_str);
+        if (t_position != 0)
+            /* UNCHECKED */ MCS_resolvepath(p_path, &t_path_str);
         else
-			t_path_str = *t_original_path;
+            t_path_str = p_path;
     }
 
-    char *t_folder;
-    t_folder = nil;
+    MCAutoStringRef t_folder;
     
     if (*t_path_str != nil)
 	{
-		if (MCS_exists(*t_path_str, false))
-        /* UNCHECKED */ t_folder = strdup(MCStringGetCString(*t_path_str));
+        if (MCS_exists(*t_path_str, false))
+        {
+            r_folder_path = MCValueRetain(*t_path_str);
+            return true;
+        }
 		else
 		{
 			uindex_t t_index;
-			if (MCStringLastIndexOfChar(*t_path_str, '/', kMCStringOptionCompareExact, UINDEX_MAX, t_index))
+            if (MCStringLastIndexOfChar(*t_path_str, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_index))
 			{
 				MCAutoStringRef t_folder_str;
 				/* UNCHECKED */ MCStringCopySubstring(*t_path_str, MCRangeMake(0, t_index), &t_folder_str);
-				t_folder = strdup(MCStringGetCString(*t_folder_str));
+                r_folder_path = MCValueRetain(*t_folder_str);
+                return true;
 			}
 		}
 	}
 
-    return t_folder;    
+    return false;
 }
 
-static bool filter_to_type_list(const char *p_filter, char ***r_types, uint32_t &r_type_count)
+static bool filter_to_type_list(MCStringRef p_filter, MCStringRef *&r_types, uint32_t &r_type_count)
 {
 	bool t_success;
 	t_success = true;
@@ -241,44 +244,52 @@ static bool filter_to_type_list(const char *p_filter, char ***r_types, uint32_t 
 	uint32_t t_filter_length;
 	if (t_success)
 	{
-		t_filter_length = MCCStringLength(p_filter);
+        t_filter_length = MCStringGetLength(p_filter);
 		t_success = t_filter_length >= 4;
 	}
+    
+    if (!t_success)
+    {
+        r_type_count = 0;
+        return true;
+    }
 	
-	char *t_types;
-	t_types = nil;
+    MCStringRef t_types;
+    if (t_success)
+        t_success = MCStringCreateMutable(0, t_types);
+
 	if (t_success)
-		t_success = MCCStringClone("||", t_types);
+        t_success = MCStringAppendFormat(t_types, "||", strlen("||"));
 	
 	if (t_success)
-	{
-		const char *t_current_type;
-		t_current_type = p_filter;
+    {
+        uint32_t t_current_pos;
+        t_current_pos = 0;
 		for (uint32_t i = 0; t_success && i < t_filter_length / 4; i++)
 		{
 			if (i > 0)
-				t_success = MCCStringAppend(t_types, ",");
+                t_success = MCStringAppendNativeChar(t_types, ',');
 			if (t_success)
 			{
-				t_success = MCCStringAppendFormat(t_types, "%c%c%c%c", t_current_type[0], t_current_type[1], t_current_type[2], t_current_type[3]);
-				t_current_type += 4;
+                t_success = MCStringAppendSubstring(t_types, p_filter, MCRangeMake(t_current_pos, 4));
+                t_current_pos += 4;
 			}
 		}
 	}
 	
 	if (t_success)
-		t_success = MCMemoryNewArray(1, *r_types);
+		t_success = MCMemoryNewArray(1, r_types);
 	
 	if (t_success)
 	{
-		*r_types[0] = t_types;
+		r_types[0] = t_types;
 		r_type_count = 1;
 	}
 	else
 	{
 		r_type_count = 0;
-		/* UNCHECKED */ MCCStringFree(t_types);
-	}		
+        MCValueRelease(t_types);
+    }
 	
 	return t_success;	
 }
@@ -498,17 +509,17 @@ static int s_dialog_result = 0;
 
 void *MCCreateNSWindow(void *);
 
-static int display_modal_dialog(MCExecPoint &ep, NSSavePanel *p_panel, const char *p_initial_folder, const char *p_initial_file, bool p_as_sheet)
+static int display_modal_dialog(NSSavePanel *p_panel, MCStringRef p_initial_folder, MCStringRef p_initial_file, bool p_as_sheet)
 {
 	NSString *t_initial_folder;
 	t_initial_folder = nil;
 	if (p_initial_folder != nil)
-		t_initial_folder = [NSString stringWithCString: p_initial_folder encoding: NSMacOSRomanStringEncoding];
+        t_initial_folder = [NSString stringWithMCStringRef: p_initial_folder encoding: NSMacOSRomanStringEncoding];
 	
 	NSString *t_initial_file;
 	t_initial_file = nil;
 	if (p_initial_file != nil)
-		t_initial_file = [NSString stringWithCString: p_initial_file encoding: NSMacOSRomanStringEncoding];			
+        t_initial_file = [NSString stringWithMCStringRef: p_initial_file encoding: NSMacOSRomanStringEncoding];
 	
 	if (p_as_sheet)
 	{
@@ -540,7 +551,7 @@ static int display_modal_dialog(MCExecPoint &ep, NSSavePanel *p_panel, const cha
 ////////////////////////////////////////////////////////////////////////////////
 
 // MM-2012-02-13: Updated to use Cocoa APIs.
-int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options)
+int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
     bool t_is_save;
     t_is_save = (p_options & MCA_OPTION_SAVE_DIALOG) != 0;
@@ -550,28 +561,22 @@ int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *p_promp
     if (!MCModeMakeLocalWindows())
 	{
         MCAutoStringRef t_resolved_initial_str;
-        MCAutoStringRef t_initial_string;
-		/* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_initial_string);
-        MCS_resolvepath(*t_initial_string, &t_resolved_initial_str);
-        MCRemoteFileDialog(ep, p_title, p_prompt, p_types, p_type_count, nil, MCStringGetCString(*t_resolved_initial_str), t_is_save, t_is_plural);
+        MCS_resolvepath(p_initial, &t_resolved_initial_str);
+        MCRemoteFileDialog(p_title, p_prompt, p_types, p_type_count, kMCEmptyString, *t_resolved_initial_str, t_is_save, t_is_plural, r_value);
 	}
     else
     {
-		char *t_initial_folder;
-		t_initial_folder = nil;
+        MCAutoStringRef t_initial_folder;
+
 		if (p_initial != nil)
-			t_initial_folder = folder_path_from_intial_path(p_initial);
+            /* UNCHECKED */ folder_path_from_initial_path(p_initial, &t_initial_folder);
 		
-		const char *t_initial_file;
-		t_initial_file = nil;	
-		MCAutoStringRef t_initial_string;
-		/* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_initial_string);
-		if (t_is_save && p_initial != nil && !MCS_exists(*t_initial_string, false))
+        MCAutoStringRef t_initial_file;
+        if (t_is_save && p_initial != nil && !MCS_exists(p_initial, false))
 		{
-			char *t_last_slash;
-			t_last_slash = strrchr(p_initial, '/');
-			if (t_last_slash != nil)
-				t_initial_file = strrchr(p_initial, '/') + 1;
+            uindex_t t_last_slash;
+            if (MCStringLastIndexOfChar(p_initial, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
+                /* UNCHECKED */ MCStringCopySubstring(p_initial, MCRangeMake(t_last_slash + 1, MCStringGetLength(p_initial) - (t_last_slash + 1)), &t_initial_file);
 			else
 				t_initial_file = p_initial;
 		}		
@@ -580,10 +585,15 @@ int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *p_promp
         Cursor c;
         SetCursor(GetQDGlobalsArrow(&c));
         ShowCursor();
+        
+        //
+        char **t_types = new char*[p_type_count];
+        for (uint4 i = 0; i < p_type_count; ++i)
+            t_types[i] = strclone(MCStringGetCString(p_types[i]));
 		
         FileDialogAccessoryView *t_accessory;
         t_accessory = [[FileDialogAccessoryView alloc] init];
-        [t_accessory setTypes: p_types length: p_type_count];
+        [t_accessory setTypes: t_types length: p_type_count];
 		
         char *t_filename;
         t_filename = nil;
@@ -593,13 +603,13 @@ int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *p_promp
 		NSSavePanel *t_panel;
 		t_panel = (t_is_save) ? [NSSavePanel savePanel] : [NSOpenPanel openPanel] ;
 		
-		if (p_title != nil && MCCStringLength(p_title) != 0)
+        if (p_title != nil && MCStringGetLength(p_title) != 0)
 		{
-			[t_panel setTitle: [NSString stringWithCString: p_title encoding: NSMacOSRomanStringEncoding]];
-			[t_panel setMessage: [NSString stringWithCString: p_prompt encoding: NSMacOSRomanStringEncoding]];
+			[t_panel setTitle: [NSString stringWithCString: MCStringGetCString(p_title) encoding: NSMacOSRomanStringEncoding]];
+			[t_panel setMessage: [NSString stringWithCString: MCStringGetCString(p_prompt) encoding: NSMacOSRomanStringEncoding]];
 		}
 		else
-			[t_panel setTitle: [NSString stringWithCString: p_prompt encoding: NSMacOSRomanStringEncoding]];
+			[t_panel setTitle: [NSString stringWithCString: MCStringGetCString(p_prompt) encoding: NSMacOSRomanStringEncoding]];
 			
 //		[t_panel setDelegate: t_accessory];
 		
@@ -619,7 +629,7 @@ int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *p_promp
 		else 
 			[t_panel setCanCreateDirectories: YES];
 		
-		if (display_modal_dialog(ep, t_panel, t_initial_folder, t_initial_file, (p_options & MCA_OPTION_SHEET) != 0) == NSOKButton)
+        if (display_modal_dialog(t_panel, *t_initial_folder, *t_initial_file, (p_options & MCA_OPTION_SHEET) != 0) == NSOKButton)
 		{
 			if (t_is_save)
 			{
@@ -646,16 +656,18 @@ int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *p_promp
 			}
 		}
 		
-        if (MCCStringLength(t_filename) == 0)
-            ep.clear();
-        else
+        if (MCCStringLength(t_filename) != 0)
         {
-            ep.copysvalue(t_filename, MCCStringLength(t_filename));
+            /* UNCHECKED */ MCStringCreateWithCString(t_filename, r_value);
+            
             if (p_options & MCA_OPTION_RETURN_FILTER && p_type_count > 0)
-                MCresult->copysvalue(t_type);
+                /* UNCHECKED */ MCStringCreateWithCString(t_type, r_result);
         }
 		
-		/* UNCHECKED */ MCCStringFree(t_initial_folder);
+        for(uint4 i = 0; i < p_type_count; ++i)
+            MCCStringFree(t_types[i]);
+        delete[] t_types;
+        
         /* UNCHECKED */ MCCStringFree(t_filename);
         /* UNCHECKED */ MCCStringFree(t_type);
         [t_accessory release];
@@ -664,100 +676,96 @@ int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *p_promp
     return noErr;
 }
 
-int MCA_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options)
+int MCA_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	if (MCmajorosversion > 0x1040)
 	{
-		int t_result;	
+        int t_result;
 
 		// MW-2012-03-27: [[ Bug ]] Make sure we initialize t_types to nil.
-		char **t_types;
-		uint32_t t_type_count;	
-		t_types = nil;
-		filter_to_type_list(p_filter, &t_types, t_type_count);	
-		t_result = MCA_do_file_dialog(ep, p_title == NULL ? "" : p_title, p_prompt == NULL ? "" : p_prompt, t_types, t_type_count, p_initial, p_options);
-		/* UNCHECKED */ MCMemoryDeleteArray(t_types);
+        MCAutoStringRefArray t_types;
+        
+        filter_to_type_list(p_filter, t_types.PtrRef(), t_types.CountRef());
+        t_result = MCA_do_file_dialog(p_title == nil ? kMCEmptyString : p_title, p_prompt == nil ? kMCEmptyString : p_prompt, *t_types, t_types.Count(), p_initial, p_options, r_value, r_result);
+        
 		return t_result;
 			
 	}
 	else
-		return MCA_file_tiger(ep, p_title, p_prompt, p_filter, p_initial, p_options);
+		return MCA_file_tiger(p_title, p_prompt, p_filter, p_initial, p_options, r_value, r_result);
 }
 
-int MCA_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options)
+int MCA_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	if (MCmajorosversion > 0x1040)
 	{
 		int t_result;
-		t_result = MCA_do_file_dialog(ep, p_title == NULL ? "" : p_title, p_prompt == NULL ? "" : p_prompt, p_types, p_type_count, p_initial, p_options | MCA_OPTION_RETURN_FILTER);
+		t_result = MCA_do_file_dialog(p_title == nil ? kMCEmptyString : p_title, p_prompt == nil ? kMCEmptyString : p_prompt, p_types, p_type_count, p_initial, p_options | MCA_OPTION_RETURN_FILTER, r_value, r_result);
 		return t_result;
 	}
 	else
-		return MCA_file_with_types_tiger(ep, p_title, p_prompt, p_types, p_type_count, p_initial, p_options);
+		return MCA_file_with_types_tiger(p_title, p_prompt, p_types, p_type_count, p_initial, p_options, r_value, r_result);
 }
 
-int MCA_ask_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options)
+int MCA_ask_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	if (MCmajorosversion > 0x1040)
 	{
 		int t_result;
-		char **t_types;
-		uint32_t t_type_count;	
-			t_types = nil;
-		filter_to_type_list(p_filter, &t_types, t_type_count);
-		t_result = MCA_do_file_dialog(ep, p_prompt == NULL ? "" : p_prompt, "", t_types, t_type_count, p_initial == NULL ? "" : p_initial, p_options | MCA_OPTION_SAVE_DIALOG);
-		/* UNCHECKED */ MCMemoryDeleteArray(t_types);
-		return t_result;
+		MCAutoStringRefArray t_types;
+        
+		/* UNCHECKED */ filter_to_type_list(p_filter, t_types.PtrRef(), t_types.CountRef());
+		t_result = MCA_do_file_dialog(p_prompt == nil ? kMCEmptyString : p_prompt, kMCEmptyString, *t_types, t_types.Count(), p_initial == nil ? kMCEmptyString : p_initial, p_options | MCA_OPTION_SAVE_DIALOG, r_value, r_result);
+		
+        return t_result;
 	}
 	else
-		return MCA_ask_file_tiger(ep, p_title, p_prompt, p_filter, p_initial, p_options);
+		return MCA_ask_file_tiger(p_title, p_prompt, p_filter, p_initial, p_options, r_value, r_result);
 }
 
-int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options)
+int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	if (MCmajorosversion > 0x1040)
 	{
 		int t_result;
-		t_result = MCA_do_file_dialog(ep, p_title == NULL ? "" : p_title, p_prompt == NULL ? "" : p_prompt, p_types, p_type_count, p_initial == NULL ? "" : p_initial, p_options | MCA_OPTION_RETURN_FILTER | MCA_OPTION_SAVE_DIALOG);
+		t_result = MCA_do_file_dialog(p_title == nil ? kMCEmptyString : p_title, p_prompt == nil ? kMCEmptyString : p_prompt, p_types, p_type_count, p_initial == nil ? kMCEmptyString : p_initial, p_options | MCA_OPTION_RETURN_FILTER | MCA_OPTION_SAVE_DIALOG, r_value, r_result);
 		return t_result;
 	}
 	else
-		return MCA_ask_file_with_types_tiger(ep, p_title, p_prompt, p_types, p_type_count, p_initial, p_options);
+		return MCA_ask_file_with_types_tiger(p_title, p_prompt, p_types, p_type_count, p_initial, p_options, r_value, r_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // MM-2012-02-13: Updated to use Cocoa APIs.  Code mostly cribbed from plugin dialog stuff
-int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial, unsigned int p_options)
+int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	if (MCmajorosversion > 0x1040)
 	{
 		if (!MCModeMakeLocalWindows())
-		{
-            MCAutoStringRef t_unresolved_initial_str, t_resolved_initial_str;
-            /* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_unresolved_initial_str);
-			/* UNCHECKED */ MCS_resolvepath(*t_unresolved_initial_str, &t_resolved_initial_str);
-			MCRemoteFolderDialog(ep, p_title, p_prompt, MCStringGetCString(*t_resolved_initial_str));
+        {
+            MCAutoStringRef t_resolved_initial_str;
+			/* UNCHECKED */ MCS_resolvepath(p_initial, &t_resolved_initial_str);
+            MCRemoteFolderDialog(p_title, p_prompt, *t_resolved_initial_str, r_value);
 		}
 		else
 		{
-			char *t_initial_folder;
-			t_initial_folder = nil;
-			if (p_initial != nil)
-				t_initial_folder = folder_path_from_intial_path(p_initial);
-			
-			char *t_folder;
-			t_folder = nil;
+            MCAutoStringRef t_initial_folder;
+            if (p_initial != nil)
+                /* UNCHECKED */ folder_path_from_initial_path(p_initial, &t_initial_folder);
+            
+            char *t_folder;
+            t_folder = nil;
 			
 			NSOpenPanel *t_choose;
 			t_choose = [NSOpenPanel openPanel];
-			if (p_title != nil && MCCStringLength(p_title) != 0)
+			if (p_title != nil && MCStringGetLength(p_title) != 0)
 			{
-				[t_choose setTitle: [NSString stringWithCString: p_title encoding: NSMacOSRomanStringEncoding]];
-				[t_choose setMessage: [NSString stringWithCString:p_prompt encoding: NSMacOSRomanStringEncoding]];
+				[t_choose setTitle: [NSString stringWithCString: MCStringGetCString(p_title) encoding: NSMacOSRomanStringEncoding]];
+				[t_choose setMessage: [NSString stringWithCString: MCStringGetCString(p_prompt) encoding: NSMacOSRomanStringEncoding]];
 			}
 			else
-				[t_choose setTitle: [NSString stringWithCString: p_prompt encoding: NSMacOSRomanStringEncoding]];
+				[t_choose setTitle: [NSString stringWithCString: MCStringGetCString(p_prompt) encoding: NSMacOSRomanStringEncoding]];
 			[t_choose setPrompt: @"Choose"];
 			[t_choose setCanChooseFiles: NO];
 			[t_choose setCanChooseDirectories: YES];
@@ -766,7 +774,7 @@ int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const
 			// MM-2012-03-01: [[ BUG 10046]] Make sure the "new folder" button is enabled for folder dialogs
 			[t_choose setCanCreateDirectories: YES];
 			
-			if (display_modal_dialog(ep, t_choose, t_initial_folder, nil, (p_options & MCA_OPTION_SHEET) != 0) == NSOKButton)
+			if (display_modal_dialog(t_choose, *t_initial_folder, nil, (p_options & MCA_OPTION_SHEET) != 0) == NSOKButton)
 				{
 					// MM-2012-09-25: [[ Bug 10407 ]] Resolve alias (if any) of the returned folder
 					NSString *t_alias;
@@ -775,21 +783,18 @@ int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const
 					[t_alias release];
 				}
 			
-			// Send results back
-			if (MCCStringLength(t_folder) == 0)
-				ep.clear();
-			else
-				ep.copysvalue(t_folder, MCCStringLength(t_folder));
-			
+			// Send results back                
+			if (MCCStringLength(t_folder) != 0)
+            /* UNCHECKED */ MCStringCreateWithCString(t_folder, r_value);
+    
 			// Free the folder
-			/* UNCHECKED */ MCCStringFree(t_folder);
-			/* UNCHECKED */ MCCStringFree(t_initial_folder);		
+			/* UNCHECKED */ MCCStringFree(t_folder);	
 		}
 		
 		return noErr;
 	}
 	else
-		return MCA_folder_tiger(ep, p_title, p_prompt, p_initial, p_options);
+		return MCA_folder_tiger(p_title, p_prompt, p_initial, p_options, r_value, r_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
