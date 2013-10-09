@@ -1713,8 +1713,9 @@ void MCFilesExecReadFromProcessUntil(MCExecContext& ctxt, MCNameRef p_process, M
 
 void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringRef p_data, int p_unit_type, IO_stat &r_stat)
 {
-	uint4 l = MCStringGetLength(p_data);
-	const char *t_data = MCStringGetCString(p_data);
+	uint4 len = MCStringGetLength(p_data);
+	uindex_t t_data_pos;
+	t_data_pos = 0;
 
 	switch (p_unit_type)
 	{
@@ -1722,20 +1723,21 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
 	case FU_ITEM:
 	case FU_LINE:
 	case FU_WORD:
-		r_stat = MCS_write(t_data, sizeof(char), l, p_stream);
+		r_stat = MCS_write(MCStringGetCString(p_data), sizeof(char), len, p_stream);
 		break;
 	default:
 		{
-			while (l)
+			while (len)
 			{
-				const char *startptr = t_data;
-				if (!MCU_strchr(t_data, l, ','))
+				uindex_t t_start_pos;
+				t_start_pos = t_data_pos;
+				if (!MCStringFirstIndexOfChar(p_data, ',', 0, kMCCompareExact, len))
 				{
-					t_data += l;
-					l = 0;
+					t_data_pos += len;
+					len = 0;
 				}
 				MCAutoStringRef s;
-				MCStringCreateWithNativeChars((const char_t *)startptr, t_data - startptr, &s);
+				/* UNCHECKED */ MCStringCopySubstring(p_data, MCRangeMake(t_start_pos, t_data_pos - t_start_pos), &s); 
 				real8 n;
 				if (!MCU_stor8(*s, n))
 				{
@@ -1743,7 +1745,7 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
 					r_stat = IO_ERROR;
 					break;
 				}
-				t_data++;
+				t_data_pos++;
 				switch (p_unit_type)
 				{
 				case FU_INT1:
