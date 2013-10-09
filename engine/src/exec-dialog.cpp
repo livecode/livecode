@@ -546,9 +546,12 @@ void MCDialogExecAskFileWithFilter(MCExecContext& ctxt, MCStringRef p_prompt, MC
 	
 	if (!t_cancelled)
 	{
-		ctxt . SetItToValue(*t_value);
+        ctxt . SetItToValue(*t_value);
+
         if (*t_result != nil)
-            ctxt . SetTheResultToEmpty();
+            ctxt.SetTheResultToValue(*t_result);
+        else
+            ctxt.SetTheResultToEmpty();
 	}
 	else
 	{
