@@ -91,9 +91,7 @@ static char *strndup(const char *s, uint32_t n)
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCStringRef s_cgi_upload_temp_dir;
-s_cgi_upload_temp_dir = MCValueRetain(kMCEmptyString);
 static MCStringRef s_cgi_temp_dir;
-s_cgi_temp_dir = MCValueRetain(kMCEmptyString);
 
 bool MCS_get_temporary_folder(MCStringRef &r_temp_folder);
 
@@ -1238,6 +1236,8 @@ extern char **environ;
 
 bool cgi_initialize()
 {
+	s_cgi_upload_temp_dir = MCValueRetain(kMCEmptyString);
+	s_cgi_temp_dir = MCValueRetain(kMCEmptyString);
 	// need to ensure PATH_TRANSLATED points to the script and PATH_INFO contains everything that follows
 	cgi_fix_path_variables();
 
@@ -1412,6 +1412,8 @@ void cgi_finalize_session();
 
 void cgi_finalize()
 {
+	MCValueRelease(s_cgi_upload_temp_dir);
+	MCValueRelease(s_cgi_temp_dir);
 	// clean up any temporary uploaded files
 	MCMultiPartRemoveTempFiles();
 	
