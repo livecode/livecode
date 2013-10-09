@@ -162,34 +162,17 @@ FormatData::~FormatData(void)
 		ReleaseStgMedium(&m_storage);
 }
 
-MCString FormatData::Get(void) const
-{
-	if (!m_valid)
-		return MCString();
-
-	if (m_storage . tymed != TYMED_HGLOBAL)
-		return MCString();
-
-	void *t_data;
-	uint4 t_size;
-
-	t_size = GlobalSize(m_storage . hGlobal);
-	t_data = GlobalLock(m_storage . hGlobal);
-
-	return MCString((char *)t_data, t_size);
-}
-
-void FormatData::Get(MCStringRef& r_data)
+void FormatData::Get(MCDataRef& r_data)
 {
 	if (!m_valid)
 	{
-		r_data = MCValueRetain(kMCEmptyString);
+		r_data = MCValueRetain(kMCEmptyData);
 		return;
 	}
 
 	if (m_storage . tymed != TYMED_HGLOBAL)
 	{
-		r_data = MCValueRetain(kMCEmptyString);
+		r_data = MCValueRetain(kMCEmptyData);
 		return;
 	}
 
@@ -199,10 +182,10 @@ void FormatData::Get(MCStringRef& r_data)
 	t_size = GlobalSize(m_storage . hGlobal);
 	t_data = GlobalLock(m_storage . hGlobal);
 
-	if (MCStringCreateWithNativeChars((const char_t *)t_data, t_size, r_data))
+	if (MCDataCreateWithBytes((const byte_t *)t_data, t_size, r_data))
 		return;
 
-	r_data = MCValueRetain(kMCEmptyString);
+	r_data = MCValueRetain(kMCEmptyData);
 }
 HGLOBAL FormatData::GetHandle(void) const
 {
@@ -1057,13 +1040,13 @@ void MCWindowsPasteboard::Resolve(void)
 				FormatData t_locale_data(m_data_object, CF_LOCALE);
 				if (t_locale_data . Valid())
 				{
-					MCString t_locale_string;
-					t_locale_string = t_locale_data . Get();
+					MCAutoDataRef t_locale_string;
+					/* UNCHECKED */ t_locale_data . Get(&t_locale_string);
 
-					if (t_locale_string . getlength() == 4)
+					if (MCDataGetLength(*t_locale_string) == 4)
 					{
 						LCID t_locale_id;
-						t_locale_id = *(LCID *)t_locale_string . getstring();
+						memcpy(&t_locale_id, MCDataGetBytePtr(*t_locale_string), 4);
 						if (GetLocaleInfoA(t_locale_id, LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER, (LPSTR)&t_codepage, 4) != 4)
 							t_codepage = 0;
 					}
@@ -1162,10 +1145,8 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 	if (!t_in_data . Valid())
 		return false;
 
-	MCAutoStringRef t_in_string;
+	MCAutoDataRef t_in_string;
 	t_in_data . Get(&t_in_string);
-
-	uint4 t_in_length = MCStringGetLength(*t_in_string);
 
 	switch(m_entries[t_entry] . format)
 	{
@@ -1173,26 +1154,36 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 	{
 		MCExecPoint ep(NULL, NULL, NULL);
 
-		if (t_in_length > 0 && MCStringGetNativeCharAtIndex(*t_in_string, t_in_length - 1) == '\0')
+		// TO DO:
+		//   Convert t_in_string to a stringref (assume native encoding)
+		//   If the last char of the stringref is '\0' then remove it.
+		//   Convert to livecode line endings
+		//   Convert to a dataref (native encoding).
+		/* if (t_in_length > 0 && MCStringGetNativeCharAtIndex(*t_in_string, t_in_length - 1) == '\0')
 			t_in_length -= 1;
 
 		ep . setsvalue(MCString(MCStringGetCString(*t_in_string), t_in_length));
 		ep . texttobinary();
-		ep . copyasdataref(&t_out_data);
+		ep . copyasdataref(&t_out_data); */
 	}
 	break;
 	case CF_UNICODETEXT:
 	{
 		MCExecPoint ep(NULL, NULL, NULL);
 
-		if (t_in_length > 1 && MCStringGetNativeCharAtIndex(*t_in_string, t_in_length - 1) == '\0' && MCStringGetNativeCharAtIndex(*t_in_string, t_in_length - 2) == '\0')
+		// TO DO:
+		//   Convert t_in_string to a stringref (assume utf-16 encoding)
+		//   If the last unichar of the stringref is '\0' then remove it.
+		//   Convert to livecode line endings
+		//   Convert to a dataref (utf-16 encoding).
+		/* if (t_in_length > 1 && MCStringGetNativeCharAtIndex(*t_in_string, t_in_length - 1) == '\0' && MCStringGetNativeCharAtIndex(*t_in_string, t_in_length - 2) == '\0')
 			t_in_length -= 2;
 
 		ep . setsvalue(MCString(MCStringGetCString(*t_in_string), t_in_length));
 		ep . utf16toutf8();
 		ep . texttobinary();
 		ep . utf8toutf16();
-		ep . copyasdataref(&t_out_data);
+		ep . copyasdataref(&t_out_data);*/
 	}
 	break;
 	case CF_DIB:
@@ -1209,7 +1200,7 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 		uint32_t t_length = 0;
 
         if (t_success)
-            t_success = nil != (t_stream = MCS_fakeopen(MCStringGetOldString(*t_in_string)));
+            t_success = nil != (t_stream = MCS_fakeopen(MCDataGetOldString(*t_in_string)));
 
 		if (t_success)
 			t_success = MCImageDecodeBMPStruct(t_stream, t_byte_count, t_bitmap);
@@ -1376,21 +1367,18 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 	break;
 	default:
 	{
-		MCAutoDataRef t_in_dataref;
-		/* UNCHECKED */ MCDataCreateWithBytes(MCStringGetNativeCharPtr(*t_in_string), MCStringGetLength(*t_in_string), &t_in_dataref);
-
 		if (m_entries[t_entry] . format == CF_RTF())
-			/* UNCHECKED */ MCConvertRTFToStyledText(*t_in_dataref, &t_out_data);
+			/* UNCHECKED */ MCConvertRTFToStyledText(*t_in_string, &t_out_data);
 		else if (m_entries[t_entry] . format == CF_GIF())
-			t_out_data = *t_in_dataref;
+			t_out_data = *t_in_string;
 		else if (m_entries[t_entry] . format == CF_PNG())
-			t_out_data = *t_in_dataref;
+			t_out_data = *t_in_string;
 		else if (m_entries[t_entry] . format == CF_JFIF())
-			t_out_data = *t_in_dataref;
+			t_out_data = *t_in_string;
 		else if (m_entries[t_entry] . format == CF_REVOLUTION_STYLED_TEXT())
-			t_out_data = *t_in_dataref;
+			t_out_data = *t_in_string;
 		else if (m_entries[t_entry] . format == CF_REVOLUTION_OBJECTS())
-			t_out_data = *t_in_dataref;
+			t_out_data = *t_in_string;
 	}
 	break;
 	}
