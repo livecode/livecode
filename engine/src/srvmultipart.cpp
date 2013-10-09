@@ -295,23 +295,17 @@ bool read_quoted_string(MCStringRef p_header, uint32_t &x_offset, MCStringRef &r
 		if (is_folded_lwsp(p_header, t_pos))
 		{
 			t_char = MCStringGetNativeCharAtIndex(p_header, t_pos + 2);
-			//MCAutoStringRef t_head;
-			//MCStringDivideAtIndex(p_header, 2, &t_head, p_header);
 			t_pos += 3;
 		}
 		else if (MCStringGetNativeCharAtIndex(p_header, t_pos) == '\\')
 		{
 			t_char = MCStringGetNativeCharAtIndex(p_header, t_pos + 1);
 			t_pos += 2;
-			//MCAutoStringRef t_head;
-			//MCStringDivideAtIndex(p_header, 1, &t_head, p_header);
 		}
 		else if (is_qtext(MCStringGetNativeCharAtIndex(p_header, t_pos)))
 		{
 			t_char = MCStringGetNativeCharAtIndex(p_header, t_pos);
 			t_pos += 1;
-			//MCAutoStringRef t_head;
-			//MCStringDivideAtIndex(p_header, 0, &t_head, p_header);
 		}
 		else
 			t_success = false;
@@ -406,7 +400,6 @@ bool MCMultiPartParseHeader(MCStringRef p_header, MCMultiPartHeaderCallback p_ca
 	bool t_success = true;
 	
 	uint32_t t_index = 0;
-	const char *t_next_param = NULL;
 	
 	t_success = read_name(p_header, t_index, t_header.name);
 	if (t_success)
