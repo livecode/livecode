@@ -1076,7 +1076,9 @@ Exec_stat MCProperty::resolveprop(MCExecPoint& ep, Properties& r_which, MCNameRe
 	{
 		MCExecPoint ep2(ep);
 		destvar -> eval(ep2);
-		MCScriptPoint sp(ep2.getsvalue());
+        MCAutoStringRef t_value;
+        ep2 . copyasstringref(&t_value);
+		MCScriptPoint sp(*t_value);
 		Symbol_type type;
 		const LT *te;
 		if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL && te->type == TT_PROPERTY && sp.next(type) == PS_EOF)

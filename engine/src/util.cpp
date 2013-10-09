@@ -380,12 +380,12 @@ real8 MCU_drand()
 }
 
 // custom strtok that only skips single delimiters
-static char *olds = NULL;
-char *MCU_strtok(char *s, const char *delim)
+static MCStringRef olds = nil;
+char *MCU_strtok(MCStringRef s, MCStringRef delim)
 {
-	if (s == NULL)
+	if (s == nil)
 	{
-		if (olds == NULL)
+		if (olds == nil)
 		{
 			MCS_seterrno(EINVAL);
 			return NULL;
@@ -393,19 +393,20 @@ char *MCU_strtok(char *s, const char *delim)
 		else
 			s = olds;
 	}
-	if (*s == '\0')
+	if (MCStringIsEmpty(s))
 	{
-		olds = NULL;
+		olds = nil;
 		return NULL;
 	}
-	char *token = s;
-	s = strpbrk(token, delim);
-	if (s == NULL)
-		olds = NULL;
+	char *token = (char *) MCStringGetCString(s);
+	/* UNCHECKED */ MCStringCreateWithCString(strpbrk(token, MCStringGetCString(delim)), s);
+	if (s == nil)
+		olds = nil;
 	else
 	{
-		*s = '\0';
-		olds = s + 1;
+		//*s = '\0';
+        MCAutoStringRef t_head;
+        /* UNCHECKED */ MCStringDivideAtIndex(s, 0, &t_head, olds);
 	}
 	return token;
 }

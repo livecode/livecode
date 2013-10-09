@@ -47,8 +47,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 ////////////////////////////////////////////////////////////////////////////////
 
 extern void MCRemoteFileDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char * const p_types[], uint32_t p_type_count, const char *p_initial_folder, const char *p_initial_file, bool p_save, bool p_files);
-extern void MCRemoteFolderDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial);
-extern void MCRemoteColorDialog(MCExecPoint& ep, const char *p_title, uint32_t p_r, uint32_t p_g, uint32_t p_b);
+extern void MCRemoteFolderDialog(MCExecPoint& ep, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial);
+extern void MCRemoteColorDialog(MCExecPoint& ep, MCStringRef p_title, uint32_t p_r, uint32_t p_g, uint32_t p_b);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -926,13 +926,14 @@ int MCA_folder_tiger(MCExecPoint& ep, const char *p_title, const char *p_prompt,
 	
 	if (!MCModeMakeLocalWindows())
 	{
-        MCAutoStringRef t_resolved_initial_path_str;
-        
-        MCS_resolvepath(MCSTR(p_initial), &t_resolved_initial_path_str);
-		
-		MCRemoteFolderDialog(ep, p_title, p_prompt, MCStringGetCString(*t_resolved_initial_path_str));
-	//	if (t_resolved_initial_path != NULL)
-	//		free(t_resolved_initial_path);
+        MCAutoStringRef t_unresolved_initial_str, t_resolved_initial_str;
+        MCAutoStringRef t_title, t_prompt;
+        /* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_unresolved_initial_str);
+        /* UNCHECKED */ MCS_resolvepath(*t_unresolved_initial_str, &t_resolved_initial_str);
+        /* UNCHECKED */ MCStringCreateWithCString(p_title, &t_title);
+        /* UNCHECKED */ MCStringCreateWithCString(p_prompt, &t_prompt);
+        MCRemoteFolderDialog(ep, *t_title, *t_prompt, *t_resolved_initial_str);
+	
 		return 0;
 	}
 	
