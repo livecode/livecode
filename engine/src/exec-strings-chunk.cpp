@@ -133,7 +133,7 @@ void MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCString
             
         case CT_TOKEN:
         {
-            MCScriptPoint sp(MCStringGetOldString(p_string));
+            MCScriptPoint sp(p_string);
             Parse_stat ps = sp.nexttoken();
             while (ps != PS_ERROR && ps != PS_EOF)
             {
@@ -360,7 +360,7 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             
         case CT_TOKEN:
         {
-            MCScriptPoint sp(MCStringGetOldString(p_string));
+            MCScriptPoint sp(p_string);
             MCerrorlock++;
             
             uint2 t_pos;

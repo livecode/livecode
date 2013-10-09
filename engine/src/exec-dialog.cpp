@@ -73,7 +73,7 @@ MC_EXEC_DEFINE_EXEC_METHOD(Dialog, CustomAskDialog, 7)
 ////////////////////////////////////////////////////////////////////////////////
 void MCDialogExecAnswerColor(MCExecContext &ctxt, MCColor *p_initial_color, MCStringRef p_title, bool p_as_sheet)
 {
-	MCAutoStringRef t_value, t_result;
+    MCAutoStringRef t_value;
 	bool t_chosen;
 	if (MCsystemCS && MCscreen->hasfeature(PLATFORM_FEATURE_OS_COLOR_DIALOGS))
 	{
@@ -93,7 +93,7 @@ void MCDialogExecAnswerColor(MCExecContext &ctxt, MCColor *p_initial_color, MCSt
 		if (t_chosen)
 		{
 			if (!MCStringFormat(&t_value, "%d,%d,%d",
-				t_color.red >> 8, t_color.green >> 8, t_color.blue >> 8))
+                t_chosen_color.red >> 8, t_chosen_color.green >> 8, t_chosen_color.blue >> 8))
 			{
 				ctxt.Throw();
 				return;

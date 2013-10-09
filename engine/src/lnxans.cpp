@@ -55,8 +55,8 @@ struct MCLinuxPageSetup
 	uint32_t orientation;
 };
 
-bool MCLinuxPageSetupEncode(const MCLinuxPageSetup& setup, void*& r_data, uint32_t& r_data_size);
-bool MCLinuxPageSetupDecode(const void *data, uint32_t data_size, MCLinuxPageSetup& setup);
+bool MCLinuxPageSetupEncode(const MCLinuxPageSetup& setup, MCDataRef& r_data);
+bool MCLinuxPageSetupDecode(MCDataRef p_data, MCLinuxPageSetup& setup);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,8 +64,8 @@ struct MCLinuxPrintSetup
 {
 };
 
-bool MCLinuxPrintSetupEncode(const MCLinuxPrintSetup& setup, void*& r_data, uint32_t& r_data_size);
-bool MCLinuxPrintSetupDecode(const void *data, uint32_t data_size, MCLinuxPrintSetup& setup);
+bool MCLinuxPrintSetupEncode(const MCLinuxPrintSetup& setup, MCDataRef& r_data);
+bool MCLinuxPrintSetupDecode(MCDataRef p_data, MCLinuxPrintSetup& setup);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -74,9 +74,9 @@ extern gtk_file_chooser_dialog_newPTR gtk_file_chooser_dialog_new_ptr;
 
 extern void MCRemoteFileDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint32_t p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file, bool p_save, bool p_files, MCStringRef &r_value);
 extern void MCRemoteFolderDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef &r_value);
-extern void MCRemoteColorDialog(MCExecPoint& ep, const char *p_title, uint32_t p_r, uint32_t p_g, uint32_t p_b);
-extern void MCRemotePrintSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size);
-extern void MCRemotePageSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size);
+extern void MCRemoteColorDialog(MCStringRef p_title, uint32_t p_r, uint32_t p_g, uint32_t p_b, bool& r_chosen, MCColor& r_chosen_color);
+extern void MCRemotePrintSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result);
+extern void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result);
 
 bool G_init = false ;
 
@@ -442,8 +442,8 @@ void set_initial_file ( GtkWidget *dialog, MCStringRef p_initial, char * p_last_
 {
     MCAutoStringRef t_resolved;
 
-	if ( p_initial != NULL ) 
-	{
+	if ( p_initial != NULL )
+    {
         if (file_has_path(p_initial))
             MCS_resolvepath(p_initial, &t_resolved);
 		else
@@ -459,10 +459,11 @@ void set_initial_file ( GtkWidget *dialog, MCStringRef p_initial, char * p_last_
             gtk_file_chooser_set_filename ( GTK_FILE_CHOOSER ( dialog ), MCStringGetCString(*t_resolved));
         else // folder
             gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), MCStringGetCString(*t_resolved));
+
 	}
 	else
-		if ( p_last_path != NULL )
-		  gtk_file_chooser_set_current_folder  ( GTK_FILE_CHOOSER ( dialog ) , p_last_path );
+		if ( p_last_path != nil )
+          gtk_file_chooser_set_current_folder  ( GTK_FILE_CHOOSER ( dialog ) , p_last_path);
 }
 
 
@@ -539,7 +540,6 @@ int MCA_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *
 
             MCMemoryDeleteArray(t_rtypes);
         }
-//		delete t_resolved_path;
 		return 1;
 	}
 
@@ -548,8 +548,8 @@ int MCA_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *
 	GtkWidget *dialog ;
 	
 	
-	// Create the file dialog with the correct prompt
-	dialog = create_open_dialog ( p_title == NULL  ? p_prompt : p_title, GTK_FILE_CHOOSER_ACTION_OPEN );
+    // Create the file dialog with the correct prompt
+    dialog = create_open_dialog ( p_title == NULL || MCStringIsEmpty(p_title) ? p_prompt : p_title, GTK_FILE_CHOOSER_ACTION_OPEN );
 	
 	// If we have any filters, add them.
 	if ( p_type_count > 0 ) 
@@ -559,7 +559,7 @@ int MCA_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *
 	if ( p_options & MCA_OPTION_PLURAL ) 
 		gtk_file_chooser_set_select_multiple ( GTK_FILE_CHOOSER ( dialog ) ,true );
 	
-	// If we have an initial file/folder then set it.
+    // If we have an initial file/folder then set it.
     set_initial_file ( dialog, p_initial, G_last_opened_path ) ;
 
 	// Run the dialog ... this will be replaced with our own loop which will call the REV event handler too.
@@ -594,7 +594,7 @@ int MCA_ask_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter
 
 int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
-	if (!MCModeMakeLocalWindows())
+    if (!MCModeMakeLocalWindows())
     {
         bool t_plural = (p_options & MCA_OPTION_PLURAL) != 0;
         MCAutoStringRef t_resolved_path;
@@ -621,10 +621,10 @@ int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringR
 		add_dialog_filters ( dialog, p_types , p_type_count );
 
 	// If we are given an initial
-	if (p_initial != nil)
+    if (p_initial != nil)
 	{
 		if (MCS_exists(p_initial, True))
-		{
+        {
             MCAutoStringRef t_resolved;
             /* UNCHECKED */ MCS_resolvepath(p_initial, &t_resolved);
             gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog), MCStringGetCString(*t_resolved));
@@ -686,7 +686,7 @@ int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial,
     MCAutoStringRef t_resolved;
     /* UNCHECKED */ MCS_resolvepath(p_initial, &t_resolved);
 
-	if (!MCModeMakeLocalWindows())
+    if (!MCModeMakeLocalWindows())
     {
         MCRemoteFolderDialog(p_title, p_prompt, *t_resolved, r_value);
 		return 0;
@@ -701,6 +701,7 @@ int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial,
 
     if (p_initial != NULL)
         gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), MCStringGetCString(*t_resolved));
+
 	
     run_dialog(dialog, r_value);
     close_dialog(dialog);
@@ -722,23 +723,15 @@ int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial,
 
 bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bool& r_chosen, MCColor& r_chosen_color)
 {
-	uint32_t t_red, t_green, t_blue;
-	t_red = p_initial_color . red;
-	t_green = p_initial_color . green;
-	t_blue = p_initial_color . blue;
-
-	//////////
-
 	GtkWidget * dialog ;
 	GtkColorSelection *colorsel;
-	GdkColor gdk_color ;
-	char *colorstr;
+    GdkColor gdk_color;
 	
 	gtk_init();
 	
-	gdk_color . red = t_red;
-	gdk_color . green = t_green;
-	gdk_color . blue = t_blue;
+    gdk_color . red = p_initial_color . red;
+    gdk_color . green = p_initial_color . green;
+    gdk_color . blue = p_initial_color . blue;
 		
 	dialog = gtk_color_selection_dialog_new  (MCStringGetCString(p_title));
 	make_front_widget ( dialog ) ;
@@ -750,11 +743,8 @@ bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bo
 	
 	if (gtk_dialog_run(GTK_DIALOG (dialog)) == GTK_RESPONSE_OK)
 	{
-		/*gtk_color_selection_get_current_color  (  colorsel , &gdk_color ) ;
-		colorstr = rgbtostr ( gdk_color.red, gdk_color.green, gdk_color.blue);
-		ep . clear();
-		ep . copysvalue(colorstr, strlen(colorstr));
-		delete colorstr ;*/
+        gtk_color_selection_get_current_color(colorsel, &gdk_color);
+
 		r_chosen_color . red = gdk_color . red;
 		r_chosen_color . blue = gdk_color . blue;
 		r_chosen_color . green = gdk_color . green;
@@ -795,37 +785,30 @@ MCPrinterDialogResult MCA_gtk_printer_setup ( PSPrinterSettings &p_settings )
 
 		MCLinuxPrintSetup t_setup;
 
-		void *t_data_in;
-		uint32_t t_data_in_size;
+		MCAutoDataRef t_data_in;
 
 		if (t_success)
-			t_success = MCLinuxPrintSetupEncode(t_setup, t_data_in, t_data_in_size);
+			t_success = MCLinuxPrintSetupEncode(t_setup, &t_data_in);
 
 		uint32_t t_result;
 		t_result = PRINTER_DIALOG_RESULT_ERROR;
 		if (t_success)
 		{
-			char *t_data_out;
-			uint32_t t_data_out_size;
-			t_data_out = nil;
-			t_data_out_size = 0;
-
-			MCRemotePrintSetupDialog(t_data_out, t_data_out_size, t_result, (const char *)t_data_in, t_data_in_size);
-
+			MCAutoDataRef t_data_out;
+            
+            MCRemotePrintSetupDialog(*t_data_in, &t_data_out, t_result);
+			
 			if (t_result == PRINTER_DIALOG_RESULT_OKAY)
 			{
-				if (MCLinuxPrintSetupDecode(t_data_out, t_data_out_size, t_setup))
+				if (MCLinuxPrintSetupDecode(*t_data_out, t_setup))
 				{
 				}
 				else
 					t_result = PRINTER_DIALOG_RESULT_ERROR;
 
 			}
+        }
 
-			free(t_data_out);
-		}
-
-		MCMemoryDeallocate(t_data_in);
 
 		return (MCPrinterDialogResult)t_result;
 	}
@@ -961,26 +944,22 @@ MCPrinterDialogResult MCA_gtk_page_setup (PSPrinterSettings &p_settings)
 		t_setup . orientation = p_settings . orientation;
 		t_setup . left_margin = t_setup . top_margin = t_setup . right_margin = t_setup . bottom_margin = 0;
 
-		void *t_data_in;
-		uint32_t t_data_in_size;
+		MCAutoDataRef t_data_in;
 
 		if (t_success)
-			t_success = MCLinuxPageSetupEncode(t_setup, t_data_in, t_data_in_size);
+			t_success = MCLinuxPageSetupEncode(t_setup, &t_data_in);
 
 		uint32_t t_result;
 		t_result = PRINTER_DIALOG_RESULT_ERROR;
 		if (t_success)
 		{
-			char *t_data_out;
-			uint32_t t_data_out_size;
-			t_data_out = nil;
-			t_data_out_size = 0;
-
-			MCRemotePageSetupDialog(t_data_out, t_data_out_size, t_result, (const char *)t_data_in, t_data_in_size);
+			MCAutoDataRef t_data_out;
+            
+			MCRemotePageSetupDialog(*t_data_in, &t_data_out, t_result);
 
 			if (t_result == PRINTER_DIALOG_RESULT_OKAY)
 			{
-				if (MCLinuxPageSetupDecode(t_data_out, t_data_out_size, t_setup))
+				if (MCLinuxPageSetupDecode(*t_data_out, t_setup))
 				{
 					p_settings . paper_size_width = t_setup . paper_width;
 					p_settings . paper_size_height = t_setup . paper_height;
@@ -990,11 +969,7 @@ MCPrinterDialogResult MCA_gtk_page_setup (PSPrinterSettings &p_settings)
 					t_result = PRINTER_DIALOG_RESULT_ERROR;
 
 			}
-
-			free(t_data_out);
 		}
-
-		MCMemoryDeallocate(t_data_in);
 
 		return (MCPrinterDialogResult)t_result;
 	}
@@ -1066,7 +1041,7 @@ MCPrinterDialogResult MCA_gtk_page_setup (PSPrinterSettings &p_settings)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCLinuxPageSetupEncode(const MCLinuxPageSetup& setup, void*& r_data, uint32_t& r_data_size)
+bool MCLinuxPageSetupEncode(const MCLinuxPageSetup& setup, MCDataRef &r_data)
 {
 	return false;
 
@@ -1104,7 +1079,7 @@ bool MCLinuxPageSetupEncode(const MCLinuxPageSetup& setup, void*& r_data, uint32
 	return t_success;*/
 }
 
-bool MCLinuxPageSetupDecode(const void *p_data, uint32_t p_data_size, MCLinuxPageSetup& setup)
+bool MCLinuxPageSetupDecode(MCDataRef p_data, MCLinuxPageSetup& setup)
 {
 	return false;
 
@@ -1132,7 +1107,7 @@ bool MCLinuxPageSetupDecode(const void *p_data, uint32_t p_data_size, MCLinuxPag
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCLinuxPrintSetupEncode(const MCLinuxPrintSetup& setup, void*& r_data, uint32_t& r_data_size)
+bool MCLinuxPrintSetupEncode(const MCLinuxPrintSetup& setup, MCDataRef &r_data)
 {
 	return false;
 
@@ -1162,7 +1137,7 @@ bool MCLinuxPrintSetupEncode(const MCLinuxPrintSetup& setup, void*& r_data, uint
 	return t_success;*/
 }
 
-bool MCLinuxPrintSetupDecode(const void *p_data, uint32_t p_data_size, MCLinuxPrintSetup& setup)
+bool MCLinuxPrintSetupDecode(MCDataRef p_data, MCLinuxPrintSetup& setup)
 {
 	return false;
 
