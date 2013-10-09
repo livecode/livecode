@@ -103,7 +103,9 @@ static MCStringRef cgi_get_upload_temp_dir()
 	if (!MCStringIsEmpty(s_cgi_temp_dir))
 		return s_cgi_temp_dir;
 
-	/* UNCHECKED */ MCS_get_temporary_folder(s_cgi_temp_dir);
+	MCAutoStringRef t_temp_folder;
+	if (MCS_get_temporary_folder(&t_temp_folder))
+		MCValueAssign(s_cgi_temp_dir, *t_temp_folder);
 	return s_cgi_temp_dir;
 }
 
