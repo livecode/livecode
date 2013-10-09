@@ -189,6 +189,11 @@ public class Engine extends View implements EngineApi
         
         // AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
         m_collator = Collator.getInstance(Locale.getDefault());
+		
+		// MW-2013-10-09: [[ Bug 11266 ]] Turn off keep-alive connections to
+		//   work-around a general bug in android:
+		// https://code.google.com/p/google-http-java-client/issues/detail?id=116
+		System.setProperty("http.keepAlive", "false");
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
