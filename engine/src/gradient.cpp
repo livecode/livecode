@@ -486,7 +486,8 @@ bool MCGradientFillGetProperties(MCGradientFill* p_gradient, MCArrayRef& r_array
 Exec_stat MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCGradientFillProperty which, MCExecPoint &ep, Boolean &dirty, MCRectangle rect)
 {
 	MCGradientFill *t_gradient = NULL;
-	MCString data = ep.getsvalue();
+    MCAutoStringRef t_data;
+    ep . copyasstringref(&t_data);
 	Exec_stat t_stat = ES_NORMAL;
 	
 	if (p_gradient == NULL)
@@ -517,7 +518,7 @@ Exec_stat MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCGradientFillP
 			t_new_gradient_kind = kMCGradientKindNone;
 		else
 		{
-			MCeerror->add(EE_GRAPHIC_BADGRADIENTTYPE, 0, 0, data);
+			MCeerror->add(EE_GRAPHIC_BADGRADIENTTYPE, 0, 0, *t_data);
 			t_stat = ES_ERROR;
 			break;
 		}
@@ -530,17 +531,17 @@ Exec_stat MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCGradientFillP
 	}
 	break;
 	case P_GRADIENT_FILL_RAMP:
-		if (!MCGradientFillRampParse(t_gradient->ramp, t_gradient->ramp_length, data))
+		if (!MCGradientFillRampParse(t_gradient->ramp, t_gradient->ramp_length, *t_data))
 		{
-			MCeerror->add(EE_GRAPHIC_BADGRADIENTRAMP, 0, 0, data);
+			MCeerror->add(EE_GRAPHIC_BADGRADIENTRAMP, 0, 0, *t_data);
 			t_stat = ES_ERROR;
 		}
 		dirty = true;
 	break;
 	case P_GRADIENT_FILL_ORIGIN:
-		if (!MCU_parsepoint(t_gradient->origin, data))
+		if (!MCU_parsepoint(t_gradient->origin, *t_data))
 		{
-			MCeerror->add(EE_GRAPHIC_BADGRADIENTPOINT, 0, 0, data);
+			MCeerror->add(EE_GRAPHIC_BADGRADIENTPOINT, 0, 0, *t_data);
 			t_stat = ES_ERROR;
 		}
 		else
@@ -551,9 +552,9 @@ Exec_stat MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCGradientFillP
 		}
 	break;
 	case P_GRADIENT_FILL_PRIMARY_POINT:
-		if (!MCU_parsepoint(t_gradient->primary, data))
+		if (!MCU_parsepoint(t_gradient->primary, *t_data))
 		{
-			MCeerror->add(EE_GRAPHIC_BADGRADIENTPOINT, 0, 0, data);
+			MCeerror->add(EE_GRAPHIC_BADGRADIENTPOINT, 0, 0, *t_data);
 			t_stat = ES_ERROR;
 		}
 		else
@@ -564,9 +565,9 @@ Exec_stat MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCGradientFillP
 		}
 	break;
 	case P_GRADIENT_FILL_SECONDARY_POINT:
-		if (!MCU_parsepoint(t_gradient->secondary, data))
+		if (!MCU_parsepoint(t_gradient->secondary, *t_data))
 		{
-			MCeerror->add(EE_GRAPHIC_BADGRADIENTPOINT, 0, 0, data);
+			MCeerror->add(EE_GRAPHIC_BADGRADIENTPOINT, 0, 0, *t_data);
 			t_stat = ES_ERROR;
 		}
 		else
@@ -585,7 +586,7 @@ Exec_stat MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCGradientFillP
 			t_new_gradient_quality = kMCGradientQualityGood;
 		else
 		{
-			MCeerror->add(EE_GRAPHIC_BADGRADIENTQUALITY, 0, 0, data);
+			MCeerror->add(EE_GRAPHIC_BADGRADIENTQUALITY, 0, 0, *t_data);
 			t_stat = ES_ERROR;
 			break;
 		}
@@ -605,7 +606,7 @@ Exec_stat MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCGradientFillP
 			t_new_mirror = false;
 		else
 			{
-				MCeerror->add(EE_GRAPHIC_NAB, 0, 0, data);
+				MCeerror->add(EE_GRAPHIC_NAB, 0, 0, *t_data);
 				t_stat = ES_ERROR;
 				break;
 			}
@@ -623,7 +624,7 @@ Exec_stat MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCGradientFillP
 			t_new_wrap = false;
 		else
 			{
-				MCeerror->add(EE_GRAPHIC_NAB, 0, 0, data);
+				MCeerror->add(EE_GRAPHIC_NAB, 0, 0, *t_data);
 				t_stat = ES_ERROR;
 				break;
 			}
@@ -636,9 +637,9 @@ Exec_stat MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCGradientFillP
 	case P_GRADIENT_FILL_REPEAT:
 		{
 			uint4 t_new_repeat;
-			if (!MCU_stoui4(data, t_new_repeat))
+			if (!MCU_stoui4(MCStringGetOldString(*t_data), t_new_repeat))
 			{
-				MCeerror->add(EE_GRAPHIC_NAN, 0, 0, data);
+				MCeerror->add(EE_GRAPHIC_NAN, 0, 0, *t_data);
 				t_stat = ES_ERROR;
 				break;
 			}
@@ -760,8 +761,9 @@ bool MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCGradientFillProper
     
     MCExecPoint ep(nil, nil, nil);
     ep . setvalueref(p_setting);
-    MCString data = ep . getsvalue();
-    
+    MCAutoStringRef t_data;
+    ep . copyasstringref(&t_data);
+       
 	switch (which)
 	{
         case P_GRADIENT_FILL_TYPE:
@@ -785,7 +787,7 @@ bool MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCGradientFillProper
                 t_new_gradient_kind = kMCGradientKindNone;
             else
             {
-                MCeerror->add(EE_GRAPHIC_BADGRADIENTTYPE, 0, 0, data);
+                MCeerror->add(EE_GRAPHIC_BADGRADIENTTYPE, 0, 0, *t_data);
                 t_success = false;
                 break;
             }
@@ -798,17 +800,17 @@ bool MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCGradientFillProper
         }
             break;
         case P_GRADIENT_FILL_RAMP:
-            if (!MCGradientFillRampParse(t_gradient->ramp, t_gradient->ramp_length, data))
+            if (!MCGradientFillRampParse(t_gradient->ramp, t_gradient->ramp_length, *t_data))
             {
-                MCeerror->add(EE_GRAPHIC_BADGRADIENTRAMP, 0, 0, data);
+                MCeerror->add(EE_GRAPHIC_BADGRADIENTRAMP, 0, 0, *t_data);
                 t_success = false;
             }
             dirty = true;
             break;
         case P_GRADIENT_FILL_ORIGIN:
-            if (!MCU_parsepoint(t_gradient->origin, data))
+            if (!MCU_parsepoint(t_gradient->origin, *t_data))
             {
-                MCeerror->add(EE_GRAPHIC_BADGRADIENTPOINT, 0, 0, data);
+                MCeerror->add(EE_GRAPHIC_BADGRADIENTPOINT, 0, 0, *t_data);
                 t_success = false;
             }
             else
@@ -819,9 +821,9 @@ bool MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCGradientFillProper
             }
             break;
         case P_GRADIENT_FILL_PRIMARY_POINT:
-            if (!MCU_parsepoint(t_gradient->primary, data))
+            if (!MCU_parsepoint(t_gradient->primary, *t_data))
             {
-                MCeerror->add(EE_GRAPHIC_BADGRADIENTPOINT, 0, 0, data);
+                MCeerror->add(EE_GRAPHIC_BADGRADIENTPOINT, 0, 0, *t_data);
                 t_success = false;
             }
             else
@@ -832,9 +834,9 @@ bool MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCGradientFillProper
             }
             break;
         case P_GRADIENT_FILL_SECONDARY_POINT:
-            if (!MCU_parsepoint(t_gradient->secondary, data))
+            if (!MCU_parsepoint(t_gradient->secondary, *t_data))
             {
-                MCeerror->add(EE_GRAPHIC_BADGRADIENTPOINT, 0, 0, data);
+                MCeerror->add(EE_GRAPHIC_BADGRADIENTPOINT, 0, 0, *t_data);
                 t_success = false;
             }
             else
@@ -853,7 +855,7 @@ bool MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCGradientFillProper
                 t_new_gradient_quality = kMCGradientQualityGood;
             else
             {
-                MCeerror->add(EE_GRAPHIC_BADGRADIENTQUALITY, 0, 0, data);
+                MCeerror->add(EE_GRAPHIC_BADGRADIENTQUALITY, 0, 0, *t_data);
                 t_success = false;
                 break;
             }
@@ -873,7 +875,7 @@ bool MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCGradientFillProper
                 t_new_mirror = false;
             else
 			{
-				MCeerror->add(EE_GRAPHIC_NAB, 0, 0, data);
+				MCeerror->add(EE_GRAPHIC_NAB, 0, 0, *t_data);
                 t_success = false;
 				break;
 			}
@@ -891,7 +893,7 @@ bool MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCGradientFillProper
                 t_new_wrap = false;
             else
 			{
-				MCeerror->add(EE_GRAPHIC_NAB, 0, 0, data);
+				MCeerror->add(EE_GRAPHIC_NAB, 0, 0, *t_data);
                 t_success = false;
 				break;
 			}
@@ -904,9 +906,9 @@ bool MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCGradientFillProper
         case P_GRADIENT_FILL_REPEAT:
 		{
 			uint4 t_new_repeat;
-			if (!MCU_stoui4(data, t_new_repeat))
+			if (!MCU_stoui4(MCStringGetOldString(*t_data), t_new_repeat))
 			{
-				MCeerror->add(EE_GRAPHIC_NAN, 0, 0, data);
+				MCeerror->add(EE_GRAPHIC_NAN, 0, 0, *t_data);
                 t_success = false;
 				break;
 			}
@@ -1017,13 +1019,13 @@ static void compute_stop_hw_color(MCGradientFillStop *p_stop)
 #endif
 }
 
-Boolean MCGradientFillRampParse(MCGradientFillStop* &r_stops, uint1 &r_stop_count, const MCString &r_data)
+Boolean MCGradientFillRampParse(MCGradientFillStop* &r_stops, uint1 &r_stop_count, MCStringRef r_data)
 {
 	Boolean allvalid = True;
 	bool ordered = true;
 	uint4 t_nstops = 0;
-	uint4 l = r_data.getlength();
-	const char *sptr = r_data.getstring();
+	uint4 l = MCStringGetLength(r_data);
+	const char *sptr = MCStringGetCString(r_data);
 	// avoid overflow in the case of extremely long ramps
 	while(t_nstops < 255 && (l != 0))
 	{

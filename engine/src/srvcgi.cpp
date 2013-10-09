@@ -943,7 +943,6 @@ static bool cgi_multipart_get_boundary(char *&r_boundary)
 	uint32_t t_param_count = 0;
 	
 	t_success = MCStringFirstIndexOfChar(*t_content_type, ';', 0, kMCStringOptionCompareExact, t_index);
-	//t_success = MCCStringFirstIndexOf(MCStringGetCString(*t_content_type), ';', t_index);
 
 	if (t_success)
 		t_success = MCMultiPartParseHeaderParams(MCStringGetCString(*t_content_type) + t_index + 1, t_names, t_values, t_param_count);
@@ -1428,6 +1427,7 @@ static bool cgi_send_cookies(void)
 	
 	char *t_cookie_header = NULL;
 	MCExecPoint ep;
+	MCExecContext ctxt(ep);
 	
 	for (uint32_t i = 0; t_success && i < MCservercgicookiecount; i++)
 	{
@@ -1435,13 +1435,13 @@ static bool cgi_send_cookies(void)
 		
 		if (t_success && MCservercgicookies[i].expires != 0)
 		{
-			ep.setuint(MCservercgicookies[i].expires);
-			t_success = MCD_convert(ep, CF_SECONDS, CF_UNDEFINED, CF_INTERNET_DATE, CF_UNDEFINED);
+			MCAutoNumberRef t_num;
+			MCAutoStringRef t_string;
+			/* UNCHECKED */ MCNumberCreateWithInteger(MCservercgicookies[i].expires, &t_num);
+			t_success = MCD_convert(ctxt, *t_num, CF_SECONDS, CF_UNDEFINED, CF_INTERNET_DATE, CF_UNDEFINED, &t_string);
 			if (t_success)
 			{
-				MCString t_date;
-				t_date = ep.getsvalue();
-				t_success = MCCStringAppendFormat(t_cookie_header, "; Expires=%.*s", t_date.getlength(), t_date.getstring());
+				t_success = MCCStringAppendFormat(t_cookie_header, "; Expires=%s", MCStringGetCString(*t_string));
 			}
 		}
 		

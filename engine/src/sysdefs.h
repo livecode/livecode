@@ -1240,26 +1240,32 @@ struct MCObjectPtr
 	uint32_t part_id;
 };
 
+struct MCMarkedText
+{
+    MCStringRef text;
+    uint32_t start, finish;
+};
+
 struct MCObjectChunkPtr
 {
 	MCObject *object;
 	uint32_t part_id;
 	Chunk_term chunk; 
-	uint32_t start, finish;
+	MCMarkedText mark;
 };
 
 struct MCVariableChunkPtr
 {
 	MCVarref *variable;
 	Chunk_term chunk;
-	uint32_t start, finish;
+	MCMarkedText mark;
 };
 
 struct MCUrlChunkPtr
 {
 	MCStringRef url;
 	Chunk_term chunk;
-	uint32_t start, finish;
+	MCMarkedText mark;
 };
 
 //////////////////////////////////////////////////////////////////////

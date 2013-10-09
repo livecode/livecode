@@ -377,8 +377,8 @@ public:
 	Exec_stat openrect(const MCRectangle &rel, Window_mode wm, MCStack *parentwindow,
 	                   Window_position wpos,  Object_pos walign);
 	void getstackfiles(MCExecPoint &);
-	void stringtostackfiles(char *d, MCStackfile **sf, uint2 &nf);
-	void setstackfiles(const MCString &);
+	void stringtostackfiles(MCStringRef d, MCStackfile **sf, uint2 &nf);
+	void setstackfiles(MCStringRef);
 	char *getstackfile(const MCString &);
 	void setfilename(MCStringRef f);
 
@@ -425,22 +425,21 @@ public:
 	MCObject *getobjname(Chunk_term type, MCStringRef p_name);
 	void createmenu(MCControl *nc, uint2 width, uint2 height);
 	void menuset(uint2 button, uint2 defy);
-	void menumup(uint2 which, MCString &s, uint2 &selline);
-	void menukdown(const char *string, KeySym key,
-	               MCString &s, uint2 &selline);
-	void findaccel(uint2 key, MCString &tpick, bool &r_disabled);
+	void menumup(uint2 which, MCStringRef &r_string, uint2 &selline);
+	void menukdown(const char *string, KeySym key, MCStringRef &r_string, uint2 &selline);
+	void findaccel(uint2 key, MCStringRef &r_pick, bool &r_disabled);
 	void raise();
 	void enter();
 	void flip(uint2 count);
-	Exec_stat sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
+	bool sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 	               MCExpression *by, Boolean marked);
 	void breakstring(MCStringRef, MCStringRef*& dest, uint2 &nstrings,
 	                 Find_mode fmode);
-	Boolean findone(MCExecPoint &ep, Find_mode mode, MCStringRef *strings,
+	Boolean findone(MCExecContext &ctxt, Find_mode mode, MCStringRef *strings,
 	                uint2 nstrings, MCChunk *field, Boolean firstcard);
 	void find(MCExecPoint &ep, int p_mode, MCStringRef p_needle, MCChunk *p_target);
-	void find(MCExecPoint &ep, Find_mode mode, MCStringRef, MCChunk *field);
-	void markfind(MCExecPoint &ep, Find_mode mode, MCStringRef,
+	void find(MCExecContext &ctxt, Find_mode mode, MCStringRef, MCChunk *field);
+	void markfind(MCExecContext &ctxt, Find_mode mode, MCStringRef,
 	              MCChunk *, Boolean mark);
 	void mark(MCExecPoint &ep, MCExpression *where, Boolean mark);
 	Linkatts *getlinkatts();
@@ -885,8 +884,8 @@ private:
 
 	void mode_load(void);
 
-	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, const MCString &carray, Boolean effective);
-	Exec_stat mode_setprop(uint4 parid, Properties which, MCExecPoint &, const MCString &cprop, const MCString &carray, Boolean effective);
+	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, MCStringRef carray, Boolean effective);
+	Exec_stat mode_setprop(uint4 parid, Properties which, MCExecPoint &, MCStringRef cprop, MCStringRef carray, Boolean effective);
 
 	void mode_getrealrect(MCRectangle& r_rect);
 	void mode_takewindow(MCStack *other);

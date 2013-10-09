@@ -704,6 +704,7 @@ void MCPlayer::SetTraversalOn(MCExecContext& ctxt, bool setting)
         qt_enablekeys((flags & F_TRAVERSAL_ON) != 0);
 #endif
 }
+
 void MCPlayer::GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks)
 {
 	if (getstate(CS_PREPARED))
