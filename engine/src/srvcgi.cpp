@@ -1749,15 +1749,15 @@ bool MCServerGetSessionIdFromCookie(MCStringRef &r_id)
 		return false;
 	
 	MCExecPoint ep;
+	MCExecContext ctxt(ep);
 	MCAutoStringRef t_name;
-	if (!MCS_get_session_name(&t_name) || ES_NORMAL != ep.fetcharrayelement_oldstring((MCArrayRef)t_cookie_array -> getvalueref(), MCStringGetOldString(*t_name)))
+	if (!MCS_get_session_name(&t_name))
 		return false;
-	
-	// retrieve ID from cookie value
-	if (ep.isempty())
-		r_id = nil;
-	else
-		ep.copyasstringref(r_id);
+	MCAutoNameRef t_key;
+	/* UNCHECKED */ MCNameCreate(*t_name, &t_key);
+		
+	if (!ctxt.CopyElementAsString((MCArrayRef)t_cookie_array -> getvalueref(), *t_key, false, r_id))
+		return false;
 	
 	return true;
 }

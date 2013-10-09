@@ -999,7 +999,6 @@ bool ConvertFile_rev_to_MIME ( MCDataRef p_input, MCTransferType p_type, MCDataR
 	
 	delete t_strings;
 
-	//MCU_urlencode(ep);
 	return ep . copyasdataref(r_output);
 }
 

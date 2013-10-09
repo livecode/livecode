@@ -499,13 +499,7 @@ bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expir
 	
 	MCAutoStringRef t_encoded;
 	if (t_success && !MCStringIsEmpty(p_value))
-	{
-		MCExecPoint ep;
-		ep.setsvalue(MCStringGetCString(p_value));
-		MCU_urlencode(ep);
-		t_success = ep .copyasstringref(&t_encoded);
-
-	}	
+		MCU_urlencode(p_value, &t_encoded);
 	
 	if (t_success)
 	{
