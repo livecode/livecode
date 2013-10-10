@@ -178,7 +178,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_START_ANGLE, UInt16, Interface, StartAngle)
 	DEFINE_RW_PROPERTY(P_ARC_ANGLE, UInt16, Interface, ArcAngle)
 	DEFINE_RW_PROPERTY(P_ROUND_ENDS, Bool, Interface, RoundEnds)
-	DEFINE_RW_PROPERTY(P_DASHES, String, Interface, Dashes)
+	DEFINE_RW_PROPERTY(P_DASHES, ItemsOfUInt, Interface, Dashes)
 	
 	DEFINE_RW_PROPERTY(P_EDIT_BACKGROUND, Bool, Interface, EditBackground)
 	
@@ -1076,7 +1076,9 @@ Exec_stat MCProperty::resolveprop(MCExecPoint& ep, Properties& r_which, MCNameRe
 	{
 		MCExecPoint ep2(ep);
 		destvar -> eval(ep2);
-		MCScriptPoint sp(ep2.getsvalue());
+        MCAutoStringRef t_value;
+        /* UNCHECKED */ ep2 . copyasstringref(&t_value);
+		MCScriptPoint sp(*t_value);
 		Symbol_type type;
 		const LT *te;
 		if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL && te->type == TT_PROPERTY && sp.next(type) == PS_EOF)

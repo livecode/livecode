@@ -523,11 +523,7 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	MCValueRef t_valueref;
 
 	// Set foreground
-	MCNewAutoNameRef t_key1;
-    /* UNCHECKED */ MCNameCreateWithCString("textColor", &t_key1);
-         
-            
-    if (MCArrayFetchValue(p_style, false, *t_key1, t_valueref))
+    if (MCArrayFetchValue(p_style, false, MCNAME("textColor"), t_valueref))
 	{
 		MCColor t_color;
 		if (MCscreen -> parsecolor((MCStringRef)t_valueref, t_color, nil))
@@ -536,10 +532,7 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	}
 	
 	// Set background
-	MCNewAutoNameRef t_key2;
-    /* UNCHECKED */ MCNameCreateWithCString("backgroundColor", &t_key2);
-	
-	if (MCArrayFetchValue(p_style, false, *t_key2, t_valueref))
+	if (MCArrayFetchValue(p_style, false, MCNAME("backgroundColor"), t_valueref))
 	{
 		MCColor t_color;
 		if (MCscreen -> parsecolor((MCStringRef)t_valueref, t_color, nil))
@@ -548,10 +541,7 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	}
 	
 	// Set textshift
-	MCNewAutoNameRef t_key3;
-    /* UNCHECKED */ MCNameCreateWithCString("textShift", &t_key3);
-	
-	if (MCArrayFetchValue(p_style, false, *t_key3, t_valueref))
+	if (MCArrayFetchValue(p_style, false, MCNAME("textShift"), t_valueref))
 	{
 		t_block -> setshift(MCNumberFetchAsInteger((MCNumberRef)t_valueref));
 		MCValueRelease(t_valueref);
@@ -559,10 +549,7 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	
 	// If the block is unicode then we always have to set textFont. In either
 	// case if there is a textFont key, strip any ,unicode tag first.
-	MCNewAutoNameRef t_key4;
-    /* UNCHECKED */ MCNameCreateWithCString("textFont", &t_key4);
-
-	if (MCArrayFetchValue(p_style, false, *t_key4, t_valueref))
+	if (MCArrayFetchValue(p_style, false, MCNAME("textFont"), t_valueref))
 	{
 		uindex_t t_comma;
 		if (MCStringFirstIndexOfChar((MCStringRef)t_valueref, ',', 0, kMCCompareExact, t_comma))
@@ -583,20 +570,14 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	}
 	
 	// Set textsize
-	MCNewAutoNameRef t_key5;
-    /* UNCHECKED */ MCNameCreateWithCString("textSize", &t_key5);
-	
-	if (MCArrayFetchValue(p_style, false, *t_key5, t_valueref))
+	if (MCArrayFetchValue(p_style, false, MCNAME("textSize"), t_valueref))
 	{
 		t_block -> setatts(P_TEXT_SIZE, (void *)MCNumberFetchAsInteger((MCNumberRef)t_valueref));
 		MCValueRelease(t_valueref);
 	}
 	
 	// Set textstyle
-	MCNewAutoNameRef t_key6;
-    /* UNCHECKED */ MCNameCreateWithCString("textStyle", &t_key6);
-
-	if (MCArrayFetchValue(p_style, false, *t_key6, t_valueref))
+	if (MCArrayFetchValue(p_style, false, MCNAME("textStyle"), t_valueref))
 	{
 		uint4 flags;
 		MCAutoStringRef fname;
@@ -611,20 +592,14 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	}
 
 	// Set linktext
-	MCNewAutoNameRef t_key7;
-    /* UNCHECKED */ MCNameCreateWithCString("linkText", &t_key7);
-	
-	if (MCArrayFetchValue(p_style, false, *t_key7, t_valueref))
+	if (MCArrayFetchValue(p_style, false, MCNAME("linkText"), t_valueref))
 	{	
 		t_block -> setatts(P_LINK_TEXT, (void *)t_valueref);
 		MCValueRelease(t_valueref);
 	}
 
 	// Set imagesource
-	MCNewAutoNameRef t_key8;
-    /* UNCHECKED */ MCNameCreateWithCString("imageSource", &t_key8);
-	
-	if (MCArrayFetchValue(p_style, false, *t_key8, t_valueref))
+	if (MCArrayFetchValue(p_style, false, MCNAME("imageSource"), t_valueref))
 	{
 		t_block -> setatts(P_IMAGE_SOURCE, (void *)t_valueref);
 		MCValueRelease(t_valueref);
@@ -656,22 +631,16 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 	}
 	
 	MCValueRef t_valueref;
+	MCAutoArrayRef t_style_entry;    
 
 	// Set foreground
-	MCNewAutoNameRef t_key1;
-    /* UNCHECKED */ MCNameCreateWithCString("style", &t_key1);
-         
-    // Fetch the style array.
-	MCAutoArrayRef t_style_entry;        
-    if (MCArrayFetchValue(p_block_value, false, *t_key1, t_valueref))
+    if (MCArrayFetchValue(p_block_value, false, MCNAME("style"), t_valueref))
 	{
 		/* UNCHECKED */ MCArrayCopyAndRelease((MCArrayRef)t_valueref, &t_style_entry);	
 	}
 	// Get the metadata (if any)
-	MCNewAutoNameRef t_key2;
-    /* UNCHECKED */ MCNameCreateWithCString("metadata", &t_key2);
 	MCStringRef t_metadata;
-	if (MCArrayFetchValue(p_block_value, false, *t_key2, t_valueref))
+	if (MCArrayFetchValue(p_block_value, false, MCNAME("metadata"), t_valueref))
 	{
 		t_metadata = (MCStringRef)MCValueRetain(t_valueref);
 		MCValueRelease(t_valueref);
@@ -689,14 +658,9 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 	bool t_is_unicode;
 	t_is_unicode = false;
 
-	MCNewAutoNameRef t_key3;
-    /* UNCHECKED */ MCNameCreateWithCString("text", &t_key3);
-	/* UNCHECKED */ ;
-	if (!MCArrayFetchValue(p_block_value, false, *t_key3, t_valueref))
+	if (!MCArrayFetchValue(p_block_value, false, MCNAME("text"), t_valueref))
 	{
-		MCNewAutoNameRef t_key4;
-		/* UNCHECKED */ MCNameCreateWithCString("unicodeText", &t_key4);
-		/* UNCKECKED */ MCArrayFetchValue(p_block_value, false, *t_key3, t_valueref);
+		/* UNCKECKED */ MCArrayFetchValue(p_block_value, false, MCNAME("unicodeText"), t_valueref);
 		t_is_unicode = true;
 	}
 	if (MCStringIsEmpty((MCStringRef)t_valueref) || MCValueGetTypeCode(t_valueref) == kMCValueTypeCodeArray)

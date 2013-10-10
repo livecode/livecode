@@ -175,23 +175,23 @@ void MCSellist::remove(MCObject *objptr, bool p_sendmessage)
 void MCSellist::sort()
 {
 	MCSelnode *optr = objects;
-	MCSortnode *items = NULL;
+	MCAutoArray<MCSortnode> items;
 	uint4 nitems = 0;
 	MCCard *cptr = optr->ref->getcard();
 	do
 	{
-		MCU_realloc((char **)&items, nitems, nitems + 1, sizeof(MCSortnode));
+		items.Extend(nitems + 1);
 		items[nitems].data = (void *)optr;
 		uint2 num = 0;
 		cptr->count(CT_LAYER, CT_UNDEFINED, optr->ref, num, True);
-		items[nitems].nvalue = (real8)num;
+		/* UNCHECKED */ MCNumberCreateWithUnsignedInteger(num, items[nitems].nvalue);
 		nitems++;
 		optr = optr->next();
 	}
 	while (optr != objects);
 	if (nitems > 1)
 	{
-		MCU_sort(items, nitems, ST_ASCENDING, ST_NUMERIC);
+		MCU_sort(items.Ptr(), nitems, ST_ASCENDING, ST_NUMERIC);
 		uint4 i;
 		MCSelnode *newobjects = NULL;
 		for (i = 0 ; i < nitems ; i++)
@@ -202,7 +202,6 @@ void MCSellist::sort()
 		}
 		objects = newobjects;
 	}
-	delete items;
 }
 
 uint32_t MCSellist::count()

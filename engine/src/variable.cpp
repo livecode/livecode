@@ -736,10 +736,10 @@ void MCVariable::synchronize(MCExecContext& ctxt, MCValueRef p_value, bool p_not
                     ctxt . GetHandler() -> eval(ctxt, *t_expression, &t_bool_value);
                     
 					if (!ctxt . HasError() && (MCBooleanRef)*t_bool_value == kMCTrue)
-						MCB_setvar(ctxt, p_value, name);
+                        MCB_setvar(ctxt, *t_value, name);
 				}
 				else
-					MCB_setvar(ctxt, p_value, name);
+                    MCB_setvar(ctxt, *t_value, name);
                 
 				break;
 			}

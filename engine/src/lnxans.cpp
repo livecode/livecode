@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "objdefs.h"
 #include "execpt.h"
+#include "exec.h"
 #include "mcerror.h"
 #include "ans.h"
 #include "stack.h"
@@ -54,8 +55,8 @@ struct MCLinuxPageSetup
 	uint32_t orientation;
 };
 
-bool MCLinuxPageSetupEncode(const MCLinuxPageSetup& setup, void*& r_data, uint32_t& r_data_size);
-bool MCLinuxPageSetupDecode(const void *data, uint32_t data_size, MCLinuxPageSetup& setup);
+bool MCLinuxPageSetupEncode(const MCLinuxPageSetup& setup, MCDataRef& r_data);
+bool MCLinuxPageSetupDecode(MCDataRef p_data, MCLinuxPageSetup& setup);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -63,19 +64,19 @@ struct MCLinuxPrintSetup
 {
 };
 
-bool MCLinuxPrintSetupEncode(const MCLinuxPrintSetup& setup, void*& r_data, uint32_t& r_data_size);
-bool MCLinuxPrintSetupDecode(const void *data, uint32_t data_size, MCLinuxPrintSetup& setup);
+bool MCLinuxPrintSetupEncode(const MCLinuxPrintSetup& setup, MCDataRef& r_data);
+bool MCLinuxPrintSetupDecode(MCDataRef p_data, MCLinuxPrintSetup& setup);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef GtkWidget* (*gtk_file_chooser_dialog_newPTR )  (const gchar *title,  GtkWindow *parent, GtkFileChooserAction action, const gchar *first_button_text, GtkResponseType first_button_response, ...) ; //, const gchar *second_button_text, GtkResponseType second_button_response, void *EOF );
 extern gtk_file_chooser_dialog_newPTR gtk_file_chooser_dialog_new_ptr;
 
-extern void MCRemoteFileDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char * const p_types[], uint32_t p_type_count, const char *p_initial_folder, const char *p_initial_file, bool p_save, bool p_files);
-extern void MCRemoteFolderDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial);
-extern void MCRemoteColorDialog(MCExecPoint& ep, const char *p_title, uint32_t p_r, uint32_t p_g, uint32_t p_b);
-extern void MCRemotePrintSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size);
-extern void MCRemotePageSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size);
+extern void MCRemoteFileDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint32_t p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file, bool p_save, bool p_files, MCStringRef &r_value);
+extern void MCRemoteFolderDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef &r_value);
+extern void MCRemoteColorDialog(MCStringRef p_title, uint32_t p_r, uint32_t p_g, uint32_t p_b, bool& r_chosen, MCColor& r_chosen_color);
+extern void MCRemotePrintSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result);
+extern void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result);
 
 bool G_init = false ;
 
@@ -130,10 +131,10 @@ void gtk_init(void)
 //NOTE: These routines may need to be converted to take care of UniCode later on.
 
 // Return the name of the filter
-char * get_filter_name ( char * p_type ) 
+char * get_filter_name (const char * p_type )
 {
 	uint4 a;
-	char * t_ptr ;
+    const char * t_ptr ;
 
 	// MW-2010-10-14: Make sure we have enough room to do this.
 	char *ret;
@@ -157,9 +158,9 @@ char * get_filter_name ( char * p_type )
 }
 
 // Return ALL the masks from the filter
-char * get_filter_masks ( char * p_type ) 
+char * get_filter_masks (const char * p_type )
 {
-	char *t_ptr ;
+    const char *t_ptr ;
 	uint4 a ;
 
 	// MW-2010-10-14: Make sure we have enough room to do this.
@@ -285,14 +286,14 @@ void make_front_widget ( GtkWidget *p_widget)
 	
 
 
-GtkWidget * create_open_dialog ( const char *p_title , GtkFileChooserAction action) 
+GtkWidget * create_open_dialog (MCStringRef p_title , GtkFileChooserAction action)
 {
 	
 	gtk_init();
 	
 	GtkWidget *dialog;
 
-	dialog = gtk_file_chooser_dialog_new_ptr(p_title, NULL, action,
+    dialog = gtk_file_chooser_dialog_new_ptr(MCStringGetCString(p_title), NULL, action,
 											 GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
 											 (action == GTK_FILE_CHOOSER_ACTION_SAVE) ? GTK_STOCK_SAVE : GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
 											 NULL);
@@ -311,40 +312,41 @@ static gboolean gtk_idle_callback (gpointer data)
 }
  
 
-void run_dialog ( GtkWidget *dialog, MCExecPoint &ep ) 
+void run_dialog(GtkWidget *dialog, MCStringRef &r_value)
 {
-	char *t_filename;
-	
-	ep . clear();
-
 	// TODO : This needs to be changed to a proper callback function : gdk_event_handler_set()
 	g_timeout_add(100, gtk_idle_callback, NULL);
 
-	bool foo = false ;
 	if (gtk_dialog_run(GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
-	{
-
+    {
+        MCAutoStringRef t_filename;
 		if ( gtk_file_chooser_get_select_multiple ( GTK_FILE_CHOOSER ( dialog ) ) )
 		{
-			GSList * t_filename_list ;
-			bool t_firstfile = true ;
+            MCAutoListRef t_filenames;
+             /* UNCHECKED */ MCListCreateMutable('\n', &t_filenames);
+
+            GSList * t_filename_list ;
 			
 			t_filename_list = gtk_file_chooser_get_filenames ( GTK_FILE_CHOOSER ( dialog )) ;
 			while ( t_filename_list != NULL )
-			{
-				ep . concatcstring( (char*)t_filename_list -> data , EC_RETURN, t_firstfile) ;				
-				if (t_firstfile ) t_firstfile = false ;
+            {
+                /* UNCHECKED */ MCListAppendNativeChars(*t_filenames, (char_t*)t_filename_list -> data, strlen((char*)t_filename_list -> data));
 			
 				t_filename_list = t_filename_list -> next ;
 			}
+
+            /* UNCHECKED */ MCListCopyAsString(*t_filenames, &t_filename);
 		}
 		else
-		{
-			t_filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-			ep . copysvalue(t_filename, strlen(t_filename));
+        {
+            gchar *t_cstr_filename;
+            t_cstr_filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+            /* UNCHECKED */ MCStringCreateWithCString((char*)t_cstr_filename, &t_filename);
+            g_free(t_cstr_filename);
 		}
-		
-		
+
+        if (*t_filename != nil)
+            r_value = MCValueRetain(*t_filename);
 	}
 }
 
@@ -361,17 +363,17 @@ void close_dialog ( GtkWidget *dialog )
 }
 
 
-void add_dialog_filters(GtkWidget *dialog, char * const p_types[], uint4 p_type_count )
+void add_dialog_filters(GtkWidget *dialog, MCStringRef *p_types, uint4 p_type_count)
 {
 	GtkFileFilter *filter ;
 	
-	if ( p_type_count >= 1 ) 
+    if (p_type_count >= 1 )
 	{
 		for (uint4 a=0; a < p_type_count; a++)
 		{
 			char *t_filter_name, *t_filter_masks;
-			t_filter_name = get_filter_name(p_types[a]);
-			t_filter_masks = get_filter_masks(p_types[a]);
+            t_filter_name = get_filter_name(MCStringGetCString(p_types[a]));
+            t_filter_masks = get_filter_masks(MCStringGetCString(p_types[a]));
 
 			filter = gtk_file_filter_new();
 			gtk_file_filter_set_name(filter, t_filter_name);
@@ -427,29 +429,41 @@ const char * get_current_filter_name ( GtkWidget * dialog )
 
 
 
-bool file_has_path ( const char * p_file) 
+bool file_has_path(MCStringRef p_file)
 {
-	return (  ( *p_file == '/' ) || ( *p_file == '~' ) || ( *p_file == '.' ) );
+    return ((MCStringGetNativeCharAtIndex(p_file, 0) == '/' ) ||
+            (MCStringGetNativeCharAtIndex(p_file, 0) == '~' ) ||
+            (MCStringGetNativeCharAtIndex(p_file, 0) == '.' ) );
 }
 
 
 
-void set_initial_file ( GtkWidget *dialog, const char * p_initial, char * p_last_path ) 
+void set_initial_file ( GtkWidget *dialog, MCStringRef p_initial, char * p_last_path)
 {
-	char *t_filename ;
+    MCAutoStringRef t_resolved;
 
-	if ( p_initial != NULL ) 
-	{
-		if ( file_has_path (p_initial)  )
-			t_filename =  MCS_resolvepath ( p_initial );
+	if ( p_initial != NULL )
+    {
+        if (file_has_path(p_initial))
+            MCS_resolvepath(p_initial, &t_resolved);
 		else
-			t_filename = strcat ( strcat(MCS_resolvepath ( NULL ), "/") , p_initial );
+        {
+            MCAutoStringRef t_current_dir;
+            MCAutoStringRef t_folder;
+            /* UNCHECKED */ MCS_getcurdir(&t_current_dir);
+            /* UNCHECKED */ MCStringFormat(&t_folder, "%@/%@", *t_current_dir, p_initial);
+            /* UNCHECKED */ MCS_resolvepath(*t_folder, &t_resolved);
+        }
 			
-		gtk_file_chooser_set_filename ( GTK_FILE_CHOOSER ( dialog ) , MCS_resolvepath ( t_filename ) );
+        if (MCS_exists(*t_resolved, True)) // file
+            gtk_file_chooser_set_filename ( GTK_FILE_CHOOSER ( dialog ), MCStringGetCString(*t_resolved));
+        else // folder
+            gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), MCStringGetCString(*t_resolved));
+
 	}
 	else
-		if ( p_last_path != NULL )
-		  gtk_file_chooser_set_current_folder  ( GTK_FILE_CHOOSER ( dialog ) , p_last_path );
+		if ( p_last_path != nil )
+          gtk_file_chooser_set_current_folder  ( GTK_FILE_CHOOSER ( dialog ) , p_last_path);
 }
 
 
@@ -465,59 +479,67 @@ void set_initial_file ( GtkWidget *dialog, const char * p_initial, char * p_last
 //
 // ---===================================================---
 
+extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
 
-static bool types_to_remote_types(char * const p_types[], uint4 p_type_count, char**& r_rtypes)
+
+static bool types_to_remote_types(MCStringRef *p_types, uint4 p_type_count, MCStringRef *&r_rtypes, uint32_t &r_count)
 {
-	char **t_rtypes;
-	if (!MCMemoryNewArray(p_type_count * 2, t_rtypes))
-		return false;
+    MCAutoStringRefArray t_rtypes;
+    if (!t_rtypes.New(p_type_count * 2))
+        return false;
+
+    index_t t_count;
+    t_count = 0;
 
 	for(uint32_t i = 0; i < p_type_count; i++)
-	{
-		uint32_t t_part_count;
-		char **t_parts;
-		if (MCCStringSplit(p_types[i], '|', t_parts, t_part_count))
-		{
-			if (t_part_count > 0)
-			{
-				MCCStringClone(t_parts[0], t_rtypes[i * 2]);
-				if (t_part_count > 1)
-					MCCStringClone(t_parts[1], t_rtypes[i * 2 + 1]);
-			}
-			MCCStringArrayFree(t_parts, t_part_count);
-		}
+    {
+        MCAutoStringRefArray t_parts;
+        if (MCStringsSplit(p_types[i], '|', t_parts.PtrRef(), t_parts.CountRef()))
+        {
+            if (t_parts.Count() > 0)
+            {
+                t_rtypes[t_count++] = MCValueRetain(t_parts[0]);
+                if (t_parts.Count() > 1)
+                    t_rtypes[t_count++] = MCValueRetain(t_parts[1]);
+            }
+        }
 	}
 
-	r_rtypes = t_rtypes;
+    t_rtypes.Shrink(t_count);
+    t_rtypes.Take(r_rtypes, r_count);
 
 	return true;
 }
 
-int MCA_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options)
-{
-
-	
-  	MCA_file_with_types ( ep, p_title, p_prompt, NULL, 0, p_initial, p_options ) ;	
-        return(1);
+int MCA_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
+{	
+    MCA_file_with_types(p_title, p_prompt, NULL, 0, p_initial, p_options, r_value, r_result);
+    return(1);
 }
 
 
 
 
-int MCA_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options)
+int MCA_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 
 {
 	if (!MCModeMakeLocalWindows())
 	{
 		bool t_plural = (p_options & MCA_OPTION_PLURAL) != 0;
-		char *t_resolved_path = MCS_resolvepath(p_initial);
-		char **t_rtypes;
-		if (types_to_remote_types(p_types, p_type_count, t_rtypes))
+
+        MCAutoStringRef t_resolved_path;
+        /* UNCHECKED */ MCS_resolvepath(p_initial, &t_resolved_path);
+
+        MCStringRef *t_rtypes;
+        uindex_t t_count;
+        if (types_to_remote_types(p_types, p_type_count, t_rtypes, t_count))
 		{
-			MCRemoteFileDialog(ep, p_title, p_prompt, t_rtypes, p_type_count * 2, NULL, t_resolved_path, false, t_plural);
-			MCCStringArrayFree(t_rtypes, p_type_count * 2);
-		}
-		delete t_resolved_path;
+            MCRemoteFileDialog(p_title, p_prompt, t_rtypes, t_count, NULL, *t_resolved_path, false, t_plural, r_result);
+            for (uint32_t i = 0; i < t_count; ++i)
+                MCValueRelease(t_rtypes[i]);
+
+            MCMemoryDeleteArray(t_rtypes);
+        }
 		return 1;
 	}
 
@@ -526,27 +548,29 @@ int MCA_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prom
 	GtkWidget *dialog ;
 	
 	
-	// Create the file dialog with the correct prompt
-	dialog = create_open_dialog ( p_title == NULL  ? p_prompt : p_title, GTK_FILE_CHOOSER_ACTION_OPEN );
+    // Create the file dialog with the correct prompt
+    dialog = create_open_dialog ( p_title == NULL || MCStringIsEmpty(p_title) ? p_prompt : p_title, GTK_FILE_CHOOSER_ACTION_OPEN );
 	
 	// If we have any filters, add them.
 	if ( p_type_count > 0 ) 
-		add_dialog_filters ( dialog, p_types , p_type_count );
+        add_dialog_filters ( dialog, p_types , p_type_count );
 
 	
 	if ( p_options & MCA_OPTION_PLURAL ) 
 		gtk_file_chooser_set_select_multiple ( GTK_FILE_CHOOSER ( dialog ) ,true );
 	
-	// If we have an initial file/folder then set it.
-	set_initial_file ( dialog, p_initial, G_last_opened_path ) ;
+    // If we have an initial file/folder then set it.
+    set_initial_file ( dialog, p_initial, G_last_opened_path ) ;
 
 	// Run the dialog ... this will be replaced with our own loop which will call the REV event handler too.
 
-	run_dialog ( dialog, ep) ;
-	
-	
-	MCresult -> clear();
-	MCresult -> copysvalue(get_current_filter_name ( dialog ) );
+    run_dialog(dialog, r_value);
+
+    if (r_value == nil)
+        /* UNCHECKED */ MCStringCreateWithCString(MCcancelstring, r_result);
+    else if (p_options & MCA_OPTION_RETURN_FILTER != 0)
+    /* UNCHECKED */ MCStringCreateWithCString(get_current_filter_name(dialog), r_result);
+
 	
 	if (G_last_opened_path != nil)
 		g_free(G_last_opened_path);
@@ -560,74 +584,79 @@ int MCA_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prom
 
 
 
-int MCA_ask_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options)
+int MCA_ask_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	//TODO : This still needs to pass over the p_filter.
-	MCA_ask_file_with_types ( ep, p_title, p_prompt, NULL, 0, p_initial, p_options ) ;	
+    MCA_ask_file_with_types ( p_title, p_prompt, NULL, 0, p_initial, p_options, r_value, r_result);
 	return(1);
 }
 
 
-int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options)
+int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
-	if (!MCModeMakeLocalWindows())
-	{
-		bool t_plural = (p_options & MCA_OPTION_PLURAL) != 0;
-		char *t_resolved_path = MCS_resolvepath(p_initial);
-		char **t_rtypes;
-		if (types_to_remote_types(p_types, p_type_count, t_rtypes))
+    if (!MCModeMakeLocalWindows())
+    {
+        bool t_plural = (p_options & MCA_OPTION_PLURAL) != 0;
+        MCAutoStringRef t_resolved_path;
+        /* UNCHECKED */ MCS_resolvepath(p_initial, &t_resolved_path);
+        MCStringRef *t_rtypes;
+        uindex_t t_count;
+
+        if (types_to_remote_types(p_types, p_type_count, t_rtypes, t_count))
 		{
-			MCRemoteFileDialog(ep, p_title, p_prompt, t_rtypes, p_type_count * 2, NULL, t_resolved_path, true, t_plural);
-			MCCStringArrayFree(t_rtypes, p_type_count * 2);
-		}
-		delete t_resolved_path;
+            MCRemoteFileDialog(p_title, p_prompt, t_rtypes, t_count, NULL, *t_resolved_path, true, t_plural, r_result);
+            for (uint32_t i = 0; i < t_count; ++i)
+                MCValueRelease(t_rtypes[i]);
+
+            MCMemoryDeleteArray(t_rtypes);
+        }
 		return 1;
 	}
 
 	GtkWidget *dialog ;
 	
-	dialog = create_open_dialog( p_title == NULL  ? p_prompt : p_title, GTK_FILE_CHOOSER_ACTION_SAVE );
+    dialog = create_open_dialog(p_title == NULL ? p_prompt : p_title, GTK_FILE_CHOOSER_ACTION_SAVE );
 
 	if ( p_type_count > 0 ) 
 		add_dialog_filters ( dialog, p_types , p_type_count );
 
 	// If we are given an initial
-	if (p_initial != nil)
+    if (p_initial != nil)
 	{
 		if (MCS_exists(p_initial, True))
-		{
-			char *t_path;
-			t_path = MCS_resolvepath(p_initial);
-			gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog), t_path);
-			delete t_path;
+        {
+            MCAutoStringRef t_resolved;
+            /* UNCHECKED */ MCS_resolvepath(p_initial, &t_resolved);
+            gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog), MCStringGetCString(*t_resolved));
 		}
 		else
 		{
-			char *t_folder;
-			const char *t_name;
-			if (strchr(p_initial, '/') == NULL)
-			{
-				t_folder = NULL;
-				t_name = p_initial;
-			}
-			else
-			{
-				t_folder = strdup(p_initial);
-				strrchr(t_folder, '/')[0] = '\0';
-				t_name = strrchr(p_initial, '/') + 1;
-				if (MCS_exists(t_folder, False))
-				{
-					char *t_new_folder;
-					t_new_folder = MCS_resolvepath(t_folder);
-					delete t_folder;
-					t_folder = t_new_folder;
-				}
-				else
-					t_folder = NULL;
-			}
-			gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), t_folder == NULL ? G_last_saved_path : t_folder);
-			gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog), t_name);
-			delete t_folder;
+            MCAutoStringRef t_folder;
+            MCAutoStringRef t_name;
+            uindex_t t_last_slash;
+            bool t_folder_exists;
+
+            if (!MCStringLastIndexOfChar(p_initial, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
+            {
+                /* UNCHECKED */ MCStringCopy(p_initial, &t_name);
+                t_folder_exists = false;
+            }
+            else
+            {
+                MCAutoStringRef t_tmp_folder;
+                MCStringCopySubstring(p_initial, MCRangeMake(t_last_slash + 1, MCStringGetLength(p_initial) - (t_last_slash+1)), &t_name);
+                MCStringCopySubstring(p_initial, MCRangeMake(0, t_last_slash), &t_tmp_folder);
+
+                if (MCS_exists(*t_tmp_folder, False))
+                    /* UNCHECKED */ MCS_resolvepath(*t_tmp_folder, &t_folder);
+                else
+                    /* UNCHECKED */ MCStringCopy(*t_tmp_folder, &t_folder);
+
+                t_folder_exists = true;
+            }
+
+            gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), t_folder_exists ? MCStringGetCString(*t_folder) : G_last_saved_path);
+            gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog),MCStringGetCString(*t_name));
 		}
 	}
 	else
@@ -635,11 +664,9 @@ int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_
 		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), G_last_saved_path);
 	}
 	
-	run_dialog ( dialog, ep) ;
+    run_dialog(dialog, r_value) ;
 
-	MCresult -> clear();
-	MCresult -> copysvalue(get_current_filter_name ( dialog ) );
-	
+    MCStringCreateWithCString(get_current_filter_name(dialog), r_result);
 
 	if (G_last_saved_path != NULL)
 		g_free(G_last_saved_path);
@@ -654,15 +681,14 @@ int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_
 
 
 
-int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial, unsigned int p_options)
+int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
-	if (!MCModeMakeLocalWindows())
-	{
-		char *t_resolved_initial_path = MCS_resolvepath(p_initial);
-		
-		MCRemoteFolderDialog(ep, p_title, p_prompt, t_resolved_initial_path);
-		if (t_resolved_initial_path != NULL)
-			free(t_resolved_initial_path);
+    MCAutoStringRef t_resolved;
+    /* UNCHECKED */ MCS_resolvepath(p_initial, &t_resolved);
+
+    if (!MCModeMakeLocalWindows())
+    {
+        MCRemoteFolderDialog(p_title, p_prompt, *t_resolved, r_value);
 		return 0;
 	}
 	
@@ -671,13 +697,14 @@ int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const
 	GtkWidget *dialog ;
 	
 	
-	dialog = create_open_dialog( p_title == NULL  ? p_prompt : p_title, GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER );
+    dialog = create_open_dialog(p_title == nil || MCStringGetLength(p_title) == 0  ? p_prompt : p_title, GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER );
 
-	if ( p_initial != NULL ) 
-		gtk_file_chooser_set_current_folder ( GTK_FILE_CHOOSER ( dialog ) , MCS_resolvepath(p_initial) );
+    if (p_initial != NULL)
+        gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), MCStringGetCString(*t_resolved));
+
 	
-	run_dialog ( dialog, ep) ;
-	close_dialog ( dialog ) ;
+    run_dialog(dialog, r_value);
+    close_dialog(dialog);
         
         return (1);
 	
@@ -696,23 +723,15 @@ int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const
 
 bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bool& r_chosen, MCColor& r_chosen_color)
 {
-	uint32_t t_red, t_green, t_blue;
-	t_red = p_initial_color . red;
-	t_green = p_initial_color . green;
-	t_blue = p_initial_color . blue;
-
-	//////////
-
 	GtkWidget * dialog ;
 	GtkColorSelection *colorsel;
-	GdkColor gdk_color ;
-	char *colorstr;
+    GdkColor gdk_color;
 	
 	gtk_init();
 	
-	gdk_color . red = t_red;
-	gdk_color . green = t_green;
-	gdk_color . blue = t_blue;
+    gdk_color . red = p_initial_color . red;
+    gdk_color . green = p_initial_color . green;
+    gdk_color . blue = p_initial_color . blue;
 		
 	dialog = gtk_color_selection_dialog_new  (MCStringGetCString(p_title));
 	make_front_widget ( dialog ) ;
@@ -724,11 +743,8 @@ bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bo
 	
 	if (gtk_dialog_run(GTK_DIALOG (dialog)) == GTK_RESPONSE_OK)
 	{
-		/*gtk_color_selection_get_current_color  (  colorsel , &gdk_color ) ;
-		colorstr = rgbtostr ( gdk_color.red, gdk_color.green, gdk_color.blue);
-		ep . clear();
-		ep . copysvalue(colorstr, strlen(colorstr));
-		delete colorstr ;*/
+        gtk_color_selection_get_current_color(colorsel, &gdk_color);
+
 		r_chosen_color . red = gdk_color . red;
 		r_chosen_color . blue = gdk_color . blue;
 		r_chosen_color . green = gdk_color . green;
@@ -769,37 +785,30 @@ MCPrinterDialogResult MCA_gtk_printer_setup ( PSPrinterSettings &p_settings )
 
 		MCLinuxPrintSetup t_setup;
 
-		void *t_data_in;
-		uint32_t t_data_in_size;
+		MCAutoDataRef t_data_in;
 
 		if (t_success)
-			t_success = MCLinuxPrintSetupEncode(t_setup, t_data_in, t_data_in_size);
+			t_success = MCLinuxPrintSetupEncode(t_setup, &t_data_in);
 
 		uint32_t t_result;
 		t_result = PRINTER_DIALOG_RESULT_ERROR;
 		if (t_success)
 		{
-			char *t_data_out;
-			uint32_t t_data_out_size;
-			t_data_out = nil;
-			t_data_out_size = 0;
-
-			MCRemotePrintSetupDialog(t_data_out, t_data_out_size, t_result, (const char *)t_data_in, t_data_in_size);
-
+			MCAutoDataRef t_data_out;
+            
+            MCRemotePrintSetupDialog(*t_data_in, &t_data_out, t_result);
+			
 			if (t_result == PRINTER_DIALOG_RESULT_OKAY)
 			{
-				if (MCLinuxPrintSetupDecode(t_data_out, t_data_out_size, t_setup))
+				if (MCLinuxPrintSetupDecode(*t_data_out, t_setup))
 				{
 				}
 				else
 					t_result = PRINTER_DIALOG_RESULT_ERROR;
 
 			}
+        }
 
-			free(t_data_out);
-		}
-
-		MCMemoryDeallocate(t_data_in);
 
 		return (MCPrinterDialogResult)t_result;
 	}
@@ -935,26 +944,22 @@ MCPrinterDialogResult MCA_gtk_page_setup (PSPrinterSettings &p_settings)
 		t_setup . orientation = p_settings . orientation;
 		t_setup . left_margin = t_setup . top_margin = t_setup . right_margin = t_setup . bottom_margin = 0;
 
-		void *t_data_in;
-		uint32_t t_data_in_size;
+		MCAutoDataRef t_data_in;
 
 		if (t_success)
-			t_success = MCLinuxPageSetupEncode(t_setup, t_data_in, t_data_in_size);
+			t_success = MCLinuxPageSetupEncode(t_setup, &t_data_in);
 
 		uint32_t t_result;
 		t_result = PRINTER_DIALOG_RESULT_ERROR;
 		if (t_success)
 		{
-			char *t_data_out;
-			uint32_t t_data_out_size;
-			t_data_out = nil;
-			t_data_out_size = 0;
-
-			MCRemotePageSetupDialog(t_data_out, t_data_out_size, t_result, (const char *)t_data_in, t_data_in_size);
+			MCAutoDataRef t_data_out;
+            
+			MCRemotePageSetupDialog(*t_data_in, &t_data_out, t_result);
 
 			if (t_result == PRINTER_DIALOG_RESULT_OKAY)
 			{
-				if (MCLinuxPageSetupDecode(t_data_out, t_data_out_size, t_setup))
+				if (MCLinuxPageSetupDecode(*t_data_out, t_setup))
 				{
 					p_settings . paper_size_width = t_setup . paper_width;
 					p_settings . paper_size_height = t_setup . paper_height;
@@ -964,11 +969,7 @@ MCPrinterDialogResult MCA_gtk_page_setup (PSPrinterSettings &p_settings)
 					t_result = PRINTER_DIALOG_RESULT_ERROR;
 
 			}
-
-			free(t_data_out);
 		}
-
-		MCMemoryDeallocate(t_data_in);
 
 		return (MCPrinterDialogResult)t_result;
 	}
@@ -1040,7 +1041,7 @@ MCPrinterDialogResult MCA_gtk_page_setup (PSPrinterSettings &p_settings)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCLinuxPageSetupEncode(const MCLinuxPageSetup& setup, void*& r_data, uint32_t& r_data_size)
+bool MCLinuxPageSetupEncode(const MCLinuxPageSetup& setup, MCDataRef &r_data)
 {
 	return false;
 
@@ -1078,7 +1079,7 @@ bool MCLinuxPageSetupEncode(const MCLinuxPageSetup& setup, void*& r_data, uint32
 	return t_success;*/
 }
 
-bool MCLinuxPageSetupDecode(const void *p_data, uint32_t p_data_size, MCLinuxPageSetup& setup)
+bool MCLinuxPageSetupDecode(MCDataRef p_data, MCLinuxPageSetup& setup)
 {
 	return false;
 
@@ -1106,7 +1107,7 @@ bool MCLinuxPageSetupDecode(const void *p_data, uint32_t p_data_size, MCLinuxPag
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCLinuxPrintSetupEncode(const MCLinuxPrintSetup& setup, void*& r_data, uint32_t& r_data_size)
+bool MCLinuxPrintSetupEncode(const MCLinuxPrintSetup& setup, MCDataRef &r_data)
 {
 	return false;
 
@@ -1136,7 +1137,7 @@ bool MCLinuxPrintSetupEncode(const MCLinuxPrintSetup& setup, void*& r_data, uint
 	return t_success;*/
 }
 
-bool MCLinuxPrintSetupDecode(const void *p_data, uint32_t p_data_size, MCLinuxPrintSetup& setup)
+bool MCLinuxPrintSetupDecode(MCDataRef p_data, MCLinuxPrintSetup& setup)
 {
 	return false;
 

@@ -69,8 +69,8 @@ extern bool deserialize_uint32(const char *p_stream, uint32_t p_stream_size, uin
 
 ///////////////////////////////////////////////////////////////////////////////
 
-extern void MCRemotePrintSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size);
-extern void MCRemotePageSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size);
+extern void MCRemotePrintSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result);
+extern void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result);
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1000,19 +1000,19 @@ MCPrinterDialogResult MCMacOSXPrinter::DoDialog(bool p_window_modal, Window p_ow
 		// serialize printer + print settings + page format, display remotely then deserialize returned data
 		char *t_data = NULL;
 		uint32_t t_data_size = 0;
-		char *t_reply_data = NULL;
-		uint32_t t_reply_data_size = 0;
-		uint32_t t_result;
+		MCAutoDataRef t_reply_data;
+        uint32_t t_result;
 		t_success = serialize_printer_settings(t_data, t_data_size, m_session, m_printer, m_settings, m_page_format);
 		PMPrinter t_printer = NULL;
 		if (t_success)
 		{
+            MCAutoDataRef t_data_str;
+            /* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_data, t_data_size, &t_data_str);
 			if (p_is_settings)
-				MCRemotePrintSetupDialog(t_reply_data, t_reply_data_size, t_result, t_data, t_data_size);
+				MCRemotePrintSetupDialog(*t_data_str, &t_reply_data, t_result);
 			else
-				MCRemotePageSetupDialog(t_reply_data, t_reply_data_size, t_result, t_data, t_data_size);
-			t_success = deserialize_printer_settings(t_reply_data, t_reply_data_size, m_session, t_printer, m_settings, m_page_format);
-			free(t_reply_data);
+				MCRemotePageSetupDialog(*t_data_str, &t_reply_data, t_result);
+			t_success = deserialize_printer_settings((const char *)MCDataGetBytePtr(*t_reply_data), MCDataGetLength(*t_reply_data), m_session, t_printer, m_settings, m_page_format);
 		}
 		if (t_success)
 		{

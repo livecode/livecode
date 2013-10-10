@@ -2799,7 +2799,7 @@ Boolean MCCard::checkid(uint4 controlid)
 	return False;
 }
 
-Boolean MCCard::find(MCExecPoint &ep, Find_mode mode, MCStringRef tofind,
+Boolean MCCard::find(MCExecContext &ctxt, Find_mode mode, MCStringRef tofind,
                      Boolean firstcard, Boolean firstword)
 {
 	if (flags & F_C_DONT_SEARCH)
@@ -2834,7 +2834,7 @@ Boolean MCCard::find(MCExecPoint &ep, Find_mode mode, MCStringRef tofind,
 					gptr = gptr->getparent();
 				}
 				firstcard = False;
-				if (fptr != NULL && fptr->find(ep, obj_id, mode, tofind, firstword))
+				if (fptr != NULL && fptr->find(ctxt, obj_id, mode, tofind, firstword))
 					return True;
 				else
 					break;
