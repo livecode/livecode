@@ -4125,7 +4125,6 @@ void MCButton::freeicons()
 	closeicon(macrbhilitetrack);
 }
 
-
 // MW-2012-02-16: [[ IntrinsicUnicode ]] This method switches all the text in
 //   the button to or from unicode (to unicode if 'to_unicode' is set).
 void MCButton::switchunicode(bool p_to_unicode)
