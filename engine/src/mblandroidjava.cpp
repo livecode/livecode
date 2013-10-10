@@ -463,6 +463,22 @@ bool MCJavaListAppendObject(JNIEnv *env, jobject p_list, jobject p_object)
 
 ////////
 
+bool MCJavaListAppendStringRef(JNIEnv *env, jobject p_list, MCStringRef p_string)
+{
+    bool t_success = true;
+    jstring t_jstring = nil;
+    
+    t_success = MCJavaStringFromNative(env, MCStringGetCString(p_string), t_jstring);
+    
+    if (t_success)
+        t_success = MCJavaListAppendObject(env, p_list, t_jstring);
+    
+    if (t_jstring != nil)
+        env->DeleteLocalRef(t_jstring);
+    
+    return t_success;
+}
+
 bool MCJavaListAppendString(JNIEnv *env, jobject p_list, const MCString *p_string)
 {
     bool t_success = true;
