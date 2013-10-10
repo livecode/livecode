@@ -1019,7 +1019,7 @@ void MCInterfaceSetDashes(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_d
     
     for (uindex_t i = 0; i < p_count; i++)
     {
-        if (p_dashes[i] < 0)
+        if (p_dashes[i] >= 256)
         {
             ctxt . LegacyThrow(EE_GRAPHIC_NAN);
             return;
