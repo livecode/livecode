@@ -331,7 +331,7 @@ MCRectangle MCStack::view_setstackviewport(const MCRectangle &p_rect)
 	
 	m_view_stack_rect = view_constrainstackviewport(p_rect);
 	
-	t_transform = view_get_stack_transform(m_view_fullscreenmode, m_view_stack_rect, m_view_rect);
+	t_transform = view_get_stack_transform(t_mode, m_view_stack_rect, m_view_rect);
 	
 	// IM-2013-10-03: [[ FullscreenMode ]] if the transform has changed, redraw everything
 	if (!MCGAffineTransformIsEqual(t_transform, m_view_transform))
