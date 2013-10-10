@@ -705,7 +705,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 	NSMutableString *t_chosen = nil;
 	
     if (t_success)
-		t_success = nil != (t_person_name = CFStringCreateWithCString(NULL, MCStringGetCString(p_person_name), kCFStringEncodingMacRoman));
+		t_success = MCStringConvertToCFStringRef(p_person_name, t_person_name);
 
 	if (t_success)
 	{
@@ -1125,7 +1125,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 }
 
 -(bool)showUpdateContact: (ABRecordRef) p_contact
-			   withTitle: (const char*)p_title withMessage: (const char*)p_message withAlternateName: (const char*)p_alternate_name
+			   withTitle: (MCStringRef)p_title withMessage: (MCStringRef)p_message withAlternateName: (MCStringRef)p_alternate_name
 			  withResult: (int32_t&) r_chosen
 {
 	m_success = true;
@@ -1279,7 +1279,7 @@ bool MCSystemUpdateContact(MCArrayRef p_contact, MCStringRef p_title, MCStringRe
 		t_success = nil != (t_update_contact = [[MCIPhoneUpdateContactDelegate alloc] init]);
 	if (t_success)
 		t_success = [t_update_contact showUpdateContact:t_contact
-											  withTitle:MCStringGetCString(p_title) withMessage:MCStringGetCString(p_message) withAlternateName:MCStringGetCString(p_alternate_name)
+											  withTitle:p_title withMessage:p_message withAlternateName:p_alternate_name
 											 withResult:r_result];
 	if (t_update_contact != nil)
 		[t_update_contact release];
