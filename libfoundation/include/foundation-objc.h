@@ -27,6 +27,7 @@
 
 @interface NSString (com_runrev_livecode_foundation_NSStringAdditions)
 	+ (NSString *)stringWithMCStringRef: (MCStringRef)value;
+    + (NSString *)stringWithMCNameRef: (MCNameRef)value;
 @end
 
 ////////////////////////////////////////////////////////////////////////////////

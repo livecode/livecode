@@ -514,12 +514,12 @@ static int display_modal_dialog(NSSavePanel *p_panel, MCStringRef p_initial_fold
 	NSString *t_initial_folder;
 	t_initial_folder = nil;
 	if (p_initial_folder != nil)
-        t_initial_folder = [NSString stringWithMCStringRef: p_initial_folder encoding: NSMacOSRomanStringEncoding];
+        t_initial_folder = [NSString stringWithMCStringRef: p_initial_folder];
 	
 	NSString *t_initial_file;
 	t_initial_file = nil;
 	if (p_initial_file != nil)
-        t_initial_file = [NSString stringWithMCStringRef: p_initial_file encoding: NSMacOSRomanStringEncoding];
+        t_initial_file = [NSString stringWithMCStringRef: p_initial_file];
 	
 	if (p_as_sheet)
 	{
@@ -545,7 +545,11 @@ static int display_modal_dialog(NSSavePanel *p_panel, MCStringRef p_initial_fold
 	}
 	else
 		// MM-2012-03-16: [[ Bug ]] Use runModalForDirectory:file: rather than setting directory and file - methods only introduced in 10.6
-		return [p_panel runModalForDirectory: t_initial_folder file: t_initial_file];
+//		return [p_panel runModalForDirectory: t_initial_folder file: t_initial_file];
+    {
+        [p_panel setDirectoryURL: [NSURL URLWithString: t_initial_folder]];
+        return [p_panel runModal];
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -594,6 +598,8 @@ int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p
         FileDialogAccessoryView *t_accessory;
         t_accessory = [[FileDialogAccessoryView alloc] init];
         [t_accessory setTypes: t_types length: p_type_count];
+        
+        
 		
         char *t_filename;
         t_filename = nil;
@@ -603,15 +609,13 @@ int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p
 		NSSavePanel *t_panel;
 		t_panel = (t_is_save) ? [NSSavePanel savePanel] : [NSOpenPanel openPanel] ;
 		
-        if (p_title != nil && MCStringGetLength(p_title) != 0)
+        if (p_title != nil && !MCStringIsEmpty(p_title))
 		{
-			[t_panel setTitle: [NSString stringWithCString: MCStringGetCString(p_title) encoding: NSMacOSRomanStringEncoding]];
-			[t_panel setMessage: [NSString stringWithCString: MCStringGetCString(p_prompt) encoding: NSMacOSRomanStringEncoding]];
+			[t_panel setTitle: [NSString stringWithMCStringRef: p_title]];
+			[t_panel setMessage: [NSString stringWithMCStringRef: p_prompt]];
 		}
 		else
-			[t_panel setTitle: [NSString stringWithCString: MCStringGetCString(p_prompt) encoding: NSMacOSRomanStringEncoding]];
-			
-//		[t_panel setDelegate: t_accessory];
+			[t_panel setTitle: [NSString stringWithMCStringRef: p_prompt]];
 		
 		if (p_type_count > 1)
 		{
@@ -761,11 +765,11 @@ int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial,
 			t_choose = [NSOpenPanel openPanel];
 			if (p_title != nil && MCStringGetLength(p_title) != 0)
 			{
-				[t_choose setTitle: [NSString stringWithCString: MCStringGetCString(p_title) encoding: NSMacOSRomanStringEncoding]];
-				[t_choose setMessage: [NSString stringWithCString: MCStringGetCString(p_prompt) encoding: NSMacOSRomanStringEncoding]];
+				[t_choose setTitle: [NSString stringWithMCStringRef: p_title]];
+				[t_choose setMessage: [NSString stringWithMCStringRef: p_prompt]];
 			}
 			else
-				[t_choose setTitle: [NSString stringWithCString: MCStringGetCString(p_prompt) encoding: NSMacOSRomanStringEncoding]];
+				[t_choose setTitle: [NSString stringWithMCStringRef: p_prompt]];
 			[t_choose setPrompt: @"Choose"];
 			[t_choose setCanChooseFiles: NO];
 			[t_choose setCanChooseDirectories: YES];

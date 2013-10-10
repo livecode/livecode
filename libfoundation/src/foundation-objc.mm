@@ -28,6 +28,13 @@
 	return [((NSString *)t_string) autorelease];
 }
 
++ (NSString *)stringWithMCNameRef: (MCNameRef)p_name_ref;
+{
+	CFStringRef t_string;
+	/* UNCHECKED */ MCStringConvertToCFStringRef(MCNameGetString(p_name_ref), t_string);
+	return [((NSString *)t_string) autorelease];
+}
+
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
