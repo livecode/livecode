@@ -1140,9 +1140,9 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 		
 		if (m_success)
 		{
-			t_title = [NSString stringWithCString: p_title == nil ? "" : p_title encoding:NSMacOSRomanStringEncoding];
-			t_message = [NSString stringWithCString: p_message == nil ? "" : p_message encoding:NSMacOSRomanStringEncoding];
-			t_alternate_name = [NSString stringWithCString: p_alternate_name == nil ? "" : p_alternate_name encoding:NSMacOSRomanStringEncoding];
+            t_title = MCStringRefToNSString(p_title == nil ? kMCEmptyString : p_title, false);
+            t_message = MCStringRefToNSString(p_message == nil ? kMCEmptyString : p_message, false);
+			t_alternate_name = MCStringRefToNSString(p_alternate_name == nil ? kMCEmptyString : p_alternate_name, false);
 			m_success = (t_title != nil) && (t_message != nil) && (t_alternate_name != nil);
 		}
 		
