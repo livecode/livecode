@@ -514,12 +514,12 @@ static int display_modal_dialog(NSSavePanel *p_panel, MCStringRef p_initial_fold
 	NSString *t_initial_folder;
 	t_initial_folder = nil;
 	if (p_initial_folder != nil)
-        t_initial_folder = [NSString stringWithMCStringRef: p_initial_folder encoding: NSMacOSRomanStringEncoding];
+        t_initial_folder = [NSString stringWithMCStringRef: p_initial_folder];
 	
 	NSString *t_initial_file;
 	t_initial_file = nil;
 	if (p_initial_file != nil)
-        t_initial_file = [NSString stringWithMCStringRef: p_initial_file encoding: NSMacOSRomanStringEncoding];
+        t_initial_file = [NSString stringWithMCStringRef: p_initial_file];
 	
 	if (p_as_sheet)
 	{
