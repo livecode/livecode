@@ -1474,8 +1474,9 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 					MCGFloat t_scale;
 					t_scale = MCResGetDeviceScale();
 					
+					// IM-2013-10-10: [[ FullscreenMode ]] Use height of view instead of card
 					int32_t t_surface_height;
-					t_surface_height = floor(t_context->stack->getcurcard()->getrect().height * t_scale);
+					t_surface_height = floor(t_context->stack->view_getrect().height * t_scale);
 					
 					// IM-2013-08-29: [[ ResIndependence ]] also provide scroll value at device scale
 					int32_t t_surface_scroll;
