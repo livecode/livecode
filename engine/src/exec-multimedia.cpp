@@ -410,7 +410,7 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 	else
 	{
 		/* UNCHECKED */ MCStringCopy(MCNameGetString(vcptr->getname()), &t_video_name);
-		/* UNCHECKED */ MCStringCreateWithCString(vcptr->getfile(), &t_temp);
+	    /* UNCHECKED */ vcptr->getfile(&t_temp);
 		scale = vcptr->getscale();
 		dontrefresh = vcptr->getflag(F_DONT_REFRESH);
 		tmpfile = True;
