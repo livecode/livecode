@@ -2160,15 +2160,15 @@ void MCInterfaceExecDeleteObjectChunks(MCExecContext& ctxt, MCObjectChunkPtr *p_
 	{
 		if (p_chunks[i] . object -> gettype() == CT_BUTTON)
 		{
-			p_chunks[i] . object -> getprop(p_chunks[i] . part_id, P_UNICODE_TEXT, ctxt . GetEP(), False);
+			MCStringRef t_value; 
+			t_value = nil;
+			p_chunks[i] . object -> getstringprop(ctxt, p_chunks[i] . part_id, P_TEXT, False, t_value);
 
-			ctxt . GetEP() . utf16toutf8();
-
-			ctxt . GetEP() . insert(MCnullmcstring, p_chunks[i] . mark . start, p_chunks[i] . mark . finish);
-
-			ctxt . GetEP() . utf8toutf16();
-
-			p_chunks[i] . object -> setprop(p_chunks[i] . part_id, P_UNICODE_TEXT, ctxt . GetEP(), False);
+			/* UNCHECKED */ MCStringMutableCopyAndRelease(t_value, t_value);
+			/* UNCHECKED */ MCStringRemove(t_value, MCRangeMake(p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start));
+			/* UNCHECKED */ MCStringCopyAndRelease(t_value, t_value);
+			p_chunks[i] . object -> setstringprop(ctxt, p_chunks[i] . part_id, P_TEXT, False, t_value);
+			MCValueRelease(t_value);
 		}
 		else if (p_chunks[i] . object -> gettype() == CT_FIELD)
         {
@@ -2188,11 +2188,10 @@ void MCInterfaceExecDeleteObjectChunks(MCExecContext& ctxt, MCObjectChunkPtr *p_
 
 static void MCInterfaceExecChangeChunkOfButton(MCExecContext& ctxt, MCObjectChunkPtr p_target, Properties p_prop, bool p_value)
 {
-	MCExecPoint& ep = ctxt . GetEP();
-	
-	p_target . object -> getprop(p_target . part_id, P_UNICODE_TEXT, ep, False);
+	MCStringRef t_value;
+	p_target . object -> getstringprop(ctxt, p_target . part_id, P_TEXT, False, t_value);
 
-	ep . utf16toutf8();
+	/* UNCHECKED */ MCStringMutableCopyAndRelease(t_value, t_value);
 
 	int4 start, end;
 	start = p_target . mark . start;
@@ -2203,45 +2202,41 @@ static void MCInterfaceExecChangeChunkOfButton(MCExecContext& ctxt, MCObjectChun
 	if (p_prop == P_DISABLED)
 		if (p_value)
 		{
-			if (ep.getsvalue().getstring()[start] != '(')
-				ep.insert("(", start, start), t_changed = true;
+			if (MCStringGetNativeCharAtIndex(t_value, start) != '(')
+		        /* UNCHECKED */ MCStringInsert(t_value, start, MCSTR("(")), t_changed = true;
 		}
 		else
 		{
-			if (ep.getsvalue().getstring()[start] == '(')
-				ep.insert(MCnullmcstring, start, start + 1), t_changed = true;
+			 if (MCStringGetNativeCharAtIndex(t_value, start) == '(')
+		        /* UNCHECKED */ MCStringRemove(t_value, MCRangeMake(start, 1)), t_changed = true;
 		}
 	else
 	{
-		if (ep.getsvalue().getstring()[start] == '(')
+		if (MCStringGetNativeCharAtIndex(t_value, start) == '(')
 			start++;
 		if (p_value)
 		{
-			if (ep.getsvalue().getstring()[start + 1] == 'n')
-				ep.insert("c", start + 1, start + 2), t_changed = true;
+			if (MCStringGetNativeCharAtIndex(t_value, start + 1) == 'n')
+		        /* UNCHECKED */ MCStringReplace(t_value, MCRangeMake(start + 1, 1), MCSTR("c")), t_changed = true;
 			else
-				if (ep.getsvalue().getstring()[start + 1] == 'u')
-					ep.insert("r", start + 1, start + 2), t_changed = true;
+				if (MCStringGetNativeCharAtIndex(t_value, start + 1) == 'u')
+					/* UNCHECKED */ MCStringReplace(t_value, MCRangeMake(start + 1, 1), MCSTR("r")), t_changed = true;
 		}
 		else
 		{
-			if (ep.getsvalue().getstring()[start + 1] == 'c')
-				ep.insert("n", start + 1, start + 2), t_changed = true;
+			if (MCStringGetNativeCharAtIndex(t_value, start + 1) == 'c')
+		        /* UNCHECKED */ MCStringReplace(t_value, MCRangeMake(start + 1, 1), MCSTR("n")), t_changed = true;
 			else
-				if (ep.getsvalue().getstring()[start + 1] == 'r')
-					ep.insert("u", start + 1, start + 2), t_changed = true;
+				if (MCStringGetNativeCharAtIndex(t_value, start + 1) == 'r')
+					/* UNCHECKED */ MCStringReplace(t_value, MCRangeMake(start + 1, 1), MCSTR("u")), t_changed = true;
 		}
 	}
 
 	if (t_changed)
 	{
-		ep . utf8toutf16();
-		if (p_target . object->setprop(p_target . part_id, P_UNICODE_TEXT, ep, False) != ES_NORMAL)
-		{
-			ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
-			return;
-		}
+		p_target . object->setstringprop(ctxt, p_target . part_id, P_TEXT, False, t_value);    
 	}
+	MCValueRelease(t_value);
 }
 
 void MCInterfaceExecEnableObject(MCExecContext& ctxt, MCObjectPtr p_target)
@@ -2621,13 +2616,16 @@ void MCInterfaceExecShowCards(MCExecContext& ctxt, uint2 p_count)
 
 void MCInterfaceExecShowObject(MCExecContext& ctxt, MCObjectPtr p_target, MCPoint *p_at)
 {
-	if (p_at != nil && p_target . object -> setprop(p_target . part_id, P_LOCATION, ctxt . GetEP(), False) != ES_NORMAL)
-		{
-			ctxt . LegacyThrow(EE_SHOW_BADLOCATION);
-			return;
-		}
+	if (p_at != nil)
+		p_target.object->setpointprop(ctxt, p_target.part_id, P_LOCATION, False, *p_at);
 
-	p_target . object->setsprop(P_VISIBLE, kMCTrueString);
+	if (!ctxt.HasError())
+	{
+		p_target.object->setboolprop(ctxt, p_target.part_id, P_VISIBLE, False, kMCTrue);
+		return;
+	}
+	
+	ctxt.Throw();
 }
 
 void MCInterfaceExecShowObjectWithEffect(MCExecContext& ctxt, MCObjectPtr p_target, MCPoint *p_at, MCVisualEffect *p_effect)
@@ -2638,11 +2636,11 @@ void MCInterfaceExecShowObjectWithEffect(MCExecContext& ctxt, MCObjectPtr p_targ
 		return;
 	}
 
-	if (p_at != nil && p_target . object -> setprop(p_target . part_id, P_LOCATION, ctxt . GetEP(), False) != ES_NORMAL)
-	{
-		ctxt . LegacyThrow(EE_SHOW_BADLOCATION);
+	if (p_at != nil)
+		p_target.object->setpointprop(ctxt, p_target.part_id, P_LOCATION, False, *p_at);
+		
+	if (ctxt.HasError())
 		return;
-	}
 
 	if (p_effect->exec(ctxt . GetEP()) != ES_NORMAL)
 	{
