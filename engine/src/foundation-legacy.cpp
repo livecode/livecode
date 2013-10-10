@@ -333,7 +333,6 @@ bool MCStringConvertLineEndingsFromLiveCode(MCStringRef p_input, MCStringRef& r_
 	r_output = MCValueRetain(p_input);
 #endif
 
-
 	return true;
 }
 

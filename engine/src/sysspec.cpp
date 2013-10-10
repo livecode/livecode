@@ -208,7 +208,6 @@ bool MCS_alternatelanguages(MCListRef& r_list)
     return MCsystem -> AlternateLanguages(r_list);
 }
 
-
 void MCS_seterrno(int value)
 {
 //	*s_mainthread_errno = value;
