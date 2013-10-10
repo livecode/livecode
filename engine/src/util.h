@@ -40,13 +40,32 @@ typedef struct
 }
 MCSaveprops;
 
-typedef struct
+struct MCSortnode
 {
-	char *svalue;
-	real8 nvalue;
+	union
+	{
+		MCStringRef svalue;
+		MCNumberRef nvalue;
+	};
+	
 	const void *data;
-}
-MCSortnode;
+	
+	MCSortnode()
+	: svalue(nil) {}
+	
+	~MCSortnode()
+	{
+		if (svalue != nil)
+			MCValueRelease(svalue);
+	}
+	
+	MCSortnode& operator= (const MCSortnode& s)
+	{
+		MCValueAssign(svalue, s.svalue);
+		data = s.data;
+		return *this;
+	}
+};
 
 extern void MCU_play();
 extern void MCU_play_stop();
@@ -110,7 +129,7 @@ extern void MCU_addline(char *&dptr, const char *sptr, Boolean first);
 extern void MCU_break_string(const MCString &s, MCString *&ptrs, uint2 &nptrs,
 	                             Boolean isunicode = False);
 extern void MCU_sort(MCSortnode *items, uint4 nitems,
-	                     Sort_type dir, Sort_type form);
+                       Sort_type dir, Sort_type form);
 #ifndef _DEBUG_MEMORY
 extern void MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize);
 #endif
@@ -167,8 +186,6 @@ extern void MCU_cleaninserted();
 extern Exec_stat MCU_change_color(MCColor &c, MCStringRef&n, MCExecPoint &ep, uint2 line, uint2 pos);
 //extern void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c);
 extern void MCU_get_color(MCExecPoint &ep, MCStringRef name, MCColor &c);
-extern void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
-	                       real8 tn, real8 oldn, MCSortnode *titems);
 extern void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output);
 extern void MCU_geturl(MCExecPoint &ep);
 extern void MCU_puturl(MCExecPoint &ep, MCExecPoint &data);

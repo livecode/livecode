@@ -3383,7 +3383,27 @@ void MCObject::setdataprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p
 	if (setprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL)
 		return;
 	
-	ctxt . Throw();
+    ctxt . Throw();
+}
+
+//////////
+
+void MCObject::getpointprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCPoint &r_point)
+{
+	if (getprop(p_part_id, p_which, ctxt.GetEP(), p_effective) == ES_NORMAL
+		&& ctxt.GetEP().copyaspoint(r_point))
+		return;
+	
+	ctxt.Throw();
+}
+
+void MCObject::setpointprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, const MCPoint &p_point)
+{
+	ctxt.GetEP().setpoint(p_point);
+	if (setprop(p_part_id, p_which, ctxt.GetEP(), p_effective) == ES_NORMAL)
+		return;
+	
+    ctxt.Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

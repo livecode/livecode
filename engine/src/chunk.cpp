@@ -2719,8 +2719,9 @@ static int4 countwords(MCExecPoint &ep, const char *sptr, const char *eptr)
 static int4 counttokens(MCExecPoint &ep, const char *sptr, const char *eptr)
 {
 	int4 tokens = 0;
-	MCString s(sptr, eptr - sptr);
-	MCScriptPoint sp(s);
+    MCAutoStringRef s;
+    /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *) sptr, eptr - sptr, &s);
+	MCScriptPoint sp(*s);
 	Parse_stat ps = sp.nexttoken();
 	while (ps != PS_ERROR && ps != PS_EOF)
 	{
@@ -3082,8 +3083,10 @@ Exec_stat MCChunk::mark_legacy(MCExecPoint &ep, int4 &start, int4 &end, Boolean 
 			return ES_ERROR;
 		}
 		uint4 offset = sptr - startptr;
-		MCString string(sptr, eptr - sptr);
-		MCScriptPoint sp(string);
+        MCAutoStringRef string;
+        /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *) sptr, eptr - sptr, &string);
+
+        MCScriptPoint sp(*string);
 		MCerrorlock++;
 
 		Parse_stat ps = sp.nexttoken();
