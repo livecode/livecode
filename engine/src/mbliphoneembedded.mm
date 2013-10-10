@@ -474,9 +474,9 @@ public:
             else if (MCValueGetTypeCode(*t_value) == kMCValueTypeCodeNumber)
                 t_result = [NSNumber numberWithDouble: MCNumberFetchAsReal((MCNumberRef)*t_value)];
             else if (MCValueGetTypeCode((*t_value) == kMCValueTypeCodeString))
-                t_result = [NSString stringWithMCStringRef: (MCStringRef)*t_value encoding: NSMacOSRomanStringEncoding];
+                t_result = [NSString stringWithMCStringRef: (MCStringRef)*t_value];
             else if (MCValueGetTypeCode((*t_value) == kMCValueTypeCodeName))
-                t_result = [NSString stringWithMCStringRef: MCNameGetString((MCNameRef)*t_value) encoding: NSMacOSRomanStringEncoding];
+                t_result = [NSString stringWithMCNameRef: (MCNameRef)*t_value)];
 				
 			m_completion(t_result);
 		}
