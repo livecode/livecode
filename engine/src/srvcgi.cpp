@@ -942,7 +942,6 @@ static bool cgi_multipart_get_boundary(char *&r_boundary)
 	uint32_t t_param_count = 0;
 	
 	t_success = MCStringFirstIndexOfChar(*t_content_type, ';', 0, kMCStringOptionCompareExact, t_index);
-	//t_success = MCCStringFirstIndexOf(MCStringGetCString(*t_content_type), ';', t_index);
 
 	if (t_success)
 	{
@@ -960,7 +959,6 @@ static bool cgi_multipart_get_boundary(char *&r_boundary)
 			if (MCStringIsEqualToCString(t_names[i], "boundary", kMCCompareCaseless) && MCStringGetLength(t_values[i]) > 0)
 			{
 				r_boundary = strdup(MCStringGetCString(t_values[i]));
-				t_values[i] = nil;
 				break;
 			}
 		}
