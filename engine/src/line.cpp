@@ -409,7 +409,7 @@ findex_t MCLine::getcursorindex(int2 cx, Boolean chunk)
 		bwidth = bptr->getwidth(NULL, x);
 	}
 	// The block still thinks in terms of byte offsets...
-	return (bptr->getcursorbyteindex(x, cx, chunk, bptr == lastblock)+1)/2;
+	return bptr->getcursorbyteindex(x, cx, chunk, bptr == lastblock)/2;
 }
 
 uint2 MCLine::getwidth()

@@ -318,7 +318,8 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 
 	// MW-2012-02-17: [[ SplitTextAttrs ]] If we have unicode, or one of the font attr are
 	//   set then we must serialize a font.
-	if ((flags & (F_FATTR_MASK | F_HAS_UNICODE)) != 0)
+	//if ((flags & (F_FATTR_MASK | F_HAS_UNICODE)) != 0)
+	if (true)
 	{
 		// Add in the font record flag.
 		flags |= F_FONT;
@@ -334,7 +335,8 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 
 	// MW-2012-02-17: [[ SplitTextAttrs ]] If any one of the font attrs are set, or we
 	//   are unicode we must serialize a font.
-	if ((flags & (F_FATTR_MASK | F_HAS_UNICODE)) != 0)
+	//if ((flags & (F_FATTR_MASK | F_HAS_UNICODE)) != 0)
+	if (true)
 	{
 		// MW-2012-02-17: [[ SplitTextAttrs ]] Compute the attrs to write out.
 		MCNameRef t_fontname;
@@ -1938,8 +1940,8 @@ void MCBlock::sethilite(Boolean on)
 uint2 MCBlock::indexincrement(uint2 tindex)
 {
 	// If no unicode flag, then chars == characters
-	if ((flags & F_HAS_UNICODE) == 0)
-		return 1;
+	//if ((flags & F_HAS_UNICODE) == 0)
+	//	return 1;
 
 	// Adjust index so it starts on a unicode char...
 	uint2 t_this_index;
@@ -1992,8 +1994,8 @@ uint2 MCBlock::indexdecrement(uint2 tindex)
 	}
 
 	// If no unicode flag, then chars == characters
-	if ((flags & F_HAS_UNICODE) == 0)
-		return 1;
+	//if ((flags & F_HAS_UNICODE) == 0)
+	//	return 1;
 
 	// Adjust index so it starts on a unicode char before tindex
 	uint2 t_this_index;
@@ -2030,7 +2032,8 @@ Boolean MCBlock::textcomparechar(const char *thetext, char thechar)
 {
 	if (!size)
 		return False;
-	return MCU_comparechar(thetext, thechar, (flags & F_HAS_UNICODE) != 0);
+	//return MCU_comparechar(thetext, thechar, (flags & F_HAS_UNICODE) != 0);
+	return MCU_comparechar(thetext, thechar, true);
 }
 
 char *MCBlock::textstrchr(const char *sptr,  uint2 l, char target)
@@ -2041,7 +2044,8 @@ char *MCBlock::textstrchr(const char *sptr,  uint2 l, char target)
 	uint4 len = l;
 	if (!l)
 		return NULL;
-	if (MCU_strchr(eptr, len, target, (flags & F_HAS_UNICODE) != 0))
+	//if (MCU_strchr(eptr, len, target, (flags & F_HAS_UNICODE) != 0))
+	if (MCU_strchr(eptr, len, target, true))
 		return (char *)eptr;
 	return NULL;
 }
@@ -2050,7 +2054,8 @@ Boolean MCBlock::textisspace(const char *textptr)
 {
 	if (!size)
 		return False;
-	if (flags & F_HAS_UNICODE)
+	//if (flags & F_HAS_UNICODE)
+	if (true)
 #if defined(_WINDOWS)
 		return iswspace(*(uint2 *)textptr) != 0;
 #else
@@ -2064,7 +2069,8 @@ Boolean MCBlock::textispunct(const char *textptr)
 {
 	if (!size)
 		return False;
-	if (flags & F_HAS_UNICODE)
+	//if (flags & F_HAS_UNICODE)
+	if (true)
 	{
 		const uint2 *uchar = (const uint2 *)textptr;
 		if (*uchar < MAXUINT1)
@@ -2084,12 +2090,14 @@ Boolean MCBlock::textispunct(const char *textptr)
 
 uint2 MCBlock::getcharsize()
 {
-	return MCU_charsize((flags & F_HAS_UNICODE) != 0);
+	//return MCU_charsize((flags & F_HAS_UNICODE) != 0);
+	return MCU_charsize(true);
 }
 
 uint2 MCBlock::indextocharacter(uint2 si)
 {
-	if (flags & F_HAS_UNICODE)
+	//if (flags & F_HAS_UNICODE)
+	if (true)
 		return si >> 1;
 	else
 		return si + index;
@@ -2098,7 +2106,8 @@ uint2 MCBlock::indextocharacter(uint2 si)
 uint2 MCBlock::verifyindex(uint2 si, bool p_is_end)
 {
 	si -= index;
-	if (flags & F_HAS_UNICODE && si & 0x1)
+	//if (flags & F_HAS_UNICODE && si & 0x1)
+	if (si & 0x1)
 	{
 		if (p_is_end)
 			return index + si + 1;
@@ -2111,7 +2120,8 @@ uint2 MCBlock::verifyindex(uint2 si, bool p_is_end)
 
 uint2 MCBlock::getlength()
 {
-	if (flags & F_HAS_UNICODE)
+	//if (flags & F_HAS_UNICODE)
+	if (true)
 		return size >> 1;
 	else
 		return size;
@@ -2139,7 +2149,8 @@ uint4 MCBlock::getcharatindex(int4 p_index)
 	
 	// MW-2008-07-25: [[ Bug 6830 ]] The code to fetch the correct unicode character
 	//   was previously completely wrong. I think its correct now...
-	if (getflag(F_HAS_UNICODE))
+	//if (getflag(F_HAS_UNICODE))
+	if (true)
 	{
 		if (t_block -> index + t_block -> size - p_index >= 2)
 			return *((uint2 *)(parent -> gettext_raw() + p_index));
@@ -2171,7 +2182,8 @@ MCBlock *MCBlock::retreatindex(uint2& p_index)
 		while(t_block -> size == 0 && t_block -> prev() != parent -> getblocks() -> prev());
 	}
 		
-	if (t_block -> getflag(F_HAS_UNICODE))
+	//if (t_block -> getflag(F_HAS_UNICODE))
+	if (true)
 		p_index -= 2;
 	else
 		p_index -= 1;
@@ -2204,7 +2216,8 @@ MCBlock *MCBlock::advanceindex(uint2& p_index)
 		while(t_block -> size == 0 && t_block -> next() != parent -> getblocks());
 	}
 	
-	if (t_block -> getflag(F_HAS_UNICODE) && p_index < index + size - 1)
+	//if (t_block -> getflag(F_HAS_UNICODE) && p_index < index + size - 1)
+	if (p_index < index + size - 1)
 		p_index += 2;
 	else
 		p_index += 1;
@@ -2352,7 +2365,8 @@ uint32_t MCBlock::measureattrs(void)
 	// The flags field.
 	t_size = 4;
 	// The font index (if any)
-	if ((flags & (F_FATTR_MASK | F_HAS_UNICODE)) != 0)
+	//if ((flags & (F_FATTR_MASK | F_HAS_UNICODE)) != 0)
+	if (true)
 		t_size += 2;
 	if ((flags & F_HAS_COLOR) != 0)
 		t_size += 6;
