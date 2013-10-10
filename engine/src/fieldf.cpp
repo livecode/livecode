@@ -571,7 +571,7 @@ void MCField::drawcursor(MCContext *p_context, const MCRectangle &dirty)
 	{
 		// MW-2012-01-27: [[ Bug 9511 ]] Make sure we don't render the win95-esque focus
 		//   border in native GTK mode.
-		if (focusedparagraph->gettextsize() && !IsMacLF() && !IsNativeGTK() && !getstate(CS_MENUFIELD))
+		if (!focusedparagraph->IsEmpty() && !IsMacLF() && !IsNativeGTK() && !getstate(CS_MENUFIELD))
 		{
 			if (MClook == LF_WIN95)
 			{
@@ -776,7 +776,7 @@ void MCField::dragtext()
 		pgheight = pgptr->getheight(fixedheight);
 	}
 	cy -= y;
-	uint2 ssi, sei;
+	findex_t ssi, sei;
 	pgptr->getclickindex(cx, cy, fixedheight, ssi, sei, False, False);
 
 	// MW-2012-01-25: [[ ParaStyles ]] Request the cursor rect without spacing.
@@ -1690,7 +1690,9 @@ void MCField::finsertnew(Field_translations function, const MCString& p_string, 
 	selectedmark(False, si, ei, False, False);
 
 	// Defer to the paragraph method to insert the text.
-	focusedparagraph -> finsertnew(p_string, p_is_unicode);
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)p_string.getstring(), p_string.getlength(), p_is_unicode?kMCStringEncodingUTF16:kMCStringEncodingNative, false, &t_string);
+	focusedparagraph -> finsertnew(*t_string);
 
 	// Compute the end of the selection.
 	int4 ti;
@@ -2289,10 +2291,12 @@ void MCField::typetext(const MCString &newtext)
 			message_with_args(MCM_key_up, string);
 		}
 	}
-	uint2 oldfocused;
+	findex_t oldfocused;
 	focusedparagraph->getselectionindex(oldfocused, oldfocused);
 	state |= CS_CHANGED;
-	if (newtext.getlength() && focusedparagraph->finsertnew(newtext, false))
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCStringCreateWithOldString(newtext, &t_string);
+	if (newtext.getlength() && focusedparagraph->finsertnew(*t_string))
 	{
 		recompute();
 		int4 endindex = oldfocused + newtext.getlength();

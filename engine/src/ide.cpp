@@ -1069,7 +1069,7 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 		char *t_text;
 		uint4 t_length;
 		uint4 t_min_nesting, t_nesting;
-		t_text = new char[t_paragraph -> gettextsize()];
+		t_text = new char[t_paragraph -> gettextbytesize()];
 		t_length = 0;
 		t_paragraph -> nativizetext(true, t_text, t_length);
 		t_paragraph -> clearzeros();
@@ -1090,7 +1090,7 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 			char *t_text;
 			uint4 t_length;
 			uint4 t_min_nesting, t_nesting;
-			t_text = new char[t_paragraph -> gettextsize()];
+			t_text = new char[t_paragraph -> gettextbytesize()];
 			t_length = 0;
 			t_paragraph -> nativizetext(true, t_text, t_length);
 			t_paragraph -> clearzeros();
@@ -1352,7 +1352,7 @@ static void strip_paragraph(void *p_context, MCColourizeClass p_class, uint4 p_i
 	break;
 	
 	default:
-		s_strip_paragraph_ep -> concatchars(t_paragraph -> gettext() + t_start, t_end - t_start, EC_SPACE, t_first);
+		s_strip_paragraph_ep -> concatchars(t_paragraph -> gettext_raw() + t_start, t_end - t_start, EC_SPACE, t_first);
 	break;
 	}
 }

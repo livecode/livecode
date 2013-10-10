@@ -1458,16 +1458,14 @@ void MCS_mac_closeresourcefile(SInt16 p_ref) // TODO: remove?
 
 bool MCS_mac_fsref_to_path(FSRef& p_ref, MCStringRef& r_path)
 {
-	MCAutoNativeCharArray t_buffer;
+	MCAutoArray<byte_t> t_buffer;
 	if (!t_buffer.New(PATH_MAX))
 		return false;
-	FSRefMakePath(&p_ref, (UInt8*)t_buffer.Chars(), PATH_MAX);
+	FSRefMakePath(&p_ref, (UInt8*)t_buffer.Ptr(), PATH_MAX);
     
-	t_buffer.Shrink(MCCStringLength((char*)t_buffer.Chars()));
+	t_buffer.Shrink(strlen((const char*)t_buffer.Ptr()));
     
-	MCAutoStringRef t_utf8_path;
-	return t_buffer.CreateStringAndRelease(&t_utf8_path) &&
-    MCU_utf8tonative(*t_utf8_path, r_path);
+	return MCStringCreateWithBytes(t_buffer.Ptr(), t_buffer.Size(), kMCStringEncodingUTF8, false, r_path);
 }
 
 bool MCS_mac_FSSpec2path(FSSpec *fSpec, MCStringRef& r_path)

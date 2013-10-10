@@ -764,6 +764,7 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 			MCAutoStringRef tptr;
 			MCAutoStringRef t_mptr_string;
 			
+			t_mptr_string = MCNameGetString(mptr);
 			if (params != nil)
 			{
 				MCExecPoint ep(this, NULL, NULL);
@@ -772,8 +773,7 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 				ep . copyasstringref(&t_value);
 				MCStringFormat(&tptr, "%@ %@", *t_mptr_string, *t_value);
 			}
-            else
-                t_mptr_string = MCNameGetString(mptr);
+                
 			
 			MCHandler *t_handler;
 			t_handler = findhandler(HT_MESSAGE, mptr);

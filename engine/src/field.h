@@ -25,6 +25,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define SCROLL_RATE 100
 #define MAX_PASTE_MESSAGES 32
 
+
+// Type used to index into fields, paragraphs, blocks, etc
+typedef int32_t findex_t;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // MW-2012-02-20: [[ FieldExport ]] Structure representing a (flattened) para-
@@ -145,8 +149,8 @@ struct MCFieldExportEventData
 	bool has_character_style;
 	MCFieldCharacterStyle character_style;
 	// The bytes comprising the current run (if a run event).
-	const void *bytes;
-	uint32_t byte_count;
+	MCStringRef m_text;
+	MCRange m_range;
 	// Whether this event is occuring on the first or last paragraph (or both).
 	bool is_first_paragraph, is_last_paragraph;
 	// The number of the paragraph (if requested).

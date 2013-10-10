@@ -876,7 +876,7 @@ void MCField::DoGetTextState(MCExecContext& ctxt, Properties which, uint32_t par
 		}
         
 		// Reduce ei until we get to zero, advancing through the paras.
-		ei -= sptr->gettextsizecr();
+		ei -= sptr->gettextlengthcr();
 		sptr = sptr->next();
 	}
 	while(ei > 0);
@@ -975,11 +975,11 @@ void MCField::GetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, MCInterface
             t_ranges . Push(t_para_ranges . ranges[i]);
         
         // Increment the offset by the size of the paragraph.
-        t_index_offset += sptr -> gettextsizecr();
+        t_index_offset += sptr -> gettextlengthcr();
         
         // Reduce ei until we get to zero, advancing through the paras.
         si = 0;
-        ei -= sptr -> gettextsizecr();
+        ei -= sptr -> gettextlengthcr();
         sptr = sptr -> next();
     }
     while(ei > 0);

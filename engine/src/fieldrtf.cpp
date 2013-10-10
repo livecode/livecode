@@ -747,7 +747,8 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		ctxt . styles[ctxt . style_index] = t_new_style;
 
 		// Now emit the text, if native its easy, otherwise we must process.
-		if (p_event_type == kMCFieldExportEventNativeRun)
+		// TODO: change to use StringRefs
+		/*if (p_event_type == kMCFieldExportEventNativeRun)
 			export_rtf_emit_native_text(ctxt . buffer, (const uint8_t *)p_event_data . bytes, p_event_data . byte_count);
 		else if (p_event_type == kMCFieldExportEventUnicodeRun)
 		{
@@ -784,7 +785,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		
 			// Delete the temporary buffer.
 			delete t_native_text;
-		}
+		}*/
 	}
 
 	return true;

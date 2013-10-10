@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define	BLOCK_H
 
 #include "dllst.h"
+#include "field.h"
 
 class MCParagraph;
 class MCField;
@@ -54,8 +55,6 @@ Blockatts;
 
 class MCBlock : public MCDLlist
 {
-	friend class MCField;
-	friend class MCParagraph;
 
 protected:
 	MCParagraph *parent;
@@ -99,16 +98,15 @@ public:
 	// MW-2012-02-06: The 'persistent_only' param determines whether things like
 	//   'flagged' are excluded from the sameness check (used by styledText).
 	Boolean sameatts(MCBlock *bptr, bool p_persistent_only);
-	Boolean breakat(int2 x, uint2 width, Boolean first,
-	                MCFontStruct *pfont, Boolean &broken);
+
 	bool fit(int2 x, uint2 width, uint2& r_break_index, bool& r_break_fits);
 	void split(uint2 p_index);
 	int2 gettabwidth(int2 x, const char *text, uint2 index);
-	void drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 length, Boolean image, uint32_t style);
+	void drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, findex_t length, Boolean image, uint32_t style);
 	
 	// MW-2012-02-27: [[ Bug 2939 ]] The 'flags' parameter indicates whether the left and/or
 	//   right edge of any box or 3d-box should be rendered.
-	void draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const char *tptr, uint2 pstyle, uint32_t flags);
+	void draw(MCDC *dc, int2 x, int2 cx, int2 y, findex_t si, findex_t ei, MCStringRef p_text, uint2 pstyle, uint32_t flags);
 
 	// MW-2012-02-17: [[ SplitTextAttrs ]] Returns the effective font attrs of the block.
 	//   If 'base_attrs' is non-nil, it uses that to derive the attrs.
@@ -156,14 +154,14 @@ public:
 	{
 		parent = pgptr;
 	}
-	void setindex(const char *sptr, uint2 i, uint2 l);
-	void moveindex(const char *sptr, int2 ioffset, int2 loffset);
+	void setbyteindex(const char *sptr, uint2 i, uint2 l);
+	void movebyteindex(const char *sptr, int2 ioffset, int2 loffset);
 	uint2 getcursorx(int2 x, uint2 fi);
-	uint2 getcursorindex(int2 x, int2 cx, Boolean chunk, Boolean last);
+	uint2 getcursorbyteindex(int2 x, int2 cx, Boolean chunk, Boolean last);
 	uint2 getsubwidth(MCDC *dc, int2 x, uint2 i, uint2 l);
 	uint2 getwidth(MCDC *dc, int2 x);
 	void reset();
-	void getindex(uint2 &i, uint2 &l);
+	void getbyteindex(uint2 &i, uint2 &l);
 	uint2 getascent(void);
 	uint2 getdescent(void);
 	void freeatts();
@@ -206,7 +204,9 @@ public:
 	}
 	bool hasunicode() const
 	{
-		return (flags & F_HAS_UNICODE) != 0;
+		// Paragraphs now use StringRefs so blocks are always considered to
+		// use unicode. This function will soon go away.
+		return true;
 	}
 	Boolean islink() const
 	{
@@ -225,16 +225,16 @@ public:
 
 	bool getflag(unsigned int f) const
 	{
+		if (f & F_HAS_UNICODE)
+			return true;
 		return (flags & f) != 0;
 	}
 
-	void sethasunicode(bool p_has_unicode)
+	/*void sethasunicode(bool p_has_unicode)
 	{
-		if (p_has_unicode)
-			flags |= F_HAS_UNICODE;
-		else
-			flags &= ~F_HAS_UNICODE;
-	}
+		// Blocks are always Unicode now and this is ignored
+		assert(false);
+	}*/
 
 	MCBlock *next()
 	{
@@ -279,12 +279,12 @@ public:
 		return (MCBlock *)MCDLlist::remove((MCDLlist *&)list);
 	}
 
-	uint2 getindex(void) const
+	uint2 getbyteindex(void) const
 	{
 		return index;
 	}
 	
-	uint2 getsize(void) const
+	uint2 getbytesize(void) const
 	{
 		return size;
 	}
@@ -295,5 +295,38 @@ public:
 	MCBlock *advanceindex(uint2& p_index);
 
 	bool imagechanged(MCImage *p_image, bool p_deleting);
+	
+	////////////////////
+	
+	// Returns only the "index" component of the range
+	findex_t GetOffset();
+	
+	// Returns only the "length" component of the range
+	findex_t GetLength();
+	
+	// Returns the range of text covered by the block
+	void GetRange(findex_t &r_index, findex_t &r_length);
+	
+	// Sets the indices correctly using the parent paragraph's stringref
+	void SetRange(findex_t t_index, findex_t t_length);
+	
+	// Moves the index by the specified number of character positions
+	void MoveRange(findex_t t_index_offset, findex_t t_length_offset); 
+	
+	// Moves the index forwards by one codepoint, possibly changing block
+	MCBlock *AdvanceIndex(findex_t &x_index);
+	
+	// Moves the index backwards by one codepoint, possibly changing block
+	MCBlock *RetreatIndex(findex_t &x_index);
+	
+	// Returns the codepoint at the given index into the block
+	codepoint_t GetCodepointAtIndex(findex_t p_index) const;
+	
+	// Returns true if the block's text was stored in Unicode format (required
+	// when reading the existing (non-Unicode) stack file format)
+	bool IsSavedAsUnicode() const
+	{
+		return flags & F_HAS_UNICODE;
+	}
 };
 #endif

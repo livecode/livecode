@@ -129,8 +129,8 @@ Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
 			nitems = 0;
 			do
 			{
-				s.set(tpgptr->gettext(), tpgptr->gettextsize());
-				if (tpgptr->next() != pgptr || tpgptr->gettextsize())
+				s.set(tpgptr->gettext_raw(), tpgptr->gettextbytesize());
+				if (tpgptr->next() != pgptr || !tpgptr->IsEmpty())
 				{
 					MCAutoStringRef t_string;
 					/* UNCHECKED */ MCStringCreateWithOldString(s, &t_string);
@@ -219,8 +219,8 @@ Boolean MCField::find(MCExecContext &ctxt, uint4 cardid, Find_mode mode,
 				toffset = oldoffset = 0;
 			do
 			{
-				const char *text = tpgptr->gettext();
-				uint2 length = tpgptr->gettextsize();
+				const char *text = tpgptr->gettext_raw();
+				findex_t length = tpgptr->gettextbytesize();
 				uint4 offset;
 				MCString tosearch(&text[oldoffset], length - oldoffset);
 				while (MCU_offset(MCStringGetOldString(tofind), tosearch, offset, ctxt.GetCaseSensitive()))
@@ -284,7 +284,7 @@ Boolean MCField::find(MCExecContext &ctxt, uint4 cardid, Find_mode mode,
 					oldoffset = offset;
 					tosearch.set(&text[oldoffset], length - oldoffset);
 				}
-				toffset += tpgptr->gettextsizecr();
+				toffset += tpgptr->gettextbytesizecr();
 				tpgptr = tpgptr->next();
 				oldoffset = 0;
 			}
@@ -299,11 +299,8 @@ Boolean MCField::find(MCExecContext &ctxt, uint4 cardid, Find_mode mode,
 
 void MCField::verifyindex(MCParagraph *top, int4 &si, bool p_is_end)
 {
-	int4 oldindex = si;
-	int4 junk = si;
-	MCParagraph *pgptr = indextoparagraph(top, si, junk);
-	MCBlock *bptr = pgptr->indextoblock(si, False);
-	si = (oldindex - si) + bptr->verifyindex(si, p_is_end);
+	// Does nothing at the moment
+	// TODO: this will become useful again for surrogate pairs
 }
 
 // MW-2012-02-08: [[ Field Indices ]] If 'index' is non-nil then we return the
@@ -311,7 +308,7 @@ void MCField::verifyindex(MCParagraph *top, int4 &si, bool p_is_end)
 MCParagraph *MCField::indextoparagraph(MCParagraph *top, int4 &si, int4 &ei, int4* index)
 {
 	int4 t_index;
-	uint2 l = top->gettextsizecr();
+	findex_t l = top->gettextlengthcr();
 	MCParagraph *pgptr = top;
 	t_index = 1;
 	while (si >= l)
@@ -326,7 +323,7 @@ MCParagraph *MCField::indextoparagraph(MCParagraph *top, int4 &si, int4 &ei, int
 			pgptr = pgptr->prev();
 			si = ei = l - 1;
 		}
-		l = pgptr->gettextsizecr();
+		l = pgptr->gettextlengthcr();
 	}
 	if (index != nil)
 		*index = t_index;
@@ -342,7 +339,7 @@ uint4 MCField::ytooffset(int4 y)
 		y -= tptr->getheight(fixedheight);
 		if (y <= 0)
 			break;
-		si += tptr->gettextsizecr();
+		si += tptr->gettextlengthcr();
 		tptr = tptr->next();
 	}
 	return si;
@@ -416,7 +413,7 @@ uint4 MCField::getpgsize(MCParagraph *pgptr)
 	uint4 length = 0;
 	do
 	{
-		length += tpgptr->gettextsizecr();
+		length += tpgptr->gettextlengthcr();
 		tpgptr = tpgptr->next();
 	}
 	while (tpgptr != pgptr);
@@ -542,7 +539,9 @@ Exec_stat MCField::settext_oldstring(uint4 parid, const MCString &s, Boolean for
 
 			// MW-2012-02-16: [[ IntrinsicUnicode ]] Make sure we pass the correct setting for
 			//   'unicode'.
-			tpgptr->settext(pgtext, length, isunicode == True);
+			MCAutoStringRef t_text;
+			/* UNCHECKED */ MCStringCreateWithBytes((const char_t*)pgtext, length, isunicode?kMCStringEncodingUTF16:kMCStringEncodingNative, false, &t_text);
+			tpgptr->settext(*t_text);
 			if (l)
 			{
 				sptr = eptr + MCU_charsize(isunicode);
@@ -575,19 +574,10 @@ MCParagraph *MCField::verifyindices(MCParagraph *p_top, int4& si, int4& ei)
 	MCParagraph *t_start_pg;
 	t_start_pg = indextoparagraph(p_top, si, ei);
 	
-	MCBlock *t_start_block;
-	t_start_block = t_start_pg -> indextoblock(si, False);
-	si = t_start_block -> verifyindex(si, false);
-	
-	int4 t_new_ei, t_junk;
+	int4 t_junk;
 	MCParagraph *t_end_pg;
-	t_new_ei = ei;
 	t_junk = ei;
-	t_end_pg = indextoparagraph(t_start_pg, t_new_ei, t_junk);
-	
-	MCBlock *t_end_block;
-	t_end_block = t_end_pg -> indextoblock(t_new_ei, False);
-	ei = (ei - t_new_ei) + t_end_block -> verifyindex(t_new_ei, true);
+	t_end_pg = indextoparagraph(t_start_pg, ei, t_junk);
 	
 	return t_start_pg;
 }
@@ -626,9 +616,9 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 	if (si != ei)
 	{
 		int4 tei;
-		if (ei >= pgptr->gettextsizecr())
+		if (ei >= pgptr->gettextlengthcr())
 		{
-			tei = pgptr->gettextsize();
+			tei = pgptr->gettextlength();
 			ei--;
 			if (ei == tei && pgptr->next() != toppgptr)
 				pgptr->join();
@@ -644,9 +634,9 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 		if (ei > 0)
 		{
 			pgptr = pgptr->next();
-			while (ei >= pgptr->gettextsizecr())
+			while (ei >= pgptr->gettextlengthcr())
 			{
-				ei -= pgptr->gettextsizecr();
+				ei -= pgptr->gettextlengthcr();
 				MCParagraph *tpgptr = pgptr->remove
 				                      (pgptr);
 				if (tpgptr == curparagraph)
@@ -686,8 +676,11 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 
 	// MW-2012-02-13: [[ Block Unicode ]] Use the new finsert method in native mode.
 	// MW-2012-02-23: [[ PutUnicode ]] Pass through the encoding to finsertnew.
+	MCAutoStringRef t_text;
+	/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)s.getstring(), s.getlength(), p_as_unicode?
+											kMCStringEncodingUTF16:kMCStringEncodingNative, false, &t_text);
 	if (s.getlength())
-		t_need_recompute = pgptr->finsertnew(s, p_as_unicode);
+		t_need_recompute = pgptr->finsertnew(*t_text);
 
 	if (opened && fptr == fdata)
 	{
@@ -719,7 +712,7 @@ void MCField::getlinkdata(MCRectangle &lrect, MCBlock *&sb, MCBlock *&eb)
 	MCParagraph *sptr = indextoparagraph(paragraphs, si, ei);
 	linksi -= si;
 	linkei -= si;
-	ei = MCU_min(ei, sptr->gettextsizecr());
+	ei = MCU_min(ei, sptr->gettextlengthcr());
 	sb = sptr->indextoblock(si, False);
 	if (!sb->islink())
 	{
@@ -730,11 +723,11 @@ void MCField::getlinkdata(MCRectangle &lrect, MCBlock *&sb, MCBlock *&eb)
 	
 	// MW-2011-02-26: [[ Bug 9416 ]] Make sure the linkrect and block extends to the
 	//   extremities of the link.
-	uint2 t_index;
-	t_index = (uint2)si;
+	findex_t t_index;
+	t_index = si;
 	sptr -> extendup(sb, t_index);
 	si = t_index;
-	t_index = (uint2)(ei - 1);
+	t_index = (ei - 1);
 	sptr -> extenddown(eb, t_index);
 	ei = t_index;
 	
@@ -875,7 +868,7 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 				if (maxy != 0)
 					maxy += sptr -> prev() -> computebottommargin() + sptr -> computetopmargin();
 				maxy += sptr->getyextent(ei, fixedheight);
-				ei -= sptr->gettextsizecr();
+				ei -= sptr->gettextlengthcr();
 				sptr = sptr->next();
 			}
 			while (ei > 0 && sptr != pgptr);
@@ -954,8 +947,7 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 				}
 
 				// Reduce ei until we get to zero, advancing through the paras.
-				ei -= sptr->gettextsizecr();
-				
+				ei -= sptr->gettextlengthcr();
 				sptr = sptr->next();
 				
 				// MW-2013-08-27: [[ Bug 11129 ]] If we reach the end of the paragraphs
@@ -996,11 +988,11 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 				sptr -> getflaggedranges(parid, ep, si, ei, t_index_offset);
 
 				// Increment the offset by the size of the paragraph.
-				t_index_offset += sptr -> gettextsizecr();
+				t_index_offset += sptr -> gettextlengthcr();
 
 				// Reduce ei until we get to zero, advancing through the paras.
 				si = 0;
-				ei -= sptr -> gettextsizecr();
+				ei -= sptr -> gettextlengthcr();
 				sptr = sptr -> next();
 				
 				// MW-2013-08-27: [[ Bug 11129 ]] If we reach the end of the paragraphs
@@ -1057,7 +1049,7 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 					break;
 				}
 
-				ei -= sptr->gettextsizecr();
+				ei -= sptr->gettextlengthcr();
 				sptr = sptr->next();
 				
 				// MW-2013-08-27: [[ Bug 11129 ]] If we reach the end of the paragraphs
@@ -1172,7 +1164,7 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 				if (tspecstyle != pspecstyle)
 					mixed |= MIXED_SPEC_STYLE;
 			}
-			ei -= sptr->gettextsizecr();
+			ei -= sptr->gettextlengthcr();
 			si = 0;
 			sptr = sptr->next();
 			
@@ -1554,7 +1546,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 			MCeerror->add(EE_OBJECT_NAB, 0, 0, *s);
 			return ES_ERROR;
 		}
-		pgptr->setvisited(si, MCU_min(ei, pgptr->gettextsize()), newstate);
+		pgptr->setvisited(si, MCU_min(ei, pgptr->gettextlength()), newstate);
 		break;
 	// MW-2012-01-25: [[ ParaStyles ]] Make sure we set 'is_para_attr' for all
 	//   paragraph styles. Notice that they all cause a complete recompute.
@@ -1628,13 +1620,13 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 
 	do
 	{
-		uint2 l = pgptr->gettextsizecr();
+		findex_t l = pgptr->gettextlengthcr();
 		if (si < l)
 		{
 			pgptr->setparent(this);
 
 			if (!t_is_para_attr)
-				pgptr->setatts(si, MCU_min(ei, pgptr->gettextsize()), which, t_value);
+				pgptr->setatts(si, MCU_min(ei, pgptr->gettextlength()), which, t_value);
 			else
 			{
 				// MW-2012-01-25: [[ ParaStyles ]] If we are a paragraph style then we
@@ -1729,7 +1721,7 @@ Exec_stat MCField::seltext(int4 si, int4 ei, Boolean focus, Boolean update)
 	uint2 l;
 	do
 	{
-		l = pgptr->gettextsizecr();
+		l = pgptr->gettextlengthcr();
 		pgptr->setselectionindex(si, MCU_min(ei, l-1),
 		                         pgptr != firstparagraph, ei > l);
 		if (flags & F_LIST_BEHAVIOR)
@@ -1993,7 +1985,7 @@ Boolean MCField::locmark(Boolean wholeline, Boolean wholeword,
 	si = 0;
 	while (pgptr != curparagraph)
 	{
-		si += pgptr->gettextsizecr();
+		si += pgptr->gettextlengthcr();
 		pgptr = pgptr->next();
 	}
 	int4 y = 0;
@@ -2001,7 +1993,7 @@ Boolean MCField::locmark(Boolean wholeline, Boolean wholeword,
 	while (pgptr->next() != paragraphs && y + pgheight <= cy)
 	{
 		y += pgheight;
-		si += pgptr->gettextsizecr();
+		si += pgptr->gettextlengthcr();
 		pgptr = pgptr->next();
 		pgheight = pgptr->getheight(fixedheight);
 	}
@@ -2010,13 +2002,13 @@ Boolean MCField::locmark(Boolean wholeline, Boolean wholeword,
 		return False;
 	if (wholeline || wholeword && flags & F_LIST_BEHAVIOR)
 	{
-		ei = si + pgptr->gettextsizecr();
+		ei = si + pgptr->gettextlengthcr();
 		if (!inc_cr || flags & F_LIST_BEHAVIOR || pgptr->next() == paragraphs)
 			ei--;
 	}
 	else
 	{
-		uint2 ssi, sei;
+		findex_t ssi, sei;
 		ei = si;
 		pgptr->getclickindex(cx, cy, fixedheight, ssi, sei, wholeword, chunk);
 		si += ssi;
@@ -2071,12 +2063,12 @@ Boolean MCField::foundmark(Boolean wholeline, Boolean inc_cr, int4 &si, int4 &ei
 	{
 		MCParagraph *pgptr = paragraphs;
 		si = 0;
-		while (si + pgptr->gettextsizecr() <= foundoffset)
+		while (si + pgptr->gettextlengthcr() <= foundoffset)
 		{
-			si += pgptr->gettextsizecr();
+			si += pgptr->gettextlengthcr();
 			pgptr = pgptr->next();
 		}
-		ei = si + pgptr->gettextsizecr();
+		ei = si + pgptr->gettextlengthcr();
 		if (!inc_cr || pgptr->next() == paragraphs)
 			ei--;
 	}
@@ -2142,7 +2134,7 @@ bool MCField::selectedtext(MCStringRef& r_string)
 			if (pgptr->gethilite())
 			{
 				MCAutoStringRef t_string;
-				if (!pgptr -> gettextasstringref(&t_string))
+				if (!pgptr -> copytextasstringref(&t_string))
 					return false;
 				if (!MCListAppend(*t_list, *t_string))
 					return false;
@@ -2180,24 +2172,24 @@ Boolean MCField::selectedmark(Boolean whole, int4 &si, int4 &ei,
 			
 		while (!pgptr->gethilite())
 		{
-			si += pgptr->gettextsizecr();
+			si += pgptr->gettextlengthcr();
 			pgptr = pgptr->next();
 			if (pgptr == paragraphs)
 				return False;
 		}
 		ei = si;
-		ei += pgptr->gettextsizecr();
+		ei += pgptr->gettextlengthcr();
 		pgptr = pgptr->next();
 		while (pgptr != paragraphs && pgptr->gethilite())
 		{
-			ei += pgptr->gettextsizecr();
+			ei += pgptr->gettextlengthcr();
 			pgptr = pgptr->next();
 		}
 		ei--;
 	}
 	else
 	{
-		uint2 s, e;
+		findex_t s, e;
 		if (!force && MCactivefield != this)
 			return False;
 		if (firstparagraph == NULL)
@@ -2209,11 +2201,11 @@ Boolean MCField::selectedmark(Boolean whole, int4 &si, int4 &ei,
 		{
 			while (pgptr != focusedparagraph)
 			{
-				si += pgptr->gettextsizecr();
+				si += pgptr->gettextlengthcr();
 				pgptr = pgptr->next();
 			}
 			if (whole)
-				ei = si + focusedparagraph->gettextsizecr();
+				ei = si + focusedparagraph->gettextlengthcr();
 			else
 			{
 				focusedparagraph->getselectionindex(s, e);
@@ -2224,7 +2216,7 @@ Boolean MCField::selectedmark(Boolean whole, int4 &si, int4 &ei,
 		{
 			while (pgptr != firstparagraph)
 			{
-				si += pgptr->gettextsizecr();
+				si += pgptr->gettextlengthcr();
 				pgptr = pgptr->next();
 			}
 			ei = si;
@@ -2235,12 +2227,12 @@ Boolean MCField::selectedmark(Boolean whole, int4 &si, int4 &ei,
 			}
 			while (pgptr != lastparagraph)
 			{
-				ei += pgptr->gettextsizecr();
+				ei += pgptr->gettextlengthcr();
 				pgptr = pgptr->next();
 			}
 			if (whole)
 			{
-				ei += pgptr->gettextsizecr();
+				ei += pgptr->gettextlengthcr();
 				if (pgptr->next() == paragraphs)
 					ei--;
 			}
@@ -2250,7 +2242,7 @@ Boolean MCField::selectedmark(Boolean whole, int4 &si, int4 &ei,
 				ei += e;
 			}
 		}
-		if (include_cr && pgptr != NULL && e == pgptr->gettextsize() && pgptr->next() != paragraphs)
+		if (include_cr && pgptr != NULL && e == pgptr->gettextlength() && pgptr->next() != paragraphs)
 			ei++;
 	}
 	return True;
@@ -2285,7 +2277,7 @@ bool MCField::returnline(int4 si, int4 ei, MCStringRef& r_string)
 	do
 	{
 		line++;
-		offset += pgptr->gettextsizecr();
+		offset += pgptr->gettextlengthcr();
 		pgptr = pgptr->next();
 	}
 	while (offset <= si);
@@ -2301,7 +2293,7 @@ bool MCField::returnline(int4 si, int4 ei, MCStringRef& r_string)
 		do
 		{
 			endline++;
-			offset += pgptr->gettextsizecr();
+			offset += pgptr->gettextlengthcr();
 			pgptr = pgptr->next();
 		}
 		while (offset < ei);
@@ -2357,7 +2349,7 @@ void MCField::charstoparagraphs(int4 si, int4 ei, MCParagraph*& rsp, MCParagraph
 	{
 		sl++;
 		sp = pgptr;
-		offset += pgptr->gettextsizecr();
+		offset += pgptr->gettextlengthcr();
 		pgptr = pgptr->next();
 	}
 	while (offset < si);
@@ -2370,7 +2362,7 @@ void MCField::charstoparagraphs(int4 si, int4 ei, MCParagraph*& rsp, MCParagraph
 		{
 			el++;
 			ep = pgptr;
-			offset += pgptr->gettextsizecr();
+			offset += pgptr->gettextlengthcr();
 			pgptr = pgptr->next();
 		}
 		while (offset < ei);
@@ -2547,7 +2539,7 @@ void MCField::pastetext(MCParagraph *newtext, Boolean dodel)
 		MCParagraph *tpgptr = newtext;
 		do
 		{
-			us->ud.text.newchars += tpgptr->gettextsizecr();
+			us->ud.text.newchars += tpgptr->gettextlengthcr();
 			tpgptr = tpgptr->next();
 		}
 		while (tpgptr != newtext);
@@ -2595,7 +2587,7 @@ void MCField::movetext(MCParagraph *newtext, int4 p_to_index)
 		MCParagraph *tpgptr = newtext;
 		do
 		{
-			us->ud.text.newchars += tpgptr->gettextsizecr();
+			us->ud.text.newchars += tpgptr->gettextlengthcr();
 			tpgptr = tpgptr->next();
 		}
 		while (tpgptr != newtext);
@@ -2641,7 +2633,7 @@ MCParagraph *MCField::clonetext(int4 si, int4 ei)
 	uint2 l;
 	do
 	{
-		l = t_paragraph -> gettextsizecr();
+		l = t_paragraph -> gettextlengthcr();
 		
 		MCParagraph *t_new_paragraph;
 		t_new_paragraph = t_paragraph -> copystring(si, MCU_min(l - 1, ei));
@@ -2693,7 +2685,7 @@ void MCField::insertparagraph(MCParagraph *newtext)
 		updateparagraph(True, False, False);
 	}
 	textheight -= focusedparagraph->getheight(fixedheight);
-	uint2 si = focusedparagraph->gettextsize();
+	findex_t si = focusedparagraph->gettextlength();
 	focusedparagraph->join();
 	firstparagraph = lastparagraph = NULL;
 	flags = oldflags;

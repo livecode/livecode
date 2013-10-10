@@ -42,6 +42,14 @@ MCLine::~MCLine()
 {
 }
 
+void MCLine::GetRange(findex_t &r_index, findex_t &r_length)
+{
+	uint2 i, l;
+	getbyteindex(i, l);
+	r_index = i / sizeof(unichar_t);
+	r_length = l / sizeof(unichar_t);
+}
+
 void MCLine::takebreaks(MCLine *lptr)
 {
 	if (firstblock != lptr->firstblock)
@@ -94,7 +102,7 @@ MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_wi
 		bool t_continue;
 		if (t_block_fits)
 		{
-			if (t_new_break_index > t_block -> getindex() || (t_block -> getsize() == 0 && t_break_fits))
+			if (t_new_break_index > t_block -> getbyteindex() || (t_block -> getbytesize() == 0 && t_break_fits))
 			{
 				// The whole block fits, so record the break position
 				t_break_block = t_block;
@@ -110,7 +118,7 @@ MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_wi
 		}
 		else
 		{
-			if (t_new_break_index > t_block -> getindex())
+			if (t_new_break_index > t_block -> getbyteindex())
 			{
 				// We have a break position but the whole block doesn't fit
 				
@@ -164,7 +172,7 @@ MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_wi
 	if (t_break_block == NULL)
 	{
 		t_break_block = t_block -> prev();
-		t_break_index = t_break_block -> getindex() + t_break_block -> getsize();
+		t_break_index = t_break_block -> getbyteindex() + t_break_block -> getbytesize();
 	}
 	
 	// MW-2012-02-21: [[ LineBreak ]] Check to see if there is a vtab char before the
@@ -194,8 +202,8 @@ MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_wi
 	// If the break index is before the end of the block *or* if we are explicit and it
 	// is at the end of the block, split the block. [ The latter rule means there is an
 	// empty block to have as a line ].
-	if (t_break_index < t_break_block -> getindex() + t_break_block -> getsize() ||
-		t_is_explicit_line_break && t_break_index == t_break_block -> getindex() + t_break_block -> getsize())
+	if (t_break_index < t_break_block -> getbyteindex() + t_break_block -> getbytesize() ||
+		t_is_explicit_line_break && t_break_index == t_break_block -> getbyteindex() + t_break_block -> getbytesize())
 		t_break_block -> split(t_break_index);
 		
 	firstblock = p_first;
@@ -233,7 +241,7 @@ void MCLine::appendall(MCBlock *bptr)
 	dirtywidth = MCU_max(width, oldwidth);
 }
 
-void MCLine::draw(MCDC *dc, int2 x, int2 y, uint2 si, uint2 ei, const char *tptr, uint2 pstyle)
+void MCLine::draw(MCDC *dc, int2 x, int2 y, findex_t si, findex_t ei, MCStringRef p_string, uint2 pstyle)
 {
 	int2 cx = 0;
 	MCBlock *bptr = (MCBlock *)firstblock->prev();
@@ -297,7 +305,7 @@ void MCLine::draw(MCDC *dc, int2 x, int2 y, uint2 si, uint2 ei, const char *tptr
 		}
 		
 		// Pass the computed flags to the block to draw.
-		bptr->draw(dc, x, cx, y, si, ei, tptr, pstyle, t_flags);
+		bptr->draw(dc, x, cx, y, si, ei, p_string, pstyle, t_flags);
 		
 		uint2 twidth;
 		twidth = bptr->getwidth(dc, cx);
@@ -362,30 +370,33 @@ void MCLine::makedirty()
 	dirtywidth = MCU_max(width, 1);
 }
 
-void MCLine::getindex(uint2 &i, uint2 &l)
+void MCLine::getbyteindex(uint2 &i, uint2 &l)
 {
-	firstblock->getindex(i, l);
+	firstblock->getbyteindex(i, l);
 	uint2 j;
-	lastblock->getindex(j, l);
+	lastblock->getbyteindex(j, l);
 	l = j + l - i;
 }
 
-uint2 MCLine::getcursorx(uint2 fi)
+uint2 MCLine::getcursorx(findex_t fi)
 {
+	// We have a char index while MCBlock expects a byte index
+	uint2 idx = fi*sizeof(unichar_t);
+	
 	uint2 x = 0;
 	MCBlock *bptr = (MCBlock *)firstblock;
 	uint2 i, l;
-	bptr->getindex(i, l);
-	while (fi > i + l && bptr != lastblock)
+	bptr->getbyteindex(i, l);
+	while (idx > i + l && bptr != lastblock)
 	{
 		x += bptr->getwidth(NULL, x);
 		bptr = (MCBlock *)bptr->next();
-		bptr->getindex(i, l);
+		bptr->getbyteindex(i, l);
 	}
-	return x + bptr->getcursorx(x, fi);
+	return x + bptr->getcursorx(x, idx);
 }
 
-uint2 MCLine::getcursorindex(int2 cx, Boolean chunk)
+findex_t MCLine::getcursorindex(int2 cx, Boolean chunk)
 {
 	uint2 x = 0;
 	MCBlock *bptr = firstblock;
@@ -397,7 +408,8 @@ uint2 MCLine::getcursorindex(int2 cx, Boolean chunk)
 		bptr = (MCBlock *)bptr->next();
 		bwidth = bptr->getwidth(NULL, x);
 	}
-	return bptr->getcursorindex(x, cx, chunk, bptr == lastblock);
+	// The block still thinks in terms of byte offsets...
+	return (bptr->getcursorbyteindex(x, cx, chunk, bptr == lastblock)+1)/2;
 }
 
 uint2 MCLine::getwidth()

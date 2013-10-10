@@ -41,7 +41,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 MCBlock::MCBlock(void)
 {
 	parent = NULL;
-	flags = F_CLEAR;
+	flags = F_CLEAR|F_HAS_UNICODE;
 	atts = NULL;
 	index = size = 0;
 	width = 0;
@@ -605,7 +605,7 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 	}
 	
 	const char *text;
-	text = parent -> gettext();
+	text = parent -> gettext_raw();
 
 	// Fetch the first character of the next block
 	int4 t_next_block_char;
@@ -613,7 +613,7 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 	t_next_block = next();
 	if (t_next_block != parent -> getblocks())
 	{
-		if (t_next_block -> getsize() == 0)
+		if (t_next_block -> getbytesize() == 0)
 			t_next_block_char = -2;
 		else if (t_next_block -> hasunicode())
 			t_next_block_char = *(uint2 *)&text[t_next_block -> index];
@@ -798,7 +798,7 @@ void MCBlock::split(uint2 p_index)
 {
 	MCBlock *bptr = new MCBlock(*this);
 	uint2 newlength = size - (p_index - index);
-	bptr->setindex(parent -> gettext(), p_index, newlength);
+	bptr->setbyteindex(parent -> gettext_raw(), p_index, newlength);
 	size -= newlength;
 	width = 0;
 	// MW-2012-02-13: [[ Block Unicode ]] Only open the new block if the original
@@ -838,7 +838,7 @@ int2 MCBlock::gettabwidth(int2 x, const char *text, uint2 i)
 			if (t_block -> getflag(F_HAS_TAB))
 			{
 				uint2 k;
-				k = t_block -> getindex() + t_block -> getsize();
+				k = t_block -> getbyteindex() + t_block -> getbytesize();
 				while(j < k && j < i)
 				{
 					if (t_block -> textcomparechar(&cptr[j], '\t'))
@@ -847,7 +847,7 @@ int2 MCBlock::gettabwidth(int2 x, const char *text, uint2 i)
 				}
 			}
 			else
-				j = t_block -> getindex() + t_block -> getsize();
+				j = t_block -> getbyteindex() + t_block -> getbytesize();
 			t_block = t_block -> next();
 		}
 
@@ -926,7 +926,7 @@ int2 MCBlock::gettabwidth(int2 x, const char *text, uint2 i)
 	}
 }
 
-void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 length, Boolean image, uint32_t style)
+void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, findex_t length, Boolean image, uint32_t style)
 {
 	// MW-2012-02-16: [[ FontRefs ]] Fetch the font metrics we need to draw.
 	int32_t t_ascent, t_descent;
@@ -937,7 +937,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 l
 	if (parent -> getvgrid())
 	{
 		const char *t_text;
-		t_text = parent -> gettext();
+		t_text = parent -> gettext_raw();
 
 		// MW-2012-02-09: [[ ParaStyles ]] Fetch the padding setting from the owning paragraph.
 		// MW-2012-03-19: [[ Bug 10069 ]] Use the horiztonal padding value here.
@@ -1024,7 +1024,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 l
 	{
 		const char *sptr;
 		uint2 size;
-		sptr = parent -> gettext() + start;
+		sptr = parent -> gettext_raw() + start;
 		size = length;
 		
 		// MW-2012-02-21: [[ LineBreak ]] Trim the block slightly if there is an explicit line break
@@ -1043,7 +1043,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 l
 		if (flags & F_HAS_TAB)
 		{
 			const char *eptr;
-			const char *tptr = parent->gettext();
+			const char *tptr = parent->gettext_raw();
 			while ((eptr = textstrchr(sptr, size, '\t')) != NULL)
 			{
 				uint2 l = eptr - sptr;
@@ -1076,7 +1076,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 l
 	}
 }
 
-void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const char *tptr, uint2 pstyle, uint32_t p_border_flags)
+void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, findex_t si, findex_t ei, MCStringRef p_string, uint2 pstyle, uint32_t p_border_flags)
 {
 	if (flags & F_HAS_SHIFT)
 		y += atts->shift;
@@ -1612,7 +1612,7 @@ void MCBlock::setbackcolor(const MCColor *newcolor)
 	}
 }
 
-void MCBlock::setindex(const char *sptr, uint2 i, uint2 l)
+void MCBlock::setbyteindex(const char *sptr, uint2 i, uint2 l)
 {
 	index = i;
 	size = l;
@@ -1625,7 +1625,7 @@ void MCBlock::setindex(const char *sptr, uint2 i, uint2 l)
 		freeatts();
 }
 
-void MCBlock::moveindex(const char *sptr, int2 ioffset, int2 loffset)
+void MCBlock::movebyteindex(const char *sptr, int2 ioffset, int2 loffset)
 {
 	index += ioffset;
 	if (loffset != 0)
@@ -1649,7 +1649,7 @@ uint2 MCBlock::getcursorx(int2 x, uint2 fi)
 	return getsubwidth(NULL, x, index, j);
 }
 
-uint2 MCBlock::getcursorindex(int2 x, int2 cx, Boolean chunk, Boolean last)
+uint2 MCBlock::getcursorbyteindex(int2 x, int2 cx, Boolean chunk, Boolean last)
 {
 	// MW-2007-07-05: [[ Bug 5099 ]] If we have an image and are unicode, the char
 	//   we replace is two bytes long
@@ -1657,10 +1657,10 @@ uint2 MCBlock::getcursorindex(int2 x, int2 cx, Boolean chunk, Boolean last)
 		if (chunk || cx < atts->image->getrect().width >> 1)
 			return index;
 		else
-			return index + (flags & F_HAS_UNICODE ? 2 : 1);
+			return index + 2;
 
 	uint2 i = index;
-	const char *text = parent->gettext();
+	const char *text = parent->gettext_raw();
 	int2 cwidth;
 	uint2 tlen = 0;
 	uint2 twidth = 0;
@@ -1721,9 +1721,9 @@ uint2 MCBlock::getcursorindex(int2 x, int2 cx, Boolean chunk, Boolean last)
 		i +=  indexincrement(i);
 	}
 #endif
-	if (i == index + size && last && (index + size != parent->gettextsize()) && !hasunicode())
-		return i - indexdecrement(i);
-	else
+	//if (i == index + size && last && (index + size != parent->gettextbytesize()) && !hasunicode())
+	//	return i - indexdecrement(i);
+	//else
 		return i;
 }
 
@@ -1735,8 +1735,8 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, uint2 i, uint2 l)
 		return atts->image->getrect().width;
 	else
 	{
-		const char *tptr = parent->gettext();
-		const char *sptr = parent->gettext() + i;
+		const char *tptr = parent->gettext_raw();
+		const char *sptr = parent->gettext_raw() + i;
 		
 		// MW-2012-02-12: [[ Bug 10662 ]] If the last char is a VTAB then ignore it.
 		if (textcomparechar(sptr + l - getcharsize(), 11))
@@ -1791,7 +1791,7 @@ void MCBlock::reset()
 	width = 0;
 }
 
-void MCBlock::getindex(uint2 &i, uint2 &l)
+void MCBlock::getbyteindex(uint2 &i, uint2 &l)
 {
 	i = index;
 	l = size;
@@ -1953,7 +1953,7 @@ uint2 MCBlock::indexincrement(uint2 tindex)
 
 	// Make sure we have the text pointer.
 	const char *thetext;
-	thetext = parent->gettext();
+	thetext = parent->gettext_raw();
 
 	// Fetch the char
 	uint16_t *t_chars;
@@ -2009,7 +2009,7 @@ uint2 MCBlock::indexdecrement(uint2 tindex)
 
 	// Make sure we have the text pointer.
 	const char *thetext;
-	thetext = parent->gettext();
+	thetext = parent->gettext_raw();
 
 	// Fetch the char pointer
 	uint16_t *t_chars;
@@ -2142,14 +2142,14 @@ uint4 MCBlock::getcharatindex(int4 p_index)
 	if (getflag(F_HAS_UNICODE))
 	{
 		if (t_block -> index + t_block -> size - p_index >= 2)
-			return *((uint2 *)(parent -> gettext() + p_index));
+			return *((uint2 *)(parent -> gettext_raw() + p_index));
 		
-		return parent -> gettext()[p_index];
+		return parent -> gettext_raw()[p_index];
 	}
 
 	// MW-2008-07-21: [[ Bug 6817 ]] Make sure we map the native encoded character
 	//   to a Unicode codepoint.
-	return MCUnicodeMapFromNative(parent -> gettext()[p_index]);
+	return MCUnicodeMapFromNative(parent -> gettext_raw()[p_index]);
 }
 
 MCBlock *MCBlock::retreatindex(uint2& p_index)
@@ -2376,11 +2376,11 @@ uint32_t MCBlock::measureattrs(void)
 bool MCBlock::getfirstlinebreak(uint2& r_index)
 {
 	char *t_break;
-	t_break = textstrchr(parent -> gettext() + index, size, '\x0B');
+	t_break = textstrchr(parent -> gettext_raw() + index, size, '\x0B');
 	if (t_break == nil)
 		return false;
 
-	r_index = t_break - parent -> gettext();
+	r_index = t_break - parent -> gettext_raw();
 	advanceindex(r_index);
 	
 	return true;
@@ -2398,3 +2398,55 @@ bool MCBlock::imagechanged(MCImage *p_image, bool p_deleting)
 	return false;
 }
 
+void MCBlock::GetRange(findex_t &r_index, findex_t &r_length)
+{
+	uint2 i, l;
+	getbyteindex(i, l);
+	r_index = i/sizeof(unichar_t);
+	r_length = l/sizeof(unichar_t);
+}
+
+findex_t MCBlock::GetOffset()
+{
+	findex_t i, l;
+	GetRange(i, l);
+	return i;
+}
+
+findex_t MCBlock::GetLength()
+{
+	findex_t i, l;
+	GetRange(i, l);
+	return l;
+}
+
+void MCBlock::SetRange(findex_t p_index, findex_t p_length)
+{
+	setbyteindex(parent->gettext_raw(), p_index*sizeof(unichar_t), p_length*sizeof(unichar_t));
+}
+
+void MCBlock::MoveRange(findex_t p_index, findex_t p_length)
+{
+	movebyteindex(parent->gettext_raw(), p_index*sizeof(unichar_t), p_length*sizeof(unichar_t));
+}
+
+MCBlock *MCBlock::AdvanceIndex(findex_t &x_index)
+{
+	uint2 t_index = x_index * sizeof(unichar_t);
+	MCBlock *t_block = advanceindex(t_index);
+	x_index = t_index / sizeof(unichar_t);
+	return t_block;
+}
+
+MCBlock *MCBlock::RetreatIndex(findex_t &x_index)
+{
+	uint2 t_index = x_index * sizeof(unichar_t);
+	MCBlock *t_block = retreatindex(t_index);
+	x_index = t_index / sizeof(unichar_t);
+	return t_block;
+}
+
+codepoint_t MCBlock::GetCodepointAtIndex(findex_t p_index) const
+{
+	return parent->GetCodepointAtIndex((index / sizeof(unichar_t)) + p_index);
+}
