@@ -315,26 +315,26 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, B
 #define DEFINE_RW_PROPERTY(prop, type, module, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MC##module##Get##tag, (void *)MC##module##Set##tag },
 
-#define DEFINE_RW_SET_PROPERTY(prop, typeinfo, module, tag) \
-{ prop, false, kMCPropertyTypeSet, typeinfo, (void *)MC##module##Get##tag, (void *)MC##module##Set##tag },
+#define DEFINE_RW_SET_PROPERTY(prop, type, module, tag) \
+{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MC##module##Get##tag, (void *)MC##module##Set##tag },
 
-#define DEFINE_RW_ENUM_PROPERTY(prop, typeinfo, module, tag) \
-{ prop, false, kMCPropertyTypeEnum, typeinfo, (void *)MC##module##Get##tag, (void *)MC##module##Set##tag },
+#define DEFINE_RW_ENUM_PROPERTY(prop, type, module, tag) \
+{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MC##module##Get##tag, (void *)MC##module##Set##tag },
 
-#define DEFINE_RW_CUSTOM_PROPERTY(prop, typeinfo, module, tag) \
-{ prop, false, kMCPropertyTypeCustom, typeinfo, (void *)MC##module##Get##tag, (void *)MC##module##Set##tag },
+#define DEFINE_RW_CUSTOM_PROPERTY(prop, type, module, tag) \
+{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MC##module##Get##tag, (void *)MC##module##Set##tag },
 
 #define DEFINE_RO_PROPERTY(prop, type, module, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MC##module##Get##tag, nil },
 
-#define DEFINE_RO_SET_PROPERTY(prop, typeinfo, module, tag) \
-{ prop, false, kMCPropertyTypeSet, typeinfo, (void *)MC##module##Get##tag, nil },
+#define DEFINE_RO_SET_PROPERTY(prop, type, module, tag) \
+{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MC##module##Get##tag, nil },
 
-#define DEFINE_RO_ENUM_PROPERTY(prop, typeinfo, module, tag) \
-{ prop, false, kMCPropertyTypeEnum, typeinfo, (void *)MC##module##Get##tag, nil },
+#define DEFINE_RO_ENUM_PROPERTY(prop, type, module, tag) \
+{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MC##module##Get##tag, nil },
 
-#define DEFINE_RO_CUSTOM_PROPERTY(prop, typeinfo, module, tag) \
-{ prop, false, kMCPropertyTypeCustom, typeinfo, (void *)MC##module##Get##tag, nil },
+#define DEFINE_RO_CUSTOM_PROPERTY(prop, type, module, tag) \
+{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MC##module##Get##tag, nil },
 
 #define DEFINE_RO_EFFECTIVE_PROPERTY(prop, type, module, tag) \
 { prop, true, kMCPropertyType##type, nil, (void *)MC##module##GetEffective##tag, nil },
