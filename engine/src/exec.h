@@ -559,6 +559,11 @@ public:
 	
 	//////////
 
+	void SetNumberFormat(uint2 p_fw, uint2 p_trailing, uint2 p_force)
+    {
+        m_ep . setnumberformat(p_fw, p_trailing, p_force);
+    }
+
 	void SetCaseSensitive(bool p_value)
 	{
 		m_ep . setcasesensitive(p_value);
@@ -609,7 +614,7 @@ public:
 		m_ep . setrowdel(p_value);
 	}
 	//////////
-	
+
 	// Convert the given valueref to a string. If the type is not convertable
 	// to a string, the empty string is returned.
 	// This method should be used in cases where a string is required and
@@ -1975,8 +1980,8 @@ void MCInterfaceGetArcAngle(MCExecContext& ctxt, uinteger_t& r_radius);
 void MCInterfaceSetArcAngle(MCExecContext& ctxt, uinteger_t radius);
 void MCInterfaceGetRoundEnds(MCExecContext& ctxt, bool& r_value);
 void MCInterfaceSetRoundEnds(MCExecContext& ctxt, bool value);
-void MCInterfaceGetDashes(MCExecContext& ctxt, MCStringRef& r_dashes);
-void MCInterfaceSetDashes(MCExecContext& ctxt, MCStringRef dashes);
+void MCInterfaceGetDashes(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_points);
+void MCInterfaceSetDashes(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_points);
 
 void MCInterfaceGetRecentCards(MCExecContext& ctxt, MCStringRef& r_cards);
 void MCInterfaceGetRecentNames(MCExecContext& ctxt, MCStringRef& r_names);
