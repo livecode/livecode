@@ -274,8 +274,13 @@ void MCStack::view_on_rect_changed(void)
 	// IM-2013-10-03: [[ FullscreenMode ]] if the view rect has changed, update the tilecache geometry
 	if (m_view_tilecache != nil)
 	{
+		// IM-2013-10-10: [[ FullscreenMode ]] Align tilecache viewport to origin
+		MCRectangle t_view_rect;
+		t_view_rect = m_view_rect;
+		t_view_rect.x = t_view_rect.y = 0;
+		
 		MCRectangle t_device_rect;
-		t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(m_view_rect));
+		t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(t_view_rect));
 
 		MCTileCacheSetViewport(m_view_tilecache, t_device_rect);
 	}
@@ -503,8 +508,13 @@ void MCStack::view_setacceleratedrendering(bool p_value)
 	
 	// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
 	// IM-2013-09-30: [[ FullscreenMode ]] Use view rect when setting the size of the tilecache
+	// IM-2013-10-10: [[ FullscreenMode ]] Align tilecache viewport to origin
+	MCRectangle t_view_rect;
+	t_view_rect = view_getrect();
+	t_view_rect.x = t_view_rect.y = 0;
+	
 	MCRectangle t_device_rect;
-	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(view_getrect()));
+	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_view_rect));
 	MCTileCacheCreate(t_tile_size, t_cache_limit, m_view_tilecache);
 	MCTileCacheSetViewport(m_view_tilecache, t_device_rect);
 	MCTileCacheSetCompositor(m_view_tilecache, t_compositor_type);
@@ -536,8 +546,13 @@ void MCStack::view_setcompositortype(MCTileCacheCompositorType p_type)
 			MCTileCacheCreate(32, 4096 * 1024, m_view_tilecache);
 			// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
 			// IM-2013-10-02: [[ FullscreenMode ]] Use view rect when setting the size of the tilecache
+			// IM-2013-10-10: [[ FullscreenMode ]] Align tilecache viewport to origin
+			MCRectangle t_view_rect;
+			t_view_rect = view_getrect();
+			t_view_rect.x = t_view_rect.y = 0;
+			
 			MCRectangle t_device_rect;
-			t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(view_getrect()));
+			t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_view_rect));
 			MCTileCacheSetViewport(m_view_tilecache, t_device_rect);
 		}
 		
