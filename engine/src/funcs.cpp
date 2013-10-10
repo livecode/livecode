@@ -8269,7 +8269,7 @@ Exec_stat MCUniDecode::eval(MCExecPoint &ep)
 		// Explicit language, destination is a dataref
 		MCAutoDataRef t_data;
 		
-		MCFiltersEvalUniDecode(ctxt, *t_source, *t_language, &t_data);
+		MCFiltersEvalUniDecodeToEncoding(ctxt, *t_source, *t_language, &t_data);
 		t_result = *t_data;
 	}
 	else
@@ -8277,7 +8277,7 @@ Exec_stat MCUniDecode::eval(MCExecPoint &ep)
 		// No language, destination encoding is native
 		MCAutoStringRef t_string;
 		
-		MCFiltersEvalUniDecode(ctxt, *t_source, &t_string);
+		MCFiltersEvalUniDecodeToNative(ctxt, *t_source, &t_string);
 		t_result = *t_string;
 	}
 
@@ -8385,7 +8385,7 @@ Exec_stat MCUniEncode::eval(MCExecPoint &ep)
 		MCAutoDataRef t_source;
 		/* UNCHECKED */ ep.copyasdataref(&t_source);
 		
-		MCFiltersEvalUniEncode(ctxt, *t_source, *t_language, &t_result);
+		MCFiltersEvalUniEncodeFromEncoding(ctxt, *t_source, *t_language, &t_result);
 	}
 	else
 	{
@@ -8393,7 +8393,7 @@ Exec_stat MCUniEncode::eval(MCExecPoint &ep)
 		MCAutoStringRef t_source;
 		/* UNCHECKED */ ep.copyasstringref(&t_source);
 		
-		MCFiltersEvalUniEncode(ctxt, *t_source, &t_result);
+		MCFiltersEvalUniEncodeFromNative(ctxt, *t_source, &t_result);
 	}
 
 	if (!ctxt.HasError())

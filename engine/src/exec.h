@@ -993,10 +993,10 @@ void MCFiltersEvalIsoToMac(MCExecContext& ctxt, MCDataRef p_source, MCDataRef& r
 void MCFiltersEvalMacToIso(MCExecContext& ctxt, MCDataRef p_source, MCDataRef& r_result);
 void MCFiltersEvalUrlEncode(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result);
 void MCFiltersEvalUrlDecode(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result);
-void MCFiltersEvalUniEncode(MCExecContext& ctxt, MCStringRef p_input, MCDataRef &r_output);
-void MCFiltersEvalUniDecode(MCExecContext& ctxt, MCDataRef p_input, MCStringRef &r_output);
-void MCFiltersEvalUniEncode(MCExecContext& ctxt, MCDataRef p_src, MCNameRef p_lang, MCDataRef& r_dest);
-void MCFiltersEvalUniDecode(MCExecContext& ctxt, MCDataRef p_src, MCNameRef p_lang, MCDataRef& r_dest);
+void MCFiltersEvalUniEncodeFromNative(MCExecContext& ctxt, MCStringRef p_input, MCDataRef &r_output);
+void MCFiltersEvalUniDecodeToNative(MCExecContext& ctxt, MCDataRef p_input, MCStringRef &r_output);
+void MCFiltersEvalUniEncodeFromEncoding(MCExecContext& ctxt, MCDataRef p_src, MCNameRef p_lang, MCDataRef& r_dest);
+void MCFiltersEvalUniDecodeToEncoding(MCExecContext& ctxt, MCDataRef p_src, MCNameRef p_lang, MCDataRef& r_dest);
 void MCFiltersEvalMD5Digest(MCExecContext& ctxt, MCDataRef p_src, MCDataRef& r_digest);
 void MCFiltersEvalSHA1Digest(MCExecContext& ctxt, MCDataRef p_src, MCDataRef& r_digest);
 
