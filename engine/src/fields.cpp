@@ -1500,7 +1500,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 			return ES_ERROR;
 		all = True;
 		if (which == P_TEXT_FONT)
-			t_value = (void *)*fname;
+			t_value = (void *)MCStringGetCString(*fname);
 		else if (which == P_TEXT_SIZE)
 			t_value = (void *)size;
 		else
