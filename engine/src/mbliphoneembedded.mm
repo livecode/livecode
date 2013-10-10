@@ -268,80 +268,65 @@ static const char *native_signature_to_objc(ObjcType p_type)
 	return t_tag;
 }
 
-static bool param_to_objc_value(MCExecPoint& ep, MCParameter *p_param, ObjcType p_as_type, ObjcValue& r_objc_value)
+static bool param_to_objc_value(MCParameter *p_param, ObjcType p_as_type, ObjcValue& r_objc_value)
 {
-	p_param -> eval_argument(ep);
-	
 	switch(p_as_type)
 	{
 	case kObjcTypeVoid:
 		break;
 	case kObjcTypeChar:
-		ep.ton();
-		r_objc_value . c = ep . getint4();
+		r_objc_value . c = MCNumberFetchAsInteger((MCNumberRef)p_param->value);
 		break;
 	case kObjcTypeInt:
-		ep.ton();
-		r_objc_value . i = ep . getint4();
+        r_objc_value . i = MCNumberFetchAsInteger((MCNumberRef)p_param->value);
 		break;
 	case kObjcTypeShort:
-		ep.ton();
-		r_objc_value . s = ep . getint4();
+        r_objc_value . s = MCNumberFetchAsInteger((MCNumberRef)p_param->value);
 		break;
 	case kObjcTypeLong:
-		ep.ton();
-		r_objc_value . l = ep . getint4();
+		r_objc_value . l = MCNumberFetchAsInteger((MCNumberRef)p_param->value);
 		break;
 	case kObjcTypeLongLong:
-		ep.ton();
 		r_objc_value . q = ep . getint8();
 		break;
 	case kObjcTypeUnsignedChar:
-		ep.ton();
-		r_objc_value . c = ep . getuint4();
+        r_objc_value . c = MCNumberFetchAsUnsignedInteger((MCNumberRef)p_param->value);
 		break;
 	case kObjcTypeUnsignedInt:
-		ep.ton();
-		r_objc_value . i = ep . getuint4();
+        r_objc_value . i = MCNumberFetchAsUnsignedInteger((MCNumberRef)p_param->value);
 		break;
 	case kObjcTypeUnsignedShort:
-		ep.ton();
-		r_objc_value . s = ep . getuint4();
+        r_objc_value . s = MCNumberFetchAsUnsignedInteger((MCNumberRef)p_param->value);
 		break;
 	case kObjcTypeUnsignedLong:
-		ep.ton();
-		r_objc_value . l = ep . getuint4();
+		r_objc_value . l = MCNumberFetchAsUnsignedInteger((MCNumberRef)p_param->value);
 		break;
 	case kObjcTypeUnsignedLongLong:
-		ep.ton();
-		r_objc_value . q = ep . getuint8();
+        r_objc_value . q = ep . getuint8();
 		break;
 	case kObjcTypeFloat:
-		ep.ton();
-		r_objc_value . f = ep . getnvalue();
+        r_objc_value . f = MCNumberFetchAsReal((MCNumberRef)p_param->value);
 		break;
 	case kObjcTypeDouble:
-		ep.ton();
-		r_objc_value . d = ep . getnvalue();
+        r_objc_value . d = MCNumberFetchAsReal((MCNumberRef)p_param->value);
 		break;
 	case kObjcTypeBool:
-		r_objc_value . B = ep . getsvalue() == MCtruemcstring;
+		r_objc_value . B = MCStringGetOldString((MCStringRef)p_param->value) == MCtruemcstring;
 		break;
 	case kObjcTypeCString:
-		r_objc_value . cstring = [[NSString stringWithCString: ep . getcstring() encoding: NSMacOSRomanStringEncoding] cStringUsingEncoding: NSMacOSRomanStringEncoding];
+		r_objc_value . cstring = [[NSString stringWithCString: MCStringGetCString((StringRef)p_param->value) encoding: NSMacOSRomanStringEncoding] cStringUsingEncoding: NSMacOSRomanStringEncoding];
 		break;
 	case kObjcTypeObject:
 		r_objc_value . object = nil;
 		break;
 	case kObjcTypeNumber:
-		ep . ton();
-		r_objc_value . number = [NSNumber numberWithDouble: ep . getnvalue()];
+        r_objc_value . number = [NSNumber numberWithDouble: MCNumberFetchAsReal((MCNumberRef)p_param->value)];
 		break;
 	case kObjcTypeString:
-		r_objc_value . string = [NSString stringWithCString: ep . getcstring() encoding: NSMacOSRomanStringEncoding];
+		r_objc_value . string = [NSString stringWithCString: MCStringGetCString((StringRef)p_param->value) encoding: NSMacOSRomanStringEncoding];
 		break;
 	case kObjcTypeData:
-		r_objc_value . data = [NSData dataWithBytes: ep . getsvalue() . getstring() length: ep . getsvalue() . getlength()];
+		r_objc_value . data = [NSData dataWithBytes: MCStringGetCString((StringRef)p_param->value) length: MCStringGetLength((MCStringRef)p_param->value)];
 		break;
 	case kObjcTypeArray:
 		r_objc_value . array = nil;
@@ -354,71 +339,128 @@ static bool param_to_objc_value(MCExecPoint& ep, MCParameter *p_param, ObjcType 
 	return true;
 }
 
-static void objc_value_to_livecode(MCExecPoint& ep, ObjcType p_type, const ObjcValue& p_value)
+static void objc_value_to_livecode(MCValueRef &r_value, ObjcType p_type, const ObjcValue& p_value)
 {
+    MCNumberRef t_number;
+
 	switch(p_type)
 	{
 	case kObjcTypeVoid:
 		break;
 	case kObjcTypeChar:
-		ep . setint(p_value . c);
+    {
+        /* UNCHECKED */ MCNumberCreateWithInteger(p_value . c, t_number)
+        r_value = t_number;
 		break;
+    }
 	case kObjcTypeInt:
-		ep . setint(p_value . i);
+    {
+		/* UNCHECKED */ MCNumberCreateWithInteger(p_value . i, t_number)
+        r_value = t_number;
 		break;
+    }
 	case kObjcTypeShort:
-		ep . setint(p_value . s);
-		break;
+    {
+        /* UNCHECKED */ MCNumberCreateWithInteger(p_value . s, t_number)
+        r_value = t_number;
+        break;
+    }
 	case kObjcTypeLong:
-		ep . setint(p_value . l);
-		break;
+    {
+        /* UNCHECKED */ MCNumberCreateWithInteger(p_value . l, t_number)
+        r_value = t_number;
+        break;
+    }
 	case kObjcTypeLongLong:
-		ep . setint64(p_value . q);
-		break;
+    {
+        /* UNCHECKED */ MCNumberCreateWithInteger(p_value . q, t_number)
+        r_value = t_number;
+        break;
+    }
 	case kObjcTypeUnsignedChar:
-		ep . setuint(p_value . C);
-		break;
+    {
+        /* UNCHECKED */ MCNumberCreateWithUnsignedInteger(p_value . C, t_number)
+        r_value = t_number;
+        break;
+    }
 	case kObjcTypeUnsignedInt:
-		ep . setuint(p_value . I);
-		break;
+    {
+        /* UNCHECKED */ MCNumberCreateWithUnsignedInteger(p_value . I, t_number)
+        r_value = t_number;
+        break;
+    }
 	case kObjcTypeUnsignedShort:
-		ep . setuint(p_value . S);
-		break;
+    {
+        /* UNCHECKED */ MCNumberCreateWithUnsignedInteger(p_value . S, t_number)
+        r_value = t_number;
+        break;
+    }
 	case kObjcTypeUnsignedLong:
-		ep . setuint(p_value . L);
-		break;
+    {
+        /* UNCHECKED */ MCNumberCreateWithUnsignedInteger(p_value . L, t_number)
+        r_value = t_number;
+        break;
+    }
 	case kObjcTypeUnsignedLongLong:
-		ep . setuint64(p_value . Q);
-		break;
+    {
+        /* UNCHECKED */ MCNumberCreateWithUnsignedInteger(p_value . Q, t_number)
+        r_value = t_number;
+        break;
+    }
 	case kObjcTypeFloat:
-		ep . setnvalue(p_value . f);
-		break;
+    {
+        /* UNCHECKED */ MCNumberCreateWithReal(p_value . f, t_number)
+        r_value = t_number;
+        break;
+    }
 	case kObjcTypeDouble:
-		ep . setnvalue(p_value . d);
-		break;
+    {
+        /* UNCHECKED */ MCNumberCreateWithReal(p_value . d, t_number)
+        r_value = t_number;
+        break;
+    }
 	case kObjcTypeBool:
-		ep . setboolean(p_value . B);
+		r_value = MCValueRetain(p_value . B == true ? kMCTrue : kMCFalse);
 		break;
 	case kObjcTypeCString:
-		ep . copysvalue(p_value . cstring);
+    {
+        MCAutoStringRef t_value;
+        /* UNCHECKED */ MCStringCreateWithOldString(p_value . cstring, &t_value);
+		r_value = MCValueRetain(*t_value);
 		break;
+    }
 	case kObjcTypeObject:
-		ep . copysvalue([[p_value . object description] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
-		break;
+    {
+        MCAutoStringRef t_value;
+        /* UNCHECKED */ MCStringCreateWithOldString([[p_value . object description] cStringUsingEncoding: NSMacOSRomanStringEncoding], &t_value);
+        r_value = MCValueRetain(*t_value);
+        break;
+    }
 	case kObjcTypeNumber:
-		ep . setnvalue([p_value . number doubleValue]);
-		break;
+    {
+        /* UNCHECKED */ MCNumberCreateWithReal([p_value . number doubleValue], t_number);
+        r_value = t_number;
+        break;
+    }
 	case kObjcTypeString:
-		ep . copysvalue([p_value . string cStringUsingEncoding: NSMacOSRomanStringEncoding]);
-		break;
+    {
+        MCAutoStringRef t_value;
+        /* UNCHECKED */ MCStringCreateWithOldString([p_value . string cStringUsingEncoding: NSMacOSRomanStringEncoding], &t_value);
+        r_value = MCValueRetain(*t_value);
+        break;
+    }
 	case kObjcTypeData:
-		ep . copysvalue((const char *)[p_value . data bytes], [p_value . data length]);
+    {
+        MCAutoStringRef t_value;
+        /* UNCHECKED */ MCStringCreateWithCString((const char *)[p_value . data bytes], &t_value);
+		r_value = MCValueRetain(*t_value);
 		break;
+    }
 	case kObjcTypeArray:
-		ep . clear();
+		r_value = MCValueRetain(kMCEmptyString);
 		break;
 	case kObjcTypeDictionary:
-		ep . clear();
+		r_value = MCValueRetain(kMCEmptyString);
 		break;
 	default:
 		break;
@@ -826,13 +868,13 @@ static void post_message_to_engine(MCObject *p_target, NSString *p_message, void
 	[t_invocation setTarget: m_delegate];
 	
 	// Create an ep from the current context.
-	MCExecPoint ep(nil, nil, nil);
+	//MCExecPoint ep(nil, nil, nil);
 	for(uindex_t i = 2; i < [t_signature numberOfArguments]; i++)
 	{
 		// Convert the parameter value to obj-c, or empty if failure.
 		ObjcValue t_value;
 		if (p_parameters == nil ||
-			!param_to_objc_value(ep, p_parameters, t_native_args[i - 2], t_value))
+			!param_to_objc_value(p_parameters, t_native_args[i - 2], t_value))
 			memset(&t_value, 0, sizeof(ObjcValue));
 			
 		// Copy the value into the invocation.
@@ -852,8 +894,9 @@ static void post_message_to_engine(MCObject *p_target, NSString *p_message, void
 	{
 		ObjcValue t_value;
 		[t_invocation getReturnValue: &t_value];
-		objc_value_to_livecode(ep, t_native_return_type, t_value);
-		MCresult -> store(ep, True);
+        MCValueRef t_valueref;
+		objc_value_to_livecode(t_valueref, t_native_return_type, t_value);
+		MCresult -> setvalueref(t_valueref);
 	}
 	
 	[t_pool release];
