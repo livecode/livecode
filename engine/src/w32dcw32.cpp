@@ -1128,12 +1128,12 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					if (target->isiconic())
 					{
 						MCstacks->restack(target);
-						target->configure(True);
+						target->view_configure(true);
 						target->uniconify();
 						SetWindowPos((HWND)target -> getwindow() -> handle . window, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
 					}
 					else
-						target->configure(True);
+						target->view_configure(true);
 				curinfo->handled = True;
 			}
 		}

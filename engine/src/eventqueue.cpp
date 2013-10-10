@@ -239,7 +239,7 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 		break;
 
 	case kMCEventTypeWindowReshape:
-		t_event -> window . stack -> configure(True);
+		t_event -> window . stack -> view_configure(true);
 		break;
 			
 	case kMCEventTypeMouseFocus:

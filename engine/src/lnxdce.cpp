@@ -274,10 +274,13 @@ Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 				        || bpevent->state >> 8 & 0x1F & ~(0x1L << button - 1))
 				{
 					setmods(bpevent->state, 0, bpevent->button, False);
-					MCclickstackptr = MCmousestackptr;
 					// IM-2013-08-12: [[ ResIndependence ]] Scale mouse coordinates to user space
-					MCclicklocx = bpevent->x / t_device_scale;
-					MCclicklocy = bpevent->y / t_device_scale;
+					MCPoint t_clickloc;
+					t_clickloc = MCPointMake(bpevent->x / t_device_scale, bpevent->y / t_device_scale);
+					
+					// IM-2013-10-09: [[ FullscreenMode ]] Update clickloc with MCscreen getters & setters
+					MCscreen->setclickloc(MCmousestackptr, t_clickloc);
+					
 					pressptr = tptr;
 					tptr = (MCEventnode *)tptr->next();
 					break;

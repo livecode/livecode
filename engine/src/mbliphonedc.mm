@@ -744,7 +744,7 @@ void MCScreenDC::do_fit_window(bool p_immediate_resize, bool p_post_message)
 	if (p_post_message)
 	{
 		if (p_immediate_resize)
-			((MCStack *)m_current_window) -> configure(True);
+			((MCStack *)m_current_window) -> view_configure(true);
 		else
 			MCEventQueuePostWindowReshape((MCStack *)m_current_window);
 	}

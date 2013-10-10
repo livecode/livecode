@@ -166,7 +166,11 @@ void MCStack::configure(Boolean user)
 	if (view_getfullscreen())
 		trect = view_setstackviewport(old_rect);
 	else
-		mode_getrealrect(trect);
+	{
+		// IM-2013-10-09: [[ FullscreenMode ]] Non-fullscreen stacks should use
+		// the whole view rect
+		trect = view_getrect();
+	}
 	if (trect.width != 0 && trect.height != 0
 	        && (trect.width != rect.width || trect.height != rect.height))
 	{
@@ -2105,7 +2109,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 
 			// MW-2009-09-09: If this is a plugin window, then we need to send a resizeStack
 			//   as we have no control over the size of the window...
-			configure(window != DNULL ? False : True);
+			view_configure(window != DNULL ? False : True);
 		}
 
 		// MW-2008-10-31: [[ ParentScripts ]] Send openControl appropriately

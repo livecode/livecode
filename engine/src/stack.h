@@ -372,6 +372,14 @@ public:
 	void view_activatetilecache(void);
 	void view_compacttilecache(void);
 	
+	// IM-2013-10-10: [[ FullscreenMode ]] Reconfigure view after window rect changes
+	void view_configure(bool p_user);
+	
+	// IM-2013-10-10: [[ FullscreenMode ]] Update the on-screen bounds of the view
+	void view_setrect(const MCRectangle &p_new_rect);
+	// IM-2013-10-10: [[ FullscreenMode ]] Notify view of changes to its bounds
+	void view_on_rect_changed(void);
+	
 	//////////
 	
 	// Return the stack -> device coordinate transform

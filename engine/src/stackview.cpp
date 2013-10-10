@@ -236,6 +236,9 @@ MCGAffineTransform view_get_stack_transform(MCStackFullscreenMode p_mode, MCRect
 
 	switch (p_mode)
 	{
+	case kMCStackFullscreenModeNone:
+		return MCGAffineTransformMakeIdentity();
+		
 	case kMCStackFullscreenResize:
 		return MCGAffineTransformMakeIdentity();
 
@@ -266,48 +269,69 @@ MCGAffineTransform view_get_stack_transform(MCStackFullscreenMode p_mode, MCRect
 	}
 }
 
+void MCStack::view_on_rect_changed(void)
+{
+	// IM-2013-10-03: [[ FullscreenMode ]] if the view rect has changed, update the tilecache geometry
+	if (m_view_tilecache != nil)
+	{
+		MCRectangle t_device_rect;
+		t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(m_view_rect));
+
+		MCTileCacheSetViewport(m_view_tilecache, t_device_rect);
+	}
+	
+	if (view_getfullscreen())
+		m_view_redraw = true;
+}
+
+void MCStack::view_setrect(const MCRectangle &p_rect)
+{
+	if (MCU_equal_rect(p_rect, m_view_rect))
+		return;
+	
+	// IM-2013-10-08: [[ FullscreenMode ]] Update view rect before calling setsizehints()
+	m_view_rect = p_rect;
+	
+	// IM-2013-10-03: [[ FullscreenMode ]] if the view rect has changed, update the window geometry
+	MCRectangle t_device_rect;
+	t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(m_view_rect));
+
+	// IM-2013-10-08: [[ FullscreenMode ]] Update window size hints when setting the view geometry.
+	setsizehints();
+	device_setgeom(t_device_rect);
+	
+	view_on_rect_changed();
+}
+
 MCRectangle MCStack::view_setstackviewport(const MCRectangle &p_rect)
 {
-	MCRectangle t_stack_rect, t_view_rect;
+	MCRectangle t_view_rect;
 	MCGAffineTransform t_transform;
+	
+	MCStackFullscreenMode t_mode;
 	
 	if (view_getfullscreen())
 	{
+		t_mode = m_view_fullscreenmode;
+		
 		const MCDisplay *t_display;
 		t_display = MCscreen -> getnearestdisplay(p_rect);
 
 		t_view_rect = MCscreen->fullscreenrect(t_display);
 		t_view_rect . x = t_view_rect . y = 0;
 		
-		t_stack_rect = view_constrainstackviewport(p_rect);
-		t_transform = view_get_stack_transform(m_view_fullscreenmode, t_stack_rect, t_view_rect);
-
-		m_view_redraw = true;
 	}
 	else
 	{
+		t_mode = kMCStackFullscreenModeNone;
 		t_view_rect = p_rect;
-
-		t_stack_rect = p_rect;
-		t_transform = MCGAffineTransformMakeIdentity();
 	}
 	
-	if (!MCU_equal_rect(t_view_rect, m_view_rect))
-	{
-		// IM-2013-10-03: [[ FullscreenMode ]] if the view rect has changed, update the window & tilecache geometry
-		MCRectangle t_device_rect;
-		t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(t_view_rect));
-		
-		// IM-2013-10-08: [[ FullscreenMode ]] Update view rect before calling setsizehints()
-		m_view_rect = t_view_rect;
-
-		// IM-2013-10-08: [[ FullscreenMode ]] Update window size hints when setting the view geometry.
-		setsizehints();
-		device_setgeom(t_device_rect);
-		
-		if (m_view_tilecache != nil)
-			MCTileCacheSetViewport(m_view_tilecache, t_device_rect);
-	}
+	view_setrect(t_view_rect);
+	
+	m_view_stack_rect = view_constrainstackviewport(p_rect);
+	
+	t_transform = view_get_stack_transform(m_view_fullscreenmode, m_view_stack_rect, m_view_rect);
 	
 	// IM-2013-10-03: [[ FullscreenMode ]] if the transform has changed, redraw everything
 	if (!MCGAffineTransformIsEqual(t_transform, m_view_transform))
@@ -316,9 +340,20 @@ MCRectangle MCStack::view_setstackviewport(const MCRectangle &p_rect)
 		dirtyall();
 	}
 	
-	m_view_stack_rect = t_stack_rect;
-	
 	return m_view_stack_rect;
+}
+
+void MCStack::view_configure(bool p_user)
+{
+	MCRectangle t_view_rect;
+	mode_getrealrect(t_view_rect);
+	
+	if (!MCU_equal_rect(t_view_rect, m_view_rect))
+	{
+		m_view_rect = t_view_rect;
+		view_on_rect_changed();
+	}
+	configure(p_user);
 }
 
 MCRectangle MCStack::view_getstackviewport()

@@ -294,7 +294,7 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 			
 			// MW-2007-08-29: [[ Bug 4846 ]] Ensure a moveStack message is sent whenever the window moves
 			if ((attributes & kWindowBoundsChangeSizeChanged) != 0 || ((attributes & kWindowBoundsChangeUserDrag) != 0 && (attributes & kWindowBoundsChangeOriginChanged) != 0))
-				sptr->configure(True);//causes a redraw and recalculation
+				sptr->view_configure(true);//causes a redraw and recalculation
 		}
 		else if (GetEventKind(event) == kEventWindowInit && sptr != NULL)
 		{

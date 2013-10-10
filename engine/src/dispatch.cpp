@@ -1261,7 +1261,7 @@ void MCDispatch::configure(Window w)
 {
 	MCStack *target = findstackd(w);
 	if (target != NULL)
-		target->configure(True);
+		target->view_configure(true);
 }
 
 void MCDispatch::enter(Window w)
