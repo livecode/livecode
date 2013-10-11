@@ -570,7 +570,7 @@ private:
 	uint4 m_style_capacity;
 };
 
-Exec_stat MCField::getparagraphmacunicodestyles(MCParagraph *p_start, MCParagraph *p_finish, MCDataRef& r_data)
+Exec_stat MCField::getparagraphmacunicodestyles(MCParagraph *p_start, MCParagraph *p_end, MCDataRef& r_data)
 {
 	MCNameRef origname;
 	uint2 origsize;
@@ -692,7 +692,7 @@ Exec_stat MCField::getparagraphmacunicodestyles(MCParagraph *p_start, MCParagrap
 		{
 			if (ATSUFlattenStyleRunsToStream(kATSUDataStreamUnicodeStyledText, 0, t_run_count, t_runs, t_style_count, t_styles, t_stream_size, t_stream, &t_stream_size) != noErr)
 				t_stream_size = 0;
-			/* UNCHECKED */ MCDataCreateWithBytesAndRelease(t_stream, t_stream_size, r_data);
+			/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_stream, t_stream_size, r_data);
 		}
 	}
 	

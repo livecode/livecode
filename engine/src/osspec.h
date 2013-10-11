@@ -113,6 +113,12 @@ extern Boolean MCS_resolvealias(MCStringRef p_path, MCStringRef& r_resolved);
 extern void MCS_doalternatelanguage(MCStringRef script, MCStringRef language);
 extern bool MCS_alternatelanguages(MCListRef& r_list);
 
+extern void MCS_nativetoutf16(const char *p_native, uint4 p_native_length, unsigned short *p_utf16, uint4& p_utf16_length);
+extern void MCS_utf16tonative(const unsigned short *p_utf16, uint4 p_utf16_length, char *p_native, uint4& p_native_length);
+
+extern void MCS_nativetoutf8(const char *p_native, uint4 p_native_length, char *p_utf8, uint4& p_utf16_length);
+extern void MCS_utf8tonative(const char *p_utf8, uint4 p_uitf8_length, char *p_native, uint4& p_native_length);
+
 extern MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename);
 extern MCSysModuleHandle MCS_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol);
 extern void MCS_unloadmodule(MCSysModuleHandle p_module);
