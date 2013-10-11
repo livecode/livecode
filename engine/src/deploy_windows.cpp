@@ -1083,24 +1083,30 @@ static uint64_t MCWindowsVersionInfoParseVersion(MCStringRef p_string)
 static bool add_version_info_entry(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
 {
 	MCWindowsVersionInfo *t_string;
-	char *t_value;
-	t_value = strdup(MCStringGetCString((MCStringRef)p_value));
-	uint4 t_value_len = strlen(t_value);
-	
-	if (t_value[t_value_len - 1] != '\0')
-		t_value[t_value_len - 1] = '\0';
-	
-	unsigned short *t_value_utf16;
-	uint4 t_value_utf16_length;
-	MCS_nativetoutf16(t_value, strlen(t_value), t_value_utf16, t_value_utf16_length);
-	
-	swap_uint16s(t_value_utf16, t_value_utf16_length / 2);
-	return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, MCStringGetCString(MCNameGetString(p_key)), true, t_value_utf16, t_value_utf16_length, t_string);
+	MCExecPoint ep(NULL, NULL, NULL);
+	MCExecContext ctxt(ep);
+	MCAutoStringRef t_value;
+	/* UNCHECKED */ ctxt . ConvertToString(p_value, &t_value);
+	byte_t *t_bytes;
+	uindex_t t_byte_count;
+	/* UNCHECKED */ MCStringConvertToBytes(*t_value, kMCStringEncodingUTF16LE, false, t_bytes, t_byte_count);
+	if (t_bytes[t_byte_count - 1] != '\0' || t_bytes[t_byte_count - 2] != '\0')
+	{
+		byte_t* temp = t_bytes;                       
+		t_bytes = new byte_t[t_byte_count + 2];		
+		memcpy(t_bytes, temp, t_byte_count); 
+		t_byte_count +=2;
+		delete temp;
+		t_bytes[t_byte_count - 2] = '\0';
+		t_bytes[t_byte_count - 1] = '\0';	 
+	}
+	return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, MCStringGetCString(MCNameGetString(p_key)), true, t_bytes, t_byte_count, t_string);
 }
 
 static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCArrayRef p_info)
 {
 	MCExecPoint ep(NULL, NULL, NULL);
+	MCExecContext ctxt(ep);
 
 	bool t_success;
 	t_success = true;
@@ -1109,16 +1115,20 @@ static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCArrayRe
 	t_file_version = t_product_version = 0;
 	if (t_success)
 	{
-		MCNewAutoNameRef t_key1, t_key2;
-        /* UNCHECKED */ MCNameCreateWithCString("FileVersion", &t_key1);
-		/* UNCHECKED */ MCNameCreateWithCString("ProductVersion", &t_key2);
-            
         MCValueRef t_value1, t_value2;
             
-        if (MCArrayFetchValue(p_info, false, *t_key1, t_value1))
-            t_file_version = MCWindowsVersionInfoParseVersion((MCStringRef)t_value1);   
-		if (MCArrayFetchValue(p_info, false, *t_key2, t_value2))
-            t_product_version = MCWindowsVersionInfoParseVersion((MCStringRef)t_value2);
+        if (MCArrayFetchValue(p_info, false, MCNAME("FileVersion"), t_value1))
+		{
+			MCAutoStringRef t_string1;
+			/* UNCHECKED */ ctxt . ConvertToString(t_value1, &t_string1);
+            t_file_version = MCWindowsVersionInfoParseVersion(*t_string1); 
+		}
+		if (MCArrayFetchValue(p_info, false, MCNAME("ProductVersion"), t_value2))
+		{
+			MCAutoStringRef t_string2;
+			/* UNCHECKED */ ctxt . ConvertToString(t_value2, &t_string2);
+            t_product_version = MCWindowsVersionInfoParseVersion(*t_string2);
+		}
 		MCValueRelease(t_value1);
 		MCValueRelease(t_value2);
 	}

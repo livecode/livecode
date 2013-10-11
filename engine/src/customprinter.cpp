@@ -1120,10 +1120,11 @@ static bool convert_options_array(void *p_context, MCArrayRef p_array, MCNameRef
 	convert_options_array_t *ctxt;
 	ctxt = (convert_options_array_t *)p_context;
 
-	//MCExecPoint ep(nil, nil, nil);
 	if (!MCCStringClone(MCStringGetCString(MCNameGetString(p_key)), ctxt -> option_keys[ctxt -> index]))
 		return false;
 	MCStringRef t_value;
+	if (MCValueGetTypeCode(p_value) != kMCValueTypeCodeString)
+		return false;
 	t_value = (MCStringRef) MCValueRetain(p_value);
 	
     ctxt -> option_values[ctxt -> index] = strdup(MCStringGetCString(t_value));

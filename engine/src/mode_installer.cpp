@@ -643,13 +643,17 @@ private:
 		}
 		else
 		{
+			MCExecPoint ep(NULL, NULL, NULL);
+			MCExecContext ctxt(ep);
 			MCAutoStringRef t_data;
 			/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)p_data, p_data_length, kMCStringEncodingNative, false, &t_data);
 			MCAutoStringRef t_value; 
-			/* UNCHECHED */ MCStringMutableCopy((MCStringRef)context -> var -> value, &t_value);
-			if (!MCStringAppend(*t_value, *t_data))
+			/* UNCHECKED */ ctxt . ConvertToString(context -> var -> value, t_value);
+			/* UNCHECHED */ MCStringMutableCopyAndRelease(t_value, t_value);
+			if (!MCStringAppend(t_value, *t_data))
 				return false;
-			MCValueAssign(context -> var -> value, *t_value);
+			MCValueAssign(context -> var -> value, t_value);
+			MCValueRelease(t_value);
 		}
 
 		MCObject *t_target;

@@ -632,33 +632,6 @@ public:
     }
 
     //////////
-
-    void Clear()
-    {
-        m_ep.clear();
-    }
-
-    bool IsEmpty()
-    {
-        return m_ep.isempty();
-    }
-
-    bool IsString()
-    {
-        return m_ep.isstring();
-    }
-
-    bool IsArray()
-    {
-        return m_ep.isarray();
-    }
-
-    bool IsNumber()
-    {
-        return m_ep.isnumber();
-    }
-
-    //////////
 	
 	// Convert the given valueref to a string. If the type is not convertable
 	// to a string, the empty string is returned.
