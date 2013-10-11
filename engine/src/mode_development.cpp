@@ -384,7 +384,7 @@ void MCStack::mode_destroy(void)
 	delete m_mode_data;
 }
 
-Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &carray, Boolean effective)
+Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 	switch(which)
 	{
@@ -429,7 +429,7 @@ Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, 
 	return ES_NORMAL;
 }
 
-Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &cprop, const MCString &carray, Boolean effective)
+Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef cprop, MCStringRef carray, Boolean effective)
 {
 	switch(which)
 	{
@@ -549,7 +549,7 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 //  Implementation of MCObject::getmodeprop for DEVELOPMENT mode.
 //
 
-Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &carray, Boolean effective)
+Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 	switch(which)
 	{
@@ -676,7 +676,7 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 		}
 
 		char *t_key;
-		t_key = carray . clone();
+		t_key = strdup(MCStringGetCString(carray));
 		if (t_key == NULL)
 			return ES_NORMAL;
 
@@ -1052,10 +1052,10 @@ bool MCModeShouldLoadStacksOnStartup(void)
 }
 
 // In development mode, we just issue a generic error.
-void MCModeGetStartupErrorMessage(const char*& r_caption, const char *& r_text)
+void MCModeGetStartupErrorMessage(MCStringRef& r_caption, MCStringRef& r_text)
 {
-	r_caption = "Initialization Error";
-	r_text = "Error while initializing development environment";
+	r_caption = MCSTR("Initialization Error");
+	r_text = MCSTR("Error while initializing development environment");
 }
 
 // In development mode, we can set any object's script.
@@ -1132,7 +1132,9 @@ bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 			else
 				t_msg_stack -> raise();
 
-			((MCField *)MCmessageboxredirect) -> settext_oldstring(0, ep . getsvalue(), False);
+			MCAutoStringRef t_string;
+			ep . copyasstringref(&t_string);
+			((MCField *)MCmessageboxredirect) -> settext(0, *t_string, False);
 		}
 		else
 		{
@@ -1158,9 +1160,9 @@ bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 	return false;
 }
 
-bool MCModeHandleRelaunch(const char *& r_id)
+bool MCModeHandleRelaunch(MCStringRef & r_id)
 {
-	r_id = "LiveCodeTools";
+	r_id = MCSTR("LiveCodeTools");
 	return true;
 }
 
@@ -1291,23 +1293,23 @@ bool MCModeHasHomeStack(void)
 //  Implementation of remote dialog methods
 //
 
-void MCRemoteFileDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char * const p_types[], uint32_t p_type_count, const char *p_initial_folder, const char *p_initial_file, bool p_save, bool p_files)
+void MCRemoteFileDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint32_t p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file, bool p_save, bool p_files, MCStringRef &r_value)
 {
 }
 
-void MCRemoteColorDialog(MCExecPoint& ep, const char *p_title, uint32_t p_red, uint32_t p_green, uint32_t p_blue)
+void MCRemoteColorDialog(MCStringRef p_title, uint32_t p_red, uint32_t p_green, uint32_t p_blue, bool& r_chosen, MCColor& r_chosen_color)
 {
 }
 
-void MCRemoteFolderDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial)
+void MCRemoteFolderDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef &r_value)
 {
 }
 
-void MCRemotePrintSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size)
+void MCRemotePrintSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result)
 {
 }
 
-void MCRemotePageSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size)
+void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result)
 {
 }
 

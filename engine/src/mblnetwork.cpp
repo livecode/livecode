@@ -127,7 +127,7 @@ void MCS_close_socket(MCSocket *p_socket)
 }
 
 
-void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, const char *until, MCNameRef m)
+void MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char *until, MCNameRef m, MCDataRef& r_data)
 {
 }
 

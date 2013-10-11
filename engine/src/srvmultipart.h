@@ -50,10 +50,10 @@ typedef bool (*MCMultiPartBodyCallback)(void *p_context, const char *p_data, uin
 
 //read multipart message from stream, pass headers & data through callbacks
 
-bool MCMultiPartReadMessageFromStream(IO_handle p_stream, const char *p_boundary, uint32_t &r_bytes_read,
+bool MCMultiPartReadMessageFromStream(IO_handle p_stream, MCStringRef p_boundary, uint32_t &r_bytes_read,
 									  MCMultiPartHeaderCallback p_header_callback, MCMultiPartBodyCallback p_body_callback, void *p_context);
 
-bool MCMultiPartCreateTempFile(const char *p_temp_folder, IO_handle &r_file_handle, const char *&r_temp_name);
+bool MCMultiPartCreateTempFile(MCStringRef p_temp_folder, IO_handle &r_file_handle, MCStringRef &r_temp_name);
 void MCMultiPartRemoveTempFiles();
 
 
