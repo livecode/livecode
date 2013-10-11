@@ -46,9 +46,6 @@ public:
 	uint2 getdirtywidth();
 	void makedirty();
 	void clean();
-	void getbyteindex(uint2 &i, uint2 &l);
-	findex_t getcursorindex(int2 x, Boolean chunk);
-	uint2 getcursorx(findex_t i);
 	uint2 getwidth();
 	uint2 getheight();
 	uint2 getascent();
@@ -68,6 +65,8 @@ public:
 	void GetRange(findex_t &r_index, findex_t &r_length);
 	findex_t GetOffset();
 	findex_t GetLength();
+	findex_t GetCursorIndex(int2 x, Boolean chunk);
+	uint2 GetCursorX(findex_t i);
 	
 	//////////
 	

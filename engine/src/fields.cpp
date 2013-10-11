@@ -129,11 +129,10 @@ Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
 			nitems = 0;
 			do
 			{
-				s.set(tpgptr->gettext_raw(), tpgptr->gettextbytesize());
 				if (tpgptr->next() != pgptr || !tpgptr->IsEmpty())
 				{
 					MCAutoStringRef t_string;
-					/* UNCHECKED */ MCStringCreateWithOldString(s, &t_string);
+					/* UNCHECKED */ MCStringCopy(tpgptr->GetInternalStringRef(), &t_string);
 					MCSort::additem(ctxt, items.Ptr(), nitems, form, *t_string, by);
 					items[nitems - 1].data = (void *)tpgptr;
 				}
@@ -219,54 +218,60 @@ Boolean MCField::find(MCExecContext &ctxt, uint4 cardid, Find_mode mode,
 				toffset = oldoffset = 0;
 			do
 			{
-				const char *text = tpgptr->gettext_raw();
-				findex_t length = tpgptr->gettextbytesize();
-				uint4 offset;
-				MCString tosearch(&text[oldoffset], length - oldoffset);
-				while (MCU_offset(MCStringGetOldString(tofind), tosearch, offset, ctxt.GetCaseSensitive()))
+				uindex_t t_length = MCStringGetLength(tpgptr->GetInternalStringRef());
+				MCRange t_range, t_where;
+				t_range = MCRangeMake(oldoffset, t_length - oldoffset);
+				while (MCStringFind(tpgptr->GetInternalStringRef(), t_range, tofind, 
+									ctxt.GetCaseSensitive() ? kMCStringOptionCompareCaseless : kMCStringOptionCompareExact,
+									&t_where))
 				{
-					offset += oldoffset;
 					switch (mode)
 					{
 					case FM_NORMAL:
-						if (offset == 0 || isspace((uint1)text[offset - 1])
-						        || ispunct((uint1)text[offset - 1]))
+						if (t_where.offset == 0 
+							|| tpgptr->TextIsWordBreak(tpgptr->GetCodepointAtIndex(tpgptr->DecrementIndex(t_where.offset)))
+							|| tpgptr->TextIsPunctuation(tpgptr->GetCodepointAtIndex(tpgptr->DecrementIndex(t_where.offset))))
 						{
 							if (first)
 							{
 								if (MCfoundfield != NULL && MCfoundfield != this)
 									MCfoundfield->clearfound();
-								foundoffset = toffset + offset;
-								toffset = offset++;
-								while (offset < length && !isspace((uint1)text[offset])
-								        && !ispunct((uint1)text[offset]))
-									offset++;
-								foundlength = offset - toffset;
+								foundoffset = toffset + t_where.offset;
+								toffset = t_where.offset;
+								t_where.offset = tpgptr->IncrementIndex(t_where.offset);
+								while (t_where.offset < t_length
+									   && !tpgptr->TextIsWordBreak(tpgptr->GetCodepointAtIndex(t_where.offset))
+									   && !tpgptr->TextIsPunctuation(tpgptr->GetCodepointAtIndex(t_where.offset)))
+								{
+									t_where.offset = tpgptr->IncrementIndex(t_where.offset);
+								}
+								foundlength = t_where.offset - toffset;
 								MCfoundfield = this;
 							}
 							return True;
 						}
-						offset++;
+						t_where.offset = tpgptr->IncrementIndex(t_where.offset);
 						break;
 					case FM_WHOLE:
 					case FM_WORD:
-						if ((offset == 0 || isspace((uint1)text[offset - 1])
-						        || ispunct((uint1)text[offset - 1]))
-						        && (offset + flength == length
-						            || isspace((uint1)text[offset + flength])
-						            || ispunct((uint1)text[offset + flength])))
+						if ((t_where.offset == 0 
+								|| tpgptr->TextIsWordBreak(tpgptr->GetCodepointAtIndex(tpgptr->DecrementIndex(t_where.offset))))
+							 && (t_where.offset + flength == t_length
+								|| tpgptr->TextIsWordBreak(tpgptr->GetCodepointAtIndex(t_where.offset + flength))
+								|| tpgptr->TextIsPunctuation(tpgptr->GetCodepointAtIndex(t_where.offset + flength))))
+
 						{
 							if (first)
 							{
 								if (MCfoundfield != NULL && MCfoundfield != this)
 									MCfoundfield->clearfound();
-								foundoffset = toffset + offset;
+								foundoffset = toffset + t_where.offset;
 								foundlength = MCStringGetLength(tofind);
 								MCfoundfield = this;
 							}
 							return True;
 						}
-						offset++;
+						t_where.offset = tpgptr->IncrementIndex(t_where.offset);
 						break;
 					case FM_CHARACTERS:
 					case FM_STRING:
@@ -274,17 +279,19 @@ Boolean MCField::find(MCExecContext &ctxt, uint4 cardid, Find_mode mode,
 						{
 							if (MCfoundfield != NULL && MCfoundfield != this)
 								MCfoundfield->clearfound();
-							foundoffset = toffset + offset;
+							foundoffset = toffset + t_where.offset;
 							foundlength = MCStringGetLength(tofind);
 							MCfoundfield = this;
 						}
+						// Fall through...
 					default:
 						return True;
 					}
-					oldoffset = offset;
-					tosearch.set(&text[oldoffset], length - oldoffset);
+					oldoffset = t_where.offset;
+					t_range.offset = oldoffset;
+					t_range.length = t_length - oldoffset;
 				}
-				toffset += tpgptr->gettextbytesizecr();
+				toffset += tpgptr->gettextlengthcr();
 				tpgptr = tpgptr->next();
 				oldoffset = 0;
 			}

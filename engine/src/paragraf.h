@@ -199,6 +199,9 @@ public:
 	// Returns true if the given character is a paragraph break
 	static bool TextIsParagraphBreak(codepoint_t);
 	
+	// Returns true if the given character is punctuation
+	static bool TextIsPunctuation(codepoint_t);
+	
 	// Scans the given string for the next paragraph break character and
 	// returns the index of the character following the break
 	static bool TextFindNextParagraph(MCStringRef p_string, findex_t p_after, findex_t &r_next_para);
@@ -365,17 +368,6 @@ public:
 	{
 		return gettextlength() + 1;
 	}
-	
-	// Returns the length of the text in bytes
-	findex_t gettextbytesize()
-	{
-		return gettextlength() * sizeof(unichar_t);
-	}
-	
-	findex_t gettextbytesizecr()
-	{
-		return gettextlengthcr() * sizeof(unichar_t);
-	}
 
 	// 'gettext()' returns a direct pointer to the backstore
 	// Called by:
@@ -386,7 +378,7 @@ public:
 	//   MCField::gettext
 	//   MCField::selectedtext
 	//   MCIdeScriptColorize::exec
-	const char *gettext_raw();
+	//const char *gettext_raw();
 
 	// Return the text as HTML formatted string.
 	// Called by:
@@ -666,8 +658,8 @@ public:
 	// Draw the paragraph
 	void draw(MCDC *dc, int2 x, int2 y,
 	          uint2 fa, uint2 fd,
-			  uint2 fstart, uint2 fend,
-	          uint2 compstart,uint2 compend, uint1 compconvstart, uint1 compconvend,
+			  findex_t fstart, findex_t fend,
+	          findex_t compstart, findex_t compend, findex_t compconvstart, findex_t compconvend,
 			  uint2 textwidth, uint2 pgheight, uint2 sx, uint2 swidth,
 	          uint2 pstyle);
 
@@ -821,8 +813,8 @@ private:
 
 	// Only called internally
 	void fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 height, int2 sx, uint2 swidth);
-	void drawcomposition(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 height, uint2 compstart, uint2 compend, uint1 compconvstart, uint1 compconvend);
-	void drawfound(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 height, uint2 fstart, uint2 fend);
+	void drawcomposition(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 height, findex_t compstart, findex_t compend, findex_t compconvstart, findex_t compconvend);
+	void drawfound(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 height, findex_t fstart, findex_t fend);
 
 	MCLine *indextoline(findex_t tindex);
 

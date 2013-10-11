@@ -149,12 +149,10 @@ int32_t MCFontMeasureText(MCFontRef font, const char *chars, uint32_t char_count
 
 int32_t MCFontMeasureTextSubstring(MCFontRef p_font, MCStringRef p_text, MCRange p_range)
 {
-	const char_t *t_native_text;
-	t_native_text = MCStringGetNativeCharPtr(p_text);
-	if (t_native_text != nil)
-		return MCFontMeasureText(p_font, (const char *)(t_native_text + p_range.offset), p_range.length, false);
+	if (MCStringIsNative(p_text))
+		return MCFontMeasureText(p_font, (const char *)(MCStringGetNativeCharPtr(p_text) + p_range.offset), p_range.length, false);
 	
-	return MCFontMeasureText(p_font, (const char *)(MCStringGetCharPtr(p_text) + p_range.offset), p_range.length, true);
+	return MCFontMeasureText(p_font, (const char *)(MCStringGetCharPtr(p_text) + p_range.offset), p_range.length*sizeof(unichar_t), true);
 }
 
 void MCFontDrawText(MCFontRef font, MCStringRef p_text, MCContext *context, int32_t x, int32_t y, bool image)
@@ -170,12 +168,10 @@ void MCFontDrawText(MCFontRef font, const char *chars, uint32_t char_count, bool
 
 void MCFontDrawTextSubstring(MCFontRef font, MCStringRef p_text, MCRange p_range, MCContext *context, int32_t x, int32_t y, bool image)
 {
-	const char_t *t_native_text;
-	t_native_text = MCStringGetNativeCharPtr(p_text);
-	if (t_native_text != nil)
-		return MCFontDrawText(font, (const char *)(t_native_text + p_range.offset), p_range.length, false, context, x, y, image);
+	if (MCStringIsNative(p_text))
+		return MCFontDrawText(font, (const char *)(MCStringGetNativeCharPtr(p_text) + p_range.offset), p_range.length, false, context, x, y, image);
 	
-	return MCFontDrawText(font, (const char *)(MCStringGetCharPtr(p_text) + p_range.offset), p_range.length, true, context, x, y, image);
+	return MCFontDrawText(font, (const char *)(MCStringGetCharPtr(p_text) + p_range.offset), p_range.length*sizeof(unichar_t), true, context, x, y, image);
 }
 
 MCFontStyle MCFontStyleFromTextStyle(uint2 p_text_style)

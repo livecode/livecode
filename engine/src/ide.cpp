@@ -1066,15 +1066,13 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 	{
 		// MW-2012-02-23: [[ FieldChars ]] Nativize the paragraph so tokenization
 		//   works.
-		char *t_text;
-		uint4 t_length;
-		uint4 t_min_nesting, t_nesting;
-		t_text = new char[t_paragraph -> gettextbytesize()];
-		t_length = 0;
-		t_paragraph -> nativizetext(true, t_text, t_length);
+		const char_t *t_text;
+		uindex_t t_length;
+		uint4 t_nesting, t_min_nesting;
+		t_text = MCStringGetNativeCharPtr(t_paragraph->GetInternalStringRef());
+		t_length = MCStringGetLength(t_paragraph->GetInternalStringRef());
 		t_paragraph -> clearzeros();
-		tokenize((const unsigned char *)t_text, t_length, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
-		delete t_text;
+		tokenize(t_text, t_length, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
 
 		t_old_nesting += t_state -> GetCommentDelta(t_line);
 		if (p_mutate)
@@ -1087,15 +1085,13 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 		{
 			// MW-2012-02-23: [[ FieldChars ]] Nativize the paragraph so tokenization
 			//   works.
-			char *t_text;
-			uint4 t_length;
-			uint4 t_min_nesting, t_nesting;
-			t_text = new char[t_paragraph -> gettextbytesize()];
-			t_length = 0;
-			t_paragraph -> nativizetext(true, t_text, t_length);
+			const char_t *t_text;
+			uindex_t t_length;
+			uint4 t_nesting, t_min_nesting;
+			t_text = MCStringGetNativeCharPtr(t_paragraph->GetInternalStringRef());
+			t_length = MCStringGetLength(t_paragraph->GetInternalStringRef());
 			t_paragraph -> clearzeros();
-			tokenize((const unsigned char *)t_text, t_length, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
-			delete t_text;
+			tokenize(t_text, t_length, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
 
 			t_old_nesting += t_state -> GetCommentDelta(t_line);
 			t_state -> SetCommentDelta(t_line, t_nesting - t_new_nesting);
@@ -1336,7 +1332,7 @@ static MCExecPoint *s_strip_paragraph_ep;
 
 static void strip_paragraph(void *p_context, MCColourizeClass p_class, uint4 p_index, uint4 t_start, uint4 t_end)
 {
-	MCParagraph *t_paragraph;
+	/*MCParagraph *t_paragraph;
 	t_paragraph = (MCParagraph *)p_context;
 
 	bool t_first;
@@ -1354,7 +1350,7 @@ static void strip_paragraph(void *p_context, MCColourizeClass p_class, uint4 p_i
 	default:
 		s_strip_paragraph_ep -> concatchars(t_paragraph -> gettext_raw() + t_start, t_end - t_start, EC_SPACE, t_first);
 	break;
-	}
+	}*/
 }
 
 Exec_stat MCIdeScriptStrip::exec(MCExecPoint& p_exec)

@@ -205,7 +205,7 @@ bool MCParagraph::TextIsWordBreak(codepoint_t p_codepoint)
 
 bool MCParagraph::TextIsLineBreak(codepoint_t p_codepoint)
 {
-	return p_codepoint == '\n';
+	return p_codepoint == '\v';
 }
 
 bool MCParagraph::TextIsSentenceBreak(codepoint_t p_codepoint)
@@ -216,6 +216,11 @@ bool MCParagraph::TextIsSentenceBreak(codepoint_t p_codepoint)
 bool MCParagraph::TextIsParagraphBreak(codepoint_t p_codepoint)
 {
 	return p_codepoint == '\n';
+}
+
+bool MCParagraph::TextIsPunctuation(codepoint_t p_codepoint)
+{
+	return ispunct(p_codepoint);
 }
 
 bool MCParagraph::TextFindNextParagraph(MCStringRef p_string, findex_t p_after, findex_t &r_next)
@@ -308,11 +313,13 @@ IO_stat MCParagraph::load(IO_handle stream, const char *version, bool is_ext)
 					return stat;
 				}
 				
-				// The old index method needs to be used here as the info we
-				// need is the indices into the paragraph text that the block
-				// thinks it has, not what it will actually use.
-				uint2 index, len;
-				newblock->getbyteindex(index, len);
+				// The indices returned here are *wrong* from the point of view
+				// of the refactored Unicode paragraph - the block as loaded
+				// stores byte indices, not UTF-16 value indices. These wrong
+				// values are needed to ensure the paragraph text is loaded 
+				// using the correct encoding and get fixed up below.
+				findex_t index, len;
+				newblock->GetRange(index, len);
 				t_last_added = index+len;
 				if (newblock->IsSavedAsUnicode())
 				{
@@ -757,7 +764,7 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
 		{
 			srect.x = x;
 			if (startindex > i)
-				srect.x += lptr->getcursorx(MCU_min(gettextlength(), startindex));
+				srect.x += lptr->GetCursorX(MCU_min(gettextlength(), startindex));
 		}
 		
 		bool t_show_back;
@@ -766,7 +773,7 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
 			srect.width = swidth - (srect.x - sx);
 		else
 		{
-			int2 sx = x + lptr->getcursorx(MCU_min(gettextlength(), endindex));
+			int2 sx = x + lptr->GetCursorX(MCU_min(gettextlength(), endindex));
 			if (sx > srect.x)
 				srect.width = sx - srect.x;
 			else
@@ -842,7 +849,7 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
 }
 
 //draw box around found text
-void MCParagraph::drawcomposition(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 height, uint2 compstart, uint2 compend, uint1 compconvstart, uint1 compconvend)
+void MCParagraph::drawcomposition(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 height, findex_t compstart, findex_t compend, findex_t compconvstart, findex_t compconvend)
 {
 	findex_t i, l;
 	lptr->GetRange(i, l);
@@ -853,11 +860,11 @@ void MCParagraph::drawcomposition(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 
 		srect.y = y;
 		srect.height = height;
 		if (compstart > i)
-			srect.x += lptr->getcursorx(compstart);
+			srect.x += lptr->GetCursorX(compstart);
 		if (compend > i + l)
 			srect.width = lptr->getwidth() - (srect.x - x);
 		else
-			srect.width = x + lptr->getcursorx(compend) - srect.x;
+			srect.width = x + lptr->GetCursorX(compend) - srect.x;
 		dc->setforeground(dc->getgray());
 		dc->drawline(srect.x, srect.y + srect.height - 1, srect.x + srect.width,
 		             srect.y + srect.height - 1);
@@ -871,11 +878,11 @@ void MCParagraph::drawcomposition(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 
 			srect.y = y;
 			srect.height = height;
 			if (compconvstart > i)
-				srect.x += lptr->getcursorx(compconvstart);
+				srect.x += lptr->GetCursorX(compconvstart);
 			if (compconvend > i + l)
 				srect.width = lptr->getwidth() - (srect.x - x);
 			else
-				srect.width = x + lptr->getcursorx(compconvend) - srect.x;
+				srect.width = x + lptr->GetCursorX(compconvend) - srect.x;
 
 			dc->drawline(srect.x, srect.y + srect.height - 1, srect.x + srect.width,
 			             srect.y + srect.height - 1);
@@ -890,7 +897,7 @@ void MCParagraph::drawcomposition(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 
 }
 
 // MW-2007-07-05: [[ Bug 110 ]] - Make sure the find box is continued over multiple lines
-void MCParagraph::drawfound(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 height, uint2 fstart, uint2 fend)
+void MCParagraph::drawfound(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 height, findex_t fstart, findex_t fend)
 {
 	findex_t i, l;
 	lptr->GetRange(i, l);
@@ -904,14 +911,14 @@ void MCParagraph::drawfound(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 height
 		bool t_has_start;
 		t_has_start = fstart >= i;
 		if (fstart > i)
-			srect.x += lptr->getcursorx(fstart);
+			srect.x += lptr->GetCursorX(fstart);
 
 		bool t_has_end;
 		t_has_end = fend <= i + l;
 		if (fend > i + l)
 			srect.width = lptr->getwidth() - (srect.x - x);
 		else
-			srect.width = x + lptr->getcursorx(fend) - srect.x;
+			srect.width = x + lptr->GetCursorX(fend) - srect.x;
 
 		parent->setforeground(dc, DI_FORE, False, True);
 		if (t_has_start && t_has_end)
@@ -930,8 +937,8 @@ void MCParagraph::drawfound(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 height
 
 //draw text of paragraph
 void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
-                       uint2 fixedd, uint2 fstart, uint2 fend, uint2 compstart,
-                       uint2 compend, uint1 compconvstart, uint1 compconvend,
+                       uint2 fixedd, findex_t fstart, findex_t fend, findex_t compstart,
+                       findex_t compend, findex_t compconvstart, findex_t compconvend,
                        uint2 textwidth, uint2 pgheight, uint2 sx, uint2 swidth, uint2 pstyle)
 {
 	if (lines == NULL)
@@ -2352,7 +2359,7 @@ int2 MCParagraph::setfocus(int4 x, int4 y, uint2 fixedheight,
 	//   indents, list indents and alignment. (Field to Paragraph so -ve)
 	x -= computelineoffset(lptr);
 
-	focusedindex = lptr->getcursorindex(x, False);
+	focusedindex = lptr->GetCursorIndex(x, False);
 	if (extend)
 	{
 		if (originalindex == PARAGRAPH_MAX_LEN)
@@ -2693,7 +2700,7 @@ MCRectangle MCParagraph::getcursorrect(findex_t fi, uint2 fixedheight, bool p_in
 		drect.height = lptr->getheight() - 2;
 	else
 		drect.height = fixedheight - 2;
-	drect.x = lptr->getcursorx(fi);
+	drect.x = lptr->GetCursorX(fi);
 	
 	// MW-2012-01-08: [[ ParaStyles ]] If we want the 'full height' of the
 	//   cursor (inc space), adjust appropriately depending on which line we are
@@ -2715,47 +2722,6 @@ MCRectangle MCParagraph::getcursorrect(findex_t fi, uint2 fixedheight, bool p_in
 
 	return drect;
 }
-
-const char *MCParagraph::gettext_raw()
-{
-	//if (blocks == NULL)
-	//	inittext();
-	
-	// This returns a pointer to the internals of the StringRef and is
-	// therefore volatile across any calls that modify the paragraph
-	//
-	// NOTE: this deliberately returns the UTF-16 string!
-	return (const char *)MCStringGetCharPtr(m_text);
-}
-
-/*static void appendblocktext(MCExecPoint& ep, MCExecPoint& tmpep, char *p_text, MCBlock *p_block, bool p_unicode)
-{
-	uint2 i,l;
-	p_block -> getindex(i,l);
-	if (p_unicode)
-	{
-		if (p_block -> hasunicode())
-			ep . appendbytes(&p_text[i], l);
-		else
-		{
-			tmpep . setsvalue(MCString(&p_text[i], l));
-			tmpep . nativetoutf16();
-			ep . appendmcstring(tmpep . getsvalue());
-		}
-	}
-	else
-	{
-		if (!p_block -> hasunicode())
-			ep . appendbytes(&p_text[i], l);
-		else
-		{
-			tmpep . setsvalue(MCString(&p_text[i], l));
-			tmpep . utf16tonative();
-			ep . appendmcstring(tmpep . getsvalue());
-		}
-	}
-	
-}*/
 
 bool MCParagraph::copytextasstringref(MCStringRef& r_string)
 {
@@ -2994,7 +2960,7 @@ uint2 MCParagraph::getyextent(findex_t tindex, uint2 fixedheight)
 
 int2 MCParagraph::getx(findex_t tindex, MCLine *lptr)
 {
-	int2 x = lptr->getcursorx(tindex);
+	int2 x = lptr->GetCursorX(tindex);
 
 	// MW-2012-01-08: [[ ParaStyles ]] Adjust the x start taking into account
 	//   indents, list indents and alignment. (Paragraph to Field so +ve)
@@ -3153,7 +3119,7 @@ void MCParagraph::getclickindex(int2 x, int2 y,
 	//   indents, list indents and alignment. (Field to Paragraph so -ve)
 	x -= computelineoffset(lptr);
 
-	si = lptr->getcursorindex(x, chunk);
+	si = lptr->GetCursorIndex(x, chunk);
 	int4 lwidth = lptr->getwidth();
 	if (x < 0 || x >= lwidth)
 	{

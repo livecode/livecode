@@ -60,7 +60,7 @@ protected:
 	MCParagraph *parent;
 	uint4 flags;
 	Blockatts *atts;
-	uint2 index, size;
+	findex_t m_index, m_size;
 	uint2 width;
 	uint2 opened;
 
@@ -99,9 +99,9 @@ public:
 	//   'flagged' are excluded from the sameness check (used by styledText).
 	Boolean sameatts(MCBlock *bptr, bool p_persistent_only);
 
-	bool fit(int2 x, uint2 width, uint2& r_break_index, bool& r_break_fits);
-	void split(uint2 p_index);
-	int2 gettabwidth(int2 x, const char *text, uint2 index);
+	bool fit(int2 x, uint2 width, findex_t& r_break_index, bool& r_break_fits);
+	void split(findex_t p_index);
+	int2 gettabwidth(int2 x, findex_t index);
 	void drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, findex_t length, Boolean image, uint32_t style);
 	
 	// MW-2012-02-27: [[ Bug 2939 ]] The 'flags' parameter indicates whether the left and/or
@@ -154,14 +154,10 @@ public:
 	{
 		parent = pgptr;
 	}
-	void setbyteindex(const char *sptr, uint2 i, uint2 l);
-	void movebyteindex(const char *sptr, int2 ioffset, int2 loffset);
-	uint2 getcursorx(int2 x, uint2 fi);
-	uint2 getcursorbyteindex(int2 x, int2 cx, Boolean chunk, Boolean last);
-	uint2 getsubwidth(MCDC *dc, int2 x, uint2 i, uint2 l);
+
+	uint2 getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l);
 	uint2 getwidth(MCDC *dc, int2 x);
 	void reset();
-	void getbyteindex(uint2 &i, uint2 &l);
 	uint2 getascent(void);
 	uint2 getdescent(void);
 	void freeatts();
@@ -176,8 +172,6 @@ public:
 	MCStringRef getmetadata(void);
 
 	void sethilite(Boolean on);
-	
-	bool getfirstlinebreak(uint2& index);
 	
 	// MW-2012-01-26: [[ FlaggedField ]] Returns whether the given block has the
 	//   'flagged' status set.
@@ -202,12 +196,7 @@ public:
 	{
 		flags &= ~F_VISITED;
 	}
-	bool hasunicode() const
-	{
-		// Paragraphs now use StringRefs so blocks are always considered to
-		// use unicode. This function will soon go away.
-		return true;
-	}
+
 	Boolean islink() const
 	{
 		// MW-2012-02-17: [[ SplitTextAttrs ]] We are a link if we have a font
@@ -225,16 +214,8 @@ public:
 
 	bool getflag(unsigned int f) const
 	{
-		if (f & F_HAS_UNICODE)
-			return true;
 		return (flags & f) != 0;
 	}
-
-	/*void sethasunicode(bool p_has_unicode)
-	{
-		// Blocks are always Unicode now and this is ignored
-		assert(false);
-	}*/
 
 	MCBlock *next()
 	{
@@ -264,35 +245,10 @@ public:
 	{
 		MCDLlist::splitat((MCDLlist *)node) ;
 	}
-	uint2 indexdecrement(uint2 index);
-	uint2 indexincrement(uint2 index);
-	Boolean textcomparechar(const char *textptr,char whichchar);
-	char *textstrchr(const char *sptr,  uint2 l, char target);
-	Boolean textisspace(const char *textptr);
-	Boolean textispunct(const char *textptr);
-	uint2 getcharsize();
-	uint2 getlength();
-	uint2 indextocharacter(uint2 si);
-	uint2 verifyindex(uint2 si, bool p_is_end);
 	MCBlock *remove(MCBlock *&list)
 	{
 		return (MCBlock *)MCDLlist::remove((MCDLlist *&)list);
 	}
-
-	uint2 getbyteindex(void) const
-	{
-		return index;
-	}
-	
-	uint2 getbytesize(void) const
-	{
-		return size;
-	}
-
-	
-	uint4 getcharatindex(int4 p_index);
-	MCBlock *retreatindex(uint2& p_index);
-	MCBlock *advanceindex(uint2& p_index);
 
 	bool imagechanged(MCImage *p_image, bool p_deleting);
 	
@@ -313,6 +269,12 @@ public:
 	// Moves the index by the specified number of character positions
 	void MoveRange(findex_t t_index_offset, findex_t t_length_offset); 
 	
+	// Translates from a pixel position to a cursor index
+	findex_t GetCursorIndex(int2 x, int2 cx, Boolean chunk, Boolean last);
+	
+	// Returns the x coordinate of the cursor
+	uint2 GetCursorX(int2 x, findex_t fi);
+	
 	// Moves the index forwards by one codepoint, possibly changing block
 	MCBlock *AdvanceIndex(findex_t &x_index);
 	
@@ -321,6 +283,9 @@ public:
 	
 	// Returns the codepoint at the given index into the block
 	codepoint_t GetCodepointAtIndex(findex_t p_index) const;
+	
+	// Finds the first linebreak character in the block
+	bool GetFirstLineBreak(findex_t &r_index);
 	
 	// Returns true if the block's text was stored in Unicode format (required
 	// when reading the existing (non-Unicode) stack file format)
