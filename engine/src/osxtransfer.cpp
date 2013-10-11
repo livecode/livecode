@@ -722,25 +722,27 @@ bool MCConvertMacUnicodeStyledToStyledText(MCDataRef p_text_data, MCDataRef p_st
 {
 	MCParagraph *t_paragraphs;
 	
-	MCString t_text;
-	t_text = MCDataGetOldString(p_text_data);
+	MCStringRef t_text;
+	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)MCDataGetBytePtr(p_text_data), MCDataGetLength(p_text_data), t_text);
 	
 	// MW-2010-01-08: [[ Bug 8327 ]] If the text is 'external' representation, skip the BOM.
-	if (p_is_external && t_text . getlength() >= 2 &&
-		(*(uint2 *)t_text . getstring() == 0xfffe || 
-		*(uint2 *)t_text . getstring() == 0xfeff))
-		t_text . set(t_text . getstring() + 2, t_text . getlength() - 1);
+	if (p_is_external && MCStringGetLength(t_text) >= 2 &&
+		(*(uint2 *)MCStringGetCString(t_text) == 0xfffe || 
+		*(uint2 *)MCStringGetCString(t_text) == 0xfeff))
+	{
+		MCAutoStringRef t_substring;
+		MCStringCopySubstring(t_text, MCRangeMake(2, MCStringGetLength(t_text) - 2), &t_substring);
+		MCValueAssign(t_text, *t_substring);
+	}
 	
 	// MW-2009-12-01: If the unicode styled text has an empty style data, then make
 	//   sure we just convert it as plain unicode text.
 	if (MCDataGetLength(p_style_data) != 0)
-		t_paragraphs = MCtemplatefield -> macunicodestyletexttoparagraphs(t_text, MCDataGetOldString(p_style_data));
+		t_paragraphs = MCtemplatefield -> macunicodestyletexttoparagraphs(MCStringGetOldString(t_text), MCDataGetOldString(p_style_data));
 	else
 	{
-		MCAutoStringRef t_input;
-		/* UNCHECKED */ MCStringCreateWithChars(t_text, t_text . getlength(), &t_input);
 		MCAutoStringRef t_output;
-		/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_input, &t_output);
+		/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(t_text, &t_output);
 		MCAutoDataRef t_data;
 		/* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingUTF16, false, &t_data);
 		t_paragraphs = MCtemplatefield -> texttoparagraphs(MCDataGetOldString(*t_data), true);
@@ -1020,7 +1022,7 @@ bool MCConvertMacHFSToFiles(MCDataRef p_data, MCDataRef& r_output)
 
 	// Create a mutable list ref.
 	MCListRef t_output_files;
-	/* UNCHECKED */ MCListCreateMutable('\n', &t_output_files);
+	/* UNCHECKED */ MCListCreateMutable('\n', t_output_files);
 	
 	for(uint32_t i = 0; i < t_count; ++i)
 	{
