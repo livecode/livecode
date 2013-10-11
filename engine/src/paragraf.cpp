@@ -3501,12 +3501,6 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
 	return True;
 }
 
-bool MCParagraph::nativizetext(bool p_ascii_only, char *p_data, uint32_t& x_length)
-{
-	memcpy(p_data, (const char*)MCStringGetCString(m_text), MCStringGetLength(m_text));
-	x_length = MCStringGetLength(m_text);
-}
-
 bool MCParagraph::imagechanged(MCImage *p_image, bool p_deleting)
 {
 	bool t_used = false;

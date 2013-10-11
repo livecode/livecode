@@ -649,12 +649,6 @@ public:
 	// Force the paragraph to re-flow itself depending on its setting of dontWrap.
 	void layout(void);
 	
-	// MW-2012-01-27: [[ UnicodeChunks ]] Returns the content of the field in a native
-	//   form such that indices match that of the original content. If ASCII-only is
-	//   set, then it preserves only ASCII unicode chars. 'p_data' must point to a
-	//   at least gettextsize() bytes.
-	bool nativizetext(bool p_ascii_only, char *p_data, uint32_t& x_length);
-	
 	// Draw the paragraph
 	void draw(MCDC *dc, int2 x, int2 y,
 	          uint2 fa, uint2 fd,
