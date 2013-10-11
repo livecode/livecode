@@ -700,6 +700,7 @@ Exec_stat MCStack::resubstack(MCStringRef p_data)
 		if (tsub != NULL)
 		{
 			// If t_val doesn't exist as a name, it can't exist as a substack name.
+			// t_val is always a stringref (fetched from an MCSplitString array)
 			MCNameRef t_name;
 			t_name = MCNameLookup((MCStringRef)t_val);
 		
@@ -751,7 +752,7 @@ Exec_stat MCStack::resubstack(MCStringRef p_data)
 		else
 		{
 			iserror = True;
-			t_error = MCValueRetain((MCStringRef)t_val);
+			t_error = ((MCStringRef)t_val);
 		}
 	}
 	
