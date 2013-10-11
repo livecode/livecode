@@ -4797,17 +4797,8 @@ Exec_stat MCChunk::evalobjectchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_f
     MCExecContext ctxt(ep);
     if (t_function)
         MCInterfaceMarkFunction(ctxt, t_object, function, p_whole_chunk, r_chunk . mark);
-    else if (cline != nil || item != nil || token != nil || word != nil || character!= nil)
-        MCInterfaceMarkObject(ctxt, t_object, p_whole_chunk, r_chunk . mark);
     else
-    {
-        r_chunk . chunk = CT_UNDEFINED;
-        r_chunk . object = t_object . object;
-        r_chunk . part_id = t_object . part_id;
-        r_chunk . mark . start = 0;
-        r_chunk . mark . finish = INDEX_MAX;
-        return ES_NORMAL;
-    }
+        MCInterfaceMarkObject(ctxt, t_object, p_whole_chunk, r_chunk . mark);
     
     if (mark(ep, p_force, p_whole_chunk, r_chunk . mark) != ES_NORMAL)
     {
