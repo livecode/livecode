@@ -251,8 +251,14 @@ template<typename A, void Method(MCExecContext&, A)> inline void MCPropertyThunk
     Method(ctxt, arg);
 }
 
+template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void MCPropertyListThunk(MCExecContext& ctxt, void *, B count, A arg)
+{
+    Method(ctxt, count, arg);
+}
+
 #define MCPropertyThunkImp(mth,typ) (void(*)(MCExecContext&, void *,typ))MCPropertyThunk<typ,mth>
 #define MCPropertyIndexedThunkImp(mth,index,typ) (void(*)(MCExecContext&, MCNameRef, typ))MCPropertyIndexedThunk<typ,mth>
+#define MCPropertyListThunkImp(mth,count,typ) (void(*)(MCExecContext&,void *,count,typ))MCPropertyListThunk<typ,count,mth>
 
 #define MCPropertyThunkIndexedGetBinaryString(mth) MCPropertyIndexedThunkImp(mth, MCNameRef, MCDataRef&)
 #define MCPropertyThunkIndexedSetBinaryString(mth) MCPropertyIndexedThunkImp(mth, MCNameRef, MCDataRef)
@@ -284,6 +290,7 @@ template<typename A, void Method(MCExecContext&, A)> inline void MCPropertyThunk
 #define MCPropertyThunkGetOptionalEnumType(mth) MCPropertyThunkImp(mth, intenum_t*&)
 #define MCPropertyThunkGetArray(mth) MCPropertyThunkImp(mth, MCArrayRef&)
 #define MCPropertyThunkGetName(mth) MCPropertyThunkImp(mth, MCNameRef&)
+#define MCPropertyThunkGetItemsOfUInt(mth) MCPropertyListThunkImp(mth,uindex_t&,uinteger_t*&)
 
 #define MCPropertyThunkSetAny(mth) MCPropertyThunkImp(mth, MCValueRef)
 #define MCPropertyThunkSetBool(mth) MCPropertyThunkImp(mth, bool)
@@ -312,6 +319,7 @@ template<typename A, void Method(MCExecContext&, A)> inline void MCPropertyThunk
 #define MCPropertyThunkSetOptionalEnumType(mth) MCPropertyThunkImp(mth, intenum_t*)
 #define MCPropertyThunkSetArray(mth) MCPropertyThunkImp(mth, MCArrayRef)
 #define MCPropertyThunkSetName(mth) MCPropertyThunkImp(mth, MCNameRef)
+#define MCPropertyThunkSetItemsOfUInt(mth) MCPropertyListThunkImp(mth,uindex_t,uinteger_t*)
 
 #define MCPropertyObjectThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectPtr*,typ))MCPropertyObjectThunk<obj,typ,&obj::mth>
 #define MCPropertyObjectPartThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectPtr*,typ))MCPropertyObjectPartThunk<obj,typ,&obj::mth>
