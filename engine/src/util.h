@@ -188,6 +188,7 @@ extern Exec_stat MCU_change_color(MCColor &c, MCStringRef&n, MCExecPoint &ep, ui
 extern void MCU_get_color(MCExecPoint &ep, MCStringRef name, MCColor &c);
 extern void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output);
 extern void MCU_geturl(MCExecPoint &ep);
+extern void MCU_puturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef p_data);
 extern void MCU_puturl(MCExecPoint &ep, MCExecPoint &data);
 extern uint1 MCU_unicodetocharset(uint2 uchar);
 extern uint1 MCU_languagetocharset(MCNameRef langname);

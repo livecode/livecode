@@ -2330,46 +2330,47 @@ void MCU_geturl(MCExecPoint &ep)
     ep.setvalueref(*t_output);
 }
 
-
-void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
+void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCStringRef p_data)
 {
-	if (dest.getsvalue().getlength() > 5
-	        && !MCU_strncasecmp(dest.getsvalue().getstring(), "file:", 5))
+	if (MCStringBeginsWithCString(p_url, (const char_t*)"file:", kMCCompareCaseless))
 	{
-		dest.tail(5);
-		data . texttobinary();
-		MCAutoDataRef t_data_ref;
-		/* UNCHECKED */ data . copyasdataref(&t_data_ref);
-		MCAutoStringRef t_filename;
-		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &t_filename);
-		MCS_savebinaryfile(*t_filename, *t_data_ref);
+		MCAutoStringRef t_path;
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(5, MCStringGetLength(p_url) - 5), &t_path);
+		MCS_savetextfile(*t_path, p_data);
 	}
-	else if (dest.getsvalue().getlength() > 8
-		        && !MCU_strncasecmp(dest.getsvalue().getstring(), "binfile:", 8))
+	else if (MCStringBeginsWithCString(p_url, (const char_t*)"binfile:", kMCCompareCaseless))
 	{
-		dest.tail(8);
-		MCAutoDataRef t_data_ref;
-		/* UNCHECKED */ data . copyasdataref(&t_data_ref);
-		MCAutoStringRef t_filename;
-		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &t_filename);
-		MCS_savebinaryfile(*t_filename, *t_data_ref);
+		MCAutoStringRef t_path;
+		MCAutoDataRef t_data;
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url) - 8), &t_path);
+		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
+		MCS_savebinaryfile(*t_path, *t_data);
 	}
-	else if (dest.getsvalue().getlength() > 8
-		        && !MCU_strncasecmp(dest.getsvalue().getstring(), "resfile:", 8))
+	else if (MCStringBeginsWithCString(p_url, (const char_t*)"resfile:", kMCCompareCaseless))
 	{
-		dest.tail(8);
-		MCAutoStringRef t_filename;
-		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &t_filename);
-		/* UNCHECKED */ MCS_saveresfile(*t_filename, (MCDataRef)data.getvalueref());
+		MCAutoStringRef t_path;
+		MCAutoDataRef t_data;
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url) - 8), &t_path);
+		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
+		MCS_saveresfile(*t_path, *t_data);
 	}
 	else
 	{
-		MCAutoStringRef p_url;
-        MCAutoDataRef t_data;
-		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &p_url);
-        /* UNCHECKED */ MCDataCreateWithBytes((byte_t*)data.getcstring(), data.getsvalue().getlength(), &t_data);
-		MCS_putintourl(dest . getobj(), *t_data, *p_url);
+		MCAutoDataRef t_data;
+		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
+		MCS_putintourl(ctxt.GetObject(), *t_data, p_url);
 	}
+}
+
+void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
+{
+	MCAutoStringRef t_url;
+	MCAutoStringRef t_data;
+	/* UNCHECKED */ dest.copyasstringref(&t_url);
+	/* UNCHECKED */ data.copyasstringref(&t_data);
+	
+	MCExecContext ctxt(data);
+	MCU_puturl(ctxt, *t_url, *t_data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
