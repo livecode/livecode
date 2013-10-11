@@ -28,7 +28,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "execpt.h"
 #include "mcstring.h"
-#include "textbuffer.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -180,7 +179,7 @@ struct export_rtf_t
 	// then the paragraph has no list styling).
 	export_rtf_array_t<uint32_t> list_ids;
 	// The buffer containing the output text.
-	text_buffer_t buffer;
+	MCStringRef m_text;
 
 	// The styles we inherit from the field (used for list labels).
 	export_rtf_char_style_t parent_style;
@@ -327,7 +326,7 @@ static bool export_rtf_build_tables(void *p_context, MCFieldExportEventType p_ev
 
 // Emit a run of native text, taking care to encode appropriate chars
 // (in particular, line break - 0x0b).
-static void export_rtf_emit_native_text(text_buffer_t& buffer, const uint8_t *p_chars, uint32_t p_char_count)
+static void export_rtf_emit_native_text(MCStringRef p_buffer, const uint8_t *p_chars, uint32_t p_char_count)
 {
 	for(;;)
 	{
@@ -343,7 +342,7 @@ static void export_rtf_emit_native_text(text_buffer_t& buffer, const uint8_t *p_
 
 		if (t_end > 0)
 		{
-			buffer . appendtext(p_chars, t_end, false);
+			/* UNCHECKED */ MCStringAppendFormat(p_buffer, "%*.s", t_end, p_chars);
 			p_char_count -= t_end;
 			p_chars += t_end;
 		}
@@ -352,9 +351,9 @@ static void export_rtf_emit_native_text(text_buffer_t& buffer, const uint8_t *p_
 			break;
 
 		if (*p_chars != 0x0b)
-			buffer . appendtextf("\\'%02X", *p_chars);
+			/* UNCHECKED */ MCStringAppendFormat(p_buffer, "\\'%02X", *p_chars);
 		else
-			buffer . appendcstring("\\line ");
+			/* UNCHECKED */ MCStringAppendFormat(p_buffer, "\\line ");
 		p_chars += 1;
 		p_char_count -= 1;
 	}
@@ -408,27 +407,27 @@ static void export_rtf_fetch_char_style(export_rtf_t& ctxt, export_rtf_char_styl
 }
 
 // Emit the changes in char style from old to new.
-static void export_rtf_emit_char_style_changes(text_buffer_t& buffer, export_rtf_char_style_t& p_old, export_rtf_char_style_t& p_new)
+static void export_rtf_emit_char_style_changes(MCStringRef p_buffer, export_rtf_char_style_t& p_old, export_rtf_char_style_t& p_new)
 {
 	if (p_new . italic_on != p_old . italic_on)
-		buffer . appendcstring(p_new . italic_on ? "\\i " : "\\i0 ");
+		/* UNCHECKED */ MCStringAppendFormat(p_buffer, p_new . italic_on ? "\\i " : "\\i0 ");
 	if (p_new . bold_on != p_old . bold_on)
-		buffer . appendcstring(p_new . bold_on ? "\\b " : "\\b0 ");
+		/* UNCHECKED */ MCStringAppendFormat(p_buffer, p_new . bold_on ? "\\b " : "\\b0 ");
 	if (p_new . strike_on != p_old . strike_on)
-		buffer . appendcstring(p_new . strike_on ? "\\strike " : "\\strike0 ");
+		/* UNCHECKED */ MCStringAppendFormat(p_buffer, p_new . strike_on ? "\\strike " : "\\strike0 ");
 	// MW-2012-03-13: [[ Bug ]] Incorrect tag used for underline - should be 'ul' not 'u'.
 	if (p_new . underline_on != p_old . underline_on)
-		buffer . appendcstring(p_new . underline_on ? "\\ul " : "\\ul0 ");
+		/* UNCHECKED */ MCStringAppendFormat(p_buffer, p_new . underline_on ? "\\ul " : "\\ul0 ");
 	if (p_new . superscript_on != p_old . superscript_on || p_new . subscript_on != p_old . subscript_on)
-		buffer . appendcstring(p_new . subscript_on ? "\\sub " : (p_new . subscript_on ? "\\super " : "\\nosupersub "));
+		/* UNCHECKED */ MCStringAppendFormat(p_buffer, p_new . subscript_on ? "\\sub " : (p_new . subscript_on ? "\\super " : "\\nosupersub "));
 	if (p_new . font_index != p_old . font_index)
-		buffer . appendtextf("\\f%d ", p_new . font_index);
+		/* UNCHECKED */ MCStringAppendFormat(p_buffer, "\\f%d ", p_new . font_index);
 	if (p_new . font_size != p_old . font_size)
-		buffer . appendtextf("\\fs%d ", p_new . font_size);
+		/* UNCHECKED */ MCStringAppendFormat(p_buffer, "\\fs%d ", p_new . font_size);
 	if (p_new . text_color_index != p_old . text_color_index)
-		buffer . appendtextf("\\cf%d ", p_new . text_color_index + 1);
+		/* UNCHECKED */ MCStringAppendFormat(p_buffer, "\\cf%d ", p_new . text_color_index + 1);
 	if (p_new . background_color_index != p_old . background_color_index && p_new . background_color_index != -1)
-		buffer . appendtextf("\\cb%d\\chcbpat%d ", p_new . background_color_index + 1, p_new . background_color_index + 1);
+		/* UNCHECKED */ MCStringAppendFormat(p_buffer, "\\cb%d\\chcbpat%d ", p_new . background_color_index + 1, p_new . background_color_index + 1);
 }
 
 // Emit the paragraph content. This is the second pass of rtf generation, the
@@ -441,24 +440,24 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 	if (p_event_type == kMCFieldExportEventBeginParagraph && p_event_data . is_first_paragraph)
 	{
 		// Output the inital info.
-		ctxt . buffer . appendcstring("{\\rtf1" EXPORT_RTF_PLATFORM_TAG " ");
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\rtf1" EXPORT_RTF_PLATFORM_TAG " ");
 		
 		// Output the font table.
 		if (ctxt . fonts . count() > 0)
 		{
-			ctxt . buffer . appendcstring("{\\fonttbl");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\fonttbl");
 			for(uint32_t i = 0; i < ctxt . fonts . count(); i++)
-				ctxt . buffer . appendtextf("{\\f%d\\fnil \\fcharset" EXPORT_RTF_PLATFORM_CHARSET " %s;}", i, MCNameGetCString(ctxt . fonts[i]));
-			ctxt . buffer . appendcstring("}\n");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\f%d\\fnil \\fcharset" EXPORT_RTF_PLATFORM_CHARSET " %s;}", i, ctxt.fonts[i]);
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}\n");
 		}
 		
 		// Output the color table.
 		if (ctxt . colors . count() > 0)
 		{
-			ctxt . buffer . appendcstring("{\\colortbl;");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\colortbl;");
 			for(uint32_t i = 0; i < ctxt . colors . count(); i++)
-				ctxt . buffer . appendtextf("\\red%d\\green%d\\blue%d;", (ctxt . colors[i] >> 16) & 0xff, (ctxt . colors[i] >> 8) & 0xff, (ctxt . colors[i] >> 0) & 0xff);
-			ctxt . buffer . appendcstring("}\n");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\ref%d\\green%d\\blue%d;", (ctxt . colors[i] >> 16) & 0xff, (ctxt . colors[i] >> 8) & 0xff, (ctxt . colors[i] >> 0) & 0xff);
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}\n");
 		}
 		
 		// Output the list table.
@@ -467,10 +466,10 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 			// Fetch the char rtf styles that are inherited (for listtext labels).
 			export_rtf_fetch_char_style(ctxt, ctxt . parent_style, p_event_data . character_style);
 			
-			ctxt . buffer . appendcstring("{\\*\\listtable");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\*\\listtable");
 			for(uint32_t i = 0; i < ctxt . lists . count(); i++)
 			{
-				ctxt . buffer . appendtextf("{\\list\n", i + 1);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\list\n");
 				for(uint32_t j = 0; j < export_rtf_get_list_style_depth(ctxt . lists[i]); j++)
 				{
 					uint32_t t_list_style;
@@ -485,7 +484,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 							t_char = 0x25AA, t_marker = "square";
 						else if (t_list_style == kMCParagraphListStyleCircle)
 							t_char = 0x25E6, t_marker = "circle";
-						ctxt . buffer . appendtextf("{\\listlevel\\levelnfc23\\leveljc0\\levelstartat1\\levelfollow0{\\*\\levelmarker \\{%s\\}}{\\leveltext\\'01\\u%d.;}{\\levelnumbers;}",
+						/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\listlevel\\levelnfc23\\leveljc0\\levelstartat1\\levelfollow0{\\*\\levelmarker \\{%s\\}}{\\leveltext\\'01\\u%d.;}{\\levelnumbers;}",
 													t_marker, t_char);
 					}
 					else
@@ -499,21 +498,22 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 							case kMCParagraphListStyleLowerRoman: t_type = 2; break;
 							case kMCParagraphListStyleUpperRoman: t_type = 1; break;
 						}
-						ctxt . buffer . appendtextf("{\\listlevel\\levelnfc%d\\leveljc0\\levelstartat1\\levelfollow0{\\leveltext\'02\'0%d.;}{\\levelnumbers\'01;}", t_type, j);
+						/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\listlevel\\levelnfc%d\\leveljc0\\levelstartat1\\levelfollow0{\\leveltext\'02\'0%d.;}{\\levelnumbers\'01;}", t_type, j);
 					}
 					
-					export_rtf_emit_char_style_changes(ctxt . buffer, ctxt . styles[0], ctxt . parent_style);
+					export_rtf_emit_char_style_changes(ctxt.m_text, ctxt . styles[0], ctxt . parent_style);
 					
-					ctxt . buffer . appendcstring("}\n");
+					/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}\n");
 				}
-				ctxt . buffer . appendtextf("\\listid%d}\n", i + 1);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\listid%d}\n", i + 1);
 			}
-			ctxt . buffer . appendcstring("}\n");
-			
-			ctxt . buffer . appendcstring("{\\*\\listoverridetable");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}\n");
+		
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\*\\listoverridetable");
 			for(uint32_t i = 0; i < ctxt . lists . count(); i++)
-				ctxt . buffer . appendtextf("{\\listoverride\\listid%d\\listoverridecount0\\ls%d}\n", i + 1, i + 1);
-			ctxt . buffer . appendcstring("}\n");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\listoverride\\listid%d\\listoverridecount0\\ls%d}\n",
+													 i + 1, i + 1);
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}\n");
 		}		
 	}
 	
@@ -521,10 +521,10 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 	{
 		// If we aren't on the first paragraph, then emit a paragraph separator.
 		if (!p_event_data . is_first_paragraph)
-			ctxt . buffer . appendcstring("\\par ");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\par ");
 
 		// Clear all the paragraph properties.
-		ctxt . buffer . appendcstring("\\pard ");
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\pard ");
 		
 		// If we have paragraph metadata set, then emit that field.
 		if (p_event_data . paragraph_style . has_metadata)
@@ -538,12 +538,12 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		// If we have a background color set, then emit a 'cbpat' control. Note that
 		// putting this control later on breaks in openoffice :(
 		if (p_event_data . paragraph_style . has_background_color)
-			ctxt . buffer . appendtextf("\\cbpat%d ", ctxt . colors . lookup(p_event_data . paragraph_style . background_color) + 1);
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\cbpat%d ", ctxt.colors.lookup(p_event_data.paragraph_style.background_color) + 1);
 		
 		// If we have a border set, then emit the border controls.
 		if (p_event_data . paragraph_style . border_width != 0)
 		{
-			ctxt . buffer . appendtextf("\\box\\brdrw%d\\brdrcf%d\\brdsp%d ",
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\box\\brdrw%d\\brdrcf%d\\brdsp%d ",
 											pixels_to_twips(p_event_data . paragraph_style . border_width),
 											ctxt . colors . lookup(p_event_data . paragraph_style . border_color) + 1,
 											pixels_to_twips(p_event_data . paragraph_style . padding));
@@ -580,25 +580,25 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		
 		// Emit the controls for first / left / right indent.
 		if (t_first_indent != 0)
-			ctxt . buffer . appendtextf("\\fi%d ", pixels_to_twips(t_first_indent));
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\fi%d ", pixels_to_twips(t_first_indent));
 		if (t_left_indent != 0)
-			ctxt . buffer . appendtextf("\\li%d ", pixels_to_twips(t_left_indent));
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\li%d ", pixels_to_twips(t_left_indent));
 		if (p_event_data . paragraph_style . right_indent != 0)
-			ctxt . buffer . appendtextf("\\ri%d ", pixels_to_twips(p_event_data . paragraph_style . right_indent));
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\ri%d ", pixels_to_twips(p_event_data.paragraph_style.right_indent));
 		
 		// If we have a list style assigned to this paragraph, then process it.
 		if (ctxt . list_ids[ctxt . paragraph_index] != 0)
 		{
 			// Emit a tab-stop at the text indent level.
-			ctxt . buffer . appendtextf("\\tx%d", pixels_to_twips(-t_first_indent));
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\tx%d", pixels_to_twips(-t_first_indent));
 			
 			// Emit the level and list style controls.
-			ctxt . buffer . appendtextf("\\ls%d", ctxt . list_ids[ctxt . paragraph_index]);
-			ctxt . buffer . appendtextf("\\ilvl%d", MCMin(p_event_data . paragraph_style . list_depth, 8U));
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\ls%d", ctxt.list_ids[ctxt.paragraph_index]);
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\ilvl%d", MCMin(p_event_data.paragraph_style.list_depth, 8U));
 			
 			// Emit the tag prefix and styling.
-			ctxt . buffer . appendcstring("{\\listtext\\tab");
-			export_rtf_emit_char_style_changes(ctxt . buffer, ctxt . styles[ctxt . style_index], ctxt . parent_style);
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\listtext\\tab");
+			export_rtf_emit_char_style_changes(ctxt.m_text, ctxt . styles[ctxt . style_index], ctxt . parent_style);
 			
 			// Now fetch the list style of the current paragraph and output the
 			// appropriate 'listtext' tag.
@@ -613,7 +613,8 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 				// Emit the correct bullet char in the 'listtext' section.
 				uint32_t t_char;
 				t_char = (t_list_style == kMCParagraphListStyleDisc ? 0x2022 : (t_list_style == kMCParagraphListStyleCircle ? 0x25E6 : 0x25AA));
-				ctxt . buffer . appendtextf("\\u%d.\\tab}", t_char);			}
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\u%d.\\tab}", t_char);			
+			}
 			break;
 			case kMCParagraphListStyleNumeric:
 			case kMCParagraphListStyleUpperRoman:
@@ -627,13 +628,13 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 				const char *t_label_string;
 				uint32_t t_label_length;
 				MCParagraph::formatliststyleindex(t_list_style, p_event_data . paragraph_number, t_label_buffer, t_label_string, t_label_length);
-				ctxt . buffer . appendtextf(" %.*s\\tab}", t_label_length, t_label_string);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " %.*s\\tab}", t_label_length, t_label_string);
 			}
 			break;
 			case kMCParagraphListStyleSkip:
 				// Just emit a tab in the listtext section. This causes the paragraph to be
 				// aligned after an (invisible) number.
-				ctxt . buffer . appendcstring("\\tab}");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\tab}");
 				break;
 			}
 		}
@@ -645,18 +646,19 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		case kMCParagraphTextAlignJustify:
 			break;
 		case kMCParagraphTextAlignRight:
-			ctxt . buffer . appendcstring("\\qr ");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\qr ");
 			break;
 		case kMCParagraphTextAlignCenter:
-			ctxt . buffer . appendcstring("\\qc ");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\qc ");
 			break;
 		}
 
 		// Emit the spacing above and below controls.
+		// NOTE: \sa is "space after" and \sb "space before" (opposite of "above" and "below")
 		if (p_event_data . paragraph_style . space_above != 0)
-			ctxt . buffer . appendtextf("\\sb%d ", pixels_to_twips(p_event_data . paragraph_style . space_above));
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\sb%d ", pixels_to_twips(p_event_data.paragraph_style.space_above));
 		if (p_event_data . paragraph_style . space_below != 0)
-			ctxt . buffer . appendtextf("\\sa%d ", pixels_to_twips(p_event_data . paragraph_style . space_below));
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\sa%d ", pixels_to_twips(p_event_data.paragraph_style.space_below));
 
 		// Increment the paragraph index.
 		ctxt . paragraph_index += 1;
@@ -665,19 +667,19 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 	{
 		// Make sure any nested styles are finished.
 		if (ctxt . styles[ctxt . style_index] . link_text != nil)
-			ctxt . buffer . appendcstring("}");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
 		while(ctxt . style_index > 0)
 		{
-			ctxt . buffer . appendcstring("}");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
 			ctxt . style_index -= 1;
 		}
 		
 		if (ctxt . has_metadata)
-			ctxt . buffer . appendcstring("}");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
 
 		// For neatness, emit a newline after each paragraph.
 		if (!p_event_data . is_last_paragraph)
-			ctxt . buffer . appendcstring("\n");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\n");
 	}
 	else if (p_event_type == kMCFieldExportEventNativeRun || p_event_type == kMCFieldExportEventUnicodeRun)
 	{
@@ -690,17 +692,20 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		if (t_new_style . link_text != ctxt . styles[ctxt . style_index] . link_text)
 		{
 			if (ctxt . styles[ctxt . style_index] . link_text != nil)
-				ctxt . buffer . appendcstring("}");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
 
 			while(ctxt . style_index > 0)
 			{
-				ctxt . buffer . appendcstring("}");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
 				ctxt . style_index -= 1;
 			}
 
 			if (t_new_style . link_text != nil)
 			{
-				ctxt . buffer . appendtextf("{\\field{\\*\\fldinst %s \"%s\"}{\\fldrslt ", t_new_style . link_on ? "HYPERLINK" : "LCANCHOR", MCStringGetCString(t_new_style . link_text));
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text,
+													 "{\\field{\\*\\fldinst %s \"%@\"}{\\fldrslt ",
+													 t_new_style . link_on ? "HYPERLINK" : "LCANCHOR",
+													 t_new_style . link_text);
 				ctxt . styles[ctxt . style_index] = ctxt . styles[ctxt . style_index];
 				ctxt . style_index += 1;
 			}
@@ -710,17 +715,19 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		if (t_new_style . metadata != ctxt . styles[ctxt . style_index] . metadata)
 		{
 			if (ctxt . styles[ctxt . style_index] . metadata != nil)
-				ctxt . buffer . appendcstring("}");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
 
 			while(ctxt . style_index > 0 && ctxt . styles[ctxt . style_index] . link_text == nil)
 			{
-				ctxt . buffer . appendcstring("}");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
 				ctxt . style_index -= 1;
 			}
 
 			if (t_new_style . metadata != nil)
 			{
-				ctxt . buffer . appendtextf("{\\field{\\*\\fldinst LCMETADATA \"%s\"}{\\fldrslt ", MCStringGetCString(t_new_style . metadata));
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, 
+													 "{\\field{\\*\\fldinst LCMETADATA \"%@\"}{\\fldrslt ", 
+													 t_new_style . metadata);
 				ctxt . styles[ctxt . style_index + 1] = ctxt . styles[ctxt . style_index];
 				ctxt . style_index += 1;
 			}
@@ -731,31 +738,36 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		{
 			if (t_new_style . background_color_index == -1)
 			{
-				ctxt . buffer . appendcstring("}");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
 				ctxt . style_index -= 1;
 			}
 			else if (ctxt . styles[ctxt . style_index] . background_color_index == -1)
 			{
-				ctxt . buffer . appendcstring("{");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
 				ctxt . styles[ctxt . style_index + 1] = ctxt . styles[ctxt . style_index];
 				ctxt . style_index += 1;
 			}
 		}
 
 		// Emit any style changes.
-		export_rtf_emit_char_style_changes(ctxt . buffer, ctxt . styles[ctxt . style_index], t_new_style);
+		export_rtf_emit_char_style_changes(ctxt.m_text, ctxt . styles[ctxt . style_index], t_new_style);
 		ctxt . styles[ctxt . style_index] = t_new_style;
 
+		// Nothing more to do if this isn't a text run
+		if (p_event_type != kMCFieldExportEventNativeRun && p_event_type != kMCFieldExportEventUnicodeRun)
+			return true;
+		
 		// Now emit the text, if native its easy, otherwise we must process.
-		// TODO: change to use StringRefs
-		/*if (p_event_type == kMCFieldExportEventNativeRun)
-			export_rtf_emit_native_text(ctxt . buffer, (const uint8_t *)p_event_data . bytes, p_event_data . byte_count);
-		else if (p_event_type == kMCFieldExportEventUnicodeRun)
+		if (MCStringIsNative(p_event_data.m_text))
+			export_rtf_emit_native_text(ctxt.m_text,
+										MCStringGetNativeCharPtr(p_event_data.m_text) + p_event_data.m_range.offset, 
+										p_event_data.m_range.length);
+		else
 		{
-			const uint16_t *t_chars;
+			const unichar_t *t_chars;
 			uint32_t t_char_count;
-			t_chars = (const uint16_t *)p_event_data . bytes;
-			t_char_count = p_event_data . byte_count / 2;
+			t_chars = MCStringGetCharPtr(p_event_data.m_text) + p_event_data.m_range.offset;
+			t_char_count = p_event_data.m_range.length;
 
 			// A temporary buffer to store any native converted text in.
 			uint8_t *t_native_text;
@@ -764,6 +776,9 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 			// Loop until we are done.
 			while(t_char_count > 0)
 			{
+				// Scan for the next replacement character
+				
+				
 				// Attempt to convert as much as possible to native text. This returns
 				// the number of unicode chars consumed in 'used', and the number of native
 				// chars created in made.
@@ -774,9 +789,9 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 				// have 'made' native chars to emit.
 				if (t_made == 0)
 					for(uint32_t i = 0; i < t_used; i++)
-						ctxt . buffer . appendtextf("\\u%d?", t_chars[i]);
+						/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\u%d?", t_chars[i]);
 				else
-					export_rtf_emit_native_text(ctxt . buffer, t_native_text, t_made);
+					export_rtf_emit_native_text(ctxt.m_text, t_native_text, t_made);
 			
 				// Update the char / char_count.
 				t_chars += t_used;
@@ -785,7 +800,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		
 			// Delete the temporary buffer.
 			delete t_native_text;
-		}*/
+		}
 	}
 
 	return true;
@@ -815,6 +830,9 @@ bool MCField::exportasrtftext(uint32_t p_part_id, int32_t p_start_index, int32_t
 /* UNSAFE */ bool MCField::exportasrtftext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, MCStringRef &r_string)
 {
 	export_rtf_t ctxt;
+	
+	// Create the text buffer
+	/* UNCHECKED */ MCStringCreateMutable(0, ctxt.m_text);
 
 	// Reset the list-style info.
 	ctxt . list_style = 0;
@@ -838,10 +856,10 @@ bool MCField::exportasrtftext(uint32_t p_part_id, int32_t p_start_index, int32_t
 	doexport(kMCFieldExportParagraphs | kMCFieldExportRuns | kMCFieldExportParagraphStyles | kMCFieldExportCharacterStyles | kMCFieldExportFlattenStyles | kMCFieldExportNumbering, p_paragraphs, p_start_index, p_finish_index, export_rtf_emit_paragraphs, &ctxt);
 
 	// Output the final info.
-	ctxt . buffer . appendcstring("\n}");
+	/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\n}");
 
 	// Return the buffer.
-	return ctxt . buffer . takeasstringref(r_string);
+	return MCStringCopyAndRelease(ctxt.m_text, r_string);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
