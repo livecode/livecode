@@ -122,8 +122,8 @@ static void compose_text_message_prewait(void *p_context)
 	
 	ctxt -> dialog = [[MCIPhoneSmsComposerDialog alloc] init];
     [ctxt -> dialog setMessageComposeDelegate: ctxt -> dialog];
-    [ctxt -> dialog setRecipients: [[NSString stringWithCString: MCStringGetCString(ctxt -> recipients) encoding: NSMacOSRomanStringEncoding] componentsSeparatedByString:@","]];
-    [ctxt -> dialog setBody: [NSString stringWithCString: MCStringGetCString(ctxt -> body) encoding: NSMacOSRomanStringEncoding]];
+    [ctxt -> dialog setRecipients: [[NSString stringWithMCStringRef: ctxt -> recipients] componentsSeparatedByString:@","]];
+    [ctxt -> dialog setBody: [NSString stringWithMCStringRef: ctxt -> body]];
 	[ctxt -> dialog preWait];
 	
 	ctxt -> success = true;

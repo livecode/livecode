@@ -72,10 +72,10 @@ int main(int argc, char *argv[], char *envp[])
 	{
 		[t_pool release];
 		
-		const char *t_caption;
-		const char *t_text;
-		MCModeGetStartupErrorMessage(t_caption, t_text);
-		fprintf(stderr, "%s - %s\n", t_caption, t_text);
+		MCAutoStringRef t_caption;
+		MCAutoStringRef t_text;
+		MCModeGetStartupErrorMessage(&t_caption, &t_text);
+		fprintf(stderr, "%s - %s\n", MCStringGetCString(*t_caption), MCStringGetCString(*t_text));
 		exit(-1);
 	}
 

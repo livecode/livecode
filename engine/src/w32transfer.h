@@ -137,8 +137,7 @@ public:
 	// Returns the data to which the object is bound. If the object is not
 	// valid (i.e. Valid() is false), or the data it is bound to is not of
 	// HGLOBAL type, the empty string is returned.
-	MCString Get(void) const;
-	void Get(MCStringRef& r_data);
+	void Get(MCDataRef& r_data);
 
 	// Return the HGLOBAL handle to which the object is bound, or NULL if
 	// it is not bound to such a handle.

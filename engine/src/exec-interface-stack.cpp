@@ -203,6 +203,7 @@ static void MCInterfaceDecorationParse(MCExecContext& ctxt, MCStringRef p_input,
 
 static void MCInterfaceDecorationFormat(MCExecContext& ctxt, const MCInterfaceDecoration& p_input, MCStringRef& r_output)
 {
+
     if (p_input . has_decorations)
     {
         if (p_input . decorations & WD_WDEF)
@@ -212,28 +213,37 @@ static void MCInterfaceDecorationFormat(MCExecContext& ctxt, const MCInterfaceDe
         }
         else
         {
-            uindex_t j = 0;
-            MCExecPoint ep(nil, nil, nil);
+			MCListRef t_output;
+			/* UNCHECKED */ MCListCreateMutable(',', t_output);
+			
             if (p_input . decorations & WD_TITLE)
-                ep.concatcstring(MCtitlestring, EC_COMMA, j++ == 0);
+				/* UNCHECKED */ MCListAppendCString(t_output, MCtitlestring);
+				
             if (p_input . decorations & WD_MENU)
-                ep.concatcstring(MCmenustring, EC_COMMA, j++ == 0);
+				/* UNCHECKED */ MCListAppendCString(t_output, MCmenustring);
             if (p_input . decorations & WD_MINIMIZE)
-                ep.concatcstring(MCminimizestring, EC_COMMA, j++ == 0);
+				/* UNCHECKED */ MCListAppendCString(t_output, MCminimizestring);
+				
             if (p_input . decorations & WD_MAXIMIZE)
-                ep.concatcstring(MCmaximizestring, EC_COMMA, j++ == 0);
+				/* UNCHECKED */ MCListAppendCString(t_output, MCmaximizestring);
+		
             if (p_input . decorations & WD_CLOSE)
-                ep.concatcstring(MCclosestring, EC_COMMA, j++ == 0);
+				/* UNCHECKED */ MCListAppendCString(t_output, MCclosestring);
+				
             if (p_input . decorations & WD_METAL)
-                ep.concatcstring(MCmetalstring, EC_COMMA, j++ == 0);
+				/* UNCHECKED */ MCListAppendCString(t_output, MCmetalstring);
+				
             if (p_input . decorations & WD_UTILITY)
-                ep.concatcstring(MCutilitystring, EC_COMMA, j++ == 0);
+				/* UNCHECKED */ MCListAppendCString(t_output, MCutilitystring);
+			
             if (p_input . decorations & WD_NOSHADOW)
-                ep.concatcstring(MCnoshadowstring, EC_COMMA, j++ == 0);
+				/* UNCHECKED */ MCListAppendCString(t_output, MCnoshadowstring);
+				
             if (p_input . decorations & WD_FORCETASKBAR)
-                ep.concatcstring(MCforcetaskbarstring, EC_COMMA, j++ == 0);
-            if (ep . copyasstringref(r_output))
-                return;
+				/* UNCHECKED */ MCListAppendCString(t_output, MCforcetaskbarstring);
+				
+            /* UNCHECKED */ MCListCopyAsStringAndRelease(t_output, r_output);
+			return;
         }
     }
     else
@@ -1965,7 +1975,7 @@ void MCStack::SetDecorations(MCExecContext& ctxt, const MCInterfaceDecoration& p
 
 void MCStack::GetDecorations(MCExecContext& ctxt, MCInterfaceDecoration& r_value)
 {
-    r_value . has_decorations = (flags & F_DECORATIONS) == True;
+    r_value . has_decorations = (flags & F_DECORATIONS) != False;
     r_value . decorations = decorations;
 }
 

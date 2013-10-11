@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "mblsyntax.h"
 
+#include "mbliphone.h"
 #include "mbliphoneapp.h"
 
 #import <Foundation/Foundation.h>
@@ -148,24 +149,24 @@ static void iphone_send_email_prewait(void *p_context)
 	NSArray *t_recipients;
 	t_recipients = nil;
 	if (ctxt -> to_addresses != nil && !MCStringIsEqualTo(ctxt -> to_addresses, kMCEmptyString, kMCCompareCaseless))
-		t_recipients = [[NSString stringWithCString: MCStringGetCString(ctxt -> to_addresses) encoding: NSMacOSRomanStringEncoding] componentsSeparatedByString: @","];
+		t_recipients = [[NSString stringWithMCStringRef: ctxt -> to_addresses] componentsSeparatedByString: @","];
 	
 	NSArray *t_ccs;
 	t_ccs = nil;
 	if (ctxt -> cc_addresses != nil && !MCStringIsEqualTo(ctxt -> cc_addresses, kMCEmptyString, kMCCompareCaseless))
-		t_ccs = [[NSString stringWithCString: MCStringGetCString(ctxt -> cc_addresses) encoding: NSMacOSRomanStringEncoding] componentsSeparatedByString: @","];
+		t_ccs = [[NSString stringWithMCStringRef: ctxt -> cc_addresses] componentsSeparatedByString: @","];
 	
 	[ ctxt -> dialog setToRecipients: t_recipients ];
 	
 	[ ctxt -> dialog setCcRecipients: t_ccs ];
 	
 	if (ctxt -> subject != nil)
-		[ ctxt -> dialog setSubject: [NSString stringWithCString: MCStringGetCString(ctxt -> subject) encoding: NSMacOSRomanStringEncoding]];
+		[ ctxt -> dialog setSubject: [NSString stringWithMCStringRef: ctxt -> subject]];
 	else
 		[ ctxt -> dialog setSubject: @"" ];
 	
 	if (ctxt -> body != nil)
-		[ ctxt -> dialog setMessageBody: [NSString stringWithCString: MCStringGetCString(ctxt -> body) encoding: NSMacOSRomanStringEncoding] isHTML: NO ];
+		[ ctxt -> dialog setMessageBody: [NSString stringWithMCStringRef: ctxt -> body] isHTML: NO ];
 	else
 		[ ctxt -> dialog setMessageBody: @"" isHTML: NO ];
 	
@@ -289,7 +290,7 @@ static NSString *mcstringref_to_nsstring(MCStringRef p_string, bool p_unicode)
 
 static NSArray *mcstringref_to_nsarray(MCStringRef p_string, NSCharacterSet* p_separator_set)
 {
-	return [[NSString stringWithCString: MCStringGetCString(p_string) encoding: NSMacOSRomanStringEncoding] componentsSeparatedByCharactersInSet: p_separator_set];
+	return [[NSString stringWithMCStringRef: p_string] componentsSeparatedByCharactersInSet: p_separator_set];
 }
 
 static NSData *mcstringref_to_nsdata(MCStringRef p_string)
@@ -485,18 +486,18 @@ static void compose_mail_prewait(void *p_context)
 			{
 				MCAutoStringRef t_resolved_path;
 				MCS_resolvepath(ctxt -> attachments[i] . file, &t_resolved_path);
-				t_data = [[NSData alloc] initWithContentsOfMappedFile: [NSString stringWithCString: MCStringGetCString(*t_resolved_path) encoding: NSMacOSRomanStringEncoding]];
+				t_data = [[NSData alloc] initWithContentsOfMappedFile: [NSString stringWithMCStringRef: *t_resolved_path]];
 			}
 			
 			if (ctxt -> attachments[i] . type == nil)
 				t_type = @"application/octet-stream";
 			else
-				t_type = [NSString stringWithCString: MCStringGetCString(ctxt -> attachments[i] . type) encoding: NSMacOSRomanStringEncoding];
+				t_type = [NSString stringWithMCStringRef: ctxt -> attachments[i] . type];
 			
 			if (ctxt -> attachments[i] . name == nil)
 				t_name = nil;
 			else
-				t_name = [NSString stringWithCString: MCStringGetCString(ctxt -> attachments[i] . name) encoding: NSMacOSRomanStringEncoding];
+				t_name = [NSString stringWithMCStringRef: ctxt -> attachments[i] . name];
 				
 			[ctxt -> dialog addAttachmentData: t_data mimeType: t_type fileName: t_name];
 			[t_data release];

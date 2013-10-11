@@ -29,6 +29,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "securemode.h"
 #include "exec.h"
 
+#include "osspec.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCExecContext::ForceToString(MCValueRef p_value, MCStringRef& r_string)
@@ -62,6 +64,16 @@ bool MCExecContext::ConvertToReal(MCValueRef p_value, real64_t& r_double)
 	return true;
 }
 
+bool MCExecContext::ConvertToArray(MCValueRef p_value, MCArrayRef &r_array)
+{
+	if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray)
+		r_array = MCValueRetain((MCArrayRef)p_value);
+	else
+		r_array = MCValueRetain(kMCEmptyArray);
+	
+	return true;
+}
+
 bool MCExecContext::ConvertToInteger(MCValueRef p_value, integer_t& r_integer)
 {
 	MCAutoNumberRef t_number;
@@ -85,25 +97,30 @@ bool MCExecContext::ConvertToBoolean(MCValueRef p_value, MCBooleanRef &r_boolean
 	return m_ep . convertvaluereftoboolean(p_value, r_boolean);
 }
 
-bool MCExecContext::ConvertToBinary(MCValueRef p_value, MCDataRef &r_data)
+bool MCExecContext::ConvertToMutableString(MCValueRef p_value, MCStringRef& r_string)
 {
-	// Don't try to convert to a string if it is already binary
-	if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeData)
-	{
-		r_data = MCValueRetain((MCDataRef)p_value);
-		return true;
-	}
-	
-	// Convert to a string and then to binary data
-	MCAutoStringRef t_as_string;
-	if (ConvertToString(p_value, &t_as_string))
-		if (MCDataCreateWithBytes(MCStringGetNativeCharPtr(*t_as_string), MCStringGetLength(*t_as_string), r_data))
-			return true;
-	
-	return false;
+    MCAutoStringRef t_string;
+    if (!ConvertToString(p_value, &t_string))
+        return false;
+    
+    return MCStringMutableCopy(*t_string, r_string);
+}
+
+bool MCExecContext::ConvertToData(MCValueRef p_value, MCDataRef& r_data)
+{
+    MCAutoStringRef t_string;
+    if (!ConvertToString(p_value, &t_string))
+        return false;
+    
+	return MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_string), MCStringGetLength(*t_string), r_data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCExecContext::FormatReal(real64_t p_real, MCStringRef& r_value)
+{
+	return MCU_r8tos(p_real, GetNumberFormatWidth(), GetNumberFormatTrailing(), GetNumberFormatForce(), r_value);
+}
 
 bool MCExecContext::FormatUnsignedInteger(uinteger_t p_integer, MCStringRef& r_value)
 {
@@ -181,6 +198,181 @@ bool MCExecContext::TryToConvertToLegacyRectangle(MCValueRef p_value, bool& r_co
 	return true;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
+bool MCExecContext::CopyElementAsBoolean(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, MCBooleanRef &r_boolean)
+{
+	MCValueRef t_val = nil;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_key, t_val))
+		return false;
+	return (ConvertToBoolean(t_val, r_boolean));
+}
+
+bool MCExecContext::CopyElementAsString(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, MCStringRef &r_string)
+{
+	MCValueRef t_val = nil;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_key, t_val))
+		return false;
+	return (ConvertToString(t_val, r_string));
+}
+
+bool MCExecContext::CopyElementAsNumber(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, MCNumberRef &r_number)
+{
+	MCValueRef t_val = nil;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_key, t_val))
+		return false;
+	return (ConvertToNumber(t_val, r_number));
+}
+
+bool MCExecContext::CopyElementAsInteger(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, integer_t &r_integer)
+{
+	MCValueRef t_val = nil;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_key, t_val))
+		return false;
+	return (ConvertToInteger(t_val, r_integer));
+}
+
+bool MCExecContext::CopyElementAsUnsignedInteger(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, uinteger_t &r_integer)
+{
+	MCValueRef t_val = nil;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_key, t_val))
+		return false;
+	return (ConvertToUnsignedInteger(t_val, r_integer));
+}
+
+bool MCExecContext::CopyElementAsReal(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, real64_t &r_real)
+{
+	MCValueRef t_val = nil;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_key, t_val))
+		return false;
+	return (ConvertToReal(t_val, r_real));
+}
+
+bool MCExecContext::CopyElementAsArray(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, MCArrayRef &r_array)
+{
+	MCValueRef t_val = nil;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_key, t_val))
+		return false;
+	return (ConvertToArray(t_val, r_array));
+}
+
+bool MCExecContext::CopyElementAsStringArray(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, MCArrayRef &r_string_array)
+{
+	MCAutoStringRef t_string;
+	if (!CopyElementAsString(p_array, p_key, p_case_sensitive, &t_string))
+		return false;
+	
+	MCAutoArrayRef t_string_array;
+	if (!MCStringSplit(*t_string, MCSTR("\n"), nil, kMCStringOptionCompareExact, &t_string_array))
+		return false;
+		
+	r_string_array = MCValueRetain(*t_string_array);
+	return true;
+}
+
+bool MCExecContext::CopyElementAsFilepath(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, MCStringRef &r_path)
+{
+	MCAutoStringRef t_string, t_path;
+	if (!CopyElementAsString(p_array, p_key, p_case_sensitive, &t_string))
+		return false;
+	
+	if (!MCS_resolvepath(*t_string, &t_path))
+		return false;
+	
+	r_path = MCValueRetain(*t_path);
+	return true;
+}
+
+bool MCExecContext::CopyElementAsFilepathArray(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, MCArrayRef &r_path_array)
+{
+	MCAutoArrayRef t_array;
+	if (!CopyElementAsStringArray(p_array, p_key, p_case_sensitive, &t_array))
+		return false;
+	
+	MCAutoArrayRef t_path_array;
+	if (!MCArrayCreateMutable(&t_path_array))
+		return false;
+	
+	for (uindex_t i = 0; i < MCArrayGetCount(*t_array); i++)
+	{
+		MCValueRef t_val;
+		if (!MCArrayFetchValueAtIndex(*t_array, i, t_val))
+			return false;
+		
+		MCAutoStringRef t_path;
+		if (!MCS_resolvepath((MCStringRef)t_val, &t_path))
+			return false;
+		
+		if (!MCArrayStoreValueAtIndex(*t_path_array, i, *t_path))
+			return false;
+	}
+	
+	r_path_array = MCValueRetain(*t_path_array);
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCExecContext::CopyOptElementAsBoolean(MCArrayRef p_array, MCNameRef p_name, bool p_case_sensitive, MCBooleanRef &r_boolean)
+{
+	MCValueRef t_val;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_name, t_val))
+	{
+		r_boolean = MCValueRetain(kMCFalse);
+		return true;
+	}
+	
+	return CopyElementAsBoolean(p_array, p_name, p_case_sensitive, r_boolean);
+}
+
+bool MCExecContext::CopyOptElementAsString(MCArrayRef p_array, MCNameRef p_name, bool p_case_sensitive, MCStringRef &r_string)
+{
+	MCValueRef t_val;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_name, t_val))
+	{
+		r_string = MCValueRetain(kMCEmptyString);
+		return true;
+	}
+	
+	return CopyElementAsString(p_array, p_name, p_case_sensitive, r_string);
+}
+
+bool MCExecContext::CopyOptElementAsStringArray(MCArrayRef p_array, MCNameRef p_name, bool p_case_sensitive, MCArrayRef &r_string_array)
+{
+	MCValueRef t_val;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_name, t_val))
+	{
+		r_string_array = MCValueRetain(kMCEmptyArray);
+		return true;
+	}
+	
+	return CopyElementAsStringArray(p_array, p_name, p_case_sensitive, r_string_array);
+}
+
+bool MCExecContext::CopyOptElementAsFilepath(MCArrayRef p_array, MCNameRef p_name, bool p_case_sensitive, MCStringRef &r_path)
+{
+	MCValueRef t_val;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_name, t_val))
+	{
+		r_path = MCValueRetain(kMCEmptyString);
+		return true;
+	}
+	
+	return CopyElementAsFilepath(p_array, p_name, p_case_sensitive, r_path);
+}
+
+bool MCExecContext::CopyOptElementAsFilepathArray(MCArrayRef p_array, MCNameRef p_name, bool p_case_sensitive, MCArrayRef &r_path_array)
+{
+	MCValueRef t_val;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_name, t_val))
+	{
+		r_path_array = MCValueRetain(kMCEmptyArray);
+		return true;
+	}
+	
+	return CopyElementAsFilepathArray(p_array, p_name, p_case_sensitive, r_path_array); 
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool FormatUnsignedInteger(uinteger_t p_integer, MCStringRef& r_output)
@@ -188,25 +380,6 @@ bool FormatUnsignedInteger(uinteger_t p_integer, MCStringRef& r_output)
 	return MCStringFormat(r_output, "%d", p_integer);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-bool MCExecContext::EncodeStringAsUTF8(MCStringRef self, char*& r_utf8_string)
-{
-	MCExecPoint ep;
-	ep . setsvalue(MCStringGetOldString(self));
-	ep . nativetoutf8();
-	r_utf8_string = ep . getsvalue() . clone();
-	return true;
-}
-
-bool MCExecContext::EncodeUnicodeStringAsUTF8(MCStringRef self, char*& r_utf8_string)
-{
-	MCExecPoint ep;
-	ep . setsvalue(MCStringGetOldString(self));
-	ep . utf16toutf8();
-	r_utf8_string = ep . getsvalue() . clone();
-	return true;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
