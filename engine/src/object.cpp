@@ -325,12 +325,6 @@ void MCObject::setname_cstring(const char *p_new_name)
 	/* UNCHECKED */ MCNameCreateWithCString(p_new_name, _name);
 }
 
-void MCObject::setname_oldstring(const MCString& p_new_name)
-{
-	MCNameDelete(_name);
-	/* UNCHECKED */ MCNameCreateWithOldString(p_new_name, _name);
-}
-
 void MCObject::setscript_cstring(const char *cstring)
 {
 	MCStringRef t_script;
@@ -592,7 +586,7 @@ Boolean MCObject::kdown(const char *string, KeySym key)
 	if (state & CS_MENU_ATTACHED && attachedmenu != NULL)
 	{
 		MCStack *oldmenu = attachedmenu;
-		MCString pick;
+		MCAutoStringRef t_pick;
 		uint2 mh;
 		switch (key)
 		{
@@ -603,8 +597,7 @@ Boolean MCObject::kdown(const char *string, KeySym key)
 		case XK_Return:
 		case XK_KP_Enter:
 			closemenu(False, True);
-			oldmenu->menukdown(string, key, pick, mh);
-			delete (char *)pick.getstring();
+			oldmenu->menukdown(string, key, &t_pick, mh);
 			message_with_args(MCM_mouse_up, Button1);
 			return True;
 		default:
@@ -612,7 +605,7 @@ Boolean MCObject::kdown(const char *string, KeySym key)
 			if (mbptr != NULL)
 			{
 				closemenu(False, True);
-				oldmenu->menukdown(string, key, pick, mh);
+				oldmenu->menukdown(string, key, &t_pick, mh);
 				mbptr->activate(False, string[0]);
 				message_with_args(MCM_mouse_up, Button1);
 				return True;
@@ -728,12 +721,11 @@ Boolean MCObject::mup(uint2 which)
 		{
 			MCStack *oldmenu = attachedmenu;
 			closemenu(True, True);
-			MCString pick;
+			MCAutoStringRef t_pick;
 			uint2 menuhistory;
 			MCmenupoppedup = true;
-			oldmenu->menumup(which, pick, menuhistory);
+			oldmenu->menumup(which, &t_pick, menuhistory);
 			MCmenupoppedup = false;
-			delete (char *)pick.getstring();
 		}
 		return True;
 	}
@@ -769,16 +761,15 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 		Exec_stat stat = message(mptr, params, True, True);
 		if (stat == ES_NOT_HANDLED && !handler.getpass())
 		{
-			MCAutoStringRef tptr;
-			MCAutoStringRef t_mptr_string;
-			
+            MCAutoStringRef t_mptr_string;
+            
 			if (params != nil)
 			{
 				MCExecPoint ep(this, NULL, NULL);
 				params->eval(ep);
                 MCAutoStringRef t_value;
 				ep . copyasstringref(&t_value);
-				MCStringFormat(&tptr, "%@ %@", *t_mptr_string, *t_value);
+				MCStringFormat(&t_mptr_string, "%@ %@", mptr, *t_value);
 			}
             else
                 t_mptr_string = MCNameGetString(mptr);
@@ -786,7 +777,7 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 			MCHandler *t_handler;
 			t_handler = findhandler(HT_MESSAGE, mptr);
 			if (t_handler == NULL || !t_handler -> isprivate())
-				domess(params == NULL ? *t_mptr_string : *tptr);
+				domess(*t_mptr_string);
 
 		}
 		if (stat == ES_ERROR && !MCNameIsEqualTo(mptr, MCM_error_dialog, kMCCompareCaseless))
@@ -1221,15 +1212,12 @@ void MCObject::setstate(Boolean on, uint4 newstate)
 		state &= ~newstate;
 }
 
-/* WRAPPER */ Exec_stat MCObject::setsprop(Properties which, MCStringRef p_string)
-{
-	return setsprop(which, MCStringGetOldString(p_string));
-}
 
-Exec_stat MCObject::setsprop(Properties which, const MCString &s)
+
+Exec_stat MCObject::setsprop(Properties which, MCStringRef s)
 {
 	MCExecPoint ep(this, NULL, NULL);
-	ep.setsvalue(s);
+	ep.setvalueref(s);
 	return setprop(0, which, ep, False);
 }
 
@@ -1813,12 +1801,6 @@ void MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
 		style = m_font_attrs -> style;
 }
 
-void MCObject::getfontattsnew(const char *& fname, uint2 &size, uint2 &style)
-{
-	MCNameRef t_fname_name;
-	getfontattsnew(t_fname_name, size, style);
-	fname = MCNameGetCString(t_fname_name);
-}
 
 MCNameRef MCObject::gettextfont(void)
 {
@@ -3192,7 +3174,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (flags & F_SCRIPT && !(addflags & AF_LONG_SCRIPT))
 	{
 		getstack() -> unsecurescript(this);
-		stat = IO_write_string(MCStringGetCString(_script), stream, false);
+		stat = IO_write_string(MCStringGetCString(_script), stream);
 		getstack() -> securescript(this);
 		if (stat != IO_NORMAL)
 			return stat;

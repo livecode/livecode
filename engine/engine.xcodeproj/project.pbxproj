@@ -559,6 +559,8 @@
 		4DFFC7E013DD8A91006233A4 /* syscfdate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC7DE13DD8A91006233A4 /* syscfdate.cpp */; };
 		4DFFC7E113DD8A91006233A4 /* sysunxnetwork.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC7DF13DD8A91006233A4 /* sysunxnetwork.cpp */; };
 		4DFFC7E713DD8AB9006233A4 /* objectpropsets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC7E613DD8AB9006233A4 /* objectpropsets.cpp */; };
+		76FA930A17FC7301003DB770 /* exec-strings-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76FA930917FC72FB003DB770 /* exec-strings-chunk.cpp */; };
+		76FA930B17FC7301003DB770 /* exec-strings-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76FA930917FC72FB003DB770 /* exec-strings-chunk.cpp */; };
 		A71F80540F4F178C003012FD /* Standalone.icns in Resources */ = {isa = PBXBuildFile; fileRef = A71F80530F4F178C003012FD /* Standalone.icns */; };
 		A71F80550F4F17C1003012FD /* LiveCode.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885610B80DEAC00200116 /* LiveCode.icns */; };
 		A71F80620F4F17F9003012FD /* StandaloneDoc.icns in Resources */ = {isa = PBXBuildFile; fileRef = A71F80610F4F17F9003012FD /* StandaloneDoc.icns */; };
@@ -1257,6 +1259,7 @@
 		4D8387241678B2F4003BEC7C /* flst.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = flst.h; path = src/flst.h; sourceTree = "<group>"; };
 		4D8387251678B2F4003BEC7C /* image_rep.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = image_rep.h; path = src/image_rep.h; sourceTree = "<group>"; };
 		4D8387261678B2F4003BEC7C /* imagebitmap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imagebitmap.h; path = src/imagebitmap.h; sourceTree = "<group>"; };
+		4D8395DD17FECEB30002D53E /* dsklnx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dsklnx.cpp; path = src/dsklnx.cpp; sourceTree = "<group>"; };
 		4D88B73815F4C66F002CFBD6 /* libgif.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libgif.xcodeproj; path = ../thirdparty/libgif/libgif.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4D8B47960BE7B3240046CD2F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		4D8BEC3F11B9379500DED42A /* osxicon.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = osxicon.cpp; path = src/osxicon.cpp; sourceTree = "<group>"; };
@@ -1524,6 +1527,7 @@
 		768D66A21762087500F203A3 /* mbliphonesensor.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonesensor.mm; path = src/mbliphonesensor.mm; sourceTree = "<group>"; };
 		768D66A31762087500F203A3 /* mbliphonestore.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonestore.mm; path = src/mbliphonestore.mm; sourceTree = "<group>"; };
 		768D66A41762087500F203A3 /* mbliphonetextmessaging.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonetextmessaging.mm; path = src/mbliphonetextmessaging.mm; sourceTree = "<group>"; };
+		76FA930917FC72FB003DB770 /* exec-strings-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-strings-chunk.cpp"; path = "src/exec-strings-chunk.cpp"; sourceTree = "<group>"; };
 		A04643DB0BAAA63A0030A830 /* w32ans.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = w32ans.cpp; path = src/w32ans.cpp; sourceTree = "<group>"; };
 		A04643DC0BAAA63A0030A830 /* w32context.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = w32context.cpp; path = src/w32context.cpp; sourceTree = "<group>"; };
 		A04643DD0BAAA63A0030A830 /* w32context.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = w32context.h; path = src/w32context.h; sourceTree = "<group>"; };
@@ -2343,6 +2347,7 @@
 		4DE3B0EE15888AA1008EB6B5 /* Exec */ = {
 			isa = PBXGroup;
 			children = (
+				76FA930917FC72FB003DB770 /* exec-strings-chunk.cpp */,
 				768D665F1762076000F203A3 /* exec-ad.cpp */,
 				768D66601762076000F203A3 /* exec-addressbook.cpp */,
 				768D66611762076000F203A3 /* exec-idletimer.cpp */,
@@ -2384,6 +2389,7 @@
 		4DE7ED0B13B33B4E002634F5 /* Desktop */ = {
 			isa = PBXGroup;
 			children = (
+				4D8395DD17FECEB30002D53E /* dsklnx.cpp */,
 				BEFE81D317B2B32800C9D14F /* dskmac.cpp */,
 				4D05B90C13E06AAB001CD82A /* dsklnxmain.cpp */,
 				4D05B90D13E06AAB001CD82A /* dskmain.cpp */,
@@ -3753,6 +3759,7 @@
 				BEFE81D417B2B32800C9D14F /* dskmac.cpp in Sources */,
 				BEFD23CD17B5233800B9310D /* sysspec.cpp in Sources */,
 				1D17A9C317BE673E0024CCA8 /* osxans.mm in Sources */,
+				76FA930A17FC7301003DB770 /* exec-strings-chunk.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3801,6 +3808,7 @@
 				4D02A3CA17A6CBE1009D8AF4 /* syntax.cpp in Sources */,
 				4D02A3CF17A6CC14009D8AF4 /* foundation-legacy.cpp in Sources */,
 				4D02A3E417A6CE55009D8AF4 /* legacy_spec.cpp in Sources */,
+				76FA930B17FC7301003DB770 /* exec-strings-chunk.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4046,6 +4054,7 @@
 					MODE_INSTALLER,
 				);
 				INFOPLIST_FILE = "rsrc/Installer-Info.plist";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = Installer;
 			};
 			name = Debug;
@@ -4058,6 +4067,7 @@
 					MODE_INSTALLER,
 				);
 				INFOPLIST_FILE = "rsrc/Installer-Info.plist";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = Installer;
 			};
 			name = Release;
@@ -4080,6 +4090,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "rsrc/Revolution-Info.plist";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "LiveCode-Community";
 				WRAPPER_EXTENSION = app;
 			};
@@ -4089,6 +4100,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "rsrc/Revolution-Info.plist";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "LiveCode-Community";
 				WRAPPER_EXTENSION = app;
 			};
@@ -4098,6 +4110,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "rsrc/Standalone-Info.plist";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Standalone-Community";
 			};
 			name = Debug;
@@ -4106,6 +4119,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "rsrc/Standalone-Info.plist";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Standalone-Community";
 			};
 			name = Release;
@@ -4128,6 +4142,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GLOBAL_GCC_PREPROCESSOR_DEFINITIONS = "_SERVER _MAC_SERVER";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Server-Community";
 			};
 			name = Debug;
@@ -4136,6 +4151,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GLOBAL_GCC_PREPROCESSOR_DEFINITIONS = "_SERVER _MAC_SERVER";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Server-Community";
 			};
 			name = Release;

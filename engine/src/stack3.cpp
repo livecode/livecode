@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "stack.h"
 #include "aclip.h"
 #include "vclip.h"
@@ -57,6 +58,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mctheme.h"
 #include "license.h"
 #include "stacksecurity.h"
+
+#include "exec.h"
 
 #define STACK_EXTRA_ORIGININFO (1U << 0)
 
@@ -227,11 +230,11 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 
 	if (flags & F_STACK_FILES)
 	{
-		char *sf;
-		if ((stat = IO_read_string(sf, stream)) != IO_NORMAL)
+		MCAutoStringRef sf;
+		if ((stat = IO_read_stringref(&sf, stream)) != IO_NORMAL)
 			return stat;
-		setstackfiles(sf);
-		delete sf;
+		setstackfiles(*sf);
+		
 	}
 	if (flags & F_MENU_BAR)
 	{
@@ -1476,39 +1479,56 @@ void MCStack::createmenu(MCControl *nc, uint2 width, uint2 height)
 	controls = nc;
 	curcard = cards = MCtemplatecard->clone(False, False);
 	curcard->allowmessages(False);
-	curcard->setsprop(P_SHOW_BORDER, MCtruemcstring);
-	setsprop(P_COLORS, MCnullmcstring);
+	curcard->setsprop(P_SHOW_BORDER, MCSTR(MCtruestring));
+	setsprop(P_COLORS, kMCEmptyString);
 	if (nc->gettype() == CT_FIELD && IsMacLFAM() && MCaqua)
 	{
-		curcard->setsprop(P_BORDER_WIDTH, "0");
+		curcard->setsprop(P_BORDER_WIDTH, MCSTR("0"));
 		uint2 i;
 		MCObject *tparent = getparent();
 		if  (!tparent->getcindex(DI_BACK, i) && !tparent->getpindex(DI_BACK,i))
-			setsprop(P_BACK_COLOR,  "255,255,255");
+			setsprop(P_BACK_COLOR,  MCSTR("255,255,255"));
 	}
 	else
 		if (nc->gettype() == CT_FIELD && MClook != LF_MOTIF
 		        || IsMacLF() || (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN))
 		{
-			curcard->setsprop(P_BORDER_WIDTH, "1");
+			curcard->setsprop(P_BORDER_WIDTH, MCSTR("1"));
 			if (IsMacLF() || nc->gettype() == CT_FIELD || MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN)
-				curcard->setsprop(P_3D, MCfalsemcstring);
+				curcard->setsprop(P_3D, MCSTR(MCfalsestring));
 		}
-	char colorbuf[16];
+	
 	MCWidgetInfo wmenu;
 	wmenu.type = WTHEME_TYPE_MENU;
 	if ( nc->gettype() != CT_FIELD && (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN))
 	{
 		uint2 i;
 		MCObject *tparent = getparent();
+
 		if  (!tparent->getcindex(DI_BACK, i) && !tparent->getpindex(DI_BACK,i))
-			setsprop(P_BACK_COLOR,  MCcurtheme->getthemecolor(wmenu,WCOLOR_BACK,colorbuf));
+        {
+            MCAutoStringRef colorbuf;
+            MCcurtheme->getthemecolor(wmenu, WCOLOR_BACK, &colorbuf);
+			setsprop(P_BACK_COLOR, *colorbuf);
+        }
 		if  (!tparent->getcindex(DI_BORDER, i) && !tparent->getpindex(DI_BORDER,i))
-			setsprop(P_BORDER_COLOR,  MCcurtheme->getthemecolor(wmenu,WCOLOR_BORDER,colorbuf));
+        {
+            MCAutoStringRef colorbuf;
+            MCcurtheme->getthemecolor(wmenu, WCOLOR_BORDER, &colorbuf);
+			setsprop(P_BORDER_COLOR, *colorbuf);
+        }
 		if  (!tparent->getcindex(DI_FORE, i) && !tparent->getpindex(DI_FORE,i))
-			setsprop(P_FORE_COLOR,  MCcurtheme->getthemecolor(wmenu,WCOLOR_TEXT,colorbuf));
+        {
+            MCAutoStringRef colorbuf;
+            MCcurtheme->getthemecolor(wmenu, WCOLOR_TEXT, &colorbuf);
+			setsprop(P_FORE_COLOR, *colorbuf);
+        }
 		if  (!tparent->getcindex( DI_HILITE, i) && !tparent->getpindex( DI_HILITE,i))
-			setsprop(P_HILITE_COLOR,  MCcurtheme->getthemecolor(wmenu,WCOLOR_HILIGHT,colorbuf));
+        {
+            MCAutoStringRef colorbuf;
+            MCcurtheme->getthemecolor(wmenu, WCOLOR_HILIGHT, &colorbuf);
+			setsprop(P_HILITE_COLOR, *colorbuf);
+        }
 	}
 
 
@@ -1537,10 +1557,15 @@ void MCStack::menuset(uint2 button, uint2 defy)
 	lasty = trect.y + (trect.height >> 1);
 }
 
-void MCStack::menumup(uint2 which, MCString &s, uint2 &selline)
+void MCStack::menumup(uint2 which, MCStringRef &r_string, uint2 &selline)
 {
+	// The original behaviour of this function interprets an empty string and
+	// the null string as different things: the empty string means that the
+	// function succeeded but there is no text while the null string indicates
+	// that no menu handled the key event.
+	r_string = nil;
+	
 	MCControl *focused = curcard->getmfocused();
-	s.set(NULL, 0);
 	if (focused == NULL)
 		focused = curcard->getkfocused();
 	MCButton *bptr = (MCButton *)focused;
@@ -1551,18 +1576,19 @@ void MCStack::menumup(uint2 which, MCString &s, uint2 &selline)
 		bool t_has_tags = bptr->getmenuhastags();
 
 		MCExecPoint ep(this, NULL, NULL);
-		focused->getprop(0, P_LABEL, ep, True);
-		const char *t_label = ep.getsvalue().getstring();
-		uint4 t_label_len = ep.getsvalue().getlength();
-		const char *t_name = focused->getname_cstring();
-		if (t_name != NULL)
+		MCExecContext ctxt(ep);
+		MCAutoStringRef t_label;
+		MCStringRef t_name = nil;
+		focused->getstringprop(ctxt, 0, P_LABEL, true, &t_label);
+		t_name = MCNameGetString(focused->getname());
+		if (!MCStringIsEmpty(t_name))
 		{
-			uint4 t_name_len = strlen(t_name);
-			//if name is set and differs from label, then use name as menu pick
-			if (t_has_tags && memcmp(t_label, t_name, MCU_max(t_label_len, t_name_len)) != 0)
-				ep.setsvalue(t_name);
+			// If the name exists, use it in preference to the label
+			if (t_has_tags && !MCStringIsEqualTo(*t_label, t_name, kMCStringOptionCompareExact))
+				r_string = MCValueRetain(t_name);
+			else 
+				r_string = MCValueRetain(*t_label);
 		}
-		s.set(ep.getsvalue().clone(),ep.getsvalue().getlength());
 			
 		if (focused->gettype() == CT_FIELD)
 		{
@@ -1575,28 +1601,25 @@ void MCStack::menumup(uint2 which, MCString &s, uint2 &selline)
 	curcard->mup(which);
 }
 
-void MCStack::menukdown(const char *string, KeySym key,
-                        MCString &s, uint2 &selline)
+void MCStack::menukdown(const char *string, KeySym key, MCStringRef &r_string, uint2 &selline)
 {
 	MCControl *kfocused = curcard->getkfocused();
-	s.set(NULL,0);
+	r_string = nil;
 	if (kfocused != NULL)
 	{
-		MCString tlabel;
-		
 		// OK-2010-03-08: [[Bug 8650]] - Check its actually a button before casting, 
 		// with combo boxes on OS X this will be a field.
 		if (kfocused ->gettype() == CT_BUTTON && ((MCButton*)kfocused)->getmenuhastags())
 		{
-			const char *t_name = kfocused->getname_cstring();
-			uint4 t_namelen = strlen(t_name);
-			s.set(strclone(t_name, t_namelen), t_namelen);
+			r_string = MCValueRetain(MCNameGetString(kfocused->getname()));
 		}
 		else
 		{
+			MCAutoStringRef t_string;
 			MCExecPoint ep(this, NULL, NULL);
-			kfocused->getprop(0, P_LABEL, ep, True);
-			s.set(ep.getsvalue().clone(),ep.getsvalue().getlength());
+			MCExecContext ctxt(ep);
+			kfocused->getstringprop(ctxt, 0, P_LABEL, True, &t_string);
+			r_string = MCValueRetain(*t_string);
 		}
 		curcard->count(CT_LAYER, CT_UNDEFINED, kfocused, selline, True);
 	}
@@ -1604,7 +1627,7 @@ void MCStack::menukdown(const char *string, KeySym key,
 	curcard->kunfocus();
 }
 
-void MCStack::findaccel(uint2 key, MCString &tpick, bool &r_disabled)
+void MCStack::findaccel(uint2 key, MCStringRef &r_pick, bool &r_disabled)
 {
 	if (controls != NULL)
 	{
@@ -1614,39 +1637,30 @@ void MCStack::findaccel(uint2 key, MCString &tpick, bool &r_disabled)
 		{
 			if (bptr->getaccelkey() == key && bptr->getaccelmods() == MCmodifierstate)
 			{
-				MCString tlabel;
-				bool isunicode;
 				if (t_menuhastags)
-					tlabel = bptr -> getname_oldstring(), isunicode = false;
-				else
-					bptr->getlabeltext(tlabel, isunicode);
-				tpick.set(tlabel.clone(),tlabel.getlength());
+					r_pick = MCValueRetain(MCNameGetString(bptr->getname()));
+				else 
+					r_pick = MCValueRetain(bptr->getlabeltext());
 				r_disabled = bptr->isdisabled() == True;
 				return;
 			}
 			if (bptr->getmenumode() == WM_CASCADE && bptr->getmenu() != NULL)
 			{
-				MCString taccel;
-				bptr->getmenu()->findaccel(key,taccel, r_disabled);
-				if (taccel.getlength())
+				MCStringRef t_accel = nil;
+				bptr->getmenu()->findaccel(key, t_accel, r_disabled);
+				if (!MCStringIsEmpty(t_accel))
 				{
-					MCString tlabel;
-					bool isunicode;
+					MCStringRef t_label = nil;
+					/* UNCHECKED */ MCStringCreateMutable(0, t_label);
 					if (t_menuhastags)
-						tlabel = bptr -> getname_oldstring(), isunicode = false;
+						/* UNCHECKED */ MCStringAppend(t_label, MCNameGetString(bptr->getname()));
 					else
-						bptr->getlabeltext(tlabel, isunicode);
-					uint4 rptrlength = taccel.getlength() + tlabel.getlength() + MCU_charsize(isunicode);
-					char *rptr = new char[rptrlength];
-					tpick.set(rptr,rptrlength);
-					if (tlabel.getlength())
-						memcpy(rptr,tlabel.getstring(),tlabel.getlength());
-					rptr+=tlabel.getlength();
+						/* UNCHECKED */ MCStringAppend(t_label, bptr->getlabeltext());
+					
+					/* UNCHECKED */ MCStringAppendFormat(t_label, "|");
+					/* UNCHECKED */ MCStringAppend(t_label, t_accel);
 
-					MCU_copychar('|',rptr,isunicode);
-					rptr+=MCU_charsize(isunicode);
-					memcpy(rptr,taccel.getstring(),taccel.getlength());
-					delete (char *)taccel.getstring();
+					MCValueRelease(t_accel);
 					return;
 				}
 			}
@@ -1655,7 +1669,7 @@ void MCStack::findaccel(uint2 key, MCString &tpick, bool &r_disabled)
 		}
 		while (bptr != controls);
 	}
-	tpick.set(NULL,0);
+	r_pick = MCValueRetain(kMCEmptyString);
 }
 
 void MCStack::raise()
@@ -1701,56 +1715,63 @@ void MCStack::flip(uint2 count)
 	}
 }
 
-Exec_stat MCStack::sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
+bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
                         MCExpression *by, Boolean marked)
 {
 	if (by == NULL)
-		return ES_ERROR;
+		return false;
 	if (editing != NULL)
 		stopedit();
+	
 	MCStack *olddefault = MCdefaultstackptr;
 	MCdefaultstackptr = this;
 	MCCard *cptr = curcard;
-	MCSortnode *items = NULL;
+	MCAutoArray<MCSortnode> items;
 	uint4 nitems = 0;
 	MCerrorlock++;
 	do
 	{
-		MCU_realloc((char **)&items, nitems, nitems + 1, sizeof(MCSortnode));
+		items.Extend(nitems + 1);
 		items[nitems].data = (void *)curcard;
 		switch (form)
 		{
 		case ST_DATETIME:
-			if (marked && !curcard->getmark()
-			        || by->eval(ep) != ES_NORMAL
-			        || !MCD_convert(ep, CF_UNDEFINED, CF_UNDEFINED,
-			                        CF_SECONDS, CF_UNDEFINED)
-			        || !MCU_stor8(ep.getsvalue(), items[nitems].nvalue))
-				items[nitems].nvalue = -MAXREAL8;
+			if (!marked || curcard->getmark() && by->eval(ctxt.GetEP()) == ES_NORMAL)
+			{
+				MCAutoStringRef t_out;
+				if (MCD_convert(ctxt, ctxt.GetEP().getvalueref(), CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_out))
+					if (ctxt.ConvertToNumber(*t_out, items[nitems].nvalue))
+						break;
+			}
+
+			/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
 			break;
 		case ST_NUMERIC:
 			if ((!marked || curcard->getmark())
-			        && by->eval(ep) == ES_NORMAL && ep.ton() == ES_NORMAL)
-				items[nitems].nvalue = ep.getnvalue();
+			        && by->eval(ctxt.GetEP()) == ES_NORMAL 
+					&& ctxt.ConvertToNumber(ctxt.GetEP().getvalueref(), items[nitems].nvalue))
+				break;
 
-			else
-				items[nitems].nvalue = -MAXREAL8;
+			/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
 			break;
 		case ST_INTERNATIONAL:
 		case ST_TEXT:
-			if ((!marked || curcard->getmark()) && by->eval(ep) == ES_NORMAL)
+			if ((!marked || curcard->getmark()) && by->eval(ctxt.GetEP()) == ES_NORMAL)
 			{
-				if (ep.getcasesensitive())
-					items[nitems].svalue = ep.getsvalue().clone();
+				MCStringRef t_string;
+				/* UNCHECKED */ ctxt.ConvertToString(ctxt.GetEP().getvalueref(), t_string);
+				if (ctxt.GetCaseSensitive())
+					items[nitems].svalue = t_string;
 				else
 				{
-					items[nitems].svalue = new char[ep.getsvalue().getlength() + 1];
-					MCU_lower(items[nitems].svalue, ep.getsvalue());
-					items[nitems].svalue[ep.getsvalue().getlength()] = '\0';
+					MCStringRef t_mutable;
+					/* UNCHECKED */ MCStringMutableCopyAndRelease(t_string, t_mutable);
+					/* UNCHECKED */ MCStringLowercase(t_mutable);
+					/* UNCHECKED */ MCStringCopyAndRelease(t_mutable, items[nitems].svalue);
 				}
 			}
 			else
-				items[nitems].svalue = MCU_empty();
+				items[nitems].svalue = MCValueRetain(kMCEmptyString);
 			break;
 		default:
 			break;
@@ -1761,13 +1782,11 @@ Exec_stat MCStack::sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
 	while (curcard != cptr);
 	MCerrorlock--;
 	if (nitems > 1)
-		MCU_sort(items, nitems, dir, form);
+		MCU_sort(items.Ptr(), nitems, dir, form);
 	MCCard *newcards = NULL;
 	uint4 i;
 	for (i = 0 ; i < nitems ; i++)
 	{
-		if (form == ST_INTERNATIONAL || form == ST_TEXT)
-			delete items[i].svalue;
 		const MCCard *tcptr = (const MCCard *)items[i].data;
 		cptr = (MCCard *)tcptr;
 		cptr->remove(cards);
@@ -1776,7 +1795,6 @@ Exec_stat MCStack::sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
 	cards = newcards;
 	setcard(cards, True, False);
 	dirtywindowname();
-	delete items;
 	MCdefaultstackptr = olddefault;
 	return ES_NORMAL;
 }
@@ -1823,7 +1841,7 @@ void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uint2 &nstring
 	dest = tdest_str;
 }
 
-Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
+Boolean MCStack::findone(MCExecContext &ctxt, Find_mode fmode,
                          MCStringRef *strings, uint2 nstrings,
                          MCChunk *field, Boolean firstcard)
 {
@@ -1834,14 +1852,13 @@ Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
 		MCObject *optr;
 		uint4 parid;
 		MCerrorlock++;
-		MCExecPoint ep1(ep);
-		if (field->getobj(ep1, optr, parid, True) == ES_NORMAL)
+		if (field->getobj(ctxt.GetEP(), optr, parid, True) == ES_NORMAL)
 		{
 			if (optr->gettype() == CT_FIELD)
 			{
 				MCField *searchfield = (MCField *)optr;
 				while (i < nstrings)
-					if (!searchfield->find(ep, curcard->getid(), fmode,
+					if (!searchfield->find(ctxt, curcard->getid(), fmode,
 					                       strings[i], firstword))
 					{
 						MCerrorlock--;
@@ -1862,7 +1879,7 @@ Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
 	else
 	{
 		while (i < nstrings)
-			if (!curcard->find(ep, fmode, strings[i], firstcard, firstword))
+			if (!curcard->find(ctxt, fmode, strings[i], firstcard, firstword))
 				return False;
 			else
 			{
@@ -1873,7 +1890,7 @@ Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
 	}
 }
 
-void MCStack::find(MCExecPoint &ep, Find_mode fmode,
+void MCStack::find(MCExecContext &ctxt, Find_mode fmode,
                    MCStringRef tofind, MCChunk *field)
 {
 	MCStringRef *strings = NULL;
@@ -1884,7 +1901,7 @@ void MCStack::find(MCExecPoint &ep, Find_mode fmode,
 	MCField *oldfound = MCfoundfield;
 	do
 	{
-		if (findone(ep, fmode, strings, nstrings, field, firstcard))
+		if (findone(ctxt, fmode, strings, nstrings, field, firstcard))
 		{
 			delete strings;
 			MCField *newfound = MCfoundfield;
@@ -1921,7 +1938,7 @@ void MCStack::find(MCExecPoint &ep, Find_mode fmode,
 	MCresult->sets(MCnotfoundstring);
 }
 
-void MCStack::markfind(MCExecPoint &ep, Find_mode fmode,
+void MCStack::markfind(MCExecContext &ctxt, Find_mode fmode,
                        MCStringRef tofind, MCChunk *field, Boolean mark)
 {
 	if (MCfoundfield != NULL)
@@ -1932,7 +1949,7 @@ void MCStack::markfind(MCExecPoint &ep, Find_mode fmode,
 	MCCard *ocard = curcard;
 	do
 	{
-		if (findone(ep, fmode, strings, nstrings, field, False))
+		if (findone(ctxt, fmode, strings, nstrings, field, False))
 		{
 			MCfoundfield->clearfound();
 			curcard->setmark(mark);

@@ -101,7 +101,7 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_MULTIPLE_HILITES, Bool, MCField, MultipleHilites)
 	DEFINE_RW_OBJ_PROPERTY(P_NONCONTIGUOUS_HILITES, Bool, MCField, NoncontiguousHilites)
 	DEFINE_RW_OBJ_PART_PROPERTY(P_TEXT, String, MCField, Text)
-	DEFINE_RW_OBJ_PART_PROPERTY(P_UNICODE_TEXT, String, MCField, UnicodeText)
+	DEFINE_RW_OBJ_PART_PROPERTY(P_UNICODE_TEXT, BinaryString, MCField, UnicodeText)
 	DEFINE_RW_OBJ_PART_NON_EFFECTIVE_PROPERTY(P_HTML_TEXT, String, MCField, HtmlText)
 	DEFINE_RO_OBJ_PART_EFFECTIVE_PROPERTY(P_HTML_TEXT, String, MCField, HtmlText)
 	DEFINE_RW_OBJ_PART_PROPERTY(P_RTF_TEXT, String, MCField, RtfText)
@@ -110,9 +110,9 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RO_OBJ_PART_NON_EFFECTIVE_PROPERTY(P_FORMATTED_STYLED_TEXT, Array, MCField, FormattedStyledText)
 	DEFINE_RO_OBJ_PART_EFFECTIVE_PROPERTY(P_FORMATTED_STYLED_TEXT, Array, MCField, FormattedStyledText)
 	DEFINE_RO_OBJ_PART_PROPERTY(P_PLAIN_TEXT, String, MCField, PlainText)
-	DEFINE_RO_OBJ_PART_PROPERTY(P_UNICODE_PLAIN_TEXT, String, MCField, UnicodePlainText)
+	DEFINE_RO_OBJ_PART_PROPERTY(P_UNICODE_PLAIN_TEXT, BinaryString, MCField, UnicodePlainText)
 	DEFINE_RW_OBJ_PART_PROPERTY(P_FORMATTED_TEXT, String, MCField, FormattedText)
-	DEFINE_RW_OBJ_PART_PROPERTY(P_UNICODE_FORMATTED_TEXT, String, MCField, UnicodeFormattedText)
+	DEFINE_RW_OBJ_PART_PROPERTY(P_UNICODE_FORMATTED_TEXT, BinaryString, MCField, UnicodeFormattedText)
 	DEFINE_RW_OBJ_PROPERTY(P_LABEL, String, MCField, Label)
 	DEFINE_RW_OBJ_PROPERTY(P_TOGGLE_HILITE, Bool, MCField, ToggleHilite)
 	DEFINE_RW_OBJ_PROPERTY(P_3D_HILITE, Bool, MCField, ThreeDHilite)
@@ -1429,13 +1429,62 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 				ep.concatuint(height - theight, EC_RETURN, j++ == 0);
 		}
 		break;
-	// MW-2012-02-08: [[ FlaggedRanges ]] Return the flaggedRanges of the whole field.
+    // JS-2013-05-15: [[ PageRanges ]] Return the pageRanges of the whole field.
+    case P_PAGE_RANGES:
+        ep.clear();
+        if (opened)
+        {
+            MCParagraph *pgptr = paragraphs;
+            uint2 height = getfheight();
+            uint2 theight = height;
+            uint2 tstart = 1;
+            uint2 tend = 0;
+            MCLine *lastline = NULL;
+            uint2 j = 0;
+            while (True)
+            {
+                MCLine *oldlast = lastline;
+                if (!pgptr->pagerange(fixedheight, theight, tend, lastline))
+                {
+                    if (theight == height)
+                    {
+                        ep.concatuint(tstart, EC_RETURN, j++ == 0);
+                        ep.concatuint(tend, EC_COMMA, false);
+                        tstart = tend + 1;
+                        lastline = NULL;
+                    }
+                    else
+                    {
+                        ep.concatuint(tstart, EC_RETURN, j++ == 0);
+                        ep.concatuint(tend, EC_COMMA, false);
+                        tstart = tend + 1;
+                        theight = height;
+                        if (oldlast == NULL || lastline != NULL)
+                            continue;
+                    }
+                }
+                else
+                    tend += 1;
+
+                pgptr = pgptr->next();
+                if (pgptr == paragraphs)
+                    break;
+            }
+            if (theight != height) {
+                ep.concatuint(tstart, EC_RETURN, j++ == 0);
+                ep.concatuint(tend, EC_COMMA, false);
+            }
+        }
+        break;
+    // MW-2012-02-08: [[ FlaggedRanges ]] Return the flaggedRanges of the whole field.
+	// MW-2013-08-27: [[ Bug 11129 ]] Use INT32_MAX as upper limit.
 	case P_FLAGGED_RANGES:
-		return gettextatts(parid, P_FLAGGED_RANGES, ep, nil, False, 0, getpgsize(nil), false);
+		return gettextatts(parid, P_FLAGGED_RANGES, ep, nil, False, 0, INT32_MAX, false);
 	// MW-2012-02-22: [[ IntrinsicUnicode ]] Fetch the encoding property of the field, this is
 	//   actually the encoding of the content.
 	case P_ENCODING:
-		return gettextatts(parid, P_ENCODING, ep, nil, False, 0, getpgsize(nil), false);
+		// MW-2013-08-27: [[ Bug 11129 ]] Use INT32_MAX as upper limit.
+		return gettextatts(parid, P_ENCODING, ep, nil, False, 0, INT32_MAX, false);
 #endif /* MCField::getprop */
 	default:
 		return MCControl::getprop_legacy(parid, which, ep, effective);
@@ -1446,15 +1495,15 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 // MW-2012-01-25: [[ ParaStyles ]] Parse the given string as a list of tab-stops.
 // MW-2012-02-11: [[ TabWidths ]] The 'which' parameter determines what style of tabStops to
 //   parse - widths or stops.
-bool MCField::parsetabstops(Properties which, const MCString& data, uint16_t*& r_tabs, uint16_t& r_tab_count)
+bool MCField::parsetabstops(Properties which, MCStringRef data, uint16_t*& r_tabs, uint16_t& r_tab_count)
 {
 	uint2 *newtabs;
 	uint2 newntabs;
 	newtabs = nil;
 	newntabs = 0;
 
-	uint4 l = data.getlength();
-	const char *sptr = data.getstring();
+	uint4 l = MCStringGetLength(data);
+	const char *sptr = MCStringGetCString(data);
 	while (l)
 	{
 		int32_t i1;
@@ -1527,7 +1576,9 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 			// MW-2012-01-25: [[ ParaStyles ]] Use the refactored tabStop parsing method.
 			uint2 *newtabs = NULL;
 			uint2 newntabs = 0;
-			if (!parsetabstops(p, data, newtabs, newntabs))
+            MCAutoStringRef t_data;
+            /* UNCHECKED */ MCStringCreateWithOldString(data, &t_data);
+			if (!parsetabstops(p, *t_data, newtabs, newntabs))
 				return ES_ERROR;
 
 			delete tabs;
@@ -1969,8 +2020,9 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 		setsbrects();
 		break;
 	// MW-2012-02-08: [[ FlaggedField ]] Set the flaggedRanges of the whole field.
+	// MW-2013-08-27: [[ Bug 11129 ]] Use INT32_MAX as upper limit.
 	case P_FLAGGED_RANGES:
-		return settextatts(parid, P_FLAGGED_RANGES, ep, nil, 0, getpgsize(nil), false);
+		return settextatts(parid, P_FLAGGED_RANGES, ep, nil, 0, INT32_MAX, false);
 #endif /* MCField::setprop */
 	default:
 		return MCControl::setprop_legacy(parid, p, ep, effective);
