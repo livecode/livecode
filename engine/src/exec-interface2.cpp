@@ -726,7 +726,7 @@ void MCInterfaceSetScreenMouseLoc(MCExecContext& ctxt, MCPoint p_value)
 
 void MCInterfaceGetBackdrop(MCExecContext& ctxt, MCInterfaceBackdrop& r_backdrop)
 {
-	r_backdrop = MCbackdrop;
+	MCInterfaceBackdropCopy(ctxt, MCbackdrop, r_backdrop);
 }
 
 void MCInterfaceSetBackdrop(MCExecContext& ctxt, const MCInterfaceBackdrop& p_backdrop)
@@ -3292,7 +3292,7 @@ void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wh
     {
         p_object . object -> getstringprop(ctxt, p_object . part_id, P_TEXT, False, r_mark . text);
         r_mark . start = 0;
-        r_mark . finish = INDEX_MAX;
+        r_mark . finish = MCStringGetLength(r_mark . text);
     	return;
     }
     r_mark . text = nil;
@@ -3312,7 +3312,7 @@ void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCMa
         case CT_VIDEO_CLIP:
             p_container . object -> getstringprop(ctxt, p_container . part_id, P_TEXT, False, r_mark . text);
             r_mark . start = 0;
-            r_mark . finish = INDEX_MAX;
+            r_mark . finish = MCStringGetLength(r_mark . text);
             return;
         default:
             break;

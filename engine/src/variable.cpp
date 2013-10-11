@@ -112,15 +112,6 @@ MCVariable::~MCVariable(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if 0
-void MCVariable::doclearuql(void)
-{
-	if (value . is_string() && value . get_string() . getstring() == MCNameGetOldString(name) . getstring())
-		clear(True);
-	is_uql = false;
-}
-#endif
-
 bool MCVariable::isuql(void) const
 {
 	return is_uql;
