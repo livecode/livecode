@@ -3335,6 +3335,10 @@ void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Function
     //   line chunks to include the CR at the end.
     
     int4 start, end;
+    
+    start = r_mark . start;
+    end = r_mark . finish;
+    
 	Boolean wholeline = True;
 	Boolean wholeword = True;
 	switch (p_function)
@@ -3376,6 +3380,8 @@ void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Function
             end = t_field->getpgsize(NULL);
             break;
 	}
+    r_mark . start = start;
+    r_mark . finish  = end;
 }
 
 void MCInterfaceEvalTextOfContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCStringRef &r_text)
