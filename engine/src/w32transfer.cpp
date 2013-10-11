@@ -1169,7 +1169,7 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 	case CF_UNICODETEXT:
 	{
 		MCStringRef t_input, t_output;
-		 /* UNCHECKED */ MCStringDecode(*t_in_string, kMCStringEncodingUTF16LE, false, t_input);
+		 /* UNCHECKED */ MCStringDecode(*t_in_string, kMCStringEncodingUTF16, false, t_input);
 		 if (MCStringGetNativeCharAtIndex(t_input, MCStringGetLength(t_input) - 1) == '\0')
 		 {
 			 MCStringMutableCopyAndRelease(t_input, t_input);
@@ -1327,17 +1327,15 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 	break;
 	case CF_HDROP:
 	{
-		MCExecPoint ep(NULL, NULL, NULL);
-
 		HDROP t_hdrop;
 		t_hdrop = (HDROP)t_in_data . GetHandle();
 
 		UINT t_count;
 		t_count = DragQueryFileA(t_hdrop, 0xFFFFFFFF, NULL, 0);
 		
-		MCAutoStringRef t_output;
-		char_t t_del;
-		/* UNCHECKED */ MCStringCreateMutable(0, &t_output);
+		// Create a mutable list ref.
+		MCListRef t_output;
+		/* UNCHECKED */ MCListCreateMutable('\n', t_output);
 		for(unsigned int i = 0; i < t_count; ++i)
 		{
 			UINT t_size;
@@ -1354,19 +1352,12 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 				/* UNCHECKED */ MCStringCreateWithCString(t_file, &t_std_path);
 				/* UNCHECKED */ MCS_pathtonative(*t_std_path, &t_native_path);
 				
-				if (i == 0)
-					MCStringAppendNativeChars(*t_output, (const char_t *)MCStringGetCString(*t_native_path), MCStringGetLength(*t_native_path));
-				else
-				{
-					t_del = '\n';
-					MCStringAppendNativeChars(*t_output, &t_del, 1);
-					MCStringAppendNativeChars(*t_output, (const char_t *)MCStringGetCString(*t_native_path), MCStringGetLength(*t_native_path));
-				}
-				delete t_file;
+				/* UNCHECKED */ MCListAppend(t_output, *t_native_path);
 			}
 		}
-
-		/*UNCHECKED */ MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_output), MCStringGetLength(*t_output), &t_out_data);
+		MCAutoStringRef t_out_string;
+		/* UNCHECKED */ MCListCopyAsStringAndRelease(t_output, &t_out_string);
+		/* UNCHECKED */ MCStringEncode(*t_out_string, kMCStringEncodingNative, false, &t_out_data);
 	}
 	break;
 	default:

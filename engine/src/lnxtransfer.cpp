@@ -1033,10 +1033,10 @@ bool ConvertFile_MIME_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef
 
 	for(uindex_t i = 0; i < t_range_count; i++)
 	{
-		MCAutoStringRef t_substring1;
-		MCStringCopySubstring(*t_input_files_livecode_decoded, (*t_ranges)[i], &t_substring1);
-
-		/* UNCHECKED */ MCListAppendSubstring(t_output_files, *t_substring1, MCRangeMake(7, MCStringGetLength(*t_substring1) - 7));
+		MCAutoStringRef t_substring;
+		MCStringCopySubstring(*t_input_files_livecode_decoded, (*t_ranges)[i], &t_substring);
+		if (MCStringBeginsWithCString(*t_substring, (const char_t*) "file://", kMCCompareExact))  
+			/* UNCHECKED */ MCListAppendSubstring(t_output_files, *t_substring, MCRangeMake(7, MCStringGetLength(*t_substring) - 7));
 	}
 
 	MCStringRef t_output_files_string;
