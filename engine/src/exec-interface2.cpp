@@ -726,7 +726,7 @@ void MCInterfaceSetScreenMouseLoc(MCExecContext& ctxt, MCPoint p_value)
 
 void MCInterfaceGetBackdrop(MCExecContext& ctxt, MCInterfaceBackdrop& r_backdrop)
 {
-	r_backdrop = MCbackdrop;
+	MCInterfaceBackdropCopy(ctxt, MCbackdrop, r_backdrop);
 }
 
 void MCInterfaceSetBackdrop(MCExecContext& ctxt, const MCInterfaceBackdrop& p_backdrop)
