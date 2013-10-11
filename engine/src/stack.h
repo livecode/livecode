@@ -431,15 +431,15 @@ public:
 	void raise();
 	void enter();
 	void flip(uint2 count);
-	Exec_stat sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
+	bool sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 	               MCExpression *by, Boolean marked);
 	void breakstring(MCStringRef, MCStringRef*& dest, uint2 &nstrings,
 	                 Find_mode fmode);
-	Boolean findone(MCExecPoint &ep, Find_mode mode, MCStringRef *strings,
+	Boolean findone(MCExecContext &ctxt, Find_mode mode, MCStringRef *strings,
 	                uint2 nstrings, MCChunk *field, Boolean firstcard);
 	void find(MCExecPoint &ep, int p_mode, MCStringRef p_needle, MCChunk *p_target);
-	void find(MCExecPoint &ep, Find_mode mode, MCStringRef, MCChunk *field);
-	void markfind(MCExecPoint &ep, Find_mode mode, MCStringRef,
+	void find(MCExecContext &ctxt, Find_mode mode, MCStringRef, MCChunk *field);
+	void markfind(MCExecContext &ctxt, Find_mode mode, MCStringRef,
 	              MCChunk *, Boolean mark);
 	void mark(MCExecPoint &ep, MCExpression *where, Boolean mark);
 	Linkatts *getlinkatts();
@@ -776,8 +776,8 @@ public:
 	void GetBackgroundIds(MCExecContext& ctxt, MCStringRef& r_ids);
 	void GetSharedGroupNames(MCExecContext& ctxt, MCStringRef& r_names);
 	void GetSharedGroupIds(MCExecContext& ctxt, MCStringRef& r_ids);
-	void GetCardIds(MCExecContext& ctxt, MCStringRef& r_ids);
-	void GetCardNames(MCExecContext& ctxt, MCStringRef& r_names);
+    void GetCardIds(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_ids);
+    void GetCardNames(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_names);
 	void GetEditBackground(MCExecContext& ctxt, bool& r_value);
 	void SetEditBackground(MCExecContext& ctxt, bool p_value);
 	void GetExternals(MCExecContext& ctxt, MCStringRef& r_externals);

@@ -158,7 +158,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_STATUS_ICON_MENU, String, Interface, StatusIconMenu)
 	DEFINE_RW_ENUM_PROPERTY(P_PROCESS_TYPE, InterfaceProcessType, Interface, ProcessType)
 	DEFINE_RW_PROPERTY(P_STACK_LIMIT, UInt32, Engine, StackLimit)
-	DEFINE_RO_EFFECTIVE_PROPERTY(P_STACK_LIMIT, UInt32, Engine, StackLimit)
+	DEFINE_RO_EFFECTIVE_PROPERTY(P_STACK_LIMIT, UInt32,Engine, StackLimit)
 	DEFINE_RW_PROPERTY(P_IMAGE_CACHE_LIMIT, UInt32, Graphics, ImageCacheLimit)
 	DEFINE_RO_PROPERTY(P_IMAGE_CACHE_USAGE, UInt32, Graphics, ImageCacheUsage)
 	DEFINE_RW_PROPERTY(P_ALLOW_DATAGRAM_BROADCASTS, Bool, Network, AllowDatagramBroadcasts)
@@ -178,7 +178,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_START_ANGLE, UInt16, Interface, StartAngle)
 	DEFINE_RW_PROPERTY(P_ARC_ANGLE, UInt16, Interface, ArcAngle)
 	DEFINE_RW_PROPERTY(P_ROUND_ENDS, Bool, Interface, RoundEnds)
-	DEFINE_RW_PROPERTY(P_DASHES, String, Interface, Dashes)
+	DEFINE_RW_PROPERTY(P_DASHES, ItemsOfUInt, Interface, Dashes)
 	
 	DEFINE_RW_PROPERTY(P_EDIT_BACKGROUND, Bool, Interface, EditBackground)
 	
@@ -187,7 +187,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RO_PROPERTY(P_RECENT_CARDS, String, Interface, RecentCards)
 	DEFINE_RO_PROPERTY(P_RECENT_NAMES, String, Interface, RecentNames)
 	
-	DEFINE_RW_PROPERTY(P_TEXT_ALIGN, Any, Legacy, TextAlign)
+	DEFINE_RO_PROPERTY(P_TEXT_ALIGN, Any, Legacy, TextAlign)
 	DEFINE_RW_PROPERTY(P_TEXT_FONT, Any, Legacy, TextFont)
 	DEFINE_RW_PROPERTY(P_TEXT_HEIGHT, Any, Legacy, TextHeight)
 	DEFINE_RW_PROPERTY(P_TEXT_SIZE, Any, Legacy, TextSize)
@@ -1076,7 +1076,9 @@ Exec_stat MCProperty::resolveprop(MCExecPoint& ep, Properties& r_which, MCNameRe
 	{
 		MCExecPoint ep2(ep);
 		destvar -> eval(ep2);
-		MCScriptPoint sp(ep2.getsvalue());
+        MCAutoStringRef t_value;
+        /* UNCHECKED */ ep2 . copyasstringref(&t_value);
+		MCScriptPoint sp(*t_value);
 		Symbol_type type;
 		const LT *te;
 		if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL && te->type == TT_PROPERTY && sp.next(type) == PS_EOF)

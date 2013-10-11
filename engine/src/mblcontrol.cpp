@@ -503,13 +503,13 @@ bool MCExecPointSetRect(MCExecPoint &ep, int2 p_left, int2 p_top, int2 p_right, 
 	return true;
 }
 
-static bool MCParseRGBA(const MCString &p_data, bool p_require_alpha, uint1 &r_red, uint1 &r_green, uint1 &r_blue, uint1 &r_alpha)
+static bool MCParseRGBA(MCStringRef p_data, bool p_require_alpha, uint1 &r_red, uint1 &r_green, uint1 &r_blue, uint1 &r_alpha)
 {
 	bool t_success = true;
 	Boolean t_parsed;
 	uint2 r, g, b, a;
-	const char *t_data = p_data.getstring();
-	uint32_t l = p_data.getlength();
+	const char *t_data = MCStringGetCString(p_data);
+	uint32_t l = MCStringGetLength(p_data);
 	if (t_success)
 	{
 		r = MCU_max(0, MCU_min(255, MCU_strtol(t_data, l, ',', t_parsed)));
@@ -551,11 +551,11 @@ bool MCNativeControl::ParseColor(MCExecPoint &ep, uint16_t &r_red, uint16_t &r_g
 {
     uint8_t t_r8, t_g8, t_b8, t_a8;
     MCColor t_color;
-    
-	MCAutoStringRef t_color_str;
-	/* UNCHECKED */ ep . copyasstringref(&t_color_str);
-	
-    if (MCParseRGBA(MCStringGetOldString(*t_color_str), false, t_r8, t_g8, t_b8, t_a8))
+
+    char *t_name = nil;
+    MCAutoStringRef t_value;
+    ep . copyasstringref(&t_value);
+    if (MCParseRGBA(*t_value, false, t_r8, t_g8, t_b8, t_a8))
     {
         r_red = (t_r8 << 8) | t_r8;
         r_green = (t_g8 << 8) | t_g8;
@@ -563,7 +563,7 @@ bool MCNativeControl::ParseColor(MCExecPoint &ep, uint16_t &r_red, uint16_t &r_g
         r_alpha = (t_a8 << 8) | t_a8;
         return true;
     }
-    else if (MCscreen->parsecolor(*t_color_str, t_color, NULL))
+    else if (MCscreen->parsecolor(*t_value, t_color, NULL))
     {
         r_red = t_color.red;
         r_green = t_color.green;

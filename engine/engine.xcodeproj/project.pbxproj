@@ -4060,6 +4060,7 @@
 					MODE_INSTALLER,
 				);
 				INFOPLIST_FILE = "rsrc/Installer-Info.plist";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = Installer;
 			};
 			name = Debug;
@@ -4072,6 +4073,7 @@
 					MODE_INSTALLER,
 				);
 				INFOPLIST_FILE = "rsrc/Installer-Info.plist";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = Installer;
 			};
 			name = Release;
@@ -4094,6 +4096,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "rsrc/Revolution-Info.plist";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "LiveCode-Community";
 				SDKROOT = macosx10.6;
 				WRAPPER_EXTENSION = app;
@@ -4104,6 +4107,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "rsrc/Revolution-Info.plist";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "LiveCode-Community";
 				SDKROOT = macosx10.6;
 				WRAPPER_EXTENSION = app;
@@ -4114,6 +4118,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "rsrc/Standalone-Info.plist";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Standalone-Community";
 			};
 			name = Debug;
@@ -4122,6 +4127,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "rsrc/Standalone-Info.plist";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Standalone-Community";
 			};
 			name = Release;
@@ -4144,6 +4150,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GLOBAL_GCC_PREPROCESSOR_DEFINITIONS = "_SERVER _MAC_SERVER";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Server-Community";
 			};
 			name = Debug;
@@ -4152,6 +4159,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GLOBAL_GCC_PREPROCESSOR_DEFINITIONS = "_SERVER _MAC_SERVER";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Server-Community";
 			};
 			name = Release;

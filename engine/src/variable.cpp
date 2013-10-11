@@ -112,15 +112,6 @@ MCVariable::~MCVariable(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if 0
-void MCVariable::doclearuql(void)
-{
-	if (value . is_string() && value . get_string() . getstring() == MCNameGetOldString(name) . getstring())
-		clear(True);
-	is_uql = false;
-}
-#endif
-
 bool MCVariable::isuql(void) const
 {
 	return is_uql;
@@ -736,10 +727,10 @@ void MCVariable::synchronize(MCExecContext& ctxt, MCValueRef p_value, bool p_not
                     ctxt . GetHandler() -> eval(ctxt, *t_expression, &t_bool_value);
                     
 					if (!ctxt . HasError() && (MCBooleanRef)*t_bool_value == kMCTrue)
-						MCB_setvar(ctxt, p_value, name);
+                        MCB_setvar(ctxt, *t_value, name);
 				}
 				else
-					MCB_setvar(ctxt, p_value, name);
+                    MCB_setvar(ctxt, *t_value, name);
                 
 				break;
 			}

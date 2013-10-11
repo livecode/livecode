@@ -56,7 +56,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	exec-sensor.cpp exec-sound.cpp exec-store.cpp exec-textmessaging.cpp \
 	exec-array.cpp exec-datetime.cpp exec-engine.cpp exec-files.cpp exec-filters.cpp exec-interface.cpp \
 	exec-logic.cpp exec-math.cpp exec-multimedia.cpp exec-network.cpp exec-pasteboard.cpp exec-scripting.cpp \
-	exec-strings.cpp exec-text.cpp exec-graphics.cpp exec-security.cpp exec-printing.cpp exec-debugging.cpp \
+	exec-strings.cpp exec-strings-chunk.cpp exec-text.cpp exec-graphics.cpp exec-security.cpp exec-printing.cpp exec-debugging.cpp \
 	exec-ide.cpp exec-server.cpp exec-interface2.cpp exec.cpp \
 	exec-interface-aclip.cpp exec-interface-button.cpp exec-interface-card.cpp exec-interface-control.cpp \
 	exec-interface-field.cpp exec-interface-graphic.cpp exec-interface-group.cpp exec-interface-image.cpp \

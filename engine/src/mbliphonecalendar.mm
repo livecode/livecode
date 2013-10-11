@@ -101,6 +101,7 @@ UIViewController *MCIPhoneGetViewController(void);
 -(void)createEvent: (MCCalendar) p_event_data withResult: (EKEvent*&) r_event
 {
     MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(ep);
     CFErrorRef t_an_error = NULL;
 	bool t_did_add = true;
 
@@ -140,14 +141,20 @@ UIViewController *MCIPhoneGetViewController(void);
         r_event.location = [NSString stringWithMCStringRef: p_event_data.mclocation];
     
     // Set up the dates
-    if (p_event_data.mcstartdateset == true && MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, p_event_data.mcstartdate))
+	MCAutoValueRef t_start;
+    if (p_event_data.mcstartdateset == true && MCD_convert_from_datetime(ctxt, p_event_data.mcstartdate, CF_SECONDS, CF_SECONDS, &t_start))
     {
-        r_event.startDate = [NSDate dateWithTimeIntervalSince1970:ep.getnvalue()];
+        integer_t t_secs;
+		/* UNCHECKED */ ctxt.ConvertToInteger(*t_start, t_secs);
+		r_event.startDate = [NSDate dateWithTimeIntervalSince1970:t_secs];
     }
 
-    if (p_event_data.mcenddateset == true && MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, p_event_data.mcenddate))
+	MCAutoValueRef t_end;
+    if (p_event_data.mcenddateset == true && MCD_convert_from_datetime(ctxt, p_event_data.mcenddate, CF_SECONDS, CF_SECONDS, &t_end))
     {
-        r_event.endDate = [NSDate dateWithTimeIntervalSince1970:ep.getnvalue()];
+        integer_t t_secs;
+		/* UNCHECKED */ ctxt.ConvertToInteger(*t_end, t_secs);
+		r_event.endDate = [NSDate dateWithTimeIntervalSince1970:ep.getnvalue()];
     }
 
     // Set up the alerts
@@ -178,6 +185,7 @@ UIViewController *MCIPhoneGetViewController(void);
 -(MCCalendar)createEventData: (EKEvent*) p_event
 {
     MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(ep);
     MCCalendar t_event_data;
     MCString t_temp_string;
     
@@ -202,15 +210,15 @@ UIViewController *MCIPhoneGetViewController(void);
 
     int32_t t_date_in_seconds;
     
-    // Convert the seconds to date time        
-    t_date_in_seconds = [p_event.startDate timeIntervalSince1970];
-    ep.setnvalue(t_date_in_seconds);
-    MCD_convert_to_datetime(ep, CF_SECONDS, CF_SECONDS, t_event_data.mcstartdate);
+    // Convert the seconds to date time
+	MCAutoNumberRef t_start;
+	MCNumberCreateWithInteger([p_event.startDate timeIntervalSince1970], &t_start);
+    MCD_convert_to_datetime(ctxt, *t_start, CF_SECONDS, CF_SECONDS,t_event_data.mcstartdate);
     
-    // Convert the seconds to date time        
-    t_date_in_seconds = [p_event.endDate timeIntervalSince1970];
-    ep.setnvalue(t_date_in_seconds);
-    MCD_convert_to_datetime(ep, CF_SECONDS, CF_SECONDS, t_event_data.mcenddate);
+    // Convert the seconds to date time
+	MCAutoNumberRef t_end;
+    MCNumberCreateWithInteger([p_event.endDate timeIntervalSince1970], &t_end);
+    MCD_convert_to_datetime(ctxt, *t_end, CF_SECONDS, CF_SECONDS, t_event_data.mcenddate);
 
     // Get the alerts
     if (p_event.alarms != nil)
@@ -633,18 +641,24 @@ bool MCSystemGetCalendarsEvent(MCStringRef& r_result)
 bool MCSystemFindEvent(MCDateTime p_start_date, MCDateTime p_end_date, MCStringRef& r_result)
 {
     MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(ep);
     bool t_result = false;
 	NSString *t_ns_result = NULL;
     NSDate *t_start_date = NULL;
     NSDate *t_end_date = NULL;
     
-    if (MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, p_start_date))
+    MCAutoValueRef t_start, t_end;
+	if (MCD_convert_from_datetime(ctxt, p_start_date, CF_SECONDS, CF_SECONDS, &t_start))
     {
-        t_start_date = [NSDate dateWithTimeIntervalSince1970:ep.getnvalue()];
+        integer_t t_start_secs;
+		/* UNCHECKED */ ctxt.ConvertToInteger(*t_start, t_start_secs);
+		t_start_date = [NSDate dateWithTimeIntervalSince1970:t_start_secs];
     }
-    if (MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, p_end_date))
+    if (MCD_convert_from_datetime(ctxt, p_end_date, CF_SECONDS, CF_SECONDS, &t_end))
     {
-        t_end_date = [NSDate dateWithTimeIntervalSince1970:ep.getnvalue()];
+        integer_t t_end_secs;
+		/* UNCHECKED */ ctxt.ConvertToInteger(*t_end, t_end_secs);
+		t_end_date = [NSDate dateWithTimeIntervalSince1970:t_end_secs];
     }
     if (t_start_date != NULL && t_end_date != NULL)
     {

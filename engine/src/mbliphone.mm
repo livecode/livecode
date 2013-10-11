@@ -80,13 +80,6 @@ uint1 *MClowercasingtable;
 		return (const char *)[t_data bytes];
 	}
 
-+ (NSString *)stringWithMCStringRef: (MCStringRef)p_string_ref;
-{
-	CFStringRef t_string;
-	/* UNCHECKED */ MCStringConvertToCFStringRef(p_string_ref, t_string);
-	return [((NSString *)t_string) autorelease];
-}
-
 @end
 
 ////////////////////////////////////////////////////////////////////////
