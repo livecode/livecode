@@ -375,7 +375,7 @@ void MCStack::view_render(MCGContextRef p_target, MCRectangle p_rect)
 	if (view_getfullscreen())
 	{
 		MCRectangle t_update_rect;
-		t_update_rect = MCGRectangleGetIntegerBounds(MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(p_rect), MCGAffineTransformInvert(m_view_transform)));
+		t_update_rect = MCRectangleGetTransformedBounds(p_rect, MCGAffineTransformInvert(m_view_transform));
 		
 		MCGContextSave(p_target);
 		MCGContextConcatCTM(p_target, m_view_transform);

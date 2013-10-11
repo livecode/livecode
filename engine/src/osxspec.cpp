@@ -276,14 +276,11 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 			Rect t_rect;
 			GetWindowPortBounds((WindowPtr)t_window . handle . window, &t_rect);
 			
+			// IM-2013-10-11: [[ FullscreenMode ]] Move stack scroll handling into stack transform
 			t_rect . right -= t_rect . left;
 			t_rect . bottom -= t_rect . top;
 			t_rect . left = 0;
-			
-			// MW-2011-09-12: [[ MacScroll ]] Make sure the top of the HIView takes into
-			//   account the scroll.
-			// IM-2013-08-01: [[ ResIndependence ]] scale to device pixels
-			t_rect . top = -sptr -> getscroll() * MCResGetDeviceScale();
+			t_rect . top = 0;
 			
 			ControlRef t_root_control;
 			GetRootControl((WindowPtr)t_window . handle . window, &t_root_control);

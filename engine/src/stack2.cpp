@@ -2468,10 +2468,16 @@ void MCStack::applyupdates(void)
 
 void MCStack::render(MCGContextRef p_context, const MCRectangle &p_rect)
 {
+	// IM-2013-10-11: [[ FullscreenMode ]] Apply transform & modify redraw rect to account for stack scroll
+	MCGContextTranslateCTM(p_context, 0.0, -(MCGFloat)getscroll());
+	MCRectangle t_rect;
+	t_rect = p_rect;
+	t_rect.y += getscroll();
+	
 	MCGraphicsContext *t_old_context = nil;
 	t_old_context = new MCGraphicsContext(p_context);
 	if (t_old_context != nil)
-		render(t_old_context, p_rect);
+		render(t_old_context, t_rect);
 	delete t_old_context;
 }
 
@@ -2627,9 +2633,11 @@ MCGAffineTransform MCStack::getdevicetransform(void) const
 	MCGFloat t_scale;
 	t_scale = MCResGetDeviceScale();
 	
+	// IM-2013-10-11: [[ FullscreenMode ]] Add scroll offset to stack transform
 	MCGAffineTransform t_transform;
-	t_transform = MCGAffineTransformMakeScale(t_scale, t_scale);
-	t_transform = MCGAffineTransformConcat(t_transform, view_getviewtransform());
+	t_transform = MCGAffineTransformMakeTranslation(0.0, -(MCGFloat)getscroll());
+	t_transform = MCGAffineTransformConcat(view_getviewtransform(), t_transform);
+	t_transform = MCGAffineTransformScale(t_transform, t_scale, t_scale);
 	
 	return t_transform;
 }

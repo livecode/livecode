@@ -6559,13 +6559,9 @@ Exec_stat MCControlAtLoc::eval(MCExecPoint &ep)
 	else
 	{
 		t_stack = MCscreen -> getstackatpoint(t_location . x, t_location . y);
+		// IM-2013-10-11: [[ FullscreenMode ]] Update to use stack coord conversion methods
 		if (t_stack != nil)
-		{
-			MCRectangle t_rect;
-			t_rect = t_stack -> getrect();
-			t_location . x -= t_rect . x;
-			t_location . y -= t_rect . y - t_stack -> getscroll();
-		}
+			t_location = t_stack->globaltostackloc(t_location);
 	}
 
 	// If the location is over a stack, then return nil.

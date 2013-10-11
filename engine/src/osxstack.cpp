@@ -634,6 +634,9 @@ void MCStack::applyscroll(void)
 	
 	// Make sure window contents reflects the new scroll.
 	syncscroll();
+	
+	// IM-2013-10-11: [[ FullscreenMode ]] Trigger redraw of stack after scroll changes
+	dirtyall();
 }
 
 // MW-2011-09-12: [[ MacScroll ]] This is called to clear any currently applied
@@ -663,18 +666,10 @@ void MCStack::syncscroll(void)
 	ControlRef t_root_control;
 	GetRootControl((WindowPtr)window -> handle . window, &t_root_control);
 	ControlRef t_subcontrol;
-	if (GetIndexedSubControl(t_root_control, 1, &t_subcontrol) == noErr)
-	{
-		// IM-2013-08-01: [[ ResIndependence ]] scale control bounds to device res
-		MCRectangle t_user_bounds, t_device_bounds;
-		t_user_bounds = MCU_make_rect(0, -m_scroll, rect.width, rect.height + m_scroll);
-		t_device_bounds = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_user_bounds));
-		
-		Rect t_bounds;
-		t_bounds = MCRectToMacRect(t_device_bounds);
-
-		SetControlBounds(t_subcontrol, &t_bounds);
-	}
+	
+	// IM-2013-10-11: [[ FullscreenMode ]] Move stack scroll handling into stack transform.
+	// Don't adjust the control bounds to the stack scroll.
+	/* CODE REMOVED */
 	
 	// MW-2011-11-30: [[ Bug 9887 ]] Make sure all the player objects on this
 	//   stack are adjusted as appropriate.
@@ -1079,7 +1074,6 @@ class MCMacStackSurface: public MCStackSurface
 	CGContextRef m_context;
 	
 	int32_t m_surface_height;
-	int32_t m_surface_scroll;
 	
 	MCRectangle m_locked_area;
 	MCGContextRef m_locked_context;
@@ -1087,11 +1081,10 @@ class MCMacStackSurface: public MCStackSurface
 	uint32_t m_locked_stride;
 	
 public:
-	MCMacStackSurface(MCStack *p_stack, int32_t p_surface_height, int32_t p_surface_scroll, MCRegionRef p_region, CGContextRef p_context)
+	MCMacStackSurface(MCStack *p_stack, int32_t p_surface_height, MCRegionRef p_region, CGContextRef p_context)
 	{
 		m_stack = p_stack;
 		m_surface_height = p_surface_height;
-		m_surface_scroll = p_surface_scroll;
 		m_region = p_region;
 		m_context = p_context;
 		
@@ -1122,7 +1115,7 @@ public:
 			
 			CGRect t_dst_rect;
 			t_dst_rect . origin . x = 0;
-			t_dst_rect . origin . y = m_surface_height - t_mask_height - m_surface_scroll;
+			t_dst_rect . origin . y = m_surface_height - t_mask_height;
 			t_dst_rect . size . width = t_mask_width;
 			t_dst_rect . size . height = t_mask_height;
 			CGContextClipToMask(m_context, t_dst_rect, t_mask);
@@ -1373,11 +1366,9 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 			MCRectangle t_stack_rect;
 			t_stack_rect = t_context->stack->getrect();
 			
-			int32_t t_scroll;
-			t_scroll = t_context->stack->getscroll();
-			
+			// IM-2013-10-11: [[ FullscreenMode ]] Move stack scroll handling into stack transform
 			MCRectangle t_rect;
-			t_rect = MCRectangleMake(0, -t_scroll, t_stack_rect.width, t_stack_rect.height + t_scroll);
+			t_rect = MCRectangleMake(0, 0, t_stack_rect.width, t_stack_rect.height);
 			
 			MCRectangle t_device_rect;
 			t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(t_rect));
@@ -1478,9 +1469,8 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 					int32_t t_surface_height;
 					t_surface_height = floor(t_context->stack->view_getrect().height * t_scale);
 					
-					// IM-2013-08-29: [[ ResIndependence ]] also provide scroll value at device scale
-					int32_t t_surface_scroll;
-					t_surface_scroll = ceil(t_context->stack->getscroll() * t_scale);
+					// IM-2013-10-11: [[ FullscreenMode ]] Move stack scroll handling into stack transform
+					/* CODE REMOVED */
 					
 					// HIView gives us a context in top-left origin mode which isn't so good
 					// for our CG rendering so, revert back to bottom-left.
@@ -1490,7 +1480,7 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 					// Save the context state
 					CGContextSaveGState(t_graphics);
 					
-					MCMacStackSurface t_surface(t_context -> stack, t_surface_height, t_surface_scroll, (MCRegionRef)t_dirty_rgn, t_graphics);
+					MCMacStackSurface t_surface(t_context -> stack, t_surface_height, (MCRegionRef)t_dirty_rgn, t_graphics);
 					
 					if (t_surface.Lock())
 					{
