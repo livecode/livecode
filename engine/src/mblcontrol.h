@@ -608,7 +608,7 @@ public:
 	uint32_t GetId(void);
 	
 	// Get the native control's name (if any)
-	const char *GetName(void);
+	void GetName(MCStringRef &r_name);
 	
 	// Set the native control's name
 	bool SetName(MCStringRef name);
@@ -638,12 +638,12 @@ public:
 	static MCNativeControl *CurrentTarget(void);
 	
 	// Tokenization methods
-	static bool LookupProperty(const char *property, MCNativeControlProperty& r_property);
-	static bool LookupAction(const char *action, MCNativeControlAction& r_action);
-	static bool LookupType(const char *type, MCNativeControlType& r_type);
+	static bool LookupProperty(MCStringRef p_property, MCNativeControlProperty& r_property);
+	static bool LookupAction(MCStringRef p_action, MCNativeControlAction& r_action);
+	static bool LookupType(MCStringRef p_type, MCNativeControlType& r_type);
 	
 	// Look for an instance either by name or id
-	static bool FindByNameOrId(const char *name_or_id, MCNativeControl*& r_control);
+	static bool FindByNameOrId(MCStringRef p_name_or_id, MCNativeControl*& r_control);
 	// Look for an instance with a given id
 	static bool FindById(uint32_t p_id, MCNativeControl*& r_control);
 	
@@ -704,7 +704,7 @@ private:
 	// The id of the instance
 	uint32_t m_id;
 	// The name of the instance
-	char *m_name;
+	MCStringRef m_name;
 	// The instance's owning object (handle)
 	MCObjectHandle *m_object;    
 };

@@ -62,9 +62,10 @@ public:
 
 	Parse_stat parse(MCScriptPoint &spt, Boolean the);
 	Exec_stat eval(MCExecPoint &);
-    Exec_stat evaltextchunk(MCExecPoint &ep, MCCRef *ref, MCStringRef p_source, Chunk_term p_chunk_type, MCStringRef& x_text);
-    Exec_stat setmutabletextchunk(MCExecPoint &ep, MCCRef *ref, MCStringRef p_to_insert, Preposition_type p_type, Chunk_term p_chunk_type, MCStringRef& x_text);
-    Exec_stat evalmutabletextchunk(MCExecPoint &ep, MCCRef *ref, MCStringRef p_source, Chunk_term p_chunk_type, MCStringRef& r_text);
+
+#ifdef LEGACY_EXEC
+    Exec_stat eval_legacy(MCExecPoint &ep);
+#endif
 	MCVarref *getrootvarref(void);
 	
 	void compile(MCSyntaxFactoryRef factory);
@@ -81,11 +82,18 @@ public:
 	void take_components(MCChunk *tchunk);
 	Exec_stat getobj(MCExecPoint &, MCObject *&, uint4 &parid, Boolean recurse);
 	Exec_stat getobj(MCExecPoint&, MCObjectPtr&, Boolean recurse);
+#ifdef LEGACY_EXEC    
+    Exec_stat getobj_legacy(MCExecPoint &ep, MCObject *&objptr, uint4 &parid, Boolean recurse);
+    
 	Exec_stat extents(MCCRef *ref, int4 &start, int4 &number,
 	                  MCExecPoint &ep, const char *sptr, const char *eptr,
 	                  int4 (*count)(MCExecPoint &ep, const char *sptr,
 	                                const char *eptr));
-	Exec_stat mark(MCExecPoint &, int4 &start, int4 &end, Boolean force, Boolean wholechunk, bool include_characters = true);
+#endif
+    Exec_stat mark(MCExecPoint &ep, Boolean force, Boolean wholechunk, MCMarkedText& r_mark, bool includechars = true);
+#ifdef LEGACY_EXEC
+	Exec_stat mark_legacy(MCExecPoint &, int4 &start, int4 &end, Boolean force, Boolean wholechunk, bool include_characters = true);
+
 	// MW-2012-02-23: [[ CharChunk ]] Compute the start and end field indices corresponding
 	//   to the field char chunk in 'field'.
 	Exec_stat markcharactersinfield(uint32_t part_id, MCExecPoint& ep, int32_t& start, int32_t& end, MCField *field);
@@ -93,26 +101,40 @@ public:
 	Exec_stat gets(MCExecPoint &);
 	Exec_stat set(MCExecPoint &, Preposition_type ptype);
 
+#endif
+    Exec_stat set(MCExecPoint& ep, Preposition_type p_type, MCValueRef p_text);
+#ifdef LEGACY_EXEC 
+	Exec_stat gets(MCExecPoint &);
+	Exec_stat set_legacy(MCExecPoint &, Preposition_type ptype);
+       
 	// MW-2012-02-23: [[ PutUnicode ]] Set the chunk to the UTF-16 encoded text in ep.
 	Exec_stat setunicode(MCExecPoint& ep, Preposition_type ptype);
+#endif
 	Exec_stat count(Chunk_term tocount, Chunk_term ptype, MCExecPoint &);
+#ifdef LEGACY_EXEC	
 	Exec_stat fmark(MCField *fptr, int4 &start, int4 &end, Boolean wholechunk);
-	
+
 	// MW-2012-01-27: [[ UnicodeChunks ]] Added the 'keeptext' parameter, if True then on exit the
 	//   ep will contain the actual content of the field.
 	Exec_stat fieldmark(MCExecPoint &, MCField *fptr, uint4 parid, int4 &start, int4 &end, Boolean wholechunk, Boolean force, Boolean keeptext = False);
-
+#endif
 	// MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
 	Exec_stat getprop(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
 	Exec_stat setprop(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
+#ifdef LEGACY_EXEC
+	Exec_stat getprop_legacy(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
+	Exec_stat setprop_legacy(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
+#endif
 	Exec_stat getobjforprop(MCExecPoint& ep, MCObject*& r_object, uint4& r_parid);
 
 	// REMOVE: Exec_stat select(MCExecPoint &, Preposition_type where, Boolean text, Boolean first);
+#ifdef LEGACY_EXEC
 	Exec_stat cut(MCExecPoint &);
 	Exec_stat copy(MCExecPoint &);
+
 	// REMOVE: Exec_stat del(MCExecPoint &);
 	Exec_stat changeprop(MCExecPoint &ep, Properties prop, Boolean value);
-
+#endif
 	// Returns true if this chunk is of text type
 	bool istextchunk(void) const;
 
@@ -127,10 +149,10 @@ public:
 	
 	// Returns true if this chunk is of a url
 	bool isurlchunk(void) const;
-
+#ifdef LEGACY_EXEC
 	// Returns the field, part and range of the text chunk
 	Exec_stat marktextchunk(MCExecPoint& ep, MCField*& r_field, uint4& r_part, uint4& r_start, uint4& r_end);
-
+#endif
 	MCObject *getdestobj()
 	{
 		return destobj;
