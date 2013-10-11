@@ -76,7 +76,7 @@ static int2 depth;
 
 #include "srvdebug.h"
 
-void MCB_setmsg(MCStringRef p_msg)
+void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_msg)
 {
     
 }
@@ -122,9 +122,9 @@ void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name)
 
 #else
 
-void MCB_setmsg(MCStringRef p_msg)
+void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_msg)
 {
-    MCExecPoint ep(nil, nil, nil);
+    MCExecPoint ep(ctxt.GetEP());
     ep . setvalueref(p_msg);
     MCB_setmsg(ep);
 }

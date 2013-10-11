@@ -695,7 +695,7 @@ void MCVariable::synchronize(MCExecContext& ctxt, MCValueRef p_value, bool p_not
         
         MCAutoStringRef t_msg;
         if (ctxt . ConvertToString(*t_value, &t_msg))
-            MCB_setmsg(*t_msg);
+            MCB_setmsg(ctxt, *t_msg);
 	}
     
 	if (p_notify && MCnwatchedvars)

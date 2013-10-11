@@ -629,7 +629,7 @@ extern void MCServerPutUnicodeContent(const MCString& data);
 extern void MCServerPutMarkup(const MCString& data);
 extern void MCServerPutUnicodeMarkup(const MCString& data);
 
-bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, MCStringRef p_data_ref)
+bool MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_data_ref)
 {
 	MCString p_data;
 	p_data = MCStringGetOldString(p_data_ref);
