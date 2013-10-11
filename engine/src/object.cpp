@@ -748,16 +748,15 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 		Exec_stat stat = message(mptr, params, True, True);
 		if (stat == ES_NOT_HANDLED && !handler.getpass())
 		{
-			MCAutoStringRef tptr;
-			MCAutoStringRef t_mptr_string;
-			
+            MCAutoStringRef t_mptr_string;
+            
 			if (params != nil)
 			{
 				MCExecPoint ep(this, NULL, NULL);
 				params->eval(ep);
                 MCAutoStringRef t_value;
 				ep . copyasstringref(&t_value);
-				MCStringFormat(&tptr, "%@ %@", *t_mptr_string, *t_value);
+				MCStringFormat(&t_mptr_string, "%@ %@", mptr, *t_value);
 			}
             else
                 t_mptr_string = MCNameGetString(mptr);
@@ -765,7 +764,7 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 			MCHandler *t_handler;
 			t_handler = findhandler(HT_MESSAGE, mptr);
 			if (t_handler == NULL || !t_handler -> isprivate())
-				domess(params == NULL ? *t_mptr_string : *tptr);
+				domess(*t_mptr_string);
 
 		}
 		if (stat == ES_ERROR && !MCNameIsEqualTo(mptr, MCM_error_dialog, kMCCompareCaseless))

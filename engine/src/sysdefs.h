@@ -107,6 +107,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <foundation.h>
 #include <foundation-auto.h>
 
+#ifdef __OBJC__
+#include <foundation-objc.h>
+#endif
+
 //////////////////////////////////////////////////////////////////////
 //
 //  LEGACY INCLUDES AND DEFINES
