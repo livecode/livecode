@@ -2600,7 +2600,7 @@ void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_val
 	}
 	else
 	{
-		MCresult->eval(ctxt.GetCaseSensitive(), r_value);
+		MCresult->copyasvalueref(r_value);
 	}
 	MClockerrors = oldlock;
 	MCtargetptr = oldtargetptr;
