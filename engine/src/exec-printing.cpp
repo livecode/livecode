@@ -240,35 +240,103 @@ static void MCPrintingPrinterPageRangeParse(MCExecContext& ctxt, MCStringRef p_i
 	MCInterval *t_ranges;
 	int t_range_count;
 	t_ranges = NULL;
-	
-	const char *t_str;
-	t_str = MCStringGetCString(p_input);
+
+	uindex_t t_pos = 0;
+	uindex_t t_comma, t_dash;
 	t_range_count = 0;
-	while(*t_str != '\0' && !t_error)
+	while (t_pos != MCStringGetLength(p_input) && !t_error)
 	{
-		char *t_end_ptr;
 		int t_from, t_to;
-		t_from = strtol(t_str, &t_end_ptr, 10);
-		if (t_str == t_end_ptr)
-			t_error = true;
-		else if (*t_end_ptr == ',' || *t_end_ptr == '\0')
-			t_to = t_from;
-		else if (*t_end_ptr == '-')
+		bool t_found_comma, t_found_dash;
+		t_found_comma = MCStringFirstIndexOfChar(p_input, ',', t_pos, kMCCompareExact, t_comma);
+
+		if (t_found_comma)
 		{
-			t_str = t_end_ptr + 1;
-			t_to = strtol(t_str, &t_end_ptr, 10);
-			if (t_str == t_end_ptr)
-				t_error = true;
+			if (MCStringFirstIndexOfChar(p_input, '-', t_pos, kMCCompareExact, t_dash))
+			{
+				if(t_comma < t_dash)
+				{
+					MCAutoStringRef t_substring;
+					/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, t_comma - t_pos), &t_substring);
+					/* UNCHECKED */ MCStringToInteger(*t_substring, t_from);
+					t_to = t_from;
+					t_pos = t_comma;
+				}
+				else if(t_comma > t_dash)
+				{
+					MCAutoStringRef t_substring_from;
+					/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, t_dash - t_pos), &t_substring_from);
+					/* UNCHECKED */ MCStringToInteger(*t_substring_from, t_from);
+					t_pos = t_dash + 1;
+					if  (MCStringFirstIndexOfChar(p_input, ',', t_pos, kMCCompareExact, t_comma))
+					{
+						MCAutoStringRef t_substring_to;
+						/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, t_comma - t_pos), &t_substring_to);
+						/* UNCHECKED */ MCStringToInteger(*t_substring_to, t_to);
+						t_pos = t_comma;
+					}
+					else
+					{
+						MCAutoStringRef t_substring_to;
+						/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, MCStringGetLength(p_input) - t_pos), &t_substring_to);
+						/* UNCHECKED */ MCStringToInteger(*t_substring_to, t_to);
+						t_pos = MCStringGetLength(p_input);
+					}
+				}
+			}
+			// case of comma found but no dash
+			else
+			{
+				MCAutoStringRef t_substring;
+				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, t_comma - t_pos), &t_substring);
+				/* UNCHECKED */ MCStringToInteger(*t_substring, t_from);
+				t_to = t_from;
+				t_pos = t_comma;
+			}
 		}
-		
+		//case no comma found
+		else
+		{
+			if (MCStringFirstIndexOfChar(p_input, '-', t_pos, kMCCompareExact, t_dash))
+			{
+				MCAutoStringRef t_substring_from;
+				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, t_dash - t_pos), &t_substring_from);
+				/* UNCHECKED */ MCStringToInteger(*t_substring_from, t_from);
+				t_pos = t_dash + 1;
+				if (MCStringFirstIndexOfChar(p_input, ',', t_pos, kMCCompareExact, t_comma))
+				{
+					MCAutoStringRef t_substring_to;
+					/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, t_comma - t_pos), &t_substring_to);
+					/* UNCHECKED */ MCStringToInteger(*t_substring_to, t_to);
+					t_pos = t_comma;
+				}
+				else
+				{
+					MCAutoStringRef t_substring_to;
+					/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, MCStringGetLength(p_input) - t_pos), &t_substring_to);
+					/* UNCHECKED */ MCStringToInteger(*t_substring_to, t_to);
+					t_pos = MCStringGetLength(p_input);
+				}
+			}
+			//case neither comma nor dash found
+			else
+			{
+				MCAutoStringRef t_substring;
+				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, MCStringGetLength(p_input) - t_pos), &t_substring);
+				/* UNCHECKED */ MCStringToInteger(*t_substring, t_from);
+				t_to = t_from;
+				t_pos = MCStringGetLength(p_input);
+			}
+		}
+
 		if (!t_error)
 		{
 			MCU_disjointrangeinclude(t_ranges, t_range_count, t_from, t_to);
 			
-			t_str = t_end_ptr;
-			if (*t_str == ',')
-				t_str++;
-			else if (*t_str != '\0')
+			//t_pos index should contain a comma, or t_pos equals the length of the p_input string 
+			if (MCStringGetNativeCharAtIndex(p_input, t_pos) == ',')
+				t_pos = t_comma + 1;
+			else if (t_pos != MCStringGetLength(p_input))
 				t_error = true;
 		}
 	}
