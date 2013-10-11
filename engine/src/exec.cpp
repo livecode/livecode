@@ -461,6 +461,9 @@ void MCExecContext::SetItToValue(MCValueRef p_value)
 	MCVariable *t_var;
 	t_var = m_it -> evalvar(m_ep);
 	
+	// MW-2013-10-11: [[ Bug ]] Make sure UQLness of the it var is cleared.
+	t_var -> clearuql();
+	
 	t_var -> setvalueref(p_value);
 }
 
