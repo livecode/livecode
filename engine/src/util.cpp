@@ -2305,7 +2305,7 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output
 		if (sptr != NULL && sptr[1] != ':' && MCU_strchr(sptr, l, ':'))
 		{
 			MCS_geturl(ctxt . GetObject(), p_target);
-			MCurlresult->eval(ctxt.GetCaseSensitive(), (MCValueRef&)r_output);
+			MCurlresult->copyasvalueref((MCValueRef&)r_output);
 			return;
 		}
 	}
