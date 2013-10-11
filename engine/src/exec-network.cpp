@@ -590,13 +590,14 @@ void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCStringRef p_value, int p_whe
 			t_new_value = p_value;
 		else
 		{
-			MCAutoStringRef t_old_data;
-			/* UNCHECKED */ MCU_geturl(ctxt, p_chunk.url, &t_old_data);
-			
+			MCStringRef t_old_data;
+			/* UNCHECKED */ MCU_geturl(ctxt, p_chunk.url, t_old_data);
+			/* UNCHECKED */ MCStringMutableCopyAndRelease(t_old_data, t_old_data);
 			if (p_where == PT_AFTER)
-				/* UNCHECKED */ MCStringFormat(&t_new_value, "%@%@", *t_old_data, p_value);
+				/* UNCHECKED */ MCStringAppend(t_old_data, p_value);
 			else
-				/* UNCHECKED */ MCStringFormat(&t_new_value, "%@%@", p_value, *t_old_data);
+				/* UNCHECKED */ MCStringPrepend(t_old_data, p_value);
+			/* UNCHECKED */ MCStringCopyAndRelease(t_old_data, &t_new_value);
 		}
 	}
 	else
