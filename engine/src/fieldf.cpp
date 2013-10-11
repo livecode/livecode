@@ -1661,16 +1661,16 @@ void MCField::joinparagraphs()
 	updateparagraph(True, True);
 }
 
-void MCField::fnop(Field_translations function, const char *string, KeySym key)
+void MCField::fnop(Field_translations function, MCStringRef p_string, KeySym key)
 {
 }
 
 // MW-2012-02-13: [[ Block Unicode ]] New implementation of finsert which understands
 //   unicode text.
-void MCField::finsertnew(Field_translations function, const MCString& p_string, KeySym p_key, bool p_is_unicode)
+void MCField::finsertnew(Field_translations function, MCStringRef p_string, KeySym p_key)
 {
 	// If there is nothing to insert, do nothing.
-	if (p_string . getlength() == 0)
+	if (MCStringIsEmpty(p_string))
 		return;
 
 	// MW-2012-02-16: [[ Bug ]] Bracket any actions that result in
@@ -1690,9 +1690,7 @@ void MCField::finsertnew(Field_translations function, const MCString& p_string, 
 	selectedmark(False, si, ei, False, False);
 
 	// Defer to the paragraph method to insert the text.
-	MCAutoStringRef t_string;
-	/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)p_string.getstring(), p_string.getlength(), p_is_unicode?kMCStringEncodingUTF16:kMCStringEncodingNative, false, &t_string);
-	focusedparagraph -> finsertnew(*t_string);
+	focusedparagraph -> finsertnew(p_string);
 
 	// Compute the end of the selection.
 	int4 ti;
@@ -1761,7 +1759,7 @@ void MCField::finsertnew(Field_translations function, const MCString& p_string, 
 	}
 }
 
-void MCField::fdel(Field_translations function, const char *string, KeySym key)
+void MCField::fdel(Field_translations function, MCStringRef p_string, KeySym key)
 {
 	// MW-2012-02-16: [[ Bug ]] Bracket any actions that result in
 	//   textChanged message by a lock screen pair.
@@ -1846,25 +1844,22 @@ void MCField::fdel(Field_translations function, const char *string, KeySym key)
 	textchanged();
 }
 
-void MCField::fhelp(Field_translations function,
-                    const char *string, KeySym key)
+void MCField::fhelp(Field_translations function, MCStringRef p_string, KeySym key)
 {
 	message(MCM_help);
 }
 
-void MCField::fundo(Field_translations function,
-                    const char *string, KeySym key)
+void MCField::fundo(Field_translations function, MCStringRef p_string, KeySym key)
 {
 	MCundos->undo();
 }
 
-void MCField::fcut(Field_translations function, const char *string, KeySym key)
+void MCField::fcut(Field_translations function, MCStringRef p_string, KeySym key)
 {
 	cuttext();
 }
 
-void MCField::fcutline(Field_translations function,
-                       const char *string, KeySym key)
+void MCField::fcutline(Field_translations function, MCStringRef p_string, KeySym key)
 {
 #ifdef OLD_CLIPBOARD
 	if (!(state & CS_DELETING))
@@ -1895,26 +1890,23 @@ void MCField::fcutline(Field_translations function,
 #endif
 }
 
-void MCField::fcopy(Field_translations function,
-                    const char *string, KeySym key)
+void MCField::fcopy(Field_translations function, MCStringRef p_string, KeySym key)
 {
 	copytext();
 }
 
-void MCField::fpaste(Field_translations function,
-                     const char *string, KeySym key)
+void MCField::fpaste(Field_translations function, MCStringRef p_string, KeySym key)
 {
 	MCObject *optr;
 	MCdispatcher -> dopaste(optr);
 }
 
-void MCField::ftab(Field_translations function,
-                   const char *string, KeySym key)
+void MCField::ftab(Field_translations function, MCStringRef p_string, KeySym key)
 {
-	if (message_with_args(MCM_tab_key, string) == ES_NORMAL)
+	if (message_with_valueref_args(MCM_tab_key, p_string) == ES_NORMAL)
 		return;
 	if (ntabs != 0 && !(flags & F_LOCK_TEXT))
-		finsertnew(FT_UNDEFINED, string, key, false);
+		finsertnew(FT_UNDEFINED, p_string, key);
 	else
 		if (MCmodifierstate & MS_SHIFT)
 			getcard()->kfocusprev(False);
@@ -1922,8 +1914,7 @@ void MCField::ftab(Field_translations function,
 			getcard()->kfocusnext(False);
 }
 
-void MCField::ffocus(Field_translations function,
-                     const char *string, KeySym key)
+void MCField::ffocus(Field_translations function, MCStringRef p_string, KeySym key)
 {
 	switch (function)
 	{
@@ -1944,7 +1935,7 @@ void MCField::ffocus(Field_translations function,
 	}
 }
 
-void MCField::freturn(Field_translations function, const char *string, KeySym key)
+void MCField::freturn(Field_translations function, MCStringRef p_string, KeySym key)
 {
 	if (flags & F_AUTO_TAB && cursorrect.y + (cursorrect.height << 1) > rect.y + getfheight())
 		getcard()->kfocusnext(False);
@@ -1980,7 +1971,7 @@ void MCField::freturn(Field_translations function, const char *string, KeySym ke
 	}
 }
 
-void MCField::fcenter(Field_translations function, const char *string, KeySym key)
+void MCField::fcenter(Field_translations function, MCStringRef p_string, KeySym key)
 {
 	// MW-2012-01-25: [[ ParaStyles ]] Fetch the cursor rect, including any space
 	//   above and below.
@@ -1990,7 +1981,7 @@ void MCField::fcenter(Field_translations function, const char *string, KeySym ke
 	resetscrollbars(True);
 }
 
-void MCField::fscroll(Field_translations function, const char *string, KeySym key)
+void MCField::fscroll(Field_translations function, MCStringRef p_string, KeySym key)
 {
 	// OK-2009-03-19: [[Bug 7667]] - If we are scrolling horizontally and have no horizontal scrollbar, do nothing
 	if (!(flags & F_HSCROLLBAR) && (function == FT_SCROLLLEFT || function == FT_SCROLLRIGHT))
@@ -2052,7 +2043,7 @@ void MCField::fscroll(Field_translations function, const char *string, KeySym ke
 	message_with_args(MCM_scrollbar_drag, newval);
 }
 
-void MCField::fmove(Field_translations function, const char *string, KeySym key)
+void MCField::fmove(Field_translations function, MCStringRef p_string, KeySym key)
 {
 	removecursor();
 
@@ -2247,7 +2238,7 @@ void MCField::setupmenu(MCStringRef p_string, uint2 fheight, Boolean scrolling)
 	setstate(True, CS_MENUFIELD);
 }
 
-void MCField::setupentry(MCButton *bptr, const MCString &s, Boolean isunicode)
+void MCField::setupentry(MCButton *bptr, MCStringRef p_string)
 {
 	parent = bptr;
 	obj_id = bptr->getid();
@@ -2265,7 +2256,7 @@ void MCField::setupentry(MCButton *bptr, const MCString &s, Boolean isunicode)
 		topmargin = 6;
 	flags = F_VISIBLE | F_SHOW_BORDER | F_3D | F_OPAQUE | F_FIXED_HEIGHT
 		| F_TRAVERSAL_ON | F_AUTO_TAB | F_DONT_WRAP | F_SHARED_TEXT;
-	settext_oldstring(0, s, False, isunicode);
+	settext(0, p_string, False);
 }
 
 void MCField::typetext(const MCString &newtext)

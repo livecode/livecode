@@ -427,7 +427,7 @@ void MCGroup::kunfocus()
 	state &= ~CS_KFOCUSED;
 }
 
-Boolean MCGroup::kdown(const char *string, KeySym key)
+Boolean MCGroup::kdown(MCStringRef p_string, KeySym key)
 {
 	if (kfocused == NULL)
 		kfocused = oldkfocused;
@@ -459,7 +459,7 @@ Boolean MCGroup::kdown(const char *string, KeySym key)
 		default:
 			newkfocused = kfocused;
 			MCControl *oldfocused = kfocused;
-			if (kfocused->kdown(string, key))
+			if (kfocused->kdown(p_string, key))
 			{
 				radio(0, oldfocused);
 				newkfocused = NULL;
@@ -468,14 +468,14 @@ Boolean MCGroup::kdown(const char *string, KeySym key)
 			newkfocused = NULL;
 			return False;
 		}
-	return kfocused->kdown(string, key);
+	return kfocused->kdown(p_string, key);
 }
 
-Boolean MCGroup::kup(const char *string, KeySym key)
+Boolean MCGroup::kup(MCStringRef p_string, KeySym key)
 {
 	if (kfocused == NULL)
 		return False;
-	return kfocused->kup(string, key);
+	return kfocused->kup(p_string, key);
 }
 
 void MCGroup::mdrag(void)

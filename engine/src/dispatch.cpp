@@ -1052,20 +1052,20 @@ void MCDispatch::wkunfocus(Window w)
 		target->kunfocus();
 }
 
-Boolean MCDispatch::wkdown(Window w, const char *string, KeySym key)
+Boolean MCDispatch::wkdown(Window w, MCStringRef p_string, KeySym key)
 {
 	if (menu != NULL)
-		return menu->kdown(string, key);
+		return menu->kdown(p_string, key);
 
 	MCStack *target = findstackd(w);
-	if (target == NULL || !target->kdown(string, key))
+	if (target == NULL || !target->kdown(p_string, key))
 	{
 		if (MCmodifierstate & MS_MOD1)
 		{
-			MCButton *bptr = MCstacks->findmnemonic(MCS_tolower(string[0]));
+			MCButton *bptr = MCstacks->findmnemonic(key);
 			if (bptr != NULL)
 			{
-				bptr->activate(True, (uint2)key);
+				bptr->activate(True, key);
 				return True;
 			}
 		}
@@ -1076,15 +1076,15 @@ Boolean MCDispatch::wkdown(Window w, const char *string, KeySym key)
 	return False;
 }
 
-void MCDispatch::wkup(Window w, const char *string, KeySym key)
+void MCDispatch::wkup(Window w, MCStringRef p_string, KeySym key)
 {
 	if (menu != NULL)
-		menu->kup(string, key);
+		menu->kup(p_string, key);
 	else
 	{
 		MCStack *target = findstackd(w);
 		if (target != NULL)
-			target->kup(string, key);
+			target->kup(p_string, key);
 	}
 }
 

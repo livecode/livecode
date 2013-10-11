@@ -315,26 +315,26 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, B
 #define DEFINE_RW_PROPERTY(prop, type, module, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MC##module##Get##tag, (void *)MC##module##Set##tag },
 
-#define DEFINE_RW_SET_PROPERTY(prop, typeinfo, module, tag) \
-{ prop, false, kMCPropertyTypeSet, typeinfo, (void *)MC##module##Get##tag, (void *)MC##module##Set##tag },
+#define DEFINE_RW_SET_PROPERTY(prop, type, module, tag) \
+{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MC##module##Get##tag, (void *)MC##module##Set##tag },
 
-#define DEFINE_RW_ENUM_PROPERTY(prop, typeinfo, module, tag) \
-{ prop, false, kMCPropertyTypeEnum, typeinfo, (void *)MC##module##Get##tag, (void *)MC##module##Set##tag },
+#define DEFINE_RW_ENUM_PROPERTY(prop, type, module, tag) \
+{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MC##module##Get##tag, (void *)MC##module##Set##tag },
 
-#define DEFINE_RW_CUSTOM_PROPERTY(prop, typeinfo, module, tag) \
-{ prop, false, kMCPropertyTypeCustom, typeinfo, (void *)MC##module##Get##tag, (void *)MC##module##Set##tag },
+#define DEFINE_RW_CUSTOM_PROPERTY(prop, type, module, tag) \
+{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MC##module##Get##tag, (void *)MC##module##Set##tag },
 
 #define DEFINE_RO_PROPERTY(prop, type, module, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MC##module##Get##tag, nil },
 
-#define DEFINE_RO_SET_PROPERTY(prop, typeinfo, module, tag) \
-{ prop, false, kMCPropertyTypeSet, typeinfo, (void *)MC##module##Get##tag, nil },
+#define DEFINE_RO_SET_PROPERTY(prop, type, module, tag) \
+{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MC##module##Get##tag, nil },
 
-#define DEFINE_RO_ENUM_PROPERTY(prop, typeinfo, module, tag) \
-{ prop, false, kMCPropertyTypeEnum, typeinfo, (void *)MC##module##Get##tag, nil },
+#define DEFINE_RO_ENUM_PROPERTY(prop, type, module, tag) \
+{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MC##module##Get##tag, nil },
 
-#define DEFINE_RO_CUSTOM_PROPERTY(prop, typeinfo, module, tag) \
-{ prop, false, kMCPropertyTypeCustom, typeinfo, (void *)MC##module##Get##tag, nil },
+#define DEFINE_RO_CUSTOM_PROPERTY(prop, type, module, tag) \
+{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MC##module##Get##tag, nil },
 
 #define DEFINE_RO_EFFECTIVE_PROPERTY(prop, type, module, tag) \
 { prop, true, kMCPropertyType##type, nil, (void *)MC##module##GetEffective##tag, nil },
@@ -559,6 +559,11 @@ public:
 	
 	//////////
 
+	void SetNumberFormat(uint2 p_fw, uint2 p_trailing, uint2 p_force)
+    {
+        m_ep . setnumberformat(p_fw, p_trailing, p_force);
+    }
+
 	void SetCaseSensitive(bool p_value)
 	{
 		m_ep . setcasesensitive(p_value);
@@ -609,7 +614,7 @@ public:
 		m_ep . setrowdel(p_value);
 	}
 	//////////
-	
+
 	// Convert the given valueref to a string. If the type is not convertable
 	// to a string, the empty string is returned.
 	// This method should be used in cases where a string is required and
@@ -650,6 +655,29 @@ public:
 	bool TryToConvertToLegacyRectangle(MCValueRef value, bool& r_converted, MCRectangle& r_rectangle);
 	bool TryToConvertToLegacyColor(MCValueRef value, bool& r_converted, MCColor& r_color);
 
+	//////////
+	
+	bool CopyElementAsBoolean(MCArrayRef, MCNameRef key, bool case_sensitive, MCBooleanRef &r_boolean);
+	bool CopyElementAsString(MCArrayRef, MCNameRef key, bool case_sensitive, MCStringRef &r_string);
+	bool CopyElementAsNumber(MCArrayRef, MCNameRef key, bool case_sensitive, MCNumberRef &r_number);
+	bool CopyElementAsInteger(MCArrayRef, MCNameRef key, bool case_sensitive, integer_t &r_integer);
+	bool CopyElementAsUnsignedInteger(MCArrayRef, MCNameRef key, bool case_sensitive, uinteger_t &r_integer);
+	bool CopyElementAsReal(MCArrayRef, MCNameRef key, bool case_sensitive, real64_t &r_real);
+	bool CopyElementAsArray(MCArrayRef, MCNameRef key, bool case_sensitive, MCArrayRef &r_array);
+	
+	bool CopyElementAsStringArray(MCArrayRef, MCNameRef key, bool case_sensitive, MCArrayRef &r_string_array);
+	bool CopyElementAsFilepath(MCArrayRef, MCNameRef key, bool case_sensitive, MCStringRef &r_path);
+	bool CopyElementAsFilepathArray(MCArrayRef, MCNameRef key, bool case_sensitive, MCArrayRef &r_path_array);
+	
+	//////////
+	
+	bool CopyOptElementAsBoolean(MCArrayRef, MCNameRef key, bool case_sensitive, MCBooleanRef &r_boolean);
+	bool CopyOptElementAsString(MCArrayRef, MCNameRef key, bool case_sensitive, MCStringRef &r_string);
+	bool CopyOptElementAsStringArray(MCArrayRef, MCNameRef key, bool case_sensitive, MCArrayRef &r_string_array);
+	bool CopyOptElementAsFilepath(MCArrayRef, MCNameRef key, bool case_sensitive, MCStringRef &r_path);
+	bool CopyOptElementAsFilepathArray(MCArrayRef, MCNameRef key, bool case_sensitive, MCArrayRef &r_path_array);
+	
+	
 	//////////
 	
 	bool FormatBool(bool p_bool, MCStringRef& r_output);
@@ -1954,8 +1982,8 @@ void MCInterfaceGetArcAngle(MCExecContext& ctxt, uinteger_t& r_radius);
 void MCInterfaceSetArcAngle(MCExecContext& ctxt, uinteger_t radius);
 void MCInterfaceGetRoundEnds(MCExecContext& ctxt, bool& r_value);
 void MCInterfaceSetRoundEnds(MCExecContext& ctxt, bool value);
-void MCInterfaceGetDashes(MCExecContext& ctxt, MCStringRef& r_dashes);
-void MCInterfaceSetDashes(MCExecContext& ctxt, MCStringRef dashes);
+void MCInterfaceGetDashes(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_points);
+void MCInterfaceSetDashes(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_points);
 
 void MCInterfaceGetRecentCards(MCExecContext& ctxt, MCStringRef& r_cards);
 void MCInterfaceGetRecentNames(MCExecContext& ctxt, MCStringRef& r_names);

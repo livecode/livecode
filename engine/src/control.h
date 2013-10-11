@@ -102,7 +102,7 @@ public:
 	virtual void close();
 	virtual void kfocus();
 	virtual void kunfocus();
-	virtual Boolean kdown(const char *string, KeySym key);
+	virtual Boolean kdown(MCStringRef p_string, KeySym key);
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual void munfocus();
 	virtual Boolean doubledown(uint2 which);

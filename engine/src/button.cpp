@@ -643,11 +643,13 @@ void MCButton::kunfocus()
 	}
 }
 
-Boolean MCButton::kdown(const char *string, KeySym key)
+Boolean MCButton::kdown(MCStringRef p_string, KeySym key)
 {
+	codepoint_t t_char;
+	t_char = key & XK_Codepoint_mask;
 	if (state & CS_SUBMENU)
 	{
-		if (MCObject::kdown(string, key))
+		if (MCObject::kdown(p_string, key))
 			return True;
 		MCButton *bptr;
 		MCAutoStringRef t_pick;
@@ -659,7 +661,7 @@ Boolean MCButton::kdown(const char *string, KeySym key)
 		case XK_Tab:
 		case XK_Left:
 		case XK_Right:
-			if (menu->kdown(string, key))
+			if (menu->kdown(p_string, key))
 				return True;
 			if (menumode == WM_CASCADE)
 			{
@@ -700,11 +702,11 @@ Boolean MCButton::kdown(const char *string, KeySym key)
 			}
 			break;
 		case XK_Down:
-			if (menu->kdown(string, key))
+			if (menu->kdown(p_string, key))
 				return True;
 			return menu->kfocusnext(False);
 		case XK_Up:
-			if (menu->kdown(string, key))
+			if (menu->kdown(p_string, key))
 				return True;
 			return menu->kfocusprev(False);
 		case XK_WheelDown:
@@ -712,15 +714,15 @@ Boolean MCButton::kdown(const char *string, KeySym key)
 		case XK_WheelLeft:
 		case XK_WheelRight:
 			if (menu -> getcontrols() -> gettype() == CT_FIELD)
-				if (menu -> getcontrols() -> kdown(string, key))
+				if (menu -> getcontrols() -> kdown(p_string, key))
 					return True;
 			break;
 		case XK_space:
 		case XK_Return:
 		case XK_KP_Enter:
 			closemenu(False, True);
-			menu->menukdown(string, key, &t_pick, menuhistory);
-			
+			menu->menukdown(p_string, key, &t_pick, menuhistory);
+
 			// This check must be for null (not empty) because an empty pick
 			// indicates that the function succeeded while a null pick means
 			// that no menu responded to the event.
@@ -749,13 +751,13 @@ Boolean MCButton::kdown(const char *string, KeySym key)
 			if (MCmenuobjectptr == this)
 				MCmenuobjectptr = NULL;
 			return True;
-		default:
-			MCButton *mbptr = menu->findmnemonic(string[0]);
+		default:	
+			MCButton *mbptr = menu->findmnemonic(t_char);
 			if (mbptr != NULL)
 			{
 				closemenu(False, True);
 				if (!MCNameIsEmpty(menuname))
-					mbptr->activate(False, string[0]);
+					mbptr->activate(False, t_char);
 				else
 				{
 					MCStringRef t_label;
@@ -764,7 +766,7 @@ Boolean MCButton::kdown(const char *string, KeySym key)
 					else
 						t_label = mbptr->getlabeltext();
 	
-					menu->menukdown(string, key, &t_pick, menuhistory);
+					menu->menukdown(p_string, key, &t_pick, menuhistory);
 					Exec_stat es = message_with_valueref_args(MCM_menu_pick, t_label);
 					if (es == ES_NOT_HANDLED || es == ES_PASS)
 						message_with_args(MCM_mouse_up, menubutton);
@@ -777,7 +779,7 @@ Boolean MCButton::kdown(const char *string, KeySym key)
 			{
 				if (MCmodifierstate & MS_MOD1)
 				{
-					mbptr = MCstacks->findmnemonic(string[0]);
+					mbptr = MCstacks->findmnemonic(t_char);
 					if (mbptr != NULL && mbptr->isvisible() && !mbptr->isdisabled())
 					{
 						closemenu(True, True);
@@ -796,8 +798,8 @@ Boolean MCButton::kdown(const char *string, KeySym key)
 	else
 	{
 		if (entry != NULL)
-			return entry->kdown(string, key);
-		if (MCObject::kdown(string, key))
+			return entry->kdown(p_string, key);
+		if (MCObject::kdown(p_string, key))
 			return True;
 		if ((((key == XK_Right || key == XK_space
 		        || key == XK_Return || key == XK_KP_Enter)
@@ -812,21 +814,21 @@ Boolean MCButton::kdown(const char *string, KeySym key)
 		        && (key == XK_Return || key == XK_KP_Enter))
 		        && !(MCmodifierstate & MS_MOD1))
 		{
-			activate(False, string[0]);
+			activate(False, t_char);
 			return True;
 		}
 	}
 	return False;
 }
 
-Boolean MCButton::kup(const char *string, KeySym key)
+Boolean MCButton::kup(MCStringRef p_string, KeySym key)
 {
 	if (entry != NULL)
-		return entry->kup(string, key);
-	if (MCObject::kup(string, key))
+		return entry->kup(p_string, key);
+	if (MCObject::kup(p_string, key))
 		return True;
 	if (state & CS_SUBMENU)
-		return menu->kup(string, key);
+		return menu->kup(p_string, key);
 	return False;
 }
 
@@ -2746,7 +2748,7 @@ void MCButton::resetfontindex(MCStack *oldstack)
 	MCControl::resetfontindex(oldstack);
 }
 
-void MCButton::activate(Boolean notify, uint2 key)
+void MCButton::activate(Boolean notify, KeySym p_key)
 {
 	if (flags & F_DISABLED)
 		return;
@@ -2756,10 +2758,10 @@ void MCButton::activate(Boolean notify, uint2 key)
 		MCAutoStringRef t_pick;
 		
 		if (menu != NULL)
-			menu->findaccel(key, &t_pick, t_disabled);
+			menu->findaccel(p_key, &t_pick, t_disabled);
 #ifdef _MAC_DESKTOP
 		else if (bMenuID != 0)
-			getmacmenuitemtextfromaccelerator(bMenuID, key, MCmodifierstate, &t_pick, false);
+			getmacmenuitemtextfromaccelerator(bMenuID, p_key, MCmodifierstate, &t_pick, false);
 #endif
 		if (MCStringIsEmpty(*t_pick))
 		{
@@ -2974,7 +2976,7 @@ void MCButton::createentry()
 		entry = (MCField *)MCtemplatefield->clone(False, OP_NONE, false);
 		// MW-2005-08-16: [[Bug 2820]] If we can't be selected, let us make sure our field can't either!
 		entry->setextraflag(getextraflag(EF_CANT_SELECT), EF_CANT_SELECT);
-		entry->setupentry(this, MCStringGetOldString(label), !MCStringIsNative(label));
+		entry->setupentry(this, label);
 		entry->open();
 		setrect(rect);
 	}

@@ -1696,24 +1696,25 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 	MCmodifierstate = p_modifiers;
 	MCdefaultstackptr->kfocus();
 	uint2 i;
-	char string[2];
-	string[1] = '\0';
+	MCStringRef t_string = nil;
 	real8 nexttime = MCS_time();
 
 	for (i = 0 ; i < MCStringGetLength(p_typing); i++)
 	{
-		KeySym keysym = (unsigned char) MCStringGetNativeCharAtIndex(p_typing, i);
+		KeySym keysym = MCStringGetCodepointAtIndex(p_typing, i);
 		if (keysym < 0x20 || keysym == 0xFF)
 		{
 			if (keysym == 0x0A)
 				keysym = 0x0D;
 			keysym |= 0xFF00;
-			string[0] = '\0';
+			t_string = kMCEmptyString;
 		}
+		else if (keysym > 0x7F)
+			keysym |= XK_Class_codepoint;
 		else
-			string[0] = MCStringGetNativeCharAtIndex(p_typing, i);
-		MCdefaultstackptr->kdown(string, keysym);
-		MCdefaultstackptr->kup(string, keysym);
+			t_string = p_typing;
+		MCdefaultstackptr->kdown(t_string, keysym);
+		MCdefaultstackptr->kup(t_string, keysym);
 		nexttime += (real8)MCtyperate / 1000.0;
 		real8 delay = nexttime - MCS_time();
 		if (MCscreen->wait(delay, False, False))
@@ -2160,15 +2161,15 @@ void MCInterfaceExecDeleteObjectChunks(MCExecContext& ctxt, MCObjectChunkPtr *p_
 	{
 		if (p_chunks[i] . object -> gettype() == CT_BUTTON)
 		{
-			p_chunks[i] . object -> getprop(p_chunks[i] . part_id, P_UNICODE_TEXT, ctxt . GetEP(), False);
+			MCStringRef t_value; 
+			t_value = nil;
+			p_chunks[i] . object -> getstringprop(ctxt, p_chunks[i] . part_id, P_TEXT, False, t_value);
 
-			ctxt . GetEP() . utf16toutf8();
-
-			ctxt . GetEP() . insert(MCnullmcstring, p_chunks[i] . mark . start, p_chunks[i] . mark . finish);
-
-			ctxt . GetEP() . utf8toutf16();
-
-			p_chunks[i] . object -> setprop(p_chunks[i] . part_id, P_UNICODE_TEXT, ctxt . GetEP(), False);
+			/* UNCHECKED */ MCStringMutableCopyAndRelease(t_value, t_value);
+			/* UNCHECKED */ MCStringRemove(t_value, MCRangeMake(p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start));
+			/* UNCHECKED */ MCStringCopyAndRelease(t_value, t_value);
+			p_chunks[i] . object -> setstringprop(ctxt, p_chunks[i] . part_id, P_TEXT, False, t_value);
+			MCValueRelease(t_value);
 		}
 		else if (p_chunks[i] . object -> gettype() == CT_FIELD)
         {
@@ -2188,11 +2189,10 @@ void MCInterfaceExecDeleteObjectChunks(MCExecContext& ctxt, MCObjectChunkPtr *p_
 
 static void MCInterfaceExecChangeChunkOfButton(MCExecContext& ctxt, MCObjectChunkPtr p_target, Properties p_prop, bool p_value)
 {
-	MCExecPoint& ep = ctxt . GetEP();
-	
-	p_target . object -> getprop(p_target . part_id, P_UNICODE_TEXT, ep, False);
+	MCStringRef t_value;
+	p_target . object -> getstringprop(ctxt, p_target . part_id, P_TEXT, False, t_value);
 
-	ep . utf16toutf8();
+	/* UNCHECKED */ MCStringMutableCopyAndRelease(t_value, t_value);
 
 	int4 start, end;
 	start = p_target . mark . start;
@@ -2203,45 +2203,41 @@ static void MCInterfaceExecChangeChunkOfButton(MCExecContext& ctxt, MCObjectChun
 	if (p_prop == P_DISABLED)
 		if (p_value)
 		{
-			if (ep.getsvalue().getstring()[start] != '(')
-				ep.insert("(", start, start), t_changed = true;
+			if (MCStringGetNativeCharAtIndex(t_value, start) != '(')
+		        /* UNCHECKED */ MCStringInsert(t_value, start, MCSTR("(")), t_changed = true;
 		}
 		else
 		{
-			if (ep.getsvalue().getstring()[start] == '(')
-				ep.insert(MCnullmcstring, start, start + 1), t_changed = true;
+			 if (MCStringGetNativeCharAtIndex(t_value, start) == '(')
+		        /* UNCHECKED */ MCStringRemove(t_value, MCRangeMake(start, 1)), t_changed = true;
 		}
 	else
 	{
-		if (ep.getsvalue().getstring()[start] == '(')
+		if (MCStringGetNativeCharAtIndex(t_value, start) == '(')
 			start++;
 		if (p_value)
 		{
-			if (ep.getsvalue().getstring()[start + 1] == 'n')
-				ep.insert("c", start + 1, start + 2), t_changed = true;
+			if (MCStringGetNativeCharAtIndex(t_value, start + 1) == 'n')
+		        /* UNCHECKED */ MCStringReplace(t_value, MCRangeMake(start + 1, 1), MCSTR("c")), t_changed = true;
 			else
-				if (ep.getsvalue().getstring()[start + 1] == 'u')
-					ep.insert("r", start + 1, start + 2), t_changed = true;
+				if (MCStringGetNativeCharAtIndex(t_value, start + 1) == 'u')
+					/* UNCHECKED */ MCStringReplace(t_value, MCRangeMake(start + 1, 1), MCSTR("r")), t_changed = true;
 		}
 		else
 		{
-			if (ep.getsvalue().getstring()[start + 1] == 'c')
-				ep.insert("n", start + 1, start + 2), t_changed = true;
+			if (MCStringGetNativeCharAtIndex(t_value, start + 1) == 'c')
+		        /* UNCHECKED */ MCStringReplace(t_value, MCRangeMake(start + 1, 1), MCSTR("n")), t_changed = true;
 			else
-				if (ep.getsvalue().getstring()[start + 1] == 'r')
-					ep.insert("u", start + 1, start + 2), t_changed = true;
+				if (MCStringGetNativeCharAtIndex(t_value, start + 1) == 'r')
+					/* UNCHECKED */ MCStringReplace(t_value, MCRangeMake(start + 1, 1), MCSTR("u")), t_changed = true;
 		}
 	}
 
 	if (t_changed)
 	{
-		ep . utf8toutf16();
-		if (p_target . object->setprop(p_target . part_id, P_UNICODE_TEXT, ep, False) != ES_NORMAL)
-		{
-			ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
-			return;
-		}
+		p_target . object->setstringprop(ctxt, p_target . part_id, P_TEXT, False, t_value);    
 	}
+	MCValueRelease(t_value);
 }
 
 void MCInterfaceExecEnableObject(MCExecContext& ctxt, MCObjectPtr p_target)
@@ -2916,8 +2912,8 @@ void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCObject *p_object, MCStrin
 	{
 		MCAutoStringRef t_name;
 		p_object->names(P_NAME, &t_name);
-		ctxt . GetEP() . setvalueref(*t_name);
-		if (MCdefaultstackptr->setprop(0, P_MAIN_STACK, ctxt . GetEP(), False) != ES_NORMAL)
+		MCdefaultstackptr->setstringprop(ctxt, 0, P_MAIN_STACK, False, *t_name);
+		if (ctxt . HasError())
 		{
 			delete MCdefaultstackptr;
 			ctxt . LegacyThrow(EE_CREATE_BADBGORCARD);
@@ -2930,10 +2926,8 @@ void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCObject *p_object, MCStrin
 	MCdefaultstackptr = odefaultstackptr;
 
 	if (p_new_name != nil)
-	{
-		ctxt . GetEP() . setvalueref(p_new_name);
-		t_object->setprop(0, P_NAME, ctxt . GetEP(), False);
-	}
+		t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
+	
 	MCAutoStringRef t_id;
 	t_object->names(P_LONG_ID, &t_id);
 	ctxt . SetItToValue(*t_id);
@@ -2962,11 +2956,8 @@ void MCInterfaceExecCreateCard(MCExecContext& ctxt, MCStringRef p_new_name, bool
 	MCObject *t_object = MCtemplatecard->clone(True, False);
 
 	if (p_new_name != nil)
-	{
-		ctxt . GetEP() . setvalueref(p_new_name);
-		t_object->setprop(0, P_NAME, ctxt . GetEP(), False);
-	}
-
+		t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
+	
 	MCAutoStringRef t_id;
 	t_object->names(P_LONG_ID, &t_id);
 	ctxt . SetItToValue(*t_id);
@@ -3030,10 +3021,7 @@ void MCInterfaceExecCreateControl(MCExecContext& ctxt, MCStringRef p_new_name, i
 	}
 
 	if (p_new_name != nil)
-	{
-		ctxt . GetEP() . setvalueref(p_new_name);
-		t_object->setprop(0, P_NAME, ctxt . GetEP(), False);
-	}
+		t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
 
 	MCAutoStringRef t_id;
 	t_object->names(P_LONG_ID, &t_id);
@@ -3060,8 +3048,7 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 				MCAutoStringRef t_new_name;
 				MCStringMutableCopyAndRelease(t_short_name, &t_new_name);
 				MCStringPrependNativeChars(*t_new_name, (const char_t *)MCcopystring, strlen(MCcopystring));
-				ctxt . GetEP() . setvalueref(*t_new_name);
-				t_object->setprop(0, P_NAME, ctxt . GetEP(), False);
+				t_object->setstringprop(ctxt, 0, P_NAME, False, *t_new_name);
 			}
 			MCdefaultstackptr = (MCStack *)t_object;
 
@@ -3133,10 +3120,8 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 	}
 
 	if (p_new_name != nil)
-	{
-		ctxt . GetEP() . setvalueref(p_new_name);
-		t_object->setprop(0, P_NAME, ctxt . GetEP(), False);
-	}
+		t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
+	
 	MCAutoStringRef t_id;
 	t_object->names(P_LONG_ID, &t_id);
 	ctxt . SetItToValue(*t_id);

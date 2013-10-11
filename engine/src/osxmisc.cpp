@@ -388,7 +388,7 @@ static void getmacmenuitemtext(MenuHandle mh, uint2 mitem, MCStringRef &r_string
 		r_string = MCValueRetain(*t_menuitem);
 }
 
-static void getmacmenuitemtextfromaccelerator(MenuHandle menu, uint2 key, uint1 mods, MCStringRef &r_string, bool issubmenu)
+static void getmacmenuitemtextfromaccelerator(MenuHandle menu, KeySym p_key, uint1 mods, MCStringRef &r_string, bool issubmenu)
 {
 	uint2 itemcount = CountMenuItems(menu);
 	for (uint2 i = 1; i <= itemcount; i++)
@@ -397,7 +397,7 @@ static void getmacmenuitemtextfromaccelerator(MenuHandle menu, uint2 key, uint1 
 		GetMenuItemHierarchicalMenu(menu, i, &submenu);
 		if (submenu != NULL)
 		{
-			getmacmenuitemtextfromaccelerator(submenu, key, mods, r_string, true);
+			getmacmenuitemtextfromaccelerator(submenu, p_key, mods, r_string, true);
 			if (!MCStringIsEmpty(r_string))
 				return;
 		}
@@ -409,7 +409,7 @@ static void getmacmenuitemtextfromaccelerator(MenuHandle menu, uint2 key, uint1 
 			GetMenuItemKeyGlyph(menu, i, &t_glyph);
 			if (t_glyph != kMenuNullGlyph)
 				t_key = MCMacGlyphToKeysym(t_glyph);
-			if (t_key == key)
+			if (t_key == p_key)
 			{
 				uint1 t_macmods = 0;
 				GetMenuItemModifiers(menu, i, &t_macmods);
@@ -616,7 +616,7 @@ void MCButton::macfreemenu(void)
 	}
 }
 
-void MCButton::getmacmenuitemtextfromaccelerator(short menuid, uint2 key, uint1 mods, MCStringRef &r_string, bool issubmenu)
+void MCButton::getmacmenuitemtextfromaccelerator(short menuid, KeySym key, uint1 mods, MCStringRef &r_string, bool issubmenu)
 {
 	::getmacmenuitemtextfromaccelerator(GetMenu(menuid), key, mods, r_string, issubmenu);
 }

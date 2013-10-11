@@ -196,9 +196,9 @@ void MCControl::kunfocus()
 	}
 }
 
-Boolean MCControl::kdown(const char *string, KeySym key)
+Boolean MCControl::kdown(MCStringRef p_string, KeySym key)
 {
-	if (MCObject::kdown(string, key))
+	if (MCObject::kdown(p_string, key))
 		return True;
 	switch (key)
 	{
