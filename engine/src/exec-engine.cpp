@@ -652,6 +652,14 @@ void MCEngineExecPutOutput(MCExecContext& ctxt, MCStringRef p_value)
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
+void MCEngineExecPutOutputUnicode(MCExecContext& ctxt, MCDataRef p_value)
+{
+	MCAutoStringRef t_string;
+	if (!MCStringCreateWithChars((const unichar_t*)MCDataGetBytePtr(p_value), MCDataGetLength(p_value)/sizeof(unichar_t), &t_string)
+		|| !MCS_put(ctxt, kMCSPutUnicodeOutput, *t_string))
+		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
+}
+
 void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_where, MCVariableChunkPtr p_var)
 {	
 	p_var . variable -> clearuql();
