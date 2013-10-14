@@ -748,6 +748,7 @@ bool MCConvertMacUnicodeStyledToStyledText(MCDataRef p_text_data, MCDataRef p_st
 		t_paragraphs = MCtemplatefield -> texttoparagraphs(MCDataGetOldString(*t_data), true);
 	}
 	
+	MCValueRelease(t_text);
 	MCStyledText t_styled_text;
 	t_styled_text . setparent(MCtemplatefield -> getparent());
 	t_styled_text . setparagraphs(t_paragraphs);
