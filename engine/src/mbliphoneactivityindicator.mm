@@ -80,8 +80,6 @@ bool MCSystemActivityIndicatorStart (intenum_t p_indicator, integer_t p_location
 
 bool MCSystemActivityIndicatorStop ()
 {
-	
-	MCExecPoint ep(nil, nil, nil);
 	if (s_activity_indicator != nil)
 	{
 		[s_activity_indicator stopAnimating];
