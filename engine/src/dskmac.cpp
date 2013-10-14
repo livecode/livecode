@@ -23,6 +23,7 @@
 #include "objdefs.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "globals.h"
 #include "system.h"
 #include "osspec.h"
@@ -477,8 +478,12 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 				}
 				else
 				{
-					MCdefaultstackptr->getcard()->eval(*t_sptr, ep);
-					AEPutParamPtr(reply, '----', typeChar, ep.getsvalue().getstring(), ep.getsvalue().getlength());
+					MCExecContext ctxt(ep);
+					MCAutoValueRef t_val;
+					MCAutoStringRef t_string;
+					MCdefaultstackptr->getcard()->eval(ctxt, *t_sptr, &t_val);
+					/* UNCHECKED */ ctxt.ConvertToString(*t_val, &t_string);
+					AEPutParamPtr(reply, '----', typeChar, MCStringGetNativeCharPtr(*t_string), MCStringGetLength(*t_string));
 				}
 				delete sptr;
 			}
