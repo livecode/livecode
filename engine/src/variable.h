@@ -595,32 +595,21 @@ public:
 	// Make an immutable copy of the content of the variable (nested key).
 	bool copyasvalueref(MCNameRef *path, uindex_t length, bool case_sensitive, MCValueRef& r_value);
 
-	// Evaluate the contents of the variable (nested key) into the ep.
-	Exec_stat eval(MCExecPoint& ep, MCNameRef *path, uindex_t length);
+    // Evaluate the contents of the variable (nested key) into the ep.
 	// Evalue the contents of the variable (nested key) into r_value.
-	void eval(MCNameRef *p_path, uindex_t p_length, bool p_case_sensitive, MCValueRef &r_value);
-	// Copy the contents of the ep into the variable (nested key).
-	Exec_stat set(MCExecPoint& ep, MCNameRef *path, uindex_t length);
+    bool eval(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length, MCValueRef &r_value);
+    // Copy the contents of the ep into the variable (nested key).
     bool set(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length);
-    
-	// Append the content of the ep to the variable (nested key).
-	Exec_stat append(MCExecPoint& ep, MCNameRef *path, uindex_t length);
+    // Append the content of the ep to the variable (nested key).
     bool append(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length);
-
-	// Remove the content (nested key) of the variable.
-	Exec_stat remove(MCExecPoint& ep, MCNameRef *path, uindex_t length);
+    // Remove the content (nested key) of the variable.
     bool remove(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length);
 	
     bool setvalueref(MCValueRef value);
 	MCValueRef getvalueref(void);
 	bool copyasvalueref(MCValueRef& r_value);
 
-	Exec_stat eval(MCExecPoint& ep);
-	Exec_stat set(MCExecPoint& ep);
-	Exec_stat append(MCExecPoint& ep);
-	Exec_stat remove(MCExecPoint& ep);
-    
-	void eval(bool p_case_sensitive, MCValueRef &r_value);
+    bool eval(MCExecContext& ctxt, MCValueRef& r_value);
     bool set(MCExecContext& ctxt, MCValueRef p_value);
     bool append(MCExecContext& ctxt, MCValueRef p_value);
     bool remove(MCExecContext& ctxt);
@@ -693,91 +682,19 @@ public:
 	// transiently.
 	void grab(char *p_buffer, uint4 p_length);
 
-	//
-
-	//Exec_stat fetch(MCExecPoint& ep);
-	//Exec_stat store(MCExecPoint& ep, bool notify);
-
-#if 0
-	// Store the value in ep, into this variable.
-	// If notify is true, then update debugger state.
-	Exec_stat store(MCExecPoint& ep, Boolean notify)
-	{
-		MCValueRef t_new_value;
-		if (ep . copyasvalueref(t_new_value))
-		{
-			MCValueRelease(value);
-			t_new_value = value;
-			return ES_NORMAL;
-		}
-	}
-
-	// Store the value the value in ep, into the key key.
-	// If notify is true, then update debugger state.
-	Exec_stat store_element(MCExecPoint& ep, const MCString& k, Boolean notify)
-	{
-		Exec_stat stat;
-		stat = value . store_element(ep, k);
-		synchronize(ep, notify);
-		return stat;
-	}
-
-	// Fetch the value of this variable into ep.
-	Exec_stat fetch(MCExecPoint& ep)
-	{
-		if (ep . setvalueref(value))
-			return ES_NORMAL;
-		return ES_ERROR;
-	}
-#endif
-
-#if 0
-	// Fetch the value of key key, into ep
-	// Note that k can be owned by ep, it is used before ep is changed.
-	Exec_stat fetch_element(MCExecPoint& ep, const MCString& k)
-	{
-		return value . fetch_element(ep, k);
-	}
-#endif
-
-#if 0
-	// Append the value in ep to this variable
-	Exec_stat append(MCExecPoint& ep, Boolean notify)
-	{
-		Exec_stat stat;
-		stat = value . append(ep);
-		synchronize(ep, notify);
-		return stat;
-	}
-
-	// Append the value in ep to an element of this variable
-	Exec_stat append_element(MCExecPoint& ep, const MCString& k, Boolean notify)
-	{
-		Exec_stat stat;
-		stat = value . append_element(ep, k);
-		synchronize(ep, notify);
-		return stat;
-	}
-
-	// Remove the variable (this deletes any memory associated with it and
-	// unlinks the environment variable if appropriate)
-	Exec_stat remove(MCExecPoint& ep, Boolean notify);
-
-	// Remove the given key from the this variable
-	Exec_stat remove_element(MCExecPoint& ep, const MCString& k, Boolean notify)
-	{
-		Exec_stat stat;
-		stat = value . remove_element(ep, k);
-		synchronize(ep, notify);
-		return stat;
-	}
-#endif
+    Exec_stat eval(MCExecPoint& ep);
+    Exec_stat eval(MCExecPoint& ep, MCNameRef *path, uindex_t length);
+    Exec_stat set(MCExecPoint& ep);
+    Exec_stat set(MCExecPoint& ep, MCNameRef *path, uindex_t length);
+    Exec_stat append(MCExecPoint& ep);
+    Exec_stat append(MCExecPoint& ep, MCNameRef *path, uindex_t length);
+    Exec_stat remove(MCExecPoint& ep);
+    Exec_stat remove(MCExecPoint& ep, MCNameRef *path, uindex_t length);
 
 	// Apply any changes to the value to the 'special' part of the var.
 	// i.e. if it is an environment variable or the msg variable
-	// (ep is just used for local context vars)
-	void synchronize(MCExecPoint& ep, Boolean notify = False);
-    void synchronize(MCExecContext& ctxt, MCValueRef p_value, bool p_notify = false);
+    // (ep is just used for local context vars)
+    void synchronize(MCExecContext& ctxt, bool p_notify = false);
 
 	void setnext(MCVariable *n)
 	{
@@ -850,7 +767,7 @@ public:
 	Exec_stat append(MCExecPoint& ep);
 	Exec_stat remove(MCExecPoint& ep);
     
-    void eval(bool p_case_sensitive, MCValueRef& r_value);
+    bool eval(MCExecContext& ctxt, MCValueRef& r_value);
 	bool remove(MCExecContext& ctxt);
     bool set(MCExecContext& ctxt, MCValueRef p_value);
     bool append(MCExecContext& ctxt, MCValueRef p_value);
