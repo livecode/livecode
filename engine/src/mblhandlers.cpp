@@ -6152,9 +6152,6 @@ Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
 
 Exec_stat MCHandleControlCreate(void *context, MCParameter *p_parameters)
 {
-    MCExecPoint* t_ep_ptr;
-    t_ep_ptr = (MCExecPoint *)context;
-    
 	bool t_success;
 	t_success = true;
 	
@@ -6166,7 +6163,8 @@ Exec_stat MCHandleControlCreate(void *context, MCParameter *p_parameters)
 	if (t_success && p_parameters != nil)
 		t_success = MCParseParameters(p_parameters, "x", &(&t_control_name));
 
-    MCExecContext ctxt(*t_ep_ptr);
+    MCExecPoint ep(nil,nil,nil);
+    MCExecContext ctxt(ep);
     
     MCNativeControlExecCreateControl(ctxt, *t_type_name, *t_control_name);
     
