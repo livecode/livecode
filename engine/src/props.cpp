@@ -510,7 +510,6 @@ static PropList scrollbarprops[] =
         {"bottomColor", P_BOTTOM_COLOR},
         {"bottomPattern", P_BOTTOM_PATTERN},
         {"cantSelect", P_CANT_SELECT},
-        {"colors", P_COLORS},
         {"colorOverlay", P_BITMAP_EFFECT_COLOR_OVERLAY},
         {"disabled", P_DISABLED},
         {"dropShadow", P_BITMAP_EFFECT_DROP_SHADOW},

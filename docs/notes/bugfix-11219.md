@@ -1,0 +1,1 @@
+# Unable to set iPad status bar visibility independently of iPhone status bar visibility.
