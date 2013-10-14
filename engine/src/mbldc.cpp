@@ -232,6 +232,11 @@ void MCScreenDC::handle_key_press(uint32_t p_modifiers, uint32_t p_char_code, ui
 	MCStack *t_stack;
 	t_stack = (MCStack *)m_current_window;
 	
+	// MW-2013-10-01: [[ Bug 11199 ]] If the char code is ASCII, then make the keycode
+	//   match.
+	if (p_char_code >= 32 && p_char_code < 128)
+		p_key_code = p_char_code;
+	
 	MCEventQueuePostKeyPress(t_stack, p_modifiers, p_char_code, p_key_code);
 }
 

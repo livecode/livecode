@@ -1437,6 +1437,35 @@ static void OSX_CGContextClipToRegion(CGContextRef p_context, RgnHandle p_region
 	free(t_info . rectangles);
 }
 
+// MW-2013-10-01: [[ ImprovedPrint ]] Create a CGImageRef from encoded image data. If
+//   the image data type isn't supported false is returned.
+static bool MCImageDataToCGImage(MCImageDataType p_type, void *p_data_bits, uint32_t p_data_size, CGImageRef& r_image)
+{
+	if (p_type == kMCImageDataGIF)
+		return false;
+	
+	CGDataProviderRef t_source;
+	t_source = CGDataProviderCreateWithData(NULL, p_data_bits, p_data_size, NULL);
+	if (t_source == nil)
+		return false;
+	
+	CGImageRef t_image;
+	if (p_type == kMCImageDataPNG)
+		t_image = CGImageCreateWithPNGDataProvider(t_source, nil, true, kCGRenderingIntentDefault);
+	else
+		t_image = CGImageCreateWithJPEGDataProvider(t_source, nil, true, kCGRenderingIntentDefault);
+	
+	CGDataProviderRelease(t_source);
+	
+	if (t_image != nil)
+	{
+		r_image = t_image;
+		return true;
+	}
+	
+	return false;
+}
+
 //
 
 MCQuartzMetaContext::MCQuartzMetaContext(const MCRectangle& p_rect, int p_page_width, int p_page_height)
@@ -1474,12 +1503,25 @@ void MCQuartzMetaContext::render(PMPrintSession p_session, const MCPrinterRectan
 	}
 }
 
+// MW-2013-10-01: [[ ImprovedPrint ]] As Quartz supports printing transparency, only refuse
+//   to render blended or effect laden groups.
 bool MCQuartzMetaContext::candomark(MCMark *p_mark)
 {
-	// As currently implemented, the system contexts can do all marks unless it
-	// is a group. Group marks are only generated precisely when the (most feeble)
-	// system context cannot render it.
-	return p_mark -> type != MARK_TYPE_GROUP;
+	// We can definitely render all non-group marks.
+	if (p_mark -> type != MARK_TYPE_GROUP)
+		return true;
+	
+	// If the group has effects we cannot render them directly.
+	if (p_mark -> group . effects != nil)
+		return false;
+	
+	// If the group does not have srcOver type blendmode then we cannot render them directly.
+	if (p_mark -> group . function != GXcopy && p_mark -> group . function != GXblendSrcOver)
+		return false;
+	
+	// Otherwise we have a group which is potentially transparent which
+	// Quartz does support.
+	return true;
 }
 
 void MCQuartzMetaContext::domark(MCMark *p_mark)
@@ -1862,13 +1904,15 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 
 			t_dst_x = p_mark->image.dx - p_mark->image.sx;
 			t_dst_y = p_mark->image.dy - p_mark->image.sy;
-			
-			t_dst_width = p_mark->image.descriptor.bitmap->width;
-			t_dst_height = p_mark->image.descriptor.bitmap->height;
-			
-			t_src_bitmap = p_mark->image.descriptor.bitmap;
 
-			CGContextSaveGState(m_context);
+			// MW-2013-10-01: [[ ImprovedPrint ]] First attempt to create a CGImage with the input data (PNG etc.)
+			CGImageRef t_image = nil;
+			if (p_mark -> image . descriptor . angle == 0 && p_mark -> image . descriptor . data_type != kMCImageDataNone)
+				/* UNCHECKED */ MCImageDataToCGImage(p_mark -> image . descriptor . data_type, p_mark -> image . descriptor . data_bits, p_mark -> image . descriptor . data_size, t_image);
+			
+			// MW-2013-10-01: [[ ImprovedPrint ]] If we didn't manage to use the input data, use the bitmap instead.
+			if (t_image == nil)
+				/* UNCHECKED */ MCImageBitmapToCGImage(t_src_bitmap, false, t_image);
 
 			CGContextClipToRect(m_context, CGRectMake(p_mark -> image . dx, p_mark -> image . dy, p_mark -> image . sw, p_mark -> image . sh));
 			
@@ -1886,11 +1930,36 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			CGRect t_dst_rect;
 			t_dst_rect = CGRectMake(t_dst_x, t_dst_y, t_dst_width, t_dst_height);
 			
+			CGContextScaleCTM(m_context, 1.0f, -1.0f);
+			t_dst_rect . origin . y = -(t_dst_rect . origin . y + t_dst_rect . size . height);
 			CGContextDrawImage(m_context, t_dst_rect, t_image);
-			
-			CGContextRestoreGState(m_context);
-			
+		
+			// In theory this code should render hi-res including rotation, however something
+			// is slightly wrong with the transform logic somewhere...
+			/*CGContextSaveGState(m_context);
+			CGContextTranslateCTM(m_context, t_dst_rect . origin . x + t_dst_rect . size . width / 2.0f, -(t_dst_rect . origin . y + t_dst_rect . size . height / 2.0f));
+			CGContextScaleCTM(m_context, t_dst_width / CGImageGetWidth(t_image), t_dst_height / CGImageGetHeight(t_image));
+			CGContextRotateCTM(m_context, p_mark -> image . descriptor . angle * M_PI / 180.0f);
+			CGContextScaleCTM(m_context, 1.0f, -1.0f);
+			CGContextDrawImage(m_context, CGRectMake(-CGImageGetWidth(t_image) / 2.0f, -CGImageGetHeight(t_image) / 2.0f, CGImageGetWidth(t_image), CGImageGetHeight(t_image)), t_image);
+			CGContextRestoreGState(m_context);*/
+	
 			CGImageRelease(t_image);
+		}
+		break;
+			
+		case MARK_TYPE_GROUP:
+		{
+			if (p_mark -> group . opacity != 255)
+			{
+				CGContextSetAlpha(m_context, p_mark -> group . opacity / 255.0f);
+				CGContextBeginTransparencyLayer(m_context, NULL);
+				executegroup(p_mark);
+				CGContextEndTransparencyLayer(m_context);
+				CGContextSetAlpha(m_context, 1.0f);
+			}
+			else
+				executegroup(p_mark);
 		}
 		break;
 	}

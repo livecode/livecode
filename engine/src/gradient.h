@@ -82,6 +82,7 @@ struct MCGradientFill
 #define STOP_INT_PRECISION 16
 #define STOP_INT_MAX ((1 << STOP_INT_PRECISION) - 1)
 #define STOP_INT_MIRROR_MAX ((2 << STOP_INT_PRECISION) - 1)
+#define GRADIENT_ROUND_EPSILON (float)0.000005
 
 #define GRADIENT_AA_SCALE (2)
 

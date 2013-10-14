@@ -447,7 +447,9 @@ static bool datetime_parse(const MCDateTimeLocale *p_locale, int4 p_century_cuto
 			}
 
 		}
-		else if (*p_format != *t_input)
+		// FG-2013-10-08 [[ Bugfix 11261 ]]
+		// If there is an extra space in the format string, treat it as a match
+		else if (*p_format != *t_input && !isspace(*p_format))
 		{
 			// Unrecognised padding is optional, so advance and skip
 			if (t_loose_separators)
@@ -474,10 +476,27 @@ static bool datetime_parse(const MCDateTimeLocale *p_locale, int4 p_century_cuto
 		}
 		else
 		{
-			if (t_input_length > 0)
+			// FG-2013-09-10 [[ Bug 11162 ]]
+			// One or more spaces in the format string should accept any number of input spaces
+			// FG-2013-10-08 [[ Bug 11261 ]]
+			// Over-incrementing of format pointer caused internet dates to parse incorrectly
+			if (isspace(*p_format))
 			{
-				t_input += 1;
-				t_input_length -= 1;
+				while (t_input_length > 0 && isspace(*t_input))
+					t_input += 1, t_input_length -= 1;
+				
+				// Format is incremented past the current char below so just
+				// remove additional spaces here and leave one for it.
+				while (p_format[1] != '\0' && isspace(p_format[1]))
+					p_format++;
+			}
+			else
+			{
+				if (t_input_length > 0)
+				{
+					t_input += 1;
+					t_input_length -= 1;
+				}
 			}
 			t_valid = true;
 		}

@@ -238,7 +238,7 @@
 		4D221FDD171D65AA00E7E557 /* libcups.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A69171D574F00E7E557 /* libcups.dylib */; };
 		4D221FDE171D65AA00E7E557 /* libcurl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A6B171D574F00E7E557 /* libcurl.dylib */; };
 		4D221FDF171D65AA00E7E557 /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A6D171D574F00E7E557 /* libssl.dylib */; };
-		4D2A57AF1198634300135143 /* LiveCode.rsrc in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885620B80DEAC00200116 /* LiveCode.rsrc */; };
+		4D2A57AF1198634300135143 /* LiveCode-Community.rsrc in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885620B80DEAC00200116 /* LiveCode-Community.rsrc */; };
 		4D2A57B01198634300135143 /* da.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D58854C0B80DEAB00200116 /* da.lproj */; };
 		4D2A57B11198634300135143 /* French.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D58854E0B80DEAC00200116 /* French.lproj */; };
 		4D2A57B21198634300135143 /* Japanese.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885500B80DEAC00200116 /* Japanese.lproj */; };
@@ -288,7 +288,7 @@
 		4D5885790B80DEAC00200116 /* sv.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885650B80DEAC00200116 /* sv.lproj */; };
 		4D58857A0B80DEAC00200116 /* zh_CN.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885670B80DEAC00200116 /* zh_CN.lproj */; };
 		4D58857B0B80DEAC00200116 /* zh_TW.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885690B80DEAC00200116 /* zh_TW.lproj */; };
-		4D58857C0B80DEBE00200116 /* LiveCode.rsrc in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885620B80DEAC00200116 /* LiveCode.rsrc */; };
+		4D58857C0B80DEBE00200116 /* LiveCode-Community.rsrc in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885620B80DEAC00200116 /* LiveCode-Community.rsrc */; };
 		4D592DEB14EED23600EADBB6 /* fonttable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D592DEA14EED23600EADBB6 /* fonttable.cpp */; };
 		4D657F9917143B720086071B /* libpcre.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7999171348CD000BCF78 /* libpcre.a */; };
 		4D657F9A17143B750086071B /* libgif.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7991171348C1000BCF78 /* libgif.a */; };
@@ -351,7 +351,7 @@
 		4DDB666F14139FF500E5C84C /* tilecache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB666D14139FF500E5C84C /* tilecache.cpp */; };
 		4DDB66721413A02000E5C84C /* redraw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB66701413A02000E5C84C /* redraw.cpp */; };
 		4DDC26C9122692B10071CB31 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
-		4DE18D000B82296A0086DB92 /* LiveCode.rsrc in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885620B80DEAC00200116 /* LiveCode.rsrc */; };
+		4DE18D000B82296A0086DB92 /* LiveCode-Community.rsrc in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885620B80DEAC00200116 /* LiveCode-Community.rsrc */; };
 		4DE18D010B82296A0086DB92 /* da.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D58854C0B80DEAB00200116 /* da.lproj */; };
 		4DE18D020B82296A0086DB92 /* French.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D58854E0B80DEAC00200116 /* French.lproj */; };
 		4DE18D030B82296A0086DB92 /* Japanese.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885500B80DEAC00200116 /* Japanese.lproj */; };
@@ -1121,7 +1121,7 @@
 		4D58855E0B80DEAC00200116 /* fi.lproj */ = {isa = PBXFileReference; lastKnownFileType = folder; name = fi.lproj; path = rsrc/fi.lproj; sourceTree = "<group>"; };
 		4D5885600B80DEAC00200116 /* LiveCodeDoc.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = LiveCodeDoc.icns; path = rsrc/LiveCodeDoc.icns; sourceTree = "<group>"; };
 		4D5885610B80DEAC00200116 /* LiveCode.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = LiveCode.icns; path = rsrc/LiveCode.icns; sourceTree = "<group>"; };
-		4D5885620B80DEAC00200116 /* LiveCode.rsrc */ = {isa = PBXFileReference; lastKnownFileType = archive.rsrc; name = LiveCode.rsrc; path = rsrc/LiveCode.rsrc; sourceTree = "<group>"; };
+		4D5885620B80DEAC00200116 /* LiveCode-Community.rsrc */ = {isa = PBXFileReference; lastKnownFileType = archive.rsrc; name = "LiveCode-Community.rsrc"; path = "rsrc/LiveCode-Community.rsrc"; sourceTree = "<group>"; };
 		4D5885630B80DEAC00200116 /* Spanish.lproj */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Spanish.lproj; path = rsrc/Spanish.lproj; sourceTree = "<group>"; };
 		4D5885650B80DEAC00200116 /* sv.lproj */ = {isa = PBXFileReference; lastKnownFileType = folder; name = sv.lproj; path = rsrc/sv.lproj; sourceTree = "<group>"; };
 		4D5885670B80DEAC00200116 /* zh_CN.lproj */ = {isa = PBXFileReference; lastKnownFileType = folder; name = zh_CN.lproj; path = rsrc/zh_CN.lproj; sourceTree = "<group>"; };
@@ -1723,7 +1723,7 @@
 				4D5885610B80DEAC00200116 /* LiveCode.icns */,
 				A71F80610F4F17F9003012FD /* StandaloneDoc.icns */,
 				A71F80530F4F178C003012FD /* Standalone.icns */,
-				4D5885620B80DEAC00200116 /* LiveCode.rsrc */,
+				4D5885620B80DEAC00200116 /* LiveCode-Community.rsrc */,
 				4D5885630B80DEAC00200116 /* Spanish.lproj */,
 				4D5885650B80DEAC00200116 /* sv.lproj */,
 				4D5885670B80DEAC00200116 /* zh_CN.lproj */,
@@ -2826,7 +2826,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4DADCDFD12393F55003CD17C /* Installer.icns in Resources */,
-				4D2A57AF1198634300135143 /* LiveCode.rsrc in Resources */,
+				4D2A57AF1198634300135143 /* LiveCode-Community.rsrc in Resources */,
 				4D2A57B01198634300135143 /* da.lproj in Resources */,
 				4D2A57B11198634300135143 /* French.lproj in Resources */,
 				4D2A57B21198634300135143 /* Japanese.lproj in Resources */,
@@ -2848,7 +2848,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4D58857C0B80DEBE00200116 /* LiveCode.rsrc in Resources */,
+				4D58857C0B80DEBE00200116 /* LiveCode-Community.rsrc in Resources */,
 				4D58856B0B80DEAC00200116 /* da.lproj in Resources */,
 				4D58856C0B80DEAC00200116 /* French.lproj in Resources */,
 				4D58856D0B80DEAC00200116 /* Japanese.lproj in Resources */,
@@ -2872,7 +2872,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4DE18D000B82296A0086DB92 /* LiveCode.rsrc in Resources */,
+				4DE18D000B82296A0086DB92 /* LiveCode-Community.rsrc in Resources */,
 				4DE18D010B82296A0086DB92 /* da.lproj in Resources */,
 				4DE18D020B82296A0086DB92 /* French.lproj in Resources */,
 				4DE18D030B82296A0086DB92 /* Japanese.lproj in Resources */,

@@ -384,7 +384,6 @@ struct MCFontStruct
 
 #include <stdarg.h>
 #include <errno.h>
-#include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -392,6 +391,9 @@ struct MCFontStruct
 #include <math.h>
 #include <signal.h>
 #include <assert.h>
+#define _CTYPE_H
+
+#define _CTYPE_H
 
 #define SIGBOGUS 100
 
@@ -402,17 +404,31 @@ inline void *operator new(size_t, void *p)
 	return p;
 }
 
-extern uint1 *MClowercasingtable;
+extern uint1 MClowercasingtable[];
 inline uint1 MCS_tolower(uint1 p_char)
 {
 	return MClowercasingtable[p_char];
 }
 
-extern uint1 *MCuppercasingtable;
+extern uint1 MCuppercasingtable[];
 inline uint1 MCS_toupper(uint1 p_char)
 {
 	return MCuppercasingtable[p_char];
 }
+
+extern uint2 MCctypetable[];
+#define _ctype(x, y) ((MCctypetable[(x)] & (1 << (y))) != 0)
+#define isalpha(x) (_ctype(x, 0))
+#define isupper(x) (_ctype(x, 1))
+#define islower(x) (_ctype(x, 2))
+#define isdigit(x) (_ctype(x, 3))
+#define isspace(x) (_ctype(x, 4))
+#define isxdigit(x) (_ctype(x, 5))
+#define ispunct(x) (_ctype(x, 6))
+#define isalnum(x) (_ctype(x, 7))
+#define isprint(x) (_ctype(x, 8))
+#define isgraph(x) (_ctype(x, 9))
+#define iscntrl(x) (_ctype(x, 10))
 
 struct MCFontStruct
 {
