@@ -628,9 +628,6 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 		t_block -> setatts(P_IMAGE_SOURCE, (void *)t_valueref);
 	}
 
-	if (!MCValueIsEmpty(t_valueref))
-		MCValueRelease(t_valueref);
-
 }
 
 void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& x_paragraphs)
@@ -647,12 +644,8 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 				continue;
 
 			MCAutoArrayRef t_array;
-			if (!MCValueIsArray(t_block_entry))
-			{				
-				/* UNCHECKED */ ctxt . ConvertToArray(t_block_entry, &t_array);				
-			}
-			parsestyledtextblockarray(*t_array, x_paragraphs);
-			
+			if (ctxt . ConvertToArray(t_block_entry, &t_array))
+				parsestyledtextblockarray(*t_array, x_paragraphs);		
 		}
 		return;
 	}
