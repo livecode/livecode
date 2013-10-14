@@ -580,7 +580,7 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 		if (MCStringFirstIndexOfChar(*t_string, ',', 0, kMCCompareExact, t_comma))
 		{
 			MCAutoStringRef t_substring;
-			MCStringCopySubstringAndRelease(*t_string, MCRangeMake(0, t_comma), &t_substring);
+			MCStringCopySubstring(*t_string, MCRangeMake(0, t_comma), &t_substring);
 			t_valueref = MCValueRetain(*t_substring);
 		}
 	}
@@ -591,7 +591,6 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 		MCAutoStringRef t_string;
 		/* UNCHECKED */ ctxt . ConvertToString(t_valueref, &t_string);
 		t_block -> setatts(P_TEXT_FONT, (void *)MCStringGetCString(*t_string));
-		MCValueRelease(t_valueref);
 	}
 	
 	// Set textsize
@@ -647,12 +646,13 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 			if (!MCArrayFetchValueAtIndex(p_block_value, j, t_block_entry))
 				continue;
 
+			MCAutoArrayRef t_array;
 			if (!MCValueIsArray(t_block_entry))
-			{
-				MCArrayRef t_array;
-				/* UNCHECKED */ ctxt . ConvertToArray(t_block_entry, &t_array);
-
+			{				
+				/* UNCHECKED */ ctxt . ConvertToArray(t_block_entry, &t_array);				
+			}
 			parsestyledtextblockarray(*t_array, x_paragraphs);
+			
 		}
 		return;
 	}
@@ -728,8 +728,6 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 		parsestyledtextappendblock(t_paragraph, *t_style_entry, t_text_initial_ptr, t_text_final_ptr, t_metadata, t_is_unicode);
 		
 		MCValueRelease(t_metadata);
-		if (!MCValueIsEmpty(t_valueref))
-			MCValueRelease(t_valueref);
 
 		// And, if we need a new paragraph, add it.
 		if (t_add_paragraph)

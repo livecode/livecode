@@ -1305,8 +1305,8 @@ static void MCIPhoneDoDidBecomeActive(void *)
 		
 		if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
 		{
-			MCStringRef t_value;
-			t_value = (MCStringRef) MCValueRetain(MCresult -> getvalueref());
+			MCAutoStringRef t_value;
+			t_value = MCresult -> getvalueref();
 			NSLog(@"Startup error: %s\n", MCStringGetCString(t_value));
 			abort();
 			return;

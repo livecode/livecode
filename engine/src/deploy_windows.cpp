@@ -1115,22 +1115,20 @@ static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCArrayRe
 	t_file_version = t_product_version = 0;
 	if (t_success)
 	{
-        MCValueRef t_value1, t_value2;
+        MCValueRef t_value;
             
-        if (MCArrayFetchValue(p_info, false, MCNAME("FileVersion"), t_value1))
+        if (MCArrayFetchValue(p_info, false, MCNAME("FileVersion"), t_value))
 		{
-			MCAutoStringRef t_string1;
-			/* UNCHECKED */ ctxt . ConvertToString(t_value1, &t_string1);
-            t_file_version = MCWindowsVersionInfoParseVersion(*t_string1); 
+			MCAutoStringRef t_string;
+			/* UNCHECKED */ ctxt . ConvertToString(t_value, &t_string);
+            t_file_version = MCWindowsVersionInfoParseVersion(*t_string); 
 		}
-		if (MCArrayFetchValue(p_info, false, MCNAME("ProductVersion"), t_value2))
+		if (MCArrayFetchValue(p_info, false, MCNAME("ProductVersion"), t_value))
 		{
-			MCAutoStringRef t_string2;
-			/* UNCHECKED */ ctxt . ConvertToString(t_value2, &t_string2);
-            t_product_version = MCWindowsVersionInfoParseVersion(*t_string2);
+			MCAutoStringRef t_string;
+			/* UNCHECKED */ ctxt . ConvertToString(t_value, &t_string);
+            t_product_version = MCWindowsVersionInfoParseVersion(*t_string);
 		}
-		MCValueRelease(t_value1);
-		MCValueRelease(t_value2);
 	}
 	
 	MCWindowsVersionInfo *t_version_info;

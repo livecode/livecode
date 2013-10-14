@@ -647,7 +647,7 @@ private:
 			MCExecContext ctxt(ep);
 			MCAutoStringRef t_data;
 			/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)p_data, p_data_length, kMCStringEncodingNative, false, &t_data);
-			MCAutoStringRef t_value; 
+			MCStringRef t_value; 
 			/* UNCHECKED */ ctxt . ConvertToString(context -> var -> value, t_value);
 			/* UNCHECHED */ MCStringMutableCopyAndRelease(t_value, t_value);
 			if (!MCStringAppend(t_value, *t_data))
