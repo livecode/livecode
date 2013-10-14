@@ -697,7 +697,7 @@ bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initia
 	bool t_success;
 	t_success = true;
 	
-	CFStringRef cfoptions;
+	CFStringRef t_options;
 	NSArray *t_option_list_array;
 	
 	NSArray *t_initial_index_array;
@@ -707,10 +707,12 @@ bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initia
 	NSString *t_return_index = nil;
 	
 	// provide the correct encoding for the options list
-	/* UNCHECKED */ MCStringConvertToCFStringRef(p_options, cfoptions);
-
+	/* UNCHECKED */ MCStringConvertToCFStringRef(p_options, t_options);
+	
 	// convert the \n delimited item string into a pick wheel array
-	t_option_list_array = [NSArray arrayWithObject: [(NSString*)cfoptions componentsSeparatedByString:@"\n"]];
+	t_option_list_array = [NSArray arrayWithObject: [(NSString *)t_options componentsSeparatedByString:@"\n"]];
+	CFRelease(t_options);
+
 	// convert the initial index for each component into an array entry
 	t_initial_index_array = [NSArray arrayWithObject: [NSNumber numberWithInt: p_initial_index]];
 	// get the maximum number of digits needed for the entry column that was just added
