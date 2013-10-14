@@ -235,8 +235,12 @@ enum MCGGradientFunction
 {
 	kMCGGradientFunctionLinear,
 	kMCGGradientFunctionRadial,
-	kMCGGradientFunctionConical,
 	kMCGGradientFunctionSweep,
+	
+	kMCGLegacyGradientDiamond,
+	kMCGLegacyGradientSpiral,
+	kMCGLegacyGradientXY,
+	kMCGLegacyGradientSqrtXY,
 };
 
 enum MCGGradientTileMode

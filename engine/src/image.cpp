@@ -1355,23 +1355,17 @@ bool MCImage::lockshape(MCObjectShape& r_shape)
 		return true;
 	}
 	
-	// IM-2013-08-15: [[ ResIndependence ]] soft-mask doesn't work with scaled images so for now use the complex mask type
-	if (m_scale_factor != 1.0)
-	{
-		r_shape . type = kMCObjectShapeComplex;
-		r_shape . bounds = getrect();
-		return true;
-	}
-	else
-	{
-		// Otherwise we have a nice mask to pass back!
-		r_shape . type = kMCObjectShapeMask;
-		r_shape . bounds = getrect();
-		r_shape . mask . origin . x = r_shape . bounds . x;
-		r_shape . mask . origin . y = r_shape . bounds . y;
-		r_shape . mask . bits = t_bitmap;
-		return true;
-	}
+	// Otherwise we have a nice mask to pass back!
+	// MM-2012-10-03: [[ ResIndependence ]] Make sure we take into account the scale factor of the image when returning the mask.
+	//   Note that (as a side effect of transformed images no longer being cacehd) if the the image has a transform,
+	//   lockbitmap will create a new transformed image with a scale factor of 1. 
+	r_shape . type = kMCObjectShapeMask;
+	r_shape . bounds = getrect();
+	r_shape . mask . origin . x = r_shape . bounds . x;
+	r_shape . mask . origin . y = r_shape . bounds . y;
+	r_shape . mask . bits = t_bitmap;
+	r_shape . mask . scale = m_has_transform ? 1.0f : m_scale_factor;
+	return true;
 }
 
 void MCImage::unlockshape(MCObjectShape& p_shape)

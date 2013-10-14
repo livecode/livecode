@@ -590,14 +590,20 @@ void MCGraphicsContext::setgradient(MCGradientFill *p_gradient)
 				t_function = kMCGGradientFunctionRadial;
 				break;
 			case kMCGradientKindConical:
-				t_function = kMCGGradientFunctionConical;
-				break;
-			case kMCGradientKindDiamond:
 				t_function = kMCGGradientFunctionSweep;
 				break;
-				/*kMCGradientKindSpiral,
-				 kMCGradientKindXY,
-				 kMCGradientKindSqrtXY*/
+			case kMCGradientKindDiamond:
+				t_function = kMCGLegacyGradientDiamond;
+				break;
+			case kMCGradientKindSpiral:
+				t_function = kMCGLegacyGradientSpiral;
+				break;
+			case kMCGradientKindXY:
+				t_function = kMCGLegacyGradientXY;
+				break;
+			case kMCGradientKindSqrtXY:
+				t_function = kMCGLegacyGradientSqrtXY;
+				break;
 		}
 		
 		MCGImageFilter t_filter;
@@ -888,6 +894,16 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
 
 	MCGContextSave(m_gcontext);
 	MCGContextClipToRect(m_gcontext, t_clip);
+	
+	// MM-2013-10-03: [[ Bug ]] Make sure we apply the images transform before taking into account it's scale factor.
+	if (p_image.has_transform)
+	{
+		MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-t_dest.origin.x, -t_dest.origin.y);
+		t_transform = MCGAffineTransformConcat(p_image.transform, t_transform);
+		t_transform = MCGAffineTransformTranslate(t_transform, t_dest.origin.x, t_dest.origin.y);
+		
+		MCGContextConcatCTM(m_gcontext, t_transform);
+	}	
 
 	// IM-2013-07-19: [[ ResIndependence ]] if image has a scale factor then we need to scale the context before drawing
 	if (p_image.scale_factor != 0.0 && p_image.scale_factor != 1.0)
@@ -895,15 +911,6 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
 		MCGContextTranslateCTM(m_gcontext, t_dest.origin.x, t_dest.origin.y);
 		MCGContextScaleCTM(m_gcontext, 1.0 / p_image.scale_factor, 1.0 / p_image.scale_factor);
 		MCGContextTranslateCTM(m_gcontext, -t_dest.origin.x, -t_dest.origin.y);
-	}
-	
-	if (p_image.has_transform)
-	{
-		MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-t_dest.origin.x, -t_dest.origin.y);
-		t_transform = MCGAffineTransformConcat(p_image.transform, t_transform);
-		t_transform = MCGAffineTransformTranslate(t_transform, t_dest.origin.x, t_dest.origin.y);
-
-		MCGContextConcatCTM(m_gcontext, t_transform);
 	}
 
 	MCGContextDrawPixels(m_gcontext, t_raster, t_dest, p_image.filter);

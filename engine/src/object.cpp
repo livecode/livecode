@@ -3788,9 +3788,51 @@ struct object_mask_info
 	// The number of bytes from one scanline to the next in mask.
 	uint32_t stride;
 	
+	// MM-2012-10-03: [[ ResIndependence ]] The scale of the mask.
+	//  Note, the width property remains in logical pixels whilst the stride is multiplied by the scale.
+	MCGFloat scale;
+	
 	// This is freed after processing.
 	MCImageBitmap *temp_bitmap;
 };
+
+// MM-2012-10-03: [[ ResIndependence ]] Tweak of compute_objectshapescanline_soft to use the nearest pixel for scaled masks.
+static void compute_objectshapescanline_soft_scaled(object_mask_info& p_info, void *p_scanline, uint32_t p_threshold)
+{
+	uint32_t i;
+	for(i = 0; i < p_info . width - (p_info . width % 8); i += 8)
+	{
+		uint8_t t_mask;
+		t_mask = 0;
+		if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 0)) * 4 + 3] >= p_threshold) t_mask |= 1 << 7;
+		if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 1)) * 4 + 3] >= p_threshold) t_mask |= 1 << 6;
+		if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 2)) * 4 + 3] >= p_threshold) t_mask |= 1 << 5;
+		if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 3)) * 4 + 3] >= p_threshold) t_mask |= 1 << 4;
+		if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 4)) * 4 + 3] >= p_threshold) t_mask |= 1 << 3;
+		if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 5)) * 4 + 3] >= p_threshold) t_mask |= 1 << 2;
+		if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 6)) * 4 + 3] >= p_threshold) t_mask |= 1 << 1;
+		if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 7)) * 4 + 3] >= p_threshold) t_mask |= 1 << 0;
+		((char *)p_scanline)[i / 8] = t_mask;
+	}
+	
+	uint32_t t_mask;
+	t_mask = 0;
+	switch(p_info . width % 8)
+	{
+		case 7: if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 6)) * 4 + 3] >= p_threshold) t_mask |= 1 << 1;
+		case 6: if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 5)) * 4 + 3] >= p_threshold) t_mask |= 1 << 2;
+		case 5: if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 4)) * 4 + 3] >= p_threshold) t_mask |= 1 << 3;
+		case 4: if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 3)) * 4 + 3] >= p_threshold) t_mask |= 1 << 4;
+		case 3: if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 2)) * 4 + 3] >= p_threshold) t_mask |= 1 << 5;
+		case 2: if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 1)) * 4 + 3] >= p_threshold) t_mask |= 1 << 6;
+		case 1: if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 0)) * 4 + 3] >= p_threshold) t_mask |= 1 << 7;
+			((char *)p_scanline)[i / 8] = t_mask;
+			break;
+			
+		default:
+			break;
+	}
+}
 
 // This method fills a scanline for comparison from a soft mask.
 static void compute_objectshapescanline_soft(object_mask_info& p_info, void *p_scanline, uint32_t p_threshold)
@@ -3903,12 +3945,26 @@ static void compute_objectshape_mask(MCObject *p_object, MCObjectShape& p_shape,
 	
 		// What we setup depends on whether the mask is depth 1 or 8 and the threshold.
 		// If the threshold is not 1, we use soft bits if they are available.
-		r_mask . fill = compute_objectshapescanline_soft;
-		// IM-2013-05-10: fix wrong bit pointer offset due to adding stride (in bytes) to data (4-byte word pointer)
-		r_mask . bits = (uint8_t*)p_shape . mask . bits -> data + t_obj_rect . y * p_shape . mask . bits -> stride + t_obj_rect . x * sizeof(uint32_t);
-		r_mask . stride = p_shape . mask . bits -> stride;
-		r_mask . offset = 0;
 		
+		if (p_shape . mask . scale != 0.0f && p_shape . mask . scale != 1.0f)
+		{
+			// MM-2012-10-03: [[ ResIndependence ]] If the mask is scaled, make sure we take this into account.
+			//   At the moment we use a simple nearest pixel method - for a logical point x,y, find the nearest matching pixel in the scaled mask.
+			//   Make sure we adjust the offset within the mask appropriately as well as the stride.
+			r_mask . scale = p_shape . mask . scale;
+			r_mask . stride = (uint32_t)floorf(p_shape . mask . bits -> stride  * r_mask . scale);
+			r_mask . bits = (uint8_t*)p_shape . mask . bits -> data + (uint32_t)floorf(t_obj_rect . y * r_mask . scale) * r_mask . stride  + (uint32_t)floorf(t_obj_rect . x * r_mask . scale) * sizeof(uint32_t);
+			r_mask . fill = compute_objectshapescanline_soft_scaled;
+		}
+		else
+		{
+			// IM-2013-05-10: fix wrong bit pointer offset due to adding stride (in bytes) to data (4-byte word pointer)
+			r_mask . bits = (uint8_t*)p_shape . mask . bits -> data + t_obj_rect . y * p_shape . mask . bits -> stride + t_obj_rect . x * sizeof(uint32_t);
+			r_mask . fill = compute_objectshapescanline_soft;
+			r_mask . stride = p_shape . mask . bits -> stride;
+		}
+		
+		r_mask . offset = 0;				
 		r_mask . width = t_obj_rect . width;
 
 		return;
@@ -4022,7 +4078,7 @@ bool MCObject::intersects(MCObject *p_other, uint32_t p_threshold)
 		uint32_t *t_this_scanline, *t_other_scanline;
 		MCMemoryNewArray(t_scanline_width, t_this_scanline);
 		MCMemoryNewArray(t_scanline_width, t_other_scanline);
-		
+				
 		// If either of the masks are solid rects, then pre-fill the scanlines.
 		if (t_this_mask . fill == nil)
 			memset(t_this_scanline, 0xff, t_scanline_width * 4);
