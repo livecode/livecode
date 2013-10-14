@@ -8580,6 +8580,7 @@ void MCS_multibytetounicode(const char *s, uint4 len, char *d,
 	oldcharset = charset;
 }
 
+
 void MCS_nativetoutf16(const char *p_native, uint4 p_native_length, unsigned short *p_utf16, uint4& x_utf16_length)
 {
 	uint4 t_byte_length;

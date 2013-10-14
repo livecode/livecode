@@ -179,7 +179,7 @@ extern void MCU_fix_path(MCStringRef in, MCStringRef& r_out);
 extern void MCU_base64encode(MCExecPoint &ep);
 extern void MCU_base64decode(MCExecPoint &ep);
 extern void MCU_urlencode(MCExecPoint &ep);
-extern void MCU_urldecode(MCExecPoint &ep);
+extern void MCU_urldecode(MCStringRef p_source, MCStringRef& r_result);
 extern Boolean MCU_freeinserted(MCObjectList *&l);
 extern void MCU_cleaninserted();
 //extern Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep, uint2 line, uint2 pos);
