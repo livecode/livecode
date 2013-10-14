@@ -716,6 +716,21 @@ public:
     {
         return m_ep . gethandler();
     }
+	
+	void SetHandler(MCHandler *p_handler)
+	{
+		m_ep.sethandler(p_handler);
+	}
+	
+	MCHandlerlist *GetHandlerList()
+	{
+		return m_ep.gethlist();
+	}
+	
+	void SetHandlerList(MCHandlerlist *p_list)
+	{
+		m_ep.sethlist(p_list);
+	}
     
 	MCObject *GetObject(void)
 	{
