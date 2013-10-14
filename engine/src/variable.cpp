@@ -235,6 +235,23 @@ MCValueRef MCVariable::getvalueref(MCNameRef *p_path, uindex_t p_length, bool p_
 	return kMCEmptyString;
 }
 
+bool MCVariable::copyasvalueref(MCValueRef &r_value)
+{
+    return copyasvalueref(nil, 0, false, r_value);
+}
+
+bool MCVariable::copyasvalueref(MCNameRef *p_path, uindex_t p_length, bool p_case_sensitive, MCValueRef &r_value)
+{
+    MCValueRef t_value;
+    
+    t_value = getvalueref(p_path, p_length, p_case_sensitive);
+    
+    if (t_value != kMCEmptyString)
+        return MCValueCopy(t_value, r_value);
+    
+    return false;
+}
+
 Exec_stat MCVariable::eval(MCExecPoint& ep)
 {
 	return eval(ep, nil, 0);
