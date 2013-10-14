@@ -259,8 +259,6 @@ bool MCSystemStopTrackingSensor(MCSensorType p_sensor)
 
 bool MCSystemGetSensorAvailable(MCSensorType p_sensor)
 {
-    MCExecPoint ep(nil, nil, nil);
-
     switch (p_sensor)
     {
         case kMCSensorTypeLocation:
