@@ -674,11 +674,11 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return IO_NORMAL;
 }
 
-Exec_stat MCStack::resubstack(char *data)
+// I don't think this gets called from anywhere...
+Exec_stat MCStack::resubstack(MCStringRef p_data)
 {
 	Boolean iserror = False;
-	char *errorptr = NULL;
-	char *eptr = data;
+	MCAutoStringRef t_error;
 	
 	// MW-2012-09-07: [[ Bug 10372 ]] Record the old stack of substackedness so we
 	//   can work out later whether we need to extraopen/close.
@@ -687,20 +687,28 @@ Exec_stat MCStack::resubstack(char *data)
 	
 	MCStack *oldsubs = substacks;
 	substacks = NULL;
-	while ((eptr = strtok(eptr, "\n")) != NULL)
+	
+	MCAutoArrayRef t_array;
+	/* UNCHECKED */ MCStringSplit(p_data, MCSTR("\n"), nil, kMCStringOptionCompareExact, &t_array);
+	uindex_t t_count;
+	t_count = MCArrayGetCount(*t_array);
+	for (uindex_t i = 0; i < t_count; i++)
 	{
+		MCValueRef t_val;
+		/* UNCHECKED */ MCArrayFetchValueAtIndex(*t_array, i, t_val);
+		
 		// If tsub is one of the existing substacks of the stack, it is set to
 		// non-null, as it needs to be removed.
 		MCStack *tsub = oldsubs;
 		if (tsub != NULL)
 		{
-			// Lookup 'eptr' as a name, if it doesn't exist it can't exist as a substack
-			// name.
-			MCNameRef t_eptr_name;
-			t_eptr_name = MCNameLookupWithCString(eptr, kMCCompareCaseless);
-
-			if (t_eptr_name != nil)
-				while(tsub -> hasname(t_eptr_name))
+			// If t_val doesn't exist as a name, it can't exist as a substack name.
+			// t_val is always a stringref (fetched from an MCSplitString array)
+			MCNameRef t_name;
+			t_name = MCNameLookup((MCStringRef)t_val);
+		
+			if (t_name != nil)
+				while (tsub -> hasname(t_name))
 				{
 					tsub = (MCStack *)tsub->nptr;
 					if (tsub == oldsubs)
@@ -710,26 +718,28 @@ Exec_stat MCStack::resubstack(char *data)
 					}
 				}
 		}
-
+		
 		// OK-2008-04-10 : Added parameters to mainstackChanged message
 		Boolean t_was_mainstack;
 		if (tsub == NULL)
 		{
-			MCStack *toclone = MCdispatcher -> findstackname(eptr);
+			MCNewAutoNameRef t_name;
+			/* UNCHECKED */ MCNameCreate((MCStringRef)t_val, &t_name);
+			MCStack *toclone = MCdispatcher -> findstackname(*t_name);
 			t_was_mainstack = MCdispatcher -> ismainstack(toclone);	
-
+			
 			if (toclone != NULL)
-				/* UNCHECKED */ MCStackSecurityCopyStack(toclone, tsub);
+			/* UNCHECKED */ MCStackSecurityCopyStack(toclone, tsub);
 		}
 		else
 		{
 			// If we are here then it means tsub was found in the current list of
 			// substacks of this stack.
 			t_was_mainstack = False;
-
+			
 			tsub -> remove(oldsubs);
 		}
-
+		
 		if (tsub != NULL)
 		{
 			MCObject *t_old_mainstack;
@@ -737,7 +747,7 @@ Exec_stat MCStack::resubstack(char *data)
 				t_old_mainstack = tsub;
 			else
 				t_old_mainstack = tsub -> getparent();
-
+			
 			tsub->appendto(substacks);
 			tsub->parent = this;
 			tsub->message_with_valueref_args(MCM_main_stack_changed, t_old_mainstack -> getname(), getname());
@@ -745,10 +755,10 @@ Exec_stat MCStack::resubstack(char *data)
 		else
 		{
 			iserror = True;
-			errorptr = eptr;
+			t_error = ((MCStringRef)t_val);
 		}
-		eptr = NULL;
 	}
+	
 	while (oldsubs != NULL)
 	{
 		MCStack *dsub = (MCStack *)oldsubs->remove(oldsubs);
@@ -768,7 +778,7 @@ Exec_stat MCStack::resubstack(char *data)
 
 	if (iserror)
 	{
-		MCeerror->add(EE_STACK_BADSUBSTACK, 0, 0, errorptr);
+		MCeerror->add(EE_STACK_BADSUBSTACK, 0, 0, *t_error);
 		return ES_ERROR;
 	}
 
@@ -1149,17 +1159,17 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 }
 
 
-MCStack *MCStack::findstackfile_oldstring(const MCString &s)
+MCStack *MCStack::findstackfile(MCNameRef p_name)
 {
-	char *fname;
-	if ((fname = getstackfile(s)) != NULL)
+	MCAutoStringRef t_fname;
+	getstackfile(MCNameGetString(p_name), &t_fname);
+	if (!MCStringIsEmpty(*t_fname))
 	{
 		MCU_watchcursor(getstack(), False);
 		MCStack *tstk;
-		if (MCdispatcher->loadfile(fname, tstk) == IO_NORMAL)
+		if (MCdispatcher->loadfile(*t_fname, tstk) == IO_NORMAL)
 		{
-			delete fname;
-			MCStack *stackptr = tstk->findsubstackname_oldstring(s);
+			MCStack *stackptr = tstk->findsubstackname(p_name);
 			
 			// MW-2007-12-17: [[ Bug 266 ]] The watch cursor must be reset before we
 			//   return back to the caller.
@@ -1170,7 +1180,6 @@ MCStack *MCStack::findstackfile_oldstring(const MCString &s)
 			
 			return stackptr;
 		}
-		delete fname;
 		
 		// MW-2007-12-17: [[ Bug 266 ]] The watch cursor must be reset before we
 		//   return back to the caller.
@@ -1185,7 +1194,7 @@ MCStack *MCStack::findstackname(MCNameRef p_name)
 	if ((foundstk = findsubstackname(p_name)) != NULL)
 		return foundstk;
 	else
-		return MCdispatcher->findstackname(MCNameGetOldString(p_name));
+		return MCdispatcher->findstackname(p_name);
 }
 
 /* LEGACY */ MCStack *MCStack::findstackname_oldstring(const MCString &s)
