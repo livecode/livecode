@@ -1907,12 +1907,12 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 
 			// MW-2013-10-01: [[ ImprovedPrint ]] First attempt to create a CGImage with the input data (PNG etc.)
 			CGImageRef t_image = nil;
-			if (p_mark -> image . descriptor . angle == 0 && p_mark -> image . descriptor . data_type != kMCImageDataNone)
+			if (p_mark -> image . descriptor . data_type != kMCImageDataNone)
 				/* UNCHECKED */ MCImageDataToCGImage(p_mark -> image . descriptor . data_type, p_mark -> image . descriptor . data_bits, p_mark -> image . descriptor . data_size, t_image);
 			
 			// MW-2013-10-01: [[ ImprovedPrint ]] If we didn't manage to use the input data, use the bitmap instead.
 			if (t_image == nil)
-				/* UNCHECKED */ MCImageBitmapToCGImage(t_src_bitmap, false, t_image);
+				/* UNCHECKED */ MCImageBitmapToCGImage(t_src_bitmap, false, false, t_image);
 
 			CGContextClipToRect(m_context, CGRectMake(p_mark -> image . dx, p_mark -> image . dy, p_mark -> image . sw, p_mark -> image . sh));
 			
@@ -1923,10 +1923,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 				CGContextConcatCTM(m_context, t_transform);
 				CGContextTranslateCTM(m_context, -t_dst_x, -t_dst_y);
 			}
-			
-			CGImageRef t_image = nil;
-			/* UNCHECKED */ MCImageBitmapToCGImage(t_src_bitmap, false, true, t_image);
-			
+
 			CGRect t_dst_rect;
 			t_dst_rect = CGRectMake(t_dst_x, t_dst_y, t_dst_width, t_dst_height);
 			
