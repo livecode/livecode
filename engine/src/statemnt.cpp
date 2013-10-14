@@ -352,7 +352,7 @@ void MCStatement::compile(MCSyntaxFactoryRef ctxt)
 
 #ifdef _MOBILE
 extern bool MCIsPlatformMessage(MCNameRef handler_name);
-extern Exec_stat MCHandlePlatformMessage(MCExecPoint& ep, MCNameRef p_message, MCParameter *p_parameters);
+extern Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters);
 #endif
 
 MCComref::MCComref(MCNameRef n)
@@ -430,7 +430,7 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 #ifdef _MOBILE
     if (platform_message)
     {
-        return MCHandlePlatformMessage(ep, name, params);
+        return MCHandlePlatformMessage(name, params);
     }
 #endif
     

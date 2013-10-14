@@ -605,7 +605,7 @@ void MCExpression::compile_out(MCSyntaxFactoryRef ctxt)
 
 #ifdef _MOBILE
 extern bool MCIsPlatformMessage(MCNameRef handler_name);
-extern Exec_stat MCHandlePlatformMessage(MCExecPoint& ep, MCNameRef p_message, MCParameter *p_parameters);
+extern Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters);
 #endif 
 
 MCFuncref::MCFuncref(MCNameRef inname)
@@ -712,11 +712,7 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 #ifdef _MOBILE
     if (platform_message)
     {
-        Exec_stat t_stat;
-        t_stat = MCHandlePlatformMessage(ep, name, params);
-        if (t_stat == ES_NORMAL)
-            MCresult -> eval(ep);
-        return t_stat;
+        return MCHandlePlatformMessage(name, params);
     }
 #endif
 	// MW-2008-12-17: [[ Bug 7463 ]] Make sure we use the object from the execpoint, rather
