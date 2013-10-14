@@ -749,7 +749,7 @@ void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRe
 	}
 	else
 	{
-		MCSocketwrite *eptr = new MCSocketwrite(MCStringGetOldString(d), optr, mptr);
+		MCSocketwrite *eptr = new MCSocketwrite(d, optr, mptr);
 		eptr->appendto(s->wevents);
 		s->setselect();
 		if (mptr == NULL)
@@ -1010,13 +1010,13 @@ MCSocketread::~MCSocketread()
 	delete until;
 }
 
-MCSocketwrite::MCSocketwrite(const MCString &d, MCObject *o, MCNameRef m)
+MCSocketwrite::MCSocketwrite(MCStringRef d, MCObject *o, MCNameRef m)
 {
 	if (m != NULL)
-		buffer = d.clone();
+		buffer = strdup(MCStringGetCString(d));
 	else
-		buffer = (char *)d.getstring();
-	size = d.getlength();
+		buffer = (char *)MCStringGetCString(d);
+	size = MCStringGetLength(d);
 	timeout = curtime + MCsockettimeout;
 	optr = o;
 	done = 0;
