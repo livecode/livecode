@@ -948,7 +948,9 @@ void MCStack::SetMainStack(MCExecContext& ctxt, MCStringRef p_main_stack)
 {
 	MCStack *stackptr = nil;
 
-	if ((stackptr = MCdispatcher -> findstackname(MCStringGetOldString(p_main_stack))) == nil)
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreate(p_main_stack, &t_name);
+	if ((stackptr = MCdispatcher -> findstackname(*t_name)) == nil)
 	{
 		ctxt . LegacyThrow(EE_STACK_NOMAINSTACK);
 		return;
@@ -1112,7 +1114,9 @@ void MCStack::SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks)
 			bool t_was_mainstack;
 			if (tsub == nil)
 			{
-				MCStack *toclone = MCdispatcher -> findstackname(MCStringGetOldString(*t_name_string));
+				MCNewAutoNameRef t_name;
+				/* UNCHECKED */ MCNameCreate(*t_name_string, &t_name);
+				MCStack *toclone = MCdispatcher -> findstackname(*t_name);
 				t_was_mainstack = MCdispatcher -> ismainstack(toclone) == True;	
 
 				if (toclone != nil)
