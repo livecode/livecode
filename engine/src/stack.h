@@ -379,7 +379,7 @@ public:
 	void getstackfiles(MCExecPoint &);
 	void stringtostackfiles(MCStringRef d, MCStackfile **sf, uint2 &nf);
 	void setstackfiles(MCStringRef);
-	char *getstackfile(const MCString &);
+	void getstackfile(MCStringRef p_name, MCStringRef &r_name);
 	void setfilename(MCStringRef f);
 
 	virtual IO_stat load(IO_handle stream, const char *version, uint1 type);
@@ -391,7 +391,7 @@ public:
 	IO_stat save_stack(IO_handle stream, uint4 p_part, bool p_force_ext);
 	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
 
-	Exec_stat resubstack(char *data);
+	Exec_stat resubstack(MCStringRef p_data);
 	MCCard *getcardid(uint4 inid);
 	MCCard *findcardbyid(uint4 p_id);
 
@@ -401,7 +401,7 @@ public:
 	/* LEGACY */ MCObject *getAVname(Chunk_term type, MCStringRef);
     bool getAVname(Chunk_term type, MCNameRef p_name, MCObject*& r_object);
 	Exec_stat setcard(MCCard *card, Boolean recent, Boolean dynamic);
-	MCStack *findstackfile_oldstring(const MCString &s);
+	//MCStack *findstackfile_oldstring(const MCString &s);
 	MCStack *findstackname_oldstring(const MCString &);
 	MCStack *findsubstackname_oldstring(const MCString &);
 	MCStack *findstackfile(MCNameRef name);
@@ -776,8 +776,8 @@ public:
 	void GetBackgroundIds(MCExecContext& ctxt, MCStringRef& r_ids);
 	void GetSharedGroupNames(MCExecContext& ctxt, MCStringRef& r_names);
 	void GetSharedGroupIds(MCExecContext& ctxt, MCStringRef& r_ids);
-	void GetCardIds(MCExecContext& ctxt, MCStringRef& r_ids);
-	void GetCardNames(MCExecContext& ctxt, MCStringRef& r_names);
+    void GetCardIds(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_ids);
+    void GetCardNames(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_names);
 	void GetEditBackground(MCExecContext& ctxt, bool& r_value);
 	void SetEditBackground(MCExecContext& ctxt, bool p_value);
 	void GetExternals(MCExecContext& ctxt, MCStringRef& r_externals);

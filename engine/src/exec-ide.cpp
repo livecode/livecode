@@ -59,14 +59,14 @@ void MCIdeExecPutIntoMessage(MCExecContext& ctxt, MCStringRef p_value, int p_whe
 
 void MCIdeExecHideMessageBox(MCExecContext& ctxt)
 {
-	MCStack *mb = ctxt . GetObject()->getstack()->findstackname_oldstring(MCmessagenamestring);
+	MCStack *mb = ctxt . GetObject()->getstack()->findstackname(MCN_messagename);
 	if (mb != NULL)
 		mb->close();
 }
 
 void MCIdeExecShowMessageBox(MCExecContext& ctxt)
 {
-	MCStack *mb = ctxt . GetObject()->getstack()->findstackname_oldstring(MCmessagenamestring);
+	MCStack *mb = ctxt . GetObject()->getstack()->findstackname(MCN_messagename);
 
 	// MW-2007-08-14: [[ Bug 3310 ]] - "show message box" toplevels rather than palettes
 	if (mb != NULL)

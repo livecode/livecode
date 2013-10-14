@@ -427,20 +427,14 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 
 		resolved = true;
     }
-#ifdef _MOBILE
-    if (platform_message)
-    {
-        return MCHandlePlatformMessage(name, params);
-    }
-#endif
     
-	Exec_stat stat;
-	MCParameter *tptr = params;
+    Exec_stat stat;
+    MCParameter *tptr = params;
 	while (tptr != NULL)
 	{
 		MCVariable* t_var;
 		t_var = tptr -> evalvar(ep);
-
+        
 		if (t_var == NULL)
 		{
 			tptr -> clear_argument();
@@ -455,9 +449,9 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 		}
 		else
 			tptr->set_argument_var(t_var);
-
+        
 		tptr = tptr->getnext();
-
+        
 	}
 	MCObject *p = ep.getobj();
 	MCExecPoint *oldep = MCEPptr;
@@ -470,7 +464,14 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 		MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
 		added = True;
 	}
-
+    
+#ifdef _MOBILE
+    if (platform_message)
+    {
+        stat = MCHandlePlatformMessage(name, params);
+    }
+#endif
+    
 	if (handler != nil)
 	{
         // MW-2008-10-28: [[ ParentScripts ]] If we are in the context of a
