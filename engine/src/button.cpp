@@ -3459,21 +3459,19 @@ void MCButton::openmenu(Boolean grab)
 #ifdef _MOBILE
 	if (menumode == WM_OPTION)
 	{
-		// loop counter
-		int i;
 		// result of picker action
 		long t_result;
 		// item selection
 		uint32_t t_selected, t_chosen_option;
-		// temporary options string from which to select the new label
-		MCString t_menustringcopy;
+
 		// the selected item
 		// get a pointer to this 
 		MCButton *pptr;
 		pptr = this;
+		
 		// get the label and menu item strings
 		MCStringRef t_menustring;
-		t_menustring = getmenustring();
+		t_menustring = pptr->getmenustring();
 		
 		// process data using the pick wheel
 		t_selected = menuhistory;
