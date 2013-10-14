@@ -100,14 +100,17 @@ MCSErrorMode MCS_get_errormode(void)
 
 bool MCS_put(MCExecContext& ctxt, MCSPutKind p_kind, MCStringRef p_data)
 {   
+	ctxt . GetEP() . setvalueref(p_data);
 	switch(p_kind)
 	{
 	case kMCSPutOutput:
 	case kMCSPutBeforeMessage:
 	case kMCSPutIntoMessage:
-		return MCmb -> set(ctxt, p_data);
+		return MCmb -> set(ctxt.GetEP(), nil, 0) == ES_NORMAL;
+		//return MCmb -> set(ctxt, p_data);
 	case kMCSPutAfterMessage:
-		return MCmb -> append(ctxt, p_data);
+		return MCmb -> append(ctxt . GetEP(), nil, 0) == ES_NORMAL;
+		//return MCmb -> append(ctxt, p_data);
 	default:
 		break;
 	}
