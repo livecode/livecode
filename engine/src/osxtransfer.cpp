@@ -1036,7 +1036,7 @@ bool MCConvertMacHFSToFiles(MCDataRef p_data, MCDataRef& r_output)
 		if (!MCS_mac_fsref_to_path(t_fs_ref, &t_filename))
 			continue;
 		
-		/* UNCHECKED */ MCListAppendFormat(t_output_files, "%@", *t_filename);
+		/* UNCHECKED */ MCListAppend(t_output_files, *t_filename);
 	}
 
 	// Build the output stringref.
