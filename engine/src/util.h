@@ -178,7 +178,7 @@ extern Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef message, MCPar
 extern void MCU_fix_path(MCStringRef in, MCStringRef& r_out);
 extern void MCU_base64encode(MCExecPoint &ep);
 extern void MCU_base64decode(MCExecPoint &ep);
-extern void MCU_urlencode(MCExecPoint &ep);
+extern void MCU_urlencode(MCStringRef p_url, MCStringRef &r_encoded);
 extern void MCU_urldecode(MCExecPoint &ep);
 extern Boolean MCU_freeinserted(MCObjectList *&l);
 extern void MCU_cleaninserted();

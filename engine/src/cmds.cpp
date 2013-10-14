@@ -1534,7 +1534,8 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 				MCeerror->add(EE_PUT_CANTSETINTO, line, pos);
 				return ES_ERROR;
 			}
-			/* UNCHECKED */ ep . copyasstringref(&t_name);
+			if (!ep . copyasstringref(&t_name))
+				t_name = kMCEmptyString;
 			
 			uinteger_t t_expires;
 			t_expires = 0;
@@ -1558,8 +1559,11 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 					MCeerror->add(EE_PUT_CANTSETINTO, line, pos);
 					return ES_ERROR;
 				}
-				/* UNCHECKED */ ep . copyasstringref(&t_path);
+				if (!ep . copyasstringref(&t_path))
+					t_path = kMCEmptyString;
 			}
+			else
+				t_path = kMCEmptyString;
 			
 			MCAutoStringRef t_domain;
 			if (domain != nil)
@@ -1569,8 +1573,11 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 					MCeerror->add(EE_PUT_CANTSETINTO, line, pos);
 					return ES_ERROR;
 				}
-				/* UNCHECKED */ ep . copyasstringref(&t_domain);
+				if (!ep . copyasstringref(&t_domain))
+					t_domain = kMCEmptyString;
 			}
+			else
+				t_domain = kMCEmptyString;
 			
 			MCServerExecPutCookie(ctxt, *t_name, *t_string, t_expires, *t_path, *t_domain, is_secure, is_httponly);
 		}

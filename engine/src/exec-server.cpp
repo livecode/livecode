@@ -210,16 +210,11 @@ void MCServerExecPutMarkup(MCExecContext& ctxt, MCStringRef p_value, bool is_uni
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
-bool MCServerSetCookie(const MCString &p_name, const MCString &p_value, uint32_t p_expires, const MCString &p_path, const MCString &p_domain, bool p_secure, bool p_http_only);
+bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expires, MCStringRef p_path, MCStringRef p_domain, bool p_secure, bool p_http_only);
 void MCServerExecPutCookie(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_value, uinteger_t p_expires, MCStringRef p_path, MCStringRef p_domain, bool p_is_secure, bool p_http_only)
 {
 #ifdef _SERVER
-	MCString t_name, t_path, t_domain, t_value;
-	t_name = p_name != nil ? MCStringGetOldString(p_name) : MCnullmcstring;
-	t_value = p_value != nil ? MCStringGetOldString(p_value) : MCnullmcstring;
-	t_path = p_path != nil ? MCStringGetOldString(p_path) : MCnullmcstring;
-	t_domain = p_domain != nil ? MCStringGetOldString(p_domain) : MCnullmcstring;
-	MCServerSetCookie(t_name, t_value, p_expires, t_path, t_domain, p_is_secure, p_http_only);
+	MCServerSetCookie(p_name, p_value, p_expires, p_path, p_domain, p_is_secure, p_http_only);
 #endif
 }
 
