@@ -314,9 +314,20 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 			
 				// If the press was 'released' i.e. cancelled then we stop messages, mup then
 				// dispatch a mouseRelease message ourselves.
-				t_target -> setstate(True, CS_NO_MESSAGES);
-				t_target -> mup(t_event -> mouse . press . button + 1);
-				t_target -> setstate(False, CS_NO_MESSAGES);
+                
+                // FG-2013-10-09 [[ Bugfix 11208 ]]
+                // CS_NO_MESSAGES only applies to the target and not the controls it contains
+                // so the mouse up message (on mouseUp) sets sent when it isn't desired
+                // Hopefully nobody depends on the old behaviour...
+            
+                //t_target -> setstate(True, CS_NO_MESSAGES);
+				//t_target -> mup(t_event -> mouse . press . button + 1);
+				//t_target -> setstate(False, CS_NO_MESSAGES);
+                
+                bool old_lock = MClockmessages;
+                MClockmessages = true;
+                t_target -> mup(t_event -> mouse . press . button + 1);
+                MClockmessages = old_lock;
 				
 				t_target -> message_with_args(MCM_mouse_release, t_event -> mouse . press . button + 1);
 			}
