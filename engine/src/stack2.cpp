@@ -235,7 +235,7 @@ void MCStack::uniconify()
 		MCstacks->top(this);
 		curcard->message(MCM_uniconify_stack);
 		// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
-		dirtyall();
+		view_dirty_all();
 		resetcursor(True);
 		dirtywindowname();
 	}
@@ -1914,8 +1914,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	MCCard *startcard = curcard;
 
 	// MW-2011-08-19: [[ Redraw ]] Reset the update region.
-	MCRegionDestroy(m_update_region);
-	m_update_region = nil;
+	view_reset_updates();
 	setstate(False, CS_NEED_REDRAW);
 
 	// MW-2011-08-18: [[ Redraw ]] Make sure we don't save our lock.
@@ -2329,20 +2328,10 @@ void MCStack::dirtyrect(const MCRectangle& p_dirty_rect)
 			return;
 	}
 
-	// If there is no region yet, make one.
-	if (m_update_region == nil)
-		/* UNCHECKED */ MCRegionCreate(m_update_region);
-
-	// If we've not previously logged a redraw, we can just set a rect, else we
-	// need to do a union.
-	if (!getstate(CS_NEED_REDRAW))
-		MCRegionSetRect(m_update_region, t_actual_dirty_rect);
-	else
-		/* UNCHECKED */ MCRegionIncludeRect(m_update_region, t_actual_dirty_rect);
-
-	// Mark the stack as needing a redraw and schedule an update.
-	setstate(True, CS_NEED_REDRAW);
-	MCRedrawScheduleUpdateForStack(this);
+	MCRectangle t_view_rect;
+	t_view_rect = MCRectangleGetTransformedBounds(t_actual_dirty_rect, getviewtransform());
+	
+	view_dirty_rect(t_view_rect);
 }
 
 void MCStack::dirtyall(void)
@@ -2425,35 +2414,7 @@ void MCStack::applyupdates(void)
 	if (getstate(CS_TITLE_CHANGED))
 		setwindowname();
 
-	// Ensure the content is up to date.
-	if (getstate(CS_NEED_REDRAW))
-	{
-		// MW-2012-04-20: [[ Bug 10185 ]] Only update if there is a window to update.
-		//   (we can get here if a stack has its window taken over due to go in window).
-		if (window != nil)
-		{
-#ifdef _IOS_MOBILE
-			// MW-2013-03-20: [[ Bug 10748 ]] We defer switching the display class on iOS as
-			//   it causes flashes when switching between stacks.
-			extern void MCIPhoneSyncDisplayClass(void);
-			MCIPhoneSyncDisplayClass();
-#endif
-		
-			// MW-2011-09-08: [[ TileCache ]] If we have a tilecache, then attempt to update
-			//   it.
-			updatetilecache();
-
-			// MW-2011-09-08: [[ TileCache ]] Perform a redraw of the window within
-			//   the update region.
-			updatewindow(m_update_region);
-
-			// Clear the update region.
-			MCRegionSetEmpty(m_update_region);
-		}
-
-		// We no longer need to redraw.
-		setstate(False, CS_NEED_REDRAW);
-	}
+	view_apply_updates();
 
 #if defined(_DESKTOP)
 	// MW-2011-11-03: [[ Bug 9852 ]] If the previous blendlevel value is not the current
@@ -2545,10 +2506,9 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 	t_effect_area . height -= t_effect_area . y;
 	t_effect_area = MCU_intersect_rect(t_effect_area, p_area);
 	
-	if (view_getacceleratedrendering() && getstate(CS_NEED_REDRAW))
+	if (view_getacceleratedrendering() && view_need_redraw())
 	{
 		updatetilecache();
-		setstate(False, CS_NEED_REDRAW);
 	}
 	
 	if (!snapshottilecache(t_effect_area, m_snapshot))
@@ -2628,18 +2588,20 @@ void MCStack::updatewindow(MCRegionRef p_region)
 	view_updatestack(p_region);
 }
 
+MCGAffineTransform MCStack::gettransform(void) const
+{
+	// IM-2013-10-11: [[ FullscreenMode ]] Add scroll offset to stack transform
+	return MCGAffineTransformMakeTranslation(0.0, -(MCGFloat)getscroll());
+}
+
+MCGAffineTransform MCStack::getviewtransform(void) const
+{
+	return MCGAffineTransformConcat(view_getviewtransform(), gettransform());
+}
+
 MCGAffineTransform MCStack::getdevicetransform(void) const
 {
-	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
-	
-	// IM-2013-10-11: [[ FullscreenMode ]] Add scroll offset to stack transform
-	MCGAffineTransform t_transform;
-	t_transform = MCGAffineTransformMakeTranslation(0.0, -(MCGFloat)getscroll());
-	t_transform = MCGAffineTransformConcat(view_getviewtransform(), t_transform);
-	t_transform = MCGAffineTransformScale(t_transform, t_scale, t_scale);
-	
-	return t_transform;
+	return MCGAffineTransformConcat(MCResGetDeviceTransform(), getviewtransform());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -30,6 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "resolution.h"
 
 #include "tilecache.h"
+#include "redraw.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -126,24 +127,30 @@ void MCStack::view_init(void)
 {
 	m_view_fullscreen = false;
 	m_view_fullscreenmode = kMCStackFullscreenModeDefault;
-	m_view_redraw = false;
 
 	m_view_stack_rect = m_view_rect = MCRectangleMake(0, 0, 0, 0);
 	
 	// MW-2011-08-26: [[ TileCache ]] Stacks start off with no tilecache.
 	m_view_tilecache = nil;
+	m_view_bg_layer_id = 0;
+	
+	// MW-2011-08-19: [[ Redraw ]] Initialize the view's update region
+	m_view_update_region = nil;
 }
 
 void MCStack::view_copy(const MCStack &p_view)
 {
 	m_view_fullscreen = p_view.m_view_fullscreen;
 	m_view_fullscreenmode = p_view.m_view_fullscreenmode;
-	m_view_redraw = false;
 
 	m_view_stack_rect = p_view.m_view_stack_rect;
 	
 	// MW-2011-08-26: [[ TileCache ]] Stacks start off with no tilecache.
 	m_view_tilecache = nil;
+	m_view_bg_layer_id = 0;
+
+	// MW-2011-08-19: [[ Redraw ]] Initialize the view's update region
+	m_view_update_region = nil;
 }
 
 void MCStack::view_destroy(void)
@@ -151,6 +158,9 @@ void MCStack::view_destroy(void)
 	// MW-2011-08-26: [[ TileCache ]] Destroy the stack's tilecache - if any.
 	MCTileCacheDestroy(m_view_tilecache);
 	m_view_tilecache = nil;
+
+	// MW-2011-08-19: [[ Redraw ]] Destroy the view's update region.
+	MCRegionDestroy(m_view_update_region);
 }
 
 void MCStack::view_setfullscreen(bool p_fullscreen)
@@ -286,13 +296,18 @@ void MCStack::view_on_rect_changed(void)
 	}
 	
 	if (view_getfullscreen())
-		m_view_redraw = true;
+		view_dirty_all();
 }
 
 void MCStack::view_setrect(const MCRectangle &p_rect)
 {
 	if (MCU_equal_rect(p_rect, m_view_rect))
 		return;
+	
+	MCLog("MCStack<%p>::view_setrect({%d,%d,%d,%d})", this, p_rect.x, p_rect.y, p_rect.width, p_rect.height);
+	
+	MCRectangle t_old_rect;
+	t_old_rect = m_view_rect;
 	
 	// IM-2013-10-08: [[ FullscreenMode ]] Update view rect before calling setsizehints()
 	m_view_rect = p_rect;
@@ -310,6 +325,8 @@ void MCStack::view_setrect(const MCRectangle &p_rect)
 
 MCRectangle MCStack::view_setstackviewport(const MCRectangle &p_rect)
 {
+	MCLog("MCStack<%p>::view_setstackviewport({%d,%d,%d,%d}", this, p_rect.x, p_rect.y, p_rect.width, p_rect.height);
+
 	MCRectangle t_view_rect;
 	MCGAffineTransform t_transform;
 	
@@ -342,7 +359,8 @@ MCRectangle MCStack::view_setstackviewport(const MCRectangle &p_rect)
 	if (!MCGAffineTransformIsEqual(t_transform, m_view_transform))
 	{
 		m_view_transform = t_transform;
-		dirtyall();
+		
+		view_dirty_all();
 	}
 	
 	return m_view_stack_rect;
@@ -380,7 +398,12 @@ void MCStack::view_render(MCGContextRef p_target, MCRectangle p_rect)
 		MCGContextSave(p_target);
 		MCGContextConcatCTM(p_target, m_view_transform);
 		
-		if (!MCU_rect_in_rect(t_update_rect, m_view_stack_rect))
+		// IM-2013-10-14: [[ FullscreenMode ]] Logical stack rect has 0,0 origin
+		MCRectangle t_stack_rect;
+		t_stack_rect = m_view_stack_rect;
+		t_stack_rect.x = t_stack_rect.y = 0;
+		
+		if (!MCU_rect_in_rect(t_update_rect, t_stack_rect))
 		{
 			// IM-2013-10-08: [[ FullscreenMode ]] draw the view backdrop if the render area
 			// falls outside the stack rect
@@ -402,6 +425,26 @@ void MCStack::view_render(MCGContextRef p_target, MCRectangle p_rect)
 
 }
 
+// IM-2013-10-14: [[ FullscreenMode ]] Move update region tracking into view abstraction
+void MCStack::view_updatewindow(void)
+{
+	if (m_view_update_region == nil)
+		return;
+	
+	MCGAffineTransform t_transform;
+	t_transform = MCResGetDeviceTransform();
+	
+	// transform view region to device region
+	MCRegionRef t_device_region;
+	t_device_region = nil;
+	
+	/* UNCHECKED */ MCRegionTransform(m_view_update_region, t_transform, t_device_region);
+	
+	device_updatewindow(t_device_region);
+	
+	MCRegionDestroy(t_device_region);
+}
+
 void MCStack::view_updatestack(MCRegionRef p_region)
 {
 	MCGAffineTransform t_transform;
@@ -412,17 +455,6 @@ void MCStack::view_updatestack(MCRegionRef p_region)
 	t_view_region = nil;
 
 	/* UNCHECKED */ MCRegionTransform(p_region, t_transform, t_view_region);
-	
-	// IM-2013-09-30: [[ FullscreenMode ]] If view background needs redrawn, add view rect
-	// (in device coords) to redraw region
-	if (view_getfullscreen() && m_view_redraw)
-	{
-		// IM-2013-10-08: [[ FullscreenMode ]] As we're now checking the redraw rect to
-		// determine when to draw the background, we can unset m_view_redraw once we've
-		// added the view rect to the update region.
-		MCRegionIncludeRect(t_view_region, MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(m_view_rect)));
-		m_view_redraw = false;
-	}
 	
 	device_updatewindow(t_view_region);
 
@@ -463,7 +495,7 @@ void MCStack::view_setacceleratedrendering(bool p_value)
 		
 		// MW-2012-03-15: [[ Bug ]] Make sure we dirty the stack to ensure all the
 		//   layer mode attrs are rest.
-		dirtyall();
+		view_dirty_all();
 		
 		return;
 	}
@@ -519,7 +551,7 @@ void MCStack::view_setacceleratedrendering(bool p_value)
 	MCTileCacheSetViewport(m_view_tilecache, t_device_rect);
 	MCTileCacheSetCompositor(m_view_tilecache, t_compositor_type);
 	
-	dirtyall();
+	view_dirty_all();
 }
 
 //////////
@@ -559,7 +591,7 @@ void MCStack::view_setcompositortype(MCTileCacheCompositorType p_type)
 		MCTileCacheSetCompositor(m_view_tilecache, p_type);
 	}
 	
-	dirtyall();
+	view_dirty_all();
 }
 
 //////////
@@ -577,7 +609,7 @@ void MCStack::view_setcompositorcachelimit(uint32_t p_limit)
 	if (m_view_tilecache != nil)
 	{
 		MCTileCacheSetCacheLimit(m_view_tilecache, p_limit);
-		dirtyall();
+		view_dirty_all();
 	}
 }
 
@@ -601,11 +633,21 @@ void MCStack::view_setcompositortilesize(uint32_t p_size)
 	if (m_view_tilecache != nil)
 	{
 		MCTileCacheSetTileSize(m_view_tilecache, p_size);
-		dirtyall();
+		view_dirty_all();
 	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool view_device_render_background(void *p_context, MCGContextRef p_target, const MCRectangle& p_rectangle)
+{
+	/* OVERHAUL - REVISIT: currently just draws black behind the stack area */
+	MCGContextAddRectangle(p_target, MCRectangleToMCGRectangle(p_rectangle));
+	MCGContextSetFillRGBAColor(p_target, 0.0, 0.0, 0.0, 1.0);
+	MCGContextFill(p_target);
+	
+	return true;
+}
 
 void MCStack::view_updatetilecache(void)
 {
@@ -618,6 +660,24 @@ void MCStack::view_updatetilecache(void)
 	
 	MCTileCacheBeginFrame(m_view_tilecache);
 	curcard -> render();
+
+	// IM-2013-10-14: [[ FullscreenMode ]] Add tilecache scenery layer to render the view background
+	
+	// Final step is to render the background. Note that the background layer
+	// really only needs to be the rect rounded outward to the nearest tile
+	// boundaries, but 8192, 8192 is bigger than it can ever be at present so
+	// is an easier alternative.
+	MCTileCacheLayer t_bg_layer;
+	t_bg_layer . id = m_view_bg_layer_id;
+	t_bg_layer . region = MCU_make_rect(0, 0, 8192, 8192);
+	t_bg_layer . is_opaque = true;
+	t_bg_layer . opacity = 255;
+	t_bg_layer . ink = GXblendSrcOver;
+	t_bg_layer . callback = view_device_render_background;
+	t_bg_layer . context = this;
+	MCTileCacheRenderScenery(m_view_tilecache, t_bg_layer);
+	m_view_bg_layer_id = t_bg_layer . id;
+	
 	MCTileCacheEndFrame(m_view_tilecache);
 }
 
@@ -665,6 +725,83 @@ bool MCStack::view_snapshottilecache(const MCRectangle &p_stack_rect, MCGImageRe
 	MCRectangle t_device_rect;
 	t_device_rect = MCRectangleGetTransformedBounds(p_stack_rect, getdevicetransform());
 	return MCTileCacheSnapshot(m_view_tilecache, t_device_rect, r_image);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2013-10-14: [[ FullscreenMode ]] Move update region tracking into view abstraction
+void MCStack::view_apply_updates()
+{
+	// Ensure the content is up to date.
+	if (m_view_need_redraw)
+	{
+		// MW-2012-04-20: [[ Bug 10185 ]] Only update if there is a window to update.
+		//   (we can get here if a stack has its window taken over due to go in window).
+		if (window != nil)
+		{
+#ifdef _IOS_MOBILE
+			// MW-2013-03-20: [[ Bug 10748 ]] We defer switching the display class on iOS as
+			//   it causes flashes when switching between stacks.
+			extern void MCIPhoneSyncDisplayClass(void);
+			MCIPhoneSyncDisplayClass();
+#endif
+			
+			// MW-2011-09-08: [[ TileCache ]] If we have a tilecache, then attempt to update
+			//   it.
+			updatetilecache();
+			
+			// MW-2011-09-08: [[ TileCache ]] Perform a redraw of the window within
+			//   the update region.
+			view_updatewindow();
+			
+			// Clear the update region.
+			MCLog("\tClear update region", nil);
+			MCRegionSetEmpty(m_view_update_region);
+		}
+		
+		// We no longer need to redraw.
+		m_view_need_redraw = false;
+	}
+}
+
+// IM-2013-10-14: [[ FullscreenMode ]] Move update region tracking into view abstraction
+void MCStack::view_reset_updates()
+{
+	MCRegionDestroy(m_view_update_region);
+	m_view_update_region = nil;
+	m_view_need_redraw = false;
+}
+
+// IM-2013-10-14: [[ FullscreenMode ]] Move update region tracking into view abstraction
+void MCStack::view_dirty_rect(const MCRectangle &p_rect)
+{
+	MCRectangle t_view_rect;
+	t_view_rect = MCRectangleMake(0, 0, m_view_rect.width, m_view_rect.height);
+	
+	MCRectangle t_dirty_rect;
+	t_dirty_rect = MCU_intersect_rect(p_rect, t_view_rect);
+	
+	if (t_dirty_rect.width == 0 || t_dirty_rect.height == 0)
+		return;
+	
+	// If there is no region yet, make one.
+	if (m_view_update_region == nil)
+		/* UNCHECKED */ MCRegionCreate(m_view_update_region);
+	
+	MCRegionIncludeRect(m_view_update_region, t_dirty_rect);
+	
+	// Mark the stack as needing a redraw and schedule an update.
+	m_view_need_redraw = true;
+
+	MCRedrawScheduleUpdateForStack(this);
+}
+
+// IM-2013-10-14: [[ FullscreenMode ]] Move update region tracking into view abstraction
+void MCStack::view_dirty_all(void)
+{
+	view_dirty_rect(MCRectangleMake(0, 0, m_view_rect.width, m_view_rect.height));
+	
+	dirtyall();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

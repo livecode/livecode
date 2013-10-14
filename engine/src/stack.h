@@ -180,10 +180,6 @@ protected:
 	
 	MCExternalHandlerList *m_externals;
 
-	// MW-2011-08-19: [[ Redraw ]] The region of the stack that needs to be
-	//   drawn to the screen on the next update.
-	MCRegionRef m_update_region;
-
 	// MW-2011-09-12: [[ MacScroll ]] The current y-scroll setting of the stack.
 	int32_t m_scroll;
 	
@@ -214,12 +210,20 @@ protected:
 	MCRectangle m_view_stack_rect;
 	MCRectangle m_view_rect;
 
-	bool m_view_redraw;
+	// IM-2013-10-14: [[ FullscreenMode ]] Indicates whether the view needs to be redrawn
+	bool m_view_need_redraw;
 	
 	MCGAffineTransform m_view_transform;
 
 	// MW-2011-08-26: [[ TileCache ]] The stack's tilecache renderer - if any.
 	MCTileCacheRef m_view_tilecache;
+
+	// IM-2013-10-14: [[ FullscreenMode ]] The tilecache layer ID of the view background
+	uint32_t m_view_bg_layer_id;
+	
+	// MW-2011-08-19: [[ Redraw ]] The region of the view that needs to be
+	//   drawn to the screen on the next update.
+	MCRegionRef m_view_update_region;
 	
 public:
 	Boolean menuwindow;
@@ -380,9 +384,26 @@ public:
 	// IM-2013-10-10: [[ FullscreenMode ]] Notify view of changes to its bounds
 	void view_on_rect_changed(void);
 	
+	bool view_need_redraw(void) const { return m_view_need_redraw; }
+	
+	// IM-2013-10-14: [[ FullscreenMode ]] Clear any pending updates of the view
+	void view_reset_updates(void);
+	// IM-2013-10-14: [[ FullscreenMode ]] Mark the given view region as needing redrawn
+	void view_dirty_rect(const MCRectangle &p_rect);
+	// IM-2013-10-14: [[ FullscreenMode ]] Mark the entire view surface as needing redrawn
+	void view_dirty_all(void);
+	// IM-2013-10-14: [[ FullscreenMode ]] Request a redraw of the marked areas
+	void view_updatewindow(void);
+	// IM-2013-10-14: [[ FullscreenMode ]] Ensure the view content is up to date
+	void view_apply_updates(void);
+	
 	//////////
 	
-	// Return the stack -> device coordinate transform
+	// IM-2013-10-14: [[ FullscreenMode ]] Return the stack -> stack viewport coordinate transform (Currently only applies the stack vertical scroll)
+	MCGAffineTransform gettransform(void) const;
+	// IM-2013-10-14: [[ FullscreenMode ]] Return the stack -> view coordinate transform
+	MCGAffineTransform getviewtransform(void) const;
+	// IM-2013-10-14: [[ FullscreenMode ]] Return the stack -> device coordinate transform
 	MCGAffineTransform getdevicetransform(void) const;
 	
 	//////////

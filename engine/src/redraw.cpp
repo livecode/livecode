@@ -1067,6 +1067,12 @@ void MCCard::render(void)
 	MCGAffineTransform t_transform;
 	t_transform = getstack()->getdevicetransform();
 	
+	// IM-2013-10-14: [[ FullscreenMode ]] Get the visible area of the stack
+	MCRectangle t_visible_rect;
+	t_visible_rect = getstack()->getrect();
+	t_visible_rect.x = 0;
+	t_visible_rect.y = getstack()->getscroll();
+	
 	MCObjptr *t_objptrs;
 	t_objptrs = getobjptrs();
 	if (t_objptrs != nil)
@@ -1121,6 +1127,9 @@ void MCCard::render(void)
 				t_layer . clip = t_control -> geteffectiverect();
 			}
 
+			// IM-2013-10-14: [[ FullscreenMode ]] Constrain each layer to the visible area
+			t_layer . region = MCU_intersect_rect(t_layer . region, t_visible_rect);
+			t_layer . clip = MCU_intersect_rect(t_layer . clip, t_visible_rect);
 			// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
 			// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
 			t_layer . region = MCRectangleGetTransformedBounds(t_layer . region, t_transform);
@@ -1168,13 +1177,11 @@ void MCCard::render(void)
 		while(t_objptr != t_objptrs -> prev());
 	}
 
-	// Final step is to render the background. Note that the background layer
-	// really only needs to be the rect rounded outward to the nearest tile
-	// boundaries, but 8192, 8192 is bigger than it can ever be at present so
-	// is an easier alternative.
+	// IM-2013-10-14: [[ FullscreenMode ]] Render the background into the card's visible area
 	MCTileCacheLayer t_bg_layer;
 	t_bg_layer . id = m_bg_layer_id;
-	t_bg_layer . region = MCU_make_rect(0, 0, 8192, 8192);
+	t_bg_layer . region = t_visible_rect;
+	t_bg_layer . clip = t_visible_rect;
 	t_bg_layer . is_opaque = true;
 	t_bg_layer . opacity = 255;
 	t_bg_layer . ink = GXblendSrcOver;
@@ -1269,7 +1276,7 @@ void MCRedrawDirtyScreen(void)
 	do
 	{
 		MCStack *sptr = tptr->getstack();
-		sptr -> dirtyall();
+		sptr -> view_dirty_all();
 		tptr = tptr->prev();
 	}
 	while (tptr != t_stacks -> prev());

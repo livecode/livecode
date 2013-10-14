@@ -118,9 +118,6 @@ MCStack::MCStack()
 	f_extended_state = 0;
 	m_externals = NULL;
 
-	// MW-2011-08-19: [[ Redraw ]] Initialize the stack's update region
-	m_update_region = nil;
-
 	// MW-2011-09-12: [[ MacScroll ]] There is no scroll to start with.
 	m_scroll = 0;
 
@@ -306,9 +303,6 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 
 	m_externals = NULL;
 
-	// MW-2011-08-19: [[ Redraw ]] Initialize the stack's update region
-	m_update_region = nil;
-
 	// MW-2011-09-12: [[ MacScroll ]] There is no scroll to start with.
 	m_scroll = 0;
 	
@@ -438,9 +432,6 @@ MCStack::~MCStack()
 	unloadexternals();
 
 	MCEventQueueFlush(this);
-
-	// MW-2011-08-19: [[ Redraw ]] Destroy the stack's update region.
-	MCRegionDestroy(m_update_region);
 
 	// MW-2011-09-13: [[ Redraw ]] If there is snapshot, get rid of it.
 	MCGImageRelease(m_snapshot);

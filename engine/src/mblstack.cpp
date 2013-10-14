@@ -123,8 +123,9 @@ void MCStack::setgeom(void)
 		return;
 	
 	// IM-2013-10-03: [[ FullscreenMode ]] Use view methods to get / set the stack viewport
+	// IM-2013-10-14: [[ FullscreenMode ]] Compare the new rect with the stack's existing rect
 	MCRectangle t_old_rect;
-	t_old_rect = view_getstackviewport();
+	t_old_rect = rect;
 	
 	rect = view_setstackviewport(rect);
 	
