@@ -2424,6 +2424,10 @@ enum Exec_errors
     // TD-2013-06-24: [[ DynamicFonts ]]
     // {EE-0798} font: couldn't find font
 	EE_FONT_BADFILEEXP,
+
+	// IM-2013-09-22: [[ FullscreenMode ]]
+	// {EE-0799} fullscreenmode: not a valid mode
+	EE_STACK_BADFULLSCREENMODE,
 };
 
 extern const char *MCexecutionerrors;

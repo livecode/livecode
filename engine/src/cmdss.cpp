@@ -861,7 +861,7 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 		
 		// MW-2011-10-17: [[ Bug 9811 ]] Make sure we configure the new card now.
 		MCRedrawDisableScreenUpdates();
-		sptr -> configure(True);
+		sptr -> view_configure(True);
 		MCRedrawEnableScreenUpdates();
 			
 		Boolean t_abort;

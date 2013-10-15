@@ -41,6 +41,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "redraw.h"
 
+#include "graphics_util.h"
+
 #ifdef _WINDOWS_DESKTOP
 #include "w32prefix.h"
 #include "w32dc.h"
@@ -2016,15 +2018,16 @@ void MCPlayer::qt_click(bool p_state, uint4 p_button)
 		if ((MCmodifierstate & MS_MOD1) != 0)
 			t_modifiers |= (1 << optionKeyBit);
 		
-		MCRectangle t_rect;
-		t_rect = getstack() -> getrect();
+		// IM-2013-10-11: [[ FullscreenMode ]] Update to use stack coord conversion methods
+		MCPoint t_loc;
+		t_loc = getstack()->stacktogloballoc(MCPointMake(t_where.h, t_where.v));
 		
 		EventRecord t_event;
 		t_event . what = p_state ? mouseDown : mouseUp;
 		t_event . message = 0;
 		t_event . when = t_when;
-		t_event . where . h = t_rect . x + t_where . h;
-		t_event . where . v = t_rect . y + t_where . v - getstack() -> getscroll();
+		t_event . where . h = t_loc.x;
+		t_event . where . v = t_loc.y;
 		t_event . message = 0;
 		t_event . modifiers = t_modifiers;
 		

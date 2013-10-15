@@ -299,7 +299,13 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *&r_displays, ui
 
 bool MCScreenDC::device_getwindowgeometry(Window p_window, MCRectangle& r_rect)
 {
-	r_rect = MCDeviceRectFromLogicalCGRect(MCIPhoneGetViewBounds());
+	// IM-2013-09-30: [[ FullscreenMode ]] REVISIT - currently we just return the stack
+	// rect here, though ideally if a new stack is being opened in the window of the
+	// current one, it should use it's own rect rather than the current stack rect
+	MCRectangle t_rect;
+	t_rect = ((MCStack*)p_window)->getrect();
+	
+	r_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(t_rect));
 	return true;
 }
 
@@ -738,7 +744,7 @@ void MCScreenDC::do_fit_window(bool p_immediate_resize, bool p_post_message)
 	if (p_post_message)
 	{
 		if (p_immediate_resize)
-			((MCStack *)m_current_window) -> configure(True);
+			((MCStack *)m_current_window) -> view_configure(true);
 		else
 			MCEventQueuePostWindowReshape((MCStack *)m_current_window);
 	}

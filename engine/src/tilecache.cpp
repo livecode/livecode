@@ -2507,7 +2507,13 @@ bool MCTileCacheSnapshot(MCTileCacheRef self, MCRectangle p_area, MCGImageRef& r
 		t_success = MCMemoryAllocate(t_raster.stride * t_raster.height, t_raster.pixels);
 	
 	if (t_success)
+	{
+		// IM-2013-10-14: [[ FullscreenMode ]] Snapshot region may extend outside the tilecache viewport,
+		// so clear the raster to leave the clipped-out area transparent
+		MCMemoryClear(t_raster.pixels, t_raster.stride * t_raster.height);
+		p_area = MCU_intersect_rect(p_area, MCTileCacheGetViewport(self));
 		t_success = self -> compositor . begin_snapshot(self -> compositor . context, p_area, t_raster);
+	}
 	
 	if (t_success)
 		t_success = MCTileCacheDoComposite(self);

@@ -135,5 +135,8 @@ bool MCRegionCalculateMask(MCRegionRef region, int32_t width, int32_t height, MC
 typedef bool (*MCRegionForEachRectCallback)(void *context, const MCRectangle& rect);
 bool MCRegionForEachRect(MCRegionRef region, MCRegionForEachRectCallback callback, void *context)
 {
-	return false;
+	// IM-2013-09-30: [[ FullscreenMode ]] Implement for mobile
+	
+	// region is just a single rect
+	return callback(context, region->rect);
 }
