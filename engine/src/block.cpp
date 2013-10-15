@@ -153,6 +153,7 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 	// MW-2012-02-17: [[ SplitTextAttrs ]] If the font flag is present, it means there
 	//   is a font record to read.
 	if (flags & F_FONT)
+    {
 		if (strncmp(version, "1.3", 3) > 0)
 		{
 			uint2 t_font_index;
@@ -188,6 +189,7 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 			// MW-2012-02-17; [[ SplitTextAttrs ]] All the font attrs are set.
 			flags |= F_FATTR_MASK;
 		}
+    }
 	if (flags & F_HAS_COLOR)
 	{
 		atts->color = new MCColor;
@@ -341,6 +343,12 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 		flags = (flags & ~F_FATTR_MASK) | (~(flags & F_FATTR_MASK) & F_FATTR_MASK);
 	}
 
+    // The "has unicode" flag depends on whether the paragraph is native
+    if (MCStringIsNative(parent->GetInternalStringRef()))
+        flags &= ~F_HAS_UNICODE;
+    else
+        flags |= F_HAS_UNICODE;
+    
 	if ((stat = IO_write_uint4(flags, stream)) != IO_NORMAL)
 		return stat;
 		
@@ -952,8 +960,10 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 		{
 			uindex_t t_next_tab;
 			if (MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\t', t_index, kMCStringOptionCompareExact, t_next_tab))
+            {
 				if (t_next_tab >= m_index + m_size)
 					t_next_tab = -1;
+            }
 			else
 				t_next_tab = -1;
 
@@ -1140,7 +1150,7 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, findex_t si, findex_t ei, 
 	
 	uint32_t t_style;
 	t_style = 0;
-	if (fontstyle & FA_UNDERLINE || fontstyle & FA_LINK && ull)
+	if (fontstyle & FA_UNDERLINE || (fontstyle & FA_LINK && ull))
 		t_style |= FA_UNDERLINE;
 	if (fontstyle & FA_STRIKEOUT)
 		t_style |= FA_STRIKEOUT;
@@ -1280,7 +1290,7 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, findex_t si, findex_t ei, 
 	if (flags & F_HAS_BACK_COLOR && atts->backcolor->pixel != MAXUINT4)
 		dc->setbackground(MCzerocolor);
 
-	if (flags & F_HAS_COLOR && atts->color->pixel != MAXUINT4 || fontstyle & FA_LINK)
+	if ((flags & F_HAS_COLOR && atts->color->pixel != MAXUINT4) || fontstyle & FA_LINK)
 		f->setforeground(dc, DI_FORE, False, True);
 
 	// MW-2010-01-06: If there is link text, then draw a link
@@ -1628,14 +1638,16 @@ findex_t MCBlock::GetCursorIndex(int2 x, int2 cx, Boolean chunk, Boolean last)
 	// MW-2007-07-05: [[ Bug 5099 ]] If we have an image and are unicode, the char
 	//   we replace is two bytes long
 	if (flags & F_HAS_IMAGE && atts->image != NULL)
+    {
 		if (chunk || cx < atts->image->getrect().width >> 1)
 			return m_index;
 		else
-			return m_index + 2;
+			return m_index + 1;
+    }
 
 	findex_t i = m_index;
 	int2 cwidth;
-	uint2 tlen = 0;
+	findex_t tlen = 0;
 	uint2 twidth = 0;
 	uint2 toldwidth = 0;
 #ifdef _IOS_MOBILE
@@ -1672,12 +1684,13 @@ findex_t MCBlock::GetCursorIndex(int2 x, int2 cx, Boolean chunk, Boolean last)
 		else
 		{
 #if defined(_MACOSX)
-			tlen = parent->IncrementIndex(i);
+			tlen = parent->IncrementIndex(i) - m_index;
 			twidth = MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), MCRangeMake(m_index, tlen));
 			cwidth = twidth - toldwidth;
 			toldwidth = twidth;
 #else
-			cwidth = MCFontMeasureText(m_font, &text[i], indexincrement(i), hasunicode());
+			cwidth = MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(),
+                                                MCRangeMake(i, parent->IncrementIndex(i) - i));
 #endif
 		}
 		if (chunk)
@@ -1740,7 +1753,7 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l)
 		}
 		MCRange t_range;
 		t_range = MCRangeMake(sptr, l);
-		return MCU_min(6535U, twidth + MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range));
+		return MCU_min(65535U, twidth + MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range));
 	}
 }
 

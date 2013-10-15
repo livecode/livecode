@@ -195,7 +195,7 @@ MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_wi
 	// is at the end of the block, split the block. [ The latter rule means there is an
 	// empty block to have as a line ].
 	if (t_break_index < t_break_block -> GetOffset() + t_break_block -> GetLength() ||
-		t_is_explicit_line_break && t_break_index == t_break_block -> GetOffset() + t_break_block -> GetLength())
+		(t_is_explicit_line_break && t_break_index == t_break_block -> GetOffset() + t_break_block -> GetLength()))
 		t_break_block -> split(t_break_index);
 		
 	firstblock = p_first;

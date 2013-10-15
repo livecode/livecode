@@ -580,23 +580,20 @@ MCParagraph *MCField::verifyindices(MCParagraph *p_top, int4& si, int4& ei)
 {
 	MCParagraph *t_start_pg;
 	t_start_pg = indextoparagraph(p_top, si, ei);
-	
-	int4 t_junk;
-	MCParagraph *t_end_pg;
-	t_junk = ei;
-	t_end_pg = indextoparagraph(t_start_pg, ei, t_junk);
-	
+
 	return t_start_pg;
 }
 
-Exec_stat MCField::settextindex_stringref(uint4 parid, int4 si, int4 ei, MCStringRef s, Boolean undoing)
+Exec_stat MCField::settextindex_oldstring(uint4 parid, int4 si, int4 ei, const MCString &s, Boolean undoing, bool p_as_unicode)
 {
-	if (MCStringIsNative(s))
-		return settextindex(parid, si, ei, MCStringGetOldString(s), undoing, false);
-	return settextindex(parid, si, ei, MCString((const char *)MCStringGetCharPtr(s), MCStringGetLength(s) * 2), undoing, true);
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)s.getstring(), s.getlength(),
+                                            p_as_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative,
+                                            false, &t_string);
+    return settextindex(parid, si, ei, *t_string, undoing);
 }
 
-Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s, Boolean undoing, bool p_as_unicode)
+Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringRef p_text, Boolean undoing)
 {
 	state &= ~CS_CHANGED;
 	if (!undoing)
@@ -683,15 +680,12 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 
 	// MW-2012-02-13: [[ Block Unicode ]] Use the new finsert method in native mode.
 	// MW-2012-02-23: [[ PutUnicode ]] Pass through the encoding to finsertnew.
-	MCAutoStringRef t_text;
-	/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)s.getstring(), s.getlength(), p_as_unicode?
-											kMCStringEncodingUTF16:kMCStringEncodingNative, false, &t_text);
-	if (s.getlength())
-		t_need_recompute = pgptr->finsertnew(*t_text);
+	if (!MCStringIsEmpty(p_text))
+		t_need_recompute = pgptr->finsertnew(p_text);
 
 	if (opened && fptr == fdata)
 	{
-		oldsi += s.getlength();
+		oldsi += MCStringGetLength(p_text);
 		ei = oldsi;
 		focusedparagraph = indextoparagraph(paragraphs, oldsi, ei);
 		if (state & CS_KFOCUSED)
@@ -1304,7 +1298,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 			close();
 			oc++;
 		}
-		settextindex(parid, si, ei, MCnullmcstring, False);
+		settextindex(parid, si, ei, kMCEmptyString, False);
 		MCCdata *fptr = getcarddata(fdata, parid, True);
 		MCParagraph *oldparagraphs = fptr->getparagraphs();
 		fptr->setset(0);
@@ -2637,7 +2631,7 @@ void MCField::deletetext(int4 si, int4 ei)
 	us->ud.text.data = t_deleted_text;
 	us->ud.text.newline = False;
 	MCundos->savestate(this, us);
-	settextindex(0, si, ei, MCnullmcstring, True);
+	settextindex(0, si, ei, kMCEmptyString, True);
 }
 
 MCParagraph *MCField::clonetext(int4 si, int4 ei)

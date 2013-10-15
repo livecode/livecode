@@ -1036,7 +1036,7 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 		// MW-2012-02-23: [[ CharChunk ]] Convert the 1-based char indices to 1-based field indices.
 		int32_t si, ei;
 		si = 0;
-		ei = INT32_MAX;
+		ei = PARAGRAPH_MAX_LEN;
 		t_target -> resolvechars(0, si, ei, t_start - 1, t_end - t_start + 1);
 		t_start = si + 1;
 		t_end = ei;
@@ -1199,13 +1199,13 @@ Exec_stat MCIdeScriptReplace::exec(MCExecPoint& p_exec)
 		
 		// MW-2012-02-23: [[ FieldChars ]] Resolve the field indices from the chunk
 		//   and set the range of text.
-		int32_t si, ei;
+		findex_t si, ei;
 		si = 0;
 		ei = INT32_MAX;
 		MCAutoStringRef t_string;
 		/* UNCHECKED */ t_text.copyasstringref(&t_string);
 		t_target -> resolvechars(0, si, ei, t_start_index, t_end_index - t_start_index);
-		t_target -> settextindex_stringref(0, si, ei, *t_string, False);
+		t_target -> settextindex(0, si, ei, *t_string, False);
 		
 		TokenizeField(t_target, t_state, CT_CHARACTER, t_start, t_start + t_text . getsvalue() . getlength() - 1, colourize_paragraph);
 		

@@ -2070,7 +2070,7 @@ void MCField::undo(Ustruct *us)
 
 		seltext(ei - us->ud.text.newchars, ei, False);
 		pgptr = cloneselection();
-		settextindex(0, ei - us->ud.text.newchars, ei, MCnullmcstring, True);
+		settextindex_oldstring(0, ei - us->ud.text.newchars, ei, MCnullmcstring, True);
 		ei -= us->ud.text.newchars;
 		us->ud.text.newchars = 0;
 		if (us->ud.text.data != NULL)
@@ -2109,7 +2109,7 @@ void MCField::undo(Ustruct *us)
 		ei = si + us -> ud . text . newchars;
 		seltext(si, ei, False);
 		pgptr = cloneselection();
-		settextindex(0, si, ei, MCnullmcstring, True);
+		settextindex(0, si, ei, kMCEmptyString, True);
 
 		us->ud.text.newchars = 0;
 		if (us -> ud . text . data != NULL)
@@ -2187,7 +2187,7 @@ void MCField::undo(Ustruct *us)
 				pgptr = pgptr->next();
 			}
 			while (pgptr != us->ud.text.data);
-			settextindex(0, si, ei - 1, MCnullmcstring, True);
+			settextindex(0, si, ei - 1, kMCEmptyString, True);
 			us->type = UT_DELETE_TEXT;
 		}
 		updateparagraph(True, True);

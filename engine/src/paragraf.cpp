@@ -750,9 +750,9 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
 {
 	findex_t i, l;
 	lptr->GetRange(i, l);
-	if (state & PS_FRONT && lptr == lines
-	        || state & PS_BACK && lptr == lines->prev()
-	        || endindex >= i && startindex < i + l)
+	if ((state & PS_FRONT && lptr == lines)
+	        || (state & PS_BACK && lptr == lines->prev())
+	        || (endindex >= i && startindex < i + l))
 	{
 		bool t_show_front;
 		t_show_front = (state & PS_FRONT) != 0 && (parent -> getflag(F_LIST_BEHAVIOR) || this != parent -> getparagraphs() || lptr != lines);
@@ -1694,7 +1694,7 @@ void MCParagraph::deletestring(findex_t si, findex_t ei)
 	MCBlock *ebptr = indextoblock(ei, False);
 	
 	// Don't try to remove text beyond the end of the paragraph
-	if (ei > MCStringGetLength(m_text))
+	if (ei > gettextlength())
 		return;
 	
 	findex_t length = ei - si;
@@ -1763,7 +1763,7 @@ void MCParagraph::deletestring(findex_t si, findex_t ei)
 	}
 	
 	// Excise the deleted range from the paragraph text
-	uindex_t t_length = MCStringGetLength(m_text);
+	uindex_t t_length = gettextlength();
 	/* UNCHECKED */ MCStringRemove(m_text, MCRangeMake(si, ei-si));
 
 	clearzeros();
@@ -3071,7 +3071,7 @@ Boolean MCParagraph::extenddown(MCBlock *bptr, findex_t &ei)
 	MCStringRef t_link_text;
 	t_link_text = bptr -> getlinktext();
 	
-	while (bptr == NULL || bptr->next() != blocks && isgroup)
+	while (bptr == NULL || (bptr->next() != blocks && isgroup))
 	{
 		if (bptr == NULL)
 			bptr = blocks;
