@@ -261,7 +261,10 @@ static void export_image(void *p_context)
 	ctxt = (export_image_t *)p_context;
 	
 	NSData *t_data;
-	t_data = [[NSData alloc] initWithBytes: (void *)MCStringGetCString(ctxt -> raw_data) length: MCStringGetLength(ctxt -> raw_data)];
+	char *temp;
+	/* UNCHECKED */ MCStringConvertToCString(ctxt -> raw_data, temp);
+	t_data = [[NSData alloc] initWithBytes: (void *)temp length: strlen(temp)];
+	delete temp;
 	
 	UIImage *t_img;
 	t_img = [[UIImage alloc] initWithData: t_data];
