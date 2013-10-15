@@ -50,6 +50,9 @@ extern "C" int initialise_weak_link_pango();
 extern "C" int initialise_weak_link_pangoxft();
 extern "C" int initialise_weak_link_pangoft2();
 
+extern "C" int initialise_weak_link_glib();
+extern "C" int initialise_weak_link_gobject();
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCNewFontlist: public MCFontlist
@@ -101,10 +104,20 @@ MCNewFontlist::~MCNewFontlist()
 
 bool MCNewFontlist::create(void)
 {
+#ifdef _SERVER
+	// MM-2013-09-13: [[ RefactorGraphics ]] We don't link to glib and gobject on server by default (but both are needed for font support, so added here).
+	if (initialise_weak_link_pango() == 0 ||
+		initialise_weak_link_pangoft2() == 0 ||
+		initialise_weak_link_gobject() == 0 ||
+		initialise_weak_link_glib() == 0)
+		return false;
+#else
 	if (initialise_weak_link_pango() == 0 ||
 		initialise_weak_link_pangoft2() == 0)
 		return false;
-
+	
+#endif
+	
 	m_font_map = pango_ft2_font_map_new();
 	if (m_font_map == nil)
 		return false;
