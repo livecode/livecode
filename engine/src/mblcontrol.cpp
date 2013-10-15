@@ -37,13 +37,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeControlPropertyInfo MCNativeControl::kProperties[] =
+MCPropertyInfo MCNativeControl::kProperties[] =
 {
-    DEFINE_RW_CTRL_PROPERTY(Name, OptionalString, MCNativeControl, Name)
-    DEFINE_RO_CTRL_PROPERTY(Id, UInt32, MCNativeControl, Id)
+    DEFINE_RW_CTRL_PROPERTY(P_NAME, OptionalString, MCNativeControl, Name)
+    DEFINE_RO_CTRL_PROPERTY(P_ID, UInt32, MCNativeControl, Id)
 };
 
-MCNativeControlPropertyTable MCNativeControl::kPropertyTable =
+MCObjectPropertyTable MCNativeControl::kPropertyTable =
 {
 	nil,
 	sizeof(kProperties) / sizeof(kProperties[0]),
@@ -205,100 +205,100 @@ static struct {const char *name; MCNativeControlType type;} s_native_control_typ
 	{nil, kMCNativeControlTypeUnknown}
 };
 
-static struct {const char *name; MCNativeControlProperty property;} s_native_control_properties[] =
+static struct {const char *name; Properties property;} s_native_control_properties[] =
 {
-	{"id", kMCNativeControlPropertyId},
-	{"name", kMCNativeControlPropertyName},
+	{"id", P_ID},
+	{"name", P_NAME},
 	
-	{"rect", kMCNativeControlPropertyRectangle},
-	{"rectangle", kMCNativeControlPropertyRectangle},
-	{"visible", kMCNativeControlPropertyVisible},
-	{"opaque", kMCNativeControlPropertyOpaque},
-	{"alpha", kMCNativeControlPropertyAlpha},
-	{"backgroundColor", kMCNativeControlPropertyBackgroundColor},
+	{"rect", P_RECTANGLE},
+	{"rectangle", P_RECTANGLE},
+	{"visible", P_VISIBLE},
+	{"opaque", P_OPAQUE},
+	{"alpha", P_ALPHA},
+	{"backgroundColor", P_BACKGROUND_COLOR},
 	
-	{"dataDetectorTypes", kMCNativeControlPropertyDataDetectorTypes},
+	{"dataDetectorTypes", P_DATA_DETECTOR_TYPES},
 	
-	{"url", kMCNativeControlPropertyUrl},
-	{"canadvance", kMCNativeControlPropertyCanAdvance},
-	{"canretreat", kMCNativeControlPropertyCanRetreat},
-	{"autofit", kMCNativeControlPropertyAutoFit},
-	{"delayrequests", kMCNativeControlPropertyDelayRequests},
-	{"allowsInlineMediaPlayback", kMCNativeControlPropertyAllowsInlineMediaPlayback},
-	{"mediaPlaybackRequiresUserAction", kMCNativeControlPropertyMediaPlaybackRequiresUserAction},
+	{"url", P_URL},
+	{"canadvance", P_CAN_ADVANCE},
+	{"canretreat", P_CAN_RETREAT},
+	{"autofit", P_AUTO_FIT},
+	{"delayrequests", P_DELAY_REQUESTS},
+	{"allowsInlineMediaPlayback", P_ALLOWS_INLINE_MEDIA_PLAYBACK},
+	{"mediaPlaybackRequiresUserAction", P_MEDIA_PLAYBACK_REQUIRES_USER_ACTION},
 	
-	{"contentrect", kMCNativeControlPropertyContentRectangle},
-	{"contentrectangle", kMCNativeControlPropertyContentRectangle},
-	{"canbounce", kMCNativeControlPropertyCanBounce},
-	{"vscroll", kMCNativeControlPropertyVScroll},
-	{"hscroll", kMCNativeControlPropertyHScroll},
-	{"canscrolltotop", kMCNativeControlPropertyCanScrollToTop},
-	{"cancanceltouches", kMCNativeControlPropertyCanCancelTouches},
-	{"delaytouches", kMCNativeControlPropertyDelayTouches},
-	{"decelerationrate", kMCNativeControlPropertyDecelerationRate},
-	{"indicatorstyle", kMCNativeControlPropertyIndicatorStyle},
-	{"indicatorinsets", kMCNativeControlPropertyIndicatorInsets},
-	{"pagingenabled", kMCNativeControlPropertyPagingEnabled},
-	{"scrollingenabled", kMCNativeControlPropertyScrollingEnabled},
-	{"hIndicator", kMCNativeControlPropertyShowHorizontalIndicator},
-	{"vIndicator", kMCNativeControlPropertyShowVerticalIndicator},
-	{"lockdirection", kMCNativeControlPropertyLockDirection},
-	{"tracking", kMCNativeControlPropertyTracking},
-	{"dragging", kMCNativeControlPropertyDragging},
-	{"decelerating", kMCNativeControlPropertyDecelerating},
+	{"contentrect", P_CONTENT_RECT},
+	{"contentrectangle", P_CONTENT_RECT},
+	{"canbounce", P_CAN_BOUNCE},
+	{"vscroll", P_VSCROLL},
+	{"hscroll", P_HSCROLL},
+	{"canscrolltotop", P_CAN_SCROLL_TO_TOP},
+	{"cancanceltouches", P_CAN_CANCEL_TOUCHES},
+	{"delaytouches", P_DELAY_TOUCHES},
+	{"decelerationrate", P_DECELERATION_RATE},
+	{"indicatorstyle", P_INDICATOR_STYLE},
+	{"indicatorinsets", P_INDICATOR_INSETS},
+	{"pagingenabled", P_PAGING_ENABLED},
+	{"scrollingenabled", P_SCROLLING_ENABLED},
+	{"hIndicator", P_SHOW_HORIZONTAL_INDICATOR},
+	{"vIndicator", P_SHOW_VERTICAL_INDICATOR},
+	{"lockdirection", P_LOCK_DIRECTION},
+	{"tracking", P_TRACKING},
+	{"dragging", P_DRAGGING},
+	{"decelerating", P_DECELERATING},
 	
-	{"filename", kMCNativeControlPropertyContent},
-	{"naturalsize", kMCNativeControlPropertyNaturalSize},
-	{"fullscreen", kMCNativeControlPropertyFullscreen},
-	{"preserveaspect", kMCNativeControlPropertyPreserveAspect},
-	{"showcontroller", kMCNativeControlPropertyShowController},
-	{"duration", kMCNativeControlPropertyDuration},
-	{"playableduration", kMCNativeControlPropertyPlayableDuration},
-	{"starttime", kMCNativeControlPropertyStartTime},
-	{"endtime", kMCNativeControlPropertyEndTime},
-	{"currenttime", kMCNativeControlPropertyCurrentTime},
-	{"autoplay", kMCNativeControlPropertyShouldAutoplay},
-	{"looping", kMCNativeControlPropertyLooping},
+	{"filename", P_CONTENT},
+	{"naturalsize", P_NATURAL_SIZE},
+	{"fullscreen", P_FULLSCREEN},
+	{"preserveaspect", P_PRESERVE_ASPECT},
+	{"showcontroller", P_SHOW_CONTROLLER},
+	{"duration", P_DURATION},
+	{"playableduration", P_PLAYABLE_DURATION},
+	{"starttime", P_START_TIME},
+	{"endtime", P_END_TIME},
+	{"currenttime", P_CURRENT_TIME},
+	{"autoplay", P_SHOULD_AUTOPLAY},
+	{"looping", P_LOOPING},
 	
-	{"playbackstate", kMCNativeControlPropertyPlaybackState},
+	{"playbackstate", P_PLAYBACK_STATE},
     
     // MM-2013-02-21: [[ Bug 10632 ]] Added playRate property for native player.
-    {"playrate", kMCNativeControlPropertyPlayRate},
+    {"playrate", P_PLAY_RATE},
     
-	{"loadstate", kMCNativeControlPropertyLoadState},
-	{"useapplicationaudiosession", kMCNativeControlPropertyUseApplicationAudioSession},
-	{"allowsairplay", kMCNativeControlPropertyAllowsAirPlay},
+	{"loadstate", P_LOAD_STATE},
+	{"useapplicationaudiosession", P_USE_APPLICATION_AUDIO_SESSION},
+	{"allowsairplay", P_ALLOWS_AIR_PLAY},
 	
-	{"enabled", kMCNativeControlPropertyEnabled},
+	{"enabled", P_ENABLED},
 	
-	{"text", kMCNativeControlPropertyText},
-	{"unicodetext", kMCNativeControlPropertyUnicodeText},
-	{"textcolor", kMCNativeControlPropertyTextColor},
-	{"textalign", kMCNativeControlPropertyTextAlign},
-	{"fontname", kMCNativeControlPropertyFontName},
-	{"fontsize", kMCNativeControlPropertyFontSize},
-	{"editing", kMCNativeControlPropertyEditing},
+	{"text", P_TEXT},
+	{"unicodetext", P_UNICODE_TEXT},
+	{"textcolor", P_TEXT_COLOR},
+	{"textalign", P_TEXT_ALIGN},
+	{"fontname", P_FONT_NAME},
+	{"fontsize", P_FONT_SIZE},
+	{"editing", P_EDITING},
     
-	{"minimumfontsize", kMCNativeControlPropertyMinimumFontSize},
-	{"autoclear", kMCNativeControlPropertyAutoClear},
-	{"clearbuttonmode", kMCNativeControlPropertyClearButtonMode},
-	{"borderstyle", kMCNativeControlPropertyBorderStyle},
-	{"verticaltextalign", kMCNativeControlPropertyVerticalTextAlign},
+	{"minimumfontsize", P_MINIMUM_FONT_SIZE},
+	{"autoclear", P_AUTO_CLEAR},
+	{"clearbuttonmode", P_CLEAR_BUTTON_MODE},
+	{"borderstyle", P_BORDER_STYLE},
+	{"verticaltextalign", P_VERTICAL_TEXT_ALIGN},
 	
-	{"editable", kMCNativeControlPropertyEditable},
-	{"selectedrange", kMCNativeControlPropertySelectedRange},
+	{"editable", P_EDITABLE},
+	{"selectedrange", P_SELECTED_RANGE},
 	
-	{"autocapitalizationtype", kMCNativeControlPropertyAutoCapitalizationType},
-	{"autocorrectiontype", kMCNativeControlPropertyAutoCorrectionType},
-	{"managereturnkey", kMCNativeControlPropertyManageReturnKey},
-	{"keyboardtype", kMCNativeControlPropertyKeyboardType},
-	{"keyboardstyle", kMCNativeControlPropertyKeyboardStyle},
-	{"returnkeytype", kMCNativeControlPropertyReturnKeyType},
-	{"contenttype", kMCNativeControlPropertyContentType},
+	{"autocapitalizationtype", P_AUTO_CAPITALIZATION_TYPE},
+	{"autocorrectiontype", P_AUTOCORRECTION_TYPE},
+	{"managereturnkey", P_MANAGE_RETURN_KEY},
+	{"keyboardtype", P_KEYBOARD_TYPE},
+	{"keyboardstyle", P_KEYBOARD_STYLE},
+	{"returnkeytype", P_RETURN_KEY_TYPE},
+	{"contenttype", P_CONTENT_TYPE},
 	
-    {"multiline", kMCNativeControlPropertyMultiLine},
+    {"multiline", P_MULTI_LINE},
     
-	{nil, kMCNativeControlPropertyUnknown}
+	{nil, P_UNDEFINED}
 };
 
 static struct {const char *name; MCNativeControlAction action;} s_native_control_actions[] =
@@ -328,7 +328,7 @@ static struct {const char *name; MCNativeControlAction action;} s_native_control
 	{nil, kMCNativeControlActionUnknown}
 };
 
-bool MCNativeControl::LookupProperty(MCStringRef p_property, MCNativeControlProperty& r_prop)
+bool MCNativeControl::LookupProperty(MCStringRef p_property, Properties& r_prop)
 {
 	for(uint32_t i = 0; s_native_control_properties[i] . name != nil; i++)
 		if (MCStringIsEqualToCString(p_property, s_native_control_properties[i] . name, kMCCompareCaseless))

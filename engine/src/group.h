@@ -272,6 +272,7 @@ public:
 	void SetBackSize(MCExecContext& ctxt, MCPoint p_size);
 	void GetSelectGroupedControls(MCExecContext& ctxt, bool& r_setting);
 	void SetSelectGroupedControls(MCExecContext& ctxt, bool setting);
+    void GetCardNames(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_list);
     
 	virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
 	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);

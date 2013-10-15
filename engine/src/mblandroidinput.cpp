@@ -192,8 +192,8 @@ static MCNativeControlEnumEntry s_verticalalign_enum[] =
 class MCAndroidInputControl: public MCAndroidControl
 {
 protected:
-	static MCNativeControlPropertyInfo kProperties[];
-	static MCNativeControlPropertyTable kPropertyTable;
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
     static MCNativeControlActionInfo kActions[];
 	static MCNativeControlActionTable kActionTable;
 
@@ -207,7 +207,7 @@ public:
     virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
 #endif
 
-    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     void SetMultiLine(bool p_multiline);
@@ -258,27 +258,27 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeControlPropertyInfo MCAndroidInputControl::kProperties[] =
+MCPropertyInfo MCAndroidInputControl::kProperties[] =
 {
-    DEFINE_RW_CTRL_PROPERTY(MultiLine, Bool, MCAndroidInputControl, MultiLine)
-    DEFINE_RW_CTRL_PROPERTY(Text, String, MCAndroidInputControl, Text)
-    DEFINE_RW_CTRL_PROPERTY(UnicodeText, String, MCAndroidInputControl, Text)
-    DEFINE_RW_CTRL_CUSTOM_PROPERTY(TextColor, NativeControlColor, MCAndroidInputControl, TextColor)
-    DEFINE_RW_CTRL_PROPERTY(FontSize, UInt32, MCAndroidInputControl, TextSize)
-    DEFINE_RW_CTRL_ENUM_PROPERTY(TextAlign, NativeControlInputTextAlign, MCAndroidInputControl, TextAlign)
-    DEFINE_RW_CTRL_PROPERTY(Enabled, Bool, MCAndroidInputControl, Enabled)
-    DEFINE_RW_CTRL_PROPERTY(Editable, Bool, MCAndroidInputControl, Enabled)
-    DEFINE_RW_CTRL_ENUM_PROPERTY(AutoCapitalizationType, NativeControlInputCapitalizationType, MCAndroidInputControl, AutoCapitalizationType)
-    DEFINE_RW_CTRL_ENUM_PROPERTY(AutoCorrectionType, NativeControlInputAutocorrectionType, MCAndroidInputControl, AutoCorrectionType)
-    DEFINE_RW_CTRL_ENUM_PROPERTY(KeyboardType, NativeControlInputKeyboardType, MCAndroidInputControl, KeyboardType)
-    DEFINE_RW_CTRL_ENUM_PROPERTY(ReturnKeyType, NativeControlInputReturnKeyType, MCAndroidInputControl, ReturnKey)
-    DEFINE_RW_CTRL_ENUM_PROPERTY(ContentType, NativeControlInputContentType, MCAndroidInputControl, ContentType)
-    DEFINE_RW_CTRL_PROPERTY(ScrollingEnabled, Bool, MCAndroidInputControl, ScrollingEnabled)
-    DEFINE_RW_CTRL_SET_PROPERTY(DataDetectorTypes, NativeControlInputDataDetectorType, MCAndroidInputControl, DataDetectorTypes)
-    DEFINE_RW_CTRL_CUSTOM_PROPERTY(SelectedRange, NativeControlRange, MCAndroidInputControl, SelectedRange)
+    DEFINE_RW_CTRL_PROPERTY(P_MULTI_LINE, Bool, MCAndroidInputControl, MultiLine)
+    DEFINE_RW_CTRL_PROPERTY(P_TEXT, String, MCAndroidInputControl, Text)
+    DEFINE_RW_CTRL_PROPERTY(P_UNICODE_TEXT, String, MCAndroidInputControl, Text)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(P_TEXT_COLOR, NativeControlColor, MCAndroidInputControl, TextColor)
+    DEFINE_RW_CTRL_PROPERTY(P_FONT_SIZE, UInt32, MCAndroidInputControl, TextSize)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_TEXT_ALIGN, NativeControlInputTextAlign, MCAndroidInputControl, TextAlign)
+    DEFINE_RW_CTRL_PROPERTY(P_ENABLED, Bool, MCAndroidInputControl, Enabled)
+    DEFINE_RW_CTRL_PROPERTY(P_EDITABLE, Bool, MCAndroidInputControl, Enabled)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_AUTO_CAPITALIZATION_TYPE, NativeControlInputCapitalizationType, MCAndroidInputControl, AutoCapitalizationType)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_AUTOCORRECTION_TYPE, NativeControlInputAutocorrectionType, MCAndroidInputControl, AutoCorrectionType)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_KEYBOARD_TYPE, NativeControlInputKeyboardType, MCAndroidInputControl, KeyboardType)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_RETURN_KEY_TYPE, NativeControlInputReturnKeyType, MCAndroidInputControl, ReturnKey)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_CONTENT_TYPE, NativeControlInputContentType, MCAndroidInputControl, ContentType)
+    DEFINE_RW_CTRL_PROPERTY(P_SCROLLING_ENABLED, Bool, MCAndroidInputControl, ScrollingEnabled)
+    DEFINE_RW_CTRL_SET_PROPERTY(P_DATA_DETECTOR_TYPES, NativeControlInputDataDetectorType, MCAndroidInputControl, DataDetectorTypes)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(P_SELECTED_RANGE, NativeControlRange, MCAndroidInputControl, SelectedRange)
 };
 
-MCNativeControlPropertyTable MCAndroidInputControl::kPropertyTable =
+MCObjectPropertyTable MCAndroidInputControl::kPropertyTable =
 {
 	&MCAndroidControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),

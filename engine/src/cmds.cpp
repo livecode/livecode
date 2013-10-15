@@ -2438,9 +2438,8 @@ void MCSort::additem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, Sort
 	MCAutoValueRef t_value;
 	if (by != NULL)
 	{
-		MCerrorlock++;
-		ctxt.GetEP().setvalueref(p_value);
-		MCeach->set(ctxt.GetEP());
+        MCerrorlock++;
+        MCeach -> setvalueref(p_value);
 		if (by->eval(ctxt.GetEP()) == ES_NORMAL)
 			t_value = ctxt.GetEP().getvalueref();
 		else

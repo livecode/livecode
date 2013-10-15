@@ -628,7 +628,7 @@ void MCMultimediaGetRecordSampleSize(MCExecContext& ctxt, uinteger_t& r_value)
 	r_value = MCrecordsamplesize;
 }
 
-void MCMultimediaSetRecordSampleSize(MCExecContext& ctxt, uint2 p_value)
+void MCMultimediaSetRecordSampleSize(MCExecContext& ctxt, uinteger_t p_value)
 {
 	MCrecordsamplesize = (p_value <= 8) ? 8 : 16;
 }
@@ -638,7 +638,7 @@ void MCMultimediaGetRecordChannels(MCExecContext& ctxt, uinteger_t& r_value)
 	r_value = MCrecordchannels;
 }
 
-void MCMultimediaSetRecordChannels(MCExecContext& ctxt, uint2 p_value)
+void MCMultimediaSetRecordChannels(MCExecContext& ctxt, uinteger_t p_value)
 {
 	MCrecordchannels = (p_value <= 1) ? 1 : 2;
 }

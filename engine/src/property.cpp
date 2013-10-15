@@ -86,8 +86,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_PRINT_PAGE_SIZE, Int16X2, Printing, PrintPageSize)
 	DEFINE_RW_PROPERTY(P_PRINT_PAGE_SCALE, Double, Printing, PrintPageScale)
 	DEFINE_RO_PROPERTY(P_PRINT_PAGE_RECTANGLE, Rectangle, Printing, PrintPageRectangle)
-	DEFINE_RW_PROPERTY(P_PRINT_JOB_NAME, String, Printing, PrintPageSize)
-	DEFINE_RW_PROPERTY(P_PRINT_JOB_COPIES, Int16, Printing, PrintPageScale)
+	DEFINE_RW_PROPERTY(P_PRINT_JOB_NAME, String, Printing, PrintJobName)
+	DEFINE_RW_PROPERTY(P_PRINT_JOB_COPIES, Int16, Printing, PrintJobCopies)
 	DEFINE_RW_PROPERTY(P_PRINT_JOB_COLLATE, Bool, Printing, PrintJobCollate)
 	DEFINE_RW_PROPERTY(P_PRINT_JOB_COLOR, Bool, Printing, PrintJobColor)
 	DEFINE_RW_ENUM_PROPERTY(P_PRINT_JOB_DUPLEX, PrintingPrintJobDuplex, Printing, PrintJobDuplex)
@@ -146,7 +146,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_ENUM_PROPERTY(P_DRAG_ACTION, PasteboardDragAction, Pasteboard, DragAction)
 	DEFINE_RW_PROPERTY(P_ACCEPT_DROP, Bool, Pasteboard, AcceptDrop)
 	DEFINE_RW_PROPERTY(P_DRAG_IMAGE, UInt16, Pasteboard, DragImage)
-	DEFINE_RW_PROPERTY(P_DRAG_IMAGE_OFFSET, Point, Pasteboard, DragImageOffset)
+	DEFINE_RW_PROPERTY(P_DRAG_IMAGE_OFFSET, OptionalPoint, Pasteboard, DragImageOffset)
 	DEFINE_RW_SET_PROPERTY(P_ALLOWABLE_DRAG_ACTIONS, PasteboardAllowableDragActions, Pasteboard, AllowableDragActions)
 	DEFINE_RW_PROPERTY(P_ALLOW_INLINE_INPUT, Bool, Interface, AllowInlineInput)
 	DEFINE_RW_PROPERTY(P_DRAG_DELTA, UInt16, Interface, DragDelta)
@@ -348,8 +348,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_BREAK_POINTS, String, Debugging, Breakpoints)
 	DEFINE_RW_PROPERTY(P_WATCHED_VARIABLES, String, Debugging, WatchedVariables)
 
-	//DEFINE_RW_PROPERTY(P_CLIPBOARD_DATA, String, Pasteboard, ClipboardData)
-	//DEFINE_RW_PROPERTY(P_DRAG_DATA, String, Pasteboard, DragData)
+	DEFINE_RW_INDEXED_PROPERTY(P_CLIPBOARD_DATA, BinaryString, Pasteboard, ClipboardData)
+	DEFINE_RW_INDEXED_PROPERTY(P_DRAG_DATA, BinaryString, Pasteboard, DragData)
 };
 
 static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, const MCPropertyInfo*& r_info)
@@ -2991,33 +2991,6 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCProperty::set */
-	if (which == P_CLIPBOARD_DATA || which == P_DRAG_DATA)
-	{
-        MCAutoDataRef t_data;
-        MCAutoStringRef t_type;
-        
-        ep . copyasdataref(&t_data);
-		if (customindex != nil)
-        {
-			if (customindex -> eval(ep) != ES_NORMAL)
-			{
-				MCeerror -> add(EE_PROPERTY_BADEXPRESSION, line, pos);
-				return ES_ERROR;
-			}
-			ep . copyasstringref(&t_type);
-		}
-        
-        MCExecContext ctxt(ep);
-        if (which == P_CLIPBOARD_DATA)
-            MCPasteboardSetClipboardData(ctxt, *t_type, *t_data);
-        else
-            MCPasteboardSetDragData(ctxt, *t_type, *t_data);
-        
-        if (!ctxt . HasError())
-            return ES_NORMAL;
-        
-        return ES_ERROR;
-	}
 	
 	if (destvar != NULL && which != P_CUSTOM_VAR)
 		return set_variable(ep);
@@ -3039,7 +3012,32 @@ Exec_stat MCProperty::set_global_property(MCExecPoint& ep)
 	if (MCPropertyInfoTableLookup(which, effective, t_info))
 	{
 		MCExecContext ctxt(ep);
-		
+        MCAutoValueRef t_value;
+        /* UNCHECKED */ ep . copyasvalueref(&t_value);
+        
+        if (t_info -> custom_index)
+        {
+            MCNewAutoNameRef t_type;
+            
+            if (customindex != nil)
+            {
+                if (customindex -> eval(ep) != ES_NORMAL)
+                {
+                    MCeerror -> add(EE_PROPERTY_BADEXPRESSION, line, pos);
+                    return ES_ERROR;
+                }
+                ep . copyasnameref(&t_type);
+            }
+            MCExecStoreProperty(ctxt, t_info, *t_type, *t_value);
+        }
+        else
+            MCExecStoreProperty(ctxt, t_info, nil, *t_value);
+        
+        if (!ctxt . HasError())
+            return ES_NORMAL;
+        
+        return ctxt . Catch(line, pos);
+#ifdef LEGACY_EXEC
 		switch(t_info -> type)
 		{
 			case kMCPropertyTypeAny:
@@ -3311,6 +3309,7 @@ Exec_stat MCProperty::set_global_property(MCExecPoint& ep)
 			return ES_NORMAL;
 		
 		return ctxt . Catch(line, pos);
+#endif
 	}
 
 	Exec_stat t_stat;
@@ -4798,36 +4797,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCProperty::eval */
-	if (which == P_CLIPBOARD_DATA || which == P_DRAG_DATA)
-	{
-        MCAutoDataRef t_data;
-        MCAutoStringRef t_type;
-        
-		if (customindex != nil)
-        {
-			if (customindex -> eval(ep) != ES_NORMAL)
-			{
-				MCeerror -> add(EE_PROPERTY_BADEXPRESSION, line, pos);
-				return ES_ERROR;
-			}
-			ep . copyasstringref(&t_type);
-		}
-        
-        MCExecContext ctxt(ep);
-        if (which == P_CLIPBOARD_DATA)
-            MCPasteboardGetClipboardData(ctxt, *t_type, &t_data);
-        else
-            MCPasteboardGetDragData(ctxt, *t_type, &t_data);
-        
-        if (!ctxt . HasError())
-        {
-            ep . setvalueref(*t_data);
-            return ES_NORMAL;
-        }
-        
-        return ES_ERROR;
-	}
-    
+  
 	ep . setline(line);
 
 	if (destvar != nil && which != P_CUSTOM_VAR)
@@ -5064,7 +5034,34 @@ Exec_stat MCProperty::eval_global_property(MCExecPoint& ep)
 	if (MCPropertyInfoTableLookup(which, effective, t_info))
 	{
 		MCExecContext ctxt(ep);
+        MCAutoValueRef t_value;
+        
+        if (t_info -> custom_index)
+        {
+            MCNewAutoNameRef t_type;
+            
+            if (customindex != nil)
+            {
+                if (customindex -> eval(ep) != ES_NORMAL)
+                {
+                    MCeerror -> add(EE_PROPERTY_BADEXPRESSION, line, pos);
+                    return ES_ERROR;
+                }
+                ep . copyasnameref(&t_type);
+            }
+            MCExecFetchProperty(ctxt, t_info, *t_type, &t_value);
+        }
+        else
+            MCExecFetchProperty(ctxt, t_info, nil, &t_value);
+        
+        if (!ctxt . HasError())
+        {
+            ep . setvalueref(*t_value);
+            return ES_NORMAL;
+        }
 		
+        return ctxt . Catch(line, pos);
+#ifdef LEGACY_EXEC
 		switch(t_info -> type)
 		{
 			case kMCPropertyTypeAny:
@@ -5324,7 +5321,8 @@ Exec_stat MCProperty::eval_global_property(MCExecPoint& ep)
 				break;
 		}
 		
-		return ctxt . Catch(line, pos);
+		return ctxt . Catch(line, pos); */
+#endif
 	}
 
 	Exec_stat t_stat;

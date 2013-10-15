@@ -6162,8 +6162,8 @@ Exec_stat MCHandleControlCreate(void *context, MCParameter *p_parameters)
 	MCAutoStringRef t_control_name;
 	if (t_success && p_parameters != nil)
 		t_success = MCParseParameters(p_parameters, "x", &(&t_control_name));
-	
-    MCExecPoint ep(nil, nil, nil);
+
+    MCExecPoint ep(nil,nil,nil);
     MCExecContext ctxt(ep);
     
     MCNativeControlExecCreateControl(ctxt, *t_type_name, *t_control_name);
@@ -6288,8 +6288,10 @@ Exec_stat MCHandleControlGet(void *context, MCParameter *p_parameters)
     MCAutoStringRef t_control_name;
     MCAutoStringRef t_property;
     
-    MCExecPoint ep(nil, nil, nil);
-    MCExecContext ctxt(ep);
+    MCExecPoint* t_ep_ptr;
+    t_ep_ptr = (MCExecPoint *)context;
+    
+    MCExecContext ctxt(*t_ep_ptr);
     
     bool t_success;
 	t_success = true;
