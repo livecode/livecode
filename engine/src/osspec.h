@@ -191,6 +191,7 @@ enum MCSPutKind
 };
 
 bool MCS_put(MCExecPoint& ep, MCSPutKind kind, MCStringRef data);
+bool MCS_put_binary(MCExecPoint& ep, MCSPutKind kind, MCDataRef data);
 
 ///////////////////////////////////////////////////////////////////////////////
 

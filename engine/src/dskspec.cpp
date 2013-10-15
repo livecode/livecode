@@ -119,6 +119,12 @@ bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, MCStringRef p_data)
 	return false;
 }
 
+// Missing implementation. What to write here? Panos.
+bool MCS_put_binary(MCExecPoint& ep, MCSPutKind p_kind, MCDataRef p_data)
+{
+	return false;
+}
+
 void MCS_set_outputtextencoding(MCSOutputTextEncoding encoding)
 {
 }
