@@ -2639,14 +2639,14 @@ Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters)
     bool t_success = true;
     const char *r_result = NULL;
     MCExecPoint ep(nil, nil, nil);
-	ep . clear();
+	MCExecContext ctxt(ep);
     // Handle parameters.
     if (p_parameters)
     {
         p_parameters->eval(ep);
         if (!ep.isempty())
         {
-            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_start_date);
+			t_success = MCD_convert_to_datetime(ctxt, ep.getvalueref(), CF_UNDEFINED, CF_UNDEFINED, t_start_date);
         }
         p_parameters = p_parameters->getnext();
     }
@@ -2655,10 +2655,10 @@ Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters)
         p_parameters->eval(ep);
         if (!ep.isempty())
         {
-            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_end_date);
+			t_success = MCD_convert_to_datetime(ctxt, ep.getvalueref(), CF_UNDEFINED, CF_UNDEFINED, t_end_date);
         }
     }
-    MCExecContext ctxt(ep);
+
     ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
 //    MCCalendarExecFindEvent(ctxt, t_start_date, t_end_date);
@@ -2727,7 +2727,7 @@ Exec_stat MCHandleCreateLocalNotification (void *context, MCParameter *p_paramet
         p_parameters->eval(ep);
         if (!ep.isempty())
         {
-            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_date);
+            t_success = MCD_convert_to_datetime(ctxt, ep.getvalueref(), CF_UNDEFINED, CF_UNDEFINED, t_date);
         }
         p_parameters = p_parameters->getnext();
     }
@@ -6162,8 +6162,8 @@ Exec_stat MCHandleControlCreate(void *context, MCParameter *p_parameters)
 	MCAutoStringRef t_control_name;
 	if (t_success && p_parameters != nil)
 		t_success = MCParseParameters(p_parameters, "x", &(&t_control_name));
-	
-    MCExecPoint ep(nil, nil, nil);
+
+    MCExecPoint ep(nil,nil,nil);
     MCExecContext ctxt(ep);
     
     MCNativeControlExecCreateControl(ctxt, *t_type_name, *t_control_name);
@@ -6288,8 +6288,10 @@ Exec_stat MCHandleControlGet(void *context, MCParameter *p_parameters)
     MCAutoStringRef t_control_name;
     MCAutoStringRef t_property;
     
-    MCExecPoint ep(nil, nil, nil);
-    MCExecContext ctxt(ep);
+    MCExecPoint* t_ep_ptr;
+    t_ep_ptr = (MCExecPoint *)context;
+    
+    MCExecContext ctxt(*t_ep_ptr);
     
     bool t_success;
 	t_success = true;

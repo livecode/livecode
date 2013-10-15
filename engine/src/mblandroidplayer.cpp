@@ -48,8 +48,8 @@ bool path_to_apk_path(MCStringRef p_path, MCStringRef &r_apk_path);
 class MCAndroidPlayerControl: public MCAndroidControl
 {
 protected:
-	static MCNativeControlPropertyInfo kProperties[];
-	static MCNativeControlPropertyTable kPropertyTable;
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
     static MCNativeControlActionInfo kActions[];
 	static MCNativeControlActionTable kActionTable;
     
@@ -64,7 +64,7 @@ public:
 #endif
     
     virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
-    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
 
     void SetContent(MCExecContext& ctxt, MCStringRef p_content);
     void GetContent(MCExecContext& ctxt, MCStringRef& r_content);
@@ -96,17 +96,17 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeControlPropertyInfo MCAndroidPlayerControl::kProperties[] =
+MCPropertyInfo MCAndroidPlayerControl::kProperties[] =
 {
-    DEFINE_RW_CTRL_PROPERTY(Content, String, MCAndroidPlayerControl, Content)
-    DEFINE_RW_CTRL_PROPERTY(ShowController, Bool, MCAndroidPlayerControl, ShowController)
-    DEFINE_RW_CTRL_PROPERTY(CurrentTime, Int32, MCAndroidPlayerControl, CurrentTime)
-    DEFINE_RW_CTRL_PROPERTY(Looping, Bool, MCAndroidPlayerControl, Looping)
-    DEFINE_RO_CTRL_PROPERTY(Duration, Int32, MCAndroidPlayerControl, Duration)
-    DEFINE_RO_CTRL_PROPERTY(NaturalSize, Int32X2, MCAndroidPlayerControl, NaturalSize)
+    DEFINE_RW_CTRL_PROPERTY(P_CONTENT, String, MCAndroidPlayerControl, Content)
+    DEFINE_RW_CTRL_PROPERTY(P_SHOW_CONTROLLER, Bool, MCAndroidPlayerControl, ShowController)
+    DEFINE_RW_CTRL_PROPERTY(P_CURRENT_TIME, Int32, MCAndroidPlayerControl, CurrentTime)
+    DEFINE_RW_CTRL_PROPERTY(P_LOOPING, Bool, MCAndroidPlayerControl, Looping)
+    DEFINE_RO_CTRL_PROPERTY(P_DURATION, Int32, MCAndroidPlayerControl, Duration)
+    DEFINE_RO_CTRL_PROPERTY(P_NATURAL_SIZE, Int32X2, MCAndroidPlayerControl, NaturalSize)
 };
 
-MCNativeControlPropertyTable MCAndroidPlayerControl::kPropertyTable =
+MCObjectPropertyTable MCAndroidPlayerControl::kPropertyTable =
 {
 	&MCAndroidControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),

@@ -1537,6 +1537,7 @@ bool MCS_isnan(double v)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+//This method needs to be updated (the implementation is wrong) after fixing the server stuff (in srvposix.cpp as well)
 bool MCS_get_temporary_folder(MCStringRef &r_temp_folder)
 {
 	bool t_success = true;

@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "stack.h"
 #include "aclip.h"
 #include "vclip.h"
@@ -673,11 +674,11 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return IO_NORMAL;
 }
 
-Exec_stat MCStack::resubstack(char *data)
+// I don't think this gets called from anywhere...
+Exec_stat MCStack::resubstack(MCStringRef p_data)
 {
 	Boolean iserror = False;
-	char *errorptr = NULL;
-	char *eptr = data;
+	MCAutoStringRef t_error;
 	
 	// MW-2012-09-07: [[ Bug 10372 ]] Record the old stack of substackedness so we
 	//   can work out later whether we need to extraopen/close.
@@ -686,20 +687,28 @@ Exec_stat MCStack::resubstack(char *data)
 	
 	MCStack *oldsubs = substacks;
 	substacks = NULL;
-	while ((eptr = strtok(eptr, "\n")) != NULL)
+	
+	MCAutoArrayRef t_array;
+	/* UNCHECKED */ MCStringSplit(p_data, MCSTR("\n"), nil, kMCStringOptionCompareExact, &t_array);
+	uindex_t t_count;
+	t_count = MCArrayGetCount(*t_array);
+	for (uindex_t i = 0; i < t_count; i++)
 	{
+		MCValueRef t_val;
+		/* UNCHECKED */ MCArrayFetchValueAtIndex(*t_array, i, t_val);
+		
 		// If tsub is one of the existing substacks of the stack, it is set to
 		// non-null, as it needs to be removed.
 		MCStack *tsub = oldsubs;
 		if (tsub != NULL)
 		{
-			// Lookup 'eptr' as a name, if it doesn't exist it can't exist as a substack
-			// name.
-			MCNameRef t_eptr_name;
-			t_eptr_name = MCNameLookupWithCString(eptr, kMCCompareCaseless);
-
-			if (t_eptr_name != nil)
-				while(tsub -> hasname(t_eptr_name))
+			// If t_val doesn't exist as a name, it can't exist as a substack name.
+			// t_val is always a stringref (fetched from an MCSplitString array)
+			MCNameRef t_name;
+			t_name = MCNameLookup((MCStringRef)t_val);
+		
+			if (t_name != nil)
+				while (tsub -> hasname(t_name))
 				{
 					tsub = (MCStack *)tsub->nptr;
 					if (tsub == oldsubs)
@@ -709,26 +718,28 @@ Exec_stat MCStack::resubstack(char *data)
 					}
 				}
 		}
-
+		
 		// OK-2008-04-10 : Added parameters to mainstackChanged message
 		Boolean t_was_mainstack;
 		if (tsub == NULL)
 		{
-			MCStack *toclone = MCdispatcher -> findstackname(eptr);
+			MCNewAutoNameRef t_name;
+			/* UNCHECKED */ MCNameCreate((MCStringRef)t_val, &t_name);
+			MCStack *toclone = MCdispatcher -> findstackname(*t_name);
 			t_was_mainstack = MCdispatcher -> ismainstack(toclone);	
-
+			
 			if (toclone != NULL)
-				/* UNCHECKED */ MCStackSecurityCopyStack(toclone, tsub);
+			/* UNCHECKED */ MCStackSecurityCopyStack(toclone, tsub);
 		}
 		else
 		{
 			// If we are here then it means tsub was found in the current list of
 			// substacks of this stack.
 			t_was_mainstack = False;
-
+			
 			tsub -> remove(oldsubs);
 		}
-
+		
 		if (tsub != NULL)
 		{
 			MCObject *t_old_mainstack;
@@ -736,7 +747,7 @@ Exec_stat MCStack::resubstack(char *data)
 				t_old_mainstack = tsub;
 			else
 				t_old_mainstack = tsub -> getparent();
-
+			
 			tsub->appendto(substacks);
 			tsub->parent = this;
 			tsub->message_with_valueref_args(MCM_main_stack_changed, t_old_mainstack -> getname(), getname());
@@ -744,10 +755,10 @@ Exec_stat MCStack::resubstack(char *data)
 		else
 		{
 			iserror = True;
-			errorptr = eptr;
+			t_error = ((MCStringRef)t_val);
 		}
-		eptr = NULL;
 	}
+	
 	while (oldsubs != NULL)
 	{
 		MCStack *dsub = (MCStack *)oldsubs->remove(oldsubs);
@@ -767,7 +778,7 @@ Exec_stat MCStack::resubstack(char *data)
 
 	if (iserror)
 	{
-		MCeerror->add(EE_STACK_BADSUBSTACK, 0, 0, errorptr);
+		MCeerror->add(EE_STACK_BADSUBSTACK, 0, 0, *t_error);
 		return ES_ERROR;
 	}
 
@@ -1148,17 +1159,17 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 }
 
 
-MCStack *MCStack::findstackfile_oldstring(const MCString &s)
+MCStack *MCStack::findstackfile(MCNameRef p_name)
 {
-	char *fname;
-	if ((fname = getstackfile(s)) != NULL)
+	MCAutoStringRef t_fname;
+	getstackfile(MCNameGetString(p_name), &t_fname);
+	if (!MCStringIsEmpty(*t_fname))
 	{
 		MCU_watchcursor(getstack(), False);
 		MCStack *tstk;
-		if (MCdispatcher->loadfile(fname, tstk) == IO_NORMAL)
+		if (MCdispatcher->loadfile(*t_fname, tstk) == IO_NORMAL)
 		{
-			delete fname;
-			MCStack *stackptr = tstk->findsubstackname_oldstring(s);
+			MCStack *stackptr = tstk->findsubstackname(p_name);
 			
 			// MW-2007-12-17: [[ Bug 266 ]] The watch cursor must be reset before we
 			//   return back to the caller.
@@ -1169,7 +1180,6 @@ MCStack *MCStack::findstackfile_oldstring(const MCString &s)
 			
 			return stackptr;
 		}
-		delete fname;
 		
 		// MW-2007-12-17: [[ Bug 266 ]] The watch cursor must be reset before we
 		//   return back to the caller.
@@ -1184,7 +1194,7 @@ MCStack *MCStack::findstackname(MCNameRef p_name)
 	if ((foundstk = findsubstackname(p_name)) != NULL)
 		return foundstk;
 	else
-		return MCdispatcher->findstackname(MCNameGetOldString(p_name));
+		return MCdispatcher->findstackname(p_name);
 }
 
 /* LEGACY */ MCStack *MCStack::findstackname_oldstring(const MCString &s)
@@ -1714,56 +1724,63 @@ void MCStack::flip(uint2 count)
 	}
 }
 
-Exec_stat MCStack::sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
+bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
                         MCExpression *by, Boolean marked)
 {
 	if (by == NULL)
-		return ES_ERROR;
+		return false;
 	if (editing != NULL)
 		stopedit();
+	
 	MCStack *olddefault = MCdefaultstackptr;
 	MCdefaultstackptr = this;
 	MCCard *cptr = curcard;
-	MCSortnode *items = NULL;
+	MCAutoArray<MCSortnode> items;
 	uint4 nitems = 0;
 	MCerrorlock++;
 	do
 	{
-		MCU_realloc((char **)&items, nitems, nitems + 1, sizeof(MCSortnode));
+		items.Extend(nitems + 1);
 		items[nitems].data = (void *)curcard;
 		switch (form)
 		{
 		case ST_DATETIME:
-			if (marked && !curcard->getmark()
-			        || by->eval(ep) != ES_NORMAL
-			        || !MCD_convert(ep, CF_UNDEFINED, CF_UNDEFINED,
-			                        CF_SECONDS, CF_UNDEFINED)
-			        || !MCU_stor8(ep.getsvalue(), items[nitems].nvalue))
-				items[nitems].nvalue = -MAXREAL8;
+			if (!marked || curcard->getmark() && by->eval(ctxt.GetEP()) == ES_NORMAL)
+			{
+				MCAutoStringRef t_out;
+				if (MCD_convert(ctxt, ctxt.GetEP().getvalueref(), CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_out))
+					if (ctxt.ConvertToNumber(*t_out, items[nitems].nvalue))
+						break;
+			}
+
+			/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
 			break;
 		case ST_NUMERIC:
 			if ((!marked || curcard->getmark())
-			        && by->eval(ep) == ES_NORMAL && ep.ton() == ES_NORMAL)
-				items[nitems].nvalue = ep.getnvalue();
+			        && by->eval(ctxt.GetEP()) == ES_NORMAL 
+					&& ctxt.ConvertToNumber(ctxt.GetEP().getvalueref(), items[nitems].nvalue))
+				break;
 
-			else
-				items[nitems].nvalue = -MAXREAL8;
+			/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
 			break;
 		case ST_INTERNATIONAL:
 		case ST_TEXT:
-			if ((!marked || curcard->getmark()) && by->eval(ep) == ES_NORMAL)
+			if ((!marked || curcard->getmark()) && by->eval(ctxt.GetEP()) == ES_NORMAL)
 			{
-				if (ep.getcasesensitive())
-					items[nitems].svalue = ep.getsvalue().clone();
+				MCStringRef t_string;
+				/* UNCHECKED */ ctxt.ConvertToString(ctxt.GetEP().getvalueref(), t_string);
+				if (ctxt.GetCaseSensitive())
+					items[nitems].svalue = t_string;
 				else
 				{
-					items[nitems].svalue = new char[ep.getsvalue().getlength() + 1];
-					MCU_lower(items[nitems].svalue, ep.getsvalue());
-					items[nitems].svalue[ep.getsvalue().getlength()] = '\0';
+					MCStringRef t_mutable;
+					/* UNCHECKED */ MCStringMutableCopyAndRelease(t_string, t_mutable);
+					/* UNCHECKED */ MCStringLowercase(t_mutable);
+					/* UNCHECKED */ MCStringCopyAndRelease(t_mutable, items[nitems].svalue);
 				}
 			}
 			else
-				items[nitems].svalue = MCU_empty();
+				items[nitems].svalue = MCValueRetain(kMCEmptyString);
 			break;
 		default:
 			break;
@@ -1774,13 +1791,11 @@ Exec_stat MCStack::sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
 	while (curcard != cptr);
 	MCerrorlock--;
 	if (nitems > 1)
-		MCU_sort(items, nitems, dir, form);
+		MCU_sort(items.Ptr(), nitems, dir, form);
 	MCCard *newcards = NULL;
 	uint4 i;
 	for (i = 0 ; i < nitems ; i++)
 	{
-		if (form == ST_INTERNATIONAL || form == ST_TEXT)
-			delete items[i].svalue;
 		const MCCard *tcptr = (const MCCard *)items[i].data;
 		cptr = (MCCard *)tcptr;
 		cptr->remove(cards);
@@ -1789,7 +1804,6 @@ Exec_stat MCStack::sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
 	cards = newcards;
 	setcard(cards, True, False);
 	dirtywindowname();
-	delete items;
 	MCdefaultstackptr = olddefault;
 	return ES_NORMAL;
 }
@@ -1836,7 +1850,7 @@ void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uint2 &nstring
 	dest = tdest_str;
 }
 
-Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
+Boolean MCStack::findone(MCExecContext &ctxt, Find_mode fmode,
                          MCStringRef *strings, uint2 nstrings,
                          MCChunk *field, Boolean firstcard)
 {
@@ -1847,14 +1861,13 @@ Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
 		MCObject *optr;
 		uint4 parid;
 		MCerrorlock++;
-		MCExecPoint ep1(ep);
-		if (field->getobj(ep1, optr, parid, True) == ES_NORMAL)
+		if (field->getobj(ctxt.GetEP(), optr, parid, True) == ES_NORMAL)
 		{
 			if (optr->gettype() == CT_FIELD)
 			{
 				MCField *searchfield = (MCField *)optr;
 				while (i < nstrings)
-					if (!searchfield->find(ep, curcard->getid(), fmode,
+					if (!searchfield->find(ctxt, curcard->getid(), fmode,
 					                       strings[i], firstword))
 					{
 						MCerrorlock--;
@@ -1875,7 +1888,7 @@ Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
 	else
 	{
 		while (i < nstrings)
-			if (!curcard->find(ep, fmode, strings[i], firstcard, firstword))
+			if (!curcard->find(ctxt, fmode, strings[i], firstcard, firstword))
 				return False;
 			else
 			{
@@ -1886,7 +1899,7 @@ Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
 	}
 }
 
-void MCStack::find(MCExecPoint &ep, Find_mode fmode,
+void MCStack::find(MCExecContext &ctxt, Find_mode fmode,
                    MCStringRef tofind, MCChunk *field)
 {
 	MCStringRef *strings = NULL;
@@ -1897,7 +1910,7 @@ void MCStack::find(MCExecPoint &ep, Find_mode fmode,
 	MCField *oldfound = MCfoundfield;
 	do
 	{
-		if (findone(ep, fmode, strings, nstrings, field, firstcard))
+		if (findone(ctxt, fmode, strings, nstrings, field, firstcard))
 		{
 			delete strings;
 			MCField *newfound = MCfoundfield;
@@ -1934,7 +1947,7 @@ void MCStack::find(MCExecPoint &ep, Find_mode fmode,
 	MCresult->sets(MCnotfoundstring);
 }
 
-void MCStack::markfind(MCExecPoint &ep, Find_mode fmode,
+void MCStack::markfind(MCExecContext &ctxt, Find_mode fmode,
                        MCStringRef tofind, MCChunk *field, Boolean mark)
 {
 	if (MCfoundfield != NULL)
@@ -1945,7 +1958,7 @@ void MCStack::markfind(MCExecPoint &ep, Find_mode fmode,
 	MCCard *ocard = curcard;
 	do
 	{
-		if (findone(ep, fmode, strings, nstrings, field, False))
+		if (findone(ctxt, fmode, strings, nstrings, field, False))
 		{
 			MCfoundfield->clearfound();
 			curcard->setmark(mark);

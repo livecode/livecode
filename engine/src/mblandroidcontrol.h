@@ -22,8 +22,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 class MCAndroidControl : public MCNativeControl
 {
 protected:
-	static MCNativeControlPropertyInfo kProperties[];
-	static MCNativeControlPropertyTable kPropertyTable;
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
     static MCNativeControlActionInfo kActions[];
 	static MCNativeControlActionTable kActionTable;
 
@@ -39,7 +39,7 @@ public:
     virtual Exec_stat Do(MCNativeControlAction p_action, MCParameter *_parameters);
 #endif
 
-    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     void SetRect(MCExecContext& ctxt, MCRectangle p_rect);

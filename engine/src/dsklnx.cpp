@@ -1440,14 +1440,10 @@ public:
         if (MCStringGetLength(p_path) == 0)
             return false;
 
-        MCAutoStringRef t_resolved;
-        if (!MCS_resolvepath(p_path, &t_resolved))
-            return false;
-
         bool t_found;
         struct stat64 buf;
         // MM-2011-08-24: [[ Bug 9691 ]] Updated to use stat64 so no longer fails on files larger than 2GB
-        t_found = stat64(MCStringGetCString(*t_resolved), &buf) == 0;
+        t_found = stat64(MCStringGetCString(p_path), &buf) == 0;
 
         if (t_found)
             t_found = (buf.st_mode & S_IFDIR) == 0;
@@ -1935,7 +1931,7 @@ public:
             else
             {
                 MCAutoStringRef t_username;
-                if (!MCStringCopySubstring(p_path, MCRangeMake(1, t_user_end - 1), &t_username))
+                if (!MCStringCopySubstring(p_path, MCRangeMake(1, t_user_end), &t_username))
                     return false;
 
                 t_password = getpwnam(MCStringGetCString(*t_username));

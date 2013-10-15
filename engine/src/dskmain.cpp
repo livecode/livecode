@@ -285,7 +285,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 		for(int i = 0 ; i < MCnstacks ; i++)
 		{
 			MCStack *sptr;
-			if (MCdispatcher->loadfile(MCStringGetCString(MCstacknames[i]), sptr) == IO_NORMAL)
+			if (MCdispatcher->loadfile(MCstacknames[i], sptr) == IO_NORMAL)
 				sptr->open();
             MCValueRelease(MCstacknames[i]);
 		}

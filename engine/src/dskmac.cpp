@@ -23,6 +23,7 @@
 #include "objdefs.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "globals.h"
 #include "system.h"
 #include "osspec.h"
@@ -477,8 +478,12 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 				}
 				else
 				{
-					MCdefaultstackptr->getcard()->eval(*t_sptr, ep);
-					AEPutParamPtr(reply, '----', typeChar, ep.getsvalue().getstring(), ep.getsvalue().getlength());
+					MCExecContext ctxt(ep);
+					MCAutoValueRef t_val;
+					MCAutoStringRef t_string;
+					MCdefaultstackptr->getcard()->eval(ctxt, *t_sptr, &t_val);
+					/* UNCHECKED */ ctxt.ConvertToString(*t_val, &t_string);
+					AEPutParamPtr(reply, '----', typeChar, MCStringGetNativeCharPtr(*t_string), MCStringGetLength(*t_string));
 				}
 				delete sptr;
 			}
@@ -537,7 +542,7 @@ static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply
 		else
 		{
 			MCStack *stkptr;  //stack pointer
-			if (MCdispatcher->loadfile(MCStringGetCString(*t_full_path_name), stkptr) == IO_NORMAL)
+			if (MCdispatcher->loadfile(*t_full_path_name, stkptr) == IO_NORMAL)
 				stkptr->open();
 		}
 	}
@@ -1119,32 +1124,6 @@ static void init_utf8_converters(void)
 	CreateTextToUnicodeInfo(&ucmapping, &texttoutf8info);
 	CreateUnicodeToTextInfo(&ucmapping, &utf8totextinfo);
 }
-
-void MCS_utf8tonative(const char *s, uint4 len, char *d, uint4 &destlen)
-{
-	init_utf8_converters();
-	
-	ByteCount processedbytes, outlength;
-	uint4 destbufferlength;
-	destbufferlength = destlen;
-	ConvertFromUnicodeToText(utf8totextinfo, len, (UniChar *)s,kUnicodeUseFallbacksMask | kUnicodeLooseMappingsMask, 0, NULL, 0, NULL, destbufferlength, &processedbytes, &outlength, (LogicalAddress)d);
-	destlen = outlength;
-}
-
-void MCS_nativetoutf8(const char *s, uint4 len, char *d, uint4 &destlen)
-{
-	init_utf8_converters();
-	
-	ByteCount processedbytes, outlength;
-	uint4 destbufferlength;
-	destbufferlength = destlen;
-	ConvertFromTextToUnicode(texttoutf8info, len, (LogicalAddress)s,
-	                         kUnicodeLooseMappingsMask, 0, NULL, 0, NULL,
-	                         destbufferlength, &processedbytes,
-	                         &outlength, (UniChar *)d);
-	destlen = outlength;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 /* LEGACY */
@@ -5480,16 +5459,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (NULL == getcwd(namebuf, PATH_MAX))
             return false;
         
-        MCAutoNativeCharArray t_buffer;
-        if (!t_buffer.New(PATH_MAX))
-            return false;
-        
-        uint4 outlen;
-        outlen = PATH_MAX;
-        MCS_utf8tonative(namebuf, strlen(namebuf), (char*)t_buffer.Chars(), outlen);
-        t_buffer.Shrink(outlen);
-        
-        if (!t_buffer.CreateStringAndRelease(r_path))
+        if (!MCStringCreateWithBytesAndRelease((byte_t*)namebuf, strlen(namebuf), kMCStringEncodingUTF8, false, r_path))
         {
             r_path = MCValueRetain(kMCEmptyString);
             return false;
@@ -8579,19 +8549,6 @@ void MCS_multibytetounicode(const char *s, uint4 len, char *d,
 	                         &outlength, (UniChar *)d);
 	destlen = outlength;
 	oldcharset = charset;
-}
-
-void MCS_nativetoutf16(const char *p_native, uint4 p_native_length, unsigned short *p_utf16, uint4& x_utf16_length)
-{
-	uint4 t_byte_length;
-	t_byte_length = x_utf16_length * sizeof(unsigned short);
-	MCS_multibytetounicode(p_native, p_native_length, (char *)p_utf16, t_byte_length, t_byte_length, LCH_ROMAN);
-	x_utf16_length = t_byte_length / sizeof(unsigned short);
-}
-
-void MCS_utf16tonative(const unsigned short *p_utf16, uint4 p_utf16_length, char *p_native, uint4& p_native_length)
-{
-	MCS_unicodetomultibyte((const char *)p_utf16, p_utf16_length * 2, p_native, p_native_length, p_native_length, LCH_ROMAN);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

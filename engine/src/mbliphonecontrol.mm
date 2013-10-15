@@ -41,16 +41,16 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeControlPropertyInfo MCiOSControl::kProperties[] =
+MCPropertyInfo MCiOSControl::kProperties[] =
 {
-    DEFINE_RW_CTRL_PROPERTY(Rectangle, Rectangle, MCiOSControl, Rect)
-    DEFINE_RW_CTRL_PROPERTY(Visible, Bool, MCiOSControl, Visible)
-    DEFINE_RW_CTRL_PROPERTY(Opaque, Bool, MCiOSControl, Opaque)
-    DEFINE_RW_CTRL_PROPERTY(Alpha, UInt16, MCiOSControl, Alpha)
-    DEFINE_RW_CTRL_CUSTOM_PROPERTY(BackgroundColor, NativeControlColor, MCiOSControl, BackgroundColor)
+    DEFINE_RW_CTRL_PROPERTY(P_RECTANGLE, Rectangle, MCiOSControl, Rect)
+    DEFINE_RW_CTRL_PROPERTY(P_VISIBLE, Bool, MCiOSControl, Visible)
+    DEFINE_RW_CTRL_PROPERTY(P_OPAQUE, Bool, MCiOSControl, Opaque)
+    DEFINE_RW_CTRL_PROPERTY(P_ALPHA, UInt16, MCiOSControl, Alpha)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(P_BACKGROUND_COLOR, NativeControlColor, MCiOSControl, BackgroundColor)
 };
 
-MCNativeControlPropertyTable MCiOSControl::kPropertyTable =
+MCObjectPropertyTable MCiOSControl::kPropertyTable =
 {
 	&MCNativeControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
