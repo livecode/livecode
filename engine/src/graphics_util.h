@@ -111,7 +111,7 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 	return t_font;
 }
 
-#elif defined(TARGET_PLATFORM_MACOS_X)
+#elif defined(_MAC_DESKTOP) || defined(_MAC_SERVER)
 
 static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 {
@@ -124,7 +124,7 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 	return t_font;
 }
 
-#elif defined(TARGET_PLATFORM_LINUX)
+#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
 
 #include "lnxflst.h"
 
@@ -135,19 +135,6 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 	t_font . ascent = p_font -> ascent;
 	t_font . descent = p_font -> descent;
 	t_font . fid = static_cast<MCNewFontStruct *>(p_font) -> description;
-	t_font . style = 0;
-	return t_font;
-}
-
-#elif defined(_SERVER)
-
-static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
-{
-	MCGFont t_font;
-	t_font . size = p_font -> size;
-	t_font . ascent = p_font -> ascent;
-	t_font . descent = p_font -> descent;
-	t_font . fid = nil;
 	t_font . style = 0;
 	return t_font;
 }

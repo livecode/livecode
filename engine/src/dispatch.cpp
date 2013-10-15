@@ -1283,11 +1283,15 @@ void MCDispatch::redraw(Window w, MCRegionRef p_dirty_region)
 MCFontStruct *MCDispatch::loadfont(const MCString &fname, uint2 &size,
                                    uint2 style, Boolean printer)
 {
-#ifdef _LINUX
+#if defined(_LINUX_DESKTOP)
 	if (fonts == NULL)
 		fonts = MCFontlistCreateNew();
 	if (fonts == NULL)
 		fonts = MCFontlistCreateOld();
+#elif defined(_LINUX_SERVER)
+	// MM-2013-09-13: [[ RefactorGraphics ]] Server font support.
+	if (fonts == NULL)
+		fonts = MCFontlistCreateNew();
 #else
 	if (fonts == nil)
 		fonts = new MCFontlist;
