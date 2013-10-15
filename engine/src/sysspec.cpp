@@ -208,6 +208,50 @@ bool MCS_alternatelanguages(MCListRef& r_list)
     return MCsystem -> AlternateLanguages(r_list);
 }
 
+void MCS_nativetoutf16(const char *p_native, uint4 p_native_length, unsigned short *r_utf16, uint4& r_utf16_length)
+{
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)p_native, p_native_length, kMCStringEncodingNative, false, &t_string);
+    byte_t *t_bytes;
+    uindex_t t_len;
+    /* UNCHECKED */ MCStringConvertToBytes(*t_string, kMCStringEncodingUTF16, false, t_bytes, t_len);
+    r_utf16 = (unsigned short *)t_bytes;
+    r_utf16_length = (uint4) t_len;
+}
+
+void MCS_utf16tonative(const unsigned short *p_utf16, uint4 p_utf16_length, char *r_native, uint4& r_native_length)
+{
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)p_utf16, p_utf16_length, kMCStringEncodingUTF16, false, &t_string);
+    byte_t *t_bytes;
+    uindex_t t_len;
+    /* UNCHECKED */ MCStringConvertToBytes(*t_string, kMCStringEncodingNative, false, t_bytes, t_len);
+    r_native = (char *)t_bytes;
+    r_native_length = (uint4)t_len;
+}
+
+void MCS_nativetoutf8(const char *p_native, uint4 p_native_length, char *r_utf8, uint4& r_utf8_length)
+{
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)p_native, p_native_length, kMCStringEncodingNative, false, &t_string);
+    byte_t *t_bytes;
+    uindex_t t_len;
+    /* UNCHECKED */ MCStringConvertToBytes(*t_string, kMCStringEncodingUTF8, false, t_bytes, t_len);
+    r_utf8 = (char *)t_bytes;
+    r_utf8_length = (uint4) t_len;
+}
+
+void MCS_utf8tonative(const char *p_utf8, uint4 p_utf8_length, char *r_native, uint4& r_native_length)
+{
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)p_utf8, p_utf8_length, kMCStringEncodingUTF8, false, &t_string);
+    byte_t *t_bytes;
+    uindex_t t_len;
+    /* UNCHECKED */ MCStringConvertToBytes(*t_string, kMCStringEncodingNative, false, t_bytes, t_len);
+    r_native = (char *)t_bytes;
+    r_native_length = (uint4)t_len;
+}
+
 void MCS_seterrno(int value)
 {
 //	*s_mainthread_errno = value;

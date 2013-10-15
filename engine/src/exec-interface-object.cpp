@@ -1381,7 +1381,7 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 
 	// Create a script point with the value are setting the property to
 	// as source text.
-	MCScriptPoint sp(MCStringGetOldString(new_parent_script));
+	MCScriptPoint sp(new_parent_script);
 
 	// Create a new chunk object to parse the reference into
 	MCChunk *t_chunk;

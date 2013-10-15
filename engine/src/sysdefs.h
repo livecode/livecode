@@ -107,6 +107,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <foundation.h>
 #include <foundation-auto.h>
 
+#ifdef __OBJC__
+#include <foundation-objc.h>
+#endif
+
 //////////////////////////////////////////////////////////////////////
 //
 //  LEGACY INCLUDES AND DEFINES
@@ -1266,6 +1270,13 @@ struct MCUrlChunkPtr
 	MCStringRef url;
 	Chunk_term chunk;
 	MCMarkedText mark;
+};
+
+struct MCObjectIndexPtr
+{
+    MCObject *object;
+    uint32_t part_id;
+    MCNameRef index;
 };
 
 //////////////////////////////////////////////////////////////////////

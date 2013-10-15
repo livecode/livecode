@@ -466,7 +466,7 @@ public:
 	// Sets the given paragraph attribute to the value in ep.
 	Exec_stat setparagraphattr(Properties which, MCExecPoint& ep);
 	// Gets the given paragraph attribute into the given ep.
-	Exec_stat getparagraphattr(Properties which, MCExecPoint& ep, Boolean effective);
+    Exec_stat getparagraphattr(Properties which, MCExecPoint& ep, Boolean effective);
 	// Copies the given attribute from the given paragraph.
 	void copysingleattr(Properties which, MCParagraph *other);
 	// Copies all the attributes from the given paragraph.
@@ -719,6 +719,9 @@ public:
 	static void formatliststyleindex(uint32_t p_list_style, uint32_t p_index, char r_index_buffer[PG_MAX_INDEX_SIZE], const char*& r_string, uint32_t& r_length);
 
 	bool imagechanged(MCImage *p_image, bool p_deleting);
+
+    void GetTextAlign(MCExecContext& ctxt, intenum_t*& r_value);
+    void GetEffectiveTextAlign(MCExecContext& ctxt, intenum_t& r_value);
 
 private:
 	// Flow the paragraph using the given parent font. This is called

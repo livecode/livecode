@@ -26,6 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "globals.h"
 #include "execpt.h"
+#include "exec.h"
 #include "metacontext.h"
 #include "printer.h"
 #include "customprinter.h"
@@ -899,17 +900,11 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 	dotextmark_callback_state *context;
 	context = (dotextmark_callback_state *)p_context;
 	
-	// Note we can use 'setstaticbytes' here because the execpoint is immediately
-	// modified.
-	MCExecPoint ep(nil, nil, nil);
-	ep . setstaticbytes((const char *)p_span -> chars, p_span -> char_count * 2);
-	ep . utf16toutf8();
-	
-	// Get the UTF-8 string pointer and length
-	const uint8_t *t_bytes;
-	uint32_t t_byte_count;
-	t_bytes = (const uint8_t *)ep . getcstring();
-	t_byte_count = ep . getsvalue() . getlength();
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCStringCreateWithCString((const char *)p_span -> chars, &t_string);
+	byte_t *t_bytes;
+	uindex_t t_byte_count;
+	/* UNCHECKED */ MCStringConvertToBytes(*t_string, kMCStringEncodingUTF8, false, t_bytes, t_byte_count);
 	
 	// Allocate a cluster index for every UTF-8 byte
 	uint32_t *t_clusters;
@@ -983,18 +978,16 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 
 void MCCustomMetaContext::dotextmark(MCMark *p_mark)
 {
-	// Note we can use 'setstaticbytes' here because the ep is just being used
-	// for conversion.
-	MCExecPoint ep(nil, nil, nil);
-	ep . setstaticbytes(p_mark -> text . data, p_mark -> text . length);
-	if (!p_mark -> text . font -> unicode && !p_mark -> text . unicode_override)
-		ep . nativetoutf16();
+	bool t_is_unicode;
+	t_is_unicode = p_mark -> text . font -> unicode || p_mark -> text . unicode_override;
 
-	const unichar_t *t_chars;
-	uint32_t t_char_count;
-	t_chars = (const unichar_t *)ep . getsvalue() . getstring();
-	t_char_count = ep . getsvalue() . getlength() / 2;
+	MCAutoStringRef t_text_str;
+	/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)p_mark -> text . data, p_mark -> text . length, t_is_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative, false, &t_text_str);
 
+	unichar_t *t_chars;
+	uindex_t t_char_count;
+	/* UNCHECKED */ MCStringConvertToUnicode(*t_text_str, t_chars, t_char_count);
+	
 	dotextmark_callback_state t_state;
 	t_state . device = m_device;
 
@@ -1127,13 +1120,15 @@ static bool convert_options_array(void *p_context, MCArrayRef p_array, MCNameRef
 	convert_options_array_t *ctxt;
 	ctxt = (convert_options_array_t *)p_context;
 
-	//MCExecPoint ep(nil, nil, nil);
 	if (!MCStringCopy(MCNameGetString(p_key), ctxt -> option_keys[ctxt -> index]))
 		return false;
-	//if (!ep . setvalueref(p_value))
-		//return false;
+	
 	if (!MCStringCopy((MCStringRef)p_value, ctxt -> option_values[ctxt -> index]))
 		return false;
+	t_value = (MCStringRef) MCValueRetain(p_value);
+	
+    ctxt -> option_values[ctxt -> index] = strdup(MCStringGetCString(t_value));
+	MCValueRelease(t_value);
 	ctxt -> index += 1;
 	return true;
 }

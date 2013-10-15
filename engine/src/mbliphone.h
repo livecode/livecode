@@ -135,7 +135,6 @@ public:
 
 @interface NSString (com_runrev_livecode_NSStringAdditions)
 	- (const char *)nativeCString;
-	+ (NSString *)stringWithMCStringRef: (MCStringRef)value;
 @end
 
 NSString *MCStringRefToNSString(MCStringRef p_string, bool p_unicode);

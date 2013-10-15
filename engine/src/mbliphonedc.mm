@@ -1269,7 +1269,7 @@ void MCIPhoneRunBlockOnMainFiber(void (^block)(void))
 
 // MW-2012-08-06: [[ Fibers ]] Updated entry point for didBecomeActive.
 static void MCIPhoneDoDidBecomeActive(void *)
-{
+{ 
 	extern char **environ;
 	char **env;
 	env = environ;
@@ -1300,11 +1300,15 @@ static void MCIPhoneDoDidBecomeActive(void *)
 	
 	if (!t_init_success)
 	{
-		MCExecPoint ep(nil, nil, nil);
-        ep . setvalueref(MCresult -> getvalueref());
-		NSLog(@"Startup error: %s\n", ep . getcstring());
-		abort();
-		return;
+		
+		if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
+		{
+			MCAutoStringRef t_value;
+			t_value = MCresult -> getvalueref();
+			NSLog(@"Startup error: %s\n", MCStringGetCString(t_value));
+			abort();
+			return;
+		}
 	}
 
 	// MW-2012-08-31: [[ Bug 10340 ]] Now we've finished initializing, get the app to

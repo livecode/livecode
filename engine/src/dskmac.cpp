@@ -23,6 +23,7 @@
 #include "objdefs.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "globals.h"
 #include "system.h"
 #include "osspec.h"
@@ -477,8 +478,12 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 				}
 				else
 				{
-					MCdefaultstackptr->getcard()->eval(*t_sptr, ep);
-					AEPutParamPtr(reply, '----', typeChar, ep.getsvalue().getstring(), ep.getsvalue().getlength());
+					MCExecContext ctxt(ep);
+					MCAutoValueRef t_val;
+					MCAutoStringRef t_string;
+					MCdefaultstackptr->getcard()->eval(ctxt, *t_sptr, &t_val);
+					/* UNCHECKED */ ctxt.ConvertToString(*t_val, &t_string);
+					AEPutParamPtr(reply, '----', typeChar, MCStringGetNativeCharPtr(*t_string), MCStringGetLength(*t_string));
 				}
 				delete sptr;
 			}
@@ -537,7 +542,7 @@ static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply
 		else
 		{
 			MCStack *stkptr;  //stack pointer
-			if (MCdispatcher->loadfile(MCStringGetCString(*t_full_path_name), stkptr) == IO_NORMAL)
+			if (MCdispatcher->loadfile(*t_full_path_name, stkptr) == IO_NORMAL)
 				stkptr->open();
 		}
 	}
@@ -1119,32 +1124,6 @@ static void init_utf8_converters(void)
 	CreateTextToUnicodeInfo(&ucmapping, &texttoutf8info);
 	CreateUnicodeToTextInfo(&ucmapping, &utf8totextinfo);
 }
-
-void MCS_utf8tonative(const char *s, uint4 len, char *d, uint4 &destlen)
-{
-	init_utf8_converters();
-	
-	ByteCount processedbytes, outlength;
-	uint4 destbufferlength;
-	destbufferlength = destlen;
-	ConvertFromUnicodeToText(utf8totextinfo, len, (UniChar *)s,kUnicodeUseFallbacksMask | kUnicodeLooseMappingsMask, 0, NULL, 0, NULL, destbufferlength, &processedbytes, &outlength, (LogicalAddress)d);
-	destlen = outlength;
-}
-
-void MCS_nativetoutf8(const char *s, uint4 len, char *d, uint4 &destlen)
-{
-	init_utf8_converters();
-	
-	ByteCount processedbytes, outlength;
-	uint4 destbufferlength;
-	destbufferlength = destlen;
-	ConvertFromTextToUnicode(texttoutf8info, len, (LogicalAddress)s,
-	                         kUnicodeLooseMappingsMask, 0, NULL, 0, NULL,
-	                         destbufferlength, &processedbytes,
-	                         &outlength, (UniChar *)d);
-	destlen = outlength;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 /* LEGACY */
