@@ -40,6 +40,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "visual.h"
 
 #include "globals.h"
+#include "graphics_util.h"
 
 // MM-2013-03-06: [[ RefactorGraphics ]] Added to allow server engines to compile.
 MCGFloat MCResGetDeviceScale(void)
@@ -106,6 +107,11 @@ void MCStack::sethints(void)
 
 void MCStack::destroywindowshape(void)
 {
+}
+
+MCRectangle MCStack::device_setgeom(const MCRectangle &p_rect)
+{
+	return MCRectangleMake(0,0,0,0);
 }
 
 void MCStack::setgeom(void)
