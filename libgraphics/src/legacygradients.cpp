@@ -816,14 +816,13 @@ MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, 
 		if (i != 0)
 			t_ramp[i - 1] . difference = (uint4) (STOP_DIFF_MULT / (t_ramp[i] . offset - t_ramp[i - 1] . offset));
 		
-		if (kMCGPixelFormatNative != kMCGPixelFormatBGRA)
-		{
-			uint8_t t_red, t_green, t_blue, t_alpha;
-			MCGPixelUnpack(kMCGPixelFormatBGRA, t_ramp[i] . color, t_red, t_green, t_blue, t_alpha);
-			t_ramp[i] . hw_color = MCGPixelPackNative(t_red, t_green, t_blue, t_alpha);
-		}
-		else
-			t_ramp[i] . hw_color = t_ramp[i] . color;
+#if kMCGPixelFormatNative != kMCGPixelFormatBGRA
+		uint8_t t_red, t_green, t_blue, t_alpha;
+		MCGPixelUnpack(kMCGPixelFormatBGRA, t_ramp[i] . color, t_red, t_green, t_blue, t_alpha);
+		t_ramp[i] . hw_color = MCGPixelPackNative(t_red, t_green, t_blue, t_alpha);
+#else
+		t_ramp[i] . hw_color = t_ramp[i] . color;
+#endif
 	}
 	t_ramp[i] . difference = (uint4) (STOP_DIFF_MULT / STOP_INT_MAX);		
 	
@@ -882,7 +881,7 @@ MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, 
 		case kMCGImageFilterBicubic:
 		{
 			s_gradient_affine_combiner.end = gradient_bilinear_affine_combiner_end;
-			s_gradient_affine_combiner.buffer_width = GRADIENT_AA_SCALE * (int32_t) r_clip . size . width;
+			s_gradient_affine_combiner.buffer_width = GRADIENT_AA_SCALE * (uint32_t) ceilf(r_clip . size . width);
 			s_gradient_affine_combiner.buffer = new uint4[GRADIENT_AA_SCALE * s_gradient_affine_combiner.buffer_width];
 			
 			s_gradient_affine_combiner.x_inc += (s_gradient_affine_combiner.x_coef_a + s_gradient_affine_combiner.x_coef_b) >> 2;
