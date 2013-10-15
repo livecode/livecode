@@ -10,7 +10,7 @@ The first step to supporting resolution independence was to completely refactor 
 
 Since all of the updates are internal, the end LiveCode developer should see no major changes: Where possible, we've tried to match previous behaviors as closely as possible. However, in the early DPs, we do expect some rendering irregularities.
 
-Though the primary reason for the updates is to support resolution independence, we do get the side benefits of having a modern 2D graphics library. These include a clean developer API allowing for easy integration into other modules, potential performance improvements and support for graphic rendering on the server platforms (planned for a future release).
+Though the primary reason for the updates is to support resolution independence, we do get the side benefits of having a modern 2D graphics library. These include a clean developer API allowing for easy integration into other modules, potential performance improvements and support for graphic rendering on the server platforms.
 
 ##Multiple Density Support
 
@@ -71,7 +71,3 @@ This will be available on all desktop platforms and operates independently from 
 
 Automatically scale stacks on desktop systems with high resolution displays. This will function in the same way as the current support for mobile devices.
 Support for automatic scaling will be added for desktop operating systems that support high resolution displays. This currently includes Windows 7 & 8 and OSX Mountain Lion.
-
-###Server graphics.
-
-Support for creating images for output on a web server, for example by composing a set of objects and using "export snapshot ... " to generate the image data.
