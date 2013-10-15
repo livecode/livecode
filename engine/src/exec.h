@@ -203,6 +203,11 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, B
 	(static_cast<O *>(obj -> object) ->* Method)(ctxt, count, arg);
 }
 
+template<typename O, typename A, void (O::*Method)(MCExecContext&, A[4])> inline void MCPropertyX4ObjectThunk(MCExecContext& ctxt, MCObjectPtr *obj, A arg[4])
+{
+	(static_cast<O *>(obj -> object) ->* Method)(ctxt, arg);
+}
+
 template<typename O, typename A, void (O::*Method)(MCExecContext&, uint32_t, int32_t, int32_t, A)> inline void MCPropertyObjectChunkThunk(MCExecContext& ctxt, MCObjectChunkPtr *obj, A arg)
 {
     int32_t t_si, t_ei;
@@ -256,9 +261,21 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
     Method(ctxt, count, arg);
 }
 
+template<typename A, void Method(MCExecContext&, A[2])> inline void MCPropertyX2Thunk(MCExecContext& ctxt, void *, A arg[2])
+{
+    Method(ctxt, arg);
+}
+
+template<typename A, void Method(MCExecContext&, A[4])> inline void MCPropertyX4Thunk(MCExecContext& ctxt, void *, A arg[4])
+{
+    Method(ctxt, arg);
+}
+
 #define MCPropertyThunkImp(mth,typ) (void(*)(MCExecContext&, void *,typ))MCPropertyThunk<typ,mth>
 #define MCPropertyIndexedThunkImp(mth,index,typ) (void(*)(MCExecContext&, MCNameRef, typ))MCPropertyIndexedThunk<typ,mth>
 #define MCPropertyListThunkImp(mth,count,typ) (void(*)(MCExecContext&,void *,count,typ))MCPropertyListThunk<typ,count,mth>
+#define MCPropertyX2ThunkImp(mth,typ) (void(*)(MCExecContext&,void *,typ))MCPropertyX2Thunk<typ,mth>
+#define MCPropertyX4ThunkImp(mth,typ) (void(*)(MCExecContext&,void *,typ))MCPropertyX4Thunk<typ,mth>
 
 #define MCPropertyThunkIndexedGetBinaryString(mth) MCPropertyIndexedThunkImp(mth, MCNameRef, MCDataRef&)
 #define MCPropertyThunkIndexedSetBinaryString(mth) MCPropertyIndexedThunkImp(mth, MCNameRef, MCDataRef)
@@ -266,8 +283,8 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyThunkGetAny(mth) MCPropertyThunkImp(mth, MCValueRef&)
 #define MCPropertyThunkGetBool(mth) MCPropertyThunkImp(mth, bool&)
 #define MCPropertyThunkGetInt16(mth) MCPropertyThunkImp(mth, integer_t&)
-#define MCPropertyThunkGetInt16X2(mth) MCPropertyThunkImp(mth, integer_t[2])
-#define MCPropertyThunkGetInt16X4(mth) MCPropertyThunkImp(mth, integer_t[4])
+#define MCPropertyThunkGetInt16X2(mth) MCPropertyX2ThunkImp(mth, integer_t)
+#define MCPropertyThunkGetInt16X4(mth) MCPropertyX4ThunkImp(mth, integer_t)
 #define MCPropertyThunkGetInt32(mth) MCPropertyThunkImp(mth, integer_t&)
 #define MCPropertyThunkGetUInt16(mth) MCPropertyThunkImp(mth, uinteger_t&)
 #define MCPropertyThunkGetUInt32(mth) MCPropertyThunkImp(mth, uinteger_t&)
@@ -295,8 +312,8 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyThunkSetAny(mth) MCPropertyThunkImp(mth, MCValueRef)
 #define MCPropertyThunkSetBool(mth) MCPropertyThunkImp(mth, bool)
 #define MCPropertyThunkSetInt16(mth) MCPropertyThunkImp(mth, integer_t)
-#define MCPropertyThunkSetInt16X2(mth) MCPropertyThunkImp(mth, integer_t[2])
-#define MCPropertyThunkSetInt16X4(mth) MCPropertyThunkImp(mth, integer_t[4])
+#define MCPropertyThunkSetInt16X2(mth) MCPropertyX2ThunkImp(mth, integer_t)
+#define MCPropertyThunkSetInt16X4(mth) MCPropertyX4ThunkImp(mth, integer_t)
 #define MCPropertyThunkSetInt32(mth) MCPropertyThunkImp(mth, integer_t)
 #define MCPropertyThunkSetUInt16(mth) MCPropertyThunkImp(mth, uinteger_t)
 #define MCPropertyThunkSetUInt32(mth) MCPropertyThunkImp(mth, uinteger_t)
@@ -327,12 +344,13 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectListThunkImp(obj, mth, count, typ) (void(*)(MCExecContext&,MCObjectPtr*,count,typ))MCPropertyObjectListThunk<obj,typ,count,&obj::mth>
 #define MCPropertyObjectChunkThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectChunkPtr*,typ))MCPropertyObjectChunkThunk<obj,typ,&obj::mth>
 #define MCPropertyObjectChunkMixedThunkImp(obj, mth, mixed, typ) (void(*)(MCExecContext&,MCObjectChunkPtr*,mixed,typ))MCPropertyObjectChunkMixedThunk<obj,typ,mixed,&obj::mth>
+#define MCPropertyX4ObjectThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectPtr*,typ))MCPropertyX4ObjectThunk<obj,typ,&obj::mth>
 
 #define MCPropertyObjectThunkGetAny(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCValueRef&)
 #define MCPropertyObjectThunkGetBool(obj, mth) MCPropertyObjectThunkImp(obj, mth, bool&)
 #define MCPropertyObjectThunkGetInt16(obj, mth) MCPropertyObjectThunkImp(obj, mth, integer_t&)
 #define MCPropertyObjectThunkGetInt32(obj, mth) MCPropertyObjectThunkImp(obj, mth, integer_t&)
-#define MCPropertyObjectThunkGetInt32X4(obj, mth) MCPropertyObjectThunkImp(obj, mth, integer_t[4])
+#define MCPropertyObjectThunkGetInt32X4(obj, mth) MCPropertyX4ObjectThunkImp(obj, mth, integer_t)
 #define MCPropertyObjectThunkGetUInt16(obj, mth) MCPropertyObjectThunkImp(obj, mth, uinteger_t&)
 #define MCPropertyObjectThunkGetUInt32(obj, mth) MCPropertyObjectThunkImp(obj, mth, uinteger_t&)
 #define MCPropertyObjectThunkGetOptionalInt16(obj, mth) MCPropertyObjectThunkImp(obj, mth, integer_t*&)
@@ -362,7 +380,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectThunkSetBool(obj, mth) MCPropertyObjectThunkImp(obj, mth, bool)
 #define MCPropertyObjectThunkSetInt16(obj, mth) MCPropertyObjectThunkImp(obj, mth, integer_t)
 #define MCPropertyObjectThunkSetInt32(obj, mth) MCPropertyObjectThunkImp(obj, mth, integer_t)
-#define MCPropertyObjectThunkSetInt32X4(obj, mth) MCPropertyObjectThunkImp(obj, mth, integer_t[4])
+#define MCPropertyObjectThunkSetInt32X4(obj, mth) MCPropertyX4ObjectThunkImp(obj, mth, integer_t)
 #define MCPropertyObjectThunkSetUInt16(obj, mth) MCPropertyObjectThunkImp(obj, mth, uinteger_t)
 #define MCPropertyObjectThunkSetUInt32(obj, mth) MCPropertyObjectThunkImp(obj, mth, uinteger_t)
 #define MCPropertyObjectThunkSetOptionalInt16(obj, mth) MCPropertyObjectThunkImp(obj, mth, integer_t*)
