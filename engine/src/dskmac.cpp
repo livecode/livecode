@@ -1124,32 +1124,6 @@ static void init_utf8_converters(void)
 	CreateTextToUnicodeInfo(&ucmapping, &texttoutf8info);
 	CreateUnicodeToTextInfo(&ucmapping, &utf8totextinfo);
 }
-
-void MCS_utf8tonative(const char *s, uint4 len, char *d, uint4 &destlen)
-{
-	init_utf8_converters();
-	
-	ByteCount processedbytes, outlength;
-	uint4 destbufferlength;
-	destbufferlength = destlen;
-	ConvertFromUnicodeToText(utf8totextinfo, len, (UniChar *)s,kUnicodeUseFallbacksMask | kUnicodeLooseMappingsMask, 0, NULL, 0, NULL, destbufferlength, &processedbytes, &outlength, (LogicalAddress)d);
-	destlen = outlength;
-}
-
-void MCS_nativetoutf8(const char *s, uint4 len, char *d, uint4 &destlen)
-{
-	init_utf8_converters();
-	
-	ByteCount processedbytes, outlength;
-	uint4 destbufferlength;
-	destbufferlength = destlen;
-	ConvertFromTextToUnicode(texttoutf8info, len, (LogicalAddress)s,
-	                         kUnicodeLooseMappingsMask, 0, NULL, 0, NULL,
-	                         destbufferlength, &processedbytes,
-	                         &outlength, (UniChar *)d);
-	destlen = outlength;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 /* LEGACY */

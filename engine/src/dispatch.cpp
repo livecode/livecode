@@ -1715,13 +1715,15 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 		if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
 		{
 			MCExecPoint ep(NULL, NULL, NULL);
-			/* UNCHECKED */ ep . setvalueref(*t_data);
+			MCExecContext ctxt(ep);
 
 			MCImage *t_image;
 			t_image = new MCImage;
 			t_image -> open();
 			t_image -> openimage();
-			t_image -> setprop(0, P_TEXT, ep, False);
+			MCAutoStringRef t_string_data;
+			/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), &t_string_data);
+			t_image -> setstringprop(ctxt, 0, P_TEXT, False, *t_string_data);
 			MCactiveimage -> pasteimage(t_image);
 			t_image -> closeimage();
 			t_image -> close();
@@ -1752,10 +1754,13 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 			if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
 			{
 				MCExecPoint ep(NULL, NULL, NULL);
-				/* UNCHECKED */ ep . setvalueref(*t_data);
+				MCExecContext ctxt(ep);
+				
 				t_objects = new MCImage(*MCtemplateimage);
 				t_objects -> open();
-				t_objects -> setprop(0, P_TEXT, ep, False);
+				MCAutoStringRef t_string_data;
+				/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), &t_string_data);
+				t_objects -> setstringprop(ctxt, 0, P_TEXT, False, *t_string_data);
 				t_objects -> close();
 			}
 		}

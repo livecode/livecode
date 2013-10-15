@@ -644,9 +644,16 @@ private:
 		else
 		{
 			MCExecPoint ep(NULL, NULL, NULL);
-			ep . setstaticbytes(p_data, p_data_length);
-			if (context -> var -> append(ep) != ES_NORMAL)
+			MCExecContext ctxt(ep);
+			MCAutoStringRef t_data;
+			/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)p_data, p_data_length, kMCStringEncodingNative, false, &t_data);
+			MCStringRef t_value; 
+			/* UNCHECKED */ ctxt . ConvertToString(context -> var -> value, t_value);
+			/* UNCHECHED */ MCStringMutableCopyAndRelease(t_value, t_value);
+			if (!MCStringAppend(t_value, *t_data))
 				return false;
+			MCValueAssign(context -> var -> value, t_value);
+			MCValueRelease(t_value);
 		}
 
 		MCObject *t_target;
