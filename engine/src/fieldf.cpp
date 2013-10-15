@@ -1451,13 +1451,13 @@ void MCField::unselect(Boolean clear, Boolean internal)
 	{
 		firstparagraph = lastparagraph = NULL;
 		if (focusedparagraph->next() == paragraphs && !(flags & F_LIST_BEHAVIOR))
-			focusedparagraph->setselectionindex(MAXUINT2, MAXUINT2, False, False);
+			focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 		return;
 	}
 	if (firstparagraph == NULL)
 	{
 		if (!(flags & F_LIST_BEHAVIOR))
-			focusedparagraph->setselectionindex(MAXUINT2, MAXUINT2, False, False);
+			focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 		return;
 	}
 	if (!(flags & F_LIST_BEHAVIOR))
@@ -1474,13 +1474,13 @@ void MCField::unselect(Boolean clear, Boolean internal)
 		drect.y += getcontenty() + focusedy;
 		focusedparagraph = firstparagraph;
 		focusedy = firsty;
-		focusedparagraph->setselectionindex(MAXUINT2, MAXUINT2, False, False);
+		focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 		updateparagraph(False, False);
 		while (focusedparagraph != lastparagraph)
 		{
 			focusedy += focusedparagraph->getheight(fixedheight);
 			focusedparagraph = focusedparagraph->next();
-			focusedparagraph->setselectionindex(MAXUINT2, MAXUINT2, False, False);
+			focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 			updateparagraph(False, False);
 		}
 		setfocus(drect.x, drect.y);
@@ -1952,7 +1952,7 @@ void MCField::freturn(Field_translations function, MCStringRef p_string, KeySym 
 			focusedparagraph->clearzeros();
 		textheight -= focusedparagraph->getheight(fixedheight);
 		focusedparagraph->split();
-		focusedparagraph->setselectionindex(MAXUINT2, MAXUINT2, False, False);
+		focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 		updateparagraph(True, False);
 		focusedy += focusedparagraph->getheight(fixedheight);
 		focusedparagraph = focusedparagraph->next();
@@ -2315,14 +2315,14 @@ void MCField::startcomposition()
 	composelength = 0;
 }
 
-void MCField::setcompositioncursoroffset(uint2 coffset)
+void MCField::setcompositioncursoroffset(findex_t coffset)
 {
 	composecursorindex = coffset;
 }
 
 
 
-void MCField::setcompositionconvertingrange(uint1 si, uint1 ei)
+void MCField::setcompositionconvertingrange(findex_t si, findex_t ei)
 {
 	composeconvertingsi = si;
 	composeconvertingei = ei;

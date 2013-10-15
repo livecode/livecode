@@ -66,11 +66,11 @@ MCBlock *MCField::linkend;
 int4 MCField::linksi;
 int4 MCField::linkei;
 int4 MCField::composeoffset = 0;
-uint2 MCField::composelength = 0;
-uint1 MCField::composeconvertingsi = 0;
-uint1 MCField::composeconvertingei = 0;
+findex_t MCField::composelength = 0;
+findex_t MCField::composeconvertingsi = 0;
+findex_t MCField::composeconvertingei = 0;
 Boolean MCField::composing = False;
-uint2 MCField::composecursorindex = 0;
+findex_t MCField::composecursorindex = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2166,7 +2166,7 @@ void MCField::undo(Ustruct *us)
 				if (us->ud.text.newline)
 				{
 					pgptr->split();
-					pgptr->setselectionindex(MAXUINT2, MAXUINT2, False, False);
+					pgptr->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 					pgptr = pgptr->next();
 					pgptr->setselectionindex(0, 0, False, False);
 					flags &= ~F_VISIBLE;

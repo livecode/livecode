@@ -523,9 +523,9 @@ Exec_stat MCField::settext_oldstring(uint4 parid, const MCString &s, Boolean for
 					l = 0;
 				}
 			uint4 length = eptr - sptr;
-			if (length > MAXUINT2 - 2)
+			if (length > PARAGRAPH_MAX_LEN - 2)
 			{
-				length = MAXUINT2 - 2;
+				length = PARAGRAPH_MAX_LEN - 2;
 				eptr = sptr + length;
 			}
 			char *pgtext = new char[length ? length : 1];
@@ -611,7 +611,7 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 	{
 		clearfound();
 		unselect(False, True);
-		focusedparagraph->setselectionindex(MAXUINT2, MAXUINT2, False, False);
+		focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 	}
 	int4 oldsi = si;
 	
@@ -1707,7 +1707,7 @@ Exec_stat MCField::seltext(int4 si, int4 ei, Boolean focus, Boolean update)
 		if (MCactivefield != NULL)
 			MCactivefield->unselect(True, True);
 		if (focusedparagraph != NULL)
-			focusedparagraph->setselectionindex(MAXUINT2, MAXUINT2, False, False);
+			focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 	}
 	if (focus && !(state & CS_KFOCUSED))
 	{

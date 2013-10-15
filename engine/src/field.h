@@ -221,11 +221,11 @@ class MCField : public MCControl
 	static int4 linksi;
 	static int4 linkei;
 	static int4 composeoffset;
-	static uint2 composelength;
+	static findex_t composelength;
 	static Boolean composing;
-	static uint2 composecursorindex;
-	static uint1 composeconvertingsi;
-	static uint1 composeconvertingei;
+	static findex_t composecursorindex;
+	static findex_t composeconvertingsi;
+	static findex_t composeconvertingei;
 
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
@@ -357,16 +357,16 @@ public:
 	void typetext(const MCString &newtext);
 	void startcomposition();
 	void stopcomposition(Boolean del, Boolean force);
-	void setcompositioncursoroffset(uint2 coffset);
-	void setcompositionconvertingrange(uint1 si,uint1 ei);
+	void setcompositioncursoroffset(findex_t coffset);
+	void setcompositionconvertingrange(findex_t si, findex_t ei);
 	void deletecomposition();
 	Boolean getcompositionrect(MCRectangle &r, int2 offset);
 	void syncfonttokeyboard();
-	void verifyindex(MCParagraph *top, int4 &si, bool p_is_end);
+	void verifyindex(MCParagraph *top, findex_t &si, bool p_is_end);
 	
-	MCParagraph *verifyindices(MCParagraph *top, int4& si, int4& ei);
+	MCParagraph *verifyindices(MCParagraph *top, findex_t& si, findex_t& ei);
 	
-	void indextorect(MCParagraph *top, int4 si, int4 ei, MCRectangle &r);
+	void indextorect(MCParagraph *top, findex_t si, findex_t ei, MCRectangle &r);
 	void insertparagraph(MCParagraph *newtext);
 	// MCField selection functions in fields.cc
 	Boolean find(MCExecContext &ctxt, uint4 cardid,
@@ -375,8 +375,8 @@ public:
 	               Sort_type dir, Sort_type form, MCExpression *by);
 	// MW-2012-02-08: [[ Field Indices ]] The 'index' parameter, if non-nil, will contain
 	//   the 1-based index of the returned paragraph (i.e. the one si resides in).
-	MCParagraph *indextoparagraph(MCParagraph *top, int4 &si, int4 &ei, int* index = nil);
-	void indextocharacter(int4 &si);
+	MCParagraph *indextoparagraph(MCParagraph *top, findex_t &si, findex_t &ei, int* index = nil);
+	//void indextocharacter(int4 &findex_t);
 	uint4 ytooffset(int4 y);
 	int4 paragraphtoy(MCParagraph *target);
 	uint4 getpgsize(MCParagraph *pgptr);

@@ -2118,18 +2118,14 @@ bool MCBlock::GetFirstLineBreak(findex_t& r_index)
 	findex_t t_index;
 	t_index = m_index;
 
-	while (t_index < m_index + m_size)
-	{
-		if (parent->TextIsLineBreak(parent->GetCodepointAtIndex(t_index)))
-		{
-			r_index = t_index;
-			return true;
-		}
-		
-		t_index = parent->IncrementIndex(t_index);
-	}
-	
-	return false;
+	uindex_t t_offset;
+    if (!MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\v', t_index, kMCStringOptionCompareExact, t_offset))
+        return false;
+    if (t_offset > m_index + m_size)
+        return false;
+
+	r_index = t_offset;
+    return true;
 }
 
 bool MCBlock::imagechanged(MCImage *p_image, bool p_deleting)

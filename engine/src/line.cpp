@@ -77,7 +77,7 @@ MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_wi
 	MCBlock *t_break_block;
 	t_break_block = NULL;
 
-	uint2 t_break_index;
+	findex_t t_break_index;
 	t_break_index = 0;
 
 	do

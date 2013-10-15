@@ -126,7 +126,7 @@ struct MCParagraphAttrs
 
 // Don't change this until everything dealing with fields, paragraphs, etc
 // is capable of dealing with 32-bit offsets or things will break!
-#define PARAGRAPH_MAX_LEN	UINT16_MAX
+#define PARAGRAPH_MAX_LEN	INT32_MAX
 
 class MCParagraph : public MCDLlist
 {
