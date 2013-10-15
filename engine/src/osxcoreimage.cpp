@@ -154,6 +154,7 @@ bool MCCoreImageEffectBegin(const char *p_name, Drawable p_target, Drawable p_so
 					if (!MCStringToDouble(*t_substring, t_vector[t_count]))
 						t_success = false;
 					
+					t_pos = t_comma + 1;
 					t_count += 1;
 				}
 				while(t_success && t_count < 4);
