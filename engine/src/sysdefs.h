@@ -460,13 +460,18 @@ inline uint1 MCS_toupper(uint1 p_char)
 	return MCuppercasingtable[p_char];
 }
 
+// MM-2013-09-13: [[ RefactorGraphics ]] Updated for server font support.
 struct MCFontStruct
 {
-	uint16_t size;
+	MCSysFontHandle fid;
+	uint2 size;
+	uint2 style;
 	int ascent;
 	int descent;
-	Boolean unicode;
+	Boolean wide;
 	uint1 charset;
+	Boolean unicode;
+	uint1 widths[256];
 };
 
 #define fixmaskrop(a) (a)

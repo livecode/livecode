@@ -25,6 +25,8 @@
 		3C0A3CC410BAF6120074D630 /* iquantization.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3C0A3CC310BAF6120074D630 /* iquantization.cpp */; };
 		4C10D82C16BFADDB00D25197 /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C10D82916BFADB800D25197 /* libgraphics.a */; };
 		4C10D85416BFB1DC00D25197 /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C10D76D16BF9BFA00D25197 /* graphicscontext.cpp */; };
+		4C4D3DF417E355B50012FB12 /* osxflst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880160B80A4F800200116 /* osxflst.cpp */; };
+		4C4D3E0117E358230012FB12 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DB3856E1714422200D3F102 /* Carbon.framework */; };
 		4C6F241E1529B33000C5AFB6 /* osxsnapshot.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4C6F241D1529B33000C5AFB6 /* osxsnapshot.mm */; };
 		4CAA94D015EF6E64007CD4C5 /* osxansold.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CAA94CF15EF6E64007CD4C5 /* osxansold.cpp */; };
 		4CC1535714E7FB91009FA80E /* paragrafattr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1535614E7FB91009FA80E /* paragrafattr.cpp */; };
@@ -48,7 +50,6 @@
 		4D1F9D18171C682E0091C6CB /* mode_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFD486B13BA28FF008DB91F /* mode_server.cpp */; };
 		4D1F9D19171C682E0091C6CB /* srvcgi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFD485213BA28AE008DB91F /* srvcgi.cpp */; };
 		4D1F9D1A171C682E0091C6CB /* srvdebug.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFD485713BA28AE008DB91F /* srvdebug.cpp */; };
-		4D1F9D1B171C682E0091C6CB /* srvflst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFD485A13BA28AE008DB91F /* srvflst.cpp */; };
 		4D1F9D1C171C682E0091C6CB /* srvmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFD485C13BA28AE008DB91F /* srvmain.cpp */; };
 		4D1F9D1D171C682E0091C6CB /* srvscript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFD485E13BA28AE008DB91F /* srvscript.cpp */; };
 		4D1F9D1E171C682E0091C6CB /* srvspec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFD486013BA28AE008DB91F /* srvspec.cpp */; };
@@ -829,6 +830,7 @@
 		4CAA94CF15EF6E64007CD4C5 /* osxansold.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = osxansold.cpp; path = src/osxansold.cpp; sourceTree = "<group>"; };
 		4CC1535614E7FB91009FA80E /* paragrafattr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = paragrafattr.cpp; path = src/paragrafattr.cpp; sourceTree = "<group>"; };
 		4CC1536114E7FE1D009FA80E /* fieldstyledtext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fieldstyledtext.cpp; path = src/fieldstyledtext.cpp; sourceTree = "<group>"; };
+		4CC55320180D546000C10387 /* graphics_util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = graphics_util.h; path = src/graphics_util.h; sourceTree = "<group>"; };
 		4D00C6280CE1F27300341AD3 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = /System/Library/Frameworks/SystemConfiguration.framework; sourceTree = "<absolute>"; };
 		4D00CD75103305D4003D3C0D /* bitmapeffectblur.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bitmapeffectblur.cpp; path = src/bitmapeffectblur.cpp; sourceTree = "<group>"; };
 		4D00CD76103305D4003D3C0D /* bitmapeffectblur.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bitmapeffectblur.h; path = src/bitmapeffectblur.h; sourceTree = "<group>"; };
@@ -1562,6 +1564,7 @@
 				4D221A6A171D574F00E7E557 /* libcups.dylib in Frameworks */,
 				4D221A6C171D574F00E7E557 /* libcurl.dylib in Frameworks */,
 				4D221A6E171D574F00E7E557 /* libssl.dylib in Frameworks */,
+				4C4D3E0117E358230012FB12 /* Carbon.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1658,11 +1661,6 @@
 				4D6F92F712AA5D6600026A72 /* Mode - Standalone */,
 				4DFD485013BA2893008DB91F /* Server */,
 				4DFD486413BA28BF008DB91F /* System */,
-				4C10D76D16BF9BFA00D25197 /* graphicscontext.cpp */,
-				4C10D76E16BF9BFA00D25197 /* graphicscontext.h */,
-				E8B5BB1216DF77DF00CA02FB /* imagelist.cpp */,
-				E8B5BB1316DF77DF00CA02FB /* imagelist.h */,
-				E8D7F8C21785D82F00EC051A /* resolution.h */,
 			);
 			name = Sources;
 			sourceTree = "<group>";
@@ -2187,6 +2185,11 @@
 				4D592DEA14EED23600EADBB6 /* fonttable.cpp */,
 				4DB902510DAA5C980014A170 /* gradient.cpp */,
 				4DB902520DAA5C980014A170 /* gradient.h */,
+				4C10D76D16BF9BFA00D25197 /* graphicscontext.cpp */,
+				4C10D76E16BF9BFA00D25197 /* graphicscontext.h */,
+				4CC55320180D546000C10387 /* graphics_util.h */,
+				E8B5BB1216DF77DF00CA02FB /* imagelist.cpp */,
+				E8B5BB1316DF77DF00CA02FB /* imagelist.h */,
 				4D587E370B8096FD00200116 /* mctheme.cpp */,
 				4D587DD90B8096E600200116 /* mctheme.h */,
 				4D587E7D0B8096FD00200116 /* metacontext.cpp */,
@@ -2203,6 +2206,7 @@
 				4DDB66701413A02000E5C84C /* redraw.cpp */,
 				4DDB66711413A02000E5C84C /* redraw.h */,
 				E8A49106170F179000769C7A /* region.h */,
+				E8D7F8C21785D82F00EC051A /* resolution.h */,
 				4D587E890B8096FD00200116 /* rgb.cpp */,
 				4D4F9DFA13CDE63000B9B15D /* surface.cpp */,
 				4D6F92FA12AA5E2600026A72 /* textlayout.h */,
@@ -3041,7 +3045,6 @@
 				4D1F9D18171C682E0091C6CB /* mode_server.cpp in Sources */,
 				4D1F9D19171C682E0091C6CB /* srvcgi.cpp in Sources */,
 				4D1F9D1A171C682E0091C6CB /* srvdebug.cpp in Sources */,
-				4D1F9D1B171C682E0091C6CB /* srvflst.cpp in Sources */,
 				4D1F9D1C171C682E0091C6CB /* srvmain.cpp in Sources */,
 				4D1F9D1D171C682E0091C6CB /* srvscript.cpp in Sources */,
 				4D1F9D1E171C682E0091C6CB /* srvspec.cpp in Sources */,
@@ -3196,6 +3199,7 @@
 				E8D7F8321785A88200EC051A /* imagelist.cpp in Sources */,
 				E8D7F8391785A8AC00EC051A /* graphicscontext.cpp in Sources */,
 				E8D7F8471785A99900EC051A /* srvtheme.cpp in Sources */,
+				4C4D3DF417E355B50012FB12 /* osxflst.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
