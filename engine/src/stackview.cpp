@@ -755,7 +755,6 @@ void MCStack::view_apply_updates()
 			view_updatewindow();
 			
 			// Clear the update region.
-			MCLog("\tClear update region", nil);
 			MCRegionSetEmpty(m_view_update_region);
 		}
 		
