@@ -1034,7 +1034,7 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 	if (p_type == CT_CHARACTER)
 	{
 		// MW-2012-02-23: [[ CharChunk ]] Convert the 1-based char indices to 1-based field indices.
-		int32_t si, ei;
+		findex_t si, ei;
 		si = 0;
 		ei = PARAGRAPH_MAX_LEN;
 		t_target -> resolvechars(0, si, ei, t_start - 1, t_end - t_start + 1);

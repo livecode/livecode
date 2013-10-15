@@ -63,9 +63,9 @@ int2 MCField::narrowmargin = 8;
 MCRectangle MCField::linkrect;
 MCBlock *MCField::linkstart;
 MCBlock *MCField::linkend;
-int4 MCField::linksi;
-int4 MCField::linkei;
-int4 MCField::composeoffset = 0;
+findex_t MCField::linksi;
+findex_t MCField::linkei;
+findex_t MCField::composeoffset = 0;
 findex_t MCField::composelength = 0;
 findex_t MCField::composeconvertingsi = 0;
 findex_t MCField::composeconvertingei = 0;
@@ -1007,8 +1007,8 @@ Boolean MCField::mup(uint2 which)
 		if (flags & F_F_AUTO_ARM && flags & F_LOCK_TEXT
 		        && flags & F_LIST_BEHAVIOR)
 		{
-			int4 index = ytooffset(texty);
-			int4 ei = index;
+			findex_t index = ytooffset(texty);
+			findex_t ei = index;
 			focusedparagraph = indextoparagraph(paragraphs, index, ei)->next();
 			focusedy = paragraphtoy(focusedparagraph);
 		}
@@ -2043,7 +2043,7 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 
 void MCField::undo(Ustruct *us)
 {
-	int4 si, ei;
+	findex_t si, ei;
 	MCParagraph *pgptr = NULL;
 
 	// MW-2005-02-20: Fix Bug 2537 by assuming if the field is closed then
@@ -2724,7 +2724,7 @@ bool MCField::recomputefonts(MCFontRef p_parent_font)
 
 // MW-2012-02-23: [[ FieldChars ]] Count the number of characters between si and
 //   ei in the paragraphs corresponding to part_id.
-int32_t MCField::countchars(uint32_t p_part_id, int32_t si, int32_t ei)
+findex_t MCField::countchars(uint32_t p_part_id, findex_t si, findex_t ei)
 {
 	// Now that character offsets are being used, this is trivial...
 	return ei-si;
@@ -2732,14 +2732,14 @@ int32_t MCField::countchars(uint32_t p_part_id, int32_t si, int32_t ei)
 
 // MW-2012-02-23: [[ FieldChars ]] Adjust field indices (si, ei) to cover the start chars
 //   in, ending count chars later.
-void MCField::resolvechars(uint32_t p_part_id, int32_t& x_si, int32_t& x_ei, int32_t p_start, int32_t p_count)
+void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, findex_t p_start, findex_t p_count)
 {
 	x_si += p_start;
 	x_ei = x_si + p_count;
 }
 
 // MW-2012-02-23: [[ FieldChars ]] Convert field indices (si, ei) back to char indices.
-void MCField::unresolvechars(uint32_t p_part_id, int32_t& x_si, int32_t& x_ei)
+void MCField::unresolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei)
 {
 	// Char and field indices are identical
 	return;

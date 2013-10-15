@@ -3378,7 +3378,7 @@ void MCParagraph::getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, findex_t
 					ep . appendnewline();
 				
 				// MW-2012-02-24: [[ FieldChars ]] Map the field indices back to char indices.
-				int32_t t_start, t_end;
+				findex_t t_start, t_end;
 				t_start = t_flagged_start;
 				t_end = t_flagged_end;
 				parent -> unresolvechars(p_part_id, t_start, t_end);
@@ -3449,7 +3449,7 @@ void MCParagraph::getflaggedranges(uint32_t p_part_id, findex_t si, findex_t ei,
 			if (t_flagged_start != -1 && (!bptr -> getflagged() || i + l >= ei))
 			{				
 				// MW-2012-02-24: [[ FieldChars ]] Map the field indices back to char indices.
-				int32_t t_start, t_end;
+				findex_t t_start, t_end;
 				t_start = t_flagged_start;
 				t_end = t_flagged_end;
 				parent -> unresolvechars(p_part_id, t_start, t_end);

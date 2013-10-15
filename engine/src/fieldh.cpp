@@ -137,7 +137,7 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 
 	// The first and last boundaries of the export.
 	MCParagraph *t_first_paragraph;
-	int32_t t_first_offset, t_last_offset;
+	findex_t t_first_offset, t_last_offset;
 	t_first_offset = p_start_index;
 	t_last_offset = p_finish_index;
 

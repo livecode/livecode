@@ -2066,29 +2066,22 @@ void MCBlock::importattrs(const MCFieldCharacterStyle& p_style)
 		setshift(p_style . text_shift);
 }
 
+static uint32_t measure_stringref(MCStringRef p_string)
+{
+	if (MCStringIsNative(p_string))
+        return 2 + MCU_min(MCStringGetLength(p_string) + 1, MAXUINT2);
+    else
+        return 2 + MCU_min((MCStringGetLength(p_string) + 1) * sizeof(unichar_t), MAXUINT2);
+
+}
+
 // MW-2012-03-04: [[ StackFile5500 ]] Utility routine for computing the length of
 //   a nameref when serialized to disk.
 uint32_t measure_nameref(MCNameRef p_name)
 {
-	const char *t_cstring;
-	t_cstring = MCNameGetCString(p_name);
-	
-	// If the cstring is nil, then it's just a size field.
-	if (t_cstring == nil)
-		return 2;
-		
-	// Otherwise its the length of it nul terminated plus the 2 byte size.
-	return 2 + MCU_min(strlen(t_cstring) + 1, MAXUINT2);
+	return measure_stringref(MCNameGetString(p_name));
 }
 
-static uint32_t measure_stringref(MCStringRef p_string)
-{
-	const char *t_cstring;
-	t_cstring = MCStringGetCString(p_string);
-	if (*t_cstring == '\0')
-		return 2;
-	return 2 + MCU_min(strlen(t_cstring) + 1, MAXUINT2);
-}
 
 // MW-2012-03-04: [[ StackFile5500 ]] Compute the number of bytes the attributes will
 //   take up when serialized.

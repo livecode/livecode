@@ -3334,7 +3334,7 @@ void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Function
     // MW-2012-12-13: [[ Bug 10592 ]] If wholechunk is False then we don't expand
     //   line chunks to include the CR at the end.
     
-    int4 start, end;
+    findex_t start, end;
 	Boolean wholeline = True;
 	Boolean wholeword = True;
 	switch (p_function)
