@@ -76,12 +76,12 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_WHOLE_MATCHES, Bool, Engine, WholeMatches)
 	DEFINE_RW_PROPERTY(P_USE_SYSTEM_DATE, Bool, Engine, UseSystemDate)
 	DEFINE_RW_PROPERTY(P_USE_UNICODE, Bool, Engine, UseUnicode)
-	DEFINE_RW_CUSTOM_PROPERTY(P_NUMBER_FORMAT, kMCEngineNumberFormatTypeInfo, Engine, NumberFormat)
+	DEFINE_RW_CUSTOM_PROPERTY(P_NUMBER_FORMAT, EngineNumberFormat, Engine, NumberFormat)
 	
-	DEFINE_RO_SET_PROPERTY(P_PRINT_DEVICE_FEATURES, kMCPrintingPrinterFeaturesTypeInfo, Printing, PrintDeviceFeatures)
-	DEFINE_RW_CUSTOM_PROPERTY(P_PRINT_DEVICE_OUTPUT, kMCPrintingPrintDeviceOutputTypeInfo, Printing, PrintDeviceOutput)
-	DEFINE_RW_ENUM_PROPERTY(P_PRINT_PAGE_ORIENTATION, kMCPrintingPrinterOrientationTypeInfo, Printing, PrintPageOrientation)
-	DEFINE_RW_CUSTOM_PROPERTY(P_PRINT_JOB_RANGES, kMCPrintingPrinterPageRangeTypeInfo, Printing, PrintJobRanges)
+	DEFINE_RO_SET_PROPERTY(P_PRINT_DEVICE_FEATURES, PrintingPrinterFeatures, Printing, PrintDeviceFeatures)
+	DEFINE_RW_CUSTOM_PROPERTY(P_PRINT_DEVICE_OUTPUT, PrintingPrintDeviceOutput, Printing, PrintDeviceOutput)
+	DEFINE_RW_ENUM_PROPERTY(P_PRINT_PAGE_ORIENTATION, PrintingPrinterOrientation, Printing, PrintPageOrientation)
+	DEFINE_RW_CUSTOM_PROPERTY(P_PRINT_JOB_RANGES, PrintingPrinterPageRange, Printing, PrintJobRanges)
 	
 	DEFINE_RW_PROPERTY(P_PRINT_PAGE_SIZE, Int16X2, Printing, PrintPageSize)
 	DEFINE_RW_PROPERTY(P_PRINT_PAGE_SCALE, Double, Printing, PrintPageScale)
@@ -90,7 +90,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_PRINT_JOB_COPIES, Int16, Printing, PrintPageScale)
 	DEFINE_RW_PROPERTY(P_PRINT_JOB_COLLATE, Bool, Printing, PrintJobCollate)
 	DEFINE_RW_PROPERTY(P_PRINT_JOB_COLOR, Bool, Printing, PrintJobColor)
-	DEFINE_RW_ENUM_PROPERTY(P_PRINT_JOB_DUPLEX, kMCPrintingPrintJobDuplexTypeInfo, Printing, PrintJobDuplex)
+	DEFINE_RW_ENUM_PROPERTY(P_PRINT_JOB_DUPLEX, PrintingPrintJobDuplex, Printing, PrintJobDuplex)
 	DEFINE_RO_PROPERTY(P_PRINT_JOB_PAGE, Int32, Printing, PrintJobPage)
 	DEFINE_RO_PROPERTY(P_PRINT_DEVICE_RECTANGLE, Rectangle, Printing, PrintDeviceRectangle)
 	DEFINE_RW_PROPERTY(P_PRINT_DEVICE_SETTINGS, BinaryString, Printing, PrintDeviceSettings)
@@ -105,9 +105,9 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_PRINT_CARD_BORDERS, Bool, Printing, PrintCardBorders)
 	DEFINE_RO_PROPERTY(P_PRINTER_NAMES, String, Printing, PrinterNames)
 
-	DEFINE_RW_ENUM_PROPERTY(P_ERROR_MODE, kMCServerErrorModeTypeInfo, Server, ErrorMode)
-	DEFINE_RW_ENUM_PROPERTY(P_OUTPUT_LINE_ENDINGS, kMCServerOutputLineEndingsTypeInfo, Server, OutputLineEnding)
-	DEFINE_RW_ENUM_PROPERTY(P_OUTPUT_TEXT_ENCODING, kMCServerOutputTextEncodingTypeInfo, Server, OutputTextEncoding)
+	DEFINE_RW_ENUM_PROPERTY(P_ERROR_MODE, ServerErrorMode, Server, ErrorMode)
+	DEFINE_RW_ENUM_PROPERTY(P_OUTPUT_LINE_ENDINGS, ServerOutputLineEndings, Server, OutputLineEnding)
+	DEFINE_RW_ENUM_PROPERTY(P_OUTPUT_TEXT_ENCODING, ServerOutputTextEncoding, Server, OutputTextEncoding)
 	DEFINE_RW_PROPERTY(P_SESSION_SAVE_PATH, String, Server, SessionSavePath)
 	DEFINE_RW_PROPERTY(P_SESSION_LIFETIME, UInt32, Server, SessionLifetime)
 	DEFINE_RW_PROPERTY(P_SESSION_COOKIE_NAME, String, Server, SessionCookieName)
@@ -123,9 +123,9 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 
 	DEFINE_RW_PROPERTY(P_DIALOG_DATA, Any, Interface, DialogData)
 
-	DEFINE_RW_ENUM_PROPERTY(P_LOOK_AND_FEEL, kMCInterfaceLookAndFeelTypeInfo, Interface, LookAndFeel)
+	DEFINE_RW_ENUM_PROPERTY(P_LOOK_AND_FEEL, InterfaceLookAndFeel, Interface, LookAndFeel)
 	DEFINE_RW_PROPERTY(P_SCREEN_MOUSE_LOC, Point, Interface, ScreenMouseLoc)
-	DEFINE_RW_CUSTOM_PROPERTY(P_BACK_DROP, kMCInterfaceBackdropTypeInfo, Interface, Backdrop)
+	DEFINE_RW_CUSTOM_PROPERTY(P_BACK_DROP, InterfaceBackdrop, Interface, Backdrop)
 	DEFINE_RW_PROPERTY(P_BUFFER_IMAGES, Bool, Interface, BufferImages)
 	DEFINE_RW_PROPERTY(P_SYSTEM_FS, Bool, Interface, SystemFileSelector)
 	DEFINE_RW_PROPERTY(P_SYSTEM_CS, Bool, Interface, SystemColorSelector)
@@ -139,15 +139,15 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_RECORD_SAMPLESIZE, UInt16, Multimedia, RecordSampleSize)
 	DEFINE_RW_PROPERTY(P_RECORD_RATE, Double, Multimedia, RecordRate)
 	DEFINE_RW_PROPERTY(P_RECORD_CHANNELS, UInt16, Multimedia, RecordChannels)
-	DEFINE_RW_ENUM_PROPERTY(P_RECORD_FORMAT, kMCMultimediaRecordFormatTypeInfo, Multimedia, RecordFormat) 
+	DEFINE_RW_ENUM_PROPERTY(P_RECORD_FORMAT, MultimediaRecordFormat, Multimedia, RecordFormat) 
 	DEFINE_RW_PROPERTY(P_RECORD_COMPRESSION, String, Multimedia, RecordCompression)
 	DEFINE_RW_PROPERTY(P_RECORD_INPUT, String, Multimedia, RecordInput)
 
-	DEFINE_RW_ENUM_PROPERTY(P_DRAG_ACTION, kMCPasteboardDragActionTypeInfo, Pasteboard, DragAction)
+	DEFINE_RW_ENUM_PROPERTY(P_DRAG_ACTION, PasteboardDragAction, Pasteboard, DragAction)
 	DEFINE_RW_PROPERTY(P_ACCEPT_DROP, Bool, Pasteboard, AcceptDrop)
 	DEFINE_RW_PROPERTY(P_DRAG_IMAGE, UInt16, Pasteboard, DragImage)
 	DEFINE_RW_PROPERTY(P_DRAG_IMAGE_OFFSET, Point, Pasteboard, DragImageOffset)
-	DEFINE_RW_SET_PROPERTY(P_ALLOWABLE_DRAG_ACTIONS, kMCPasteboardAllowableDragActionsTypeInfo, Pasteboard, AllowableDragActions)
+	DEFINE_RW_SET_PROPERTY(P_ALLOWABLE_DRAG_ACTIONS, PasteboardAllowableDragActions, Pasteboard, AllowableDragActions)
 	DEFINE_RW_PROPERTY(P_ALLOW_INLINE_INPUT, Bool, Interface, AllowInlineInput)
 	DEFINE_RW_PROPERTY(P_DRAG_DELTA, UInt16, Interface, DragDelta)
 	DEFINE_RW_PROPERTY(P_STACK_FILE_TYPE, String, Interface, StackFileType)
@@ -156,17 +156,17 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_STATUS_ICON, UInt32, Interface, StatusIcon)
 	DEFINE_RW_PROPERTY(P_STATUS_ICON_TOOLTIP, String, Interface, StatusIconToolTip)
 	DEFINE_RW_PROPERTY(P_STATUS_ICON_MENU, String, Interface, StatusIconMenu)
-	DEFINE_RW_ENUM_PROPERTY(P_PROCESS_TYPE, kMCInterfaceProcessTypeTypeInfo, Interface, ProcessType)
+	DEFINE_RW_ENUM_PROPERTY(P_PROCESS_TYPE, InterfaceProcessType, Interface, ProcessType)
 	DEFINE_RW_PROPERTY(P_STACK_LIMIT, UInt32, Engine, StackLimit)
-	DEFINE_RO_EFFECTIVE_PROPERTY(P_STACK_LIMIT, UInt32, Engine, StackLimit)
+	DEFINE_RO_EFFECTIVE_PROPERTY(P_STACK_LIMIT, UInt32,Engine, StackLimit)
 	DEFINE_RW_PROPERTY(P_IMAGE_CACHE_LIMIT, UInt32, Graphics, ImageCacheLimit)
 	DEFINE_RO_PROPERTY(P_IMAGE_CACHE_USAGE, UInt32, Graphics, ImageCacheUsage)
 	DEFINE_RW_PROPERTY(P_ALLOW_DATAGRAM_BROADCASTS, Bool, Network, AllowDatagramBroadcasts)
 	
 	DEFINE_RW_PROPERTY(P_BRUSH_BACK_COLOR, Any, Interface, BrushBackColor)
 	DEFINE_RW_PROPERTY(P_PEN_BACK_COLOR, Any, Interface, PenBackColor)
-	DEFINE_RW_CUSTOM_PROPERTY(P_BRUSH_COLOR, kMCInterfaceNamedColorTypeInfo, Interface, BrushColor)
-	DEFINE_RW_CUSTOM_PROPERTY(P_PEN_COLOR, kMCInterfaceNamedColorTypeInfo, Interface, PenColor)
+	DEFINE_RW_CUSTOM_PROPERTY(P_BRUSH_COLOR, InterfaceNamedColor, Interface, BrushColor)
+	DEFINE_RW_CUSTOM_PROPERTY(P_PEN_COLOR, InterfaceNamedColor, Interface, PenColor)
 	DEFINE_RW_PROPERTY(P_BRUSH_PATTERN, UInt16, Interface, BrushPattern)
 	DEFINE_RW_PROPERTY(P_PEN_PATTERN, UInt16, Interface, PenPattern)
 	DEFINE_RW_PROPERTY(P_FILLED, Bool, Interface, Filled)
@@ -178,7 +178,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_START_ANGLE, UInt16, Interface, StartAngle)
 	DEFINE_RW_PROPERTY(P_ARC_ANGLE, UInt16, Interface, ArcAngle)
 	DEFINE_RW_PROPERTY(P_ROUND_ENDS, Bool, Interface, RoundEnds)
-	DEFINE_RW_PROPERTY(P_DASHES, String, Interface, Dashes)
+	DEFINE_RW_PROPERTY(P_DASHES, ItemsOfUInt, Interface, Dashes)
 	
 	DEFINE_RW_PROPERTY(P_EDIT_BACKGROUND, Bool, Interface, EditBackground)
 	
@@ -187,7 +187,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RO_PROPERTY(P_RECENT_CARDS, String, Interface, RecentCards)
 	DEFINE_RO_PROPERTY(P_RECENT_NAMES, String, Interface, RecentNames)
 	
-	DEFINE_RW_PROPERTY(P_TEXT_ALIGN, Any, Legacy, TextAlign)
+	DEFINE_RO_PROPERTY(P_TEXT_ALIGN, Any, Legacy, TextAlign)
 	DEFINE_RW_PROPERTY(P_TEXT_FONT, Any, Legacy, TextFont)
 	DEFINE_RW_PROPERTY(P_TEXT_HEIGHT, Any, Legacy, TextHeight)
 	DEFINE_RW_PROPERTY(P_TEXT_SIZE, Any, Legacy, TextSize)
@@ -209,12 +209,12 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_USER_LEVEL, UInt16, Legacy, UserLevel)
 	DEFINE_RW_PROPERTY(P_USER_MODIFY, Bool, Legacy, UserModify)
 
-	DEFINE_RW_CUSTOM_PROPERTY(P_ACCENT_COLOR, kMCInterfaceNamedColorTypeInfo, Interface, AccentColor)
-	DEFINE_RW_CUSTOM_PROPERTY(P_HILITE_COLOR, kMCInterfaceNamedColorTypeInfo, Interface, HiliteColor)
-	DEFINE_RW_ENUM_PROPERTY(P_PAINT_COMPRESSION, kMCInterfacePaintCompressionTypeInfo, Interface, PaintCompression)
-	DEFINE_RW_CUSTOM_PROPERTY(P_LINK_COLOR, kMCInterfaceNamedColorTypeInfo, Interface, LinkColor)
-	DEFINE_RW_CUSTOM_PROPERTY(P_LINK_HILITE_COLOR, kMCInterfaceNamedColorTypeInfo, Interface, LinkHiliteColor)
-	DEFINE_RW_CUSTOM_PROPERTY(P_LINK_VISITED_COLOR, kMCInterfaceNamedColorTypeInfo, Interface, LinkVisitedColor)
+	DEFINE_RW_CUSTOM_PROPERTY(P_ACCENT_COLOR, InterfaceNamedColor, Interface, AccentColor)
+	DEFINE_RW_CUSTOM_PROPERTY(P_HILITE_COLOR, InterfaceNamedColor, Interface, HiliteColor)
+	DEFINE_RW_ENUM_PROPERTY(P_PAINT_COMPRESSION, InterfacePaintCompression, Interface, PaintCompression)
+	DEFINE_RW_CUSTOM_PROPERTY(P_LINK_COLOR, InterfaceNamedColor, Interface, LinkColor)
+	DEFINE_RW_CUSTOM_PROPERTY(P_LINK_HILITE_COLOR, InterfaceNamedColor, Interface, LinkHiliteColor)
+	DEFINE_RW_CUSTOM_PROPERTY(P_LINK_VISITED_COLOR, InterfaceNamedColor, Interface, LinkVisitedColor)
 	DEFINE_RW_PROPERTY(P_UNDERLINE_LINKS, Bool, Interface, UnderlineLinks)
 	
 	DEFINE_RW_PROPERTY(P_SELECT_GROUPED_CONTROLS, Bool, Interface, SelectGroupedControls)
@@ -229,8 +229,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_SOCKET_TIMEOUT, Double, Network, SocketTimeout)
 
 	DEFINE_RW_PROPERTY(P_SECURE_MODE, Bool, Engine, SecureMode)
-	DEFINE_RO_SET_PROPERTY(P_SECURITY_CATEGORIES, kMCEngineSecurityCategoriesTypeInfo, Engine, SecurityCategories)
-	DEFINE_RO_SET_PROPERTY(P_SECURITY_PERMISSIONS, kMCEngineSecurityCategoriesTypeInfo, Engine, SecurityPermissions)
+	DEFINE_RO_SET_PROPERTY(P_SECURITY_CATEGORIES, EngineSecurityCategories, Engine, SecurityCategories)
+	DEFINE_RO_SET_PROPERTY(P_SECURITY_PERMISSIONS, EngineSecurityCategories, Engine, SecurityPermissions)
 
 	DEFINE_RW_PROPERTY(P_SERIAL_CONTROL_STRING, String, Files, SerialControlString)
 	DEFINE_RW_PROPERTY(P_HIDE_CONSOLE_WINDOWS, Bool, Files, HideConsoleWindows)
@@ -292,8 +292,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_PROPORTIONAL_THUMBS, Bool, Interface, ProportionalThumbs)
 	DEFINE_RW_PROPERTY(P_SHARED_MEMORY, Bool, Interface, SharedMemory)
 	DEFINE_RW_PROPERTY(P_SCREEN_GAMMA, Double, Interface, ScreenGamma)
-	DEFINE_RW_ENUM_PROPERTY(P_SELECTION_MODE, kMCInterfaceSelectionModeTypeInfo, Interface, SelectionMode)
-	DEFINE_RW_CUSTOM_PROPERTY(P_SELECTION_HANDLE_COLOR, kMCInterfaceNamedColorTypeInfo, Interface, SelectionHandleColor)
+	DEFINE_RW_ENUM_PROPERTY(P_SELECTION_MODE, InterfaceSelectionMode, Interface, SelectionMode)
+	DEFINE_RW_CUSTOM_PROPERTY(P_SELECTION_HANDLE_COLOR, InterfaceNamedColor, Interface, SelectionHandleColor)
 	DEFINE_RW_PROPERTY(P_WINDOW_BOUNDING_RECT, Rectangle, Interface, WindowBoundingRect)
 	DEFINE_RW_PROPERTY(P_JPEG_QUALITY, UInt16, Interface, JpegQuality)
 	DEFINE_RW_PROPERTY(P_RELAYER_GROUPED_CONTROLS, Bool, Interface, RelayerGroupedControls)
@@ -1076,7 +1076,9 @@ Exec_stat MCProperty::resolveprop(MCExecPoint& ep, Properties& r_which, MCNameRe
 	{
 		MCExecPoint ep2(ep);
 		destvar -> eval(ep2);
-		MCScriptPoint sp(ep2.getsvalue());
+        MCAutoStringRef t_value;
+        /* UNCHECKED */ ep2 . copyasstringref(&t_value);
+		MCScriptPoint sp(*t_value);
 		Symbol_type type;
 		const LT *te;
 		if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL && te->type == TT_PROPERTY && sp.next(type) == PS_EOF)

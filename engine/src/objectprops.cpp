@@ -3366,6 +3366,8 @@ void MCObject::getarrayprop(MCExecContext& ctxt, uint32_t p_part_id, Properties 
 	ctxt . Throw();
 }
 
+/////////
+
 void MCObject::getvariantprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCValueRef& r_value)
 {
 	if (getprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL &&
@@ -3373,6 +3375,15 @@ void MCObject::getvariantprop(MCExecContext& ctxt, uint32_t p_part_id, Propertie
 		return;
 
 	ctxt . Throw();
+}
+
+void MCObject::setvariantprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCValueRef p_value)
+{
+    ctxt . GetEP() . setvalueref(p_value);
+    if (setprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL)
+        return;
+    
+    ctxt . Throw();
 }
 
 /////////

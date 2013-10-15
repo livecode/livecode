@@ -179,7 +179,7 @@ extern void MCU_fix_path(MCStringRef in, MCStringRef& r_out);
 extern void MCU_base64encode(MCExecPoint &ep);
 extern void MCU_base64decode(MCExecPoint &ep);
 extern void MCU_urlencode(MCExecPoint &ep);
-extern void MCU_urldecode(MCExecPoint &ep);
+extern void MCU_urldecode(MCStringRef p_source, MCStringRef& r_result);
 extern Boolean MCU_freeinserted(MCObjectList *&l);
 extern void MCU_cleaninserted();
 //extern Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep, uint2 line, uint2 pos);
@@ -188,6 +188,7 @@ extern Exec_stat MCU_change_color(MCColor &c, MCStringRef&n, MCExecPoint &ep, ui
 extern void MCU_get_color(MCExecPoint &ep, MCStringRef name, MCColor &c);
 extern void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output);
 extern void MCU_geturl(MCExecPoint &ep);
+extern void MCU_puturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef p_data);
 extern void MCU_puturl(MCExecPoint &ep, MCExecPoint &data);
 extern uint1 MCU_unicodetocharset(uint2 uchar);
 extern uint1 MCU_languagetocharset(MCNameRef langname);
