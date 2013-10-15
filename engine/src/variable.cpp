@@ -244,6 +244,11 @@ MCValueRef MCVariable::getvalueref(MCNameRef *p_path, uindex_t p_length, bool p_
 	return kMCEmptyString;
 }
 
+bool MCVariable::copyasvalueref(MCValueRef &r_value)
+{
+    return MCValueCopy(value, r_value);
+}
+
 Exec_stat MCVariable::eval(MCExecPoint& ep)
 {
 	return eval(ep, nil, 0);
