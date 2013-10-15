@@ -1290,6 +1290,7 @@ static void MCIPhoneDoDidBecomeActive(void *)
 	// Convert the environment variables into stringrefs
 	uindex_t envc = 0;
 	MCAutoArray<MCStringRef> t_envp;
+    t_envp.New(1);
 	while (env[envc] != 0)
 	{
 		t_envp.Extend(envc);
