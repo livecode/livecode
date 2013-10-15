@@ -156,6 +156,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\legacygradients.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\path.cpp"
 				>
 			</File>

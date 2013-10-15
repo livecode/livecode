@@ -429,6 +429,9 @@ static MCImageScaleLabel s_image_scale_labels[] = {
 	{"@extra-high", 2.0},
 	{"@ultra-high", 4.0},
 	
+	// MM-2012-10-03: [[ ResIndependence ]] Added missing @2x
+	{"@2x", 2.0},
+	
 	// unlabeled default scale
 	{"", 1.0},
 	

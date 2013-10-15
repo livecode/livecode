@@ -5,6 +5,7 @@
 #include <SkCanvas.h>
 #include <SkDashPathEffect.h>
 #include <SkMask.h>
+#include <SkShader.h>
 
 #ifndef M_PI
 #define M_PI 3.141592653589793238462643
@@ -58,7 +59,7 @@ struct __MCGGradient
 bool MCGGradientCreate(MCGGradientFunction function, const MCGFloat* stops, const MCGColor* colors, uindex_t ramp_length, bool mirror, bool wrap, uint32_t repeats, MCGAffineTransform transform, MCGImageFilter filter, MCGGradientRef& r_gradient);
 MCGGradientRef MCGGradientRetain(MCGGradientRef gradient);
 void MCGGradientRelease(MCGGradientRef gradient);
-bool MCGGradientToSkShader(MCGGradientRef gradient, SkShader*& r_shader);
+bool MCGGradientToSkShader(MCGGradientRef gradient, MCGRectangle clip, SkShader*& r_shader);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -497,6 +498,44 @@ private:
 	{
 		return SkNEW_ARGS(MCGLegacyBlendMode, (buffer));
 	}
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef struct MCGradientCombiner MCGradientCombiner_t;
+
+class MCGLegacyGradientShader : public SkShader
+{
+public:
+	MCGLegacyGradientShader(MCGGradientRef gradient_ref, MCGRectangle clip);
+	~MCGLegacyGradientShader();
+	
+    virtual bool setContext(const SkBitmap&, const SkPaint&, const SkMatrix&);
+    virtual uint32_t getFlags();
+    virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count);
+    virtual void shadeSpan16(int x, int y, uint16_t dstC[], int count);
+    /*virtual void beginSession();
+    virtual void endSession();*/
+    virtual bool asABitmap(SkBitmap*, SkMatrix*, TileMode*);
+	
+    static SkFlattenable* CreateProc(SkFlattenableReadBuffer& buffer)
+	{ 
+        return SkNEW_ARGS(MCGLegacyGradientShader, (buffer));
+    }	
+	
+protected:
+    MCGLegacyGradientShader(SkFlattenableReadBuffer& );
+    virtual void flatten(SkFlattenableWriteBuffer& );
+    virtual Factory getFactory() { return CreateProc; }
+	
+	MCGGradientRef			m_gradient_ref;
+	int32_t					m_y;
+	uint8_t					*m_mask;
+	MCGRectangle			m_clip;
+	MCGradientCombiner_t	*m_gradient_combiner;
+	
+private:    
+    typedef SkShader INHERITED;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

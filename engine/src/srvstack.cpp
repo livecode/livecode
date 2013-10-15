@@ -96,6 +96,10 @@ void MCStack::realize(void)
 	start_externals();
 }
 
+void MCStack::setsizehints(void)
+{
+}
+
 void MCStack::sethints(void)
 {
 }

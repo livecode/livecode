@@ -304,12 +304,8 @@ void MCStack::realize()
 			if (!((MCScreenDC*)MCscreen)->getmenubarhidden())
 				SetSystemUIMode(kUIModeAllHidden, kUIOptionAutoShowMenuBar);
 
-			const MCDisplay *t_display;
-			t_display = MCscreen -> getnearestdisplay(rect);
-			MCRectangle t_workarea, t_viewport;
-			t_workarea = t_display -> workarea;
-			t_viewport = t_display -> viewport ;
-			setrect(t_viewport);
+			// IM-2013-10-04: [[ FullscreenMode ]] Don't change stack rect if fullscreen
+			/* CODE DELETED */
 		}
 		else
 		{
@@ -511,19 +507,12 @@ void MCStack::realize()
 	start_externals();
 }
 
-void MCStack::sethints()
+void MCStack::setsizehints()
 {
-	if (!opened || MCnoui || window == DNULL) //not opened or no user interface
-		return;
-	if (flags & F_RESIZABLE)
-	{
-		rect.width = MCU_max(minwidth, rect.width);
-		rect.width = MCU_min(maxwidth, rect.width);
-		rect.width = MCU_min(MCscreen->getwidth(), rect.width);
-		rect.height = MCU_max(minheight, rect.height);
-		rect.height = MCU_min(maxheight, rect.height);
-		rect.height = MCU_min(MCscreen->getheight(), rect.height);
-	}
+}
+
+void MCStack::sethints(void)
+{
 }
 
 MCRectangle MCStack::device_getwindowrect() const
@@ -559,6 +548,34 @@ void MCStackGetWindowRect(WindowPtr p_window, MCRectangle &r_rect)
 	r_rect.height = t_winrect.bottom - t_winrect.top;
 }
 
+// IM-2013-09-23: [[ FullscreenMode ]] Factor out device-specific window sizing
+MCRectangle MCStack::device_setgeom(const MCRectangle &p_rect)
+{
+	MCRectangle t_win_rect;
+	MCStackGetWindowRect((WindowPtr)window->handle.window, t_win_rect);
+	
+	if (IsWindowVisible((WindowPtr)window->handle.window))
+	{
+		if (mode != WM_SHEET && mode != WM_DRAWER
+			&& (p_rect.x != t_win_rect.x || p_rect.y != t_win_rect.y))
+		{
+			MoveWindow((WindowPtr)window->handle.window, p_rect.x, p_rect.y, False);
+//			state |= CS_BEEN_MOVED;
+		}
+	}
+	else
+	{
+		if (mode != WM_SHEET && mode != WM_DRAWER)
+			MoveWindow((WindowPtr)window->handle.window, p_rect.x, p_rect.y, False);
+//		state &= ~CS_BEEN_MOVED;
+	}
+
+	if (p_rect.width != t_win_rect.width || p_rect.height != t_win_rect.height)
+		SizeWindow((WindowPtr)window->handle.window, p_rect.width, p_rect.height, True);
+	
+	return t_win_rect;
+}
+
 void MCStack::setgeom()
 {
 	//set stack(window) size or position from script
@@ -581,42 +598,18 @@ void MCStack::setgeom()
 	// MW-2011-09-12: [[ MacScroll ]] Make sure we apply the current scroll setting.
 	applyscroll();
 	
-	// IM-2013-08-01: [[ ResIndependence ]] scale to device res when updating window size
-	MCRectangle t_rect_scaled;
-	t_rect_scaled = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
+	// IM-2013-10-03: [[ FullscreenMode ]] Use view methods to get / set the stack viewport
+	MCRectangle t_old_rect;
+	t_old_rect = view_getstackviewport();
 	
-	MCRectangle t_win_rect;
-	MCStackGetWindowRect((WindowPtr)window->handle.window, t_win_rect);
+	rect = view_setstackviewport(rect);
 	
-	MCRectangle t_win_rect_scaled;
-	t_win_rect_scaled = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_win_rect));
+	state &= ~CS_NEED_RESIZE;
 	
-	if (IsWindowVisible((WindowPtr)window->handle.window))
-	{
-		if (mode != WM_SHEET && mode != WM_DRAWER
-		        && (t_rect_scaled.x != t_win_rect.x || t_rect_scaled.y != t_win_rect.y))
-		{
-			MoveWindow((WindowPtr)window->handle.window, t_rect_scaled.x, t_rect_scaled.y, False);
-			state |= CS_BEEN_MOVED;
-		}
-		if (t_rect_scaled.width != t_win_rect.width || t_rect_scaled.height != t_win_rect.height)
-		{
-			SizeWindow((WindowPtr)window->handle.window, t_rect_scaled.width, t_rect_scaled.height, True);
-			resize(t_win_rect_scaled.width, t_win_rect_scaled.height + getscroll());
-		}
-		state &= ~CS_NEED_RESIZE;
-	}
-	else
-	{
-		if (mode != WM_SHEET && mode != WM_DRAWER)
-			MoveWindow((WindowPtr)window->handle.window, t_rect_scaled.x, t_rect_scaled.y, False);
-		if (t_rect_scaled.width != t_win_rect.width || t_rect_scaled.height != t_win_rect.height)
-		{
-			SizeWindow((WindowPtr)window->handle.window, t_rect_scaled.width, t_rect_scaled.height, True);
-			resize(t_win_rect_scaled.width, t_win_rect_scaled.height + getscroll());
-		}
-		state &= ~(CS_BEEN_MOVED | CS_NEED_RESIZE);
-	}
+	// IM-2013-10-03: [[ FullscreenMode ]] Return values from view methods are
+	// in stack coords so don't need to transform
+	if (t_old_rect.x != rect.x || t_old_rect.y != rect.y || t_old_rect.width != rect.width || t_old_rect.height != rect.height)
+		resize(t_old_rect.width, t_old_rect.height);
 }
 
 // MW-2011-09-12: [[ MacScroll ]] This is called to apply the Mac menu scroll. It
@@ -641,6 +634,9 @@ void MCStack::applyscroll(void)
 	
 	// Make sure window contents reflects the new scroll.
 	syncscroll();
+	
+	// IM-2013-10-11: [[ FullscreenMode ]] Trigger redraw of stack after scroll changes
+	dirtyall();
 }
 
 // MW-2011-09-12: [[ MacScroll ]] This is called to clear any currently applied
@@ -670,18 +666,10 @@ void MCStack::syncscroll(void)
 	ControlRef t_root_control;
 	GetRootControl((WindowPtr)window -> handle . window, &t_root_control);
 	ControlRef t_subcontrol;
-	if (GetIndexedSubControl(t_root_control, 1, &t_subcontrol) == noErr)
-	{
-		// IM-2013-08-01: [[ ResIndependence ]] scale control bounds to device res
-		MCRectangle t_user_bounds, t_device_bounds;
-		t_user_bounds = MCU_make_rect(0, -m_scroll, rect.width, rect.height + m_scroll);
-		t_device_bounds = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_user_bounds));
-		
-		Rect t_bounds;
-		t_bounds = MCRectToMacRect(t_device_bounds);
-
-		SetControlBounds(t_subcontrol, &t_bounds);
-	}
+	
+	// IM-2013-10-11: [[ FullscreenMode ]] Move stack scroll handling into stack transform.
+	// Don't adjust the control bounds to the stack scroll.
+	/* CODE REMOVED */
 	
 	// MW-2011-11-30: [[ Bug 9887 ]] Make sure all the player objects on this
 	//   stack are adjusted as appropriate.
@@ -1086,7 +1074,6 @@ class MCMacStackSurface: public MCStackSurface
 	CGContextRef m_context;
 	
 	int32_t m_surface_height;
-	int32_t m_surface_scroll;
 	
 	MCRectangle m_locked_area;
 	MCGContextRef m_locked_context;
@@ -1094,11 +1081,10 @@ class MCMacStackSurface: public MCStackSurface
 	uint32_t m_locked_stride;
 	
 public:
-	MCMacStackSurface(MCStack *p_stack, int32_t p_surface_height, int32_t p_surface_scroll, MCRegionRef p_region, CGContextRef p_context)
+	MCMacStackSurface(MCStack *p_stack, int32_t p_surface_height, MCRegionRef p_region, CGContextRef p_context)
 	{
 		m_stack = p_stack;
 		m_surface_height = p_surface_height;
-		m_surface_scroll = p_surface_scroll;
 		m_region = p_region;
 		m_context = p_context;
 		
@@ -1129,7 +1115,7 @@ public:
 			
 			CGRect t_dst_rect;
 			t_dst_rect . origin . x = 0;
-			t_dst_rect . origin . y = m_surface_height - t_mask_height - m_surface_scroll;
+			t_dst_rect . origin . y = m_surface_height - t_mask_height;
 			t_dst_rect . size . width = t_mask_width;
 			t_dst_rect . size . height = t_mask_height;
 			CGContextClipToMask(m_context, t_dst_rect, t_mask);
@@ -1380,11 +1366,9 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 			MCRectangle t_stack_rect;
 			t_stack_rect = t_context->stack->getrect();
 			
-			int32_t t_scroll;
-			t_scroll = t_context->stack->getscroll();
-			
+			// IM-2013-10-11: [[ FullscreenMode ]] Move stack scroll handling into stack transform
 			MCRectangle t_rect;
-			t_rect = MCRectangleMake(0, -t_scroll, t_stack_rect.width, t_stack_rect.height + t_scroll);
+			t_rect = MCRectangleMake(0, 0, t_stack_rect.width, t_stack_rect.height);
 			
 			MCRectangle t_device_rect;
 			t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(t_rect));
@@ -1481,12 +1465,12 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 					MCGFloat t_scale;
 					t_scale = MCResGetDeviceScale();
 					
+					// IM-2013-10-10: [[ FullscreenMode ]] Use height of view instead of card
 					int32_t t_surface_height;
-					t_surface_height = floor(t_context->stack->getcurcard()->getrect().height * t_scale);
+					t_surface_height = floor(t_context->stack->view_getrect().height * t_scale);
 					
-					// IM-2013-08-29: [[ ResIndependence ]] also provide scroll value at device scale
-					int32_t t_surface_scroll;
-					t_surface_scroll = ceil(t_context->stack->getscroll() * t_scale);
+					// IM-2013-10-11: [[ FullscreenMode ]] Move stack scroll handling into stack transform
+					/* CODE REMOVED */
 					
 					// HIView gives us a context in top-left origin mode which isn't so good
 					// for our CG rendering so, revert back to bottom-left.
@@ -1496,7 +1480,7 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 					// Save the context state
 					CGContextSaveGState(t_graphics);
 					
-					MCMacStackSurface t_surface(t_context -> stack, t_surface_height, t_surface_scroll, (MCRegionRef)t_dirty_rgn, t_graphics);
+					MCMacStackSurface t_surface(t_context -> stack, t_surface_height, (MCRegionRef)t_dirty_rgn, t_graphics);
 					
 					if (t_surface.Lock())
 					{

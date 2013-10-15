@@ -76,6 +76,9 @@ public:
 	void device_querymouse(int16_t &r_x, int16_t &r_y);
 	void device_setmouse(int16_t p_x, int16_t p_y);
 
+	bool fullscreenwindows(void);
+	MCRectangle fullscreenrect(const MCDisplay *p_display);
+	
 	void resetcursors(void);
 	void setcursor(Window w, MCCursorRef c);
 

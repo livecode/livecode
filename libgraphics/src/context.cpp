@@ -1990,7 +1990,7 @@ void MCGContextAddPath(MCGContextRef self, MCGPathRef p_path)
 ////////////////////////////////////////////////////////////////////////////////
 // Paint setup
 
-static bool MCGContextApplyPaintSettingsToSkPaint(MCGColor p_color, MCGPatternRef p_pattern, MCGGradientRef p_gradient, MCGPaintStyle p_paint_style, SkPaint &r_paint)
+static bool MCGContextApplyPaintSettingsToSkPaint(MCGContextRef self, MCGColor p_color, MCGPatternRef p_pattern, MCGGradientRef p_gradient, MCGPaintStyle p_paint_style, SkPaint &r_paint)
 {
 	// TODO: Refactor color, pattern and gradients into ref counted (copy on write?) paint type.
 	bool t_success;
@@ -2007,7 +2007,7 @@ static bool MCGContextApplyPaintSettingsToSkPaint(MCGColor p_color, MCGPatternRe
 		if (p_gradient != NULL)
 		{
 			t_filter = p_gradient -> filter;
-			t_success = MCGGradientToSkShader(p_gradient, t_shader);
+			t_success = MCGGradientToSkShader(p_gradient, MCGContextGetClipBounds(self), t_shader);
 		}
 		else if (p_pattern != NULL)
 		{
@@ -2056,7 +2056,7 @@ static bool MCGContextSetupFillPaint(MCGContextRef self, SkPaint &r_paint)
 	t_success = true;
 	
 	if (t_success)
-		t_success = MCGContextApplyPaintSettingsToSkPaint(self -> state -> fill_color, self -> state -> fill_pattern, self -> state -> fill_gradient, self -> state -> fill_style, r_paint);
+		t_success = MCGContextApplyPaintSettingsToSkPaint(self, self -> state -> fill_color, self -> state -> fill_pattern, self -> state -> fill_gradient, self -> state -> fill_style, r_paint);
 	
 	if (t_success)
 	{		
@@ -2079,7 +2079,7 @@ static bool MCGContextSetupStrokePaint(MCGContextRef self, SkPaint &r_paint)
 	t_success = true;
 	
 	if (t_success)
-		t_success = MCGContextApplyPaintSettingsToSkPaint(self -> state -> stroke_color, self -> state -> stroke_pattern, self -> state -> stroke_gradient, self -> state -> stroke_style, r_paint);
+		t_success = MCGContextApplyPaintSettingsToSkPaint(self, self -> state -> stroke_color, self -> state -> stroke_pattern, self -> state -> stroke_gradient, self -> state -> stroke_style, r_paint);
 	
 	SkDashPathEffect *t_dash_effect;
 	t_dash_effect = NULL;

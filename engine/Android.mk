@@ -27,8 +27,13 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	mcio.cpp mcstring.cpp mctheme.cpp newobj.cpp mcutility.cpp \
 	object.cpp objectpropsets.cpp objptr.cpp operator.cpp paragraf.cpp paragrafattr.cpp param.cpp \
 	property.cpp pickle.cpp regex.cpp \
-	scriptpt.cpp scrolbar.cpp scrollbardraw.cpp sellst.cpp stack.cpp stack2.cpp \
-	stack3.cpp stacklst.cpp statemnt.cpp styledtext.cpp tooltip.cpp \
+	scriptpt.cpp scrolbar.cpp scrollbardraw.cpp sellst.cpp \
+	stack.cpp \
+	stack2.cpp \
+	stack3.cpp \
+	stacklst.cpp \
+	stackview.cpp \
+	statemnt.cpp styledtext.cpp tooltip.cpp \
 	transfer.cpp uidc.cpp gradient.cpp edittool.cpp \
 	undolst.cpp util.cpp variable.cpp vclip.cpp visual.cpp \
 	eps.cpp mcssl.cpp notify.cpp fonttable.cpp \

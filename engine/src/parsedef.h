@@ -1222,6 +1222,8 @@ enum Properties {
 	P_REMOTEABLE, // RUNTIME only
 	P_STACK_URL, // RUNTIME only
 	P_FULLSCREEN, 
+	// IM-2013-09-23: [[ FullscreenMode ]] Property tag for the fullscreenMode
+	P_FULLSCREENMODE,
     P_FILE_NAME,
     P_SAVE_COMPRESSED,
     P_USER_LEVEL,

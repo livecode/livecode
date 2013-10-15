@@ -568,12 +568,13 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 			t_scale = MCResGetDeviceScale();
 			
 			MCPoint t_mouseloc;
-			t_mouseloc.x = mevent->x / t_scale;
-			t_mouseloc.y = mevent->y / t_scale;
+			t_mouseloc = MCPointMake(mevent->x / t_scale, mevent->y / t_scale);
 			
-			MCmousex = t_mouseloc.x;
-			MCmousey = t_mouseloc.y;
-			MCmousestackptr = MCdispatcher->findstackd(mevent->window);
+			MCStack *t_mousestack;
+			t_mousestack = MCdispatcher->findstackd(mevent->window);
+			
+			// IM-2013-10-09: [[ FullscreenMode ]] Update mouseloc with MCscreen getters & setters
+			MCscreen->setmouseloc(t_mousestack, t_mouseloc);
 			
 			//XDND
 			if ( !dragclick && (MCU_abs(MCmousex - MCclicklocx) > 4 || MCU_abs(MCmousey - MCclicklocy) > 4) && MCbuttonstate != 0  ) 
@@ -611,18 +612,16 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 			MCGFloat t_scale;
 			t_scale = MCResGetDeviceScale();
 			
-			MCGPoint t_clickloc;
-			t_clickloc.x = brevent->x / t_scale;
-			t_clickloc.y = brevent->y / t_scale;
+			MCPoint t_clickloc;
+			t_clickloc = MCPointMake(brevent->x / t_scale, brevent->y / t_scale);
 			
-			MCGPoint t_oldclickloc;
-			t_oldclickloc.x = MCclicklocx;
-			t_oldclickloc.y = MCclicklocy;
+			MCStack *t_old_clickstack;
+			MCPoint t_oldclickloc;
+			MCscreen->getclickloc(t_old_clickstack, t_oldclickloc);
 			
-			MCclicklocx = t_clickloc.x;
-			MCclicklocy = t_clickloc.y;
+			// IM-2013-10-09: [[ FullscreenMode ]] Update clickloc with MCscreen getters & setters
+			MCscreen->setclickloc(MCmousestackptr, t_clickloc);
 			
-			MCclickstackptr = MCmousestackptr;
 			if (dispatch)
 			{
 				if (bpevent->window != MCtracewindow)
@@ -654,9 +653,10 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 							                                      brevent->button);
 						else
 						{
+							// MM-2013-09-16: [[ Bug 11176 ]] Make sure we calculate the y delta correctly.
 							if (delay < MCdoubletime
 							        && MCU_abs(t_oldclickloc.x - t_clickloc.x) < MCdoubledelta
-							        && MCU_abs(t_oldclickloc.y - t_clickloc.x) < MCdoubledelta)
+							        && MCU_abs(t_oldclickloc.y - t_clickloc.y) < MCdoubledelta)
 							{
 								if (doubleclick)
 								{

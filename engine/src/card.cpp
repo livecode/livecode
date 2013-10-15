@@ -672,7 +672,11 @@ Boolean MCCard::mdown(uint2 which)
 				cptr = new MCImage(*MCtemplateimage);
 				break;
 			case T_DROPPER:
-				MCscreen->dropper(getw(), MCmousex, MCmousey, NULL);
+				// IM-2013-09-23: [[ FullscreenMode ]] Get mouse loc in view coordinates
+				MCStack *t_mousestack;
+				MCPoint t_mouseloc;
+				MCscreen->getmouseloc(t_mousestack, t_mouseloc);
+				MCscreen->dropper(getw(), t_mouseloc.x, t_mouseloc.y, NULL);
 				message(MCM_color_changed);
 				break;
 			case T_BRUSH:
@@ -2637,10 +2641,78 @@ void MCCard::drawcardborder(MCDC *dc, const MCRectangle &dirty)
 //-----------------------------------------------------------------------------
 //  Redraw Management
 
-void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
+// IM-2013-09-13: [[ RefactorGraphics ]] Factor out card background drawing to separate method
+void MCCard::drawbackground(MCContext *p_context, const MCRectangle &p_dirty)
 {
+	if (MCcurtheme != nil && getstack() -> ismetal() && MCcurtheme -> drawmetalbackground(p_context, p_dirty, rect, parent))
+		return;
+	
+	// IM-2013-09-13: [[ RefactorGraphics ]] [[ Bug 11175 ]] Rework card background drawing to handle transparent background patterns
+	// transparent backgrounds will now draw on top of the stack background, which in turn draws on top of solid black if transparent
+	MCColor color;
+	MCPatternRef t_pattern = nil;
+	int2 x, y;
+	
+	MCPatternRef t_stack_pattern = nil;
+	int16_t t_stack_x, t_stack_y;
+	
 	Window_mode wm = getstack()->getmode();
 	
+	Boolean t_hilite;
+	t_hilite = MClook == LF_WIN95 && (wm == WM_COMBO || wm == WM_OPTION);
+	
+	bool t_opaque;
+	t_opaque = getforecolor(DI_BACK, False, t_hilite, color, t_pattern, x, y, p_context, this) || MCPatternIsOpaque(t_pattern);
+	
+	// If the card background is a pattern with transparency, then draw the stack background first
+	if (!t_opaque)
+	{
+		t_opaque = parent->getforecolor(DI_BACK, False, t_hilite, color, t_stack_pattern, t_stack_x, t_stack_y, p_context, parent) || MCPatternIsOpaque(t_stack_pattern);
+		
+		// And if the stack background is a pattern with transparency, then fill with black first
+		if (!t_opaque)
+		{
+			p_context->setforeground(p_context->getblack());
+			p_context->setfillstyle(FillSolid, nil, 0, 0);
+			p_context->fillrect(p_dirty);
+		}
+		
+		if (t_stack_pattern != nil)
+			p_context->setfillstyle(FillTiled, t_stack_pattern, t_stack_x, t_stack_y);
+		else
+		{
+			p_context->setforeground(color);
+			p_context->setfillstyle(FillSolid, nil, 0, 0);
+		}
+		
+		p_context->fillrect(p_dirty);
+	}
+	
+	if (t_pattern != nil)
+		p_context->setfillstyle(FillTiled, t_pattern, x, y);
+	else
+	{
+		p_context->setforeground(color);
+		p_context->setfillstyle(FillSolid, nil, 0, 0);
+	}
+	
+	p_context->fillrect(p_dirty);
+}
+
+// IM-2013-09-13: [[ RefactorGraphics ]] Factor out card selection rect drawing to separate method
+void MCCard::drawselectionrect(MCContext *p_context)
+{
+	p_context->setlineatts(0, LineDoubleDash, CapButt, JoinBevel);
+	p_context->setforeground(p_context->getblack());
+	p_context->setbackground(p_context->getwhite());
+	p_context->setdashes(0, dashlist, 2);
+	p_context->drawrect(selrect);
+	p_context->setlineatts(0, LineSolid, CapButt, JoinBevel);
+	p_context->setbackground(MCzerocolor);
+}
+
+void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
+{
 	bool t_draw_cardborder;
 	t_draw_cardborder = true;
 
@@ -2649,12 +2721,8 @@ void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
 	if (MCcurtheme != nil && getstack() -> menuwindow &&
 		MCcurtheme -> drawmenubackground(dc, dirty, getrect(), true))
 		t_draw_cardborder = false;
-	else if (MCcurtheme == nil || !getstack() -> ismetal() ||
-		!MCcurtheme -> drawmetalbackground(dc, dirty, rect, parent))
-	{
-		setforeground(dc, DI_BACK, False, MClook == LF_WIN95 && (wm == WM_COMBO || wm == WM_OPTION));
-		dc -> fillrect(dirty);
-	}
+	else
+		drawbackground(dc, dirty);
 
 	if (objptrs != NULL)
 	{
@@ -2675,15 +2743,7 @@ void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
 		drawcardborder(dc, dirty);
 	
 	if (getstate(CS_SIZE))
-	{
-		dc->setlineatts(0, LineDoubleDash, CapButt, JoinBevel);
-		dc->setforeground(dc->getblack());
-		dc->setbackground(dc->getwhite());
-		dc->setdashes(0, dashlist, 2);
-		dc->drawrect(selrect);
-		dc->setlineatts(0, LineSolid, CapButt, JoinBevel);
-		dc->setbackground(MCzerocolor);
-	}
+		drawselectionrect(dc);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

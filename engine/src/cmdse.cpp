@@ -287,8 +287,9 @@ Exec_stat MCClickCmd::exec(MCExecPoint &ep)
 		MCeerror->add(EE_CLICK_BADLOCATION, line, pos);
 		return ES_ERROR;
 	}
-	int2 x, y;
-	if (!MCU_stoi2x2(ep.getsvalue(), x, y))
+
+	MCPoint t_clickloc;
+	if (!MCU_stoi2x2(ep.getsvalue(), t_clickloc.x, t_clickloc.y))
 	{
 		MCeerror->add(EE_CLICK_NAP, line, pos, ep.getsvalue());
 		return ES_ERROR;
@@ -299,17 +300,24 @@ Exec_stat MCClickCmd::exec(MCExecPoint &ep)
 		MCeerror->add(EE_CLICK_STACKNOTOPEN, line, pos, ep.getsvalue());
 		return ES_ERROR;
 	}
+
+	// IM-2013-09-23: [[ FullscreenMode ]] get / set mouseloc & clickloc in view coords
+	MCPoint t_view_clickloc;
+	t_view_clickloc = MCdefaultstackptr->view_stacktoviewloc(t_clickloc);
+
 	uint2 oldmstate = MCmodifierstate;
 	uint2 oldbstate = MCbuttonstate;
-	int2 oldmx = MCmousex;
-	int2 oldmy = MCmousey;
-	MCmousex = x;
-	MCmousey = y;
-	MCStack *oldms = MCmousestackptr;
+
+	MCStack *t_old_mousestack;
+	MCPoint t_old_mouseloc;
+
+	MCscreen->getmouseloc(t_old_mousestack, t_old_mouseloc);
+	MCscreen->setmouseloc(MCdefaultstackptr, t_view_clickloc);
+
 	MCmodifierstate = mstate;
 	MCbuttonstate |= 0x1L << (which - 1);
-	MCmousestackptr = MCdefaultstackptr;
-	MCdispatcher->wmfocus_stack(MCdefaultstackptr, x, y);
+
+	MCdispatcher->wmfocus_stack(MCdefaultstackptr, t_view_clickloc.x, t_view_clickloc.y);
 	MCmodifierstate = mstate;
 	MCbuttonstate |= 0x1L << (which - 1);
 	MCdispatcher->wmdown_stack(MCdefaultstackptr, which);
@@ -317,8 +325,9 @@ Exec_stat MCClickCmd::exec(MCExecPoint &ep)
 	if (MCmousestackptr != NULL)
 		MCscreen->sync(MCmousestackptr->getw());
 	Boolean abort = MCscreen->wait(CLICK_INTERVAL, False, False);
-	MCclicklocx = x;
-	MCclicklocy = y;
+
+	MCscreen->setclickloc(MCdefaultstackptr, t_view_clickloc);
+
 	MCmodifierstate = mstate;
 	MCbuttonstate &= ~(0x1L << (which - 1));
 	MCdispatcher->wmup_stack(MCdefaultstackptr, which);
@@ -331,13 +340,11 @@ Exec_stat MCClickCmd::exec(MCExecPoint &ep)
 	            || (mfocused->gettype() == CT_IMAGE && mfocused->getstate(CS_DRAW)
 	                && MCdefaultstackptr->gettool(mfocused) == T_POLYGON)))
 		mfocused->doubleup(1); // cancel polygon create
-	if (oldms == NULL || oldms->getmode() != 0)
+	if (t_old_mousestack == NULL || t_old_mousestack->getmode() != 0)
 	{
-		MCmousestackptr = oldms;
-		MCmousex = oldmx;
-		MCmousey = oldmy;
-		if (oldms != NULL)
-			MCdispatcher->wmfocus_stack(oldms, oldmx, oldmy);
+		MCscreen->setmouseloc(t_old_mousestack, t_old_mouseloc);
+		if (t_old_mousestack != NULL)
+			MCdispatcher->wmfocus_stack(t_old_mousestack, t_old_mouseloc.x, t_old_mouseloc.y);
 	}
 	if (abort)
 	{

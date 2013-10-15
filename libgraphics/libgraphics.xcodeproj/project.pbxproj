@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4C03161B17D4D7BB00D6BDB7 /* cachetable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C03161A17D4D7BB00D6BDB7 /* cachetable.cpp */; };
+		4C313A9518059BE1004232E1 /* legacygradients.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C313A9418059BE1004232E1 /* legacygradients.cpp */; };
 		4C4463D716C3ACBD00C5CE3C /* context.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C4463D316C3ACBD00C5CE3C /* context.cpp */; };
 		4C4463D816C3ACBD00C5CE3C /* image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C4463D516C3ACBD00C5CE3C /* image.cpp */; };
 		4C4463D916C3ACBD00C5CE3C /* path.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C4463D616C3ACBD00C5CE3C /* path.cpp */; };
@@ -31,6 +32,7 @@
 
 /* Begin PBXFileReference section */
 		4C03161A17D4D7BB00D6BDB7 /* cachetable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cachetable.cpp; path = src/cachetable.cpp; sourceTree = "<group>"; };
+		4C313A9418059BE1004232E1 /* legacygradients.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = legacygradients.cpp; path = src/legacygradients.cpp; sourceTree = "<group>"; };
 		4C4463D316C3ACBD00C5CE3C /* context.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = context.cpp; path = src/context.cpp; sourceTree = "<group>"; };
 		4C4463D416C3ACBD00C5CE3C /* graphics-internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "graphics-internal.h"; path = "src/graphics-internal.h"; sourceTree = "<group>"; };
 		4C4463D516C3ACBD00C5CE3C /* image.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image.cpp; path = src/image.cpp; sourceTree = "<group>"; };
@@ -88,6 +90,7 @@
 				4CAFB58B17C504100076F2ED /* mbliphonetext.mm */,
 				4C03161A17D4D7BB00D6BDB7 /* cachetable.cpp */,
 				4CF7963517D6249F009DDCC2 /* legacyblendmodes.cpp */,
+				4C313A9418059BE1004232E1 /* legacygradients.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -175,6 +178,7 @@
 				4CAFB58E17C5041E0076F2ED /* osxtext.cpp in Sources */,
 				4C03161B17D4D7BB00D6BDB7 /* cachetable.cpp in Sources */,
 				4CF7963617D6249F009DDCC2 /* legacyblendmodes.cpp in Sources */,
+				4C313A9518059BE1004232E1 /* legacygradients.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

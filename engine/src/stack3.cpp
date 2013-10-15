@@ -59,6 +59,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "license.h"
 #include "stacksecurity.h"
 
+#include "graphics_util.h"
+
 #define STACK_EXTRA_ORIGININFO (1U << 0)
 
 IO_stat MCStack::load_substacks(IO_handle stream, const char *version)
@@ -151,6 +153,9 @@ IO_stat MCStack::load(IO_handle stream, const char *version, uint1 type)
 		return stat;
 	
 	stat = load_stack(stream, version);
+	
+	// IM-2013-09-30: [[ FullscreenMode ]] ensure old_rect is initialized for fullscreen stacks
+	old_rect = rect;
 	
 	return stat;
 }
@@ -1271,12 +1276,15 @@ MCStack *MCStack::findsubstackid(uint4 fid)
 void MCStack::translatecoords(MCStack *dest, int2 &x, int2 &y)
 {
 	// WEBREV
-	MCRectangle srect;
-	
-	srect = getrect();
+	// IM-2013-10-09: [[ FullscreenMode ]] Reimplement using MCStack::stacktogloballoc
+	MCPoint t_loc;
+	t_loc = MCPointMake(x, y);
 
-	x += srect.x - dest->rect.x;
-	y += srect.y - dest->rect.y - getscroll();
+	t_loc = stacktogloballoc(t_loc);
+	t_loc = dest->globaltostackloc(t_loc);
+
+	x = t_loc.x;
+	y = t_loc.y;
 }
 
 uint4 MCStack::newid()

@@ -99,6 +99,10 @@ void MCStack::realize(void)
 	setextendedstate(true, ECS_DONTDRAW);
 }
 
+void MCStack::setsizehints(void)
+{
+}
+
 void MCStack::sethints(void)
 {
 }
@@ -107,9 +111,31 @@ void MCStack::destroywindowshape(void)
 {
 }
 
+MCRectangle MCStack::device_setgeom(const MCRectangle &p_rect)
+{
+	return p_rect;
+}
+
+// IM-2013-09-30: [[ FullscreenMode ]] Mobile version of setgeom now calls view methods
 void MCStack::setgeom(void)
 {
+	if (MCnoui || !opened)
+		return;
+	
+	// IM-2013-10-03: [[ FullscreenMode ]] Use view methods to get / set the stack viewport
+	// IM-2013-10-14: [[ FullscreenMode ]] Compare the new rect with the stack's existing rect
+	MCRectangle t_old_rect;
+	t_old_rect = rect;
+	
+	rect = view_setstackviewport(rect);
+	
 	state &= ~CS_NEED_RESIZE;
+	
+	// IM-2013-10-03: [[ FullscreenMode ]] Return values from view methods are
+	// in stack coords so don't need to transform
+	if (t_old_rect.x != rect.x || t_old_rect.y != rect.y || t_old_rect.width != rect.width || t_old_rect.height != rect.height)
+		resize(t_old_rect.width, t_old_rect.height);
+	
 }
 
 void MCStack::start_externals()

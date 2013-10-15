@@ -492,7 +492,7 @@ void MCScreenDC::do_fit_window(bool p_immediate_resize, bool p_post_message)
 	if (p_post_message)
 	{
 		if (p_immediate_resize)
-			((MCStack *)m_current_window) -> configure(True);
+			((MCStack *)m_current_window) -> view_configure(true);
 		else
 			MCEventQueuePostWindowReshape((MCStack *)m_current_window);
 
@@ -987,9 +987,13 @@ void MCStack::preservescreenforvisualeffect(const MCRectangle& p_rect)
 	if (!s_android_opengl_enabled || !s_android_opengl_visible)
 		return;
 
+	// IM-2013-10-03: [[ FullscreenMode ]] get region in device coords for comparison
+	MCRectangle t_device_rect;
+	t_device_rect = MCRectangleGetTransformedBounds(p_rect, getdevicetransform());
+	
 	// If we are doing a full screen effect, we don't need to ensure the rest
 	// of the bitmap is in sync.
-	if (p_rect . width == s_android_bitmap_width && p_rect . height == s_android_bitmap_height)
+	if (t_device_rect . width == s_android_bitmap_width && t_device_rect . height == s_android_bitmap_height)
 		return;
 
 	MCRegionRef t_actual_region;
@@ -1006,7 +1010,7 @@ void MCStack::preservescreenforvisualeffect(const MCRectangle& p_rect)
 		{
 			// We need the contents of the last presented framebuffer. To ensure
 			// we get that, force an (OpenGL) update before reading the pixels.
-			updatewindow(nil);
+			device_updatewindow(t_actual_region);
 			
 			// Fetch the contents of the framebuffer.
 			glReadPixels(0, 0, s_android_bitmap_width, s_android_bitmap_height, GL_RGBA, GL_UNSIGNED_BYTE, t_raster . pixels);

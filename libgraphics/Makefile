@@ -5,7 +5,7 @@ include ../rules/environment.linux.makefile
 
 include ../rules/environment.linux.makefile
 
-SOURCES=context.cpp image.cpp path.cpp utils.cpp blur.cpp lnxtext.cpp cachetable.cpp legacyblendmodes.cpp
+SOURCES=context.cpp image.cpp path.cpp utils.cpp blur.cpp lnxtext.cpp cachetable.cpp legacyblendmodes.cpp legacygradients.cpp
 
 CUSTOM_DEFINES=
 

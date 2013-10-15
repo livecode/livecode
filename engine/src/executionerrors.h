@@ -2426,8 +2426,12 @@ enum Exec_errors
 	EE_FONT_BADFILEEXP,
 	
 	// MERG-2013-10-04: [[ EditScriptAt ]] edit script of object at.
-    // {EE-0797} edit script: bad at expression
+    // {EE-0799} edit script: bad at expression
 	EE_EDIT_BADAT,
+
+	// IM-2013-09-22: [[ FullscreenMode ]]
+	// {EE-0800} fullscreenmode: not a valid mode
+	EE_STACK_BADFULLSCREENMODE,
 };
 
 extern const char *MCexecutionerrors;

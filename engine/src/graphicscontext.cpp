@@ -68,38 +68,53 @@ static void MCGraphicsContextAngleAndDistanceToXYOffset(int p_angle, int p_dista
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCGraphicsContext::MCGraphicsContext(MCGContextRef p_context)
+void MCGraphicsContext::init(MCGContextRef p_context)
 {
 	m_gcontext = MCGContextRetain(p_context);
 	m_pattern = nil;
 	m_background = getblack();
-
+	m_fill_style = FillSolid;
+	
 	m_line_width = 0;
 	m_line_style = LineSolid;
 	m_cap_style = CapButt;
 	m_join_style = JoinBevel;
 
 	m_miter_limit = 0.0;
+
+	m_dash_phase = 0.0;
+	m_dash_lengths = nil;
+	m_dash_count = 0;
+}
+
+MCGraphicsContext::MCGraphicsContext(MCGContextRef p_context)
+{
+	init(p_context);
 }
 
 MCGraphicsContext::MCGraphicsContext(uint32_t p_width, uint32_t p_height, bool p_alpha)
 {
-	/* UNCHECKED */ MCGContextCreate(p_width, p_height, p_alpha, m_gcontext);
-	m_pattern = nil;
-	m_background = getblack();
+	MCGContextRef t_context;
+	/* UNCHECKED */ MCGContextCreate(p_width, p_height, p_alpha, t_context);
+
+	init(t_context);
+	MCGContextRelease(t_context);
 }
 
 MCGraphicsContext::MCGraphicsContext(uint32_t p_width, uint32_t p_height, uint32_t p_stride, void *p_pixels, bool p_alpha)
 {
+	MCGContextRef t_context;
 	/* UNCHECKED */ MCGContextCreateWithPixels(p_width, p_height, p_stride, p_pixels, p_alpha, m_gcontext);
-	m_pattern = nil;
-	m_background = getblack();
+
+	init(t_context);
+	MCGContextRelease(t_context);
 }
 
 MCGraphicsContext::~MCGraphicsContext()
 {
 	MCPatternRelease(m_pattern);
 	MCGContextRelease(m_gcontext);
+	MCMemoryDeleteArray(m_dash_lengths);
 }
 
 MCContextType MCGraphicsContext::gettype() const
@@ -429,20 +444,31 @@ void MCGraphicsContext::setbackground(const MCColor& c)
 
 void MCGraphicsContext::setdashes(uint16_t p_offset, const uint8_t *p_dashes, uint16_t p_length)
 {
-	MCGFloat *t_lengths;
-	/* UNCHECKED */ MCMemoryNewArray(p_length, t_lengths);
-	for (uint32_t i = 0; i < p_length; i++)
-		t_lengths[i] = (MCGFloat) p_dashes[i];
-	
-	MCGContextSetStrokeDashes(m_gcontext, (MCGFloat) p_offset, t_lengths, p_length);
-	
-	MCMemoryDeleteArray(t_lengths);	
+	//MCGFloat *t_lengths;
+	MCMemoryDeleteArray(m_dash_lengths);
+	m_dash_lengths = nil;
+	m_dash_count = 0;
+	m_dash_phase = (MCGFloat)p_offset;
+
+	if (p_length > 0)
+	{
+		m_dash_count = p_length;
+		/* UNCHECKED */ MCMemoryNewArray(m_dash_count, m_dash_lengths);
+		for (uint32_t i = 0; i < m_dash_count; i++)
+			m_dash_lengths[i] = (MCGFloat) p_dashes[i];
+	}
+
+	if (m_line_style != LineSolid)
+		MCGContextSetStrokeDashes(m_gcontext, m_dash_phase, m_dash_lengths, m_dash_count);
 }
 
 void MCGraphicsContext::setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y)
 {
 	MCPatternRelease(m_pattern);
 	m_pattern = nil;
+	
+	// MM-2013-09-30: [[ Bug 11221 ]] Retain the fill style (and return in getfillstyle). Breaks backpatterns in fields otherwise.
+	m_fill_style = style;
 
 	if (style == FillTiled && p != NULL)
 	{
@@ -469,6 +495,7 @@ void MCGraphicsContext::setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y
 
 void MCGraphicsContext::getfillstyle(uint2& style, MCPatternRef& p, int2& x, int2& y)
 {
+	style = m_fill_style;
 	p = m_pattern;
 	x = m_pattern_x;
 	y = m_pattern_y;
@@ -499,10 +526,14 @@ void MCGraphicsContext::setlineatts(uint2 linesize, uint2 linestyle, uint2 capst
 	
 	switch (linestyle)
 	{
-		case LineOnOffDash:
-		{
+		case LineSolid:
+			MCGContextSetStrokeDashes(m_gcontext, 0, nil, 0);
 			break;
-		}
+
+		case LineOnOffDash:
+			MCGContextSetStrokeDashes(m_gcontext, m_dash_phase, m_dash_lengths, m_dash_count);
+			break;
+
 		case LineDoubleDash:
 		{
 			break;
@@ -559,14 +590,20 @@ void MCGraphicsContext::setgradient(MCGradientFill *p_gradient)
 				t_function = kMCGGradientFunctionRadial;
 				break;
 			case kMCGradientKindConical:
-				t_function = kMCGGradientFunctionConical;
-				break;
-			case kMCGradientKindDiamond:
 				t_function = kMCGGradientFunctionSweep;
 				break;
-				/*kMCGradientKindSpiral,
-				 kMCGradientKindXY,
-				 kMCGradientKindSqrtXY*/
+			case kMCGradientKindDiamond:
+				t_function = kMCGLegacyGradientDiamond;
+				break;
+			case kMCGradientKindSpiral:
+				t_function = kMCGLegacyGradientSpiral;
+				break;
+			case kMCGradientKindXY:
+				t_function = kMCGLegacyGradientXY;
+				break;
+			case kMCGradientKindSqrtXY:
+				t_function = kMCGLegacyGradientSqrtXY;
+				break;
 		}
 		
 		MCGImageFilter t_filter;
@@ -857,6 +894,16 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
 
 	MCGContextSave(m_gcontext);
 	MCGContextClipToRect(m_gcontext, t_clip);
+	
+	// MM-2013-10-03: [[ Bug ]] Make sure we apply the images transform before taking into account it's scale factor.
+	if (p_image.has_transform)
+	{
+		MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-t_dest.origin.x, -t_dest.origin.y);
+		t_transform = MCGAffineTransformConcat(p_image.transform, t_transform);
+		t_transform = MCGAffineTransformTranslate(t_transform, t_dest.origin.x, t_dest.origin.y);
+		
+		MCGContextConcatCTM(m_gcontext, t_transform);
+	}	
 
 	// IM-2013-07-19: [[ ResIndependence ]] if image has a scale factor then we need to scale the context before drawing
 	if (p_image.scale_factor != 0.0 && p_image.scale_factor != 1.0)
@@ -864,15 +911,6 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
 		MCGContextTranslateCTM(m_gcontext, t_dest.origin.x, t_dest.origin.y);
 		MCGContextScaleCTM(m_gcontext, 1.0 / p_image.scale_factor, 1.0 / p_image.scale_factor);
 		MCGContextTranslateCTM(m_gcontext, -t_dest.origin.x, -t_dest.origin.y);
-	}
-	
-	if (p_image.has_transform)
-	{
-		MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-t_dest.origin.x, -t_dest.origin.y);
-		t_transform = MCGAffineTransformConcat(p_image.transform, t_transform);
-		t_transform = MCGAffineTransformTranslate(t_transform, t_dest.origin.x, t_dest.origin.y);
-
-		MCGContextConcatCTM(m_gcontext, t_transform);
 	}
 
 	MCGContextDrawPixels(m_gcontext, t_raster, t_dest, p_image.filter);

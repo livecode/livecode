@@ -265,6 +265,7 @@
 		E84A254E1680BFFD00EA7ACC /* image_rep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E84A254C1680BFF600EA7ACC /* image_rep.cpp */; };
 		E85A91BF16C2B4D300C07FA9 /* stackcache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E85A91BE16C2B4D300C07FA9 /* stackcache.cpp */; };
 		E86481931439BCE100775960 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E86481921439BCE100775960 /* StoreKit.framework */; };
+		E8B6EE1417F0A1C900F77E0E /* stackview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8B6EE1317F0A1C900F77E0E /* stackview.cpp */; };
 		E8C22C46177B1700003785D3 /* cgimageutil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8C22C45177B1700003785D3 /* cgimageutil.cpp */; };
 		E8C22C53177B1BED003785D3 /* libgraphicsmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8C22C4C177B1B79003785D3 /* libgraphicsmobile.a */; };
 		E8C22C54177B1BED003785D3 /* libskiamobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8C22C52177B1B87003785D3 /* libskiamobile.a */; };
@@ -894,6 +895,7 @@
 		E89112EB148E73EB00B554CF /* mbldialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mbldialog.cpp; path = src/mbldialog.cpp; sourceTree = "<group>"; };
 		E89A45D314EE7603007250AA /* mblnotification.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblnotification.h; path = src/mblnotification.h; sourceTree = "<group>"; };
 		E8B4FDD8152CAF8300CBAF90 /* mbliphonefs.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonefs.mm; path = src/mbliphonefs.mm; sourceTree = "<group>"; };
+		E8B6EE1317F0A1C900F77E0E /* stackview.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stackview.cpp; path = src/stackview.cpp; sourceTree = "<group>"; };
 		E8C22C45177B1700003785D3 /* cgimageutil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cgimageutil.cpp; path = src/cgimageutil.cpp; sourceTree = "<group>"; };
 		E8C22C47177B1B78003785D3 /* libgraphics-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libgraphics-mobile.xcodeproj"; path = "../libgraphics/libgraphics-mobile.xcodeproj"; sourceTree = "<group>"; };
 		E8C22C4D177B1B87003785D3 /* libskia-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libskia-mobile.xcodeproj"; path = "../thirdparty/libskia/libskia-mobile.xcodeproj"; sourceTree = "<group>"; };
@@ -1507,6 +1509,7 @@
 				4DD3DEE61040ADEF00CAC7EF /* stacke.cpp */,
 				4DD3DEE51040ADEF00CAC7EF /* stacklst.cpp */,
 				4DD3DEE41040ADEF00CAC7EF /* stacklst.h */,
+				E8B6EE1317F0A1C900F77E0E /* stackview.cpp */,
 				4DD3DF061040ADFC00CAC7EF /* styledtext.cpp */,
 				4DD3DF051040ADFC00CAC7EF /* styledtext.h */,
 				4DD3DF111040ADFC00CAC7EF /* tooltip.cpp */,
@@ -2173,6 +2176,7 @@
 				E8C22E57177B2884003785D3 /* imagelist.cpp in Sources */,
 				E8C22E73177B2960003785D3 /* graphicscontext.cpp in Sources */,
 				E8C22E75177B2B53003785D3 /* mbltheme.cpp in Sources */,
+				E8B6EE1417F0A1C900F77E0E /* stackview.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -510,6 +510,9 @@ void MCImage::rotate_transform(int32_t p_angle)
 			t_trans_width = rect.width;
 			t_trans_height = rect.height;
 		}
+		
+		// MM-2013-09-16: [[ Bug 11179 ]] Make sure we store the transform.
+		m_transform = t_transform;
 	}
 
 	if (t_trans_width != rect.width || t_trans_height != rect.height)

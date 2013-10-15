@@ -90,7 +90,9 @@ struct MCObjectShape
 		struct
 		{
 			MCPoint origin;
-			MCImageBitmap *bits;
+			MCImageBitmap *bits;			
+			// MM-2012-10-03: [[ ResIndependence ]] The scale of the mask. Used when computing intersect of images with a scale factor.
+			MCGFloat scale;
 		} mask;
 	};
 };

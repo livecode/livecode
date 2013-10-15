@@ -25,6 +25,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "uidc.h"
 #endif
 
+#include "tilecache.h"
+
 #define EXTERNAL_WAIT 10.0
 #define MENU_SPACE 8
 #define MENU_ARROW_SIZE 16
@@ -63,6 +65,27 @@ enum MCStackSurfaceTargetType
 	kMCStackSurfaceTargetEAGLContext,
 	kMCStackSurfaceTargetPixmap,
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2013-09-23: [[ FullscreenMode ]] Available fullscreen modes
+enum MCStackFullscreenMode
+{
+	kMCStackFullscreenModeNone,
+
+	kMCStackFullscreenResize,	// ""			stack is resized to fill screen without scaling
+	kMCStackFullscreenExactFit,	// "exact fit"	stack is stretched to fill screen
+	kMCStackFullscreenShowAll,	// "show all"	whole stack is shown, scaled to take up as much screen space as possible. Both full width and height are visible
+	kMCStackFullscreenNoBorder, // "no border"	scaled to cover whole screen, top+bottom or left+right of stack may be clipped
+	kMCStackFullscreenNoScale,	// "no scale"	stack is centered on screen with no scaling
+};
+
+extern const char *MCStackFullscreenModeToString(MCStackFullscreenMode p_mode);
+extern bool MCStackFullscreenModeFromString(const char *p_string, MCStackFullscreenMode &r_mode);
+
+#define kMCStackFullscreenModeDefault (kMCStackFullscreenResize)
+
+////////////////////////////////////////////////////////////////////////////////
 
 class MCStackSurface
 {
@@ -157,13 +180,6 @@ protected:
 	
 	MCExternalHandlerList *m_externals;
 
-	// MW-2011-08-19: [[ Redraw ]] The region of the stack that needs to be
-	//   drawn to the screen on the next update.
-	MCRegionRef m_update_region;
-
-	// MW-2011-08-26: [[ TileCache ]] The stack's tilecache renderer - if any.
-	MCTileCacheRef m_tilecache;
-
 	// MW-2011-09-12: [[ MacScroll ]] The current y-scroll setting of the stack.
 	int32_t m_scroll;
 	
@@ -185,6 +201,30 @@ protected:
 	
 	static uint2 ibeam;
 
+	//////////
+
+	// Stack view properties
+	bool m_view_fullscreen;
+	MCStackFullscreenMode m_view_fullscreenmode;
+
+	MCRectangle m_view_stack_rect;
+	MCRectangle m_view_rect;
+
+	// IM-2013-10-14: [[ FullscreenMode ]] Indicates whether the view needs to be redrawn
+	bool m_view_need_redraw;
+	
+	MCGAffineTransform m_view_transform;
+
+	// MW-2011-08-26: [[ TileCache ]] The stack's tilecache renderer - if any.
+	MCTileCacheRef m_view_tilecache;
+
+	// IM-2013-10-14: [[ FullscreenMode ]] The tilecache layer ID of the view background
+	uint32_t m_view_bg_layer_id;
+	
+	// MW-2011-08-19: [[ Redraw ]] The region of the view that needs to be
+	//   drawn to the screen on the next update.
+	MCRegionRef m_view_update_region;
+	
 public:
 	Boolean menuwindow;
 
@@ -238,13 +278,153 @@ public:
 	virtual bool recomputefonts(MCFontRef parent_font);
 	
 	//////////
+	// device interface
+
+	MCRectangle device_getwindowrect() const;
+	MCRectangle device_setgeom(const MCRectangle &p_rect);
+	
+	// IM-2013-08-29: [[ ResIndependence ]] add device-specific version of updatewindow.
+	//   device_updatewindow takes a region in device coordinates.
+	void device_updatewindow(MCRegionRef p_region);
+	// MW-2011-09-13: [[ Redraw ]] Request an immediate update of the given region of the
+	//   window using the presented pixmap. This is a platform-specific method - note that
+	//   any window-mask is ignored with per-pixel alpha assumed to come from the the image.
+	//   (although a window-mask needs to be present in the stack for it not to be ignored).
+	// IM-2013-06-19: [[ RefactorGraphics ]] Replace pixmap update method with this
+	//   version which uses a callback function to perform the actual drawing using a
+	//    provided MCStackSurface instance. The MCStackSurface class is now responsible
+	//    for handling any window mask present.
+	// IM-2013-08-29: [[ ResIndependence ]] change updatewindowwithcallback to device-specific version.
+	//   device_updatewindowwithcallback takes a region in device coordinates.
+	void device_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context);
+	
+	// MW-2011-09-10: [[ Redraw ]] Perform a redraw of the window's content to the given
+	//   surface.
+	void device_redrawwindow(MCStackSurface *surface, MCRegionRef region);
+	
+	//////////
+	// view interface
+
+	void view_init(void);
+	void view_copy(const MCStack &p_view);
+	void view_destroy(void);
+
+	// Get visible stack region
+	MCRectangle view_getstackviewport(void);
+	// Set the visible stack region. Returns modified rect if constrained by fullscreen mode
+	MCRectangle view_setstackviewport(const MCRectangle &p_viewport);
+
+	// Return the visible stack region constrained by the fullscreen settings
+	MCRectangle view_constrainstackviewport(const MCRectangle &p_viewport);
+	
+	// Return the rect of the view in logical screen coords.
+	MCRectangle view_getrect(void) const;
+
+	// Set view to fullscreen 
+	void view_setfullscreen(bool p_fullscreen);
+	// Return whether this view is fullscreen or not
+	bool view_getfullscreen(void) const;
+
+	// Set scaling mode when fullscreen
+	void view_setfullscreenmode(MCStackFullscreenMode p_mode);
+	// Get the fullscreen scaling mode
+	MCStackFullscreenMode view_getfullscreenmode(void) const;
+
+	// Request update of the given stack region
+	void view_updatestack(MCRegionRef p_region);
+	// Redraw the given view rect
+	void view_render(MCGContextRef p_target, MCRectangle p_rect);
+	
+	// Translate local stack coords to view space
+	MCPoint view_viewtostackloc(const MCPoint &p_loc) const;
+	// Translate view coords to local stack space
+	MCPoint view_stacktoviewloc(const MCPoint &p_loc) const;
+
+	// Return the stack -> view coordinates transform
+	MCGAffineTransform view_getviewtransform(void) const;
+	
+	//////////
+	
+	// IM-2013-10-03: [[ FullscreenMode ]] Move implementation of tilecache operations into stackview
+	
+	// MW-2011-11-23: [[ AccelRender ]] Set / get the accelerated rendering derived property.
+	bool view_getacceleratedrendering(void);
+	void view_setacceleratedrendering(bool value);
+	
+	// IM-2013-01-03: [[ FullscreenMode ]] Set / get the compositor type
+	MCTileCacheCompositorType view_getcompositortype(void);
+	void view_setcompositortype(MCTileCacheCompositorType p_type);
+	
+	// IM-2013-01-03: [[ FullscreenMode ]] Set / get the compositor cache limit
+	uint32_t view_getcompositorcachelimit(void);
+	void view_setcompositorcachelimit(uint32_t p_limit);
+	
+	// IM-2013-01-03: [[ FullscreenMode ]] Set / get the compositor tile size
+	uint32_t view_getcompositortilesize(void);
+	void view_setcompositortilesize(uint32_t p_size);
+	// IM-2013-01-03: [[ FullscreenMode ]] Check the validity of the tilesize (accepted tile sizes are powers of two between 16 & 256 pixels)
+	bool view_isvalidcompositortilesize(uint32_t p_size);
+	
+	// MW-2011-08-26: [[ TileCache ]] Fetch the stack's tilecache.
+	MCTileCacheRef view_gettilecache(void) { return m_view_tilecache; }
+	
+	void view_updatetilecache(void);
+	void view_deactivatetilecache(void);
+	bool view_snapshottilecache(const MCRectangle &p_stack_rect, MCGImageRef &r_image);
+	
+	void view_flushtilecache(void);
+	void view_activatetilecache(void);
+	void view_compacttilecache(void);
+	
+	// IM-2013-10-10: [[ FullscreenMode ]] Reconfigure view after window rect changes
+	void view_configure(bool p_user);
+	
+	// IM-2013-10-10: [[ FullscreenMode ]] Update the on-screen bounds of the view
+	void view_setrect(const MCRectangle &p_new_rect);
+	// IM-2013-10-10: [[ FullscreenMode ]] Notify view of changes to its bounds
+	void view_on_rect_changed(void);
+	
+	bool view_need_redraw(void) const { return m_view_need_redraw; }
+	
+	// IM-2013-10-14: [[ FullscreenMode ]] Clear any pending updates of the view
+	void view_reset_updates(void);
+	// IM-2013-10-14: [[ FullscreenMode ]] Mark the given view region as needing redrawn
+	void view_dirty_rect(const MCRectangle &p_rect);
+	// IM-2013-10-14: [[ FullscreenMode ]] Mark the entire view surface as needing redrawn
+	void view_dirty_all(void);
+	// IM-2013-10-14: [[ FullscreenMode ]] Request a redraw of the marked areas
+	void view_updatewindow(void);
+	// IM-2013-10-14: [[ FullscreenMode ]] Ensure the view content is up to date
+	void view_apply_updates(void);
+	
+	//////////
+	
+	// IM-2013-10-14: [[ FullscreenMode ]] Return the stack -> stack viewport coordinate transform (Currently only applies the stack vertical scroll)
+	MCGAffineTransform gettransform(void) const;
+	// IM-2013-10-14: [[ FullscreenMode ]] Return the stack -> view coordinate transform
+	MCGAffineTransform getviewtransform(void) const;
+	// IM-2013-10-14: [[ FullscreenMode ]] Return the stack -> device coordinate transform
+	MCGAffineTransform getdevicetransform(void) const;
+	
+	//////////
+	
+	// IM-2013-10-08: [[ FullscreenMode ]] Ensure rect of resizable stacks is within min/max width & height
+	MCRectangle constrainstackrect(const MCRectangle &p_rect);
+	// IM-2013-10-08: [[ FullscreenMode ]] Ensure rect of resizable stacks is within screen bounds
+	MCRectangle constrainstackrecttoscreen(const MCRectangle &p_rect);
 	
     // IM-2012-05-15: [[ Effective Rect ]] get the rect of the window (including decorations)
     MCRectangle getwindowrect() const;
-	MCRectangle device_getwindowrect() const;
 	
+	// IM-2013-10-08: [[ FullscreenMode ]] transform to / from stack & window coords, taking stack scroll into account
+	MCPoint stacktowindowloc(const MCPoint &p_stackloc) const;
+	MCPoint windowtostackloc(const MCPoint &p_windowloc) const;
+	
+	// IM-2013-10-09: [[ FullscreenMode ]] transform to / from stack & global coords, taking stack scroll into account
+	MCPoint stacktogloballoc(const MCPoint &p_stackloc) const;
+	MCPoint globaltostackloc(const MCPoint &p_globalloc) const;
+
 	void setgeom();
-	MCRectangle device_setgeom(const MCRectangle &p_rect);
 	//////////
 	
     virtual MCRectangle getrectangle(bool p_effective) const;
@@ -496,6 +676,8 @@ public:
 	MCStack *findchildstackd(Window w,uint2 &ccount, uint2 cindex);
 	void realize();
 	void sethints();
+	// IM-2013-10-08: [[ FullscreenMode ]] Separate out window sizing hints
+	void setsizehints();
 	void destroywindowshape();
 
 	// MW-2011-08-17: [[ Redraw ]] Mark the whole content area as needing redrawn.
@@ -511,22 +693,7 @@ public:
 	// MW-2011-09-10: [[ Redraw ]] Request an immediate update of the given region of the
 	//   window. This is a platform-specific method which causes 'redrawwindow' to be
 	//   invoked.
-	// IM-2013-08-29: [[ ResIndependence ]] add device-specific version of updatewindow.
-	//   device_updatewindow takes a region in device coordinates.
 	void updatewindow(MCRegionRef region);
-	void device_updatewindow(MCRegionRef p_region);
-	
-	// MW-2011-09-13: [[ Redraw ]] Request an immediate update of the given region of the
-	//   window using the presented pixmap. This is a platform-specific method - note that
-	//   any window-mask is ignored with per-pixel alpha assumed to come from the the image.
-	//   (although a window-mask needs to be present in the stack for it not to be ignored).
-	// IM-2013-06-19: [[ RefactorGraphics ]] Replace pixmap update method with this
-	//   version which uses a callback function to perform the actual drawing using a
-	//    provided MCStackSurface instance. The MCStackSurface class is now responsible
-	//    for handling any window mask present.
-	// IM-2013-08-29: [[ ResIndependence ]] change updatewindowwithcallback to device-specific version.
-	//   device_updatewindowwithcallback takes a region in device coordinates.
-	void device_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context);
 	
 	// MW-2012-08-06: [[ Fibers ]] Ensure the tilecache is updated to reflect the current
 	//   frame.
@@ -536,10 +703,6 @@ public:
 	// MW-2013-06-26: [[ Bug 10990 ]] Deactivate the tilecache.
     void deactivatetilecache(void);
     
-	// MW-2011-09-10: [[ Redraw ]] Perform a redraw of the window's content to the given
-	//   surface.
-	void device_redrawwindow(MCStackSurface *surface, MCRegionRef region);
-	
 	// MW-2011-09-08: [[ Redraw ]] Capture the contents of the given rect of the window
 	//   into a temporary buffer. The buffer is ditched at the next update.
 	void snapshotwindow(const MCRectangle& rect);
@@ -551,13 +714,6 @@ public:
 	//   locking screen for a visual effect.
 	void preservescreenforvisualeffect(const MCRectangle& p_rect);
 
-	// MW-2011-08-26: [[ TileCache ]] Fetch the stack's tilecache.
-	MCTileCacheRef gettilecache(void) { return m_tilecache; }
-
-	// MW-2011-11-23: [[ AccelRender ]] Set / get the accelerated rendering derived property.
-	bool getacceleratedrendering(void);
-	void setacceleratedrendering(bool value);
-	
 	// MW-2012-10-10: [[ IdCache ]] Add and remove an object from the id cache.
 	void cacheobjectbyid(MCObject *object);
 	void uncacheobjectbyid(MCObject *object);
