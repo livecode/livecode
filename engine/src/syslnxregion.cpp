@@ -109,3 +109,14 @@ bool MCRegionCalculateMask(MCRegionRef p_region, int32_t p_width, int32_t p_heig
 	return true;
 }
 #endif
+
+// IM-2013-10-04: [[ FullscreenMode ]] Implement Linux version of MCRegionForEachRect()
+// Note: There is no X11 function for getting the components of a region, so for now
+// just use the bounding box
+bool MCRegionForEachRect(MCRegionRef region, MCRegionForEachRectCallback callback, void *context)
+{
+	if (callback == nil)
+		return false;
+	
+	return callback(context, MCRegionGetBoundingBox(region));
+}

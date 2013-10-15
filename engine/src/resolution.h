@@ -47,6 +47,14 @@ inline MCGRectangle MCResDeviceToUserRect(MCRectangle p_rect)
 	return MCGRectangleToUserSpace(MCRectangleToMCGRectangle(p_rect));
 }
 
+inline MCGAffineTransform MCResGetDeviceTransform(void)
+{
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
+	return MCGAffineTransformMakeScale(t_scale, t_scale);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif // __RESOLUTION_INDEPENDENCE_H__

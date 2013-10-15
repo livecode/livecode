@@ -615,6 +615,11 @@ MCGPoint MCGPointApplyAffineTransform(const MCGPoint& p_point, const MCGAffineTr
 MCGRectangle MCGRectangleApplyAffineTransform(const MCGRectangle& p_rect, const MCGAffineTransform& p_transform);
 MCGSize MCGSizeApplyAffineTransform(const MCGSize& p_size, const MCGAffineTransform& p_transform);
 
+static inline bool MCGAffineTransformIsEqual(const MCGAffineTransform &p_left, const MCGAffineTransform &p_right)
+{
+	return p_left.a == p_right.a && p_left.b == p_right.b && p_left.c == p_right.c && p_left.d == p_right.d && p_left.tx == p_right.tx && p_left.ty == p_right.ty;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif

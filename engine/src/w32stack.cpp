@@ -389,15 +389,8 @@ void MCStack::realize()
 		getstyle(wstyle, exstyle);
 		RECT wrect ;
 
-		if ( getextendedstate(ECS_FULLSCREEN) )
-		{
-			const MCDisplay *t_display;
-			t_display = MCscreen -> getnearestdisplay(rect);
-			MCRectangle t_workarea, t_viewport;
-			t_workarea = t_display -> workarea;
-			t_viewport = t_display -> viewport ;
-			setrect(t_viewport);
-		}
+		// IM-2013-09-23: [[ FullscreenMode ]] Don't change stack rect if fullscreen
+		/* CODE DELETED */
 
 		wrect = getwrect(rect, wstyle, exstyle);
 		LONG x = wrect.left;
@@ -453,17 +446,14 @@ void MCStack::realize()
 	start_externals();
 }
 
+void MCStack::setsizehints()
+{
+}
+
 void MCStack::sethints()
 {
 	if (!opened || MCnoui || window == DNULL)
 		return;
-	if (flags & F_RESIZABLE)
-	{
-		rect.width = MCU_max(minwidth, rect.width);
-		rect.width = MCU_min(maxwidth, rect.width);
-		rect.height = MCU_max(minheight, rect.height);
-		rect.height = MCU_min(maxheight, rect.height);
-	}
 	MCStack *sptr = MCdefaultstackptr == this ? MCtopstackptr : MCdefaultstackptr;
 	if (sptr != NULL && sptr != this && sptr->getw() != DNULL
 	        && GetWindowLongA((HWND)window->handle.window, 0) == 0)
@@ -491,6 +481,32 @@ static inline MCRectangle MCWinRectToMCRect(RECT p_rect)
 	return MCRectangleMake(p_rect.left, p_rect.top, p_rect.right - p_rect.left, p_rect.bottom - p_rect.top);
 }
 
+// IM-2013-09-23: [[ FullscreenMode ]] Factor out device-specific window sizing
+MCRectangle MCStack::device_setgeom(const MCRectangle &p_rect)
+{
+	uint32_t wstyle, exstyle;
+	getstyle(wstyle, exstyle);
+	RECT newrect = getwrect(p_rect, wstyle, exstyle);
+	RECT wrect;
+	GetWindowRect((HWND)window->handle.window, &wrect);
+
+	MCRectangle t_old_rect;
+	t_old_rect = MCWinRectToMCRect(wrect);
+
+	LONG t_width = newrect.right - newrect.left;
+	LONG t_height = newrect.bottom - newrect.top;
+
+	if (t_old_rect.x != p_rect.x || t_old_rect.y != p_rect.y
+	        || t_old_rect.width != p_rect.width || t_old_rect.height != p_rect.height)
+	{
+		state |= CS_NO_CONFIG;
+		MoveWindow((HWND)window->handle.window, newrect.left, newrect.top, t_width, t_height, True);
+		state &= ~CS_NO_CONFIG;
+	}
+
+	return t_old_rect;
+}
+
 void MCStack::setgeom()
 {
 	if (MCnoui || !opened)
@@ -509,32 +525,18 @@ void MCStack::setgeom()
 		return;
 	}
 
-	// IM-2013-08-08: [[ ResIndependence ]] Scale stack rect to device space
-	MCRectangle t_device_rect;
-	t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
-
-	uint32_t wstyle, exstyle;
-	getstyle(wstyle, exstyle);
-	RECT newrect = getwrect(t_device_rect, wstyle, exstyle);
-	RECT wrect;
-	GetWindowRect((HWND)window->handle.window, &wrect);
-	LONG cx = newrect.right - newrect.left;
-	LONG cy = newrect.bottom - newrect.top;
+	// IM-2013-10-04: [[ FullscreenMode ]] Use view methods to get / set the stack viewport
+	MCRectangle t_old_rect;
+	t_old_rect = view_getstackviewport();
+	
+	rect = view_setstackviewport(rect);
+	
 	state &= ~CS_NEED_RESIZE;
-
-	// IM-2013-08-08: [[ ResIndependence ]] Scale old window rect to user space for comparison
-	MCRectangle t_old_user_rect;
-	t_old_user_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(MCWinRectToMCRect(wrect)));
-
-	if (t_old_user_rect.x != rect.x || t_old_user_rect.y != rect.y
-	        || t_old_user_rect.width != rect.width || t_old_user_rect.height != rect.height)
-	{
-		state |= CS_NO_CONFIG;
-		MoveWindow((HWND)window->handle.window, newrect.left, newrect.top, cx, cy, True);
-		if (t_old_user_rect.width != rect.width || t_old_user_rect.height != rect.height)
-			resize(t_old_user_rect.width, t_old_user_rect.height);
-		state &= ~CS_NO_CONFIG;
-	}
+	
+	// IM-2013-10-04: [[ FullscreenMode ]] Return values from view methods are
+	// in stack coords so don't need to transform
+	if (t_old_rect.x != rect.x || t_old_rect.y != rect.y || t_old_rect.width != rect.width || t_old_rect.height != rect.height)
+		resize(t_old_rect.width, t_old_rect.height);
 }
 
 void MCStack::constrain(intptr_t lp)

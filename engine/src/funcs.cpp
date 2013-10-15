@@ -2620,8 +2620,14 @@ Exec_stat MCGlobalLoc::eval(MCExecPoint &ep)
 		(EE_GLOBALLOC_NAP, line, pos, ep.getsvalue());
 		return ES_ERROR;
 	}
-	MCRectangle trect = MCdefaultstackptr->getrect();
-	ep.setpoint(x + trect.x, y + trect.y - MCdefaultstackptr->getscroll());
+
+	// IM-2013-10-09: [[ FullscreenMode ]] Update to use stack coord conversion methods
+	MCPoint t_loc;
+	t_loc = MCPointMake(x, y);
+	t_loc = MCdefaultstackptr->stacktogloballoc(t_loc);
+
+	ep.setpoint(t_loc.x, t_loc.y);
+
 	return ES_NORMAL;
 #endif /* MCGlobalLoc */
 }
@@ -3264,8 +3270,14 @@ Exec_stat MCLocalLoc::eval(MCExecPoint &ep)
 		(EE_LOCALLOC_NAP, line, pos, ep.getsvalue());
 		return ES_ERROR;
 	}
-	MCRectangle trect = MCdefaultstackptr->getrect();
-	ep.setpoint(x - trect.x, y - trect.y + MCdefaultstackptr->getscroll());
+
+	// IM-2013-10-09: [[ FullscreenMode ]] Update to use stack coord conversion methods
+	MCPoint t_loc;
+	t_loc = MCPointMake(x, y);
+	t_loc = MCdefaultstackptr->globaltostackloc(t_loc);
+
+	ep.setpoint(t_loc.x, t_loc.y);
+
 	return ES_NORMAL;
 #endif /* MCLocalLoc */
 }
@@ -3792,8 +3804,13 @@ Exec_stat MCMouseH::eval(MCExecPoint &ep)
 #ifdef /* MCMouseH */ LEGACY_EXEC
 	int2 x, y;
 	MCscreen->querymouse(x, y);
-	MCRectangle trect = MCdefaultstackptr->getrect();
-	ep.setint(x - trect.x);
+
+	// IM-2013-10-10: [[ FullscreenMode ]] Update to use stack coord conversion methods
+	MCPoint t_mouseloc;
+	t_mouseloc = MCdefaultstackptr->globaltostackloc(MCPointMake(x, y));
+	
+	ep.setint(t_mouseloc.x);
+	
 	return ES_NORMAL;
 #endif /* MCMouseH */
 }
@@ -3820,8 +3837,13 @@ Exec_stat MCMouseLoc::eval(MCExecPoint &ep)
 #ifdef /* MCMouseLoc */ LEGACY_EXEC
 	int2 x, y;
 	MCscreen->querymouse(x, y);
-	MCRectangle trect = MCdefaultstackptr->getrect();
-	ep.setpoint(x - trect.x, y - trect.y + MCdefaultstackptr->getscroll());
+	
+	// IM-2013-10-09: [[ FullscreenMode ]] Update to use stack coord conversion methods
+	MCPoint t_mouseloc;
+	t_mouseloc = MCdefaultstackptr->globaltostackloc(MCPointMake(x, y));
+
+	ep.setpoint(t_mouseloc.x, t_mouseloc.y);
+	
 	return ES_NORMAL;
 #endif /* MCMouseLoc */
 }
@@ -3860,8 +3882,13 @@ Exec_stat MCMouseV::eval(MCExecPoint &ep)
 #ifdef /* MCMouseV */ LEGACY_EXEC
 	int2 x, y;
 	MCscreen->querymouse(x, y);
-	MCRectangle trect = MCdefaultstackptr->getrect();
-	ep.setint(y - trect.y + MCdefaultstackptr->getscroll());
+	
+	// IM-2013-10-09: [[ FullscreenMode ]] Update to use stack coord conversion methods
+	MCPoint t_mouseloc;
+	t_mouseloc = MCdefaultstackptr->globaltostackloc(MCPointMake(x, y));
+	
+	ep.setint(t_mouseloc.y);
+	
 	return ES_NORMAL;
 #endif /* MCMouseV */
 }
@@ -6532,13 +6559,9 @@ Exec_stat MCControlAtLoc::eval(MCExecPoint &ep)
 	else
 	{
 		t_stack = MCscreen -> getstackatpoint(t_location . x, t_location . y);
+		// IM-2013-10-11: [[ FullscreenMode ]] Update to use stack coord conversion methods
 		if (t_stack != nil)
-		{
-			MCRectangle t_rect;
-			t_rect = t_stack -> getrect();
-			t_location . x -= t_rect . x;
-			t_location . y -= t_rect . y - t_stack -> getscroll();
-		}
+			t_location = t_stack->globaltostackloc(t_location);
 	}
 
 	// If the location is over a stack, then return nil.

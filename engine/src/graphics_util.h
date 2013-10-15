@@ -61,12 +61,36 @@ inline MCRectangle MCGRectangleGetIntegerInterior(MCGRectangle p_rect)
 	return t_rect;
 }
 
+static inline MCPoint MCPointMake(int16_t x, int16_t y)
+{
+	MCPoint t_point;
+	t_point.x = x;
+	t_point.y = y;
+
+	return t_point;
+}
+
+static inline MCPoint MCGPointToMCPoint(const MCGPoint &p_point)
+{
+	return MCPointMake(p_point.x, p_point.y);
+}
+
 inline MCGPoint MCPointToMCGPoint(MCPoint p_point)
 {
 	MCGPoint t_point;
 	t_point . x = (MCGFloat) p_point . x;
 	t_point . y = (MCGFloat) p_point . y;
 	return t_point;
+}
+
+inline MCRectangle MCRectangleGetTransformedBounds(const MCRectangle &p_rect, const MCGAffineTransform &p_transform)
+{
+	return MCGRectangleGetIntegerBounds(MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(p_rect), p_transform));
+}
+
+inline MCPoint MCPointTransform(const MCPoint &p_point, const MCGAffineTransform &p_transform)
+{
+	return MCGPointToMCPoint(MCGPointApplyAffineTransform(MCPointToMCGPoint(p_point), p_transform));
 }
 
 #if defined(TARGET_SUBPLATFORM_ANDROID)

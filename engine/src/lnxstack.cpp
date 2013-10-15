@@ -130,22 +130,20 @@ void MCStack::realize()
 		xswa.border_pixel = 0;
 		xswa.colormap = screen->getcmap();
 
-		if (rect.width == 0)
-			rect.width = MCminsize << 4;
-		if (rect.height == 0)
-			rect.height = MCminsize << 3;
-		
-		if ( getextendedstate(ECS_FULLSCREEN) )
-		{
-			const MCDisplay *t_display;
-			t_display = MCscreen -> getnearestdisplay(rect);
-			MCRectangle t_workarea, t_viewport;
-			t_workarea = t_display -> workarea;
-			setrect(t_viewport);
-		}
+		// IM-2013-10-08: [[ FullscreenMode ]] Don't change stack rect if fullscreen
+		/* CODE DELETED */
 
-		window = XCreateWindow(MCdpy, screen->getroot(), rect.x, rect.y,
-							   rect.width, rect.height,
+		// IM-2013-10-08: [[ FullscreenMode ]] scale stack rect to device coords
+		MCRectangle t_rect;
+		t_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(view_getrect()));
+
+		if (t_rect.width == 0)
+			t_rect.width = MCminsize << 4;
+		if (t_rect.height == 0)
+			t_rect.height = MCminsize << 3;
+		
+		window = XCreateWindow(MCdpy, screen->getroot(), t_rect.x, t_rect.y,
+							   t_rect.width, t_rect.height,
 							   0, screen->getrealdepth(), InputOutput,
 							   screen->getvisual(), xswamask, &xswa);
 		
@@ -202,43 +200,40 @@ void MCStack::setmodalhints()
 	}
 }
 
-void MCStack::sethints()
+// IM-2013-10-08: [[ FullscreenMode ]] Separate out window sizing hints
+void MCStack::setsizehints(void)
 {
 	if (!opened || MCnoui || window == DNULL)
 		return;
-		
-	// IM-2013-08-12: [[ ResIndependence ]] Use device coordinates when setting WM hints
-	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
-	
-	uint32_t t_minwidth, t_maxwidth, t_minheight, t_maxheight;
-	t_minwidth = minwidth * t_scale;
-	t_maxwidth = MCMin((uint32_t)(maxwidth * t_scale), (uint32_t)MCscreen->device_getwidth());
-	t_minheight = minheight * t_scale;
-	t_maxheight = MCMin((uint32_t)(maxheight * t_scale), (uint32_t)MCscreen->device_getheight());
-	
-	MCRectangle t_device_rect;
-	t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
-	
-	if (flags & F_RESIZABLE)
-	{
-		t_device_rect.width = MCMin(t_maxwidth, MCMax(t_minwidth, (uint32_t)t_device_rect.width));
-		t_device_rect.height = MCMin(t_maxheight, MCMax(t_minheight, (uint32_t)t_device_rect.height));
-		
-		rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_device_rect));
-	}
+
 	if (opened)
 	{
+		// IM-2013-08-12: [[ ResIndependence ]] Use device coordinates when setting WM hints
 		XSizeHints hints;
 		if (flags & F_RESIZABLE )
 		{
-			hints.min_width = t_minwidth;
-			hints.min_height = t_minheight;
-			hints.max_width = t_maxwidth;
-			hints.max_height = t_maxheight;
+			// IM-2013-08-12: [[ FullscreenMode ]] Use stack transform to get min / max sizes in device coords
+			MCRectangle t_minrect, t_maxrect;
+			t_minrect = MCRectangleMake(0, 0, minwidth, minheight);
+			t_maxrect = MCRectangleMake(0, 0, maxwidth, maxheight);
+			
+			MCGAffineTransform t_transform;
+			t_transform = getdevicetransform();
+			
+			t_minrect = MCRectangleGetTransformedBounds(t_minrect, t_transform);
+			t_maxrect = MCRectangleGetTransformedBounds(t_maxrect, t_transform);
+			
+			hints.min_width = t_minrect.width;
+			hints.min_height = t_minrect.height;
+			hints.max_width = t_maxrect.width;
+			hints.max_height = t_maxrect.height;
 		}
 		else
 		{
+			// IM-2013-08-12: [[ ResIndependence ]] Use view rect when setting window size
+			MCRectangle t_device_rect;
+			t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(view_getrect()));
+			
 			hints.min_width = hints.max_width = t_device_rect.width;
 			hints.min_height = hints.max_height = t_device_rect.height;
 		}
@@ -247,7 +242,27 @@ void MCStack::sethints()
 		hints.flags = PMaxSize | PMinSize | PResizeInc | PWinGravity;
 		XSetWMNormalHints(MCdpy, window, &hints);
 	}
+	
+	// Use the window manager to set to full screen.
+	if ( getextendedstate(ECS_FULLSCREEN) )
+	{
+		Atom t_type;
+		t_type = XInternAtom ( MCdpy, "_NET_WM_STATE_FULLSCREEN", false );
 
+		Atom t_control;
+		t_control = XInternAtom(MCdpy, "_NET_WM_STATE", false);
+		
+		XChangeProperty(MCdpy, window, t_control, XA_ATOM, 32, PropModeReplace, (unsigned char*)&t_type, 1);
+		XUnmapWindow(MCdpy, window );
+		XMapWindow(MCdpy, window );
+	}
+}
+
+void MCStack::sethints()
+{
+	if (!opened || MCnoui || window == DNULL)
+		return;
+		
 	XSetWindowAttributes xswa;
 	unsigned long xswamask = CWOverrideRedirect | CWSaveUnder;
 	xswa.override_redirect = xswa.save_under = mode >= WM_PULLDOWN && mode <= WM_LICENSE;
@@ -319,7 +334,7 @@ void MCStack::sethints()
 	case WM_PALETTE:
 	case WM_DRAWER:
 		mwmhints.decorations |= MWM_DECOR_MENU;
-		if (mode != WM_PALETTE && t_device_rect.width > DECORATION_MINIMIZE_WIDTH)
+		if (mode != WM_PALETTE && view_getrect().width > DECORATION_MINIMIZE_WIDTH)
 		//if (rect.width > DECORATION_MINIMIZE_WIDTH)
 		{
 			mwmhints.decorations |= MWM_DECOR_MINIMIZE;
@@ -410,15 +425,6 @@ void MCStack::sethints()
 	Atom t_type, t_control ;
 	t_control = XInternAtom(MCdpy, "_NET_WM_STATE", false);
 	
-	// Use the window manager to set to full screen.
-	if ( getextendedstate(ECS_FULLSCREEN) )
-	{
-		t_type = XInternAtom ( MCdpy, "_NET_WM_STATE_FULLSCREEN", false );
-		XChangeProperty(MCdpy, window, t_control, XA_ATOM, 32, PropModeReplace, (unsigned char*)&t_type, 1);
-		XUnmapWindow(MCdpy, window );
-		XMapWindow(MCdpy, window );
-	}
-
 	//TS 2007-11-08 : Adding in additional hint _NET_WM_STATE == _NET_WM_STATE_ABOVE if we have set WD_UTILITY (i.e. systemwindow == true)
 	if ( decorations & WD_UTILITY)
 	{
@@ -525,19 +531,21 @@ MCRectangle MCStack::device_setgeom(const MCRectangle &p_rect)
 		hints.height = p_rect.height;
 		if (flags & F_RESIZABLE )
 		{
-			MCGFloat t_scale;
-			t_scale = MCResGetDeviceScale();
+			// IM-2013-08-12: [[ FullscreenMode ]] Use stack transform to get min / max sizes in device coords
+			MCRectangle t_minrect, t_maxrect;
+			t_minrect = MCRectangleMake(0, 0, minwidth, minheight);
+			t_maxrect = MCRectangleMake(0, 0, maxwidth, maxheight);
 			
-			uint32_t t_minwidth, t_maxwidth, t_minheight, t_maxheight;
-			t_minwidth = minwidth * t_scale;
-			t_maxwidth = MCMin((uint32_t)(maxwidth * t_scale), (uint32_t)MCscreen->device_getwidth());
-			t_minheight = minheight * t_scale;
-			t_maxheight = MCMin((uint32_t)(maxheight * t_scale), (uint32_t)MCscreen->device_getheight());
+			MCGAffineTransform t_transform;
+			t_transform = getdevicetransform();
 			
-			hints.min_width = t_minwidth;
-			hints.min_height = t_minheight;
-			hints.max_width = t_maxwidth;
-			hints.max_height = t_maxheight;
+			t_minrect = MCRectangleGetTransformedBounds(t_minrect, t_transform);
+			t_maxrect = MCRectangleGetTransformedBounds(t_maxrect, t_transform);
+
+			hints.min_width = t_minrect.width;
+			hints.min_height = t_minrect.height;
+			hints.max_width = t_maxrect.width;
+			hints.max_height = t_maxrect.height;
 		}
 		else
 		{
@@ -584,19 +592,18 @@ void MCStack::setgeom()
 		return;
 	}
 
-	MCRectangle t_device_rect, t_old_device_rect;
-	t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
+	// IM-2013-10-04: [[ FullscreenMode ]] Use view methods to get / set the stack viewport
+	MCRectangle t_old_rect;
+	t_old_rect = view_getstackviewport();
 	
-	t_old_device_rect = device_setgeom(t_device_rect);
+	rect = view_setstackviewport(rect);
 	
 	state &= ~CS_NEED_RESIZE;
 	
-	if (t_old_device_rect.width != t_device_rect.width || t_old_device_rect.height != t_device_rect.height)
-	{
-		MCRectangle t_old_rect;
-		t_old_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_old_device_rect));
+	// IM-2013-10-04: [[ FullscreenMode ]] Return values from view methods are
+	// in stack coords so don't need to transform
+	if (t_old_rect.x != rect.x || t_old_rect.y != rect.y || t_old_rect.width != rect.width || t_old_rect.height != rect.height)
 		resize(t_old_rect.width, t_old_rect.height);
-	}
 		
 	state &= ~CS_ISOPENING;
 }
