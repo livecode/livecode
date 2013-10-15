@@ -559,7 +559,8 @@ void MCPasteboardGetDragImageOffset(MCExecContext& ctxt, MCPoint*& r_value)
 
 void MCPasteboardSetDragImageOffset(MCExecContext& ctxt, MCPoint *p_value)
 {
-	MCdragimageoffset = *p_value;
+    if (p_value != nil)
+        MCdragimageoffset = *p_value;
 }
 
 void MCPasteboardGetAllowableDragActions(MCExecContext& ctxt, intset_t& r_value)
