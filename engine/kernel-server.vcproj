@@ -1462,6 +1462,14 @@
 			<File
 				RelativePath=".\src\srvflst.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\srvflst.h"
@@ -1549,6 +1557,10 @@
 			</File>
 			<File
 				RelativePath=".\src\srvwindows.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\w32flst.cpp"
 				>
 			</File>
 		</Filter>
