@@ -2148,26 +2148,16 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 
 bool MCFiltersBase64Encode(MCDataRef p_src, MCStringRef& r_dst);
 
-void MCU_base64encode(MCExecPoint &ep)
+void MCU_base64encode(MCDataRef in, MCStringRef &out)
 {
-	MCAutoDataRef t_source;
-	/* UNCHECKED */ ep . copyasdataref(&t_source);
-
-	MCAutoStringRef t_result;
-	/* UNCHECKED */ MCFiltersBase64Encode(*t_source, &t_result);
-	/* UNCHECKED */ ep.setvalueref(*t_result);
+	/* UNCHECKED */ MCFiltersBase64Encode(in, out);
 }
 
 bool MCFiltersBase64Decode(MCStringRef p_src, MCDataRef& r_dst);
 
-void MCU_base64decode(MCExecPoint &ep)
+void MCU_base64decode(MCStringRef in, MCDataRef &out)
 {
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
-
-	MCAutoDataRef t_result;
-	/* UNCHECKED */ MCFiltersBase64Decode(*t_source, &t_result);
-	/* UNCHECKED */ ep.setvalueref(*t_result);
+	/* UNCHECKED */ MCFiltersBase64Decode(in, out);
 }
 
 bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
