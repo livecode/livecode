@@ -1123,12 +1123,12 @@ static bool convert_options_array(void *p_context, MCArrayRef p_array, MCNameRef
 	if (!MCStringCopy(MCNameGetString(p_key), ctxt -> option_keys[ctxt -> index]))
 		return false;
 	
+    if (MCValueGetTypeCode(p_value) != kMCValueTypeCodeString)
+		return false;
+	
 	if (!MCStringCopy((MCStringRef)p_value, ctxt -> option_values[ctxt -> index]))
 		return false;
-	t_value = (MCStringRef) MCValueRetain(p_value);
 	
-    ctxt -> option_values[ctxt -> index] = strdup(MCStringGetCString(t_value));
-	MCValueRelease(t_value);
 	ctxt -> index += 1;
 	return true;
 }

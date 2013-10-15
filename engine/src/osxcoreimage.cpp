@@ -141,24 +141,22 @@ bool MCCoreImageEffectBegin(const char *p_name, Drawable p_target, Drawable p_so
 			{
 				double t_vector[4];
 				unsigned int t_count = 0;
-				const char *t_string;
-				char *t_next;
-				t_string = MCStringGetCString(t_argument -> value);
+				uindex_t t_pos = 0;
+				uindex_t t_comma;
 				do
 				{
-					t_vector[t_count] = strtod(t_string, &t_next);
-					if (t_next != t_string)
-					{
-						if (*t_next == ',')
-							t_string = t_next + 1;
-						else
-							t_string = NULL;
-					}
-					else
+					if (!MCStringFirstIndexOfChar(t_argument -> value, ',', t_pos, kMCCompareExact, t_comma))
 						t_success = false;
+					MCAutoStringRef t_substring;
+					if (!MCStringCopySubstring(t_argument -> value, MCRangeMake(t_pos, t_comma - t_pos), &t_substring))
+						t_success = false;
+
+					if (!MCStringToDouble(*t_substring, t_vector[t_count]))
+						t_success = false;
+					
 					t_count += 1;
 				}
-				while(t_string != NULL && t_success && t_count < 4);
+				while(t_success && t_count < 4);
 				if (t_success)
 				{
 					t_parameters -> entries[t_index] . value . vector . length = t_count;
