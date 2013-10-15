@@ -55,18 +55,6 @@ A useful rule of thumb is for images to have natural width and height values tha
 
 Currently, on Android and iOS the scale factor is automatically applied. On iOS, this can be overridden by calling the existing command "iphoneUseDeviceResolution true", which will turn off scaling so one point is equal to one pixel. This capability will be generalized to all platforms supporting resolution independence, and extended to allow configuration of the display scale.
 
-###Full screen scaling mode.
-
-There are multiple ways in which a stack can be resized or scaled to take full advantage of the available screen space. The full screen scaling mode will allow the developer to choose the most appropraite for their application:
-
-* empty (default) - the existing behaviour - the stack is resized (not scaled) to fit the screen.
-* "exact fit" - scale the stack to fill the screen. This will stretch the stack if the aspect ratio of the screen does not match that of the stack.
-* "show all" - scale the stack preserving aspect ratio so all content is visible. Some blank space may remain if the screen & stack aspect ratios do not match.
-* "no border" - scale the stack to fill the screen preserving aspect ratio. If the stack & screen aspect ratios do not match, the left / right or top / bottom extremes of the stack will not be visible.
-* "no scale" - the stack will not be scaled, being centered on the screen instead.
-
-This will be available on all desktop platforms and operates independently from Hi-DPI support.
-
 ###Hi-DPI support on desktop platforms.
 
 Automatically scale stacks on desktop systems with high resolution displays. This will function in the same way as the current support for mobile devices.
