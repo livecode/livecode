@@ -38,6 +38,7 @@ public:
 	IO_stat ReadFloat64(double& r_value);
 	IO_stat ReadNameRef(MCNameRef& r_value);
 	IO_stat ReadStringRef(MCStringRef& r_value);
+    IO_stat ReadTranslatedStringRef(MCStringRef& r_value);
 	IO_stat ReadColor(MCColor &r_color);
 
 	IO_stat Read(void *p_buffer, uint32_t p_amount);

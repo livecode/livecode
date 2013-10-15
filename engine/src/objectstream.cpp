@@ -246,6 +246,42 @@ IO_stat MCObjectInputStream::ReadNameRef(MCNameRef& r_value)
 	return t_stat;
 }
 
+IO_stat MCObjectInputStream::ReadTranslatedStringRef(MCStringRef &r_value)
+{
+    // Read the text as a StringRef initially (because there is no support
+    // for loading as a CString anymore)
+    MCStringRef t_read;
+    IO_stat t_stat;
+    t_stat = ReadStringRef(t_read);
+    
+    // Abort if the string could not be read
+    if (t_stat != IO_NORMAL)
+        return t_stat;
+    
+    // If the string needs to be converted, do so
+    if (MCtranslatechars)
+    {
+        char *t_cstring;
+        t_cstring = MCStringGetOldString(t_read).clone();
+#ifdef __MACROMAN__
+        IO_iso_to_mac(t_cstring, strlen(t_cstring));
+#else
+        IO_mac_to_iso(t_cstring, strlen(t_cstring));
+#endif
+        
+        // Conversion complete
+        MCValueRelease(t_read);
+        if (!MCStringCreateWithCStringAndRelease((char_t*)t_cstring, t_read))
+        {
+            free(t_cstring);
+            return IO_ERROR;
+        }
+    }
+    
+    // All done
+    r_value = t_read;
+}
+
 IO_stat MCObjectInputStream::ReadColor(MCColor &r_color)
 {
 	IO_stat t_stat = IO_NORMAL;

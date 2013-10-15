@@ -3010,7 +3010,7 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 			t_length -= 1;
 			
 			MCStringRef t_script_string;
-			stat = t_stream -> ReadStringRef(t_script_string);
+			stat = t_stream -> ReadTranslatedStringRef(t_script_string);
 			if (stat == IO_NORMAL)
 			{
 				// Adjust the remaining length based on the length of the string read
@@ -3018,18 +3018,6 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 					t_length -= 1;
 				else
 					t_length -= MCStringGetLength(t_script_string);
-				
-				if (MCtranslatechars && !MCStringIsEmpty(t_script_string) && MCStringIsNative(t_script_string))
-				{
-					char *t_xlate = strclone(MCStringGetCString(t_script_string));
-#ifdef __MACROMAN__
-					IO_iso_to_mac(t_xlate, strlen(t_xlate));
-#else
-					IO_mac_to_iso(t_xlate, strlen(t_xlate));
-#endif
-					MCValueRelease(t_script_string);
-					/* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)t_xlate, t_script_string);
-				}
 
 				if (!MCStringIsEmpty(t_script_string))
 					getstack() -> securescript(this);
