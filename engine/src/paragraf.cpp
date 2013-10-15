@@ -414,7 +414,12 @@ IO_stat MCParagraph::save(IO_handle stream, uint4 p_part)
 	}
 	else
 	{
-		t_data_len = MCStringGetLength(m_text) * sizeof(unichar_t);
+		// The paragraph is not native. If it does not contain any blocks,
+        // one will have to be created to ensure Unicodeness is preserved.
+        if (blocks == nil)
+            inittext();
+        
+        t_data_len = MCStringGetLength(m_text) * sizeof(unichar_t);
 		t_data = (const char *)MCStringGetCharPtr(m_text);
 	}
 	
