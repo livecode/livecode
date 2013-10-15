@@ -1521,18 +1521,22 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 	{
 		MCAutoValueRef t_val;
 		if (is_unicode && (prep == PT_UNDEFINED || prep == PT_CONTENT || prep == PT_MARKUP))
+        {
 			if (!ctxt . ConvertToData(*t_value, (MCDataRef&)&t_val))
 			{
 				MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
 				return ES_ERROR;
 			}
+        }
 		else
+        {
 			if (!ctxt . ConvertToString(*t_value, (MCStringRef&)&t_val))
 
 			{
 				MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
 				return ES_ERROR;
 			}
+        }
 		
 		// Defined for convenience
 		MCStringRef t_string = (MCStringRef)*t_val;
