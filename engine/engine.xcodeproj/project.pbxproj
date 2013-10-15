@@ -506,6 +506,7 @@
 		A71F80550F4F17C1003012FD /* LiveCode.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885610B80DEAC00200116 /* LiveCode.icns */; };
 		A71F80620F4F17F9003012FD /* StandaloneDoc.icns in Resources */ = {isa = PBXBuildFile; fileRef = A71F80610F4F17F9003012FD /* StandaloneDoc.icns */; };
 		E8252264174E2BF500055329 /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AF4895174D5563000B2F9E /* libskia.a */; };
+		E88869AC180D63FC0026BFDA /* stackview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8988A8917FDD5B700F640F4 /* stackview.cpp */; };
 		E8988A8A17FDD5B700F640F4 /* stackview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8988A8917FDD5B700F640F4 /* stackview.cpp */; };
 		E8A554B11785A70600DABC1A /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C10D82916BFADB800D25197 /* libgraphics.a */; };
 		E8A554B21785A70600DABC1A /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AF4895174D5563000B2F9E /* libskia.a */; };
@@ -3203,6 +3204,7 @@
 				E8D7F8391785A8AC00EC051A /* graphicscontext.cpp in Sources */,
 				E8D7F8471785A99900EC051A /* srvtheme.cpp in Sources */,
 				4C4D3DF417E355B50012FB12 /* osxflst.cpp in Sources */,
+				E88869AC180D63FC0026BFDA /* stackview.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
