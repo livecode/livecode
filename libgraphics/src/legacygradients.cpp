@@ -807,21 +807,26 @@ MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, 
 	
 	MCGradientFillStop *t_ramp;
 	/* UNCHECKED */ MCMemoryNewArray(p_gradient_ref -> ramp_length, t_ramp);
-	for (uint32_t i = 0; i < p_gradient_ref -> ramp_length; i++)
+	uint32_t i;
+	for (i = 0; i < p_gradient_ref -> ramp_length; i++)
 	{
 		t_ramp[i] . offset = (uint4) (p_gradient_ref -> stops[i] * STOP_INT_MAX);
 		t_ramp[i] . color = p_gradient_ref -> colors[i];
-#if defined(_ANDROID_MOBILE)
-		t_ramp[i] . hw_color = (t_ramp[i] . color & 0xff00ff00) | ((t_ramp[i] . color >> 16) & 0xff) | ((t_ramp[i] . color & 0xff) << 16);
-#else
-		t_ramp[i] . hw_color = t_ramp[i] . color;
-#endif		
-		if (i == 0)
-			t_ramp[i] . difference = 0;
-		else
-			t_ramp[i] . difference = (uint4) (STOP_DIFF_MULT / (t_ramp[i] . offset - t_ramp[i - 1] . offset));
-	}	
 		
+		if (i != 0)
+			t_ramp[i - 1] . difference = (uint4) (STOP_DIFF_MULT / (t_ramp[i] . offset - t_ramp[i - 1] . offset));
+		
+		if (kMCGPixelFormatNative != kMCGPixelFormatBGRA)
+		{
+			uint8_t t_red, t_green, t_blue, t_alpha;
+			MCGPixelUnpack(kMCGPixelFormatBGRA, t_ramp[i] . color, t_red, t_green, t_blue, t_alpha);
+			t_ramp[i] . hw_color = MCGPixelPackNative(t_red, t_green, t_blue, t_alpha);
+		}
+		else
+			t_ramp[i] . hw_color = t_ramp[i] . color;
+	}
+	t_ramp[i] . difference = (uint4) (STOP_DIFF_MULT / STOP_INT_MAX);		
+	
 	s_gradient_affine_combiner . origin . x = (int2) p_gradient_ref -> transform . tx;
 	s_gradient_affine_combiner . origin . y = (int2) p_gradient_ref -> transform . ty;	
 	s_gradient_affine_combiner . ramp = t_ramp;	
