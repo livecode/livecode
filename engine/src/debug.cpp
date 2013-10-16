@@ -76,7 +76,7 @@ static int2 depth;
 
 #include "srvdebug.h"
 
-void MCB_setmsg(MCStringRef p_msg)
+void MCB_setmsg(MCExecContext& ctxt, MCStringRef p_msg)
 {
     
 }
@@ -122,11 +122,10 @@ void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name)
 
 #else
 
-void MCB_setmsg(MCStringRef p_msg)
+void MCB_setmsg(MCExecContext& ctxt, MCStringRef p_msg)
 {
-    MCExecPoint ep(nil, nil, nil);
-    ep . setvalueref(p_msg);
-    MCB_setmsg(ep);
+    ctxt . GetEP() . setvalueref(p_msg);
+    MCB_setmsg(ctxt . GetEP());
 }
 
 void MCB_setmsg(MCExecPoint &ep)
@@ -145,7 +144,7 @@ void MCB_setmsg(MCExecPoint &ep)
 	{
 		// MW-2004-11-17: Now use global 'MCmbstackptr' instead
 		if (MCmbstackptr == NULL)
-			MCmbstackptr = MCdispatcher->findstackname(MCmessagenamestring);
+			MCmbstackptr = MCdispatcher->findstackname(MCN_messagename);
 			
 		if (MCmbstackptr != NULL)
 		{

@@ -62,7 +62,7 @@ extern uint2 MCnexecutioncontexts;
 extern uint2 MCdebugcontext;
 extern Boolean MCmessagemessages;
 
-extern void MCB_setmsg(MCStringRef p_string);
+extern void MCB_setmsg(MCExecContext& ctxt, MCStringRef p_msg);
 extern void MCB_setmsg(MCExecPoint &ep);
 extern void MCB_message(MCExecPoint &ep, MCNameRef message, MCParameter *p);
 extern void MCB_prepmessage(MCExecPoint &ep, MCNameRef message, uint2 line, uint2 pos, uint2 id, MCStringRef p_info = kMCEmptyString);

@@ -56,8 +56,8 @@ class MCiOSScrollerControl;
 
 class MCiOSScrollerControl : public MCiOSControl
 {
-	static MCNativeControlPropertyInfo kProperties[];
-	static MCNativeControlPropertyTable kPropertyTable;
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
     static MCNativeControlActionInfo kActions[];
 	static MCNativeControlActionTable kActionTable;
 
@@ -71,13 +71,13 @@ public:
 	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
 #endif
 
-    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
 	virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     virtual void SetRect(MCExecContext& ctxt, MCRectangle p_rect);
     
-    void SetContentRect(MCExecContext& ctxt, MCRectangle32 p_rect);
-    void GetContentRect(MCExecContext& ctxt, MCRectangle32& r_rect);
+    void SetContentRect(MCExecContext& ctxt, integer_t p_rect[4]);
+    void GetContentRect(MCExecContext& ctxt, integer_t r_rect[4]);
     void SetHScroll(MCExecContext& ctxt, integer_t p_scroll);
     void GetHScroll(MCExecContext& ctxt, integer_t& r_scroll);
     void SetVScroll(MCExecContext& ctxt, integer_t p_scroll);
@@ -135,29 +135,29 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeControlPropertyInfo MCiOSScrollerControl::kProperties[] =
+MCPropertyInfo MCiOSScrollerControl::kProperties[] =
 {
-    DEFINE_RW_CTRL_PROPERTY(ContentRectangle, Int32X4, MCiOSScrollerControl, ContentRect)
-    DEFINE_RW_CTRL_PROPERTY(HScroll, Int32, MCiOSScrollerControl, HScroll)
-    DEFINE_RW_CTRL_PROPERTY(VScroll, Int32, MCiOSScrollerControl, VScroll)
-    DEFINE_RW_CTRL_PROPERTY(CanBounce, Bool, MCiOSScrollerControl, CanBounce)
-    DEFINE_RW_CTRL_PROPERTY(CanScrollToTop, Bool, MCiOSScrollerControl, CanScrollToTop)
-    DEFINE_RW_CTRL_PROPERTY(CanCancelTouches, Bool, MCiOSScrollerControl, CanCancelTouches)
-    DEFINE_RW_CTRL_PROPERTY(DelayTouches, Bool, MCiOSScrollerControl, DelayTouches)
-    DEFINE_RW_CTRL_PROPERTY(ScrollingEnabled, Bool, MCiOSScrollerControl, ScrollingEnabled)
-    DEFINE_RW_CTRL_PROPERTY(PagingEnabled, Bool, MCiOSScrollerControl, PagingEnabled)
-    DEFINE_RW_CTRL_CUSTOM_PROPERTY(DecelerationRate, NativeControlDecelerationRate, MCiOSScrollerControl, DecelerationRate)
-    DEFINE_RW_CTRL_ENUM_PROPERTY(IndicatorStyle, NativeControlIndicatorStyle, MCiOSScrollerControl, IndicatorStyle)
-    DEFINE_RW_CTRL_CUSTOM_PROPERTY(IndicatorInsets, NativeControlIndicatorInsets, MCiOSScrollerControl, IndicatorInsets)
-    DEFINE_RW_CTRL_PROPERTY(ShowHorizontalIndicator, Bool, MCiOSScrollerControl, ShowHorizontalIndicator)
-    DEFINE_RW_CTRL_PROPERTY(ShowVerticalIndicator, Bool, MCiOSScrollerControl, ShowVerticalIndicator)
-    DEFINE_RW_CTRL_PROPERTY(LockDirection, Bool, MCiOSScrollerControl, LockDirection)
-    DEFINE_RO_CTRL_PROPERTY(Tracking, Bool, MCiOSScrollerControl, Tracking)
-    DEFINE_RO_CTRL_PROPERTY(Dragging, Bool, MCiOSScrollerControl, Dragging)
-    DEFINE_RO_CTRL_PROPERTY(Decelerating, Bool, MCiOSScrollerControl, Decelerating)
+    DEFINE_RW_CTRL_PROPERTY(P_CONTENT_RECT, Int32X4, MCiOSScrollerControl, ContentRect)
+    DEFINE_RW_CTRL_PROPERTY(P_HSCROLL, Int32, MCiOSScrollerControl, HScroll)
+    DEFINE_RW_CTRL_PROPERTY(P_VSCROLL, Int32, MCiOSScrollerControl, VScroll)
+    DEFINE_RW_CTRL_PROPERTY(P_CAN_BOUNCE, Bool, MCiOSScrollerControl, CanBounce)
+    DEFINE_RW_CTRL_PROPERTY(P_CAN_SCROLL_TO_TOP, Bool, MCiOSScrollerControl, CanScrollToTop)
+    DEFINE_RW_CTRL_PROPERTY(P_CAN_CANCEL_TOUCHES, Bool, MCiOSScrollerControl, CanCancelTouches)
+    DEFINE_RW_CTRL_PROPERTY(P_DELAY_TOUCHES, Bool, MCiOSScrollerControl, DelayTouches)
+    DEFINE_RW_CTRL_PROPERTY(P_SCROLLING_ENABLED, Bool, MCiOSScrollerControl, ScrollingEnabled)
+    DEFINE_RW_CTRL_PROPERTY(P_PAGING_ENABLED, Bool, MCiOSScrollerControl, PagingEnabled)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(P_DECELERATION_RATE, NativeControlDecelerationRate, MCiOSScrollerControl, DecelerationRate)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_INDICATOR_STYLE, NativeControlIndicatorStyle, MCiOSScrollerControl, IndicatorStyle)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(P_INDICATOR_INSETS, NativeControlIndicatorInsets, MCiOSScrollerControl, IndicatorInsets)
+    DEFINE_RW_CTRL_PROPERTY(P_SHOW_HORIZONTAL_INDICATOR, Bool, MCiOSScrollerControl, ShowHorizontalIndicator)
+    DEFINE_RW_CTRL_PROPERTY(P_SHOW_VERTICAL_INDICATOR, Bool, MCiOSScrollerControl, ShowVerticalIndicator)
+    DEFINE_RW_CTRL_PROPERTY(P_LOCK_DIRECTION, Bool, MCiOSScrollerControl, LockDirection)
+    DEFINE_RO_CTRL_PROPERTY(P_TRACKING, Bool, MCiOSScrollerControl, Tracking)
+    DEFINE_RO_CTRL_PROPERTY(P_DRAGGING, Bool, MCiOSScrollerControl, Dragging)
+    DEFINE_RO_CTRL_PROPERTY(P_DECELERATING, Bool, MCiOSScrollerControl, Decelerating)
 };
 
-MCNativeControlPropertyTable MCiOSScrollerControl::kPropertyTable =
+MCObjectPropertyTable MCiOSScrollerControl::kPropertyTable =
 {
 	&MCiOSControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
@@ -227,7 +227,7 @@ void MCiOSScrollerControl::SetRect(MCExecContext& ctxt, MCRectangle p_rect)
         UpdateForwarderBounds();
 }
 
-void MCiOSScrollerControl::SetContentRect(MCExecContext& ctxt, MCRectangle32 p_rect)
+void MCiOSScrollerControl::SetContentRect(MCExecContext& ctxt, integer_t p_rect[4])
 {
     float t_scale;
     t_scale = MCIPhoneGetNativeControlScale();
@@ -236,13 +236,18 @@ void MCiOSScrollerControl::SetContentRect(MCExecContext& ctxt, MCRectangle32 p_r
 	t_view = (UIScrollView*)GetView();
     
     if (t_view != nil)
-        [t_view setContentSize:CGSizeMake((float)m_content_rect.width / t_scale, (float)m_content_rect.height / t_scale)];
+        [t_view setContentSize:CGSizeMake((float)(p_rect[2] - p_rect[0]) / t_scale, (float)(p_rect[3] - p_rect[1]) / t_scale)];
 }
 
-void MCiOSScrollerControl::GetContentRect(MCExecContext& ctxt, MCRectangle32& r_rect)
+void MCiOSScrollerControl::GetContentRect(MCExecContext& ctxt, integer_t r_rect[4])
 {
     if (GetView())
-        r_rect = m_content_rect;
+    {
+        r_rect[0] = m_content_rect . x;
+        r_rect[1] = m_content_rect . y;
+        r_rect[2] = m_content_rect . x + m_content_rect . width;
+        r_rect[3] = m_content_rect . y + m_content_rect . height;
+    }
 }
 
 void MCiOSScrollerControl::SetHScroll(MCExecContext& ctxt, integer_t p_scroll)

@@ -1519,12 +1519,28 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 	}
 	else
 	{
-		MCAutoStringRef t_string;
-		if (!ctxt . ConvertToString(*t_value, &t_string))
-		{
-			MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
-			return ES_ERROR;
-		}
+		MCAutoValueRef t_val;
+		if (is_unicode && (prep == PT_UNDEFINED || prep == PT_CONTENT || prep == PT_MARKUP))
+        {
+			if (!ctxt . ConvertToData(*t_value, (MCDataRef&)&t_val))
+			{
+				MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
+				return ES_ERROR;
+			}
+        }
+		else
+        {
+			if (!ctxt . ConvertToString(*t_value, (MCStringRef&)&t_val))
+
+			{
+				MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
+				return ES_ERROR;
+			}
+        }
+		
+		// Defined for convenience
+		MCStringRef t_string = (MCStringRef)*t_val;
+		MCDataRef t_data = (MCDataRef)*t_val;
 		
 		if (prep == PT_COOKIE)
 		{
@@ -1534,7 +1550,8 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 				MCeerror->add(EE_PUT_CANTSETINTO, line, pos);
 				return ES_ERROR;
 			}
-			/* UNCHECKED */ ep . copyasstringref(&t_name);
+			if (!ep . copyasstringref(&t_name))
+				t_name = kMCEmptyString;
 			
 			uinteger_t t_expires;
 			t_expires = 0;
@@ -1558,8 +1575,11 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 					MCeerror->add(EE_PUT_CANTSETINTO, line, pos);
 					return ES_ERROR;
 				}
-				/* UNCHECKED */ ep . copyasstringref(&t_path);
+				if (!ep . copyasstringref(&t_path))
+					t_path = kMCEmptyString;
 			}
+			else
+				t_path = kMCEmptyString;
 			
 			MCAutoStringRef t_domain;
 			if (domain != nil)
@@ -1569,23 +1589,41 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 					MCeerror->add(EE_PUT_CANTSETINTO, line, pos);
 					return ES_ERROR;
 				}
-				/* UNCHECKED */ ep . copyasstringref(&t_domain);
+				if (!ep . copyasstringref(&t_domain))
+					t_domain = kMCEmptyString;
 			}
+			else
+				t_domain = kMCEmptyString;
 			
-			MCServerExecPutCookie(ctxt, *t_name, *t_string, t_expires, *t_path, *t_domain, is_secure, is_httponly);
+			MCServerExecPutCookie(ctxt, *t_name, t_string, t_expires, *t_path, *t_domain, is_secure, is_httponly);
 		}
 		else if (prep == PT_UNDEFINED)
-			MCEngineExecPutOutput(ctxt, *t_string, is_unicode);
+		{
+			if (is_unicode)
+				MCEngineExecPutOutputUnicode(ctxt, t_data);
+			else
+				MCEngineExecPutOutput(ctxt, t_string);
+		}
 		else if (prep == PT_INTO || prep == PT_AFTER || prep == PT_BEFORE)
-			MCIdeExecPutIntoMessage(ctxt, *t_string, prep);
+			MCIdeExecPutIntoMessage(ctxt, t_string, prep);
 		else if (prep == PT_HEADER || prep == PT_NEW_HEADER)
-			MCServerExecPutHeader(ctxt, *t_string, prep == PT_NEW_HEADER);
+			MCServerExecPutHeader(ctxt, t_string, prep == PT_NEW_HEADER);
 		else if (prep == PT_CONTENT)
-			MCServerExecPutContent(ctxt, *t_string, is_unicode);
+		{
+			if (is_unicode)
+				MCServerExecPutContentUnicode(ctxt, t_data);
+			else
+				MCServerExecPutContent(ctxt, t_string);
+		}
 		else if (prep == PT_MARKUP)
-			MCServerExecPutMarkup(ctxt, *t_string, is_unicode);
+		{
+			if (is_unicode)
+				MCServerExecPutMarkupUnicode(ctxt, t_data);
+			else
+				MCServerExecPutMarkup(ctxt, t_string);
+		}
 		else if (prep == PT_BINARY)
-			MCServerExecPutBinaryOutput(ctxt, *t_string);
+            MCServerExecPutBinaryOutput(ctxt, t_data);
 	}
 	
 	if (!ctxt . HasError())
@@ -2438,9 +2476,8 @@ void MCSort::additem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, Sort
 	MCAutoValueRef t_value;
 	if (by != NULL)
 	{
-		MCerrorlock++;
-		ctxt.GetEP().setvalueref(p_value);
-		MCeach->set(ctxt.GetEP());
+        MCerrorlock++;
+        MCeach -> setvalueref(p_value);
 		if (by->eval(ctxt.GetEP()) == ES_NORMAL)
 			t_value = ctxt.GetEP().getvalueref();
 		else
