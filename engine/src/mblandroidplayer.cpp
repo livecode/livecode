@@ -76,7 +76,7 @@ public:
     void GetLooping(MCExecContext& ctxt, bool& r_value);
     
     void GetDuration(MCExecContext& ctxt, integer_t& r_duration);
-    void GetNaturalSize(MCExecContext& ctxt, MCPoint32& r_size);
+    void GetNaturalSize(MCExecContext& ctxt, integer_t r_size[2]);
     
 	// Player-specific actions
 	void ExecPlay(MCExecContext& ctxt);
@@ -242,7 +242,7 @@ void MCAndroidPlayerControl::GetDuration(MCExecContext& ctxt, integer_t& r_durat
     MCAndroidObjectRemoteCall(t_view, "getDuration", "i", &r_duration);
 }
 
-void MCAndroidPlayerControl::GetNaturalSize(MCExecContext& ctxt, MCPoint32& r_size)
+void MCAndroidPlayerControl::GetNaturalSize(MCExecContext& ctxt, integer_t r_size[2])
 {
     jobject t_view;
     t_view = GetView();
@@ -250,8 +250,8 @@ void MCAndroidPlayerControl::GetNaturalSize(MCExecContext& ctxt, MCPoint32& r_si
     int32_t t_width = 0, t_height = 0;
     MCAndroidObjectRemoteCall(t_view, "getVideoWidth", "i", &t_width);
     MCAndroidObjectRemoteCall(t_view, "getVideoHeight", "i", &t_height);
-    r_size . x = t_width;
-    r_size . y = t_height;
+    r_size[0] = t_width;
+    r_size[1] = t_height;
 }
 
 #ifdef /* MCAndroidPlayerControl::Set */ LEGACY_EXEC
