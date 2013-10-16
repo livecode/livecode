@@ -42,11 +42,11 @@ typedef struct
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCSystemLockFile(MCSystemFileHandle *p_file, bool p_shared, bool p_wait);
-bool MCServerSetCookie(const MCString &p_name, const MCString &p_value, uint32_t p_expires, const MCString &p_path, const MCString &p_domain, bool p_secure, bool p_http_only);
+bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expires, MCStringRef p_path, MCStringRef p_domain, bool p_secure, bool p_http_only);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSessionGenerateID(char *&r_id);
+bool MCSessionGenerateID(MCStringRef &r_id);
 void MCSessionRefreshExpireTime(MCSession *p_session);
 
 bool MCSessionOpenIndex(MCSessionIndexRef &r_index);
@@ -58,7 +58,7 @@ bool MCSessionWriteIndex(MCSessionIndexRef p_index);
 bool MCSessionReadIndex(MCSessionIndexRef p_index);
 
 bool MCSessionOpenSession(MCSessionIndexRef p_index, MCSession *p_session);
-bool MCSessionCreateSession(MCSessionIndexRef p_index, const char *p_session_id, MCSession *&r_session);
+bool MCSessionCreateSession(MCSessionIndexRef p_index, MCStringRef p_session_id, MCSession *&r_session);
 bool MCSessionCloseSession(MCSession *p_session, bool p_update);
 void MCSessionDisposeSession(MCSession *p_session);
 bool MCSessionCopySession(MCSession *p_src, MCSession *&r_dst);
@@ -343,7 +343,7 @@ bool MCSessionReadSession(MCSession *p_session)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSessionFindMatchingSession(MCSessionIndexRef p_index, const char *p_session_id, MCSession *&r_session)
+bool MCSessionFindMatchingSession(MCSessionIndexRef p_index, MCStringRef p_session_id, MCSession *&r_session)
 {
 	MCAutoStringRef t_remote_addr_str;
 	
@@ -356,7 +356,7 @@ bool MCSessionFindMatchingSession(MCSessionIndexRef p_index, const char *p_sessi
 
 	for (uint32_t i = 0; i < p_index->session_count; i++)
 	{
-		if (MCCStringEqual(p_session_id, p_index->session[i]->id) && MCCStringEqual(p_index->session[i]->ip, t_remote_addr))
+		if (MCStringIsEqualToCString(p_session_id, p_index->session[i]->id, kMCCompareExact) && MCCStringEqual(p_index->session[i]->ip, t_remote_addr))
 		{
 			r_session = p_index->session[i];
 			return true;
@@ -385,7 +385,7 @@ bool MCSessionOpenSession(MCSessionIndexRef p_index, MCSession *p_session)
 	return t_success;
 }
 
-bool MCSessionCreateSession(MCSessionIndexRef p_index, const char *p_session_id, MCSession *&r_session)
+bool MCSessionCreateSession(MCSessionIndexRef p_index, MCStringRef p_session_id, MCSession *&r_session)
 {
 	bool t_success = true;
 	
@@ -404,10 +404,17 @@ bool MCSessionCreateSession(MCSessionIndexRef p_index, const char *p_session_id,
 
 	if (t_success)
 	{
-		if (p_session_id != NULL && p_session_id[0] != '\0')
-			t_success = MCCStringClone(p_session_id, t_session->id);
+		if (p_session_id != nil && !MCStringIsEmpty(p_session_id))
+		{
+			t_session->id = strdup(MCStringGetCString(p_session_id));
+			t_success = true;
+		}
 		else
-			t_success = MCSessionGenerateID(t_session->id);
+		{
+			MCAutoStringRef t_session_id;
+			t_success = MCSessionGenerateID(&t_session_id);
+			t_session->id = strdup(MCStringGetCString(*t_session_id));
+		}
 	}
 	
 	if (t_success)
@@ -480,11 +487,13 @@ bool MCSessionCloseSession(MCSession *p_session, bool p_update)
 		t_success = MCSessionOpenIndex(t_index);
 		if (t_success)
 		{
-			if (!MCSessionFindMatchingSession(t_index, p_session->id, t_index_session))
+			MCAutoStringRef t_session_id;
+			/* UNCHECKED */ MCStringCreateWithCString(p_session->id, &t_session_id);
+			if (!MCSessionFindMatchingSession(t_index, *t_session_id, t_index_session))
 			{
 				t_success = MCSessionIndexAddSession(t_index, p_session);
 				if (t_success)
-					t_success = MCSessionFindMatchingSession(t_index, p_session->id, t_index_session);
+					t_success = MCSessionFindMatchingSession(t_index, *t_session_id, t_index_session);
 			}
 		}
 		if (t_success)
@@ -516,7 +525,7 @@ bool MCSessionCloseSession(MCSession *p_session, bool p_update)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSessionStart(const char *p_session_id, MCSessionRef &r_session)
+bool MCSessionStart(MCStringRef p_session_id, MCSessionRef &r_session)
 {
 	bool t_success = true;
 	
@@ -542,7 +551,11 @@ bool MCSessionStart(const char *p_session_id, MCSessionRef &r_session)
 			t_success = MCS_get_session_name(&t_session_name);
 			
 		if (t_success)
-			t_success = MCServerSetCookie(MCStringGetOldString(*t_session_name), t_session->id, 0, NULL, NULL, false, true);
+		{
+			MCAutoStringRef t_session_id_str;
+			/* UNCHECKED */ MCStringCreateWithCString(t_session->id, &t_session_id_str);
+			t_success = MCServerSetCookie(*t_session_name, *t_session_id_str, 0, nil, nil, false, true);
+		}
 		
 		if (t_success)
 			t_success = MCSessionOpenSession(t_index, t_session);
@@ -574,7 +587,7 @@ void MCSessionDiscard(MCSessionRef p_session)
 {
 	MCSessionCloseSession(p_session, false);
 }
-bool MCSessionExpireSession(const char *p_id)
+bool MCSessionExpireSession(MCStringRef p_id)
 {
 	bool t_success = true;
 	
@@ -598,13 +611,10 @@ bool MCSessionExpireCookie()
 	MCAutoStringRef t_session_name;
 	/* UNCHECKED */ MCS_get_session_name(&t_session_name);
 	
-	MCString t_value("EXPIRE");
-	MCString t_path(NULL, 0);
-	MCString t_domain(NULL, 0);
-	return MCServerSetCookie(MCStringGetOldString(*t_session_name), t_value, MCS_time() - 60 * 60 * 24, t_path, t_domain, false, true);
+	return MCServerSetCookie(*t_session_name, MCSTR("EXPIRE"), MCS_time() - 60 * 60 * 24, nil, nil, false, true);
 }
 
-bool MCSessionExpire(const char *p_id)
+bool MCSessionExpire(MCStringRef p_id)
 {
 	return MCSessionExpireSession(p_id) && MCSessionExpireCookie();
 }
@@ -659,12 +669,12 @@ bool MCSessionCleanup(void)
 #include "md5.h"
 
 static const char *s_hex_char = "0123456789ABCDEF";
-bool byte_to_hex(uint8_t *p_src, uint32_t p_len, char *&r_hex)
+bool byte_to_hex(uint8_t *p_src, uint32_t p_len, MCStringRef &r_hex)
 {
-	if (!MCMemoryNewArray(p_len * 2 + 1, r_hex))
+	if (!MCMemoryNewArray<MCStringRef>(p_len * 2 + 1, (MCStringRef *&) r_hex))
 		return false;
 	
-	char *t_dst = r_hex;
+	char *t_dst = strdup(MCStringGetCString(r_hex));
 	for (uint32_t i = 0; i < p_len; i++)
 	{
 		*t_dst++ = s_hex_char[(p_src[i] >> 4)];
@@ -676,7 +686,7 @@ bool byte_to_hex(uint8_t *p_src, uint32_t p_len, char *&r_hex)
 	return true;
 }
 				 
-bool MCSessionGenerateID(char *&r_id)
+bool MCSessionGenerateID(MCStringRef &r_id)
 {
 	// php calculates session ids by hashing a string composed of REMOTE_ADDR, time in seconds & milliseconds, and a random value
 
