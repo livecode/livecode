@@ -2201,14 +2201,9 @@ void MCU_base64decode(MCStringRef in, MCDataRef &out)
 
 bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
 
-void MCU_urlencode(MCExecPoint &ep)
+void MCU_urlencode(MCStringRef p_url, MCStringRef &r_encoded)
 {
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
-
-	MCAutoStringRef t_result;
-	/* UNCHECKED */ MCFiltersUrlEncode(*t_source, &t_result);
-	/* UNCHECKED */ ep.setvalueref(*t_result);
+	/* UNCHECKED */ MCFiltersUrlEncode(p_url, r_encoded);
 }
 
 bool MCFiltersUrlDecode(MCStringRef p_source, MCStringRef& r_result);
