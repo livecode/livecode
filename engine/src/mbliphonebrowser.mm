@@ -68,8 +68,8 @@ class MCiOSBrowserControl;
 class MCiOSBrowserControl: public MCiOSControl
 {
 protected:
-	static MCNativeControlPropertyInfo kProperties[];
-	static MCNativeControlPropertyTable kPropertyTable;
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
     static MCNativeControlActionInfo kActions[];
 	static MCNativeControlActionTable kActionTable;
     
@@ -83,7 +83,7 @@ public:
 	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);	
 #endif
     
-    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     void SetUrl(MCExecContext& ctxt, MCStringRef p_url);
@@ -137,21 +137,21 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeControlPropertyInfo MCiOSBrowserControl::kProperties[] =
+MCPropertyInfo MCiOSBrowserControl::kProperties[] =
 {
-    DEFINE_RW_CTRL_PROPERTY(Url, String, MCiOSBrowserControl, Url)
-    DEFINE_RW_CTRL_PROPERTY(AutoFit, Bool, MCiOSBrowserControl, AutoFit)
-    DEFINE_RW_CTRL_PROPERTY(DelayRequests, Bool, MCiOSBrowserControl, DelayRequests)
-    DEFINE_RW_CTRL_SET_PROPERTY(DataDetectorTypes, NativeControlInputDataDetectorType, MCiOSBrowserControl, DataDetectorTypes)
-    DEFINE_RW_CTRL_PROPERTY(AllowsInlineMediaPlayback, Bool, MCiOSBrowserControl, AllowsInlineMediaPlayback)
-    DEFINE_RW_CTRL_PROPERTY(MediaPlaybackRequiresUserAction, Bool, MCiOSBrowserControl, MediaPlaybackRequiresUserAction)
-    DEFINE_RW_CTRL_PROPERTY(CanBounce, Bool, MCiOSBrowserControl, CanBounce)
-    DEFINE_RW_CTRL_PROPERTY(ScrollingEnabled, Bool, MCiOSBrowserControl, ScrollingEnabled)
-    DEFINE_RO_CTRL_PROPERTY(CanAdvance, Bool, MCiOSBrowserControl, CanAdvance)
-    DEFINE_RO_CTRL_PROPERTY(CanRetreat, Bool, MCiOSBrowserControl, CanRetreat)
+    DEFINE_RW_CTRL_PROPERTY(P_URL, String, MCiOSBrowserControl, Url)
+    DEFINE_RW_CTRL_PROPERTY(P_AUTO_FIT, Bool, MCiOSBrowserControl, AutoFit)
+    DEFINE_RW_CTRL_PROPERTY(P_DELAY_REQUESTS, Bool, MCiOSBrowserControl, DelayRequests)
+    DEFINE_RW_CTRL_SET_PROPERTY(P_DATA_DETECTOR_TYPES, NativeControlInputDataDetectorType, MCiOSBrowserControl, DataDetectorTypes)
+    DEFINE_RW_CTRL_PROPERTY(P_ALLOWS_INLINE_MEDIA_PLAYBACK, Bool, MCiOSBrowserControl, AllowsInlineMediaPlayback)
+    DEFINE_RW_CTRL_PROPERTY(P_MEDIA_PLAYBACK_REQUIRES_USER_ACTION, Bool, MCiOSBrowserControl, MediaPlaybackRequiresUserAction)
+    DEFINE_RW_CTRL_PROPERTY(P_CAN_BOUNCE, Bool, MCiOSBrowserControl, CanBounce)
+    DEFINE_RW_CTRL_PROPERTY(P_SCROLLING_ENABLED, Bool, MCiOSBrowserControl, ScrollingEnabled)
+    DEFINE_RO_CTRL_PROPERTY(P_CAN_ADVANCE, Bool, MCiOSBrowserControl, CanAdvance)
+    DEFINE_RO_CTRL_PROPERTY(P_CAN_RETREAT, Bool, MCiOSBrowserControl, CanRetreat)
 };
 
-MCNativeControlPropertyTable MCiOSBrowserControl::kPropertyTable =
+MCObjectPropertyTable MCiOSBrowserControl::kPropertyTable =
 {
 	&MCiOSControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),

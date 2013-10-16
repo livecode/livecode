@@ -22,10 +22,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "handler.h"
 #include "scriptpt.h"
 #include "variable.h"
 #include "statemnt.h"
+#include "osspec.h"
 
 #include "deploy.h"
 
@@ -1070,33 +1072,41 @@ static void MCWindowsVersionInfoDestroy(MCWindowsVersionInfo *self)
 	delete self;
 }
 
-static uint64_t MCWindowsVersionInfoParseVersion(const char *p_string)
+static uint64_t MCWindowsVersionInfoParseVersion(MCStringRef p_string)
 {
 	uint32_t a, b, c, d;
-	if (sscanf(p_string, "%u.%u.%u.%u", &a, &b, &c, &d) != 4)
+	if (sscanf(MCStringGetCString(p_string), "%u.%u.%u.%u", &a, &b, &c, &d) != 4)
 		return 0;
 	return 0ULL | ((uint64_t)a << 48) | ((uint64_t)b << 32) | (c << 16) | d;
 }
 
 static bool add_version_info_entry(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
 {
-	MCExecPoint ep(NULL, NULL, NULL);
-
-	if (!ep . setvalueref(p_value))
-		return false;
-
 	MCWindowsVersionInfo *t_string;
-	
-	if (ep . getsvalue() . getstring()[ep . getsvalue() . getlength() - 1] != '\0')
-		ep . appendchar('\0');
-	ep . nativetoutf16();
-	swap_uint16s((uint16_t *)ep . getsvalue() . getstring(), ep . getsvalue() . getlength() / 2);
-	return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, MCStringGetCString(MCNameGetString(p_key)), true, ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_string);
+	MCExecPoint ep(NULL, NULL, NULL);
+	MCExecContext ctxt(ep);
+	MCAutoStringRef t_value;
+	/* UNCHECKED */ ctxt . ConvertToString(p_value, &t_value);
+	byte_t *t_bytes;
+	uindex_t t_byte_count;
+	/* UNCHECKED */ MCStringConvertToBytes(*t_value, kMCStringEncodingUTF16LE, false, t_bytes, t_byte_count);
+	if (t_bytes[t_byte_count - 1] != '\0' || t_bytes[t_byte_count - 2] != '\0')
+	{
+		byte_t* temp = t_bytes;                       
+		t_bytes = new byte_t[t_byte_count + 2];		
+		memcpy(t_bytes, temp, t_byte_count); 
+		t_byte_count +=2;
+		delete temp;
+		t_bytes[t_byte_count - 2] = '\0';
+		t_bytes[t_byte_count - 1] = '\0';	 
+	}
+	return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, MCStringGetCString(MCNameGetString(p_key)), true, t_bytes, t_byte_count, t_string);
 }
 
 static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCArrayRef p_info)
 {
 	MCExecPoint ep(NULL, NULL, NULL);
+	MCExecContext ctxt(ep);
 
 	bool t_success;
 	t_success = true;
@@ -1105,10 +1115,20 @@ static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCArrayRe
 	t_file_version = t_product_version = 0;
 	if (t_success)
 	{
-		if (ep . fetcharrayelement_cstring(p_info, "FileVersion") == ES_NORMAL)
-			t_file_version = MCWindowsVersionInfoParseVersion(ep . getcstring());
-		if (ep . fetcharrayelement_cstring(p_info, "ProductVersion") == ES_NORMAL)
-			t_product_version = MCWindowsVersionInfoParseVersion(ep . getcstring());
+        MCValueRef t_value;
+            
+        if (MCArrayFetchValue(p_info, false, MCNAME("FileVersion"), t_value))
+		{
+			MCAutoStringRef t_string;
+			/* UNCHECKED */ ctxt . ConvertToString(t_value, &t_string);
+            t_file_version = MCWindowsVersionInfoParseVersion(*t_string); 
+		}
+		if (MCArrayFetchValue(p_info, false, MCNAME("ProductVersion"), t_value))
+		{
+			MCAutoStringRef t_string;
+			/* UNCHECKED */ ctxt . ConvertToString(t_value, &t_string);
+            t_product_version = MCWindowsVersionInfoParseVersion(*t_string);
+		}
 	}
 	
 	MCWindowsVersionInfo *t_version_info;
