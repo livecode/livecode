@@ -5453,16 +5453,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (NULL == getcwd(namebuf, PATH_MAX))
             return false;
         
-        MCAutoNativeCharArray t_buffer;
-        if (!t_buffer.New(PATH_MAX))
-            return false;
-        
-        uint4 outlen;
-        outlen = PATH_MAX;
-        MCS_utf8tonative(namebuf, strlen(namebuf), (char*)t_buffer.Chars(), outlen);
-        t_buffer.Shrink(outlen);
-        
-        if (!t_buffer.CreateStringAndRelease(r_path))
+        if (!MCStringCreateWithBytesAndRelease((byte_t*)namebuf, strlen(namebuf), kMCStringEncodingUTF8, false, r_path))
         {
             r_path = MCValueRetain(kMCEmptyString);
             return false;

@@ -788,6 +788,11 @@ Boolean MCU_stoi2x4(const MCString &s, int2 &d1, int2 &d2, int2 &d3, int2 &d4)
 	return True == MCU_stoi2x4(MCStringGetOldString(p_string), r_d1, r_d2, r_d3, r_d4);
 }
 
+/* WRAPPER */ bool MCU_stoi4x4(MCStringRef p_string, int32_t& r_d1, int32_t& r_d2, int32_t& r_d3, int32_t& r_d4)
+{
+	return True == MCU_stoi4x4(MCStringGetOldString(p_string), r_d1, r_d2, r_d3, r_d4);
+}
+
 Boolean MCU_stoi4x4(const MCString &s, int32_t &d1, int32_t &d2, int32_t &d3, int32_t &d4)
 {
 	const char *sptr = s.getstring();
@@ -804,6 +809,20 @@ Boolean MCU_stoi4x4(const MCString &s, int32_t &d1, int32_t &d2, int32_t &d3, in
 		return False;
 	d4 = MCU_strtol(sptr, l, '\0', done, True, False);
 	if (!done || l != 0)
+		return False;
+	return True;
+}
+
+Boolean MCU_stoi4x2(const MCString &s, int32_t &d1, int32_t &d2)
+{
+	const char *sptr = s.getstring();
+	uint4 l = s.getlength();
+	Boolean done;
+	d1 = MCU_strtol(sptr, l, ',', done, True, False);
+	if (!done || l == 0)
+		return False;
+	d2 = MCU_strtol(sptr, l, ',', done, True, False);
+	if (!done || l == 0)
 		return False;
 	return True;
 }
@@ -2192,14 +2211,9 @@ void MCU_base64decode(MCExecPoint &ep)
 
 bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
 
-void MCU_urlencode(MCExecPoint &ep)
+void MCU_urlencode(MCStringRef p_url, MCStringRef &r_encoded)
 {
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
-
-	MCAutoStringRef t_result;
-	/* UNCHECKED */ MCFiltersUrlEncode(*t_source, &t_result);
-	/* UNCHECKED */ ep.setvalueref(*t_result);
+	/* UNCHECKED */ MCFiltersUrlEncode(p_url, r_encoded);
 }
 
 bool MCFiltersUrlDecode(MCStringRef p_source, MCStringRef& r_result);

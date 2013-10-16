@@ -4571,11 +4571,24 @@ Exec_stat MCChunk::setprop_legacy(Properties which, MCExecPoint &ep, MCNameRef i
 	return ES_NORMAL;
 }
 #endif
+
+static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_table, Properties p_which, bool p_effective, bool p_array_prop, bool p_chunk_prop)
+{
+	for(uindex_t i = 0; i < p_table -> size; i++)
+		if (p_table -> table[i] . property == p_which && (!p_table -> table[i] . has_effective || p_table -> table[i] . effective == p_effective) &&
+            (p_array_prop == p_table -> table[i] . is_array_prop) &&
+            (p_chunk_prop == p_table -> table[i] . is_chunk_prop))
+			return &p_table -> table[i];
+	
+	if (p_table -> parent != nil)
+		return lookup_object_property(p_table -> parent, p_which, p_effective, p_array_prop, p_chunk_prop);
+	
+	return nil;
+}
+
 // MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
 Exec_stat MCChunk::getprop(Properties which, MCExecPoint &ep, MCNameRef index, Boolean effective)
 {
-    //return getprop_legacy(which, ep, index, effective);
-    
     if (url != NULL)
 	{
 		if (url->startpos == NULL || url->startpos->eval(ep) != ES_NORMAL)
@@ -4590,21 +4603,63 @@ Exec_stat MCChunk::getprop(Properties which, MCExecPoint &ep, MCNameRef index, B
     if (evalobjectchunk(ep, false, false, t_obj_chunk) != ES_NORMAL)
         return ES_ERROR;
     
+    
+    MCAutoValueRef t_value;
+    MCPropertyInfo *t_info;
+    MCExecContext ctxt(ep);
+    
     if (t_obj_chunk . chunk == CT_UNDEFINED)
     {
-        // MW-2011-11-23: [[ Array Chunk Props ]] If index is nil, then its just a normal
+        bool t_is_array_prop;
+        // MW-2011-11-23: [[ Array Chunk Props ]] If index is nil or empty, then its just a normal
 		//   prop, else its an array prop.
-		Exec_stat t_stat;
-		if (index == nil)
-			t_stat = t_obj_chunk . object->getprop(t_obj_chunk . part_id, which, ep, effective);
-		else
-			t_stat = t_obj_chunk . object->getarrayprop(t_obj_chunk . part_id, which, ep, index, effective);
+		t_is_array_prop = (index != nil && !MCNameIsEmpty(index));
+
+        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, false);
+
+        if (t_info != nil && t_info -> getter == nil)
+        {
+            MCeerror -> add(EE_OBJECT_GETNOPROP, line, pos);
+            return ES_ERROR;
+        }
         
-		if (t_stat != ES_NORMAL)
-		{
-			MCeerror->add(EE_CHUNK_NOPROP, line, pos);
-			return ES_ERROR;
-		}
+        if (t_is_array_prop)
+        {
+            if (t_info != nil)
+            {
+                MCObjectIndexPtr t_object;
+                t_object . object = t_obj_chunk . object;
+                t_object . part_id = t_obj_chunk . part_id;
+                t_object . index = index;
+                
+                MCAutoValueRef t_value;
+                MCExecFetchProperty(ctxt, t_info, &t_object, &t_value);
+            }
+            else
+            {
+                Exec_stat t_stat = ES_NOT_HANDLED;
+                t_stat = t_obj_chunk . object -> getarrayprop_legacy(t_obj_chunk . part_id, which, ep, index, False);
+                if (t_stat == ES_NOT_HANDLED)
+                {
+                    MCeerror->add(EE_OBJECT_GETNOPROP, line, pos);
+                    return ES_ERROR;
+                }
+                return t_stat;
+            } 
+        }
+        else
+        {
+            if (t_info != nil)
+            {
+                MCObjectPtr t_object;
+                t_object . object = t_obj_chunk . object;
+                t_object . part_id = t_obj_chunk . part_id;
+                
+                MCExecFetchProperty(ctxt, t_info, &t_object, &t_value);
+            }
+            else
+                return t_obj_chunk . object -> getprop_legacy(t_obj_chunk . part_id, which, ep, effective);
+        }
     }
     else
 	{
@@ -4613,25 +4668,41 @@ Exec_stat MCChunk::getprop(Properties which, MCExecPoint &ep, MCNameRef index, B
 			MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
 			return ES_ERROR;
 		}
+        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, false, true);
         
-		// MW-2011-11-23: [[ Array TextStyle ]] Pass the 'index' along to method to
-		//   handle specific styles.
-        MCField *fptr;
-        fptr = static_cast<MCField *>(t_obj_chunk . object);
-		if (fptr->gettextatts(t_obj_chunk . part_id, which, ep, index, effective, t_obj_chunk . mark . start, t_obj_chunk . mark . finish, islinechunk()) != ES_NORMAL)
-		{
-			MCeerror->add(EE_CHUNK_CANTGETATTS, line, pos);
-			return ES_ERROR;
-		}
+        if (t_info != nil)
+        {
+            MCExecFetchProperty(ctxt, t_info, &t_obj_chunk, &t_value);
+        }
+        else
+        {
+            // MW-2011-11-23: [[ Array TextStyle ]] Pass the 'index' along to method to
+            //   handle specific styles.
+            MCField *fptr;
+            fptr = static_cast<MCField *>(t_obj_chunk . object);
+            if (fptr->gettextatts(t_obj_chunk . part_id, which, ep, index, effective, t_obj_chunk . mark . start, t_obj_chunk . mark . finish, islinechunk()) != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_CANTGETATTS, line, pos);
+                return ES_ERROR;
+            }
+        }
 	}
-	return ES_NORMAL;
+    
+    if (!ctxt . HasError())
+    {
+        if (*t_value == nil)
+            ep . clear();
+        else
+            ep . setvalueref(*t_value);
+        return ES_NORMAL;
+    }
+    
+    return ctxt . Catch(line, pos);
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
 Exec_stat MCChunk::setprop(Properties which, MCExecPoint &ep, MCNameRef index, Boolean effective)
-{
-    //return setprop_legacy(which, ep, index, effective);
-        
+{        
     if (url != NULL)
     {
         if (url->startpos == NULL || url->startpos->eval(ep) != ES_NORMAL)
@@ -4646,51 +4717,71 @@ Exec_stat MCChunk::setprop(Properties which, MCExecPoint &ep, MCNameRef index, B
     MCExecPoint ep2(ep);
     if (evalobjectchunk(ep2, false, true, t_obj_chunk) != ES_NORMAL)
         return ES_ERROR;
+
+    MCAutoValueRef t_value;
+    MCPropertyInfo *t_info;
+    MCExecContext ctxt(ep);
     
+    ep . copyasvalueref(&t_value);
     if (t_obj_chunk . chunk == CT_UNDEFINED)
     {
-        // MW-2011-11-23: [[ Array Chunk Props ]] If index is nil, then its just a normal
-        //   prop, else its an array prop.
-        Exec_stat t_stat;
-        if (index == nil)
-            t_stat = t_obj_chunk . object->setprop(t_obj_chunk . part_id, which, ep, effective);
-        else
-            t_stat = t_obj_chunk . object->setarrayprop(t_obj_chunk . part_id, which, ep, index, effective);
+        bool t_is_array_prop;
+        // MW-2011-11-23: [[ Array Chunk Props ]] If index is nil or empty, then its just a normal
+		//   prop, else its an array prop.
+		t_is_array_prop = (index != nil && !MCNameIsEmpty(index));
         
-        if (t_stat != ES_NORMAL)
+        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, false);
+        
+        if (t_info != nil && t_info -> getter == nil)
         {
-            MCeerror->add(EE_CHUNK_NOPROP, line, pos);
+            MCeerror -> add(EE_OBJECT_SETNOPROP, line, pos);
             return ES_ERROR;
+        }
+        
+        if (t_is_array_prop)
+        {
+            if (t_info != nil)
+            {
+                MCObjectIndexPtr t_object;
+                t_object . object = t_obj_chunk . object;
+                t_object . part_id = t_obj_chunk . part_id;
+                t_object . index = index;
+                
+                MCAutoValueRef t_value;
+                MCExecStoreProperty(ctxt, t_info, &t_object, *t_value);
+            }
+            else
+            {
+                Exec_stat t_stat;
+                t_stat = t_obj_chunk . object -> setarrayprop_legacy(t_obj_chunk . part_id, which, ep, index, False);
+                if (t_stat == ES_NOT_HANDLED)
+                {
+                    MCeerror->add(EE_OBJECT_SETNOPROP, line, pos);
+                    return ES_ERROR;
+                }
+                return t_stat;
+            } 
+        }
+        else
+        {
+            if (t_info != nil)
+            {
+                MCObjectPtr t_object;
+                t_object . object = t_obj_chunk . object;
+                t_object . part_id = t_obj_chunk . part_id;
+                
+                MCExecStoreProperty(ctxt, t_info, &t_object, *t_value);
+            }
+            else
+                return t_obj_chunk . object -> setprop_legacy(t_obj_chunk . part_id, which, ep, effective);
         }
     }
     else
     {
-        if (t_obj_chunk . object -> gettype() == CT_BUTTON)
-        {
-            MCExecContext ctxt(ep);
-            bool t_value;
-            if (ep . copyasbool(t_value))
-            {
-                MCeerror->add(EE_OBJECT_NAB, 0, 0, ep.getsvalue());
-                return ES_ERROR;
-            }
-			switch (which)
-            {
-                case P_DISABLED:
-                    if (t_value)
-                        MCInterfaceExecDisableChunkOfButton(ctxt, t_obj_chunk);
-                    else
-                        MCInterfaceExecEnableChunkOfButton(ctxt, t_obj_chunk);
-                    break;
-                case P_HILITE:
-                    if (t_value)
-                        MCInterfaceExecHiliteChunkOfButton(ctxt, t_obj_chunk);
-                    else
-                        MCInterfaceExecUnhiliteChunkOfButton(ctxt, t_obj_chunk);
-                    break;
-                default:
-                    break;
-			}
+        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, false, true);
+        if (t_info != nil)
+        {  
+            MCExecStoreProperty(ctxt, t_info, &t_obj_chunk, *t_value);
         }
         else
         {
@@ -4714,7 +4805,7 @@ Exec_stat MCChunk::setprop(Properties which, MCExecPoint &ep, MCNameRef index, B
             }
         }
     }
-    
+
     // MM-2012-09-05: [[ Property Listener ]] Make sure any listeners are updated of the property change.
     //  Handled at this point rather than MCProperty::set as here we know if it is a valid object set prop.
     t_obj_chunk . object -> signallisteners(which);

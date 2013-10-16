@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "scriptpt.h"
 #include "globals.h"
 #include "param.h"
@@ -1518,7 +1519,7 @@ static bool cgi_send_headers(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCServerGetSessionIdFromCookie(char *&r_id);
+bool MCServerGetSessionIdFromCookie(MCStringRef &r_id);
 
 MCSession *s_current_session = NULL;
 
@@ -1532,19 +1533,21 @@ bool MCServerStartSession()
 	if (s_current_session != NULL)
 		return true;
 
-	const char *t_session_id = NULL;
-	char *t_cookie_id = NULL;
-	
-	t_session_id = MCsessionid;
-	
-	if (t_session_id == NULL)
+	MCAutoStringRef t_session_id;
+	MCAutoStringRef t_cookie_id;
+
+	if (MCsessionid == nil)
 	{
-		t_success = MCServerGetSessionIdFromCookie(t_cookie_id);
-		t_session_id = t_cookie_id;
+		t_success = MCServerGetSessionIdFromCookie(&t_cookie_id);
+		t_session_id = *t_cookie_id;
 	}
+	else
+		/* UNCHECKED */ MCStringCreateWithCString(MCsessionid, &t_session_id);
 	
 	if (t_success)
-		t_success = MCSessionStart(t_session_id, s_current_session);
+	{
+		t_success = MCSessionStart(*t_session_id, s_current_session);
+	}
 	
 	MCVariable *t_session_var = NULL;
 	
@@ -1583,8 +1586,6 @@ bool MCServerStartSession()
 		MCSessionDiscard(s_current_session);
 		s_current_session = NULL;
 	}
-	
-	MCCStringFree(t_cookie_id);
 	
 	return t_success;
 }
@@ -1628,7 +1629,7 @@ bool MCServerDeleteSession()
 	t_success = MCS_get_session_id(&t_id);
 
 	if (t_success)
-		t_success = MCSessionExpire(MCStringGetCString(*t_id));
+		t_success = MCSessionExpire(*t_id);
 	
 	if (s_current_session != NULL)
 	{
@@ -1748,14 +1749,14 @@ bool MCS_get_session_id(MCStringRef& r_id)
 	return MCStringCreateWithCString(MCsessionid, r_id);
 }
 
-bool MCServerGetSessionIdFromCookie(char *&r_id)
+bool MCServerGetSessionIdFromCookie(MCStringRef &r_id)
 {
 	MCVariable *t_cookie_array;
 	t_cookie_array = MCVariable::lookupglobal_cstring("$_COOKIE");
 	
 	if (t_cookie_array == NULL)
 	{
-		r_id = NULL;
+		r_id = nil;
 		return true;
 	}
 	
@@ -1764,15 +1765,15 @@ bool MCServerGetSessionIdFromCookie(char *&r_id)
 		return false;
 	
 	MCExecPoint ep;
+	MCExecContext ctxt(ep);
 	MCAutoStringRef t_name;
-	if (!MCS_get_session_name(&t_name) || ES_NORMAL != ep.fetcharrayelement_oldstring((MCArrayRef)t_cookie_array -> getvalueref(), MCStringGetOldString(*t_name)))
+	if (!MCS_get_session_name(&t_name))
 		return false;
-	
-	// retrieve ID from cookie value
-	if (ep.isempty())
-		r_id = NULL;
-	else
-		r_id = ep.getsvalue().clone();
+	MCAutoNameRef t_key;
+	/* UNCHECKED */ MCNameCreate(*t_name, &t_key);
+		
+	if (!ctxt.CopyElementAsString((MCArrayRef)t_cookie_array -> getvalueref(), *t_key, false, r_id))
+		return false;
 	
 	return true;
 }

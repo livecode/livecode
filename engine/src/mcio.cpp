@@ -24,6 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mcerror.h"
 #include "execpt.h"
+#include "exec.h"
 #include "player.h"
 #include "osspec.h"
 #include "globals.h"
@@ -218,14 +219,14 @@ IO_stat IO_write(const void *ptr, uint4 size, uint4 n, IO_handle stream)
 	return MCS_write(ptr, size, n, stream);
 }
 
-IO_stat IO_read_to_eof(IO_handle stream, MCExecPoint &ep)
+IO_stat IO_read_to_eof(IO_handle stream, MCDataRef& r_data)
 {
 	uint4 nread;
 	nread = (uint4)MCS_fsize(stream) - (uint4)MCS_tell(stream);
-	char *dptr;
-	/* UNCHECKED */ ep.reserve(nread, dptr);
-	/* UNCHECKED */ MCS_readall(dptr, nread, stream, nread);
-	ep.commit(nread);
+	void *t_stream;
+	/* UNCHECKED */ MCMemoryAllocate(nread, t_stream);
+	/* UNCHECKED */ MCS_readall(t_stream, nread, stream, nread);
+	/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t*)t_stream, nread, r_data);
 	return IO_NORMAL;
 }
 

@@ -50,21 +50,21 @@ MC_EXEC_DEFINE_EXEC_METHOD(Store, PurchaseVerify, 2)
 
 static MCExecEnumTypeElementInfo _kMCStorePurchasePropertyElementInfo[] =
 {
-    { "product identifier", kMCPurchasePropertyProductIdentifier},
-    { "quantity", kMCPurchasePropertyQuantity},
-    { "developer payload", kMCPurchasePropertyDeveloperPayload},
-    { "localized title", kMCPurchasePropertyLocalizedTitle},
-    { "localized description", kMCPurchasePropertyLocalizedDescription},
-    { "localized price", kMCPurchasePropertyLocalizedPrice},
-    { "purchase date", kMCPurchasePropertyPurchaseDate},
-    { "transaction identifier", kMCPurchasePropertyTransactionIdentifier},
-    { "receipt", kMCPurchasePropertyReceipt},
-    { "original transaction identifier", kMCPurchasePropertyOriginalTransactionIdentifier},
-    { "original purchase date", kMCPurchasePropertyOriginalPurchaseDate},
-    { "original receipt", kMCPurchasePropertyOriginalReceipt},
-    { "signed data", kMCPurchasePropertySignedData},
-    { "signature", kMCPurchasePropertySignature},
-    { "unknown", kMCPurchasePropertyUnknown}
+    { "product identifier", P_PRODUCT_IDENTIFIER},
+    { "quantity", P_PURCHASE_QUANTITY},
+    { "developer payload", P_DEVELOPER_PAYLOAD},
+    { "localized title", P_LOCALIZED_TITLE},
+    { "localized description", P_LOCALIZED_DESCRIPTION},
+    { "localized price", P_LOCALIZED_PRICE},
+    { "purchase date", P_PURCHASE_DATE},
+    { "transaction identifier", P_TRANSACTION_IDENTIFIER},
+    { "receipt", P_RECEIPT},
+    { "original transaction identifier", P_ORIGINAL_TRANSACTION_IDENTIFIER},
+    { "original purchase date", P_ORIGINAL_PURCHASE_DATE},
+    { "original receipt", P_ORIGINAL_RECEIPT},
+    { "signed data", P_SIGNED_DATA},
+    { "signature", P_SIGNATURE},
+    { "unknown", P_UNDEFINED}
 };
 
 static MCExecEnumTypeInfo _kMCStorePurchasePropertyTypeInfo =
@@ -163,7 +163,7 @@ void MCStoreGetPurchaseError(MCExecContext& ctxt, int p_id, MCStringRef& r_error
     ctxt.Throw();
 }
 
-MCPurchasePropertyInfo *lookup_purchase_property(const MCPurchasePropertyTable *p_table, MCPurchaseProperty p_which)
+MCPropertyInfo *lookup_purchase_property(const MCPurchasePropertyTable *p_table, Properties p_which)
 {
 	for(uindex_t i = 0; i < p_table -> size; i++)
 		if (p_table -> table[i] . property == p_which)
@@ -176,193 +176,41 @@ MCPurchasePropertyInfo *lookup_purchase_property(const MCPurchasePropertyTable *
 void MCStoreExecGet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name, MCValueRef& r_value)
 {
     MCPurchase *t_purchase = nil;
-	MCPurchaseProperty t_property;
+	Properties t_property;
     
-    MCPurchaseFindById(p_id, t_purchase) &&
-    MCPurchaseLookupProperty(p_prop_name, t_property);
+    MCPropertyInfo *t_info;
+    t_info = nil;
     
-    MCPurchasePropertyInfo *t_info;
-    t_info = lookup_purchase_property(getpropertytable(), t_property);
+    if (MCPurchaseFindById(p_id, t_purchase) && MCPurchaseLookupProperty(p_prop_name, t_property))
+        t_info = lookup_purchase_property(getpropertytable(), t_property);
     
 	if (t_info != nil)
 	{
-		switch(t_info -> type)
-		{
-			case kMCPropertyTypeAny:
-			{
-				MCAutoValueRef t_any;
-				if (((bool(*)(MCPurchase*, MCValueRef&))t_info -> getter)(t_purchase, &t_any))
-					r_value = MCValueRetain(*t_any);
-			}
-                break;
-				
-			case kMCPropertyTypeBool:
-			{
-				bool t_value;
-				if (((bool(*)(MCPurchase*, bool&))t_info -> getter)(t_purchase, t_value))
-					r_value = MCValueRetain(t_value ? kMCTrue : kMCFalse);
-			}
-                break;
-                
-			case kMCPropertyTypeInt16:
-			case kMCPropertyTypeInt32:
-			{
-				integer_t t_value;
-				if (((bool(*)(MCPurchase*, integer_t&))t_info -> getter)(t_purchase, t_value))
-					MCNumberCreateWithInteger(t_value, (MCNumberRef&)r_value);
-			}
-                break;
-                
-			case kMCPropertyTypeUInt16:
-			case kMCPropertyTypeUInt32:
-			{
-				uinteger_t t_value;
-			if (((bool(*)(MCPurchase*, uinteger_t&))t_info -> getter)(t_purchase, t_value))
-					MCNumberCreateWithUnsignedInteger(t_value, (MCNumberRef&)r_value);
-			}
-                break;
-				
-			case kMCPropertyTypeDouble:
-			{
-				double t_value;
-				if (((bool(*)(MCPurchase*, double&))t_info -> getter)(t_purchase, t_value))
-					MCNumberCreateWithReal(t_value, (MCNumberRef&)r_value);
-			}
-                break;
-                
-			case kMCPropertyTypeChar:
-			{
-				char_t t_value;
-				if (((bool(*)(MCPurchase*, char_t&))t_info -> getter)(t_purchase, t_value))
-					MCStringCreateWithNativeChars(&t_value, 1, (MCStringRef&)r_value);
-			}
-                break;
-				
-			case kMCPropertyTypeString:
-			case kMCPropertyTypeBinaryString:
-			{
-				MCAutoStringRef t_value;
-				if (((bool(*)(MCPurchase*, MCStringRef&))t_info -> getter)(t_purchase, &t_value))
-					r_value = MCValueRetain(*t_value);
-			}
-                break;
-				
-			default:
-				MCAssert(false);
-				break;
-		}
-	}
+        MCExecFetchProperty(ctxt, t_info, t_purchase, r_value);
+        return;
+    }
+    
+    ctxt .Throw();
 }
 
 void MCStoreExecSet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name, MCValueRef p_value)
 {
     MCPurchase *t_purchase = nil;
-	MCPurchaseProperty t_property;
+	Properties t_property;
     
-    MCPurchaseFindById(p_id, t_purchase) &&
-    MCPurchaseLookupProperty(p_prop_name, t_property);
+    MCPropertyInfo *t_info;
+    t_info = nil;
     
-    MCPurchasePropertyInfo *t_info;
-    t_info = lookup_purchase_property(getpropertytable(), t_property);
+    if (MCPurchaseFindById(p_id, t_purchase) && MCPurchaseLookupProperty(p_prop_name, t_property))
+        t_info = lookup_purchase_property(getpropertytable(), t_property);
 	
 	if (t_info != nil)
 	{
-		switch(t_info -> type)
-		{
-			case kMCPropertyTypeAny:
-			{
-				((void(*)(MCPurchase*, MCValueRef))t_info -> setter)(t_purchase, p_value);
-			}
-                break;
-				
-			case kMCPropertyTypeBool:
-			{
-				MCAutoBooleanRef t_value;
-				if (ctxt.ConvertToBoolean(p_value, &t_value))
-					((void(*)(MCPurchase*, bool))t_info -> setter)(t_purchase, MCValueIsEqualTo(*t_value, kMCTrue));
-				else
-					ctxt.Throw();
-			}
-                break;
-                
-			case kMCPropertyTypeInt16:
-			{
-				integer_t t_value;
-				if (!ctxt.ConvertToInteger(p_value, t_value)
-					 || t_value < -32768 || t_value > 32767)
-					ctxt . LegacyThrow(EE_PROPERTY_NAN);
-				if (!ctxt . HasError())
-					((void(*)(MCPurchase*, integer_t))t_info -> setter)(t_purchase, t_value);
-			}
-                break;
-				
-			case kMCPropertyTypeInt32:
-			{
-				integer_t t_value;
-				if (!ctxt.ConvertToInteger(p_value, t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NAN);
-				if (!ctxt . HasError())
-					((void(*)(MCPurchase*, integer_t))t_info -> setter)(t_purchase, t_value);
-			}
-                break;
-                
-			case kMCPropertyTypeUInt16:
-			{
-				uinteger_t t_value;
-				if (!ctxt.ConvertToUnsignedInteger(p_value, t_value)
-					|| t_value > 65535)
-					ctxt . LegacyThrow(EE_PROPERTY_NAN);
-				if (!ctxt . HasError())
-					((void(*)(MCPurchase*, uinteger_t))t_info -> setter)(t_purchase, t_value);
-			}
-                break;
-				
-			case kMCPropertyTypeUInt32:
-			{
-				uinteger_t t_value;
-				if (!ctxt.ConvertToUnsignedInteger(p_value, t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NAN);
-				if (!ctxt . HasError())
-					((void(*)(MCPurchase*, uinteger_t))t_info -> setter)(t_purchase, t_value);
-			}
-                break;
-				
-			case kMCPropertyTypeDouble:
-			{
-				double t_value;
-				if (!ctxt.ConvertToReal(p_value, t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NAN);
-				if (!ctxt . HasError())
-					((void(*)(MCPurchase*, double))t_info -> setter)(t_purchase, t_value);
-			}
-                break;
-                
-			case kMCPropertyTypeChar:
-			{
-				MCAutoStringRef t_value;
-				if (ctxt.ConvertToString(p_value, &t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NAC);
-				if (!ctxt . HasError())
-					((void(*)(MCPurchase*, char_t))t_info -> setter)(t_purchase, MCStringGetNativeCharAtIndex(*t_value, 0));
-			}
-                break;
-				
-			case kMCPropertyTypeString:
-			case kMCPropertyTypeBinaryString:
-			{
-				MCAutoStringRef t_value;
-				if (!ctxt.ConvertToString(p_value, &t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NAC);
-				if (!ctxt . HasError())
-					((void(*)(MCPurchase*, MCStringRef))t_info -> setter)(t_purchase, *t_value);
-			}
-                break;
-				
-			default:
-				ctxt . Unimplemented();
-				break;
-		}
+        MCExecStoreProperty(ctxt, t_info, t_purchase, p_value);
+        return;
 	}
+    
+    ctxt . Throw();
 }
 
 void MCStoreExecSendPurchaseRequest(MCExecContext& ctxt, uint32_t p_id)
