@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "handler.h"
 #include "scriptpt.h"
 #include "variable.h"
@@ -893,15 +894,11 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 		t_success = i2d(i2d_SpcTimeStampRequest, t_request, t_request_data, t_request_length);
 
 	// Convert the request to base64
-	extern MCExecPoint *MCEPptr;
-	MCExecPoint ep(*MCEPptr);
-	if (t_success)
-	{
-		ep . setstaticbytes(t_request_data, t_request_length);
-		MCU_base64encode(ep);
-		ep . appendnewline();
-	}
-
+    MCAutoDataRef t_req_dataref;
+    MCAutoStringRef t_req_base64;
+    /* UNCHECKED */ MCDataCreateWithBytes(t_request_data, t_request_length, &t_req_dataref);
+    MCU_base64encode(*t_req_dataref, &t_req_base64);
+    
 	// Request the timestamp from the tsa
 	if (t_success)
 	{
@@ -920,10 +917,11 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 		while(t_retry_count > 0)
 		{
 			MCParameter t_data, t_url;
-			t_data . sets_argument(ep . getsvalue());
+			t_data . setvalueref_argument(*t_req_base64);
 			t_data . setnext(&t_url);
 			t_url . sets_argument(p_params . timestamper);
-			if (ep . getobj() -> message(MCM_post_url, &t_data, False, True) == ES_NORMAL &&
+            extern MCExecContext *MCECptr;
+			if (MCECptr->GetObject() -> message(MCM_post_url, &t_data, False, True) == ES_NORMAL &&
 				MCresult -> isempty())
 			{
 				t_failed = false;
@@ -942,11 +940,19 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 	}
 
 	// Now convert the reply to binary.
-	if (t_success)
-	{
-		MCurlresult -> eval(ep);
-		MCU_base64decode(ep);
-	}
+    MCAutoValueRef t_result_value;
+    MCAutoStringRef t_result_base64;
+    MCAutoDataRef t_result_data;
+    extern MCExecContext *MCECptr;
+	
+    if (t_success)
+    {
+		MCurlresult -> copyasvalueref(&t_result_value);
+        t_success = MCECptr->ConvertToString(*t_result_value, &t_result_base64);
+    }
+    
+    if (t_success)
+        MCU_base64decode(*t_result_base64, &t_result_data);
 
 	// Decode the PKCS7 structure
 	PKCS7 *t_counter_sig;
@@ -955,13 +961,13 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 	{
 #if defined(TARGET_PLATFORM_LINUX) || defined(TARGET_PLATFORM_WINDOWS) || (__MAC_OS_X_VERSION_MAX_ALLOWED > 1050)
 		const unsigned char *t_data;
-		t_data = (const unsigned char *)ep . getsvalue() . getstring();
+		t_data = (const unsigned char *)MCDataGetBytePtr(*t_result_data);
 #else
 		unsigned char *t_data;
-		t_data = (unsigned char *)ep . getsvalue() . getstring();
+		t_data = (unsigned char *)MCDataGetBytePtr(*t_result_data);
 #endif
 		int t_length;
-		t_length = ep . getsvalue() . getlength();
+		t_length = MCDataGetLength(*t_result_data);
 		t_counter_sig = d2i_PKCS7(&t_counter_sig, &t_data, t_length);
 		if (t_counter_sig == nil)
 			t_success = MCDeployThrow(kMCDeployErrorBadTimestamp);

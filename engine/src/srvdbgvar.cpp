@@ -564,7 +564,7 @@ void MCDebugNotifyValueDeleted(MCVariableValue *p_value)
 
 ////////
 
-void MCVariableViewEnter(MCExecPoint* p_context)
+void MCVariableViewEnter(MCExecContext &ctxt)
 {
 	// Allocate a change buffer, if there is none.
 	if (s_variable_deletions == NULL)
@@ -581,7 +581,7 @@ void MCVariableViewEnter(MCExecPoint* p_context)
 	
 	// First list the handler locals and parameters (if any)
 	MCHandler *t_handler;
-	t_handler = p_context -> gethandler();
+	t_handler = ctxt.GetHandler();
 	if (t_handler != NULL)
 	{
 		MCVariable **t_vars;
@@ -605,7 +605,7 @@ void MCVariableViewEnter(MCExecPoint* p_context)
 	
 	// Script locals
 	MCHandlerlist *t_hlist;
-	t_hlist = p_context -> gethlist();
+	t_hlist = ctxt.GetEP().gethlist();
 	for(MCVariable *t_var = t_hlist -> getvars(); t_var != NULL; t_var = t_var -> getnext())
 		MCVariableViewWatch(s_variable_view, kMCVariableScopeScript, t_var);
 	

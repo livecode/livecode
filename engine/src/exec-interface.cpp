@@ -4093,7 +4093,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
-		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt . GetEP();
+		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
 
