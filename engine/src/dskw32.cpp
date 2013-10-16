@@ -4027,8 +4027,8 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
         if (created)
         {
             MCAutoStringRef t_cmdline;
-            if (doc != nil && *doc != '\0')
-				/* UNCHECKED */ MCStringFormat(&t_cmdline, "%@ \"%s\"", p_name, doc);
+            if (p_doc != nil && !MCStringIsEmpty(p_doc))
+				/* UNCHECKED */ MCStringFormat(&t_cmdline, "%@ \"%@\"", p_name, p_doc);
             else
                 t_cmdline = (MCStringRef) MCValueRetain(MCNameGetString(p_name));
             
@@ -4124,19 +4124,20 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
                         t_output_pipe = (HANDLE)t_msg . lParam;
                         
                         // Get the environment strings to send across
-						LPCWSTR lpEnvStrings;
+						LPWCH lpEnvStrings;
 						lpEnvStrings = GetEnvironmentStringsW();
-						size_t t_env_length;
-                        if (t_env_strings != nil)
-                        {
-                            t_env_length = 0;
+						size_t t_env_length = 0;
+                        if (lpEnvStrings != nil)
+						{
+							// The environment block is terminated with a double-null                           
+							t_env_length = 0;
                             while(lpEnvStrings[t_env_length] != '\0' || lpEnvStrings[t_env_length + 1] != '\0')
                                 t_env_length += 1;
                             t_env_length += 2;
                         }
                         
                         // Write out the cmd line and env strings
-                        if (write_blob_to_pipe(t_output_pipe, sizeof(wchar_t) * (wstrlen(*t_cmdline) + 1), MCStringGetCharPtr(*t_cmdline)) &&
+                        if (write_blob_to_pipe(t_output_pipe, sizeof(wchar_t) * (MCStringGetLength(*t_cmdline) + 1), MCStringGetCharPtr(*t_cmdline)) &&
                             write_blob_to_pipe(t_output_pipe, sizeof(wchar_t) * t_env_length, lpEnvStrings))
                         {
                             // Now we should have a process id and handle waiting for us.

@@ -501,30 +501,28 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				MCParameter *t_first_parameter = NULL;
 				MCParameter *t_current_parameter = NULL;
 
-				extern char *strndup(const char *, unsigned int);
-				char *t_command_line = strndup((char *)t_data -> lpData, t_data -> cbData);
+				MCStringRef t_tempstr;
+				MCAutoStringRef t_cmdline;
+				/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)t_data -> lpData, t_data -> cbData, kMCStringEncodingUTF16, false, t_tempstr);
+				/* UNCHECKED */ MCStringMutableCopyAndRelease(t_tempstr, &t_cmdline);
+				/* UNCHECKED */ MCStringFindAndReplaceChar(*t_cmdline, '\\', '/', kMCStringOptionCompareExact);
 
-				char *sptr = t_command_line;
-				while(*sptr)
+				uindex_t sptr = 0;
+				unichar_t t_char;
+				while((t_char = MCStringGetCharAtIndex(*t_cmdline, sptr)) != '\0')
 				{
-					if (*sptr == '\\')
-						*sptr = '/';
-					sptr++;
-				}
-				sptr = t_command_line;
-				while(*sptr)
-				{
-					char *t_argument;
+					uindex_t t_argument;
 					int t_argument_length;
 
-					while (isspace(*sptr))
-						sptr++;
+					while (iswspace(t_char))
+						t_char = MCStringGetCharAtIndex(*t_cmdline, ++sptr);
 
 					t_argument_length = 0;
-					if (*sptr == '"')
+					if (t_char == '"')
 					{
 						t_argument = ++sptr;
-						while (*sptr && *sptr != '"')
+						while ((t_char = MCStringGetCharAtIndex(*t_cmdline, sptr)) != '\0'
+							&& t_char != '"')
 						{
 							sptr++;
 							t_argument_length += 1;
@@ -533,9 +531,9 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					else
 					{
 						t_argument = sptr;
-						while(*sptr && !isspace(*sptr))
+						while (t_char != '\0' && iswspace(t_char))
 						{
-							sptr++;
+							t_char = MCStringGetCharAtIndex(*t_cmdline, ++sptr);
 							t_argument_length += 1;
 						}
 					}
@@ -543,10 +541,10 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					if (t_argument_length != 0)
 					{
 						MCParameter *t_parameter;
-						MCString t_param;
-						t_param . set(t_argument, t_argument_length);
+						MCAutoStringRef t_param;
+						/* UNCHECKED */ MCStringCopySubstring(*t_cmdline, MCRangeMake(t_argument, t_argument_length), &t_param);
 						t_parameter = new MCParameter;
-						t_parameter -> sets_argument(t_param);
+						t_parameter -> setvalueref_argument(*t_param);
 						if (t_first_parameter == NULL)
 							t_first_parameter = t_parameter;
 						else
@@ -554,8 +552,8 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 						t_current_parameter = t_parameter;
 					}
 
-					if (*sptr)
-						sptr++;
+					if (t_char != '\0')
+						t_char = MCStringGetCharAtIndex(*t_cmdline, ++sptr);
 				}
 
 				if (MCdispatcher -> gethome() -> message(MCM_relaunch, t_first_parameter, False, True) != ES_NORMAL)
@@ -578,8 +576,6 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					delete t_first_parameter;
 					t_first_parameter = t_next;
 				}
-
-				free(t_command_line);
 
 				MCresult -> clear();
 			}

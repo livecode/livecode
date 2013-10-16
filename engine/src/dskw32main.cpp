@@ -70,8 +70,8 @@ extern int *g_mainthread_errno;
 struct InitializeFiberContext
 {
 	int argc;
-	char **argv;
-	char **envp;
+	MCStringRef *argv;
+	MCStringRef *envp;
 	bool success;
 };
 
@@ -151,12 +151,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 	// Get the command line and convert it into the expected argc/argv form
 	LPCWSTR lpWCmdLine = GetCommandLineW();
-	LPWSTR *lpWargv = CommandLineToArgvW(lpWCmdLine, argc);
+	LPWSTR *lpWargv = CommandLineToArgvW(lpWCmdLine, &argc);
 	
 	// Windows uses slashes the opposite way around to the other platforms and requires conversion
 	for (int i = 0; i < argc; i++)
 	{
-		LPWSTR *sptr = lpWargv[i];
+		LPWSTR sptr = lpWargv[i];
 		while (*sptr)
 		{
 			if (*sptr == '\\')
