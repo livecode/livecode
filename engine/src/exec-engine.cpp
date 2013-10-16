@@ -648,7 +648,7 @@ void MCEngineExecGet(MCExecContext& ctxt, MCValueRef p_value)
 
 void MCEngineExecPutOutput(MCExecContext& ctxt, MCStringRef p_value, bool p_is_unicode)
 {
-	if (!MCS_put(ctxt . GetEP(), p_is_unicode ? kMCSPutUnicodeOutput : kMCSPutOutput, p_value))
+	if (!MCS_put(ctxt, p_is_unicode ? kMCSPutUnicodeOutput : kMCSPutOutput, p_value))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 

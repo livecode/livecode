@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "object.h"
 #include "globals.h"
 #include "param.h"
@@ -97,19 +98,16 @@ MCSErrorMode MCS_get_errormode(void)
 	return kMCSErrorModeNone;
 }
 
-bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, MCStringRef p_data)
-{
-	ep . setvalueref(p_data);
-
+bool MCS_put(MCExecContext& ctxt, MCSPutKind p_kind, MCStringRef p_data)
+{   
 	switch(p_kind)
 	{
 	case kMCSPutOutput:
 	case kMCSPutBeforeMessage:
 	case kMCSPutIntoMessage:
-		return MCmb -> set(ep, nil, 0) == ES_NORMAL;
+		return MCmb -> set(ctxt, p_data);
 	case kMCSPutAfterMessage:
-		return MCmb -> append(ep, nil, 0) == ES_NORMAL;
-
+		return MCmb -> append(ctxt, p_data);
 	default:
 		break;
 	}
