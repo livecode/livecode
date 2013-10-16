@@ -98,23 +98,33 @@ MCSErrorMode MCS_get_errormode(void)
 	return kMCSErrorModeNone;
 }
 
-bool MCS_put(MCExecContext& ctxt, MCSPutKind p_kind, MCStringRef p_data)
-{   
-	switch(p_kind)
+bool MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_data)
+{
+    /* UNSURE */// This might no be required
+	ctxt . SetTheResultToValue(p_data);
+	
+    switch (p_kind)
 	{
-	case kMCSPutOutput:
-	case kMCSPutBeforeMessage:
+    case kMCSPutOutput:
+    case kMCSPutUnicodeOutput:
+    case kMCSPutBeforeMessage:
 	case kMCSPutIntoMessage:
 		return MCmb -> set(ctxt, p_data);
-	case kMCSPutAfterMessage:
-		return MCmb -> append(ctxt, p_data);
+    case kMCSPutAfterMessage:
+        return MCmb -> append(ctxt, p_data);
 	default:
 		break;
 	}
-
+	
 	// MW-2012-02-23: [[ PutUnicode ]] If we don't understand the kind
 	//   then return false (caller can then throw an error).
 	return false;
+}
+
+// Missing implementation. What to write here? Panos.
+bool MCS_put_binary(MCExecContext& ctxt, MCSPutKind p_kind, MCDataRef p_data)
+{
+    return false;
 }
 
 void MCS_set_outputtextencoding(MCSOutputTextEncoding encoding)

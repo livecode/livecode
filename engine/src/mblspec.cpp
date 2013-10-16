@@ -769,9 +769,9 @@ void MCS_unloadurl(MCObject *p_object, MCStringRef p_url)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool MCS_put(MCExecContext& ctxt, MCSPutKind p_kind, MCStringRef p_data)
+bool MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_data)
 {
-	/* UNCHECKED */ ctxt . GetEP() . setvalueref(p_data);
+	/* UNCHECKED */ ctxt . SetTheResultToValue(p_data);
 
 	switch(p_kind)
 	{
@@ -786,6 +786,12 @@ bool MCS_put(MCExecContext& ctxt, MCSPutKind p_kind, MCStringRef p_data)
 		break;
 	}
 	return true;
+}
+
+// Missing implementation. What to write here? Panos.
+bool MCS_put_binary(MCExecContext& ctxt, MCSPutKind p_kind, MCDataRef p_data)
+{
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

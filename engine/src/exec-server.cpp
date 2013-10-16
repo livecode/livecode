@@ -180,7 +180,7 @@ void MCServerExecInclude(MCExecContext& ctxt, MCStringRef p_filename, bool p_is_
 
 void MCServerExecEcho(MCExecContext& ctxt, MCStringRef p_data)
 {
-	if (!MCS_put(ctxt, kMCSPutBinaryOutput, p_data) != IO_NORMAL)
+	if (!MCS_put(ctxt, kMCSPutBinaryOutput, p_data))
 		MCexitall = True;
 }
 
@@ -188,25 +188,41 @@ void MCServerExecEcho(MCExecContext& ctxt, MCStringRef p_data)
 
 void MCServerExecPutHeader(MCExecContext& ctxt, MCStringRef p_value, bool p_as_new)
 {
-	if (!MCS_put(ctxt, p_as_new ? kMCSPutNewHeader : kMCSPutHeader, p_value))
+    if (!MCS_put(ctxt, p_as_new ? kMCSPutNewHeader : kMCSPutHeader, p_value))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
-void MCServerExecPutBinaryOutput(MCExecContext& ctxt, MCStringRef p_value)
+void MCServerExecPutBinaryOutput(MCExecContext& ctxt, MCDataRef p_value)
 {
-	if (!MCS_put(ctxt, kMCSPutBinaryOutput, p_value))
+    if (!MCS_put_binary(ctxt, kMCSPutBinaryOutput, p_value))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
-void MCServerExecPutContent(MCExecContext& ctxt, MCStringRef p_value, bool is_unicode)
+void MCServerExecPutContent(MCExecContext& ctxt, MCStringRef p_value)
 {
-	if (!MCS_put(ctxt, is_unicode ? kMCSPutUnicodeContent : kMCSPutContent, p_value))
+	if (!MCS_put(ctxt, MCStringIsNative(p_value) ? kMCSPutContent : kMCSPutUnicodeContent, p_value))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
-void MCServerExecPutMarkup(MCExecContext& ctxt, MCStringRef p_value, bool is_unicode)
+void MCServerExecPutContentUnicode(MCExecContext& ctxt, MCDataRef p_value)
 {
-	if (!MCS_put(ctxt, is_unicode ? kMCSPutUnicodeMarkup : kMCSPutMarkup, p_value))
+	MCAutoStringRef t_string;
+	if (!MCStringCreateWithChars((const unichar_t*)MCDataGetBytePtr(p_value), MCDataGetLength(p_value)/sizeof(unichar_t), &t_string)
+		|| !MCS_put(ctxt, kMCSPutUnicodeContent, *t_string))
+		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
+}
+
+void MCServerExecPutMarkup(MCExecContext& ctxt, MCStringRef p_value)
+{
+	if (!MCS_put(ctxt, MCStringIsNative(p_value) ? kMCSPutMarkup : kMCSPutUnicodeMarkup, p_value))
+		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
+}
+
+void MCServerExecPutMarkupUnicode(MCExecContext& ctxt, MCDataRef p_value)
+{
+	MCAutoStringRef t_string;
+	if (!MCStringCreateWithChars((const unichar_t*)MCDataGetBytePtr(p_value), MCDataGetLength(p_value)/sizeof(unichar_t), &t_string)
+		|| !MCS_put(ctxt, kMCSPutUnicodeMarkup, *t_string))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
