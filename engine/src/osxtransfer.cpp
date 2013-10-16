@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "image.h"
 #include "dispatch.h"
 #include "util.h"
+#include "exec.h"
 #include "execpt.h"
 #include "globals.h"
 #include "mctheme.h"
@@ -286,21 +287,23 @@ bool MCMacOSXPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 	{
 	case kScrapFlavorTypeText:
 	{
-		MCExecPoint ep;
-		ep . setvalueref(*t_in_data);
-		ep . texttobinary();
-		ep . copyasdataref(&t_out_data);
+		MCAutoStringRef t_input_mac;
+		/* UNCHECKED */ MCStringDecode(*t_in_data, kMCStringEncodingMacRoman, false, &t_input_mac);
+		MCAutoStringRef t_output;
+		/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_input_mac, &t_output);
+		/* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingMacRoman, false, &t_out_data);
 	}
 	break;
 
 	case kScrapFlavorTypeUnicode:
 	{
-		MCExecPoint ep;
-		ep . setvalueref(*t_in_data);
-		ep . utf16toutf8();
-		ep . texttobinary();
-		ep . utf8toutf16();
-		ep . copyasdataref(&t_out_data);
+
+		MCAutoStringRef t_utf8;
+		/* UNCHECKED */ MCStringDecode(*t_in_data, kMCStringEncodingUTF16, false, &t_utf8);
+		MCAutoStringRef t_output;
+		/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_utf8, &t_output);
+		/* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingUTF16, false, &t_out_data);
+
 	}
 	break;
 
@@ -544,20 +547,23 @@ bool MCMacOSXPasteboard::AddEntry(MCTransferType p_type, ScrapFlavorType p_flavo
 
 bool MCConvertTextToMacPlain(MCDataRef p_input, MCDataRef& r_output)
 {
-	MCExecPoint ep(NULL, NULL, NULL);
-	ep . setvalueref(p_input);
-	ep . binarytotext();
-	return ep . copyasdataref(r_output);
+	MCAutoStringRef t_input_mac;
+	/* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingMacRoman, false, &t_input_mac);
+	MCAutoStringRef t_output;
+	/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_input_mac, &t_output);
+	
+	return MCStringEncode(*t_output, kMCStringEncodingMacRoman, false, r_output);
 }
 
 bool MCConvertUnicodeToMacUnicode(MCDataRef p_input, MCDataRef& r_output)
 {
-	MCExecPoint ep(NULL, NULL, NULL);
-	ep . setvalueref(p_input);
-	ep . utf16toutf8();
-	ep . binarytotext();
-	ep . utf8toutf16();
-	return ep . copyasdataref(r_output);
+
+	MCAutoStringRef t_input_mac_unicode;
+	/* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingUTF16, false, &t_input_mac_unicode);
+	MCAutoStringRef t_output;
+	/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_input_mac_unicode, &t_output);
+	
+	return MCStringEncode(*t_output, kMCStringEncodingUTF16, false, r_output);
 }
 
 bool MCConvertStyledTextToMacUnicode(MCDataRef p_input, MCDataRef& r_output)
@@ -580,12 +586,11 @@ bool MCConvertStyledTextToMacUnicodeStyled(MCDataRef p_input, MCDataRef& r_outpu
 	MCParagraph *t_paragraphs;
 	t_paragraphs = ((MCStyledText *)t_object) -> getparagraphs();
 	
-	MCExecPoint ep(NULL, NULL, NULL);
-	/* UNCHECKED */ MCtemplatefield -> getparagraphmacunicodestyles(ep, t_paragraphs, t_paragraphs -> prev());
+	/* UNCHECKED */ MCtemplatefield -> getparagraphmacunicodestyles(t_paragraphs, t_paragraphs -> prev(), r_output);
 	
 	delete t_object;
 	
-	return ep . copyasdataref(r_output);
+	return true;
 }
 
 bool MCConvertStyledTextToMacPlain(MCDataRef p_input, MCDataRef& r_output)
@@ -717,29 +722,33 @@ bool MCConvertMacUnicodeStyledToStyledText(MCDataRef p_text_data, MCDataRef p_st
 {
 	MCParagraph *t_paragraphs;
 	
-	MCString t_text;
-	t_text = MCDataGetOldString(p_text_data);
+	MCStringRef t_text;
+	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)MCDataGetBytePtr(p_text_data), MCDataGetLength(p_text_data), t_text);
 	
 	// MW-2010-01-08: [[ Bug 8327 ]] If the text is 'external' representation, skip the BOM.
-	if (p_is_external && t_text . getlength() >= 2 &&
-		(*(uint2 *)t_text . getstring() == 0xfffe || 
-		*(uint2 *)t_text . getstring() == 0xfeff))
-		t_text . set(t_text . getstring() + 2, t_text . getlength() - 1);
+	if (p_is_external && MCStringGetLength(t_text) >= 2 &&
+		(*(uint2 *)MCStringGetCString(t_text) == 0xfffe || 
+		*(uint2 *)MCStringGetCString(t_text) == 0xfeff))
+	{
+		MCAutoStringRef t_substring;
+		MCStringCopySubstring(t_text, MCRangeMake(2, MCStringGetLength(t_text) - 2), &t_substring);
+		MCValueAssign(t_text, *t_substring);
+	}
 	
 	// MW-2009-12-01: If the unicode styled text has an empty style data, then make
 	//   sure we just convert it as plain unicode text.
 	if (MCDataGetLength(p_style_data) != 0)
-		t_paragraphs = MCtemplatefield -> macunicodestyletexttoparagraphs(t_text, MCDataGetOldString(p_style_data));
+		t_paragraphs = MCtemplatefield -> macunicodestyletexttoparagraphs(MCStringGetOldString(t_text), MCDataGetOldString(p_style_data));
 	else
 	{
-		MCExecPoint ep;
-		ep . setsvalue(t_text);
-		ep . utf16toutf8();
-		ep . texttobinary();
-		ep . utf8toutf16();
-		t_paragraphs = MCtemplatefield -> texttoparagraphs(ep . getsvalue(), true);
+		MCAutoStringRef t_output;
+		/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(t_text, &t_output);
+		MCAutoDataRef t_data;
+		/* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingUTF16, false, &t_data);
+		t_paragraphs = MCtemplatefield -> texttoparagraphs(MCDataGetOldString(*t_data), true);
 	}
 	
+	MCValueRelease(t_text);
 	MCStyledText t_styled_text;
 	t_styled_text . setparent(MCtemplatefield -> getparent());
 	t_styled_text . setparagraphs(t_paragraphs);
@@ -1011,8 +1020,11 @@ bool MCConvertMacHFSToFiles(MCDataRef p_data, MCDataRef& r_output)
 	
 	uint32_t t_count;
 	t_count = MCDataGetLength(p_data) / sizeof(HFSFlavor);
+
+	// Create a mutable list ref.
+	MCListRef t_output_files;
+	/* UNCHECKED */ MCListCreateMutable('\n', t_output_files);
 	
-	MCExecPoint ep(NULL, NULL, NULL);
 	for(uint32_t i = 0; i < t_count; ++i)
 	{
 		FSRef t_fs_ref;
@@ -1023,9 +1035,16 @@ bool MCConvertMacHFSToFiles(MCDataRef p_data, MCDataRef& r_output)
 		
 		if (!MCS_mac_fsref_to_path(t_fs_ref, &t_filename))
 			continue;
-			
-		/* UNCHECKED */ ep . concatstringref(*t_filename, EC_RETURN, i == 0);
+		
+		/* UNCHECKED */ MCListAppend(t_output_files, *t_filename);
 	}
-	
-	return ep . copyasdataref(r_output);
+
+	// Build the output stringref.
+	MCStringRef t_output_files_string;
+	/* UNCHECKED */ MCListCopyAsStringAndRelease(t_output_files, t_output_files_string);
+
+	// Finally encode as native string and encapsulate in a dataref.
+	/* UNCHECKED */ MCStringEncodeAndRelease(t_output_files_string, kMCStringEncodingNative, false, r_output);
+
+	return true;
 }

@@ -763,22 +763,22 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 		{
 			MCAutoStringRef tptr;
 			MCAutoStringRef t_mptr_string;
-			
+            
+            t_mptr_string = MCNameGetString(mptr);
+            
 			if (params != nil)
 			{
 				MCExecPoint ep(this, NULL, NULL);
 				params->eval(ep);
                 MCAutoStringRef t_value;
 				ep . copyasstringref(&t_value);
-				MCStringFormat(&tptr, "%@ %@", *t_mptr_string, *t_value);
+				MCStringFormat(&t_mptr_string, "%@ %@", mptr, *t_value);
 			}
-            else
-                t_mptr_string = MCNameGetString(mptr);
 			
 			MCHandler *t_handler;
 			t_handler = findhandler(HT_MESSAGE, mptr);
 			if (t_handler == NULL || !t_handler -> isprivate())
-				domess(params == NULL ? *t_mptr_string : *tptr);
+				domess(*t_mptr_string);
 
 		}
 		if (stat == ES_ERROR && !MCNameIsEqualTo(mptr, MCM_error_dialog, kMCCompareCaseless))
@@ -2570,56 +2570,44 @@ Exec_stat MCObject::domess(MCStringRef sptr)
 	}
 }
 
-Exec_stat MCObject::eval(MCStringRef sptr, MCExecPoint &ep)
+void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_value)
 {
 	MCAutoStringRef t_temp_script;
-	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on eval\nreturn %@\nend eval\n", sptr);
+	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on eval\nreturn %@\nend eval\n", p_script);
 	
 	MCHandlerlist *handlist = new MCHandlerlist;
 	if (handlist->parse(this, *t_temp_script) != PS_NORMAL)
 	{
-		ep.setstaticcstring("Error parsing expression\n");
+		r_value = MCSTR("Error parsing expression\n");
 		delete handlist;
-		return ES_ERROR;
+		ctxt.Throw();
+		return;
 	}
 	MCObject *oldtargetptr = MCtargetptr;
 	MCtargetptr = this;
 	MCHandler *hptr;
-	MCHandler *oldhandler = ep.gethandler();
-	MCHandlerlist *oldhlist = ep.gethlist();
+	MCHandler *oldhandler = ctxt.GetHandler();
+	MCHandlerlist *oldhlist = ctxt.GetHandlerList();
 	handlist->findhandler(HT_MESSAGE, MCM_eval, hptr);
-	ep.sethlist(handlist);
-	ep.sethandler(hptr);
+	ctxt.SetHandlerList(handlist);
+	ctxt.SetHandler(hptr);
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
-	Exec_stat stat;
-	if (hptr->exec(ep, NULL) != ES_NORMAL)
+	
+	if (hptr->exec(ctxt.GetEP(), NULL) != ES_NORMAL)
 	{
-		ep.setstaticcstring("Error parsing expression\n");
-		stat = ES_ERROR;
+		r_value = MCSTR("Error parsing expression\n");
+		ctxt.Throw();
 	}
 	else
 	{
-		MCresult->eval(ep);
-		stat = ES_NORMAL;
+		MCresult->copyasvalueref(r_value);
 	}
 	MClockerrors = oldlock;
 	MCtargetptr = oldtargetptr;
-	ep.sethlist(oldhlist);
-	ep.sethandler(oldhandler);
+	ctxt.SetHandlerList(oldhlist);
+	ctxt.SetHandler(oldhandler);
 	delete handlist;
-	return stat;
-}
-
-/* WRAPPER */ void MCObject::eval(MCExecContext& ctxt, MCStringRef p_script, MCValueRef& r_value)
-{
-	MCExecPoint ep(ctxt.GetEP());
-	Exec_stat stat = eval(p_script, ep);
-	/* UNCHECKED */ ep.copyasvalueref(r_value);
-	if (stat != ES_ERROR)
-		return;
-
-	ctxt.Throw();
 }
 
 void MCObject::editscript()

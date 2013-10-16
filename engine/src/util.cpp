@@ -788,6 +788,11 @@ Boolean MCU_stoi2x4(const MCString &s, int2 &d1, int2 &d2, int2 &d3, int2 &d4)
 	return True == MCU_stoi2x4(MCStringGetOldString(p_string), r_d1, r_d2, r_d3, r_d4);
 }
 
+/* WRAPPER */ bool MCU_stoi4x4(MCStringRef p_string, int32_t& r_d1, int32_t& r_d2, int32_t& r_d3, int32_t& r_d4)
+{
+	return True == MCU_stoi4x4(MCStringGetOldString(p_string), r_d1, r_d2, r_d3, r_d4);
+}
+
 Boolean MCU_stoi4x4(const MCString &s, int32_t &d1, int32_t &d2, int32_t &d3, int32_t &d4)
 {
 	const char *sptr = s.getstring();
@@ -804,6 +809,20 @@ Boolean MCU_stoi4x4(const MCString &s, int32_t &d1, int32_t &d2, int32_t &d3, in
 		return False;
 	d4 = MCU_strtol(sptr, l, '\0', done, True, False);
 	if (!done || l != 0)
+		return False;
+	return True;
+}
+
+Boolean MCU_stoi4x2(const MCString &s, int32_t &d1, int32_t &d2)
+{
+	const char *sptr = s.getstring();
+	uint4 l = s.getlength();
+	Boolean done;
+	d1 = MCU_strtol(sptr, l, ',', done, True, False);
+	if (!done || l == 0)
+		return False;
+	d2 = MCU_strtol(sptr, l, ',', done, True, False);
+	if (!done || l == 0)
 		return False;
 	return True;
 }
@@ -2192,26 +2211,16 @@ void MCU_base64decode(MCExecPoint &ep)
 
 bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
 
-void MCU_urlencode(MCExecPoint &ep)
+void MCU_urlencode(MCStringRef p_url, MCStringRef &r_encoded)
 {
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
-
-	MCAutoStringRef t_result;
-	/* UNCHECKED */ MCFiltersUrlEncode(*t_source, &t_result);
-	/* UNCHECKED */ ep.setvalueref(*t_result);
+	/* UNCHECKED */ MCFiltersUrlEncode(p_url, r_encoded);
 }
 
 bool MCFiltersUrlDecode(MCStringRef p_source, MCStringRef& r_result);
 
-void MCU_urldecode(MCExecPoint &ep)
+void MCU_urldecode(MCStringRef p_source, MCStringRef& r_result)
 {
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
-
-	MCAutoStringRef t_result;
-	/* UNCHECKED */ MCFiltersUrlDecode(*t_source, &t_result);
-	/* UNCHECKED */ ep.setvalueref(*t_result);
+	/* UNCHECKED */ MCFiltersUrlDecode(p_source, r_result);
 }
 
 Boolean MCU_freeinserted(MCObjectList *&l)
@@ -2330,46 +2339,47 @@ void MCU_geturl(MCExecPoint &ep)
     ep.setvalueref(*t_output);
 }
 
-
-void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
+void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCStringRef p_data)
 {
-	if (dest.getsvalue().getlength() > 5
-	        && !MCU_strncasecmp(dest.getsvalue().getstring(), "file:", 5))
+	if (MCStringBeginsWithCString(p_url, (const char_t*)"file:", kMCCompareCaseless))
 	{
-		dest.tail(5);
-		data . texttobinary();
-		MCAutoDataRef t_data_ref;
-		/* UNCHECKED */ data . copyasdataref(&t_data_ref);
-		MCAutoStringRef t_filename;
-		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &t_filename);
-		MCS_savebinaryfile(*t_filename, *t_data_ref);
+		MCAutoStringRef t_path;
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(5, MCStringGetLength(p_url) - 5), &t_path);
+		MCS_savetextfile(*t_path, p_data);
 	}
-	else if (dest.getsvalue().getlength() > 8
-		        && !MCU_strncasecmp(dest.getsvalue().getstring(), "binfile:", 8))
+	else if (MCStringBeginsWithCString(p_url, (const char_t*)"binfile:", kMCCompareCaseless))
 	{
-		dest.tail(8);
-		MCAutoDataRef t_data_ref;
-		/* UNCHECKED */ data . copyasdataref(&t_data_ref);
-		MCAutoStringRef t_filename;
-		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &t_filename);
-		MCS_savebinaryfile(*t_filename, *t_data_ref);
+		MCAutoStringRef t_path;
+		MCAutoDataRef t_data;
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url) - 8), &t_path);
+		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
+		MCS_savebinaryfile(*t_path, *t_data);
 	}
-	else if (dest.getsvalue().getlength() > 8
-		        && !MCU_strncasecmp(dest.getsvalue().getstring(), "resfile:", 8))
+	else if (MCStringBeginsWithCString(p_url, (const char_t*)"resfile:", kMCCompareCaseless))
 	{
-		dest.tail(8);
-		MCAutoStringRef t_filename;
-		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &t_filename);
-		/* UNCHECKED */ MCS_saveresfile(*t_filename, (MCDataRef)data.getvalueref());
+		MCAutoStringRef t_path;
+		MCAutoDataRef t_data;
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url) - 8), &t_path);
+		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
+		MCS_saveresfile(*t_path, *t_data);
 	}
 	else
 	{
-		MCAutoStringRef p_url;
-        MCAutoDataRef t_data;
-		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &p_url);
-        /* UNCHECKED */ MCDataCreateWithBytes((byte_t*)data.getcstring(), data.getsvalue().getlength(), &t_data);
-		MCS_putintourl(dest . getobj(), *t_data, *p_url);
+		MCAutoDataRef t_data;
+		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
+		MCS_putintourl(ctxt.GetObject(), *t_data, p_url);
 	}
+}
+
+void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
+{
+	MCAutoStringRef t_url;
+	MCAutoStringRef t_data;
+	/* UNCHECKED */ dest.copyasstringref(&t_url);
+	/* UNCHECKED */ data.copyasstringref(&t_data);
+	
+	MCExecContext ctxt(data);
+	MCU_puturl(ctxt, *t_url, *t_data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
