@@ -523,20 +523,27 @@ Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
 			t_string = p_string;
 			
 		if (MCmodifierstate & MS_CONTROL)
+        {
 			if (message_with_valueref_args(MCM_command_key_down, *t_string) == ES_NORMAL)
 				return True;
-				
+		}
 		else if (MCmodifierstate & MS_MOD1)
+        {
 				if (message_with_valueref_args(MCM_option_key_down, *t_string) == ES_NORMAL)
 				return True;
+        }
 #ifdef _MACOSX
 		else if (MCmodifierstate & MS_MAC_CONTROL)
+        {
 			if (message_with_valueref_args(MCM_control_key_down, *t_string) == ES_NORMAL)
 				return True;
+        }
 #endif
 		else
+        {
 			if (message_with_valueref_args(MCM_key_down, p_string) == ES_NORMAL)
 				return True;
+        }
 		break;
 	}
 
