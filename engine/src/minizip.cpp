@@ -232,7 +232,7 @@ struct MCMiniZip
 	MCMiniZipItem *items;
 };
 
-static void decode_struct(const void *p_data, const char *p_format, void *p_struct);
+static void decode_struct(const void *p_data, MCStringRef p_format, void *p_struct);
 static bool MCMiniZipReadCentralDir(MCMiniZipRef self);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -369,7 +369,7 @@ bool MCMiniZipExtractItem(MCMiniZipRef self, MCStringRef p_item_name, MCMiniZipE
 
 	// Now decode the local file header
 	ZipLocalFileHeader t_header;
-	decode_struct(self -> data + t_item -> header_offset, "ISSSSSIIISS", &t_header);
+	decode_struct(self -> data + t_item -> header_offset, MCSTR("ISSSSSIIISS"), &t_header);
 
 	// Work out where the 'compressed' data is and that it is all there
 	uint32_t t_data_offset;
@@ -508,11 +508,13 @@ static inline uint16_t swap_to_le(uint16_t v)
 
 // Decode a byte-stream into a struct. Note we assume that the struct has natural
 // alignment for all fields.
-static void decode_struct(const void *p_data, const char *p_format, void *p_struct)
+static void decode_struct(const void *p_data, MCStringRef p_format, void *p_struct)
 {
-	while(*p_format != '\0')
+	uindex_t t_pos;
+	t_pos = 0;
+	while(t_pos != MCStringGetLength(p_format))
 	{
-		switch(*p_format++)
+		switch(MCStringGetNativeCharAtIndex(p_format, t_pos++))
 		{
 		case 'i':
 		case 'I': // little-endian uint32_t
@@ -569,7 +571,7 @@ static bool MCMiniZipReadCentralDir(MCMiniZipRef self)
 		{
 			// Parse the format structure (we can't read directly as might not
 			// be word-aligned and might be a different endian).
-			decode_struct(self -> data + t_footer_offset, "ISSSSIIS", &t_footer);
+			decode_struct(self -> data + t_footer_offset, MCSTR("ISSSSIIS"), &t_footer);
 
 			// Check the following:
 			//   1) There is room for the comment field
@@ -619,7 +621,7 @@ static bool MCMiniZipReadCentralDir(MCMiniZipRef self)
 
 		// Otherwise we decode the next header
 		ZipFileHeader t_header;
-		decode_struct(self -> data + t_header_offset, "ISSSSSSIIISSSSSII", &t_header);
+		decode_struct(self -> data + t_header_offset, MCSTR("ISSSSSSIIISSSSSII"), &t_header);
 
 		// Check that there is room for filename, extra and comment fields
 		if (t_header_offset + t_header . filename_length + t_header . extra_length + t_header . comment_length > t_footer_offset)
