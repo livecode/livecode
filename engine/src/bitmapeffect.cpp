@@ -700,11 +700,11 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 		case kMCBitmapEffectPropertyBlendMode:
 		{
 			MCBitmapEffectBlendMode t_new_mode;
-			if (MCStringIsEqualToCString(*t_data, "normal", kMCCompareExact))
+			if (MCStringIsEqualToCString(*t_data, "normal", kMCCompareCaseless))
 				t_new_mode = kMCBitmapEffectBlendModeNormal;
-			else if (MCStringIsEqualToCString(*t_data, "multiply", kMCCompareExact))
+			else if (MCStringIsEqualToCString(*t_data, "multiply", kMCCompareCaseless))
 				t_new_mode = kMCBitmapEffectBlendModeMultiply;
-			else if (MCStringIsEqualToCString(*t_data, "colordodge", kMCCompareExact))
+			else if (MCStringIsEqualToCString(*t_data, "colordodge", kMCCompareCaseless))
 				t_new_mode = kMCBitmapEffectBlendModeColorDodge;
 			else
 			{
@@ -735,13 +735,13 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 		case kMCBitmapEffectPropertyFilter:
 		{
 			MCBitmapEffectFilter t_new_filter;
-			if (MCStringIsEqualToCString(*t_data, "gaussian", kMCCompareExact))
+			if (MCStringIsEqualToCString(*t_data, "gaussian", kMCCompareCaseless))
 				t_new_filter = kMCBitmapEffectFilterFastGaussian;
-			else if (MCStringIsEqualToCString(*t_data, "box1pass", kMCCompareExact))
+			else if (MCStringIsEqualToCString(*t_data, "box1pass", kMCCompareCaseless))
 				t_new_filter = kMCBitmapEffectFilterOnePassBox;
-			else if (MCStringIsEqualToCString(*t_data, "box2pass", kMCCompareExact))
+			else if (MCStringIsEqualToCString(*t_data, "box2pass", kMCCompareCaseless))
 				t_new_filter = kMCBitmapEffectFilterTwoPassBox;
-			else if (MCStringIsEqualToCString(*t_data, "box3pass", kMCCompareExact))
+			else if (MCStringIsEqualToCString(*t_data, "box3pass", kMCCompareCaseless))
 				t_new_filter = kMCBitmapEffectFilterThreePassBox;
 			else
 			{

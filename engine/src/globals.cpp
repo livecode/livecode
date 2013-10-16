@@ -68,6 +68,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcssl.h"
 #include "stacksecurity.h"
 
+#include "date.h"
+
 #define HOLD_SIZE1 65535
 #define HOLD_SIZE2 16384
 
@@ -487,6 +489,11 @@ Boolean MCallowdatagrambroadcasts = False;
 extern MCUIDC *MCCreateScreenDC(void);
 extern void MCU_finalize_names();
 
+#ifdef _IOS_MOBILE
+extern void MCReachabilityEventInitialize();
+extern void MCReachabilityEventFinalize();
+#endif
+
 #ifdef _ANDROID_MOBILE
 void MCAndroidCustomFontsInitialize();
 void MCAndroidCustomFontsFinalize();
@@ -827,7 +834,10 @@ void X_clear_globals(void)
 	
 #ifdef _IOS_MOBILE
 	MCSystemSoundInitialize();
+    MCReachabilityEventInitialize();    
 #endif
+	
+	MCDateTimeInitialize();
 }
 
 bool X_open(int argc, char *argv[], char *envp[])
@@ -1180,8 +1190,11 @@ int X_close(void)
 #endif
 	
 #ifdef _IOS_MOBILE
-	MCSystemSoundInitialize();
+	MCSystemSoundFinalize();
+    MCReachabilityEventFinalize();
 #endif
+	
+	MCDateTimeFinalize();
 	
 	MCU_finalize_names();
 

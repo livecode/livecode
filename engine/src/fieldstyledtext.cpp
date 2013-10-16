@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "cdata.h"
 #include "mcerror.h"
 #include "execpt.h"
+#include "exec.h"
 #include "util.h"
 #include "block.h"
 
@@ -459,8 +460,35 @@ MCParagraph *MCField::parsestyledtextappendparagraph(MCArrayRef p_style, MCNameR
 	return t_new_paragraph;
 }
 
+static bool convert_array_value_to_number_if_non_empty(MCExecContext& ctxt, MCArrayRef p_array, MCNameRef p_key, MCNumberRef &r_value)
+{
+	MCValueRef t_value;
+	if (!MCArrayFetchValue(p_array, false, p_key, t_value))
+		return false;
+	if (MCValueIsEmpty(t_value))
+		return false;
+	if (!ctxt . ConvertToNumber(t_value, r_value))
+		return false;
+	return true;
+} 
+
+static bool copy_element_as_color_if_non_empty(MCExecContext& ctxt, MCArrayRef array, MCNameRef key, MCColor& r_value)
+{
+	MCValueRef t_value;
+	if (!MCArrayFetchValue(array, false, key, t_value))
+		return false;
+	if (MCValueIsEmpty(t_value))
+		return false;
+	MCAutoStringRef t_string;
+	if (!ctxt . ConvertToString(t_value, &t_string))
+		return false;
+	return MCscreen -> parsecolor(*t_string, r_value, nil);
+}
+
 void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_style, const char *p_initial, const char *p_final, MCStringRef p_metadata, bool p_is_unicode)
 {
+	MCExecPoint ep(NULL, NULL, NULL);
+	MCExecContext ctxt(ep);
 	// Make sure we don't try and append any more than 64K worth of bytes.
 	uint32_t t_text_length;
 	t_text_length = MCMin(p_final - p_initial, 65534 - p_paragraph -> textsize);
@@ -504,7 +532,6 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	p_paragraph -> textsize += t_block -> size;
 	
 	// Now set the block styles.
-	MCExecPoint ep(nil, nil, nil);
 	
 	// Set metadata
 	if (p_metadata != nil)
@@ -521,87 +548,92 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	if (p_style == nil)
 		return;
 
+	MCValueRef t_valueref;
+
 	// Set foreground
-	/* UNCHECKED */ ep . fetcharrayelement_cstring(p_style, "textColor");
-	if (!ep . isempty())
 	{
 		MCColor t_color;
-		MCAutoStringRef t_value;
-		ep . copyasstringref(&t_value);
-		if (MCscreen -> parsecolor(*t_value, t_color, nil))
+		if (copy_element_as_color_if_non_empty(ctxt, p_style, MCNAME("textColor"), t_color))
 			t_block -> setcolor(&t_color);
 	}
 	
 	// Set background
-	/* UNCHECKED */ ep . fetcharrayelement_cstring(p_style, "backgroundColor");
-	if (!ep . isempty())
 	{
 		MCColor t_color;
-		MCAutoStringRef t_value;
-		ep . copyasstringref(&t_value);
-		if (MCscreen -> parsecolor(*t_value, t_color, nil))
+		if (copy_element_as_color_if_non_empty(ctxt, p_style, MCNAME("backgroundColor"), t_color))
 			t_block -> setbackcolor(&t_color);
 	}
-	
 	// Set textshift
-	/* UNCHECKED */ ep . fetcharrayelement_cstring(p_style, "textShift");
-	if (!ep . isempty())
-		t_block -> setshift(ep . getint4());
-	
+	{
+		MCAutoNumberRef t_number;
+		convert_array_value_to_number_if_non_empty(ctxt, p_style, MCNAME("textShift"), &t_number);
+		t_block -> setshift(MCNumberFetchAsInteger(*t_number));
+	}
+
 	// If the block is unicode then we always have to set textFont. In either
 	// case if there is a textFont key, strip any ,unicode tag first.
-	/* UNCHECKED */ ep . fetcharrayelement_cstring(p_style, "textFont");
-	if (!ep . isempty())
+	if (MCArrayFetchValue(p_style, false, MCNAME("textFont"), t_valueref) && !MCValueIsEmpty(t_valueref))
 	{
-		const char *t_font_tag;
-		t_font_tag = strchr(ep . getcstring(), ',');
-		if (t_font_tag != nil)
-			ep . substring(0, ep . getcstring() - t_font_tag);
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ ctxt . ConvertToString(t_valueref, &t_string);
+		uindex_t t_comma;
+		if (MCStringFirstIndexOfChar(*t_string, ',', 0, kMCCompareExact, t_comma))
+		{
+			MCAutoStringRef t_substring;
+			MCStringCopySubstring(*t_string, MCRangeMake(0, t_comma), &t_substring);
+			t_valueref = MCValueRetain(*t_substring);
+		}
 	}
 
 	// Now if we have unicode, or a textFont style set it.
-	if (!ep . isempty())
-		t_block -> setatts(P_TEXT_FONT, (void *)ep . getcstring());
+	if (!MCValueIsEmpty(t_valueref))
+	{
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ ctxt . ConvertToString(t_valueref, &t_string);
+		t_block -> setatts(P_TEXT_FONT, (void *)MCStringGetCString(*t_string));
+	}
 	
 	// Set textsize
-	/* UNCHECKED */ ep . fetcharrayelement_cstring(p_style, "textSize");
-	if (!ep . isempty())
-		t_block -> setatts(P_TEXT_SIZE, (void *)ep . getint4());
+	{
+		MCAutoNumberRef t_number;
+		convert_array_value_to_number_if_non_empty(ctxt, p_style, MCNAME("textSize"), &t_number);
+		t_block -> setatts(P_TEXT_SIZE, (void *)MCNumberFetchAsInteger(*t_number));
+	}
 	
 	// Set textstyle
-	/* UNCHECKED */ ep . fetcharrayelement_cstring(p_style, "textStyle");
-	if (!ep . isempty())
+	if (MCArrayFetchValue(p_style, false, MCNAME("textStyle"), t_valueref) && !MCValueIsEmpty(t_valueref))
 	{
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ ctxt . ConvertToString(t_valueref, &t_string);
 		uint4 flags;
-		char *fname;
+		MCAutoStringRef fname;
 		uint2 height;
 		uint2 size;
 		uint2 style;
-		MCF_parsetextatts(P_TEXT_STYLE, ep . getsvalue(), flags, fname, height, size, style);
+
+		MCF_parsetextatts(P_TEXT_STYLE, *t_string, flags, &fname, height, size, style);
+
 		t_block -> setatts(P_TEXT_STYLE, (void *)style);
 	}
 
 	// Set linktext
-	/* UNCHECKED */ ep . fetcharrayelement_cstring(p_style, "linkText");
-	if (!ep . isempty())
-	{
-		MCAutoStringRef t_string;
-		/* UNCHECKED */ ep . copyasstringref(&t_string);
-		t_block -> setatts(P_LINK_TEXT, (void *)*t_string);
+	if (MCArrayFetchValue(p_style, false, MCNAME("linkText"), t_valueref))
+	{	
+		t_block -> setatts(P_LINK_TEXT, (void *)t_valueref);
 	}
 
 	// Set imagesource
-	/* UNCHECKED */ ep . fetcharrayelement_cstring(p_style, "imageSource");
-	if (!ep . isempty())
+	if (MCArrayFetchValue(p_style, false, MCNAME("imageSource"), t_valueref))
 	{
-		MCAutoStringRef t_string;
-		/* UNCHECKED */ ep . copyasstringref(&t_string);
-		t_block -> setatts(P_IMAGE_SOURCE, (void *)*t_string);
+		t_block -> setatts(P_IMAGE_SOURCE, (void *)t_valueref);
 	}
+
 }
 
 void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& x_paragraphs)
 {	
+	MCExecPoint ep(NULL, NULL, NULL);
+	MCExecContext ctxt(ep);
 	// If the value is a sequence, recurse for each element.
 	if (MCArrayIsSequence(p_block_value))
 	{
@@ -611,30 +643,31 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 			if (!MCArrayFetchValueAtIndex(p_block_value, j, t_block_entry))
 				continue;
 
-			if (!MCValueIsArray(t_block_entry))
-				continue;
-
-			parsestyledtextblockarray((MCArrayRef)t_block_entry, x_paragraphs);
+			MCAutoArrayRef t_array;
+			if (ctxt . ConvertToArray(t_block_entry, &t_array))
+				parsestyledtextblockarray(*t_array, x_paragraphs);		
 		}
-
 		return;
 	}
 	
-	// We'll need an ep for processing.
-	MCExecPoint ep(nil, nil, nil);
-	
-	// Fetch the style array.
-	MCAutoArrayRef t_style_entry;
-	/* UNCHECKED */ ep . fetcharrayelement_cstring(p_block_value, "style");
-	if (!ep . isempty())
-		/* UNCHECKED */ ep . copyasarrayref(&t_style_entry);
+	MCValueRef t_valueref;
+	MCAutoArrayRef t_style_entry;   
 
+	// Set foreground
+    if (MCArrayFetchValue(p_block_value, false, MCNAME("style"), t_valueref) && !MCValueIsEmpty(t_valueref))
+	{
+		MCArrayRef t_array;
+		/* UNCHECKED */ ctxt . ConvertToArray(t_valueref, t_array);
+		/* UNCHECKED */ MCArrayCopyAndRelease(t_array, &t_style_entry);	
+	}
 	// Get the metadata (if any)
-	MCAutoStringRef t_metadata;
-	/* UNCHECKED */ ep . fetcharrayelement_cstring(p_block_value, "metadata");
-	if (!ep . isempty())
-		/* UNCHECKED */ ep . copyasstringref(&t_metadata);
-		
+	MCStringRef t_metadata;
+	if (MCArrayFetchValue(p_block_value, false, MCNAME("metadata"), t_valueref) && !MCValueIsEmpty(t_valueref))
+	{
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ ctxt . ConvertToString(t_valueref, &t_string);
+		t_metadata = MCValueRetain(*t_string);
+	}	
 	// If there are no paragraphs yet, create one.
 	MCParagraph *t_paragraph;
 	t_paragraph = x_paragraphs -> prev();
@@ -647,17 +680,19 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 	// appropriately.
 	bool t_is_unicode;
 	t_is_unicode = false;
-	/* UNCHECKED */ ep . fetcharrayelement_cstring(p_block_value, "text");
-	if (ep . isempty())
+
+	if (!MCArrayFetchValue(p_block_value, false, MCNAME("text"), t_valueref) || MCValueIsEmpty(t_valueref))
 	{
-		/* UNCHECKED */ ep . fetcharrayelement_cstring(p_block_value, "unicodeText");
+		/* UNCKECKED */ MCArrayFetchValue(p_block_value, false, MCNAME("unicodeText"), t_valueref);
 		t_is_unicode = true;
 	}
-	if (ep . isempty() || ep . isarray())
+	if (MCValueIsEmpty(t_valueref) || MCValueGetTypeCode(t_valueref) == kMCValueTypeCodeArray)
 		return;
 	
-	t_text_ptr = ep . getsvalue() . getstring();
-	t_text_length = ep . getsvalue() . getlength();
+	MCAutoStringRef t_temp;
+	/* UNCHECKED */ ctxt . ConvertToString(t_valueref, &t_temp);
+	t_text_ptr = MCStringGetCString(*t_temp);
+	t_text_length = MCStringGetLength(*t_temp);
 	while(t_text_length != 0)
 	{
 		bool t_add_paragraph;
@@ -683,8 +718,10 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 		}
 
 		// We now add the range initial...final as a block.
-		parsestyledtextappendblock(t_paragraph, *t_style_entry, t_text_initial_ptr, t_text_final_ptr, *t_metadata, t_is_unicode);
+		parsestyledtextappendblock(t_paragraph, *t_style_entry, t_text_initial_ptr, t_text_final_ptr, t_metadata, t_is_unicode);
 		
+		MCValueRelease(t_metadata);
+
 		// And, if we need a new paragraph, add it.
 		if (t_add_paragraph)
 			t_paragraph = parsestyledtextappendparagraph(nil, nil, true, x_paragraphs);

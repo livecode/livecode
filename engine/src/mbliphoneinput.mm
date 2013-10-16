@@ -98,8 +98,8 @@ class MCiOSInputControl;
 class MCiOSInputControl: public MCiOSControl
 {
 protected:
-	static MCNativeControlPropertyInfo kProperties[];
-	static MCNativeControlPropertyTable kPropertyTable;
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
     static MCNativeControlActionInfo kActions[];
 	static MCNativeControlActionTable kActionTable;
     
@@ -111,7 +111,7 @@ public:
     virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
 #endif	
     
-    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     void SetEnabled(MCExecContext& ctxt, bool p_value);
@@ -162,8 +162,8 @@ protected:
 class MCiOSInputFieldControl: public MCiOSInputControl
 {
 protected:
-	static MCNativeControlPropertyInfo kProperties[];
-	static MCNativeControlPropertyTable kPropertyTable;
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
     static MCNativeControlActionInfo kActions[];
 	static MCNativeControlActionTable kActionTable;
     
@@ -173,7 +173,7 @@ public:
 	virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint& ep);
 	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint& ep);
 #endif
-    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     void SetAutoFit(MCExecContext& ctxt, bool p_value);
@@ -197,8 +197,8 @@ protected:
 class MCiOSMultiLineControl: public MCiOSInputControl
 {
 protected:
-	static MCNativeControlPropertyInfo kProperties[];
-	static MCNativeControlPropertyTable kPropertyTable;
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
     static MCNativeControlActionInfo kActions[];
 	static MCNativeControlActionTable kActionTable;
 
@@ -219,21 +219,21 @@ public:
 	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
 #endif
 
-    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
 	virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     void SetEditable(MCExecContext& ctxt, bool p_value);
     void SetSelectedRange(MCExecContext& ctxt, const MCNativeControlRange& p_range);
     void SetDataDetectorTypes(MCExecContext& ctxt, MCNativeControlInputDataDetectorType p_type);
     void SetVerticalTextAlign(MCExecContext& ctxt, MCNativeControlInputVerticalAlign p_align);
-    virtual void SetContentRect(MCExecContext& ctxt, MCRectangle32 p_rect);
+    virtual void SetContentRect(MCExecContext& ctxt, integer_t p_rect[4]);
     
     void GetEditable(MCExecContext& ctxt, bool& r_value);
     void GetSelectedRange(MCExecContext& ctxt, MCNativeControlRange& r_range);
     void GetDataDetectorTypes(MCExecContext& ctxt, MCNativeControlInputDataDetectorType& r_type);
     void GetVerticalTextAlign(MCExecContext& ctxt, MCNativeControlInputVerticalAlign& r_align);
     
-    void GetContentRect(MCExecContext& ctxt, MCRectangle32& r_rect);
+    void GetContentRect(MCExecContext& ctxt, integer_t r_rect[4]);
     void SetHScroll(MCExecContext& ctxt, integer_t p_scroll);
     void GetHScroll(MCExecContext& ctxt, integer_t& r_scroll);
     void SetVScroll(MCExecContext& ctxt, integer_t p_scroll);
@@ -410,25 +410,25 @@ static MCNativeControlEnumEntry s_verticaltextalign_enum[] =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeControlPropertyInfo MCiOSInputControl::kProperties[] =
+MCPropertyInfo MCiOSInputControl::kProperties[] =
 {
-    DEFINE_RW_CTRL_PROPERTY(Enabled, Bool, MCiOSInputControl, Enabled)
-    DEFINE_RW_CTRL_PROPERTY(Text, String, MCiOSInputControl, Text)
-    DEFINE_RW_CTRL_PROPERTY(UnicodeText, String, MCiOSInputControl, Text)
-    DEFINE_RW_CTRL_CUSTOM_PROPERTY(TextColor, NativeControlColor, MCiOSInputControl, TextColor)
-    DEFINE_RW_CTRL_PROPERTY(FontSize, UInt32, MCiOSInputControl, FontSize)
-    DEFINE_RW_CTRL_PROPERTY(FontName, String, MCiOSInputControl, FontName)
-    DEFINE_RW_CTRL_ENUM_PROPERTY(TextAlign, NativeControlInputTextAlign, MCiOSInputControl, TextAlign)  
-    DEFINE_RW_CTRL_ENUM_PROPERTY(AutoCapitalizationType, NativeControlInputCapitalizationType, MCiOSInputControl, AutoCapitalizationType)
-    DEFINE_RW_CTRL_ENUM_PROPERTY(AutoCorrectionType, NativeControlInputAutocorrectionType, MCiOSInputControl, AutoCorrectionType)
-    DEFINE_RW_CTRL_PROPERTY(ManageReturnKey, Bool, MCiOSInputControl, ManageReturnKey)
-    DEFINE_RW_CTRL_ENUM_PROPERTY(KeyboardType, NativeControlInputKeyboardType, MCiOSInputControl, KeyboardType)
-    DEFINE_RW_CTRL_ENUM_PROPERTY(KeyboardStyle, NativeControlInputKeyboardStyle, MCiOSInputControl, KeyboardStyle)
-    DEFINE_RW_CTRL_ENUM_PROPERTY(ReturnKeyType, NativeControlInputReturnKeyType, MCiOSInputControl, ReturnKey)
-    DEFINE_RW_CTRL_ENUM_PROPERTY(ContentType, NativeControlInputContentType, MCiOSInputControl, ContentType)
+    DEFINE_RW_CTRL_PROPERTY(P_ENABLED, Bool, MCiOSInputControl, Enabled)
+    DEFINE_RW_CTRL_PROPERTY(P_TEXT, String, MCiOSInputControl, Text)
+    DEFINE_RW_CTRL_PROPERTY(P_UNICODE_TEXT, String, MCiOSInputControl, Text)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(P_TEXT_COLOR, NativeControlColor, MCiOSInputControl, TextColor)
+    DEFINE_RW_CTRL_PROPERTY(P_FONT_SIZE, UInt32, MCiOSInputControl, FontSize)
+    DEFINE_RW_CTRL_PROPERTY(P_FONT_NAME, String, MCiOSInputControl, FontName)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_TEXT_ALIGN, NativeControlInputTextAlign, MCiOSInputControl, TextAlign)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_AUTO_CAPITALIZATION_TYPE, NativeControlInputCapitalizationType, MCiOSInputControl, AutoCapitalizationType)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_AUTOCORRECTION_TYPE, NativeControlInputAutocorrectionType, MCiOSInputControl, AutoCorrectionType)
+    DEFINE_RW_CTRL_PROPERTY(P_MANAGE_RETURN_KEY, Bool, MCiOSInputControl, ManageReturnKey)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_KEYBOARD_TYPE, NativeControlInputKeyboardType, MCiOSInputControl, KeyboardType)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_KEYBOARD_STYLE, NativeControlInputKeyboardStyle, MCiOSInputControl, KeyboardStyle)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_RETURN_KEY_TYPE, NativeControlInputReturnKeyType, MCiOSInputControl, ReturnKey)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_CONTENT_TYPE, NativeControlInputContentType, MCiOSInputControl, ContentType)
 };
 
-MCNativeControlPropertyTable MCiOSInputControl::kPropertyTable =
+MCObjectPropertyTable MCiOSInputControl::kPropertyTable =
 {
 	&MCiOSControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
@@ -451,16 +451,16 @@ MCNativeControlActionTable MCiOSInputControl::kActionTable =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeControlPropertyInfo MCiOSInputFieldControl::kProperties[] =
+MCPropertyInfo MCiOSInputFieldControl::kProperties[] =
 {
-    DEFINE_RW_CTRL_PROPERTY(AutoFit, Bool, MCiOSInputFieldControl, AutoFit)
-    DEFINE_RW_CTRL_PROPERTY(MinimumFontSize, Int32, MCiOSInputFieldControl, MinimumFontSize)
-    DEFINE_RW_CTRL_PROPERTY(AutoClear, Bool, MCiOSInputFieldControl, AutoClear)
-    DEFINE_RW_CTRL_ENUM_PROPERTY(ClearButtonMode, NativeControlClearButtonMode, MCiOSInputFieldControl, ClearButtonMode)
-    DEFINE_RW_CTRL_ENUM_PROPERTY(BorderStyle, NativeControlBorderStyle, MCiOSInputFieldControl, BorderStyle)
+    DEFINE_RW_CTRL_PROPERTY(P_AUTO_FIT, Bool, MCiOSInputFieldControl, AutoFit)
+    DEFINE_RW_CTRL_PROPERTY(P_MINIMUM_FONT_SIZE, Int32, MCiOSInputFieldControl, MinimumFontSize)
+    DEFINE_RW_CTRL_PROPERTY(P_AUTO_CLEAR, Bool, MCiOSInputFieldControl, AutoClear)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_CLEAR_BUTTON_MODE, NativeControlClearButtonMode, MCiOSInputFieldControl, ClearButtonMode)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_BORDER_STYLE, NativeControlBorderStyle, MCiOSInputFieldControl, BorderStyle)
 };
 
-MCNativeControlPropertyTable MCiOSInputFieldControl::kPropertyTable =
+MCObjectPropertyTable MCiOSInputFieldControl::kPropertyTable =
 {
 	&MCiOSInputControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
@@ -482,33 +482,33 @@ MCNativeControlActionTable MCiOSInputFieldControl::kActionTable =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeControlPropertyInfo MCiOSMultiLineControl::kProperties[] =
+MCPropertyInfo MCiOSMultiLineControl::kProperties[] =
 {
-    DEFINE_RW_CTRL_PROPERTY(Editable, Bool, MCiOSMultiLineControl, Editable)
-    DEFINE_RW_CTRL_SET_PROPERTY(DataDetectorTypes, NativeControlInputDataDetectorType, MCiOSMultiLineControl, DataDetectorTypes)
-    DEFINE_RW_CTRL_CUSTOM_PROPERTY(SelectedRange, NativeControlRange, MCiOSMultiLineControl, SelectedRange)
-    DEFINE_RW_CTRL_ENUM_PROPERTY(VerticalTextAlign, NativeControlInputVerticalAlign, MCiOSMultiLineControl, VerticalTextAlign)
-    DEFINE_RW_CTRL_PROPERTY(ContentRectangle, Int32X4, MCiOSMultiLineControl, ContentRect)
-    DEFINE_RW_CTRL_PROPERTY(HScroll, Int32, MCiOSMultiLineControl, HScroll)
-    DEFINE_RW_CTRL_PROPERTY(VScroll, Int32, MCiOSMultiLineControl, VScroll)
-    DEFINE_RW_CTRL_PROPERTY(CanBounce, Bool, MCiOSMultiLineControl, CanBounce)
-    DEFINE_RW_CTRL_PROPERTY(CanScrollToTop, Bool, MCiOSMultiLineControl, CanScrollToTop)
-    DEFINE_RW_CTRL_PROPERTY(CanCancelTouches, Bool, MCiOSMultiLineControl, CanCancelTouches)
-    DEFINE_RW_CTRL_PROPERTY(DelayTouches, Bool, MCiOSMultiLineControl, DelayTouches)
-    DEFINE_RW_CTRL_PROPERTY(ScrollingEnabled, Bool, MCiOSMultiLineControl, ScrollingEnabled)
-    DEFINE_RW_CTRL_PROPERTY(PagingEnabled, Bool, MCiOSMultiLineControl, PagingEnabled)
-    DEFINE_RW_CTRL_CUSTOM_PROPERTY(DecelerationRate, NativeControlDecelerationRate, MCiOSMultiLineControl, DecelerationRate)
-    DEFINE_RW_CTRL_ENUM_PROPERTY(IndicatorStyle, NativeControlIndicatorStyle, MCiOSMultiLineControl, IndicatorStyle)
-    DEFINE_RW_CTRL_CUSTOM_PROPERTY(IndicatorInsets, NativeControlIndicatorInsets, MCiOSMultiLineControl, IndicatorInsets)
-    DEFINE_RW_CTRL_PROPERTY(ShowHorizontalIndicator, Bool, MCiOSMultiLineControl, ShowHorizontalIndicator)
-    DEFINE_RW_CTRL_PROPERTY(ShowVerticalIndicator, Bool, MCiOSMultiLineControl, ShowVerticalIndicator)
-    DEFINE_RW_CTRL_PROPERTY(LockDirection, Bool, MCiOSMultiLineControl, LockDirection)
-    DEFINE_RO_CTRL_PROPERTY(Tracking, Bool, MCiOSMultiLineControl, Tracking)
-    DEFINE_RO_CTRL_PROPERTY(Dragging, Bool, MCiOSMultiLineControl, Dragging)
-    DEFINE_RO_CTRL_PROPERTY(Decelerating, Bool, MCiOSMultiLineControl, Decelerating)
+    DEFINE_RW_CTRL_PROPERTY(P_EDITABLE, Bool, MCiOSMultiLineControl, Editable)
+    DEFINE_RW_CTRL_SET_PROPERTY(P_DATA_DETECTOR_TYPES, NativeControlInputDataDetectorType, MCiOSMultiLineControl, DataDetectorTypes)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(P_SELECTED_RANGE, NativeControlRange, MCiOSMultiLineControl, SelectedRange)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_VERTICAL_TEXT_ALIGN, NativeControlInputVerticalAlign, MCiOSMultiLineControl, VerticalTextAlign)
+    DEFINE_RW_CTRL_PROPERTY(P_CONTENT_RECT, Int32X4, MCiOSMultiLineControl, ContentRect)
+    DEFINE_RW_CTRL_PROPERTY(P_HSCROLL, Int32, MCiOSMultiLineControl, HScroll)
+    DEFINE_RW_CTRL_PROPERTY(P_VSCROLL, Int32, MCiOSMultiLineControl, VScroll)
+    DEFINE_RW_CTRL_PROPERTY(P_CAN_BOUNCE, Bool, MCiOSMultiLineControl, CanBounce)
+    DEFINE_RW_CTRL_PROPERTY(P_CAN_SCROLL_TO_TOP, Bool, MCiOSMultiLineControl, CanScrollToTop)
+    DEFINE_RW_CTRL_PROPERTY(P_CAN_CANCEL_TOUCHES, Bool, MCiOSMultiLineControl, CanCancelTouches)
+    DEFINE_RW_CTRL_PROPERTY(P_DELAY_TOUCHES, Bool, MCiOSMultiLineControl, DelayTouches)
+    DEFINE_RW_CTRL_PROPERTY(P_SCROLLING_ENABLED, Bool, MCiOSMultiLineControl, ScrollingEnabled)
+    DEFINE_RW_CTRL_PROPERTY(P_PAGING_ENABLED, Bool, MCiOSMultiLineControl, PagingEnabled)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(P_DECELERATION_RATE, NativeControlDecelerationRate, MCiOSMultiLineControl, DecelerationRate)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_INDICATOR_STYLE, NativeControlIndicatorStyle, MCiOSMultiLineControl, IndicatorStyle)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(P_INDICATOR_INSETS, NativeControlIndicatorInsets, MCiOSMultiLineControl, IndicatorInsets)
+    DEFINE_RW_CTRL_PROPERTY(P_SHOW_HORIZONTAL_INDICATOR, Bool, MCiOSMultiLineControl, ShowHorizontalIndicator)
+    DEFINE_RW_CTRL_PROPERTY(P_SHOW_VERTICAL_INDICATOR, Bool, MCiOSMultiLineControl, ShowVerticalIndicator)
+    DEFINE_RW_CTRL_PROPERTY(P_LOCK_DIRECTION, Bool, MCiOSMultiLineControl, LockDirection)
+    DEFINE_RO_CTRL_PROPERTY(P_TRACKING, Bool, MCiOSMultiLineControl, Tracking)
+    DEFINE_RO_CTRL_PROPERTY(P_DRAGGING, Bool, MCiOSMultiLineControl, Dragging)
+    DEFINE_RO_CTRL_PROPERTY(P_DECELERATING, Bool, MCiOSMultiLineControl, Decelerating)
 };
 
-MCNativeControlPropertyTable MCiOSMultiLineControl::kPropertyTable =
+MCObjectPropertyTable MCiOSMultiLineControl::kPropertyTable =
 {
 	&MCiOSInputControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
@@ -569,7 +569,7 @@ void MCiOSInputControl::SetText(MCExecContext& ctxt, MCStringRef p_string)
     if (t_field)
     {
         NSString *t_string;
-        t_string = [NSString stringWithCString: MCStringGetCString(p_string)];
+        t_string = [NSString stringWithMCStringRef: p_string];
         [t_field setText: t_string];
     }
 }
@@ -595,7 +595,7 @@ void MCiOSInputControl::SetFontName(MCExecContext& ctxt, MCStringRef p_font)
     if (t_field)
     {
         NSString *t_string;
-        t_string = [NSString stringWithCString: MCStringGetCString(p_font)];
+        t_string = [NSString stringWithMCStringRef: p_font];
         [t_field setFont: [UIFont fontWithName: t_string size: [[t_field font] pointSize]]];
     }
 }
@@ -1674,7 +1674,7 @@ void MCiOSMultiLineControl::SetVerticalTextAlign(MCExecContext& ctxt, MCNativeCo
     }
 }
 
-void MCiOSMultiLineControl::SetContentRect(MCExecContext& ctxt, MCRectangle32 p_rect)
+void MCiOSMultiLineControl::SetContentRect(MCExecContext& ctxt, integer_t p_rect[4])
 {
     // ES_NOT_HANDLED
 }
@@ -1750,11 +1750,16 @@ void MCiOSMultiLineControl::GetVerticalTextAlign(MCExecContext& ctxt, MCNativeCo
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCiOSMultiLineControl::GetContentRect(MCExecContext& ctxt, MCRectangle32& r_rect)
+void MCiOSMultiLineControl::GetContentRect(MCExecContext& ctxt, integer_t r_rect[4])
 {
     UpdateContentRect();
     if (GetView())
-        r_rect = m_content_rect;
+    {
+        r_rect[0] = m_content_rect . x;
+        r_rect[1] = m_content_rect . y;
+        r_rect[2] = m_content_rect . x + m_content_rect . width;
+        r_rect[3] = m_content_rect . y + m_content_rect . height;
+    }
 }
 
 void MCiOSMultiLineControl::SetHScroll(MCExecContext& ctxt, integer_t p_scroll)

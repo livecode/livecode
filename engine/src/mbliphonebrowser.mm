@@ -68,8 +68,8 @@ class MCiOSBrowserControl;
 class MCiOSBrowserControl: public MCiOSControl
 {
 protected:
-	static MCNativeControlPropertyInfo kProperties[];
-	static MCNativeControlPropertyTable kPropertyTable;
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
     static MCNativeControlActionInfo kActions[];
 	static MCNativeControlActionTable kActionTable;
     
@@ -83,7 +83,7 @@ public:
 	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);	
 #endif
     
-    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     void SetUrl(MCExecContext& ctxt, MCStringRef p_url);
@@ -137,21 +137,21 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeControlPropertyInfo MCiOSBrowserControl::kProperties[] =
+MCPropertyInfo MCiOSBrowserControl::kProperties[] =
 {
-    DEFINE_RW_CTRL_PROPERTY(Url, String, MCiOSBrowserControl, Url)
-    DEFINE_RW_CTRL_PROPERTY(AutoFit, Bool, MCiOSBrowserControl, AutoFit)
-    DEFINE_RW_CTRL_PROPERTY(DelayRequests, Bool, MCiOSBrowserControl, DelayRequests)
-    DEFINE_RW_CTRL_SET_PROPERTY(DataDetectorTypes, NativeControlInputDataDetectorType, MCiOSBrowserControl, DataDetectorTypes)
-    DEFINE_RW_CTRL_PROPERTY(AllowsInlineMediaPlayback, Bool, MCiOSBrowserControl, AllowsInlineMediaPlayback)
-    DEFINE_RW_CTRL_PROPERTY(MediaPlaybackRequiresUserAction, Bool, MCiOSBrowserControl, MediaPlaybackRequiresUserAction)
-    DEFINE_RW_CTRL_PROPERTY(CanBounce, Bool, MCiOSBrowserControl, CanBounce)
-    DEFINE_RW_CTRL_PROPERTY(ScrollingEnabled, Bool, MCiOSBrowserControl, ScrollingEnabled)
-    DEFINE_RO_CTRL_PROPERTY(CanAdvance, Bool, MCiOSBrowserControl, CanAdvance)
-    DEFINE_RO_CTRL_PROPERTY(CanRetreat, Bool, MCiOSBrowserControl, CanRetreat)
+    DEFINE_RW_CTRL_PROPERTY(P_URL, String, MCiOSBrowserControl, Url)
+    DEFINE_RW_CTRL_PROPERTY(P_AUTO_FIT, Bool, MCiOSBrowserControl, AutoFit)
+    DEFINE_RW_CTRL_PROPERTY(P_DELAY_REQUESTS, Bool, MCiOSBrowserControl, DelayRequests)
+    DEFINE_RW_CTRL_SET_PROPERTY(P_DATA_DETECTOR_TYPES, NativeControlInputDataDetectorType, MCiOSBrowserControl, DataDetectorTypes)
+    DEFINE_RW_CTRL_PROPERTY(P_ALLOWS_INLINE_MEDIA_PLAYBACK, Bool, MCiOSBrowserControl, AllowsInlineMediaPlayback)
+    DEFINE_RW_CTRL_PROPERTY(P_MEDIA_PLAYBACK_REQUIRES_USER_ACTION, Bool, MCiOSBrowserControl, MediaPlaybackRequiresUserAction)
+    DEFINE_RW_CTRL_PROPERTY(P_CAN_BOUNCE, Bool, MCiOSBrowserControl, CanBounce)
+    DEFINE_RW_CTRL_PROPERTY(P_SCROLLING_ENABLED, Bool, MCiOSBrowserControl, ScrollingEnabled)
+    DEFINE_RO_CTRL_PROPERTY(P_CAN_ADVANCE, Bool, MCiOSBrowserControl, CanAdvance)
+    DEFINE_RO_CTRL_PROPERTY(P_CAN_RETREAT, Bool, MCiOSBrowserControl, CanRetreat)
 };
 
-MCNativeControlPropertyTable MCiOSBrowserControl::kPropertyTable =
+MCObjectPropertyTable MCiOSBrowserControl::kPropertyTable =
 {
 	&MCiOSControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
@@ -205,7 +205,7 @@ void MCiOSBrowserControl::SetUrl(MCExecContext& ctxt, MCStringRef p_url)
     if (t_view != nil)
     {
         [m_delegate setPendingRequest: true];
-        [t_view loadRequest: [NSURLRequest requestWithURL: [NSURL URLWithString: [NSString stringWithCString: MCStringGetCString(p_url) encoding: NSMacOSRomanStringEncoding]]]];
+        [t_view loadRequest: [NSURLRequest requestWithURL: [NSURL URLWithString: [NSString stringWithMCStringRef: p_url]]]];
     }
 }
 
@@ -652,7 +652,7 @@ void MCiOSBrowserControl::ExecExecute(MCExecContext& ctxt, MCStringRef p_script)
 	t_view = (UIWebView *)GetView();
     
     NSString *t_result;
-    t_result = [t_view stringByEvaluatingJavaScriptFromString: [NSString stringWithCString: MCStringGetCString(p_script) encoding: NSMacOSRomanStringEncoding]];
+    t_result = [t_view stringByEvaluatingJavaScriptFromString: [NSString stringWithMCStringRef: p_script]];
     
     if (t_result == nil)
     {
@@ -674,7 +674,7 @@ void MCiOSBrowserControl::ExecLoad(MCExecContext& ctxt, MCStringRef p_url, MCStr
     // MW-2012-10-01: [[ Bug 10422 ]] Make sure we mark a pending request so the
     //   HTML loading doesn't divert through a loadRequested message.
     [m_delegate setPendingRequest: true];
-    [t_view loadHTMLString: [NSString stringWithCString: MCStringGetCString(p_html) encoding: NSMacOSRomanStringEncoding] baseURL: [NSURL URLWithString: [NSString stringWithCString: MCStringGetCString(p_url) encoding: NSMacOSRomanStringEncoding]]];
+    [t_view loadHTMLString: [NSString stringWithMCStringRef: p_html] baseURL: [NSURL URLWithString: [NSString stringWithMCStringRef: p_url]]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

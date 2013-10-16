@@ -40,7 +40,6 @@ public:
 
 	// Evaluate the exoression as a value, and place its value into ep.
 	virtual Exec_stat eval(MCExecPoint &ep);
-
 	// Compile the syntax into the (new) tree for use by the new evaluator.
 	virtual void compile(MCSyntaxFactoryRef);
 	virtual void compile_out(MCSyntaxFactoryRef);

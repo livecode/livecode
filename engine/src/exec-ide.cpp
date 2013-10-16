@@ -53,20 +53,20 @@ void MCIdeExecEditScriptOfObject(MCExecContext &ctxt, MCObject *p_object)
 
 void MCIdeExecPutIntoMessage(MCExecContext& ctxt, MCStringRef p_value, int p_where)
 {
-	if (!MCS_put(ctxt . GetEP(), p_where == PT_INTO ? kMCSPutIntoMessage : (p_where == PT_BEFORE ? kMCSPutBeforeMessage : kMCSPutAfterMessage), p_value))
+	if (!MCS_put(ctxt, p_where == PT_INTO ? kMCSPutIntoMessage : (p_where == PT_BEFORE ? kMCSPutBeforeMessage : kMCSPutAfterMessage), p_value))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
 void MCIdeExecHideMessageBox(MCExecContext& ctxt)
 {
-	MCStack *mb = ctxt . GetObject()->getstack()->findstackname_oldstring(MCmessagenamestring);
+	MCStack *mb = ctxt . GetObject()->getstack()->findstackname(MCN_messagename);
 	if (mb != NULL)
 		mb->close();
 }
 
 void MCIdeExecShowMessageBox(MCExecContext& ctxt)
 {
-	MCStack *mb = ctxt . GetObject()->getstack()->findstackname_oldstring(MCmessagenamestring);
+	MCStack *mb = ctxt . GetObject()->getstack()->findstackname(MCN_messagename);
 
 	// MW-2007-08-14: [[ Bug 3310 ]] - "show message box" toplevels rather than palettes
 	if (mb != NULL)

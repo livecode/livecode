@@ -38,31 +38,31 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-bool MCPurchaseGetProductIdentifier(MCPurchase *p_purchase, MCStringRef& r_productIdentifier);
-bool MCPurchaseGetQuantity(MCPurchase *p_purchase, uinteger_t& r_quantity);
-bool MCPurchaseGetPurchaseDate(MCPurchase *p_purchase, integer_t& r_date);
-bool MCPurchaseGetTransactionIdentifier(MCPurchase *p_purchase, MCStringRef& r_identifier);
-bool MCPurchaseGetReceipt(MCPurchase *p_purchase, MCDataRef& r_receipt);
-bool MCPurchaseGetOriginalTransactionIdentifier(MCPurchase *p_purchase, MCStringRef& r_identifier);
-bool MCPurchaseGetOriginalPurchaseDate(MCPurchase *p_purchase, integer_t& r_date);
-bool MCPurchaseGetOriginalReceipt(MCPurchase *p_purchase, MCDataRef& r_receipt);
+void MCPurchaseGetProductIdentifier(MCExecContext& ctxt,MCPurchase *p_purchase, MCStringRef& r_productIdentifier);
+void MCPurchaseGetQuantity(MCExecContext& ctxt,MCPurchase *p_purchase, uinteger_t& r_quantity);
+void MCPurchaseGetPurchaseDate(MCExecContext& ctxt,MCPurchase *p_purchase, integer_t& r_date);
+void MCPurchaseGetTransactionIdentifier(MCExecContext& ctxt,MCPurchase *p_purchase, MCStringRef& r_identifier);
+void MCPurchaseGetReceipt(MCExecContext& ctxt,MCPurchase *p_purchase, MCDataRef& r_receipt);
+void MCPurchaseGetOriginalTransactionIdentifier(MCExecContext& ctxt,MCPurchase *p_purchase, MCStringRef& r_identifier);
+void MCPurchaseGetOriginalPurchaseDate(MCExecContext& ctxt,MCPurchase *p_purchase, integer_t& r_date);
+void MCPurchaseGetOriginalReceipt(MCExecContext& ctxt,MCPurchase *p_purchase, MCDataRef& r_receipt);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-bool MCPurchaseSetQuantity(MCPurchase *p_purchase, integer_t p_quantity);
+void MCPurchaseSetQuantity(MCExecContext& ctxt, MCPurchase *p_purchase, uinteger_t p_quantity);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-static MCPurchasePropertyInfo kProperties[] =
+static MCPropertyInfo kProperties[] =
 {
-        DEFINE_RO_PROPERTY(kMCPurchasePropertyProductIdentifier, String, Purchase, ProductIdentifier)
-        DEFINE_RW_PROPERTY(kMCPurchasePropertyQuantity, UInt32, Purchase, Quantity)
-        DEFINE_RO_PROPERTY(kMCPurchasePropertyPurchaseDate, Int32, Purchase, PurchaseDate)
-        DEFINE_RO_PROPERTY(kMCPurchasePropertyTransactionIdentifier, String, Purchase, TransactionIdentifier)
-        DEFINE_RO_PROPERTY(kMCPurchasePropertyReceipt, BinaryString, Purchase, Receipt)
-        DEFINE_RO_PROPERTY(kMCPurchasePropertyOriginalPurchaseDate, Int32, Purchase, OriginalPurchaseDate)
-        DEFINE_RO_PROPERTY(kMCPurchasePropertyOriginalTransactionIdentifier, String, Purchase, OriginalTransactionIdentifier)
-        DEFINE_RO_PROPERTY(kMCPurchasePropertyOriginalReceipt, BinaryString, Purchase, OriginalReceipt)
+    DEFINE_RO_STORE_PROPERTY(P_PRODUCT_IDENTIFIER, String, Purchase, ProductIdentifier)
+    DEFINE_RW_STORE_PROPERTY(P_PURCHASE_QUANTITY, UInt32, Purchase, Quantity)
+    DEFINE_RO_STORE_PROPERTY(P_PURCHASE_DATE, Int32, Purchase, PurchaseDate)
+    DEFINE_RO_STORE_PROPERTY(P_TRANSACTION_IDENTIFIER, String, Purchase, TransactionIdentifier)
+    DEFINE_RO_STORE_PROPERTY(P_RECEIPT, BinaryString, Purchase, Receipt)
+    DEFINE_RO_STORE_PROPERTY(P_ORIGINAL_PURCHASE_DATE, Int32, Purchase, OriginalPurchaseDate)
+    DEFINE_RO_STORE_PROPERTY(P_ORIGINAL_TRANSACTION_IDENTIFIER, String, Purchase, OriginalTransactionIdentifier)
+    DEFINE_RO_STORE_PROPERTY(P_ORIGINAL_RECEIPT, BinaryString, Purchase, OriginalReceipt)
 };
 
 static MCPurchasePropertyTable kPropertyTable =
@@ -120,7 +120,7 @@ bool MCPurchaseInit(MCPurchase *p_purchase, MCStringRef p_product_id, void *p_co
 			t_success = MCMemoryNew(t_ios_data);
 		
 		if (t_success)
-			t_success = nil != (t_ios_data->product_id = [NSString stringWithCString:MCStringGetCString(p_product_id) encoding:NSMacOSRomanStringEncoding]);
+			t_success = nil != (t_ios_data->product_id = [NSString stringWithMCStringRef: p_product_id]);
 		if (t_success)
 			t_success = nil != (t_ios_data->payment = [SKMutablePayment paymentWithProductIdentifier: t_ios_data->product_id]);
 		
@@ -246,7 +246,7 @@ Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, M
 }
 #endif /* MCPurchaseGet */
 
-bool MCPurchaseGetProductIdentifier(MCPurchase *p_purchase, MCStringRef& r_productIdentifier)
+void MCPurchaseGetProductIdentifier(MCExecContext& ctxt, MCPurchase *p_purchase, MCStringRef& r_productIdentifier)
 {
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
     
@@ -258,13 +258,13 @@ bool MCPurchaseGetProductIdentifier(MCPurchase *p_purchase, MCStringRef& r_produ
 	else
 		t_payment = t_ios_data->payment;
     
-    if (t_payment == nil)
-        return false;
+    if (t_payment != nil && MCStringCreateWithCString([[t_payment productIdentifier] cStringUsingEncoding: NSMacOSRomanStringEncoding], r_productIdentifier))
+        return;
     
-    return MCStringCreateWithCString([[t_payment productIdentifier] cStringUsingEncoding: NSMacOSRomanStringEncoding], r_productIdentifier);
+    ctxt . Throw();
 }
 
-bool MCPurchaseGetQuantity(MCPurchase *p_purchase, uinteger_t& r_quantity)
+void MCPurchaseGetQuantity(MCExecContext& ctxt, MCPurchase *p_purchase, uinteger_t& r_quantity)
 {
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
     
@@ -276,14 +276,16 @@ bool MCPurchaseGetQuantity(MCPurchase *p_purchase, uinteger_t& r_quantity)
 	else
 		t_payment = t_ios_data->payment;
     
-    if (t_payment == nil)
-        return false;
+    if (t_payment != nil)
+    {
+        r_quantity = [t_payment quantity];
+        return;
+    }
     
-    r_quantity = [t_payment quantity];
-    return true;
+    ctxt . Throw();
 }
 
-bool MCPurchaseGetPurchaseDate(MCPurchase *p_purchase, integer_t& r_date)
+void MCPurchaseGetPurchaseDate(MCExecContext& ctxt, MCPurchase *p_purchase, integer_t& r_date)
 {
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
     
@@ -298,14 +300,16 @@ bool MCPurchaseGetPurchaseDate(MCPurchase *p_purchase, integer_t& r_date)
 	else
 		t_payment = t_ios_data->payment;
     
-    if (t_transaction == nil)
-        return false;
+    if (t_transaction != nil)
+    {
+        r_date = [[t_transaction transactionDate] timeIntervalSince1970];
+        return;
+    }
     
-    r_date = [[t_transaction transactionDate] timeIntervalSince1970];
-    return true;
+    ctxt . Throw();
 }
 // iOS
-bool MCPurchaseGetTransactionIdentifier(MCPurchase *p_purchase, MCStringRef& r_identifier)
+void MCPurchaseGetTransactionIdentifier(MCExecContext& ctxt, MCPurchase *p_purchase, MCStringRef& r_identifier)
 {
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
     
@@ -320,13 +324,13 @@ bool MCPurchaseGetTransactionIdentifier(MCPurchase *p_purchase, MCStringRef& r_i
 	else
 		t_payment = t_ios_data->payment;
     
-    if (t_transaction == nil)
-        return false;
+    if (t_transaction != nil && MCStringCreateWithCString([[t_transaction transactionIdentifier] cStringUsingEncoding:NSMacOSRomanStringEncoding], r_identifier))
+        return;
     
-    return MCStringCreateWithCString([[t_transaction transactionIdentifier] cStringUsingEncoding:NSMacOSRomanStringEncoding], r_identifier);
+    ctxt . Throw();
 }
 
-bool MCPurchaseGetReceipt(MCPurchase *p_purchase, MCDataRef& r_receipt)
+void MCPurchaseGetReceipt(MCExecContext& ctxt, MCPurchase *p_purchase, MCDataRef& r_receipt)
 {
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
     
@@ -341,14 +345,17 @@ bool MCPurchaseGetReceipt(MCPurchase *p_purchase, MCDataRef& r_receipt)
 	else
 		t_payment = t_ios_data->payment;
     
-    if (t_transaction == nil)
-        return false;
+    if (t_transaction != nil)
+    {
+        NSData *t_bytes = [t_transaction transactionReceipt];
+        MCDataCreateWithBytes((const byte_t*)[t_bytes bytes], [t_bytes length], r_receipt);
+        return;
+    }
     
-    NSData *t_bytes = [t_transaction transactionReceipt];
-    return MCDataCreateWithBytes((const byte_t*)[t_bytes bytes], [t_bytes length], r_receipt);
+    ctxt . Throw();
 }
 
-bool MCPurchaseGetOriginalTransactionIdentifier(MCPurchase *p_purchase, MCStringRef& r_identifier)
+void MCPurchaseGetOriginalTransactionIdentifier(MCExecContext& ctxt, MCPurchase *p_purchase, MCStringRef& r_identifier)
 {
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
     
@@ -361,13 +368,13 @@ bool MCPurchaseGetOriginalTransactionIdentifier(MCPurchase *p_purchase, MCString
 		t_original_transaction = [t_transaction originalTransaction];
 	}
     
-    if (t_original_transaction == nil)
-        return false;
+    if (t_original_transaction != nil && MCStringCreateWithCString([[t_original_transaction transactionIdentifier] cStringUsingEncoding:NSMacOSRomanStringEncoding], r_identifier))
+        return;
     
-    return MCStringCreateWithCString([[t_original_transaction transactionIdentifier] cStringUsingEncoding:NSMacOSRomanStringEncoding], r_identifier);
+    ctxt . Throw();
 }
 
-bool MCPurchaseGetOriginalPurchaseDate(MCPurchase *p_purchase, integer_t& r_date)
+void MCPurchaseGetOriginalPurchaseDate(MCExecContext& ctxt, MCPurchase *p_purchase, integer_t& r_date)
 {
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
     \
@@ -380,14 +387,16 @@ bool MCPurchaseGetOriginalPurchaseDate(MCPurchase *p_purchase, integer_t& r_date
 		t_original_transaction = [t_transaction originalTransaction];
 	}
     
-    if (t_original_transaction == nil)
-        return false;
+    if (t_original_transaction != nil)
+    {
+        r_date = [[t_original_transaction transactionDate] timeIntervalSince1970];
+        return;
+    }
     
-    r_date = [[t_original_transaction transactionDate] timeIntervalSince1970];
-    return true;
+    ctxt . Throw();
 }
 
-bool MCPurchaseGetOriginalReceipt(MCPurchase *p_purchase, MCDataRef& r_receipt)
+void MCPurchaseGetOriginalReceipt(MCExecContext& ctxt, MCPurchase *p_purchase, MCDataRef& r_receipt)
 {
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
     
@@ -400,11 +409,14 @@ bool MCPurchaseGetOriginalReceipt(MCPurchase *p_purchase, MCDataRef& r_receipt)
 		t_original_transaction = [t_transaction originalTransaction];
 	}
     
-    if (t_original_transaction == nil)
-        return false;
+    if (t_original_transaction != nil)
+    {
+        NSData *t_bytes = [t_original_transaction transactionReceipt];
+        MCDataCreateWithBytes((const byte_t*)[t_bytes bytes], [t_bytes length], r_receipt);
+        return;
+    }
     
-    NSData *t_bytes = [t_original_transaction transactionReceipt];
-    return MCDataCreateWithBytes((const byte_t*)[t_bytes bytes], [t_bytes length], r_receipt);
+    ctxt . Throw();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -430,15 +442,14 @@ Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, u
 }
 #endif /* MCPurchaseSet */
 
-bool MCPurchaseSetQuantity(MCPurchase *p_purchase, integer_t p_quantity)
+void MCPurchaseSetQuantity(MCExecContext& ctxt, MCPurchase *p_purchase, uinteger_t p_quantity)
 {
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
     
     if (t_ios_data->payment == nil)
-        return false;
+        return;
     
     [t_ios_data->payment setQuantity: p_quantity];
-    return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -728,7 +739,7 @@ bool MCStoreRequestProductDetails(MCStringRef p_product_id)
     
     NSString *t_product_id = nil;
     
-    t_product_id = [NSString stringWithCString:MCStringGetCString(p_product_id) encoding:NSMacOSRomanStringEncoding];
+    t_product_id = [NSString stringWithMCStringRef: p_product_id];
     t_request = [[MCProductsRequest alloc] initWithProductId: t_product_id];
     
     [t_request setDelegate: [[MCProductsRequestDelegate alloc] init]];
