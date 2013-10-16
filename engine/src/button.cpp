@@ -4168,7 +4168,7 @@ IO_stat MCButton::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return t_stat;
 }
 
-IO_stat MCButton::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
+IO_stat MCButton::extendedload(MCObjectInputStream& p_stream, MCStringRef p_version, uint4 p_remaining)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -4294,7 +4294,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return IO_NORMAL;
 }
 
-IO_stat MCButton::load(IO_handle stream, const char *version)
+IO_stat MCButton::load(IO_handle stream, MCStringRef version)
 {
 	IO_stat stat;
 

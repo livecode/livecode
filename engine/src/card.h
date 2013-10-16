@@ -102,13 +102,13 @@ public:
 	MCObject *hittest(int32_t x, int32_t y);
 	
 	// MCCard functions
-	IO_stat load(IO_handle stream, const char *version);
-	IO_stat extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length);
+	IO_stat load(IO_handle stream, MCStringRef version);
+	IO_stat extendedload(MCObjectInputStream& p_stream, MCStringRef p_version, uint4 p_length);
 	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
 	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
 
 	IO_stat saveobjects(IO_handle stream, uint4 p_part);
-	IO_stat loadobjects(IO_handle stream, const char *version);
+	IO_stat loadobjects(IO_handle stream, MCStringRef version);
 
 	void kfocusset(MCControl *target);
 	MCCard *clone(Boolean attach, Boolean controls);

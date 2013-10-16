@@ -475,9 +475,10 @@ Boolean MCDispatch::openenv(MCStringRef sname, MCStringRef env,
 	return t_found;
 }
 
-IO_stat readheader(IO_handle& stream, char *version)
+IO_stat readheader(IO_handle& stream, MCStringRef& r_version)
 {
 	char tnewheader[NEWHEADERSIZE];
+	char *version;
 	if (IO_read(tnewheader, NEWHEADERSIZE, stream) == IO_NORMAL)
 	{
 		// MW-2012-03-04: [[ StackFile5500 ]] Check for either the 2.7 or 5.5 header.
@@ -512,7 +513,9 @@ IO_stat readheader(IO_handle& stream, char *version)
 			}
 			else
 				return IO_ERROR;
+
 		}
+		/* UNCHECKED */ MCStringCreateWithCString(version, r_version);
 	}
 	return IO_NORMAL;
 }
@@ -522,7 +525,7 @@ IO_stat readheader(IO_handle& stream, char *version)
 // for embedded stacks/deployed stacks/revlet stacks.
 IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 {
-	char version[8];
+	MCStringRef version;
 	uint1 charset, type;
 	char *newsf;
 	if (readheader(stream, version) != IO_NORMAL
@@ -603,7 +606,7 @@ IO_stat MCDispatch::readfile(MCStringRef p_openpath, MCStringRef p_name, IO_hand
 IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_handle &stream, MCStack *&sptr)
 {
 	Boolean loadhome = False;
-	char version[8];
+	MCStringRef version;
 
 	if (readheader(stream, version) == IO_NORMAL)
 	{

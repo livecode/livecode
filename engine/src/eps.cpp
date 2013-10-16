@@ -430,7 +430,7 @@ IO_stat MCEPS::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return defaultextendedsave(p_stream, p_part);
 }
 
-IO_stat MCEPS::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length)
+IO_stat MCEPS::extendedload(MCObjectInputStream& p_stream, MCStringRef p_version, uint4 p_length)
 {
 	return defaultextendedload(p_stream, p_version, p_length);
 }
@@ -560,7 +560,7 @@ void MCEPS::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_spr
 		drawselected(dc);
 }
 
-IO_stat MCEPS::load(IO_handle stream, const char *version)
+IO_stat MCEPS::load(IO_handle stream, MCStringRef version)
 {
 	IO_stat stat;
 

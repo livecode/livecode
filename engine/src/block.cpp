@@ -118,7 +118,7 @@ bool MCBlock::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_vi
 
 // MW-2012-03-04: [[ StackFile5500 ]] If 'is_ext' is true then the record is an extended
 //   record.
-IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
+IO_stat MCBlock::load(IO_handle stream, MCStringRef version, bool is_ext)
 {
 	IO_stat stat;
 

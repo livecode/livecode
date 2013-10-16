@@ -1168,7 +1168,7 @@ IO_stat MCPlayer::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return defaultextendedsave(p_stream, p_part);
 }
 
-IO_stat MCPlayer::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
+IO_stat MCPlayer::extendedload(MCObjectInputStream& p_stream, MCStringRef p_version, uint4 p_remaining)
 {
 	return defaultextendedload(p_stream, p_version, p_remaining);
 }
@@ -1197,7 +1197,7 @@ IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return savepropsets(stream);
 }
 
-IO_stat MCPlayer::load(IO_handle stream, const char *version)
+IO_stat MCPlayer::load(IO_handle stream, MCStringRef version)
 {
 	IO_stat stat;
 

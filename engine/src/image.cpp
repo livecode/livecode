@@ -1536,7 +1536,7 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return t_stat;
 }
 
-IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
+IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, MCStringRef p_version, uint4 p_remaining)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -1766,7 +1766,7 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return savepropsets(stream);
 }
 
-IO_stat MCImage::load(IO_handle stream, const char *version)
+IO_stat MCImage::load(IO_handle stream, MCStringRef version)
 {
 	IO_stat stat;
 

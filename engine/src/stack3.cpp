@@ -63,7 +63,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define STACK_EXTRA_ORIGININFO (1U << 0)
 
-IO_stat MCStack::load_substacks(IO_handle stream, const char *version)
+IO_stat MCStack::load_substacks(IO_handle stream, MCStringRef version)
 {
 	IO_stat stat;
 
@@ -100,7 +100,7 @@ IO_stat MCStack::load_substacks(IO_handle stream, const char *version)
 	return IO_NORMAL;
 }
 
-IO_stat MCStack::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
+IO_stat MCStack::extendedload(MCObjectInputStream& p_stream, MCStringRef p_version, uint4 p_remaining)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -132,7 +132,7 @@ IO_stat MCStack::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 	return t_stat;
 }
 
-IO_stat MCStack::load(IO_handle stream, const char *version, uint1 type)
+IO_stat MCStack::load(IO_handle stream, MCStringRef version, uint1 type)
 {
 	IO_stat stat;
 
@@ -151,7 +151,7 @@ IO_stat MCStack::load(IO_handle stream, const char *version, uint1 type)
 	return stat;
 }
 
-IO_stat MCStack::load_stack(IO_handle stream, const char *version)
+IO_stat MCStack::load_stack(IO_handle stream, MCStringRef version)
 {
 	IO_stat stat;
 	

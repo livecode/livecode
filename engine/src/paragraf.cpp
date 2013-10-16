@@ -198,7 +198,7 @@ bool MCParagraph::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* 
 }
 
 // **** mutate blocks
-IO_stat MCParagraph::load(IO_handle stream, const char *version, bool is_ext)
+IO_stat MCParagraph::load(IO_handle stream, MCStringRef version, bool is_ext)
 {
 	IO_stat stat;
 	uint1 type;

@@ -3181,7 +3181,7 @@ void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
 //  SAVING AND LOADING
 //
 
-IO_stat MCCard::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length)
+IO_stat MCCard::extendedload(MCObjectInputStream& p_stream, MCStringRef p_version, uint4 p_length)
 {
 	return defaultextendedload(p_stream, p_version, p_length);
 }
@@ -3191,7 +3191,7 @@ IO_stat MCCard::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return defaultextendedsave(p_stream, p_part);
 }
 
-IO_stat MCCard::load(IO_handle stream, const char *version)
+IO_stat MCCard::load(IO_handle stream, MCStringRef version)
 {
 	IO_stat stat;
 
@@ -3236,7 +3236,7 @@ IO_stat MCCard::load(IO_handle stream, const char *version)
 	return IO_NORMAL;
 }
 
-IO_stat MCCard::loadobjects(IO_handle stream, const char *version)
+IO_stat MCCard::loadobjects(IO_handle stream, MCStringRef version)
 {
 	IO_stat stat;
 	

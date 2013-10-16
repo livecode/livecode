@@ -83,7 +83,7 @@ MCCdata::~MCCdata()
 	}
 }
 
-IO_stat MCCdata::load(IO_handle stream, MCObject *parent, const char *version)
+IO_stat MCCdata::load(IO_handle stream, MCObject *parent, MCStringRef version)
 {
 	IO_stat stat;
 
