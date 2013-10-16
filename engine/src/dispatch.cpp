@@ -582,10 +582,16 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 
 // MW-2012-02-17: [[ LogFonts ]] Load a stack file, ensuring we clear up any
 //   font table afterwards - regardless of errors.
-IO_stat MCDispatch::readfile(const char *openpath, const char *inname, IO_handle &stream, MCStack *&sptr)
+IO_stat MCDispatch::readfile(MCStringRef p_openpath, MCStringRef p_name, IO_handle &stream, MCStack *&sptr)
 {
+	// Various places like to call this function with the first two parameters as NULL
+	if (p_openpath == nil)
+		p_openpath = kMCEmptyString;
+	if (p_name == nil)
+		p_name = kMCEmptyString;
+	
 	IO_stat stat;
-	stat = doreadfile(openpath, inname, stream, sptr);
+	stat = doreadfile(p_openpath, p_name, stream, sptr);
 
 	MCLogicalFontTableFinish();
 
@@ -594,7 +600,7 @@ IO_stat MCDispatch::readfile(const char *openpath, const char *inname, IO_handle
 
 // MW-2012-02-17: [[ LogFonts ]] Actually load the stack file (wrapped by readfile
 //   to handle font table cleanup).
-IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_handle &stream, MCStack *&sptr)
+IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_handle &stream, MCStack *&sptr)
 {
 	Boolean loadhome = False;
 	char version[8];
@@ -629,9 +635,7 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 		else
 			sptr->setparent(stacks);
 			
-		MCAutoStringRef t_openpath;
-		/* UNCHECKED */ MCStringCreateWithCString(openpath, &t_openpath);
-		sptr->setfilename(*t_openpath);
+		sptr->setfilename(p_openpath);
 
 		if (MCModeCanLoadHome() && type == OT_HOME)
 		{
@@ -684,11 +688,12 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 					delete sptr;
 					sptr = NULL;
 					
-					if (MCStringIsEqualTo(tstk -> getfilename(), *t_openpath, kMCStringOptionCompareExact))
+					
+					if (MCStringIsEqualTo(tstk -> getfilename(), p_openpath, kMCStringOptionCompareCaseless))
 						sptr = tstk;
 					else
 					{
-						MCdefaultstackptr->getcard()->message_with_args(MCM_reload_stack, MCNameGetOldString(tstk->getname()), openpath);
+						MCdefaultstackptr->getcard()->message_with_valueref_args(MCM_reload_stack, tstk->getname(), p_openpath);
 						tstk = stacks;
 						do
 						{
@@ -752,11 +757,8 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 		}
 		else
 		{
-			MCAutoStringRef tname;
-            /* UNCHECKED */ MCStringCreateWithCString(inname, &tname);
-			
 			// MW-2008-06-12: [[ Bug 6476 ]] Media won't open HC stacks
-			if (!MCdispatcher->cut(True) || hc_import(*tname, stream, sptr) != IO_NORMAL)
+			if (!MCdispatcher->cut(True) || hc_import(p_name, stream, sptr) != IO_NORMAL)
 			{
 				MCresult->sets("file is not a stack");
 				return IO_ERROR;
@@ -766,32 +768,28 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 	return IO_NORMAL;
 }
 
-IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
+IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 {
 	IO_handle stream;
-	char *openpath = NULL;
-
 	MCAutoStringRef t_open_path;
-
-	MCAutoStringRef t_fname_string;
-	/* UNCHECKED */ MCStringCreateWithCString(inname, &t_fname_string);
 
 	bool t_found;
 	t_found = false;
 	if (!t_found)
 	{
-		if ((stream = MCS_open(*t_fname_string, kMCSOpenFileModeRead, True, False, 0)) != NULL)
+		if ((stream = MCS_open(p_name, kMCSOpenFileModeRead, True, False, 0)) != NULL)
 		{
 			// This should probably use resolvepath().
-			if (inname[0] != PATH_SEPARATOR && inname[1] != ':')
+			if (MCStringGetCharAtIndex(p_name, 0) != PATH_SEPARATOR 
+				&& MCStringGetCharAtIndex(p_name, 1) != ':')
 			{
 				MCAutoStringRef t_curpath;
 				
 				/* UNCHECKED */ MCS_getcurdir(&t_curpath);
-				/* UNCHECKED */ MCStringFormat(&t_open_path, "%s/%s", MCStringGetCString(*t_curpath), MCStringGetCString(*t_fname_string)); 
+				/* UNCHECKED */ MCStringFormat(&t_open_path, "@s/%@", *t_curpath, p_name); 
 			}
 			else
-				t_open_path = *t_fname_string;
+				t_open_path = p_name;
 
 			t_found = true;
 		}
@@ -801,28 +799,24 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 	{
 		MCAutoStringRef t_leaf_name;
 		uindex_t t_leaf_index;
-		if (MCStringLastIndexOfChar(*t_fname_string, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareCaseless, t_leaf_index))
-			/* UNCHECKED */ MCStringCopySubstring(*t_fname_string, MCRangeMake(t_leaf_index + 1, MCStringGetLength(*t_fname_string) - (t_leaf_index + 1)), &t_leaf_name);
+		if (MCStringLastIndexOfChar(p_name, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareCaseless, t_leaf_index))
+			/* UNCHECKED */ MCStringCopySubstring(p_name, MCRangeMake(t_leaf_index + 1, MCStringGetLength(p_name) - (t_leaf_index + 1)), &t_leaf_name);
 		else
-			t_leaf_name = *t_fname_string;
+			t_leaf_name = p_name;
 		if ((stream = MCS_open(*t_leaf_name, kMCSOpenFileModeRead, True, False, 0)) != NULL)
 		{
 			MCAutoStringRef t_curpath;
-		
 			/* UNCHECKED */ MCS_getcurdir(&t_curpath);
-			
-		
-			/* UNCHECKED */ MCStringFormat(&t_open_path, "%s/%s", MCStringGetCString(*t_curpath), MCStringGetCString(*t_fname_string)); 
-	
+			/* UNCHECKED */ MCStringFormat(&t_open_path, "%@/%@", *t_curpath, p_name); 
 			t_found = true;
 		}
 	}
 
 	if (!t_found)
 	{
-		if (openstartup(*t_fname_string, &t_open_path, stream) ||
-		        openenv(*t_fname_string, MCSTR("MCPATH"), &t_open_path, stream, 0) ||
-		        openenv(*t_fname_string, MCSTR("PATH"), &t_open_path, stream, 0))
+		if (openstartup(p_name, &t_open_path, stream) ||
+		        openenv(p_name, MCSTR("MCPATH"), &t_open_path, stream, 0) ||
+		        openenv(p_name, MCSTR("PATH"), &t_open_path, stream, 0))
 			t_found = true;
 	}
 
@@ -830,24 +824,22 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 	{
 
 		MCAutoStringRef t_homename;
-
-			
 		if (MCS_getenv(MCSTR("HOME"), &t_homename))
 		{
 			MCAutoStringRef t_trimmed_homename;
-			if (MCStringGetNativeCharAtIndex(*t_homename, MCStringGetLength(*t_homename) - 1) == '/')
+			if (MCStringGetCharAtIndex(*t_homename, MCStringGetLength(*t_homename) - 1) == '/')
 				/* UNCHECKED */ MCStringCopySubstring(*t_homename, MCRangeMake(0, MCStringGetLength(*t_homename) - 1), &t_trimmed_homename);
 			else
 				t_trimmed_homename = *t_homename;
 
 			if (!t_found)
-				t_found = attempt_to_loadfile(stream, &t_open_path, "%s/%s", MCStringGetCString(*t_trimmed_homename), MCStringGetCString(*t_fname_string));
+				t_found = attempt_to_loadfile(stream, &t_open_path, "%@/%@", *t_trimmed_homename, p_name);
 
 			if (!t_found)
-				t_found = attempt_to_loadfile(stream, &t_open_path, "%s/stacks/%s", MCStringGetCString(*t_trimmed_homename), MCStringGetCString(*t_fname_string));
+				t_found = attempt_to_loadfile(stream, &t_open_path, "%@/stacks/%@", *t_trimmed_homename, p_name);
 
 			if (!t_found)
-				t_found = attempt_to_loadfile(stream, &t_open_path, "%s/components/%s", MCStringGetCString(*t_trimmed_homename), MCStringGetCString(*t_fname_string));
+				t_found = attempt_to_loadfile(stream, &t_open_path, "%@/components/%@", *t_trimmed_homename, p_name);
 		}
 	}
 
@@ -856,7 +848,7 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 	{
 		return IO_ERROR;
 	}
-	IO_stat stat = readfile(MCStringGetCString(*t_open_path), inname, stream, sptr);
+	IO_stat stat = readfile(*t_open_path, p_name, stream, sptr);
 	MCS_close(stream);
 	return stat;
 }
@@ -993,7 +985,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 }
 
 #ifdef FEATURE_RELAUNCH_SUPPORT
-extern bool relaunch_startup(const char *p_id);
+extern bool relaunch_startup(MCStringRef p_id);
 #endif
 
 void send_relaunch(void)
@@ -1001,12 +993,12 @@ void send_relaunch(void)
 #ifdef FEATURE_RELAUNCH_SUPPORT
 	bool t_do_relaunch;
 	t_do_relaunch = false;
-	const char *t_id;
+	MCAutoStringRef t_id;
 
-	t_do_relaunch = MCModeHandleRelaunch(t_id);
+	t_do_relaunch = MCModeHandleRelaunch(&t_id);
 
 	if (t_do_relaunch)
-		if (relaunch_startup(t_id))
+		if (relaunch_startup(*t_id))
 			exit(0);
 #endif
 }
@@ -1358,9 +1350,9 @@ MCFontStruct *MCDispatch::loadfont(MCNameRef fname, uint2 &size, uint2 style, Bo
 	return fonts->getfont(fname, size, style, printer);
 }
 
-MCStack *MCDispatch::findstackname(const MCString &s)
+MCStack *MCDispatch::findstackname(MCNameRef p_name)
 {
-	if (s.getlength() == 0)
+	if (p_name == nil || MCNameIsEmpty(p_name))
 		return NULL;
 
 	MCStack *tstk = stacks;
@@ -1369,7 +1361,7 @@ MCStack *MCDispatch::findstackname(const MCString &s)
 		do
 		{
 			MCStack *foundstk;
-			if ((foundstk = (MCStack *)tstk->findsubstackname_oldstring(s)) != NULL)
+			if ((foundstk = (MCStack *)tstk->findsubstackname(p_name)) != NULL)
 				return foundstk;
 			tstk = (MCStack *)tstk->next();
 		}
@@ -1382,40 +1374,39 @@ MCStack *MCDispatch::findstackname(const MCString &s)
 		do
 		{
 			MCStack *foundstk;
-			if ((foundstk = (MCStack *)tstk->findstackfile_oldstring(s)) != NULL)
+			if ((foundstk = (MCStack *)tstk->findstackfile(p_name)) != NULL)
 				return foundstk;
 			tstk = (MCStack *)tstk->next();
 		}
 		while (tstk != stacks);
 	}
 
-	char *sname = s.clone();
-	if (loadfile(sname, tstk) != IO_NORMAL)
+	if (loadfile(MCNameGetString(p_name), tstk) != IO_NORMAL)
 	{
-		char *buffer = new char[s.getlength() + 5];
-		MCU_lower(buffer, s);
-		strcpy(&buffer[s.getlength()], ".mc");
-		delete sname;
-		char *sptr = buffer;
-		while (*sptr)
+		MCAutoStringRef t_name;
+		/* UNCHECKED */ MCStringMutableCopy(MCNameGetString(p_name), &t_name);
+		/* UNCHECKED */ MCStringLowercase(*t_name);
+		
+		// Remove all special characters from the input string
+		// TODO: what about other 'special' chars added by unicode?
+		MCStringRef t_replace = MCSTR("\r\n\t *?<>/\\()[]{}|'`\"");
+		MCRange t_range = MCRangeMake(0, MCStringGetLength(t_replace));
+		for (uindex_t i = 0; i < MCStringGetLength(*t_name); i++)
 		{
-			if (strchr("\r\n\t *?*<>/\\()[]{}|'`\"", *sptr) != NULL)
-				*sptr = '_';
-			sptr++;
+			if (MCStringCountChar(t_replace, t_range, MCStringGetCharAtIndex(*t_name, i), kMCStringOptionCompareExact))
+				/* UNCHECKED */ MCStringReplace(*t_name, MCRangeMake(i, 1), MCSTR("_"));
 		}
-		if (loadfile(buffer, tstk) != IO_NORMAL)
+		
+		MCAutoStringRef t_name_mc;
+		/* UNCHECKED */ MCStringFormat(&t_name_mc, "%@.mc", *t_name);
+		if (loadfile(*t_name_mc, tstk) != IO_NORMAL)
 		{
-			strcpy(&buffer[s.getlength()], ".rev");
-			if (loadfile(buffer, tstk) != IO_NORMAL)
-			{
-				delete buffer;
+			MCAutoStringRef t_name_rev;
+			/* UNCHECKED */ MCStringFormat(&t_name_rev, "%@.rev", *t_name);
+			if (loadfile(*t_name_rev, tstk) != IO_NORMAL)
 				return NULL;
-			}
 		}
-		delete buffer;
 	}
-	else
-		delete sname;
 
 	return tstk;
 }
@@ -1724,13 +1715,15 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 		if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
 		{
 			MCExecPoint ep(NULL, NULL, NULL);
-			/* UNCHECKED */ ep . setvalueref(*t_data);
+			MCExecContext ctxt(ep);
 
 			MCImage *t_image;
 			t_image = new MCImage;
 			t_image -> open();
 			t_image -> openimage();
-			t_image -> setprop(0, P_TEXT, ep, False);
+			MCAutoStringRef t_string_data;
+			/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), &t_string_data);
+			t_image -> setstringprop(ctxt, 0, P_TEXT, False, *t_string_data);
 			MCactiveimage -> pasteimage(t_image);
 			t_image -> closeimage();
 			t_image -> close();
@@ -1761,10 +1754,13 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 			if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
 			{
 				MCExecPoint ep(NULL, NULL, NULL);
-				/* UNCHECKED */ ep . setvalueref(*t_data);
+				MCExecContext ctxt(ep);
+				
 				t_objects = new MCImage(*MCtemplateimage);
 				t_objects -> open();
-				t_objects -> setprop(0, P_TEXT, ep, False);
+				MCAutoStringRef t_string_data;
+				/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), &t_string_data);
+				t_objects -> setstringprop(ctxt, 0, P_TEXT, False, *t_string_data);
 				t_objects -> close();
 			}
 		}

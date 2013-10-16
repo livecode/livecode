@@ -127,7 +127,9 @@ Exec_stat MCChoose::exec(MCExecPoint &ep)
 			MCeerror->add(EE_CHOOSE_BADEXP, line, pos);
 			return ES_ERROR;
 		}
-	MCInterfaceExecChooseTool(ctxt, littool);
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ ep.copyasstringref(&t_string);
+	MCInterfaceExecChooseTool(ctxt, *t_string, littool);
 	
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -359,8 +361,7 @@ Exec_stat MCConvert::exec(MCExecPoint &ep)
 	else
 	{
 		MCDateTimeExecConvert(ctxt, *t_input, fform, fsform, pform, sform, &t_output);
-		ep . setvalueref(*t_output);
-		if (container -> set(ep, PT_INTO) != ES_NORMAL)
+		if (container -> set(ep, PT_INTO, *t_output) != ES_NORMAL)
 		{
 			MCeerror->add(EE_CONVERT_CANTSET, line, pos);
 			return ES_ERROR;
@@ -708,11 +709,11 @@ Scroll To Selection, Replace..., Replace Again, Comment, Uncomment,
 Set Checkpoint, Step, Step Into, Trace, Go, Trace Delay..., Abort,
 Variable Watcher, Message Watcher
 */
-const char *MCDoMenu::lookup(const MCString &s)
+const char *MCDoMenu::lookup(MCStringRef s)
 {
 	uint2 size = ELEMENTS(domenu_table);
 	while(size--)
-		if (s == domenu_table[size].token)
+		if (MCStringIsEqualToCString(s, domenu_table[size].token, kMCCompareCaseless));
 			return domenu_table[size].command;
 	return NULL;
 }
@@ -1187,7 +1188,8 @@ Exec_stat MCMarking::exec(MCExecPoint &ep)
 		}
         MCAutoStringRef t_value;
         ep . copyasstringref(&t_value);
-		MCdefaultstackptr->markfind(ep, mode, *t_value, field, mark);
+		MCExecContext ctxt(ep);
+		MCdefaultstackptr->markfind(ctxt, mode, *t_value, field, mark);
 	}
 	return ES_NORMAL;
 }
@@ -1479,39 +1481,66 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 		}
 		else
 		{
-			MCAutoStringRef t_string;
-			if (!ctxt . ConvertToString(*t_value, &t_string))
-			{
-				MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
-				return ES_ERROR;
-			}
-			
-			MCObjectChunkPtr t_obj_chunk;
+            MCObjectChunkPtr t_obj_chunk;
 			if (dest -> evalobjectchunk(ep, false, true, t_obj_chunk) != ES_NORMAL)
 				return ES_ERROR;
-			
-			if (t_obj_chunk . object -> gettype() == CT_FIELD)
-				MCInterfaceExecPutIntoField(ctxt, *t_string, prep, t_obj_chunk, is_unicode);
-			else
-			{
-				if (is_unicode)
-				{
-					MCeerror -> add(EE_CHUNK_CANTSETUNICODEDEST, line, pos);
-					return ES_ERROR;
-				}
-				
-				MCInterfaceExecPutIntoObject(ctxt, *t_string, prep, t_obj_chunk);
+            
+            if (is_unicode)
+            {
+                if (t_obj_chunk . object -> gettype() != CT_FIELD)
+                {
+                    MCeerror -> add(EE_CHUNK_CANTSETUNICODEDEST, line, pos);
+                    return ES_ERROR;
+                }
+                
+                MCAutoDataRef t_data;
+                if (!ctxt . ConvertToData(*t_value, &t_data))
+                {
+                    MCeerror -> add(EE_CHUNK_CANTSETUNICODEDEST, line, pos);
+                    return ES_ERROR;
+                }
+                MCInterfaceExecPutUnicodeIntoField(ctxt, *t_data, prep, t_obj_chunk);
+            }
+            else
+            {
+                MCAutoStringRef t_string;
+                if (!ctxt . ConvertToString(*t_value, &t_string))
+                {
+                    MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
+                    return ES_ERROR;
+                }
+			            
+                if (t_obj_chunk . object -> gettype() == CT_FIELD)
+                    MCInterfaceExecPutIntoField(ctxt, *t_string, prep, t_obj_chunk);
+                else
+                    MCInterfaceExecPutIntoObject(ctxt, *t_string, prep, t_obj_chunk);
 			}
 		}
 	}
 	else
 	{
-		MCAutoStringRef t_string;
-		if (!ctxt . ConvertToString(*t_value, &t_string))
-		{
-			MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
-			return ES_ERROR;
-		}
+		MCAutoValueRef t_val;
+		if (is_unicode && (prep == PT_UNDEFINED || prep == PT_CONTENT || prep == PT_MARKUP))
+        {
+			if (!ctxt . ConvertToData(*t_value, (MCDataRef&)&t_val))
+			{
+				MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
+				return ES_ERROR;
+			}
+        }
+		else
+        {
+			if (!ctxt . ConvertToString(*t_value, (MCStringRef&)&t_val))
+
+			{
+				MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
+				return ES_ERROR;
+			}
+        }
+		
+		// Defined for convenience
+		MCStringRef t_string = (MCStringRef)*t_val;
+		MCDataRef t_data = (MCDataRef)*t_val;
 		
 		if (prep == PT_COOKIE)
 		{
@@ -1521,7 +1550,8 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 				MCeerror->add(EE_PUT_CANTSETINTO, line, pos);
 				return ES_ERROR;
 			}
-			/* UNCHECKED */ ep . copyasstringref(&t_name);
+			if (!ep . copyasstringref(&t_name))
+				t_name = kMCEmptyString;
 			
 			uinteger_t t_expires;
 			t_expires = 0;
@@ -1545,8 +1575,11 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 					MCeerror->add(EE_PUT_CANTSETINTO, line, pos);
 					return ES_ERROR;
 				}
-				/* UNCHECKED */ ep . copyasstringref(&t_path);
+				if (!ep . copyasstringref(&t_path))
+					t_path = kMCEmptyString;
 			}
+			else
+				t_path = kMCEmptyString;
 			
 			MCAutoStringRef t_domain;
 			if (domain != nil)
@@ -1556,23 +1589,41 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 					MCeerror->add(EE_PUT_CANTSETINTO, line, pos);
 					return ES_ERROR;
 				}
-				/* UNCHECKED */ ep . copyasstringref(&t_domain);
+				if (!ep . copyasstringref(&t_domain))
+					t_domain = kMCEmptyString;
 			}
+			else
+				t_domain = kMCEmptyString;
 			
-			MCServerExecPutCookie(ctxt, *t_name, *t_string, t_expires, *t_path, *t_domain, is_secure, is_httponly);
+			MCServerExecPutCookie(ctxt, *t_name, t_string, t_expires, *t_path, *t_domain, is_secure, is_httponly);
 		}
 		else if (prep == PT_UNDEFINED)
-			MCEngineExecPutOutput(ctxt, *t_string, is_unicode);
+		{
+			if (is_unicode)
+				MCEngineExecPutOutputUnicode(ctxt, t_data);
+			else
+				MCEngineExecPutOutput(ctxt, t_string);
+		}
 		else if (prep == PT_INTO || prep == PT_AFTER || prep == PT_BEFORE)
-			MCIdeExecPutIntoMessage(ctxt, *t_string, prep);
+			MCIdeExecPutIntoMessage(ctxt, t_string, prep);
 		else if (prep == PT_HEADER || prep == PT_NEW_HEADER)
-			MCServerExecPutHeader(ctxt, *t_string, prep == PT_NEW_HEADER);
+			MCServerExecPutHeader(ctxt, t_string, prep == PT_NEW_HEADER);
 		else if (prep == PT_CONTENT)
-			MCServerExecPutContent(ctxt, *t_string, is_unicode);
+		{
+			if (is_unicode)
+				MCServerExecPutContentUnicode(ctxt, t_data);
+			else
+				MCServerExecPutContent(ctxt, t_string);
+		}
 		else if (prep == PT_MARKUP)
-			MCServerExecPutMarkup(ctxt, *t_string, is_unicode);
+		{
+			if (is_unicode)
+				MCServerExecPutMarkupUnicode(ctxt, t_data);
+			else
+				MCServerExecPutMarkup(ctxt, t_string);
+		}
 		else if (prep == PT_BINARY)
-			MCServerExecPutBinaryOutput(ctxt, *t_string);
+            MCServerExecPutBinaryOutput(ctxt, t_data);
 	}
 	
 	if (!ctxt . HasError())
@@ -2420,82 +2471,53 @@ Exec_stat MCSort::sort_container(MCExecPoint &p_exec_point, Chunk_term p_type, S
 }
 #endif /* MCSort::sort_container */
 
-void MCSort::additem(MCExecPoint &ep, MCSortnode *&items, uint4 &nitems, Sort_type form, MCString &s, MCExpression *by)
+void MCSort::additem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, Sort_type form, MCValueRef p_value, MCExpression *by)
 {
-	MCExecContext ctxt(ep);
-	
+	MCAutoValueRef t_value;
 	if (by != NULL)
 	{
-		MCerrorlock++;
-		ep.setsvalue(s);
-		MCeach->set(ep);
-		if (by->eval(ep) == ES_NORMAL)
-			s = ep.getsvalue();
+        MCerrorlock++;
+        MCeach -> setvalueref(p_value);
+		if (by->eval(ctxt.GetEP()) == ES_NORMAL)
+			t_value = ctxt.GetEP().getvalueref();
 		else
-			s = MCnullmcstring;
+			t_value = MCValueRetain(kMCEmptyString);
 		MCerrorlock--;
 	}
+	else
+		t_value = MCValueRetain(p_value);
+		
 	switch (form)
 	{
 	case ST_DATETIME:
 		{
-			MCAutoStringRef t_in, t_out;
-			/* UNCHECKED */ MCStringCreateWithOldString(s, &t_in);
-			if (MCD_convert(ctxt, *t_in, CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_out))
+			MCAutoStringRef t_out;
+			if (MCD_convert(ctxt, *t_value, CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_out))
 			{
-				if (ctxt.ConvertToReal(*t_out, items[nitems].nvalue))
+				if (ctxt.ConvertToNumber(*t_out, items[nitems].nvalue))
 					break;
 			}
 
-			items[nitems].nvalue = -MAXREAL8;
+			/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
 			break;
 		}
 	case ST_NUMERIC:
 		{
-			const char *sptr = s.getstring();
-			uint4 length = s.getlength();
-			
-			// MW-2013-03-21: [[ Bug ]] Make sure we skip any whitespace before the
-			//   number starts - making it consistent with string->number conversions
-			//   elsewhere.
-			MCU_skip_spaces(sptr, length);
-			
-		    // REVIEW - at the moment the numeric prefix of the string is used to
-			//   derive the sort key e.g. 1000abc would get processed as 1000.
-			while (length && (isdigit((uint1)*sptr) ||
-			                  *sptr == '.' || *sptr == '-' || *sptr == '+'))
-			{
-				sptr++;
-				length--;
-			}
-			s.setlength(s.getlength() - length);
-			if (!MCU_stor8(s, items[nitems].nvalue))
-				items[nitems].nvalue = -MAXREAL8;
+			if (!ctxt.ConvertToNumber(*t_value, items[nitems].nvalue))
+				/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
 		}
 		break;
 	default:
-		if (ep.getcasesensitive() && by == NULL)
-			items[nitems].svalue = (char *)s.getstring();
+		if (ctxt.GetCaseSensitive())
+			/* UNCHECKED */ ctxt.ConvertToString(*t_value, items[nitems].svalue);
 		else
-			if (ep.getcasesensitive())
-				items[nitems].svalue = s.clone();
-			else
-			{
-#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
-				if (form == ST_INTERNATIONAL)
-				{
-					extern char *MCSystemLowercaseInternational(const MCString& s);
-					items[nitems].svalue = MCSystemLowercaseInternational(s);
-				}
-				else
-#endif
-
-				{
-					items[nitems].svalue = new char[s.getlength() + 1];
-					MCU_lower(items[nitems].svalue, s);
-					items[nitems].svalue[s.getlength()] = '\0';
-				}
-			}
+		{
+			MCStringRef t_fixed, t_mutable;
+			/* UNCHECKED */ ctxt.ConvertToString(*t_value, t_fixed);
+			/* UNCHECKED */ MCStringMutableCopyAndRelease(t_fixed, t_mutable);
+			/* UNCHECKED */ MCStringLowercase(t_mutable);
+			/* UNCHECKED */ MCStringCopyAndRelease(t_fixed, items[nitems].svalue);
+		}
 		break;
 	}
 	nitems++;
@@ -2603,7 +2625,7 @@ Exec_stat MCSort::exec(MCExecPoint &ep)
 		MCInterfaceExecSortContainer(ctxt, t_sorted_target, chunktype, direction == ST_ASCENDING, format, by);
 		if (!ctxt . HasError())
 		{
-			/* UNCHECKED */ ep . setvalueref(t_sorted_target);
+            of -> set(ep, PT_INTO, t_sorted_target);
 			MCValueRelease(t_sorted_target);
 		}
 	}

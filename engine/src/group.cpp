@@ -86,6 +86,7 @@ MCPropertyInfo MCGroup::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_BOUNDING_RECT, OptionalRectangle, MCGroup, BoundingRect)
 	DEFINE_RW_OBJ_PROPERTY(P_BACK_SIZE, Point, MCGroup, BackSize)
 	DEFINE_RW_OBJ_PROPERTY(P_SELECT_GROUPED_CONTROLS, Bool, MCGroup, SelectGroupedControls)
+    DEFINE_RO_OBJ_LIST_PROPERTY(P_CARD_NAMES, LinesOfString, MCGroup, CardNames)
 };
 
 MCObjectPropertyTable MCGroup::kPropertyTable =
@@ -2075,6 +2076,25 @@ MCControl *MCGroup::getchildbyname(MCNameRef p_name, Chunk_term p_object_type)
     MCControl *cptr = controls;
     if (cptr == nil)
         return nil;
+    
+    uint2 t_num = 0;
+    if (MCU_stoui2(MCNameGetString(p_name), t_num))
+    {
+        if (t_num < 1)
+            return nil;
+        t_num--;
+        
+        do
+        {
+            MCControl *foundobj;
+            if ((foundobj = cptr->findnum(p_object_type, t_num)) != nil)
+                return foundobj;
+            cptr = cptr->next();
+        }
+        while (cptr != controls);
+        return nil;
+    }
+    
     do
     {
         MCControl *foundobj;

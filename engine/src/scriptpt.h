@@ -63,7 +63,7 @@ public:
 	MCScriptPoint(MCScriptPoint &sp);
 	MCScriptPoint(MCObject *, MCHandlerlist *, MCStringRef script);
 	MCScriptPoint(MCExecPoint &ep);
-	MCScriptPoint(const MCString &s);
+	MCScriptPoint(MCStringRef s);
 	~MCScriptPoint();
 	MCScriptPoint& operator=(const MCScriptPoint& sp);
 	
@@ -123,6 +123,11 @@ public:
 	{
 		return curptr;
 	}
+    
+    uindex_t getindex(void)
+    {
+        return tokenptr - backupptr;
+    }
 
 	Parse_stat skip_space();
 	Parse_stat skip_eol();

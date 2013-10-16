@@ -527,12 +527,12 @@ static void domenu(short menu, short item)
 			isunicode &= !t_menuhastags;
 			char *menuitemname;
 			uint2 menuitemlen;
-			MCString t_tag;
-			extern bool MCMacGetMenuItemTag(MenuHandle menu, uint2 mitem, MCString &s);
-			if (t_menuhastags && MCMacGetMenuItemTag(mhandle, item, t_tag))
+			MCAutoStringRef t_tag_ref;
+			extern bool MCMacGetMenuItemTag(MenuHandle menu, uint2 mitem, MCStringRef &r_string);
+			if (t_menuhastags && MCMacGetMenuItemTag(mhandle, item, &t_tag_ref))
 			{
-				menuitemname = (char*)t_tag.getstring();
-				menuitemlen = t_tag.getlength();
+				menuitemname = strclone(MCStringGetCString(*t_tag_ref));
+				menuitemlen = strlen(menuitemname);
 			}
 			else
 			{
@@ -1521,6 +1521,20 @@ struct OSXMenuItem : public MCMenuItem
 	char mark;
 	uint2 glyph;
 	uint2 after; //insert new menu item after this number
+	
+	OSXMenuItem() :
+		MCMenuItem()
+	{
+		mh = nil;
+		mark = 0;
+		glyph = 0;
+		after = 0;
+	}
+	
+	~OSXMenuItem()
+	{
+		;
+	}
 };
 
 static void SetMacMenuItemText(MenuHandle mh, uint2 mitem, char *mitemtext, uint2 mitemlength, bool isunicode)
@@ -1583,7 +1597,6 @@ public:
 		isunicode = p_menubutton -> hasunicode();
 		firstTime = true;
 		mainMenuID = p_mainmenu_id;
-		memset(curMenuStruct, 0, sizeof(curMenuStruct));
 		curMenuLevel = 0;
 		firstitem = 0;
 		curMenuStruct[0].after = firstitem;
@@ -1621,10 +1634,11 @@ public:
 		{
 			DisableMenuItem(p_menu, p_item);
 		}
-		if (p_menuitem->tag != NULL)
+		if (!MCStringIsEmpty(p_menuitem->tag))
 		{
-			MCString t_tag = p_menuitem->tag;
-			SetMenuItemProperty(p_menu, p_item,'RRev','MTag',t_tag.getlength(),(const void *)t_tag.getstring());
+			// This property does not appear to get queried at any point
+			MCStringRef t_tag = p_menuitem->tag;
+			SetMenuItemProperty(p_menu, p_item,'RRev','MTag', MCStringGetLength(t_tag), MCStringGetCString(t_tag));
 			
 			static const struct { const char *tag; MenuCommand id; } s_tag_to_id[] =
 			{
@@ -1640,7 +1654,7 @@ public:
 			};
 
 			for(uint4 i = 0; i < sizeof(s_tag_to_id) / sizeof(s_tag_to_id[0]); ++i)
-				if (t_tag == s_tag_to_id[i] . tag)
+				if (MCStringIsEqualToCString(t_tag, s_tag_to_id[i].tag, kMCCompareCaseless))
 				{
 					SetMenuItemCommandID(p_menu, p_item, s_tag_to_id[i] . id);
 					break;
@@ -1652,8 +1666,7 @@ public:
 	{
 		uint2 t_keyglyph = 0;
 		uint4 t_key = p_menuitem->accelerator;
-		const char *t_keyname = p_menuitem->accelerator_name;
-		if (t_keyname != NULL)
+		if (!MCStringIsEmpty(p_menuitem->accelerator_name))
 		{
 			t_keyglyph = MCMacKeysymToGlyph(t_key);
 		}
@@ -1671,9 +1684,6 @@ public:
 		if (firstTime)
 		{
 			curMenuStruct[curMenuLevel].assignFrom(p_menuitem);
-			curMenuStruct[curMenuLevel].label.set( p_menuitem->label.clone() , p_menuitem->label.getlength() );
-			if (p_menuitem->tag != NULL)
-				curMenuStruct[curMenuLevel].tag.set( p_menuitem->tag.clone() , p_menuitem->tag.getlength() );
 			curMenuStruct[curMenuLevel].mark = markchar;
 			curMenuStruct[curMenuLevel].glyph = t_keyglyph;
 			firstTime = false;
@@ -1683,47 +1693,23 @@ public:
 		{ //cur item goes down one level deep
 			//new submenu name reflects the hierachy of it's menu level :
 
-			uint4 t_combined_length = 0;
-			for (int i = 0; i <= curMenuLevel; i++)
-			{
-				if (curMenuStruct[i].tag != NULL)
-					t_combined_length += curMenuStruct[i].tag.getlength() * MCU_charsize(isunicode);
-				else
-					t_combined_length += curMenuStruct[i].label.getlength();
-					
-				t_combined_length += MCU_charsize(isunicode);
-			}
-
-			char *newname = new char[t_combined_length + 1];
-
+			MCStringRef t_newname;
+			/* UNCHECKED */ MCStringCreateMutable(0, t_newname);
 			uint2 submenutitlelen = 0;
 
 			MCExecPoint ep;
 			for (int i = 0; i <= curMenuLevel; i++)
 			{
-				if (curMenuStruct[i].tag != NULL)
+				if (!MCStringIsEmpty(curMenuStruct[i].tag))
 				{
-					MCString t_tag = curMenuStruct[i].tag;
-					if (isunicode)
-					{
-						ep.setsvalue(t_tag);
-						ep.nativetoutf16();
-						t_tag = ep.getsvalue();
-					}
-					memcpy(&newname[submenutitlelen], t_tag.getstring(), t_tag.getlength());
-					submenutitlelen += t_tag.getlength();
+					/* UNCHECKED */ MCStringAppend(t_newname, curMenuStruct[i].tag);
 				}
 				else
 				{
-					memcpy(&newname[submenutitlelen], curMenuStruct[i].label.getstring(), curMenuStruct[i].label.getlength());
-					submenutitlelen += curMenuStruct[i].label.getlength();
+					/* UNCHECKED */ MCStringAppend(t_newname, curMenuStruct[i].label);
 				}
-
-				MCU_copychar('|',&newname[submenutitlelen],isunicode);
-				submenutitlelen += MCU_charsize(isunicode);
+				/* UNCHECKED */ MCStringAppendFormat(t_newname, "|");
 			}
-
-			newname[submenutitlelen] = 0;
 
 			short menuID = screen->allocateSubMenuID(True);// get an id, if none is found, bail out
 			if (menuID == 0)
@@ -1736,23 +1722,15 @@ public:
 			InsertMenu(curMenuStruct[curMenuLevel + 1].mh, -1); //-1 is submenu
 
 			CFStringRef cfmenustring;
-			if (isunicode)
-				cfmenustring = CFStringCreateWithCharacters(NULL, (UniChar *)newname,submenutitlelen >> 1);
-			else
-				cfmenustring = CFStringCreateWithCString(NULL, newname, kCFStringEncodingMacRoman);
-
+			/* UNCHECKED */ MCStringConvertToCFStringRef(t_newname, cfmenustring);
+			MCValueRelease(t_newname);
 			SetMenuTitleWithCFString(curMenuStruct[curMenuLevel + 1].mh,cfmenustring);
 			CFRelease(cfmenustring);
-			delete newname;
 
 			curMenuStruct[curMenuLevel + 1].after = 0;
 
-			const char *t_label = (const char *)curMenuStruct[curMenuLevel].label.getstring();
+			/* UNCHECKED */ MCStringConvertToCFStringRef(curMenuStruct[curMenuLevel].label, cfmenustring);
 			
-			if (isunicode)
-				cfmenustring = CFStringCreateWithCharacters(NULL, (UniChar *)t_label, curMenuStruct[curMenuLevel].label.getlength() >> 1);
-			else
-				cfmenustring = CFStringCreateWithCString(NULL, t_label, kCFStringEncodingMacRoman);
 			// HS-2010-06-07: [[ Bug 8659 ]] Make sure OS X meta-characters are ignored except for strings like '-'
 			UInt32 t_attributes;
 			CFStringGetLength(cfmenustring) > 1 ? t_attributes = kMenuItemAttrIgnoreMeta : t_attributes = 0;
@@ -1770,10 +1748,8 @@ public:
 		else
 		{
 			CFStringRef cfmenustring;
-			if (isunicode)
-				cfmenustring = CFStringCreateWithCharacters(NULL, (UniChar *)curMenuStruct[curMenuLevel].label.getstring(),curMenuStruct[curMenuLevel].label.getlength() >> 1);
-			else
-				cfmenustring = CFStringCreateWithCString(NULL, (char*)curMenuStruct[curMenuLevel].label.getstring(), kCFStringEncodingMacRoman);
+			/* UNCHECKED */ MCStringConvertToCFStringRef(curMenuStruct[curMenuLevel].label, cfmenustring);
+
 			// HS-2010-06-07: [[ Bug 8659 ]] Make sure OS X meta-characters are ignored except for strings like '-'
 			UInt32 t_attributes;
 			CFStringGetLength(cfmenustring) > 1 ? t_attributes = kMenuItemAttrIgnoreMeta : t_attributes = 0;
@@ -1787,25 +1763,18 @@ public:
 
 			while (curMenuLevel && curMenuStruct[curMenuLevel].depth > p_menuitem->depth)
 			{
-				delete curMenuStruct[curMenuLevel].label.getstring();
-				curMenuStruct[curMenuLevel].label.set(NULL, 0);
-				delete curMenuStruct[curMenuLevel].tag.getstring();
-				curMenuStruct[curMenuLevel].tag.set(NULL, 0);
+				MCValueAssign(curMenuStruct[curMenuLevel].label, kMCEmptyString);
+				MCValueAssign(curMenuStruct[curMenuLevel].tag, kMCEmptyString);
 				curMenuLevel--;
 			}
 			if (curMenuStruct[curMenuLevel].depth < p_menuitem->depth)
 				curMenuLevel++;
 		}
-		delete curMenuStruct[curMenuLevel].label.getstring();
-		curMenuStruct[curMenuLevel].label.set(NULL, 0);
-		delete curMenuStruct[curMenuLevel].tag.getstring();
-		curMenuStruct[curMenuLevel].tag.set(NULL, 0);
+		MCValueAssign(curMenuStruct[curMenuLevel].label, kMCEmptyString);
+		MCValueAssign(curMenuStruct[curMenuLevel].tag, kMCEmptyString);
 
 		//keep record of the current item
 		curMenuStruct[curMenuLevel].assignFrom(p_menuitem);
-		curMenuStruct[curMenuLevel].label.set( p_menuitem->label.clone() , p_menuitem->label.getlength() );
-		if (p_menuitem->tag != NULL)
-			curMenuStruct[curMenuLevel].tag.set( p_menuitem->tag.clone(), p_menuitem->tag.getlength() );
 		curMenuStruct[curMenuLevel].mark = markchar;
 		curMenuStruct[curMenuLevel].glyph = t_keyglyph;
 
@@ -1815,15 +1784,13 @@ public:
 	
 	virtual bool End(bool p_hastags)
 	{
-		if (curMenuStruct[curMenuLevel].label.getlength())
+		if (!MCStringIsEmpty(curMenuStruct[curMenuLevel].label))
 		{
 			//handle single menu item and the last menu item situation
 			//add the menu item to the menu
 			CFStringRef cfmenustring;
-			if (isunicode)
-				cfmenustring = CFStringCreateWithCharacters(NULL, (UniChar *)curMenuStruct[curMenuLevel].label.getstring(),curMenuStruct[curMenuLevel].label.getlength() >> 1);
-			else
-				cfmenustring = CFStringCreateWithCString(NULL, (char*)curMenuStruct[curMenuLevel].label.getstring(), kCFStringEncodingMacRoman);
+			/* UNCHECKED */ MCStringConvertToCFStringRef(curMenuStruct[curMenuLevel].label, cfmenustring);
+
 			// HS-2010-06-07: [[ Bug 8659 ]] Make sure OS X meta-characters are ignored except for strings like '-'
 			UInt32 t_attributes;
 			CFStringGetLength(cfmenustring) > 1 ? t_attributes = kMenuItemAttrIgnoreMeta : t_attributes = 0;
@@ -1838,10 +1805,8 @@ public:
 		}
 		while (curMenuLevel >= 0)
 		{
-			delete curMenuStruct[curMenuLevel].label.getstring();
-			curMenuStruct[curMenuLevel].label.set(NULL, 0);
-			delete curMenuStruct[curMenuLevel].tag.getstring();
-			curMenuStruct[curMenuLevel].tag.set(NULL, 0);
+			MCValueAssign(curMenuStruct[curMenuLevel].label, kMCEmptyString);
+			MCValueAssign(curMenuStruct[curMenuLevel].tag, kMCEmptyString);
 			curMenuLevel--;
 		}
 		MenuHandle t_mainmenu = curMenuStruct[0].mh;
@@ -1854,10 +1819,9 @@ public:
 Boolean MCScreenDC::addMenuItemsAndSubMenu(uint2 mainMenuID, MenuHandle mainMenu, MCButton *p_menubutton, uint1 menumode)
 {
 	OSXMenuCallback t_callback(this, p_menubutton, mainMenu, appleMenu, mainMenuID);
-	bool isunicode = p_menubutton -> hasunicode();
-	MCString t_string;
-	p_menubutton->getmenustring(t_string);
-	MCParseMenuString(t_string, &t_callback, isunicode, menumode);
+	MCStringRef t_string;
+	t_string = p_menubutton->getmenustring();
+	MCParseMenuString(t_string, &t_callback, menumode);
 
 	return True;
 }
@@ -1940,11 +1904,9 @@ void MCScreenDC::updatemenubar(Boolean force)
 		MCstacks->deleteaccelerator(bptr, bptr->getstack());
 		
 		//found a menu group & is not the very last menu
-		MCString t_menu_label;
-		bool t_is_unicode;
-		bptr->getlabeltext(t_menu_label, t_is_unicode); // clone menu title/name
+		MCStringRef t_menu_label = bptr->getlabeltext();
 		
-		if (t_menu_label . getlength() != 0 && bptr->getflag(F_VISIBLE))
+		if (!MCStringIsEmpty(t_menu_label) && bptr->getflag(F_VISIBLE))
 		{
 			//unsigned char *tmp = c2pstr(mname);
 			
@@ -1959,10 +1921,7 @@ void MCScreenDC::updatemenubar(Boolean force)
 			//separated by ','. the cloned menustring is deleted in
 			//addMenuItemsAndSubMenu().
 			CFStringRef cfmenustring;
-			if (t_is_unicode)
-				cfmenustring = CFStringCreateWithCharacters(NULL, (UniChar *)t_menu_label.getstring(), t_menu_label.getlength() >> 1);
-			else
-				cfmenustring = CFStringCreateWithBytes(NULL, (UInt8*)t_menu_label . getstring(), t_menu_label . getlength(), kCFStringEncodingMacRoman, False);
+			/* UNCHECKED */ MCStringConvertToCFStringRef(t_menu_label, cfmenustring);
 			SetMenuTitleWithCFString(menu,cfmenustring);
 			CFRelease(cfmenustring);
 

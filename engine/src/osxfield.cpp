@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "cdata.h"
 #include "mcerror.h"
 #include "execpt.h"
+#include "exec.h"
 #include "util.h"
 #include "block.h"
 
@@ -569,14 +570,14 @@ private:
 	uint4 m_style_capacity;
 };
 
-Exec_stat MCField::getparagraphmacunicodestyles(MCExecPoint& ep, MCParagraph *p_start, MCParagraph *p_end)
+Exec_stat MCField::getparagraphmacunicodestyles(MCParagraph *p_start, MCParagraph *p_end, MCDataRef& r_data)
 {
-	const char *origname;
+	MCNameRef origname;
 	uint2 origsize;
 	uint2 origstyle;
 	getfontattsnew(origname, origsize, origstyle);
 	
-	const char *fontname;
+	MCNameRef fontname;
 	uint2 fontsize, fontstyle;
 	getfontattsnew(fontname, fontsize, fontstyle);
 	
@@ -637,7 +638,7 @@ Exec_stat MCField::getparagraphmacunicodestyles(MCExecPoint& ep, MCParagraph *p_
 				
 				// MW-2012-02-17: [[ SplitTextAttrs ]] Get any font attrs the block has.
 				if (!t_block -> gettextfont(t_font_name))
-					t_font_name = origname;
+					t_font_name = MCNameGetCString(origname);
 				if (!t_block -> gettextsize(t_font_size))
 					t_font_size = origsize;
 				if (!t_block -> gettextstyle(t_font_style))
@@ -685,13 +686,13 @@ Exec_stat MCField::getparagraphmacunicodestyles(MCExecPoint& ep, MCParagraph *p_
 	ByteCount t_stream_size;
 	if (ATSUFlattenStyleRunsToStream(kATSUDataStreamUnicodeStyledText, 0, t_run_count, t_runs, t_style_count, t_styles, 0, NULL, &t_stream_size) == noErr)
 	{
-		char *t_stream;
-		/* UNCHECKED */ ep . reserve(t_stream_size, t_stream);
+		void *t_stream;
+		/* UNCHECKED */ MCMemoryAllocate(t_stream_size, t_stream);
 		if (t_stream != NULL)
 		{
 			if (ATSUFlattenStyleRunsToStream(kATSUDataStreamUnicodeStyledText, 0, t_run_count, t_runs, t_style_count, t_styles, t_stream_size, t_stream, &t_stream_size) != noErr)
 				t_stream_size = 0;
-			ep . commit(t_stream_size);
+			/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_stream, t_stream_size, r_data);
 		}
 	}
 	

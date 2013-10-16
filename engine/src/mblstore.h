@@ -50,49 +50,12 @@ enum MCPurchaseProperty
 	kMCPurchasePropertyUnknown,
 };
 
-struct MCPurchasePropertyInfo
-{
-	MCPurchaseProperty property;
-	bool effective : 1;
-	MCPropertyType type;
-	void *type_info;
-	void *getter;
-	void *setter;
-	bool has_effective : 1;
-};
-
-enum MCPurchaseState
-{
-	kMCPurchaseStateInitialized,
-	kMCPurchaseStateSendingRequest,
-	kMCPurchaseStatePaymentReceived,
-	kMCPurchaseStateComplete,
-	kMCPurchaseStateRestored,
-	kMCPurchaseStateCancelled,
-	kMCPurchaseStateRefunded,
-	kMCPurchaseStateError,
-    kMCPurchaseStateUnverified,
-	
-	kMCPurchaseStateUnknown,
-};
-
-typedef struct _mcpurchase_t
-{
-	uint32_t			id;
-	MCPurchaseState		state;
-	uint32_t			ref_count;
-	
-	void *				platform_data;
-	
-	struct _mcpurchase_t *	next;
-} MCPurchase;
-
 typedef bool (*MCPurchaseListCallback)(void *context, MCPurchase *purchase);
 
 struct MCPurchasePropertyTable
 {
 	uindex_t size;
-	MCPurchasePropertyInfo *table;
+	MCPropertyInfo *table;
 };
 
 const MCPurchasePropertyTable *getpropertytable(void);
@@ -170,10 +133,10 @@ void MCStoreExecSet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-bool MCPurchaseLookupProperty(MCStringRef p_property, MCPurchaseProperty &r_property);
+bool MCPurchaseLookupProperty(MCStringRef p_property, Properties &r_property);
 
 bool MCPurchaseFindById(uint32_t p_id, MCPurchase *&r_purchase);
-bool MCPurchaseList(MCExecPoint& ep);
+bool MCPurchaseList(MCStringRef& r_string);
 
 bool MCPurchaseCreate(MCStringRef p_product_id, void *p_context, MCPurchase *&r_purchase);
 

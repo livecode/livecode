@@ -1166,6 +1166,8 @@ MCNameRef MCNAME(const char *);
 
 // Create a name using the given string.
 bool MCNameCreate(MCStringRef string, MCNameRef& r_name);
+// Create a name using chars.
+bool MCNameCreateWithChars(const unichar_t *chars, uindex_t count, MCNameRef& r_name);
 // Create a name using native chars.
 bool MCNameCreateWithNativeChars(const char_t *chars, uindex_t count, MCNameRef& r_name);
 
@@ -1386,6 +1388,9 @@ const unichar_t *MCStringGetCharPtr(MCStringRef string);
 // in native encoding.
 const char_t *MCStringGetNativeCharPtr(MCStringRef string);
 
+// Returns the Unicode codepoint at the given codepoint index
+codepoint_t MCStringGetCodepointAtIndex(MCStringRef string, uindex_t index);
+
 // Returns the char at the given index.
 unichar_t MCStringGetCharAtIndex(MCStringRef string, uindex_t index);
 
@@ -1516,6 +1521,13 @@ bool MCStringDivideAtIndex(MCStringRef self, uindex_t p_offset, MCStringRef& r_h
 
 //////////
 
+// Break the string into ranges inbetween the given delimiter char. A trailing
+// empty range is ignored. The caller is responsible for deleting the returned
+// array.
+bool MCStringBreakIntoChunks(MCStringRef string, codepoint_t separator, MCStringOptions options, MCRange*& r_ranges, uindex_t& r_range_count);
+
+//////////
+
 // Transform the string to its folded form as specified by 'options'. The folded
 // form of a string is that which is used to perform comparisons.
 //
@@ -1549,17 +1561,30 @@ bool MCStringAppendNativeChar(MCStringRef string, char_t p_char);
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
 bool MCStringPrepend(MCStringRef string, MCStringRef prefix);
 bool MCStringPrependSubstring(MCStringRef string, MCStringRef suffix, MCRange range);
+bool MCStringPrependChars(MCStringRef string, const unichar_t *chars, uindex_t count);
 bool MCStringPrependNativeChars(MCStringRef string, const char_t *chars, uindex_t count);
+bool MCStringPrependChar(MCStringRef string, unichar_t p_char);
+bool MCStringPrependNativeChar(MCStringRef string, char_t p_char);
 
 // Insert new_string into string at offset 'at'.
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
 bool MCStringInsert(MCStringRef string, uindex_t at, MCStringRef new_string);
+bool MCStringInsertSubstring(MCStringRef string, uindex_t at, MCStringRef new_string, MCRange range);
+bool MCStringInsertChars(MCStringRef string, uindex_t at, const unichar_t *chars, uindex_t count);
+bool MCStringInsertNativeChars(MCStringRef string, uindex_t at, const char_t *chars, uindex_t count);
+bool MCStringInsertChar(MCStringRef string, uindex_t at, unichar_t p_char);
+bool MCStringInsertNativeChar(MCStringRef string, uindex_t at, char_t p_char);
 
 // Remove 'range' characters from 'string'.
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
 bool MCStringRemove(MCStringRef string, MCRange range);
+
+// Retain only 'range' characters from 'string'.
+//
+// Note that 'string' must be mutable, it is a fatal runtime error if it is not.
+bool MCStringSubstring(MCStringRef string, MCRange range);
 
 // Replace 'range' characters in 'string' with 'replacement'.
 //
@@ -1576,7 +1601,7 @@ bool MCStringPad(MCStringRef string, uindex_t at, uindex_t count, MCStringRef va
 //
 // Note that 'string' must be mutable.
 bool MCStringFindAndReplace(MCStringRef string, MCStringRef pattern, MCStringRef replacement, MCStringOptions options);
-bool MCStringFindAndReplaceChar(MCStringRef string, char_t pattern, char_t replacement, MCStringOptions options);
+bool MCStringFindAndReplaceChar(MCStringRef string, codepoint_t pattern, codepoint_t replacement, MCStringOptions options);
 
 /////////
 
@@ -1637,6 +1662,8 @@ bool MCDataPrependByte(MCDataRef r_data, byte_t p_byte);
 bool MCDataInsert(MCDataRef r_data, uindex_t p_at, MCDataRef p_new_data);
 bool MCDataRemove(MCDataRef r_data, MCRange p_range);
 bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data);
+
+bool MCDataPad(MCDataRef data, byte_t byte, uindex_t count);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -1728,7 +1755,15 @@ bool MCListCreateMutable(char_t delimiter, MCListRef& r_list);
 
 // Eventually this will accept any value type, but for now - just strings, names, and booleans.
 bool MCListAppend(MCListRef list, MCValueRef value);
+
+// Append a substring to the list.
+bool MCListAppendSubstring(MCListRef list, MCStringRef value, MCRange range);
+
+// Append a sequence of native chars as an element.
 bool MCListAppendNativeChars(MCListRef list, const char_t *chars, uindex_t char_count);
+
+// Append a formatted string as an element.
+bool MCListAppendFormat(MCListRef list, const char *format, ...);
 
 // Make an immutable copy of the list.
 // Note that this method is fragile at the moment and should only be used to

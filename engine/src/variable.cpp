@@ -112,15 +112,6 @@ MCVariable::~MCVariable(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if 0
-void MCVariable::doclearuql(void)
-{
-	if (value . is_string() && value . get_string() . getstring() == MCNameGetOldString(name) . getstring())
-		clear(True);
-	is_uql = false;
-}
-#endif
-
 bool MCVariable::isuql(void) const
 {
 	return is_uql;
@@ -244,101 +235,156 @@ MCValueRef MCVariable::getvalueref(MCNameRef *p_path, uindex_t p_length, bool p_
 	return kMCEmptyString;
 }
 
+bool MCVariable::copyasvalueref(MCValueRef& r_value)
+{
+    return copyasvalueref(nil, 0, false, r_value);
+}
+
+bool MCVariable::copyasvalueref(MCNameRef *p_path, uindex_t p_length, bool p_case_sensitive, MCValueRef& r_value)
+{
+    return MCValueCopy(getvalueref(p_path, p_length, p_case_sensitive), r_value);
+}
+
 Exec_stat MCVariable::eval(MCExecPoint& ep)
 {
-	return eval(ep, nil, 0);
-}
-
-void MCVariable::eval(bool p_case_sensitive, MCValueRef &r_value)
-{
-	eval(nil, 0, p_case_sensitive, r_value);
-}
-
-void MCVariable::eval(MCNameRef *p_path, uindex_t p_length, bool p_case_sensitive, MCValueRef &r_value)
-{
-	r_value = getvalueref(p_path, p_length, p_case_sensitive);
+    return eval(ep, nil, 0);
 }
 
 Exec_stat MCVariable::eval(MCExecPoint& ep, MCNameRef *p_path, uindex_t p_length)
 {
-	MCValueRef t_value;
-	t_value = getvalueref(p_path, p_length, ep . getcasesensitive() == True);
+    MCExecContext ctxt(ep);
 
-	if (ep . setvalueref(t_value))
-		return ES_NORMAL;
+    MCAutoValueRef t_value;
+    if (eval(ctxt, p_path, p_length, &t_value) &&
+            ep . setvalueref(*t_value))
+        return ES_NORMAL;
 
-	return ES_ERROR;
+    return ES_ERROR;
+}
+
+bool MCVariable::eval(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length, MCValueRef& r_value)
+{
+    return copyasvalueref(p_path, p_length, ctxt . GetCaseSensitive(), r_value);
 }
 
 Exec_stat MCVariable::set(MCExecPoint& ep)
 {
-	return set(ep, nil, 0);
+    return set(ep, nil, 0);
 }
 
 Exec_stat MCVariable::set(MCExecPoint& ep, MCNameRef *p_path, uindex_t p_length)
 {
-	MCAutoValueRef t_value;
-	if (!ep . copyasvalueref(&t_value))
-		return ES_ERROR;
+    MCAutoValueRef t_value;
+    if (!ep . copyasvalueref(&t_value))
+        return ES_ERROR;
 
-	if (setvalueref(p_path, p_length, ep . getcasesensitive() == True, *t_value))
-	{
-		synchronize(ep, True);
-		return ES_NORMAL;
-	}
+    MCExecContext ctxt(ep);
+    if (set(ctxt, *t_value, p_path, p_length))
+        return ES_NORMAL;
 
-	return ES_ERROR;
+    return ES_ERROR;
+}
+
+bool MCVariable::set(MCExecContext& ctxt, MCValueRef p_value)
+{
+    return set(ctxt, p_value, nil, 0);
+}
+
+bool MCVariable::set(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length)
+{
+    MCAutoValueRef t_value;
+    MCValueCopy(p_value, &t_value);
+    
+    if (setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), *t_value))
+    {
+        synchronize(ctxt, true);
+        return true;
+    }
+    
+    return false;
 }
 
 Exec_stat MCVariable::append(MCExecPoint& ep)
 {
-	return append(ep, nil, 0);
+    return append(ep, nil, 0);
 }
 
 Exec_stat MCVariable::append(MCExecPoint& ep, MCNameRef *p_path, uindex_t p_length)
 {
-	MCAutoStringRef t_value;
-	if (!ep . copyasstringref(&t_value))
-		return ES_ERROR;
+    MCAutoValueRef t_value;
+    if (!ep . copyasvalueref(&t_value))
+        return ES_ERROR;
 
+    MCExecContext ctxt(ep);
+    if (append(ctxt, *t_value, p_path, p_length))
+        return ES_NORMAL;
+
+    return ES_ERROR;
+}
+
+bool MCVariable::append(MCExecContext& ctxt, MCValueRef p_value)
+{
+	return append(ctxt, p_value, nil, 0);
+}
+
+bool MCVariable::append(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length)
+{
+    MCAutoStringRef t_value;
+    if (!ctxt . ConvertToString(p_value, &t_value))
+        return false;
+    
 	if (p_length == 0)
 	{
-		if (!converttomutablestring(ep))
-			return ES_ERROR;
-
+        if (!converttomutablestring(ctxt))
+            return false;
+        
 		if (!MCStringAppend((MCStringRef)value, *t_value))
-			return ES_ERROR;
-
-		synchronize(ep, True);
-
-		return ES_NORMAL;
+			return false;
+        
+        synchronize(ctxt, true);
+        
+		return true;
 	}
 
 	MCValueRef t_current_value;
-	t_current_value = getvalueref(p_path, p_length, ep . getcasesensitive() == True);
+	t_current_value = getvalueref(p_path, p_length, ctxt . GetCaseSensitive());
 	
 	MCStringRef t_current_value_as_string;
 	t_current_value_as_string = nil;
-	if (ep . convertvaluereftostring(t_current_value, t_current_value_as_string) &&
+	if (ctxt . ConvertToString(t_current_value, t_current_value_as_string) &&
 		MCStringMutableCopyAndRelease(t_current_value_as_string, t_current_value_as_string) &&
 		MCStringAppend(t_current_value_as_string, *t_value) &&
-		setvalueref(p_path, p_length, ep . getcasesensitive() == True, t_current_value_as_string))
+		setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_current_value_as_string))
 	{
 		MCValueRelease(t_current_value_as_string);
-		synchronize(ep, True);
-		return ES_NORMAL;
+        synchronize(ctxt, true);
+		return true;
 	}
-
+    
 	MCValueRelease(t_current_value_as_string);
-	return ES_ERROR;
+	return false;
 }
 
 Exec_stat MCVariable::remove(MCExecPoint& ep)
 {
-	return remove(ep, nil, 0);
+    return remove(ep, nil, 0);
 }
 
 Exec_stat MCVariable::remove(MCExecPoint& ep, MCNameRef *p_path, uindex_t p_length)
+{
+    MCExecContext ctxt(ep);
+    if (remove(ctxt, p_path, p_length))
+        return ES_NORMAL;
+
+    return ES_ERROR;
+}
+
+bool MCVariable::remove(MCExecContext& ctxt)
+{
+	return remove(ctxt, nil, 0);
+}
+
+bool MCVariable::remove(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length)
 {
 	if (p_length == 0)
 	{
@@ -354,18 +400,19 @@ Exec_stat MCVariable::remove(MCExecPoint& ep, MCNameRef *p_path, uindex_t p_leng
 			}
 		}
 	}
-
+    
 	if (MCValueGetTypeCode(value) != kMCValueTypeCodeArray)
-		return ES_NORMAL;
-
+		return true;
+    
 	if (!converttomutablearray())
-		return ES_ERROR;
-
-	MCArrayRemoveValueOnPath((MCArrayRef)value, ep . getcasesensitive() == True, p_path, p_length);
-
-	return ES_NORMAL;
-
+		return false;
+    
+	MCArrayRemoveValueOnPath((MCArrayRef)value, ctxt . GetCaseSensitive(), p_path, p_length);
+    
+	return true;
+    
 }
+
 
 bool MCVariable::converttomutablearray(void)
 {
@@ -415,6 +462,37 @@ bool MCVariable::converttomutablestring(MCExecPoint& ep)
 		value = t_string;
 	}
 
+	MCStringRef t_mutable_string;
+	if (MCStringMutableCopyAndRelease((MCStringRef)value, t_mutable_string))
+	{
+		value = t_mutable_string;
+		return true;
+	}
+	return false;
+}
+
+bool MCVariable::converttomutablestring(MCExecContext& ctxt)
+{
+	if (MCValueGetTypeCode(value) != kMCValueTypeCodeString)
+	{
+		MCStringRef t_string = nil;
+		if (!ctxt . ConvertToString(value, t_string))
+		{
+			MCStringRef t_mutable_string;
+			if (MCStringCreateMutable(0, t_mutable_string))
+			{
+				MCValueRelease(value);
+				value = t_mutable_string;
+				return true;
+			}
+            
+			return false;
+		}
+        
+		MCValueRelease(value);
+		value = t_string;
+	}
+    
 	MCStringRef t_mutable_string;
 	if (MCStringMutableCopyAndRelease((MCStringRef)value, t_mutable_string))
 	{
@@ -498,6 +576,7 @@ bool MCVariable::ensureglobal(MCNameRef p_name, MCVariable*& r_var)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if 0
 void MCVariable::synchronize(MCExecPoint& ep, Boolean notify)
 {
 	if (is_env)
@@ -548,6 +627,67 @@ void MCVariable::synchronize(MCExecPoint& ep, Boolean notify)
 				else
 					MCB_setvar(ep, name);
 
+				break;
+			}
+		}
+	}
+}
+#endif
+
+void MCVariable::synchronize(MCExecContext& ctxt, bool p_notify)
+{
+	if (is_env)
+	{
+		if (!isdigit(MCNameGetCharAtIndex(name, 1)) && MCNameGetCharAtIndex(name, 1) != '#')
+		{
+			MCAutoStringRef t_string;
+            if (ctxt . ConvertToString(value, &t_string))
+            {
+                MCAutoStringRef t_env;
+				/* UNCHECKED */ MCStringCopySubstring(MCNameGetString(name), MCRangeMake(1, MCStringGetLength(MCNameGetString(name))), &t_env);
+				MCS_setenv(*t_env, *t_string);
+            }
+		}
+	}
+	else if (is_msg)
+    {
+        MCAutoStringRef t_msg;
+        if (ctxt . ConvertToString(value, &t_msg))
+            MCB_setmsg(ctxt, *t_msg);
+	}
+    
+	if (p_notify && MCnwatchedvars)
+	{
+		uint2 i;
+		for (i = 0 ; i < MCnwatchedvars ; i++)
+		{
+			if ((MCwatchedvars[i].object == NULL || MCwatchedvars[i].object == ctxt . GetObject()) &&
+				(MCwatchedvars[i].handlername == NULL || ctxt . GetHandler() -> hasname(MCwatchedvars[i].handlername)) &&
+				hasname(MCwatchedvars[i].varname))
+			{
+				// If this is a global watch (object == handlername == nil) then
+				// check that this var is a global - if not carry on the search.
+				if (MCwatchedvars[i] . object == NULL &&
+					MCwatchedvars[i] . handlername == NULL &&
+					!is_global)
+					continue;
+
+				if (*MCwatchedvars[i].expression)
+				{
+					MCAutoStringRef t_expression;
+                    MCStringCreateWithCString(MCwatchedvars[i].expression, &t_expression);
+                    MCAutoValueRef t_value;
+                    MCAutoBooleanRef t_bool_value;
+                    
+                    ctxt . GetHandler() -> eval(ctxt, *t_expression, &t_value);
+                    if (!ctxt . HasError() &&
+                            ctxt . ConvertToBoolean(*t_value, &t_bool_value))
+                    if (!ctxt . HasError() && *t_bool_value == kMCTrue)
+                        MCB_setvar(ctxt, value, name);
+				}
+				else
+                    MCB_setvar(ctxt, value, name);
+                
 				break;
 			}
 		}
@@ -608,6 +748,27 @@ Exec_stat MCContainer::remove(MCExecPoint& ep)
 {
 	return m_variable -> remove(ep, m_path, m_length);
 }
+
+bool MCContainer::eval(MCExecContext& ctxt, MCValueRef& r_value)
+{
+    return m_variable -> eval(ctxt, m_path, m_length, r_value);
+}
+
+bool MCContainer::set(MCExecContext& ctxt, MCValueRef p_value)
+{
+	return m_variable -> set(ctxt, p_value, m_path, m_length);
+}
+
+bool MCContainer::append(MCExecContext& ctxt, MCValueRef p_value)
+{
+	return m_variable -> append(ctxt, p_value, m_path, m_length);
+}
+
+bool MCContainer::remove(MCExecContext& ctxt)
+{
+	return m_variable -> remove(ctxt, m_path, m_length);
+}
+
 
 bool MCContainer::set_valueref(MCValueRef p_value)
 {
@@ -691,6 +852,24 @@ MCVariable *MCVarref::fetchvar(MCExecPoint& ep)
 	return t_parentscript -> GetVariable(index);
 }
 
+MCVariable *MCVarref::fetchvar(MCExecContext& ctxt)
+{
+	// MW-2009-01-28: [[ Inherited parentScripts ]]
+	// If we are in parentScript context, then fetch the script local from there,
+	// otherwise use the information stored in this.
+	MCParentScriptUse *t_parentscript;
+	t_parentscript = ctxt . GetParentScript();
+	if (!isscriptlocal || t_parentscript == NULL)
+	{
+		if (ref != NULL)
+			return ref;
+        
+		return handler -> getvar(index, isparam);
+	}
+	
+	return t_parentscript -> GetVariable(index);
+}
+
 MCVariable *MCVarref::evalvar(MCExecPoint& ep)
 {
 	if (dimensions != 0)
@@ -715,6 +894,27 @@ Exec_stat MCVarref::eval(MCExecPoint& ep)
 		return ES_ERROR;
 
 	return t_container -> eval(ep);
+}
+
+bool MCVarref::eval(MCExecContext& ctxt, MCValueRef& r_value)
+{
+	if (dimensions == 0)
+	{
+		MCVariable *t_resolved_ref;
+		
+		t_resolved_ref = fetchvar(ctxt);
+        
+        return t_resolved_ref -> copyasvalueref(r_value);
+	}
+    
+	MCAutoPointer<MCContainer> t_container;
+	if (!resolve(ctxt, &t_container))
+		return false;
+    
+    if (!t_container -> eval(ctxt, r_value))
+        return false;
+    
+    return true;
 }
 
 Exec_stat MCVarref::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
@@ -761,7 +961,6 @@ MCVarref *MCVarref::getrootvarref(void)
 	return this;
 }
 
-
 bool MCVarref::rootmatches(MCVarref *p_other) const
 {
 	if (this == p_other)
@@ -795,6 +994,30 @@ Exec_stat MCVarref::set(MCExecPoint &ep, Boolean append)
 		return t_container -> set(ep);
 
 	return t_container -> append(ep);
+}
+
+bool MCVarref::set(MCExecContext& ctxt, MCValueRef p_value, bool p_append)
+{
+	if (dimensions == 0)
+	{
+		MCVariable *t_resolved_ref;
+        
+		t_resolved_ref = fetchvar(ctxt);
+        
+		if (!p_append)
+			return t_resolved_ref -> set(ctxt, p_value);
+        
+		return t_resolved_ref -> append(ctxt, p_value);
+	}
+    
+	MCAutoPointer<MCContainer> t_container;
+	if (resolve(ctxt, &t_container) != ES_NORMAL)
+		return false;
+	
+	if (!p_append)
+		return t_container -> set(ctxt, p_value);
+    
+	return t_container -> append(ctxt, p_value);
 }
 
 Parse_stat MCVarref::parsearray(MCScriptPoint &sp)
@@ -890,7 +1113,7 @@ Exec_stat MCVarref::dofree(MCExecPoint &ep)
 		
 		t_var = fetchvar(ep);
 			
-		return t_var -> remove(ep, nil, 0);
+        return t_var -> remove(ep);
 	}
 	
 	MCAutoPointer<MCContainer> t_container;
@@ -898,6 +1121,24 @@ Exec_stat MCVarref::dofree(MCExecPoint &ep)
 		return ES_ERROR;
 
 	return t_container -> remove(ep);
+}
+
+bool MCVarref::dofree(MCExecContext& ctxt)
+{
+	if (dimensions == 0)
+	{
+		MCVariable *t_var;
+		
+		t_var = fetchvar(ctxt);
+        
+		return t_var -> remove(ctxt);
+	}
+	
+	MCAutoPointer<MCContainer> t_container;
+	if (resolve(ctxt, &t_container) != ES_NORMAL)
+		return ES_ERROR;
+    
+	return t_container -> remove(ctxt);
 }
 
 //
@@ -988,6 +1229,95 @@ Exec_stat MCVarref::resolve(MCExecPoint& ep, MCContainer*& r_container)
 		MCMemoryDeleteArray(t_path);
 	}
 
+	return t_stat;
+}
+
+bool MCVarref::resolve(MCExecContext& ctxt, MCContainer*& r_container)
+{
+	MCVariable *t_var;
+	t_var = fetchvar(ctxt);
+    
+	if (dimensions == 0)
+	{
+		/* UNCHECKED */ MCContainer::createwithvariable(t_var, r_container);
+		return ES_NORMAL;
+	}
+    
+	MCExpression **t_dimensions;
+	if (dimensions == 1)
+		t_dimensions = &exp;
+	else
+		t_dimensions = exps;
+    
+	uindex_t t_dimension_count;
+	t_dimension_count = dimensions;
+    
+	uindex_t t_path_length;
+	t_path_length = 0;
+    
+	MCNameRef *t_path;
+	/* UNCHECKED */ MCMemoryNewArray(dimensions, t_path);
+    
+	Exec_stat t_stat;
+	t_stat = ES_NORMAL;
+    
+	MCExecPoint& ep = ctxt . GetEP();
+	for(uindex_t i = 0; i < dimensions && t_stat == ES_NORMAL; i++)
+	{
+		t_stat = t_dimensions[i] -> eval(ep);
+        
+		if (t_stat == ES_NORMAL)
+		{
+			if (ep . isarray() && !ep . isempty())
+			{
+				MCArrayRef t_array;
+				t_array = ep . getarrayref();
+                
+				if (!MCArrayIsSequence(t_array))
+				{
+					MCeerror -> add(EE_VARIABLE_BADINDEX, line, pos);
+					t_stat = ES_ERROR;
+				}
+                
+				if (t_stat == ES_NORMAL)
+				{
+					uindex_t t_length;
+					t_length = MCArrayGetCount(t_array);
+                    
+					/* UNCHECKED */ MCMemoryResizeArray(t_dimension_count + t_length, t_path, t_dimension_count);
+                    
+					MCExecPoint ep2(ep);
+					for(uindex_t t_index = 1; t_index <= t_length; t_index += 1)
+					{
+						if (!ep2 . fetcharrayindex(t_array, t_index))
+							ep2 . clear();
+						
+						if (!ep2 . copyasnameref(t_path[t_path_length++]))
+						{
+							MCeerror -> add(EE_VARIABLE_BADINDEX, line, pos);
+							t_stat = ES_ERROR;
+							break;
+						}
+					}
+				}
+			}
+			else if (!ep . copyasnameref(t_path[t_path_length++]))
+			{
+				MCeerror -> add(EE_VARIABLE_BADINDEX, line, pos);
+				t_stat = ES_ERROR;
+			}
+		}
+	}
+    
+	if (t_stat == ES_NORMAL)
+    /* UNCHECKED */ MCContainer::createwithpath(t_var, t_path, t_path_length, r_container);
+	else
+	{
+		for(uindex_t i = 0; i < t_path_length; i++)
+			MCValueRelease(t_path[i]);
+		MCMemoryDeleteArray(t_path);
+	}
+    
 	return t_stat;
 }
 

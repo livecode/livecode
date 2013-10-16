@@ -48,8 +48,8 @@ bool path_to_apk_path(MCStringRef p_path, MCStringRef &r_apk_path);
 class MCAndroidPlayerControl: public MCAndroidControl
 {
 protected:
-	static MCNativeControlPropertyInfo kProperties[];
-	static MCNativeControlPropertyTable kPropertyTable;
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
     static MCNativeControlActionInfo kActions[];
 	static MCNativeControlActionTable kActionTable;
     
@@ -64,7 +64,7 @@ public:
 #endif
     
     virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
-    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
 
     void SetContent(MCExecContext& ctxt, MCStringRef p_content);
     void GetContent(MCExecContext& ctxt, MCStringRef& r_content);
@@ -76,7 +76,7 @@ public:
     void GetLooping(MCExecContext& ctxt, bool& r_value);
     
     void GetDuration(MCExecContext& ctxt, integer_t& r_duration);
-    void GetNaturalSize(MCExecContext& ctxt, MCPoint32& r_size);
+    void GetNaturalSize(MCExecContext& ctxt, integer_t r_size[2]);
     
 	// Player-specific actions
 	void ExecPlay(MCExecContext& ctxt);
@@ -96,17 +96,17 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeControlPropertyInfo MCAndroidPlayerControl::kProperties[] =
+MCPropertyInfo MCAndroidPlayerControl::kProperties[] =
 {
-    DEFINE_RW_CTRL_PROPERTY(Content, String, MCAndroidPlayerControl, Content)
-    DEFINE_RW_CTRL_PROPERTY(ShowController, Bool, MCAndroidPlayerControl, ShowController)
-    DEFINE_RW_CTRL_PROPERTY(CurrentTime, Int32, MCAndroidPlayerControl, CurrentTime)
-    DEFINE_RW_CTRL_PROPERTY(Looping, Bool, MCAndroidPlayerControl, Looping)
-    DEFINE_RO_CTRL_PROPERTY(Duration, Int32, MCAndroidPlayerControl, Duration)
-    DEFINE_RO_CTRL_PROPERTY(NaturalSize, Int32X2, MCAndroidPlayerControl, NaturalSize)
+    DEFINE_RW_CTRL_PROPERTY(P_CONTENT, String, MCAndroidPlayerControl, Content)
+    DEFINE_RW_CTRL_PROPERTY(P_SHOW_CONTROLLER, Bool, MCAndroidPlayerControl, ShowController)
+    DEFINE_RW_CTRL_PROPERTY(P_CURRENT_TIME, Int32, MCAndroidPlayerControl, CurrentTime)
+    DEFINE_RW_CTRL_PROPERTY(P_LOOPING, Bool, MCAndroidPlayerControl, Looping)
+    DEFINE_RO_CTRL_PROPERTY(P_DURATION, Int32, MCAndroidPlayerControl, Duration)
+    DEFINE_RO_CTRL_PROPERTY(P_NATURAL_SIZE, Int32X2, MCAndroidPlayerControl, NaturalSize)
 };
 
-MCNativeControlPropertyTable MCAndroidPlayerControl::kPropertyTable =
+MCObjectPropertyTable MCAndroidPlayerControl::kPropertyTable =
 {
 	&MCAndroidControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
@@ -242,7 +242,7 @@ void MCAndroidPlayerControl::GetDuration(MCExecContext& ctxt, integer_t& r_durat
     MCAndroidObjectRemoteCall(t_view, "getDuration", "i", &r_duration);
 }
 
-void MCAndroidPlayerControl::GetNaturalSize(MCExecContext& ctxt, MCPoint32& r_size)
+void MCAndroidPlayerControl::GetNaturalSize(MCExecContext& ctxt, integer_t r_size[2])
 {
     jobject t_view;
     t_view = GetView();
@@ -250,8 +250,8 @@ void MCAndroidPlayerControl::GetNaturalSize(MCExecContext& ctxt, MCPoint32& r_si
     int32_t t_width = 0, t_height = 0;
     MCAndroidObjectRemoteCall(t_view, "getVideoWidth", "i", &t_width);
     MCAndroidObjectRemoteCall(t_view, "getVideoHeight", "i", &t_height);
-    r_size . x = t_width;
-    r_size . y = t_height;
+    r_size[0] = t_width;
+    r_size[1] = t_height;
 }
 
 #ifdef /* MCAndroidPlayerControl::Set */ LEGACY_EXEC

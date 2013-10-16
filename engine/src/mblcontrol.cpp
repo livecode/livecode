@@ -37,13 +37,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeControlPropertyInfo MCNativeControl::kProperties[] =
+MCPropertyInfo MCNativeControl::kProperties[] =
 {
-    DEFINE_RW_CTRL_PROPERTY(Name, OptionalString, MCNativeControl, Name)
-    DEFINE_RO_CTRL_PROPERTY(Id, UInt32, MCNativeControl, Id)
+    DEFINE_RW_CTRL_PROPERTY(P_NAME, OptionalString, MCNativeControl, Name)
+    DEFINE_RO_CTRL_PROPERTY(P_ID, UInt32, MCNativeControl, Id)
 };
 
-MCNativeControlPropertyTable MCNativeControl::kPropertyTable =
+MCObjectPropertyTable MCNativeControl::kPropertyTable =
 {
 	nil,
 	sizeof(kProperties) / sizeof(kProperties[0]),
@@ -96,7 +96,7 @@ MCNativeControl::MCNativeControl(void)
 {
 	m_references = 1;
 	m_id = ++s_last_native_control_id;
-	m_name = nil;
+	m_name = MCValueRetain(kMCEmptyString);
 	m_object = nil;
 	m_next = nil;
     m_deleted = false;
@@ -110,10 +110,9 @@ MCNativeControl::~MCNativeControl(void)
 		m_object = nil;
 	}
 	
-	if (m_name != nil)
+	if (!MCStringIsEmpty(m_name))
 	{
-		MCCStringFree(m_name);
-		m_name = nil;
+		MCValueRelease(m_name);
 	}
     
 	if (s_native_controls == this)
@@ -150,9 +149,9 @@ uint32_t MCNativeControl::GetId(void)
 	return m_id;
 }
 
-const char *MCNativeControl::GetName(void)
+void MCNativeControl::GetName(MCStringRef &r_name)
 {
-	return m_name;
+        r_name = MCValueRetain(m_name);
 }
 
 MCObject *MCNativeControl::GetOwner(void)
@@ -169,14 +168,14 @@ void MCNativeControl::SetOwner(MCObject *p_owner)
 
 bool MCNativeControl::SetName(MCStringRef p_name)
 {
-	if (m_name != nil)
+	if (!MCStringIsEmpty(m_name))
 	{
-		MCCStringFree(m_name);
-		m_name = nil;
+		MCValueRelease(m_name);
+		m_name = MCValueRetain(kMCEmptyString);
 	}
 	
-	if (p_name != nil) 
-		return MCCStringClone(MCStringGetCString(p_name), m_name);
+	if (p_name != nil)
+		MCValueAssign(m_name, p_name);
 	
 	return true;
 }
@@ -206,100 +205,100 @@ static struct {const char *name; MCNativeControlType type;} s_native_control_typ
 	{nil, kMCNativeControlTypeUnknown}
 };
 
-static struct {const char *name; MCNativeControlProperty property;} s_native_control_properties[] =
+static struct {const char *name; Properties property;} s_native_control_properties[] =
 {
-	{"id", kMCNativeControlPropertyId},
-	{"name", kMCNativeControlPropertyName},
+	{"id", P_ID},
+	{"name", P_NAME},
 	
-	{"rect", kMCNativeControlPropertyRectangle},
-	{"rectangle", kMCNativeControlPropertyRectangle},
-	{"visible", kMCNativeControlPropertyVisible},
-	{"opaque", kMCNativeControlPropertyOpaque},
-	{"alpha", kMCNativeControlPropertyAlpha},
-	{"backgroundColor", kMCNativeControlPropertyBackgroundColor},
+	{"rect", P_RECTANGLE},
+	{"rectangle", P_RECTANGLE},
+	{"visible", P_VISIBLE},
+	{"opaque", P_OPAQUE},
+	{"alpha", P_ALPHA},
+	{"backgroundColor", P_BACKGROUND_COLOR},
 	
-	{"dataDetectorTypes", kMCNativeControlPropertyDataDetectorTypes},
+	{"dataDetectorTypes", P_DATA_DETECTOR_TYPES},
 	
-	{"url", kMCNativeControlPropertyUrl},
-	{"canadvance", kMCNativeControlPropertyCanAdvance},
-	{"canretreat", kMCNativeControlPropertyCanRetreat},
-	{"autofit", kMCNativeControlPropertyAutoFit},
-	{"delayrequests", kMCNativeControlPropertyDelayRequests},
-	{"allowsInlineMediaPlayback", kMCNativeControlPropertyAllowsInlineMediaPlayback},
-	{"mediaPlaybackRequiresUserAction", kMCNativeControlPropertyMediaPlaybackRequiresUserAction},
+	{"url", P_URL},
+	{"canadvance", P_CAN_ADVANCE},
+	{"canretreat", P_CAN_RETREAT},
+	{"autofit", P_AUTO_FIT},
+	{"delayrequests", P_DELAY_REQUESTS},
+	{"allowsInlineMediaPlayback", P_ALLOWS_INLINE_MEDIA_PLAYBACK},
+	{"mediaPlaybackRequiresUserAction", P_MEDIA_PLAYBACK_REQUIRES_USER_ACTION},
 	
-	{"contentrect", kMCNativeControlPropertyContentRectangle},
-	{"contentrectangle", kMCNativeControlPropertyContentRectangle},
-	{"canbounce", kMCNativeControlPropertyCanBounce},
-	{"vscroll", kMCNativeControlPropertyVScroll},
-	{"hscroll", kMCNativeControlPropertyHScroll},
-	{"canscrolltotop", kMCNativeControlPropertyCanScrollToTop},
-	{"cancanceltouches", kMCNativeControlPropertyCanCancelTouches},
-	{"delaytouches", kMCNativeControlPropertyDelayTouches},
-	{"decelerationrate", kMCNativeControlPropertyDecelerationRate},
-	{"indicatorstyle", kMCNativeControlPropertyIndicatorStyle},
-	{"indicatorinsets", kMCNativeControlPropertyIndicatorInsets},
-	{"pagingenabled", kMCNativeControlPropertyPagingEnabled},
-	{"scrollingenabled", kMCNativeControlPropertyScrollingEnabled},
-	{"hIndicator", kMCNativeControlPropertyShowHorizontalIndicator},
-	{"vIndicator", kMCNativeControlPropertyShowVerticalIndicator},
-	{"lockdirection", kMCNativeControlPropertyLockDirection},
-	{"tracking", kMCNativeControlPropertyTracking},
-	{"dragging", kMCNativeControlPropertyDragging},
-	{"decelerating", kMCNativeControlPropertyDecelerating},
+	{"contentrect", P_CONTENT_RECT},
+	{"contentrectangle", P_CONTENT_RECT},
+	{"canbounce", P_CAN_BOUNCE},
+	{"vscroll", P_VSCROLL},
+	{"hscroll", P_HSCROLL},
+	{"canscrolltotop", P_CAN_SCROLL_TO_TOP},
+	{"cancanceltouches", P_CAN_CANCEL_TOUCHES},
+	{"delaytouches", P_DELAY_TOUCHES},
+	{"decelerationrate", P_DECELERATION_RATE},
+	{"indicatorstyle", P_INDICATOR_STYLE},
+	{"indicatorinsets", P_INDICATOR_INSETS},
+	{"pagingenabled", P_PAGING_ENABLED},
+	{"scrollingenabled", P_SCROLLING_ENABLED},
+	{"hIndicator", P_SHOW_HORIZONTAL_INDICATOR},
+	{"vIndicator", P_SHOW_VERTICAL_INDICATOR},
+	{"lockdirection", P_LOCK_DIRECTION},
+	{"tracking", P_TRACKING},
+	{"dragging", P_DRAGGING},
+	{"decelerating", P_DECELERATING},
 	
-	{"filename", kMCNativeControlPropertyContent},
-	{"naturalsize", kMCNativeControlPropertyNaturalSize},
-	{"fullscreen", kMCNativeControlPropertyFullscreen},
-	{"preserveaspect", kMCNativeControlPropertyPreserveAspect},
-	{"showcontroller", kMCNativeControlPropertyShowController},
-	{"duration", kMCNativeControlPropertyDuration},
-	{"playableduration", kMCNativeControlPropertyPlayableDuration},
-	{"starttime", kMCNativeControlPropertyStartTime},
-	{"endtime", kMCNativeControlPropertyEndTime},
-	{"currenttime", kMCNativeControlPropertyCurrentTime},
-	{"autoplay", kMCNativeControlPropertyShouldAutoplay},
-	{"looping", kMCNativeControlPropertyLooping},
+	{"filename", P_CONTENT},
+	{"naturalsize", P_NATURAL_SIZE},
+	{"fullscreen", P_FULLSCREEN},
+	{"preserveaspect", P_PRESERVE_ASPECT},
+	{"showcontroller", P_SHOW_CONTROLLER},
+	{"duration", P_DURATION},
+	{"playableduration", P_PLAYABLE_DURATION},
+	{"starttime", P_START_TIME},
+	{"endtime", P_END_TIME},
+	{"currenttime", P_CURRENT_TIME},
+	{"autoplay", P_SHOULD_AUTOPLAY},
+	{"looping", P_LOOPING},
 	
-	{"playbackstate", kMCNativeControlPropertyPlaybackState},
+	{"playbackstate", P_PLAYBACK_STATE},
     
     // MM-2013-02-21: [[ Bug 10632 ]] Added playRate property for native player.
-    {"playrate", kMCNativeControlPropertyPlayRate},
+    {"playrate", P_PLAY_RATE},
     
-	{"loadstate", kMCNativeControlPropertyLoadState},
-	{"useapplicationaudiosession", kMCNativeControlPropertyUseApplicationAudioSession},
-	{"allowsairplay", kMCNativeControlPropertyAllowsAirPlay},
+	{"loadstate", P_LOAD_STATE},
+	{"useapplicationaudiosession", P_USE_APPLICATION_AUDIO_SESSION},
+	{"allowsairplay", P_ALLOWS_AIR_PLAY},
 	
-	{"enabled", kMCNativeControlPropertyEnabled},
+	{"enabled", P_ENABLED},
 	
-	{"text", kMCNativeControlPropertyText},
-	{"unicodetext", kMCNativeControlPropertyUnicodeText},
-	{"textcolor", kMCNativeControlPropertyTextColor},
-	{"textalign", kMCNativeControlPropertyTextAlign},
-	{"fontname", kMCNativeControlPropertyFontName},
-	{"fontsize", kMCNativeControlPropertyFontSize},
-	{"editing", kMCNativeControlPropertyEditing},
+	{"text", P_TEXT},
+	{"unicodetext", P_UNICODE_TEXT},
+	{"textcolor", P_TEXT_COLOR},
+	{"textalign", P_TEXT_ALIGN},
+	{"fontname", P_FONT_NAME},
+	{"fontsize", P_FONT_SIZE},
+	{"editing", P_EDITING},
     
-	{"minimumfontsize", kMCNativeControlPropertyMinimumFontSize},
-	{"autoclear", kMCNativeControlPropertyAutoClear},
-	{"clearbuttonmode", kMCNativeControlPropertyClearButtonMode},
-	{"borderstyle", kMCNativeControlPropertyBorderStyle},
-	{"verticaltextalign", kMCNativeControlPropertyVerticalTextAlign},
+	{"minimumfontsize", P_MINIMUM_FONT_SIZE},
+	{"autoclear", P_AUTO_CLEAR},
+	{"clearbuttonmode", P_CLEAR_BUTTON_MODE},
+	{"borderstyle", P_BORDER_STYLE},
+	{"verticaltextalign", P_VERTICAL_TEXT_ALIGN},
 	
-	{"editable", kMCNativeControlPropertyEditable},
-	{"selectedrange", kMCNativeControlPropertySelectedRange},
+	{"editable", P_EDITABLE},
+	{"selectedrange", P_SELECTED_RANGE},
 	
-	{"autocapitalizationtype", kMCNativeControlPropertyAutoCapitalizationType},
-	{"autocorrectiontype", kMCNativeControlPropertyAutoCorrectionType},
-	{"managereturnkey", kMCNativeControlPropertyManageReturnKey},
-	{"keyboardtype", kMCNativeControlPropertyKeyboardType},
-	{"keyboardstyle", kMCNativeControlPropertyKeyboardStyle},
-	{"returnkeytype", kMCNativeControlPropertyReturnKeyType},
-	{"contenttype", kMCNativeControlPropertyContentType},
+	{"autocapitalizationtype", P_AUTO_CAPITALIZATION_TYPE},
+	{"autocorrectiontype", P_AUTOCORRECTION_TYPE},
+	{"managereturnkey", P_MANAGE_RETURN_KEY},
+	{"keyboardtype", P_KEYBOARD_TYPE},
+	{"keyboardstyle", P_KEYBOARD_STYLE},
+	{"returnkeytype", P_RETURN_KEY_TYPE},
+	{"contenttype", P_CONTENT_TYPE},
 	
-    {"multiline", kMCNativeControlPropertyMultiLine},
+    {"multiline", P_MULTI_LINE},
     
-	{nil, kMCNativeControlPropertyUnknown}
+	{nil, P_UNDEFINED}
 };
 
 static struct {const char *name; MCNativeControlAction action;} s_native_control_actions[] =
@@ -329,10 +328,10 @@ static struct {const char *name; MCNativeControlAction action;} s_native_control
 	{nil, kMCNativeControlActionUnknown}
 };
 
-bool MCNativeControl::LookupProperty(const char *p_property, MCNativeControlProperty& r_prop)
+bool MCNativeControl::LookupProperty(MCStringRef p_property, Properties& r_prop)
 {
 	for(uint32_t i = 0; s_native_control_properties[i] . name != nil; i++)
-		if (MCCStringEqualCaseless(p_property, s_native_control_properties[i] . name))
+		if (MCStringIsEqualToCString(p_property, s_native_control_properties[i] . name, kMCCompareCaseless))
 		{
 			r_prop = s_native_control_properties[i] . property;
 			return true;
@@ -341,10 +340,10 @@ bool MCNativeControl::LookupProperty(const char *p_property, MCNativeControlProp
 	return false;
 }
 
-bool MCNativeControl::LookupAction(const char *p_action, MCNativeControlAction& r_action)
+bool MCNativeControl::LookupAction(MCStringRef p_action, MCNativeControlAction& r_action)
 {
 	for(uint32_t i = 0; s_native_control_actions[i] . name != nil; i++)
-		if (MCCStringEqualCaseless(p_action, s_native_control_actions[i] . name))
+		if (MCStringIsEqualToCString(p_action, s_native_control_actions[i] . name, kMCCompareCaseless))
 		{
 			r_action = s_native_control_actions[i] . action;
 			return true;
@@ -352,10 +351,10 @@ bool MCNativeControl::LookupAction(const char *p_action, MCNativeControlAction& 
 	return false;
 }
 
-bool MCNativeControl::LookupType(const char *p_type, MCNativeControlType& r_type)
+bool MCNativeControl::LookupType(MCStringRef p_type, MCNativeControlType& r_type)
 {
 	for(uint32_t i = 0; s_native_control_types[i] . name != nil; i++)
-		if (MCCStringEqualCaseless(p_type, s_native_control_types[i] . name))
+		if (MCStringIsEqualToCString(p_type, s_native_control_types[i] . name, kMCCompareCaseless))
 		{
 			r_type = s_native_control_types[i] . type;
 			return true;
@@ -363,20 +362,22 @@ bool MCNativeControl::LookupType(const char *p_type, MCNativeControlType& r_type
 	return false;
 }
 
-bool MCNativeControl::FindByNameOrId(const char *p_name, MCNativeControl*& r_control)
+bool MCNativeControl::FindByNameOrId(MCStringRef p_name, MCNativeControl*& r_control)
 {
-	char *t_id_end;
-	uint32_t t_id;
-	t_id = strtoul(p_name, &t_id_end, 10);
-	if (t_id_end != p_name)
+	integer_t t_id;
+	if (/* CTXT */ MCStringToInteger(p_name, t_id))
 		return FindById(t_id, r_control);
 	
 	for(MCNativeControl *t_control = s_native_controls; t_control != nil; t_control = t_control -> m_next)
-		if (!t_control -> m_deleted && t_control -> GetName() != nil && MCCStringEqualCaseless(t_control -> GetName(), p_name))
+    {
+        MCAutoStringRef t_name;
+        t_control -> GetName(&t_name);
+		if (!t_control -> m_deleted && !MCStringIsEmpty(*t_name) && MCStringIsEqualTo(p_name, *t_name, kMCCompareCaseless))
 		{
 			r_control = t_control;
 			return true;
 		}
+    }
 	
 	return false;
 }
@@ -424,9 +425,10 @@ bool MCNativeControl::GetControlList(MCStringRef& r_list)
     MCListCreateMutable('\n', &t_list);
 	for(MCNativeControl *t_control = s_native_controls; t_success && t_control != nil; t_control = t_control -> m_next)
     {
-        MCAutoStringRef t_control_string;
-        if (t_control -> GetName() != nil)
-            t_success = MCStringCreateWithCString(t_control -> GetName(), &t_control_string);
+        MCAutoStringRef t_name, t_control_string;
+        t_control -> GetName(&t_name);
+        if (!MCStringIsEmpty(*t_name))
+            t_control_string = MCValueRetain(*t_name);
         else
             t_success = MCStringFormat(&t_control_string, "%u");
         
@@ -501,13 +503,13 @@ bool MCExecPointSetRect(MCExecPoint &ep, int2 p_left, int2 p_top, int2 p_right, 
 	return true;
 }
 
-static bool MCParseRGBA(const MCString &p_data, bool p_require_alpha, uint1 &r_red, uint1 &r_green, uint1 &r_blue, uint1 &r_alpha)
+static bool MCParseRGBA(MCStringRef p_data, bool p_require_alpha, uint1 &r_red, uint1 &r_green, uint1 &r_blue, uint1 &r_alpha)
 {
 	bool t_success = true;
 	Boolean t_parsed;
 	uint2 r, g, b, a;
-	const char *t_data = p_data.getstring();
-	uint32_t l = p_data.getlength();
+	const char *t_data = MCStringGetCString(p_data);
+	uint32_t l = MCStringGetLength(p_data);
 	if (t_success)
 	{
 		r = MCU_max(0, MCU_min(255, MCU_strtol(t_data, l, ',', t_parsed)));
@@ -549,11 +551,11 @@ bool MCNativeControl::ParseColor(MCExecPoint &ep, uint16_t &r_red, uint16_t &r_g
 {
     uint8_t t_r8, t_g8, t_b8, t_a8;
     MCColor t_color;
-    
-	MCAutoStringRef t_color_str;
-	/* UNCHECKED */ ep . copyasstringref(&t_color_str);
-	
-    if (MCParseRGBA(MCStringGetOldString(*t_color_str), false, t_r8, t_g8, t_b8, t_a8))
+
+    char *t_name = nil;
+    MCAutoStringRef t_value;
+    ep . copyasstringref(&t_value);
+    if (MCParseRGBA(*t_value, false, t_r8, t_g8, t_b8, t_a8))
     {
         r_red = (t_r8 << 8) | t_r8;
         r_green = (t_g8 << 8) | t_g8;
@@ -561,7 +563,7 @@ bool MCNativeControl::ParseColor(MCExecPoint &ep, uint16_t &r_red, uint16_t &r_g
         r_alpha = (t_a8 << 8) | t_a8;
         return true;
     }
-    else if (MCscreen->parsecolor(*t_color_str, t_color, NULL))
+    else if (MCscreen->parsecolor(*t_value, t_color, NULL))
     {
         r_red = t_color.red;
         r_green = t_color.green;
@@ -1028,32 +1030,22 @@ void MCNativeControl::GetId(MCExecContext& ctxt, uinteger_t& r_id)
 
 void MCNativeControl::GetName(MCExecContext& ctxt, MCStringRef& r_name)
 {
-    if (m_name != nil)
-    {
-        if (MCStringCreateWithCString(m_name, r_name))
-            return;
-    }
-    else
-        return;
-    
-    ctxt . Throw();
+    if (!MCStringIsEmpty(m_name))
+        r_name = MCValueRetain(m_name);
+      
+    return;  
 }
 
 void MCNativeControl::SetName(MCExecContext& ctxt, MCStringRef p_name)
 {
-    if (m_name != nil)
+    if (!MCStringIsEmpty(m_name))
 	{
-		MCCStringFree(m_name);
-		m_name = nil;
+		MCValueRelease(m_name);
+		m_name = MCValueRetain(kMCEmptyString);
 	}
 	
 	if (p_name != nil)
-    {
-        if (MCCStringClone(MCStringGetCString(p_name), m_name))
-            return;
-	}
-    else
-        return;
-	
-    ctxt . Throw();
+		m_name = MCValueRetain(p_name);
+
+    return;
 }

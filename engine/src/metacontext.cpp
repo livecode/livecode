@@ -509,16 +509,16 @@ void MCMetaContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy
 	setclip(t_old_clip);
 }
 
-void MCMetaContext::drawlink(const char *p_link, const MCRectangle& p_region)
+void MCMetaContext::drawlink(MCStringRef p_link, const MCRectangle& p_region)
 {
 	MCMark *t_mark;
 	t_mark = new_mark(MARK_TYPE_LINK, false, false);
 	if (t_mark != NULL)
 	{
 		t_mark -> link . region = p_region;
-		t_mark -> link . text = new_array<char>(strlen(p_link) + 1);
+		t_mark -> link . text = new_array<char>(MCStringGetLength(p_link) + 1);
 		if (t_mark -> link . text != NULL)
-			strcpy(t_mark -> link . text, p_link);
+			strcpy(t_mark -> link . text, MCStringGetCString(p_link));
 	}
 }
 
