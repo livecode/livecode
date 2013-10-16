@@ -1926,7 +1926,7 @@ void MCX11Context::drawtheme(MCThemeDrawType p_type, MCThemeDrawInfo* p_info)
 		MCscreen->destroyimage(t_argb_image);
 }
 
-void MCX11Context::drawlink(const char *link, const MCRectangle& region)
+void MCX11Context::drawlink(MCStringRef link, const MCRectangle& region)
 {
 }
 

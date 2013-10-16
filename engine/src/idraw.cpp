@@ -20,7 +20,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
-
+#include "execpt.h"
+#include "exec.h"
 #include "stacklst.h"
 #include "undolst.h"
 #include "image.h"
@@ -166,20 +167,21 @@ void MCImage::startmag(int2 x, int2 y)
 	MCmagimage = this;
 	state |= CS_MAGNIFY;
 
-	char buffer[U2L];
-	sprintf(buffer, "%d", rect.width * MCmagnification);
-	sptr->setsprop(P_MAX_WIDTH, buffer);
+    MCExecPoint ep(this, NULL, NULL);
+    MCExecContext ctxt(ep);
+    
+    sptr->setintprop(ctxt, 0, P_MAX_WIDTH, False, rect.width * MCmagnification);
 
-	sprintf(buffer, "%d", rect.width * MCmagnification);
-	sptr->setsprop(P_MAX_HEIGHT, buffer);
+    sptr->setintprop(ctxt, 0, P_MAX_HEIGHT, False, rect.width * MCmagnification);
 
 	uint2 ssize = MCU_min(32, rect.width);
-	sprintf(buffer, "%d", ssize * MCmagnification);
-	sptr->setsprop(P_WIDTH, buffer);
+	
+    sptr->setintprop(ctxt, 0, P_WIDTH, False, ssize * MCmagnification);
 
 	ssize = MCU_min(32, rect.height);
-	sprintf(buffer, "%d", ssize * MCmagnification);
-	sptr->setsprop(P_HEIGHT, buffer);
+
+    sptr->setintprop(ctxt, 0, P_HEIGHT, False, ssize * MCmagnification);
+
 
 	MCRectangle drect = sptr->getrect();
 	magrect.width = drect.width / MCmagnification;

@@ -605,7 +605,7 @@ void MCExpression::compile_out(MCSyntaxFactoryRef ctxt)
 
 #ifdef _MOBILE
 extern bool MCIsPlatformMessage(MCNameRef handler_name);
-extern Exec_stat MCHandlePlatformMessage(const MCString& p_message, MCParameter *p_parameters);
+extern Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters);
 #endif 
 
 MCFuncref::MCFuncref(MCNameRef inname)
@@ -709,12 +709,7 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 
 		tptr = tptr->getnext();
 	}
-#ifdef _MOBILE
-    if (platform_message)
-    {
-        return MCHandlePlatformMessage(MCNameGetOldString(name), params);
-    }
-#endif
+
 	// MW-2008-12-17: [[ Bug 7463 ]] Make sure we use the object from the execpoint, rather
 	//   than the 'parent' field in this.
 	MCObject *p = ep.getobj();
@@ -728,7 +723,14 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 		MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
 		added = True;
 	}
-	
+    
+#ifdef _MOBILE
+    if (platform_message)
+    {
+        stat = MCHandlePlatformMessage(name, params);
+    }
+#endif
+    
 	if (handler != nil)
 	{   
         // MW-2008-10-28: [[ ParentScripts ]] If we are in the context of a

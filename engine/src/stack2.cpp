@@ -795,7 +795,7 @@ void MCStack::startedit(MCGroup *group)
 	// Link the card to the parent, give it the same id as the current card and give it a temporary script
 	curcard->setparent(this);
 	curcard->setid(savecard->getid());
-	curcard->setsprop(P_SCRIPT, ECS);
+	curcard->setsprop(P_SCRIPT, MCSTR(ECS));
 
 	// Now add references for each control in the group being edited to the card
 	if (controls != NULL)
@@ -2571,11 +2571,14 @@ void MCStack::getstackfiles(MCExecPoint &ep)
 	}
 }
 
-void MCStack::stringtostackfiles(char *d, MCStackfile **sf, uint2 &nf)
+void MCStack::stringtostackfiles(MCStringRef d_strref, MCStackfile **sf, uint2 &nf)
 {
 	MCStackfile *newsf = NULL;
 	uint2 nnewsf = 0;
-	char *eptr = d;
+    // This ensures the coy is freed when the method ends
+    MCAutoPointer<char> d;
+    /* UNCHECKED */ d = strdup(MCStringGetCString(d_strref));
+	char *eptr = *d;
 	while ((eptr = strtok(eptr, "\n")) != NULL)
 	{
 		char *cptr = strchr(eptr, ',');
@@ -2593,7 +2596,7 @@ void MCStack::stringtostackfiles(char *d, MCStackfile **sf, uint2 &nf)
 	nf = nnewsf;
 }
 
-void MCStack::setstackfiles(const MCString &s)
+void MCStack::setstackfiles(MCStringRef s)
 {
 	while (nstackfiles--)
 	{
@@ -2601,39 +2604,38 @@ void MCStack::setstackfiles(const MCString &s)
 		MCValueRelease(stackfiles[nstackfiles].filename);
 	}
 	delete stackfiles;
-	char *d = s.clone();
-	stringtostackfiles(d, &stackfiles, nstackfiles);
-	delete d;
+	stringtostackfiles(s, &stackfiles, nstackfiles);
 }
 
-char *MCStack::getstackfile(const MCString &s)
+void MCStack::getstackfile(MCStringRef p_name, MCStringRef &r_name)
 {
-	MCAutoStringRef tmp_s;
-	MCStringCreateWithOldString(s, &tmp_s);
 	if (stackfiles != NULL)
 	{
 		uint2 i;
 		for (i = 0 ; i < nstackfiles ; i++)
-			if (MCStringIsEqualTo(stackfiles[i].stackname, *tmp_s, kMCStringOptionCompareCaseless))
+			if (MCStringIsEqualTo(stackfiles[i].stackname, p_name, kMCStringOptionCompareCaseless))
 			{
-				if (filename == NULL || MCStringGetNativeCharAtIndex(stackfiles[i].filename, 0) == '/' || MCStringGetNativeCharAtIndex(stackfiles[i].filename, 1) == ':')
-					return strclone(MCStringGetCString(stackfiles[i].filename));
+				if (MCStringIsEmpty(filename) || MCStringGetCharAtIndex(stackfiles[i].filename, 0) == '/' || MCStringGetCharAtIndex(stackfiles[i].filename, 1) == ':')
+				{
+					r_name = MCValueRetain(stackfiles[i].filename);
+					return;
+				}
 
-				// OK-2007-11-13 : Fix for crash caused by strcpy writing over sptr. sptr extended by 1 byte to cover null termination char.
-				char *sptr = new char[MCStringGetLength(filename) + MCStringGetLength(stackfiles[i].filename) + 1];
-				strcpy(sptr, MCStringGetCString(filename));
-				char *eptr = strrchr(sptr, PATH_SEPARATOR);
-
-				if (eptr == NULL)
-					eptr = sptr;
-				else
-					eptr++;
-
-				strcpy(eptr, MCStringGetCString(stackfiles[i].filename));
-				return sptr;
+				uindex_t t_index;
+				if (!MCStringLastIndexOfChar(filename, PATH_SEPARATOR, -1, kMCStringOptionCompareExact, t_index))
+				{
+					r_name = MCValueRetain(filename);
+					return;
+				}
+				
+				MCStringRef t_filename;
+				/* UNCHECKED */ MCStringMutableCopySubstring(filename, MCRangeMake(0, t_index + 1), t_filename);
+				/* UNCHECKED */ MCStringAppend(t_filename, stackfiles[i].filename);
+				/* UNCHECKED */ MCStringCopyAndRelease(t_filename, r_name);
+				return;
 			}
 	}
-	return NULL;
+	r_name = MCValueRetain(kMCEmptyString);
 }
 
 void MCStack::setfilename(MCStringRef f)

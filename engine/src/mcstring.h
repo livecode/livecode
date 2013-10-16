@@ -110,7 +110,6 @@ extern const char *MCasknamestring;
 extern const char *MChelpnamestring;
 extern const char *MChomenamestring;
 extern const char *MChcstatnamestring;
-extern const char *MCmessagenamestring;
 extern const char *MCdonestring;
 extern const char *MCnullstring;
 extern const char *MCintersectstring;
@@ -271,6 +270,8 @@ extern MCNameRef MCN_question;
 extern MCNameRef MCN_record;
 extern MCNameRef MCN_titled;
 extern MCNameRef MCN_warning;
+
+extern MCNameRef MCN_messagename;
 
 extern MCNameRef MCM_apple_event;
 extern MCNameRef MCM_arrow_key;

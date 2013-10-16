@@ -49,8 +49,8 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 class MCAndroidBrowserControl: public MCAndroidControl
 {
 protected:
-	static MCNativeControlPropertyInfo kProperties[];
-	static MCNativeControlPropertyTable kPropertyTable;
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
     static MCNativeControlActionInfo kActions[];
 	static MCNativeControlActionTable kActionTable;
 
@@ -64,7 +64,7 @@ public:
     virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
 #endif
 
-    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     void SetUrl(MCExecContext& ctxt, MCStringRef p_url);
@@ -102,16 +102,16 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeControlPropertyInfo MCAndroidBrowserControl::kProperties[] =
+MCPropertyInfo MCAndroidBrowserControl::kProperties[] =
 {
-    DEFINE_RW_CTRL_PROPERTY(Url, String, MCAndroidBrowserControl, Url)
-    DEFINE_RW_CTRL_PROPERTY(CanBounce, Bool, MCAndroidBrowserControl, CanBounce)
-    DEFINE_RW_CTRL_PROPERTY(ScrollingEnabled, Bool, MCAndroidBrowserControl, ScrollingEnabled)
-    DEFINE_RO_CTRL_PROPERTY(CanAdvance, Bool, MCAndroidBrowserControl, CanAdvance)
-    DEFINE_RO_CTRL_PROPERTY(CanRetreat, Bool, MCAndroidBrowserControl, CanRetreat)
+    DEFINE_RW_CTRL_PROPERTY(P_URL, String, MCAndroidBrowserControl, Url)
+    DEFINE_RW_CTRL_PROPERTY(P_CAN_BOUNCE, Bool, MCAndroidBrowserControl, CanBounce)
+    DEFINE_RW_CTRL_PROPERTY(P_SCROLLING_ENABLED, Bool, MCAndroidBrowserControl, ScrollingEnabled)
+    DEFINE_RO_CTRL_PROPERTY(P_CAN_ADVANCE, Bool, MCAndroidBrowserControl, CanAdvance)
+    DEFINE_RO_CTRL_PROPERTY(P_CAN_RETREAT, Bool, MCAndroidBrowserControl, CanRetreat)
 };
 
-MCNativeControlPropertyTable MCAndroidBrowserControl::kPropertyTable =
+MCObjectPropertyTable MCAndroidBrowserControl::kPropertyTable =
 {
 	&MCAndroidControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),

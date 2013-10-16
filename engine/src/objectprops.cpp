@@ -77,26 +77,26 @@ MCPropertyInfo MCObject::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_PARENT_SCRIPT, OptionalString, MCObject, ParentScript)
 	DEFINE_RO_OBJ_PART_PROPERTY(P_NUMBER, UInt32, MCObject, Number)
 
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FORE_PIXEL, OptionalUInt16, MCObject, ForePixel)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FORE_PIXEL, UInt16, MCObject, ForePixel)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BACK_PIXEL, OptionalUInt16, MCObject, BackPixel)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BACK_PIXEL, UInt16, MCObject, BackPixel)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_HILITE_PIXEL, OptionalUInt16, MCObject, HilitePixel)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_HILITE_PIXEL, UInt16, MCObject, HilitePixel)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BORDER_PIXEL, OptionalUInt16, MCObject, BorderPixel)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BORDER_PIXEL, UInt16, MCObject, BorderPixel)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_TOP_PIXEL, OptionalUInt16, MCObject, TopPixel)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_TOP_PIXEL, UInt16, MCObject, TopPixel)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BOTTOM_PIXEL, OptionalUInt16, MCObject, BottomPixel)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BOTTOM_PIXEL, UInt16, MCObject, BottomPixel)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_SHADOW_PIXEL, OptionalUInt16, MCObject, ShadowPixel)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_SHADOW_PIXEL, UInt16, MCObject, ShadowPixel)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FOCUS_PIXEL, OptionalUInt16, MCObject, FocusPixel)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FOCUS_PIXEL, UInt16, MCObject, FocusPixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FORE_PIXEL, OptionalUInt32, MCObject, ForePixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FORE_PIXEL, UInt32, MCObject, ForePixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BACK_PIXEL, OptionalUInt32, MCObject, BackPixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BACK_PIXEL, UInt32, MCObject, BackPixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_HILITE_PIXEL, OptionalUInt32, MCObject, HilitePixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_HILITE_PIXEL, UInt32, MCObject, HilitePixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BORDER_PIXEL, OptionalUInt32, MCObject, BorderPixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BORDER_PIXEL, UInt32, MCObject, BorderPixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_TOP_PIXEL, OptionalUInt32, MCObject, TopPixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_TOP_PIXEL, UInt32, MCObject, TopPixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BOTTOM_PIXEL, OptionalUInt32, MCObject, BottomPixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BOTTOM_PIXEL, UInt32, MCObject, BottomPixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_SHADOW_PIXEL, OptionalUInt32, MCObject, ShadowPixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_SHADOW_PIXEL, UInt32, MCObject, ShadowPixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FOCUS_PIXEL, OptionalUInt32, MCObject, FocusPixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FOCUS_PIXEL, UInt32, MCObject, FocusPixel)
 	DEFINE_RW_OBJ_PROPERTY(P_PEN_BACK_COLOR, Any, MCObject, PenBackColor)
 	DEFINE_RW_OBJ_PROPERTY(P_BRUSH_BACK_COLOR, Any, MCObject, PenBackColor)
-	DEFINE_RW_OBJ_PROPERTY(P_PEN_PATTERN, OptionalUInt16, MCObject, PenPattern)
-	DEFINE_RW_OBJ_PROPERTY(P_BRUSH_PATTERN, OptionalUInt16, MCObject, PenPattern)
+	DEFINE_RW_OBJ_PROPERTY(P_PEN_PATTERN, OptionalUInt32, MCObject, PenPattern)
+	DEFINE_RW_OBJ_PROPERTY(P_BRUSH_PATTERN, OptionalUInt32, MCObject, PenPattern)
 
 	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_PEN_COLOR, InterfaceNamedColor, MCObject, ForeColor)
 	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_PEN_COLOR, InterfaceNamedColor, MCObject, ForeColor)
@@ -119,22 +119,22 @@ MCPropertyInfo MCObject::kProperties[] =
 	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_FOCUS_COLOR, InterfaceNamedColor, MCObject, FocusColor)
 	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_FOCUS_COLOR, InterfaceNamedColor, MCObject, FocusColor)
 
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FORE_PATTERN, OptionalUInt16, MCObject, ForePattern)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FORE_PATTERN, UInt16, MCObject, ForePattern)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BACK_PATTERN, OptionalUInt16, MCObject, BackPattern)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BACK_PATTERN, UInt16, MCObject, BackPattern)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_HILITE_PATTERN, OptionalUInt16, MCObject, HilitePattern)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_HILITE_PATTERN, UInt16, MCObject, HilitePattern)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BORDER_PATTERN, OptionalUInt16, MCObject, BorderPattern)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BORDER_PATTERN, UInt16, MCObject, BorderPattern)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_TOP_PATTERN, OptionalUInt16, MCObject, TopPattern)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_TOP_PATTERN, UInt16, MCObject, TopPattern)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BOTTOM_PATTERN, OptionalUInt16, MCObject, BottomPattern)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BOTTOM_PATTERN, UInt16, MCObject, BottomPattern)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_SHADOW_PATTERN, OptionalUInt16, MCObject, ShadowPattern)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_SHADOW_PATTERN, UInt16, MCObject, ShadowPattern)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FOCUS_PATTERN, OptionalUInt16, MCObject, FocusPattern)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FOCUS_PATTERN, UInt16, MCObject, FocusPattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FORE_PATTERN, OptionalUInt32, MCObject, ForePattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FORE_PATTERN, UInt32, MCObject, ForePattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BACK_PATTERN, OptionalUInt32, MCObject, BackPattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BACK_PATTERN, UInt32, MCObject, BackPattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_HILITE_PATTERN, OptionalUInt32, MCObject, HilitePattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_HILITE_PATTERN, UInt32, MCObject, HilitePattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BORDER_PATTERN, OptionalUInt32, MCObject, BorderPattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BORDER_PATTERN, UInt32, MCObject, BorderPattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_TOP_PATTERN, OptionalUInt32, MCObject, TopPattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_TOP_PATTERN, UInt32, MCObject, TopPattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BOTTOM_PATTERN, OptionalUInt32, MCObject, BottomPattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BOTTOM_PATTERN, UInt32, MCObject, BottomPattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_SHADOW_PATTERN, OptionalUInt32, MCObject, ShadowPattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_SHADOW_PATTERN, UInt32, MCObject, ShadowPattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FOCUS_PATTERN, OptionalUInt32, MCObject, FocusPattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FOCUS_PATTERN, UInt32, MCObject, FocusPattern)
 
 	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_COLORS, String, MCObject, Colors)
 	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_COLORS, String, MCObject, Colors)
@@ -735,7 +735,7 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 	default:
 		{
 			Exec_stat t_stat;
-			t_stat = mode_getprop(parid, which, ep, MCnullmcstring, effective);
+			t_stat = mode_getprop(parid, which, ep, kMCEmptyString, effective);
 			if (t_stat == ES_NOT_HANDLED)
 			{
 				MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
@@ -748,7 +748,7 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 	return ES_NORMAL;
 #endif /* MCObject::getprop */
 	Exec_stat t_stat;
-	t_stat = mode_getprop(parid, which, ep, MCnullmcstring, effective);
+	t_stat = mode_getprop(parid, which, ep, kMCEmptyString, effective);
 	if (t_stat == ES_NOT_HANDLED)
 	{
 		MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
@@ -758,7 +758,7 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 }
 
 static bool string_contains_item(const char *p_string, const char *p_item)
-{
+{ 
 	const char *t_offset;
 	t_offset = strstr(p_string, p_item);
 	if (t_offset == nil)
@@ -768,7 +768,7 @@ static bool string_contains_item(const char *p_string, const char *p_item)
 	
 	uint32_t t_length;
 	t_length = strlen(p_item);
-	if (t_offset[t_length] != '\0' && t_offset[t_length] != ',')
+    if (t_offset[t_length] != '\0' && t_offset[t_length] != ',')
 		return false;
 
 	return true;
@@ -779,6 +779,7 @@ Exec_stat MCObject::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 {
 	switch(which)
 	{
+#ifdef LEGACY_EXEC
 	// MW-2011-11-23: [[ Array TextStyle ]] We now treat textStyle as (potentially) an
 	//   an array.
 	case P_TEXT_STYLE:
@@ -793,11 +794,11 @@ Exec_stat MCObject::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 
 		// Parse the requested text style.
 		Font_textstyle t_style;
-		if (MCF_parsetextstyle(MCNameGetOldString(key), t_style) != ES_NORMAL)
+		if (MCF_parsetextstyle(MCNameGetString(key), t_style) != ES_NORMAL)
 			return ES_ERROR;
 
 		// Check the textstyle string is within the object's textstyle set.
-		ep . setboolean(string_contains_item(ep . getcstring(), MCF_unparsetextstyle(t_style)));
+        ep . setboolean(string_contains_item(ep . getcstring(), MCF_unparsetextstyle(t_style)));
 	}
 	break;
 	case P_CUSTOM_KEYS:
@@ -815,10 +816,11 @@ Exec_stat MCObject::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 				ep.clear();
 		}
 		break;
+#endif
 	default:
 		{
 			Exec_stat t_stat;
-			t_stat = mode_getprop(parid, which, ep, MCNameGetOldString(key), False);
+			t_stat = mode_getprop(parid, which, ep, MCNameGetString(key), False);
 			if (t_stat == ES_NOT_HANDLED)
 			{
 				MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
@@ -1860,7 +1862,7 @@ Exec_stat MCObject::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 
 		// Parse the requested text style.
 		Font_textstyle t_style;
-		if (MCF_parsetextstyle(MCNameGetOldString(key), t_style) != ES_NORMAL)
+		if (MCF_parsetextstyle(MCNameGetString(key), t_style) != ES_NORMAL)
 			return ES_ERROR;
 
 		// MW-2012-02-19: [[ SplitTextAttrs ]] If we have no textStyle set then
@@ -1918,7 +1920,7 @@ Exec_stat MCObject::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 	default:
 		{
 			Exec_stat t_stat;
-			t_stat = mode_getprop(parid, which, ep, MCNameGetOldString(key), False);
+			t_stat = mode_getprop(parid, which, ep, MCNameGetString(key), False);
 			if (t_stat == ES_NOT_HANDLED)
 			{
 				MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
@@ -2189,15 +2191,16 @@ static bool MCPropertyParsePointList(MCStringRef p_input, char_t p_delimiter, ui
 	return t_success;
 }
 
-static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_table, Properties p_which, bool p_effective, bool p_array_prop)
+static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_table, Properties p_which, bool p_effective, bool p_array_prop, bool p_chunk_prop)
 {
 	for(uindex_t i = 0; i < p_table -> size; i++)
 		if (p_table -> table[i] . property == p_which && (!p_table -> table[i] . has_effective || p_table -> table[i] . effective == p_effective) &&
-            (p_array_prop == p_table -> table[i] . is_array_prop))
+            (p_array_prop == p_table -> table[i] . is_array_prop) &&
+            (p_chunk_prop == p_table -> table[i] . is_chunk_prop))
 			return &p_table -> table[i];
 	
 	if (p_table -> parent != nil)
-		return lookup_object_property(p_table -> parent, p_which, p_effective, p_array_prop);
+		return lookup_object_property(p_table -> parent, p_which, p_effective, p_array_prop, p_chunk_prop);
 	
 	return nil;
 }
@@ -2208,7 +2211,7 @@ Exec_stat MCObject::getarrayprop(uint32_t p_part_id, Properties p_which, MCExecP
         return getprop(p_part_id, p_which, ep, p_effective);
     
 	MCPropertyInfo *t_info;
-	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, true);
+	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, true, false);
 	
 	if (t_info != nil && t_info -> getter == nil)
 	{
@@ -2220,65 +2223,25 @@ Exec_stat MCObject::getarrayprop(uint32_t p_part_id, Properties p_which, MCExecP
 	{
 		MCExecContext ctxt(ep);
 		
-		MCObjectPtr t_object;
+		MCObjectIndexPtr t_object;
 		t_object . object = this;
 		t_object . part_id = p_part_id;
-		
-		switch(t_info -> type)
-		{
-			case kMCPropertyTypeAny:
-			{
-				MCAutoValueRef t_any;
-				((void(*)(MCExecContext&, MCObjectPtr, MCNameRef, MCValueRef&))t_info -> getter)(ctxt, t_object, p_index, &t_any);
-				if (!ctxt . HasError())
-				{
-					ep . setvalueref(*t_any);
-					return ES_NORMAL;
-				}
-			}
-				break;
-				
-			case kMCPropertyTypeBool:
-			{
-				bool t_value;
-				((void(*)(MCExecContext&, MCObjectPtr, MCNameRef, bool&))t_info -> getter)(ctxt, t_object, p_index, t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setboolean(t_value ? True : False);
-					return ES_NORMAL;
-				}
-			}
-				break;
-				
-			case kMCPropertyTypeString:
-			{
-				MCAutoStringRef t_value;
-				((void(*)(MCExecContext&, MCObjectPtr, MCNameRef, MCStringRef&))t_info -> getter)(ctxt, t_object, p_index, &t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setvalueref(*t_value);
-					return ES_NORMAL;
-				}
-			}
-				break;
-                
-			case kMCPropertyTypeArray:
-			{
-				MCAutoArrayRef t_value;
-				((void(*)(MCExecContext&, MCObjectPtr, MCNameRef, MCArrayRef&))t_info -> getter)(ctxt, t_object, p_index, &t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setvalueref(*t_value);
-					return ES_NORMAL;
-				}
-			}
-				break;
+        t_object . index = p_index;
+        
+        MCAutoValueRef t_value;
+        MCExecFetchProperty(ctxt, t_info, &t_object, &t_value);
+        
+        if (!ctxt . HasError())
+        {
+            ep . setvalueref(*t_value);
+            return ES_NORMAL;
         }
-        return ctxt . Catch(0, 0);
-    }
+        
+		return ctxt . Catch(0, 0);
+	}
     
     Exec_stat t_stat;
-    t_stat = mode_getprop(p_part_id, p_which, ep, MCNameGetOldString(p_index), False);
+    t_stat = mode_getprop(p_part_id, p_which, ep, MCNameGetString(p_index), False);
     if (t_stat == ES_NOT_HANDLED)
     {
         MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
@@ -2293,7 +2256,7 @@ Exec_stat MCObject::setarrayprop(uint32_t p_part_id, Properties p_which, MCExecP
         return setprop(p_part_id, p_which, ep, p_effective);
     
 	MCPropertyInfo *t_info;
-	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, true);
+	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, true, false);
     
 	if (t_info != nil && t_info -> setter == nil)
 	{
@@ -2305,60 +2268,26 @@ Exec_stat MCObject::setarrayprop(uint32_t p_part_id, Properties p_which, MCExecP
 	{
 		MCExecContext ctxt(ep);
 		
-		MCObjectPtr t_object;
+		MCObjectIndexPtr t_object;
 		t_object . object = this;
 		t_object . part_id = p_part_id;
-		
-		switch(t_info -> type)
-		{
-			case kMCPropertyTypeAny:
-			{
-				MCAutoValueRef t_value;
-				/* UNCHECKED */ ep . copyasvalueref(&t_value);
-				((void(*)(MCExecContext&, MCObjectPtr, MCNameRef, MCValueRef))t_info -> setter)(ctxt, t_object, p_index, *t_value);
-			}
-                break;
-				
-			case kMCPropertyTypeBool:
-			{
-				bool t_value;
-				if (!ep . copyasbool(t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NAB);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, MCNameRef, bool))t_info -> setter)(ctxt, t_object, p_index, t_value);
-			}
-                break;
-                
-                
-			case kMCPropertyTypeString:
-			{
-				MCAutoStringRef t_value;
-                if (!ep . copyasstringref(&t_value))
-                    ctxt . LegacyThrow(EE_PROPERTY_NAS);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, MCNameRef, MCStringRef))t_info -> setter)(ctxt, t_object, p_index, *t_value);
-			}
-                break;
-                
-			case kMCPropertyTypeArray:
-			{
-				MCAutoArrayRef t_value;
-				if (!ep . copyasarrayref(&t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NOTANARRAY);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, MCNameRef, MCArrayRef))t_info -> setter)(ctxt, t_object, p_index, *t_value);
-			}
-                break;
-		}
-		
-		if (!ctxt . HasError())
-			return ES_NORMAL;
+        t_object . index = p_index;
         
-		return ctxt . Catch(0, 0);
+        MCAutoValueRef t_value;
+        ep . copyasvalueref(&t_value);
+        MCExecStoreProperty(ctxt, t_info, &t_object, *t_value);
+        
+        if (!ctxt . HasError())
+        {
+            ep . setvalueref(*t_value);
+            return ES_NORMAL;
+        }
+        
+        return ctxt . Catch(0, 0);
 	}
     
     Exec_stat t_stat;
-    t_stat = mode_getprop(p_part_id, p_which, ep, MCNameGetOldString(p_index), False);
+    t_stat = mode_getprop(p_part_id, p_which, ep, MCNameGetString(p_index), False);
     if (t_stat == ES_NOT_HANDLED)
     {
         MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
@@ -2370,7 +2299,7 @@ Exec_stat MCObject::setarrayprop(uint32_t p_part_id, Properties p_which, MCExecP
 Exec_stat MCObject::getprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, Boolean p_effective)
 {
 	MCPropertyInfo *t_info;
-	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, false);
+	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, false, false);
 	
 	if (t_info != nil && t_info -> getter == nil)
 	{
@@ -2384,400 +2313,18 @@ Exec_stat MCObject::getprop(uint32_t p_part_id, Properties p_which, MCExecPoint&
 		
 		MCObjectPtr t_object;
 		t_object . object = this;
-		t_object . part_id = p_part_id;
-		
-		switch(t_info -> type)
-		{
-			case kMCPropertyTypeAny:
-			{
-				MCAutoValueRef t_any;
-				((void(*)(MCExecContext&, MCObjectPtr, MCValueRef&))t_info -> getter)(ctxt, t_object, &t_any);
-				if (!ctxt . HasError())
-				{
-					ep . setvalueref(*t_any);
-					return ES_NORMAL;
-				}
-			}
-				break;
-				
-			case kMCPropertyTypeBool:
-			{
-				bool t_value;
-				((void(*)(MCExecContext&, MCObjectPtr, bool&))t_info -> getter)(ctxt, t_object, t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setboolean(t_value ? True : False);
-					return ES_NORMAL;
-				}
-			}
-				break;
-				
-			case kMCPropertyTypeInt16:
-			case kMCPropertyTypeInt32:
-			{
-				integer_t t_value;
-				((void(*)(MCExecContext&, MCObjectPtr, integer_t&))t_info -> getter)(ctxt, t_object, t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setint(t_value);
-					return ES_NORMAL;
-				}
-			}
-				break;
-				
-			case kMCPropertyTypeUInt16:
-			case kMCPropertyTypeUInt32:
-			{
-				uinteger_t t_value;
-				((void(*)(MCExecContext&, MCObjectPtr, uinteger_t&))t_info -> getter)(ctxt, t_object, t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setuint(t_value);
-					return ES_NORMAL;
-				}
-			}
-				break;
-				
-			case kMCPropertyTypeDouble:
-			{
-				double t_value;
-				((void(*)(MCExecContext&, MCObjectPtr, double&))t_info -> getter)(ctxt, t_object, t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setnvalue(t_value);
-					return ES_NORMAL;
-				}
-			}
-				break;
-				
-			case kMCPropertyTypeChar:
-			{
-				char_t t_value;
-				((void(*)(MCExecContext&, MCObjectPtr, char_t&))t_info -> getter)(ctxt, t_object, t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setchar((char)t_value);
-					return ES_NORMAL;
-				}
-			}
-				break;
-				
-			case kMCPropertyTypeString:
-			case kMCPropertyTypeBinaryString:
-			{	
-				MCAutoStringRef t_value;
-				((void(*)(MCExecContext&, MCObjectPtr, MCStringRef&))t_info -> getter)(ctxt, t_object, &t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setvalueref(*t_value);
-					return ES_NORMAL;
-				}
-			}
-				break;
-				
-			case kMCPropertyTypeColor:
-			{
-				MCColor t_value;
-				((void(*)(MCExecContext&, MCObjectPtr, MCColor&))t_info -> getter)(ctxt, t_object, t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setcolor(t_value);
-					return ES_NORMAL;
-				}
-			}
-				break;
-				
-			case kMCPropertyTypeRectangle:
-			{
-				MCRectangle t_value;
-				((void(*)(MCExecContext&, MCObjectPtr, MCRectangle&))t_info -> getter)(ctxt, t_object, t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setrectangle(t_value);
-					return ES_NORMAL;
-				}
-			}
-				break;
-				
-			case kMCPropertyTypePoint:
-			{
-				MCPoint t_value;
-				((void(*)(MCExecContext&, MCObjectPtr, MCPoint&))t_info -> getter)(ctxt, t_object, t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setpoint(t_value);
-					return ES_NORMAL;
-				}
-			}
-				break;
-				
-			case kMCPropertyTypeInt16X2:
-			{
-				integer_t t_value[2];
-				((void(*)(MCExecContext&, MCObjectPtr, integer_t[2]))t_info -> getter)(ctxt, t_object, t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setstringf("%d,%d", t_value[0], t_value[1]);
-					return ES_NORMAL;
-				}
-			}
-				break;
-				
-			case kMCPropertyTypeInt16X4:
-			{
-				integer_t t_value[4];
-				((void(*)(MCExecContext&, MCObjectPtr, integer_t[4]))t_info -> getter)(ctxt, t_object, t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setstringf("%d,%d,%d,%d", t_value[0], t_value[1], t_value[2], t_value[3]);
-					return ES_NORMAL;
-				}
-			}
-				break;
-				
-			case kMCPropertyTypeArray:
-			{
-				MCAutoArrayRef t_value;
-				((void(*)(MCExecContext&, MCObjectPtr, MCArrayRef&))t_info -> getter)(ctxt, t_object, &t_value);
-				if (!ctxt . HasError())
-				{
-                    if (*t_value != nil)
-                        ep . setvalueref(*t_value);
-                    else
-                        ep . clear();
-                    return ES_NORMAL;
-				}
-			}
-				break;
-                
-			case kMCPropertyTypeEnum:
-			{
-				int t_value;
-				((void(*)(MCExecContext&, MCObjectPtr, int&))t_info -> getter)(ctxt, t_object, t_value);
-				if (!ctxt . HasError())
-				{
-					MCExecEnumTypeInfo *t_enum_info;
-					t_enum_info = (MCExecEnumTypeInfo *)(t_info -> type_info);
-					for(uindex_t i = 0; i < t_enum_info -> count; i++)
-						if (t_enum_info -> elements[i] . value == t_value)
-						{
-							ep . setcstring(t_enum_info -> elements[i] . tag);
-							return ES_NORMAL;
-						}
-					
-					// THIS MEANS A METHOD HAS RETURNED AN ILLEGAL VALUE
-					MCAssert(false);
-					return ES_ERROR;
-				}
-			}
-				break;
-
-			case kMCPropertyTypeOptionalEnum:
-			{
-				int t_value;
-				int *t_value_ptr;
-				t_value_ptr = &t_value;
-				((void(*)(MCExecContext&, MCObjectPtr, int*&))t_info -> getter)(ctxt, t_object, t_value_ptr);
-				if (!ctxt . HasError())
-				{
-					if (t_value_ptr == nil)
-						ep . clear();
-					else
-					{
-						MCExecEnumTypeInfo *t_enum_info;
-						t_enum_info = (MCExecEnumTypeInfo *)(t_info -> type_info);
-						for(uindex_t i = 0; i < t_enum_info -> count; i++)
-							if (t_enum_info -> elements[i] . value == t_value)
-							{
-								ep . setcstring(t_enum_info -> elements[i] . tag);
-								return ES_NORMAL;
-							}
-						
-						// THIS MEANS A METHOD HAS RETURNED AN ILLEGAL VALUE
-						MCAssert(false);
-						return ES_ERROR;
-					}
-					return ES_NORMAL;
-				}
-			}
-				break;
-								
-			case kMCPropertyTypeSet:
-			{
-				unsigned int t_value;
-				((void(*)(MCExecContext&, MCObjectPtr, unsigned int&))t_info -> getter)(ctxt, t_object, t_value);
-				if (!ctxt . HasError())
-				{
-					MCExecSetTypeInfo *t_set_info;
-					t_set_info = (MCExecSetTypeInfo *)(t_info -> type_info);
-					
-					bool t_first;
-					t_first = true;
-					
-					ep . clear();
-					for(uindex_t i = 0; i < t_set_info -> count; i++)
-						if (((1 << t_set_info -> elements[i] . bit) & t_value) != 0)
-						{
-							ep . concatcstring(t_set_info -> elements[i] . tag, EC_COMMA, t_first);
-							t_first = false;
-						}
-					
-					return ES_NORMAL;
-				}
-			}
-				break;
-				
-			case kMCPropertyTypeCustom:
-			{
-				MCExecCustomTypeInfo *t_custom_info;
-				t_custom_info = (MCExecCustomTypeInfo *)(t_info -> type_info);
-				
-				MCAssert(t_custom_info -> size <= 64);
-				
-				char t_value[64];
-				((void(*)(MCExecContext&, MCObjectPtr, void *))t_info -> getter)(ctxt, t_object, t_value);
-				if (!ctxt . HasError())
-				{
-					MCAutoStringRef t_value_ref;
-					((MCExecCustomTypeFormatProc)t_custom_info -> format)(ctxt, t_value, &t_value_ref);
-					((MCExecCustomTypeFreeProc)t_custom_info -> free)(ctxt, t_value);
-					if (!ctxt . HasError())
-					{
-						ep . setvalueref(*t_value_ref);
-						return ES_NORMAL;
-					}
-				}
-				
-			}
-				break;
-
-			case kMCPropertyTypeOptionalInt16:	
-			{
-				integer_t t_value;
-				integer_t *t_value_ptr;
-				t_value_ptr = &t_value;
-				((void(*)(MCExecContext&, MCObjectPtr, integer_t*&))t_info -> getter)(ctxt, t_object, t_value_ptr);
-				if (!ctxt . HasError())
-				{
-					if (t_value_ptr == nil)
-						ep . clear();
-					else
-						ep . setint(t_value);
-					return ES_NORMAL;
-				}
-			}
-				break;
-
-			case kMCPropertyTypeOptionalUInt16:	
-			case kMCPropertyTypeOptionalUInt32:
-			{
-				uinteger_t t_value;
-				uinteger_t *t_value_ptr;
-				t_value_ptr = &t_value;
-				((void(*)(MCExecContext&, MCObjectPtr, uinteger_t*&))t_info -> getter)(ctxt, t_object, t_value_ptr);
-				if (!ctxt . HasError())
-				{
-					if (t_value_ptr == nil)
-						ep . clear();
-					else
-						ep . setint(t_value);
-					return ES_NORMAL;
-				}
-			}
-				break;
-				
-			case kMCPropertyTypeOptionalString:
-			{
-				MCAutoStringRef t_value;
-				((void(*)(MCExecContext&, MCObjectPtr, MCStringRef&))t_info -> getter)(ctxt, t_object, &t_value);
-				if (!ctxt . HasError())
-				{
-					if (*t_value == nil)
-						ep . clear();
-					else
-						ep . setvalueref(*t_value);
-					
-					return ES_NORMAL;
-				}
-				
-			}
-				break;
-
-			case kMCPropertyTypeOptionalRectangle:
-			{
-				MCRectangle t_value;
-				MCRectangle *t_value_ptr;
-				t_value_ptr = &t_value;
-				((void(*)(MCExecContext&, MCObjectPtr, MCRectangle*&))t_info -> getter)(ctxt, t_object, t_value_ptr);
-				if (!ctxt . HasError())
-				{
-					if (t_value_ptr == nil)
-						ep . clear();
-					else
-						ep . setrectangle(t_value);
-					return ES_NORMAL;
-				}
-			}
-				break;
-                
-            case kMCPropertyTypeLinesOfString:
-            {
-				MCStringRef* t_value;
-                uindex_t t_count;
-				((void(*)(MCExecContext&, MCObjectPtr, uindex_t&, MCStringRef*&))t_info -> getter)(ctxt, t_object, t_count, t_value);
-				if (!ctxt . HasError())
-                {
-                    MCAutoStringRef t_output;
-                    if (MCPropertyFormatStringList(t_value, t_count, '\n', &t_output))
-                    {
-                        ep . setvalueref(*t_output);
-                        return ES_NORMAL;
-                    }
-				}
-			}
-				break;
-                
-            case kMCPropertyTypeLinesOfUInt:
-            case kMCPropertyTypeItemsOfUInt:
-            {
-				uinteger_t* t_value;
-                uindex_t t_count;
-				((void(*)(MCExecContext&, MCObjectPtr, uindex_t&, uinteger_t*&))t_info -> getter)(ctxt, t_object, t_count, t_value);
-				if (!ctxt . HasError())
-                {
-                    MCAutoStringRef t_output;
-                    char_t t_delimiter;
-                    t_delimiter = t_info -> type == kMCPropertyTypeLinesOfUInt ? '\n' : ',';
-                    if (MCPropertyFormatUIntList(t_value, t_count, t_delimiter, &t_output))
-                    {
-                        ep . setvalueref(*t_output);
-                        return ES_NORMAL;
-                    }
-				}
-			}
-				break;
-                
-            case kMCPropertyTypeLinesOfPoint:
-            {
-				MCPoint* t_value;
-                uindex_t t_count;
-				((void(*)(MCExecContext&, MCObjectPtr, uindex_t&, MCPoint*&))t_info -> getter)(ctxt, t_object, t_count, t_value);
-				if (!ctxt . HasError())
-                {
-                    MCAutoStringRef t_output;
-                    if (MCPropertyFormatPointList(t_value, t_count, '\n', &t_output))
-                    {
-                        ep . setvalueref(*t_output);
-                        return ES_NORMAL;
-                    }
-				}
-			}
-				break;
-		}
-		
-		return ctxt . Catch(0, 0);
-	}
-	
+        t_object . part_id = p_part_id;
+        
+        MCAutoValueRef t_value;
+        MCExecFetchProperty(ctxt, t_info, &t_object, &t_value);
+        
+        if (!ctxt . HasError())
+        {
+            ep . setvalueref(*t_value);
+            return ES_NORMAL;
+        }
+        return ctxt . Catch(0, 0);
+    }
 
 	return getprop_legacy(p_part_id, p_which, ep, p_effective);
 }
@@ -2785,7 +2332,7 @@ Exec_stat MCObject::getprop(uint32_t p_part_id, Properties p_which, MCExecPoint&
 Exec_stat MCObject::setprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, Boolean p_effective)
 {
 	MCPropertyInfo *t_info;
-	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, false);
+	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, false, false);
 
 	if (t_info != nil && t_info -> setter == nil)
 	{
@@ -2800,415 +2347,18 @@ Exec_stat MCObject::setprop(uint32_t p_part_id, Properties p_which, MCExecPoint&
 		MCObjectPtr t_object;
 		t_object . object = this;
 		t_object . part_id = p_part_id;
-		
-		switch(t_info -> type)
-		{
-			case kMCPropertyTypeAny:
-			{
-				MCAutoValueRef t_value;
-				if (!ep . copyasvalueref(&t_value))
-					return ES_ERROR;
-				((void(*)(MCExecContext&, MCObjectPtr, MCValueRef))t_info -> setter)(ctxt, t_object, *t_value);
-			}
-			break;
-				
-			case kMCPropertyTypeBool:
-			{
-				bool t_value;
-				if (!ep . copyasbool(t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NAB);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, bool))t_info -> setter)(ctxt, t_object, t_value);
-			}
-			break;
-				 
-			case kMCPropertyTypeInt16:
-			{
-				integer_t t_value;
-				if (!ep . copyasint(t_value) ||
-					t_value < -32768 || t_value > 32767)
-					ctxt . LegacyThrow(EE_PROPERTY_NAN);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, integer_t))t_info -> setter)(ctxt, t_object, t_value);				
-			}
-			break;
-				
-			case kMCPropertyTypeInt32:
-			{
-				integer_t t_value;
-				if (!ep . copyasint(t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NAN);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, integer_t))t_info -> setter)(ctxt, t_object, t_value);				
-			}
-			break; 
-			
-			case kMCPropertyTypeUInt16:
-			{
-				uinteger_t t_value;
-				if (!ep . copyasuint(t_value) ||
-					t_value < 0 || t_value > 65535)
-					ctxt . LegacyThrow(EE_PROPERTY_NAN);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, uinteger_t))t_info -> setter)(ctxt, t_object, t_value);				
-			}
-			break;
-				
-			case kMCPropertyTypeUInt32:
-			{
-				uinteger_t t_value;
-				if (!ep . copyasuint(t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NAN);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, uinteger_t))t_info -> setter)(ctxt, t_object, t_value);				
-			}
-			break;
-				
-			case kMCPropertyTypeDouble:
-			{
-				double t_value;
-				if (!ep . copyasdouble(t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NAN);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, double))t_info -> setter)(ctxt, t_object, t_value);	
-			}
-			break;
-			
-			case kMCPropertyTypeChar:
-			{
-				char_t t_value;
-				if (!ep . copyaschar(t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NAC);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, char_t))t_info -> setter)(ctxt, t_object, t_value);	
-			}
-			break;
-				
-			case kMCPropertyTypeString:
-			case kMCPropertyTypeBinaryString:
-			{
-				MCAutoStringRef t_value;
-				if (!ep . copyasstringref(&t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NAC);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, MCStringRef))t_info -> setter)(ctxt, t_object, *t_value);	
-			}
-			break;
-				
-			case kMCPropertyTypeColor:
-			{
-				MCColor t_value;
-				if (!ep . copyaslegacycolor(t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NOTACOLOR);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, MCColor))t_info -> setter)(ctxt, t_object, t_value);	
-			}
-			break;
-				
-			case kMCPropertyTypeRectangle:
-			{
-				MCRectangle t_value;
-				if (!ep . copyaslegacyrectangle(t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NOTARECT);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, MCRectangle))t_info -> setter)(ctxt, t_object, t_value);	
-			}
-			break;
-				
-			case kMCPropertyTypePoint:
-			{
-				MCPoint t_value;
-				if (!ep . copyaslegacypoint(t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NOTAPOINT);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, MCPoint))t_info -> setter)(ctxt, t_object, t_value);	
-			}
-			break;
-			
-			case kMCPropertyTypeInt16X2:
-			{
-				int2 a, b;
-				if (!MCU_stoi2x2(ep . getsvalue(), a, b))
-					ctxt . LegacyThrow(EE_PROPERTY_NOTAINTPAIR);
-				if (!ctxt . HasError())
-				{
-					integer_t t_value[2];
-					t_value[0] = a;
-					t_value[1] = b;
-					((void(*)(MCExecContext&, MCObjectPtr, integer_t[2]))t_info -> setter)(ctxt, t_object, t_value);
-				}
-			}
-			break;
-			
-			case kMCPropertyTypeInt16X4:
-			{
-				int2 a, b, c, d;
-				if (!MCU_stoi2x4(ep . getsvalue(), a, b, c, d))
-					ctxt . LegacyThrow(EE_PROPERTY_NOTAINTQUAD);
-				if (!ctxt . HasError())
-				{
-					integer_t t_value[4];
-					t_value[0] = a;
-					t_value[1] = b;
-					t_value[2] = c;
-					t_value[3] = d;
-					((void(*)(MCExecContext&, MCObjectPtr, integer_t[4]))t_info -> setter)(ctxt, t_object, t_value);
-				}
-			}
-			break;
-
-			case kMCPropertyTypeArray:
-			{
-				MCAutoArrayRef t_value;
-				if (!ep . copyasarrayref(&t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NOTANARRAY);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, MCArrayRef))t_info -> setter)(ctxt, t_object, *t_value);	
-			}
-			break;	
-
-			case kMCPropertyTypeEnum:
-			{
-				MCExecEnumTypeInfo *t_enum_info;
-				t_enum_info = (MCExecEnumTypeInfo *)t_info -> type_info;
-				
-				bool t_found;
-				t_found = false;
-				intenum_t t_value;
-				for(uindex_t i = 0; i < t_enum_info -> count; i++)
-					if (!t_enum_info -> elements[i] . read_only &&
-						MCU_strcasecmp(ep . getcstring(), t_enum_info -> elements[i] . tag) == 0)
-					{
-						t_found = true;
-						t_value = t_enum_info -> elements[i] . value;
-					}
-			
-				if (!t_found)
-					ctxt . LegacyThrow(EE_PROPERTY_BADENUMVALUE);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, int))t_info -> setter)(ctxt, t_object, t_value);
-			}
-			break;
-
-			case kMCPropertyTypeOptionalEnum:
-			{
-				MCExecEnumTypeInfo *t_enum_info;
-				t_enum_info = (MCExecEnumTypeInfo *)t_info -> type_info;
-				
-				intenum_t t_value;
-				intenum_t* t_value_ptr;
-				if (ep . isempty())
-					t_value_ptr = nil;
-				else
-				{
-					t_value_ptr = &t_value;
-					bool t_found;
-					t_found = false;
-					for(uindex_t i = 0; i < t_enum_info -> count; i++)
-						if (!t_enum_info -> elements[i] . read_only &&
-							MCU_strcasecmp(ep . getcstring(), t_enum_info -> elements[i] . tag) == 0)
-						{
-							t_found = true;
-							t_value = t_enum_info -> elements[i] . value;
-						}
-				
-					if (!t_found)
-						ctxt . LegacyThrow(EE_PROPERTY_BADENUMVALUE);
-				}
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, int*))t_info -> setter)(ctxt, t_object, t_value_ptr);
-			}
-			break;
-
-			case kMCPropertyTypeSet:
-			{
-				MCExecSetTypeInfo *t_set_info;
-				t_set_info = (MCExecSetTypeInfo *)(t_info -> type_info);
-				
-				intset_t t_value = 0;
-				char **t_elements;
-				uindex_t t_element_count;
-				MCCStringSplit(ep . getcstring(), ',', t_elements, t_element_count);
-
-				for (uindex_t i = 0; i < t_element_count; i++)
-				{
-					for (uindex_t j = 0; j < t_set_info -> count; j++)
-					{
-						if (MCU_strcasecmp(t_elements[i], t_set_info -> elements[j] . tag) == 0)
-						{
-							t_value |= 1 << t_set_info -> elements[j] . bit;
-							break;
-						}
-					}
-				}
-
-				MCCStringArrayFree(t_elements, t_element_count);
-				((void(*)(MCExecContext&, MCObjectPtr, unsigned int))t_info -> setter)(ctxt, t_object, t_value);
-			}
-			break;
-				
-			case kMCPropertyTypeCustom:
-			{
-				MCExecCustomTypeInfo *t_custom_info;
-				t_custom_info = (MCExecCustomTypeInfo *)(t_info -> type_info);
-				
-				MCAssert(t_custom_info -> size <= 64);
-			
-				MCAutoStringRef t_input_value;
-				/* UNCHECKED */ ep . copyasstringref(&t_input_value);
-				
-				char t_value[64];
-				((MCExecCustomTypeParseProc)t_custom_info -> parse)(ctxt, *t_input_value, t_value);
-				if (!ctxt . HasError())
-				{
-					((void(*)(MCExecContext&, MCObjectPtr, void *))t_info -> setter)(ctxt, t_object, t_value);
-					((MCExecCustomTypeFreeProc)t_custom_info -> free)(ctxt, t_value);
-				}
-			}
-			break;
-
-			case kMCPropertyTypeOptionalInt16:
-			{
-				integer_t t_value;
-				integer_t *t_value_ptr;
-				if (ep . isempty())
-					t_value_ptr = nil;
-				else
-				{
-					t_value_ptr = &t_value;
-					if (!ep . copyasint(t_value) ||
-						t_value < -32768 || t_value > 32767)
-						ctxt . LegacyThrow(EE_PROPERTY_NAN);
-				}
-				
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, integer_t*))t_info -> setter)(ctxt, t_object, t_value_ptr);		
-			}
-			break;
-
-			case kMCPropertyTypeOptionalUInt16:
-			{
-				uinteger_t t_value;
-				uinteger_t *t_value_ptr;
-				if (ep . isempty())
-					t_value_ptr = nil;
-				else
-				{
-					t_value_ptr = &t_value;
-					if (!ep . copyasuint(t_value) ||
-						t_value < 0 || t_value > 65535)
-						ctxt . LegacyThrow(EE_PROPERTY_NAN);
-				}
-				
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, uinteger_t*))t_info -> setter)(ctxt, t_object, t_value_ptr);		
-			}
-			break;
-
-			case kMCPropertyTypeOptionalUInt32:
-			{
-				uinteger_t t_value;
-				uinteger_t *t_value_ptr;
-				if (ep . isempty())
-					t_value_ptr = nil;
-				else
-				{
-					t_value_ptr = &t_value;
-					if (!ep . copyasuint(t_value))
-						ctxt . LegacyThrow(EE_PROPERTY_NAN);
-				}
-				
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, uinteger_t*))t_info -> setter)(ctxt, t_object, t_value_ptr);		
-			}
-			break;
-			
-			case kMCPropertyTypeOptionalString:
-			{
-				MCAutoStringRef t_value;
-				if (!ep . isempty())
-				{
-					if (!ep . copyasstringref(&t_value))
-						ctxt . LegacyThrow(EE_PROPERTY_NAS);
-				}
-				
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, MCStringRef))t_info -> setter)(ctxt, t_object, *t_value);
-			}
-			break;
-
-			case kMCPropertyTypeOptionalRectangle:
-			{
-				MCRectangle t_value;
-				MCRectangle *t_value_ptr;
-				if (ep . isempty())
-					t_value_ptr = nil;
-				else
-				{
-					t_value_ptr = &t_value;
-					if (!ep . copyaslegacyrectangle(t_value))
-						ctxt . LegacyThrow(EE_PROPERTY_NOTARECT);
-				}
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCObjectPtr, MCRectangle*))t_info -> setter)(ctxt, t_object, t_value_ptr);	
-			}
-			break;
-                
-            case kMCPropertyTypeLinesOfString:
-            {
-				MCAutoStringRef t_input;
-                MCStringRef *t_value;
-                uindex_t t_count;
-                
-                if (!ep . copyasstringref(&t_input) || !MCPropertyParseStringList(*t_input, '\n', t_count, t_value))
-                    ctxt . LegacyThrow(EE_PROPERTY_NAS);
-                
-				if (!ctxt . HasError())
-                    ((void(*)(MCExecContext&, MCObjectPtr, uindex_t, MCStringRef*))t_info -> setter)(ctxt, t_object, t_count, t_value);
-			}
-				break;
-                
-            case kMCPropertyTypeLinesOfUInt:
-            case kMCPropertyTypeItemsOfUInt:
-            {
-                MCAutoStringRef t_input;
-				uinteger_t* t_value;
-                uindex_t t_count;
-                
-                char_t t_delimiter;
-                t_delimiter = t_info -> type == kMCPropertyTypeLinesOfUInt ? '\n' : ',';
-
-                if (!ep . copyasstringref(&t_input) || !MCPropertyParseUIntList(*t_input, t_delimiter, t_count, t_value))
-                    ctxt . LegacyThrow(EE_PROPERTY_NAN);
-                
-				if (!ctxt . HasError())
-                    ((void(*)(MCExecContext&, MCObjectPtr, uindex_t, uinteger_t*))t_info -> setter)(ctxt, t_object, t_count, t_value);
-			}
-				break;
-                
-            case kMCPropertyTypeLinesOfPoint:
-            {
-				MCAutoStringRef t_input;
-                MCPoint *t_value;
-                uindex_t t_count;
-                
-                if (!ep . copyasstringref(&t_input) || !MCPropertyParsePointList(*t_input, '\n', t_count, t_value))
-                    ctxt . LegacyThrow(EE_PROPERTY_NAS);
-                
-				if (!ctxt . HasError())
-                    ((void(*)(MCExecContext&, MCObjectPtr, uindex_t, MCPoint*))t_info -> setter)(ctxt, t_object, t_count, t_value);
-			}
-				break;
-
-			default:
-				ctxt . Unimplemented();
-				break;
-		}
-		
-		if (!ctxt . HasError())
-			return ES_NORMAL;
-
-		return ctxt . Catch(0, 0);
+        
+        MCAutoValueRef t_value;
+        ep . copyasvalueref(&t_value);
+        MCExecStoreProperty(ctxt, t_info, &t_object, *t_value);
+        
+        if (!ctxt . HasError())
+        {
+            ep . setvalueref(*t_value);
+            return ES_NORMAL;
+        }
+        
+        return ctxt . Catch(0, 0);
 	}
 	
 	return setprop_legacy(p_part_id, p_which, ep, p_effective);
@@ -3265,6 +2415,14 @@ void MCObject::setuintprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p
 	ctxt . Throw();
 }
 
+void MCObject::setintprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, integer_t p_value)
+{
+	ctxt . GetEP() . setint(p_value);
+	if (setprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL)
+		return;
+	
+	ctxt . Throw();
+}
 //////////
 
 void MCObject::getdoubleprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, double& r_value)
@@ -3323,6 +2481,37 @@ void MCObject::getvariantprop(MCExecContext& ctxt, uint32_t p_part_id, Propertie
 		return;
 
 	ctxt . Throw();
+}
+
+/////////
+
+void MCObject::setdataprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCDataRef p_value)
+{
+	ctxt . GetEP() . setvalueref(p_value);
+	if (setprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL)
+		return;
+	
+    ctxt . Throw();
+}
+
+//////////
+
+void MCObject::getpointprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCPoint &r_point)
+{
+	if (getprop(p_part_id, p_which, ctxt.GetEP(), p_effective) == ES_NORMAL
+		&& ctxt.GetEP().copyaspoint(r_point))
+		return;
+	
+	ctxt.Throw();
+}
+
+void MCObject::setpointprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, const MCPoint &p_point)
+{
+	ctxt.GetEP().setpoint(p_point);
+	if (setprop(p_part_id, p_which, ctxt.GetEP(), p_effective) == ES_NORMAL)
+		return;
+	
+    ctxt.Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

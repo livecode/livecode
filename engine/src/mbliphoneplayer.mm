@@ -83,8 +83,8 @@ class MCiOSPlayerControl;
 
 class MCiOSPlayerControl: public MCiOSControl
 {
-	static MCNativeControlPropertyInfo kProperties[];
-	static MCNativeControlPropertyTable kPropertyTable;
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
     static MCNativeControlActionInfo kActions[];
 	static MCNativeControlActionTable kActionTable;
 
@@ -98,7 +98,7 @@ public:
 	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
 #endif
 
-    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
 	virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     virtual void SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor& p_color);
@@ -134,7 +134,7 @@ public:
     void GetIsPreparedToPlay(MCExecContext& ctxt, bool& r_value);
     void GetLoadState(MCExecContext& ctxt, MCNativeControlLoadState& r_state);
     void GetPlaybackState(MCExecContext& ctxt, MCNativeControlPlaybackState& r_state);
-    void GetNaturalSize(MCExecContext& ctxt, MCPoint32& r_size);
+    void GetNaturalSize(MCExecContext& ctxt, integer_t r_size[2]);
     
     
 	// Player-specific actions
@@ -169,30 +169,30 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeControlPropertyInfo MCiOSPlayerControl::kProperties[] =
+MCPropertyInfo MCiOSPlayerControl::kProperties[] =
 {
-    DEFINE_RW_CTRL_CUSTOM_PROPERTY(BackgroundColor, NativeControlColor, MCiOSPlayerControl, BackgroundColor)
-    DEFINE_RW_CTRL_PROPERTY(Content, String, MCiOSPlayerControl, Content)
-    DEFINE_RW_CTRL_PROPERTY(Fullscreen, Bool, MCiOSPlayerControl, Fullscreen)
-    DEFINE_RW_CTRL_PROPERTY(PreserveAspect, Bool, MCiOSPlayerControl, PreserveAspect)
-    DEFINE_RW_CTRL_PROPERTY(ShowController, Bool, MCiOSPlayerControl, Fullscreen)
-    DEFINE_RW_CTRL_PROPERTY(UseApplicationAudioSession, Bool, MCiOSPlayerControl, UseApplicationAudioSession)
-    DEFINE_RW_CTRL_PROPERTY(StartTime, Int32, MCiOSPlayerControl, StartTime)
-    DEFINE_RW_CTRL_PROPERTY(EndTime, Int32, MCiOSPlayerControl, EndTime)
-    DEFINE_RW_CTRL_PROPERTY(CurrentTime, Int32, MCiOSPlayerControl, CurrentTime)
-    DEFINE_RW_CTRL_PROPERTY(ShouldAutoplay, Bool, MCiOSPlayerControl, ShouldAutoplay)
-    DEFINE_RW_CTRL_PROPERTY(Looping, Bool, MCiOSPlayerControl, Looping)
-    DEFINE_RW_CTRL_PROPERTY(AllowsAirPlay, Bool, MCiOSPlayerControl, AllowsAirPlay)
-    DEFINE_RW_CTRL_PROPERTY(PlayRate, Double, MCiOSPlayerControl, PlayRate)
-    DEFINE_RO_CTRL_PROPERTY(Duration, Int32, MCiOSPlayerControl, Duration)
-    DEFINE_RO_CTRL_PROPERTY(PlayableDuration, Int32, MCiOSPlayerControl, PlayableDuration)
-    DEFINE_RO_CTRL_PROPERTY(IsPreparedToPlay, Bool, MCiOSPlayerControl, IsPreparedToPlay)
-    DEFINE_RO_CTRL_SET_PROPERTY(LoadState, NativeControlLoadState, MCiOSPlayerControl, LoadState)
-    DEFINE_RO_CTRL_ENUM_PROPERTY(PlaybackState, NativeControlPlaybackState, MCiOSPlayerControl, PlaybackState)
-    DEFINE_RO_CTRL_PROPERTY(NaturalSize, Int32X2, MCiOSPlayerControl, NaturalSize)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(P_BACKGROUND_COLOR, NativeControlColor, MCiOSPlayerControl, BackgroundColor)
+    DEFINE_RW_CTRL_PROPERTY(P_CONTENT, String, MCiOSPlayerControl, Content)
+    DEFINE_RW_CTRL_PROPERTY(P_FULLSCREEN, Bool, MCiOSPlayerControl, Fullscreen)
+    DEFINE_RW_CTRL_PROPERTY(P_PRESERVE_ASPECT, Bool, MCiOSPlayerControl, PreserveAspect)
+    DEFINE_RW_CTRL_PROPERTY(P_SHOW_CONTROLLER, Bool, MCiOSPlayerControl, Fullscreen)
+    DEFINE_RW_CTRL_PROPERTY(P_USE_APPLICATION_AUDIO_SESSION, Bool, MCiOSPlayerControl, UseApplicationAudioSession)
+    DEFINE_RW_CTRL_PROPERTY(P_START_TIME, Int32, MCiOSPlayerControl, StartTime)
+    DEFINE_RW_CTRL_PROPERTY(P_END_TIME, Int32, MCiOSPlayerControl, EndTime)
+    DEFINE_RW_CTRL_PROPERTY(P_CURRENT_TIME, Int32, MCiOSPlayerControl, CurrentTime)
+    DEFINE_RW_CTRL_PROPERTY(P_SHOULD_AUTOPLAY, Bool, MCiOSPlayerControl, ShouldAutoplay)
+    DEFINE_RW_CTRL_PROPERTY(P_LOOPING, Bool, MCiOSPlayerControl, Looping)
+    DEFINE_RW_CTRL_PROPERTY(P_ALLOWS_AIR_PLAY, Bool, MCiOSPlayerControl, AllowsAirPlay)
+    DEFINE_RW_CTRL_PROPERTY(P_PLAY_RATE, Double, MCiOSPlayerControl, PlayRate)
+    DEFINE_RO_CTRL_PROPERTY(P_DURATION, Int32, MCiOSPlayerControl, Duration)
+    DEFINE_RO_CTRL_PROPERTY(P_PLAYABLE_DURATION, Int32, MCiOSPlayerControl, PlayableDuration)
+    DEFINE_RO_CTRL_PROPERTY(P_IS_PREPARED_TO_PLAY, Bool, MCiOSPlayerControl, IsPreparedToPlay)
+    DEFINE_RO_CTRL_SET_PROPERTY(P_LOAD_STATE, NativeControlLoadState, MCiOSPlayerControl, LoadState)
+    DEFINE_RO_CTRL_ENUM_PROPERTY(P_PLAYBACK_STATE, NativeControlPlaybackState, MCiOSPlayerControl, PlaybackState)
+    DEFINE_RO_CTRL_PROPERTY(P_NATURAL_SIZE, Int32X2, MCiOSPlayerControl, NaturalSize)
 };
 
-MCNativeControlPropertyTable MCiOSPlayerControl::kPropertyTable =
+MCObjectPropertyTable MCiOSPlayerControl::kPropertyTable =
 {
 	&MCiOSControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
@@ -259,8 +259,10 @@ static void MCIPhoneImportUIImage(UIImage *p_image, int32_t p_max_width, int32_t
 	iptr -> attach(OP_CENTER, false);
 
 	MCExecPoint ep(nil, nil, nil);
-	ep . setsvalue(MCString((const char *)[t_data bytes], [t_data length]));
-	iptr -> setprop(0, P_TEXT, ep, false);
+	MCExecContext ctxt(ep);
+	MCAutoDataRef t_dataref;
+	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)[t_data bytes], [t_data length], &t_dataref);
+	iptr -> setdataprop(ctxt, 0, P_TEXT, false, *t_dataref);	
 }
 
 static void content_to_url(const char *p_file, NSURL*& r_url)
@@ -632,19 +634,19 @@ void MCiOSPlayerControl::GetPlaybackState(MCExecContext& ctxt, MCNativeControlPl
         r_state = kMCNativeControlPlaybackStateNone;
 }
 
-void MCiOSPlayerControl::GetNaturalSize(MCExecContext& ctxt, MCPoint32& r_size)
+void MCiOSPlayerControl::GetNaturalSize(MCExecContext& ctxt, integer_t r_size[2])
 {
     if (m_controller != nil)
     {
         CGSize t_size;
         t_size = [m_controller naturalSize];
-        r_size . x = (int32_t)t_size . width;
-        r_size . y = (int32_t)t_size . height;
+        r_size[0] = (int32_t)t_size . width;
+        r_size[1] = (int32_t)t_size . height;
     }
     else
     {
-        r_size . x = 0;
-        r_size . y = 0;
+        r_size[0] = 0;
+        r_size[1] = 0;
     }
 }
 

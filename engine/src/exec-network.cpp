@@ -527,13 +527,12 @@ void MCNetworkExecReadFromSocket(MCExecContext& ctxt, MCNameRef p_socket, uint4 
 		MCAutoDataRef t_data;
 		
 		if (p_sentinel != nil)
-			MCS_read_socket(MCsockets[t_index], ctxt . GetEP(), p_count, MCStringGetCString(p_sentinel), p_message);
+			MCS_read_socket(MCsockets[t_index], ctxt, p_count, MCStringGetCString(p_sentinel), p_message, &t_data);
 		else
-			MCS_read_socket(MCsockets[t_index], ctxt . GetEP(), 0, nil, p_message);
+			MCS_read_socket(MCsockets[t_index], ctxt, 0, nil, p_message, &t_data);
 
 		if (p_message == NULL)
 		{
-			ctxt . GetEP() . copyasdataref(&t_data);
 			ctxt . SetItToValue(*t_data);
 		}
 	}
@@ -584,43 +583,37 @@ void MCNetworkExecWriteToSocket(MCExecContext& ctxt, MCNameRef p_socket, MCStrin
 
 void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCStringRef p_value, int p_where, MCUrlChunkPtr p_chunk)
 {
-	MCExecPoint& ep = ctxt . GetEP();
+	MCAutoStringRef t_new_value;
 	if (p_chunk . chunk == CT_UNDEFINED)
 	{
 		if (p_where == PT_INTO)
-			ep . setvalueref(p_value);
+			t_new_value = p_value;
 		else
 		{
-			ep . setvalueref(p_chunk . url);
-			MCU_geturl(ep);
-			
+			MCStringRef t_old_data;
+			/* UNCHECKED */ MCU_geturl(ctxt, p_chunk.url, t_old_data);
+			/* UNCHECKED */ MCStringMutableCopyAndRelease(t_old_data, t_old_data);
 			if (p_where == PT_AFTER)
-				ep . appendmcstring(MCStringGetOldString(p_value));
+				/* UNCHECKED */ MCStringAppend(t_old_data, p_value);
 			else
-			{
-				MCAutoStringRef t_string;
-				/* UNCHECKED */ ep . copyasmutablestringref(&t_string);
-				/* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(0, 0), p_value);
-				ep . setvalueref(*t_string);
-			}
+				/* UNCHECKED */ MCStringPrepend(t_old_data, p_value);
+			/* UNCHECKED */ MCStringCopyAndRelease(t_old_data, &t_new_value);
 		}
 	}
 	else
 	{
-		ep . setvalueref(p_chunk . url);
-		MCU_geturl(ep);
+		MCAutoStringRef t_old_data;
+		/* UNCHECKED */ MCU_geturl(ctxt, p_chunk.url, &t_old_data);
 		
-		MCAutoStringRef t_string;
-		/* UNCHECKED */ ep . copyasmutablestringref(&t_string);
-		
-		/* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_chunk . start, p_chunk . finish - p_chunk . start), p_value);
-		
-		ep . setvalueref(*t_string);
+		MCStringRef t_string;
+		/* UNCHECKED */ MCStringMutableCopy(*t_old_data, t_string);
+		/* UNCHECKED */ MCStringReplace(t_string, MCRangeMake(p_chunk.mark.start, p_chunk.mark.finish - p_chunk.mark.start), p_value);
+		/* UNCHECKED */ MCStringCopyAndRelease(t_string, &t_new_value);
 	}
-	MCExecPoint ep2(ep);
-	ep2 . setvalueref(p_chunk . url);
 	
-	MCU_puturl(ep2, ep);
+	ctxt.SetTheResultToValue(*t_new_value);
+
+	/* UNCHECKED */ MCU_puturl(ctxt, p_chunk.url, *t_new_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -636,15 +629,16 @@ void MCNetworkExecReturnValueAndUrlResult(MCExecContext& ctxt, MCValueRef p_resu
 
 void MCNetworkExecReturnValueAndUrlResultFromVar(MCExecContext& ctxt, MCValueRef p_result, MCVarref *p_variable)
 {
-	if (p_variable -> eval(ctxt . GetEP()) != ES_NORMAL)
+    MCAutoValueRef t_value;
+	if (!p_variable -> eval(ctxt, &t_value))
 	{
 		ctxt . LegacyThrow(EE_RETURN_BADEXP);
 		return;
 	}
 	
 	ctxt . SetTheResultToValue(p_result);
-	MCurlresult -> set(ctxt . GetEP());
-	p_variable -> dofree(ctxt . GetEP());
+	MCurlresult -> set(ctxt, *t_value);
+	p_variable -> dofree(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -740,9 +734,9 @@ void MCNetworkSetDefaultNetworkInterface(MCExecContext& ctxt, MCStringRef p_valu
 	else
 	{
 		regexp *t_net_int_regex;
-		t_net_int_regex = MCR_compile("\\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b");
+		t_net_int_regex = MCR_compile(MCSTR("\\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b"));
 		int t_net_int_valid;
-		t_net_int_valid = MCR_exec(t_net_int_regex, MCStringGetCString(p_value), MCStringGetLength(p_value));
+		t_net_int_valid = MCR_exec(t_net_int_regex, p_value, MCStringGetLength(p_value));
 		MCR_free(t_net_int_regex);			
 		if (t_net_int_valid != 0)
 		{
@@ -775,3 +769,41 @@ void MCNetworkSetAllowDatagramBroadcasts(MCExecContext& ctxt, bool p_value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCNetworkExecSetUrl(MCExecContext& ctxt, MCStringRef p_value, MCStringRef p_url)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecPoint ep2(nil, nil, nil);
+    
+    ep . setvalueref(p_url);
+    ep2 . setvalueref(p_value);
+    
+	MCU_puturl(ep, ep2);
+}
+
+void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCStringRef p_value, int p_where, MCStringRef p_url)
+{
+    if (p_where == PT_INTO)
+        MCNetworkExecSetUrl(ctxt, p_value, p_url);
+    else
+    {
+        MCAutoStringRef t_string;
+        MCU_geturl(ctxt, p_url, &t_string);
+        
+        MCAutoStringRef t_new_value;
+        MCStringMutableCopy(*t_string, &t_new_value);
+        
+        if (p_where == PT_AFTER)
+            MCStringAppend(*t_new_value, p_value);
+        else
+            MCStringPrepend(*t_new_value, p_value);
+        MCNetworkExecSetUrl(ctxt, *t_new_value, p_url);
+    }
+}
+
+void MCNetworkMarkUrl(MCExecContext& ctxt, MCStringRef p_url, MCMarkedText& r_mark)
+{
+    MCU_geturl(ctxt, p_url, r_mark . text);
+    r_mark . start = 0;
+    r_mark . finish = MAXUINT4;
+}

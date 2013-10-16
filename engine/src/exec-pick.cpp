@@ -237,7 +237,7 @@ void MCPickDoPickDateTime(MCExecContext& ctxt, MCStringRef p_current, MCStringRe
     t_cancelled = false;
     
     bool t_success;
-    MCAutoStringRef t_result_string;
+    MCAutoValueRef t_result_string;
     
     switch (p_which)
     {

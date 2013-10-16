@@ -82,8 +82,6 @@ bool MCSystemGetSensorAvailable(MCSensorType p_sensor, bool& r_available);
 bool MCSystemStartTrackingSensor(MCSensorType p_sensor, bool p_loosely);
 bool MCSystemStopTrackingSensor(MCSensorType p_sensor);
 
-bool MCSystemGetSensorAvailable(MCSensorType p_sensor, bool& r_available);
-
 double MCSystemGetSensorDispatchThreshold(MCSensorType p_sensor);
 
 bool MCSystemGetLocationReading(MCSensorLocationReading &r_reading, bool p_detailed);

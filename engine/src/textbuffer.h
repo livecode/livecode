@@ -40,7 +40,7 @@ public:
 	// Returns true if the buffer is accepting unicode.
 	bool isunicode(void) const
 	{
-		return m_as_unicode;
+		return true;
 	}
 
 	// Change the output encoding type.
@@ -152,17 +152,17 @@ public:
 	}
 	
 	// Transfer the buffer to the EP.
-	void givetoep(MCExecPoint& ep)
+	/*void givetoep(MCExecPoint& ep)
 	{
 		ep . grabbuffer(m_buffer, m_frontier);
 		m_buffer = nil;
 		m_frontier = 0;
 		m_capacity = 0;
-	}
+	}*/
 
 	bool takeasstringref(MCStringRef& r_string)
 	{
-		if (!MCStringCreateWithNativeCharsAndRelease((char_t *)m_buffer, m_frontier, r_string))
+		if (!MCStringCreateWithBytesAndRelease((char_t *)m_buffer, m_frontier, m_as_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingMacRoman, false, r_string))
 			return false;
 
 		m_buffer = nil;

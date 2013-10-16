@@ -295,5 +295,7 @@ public:
 	MCBlock *advanceindex(uint2& p_index);
 
 	bool imagechanged(MCImage *p_image, bool p_deleting);
+
+    void GetTextSize(MCExecContext& ctxt, uinteger_t*& r_value);
 };
 #endif
