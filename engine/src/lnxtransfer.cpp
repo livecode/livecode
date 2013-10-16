@@ -1011,7 +1011,7 @@ bool ConvertFile_rev_to_MIME ( MCDataRef p_input, MCTransferType p_type, MCDataR
 	// Finally encode as native string and encapsulate in a dataref.
 	/* UNCHECKED */ MCStringEncodeAndRelease(t_output_files_string, kMCStringEncodingNative, false, r_output);
 
-	return true;
+    return true;
 }
 
 bool ConvertFile_MIME_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output )  
