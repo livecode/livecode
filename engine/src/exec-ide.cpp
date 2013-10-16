@@ -53,7 +53,7 @@ void MCIdeExecEditScriptOfObject(MCExecContext &ctxt, MCObject *p_object)
 
 void MCIdeExecPutIntoMessage(MCExecContext& ctxt, MCStringRef p_value, int p_where)
 {
-	if (!MCS_put(ctxt . GetEP(), p_where == PT_INTO ? kMCSPutIntoMessage : (p_where == PT_BEFORE ? kMCSPutBeforeMessage : kMCSPutAfterMessage), p_value))
+	if (!MCS_put(ctxt, p_where == PT_INTO ? kMCSPutIntoMessage : (p_where == PT_BEFORE ? kMCSPutBeforeMessage : kMCSPutAfterMessage), p_value))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
