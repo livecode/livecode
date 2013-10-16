@@ -43,6 +43,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mctheme.h"
 
 #include "context.h"
+#include "graphics_util.h"
 
 // MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
 void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p_sprite)
@@ -1856,28 +1857,14 @@ bool MCButton::lockshape(MCObjectShape& r_shape)
 	
 	MCRectangle t_image_rect;
 	t_image_rect = t_image -> getrect();
+	
+	MCRectangle t_bounds;
+	t_bounds = getrect();
+	
+	MCPoint t_origin;
+	t_origin = MCPointMake(centerx - t_image_rect . width / 2, centery - t_image_rect . height / 2);
 
-	MCImageBitmap *t_icon_bitmap = nil;
-	if (!t_image->lockbitmap(t_icon_bitmap, true))
-		return false;
-
-	// If the icon has no transparent pixels, then we are an opaque rectangle.
-	if (!MCImageBitmapHasTransparency(t_icon_bitmap))
-	{
-		t_image->unlockbitmap(t_icon_bitmap);
-
-		r_shape . type = kMCObjectShapeRectangle;
-		r_shape . bounds = getrect();
-		r_shape . rectangle = MCU_make_rect(centerx - t_image_rect . width / 2, centery - t_image_rect . height / 2, t_image_rect . width, t_image_rect . height);
-		return true;
-	}
-
-	r_shape . type = kMCObjectShapeMask;
-	r_shape . bounds = getrect();
-	r_shape . mask . origin . x = centerx - t_image_rect . width / 2;
-	r_shape . mask . origin . y = centery - t_image_rect . height / 2;
-	r_shape . mask . bits = t_icon_bitmap;
-	return true;
+	return t_image -> lockbitmapshape(t_bounds, t_origin, r_shape);
 }
 
 void MCButton::unlockshape(MCObjectShape& p_shape)

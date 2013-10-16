@@ -1339,18 +1339,36 @@ bool MCImage::lockshape(MCObjectShape& r_shape)
 		return true;
 	}
 	
+	MCRectangle t_bounds;
+	t_bounds = getrect();
+	
+	MCPoint t_origin;
+	t_origin = MCPointMake(t_bounds.x, t_bounds.y);
+
+	return lockbitmapshape(t_bounds, t_origin, r_shape);
+}
+
+// IM-2013-10:16: [[ ResIndependence ]] Split out image bitmap shape functionality for use
+// when locking button icon shapes
+bool MCImage::lockbitmapshape(const MCRectangle &p_bounds, const MCPoint &p_origin, MCObjectShape &r_shape)
+{
 	bool t_mask, t_alpha;
 	MCImageBitmap *t_bitmap = nil;
-
-	/* UNCHECKED */ lockbitmap(t_bitmap, true);
+	
+	if (!lockbitmap(t_bitmap, true))
+		return false;
+	
 	t_mask = MCImageBitmapHasTransparency(t_bitmap, t_alpha);
-
+	
 	// If the image has no mask, then it is a solid rectangle.
 	if (!t_mask)
 	{
+		MCRectangle t_rect;
+		t_rect = getrect();
+		
 		r_shape . type = kMCObjectShapeRectangle;
-		r_shape . bounds = getrect();
-		r_shape . rectangle = r_shape . bounds;
+		r_shape . bounds = p_bounds;
+		r_shape . rectangle = MCRectangleMake(p_origin . x, p_origin . y, t_rect . width, t_rect . height);
 		unlockbitmap(t_bitmap);
 		return true;
 	}
@@ -1360,9 +1378,9 @@ bool MCImage::lockshape(MCObjectShape& r_shape)
 	//   Note that (as a side effect of transformed images no longer being cacehd) if the the image has a transform,
 	//   lockbitmap will create a new transformed image with a scale factor of 1. 
 	r_shape . type = kMCObjectShapeMask;
-	r_shape . bounds = getrect();
-	r_shape . mask . origin . x = r_shape . bounds . x;
-	r_shape . mask . origin . y = r_shape . bounds . y;
+	r_shape . bounds = p_bounds;
+	r_shape . mask . origin . x = p_origin . x;
+	r_shape . mask . origin . y = p_origin . y;
 	r_shape . mask . bits = t_bitmap;
 	r_shape . mask . scale = m_has_transform ? 1.0f : m_scale_factor;
 	return true;
