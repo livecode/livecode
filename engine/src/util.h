@@ -40,13 +40,32 @@ typedef struct
 }
 MCSaveprops;
 
-typedef struct
+struct MCSortnode
 {
-	char *svalue;
-	real8 nvalue;
+	union
+	{
+		MCStringRef svalue;
+		MCNumberRef nvalue;
+	};
+	
 	const void *data;
-}
-MCSortnode;
+	
+	MCSortnode()
+	: svalue(nil) {}
+	
+	~MCSortnode()
+	{
+		if (svalue != nil)
+			MCValueRelease(svalue);
+	}
+	
+	MCSortnode& operator= (const MCSortnode& s)
+	{
+		MCValueAssign(svalue, s.svalue);
+		data = s.data;
+		return *this;
+	}
+};
 
 extern void MCU_play();
 extern void MCU_play_stop();
@@ -90,7 +109,9 @@ extern bool MCU_stoi2x2(MCStringRef p_string, int16_t& r_d1, int16_t& r_d2);
 extern Boolean MCU_stoi2x2(const MCString&, int2 &d1, int2 &d2);
 extern bool MCU_stoi2x4(MCStringRef p_string, int16_t& r_d1, int16_t& r_d2, int16_t& r_d3, int16_t& r_d4);
 extern Boolean MCU_stoi2x4(const MCString&, int2 &d1, int2 &d2, int2 &d3, int2 &d4);
+extern bool MCU_stoi4x4(MCStringRef p_string, int32_t& r_d1, int32_t& r_d2, int32_t& r_d3, int32_t& r_d4);
 extern Boolean MCU_stoi4x4(const MCString&, int32_t &d1, int32_t &d2, int32_t &d3, int32_t &d4);
+extern Boolean MCU_stoi4x2(const MCString &s, int32_t &d1, int32_t &d2);
 extern Boolean MCU_stobxb(const MCString& p_string, Boolean &r_left, Boolean& r_right);
 extern bool MCU_stoi4(MCStringRef p_string, int4& r_d);
 extern Boolean MCU_stoi4(const MCString&, int4& d);
@@ -110,7 +131,7 @@ extern void MCU_addline(char *&dptr, const char *sptr, Boolean first);
 extern void MCU_break_string(const MCString &s, MCString *&ptrs, uint2 &nptrs,
 	                             Boolean isunicode = False);
 extern void MCU_sort(MCSortnode *items, uint4 nitems,
-	                     Sort_type dir, Sort_type form);
+                       Sort_type dir, Sort_type form);
 #ifndef _DEBUG_MEMORY
 extern void MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize);
 #endif
@@ -160,17 +181,16 @@ extern void MCU_fix_path(MCStringRef in, MCStringRef& r_out);
 extern void MCU_base64encode(MCDataRef in, MCStringRef &out);
 extern void MCU_base64decode(MCStringRef in, MCDataRef &out);
 extern void MCU_urlencode(MCExecPoint &ep);
-extern void MCU_urldecode(MCExecPoint &ep);
+extern void MCU_urldecode(MCStringRef p_source, MCStringRef& r_result);
 extern Boolean MCU_freeinserted(MCObjectList *&l);
 extern void MCU_cleaninserted();
 //extern Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep, uint2 line, uint2 pos);
 extern Exec_stat MCU_change_color(MCColor &c, MCStringRef&n, MCExecPoint &ep, uint2 line, uint2 pos);
 //extern void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c);
 extern void MCU_get_color(MCExecPoint &ep, MCStringRef name, MCColor &c);
-extern void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
-	                       real8 tn, real8 oldn, MCSortnode *titems);
 extern void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output);
 extern void MCU_geturl(MCExecPoint &ep);
+extern void MCU_puturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef p_data);
 extern void MCU_puturl(MCExecPoint &ep, MCExecPoint &data);
 extern uint1 MCU_unicodetocharset(uint2 uchar);
 extern uint1 MCU_languagetocharset(MCNameRef langname);

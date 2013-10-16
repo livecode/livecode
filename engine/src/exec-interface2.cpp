@@ -726,7 +726,7 @@ void MCInterfaceSetScreenMouseLoc(MCExecContext& ctxt, MCPoint p_value)
 
 void MCInterfaceGetBackdrop(MCExecContext& ctxt, MCInterfaceBackdrop& r_backdrop)
 {
-	r_backdrop = MCbackdrop;
+	MCInterfaceBackdropCopy(ctxt, MCbackdrop, r_backdrop);
 }
 
 void MCInterfaceSetBackdrop(MCExecContext& ctxt, const MCInterfaceBackdrop& p_backdrop)
@@ -998,54 +998,46 @@ void MCInterfaceSetRoundEnds(MCExecContext& ctxt, bool p_value)
 	MCroundends = p_value;
 }
 
-void MCInterfaceGetDashes(MCExecContext& ctxt, MCStringRef& r_dashes)
+void MCInterfaceGetDashes(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_dashes)
 {
-	bool t_success;
-	t_success = true;
-	
-	MCAutoListRef t_list;
-	t_success = MCListCreateMutable(',', &t_list);
-
-	for(uindex_t i = 0; i < MCndashes && t_success; i++)
-		t_success = MCListAppendInteger(*t_list, MCdashes[i]);
-		
-	if (t_success)
-		t_success = MCListCopyAsString(*t_list, r_dashes);
-		
-	if (t_success)
-		return;
-		
-	ctxt . Throw();
+    MCAutoArray<uinteger_t> t_dashes;
+    
+    for (uindex_t i = 0; i < MCndashes; i++)
+        t_dashes . Push(MCdashes[i]);
+    
+    t_dashes . Take(r_dashes, r_count);
 }
 
-void MCInterfaceSetDashes(MCExecContext& ctxt, MCStringRef p_dashes)
+void MCInterfaceSetDashes(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_dashes)
 {
-	uint1 *newdashes = NULL;
-	uint2 newndashes = 0;
-	char *svalue = strdup(MCStringGetCString(p_dashes));
-	char *eptr = svalue;
-	uint4 t_dash_len = 0;
-	while ((eptr = strtok(eptr, ",")) != NULL)
-	{
-		int2 i1;
-		MCString e = eptr;
-		if ((!MCU_stoi2(e, i1)) || i1 < 0)
-		{
-			ctxt . LegacyThrow(EE_GRAPHIC_NAN);
-			return;
-		}
-		t_dash_len += i1;
-		MCU_realloc((char **)&newdashes, newndashes, newndashes + 1, sizeof(uint1));
-		newdashes[newndashes++] = (uint1)i1;
-		eptr = NULL;
-	}
-	if (newndashes > 0 && t_dash_len == 0)
-	{
-		delete newdashes;
-		newdashes = NULL;
-		newndashes = 0;
-	}
-	delete svalue;
+    MCAutoArray<uint1> t_dashes;
+    
+    uint1 *newdashes = nil;
+    uint2 newndashes = 0;
+    uint4 t_dash_length = 0;
+    uindex_t t_new_count;
+    
+    for (uindex_t i = 0; i < p_count; i++)
+    {
+        if (p_dashes[i] >= 256)
+        {
+            ctxt . LegacyThrow(EE_GRAPHIC_NAN);
+            return;
+        }
+        t_dashes . Push((uint1)p_dashes[i]);
+        t_dash_length += p_dashes[i];
+    }
+    
+    t_dashes . Take(newdashes, t_new_count);
+    newndashes = t_new_count;
+    
+    if (newndashes > 0 && t_dash_length == 0)
+    {
+        delete newdashes;
+        newdashes = nil;
+        newndashes = 0;
+    }
+    
 	delete MCdashes;
 	MCdashes = newdashes;
 	MCndashes = newndashes;
@@ -3300,7 +3292,7 @@ void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wh
     {
         p_object . object -> getstringprop(ctxt, p_object . part_id, P_TEXT, False, r_mark . text);
         r_mark . start = 0;
-        r_mark . finish = INDEX_MAX;
+        r_mark . finish = MCStringGetLength(r_mark . text);
     	return;
     }
     r_mark . text = nil;
@@ -3320,7 +3312,7 @@ void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCMa
         case CT_VIDEO_CLIP:
             p_container . object -> getstringprop(ctxt, p_container . part_id, P_TEXT, False, r_mark . text);
             r_mark . start = 0;
-            r_mark . finish = INDEX_MAX;
+            r_mark . finish = MCStringGetLength(r_mark . text);
             return;
         default:
             break;
@@ -3343,6 +3335,10 @@ void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Function
     //   line chunks to include the CR at the end.
     
     int4 start, end;
+    
+    start = r_mark . start;
+    end = r_mark . finish;
+    
 	Boolean wholeline = True;
 	Boolean wholeword = True;
 	switch (p_function)
@@ -3384,6 +3380,8 @@ void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Function
             end = t_field->getpgsize(NULL);
             break;
 	}
+    r_mark . start = start;
+    r_mark . finish  = end;
 }
 
 void MCInterfaceEvalTextOfContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCStringRef &r_text)

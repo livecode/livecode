@@ -123,6 +123,8 @@ MCPropertyInfo MCField::kProperties[] =
     DEFINE_RW_OBJ_LIST_PROPERTY(P_TAB_STOPS, ItemsOfUInt, MCField, TabStops)
     DEFINE_RW_OBJ_LIST_PROPERTY(P_TAB_WIDTHS, ItemsOfUInt, MCField, TabWidths)
     DEFINE_RO_OBJ_LIST_PROPERTY(P_PAGE_HEIGHTS, LinesOfUInt, MCField, PageHeights)
+    
+    DEFINE_RW_OBJ_NON_EFFECTIVE_MIXED_CHUNK_PROPERTY(P_TEXT_SIZE, UInt16, MCField, TextSize)
 };
 
 MCObjectPropertyTable MCField::kPropertyTable =

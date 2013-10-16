@@ -436,7 +436,6 @@ void MCEngineEvalParams(MCExecContext& ctxt, MCStringRef& r_string)
             MCStringAppendChars(*t_string, (t_handler->gettype() == HT_FUNCTION) ? &t_open_bracket_char : &t_space_char, 1);
     
     uindex_t t_count = t_handler->getnparams();
-    MCExecPoint ep(ctxt.GetEP());
     
     for (uinteger_t i = 1; t_success && i <= t_count; i++)
     {
@@ -1393,14 +1392,14 @@ void MCEngineGetUseUnicode(MCExecContext& ctxt, bool& r_value)
 
 void MCEngineSetNumberFormat(MCExecContext& ctxt, const MCEngineNumberFormat& p_format)
 {
-	ctxt . GetEP() . setnumberformat(p_format . fw, p_format . trailing, p_format . force);
+	ctxt . SetNumberFormat(p_format . fw, p_format . trailing, p_format . force);
 }
 
 void MCEngineGetNumberFormat(MCExecContext& ctxt, MCEngineNumberFormat& r_format)
 {
-	r_format . fw = ctxt . GetEP() . getnffw();
-	r_format . trailing = ctxt . GetEP() . getnftrailing();
-	r_format . force = ctxt . GetEP() . getnfforce();
+	r_format . fw = ctxt . GetNumberFormatWidth();
+	r_format . trailing = ctxt . GetNumberFormatTrailing();
+	r_format . force = ctxt . GetNumberFormatForce();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

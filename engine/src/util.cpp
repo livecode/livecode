@@ -788,6 +788,11 @@ Boolean MCU_stoi2x4(const MCString &s, int2 &d1, int2 &d2, int2 &d3, int2 &d4)
 	return True == MCU_stoi2x4(MCStringGetOldString(p_string), r_d1, r_d2, r_d3, r_d4);
 }
 
+/* WRAPPER */ bool MCU_stoi4x4(MCStringRef p_string, int32_t& r_d1, int32_t& r_d2, int32_t& r_d3, int32_t& r_d4)
+{
+	return True == MCU_stoi4x4(MCStringGetOldString(p_string), r_d1, r_d2, r_d3, r_d4);
+}
+
 Boolean MCU_stoi4x4(const MCString &s, int32_t &d1, int32_t &d2, int32_t &d3, int32_t &d4)
 {
 	const char *sptr = s.getstring();
@@ -804,6 +809,20 @@ Boolean MCU_stoi4x4(const MCString &s, int32_t &d1, int32_t &d2, int32_t &d3, in
 		return False;
 	d4 = MCU_strtol(sptr, l, '\0', done, True, False);
 	if (!done || l != 0)
+		return False;
+	return True;
+}
+
+Boolean MCU_stoi4x2(const MCString &s, int32_t &d1, int32_t &d2)
+{
+	const char *sptr = s.getstring();
+	uint4 l = s.getlength();
+	Boolean done;
+	d1 = MCU_strtol(sptr, l, ',', done, True, False);
+	if (!done || l == 0)
+		return False;
+	d2 = MCU_strtol(sptr, l, ',', done, True, False);
+	if (!done || l == 0)
 		return False;
 	return True;
 }
@@ -1161,41 +1180,60 @@ static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean
 	MCSortnode *tmp = t;
 	while (n1 > 0 && n2 > 0)
 	{
-		Boolean first;
-		if (reverse)
-			switch (form)
+		// NOTE:
+		//
+		// This code assumes the types in the MCSortnodes are correct for the
+		// requested sort type. Bad things will happen if this isn't true...
+		bool first;
+		switch (form)
+		{
+		case ST_INTERNATIONAL:
 			{
-			case ST_INTERNATIONAL:
+				const char *s1, *s2;
+				s1 = MCStringGetCString(b1->svalue);
+				s2 = MCStringGetCString(b2->svalue);
+				
+				// WARNING: this will *not* work properly on anything other
+				// that OSX or iOS: the LC_COLLATE locale facet is set to the
+				// locale "en_US.<native encoding>"...
+				//
+				// Additionally, UTF-16 strings don't work at all.
 #if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
-				first = MCSystemCompareInternational(b1->svalue, b2->svalue) >= 0;
+				int result = MCSystemCompareInternational(s1, s2);
 #else
-				first = strcoll(b1->svalue, b2->svalue) >= 0;
+				int result = strcoll(s1, s2);
 #endif
-				break;
-			case ST_TEXT:
-				first = strcmp(b1->svalue, b2->svalue) >= 0;
-				break;
-			default:
-				first = b1->nvalue >= b2->nvalue;
+				
+				first = reverse ? result >= 0 : result <= 0;
 				break;
 			}
-		else
-			switch (form)
+
+		case ST_TEXT:
 			{
-			case ST_INTERNATIONAL:
-#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
-				first = MCSystemCompareInternational(b1->svalue, b2->svalue) <= 0;
-#else
-				first = strcoll(b1->svalue, b2->svalue) <= 0;
-#endif
-				break;
-			case ST_TEXT:
-				first = strcmp(b1->svalue, b2->svalue) <= 0;
-				break;
-			default:
-				first = b1->nvalue <= b2->nvalue;
+				const char *s1, *s2;
+				s1 = MCStringGetCString(b1->svalue);
+				s2 = MCStringGetCString(b2->svalue);
+				
+				// WARNING:
+				//
+				// This provides codepoint order sorting (not lexical sorting)
+				// for strings. It will not, however, do the right thing with
+				// UTF-16LE strings (the encoding used on x86 and ARM)...
+				int result = strcmp(s1, s2);
+				
+				first = reverse ? result >= 0 : result <= 0;
 				break;
 			}
+				
+		default:
+			{
+				first = reverse
+							? MCNumberFetchAsReal(b1->nvalue) >= MCNumberFetchAsReal(b2->nvalue)
+							: MCNumberFetchAsReal(b1->nvalue) <= MCNumberFetchAsReal(b2->nvalue);
+				break;
+			}
+		}
+		
 		if (first)
 		{
 			*tmp++ = *b1++;
@@ -1207,9 +1245,10 @@ static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean
 			n2--;
 		}
 	}
-	if (n1 > 0)
-		memcpy(tmp, b1, n1 * sizeof(MCSortnode));
-	memcpy(b, t, (n - n2) * sizeof(MCSortnode));
+	for (uindex_t i = 0; i < n1; i++)
+		tmp[i] = b1[i];
+	for (uindex_t i = 0; i < (n - n2); i++)
+		b[i] = t[i];
 }
 
 void MCU_sort(MCSortnode *items, uint4 nitems,
@@ -1219,7 +1258,7 @@ void MCU_sort(MCSortnode *items, uint4 nitems,
 		return;
 	MCSortnode *tmp = new MCSortnode[nitems];
 	msort(items, nitems, tmp, form, dir == ST_DESCENDING);
-	delete tmp;
+	delete[] tmp;
 }
 
 #if !defined(_DEBUG_MEMORY)
@@ -2174,14 +2213,9 @@ void MCU_urlencode(MCExecPoint &ep)
 
 bool MCFiltersUrlDecode(MCStringRef p_source, MCStringRef& r_result);
 
-void MCU_urldecode(MCExecPoint &ep)
+void MCU_urldecode(MCStringRef p_source, MCStringRef& r_result)
 {
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
-
-	MCAutoStringRef t_result;
-	/* UNCHECKED */ MCFiltersUrlDecode(*t_source, &t_result);
-	/* UNCHECKED */ ep.setvalueref(*t_result);
+	/* UNCHECKED */ MCFiltersUrlDecode(p_source, r_result);
 }
 
 Boolean MCU_freeinserted(MCObjectList *&l)
@@ -2244,48 +2278,6 @@ void MCU_get_color(MCExecPoint& ep, MCStringRef name, MCColor& c)
 	ep.setcolor(c, name != nil ? MCStringGetCString(name) : nil);
 }
 
-/*
-void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c)
-{
-	ep.setcolor(c, name);
-}
-*/
-void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
-                real8 tn, real8 oldn, MCSortnode *titems)
-{
-	switch (func)
-	{
-	case F_AVERAGE:
-		n += tn;
-		nparams++;
-		break;
-	case F_MAX:
-		if (nparams++ == 0 || tn > n)
-			n = tn;
-		break;
-	case F_MIN:
-		if (nparams++ == 0 || tn < n)
-			n = tn;
-		break;
-	case F_SUM:
-		n += tn;
-		break;
-	case F_MEDIAN:
-		titems[nparams].nvalue = tn;
-		nparams++;
-		break;
-	case F_STD_DEV:
-		tn = tn - oldn;
-		n += tn * tn;
-		nparams++;
-		break;
-	case  F_UNDEFINED:
-		nparams++;
-		break;
-	default:
-		break;
-	}
-}
 
 void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output)
 {
@@ -2342,46 +2334,47 @@ void MCU_geturl(MCExecPoint &ep)
     ep.setvalueref(*t_output);
 }
 
-
-void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
+void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCStringRef p_data)
 {
-	if (dest.getsvalue().getlength() > 5
-	        && !MCU_strncasecmp(dest.getsvalue().getstring(), "file:", 5))
+	if (MCStringBeginsWithCString(p_url, (const char_t*)"file:", kMCCompareCaseless))
 	{
-		dest.tail(5);
-		data . texttobinary();
-		MCAutoDataRef t_data_ref;
-		/* UNCHECKED */ data . copyasdataref(&t_data_ref);
-		MCAutoStringRef t_filename;
-		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &t_filename);
-		MCS_savebinaryfile(*t_filename, *t_data_ref);
+		MCAutoStringRef t_path;
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(5, MCStringGetLength(p_url) - 5), &t_path);
+		MCS_savetextfile(*t_path, p_data);
 	}
-	else if (dest.getsvalue().getlength() > 8
-		        && !MCU_strncasecmp(dest.getsvalue().getstring(), "binfile:", 8))
+	else if (MCStringBeginsWithCString(p_url, (const char_t*)"binfile:", kMCCompareCaseless))
 	{
-		dest.tail(8);
-		MCAutoDataRef t_data_ref;
-		/* UNCHECKED */ data . copyasdataref(&t_data_ref);
-		MCAutoStringRef t_filename;
-		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &t_filename);
-		MCS_savebinaryfile(*t_filename, *t_data_ref);
+		MCAutoStringRef t_path;
+		MCAutoDataRef t_data;
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url) - 8), &t_path);
+		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
+		MCS_savebinaryfile(*t_path, *t_data);
 	}
-	else if (dest.getsvalue().getlength() > 8
-		        && !MCU_strncasecmp(dest.getsvalue().getstring(), "resfile:", 8))
+	else if (MCStringBeginsWithCString(p_url, (const char_t*)"resfile:", kMCCompareCaseless))
 	{
-		dest.tail(8);
-		MCAutoStringRef t_filename;
-		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &t_filename);
-		/* UNCHECKED */ MCS_saveresfile(*t_filename, (MCDataRef)data.getvalueref());
+		MCAutoStringRef t_path;
+		MCAutoDataRef t_data;
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url) - 8), &t_path);
+		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
+		MCS_saveresfile(*t_path, *t_data);
 	}
 	else
 	{
-		MCAutoStringRef p_url;
-        MCAutoDataRef t_data;
-		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &p_url);
-        /* UNCHECKED */ MCDataCreateWithBytes((byte_t*)data.getcstring(), data.getsvalue().getlength(), &t_data);
-		MCS_putintourl(dest . getobj(), *t_data, *p_url);
+		MCAutoDataRef t_data;
+		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
+		MCS_putintourl(ctxt.GetObject(), *t_data, p_url);
 	}
+}
+
+void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
+{
+	MCAutoStringRef t_url;
+	MCAutoStringRef t_data;
+	/* UNCHECKED */ dest.copyasstringref(&t_url);
+	/* UNCHECKED */ data.copyasstringref(&t_data);
+	
+	MCExecContext ctxt(data);
+	MCU_puturl(ctxt, *t_url, *t_data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
