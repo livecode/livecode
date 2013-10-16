@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "filedefs.h"
 #include "execpt.h"
+#include "exec.h"
 #include "stack.h"
 #include "card.h"
 #include "mcerror.h"
@@ -36,6 +37,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osxdc.h"
 #include "osxcontext.h"
 #include "osxprinter.h"
+#include "osspec.h"
 
 #include <cups/ppd.h>
 #include <pwd.h>
@@ -1764,13 +1766,13 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			bool t_is_unicode;
 			t_is_unicode = p_mark -> text . font -> unicode || p_mark -> text . unicode_override;
 							
-			MCExecPoint text_ep(NULL, NULL, NULL);
-			text_ep . setsvalue(MCString((const char *)s, len));
 			if (!t_is_unicode)
 			{
-				text_ep . nativetoutf16();
-				s = (void *)text_ep . getsvalue() . getstring();
-				len = text_ep . getsvalue() . getlength();
+				unsigned short *t_utf16;
+				uint4 t_utf16_length;
+				MCS_nativetoutf16((const char *)s, len, t_utf16, t_utf16_length);
+				s = (void *)t_utf16;
+				len = t_utf16_length;
 			}
 			
 			OSStatus t_err;

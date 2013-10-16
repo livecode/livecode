@@ -274,6 +274,8 @@
 		768D66C317622FE200F203A3 /* exec-nativecontrol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */; };
 		768D66C51765E11300F203A3 /* exec-pick.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C41765E11300F203A3 /* exec-pick.cpp */; };
 		768D66C61765E11300F203A3 /* exec-pick.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C41765E11300F203A3 /* exec-pick.cpp */; };
+		76B298B2180448AF0053EC38 /* exec-interface-field-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76B298B1180448AF0053EC38 /* exec-interface-field-chunk.cpp */; };
+		76B298B4180449050053EC38 /* test.rev in Resources */ = {isa = PBXBuildFile; fileRef = 76B298B3180449050053EC38 /* test.rev */; };
 		BE02B4FB17FEC652001BAFF0 /* exec-strings-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE02B4FA17FEC639001BAFF0 /* exec-strings-chunk.cpp */; };
 		BE096E8B175CD7CF00F92F90 /* libfoundationmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BE096E85175CD79D00F92F90 /* libfoundationmobile.a */; };
 		BE0A3CD417E1FD2500C2361B /* mblnetwork.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE0A3CD317E1FC9E00C2361B /* mblnetwork.cpp */; };
@@ -891,6 +893,8 @@
 		7607CFD5176B232E00ADB512 /* mblandroidmediapick.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidmediapick.cpp; path = src/mblandroidmediapick.cpp; sourceTree = "<group>"; };
 		768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-nativecontrol.cpp"; path = "src/exec-nativecontrol.cpp"; sourceTree = "<group>"; };
 		768D66C41765E11300F203A3 /* exec-pick.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-pick.cpp"; path = "src/exec-pick.cpp"; sourceTree = "<group>"; };
+		76B298B1180448AF0053EC38 /* exec-interface-field-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-field-chunk.cpp"; path = "src/exec-interface-field-chunk.cpp"; sourceTree = "<group>"; };
+		76B298B3180449050053EC38 /* test.rev */ = {isa = PBXFileReference; lastKnownFileType = file; name = test.rev; path = ../test.rev; sourceTree = "<group>"; };
 		BE02B4FA17FEC639001BAFF0 /* exec-strings-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-strings-chunk.cpp"; path = "src/exec-strings-chunk.cpp"; sourceTree = "<group>"; };
 		BE096E7D175CD79D00F92F90 /* libfoundation-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libfoundation-mobile.xcodeproj"; path = "../libfoundation/libfoundation-mobile.xcodeproj"; sourceTree = SOURCE_ROOT; };
 		BE0A3CD317E1FC9E00C2361B /* mblnetwork.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblnetwork.cpp; path = src/mblnetwork.cpp; sourceTree = "<group>"; };
@@ -1314,6 +1318,7 @@
 		4DD3DD7B1040AA4700CAC7EF = {
 			isa = PBXGroup;
 			children = (
+				76B298B3180449050053EC38 /* test.rev */,
 				E82D43BF1712CF1A00A10289 /* Projects */,
 				E82D43BE1712CEF500A10289 /* Frameworks */,
 				4DD3DF3A1040B03B00CAC7EF /* Configurations */,
@@ -1379,6 +1384,7 @@
 		7607CF7F1769BB9B00ADB512 /* Exec-Interface */ = {
 			isa = PBXGroup;
 			children = (
+				76B298B1180448AF0053EC38 /* exec-interface-field-chunk.cpp */,
 				7607CF601769BB4C00ADB512 /* exec-interface-aclip.cpp */,
 				7607CF611769BB4C00ADB512 /* exec-interface-button.cpp */,
 				7607CF621769BB4C00ADB512 /* exec-interface-card.cpp */,
@@ -2041,6 +2047,7 @@
 				4D7E3A591281835D00E7F80A /* Default.png in Resources */,
 				4CD038F316C8FE1700EBCCBA /* Default-568h@2x.png in Resources */,
 				BE44950D175CF03F00346B49 /* iphone_test.rev in Resources */,
+				76B298B4180449050053EC38 /* test.rev in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2355,6 +2362,7 @@
 				7607CF7E1769BB4D00ADB512 /* exec-interface2.cpp in Sources */,
 				BE0A3CD417E1FD2500C2361B /* mblnetwork.cpp in Sources */,
 				BE02B4FB17FEC652001BAFF0 /* exec-strings-chunk.cpp in Sources */,
+				76B298B2180448AF0053EC38 /* exec-interface-field-chunk.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

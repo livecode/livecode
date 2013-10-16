@@ -6400,6 +6400,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\exec-interface-field-chunk.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\exec-interface-field.cpp"
 				>
 			</File>

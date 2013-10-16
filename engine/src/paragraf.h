@@ -530,7 +530,7 @@ public:
 	// Sets the given paragraph attribute to the value in ep.
 	Exec_stat setparagraphattr(Properties which, MCExecPoint& ep);
 	// Gets the given paragraph attribute into the given ep.
-	Exec_stat getparagraphattr(Properties which, MCExecPoint& ep, Boolean effective);
+    Exec_stat getparagraphattr(Properties which, MCExecPoint& ep, Boolean effective);
 	// Copies the given attribute from the given paragraph.
 	void copysingleattr(Properties which, MCParagraph *other);
 	// Copies all the attributes from the given paragraph.
@@ -787,6 +787,9 @@ public:
 	// Returns true if the given block is part of a link, in which case ei is
 	// the end index of the link.
 	Boolean extenddown(MCBlock *bptr, findex_t &ei);
+
+    void GetTextAlign(MCExecContext& ctxt, intenum_t*& r_value);
+    void GetEffectiveTextAlign(MCExecContext& ctxt, intenum_t& r_value);
 
 private:
 	// Flow the paragraph using the given parent font. This is called

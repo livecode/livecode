@@ -293,5 +293,9 @@ public:
 	{
 		return flags & F_HAS_UNICODE;
 	}
+
+    //////////
+    
+    void GetTextSize(MCExecContext& ctxt, uinteger_t*& r_value);
 };
 #endif

@@ -72,6 +72,7 @@ xcuserdata/
 *.suo
 *.mode1v3
 *.xcworkspacedata
+*.creator.user
 
 
 # Build folders #

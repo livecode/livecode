@@ -559,6 +559,8 @@
 		4DFFC7E013DD8A91006233A4 /* syscfdate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC7DE13DD8A91006233A4 /* syscfdate.cpp */; };
 		4DFFC7E113DD8A91006233A4 /* sysunxnetwork.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC7DF13DD8A91006233A4 /* sysunxnetwork.cpp */; };
 		4DFFC7E713DD8AB9006233A4 /* objectpropsets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC7E613DD8AB9006233A4 /* objectpropsets.cpp */; };
+		76D47DE918030E50006F9102 /* exec-interface-field-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76D47DE81802FD03006F9102 /* exec-interface-field-chunk.cpp */; };
+		76D47DEA18030E52006F9102 /* exec-interface-field-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76D47DE81802FD03006F9102 /* exec-interface-field-chunk.cpp */; };
 		76FA930A17FC7301003DB770 /* exec-strings-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76FA930917FC72FB003DB770 /* exec-strings-chunk.cpp */; };
 		76FA930B17FC7301003DB770 /* exec-strings-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76FA930917FC72FB003DB770 /* exec-strings-chunk.cpp */; };
 		A71F80540F4F178C003012FD /* Standalone.icns in Resources */ = {isa = PBXBuildFile; fileRef = A71F80530F4F178C003012FD /* Standalone.icns */; };
@@ -1408,7 +1410,7 @@
 		4DE3B0FF15888AB8008EB6B5 /* exec-strings.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-strings.cpp"; path = "src/exec-strings.cpp"; sourceTree = "<group>"; };
 		4DE3B10115888AB8008EB6B5 /* exec-text.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-text.cpp"; path = "src/exec-text.cpp"; sourceTree = "<group>"; };
 		4DE3B10215888AB8008EB6B5 /* exec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = exec.cpp; path = src/exec.cpp; sourceTree = "<group>"; };
-		4DE3B10315888AB8008EB6B5 /* exec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = exec.h; path = src/exec.h; sourceTree = "<group>"; };
+		4DE3B10315888AB8008EB6B5 /* exec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = exec.h; path = src/exec.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		4DE663070BF9C1E50084FE0B /* Standalone-Info.plist */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.plist.xml; name = "Standalone-Info.plist"; path = "rsrc/Standalone-Info.plist"; sourceTree = "<group>"; };
 		4DE7ED0D13B33B7F002634F5 /* dskspec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dskspec.cpp; path = src/dskspec.cpp; sourceTree = "<group>"; };
 		4DEE29F60FDE41BE0009423C /* libkernel.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libkernel.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1527,6 +1529,7 @@
 		768D66A21762087500F203A3 /* mbliphonesensor.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonesensor.mm; path = src/mbliphonesensor.mm; sourceTree = "<group>"; };
 		768D66A31762087500F203A3 /* mbliphonestore.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonestore.mm; path = src/mbliphonestore.mm; sourceTree = "<group>"; };
 		768D66A41762087500F203A3 /* mbliphonetextmessaging.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonetextmessaging.mm; path = src/mbliphonetextmessaging.mm; sourceTree = "<group>"; };
+		76D47DE81802FD03006F9102 /* exec-interface-field-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-field-chunk.cpp"; path = "src/exec-interface-field-chunk.cpp"; sourceTree = "<group>"; };
 		76FA930917FC72FB003DB770 /* exec-strings-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-strings-chunk.cpp"; path = "src/exec-strings-chunk.cpp"; sourceTree = "<group>"; };
 		A04643DB0BAAA63A0030A830 /* w32ans.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = w32ans.cpp; path = src/w32ans.cpp; sourceTree = "<group>"; };
 		A04643DC0BAAA63A0030A830 /* w32context.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = w32context.cpp; path = src/w32context.cpp; sourceTree = "<group>"; };
@@ -2463,6 +2466,7 @@
 		E875FD8017293B29005A69F4 /* exec-interface */ = {
 			isa = PBXGroup;
 			children = (
+				76D47DE81802FD03006F9102 /* exec-interface-field-chunk.cpp */,
 				E875FD8117293B4F005A69F4 /* exec-interface-aclip.cpp */,
 				E875FD8217293B4F005A69F4 /* exec-interface-button.cpp */,
 				E875FD8317293B4F005A69F4 /* exec-interface-card.cpp */,
@@ -3760,6 +3764,7 @@
 				BEFD23CD17B5233800B9310D /* sysspec.cpp in Sources */,
 				1D17A9C317BE673E0024CCA8 /* osxans.mm in Sources */,
 				76FA930A17FC7301003DB770 /* exec-strings-chunk.cpp in Sources */,
+				76D47DE918030E50006F9102 /* exec-interface-field-chunk.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3809,6 +3814,7 @@
 				4D02A3CF17A6CC14009D8AF4 /* foundation-legacy.cpp in Sources */,
 				4D02A3E417A6CE55009D8AF4 /* legacy_spec.cpp in Sources */,
 				76FA930B17FC7301003DB770 /* exec-strings-chunk.cpp in Sources */,
+				76D47DEA18030E52006F9102 /* exec-interface-field-chunk.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4092,6 +4098,7 @@
 				INFOPLIST_FILE = "rsrc/Revolution-Info.plist";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "LiveCode-Community";
+				SDKROOT = macosx10.6;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -4102,6 +4109,7 @@
 				INFOPLIST_FILE = "rsrc/Revolution-Info.plist";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "LiveCode-Community";
+				SDKROOT = macosx10.6;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;

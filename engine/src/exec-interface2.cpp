@@ -726,7 +726,7 @@ void MCInterfaceSetScreenMouseLoc(MCExecContext& ctxt, MCPoint p_value)
 
 void MCInterfaceGetBackdrop(MCExecContext& ctxt, MCInterfaceBackdrop& r_backdrop)
 {
-	r_backdrop = MCbackdrop;
+	MCInterfaceBackdropCopy(ctxt, MCbackdrop, r_backdrop);
 }
 
 void MCInterfaceSetBackdrop(MCExecContext& ctxt, const MCInterfaceBackdrop& p_backdrop)
@@ -3292,7 +3292,7 @@ void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wh
     {
         p_object . object -> getstringprop(ctxt, p_object . part_id, P_TEXT, False, r_mark . text);
         r_mark . start = 0;
-        r_mark . finish = INDEX_MAX;
+        r_mark . finish = MCStringGetLength(r_mark . text);
     	return;
     }
     r_mark . text = nil;
@@ -3312,7 +3312,7 @@ void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCMa
         case CT_VIDEO_CLIP:
             p_container . object -> getstringprop(ctxt, p_container . part_id, P_TEXT, False, r_mark . text);
             r_mark . start = 0;
-            r_mark . finish = INDEX_MAX;
+            r_mark . finish = MCStringGetLength(r_mark . text);
             return;
         default:
             break;
@@ -3335,6 +3335,9 @@ void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Function
     //   line chunks to include the CR at the end.
     
     findex_t start, end;
+    start = r_mark . start;
+    end = r_mark . finish;
+
 	Boolean wholeline = True;
 	Boolean wholeword = True;
 	switch (p_function)
@@ -3376,6 +3379,8 @@ void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Function
             end = t_field->getpgsize(NULL);
             break;
 	}
+    r_mark . start = start;
+    r_mark . finish  = end;
 }
 
 void MCInterfaceEvalTextOfContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCStringRef &r_text)

@@ -143,6 +143,8 @@ enum MCPropertyType
 	kMCPropertyTypePoint,
 	kMCPropertyTypeInt16X2,
 	kMCPropertyTypeInt16X4,
+    kMCPropertyTypeInt32X2,
+    kMCPropertyTypeInt32X4,
 	kMCPropertyTypeArray,
 	kMCPropertyTypeSet,
 	kMCPropertyTypeEnum,
@@ -152,6 +154,7 @@ enum MCPropertyType
 	kMCPropertyTypeOptionalUInt32,
 	kMCPropertyTypeOptionalString,
 	kMCPropertyTypeOptionalRectangle,
+    kMCPropertyTypeOptionalPoint,
 	kMCPropertyTypeOptionalEnum,
 	kMCPropertyTypeName,
     kMCPropertyTypeLinesOfString,
@@ -159,6 +162,9 @@ enum MCPropertyType
     kMCPropertyTypeLinesOfUIntX2,
     kMCPropertyTypeLinesOfPoint,
     kMCPropertyTypeItemsOfUInt,
+    kMCPropertyTypeMixedBool,
+    kMCPropertyTypeMixedUInt16,
+    kMCPropertyTypeMixedUInt32,
 };
 
 struct MCPropertyInfo
@@ -171,37 +177,180 @@ struct MCPropertyInfo
 	void *setter;
 	bool has_effective;
     bool is_array_prop;
+    bool custom_index;
+    bool is_chunk_prop;
 };
 
-template<typename O, typename A, void (O::*Method)(MCExecContext&, A)> inline void MCPropertyObjectThunk(MCExecContext& ctxt, MCObjectPtr obj, A arg)
+void MCExecResolveCharsOfField(MCField *p_field, uint32_t p_part, int32_t& x_start, int32_t& x_finish, uint32_t p_start, uint32_t p_count);
+
+template<typename O, typename A, void (O::*Method)(MCExecContext&, A)> inline void MCPropertyObjectThunk(MCExecContext& ctxt, MCObjectPtr *obj, A arg)
 {
-	(static_cast<O *>(obj . object) ->* Method)(ctxt, arg);
+	(static_cast<O *>(obj -> object) ->* Method)(ctxt, arg);
 }
 
-template<typename O, typename A, void (O::*Method)(MCExecContext&, uint32_t, A)> inline void MCPropertyObjectPartThunk(MCExecContext& ctxt, MCObjectPtr obj, A arg)
+template<typename O, typename A, void (O::*Method)(MCExecContext&, uint32_t, A)> inline void MCPropertyObjectPartThunk(MCExecContext& ctxt, MCObjectPtr *obj, A arg)
 {
-	(static_cast<O *>(obj . object) ->* Method)(ctxt, obj . part_id, arg);
+	(static_cast<O *>(obj -> object) ->* Method)(ctxt, obj -> part_id, arg);
 }
 
-template<typename O, typename A, void (O::*Method)(MCExecContext&, MCNameRef, A)> inline void MCPropertyObjectArrayThunk(MCExecContext& ctxt, MCObjectPtr obj, MCNameRef name, A arg)
+template<typename O, typename A, void (O::*Method)(MCExecContext&, MCNameRef, A)> inline void MCPropertyObjectArrayThunk(MCExecContext& ctxt, MCObjectIndexPtr *obj, A arg)
 {
-	(static_cast<O *>(obj . object) ->* Method)(ctxt, name, arg);
+	(static_cast<O *>(obj -> object) ->* Method)(ctxt, obj -> index, arg);
 }
 
-template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, B, A)> inline void MCPropertyObjectListThunk(MCExecContext& ctxt, MCObjectPtr obj, B count, A arg)
+template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, B, A)> inline void MCPropertyObjectListThunk(MCExecContext& ctxt, MCObjectPtr *obj, B count, A arg)
 {
-	(static_cast<O *>(obj . object) ->* Method)(ctxt, count, arg);
+	(static_cast<O *>(obj -> object) ->* Method)(ctxt, count, arg);
 }
 
-#define MCPropertyObjectThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectPtr,typ))MCPropertyObjectThunk<obj,typ,&obj::mth>
-#define MCPropertyObjectPartThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectPtr,typ))MCPropertyObjectPartThunk<obj,typ,&obj::mth>
-#define MCPropertyObjectArrayThunkImp(obj, mth, name, typ) (void(*)(MCExecContext&,MCObjectPtr,MCNameRef,typ))MCPropertyObjectArrayThunk<obj,typ,&obj::mth>
-#define MCPropertyObjectListThunkImp(obj, mth, count, typ) (void(*)(MCExecContext&,MCObjectPtr,count,typ))MCPropertyObjectListThunk<obj,typ,count,&obj::mth>
+template<typename O, typename A, void (O::*Method)(MCExecContext&, A[4])> inline void MCPropertyX4ObjectThunk(MCExecContext& ctxt, MCObjectPtr *obj, A arg[4])
+{
+	(static_cast<O *>(obj -> object) ->* Method)(ctxt, arg);
+}
+
+template<typename O, typename A, void (O::*Method)(MCExecContext&, uint32_t, int32_t, int32_t, A)> inline void MCPropertyObjectChunkThunk(MCExecContext& ctxt, MCObjectChunkPtr *obj, A arg)
+{
+    int32_t t_si, t_ei;
+    
+    if (obj -> object -> gettype() == CT_FIELD)
+    {
+        t_si = 0;
+        t_ei = INT32_MAX;
+        MCExecResolveCharsOfField((MCField *)obj -> object, obj -> part_id, t_si, t_ei, obj -> mark . start, obj -> mark . finish - obj -> mark . start);
+    }
+    else
+    {
+        t_si = obj -> mark . start;
+        t_ei = obj -> mark . finish;
+    }
+    
+	(static_cast<O *>(obj -> object) ->* Method)(ctxt, obj -> part_id, t_si, t_ei, arg);
+}
+
+template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, uint32_t, int32_t, int32_t, bool&, A)> inline void MCPropertyObjectChunkMixedThunk(MCExecContext& ctxt, MCObjectChunkPtr *obj, B mixed, A arg)
+{
+    int32_t t_si, t_ei;
+    
+    if (obj -> object -> gettype() == CT_FIELD)
+    {
+        t_si = 0;
+        t_ei = INT32_MAX;
+        MCExecResolveCharsOfField((MCField *)obj -> object, obj -> part_id, t_si, t_ei, obj -> mark . start, obj -> mark . finish - obj -> mark . start);
+    }
+    else
+    {
+        t_si = obj -> mark . start;
+        t_ei = obj -> mark . finish;
+    }
+    
+	(static_cast<O *>(obj -> object) ->* Method)(ctxt, obj -> part_id, t_si, t_ei, mixed, arg);
+}
+
+template<typename A, void Method(MCExecContext&, MCNameRef, A)> inline void MCPropertyIndexedThunk(MCExecContext& ctxt, MCNameRef index, A arg)
+{
+    Method(ctxt, index, arg);
+}
+
+template<typename A, void Method(MCExecContext&, A)> inline void MCPropertyThunk(MCExecContext& ctxt, void *, A arg)
+{
+    Method(ctxt, arg);
+}
+
+template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void MCPropertyListThunk(MCExecContext& ctxt, void *, B count, A arg)
+{
+    Method(ctxt, count, arg);
+}
+
+template<typename A, void Method(MCExecContext&, A[2])> inline void MCPropertyX2Thunk(MCExecContext& ctxt, void *, A arg[2])
+{
+    Method(ctxt, arg);
+}
+
+template<typename A, void Method(MCExecContext&, A[4])> inline void MCPropertyX4Thunk(MCExecContext& ctxt, void *, A arg[4])
+{
+    Method(ctxt, arg);
+}
+
+#define MCPropertyThunkImp(mth,typ) (void(*)(MCExecContext&, void *,typ))MCPropertyThunk<typ,mth>
+#define MCPropertyIndexedThunkImp(mth,index,typ) (void(*)(MCExecContext&, MCNameRef, typ))MCPropertyIndexedThunk<typ,mth>
+#define MCPropertyListThunkImp(mth,count,typ) (void(*)(MCExecContext&,void *,count,typ))MCPropertyListThunk<typ,count,mth>
+#define MCPropertyX2ThunkImp(mth,typ) (void(*)(MCExecContext&,void *,typ))MCPropertyX2Thunk<typ,mth>
+#define MCPropertyX4ThunkImp(mth,typ) (void(*)(MCExecContext&,void *,typ))MCPropertyX4Thunk<typ,mth>
+
+#define MCPropertyThunkIndexedGetBinaryString(mth) MCPropertyIndexedThunkImp(mth, MCNameRef, MCDataRef&)
+#define MCPropertyThunkIndexedSetBinaryString(mth) MCPropertyIndexedThunkImp(mth, MCNameRef, MCDataRef)
+
+#define MCPropertyThunkGetAny(mth) MCPropertyThunkImp(mth, MCValueRef&)
+#define MCPropertyThunkGetBool(mth) MCPropertyThunkImp(mth, bool&)
+#define MCPropertyThunkGetInt16(mth) MCPropertyThunkImp(mth, integer_t&)
+#define MCPropertyThunkGetInt16X2(mth) MCPropertyX2ThunkImp(mth, integer_t)
+#define MCPropertyThunkGetInt16X4(mth) MCPropertyX4ThunkImp(mth, integer_t)
+#define MCPropertyThunkGetInt32(mth) MCPropertyThunkImp(mth, integer_t&)
+#define MCPropertyThunkGetUInt16(mth) MCPropertyThunkImp(mth, uinteger_t&)
+#define MCPropertyThunkGetUInt32(mth) MCPropertyThunkImp(mth, uinteger_t&)
+#define MCPropertyThunkGetOptionalInt16(mth) MCPropertyThunkImp(mth, integer_t*&)
+#define MCPropertyThunkGetOptionalUInt16(mth) MCPropertyThunkImp(mth, uinteger_t*&)
+#define MCPropertyThunkGetOptionalUInt32(mth) MCPropertyThunkImp(mth, uinteger_t*&)
+#define MCPropertyThunkGetDouble(mth) MCPropertyThunkImp(mth, double&)
+#define MCPropertyThunkGetChar(mth) MCPropertyThunkImp(mth, char_t&)
+#define MCPropertyThunkGetString(mth) MCPropertyThunkImp(mth, MCStringRef&)
+#define MCPropertyThunkGetBinaryString(mth) MCPropertyThunkImp(mth, MCDataRef&)
+#define MCPropertyThunkGetOptionalString(mth) MCPropertyThunkImp(mth, MCStringRef&)
+#define MCPropertyThunkGetRectangle(mth) MCPropertyThunkImp(mth, MCRectangle&)
+#define MCPropertyThunkGetOptionalRectangle(mth) MCPropertyThunkImp(mth, MCRectangle*&)
+#define MCPropertyThunkGetPoint(mth) MCPropertyThunkImp(mth, MCPoint&)
+#define MCPropertyThunkGetOptionalPoint(mth) MCPropertyThunkImp(mth, MCPoint*&)
+#define MCPropertyThunkGetCustomType(mth, typ) MCPropertyThunkImp(mth, typ&)
+#define MCPropertyThunkGetEnumType(mth) MCPropertyThunkImp(mth, intenum_t&)
+#define MCPropertyThunkGetSetType(mth) MCPropertyThunkImp(mth, intset_t&)
+#define MCPropertyThunkGetOptionalCustomType(mth, typ) MCPropertyThunkImp(mth, typ*&)
+#define MCPropertyThunkGetOptionalEnumType(mth) MCPropertyThunkImp(mth, intenum_t*&)
+#define MCPropertyThunkGetArray(mth) MCPropertyThunkImp(mth, MCArrayRef&)
+#define MCPropertyThunkGetName(mth) MCPropertyThunkImp(mth, MCNameRef&)
+#define MCPropertyThunkGetItemsOfUInt(mth) MCPropertyListThunkImp(mth,uindex_t&,uinteger_t*&)
+
+#define MCPropertyThunkSetAny(mth) MCPropertyThunkImp(mth, MCValueRef)
+#define MCPropertyThunkSetBool(mth) MCPropertyThunkImp(mth, bool)
+#define MCPropertyThunkSetInt16(mth) MCPropertyThunkImp(mth, integer_t)
+#define MCPropertyThunkSetInt16X2(mth) MCPropertyX2ThunkImp(mth, integer_t)
+#define MCPropertyThunkSetInt16X4(mth) MCPropertyX4ThunkImp(mth, integer_t)
+#define MCPropertyThunkSetInt32(mth) MCPropertyThunkImp(mth, integer_t)
+#define MCPropertyThunkSetUInt16(mth) MCPropertyThunkImp(mth, uinteger_t)
+#define MCPropertyThunkSetUInt32(mth) MCPropertyThunkImp(mth, uinteger_t)
+#define MCPropertyThunkSetOptionalInt16(mth) MCPropertyThunkImp(mth, integer_t*)
+#define MCPropertyThunkSetOptionalUInt16(mth) MCPropertyThunkImp(mth, uinteger_t*)
+#define MCPropertyThunkSetOptionalUInt32(mth) MCPropertyThunkImp(mth, uinteger_t*)
+#define MCPropertyThunkSetDouble(mth) MCPropertyThunkImp(mth, double)
+#define MCPropertyThunkSetChar(mth) MCPropertyThunkImp(mth, char_t)
+#define MCPropertyThunkSetString(mth) MCPropertyThunkImp(mth, MCStringRef)
+#define MCPropertyThunkSetBinaryString(mth) MCPropertyThunkImp(mth, MCDataRef)
+#define MCPropertyThunkSetOptionalString(mth) MCPropertyThunkImp(mth, MCStringRef)
+#define MCPropertyThunkSetRectangle(mth) MCPropertyThunkImp(mth, MCRectangle)
+#define MCPropertyThunkSetOptionalRectangle(mth) MCPropertyThunkImp(mth, MCRectangle*)
+#define MCPropertyThunkSetPoint(mth) MCPropertyThunkImp(mth, MCPoint)
+#define MCPropertyThunkSetOptionalPoint(mth) MCPropertyThunkImp(mth, MCPoint*)
+#define MCPropertyThunkSetCustomType(mth, typ) MCPropertyThunkImp(mth, const typ&)
+#define MCPropertyThunkSetEnumType(mth) MCPropertyThunkImp(mth, intenum_t)
+#define MCPropertyThunkSetSetType(mth) MCPropertyThunkImp(mth, intset_t)
+#define MCPropertyThunkSetOptionalCustomType(mth, typ) MCPropertyThunkImp(mth, const typ*&)
+#define MCPropertyThunkSetOptionalEnumType(mth) MCPropertyThunkImp(mth, intenum_t*)
+#define MCPropertyThunkSetArray(mth) MCPropertyThunkImp(mth, MCArrayRef)
+#define MCPropertyThunkSetName(mth) MCPropertyThunkImp(mth, MCNameRef)
+#define MCPropertyThunkSetItemsOfUInt(mth) MCPropertyListThunkImp(mth,uindex_t,uinteger_t*)
+
+#define MCPropertyObjectThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectPtr*,typ))MCPropertyObjectThunk<obj,typ,&obj::mth>
+#define MCPropertyObjectPartThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectPtr*,typ))MCPropertyObjectPartThunk<obj,typ,&obj::mth>
+#define MCPropertyObjectArrayThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectIndexPtr*,typ))MCPropertyObjectArrayThunk<obj,typ,&obj::mth>
+#define MCPropertyObjectListThunkImp(obj, mth, count, typ) (void(*)(MCExecContext&,MCObjectPtr*,count,typ))MCPropertyObjectListThunk<obj,typ,count,&obj::mth>
+#define MCPropertyObjectChunkThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectChunkPtr*,typ))MCPropertyObjectChunkThunk<obj,typ,&obj::mth>
+#define MCPropertyObjectChunkMixedThunkImp(obj, mth, mixed, typ) (void(*)(MCExecContext&,MCObjectChunkPtr*,mixed,typ))MCPropertyObjectChunkMixedThunk<obj,typ,mixed,&obj::mth>
+#define MCPropertyX4ObjectThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectPtr*,typ))MCPropertyX4ObjectThunk<obj,typ,&obj::mth>
 
 #define MCPropertyObjectThunkGetAny(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCValueRef&)
 #define MCPropertyObjectThunkGetBool(obj, mth) MCPropertyObjectThunkImp(obj, mth, bool&)
 #define MCPropertyObjectThunkGetInt16(obj, mth) MCPropertyObjectThunkImp(obj, mth, integer_t&)
 #define MCPropertyObjectThunkGetInt32(obj, mth) MCPropertyObjectThunkImp(obj, mth, integer_t&)
+#define MCPropertyObjectThunkGetInt32X4(obj, mth) MCPropertyX4ObjectThunkImp(obj, mth, integer_t)
 #define MCPropertyObjectThunkGetUInt16(obj, mth) MCPropertyObjectThunkImp(obj, mth, uinteger_t&)
 #define MCPropertyObjectThunkGetUInt32(obj, mth) MCPropertyObjectThunkImp(obj, mth, uinteger_t&)
 #define MCPropertyObjectThunkGetOptionalInt16(obj, mth) MCPropertyObjectThunkImp(obj, mth, integer_t*&)
@@ -231,6 +380,7 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, B
 #define MCPropertyObjectThunkSetBool(obj, mth) MCPropertyObjectThunkImp(obj, mth, bool)
 #define MCPropertyObjectThunkSetInt16(obj, mth) MCPropertyObjectThunkImp(obj, mth, integer_t)
 #define MCPropertyObjectThunkSetInt32(obj, mth) MCPropertyObjectThunkImp(obj, mth, integer_t)
+#define MCPropertyObjectThunkSetInt32X4(obj, mth) MCPropertyX4ObjectThunkImp(obj, mth, integer_t)
 #define MCPropertyObjectThunkSetUInt16(obj, mth) MCPropertyObjectThunkImp(obj, mth, uinteger_t)
 #define MCPropertyObjectThunkSetUInt32(obj, mth) MCPropertyObjectThunkImp(obj, mth, uinteger_t)
 #define MCPropertyObjectThunkSetOptionalInt16(obj, mth) MCPropertyObjectThunkImp(obj, mth, integer_t*)
@@ -302,139 +452,335 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, B
 #define MCPropertyObjectPartThunkSetOptionalEnumType(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, intenum_t*)
 #define MCPropertyObjectPartThunkSetArray(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCArrayRef)
 
+#define MCPropertyObjectArrayThunkGetAny(obj, mth) MCPropertyObjectArrayThunkImp(obj, mth, MCValueRef&)
+#define MCPropertyObjectArrayThunkGetBool(obj, mth) MCPropertyObjectArrayThunkImp(obj, mth, bool&)
+#define MCPropertyObjectArrayThunkGetString(obj, mth) MCPropertyObjectArrayThunkImp(obj, mth, MCStringRef&)
 
-#define MCPropertyObjectArrayThunkGetAny(obj, mth) MCPropertyObjectArrayThunkImp(obj, mth, MCNameRef, MCValueRef&)
-#define MCPropertyObjectArrayThunkGetBool(obj, mth) MCPropertyObjectArrayThunkImp(obj, mth, MCNameRef, bool&)
-#define MCPropertyObjectArrayThunkGetString(obj, mth) MCPropertyObjectArrayThunkImp(obj, mth, MCNameRef, MCStringRef&)
+#define MCPropertyObjectArrayThunkSetAny(obj, mth) MCPropertyObjectArrayThunkImp(obj, mth, MCValueRef)
+#define MCPropertyObjectArrayThunkSetBool(obj, mth) MCPropertyObjectArrayThunkImp(obj, mth, bool)
+#define MCPropertyObjectArrayThunkSetString(obj, mth) MCPropertyObjectArrayThunkImp(obj, mth, MCStringRef)
 
-#define MCPropertyObjectArrayThunkSetAny(obj, mth) MCPropertyObjectArrayThunkImp(obj, mth, MCNameRef, MCValueRef)
-#define MCPropertyObjectArrayThunkSetBool(obj, mth) MCPropertyObjectArrayThunkImp(obj, mth, MCNameRef, bool)
-#define MCPropertyObjectArrayThunkSetString(obj, mth) MCPropertyObjectArrayThunkImp(obj, mth, MCNameRef, MCStringRef)
+#define MCPropertyObjectChunkThunkGetBool(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, bool&)
+#define MCPropertyObjectChunkThunkSetBool(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, bool)
+
+#define MCPropertyObjectChunkMixedThunkGetOptionalBool(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, bool*&)
+#define MCPropertyObjectChunkMixedThunkGetOptionalUInt16(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, uinteger_t*&)
+
+#define MCPropertyObjectChunkMixedThunkSetOptionalBool(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool*)
+#define MCPropertyObjectChunkMixedThunkSetOptionalUInt16(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, uinteger_t*)
+
 //////////
 
 #define DEFINE_RW_PROPERTY(prop, type, module, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MC##module##Get##tag, (void *)MC##module##Set##tag },
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyThunkGet##type(MC##module##Get##tag), (void *)MCPropertyThunkSet##type(MC##module##Set##tag) },
 
 #define DEFINE_RW_SET_PROPERTY(prop, type, module, tag) \
-{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MC##module##Get##tag, (void *)MC##module##Set##tag },
+{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MCPropertyThunkGetSetType(MC##module##Get##tag), (void *)MCPropertyThunkSetSetType(MC##module##Set##tag) },
 
 #define DEFINE_RW_ENUM_PROPERTY(prop, type, module, tag) \
-{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MC##module##Get##tag, (void *)MC##module##Set##tag },
+{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyThunkGetEnumType(MC##module##Get##tag), (void *)MCPropertyThunkSetEnumType(MC##module##Set##tag) },
 
 #define DEFINE_RW_CUSTOM_PROPERTY(prop, type, module, tag) \
-{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MC##module##Get##tag, (void *)MC##module##Set##tag },
+{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyThunkGetCustomType(MC##module##Get##tag, MC##type), (void *)MCPropertyThunkSetCustomType(MC##module##Set##tag, MC##type) },
+
+#define DEFINE_RW_INDEXED_PROPERTY(prop, type, module, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyThunkIndexedGet##type(MC##module##Get##tag), (void *)MCPropertyThunkIndexedSet##type(MC##module##Set##tag), false, false, true },
 
 #define DEFINE_RO_PROPERTY(prop, type, module, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MC##module##Get##tag, nil },
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyThunkGet##type(MC##module##Get##tag), nil },
 
 #define DEFINE_RO_SET_PROPERTY(prop, type, module, tag) \
-{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MC##module##Get##tag, nil },
+{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MCPropertyThunkGetSetType(MC##module##Get##tag), nil },
 
 #define DEFINE_RO_ENUM_PROPERTY(prop, type, module, tag) \
-{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MC##module##Get##tag, nil },
+{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyThunkGetEnumType(MC##module##Get##tag), nil },
 
 #define DEFINE_RO_CUSTOM_PROPERTY(prop, type, module, tag) \
-{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MC##module##Get##tag, nil },
+{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyThunkGetCustomType(MC##module##Get##tag, MC##type), nil },
 
 #define DEFINE_RO_EFFECTIVE_PROPERTY(prop, type, module, tag) \
-{ prop, true, kMCPropertyType##type, nil, (void *)MC##module##GetEffective##tag, nil },
+{ prop, true, kMCPropertyType##type, nil, (void *)MCPropertyThunkGet##type(MC##module##Get##tag), nil },
 
 
 #define DEFINE_RW_OBJ_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectThunkSet##type(obj, Set##tag), false, false },
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectThunkSet##type(obj, Set##tag), false, false, false },
 
 #define DEFINE_RO_OBJ_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(obj, Get##tag), nil, false, false },
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(obj, Get##tag), nil, false, false, false },
 
 #define DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectThunkSet##type(obj, Set##tag), true, false },
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectThunkSet##type(obj, Set##tag), true, false, false },
 
 #define DEFINE_RO_OBJ_NON_EFFECTIVE_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(obj, Get##tag), nil, true, false },
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(obj, Get##tag), nil, true, false, false },
 
 #define DEFINE_RW_OBJ_EFFECTIVE_PROPERTY(prop, type, obj, tag) \
-{ prop, true, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(obj, GetEffective##tag), (void *)MCPropertyObjectThunkSet##type(obj, SetEffective##tag), true, false },
+{ prop, true, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(obj, GetEffective##tag), (void *)MCPropertyObjectThunkSet##type(obj, SetEffective##tag), true, false, false },
 
 #define DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(prop, type, obj, tag) \
-{ prop, true, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(obj, GetEffective##tag), nil, true, false },
+{ prop, true, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(obj, GetEffective##tag), nil, true, false, false },
 
 #define DEFINE_RW_OBJ_PART_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectPartThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectPartThunkSet##type(obj, Set##tag), false, false },
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectPartThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectPartThunkSet##type(obj, Set##tag), false, false, false },
 
 #define DEFINE_RO_OBJ_PART_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectPartThunkGet##type(obj, Get##tag), nil, false, false },
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectPartThunkGet##type(obj, Get##tag), nil, false, false, false },
 
 #define DEFINE_RW_OBJ_PART_NON_EFFECTIVE_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectPartThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectPartThunkSet##type(obj, Set##tag), true, false },
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectPartThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectPartThunkSet##type(obj, Set##tag), true, false, false },
 
 #define DEFINE_RO_OBJ_PART_NON_EFFECTIVE_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectPartThunkGet##type(obj, Get##tag), nil, true, false },
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectPartThunkGet##type(obj, Get##tag), nil, true, false, false },
 
 #define DEFINE_RW_OBJ_PART_EFFECTIVE_PROPERTY(prop, type, obj, tag) \
-{ prop, true, kMCPropertyType##type, nil, (void *)MCPropertyObjectPartThunkGet##type(obj, GetEffective##tag), (void *)MCPropertyObjectPartThunkSet##type(obj, SetEffective##tag), true, false },
+{ prop, true, kMCPropertyType##type, nil, (void *)MCPropertyObjectPartThunkGet##type(obj, GetEffective##tag), (void *)MCPropertyObjectPartThunkSet##type(obj, SetEffective##tag), true, false, false },
 
 #define DEFINE_RO_OBJ_PART_EFFECTIVE_PROPERTY(prop, type, obj, tag) \
-{ prop, true, kMCPropertyType##type, nil, (void *)MCPropertyObjectPartThunkGet##type(obj, GetEffective##tag), nil, true, false },
+{ prop, true, kMCPropertyType##type, nil, (void *)MCPropertyObjectPartThunkGet##type(obj, GetEffective##tag), nil, true, false, false },
 
 #define DEFINE_RW_OBJ_CUSTOM_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetCustomType(obj, Get##tag, MC##type), (void *)MCPropertyObjectThunkSetCustomType(obj, Set##tag, MC##type), false, false },
+{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetCustomType(obj, Get##tag, MC##type), (void *)MCPropertyObjectThunkSetCustomType(obj, Set##tag, MC##type), false, false, false },
 
 #define DEFINE_RO_OBJ_CUSTOM_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetCustomType(obj, Get##tag, MC##type), nil, false, false },
+{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetCustomType(obj, Get##tag, MC##type), nil, false, false, false },
 
 #define DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetCustomType(obj, Get##tag, MC##type), (void *)MCPropertyObjectThunkSetCustomType(obj, Set##tag, MC##type), true, false },
+{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetCustomType(obj, Get##tag, MC##type), (void *)MCPropertyObjectThunkSetCustomType(obj, Set##tag, MC##type), true, false, false },
 
 #define DEFINE_RO_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetCustomType(obj, Get##tag, MC##type), nil, true, false },
+{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetCustomType(obj, Get##tag, MC##type), nil, true, false, false },
 
 #define DEFINE_RW_OBJ_EFFECTIVE_CUSTOM_PROPERTY(prop, type, obj, tag) \
-{ prop, true, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetCustomType(obj, Get##tag, MC##type), (void *)MCPropertyObjectThunkSetCustomType(obj, Set##tag, MC##type), true, false },
+{ prop, true, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetCustomType(obj, Get##tag, MC##type), (void *)MCPropertyObjectThunkSetCustomType(obj, Set##tag, MC##type), true, false, false },
 
 #define DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(prop, type, obj, tag) \
-{ prop, true, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetCustomType(obj, Get##tag, MC##type), nil, true, false },
+{ prop, true, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetCustomType(obj, Get##tag, MC##type), nil, true, false, false },
 
 #define DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectPartThunkGetCustomType(obj, Get##tag, MC##type), (void *)MCPropertyObjectPartThunkSetCustomType(obj, Set##tag, MC##type), false, false },
+{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectPartThunkGetCustomType(obj, Get##tag, MC##type), (void *)MCPropertyObjectPartThunkSetCustomType(obj, Set##tag, MC##type), false, false, false },
 
 #define DEFINE_RO_OBJ_ENUM_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetEnumType(obj, Get##tag), nil, false, false },
+{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetEnumType(obj, Get##tag), nil, false, false, false },
 
 #define DEFINE_RW_OBJ_ENUM_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetEnumType(obj, Get##tag), (void *)MCPropertyObjectThunkSetEnumType(obj, Set##tag), false, false },
+{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetEnumType(obj, Get##tag), (void *)MCPropertyObjectThunkSetEnumType(obj, Set##tag), false, false, false },
 
 #define DEFINE_RO_OBJ_PART_ENUM_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectPartThunkGetEnumType(obj, Get##tag), nil, false, false },
+{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectPartThunkGetEnumType(obj, Get##tag), nil, false, false, false },
 
 #define DEFINE_RW_OBJ_OPTIONAL_ENUM_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyTypeOptionalEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetOptionalEnumType(obj, Get##tag), (void *)MCPropertyObjectThunkSetOptionalEnumType(obj, Set##tag), false, false },
+{ prop, false, kMCPropertyTypeOptionalEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetOptionalEnumType(obj, Get##tag), (void *)MCPropertyObjectThunkSetOptionalEnumType(obj, Set##tag), false, false, false },
 
 #define DEFINE_RW_OBJ_NON_EFFECTIVE_OPTIONAL_ENUM_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyTypeOptionalEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetOptionalEnumType(obj, Get##tag), (void *)MCPropertyObjectThunkSetOptionalEnumType(obj, Set##tag), true, false },
+{ prop, false, kMCPropertyTypeOptionalEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetOptionalEnumType(obj, Get##tag), (void *)MCPropertyObjectThunkSetOptionalEnumType(obj, Set##tag), true, false, false },
 
 #define DEFINE_RW_OBJ_NON_EFFECTIVE_ENUM_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetEnumType(obj, Get##tag), (void *)MCPropertyObjectThunkSetEnumType(obj, Set##tag), true, false },
+{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetEnumType(obj, Get##tag), (void *)MCPropertyObjectThunkSetEnumType(obj, Set##tag), true, false, false },
 
 #define DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(prop, type, obj, tag) \
-{ prop, true, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetEnumType(obj, GetEffective##tag), nil, true, false },
+{ prop, true, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetEnumType(obj, GetEffective##tag), nil, true, false, false },
 
 #define DEFINE_UNAVAILABLE_OBJ_PROPERTY(prop) \
-{ prop, false, kMCPropertyTypeAny, nil, nil, nil, false, false },
+{ prop, false, kMCPropertyTypeAny, nil, nil, nil, false, false, false },
 
 #define DEFINE_RW_OBJ_SET_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetSetType(obj, Get##tag), (void *)MCPropertyObjectThunkSetSetType(obj, Set##tag), false, false },
+{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetSetType(obj, Get##tag), (void *)MCPropertyObjectThunkSetSetType(obj, Set##tag), false, false, false },
 
 #define DEFINE_RO_OBJ_SET_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetSetType(obj, Get##tag), nil, false, false },
+{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetSetType(obj, Get##tag), nil, false, false, false },
 
 #define DEFINE_RW_OBJ_ARRAY_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectArrayThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectArrayThunkSet##type(obj, Set##tag), false, true },
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectArrayThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectArrayThunkSet##type(obj, Set##tag), false, true, false },
 
 #define DEFINE_RW_OBJ_LIST_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectListThunkSet##type(obj, Set##tag), false, false },
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectListThunkSet##type(obj, Set##tag), false, false, false },
 
 #define DEFINE_RO_OBJ_LIST_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), nil, false, false },
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), nil, false, false, false },
+
+#define DEFINE_WO_OBJ_CHUNK_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyType##type, nil, nil, (void *)MCPropertyObjectChunkThunkSet##type(obj, Set##tag##OfCharChunk), false, false, false, true },
+
+#define DEFINE_RW_OBJ_NON_EFFECTIVE_MIXED_CHUNK_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedThunkGetOptional##type(obj, Get##tag##OfCharChunk), (void *)MCPropertyObjectChunkMixedThunkSetOptional##type(obj, Set##tag##OfCharChunk), true, false, false, true },
+
+#define DEFINE_RO_OBJ_EFFECTIVE_MIXED_CHUNK_PROPERTY(prop, type, obj, tag) \
+{ prop, true, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedThunkGetOptional##type(obj, GetEffective##tag##OfCharChunk), nil, true, false, false, true },
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct MCNativeControl;
+struct MCNativeControlPtr
+{
+    MCNativeControl *control;
+};
+
+template<typename C, typename A, void (C::*Method)(MCExecContext&, A)> inline void MCPropertyNativeControlThunk(MCExecContext& ctxt, MCNativeControlPtr* ctrl, A arg)
+{
+	(static_cast<C *>(ctrl -> control) ->* Method)(ctxt, arg);
+}
+
+#define MCPropertyNativeControlThunkImp(ctrl, mth, typ) (void(*)(MCExecContext&,MCNativeControlPtr*,typ))MCPropertyNativeControlThunk<ctrl,typ,&ctrl::mth>
+
+#define MCPropertyNativeControlThunkGetBool(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, bool&)
+#define MCPropertyNativeControlThunkGetInt16(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, integer_t&)
+#define MCPropertyNativeControlThunkGetInt32(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, integer_t&)
+#define MCPropertyNativeControlThunkGetInt32X2(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, integer_t[2])
+#define MCPropertyNativeControlThunkGetInt32X4(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, integer_t[4])
+#define MCPropertyNativeControlThunkGetUInt16(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, uinteger_t&)
+#define MCPropertyNativeControlThunkGetUInt32(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, uinteger_t&)
+#define MCPropertyNativeControlThunkGetDouble(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, double&)
+#define MCPropertyNativeControlThunkGetString(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCStringRef&)
+#define MCPropertyNativeControlThunkGetOptionalString(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCStringRef&)
+#define MCPropertyNativeControlThunkGetRectangle(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCRectangle&)
+#define MCPropertyNativeControlThunkGetCustomType(ctrl, mth, typ) MCPropertyNativeControlThunkImp(ctrl, mth, typ&)
+#define MCPropertyNativeControlThunkGetEnumType(ctrl, mth, typ) MCPropertyNativeControlThunkImp(ctrl, mth, typ&)
+#define MCPropertyNativeControlThunkGetSetType(ctrl, mth, typ) MCPropertyNativeControlThunkImp(ctrl, mth, typ&)
+
+#define MCPropertyNativeControlThunkSetBool(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, bool)
+#define MCPropertyNativeControlThunkSetInt16(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, integer_t)
+#define MCPropertyNativeControlThunkSetInt32(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, integer_t)
+#define MCPropertyNativeControlThunkSetInt32X2(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, integer_t[2])
+#define MCPropertyNativeControlThunkSetInt32X4(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, integer_t[4])
+#define MCPropertyNativeControlThunkSetUInt16(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, uinteger_t)
+#define MCPropertyNativeControlThunkSetUInt32(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, uinteger_t)
+#define MCPropertyNativeControlThunkSetDouble(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, double)
+#define MCPropertyNativeControlThunkSetString(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCStringRef)
+#define MCPropertyNativeControlThunkSetOptionalString(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCStringRef)
+#define MCPropertyNativeControlThunkSetRectangle(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCRectangle)
+#define MCPropertyNativeControlThunkSetCustomType(ctrl, mth, typ) MCPropertyNativeControlThunkImp(ctrl, mth, const typ&)
+#define MCPropertyNativeControlThunkSetEnumType(ctrl, mth, typ) MCPropertyNativeControlThunkImp(ctrl, mth, typ)
+#define MCPropertyNativeControlThunkSetSetType(ctrl, mth, typ) MCPropertyNativeControlThunkImp(ctrl, mth, typ)
+
+#define DEFINE_RW_CTRL_PROPERTY(prop, type, ctrl, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyNativeControlThunkGet##type(ctrl, Get##tag), (void *)MCPropertyNativeControlThunkSet##type(ctrl, Set##tag), false, false, false, false },
+
+#define DEFINE_RO_CTRL_PROPERTY(prop, type, ctrl, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyNativeControlThunkGet##type(ctrl, Get##tag), nil, false, false, false, false },
+
+#define DEFINE_RW_CTRL_CUSTOM_PROPERTY(prop, type, ctrl, tag) \
+{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetCustomType(ctrl, Get##tag, MC##type), (void *)MCPropertyNativeControlThunkSetCustomType(ctrl, Set##tag, MC##type), false, false, false, false },
+
+#define DEFINE_RO_CTRL_CUSTOM_PROPERTY(prop, type, ctrl, tag) \
+{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetCustomType(ctrl, Get##tag, MC##type), nil, false, false, false, false },
+
+#define DEFINE_RO_CTRL_ENUM_PROPERTY(prop, type, ctrl, tag) \
+{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetEnumType(ctrl, Get##tag, MC##type), nil, false, false, false, false },
+
+#define DEFINE_RW_CTRL_ENUM_PROPERTY(prop, type, ctrl, tag) \
+{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetEnumType(ctrl, Get##tag, MC##type), (void *)MCPropertyNativeControlThunkSetEnumType(ctrl, Set##tag, MC##type), false, false, false, false },
+
+#define DEFINE_UNAVAILABLE_CTRL_PROPERTY(prop) \
+{ prop, false, kMCPropertyTypeAny, nil, nil, nil, false, false, false, false },
+
+#define DEFINE_RW_CTRL_SET_PROPERTY(prop, type, ctrl, tag) \
+{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetSetType(ctrl, Get##tag, MC##type), (void *)MCPropertyNativeControlThunkSetSetType(ctrl, Set##tag, MC##type), false, false, false, false },
+
+#define DEFINE_RO_CTRL_SET_PROPERTY(prop, type, ctrl, tag) \
+{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetSetType(ctrl, Get##tag, MC##type), nil, false, false, false, false },
+
+////////////////////////////////////////////////////////////////////////////////
+
+template<typename C, typename X, typename Y, typename Z, void (C::*Method)(MCExecContext&, X, Y, Z)> inline void MCExecNativeControlThunk(MCExecContext& ctxt, MCNativeControlPtr* ctrl, X param1, Y param2, Z param3)
+{
+	(static_cast<C *>(ctrl -> control) ->* Method)(ctxt, param1, param2, param3);
+}
+
+template<typename C, typename X, typename Y, void (C::*Method)(MCExecContext&, X, Y)> inline void MCExecNativeControlThunk(MCExecContext& ctxt, MCNativeControlPtr* ctrl, X param1, Y param2)
+{
+	(static_cast<C *>(ctrl -> control) ->* Method)(ctxt, param1, param2);
+}
+
+template<typename C, typename X, void (C::*Method)(MCExecContext&, X)> inline void MCExecNativeControlThunk(MCExecContext& ctxt, MCNativeControlPtr* ctrl, X param1)
+{
+	(static_cast<C *>(ctrl -> control) ->* Method)(ctxt, param1);
+}
+
+template<typename C, void (C::*Method)(MCExecContext&)> inline void MCExecNativeControlThunk(MCExecContext& ctxt, MCNativeControlPtr* ctrl)
+{
+	(static_cast<C *>(ctrl -> control) ->* Method)(ctxt);
+}
+
+#define MCExecNativeControlThunkExec(ctrl, mth) (void(*)(MCExecContext&,MCNativeControlPtr*))MCExecNativeControlThunk<ctrl,&ctrl::mth>
+
+#define MCExecNativeControlUnaryThunkImp(ctrl, mth, typ) (void(*)(MCExecContext&,MCNativeControlPtr*,typ))MCExecNativeControlThunk<ctrl,typ,&ctrl::mth>
+#define MCExecNativeControlThunkExecString(ctrl, mth) MCExecNativeControlUnaryThunkImp(ctrl, mth, MCStringRef)
+#define MCExecNativeControlThunkExecInt32(ctrl, mth) MCExecNativeControlUnaryThunkImp(ctrl, mth, integer_t)
+
+#define MCExecNativeControlBinaryThunkImp(ctrl, mth, typ1, typ2) (void(*)(MCExecContext&,MCNativeControlPtr*,typ1,typ2))MCExecNativeControlThunk<ctrl,typ1,typ2,&ctrl::mth>
+#define MCExecNativeControlThunkExecStringString(ctrl, mth) MCExecNativeControlBinaryThunkImp(ctrl, mth, MCStringRef, MCStringRef)
+#define MCExecNativeControlThunkExecInt32Int32(ctrl, mth) MCExecNativeControlBinaryThunkImp(ctrl, mth, integer_t, integer_t)
+
+#define MCExecNativeControlTernaryThunkImp(ctrl, mth, typ1, typ2, typ3) (void(*)(MCExecContext&,MCNativeControlPtr*,typ1,typ2,typ3))MCExecNativeControlThunk<ctrl,typ1,typ2,typ3,&ctrl::mth>
+#define MCExecNativeControlThunkExecInt32OptionalInt32OptionalInt32(ctrl, mth) MCExecNativeControlTernaryThunkImp(ctrl, mth, integer_t, integer_t*, integer_t*)
+
+#define DEFINE_CTRL_EXEC_METHOD(act, ctrl, tag) \
+{ kMCNativeControlAction##act, (void *)MCExecNativeControlThunkExec(ctrl, Exec##tag) },
+
+#define DEFINE_CTRL_EXEC_UNARY_METHOD(act, ctrl, param1, tag) \
+{ kMCNativeControlAction##act, (void *)MCExecNativeControlThunkExec##param1(ctrl, Exec##tag) },
+
+#define DEFINE_CTRL_EXEC_BINARY_METHOD(act, ctrl, param1, param2, tag) \
+{ kMCNativeControlAction##act, (void *)MCExecNativeControlThunkExec##param1##param2(ctrl, Exec##tag) },
+
+#define DEFINE_CTRL_EXEC_TERNARY_METHOD(act, ctrl, param1, param2, param3, tag) \
+{ kMCNativeControlAction##act, (void *)MCExecNativeControlThunkExec##param1##param2##param3(ctrl, Exec##tag) },
+
+////////////////////////////////////////////////////////////////////////////////
+
+enum MCPurchaseState
+{
+	kMCPurchaseStateInitialized,
+	kMCPurchaseStateSendingRequest,
+	kMCPurchaseStatePaymentReceived,
+	kMCPurchaseStateComplete,
+	kMCPurchaseStateRestored,
+	kMCPurchaseStateCancelled,
+	kMCPurchaseStateRefunded,
+	kMCPurchaseStateError,
+    kMCPurchaseStateUnverified,
+	
+	kMCPurchaseStateUnknown,
+};
+
+typedef struct _mcpurchase_t
+{
+	uint32_t			id;
+	MCPurchaseState		state;
+	uint32_t			ref_count;
+	
+	void *				platform_data;
+	
+	struct _mcpurchase_t *	next;
+} MCPurchase;
+
+template<typename A, void Method(MCExecContext&, MCPurchase *, A)> inline void MCPurchasePropertyThunk(MCExecContext& ctxt, MCPurchase *purchase, A arg)
+{
+    Method(ctxt, purchase, arg);
+}
+
+#define MCPurchasePropertyThunkImp(mth,typ) (void(*)(MCExecContext&, MCPurchase *,typ))MCPurchasePropertyThunk<typ,mth>
+
+#define MCPurchasePropertyThunkGetInt32(mth) MCPurchasePropertyThunkImp(mth, integer_t&)
+#define MCPurchasePropertyThunkGetUInt32(mth) MCPurchasePropertyThunkImp(mth, uinteger_t&)
+#define MCPurchasePropertyThunkGetString(mth) MCPurchasePropertyThunkImp(mth, MCStringRef&)
+#define MCPurchasePropertyThunkGetBinaryString(mth) MCPurchasePropertyThunkImp(mth, MCDataRef&)
+
+#define MCPurchasePropertyThunkSetInt32(mth) MCPurchasePropertyThunkImp(mth, integer_t)
+#define MCPurchasePropertyThunkSetUInt32(mth) MCPurchasePropertyThunkImp(mth, uinteger_t)
+#define MCPurchasePropertyThunkSetString(mth) MCPurchasePropertyThunkImp(mth, MCStringRef)
+#define MCPurchasePropertyThunkSetBinaryString(mth) MCPurchasePropertyThunkImp(mth, MCDataRef)
+
+#define DEFINE_RW_STORE_PROPERTY(prop, type, module, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPurchasePropertyThunkGet##type(MC##module##Get##tag), (void *)MCPurchasePropertyThunkSet##type(MC##module##Set##tag) },
+
+#define DEFINE_RO_STORE_PROPERTY(prop, type, module, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPurchasePropertyThunkGet##type(MC##module##Get##tag), nil },
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *mark, MCValueRef& r_value);
+void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *mark, MCValueRef p_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -541,7 +887,7 @@ public:
 	{
 		return m_ep . getcutoff();
 	}
-	
+
 	uinteger_t GetNumberFormatWidth() const
 	{
 		return m_ep.getnffw();
@@ -611,10 +957,11 @@ public:
 
 	void SetRowDelimiter(char_t p_value)
 	{
-		m_ep . setrowdel(p_value);
-	}
-	//////////
+        m_ep . setrowdel(p_value);
+    }
 
+    //////////
+	
 	// Convert the given valueref to a string. If the type is not convertable
 	// to a string, the empty string is returned.
 	// This method should be used in cases where a string is required and
@@ -716,6 +1063,21 @@ public:
     {
         return m_ep . gethandler();
     }
+	
+	void SetHandler(MCHandler *p_handler)
+	{
+		m_ep.sethandler(p_handler);
+	}
+	
+	MCHandlerlist *GetHandlerList()
+	{
+		return m_ep.gethlist();
+	}
+	
+	void SetHandlerList(MCHandlerlist *p_list)
+	{
+		m_ep.sethlist(p_list);
+	}
     
 	MCObject *GetObject(void)
 	{
@@ -2384,10 +2746,10 @@ void MCPasteboardSetDragImageOffset(MCExecContext& ctxt, MCPoint *p_value);
 void MCPasteboardGetAllowableDragActions(MCExecContext& ctxt, intset_t& r_value);
 void MCPasteboardSetAllowableDragActions(MCExecContext& ctxt, intset_t p_value);
 
-void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCDataRef& r_data);
-void MCPasteboardSetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCDataRef p_data);
-void MCPasteboardGetDragData(MCExecContext& ctxt, MCStringRef p_index, MCDataRef& r_data);
-void MCPasteboardSetDragData(MCExecContext& ctxt, MCStringRef p_index, MCDataRef p_data);
+void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef& r_data);
+void MCPasteboardSetClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef p_data);
+void MCPasteboardGetDragData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef& r_data);
+void MCPasteboardSetDragData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef p_data);
 
 ///////////
 
@@ -2554,7 +2916,8 @@ void MCEngineEvalErrorObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 
 void MCEngineExecGet(MCExecContext& ctxt, MCValueRef value);
 void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef value, int where, MCVariableChunkPtr t_target);
-void MCEngineExecPutOutput(MCExecContext& ctxt, MCStringRef value, bool unicode);
+void MCEngineExecPutOutput(MCExecContext& ctxt, MCStringRef value);
+void MCEngineExecPutOutputUnicode(MCExecContext& ctxt, MCDataRef value);
 
 void MCEngineExecDo(MCExecContext& ctxt, MCStringRef p_script, int p_line, int p_pos);
 void MCEngineExecInsertScriptOfObjectInto(MCExecContext& ctxt, MCObject *p_script, bool p_in_front);
@@ -2931,9 +3294,9 @@ void MCMultimediaSetRecordCompression(MCExecContext& ctxt, MCStringRef p_value);
 void MCMultimediaGetRecordInput(MCExecContext& ctxt, MCStringRef& r_value);
 void MCMultimediaSetRecordInput(MCExecContext& ctxt, MCStringRef p_value);
 void MCMultimediaGetRecordSampleSize(MCExecContext& ctxt, uinteger_t& r_value);
-void MCMultimediaSetRecordSampleSize(MCExecContext& ctxt, uint2 p_value);
+void MCMultimediaSetRecordSampleSize(MCExecContext& ctxt, uinteger_t p_value);
 void MCMultimediaGetRecordChannels(MCExecContext& ctxt, uinteger_t& r_value);
-void MCMultimediaSetRecordChannels(MCExecContext& ctxt, uint2 p_value);
+void MCMultimediaSetRecordChannels(MCExecContext& ctxt, uinteger_t p_value);
 void MCMultimediaGetRecordRate(MCExecContext& ctxt, double& r_value);
 void MCMultimediaSetRecordRate(MCExecContext& ctxt, double p_value);
 
@@ -3363,7 +3726,7 @@ void MCLegacySetHcImportStat(MCExecContext& ctxt, MCStringRef p_value);
 void MCLegacyGetScriptTextFont(MCExecContext& ctxt, MCStringRef& r_value);
 void MCLegacySetScriptTextFont(MCExecContext& ctxt, MCStringRef p_value);
 void MCLegacyGetScriptTextSize(MCExecContext& ctxt, uinteger_t &r_value);
-void MCLegacySetScriptTextSize(MCExecContext& ctxt, uint2 p_value);
+void MCLegacySetScriptTextSize(MCExecContext& ctxt, uinteger_t p_value);
 
 void MCLegacyGetStackFiles(MCExecContext& ctxt, MCStringRef& r_value);
 void MCLegacySetStackFiles(MCExecContext& ctxt, MCStringRef value);
@@ -3385,9 +3748,9 @@ void MCLegacyGetTextStyle(MCExecContext& ctxt, MCValueRef& r_value);
 void MCLegacySetTextStyle(MCExecContext& ctxt, MCValueRef value);
 
 void MCLegacyGetBufferMode(MCExecContext& ctxt, MCStringRef& r_value);
-void MCLegacySetBufferMode(MCExecContext& ctxt, MCValueRef p_value);
+void MCLegacySetBufferMode(MCExecContext& ctxt, MCStringRef p_value);
 void MCLegacyGetMultiEffect(MCExecContext& ctxt, bool& r_value);
-void MCLegacySetMultiEffect(MCExecContext& ctxt, MCValueRef p_value);
+void MCLegacySetMultiEffect(MCExecContext& ctxt, bool p_value);
 
 void MCLegacyGetPrintTextAlign(MCExecContext& ctxt, MCValueRef& r_value);
 void MCLegacySetPrintTextAlign(MCExecContext& ctxt, MCValueRef value);
@@ -3654,9 +4017,11 @@ extern MCExecMethodInfo *kMCServerGetSessionIdMethodInfo;
 extern MCExecMethodInfo *kMCServerSetSessionIdMethodInfo;
 
 void MCServerExecPutHeader(MCExecContext& ctxt, MCStringRef value, bool as_new);
-void MCServerExecPutBinaryOutput(MCExecContext& ctxt, MCStringRef value);
-void MCServerExecPutContent(MCExecContext& ctxt, MCStringRef value, bool is_unicode);
-void MCServerExecPutMarkup(MCExecContext& ctxt, MCStringRef value, bool is_unicode);
+void MCServerExecPutBinaryOutput(MCExecContext& ctxt, MCDataRef value);
+void MCServerExecPutContent(MCExecContext& ctxt, MCStringRef value);
+void MCServerExecPutContentUnicode(MCExecContext& ctxt, MCDataRef value);
+void MCServerExecPutMarkup(MCExecContext& ctxt, MCStringRef value);
+void MCServerExecPutMarkupUnicode(MCExecContext& ctxt, MCDataRef value);
 void MCServerExecPutCookie(MCExecContext& ctxt, MCStringRef name, MCStringRef value, uinteger_t expires, MCStringRef path, MCStringRef domain, bool is_secure, bool http_only);
 
 void MCServerExecDeleteSession(MCExecContext& ctxt);
