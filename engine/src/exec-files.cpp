@@ -1609,7 +1609,8 @@ void MCFilesExecReadFromFileOrDriverUntil(MCExecContext& ctxt, bool p_driver, bo
 
 	if (MCStringGetLength(p_sentinel) == 1 && MCStringGetNativeCharAtIndex(p_sentinel, 0) == '\004')
 	{
-		IO_read_to_eof(t_stream, ctxt . GetEP());
+		MCAutoDataRef t_data;
+		IO_read_to_eof(t_stream, &t_data);
 		ctxt . SetTheResultToStaticCString("eof");
 	}
 		
