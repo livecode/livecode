@@ -2604,6 +2604,11 @@ MCGAffineTransform MCStack::getdevicetransform(void) const
 	return MCGAffineTransformConcat(MCResGetDeviceTransform(), getviewtransform());
 }
 
+MCGAffineTransform MCStack::getroottransform(void) const
+{
+	return MCGAffineTransformConcat(view_getroottransform(), getviewtransform());
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // IM-2013-10-08: [[ FullscreenMode ]] Ensure rect of resizable stacks is within min/max width & height

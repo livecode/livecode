@@ -99,6 +99,23 @@ static inline void MCGPixelUnpackNative(uint32_t p_pixel, uint8_t &r_red, uint8_
 	return MCGPixelUnpack(kMCGPixelFormatNative, p_pixel, r_red, r_green, r_blue, r_alpha);
 }
 
+static inline uint8_t MCGPixelGetAlpha(MCGPixelFormat p_format, uint32_t p_pixel)
+{
+	if (p_format & kMCGPixelAlphaPositionFirst)
+		return p_pixel & 0xFF;
+	else
+		return p_pixel >> 24;
+}
+
+static inline uint8_t MCGPixelGetNativeAlpha(uint32_t p_pixel)
+{
+#if kMCGPixelFormatNative & kMCGPixelAlphaPositionFirst
+	return p_pixel & 0xFF;
+#else
+	return p_pixel >> 24;
+#endif
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef float MCGFloat;
@@ -362,6 +379,11 @@ inline MCGRectangle MCGRectangleScale(MCGRectangle p_rect, MCGFloat p_scale)
 	t_rect.size.height = p_rect.size.height * p_scale;
 	
 	return t_rect;
+}
+
+inline bool MCGRectangleIsEmpty(const MCGRectangle &p_rect)
+{
+	return p_rect.size.width == 0.0 || p_rect.size.height == 0.0;
 }
 
 MCGRectangle MCGRectangleIntersection(const MCGRectangle &rect_1, const MCGRectangle &rect_2);

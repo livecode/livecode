@@ -3775,132 +3775,21 @@ Exec_stat MCObject::changeid(uint32_t p_new_id)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// IM-2013-10-17: [[ FullscreenMode ]] Removed struct fields not related to image masks
 struct object_mask_info
 {
-	void (*fill)(object_mask_info& info, void *scanline, uint32_t threshold);
-	
-	// The original bits of the mask. If 'nil' means its a solid rect.
-	void *bits;
-	
-	// The left offset (shift) required to align the mask at the start of the
-	// scanline (if sharp).
-	uint32_t offset;
-	
-	// The width (in pixels) that we are interested in.
-	uint32_t width;
-	
-	// The number of bytes from one scanline to the next in mask.
-	uint32_t stride;
-	
+	// IM-2013-10-17: [[ FullscreenMode ]] The mask image bitmap
+	MCImageBitmap *image;
+
 	// MM-2012-10-03: [[ ResIndependence ]] The scale of the mask.
-	//  Note, the width property remains in logical pixels whilst the stride is multiplied by the scale.
 	MCGFloat scale;
+
+	// IM-2013-10-17: [[ FullscreenMode ]] top-left corner of the mask image in stack coords
+	MCPoint origin;
 	
 	// This is freed after processing.
 	MCImageBitmap *temp_bitmap;
 };
-
-// MM-2012-10-03: [[ ResIndependence ]] Tweak of compute_objectshapescanline_soft to use the nearest pixel for scaled masks.
-static void compute_objectshapescanline_soft_scaled(object_mask_info& p_info, void *p_scanline, uint32_t p_threshold)
-{
-	uint32_t i;
-	for(i = 0; i < p_info . width - (p_info . width % 8); i += 8)
-	{
-		uint8_t t_mask;
-		t_mask = 0;
-		if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 0)) * 4 + 3] >= p_threshold) t_mask |= 1 << 7;
-		if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 1)) * 4 + 3] >= p_threshold) t_mask |= 1 << 6;
-		if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 2)) * 4 + 3] >= p_threshold) t_mask |= 1 << 5;
-		if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 3)) * 4 + 3] >= p_threshold) t_mask |= 1 << 4;
-		if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 4)) * 4 + 3] >= p_threshold) t_mask |= 1 << 3;
-		if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 5)) * 4 + 3] >= p_threshold) t_mask |= 1 << 2;
-		if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 6)) * 4 + 3] >= p_threshold) t_mask |= 1 << 1;
-		if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 7)) * 4 + 3] >= p_threshold) t_mask |= 1 << 0;
-		((char *)p_scanline)[i / 8] = t_mask;
-	}
-	
-	uint32_t t_mask;
-	t_mask = 0;
-	switch(p_info . width % 8)
-	{
-		case 7: if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 6)) * 4 + 3] >= p_threshold) t_mask |= 1 << 1;
-		case 6: if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 5)) * 4 + 3] >= p_threshold) t_mask |= 1 << 2;
-		case 5: if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 4)) * 4 + 3] >= p_threshold) t_mask |= 1 << 3;
-		case 4: if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 3)) * 4 + 3] >= p_threshold) t_mask |= 1 << 4;
-		case 3: if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 2)) * 4 + 3] >= p_threshold) t_mask |= 1 << 5;
-		case 2: if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 1)) * 4 + 3] >= p_threshold) t_mask |= 1 << 6;
-		case 1: if (((uint8_t *)p_info . bits)[(uint32_t)floorf(p_info . scale * (i + 0)) * 4 + 3] >= p_threshold) t_mask |= 1 << 7;
-			((char *)p_scanline)[i / 8] = t_mask;
-			break;
-			
-		default:
-			break;
-	}
-}
-
-// This method fills a scanline for comparison from a soft mask.
-static void compute_objectshapescanline_soft(object_mask_info& p_info, void *p_scanline, uint32_t p_threshold)
-{
-	uint32_t i;
-	for(i = 0; i < p_info . width - (p_info . width % 8); i += 8)
-	{
-		uint8_t t_mask;
-		t_mask = 0;
-		if (((uint8_t *)p_info . bits)[(i + 0) * 4 + 3] >= p_threshold) t_mask |= 1 << 7;
-		if (((uint8_t *)p_info . bits)[(i + 1) * 4 + 3] >= p_threshold) t_mask |= 1 << 6;
-		if (((uint8_t *)p_info . bits)[(i + 2) * 4 + 3] >= p_threshold) t_mask |= 1 << 5;
-		if (((uint8_t *)p_info . bits)[(i + 3) * 4 + 3] >= p_threshold) t_mask |= 1 << 4;
-		if (((uint8_t *)p_info . bits)[(i + 4) * 4 + 3] >= p_threshold) t_mask |= 1 << 3;
-		if (((uint8_t *)p_info . bits)[(i + 5) * 4 + 3] >= p_threshold) t_mask |= 1 << 2;
-		if (((uint8_t *)p_info . bits)[(i + 6) * 4 + 3] >= p_threshold) t_mask |= 1 << 1;
-		if (((uint8_t *)p_info . bits)[(i + 7) * 4 + 3] >= p_threshold) t_mask |= 1 << 0;
-		((char *)p_scanline)[i / 8] = t_mask;
-	}
-	
-	uint32_t t_mask;
-	t_mask = 0;
-	switch(p_info . width % 8)
-	{
-		case 7: if (((uint8_t *)p_info . bits)[(i + 6) * 4 + 3] >= p_threshold) t_mask |= 1 << 1;
-		case 6: if (((uint8_t *)p_info . bits)[(i + 5) * 4 + 3] >= p_threshold) t_mask |= 1 << 2;
-		case 5: if (((uint8_t *)p_info . bits)[(i + 4) * 4 + 3] >= p_threshold) t_mask |= 1 << 3;
-		case 4: if (((uint8_t *)p_info . bits)[(i + 3) * 4 + 3] >= p_threshold) t_mask |= 1 << 4;
-		case 3: if (((uint8_t *)p_info . bits)[(i + 2) * 4 + 3] >= p_threshold) t_mask |= 1 << 5;
-		case 2: if (((uint8_t *)p_info . bits)[(i + 1) * 4 + 3] >= p_threshold) t_mask |= 1 << 6;
-		case 1: if (((uint8_t *)p_info . bits)[(i + 0) * 4 + 3] >= p_threshold) t_mask |= 1 << 7;
-			((char *)p_scanline)[i / 8] = t_mask;
-			break;
-			
-		default:
-			break;
-	}
-}
-
-// This method fills a scanline for comparison from a sharp mask.
-static void compute_objectshapescanline_sharp(object_mask_info& p_info, void *p_scanline, uint32_t p_threshold)
-{
-	// Fast case, offset is 0.
-	if (p_info . offset == 0)
-	{
-		uint32_t t_byte_width;
-		t_byte_width = (p_info . width + 7) / 8;
-		memcpy(p_scanline, p_info . bits, t_byte_width);
-
-		// Mask out the bits we don't need from the last byte.
-		if ((p_info . width % 8) != 0)
-			((char *)p_scanline)[t_byte_width - 1] &= ~((1 << (8 - (p_info . width % 8))) - 1);
-
-		return;
-	}
-	
-	// Slow case, must shift to compute each byte.
-	uint32_t i;
-	for(i = 0; i < p_info . width / 8; i++)
-		((char *)p_scanline)[i] = (((char *)p_info . bits)[i] << p_info . offset) | (((char *)p_info . bits)[i + 1] >> (8 - p_info . offset));
-	
-	if (p_info . width % 8 != 0)
-		((char *)p_scanline)[i] = (((char *)p_info . bits)[i] << p_info . offset) & ~((1 << (8 - (p_info . width % 8))) - 1);
-}
 
 // This method computes as small an non-transparent rect as it can for the
 // given shape.
@@ -3916,7 +3805,15 @@ static MCRectangle compute_objectshape_rect(MCObjectShape& p_shape)
 	{
 		MCImageBitmap *t_mask;
 		t_mask = p_shape . mask . bits;
-		return MCU_intersect_rect(p_shape . bounds, MCU_make_rect(p_shape . mask . origin . x, p_shape . mask . origin . y, t_mask -> width, t_mask -> height));
+		
+		// IM-2013-10-17: [[ ResIndependence ]] Apply image scale factor when computing rect
+		MCGFloat t_scale;
+		t_scale = p_shape . mask . scale == 0.0 ? 1.0 : p_shape . mask . scale;
+		
+		MCRectangle t_mask_rect;
+		t_mask_rect = MCRectangleMake(p_shape . mask . origin . x, p_shape . mask . origin . y, ceilf(p_shape . mask . bits -> width / t_scale), ceilf(p_shape . mask . bits -> height) / t_scale);
+		
+		return MCU_intersect_rect(p_shape . bounds, t_mask_rect);
 	}
 
 	// Must be complex.
@@ -3925,52 +3822,21 @@ static MCRectangle compute_objectshape_rect(MCObjectShape& p_shape)
 
 // This method computes the mask details for a given shape, rasterizing the object
 // if necessary in the process.
-static void compute_objectshape_mask(MCObject *p_object, MCObjectShape& p_shape, MCRectangle& p_rect, uint32_t p_threshold, object_mask_info& r_mask)
+static void compute_objectshape_mask(MCObject *p_object, const MCObjectShape& p_shape, const MCRectangle& p_rect, uint32_t p_threshold, object_mask_info& r_mask)
 {
 	// Make sure everything is 0.
 	memset(&r_mask, 0, sizeof(r_mask));
 	
-	// If the shape is a rect, then we don't need to do anything except set
-	// fill to nil.
-	if (p_shape . type == kMCObjectShapeRectangle)
-	{
-		r_mask . fill = nil;
-		return;
-	}
+	// IM-2013-10-17: [[ FullscreenMode ]] Only compute the mask for images & complex shapes
+	MCAssert(p_shape . type != kMCObjectShapeRectangle);
 	
-	// If the shape is a mask, then we need to fill in the details appropriate
-	// to whether it is sharp or not.
 	if (p_shape . type == kMCObjectShapeMask)
 	{
-		// The rect (in obj co-ords) we want - notice that we use the mask origin (the
-		// rect of concern has already been clipped to the bounds of the object).
-		MCRectangle t_obj_rect;
-		t_obj_rect = MCU_offset_rect(p_rect, -p_shape . mask . origin . x, -p_shape . mask . origin . y);
-	
-		// What we setup depends on whether the mask is depth 1 or 8 and the threshold.
-		// If the threshold is not 1, we use soft bits if they are available.
+		// IM-2013-10-17: [[ FullscreenMode ]] Simplified mask info
+		r_mask . scale = p_shape . mask . scale == 0.0 ? 1.0 : p_shape . mask . scale;
+		r_mask . image = p_shape . mask . bits;
+		r_mask . origin = p_shape . mask . origin;
 		
-		if (p_shape . mask . scale != 0.0f && p_shape . mask . scale != 1.0f)
-		{
-			// MM-2012-10-03: [[ ResIndependence ]] If the mask is scaled, make sure we take this into account.
-			//   At the moment we use a simple nearest pixel method - for a logical point x,y, find the nearest matching pixel in the scaled mask.
-			//   Make sure we adjust the offset within the mask appropriately as well as the stride.
-			r_mask . scale = p_shape . mask . scale;
-			r_mask . stride = (uint32_t)floorf(p_shape . mask . bits -> stride  * r_mask . scale);
-			r_mask . bits = (uint8_t*)p_shape . mask . bits -> data + (uint32_t)floorf(t_obj_rect . y * r_mask . scale) * r_mask . stride  + (uint32_t)floorf(t_obj_rect . x * r_mask . scale) * sizeof(uint32_t);
-			r_mask . fill = compute_objectshapescanline_soft_scaled;
-		}
-		else
-		{
-			// IM-2013-05-10: fix wrong bit pointer offset due to adding stride (in bytes) to data (4-byte word pointer)
-			r_mask . bits = (uint8_t*)p_shape . mask . bits -> data + t_obj_rect . y * p_shape . mask . bits -> stride + t_obj_rect . x * sizeof(uint32_t);
-			r_mask . fill = compute_objectshapescanline_soft;
-			r_mask . stride = p_shape . mask . bits -> stride;
-		}
-		
-		r_mask . offset = 0;				
-		r_mask . width = t_obj_rect . width;
-
 		return;
 	}
 	
@@ -3979,14 +3845,19 @@ static void compute_objectshape_mask(MCObject *p_object, MCObjectShape& p_shape,
 	
 	// Otherwise we are in the complex case and must rasterize and extract a
 	// temporary mask.
+	
+	// IM-2013-10-17: [[ FullscreenMode ]] Make sure our rect is clipped to the object rect
+	MCRectangle t_rect;
+	t_rect = MCU_intersect_rect(p_rect, p_object->getrect());
+	
 	MCImageBitmap *t_snapshot = nil;
-	/* UNCHECKED */ MCImageBitmapCreate(p_rect.width, p_rect.height, t_snapshot);
+	/* UNCHECKED */ MCImageBitmapCreate(t_rect.width, t_rect.height, t_snapshot);
 	MCImageBitmapClear(t_snapshot);
 
 	MCGContextRef t_context = nil;
 	/* UNCHECKED */ MCGContextCreateWithPixels(t_snapshot->width, t_snapshot->height, t_snapshot->stride, t_snapshot->data, true, t_context);
-	MCGContextTranslateCTM(t_context, -(MCGFloat)p_rect.x, -(MCGFloat)p_rect.y);
-	MCGContextClipToRect(t_context, MCGRectangleMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height));
+	MCGContextTranslateCTM(t_context, -(MCGFloat)t_rect.x, -(MCGFloat)t_rect.y);
+	MCGContextClipToRect(t_context, MCRectangleToMCGRectangle(t_rect));
 
 	MCContext *t_gfxcontext = nil;
 	/* UNCHECKED */ t_gfxcontext = new MCGraphicsContext(t_context);
@@ -3998,7 +3869,7 @@ static void compute_objectshape_mask(MCObject *p_object, MCObjectShape& p_shape,
 		p_object -> open();
 	
 	// Render the object into the context (isolated).
-	((MCControl *)p_object) -> draw(t_gfxcontext, p_rect, true, false);
+	((MCControl *)p_object) -> draw(t_gfxcontext, t_rect, true, false);
 	
 	// Close the object if we opened it.
 	if (t_needs_open)
@@ -4011,13 +3882,123 @@ static void compute_objectshape_mask(MCObject *p_object, MCObjectShape& p_shape,
 	r_mask . temp_bitmap = t_snapshot;
 	
 	// Now set up the mask structure.
-	r_mask . fill = compute_objectshapescanline_soft;
-	r_mask . bits = r_mask . temp_bitmap -> data;
-	r_mask . stride = r_mask . temp_bitmap -> stride;
-	r_mask . width = p_rect . width;
-	r_mask . offset = 0;
-	
+	// IM-2013-10-17: [[ FullscreenMode ]] Simplified mask info
+	/* OVERHAUL - REVISIT: we should render at the device scale */
+	r_mask . scale = 1.0;
+	r_mask . image = p_shape . mask . bits;
+	r_mask . origin = MCPointMake(t_rect.x, t_rect.y);
+
 	return;
+}
+
+// Returns true if any pixels within the given area have opacity above the threshold level
+static bool mask_intersects_with_rect(const MCRectangle &p_rect, const object_mask_info &p_mask, uint8_t p_threshold)
+{
+	MCRectangle t_scaled_rect;
+	t_scaled_rect = MCGRectangleGetIntegerBounds(MCGRectangleScale(MCRectangleToMCGRectangle(p_rect), p_mask.scale));
+
+	MCRectangle t_scaled_mask_rect;
+	t_scaled_mask_rect = MCRectangleMake(floorf(p_mask.origin.x * p_mask.scale), floorf(p_mask.origin.y * p_mask.scale), p_mask.image->width, p_mask.image->height);
+	
+	MCRectangle t_rect;
+	t_rect = MCU_intersect_rect(t_scaled_rect, t_scaled_mask_rect);
+	
+	if (t_rect.width == 0 || t_rect.height == 0)
+		return false;
+	
+	// check for opacity in the mask over the given rect
+	uint8_t *t_src_ptr;
+	t_src_ptr = (uint8_t*)p_mask.image->data;
+	t_src_ptr += (t_rect.y - t_scaled_mask_rect.y) * p_mask.image->stride + (t_rect.x - t_scaled_mask_rect.x) * sizeof(uint32_t);
+	
+	for (uint32_t y = 0; y < t_rect.height; y++)
+	{
+		uint32_t *t_src_row;
+		t_src_row = (uint32_t*)t_src_ptr;
+		
+		for (uint32_t x = 0; x < t_rect.width; x++)
+			if (MCGPixelGetNativeAlpha(*t_src_ptr++) > p_threshold)
+				return true;
+		
+		t_src_ptr += p_mask.image->stride;
+	}
+	
+	return false;
+}
+
+// Fill the 1bpp scanline buffer, using the nearest pixel to the scaled positions
+static void mask_fill_scanline(const object_mask_info &p_mask, uint8_t p_threshold, uint32_t p_y, MCGFloat p_start_x, MCGFloat p_step, uint32_t p_width, uint8_t *p_scanline)
+{
+	uint32_t *t_src_ptr;
+	t_src_ptr = p_mask.image->data;
+	
+	t_src_ptr += p_y * (p_mask.image->stride / sizeof(uint32_t));
+	
+	uint32_t t_x;
+	t_x = floorf(p_start_x);
+
+	p_start_x -= t_x;
+	
+	t_src_ptr += t_x;
+	
+	uint32_t i;
+	for(i = 0; i < (p_width & ~7); i += 8)
+	{
+		uint8_t t_mask;
+		t_mask = 0;
+		
+		if (MCGPixelGetNativeAlpha(t_src_ptr[(uint32_t)floorf(p_start_x)]) >= p_threshold) t_mask |= 1 << 7;
+		p_start_x += p_step;
+		if (MCGPixelGetNativeAlpha(t_src_ptr[(uint32_t)floorf(p_start_x)]) >= p_threshold) t_mask |= 1 << 6;
+		p_start_x += p_step;
+		if (MCGPixelGetNativeAlpha(t_src_ptr[(uint32_t)floorf(p_start_x)]) >= p_threshold) t_mask |= 1 << 5;
+		p_start_x += p_step;
+		if (MCGPixelGetNativeAlpha(t_src_ptr[(uint32_t)floorf(p_start_x)]) >= p_threshold) t_mask |= 1 << 4;
+		p_start_x += p_step;
+		if (MCGPixelGetNativeAlpha(t_src_ptr[(uint32_t)floorf(p_start_x)]) >= p_threshold) t_mask |= 1 << 3;
+		p_start_x += p_step;
+		if (MCGPixelGetNativeAlpha(t_src_ptr[(uint32_t)floorf(p_start_x)]) >= p_threshold) t_mask |= 1 << 2;
+		p_start_x += p_step;
+		if (MCGPixelGetNativeAlpha(t_src_ptr[(uint32_t)floorf(p_start_x)]) >= p_threshold) t_mask |= 1 << 1;
+		p_start_x += p_step;
+		if (MCGPixelGetNativeAlpha(t_src_ptr[(uint32_t)floorf(p_start_x)]) >= p_threshold) t_mask |= 1 << 0;
+		p_start_x += p_step;
+
+		p_scanline[i / 8] = t_mask;
+	}
+	
+	uint32_t t_mask;
+	t_mask = 0;
+	switch(p_width % 8)
+	{
+		case 7:
+			if (MCGPixelGetNativeAlpha(t_src_ptr[(uint32_t)floorf(p_start_x)]) >= p_threshold) t_mask |= 1 << 1;
+			p_start_x += p_step;
+		case 6:
+			if (MCGPixelGetNativeAlpha(t_src_ptr[(uint32_t)floorf(p_start_x)]) >= p_threshold) t_mask |= 1 << 2;
+			p_start_x += p_step;
+		case 5:
+			if (MCGPixelGetNativeAlpha(t_src_ptr[(uint32_t)floorf(p_start_x)]) >= p_threshold) t_mask |= 1 << 3;
+			p_start_x += p_step;
+		case 4:
+			if (MCGPixelGetNativeAlpha(t_src_ptr[(uint32_t)floorf(p_start_x)]) >= p_threshold) t_mask |= 1 << 4;
+			p_start_x += p_step;
+		case 3:
+			if (MCGPixelGetNativeAlpha(t_src_ptr[(uint32_t)floorf(p_start_x)]) >= p_threshold) t_mask |= 1 << 5;
+			p_start_x += p_step;
+		case 2:
+			if (MCGPixelGetNativeAlpha(t_src_ptr[(uint32_t)floorf(p_start_x)]) >= p_threshold) t_mask |= 1 << 6;
+			p_start_x += p_step;
+		case 1:
+			if (MCGPixelGetNativeAlpha(t_src_ptr[(uint32_t)floorf(p_start_x)]) >= p_threshold) t_mask |= 1 << 7;
+			p_start_x += p_step;
+
+			p_scanline[i / 8] = t_mask;
+			break;
+			
+		default:
+			break;
+	}
 }
 
 bool MCObject::intersects(MCObject *p_other, uint32_t p_threshold)
@@ -4047,11 +4028,24 @@ bool MCObject::intersects(MCObject *p_other, uint32_t p_threshold)
 	/* UNCHECKED */ p_other -> lockshape(t_other_shape);
 	
 	// Compute the intersection in screen co-ords.
-	MCRectangle t_rect;
-	t_rect = MCU_intersect_rect(t_this_stack -> recttoroot(compute_objectshape_rect(t_this_shape)), t_other_stack -> recttoroot(compute_objectshape_rect(t_other_shape)));
+	// IM-2013-10-17: [[ FullscreenMode ]] Perform transformations & comparisons using MCGRectangles
+	MCRectangle t_this_objectshape_rect;
+	t_this_objectshape_rect = compute_objectshape_rect(t_this_shape);
+	
+	MCRectangle t_other_objectshape_rect;
+	t_other_objectshape_rect = compute_objectshape_rect(t_other_shape);
+	
+	MCGRectangle t_this_root_rect;
+	MCGRectangle t_other_root_rect;
+	
+	t_this_root_rect = MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(t_this_objectshape_rect), t_this_stack->getroottransform());
+	t_other_root_rect = MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(t_other_objectshape_rect), t_other_stack->getroottransform());
+
+	MCGRectangle t_root_rect;
+	t_root_rect = MCGRectangleIntersection(t_this_root_rect, t_other_root_rect);
 	
 	bool t_intersects;
-	if (MCU_empty_rect(t_rect))
+	if (MCGRectangleIsEmpty(t_root_rect))
 	{
 		// If the actual intersection is empty, we don't intersect.
 		t_intersects = false;
@@ -4061,52 +4055,101 @@ bool MCObject::intersects(MCObject *p_other, uint32_t p_threshold)
 		// If both shapes are rects, then we are done (they must intersect).
 		t_intersects = true;
 	}
+	else if (t_this_shape . type == kMCObjectShapeRectangle && t_other_shape . type != kMCObjectShapeRectangle)
+	{
+		// IM-2013-10-17: Add special case handling for image / rect intersection
+		MCGRectangle t_other_rect;
+		t_other_rect = MCGRectangleApplyAffineTransform(t_root_rect, MCGAffineTransformInvert(t_other_stack->getroottransform()));
+		
+		MCRectangle t_int_rect;
+		t_int_rect = MCGRectangleGetIntegerInterior(t_other_rect);
+		
+		object_mask_info t_other_mask;
+		compute_objectshape_mask(p_other, t_other_shape, t_int_rect, p_threshold, t_other_mask);
+		
+		t_intersects = mask_intersects_with_rect(t_int_rect, t_other_mask, p_threshold);
+		
+		// Free the temporary masks that were generated (if any).
+		MCImageFreeBitmap(t_other_mask . temp_bitmap);
+	}
+	else if (t_this_shape . type != kMCObjectShapeRectangle && t_other_shape . type == kMCObjectShapeRectangle)
+	{
+		// IM-2013-10-17: Add special case handling for image / rect intersection
+		MCGRectangle t_this_rect;
+		t_this_rect = MCGRectangleApplyAffineTransform(t_root_rect, MCGAffineTransformInvert(t_this_stack->getroottransform()));
+		
+		MCRectangle t_int_rect;
+		t_int_rect = MCGRectangleGetIntegerInterior(t_this_rect);
+		
+		object_mask_info t_this_mask;
+		compute_objectshape_mask(p_other, t_this_shape, t_int_rect, p_threshold, t_this_mask);
+		
+		t_intersects = mask_intersects_with_rect(t_int_rect, t_this_mask, p_threshold);
+		
+		// Free the temporary masks that were generated (if any).
+		MCImageFreeBitmap(t_this_mask . temp_bitmap);
+	}
 	else
 	{
+		// IM-2013-10-17: [[ FullscreenMode ]] Perform transformations & comparisons using MCGRectangles
 		// Now compute the rects of interest in both the objects.
-		MCRectangle t_this_rect, t_other_rect;
-		t_this_rect = t_this_stack -> rectfromroot(t_rect);
-		t_other_rect = t_other_stack -> rectfromroot(t_rect);
-
+		MCGRectangle t_other_rect;
+		t_other_rect = MCGRectangleApplyAffineTransform(t_root_rect, MCGAffineTransformInvert(t_other_stack->getroottransform()));
+		
+		MCGRectangle t_this_rect;
+		t_this_rect = MCGRectangleApplyAffineTransform(t_root_rect, MCGAffineTransformInvert(t_this_stack->getroottransform()));
+		
 		// Now resolve the masks - this may result in a temporary image being
 		// generated in <mask>.temp_bits - this is freed at the end.
 		object_mask_info t_this_mask, t_other_mask;
-		compute_objectshape_mask(this, t_this_shape, t_this_rect, p_threshold, t_this_mask);
-		compute_objectshape_mask(p_other, t_other_shape, t_other_rect, p_threshold, t_other_mask);
+		compute_objectshape_mask(this, t_this_shape, MCGRectangleGetIntegerInterior(t_this_rect), p_threshold, t_this_mask);
+		compute_objectshape_mask(p_other, t_other_shape, MCGRectangleGetIntegerInterior(t_other_rect), p_threshold, t_other_mask);
+		
+		// IM-2013-10-17: [[ FullscreenMode ]] Use integer bounds when testing pixels
+		MCRectangle t_int_rect;
+		t_int_rect = MCGRectangleGetIntegerInterior(t_root_rect);
 		
 		// Now check for intersection by processing a scanline at a time.
 		int32_t t_scanline_width;
-		t_scanline_width = (t_rect . width + 31) / 32;
+		t_scanline_width = (t_int_rect . width + 7) / 8;
 		
 		// We accumulate the normalized mask a scanline at a time.
-		uint32_t *t_this_scanline, *t_other_scanline;
+		uint8_t *t_this_scanline, *t_other_scanline;
 		MCMemoryNewArray(t_scanline_width, t_this_scanline);
 		MCMemoryNewArray(t_scanline_width, t_other_scanline);
 				
-		// If either of the masks are solid rects, then pre-fill the scanlines.
-		if (t_this_mask . fill == nil)
-			memset(t_this_scanline, 0xff, t_scanline_width * 4);
-		if (t_other_mask . fill == nil)
-			memset(t_other_scanline, 0xff, t_scanline_width * 4);
+		MCRectangle t_this_int_rect;
+		t_this_int_rect = MCGRectangleGetIntegerInterior(t_this_rect);
+		
+		// IM-2013-10-17: [[ FullscreenMode ]] Precompute initial pixel coords & row/column increments
+		MCGFloat t_this_x, t_this_y, t_this_x_inc, t_this_y_inc;
+		t_this_x = t_this_mask.scale * (t_this_rect.origin.x - t_this_mask.origin.x);
+		t_this_y = t_this_mask.scale * (t_this_rect.origin.y - t_this_mask.origin.y);
+		t_this_x_inc = t_this_mask.scale * ((MCGFloat)t_this_int_rect.width / (MCGFloat)t_int_rect.width);
+		t_this_y_inc = t_this_mask.scale * ((MCGFloat)t_this_int_rect.height / (MCGFloat)t_int_rect.height);
+		
+		MCRectangle t_other_int_rect;
+		t_other_int_rect = MCGRectangleGetIntegerInterior(t_other_rect);
+		
+		// IM-2013-10-17: [[ FullscreenMode ]] Precompute initial pixel coords & row/column increments
+		MCGFloat t_other_x, t_other_y, t_other_x_inc, t_other_y_inc;
+		t_other_x = t_other_mask.scale * (t_other_rect.origin.x - t_other_mask.origin.x);
+		t_other_y = t_other_mask.scale * (t_other_rect.origin.y - t_other_mask.origin.y);
+		t_other_x_inc = t_other_mask.scale * ((MCGFloat)t_other_int_rect.width / (MCGFloat)t_int_rect.width);
+		t_other_y_inc = t_other_mask.scale * ((MCGFloat)t_other_int_rect.height / (MCGFloat)t_int_rect.height);
 		
 		// Now check for overlap!
 		t_intersects = false;
 		// IM-2013-05-10: optimize - exit from outer loop if intersect found
-		for(int32_t y = 0; !t_intersects && y < t_rect . height; y++)
+		for(int32_t y = 0; !t_intersects && y < t_int_rect . height; y++)
 		{
 			// Fill the scanline for this.
-			if (t_this_mask . fill != nil)
-			{
-				t_this_mask . fill(t_this_mask, t_this_scanline, p_threshold);
-				t_this_mask . bits = ((char *)t_this_mask . bits) + t_this_mask . stride;
-			}
+			mask_fill_scanline(t_this_mask, p_threshold, (uint32_t)floorf(t_this_y), t_this_x, t_this_x_inc, t_int_rect.width, t_this_scanline);
+			t_this_y += t_this_y_inc;
 			
 			// Fill the scanline for other.
-			if (t_other_mask . fill != nil)
-			{
-				t_other_mask . fill(t_other_mask, t_other_scanline, p_threshold);
-				t_other_mask . bits = ((char *)t_other_mask . bits) + t_other_mask . stride;
-			}
+			mask_fill_scanline(t_other_mask, p_threshold, (uint32_t)floorf(t_other_y), t_other_x, t_other_x_inc, t_int_rect.width, t_other_scanline);
+			t_other_y += t_other_y_inc;
 			
 			// Check to see if they intersect.
 			for(int32_t x = 0; !t_intersects && x < t_scanline_width; x++)

@@ -343,6 +343,9 @@ public:
 	// Return the stack -> view coordinates transform
 	MCGAffineTransform view_getviewtransform(void) const;
 	
+	// IM-2013-10-17: [[ FullscreenMode ]] Return the view -> root window transform
+	MCGAffineTransform view_getroottransform(void) const;
+	
 	//////////
 	
 	// IM-2013-10-03: [[ FullscreenMode ]] Move implementation of tilecache operations into stackview
@@ -405,6 +408,8 @@ public:
 	MCGAffineTransform getviewtransform(void) const;
 	// IM-2013-10-14: [[ FullscreenMode ]] Return the stack -> device coordinate transform
 	MCGAffineTransform getdevicetransform(void) const;
+	// IM-2013-10-17: [[ FullscreenMode ]] Return the stack -> root window transform
+	MCGAffineTransform getroottransform(void) const;
 	
 	//////////
 	

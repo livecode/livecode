@@ -189,6 +189,11 @@ MCGAffineTransform MCStack::view_getviewtransform(void) const
 	return m_view_transform;
 }
 
+MCGAffineTransform MCStack::view_getroottransform(void) const
+{
+	return MCGAffineTransformMakeTranslation(m_view_rect.x, m_view_rect.y);
+}
+
 MCRectangle MCStack::view_getrect(void) const
 {
 	return m_view_rect;
