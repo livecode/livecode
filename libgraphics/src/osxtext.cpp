@@ -19,31 +19,48 @@ static bool osx_prepare_text(const void *p_text, uindex_t p_length, const MCGFon
 
 	if (t_err == noErr)
 		if (s_style == NULL)
-			t_err = ATSUCreateStyle(&s_style);
+			t_err = ATSUCreateStyle(&s_style);	
 	
 	ATSUFontID t_font_id;
 	Fixed t_font_size;
+	Boolean t_font_is_italic;
     if (t_err == noErr)
     {
         t_font_size = p_font . size << 16;
+
+		// MM-2013-09-16: [[ Bug 11283 ]] It appears that ATSUI doesn't like italic being passed as a style parameter to ATSUFONDtoFontID.
+		//   Instead, set italic as an attribute tag.
+		uint8_t t_style;
+		t_style = p_font . style & ~italic;
+		t_font_is_italic = p_font . style & italic;
+		
 		// if the specified font can't be found, just use the default
-		if (ATSUFONDtoFontID((short)(intptr_t)p_font . fid, p_font . style, &t_font_id) != noErr)
-			t_err = ATSUFONDtoFontID(0, p_font . style, &t_font_id);
+		// MM-2013-09-16: [[ Bug 11283 ]] Do the same for font styles - if the font/style paring cannot be found, try font with no style.
+		t_err = ATSUFONDtoFontID((short)(intptr_t)p_font . fid, t_style, &t_font_id);
+		if (t_err != noErr)
+			t_err = ATSUFONDtoFontID((short)(intptr_t)p_font . fid, 0, &t_font_id);
+		if (t_err != noErr)
+			t_err = ATSUFONDtoFontID(0, t_style, &t_font_id);
+		if (t_err != noErr)
+			t_err = ATSUFONDtoFontID(0, 0, &t_font_id);
     }
 	ATSUAttributeTag t_tags[] =
 	{
 		kATSUFontTag,
 		kATSUSizeTag,
+		kATSUQDItalicTag,
 	};
 	ByteCount t_sizes[] =
 	{
 		sizeof(ATSUFontID),
 		sizeof(Fixed),
+		sizeof(Boolean),
 	};
 	ATSUAttributeValuePtr t_attrs[] =
 	{
 		&t_font_id,
 		&t_font_size,
+		&t_font_is_italic,
 	};
 	if (t_err == noErr)
 		t_err = ATSUSetAttributes(s_style, sizeof(t_tags) / sizeof(ATSUAttributeTag), t_tags, t_sizes, t_attrs);
@@ -74,7 +91,7 @@ static bool osx_prepare_text(const void *p_text, uindex_t p_length, const MCGFon
 	return t_err == noErr;
 }
 
-static bool osx_measure_text_substring_width(uindex_t p_length, int32_t &r_width)
+static bool osx_measure_text_substring_width(uindex_t p_length, const MCGFont &p_font, int32_t &r_width)
 {
 	if (s_layout == NULL || s_style == NULL)
 		return false;
@@ -82,12 +99,27 @@ static bool osx_measure_text_substring_width(uindex_t p_length, int32_t &r_width
     OSStatus t_err;
 	t_err = noErr;
     
-    ATSUTextMeasurement t_before, t_after, t_ascent, t_descent;
-    if (t_err == noErr)
-        t_err = ATSUGetUnjustifiedBounds(s_layout, 0, p_length / 2, &t_before, &t_after, &t_ascent, &t_descent);
-    
+	int32_t t_width;	
+	if (t_err == noErr)
+	{
+		// MM-2013-09-16: [[ Bug 11283 ]] It appears that ATSUGetUnjustifiedBounds does not take into account any extra witdh required by italic fonts.
+		//   Use ATSUMeasureTextImage image instead.
+		if (p_font . style & italic)
+		{
+			Rect t_bounds;
+			t_err = ATSUMeasureTextImage(s_layout, 0, p_length / 2, 0, 0,&t_bounds);
+			t_width = t_bounds . right;
+		}
+		else
+		{
+			ATSUTextMeasurement t_before, t_after, t_ascent, t_descent;
+			t_err = ATSUGetUnjustifiedBounds(s_layout, 0, p_length / 2, &t_before, &t_after, &t_ascent, &t_descent);
+			t_width = (t_after + 0xffff) >> 16;
+		}		
+	}
+	
     if (t_err == noErr)         
-        r_width = (t_after + 0xffff) >> 16;
+        r_width = t_width;
     
     return t_err == noErr;
 }
@@ -265,7 +297,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
         // this will potentially result in osx_prepare_text being called again
         // though ideally not, as hopefully the text will have been recently measured and in the cache
 		if (p_length >= kMCGTextMeasureCacheMaxStringLength)
-			t_success = osx_measure_text_substring_width(p_length, t_text_bounds . width);
+			t_success = osx_measure_text_substring_width(p_length, p_font, t_text_bounds . width);
 		else
 			t_text_bounds . width = MCGContextMeasurePlatformText(self, p_text, p_length, p_font);
     }
@@ -360,7 +392,7 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
     int32_t t_width;
     t_width = 0;
     if (t_success)
-        t_success = osx_measure_text_substring_width(p_length, t_width);
+        t_success = osx_measure_text_substring_width(p_length, p_font, t_width);
     
 	//self -> is_valid = t_success;
 	
