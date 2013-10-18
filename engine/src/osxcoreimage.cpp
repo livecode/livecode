@@ -181,8 +181,8 @@ bool MCCoreImageEffectBegin(const char *p_name, Drawable p_target, Drawable p_so
 					t_image = (MCImage *)(MCdefaultstackptr -> getobjid(CT_IMAGE, atoi(t_argument -> value + 3)));
 				else
                 {
-                    MCAutoStringRef t_value;
-                    /* UNCHECKED */ MCStringCreateWithCString(t_argument -> value, &t_value);
+                    MCNewAutoNameRef t_value;
+                    /* UNCHECKED */ MCNameCreateWithCString(t_argument -> value, &t_value);
 					t_image = (MCImage *)(MCdefaultstackptr -> getobjname(CT_IMAGE, *t_value));
                 }
 				if (t_image != NULL)

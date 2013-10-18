@@ -2152,7 +2152,9 @@ MCControl *MCCard::getchild(Chunk_term etype, MCStringRef p_expression,
 				{
 					if (!optr->getref()->getopened())
 						optr->getref()->setparent(this);
-					foundobj = optr->getref()->findname(otype, MCStringGetOldString(p_expression));
+					MCNewAutoNameRef t_name;
+					/* UNCHECKED */ MCNameCreate(p_expression, &t_name);
+					foundobj = optr->getref()->findname(otype, *t_name);
 				}
 				if (foundobj != NULL)
 				{
@@ -2567,7 +2569,7 @@ MCControl *MCCard::getchildbyname(MCNameRef p_name, Chunk_term p_object_type, Ch
         {
             if (!optr->getref()->getopened())
                 optr->getref()->setparent(this);
-            foundobj = optr->getref()->findname(p_object_type, MCNameGetOldString(p_name));
+            foundobj = optr->getref()->findname(p_object_type, p_name);
         }
         if (foundobj != nil)
         {

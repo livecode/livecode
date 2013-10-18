@@ -319,7 +319,7 @@ public:
 	void compact();
 	Boolean checkid(uint4 cardid, uint4 controlid);
 	IO_stat saveas(const MCStringRef);
-	MCStack *findname(Chunk_term type, const MCString &);
+	MCStack *findname(Chunk_term type, MCNameRef);
 	MCStack *findid(Chunk_term type, uint4 inid, Boolean alt);
 	void setmark();
 	void clearmark();
@@ -359,7 +359,7 @@ public:
     MCCard *getchildbyid(uinteger_t p_id);
     MCCard *getchildbyname(MCNameRef p_name);
     
-	/* LEGACY */ MCGroup *getbackground(Chunk_term etype, const MCString &, Chunk_term otype);
+	/* LEGACY */ MCGroup *getbackground(Chunk_term etype, MCStringRef, Chunk_term otype);
     
     MCGroup *getbackgroundbyordinal(Chunk_term otype);
     MCGroup *getbackgroundbyid(uinteger_t p_id);
@@ -396,12 +396,10 @@ public:
 	MCCard *findcardbyid(uint4 p_id);
 
 	MCControl *getcontrolid(Chunk_term type, uint4 inid, bool p_recurse = false);
-	MCControl *getcontrolname(Chunk_term type, MCStringRef);
+	MCControl *getcontrolname(Chunk_term type, MCNameRef);
 	MCObject *getAVid(Chunk_term type, uint4 inid);
-	/* LEGACY */ MCObject *getAVname(Chunk_term type, MCStringRef);
     bool getAVname(Chunk_term type, MCNameRef p_name, MCObject*& r_object);
 	Exec_stat setcard(MCCard *card, Boolean recent, Boolean dynamic);
-	//MCStack *findstackfile_oldstring(const MCString &s);
 	MCStack *findstackname_oldstring(const MCString &);
 	MCStack *findsubstackname_oldstring(const MCString &);
 	MCStack *findstackfile(MCNameRef name);
@@ -421,8 +419,8 @@ public:
 	void removecard(MCCard *cptr);
 	MCObject *getsubstackobjid(Chunk_term type, uint4 inid);
 	MCObject *getobjid(Chunk_term type, uint4 inid);
-	MCObject *getsubstackobjname(Chunk_term type, MCStringRef);
-	MCObject *getobjname(Chunk_term type, MCStringRef p_name);
+	MCObject *getsubstackobjname(Chunk_term type, MCNameRef);
+	MCObject *getobjname(Chunk_term type, MCNameRef);
 	void createmenu(MCControl *nc, uint2 width, uint2 height);
 	void menuset(uint2 button, uint2 defy);
 	void menumup(uint2 which, MCStringRef &r_string, uint2 &selline);

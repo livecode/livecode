@@ -2132,7 +2132,7 @@ void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)
 
 Exec_stat MCObject::names_old(Properties which, MCExecPoint& ep, uint32_t parid)
 {
-	MCAutoStringRef t_name;
+	MCAutoValueRef t_name;
 	if (names(which, &t_name) &&
 		ep . setvalueref(*t_name))
 		return ES_NORMAL;
@@ -2140,8 +2140,11 @@ Exec_stat MCObject::names_old(Properties which, MCExecPoint& ep, uint32_t parid)
 	return ES_ERROR;
 }
 
-bool MCObject::names(Properties which, MCStringRef& r_name)
+bool MCObject::names(Properties which, MCValueRef& r_name_val)
 {
+	MCStringRef &r_name = (MCStringRef&)
+	r_name_val;
+	
 	const char *itypestring = gettypestring();
 	MCAutoPointer<char> tmptypestring;
 	if (parent != NULL && gettype() >= CT_BUTTON && getstack()->hcaddress())
@@ -2202,25 +2205,25 @@ bool MCObject::names(Properties which, MCStringRef& r_name)
 			which = P_LONG_ID;
 		if (parent != NULL)
 		{
-			MCAutoStringRef t_parent;
+			MCAutoValueRef t_parent;
 			if (!parent -> names(t_which_requested, &t_parent))
 				return false;
 			if (gettype() == CT_GROUP && parent->gettype() == CT_STACK)
 				itypestring = "bkgnd";
 			if (which == P_LONG_ID)
-				return MCStringFormat(r_name, "%s id %d of %s", itypestring, obj_id, MCStringGetCString(*t_parent));
-			return MCStringFormat(r_name, "%s \"%s\" of %s", itypestring, getname_cstring(), MCStringGetCString(*t_parent));
+				return MCStringFormat(r_name, "%s id %d of %@", itypestring, obj_id, *t_parent);
+			return MCStringFormat(r_name, "%s \"%@\" of %@", itypestring, getname(), *t_parent);
 		}
 		return MCStringFormat(r_name, "the template%c%s", MCS_toupper(itypestring[0]), itypestring + 1);
 
 	case P_NAME:
 	case P_ABBREV_NAME:
 		if (isunnamed())
-			return names(P_ABBREV_ID, r_name);
+			return names(P_ABBREV_ID, r_name_val);
 		return MCStringFormat(r_name, "%s \"%s\"", itypestring, getname_cstring());
 	case P_SHORT_NAME:
 		if (isunnamed())
-			return names(P_ABBREV_ID, r_name);
+			return names(P_ABBREV_ID, r_name_val);
 		r_name = MCValueRetain(MCNameGetString(getname()));
 		return true;
 	default:
@@ -3673,7 +3676,11 @@ MCImage *MCObject::resolveimage(MCStringRef p_name, uint4 p_image_id)
 			if (t_is_id)
 				t_control = t_behavior_stack -> getcontrolid(CT_IMAGE, p_image_id, true);
 			else
-				t_control = t_behavior_stack -> getcontrolname(CT_IMAGE, p_name);
+			{
+				MCNewAutoNameRef t_name;
+				/* UNCHECKED */ MCNameCreate(p_name, &t_name);
+				t_control = t_behavior_stack -> getcontrolname(CT_IMAGE, *t_name);
+			}
 			if (t_control != NULL)
 				break;
 			
@@ -3704,7 +3711,11 @@ MCImage *MCObject::resolveimage(MCStringRef p_name, uint4 p_image_id)
 		if (t_is_id)
 			t_control = static_cast<MCControl *>(getstack() -> getobjid(CT_IMAGE, p_image_id));
 		else
-			t_control = static_cast<MCControl *>(getstack() -> getobjname(CT_IMAGE, p_name));
+		{
+			MCNewAutoNameRef t_name;
+			/* UNCHECKED */ MCNameCreate(p_name, &t_name);
+			t_control = static_cast<MCControl *>(getstack() -> getobjname(CT_IMAGE, *t_name));
+		}
 	}
 	
 	return static_cast<MCImage *>(t_control);

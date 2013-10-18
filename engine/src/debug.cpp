@@ -357,7 +357,7 @@ bool MCB_unparsebreaks(MCStringRef& r_value)
 				
 				if (t_success)
 				{
-					MCAutoStringRef t_breakpoint_id;
+					MCAutoValueRef t_breakpoint_id;
 					t_success = MCbreakpoints[i] . object -> names(P_LONG_ID, &t_breakpoint_id) &&
 								MCListAppend(*t_breakpoint, *t_breakpoint_id);
 				}
@@ -758,7 +758,7 @@ bool MCB_unparsewatches(MCStringRef &r_watches)
 				
 				if (t_success)
 				{
-					MCAutoStringRef t_var_id;
+					MCAutoValueRef t_var_id;
 					t_success = MCwatchedvars[i] . object -> names(P_LONG_ID, &t_var_id) &&
 								MCListAppend(*t_watched_var, *t_var_id);
 				}
