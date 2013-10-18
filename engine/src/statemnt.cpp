@@ -431,7 +431,6 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 	MCExecContext ctxt(ep);
 	Exec_stat stat;
 	MCParameter *tptr = params;
-
 	while (tptr != NULL)
 	{
 		MCVariable* t_var;

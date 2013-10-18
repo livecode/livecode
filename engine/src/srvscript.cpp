@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "scriptpt.h"
 #include "newobj.h"
 #include "mcerror.h"
@@ -42,7 +43,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 MCServerScript::MCServerScript(void)
 {
 	m_files = NULL;
-	m_ep = NULL;
+	m_ctxt = NULL;
 	m_include_depth = 0;
 	m_current_file = nil;
 }
@@ -65,11 +66,14 @@ MCServerScript::~MCServerScript(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCServerScript::ListFiles(MCExecPoint& ep)
+void MCServerScript::ListFiles(MCStringRef &r_string)
 {
-	ep . clear();
+	MCListRef t_list;
+	/* UNCHECKED */ MCListCreateMutable('\n', t_list);
 	for(File *t_file = m_files; t_file != NULL; t_file = t_file -> next)
-		ep . concatcstring(t_file -> filename, EC_RETURN, t_file == m_files);
+		/* UNCHECKED */ MCListAppend(t_list, t_file->filename);
+	
+	/* UNCHECKED */ MCListCopyAsStringAndRelease(t_list, r_string);
 }
 
 uint4 MCServerScript::GetFileIndexForContext(MCExecContext &ctxt)
@@ -301,7 +305,7 @@ Parse_stat MCServerScript::ParseNextStatement(MCScriptPoint& sp, MCStatement*& r
 }
 
 // MW-2009-06-02: Add support for 'require' style includes.
-bool MCServerScript::Include(MCExecPoint& outer_ep, MCStringRef p_filename, bool p_require)
+bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p_require)
 {
 	if (MCStringIsEmpty(p_filename))
 	{
@@ -312,12 +316,12 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, MCStringRef p_filename, bool
 	if (hlist == NULL)
 		hlist = new MCHandlerlist;
 	
-	if (m_ep == NULL)
-		m_ep = new MCExecPoint(this, hlist, NULL);
+	if (m_ctxt == NULL)
+		m_ctxt = new MCExecContext(*new MCExecPoint(this, hlist, NULL));
 
 	// Save the old default folder
-	char *t_old_folder;
-	t_old_folder = MCsystem->GetCurrentFolder();
+	MCAutoStringRef t_old_folder;
+	MCsystem->GetCurrentFolder(&t_old_folder);
 
 	if (m_current_file != nil)
 	{
@@ -342,11 +346,7 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, MCStringRef p_filename, bool
 	t_file = FindFile(p_filename, true);
 	
 	// Set back the old default folder
-	MCAutoStringRef t_old_folder_string;
-	/* UNCHECKED */ MCStringCreateWithCString(t_old_folder, &t_old_folder_string);
-
-	MCsystem->SetCurrentFolder(*t_old_folder_string);
-	MCCStringFree(t_old_folder);
+	MCsystem->SetCurrentFolder(*t_old_folder);
 
 	// If we are 'requiring' and the script is already loaded, we are done.
 	if (t_file -> script != NULL && p_require)
@@ -459,21 +459,21 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, MCStringRef p_filename, bool
 		while(t_stat == PS_NORMAL && !MCexitall && t_statement != nil)
 		{
 			if (MCtrace || MCnbreakpoints)
-				MCB_trace(*m_ep, t_statement -> getline(), t_statement -> getpos());
+				MCB_trace(m_ctxt->GetEP(), t_statement -> getline(), t_statement -> getpos());
 			
 			if (!MCexitall)
 			{
 				Exec_stat t_exec_stat;
-				t_exec_stat = t_statement -> exec(*m_ep);
+				t_exec_stat = t_statement -> exec(m_ctxt->GetEP());
 				if (t_exec_stat != ES_NORMAL)
 				{
 					// Throw an error in the debugger
 					if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
 						do
 						{
-							MCB_error(*m_ep, t_statement->getline(), t_statement->getpos(), EE_HANDLER_BADSTATEMENT);
+							MCB_error(m_ctxt->GetEP(), t_statement->getline(), t_statement->getpos(), EE_HANDLER_BADSTATEMENT);
 						}
-						while (MCtrace && (t_exec_stat = t_statement->exec(*m_ep)) != ES_NORMAL);
+						while (MCtrace && (t_exec_stat = t_statement->exec(m_ctxt->GetEP())) != ES_NORMAL);
 
 					// Flag an error.
 					t_stat = PS_ERROR;
@@ -505,7 +505,7 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, MCStringRef p_filename, bool
 		
 		// Throw an error in the debugger
 		if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-			MCB_error(*m_ep, 0, 0, EE_SCRIPT_SYNTAXERROR);
+			MCB_error(m_ctxt->GetEP(), 0, 0, EE_SCRIPT_SYNTAXERROR);
 	}
 	else
 	{
