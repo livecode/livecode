@@ -38,12 +38,12 @@ extern void MCServerDebugDisconnect(void);
 extern void MCServerDebugInterrupt(void);
 
 // Notify the server-side debugger of various script-events.
-extern void MCServerDebugTrace(MCExecPoint& ep, uint2 line, uint2 pos);
-extern void MCServerDebugBreak(MCExecPoint& ep, uint2 line, uint2 pos);
-extern void MCServerDebugError(MCExecPoint& ep, uint2 line, uint2 pos, uint2 id);
+extern void MCServerDebugTrace(MCExecContext &ctxt, uint2 line, uint2 pos);
+extern void MCServerDebugBreak(MCExecContext &ctxt, uint2 line, uint2 pos);
+extern void MCServerDebugError(MCExecContext &ctxt, uint2 line, uint2 pos, uint2 id);
 
 // Notify the server-side debugger that the given variable has changed.
-extern void MCServerDebugVariableChanged(MCExecPoint& ep, MCNameRef name);
+extern void MCServerDebugVariableChanged(MCExecContext &ctxt, MCNameRef name);
 
 // Notify the server-side debugger that the given variable *value* has
 // changed.

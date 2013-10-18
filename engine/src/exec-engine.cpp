@@ -728,20 +728,15 @@ void MCEngineExecReturnValue(MCExecContext& ctxt, MCValueRef p_value)
 
 void MCEngineExecDo(MCExecContext& ctxt, MCStringRef p_script, int p_line, int p_pos)
 {
-	MCExecPoint& ep = ctxt . GetEP();
-
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
-		ep.setline(p_line);
-		MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+		ctxt.GetEP().setline(p_line);
+		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
 
-	ep . setvalueref(p_script);
-
-	if (ep . gethandler() -> doscript(ep, p_line, p_pos) != ES_NORMAL)
-		ctxt . Throw();
+	ctxt.GetHandler() -> doscript(ctxt, p_script, p_line, p_pos);
 
 	if (added)
 		MCnexecutioncontexts--;
@@ -1055,14 +1050,14 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	MClockmessages = False;
 	
 	// Add a new entry in the execution contexts
-	MCExecPoint *oldep = MCEPptr;
-	MCEPptr = &ctxt . GetEP();
+	MCExecContext *oldctxt = MCECptr;
+	MCECptr = &ctxt;
 	Exec_stat t_stat;
 	t_stat = ES_NOT_HANDLED;
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
-		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt . GetEP();
+		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
 
@@ -1118,7 +1113,7 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	MClockmessages = t_old_lock;
 	
 	// Remove our entry from the contexts list
-	MCEPptr = oldep;
+	MCECptr = oldctxt;
 	if (added)
 		MCnexecutioncontexts--;
 }
@@ -1202,7 +1197,7 @@ static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObje
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
-		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt . GetEP();
+		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
 	if ((stat = optr->message(*t_message, t_params, p_is_send, True)) == ES_NOT_HANDLED)
