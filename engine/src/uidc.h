@@ -99,6 +99,9 @@ enum Transfer_mode {
     TRM_DRAGDROP
 };
 
+// Converts a keysym to its lower-case equivalent
+KeySym MCKeySymToLower(KeySym p_key);
+
 typedef struct
 {
 	MCObject *object;

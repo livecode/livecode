@@ -362,10 +362,10 @@ void MCPlayer::close()
 	}
 }
 
-Boolean MCPlayer::kdown(const char *string, KeySym key)
+Boolean MCPlayer::kdown(MCStringRef p_string, KeySym key)
 {
 	if (!(state & CS_NO_MESSAGES))
-		if (MCObject::kdown(string, key))
+		if (MCObject::kdown(p_string, key))
 			return True;
 
 #ifdef FEATURE_QUICKTIME
@@ -379,7 +379,7 @@ Boolean MCPlayer::kdown(const char *string, KeySym key)
 	return False;
 }
 
-Boolean MCPlayer::kup(const char *string, KeySym key)
+Boolean MCPlayer::kup(MCStringRef p_string, KeySym key)
 {
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)

@@ -405,7 +405,7 @@ Boolean MCObject::kfocusprev(Boolean bottom)
 void MCObject::kunfocus()
 {}
 
-Boolean MCObject::kdown(const char *string, KeySym key)
+Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
 {
 	char kstring[U4L];
 	sprintf(kstring, "%d", (int)key);
@@ -417,7 +417,7 @@ Boolean MCObject::kdown(const char *string, KeySym key)
 		sprintf(cstring, "%d", (int)(key - XK_F1 + 1));
 		if (message_with_args(MCM_function_key, cstring) == ES_NORMAL)
 			return True;
-		if (key == XK_F1 && message_with_args(MCM_help, string) == ES_NORMAL)
+		if (key == XK_F1 && message_with_valueref_args(MCM_help, p_string) == ES_NORMAL)
 			return True;
 		//return False;
 	}
@@ -514,43 +514,36 @@ Boolean MCObject::kdown(const char *string, KeySym key)
 			return True;
 		break;
 	default:
-		char tstring[U2L];
-		if (key > 0xFF)
-			sprintf(tstring, "%ld", key);
+		MCAutoStringRef t_string;
+			
+		// Special keys as their number converted to a string, the rest by value
+		if (key > 0x7F && (key & XK_Class_mask) == XK_Class_compat)
+			/* UNCHECKED */ MCStringFormat(&t_string, "%ld", key);
 		else
-			if ((uint1)string[0] < ' ' || MCmodifierstate & MS_CONTROL)
-			{
-				tstring[0] = (char)key;
-				tstring[1] = '\0';
-			}
-			else
-			{
-				tstring[0] = string[0];
-				tstring[1] = '\0';
-			}
+			t_string = p_string;
+			
 		if (MCmodifierstate & MS_CONTROL)
-		{
-			if ((key > 0xFF || string[0] != '\0' || tstring[0] == ' ')
-			        && (message_with_args(MCM_command_key_down, tstring) == ES_NORMAL))
+        {
+			if (message_with_valueref_args(MCM_command_key_down, *t_string) == ES_NORMAL)
 				return True;
 		}
 		else if (MCmodifierstate & MS_MOD1)
-		{
-			if ((key > 0xFF || string[0] != '\0' || tstring[0] == ' ')
-			        && (message_with_args(MCM_option_key_down, tstring) == ES_NORMAL))
+        {
+				if (message_with_valueref_args(MCM_option_key_down, *t_string) == ES_NORMAL)
 				return True;
-		}
+        }
 #ifdef _MACOSX
 		else if (MCmodifierstate & MS_MAC_CONTROL)
-		{
-			if ((key > 0xFF || string[0] != '\0' || tstring[0] == ' ')
-			        && (message_with_args(MCM_control_key_down, tstring) == ES_NORMAL))
+        {
+			if (message_with_valueref_args(MCM_control_key_down, *t_string) == ES_NORMAL)
 				return True;
-		}
+        }
 #endif
 		else
-			if ((string[0] != '\0' && message_with_args(MCM_key_down, string) == ES_NORMAL))
-					return True;
+        {
+			if (message_with_valueref_args(MCM_key_down, p_string) == ES_NORMAL)
+				return True;
+        }
 		break;
 	}
 
@@ -597,16 +590,16 @@ Boolean MCObject::kdown(const char *string, KeySym key)
 		case XK_Return:
 		case XK_KP_Enter:
 			closemenu(False, True);
-			oldmenu->menukdown(string, key, &t_pick, mh);
+			oldmenu->menukdown(p_string, key, &t_pick, mh);
 			message_with_args(MCM_mouse_up, Button1);
 			return True;
 		default:
-			MCButton *mbptr = attachedmenu->findmnemonic(string[0]);
+			MCButton *mbptr = attachedmenu->findmnemonic(key);
 			if (mbptr != NULL)
 			{
 				closemenu(False, True);
-				oldmenu->menukdown(string, key, &t_pick, mh);
-				mbptr->activate(False, string[0]);
+				oldmenu->menukdown(p_string, key, &t_pick, mh);
+				mbptr->activate(False, key);
 				message_with_args(MCM_mouse_up, Button1);
 				return True;
 			}
@@ -615,7 +608,7 @@ Boolean MCObject::kdown(const char *string, KeySym key)
 	return False;
 }
 
-Boolean MCObject::kup(const char *string, KeySym key)
+Boolean MCObject::kup(MCStringRef p_string, KeySym key)
 {
 	char kstring[U4L];
 	sprintf(kstring, "%d", (int)key);
@@ -626,8 +619,9 @@ Boolean MCObject::kup(const char *string, KeySym key)
 	//   don't trigger a keyup!
 	// OK-2010-04-01: [[Bug 6215]] - Need to also check for arrow keys here using the KeySym
 	//   as they don't have an ascii code.
-	if ((unsigned)(string[0]) >= 32 && string[0] != 127 && key != XK_Left && key != XK_Right && key != XK_Up && key != XK_Down)
-		if (message_with_args(MCM_key_up, string) == ES_NORMAL)
+	// TODO: filter out the C1 control codes too
+	if (key >= 32 && key != 127 && key != XK_Left && key != XK_Right && key != XK_Up && key != XK_Down)
+		if (message_with_valueref_args(MCM_key_up, p_string) == ES_NORMAL)
 			return True;
 	return False;
 }

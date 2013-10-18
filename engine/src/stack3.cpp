@@ -1605,7 +1605,8 @@ void MCStack::menumup(uint2 which, MCStringRef &r_string, uint2 &selline)
 	curcard->mup(which);
 }
 
-void MCStack::menukdown(const char *string, KeySym key, MCStringRef &r_string, uint2 &selline)
+
+void MCStack::menukdown(MCStringRef p_string, KeySym key, MCStringRef &r_string, uint2 &selline)
 {
 	MCControl *kfocused = curcard->getkfocused();
 	r_string = nil;
@@ -1627,7 +1628,7 @@ void MCStack::menukdown(const char *string, KeySym key, MCStringRef &r_string, u
 		}
 		curcard->count(CT_LAYER, CT_UNDEFINED, kfocused, selline, True);
 	}
-	curcard->kdown(string, key);
+	curcard->kdown(p_string, key);
 	curcard->kunfocus();
 }
 
