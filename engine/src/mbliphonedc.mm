@@ -360,7 +360,7 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 bool MCScreenDC::setbeepsound(MCStringRef p_beep_sound)
 {
 	MCScreenDCDoSetBeepSoundEnv t_env;
-	t_env . sound = MCValueRetain(p_beep_sound);
+	t_env . sound = p_beep_sound;
 
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 	/* REMOTE */ MCFiberCall(s_main_fiber, MCScreenDCDoSetBeepSound, &t_env);
