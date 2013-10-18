@@ -197,7 +197,8 @@ IO_stat MCObjectInputStream::ReadS16(int16_t& r_value)
 IO_stat MCObjectInputStream::ReadStringRef(MCStringRef &r_value)
 {
 	MCStringRef t_string;
-	/* UNCHECKED */ MCStringCreateMutable(0, t_string);
+	if (!MCStringCreateMutable(0, t_string))
+        return IO_ERROR;
 	
 	bool t_finished;
 	t_finished = false;
@@ -221,12 +222,17 @@ IO_stat MCObjectInputStream::ReadStringRef(MCStringRef &r_value)
 				break;
 			}
 
-		/* UNCHECKED */ MCStringAppendNativeChars(t_string, (const byte_t*)m_buffer + m_frontier, t_offset);
+		if(!MCStringAppendNativeChars(t_string, (const byte_t*)m_buffer + m_frontier, t_offset))
+            return IO_ERROR;
 
 		m_frontier += t_offset;
 	}
 
-	/* UNCHECKED */ MCStringCopyAndRelease(t_string, r_value);
+	if (!MCStringCopyAndRelease(t_string, r_value))
+    {
+        MCValueRelease(t_string);
+        return IO_ERROR;
+    }
 
 	return IO_NORMAL;
 }
