@@ -664,8 +664,6 @@ static void do_pickn_postwait(void *p_context)
 // HC-2011-09-30 [[ Bug 9773 ]] Changed using char*& argument to NSString*& for return value
 bool MCSystemPickN(NSArray *p_option_list_array, bool p_use_checkmark, bool p_use_cancel, bool p_use_done, bool p_use_picker, NSArray *p_initial_index_array, NSString*& r_return_index, MCRectangle p_button_rect)
 {
-	MCExecPoint ep(nil, nil, nil);
-	
 	// ensure that the options list array and initial index array are populated and have the same number of elements
 	if (p_option_list_array == nil || p_initial_index_array == nil || ([p_option_list_array count] != [p_initial_index_array count]))
 		return false;
@@ -697,7 +695,7 @@ bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initia
 	bool t_success;
 	t_success = true;
 	
-	CFStringRef cfoptions;
+	CFStringRef t_options;
 	NSArray *t_option_list_array;
 	
 	NSArray *t_initial_index_array;
@@ -707,10 +705,12 @@ bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initia
 	NSString *t_return_index = nil;
 	
 	// provide the correct encoding for the options list
-	/* UNCHECKED */ MCStringConvertToCFStringRef(p_options, cfoptions);
-
+	/* UNCHECKED */ MCStringConvertToCFStringRef(p_options, t_options);
+	
 	// convert the \n delimited item string into a pick wheel array
-	t_option_list_array = [NSArray arrayWithObject: [(NSString*)cfoptions componentsSeparatedByString:@"\n"]];
+	t_option_list_array = [NSArray arrayWithObject: [(NSString *)t_options componentsSeparatedByString:@"\n"]];
+	CFRelease(t_options);
+
 	// convert the initial index for each component into an array entry
 	t_initial_index_array = [NSArray arrayWithObject: [NSNumber numberWithInt: p_initial_index]];
 	// get the maximum number of digits needed for the entry column that was just added
@@ -785,7 +785,7 @@ bool MCSystemPickOption(MCPickList *p_pick_lists, uindex_t p_pick_list_count, ui
         [t_temp_picker_array retain];
         for (int j = 0; j < p_pick_lists[i] . option_count; j++)
         {
-            t_options = [NSString stringWithCString: MCStringGetCString(p_pick_lists[i] . options[j]) encoding: NSMacOSRomanStringEncoding];
+            t_options = [NSString stringWithMCStringRef: p_pick_lists[i] . options[j]];
             t_temp_picker_array = [t_temp_picker_array arrayByAddingObject: t_options];
         }
         t_option_list_array = [t_option_list_array arrayByAddingObject: t_temp_picker_array];

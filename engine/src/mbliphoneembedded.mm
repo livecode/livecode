@@ -41,8 +41,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 extern "C" UIView *LiveCodeGetView(void);
 
-extern MCExecPoint *MCEPptr;
-
 ////////////////////
 
 typedef uint8_t ObjcType;
@@ -460,20 +458,23 @@ public:
 		
 		if (m_completion != nil)
 		{
-			MCExecPoint ep(nil, nil, nil);
-			MCresult -> fetch(ep);
+            MCAutoValueRef t_value;
+            MCresult->copyasvalueref(&t_value);
 			
 			id t_result;
-			if (ep . isempty())
+            if (MCValueIsEmpty(*t_value))
 				t_result = nil;
-			else if (ep . getformat() == VF_ARRAY)
+
+            else if (MCValueGetTypeCode(*t_value) == kMCValueTypeCodeArray)
 			{
 				t_result = nil;
 			}
-			else if (ep . getformat() == VF_NUMBER || ep . getformat() == VF_BOTH)
-				t_result = [NSNumber numberWithDouble: ep . getnvalue()];
-			else
-				t_result = [NSString stringWithCString: ep . getcstring() encoding: NSMacOSRomanStringEncoding];
+            else if (MCValueGetTypeCode(*t_value) == kMCValueTypeCodeNumber)
+                t_result = [NSNumber numberWithDouble: MCNumberFetchAsReal((MCNumberRef)*t_value)];
+            else if (MCValueGetTypeCode((*t_value) == kMCValueTypeCodeString))
+                t_result = [NSString stringWithMCStringRef: (MCStringRef)*t_value];
+            else if (MCValueGetTypeCode((*t_value) == kMCValueTypeCodeName))
+                t_result = [NSString stringWithMCNameRef: (MCNameRef)*t_value)];
 				
 			m_completion(t_result);
 		}

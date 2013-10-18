@@ -352,7 +352,7 @@ void MCStatement::compile(MCSyntaxFactoryRef ctxt)
 
 #ifdef _MOBILE
 extern bool MCIsPlatformMessage(MCNameRef handler_name);
-extern Exec_stat MCHandlePlatformMessage(const MCString& p_message, MCParameter *p_parameters);
+extern Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters);
 #endif
 
 MCComref::MCComref(MCNameRef n)
@@ -427,25 +427,20 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 
 		resolved = true;
     }
-#ifdef _MOBILE
-    if (platform_message)
-    {
-        return MCHandlePlatformMessage(MCNameGetOldString(name), params);
-    }
-#endif
     
-	Exec_stat stat;
-	MCParameter *tptr = params;
+    MCExecContext ctxt(ep);
+    Exec_stat stat;
+    MCParameter *tptr = params;
 	while (tptr != NULL)
 	{
 		MCVariable* t_var;
 		t_var = tptr -> evalvar(ep);
-
+        
 		if (t_var == NULL)
 		{
 			tptr -> clear_argument();
 			while ((stat = tptr->eval(ep)) != ES_NORMAL && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-				MCB_error(ep, line, pos, EE_STATEMENT_BADPARAM);
+				MCB_error(ctxt, line, pos, EE_STATEMENT_BADPARAM);
 			if (stat != ES_NORMAL)
 			{
 				MCeerror->add(EE_STATEMENT_BADPARAM, line, pos);
@@ -455,22 +450,29 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 		}
 		else
 			tptr->set_argument_var(t_var);
-
+        
 		tptr = tptr->getnext();
-
+        
 	}
 	MCObject *p = ep.getobj();
-	MCExecPoint *oldep = MCEPptr;
-	MCEPptr = &ep;
+	MCExecContext *oldctxt = MCECptr;
+	MCECptr = &ctxt;
 	stat = ES_NOT_HANDLED;
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
 		ep.setline(line);
-		MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
-
+    
+#ifdef _MOBILE
+    if (platform_message)
+    {
+        stat = MCHandlePlatformMessage(name, params);
+    }
+#endif
+    
 	if (handler != nil)
 	{
         // MW-2008-10-28: [[ ParentScripts ]] If we are in the context of a
@@ -521,7 +523,7 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 			}
 		MCdynamicpath = olddynamic;
 	}
-	MCEPptr = oldep;
+	MCECptr = oldctxt;
 	if (added)
 		MCnexecutioncontexts--;
 	return stat;

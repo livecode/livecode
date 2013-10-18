@@ -30,6 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "dispatch.h"
 #include "mcerror.h"
 #include "execpt.h"
+#include "exec.h"
 #include "object.h"
 #include "hndlrlst.h"
 #include "handler.h"
@@ -489,7 +490,7 @@ void X_main_loop(void)
 	MCserverscript = static_cast<MCServerScript *>(MCdispatcher -> gethome());
 	
 	X_load_extensions(MCserverscript);
-	
+
 #ifdef _IREVIAM
 	rlim_t t_cpu_time_limit, t_data_limit;
 	t_cpu_time_limit = 30;
@@ -501,7 +502,10 @@ void X_main_loop(void)
 		t_port = getenv("SERVER_PORT");
 		if (t_port != NULL && atoi(t_port) == 7309)
 		{
-			if (MCServerDebugConnect(getenv("SERVER_NAME"), getenv("REQUEST_URI")))
+			MCAutoStringRef t_server_name, t_request_uri;
+			/* UNCHECKED */ MSC_getenv(MCSTR("SERVER_NAME"), &t_server_name);
+			/* UNCHECKED */ MSC_getenv(MCSTR("REQUEST_URI"), &t_request_uri);
+			if (MCServerDebugConnect(*t_server_name, *t_request_uri))
 			{
 				t_cpu_time_limit += t_cpu_time_limit / 2;
 				t_data_limit += t_data_limit / 2;
@@ -527,19 +531,19 @@ void X_main_loop(void)
 #endif
 	
 	MCExecPoint ep;
-	if (!MCserverscript -> Include(ep, MCserverinitialscript, false) &&
+	MCExecContext ctxt(ep);
+	if (!MCserverscript -> Include(ctxt, MCserverinitialscript, false) &&
 		MCS_get_errormode() != kMCSErrorModeDebugger)
 	{
-		char *t_eerror, *t_efiles;
-		t_eerror = MCeerror -> getsvalue() . clone();
-		MCserverscript -> ListFiles(ep);
-		t_efiles = ep . getsvalue() . clone();
+		MCAutoStringRef t_eerror, t_efiles;
+		/* UNCHECKED */ MCeerror->copyasstringref(&t_eerror);
+		MCserverscript -> ListFiles(&t_efiles);
 		MCeerror -> clear();
 		
 		MCParameter t_exec_stack, t_files;
-		t_exec_stack . sets_argument(t_eerror);
+		t_exec_stack . setvalueref_argument(*t_eerror);
 		t_exec_stack . setnext(&t_files);
-		t_files . sets_argument(t_efiles);
+		t_files . setvalueref_argument(*t_efiles);
 		
 		Exec_stat t_stat;
 		t_stat = MCserverscript -> message(MCM_script_execution_error, &t_exec_stack);
@@ -563,12 +567,9 @@ void X_main_loop(void)
 		
 		if ((t_stat != ES_NORMAL && t_stat != ES_PASS) && MCS_get_errormode() != kMCSErrorModeQuiet)
 		{
-			IO_printf(IO_stderr, "ERROR:\n%s\n", t_eerror);
-			IO_printf(IO_stderr, "FILES:\n%s\n", t_efiles);
+			IO_printf(IO_stderr, "ERROR:\n%@\n", *t_eerror);
+			IO_printf(IO_stderr, "FILES:\n%@\n", *t_efiles);
 		}
-
-		delete t_eerror;
-		delete t_efiles;
 	}
 	
 	if (s_server_cgi)

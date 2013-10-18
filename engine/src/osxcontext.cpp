@@ -1511,7 +1511,7 @@ void MCQuickDrawContext::drawimage(const MCImageDescriptor& p_image, int2 sx, in
 	free(t_pixel_ptr);
 }
 
-void MCQuickDrawContext::drawlink(const char *p_name, const MCRectangle& p_area)
+void MCQuickDrawContext::drawlink(MCStringRef p_name, const MCRectangle& p_area)
 {
 }
 

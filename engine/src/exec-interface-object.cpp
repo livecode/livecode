@@ -620,9 +620,9 @@ static void MCInterfaceTextStyleParse(MCExecContext& ctxt, MCStringRef p_input, 
 		{
 			t_old_offset = t_new_offset + 1;
 
-			if (MCF_setweightstring(style, MCStringGetOldString(*t_text_style)))
+			if (MCF_setweightstring(style, *t_text_style))
 				continue;
-			if (MCF_setexpandstring(style, MCStringGetOldString(*t_text_style)))
+			if (MCF_setexpandstring(style, *t_text_style))
 				continue;
 			if (MCStringIsEqualToCString(*t_text_style, "oblique", kMCCompareCaseless))
 			{
@@ -1103,32 +1103,40 @@ void MCObject::SetId(MCExecContext& ctxt, uint32_t p_new_id)
 
 void MCObject::GetAbbrevId(MCExecContext& ctxt, MCStringRef& r_abbrev_id)
 {
-	if (names(P_ABBREV_ID, r_abbrev_id))
-		return;
+	MCAutoValueRef t_abbrev_id;
+	if (names(P_ABBREV_ID, &t_abbrev_id))
+		if (ctxt.ConvertToString(*t_abbrev_id, r_abbrev_id))
+			return;
 	
 	ctxt . Throw();
 }
 
 void MCObject::GetLongName(MCExecContext& ctxt, MCStringRef& r_long_name)
 {
-	if (names(P_LONG_NAME, r_long_name))
-		return;
+	MCAutoValueRef t_long_name;
+	if (names(P_LONG_NAME, &t_long_name))
+		if (ctxt.ConvertToString(*t_long_name, r_long_name))
+			return;
 	
 	ctxt . Throw();
 }
 
 void MCObject::GetLongId(MCExecContext& ctxt, MCStringRef& r_long_id)
 {
-	if (names(P_LONG_ID, r_long_id))
-		return;
+	MCAutoValueRef t_long_id;
+	if (names(P_LONG_ID, &t_long_id))
+		if (ctxt.ConvertToString(*t_long_id, r_long_id))
+			return;
 	
 	ctxt . Throw();
 }
 
 void MCObject::GetName(MCExecContext& ctxt, MCStringRef& r_name)
 {
-	if (names(P_NAME, r_name))
-		return;
+	MCAutoValueRef t_name;
+	if (names(P_NAME, &t_name))
+		if (ctxt.ConvertToString(*t_name, r_name))
+			return;
 	
 	ctxt . Throw();
 }
@@ -1170,16 +1178,20 @@ void MCObject::SetName(MCExecContext& ctxt, MCStringRef p_name)
 
 void MCObject::GetAbbrevName(MCExecContext& ctxt, MCStringRef& r_abbrev_name)
 {
-	if (names(P_ABBREV_NAME, r_abbrev_name))
-		return;
+	MCAutoValueRef t_abbrev_name;
+	if (names(P_ABBREV_NAME, &t_abbrev_name))
+		if (ctxt.ConvertToString(*t_abbrev_name, r_abbrev_name))
+			return;
 	
 	ctxt . Throw();
 }
 
 void MCObject::GetShortName(MCExecContext& ctxt, MCStringRef& r_short_name)
 {
-	if (names(P_SHORT_NAME, r_short_name))
-		return;
+	MCAutoValueRef t_short_name;
+	if (names(P_SHORT_NAME, &t_short_name))
+		if (ctxt.ConvertToString(*t_short_name, r_short_name))
+			return;
 	
 	ctxt . Throw();
 }
@@ -1381,7 +1393,7 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 
 	// Create a script point with the value are setting the property to
 	// as source text.
-	MCScriptPoint sp(MCStringGetOldString(new_parent_script));
+	MCScriptPoint sp(new_parent_script);
 
 	// Create a new chunk object to parse the reference into
 	MCChunk *t_chunk;
@@ -2449,16 +2461,13 @@ void MCObject::GetTextFont(MCExecContext& ctxt, MCStringRef& r_font)
 {
 	if ((m_font_flags & FF_HAS_TEXTFONT) == 0)
 		return;
-	else
-	{
-		uint2 fontsize, fontstyle;
-		const char *fontname;
-		getfontattsnew(fontname, fontsize, fontstyle);
-		if (MCStringCreateWithCString(fontname, r_font))
-			return;
-	}
 
-	ctxt . Throw();
+    uint2 fontsize, fontstyle;
+    MCNameRef fontname;
+    getfontattsnew(fontname, fontsize, fontstyle);
+    r_font = MCNameGetString(fontname);
+		
+	
 }
 
 void MCObject::SetTextFont(MCExecContext& ctxt, MCStringRef font)
@@ -2533,16 +2542,12 @@ void MCObject::GetEffectiveTextFont(MCExecContext& ctxt, MCStringRef& r_font)
 			MCdispatcher -> GetDefaultTextFont(ctxt, r_font);
 		return;
 	}
-	else
-	{
-		uint2 fontsize, fontstyle;
-		const char *fontname;
-		getfontattsnew(fontname, fontsize, fontstyle);
-		if (MCStringCreateWithCString(fontname, r_font))
-			return;
-	}
 
-	ctxt . Throw();
+    uint2 fontsize, fontstyle;
+    MCNameRef fontname;
+    getfontattsnew(fontname, fontsize, fontstyle);
+    r_font = MCNameGetString(fontname);
+
 }
 
 void MCObject::GetTextSize(MCExecContext& ctxt, uinteger_t*& r_size)
@@ -2551,7 +2556,7 @@ void MCObject::GetTextSize(MCExecContext& ctxt, uinteger_t*& r_size)
 		return;
 
 	uint2 fontsize, fontstyle;
-	const char *fontname;
+	MCNameRef fontname;
 	getfontattsnew(fontname, fontsize, fontstyle);
 	uinteger_t size;
 	size = (uinteger_t)fontsize;
@@ -2605,7 +2610,7 @@ void MCObject::GetEffectiveTextSize(MCExecContext& ctxt, uinteger_t& r_size)
 	else
 	{
 		uint2 fontsize, fontstyle;
-		const char *fontname;
+		MCNameRef fontname;
 		getfontattsnew(fontname, fontsize, fontstyle);
 		r_size = (uinteger_t)fontsize;
 	}
@@ -2620,7 +2625,7 @@ void MCObject::GetTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& r_style)
     }
 
 	uint2 fontsize, fontstyle;
-	const char *fontname;
+	MCNameRef fontname;
 	getfontattsnew(fontname, fontsize, fontstyle);
 	r_style . style = fontstyle;
 }
@@ -2670,7 +2675,7 @@ void MCObject::GetEffectiveTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& 
 	else
 	{
 		uint2 fontsize, fontstyle;
-		const char *fontname;
+		MCNameRef fontname;
 		getfontattsnew(fontname, fontsize, fontstyle);
 		r_style . style = fontstyle;
 	}
@@ -3062,7 +3067,7 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
 	MCValueRef t_value;
 	while(MCArrayIterate(props, t_iterator, t_key, t_value))
 	{
-		MCScriptPoint sp(MCStringGetCString(MCNameGetString(t_key)));
+		MCScriptPoint sp(MCNameGetString(t_key));
 		Symbol_type type;
 		const LT *te;
 		if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL
@@ -3704,7 +3709,7 @@ void MCObject::GetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool&
         t_style_set = gettextstyle();
     
     Font_textstyle t_style;
-    if (MCF_parsetextstyle(MCNameGetOldString(p_index), t_style) == ES_NORMAL)
+    if (MCF_parsetextstyle(MCNameGetString(p_index), t_style) == ES_NORMAL)
     {
         r_setting = MCF_istextstyleset(t_style_set, t_style);
         return;
@@ -3716,7 +3721,7 @@ void MCObject::GetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool&
 void MCObject::SetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool p_setting)
 {
     Font_textstyle t_style;
-    if (MCF_parsetextstyle(MCNameGetOldString(p_index), t_style) == ES_NORMAL)
+    if (MCF_parsetextstyle(MCNameGetString(p_index), t_style) == ES_NORMAL)
     {
         uint2 t_style_set;
 		if ((m_font_flags & FF_HAS_TEXTSTYLE) == 0)

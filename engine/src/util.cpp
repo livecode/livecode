@@ -258,16 +258,12 @@ void MCU_getnumberformat(MCExecPoint &ep, uint2 fw, uint2 trail, uint2 force)
 #endif
 }
 
-void MCU_setnumberformat(MCStringRef p_input, uint2 &fw, uint2 &trailing, uint2 &force)
-{
-	MCU_setnumberformat(MCStringGetOldString(p_input), fw, trailing, force);
-}
 
-void MCU_setnumberformat(const MCString &d, uint2 &fw,
+void MCU_setnumberformat(MCStringRef d, uint2 &fw,
                          uint2 &trailing, uint2 &force)
 {
-	fw = d.getlength();
-	const char *sptr = d.getstring();
+	fw = MCStringGetLength(d);
+	const char *sptr = MCStringGetCString(d);
 	const char *eptr = sptr;
 	while (eptr - sptr < fw && *eptr != '.')
 		eptr++;
@@ -792,6 +788,11 @@ Boolean MCU_stoi2x4(const MCString &s, int2 &d1, int2 &d2, int2 &d3, int2 &d4)
 	return True == MCU_stoi2x4(MCStringGetOldString(p_string), r_d1, r_d2, r_d3, r_d4);
 }
 
+/* WRAPPER */ bool MCU_stoi4x4(MCStringRef p_string, int32_t& r_d1, int32_t& r_d2, int32_t& r_d3, int32_t& r_d4)
+{
+	return True == MCU_stoi4x4(MCStringGetOldString(p_string), r_d1, r_d2, r_d3, r_d4);
+}
+
 Boolean MCU_stoi4x4(const MCString &s, int32_t &d1, int32_t &d2, int32_t &d3, int32_t &d4)
 {
 	const char *sptr = s.getstring();
@@ -808,6 +809,20 @@ Boolean MCU_stoi4x4(const MCString &s, int32_t &d1, int32_t &d2, int32_t &d3, in
 		return False;
 	d4 = MCU_strtol(sptr, l, '\0', done, True, False);
 	if (!done || l != 0)
+		return False;
+	return True;
+}
+
+Boolean MCU_stoi4x2(const MCString &s, int32_t &d1, int32_t &d2)
+{
+	const char *sptr = s.getstring();
+	uint4 l = s.getlength();
+	Boolean done;
+	d1 = MCU_strtol(sptr, l, ',', done, True, False);
+	if (!done || l == 0)
+		return False;
+	d2 = MCU_strtol(sptr, l, ',', done, True, False);
+	if (!done || l == 0)
 		return False;
 	return True;
 }
@@ -897,15 +912,6 @@ void MCU_lower(char *dptr, const MCString &s)
 	uint4 i;
 	for (i = 0 ; i < length ; i++)
 		*dptr++ = MCS_tolower(*sptr++);
-}
-
-void MCU_upper(char *dptr, const MCString &s)
-{
-	uint4 length = s.getlength();
-	const uint1 *sptr = (uint1 *)s.getstring();
-	uint4 i;
-	for (i = 0 ; i < length ; i++)
-		*dptr++ = MCS_toupper(*sptr++);
 }
 
 Boolean MCU_offset(const MCString &part, const MCString &whole,
@@ -1416,25 +1422,13 @@ void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &ep)
 	}
 }
 
-/* WRAPPER */ bool MCU_parsepoints(MCPoint *&r_points, uindex_t &r_noldpoints, MCStringRef p_data)
-{
-	uint2 t_noldpoints;
-	t_noldpoints = r_noldpoints;
- 
-	bool t_result;
-	t_result = (True == MCU_parsepoints(r_points, t_noldpoints, MCStringGetOldString(p_data)));
- 
-	r_noldpoints = t_noldpoints;
- 
-	return t_result;
-}
 
-Boolean MCU_parsepoints(MCPoint *&points, uint2 &noldpoints, const MCString &data)
+Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data)
 {
 	Boolean allvalid = True;
 	uint2 npoints = 0;
-	uint4 l = data.getlength();
-	const char *sptr = data.getstring();
+	uint4 l = MCStringGetLength(data);
+	const char *sptr = MCStringGetCString(data);
 	while (l)
 	{
 		Boolean done1, done2;
@@ -1454,7 +1448,7 @@ Boolean MCU_parsepoints(MCPoint *&points, uint2 &noldpoints, const MCString &dat
 			MCU_realloc((char **)&points, npoints, npoints + 1, sizeof(MCPoint));
 		points[npoints].x = i1;
 		points[npoints++].y = i2;
-		if (data.getlength() - l > 2 && *(sptr - 1) == '\n'
+		if (MCStringGetLength(data) - l > 2 && *(sptr - 1) == '\n'
 		        && *(sptr - 2) == '\n')
 		{
 			if (npoints + 1 > noldpoints)
@@ -1468,10 +1462,10 @@ Boolean MCU_parsepoints(MCPoint *&points, uint2 &noldpoints, const MCString &dat
 	return allvalid;
 }
 
-Boolean MCU_parsepoint(MCPoint &point, const MCString &data)
+Boolean MCU_parsepoint(MCPoint &point, MCStringRef data)
 {
-	const char *sptr = data.getstring();
-	uint4 l = data.getlength();
+	const char *sptr = MCStringGetCString(data);
+	uint4 l = MCStringGetLength(data);
 	Boolean done1, done2;
 	int2 i1= MCU_strtol(sptr, l, ',', done1);
 	int2 i2 = MCU_strtol(sptr, l, ',', done2);
@@ -1887,7 +1881,7 @@ void MCU_getshift(uint4 mask, uint2 &shift, uint2 &outmask)
 	outmask = j;
 }
 
-void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool)
+void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 {
 	Tool t_new_tool;
 	MColdtool = MCcurtool;
@@ -1899,7 +1893,7 @@ void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool)
 	}
 	else
 	{
-		/* UNCHECKED */ ctxt . GetEP() . copyasstringref(&t_tool_name);
+		t_tool_name = p_input;
 		if (MCStringGetLength(*t_tool_name) < 3)
 		{
 			ctxt . LegacyThrow(EE_CHOOSE_BADTOOL);
@@ -2193,50 +2187,30 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 
 bool MCFiltersBase64Encode(MCDataRef p_src, MCStringRef& r_dst);
 
-void MCU_base64encode(MCExecPoint &ep)
+void MCU_base64encode(MCDataRef in, MCStringRef &out)
 {
-	MCAutoDataRef t_source;
-	/* UNCHECKED */ ep . copyasdataref(&t_source);
-
-	MCAutoStringRef t_result;
-	/* UNCHECKED */ MCFiltersBase64Encode(*t_source, &t_result);
-	/* UNCHECKED */ ep.setvalueref(*t_result);
+	/* UNCHECKED */ MCFiltersBase64Encode(in, out);
 }
 
 bool MCFiltersBase64Decode(MCStringRef p_src, MCDataRef& r_dst);
 
-void MCU_base64decode(MCExecPoint &ep)
+void MCU_base64decode(MCStringRef in, MCDataRef &out)
 {
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
-
-	MCAutoDataRef t_result;
-	/* UNCHECKED */ MCFiltersBase64Decode(*t_source, &t_result);
-	/* UNCHECKED */ ep.setvalueref(*t_result);
+	/* UNCHECKED */ MCFiltersBase64Decode(in, out);
 }
 
 bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
 
-void MCU_urlencode(MCExecPoint &ep)
+void MCU_urlencode(MCStringRef p_url, MCStringRef &r_encoded)
 {
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
-
-	MCAutoStringRef t_result;
-	/* UNCHECKED */ MCFiltersUrlEncode(*t_source, &t_result);
-	/* UNCHECKED */ ep.setvalueref(*t_result);
+	/* UNCHECKED */ MCFiltersUrlEncode(p_url, r_encoded);
 }
 
 bool MCFiltersUrlDecode(MCStringRef p_source, MCStringRef& r_result);
 
-void MCU_urldecode(MCExecPoint &ep)
+void MCU_urldecode(MCStringRef p_source, MCStringRef& r_result)
 {
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
-
-	MCAutoStringRef t_result;
-	/* UNCHECKED */ MCFiltersUrlDecode(*t_source, &t_result);
-	/* UNCHECKED */ ep.setvalueref(*t_result);
+	/* UNCHECKED */ MCFiltersUrlDecode(p_source, r_result);
 }
 
 Boolean MCU_freeinserted(MCObjectList *&l)
@@ -2299,40 +2273,28 @@ void MCU_get_color(MCExecPoint& ep, MCStringRef name, MCColor& c)
 	ep.setcolor(c, name != nil ? MCStringGetCString(name) : nil);
 }
 
-void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c)
-{
-	ep.setcolor(c, name);
-}
-
 void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output)
 {
 	MCAutoStringRef t_filename;
-	MCExecPoint ep = ctxt. GetEP();
 	if (MCStringGetLength(p_target) > 5 && MCStringBeginsWithCString(p_target, (const char_t*)"file:", kMCCompareCaseless))
 	{
 		MCStringCopySubstring(p_target, MCRangeMake(5, MCStringGetLength(p_target)-5), &t_filename);
-		if (!MCS_loadtextfile(*t_filename, r_output))
-            r_output = MCValueRetain(kMCEmptyString);
+		if (MCS_loadtextfile(*t_filename, r_output))
+			return;
 	}
 	else if (MCStringGetLength(p_target) > 8 && MCStringBeginsWithCString(p_target, (const char_t*)"binfile:", kMCCompareCaseless))
 	{
         MCAutoDataRef t_data;
 		MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);
-		if (!MCS_loadbinaryfile(*t_filename, &t_data))
-        {
-            r_output = MCValueRetain(kMCEmptyString);
-            return;
-        }
-        
-        MCExecPoint ep(nil, nil, nil);
-        ep . setvalueref(*t_data);
-        r_output = (MCStringRef) MCValueRetain(ep . getvalueref());
+		if (MCS_loadbinaryfile(*t_filename, &t_data))
+			if (ctxt.ConvertToString(*t_data, r_output))
+				return;
 	}
 	else if (MCStringGetLength(p_target) > 8 && MCStringBeginsWithCString(p_target, (const char_t*)"resfile:", kMCCompareCaseless))
 	{
 		MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);	
 		MCS_loadresfile(*t_filename, r_output);
-        /* UNCHECKED */ ep . copyasstringref(r_output);
+		return;
 	}
 	else
 	{
@@ -2341,10 +2303,13 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output
 		if (sptr != NULL && sptr[1] != ':' && MCU_strchr(sptr, l, ':'))
 		{
 			MCS_geturl(ctxt . GetObject(), p_target);
-			MCurlresult->eval(ep);
+			MCurlresult->copyasvalueref((MCValueRef&)r_output);
+			return;
 		}
-        /* UNCHECKED */ ep . copyasstringref(r_output);
 	}
+	
+	r_output = MCValueRetain(kMCEmptyString);
+	ctxt.Throw();
 }
 
 void MCU_geturl(MCExecPoint &ep)
@@ -2359,46 +2324,47 @@ void MCU_geturl(MCExecPoint &ep)
     ep.setvalueref(*t_output);
 }
 
-
-void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
+void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCStringRef p_data)
 {
-	if (dest.getsvalue().getlength() > 5
-	        && !MCU_strncasecmp(dest.getsvalue().getstring(), "file:", 5))
+	if (MCStringBeginsWithCString(p_url, (const char_t*)"file:", kMCCompareCaseless))
 	{
-		dest.tail(5);
-		data . texttobinary();
-		MCAutoDataRef t_data_ref;
-		/* UNCHECKED */ data . copyasdataref(&t_data_ref);
-		MCAutoStringRef t_filename;
-		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &t_filename);
-		MCS_savebinaryfile(*t_filename, *t_data_ref);
+		MCAutoStringRef t_path;
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(5, MCStringGetLength(p_url) - 5), &t_path);
+		MCS_savetextfile(*t_path, p_data);
 	}
-	else if (dest.getsvalue().getlength() > 8
-		        && !MCU_strncasecmp(dest.getsvalue().getstring(), "binfile:", 8))
+	else if (MCStringBeginsWithCString(p_url, (const char_t*)"binfile:", kMCCompareCaseless))
 	{
-		dest.tail(8);
-		MCAutoDataRef t_data_ref;
-		/* UNCHECKED */ data . copyasdataref(&t_data_ref);
-		MCAutoStringRef t_filename;
-		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &t_filename);
-		MCS_savebinaryfile(*t_filename, *t_data_ref);
+		MCAutoStringRef t_path;
+		MCAutoDataRef t_data;
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url) - 8), &t_path);
+		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
+		MCS_savebinaryfile(*t_path, *t_data);
 	}
-	else if (dest.getsvalue().getlength() > 8
-		        && !MCU_strncasecmp(dest.getsvalue().getstring(), "resfile:", 8))
+	else if (MCStringBeginsWithCString(p_url, (const char_t*)"resfile:", kMCCompareCaseless))
 	{
-		dest.tail(8);
-		MCAutoStringRef t_filename;
-		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &t_filename);
-		/* UNCHECKED */ MCS_saveresfile(*t_filename, (MCDataRef)data.getvalueref());
+		MCAutoStringRef t_path;
+		MCAutoDataRef t_data;
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url) - 8), &t_path);
+		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
+		MCS_saveresfile(*t_path, *t_data);
 	}
 	else
 	{
-		MCAutoStringRef p_url;
-        MCAutoDataRef t_data;
-		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &p_url);
-        /* UNCHECKED */ MCDataCreateWithBytes((byte_t*)data.getcstring(), data.getsvalue().getlength(), &t_data);
-		MCS_putintourl(dest . getobj(), *t_data, *p_url);
+		MCAutoDataRef t_data;
+		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
+		MCS_putintourl(ctxt.GetObject(), *t_data, p_url);
 	}
+}
+
+void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
+{
+	MCAutoStringRef t_url;
+	MCAutoStringRef t_data;
+	/* UNCHECKED */ dest.copyasstringref(&t_url);
+	/* UNCHECKED */ data.copyasstringref(&t_data);
+	
+	MCExecContext ctxt(data);
+	MCU_puturl(ctxt, *t_url, *t_data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2452,10 +2418,10 @@ uint1 MCU_languagetocharset(MCNameRef p_language)
 	return 0;
 }
 
-/* LEGACY */ uint1 MCU_languagetocharset(const char *langname)
+/* LEGACY */ uint1 MCU_languagetocharset(MCStringRef langname)
 {
 	MCNewAutoNameRef t_langname;
-	/* UNCHECKED */ MCNameCreateWithCString(langname, &t_langname);
+	/* UNCHECKED */  MCNameCreate(langname, &t_langname);
 	return MCU_languagetocharset(*t_langname);
 }
 
@@ -2558,6 +2524,8 @@ bool MCU_multibytetounicode(MCDataRef p_input, MCDataRef &r_output)
 
     if (!MCStringEncode(*t_string, kMCStringEncodingUTF16, false, r_output))
         return false;
+
+	return true;
 }
 
 bool MCU_multibytetounicode(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_unicode)
@@ -2591,6 +2559,8 @@ bool MCU_unicodetomultibyte(MCDataRef p_input, MCDataRef& r_output)
 
     if (!MCStringEncode(*t_string, kMCStringEncodingUTF8, false, r_output))
         return false;
+
+	return true;
 }
 
 bool MCU_unicodetomultibyte(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_multibyte)

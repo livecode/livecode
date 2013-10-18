@@ -248,7 +248,7 @@ public:
 	virtual Boolean drawwidget(MCDC *dc, const MCWidgetInfo &winfo, const MCRectangle &d);
 	virtual Widget_Part hittest(const MCWidgetInfo &winfo, int2 mx, int2 my, const MCRectangle &drect);
 	virtual Boolean getthemepropbool(Widget_ThemeProps themeprop);
-	virtual char *getthemecolor(const MCWidgetInfo &winfo,Widget_Color ctype,char *colorbuf);
+	virtual void getthemecolor(const MCWidgetInfo &winfo,Widget_Color ctype, MCStringRef &r_colortheme);
 
 	// MW-2011-09-14: [[ Bug 9719 ]] The MCThemeDrawInfo structure is opaque, but
 	//   the metacontext needs to know its size.

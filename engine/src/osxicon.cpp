@@ -247,8 +247,6 @@ void MCScreenDC::seticonmenu(MCStringRef p_menu_str)
 		flatten_menu(t_items);
 	
 	create_menu(f_icon_menu, t_items);
-	
-	delete p_menu;
 }
 
 static bool build_pick_string(MCExecPoint& p_result, MenuRef p_menu, UInt32 p_command)

@@ -33,14 +33,14 @@ public:
 	MCServerScript(void);
 	virtual ~MCServerScript(void);
 	
-	void ListFiles(MCExecPoint& ep);
+	void ListFiles(MCStringRef &r_string);
 	
 	uint32_t GetIncludeDepth(void);
-	bool Include(MCExecPoint& context, MCStringRef p_filename, bool p_require);
+	bool Include(MCExecContext& context, MCStringRef p_filename, bool p_require);
 
-	uint4 GetFileIndexForContext(MCExecPoint& ep);
+	uint4 GetFileIndexForContext(MCExecContext &ctxt);
 	
-	const char *GetFileForContext(MCExecPoint& ep);
+	const char *GetFileForContext(MCExecContext &ctxt);
 	
 	// Lookup the file index for the given filename. If <p_add> is true then
 	// add new entry and return its index.
@@ -89,7 +89,7 @@ private:
 	uint32_t m_include_depth;
 
 	// The execpoint in which global code is executed.
-	MCExecPoint *m_ep;
+	MCExecContext *m_ctxt;
 };
 
 #endif

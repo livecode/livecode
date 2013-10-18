@@ -285,6 +285,11 @@ MCPropertyInfo MCButton::kProperties[] =
     
     DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(P_HILITE, InterfaceTriState, MCButton, Hilite)
     DEFINE_RW_OBJ_ENUM_PROPERTY(P_MENU_MODE, InterfaceButtonMenuMode, MCButton, MenuMode)
+    
+    DEFINE_WO_OBJ_CHUNK_PROPERTY(P_HILITE, Bool, MCButton, Hilite)
+    DEFINE_WO_OBJ_CHUNK_PROPERTY(P_DISABLED, Bool, MCButton, Disabled)
+    DEFINE_WO_OBJ_CHUNK_PROPERTY(P_ENABLED, Bool, MCButton, Enabled)
+    
 };
 
 MCObjectPropertyTable MCButton::kPropertyTable =
@@ -722,7 +727,11 @@ Boolean MCButton::kdown(MCStringRef p_string, KeySym key)
 		case XK_KP_Enter:
 			closemenu(False, True);
 			menu->menukdown(p_string, key, &t_pick, menuhistory);
-			if (!MCStringIsEmpty(*t_pick))
+
+			// This check must be for null (not empty) because an empty pick
+			// indicates that the function succeeded while a null pick means
+			// that no menu responded to the event.
+			if (*t_pick != nil)
 			{
 				if (menumode == WM_OPTION || menumode == WM_COMBO)
 				{
@@ -1315,7 +1324,9 @@ Boolean MCButton::mup(uint2 which)
 		closemenu(True, True);
 		if (!(state & CS_IGNORE_MENU))
 		{
-			if (!MCStringIsEmpty(*t_pick))
+			// An empty string means something handled the menumup while the
+			// null string means nothing responded to it.
+			if (*t_pick != nil)
 			{
 				if (menumode == WM_OPTION || menumode == WM_COMBO)
 				{
@@ -2749,15 +2760,15 @@ void MCButton::activate(Boolean notify, KeySym p_key)
 	if (findmenu(true))
 	{
 		bool t_disabled;
-		MCStringRef t_pick = nil;
+		MCAutoStringRef t_pick;
 		
 		if (menu != NULL)
-			menu->findaccel(p_key, t_pick, t_disabled);
+			menu->findaccel(p_key, &t_pick, t_disabled);
 #ifdef _MAC_DESKTOP
 		else if (bMenuID != 0)
-			getmacmenuitemtextfromaccelerator(bMenuID, p_key, MCmodifierstate, t_pick, false);
+			getmacmenuitemtextfromaccelerator(bMenuID, p_key, MCmodifierstate, &t_pick, false);
 #endif
-		if (!MCStringIsEmpty(t_pick))
+		if (MCStringIsEmpty(*t_pick))
 		{
 			if (MCmodifierstate & MS_MOD1)
 			{
@@ -2769,7 +2780,7 @@ void MCButton::activate(Boolean notify, KeySym p_key)
 		else
 		{
 			if (!t_disabled)
-				message_with_valueref_args(MCM_menu_pick, t_pick);
+				message_with_valueref_args(MCM_menu_pick, *t_pick);
 		}
 	}
 	else
@@ -2823,12 +2834,12 @@ void MCButton::setupmnemonic()
 	if (opened && mnemonic != 0)
 	{
 		MCStringRef t_label = getlabeltext();
-		if (!isdisabled() && !MCStringIsEmpty(t_label) && mnemonic < MCStringGetLength(t_label))
+		if (!isdisabled() && !MCStringIsEmpty(t_label) && mnemonic <= MCStringGetLength(t_label))
 		{
-			unichar_t t_mnemonic_char = MCStringGetCharAtIndex(t_label, mnemonic - 1);
-			getstack()->addmnemonic(this, t_mnemonic_char);
+			codepoint_t t_codepoint = MCStringGetCodepointAtIndex(t_label, mnemonic - 1);
+			getstack()->addmnemonic(this, t_codepoint);
 			if (!MCStringIsEmpty(menustring) || !MCNameIsEmpty(menuname))
-				MCstacks->addmenu(this, t_mnemonic_char);
+				MCstacks->addmenu(this, t_codepoint);
 		}
 	}
 }
@@ -2956,10 +2967,9 @@ void MCButton::getentrytext()
 	// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
 	MCExecPoint ep;
 	entry->exportasplaintext(0, ep, 0, INT32_MAX, hasunicode());
-	MCStringRef t_label = nil;
-	/* UNCHECKED */ MCStringCreateWithOldString(ep.getsvalue(), t_label);
-	MCValueAssign(label, t_label);
-	MCValueRelease(t_label);
+	MCAutoStringRef t_label;
+	/* UNCHECKED */ MCStringCreateWithOldString(ep.getsvalue(), &t_label);
+	MCValueAssign(label, *t_label);
 }
 
 void MCButton::createentry()
@@ -3456,21 +3466,19 @@ void MCButton::openmenu(Boolean grab)
 #ifdef _MOBILE
 	if (menumode == WM_OPTION)
 	{
-		// loop counter
-		int i;
 		// result of picker action
 		long t_result;
 		// item selection
 		uint32_t t_selected, t_chosen_option;
-		// temporary options string from which to select the new label
-		MCString t_menustringcopy;
+
 		// the selected item
 		// get a pointer to this 
 		MCButton *pptr;
 		pptr = this;
+		
 		// get the label and menu item strings
 		MCStringRef t_menustring;
-		t_menustring = getmenustring();
+		t_menustring = pptr->getmenustring();
 		
 		// process data using the pick wheel
 		t_selected = menuhistory;
@@ -3630,7 +3638,7 @@ void MCButton::docascade(MCStringRef p_pick)
 		while(pptr->menumode == WM_CASCADE && pptr->parent->getparent()->getparent()->gettype() == CT_BUTTON)
 		{
 			MCStringRef t_label = nil;
-			if (t_has_tags && !MCStringIsEmpty(MCNameGetString(pptr->getname())))
+			if (t_has_tags && !MCNameIsEmpty(pptr->getname()))
 				t_label = MCNameGetString(pptr->getname());
 			else
 				t_label = pptr->getlabeltext();
@@ -3668,22 +3676,23 @@ void MCButton::setupmenu()
 bool MCButton::selectedchunk(MCStringRef& r_string)
 {
 	MCExecPoint ep(nil, nil, nil);
-	/* UNCHECKED */ getprop(0, P_NUMBER, ep, False);
-	/* UNCHECKED */ ep.ton();
-	uint4 number = ep.getuint4();
+	MCExecContext ctxt(ep);
+	integer_t t_number;
+	/* UNCHECKED */ getintprop(ctxt, 0, P_NUMBER, False, t_number);
+	
 	MCRange t_range;
 	t_range = getmenurange();
-	return MCStringFormat(r_string, "char %d to %d of button %d", t_range.offset, t_range.offset + t_range.length, number);
+	return MCStringFormat(r_string, "char %d to %d of button %d", t_range.offset, t_range.offset + t_range.length, t_number);
 }
 
 bool MCButton::selectedline(MCStringRef& r_string)
 {
 	MCExecPoint ep(nil, nil, nil);
-	/* UNCHECKED */ getprop(0, P_NUMBER, ep, False);
-	/* UNCHECKED */ ep.ton();
-	uint2 number;
-	ep.getuint2(number, 0, 0, EE_UNDEFINED);
-	return MCStringFormat(r_string, "line %d of button %d", menuhistory, number);
+	MCExecContext ctxt(ep);
+	integer_t t_number;
+	/* UNCHECKED */ getintprop(ctxt, 0, P_NUMBER, False, t_number);
+	
+	return MCStringFormat(r_string, "line %d of button %d", menuhistory, t_number);
 }
 
 bool MCButton::selectedtext(MCStringRef& r_string)
@@ -3695,12 +3704,12 @@ bool MCButton::selectedtext(MCStringRef& r_string)
 	}
 	else
 	{
-		MCStringRef t_text = nil;
 		MCRange t_range;
 		t_range = getmenurange();
-		/* UNCHECKED */ MCStringCopySubstring(menustring, t_range, t_text);
-		return t_text;
+		/* UNCHECKED */ MCStringCopySubstring(menustring, t_range, r_string);
+		return true;
 	}
+	return false;
 }
 
 MCStringRef MCButton::getlabeltext()

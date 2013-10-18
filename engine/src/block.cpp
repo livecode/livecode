@@ -1285,7 +1285,7 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 	{
 		MCRectangle t_box;
 		MCU_set_rect(t_box, x - 1, y - t_ascent, getwidth(dc, cx) + 3, t_ascent + t_descent);
-		dc -> drawlink(MCStringGetCString(getlinktext()), t_box);
+		dc -> drawlink(getlinktext(), t_box);
 	}
 }
 
@@ -1873,7 +1873,11 @@ void MCBlock::openimage()
 		if (MCU_stoui4(MCStringGetOldString(atts->imagesource), t_image_id))
 			atts -> image = t_field -> resolveimageid(t_image_id);
 		else
-			atts->image = (MCImage *)t_field->getstack()->getobjname(CT_IMAGE, atts->imagesource);
+		{
+			MCNewAutoNameRef t_name;
+			/* UNCHECKED */ MCNameCreate(atts->imagesource, &t_name);
+			atts->image = (MCImage *)t_field->getstack()->getobjname(CT_IMAGE, *t_name);
+		}
 
 		if (atts->image != NULL)
 		{

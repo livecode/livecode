@@ -672,18 +672,18 @@ IO_stat MCStack::saveas(const MCStringRef p_fname)
 	return IO_NORMAL;
 }
 
-MCStack *MCStack::findname(Chunk_term type, const MCString &findname)
+MCStack *MCStack::findname(Chunk_term type, MCNameRef p_name)
 { // should do case-sensitive match on filename on UNIX...
 	if (type == CT_STACK)
 	{
-		if (MCU_matchname(findname, CT_STACK, getname()))
+		if (MCU_matchname(p_name, CT_STACK, getname()))
 			return this;
 		
 		if (!MCStringIsEmpty(filename))
 		{
 			MCNewAutoNameRef t_filename_name;
 			/* UNCHECKED */ MCNameCreate(filename, &t_filename_name);
-			if (MCU_matchname(findname, CT_STACK, *t_filename_name))
+			if (MCU_matchname(p_name, CT_STACK, *t_filename_name))
 				return this;
 		}
 	}
@@ -795,7 +795,7 @@ void MCStack::startedit(MCGroup *group)
 	// Link the card to the parent, give it the same id as the current card and give it a temporary script
 	curcard->setparent(this);
 	curcard->setid(savecard->getid());
-	curcard->setsprop(P_SCRIPT, ECS);
+	curcard->setsprop(P_SCRIPT, MCSTR(ECS));
 
 	// Now add references for each control in the group being edited to the card
 	if (controls != NULL)
@@ -867,7 +867,7 @@ void MCStack::updatemenubar()
 		        || gettool(this) != T_BROWSE && MCdefaultmenubar != NULL)
 			MCmenubar = NULL;
 		else
-			MCmenubar = (MCGroup *)getobjname(CT_GROUP, MCNameGetString(getmenubar()));
+			MCmenubar = (MCGroup *)getobjname(CT_GROUP, (getmenubar()));
 		MCscreen->updatemenubar(False);
 	}
 }
@@ -1171,7 +1171,15 @@ MCObject *MCStack::getAV(Chunk_term etype, MCStringRef s, Chunk_term otype)
 		return NULL;
 	case CT_EXPRESSION:
 		if (!MCU_stoui2(s, num))
-			return getAVname(otype, s);
+		{
+			MCNewAutoNameRef t_name;
+			/* UNCHECKED */ MCNameCreate(s, &t_name);
+			MCObject* t_object;
+			if (getAVname(otype, *t_name, t_object))
+				return t_object;
+			else
+				return NULL;
+		}
 		if (num < 1)
 			return NULL;
 		num--;
@@ -1631,7 +1639,7 @@ MCCard *MCStack::getchildbyname(MCNameRef p_name)
     return found;
 }
 
-MCGroup *MCStack::getbackground(Chunk_term etype, const MCString &s,
+MCGroup *MCStack::getbackground(Chunk_term etype, MCStringRef p_string,
                                 Chunk_term otype)
 {
 	if (otype != CT_GROUP)
@@ -1708,7 +1716,7 @@ MCGroup *MCStack::getbackground(Chunk_term etype, const MCString &s,
 		break;
 	case CT_ID:
 		uint4 inid;
-		if (MCU_stoui4(s, inid))
+		if (MCU_stoui4(p_string, inid))
 			do
 			{
 				MCControl *found = cptr->findid(otype, inid, True);
@@ -1719,7 +1727,7 @@ MCGroup *MCStack::getbackground(Chunk_term etype, const MCString &s,
 			while (cptr != startcptr);
 		return NULL;
 	case CT_EXPRESSION:
-		if (MCU_stoui2(s, num))
+		if (MCU_stoui2(p_string, num))
 		{
 			if (num < 1)
 				return NULL;
@@ -1730,7 +1738,9 @@ MCGroup *MCStack::getbackground(Chunk_term etype, const MCString &s,
 		{
 			do
 			{
-				MCControl *found = cptr->findname(otype, s);
+				MCNewAutoNameRef t_name;
+				/* UNCHECKED */ MCNameCreate(p_string, &t_name);
+				MCControl *found = cptr->findname(otype, *t_name);
 				if (found != NULL)
 					return (MCGroup *)found;
 				cptr = cptr->next();
@@ -1873,7 +1883,7 @@ MCGroup *MCStack::getbackgroundbyname(MCNameRef p_name)
     
     do
     {
-        MCControl *found = cptr->findname(CT_GROUP, MCNameGetOldString(p_name));
+        MCControl *found = cptr->findname(CT_GROUP, p_name);
         if (found != nil)
             return (MCGroup *)found;
         cptr = cptr->next();
@@ -1967,7 +1977,7 @@ void MCStack::setwindowname()
 	MCAutoStringRef newname;
 	if (editing != NULL)
 	{
-		MCAutoStringRef bgname;
+		MCAutoValueRef bgname;
 		/* UNCHECKED */ editing->names(P_SHORT_NAME, &bgname);
 		/* UNCHECKED */ MCStringFormat(&newname, "%@ (%s \"%@\")", tptr, MCbackgroundstring, *bgname);
 	}
@@ -2578,11 +2588,14 @@ void MCStack::getstackfiles(MCExecPoint &ep)
 	}
 }
 
-void MCStack::stringtostackfiles(char *d, MCStackfile **sf, uint2 &nf)
+void MCStack::stringtostackfiles(MCStringRef d_strref, MCStackfile **sf, uint2 &nf)
 {
 	MCStackfile *newsf = NULL;
 	uint2 nnewsf = 0;
-	char *eptr = d;
+    // This ensures the coy is freed when the method ends
+    MCAutoPointer<char> d;
+    /* UNCHECKED */ d = strdup(MCStringGetCString(d_strref));
+	char *eptr = *d;
 	while ((eptr = strtok(eptr, "\n")) != NULL)
 	{
 		char *cptr = strchr(eptr, ',');
@@ -2600,7 +2613,7 @@ void MCStack::stringtostackfiles(char *d, MCStackfile **sf, uint2 &nf)
 	nf = nnewsf;
 }
 
-void MCStack::setstackfiles(const MCString &s)
+void MCStack::setstackfiles(MCStringRef s)
 {
 	while (nstackfiles--)
 	{
@@ -2608,9 +2621,7 @@ void MCStack::setstackfiles(const MCString &s)
 		MCValueRelease(stackfiles[nstackfiles].filename);
 	}
 	delete stackfiles;
-	char *d = s.clone();
-	stringtostackfiles(d, &stackfiles, nstackfiles);
-	delete d;
+	stringtostackfiles(s, &stackfiles, nstackfiles);
 }
 
 void MCStack::getstackfile(MCStringRef p_name, MCStringRef &r_name)

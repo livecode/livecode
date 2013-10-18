@@ -636,7 +636,7 @@ void MCIPhoneContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int2 
 	free(t_pixel_ptr);
 }
 
-void MCIPhoneContext::drawlink(const char *link, const MCRectangle& region)
+void MCIPhoneContext::drawlink(MCStringRef link, const MCRectangle& region)
 {
 	// This is a no-op as links are irrelevant to rasterized portions. The print
 	// system will iterate through any links and render them directly.

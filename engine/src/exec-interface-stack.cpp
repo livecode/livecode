@@ -203,6 +203,7 @@ static void MCInterfaceDecorationParse(MCExecContext& ctxt, MCStringRef p_input,
 
 static void MCInterfaceDecorationFormat(MCExecContext& ctxt, const MCInterfaceDecoration& p_input, MCStringRef& r_output)
 {
+
     if (p_input . has_decorations)
     {
         if (p_input . decorations & WD_WDEF)
@@ -212,28 +213,37 @@ static void MCInterfaceDecorationFormat(MCExecContext& ctxt, const MCInterfaceDe
         }
         else
         {
-            uindex_t j = 0;
-            MCExecPoint ep(nil, nil, nil);
+			MCListRef t_output;
+			/* UNCHECKED */ MCListCreateMutable(',', t_output);
+			
             if (p_input . decorations & WD_TITLE)
-                ep.concatcstring(MCtitlestring, EC_COMMA, j++ == 0);
+				/* UNCHECKED */ MCListAppendCString(t_output, MCtitlestring);
+				
             if (p_input . decorations & WD_MENU)
-                ep.concatcstring(MCmenustring, EC_COMMA, j++ == 0);
+				/* UNCHECKED */ MCListAppendCString(t_output, MCmenustring);
             if (p_input . decorations & WD_MINIMIZE)
-                ep.concatcstring(MCminimizestring, EC_COMMA, j++ == 0);
+				/* UNCHECKED */ MCListAppendCString(t_output, MCminimizestring);
+				
             if (p_input . decorations & WD_MAXIMIZE)
-                ep.concatcstring(MCmaximizestring, EC_COMMA, j++ == 0);
+				/* UNCHECKED */ MCListAppendCString(t_output, MCmaximizestring);
+		
             if (p_input . decorations & WD_CLOSE)
-                ep.concatcstring(MCclosestring, EC_COMMA, j++ == 0);
+				/* UNCHECKED */ MCListAppendCString(t_output, MCclosestring);
+				
             if (p_input . decorations & WD_METAL)
-                ep.concatcstring(MCmetalstring, EC_COMMA, j++ == 0);
+				/* UNCHECKED */ MCListAppendCString(t_output, MCmetalstring);
+				
             if (p_input . decorations & WD_UTILITY)
-                ep.concatcstring(MCutilitystring, EC_COMMA, j++ == 0);
+				/* UNCHECKED */ MCListAppendCString(t_output, MCutilitystring);
+			
             if (p_input . decorations & WD_NOSHADOW)
-                ep.concatcstring(MCnoshadowstring, EC_COMMA, j++ == 0);
+				/* UNCHECKED */ MCListAppendCString(t_output, MCnoshadowstring);
+				
             if (p_input . decorations & WD_FORCETASKBAR)
-                ep.concatcstring(MCforcetaskbarstring, EC_COMMA, j++ == 0);
-            if (ep . copyasstringref(r_output))
-                return;
+				/* UNCHECKED */ MCListAppendCString(t_output, MCforcetaskbarstring);
+				
+            /* UNCHECKED */ MCListCopyAsStringAndRelease(t_output, r_output);
+			return;
         }
     }
     else
@@ -1251,58 +1261,50 @@ void MCStack::GetSharedGroupIds(MCExecContext& ctxt, MCStringRef& r_ids)
 	GetGroupProps(ctxt, P_SHARED_GROUP_IDS, r_ids);
 }
 
-void MCStack::GetCardProps(MCExecContext& ctxt, Properties which, MCStringRef& r_props)
+void MCStack::GetCardIds(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_ids)
 {
-	MCAutoListRef t_prop_list;
-
-	bool t_success;
-	t_success = true; 
-
-	if (t_success)
-		t_success = MCListCreateMutable('\n', &t_prop_list);
-	
-	if (t_success && cards != nil)
+	MCAutoArray<uinteger_t> t_ids;
+    bool t_success;
+    
+    t_success = true;
+    if (cards != nil)
 	{
 		MCCard *cptr = cards;
 		do
 		{
-			MCAutoStringRef t_property;
-			if (which == P_CARD_NAMES)
-			{
-				cptr -> GetShortName(ctxt, &t_property);
-				t_success = !ctxt . HasError();
-			}
-			else
-			{
-				uint32_t t_id;
-				cptr -> GetId(ctxt, t_id);
-				t_success = MCStringFormat(&t_property, "%d", t_id);
-			}
-			if (t_success)
-				t_success = MCListAppend(*t_prop_list, *t_property);
-
+            uint32_t t_id;
+            t_id = cptr -> getid();
+			t_success = t_ids . Push(t_id);
 			cptr = cptr -> next();
 		}
 		while (cptr != cards && t_success);
 	}
-
-	if (t_success)
-		t_success = MCListCopyAsString(*t_prop_list, r_props);
-
-	if (t_success)
-		return;
-
-	ctxt . Throw();
+    
+    t_ids . Take(r_ids, r_count);
 }
 
-void MCStack::GetCardIds(MCExecContext& ctxt, MCStringRef& r_ids)
+void MCStack::GetCardNames(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_names)
 {
-	GetCardProps(ctxt, P_CARD_IDS, r_ids);
-}
-
-void MCStack::GetCardNames(MCExecContext& ctxt, MCStringRef& r_names)
-{
-	GetCardProps(ctxt, P_CARD_NAMES, r_names);
+	MCAutoArray<MCStringRef> t_names;
+    bool t_success;
+    
+    t_success = true;
+    if (cards != nil)
+	{
+		MCCard *cptr = cards;
+		do
+		{
+            MCStringRef t_name;
+            cptr -> getstringprop(ctxt, 0, P_SHORT_NAME, False, t_name);
+            t_success = !ctxt . HasError();
+            if (t_success)
+                t_success = t_names . Push(t_name);
+			cptr = cptr -> next();
+		}
+		while (cptr != cards && t_success);
+	}
+    
+    t_names . Take(r_names, r_count);
 }
 
 void MCStack::GetEditBackground(MCExecContext& ctxt, bool& r_value)
@@ -1318,7 +1320,7 @@ void MCStack::SetEditBackground(MCExecContext& ctxt, bool p_value)
 		{
 			MCGroup *gptr = (MCGroup *)curcard->getchild(CT_FIRST, kMCEmptyString, CT_GROUP, CT_UNDEFINED);
 			if (gptr == nil)
-				gptr = getbackground(CT_FIRST, MCnullmcstring, CT_GROUP);
+				gptr = getbackground(CT_FIRST, kMCEmptyString, CT_GROUP);
 			if (gptr != nil)
 				startedit(gptr);
 		}

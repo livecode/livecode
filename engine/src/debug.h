@@ -40,7 +40,7 @@ struct Watchvar
 
 #define MAX_CONTEXTS 100
 
-extern MCExecPoint *MCEPptr;
+extern MCExecContext *MCECptr;
 extern MCStack *MCtracestackptr;
 extern Window MCtracewindow;
 extern Boolean MCtrace;
@@ -57,20 +57,18 @@ extern Breakpoint *MCbreakpoints;
 extern uint2 MCnwatchedvars;
 extern Watchvar *MCwatchedvars;
 
-extern MCExecPoint *MCexecutioncontexts[MAX_CONTEXTS];
+extern MCExecContext *MCexecutioncontexts[MAX_CONTEXTS];
 extern uint2 MCnexecutioncontexts;
 extern uint2 MCdebugcontext;
 extern Boolean MCmessagemessages;
 
-extern void MCB_setmsg(MCStringRef p_string);
-extern void MCB_setmsg(MCExecPoint &ep);
-extern void MCB_message(MCExecPoint &ep, MCNameRef message, MCParameter *p);
-extern void MCB_prepmessage(MCExecPoint &ep, MCNameRef message, uint2 line, uint2 pos, uint2 id, MCStringRef p_info = kMCEmptyString);
-extern void MCB_break(MCExecPoint &ep, uint2 line, uint2 pos);
-extern void MCB_trace(MCExecPoint &ep, uint2 line, uint2 pos);
-extern void MCB_error(MCExecPoint &ep, uint2 line, uint2 pos, uint2 id);
-extern void MCB_done(MCExecPoint &ep);
-extern void MCB_setvar(MCExecPoint &ep, MCNameRef name);
+extern void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_string);
+extern void MCB_message(MCExecContext &ctxt, MCNameRef message, MCParameter *p);
+extern void MCB_prepmessage(MCExecContext &ctxt, MCNameRef message, uint2 line, uint2 pos, uint2 id, MCStringRef p_info = kMCEmptyString);
+extern void MCB_break(MCExecContext &ctxt, uint2 line, uint2 pos);
+extern void MCB_trace(MCExecContext &ctxt, uint2 line, uint2 pos);
+extern void MCB_error(MCExecContext &ctxt, uint2 line, uint2 pos, uint2 id);
+extern void MCB_done(MCExecContext &ctxt);
 extern void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name);
 
 extern void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input);

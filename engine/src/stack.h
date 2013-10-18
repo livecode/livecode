@@ -319,7 +319,7 @@ public:
 	void compact();
 	Boolean checkid(uint4 cardid, uint4 controlid);
 	IO_stat saveas(const MCStringRef);
-	MCStack *findname(Chunk_term type, const MCString &);
+	MCStack *findname(Chunk_term type, MCNameRef);
 	MCStack *findid(Chunk_term type, uint4 inid, Boolean alt);
 	void setmark();
 	void clearmark();
@@ -359,7 +359,7 @@ public:
     MCCard *getchildbyid(uinteger_t p_id);
     MCCard *getchildbyname(MCNameRef p_name);
     
-	/* LEGACY */ MCGroup *getbackground(Chunk_term etype, const MCString &, Chunk_term otype);
+	/* LEGACY */ MCGroup *getbackground(Chunk_term etype, MCStringRef, Chunk_term otype);
     
     MCGroup *getbackgroundbyordinal(Chunk_term otype);
     MCGroup *getbackgroundbyid(uinteger_t p_id);
@@ -377,8 +377,8 @@ public:
 	Exec_stat openrect(const MCRectangle &rel, Window_mode wm, MCStack *parentwindow,
 	                   Window_position wpos,  Object_pos walign);
 	void getstackfiles(MCExecPoint &);
-	void stringtostackfiles(char *d, MCStackfile **sf, uint2 &nf);
-	void setstackfiles(const MCString &);
+	void stringtostackfiles(MCStringRef d, MCStackfile **sf, uint2 &nf);
+	void setstackfiles(MCStringRef);
 	void getstackfile(MCStringRef p_name, MCStringRef &r_name);
 	void setfilename(MCStringRef f);
 
@@ -396,12 +396,10 @@ public:
 	MCCard *findcardbyid(uint4 p_id);
 
 	MCControl *getcontrolid(Chunk_term type, uint4 inid, bool p_recurse = false);
-	MCControl *getcontrolname(Chunk_term type, MCStringRef);
+	MCControl *getcontrolname(Chunk_term type, MCNameRef);
 	MCObject *getAVid(Chunk_term type, uint4 inid);
-	/* LEGACY */ MCObject *getAVname(Chunk_term type, MCStringRef);
     bool getAVname(Chunk_term type, MCNameRef p_name, MCObject*& r_object);
 	Exec_stat setcard(MCCard *card, Boolean recent, Boolean dynamic);
-	//MCStack *findstackfile_oldstring(const MCString &s);
 	MCStack *findstackname_oldstring(const MCString &);
 	MCStack *findsubstackname_oldstring(const MCString &);
 	MCStack *findstackfile(MCNameRef name);
@@ -421,8 +419,8 @@ public:
 	void removecard(MCCard *cptr);
 	MCObject *getsubstackobjid(Chunk_term type, uint4 inid);
 	MCObject *getobjid(Chunk_term type, uint4 inid);
-	MCObject *getsubstackobjname(Chunk_term type, MCStringRef);
-	MCObject *getobjname(Chunk_term type, MCStringRef p_name);
+	MCObject *getsubstackobjname(Chunk_term type, MCNameRef);
+	MCObject *getobjname(Chunk_term type, MCNameRef);
 	void createmenu(MCControl *nc, uint2 width, uint2 height);
 	void menuset(uint2 button, uint2 defy);
 	void menumup(uint2 which, MCStringRef &r_string, uint2 &selline);
@@ -435,11 +433,11 @@ public:
 	               MCExpression *by, Boolean marked);
 	void breakstring(MCStringRef, MCStringRef*& dest, uint2 &nstrings,
 	                 Find_mode fmode);
-	Boolean findone(MCExecPoint &ep, Find_mode mode, MCStringRef *strings,
+	Boolean findone(MCExecContext &ctxt, Find_mode mode, MCStringRef *strings,
 	                uint2 nstrings, MCChunk *field, Boolean firstcard);
 	void find(MCExecPoint &ep, int p_mode, MCStringRef p_needle, MCChunk *p_target);
-	void find(MCExecPoint &ep, Find_mode mode, MCStringRef, MCChunk *field);
-	void markfind(MCExecPoint &ep, Find_mode mode, MCStringRef,
+	void find(MCExecContext &ctxt, Find_mode mode, MCStringRef, MCChunk *field);
+	void markfind(MCExecContext &ctxt, Find_mode mode, MCStringRef,
 	              MCChunk *, Boolean mark);
 	void mark(MCExecPoint &ep, MCExpression *where, Boolean mark);
 	Linkatts *getlinkatts();
@@ -776,8 +774,8 @@ public:
 	void GetBackgroundIds(MCExecContext& ctxt, MCStringRef& r_ids);
 	void GetSharedGroupNames(MCExecContext& ctxt, MCStringRef& r_names);
 	void GetSharedGroupIds(MCExecContext& ctxt, MCStringRef& r_ids);
-	void GetCardIds(MCExecContext& ctxt, MCStringRef& r_ids);
-	void GetCardNames(MCExecContext& ctxt, MCStringRef& r_names);
+    void GetCardIds(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_ids);
+    void GetCardNames(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_names);
 	void GetEditBackground(MCExecContext& ctxt, bool& r_value);
 	void SetEditBackground(MCExecContext& ctxt, bool p_value);
 	void GetExternals(MCExecContext& ctxt, MCStringRef& r_externals);
@@ -884,8 +882,8 @@ private:
 
 	void mode_load(void);
 
-	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, const MCString &carray, Boolean effective);
-	Exec_stat mode_setprop(uint4 parid, Properties which, MCExecPoint &, const MCString &cprop, const MCString &carray, Boolean effective);
+	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, MCStringRef carray, Boolean effective);
+	Exec_stat mode_setprop(uint4 parid, Properties which, MCExecPoint &, MCStringRef cprop, MCStringRef carray, Boolean effective);
 
 	void mode_getrealrect(MCRectangle& r_rect);
 	void mode_takewindow(MCStack *other);

@@ -311,12 +311,12 @@ bool MCSystemPlaySound(MCStringRef p_sound, bool p_looping)
 		if (MCStringBeginsWithCString(p_sound, (const char_t *)"ipod-library://", kMCStringOptionCompareExact))
         {
             s_sound_file = MCValueRetain(p_sound);
-            t_url = [NSURL URLWithString: [NSString stringWithCString: MCStringGetCString(s_sound_file) encoding: NSMacOSRomanStringEncoding]];
+            t_url = [NSURL URLWithString: [NSString stringWithMCStringRef: s_sound_file]];
         }
         else
         {
 			/* UNCHECKED */ MCS_resolvepath(p_sound, s_sound_file);
-            t_url = [NSURL fileURLWithPath: [NSString stringWithCString: MCStringGetCString(s_sound_file) encoding: NSUTF8StringEncoding]];
+            t_url = [NSURL fileURLWithPath: [NSString stringWithMCStringRef: s_sound_file]];
         }
         t_success = t_url != nil;
     }

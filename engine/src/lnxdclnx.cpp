@@ -452,7 +452,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 				//
 				// This is done this way instead of via XLookupKeysym so that the X
 				// server will do the handling of modifier keys for us.
-				/* UNCHECKED */ XLookupString(kpevent, NULL, 0, &keysym, NULL);
+                /* UNCHECKED */ XLookupString(kpevent, NULL, 0, &keysym, NULL);
 				
 				// Some vendor-specific keysyms exist and, where possible, these are
 				// translated into generic keysyms.
@@ -490,8 +490,11 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 				
 				// Convert the UTF-32 character/codepoint to a StringRef
 				MCAutoStringRef t_string;
-				/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)&t_codepoint, sizeof(t_codepoint), 
+                if (t_codepoint != 0)
+                    /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)&t_codepoint, sizeof(t_codepoint),
 														  kMCStringEncodingUTF32, false, &t_string);
+                else
+                    t_string = kMCEmptyString;
 				
 				// Update the modifier state
 				setmods(kpevent->state, keysym, 0, False);

@@ -365,7 +365,7 @@ bool MCDispatch::getmainstacknames(MCListRef& r_list)
 	MCStack *tstk = stacks;
 	do
 	{
-		MCAutoStringRef t_string;
+		MCAutoValueRef t_string;
 		if (!tstk->names(P_SHORT_NAME, &t_string))
 			return false;
 		if (!MCListAppend(*t_list, *t_string))
@@ -985,7 +985,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 }
 
 #ifdef FEATURE_RELAUNCH_SUPPORT
-extern bool relaunch_startup(const char *p_id);
+extern bool relaunch_startup(MCStringRef p_id);
 #endif
 
 void send_relaunch(void)
@@ -993,12 +993,12 @@ void send_relaunch(void)
 #ifdef FEATURE_RELAUNCH_SUPPORT
 	bool t_do_relaunch;
 	t_do_relaunch = false;
-	const char *t_id;
+	MCAutoStringRef t_id;
 
-	t_do_relaunch = MCModeHandleRelaunch(t_id);
+	t_do_relaunch = MCModeHandleRelaunch(&t_id);
 
 	if (t_do_relaunch)
-		if (relaunch_startup(t_id))
+		if (relaunch_startup(*t_id))
 			exit(0);
 #endif
 }
@@ -1500,7 +1500,7 @@ MCObject *MCDispatch::getobjid(Chunk_term type, uint4 inid)
 	return NULL;
 }
 
-MCObject *MCDispatch::getobjname(Chunk_term type, MCStringRef s)
+MCObject *MCDispatch::getobjname(Chunk_term type, MCNameRef p_name)
 {
 	if (stacks != NULL)
 	{
@@ -1508,7 +1508,7 @@ MCObject *MCDispatch::getobjname(Chunk_term type, MCStringRef s)
 		do
 		{
 			MCObject *optr;
-			if ((optr = tstk->getsubstackobjname(type, s)) != NULL)
+			if ((optr = tstk->getsubstackobjname(type, p_name)) != NULL)
 				return optr;
 			tstk = (MCStack *)tstk->next();
 		}
@@ -1517,12 +1517,12 @@ MCObject *MCDispatch::getobjname(Chunk_term type, MCStringRef s)
 
 	if (type == CT_IMAGE)
 	{
-		const char *sptr = MCStringGetCString(s);
-		uint4 l = MCStringGetLength(s);
+		const char *sptr = MCNameGetCString(p_name);
+		uint4 l = MCStringGetLength(MCNameGetString((p_name)));
 
-		MCAutoNameRef t_image_name;
+		MCNewAutoNameRef t_image_name;
 		if (MCU_strchr(sptr, l, ':'))
-			/* UNCHECKED */ MCNameCreate(s, t_image_name);
+			/* UNCHECKED */ t_image_name = MCValueRetain(p_name);
 		
 		MCImage *iptr = imagecache;
 		if (iptr != NULL)
@@ -1530,7 +1530,7 @@ MCObject *MCDispatch::getobjname(Chunk_term type, MCStringRef s)
 			do
 			{
 check:
-				if (t_image_name != nil && iptr -> hasname(t_image_name))
+				if (!MCNameIsEmpty(*t_image_name) && iptr -> hasname(*t_image_name))
 					return iptr;
 				if (!iptr->getopened())
 				{
@@ -1550,15 +1550,15 @@ check:
 		{
 			MCresult->clear(False);
 			MCExecPoint ep(MCdefaultstackptr, NULL, NULL);
-			MCExecPoint *epptr = MCEPptr == NULL ? &ep : MCEPptr;
-			epptr->setvalueref(s);
+			MCExecPoint *epptr = MCECptr == NULL ? &ep : &MCECptr->GetEP();
+			epptr->setvalueref(p_name);
 			MCU_geturl(*epptr);
 			if (MCresult->isempty())
 			{
 				iptr = new MCImage;
 				iptr->appendto(imagecache);
 				iptr->setprop(0, P_TEXT, *epptr, False);
-				iptr->setname(t_image_name);
+				iptr->setname(*t_image_name);
 				return iptr;
 			}
 		}
@@ -1715,13 +1715,15 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 		if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
 		{
 			MCExecPoint ep(NULL, NULL, NULL);
-			/* UNCHECKED */ ep . setvalueref(*t_data);
+			MCExecContext ctxt(ep);
 
 			MCImage *t_image;
 			t_image = new MCImage;
 			t_image -> open();
 			t_image -> openimage();
-			t_image -> setprop(0, P_TEXT, ep, False);
+			MCAutoStringRef t_string_data;
+			/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), &t_string_data);
+			t_image -> setstringprop(ctxt, 0, P_TEXT, False, *t_string_data);
 			MCactiveimage -> pasteimage(t_image);
 			t_image -> closeimage();
 			t_image -> close();
@@ -1752,10 +1754,13 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 			if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
 			{
 				MCExecPoint ep(NULL, NULL, NULL);
-				/* UNCHECKED */ ep . setvalueref(*t_data);
+				MCExecContext ctxt(ep);
+				
 				t_objects = new MCImage(*MCtemplateimage);
 				t_objects -> open();
-				t_objects -> setprop(0, P_TEXT, ep, False);
+				MCAutoStringRef t_string_data;
+				/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), &t_string_data);
+				t_objects -> setstringprop(ctxt, 0, P_TEXT, False, *t_string_data);
 				t_objects -> close();
 			}
 		}

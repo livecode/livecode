@@ -132,7 +132,7 @@ public:
 	virtual Boolean kfocusset(MCControl *target);
 	virtual MCControl *clone(Boolean attach, Object_pos p, bool invisible);
 	virtual MCControl *findnum(Chunk_term type, uint2 &num);
-	virtual MCControl *findname(Chunk_term type, const MCString &);
+	virtual MCControl *findname(Chunk_term type, MCNameRef);
 	virtual MCControl *findid(Chunk_term type, uint4 inid, Boolean alt);
 	virtual Boolean count(Chunk_term otype, MCObject *stop, uint2 &num);
 	virtual Boolean maskrect(const MCRectangle &srect);

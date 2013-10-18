@@ -1049,7 +1049,7 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 		switch (ct_class(background->etype))
 		{
 		case CT_ORDINAL:
-			bptr = sptr->getbackground(background->etype, MCnullmcstring, CT_GROUP);
+			bptr = sptr->getbackground(background->etype, kMCEmptyString, CT_GROUP);
 			break;
 		case CT_ID:
 		case CT_EXPRESSION:
@@ -1058,7 +1058,11 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 				MCeerror->add(EE_GO_BADBACKGROUNDEXP, line, pos);
 				return ES_ERROR;
 			}
-			bptr = sptr->getbackground(background->etype, ep.getsvalue(), CT_GROUP);
+			{
+				MCAutoStringRef t_string;
+				/* UNCHECKED */ ep.copyasstringref(&t_string);
+				bptr = sptr->getbackground(background->etype, *t_string, CT_GROUP);
+			}
 			break;
 		default:
 			break;
@@ -1922,8 +1926,7 @@ MCCard *cptr = MCcstack->popcard();
 	{
 		MCAutoStringRef t_element;
 		MCInterfaceExecPop(ctxt, &t_element);
-		ep . setvalueref(*t_element);
-		if (dest->set(ep, prep) != ES_NORMAL) 
+		if (dest->set(ep, prep, *t_element) != ES_NORMAL)
 		{
 			MCeerror->add(EE_POP_CANTSET, line, pos);
 			return ES_ERROR;

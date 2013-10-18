@@ -184,7 +184,7 @@ public:
 	void drawpict(uint1 *data, uint4 length, bool embed, const MCRectangle& drect, const MCRectangle& crect);
 	void drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy);
 
-	void drawlink(const char *link, const MCRectangle& region);
+	void drawlink(MCStringRef link, const MCRectangle& region);
 
 	int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
 

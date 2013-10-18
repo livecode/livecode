@@ -230,11 +230,11 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 
 	if (flags & F_STACK_FILES)
 	{
-		char *sf;
-		if ((stat = IO_read_string(sf, stream)) != IO_NORMAL)
+		MCAutoStringRef sf;
+		if ((stat = IO_read_stringref(&sf, stream)) != IO_NORMAL)
 			return stat;
-		setstackfiles(sf);
-		delete sf;
+		setstackfiles(*sf);
+		
 	}
 	if (flags & F_MENU_BAR)
 	{
@@ -703,6 +703,7 @@ Exec_stat MCStack::resubstack(MCStringRef p_data)
 		if (tsub != NULL)
 		{
 			// If t_val doesn't exist as a name, it can't exist as a substack name.
+			// t_val is always a stringref (fetched from an MCSplitString array)
 			MCNameRef t_name;
 			t_name = MCNameLookup((MCStringRef)t_val);
 		
@@ -754,7 +755,7 @@ Exec_stat MCStack::resubstack(MCStringRef p_data)
 		else
 		{
 			iserror = True;
-			t_error = MCValueRetain((MCStringRef)t_val);
+			t_error = ((MCStringRef)t_val);
 		}
 	}
 	
@@ -894,14 +895,14 @@ MCControl *MCStack::getcontrolid(Chunk_term type, uint4 inid, bool p_recurse)
 	return NULL;
 }
 
-MCControl *MCStack::getcontrolname(Chunk_term type, MCStringRef s)
+MCControl *MCStack::getcontrolname(Chunk_term type, MCNameRef p_name)
 {
 	if (controls == NULL)
 		return NULL;
 	MCControl *tobj = controls;
 	do
 	{
-		MCControl *foundobj = tobj->findname(type, MCStringGetOldString(s));
+		MCControl *foundobj = tobj->findname(type, p_name);
 		if (foundobj != NULL)
 			return foundobj;
 		tobj = (MCControl *)tobj->next();
@@ -928,17 +929,6 @@ MCObject *MCStack::getAVid(Chunk_term type, uint4 inid)
 	}
 	while (tobj != objs);
 	return NULL;
-}
-
-/* LEGACY */ MCObject *MCStack::getAVname(Chunk_term type, MCStringRef s)
-{
-	MCNewAutoNameRef t_name;
-	/* UNCHECKED */ MCNameCreate(s, &t_name);
-	MCObject *t_object;
-	if (!getAVname(type, *t_name, t_object))
-		return nil;
-    
-	return t_object;
 }
 
 bool MCStack::getAVname(Chunk_term type, MCNameRef p_name, MCObject*& r_object)
@@ -1205,7 +1195,7 @@ MCStack *MCStack::findstackname(MCNameRef p_name)
 
 MCStack *MCStack::findsubstackname(MCNameRef p_name)
 {
-	if (findname(CT_STACK, MCNameGetOldString(p_name)) != nil)
+	if (findname(CT_STACK, p_name) != nil)
 		return this;
     
 	MCStack *sptr = this;
@@ -1228,7 +1218,7 @@ MCStack *MCStack::findsubstackname(MCNameRef p_name)
 		else
 			do
 			{
-				if (tptr->findname(CT_STACK, MCNameGetOldString(p_name)) != NULL)
+				if (tptr->findname(CT_STACK, p_name) != NULL)
 					return tptr;
 				tptr = (MCStack *)tptr->next();
 			}
@@ -1421,16 +1411,18 @@ MCObject *MCStack::getobjid(Chunk_term type, uint4 inid)
 		return MCdispatcher->getobjid(type, inid);
 }
 
-MCObject *MCStack::getsubstackobjname(Chunk_term type, MCStringRef s)
+MCObject *MCStack::getsubstackobjname(Chunk_term type, MCNameRef p_name)
 {
 	MCStack *sptr = this;
 	MCObject *optr = NULL;
 	if (!MCdispatcher->ismainstack(this))
 		sptr = parent->getstack();
 	if (type == CT_AUDIO_CLIP || type == CT_VIDEO_CLIP)
-		optr = sptr->getAVname(type, s);
+	{
+		/* UNCHECKED */ sptr->getAVname(type, p_name, optr);
+	}
 	else
-		optr = sptr->getcontrolname(type, s);
+		optr = sptr->getcontrolname(type, p_name);
 	if (optr != NULL)
 		return optr;
 	if (sptr->substacks != NULL)
@@ -1439,9 +1431,11 @@ MCObject *MCStack::getsubstackobjname(Chunk_term type, MCStringRef s)
 		do
 		{
 			if (type == CT_AUDIO_CLIP || type == CT_VIDEO_CLIP)
-				optr = tptr->getAVname(type, s);
+			{
+				/* UNCHECKED */ sptr->getAVname(type, p_name, optr);
+			}
 			else
-				optr = tptr->getcontrolname(type, s);
+				optr = tptr->getcontrolname(type, p_name);
 			if (optr != NULL)
 				return optr;
 			tptr = (MCStack *)tptr->next();
@@ -1452,28 +1446,30 @@ MCObject *MCStack::getsubstackobjname(Chunk_term type, MCStringRef s)
 }
 
 
-MCObject *MCStack::getobjname(Chunk_term type, MCStringRef s)
+MCObject *MCStack::getobjname(Chunk_term type, MCNameRef p_name)
 {
 	MCObject *optr = NULL;
 	uint4 iid;
-	if (MCU_stoui4(s, iid))
+	if (MCU_stoui4(MCNameGetString(p_name), iid))
 	{
 		optr = getobjid(type, iid);
 		if (optr != NULL)
 			return optr;
 	}
 	if (type == CT_AUDIO_CLIP || type == CT_VIDEO_CLIP)
-		optr = getAVname(type, s);
+	{
+		/* UNCHECKED */ getAVname(type, p_name, optr);
+	}
 	else
 	{
-		optr = getcontrolname(type, s);
+		optr = getcontrolname(type, p_name);
 	}
 	if (optr != NULL)
 		return optr;
-	if ((optr = getsubstackobjname(type, s)) != NULL)
+	if ((optr = getsubstackobjname(type, p_name)) != NULL)
 		return optr;
 	else
-		return MCdispatcher->getobjname(type, s);
+		return MCdispatcher->getobjname(type, p_name);
 }
 
 
@@ -1487,39 +1483,56 @@ void MCStack::createmenu(MCControl *nc, uint2 width, uint2 height)
 	controls = nc;
 	curcard = cards = MCtemplatecard->clone(False, False);
 	curcard->allowmessages(False);
-	curcard->setsprop(P_SHOW_BORDER, MCtruemcstring);
-	setsprop(P_COLORS, MCnullmcstring);
+	curcard->setsprop(P_SHOW_BORDER, MCSTR(MCtruestring));
+	setsprop(P_COLORS, kMCEmptyString);
 	if (nc->gettype() == CT_FIELD && IsMacLFAM() && MCaqua)
 	{
-		curcard->setsprop(P_BORDER_WIDTH, "0");
+		curcard->setsprop(P_BORDER_WIDTH, MCSTR("0"));
 		uint2 i;
 		MCObject *tparent = getparent();
 		if  (!tparent->getcindex(DI_BACK, i) && !tparent->getpindex(DI_BACK,i))
-			setsprop(P_BACK_COLOR,  "255,255,255");
+			setsprop(P_BACK_COLOR,  MCSTR("255,255,255"));
 	}
 	else
 		if (nc->gettype() == CT_FIELD && MClook != LF_MOTIF
 		        || IsMacLF() || (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN))
 		{
-			curcard->setsprop(P_BORDER_WIDTH, "1");
+			curcard->setsprop(P_BORDER_WIDTH, MCSTR("1"));
 			if (IsMacLF() || nc->gettype() == CT_FIELD || MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN)
-				curcard->setsprop(P_3D, MCfalsemcstring);
+				curcard->setsprop(P_3D, MCSTR(MCfalsestring));
 		}
-	char colorbuf[16];
+	
 	MCWidgetInfo wmenu;
 	wmenu.type = WTHEME_TYPE_MENU;
 	if ( nc->gettype() != CT_FIELD && (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN))
 	{
 		uint2 i;
 		MCObject *tparent = getparent();
+
 		if  (!tparent->getcindex(DI_BACK, i) && !tparent->getpindex(DI_BACK,i))
-			setsprop(P_BACK_COLOR,  MCcurtheme->getthemecolor(wmenu,WCOLOR_BACK,colorbuf));
+        {
+            MCAutoStringRef colorbuf;
+            MCcurtheme->getthemecolor(wmenu, WCOLOR_BACK, &colorbuf);
+			setsprop(P_BACK_COLOR, *colorbuf);
+        }
 		if  (!tparent->getcindex(DI_BORDER, i) && !tparent->getpindex(DI_BORDER,i))
-			setsprop(P_BORDER_COLOR,  MCcurtheme->getthemecolor(wmenu,WCOLOR_BORDER,colorbuf));
+        {
+            MCAutoStringRef colorbuf;
+            MCcurtheme->getthemecolor(wmenu, WCOLOR_BORDER, &colorbuf);
+			setsprop(P_BORDER_COLOR, *colorbuf);
+        }
 		if  (!tparent->getcindex(DI_FORE, i) && !tparent->getpindex(DI_FORE,i))
-			setsprop(P_FORE_COLOR,  MCcurtheme->getthemecolor(wmenu,WCOLOR_TEXT,colorbuf));
+        {
+            MCAutoStringRef colorbuf;
+            MCcurtheme->getthemecolor(wmenu, WCOLOR_TEXT, &colorbuf);
+			setsprop(P_FORE_COLOR, *colorbuf);
+        }
 		if  (!tparent->getcindex( DI_HILITE, i) && !tparent->getpindex( DI_HILITE,i))
-			setsprop(P_HILITE_COLOR,  MCcurtheme->getthemecolor(wmenu,WCOLOR_HILIGHT,colorbuf));
+        {
+            MCAutoStringRef colorbuf;
+            MCcurtheme->getthemecolor(wmenu, WCOLOR_HILIGHT, &colorbuf);
+			setsprop(P_HILITE_COLOR, *colorbuf);
+        }
 	}
 
 
@@ -1550,8 +1563,13 @@ void MCStack::menuset(uint2 button, uint2 defy)
 
 void MCStack::menumup(uint2 which, MCStringRef &r_string, uint2 &selline)
 {
+	// The original behaviour of this function interprets an empty string and
+	// the null string as different things: the empty string means that the
+	// function succeeded but there is no text while the null string indicates
+	// that no menu handled the key event.
+	r_string = nil;
+	
 	MCControl *focused = curcard->getmfocused();
-	r_string = MCValueRetain(kMCEmptyString);
 	if (focused == NULL)
 		focused = curcard->getkfocused();
 	MCButton *bptr = (MCButton *)focused;
@@ -1591,23 +1609,22 @@ void MCStack::menumup(uint2 which, MCStringRef &r_string, uint2 &selline)
 void MCStack::menukdown(MCStringRef p_string, KeySym key, MCStringRef &r_string, uint2 &selline)
 {
 	MCControl *kfocused = curcard->getkfocused();
-	r_string = MCValueRetain(kMCEmptyString);
+	r_string = nil;
 	if (kfocused != NULL)
 	{
 		// OK-2010-03-08: [[Bug 8650]] - Check its actually a button before casting, 
 		// with combo boxes on OS X this will be a field.
 		if (kfocused ->gettype() == CT_BUTTON && ((MCButton*)kfocused)->getmenuhastags())
 		{
-			MCValueAssign(r_string, MCNameGetString(kfocused->getname()));
+			r_string = MCValueRetain(MCNameGetString(kfocused->getname()));
 		}
 		else
 		{
-			MCStringRef t_string = nil;
+			MCAutoStringRef t_string;
 			MCExecPoint ep(this, NULL, NULL);
 			MCExecContext ctxt(ep);
-			kfocused->getstringprop(ctxt, 0, P_LABEL, True, t_string);
-			MCValueAssign(r_string, t_string);
-			MCValueRelease(t_string);
+			kfocused->getstringprop(ctxt, 0, P_LABEL, True, &t_string);
+			r_string = MCValueRetain(*t_string);
 		}
 		curcard->count(CT_LAYER, CT_UNDEFINED, kfocused, selline, True);
 	}
@@ -1710,7 +1727,7 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 		return false;
 	if (editing != NULL)
 		stopedit();
-	
+
 	MCStack *olddefault = MCdefaultstackptr;
 	MCdefaultstackptr = this;
 	MCCard *cptr = curcard;
@@ -1829,7 +1846,7 @@ void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uint2 &nstring
 	dest = tdest_str;
 }
 
-Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
+Boolean MCStack::findone(MCExecContext &ctxt, Find_mode fmode,
                          MCStringRef *strings, uint2 nstrings,
                          MCChunk *field, Boolean firstcard)
 {
@@ -1840,14 +1857,13 @@ Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
 		MCObject *optr;
 		uint4 parid;
 		MCerrorlock++;
-		MCExecPoint ep1(ep);
-		if (field->getobj(ep1, optr, parid, True) == ES_NORMAL)
+		if (field->getobj(ctxt.GetEP(), optr, parid, True) == ES_NORMAL)
 		{
 			if (optr->gettype() == CT_FIELD)
 			{
 				MCField *searchfield = (MCField *)optr;
 				while (i < nstrings)
-					if (!searchfield->find(ep, curcard->getid(), fmode,
+					if (!searchfield->find(ctxt, curcard->getid(), fmode,
 					                       strings[i], firstword))
 					{
 						MCerrorlock--;
@@ -1868,7 +1884,7 @@ Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
 	else
 	{
 		while (i < nstrings)
-			if (!curcard->find(ep, fmode, strings[i], firstcard, firstword))
+			if (!curcard->find(ctxt, fmode, strings[i], firstcard, firstword))
 				return False;
 			else
 			{
@@ -1879,7 +1895,7 @@ Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
 	}
 }
 
-void MCStack::find(MCExecPoint &ep, Find_mode fmode,
+void MCStack::find(MCExecContext &ctxt, Find_mode fmode,
                    MCStringRef tofind, MCChunk *field)
 {
 	MCStringRef *strings = NULL;
@@ -1890,7 +1906,7 @@ void MCStack::find(MCExecPoint &ep, Find_mode fmode,
 	MCField *oldfound = MCfoundfield;
 	do
 	{
-		if (findone(ep, fmode, strings, nstrings, field, firstcard))
+		if (findone(ctxt, fmode, strings, nstrings, field, firstcard))
 		{
 			delete strings;
 			MCField *newfound = MCfoundfield;
@@ -1927,7 +1943,7 @@ void MCStack::find(MCExecPoint &ep, Find_mode fmode,
 	MCresult->sets(MCnotfoundstring);
 }
 
-void MCStack::markfind(MCExecPoint &ep, Find_mode fmode,
+void MCStack::markfind(MCExecContext &ctxt, Find_mode fmode,
                        MCStringRef tofind, MCChunk *field, Boolean mark)
 {
 	if (MCfoundfield != NULL)
@@ -1938,7 +1954,7 @@ void MCStack::markfind(MCExecPoint &ep, Find_mode fmode,
 	MCCard *ocard = curcard;
 	do
 	{
-		if (findone(ep, fmode, strings, nstrings, field, False))
+		if (findone(ctxt, fmode, strings, nstrings, field, False))
 		{
 			MCfoundfield->clearfound();
 			curcard->setmark(mark);

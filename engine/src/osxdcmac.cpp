@@ -716,7 +716,7 @@ Boolean MCScreenDC::dispatchevent(EventRecord &event, Boolean dispatch,
 			
 			// If the key string hasn't already been created, do it now
 			if (*t_string == nil)
-				/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)buffer, XLOOKUPSTRING_SIZE, &t_string);
+				/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)buffer, strlen(buffer), &t_string);
 			
 			if (!MCdispatcher->wkdown(activewindow, *t_string, keysym))
 			{

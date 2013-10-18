@@ -328,6 +328,8 @@ MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfOptionalStackById, 4)
 MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfOptionalStackByName, 4)
 MC_EXEC_DEFINE_EVAL_METHOD(Interface, ThisCardOfOptionalStack, 2)
 
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, TextOfContainer, 2)
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCInterfaceNamedColorParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceNamedColor& r_output)
@@ -724,7 +726,7 @@ void MCInterfaceSetScreenMouseLoc(MCExecContext& ctxt, MCPoint p_value)
 
 void MCInterfaceGetBackdrop(MCExecContext& ctxt, MCInterfaceBackdrop& r_backdrop)
 {
-	r_backdrop = MCbackdrop;
+	MCInterfaceBackdropCopy(ctxt, MCbackdrop, r_backdrop);
 }
 
 void MCInterfaceSetBackdrop(MCExecContext& ctxt, const MCInterfaceBackdrop& p_backdrop)
@@ -996,54 +998,46 @@ void MCInterfaceSetRoundEnds(MCExecContext& ctxt, bool p_value)
 	MCroundends = p_value;
 }
 
-void MCInterfaceGetDashes(MCExecContext& ctxt, MCStringRef& r_dashes)
+void MCInterfaceGetDashes(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_dashes)
 {
-	bool t_success;
-	t_success = true;
-	
-	MCAutoListRef t_list;
-	t_success = MCListCreateMutable(',', &t_list);
-
-	for(uindex_t i = 0; i < MCndashes && t_success; i++)
-		t_success = MCListAppendInteger(*t_list, MCdashes[i]);
-		
-	if (t_success)
-		t_success = MCListCopyAsString(*t_list, r_dashes);
-		
-	if (t_success)
-		return;
-		
-	ctxt . Throw();
+    MCAutoArray<uinteger_t> t_dashes;
+    
+    for (uindex_t i = 0; i < MCndashes; i++)
+        t_dashes . Push(MCdashes[i]);
+    
+    t_dashes . Take(r_dashes, r_count);
 }
 
-void MCInterfaceSetDashes(MCExecContext& ctxt, MCStringRef p_dashes)
+void MCInterfaceSetDashes(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_dashes)
 {
-	uint1 *newdashes = NULL;
-	uint2 newndashes = 0;
-	char *svalue = strdup(MCStringGetCString(p_dashes));
-	char *eptr = svalue;
-	uint4 t_dash_len = 0;
-	while ((eptr = strtok(eptr, ",")) != NULL)
-	{
-		int2 i1;
-		MCString e = eptr;
-		if ((!MCU_stoi2(e, i1)) || i1 < 0)
-		{
-			ctxt . LegacyThrow(EE_GRAPHIC_NAN);
-			return;
-		}
-		t_dash_len += i1;
-		MCU_realloc((char **)&newdashes, newndashes, newndashes + 1, sizeof(uint1));
-		newdashes[newndashes++] = (uint1)i1;
-		eptr = NULL;
-	}
-	if (newndashes > 0 && t_dash_len == 0)
-	{
-		delete newdashes;
-		newdashes = NULL;
-		newndashes = 0;
-	}
-	delete svalue;
+    MCAutoArray<uint1> t_dashes;
+    
+    uint1 *newdashes = nil;
+    uint2 newndashes = 0;
+    uint4 t_dash_length = 0;
+    uindex_t t_new_count;
+    
+    for (uindex_t i = 0; i < p_count; i++)
+    {
+        if (p_dashes[i] >= 256)
+        {
+            ctxt . LegacyThrow(EE_GRAPHIC_NAN);
+            return;
+        }
+        t_dashes . Push((uint1)p_dashes[i]);
+        t_dash_length += p_dashes[i];
+    }
+    
+    t_dashes . Take(newdashes, t_new_count);
+    newndashes = t_new_count;
+    
+    if (newndashes > 0 && t_dash_length == 0)
+    {
+        delete newdashes;
+        newdashes = nil;
+        newndashes = 0;
+    }
+    
 	delete MCdashes;
 	MCdashes = newdashes;
 	MCndashes = newndashes;
@@ -1424,7 +1418,12 @@ void MCInterfaceSetDefaultCursor(MCExecContext& ctxt, uinteger_t p_value)
 }
 void MCInterfaceGetDefaultStack(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	MCdefaultstackptr -> names(P_NAME, r_value);
+	MCAutoValueRef t_value;
+	if (MCdefaultstackptr -> names(P_NAME, &t_value))
+		if (ctxt.ConvertToString(*t_value, r_value))
+			return;
+	
+	ctxt.Throw();
 }
 
 void MCInterfaceSetDefaultStack(MCExecContext& ctxt, MCStringRef p_value)
@@ -1441,23 +1440,27 @@ void MCInterfaceSetDefaultStack(MCExecContext& ctxt, MCStringRef p_value)
 	MCdefaultstackptr = MCstaticdefaultstackptr = sptr;
 }
 
-void MCInterfaceGetDefaultMenubar(MCExecContext& ctxt, MCStringRef& r_value)
+void MCInterfaceGetDefaultMenubar(MCExecContext& ctxt, MCNameRef& r_value)
 {	
 	if (MCdefaultmenubar == nil)
 	{
-		r_value = (MCStringRef)MCValueRetain(kMCEmptyString);
+		r_value = MCValueRetain(kMCEmptyName);
 		return;
 	}
 	else
 	{
-		if (MCdefaultmenubar->names(P_LONG_NAME, r_value))
-			return;
+		MCAutoValueRef t_value;
+		MCAutoStringRef t_string;
+		if (MCdefaultmenubar->names(P_LONG_NAME, &t_value))
+			if (ctxt.ConvertToString(*t_value, &t_string))
+				if (MCNameCreate(*t_string, r_value))
+					return;
 	}
 
 	ctxt . Throw();
 }
 
-void MCInterfaceSetDefaultMenubar(MCExecContext& ctxt, MCStringRef p_value)
+void MCInterfaceSetDefaultMenubar(MCExecContext& ctxt, MCNameRef p_value)
 {
 	MCGroup *gptr = (MCGroup *)MCdefaultstackptr->getobjname(CT_GROUP, p_value);
 																	 
@@ -2034,8 +2037,7 @@ void MCInterfaceGetTool(MCExecContext& ctxt, MCStringRef& r_value)
 
 void MCInterfaceSetTool(MCExecContext& ctxt, MCStringRef p_value)
 {
-	ctxt . GetEP() . setvalueref(p_value);
-	MCU_choose_tool(ctxt, T_UNDEFINED);
+	MCU_choose_tool(ctxt, p_value, T_UNDEFINED);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2613,7 +2615,7 @@ void MCInterfaceEvalThisCardOfStack(MCExecContext& ctxt, MCObjectPtr p_stack, MC
     if (p_stack . object -> gettype() == CT_CARD || p_stack . object -> gettype() == CT_GROUP)
     {
         r_card . object = p_stack . object;
-        r_card . part_id = p_stack . object -> getid();
+        r_card . part_id = p_stack . part_id;
         return;
     }
     
@@ -3000,6 +3002,48 @@ void MCInterfaceEvalObjectOfCardByName(MCExecContext& ctxt, MCObjectPtr p_card, 
     ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
 }
 
+void MCInterfaceEvalStackOfObject(MCExecContext& ctxt, MCObjectPtr p_object, MCObjectPtr& r_object)
+{
+    if (p_object . object -> gettype() == CT_STACK)
+    {
+        r_object . object = p_object . object;
+        r_object . part_id = p_object . part_id;
+        return;
+    }
+    
+    MCCard *t_card;
+    t_card = p_object . object -> getcard();
+    
+    r_object . object = t_card -> getstack();
+    r_object . part_id = p_object . part_id;
+}
+
+void MCInterfaceEvalStackWithOptionalBackground(MCExecContext& ctxt, MCObjectPtr p_object, MCObjectPtr& r_object)
+{
+    if (p_object . object -> gettype() == CT_GROUP)
+    {
+        MCStack *sptr;
+        MCGroup *bptr;
+        bptr = static_cast<MCGroup *>(p_object . object);
+        sptr = bptr -> getcard() -> getstack();
+        sptr -> setbackground(bptr);
+        r_object . object = sptr;
+        r_object . part_id = p_object . part_id;
+        return;
+    }
+    else if (p_object . object -> gettype() == CT_CARD)
+    {
+        r_object . object = p_object . object -> getstack();
+        r_object . part_id = 0;
+        return;
+    }
+
+    r_object . object = p_object . object;
+    r_object . part_id = p_object . part_id;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // The following are used by MCGo, and do not throw any errors. If the incoming object pointer is nil, they return nil.
 
 void MCInterfaceEvalDefaultStackAsOptionalObject(MCExecContext& ctxt, MCObjectPtr& r_object)
@@ -3251,11 +3295,59 @@ void MCInterfaceEvalCardOfOptionalStackByName(MCExecContext& ctxt, MCObjectPtr p
     r_card . part_id = t_card != nil ? t_card -> getid() : p_stack . part_id;
 }
 
-void MCInterfaceMarkField(MCField *fptr, int4 &start, int4 &end, Functions p_function, Boolean wholechunk)
+void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wholechunk, MCMarkedText& r_mark)
 {
-// MW-2012-12-13: [[ Bug 10592 ]] If wholechunk is False then we don't expand
-//   line chunks to include the CR at the end.
+    if (p_object . object -> gettype() == CT_FIELD || p_object . object -> gettype() == CT_BUTTON)
+    {
+        p_object . object -> getstringprop(ctxt, p_object . part_id, P_TEXT, False, r_mark . text);
+        r_mark . start = 0;
+        r_mark . finish = MCStringGetLength(r_mark . text);
+    	return;
+    }
+    r_mark . text = nil;
+    ctxt . LegacyThrow(EE_CHUNK_BADCONTAINER);
+}
 
+void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCMarkedText& r_mark)
+{
+    switch (p_container . object -> gettype())
+    {
+        case CT_FIELD:
+        case CT_BUTTON:
+            MCInterfaceMarkObject(ctxt, p_container, false, r_mark);
+            return;
+        case CT_IMAGE:
+        case CT_AUDIO_CLIP:
+        case CT_VIDEO_CLIP:
+            p_container . object -> getstringprop(ctxt, p_container . part_id, P_TEXT, False, r_mark . text);
+            r_mark . start = 0;
+            r_mark . finish = MCStringGetLength(r_mark . text);
+            return;
+        default:
+            break;
+    }
+    
+    r_mark . text = nil;
+    ctxt . LegacyThrow(EE_CHUNK_OBJECTNOTCONTAINER);
+}
+
+void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Functions p_function, bool p_whole_chunk, MCMarkedText& r_mark)
+{
+    if (p_object . object -> gettype() != CT_FIELD)
+        return;
+    
+    MCInterfaceMarkObject(ctxt, p_object, p_whole_chunk, r_mark);
+    
+    MCField *t_field;
+    t_field = (MCField *)p_object . object;
+    // MW-2012-12-13: [[ Bug 10592 ]] If wholechunk is False then we don't expand
+    //   line chunks to include the CR at the end.
+    
+    int4 start, end;
+    
+    start = r_mark . start;
+    end = r_mark . finish;
+    
 	Boolean wholeline = True;
 	Boolean wholeword = True;
 	switch (p_function)
@@ -3266,21 +3358,21 @@ void MCInterfaceMarkField(MCField *fptr, int4 &start, int4 &end, Functions p_fun
         case F_CLICK_TEXT:
             wholeline = False;
         case F_CLICK_LINE:
-            if (!fptr->locmark(wholeline, wholeword, True, True, wholechunk, start, end))
+            if (!t_field->locmark(wholeline, wholeword, True, True, p_whole_chunk, start, end))
                 start = end = 0;
             break;
         case F_FOUND_CHUNK:
         case F_FOUND_TEXT:
             wholeline = False;
         case F_FOUND_LINE:
-            if (!fptr->foundmark(wholeline, wholechunk, start, end))
+            if (!t_field->foundmark(wholeline, p_whole_chunk, start, end))
                 start = end = 0;
             break;
         case F_SELECTED_CHUNK:
         case F_SELECTED_TEXT:
             wholeline = False;
         case F_SELECTED_LINE:
-            if (!fptr->selectedmark(wholeline, start, end, False, wholechunk))
+            if (!t_field->selectedmark(wholeline, start, end, False, p_whole_chunk))
                 start = end = 0;
             break;
         case F_MOUSE_CHAR_CHUNK:
@@ -3289,149 +3381,16 @@ void MCInterfaceMarkField(MCField *fptr, int4 &start, int4 &end, Functions p_fun
         case F_MOUSE_TEXT:
             wholeline = False;
         case F_MOUSE_LINE:
-            if (!fptr->locmark(wholeline, wholeword, False, True, wholechunk, start, end))
+            if (!t_field->locmark(wholeline, wholeword, False, True, p_whole_chunk, start, end))
                 start = end = 0;
             break;
         default:
             start = 0;
-            end = fptr->getpgsize(NULL);
+            end = t_field->getpgsize(NULL);
             break;
 	}
-}
-/*
-void MCInterfaceMarkTextOfField(MCField *fptr, uinteger_t part_id, integer_t &r_start, integer_t &r_end, bool p_whole_chunk, bool p_force, bool p_keep_text)
-{
-	if (desttype == DT_FUNCTION)
-	{
-		// MW-2012-09-20: [[ Bug 10229 ]] If 'keeptext' is true, make sure we leave with
-		//   the ep containing the field's content between start and end.
-		// MW-2012-12-13: [[ Bug 10592 ]] Pass through wholechunk to ensure we only get the CR
-		//   included when we need it.
-		fmark(fptr, r_start, r_end, p_whole_chunk);
-		if (cline != NULL || item != NULL || word != NULL || token != NULL || character != NULL)
-		{
-			fptr->returntext(ep, start, end);
-			int4 si, ei;
-			if (mark(ep, si, ei, force, wholechunk, false) != ES_NORMAL)
-			{
-				MCeerror->add(EE_CHUNK_BADTEXT, line, pos);
-				return ES_ERROR;
-			}
-			
-			end = start + ei;
-			start += si;
-			
-			if (character != nil)
-				if (markcharactersinfield(parid, ep, start, end, fptr) != ES_NORMAL)
-				{
-					MCeerror->add(EE_CHUNK_BADTEXT, line, pos);
-					return ES_ERROR;
-				}
-			
-		}
-		else if (keeptext)
-			fptr -> returntext(ep, start, end);
-	}
-	else
-	{
-		// We can make do with ASCII content if the delimiters (if needed) are
-		// ASCII chars.
-		bool t_ascii_only;
-		t_ascii_only = (cline == nil || (unsigned)ep . getlinedel() <= 127) && (item == nil || (unsigned)ep . getitemdel() <= 127);
-		
-		// Fetch the nativized text - the method returns true if it had to
-		// coecre unicode.
-		bool t_has_unicode;
-		t_has_unicode = fptr->nativizetext(parid, ep, t_ascii_only);
-		
-		// Perform the 'mark' operation.
-		MCString oldstring = ep.getsvalue();
-		if (mark(ep, start, end, force, wholechunk, !t_has_unicode) != ES_NORMAL)
-		{
-			MCeerror->add(EE_CHUNK_BADTEXT, line, pos);
-			return ES_ERROR;
-		}
-		
-		// If the ep got changed, mutate the field appropriately.
-		if (ep.getsvalue() != oldstring)
-		{
-			MCExecPoint ep2(ep);
-			fptr->nativizetext(parid, ep2, t_ascii_only);
-			int4 si = 0;
-			int4 sei = ep.getsvalue().getlength() - 1;
-			int4 oei = ep2.getsvalue().getlength() - 1;
-			const char *sref = ep.getsvalue().getstring();
-			const char *oref = ep2.getsvalue().getstring();
-			while (si <= oei && sref[si] == oref[si])
-				si++;
-			while (oei >= si && sref[sei] == oref[oei])
-			{
-				sei--;
-				oei--;
-			}
-			sei++;
-			MCString newstring;
-			newstring.set(&sref[si], sei - si);
-			fptr->settextindex(parid, si, si, newstring, False);
-		}
-		
-		if (t_has_unicode && character != nil)
-			if (markcharactersinfield(parid, ep, start, end, fptr) != ES_NORMAL)
-			{
-				MCeerror->add(EE_CHUNK_BADTEXT, line, pos);
-				return ES_ERROR;
-			}
-		
-		// MW-2012-01-29: [[ Bug ]] If keeptext is true make sure we substring, remembering
-		//   to refetch the text if unicode.
-		if (keeptext)
-		{
-			// MW-2012-02-21: [[ FieldExport ]] If the buffer doesn't have native text in it
-			//   (due to unicode being involved) then fetch the appropriate range as native.
-			//   Otherwise, just trim the buffer.
-			if (t_has_unicode)
-				fptr -> exportastext(parid, ep, start, end, false);
-			else
-				ep . substring(start, end);
-		}
-	}
-	return ES_NORMAL;
-}
-*/
-
-void MCInterfaceEvalFieldTextChunkByRange(MCExecContext& ctxt, MCObjectPtr p_field, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, bool p_function, MCStringRef& r_result)
-{
-    int4 t_first;
-    int4 t_chunk_count;
-    //MCStringsGetExtentsByRange(ctxt, p_chunk_type, p_first, p_last, p_source, t_first, t_chunk_count);
-    
-    //MCStringsGetTextChunk(ctxt, p_source, p_chunk_type, t_first, t_chunk_count, r_result);
-}
-
-void MCInterfaceEvalFieldTextChunkByExpression(MCExecContext& ctxt, MCObjectPtr p_field, Chunk_term p_chunk_type, integer_t p_first, bool p_function, MCStringRef& r_result)
-{
-    int4 t_first;
-    int4 t_chunk_count;
-    // MCStringsGetExtentsByExpression(ctxt, p_chunk_type, p_first, p_source, t_first, t_chunk_count);
-    
-    //MCStringsGetTextChunk(ctxt, p_source, p_chunk_type, t_first, t_chunk_count, r_result);
-}
-
-void MCInterfacveEvalFieldTextChunkByOrdinal(MCExecContext& ctxt, MCObjectPtr p_field, Chunk_term p_chunk_type, Chunk_term p_ordinal_type, bool p_function, MCStringRef& r_result)
-{
-    int4 t_first;
-    int4 t_chunk_count;
-    // MCStringsGetExtentsByOrdinal(ctxt, p_chunk_type, t_first, t_chunk_count, p_ordinal_type, p_source);
-    
-    // MCStringsGetTextChunk(ctxt, p_source, p_chunk_type, t_first, t_chunk_count, r_result);
-}
-
-void MCInterfaceEvalFieldChunk(MCExecContext& ctxt, MCObjectPtr p_field, Functions p_function, MCStringRef& r_text)
-{
-    integer_t t_start, t_end;
-    MCField *t_field = static_cast<MCField *>(p_field . object);
-    MCInterfaceMarkField(t_field, t_start, t_end, p_function, False);
-    t_field -> returntext(t_start, t_end, r_text);
+    r_mark . start = start;
+    r_mark . finish  = end;
 }
 
 void MCInterfaceEvalTextOfContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCStringRef &r_text)

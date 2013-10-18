@@ -118,8 +118,8 @@ MCPropertyInfo MCStack::kProperties[] =
 	DEFINE_RO_OBJ_PROPERTY(P_BACKGROUND_IDS, String, MCStack, BackgroundIds)
 	DEFINE_RO_OBJ_PROPERTY(P_SHARED_GROUP_NAMES, String, MCStack, SharedGroupNames)
 	DEFINE_RO_OBJ_PROPERTY(P_SHARED_GROUP_IDS, String, MCStack, SharedGroupIds)
-	DEFINE_RO_OBJ_PROPERTY(P_CARD_IDS, String, MCStack, CardIds)
-	DEFINE_RO_OBJ_PROPERTY(P_CARD_NAMES, String, MCStack, CardNames)
+	DEFINE_RO_OBJ_LIST_PROPERTY(P_CARD_IDS, LinesOfUInt, MCStack, CardIds)
+	DEFINE_RO_OBJ_LIST_PROPERTY(P_CARD_NAMES, LinesOfString, MCStack, CardNames)
 
 	DEFINE_RW_OBJ_PROPERTY(P_EDIT_BACKGROUND, Bool, MCStack, EditBackground)
 	DEFINE_RW_OBJ_PROPERTY(P_EXTERNALS, String, MCStack, Externals)
@@ -1673,7 +1673,7 @@ Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 	default:
 	{
 		Exec_stat t_stat;
-		t_stat = mode_getprop(parid, which, ep, MCnullmcstring, effective);
+		t_stat = mode_getprop(parid, which, ep, kMCEmptyString, effective);
 		if (t_stat == ES_NOT_HANDLED)
 			return MCObject::getprop_legacy(parid, which, ep, effective);
 
@@ -2736,7 +2736,7 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 	default:
 	{
 		Exec_stat t_stat;
-		t_stat = mode_setprop(parid, which, ep, MCnullmcstring, MCnullmcstring, effective);
+		t_stat = mode_setprop(parid, which, ep, kMCEmptyString, kMCEmptyString, effective);
 		if (t_stat == ES_NOT_HANDLED)
 			return MCObject::setprop_legacy(parid, which, ep, effective);
 
@@ -2826,6 +2826,7 @@ void MCStack::paste(void)
 				break;
 			t_index += 1;
 		}
+		
 		setname(t_name);
 		MCValueRelease(t_name);
 	}

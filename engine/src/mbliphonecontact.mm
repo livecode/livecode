@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblsyntax.h"
 #include "mblcontact.h"
 
+#include "mbliphone.h"
 #include "mbliphoneapp.h"
 
 #import <UIKit/UIKit.h>
@@ -306,7 +307,7 @@ bool MCCFDictionaryFromArray(MCArrayRef p_array, CFDictionaryRef& r_dict)
 		{
 			NSString *t_value = nil;
 			if (t_success)
-				t_success = nil != (t_value = [NSString stringWithCString:MCStringGetCString((MCStringRef)t_entry) encoding: NSMacOSRomanStringEncoding]);
+				t_success = nil != (t_value = [NSString stringWithMCStringRef: (MCStringRef)t_entry]);
 			
 			if (t_success)
 				CFDictionaryAddValue(t_dict, t_key, t_value);
@@ -567,7 +568,7 @@ bool MCCreatePerson(MCArrayRef p_contact, ABRecordRef &r_person)
 				if (MCStringGetLength((MCStringRef)t_value) > 0)
 				{
 					t_success = ABRecordSetValue(t_person, *s_property_map[i].property,
-									 [NSString stringWithCString:MCStringGetCString((MCStringRef)t_value) encoding:NSMacOSRomanStringEncoding],
+									 [NSString stringWithMCStringRef: (MCStringRef)t_value],
 									 nil);
 				}
 			}
@@ -597,7 +598,7 @@ bool MCCreatePerson(MCArrayRef p_contact, ABRecordRef &r_person)
 									if (MCStringGetLength((MCStringRef)t_index_value) > 0)
 									{
 										t_success = ABMultiValueAddValueAndLabel(t_multi_value,
-																				 [NSString stringWithCString:MCStringGetCString((MCStringRef)t_value) encoding:NSMacOSRomanStringEncoding],
+																				 [NSString stringWithMCStringRef: (MCStringRef)t_value],
 																				 s_label_map[j].label,
 																				 nil);
 									}

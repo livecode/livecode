@@ -365,38 +365,27 @@ static void getmacmenuitemtext(MenuHandle mh, uint2 mitem, MCStringRef &r_string
 	//isunicode &= !t_menuhastags;
 	char *newmenu = NULL;
 
-	MCStringRef t_menuitem = nil;
-	MCStringRef t_tagstr = nil;
-	if (MCMacGetMenuItemTag(mh, mitem, t_tagstr))
-	{
-		t_menuitem = t_tagstr;
-	}
-	else
+	MCAutoStringRef t_menuitem;
+	if (!MCMacGetMenuItemTag(mh, mitem, &t_menuitem))
 	{
 		CFStringRef cfmenuitemstr;
-		CopyMenuItemTextAsCFString(mh, mitem,&cfmenuitemstr);
-		/* UNCHECKED */ MCStringCreateWithCFString(cfmenuitemstr, t_menuitem);
+		CopyMenuItemTextAsCFString(mh, mitem, &cfmenuitemstr);
+		/* UNCHECKED */ MCStringCreateWithCFString(cfmenuitemstr, &t_menuitem);
 		CFRelease(cfmenuitemstr);
 	}
 	
-	MCStringRef t_menupick = nil;
 	if (issubmenu)
 	{
 		CFStringRef cftitlestr;
-		MCStringRef t_titlestr;
+		MCAutoStringRef t_titlestr;
 		CopyMenuTitleAsCFString(mh, &cftitlestr);
-		/* UNCHECKED */ MCStringCreateWithCFString(cftitlestr, t_titlestr);
-		MCValueRelease(t_menupick);
+		/* UNCHECKED */ MCStringCreateWithCFString(cftitlestr, &t_titlestr);
+		CFRelease(cftitlestr);
 		
-		/* UNCHECKED */ MCStringCreateMutable(0, t_menupick);
-		/* UNCHECKED */ MCStringAppend(t_menupick, t_titlestr);
-		/* UNCHECKED */ MCStringAppend(t_menupick, t_menuitem);
-		MCValueRelease(t_titlestr);
+		/* UNCHECKED */ MCStringFormat(r_string, "%@%@", *t_titlestr, *t_menuitem);
 	}
 	else
-		t_menupick = MCValueRetain(t_menuitem);
-	MCValueRelease(t_menuitem);
-	/* UNCHECKED */ MCStringCopyAndRelease(t_menupick, r_string);
+		r_string = MCValueRetain(*t_menuitem);
 }
 
 static void getmacmenuitemtextfromaccelerator(MenuHandle menu, KeySym p_key, uint1 mods, MCStringRef &r_string, bool issubmenu)
@@ -554,10 +543,9 @@ void MCButton::macopenmenu(void)
 				//low word of result from PopUpMenuSelect() is the item selected
 				//high word contains the menu id
 				
-				MCStringRef t_label = nil;
-				getmacmenuitemtext(mh, menuhistory, t_label, False);
-				MCValueAssign(label, t_label);
-				MCValueRelease(t_label);
+				MCAutoStringRef t_label;
+				getmacmenuitemtext(mh, menuhistory, &t_label, False);
+				MCValueAssign(label, *t_label);
 				Exec_stat es = message_with_valueref_args(MCM_menu_pick, label);
 				if (es == ES_NOT_HANDLED || es == ES_PASS)
 					message_with_args(MCM_mouse_up, menubutton);
@@ -595,10 +583,9 @@ void MCButton::macopenmenu(void)
 			{ //user selected something
 				MenuHandle mhandle = GetMenuHandle(HiWord(result));
 				setmenuhistoryprop(LoWord(result));
-				MCStringRef t_menu_string = nil;
-				getmacmenuitemtext(mhandle, menuhistory, t_menu_string, mhandle != mh);
-				Exec_stat es = message_with_valueref_args(MCM_menu_pick, t_menu_string);
-				MCValueRelease(t_menu_string);
+				MCAutoStringRef t_menu_string;
+				getmacmenuitemtext(mhandle, menuhistory, &t_menu_string, mhandle != mh);
+				Exec_stat es = message_with_valueref_args(MCM_menu_pick, *t_menu_string);
 				if (es == ES_NOT_HANDLED || es == ES_PASS)
 					message_with_args(MCM_mouse_up, menubutton);
 			}

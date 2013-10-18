@@ -523,20 +523,27 @@ Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
 			t_string = p_string;
 			
 		if (MCmodifierstate & MS_CONTROL)
+        {
 			if (message_with_valueref_args(MCM_command_key_down, *t_string) == ES_NORMAL)
 				return True;
-				
+		}
 		else if (MCmodifierstate & MS_MOD1)
+        {
 				if (message_with_valueref_args(MCM_option_key_down, *t_string) == ES_NORMAL)
 				return True;
+        }
 #ifdef _MACOSX
 		else if (MCmodifierstate & MS_MAC_CONTROL)
+        {
 			if (message_with_valueref_args(MCM_control_key_down, *t_string) == ES_NORMAL)
 				return True;
+        }
 #endif
 		else
+        {
 			if (message_with_valueref_args(MCM_key_down, p_string) == ES_NORMAL)
 				return True;
+        }
 		break;
 	}
 
@@ -750,22 +757,22 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 		{
 			MCAutoStringRef tptr;
 			MCAutoStringRef t_mptr_string;
-			
+            
+            t_mptr_string = MCNameGetString(mptr);
+            
 			if (params != nil)
 			{
 				MCExecPoint ep(this, NULL, NULL);
 				params->eval(ep);
                 MCAutoStringRef t_value;
 				ep . copyasstringref(&t_value);
-				MCStringFormat(&tptr, "%@ %@", *t_mptr_string, *t_value);
+				MCStringFormat(&t_mptr_string, "%@ %@", mptr, *t_value);
 			}
-            else
-                t_mptr_string = MCNameGetString(mptr);
 			
 			MCHandler *t_handler;
 			t_handler = findhandler(HT_MESSAGE, mptr);
 			if (t_handler == NULL || !t_handler -> isprivate())
-				domess(params == NULL ? *t_mptr_string : *tptr);
+				domess(*t_mptr_string);
 
 		}
 		if (stat == ES_ERROR && !MCNameIsEqualTo(mptr, MCM_error_dialog, kMCCompareCaseless))
@@ -836,6 +843,7 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 	if (scriptdepth == 255)
 		MCfreescripts = False; // prevent recursion wrap
 	MCExecPoint ep(this, hlist, hptr);
+	MCExecContext ctxt(ep);
 	if (MCtracestackptr != NULL && MCtracereturn)
 	{
 		Boolean oldtrace = MCtrace;
@@ -844,7 +852,7 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 		stat = hptr->exec(ep, params);
 		if (MCtrace && !oldtrace)
 		{
-			MCB_done(ep);
+			MCB_done(ctxt);
 			MCtrace = False;
 		}
 	}
@@ -895,6 +903,7 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 		MCfreescripts = False; // prevent recursion wrap
 
 	MCExecPoint ep(this, t_parentscript_object -> hlist, hptr);
+	MCExecContext ctxt(ep);
 	ep.setparentscript(parentscript);
 	if (MCtracestackptr != NULL && MCtracereturn)
 	{
@@ -904,7 +913,7 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 		stat = hptr->exec(ep, params);
 		if (MCtrace && !oldtrace)
 		{
-			MCB_done(ep);
+			MCB_done(ctxt);
 			MCtrace = False;
 		}
 	}
@@ -1200,15 +1209,12 @@ void MCObject::setstate(Boolean on, uint4 newstate)
 		state &= ~newstate;
 }
 
-/* WRAPPER */ Exec_stat MCObject::setsprop(Properties which, MCStringRef p_string)
-{
-	return setsprop(which, MCStringGetOldString(p_string));
-}
 
-Exec_stat MCObject::setsprop(Properties which, const MCString &s)
+
+Exec_stat MCObject::setsprop(Properties which, MCStringRef s)
 {
 	MCExecPoint ep(this, NULL, NULL);
-	ep.setsvalue(s);
+	ep.setvalueref(s);
 	return setprop(0, which, ep, False);
 }
 
@@ -1792,12 +1798,6 @@ void MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
 		style = m_font_attrs -> style;
 }
 
-void MCObject::getfontattsnew(const char *& fname, uint2 &size, uint2 &style)
-{
-	MCNameRef t_fname_name;
-	getfontattsnew(t_fname_name, size, style);
-	fname = MCNameGetCString(t_fname_name);
-}
 
 MCNameRef MCObject::gettextfont(void)
 {
@@ -2086,7 +2086,7 @@ void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)
 
 Exec_stat MCObject::names_old(Properties which, MCExecPoint& ep, uint32_t parid)
 {
-	MCAutoStringRef t_name;
+	MCAutoValueRef t_name;
 	if (names(which, &t_name) &&
 		ep . setvalueref(*t_name))
 		return ES_NORMAL;
@@ -2094,8 +2094,11 @@ Exec_stat MCObject::names_old(Properties which, MCExecPoint& ep, uint32_t parid)
 	return ES_ERROR;
 }
 
-bool MCObject::names(Properties which, MCStringRef& r_name)
+bool MCObject::names(Properties which, MCValueRef& r_name_val)
 {
+	MCStringRef &r_name = (MCStringRef&)
+	r_name_val;
+	
 	const char *itypestring = gettypestring();
 	MCAutoPointer<char> tmptypestring;
 	if (parent != NULL && gettype() >= CT_BUTTON && getstack()->hcaddress())
@@ -2156,25 +2159,25 @@ bool MCObject::names(Properties which, MCStringRef& r_name)
 			which = P_LONG_ID;
 		if (parent != NULL)
 		{
-			MCAutoStringRef t_parent;
+			MCAutoValueRef t_parent;
 			if (!parent -> names(t_which_requested, &t_parent))
 				return false;
 			if (gettype() == CT_GROUP && parent->gettype() == CT_STACK)
 				itypestring = "bkgnd";
 			if (which == P_LONG_ID)
-				return MCStringFormat(r_name, "%s id %d of %s", itypestring, obj_id, MCStringGetCString(*t_parent));
-			return MCStringFormat(r_name, "%s \"%s\" of %s", itypestring, getname_cstring(), MCStringGetCString(*t_parent));
+				return MCStringFormat(r_name, "%s id %d of %@", itypestring, obj_id, *t_parent);
+			return MCStringFormat(r_name, "%s \"%@\" of %@", itypestring, getname(), *t_parent);
 		}
 		return MCStringFormat(r_name, "the template%c%s", MCS_toupper(itypestring[0]), itypestring + 1);
 
 	case P_NAME:
 	case P_ABBREV_NAME:
 		if (isunnamed())
-			return names(P_ABBREV_ID, r_name);
+			return names(P_ABBREV_ID, r_name_val);
 		return MCStringFormat(r_name, "%s \"%s\"", itypestring, getname_cstring());
 	case P_SHORT_NAME:
 		if (isunnamed())
-			return names(P_ABBREV_ID, r_name);
+			return names(P_ABBREV_ID, r_name_val);
 		r_name = MCValueRetain(MCNameGetString(getname()));
 		return true;
 	default:
@@ -2528,56 +2531,44 @@ Exec_stat MCObject::domess(MCStringRef sptr)
 	}
 }
 
-Exec_stat MCObject::eval(MCStringRef sptr, MCExecPoint &ep)
+void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_value)
 {
 	MCAutoStringRef t_temp_script;
-	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on eval\nreturn %@\nend eval\n", sptr);
+	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on eval\nreturn %@\nend eval\n", p_script);
 	
 	MCHandlerlist *handlist = new MCHandlerlist;
 	if (handlist->parse(this, *t_temp_script) != PS_NORMAL)
 	{
-		ep.setstaticcstring("Error parsing expression\n");
+		r_value = MCSTR("Error parsing expression\n");
 		delete handlist;
-		return ES_ERROR;
+		ctxt.Throw();
+		return;
 	}
 	MCObject *oldtargetptr = MCtargetptr;
 	MCtargetptr = this;
 	MCHandler *hptr;
-	MCHandler *oldhandler = ep.gethandler();
-	MCHandlerlist *oldhlist = ep.gethlist();
+	MCHandler *oldhandler = ctxt.GetHandler();
+	MCHandlerlist *oldhlist = ctxt.GetHandlerList();
 	handlist->findhandler(HT_MESSAGE, MCM_eval, hptr);
-	ep.sethlist(handlist);
-	ep.sethandler(hptr);
+	ctxt.SetHandlerList(handlist);
+	ctxt.SetHandler(hptr);
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
-	Exec_stat stat;
-	if (hptr->exec(ep, NULL) != ES_NORMAL)
+	
+	if (hptr->exec(ctxt.GetEP(), NULL) != ES_NORMAL)
 	{
-		ep.setstaticcstring("Error parsing expression\n");
-		stat = ES_ERROR;
+		r_value = MCSTR("Error parsing expression\n");
+		ctxt.Throw();
 	}
 	else
 	{
-		MCresult->eval(ep);
-		stat = ES_NORMAL;
+		MCresult->copyasvalueref(r_value);
 	}
 	MClockerrors = oldlock;
 	MCtargetptr = oldtargetptr;
-	ep.sethlist(oldhlist);
-	ep.sethandler(oldhandler);
+	ctxt.SetHandlerList(oldhlist);
+	ctxt.SetHandler(oldhandler);
 	delete handlist;
-	return stat;
-}
-
-/* WRAPPER */ void MCObject::eval(MCExecContext& ctxt, MCStringRef p_script, MCValueRef& r_value)
-{
-	MCExecPoint ep(ctxt.GetEP());
-	Exec_stat stat = eval(p_script, ep);
-	/* UNCHECKED */ ep.copyasvalueref(r_value);
-	if (stat != ES_ERROR)
-		return;
-
-	ctxt.Throw();
 }
 
 void MCObject::editscript()
@@ -3133,7 +3124,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (flags & F_SCRIPT && !(addflags & AF_LONG_SCRIPT))
 	{
 		getstack() -> unsecurescript(this);
-		stat = IO_write_string(MCStringGetCString(_script), stream, false);
+		stat = IO_write_string(MCStringGetCString(_script), stream);
 		getstack() -> securescript(this);
 		if (stat != IO_NORMAL)
 			return stat;
@@ -3641,7 +3632,11 @@ MCImage *MCObject::resolveimage(MCStringRef p_name, uint4 p_image_id)
 			if (t_is_id)
 				t_control = t_behavior_stack -> getcontrolid(CT_IMAGE, p_image_id, true);
 			else
-				t_control = t_behavior_stack -> getcontrolname(CT_IMAGE, p_name);
+			{
+				MCNewAutoNameRef t_name;
+				/* UNCHECKED */ MCNameCreate(p_name, &t_name);
+				t_control = t_behavior_stack -> getcontrolname(CT_IMAGE, *t_name);
+			}
 			if (t_control != NULL)
 				break;
 			
@@ -3672,7 +3667,11 @@ MCImage *MCObject::resolveimage(MCStringRef p_name, uint4 p_image_id)
 		if (t_is_id)
 			t_control = static_cast<MCControl *>(getstack() -> getobjid(CT_IMAGE, p_image_id));
 		else
-			t_control = static_cast<MCControl *>(getstack() -> getobjname(CT_IMAGE, p_name));
+		{
+			MCNewAutoNameRef t_name;
+			/* UNCHECKED */ MCNameCreate(p_name, &t_name);
+			t_control = static_cast<MCControl *>(getstack() -> getobjname(CT_IMAGE, *t_name));
+		}
 	}
 	
 	return static_cast<MCImage *>(t_control);

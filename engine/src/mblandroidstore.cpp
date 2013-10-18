@@ -73,23 +73,23 @@ static bool s_can_make_purchase = false;
 
 ////////////////////////////////////////////////////////////////////////
 
-bool MCPurchaseGetProductIdentifier(MCPurchase *p_purchase, MCStringRef& r_identifier);
-bool MCPurchaseGetDeveloperPayload(MCPurchase *p_purchase, MCStringRef& r_payload);
-bool MCPurchaseGetPurchaseDate(MCPurchase *p_purchase, integer_t& r_date);
-bool MCPurchaseGetTransactionIdentifier(MCPurchase *p_purchase, MCStringRef& r_identifier);
-bool MCPurchaseGetSignedData(MCPurchase *p_purchase, MCStringRef& r_data);
-bool MCPurchaseGetSignature(MCPurchase *p_purchase, MCStringRef& r_signature);
+void MCPurchaseGetProductIdentifier(MCExecContext& ctxt,MCPurchase *p_purchase, MCStringRef& r_identifier);
+void MCPurchaseGetDeveloperPayload(MCExecContext& ctxt,MCPurchase *p_purchase, MCStringRef& r_payload);
+void MCPurchaseGetPurchaseDate(MCExecContext& ctxt,MCPurchase *p_purchase, integer_t& r_date);
+void MCPurchaseGetTransactionIdentifier(MCExecContext& ctxt,MCPurchase *p_purchase, MCStringRef& r_identifier);
+void MCPurchaseGetSignedData(MCExecContext& ctxt,MCPurchase *p_purchase, MCStringRef& r_data);
+void MCPurchaseGetSignature(MCExecContext& ctxt,MCPurchase *p_purchase, MCStringRef& r_signature);
 
 ////////////////////////////////////////////////////////////////////////
 
-static MCPurchasePropertyInfo kProperties[] =
+static MCPropertyInfo kProperties[] =
 {
-    DEFINE_RO_PROPERTY(kMCPurchasePropertyDeveloperPayload, String, Purchase, DeveloperPayload)
-    DEFINE_RO_PROPERTY(kMCPurchasePropertyProductIdentifier, String, Purchase, ProductIdentifier)
-    DEFINE_RO_PROPERTY(kMCPurchasePropertyTransactionIdentifier, String, Purchase, TransactionIdentifier)
-    DEFINE_RO_PROPERTY(kMCPurchasePropertyPurchaseDate, Int32, Purchase, PurchaseDate)
-    DEFINE_RO_PROPERTY(kMCPurchasePropertySignedData, String, Purchase, SignedData)
-    DEFINE_RO_PROPERTY(kMCPurchasePropertySignature, String, Purchase, Signature)
+    DEFINE_RO_STORE_PROPERTY(P_DEVELOPER_PAYLOAD, String, Purchase, DeveloperPayload)
+    DEFINE_RO_STORE_PROPERTY(P_PRODUCT_IDENTIFIER, String, Purchase, ProductIdentifier)
+    DEFINE_RO_STORE_PROPERTY(P_TRANSACTION_IDENTIFIER, String, Purchase, TransactionIdentifier)
+    DEFINE_RO_STORE_PROPERTY(P_PURCHASE_DATE, Int32, Purchase, PurchaseDate)
+    DEFINE_RO_STORE_PROPERTY(P_SIGNED_DATA, String, Purchase, SignedData)
+    DEFINE_RO_STORE_PROPERTY(P_SIGNATURE, String, Purchase, Signature)
 };
 
 static MCPurchasePropertyTable kPropertyTable =
@@ -263,70 +263,82 @@ Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, M
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-bool MCPurchaseGetProductIdentifier(MCPurchase *p_purchase, MCStringRef& r_identifier)
+void MCPurchaseGetProductIdentifier(MCExecContext& ctxt,MCPurchase *p_purchase, MCStringRef& r_identifier)
 {
     MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
     
-    if (t_android_data->product_id == nil)
-        return false;
+    if (t_android_data->product_id != nil)
+    {
+        r_identifier = MCValueRetain(t_android_data->product_id);
+        return;
+    }
     
-	r_identifier = MCValueRetain(t_android_data->product_id);
-	return true;
+    ctxt.Throw();
 }
 
-bool MCPurchaseGetDeveloperPayload(MCPurchase *p_purchase, MCStringRef& r_payload)
+void MCPurchaseGetDeveloperPayload(MCExecContext& ctxt,MCPurchase *p_purchase, MCStringRef& r_payload)
 {
     MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
     
-    if (t_android_data->developer_payload == nil)
-        return false;
+    if (t_android_data->developer_payload != nil)
+    {
+        r_payload = MCValueRetain(t_android_data->developer_payload);
+        return;
+    }
     
-    r_payload = MCValueRetain(t_android_data->developer_payload);
-	return true;
+    ctxt.Throw();
 }
 
-bool MCPurchaseGetPurchaseDate(MCPurchase *p_purchase, integer_t& r_date)
+void MCPurchaseGetPurchaseDate(MCExecContext& ctxt,MCPurchase *p_purchase, integer_t& r_date)
 {
     MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
     
-    if (t_android_data->purchase_time == nil)
-        return false;
+    if (t_android_data->purchase_time != nil)
+    {
+        r_date = (integer_t)(t_android_data->purchase_time);
+        return;
+    }
     
-    r_date = (integer_t)(t_android_data->purchase_time);
-    return true;
+    ctxt.Throw();
 }
 
-bool MCPurchaseGetTransactionIdentifier(MCPurchase *p_purchase, MCStringRef& r_identifier)
+void MCPurchaseGetTransactionIdentifier(MCExecContext& ctxt,MCPurchase *p_purchase, MCStringRef& r_identifier)
 {
     MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
     
-    if (t_android_data->order_id == nil)
-        return false;
+    if (t_android_data->order_id != nil)
+    {
+        r_identifier = MCValueRetain(t_android_data->order_id);
+        return;
+    }
     
-    r_identifier = MCValueRetain(t_android_data->order_id);
-	return true;
+    ctxt.Throw();
 }
 
-bool MCPurchaseGetSignedData(MCPurchase *p_purchase, MCStringRef& r_data)
+void MCPurchaseGetSignedData(MCExecContext& ctxt,MCPurchase *p_purchase, MCStringRef& r_data)
 {
     MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
     
-    if (t_android_data->signed_data == nil)
-        return false;
+    if (t_android_data->signed_data != nil)
+    {
+        r_data = MCValueRetain(t_android_data->signed_data);
+        return;
+    }
     
-	r_data = MCValueRetain(t_android_data->signed_data);
-	return true;
+    ctxt.Throw();
 }
 
-bool MCPurchaseGetSignature(MCPurchase *p_purchase, MCStringRef& r_signature)
+void MCPurchaseGetSignature(MCExecContext& ctxt,MCPurchase *p_purchase, MCStringRef& r_signature)
 {
     MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
     
-    if (t_android_data->signature == nil)
-        return false;
+    if (t_android_data->signature != nil)
+    {
+        r_signature = MCValueRetain(t_android_data->signature);
+        return;
+    }
     
-	r_signature = MCValueRetain(t_android_data->signature);
-	return true;
+    ctxt.Throw();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////

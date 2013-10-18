@@ -571,15 +571,27 @@ void MCButton::SetShowName(MCExecContext& ctxt, bool setting)
 
 void MCButton::GetLabel(MCExecContext& ctxt, MCStringRef& r_label)
 {
-	r_label = MCValueRetain(label);
+	if (entry != NULL)
+		r_label = MCValueRetain(getlabeltext());
+	else
+		r_label = MCValueRetain(label);
 }
 
 void MCButton::SetLabel(MCExecContext& ctxt, MCStringRef p_label)
 {
+	// Make sure the label is up to date
+	if (entry != NULL)
+		getentrytext();
+	
+	// Don't make any changes if it isn't necessary
 	if (MCStringIsEqualTo(p_label, label, kMCStringOptionCompareExact))
 		return;
 	
 	MCValueAssign(label, p_label);
+
+	if (entry != NULL)
+		entry->settext(0, label, False);
+	
 	clearmnemonic();
 	setupmnemonic();
 	Redraw();
@@ -1138,4 +1150,48 @@ void MCButton::SetHilite(MCExecContext& ctxt, uint32_t p_part, const MCInterface
         reseticon();
         Redraw();
     }
+}
+
+void MCButton::SetChunkProp(MCExecContext& ctxt, uint32_t p_part, int32_t p_start, int32_t p_finish, Properties which, bool setting)
+{
+    MCObjectChunkPtr t_obj_chunk;
+    t_obj_chunk . object = this;
+    t_obj_chunk . part_id = p_part;
+    t_obj_chunk . mark . start = p_start;
+    t_obj_chunk . mark . finish = p_finish;
+    
+    if (which == P_DISABLED)
+    {
+        if (setting)
+            MCInterfaceExecDisableChunkOfButton(ctxt, t_obj_chunk);
+        else
+            MCInterfaceExecEnableChunkOfButton(ctxt, t_obj_chunk);
+    }
+    else
+    {
+        if (setting)
+            MCInterfaceExecHiliteChunkOfButton(ctxt, t_obj_chunk);
+        else
+            MCInterfaceExecUnhiliteChunkOfButton(ctxt, t_obj_chunk);
+    }
+}
+
+void MCButton::SetDisabledOfCharChunk(MCExecContext& ctxt, uint32_t p_part, int32_t p_start, int32_t p_finish, bool setting)
+{
+    SetChunkProp(ctxt, p_part, p_start, p_finish, P_DISABLED, setting);
+}
+
+void MCButton::SetEnabledOfCharChunk(MCExecContext& ctxt, uint32_t p_part, int32_t p_start, int32_t p_finish, bool setting)
+{
+    SetChunkProp(ctxt, p_part, p_start, p_finish, P_DISABLED, !setting);
+}
+
+void MCButton::SetHiliteOfCharChunk(MCExecContext& ctxt, uint32_t p_part, int32_t p_start, int32_t p_finish, bool setting)
+{
+    SetChunkProp(ctxt, p_part, p_start, p_finish, P_HILITE, setting);
+}
+
+void MCButton::SetUnhiliteOfCharChunk(MCExecContext& ctxt, uint32_t p_part, int32_t p_start, int32_t p_finish, bool setting)
+{
+    SetChunkProp(ctxt, p_part, p_start, p_finish, P_HILITE, !setting);
 }

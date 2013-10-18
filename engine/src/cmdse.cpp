@@ -1168,6 +1168,7 @@ Exec_stat MCDispatchCmd::exec(MCExecPoint& ep)
 	
 	return stat;
 #endif /* MCDispatchCmd */
+	
 	MCNewAutoNameRef t_message;
 	if (message -> eval(ep) != ES_NORMAL)
 	{
@@ -1203,9 +1204,10 @@ Exec_stat MCDispatchCmd::exec(MCExecPoint& ep)
 
 		if (t_var == NULL)
 		{
+			MCExecContext ctxt(ep);
 			tptr -> clear_argument();
 			while ((stat = tptr->eval(ep)) != ES_NORMAL && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-				MCB_error(ep, line, pos, EE_STATEMENT_BADPARAM);
+				MCB_error(ctxt, line, pos, EE_STATEMENT_BADPARAM);
 			if (stat != ES_NORMAL)
 			{
 				MCeerror->add(EE_STATEMENT_BADPARAM, line, pos);

@@ -51,7 +51,7 @@ public:
 	void add(uint2 id, uint2 line, uint2 pos, MCValueRef);
 	void append(MCError& string);
 	const MCString &getsvalue();
-	void copysvalue(const MCString &s, Boolean t);
+	void copystringref(MCStringRef s, Boolean t);
 	bool copyasstringref(MCStringRef &r_string);
 	void clear();
 	Boolean isempty()
