@@ -442,7 +442,7 @@ void MCMetaContext::fillpath(MCPath *path, bool p_evenodd)
 }
 
 
-void MCMetaContext::draweps(real8 sx, real8 sy, int2 angle, real8 xscale, real8 yscale, int2 tx, int2 ty, const char *prolog, const char *psprolog, uint4 psprologlength, const char *ps, uint4 length, const char *fontname, uint2 fontsize, uint2 fontstyle, MCFontStruct *font, const MCRectangle& trect)
+void MCMetaContext::draweps(real8 sx, real8 sy, int2 angle, real8 xscale, real8 yscale, int2 tx, int2 ty, MCStringRef prolog, MCStringRef psprolog, uint4 psprologlength, MCStringRef ps, uint4 length, MCStringRef fontname, uint2 fontsize, uint2 fontstyle, MCFontStruct *font, const MCRectangle& trect)
 {
 }
 
