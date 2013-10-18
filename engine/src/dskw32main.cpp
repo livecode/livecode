@@ -124,11 +124,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 	int argc = 0;
 	int envc = 0;
-	MCStringRef *argv;
-	MCStringRef *envp;
-	
-	argv = nil;
-	envp = nil;
+	MCAutoArray<MCStringRef> argv;
+	MCAutoArray<MCStringRef> envp;
 
 	// MW-2004-11-25: Under Win9x it would appear that not all exceptions are masked...
 	// MW-2004-11-28: Actually, this doesn't solve the problem, it seems the OS is
@@ -165,30 +162,29 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 				*sptr = '\\';
 			sptr++;
 		}
-		
 	}
 	
 	// Convert the WStrings (UTF-16) into StringRefs
+	argv.New(argc);
 	for (int i = 0; i < argc; i++)
 		/* UNCHECKED */ MCStringCreateWithWString(lpWargv[i], argv[i]);
 	
 	LocalFree(lpWargv);
 	
 	// Convert the environment strings into StringRefs
+	envp.New(1);
 	LPWCH lpEnvStrings = GetEnvironmentStringsW();
 	LPCWSTR sptr = lpEnvStrings;
 	size_t t_len;
 	while ((t_len = wcslen(sptr)) > 0)
 	{
 		uindex_t t_index = envc++;
-		/* UNCHECKED */ MCMemoryResizeArray(envc, envp, t_index);
+		/* UNCHECKED */ envp.Extend(envc + 1);
 		/* UNCHECKED */ MCStringCreateWithWString(sptr, envp[envc - 1]);
 		sptr += t_len + 1;
 	}
 	
 	// Terminate the envp array
-	uindex_t t_temp = envc;
-	/* UNCHECKED */ MCMemoryResizeArray(envc + 1, envp, t_temp);
 	envp[envc] = nil;
 	
 	FreeEnvironmentStringsW(lpEnvStrings);
@@ -210,8 +206,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	// Now create the init fiber
 	InitializeFiberContext t_init;
 	t_init . argc = argc;
-	t_init . argv = argv;
-	t_init . envp = envp;
+	t_init . argv = argv.Ptr();
+	t_init . envp = envp.Ptr();
 	t_init . success = False;
 
 	void *t_init_fiber;
@@ -222,14 +218,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	SwitchToFiber(t_init_fiber);
 	DeleteFiber(t_init_fiber);
 
-	// Clean up the argv and envp strings
-	for (int i = 0; i < argc; i++)
-		MCValueRelease(argv[i]);
-	for (int i = 0; i < envc; i++)
-		MCValueRelease(envp[i]);
-	MCMemoryDeleteArray(argv);
-	MCMemoryDeleteArray(envp);
-	
 	if (!t_init . success)
 		DisplayStartupErrorAndExit();
 
