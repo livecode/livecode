@@ -212,16 +212,14 @@ void MCStack::setsizehints(void)
 		XSizeHints hints;
 		if (flags & F_RESIZABLE )
 		{
-			// IM-2013-08-12: [[ FullscreenMode ]] Use stack transform to get min / max sizes in device coords
+			// IM-2013-10-18: [[ FullscreenMode ]] Assume min/max sizes in view coords
+			// for resizable stacks - transform to device coords
 			MCRectangle t_minrect, t_maxrect;
 			t_minrect = MCRectangleMake(0, 0, minwidth, minheight);
 			t_maxrect = MCRectangleMake(0, 0, maxwidth, maxheight);
 			
-			MCGAffineTransform t_transform;
-			t_transform = getdevicetransform();
-			
-			t_minrect = MCRectangleGetTransformedBounds(t_minrect, t_transform);
-			t_maxrect = MCRectangleGetTransformedBounds(t_maxrect, t_transform);
+			t_minrect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_minrect));
+			t_maxrect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(t_maxrect));
 			
 			hints.min_width = t_minrect.width;
 			hints.min_height = t_minrect.height;
@@ -531,16 +529,14 @@ MCRectangle MCStack::device_setgeom(const MCRectangle &p_rect)
 		hints.height = p_rect.height;
 		if (flags & F_RESIZABLE )
 		{
-			// IM-2013-08-12: [[ FullscreenMode ]] Use stack transform to get min / max sizes in device coords
+			// IM-2013-10-18: [[ FullscreenMode ]] Assume min/max sizes in view coords
+			// for resizable stacks - transform to device coords
 			MCRectangle t_minrect, t_maxrect;
 			t_minrect = MCRectangleMake(0, 0, minwidth, minheight);
 			t_maxrect = MCRectangleMake(0, 0, maxwidth, maxheight);
 			
-			MCGAffineTransform t_transform;
-			t_transform = getdevicetransform();
-			
-			t_minrect = MCRectangleGetTransformedBounds(t_minrect, t_transform);
-			t_maxrect = MCRectangleGetTransformedBounds(t_maxrect, t_transform);
+			t_minrect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_minrect));
+			t_maxrect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(t_maxrect));
 
 			hints.min_width = t_minrect.width;
 			hints.min_height = t_minrect.height;
