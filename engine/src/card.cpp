@@ -3201,7 +3201,7 @@ IO_stat MCCard::load(IO_handle stream, MCStringRef version)
 //---- 2.7+:
 //  . F_OPAQUE is now valid - default true
 //  . ink is now valid - default GXcopy
-	if (strncmp(version, "2.7", 3) < 0)
+	if (MCStringCompareTo(version, MCSTR("2.7"), kMCCompareCaseless) < 0)
 	{
 		flags |= F_OPAQUE;
 		ink = GXcopy;

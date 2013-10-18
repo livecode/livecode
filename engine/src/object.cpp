@@ -2840,7 +2840,7 @@ IO_stat MCObject::load(IO_handle stream, MCStringRef version)
 	t_has_font_index = false;
 	if (flags & F_FONT)
 	{
-		if (strncmp(version, "1.3", 3) > 0)
+		if (MCStringCompareTo(version, MCSTR("1.3"), kMCCompareCaseless) > 0)
 		{
 			if ((stat = IO_read_uint2(&t_font_index, stream)) != IO_NORMAL)
 				return stat;
@@ -2944,7 +2944,7 @@ IO_stat MCObject::load(IO_handle stream, MCStringRef version)
 		//   is older.
 		// MW-2012-03-13: [[ UnicodeToolTip ]] If the file format is older than 5.5
 		//   then convert native to utf-8.
-		if (strncmp(version, "5.5", 3) < 0)
+		if (MCStringCompareTo(version, MCSTR("5.5"), kMCCompareCaseless) < 0)
 		{
 			// Read the tooltip, as encoded in its native format
 			if ((stat = IO_read_stringref(tooltip, stream, false)) != IO_NORMAL)
@@ -3044,7 +3044,7 @@ IO_stat MCObject::load(IO_handle stream, MCStringRef version)
 
 	// MW-2013-03-28: The restrictions byte is no longer relevant due to new
 	//   licensing.
-	if (strcmp(version, "2.7") >= 0)
+	if (MCStringCompareTo(version, MCSTR("2.7"), kMCCompareCaseless) >= 0)
 	{
 		uint1 t_restrictions;
 		if ((stat = IO_read_uint1(&t_restrictions, stream)) != IO_NORMAL)

@@ -1776,7 +1776,7 @@ IO_stat MCImage::load(IO_handle stream, MCStringRef version)
 		return stat;
 
 //---- Conversion from pre-2.7 behaviour to new behaviour
-	if (ink & 0x80 && strncmp(version, "2.7", 3) < 0)
+	if (ink & 0x80 && MCStringCompareTo(version, MCSTR("2.7"), kMCCompareCaseless) < 0)
 	{
 		blendlevel = 100 - (ink & 0x7F);
 		ink = GXblendSrcOver;
@@ -1809,7 +1809,7 @@ IO_stat MCImage::load(IO_handle stream, MCStringRef version)
 				/* UNCHECKED */ MCMemoryAllocate(t_compressed->size, t_compressed->data);
 				if (IO_read(t_compressed->data, t_compressed->size, stream) != IO_NORMAL)
 					return IO_ERROR;
-				if (strncmp(version, "1.4", 3) == 0)
+				if (MCStringCompareTo(version, MCSTR("1.4"), kMCCompareCaseless) == 0)
 				{
 					if ((ncolors == 16 || ncolors == 256) && noblack())
 						flags |= F_NEED_FIXING;

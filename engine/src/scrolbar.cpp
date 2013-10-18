@@ -1354,7 +1354,7 @@ IO_stat MCScrollbar::load(IO_handle stream, MCStringRef version)
 				return stat;
 		}
 	}
-	if (strncmp(version, "2.0", 3) <= 0)
+	if (MCStringCompareTo(version, MCSTR("2.0"), kMCCompareCaseless) <= 0)
 	{
 		if (flags & F_TRAVERSAL_ON)
 			rect = MCU_reduce_rect(rect, MCfocuswidth);

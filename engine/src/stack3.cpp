@@ -157,7 +157,7 @@ IO_stat MCStack::load_stack(IO_handle stream, MCStringRef version)
 	
 //---- 2.7+:
 //  . F_OPAQUE now valid - default true
-	if (strncmp(version, "2.7", 3) < 0)
+	if (MCStringCompareTo(version, MCSTR("2.7"), kMCCompareCaseless) < 0)
 	{
 		flags |= F_OPAQUE;
 	}
@@ -167,13 +167,13 @@ IO_stat MCStack::load_stack(IO_handle stream, MCStringRef version)
 		state |= CS_TRANSLATED;
 	if ((stat = IO_read_uint4(&iconid, stream)) != IO_NORMAL)
 		return stat;
-	if (strncmp(version, "1.0", 3) > 0)
+	if (MCStringCompareTo(version, MCSTR("1.0"), kMCCompareCaseless) > 0)
 	{
 		if (flags & F_TITLE)
 		{
 			// MW-2012-03-04: [[ StackFile5500 ]] If the version is 5.5 or above, then the
 			//   stack title will be UTF-8 already.
-			if (strncmp(version, "5.5", 3) >= 0)
+			if (MCStringCompareTo(version, MCSTR("5.5"), kMCCompareCaseless) >= 0)
 			{
 				if ((stat = IO_read_stringref_utf8(title, stream)) != IO_NORMAL)
 					return stat;
@@ -195,7 +195,7 @@ IO_stat MCStack::load_stack(IO_handle stream, MCStringRef version)
 	}
 	else
 		flags &= ~(F_TITLE | F_DECORATIONS);
-	if (strncmp(version, "2.3", 3) < 0)
+	if (MCStringCompareTo(version, MCSTR("2.3"), kMCCompareCaseless) < 0)
 		flags &= ~(F_SHOW_BORDER | F_3D | F_OPAQUE | F_FORMAT_FOR_PRINTING);
 	if (flags & F_RESIZABLE)
 	{
@@ -212,7 +212,7 @@ IO_stat MCStack::load_stack(IO_handle stream, MCStringRef version)
 	}
 	if ((stat = IO_read_stringref(externalfiles, stream, false)) != IO_NORMAL)
 		return stat;
-	if (strncmp(version, "1.3", 3) > 0)
+	if (MCStringCompareTo(version, MCSTR("1.3"), kMCCompareCaseless) > 0)
 	{
 		if ((stat = MCLogicalFontTableLoad(stream)) != IO_NORMAL)
 			return stat;

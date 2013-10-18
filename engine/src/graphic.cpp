@@ -2497,7 +2497,7 @@ IO_stat MCGraphic::load(IO_handle stream, MCStringRef version)
 
 //---- 2.7+:
 //  . F_G_ANTI_ALIASED now defined
-	if (strncmp(version, "2.7", 3) < 0)
+	if (MCStringCompareTo(version, MCSTR("2.7"), kMCCompareCaseless) < 0)
 		flags &= ~F_G_ANTI_ALIASED;
 //----
 
@@ -2560,9 +2560,9 @@ IO_stat MCGraphic::load(IO_handle stream, MCStringRef version)
 					return stat;
 			}
 		}
-		if (strncmp(version, "1.4", 3) < 0)
+		if (MCStringCompareTo(version, MCSTR("1.4"), kMCCompareCaseless) < 0)
 			loaddashes = True;
-		if (strncmp(version, "1.4", 3) <= 0)
+		if (MCStringCompareTo(version, MCSTR("1.4"), kMCCompareCaseless) <= 0)
 			arrowsize = DEFAULT_ARROW_SIZE;
 		break;
 	}

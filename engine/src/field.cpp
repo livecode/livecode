@@ -3140,7 +3140,7 @@ IO_stat MCField::load(IO_handle stream, MCStringRef version)
 			if ((stat = IO_read_uint2(&tabs[i], stream)) != IO_NORMAL)
 				return stat;
 	}
-	if (strncmp(version, "2.0", 3) <= 0)
+	if (MCStringCompareTo(version, MCSTR("2.0"), kMCCompareCaseless) <= 0)
 	{
 		rect = MCU_reduce_rect(rect, MCfocuswidth);
 		if (flags & F_LIST_BEHAVIOR)

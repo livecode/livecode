@@ -4305,7 +4305,7 @@ IO_stat MCButton::load(IO_handle stream, MCStringRef version)
 	if ((m_font_flags & FF_HAS_UNICODE_TAG) != 0)
 		m_font_flags |= FF_HAS_UNICODE;
 
-	if (strncmp(version, "2.3", 3) <= 0)
+	if (MCStringCompareTo(version, MCSTR("2.3"), kMCCompareCaseless) <= 0)
 	{
 		uint4 iconid;
 		uint4 hiliteiconid = 0;
@@ -4414,7 +4414,7 @@ IO_stat MCButton::load(IO_handle stream, MCStringRef version)
 		return stat;
 	if ((stat = IO_read_uint1(&mnemonic, stream)) != IO_NORMAL)
 		return stat;
-	if (strncmp(version, "2.0", 3) <= 0)
+	if (MCStringCompareTo(version, MCSTR("2.0"), kMCCompareCaseless) <= 0)
 	{
 		if (flags & F_DEFAULT)
 			rect = MCU_reduce_rect(rect, MOTIF_DEFAULT_WIDTH);

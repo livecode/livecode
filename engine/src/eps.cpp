@@ -605,7 +605,7 @@ IO_stat MCEPS::load(IO_handle stream, MCStringRef version)
 		if ((stat = image->load(stream, version)) != IO_NORMAL)
 			return stat;
 	}
-	if (strncmp(version, "1.3", 3) > 0)
+	if (MCStringCompareTo(version, MCSTR("1.3"), kMCCompareCaseless) > 0)
 	{
 		if ((stat = IO_read_uint2(&curpage, stream)) != IO_NORMAL)
 			return stat;

@@ -3223,7 +3223,7 @@ IO_stat MCGroup::load(IO_handle stream, MCStringRef version)
 			}
 			break;
 		case OT_GROUPEND:
-			if (strncmp(version, "1.0", 3) == 0)
+			if (MCStringCompareTo(version, MCSTR("1.0"), kMCCompareCaseless) == 0)
 			{
 				computecrect();
 				if (rect.x == minrect.x && rect.y == minrect.y
