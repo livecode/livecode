@@ -1600,7 +1600,11 @@ Exec_stat MCThrowKeyword::exec(MCExecPoint &ep)
 		MCeerror->add
 		(EE_THROW_BADERROR, line, pos);
 	else
-		MCeerror->copysvalue(ep.getsvalue(), True);
+    {
+        MCAutoStringRef t_value;
+        ep . copyasstringref(&t_value);
+		MCeerror->copystringref(*t_value, True);
+    }
 	return ES_ERROR;
 }
 
@@ -1834,7 +1838,9 @@ Exec_stat MCTry::exec(MCExecPoint &ep)
 			if (state == TS_CATCH)
 			{
 				errorvar->evalvar(ep)->eval(ep);
-				MCeerror->copysvalue(ep.getsvalue(), False);
+                MCAutoStringRef t_value;
+                ep . copyasstringref(&t_value);
+				MCeerror->copystringref(*t_value, False);
 				MCeerror->add(EE_TRY_BADSTATEMENT, line, pos);
 				stat = ES_ERROR;
 			}

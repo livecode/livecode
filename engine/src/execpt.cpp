@@ -515,7 +515,9 @@ Exec_stat MCExecPoint::setlinedel(uint2 l, uint2 p)
 
 void MCExecPoint::setnumberformat()
 {
-	MCU_setnumberformat(getsvalue(), nffw, nftrailing, nfforce);
+    MCAutoStringRef t_value;
+    copyasstringref(&t_value);
+	MCU_setnumberformat(*t_value, nffw, nftrailing, nfforce);
 }
 
 //////////
@@ -668,9 +670,15 @@ void MCExecPoint::texttobinary(void)
 void MCExecPoint::binarytotext(void)
 {
 #ifdef __CRLF__
+	MCDataRef t_data;
+	copyasdataref(t_data);
+	
+	MCDataMutableCopyAndRelease(t_data, t_data);
+
 	char *sptr;
 	uint32_t l;
-	modify(sptr, l);
+	sptr = (char*)MCDataGetBytePtr(t_data);
+	l = MCDataGetLength(t_data);
 
 	uint32_t pad;
 	pad = 0;
@@ -682,7 +690,7 @@ void MCExecPoint::binarytotext(void)
 	{
 		uint4 newsize;
 		MCStringPad((MCStringRef)value, MCStringGetLength((MCStringRef)value), pad, nil);
-		modify(sptr, newsize);
+		newsize = MCDataGetLength(t_data);
 
 		char *newbuffer = sptr;
 		sptr += l;
@@ -694,6 +702,9 @@ void MCExecPoint::binarytotext(void)
 				*--dptr = '\r';
 		}
 	}
+	setvalueref(t_data);
+	MCValueRelease(t_data);
+
 #elif defined(__CR__)
 	MCDataRef t_data;
 	copyasdataref(t_data);

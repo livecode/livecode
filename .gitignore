@@ -19,6 +19,8 @@ stacksecurity_encrypted.cpp
 
 # Compiled source #
 ###################
+*.i
+*.ii
 *.com
 *.class
 *.dll
@@ -70,6 +72,7 @@ xcuserdata/
 *.suo
 *.mode1v3
 *.xcworkspacedata
+*.creator.user
 
 
 # Build folders #

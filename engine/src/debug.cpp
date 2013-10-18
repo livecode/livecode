@@ -76,7 +76,6 @@ static int2 depth;
 
 #include "srvdebug.h"
 
-
 void MCB_setmsg(MCExecContext& ctxt, MCStringRef p_string)
 {
 	// At some point we will add the ability to manipulate/look at the 'message box' in a
@@ -128,7 +127,7 @@ void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_string)
 	{
 		// MW-2004-11-17: Now use global 'MCmbstackptr' instead
 		if (MCmbstackptr == NULL)
-			MCmbstackptr = MCdispatcher->findstackname(MCmessagenamestring);
+			MCmbstackptr = MCdispatcher->findstackname(MCN_messagename);
 			
 		if (MCmbstackptr != NULL)
 		{
@@ -311,6 +310,7 @@ void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name)
 	p2.setnext(&p3);
 	p3.setvalueref_argument(p_value);
 	MCB_message(ctxt, MCM_update_var, &p1);
+
 	if (added)
 		MCnexecutioncontexts--;
 }

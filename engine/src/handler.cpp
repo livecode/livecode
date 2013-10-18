@@ -732,6 +732,7 @@ void MCHandler::eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &
 
 	delete exp;
 	/* UNCHECKED */ ctxt.GetEP().copyasvalueref(r_value);
+
 	if (stat != ES_ERROR)
 		return;
 	

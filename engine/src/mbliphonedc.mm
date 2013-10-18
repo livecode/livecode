@@ -314,7 +314,7 @@ struct MCScreenDCDoSetBeepSoundEnv
 
 // MW-2012-08-06: [[ Fibers ]] Main fiber callback for system calls.
 static void MCScreenDCDoSetBeepSound(void *p_env)
-	{
+{
 	MCScreenDCDoSetBeepSoundEnv *env;
 	env = (MCScreenDCDoSetBeepSoundEnv *)p_env;
 	
@@ -339,7 +339,7 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 	MCS_resolvepath(*t_env_sound, &t_sound_path);
 	
 	NSURL *t_url;
-	t_url = [NSURL fileURLWithPath: [NSString stringWithCString: MCStringGetCString(*t_sound_path) encoding: NSMacOSRomanStringEncoding]];
+	t_url = [NSURL fileURLWithPath: [NSString stringWithMCStringRef: *t_sound_path]];
 	
 	OSStatus t_status;
 	t_status = AudioServicesCreateSystemSoundID((CFURLRef)t_url, &t_new_sound);
@@ -807,10 +807,10 @@ static void do_iphone_font_create(void *p_env)
 	env -> result = t_font;
 }
 
-void *iphone_font_create(const char *p_name, uint32_t p_size, bool p_bold, bool p_italic)
+void *iphone_font_create(MCStringRef p_name, uint32_t p_size, bool p_bold, bool p_italic)
 {
 	do_iphone_font_create_env env;
-	env . name = p_name;
+	env . name = MCStringGetCString(p_name);
 	env . size = p_size;
 	env . bold = p_bold;
 	env . italic = p_italic;
@@ -1271,7 +1271,7 @@ void MCIPhoneRunBlockOnMainFiber(void (^block)(void))
 
 // MW-2012-08-06: [[ Fibers ]] Updated entry point for didBecomeActive.
 static void MCIPhoneDoDidBecomeActive(void *)
-{
+{ 
 	extern char **environ;
 	char **env;
 	env = environ;
@@ -1302,11 +1302,15 @@ static void MCIPhoneDoDidBecomeActive(void *)
 	
 	if (!t_init_success)
 	{
-		MCExecPoint ep(nil, nil, nil);
-        ep . setvalueref(MCresult -> getvalueref());
-		NSLog(@"Startup error: %s\n", ep . getcstring());
-		abort();
-		return;
+		
+		if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
+		{
+			MCAutoStringRef t_value;
+			t_value = (MCStringRef)MCresult -> getvalueref();
+			NSLog(@"Startup error: %s\n", MCStringGetCString(*t_value));
+			abort();
+			return;
+		}
 	}
 
 	// MW-2012-08-31: [[ Bug 10340 ]] Now we've finished initializing, get the app to

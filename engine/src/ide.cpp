@@ -643,6 +643,19 @@ static void colourize_paragraph(void *p_context, MCColourizeClass p_class, uint4
 	}
 }
 
+// Both of the following are control characters that see no use in modern systems
+#define REPLACEMENT_CHAR_ASCII	0x16	/* SYN: synchronous idle */
+#define REPLACEMENT_CHAR_UTF16	0x1A	/* SUB: substitute */
+
+static unsigned char next_valid_char(const unsigned char *p_text, uindex_t &x_index)
+{
+	if (p_text[x_index] != REPLACEMENT_CHAR_UTF16)
+		if (p_text[x_index + 1] == REPLACEMENT_CHAR_ASCII)
+			return p_text[x_index += 2];
+	
+	return p_text[x_index += 1];
+}
+
 
 // Parameters
 //   p_text : pointer to the buffer containing the text we are tokenizing
@@ -662,66 +675,78 @@ static bool match_comment(const unsigned char *p_text, uint4 p_length, uint4 &x_
 	r_update_min_nesting = false;
 	r_multiple_lines = false;
 
+	unsigned char t_char = p_text[x_index];
 	while(x_index < p_length)
 	{
-		switch(type_table[p_text[x_index]])
+		switch(type_table[t_char])
 		{
 			case ST_MIN:
-				if (type_table[p_text[x_index + 1]] == ST_MIN)
+			{
+				uindex_t t_new_index = x_index;
+				if (type_table[(t_char = next_valid_char(p_text, t_new_index))] == ST_MIN)
 				{
 					r_class = COLOURIZE_CLASS_SINGLE_COMMENT;
-					while(x_index < p_length && type_table[p_text[x_index]] != ST_EOL)
-						x_index++;
+					while(t_new_index < p_length && type_table[(t_char = next_valid_char(p_text, t_new_index))] != ST_EOL)
+						;
 		
+					x_index = t_new_index;
 					return true;
 				}
 				else
 					return false;
 				break;
+			}
 
 			case ST_COM:
 				r_class = COLOURIZE_CLASS_SINGLE_COMMENT;
-				while(x_index < p_length && type_table[p_text[x_index]] != ST_EOL)
-					x_index++;
+				while(x_index < p_length && type_table[(t_char = next_valid_char(p_text, x_index))] != ST_EOL)
+					;
 				
 				return true;
 				break;
 
 			case ST_OP:
-				if (p_length - x_index >= 2 && p_text[x_index] == '/' && p_text[x_index + 1] == '/')
+			{
+				uindex_t t_new_index = x_index;
+				if (t_char == '/' && next_valid_char(p_text, t_new_index) == '/')
 				{
 					r_class = COLOURIZE_CLASS_SINGLE_COMMENT;
-					while(x_index < p_length && type_table[p_text[x_index]] != ST_EOL)
-						x_index++;
+					while(t_new_index < p_length && type_table[(t_char = next_valid_char(p_text, t_new_index))] != ST_EOL)
+						;
 
+					x_index = t_new_index;
 					return true;
 				}
-				else if (p_length - x_index >= 2 && p_text[x_index] == '/' && p_text[x_index + 1] == '*')
+				
+				t_new_index = x_index;
+				if (t_char == '/' && (t_char = next_valid_char(p_text, t_new_index)) == '*')
 				{
 					// As we only need to return the nesting difference, we start the nesting off at 0
 					uint4 t_nesting;
 					t_nesting = 0;
 
-					x_index += 2;
+					x_index = t_new_index;
+					t_char = next_valid_char(p_text, x_index);
 					t_nesting += 1;
 					r_class = COLOURIZE_CLASS_MULTI_COMMENT;
-					while(x_index < p_length - 1 && t_nesting > 0)
+					while(x_index < p_length && t_nesting > 0)
 					{
-						if (type_table[p_text[x_index]] == ST_EOL)
+						if (type_table[t_char] == ST_EOL)
 							r_multiple_lines = true;
 
-						if (p_text[x_index] == '*' && p_text[x_index + 1] == '/')
+						t_new_index = x_index;
+						if (t_char == '*' && next_valid_char(p_text, t_new_index)  == '/')
 						{
 							t_nesting -= 1;
-							x_index += 2;
+							x_index = t_new_index;
 
 							r_update_min_nesting = true;
 						}
-						else
-							x_index += 1;
+						
+						t_char = next_valid_char(p_text, x_index);
 					}
 					if (t_nesting != 0 && x_index < p_length)
-						x_index += 1;
+						t_char = next_valid_char(p_text, x_index);
 
 					r_nesting_delta = t_nesting;
 
@@ -730,6 +755,7 @@ static bool match_comment(const unsigned char *p_text, uint4 p_length, uint4 &x_
 				else
 					return false;
 				break;
+			}
 			default:
 				return false;
 		}
@@ -759,28 +785,31 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 		return;
 	}
 
+	unsigned char t_char;
+	t_char = p_text[t_index];
 	if (t_nesting > 0)
 	{
 		while(t_nesting > 0 && t_index < p_length - 1)
 		{
-			if (p_text[t_index] == '/' && p_text[t_index + 1] == '*')
+			uindex_t t_new_index = t_index;
+			if (t_char == '/' && next_valid_char(p_text, t_new_index) == '*')
 			{
 				t_nesting += 1;
-				t_index += 2;
+				t_index = t_new_index;
 			}
-			else if (p_text[t_index] == '*' && p_text[t_index + 1] == '/')
+			else if (t_char == '*' && next_valid_char(p_text, t_new_index) == '/')
 			{
 				t_nesting -= 1;
-				t_index += 2;
+				t_index = t_new_index;
 
 				t_min_nesting = MCU_min(t_min_nesting, t_nesting);
 			}
-			else
-				t_index += 1;
+			
+			t_char = next_valid_char(p_text, t_index);
 		}
 
 		if (t_nesting != 0 && t_index < p_length)
-			t_index += 1;
+			t_char = next_valid_char(p_text, t_index);
 
 		p_callback(p_context, COLOURIZE_CLASS_MULTI_COMMENT, 0, 0, t_index);
 	}
@@ -811,27 +840,27 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 		}
 		else
 		{
-			switch(type_table[p_text[t_index]])
+			switch(type_table[t_char])
 			{
 				case ST_SPC:
 					t_class = COLOURIZE_CLASS_WHITESPACE;
-					while(t_index < p_length && type_table[p_text[t_index]] == ST_SPC)
-						t_index++;
+					while(t_index < p_length && type_table[(t_char = next_valid_char(p_text, t_index))] == ST_SPC)
+						;
 					t_end = t_index;
 				break;
 
 				case ST_MIN:
 					t_index++;
 					t_class = COLOURIZE_CLASS_OPERATOR;
-					while(t_index < p_length && type_table[p_text[t_index + 1]] == ST_OP)
-						t_index++;
+					while(t_index < p_length && type_table[(t_char = next_valid_char(p_text, t_index))] == ST_OP)
+						;
 					t_end = t_index;
 				break;
 
 				case ST_OP:
 					t_class = COLOURIZE_CLASS_OPERATOR;
-					while(t_index < p_length && type_table[p_text[t_index]] == ST_OP)
-						t_index++;
+					while(t_index < p_length && type_table[(t_char = next_valid_char(p_text, t_index))] == ST_OP)
+						;
 					t_end = t_index;
 				break;
 
@@ -840,17 +869,17 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 				case ST_LB:
 				case ST_RB:
 				case ST_SEP:
-					t_index++;
+					t_char = next_valid_char(p_text, t_index);
 					t_class = COLOURIZE_CLASS_OPERATOR;
 					t_end = t_index;
 				break;
 
 				case ST_ESC:
-					t_index++;
+					t_char = next_valid_char(p_text, t_index);
 					p_callback(p_context, COLOURIZE_CLASS_CONTINUATION, 0, t_start, t_index);
 					t_start = t_index;
-					while(t_index < p_length && type_table[p_text[t_index]] == ST_SPC)
-						t_index++;
+					while(t_index < p_length && type_table[t_char] == ST_SPC)
+						t_char = next_valid_char(p_text, t_index);
 					if (t_start != t_index)
 						p_callback(p_context, COLOURIZE_CLASS_WHITESPACE, 0, t_start, t_index);
 
@@ -877,8 +906,8 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 					}
 					else
 					{
-						while(t_index < p_length && (type_table[p_text[t_index]] != ST_EOL))
-							t_index++;
+						while(t_index < p_length && (type_table[t_char] != ST_EOL))
+							t_char = next_valid_char(p_text, t_index);
 
 						t_end = t_index;
 					}
@@ -887,14 +916,14 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 					
 				case ST_SEMI:
 				case ST_EOL:
-					t_index++;
+					t_char = next_valid_char(p_text, t_index);
 					t_class = COLOURIZE_CLASS_SEPARATOR;
 					t_end = t_index;
 				break;
 
 				case ST_EOF:
 				case ST_ERR:
-					t_index++;
+					t_char = next_valid_char(p_text, t_index);
 					t_class = COLOURIZE_CLASS_ERROR;
 					t_end = t_index;
 				break;
@@ -910,20 +939,23 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 					t_hash = SCRIPT_KEYWORD_SALT;
 					t_klength = 0;
 					t_class = COLOURIZE_CLASS_KEYWORD;
-					while(t_index < p_length && (type_table[p_text[t_index]] == ST_ID || type_table[p_text[t_index]] == ST_NUM || type_table[p_text[t_index]] == ST_TAG))
+					while(t_index < p_length && (type_table[t_char] == ST_ID || type_table[t_char] == ST_NUM || type_table[t_char] == ST_TAG))
 					{
 						if (t_class == COLOURIZE_CLASS_KEYWORD)
 						{
 							if (t_klength == SCRIPT_KEYWORD_LARGEST)
 								t_class = COLOURIZE_CLASS_IDENTIFIER;
+							else if (t_char == REPLACEMENT_CHAR_UTF16)
+								t_class = COLOURIZE_CLASS_IDENTIFIER;
 							else
 							{
-								t_keyword[t_klength] = MCS_tolower(p_text[t_index]);
+								t_keyword[t_klength] = MCS_tolower(t_char);
 								t_hash = (t_hash ^ t_keyword[t_klength]) + ((t_hash << 26) + (t_hash >> 6));
 								t_klength++;
 							}
 						}
-						t_index++;
+						
+						t_char = next_valid_char(p_text, t_index);
 					}
 					t_end = t_index;
 					if (t_class == COLOURIZE_CLASS_KEYWORD)
@@ -942,12 +974,12 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 				break;
 
 				case ST_LIT:
-					t_index++;
-					while(t_index < p_length && type_table[p_text[t_index]] != ST_EOL && (type_table[p_text[t_index]] != ST_LIT))
-						t_index++;
-					if (t_index < p_length && type_table[p_text[t_index]] == ST_LIT)
+					t_char = next_valid_char(p_text, t_index);
+					while(t_index < p_length && type_table[t_char] != ST_EOL && (type_table[t_char] != ST_LIT))
+						t_char = next_valid_char(p_text, t_index);
+					if (t_index < p_length && type_table[t_char] == ST_LIT)
 					{
-						t_index++;
+						t_char = next_valid_char(p_text, t_index);
 						t_class = COLOURIZE_CLASS_STRING;
 					}
 					else
@@ -957,8 +989,8 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 
 				case ST_NUM:
 					t_class = COLOURIZE_CLASS_NUMBER;
-					while(t_index < p_length && type_table[p_text[t_index]] == ST_NUM)
-						t_index++;
+					while(t_index < p_length && type_table[(t_char = next_valid_char(p_text, t_index))] == ST_NUM)
+						;
 					t_end = t_index;
 				break;
 			}
@@ -1174,8 +1206,10 @@ Exec_stat MCIdeScriptReplace::exec(MCExecPoint& p_exec)
 		int32_t si, ei;
 		si = 0;
 		ei = INT32_MAX;
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ t_text.copyasstringref(&t_string);
 		t_target -> resolvechars(0, si, ei, t_start_index, t_end_index - t_start_index);
-		t_target -> settextindex(0, si, ei, t_text . getsvalue(), False);
+		t_target -> settextindex_stringref(0, si, ei, *t_string, False);
 		
 		TokenizeField(t_target, t_state, CT_CHARACTER, t_start, t_start + t_text . getsvalue() . getlength() - 1, colourize_paragraph);
 		
@@ -1515,7 +1549,9 @@ Exec_stat MCIdeScriptTokenize::exec(MCExecPoint& ep)
 		}
 
 		// We have our output, so now set the chunk back to it
-		t_stat = m_script -> set(ep, PT_INTO);
+        MCAutoStringRef t_string;
+        ep . copyasstringref(&t_string);
+		t_stat = m_script -> set(ep, PT_INTO, *t_string);
 	}
 
 	return t_stat;

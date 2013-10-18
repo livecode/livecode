@@ -81,7 +81,7 @@ bool MCModeShouldLoadStacksOnStartup(void);
 //
 // This hook is called by WinMain.
 //
-void MCModeGetStartupErrorMessage(const char*& r_caption, const char *& r_text);
+void MCModeGetStartupErrorMessage(MCStringRef& r_caption, MCStringRef& r_text);
 
 // This hook is used to determine if a given object can have its
 // script set.
@@ -116,7 +116,7 @@ bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string);
 //
 // This hook is called by send_relaunch (dispatch.cpp)
 //
-bool MCModeHandleRelaunch(const char *& r_id);
+bool MCModeHandleRelaunch(MCStringRef & r_id);
 
 // This hook is used to work out what stack to startup with.
 //

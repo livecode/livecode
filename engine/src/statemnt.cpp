@@ -352,7 +352,7 @@ void MCStatement::compile(MCSyntaxFactoryRef ctxt)
 
 #ifdef _MOBILE
 extern bool MCIsPlatformMessage(MCNameRef handler_name);
-extern Exec_stat MCHandlePlatformMessage(const MCString& p_message, MCParameter *p_parameters);
+extern Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters);
 #endif
 
 MCComref::MCComref(MCNameRef n)
@@ -427,21 +427,16 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 
 		resolved = true;
     }
-#ifdef _MOBILE
-    if (platform_message)
-    {
-        return MCHandlePlatformMessage(MCNameGetOldString(name), params);
-    }
-#endif
     
 	MCExecContext ctxt(ep);
 	Exec_stat stat;
 	MCParameter *tptr = params;
+
 	while (tptr != NULL)
 	{
 		MCVariable* t_var;
 		t_var = tptr -> evalvar(ep);
-
+        
 		if (t_var == NULL)
 		{
 			tptr -> clear_argument();
@@ -456,9 +451,9 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 		}
 		else
 			tptr->set_argument_var(t_var);
-
+        
 		tptr = tptr->getnext();
-
+        
 	}
 	MCObject *p = ep.getobj();
 	MCExecContext *oldctxt = MCECptr;
@@ -471,7 +466,14 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
-
+    
+#ifdef _MOBILE
+    if (platform_message)
+    {
+        stat = MCHandlePlatformMessage(name, params);
+    }
+#endif
+    
 	if (handler != nil)
 	{
         // MW-2008-10-28: [[ ParentScripts ]] If we are in the context of a

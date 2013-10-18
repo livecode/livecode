@@ -85,7 +85,7 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 		}
 		
 		if (p_parameters != nil)
-			t_success = p_parameters -> eval_argument(ep) == ES_NORMAL;
+			t_success = p_parameters -> eval(ep) == ES_NORMAL;
 		else if (t_now_optional)
 			break;
 		else
@@ -114,21 +114,19 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 			
             case 'x':
             {
-                MCStringRef t_string;
-                if (t_success && ep . copyasstringref(t_string))
-                    *(va_arg(t_args, MCStringRef *)) = t_string;
+				if (t_success)
+					ep . copyasstringref(*(va_arg(t_args, MCStringRef *)));
 				else
-					*(va_arg(t_args, MCStringRef *)) = nil;
+					t_success = false;
 				break;
             }
                 
 			case 'a':
             {
-                MCArrayRef t_array;
-				if (t_success && ep . copyasarray(t_array))
-                    *(va_arg(t_args, MCArrayRef *)) = t_array;
+				if (t_success)
+					ep . copyasarrayref(*(va_arg(t_args, MCArrayRef *)));
 				else
-					*(va_arg(t_args, MCArrayRef *)) = nil;
+					t_success = false;
 				break;
             }
 				
@@ -380,7 +378,7 @@ bool MCSystemListFontsForFamily(MCStringRef p_family, MCListRef& r_styles)
 	MCAutoListRef t_list;
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
-	for(NSString *t_font in [UIFont fontNamesForFamilyName: [NSString stringWithCString: MCStringGetCString(p_family) encoding: NSMacOSRomanStringEncoding]])
+	for(NSString *t_font in [UIFont fontNamesForFamilyName: [NSString stringWithMCStringRef: p_family]])
 		if (!MCListAppendCString(*t_list, [t_font cStringUsingEncoding: NSMacOSRomanStringEncoding]))
 			return false;
 

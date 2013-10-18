@@ -31,32 +31,32 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mblstore.h"
 
-static struct {const char *name; MCPurchaseProperty property;} s_purchase_properties[] = 
+static struct {const char *name; Properties property;} s_purchase_properties[] =
 {
-	{"productId", kMCPurchasePropertyProductIdentifier},
+	{"productId", P_PRODUCT_IDENTIFIER},
 	
-	{"quantity", kMCPurchasePropertyQuantity},
+	{"quantity", P_PURCHASE_QUANTITY},
 	
-	{"developerPayload", kMCPurchasePropertyDeveloperPayload},
+	{"developerPayload", P_DEVELOPER_PAYLOAD},
 	
-	{"title", kMCPurchasePropertyLocalizedTitle},
-	{"description", kMCPurchasePropertyLocalizedDescription},
-	{"price", kMCPurchasePropertyLocalizedPrice},
+	{"title", P_LOCALIZED_TITLE},
+	{"description", P_LOCALIZED_DESCRIPTION},
+	{"price", P_LOCALIZED_PRICE},
 	
-	{"purchaseDate", kMCPurchasePropertyPurchaseDate},
+	{"purchaseDate", P_PURCHASE_DATE},
 	
-	{"transactionIdentifier", kMCPurchasePropertyTransactionIdentifier},
-	{"receipt", kMCPurchasePropertyReceipt},
-	{"originalTransactionIdentifier", kMCPurchasePropertyOriginalTransactionIdentifier},
-	{"originalPurchaseDate", kMCPurchasePropertyOriginalPurchaseDate},
-	{"originalReceipt", kMCPurchasePropertyOriginalReceipt},
+	{"transactionIdentifier", P_TRANSACTION_IDENTIFIER},
+	{"receipt", P_RECEIPT},
+	{"originalTransactionIdentifier", P_ORIGINAL_TRANSACTION_IDENTIFIER},
+	{"originalPurchaseDate", P_ORIGINAL_PURCHASE_DATE},
+	{"originalReceipt", P_ORIGINAL_RECEIPT},
 
-	{"signedData", kMCPurchasePropertySignedData},
-	{"signature", kMCPurchasePropertySignature},
-    {"orderId", kMCPurchasePropertyTransactionIdentifier}, // alias for transactionIdentifier
-    {"purchaseTime", kMCPurchasePropertyPurchaseDate}, // alias for purchaseDate
+	{"signedData", P_SIGNED_DATA},
+	{"signature", P_SIGNATURE},
+    {"orderId", P_TRANSACTION_IDENTIFIER}, // alias for transactionIdentifier
+    {"purchaseTime", P_PURCHASE_DATE}, // alias for purchaseDate
 	
-	{nil, kMCPurchasePropertyUnknown},
+	{nil, P_UNDEFINED},
 };
 
 static struct {const char *name; MCPurchaseState state;} s_purchase_states[] = 
@@ -89,7 +89,7 @@ bool MCPurchaseFindById(uint32_t p_id, MCPurchase *&r_purchase)
 	return false;
 }
 
-bool MCPurchaseLookupProperty(MCStringRef p_property, MCPurchaseProperty &r_property)
+bool MCPurchaseLookupProperty(MCStringRef p_property, Properties &r_property)
 {
 	for (uint32_t i = 0; s_purchase_properties[i].name != nil; i++)
 	{
@@ -115,12 +115,15 @@ bool MCPurchaseStateToString(MCPurchaseState p_state, const char *&r_string)
 	return false;
 }
 
-bool MCPurchaseList(MCExecPoint& ep)
-{    
+bool MCPurchaseList(MCStringRef& r_string)
+{   
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
 	for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != NULL; t_purchase = t_purchase->next)
-        ep.concatuint(t_purchase -> id, EC_RETURN, ep.isempty());
+		MCListAppendInteger(*t_list, t_purchase -> id);
 	
-	return true;
+	return MCListCopyAsString(*t_list, r_string);	
 }
 
 bool MCPurchaseInit(MCPurchase *p_purchase, MCStringRef p_product_id, void *p_context);

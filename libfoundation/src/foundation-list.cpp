@@ -103,6 +103,28 @@ bool MCListCopyAsStringAndRelease(MCListRef self, MCStringRef& r_string)
 	return true;
 }
 
+bool MCListAppendFormat(MCListRef self, const char *p_format, ...)
+{
+	bool t_success;
+	t_success = true;
+
+	MCStringRef t_string;
+	t_string = nil;
+	
+	va_list t_args;
+	va_start(t_args, p_format);
+	t_success = MCStringFormatV(t_string, p_format, t_args);
+	va_end(t_args);
+	
+	if (t_success)
+		t_success = MCListAppend(self, t_string);
+	
+	if (t_string != nil)
+		MCValueRelease(t_string);
+	
+	return t_success;
+}
+
 bool MCListAppendNativeChars(MCListRef self, const char_t *p_chars, uindex_t p_char_count)
 {
 	bool t_first = self->buffer == nil;
@@ -114,6 +136,11 @@ bool MCListAppendNativeChars(MCListRef self, const char_t *p_chars, uindex_t p_c
 		return false;
 
 	return MCStringAppendNativeChars(self -> buffer, p_chars, p_char_count);
+}
+
+bool MCListAppendSubstring(MCListRef self, MCStringRef p_string, MCRange p_range)
+{
+	return MCListAppendFormat(self, "%*@", &p_range, p_string);
 }
 
 bool MCListIsEmpty(MCListRef self)
