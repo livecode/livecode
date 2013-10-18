@@ -25,6 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "securemode.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "util.h"
 #include "stack.h"
 
@@ -148,13 +149,15 @@ bool MCReferencedImageRep::GetDataStream(IO_handle &r_stream)
 		if (m_url_data == nil)
 		{
 			MCExecPoint ep(MCdefaultstackptr, nil, nil);
+			MCExecContext ctxt(ep);
+			MCAutoStringRef t_data;
 			ep.setvalueref(m_file_name);
-			MCU_geturl(ep);
-			if (ep.getsvalue().getlength() == 0)
+			MCU_geturl(ctxt, m_file_name, &t_data);
+			if (ctxt.HasError() || MCStringIsEmpty(*t_data))
 				return false;
 
-			/* UNCHECKED */ MCMemoryAllocateCopy(ep.getsvalue().getstring(), ep.getsvalue().getlength(), m_url_data);
-			m_url_data_size = ep.getsvalue().getlength();
+			/* UNCHECKED */ MCMemoryAllocateCopy(MCStringGetCString(*t_data), MCStringGetLength(*t_data), m_url_data);
+			m_url_data_size = MCStringGetLength(*t_data);
 		}
 
 		t_stream = MCS_fakeopen(MCString((const char *)m_url_data, m_url_data_size));

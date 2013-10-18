@@ -2277,32 +2277,25 @@ void MCU_get_color(MCExecPoint& ep, MCStringRef name, MCColor& c)
 void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output)
 {
 	MCAutoStringRef t_filename;
-	MCExecPoint ep = ctxt. GetEP();
 	if (MCStringGetLength(p_target) > 5 && MCStringBeginsWithCString(p_target, (const char_t*)"file:", kMCCompareCaseless))
 	{
 		MCStringCopySubstring(p_target, MCRangeMake(5, MCStringGetLength(p_target)-5), &t_filename);
-		if (!MCS_loadtextfile(*t_filename, r_output))
-            r_output = MCValueRetain(kMCEmptyString);
+		if (MCS_loadtextfile(*t_filename, r_output))
+			return;
 	}
 	else if (MCStringGetLength(p_target) > 8 && MCStringBeginsWithCString(p_target, (const char_t*)"binfile:", kMCCompareCaseless))
 	{
         MCAutoDataRef t_data;
 		MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);
-		if (!MCS_loadbinaryfile(*t_filename, &t_data))
-        {
-            r_output = MCValueRetain(kMCEmptyString);
-            return;
-        }
-        
-        MCExecPoint ep(nil, nil, nil);
-        ep . setvalueref(*t_data);
-        r_output = (MCStringRef) MCValueRetain(ep . getvalueref());
+		if (MCS_loadbinaryfile(*t_filename, &t_data))
+			if (ctxt.ConvertToString(*t_data, r_output))
+				return;
 	}
 	else if (MCStringGetLength(p_target) > 8 && MCStringBeginsWithCString(p_target, (const char_t*)"resfile:", kMCCompareCaseless))
 	{
 		MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);	
 		MCS_loadresfile(*t_filename, r_output);
-        /* UNCHECKED */ ep . copyasstringref(r_output);
+		return;
 	}
 	else
 	{
@@ -2311,10 +2304,13 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output
 		if (sptr != NULL && sptr[1] != ':' && MCU_strchr(sptr, l, ':'))
 		{
 			MCS_geturl(ctxt . GetObject(), p_target);
-			MCurlresult->eval(ep);
+			MCurlresult->copyasvalueref((MCValueRef&)r_output);
+			return;
 		}
-        /* UNCHECKED */ ep . copyasstringref(r_output);
 	}
+	
+	r_output = MCValueRetain(kMCEmptyString);
+	ctxt.Throw();
 }
 
 void MCU_geturl(MCExecPoint &ep)
