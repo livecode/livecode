@@ -370,9 +370,10 @@ Exec_stat MCObject::sendgetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef
 		MCObject *oldtargetptr = MCtargetptr;
 		MCtargetptr = this;
 		Boolean added = False;
+		MCExecContext ctxt(ep);
 		if (MCnexecutioncontexts < MAX_CONTEXTS)
 		{
-			MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+			MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 			added = True;
 		}
 		t_stat = MCU_dofrontscripts(HT_GETPROP, t_getprop_name, &p1);
@@ -1340,9 +1341,10 @@ Exec_stat MCObject::sendsetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef
 		MCObject *oldtargetptr = MCtargetptr;
 		MCtargetptr = this;
 		Boolean added = False;
+		MCExecContext ctxt(ep);
 		if (MCnexecutioncontexts < MAX_CONTEXTS)
 		{
-			MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+			MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 			added = True;
 		}
 

@@ -1552,7 +1552,7 @@ bool MCS_mac_FSSpec2path(FSSpec *fSpec, MCStringRef& r_path)
 	else
 		errno = FSRefMakePath(&ref, (unsigned char *)t_char_ptr, PATH_MAX);
 	uint4 destlen;
-	char *tutfpath = new char[PATH_MAX + 1];
+	char *tutfpath;
 	destlen = PATH_MAX;
 	MCS_utf8tonative(t_char_ptr, strlen(t_char_ptr), tutfpath, destlen);
 	tutfpath[destlen] = '\0';
@@ -5945,9 +5945,9 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             {
                 MCSystemFolderEntry t_entry;
                 
-                char t_native_name[256];
+                char* t_native_name;
                 uint4 t_native_length;
-                t_native_length = 256;
+                t_native_length = 0;
                 MCS_utf16tonative((const unsigned short *)t_names[t_i] . unicode, t_names[t_i] . length, t_native_name, t_native_length);
                 // MCS_utf16tonative return a non nul-terminated string
                 t_native_name[t_native_length] = '\0';

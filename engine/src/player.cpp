@@ -5334,28 +5334,28 @@ bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p
 			QTEffect *teffects = MCtemplateplayer->geteffects();
 			uint2 tsize = MCtemplateplayer->getneffects();
 			
-			MCString effectname(p_name);
+			MCAutoStringRef t_effectname;
+            /* UNCHECKED */ MCStringCreateWithCString(p_name, &t_effectname);
 			for (i = 0 ; i < tsize; i++)
 			{
-				if (effectname == teffects[i].token)
+				if (MCStringIsEqualToCString(*t_effectname, teffects[i].token, kMCCompareExact))
 				{
 					qteffect = teffects[i].type;
 					break;
 				}
 			}
-			if (!qteffect && effectname.getlength() == 4)
+			if (!qteffect && MCStringGetLength(*t_effectname) == 4)
 			{
 				memcpy(&qteffect, p_name, sizeof(OSType));
 				qteffect = EndianU32_NtoB(qteffect);
 			}
 			else
 			{
-				MCExecPoint ep;
-				ep.setsvalue(effectname);
-				MCU_base64decode(ep);
-				if (ep.getsvalue().getlength() > 8)
+				MCAutoDataRef t_data;
+                MCU_base64decode(*t_effectname, &t_data);
+                if (MCDataGetLength(*t_data) > 8)
 				{
-					const char *dataptr = ep.getsvalue().getstring();
+					const char *dataptr = (const char*)MCDataGetBytePtr(*t_data);
 					long *aLong = (long *)dataptr;
 					long datasize = EndianU32_BtoN(aLong[0]) - (sizeof(long)*2);
 					OSType ostype = EndianU32_BtoN(aLong[1]);
