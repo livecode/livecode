@@ -683,7 +683,7 @@ static bool MCDeploySignCopyFileAt(BIO *p_output, MCDeployFileRef p_input, uint3
 	bool t_success;
 	t_success = true;
 
-	if (!MCDeployFileSeek(p_input, p_offset, SEEK_SET))
+	if (!MCDeployFileSeekSet(p_input, p_offset))
 		return MCDeployThrow(kMCDeployErrorBadRead);
 
 	while(p_amount > 0)
@@ -796,14 +796,14 @@ static bool MCDeploySignWindowsAddOpusInfo(const MCDeploySignParameters& p_param
 	}
 
 	if (t_success && p_params . description != nil)
-		t_success = MCDeployBuildSpcString(p_params . description, false, t_opus -> description);
+		t_success = MCDeployBuildSpcString((const char *)MCStringGetNativeCharPtr(p_params . description), false, t_opus -> description);
 	
 	if (t_success && p_params . url != nil)
 	{
 		t_opus -> url = SpcLink_new();
 		if (t_opus -> url != nil)
 		{
-			if (ASN1_mbstring_copy(&t_opus -> url -> d . url, (const unsigned char *)p_params . url, strlen(p_params . url), MBSTRING_UTF8, B_ASN1_IA5STRING))
+			if (ASN1_mbstring_copy(&t_opus -> url -> d . url, MCStringGetNativeCharPtr(p_params.url), MCStringGetLength(p_params.url), MBSTRING_UTF8, B_ASN1_IA5STRING))
 				t_opus -> url -> type = 0;
 			else
 				t_success = MCDeployThrowOpenSSL(kMCDeployErrorBadString);
@@ -919,7 +919,7 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 			MCParameter t_data, t_url;
 			t_data . setvalueref_argument(*t_req_base64);
 			t_data . setnext(&t_url);
-			t_url . sets_argument(p_params . timestamper);
+			t_url . setvalueref_argument(p_params . timestamper);
             extern MCExecContext *MCECptr;
 			if (MCECptr->GetObject() -> message(MCM_post_url, &t_data, False, True) == ES_NORMAL &&
 				MCresult -> isempty())
@@ -1039,14 +1039,14 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 	// First open input and output executable files
 	MCDeployFileRef t_input;
 	t_input = nil;
-	if (t_success && !MCDeployFileOpen(p_params . input, "rb", t_input))
+	if (t_success && !MCDeployFileOpen(p_params . input, kMCSOpenFileModeRead, t_input))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 
 	BIO *t_output;
 	t_output = nil;
 	if (t_success)
 	{
-		t_output = BIO_new_file(p_params . output, "wb");
+		t_output = BIO_new_file(MCStringGetCString(p_params . output), "wb");
 		if (t_output == nil)
 			t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 	}
@@ -1058,11 +1058,17 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 	t_cert_chain = nil;
 	t_privatekey = nil;
 	if (t_success && p_params . certstore != nil)
-		t_success = MCDeployCertStoreLoad(p_params . passphrase, p_params . certstore, t_cert_chain, t_privatekey);
+		t_success = MCDeployCertStoreLoad((const char *)MCStringGetNativeCharPtr(p_params . passphrase),
+										  (const char *)MCStringGetNativeCharPtr(p_params . certstore),
+										  t_cert_chain, t_privatekey);
 	else if (t_success)
 		t_success =
-			MCDeployCertificateLoad(p_params . passphrase, p_params . certificate, t_cert_chain) &&
-			MCDeployPrivateKeyLoad(p_params . passphrase, p_params . privatekey, t_privatekey);
+			MCDeployCertificateLoad((const char *)MCStringGetNativeCharPtr(p_params . passphrase),
+									(const char *)MCStringGetNativeCharPtr(p_params . certificate),
+									t_cert_chain) &&
+			MCDeployPrivateKeyLoad((const char *)MCStringGetNativeCharPtr(p_params . passphrase),
+								   (const char *)MCStringGetNativeCharPtr(p_params . privatekey),
+								   t_privatekey);
 
 	// Next we check the input file, and compute the hash, writing out the new
 	// version of the executable as we go.
