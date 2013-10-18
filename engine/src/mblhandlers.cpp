@@ -1630,27 +1630,21 @@ Exec_stat MCHandleCanTrackHeading(void *p_context, MCParameter *p_parameters)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCContactParseParams(MCParameter *p_params, MCArrayRef &r_contact, char *&r_title, char *&r_message, char *&r_alternate_name)
+bool MCContactParseParams(MCParameter *p_params, MCArrayRef &r_contact, MCStringRef& r_title, MCStringRef& r_message, MCStringRef& r_alternate_name)
 {
 	bool t_success = true;
 	
-	char *t_title = nil;
-	char *t_message = nil;
-	char *t_alternate_name = nil;
+	MCAutoStringRef t_title;
+	MCAutoStringRef t_message;
+	MCAutoStringRef t_alternate_name;
 	
-	t_success = MCParseParameters(p_params, "a|sss", r_contact, &t_title, &t_message, &t_alternate_name);
+	t_success = MCParseParameters(p_params, "a|xxx", r_contact, &t_title, &t_message, &t_alternate_name);
 	
 	if (t_success)
 	{
-		r_title = t_title;
-		r_message = t_message;
-		r_alternate_name = t_alternate_name;
-	}
-	else
-	{
-		MCCStringFree(t_title);
-		MCCStringFree(t_message);
-		MCCStringFree(t_alternate_name);
+		r_title = MCValueRetain(*t_title);
+		r_message = MCValueRetain(*t_message);
+		r_alternate_name = MCValueRetain(*t_alternate_name);
 	}
 	
 	return t_success;

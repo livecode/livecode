@@ -200,7 +200,7 @@ bool MCCapsuleFillNoCopy(MCCapsuleRef self, const void *data, uint32_t data_leng
 // will open the file at this point, but not read any data until required. It
 // will close the file as soon as it is finished with it. It will start reading
 // data at the given offset and for the given number of bytes.
-bool MCCapsuleFillFromFile(MCCapsuleRef self, const char *path, uint32_t offset, bool finished);
+bool MCCapsuleFillFromFile(MCCapsuleRef self, MCStringRef path, uint32_t offset, bool finished);
 
 // The process method attempts to parse as many sections as it can, invoking the
 // callback for each one. Note that a section cannot be processed until the capsule
