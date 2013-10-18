@@ -179,6 +179,16 @@ static uint4 stdcmap[256] =
         0xFFFF00, 0x0000FF, 0xFF00FF, 0x00FFFF, 0xFFFFFF
     };
 
+KeySym MCKeySymToLower(KeySym p_key)
+{
+	if ((p_key & XK_Class_mask) == XK_Class_codepoint)
+		return MCS_tolower(p_key & XK_Codepoint_mask) | XK_Class_codepoint;
+	else if (p_key < 0x80)
+		return MCS_tolower(p_key);
+	else
+		return p_key;
+}
+
 MCMovingList::~MCMovingList()
 {
 	delete pts;

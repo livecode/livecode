@@ -1397,6 +1397,9 @@ unichar_t MCStringGetCharAtIndex(MCStringRef string, uindex_t index);
 // Returns the native char at the given index.
 char_t MCStringGetNativeCharAtIndex(MCStringRef string, uindex_t index);
 
+// Returns the Unicode codepoint (not UTF-16 char) at the given codepoint index
+codepoint_t MCStringGetCodepointAtIndex(MCStringRef string, uindex_t index);
+
 // Returns the sequence of chars making up the given range in 'chars' and returns
 // the number of chars generated. If 'chars' is nil, just the number of chars that
 // would be generated is returned.

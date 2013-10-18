@@ -174,8 +174,8 @@ void MCScreenDC::boundrect(MCRectangle &rect, Boolean title, Window_mode m)
 void MCScreenDC::expose()
 {
 	MSG msg;
-	while (PeekMessageA(&msg, NULL, WM_PAINT, WM_PAINT, PM_REMOVE))
-		DispatchMessageA(&msg);
+	while (PeekMessageW(&msg, NULL, WM_PAINT, WM_PAINT, PM_REMOVE))
+		DispatchMessageW(&msg);
 }
 
 Boolean MCScreenDC::abortkey()

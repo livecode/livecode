@@ -1698,24 +1698,25 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 	MCmodifierstate = p_modifiers;
 	MCdefaultstackptr->kfocus();
 	uint2 i;
-	char string[2];
-	string[1] = '\0';
+	MCStringRef t_string = nil;
 	real8 nexttime = MCS_time();
 
 	for (i = 0 ; i < MCStringGetLength(p_typing); i++)
 	{
-		KeySym keysym = (unsigned char) MCStringGetNativeCharAtIndex(p_typing, i);
+		KeySym keysym = MCStringGetCodepointAtIndex(p_typing, i);
 		if (keysym < 0x20 || keysym == 0xFF)
 		{
 			if (keysym == 0x0A)
 				keysym = 0x0D;
 			keysym |= 0xFF00;
-			string[0] = '\0';
+			t_string = kMCEmptyString;
 		}
+		else if (keysym > 0x7F)
+			keysym |= XK_Class_codepoint;
 		else
-			string[0] = MCStringGetNativeCharAtIndex(p_typing, i);
-		MCdefaultstackptr->kdown(string, keysym);
-		MCdefaultstackptr->kup(string, keysym);
+			t_string = p_typing;
+		MCdefaultstackptr->kdown(t_string, keysym);
+		MCdefaultstackptr->kup(t_string, keysym);
 		nexttime += (real8)MCtyperate / 1000.0;
 		real8 delay = nexttime - MCS_time();
 		if (MCscreen->wait(delay, False, False))

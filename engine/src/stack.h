@@ -199,8 +199,8 @@ public:
 	virtual Boolean kfocusnext(Boolean top);
 	virtual Boolean kfocusprev(Boolean bottom);
 	virtual void kunfocus();
-	virtual Boolean kdown(const char *string, KeySym key);
-	virtual Boolean kup(const char *string, KeySym key);
+	virtual Boolean kdown(MCStringRef p_string, KeySym key);
+	virtual Boolean kup(MCStringRef p_string, KeySym key);
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual void mfocustake(MCControl *target);
 	virtual void munfocus(void);
@@ -366,9 +366,9 @@ public:
     MCGroup *getbackgroundbyname(MCNameRef p_name);
 	void addneed(MCButton *bptr);
 	void removeneed(MCButton *bptr);
-	void addmnemonic(MCButton *button, uint1 key);
+	void addmnemonic(MCButton *button, KeySym p_key);
 	void deletemnemonic(MCButton *button);
-	MCButton *findmnemonic(char which);
+	MCButton *findmnemonic(KeySym p_key);
 	void installaccels(MCStack *stack);
 	void removeaccels(MCStack *stack);
 	void setwindowname();
@@ -424,7 +424,7 @@ public:
 	void createmenu(MCControl *nc, uint2 width, uint2 height);
 	void menuset(uint2 button, uint2 defy);
 	void menumup(uint2 which, MCStringRef &r_string, uint2 &selline);
-	void menukdown(const char *string, KeySym key, MCStringRef &r_string, uint2 &selline);
+	void menukdown(MCStringRef p_string, KeySym key, MCStringRef &r_string, uint2 &selline);
 	void findaccel(uint2 key, MCStringRef &r_pick, bool &r_disabled);
 	void raise();
 	void enter();
