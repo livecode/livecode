@@ -90,6 +90,94 @@ extern Boolean InitSSLCrypt(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
+{
+	MCStringRef t_temp_string;
+	MCArrayRef t_temp_array;
+	
+	if (!ctxt.CopyOptElementAsFilepath(p_array, MCNAME("engine_ppc"), false, t_temp_string))
+		return false;
+	MCValueAssign(engine_ppc, t_temp_string);
+	MCValueRelease(t_temp_string);
+	
+	if (!ctxt.CopyOptElementAsFilepath(p_array, MCNAME("engine_x86"), false, t_temp_string))
+		return false;
+	MCValueAssign(engine_x86, t_temp_string);
+	MCValueRelease(t_temp_string);
+	
+	if (MCStringIsEmpty(engine_ppc) && MCStringIsEmpty(engine_x86))
+	{
+		if (!ctxt.CopyElementAsFilepath(p_array, MCNAME("engine"), false, t_temp_string))
+			return false;
+		MCValueAssign(engine, t_temp_string);
+		MCValueRelease(t_temp_string);
+	}
+	
+	if (!ctxt.CopyElementAsFilepath(p_array, MCNAME("stackfile"), false, t_temp_string))
+		return false;
+	MCValueAssign(stackfile, t_temp_string);
+	MCValueRelease(t_temp_string);
+	
+	if (!ctxt.CopyElementAsFilepathArray(p_array, MCNAME("auxillary_stackfiles"), false, t_temp_array))
+		return false;
+	MCValueAssign(auxillary_stackfiles, t_temp_array);
+	MCValueRelease(t_temp_array);
+	
+	if (!ctxt.CopyElementAsArray(p_array, MCNAME("externals"), false, t_temp_array))
+		return false;
+	MCValueAssign(externals, t_temp_array);
+	MCValueRelease(t_temp_array);
+	
+	if (!ctxt.CopyOptElementAsString(p_array, MCNAME("startup_script"), false, startup_script))
+		return false;
+	MCValueAssign(startup_script, t_temp_string);
+	MCValueRelease(t_temp_string);
+	
+	if (!ctxt.CopyElementAsArray(p_array, MCNAME("redirects"), false, t_temp_array))
+		return false;
+	MCValueAssign(redirects, t_temp_array);
+	MCValueRelease(t_temp_array);
+	
+	if (!ctxt.CopyOptElementAsFilepath(p_array, MCNAME("appicon"), false, t_temp_string))
+		return false;
+	MCValueAssign(app_icon, t_temp_string);
+	MCValueRelease(t_temp_string);
+
+	if (!ctxt.CopyOptElementAsFilepath(p_array, MCNAME("docicon"), false, t_temp_string))
+		return false;
+	MCValueAssign(doc_icon, t_temp_string);
+	MCValueRelease(t_temp_string);
+	
+	if (!ctxt.CopyOptElementAsFilepath(p_array, MCNAME("manifest"), false, t_temp_string))
+		return false;
+	MCValueAssign(manifest, t_temp_string);
+	MCValueRelease(t_temp_string);
+	
+	if (!ctxt.CopyOptElementAsFilepath(p_array, MCNAME("payload"), false, t_temp_string))
+		return false;
+	MCValueAssign(payload, t_temp_string);
+	MCValueRelease(t_temp_string);
+	
+	if (!ctxt.CopyOptElementAsFilepath(p_array, MCNAME("spill"), false, t_temp_string))
+		return false;
+	MCValueAssign(spill, t_temp_string);
+	MCValueRelease(t_temp_string);
+	
+	if (!ctxt.CopyElementAsFilepath(p_array, MCNAME("output"), false, t_temp_string))
+		return false;
+	MCValueAssign(output, t_temp_string);
+	MCValueRelease(t_temp_string);
+	
+	if (!ctxt.CopyElementAsArray(p_array, MCNAME("version"), false, t_temp_array))
+		return false;
+	MCValueAssign(version_info, t_temp_array);
+	MCValueRelease(t_temp_array);
+	
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static bool MCDeployWriteDefinePrologueSection(const MCDeployParameters& p_params, MCDeployCapsuleRef p_capsule)
 {
 	MCCapsulePrologueSection t_prologue;
@@ -127,7 +215,7 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 	// Open the spill file, if required
 	MCDeployFileRef t_spill;
 	t_spill = NULL;
-	if (t_success && p_params . spill != nil && !MCDeployFileOpen(p_params . spill, kMCSOpenFileModeWrite, t_spill))
+	if (t_success && !MCStringIsEmpty(p_params . spill) && !MCDeployFileOpen(p_params . spill, kMCSOpenFileModeWrite, t_spill))
 		t_success = MCDeployThrow(kMCDeployErrorNoSpill);
 
 	// First create our deployment capsule
@@ -362,65 +450,7 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
 	MCExecContext ctxt(ep);
 
 	MCDeployParameters t_params;
-	
-	MCStringRef t_temp;
-	if (t_stat == ES_NORMAL)
-		if (!ctxt.CopyOptElementAsFilepath(*t_array, MCNAME("engine_ppc"), false, t_params.engine_ppc))
-			t_stat = ES_ERROR;
-	if (t_stat == ES_NORMAL)
-		if (!ctxt.CopyOptElementAsFilepath(*t_array, MCNAME("engine_x86"), false, t_params.engine_x86))
-			t_stat = ES_ERROR;
-	if (t_stat == ES_NORMAL && MCStringIsEmpty(t_params.engine_ppc) && MCStringIsEmpty(t_params.engine_x86))
-		if (!ctxt.CopyElementAsFilepath(*t_array, MCNAME("engine"), false, t_params.engine))
-			t_stat = ES_ERROR;
-	
-	if (t_stat == ES_NORMAL)
-		if (!ctxt.CopyElementAsFilepath(*t_array, MCNAME("stackfile"), false, t_params.stackfile))
-			t_stat = ES_ERROR;
-	if (t_stat == ES_NORMAL)
-		if (!ctxt.CopyElementAsFilepathArray(*t_array, MCNAME("auxillary_stackfiles"), false, t_params.auxillary_stackfiles))
-			t_stat = ES_ERROR;
-	if (t_stat == ES_NORMAL)
-		if (!ctxt.CopyElementAsArray(*t_array, MCNAME("externals"), false, t_params.externals))
-			t_stat = ES_ERROR;
-	
-	if (t_stat == ES_NORMAL)
-		if (!ctxt.CopyOptElementAsString(*t_array, MCNAME("startup_script"), false, t_params.startup_script))
-			t_stat = ES_ERROR;
-
-	if (t_stat == ES_NORMAL)
-		if (!ctxt.CopyElementAsArray(*t_array, MCNAME("redirects"), false, t_params.redirects))
-			t_stat = ES_ERROR;
-			
-	if (t_stat == ES_NORMAL)
-		if (!ctxt.CopyOptElementAsFilepath(*t_array, MCNAME("appicon"), false, t_params.app_icon))
-			t_stat = ES_ERROR;
-	if (t_stat == ES_NORMAL)
-		if (!ctxt.CopyOptElementAsFilepath(*t_array, MCNAME("docicon"), false, t_params.doc_icon))
-			t_stat = ES_ERROR;
-			
-	if (t_stat == ES_NORMAL)
-		if (!ctxt.CopyOptElementAsFilepath(*t_array, MCNAME("manifest"), false, t_params.manifest))
-			t_stat = ES_ERROR;
-
-	if (t_stat == ES_NORMAL)
-		if (!ctxt.CopyOptElementAsFilepath(*t_array, MCNAME("payload"), false, t_params.payload))
-			t_stat = ES_ERROR;
-			
-	if (t_stat == ES_NORMAL)
-		if (!ctxt.CopyOptElementAsFilepath(*t_array, MCNAME("spill"), false, t_params.spill))
-			t_stat = ES_ERROR;
-			
-	if (t_stat == ES_NORMAL)
-		if (!ctxt.CopyElementAsFilepath(*t_array, MCNAME("output"), false, t_params.output))
-			t_stat = ES_ERROR;
-			
-	if (t_stat == ES_NORMAL)
-	{
-		MCAutoArrayRef t_version;
-		if (!ctxt.CopyElementAsArray(*t_array, MCNAME("version"), false, &t_version))
-			t_params.version_info = MCValueRetain(*t_version);
-	}
+	t_params.InitWithArray(ctxt, *t_array);
 	
 	// If platform is iOS and we are not Mac then error
 #ifndef _MACOSX

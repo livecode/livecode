@@ -73,57 +73,45 @@ struct MCDeployParameters
 	
 	MCDeployParameters()
 	{
-		engine			= nil;
-		engine_x86		= nil;
-		engine_ppc		= nil;
-		version_info	= nil;
-		stackfile		= nil;
-		auxillary_stackfiles = nil;
-		externals		= nil;
-		startup_script	= nil;
+		engine			= MCValueRetain(kMCEmptyString);
+		engine_x86		= MCValueRetain(kMCEmptyString);
+		engine_ppc		= MCValueRetain(kMCEmptyString);
+		version_info	= MCValueRetain(kMCEmptyArray);
+		stackfile		= MCValueRetain(kMCEmptyString);
+		auxillary_stackfiles = MCValueRetain(kMCEmptyArray);
+		externals		= MCValueRetain(kMCEmptyArray);
+		startup_script	= MCValueRetain(kMCEmptyString);
 		timeout			= 0;
-		redirects		= nil;
-		app_icon		= nil;
-		doc_icon		= nil;
-		manifest		= nil;
-		payload			= nil;
-		spill			= nil;
-		output			= nil;
+		redirects		= MCValueRetain(kMCEmptyArray);
+		app_icon		= MCValueRetain(kMCEmptyString);
+		doc_icon		= MCValueRetain(kMCEmptyString);
+		manifest		= MCValueRetain(kMCEmptyString);
+		payload			= MCValueRetain(kMCEmptyString);
+		spill			= MCValueRetain(kMCEmptyString);
+		output			= MCValueRetain(kMCEmptyString);
 	}
 	
 	~MCDeployParameters()
 	{
-		if (engine != nil)
 			MCValueRelease(engine);
-		if (engine_x86 != nil)
 			MCValueRelease(engine_x86);
-		if (engine_ppc != nil)
 			MCValueRelease(engine_ppc);
-		if (version_info != nil)
 			MCValueRelease(version_info);
-		if (stackfile != nil)
 			MCValueRelease(stackfile);
-		if (auxillary_stackfiles != nil)
 			MCValueRelease(auxillary_stackfiles);
-		if (externals != nil)
 			MCValueRelease(externals);
-		if (startup_script != nil)
 			MCValueRelease(startup_script);
-		if (redirects != nil)
 			MCValueRelease(redirects);
-		if (app_icon != nil)
 			MCValueRelease(app_icon);
-		if (doc_icon != nil)
 			MCValueRelease(doc_icon);
-		if (manifest != nil)
 			MCValueRelease(manifest);
-		if (payload != nil)
 			MCValueRelease(payload);
-		if (spill != nil)
 			MCValueRelease(spill);
-		if (output != nil)
 			MCValueRelease(output);
 	}
+	
+	// Creates using an array of parameters
+	bool InitWithArray(MCExecContext &ctxt, MCArrayRef p_array);
 };
 
 Exec_stat MCDeployToWindows(const MCDeployParameters& p_params);
