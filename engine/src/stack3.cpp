@@ -1727,7 +1727,7 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 		return false;
 	if (editing != NULL)
 		stopedit();
-	
+
 	MCStack *olddefault = MCdefaultstackptr;
 	MCdefaultstackptr = this;
 	MCCard *cptr = curcard;
