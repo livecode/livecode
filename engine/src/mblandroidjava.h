@@ -74,6 +74,7 @@ bool MCJavaInitList(JNIEnv *env, jobject&);
 bool MCJavaFreeList(JNIEnv *env, jobject);
 bool MCJavaListAppendObject(JNIEnv *env, jobject, jobject);
 bool MCJavaListAppendString(JNIEnv *env, jobject p_list, const MCString *p_string);
+bool MCJavaListAppendStringRef(JNIEnv *env, jobject p_list, MCStringRef p_string);
 bool MCJavaListAppendInt(JNIEnv *env, jobject p_list, jint p_int);
 
 bool MCJavaInitMap(JNIEnv *env, jobject &r_map);

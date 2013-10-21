@@ -82,7 +82,7 @@ static const MCAndroidDroidFontMap s_droid_fonts[] = {
 ////////////////////////////////////////////////////////////////////////////////
 
 static void MCAndroidCustomFontsList(char *&r_font_names);
-static MCAndroidFontStyle MCAndroidCustomFontsGetStyle(const char *p_name);
+static MCAndroidFontStyle MCAndroidCustomFontsGetStyle(MCStringRef p_name);
 
 bool MCSystemListFontFamilies(MCListRef& r_names)
 {
@@ -118,7 +118,7 @@ bool MCSystemListFontsForFamily(MCStringRef p_family, MCListRef& r_styles)
     }
     
     if (t_styles == 0)
-        t_styles = MCAndroidCustomFontsGetStyle(MCStringGetCString(p_family));
+        t_styles = MCAndroidCustomFontsGetStyle(p_family);
     
     
 	MCAutoListRef t_list;
@@ -199,9 +199,9 @@ struct MCAndroidCustomFont {
 static MCAndroidCustomFont *s_custom_fonts = nil;
 static const char *s_font_folder = "fonts/";
 
-static MCAndroidCustomFont* look_up_custom_font_by_name(const char *p_name);
-static MCAndroidCustomFont* look_up_custom_font_by_family_and_style(const char *p_family, bool p_bold, bool p_italic);
-static MCAndroidCustomFont* look_up_custom_font(const char *p_name, bool p_bold, bool p_italic);
+static MCAndroidCustomFont* look_up_custom_font_by_name(MCStringRef p_name);
+static MCAndroidCustomFont* look_up_custom_font_by_family_and_style(MCStringRef p_family, bool p_bold, bool p_italic);
+static MCAndroidCustomFont* look_up_custom_font(MCStringRef p_name, bool p_bold, bool p_italic);
 static bool create_custom_font_from_path(const char *p_path, FT_Library p_library, MCAndroidCustomFont *&r_custom_font);
 static void delete_custom_font(MCAndroidCustomFont *p_font);
 
@@ -332,14 +332,14 @@ static void MCAndroidCustomFontsList(char *&r_font_names)
         /*UNCHECKED */ MCCStringFree(t_font_names);
 }
 
-static MCAndroidFontStyle MCAndroidCustomFontsGetStyle(const char *p_name)
+static MCAndroidFontStyle MCAndroidCustomFontsGetStyle(MCStringRef p_name)
 {
     MCAndroidFontStyle t_styles;
     t_styles = 0;
     
     for (MCAndroidCustomFont *t_font = s_custom_fonts; t_font != nil; t_font = t_font->next)
     {
-        if (MCCStringEqualCaseless(p_name, t_font->family))
+        if (MCStringIsEqualToCString(p_name, t_font->family, kMCCompareCaseless))
             t_styles |= t_font->style;
     }
     
@@ -356,23 +356,23 @@ static MCAndroidFontStyle MCAndroidCustomFontsGetStyle(const char *p_name)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCAndroidCustomFont* look_up_custom_font(const char *p_name, bool p_bold, bool p_italic)
+static MCAndroidCustomFont* look_up_custom_font(MCStringRef p_name, bool p_bold, bool p_italic)
 {
-    char *t_styled_name;
+    MCAutoStringRef t_styled_name;
     t_styled_name = nil;    
-    if (!MCCStringClone(p_name, t_styled_name))
+    if (!MCStringMutableCopy(p_name, &t_styled_name))
         return nil;    
-    if (p_bold && !MCCStringAppend(t_styled_name, " Bold"))
+    if (p_bold && !MCStringAppend(*t_styled_name, MCSTR(" Bold")))
         return nil;
-    if (p_italic && !MCCStringAppend(t_styled_name, " Italic"))
+    if (p_italic && !MCStringAppend(*t_styled_name, MCSTR(" Italic")))
         return nil;    
     
     // Fist of all, attempt to look the font up by taking into account its name and style.
     // e.g. textFont:Arial textStyle:Bold - look for a font named Arial Bold.
     // This will fail for textFonts which include style information e.g. textFont:Arial textStyle:Bold will search for Arial Bold Bold
     MCAndroidCustomFont *t_font;
-    t_font = look_up_custom_font_by_name(t_styled_name);
-    /*UNCHECKED */ MCCStringFree(t_styled_name);
+    t_font = look_up_custom_font_by_name(*t_styled_name);
+  
     if (t_font != nil)
         return t_font;
     
@@ -391,23 +391,23 @@ static MCAndroidCustomFont* look_up_custom_font(const char *p_name, bool p_bold,
     return t_font;
 }
 
-static MCAndroidCustomFont* look_up_custom_font_by_name(const char *p_name)
+static MCAndroidCustomFont* look_up_custom_font_by_name(MCStringRef p_name)
 {
     for (MCAndroidCustomFont *t_font = s_custom_fonts; t_font != nil; t_font = t_font->next)
     {
-        if (MCCStringEqualCaseless(p_name, t_font->name))
+        if (MCStringIsEqualToCString(p_name, t_font->name, kMCCompareCaseless))
             return t_font;
     }
     return nil;
 }
 
-static MCAndroidCustomFont* look_up_custom_font_by_family_and_style(const char *p_family, bool p_bold, bool p_italic)
+static MCAndroidCustomFont* look_up_custom_font_by_family_and_style(MCStringRef p_family, bool p_bold, bool p_italic)
 {
     MCAndroidCustomFont *t_closest_font;
     t_closest_font = nil;
     for (MCAndroidCustomFont *t_font = s_custom_fonts; t_font != nil; t_font = t_font->next)
     {
-        if (MCCStringEqualCaseless(p_family, t_font->family))
+        if (MCStringIsEqualToCString(p_family, t_font->family, kMCCompareCaseless))
         {
             if ((p_bold && p_italic && t_font->style == kMCAndroidFontStyleBoldItalic) || 
                 (p_bold && t_font->style == kMCAndroidFontStyleBold) || 
@@ -549,7 +549,7 @@ static bool create_custom_font_from_path(const char *p_path, FT_Library p_librar
     return t_success;
 }
 
-static bool create_skia_font_face_from_custom_font_name_and_style(const char *p_name, bool p_bold, bool p_italic, SkTypeface *&r_type_face)
+static bool create_skia_font_face_from_custom_font_name_and_style(MCStringRef p_name, bool p_bold, bool p_italic, SkTypeface *&r_type_face)
 {    
     bool t_success;
     t_success = true;
@@ -601,7 +601,7 @@ static bool create_skia_font_face_from_custom_font_name_and_style(const char *p_
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void *android_font_create(const char *name, uint32_t size, bool bold, bool italic)
+void *android_font_create(MCStringRef name, uint32_t size, bool bold, bool italic)
 {
 	MCAndroidFont *t_font = nil;
     
@@ -620,7 +620,7 @@ void *android_font_create(const char *name, uint32_t size, bool bold, bool itali
         
         // MM-2012-03-06: Check to see if we have a custom font of the given style and name available
         if (!create_skia_font_face_from_custom_font_name_and_style(name, bold, italic, t_font->sk_typeface))
-            t_font->sk_typeface = SkTypeface::CreateFromName(name, t_style);
+            t_font->sk_typeface = SkTypeface::CreateFromName(MCStringGetCString(name), t_style);
         
 		MCAssert(t_font->sk_typeface != NULL);
 		t_font->size = size;
