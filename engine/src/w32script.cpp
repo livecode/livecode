@@ -470,7 +470,7 @@ public:
 
 	bool Define(const char* p_function, MCScriptEnvironmentCallback p_callback);
 
-	char *Run(const char* p_script);
+	void Run(MCStringRef p_script, MCStringRef& r_out);
 	char *Call(const char* p_method, const char** p_arguments, unsigned int p_argument_count);
 
 private:
@@ -593,12 +593,15 @@ void MCWindowsActiveScriptEnvironment::Finalize(void)
 	m_dispatch = NULL;
 }
 
-char *MCWindowsActiveScriptEnvironment::Run(const char *p_script)
+void MCWindowsActiveScriptEnvironment::Run(MCStringRef p_script, MCStringRef& r_out)
 {
 	LPOLESTR t_ole_script;
-	t_ole_script = ConvertUTF8ToOLESTR(p_script);
+	char *temp;
+	/* UNCHECKED */ MCStringConvertToCString(p_script, temp);
+	t_ole_script = ConvertUTF8ToOLESTR(temp);
+	delete temp;
 	if (t_ole_script == NULL)
-		return false;
+		return;
 
 	EXCEPINFO t_exception = { 0 };
 
@@ -669,7 +672,8 @@ char *MCWindowsActiveScriptEnvironment::Run(const char *p_script)
 	if (t_ole_script != NULL)
 		delete t_ole_script;
 
-	return t_return_value;
+	/* UNCHECKED */ MCStringCreateWithCString(t_return_value, r_out);
+	return;
 }
 
 bool MCWindowsActiveScriptEnvironment::Define(const char* p_function, MCScriptEnvironmentCallback p_callback)

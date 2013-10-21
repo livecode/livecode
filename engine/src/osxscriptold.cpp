@@ -95,7 +95,7 @@ public:
 	
 	bool Define(const char *p_function, MCScriptEnvironmentCallback p_callback);
 	
-	char *Run(const char *p_script);
+	void Run(MCStringRef p_script, MCStringRef& r_out);
 	
 	char *Call(const char *p_method, const char **p_arguments, unsigned int p_argument_count);
 	
@@ -238,19 +238,21 @@ bool MCMacOSXOldJavaScriptEnvironment::Define(const char *p_name, MCScriptEnviro
 	return true;
 }
 
-char *MCMacOSXOldJavaScriptEnvironment::Run(const char *p_script)
+void MCMacOSXOldJavaScriptEnvironment::Run(MCStringRef p_script, MCStringRef& r_out)
 {
 	bool t_success;
 	t_success = true;
 	
 	CFStringRef t_cf_script;
 	t_cf_script = NULL;
-	if (t_success)
+    char *temp;
+	if (t_success && MCStringConvertToCString(p_script, temp))
 	{
-		t_cf_script = CFStringCreateWithCStringNoCopy(kCFAllocatorDefault, p_script, kCFStringEncodingMacRoman, kCFAllocatorNull);
+		t_cf_script = CFStringCreateWithCStringNoCopy(kCFAllocatorDefault, temp, kCFStringEncodingMacRoman, kCFAllocatorNull);
 		if (t_cf_script == NULL)
 			t_success = false;
 	}
+    delete temp;
 	
 	JSRunRef t_runtime;
 	t_runtime = NULL;
@@ -326,19 +328,18 @@ char *MCMacOSXOldJavaScriptEnvironment::Run(const char *p_script)
 			JSRelease(t_eval);
 	}
 	
-	char *t_result;
 	if (t_success)
 	{
 		m_runtime = t_runtime;
-		t_result = strdup("");
+		r_out = MCValueRetain(kMCEmptyString);
 	}
 	else
 	{
 		JSRelease(m_runtime);
-		t_result = NULL;
+		r_out = nil;
 	}
 	
-	return t_result;
+	return;
 }
 
 char *MCMacOSXOldJavaScriptEnvironment::Call(const char *p_method, const char **p_arguments, unsigned int p_argument_count)

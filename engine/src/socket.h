@@ -76,7 +76,7 @@ public:
 	uint4 size;
 	uint4 done;
 	Boolean writedone;
-	MCSocketwrite(const MCString &d, MCObject *o, MCNameRef m);
+	MCSocketwrite(MCStringRef d, MCObject *o, MCNameRef m);
 	~MCSocketwrite();
 	MCSocketwrite *next()
 	{
