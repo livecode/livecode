@@ -1084,6 +1084,7 @@ void MCBitmapEffectsComputeBounds(MCBitmapEffectsRef self, const MCRectangle& p_
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef OLD_GRAPHICS
 PACKED_INLINE uint8_t _scale_bounded(uint8_t a, uint8_t b)
 {
 	uint32_t u;
@@ -1447,3 +1448,4 @@ void MCBitmapEffectsRender(MCBitmapEffectsRef self, const MCRectangle& shape, MC
 	if ((self -> mask & kMCBitmapEffectTypeColorOverlayBit) != 0)
 		MCColorOverlayEffectRender(&self -> effects[kMCBitmapEffectTypeColorOverlay] . layer, shape, dst, src);
 }
+#endif
