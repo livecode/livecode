@@ -60,16 +60,16 @@ public:
 struct MCEffectArgument
 {
 	MCEffectArgument *next;
-	char *key;
-	char *value;
+	MCStringRef key;
+	MCStringRef value;
 };
 
 class MCEffectList
 {
 public:
 	MCEffectList *next;
-	char *name;
-	char *sound;
+	MCStringRef name;
+	MCStringRef sound;
 	MCEffectArgument *arguments;
 	
 	Visual_effects type;

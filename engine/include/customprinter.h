@@ -39,8 +39,8 @@ struct MCCustomPrinterDocument
 	const char *filename;
 
 	uint32_t option_count;
-	const char * const *option_keys;
-	const char * const *option_values;
+	MCStringRef const *option_keys;
+	MCStringRef const *option_values;
 };
 
 struct MCCustomPrinterPage
