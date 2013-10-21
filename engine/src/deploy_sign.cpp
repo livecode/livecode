@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "handler.h"
 #include "scriptpt.h"
 #include "variable.h"
@@ -682,7 +683,7 @@ static bool MCDeploySignCopyFileAt(BIO *p_output, MCDeployFileRef p_input, uint3
 	bool t_success;
 	t_success = true;
 
-	if (!MCDeployFileSeek(p_input, p_offset, SEEK_SET))
+	if (!MCDeployFileSeekSet(p_input, p_offset))
 		return MCDeployThrow(kMCDeployErrorBadRead);
 
 	while(p_amount > 0)
@@ -795,14 +796,14 @@ static bool MCDeploySignWindowsAddOpusInfo(const MCDeploySignParameters& p_param
 	}
 
 	if (t_success && p_params . description != nil)
-		t_success = MCDeployBuildSpcString(p_params . description, false, t_opus -> description);
+		t_success = MCDeployBuildSpcString((const char *)MCStringGetNativeCharPtr(p_params . description), false, t_opus -> description);
 	
 	if (t_success && p_params . url != nil)
 	{
 		t_opus -> url = SpcLink_new();
 		if (t_opus -> url != nil)
 		{
-			if (ASN1_mbstring_copy(&t_opus -> url -> d . url, (const unsigned char *)p_params . url, strlen(p_params . url), MBSTRING_UTF8, B_ASN1_IA5STRING))
+			if (ASN1_mbstring_copy(&t_opus -> url -> d . url, MCStringGetNativeCharPtr(p_params.url), MCStringGetLength(p_params.url), MBSTRING_UTF8, B_ASN1_IA5STRING))
 				t_opus -> url -> type = 0;
 			else
 				t_success = MCDeployThrowOpenSSL(kMCDeployErrorBadString);
@@ -893,15 +894,11 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 		t_success = i2d(i2d_SpcTimeStampRequest, t_request, t_request_data, t_request_length);
 
 	// Convert the request to base64
-	extern MCExecPoint *MCEPptr;
-	MCExecPoint ep(*MCEPptr);
-	if (t_success)
-	{
-		ep . setstaticbytes(t_request_data, t_request_length);
-		MCU_base64encode(ep);
-		ep . appendnewline();
-	}
-
+    MCAutoDataRef t_req_dataref;
+    MCAutoStringRef t_req_base64;
+    /* UNCHECKED */ MCDataCreateWithBytes(t_request_data, t_request_length, &t_req_dataref);
+    MCU_base64encode(*t_req_dataref, &t_req_base64);
+    
 	// Request the timestamp from the tsa
 	if (t_success)
 	{
@@ -920,10 +917,11 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 		while(t_retry_count > 0)
 		{
 			MCParameter t_data, t_url;
-			t_data . sets_argument(ep . getsvalue());
+			t_data . setvalueref_argument(*t_req_base64);
 			t_data . setnext(&t_url);
-			t_url . sets_argument(p_params . timestamper);
-			if (ep . getobj() -> message(MCM_post_url, &t_data, False, True) == ES_NORMAL &&
+			t_url . setvalueref_argument(p_params . timestamper);
+            extern MCExecContext *MCECptr;
+			if (MCECptr->GetObject() -> message(MCM_post_url, &t_data, False, True) == ES_NORMAL &&
 				MCresult -> isempty())
 			{
 				t_failed = false;
@@ -942,11 +940,19 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 	}
 
 	// Now convert the reply to binary.
-	if (t_success)
-	{
-		MCurlresult -> eval(ep);
-		MCU_base64decode(ep);
-	}
+    MCAutoValueRef t_result_value;
+    MCAutoStringRef t_result_base64;
+    MCAutoDataRef t_result_data;
+    extern MCExecContext *MCECptr;
+	
+    if (t_success)
+    {
+		MCurlresult -> copyasvalueref(&t_result_value);
+        t_success = MCECptr->ConvertToString(*t_result_value, &t_result_base64);
+    }
+    
+    if (t_success)
+        MCU_base64decode(*t_result_base64, &t_result_data);
 
 	// Decode the PKCS7 structure
 	PKCS7 *t_counter_sig;
@@ -955,13 +961,13 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 	{
 #if defined(TARGET_PLATFORM_LINUX) || defined(TARGET_PLATFORM_WINDOWS) || (__MAC_OS_X_VERSION_MAX_ALLOWED > 1050)
 		const unsigned char *t_data;
-		t_data = (const unsigned char *)ep . getsvalue() . getstring();
+		t_data = (const unsigned char *)MCDataGetBytePtr(*t_result_data);
 #else
 		unsigned char *t_data;
-		t_data = (unsigned char *)ep . getsvalue() . getstring();
+		t_data = (unsigned char *)MCDataGetBytePtr(*t_result_data);
 #endif
 		int t_length;
-		t_length = ep . getsvalue() . getlength();
+		t_length = MCDataGetLength(*t_result_data);
 		t_counter_sig = d2i_PKCS7(&t_counter_sig, &t_data, t_length);
 		if (t_counter_sig == nil)
 			t_success = MCDeployThrow(kMCDeployErrorBadTimestamp);
@@ -1033,14 +1039,14 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 	// First open input and output executable files
 	MCDeployFileRef t_input;
 	t_input = nil;
-	if (t_success && !MCDeployFileOpen(p_params . input, "rb", t_input))
+	if (t_success && !MCDeployFileOpen(p_params . input, kMCSOpenFileModeRead, t_input))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 
 	BIO *t_output;
 	t_output = nil;
 	if (t_success)
 	{
-		t_output = BIO_new_file(p_params . output, "wb");
+		t_output = BIO_new_file(MCStringGetCString(p_params . output), "wb");
 		if (t_output == nil)
 			t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 	}
@@ -1052,11 +1058,17 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 	t_cert_chain = nil;
 	t_privatekey = nil;
 	if (t_success && p_params . certstore != nil)
-		t_success = MCDeployCertStoreLoad(p_params . passphrase, p_params . certstore, t_cert_chain, t_privatekey);
+		t_success = MCDeployCertStoreLoad((const char *)MCStringGetNativeCharPtr(p_params . passphrase),
+										  (const char *)MCStringGetNativeCharPtr(p_params . certstore),
+										  t_cert_chain, t_privatekey);
 	else if (t_success)
 		t_success =
-			MCDeployCertificateLoad(p_params . passphrase, p_params . certificate, t_cert_chain) &&
-			MCDeployPrivateKeyLoad(p_params . passphrase, p_params . privatekey, t_privatekey);
+			MCDeployCertificateLoad((const char *)MCStringGetNativeCharPtr(p_params . passphrase),
+									(const char *)MCStringGetNativeCharPtr(p_params . certificate),
+									t_cert_chain) &&
+			MCDeployPrivateKeyLoad((const char *)MCStringGetNativeCharPtr(p_params . passphrase),
+								   (const char *)MCStringGetNativeCharPtr(p_params . privatekey),
+								   t_privatekey);
 
 	// Next we check the input file, and compute the hash, writing out the new
 	// version of the executable as we go.

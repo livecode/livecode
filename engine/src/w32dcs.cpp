@@ -1221,10 +1221,10 @@ MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window,
 		SetROP2(snaphdc, R2_NOT);
 		SelectObject(snaphdc, GetStockObject(HOLLOW_BRUSH));
 		MSG msg;
-		while (!snapdone && GetMessageA(&msg, NULL, 0, 0))
+		while (!snapdone && GetMessageW(&msg, NULL, 0, 0))
 		{
 			TranslateMessage(&msg);
-			DispatchMessageA(&msg);
+			DispatchMessageW(&msg);
 		}
 		r = snaprect;
 	}

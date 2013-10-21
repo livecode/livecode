@@ -41,8 +41,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 extern "C" UIView *LiveCodeGetView(void);
 
-extern MCExecPoint *MCEPptr;
-
 ////////////////////
 
 typedef uint8_t ObjcType;
