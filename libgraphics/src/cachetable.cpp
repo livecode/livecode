@@ -175,7 +175,7 @@ void MCGCacheTableSet(MCGCacheTableRef self, void *p_key, uint32_t p_key_length,
 		t_discard_bucket = rand() % self -> total_buckets;
 		while (self -> bytes_used >= self -> max_bytes)
 		{			
-			while (self -> pairs[t_discard_bucket] . key != NULL)
+			while (self -> pairs[t_discard_bucket] . key == NULL)
 			{
 				t_discard_bucket++;
 				if (t_discard_bucket >= self -> total_buckets)
@@ -192,7 +192,7 @@ void MCGCacheTableSet(MCGCacheTableRef self, void *p_key, uint32_t p_key_length,
 	{
 		uindex_t t_discard_bucket;
 		t_discard_bucket = rand() % self -> total_buckets;			
-		while (self -> pairs[t_discard_bucket] . key != NULL)
+		while (self -> pairs[t_discard_bucket] . key == NULL)
 		{
 			t_discard_bucket++;
 			if (t_discard_bucket >= self -> total_buckets)
