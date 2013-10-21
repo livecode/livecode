@@ -257,12 +257,12 @@ static void MCPrintingPrinterPageRangeParse(MCExecContext& ctxt, MCStringRef p_i
 
 				MCAutoStringRef t_substring_from;
 				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, t_dash - t_pos), &t_substring_from);
-				t_error =  !MCStringToInteger(*t_substring_from, t_from);
+				t_error = !ctxt . ConvertToInteger(*t_substring_from, t_from);
 				t_pos = t_dash + 1;
 
 				MCAutoStringRef t_substring_to;
 				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, t_comma - t_pos), &t_substring_to);
-				t_error = !MCStringToInteger(*t_substring_to, t_to);
+				t_error = !ctxt . ConvertToInteger(*t_substring_to, t_to);
 				t_pos = t_comma;
 			}
 			//case of no dash found before comma
@@ -270,7 +270,7 @@ static void MCPrintingPrinterPageRangeParse(MCExecContext& ctxt, MCStringRef p_i
 			{
 				MCAutoStringRef t_substring;
 				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, t_comma - t_pos), &t_substring);
-				t_error = !MCStringToInteger(*t_substring, t_from);
+				t_error = !ctxt . ConvertToInteger(*t_substring, t_from);
 				t_to = t_from;
 				t_pos = t_comma;
 			}
@@ -285,12 +285,12 @@ static void MCPrintingPrinterPageRangeParse(MCExecContext& ctxt, MCStringRef p_i
 
 				MCAutoStringRef t_substring_from;
 				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, t_dash - t_pos), &t_substring_from);
-				t_error =  !MCStringToInteger(*t_substring_from, t_from);
+				t_error =  !ctxt . ConvertToInteger(*t_substring_from, t_from);
 				t_pos = t_dash + 1;
 
 				MCAutoStringRef t_substring_to;
 				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, MCStringGetLength(p_input) - t_pos), &t_substring_to);
-				t_error = !MCStringToInteger(*t_substring_to, t_to);
+				t_error = !ctxt . ConvertToInteger(*t_substring_to, t_to);
 				t_pos = MCStringGetLength(p_input);
 			}
 			//case no dash after t_pos
@@ -298,7 +298,7 @@ static void MCPrintingPrinterPageRangeParse(MCExecContext& ctxt, MCStringRef p_i
 			{
 				MCAutoStringRef t_substring;
 				/* UNCHECKED */ MCStringCopySubstring(p_input, MCRangeMake(t_pos, MCStringGetLength(p_input) - t_pos), &t_substring);
-				t_error = !MCStringToInteger(*t_substring, t_from);
+				t_error = !ctxt . ConvertToInteger(*t_substring, t_from);
 				t_to = t_from;
 				t_pos = t_comma;
 			}
