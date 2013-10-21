@@ -48,7 +48,7 @@ public:
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
 
 	MCVideoClip *clone();
-	char *getfile();
+	bool getfile(MCStringRef& r_file);
 	real8 getscale()
 	{
 		return scale;
