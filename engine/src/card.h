@@ -115,7 +115,7 @@ public:
 	void clonedata(MCCard *source);
 	void replacedata(MCStack *source);
 	Exec_stat relayer(MCControl *optr, uint2 newlayer);
-	MCCard *findname(Chunk_term type, const MCString &);
+	MCCard *findname(Chunk_term type, MCNameRef);
 	MCCard *findid(Chunk_term type, uint4 inid, Boolean alt);
 	Boolean countme(uint4 groupid, Boolean marked);
 	Boolean count(Chunk_term otype, Chunk_term ptype, MCObject *stop,

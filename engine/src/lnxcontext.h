@@ -127,8 +127,8 @@ public:
 	
 	void drawpict(uint1 *data, uint4 length, bool embed, const MCRectangle& drect, const MCRectangle& crect);
 	void draweps(real8 sx, real8 sy, int2 angle, real8 xscale, real8 yscale, int2 tx, int2 ty,
-		const char *prolog, const char *psprolog, uint4 psprologlength, const char *ps, uint4 length,
-		const char *fontname, uint2 fontsize, uint2 fontstyle, MCFontStruct *font, const MCRectangle& trect);
+		MCStringRef prolog, MCStringRef psprolog, uint4 psprologlength, MCStringRef ps, uint4 length,
+		MCStringRef fontname, uint2 fontsize, uint2 fontstyle, MCFontStruct *font, const MCRectangle& trect);
 	void drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy);
 	
 	void drawlink(MCStringRef link, const MCRectangle& region);

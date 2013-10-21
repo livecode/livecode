@@ -426,8 +426,8 @@ void MCContextScaleWrapper::drawpict(uint1 *data, uint4 length, bool embed, cons
 }
 
 void MCContextScaleWrapper::draweps(real8 sx, real8 sy, int2 angle, real8 xscale, real8 yscale, int2 tx, int2 ty,
-							const char *prolog, const char *psprolog, uint4 psprologlength, const char *ps, uint4 length,
-							const char *fontname, uint2 fontsize, uint2 fontstyle, MCFontStruct *font, const MCRectangle& trect)
+							MCStringRef prolog, MCStringRef psprolog, uint4 psprologlength, MCStringRef ps, uint4 length,
+							MCStringRef fontname, uint2 fontsize, uint2 fontstyle, MCFontStruct *font, const MCRectangle& trect)
 {
 	m_context->draweps(sx, sy, angle, xscale, yscale, tx, ty, prolog, psprolog, psprologlength, ps, length,
 						 fontname, fontsize, fontstyle, font, trect);

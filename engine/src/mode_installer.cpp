@@ -1322,18 +1322,15 @@ IO_stat MCDispatch::startup(void)
 		//   0..2044 from project section
 		//   spill file
 		//   rest from project section
-		char *t_spill;
-		t_spill = (char *)malloc(strlen(openpath) + 5);
-		sprintf(t_spill, "%s.dat", openpath);
+		MCAutoStringRef t_spill;
+		/* UNCHECKED */ MCStringFormat(&t_spill, "%s.dat", openpath);
 		if (!MCCapsuleFillNoCopy(t_capsule, (const void *)&t_project_info -> data, 2044, false) ||
-			!MCCapsuleFillFromFile(t_capsule, t_spill, 0, false) ||
+			!MCCapsuleFillFromFile(t_capsule, *t_spill, 0, false) ||
 			!MCCapsuleFillNoCopy(t_capsule, (const uint8_t *)&t_project_info -> data + 2044, 2048, true))
 		{
-			free(t_spill);
 			MCCapsuleClose(t_capsule);
 			return IO_ERROR;
 		}
-		free(t_spill);
 	}
 
 	// Process the capsule

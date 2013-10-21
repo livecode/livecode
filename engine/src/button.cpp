@@ -2598,7 +2598,7 @@ MCControl *MCButton::findnum(Chunk_term type, uint2 &num)
 		return NULL;
 }
 
-MCControl *MCButton::findname(Chunk_term type, const MCString &inname)
+MCControl *MCButton::findname(Chunk_term type, MCNameRef inname)
 {
 	if ((type == gettype() || type == CT_LAYER
 	        || (type == CT_MENU && getstyleint(flags) == F_MENU
