@@ -929,7 +929,9 @@ static void configureSerialPort(int sRefNum)
 	cfsetispeed(&theTermios,  B9600);
 	theTermios.c_cflag = CS8;
     
-	char *controlptr = strclone(MCStringGetCString(MCserialcontrolsettings));
+    char *temp;
+    /* UNCHECKED */ MCStringConvertToCString(MCserialcontrolsettings, temp);
+	char *controlptr = strclone(temp);
 	char *str = controlptr;
 	char *each = NULL;
 	while ((each = strchr(str, ' ')) != NULL)
@@ -941,6 +943,7 @@ static void configureSerialPort(int sRefNum)
 		str = each;
 	}
 	delete controlptr;
+    delete temp;
 	//configure the serial output device
 	parseSerialControlStr(str,&theTermios);
 	if (tcsetattr(sRefNum, TCSANOW, &theTermios) < 0)
@@ -1008,6 +1011,14 @@ static TextToUnicodeInfo fetch_unicode_info(TextEncoding p_encoding)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+bool mcstring_to_four_char_code(MCStringRef p_string, uint32& r_four_char_code)
+{
+    char *temp;
+    /* UNCHECKED */ MCStringConvertToCString(p_string, temp);
+    memcpy(&r_four_char_code, temp, 4);
+    delete temp;
+}
+
 static void MCS_mac_setfiletype(MCStringRef p_new_path)
 {
 	FSRef t_fsref;
@@ -1019,14 +1030,15 @@ static void MCS_mac_setfiletype(MCStringRef p_new_path)
 	if (FSGetCatalogInfo(&t_fsref, kFSCatInfoFinderInfo, &t_catalog, NULL, NULL, NULL) == noErr)
 	{
 		// Set the creator and filetype of the catalog.
-        const char *t_char_ptr;
-        t_char_ptr = MCStringGetCString(MCfiletype);
+        char *t_char_ptr;
+        /* UNCHECKED */ MCStringConvertToCString(MCfiletype, t_char_ptr);
 		memcpy(&((FileInfo *) t_catalog . finderInfo) -> fileType, t_char_ptr + 4, 4);
 		memcpy(&((FileInfo *) t_catalog . finderInfo) -> fileCreator, t_char_ptr, 4);
 		((FileInfo *) t_catalog . finderInfo) -> fileType = MCSwapInt32NetworkToHost(((FileInfo *) t_catalog . finderInfo) -> fileType);
 		((FileInfo *) t_catalog . finderInfo) -> fileCreator = MCSwapInt32NetworkToHost(((FileInfo *) t_catalog . finderInfo) -> fileCreator);
         
 		FSSetCatalogInfo(&t_fsref, kFSCatInfoFinderInfo, &t_catalog);
+        delete t_char_ptr;
 	}
 }
 
@@ -1187,9 +1199,13 @@ static void handle_signal(int sig)
         case SIGILL:
         case SIGBUS:
         case SIGSEGV:
-            fprintf(stderr, "%s exiting on signal %d\n", MCStringGetCString(MCcmd), sig);
+        {
+            MCAutoStringRefAsUTF8String t_utf8_MCcmd;
+            /* UNCHECKED */ t_utf8_MCcmd.Lock(MCcmd);
+            fprintf(stderr, "%s exiting on signal %d\n", *t_utf8_MCcmd, sig);
             MCS_killall();
             return;
+        }
             
         case SIGHUP:
         case SIGINT:
@@ -1244,7 +1260,9 @@ bool MCS_mac_is_link(MCStringRef p_path)
 	return (lstat(MCStringGetCString(p_path), &buf) == 0 && S_ISLNK(buf.st_mode));
 #endif /* MCS_is_link_mac_dsk */
 	struct stat buf;
-	return (lstat(MCStringGetCString(p_path), &buf) == 0 && S_ISLNK(buf.st_mode));
+    MCAutoStringRefAsUTF8String t_utf8_path;
+    /* UNCHECKED */ t_utf8_path.Lock(p_path);
+	return (lstat(*t_utf8_path, &buf) == 0 && S_ISLNK(buf.st_mode));
 }
 
 bool MCS_mac_readlink(MCStringRef p_path, MCStringRef& r_link)
@@ -1265,12 +1283,13 @@ bool MCS_mac_readlink(MCStringRef p_path, MCStringRef& r_link)
 	struct stat t_stat;
 	ssize_t t_size;
 	MCAutoNativeCharArray t_buffer;
-    
-	if (lstat(MCStringGetCString(p_path), &t_stat) == -1 ||
+    MCAutoStringRefAsUTF8String t_utf8_path;
+    /* UNCHECKED */ t_utf8_path.Lock(p_path);
+	if (lstat(*t_utf8_path, &t_stat) == -1 ||
 		!t_buffer.New(t_stat.st_size))
 		return false;
     
-	t_size = readlink(MCStringGetCString(p_path), (char*)t_buffer.Chars(), t_stat.st_size);
+	t_size = readlink(*t_utf8_path, (char*)t_buffer.Chars(), t_stat.st_size);
     
 	return (t_size == t_stat.st_size) && t_buffer.CreateStringAndRelease(r_link);
 }
@@ -1546,7 +1565,11 @@ bool MCS_mac_FSSpec2path(FSSpec *fSpec, MCStringRef& r_path)
     
 	/* UNCHECKED */ MCS_pathfromnative(*t_filename_std, &t_filename);
     
-    t_char_ptr = strclone(MCStringGetCString(*t_filename));
+    char *temp;
+    /* UNCHECKED */ MCStringConvertToCString(*t_filename, temp);
+    
+    t_char_ptr = strclone(temp);
+    delete temp;
     
 	char oldchar = fSpec->name[0];
 	Boolean dontappendname = False;
@@ -1677,8 +1700,8 @@ static bool MCS_mac_openresourcefile_with_fsref(FSRef& p_ref, SInt8 p_permission
 		}
 		else
 		{
-            const char *t_char_ptr;
-            t_char_ptr = (char*)MCStringGetCString(MCfiletype);
+            char *t_char_ptr;
+            /* UNCHECKED */ MCStringConvertToCString(MCfiletype, t_char_ptr);
 			t_creator = MCSwapInt32NetworkToHost(*(OSType*)t_char_ptr);
 			t_ftype = MCSwapInt32NetworkToHost(*(OSType*)(t_char_ptr + 4));
 		}
@@ -1742,8 +1765,8 @@ static const char *MCS_mac_openresourcefile_with_fsref(FSRef *p_ref, SInt8 permi
 			}
 			else
 			{
-                const char *t_char_ptr;
-                t_char_ptr = (char*)MCStringGetCString(MCfiletype);
+                char *t_char_ptr;
+                /* UNCHECKED */ MCStringConvertToCString(MCfiletype, t_char_ptr);
 				memcpy((char*)&creator, t_char_ptr, 4);
 				memcpy((char*)&ftype, t_char_ptr + 4, 4);
 				creator = MCSwapInt32NetworkToHost(creator);
@@ -1814,11 +1837,14 @@ OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
         return memFullErr;
     
 	memset(fspec, 0, sizeof(FSSpec));
+    char *temp;
+    /* UNCHECKED */ MCStringConvertToCString(*t_resolved_path, temp);
     
-	char *f2 = strrchr(MCStringGetCString(*t_resolved_path), '/');
-	if (f2 != NULL && f2 != (const char*)MCStringGetCString(*t_resolved_path))
+	char *f2 = strrchr(temp, '/');
+	if (f2 != NULL && f2 != (const char*)temp)
 		*f2++ = '\0';
 	char *fspecname = strclone(f2);
+    delete temp;
     if (!t_utf_path.Lock(*t_resolved_path))
         return memFullErr;
     
@@ -2601,12 +2627,13 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         MCS_closeresourcefile(resFileRefNum);
 #endif /* MCS_setresource_dsk_mac */
         short newflags = 0; // parse up the attributes
-        if (MCStringGetLength(p_flags) != 0)
+        if (!MCStringIsEmpty(p_flags))
         {
-            const char *sptr = MCStringGetCString(p_flags);
+            uindex_t t_pos;
+            t_pos = 0;
             do
             {
-                switch (*sptr++)
+                switch (MCStringGetNativeCharAtIndex(p_flags, t_pos++))
                 {
                     case 'S':
                     case 's':
@@ -2634,20 +2661,19 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                         break;
                 }
             }
-            while (*sptr);
+            while (t_pos != MCStringGetLength(p_flags));
         }
         else
             newflags |= resChanged;
         
         ResType rtype;
-        memcpy((char *)&rtype, MCStringGetCString(p_type), 4);
+        mcstring_to_four_char_code(p_type, (uint32&)rtype);
         // MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
         rtype = (ResType)MCSwapInt32HostToNetwork(rtype);
         short rid = 0;
-        if (MCStringGetLength(p_id) != 0)
+        if (!MCStringIsEmpty(p_id))
         {
-            const char *eptr;
-            rid = (short)strtol(MCStringGetCString(p_id), (char **)&eptr, 10);
+            /* UNCHECKED */ MCStringToInt16(p_id, rid);
         }
         SInt16 resFileRefNum; //open resource fork for read and write permission
         if (!MCS_mac_openresourcefile_with_path(p_source, fsRdWrPerm, true, resFileRefNum, r_error))
@@ -2657,31 +2683,35 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         
         
         Handle rh = NULL;
+        char *temp;
+        /* UNCHECKED */ MCStringConvertToCString(p_name, temp);
+        
         if (rid != 0)
             rh = Get1Resource(rtype, rid);
         else
         {
-            char *whichres = strclone(MCStringGetCString(p_name));
+            char *whichres = strclone(temp);
             unsigned char *rname = c2pstr(whichres); //resource name in Pascal
             rh = Get1NamedResource(rtype, rname);
             delete whichres;
         }
         
         Str255 newname;
-        strcpy((char *)newname, MCStringGetCString(p_name));
+        strcpy((char *)newname, temp);
         c2pstr((char *)newname);
+        delete temp;
         if (rh != NULL)
         {
             SInt16 tid;
             ResType ttype;
             Str255 tname;
             GetResInfo(rh, &tid, &ttype, tname);
-            if (MCStringGetLength(p_name) == 0)
+            if (MCStringIsEmpty(p_name))
                 pStrcpy(newname, tname);
             else
-                if (MCStringGetLength(p_id) == 0)
+                if (MCStringIsEmpty(p_id))
                     rid = tid;
-            if (MCStringGetLength(p_flags) == 0)
+            if (MCStringIsEmpty(p_flags))
                 newflags = GetResAttrs(rh) | resChanged;
             SetResAttrs(rh, 0); // override protect flag
             RemoveResource(rh);
@@ -2699,7 +2729,11 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         }
         else
         {
-            memcpy(*rh, MCStringGetCString(p_value), len);
+            char *temp_value;
+            /* UNCHECKED */ MCStringConvertToCString(p_value, temp_value);
+
+            memcpy(*rh, temp_value, len);
+            delete temp_value;
             AddResource(rh, rtype, rid, newname);
             if ((errno = ResError()) != noErr)
             {
@@ -2782,13 +2816,16 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         }
         
         ResType rtype;
-        memcpy((char *)&rtype, MCStringGetCString(p_type), 4);
+        mcstring_to_four_char_code(p_type, (uint32&)rtype);
+        
         // MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
         rtype = (ResType)MCSwapInt32HostToNetwork(rtype);
         
+        char *temp_name;
+        /* UNCHECKED */ MCStringConvertToCString(p_name, temp_name);
         /* test to see if "name" is a resource name or an id */
-        char *whichres = strclone(MCStringGetCString(p_name));
-        const char *eptr = MCStringGetCString(p_name);
+        char *whichres = strclone(temp_name);
+        const char *eptr = temp_name;
         long rid = strtol(whichres, (char **)&eptr, 10);
         
         if (eptr == whichres)
@@ -2800,6 +2837,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         else //we got an resrouce id, the 'name' specifies an resource id
             rh = Get1Resource(rtype, rid);
         delete[] whichres;
+        delete temp_name;
         
         if (rh == NULL)
         {
