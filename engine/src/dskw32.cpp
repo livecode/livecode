@@ -4528,16 +4528,17 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 			MCAutoStringRefAsUTF8String t_utf8;
 			/* UNCHECKED */ t_utf8.Lock(p_script);
 			
-			char *t_result;
-			t_result = t_environment -> Run(*t_utf8);
+			MCAutoStringRef t_result;
+			MCAutoStringRef t_string;
+			/* UNCHECKED */ MCStringCreateWithCString(*t_utf8, &t_string);
+			t_environment -> Run(*t_string, &t_result);
 			t_environment -> Release();
 
-			if (t_result != NULL)
+			if (*t_result != nil)
 			{
-				MCExecPoint ep(nil, nil, nil);
-				ep . setsvalue(t_result);
-				ep . utf8tonative();
-				MCresult -> copysvalue(ep . getsvalue());
+				MCAutoStringRef t_native;
+				MCU_utf8tonative(*t_result, &t_native);
+				MCresult -> setvalueref(*t_native);
 			}
 			else
 				MCresult -> sets("execution error");
