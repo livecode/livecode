@@ -250,7 +250,7 @@ UIWindow *MCIPhoneGetWindow(void);
 struct export_image_t
 {
 	MCExportImageToAlbumDelegate *delegate;
-	MCStringRef raw_data;
+	MCDataRef raw_data;
 };
 
 static void export_image(void *p_context)
@@ -259,11 +259,7 @@ static void export_image(void *p_context)
 	ctxt = (export_image_t *)p_context;
 	
 	NSData *t_data;
-	char *temp;
-	/* UNCHECKED */ MCStringConvertToCString(ctxt -> raw_data, temp);
-	t_data = [[NSData alloc] initWithBytes: (void *)temp length: strlen(temp)];
-	delete temp;
-	
+	t_data = [[NSData alloc] initWithBytes: (void *)MCDataGetBytePtr(ctxt -> raw_data) length: MCDataGetLength(ctxt -> raw_data)];
 	UIImage *t_img;
 	t_img = [[UIImage alloc] initWithData: t_data];
 	UIImageWriteToSavedPhotosAlbum(t_img, ctxt -> delegate, @selector(image:didFinishSavingWithError:contextInfo:), nil);
@@ -344,7 +340,7 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCStringRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension)
 {
 	export_image_t ctxt;
-	MCStringCopy(p_raw_data, ctxt . raw_data);
+    MCStringEncode(p_raw_data, kMCStringEncodingNative, false, ctxt . raw_data);
 	ctxt . delegate = [[MCExportImageToAlbumDelegate alloc] init];
 
 	MCIPhoneRunOnMainFiber(export_image, &ctxt);
