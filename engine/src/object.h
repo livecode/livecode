@@ -279,8 +279,8 @@ public:
 	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
 	virtual IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
 
-	virtual IO_stat load(IO_handle stream, const char *version);
-	virtual IO_stat extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length);
+	virtual IO_stat load(IO_handle stream, MCStringRef version);
+	virtual IO_stat extendedload(MCObjectInputStream& p_stream, MCStringRef p_version, uint4 p_length);
 	
 	virtual void open();
 	virtual void close();
@@ -1040,7 +1040,7 @@ public:
 				
 protected:
 	IO_stat defaultextendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
-	IO_stat defaultextendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining);
+	IO_stat defaultextendedload(MCObjectInputStream& p_stream, MCStringRef p_version, uint4 p_remaining);
 
 	IO_stat loadpropsets(IO_handle stream);
 	IO_stat savepropsets(IO_handle stream);

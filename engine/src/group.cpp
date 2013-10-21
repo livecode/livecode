@@ -2940,7 +2940,7 @@ IO_stat MCGroup::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return defaultextendedsave(p_stream, p_part);
 }
 
-IO_stat MCGroup::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
+IO_stat MCGroup::extendedload(MCObjectInputStream& p_stream, MCStringRef p_version, uint4 p_remaining)
 {
 	return defaultextendedload(p_stream, p_version, p_remaining);
 }
@@ -3024,7 +3024,7 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return IO_NORMAL;
 }
 
-IO_stat MCGroup::load(IO_handle stream, const char *version)
+IO_stat MCGroup::load(IO_handle stream, MCStringRef version)
 {
 	IO_stat stat;
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
@@ -3225,7 +3225,7 @@ IO_stat MCGroup::load(IO_handle stream, const char *version)
 			}
 			break;
 		case OT_GROUPEND:
-			if (strncmp(version, "1.0", 3) == 0)
+			if (MCStringCompareTo(version, MCSTR("1.0"), kMCCompareCaseless) == 0)
 			{
 				computecrect();
 				if (rect.x == minrect.x && rect.y == minrect.y

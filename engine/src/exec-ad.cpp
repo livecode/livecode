@@ -173,7 +173,7 @@ void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_typ
     {
         uint32_t t_timeout;
         MCAdType t_type;
-        t_type = MCAdTypeFromCString(MCStringGetCString(p_type));
+        t_type = MCAdTypeFromStringRef(p_type);
         
         if (t_success)
         {

@@ -73,13 +73,13 @@ void MCAdFinalize(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCAdType MCAdTypeFromCString(const char *p_string)
+MCAdType MCAdTypeFromStringRef(MCStringRef p_string)
 {
-    if (MCCStringEqualCaseless(p_string, "banner"))
+    if (MCStringIsEqualTOCString(p_string, "banner", kMCCompareCaseless))
         return kMCAdTypeBanner;
-    else if (MCCStringEqualCaseless(p_string, "text"))
+    else if (MCStringIsEqualTOCString(p_string, "text", kMCCompareCaseless))
         return kMCAdTypeText;
-    else if (MCCStringEqualCaseless(p_string, "full screen"))
+    else if (MCStringIsEqualTOCString(p_string, "full screen", kMCCompareCaseless))
         return kMCAdTypeFullscreen;    
     return kMCAdTypeUnknown;
 }

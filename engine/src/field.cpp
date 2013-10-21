@@ -3021,7 +3021,7 @@ IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return defaultextendedsave(p_stream, p_part);
 }
 
-IO_stat MCField::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length)
+IO_stat MCField::extendedload(MCObjectInputStream& p_stream, MCStringRef p_version, uint4 p_length)
 {
 	return defaultextendedload(p_stream, p_version, p_length);
 }
@@ -3112,7 +3112,7 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return IO_NORMAL;
 }
 
-IO_stat MCField::load(IO_handle stream, const char *version)
+IO_stat MCField::load(IO_handle stream, MCStringRef version)
 {
 	IO_stat stat;
 
@@ -3138,7 +3138,7 @@ IO_stat MCField::load(IO_handle stream, const char *version)
 			if ((stat = IO_read_uint2(&tabs[i], stream)) != IO_NORMAL)
 				return stat;
 	}
-	if (strncmp(version, "2.0", 3) <= 0)
+	if (MCStringCompareTo(version, MCSTR("2.0"), kMCCompareCaseless) <= 0)
 	{
 		rect = MCU_reduce_rect(rect, MCfocuswidth);
 		if (flags & F_LIST_BEHAVIOR)

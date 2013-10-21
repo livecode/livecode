@@ -118,7 +118,7 @@ bool MCBlock::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_vi
 
 // MW-2012-03-04: [[ StackFile5500 ]] If 'is_ext' is true then the record is an extended
 //   record.
-IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
+IO_stat MCBlock::load(IO_handle stream, MCStringRef version, bool is_ext)
 {
 	IO_stat stat;
 
@@ -153,7 +153,7 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 	// MW-2012-02-17: [[ SplitTextAttrs ]] If the font flag is present, it means there
 	//   is a font record to read.
 	if (flags & F_FONT)
-		if (strncmp(version, "1.3", 3) > 0)
+		if (MCStringCompareTo(version, MCSTR("1.3"), kMCCompareCaseless) > 0)
 		{
 			uint2 t_font_index;
 			if ((stat = IO_read_uint2(&t_font_index, stream)) != IO_NORMAL)
@@ -209,7 +209,7 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 		atts->backcolor = new MCColor;
 		if ((stat = IO_read_mccolor(*atts->backcolor, stream)) != IO_NORMAL)
 			return stat;
-		if (strncmp(version, "2.0", 3) < 0 || flags & F_HAS_BACK_COLOR_NAME)
+		if (MCStringCompareTo(version, MCSTR("2.0"), kMCCompareCaseless) < 0 || flags & F_HAS_BACK_COLOR_NAME)
 		{
 			// MW-2012-01-06: [[ Block Changes ]] We no longer use the backcolor name
 			//   so load, delete and unset the flag.

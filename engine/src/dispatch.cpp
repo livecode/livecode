@@ -475,21 +475,24 @@ Boolean MCDispatch::openenv(MCStringRef sname, MCStringRef env,
 	return t_found;
 }
 
-IO_stat readheader(IO_handle& stream, char *version)
+IO_stat readheader(IO_handle& stream, MCStringRef& r_version)
 {
 	char tnewheader[NEWHEADERSIZE];
+	char *t_version;
+	t_version = new char[256];
+	
 	if (IO_read(tnewheader, NEWHEADERSIZE, stream) == IO_NORMAL)
 	{
 		// MW-2012-03-04: [[ StackFile5500 ]] Check for either the 2.7 or 5.5 header.
 		if (strncmp(tnewheader, newheader, NEWHEADERSIZE) == 0 ||
 			strncmp(tnewheader, newheader5500, NEWHEADERSIZE) == 0)
 		{
-			sprintf(version, "%c.%c.%c.%c", tnewheader[4], tnewheader[5], tnewheader[6], tnewheader[7]);
+			sprintf(t_version, "%c.%c.%c.%c", tnewheader[4], tnewheader[5], tnewheader[6], tnewheader[7]);
 			if (tnewheader[7] == '0')
 			{
-				version[5] = '\0';
+				t_version[5] = '\0';
 				if (tnewheader[6] == '0')
-					version[3] = '\0';
+					t_version[3] = '\0';
 			}
 		}
 		else
@@ -507,12 +510,16 @@ IO_stat readheader(IO_handle& stream, char *version)
 					return IO_ERROR;
 				}
 
-				strncpy(version, &theader[offset + VERSION_OFFSET], 3);
-				version[3] = '\0';
+				strncpy(t_version, &theader[offset + VERSION_OFFSET], 3);
+				t_version[3] = '\0';
 			}
 			else
 				return IO_ERROR;
+
 		}
+		/* UNCHECKED */ MCStringCreateWithCString(t_version, r_version);
+		delete[] t_version;
+
 	}
 	return IO_NORMAL;
 }
@@ -522,7 +529,7 @@ IO_stat readheader(IO_handle& stream, char *version)
 // for embedded stacks/deployed stacks/revlet stacks.
 IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 {
-	char version[8];
+	MCStringRef version;
 	uint1 charset, type;
 	char *newsf;
 	if (readheader(stream, version) != IO_NORMAL
@@ -603,11 +610,11 @@ IO_stat MCDispatch::readfile(MCStringRef p_openpath, MCStringRef p_name, IO_hand
 IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_handle &stream, MCStack *&sptr)
 {
 	Boolean loadhome = False;
-	char version[8];
+	MCStringRef version;
 
 	if (readheader(stream, version) == IO_NORMAL)
 	{
-		if (strcmp(version, MCNameGetCString(MCN_version_string)) > 0)
+		if (MCStringCompareTo(version, MCNameGetString(MCN_version_string), kMCCompareCaseless) > 0)
 		{
 			MCresult->sets("stack was produced by a newer version");
 			return IO_ERROR;
