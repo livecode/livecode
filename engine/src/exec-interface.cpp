@@ -456,7 +456,7 @@ void MCInterfaceMakeVisualEffectArgument(MCExecContext& ctxt, MCStringRef p_valu
 {
 	if (p_has_id)
 	{
-		if (!MCStringFormat(r_arg . value, "id %s", MCStringGetCString(p_key)))
+		if (!MCStringFormat(r_arg . value, "id %@", p_key))
 		{
 			ctxt . Throw();
 			return;
@@ -4227,11 +4227,11 @@ void MCInterfaceExecVisualEffect(MCExecContext& ctxt, MCInterfaceVisualEffect p_
 	effectptr -> direction = p_effect . direction;
 	effectptr -> speed = p_effect . speed;
 	effectptr -> image = p_effect . image;
-	effectptr -> name = strclone(MCStringGetCString(p_effect . name));
+	effectptr -> name = MCValueRetain(p_effect . name);
 	if (MCStringGetLength(p_effect . sound) == 0)
 		effectptr -> sound = NULL;
 	else
-		effectptr -> sound = strclone(MCStringGetCString(p_effect . sound));
+		effectptr -> sound = MCValueRetain(p_effect . sound);
 	
 	MCEffectArgument *t_arguments = nil;
 	for (uindex_t i = 0; i < p_effect . nargs; i++)
@@ -4240,8 +4240,8 @@ void MCInterfaceExecVisualEffect(MCExecContext& ctxt, MCInterfaceVisualEffect p_
 		MCEffectArgument *t_kv;
 		t_kv = new MCEffectArgument;
 		t_kv -> next = t_arguments;
-		t_kv -> key = strclone(MCStringGetCString(t_arg . key));
-		t_kv -> value = strclone(MCStringGetCString(t_arg . value));
+		t_kv -> key = MCValueRetain(t_arg . key);
+		t_kv -> value = MCValueRetain(t_arg . value);
 		t_arguments = t_kv;
 		t_arg = p_effect . arguments[i+1];
 	}

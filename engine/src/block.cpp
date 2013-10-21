@@ -2335,11 +2335,9 @@ uint32_t measure_nameref(MCNameRef p_name)
 
 static uint32_t measure_stringref(MCStringRef p_string)
 {
-	const char *t_cstring;
-	t_cstring = MCStringGetCString(p_string);
-	if (*t_cstring == '\0')
+	if (MCStringIsEmpty(p_string))
 		return 2;
-	return 2 + MCU_min(strlen(t_cstring) + 1, MAXUINT2);
+	return 2 + MCU_min(MCStringGetLength(p_string) + 1, MAXUINT2);
 }
 
 // MW-2012-03-04: [[ StackFile5500 ]] Compute the number of bytes the attributes will
