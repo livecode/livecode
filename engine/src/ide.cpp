@@ -1034,9 +1034,9 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 	if (p_type == CT_CHARACTER)
 	{
 		// MW-2012-02-23: [[ CharChunk ]] Convert the 1-based char indices to 1-based field indices.
-		int32_t si, ei;
+		findex_t si, ei;
 		si = 0;
-		ei = INT32_MAX;
+		ei = PARAGRAPH_MAX_LEN;
 		t_target -> resolvechars(0, si, ei, t_start - 1, t_end - t_start + 1);
 		t_start = si + 1;
 		t_end = ei;
@@ -1066,15 +1066,13 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 	{
 		// MW-2012-02-23: [[ FieldChars ]] Nativize the paragraph so tokenization
 		//   works.
-		char *t_text;
-		uint4 t_length;
-		uint4 t_min_nesting, t_nesting;
-		t_text = new char[t_paragraph -> gettextsize()];
-		t_length = 0;
-		t_paragraph -> nativizetext(true, t_text, t_length);
+		const char_t *t_text;
+		uindex_t t_length;
+		uint4 t_nesting, t_min_nesting;
+		t_text = MCStringGetNativeCharPtr(t_paragraph->GetInternalStringRef());
+		t_length = MCStringGetLength(t_paragraph->GetInternalStringRef());
 		t_paragraph -> clearzeros();
-		tokenize((const unsigned char *)t_text, t_length, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
-		delete t_text;
+		tokenize(t_text, t_length, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
 
 		t_old_nesting += t_state -> GetCommentDelta(t_line);
 		if (p_mutate)
@@ -1087,15 +1085,13 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 		{
 			// MW-2012-02-23: [[ FieldChars ]] Nativize the paragraph so tokenization
 			//   works.
-			char *t_text;
-			uint4 t_length;
-			uint4 t_min_nesting, t_nesting;
-			t_text = new char[t_paragraph -> gettextsize()];
-			t_length = 0;
-			t_paragraph -> nativizetext(true, t_text, t_length);
+			const char_t *t_text;
+			uindex_t t_length;
+			uint4 t_nesting, t_min_nesting;
+			t_text = MCStringGetNativeCharPtr(t_paragraph->GetInternalStringRef());
+			t_length = MCStringGetLength(t_paragraph->GetInternalStringRef());
 			t_paragraph -> clearzeros();
-			tokenize((const unsigned char *)t_text, t_length, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
-			delete t_text;
+			tokenize(t_text, t_length, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
 
 			t_old_nesting += t_state -> GetCommentDelta(t_line);
 			t_state -> SetCommentDelta(t_line, t_nesting - t_new_nesting);
@@ -1203,13 +1199,13 @@ Exec_stat MCIdeScriptReplace::exec(MCExecPoint& p_exec)
 		
 		// MW-2012-02-23: [[ FieldChars ]] Resolve the field indices from the chunk
 		//   and set the range of text.
-		int32_t si, ei;
+		findex_t si, ei;
 		si = 0;
 		ei = INT32_MAX;
 		MCAutoStringRef t_string;
 		/* UNCHECKED */ t_text.copyasstringref(&t_string);
 		t_target -> resolvechars(0, si, ei, t_start_index, t_end_index - t_start_index);
-		t_target -> settextindex_stringref(0, si, ei, *t_string, False);
+		t_target -> settextindex(0, si, ei, *t_string, False);
 		
 		TokenizeField(t_target, t_state, CT_CHARACTER, t_start, t_start + t_text . getsvalue() . getlength() - 1, colourize_paragraph);
 		
@@ -1336,7 +1332,7 @@ static MCExecPoint *s_strip_paragraph_ep;
 
 static void strip_paragraph(void *p_context, MCColourizeClass p_class, uint4 p_index, uint4 t_start, uint4 t_end)
 {
-	MCParagraph *t_paragraph;
+	/*MCParagraph *t_paragraph;
 	t_paragraph = (MCParagraph *)p_context;
 
 	bool t_first;
@@ -1352,9 +1348,9 @@ static void strip_paragraph(void *p_context, MCColourizeClass p_class, uint4 p_i
 	break;
 	
 	default:
-		s_strip_paragraph_ep -> concatchars(t_paragraph -> gettext() + t_start, t_end - t_start, EC_SPACE, t_first);
+		s_strip_paragraph_ep -> concatchars(t_paragraph -> gettext_raw() + t_start, t_end - t_start, EC_SPACE, t_first);
 	break;
-	}
+	}*/
 }
 
 Exec_stat MCIdeScriptStrip::exec(MCExecPoint& p_exec)

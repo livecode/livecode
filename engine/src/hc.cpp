@@ -678,7 +678,9 @@ MCCdata *MCHctext::buildf(MCHcstak *hcsptr, MCField *parent)
 		uint2 length = strlen(sptr);
 		MCParagraph *pgptr = new MCParagraph;
 		pgptr->setparent(parent);
-		pgptr->settext(strclone(sptr), length, false);
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)sptr, length, &t_string);
+		pgptr->settext(*t_string);
 		pgptr->appendto(paragraphs);
 		if (atts != NULL)
 		{

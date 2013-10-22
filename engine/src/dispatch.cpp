@@ -1830,7 +1830,7 @@ void MCDispatch::dodrop(bool p_source)
 	MCdropfield = NULL;
 	MCdropchar = 0;
 
-	int4 t_start_index, t_end_index;
+	findex_t t_start_index, t_end_index;
 	t_start_index = t_end_index = 0;
 	if (MCdragdest != NULL && MCdragdest -> gettype() == CT_FIELD)
 	{
@@ -1856,7 +1856,7 @@ void MCDispatch::dodrop(bool p_source)
 		MCField *t_field;
 		t_field = static_cast<MCField *>(MCdragsource);
 
-		int4 t_from_start_index, t_from_end_index;
+		findex_t t_from_start_index, t_from_end_index;
 		t_field -> selectedmark(False, t_from_start_index, t_from_end_index, False, False);
 
 		// We are dropping in the target selection - so just send the messages and do nothing
@@ -1913,7 +1913,7 @@ void MCDispatch::dodrop(bool p_source)
 		return;
 	}
 
-	int4 t_src_start, t_src_end;
+	findex_t t_src_start, t_src_end;
 	t_src_start = t_src_end = 0;
 	if (t_auto_source)
 		static_cast<MCField *>(MCdragsource) -> selectedmark(False, t_src_start, t_src_end, False, False);

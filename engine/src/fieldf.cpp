@@ -308,8 +308,8 @@ Field_translations MCField::lookup_mac_keybinding(KeySym p_key, uint32_t p_modif
 
 void MCField::resetparagraphs()
 {
-	int4 si = 0;
-	int4 ei = 0;
+	findex_t si = 0;
+	findex_t ei = 0;
 	MCExecPoint oldhilitedlines;
 	oldhilitedlines . clear();
 
@@ -571,7 +571,7 @@ void MCField::drawcursor(MCContext *p_context, const MCRectangle &dirty)
 	{
 		// MW-2012-01-27: [[ Bug 9511 ]] Make sure we don't render the win95-esque focus
 		//   border in native GTK mode.
-		if (focusedparagraph->gettextsize() && !IsMacLF() && !IsNativeGTK() && !getstate(CS_MENUFIELD))
+		if (!focusedparagraph->IsEmpty() && !IsMacLF() && !IsNativeGTK() && !getstate(CS_MENUFIELD))
 		{
 			if (MClook == LF_WIN95)
 			{
@@ -614,7 +614,7 @@ void MCField::replacecursor(Boolean force, Boolean goal)
 	MCRectangle drect;
 	if (composing && composelength)
 	{
-		int4 compsi, compei;
+		findex_t compsi, compei;
 		compsi = composeoffset + composecursorindex;
 		compei = composeoffset + composelength;
 		indextoparagraph(paragraphs,compsi,compei);
@@ -776,7 +776,7 @@ void MCField::dragtext()
 		pgheight = pgptr->getheight(fixedheight);
 	}
 	cy -= y;
-	uint2 ssi, sei;
+	findex_t ssi, sei;
 	pgptr->getclickindex(cx, cy, fixedheight, ssi, sei, False, False);
 
 	// MW-2012-01-25: [[ ParaStyles ]] Request the cursor rect without spacing.
@@ -809,7 +809,7 @@ void MCField::dragtext()
 
 void MCField::computedrag()
 {
-	int4 ti, si, ei;
+	findex_t ti, si, ei;
 	locmark(False, False, False, False, True, ti, ei);
 	selectedmark(False, si, ei, False, False);
 	uint2 c = ti >= si && ti < ei ? PI_ARROW : PI_IBEAM;
@@ -945,8 +945,8 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 
 		// Compute the find range.
 		MCParagraph *foundpgptr = NULL;
-		int4 fstart = 0;
-		int4 fend = 0;
+		findex_t fstart = 0;
+		findex_t fend = 0;
 		if (foundlength != 0)
 		{
 			fstart = foundoffset;
@@ -956,7 +956,7 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 
 		// Compute the composition range.
 		MCParagraph *comppgptr = NULL;
-		int4 compstart,compend;
+		findex_t compstart,compend;
 		compstart = compend = 0;
 		if (composelength)
 		{
@@ -1213,7 +1213,7 @@ void MCField::setfocus(int2 x, int2 y)
 	}
 	if (!(flags & F_LOCK_TEXT))
 	{
-		int4 si,ei;
+		findex_t si,ei;
 		selectedmark(False, si, ei, False, False);
 		if (composing)
 			if (!(si >= composeoffset && ei <= composeoffset + composelength))
@@ -1334,7 +1334,7 @@ void MCField::startselection(int2 x, int2 y, Boolean words)
 				        && (focusedparagraph->isselection()
 				            || firstparagraph != lastparagraph))
 				{
-					int4 ti, si, ei;
+					findex_t ti, si, ei;
 					if (locmark(False, False, False, True, True, ti, ei))
 					{
 						selectedmark(False, si, ei, False, False);
@@ -1428,7 +1428,7 @@ void MCField::endselection()
 
 		if (!(flags & F_LOCK_TEXT) && MCU_point_in_rect(rect, mx, my))
 		{
-			int4 ti, si, ei;
+			findex_t ti, si, ei;
 			locmark(False, False, False, False, True, ti, ei);
 			selectedmark(False, si, ei, False, False);
 			uint2 c = ti >= si && ti <= ei ? PI_ARROW : PI_IBEAM;
@@ -1451,13 +1451,13 @@ void MCField::unselect(Boolean clear, Boolean internal)
 	{
 		firstparagraph = lastparagraph = NULL;
 		if (focusedparagraph->next() == paragraphs && !(flags & F_LIST_BEHAVIOR))
-			focusedparagraph->setselectionindex(MAXUINT2, MAXUINT2, False, False);
+			focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 		return;
 	}
 	if (firstparagraph == NULL)
 	{
 		if (!(flags & F_LIST_BEHAVIOR))
-			focusedparagraph->setselectionindex(MAXUINT2, MAXUINT2, False, False);
+			focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 		return;
 	}
 	if (!(flags & F_LIST_BEHAVIOR))
@@ -1474,13 +1474,13 @@ void MCField::unselect(Boolean clear, Boolean internal)
 		drect.y += getcontenty() + focusedy;
 		focusedparagraph = firstparagraph;
 		focusedy = firsty;
-		focusedparagraph->setselectionindex(MAXUINT2, MAXUINT2, False, False);
+		focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 		updateparagraph(False, False);
 		while (focusedparagraph != lastparagraph)
 		{
 			focusedy += focusedparagraph->getheight(fixedheight);
 			focusedparagraph = focusedparagraph->next();
-			focusedparagraph->setselectionindex(MAXUINT2, MAXUINT2, False, False);
+			focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 			updateparagraph(False, False);
 		}
 		setfocus(drect.x, drect.y);
@@ -1510,7 +1510,7 @@ Boolean MCField::deleteselection(Boolean force)
 		// May require reflow
 		focusedparagraph->clearzeros();
 
-		int4 si, ei;
+		findex_t si, ei;
 		selectedmark(False, si, ei, False, False);
 		Ustruct *us = new Ustruct;
 		us->type = UT_DELETE_TEXT;
@@ -1551,8 +1551,8 @@ Boolean MCField::deleteselection(Boolean force)
 void MCField::centerfound()
 {
 	removecursor();
-	int4 fstart = foundoffset;
-	int4 fend = foundoffset + foundlength;
+	findex_t fstart = foundoffset;
+	findex_t fend = foundoffset + foundlength;
 	fstart = foundoffset;
 	MCParagraph *foundpgptr = indextoparagraph(paragraphs, fstart, fend);
 	fstart += (fend - fstart) >> 1;
@@ -1686,17 +1686,14 @@ void MCField::finsertnew(Field_translations function, MCStringRef p_string, KeyS
 	deletecomposition();
 	
 	// Compute the start and end point of the selection.
-	int4 si,ei;
+	findex_t si,ei;
 	selectedmark(False, si, ei, False, False);
 
 	// Defer to the paragraph method to insert the text.
-	if (!MCStringIsNative(p_string))
-		focusedparagraph -> finsertnew((const char*)MCStringGetCharPtr(p_string), true);
-	else
-		focusedparagraph -> finsertnew((const char*)MCStringGetNativeCharPtr(p_string), false);
+	focusedparagraph -> finsertnew(p_string);
 
 	// Compute the end of the selection.
-	int4 ti;
+	findex_t ti;
 	selectedmark(False, ei, ti, False, False);
 	if (composing)
 	{
@@ -1822,7 +1819,7 @@ void MCField::fdel(Field_translations function, MCStringRef p_string, KeySym key
 				updateparagraph(True, False);
 			}
 		}
-		int4 si, ei;
+		findex_t si, ei;
 		us->type = UT_DELETE_TEXT;
 		selectedmark(False, si, ei, False, False);
 		us->ud.text.index = si;
@@ -1955,7 +1952,7 @@ void MCField::freturn(Field_translations function, MCStringRef p_string, KeySym 
 			focusedparagraph->clearzeros();
 		textheight -= focusedparagraph->getheight(fixedheight);
 		focusedparagraph->split();
-		focusedparagraph->setselectionindex(MAXUINT2, MAXUINT2, False, False);
+		focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 		updateparagraph(True, False);
 		focusedy += focusedparagraph->getheight(fixedheight);
 		focusedparagraph = focusedparagraph->next();
@@ -2106,7 +2103,7 @@ void MCField::fmove(Field_translations function, MCStringRef p_string, KeySym ke
 	else if ((function == FT_LEFTCHAR || function == FT_RIGHTCHAR)
 				&& focusedparagraph->isselection())
 		{
-			int4 si, ei;
+			findex_t si, ei;
 			selectedmark(False, si, ei, False, False);
 			unselect(False, True);
 			if (function == FT_LEFTCHAR)
@@ -2285,14 +2282,16 @@ void MCField::typetext(const MCString &newtext)
 			message_with_args(MCM_key_up, string);
 		}
 	}
-	uint2 oldfocused;
+	findex_t oldfocused;
 	focusedparagraph->getselectionindex(oldfocused, oldfocused);
 	state |= CS_CHANGED;
-	if (newtext.getlength() && focusedparagraph->finsertnew(newtext, false))
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCStringCreateWithOldString(newtext, &t_string);
+	if (newtext.getlength() && focusedparagraph->finsertnew(*t_string))
 	{
 		recompute();
-		int4 endindex = oldfocused + newtext.getlength();
-		int4 junk;
+		findex_t endindex = oldfocused + newtext.getlength();
+		findex_t junk;
 		MCParagraph *newfocused = indextoparagraph(focusedparagraph, endindex, junk);
 		while (focusedparagraph != newfocused)
 		{
@@ -2316,14 +2315,14 @@ void MCField::startcomposition()
 	composelength = 0;
 }
 
-void MCField::setcompositioncursoroffset(uint2 coffset)
+void MCField::setcompositioncursoroffset(findex_t coffset)
 {
 	composecursorindex = coffset;
 }
 
 
 
-void MCField::setcompositionconvertingrange(uint1 si, uint1 ei)
+void MCField::setcompositionconvertingrange(findex_t si, findex_t ei)
 {
 	composeconvertingsi = si;
 	composeconvertingei = ei;
@@ -2356,7 +2355,7 @@ void MCField::deletecomposition()
 		return;
 	if (composelength)
 	{
-		int4 composesi, composeei;
+		findex_t composesi, composeei;
 		composesi = composeoffset;
 		composeei = composeoffset+composelength;
 		MCParagraph *pgptr = indextoparagraph(paragraphs, composesi, composeei);
@@ -2366,9 +2365,9 @@ void MCField::deletecomposition()
 	composelength = 0;
 }
 
-Boolean MCField::getcompositionrect(MCRectangle &r, int2 offset)
+Boolean MCField::getcompositionrect(MCRectangle &r, findex_t offset)
 {
-	int4 si,ei;
+	findex_t si,ei;
 	if (!composing)
 		return False;
 	MCParagraph *pgptr = NULL;

@@ -29,7 +29,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "execpt.h"
 #include "mcstring.h"
-#include "textbuffer.h"
 #include "uidc.h"
 #include "globals.h"
 #include "util.h"
@@ -93,7 +92,7 @@ typedef export_html_tag_t export_html_tag_list_t[kExportHtmlTag_Upper];
 
 struct export_html_t
 {
-	text_buffer_t buffer;
+	MCStringRef m_text;
 	
 	bool effective;
 	
@@ -253,38 +252,24 @@ static void export_html_emit_char(char *p_output, uint32_t p_char, export_html_e
 		sprintf(p_output, "&#%d;", p_char);
 }
 
-static void export_html_emit_unicode_text(text_buffer_t& buffer, const uint16_t *p_chars, uint32_t p_char_count, export_html_escape_type_t p_escape)
+static void export_html_emit_unicode_text(MCStringRef p_buffer, MCStringRef p_input, MCRange p_range, export_html_escape_type_t p_escape)
 {
-	for(uint32_t i = 0; i < p_char_count; i++)
+	for(uint32_t i = 0; i < p_range.length; i++)
 	{
 		char t_output[16];
-		export_html_emit_char(t_output, p_chars[i], p_escape);
-		buffer . appendcstring(t_output);
+		export_html_emit_char(t_output, MCStringGetCodepointAtIndex(p_input, p_range.offset+i), p_escape);
+		/* UNCHECKED */ MCStringAppendFormat(p_buffer, "%s", t_output);
 	}
 }
 
-static void export_html_emit_text(text_buffer_t& buffer, const void *p_bytes, uint32_t p_byte_count, bool p_is_unicode, export_html_escape_type_t p_escape)
+static void export_html_emit_text(MCStringRef p_buffer, MCStringRef p_input, MCRange p_range, export_html_escape_type_t p_escape)
 {
-	if (p_is_unicode)
-		export_html_emit_unicode_text(buffer, (const uint16_t *)p_bytes, p_byte_count / 2, p_escape);
-	else
-	{
-		uint16_t *t_chars;
-		uint32_t t_char_count;
-		t_chars = new uint16_t[p_byte_count * 2];
-		t_char_count = p_byte_count;
-        MCU_multibytetounicode((const char *)p_bytes, p_byte_count, (char *)t_chars, t_char_count * 2, t_char_count, LCH_ROMAN);
-		t_char_count /= 2;
-		
-		export_html_emit_unicode_text(buffer, t_chars, t_char_count, p_escape);
-
-		delete t_chars;
-	}
+	export_html_emit_unicode_text(p_buffer, p_input, p_range, p_escape);
 }
 
-static void export_html_emit_cstring(text_buffer_t& buffer, const char *p_cstring, export_html_escape_type_t p_escape)
+static void export_html_emit_cstring(MCStringRef buffer, MCStringRef p_cstring, export_html_escape_type_t p_escape)
 {
-	export_html_emit_text(buffer, p_cstring, strlen(p_cstring), false, p_escape);
+	export_html_emit_text(buffer, p_cstring, MCRangeMake(0, MCStringGetLength(p_cstring)), p_escape);
 }
 
 static bool export_html_tag_equal(const export_html_tag_t& left, const export_html_tag_t& right)
@@ -376,19 +361,19 @@ static void export_html_add_tag(export_html_t& ctxt, export_html_tag_type_t p_ta
 	{
 	case kExportHtmlTagSuperscript:
 	case kExportHtmlTagSubscript:
-		ctxt . buffer . appendtextf("<%s shift=\"%d\">", s_export_html_tag_strings[p_tag], p_value . shift);
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<%s shift=\"%d\">", s_export_html_tag_strings[p_tag], p_value.shift);
 		break;
 	case kExportHtmlTagFont:
-		ctxt . buffer . appendcstring("<font");
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<font");
 		if (p_value . font . name != nil)
-			ctxt . buffer . appendtextf(" face=\"%s\"", MCNameGetCString(p_value . font . name));
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " face=\"%@\"", p_value.font.name);
 		if (p_value . font . size != 0)
-			ctxt . buffer . appendtextf(" size=\"%d\"", p_value . font . size);
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " size=\"%d\"", p_value.font.size);
 		if (p_value . font . has_color)
-			ctxt . buffer . appendtextf(" color=\"#%06X\"", p_value . font . color);
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " color=\"#%06X\"", p_value.font.color);
 		if (p_value . font . has_bg_color)
-			ctxt . buffer . appendtextf(" bgcolor=\"#%06X\"", p_value . font . bg_color);
-		ctxt . buffer . appendcstring(">");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " bgcolor=\"#%06X\"", p_value.font.bg_color);
+		/* UNCHECKED */ MCStringAppendChar(ctxt.m_text, '>');
 		break;
 	case kExportHtmlTagItalic:
 	case kExportHtmlTagBold:
@@ -398,27 +383,28 @@ static void export_html_add_tag(export_html_t& ctxt, export_html_tag_type_t p_ta
 	case kExportHtmlTagExpanded:
 	case kExportHtmlTagThreeDBox:
 	case kExportHtmlTagBox:
-		ctxt . buffer . appendtextf("<%s>", s_export_html_tag_strings[p_tag]);
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<%s>", s_export_html_tag_strings[p_tag]);
 		break;
 	case kExportHtmlTagLink:
 		{
 			// MW-2012-03-16: [[ Bug ]] If the linkText is nil, then just output a <a> tag.
 			if (p_value . link . target != nil)
 			{
-				ctxt . buffer . appendtextf("<a %s=\"", p_value . link . is_href ? "href" : "name");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<a %s=\"", p_value.link.is_href ? "href" : "name");
+
 				// MW-2012-09-19: [[ Bug 10228 ]] Make sure we generate the string in quote context.
-				export_html_emit_cstring(ctxt . buffer, MCStringGetCString(p_value . link . target), kExportHtmlEscapeTypeAttribute);
-				ctxt . buffer . appendcstring("\">");
+				export_html_emit_cstring(ctxt.m_text, p_value.link.target, kExportHtmlEscapeTypeAttribute);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\">");
 			}
 			else
-				ctxt . buffer . appendcstring("<a>");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<a>");
 		}
 		break;
 	case kExportHtmlTagSpan:
-		ctxt . buffer . appendcstring("<span metadata=\"");
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<span metadata=\"");
 		// MW-2012-09-19: [[ Bug 10228 ]] Make sure we generate the string in quote context.
-		export_html_emit_cstring(ctxt . buffer, MCStringGetCString(p_value . metadata), kExportHtmlEscapeTypeAttribute);
-		ctxt . buffer . appendcstring("\">");
+		export_html_emit_cstring(ctxt.m_text, p_value.metadata, kExportHtmlEscapeTypeAttribute);
+		MCStringAppendFormat(ctxt.m_text, "\">");
 		break;
 	default:
 		break;
@@ -434,7 +420,7 @@ static void export_html_remove_tag(export_html_t& ctxt, export_html_tag_type_t p
 	{
 		ctxt . tag_depth -= 1;
 		memset(&ctxt . tags[ctxt . tag_stack[ctxt . tag_depth]], 0, sizeof(export_html_tag_t));
-		ctxt . buffer . appendtextf("</%s>", s_export_html_tag_strings[ctxt . tag_stack[ctxt . tag_depth]]);
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "</%s>", s_export_html_tag_strings[ctxt.tag_stack[ctxt.tag_depth]]);
 		
 		if (ctxt . tag_stack[ctxt . tag_depth] == p_tag &&
 			(!p_all_above || ctxt . tag_stack[ctxt . tag_depth] > p_tag))
@@ -448,7 +434,7 @@ static void export_html_remove_all_tags(export_html_t& ctxt, bool p_keep_link)
 	{
 		ctxt .  tag_depth -= 1;
 		memset(&ctxt . tags[ctxt . tag_stack[ctxt . tag_depth]], 0, sizeof(export_html_tag_t));
-		ctxt . buffer . appendtextf("</%s>", s_export_html_tag_strings[ctxt . tag_stack[ctxt . tag_depth]]);
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "</%s>", s_export_html_tag_strings[ctxt.tag_stack[ctxt.tag_depth]]);
 		
 		if (ctxt . tag_stack[ctxt . tag_depth] == kExportHtmlTagLink && p_keep_link)
 			break;
@@ -458,12 +444,12 @@ static void export_html_remove_all_tags(export_html_t& ctxt, bool p_keep_link)
 static void export_html_end_lists(export_html_t& ctxt, uint32_t p_new_style, uint32_t p_new_depth)
 {
 	if (ctxt . list_depth > 0 && !(p_new_depth == ctxt . list_depth && p_new_style == kMCParagraphListStyleSkip))
-		ctxt . buffer . appendcstring("</li>\n");
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "</li>\n");
 	
 	while(p_new_depth < ctxt . list_depth)
 	{
 		ctxt . list_depth -= 1;
-		ctxt . buffer . appendcstring(ctxt . list_styles[ctxt . list_depth] < kMCParagraphListStyleNumeric ? "</ul>" : "</ol>");
+		MCStringAppendFormat(ctxt.m_text, ctxt.list_styles[ctxt.list_depth] < kMCParagraphListStyleNumeric ? "</ul>" : "</ol>");
 	}
 }
 
@@ -475,22 +461,22 @@ static void export_html_begin_lists(export_html_t& ctxt, uint32_t p_new_style, u
 	if (ctxt . list_depth == p_new_depth && p_new_style != kMCParagraphListStyleSkip && ctxt . list_styles[ctxt . list_depth - 1] != p_new_style)
 	{
 		ctxt . list_depth -= 1;
-		ctxt . buffer . appendcstring(ctxt . list_styles[ctxt . list_depth] < kMCParagraphListStyleNumeric ? "</ul>" : "</ol>");
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, ctxt.list_styles[ctxt.list_depth] < kMCParagraphListStyleNumeric ? "</ul>" : "</ol>");
 	}
 	
 	while(p_new_depth > ctxt . list_depth)
 	{
 		ctxt . list_styles[ctxt . list_depth] = p_new_style;
-		ctxt . buffer . appendtextf(ctxt . list_styles[ctxt . list_depth] < kMCParagraphListStyleNumeric ? "<ul type=\"%s\">\n" : "<ol type=\"%s\">\n", s_export_html_list_types[p_new_style]);
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, ctxt.list_styles[ctxt.list_depth] < kMCParagraphListStyleNumeric ? "<ul type=\"%s\">\n" : "<ol type=\"%s\">\n", s_export_html_list_types[p_new_style]);
 		ctxt . list_depth += 1;
 	}
 	
 	if (ctxt . list_depth != p_new_depth || p_new_style != kMCParagraphListStyleSkip)
 	{
 		if (p_index == 0)
-			ctxt . buffer . appendcstring("<li>\n");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<li>\n");
 		else
-			ctxt . buffer . appendtextf("<li value=%d>", p_index);
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<li value=\"%d\">", p_index);
 	}
 }
 
@@ -517,54 +503,54 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 		{
 			const MCFieldParagraphStyle& t_style = p_event_data . paragraph_style;
 			
-			ctxt . buffer . appendcstring("<p");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<p");
 			if (t_style . has_metadata)
 			{
-				ctxt . buffer . appendcstring(" metadata=\"");
-				export_html_emit_cstring(ctxt . buffer, MCNameGetCString(t_style . metadata), kExportHtmlEscapeTypeAttribute);
-				ctxt . buffer . appendcstring("\"");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " metadata=`\"");
+				export_html_emit_cstring(ctxt.m_text, MCNameGetString(t_style.metadata), kExportHtmlEscapeTypeAttribute);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\"");
 			}
 			if (ctxt . effective || t_style . has_text_align)
-				ctxt . buffer . appendtextf(" align=\"%s\"", MCtextalignstrings[t_style . text_align]);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " align=\"%s\"", MCtextalignstrings[t_style.text_align]);
 			if (!t_style . has_list_indent && (t_style . has_first_indent || ctxt . effective))
-				ctxt . buffer . appendtextf(" firstindent=\"%d\"", t_style . first_indent);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " firstindent=\"%s\"", t_style.first_indent);
 			else if (t_style . has_list_indent)
-				ctxt . buffer . appendtextf(" listindent=\"%d\"", t_style . list_indent);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " listindent=\"%d\"", t_style.list_indent);
 			if (ctxt . effective || t_style . has_left_indent)
-				ctxt . buffer . appendtextf(" leftindent=\"%d\"", t_style . left_indent);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " leftindent=\"%d\"", t_style.left_indent);
 			if (ctxt . effective || t_style . has_right_indent)
-				ctxt . buffer . appendtextf(" rightindent=\"%d\"", t_style . right_indent);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " rightindent=\"%d\"", t_style.right_indent);
 			if (ctxt . effective || t_style . has_space_above)
-				ctxt . buffer . appendtextf(" spaceabove=\"%d\"", t_style . space_above);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " spaceabove=\"%d\"", t_style.space_above);
 			if (ctxt . effective || t_style . has_space_below)
-				ctxt . buffer . appendtextf(" spacebelow=\"%d\"", t_style . space_below);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " spacebelow=\"%d\"", t_style.space_below);
 			if (ctxt . effective || t_style . has_tabs)
 			{
-				ctxt . buffer . appendcstring(" tabstops=\"");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " tabstops=\"");
 				for(uint32_t i = 0; i < t_style . tab_count; i++)
-					ctxt . buffer . appendtextf(i == 0 ? "%d" : ",%d", t_style . tabs[i]);
-				ctxt . buffer . appendcstring("\"");
+					/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, i == 0 ? "%d" : ",%d", t_style.tabs[i]);
+				/* UNCHECKED */ MCStringAppendChar(ctxt.m_text, '"');
 			}
 			if (t_style . has_background_color)
-				ctxt . buffer . appendtextf(" bgcolor=\"#%06X\"", t_style . background_color);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " bgcolor=\"#%06X\"", t_style.background_color);
 			if (t_style . has_border_width || ctxt . effective)
-				ctxt . buffer . appendtextf(" borderwidth=\"%d\"", t_style . border_width);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " borderwidth=\"%d\"", t_style.border_width);
 			if (t_style . has_border_color || ctxt . effective)
-				ctxt . buffer . appendtextf(" bordercolor=\"#%06X\"", t_style . border_color);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " bordercolor=\"#%06X\"", t_style.border_color);
 			if (t_style . has_padding || ctxt . effective)
-				ctxt . buffer . appendtextf(" padding=\"%d\"", t_style . padding);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " padding=\"%d\"", t_style.padding);
 			if (t_style . has_hgrid || ctxt . effective)
-				ctxt . buffer . appendcstring(t_style . hgrid ? " hgrid" : " nohgrid");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, t_style.hgrid ? " hgrid" : " nohgrid");
 			if (t_style . has_vgrid || ctxt . effective)
-				ctxt . buffer . appendcstring(t_style . vgrid ? " vgrid" : " novgrid");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, t_style.vgrid ? " vgrid" : " novgrid");
 			if (t_style . has_dont_wrap || ctxt . effective)
-				ctxt . buffer . appendcstring(t_style . dont_wrap ? " nowrap" : " wrap");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, t_style.dont_wrap ? " nowrap" : " wrap");
 			if (t_style . hidden)
-				ctxt . buffer . appendcstring(" hidden");
-			ctxt . buffer . appendcstring(">");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " hidden");
+			/* UNCHECKED */ MCStringAppendChar(ctxt.m_text, '>');
 		}
 		else
-			ctxt . buffer . appendcstring("<p>");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<p>");
 	}
 	else if (p_event_type == kMCFieldExportEventEndParagraph)
 	{
@@ -572,7 +558,7 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 		
 		// MW-2012-09-18: [[ Bug 10216 ]] If we are the last paragraph, but have non-zero listDepth then
 		//   still emit a newline.
-		ctxt . buffer . appendcstring(p_event_data . is_last_paragraph && ctxt . list_depth == 0 ? "</p>" : "</p>\n");
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, p_event_data.is_last_paragraph && ctxt.list_depth == 0 ? "</p>" : "</p>\n");
 		
 		if (p_event_data . is_last_paragraph)
 			export_html_end_lists(ctxt, kMCParagraphListStyleNone, 0);
@@ -594,18 +580,18 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 
 		if (p_event_data . character_style . has_image_source)
 		{
-			ctxt . buffer . appendcstring("<img src=\"");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<img src=\"");
 			// MW-2012-09-19: [[ Bug 10228 ]] Make sure we generate the string in quote context.
-			export_html_emit_cstring(ctxt . buffer, MCStringGetCString(p_event_data . character_style . image_source), kExportHtmlEscapeTypeAttribute);
-			ctxt . buffer . appendcstring("\" char=\"");
+			export_html_emit_cstring(ctxt.m_text, p_event_data.character_style.image_source, kExportHtmlEscapeTypeAttribute);
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\" char=\"");
 			// MW-2012-09-19: [[ Bug 10228 ]] Make sure we generate the string in quote context.
-			export_html_emit_text(ctxt . buffer, p_event_data . bytes, p_event_data . byte_count, p_event_type == kMCFieldExportEventUnicodeRun, kExportHtmlEscapeTypeAttribute);
-			ctxt . buffer . appendcstring("\">");
+			export_html_emit_text(ctxt.m_text, p_event_data.m_text, p_event_data.m_range, kExportHtmlEscapeTypeAttribute);
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\">");
 		}
 		else
 		{
 			// MW-2012-09-19: [[ Bug 10228 ]] Make sure we generate the string in tag context.
-			export_html_emit_text(ctxt . buffer, p_event_data . bytes, p_event_data . byte_count, p_event_type == kMCFieldExportEventUnicodeRun, kExportHtmlEscapeTypeTag);
+			export_html_emit_text(ctxt.m_text, p_event_data.m_text, p_event_data.m_range, kExportHtmlEscapeTypeTag);
 		}
 	}
 	
@@ -636,6 +622,7 @@ bool MCField::exportashtmltext(MCParagraph *p_paragraphs, int32_t p_start_index,
 {
 	export_html_t ctxt;
 	memset(&ctxt, 0, sizeof(export_html_t));
+	/* UNCHECKED */ MCStringCreateMutable(0, ctxt.m_text);
 	
 	ctxt . effective = p_effective;
 	ctxt . list_depth = 0;
@@ -650,7 +637,8 @@ bool MCField::exportashtmltext(MCParagraph *p_paragraphs, int32_t p_start_index,
 	doexport(t_flags, p_paragraphs, p_start_index, p_finish_index, export_html_emit_paragraphs, &ctxt);
 
 	// Return the buffer.
-	return ctxt . buffer . takeasstringref(r_string);
+	/* UNCHECKED */ MCStringCopyAndRelease(ctxt.m_text, r_string);
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
