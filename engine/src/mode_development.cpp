@@ -142,8 +142,10 @@ static void restart_revolution(void)
 #elif defined(TARGET_PLATFORM_MACOS_X)
 	if (fork() == 0)
 	{
+        MCAutoStringRefAsUTF8String t_utf8_mccmd;
+        t_utf8_mccmd . Lock(MCcmd);
 		usleep(250000);
-		execl(MCStringGetCString(MCcmd), MCStringGetCString(MCcmd), NULL);
+		execl(*t_utf8_mccmd, *t_utf8_mccmd, NULL);
 	}
 #elif defined(TARGET_PLATFORM_LINUX)
 	if (fork() == 0)
@@ -233,8 +235,11 @@ IO_stat MCDispatch::startup(void)
     MCAutoStringRef t_startdir;
     MCS_getcurdir(&t_startdir);
 	
-	startdir = strdup(MCStringGetCString(*t_startdir));
-	enginedir = strdup(MCStringGetCString(MCcmd));
+    char *t_startdir_cstring, *t_mccmd;
+	/* UNCHECKED */ MCStringConvertToCString(*t_startdir, t_startdir_cstring);
+    /* UNCHECKED */ MCStringConvertToCString(MCcmd, t_mccmd);
+    startdir = strdup(t_startdir_cstring);
+	enginedir = strdup(t_mccmd);
 
 	char *eptr;
 	eptr = strrchr(enginedir, PATH_SEPARATOR);
@@ -677,26 +682,19 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 			return ES_NORMAL;
 		}
 
-		char *t_key;
-		t_key = strdup(MCStringGetCString(carray));
-		if (t_key == NULL)
-			return ES_NORMAL;
-
-		char *t_comma;
-		t_comma = strchr(t_key, ',');
-		if (t_comma == NULL)
+        uindex_t t_comma_pos;
+		if (!MCStringFirstIndexOfChar(carray, ',', 0, kMCCompareExact, t_comma_pos))
 		{
-			free(t_key);
 			return ES_NORMAL;
 		}
 
 		// The handler name begins after the comma character
-		char *t_handler_name_cstring;
-		t_handler_name_cstring = t_comma + 1;
+		uindex_t t_handler_name_pos;
+		t_handler_name_pos = t_comma_pos + 1;
 
 		// The handler code must be the first char of the string
 		char t_handler_code;
-		t_handler_code = *t_key;
+		t_handler_code = MCStringGetNativeCharAtIndex(carray, 0);
 		t_handler_code = MCS_toupper(t_handler_code);
 
 		Handler_type t_handler_type;
@@ -721,8 +719,10 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 			t_handler_type = HT_MESSAGE;
 		}
 
+        MCAutoStringRef t_handler_substring;
+        MCStringCopySubstring(carray, MCRangeMake(t_handler_name_pos, MCStringGetLength(carray) - t_handler_name_pos), &t_handler_substring);
 		MCAutoNameRef t_handler_name;
-		/* UNCHECKED */ t_handler_name . CreateWithCString(t_handler_name_cstring);
+        MCNameCreate(*t_handler_substring, t_handler_name);
 
 		Exec_stat t_status;
 
@@ -731,14 +731,12 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 		t_status = hlist -> findhandler(t_handler_type, t_handler_name, t_handler);
 		if (t_status != ES_NORMAL)
 		{
-			free(t_key);
-			return ES_NORMAL;
+            return ES_NORMAL;
 		}
 
 		if (t_handler != NULL)
 			t_handler -> getvarnames(ep, true);
 
-		free(t_key);
 		return ES_NORMAL;
 	}
 	break;

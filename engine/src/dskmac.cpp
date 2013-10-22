@@ -1037,15 +1037,10 @@ static void MCS_mac_setfiletype(MCStringRef p_new_path)
 	if (FSGetCatalogInfo(&t_fsref, kFSCatInfoFinderInfo, &t_catalog, NULL, NULL, NULL) == noErr)
 	{
 		// Set the creator and filetype of the catalog.
-        char *t_char_ptr;
-        /* UNCHECKED */ MCStringConvertToCString(MCfiletype, t_char_ptr);
-		memcpy(&((FileInfo *) t_catalog . finderInfo) -> fileType, t_char_ptr + 4, 4);
-		memcpy(&((FileInfo *) t_catalog . finderInfo) -> fileCreator, t_char_ptr, 4);
-		((FileInfo *) t_catalog . finderInfo) -> fileType = MCSwapInt32NetworkToHost(((FileInfo *) t_catalog . finderInfo) -> fileType);
-		((FileInfo *) t_catalog . finderInfo) -> fileCreator = MCSwapInt32NetworkToHost(((FileInfo *) t_catalog . finderInfo) -> fileCreator);
+        FourCharCodeFromString(MCfiletype, 4, (uint32&)((FileInfo *) t_catalog . finderInfo) -> fileType);
+        FourCharCodeFromString(MCfiletype, 0, (uint32&)((FileInfo *) t_catalog . finderInfo) -> fileCreator);
         
 		FSSetCatalogInfo(&t_fsref, kFSCatInfoFinderInfo, &t_catalog);
-        delete t_char_ptr;
 	}
 }
 
