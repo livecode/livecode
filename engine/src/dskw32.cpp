@@ -1561,7 +1561,6 @@ struct MCStdioFileHandle: public MCSystemFileHandle
     
     virtual bool TakeBuffer(void*& r_buffer, size_t& r_length)
 	{
-		// TODO Implement
 		return false;
 	}
 
@@ -3526,7 +3525,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
         MCprocesses[index].name = (MCNameRef)MCValueRetain(MCM_shell);
         MCprocesses[index].mode = OM_NEITHER;
         MCprocesses[index].ohandle = NULL;
-		// TODO Implement MCprocesses[index].ihandle = MCStdioFileHandle::OpenStdFile((MCWinSysHandle)hChildStdoutRd);
+		MCprocesses[index].ihandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd);
         if (created)
         {
             HANDLE phandle = GetCurrentProcess();
@@ -4181,14 +4180,12 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
         if (created)
         {
             if (writing)
-				// TODO implement MCprocesses[MCnprocesses].ohandle = MCStdioFileHandle::OpenStdFile((MCWinSysHandle)hChildStdinWr);
-			{}
+				MCprocesses[MCnprocesses].ohandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdinWr);
             else
                 CloseHandle(hChildStdinWr);
 
             if (reading)
-				// TODO implement MCprocesses[MCnprocesses].ihandle = MCStdioFileHandle::OpenStdFile((MCWinSysHandle)hChildStdoutRd);
-			{}
+				MCprocesses[MCnprocesses].ihandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd);
             else
                 CloseHandle(hChildStdoutRd);
         }
