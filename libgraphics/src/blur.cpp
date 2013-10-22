@@ -16,7 +16,7 @@
 
 #define kBlurRadiusFudgeFactor SkFloatToScalar( .57735f )
 
-extern void dilateDistanceBoth(const uint8_t *src, uint8_t *dst, int xradius, int yradius, int width, int height, int& r_new_width, int& r_new_height);
+extern void dilateDistanceXY(const uint8_t *src, uint8_t *dst, int xradius, int yradius, int width, int height, int& r_new_width, int& r_new_height);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -334,9 +334,10 @@ bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, S
 	int t_pass_count;
 	t_pass_count = 3;
 	
+	// Maximum amount of spread is 254 pixels.
 	int x_spread, y_spread;
-	x_spread = SkScalarFloor(p_x_radius * p_x_spread);
-	y_spread = SkScalarFloor(p_y_radius * p_y_spread);
+	x_spread = SkMin32(SkScalarFloor(p_x_radius * p_x_spread), 254);
+	y_spread = SkMin32(SkScalarFloor(p_y_radius * p_y_spread), 254);
 	
 	p_x_radius -= x_spread;
 	p_y_radius -= y_spread;
@@ -407,9 +408,7 @@ bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, S
 			{
 				//w = dilateMask(sp, p_src . fRowBytes, tp, x_spread, w, h, true);
 				//h = dilateMask(tp, h, dp, y_spread, h, w, true);
-				//w = dilateDistance(sp, p_src . fRowBytes, tp, x_spread, w, h, true);
-				//h = dilateDistance(tp, h, dp, y_spread, h, w, true);
-				dilateDistanceBoth(sp, dp, x_spread, y_spread, w, h, w, h);
+				dilateDistanceXY(sp, dp, x_spread, y_spread, w, h, w, h);
 				t_has_spread = true;
 			}
 			
@@ -448,9 +447,7 @@ bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, S
 			{
 				//w = dilateMask(sp, p_src . fRowBytes, tp, x_spread, w, h, true);
 				//h = dilateMask(tp, h, dp, y_spread, h, w, true);
-				//w = dilateDistance(sp, p_src . fRowBytes, tp, x_spread, w, h, true);
-				//h = dilateDistance(tp, h, dp, y_spread, h, w, true);
-				dilateDistanceBoth(sp, dp, x_spread, y_spread, w, h, w, h);
+				dilateDistanceXY(sp, dp, x_spread, y_spread, w, h, w, h);
 				t_has_spread = true;
 			}
 			
