@@ -830,7 +830,6 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             break;
             
         case kMCPropertyTypeString:
-        case kMCPropertyTypeBinaryString:
         {
             MCAutoStringRef t_value;
             ((void(*)(MCExecContext&, void *, MCStringRef&))prop -> getter)(ctxt, mark, &t_value);
@@ -840,6 +839,18 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             }
         }
             break;
+			
+        case kMCPropertyTypeBinaryString:
+        {
+            MCAutoDataRef t_value;
+            ((void(*)(MCExecContext&, void *, MCDataRef&))prop -> getter)(ctxt, mark, &t_value);
+            if (!ctxt . HasError())
+            {
+                ep . setvalueref(*t_value);
+            }
+        }
+		break;
+			
             
         case kMCPropertyTypeName:
         {
@@ -1160,7 +1171,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
-        case kMCPropertyTypeMixedBool:
+        case kMCPropertyTypeMixedOptionalBool:
         {
             bool t_mixed;
             bool t_value;
@@ -1171,14 +1182,16 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             {
                 if (t_mixed)
                     ep . setcstring(MCmixedstring);
-                else
-                    ep . setboolean(t_value ? True : False);
+                else if (*t_value_ptr != nil)
+                    ep . setboolean(*t_value_ptr ? True : False);
+				else
+					ep . clear();
             }
         }
             break;
             
-        case kMCPropertyTypeMixedUInt16:
-        case kMCPropertyTypeMixedUInt32:
+        case kMCPropertyTypeMixedOptionalUInt16:
+        case kMCPropertyTypeMixedOptionalUInt32:
         {
             bool t_mixed;
             uinteger_t t_value;
@@ -1189,10 +1202,16 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             {
                 if (t_mixed)
                     ep . setcstring(MCmixedstring);
-                else
-                    ep . setuint(t_value);
+                else if (*t_value_ptr != nil)
+                    ep . setuint(*t_value_ptr);
+				else
+					ep . clear();
             }
         }
+		break;
+			
+        default:
+            ctxt . Unimplemented();
             break;
     }
     
@@ -1291,13 +1310,22 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             break;
             
         case kMCPropertyTypeString:
-        case kMCPropertyTypeBinaryString:
         {
             MCAutoStringRef t_value;
             if (!ep . copyasstringref(&t_value))
                 ctxt . LegacyThrow(EE_PROPERTY_NAC);
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, MCStringRef))prop -> setter)(ctxt, mark, *t_value);
+        }
+            break;
+			
+        case kMCPropertyTypeBinaryString:
+        {
+            MCAutoDataRef t_value;
+            if (!ep . copyasdataref(&t_value))
+                ctxt . LegacyThrow(EE_PROPERTY_NAC);
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, MCDataRef))prop -> setter)(ctxt, mark, *t_value);
         }
             break;
             
@@ -1534,7 +1562,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
-        case kMCPropertyTypeMixedUInt16:
+        case kMCPropertyTypeMixedOptionalUInt16:
         case kMCPropertyTypeOptionalUInt16:
         {
             uinteger_t t_value;

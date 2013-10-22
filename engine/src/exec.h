@@ -133,6 +133,8 @@ enum MCPropertyType
 	kMCPropertyTypeInt16,
 	kMCPropertyTypeInt32,
 	kMCPropertyTypeUInt16,
+	kMCPropertyTypeUInt16_1_16,
+	kMCPropertyTypeUInt16_1_65535,
 	kMCPropertyTypeUInt32,
 	kMCPropertyTypeDouble,
 	kMCPropertyTypeChar,
@@ -163,8 +165,31 @@ enum MCPropertyType
     kMCPropertyTypeLinesOfPoint,
     kMCPropertyTypeItemsOfUInt,
     kMCPropertyTypeMixedBool,
-    kMCPropertyTypeMixedUInt16,
-    kMCPropertyTypeMixedUInt32,
+	kMCPropertyTypeMixedInt16,
+	kMCPropertyTypeMixedUInt8,
+	kMCPropertyTypeMixedUInt16,
+	kMCPropertyTypeMixedUInt16_1_16,
+	kMCPropertyTypeMixedUInt16_1_65535,
+    kMCPropertyTypeMixedOptionalBool,
+    kMCPropertyTypeMixedOptionalInt16,
+    kMCPropertyTypeMixedOptionalInt32,
+	kMCPropertyTypeMixedOptionalUInt8,
+    kMCPropertyTypeMixedOptionalUInt16,
+    kMCPropertyTypeMixedOptionalUInt32,
+	kMCPropertyTypeMixedOptionalUInt16_1_16,
+	kMCPropertyTypeMixedOptionalUInt16_1_65535,
+	kMCPropertyTypeMixedOptionalUInt16_0_32767,
+    kMCPropertyTypeMixedOptionalString,
+	kMCPropertyTypeMixedCustom,
+	kMCPropertyTypeMixedEnum,
+	kMCPropertyTypeMixedOptionalEnum,
+};
+
+enum MCPropertyInfoChunkType
+{
+	kMCPropertyInfoChunkTypeNone,
+	kMCPropertyInfoChunkTypeChar,
+	kMCPropertyInfoChunkTypeLine,
 };
 
 struct MCPropertyInfo
@@ -443,12 +468,33 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectArrayThunkSetString(obj, mth) MCPropertyObjectArrayThunkImp(obj, mth, MCStringRef)
 
 #define MCPropertyObjectChunkThunkGetBool(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, bool&)
-#define MCPropertyObjectChunkThunkSetBool(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, bool)
+#define MCPropertyObjectChunkThunkGetString(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCStringRef&)
+#define MCPropertyObjectChunkThunkGetBinaryString(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCDataRef&)
+#define MCPropertyObjectChunkThunkGetArray(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCArrayRef&)
+#define MCPropertyObjectChunkThunkGetUInt32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, uinteger_t&)
+#define MCPropertyObjectChunkThunkGetInt32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, integer_t&)
+#define MCPropertyObjectChunkThunkGetRectangle(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCRectangle&)
+#define MCPropertyObjectChunkThunkGetEnumType(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t&)
+#define MCPropertyObjectChunkThunkGetCustomType(obj, mth, typ) MCPropertyObjectChunkThunkImp(obj, mth, typ&)
+#define MCPropertyObjectChunkThunkGetOptionalEnumType(obj, mth, typ) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t*&)
 
+#define MCPropertyObjectChunkThunkSetBool(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, bool)
+#define MCPropertyObjectChunkThunkSetString(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCStringRef)
+#define MCPropertyObjectChunkThunkSetBinaryString(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCDataRef)
+#define MCPropertyObjectChunkThunkSetArray(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCArrayRef)
+#define MCPropertyObjectChunkThunkSetUInt32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, uinteger_t)
+#define MCPropertyObjectChunkThunkSetInt32(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, integer_t)
+#define MCPropertyObjectChunkThunkSetRectangle(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCRectangle)
+#define MCPropertyObjectChunkThunkSetEnumType(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t)
+#define MCPropertyObjectChunkThunkSetCustomType(obj, mth, typ) MCPropertyObjectChunkThunkImp(obj, mth, const typ&)
+#define MCPropertyObjectChunkThunkSetOptionalEnumType(obj, mth, typ) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t*&)
+
+#define MCPropertyObjectChunkMixedThunkGetBool(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, bool&)
 #define MCPropertyObjectChunkMixedThunkGetOptionalBool(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, bool*&)
 #define MCPropertyObjectChunkMixedThunkGetOptionalUInt16(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, uinteger_t*&)
 
-#define MCPropertyObjectChunkMixedThunkSetOptionalBool(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool*)
+#define MCPropertyObjectChunkMixedThunkSetBool(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, bool)
+#define MCPropertyObjectChunkMixedThunkSetOptionalBool(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, bool*)
 #define MCPropertyObjectChunkMixedThunkSetOptionalUInt16(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, uinteger_t*)
 
 //////////
@@ -580,14 +626,130 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define DEFINE_RO_OBJ_LIST_PROPERTY(prop, type, obj, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), nil, false, false, false },
 
-#define DEFINE_WO_OBJ_CHUNK_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyType##type, nil, nil, (void *)MCPropertyObjectChunkThunkSet##type(obj, Set##tag##OfCharChunk), false, false, false, true },
+/////
 
-#define DEFINE_RW_OBJ_NON_EFFECTIVE_MIXED_CHUNK_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedThunkGetOptional##type(obj, Get##tag##OfCharChunk), (void *)MCPropertyObjectChunkMixedThunkSetOptional##type(obj, Set##tag##OfCharChunk), true, false, false, true },
+#define DEFINE_RW_OBJ_CHAR_CHUNK_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectChunkThunkGet##type(obj, Get##tag##OfCharChunk), (void *)MCPropertyObjectChunkThunkSet##type(obj, Set##tag##OfCharChunk), false, false, false, kMCPropertyInfoChunkTypeChar },
 
-#define DEFINE_RO_OBJ_EFFECTIVE_MIXED_CHUNK_PROPERTY(prop, type, obj, tag) \
-{ prop, true, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedThunkGetOptional##type(obj, GetEffective##tag##OfCharChunk), nil, true, false, false, true },
+#define DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectChunkThunkGet##type(obj, Get##tag##OfCharChunk), nil, false, false, false, kMCPropertyInfoChunkTypeChar },
+
+#define DEFINE_RW_OBJ_CHAR_CHUNK_NON_EFFECTIVE_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectChunkThunkGet##type(obj, Get##tag##OfCharChunk), (void *)MCPropertyObjectChunkThunkSet##type(obj, Set##tag##OfCharChunk), true, false, false, kMCPropertyInfoChunkTypeChar },
+
+#define DEFINE_RO_OBJ_CHAR_CHUNK_NON_EFFECTIVE_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectChunkThunkGet##type(obj, Get##tag##OfCharChunk), nil, true, false, false, kMCPropertyInfoChunkTypeChar },
+
+#define DEFINE_RO_OBJ_CHAR_CHUNK_EFFECTIVE_PROPERTY(prop, type, obj, tag) \
+{ prop, true, kMCPropertyType##type, nil, (void *)MCPropertyObjectChunkThunkGet##type(obj, Get##tag##OfCharChunk), nil, true, false, false, kMCPropertyInfoChunkTypeChar },
+
+#define DEFINE_WO_OBJ_CHAR_CHUNK_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyType##type, nil, nil, (void *)MCPropertyObjectChunkThunkSet##type(obj, Set##tag##OfCharChunk), false, false, false, kMCPropertyInfoChunkTypeChar },
+
+//
+
+#define DEFINE_RW_OBJ_CHAR_CHUNK_CUSTOM_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectChunkThunkGetCustomType(obj, Get##tag##OfCharChunk, MC##type), (void *)MCPropertyObjectChunkThunkSetCustomType(obj, Set##tag##OfCharChunk, MC##type), false, false, false, kMCPropertyInfoChunkTypeChar },
+
+#define DEFINE_RW_OBJ_CHAR_CHUNK_ENUM_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectChunkThunkGetEnumType(obj, Get##tag##OfCharChunk), (void *)MCPropertyObjectChunkThunkSetEnumType(obj, Set##tag##OfCharChunk), false, false, false, kMCPropertyInfoChunkTypeChar },
+
+#define DEFINE_RO_OBJ_CHAR_CHUNK_ENUM_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectChunkThunkGetEnumType(obj, Get##tag##OfCharChunk), false, false, false, kMCPropertyInfoChunkTypeChar },
+
+//
+
+#define DEFINE_RW_OBJ_CHAR_CHUNK_MIXED_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedThunkGet##type(obj, Get##tag##OfCharChunk), (void *)MCPropertyObjectChunkMixedThunkSet##type(obj, Set##tag##OfCharChunk), false, false, false, kMCPropertyInfoChunkTypeChar },
+
+#define DEFINE_RO_OBJ_CHAR_CHUNK_MIXED_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedThunkGet##type(obj, Get##tag##OfCharChunk), nil, false, false, false, kMCPropertyInfoChunkTypeChar },
+
+#define DEFINE_RW_OBJ_CHAR_CHUNK_NON_EFFECTIVE_MIXED_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedThunkGet##type(obj, Get##tag##OfCharChunk), (void *)MCPropertyObjectChunkMixedThunkSet##type(obj, Set##tag##OfCharChunk), true, false, false, kMCPropertyInfoChunkTypeChar },
+
+#define DEFINE_RO_OBJ_CHAR_CHUNK_EFFECTIVE_MIXED_PROPERTY(prop, type, obj, tag) \
+{ prop, true, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedThunkGet##type(obj, GetEffective##tag##OfCharChunk), nil, true, false, false, kMCPropertyInfoChunkTypeChar },
+
+//
+
+#define DEFINE_RW_OBJ_CHAR_CHUNK_MIXED_CUSTOM_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeMixedCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectChunkMixedThunkGetCustomType(obj, Get##tag##OfCharChunk, MC##type), (void *)MCPropertyObjectChunkMixedThunkSetCustomType(obj, Set##tag##OfCharChunk, MC##type), false, false, false, kMCPropertyInfoChunkTypeChar },
+
+#define DEFINE_RO_OBJ_CHAR_CHUNK_MIXED_CUSTOM_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeMixedCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectChunkMixedThunkGetCustomType(obj, Get##tag##OfCharChunk, MC##type), nil, false, false, false, kMCPropertyInfoChunkTypeChar },
+
+#define DEFINE_RW_OBJ_CHAR_CHUNK_NON_EFFECTIVE_MIXED_CUSTOM_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeMixedCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectChunkMixedThunkGetCustomType(obj, Get##tag##OfCharChunk, MC##type), (void *)MCPropertyObjectChunkMixedThunkSetCustomType(obj, Set##tag##OfCharChunk, MC##type), true, false, false, kMCPropertyInfoChunkTypeChar },
+
+#define DEFINE_RO_OBJ_CHAR_CHUNK_EFFECTIVE_MIXED_CUSTOM_PROPERTY(prop, type, obj, tag) \
+{ prop, true, kMCPropertyTypeMixedCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectChunkMixedThunkGetCustomType(obj, GetEffective##tag##OfCharChunk, MC##type), nil, true, false, false, kMCPropertyInfoChunkTypeChar },
+
+//
+
+#define DEFINE_RW_OBJ_CHAR_CHUNK_MIXED_ENUM_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeMixedEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectChunkMixedThunkGetEnumType(obj, Get##tag##OfCharChunk, MC##type), (void *)MCPropertyObjectChunkMixedThunkSetEnumType(obj, Set##tag##OfCharChunk, MC##type), false, false, false, kMCPropertyInfoChunkTypeChar },
+
+#define DEFINE_RO_OBJ_CHAR_CHUNK_MIXED_ENUM_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeMixedEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectChunkMixedThunkGetEnumType(obj, Get##tag##OfCharChunk, MC##type), nil, false, false, false, kMCPropertyInfoChunkTypeChar },
+
+#define DEFINE_RW_OBJ_CHAR_CHUNK_NON_EFFECTIVE_MIXED_ENUM_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeMixedEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectChunkMixedThunkGetEnumType(obj, Get##tag##OfCharChunk, MC##type), (void *)MCPropertyObjectChunkMixedThunkSetEnumType(obj, Set##tag##OfCharChunk, MC##type), true, false, false, kMCPropertyInfoChunkTypeChar },
+
+#define DEFINE_RO_OBJ_CHAR_CHUNK_EFFECTIVE_MIXED_ENUM_PROPERTY(prop, type, obj, tag) \
+{ prop, true, kMCPropertyTypeMixedEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectChunkMixedThunkGetEnumType(obj, GetEffective##tag##OfCharChunk, MC##type), nil, true, false, false, kMCPropertyInfoChunkTypeChar },
+
+
+/////
+
+#define DEFINE_RW_OBJ_LINE_CHUNK_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectChunkThunkGet##type(obj, Get##tag##OfLineChunk), (void *)MCPropertyObjectChunkThunkSet##type(obj, Set##tag##OfLineChunk), false, false, false, kMCPropertyInfoChunkTypeLine },
+
+#define DEFINE_RO_OBJ_LINE_CHUNK_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectChunkThunkGet##type(obj, Get##tag##OfLineChunk), nil, false, false, false, kMCPropertyInfoChunkTypeLine },
+
+#define DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectChunkThunkGet##type(obj, Get##tag##OfLineChunk), (void *)MCPropertyObjectChunkThunkSet##type(obj, Set##tag##OfLineChunk), true, false, false, kMCPropertyInfoChunkTypeLine },
+
+#define DEFINE_RO_OBJ_LINE_CHUNK_NON_EFFECTIVE_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectChunkThunkGet##type(obj, Get##tag##OfLineChunk), nil, true, false, false, kMCPropertyInfoChunkTypeLine },
+
+#define DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_PROPERTY(prop, type, obj, tag) \
+{ prop, true, kMCPropertyType##type, nil, (void *)MCPropertyObjectChunkThunkGet##type(obj, Get##tag##OfLineChunk), nil, true, false, false, kMCPropertyInfoChunkTypeLine },
+
+#define DEFINE_WO_OBJ_LINE_CHUNK_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyType##type, nil, nil, (void *)MCPropertyObjectChunkThunkSet##type(obj, Set##tag##OfLineChunk), false, false, false, kMCPropertyInfoChunkTypeLine },
+
+////
+
+#define DEFINE_RW_OBJ_LINE_CHUNK_MIXED_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedThunkGet##type(obj, Get##tag##OfLineChunk), (void *)MCPropertyObjectChunkMixedThunkSet##type(obj, Set##tag##OfLineChunk), false, false, false, kMCPropertyInfoChunkTypeLine },
+
+#define DEFINE_RW_OBJ_LINE_CHUNK_MIXED_CUSTOM_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeMixedCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectChunkMixedThunkGetCustomType(obj, Get##tag##OfLineChunk, MC##type), (void *)MCPropertyObjectChunkMixedThunkSetCustomType(obj, Set##tag##OfLineChunk, MC##type), false, false, false, kMCPropertyInfoChunkTypeLine },
+
+#define DEFINE_RW_OBJ_LINE_CHUNK_MIXED_ENUM_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeMixedEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectChunkMixedThunkGetEnumType(obj, Get##tag##OfLineChunk, MC##type), (void *)MCPropertyObjectChunkMixedThunkSetEnumType(obj, Set##tag##OfLineChunk, MC##type), false, false, false, kMCPropertyInfoChunkTypeLine },
+
+#define DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedThunkGet##type(obj, Get##tag##OfLineChunk), (void *)MCPropertyObjectChunkMixedThunkSet##type(obj, Set##tag##OfLineChunk), true, false, false, kMCPropertyInfoChunkTypeLine },
+
+#define DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_LIST_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedListThunkGet##type(obj, Get##tag##OfLineChunk), (void *)MCPropertyObjectChunkMixedListThunkSet##type(obj, Set##tag##OfLineChunk), true, false, false, kMCPropertyInfoChunkTypeLine },
+
+#define DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_OPTIONAL_ENUM_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeMixedOptionalEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectChunkMixedThunkGetOptionalEnumType(obj, Get##tag##OfLineChunk), (void *)MCPropertyObjectChunkMixedThunkSetOptionalEnumType(obj, Set##tag##OfLineChunk), true, false, false, kMCPropertyInfoChunkTypeLine },
+
+#define DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_PROPERTY(prop, type, obj, tag) \
+{ prop, true, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedThunkGet##type(obj, GetEffective##tag##OfLineChunk), nil, true, false, false, kMCPropertyInfoChunkTypeLine },
+
+#define DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_ENUM_PROPERTY(prop, type, obj, tag) \
+{ prop, true, kMCPropertyTypeMixedEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectChunkMixedThunkGetEnumType(obj, GetEffective##tag##OfLineChunk, MC##type), nil, true, false, false, kMCPropertyInfoChunkTypeLine },
+
+#define DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_LIST_PROPERTY(prop, type, obj, tag) \
+{ prop, true, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedListThunkGet##type(obj, GetEffective##tag##OfLineChunk), nil, true, false, false, kMCPropertyInfoChunkTypeLine },
+
+/////
 
 ////////////////////////////////////////////////////////////////////////////////
 
