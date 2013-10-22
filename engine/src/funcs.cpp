@@ -7637,10 +7637,11 @@ if (source->eval(ep) != ES_NORMAL)
 	MCAutoStringRef t_output;
 	MCFilesEvalShell(ctxt, *t_command, &t_output);
 
-	ep.setvalueref(*t_output);
-
 	if (!ctxt . HasError())
+    {        
+        ep.setvalueref(*t_output);
 		return ES_NORMAL;
+    }
 
 	return ctxt . Catch(line, pos);
 }
