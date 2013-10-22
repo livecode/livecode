@@ -179,7 +179,7 @@ Exec_stat MCField::sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
 		{
 			paragraphs = newparagraphs;
 			resetparagraphs();
-			recompute();
+			do_recompute(true);
 
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 			layer_redrawall();
@@ -495,7 +495,7 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid)
 		paragraphs = newpgptr;
 		fptr->setparagraphs(newpgptr);
 		openparagraphs();
-		recompute();
+		do_recompute(true);
 
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
@@ -722,7 +722,7 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 		if (state & CS_KFOCUSED)
 			focusedparagraph->setselectionindex(ei, ei, False, False);
 
-		recompute();
+		do_recompute(true);
 		
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
@@ -1389,7 +1389,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		if (opened && (parid == 0 || parid == getcard()->getid()))
 		{
 			resetparagraphs();
-			recompute();
+			do_recompute(true);
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 			layer_redrawall();
 		}
@@ -1682,7 +1682,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 			if (t_need_layout && !all)
 			{
 				// MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
-				pgptr -> layout();
+				pgptr -> layout(all);
 				drect.height += pgptr->getheight(fixedheight);
 			}
 		}
@@ -1702,7 +1702,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 	{
 		if (all)
 		{
-			recompute();
+			do_recompute(true);
 			hscroll(savex - textx, False);
 			vscroll(savey - texty, False);
 			resetscrollbars(True);
@@ -2483,7 +2483,7 @@ void MCField::cuttext()
 	
 	// MW-2012-03-16: [[ Bug 3173 ]] Make sure the width is updated and such
 	//   so that the caret repositions itself correctly.
-	recompute();
+	do_recompute(true);
 	layer_redrawall();
 	
 	replacecursor(True, True);

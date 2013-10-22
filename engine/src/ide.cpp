@@ -1081,7 +1081,7 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 	do
 	{
 		t_paragraph = t_paragraph -> prev();
-		t_paragraph -> layout();
+		t_paragraph -> layout(false);
 	}
 	while(t_paragraph != t_first_paragraph);
 

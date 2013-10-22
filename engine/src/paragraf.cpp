@@ -528,9 +528,9 @@ void MCParagraph::defrag()
 
 // MW-2012-01-25: [[ ParaStyles ]] This method causes a reflow of the paragraph depending
 //   on the setting of 'dontWrap'.
-void MCParagraph::layout()
+void MCParagraph::layout(bool p_force)
 {
-	if (!needs_layout)
+	if (!needs_layout && !p_force)
 		return;
 
 	if (getdontwrap())

@@ -313,7 +313,7 @@ void MCField::open()
 	else
 	{
 		openparagraphs();
-		recompute();
+		do_recompute(false);
 		if (vscrollbar != NULL)
 		{
 			MCCdata *scrollptr = getcarddata(scrolls, parentid, False);
@@ -1172,6 +1172,8 @@ void MCField::setrect(const MCRectangle &nrect)
 	// MW-2007-07-05: [[ Bug 2435 ]] - 'Caret' doesn't move with the field when its rect changes
 	if (cursoron)
 		replacecursor(False, False);
+    
+    do_recompute(true);
 }
 
 Exec_stat MCField::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
@@ -1964,7 +1966,7 @@ Exec_stat MCField::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 	}
 	if (dirty && opened)
 	{
-		recompute();
+		do_recompute(reset);
 		if (reset)
 			resetparagraphs();
 		hscroll(savex - textx, False);
@@ -2106,7 +2108,7 @@ void MCField::undo(Ustruct *us)
 					pgptr = pgptr->next();
 					pgptr->setselectionindex(0, 0, False, False);
 					flags &= ~F_VISIBLE;
-					recompute();
+					do_recompute(true);
 					focusedparagraph = pgptr;
 					updateparagraph(True, False);
 					flags |= F_VISIBLE;
@@ -2246,7 +2248,7 @@ void MCField::replacedata(MCCdata *&data, uint4 newid)
 	{
 		paragraphs = fdata->getparagraphs();
 		openparagraphs();
-		recompute();
+		do_recompute(true);
 
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
@@ -2313,7 +2315,7 @@ void MCField::resetfontindex(MCStack *oldstack)
 	if (opened)
 	{
 		resetparagraphs();
-		recompute();
+		do_recompute(true);
 	}
 }
 
@@ -2567,6 +2569,11 @@ void MCField::setsbrects()
 
 void MCField::recompute()
 {
+    do_recompute(false);
+}
+
+void MCField::do_recompute(bool p_force_layout)
+{
 	if (!opened)
 		return;
 
@@ -2580,7 +2587,7 @@ void MCField::recompute()
 	{
 		// MW-2012-01-25: [[ ParaStyles ]] Whether to flow or noflow is decided on a
 		//   per-paragraph basis.
-		pgptr -> layout();
+		pgptr -> layout(p_force_layout);
 
 		uint2 ascent, descent, width;
 		pgptr->getmaxline(width, ascent, descent);
@@ -2872,12 +2879,12 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 	if (state & CS_SIZE)
 	{
 		resetparagraphs();
-		recompute();
+		do_recompute(true);
 	}
 	else if (state & CS_SELECTED && (texty != 0 || textx != 0))
 	{
 		resetparagraphs();
-		recompute();
+		do_recompute(false);
 	}
 
 	MCRectangle frect = getfrect();
@@ -3037,7 +3044,7 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 
 		if (fdata == NULL)
 			resetparagraphs();
-		recompute();
+		do_recompute(false);
 		hscroll(savex - textx, False);
 		vscroll(savey - texty, False);
 		resetscrollbars(True);
@@ -3173,7 +3180,7 @@ bool MCField::imagechanged(MCImage *p_image, bool p_deleting)
 
 	if (t_used)
 	{
-		recompute();
+		do_recompute(true);
 		layer_redrawall();
 	}
 

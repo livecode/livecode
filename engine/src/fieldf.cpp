@@ -1632,7 +1632,7 @@ void MCField::updateparagraph(Boolean flow, Boolean all, Boolean dodraw)
 			oldheight = focusedparagraph->getheight(fixedheight);
 		
 		// MW-2012-01-25: [[ ParaStyles ]] Get the paragraph to flow itself.
-		focusedparagraph -> layout();
+		focusedparagraph -> layout(all);
 		uint2 newheight = focusedparagraph->getheight(fixedheight);
 		if (newheight != oldheight)
 		{
@@ -1846,7 +1846,7 @@ void MCField::fdel(Field_translations function, const char *string, KeySym key)
 	}
 	if (oldwidth == textwidth)
 	{
-		recompute();
+		do_recompute(true);
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
 	}
@@ -2313,7 +2313,7 @@ void MCField::typetext(const MCString &newtext)
 	state |= CS_CHANGED;
 	if (newtext.getlength() && focusedparagraph->finsertnew(newtext, false))
 	{
-		recompute();
+		do_recompute(true);
 		int4 endindex = oldfocused + newtext.getlength();
 		int4 junk;
 		MCParagraph *newfocused = indextoparagraph(focusedparagraph, endindex, junk);
