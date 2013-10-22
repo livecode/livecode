@@ -370,9 +370,10 @@ Exec_stat MCObject::sendgetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef
 		MCObject *oldtargetptr = MCtargetptr;
 		MCtargetptr = this;
 		Boolean added = False;
+		MCExecContext ctxt(ep);
 		if (MCnexecutioncontexts < MAX_CONTEXTS)
 		{
-			MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+			MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 			added = True;
 		}
 		t_stat = MCU_dofrontscripts(HT_GETPROP, t_getprop_name, &p1);
@@ -1340,9 +1341,10 @@ Exec_stat MCObject::sendsetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef
 		MCObject *oldtargetptr = MCtargetptr;
 		MCtargetptr = this;
 		Boolean added = False;
+		MCExecContext ctxt(ep);
 		if (MCnexecutioncontexts < MAX_CONTEXTS)
 		{
-			MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+			MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 			added = True;
 		}
 
@@ -2347,7 +2349,7 @@ Exec_stat MCObject::setprop(uint32_t p_part_id, Properties p_which, MCExecPoint&
 		MCObjectPtr t_object;
 		t_object . object = this;
 		t_object . part_id = p_part_id;
-        
+
         MCAutoValueRef t_value;
         ep . copyasvalueref(&t_value);
         MCExecStoreProperty(ctxt, t_info, &t_object, *t_value);
@@ -2474,6 +2476,8 @@ void MCObject::getarrayprop(MCExecContext& ctxt, uint32_t p_part_id, Properties 
 	ctxt . Throw();
 }
 
+/////////
+
 void MCObject::getvariantprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCValueRef& r_value)
 {
 	if (getprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL &&
@@ -2481,6 +2485,15 @@ void MCObject::getvariantprop(MCExecContext& ctxt, uint32_t p_part_id, Propertie
 		return;
 
 	ctxt . Throw();
+}
+
+void MCObject::setvariantprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCValueRef p_value)
+{
+    ctxt . GetEP() . setvalueref(p_value);
+    if (setprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL)
+        return;
+    
+    ctxt . Throw();
 }
 
 /////////

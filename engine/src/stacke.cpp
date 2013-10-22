@@ -241,18 +241,16 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 		if (t_effects -> sound != NULL)
 		{
 			MCAudioClip *acptr;
-            MCAutoStringRef t_sound;
-            /* UNCHECKED */ MCStringCreateWithCString(t_effects->sound, &t_sound);
+            MCNewAutoNameRef t_sound;
+            /* UNCHECKED */ MCNameCreate(t_effects->sound, &t_sound);
 			if ((acptr = (MCAudioClip *)getobjname(CT_AUDIO_CLIP, *t_sound)) == NULL)
 			{
 				IO_handle stream;
-				MCAutoStringRef t_sound;
-				/* UNCHECKED */ MCStringCreateWithCString(t_effects->sound, &t_sound);
-				if ((stream = MCS_open(*t_sound, kMCSOpenFileModeRead, True, False, 0)) != NULL)
+				if ((stream = MCS_open(t_effects->sound, kMCSOpenFileModeRead, True, False, 0)) != NULL)
 				{
 					acptr = new MCAudioClip;
 					acptr->setdisposable();
-					if (!acptr->import(*t_sound, stream))
+					if (!acptr->import(t_effects->sound, stream))
 					{
 						delete acptr;
 						acptr = NULL;
@@ -281,12 +279,12 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 		if (t_effects -> type != VE_PLAIN)
 		{
 #ifdef _MAC_DESKTOP
-			if (t_effects -> type == VE_UNDEFINED && MCCoreImageEffectBegin(t_effects -> name, t_dst_drawable, t_start_image, t_end_image, t_dst_effect_area, t_effects -> arguments))
+			if (t_effects -> type == VE_UNDEFINED && MCCoreImageEffectBegin(MCStringGetCString(t_effects -> name), t_dst_drawable, t_start_image, t_end_image, t_dst_effect_area, t_effects -> arguments))
 				t_effects -> type = VE_CIEFFECT;
 			else
 #endif
 #ifdef FEATURE_QUICKTIME
-			if (MCQTEffectBegin(t_effects -> type, t_effects -> name, t_effects -> direction, t_dst_drawable, t_start_image, t_end_image, t_dst_effect_area))
+			if (MCQTEffectBegin(t_effects -> type, MCStringGetCString(t_effects -> name), t_effects -> direction, t_dst_drawable, t_start_image, t_end_image, t_dst_effect_area))
 				t_effects -> type = VE_QTEFFECT;
 #endif
 		}

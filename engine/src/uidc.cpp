@@ -883,7 +883,7 @@ bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 		if (messages[i].id != 0)
 		{
 			MCAutoListRef t_msg_info;
-			MCAutoStringRef t_id_string;
+			MCAutoValueRef t_id_string;
 			MCAutoStringRef t_time_string;
 
 			if (!MCListCreateMutable(',', &t_msg_info))
@@ -1038,7 +1038,7 @@ bool MCUIDC::listmoves(MCExecContext& ctxt, MCListRef& r_list)
 		MCMovingList *mptr = moving;
 		do
 		{
-			MCAutoStringRef t_string;
+			MCAutoValueRef t_string;
 			if (!mptr->object->names(P_LONG_ID, &t_string))
 				return false;
 			if (!MCListAppend(*t_list, *t_string))

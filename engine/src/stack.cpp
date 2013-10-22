@@ -2826,6 +2826,7 @@ void MCStack::paste(void)
 				break;
 			t_index += 1;
 		}
+		
 		setname(t_name);
 		MCValueRelease(t_name);
 	}
