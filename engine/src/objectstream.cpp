@@ -280,7 +280,7 @@ IO_stat MCObjectInputStream::ReadTranslatedStringRef(MCStringRef &r_value)
         // Conversion complete
         uindex_t t_length = MCStringGetLength(t_read);
         MCValueRelease(t_read);
-        if (!MCStringCreateWithNativeChars((char_t*)t_cstring, t_length, t_read))
+        if (!MCStringCreateWithNativeCharsAndRelease((char_t*)t_cstring, t_length, t_read))
         {
             free(t_cstring);
             return IO_ERROR;
