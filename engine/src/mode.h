@@ -109,6 +109,7 @@ uint4 MCModeComputeObjectOrigin(uint4 extraflags);
 //
 // This hook is called by MCB_setmsg.
 //
+
 bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string);
 
 // This hook is used to work out the parameters for the 'relaunch'

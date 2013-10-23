@@ -1156,8 +1156,8 @@ bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string)
 	}
 
 	return false;
-}
 
+}
 bool MCModeHandleRelaunch(MCStringRef & r_id)
 {
 	r_id = MCSTR("LiveCodeTools");

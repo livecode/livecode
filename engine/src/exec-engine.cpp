@@ -1125,7 +1125,9 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
 	MCParameter *params = NULL;
 	MCParameter *tparam = NULL;
 	
-	char *mptr = strclone(MCStringGetCString(p_script));
+    MCAutoStringRefAsUTF8String t_script;
+    t_script . Lock(p_script);
+	char *mptr = strclone(*t_script);
 	char *sptr = mptr;
 	while (*sptr && !isspace((uint1)*sptr))
 		sptr++;

@@ -2483,8 +2483,11 @@ void MCObject::SetTextFont(MCExecContext& ctxt, MCStringRef font)
 	
 	if (font != nil)
 	{
+        char *t_font;
+        /* UNCHECKED */ MCStringConvertToCString(font, t_font);
 		char *newfontname = NULL;
-		newfontname = strclone(MCStringGetCString(font));
+		newfontname = strclone(t_font);
+        delete t_font;
 			
 		// MW-2012-02-17: [[ IntrinsicUnicode ]] Strip any lang tag from the
 		//   fontname.

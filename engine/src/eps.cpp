@@ -730,11 +730,13 @@ Boolean MCEPS::import(MCStringRef fname, IO_handle stream)
 	if (IO_read(postscript, size, stream) != IO_NORMAL)
 		return False;
 	postscript[size] = '\0';
-	const char *tname = strrchr(MCStringGetCString(fname), PATH_SEPARATOR);
+    MCAutoStringRefAsUTF8String t_fname;
+    /* UNCHECKED */ t_fname . Lock(fname);
+	const char *tname = strrchr(*t_fname, PATH_SEPARATOR);
 	if (tname != NULL)
 		tname += 1;
 	else
-		tname = MCStringGetCString(fname);
+		tname = *t_fname;
 	setname_cstring(tname);
 	setextents();
 	rect.width = (uint2)(ex * xscale / xf);

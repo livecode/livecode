@@ -606,11 +606,13 @@ Boolean MCAudioClip::import(MCStringRef fname, IO_handle stream)
 				rate = 11000;
 			}
 	}
-	const char *tname = strrchr(MCStringGetCString(fname), PATH_SEPARATOR);
+    MCAutoStringRefAsUTF8String t_fname;
+    t_fname . Lock(fname);
+	const char *tname = strrchr(*t_fname, PATH_SEPARATOR);
 	if (tname != NULL)
 		tname += 1;
 	else
-		tname = MCStringGetCString(fname);
+		tname = *t_fname;
 	setname_cstring(tname);
 	return True;
 }
