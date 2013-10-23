@@ -1448,7 +1448,7 @@ void MCStack::GetStackFiles(MCExecContext& ctxt, MCStringRef& r_files)
 		MCAutoStringRef t_filename;
 
 		if (t_success)
-			t_success = MCStringFormat(&t_filename, "%s,%s", MCStringGetCString(stackfiles[i].stackname), MCStringGetCString(stackfiles[i].filename));
+			t_success = MCStringFormat(&t_filename, "%@,%@", stackfiles[i].stackname, stackfiles[i].filename);
 
 		if (t_success)
 			t_success = MCListAppend(*t_file_list, *t_filename);

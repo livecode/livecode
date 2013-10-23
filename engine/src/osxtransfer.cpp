@@ -722,33 +722,29 @@ bool MCConvertMacUnicodeStyledToStyledText(MCDataRef p_text_data, MCDataRef p_st
 {
 	MCParagraph *t_paragraphs;
 	
-	MCStringRef t_text;
-	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)MCDataGetBytePtr(p_text_data), MCDataGetLength(p_text_data), t_text);
-	
 	// MW-2010-01-08: [[ Bug 8327 ]] If the text is 'external' representation, skip the BOM.
-	if (p_is_external && MCStringGetLength(t_text) >= 2 &&
-		(*(uint2 *)MCStringGetCString(t_text) == 0xfffe || 
-		*(uint2 *)MCStringGetCString(t_text) == 0xfeff))
+	if (p_is_external && MCDataGetLength(p_text_data) >= 2 &&
+		(*(uint2 *)MCDataGetBytePtr(p_text_data) == 0xfffe ||
+		*(uint2 *)MCDataGetBytePtr(p_text_data) == 0xfeff))
 	{
-		MCAutoStringRef t_substring;
-		MCStringCopySubstring(t_text, MCRangeMake(2, MCStringGetLength(t_text) - 2), &t_substring);
-		MCValueAssign(t_text, *t_substring);
+        /* UNCHECKED */ MCDataRemove(p_text_data, MCRangeMake(0,2));
 	}
 	
 	// MW-2009-12-01: If the unicode styled text has an empty style data, then make
 	//   sure we just convert it as plain unicode text.
-	if (MCDataGetLength(p_style_data) != 0)
-		t_paragraphs = MCtemplatefield -> macunicodestyletexttoparagraphs(MCStringGetOldString(t_text), MCDataGetOldString(p_style_data));
+	if (!MCDataIsEmpty(p_style_data))
+		t_paragraphs = MCtemplatefield -> macunicodestyletexttoparagraphs(p_text_data, p_style_data);
 	else
 	{
+        MCAutoStringRef t_input;
+        /* UNCHECKED */ MCStringDecode(p_text_data, kMCStringEncodingNative, false, &t_input);
 		MCAutoStringRef t_output;
-		/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(t_text, &t_output);
+		/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_input, &t_output);
 		MCAutoDataRef t_data;
 		/* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingUTF16, false, &t_data);
 		t_paragraphs = MCtemplatefield -> texttoparagraphs(MCDataGetOldString(*t_data), true);
 	}
 	
-	MCValueRelease(t_text);
 	MCStyledText t_styled_text;
 	t_styled_text . setparent(MCtemplatefield -> getparent());
 	t_styled_text . setparagraphs(t_paragraphs);

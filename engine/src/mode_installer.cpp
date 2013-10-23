@@ -216,12 +216,14 @@ public:
 #ifdef _MACOSX		
 			// On Mac OS X, the payload is in a separate file.
 			// MM-2011-03-23: Refactored code to use method call.
-			char *t_payload_file;
-			t_payload_file = nil;
-			/* FRAGILE */ if (MCCStringFormat(t_payload_file, "%.*s/payload", strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd)))
+			MCAutoStringRef t_payload_file;
+            uindex_t t_last_slash;
+            /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', 0, kMCCompareExact, t_last_slash);
+			/* FRAGILE */ if (MCStringFormat(&t_payload_file, "%.*@/payload", t_last_slash - 1, MCcmd))
 			{
-				mmap_payload_from_file(t_payload_file, t_payload_data, t_payload_size);
-				MCCStringFree(t_payload_file);
+                MCAutoStringRefAsUTF8String t_utf8_payload_file;
+                /* UNCHECKED */ t_utf8_payload_file . Lock(*t_payload_file);
+				mmap_payload_from_file(*t_utf8_payload_file, t_payload_data, t_payload_size);
 				if(t_payload_data == nil)
 				{
 					MCresult -> sets("could not find payload");
