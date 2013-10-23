@@ -177,7 +177,11 @@ bool MCStringCreateWithSysString(const char *p_system_string, size_t p_len, MCSt
 {
 	// Create the pseudo-FD that iconv uses for character conversion. The most
 	// convenient form is UTF-16 as StringRefs can be constructed directly from that.
-	iconv_t t_fd = iconv_open("UTF-16", MCsysencoding);
+#ifdef __LITTLE_ENDIAN__
+	iconv_t t_fd = iconv_open("UTF-16LE", MCsysencoding);
+#else
+    iconv_t t_fd = iconv_open("UTF-16BE", MCsysencoding);
+#endif
 	
 	// Convert the string
 	char *t_utf16_bytes;
@@ -216,7 +220,11 @@ bool MCStringConvertToSysString(MCStringRef p_string, const char * &r_system_str
 	}
 	else
 	{
-		t_fd = iconv_open(MCsysencoding, "UTF-16");
+#ifdef __LITTLE_ENDIAN__
+		t_fd = iconv_open(MCsysencoding, "UTF-16LE");
+#else
+        t_fd = iconv_open(MCsysencoding, "UTF-16BE");
+#endif
 		t_mc_string = (const char *)MCStringGetCharPtr(p_string);
 		t_mc_len = MCStringGetLength(p_string) * sizeof(unichar_t);
 	}
