@@ -675,6 +675,7 @@ void MCStack::view_updatetilecache(void)
 	MCTileCacheLayer t_bg_layer;
 	t_bg_layer . id = m_view_bg_layer_id;
 	t_bg_layer . region = MCU_make_rect(0, 0, 8192, 8192);
+	t_bg_layer . clip = MCU_make_rect(0, 0, 8192, 8192);
 	t_bg_layer . is_opaque = true;
 	t_bg_layer . opacity = 255;
 	t_bg_layer . ink = GXblendSrcOver;
