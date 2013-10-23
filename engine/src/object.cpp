@@ -2979,21 +2979,20 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 			/* UNCHECKED */ MCStackSecurityCreateObjectInputStream(stream, t_length, t_stream);
 			t_length -= 1;
 			
-			MCStringRef t_script_string;
-			stat = t_stream -> ReadTranslatedStringRef(t_script_string);
+			MCAutoStringRef t_script_string;
+			stat = t_stream -> ReadTranslatedStringRef(&t_script_string);
 			if (stat == IO_NORMAL)
 			{
 				// Adjust the remaining length based on the length of the string read
-				if (MCStringIsEmpty(t_script_string))
+				if (MCStringIsEmpty(*t_script_string))
 					t_length -= 1;
 				else
-					t_length -= MCStringGetLength(t_script_string);
+					t_length -= MCStringGetLength(*t_script_string);
 
-				if (!MCStringIsEmpty(t_script_string))
+				if (!MCStringIsEmpty(*t_script_string))
 					getstack() -> securescript(this);
 				
-				setscript(t_script_string);
-				MCValueRelease(t_script_string);
+				setscript(*t_script_string);
 			}
 
 			if (stat == IO_NORMAL && t_length > 0)

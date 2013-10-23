@@ -196,7 +196,7 @@ IO_stat MCObjectInputStream::ReadS16(int16_t& r_value)
 
 IO_stat MCObjectInputStream::ReadStringRef(MCStringRef &r_value)
 {
-	MCStringRef t_string;
+    MCStringRef t_string;
 	if (!MCStringCreateMutable(0, t_string))
         return IO_ERROR;
 	
@@ -244,10 +244,12 @@ IO_stat MCObjectInputStream::ReadNameRef(MCNameRef& r_value)
 	IO_stat t_stat;
 	t_stat = ReadStringRef(&t_name_string);
 	if (t_stat == IO_NORMAL)
+    {
 		if (MCNameCreate(*t_name_string, r_value))
 			return IO_NORMAL;
 		else
 			t_stat = IO_ERROR;
+    }
 
 	return t_stat;
 }
@@ -276,8 +278,9 @@ IO_stat MCObjectInputStream::ReadTranslatedStringRef(MCStringRef &r_value)
 #endif
         
         // Conversion complete
+        uindex_t t_length = MCStringGetLength(t_read);
         MCValueRelease(t_read);
-        if (!MCStringCreateWithCStringAndRelease((char_t*)t_cstring, t_read))
+        if (!MCStringCreateWithNativeChars((char_t*)t_cstring, t_length, t_read))
         {
             free(t_cstring);
             return IO_ERROR;
@@ -286,6 +289,7 @@ IO_stat MCObjectInputStream::ReadTranslatedStringRef(MCStringRef &r_value)
     
     // All done
     r_value = t_read;
+    return IO_NORMAL;
 }
 
 IO_stat MCObjectInputStream::ReadColor(MCColor &r_color)
@@ -445,14 +449,12 @@ IO_stat MCObjectOutputStream::WriteStringRef(MCStringRef p_value)
 	if (p_value == NULL || MCStringIsEmpty(p_value))
 		return WriteU8(0);
 
-	// Warning: StringRefs don't necessarily have a trailing '\0' 
-	// included in the character count...
+	// StringRefs may contain '\0' internally but we can't write internal
+    // nulls without creating a corrupt file.
 	IO_stat t_stat;
 	uint32_t t_length;
 	t_length = strlen(MCStringGetCString(p_value));
-	t_stat = Write(MCStringGetCString(p_value), t_length);
-	if (t_stat == IO_NORMAL)
-		t_stat = WriteU8(0);
+	t_stat = Write(MCStringGetCString(p_value), t_length + 1);
 	return t_stat;
 }
 
