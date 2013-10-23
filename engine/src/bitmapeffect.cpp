@@ -478,7 +478,8 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 			MCBitmapEffectColorFromMCColor(t_mc_color, t_new_color);
 			if (t_new_color != (self -> layer . color & 0xffffff))
 			{
-				self -> layer . color = (self -> layer . color & 0xff000000) | t_new_color;
+				// MM-2013-10-21: [[ Bug 11297 ]] Make sure we ignore any opacity value in the new color (refactor graphics changes mean it defaults to 255).
+				self -> layer . color = (self -> layer . color & 0xff000000) | (t_new_color & 0x00ffffff);
 				r_dirty = True;
 			}
 		}
