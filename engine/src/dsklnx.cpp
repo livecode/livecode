@@ -922,9 +922,13 @@ public:
         IO_stdin = MCsystem -> OpenFd(0, kMCSOpenFileModeRead);
         IO_stdout = MCsystem -> OpenFd(1, kMCSOpenFileModeWrite);
         IO_stderr = MCsystem -> OpenFd(2, kMCSOpenFileModeWrite);
-
-        setlocale(LC_CTYPE, MCnullstring);
-        setlocale(LC_COLLATE, MCnullstring);
+		
+		// Internally, LiveCode assumes sorting orders etc are those of en_US.
+		// Additionally, the "native" string encoding for Linux is ISO-8859-1
+		// (even if the Linux system is using something different).
+		const char *t_internal_locale = "en_US.ISO-8859-1";
+		setlocale(LC_CTYPE, t_internal_locale);
+		setlocale(LC_COLLATE, t_internal_locale);
 
         MCinfinity = HUGE_VAL;
 
@@ -2676,9 +2680,9 @@ public:
         }
         else
         {
-            extern bool MCSystemOpenElevatedProcess(const char *p_command, int32_t& r_pid, int32_t& r_input_fd, int32_t& r_output_fd);
+            extern bool MCSystemOpenElevatedProcess(MCStringRef p_command, int32_t& r_pid, int32_t& r_input_fd, int32_t& r_output_fd);
             int32_t t_pid, t_input_fd, t_output_fd;
-            if (MCSystemOpenElevatedProcess(MCNameGetCString(p_name), t_pid, t_input_fd, t_output_fd))
+            if (MCSystemOpenElevatedProcess(MCNameGetString(p_name), t_pid, t_input_fd, t_output_fd))
             {
                 MCprocesses[MCnprocesses++] . pid = t_pid;
                 CheckProcesses();
