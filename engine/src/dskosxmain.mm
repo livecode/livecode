@@ -34,7 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool X_init(int argc, char *argv[], char *envp[]);
+bool X_init(int argc, MCStringRef argv[], MCStringRef envp[]);
 void X_main_loop_iteration();
 int X_close();
 
@@ -66,9 +66,47 @@ int main(int argc, char *argv[], char *envp[])
 	if (!MCInitialize())
 		exit(-1);
 	
+	// On OSX, argv and envp are encoded as UTF8
+	MCStringRef *t_new_argv;
+	/* UNCHECKED */ MCMemoryNewArray(argc, t_new_argv);
+	
+	for (int i = 0; i < argc; i++)
+	{
+		/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)argv[i], strlen(argv[i]), kMCStringEncodingUTF8, false, t_new_argv[i]);
+	}
+	
+	MCStringRef *t_new_envp;
+	/* UNCHECKED */ MCMemoryNewArray(1, t_new_envp);
+	
+	int i = 0;
+	uindex_t t_envp_count = 0;
+	
+	while (envp[i] != NULL)
+	{
+		t_envp_count++;
+		uindex_t t_count = i;
+		/* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_count);
+		/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)envp[i], strlen(envp[i]), kMCStringEncodingUTF8, false, t_new_envp[i]);
+		i++;
+	}
+	
+	t_new_envp[i] = nil;
+		
+	
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
-	if (!X_init(argc, argv, envp))
+	bool t_init;
+	t_init = X_init(argc, t_new_argv, t_new_envp);
+	
+	for (i = 0; i < argc; i++)
+		MCValueRelease(t_new_argv[i]);
+	for (i = 0; i < t_envp_count; i++)
+		MCValueRelease(t_new_envp[i]);
+	
+	MCMemoryDeleteArray(t_new_argv);
+	MCMemoryDeleteArray(t_new_envp);
+	
+	if (!t_init)
 	{
 		[t_pool release];
 		
