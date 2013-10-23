@@ -233,18 +233,18 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 					int4 val;
 					GetEventParameter(event, kEventParamMouseWheelDelta, typeLongInteger, NULL, sizeof(val), NULL, &val);
 					if (val < 0)
-						mfocused->kdown("", XK_WheelUp);
+						mfocused->kdown(kMCEmptyString, XK_WheelUp);
 					else
-						mfocused->kdown("", XK_WheelDown);
+						mfocused->kdown(kMCEmptyString, XK_WheelDown);
 				}
 				else if (t_axis ==  kEventMouseWheelAxisX)
 				{
 					int4 val;
 					GetEventParameter(event, kEventParamMouseWheelDelta, typeLongInteger, NULL, sizeof(val), NULL, &val);
 					if (val < 0)
-						mfocused->kdown("", XK_WheelLeft);
+						mfocused->kdown(kMCEmptyString, XK_WheelLeft);
 					else
-						mfocused->kdown("", XK_WheelRight);
+						mfocused->kdown(kMCEmptyString, XK_WheelRight);
 				}
 			}
 		}
@@ -612,7 +612,7 @@ static pascal OSErr DoAppPreferences(const AppleEvent *theAppleEvent, AppleEvent
 	MCGroup *mb = MCmenubar != NULL ? MCmenubar : MCdefaultmenubar;
 	if (mb == NULL)
 		return errAEEventNotHandled;
-	MCButton *bptr = (MCButton *)mb->findname(CT_MENU, "Edit");
+	MCButton *bptr = (MCButton *)mb->findname(CT_MENU, MCNAME("Edit"));
 	if (bptr == NULL)
 		return errAEEventNotHandled;
 	if (bptr != NULL)
@@ -1138,32 +1138,6 @@ static void init_utf8_converters(void)
 	CreateTextToUnicodeInfo(&ucmapping, &texttoutf8info);
 	CreateUnicodeToTextInfo(&ucmapping, &utf8totextinfo);
 }
-
-void MCS_utf8tonative(const char *s, uint4 len, char *d, uint4 &destlen)
-{
-	init_utf8_converters();
-	
-	ByteCount processedbytes, outlength;
-	uint4 destbufferlength;
-	destbufferlength = destlen;
-	ConvertFromUnicodeToText(utf8totextinfo, len, (UniChar *)s,kUnicodeUseFallbacksMask | kUnicodeLooseMappingsMask, 0, NULL, 0, NULL, destbufferlength, &processedbytes, &outlength, (LogicalAddress)d);
-	destlen = outlength;
-}
-
-void MCS_nativetoutf8(const char *s, uint4 len, char *d, uint4 &destlen)
-{
-	init_utf8_converters();
-	
-	ByteCount processedbytes, outlength;
-	uint4 destbufferlength;
-	destbufferlength = destlen;
-	ConvertFromTextToUnicode(texttoutf8info, len, (LogicalAddress)s,
-	                         kUnicodeLooseMappingsMask, 0, NULL, 0, NULL,
-	                         destbufferlength, &processedbytes,
-	                         &outlength, (UniChar *)d);
-	destlen = outlength;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 /* LEGACY */
@@ -1603,7 +1577,7 @@ bool MCS_mac_FSSpec2path(FSSpec *fSpec, MCStringRef& r_path)
 	else
 		errno = FSRefMakePath(&ref, (unsigned char *)t_char_ptr, PATH_MAX);
 	uint4 destlen;
-	char *tutfpath = new char[PATH_MAX + 1];
+	char *tutfpath;
 	destlen = PATH_MAX;
 	MCS_utf8tonative(t_char_ptr, strlen(t_char_ptr), tutfpath, destlen);
 	tutfpath[destlen] = '\0';
@@ -5527,16 +5501,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (NULL == getcwd(namebuf, PATH_MAX))
             return false;
         
-        MCAutoNativeCharArray t_buffer;
-        if (!t_buffer.New(PATH_MAX))
-            return false;
-        
-        uint4 outlen;
-        outlen = PATH_MAX;
-        MCS_utf8tonative(namebuf, strlen(namebuf), (char*)t_buffer.Chars(), outlen);
-        t_buffer.Shrink(outlen);
-        
-        if (!t_buffer.CreateStringAndRelease(r_path))
+        if (!MCStringCreateWithBytesAndRelease((byte_t*)namebuf, strlen(namebuf), kMCStringEncodingUTF8, false, r_path))
         {
             r_path = MCValueRetain(kMCEmptyString);
             return false;
@@ -6033,9 +5998,9 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             {
                 MCSystemFolderEntry t_entry;
                 
-                char t_native_name[256];
+                char* t_native_name;
                 uint4 t_native_length;
-                t_native_length = 256;
+                t_native_length = 0;
                 MCS_utf16tonative((const unsigned short *)t_names[t_i] . unicode, t_names[t_i] . length, t_native_name, t_native_length);
                 // MCS_utf16tonative return a non nul-terminated string
                 t_native_name[t_native_length] = '\0';
@@ -7354,8 +7319,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                         Kill(MCprocesses[index].pid, SIGKILL);
                     MCprocesses[index].pid = 0;
                     MCeerror->add
+
                     (EE_SHELL_BADCOMMAND, 0, 0, *t_utf_path);
                     return IO_ERROR;
+
                 }
             }
             else
@@ -7363,6 +7330,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 close(tochild[0]);
                 close(tochild[1]);
                 MCeerror->add
+
                 (EE_SHELL_BADCOMMAND, 0, 0, *t_utf_path);
                 return IO_ERROR;
             }
@@ -7413,7 +7381,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         r_retcode = MCprocesses[index].retcode;        
         
-        return IO_NORMAL;
+        return true;
     }
     
     virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, intenum_t p_mode, Boolean p_elevated)
@@ -8640,19 +8608,6 @@ void MCS_multibytetounicode(const char *s, uint4 len, char *d,
 	oldcharset = charset;
 }
 
-void MCS_nativetoutf16(const char *p_native, uint4 p_native_length, unsigned short *p_utf16, uint4& x_utf16_length)
-{
-	uint4 t_byte_length;
-	t_byte_length = x_utf16_length * sizeof(unsigned short);
-	MCS_multibytetounicode(p_native, p_native_length, (char *)p_utf16, t_byte_length, t_byte_length, LCH_ROMAN);
-	x_utf16_length = t_byte_length / sizeof(unsigned short);
-}
-
-void MCS_utf16tonative(const unsigned short *p_utf16, uint4 p_utf16_length, char *p_native, uint4& p_native_length)
-{
-	MCS_unicodetomultibyte((const char *)p_utf16, p_utf16_length * 2, p_native, p_native_length, p_native_length, LCH_ROMAN);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool startprocess_create_argv(char *name, char *doc, uint32_t & r_argc, char**& r_argv)
@@ -9140,6 +9095,9 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 	}
 	else
 		MCresult->clear(False);
+
     
     delete t_doc;
+
 }
+

@@ -54,7 +54,7 @@ MCPropertyInfo MCScrollbar::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_NUMBER_FORMAT, String, MCScrollbar, NumberFormat)
 	DEFINE_RW_OBJ_PROPERTY(P_START_VALUE, String, MCScrollbar, StartValue)
 	DEFINE_RW_OBJ_PROPERTY(P_END_VALUE, String, MCScrollbar, EndValue)
-//	DEFINE_RW_OBJ_PROPERTY(P_SHOW_VALUE, Bool, MCScrollbar, ShowValue)
+	DEFINE_RW_OBJ_PROPERTY(P_SHOW_VALUE, Bool, MCScrollbar, ShowValue)
 };
 
 MCObjectPropertyTable MCScrollbar::kPropertyTable =
@@ -155,10 +155,10 @@ void MCScrollbar::open()
 	compute_barsize();
 }
 
-Boolean MCScrollbar::kdown(const char *string, KeySym key)
+Boolean MCScrollbar::kdown(MCStringRef p_string, KeySym key)
 {
 	if (!(state & CS_NO_MESSAGES))
-		if (MCObject::kdown(string, key))
+		if (MCObject::kdown(p_string, key))
 			return True;
 	Boolean done = False;
 	switch (key)

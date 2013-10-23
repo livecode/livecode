@@ -60,24 +60,21 @@ MC_EXEC_DEFINE_SET_METHOD(Debugging, WatchedVariables, 1)
 
 void MCDebuggingExecDebugDo(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos)
 {
-	MCExecPoint& ep = ctxt . GetEP();
-
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
-		ep.setline(p_line);
-		MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+		ctxt.GetEP().setline(p_line);
+		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
 
 	if (MCdebugcontext >= MCnexecutioncontexts)
 		MCdebugcontext = MCnexecutioncontexts - 1;
 
-	MCExecPoint *t_ep_ptr;
-	t_ep_ptr = MCexecutioncontexts[MCdebugcontext];
+	MCExecContext *t_ctxt_ptr;
+	t_ctxt_ptr = MCexecutioncontexts[MCdebugcontext];
 
-	t_ep_ptr -> setvalueref(p_script);
-	ep . gethandler() -> doscript(*t_ep_ptr, p_line, p_pos);
+	t_ctxt_ptr->GetHandler()->doscript(*t_ctxt_ptr, p_script, p_line, p_pos);
 
 	if (added)
 		MCnexecutioncontexts--;
@@ -87,7 +84,7 @@ void MCDebuggingExecDebugDo(MCExecContext& ctxt, MCStringRef p_script, uinteger_
 
 void MCDebuggingExecBreakpoint(MCExecContext& ctxt, uinteger_t p_line, uinteger_t p_pos)
 {
-	MCB_break(ctxt . GetEP(), p_line, p_pos);
+	MCB_break(ctxt, p_line, p_pos);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,7 +127,9 @@ void MCDebuggingGetTraceStack(MCExecContext& ctxt, MCStringRef& r_value)
 		return;
 	}
 
-	if (MCtracestackptr -> names(P_NAME, r_value))
+	MCAutoValueRef t_value;
+	if (MCtracestackptr -> names(P_NAME, &t_value))
+		if (ctxt.ConvertToString(*t_value, r_value))
 		return;
 
 	ctxt . Throw();
@@ -207,16 +206,16 @@ void MCDebuggingGetDebugContext(MCExecContext& ctxt, MCStringRef& r_value)
 
 	if (t_success)
 	{
-		MCAutoStringRef t_context_id;
-		t_success = MCexecutioncontexts[MCdebugcontext]->getobj()->names(P_LONG_ID, &t_context_id) &&
+		MCAutoValueRef t_context_id;
+		t_success = MCexecutioncontexts[MCdebugcontext]->GetObject()->names(P_LONG_ID, &t_context_id) &&
 					MCListAppend(*t_list, *t_context_id);
 	}
 	
 	if (t_success)
-		t_success = MCListAppend(*t_list, MCexecutioncontexts[MCdebugcontext]->gethandler()->getname());
+		t_success = MCListAppend(*t_list, MCexecutioncontexts[MCdebugcontext]->GetHandler()->getname());
 
 	if (t_success)
-		t_success = MCListAppendInteger(*t_list, MCexecutioncontexts[MCdebugcontext]->getline());
+		t_success = MCListAppendInteger(*t_list, MCexecutioncontexts[MCdebugcontext]->GetEP().getline());
 	
 	if (t_success)
 		t_success = MCListCopyAsString(*t_list, r_value);
@@ -256,8 +255,8 @@ void MCDebuggingSetDebugContext(MCExecContext& ctxt, MCStringRef p_value)
 		{
 			for (uint2 i = 0; i < MCnexecutioncontexts; i++)
 			{
-				if (MCexecutioncontexts[i] -> getobj() == t_object . object && 
-					MCexecutioncontexts[i] -> getline() == t_line)
+				if (MCexecutioncontexts[i] -> GetObject() == t_object . object && 
+					MCexecutioncontexts[i] -> GetEP().getline() == t_line)
 				{
 					MCdebugcontext = i;
 					break;
@@ -285,7 +284,7 @@ void MCDebuggingGetExecutionContexts(MCExecContext& ctxt, MCStringRef& r_value)
 	bool added = false;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
-		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt . GetEP();
+		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = true;
 	}
 
@@ -305,25 +304,25 @@ void MCDebuggingGetExecutionContexts(MCExecContext& ctxt, MCStringRef& r_value)
 			
 			if (t_success)
 			{
-				MCAutoStringRef t_context_id;
-				t_success = MCexecutioncontexts[i]->getobj()->names(P_LONG_ID, &t_context_id) &&
+				MCAutoValueRef t_context_id;
+				t_success = MCexecutioncontexts[i]->GetObject()->names(P_LONG_ID, &t_context_id) &&
 							MCListAppend(*t_context, *t_context_id);
 			}
 			
 			if (t_success)
-				t_success = MCListAppend(*t_context, MCexecutioncontexts[i]->gethandler()->getname());
+				t_success = MCListAppend(*t_context, MCexecutioncontexts[i]->GetHandler()->getname());
 			
 			if (t_success)
 			{
 				MCAutoStringRef t_line;
-				t_success = MCStringFormat(&t_line, "%d", MCexecutioncontexts[i]->getline()) &&
+				t_success = MCStringFormat(&t_line, "%d", MCexecutioncontexts[i]->GetEP().getline()) &&
 							MCListAppend(*t_context, *t_line);
 			}
 			
-			if (t_success && MCexecutioncontexts[i] -> getparentscript() != NULL)
+			if (t_success && MCexecutioncontexts[i] -> GetParentScript() != NULL)
 			{
-				MCAutoStringRef t_parent;
-				t_success = MCexecutioncontexts[i] -> getparentscript() -> GetParent() -> GetObject() -> names(P_LONG_ID, &t_parent) &&
+				MCAutoValueRef t_parent;
+				t_success = MCexecutioncontexts[i] -> GetParentScript() -> GetParent() -> GetObject() -> names(P_LONG_ID, &t_parent) &&
 							MCListAppend(*t_context, *t_parent);
 			}
 

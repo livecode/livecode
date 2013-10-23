@@ -74,7 +74,7 @@ public:
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
 
 	virtual void open();
-	virtual Boolean kdown(const char *string, KeySym key);
+	virtual Boolean kdown(MCStringRef p_string, KeySym key);
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual void munfocus();
 	virtual Boolean mdown(uint2 which);

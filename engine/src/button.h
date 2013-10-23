@@ -163,8 +163,8 @@ public:
 	virtual Boolean kfocusnext(Boolean top);
 	virtual Boolean kfocusprev(Boolean bottom);
 	virtual void kunfocus();
-	virtual Boolean kdown(const char *string, KeySym key);
-	virtual Boolean kup(const char *string, KeySym key);
+	virtual Boolean kdown(MCStringRef p_string, KeySym key);
+	virtual Boolean kup(MCStringRef p_string, KeySym key);
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual void munfocus();
 	virtual Boolean mdown(uint2 which);
@@ -205,7 +205,7 @@ public:
 	virtual void getwidgetthemeinfo(MCWidgetInfo &widgetinfo);
 	
 	// MCButton functions
-	void activate(Boolean notify, uint2 key);
+	void activate(Boolean notify, KeySym p_key);
 	void clearmnemonic();
 	void setupmnemonic();
 	MCCdata *getbptr(uint4 cardid);
@@ -313,7 +313,7 @@ public:
 	Bool macfindmenu(bool p_just_for_accel);
 	void macopenmenu(void);
 	void macfreemenu(void);
-	static void getmacmenuitemtextfromaccelerator(short menuid, uint2 key, uint1 mods, MCStringRef &r_string, bool issubmenu);
+	static void getmacmenuitemtextfromaccelerator(short menuid, KeySym key, uint1 mods, MCStringRef &r_string, bool issubmenu);
 #endif
 
 	MCCdata *getcdata(void) {return bdata;}
@@ -357,6 +357,8 @@ public:
 	void SetIcon(MCExecContext& ctxt, Properties which, uinteger_t p_icon);
     void DoGetIcon(MCExecContext& ctxt, Current_icon which, MCInterfaceButtonIcon& r_icon);
     void DoSetIcon(MCExecContext& ctxt, Current_icon which, const MCInterfaceButtonIcon& p_icon);
+    void SetChunkProp(MCExecContext& ctxt, uint32_t p_part, int32_t p_start, int32_t p_finish, Properties which, bool setting);
+    
 	void UpdateIconAndMenus(void);
 
 	////////// PROPERTY ACCESSORS
@@ -448,6 +450,11 @@ public:
     virtual void SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins);
     void GetHilite(MCExecContext& ctxt, uint32_t p_part, MCInterfaceTriState& r_hilite);
     void SetHilite(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceTriState& p_hilite);
+    
+    void SetDisabledOfCharChunk(MCExecContext& ctxt, uint32_t p_part, int32_t p_start, int32_t p_finish, bool setting);
+    void SetEnabledOfCharChunk(MCExecContext& ctxt, uint32_t p_part, int32_t p_start, int32_t p_finish, bool setting);
+    void SetHiliteOfCharChunk(MCExecContext& ctxt, uint32_t p_part, int32_t p_start, int32_t p_finish, bool setting);
+    void SetUnhiliteOfCharChunk(MCExecContext& ctxt, uint32_t p_part, int32_t p_start, int32_t p_finish, bool setting);
     
 private:
 	int4 formattedtabwidth(void);

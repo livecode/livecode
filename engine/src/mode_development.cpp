@@ -1070,7 +1070,7 @@ bool MCModeShouldCheckCantStandalone(void)
 	return false;
 }
 
-bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
+bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string)
 {
 	// IM-2013-04-16: [[ BZ 10836 ]] update revMessageBoxLastObject
 	// if the source of the change is not within the message box
@@ -1085,8 +1085,8 @@ bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 	}
 	
 	MCObject *t_src_object = nil;
-	if (ep.getobj() != nil)
-		t_src_object = ep.getobj();
+	if (ctxt.GetObject() != nil)
+		t_src_object = ctxt.GetObject();
 	
 	bool t_in_msg_box = false;
 	
@@ -1109,9 +1109,9 @@ bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 		
 		MCNameDelete(MCmessageboxlasthandler);
 		MCmessageboxlasthandler = nil;
-		MCNameClone(ep.gethandler()->getname(), MCmessageboxlasthandler);
+		MCNameClone(ctxt.GetHandler()->getname(), MCmessageboxlasthandler);
 		
-		MCmessageboxlastline = ep.getline();
+		MCmessageboxlastline = ctxt.GetEP().getline();
 	}
 	
 	if (MCmessageboxredirect != NULL)
@@ -1132,9 +1132,7 @@ bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 			else
 				t_msg_stack -> raise();
 
-			MCAutoStringRef t_string;
-			ep . copyasstringref(&t_string);
-			((MCField *)MCmessageboxredirect) -> settext(0, *t_string, False);
+			((MCField *)MCmessageboxredirect) -> settext(0, p_string, False);
 		}
 		else
 		{
@@ -1142,9 +1140,9 @@ bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 			/* UNCHECKED */ t_msg_changed . CreateWithCString("msgchanged");
 			
 			bool t_added;
-			if (MCnexecutioncontexts < MAX_CONTEXTS && ep . getobj() != nil)
+			if (MCnexecutioncontexts < MAX_CONTEXTS && ctxt.GetObject() != nil)
 			{
-				MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+				MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 				t_added = true;
 			}
 			

@@ -193,7 +193,7 @@ MCVideoClip *MCVideoClip::clone()
 	return new MCVideoClip(*this);
 }
 
-char *MCVideoClip::getfile()
+bool MCVideoClip::getfile(MCStringRef& r_file)
 {
 	if (frames != NULL)
 	{
@@ -203,17 +203,18 @@ char *MCVideoClip::getfile()
 		
 		IO_handle tstream;
 		if ((tstream = MCS_open(*t_tmpfile, kMCSOpenFileModeWrite, False, False, 0)) == NULL)
-			return NULL;
+			return false;
 		IO_stat stat = IO_write(frames, sizeof(int1), size, tstream);
 		MCS_close(tstream);
 		if (stat != IO_NORMAL)
 		{
 			MCS_unlink(*t_tmpfile);
-			return NULL;
+			return false;
 		}
-		return strclone(MCStringGetCString(*t_tmpfile));
+		r_file = MCValueRetain(*t_tmpfile);
+		return true;
 	}
-	return NULL;
+	return false;
 }
 
 Boolean MCVideoClip::import(MCStringRef fname, IO_handle fstream)

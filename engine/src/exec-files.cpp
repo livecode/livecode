@@ -712,12 +712,6 @@ void MCFilesEvalShell(MCExecContext& ctxt, MCStringRef p_command, MCStringRef& r
 		return;
 	}
 
-	if (!ctxt . GetEP() . setvalueref(p_command))
-	{
-		ctxt . Throw();
-		return;
-	}
-
 	if (MCS_runcmd(p_command, r_output) != IO_NORMAL)
 	{
 		ctxt . LegacyThrow(EE_SHELL_BADCOMMAND);
@@ -744,7 +738,8 @@ void MCFilesExecLaunchUrl(MCExecContext& ctxt, MCStringRef p_url)
 
 	// MW-2008-04-02: [[ Bug 6306 ]] Make sure we escape invalid URL characters to save
 	//   the user having to do so.
-	MCExecPoint t_new_ep(NULL, NULL, NULL);
+	MCAutoStringRef t_mutable_string;
+	/* UNCHECKED */ MCStringCreateMutable(0, &t_mutable_string);
 	while(*t_url != '\0')
 	{
 		// MW-2008-08-14: [[ Bug 6898 ]] Interpreting this as a signed char causes sprintf
@@ -756,23 +751,26 @@ void MCFilesExecLaunchUrl(MCExecContext& ctxt, MCStringRef p_url)
 		// MW-2008-06-12: [[ Bug 6446 ]] We must not escape '#' because this breaks URL
 		//   anchors.
 		if (t_char < 128 && (isalnum(t_char) || strchr("$-_.+!*'%(),;/?:@&=#", t_char) != NULL))
-			t_new_ep . appendchar(t_char);
+			/* UNCHECKED */ MCStringAppendNativeChar(*t_mutable_string, t_char); 
 		else
-			t_new_ep . appendstringf("%%%02X", t_char);
+			MCStringAppendFormat(*t_mutable_string, "%%%02X", t_char); 
+			//t_new_ep . appendstringf("%%%02X", t_char);
 
 		t_url += 1;
 	}
 
-	MCAutoStringRef t_new_url;
-	/* UNCHECKED */ t_new_ep . copyasstringref(&t_new_url);
+	MCStringRef t_new_url;
+	t_new_url = MCValueRetain(*t_mutable_string);
 
 
 	if (ctxt . EnsureProcessIsAllowed())
 	{
-		MCS_launch_url(*t_new_url);
+		MCS_launch_url(t_new_url);
+		MCValueRelease(t_new_url);
 		return;
 	}
 
+	MCValueRelease(t_new_url);
 	ctxt . LegacyThrow(EE_PROCESS_NOPERM);
 }
 
@@ -1605,7 +1603,8 @@ void MCFilesExecReadFromFileOrDriverUntil(MCExecContext& ctxt, bool p_driver, bo
 
 	if (MCStringGetLength(p_sentinel) == 1 && MCStringGetNativeCharAtIndex(p_sentinel, 0) == '\004')
 	{
-		IO_read_to_eof(t_stream, ctxt . GetEP());
+		MCAutoDataRef t_data;
+		IO_read_to_eof(t_stream, &t_data);
 		ctxt . SetTheResultToStaticCString("eof");
 	}
 		
@@ -1713,8 +1712,9 @@ void MCFilesExecReadFromProcessUntil(MCExecContext& ctxt, MCNameRef p_process, M
 
 void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringRef p_data, int p_unit_type, IO_stat &r_stat)
 {
-	uint4 l = MCStringGetLength(p_data);
-	const char *t_data = MCStringGetCString(p_data);
+	uint4 len = MCStringGetLength(p_data);
+	uindex_t t_data_pos;
+	t_data_pos = 0;
 
 	switch (p_unit_type)
 	{
@@ -1722,20 +1722,21 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
 	case FU_ITEM:
 	case FU_LINE:
 	case FU_WORD:
-		r_stat = MCS_write(t_data, sizeof(char), l, p_stream);
+		r_stat = MCS_write(MCStringGetCString(p_data), sizeof(char), len, p_stream);
 		break;
 	default:
 		{
-			while (l)
+			while (len)
 			{
-				const char *startptr = t_data;
-				if (!MCU_strchr(t_data, l, ','))
+				uindex_t t_start_pos;
+				t_start_pos = t_data_pos;
+				if (!MCStringFirstIndexOfChar(p_data, ',', 0, kMCCompareExact, len))
 				{
-					t_data += l;
-					l = 0;
+					t_data_pos += len;
+					len = 0;
 				}
 				MCAutoStringRef s;
-				MCStringCreateWithNativeChars((const char_t *)startptr, t_data - startptr, &s);
+				/* UNCHECKED */ MCStringCopySubstring(p_data, MCRangeMake(t_start_pos, t_data_pos - t_start_pos), &s); 
 				real8 n;
 				if (!MCU_stor8(*s, n))
 				{
@@ -1743,7 +1744,7 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
 					r_stat = IO_ERROR;
 					break;
 				}
-				t_data++;
+				t_data_pos++;
 				switch (p_unit_type)
 				{
 				case FU_INT1:

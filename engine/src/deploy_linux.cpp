@@ -611,9 +611,9 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	// First thing we do is open the files.
 	MCDeployFileRef t_engine, t_output;
 	t_engine = t_output = NULL;
-	if (t_success && !MCDeployFileOpen(p_params . engine, "rb", t_engine))
+	if (t_success && !MCDeployFileOpen(p_params . engine, kMCSOpenFileModeRead, t_engine))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
-	if (t_success && !MCDeployFileOpen(p_params . output, "wb+", t_output))
+	if (t_success && !MCDeployFileOpen(p_params . output, kMCSOpenFileModeWrite, t_output))
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 
 	// Now read in the main ELF header
@@ -816,23 +816,13 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	MCDeployFileClose(t_output);
 
 	// OK-2010-02-22: [[Bug 8624]] - Standalones not being made executable if they contain accented chars in path.
-	char *t_path;
-	t_path = nil;
-#if defined(_MACOSX)
-	if (t_success)
-		t_success = MCCStringFromNative(p_params . output, t_path);
-#else
-	t_path = p_params . output;
-#endif
+	MCStringRef t_path;
+	t_path = p_params.output;
 	
 	// If on Mac OS X or Linux, make the file executable
 #if defined(_MACOSX) || defined(_LINUX)
 	if (t_success)
-		chmod(t_path, 0755);
-#endif
-	
-#if defined(_MACOSX)
-	MCCStringFree(t_path);
+		chmod(MCStringGetCString(t_path), 0755);
 #endif
 	
 	return t_success ? ES_NORMAL : ES_ERROR;

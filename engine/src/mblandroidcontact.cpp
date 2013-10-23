@@ -140,7 +140,6 @@ bool MCAndroidContactToJavaMap(MCArrayRef p_contact, jobject &r_map)
 	bool t_success = true;
 	
 	JNIEnv *t_env = MCJavaGetThreadEnv();
-	MCExecPoint ep(nil, nil, nil);
 	
 	t_success = MCJavaMapFromArray(t_env, p_contact, r_map);
 	
@@ -149,9 +148,7 @@ bool MCAndroidContactToJavaMap(MCArrayRef p_contact, jobject &r_map)
 
 bool MCAndroidContactFromJavaMap(jobject p_map, MCArrayRef &r_contact)
 {
-	JNIEnv *t_env = MCJavaGetThreadEnv();
-	MCExecPoint ep(nil, nil, nil);
-	
+	JNIEnv *t_env = MCJavaGetThreadEnv();	
 	return MCJavaMapToArray(t_env, p_map, r_contact);
 }
 

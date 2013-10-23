@@ -45,6 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxdc.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern void MCRemoteFileDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint32_t p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file, bool p_save, bool p_files, MCStringRef &r_value);
@@ -173,9 +174,8 @@ static void navigation_event_callback(NavEventCallbackMessage p_message, NavCBRe
 								char t_utf8_path[1025 + 32];
 								FSRefMakePath(&t_fsref, (UInt8 *)t_utf8_path, 1024);
 								
-								char t_path[PATH_MAX + 32];
+								char* t_path;
 								uint4 t_path_length;
-								t_path_length = PATH_MAX + 20;
 								MCS_utf8tonative(t_utf8_path, strlen(t_utf8_path), t_path, t_path_length);
 								t_path[t_path_length] = '\0';
 								
@@ -208,9 +208,8 @@ static void navigation_event_callback(NavEventCallbackMessage p_message, NavCBRe
 						char t_utf8_path[1025 + 32];
 						FSRefMakePath(&t_fsref, (UInt8 *)t_utf8_path, 1024);
 						
-						char t_path[PATH_MAX + 32];
+						char *t_path;
 						uint4 t_path_length;
-						t_path_length = PATH_MAX + 20;
 						MCS_utf8tonative(t_utf8_path, strlen(t_utf8_path), t_path, t_path_length);
 						t_path[t_path_length] = '\0';
 						
@@ -741,8 +740,6 @@ void navEventProc(NavEventCallbackMessage callBackSelector,
 											char *tnavfilepath = new char[1025 + 32];
 											osError = FSRefMakePath(&fsRef, (UInt8 *)tnavfilepath, 1024);
 											uint4 destlen;
-											navfilepath = new char[PATH_MAX + 32];
-											destlen = PATH_MAX + 20;
 											MCS_utf8tonative(tnavfilepath, strlen(tnavfilepath), navfilepath, destlen);
 											navfilepath[destlen] = '\0';
 											delete tnavfilepath;

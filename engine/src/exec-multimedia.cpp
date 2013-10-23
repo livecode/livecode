@@ -157,7 +157,7 @@ void MCMultimediaEvalMovie(MCExecContext& ctxt, MCStringRef& r_string)
 		{
 			if (tptr->isdisposable())
 			{
-				MCAutoStringRef t_string;
+				MCAutoValueRef t_string;
 				t_success = tptr->names(P_NAME, &t_string) && MCListAppend(*t_list, *t_string);
 				t_playing = true;
 			}
@@ -362,8 +362,10 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 
 	sptr = p_target != nil ? p_target : MCdefaultstackptr;
 
+	MCNewAutoNameRef t_filename;
+	/* UNCHECKED */ MCNameCreate(p_filename, &t_filename);
 	if ((vcptr = (MCVideoClip *)p_target->getAV((Chunk_term)p_chunk_type, p_filename, CT_VIDEO_CLIP)) == NULL && 
-		(vcptr = (MCVideoClip *)p_target->getobjname(CT_VIDEO_CLIP, p_filename)) == NULL)
+		(vcptr = (MCVideoClip *)p_target->getobjname(CT_VIDEO_CLIP, *t_filename)) == NULL)
 	{
 		MCAutoStringRef t_file;
 		bool t_url = true;
@@ -410,7 +412,7 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 	else
 	{
 		/* UNCHECKED */ MCStringCopy(MCNameGetString(vcptr->getname()), &t_video_name);
-		/* UNCHECKED */ MCStringCreateWithCString(vcptr->getfile(), &t_temp);
+	    /* UNCHECKED */ vcptr->getfile(&t_temp);
 		scale = vcptr->getscale();
 		dontrefresh = vcptr->getflag(F_DONT_REFRESH);
 		tmpfile = True;
@@ -467,8 +469,11 @@ void MCMultimediaExecPlayAudioClip(MCExecContext& ctxt, MCStack *p_target, int p
 #endif
 		return;
 	}
+	
+	MCNewAutoNameRef t_clipname;
+	/* UNCHECKED */ MCNameCreate(p_clip, &t_clipname);
 	if ((MCacptr = (MCAudioClip *)(sptr->getAV((Chunk_term)p_chunk_type, p_clip, CT_AUDIO_CLIP))) == NULL && 
-		(MCacptr = (MCAudioClip *)sptr->getobjname(CT_AUDIO_CLIP, p_clip)) == NULL)
+		(MCacptr = (MCAudioClip *)sptr->getobjname(CT_AUDIO_CLIP, *t_clipname)) == NULL)
 	{
 		IO_handle stream;
 		
@@ -628,7 +633,7 @@ void MCMultimediaGetRecordSampleSize(MCExecContext& ctxt, uinteger_t& r_value)
 	r_value = MCrecordsamplesize;
 }
 
-void MCMultimediaSetRecordSampleSize(MCExecContext& ctxt, uint2 p_value)
+void MCMultimediaSetRecordSampleSize(MCExecContext& ctxt, uinteger_t p_value)
 {
 	MCrecordsamplesize = (p_value <= 8) ? 8 : 16;
 }
@@ -638,7 +643,7 @@ void MCMultimediaGetRecordChannels(MCExecContext& ctxt, uinteger_t& r_value)
 	r_value = MCrecordchannels;
 }
 
-void MCMultimediaSetRecordChannels(MCExecContext& ctxt, uint2 p_value)
+void MCMultimediaSetRecordChannels(MCExecContext& ctxt, uinteger_t p_value)
 {
 	MCrecordchannels = (p_value <= 1) ? 1 : 2;
 }

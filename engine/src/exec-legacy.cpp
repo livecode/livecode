@@ -392,7 +392,7 @@ void MCLegacyExecDoMenu(MCExecContext& ctxt, MCStringRef p_option)
 	else
 	{
 		MCAutoStringRef t_result;
-		MCStringFormat(&t_result, "doMenu \"%s\" not implemented", MCStringGetCString(p_option));
+		MCStringFormat(&t_result, "doMenu \"%@\" not implemented", p_option);
 		ctxt . SetTheResultToValue(*t_result);
 	}
 }
@@ -506,7 +506,7 @@ void MCLegacyGetScriptTextSize(MCExecContext& ctxt, uinteger_t &r_value)
 	r_value = MCscriptsize;
 }
 
-void MCLegacySetScriptTextSize(MCExecContext& ctxt, uint2 p_value)
+void MCLegacySetScriptTextSize(MCExecContext& ctxt, uinteger_t p_value)
 {
 	MCscriptsize = p_value;
 }
@@ -592,7 +592,7 @@ void MCLegacyGetBufferMode(MCExecContext& ctxt, MCStringRef& r_value)
 	ctxt . Throw();
 }
 
-void MCLegacySetBufferMode(MCExecContext& ctxt, MCValueRef p_value)
+void MCLegacySetBufferMode(MCExecContext& ctxt, MCStringRef p_value)
 {
 }
 
@@ -601,7 +601,7 @@ void MCLegacyGetMultiEffect(MCExecContext& ctxt, bool& r_value)
 	r_value = false;
 }
 
-void MCLegacySetMultiEffect(MCExecContext& ctxt, MCValueRef p_value)
+void MCLegacySetMultiEffect(MCExecContext& ctxt, bool p_value)
 {
 }
 

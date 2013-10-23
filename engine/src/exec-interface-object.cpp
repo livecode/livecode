@@ -1103,32 +1103,40 @@ void MCObject::SetId(MCExecContext& ctxt, uint32_t p_new_id)
 
 void MCObject::GetAbbrevId(MCExecContext& ctxt, MCStringRef& r_abbrev_id)
 {
-	if (names(P_ABBREV_ID, r_abbrev_id))
-		return;
+	MCAutoValueRef t_abbrev_id;
+	if (names(P_ABBREV_ID, &t_abbrev_id))
+		if (ctxt.ConvertToString(*t_abbrev_id, r_abbrev_id))
+			return;
 	
 	ctxt . Throw();
 }
 
 void MCObject::GetLongName(MCExecContext& ctxt, MCStringRef& r_long_name)
 {
-	if (names(P_LONG_NAME, r_long_name))
-		return;
+	MCAutoValueRef t_long_name;
+	if (names(P_LONG_NAME, &t_long_name))
+		if (ctxt.ConvertToString(*t_long_name, r_long_name))
+			return;
 	
 	ctxt . Throw();
 }
 
 void MCObject::GetLongId(MCExecContext& ctxt, MCStringRef& r_long_id)
 {
-	if (names(P_LONG_ID, r_long_id))
-		return;
+	MCAutoValueRef t_long_id;
+	if (names(P_LONG_ID, &t_long_id))
+		if (ctxt.ConvertToString(*t_long_id, r_long_id))
+			return;
 	
 	ctxt . Throw();
 }
 
 void MCObject::GetName(MCExecContext& ctxt, MCStringRef& r_name)
 {
-	if (names(P_NAME, r_name))
-		return;
+	MCAutoValueRef t_name;
+	if (names(P_NAME, &t_name))
+		if (ctxt.ConvertToString(*t_name, r_name))
+			return;
 	
 	ctxt . Throw();
 }
@@ -1170,16 +1178,20 @@ void MCObject::SetName(MCExecContext& ctxt, MCStringRef p_name)
 
 void MCObject::GetAbbrevName(MCExecContext& ctxt, MCStringRef& r_abbrev_name)
 {
-	if (names(P_ABBREV_NAME, r_abbrev_name))
-		return;
+	MCAutoValueRef t_abbrev_name;
+	if (names(P_ABBREV_NAME, &t_abbrev_name))
+		if (ctxt.ConvertToString(*t_abbrev_name, r_abbrev_name))
+			return;
 	
 	ctxt . Throw();
 }
 
 void MCObject::GetShortName(MCExecContext& ctxt, MCStringRef& r_short_name)
 {
-	if (names(P_SHORT_NAME, r_short_name))
-		return;
+	MCAutoValueRef t_short_name;
+	if (names(P_SHORT_NAME, &t_short_name))
+		if (ctxt.ConvertToString(*t_short_name, r_short_name))
+			return;
 	
 	ctxt . Throw();
 }
@@ -3061,8 +3073,7 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
 		if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL
 		        && te->type == TT_PROPERTY && te->which != P_ID)
 		{
-			ctxt . GetEP() . setvalueref(t_value);
-			setprop(part, (Properties)te->which, ctxt . GetEP(), False);
+			setstringprop(ctxt, part, (Properties)te->which, False, (MCStringRef)t_value);
 		}
 	}	
 	MCerrorlock--;

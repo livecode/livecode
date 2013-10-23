@@ -241,7 +241,7 @@ public:
 	virtual void close();
 	virtual void kfocus();
 	virtual void kunfocus();
-	virtual Boolean kdown(const char *string, KeySym key);
+	virtual Boolean kdown(MCStringRef p_string, KeySym key);
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual void munfocus();
 	virtual void mdrag(void);
@@ -333,24 +333,23 @@ public:
 	void clearfound();
 	void updateparagraph(Boolean flow, Boolean redrawall, Boolean dodraw = True);
 	void joinparagraphs();
-	void fnop(Field_translations function, const char *string, KeySym key);
-	// MW-2012-02-13: [[ Block Unicode ]] Revised finsert method which understands unicodeness.
-	void finsertnew(Field_translations function, const MCString& string, KeySym key, bool is_unicode);
-	void fdel(Field_translations function, const char *string, KeySym key);
-	void fhelp(Field_translations function, const char *string, KeySym key);
-	void fundo(Field_translations function, const char *string, KeySym key);
-	void fcut(Field_translations function, const char *string, KeySym key);
-	void fcutline(Field_translations function, const char *string, KeySym key);
-	void fcopy(Field_translations function, const char *string, KeySym key);
-	void fpaste(Field_translations function, const char *string, KeySym key);
-	void ftab(Field_translations function, const char *string, KeySym key);
-	void ffocus(Field_translations function, const char *string, KeySym key);
-	void freturn(Field_translations function, const char *string, KeySym key);
-	void fcenter(Field_translations function, const char *string, KeySym key);
-	void fmove(Field_translations function, const char *string, KeySym key);
-	void fscroll(Field_translations function, const char *string, KeySym key);
+	void fnop(Field_translations function, MCStringRef p_string, KeySym key);
+	void finsertnew(Field_translations function, MCStringRef p_string, KeySym key);
+	void fdel(Field_translations function, MCStringRef p_string, KeySym key);
+	void fhelp(Field_translations function, MCStringRef p_string, KeySym key);
+	void fundo(Field_translations function, MCStringRef p_string, KeySym key);
+	void fcut(Field_translations function, MCStringRef p_string, KeySym key);
+	void fcutline(Field_translations function, MCStringRef p_string, KeySym key);
+	void fcopy(Field_translations function, MCStringRef p_string, KeySym key);
+	void fpaste(Field_translations function, MCStringRef p_string, KeySym key);
+	void ftab(Field_translations function, MCStringRef p_string, KeySym key);
+	void ffocus(Field_translations function, MCStringRef p_string, KeySym key);
+	void freturn(Field_translations function, MCStringRef p_string, KeySym key);
+	void fcenter(Field_translations function, MCStringRef p_string, KeySym key);
+	void fmove(Field_translations function, MCStringRef p_string, KeySym key);
+	void fscroll(Field_translations function, MCStringRef p_string, KeySym key);
 	void setupmenu(MCStringRef p_string, uint2 fheight, Boolean scrolling);
-	void setupentry(MCButton *bptr, const MCString &s, Boolean isunicode);
+	void setupentry(MCButton *bptr, MCStringRef p_string);
 	void typetext(const MCString &newtext);
 	void startcomposition();
 	void stopcomposition(Boolean del, Boolean force);
@@ -467,7 +466,7 @@ public:
 
 #ifdef _MACOSX
 	Exec_stat getparagraphmacstyles(MCExecPoint &ep, MCParagraph *start, MCParagraph *end, Boolean isunicode);
-	Exec_stat getparagraphmacunicodestyles(MCExecPoint &ep, MCParagraph *start, MCParagraph *end);
+	Exec_stat getparagraphmacunicodestyles(MCParagraph *p_start, MCParagraph *p_finish, MCDataRef& r_data);
 	MCParagraph *macstyletexttoparagraphs(const MCString &textdata, const MCString &styledata, Boolean isunicode);
 	MCParagraph *macunicodestyletexttoparagraphs(const MCString& p_text, const MCString& p_styles);
 	static bool macmatchfontname(const char *p_font_name, char p_derived_font_name[]);
@@ -686,5 +685,15 @@ public:
 	virtual void SetEffectiveHeight(MCExecContext& ctxt, uinteger_t value);
     virtual void SetRectangle(MCExecContext& ctxt, MCRectangle p_rect);
     virtual void SetEffectiveRectangle(MCExecContext& ctxt, MCRectangle p_rect);
+
+    //////////
+
+    void GetUnicodeTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef& r_value);
+    void GetCharIndexOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t& r_value);
+    void GetTextAlignOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, intenum_t*& r_value);
+    void GetEffectiveTextAlignOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, intenum_t& r_value);
+    void GetTextSizeOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t*& r_value);
+    void SetTextSizeOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t* p_value);
+    void GetEffectiveTextSizeOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t*& r_value);
 };
 #endif

@@ -168,7 +168,7 @@ void MCServerExecInclude(MCExecContext& ctxt, MCStringRef p_filename, bool p_is_
 		return;
 	}
 	
-	if (!t_script -> Include(ctxt . GetEP(), p_filename, p_is_require))
+	if (!t_script -> Include(ctxt, p_filename, p_is_require))
 	{
 		ctxt . LegacyThrow(EE_SCRIPT_ERRORPOS);
 		return;
@@ -180,7 +180,7 @@ void MCServerExecInclude(MCExecContext& ctxt, MCStringRef p_filename, bool p_is_
 
 void MCServerExecEcho(MCExecContext& ctxt, MCStringRef p_data)
 {
-	if (!MCS_put(ctxt . GetEP(), kMCSPutBinaryOutput, p_data) != IO_NORMAL)
+	if (!MCS_put(ctxt, kMCSPutBinaryOutput, p_data))
 		MCexitall = True;
 }
 
@@ -188,38 +188,49 @@ void MCServerExecEcho(MCExecContext& ctxt, MCStringRef p_data)
 
 void MCServerExecPutHeader(MCExecContext& ctxt, MCStringRef p_value, bool p_as_new)
 {
-	if (!MCS_put(ctxt . GetEP(), p_as_new ? kMCSPutNewHeader : kMCSPutHeader, p_value))
+    if (!MCS_put(ctxt, p_as_new ? kMCSPutNewHeader : kMCSPutHeader, p_value))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
-void MCServerExecPutBinaryOutput(MCExecContext& ctxt, MCStringRef p_value)
+void MCServerExecPutBinaryOutput(MCExecContext& ctxt, MCDataRef p_value)
 {
-	if (!MCS_put(ctxt . GetEP(), kMCSPutBinaryOutput, p_value))
+    if (!MCS_put_binary(ctxt, kMCSPutBinaryOutput, p_value))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
-void MCServerExecPutContent(MCExecContext& ctxt, MCStringRef p_value, bool is_unicode)
+void MCServerExecPutContent(MCExecContext& ctxt, MCStringRef p_value)
 {
-	if (!MCS_put(ctxt . GetEP(), is_unicode ? kMCSPutUnicodeContent : kMCSPutContent, p_value))
+	if (!MCS_put(ctxt, MCStringIsNative(p_value) ? kMCSPutContent : kMCSPutUnicodeContent, p_value))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
-void MCServerExecPutMarkup(MCExecContext& ctxt, MCStringRef p_value, bool is_unicode)
+void MCServerExecPutContentUnicode(MCExecContext& ctxt, MCDataRef p_value)
 {
-	if (!MCS_put(ctxt . GetEP(), is_unicode ? kMCSPutUnicodeMarkup : kMCSPutMarkup, p_value))
+	MCAutoStringRef t_string;
+	if (!MCStringCreateWithChars((const unichar_t*)MCDataGetBytePtr(p_value), MCDataGetLength(p_value)/sizeof(unichar_t), &t_string)
+		|| !MCS_put(ctxt, kMCSPutUnicodeContent, *t_string))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
-bool MCServerSetCookie(const MCString &p_name, const MCString &p_value, uint32_t p_expires, const MCString &p_path, const MCString &p_domain, bool p_secure, bool p_http_only);
+void MCServerExecPutMarkup(MCExecContext& ctxt, MCStringRef p_value)
+{
+	if (!MCS_put(ctxt, MCStringIsNative(p_value) ? kMCSPutMarkup : kMCSPutUnicodeMarkup, p_value))
+		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
+}
+
+void MCServerExecPutMarkupUnicode(MCExecContext& ctxt, MCDataRef p_value)
+{
+	MCAutoStringRef t_string;
+	if (!MCStringCreateWithChars((const unichar_t*)MCDataGetBytePtr(p_value), MCDataGetLength(p_value)/sizeof(unichar_t), &t_string)
+		|| !MCS_put(ctxt, kMCSPutUnicodeMarkup, *t_string))
+		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
+}
+
+bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expires, MCStringRef p_path, MCStringRef p_domain, bool p_secure, bool p_http_only);
 void MCServerExecPutCookie(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_value, uinteger_t p_expires, MCStringRef p_path, MCStringRef p_domain, bool p_is_secure, bool p_http_only)
 {
 #ifdef _SERVER
-	MCString t_name, t_path, t_domain, t_value;
-	t_name = p_name != nil ? MCStringGetOldString(p_name) : MCnullmcstring;
-	t_value = p_value != nil ? MCStringGetOldString(p_value) : MCnullmcstring;
-	t_path = p_path != nil ? MCStringGetOldString(p_path) : MCnullmcstring;
-	t_domain = p_domain != nil ? MCStringGetOldString(p_domain) : MCnullmcstring;
-	MCServerSetCookie(t_name, t_value, p_expires, t_path, t_domain, p_is_secure, p_http_only);
+	MCServerSetCookie(p_name, p_value, p_expires, p_path, p_domain, p_is_secure, p_http_only);
 #endif
 }
 

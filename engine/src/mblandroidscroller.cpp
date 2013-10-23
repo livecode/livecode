@@ -49,8 +49,8 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 class MCAndroidScrollerControl: public MCAndroidControl
 {
 protected:
-	static MCNativeControlPropertyInfo kProperties[];
-	static MCNativeControlPropertyTable kPropertyTable;
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
     static MCNativeControlActionInfo kActions[];
 	static MCNativeControlActionTable kActionTable;
     
@@ -65,10 +65,10 @@ public:
 #endif
     
     virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
-    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
 
-    void SetContentRect(MCExecContext& ctxt, MCRectangle32 p_rect);
-    void GetContentRect(MCExecContext& ctxt, MCRectangle32& r_rect);
+    void SetContentRect(MCExecContext& ctxt, integer_t p_rect[4]);
+    void GetContentRect(MCExecContext& ctxt, integer_t r_rect[4]);
   
     void SetHScroll(MCExecContext& ctxt, integer_t p_scroll);
     void GetHScroll(MCExecContext& ctxt, integer_t& r_scroll);
@@ -102,19 +102,19 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeControlPropertyInfo MCAndroidScrollerControl::kProperties[] =
+MCPropertyInfo MCAndroidScrollerControl::kProperties[] =
 {
-    DEFINE_RW_CTRL_PROPERTY(ContentRectangle, Int32X4, MCAndroidScrollerControl, ContentRect)
-    DEFINE_RW_CTRL_PROPERTY(HScroll, Int32, MCAndroidScrollerControl, HScroll)
-    DEFINE_RW_CTRL_PROPERTY(VScroll, Int32, MCAndroidScrollerControl, VScroll)
-    DEFINE_RW_CTRL_PROPERTY(ScrollingEnabled, Bool, MCAndroidScrollerControl, ScrollingEnabled)
-    DEFINE_RW_CTRL_PROPERTY(ShowHorizontalIndicator, Bool, MCAndroidScrollerControl, ShowHorizontalIndicator)
-    DEFINE_RW_CTRL_PROPERTY(ShowVerticalIndicator, Bool, MCAndroidScrollerControl, ShowVerticalIndicator)
-    DEFINE_RO_CTRL_PROPERTY(Tracking, Bool, MCAndroidScrollerControl, Tracking)
-    DEFINE_RO_CTRL_PROPERTY(Dragging, Bool, MCAndroidScrollerControl, Dragging)
+    DEFINE_RW_CTRL_PROPERTY(P_CONTENT_RECT, Int32X4, MCAndroidScrollerControl, ContentRect)
+    DEFINE_RW_CTRL_PROPERTY(P_HSCROLL, Int32, MCAndroidScrollerControl, HScroll)
+    DEFINE_RW_CTRL_PROPERTY(P_VSCROLL, Int32, MCAndroidScrollerControl, VScroll)
+    DEFINE_RW_CTRL_PROPERTY(P_SCROLLING_ENABLED, Bool, MCAndroidScrollerControl, ScrollingEnabled)
+    DEFINE_RW_CTRL_PROPERTY(P_SHOW_HORIZONTAL_INDICATOR, Bool, MCAndroidScrollerControl, ShowHorizontalIndicator)
+    DEFINE_RW_CTRL_PROPERTY(P_SHOW_VERTICAL_INDICATOR, Bool, MCAndroidScrollerControl, ShowVerticalIndicator)
+    DEFINE_RO_CTRL_PROPERTY(P_TRACKING, Bool, MCAndroidScrollerControl, Tracking)
+    DEFINE_RO_CTRL_PROPERTY(P_DRAGGING, Bool, MCAndroidScrollerControl, Dragging)
 };
 
-MCNativeControlPropertyTable MCAndroidScrollerControl::kPropertyTable =
+MCObjectPropertyTable MCAndroidScrollerControl::kPropertyTable =
 {
 	&MCAndroidControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
@@ -154,22 +154,27 @@ MCNativeControlType MCAndroidScrollerControl::GetType(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCAndroidScrollerControl::SetContentRect(MCExecContext& ctxt, MCRectangle32 p_rect)
+void MCAndroidScrollerControl::SetContentRect(MCExecContext& ctxt, integer_t p_rect[4])
 {
     jobject t_view;
     t_view = GetView();
     
     if (t_view != nil)
-        MCAndroidObjectRemoteCall(t_view, "setContentSize", "vii", nil, p_rect . width, p_rect . height);
+        MCAndroidObjectRemoteCall(t_view, "setContentSize", "vii", nil, p_rect[2] - p_rect[0], p_rect[3] - p_rect[1]);
 }
 
-void MCAndroidScrollerControl::GetContentRect(MCExecContext& ctxt, MCRectangle32& r_rect)
+void MCAndroidScrollerControl::GetContentRect(MCExecContext& ctxt, integer_t r_rect[4])
 {
     jobject t_view;
     t_view = GetView();
     
     if (t_view != nil)
-        r_rect = m_content_rect;
+    {
+        r_rect[0] = m_content_rect . x;
+        r_rect[1] = m_content_rect . y;
+        r_rect[2] = m_content_rect . x + m_content_rect . width;
+        r_rect[3] = m_content_rect . y + m_content_rect . height;
+    }
 }
 
 void MCAndroidScrollerControl::SetHScroll(MCExecContext& ctxt, integer_t p_scroll)

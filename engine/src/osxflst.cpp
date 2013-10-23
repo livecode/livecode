@@ -63,6 +63,7 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 	reqsize = size;
 	reqstyle = style;
 	char *tmpname;
+	char *temp;
 	font = new MCFontStruct; //create MCFont structure
 	font->unicode = False;
 	font->charset = 0;
@@ -71,11 +72,14 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 	// MW-2005-05-10: Update this to FM type
 	FMFontFamily ffamilyid;		    //font family ID
 	
-	tmpname = strclone(MCNameGetCString(fname));//make a copy of the font name
+	/* UNCHECKED */ MCStringConvertToCString(MCNameGetString(fname), temp);
+	tmpname = strclone(temp);//make a copy of the font name
+
 	StringPtr reqnamePascal = c2pstr(tmpname);
 	
 	// MW-2005-05-10: Update this call to FM rountines
 	ffamilyid = FMGetFontFamilyFromName(reqnamePascal);
+	delete temp;
 	delete tmpname;
 	if (font->charset && font->charset != LCH_UNICODE && FontToScript(ffamilyid) != MCS_charsettolangid(font->charset))
 		ffamilyid = GetScriptVariable(MCS_charsettolangid(font->charset),smScriptAppFond);

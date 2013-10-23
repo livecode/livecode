@@ -85,7 +85,7 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 		}
 		
 		if (p_parameters != nil)
-			t_success = p_parameters -> eval_argument(ep) == ES_NORMAL;
+			t_success = p_parameters -> eval(ep) == ES_NORMAL;
 		else if (t_now_optional)
 			break;
 		else
@@ -114,21 +114,19 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 			
             case 'x':
             {
-                MCStringRef t_string;
-                if (t_success && ep . copyasstringref(t_string))
-                    *(va_arg(t_args, MCStringRef *)) = t_string;
+				if (t_success)
+					ep . copyasstringref(*(va_arg(t_args, MCStringRef *)));
 				else
-					*(va_arg(t_args, MCStringRef *)) = nil;
+					t_success = false;
 				break;
             }
                 
 			case 'a':
             {
-                MCArrayRef t_array;
-				if (t_success && ep . copyasarray(t_array))
-                    *(va_arg(t_args, MCArrayRef *)) = t_array;
+				if (t_success)
+					ep . copyasarrayref(*(va_arg(t_args, MCArrayRef *)));
 				else
-					*(va_arg(t_args, MCArrayRef *)) = nil;
+					t_success = false;
 				break;
             }
 				
@@ -252,7 +250,7 @@ UIWindow *MCIPhoneGetWindow(void);
 struct export_image_t
 {
 	MCExportImageToAlbumDelegate *delegate;
-	MCStringRef raw_data;
+	MCDataRef raw_data;
 };
 
 static void export_image(void *p_context)
@@ -261,8 +259,7 @@ static void export_image(void *p_context)
 	ctxt = (export_image_t *)p_context;
 	
 	NSData *t_data;
-	t_data = [[NSData alloc] initWithBytes: (void *)MCStringGetCString(ctxt -> raw_data) length: MCStringGetLength(ctxt -> raw_data)];
-	
+	t_data = [[NSData alloc] initWithBytes: (void *)MCDataGetBytePtr(ctxt -> raw_data) length: MCDataGetLength(ctxt -> raw_data)];
 	UIImage *t_img;
 	t_img = [[UIImage alloc] initWithData: t_data];
 	UIImageWriteToSavedPhotosAlbum(t_img, ctxt -> delegate, @selector(image:didFinishSavingWithError:contextInfo:), nil);
@@ -343,7 +340,7 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCStringRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension)
 {
 	export_image_t ctxt;
-	MCStringCopy(p_raw_data, ctxt . raw_data);
+    MCStringEncode(p_raw_data, kMCStringEncodingNative, false, ctxt . raw_data);
 	ctxt . delegate = [[MCExportImageToAlbumDelegate alloc] init];
 
 	MCIPhoneRunOnMainFiber(export_image, &ctxt);

@@ -308,7 +308,7 @@ void MCScreenDC::beep(void)
 
 struct MCScreenDCDoSetBeepSoundEnv
 {
-	const char *sound;
+	MCStringRef sound;
 	bool result;
 };
 
@@ -318,7 +318,7 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 	MCScreenDCDoSetBeepSoundEnv *env;
 	env = (MCScreenDCDoSetBeepSoundEnv *)p_env;
 	
-	if (env -> sound == nil || *(env -> sound) == 0)
+	if (env -> sound == nil || MCStringIsEmpty(env -> sound))
 	{
 		if (s_system_sound_name != nil)
 		{
@@ -334,9 +334,7 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 	SystemSoundID t_new_sound;
 	
 	MCAutoStringRef t_sound_path;
-	MCAutoStringRef t_env_sound;
-	/* UNCHECKED */ MCStringCreateWithCString(env -> sound, &t_env_sound);
-	MCS_resolvepath(*t_env_sound, &t_sound_path);
+	MCS_resolvepath(env -> sound, &t_sound_path);
 	
 	NSURL *t_url;
 	t_url = [NSURL fileURLWithPath: [NSString stringWithMCStringRef: *t_sound_path]];
@@ -362,7 +360,7 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 bool MCScreenDC::setbeepsound(MCStringRef p_beep_sound)
 {
 	MCScreenDCDoSetBeepSoundEnv t_env;
-	t_env . sound = MCStringGetCString(p_beep_sound);
+	t_env . sound = p_beep_sound;
 
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 	/* REMOTE */ MCFiberCall(s_main_fiber, MCScreenDCDoSetBeepSound, &t_env);
@@ -1271,7 +1269,7 @@ void MCIPhoneRunBlockOnMainFiber(void (^block)(void))
 
 // MW-2012-08-06: [[ Fibers ]] Updated entry point for didBecomeActive.
 static void MCIPhoneDoDidBecomeActive(void *)
-{
+{ 
 	extern char **environ;
 	char **env;
 	env = environ;
@@ -1302,11 +1300,15 @@ static void MCIPhoneDoDidBecomeActive(void *)
 	
 	if (!t_init_success)
 	{
-		MCExecPoint ep(nil, nil, nil);
-        ep . setvalueref(MCresult -> getvalueref());
-		NSLog(@"Startup error: %s\n", ep . getcstring());
-		abort();
-		return;
+		
+		if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
+		{
+			MCAutoStringRef t_value;
+			t_value = (MCStringRef)MCresult -> getvalueref();
+			NSLog(@"Startup error: %s\n", MCStringGetCString(*t_value));
+			abort();
+			return;
+		}
 	}
 
 	// MW-2012-08-31: [[ Bug 10340 ]] Now we've finished initializing, get the app to

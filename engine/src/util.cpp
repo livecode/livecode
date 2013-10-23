@@ -788,6 +788,11 @@ Boolean MCU_stoi2x4(const MCString &s, int2 &d1, int2 &d2, int2 &d3, int2 &d4)
 	return True == MCU_stoi2x4(MCStringGetOldString(p_string), r_d1, r_d2, r_d3, r_d4);
 }
 
+/* WRAPPER */ bool MCU_stoi4x4(MCStringRef p_string, int32_t& r_d1, int32_t& r_d2, int32_t& r_d3, int32_t& r_d4)
+{
+	return True == MCU_stoi4x4(MCStringGetOldString(p_string), r_d1, r_d2, r_d3, r_d4);
+}
+
 Boolean MCU_stoi4x4(const MCString &s, int32_t &d1, int32_t &d2, int32_t &d3, int32_t &d4)
 {
 	const char *sptr = s.getstring();
@@ -804,6 +809,20 @@ Boolean MCU_stoi4x4(const MCString &s, int32_t &d1, int32_t &d2, int32_t &d3, in
 		return False;
 	d4 = MCU_strtol(sptr, l, '\0', done, True, False);
 	if (!done || l != 0)
+		return False;
+	return True;
+}
+
+Boolean MCU_stoi4x2(const MCString &s, int32_t &d1, int32_t &d2)
+{
+	const char *sptr = s.getstring();
+	uint4 l = s.getlength();
+	Boolean done;
+	d1 = MCU_strtol(sptr, l, ',', done, True, False);
+	if (!done || l == 0)
+		return False;
+	d2 = MCU_strtol(sptr, l, ',', done, True, False);
+	if (!done || l == 0)
 		return False;
 	return True;
 }
@@ -2168,50 +2187,30 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 
 bool MCFiltersBase64Encode(MCDataRef p_src, MCStringRef& r_dst);
 
-void MCU_base64encode(MCExecPoint &ep)
+void MCU_base64encode(MCDataRef in, MCStringRef &out)
 {
-	MCAutoDataRef t_source;
-	/* UNCHECKED */ ep . copyasdataref(&t_source);
-
-	MCAutoStringRef t_result;
-	/* UNCHECKED */ MCFiltersBase64Encode(*t_source, &t_result);
-	/* UNCHECKED */ ep.setvalueref(*t_result);
+	/* UNCHECKED */ MCFiltersBase64Encode(in, out);
 }
 
 bool MCFiltersBase64Decode(MCStringRef p_src, MCDataRef& r_dst);
 
-void MCU_base64decode(MCExecPoint &ep)
+void MCU_base64decode(MCStringRef in, MCDataRef &out)
 {
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
-
-	MCAutoDataRef t_result;
-	/* UNCHECKED */ MCFiltersBase64Decode(*t_source, &t_result);
-	/* UNCHECKED */ ep.setvalueref(*t_result);
+	/* UNCHECKED */ MCFiltersBase64Decode(in, out);
 }
 
 bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
 
-void MCU_urlencode(MCExecPoint &ep)
+void MCU_urlencode(MCStringRef p_url, MCStringRef &r_encoded)
 {
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
-
-	MCAutoStringRef t_result;
-	/* UNCHECKED */ MCFiltersUrlEncode(*t_source, &t_result);
-	/* UNCHECKED */ ep.setvalueref(*t_result);
+	/* UNCHECKED */ MCFiltersUrlEncode(p_url, r_encoded);
 }
 
 bool MCFiltersUrlDecode(MCStringRef p_source, MCStringRef& r_result);
 
-void MCU_urldecode(MCExecPoint &ep)
+void MCU_urldecode(MCStringRef p_source, MCStringRef& r_result)
 {
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
-
-	MCAutoStringRef t_result;
-	/* UNCHECKED */ MCFiltersUrlDecode(*t_source, &t_result);
-	/* UNCHECKED */ ep.setvalueref(*t_result);
+	/* UNCHECKED */ MCFiltersUrlDecode(p_source, r_result);
 }
 
 Boolean MCU_freeinserted(MCObjectList *&l)
@@ -2278,32 +2277,25 @@ void MCU_get_color(MCExecPoint& ep, MCStringRef name, MCColor& c)
 void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output)
 {
 	MCAutoStringRef t_filename;
-	MCExecPoint ep = ctxt. GetEP();
 	if (MCStringGetLength(p_target) > 5 && MCStringBeginsWithCString(p_target, (const char_t*)"file:", kMCCompareCaseless))
 	{
 		MCStringCopySubstring(p_target, MCRangeMake(5, MCStringGetLength(p_target)-5), &t_filename);
-		if (!MCS_loadtextfile(*t_filename, r_output))
-            r_output = MCValueRetain(kMCEmptyString);
+		if (MCS_loadtextfile(*t_filename, r_output))
+			return;
 	}
 	else if (MCStringGetLength(p_target) > 8 && MCStringBeginsWithCString(p_target, (const char_t*)"binfile:", kMCCompareCaseless))
 	{
         MCAutoDataRef t_data;
 		MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);
-		if (!MCS_loadbinaryfile(*t_filename, &t_data))
-        {
-            r_output = MCValueRetain(kMCEmptyString);
-            return;
-        }
-        
-        MCExecPoint ep(nil, nil, nil);
-        ep . setvalueref(*t_data);
-        r_output = (MCStringRef) MCValueRetain(ep . getvalueref());
+		if (MCS_loadbinaryfile(*t_filename, &t_data))
+			if (ctxt.ConvertToString(*t_data, r_output))
+				return;
 	}
 	else if (MCStringGetLength(p_target) > 8 && MCStringBeginsWithCString(p_target, (const char_t*)"resfile:", kMCCompareCaseless))
 	{
 		MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);	
 		MCS_loadresfile(*t_filename, r_output);
-        /* UNCHECKED */ ep . copyasstringref(r_output);
+		return;
 	}
 	else
 	{
@@ -2312,10 +2304,13 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output
 		if (sptr != NULL && sptr[1] != ':' && MCU_strchr(sptr, l, ':'))
 		{
 			MCS_geturl(ctxt . GetObject(), p_target);
-			MCurlresult->eval(ep);
+			MCurlresult->copyasvalueref((MCValueRef&)r_output);
+			return;
 		}
-        /* UNCHECKED */ ep . copyasstringref(r_output);
 	}
+	
+	r_output = MCValueRetain(kMCEmptyString);
+	ctxt.Throw();
 }
 
 void MCU_geturl(MCExecPoint &ep)
