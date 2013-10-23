@@ -1102,13 +1102,13 @@ Boolean MCField::mup(uint2 which)
 		else if (MCscreen -> hasfeature(PLATFORM_FEATURE_TRANSIENT_SELECTION) && MCselectiondata -> HasText())
 		{
 			MCAutoDataRef t_text;
-			if (MCselectiondata -> Fetch(TRANSFER_TYPE_TEXT, &t_text))
+			if (MCselectiondata -> Fetch(TRANSFER_TYPE_UNICODE_TEXT, &t_text))
 			{
 				extend = extendwords = False;
 				// MW-2012-01-25: [[ FieldMetrics ]] Co-ordinates are now card-based.
 				setfocus(mx, my);
                 MCAutoStringRef t_text_str;
-                /* UNCHECKED */ MCStringCreateWithOldString(MCDataGetOldString(*t_text), &t_text_str);
+                /* UNCHECKED */ MCStringDecode(*t_text, kMCStringEncodingUTF16, false, &t_text_str);
 				typetext(*t_text_str);
 			}
 		}
