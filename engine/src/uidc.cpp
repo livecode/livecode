@@ -179,6 +179,16 @@ static uint4 stdcmap[256] =
         0xFFFF00, 0x0000FF, 0xFF00FF, 0x00FFFF, 0xFFFFFF
     };
 
+KeySym MCKeySymToLower(KeySym p_key)
+{
+	if ((p_key & XK_Class_mask) == XK_Class_codepoint)
+		return MCS_tolower(p_key & XK_Codepoint_mask) | XK_Class_codepoint;
+	else if (p_key < 0x80)
+		return MCS_tolower(p_key);
+	else
+		return p_key;
+}
+
 MCMovingList::~MCMovingList()
 {
 	delete pts;
@@ -873,7 +883,7 @@ bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 		if (messages[i].id != 0)
 		{
 			MCAutoListRef t_msg_info;
-			MCAutoStringRef t_id_string;
+			MCAutoValueRef t_id_string;
 			MCAutoStringRef t_time_string;
 
 			if (!MCListCreateMutable(',', &t_msg_info))
@@ -1028,7 +1038,7 @@ bool MCUIDC::listmoves(MCExecContext& ctxt, MCListRef& r_list)
 		MCMovingList *mptr = moving;
 		do
 		{
-			MCAutoStringRef t_string;
+			MCAutoValueRef t_string;
 			if (!mptr->object->names(P_LONG_ID, &t_string))
 				return false;
 			if (!MCListAppend(*t_list, *t_string))

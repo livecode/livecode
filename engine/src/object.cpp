@@ -402,7 +402,7 @@ Boolean MCObject::kfocusprev(Boolean bottom)
 void MCObject::kunfocus()
 {}
 
-Boolean MCObject::kdown(const char *string, KeySym key)
+Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
 {
 	char kstring[U4L];
 	sprintf(kstring, "%d", (int)key);
@@ -414,7 +414,7 @@ Boolean MCObject::kdown(const char *string, KeySym key)
 		sprintf(cstring, "%d", (int)(key - XK_F1 + 1));
 		if (message_with_args(MCM_function_key, cstring) == ES_NORMAL)
 			return True;
-		if (key == XK_F1 && message_with_args(MCM_help, string) == ES_NORMAL)
+		if (key == XK_F1 && message_with_valueref_args(MCM_help, p_string) == ES_NORMAL)
 			return True;
 		//return False;
 	}
@@ -511,43 +511,36 @@ Boolean MCObject::kdown(const char *string, KeySym key)
 			return True;
 		break;
 	default:
-		char tstring[U2L];
-		if (key > 0xFF)
-			sprintf(tstring, "%ld", key);
+		MCAutoStringRef t_string;
+			
+		// Special keys as their number converted to a string, the rest by value
+		if (key > 0x7F && (key & XK_Class_mask) == XK_Class_compat)
+			/* UNCHECKED */ MCStringFormat(&t_string, "%ld", key);
 		else
-			if ((uint1)string[0] < ' ' || MCmodifierstate & MS_CONTROL)
-			{
-				tstring[0] = (char)key;
-				tstring[1] = '\0';
-			}
-			else
-			{
-				tstring[0] = string[0];
-				tstring[1] = '\0';
-			}
+			t_string = p_string;
+			
 		if (MCmodifierstate & MS_CONTROL)
-		{
-			if ((key > 0xFF || string[0] != '\0' || tstring[0] == ' ')
-			        && (message_with_args(MCM_command_key_down, tstring) == ES_NORMAL))
+        {
+			if (message_with_valueref_args(MCM_command_key_down, *t_string) == ES_NORMAL)
 				return True;
 		}
 		else if (MCmodifierstate & MS_MOD1)
-		{
-			if ((key > 0xFF || string[0] != '\0' || tstring[0] == ' ')
-			        && (message_with_args(MCM_option_key_down, tstring) == ES_NORMAL))
+        {
+				if (message_with_valueref_args(MCM_option_key_down, *t_string) == ES_NORMAL)
 				return True;
-		}
+        }
 #ifdef _MACOSX
 		else if (MCmodifierstate & MS_MAC_CONTROL)
-		{
-			if ((key > 0xFF || string[0] != '\0' || tstring[0] == ' ')
-			        && (message_with_args(MCM_control_key_down, tstring) == ES_NORMAL))
+        {
+			if (message_with_valueref_args(MCM_control_key_down, *t_string) == ES_NORMAL)
 				return True;
-		}
+        }
 #endif
 		else
-			if ((string[0] != '\0' && message_with_args(MCM_key_down, string) == ES_NORMAL))
-					return True;
+        {
+			if (message_with_valueref_args(MCM_key_down, p_string) == ES_NORMAL)
+				return True;
+        }
 		break;
 	}
 
@@ -594,16 +587,16 @@ Boolean MCObject::kdown(const char *string, KeySym key)
 		case XK_Return:
 		case XK_KP_Enter:
 			closemenu(False, True);
-			oldmenu->menukdown(string, key, &t_pick, mh);
+			oldmenu->menukdown(p_string, key, &t_pick, mh);
 			message_with_args(MCM_mouse_up, Button1);
 			return True;
 		default:
-			MCButton *mbptr = attachedmenu->findmnemonic(string[0]);
+			MCButton *mbptr = attachedmenu->findmnemonic(key);
 			if (mbptr != NULL)
 			{
 				closemenu(False, True);
-				oldmenu->menukdown(string, key, &t_pick, mh);
-				mbptr->activate(False, string[0]);
+				oldmenu->menukdown(p_string, key, &t_pick, mh);
+				mbptr->activate(False, key);
 				message_with_args(MCM_mouse_up, Button1);
 				return True;
 			}
@@ -612,7 +605,7 @@ Boolean MCObject::kdown(const char *string, KeySym key)
 	return False;
 }
 
-Boolean MCObject::kup(const char *string, KeySym key)
+Boolean MCObject::kup(MCStringRef p_string, KeySym key)
 {
 	char kstring[U4L];
 	sprintf(kstring, "%d", (int)key);
@@ -623,8 +616,9 @@ Boolean MCObject::kup(const char *string, KeySym key)
 	//   don't trigger a keyup!
 	// OK-2010-04-01: [[Bug 6215]] - Need to also check for arrow keys here using the KeySym
 	//   as they don't have an ascii code.
-	if ((unsigned)(string[0]) >= 32 && string[0] != 127 && key != XK_Left && key != XK_Right && key != XK_Up && key != XK_Down)
-		if (message_with_args(MCM_key_up, string) == ES_NORMAL)
+	// TODO: filter out the C1 control codes too
+	if (key >= 32 && key != 127 && key != XK_Left && key != XK_Right && key != XK_Up && key != XK_Down)
+		if (message_with_valueref_args(MCM_key_up, p_string) == ES_NORMAL)
 			return True;
 	return False;
 }
@@ -846,6 +840,7 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 	if (scriptdepth == 255)
 		MCfreescripts = False; // prevent recursion wrap
 	MCExecPoint ep(this, hlist, hptr);
+	MCExecContext ctxt(ep);
 	if (MCtracestackptr != NULL && MCtracereturn)
 	{
 		Boolean oldtrace = MCtrace;
@@ -854,7 +849,7 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 		stat = hptr->exec(ep, params);
 		if (MCtrace && !oldtrace)
 		{
-			MCB_done(ep);
+			MCB_done(ctxt);
 			MCtrace = False;
 		}
 	}
@@ -905,6 +900,7 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 		MCfreescripts = False; // prevent recursion wrap
 
 	MCExecPoint ep(this, t_parentscript_object -> hlist, hptr);
+	MCExecContext ctxt(ep);
 	ep.setparentscript(parentscript);
 	if (MCtracestackptr != NULL && MCtracereturn)
 	{
@@ -914,7 +910,7 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 		stat = hptr->exec(ep, params);
 		if (MCtrace && !oldtrace)
 		{
-			MCB_done(ep);
+			MCB_done(ctxt);
 			MCtrace = False;
 		}
 	}
@@ -2127,7 +2123,7 @@ void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)
 
 Exec_stat MCObject::names_old(Properties which, MCExecPoint& ep, uint32_t parid)
 {
-	MCAutoStringRef t_name;
+	MCAutoValueRef t_name;
 	if (names(which, &t_name) &&
 		ep . setvalueref(*t_name))
 		return ES_NORMAL;
@@ -2135,8 +2131,11 @@ Exec_stat MCObject::names_old(Properties which, MCExecPoint& ep, uint32_t parid)
 	return ES_ERROR;
 }
 
-bool MCObject::names(Properties which, MCStringRef& r_name)
+bool MCObject::names(Properties which, MCValueRef& r_name_val)
 {
+	MCStringRef &r_name = (MCStringRef&)
+	r_name_val;
+	
 	const char *itypestring = gettypestring();
 	MCAutoPointer<char> tmptypestring;
 	if (parent != NULL && gettype() >= CT_BUTTON && getstack()->hcaddress())
@@ -2197,25 +2196,25 @@ bool MCObject::names(Properties which, MCStringRef& r_name)
 			which = P_LONG_ID;
 		if (parent != NULL)
 		{
-			MCAutoStringRef t_parent;
+			MCAutoValueRef t_parent;
 			if (!parent -> names(t_which_requested, &t_parent))
 				return false;
 			if (gettype() == CT_GROUP && parent->gettype() == CT_STACK)
 				itypestring = "bkgnd";
 			if (which == P_LONG_ID)
-				return MCStringFormat(r_name, "%s id %d of %s", itypestring, obj_id, MCStringGetCString(*t_parent));
-			return MCStringFormat(r_name, "%s \"%s\" of %s", itypestring, getname_cstring(), MCStringGetCString(*t_parent));
+				return MCStringFormat(r_name, "%s id %d of %@", itypestring, obj_id, *t_parent);
+			return MCStringFormat(r_name, "%s \"%@\" of %@", itypestring, getname(), *t_parent);
 		}
 		return MCStringFormat(r_name, "the template%c%s", MCS_toupper(itypestring[0]), itypestring + 1);
 
 	case P_NAME:
 	case P_ABBREV_NAME:
 		if (isunnamed())
-			return names(P_ABBREV_ID, r_name);
+			return names(P_ABBREV_ID, r_name_val);
 		return MCStringFormat(r_name, "%s \"%s\"", itypestring, getname_cstring());
 	case P_SHORT_NAME:
 		if (isunnamed())
-			return names(P_ABBREV_ID, r_name);
+			return names(P_ABBREV_ID, r_name_val);
 		r_name = MCValueRetain(MCNameGetString(getname()));
 		return true;
 	default:
@@ -3661,7 +3660,11 @@ MCImage *MCObject::resolveimage(MCStringRef p_name, uint4 p_image_id)
 			if (t_is_id)
 				t_control = t_behavior_stack -> getcontrolid(CT_IMAGE, p_image_id, true);
 			else
-				t_control = t_behavior_stack -> getcontrolname(CT_IMAGE, p_name);
+			{
+				MCNewAutoNameRef t_name;
+				/* UNCHECKED */ MCNameCreate(p_name, &t_name);
+				t_control = t_behavior_stack -> getcontrolname(CT_IMAGE, *t_name);
+			}
 			if (t_control != NULL)
 				break;
 			
@@ -3692,7 +3695,11 @@ MCImage *MCObject::resolveimage(MCStringRef p_name, uint4 p_image_id)
 		if (t_is_id)
 			t_control = static_cast<MCControl *>(getstack() -> getobjid(CT_IMAGE, p_image_id));
 		else
-			t_control = static_cast<MCControl *>(getstack() -> getobjname(CT_IMAGE, p_name));
+		{
+			MCNewAutoNameRef t_name;
+			/* UNCHECKED */ MCNameCreate(p_name, &t_name);
+			t_control = static_cast<MCControl *>(getstack() -> getobjname(CT_IMAGE, *t_name));
+		}
 	}
 	
 	return static_cast<MCImage *>(t_control);

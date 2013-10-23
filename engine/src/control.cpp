@@ -196,9 +196,9 @@ void MCControl::kunfocus()
 	}
 }
 
-Boolean MCControl::kdown(const char *string, KeySym key)
+Boolean MCControl::kdown(MCStringRef p_string, KeySym key)
 {
-	if (MCObject::kdown(string, key))
+	if (MCObject::kdown(p_string, key))
 		return True;
 	switch (key)
 	{
@@ -914,10 +914,10 @@ MCControl *MCControl::findnum(Chunk_term type, uint2 &num)
 		return NULL;
 }
 
-MCControl *MCControl::findname(Chunk_term type, const MCString &inname)
+MCControl *MCControl::findname(Chunk_term type, MCNameRef p_name)
 {
 	if ((type == gettype() || type == CT_LAYER)
-	        && MCU_matchname(inname, gettype(), getname()))
+	        && MCU_matchname(p_name, gettype(), getname()))
 		return this;
 	else
 		return NULL;

@@ -362,10 +362,10 @@ void MCPlayer::close()
 	}
 }
 
-Boolean MCPlayer::kdown(const char *string, KeySym key)
+Boolean MCPlayer::kdown(MCStringRef p_string, KeySym key)
 {
 	if (!(state & CS_NO_MESSAGES))
-		if (MCObject::kdown(string, key))
+		if (MCObject::kdown(p_string, key))
 			return True;
 
 #ifdef FEATURE_QUICKTIME
@@ -379,7 +379,7 @@ Boolean MCPlayer::kdown(const char *string, KeySym key)
 	return False;
 }
 
-Boolean MCPlayer::kup(const char *string, KeySym key)
+Boolean MCPlayer::kup(MCStringRef p_string, KeySym key)
 {
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
@@ -3283,6 +3283,7 @@ OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
 
 	MCAutoStringRef t_filename;
 	char *nativepath;
+	char *temp;
 
 	/* UNCHECKED */ MCS_resolvepath(p_filename, &t_filename);
 
@@ -3304,11 +3305,15 @@ OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
 
 			/* UNCHECKED */ MCStringAppend(*t_path, *t_filename);
 			/* UNCHECKED */ MCS_pathtonative(*t_path, &t_native);
-			nativepath = strclone(MCStringGetCString(*t_native));
+			/* UNCHECKED */ MCStringConvertToCString(*t_native, temp);
+			nativepath = strclone(temp);
 		}
 	}
 	else
-		nativepath = strclone(MCStringGetCString(*t_filename));
+	{
+		/* UNCHECKED */ MCStringConvertToCString(*t_filename, temp);
+		nativepath = strclone(temp);
+	}
 
 	OSErr err = NativePathNameToFSSpec(nativepath, fspec, 0);
 	delete nativepath;
@@ -5334,28 +5339,28 @@ bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p
 			QTEffect *teffects = MCtemplateplayer->geteffects();
 			uint2 tsize = MCtemplateplayer->getneffects();
 			
-			MCString effectname(p_name);
+			MCAutoStringRef t_effectname;
+            /* UNCHECKED */ MCStringCreateWithCString(p_name, &t_effectname);
 			for (i = 0 ; i < tsize; i++)
 			{
-				if (effectname == teffects[i].token)
+				if (MCStringIsEqualToCString(*t_effectname, teffects[i].token, kMCCompareExact))
 				{
 					qteffect = teffects[i].type;
 					break;
 				}
 			}
-			if (!qteffect && effectname.getlength() == 4)
+			if (!qteffect && MCStringGetLength(*t_effectname) == 4)
 			{
 				memcpy(&qteffect, p_name, sizeof(OSType));
 				qteffect = EndianU32_NtoB(qteffect);
 			}
 			else
 			{
-				MCExecPoint ep;
-				ep.setsvalue(effectname);
-				MCU_base64decode(ep);
-				if (ep.getsvalue().getlength() > 8)
+				MCAutoDataRef t_data;
+                MCU_base64decode(*t_effectname, &t_data);
+                if (MCDataGetLength(*t_data) > 8)
 				{
-					const char *dataptr = ep.getsvalue().getstring();
+					const char *dataptr = (const char*)MCDataGetBytePtr(*t_data);
 					long *aLong = (long *)dataptr;
 					long datasize = EndianU32_BtoN(aLong[0]) - (sizeof(long)*2);
 					OSType ostype = EndianU32_BtoN(aLong[1]);

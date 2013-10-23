@@ -178,8 +178,8 @@ extern Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef message, MCPar
 //extern bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path);
 //extern void MCU_path2native(char *dptr);
 extern void MCU_fix_path(MCStringRef in, MCStringRef& r_out);
-extern void MCU_base64encode(MCExecPoint &ep);
-extern void MCU_base64decode(MCExecPoint &ep);
+extern void MCU_base64encode(MCDataRef in, MCStringRef &out);
+extern void MCU_base64decode(MCStringRef in, MCDataRef &out);
 extern void MCU_urldecode(MCStringRef p_source, MCStringRef& r_result);
 extern void MCU_urlencode(MCStringRef p_url, MCStringRef &r_encoded);
 extern Boolean MCU_freeinserted(MCObjectList *&l);

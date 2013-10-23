@@ -439,21 +439,21 @@ void MCCard::kunfocus()
 	}
 }
 
-Boolean MCCard::kdown(const char *string, KeySym key)
+Boolean MCCard::kdown(MCStringRef p_string, KeySym key)
 {
 	MCtooltip->closetip();
 	if (kfocused != NULL && getstack()->gettool(this) == T_BROWSE)
-		return kfocused->getref()->kdown(string, key);
-	if (MCObject::kdown(string, key))
+		return kfocused->getref()->kdown(p_string, key);
+	if (MCObject::kdown(p_string, key))
 		return True;
 	return False;
 }
 
-Boolean MCCard::kup(const char *string, KeySym key)
+Boolean MCCard::kup(MCStringRef p_string, KeySym key)
 {
 	if (kfocused != NULL && getstack()->gettool(this) == T_BROWSE)
-		return kfocused->getref()->kup(string, key);
-	return MCObject::kup(string, key);
+		return kfocused->getref()->kup(p_string, key);
+	return MCObject::kup(p_string, key);
 }
 
 void MCCard::mdrag(void)
@@ -2152,7 +2152,9 @@ MCControl *MCCard::getchild(Chunk_term etype, MCStringRef p_expression,
 				{
 					if (!optr->getref()->getopened())
 						optr->getref()->setparent(this);
-					foundobj = optr->getref()->findname(otype, MCStringGetOldString(p_expression));
+					MCNewAutoNameRef t_name;
+					/* UNCHECKED */ MCNameCreate(p_expression, &t_name);
+					foundobj = optr->getref()->findname(otype, *t_name);
 				}
 				if (foundobj != NULL)
 				{
@@ -2567,7 +2569,7 @@ MCControl *MCCard::getchildbyname(MCNameRef p_name, Chunk_term p_object_type, Ch
         {
             if (!optr->getref()->getopened())
                 optr->getref()->setparent(this);
-            foundobj = optr->getref()->findname(p_object_type, MCNameGetOldString(p_name));
+            foundobj = optr->getref()->findname(p_object_type, p_name);
         }
         if (foundobj != nil)
         {

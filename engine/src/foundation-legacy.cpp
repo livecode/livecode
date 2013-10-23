@@ -714,7 +714,7 @@ const char *MCStringGetCString(MCStringRef p_string)
 {
     if (p_string == nil)
         return nil;
-    
+  
 	const char *t_cstring;
 	t_cstring = (const char *)MCStringGetNativeCharPtr(p_string);
 	
