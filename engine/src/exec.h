@@ -178,6 +178,7 @@ enum MCPropertyType
 	kMCPropertyTypeMixedCustom,
 	kMCPropertyTypeMixedEnum,
 	kMCPropertyTypeMixedOptionalEnum,
+	kMCPropertyTypeMixedItemsOfUInt,
 };
 
 enum MCPropertyInfoChunkType
@@ -242,6 +243,25 @@ template<typename O, typename A, void (O::*Method)(MCExecContext&, uint32_t, int
 	(static_cast<O *>(obj -> object) ->* Method)(ctxt, obj -> part_id, t_si, t_ei, arg);
 }
 
+template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, uint32_t, int32_t, int32_t, B, A)> inline void MCPropertyObjectChunkListThunk(MCExecContext& ctxt, MCObjectChunkPtr *obj, B count, A arg)
+{
+    int32_t t_si, t_ei;
+    
+    if (obj -> object -> gettype() == CT_FIELD)
+    {
+        t_si = 0;
+        t_ei = INT32_MAX;
+        MCExecResolveCharsOfField((MCField *)obj -> object, obj -> part_id, t_si, t_ei, obj -> mark . start, obj -> mark . finish - obj -> mark . start);
+    }
+    else
+    {
+        t_si = obj -> mark . start;
+        t_ei = obj -> mark . finish;
+    }
+    
+	(static_cast<O *>(obj -> object) ->* Method)(ctxt, obj -> part_id, t_si, t_ei, count, arg);
+}
+
 template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, uint32_t, int32_t, int32_t, bool&, A)> inline void MCPropertyObjectChunkMixedThunk(MCExecContext& ctxt, MCObjectChunkPtr *obj, B mixed, A arg)
 {
     int32_t t_si, t_ei;
@@ -259,6 +279,25 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, u
     }
     
 	(static_cast<O *>(obj -> object) ->* Method)(ctxt, obj -> part_id, t_si, t_ei, mixed, arg);
+}
+
+template<typename O, typename A, typename B, typename C, void (O::*Method)(MCExecContext&, uint32_t, int32_t, int32_t, bool&, B, A)> inline void MCPropertyObjectChunkMixedListThunk(MCExecContext& ctxt, MCObjectChunkPtr *obj, C mixed, B count, A arg)
+{
+    int32_t t_si, t_ei;
+    
+    if (obj -> object -> gettype() == CT_FIELD)
+    {
+        t_si = 0;
+        t_ei = INT32_MAX;
+        MCExecResolveCharsOfField((MCField *)obj -> object, obj -> part_id, t_si, t_ei, obj -> mark . start, obj -> mark . finish - obj -> mark . start);
+    }
+    else
+    {
+        t_si = obj -> mark . start;
+        t_ei = obj -> mark . finish;
+    }
+    
+	(static_cast<O *>(obj -> object) ->* Method)(ctxt, obj -> part_id, t_si, t_ei, mixed, count, arg);
 }
 
 template<typename A, void Method(MCExecContext&, MCNameRef, A)> inline void MCPropertyIndexedThunk(MCExecContext& ctxt, MCNameRef index, A arg)
@@ -346,7 +385,9 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectArrayThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectIndexPtr*,typ))MCPropertyObjectArrayThunk<obj,typ,&obj::mth>
 #define MCPropertyObjectListThunkImp(obj, mth, count, typ) (void(*)(MCExecContext&,MCObjectPtr*,count,typ))MCPropertyObjectListThunk<obj,typ,count,&obj::mth>
 #define MCPropertyObjectChunkThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectChunkPtr*,typ))MCPropertyObjectChunkThunk<obj,typ,&obj::mth>
+#define MCPropertyObjectChunkListThunkImp(obj, mth, count, typ) (void(*)(MCExecContext&,MCObjectChunkPtr*,count,typ))MCPropertyObjectChunkListThunk<obj,typ,count,&obj::mth>
 #define MCPropertyObjectChunkMixedThunkImp(obj, mth, mixed, typ) (void(*)(MCExecContext&,MCObjectChunkPtr*,mixed,typ))MCPropertyObjectChunkMixedThunk<obj,typ,mixed,&obj::mth>
+#define MCPropertyObjectChunkMixedListThunkImp(obj, mth, mixed, count, typ) (void(*)(MCExecContext&,MCObjectChunkPtr*,mixed,count,typ))MCPropertyObjectChunkMixedListThunk<obj,typ,count,mixed,&obj::mth>
 
 #define MCPropertyObjectThunkGetAny(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCValueRef&)
 #define MCPropertyObjectThunkGetBool(obj, mth) MCPropertyObjectThunkImp(obj, mth, bool&)
@@ -488,21 +529,29 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectChunkMixedThunkGetEnumType(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, intenum_t&)
 #define MCPropertyObjectChunkMixedThunkGetCustomType(obj, mth, typ) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, typ&)
 #define MCPropertyObjectChunkMixedThunkGetInt16(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, integer_t&)
+#define MCPropertyObjectChunkMixedThunkGetUInt8(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, uinteger_t&)
 #define MCPropertyObjectChunkMixedThunkGetUInt16(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, uinteger_t&)
 #define MCPropertyObjectChunkMixedThunkGetOptionalBool(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, bool*&)
 #define MCPropertyObjectChunkMixedThunkGetOptionalInt16(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, integer_t*&)
+#define MCPropertyObjectChunkMixedThunkGetOptionalUInt8(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, uinteger_t*&)
 #define MCPropertyObjectChunkMixedThunkGetOptionalUInt16(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, uinteger_t*&)
 #define MCPropertyObjectChunkMixedThunkGetOptionalEnumType(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, intenum_t*&)
+#define MCPropertyObjectChunkMixedThunkGetOptionalString(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, MCStringRef&)
+#define MCPropertyObjectChunkMixedListThunkGetItemsOfUInt(obj, mth) MCPropertyObjectChunkMixedListThunkImp(obj, mth, bool&, uindex_t&, uinteger_t*&)
 
 #define MCPropertyObjectChunkMixedThunkSetBool(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, bool)
 #define MCPropertyObjectChunkMixedThunkSetEnumType(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t)
-#define MCPropertyObjectChunkMixedThunkSetCustomType(obj, mth, typ) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, const typ&)
+#define MCPropertyObjectChunkMixedThunkSetCustomType(obj, mth, typ) MCPropertyObjectChunkThunkImp(obj, mth, const typ&)
 #define MCPropertyObjectChunkMixedThunkSetInt16(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, integer_t)
+#define MCPropertyObjectChunkMixedThunkSetUInt8(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, uinteger_t)
 #define MCPropertyObjectChunkMixedThunkSetUInt16(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, uinteger_t)
 #define MCPropertyObjectChunkMixedThunkSetOptionalBool(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, bool*)
 #define MCPropertyObjectChunkMixedThunkSetOptionalInt16(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, integer_t*)
+#define MCPropertyObjectChunkMixedThunkSetOptionalUInt8(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, uinteger_t*)
 #define MCPropertyObjectChunkMixedThunkSetOptionalUInt16(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, uinteger_t*)
 #define MCPropertyObjectChunkMixedThunkSetOptionalEnumType(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t*)
+#define MCPropertyObjectChunkMixedThunkSetOptionalString(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCStringRef)
+#define MCPropertyObjectChunkMixedListThunkSetItemsOfUInt(obj, mth) MCPropertyObjectChunkListThunkImp(obj, mth, uindex_t, uinteger_t*)
 
 //////////
 
@@ -2743,6 +2792,7 @@ extern MCExecEnumTypeInfo *kMCInterfaceTextAlignTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceTextStyleTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceInkNamesTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceEncodingTypeInfo;
+extern MCExecEnumTypeInfo *kMCInterfaceListStyleTypeInfo;
 
 ///////////
 

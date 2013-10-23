@@ -969,6 +969,29 @@ MCExecEnumTypeInfo _kMCInterfaceEncodingTypeInfo =
 	_kMCInterfaceEncodingElementInfo
 };
 
+//////////
+
+MCExecEnumTypeElementInfo _kMCInterfaceListStyleElementInfo[] =
+{
+	{ "", 0, false },
+	{ "disc", 1, false },
+	{ "circle", 2, false },
+	{ "square", 3, false },
+	{ "decimal", 4, false },
+	{ "lower latin", 5, false },
+	{ "upper latin", 6, false },
+	{ "lower roman", 7, false },
+	{ "upper roman", 8, false },
+	{ "skip", 9, false },
+};
+
+MCExecEnumTypeInfo _kMCInterfaceListStyleTypeInfo =
+{
+	"Interface.ListStyle",
+	sizeof(_kMCInterfaceListStyleElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCInterfaceListStyleElementInfo
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExecCustomTypeInfo *kMCInterfaceLayerTypeInfo = &_kMCInterfaceLayerTypeInfo;
@@ -978,6 +1001,7 @@ MCExecCustomTypeInfo *kMCInterfaceTextStyleTypeInfo = &_kMCInterfaceTextStyleTyp
 MCExecEnumTypeInfo *kMCInterfaceInkNamesTypeInfo = &_kMCInterfaceInkNamesTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceEncodingTypeInfo = &_kMCInterfaceEncodingTypeInfo;
 MCExecCustomTypeInfo *kMCInterfaceTriStateTypeInfo = &_kMCInterfaceTriStateTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceListStyleTypeInfo = &_kMCInterfaceListStyleTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 

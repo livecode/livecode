@@ -48,11 +48,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCField::GetUnicodeTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef& r_value)
+void MCField::GetUnicodeTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCDataRef& r_value)
 {
-    if (exportastext(p_part_id, p_start, p_finish, r_value))
-        return;
-
+	MCAutoStringRef t_value;
+    if (exportastext(p_part_id, p_start, p_finish, &t_value) &&
+		MCStringEncode(*t_value, kMCStringEncodingUTF16, false, r_value))
+		return;
+	
     ctxt . Throw();
 }
 
@@ -239,7 +241,7 @@ template<typename T> void GetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
 
 //////////
 
-void MCField::GetCharIndexOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t& r_value)
+void MCField::GetCharIndexOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t& r_value)
 {
     MCParagraph *t_paragraph;
     t_paragraph = resolveparagraphs(p_part_id);
@@ -255,12 +257,12 @@ void MCField::GetCharIndexOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, i
     r_value = t_char_index + 1;
 }
 
-void MCField::GetTextAlignOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, intenum_t*& r_value)
+void MCField::GetTextAlignOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, intenum_t*& r_value)
 {
     GetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<intenum_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetTextAlign, r_mixed, r_value);
 }
 
-void MCField::GetEffectiveTextAlignOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, intenum_t& r_value)
+void MCField::GetEffectiveTextAlignOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, intenum_t& r_value)
 {
     GetParagraphPropOfCharChunk< PodFieldPropType<intenum_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveTextAlign, r_mixed, r_value);
 }
@@ -275,7 +277,7 @@ void MCField::SetTextSizeOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, in
 
 }
 
-void MCField::GetEffectiveTextSizeOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t*& r_value)
+void MCField::GetEffectiveTextSizeOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t& r_value)
 {
     uinteger_t t_default;
     GetEffectiveTextSize(ctxt, t_default);
