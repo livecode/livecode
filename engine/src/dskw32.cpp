@@ -31,6 +31,7 @@
 #include "system.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "globals.h"
 #include "system.h"
 #include "osspec.h"
@@ -452,49 +453,32 @@ static void readThreadDone(void *param)
 
 static DWORD readThread(Streamnode *process)
 {
-	//MCMemoryFileHandle ihandle;
-	//ihandle = process -> ihandle -> handle;
+	DWORD nread;
+	uint32_t t_bufsize = READ_PIPE_SIZE;
+	char* t_buffer = new char[t_bufsize];
 
-	//DWORD nread;
-	//ihandle->buffer = new char[READ_PIPE_SIZE];
-	//uint4 bsize = READ_PIPE_SIZE;
-	//ihandle->ioptr = ihandle->buffer;   //set ioptr member
-	//ihandle->len = 0; //set len member
-	//while (ihandle->fhandle != NULL)
-	//{
-	//	if (!PeekNamedPipe(ihandle->fhandle, NULL, 0, NULL, &nread, NULL))
-	//		break;
-	//	if (nread == 0)
-	//	{
-	//		if (WaitForSingleObject(process -> phandle, 0) != WAIT_TIMEOUT)
-	//			break;
-	//		Sleep(100);
-	//		continue;
-	//	}
-	//	if (ihandle->len + nread >= bsize)
-	//	{
-	//		uint4 newsize = ihandle->len + nread + READ_PIPE_SIZE;
-	//		MCU_realloc(&ihandle->buffer, bsize, newsize, 1);
-	//		bsize = newsize;
-	//		ihandle->ioptr = ihandle->buffer;
-	//	}
-	//	if (!ReadFile(ihandle->fhandle, (LPVOID)&ihandle->buffer[ihandle->len],
-	//	              nread, &nread, NULL)
-	//	        || nread == 0)
-	//	{
-	//		ihandle->len += nread;
-	//		break;
-	//	}
-	//	ihandle->len += nread;
-	//	ihandle->flags = 0;
-	//	if (ihandle->ioptr != ihandle->buffer)
-	//	{
-	//		ihandle->len -= ihandle->ioptr - ihandle->buffer;
-	//		memcpy(ihandle->buffer, ihandle->ioptr, ihandle->len);
-	//		ihandle->ioptr = ihandle->buffer;
-	//	}
-	//}
-	//MCNotifyPush(readThreadDone, nil, false, false);
+	while (process -> ihandle != NULL)
+	{
+		if (!PeekNamedPipe(process -> ihandle -> GetFilePointer(), NULL, 0, NULL, &nread, NULL))
+			break;
+		if (nread == 0)
+		{
+			if (WaitForSingleObject(process -> phandle, 0) != WAIT_TIMEOUT)
+				break;
+			Sleep(100);
+			continue;
+		}
+		if (!ReadFile(process -> ihandle -> GetFilePointer(), (LPVOID)t_buffer,
+				t_bufsize, &nread, NULL)
+		        || nread == 0)
+					break;
+		
+		/* UNCHECKED */ process -> ohandle -> Write(t_buffer, nread);
+	}
+
+	delete[] t_buffer;
+	MCNotifyPush(readThreadDone, nil, false, false);
+
 	return 0;
 }
 
@@ -1561,7 +1545,6 @@ struct MCStdioFileHandle: public MCSystemFileHandle
     
     virtual bool TakeBuffer(void*& r_buffer, size_t& r_length)
 	{
-		// TODO Implement
 		return false;
 	}
 
@@ -1909,7 +1892,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 #ifdef /* MCS_sleep_dsk_w32 */ LEGACY_SYSTEM
 	Sleep((DWORD)(delay * 1000.0));  //takes milliseconds as parameter
 #endif /* MCS_sleep_dsk_w32 */
-        Sleep((DWORD)(p_when * 1000.0));  //takes milliseconds as parameter
+        SleepEx((DWORD)(p_when * 1000.0), False);  //takes milliseconds as parameter
     }
 	
 	virtual void SetEnv(MCStringRef p_name, MCStringRef p_value)
@@ -3503,7 +3486,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
             created = False;
         
         PROCESS_INFORMATION piProcInfo;
-        STARTUPINFOA siStartInfo;
+        STARTUPINFOW siStartInfo;
         memset(&siStartInfo, 0, sizeof(STARTUPINFOA));
         siStartInfo.cb = sizeof(STARTUPINFOA);
         siStartInfo.dwFlags = STARTF_USESTDHANDLES;
@@ -3515,18 +3498,17 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
         siStartInfo.hStdInput = hChildStdinRd;
         siStartInfo.hStdOutput = hChildStdoutWr;
         
-		MCAutoStringRef t_mutable_cmd;
-
-		/* UNCHECKED */ MCStringCreateMutable(0, &t_mutable_cmd);
-		/* UNCHECKED */ MCStringFormat(&t_mutable_cmd, "%s\"%s\"%x", " /C ", MCshellcmd, p_command);
-        char *pname = strclone(MCStringGetCString(*t_mutable_cmd));
+		MCStringRef t_cmd;
+		/* UNCHECKED */ MCStringFormat(t_cmd, "%@ /C %@", MCshellcmd, p_command);
+		MCAutoStringRefAsWString t_wcmd;
+		t_wcmd . Lock(t_cmd);
         MCU_realloc((char **)&MCprocesses, MCnprocesses,
                     MCnprocesses + 1, sizeof(Streamnode));
         uint4 index = MCnprocesses;
         MCprocesses[index].name = (MCNameRef)MCValueRetain(MCM_shell);
         MCprocesses[index].mode = OM_NEITHER;
-        MCprocesses[index].ohandle = NULL;
-		// TODO Implement MCprocesses[index].ihandle = MCStdioFileHandle::OpenStdFile((MCWinSysHandle)hChildStdoutRd);
+        MCprocesses[index].ohandle = new MCMemoryFileHandle;
+		MCprocesses[index].ihandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd);
         if (created)
         {
             HANDLE phandle = GetCurrentProcess();
@@ -3534,7 +3516,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
                             0, TRUE, DUPLICATE_SAME_ACCESS);
             siStartInfo.hStdError = hChildStderrWr;
             DWORD threadID = 0;
-            if (CreateProcessA(NULL, pname, NULL, NULL, TRUE, CREATE_NEW_CONSOLE,
+            if (CreateProcessW(NULL, *t_wcmd, NULL, NULL, TRUE, CREATE_NEW_CONSOLE,
                                NULL, NULL, &siStartInfo, &piProcInfo))
             {
                 MCprocesses[MCnprocesses].pid = piProcInfo.dwProcessId;
@@ -3559,8 +3541,8 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
         {
             CloseHandle(hChildStdoutRd);
             Sleep(0);
-            MCeerror->add(EE_SHELL_BADCOMMAND, 0, 0, pname);
-            delete pname;
+            MCeerror->add(EE_SHELL_BADCOMMAND, 0, 0, t_cmd);
+			MCValueRelease(t_cmd);
             return false;
         }
         
@@ -3570,7 +3552,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
         {
             if (MCscreen->wait(READ_INTERVAL, False, False))
             {
-                MCeerror->add(EE_SHELL_ABORT, 0, 0, pname);
+                MCeerror->add(EE_SHELL_ABORT, 0, 0, t_cmd);
                 if (MCprocesses[index].pid != 0)
                 {
                     TerminateProcess(MCprocesses[index].phandle, 0);
@@ -3580,8 +3562,8 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
                     CloseHandle(piProcInfo.hThread);
                 }
                 MCS_close(MCprocesses[index].ihandle);
-                IO_cleanprocesses();
-                delete pname;
+                IO_cleanprocesses();                
+				MCValueRelease(t_cmd);
                 return false;
             }
         }
@@ -3594,24 +3576,21 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
             CloseHandle(piProcInfo.hProcess);
             CloseHandle(piProcInfo.hThread);
         }
+		MCExecPoint ep(nil, nil, nil);
+		MCExecContext ctxt(ep);
         if (MCprocesses[index].retcode)
-        {
-			MCExecPoint t_ep(nil, nil, nil);
-			t_ep.setint(MCprocesses[index].retcode);
-			MCresult -> set(t_ep);
-        }
+			ctxt.SetTheResultToNumber((real64_t)MCprocesses[index].retcode);
         else
-            MCresult->clear(False);
+			ctxt.SetTheResultToEmpty();
 
-		MCExecPoint t_ep;
 		void *t_buffer;
 		uint32_t t_buf_size;
 		bool t_success;
 
-		t_success = MCS_closetakingbuffer(MCprocesses[index].ihandle, t_buffer, t_buf_size) == IO_NORMAL;
+		t_success = MCS_closetakingbuffer(MCprocesses[index].ohandle, t_buffer, t_buf_size) == IO_NORMAL;
 
         IO_cleanprocesses();
-        delete pname;
+        MCValueRelease(t_cmd);
 
 		if (t_success)
 			t_success = MCDataCreateWithBytes((byte_t*) t_buffer, t_buf_size, r_data);
@@ -4181,14 +4160,12 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
         if (created)
         {
             if (writing)
-				// TODO implement MCprocesses[MCnprocesses].ohandle = MCStdioFileHandle::OpenStdFile((MCWinSysHandle)hChildStdinWr);
-			{}
+				MCprocesses[MCnprocesses].ohandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdinWr);
             else
                 CloseHandle(hChildStdinWr);
 
             if (reading)
-				// TODO implement MCprocesses[MCnprocesses].ihandle = MCStdioFileHandle::OpenStdFile((MCWinSysHandle)hChildStdoutRd);
-			{}
+				MCprocesses[MCnprocesses].ihandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd);
             else
                 CloseHandle(hChildStdoutRd);
         }
@@ -4528,16 +4505,17 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 			MCAutoStringRefAsUTF8String t_utf8;
 			/* UNCHECKED */ t_utf8.Lock(p_script);
 			
-			char *t_result;
-			t_result = t_environment -> Run(*t_utf8);
+			MCAutoStringRef t_result;
+			MCAutoStringRef t_string;
+			/* UNCHECKED */ MCStringCreateWithCString(*t_utf8, &t_string);
+			t_environment -> Run(*t_string, &t_result);
 			t_environment -> Release();
 
-			if (t_result != NULL)
+			if (*t_result != nil)
 			{
-				MCExecPoint ep(nil, nil, nil);
-				ep . setsvalue(t_result);
-				ep . utf8tonative();
-				MCresult -> copysvalue(ep . getsvalue());
+				MCAutoStringRef t_native;
+				MCU_utf8tonative(*t_result, &t_native);
+				MCresult -> setvalueref(*t_native);
 			}
 			else
 				MCresult -> sets("execution error");

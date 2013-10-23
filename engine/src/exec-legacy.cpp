@@ -392,7 +392,7 @@ void MCLegacyExecDoMenu(MCExecContext& ctxt, MCStringRef p_option)
 	else
 	{
 		MCAutoStringRef t_result;
-		MCStringFormat(&t_result, "doMenu \"%s\" not implemented", MCStringGetCString(p_option));
+		MCStringFormat(&t_result, "doMenu \"%@\" not implemented", p_option);
 		ctxt . SetTheResultToValue(*t_result);
 	}
 }

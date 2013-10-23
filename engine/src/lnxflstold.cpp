@@ -60,7 +60,7 @@ public:
 	uint2 nitalic;
 	uint2 nbolditalic;
 	MCOldFonttablenode *next;
-	char *name;
+	char* name;
 	MCOldFonttablenode();
 	~MCOldFonttablenode();
 	void registersize(uint2 size, uint2 *&sizes, uint2 &nsizes);
@@ -87,12 +87,12 @@ public:
 	~MCOldFontnode();
 	void buildtable();
 	void freetable();
-	MCOldFonttablenode *findtablenode(const char *name);
+	MCOldFonttablenode *findtablenode(MCStringRef name);
 	MCOldFonttablenode *gettable()
 	{
 		return table;
 	}
-	XFontStruct *lookup(const char *name, uint2 size, uint2 style);
+	XFontStruct *lookup(MCStringRef name, uint2 size, uint2 style);
 	
 	MCFontStruct *getfont(MCNameRef fname, uint2 size, uint2 style);
 	MCFontStruct *getfontstruct()
@@ -374,8 +374,8 @@ MCOldFontnode::MCOldFontnode(MCNameRef fname_n, uint2 &size, uint2 style)
 {
 	char fontname[XLFD_LENGTH];
 
-	MCString fname;
-	fname = MCStringGetCString(MCNameGetString(fname_n));
+	//MCString fname;
+	//fname = MCStringGetCString(MCNameGetString(fname_n));
 
 	reqname = MCValueRetain(fname_n);
 	reqsize = size;
@@ -396,18 +396,20 @@ MCOldFontnode::MCOldFontnode(MCNameRef fname_n, uint2 &size, uint2 style)
 
 	// MW-2005-02-08: We aren't going to use XMBTEXT for now, instead we will
 	//   search for an appropriate ISO10646 font if in 'encoding mode'.
-		sprintf(fontname, "-*-%s-%s-%s-%s--%d-*-*-*-*-*-iso8859-%d",
-		        MCStringGetCString(MCNameGetString(reqname)), MCF_getweightstring(style),
+	char *temp;
+	/* UNCHECKED */ MCStringConvertToCString(MCNameGetString(reqname), temp);
+	sprintf(fontname, "-*-%s-%s-%s-%s--%d-*-*-*-*-*-iso8859-%d",
+		        temp, MCF_getweightstring(style),
 		        MCF_getslantshortstring(style),
 		        MCF_getexpandstring(style), size, MCcharset);
 	
 	if ((fs = XLoadQueryFont(MCdpy, fontname)) == NULL)
-		fs = lookup(MCStringGetCString(MCNameGetString(reqname)), size, style);
+		fs = lookup(MCNameGetString(reqname), size, style);
 	else
 		font.unicode = t_is_unicode;
 
 	if (fs == NULL)
-		if ((fs = XLoadQueryFont(MCdpy, MCStringGetCString(MCNameGetString(reqname)))) != NULL)
+		if ((fs = XLoadQueryFont(MCdpy, temp)) != NULL)
 		{
 			if (pixelsize == 0)
 				pixelsize = XInternAtom(MCdpy, "PIXEL_SIZE", True);
@@ -424,7 +426,7 @@ MCOldFontnode::MCOldFontnode(MCNameRef fname_n, uint2 &size, uint2 style)
 	// font.unicode = True;
 
 	if (fs == NULL)
-		if ((fs = XLoadQueryFont(MCdpy, MCStringGetCString(MCNameGetString(reqname)))) != NULL)
+		if ((fs = XLoadQueryFont(MCdpy, temp)) != NULL)
 		{
 			if (pixelsize == 0)
 				pixelsize = XInternAtom(MCdpy, "PIXEL_SIZE", True);
@@ -439,7 +441,7 @@ MCOldFontnode::MCOldFontnode(MCNameRef fname_n, uint2 &size, uint2 style)
 		}
 
 	if (fs == NULL)
-		fs = lookup(DEFAULT_TEXT_FONT, size, style);
+		fs = lookup(MCSTR(DEFAULT_TEXT_FONT), size, style);
 	if (fs == NULL)
 		fs = XLoadQueryFont(MCdpy, "fixed");
 
@@ -457,6 +459,7 @@ MCOldFontnode::MCOldFontnode(MCNameRef fname_n, uint2 &size, uint2 style)
 	font.unicode = t_is_unicode;
 	if (t_is_unicode)
 		font.charset = LCH_UNICODE;
+	delete temp;
 }
 
 MCOldFontnode::MCOldFontnode()
@@ -490,11 +493,16 @@ void MCOldFontnode::buildtable()
 			continue;
 		if ((sptr = MCU_strtok(NULL, "-")) == NULL)
 			continue;
-		MCOldFonttablenode *fnptr = findtablenode(sptr);
+		MCAutoStringRef t_node;
+		/* UNCHECKED */ MCStringCreateWithCString(sptr, &t_node);
+		MCOldFonttablenode *fnptr = findtablenode(*t_node);
 		if (fnptr == NULL)
 		{
 			fnptr = new MCOldFonttablenode;
-			fnptr->name = strclone(sptr);
+			char *temp;
+			/* UNCHECKED */ MCStringConvertToCString(*t_node, temp);
+			fnptr->name = strclone(temp);
+			delete temp;
 			fnptr->next = table;
 			table = fnptr;
 		}
@@ -513,14 +521,14 @@ void MCOldFontnode::freetable()
 	}
 }
 
-MCOldFonttablenode *MCOldFontnode::findtablenode(const char *name)
+MCOldFonttablenode *MCOldFontnode::findtablenode(MCStringRef name)
 {
 	if (table != NULL)
 	{
 		MCOldFonttablenode *fnptr = table;
 		do
 		{
-			if (!MCU_strncasecmp(name, fnptr->name, strlen(name) + 1))
+			if (MCStringIsEqualToCString(name, fnptr->name, kMCCompareExact))
 				return fnptr;
 			fnptr = fnptr->next;
 		}
@@ -529,7 +537,7 @@ MCOldFonttablenode *MCOldFontnode::findtablenode(const char *name)
 	return NULL;
 }
 
-XFontStruct *MCOldFontnode::lookup(const char *name, uint2 size, uint2 style)
+XFontStruct *MCOldFontnode::lookup(MCStringRef name, uint2 size, uint2 style)
 {
 	
 	buildtable();
@@ -637,7 +645,7 @@ bool MCOldFontlist::getfontsizes(MCStringRef p_fname, MCListRef& r_sizes)
 
 	MCOldFontnode dummynode;
 	dummynode.buildtable();
-	MCOldFonttablenode *fnptr = dummynode.findtablenode(MCStringGetCString(p_fname));
+	MCOldFonttablenode *fnptr = dummynode.findtablenode(p_fname);
 	if (fnptr != NULL)
 		for (uint2 i = 0 ; i < fnptr->nplain ; i++)
 			if (!MCListAppendInteger(*t_list, fnptr -> psizes[i]))
@@ -660,7 +668,7 @@ bool MCOldFontlist::getfontstyles(MCStringRef p_fname, uint2 fsize, MCListRef& r
 
 	MCOldFontnode dummynode;
 	dummynode.buildtable();
-	MCOldFonttablenode *fnptr = dummynode.findtablenode(MCStringGetCString(p_fname));
+	MCOldFonttablenode *fnptr = dummynode.findtablenode(p_fname);
 	if (fnptr != NULL)
 	{
 		uint2 i;

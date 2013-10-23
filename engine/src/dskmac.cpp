@@ -7260,7 +7260,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                     MCprocesses[index].pid = 0;
                     MCeerror->add
                     (EE_SHELL_BADCOMMAND, 0, 0, MCStringGetCString(p_command));
-                    return IO_ERROR;
+                    return false;
                 }
             }
             else
@@ -7269,14 +7269,14 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 close(tochild[1]);
                 MCeerror->add
                 (EE_SHELL_BADCOMMAND, 0, 0, MCStringGetCString(p_command));
-                return IO_ERROR;
+                return false;
             }
         }
         else
         {
             MCeerror->add
             (EE_SHELL_BADCOMMAND, 0, 0, MCStringGetCString(p_command));
-            return IO_ERROR;
+            return false;
         }
         char *buffer;
         uint4 buffersize;
@@ -7318,7 +7318,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         r_retcode = MCprocesses[index].retcode;        
         
-        return IO_NORMAL;
+        return true;
     }
     
     virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, intenum_t p_mode, Boolean p_elevated)

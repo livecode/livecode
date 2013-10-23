@@ -27,7 +27,7 @@ public:
 
 	virtual bool Define(const char *p_function, MCScriptEnvironmentCallback p_callback) = 0;
 
-	virtual char *Run(const char *p_script) = 0;
+	virtual void Run(MCStringRef p_script, MCStringRef& r_output) = 0;
 
 	virtual char *Call(const char *p_method, const char** p_arguments, unsigned int p_argument_count) = 0;
 };
