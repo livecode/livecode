@@ -407,8 +407,11 @@ static void export_html_add_tag(export_html_t& ctxt, export_html_tag_type_t p_ta
 			{
 				ctxt . buffer . appendtextf("<a %s=\"", p_value . link . is_href ? "href" : "name");
 				// MW-2012-09-19: [[ Bug 10228 ]] Make sure we generate the string in quote context.
-				export_html_emit_cstring(ctxt . buffer, MCStringGetCString(p_value . link . target), kExportHtmlEscapeTypeAttribute);
+                char *t_target;
+                /* UNCHECKED */ MCStringConvertToCString(p_value . link . target, t_target);
+				export_html_emit_cstring(ctxt . buffer, t_target, kExportHtmlEscapeTypeAttribute);
 				ctxt . buffer . appendcstring("\">");
+                delete t_target;
 			}
 			else
 				ctxt . buffer . appendcstring("<a>");
@@ -417,8 +420,11 @@ static void export_html_add_tag(export_html_t& ctxt, export_html_tag_type_t p_ta
 	case kExportHtmlTagSpan:
 		ctxt . buffer . appendcstring("<span metadata=\"");
 		// MW-2012-09-19: [[ Bug 10228 ]] Make sure we generate the string in quote context.
-		export_html_emit_cstring(ctxt . buffer, MCStringGetCString(p_value . metadata), kExportHtmlEscapeTypeAttribute);
+        char *t_metadata;
+        /* UNCHECKED */ MCStringConvertToCString(p_value . metadata, t_metadata);
+		export_html_emit_cstring(ctxt . buffer, t_metadata, kExportHtmlEscapeTypeAttribute);
 		ctxt . buffer . appendcstring("\">");
+        delete t_metadata;
 		break;
 	default:
 		break;
@@ -596,11 +602,14 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 		{
 			ctxt . buffer . appendcstring("<img src=\"");
 			// MW-2012-09-19: [[ Bug 10228 ]] Make sure we generate the string in quote context.
-			export_html_emit_cstring(ctxt . buffer, MCStringGetCString(p_event_data . character_style . image_source), kExportHtmlEscapeTypeAttribute);
+            char *t_image_source;
+            /* UNCHECKED */ MCStringConvertToCString(p_event_data . character_style . image_source, t_image_source);
+			export_html_emit_cstring(ctxt . buffer, t_image_source, kExportHtmlEscapeTypeAttribute);
 			ctxt . buffer . appendcstring("\" char=\"");
 			// MW-2012-09-19: [[ Bug 10228 ]] Make sure we generate the string in quote context.
 			export_html_emit_text(ctxt . buffer, p_event_data . bytes, p_event_data . byte_count, p_event_type == kMCFieldExportEventUnicodeRun, kExportHtmlEscapeTypeAttribute);
 			ctxt . buffer . appendcstring("\">");
+            delete t_image_source;
 		}
 		else
 		{

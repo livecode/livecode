@@ -314,8 +314,12 @@ void MCNetworkEvalHTTPProxyForURL(MCExecContext& ctxt, MCStringRef p_url, MCStri
 		return;
 
 	const char *t_arguments[2];
-	t_arguments[0] = MCStringGetCString(p_url);
-	t_arguments[1] = MCStringGetCString(p_host);
+    char *t_url, *t_host;
+    /* UNCHECKED */ MCStringConvertToCString(p_url, t_url);
+    /* UNCHECKED */ MCStringConvertToCString(p_host, t_host);
+    
+    t_arguments[0] = t_url;
+    t_arguments[1] = t_host;
 
 	MCAutoPointer<char> t_proxies;
 	t_proxies = s_pac_engine -> Call("__FindProxyForURL", t_arguments, 2);
@@ -511,6 +515,8 @@ void MCNetworkExecAcceptSecureConnectionsOnPort(MCExecContext& ctxt, uint2 p_por
 
 void MCNetworkExecReadFromSocket(MCExecContext& ctxt, MCNameRef p_socket, uint4 p_count, MCStringRef p_sentinel, MCNameRef p_message)
 {
+    char *t_sentinel;
+    /* UNCHECKED */ MCStringConvertToCString(p_sentinel, t_sentinel);
 	uindex_t t_index;
 	if (IO_findsocket(p_socket, t_index))
 	{
@@ -526,7 +532,7 @@ void MCNetworkExecReadFromSocket(MCExecContext& ctxt, MCNameRef p_socket, uint4 
 		MCAutoDataRef t_data;
 		
 		if (p_sentinel != nil)
-			MCS_read_socket(MCsockets[t_index], ctxt, p_count, MCStringGetCString(p_sentinel), p_message, &t_data);
+			MCS_read_socket(MCsockets[t_index], ctxt, p_count, t_sentinel, p_message, &t_data);
 		else
 			MCS_read_socket(MCsockets[t_index], ctxt, 0, nil, p_message, &t_data);
 
@@ -537,6 +543,7 @@ void MCNetworkExecReadFromSocket(MCExecContext& ctxt, MCNameRef p_socket, uint4 
 	}
 	else
 		ctxt . SetTheResultToStaticCString("socket is not open");
+    delete t_sentinel;
 }
 
 void MCNetworkExecReadFromSocketFor(MCExecContext& ctxt, MCNameRef p_socket, uint4 p_count, int p_unit_type, MCNameRef p_message)
@@ -659,7 +666,7 @@ void MCNetworkGetFtpProxy(MCExecContext& ctxt, MCStringRef& r_value)
 	}
 	else
 	{
-		if (MCStringFormat(r_value, "%s:%d", MCStringGetCString(MCftpproxyhost), MCftpproxyport))
+		if (MCStringFormat(r_value, "%@:%d", MCftpproxyhost, MCftpproxyport))
 			return;
 	}
 
@@ -740,7 +747,10 @@ void MCNetworkSetDefaultNetworkInterface(MCExecContext& ctxt, MCStringRef p_valu
 		if (t_net_int_valid != 0)
 		{
 			delete MCdefaultnetworkinterface;
-			MCdefaultnetworkinterface = strclone(MCStringGetCString(p_value));
+            char *t_value;
+            /* UNCHECKED */ MCStringConvertToCString(p_value, t_value);
+			MCdefaultnetworkinterface = strclone(t_value);
+            delete t_value;
 		}
 		else
 			ctxt . LegacyThrow(EE_PROPERTY_BADNETWORKINTERFACE);

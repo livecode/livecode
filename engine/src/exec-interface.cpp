@@ -3469,13 +3469,17 @@ void MCInterfaceExecImportImage(MCExecContext& ctxt, MCStringRef p_filename, MCS
 			MCImage *t_image = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
 			MCtemplateimage->setparent(NULL);
 			t_image->setflag(True, F_I_ALWAYS_BUFFER);
-			if (t_image->import(MCStringGetCString(p_filename), t_stream, t_mask_stream) == IO_NORMAL)
+            char *t_filename;
+            /* UNCHECKED */ MCStringConvertToCString(p_filename, t_filename);
+			if (t_image->import(t_filename, t_stream, t_mask_stream) == IO_NORMAL)
 				t_image->attach(OP_CENTER, false);
 			else
 			{
 				ctxt . LegacyThrow(EE_IMPORT_CANTREAD);
 				delete t_image;
 			}
+            
+            delete t_filename;
 			if (t_mask_stream != NULL)
 				MCS_close(t_mask_stream);
 		}
@@ -3828,7 +3832,10 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
 	t_item_size = MCStringGetLength(p_data);
 
 	MCAutoPointer<char> t_item_text;
-	t_item_text = strclone(MCStringGetCString(p_data));
+    char *t_data;
+    /* UNCHECKED */ MCStringConvertToCString(p_data, t_data);
+	t_item_text = strclone(t_data);
+    delete t_data;
 
 	char *t_string_pointer;
 	t_string_pointer = *t_item_text;

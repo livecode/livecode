@@ -396,7 +396,9 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 				ctxt . SetTheResultToStaticCString("error opening temp file");
 				return;
 			}
-			IO_stat stat = IO_write(MCStringGetCString(*t_file), sizeof(int1), MCStringGetLength(*t_file), t_stream);
+            MCAutoStringRefAsUTF8String t_utf8_file;
+            /* UNCHECKED */ t_utf8_file . Lock(*t_file);
+			IO_stat stat = IO_write(*t_utf8_file, sizeof(int1), MCStringGetLength(*t_file), t_stream);
 			MCS_close(t_stream);
 			if (stat != IO_NORMAL)
 			{
@@ -612,7 +614,10 @@ void MCMultimediaGetRecordCompression(MCExecContext& ctxt, MCStringRef& r_value)
 
 void MCMultimediaSetRecordCompression(MCExecContext& ctxt, MCStringRef p_value)
 {
-	memcpy(MCrecordcompression, MCStringGetCString(p_value), 4);
+    char *t_value;
+    /* UNCHECKED */ MCStringConvertToCString(p_value, t_value);
+	memcpy(MCrecordcompression, t_value, 4);
+    delete t_value;
 }
 
 void MCMultimediaGetRecordInput(MCExecContext& ctxt, MCStringRef& r_value)
@@ -625,7 +630,10 @@ void MCMultimediaGetRecordInput(MCExecContext& ctxt, MCStringRef& r_value)
 
 void MCMultimediaSetRecordInput(MCExecContext& ctxt, MCStringRef p_value)
 {
-	memcpy(MCrecordinput, MCStringGetCString(p_value), 4);
+    char *t_value;
+    /* UNCHECKED */ MCStringConvertToCString(p_value, t_value);
+	memcpy(MCrecordinput, t_value, 4);
+    delete t_value;
 }
 
 void MCMultimediaGetRecordSampleSize(MCExecContext& ctxt, uinteger_t& r_value)

@@ -700,9 +700,12 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 
 			if (t_new_style . link_text != nil)
 			{
-				ctxt . buffer . appendtextf("{\\field{\\*\\fldinst %s \"%s\"}{\\fldrslt ", t_new_style . link_on ? "HYPERLINK" : "LCANCHOR", MCStringGetCString(t_new_style . link_text));
+                char *t_link_text;
+                /* UNCHECKED */ MCStringConvertToCString(t_new_style . link_text, t_link_text);
+				ctxt . buffer . appendtextf("{\\field{\\*\\fldinst %s \"%s\"}{\\fldrslt ", t_new_style . link_on ? "HYPERLINK" : "LCANCHOR", t_link_text);
 				ctxt . styles[ctxt . style_index] = ctxt . styles[ctxt . style_index];
 				ctxt . style_index += 1;
+                delete t_link_text;
 			}
 		}
 
@@ -720,9 +723,12 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 
 			if (t_new_style . metadata != nil)
 			{
-				ctxt . buffer . appendtextf("{\\field{\\*\\fldinst LCMETADATA \"%s\"}{\\fldrslt ", MCStringGetCString(t_new_style . metadata));
+                char *t_metadata;
+                /* UNCHECKED */ MCStringConvertToCString(t_new_style . metadata, t_metadata);
+				ctxt . buffer . appendtextf("{\\field{\\*\\fldinst LCMETADATA \"%s\"}{\\fldrslt ", t_metadata);
 				ctxt . styles[ctxt . style_index + 1] = ctxt . styles[ctxt . style_index];
 				ctxt . style_index += 1;
+                delete t_metadata;
 			}
 		}
 

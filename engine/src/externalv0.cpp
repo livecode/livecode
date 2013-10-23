@@ -633,7 +633,7 @@ static bool get_array_element(void *p_context, MCArrayRef p_array, MCNameRef p_k
 	get_array_element_t *ctxt;
 	ctxt = (get_array_element_t *)p_context;
 
-	ctxt -> keys[ctxt -> index] = (char *)MCStringGetCString(MCNameGetString(p_key));
+	ctxt -> keys[ctxt -> index] = (char *)MCNameGetCString(p_key);
 	if (ctxt -> strings != nil)
 	{
 		ctxt -> strings[ctxt -> index] . length = MCStringGetLength((MCStringRef)p_value);
