@@ -33,7 +33,6 @@
 		4CC1536214E7FE1D009FA80E /* fieldstyledtext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1536114E7FE1D009FA80E /* fieldstyledtext.cpp */; };
 		4D00C6290CE1F27300341AD3 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D00C6280CE1F27300341AD3 /* SystemConfiguration.framework */; };
 		4D00C62A0CE1F27300341AD3 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D00C6280CE1F27300341AD3 /* SystemConfiguration.framework */; };
-		4D00CD77103305D4003D3C0D /* bitmapeffectblur.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D00CD75103305D4003D3C0D /* bitmapeffectblur.cpp */; };
 		4D01C88E12247B0F00AAD151 /* bsdiff_apply.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D01C88D12247B0F00AAD151 /* bsdiff_apply.cpp */; };
 		4D01C89812247CBA00AAD151 /* mode_installer_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D01C89712247CBA00AAD151 /* mode_installer_osx.cpp */; };
 		4D055BE01079F732007F6E13 /* libcore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D055BB51079F6E7007F6E13 /* libcore.a */; };
@@ -42,6 +41,7 @@
 		4D05B91113E06AB4001CD82A /* dskosxmain.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D05B90E13E06AAC001CD82A /* dskosxmain.mm */; };
 		4D17F4371042877000C49A3B /* externalv0.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D17F4351042877000C49A3B /* externalv0.cpp */; };
 		4D17F4381042877000C49A3B /* externalv1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D17F4361042877000C49A3B /* externalv1.cpp */; };
+		4D1AA1E5181556180075FC5E /* bitmapeffect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DAB7B350FE120060009F91E /* bitmapeffect.cpp */; };
 		4D1F9C3C171C64DF0091C6CB /* stacksecurity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8A7EF0016FC98A200C39491 /* stacksecurity.cpp */; };
 		4D1F9C3D171C65050091C6CB /* deploysecurity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E86D59AE170AF0E000060AED /* deploysecurity.cpp */; };
 		4D1F9C4E171C65CE0091C6CB /* libsecurity-community.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D1F9C2E171C64320091C6CB /* libsecurity-community.a */; };
@@ -318,7 +318,6 @@
 		4D8BED4811B95A1000DED42A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8BED0111B959F500DED42A /* Security.framework */; };
 		4D982B1213C1CDC10066119A /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D982B1113C1CDC10066119A /* CoreServices.framework */; };
 		4D982B1913C1CDD20066119A /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D982B1813C1CDD20066119A /* ApplicationServices.framework */; };
-		4DAB7B370FE120060009F91E /* bitmapeffect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DAB7B350FE120060009F91E /* bitmapeffect.cpp */; };
 		4DAB7D280FF3A0100009F91E /* md5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DAB7D270FF3A0100009F91E /* md5.cpp */; };
 		4DADCD5B12392EAF003CD17C /* sha1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DADCD5912392EAF003CD17C /* sha1.cpp */; };
 		4DADCDFD12393F55003CD17C /* Installer.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4DADCDFC12393F26003CD17C /* Installer.icns */; };
@@ -3392,10 +3391,8 @@
 				4DEE2B0E0FDE42710009423C /* variablearray.cpp in Sources */,
 				4DEE2B0F0FDE42710009423C /* vclip.cpp in Sources */,
 				4DEE2B120FDE42710009423C /* visual.cpp in Sources */,
-				4DAB7B370FE120060009F91E /* bitmapeffect.cpp in Sources */,
 				4DAB7D280FF3A0100009F91E /* md5.cpp in Sources */,
 				4DF65E3310016337005A19CA /* capsule.cpp in Sources */,
-				4D00CD77103305D4003D3C0D /* bitmapeffectblur.cpp in Sources */,
 				4D17F4371042877000C49A3B /* externalv0.cpp in Sources */,
 				4D17F4381042877000C49A3B /* externalv1.cpp in Sources */,
 				4DC66D8B1045D41700D1CFA3 /* notify.cpp in Sources */,
@@ -3451,6 +3448,7 @@
 				E8AF465B174CF247000B2F9E /* surface.cpp in Sources */,
 				E8AE876C177B3F5C0041B7E0 /* cgimageutil.cpp in Sources */,
 				E8988A8A17FDD5B700F640F4 /* stackview.cpp in Sources */,
+				4D1AA1E5181556180075FC5E /* bitmapeffect.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

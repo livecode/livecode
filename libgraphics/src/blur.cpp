@@ -8,42 +8,15 @@
 #include "graphics.h"
 #include "graphics-internal.h"
 
+#include <assert.h>
+
 #include <SkMath.h>
 #include <SkMask.h>
 #include <SkColorPriv.h>
 
 #define kBlurRadiusFudgeFactor SkFloatToScalar( .57735f )
 
-static int dilateMask(const uint8_t *src, int src_y_stride, uint8_t *dst, int radius, int width, int height, bool transpose)
-{
-	int new_width = width + radius * 2;
-    int dst_x_stride = transpose ? height : 1;
-    int dst_y_stride = transpose ? 1 : new_width;
-	for(int y = 0; y < height; ++y)
-	{
-		uint8_t *dptr;
-		dptr = dst + y * dst_y_stride;
-		const uint8_t *sptr;
-		sptr = src + y * src_y_stride;
-		for(int x = -radius; x < width + radius; x++)
-		{
-			uint8_t v;
-			v = 0;
-			for(int z = x - radius; z < x + radius; z++)
-			{
-				if (z < 0)
-					continue;
-				if (z >= width)
-					continue;
-				if (sptr[z] > v)
-					v = sptr[z];
-			}
-			*dptr = v;
-			dptr += dst_x_stride;
-		}
-	}
-	return new_width;
-}
+extern void dilateDistanceXY(const uint8_t *src, uint8_t *dst, int xradius, int yradius, int width, int height, int& r_new_width, int& r_new_height);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -361,9 +334,10 @@ bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, S
 	int t_pass_count;
 	t_pass_count = 3;
 	
+	// Maximum amount of spread is 254 pixels.
 	int x_spread, y_spread;
-	x_spread = SkScalarFloor(p_x_radius * p_x_spread);
-	y_spread = SkScalarFloor(p_y_radius * p_y_spread);
+	x_spread = SkMin32(SkScalarFloor(p_x_radius * p_x_spread), 254);
+	y_spread = SkMin32(SkScalarFloor(p_y_radius * p_y_spread), 254);
 	
 	p_x_radius -= x_spread;
 	p_y_radius -= y_spread;
@@ -432,8 +406,9 @@ bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, S
 			t_has_spread = false;
 			if (x_spread != 0 || y_spread != 0)
 			{
-				w = dilateMask(sp, p_src . fRowBytes, tp, x_spread, w, h, true);
-				h = dilateMask(tp, h, dp, y_spread, h, w, true);
+				//w = dilateMask(sp, p_src . fRowBytes, tp, x_spread, w, h, true);
+				//h = dilateMask(tp, h, dp, y_spread, h, w, true);
+				dilateDistanceXY(sp, dp, x_spread, y_spread, w, h, w, h);
 				t_has_spread = true;
 			}
 			
@@ -470,8 +445,9 @@ bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, S
 			t_has_spread = false;
 			if (x_spread != 0 || y_spread != 0)
 			{
-				w = dilateMask(sp, p_src . fRowBytes, tp, x_spread, w, h, true);
-				h = dilateMask(tp, h, dp, y_spread, h, w, true);
+				//w = dilateMask(sp, p_src . fRowBytes, tp, x_spread, w, h, true);
+				//h = dilateMask(tp, h, dp, y_spread, h, w, true);
+				dilateDistanceXY(sp, dp, x_spread, y_spread, w, h, w, h);
 				t_has_spread = true;
 			}
 			
