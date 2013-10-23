@@ -915,44 +915,21 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 		trect = MCU_intersect_rect(trect, textrect);
 		if (flags & F_FIXED_HEIGHT && (flags & F_SHOW_LINES || state & CS_SIZE))
 		{
-			if (dc -> gettype() == CONTEXT_TYPE_PRINTER)
+			dc->setforeground(dc->getblack());
+			dc->setlineatts(1, LineOnOffDash, CapButt, JoinBevel);
+			dc->setdashes(0, dotlist, 2);
+			
+			int2 x, y;
+			x = textrect . x - 2 - textx;
+			y = cury + frect.y + fixeda - TEXT_Y_OFFSET;
+			while(y <= trect.y + trect.height)
 			{
-				dc->setforeground(dc->getblack());
-				dc->setlineatts(1, LineOnOffDash, CapButt, JoinBevel);
-				dc->setdashes(0, dotlist, 2);
-				
-				int2 x, y;
-				x = textrect . x - 2 - textx;
-				y = cury + frect.y + fixeda - TEXT_Y_OFFSET;
-				while(y <= trect.y + trect.height)
-				{
-					if (y >= trect.y)
-						dc -> drawline(x, y, x + MCU_max(textrect . width + 4, textwidth), y);
-					y += fixedheight;
-				}
-				
-				dc -> setlineatts(0, LineSolid, CapButt, JoinBevel);
-				
+				if (y >= trect.y)
+					dc -> drawline(x, y, x + MCU_max(textrect . width + 4, textwidth), y);
+				y += fixedheight;
 			}
-			else
-			{
-				setforeground(dc, DI_BACK, False);
-				dc->setbackground(dc->getblack());
-				dc->setfillstyle(FillOpaqueStippled, nil, 0, 0);
-				MCRectangle xrect;
-				xrect.x = textrect.x - 2 - textx;
-				xrect.y = cury + frect.y + fixeda - TEXT_Y_OFFSET;
-				xrect.width = MCU_max(textrect.width + 4, textwidth);
-				xrect.height = 1;
-				while (xrect.y <= trect.y + trect.height)
-				{
-					if (xrect.y >= trect.y)
-						dc->fillrect(xrect);
-					xrect.y += fixedheight;
-				}
-				dc->setfillstyle(FillSolid, nil, 0, 0);
-				dc->setbackground(MCzerocolor);
-			}
+			
+			dc -> setlineatts(0, LineSolid, CapButt, JoinBevel);
 		}
 
 		uint2 fontstyle;
