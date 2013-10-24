@@ -304,6 +304,7 @@ public:
 	int32_t getcontenty(void) const;
 	int32_t gettexty(void) const;
 	int32_t getfirstindent(void) const;
+	int32_t getfixedheight(void) const { return fixedheight; }
 
 	bool getshowlines(void) const;
 
