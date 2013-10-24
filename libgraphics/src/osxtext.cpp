@@ -149,8 +149,8 @@ static bool osx_measure_text_substring_bounds(uindex_t p_length, MCGIntRectangle
 	{
 		r_bounds . x = t_bounds . left - kMCGMeasureTextFudge;
 		r_bounds . y = t_bounds . top - kMCGMeasureTextFudge;
-		r_bounds . width = t_bounds . right - t_bounds . left + kMCGMeasureTextFudge;
-		r_bounds . height = t_bounds . bottom - t_bounds . top + kMCGMeasureTextFudge;
+		r_bounds . width = t_bounds . right - t_bounds . left + 2 * kMCGMeasureTextFudge;
+		r_bounds . height = t_bounds . bottom - t_bounds . top + 2 * kMCGMeasureTextFudge;
 	}
     
     return t_err == noErr;
@@ -361,7 +361,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	
 	if (t_success)
 	{
-		CGContextTranslateCTM(t_cgcontext, -(t_clipped_bounds . x - t_text_bounds . x), t_clipped_bounds . height + t_clipped_bounds . y);
+		CGContextTranslateCTM(t_cgcontext, -t_clipped_bounds . x, t_clipped_bounds . height + t_clipped_bounds . y);
 		CGContextConcatCTM(t_cgcontext, CGAffineTransformMake(t_transform . a, t_transform . b, t_transform . c, t_transform . d, t_transform . tx, t_transform . ty));
 		CGContextSetRGBFillColor(t_cgcontext, 0.0, 0.0, 0.0, 1.0);
 		//t_success = osx_draw_text_to_cgcontext_at_location(p_text, p_length, MCGPointMake(0.0, 0.0), p_font, t_cgcontext, t_clipped_bounds);
