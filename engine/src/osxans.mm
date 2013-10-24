@@ -593,7 +593,12 @@ int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p
         //
         char **t_types = new char*[p_type_count];
         for (uint4 i = 0; i < p_type_count; ++i)
-            t_types[i] = strclone(MCStringGetCString(p_types[i]));
+        {
+            char *t_type;
+            /* UNCHECKED */ MCStringConvertToCString(p_types[i], t_type);
+            t_types[i] = strclone(t_type);
+            delete t_type;
+        }
 		
         FileDialogAccessoryView *t_accessory;
         t_accessory = [[FileDialogAccessoryView alloc] init];
