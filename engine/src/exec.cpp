@@ -795,6 +795,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
+        case kMCPropertyTypeUInt8:
         case kMCPropertyTypeUInt16:
         case kMCPropertyTypeUInt32:
         {
@@ -1039,7 +1040,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
         }
             break;
-            
+
         case kMCPropertyTypeOptionalInt16:
         {
             integer_t t_value;
@@ -1055,7 +1056,8 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             }
         }
             break;
-            
+
+        case kMCPropertyTypeOptionalUint8:
         case kMCPropertyTypeOptionalUInt16:
         case kMCPropertyTypeOptionalUInt32:
         {
