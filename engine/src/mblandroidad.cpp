@@ -267,6 +267,7 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_ty
                 t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "phone number", t_value_cstring);
             }
         }
+        delete t_value_cstring;
     }
     
     MCAd *t_ad;
