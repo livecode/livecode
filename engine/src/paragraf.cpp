@@ -115,6 +115,8 @@ MCParagraph::MCParagraph()
 	opened = 0;
 	startindex = endindex = originalindex = MAXUINT2;
 	state = 0;
+	
+	// MP-2013-09-02: [[ FasterField ]] Paragraphs start off needing layout.
 	needs_layout = true;
 
 	// MW-2012-01-25: [[ ParaStyles ]] All attributes are unset to begin with.
@@ -156,7 +158,9 @@ MCParagraph::MCParagraph(const MCParagraph &pref) : MCDLlist(pref)
 	startindex = endindex = originalindex = MAXUINT2;
 	opened = 0;
 	state = 0;
-	needs_layout = true; // is this needed?
+	
+	// MP-2013-09-02: [[ FasterField ]] Paragraphs start off needing layout.
+	needs_layout = true;
 }
 
 MCParagraph::~MCParagraph()
@@ -274,7 +278,8 @@ IO_stat MCParagraph::load(IO_handle stream, const char *version, bool is_ext)
 			return IO_NORMAL;
 		}
 	}
-
+	
+	// MP-2013-09-02: [[ FasterField ]] Once loaded, the paragraph will need layout.
 	needs_layout = true;
 
 	return IO_NORMAL;
@@ -418,9 +423,11 @@ bool MCParagraph::recomputefonts(MCFontRef p_parent_font)
 		t_block = t_block -> next();
 	}
 	while(t_block != blocks);
-
+	
+	// MP-2013-09-02: [[ FasterField ]] If any of the blocks have changed, layout is required.
 	if (t_changed)
 		needs_layout = true;
+	
 	return t_changed;
 }
 
@@ -468,6 +475,7 @@ void MCParagraph::deletelines()
 		delete lptr;
 	}
 	
+	// MP-2013-09-02: [[ FasterField ]] Deleting the lines means layout is needed.
 	needs_layout = true;
 }
 
@@ -481,6 +489,8 @@ void MCParagraph::deleteblocks()
 	}
 
 	state |= PS_LINES_NOT_SYNCHED;
+	
+	// MP-2013-09-02: [[ FasterField ]] Deleting the blocks means layout is needed.
 	needs_layout = true;
 }
 
@@ -522,6 +532,8 @@ void MCParagraph::defrag()
 	if (t_blocks_changed)
 	{
 		state |= PS_LINES_NOT_SYNCHED;
+		
+		// MP-2013-09-02: [[ FasterField ]] If we've changed the blocks, the lines need recomputed.
 		needs_layout = true;
 	}
 }
@@ -530,6 +542,8 @@ void MCParagraph::defrag()
 //   on the setting of 'dontWrap'.
 void MCParagraph::layout(bool p_force)
 {
+	// MP-2013-09-02: [[ FasterField ]] If we don't need layout, and layout isn't being forced,
+	//   do nothing.
 	if (!needs_layout && !p_force)
 		return;
 
@@ -537,8 +551,10 @@ void MCParagraph::layout(bool p_force)
 		noflow();
 	else
 		flow();
-
-	needs_layout = False;
+	
+	// MP-2013-09-02: [[ FasterField ]] We've layed out the paragraph, so it doesn't need to
+	//   be again until mutated.
+	needs_layout = false;
 }
 
 //reflow paragraph with wrapping
@@ -1263,6 +1279,8 @@ void MCParagraph::setatts(uint2 si, uint2 ei, Properties p, void *value, bool p_
 {
 	bool t_blocks_changed;
 	t_blocks_changed = false;
+	
+	// MP-2013-09-02: [[ FasterField ]] Keep track of changes.
 	bool t_needs_layout;
 	t_needs_layout = false;
 
@@ -1306,11 +1324,14 @@ void MCParagraph::setatts(uint2 si, uint2 ei, Properties p, void *value, bool p_
 			break;
 		case P_TEXT_SHIFT:
 			bptr->setshift((uint4)(intptr_t)value);
+			// MP-2013-09-02: [[ FasterField ]] Shifting requires layout change.
 			t_needs_layout = true;
 			break;
 		case P_IMAGE_SOURCE:
 			{
 				bptr->setatts(p, value);
+				
+				// MP-2013-09-02: [[ FasterField ]] Image source changes require layout change.
 				t_needs_layout = true;
 				
 				// MW-2008-04-03: [[ Bug ]] Only add an extra block if this is coming from
@@ -1331,6 +1352,8 @@ void MCParagraph::setatts(uint2 si, uint2 ei, Properties p, void *value, bool p_
 			break;
 		default:
 			bptr->setatts(p, value);
+				
+			// MP-2013-09-02: [[ FasterField ]] Block attribute changes need layout.
 			t_needs_layout = true;
 			break;
 		}
@@ -1346,6 +1369,9 @@ void MCParagraph::setatts(uint2 si, uint2 ei, Properties p, void *value, bool p_
 	{
 		state |= PS_LINES_NOT_SYNCHED;
 	}
+	
+	// MP-2013-09-02: [[ FasterField ]] If attributes on existing blocks needing layout changed,
+	//   or the blocks themselves changed, we need layout.
 	if (t_needs_layout || t_blocks_changed)
 	{
 		needs_layout = true;
@@ -1535,6 +1561,8 @@ void MCParagraph::join()
 	delete pgptr;
 	clearzeros();
 	deletelines();
+	
+	// MP-2013-09-02: [[ FasterField ]] Joining two paragraphs requires layout.
 	needs_layout = true;
 }
 
@@ -1589,6 +1617,8 @@ void MCParagraph::split() //split paragraphs on return
 		pgptr->open(parent -> getfontref());
 	append(pgptr);
 	deletelines();
+	
+	// MP-2013-09-02: [[ FasterField ]] Splitting a paragraph requires layout.
 	needs_layout = true;
 }
 
@@ -1653,6 +1683,8 @@ void MCParagraph::deletestring(uint2 si, uint2 ei)
 	clearzeros();
 
 	state |= PS_LINES_NOT_SYNCHED;
+	
+	// MP-2013-09-02: [[ FasterField ]] Deleting a string requires layout.
 	needs_layout = true;
 }
 
@@ -1815,6 +1847,8 @@ void MCParagraph::finsertnobreak(const MCString& p_text, bool p_is_unicode)
 	}
 
 	delete t_native_text;
+	
+	// MP-2013-09-02: [[ FasterField ]] Inserting text requires layout.
 	needs_layout = true;
 }
 

@@ -137,6 +137,7 @@ class MCParagraph : public MCDLlist
 	uint2 startindex, endindex, originalindex;
 	uint2 opened;
 	uint1 state;
+	// MP-2013-09-02: [[ FasterField ]] If true, it means the paragraph needs layout.
 	bool needs_layout : 1;
 	// MW-2012-01-25: [[ ParaStyles ]] This paragraphs collection of attrs.
 	MCParagraphAttrs *attrs;
