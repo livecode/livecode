@@ -4093,17 +4093,20 @@ bool MCObject::intersects(MCObject *p_other, uint32_t p_threshold)
 	{
 		// IM-2013-10-17: [[ FullscreenMode ]] Perform transformations & comparisons using MCGRectangles
 		// Now compute the rects of interest in both the objects.
-		MCGRectangle t_other_rect;
-		t_other_rect = MCGRectangleApplyAffineTransform(t_root_rect, MCGAffineTransformInvert(t_other_stack->getroottransform()));
 		
-		MCGRectangle t_this_rect;
-		t_this_rect = MCGRectangleApplyAffineTransform(t_root_rect, MCGAffineTransformInvert(t_this_stack->getroottransform()));
+		// IM-2013-10-24: [[ FullscreenMode ]] Use integer rects to avoid mask buffer
+		// underruns caused by floating-point rounding errors.
+		MCRectangle t_other_rect;
+		t_other_rect = MCGRectangleGetIntegerInterior(MCGRectangleApplyAffineTransform(t_root_rect, MCGAffineTransformInvert(t_other_stack->getroottransform())));
+		
+		MCRectangle t_this_rect;
+		t_this_rect = MCGRectangleGetIntegerInterior(MCGRectangleApplyAffineTransform(t_root_rect, MCGAffineTransformInvert(t_this_stack->getroottransform())));
 		
 		// Now resolve the masks - this may result in a temporary image being
 		// generated in <mask>.temp_bits - this is freed at the end.
 		object_mask_info t_this_mask, t_other_mask;
-		compute_objectshape_mask(this, t_this_shape, MCGRectangleGetIntegerInterior(t_this_rect), p_threshold, t_this_mask);
-		compute_objectshape_mask(p_other, t_other_shape, MCGRectangleGetIntegerInterior(t_other_rect), p_threshold, t_other_mask);
+		compute_objectshape_mask(this, t_this_shape, t_this_rect, p_threshold, t_this_mask);
+		compute_objectshape_mask(p_other, t_other_shape, t_other_rect, p_threshold, t_other_mask);
 		
 		// IM-2013-10-17: [[ FullscreenMode ]] Use integer bounds when testing pixels
 		MCRectangle t_int_rect;
@@ -4118,25 +4121,19 @@ bool MCObject::intersects(MCObject *p_other, uint32_t p_threshold)
 		MCMemoryNewArray(t_scanline_width, t_this_scanline);
 		MCMemoryNewArray(t_scanline_width, t_other_scanline);
 				
-		MCRectangle t_this_int_rect;
-		t_this_int_rect = MCGRectangleGetIntegerInterior(t_this_rect);
-		
 		// IM-2013-10-17: [[ FullscreenMode ]] Precompute initial pixel coords & row/column increments
 		MCGFloat t_this_x, t_this_y, t_this_x_inc, t_this_y_inc;
-		t_this_x = t_this_mask.scale * (t_this_rect.origin.x - t_this_mask.origin.x);
-		t_this_y = t_this_mask.scale * (t_this_rect.origin.y - t_this_mask.origin.y);
-		t_this_x_inc = t_this_mask.scale * ((MCGFloat)t_this_int_rect.width / (MCGFloat)t_int_rect.width);
-		t_this_y_inc = t_this_mask.scale * ((MCGFloat)t_this_int_rect.height / (MCGFloat)t_int_rect.height);
-		
-		MCRectangle t_other_int_rect;
-		t_other_int_rect = MCGRectangleGetIntegerInterior(t_other_rect);
+		t_this_x = t_this_mask.scale * (t_this_rect.x - t_this_mask.origin.x);
+		t_this_y = t_this_mask.scale * (t_this_rect.y - t_this_mask.origin.y);
+		t_this_x_inc = t_this_mask.scale * ((MCGFloat)t_this_rect.width / (MCGFloat)t_int_rect.width);
+		t_this_y_inc = t_this_mask.scale * ((MCGFloat)t_this_rect.height / (MCGFloat)t_int_rect.height);
 		
 		// IM-2013-10-17: [[ FullscreenMode ]] Precompute initial pixel coords & row/column increments
 		MCGFloat t_other_x, t_other_y, t_other_x_inc, t_other_y_inc;
-		t_other_x = t_other_mask.scale * (t_other_rect.origin.x - t_other_mask.origin.x);
-		t_other_y = t_other_mask.scale * (t_other_rect.origin.y - t_other_mask.origin.y);
-		t_other_x_inc = t_other_mask.scale * ((MCGFloat)t_other_int_rect.width / (MCGFloat)t_int_rect.width);
-		t_other_y_inc = t_other_mask.scale * ((MCGFloat)t_other_int_rect.height / (MCGFloat)t_int_rect.height);
+		t_other_x = t_other_mask.scale * (t_other_rect.x - t_other_mask.origin.x);
+		t_other_y = t_other_mask.scale * (t_other_rect.y - t_other_mask.origin.y);
+		t_other_x_inc = t_other_mask.scale * ((MCGFloat)t_other_rect.width / (MCGFloat)t_int_rect.width);
+		t_other_y_inc = t_other_mask.scale * ((MCGFloat)t_other_rect.height / (MCGFloat)t_int_rect.height);
 		
 		// Now check for overlap!
 		t_intersects = false;
