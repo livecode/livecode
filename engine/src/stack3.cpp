@@ -154,9 +154,6 @@ IO_stat MCStack::load(IO_handle stream, const char *version, uint1 type)
 	
 	stat = load_stack(stream, version);
 	
-	// IM-2013-09-30: [[ FullscreenMode ]] ensure old_rect is initialized for fullscreen stacks
-	old_rect = rect;
-	
 	return stat;
 }
 
@@ -462,10 +459,18 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 			}
 			break;
 		default:
-			MCS_seek_cur(stream, -1);
-			return IO_NORMAL;
+            MCS_seek_cur(stream, -1);
+                
+            // IM-2013-09-30: [[ FullscreenMode ]] ensure old_rect is initialized for fullscreen stacks
+            old_rect = rect;
+			
+            return IO_NORMAL;
 		}
 	}
+	
+    // IM-2013-09-30: [[ FullscreenMode ]] ensure old_rect is initialized for fullscreen stacks
+	old_rect = rect;
+    
 	return IO_NORMAL;
 }
 
