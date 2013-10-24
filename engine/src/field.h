@@ -281,6 +281,8 @@ public:
 	static Field_translations trans_lookup(Keytranslations table[], KeySym key, uint2 modifiers);
 	static Field_translations lookup_mac_keybinding(KeySym key, uint32_t modifiers);
 	
+    void do_recompute(bool p_force_layout);
+    
 	void redrawcheck(MCRectangle &drect);
 	void resetparagraphs();
 
