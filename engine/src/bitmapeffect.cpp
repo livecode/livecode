@@ -204,7 +204,7 @@ bool MCBitmapEffectsScale(MCBitmapEffectsRef& self, int32_t p_scale)
 
 static void MCBitmapEffectColorToMCColor(uint32_t p_color, MCColor &r_color)
 {
-	r_color.pixel = p_color & 0x00FFFFFF;
+	r_color.pixel = p_color;
 	MCscreen->querycolor(r_color);
 }
 
@@ -243,7 +243,7 @@ static Exec_stat MCBitmapEffectGetProperty(MCBitmapEffect *effect, MCBitmapEffec
 			break;
 
 		case kMCBitmapEffectPropertyOpacity:
-			ep . setuint((effect -> layer . color >> 24) & 0xff);
+			ep . setuint(MCGPixelGetNativeAlpha(effect -> layer . color));
 			break;
 		
 		// BLUR EFFECTS
@@ -378,7 +378,7 @@ Exec_stat MCBitmapEffectsGetProperties(MCBitmapEffectsRef& self, Properties whic
 static void MCBitmapEffectDefault(MCBitmapEffect *p_effect, MCBitmapEffectType p_type)
 {
 	// Default color is 75% black
-	p_effect -> layer . color = 0xbf000000;
+	p_effect -> layer . color = MCGPixelPackNative(0, 0, 0, 0xbf);
 
 	// Default blend mode is normal
 	p_effect -> layer . blend_mode = kMCBitmapEffectBlendModeNormal;
@@ -475,11 +475,11 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 			}
 
 			uint4 t_new_color;
-			MCBitmapEffectColorFromMCColor(t_mc_color, t_new_color);
-			if (t_new_color != (self -> layer . color & 0xffffff))
+			t_new_color = MCGPixelPackNative(t_mc_color.red >> 8, t_mc_color.green >> 8, t_mc_color.blue >> 8, MCGPixelGetNativeAlpha(self->layer.color));
+
+			if (t_new_color != self -> layer . color)
 			{
-				// MM-2013-10-21: [[ Bug 11297 ]] Make sure we ignore any opacity value in the new color (refactor graphics changes mean it defaults to 255).
-				self -> layer . color = (self -> layer . color & 0xff000000) | (t_new_color & 0x00ffffff);
+				self -> layer . color = t_new_color;
 				r_dirty = True;
 			}
 		}
@@ -511,10 +511,13 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 		case kMCBitmapEffectPropertyOpacity:
 		{
 			uint4 t_value;
-			if (MCBitmapEffectSetCardinalProperty(255, t_data, self -> layer . color >> 24, t_value, r_dirty) != ES_NORMAL)
+			if (MCBitmapEffectSetCardinalProperty(255, t_data, MCGPixelGetNativeAlpha(self -> layer . color), t_value, r_dirty) != ES_NORMAL)
 				return ES_ERROR;
 			
-			self -> layer . color = (self -> layer . color & 0xffffff) | (t_value << 24);
+			uint8_t r, g, b, a;
+			MCGPixelUnpackNative(self->layer.color, r, g, b, a);
+			
+			self -> layer . color = MCGPixelPackNative(r, g, b, t_value);
 		}
 		break;
 
@@ -792,7 +795,8 @@ uint32_t MCBitmapEffectsWeigh(MCBitmapEffectsRef self)
 static IO_stat MCLayerEffectPickle(MCLayerEffect *self, MCObjectOutputStream& p_stream)
 {
 	IO_stat t_stat;
-	t_stat = p_stream . WriteU32(self -> color);
+	// IM-2013-10-18: [[ RefactorGraphics ]] Convert color to standard format when saving
+	t_stat = p_stream . WriteU32(MCGPixelFromNative(kMCGPixelFormatBGRA, self -> color));
 	if (t_stat == IO_NORMAL)
 		t_stat = p_stream . WriteU8(self -> blend_mode << 4);
 	return t_stat;
@@ -801,7 +805,8 @@ static IO_stat MCLayerEffectPickle(MCLayerEffect *self, MCObjectOutputStream& p_
 static IO_stat MCShadowEffectPickle(MCShadowEffect *self, MCObjectOutputStream& p_stream)
 {
 	IO_stat t_stat;
-	t_stat = p_stream . WriteU32(self -> color);
+	// IM-2013-10-18: [[ RefactorGraphics ]] Convert color to standard format when saving
+	t_stat = p_stream . WriteU32(MCGPixelFromNative(kMCGPixelFormatBGRA, self -> color));
 	if (t_stat == IO_NORMAL)
 		t_stat = p_stream . WriteU32((self -> blend_mode << 28) | (self -> filter << 25) | (self -> size << 17) | (self -> spread << 9) | (self -> angle << 0));
 	if (t_stat == IO_NORMAL)
@@ -812,7 +817,8 @@ static IO_stat MCShadowEffectPickle(MCShadowEffect *self, MCObjectOutputStream& 
 static IO_stat MCGlowEffectPickle(MCGlowEffect *self, MCObjectOutputStream& p_stream)
 {
 	IO_stat t_stat;
-	t_stat = p_stream . WriteU32(self -> color);
+	// IM-2013-10-18: [[ RefactorGraphics ]] Convert color to standard format when saving
+	t_stat = p_stream . WriteU32(MCGPixelFromNative(kMCGPixelFormatBGRA, self -> color));
 	if (t_stat == IO_NORMAL)
 		t_stat = p_stream . WriteU32((self -> blend_mode << 28) | (self -> filter << 25) | (self -> size << 17) | (self -> spread << 9) | (self -> range << 1) | (self -> source << 0));
 	return t_stat;
@@ -859,7 +865,8 @@ static IO_stat MCLayerEffectUnpickle(MCLayerEffect *self, MCObjectInputStream& p
 	IO_stat t_stat;
 	uint32_t t_color;
 	t_stat = p_stream . ReadU32(t_color);
-	self -> color = t_color;
+	// IM-2013-10-18: [[ RefactorGraphics ]] Convert color from standard format when loading
+	self -> color = MCGPixelToNative(kMCGPixelFormatBGRA, t_color);
 	
 	uint8_t t_flags;
 	if (t_stat == IO_NORMAL)
@@ -878,7 +885,8 @@ static IO_stat MCShadowEffectUnpickle(MCShadowEffect *self, MCObjectInputStream&
 	IO_stat t_stat;
 	uint32_t t_color;
 	t_stat = p_stream . ReadU32(t_color);
-	self -> color = t_color;
+	// IM-2013-10-18: [[ RefactorGraphics ]] Convert color from standard format when loading
+	self -> color = MCGPixelToNative(kMCGPixelFormatBGRA, t_color);
 	
 	uint32_t t_data_a;
 	if (t_stat == IO_NORMAL)
@@ -907,7 +915,8 @@ static IO_stat MCGlowEffectUnpickle(MCGlowEffect *self, MCObjectInputStream& p_s
 	IO_stat t_stat;
 	uint32_t t_color;
 	t_stat = p_stream . ReadU32(t_color);
-	self -> color = t_color;
+	// IM-2013-10-18: [[ RefactorGraphics ]] Convert color from standard format when loading
+	self -> color = MCGPixelToNative(kMCGPixelFormatBGRA, t_color);
 	
 	uint32_t t_data;
 	if (t_stat == IO_NORMAL)

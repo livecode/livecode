@@ -132,6 +132,22 @@ static inline uint8_t MCGPixelGetNativeAlpha(uint32_t p_pixel)
 #endif
 }
 
+static inline uint32_t MCGPixelToNative(MCGPixelFormat p_src_format, uint32_t p_src_pixel)
+{
+	uint8_t r, g, b, a;
+	MCGPixelUnpack(p_src_format, p_src_pixel, r, g, b, a);
+	
+	return MCGPixelPackNative(r, g, b, a);
+}
+
+static inline uint32_t MCGPixelFromNative(MCGPixelFormat p_dst_format, uint32_t p_native_pixel)
+{
+	uint8_t r, g, b, a;
+	MCGPixelUnpackNative(p_native_pixel, r, g, b, a);
+	
+	return MCGPixelPack(p_dst_format, r, g, b, a);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef float MCGFloat;
