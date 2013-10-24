@@ -210,13 +210,17 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_ty
     if (p_meta_data != nil)
     {
         MCValueRef t_value;
+        char *t_value_cstring;
         if (t_success)
         {
             MCNewAutoNameRef t_age_key;
             MCNameCreateWithCString("age", &t_age_key);
             
             if (MCArrayFetchValue(p_meta_data, false, *t_age_key, t_value))
-                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "age", MCStringGetCString((MCStringRef)t_value));
+            {
+                /* UNCHECKED */ MCStringConvertToCString((MCStringRef)t_value), t_value_cstring);
+                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "age", t_value_cstring);
+            }
         }
         if (t_success)
         {            
@@ -224,8 +228,11 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_ty
             MCNameCreateWithCString("distribution id", &t_distrib_key);
             
             if (MCArrayFetchValue(p_meta_data, false, *t_distrib_key, t_value))
-                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "distribution id", MCStringGetCString((MCStringRef)t_value));
-        }        
+            {
+                /* UNCHECKED */ MCStringConvertToCString((MCStringRef)t_value), t_value_cstring);
+                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "distribution id", t_value_cstring);
+            }
+        }
 		
         if (t_success)
         {
@@ -233,7 +240,10 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_ty
             MCNameCreateWithCString("gender", &t_gender_key);
             
             if (MCArrayFetchValue(p_meta_data, false, *t_gender_key, t_value))
-                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "gender", MCStringGetCString((MCStringRef)t_value));
+            {
+                /* UNCHECKED */ MCStringConvertToCString((MCStringRef)t_value), t_value_cstring);
+                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "gender", t_value_cstring);
+            }
         }
         if (t_success)
         {
@@ -241,7 +251,10 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_ty
             MCNameCreateWithCString("keywords", &t_keywords_key);
             
             if (MCArrayFetchValue(p_meta_data, false, *t_keywords_key, t_value))
-                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "keywords", MCStringGetCString((MCStringRef)t_value));
+            {
+                /* UNCHECKED */ MCStringConvertToCString((MCStringRef)t_value), t_value_cstring);
+                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "keywords", t_value_cstring);
+            }
         }
         if (t_success)
         {
@@ -249,7 +262,10 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_ty
             MCNameCreateWithCString("phone number", &t_phone_key);
             
             if (MCArrayFetchValue(p_meta_data, false, *t_phone_key, t_value))
-                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "phone number", MCStringGetCString((MCStringRef)t_value));
+            {
+                /* UNCHECKED */ MCStringConvertToCString((MCStringRef)t_value), t_value_cstring);
+                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "phone number", t_value_cstring);
+            }
         }
     }
     
