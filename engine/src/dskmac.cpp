@@ -219,18 +219,18 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 					int4 val;
 					GetEventParameter(event, kEventParamMouseWheelDelta, typeLongInteger, NULL, sizeof(val), NULL, &val);
 					if (val < 0)
-						mfocused->kdown("", XK_WheelUp);
+						mfocused->kdown(kMCEmptyString, XK_WheelUp);
 					else
-						mfocused->kdown("", XK_WheelDown);
+						mfocused->kdown(kMCEmptyString, XK_WheelDown);
 				}
 				else if (t_axis ==  kEventMouseWheelAxisX)
 				{
 					int4 val;
 					GetEventParameter(event, kEventParamMouseWheelDelta, typeLongInteger, NULL, sizeof(val), NULL, &val);
 					if (val < 0)
-						mfocused->kdown("", XK_WheelLeft);
+						mfocused->kdown(kMCEmptyString, XK_WheelLeft);
 					else
-						mfocused->kdown("", XK_WheelRight);
+						mfocused->kdown(kMCEmptyString, XK_WheelRight);
 				}
 			}
 		}
@@ -598,7 +598,7 @@ static pascal OSErr DoAppPreferences(const AppleEvent *theAppleEvent, AppleEvent
 	MCGroup *mb = MCmenubar != NULL ? MCmenubar : MCdefaultmenubar;
 	if (mb == NULL)
 		return errAEEventNotHandled;
-	MCButton *bptr = (MCButton *)mb->findname(CT_MENU, "Edit");
+	MCButton *bptr = (MCButton *)mb->findname(CT_MENU, MCNAME("Edit"));
 	if (bptr == NULL)
 		return errAEEventNotHandled;
 	if (bptr != NULL)
@@ -4394,7 +4394,13 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (!IsInteractiveConsole(0))
             MCS_mac_nodelay(0);
         
-        setlocale(LC_ALL, MCnullstring);
+		// Internally, LiveCode assumes sorting orders etc are those of en_US.
+		// Additionally, the "native" string encoding for Mac is MacRoman
+		// (even though the BSD components of the system are likely UTF-8).
+		const char *t_internal_locale = "en_US";
+		setlocale(LC_ALL, "");
+		setlocale(LC_CTYPE, t_internal_locale);
+		setlocale(LC_COLLATE, t_internal_locale);
         
         _CurrentRuneLocale->__runetype[202] = _CurrentRuneLocale->__runetype[201];
         
@@ -7260,7 +7266,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                     MCprocesses[index].pid = 0;
                     MCeerror->add
                     (EE_SHELL_BADCOMMAND, 0, 0, MCStringGetCString(p_command));
-                    return IO_ERROR;
+                    return false;
                 }
             }
             else
@@ -7269,14 +7275,14 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 close(tochild[1]);
                 MCeerror->add
                 (EE_SHELL_BADCOMMAND, 0, 0, MCStringGetCString(p_command));
-                return IO_ERROR;
+                return false;
             }
         }
         else
         {
             MCeerror->add
             (EE_SHELL_BADCOMMAND, 0, 0, MCStringGetCString(p_command));
-            return IO_ERROR;
+            return false;
         }
         char *buffer;
         uint4 buffersize;
@@ -7318,7 +7324,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         r_retcode = MCprocesses[index].retcode;        
         
-        return IO_NORMAL;
+        return true;
     }
     
     virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, intenum_t p_mode, Boolean p_elevated)
@@ -8976,12 +8982,14 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 		if (t_status == noErr)
 		{
 			char *t_name_dup;
-			t_name_dup = strdup(MCNameGetCString(name));
+			/* UNCHECKED */ MCStringConvertToUTF8String(MCNameGetString(name), t_name_dup);
 			
 			// Split the arguments
 			uint32_t t_argc;
 			char **t_argv;
-			startprocess_create_argv(t_name_dup, const_cast<char *>(MCStringGetCString(doc)), t_argc, t_argv);
+			char *t_doc;
+			/* UNCHECKED */ MCStringConvertToUTF8String(doc, t_doc);
+			startprocess_create_argv(t_name_dup, t_doc, t_argc, t_argv);
 			startprocess_write_uint32_to_fd(fileno(t_stream), t_argc);
 			for(uint32_t i = 0; i < t_argc; i++)
 				startprocess_write_cstring_to_fd(fileno(t_stream), t_argv[i]);
@@ -8989,6 +8997,7 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 				t_status = errAuthorizationToolExecuteFailure;
 			
 			delete t_name_dup;
+			delete t_doc;
 			delete[] t_argv;
 		}
 		

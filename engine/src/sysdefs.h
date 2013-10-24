@@ -1039,6 +1039,12 @@ typedef unsigned long       Atom;
 #define XK_WheelLeft	0xFF1E
 #define XK_WheelRight	0xFF1F
 
+#define XK_Class_mask		0xFF000000		/* Key classes */
+#define XK_Class_compat		0x00000000		/* Ordinary (X11) keycodes */
+#define XK_Class_codepoint	0x01000000		/* The low 21 bits contain a Unicode codepoint */
+#define XK_Class_vendor		0x10000000		/* OS vendor specific */
+#define XK_Codepoint_mask	0x001FFFFF		/* Mask for extracting codepoint from XK_Class_codepoint */
+
 //////////////////////////////////////////////////////////////////////
 //
 //  FORWARD REFERENCES

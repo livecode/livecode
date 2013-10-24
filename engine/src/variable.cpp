@@ -527,24 +527,6 @@ MCVariable *MCVariable::lookupglobal(MCNameRef p_name)
 	return nil;
 }
 
-bool MCVariable::ensureglobal_cstring(const char *p_name, MCVariable*& r_var)
-{
-	bool t_success;
-	t_success = true;
-
-	MCNameRef t_name;
-	t_name = nil;
-	if (t_success)
-		t_success = MCNameCreateWithCString(p_name, t_name);
-
-	if (t_success)
-		t_success = ensureglobal(t_name, r_var);
-
-	MCNameDelete(t_name);
-	
-	return t_success;
-}
-
 bool MCVariable::ensureglobal(MCNameRef p_name, MCVariable*& r_var)
 {
 	// First check to see if the global variable already exists

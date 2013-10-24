@@ -456,7 +456,7 @@ void MCInterfaceMakeVisualEffectArgument(MCExecContext& ctxt, MCStringRef p_valu
 {
 	if (p_has_id)
 	{
-		if (!MCStringFormat(r_arg . value, "id %s", MCStringGetCString(p_key)))
+		if (!MCStringFormat(r_arg . value, "id %@", p_key))
 		{
 			ctxt . Throw();
 			return;
@@ -1599,8 +1599,10 @@ void MCInterfaceEvalControlAtScreenLoc(MCExecContext& ctxt, MCPoint p_location, 
 	MCObject *t_object;
 	t_object = MCInterfaceEvalControlAtLocInStack(MCdefaultstackptr, p_location);
 
-	if (t_object -> names(P_LONG_ID, r_control))
-		return;
+	MCAutoValueRef t_control;
+	if (t_object -> names(P_LONG_ID, &t_control))
+		if (ctxt.ConvertToString(*t_control, r_control))
+			return;
 
 	ctxt . Throw();
 }
@@ -1696,24 +1698,25 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 	MCmodifierstate = p_modifiers;
 	MCdefaultstackptr->kfocus();
 	uint2 i;
-	char string[2];
-	string[1] = '\0';
+	MCStringRef t_string = nil;
 	real8 nexttime = MCS_time();
 
 	for (i = 0 ; i < MCStringGetLength(p_typing); i++)
 	{
-		KeySym keysym = (unsigned char) MCStringGetNativeCharAtIndex(p_typing, i);
+		KeySym keysym = MCStringGetCodepointAtIndex(p_typing, i);
 		if (keysym < 0x20 || keysym == 0xFF)
 		{
 			if (keysym == 0x0A)
 				keysym = 0x0D;
 			keysym |= 0xFF00;
-			string[0] = '\0';
+			t_string = kMCEmptyString;
 		}
+		else if (keysym > 0x7F)
+			keysym |= XK_Class_codepoint;
 		else
-			string[0] = MCStringGetNativeCharAtIndex(p_typing, i);
-		MCdefaultstackptr->kdown(string, keysym);
-		MCdefaultstackptr->kup(string, keysym);
+			t_string = p_typing;
+		MCdefaultstackptr->kdown(t_string, keysym);
+		MCdefaultstackptr->kup(t_string, keysym);
 		nexttime += (real8)MCtyperate / 1000.0;
 		real8 delay = nexttime - MCS_time();
 		if (MCscreen->wait(delay, False, False))
@@ -1746,9 +1749,11 @@ void MCInterfaceExecPopToLast(MCExecContext& ctxt)
 void MCInterfaceExecPop(MCExecContext& ctxt, MCStringRef& r_element)
 {
 	MCCard *cptr = MCcstack->popcard();
-	if (cptr -> names(P_LONG_ID, r_element))
-		return;
-
+	MCAutoValueRef t_element;
+	if (cptr -> names(P_LONG_ID, &t_element))
+		if (ctxt.ConvertToString(*t_element, r_element))
+			return;
+	
 	ctxt.Throw();
 }
 
@@ -2112,7 +2117,7 @@ void MCInterfaceProcessToContainer(MCExecContext& ctxt, MCObjectPtr *p_objects, 
 
 	if (t_new_object != NULL)
 	{
-		MCAutoStringRef t_id;
+		MCAutoValueRef t_id;
 		if (t_new_object -> names(P_LONG_ID, &t_id))
 			ctxt . SetItToValue(*t_id);
 	}
@@ -2911,9 +2916,9 @@ void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCObject *p_object, MCStrin
 	}
 	else if (p_object != nil)
 	{
-		MCAutoStringRef t_name;
+		MCAutoValueRef t_name;
 		p_object->names(P_NAME, &t_name);
-		MCdefaultstackptr->setstringprop(ctxt, 0, P_MAIN_STACK, False, *t_name);
+		MCdefaultstackptr->setvariantprop(ctxt, 0, P_MAIN_STACK, False, *t_name);
 		if (ctxt . HasError())
 		{
 			delete MCdefaultstackptr;
@@ -2929,7 +2934,7 @@ void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCObject *p_object, MCStrin
 	if (p_new_name != nil)
 		t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
 	
-	MCAutoStringRef t_id;
+	MCAutoValueRef t_id;
 	t_object->names(P_LONG_ID, &t_id);
 	ctxt . SetItToValue(*t_id);
 }
@@ -2959,7 +2964,7 @@ void MCInterfaceExecCreateCard(MCExecContext& ctxt, MCStringRef p_new_name, bool
 	if (p_new_name != nil)
 		t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
 	
-	MCAutoStringRef t_id;
+	MCAutoValueRef t_id;
 	t_object->names(P_LONG_ID, &t_id);
 	ctxt . SetItToValue(*t_id);
 }
@@ -3024,7 +3029,7 @@ void MCInterfaceExecCreateControl(MCExecContext& ctxt, MCStringRef p_new_name, i
 	if (p_new_name != nil)
 		t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
 
-	MCAutoStringRef t_id;
+	MCAutoValueRef t_id;
 	t_object->names(P_LONG_ID, &t_id);
 	ctxt . SetItToValue(*t_id);
 }
@@ -3044,10 +3049,12 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 			t_object = t_stack->clone();
 			if (p_new_name == nil)
 			{
-				MCStringRef t_short_name;
-				t_stack->names(P_SHORT_NAME, t_short_name);
+				MCAutoValueRef t_short_name;
+				MCAutoStringRef t_short_name_str;
+				t_stack->names(P_SHORT_NAME, &t_short_name);
+				/* UNCHECKED */ ctxt.ConvertToString(*t_short_name, &t_short_name_str);
 				MCAutoStringRef t_new_name;
-				MCStringMutableCopyAndRelease(t_short_name, &t_new_name);
+				MCStringMutableCopyAndRelease(*t_short_name_str, &t_new_name);
 				MCStringPrependNativeChars(*t_new_name, (const char_t *)MCcopystring, strlen(MCcopystring));
 				t_object->setstringprop(ctxt, 0, P_NAME, False, *t_new_name);
 			}
@@ -3123,7 +3130,7 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 	if (p_new_name != nil)
 		t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
 	
-	MCAutoStringRef t_id;
+	MCAutoValueRef t_id;
 	t_object->names(P_LONG_ID, &t_id);
 	ctxt . SetItToValue(*t_id);
 
@@ -4220,11 +4227,11 @@ void MCInterfaceExecVisualEffect(MCExecContext& ctxt, MCInterfaceVisualEffect p_
 	effectptr -> direction = p_effect . direction;
 	effectptr -> speed = p_effect . speed;
 	effectptr -> image = p_effect . image;
-	effectptr -> name = strclone(MCStringGetCString(p_effect . name));
+	effectptr -> name = MCValueRetain(p_effect . name);
 	if (MCStringGetLength(p_effect . sound) == 0)
 		effectptr -> sound = NULL;
 	else
-		effectptr -> sound = strclone(MCStringGetCString(p_effect . sound));
+		effectptr -> sound = MCValueRetain(p_effect . sound);
 	
 	MCEffectArgument *t_arguments = nil;
 	for (uindex_t i = 0; i < p_effect . nargs; i++)
@@ -4233,8 +4240,8 @@ void MCInterfaceExecVisualEffect(MCExecContext& ctxt, MCInterfaceVisualEffect p_
 		MCEffectArgument *t_kv;
 		t_kv = new MCEffectArgument;
 		t_kv -> next = t_arguments;
-		t_kv -> key = strclone(MCStringGetCString(t_arg . key));
-		t_kv -> value = strclone(MCStringGetCString(t_arg . value));
+		t_kv -> key = MCValueRetain(t_arg . key);
+		t_kv -> value = MCValueRetain(t_arg . value);
 		t_arguments = t_kv;
 		t_arg = p_effect . arguments[i+1];
 	}

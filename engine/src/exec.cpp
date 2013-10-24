@@ -32,6 +32,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osspec.h"
 
+#include "osspec.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCExecContext::ForceToString(MCValueRef p_value, MCStringRef& r_string)

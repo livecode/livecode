@@ -362,10 +362,10 @@ void MCPlayer::close()
 	}
 }
 
-Boolean MCPlayer::kdown(const char *string, KeySym key)
+Boolean MCPlayer::kdown(MCStringRef p_string, KeySym key)
 {
 	if (!(state & CS_NO_MESSAGES))
-		if (MCObject::kdown(string, key))
+		if (MCObject::kdown(p_string, key))
 			return True;
 
 #ifdef FEATURE_QUICKTIME
@@ -379,7 +379,7 @@ Boolean MCPlayer::kdown(const char *string, KeySym key)
 	return False;
 }
 
-Boolean MCPlayer::kup(const char *string, KeySym key)
+Boolean MCPlayer::kup(MCStringRef p_string, KeySym key)
 {
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
@@ -3283,6 +3283,7 @@ OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
 
 	MCAutoStringRef t_filename;
 	char *nativepath;
+	char *temp;
 
 	/* UNCHECKED */ MCS_resolvepath(p_filename, &t_filename);
 
@@ -3304,11 +3305,15 @@ OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
 
 			/* UNCHECKED */ MCStringAppend(*t_path, *t_filename);
 			/* UNCHECKED */ MCS_pathtonative(*t_path, &t_native);
-			nativepath = strclone(MCStringGetCString(*t_native));
+			/* UNCHECKED */ MCStringConvertToCString(*t_native, temp);
+			nativepath = strclone(temp);
 		}
 	}
 	else
-		nativepath = strclone(MCStringGetCString(*t_filename));
+	{
+		/* UNCHECKED */ MCStringConvertToCString(*t_filename, temp);
+		nativepath = strclone(temp);
+	}
 
 	OSErr err = NativePathNameToFSSpec(nativepath, fspec, 0);
 	delete nativepath;

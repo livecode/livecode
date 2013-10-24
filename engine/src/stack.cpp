@@ -784,11 +784,11 @@ void MCStack::kunfocus()
 	curcard->kunfocus();
 }
 
-Boolean MCStack::kdown(const char *string, KeySym key)
+Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 {
 	if (!opened || state & CS_IGNORE_CLOSE)
 		return False;
-	if (curcard->kdown(string, key))
+	if (curcard->kdown(p_string, key))
 		return True;
 	MCObject *optr;
 	switch (key)
@@ -931,13 +931,18 @@ Boolean MCStack::kdown(const char *string, KeySym key)
 			return MCundos->undo();
 		}
 	uint2 i;
+	
+	// Does this keypress correspond to a mnemonic letter?
+	// The comparison should be case-insensitive for letters
+	KeySym t_key;
+	t_key = MCKeySymToLower(key);
 	for (i = 0 ; i < nmnemonics ; i++)
 	{
-		if (mnemonics[i].key == MCS_tolower(string[0])
+		if (mnemonics[i].key == t_key
 		        && mnemonics[i].button->isvisible()
 		        && !mnemonics[i].button->isdisabled())
 		{
-			mnemonics[i].button->activate(True, string[0]);
+			mnemonics[i].button->activate(True, key);
 			return True;
 		}
 	}
@@ -945,11 +950,11 @@ Boolean MCStack::kdown(const char *string, KeySym key)
 	return False;
 }
 
-Boolean MCStack::kup(const char *string, KeySym key)
+Boolean MCStack::kup(MCStringRef p_string, KeySym key)
 {
 	if (!opened || state & CS_IGNORE_CLOSE)
 		return False;
-	Boolean done = curcard->kup(string, key);
+	Boolean done = curcard->kup(p_string, key);
 	if (menuheight && (rect.height != menuheight || menuy != 0))
 		scrollintoview();
 	return done;
@@ -2821,6 +2826,7 @@ void MCStack::paste(void)
 				break;
 			t_index += 1;
 		}
+		
 		setname(t_name);
 		MCValueRelease(t_name);
 	}

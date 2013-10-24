@@ -227,6 +227,7 @@ void MCDeployCapsuleDestroy(MCDeployCapsuleRef self);
 // This method appends a new section of the given type containing the
 // specified data.
 bool MCDeployCapsuleDefine(MCDeployCapsuleRef self, MCCapsuleSectionType type, const void *data, uint32_t data_size);
+bool MCDeployCapsuleDefineString(MCDeployCapsuleRef self, MCCapsuleSectionType type, MCStringRef p_string);
 
 // This method appends a new section of the given type contining the data
 // held in the given file - the caller is responsible for managing the lifetime

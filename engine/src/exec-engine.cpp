@@ -487,7 +487,7 @@ bool MCEngineListObjectIds(MCExecContext& ctxt, MCObjectList *p_objects, MCListR
 		{
 			if (!t_obj_ptr->getremoved())
 			{
-				MCAutoStringRef t_id_string;
+				MCAutoValueRef t_id_string;
 				if (!t_obj_ptr -> getobject() -> names(P_LONG_ID, &t_id_string))
 					return false;
 				if (!MCListAppend(*t_list, *t_id_string))
@@ -1547,7 +1547,7 @@ void MCEngineGetStacksInUse(MCExecContext& ctxt, MCStringRef &r_value)
 	{
 		if (t_success)
 		{
-			MCAutoStringRef t_stack_name;
+			MCAutoValueRef t_stack_name;
 			MCusing[i] -> names(P_SHORT_NAME, &t_stack_name);
 			t_success = MCListAppend(*t_list, *t_stack_name);
 		}

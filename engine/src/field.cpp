@@ -548,7 +548,7 @@ void MCField::kunfocus()
 	}
 }
 
-Boolean MCField::kdown(const char *string, KeySym key)
+Boolean MCField::kdown(MCStringRef p_string, KeySym key)
 {
 	if (state & CS_NO_FILE)
 		return False;
@@ -579,9 +579,9 @@ Boolean MCField::kdown(const char *string, KeySym key)
 	case XK_Left:
 	case XK_Right:
 		if (!MCtextarrows)
-			return MCObject::kdown(string, key);
+			return MCObject::kdown(p_string, key);
 	default:
-		if (MCObject::kdown(string, key))
+		if (MCObject::kdown(p_string, key))
 			return True;
 		break;
 	}
@@ -623,7 +623,7 @@ Boolean MCField::kdown(const char *string, KeySym key)
 		function = trans_lookup(MCemacskeys ? emacs_keys : std_keys, key, mods);
 	if (function == FT_UNDEFINED && MCmodifierstate & (MS_CONTROL | MS_MOD1))
 		return False;
-	if (function != FT_UNDEFINED || strlen(string))
+	if (function != FT_UNDEFINED || !MCStringIsEmpty(p_string))
 		stopcomposition(False, True);
 #endif
 
@@ -636,14 +636,12 @@ Boolean MCField::kdown(const char *string, KeySym key)
 	case FT_UNDEFINED:
 		if (!getflag(F_LOCK_TEXT))
 		{
-			if (MCnullmcstring == string)
+			if (MCStringIsEmpty(p_string))
 				return False;
 
 			getstack()->hidecursor();
 
-			// MW-2012-02-13: [[ Block Unicode ]] Use the new 'finsert' method in
-			//   native mode.
-			finsertnew(function, string, key, false);
+			finsertnew(function, p_string, key);
 		}
 		break;
 	case FT_DELBCHAR:
@@ -655,53 +653,53 @@ Boolean MCField::kdown(const char *string, KeySym key)
 	case FT_DELBOP: // Not implemented yet
 	case FT_DELEOP:
 		if (!getflag(F_LOCK_TEXT))
-			fdel(function, string, key);
+			fdel(function, p_string, key);
 		break;
 	case FT_HELP:
-		fhelp(function, string, key);
+		fhelp(function, p_string, key);
 		break;
 	case FT_UNDO:
 		if (!getflag(F_LOCK_TEXT))
-		fundo(function, string, key);
+		fundo(function, p_string, key);
 		break;
 	case FT_CUT:
 		if (!getflag(F_LOCK_TEXT))
-			fcut(function, string, key);
+			fcut(function, p_string, key);
 		break;
 	case FT_CUTLINE:
 		if (!getflag(F_LOCK_TEXT))
-			fcutline(function, string, key);
+			fcutline(function, p_string, key);
 		break;
 	case FT_COPY:
 		if (!getflag(F_LOCK_TEXT))
-			fcopy(function, string, key);
+			fcopy(function, p_string, key);
 		break;
 	case FT_PASTE:
 		if (!getflag(F_LOCK_TEXT))
-			fpaste(function, string, key);
+			fpaste(function, p_string, key);
 		break;
 	case FT_TAB:
-		ftab(function, string, key);
+		ftab(function, p_string, key);
 		break;
 	case FT_FOCUSFIRST:
 	case FT_FOCUSLAST:
 	case FT_FOCUSNEXT:
 	case FT_FOCUSPREV:
-		ffocus(function, string, key);
+		ffocus(function, p_string, key);
 		break;
 	case FT_PARAGRAPHAFTER:
 		if (!getflag(F_LOCK_TEXT))
 		{
-			freturn(function, string, key);
-			fmove(FT_LEFTCHAR, string, key);
+			freturn(function, p_string, key);
+			fmove(FT_LEFTCHAR, p_string, key);
 		}
 		break;
 	case FT_PARAGRAPH:
 		if (!getflag(F_LOCK_TEXT))
-			freturn(function, string, key);
+			freturn(function, p_string, key);
 		break;
 	case FT_CENTER:
-		fcenter(function, string, key);
+		fcenter(function, p_string, key);
 		break;
 	case FT_SCROLLUP:
 	case FT_SCROLLDOWN:
@@ -711,10 +709,10 @@ Boolean MCField::kdown(const char *string, KeySym key)
 	case FT_SCROLLPAGEDOWN:
 	case FT_SCROLLTOP:
 	case FT_SCROLLBOTTOM:
-		fscroll(function, string, key);
+		fscroll(function, p_string, key);
 		break;
 	default:
-		fmove(function, string, key);
+		fmove(function, p_string, key);
 		break;
 	}
 	return True;
