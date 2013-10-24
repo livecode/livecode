@@ -648,7 +648,7 @@ bool MCStoreDisablePurchaseUpdates()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCStorePostProductRequestError(const char *p_product, const char *p_error);
+bool MCStorePostProductRequestError(MCStringRef p_product, MCStringRef p_error);
 bool MCStorePostProductRequestResponse(SKProduct *p_product);
 
 @interface MCProductsRequest : SKProductsRequest
@@ -706,7 +706,12 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product);
     {
         for (NSString *t_invalid_id in response.invalidProductIdentifiers)
         {
-            MCStorePostProductRequestError([t_invalid_id cStringUsingEncoding:NSMacOSRomanStringEncoding], "invalid product identifier");
+            MCAutoStringRef t_string;
+            /* UNCHECKED */ MCStringCreateWithCString([t_invalid_id
+                                                       cStringUsingEncoding:
+                                                       NSMacOSRomanStringEncoding],
+                                                      &t_string);
+            MCStorePostProductRequestError(*t_string, MCSTR("invalid product identifier"));
         }
     }
     
@@ -723,10 +728,16 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product);
 {
     [request release];
 }
+
 - (void)request:(SKRequest *)request didFailWithError:(NSError *)error
 {
     const char *t_product_id = [[(MCProductsRequest*)request getProductId] cStringUsingEncoding: NSMacOSRomanStringEncoding];
-    MCStorePostProductRequestError(t_product_id, [[error description] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+    const char *t_error_str = [[error description] cStringUsingEncoding:
+                               NSMacOSRomanStringEncoding];
+    MCAutoStringRef t_product, t_error;
+    /* UNCHECKED */ MCStringCreateWithCString(t_product_id, &t_product);
+    /* UNCHECKED */ MCStringCreateWithCString(t_error_str, &t_error);
+    MCStorePostProductRequestError(*t_product, *t_error);
     [request release];
 }
 
@@ -754,38 +765,40 @@ bool MCStoreRequestProductDetails(MCStringRef p_product_id)
 class MCStoreProductRequestErrorEvent : public MCCustomEvent
 {
 public:
-    MCStoreProductRequestErrorEvent(const char *p_product, const char *p_error);
+    MCStoreProductRequestErrorEvent(MCStringRef p_product, MCStringRef p_error);
+    ~MCStoreProductRequestErrorEvent();
     
     void Destroy();
     void Dispatch();
     
 private:
-    char *m_product;
-    char *m_error;
+    MCStringRef m_product;
+    MCStringRef m_error;
 };
 
-MCStoreProductRequestErrorEvent::MCStoreProductRequestErrorEvent(const char *p_product, const char *p_error)
+MCStoreProductRequestErrorEvent::MCStoreProductRequestErrorEvent(MCStringRef p_product, MCStringRef p_error)
 {
-    m_product = m_error = nil;
-    
-    MCCStringClone(p_product, m_product);
-    MCCStringClone(p_error, m_error);
+    m_product = MCValueRetain(p_product);
+    m_error = MCValueRetain(p_error);
+}
+
+MCStoreProductRequestErrorEvent::~MCStoreProductRequestErrorEvent()
+{
+    MCValueRelease(m_product);
+    MCValueRelease(m_error);
 }
 
 void MCStoreProductRequestErrorEvent::Destroy()
 {
-    MCCStringFree(m_product);
-    MCCStringFree(m_error);
-    
     delete this;
 }
 
 void MCStoreProductRequestErrorEvent::Dispatch()
 {
-    MCdefaultstackptr->getcurcard()->message_with_args(MCM_product_request_error, m_product, m_error);
+    MCdefaultstackptr->getcurcard()->message_with_valueref_args(MCM_product_request_error, m_product, m_error);
 }
 
-bool MCStorePostProductRequestError(const char *p_product, const char *p_error)
+bool MCStorePostProductRequestError(MCStringRef p_product, MCStringRef p_error)
 {
     bool t_success;
     MCCustomEvent *t_event = nil;

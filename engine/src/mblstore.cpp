@@ -268,18 +268,19 @@ void MCPurchaseUpdateEvent::Dispatch()
 
 	//MCLog("dispatching purchase (%p) event", m_purchase);
 
-	char *t_id = NULL;
-	const char *t_state = NULL;
+	MCAutoStringRef t_id, t_state;
+	const char *t_state_str = NULL;
 	
-	t_success = MCPurchaseStateToString(m_purchase->state, t_state);
+	t_success = MCPurchaseStateToString(m_purchase->state, t_state_str);
+    
+    if (t_success)
+        t_success = MCStringCreateWithCString(t_state_str, &t_state);
 	
 	if (t_success)
-		t_success = MCCStringFormat(t_id, "%d", m_purchase->id);
+        t_success = MCStringFormat(&t_id, "%d", m_purchase->id);
 	
 	if (t_success)
-		MCdefaultstackptr->getcurcard()->message_with_args(MCM_purchase_updated, t_id, t_state);
-	
-	MCCStringFree(t_id);
+		MCdefaultstackptr->getcurcard()->message_with_valueref_args(MCM_purchase_updated, *t_id, *t_state);
 }
 
 bool MCPurchaseUpdateEvent::EventPendingForPurchase(MCPurchase *p_purchase)
