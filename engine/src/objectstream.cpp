@@ -217,7 +217,6 @@ IO_stat MCObjectInputStream::ReadStringRef(MCStringRef &r_value)
 		for(t_offset = 0; t_offset < m_limit - m_frontier; ++t_offset)
 			if (((char *)m_buffer)[m_frontier + t_offset] == '\0')
 			{
-				t_offset += 1;
 				t_finished = true;
 				break;
 			}
@@ -227,6 +226,8 @@ IO_stat MCObjectInputStream::ReadStringRef(MCStringRef &r_value)
 
 		m_frontier += t_offset;
 	}
+    
+    m_frontier += 1;
 
 	if (!MCStringCopyAndRelease(t_string, r_value))
     {

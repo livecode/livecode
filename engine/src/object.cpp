@@ -2987,7 +2987,7 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 				if (MCStringIsEmpty(*t_script_string))
 					t_length -= 1;
 				else
-					t_length -= MCStringGetLength(*t_script_string);
+					t_length -= MCStringGetLength(*t_script_string) + 1;
 
 				if (!MCStringIsEmpty(*t_script_string))
 					getstack() -> securescript(this);
