@@ -589,12 +589,10 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 
 	if (flags & F_STACK_FILES)
 	{
-		MCExecPoint ep;
-		getstackfiles(ep);
-		char *sf = ep.getsvalue().clone();
-		if ((stat = IO_write_string(sf, stream)) != IO_NORMAL)
+        MCAutoStringRef sf;
+		getstackfiles(&sf);
+		if ((stat = IO_write_stringref(*sf, stream)) != IO_NORMAL)
 			return stat;
-		delete sf;
 	}
 	if (flags & F_MENU_BAR)
 		if ((stat = IO_write_nameref(_menubar, stream)) != IO_NORMAL)
