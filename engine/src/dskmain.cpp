@@ -152,7 +152,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 		create_var(argv[0]);
     
     MCAutoStringRefAsUTF8String t_utf8_mccmd;
-    t_utf8_mccmd . Lock(MCcmd);
+    /* UNCHECKED */ t_utf8_mccmd . Lock(MCcmd);
 
 	for (int i = 1; i < argc; i++)
 	{

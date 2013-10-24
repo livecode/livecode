@@ -395,7 +395,9 @@ Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
 			// MW-2012-02-17: [[ SplitTextAttrs ]] If the string is empty, then
 			//   return 0 for the style - indicating to unset the property.
 			uint4 l = MCStringGetLength(data);
-			const char *sptr = MCStringGetCString(data);
+            char *t_data;
+            /* UNCHECKED */ MCStringConvertToCString(data, t_data);
+			const char *sptr = t_data;
 			if (l == 0)
 				style = 0;
 			else
@@ -458,9 +460,11 @@ Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
 						continue;
 					}
 					MCeerror->add(EE_OBJECT_BADSTYLE, 0, 0, data);
+                    delete t_data;
 					return ES_ERROR;
 				}
 			}
+            delete  t_data;
 		}
 		break;
 	default:

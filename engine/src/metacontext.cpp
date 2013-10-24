@@ -518,7 +518,12 @@ void MCMetaContext::drawlink(MCStringRef p_link, const MCRectangle& p_region)
 		t_mark -> link . region = p_region;
 		t_mark -> link . text = new_array<char>(MCStringGetLength(p_link) + 1);
 		if (t_mark -> link . text != NULL)
-			strcpy(t_mark -> link . text, MCStringGetCString(p_link));
+        {
+            char *t_link;
+            /* UNCHECKED */ MCStringConvertToCString(p_link, t_link);
+			strcpy(t_mark -> link . text, t_link);
+            delete t_link;
+        }
 	}
 }
 

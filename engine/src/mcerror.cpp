@@ -115,10 +115,13 @@ const MCString &MCError::getsvalue()
 void MCError::copystringref(MCStringRef s, Boolean t)
 {
 	delete buffer;
-	buffer = strdup(MCStringGetCString(s));
+    char *t_buffer;
+    /* UNCHECKED */ MCStringConvertToCString(s, t_buffer);
+	buffer = strdup(t_buffer);
 	thrown = t;
 	if (thrown)
 		svalue.set(buffer, strlen(buffer));
+    delete t_buffer;
 }
 
 bool MCError::copyasstringref(MCStringRef &r_string)

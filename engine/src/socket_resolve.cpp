@@ -364,7 +364,7 @@ bool MCS_name_to_sockaddr(MCStringRef p_name_in, struct sockaddr_in *r_addr, MCH
 	// else start name resolve thread with our own callback and wait for thread to finish
 
 	MCAutoStringRefAsUTF8String t_name_in;
-    t_name_in . Lock(p_name_in);
+    /* UNCHECKED */ t_name_in . Lock(p_name_in);
     if (!MCS_init_sockets())
 		return false;
 

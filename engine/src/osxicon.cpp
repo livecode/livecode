@@ -181,7 +181,7 @@ void MCScreenDC::seticonmenu(MCStringRef p_menu)
 	
 	const char *t_menu;
     MCAutoStringRefAsUTF8String temp;
-    temp . Lock(p_menu);
+    /* UNCHECKED */ temp . Lock(p_menu);
 	t_menu = strclone(*temp);
     	
 	t_items = NULL;

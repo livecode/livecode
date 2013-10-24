@@ -4800,8 +4800,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 
 #endif /* MCS_unsetenv_dsk_mac */
         MCAutoStringRefAsUTF8String t_name, t_value;
-        t_name . Lock(p_name);
-        t_value . Lock(p_value);
+        /* UNCHECKED */ t_name . Lock(p_name);
+        /* UNCHECKED */ t_value . Lock(p_value);
         setenv(*t_name, *t_value, True);
     }
     
@@ -4811,7 +4811,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	return getenv(name); //always returns NULL under CodeWarrier env.
 #endif /* MCS_getenv_dsk_mac */
         MCAutoStringRefAsUTF8String t_name;
-        t_name . Lock(p_name);
+        /* UNCHECKED */ t_name . Lock(p_name);
         return MCStringCreateWithCString(getenv(*t_name), r_value); //always returns NULL under CodeWarrier env.
     }
 	
@@ -5761,7 +5761,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             t_success = MCS_mac_fsref_to_path(t_folder_ref, &t_temp_file_auto);
             
             if (t_success)
-                t_success = MCStringAppendFormat(&t_temp_file_auto, "/tmp.%d.XXXXXXXX", getpid());
+                t_success = MCStringAppendFormat(*t_temp_file_auto, "/tmp.%d.XXXXXXXX", getpid());
             
             if (t_success)
             {
@@ -7306,7 +7306,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                     dup(toparent[1]);
                     close(toparent[1]);
                     MCAutoStringRefAsUTF8String t_shellcmd;
-                    t_shellcmd . Lock(MCshellcmd);
+                    /* UNCHECKED */ t_shellcmd . Lock(MCshellcmd);
                     execl(*t_shellcmd, *t_shellcmd, "-s", NULL);
                     _exit(-1);
                 }

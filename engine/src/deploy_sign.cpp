@@ -1047,7 +1047,7 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 	if (t_success)
 	{
         MCAutoStringRefAsUTF8String t_utf8_params;
-        t_utf8_params . Lock(p_params . output);
+        /* UNCHECKED */ t_utf8_params . Lock(p_params . output);
 		t_output = BIO_new_file(*t_utf8_params, "wb");
 		if (t_output == nil)
 			t_success = MCDeployThrow(kMCDeployErrorNoOutput);

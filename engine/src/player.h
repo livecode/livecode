@@ -478,7 +478,7 @@ public:
 	void qt_gettracks(MCExecPoint& ep);
 	void qt_getenabledtracks(MCExecPoint& ep);
     void qt_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks);
-	Boolean qt_setenabledtracks(const MCString& s);
+	Boolean qt_setenabledtracks(MCStringRef s);
 	void qt_draw(MCDC *dc, const MCRectangle& dirty);
 	void qt_move(int2 x, int2 y);
 	void qt_click(bool p_state, uint4 p_button);

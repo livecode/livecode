@@ -1567,29 +1567,28 @@ Boolean MCObject::setpattern(uint2 newpixmap, MCStringRef data)
 
 Boolean MCObject::setpatterns(MCStringRef data)
 {
-	char *string = strdup(MCStringGetCString(data));
-	char *sptr = string;
 	uint2 p;
 	Boolean done = False;
+    uindex_t t_start_pos, t_end_pos;
+    t_start_pos = 0;
+    t_end_pos = t_start_pos;
 	for (p = P_FORE_PATTERN ; p <= P_FOCUS_PATTERN ; p++)
 	{
-		char *eptr;
-		if ((eptr = strchr(sptr, '\n')) != NULL)
-			*eptr++ = '\0';
-		else
-			eptr = &sptr[strlen(sptr)];
-        
-        MCAutoStringRef t_sptr;
-        /* UNCHECKED */ MCStringCreateWithCString(sptr, &t_sptr);
-		if (!setpattern(p - P_FORE_PATTERN, *t_sptr))
+        MCAutoStringRef t_substring;
+        if (!MCStringFirstIndexOfChar(data, '\n', t_start_pos, kMCCompareExact, t_end_pos))
+            MCStringCopySubstring(data, MCRangeMake(t_start_pos, MCStringGetLength(data) - t_start_pos), &t_substring);
+        else
+        {
+            MCStringCopySubstring(data, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), &t_substring);
+            t_start_pos = t_end_pos + 1;
+        }
+		
+		if (!setpattern(p - P_FORE_PATTERN, *t_substring))
 		{
-			delete string;
 			return False;
 		}
-		sptr = eptr;
-	}
-	delete string;
-	return True;
+    }
+    return True;
 }
 
 Boolean MCObject::getcindex(uint2 di, uint2 &i)
@@ -1951,8 +1950,11 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 		{
 			uint2 line, pos;
 			MCeerror->geterrorloc(line, pos);
+            char *t_mccmd;
+            /* UNCHECKED */ MCStringConvertToCString(MCcmd, t_mccmd);
 			fprintf(stderr, "%s: Script execution error at line %d, column %d\n",
-			        MCStringGetCString(MCcmd), line, pos);
+			        t_mccmd, line, pos);
+            delete t_mccmd;
 		}
 		else
 			if (!send)
@@ -2188,7 +2190,7 @@ bool MCObject::names(Properties which, MCValueRef& r_name_val)
 				which = P_LONG_NAME;
 			}
 			else
-				return MCStringFormat(r_name, "stack \"%s\"", MCStringGetCString(t_filename));
+				return MCStringFormat(r_name, "stack \"%@\"", t_filename);
 		}
 		
 		// MW-2013-01-15: [[ Bug 2629 ]] If this control is unnamed, use the abbrev id form
@@ -3162,7 +3164,10 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (flags & F_SCRIPT && !(addflags & AF_LONG_SCRIPT))
 	{
 		getstack() -> unsecurescript(this);
-		stat = IO_write_string(MCStringGetCString(_script), stream);
+        char *t_script;
+        /* UNCHECKED */ MCStringConvertToCString(_script, t_script);
+		stat = IO_write_string(t_script, stream);
+        delete t_script;
 		getstack() -> securescript(this);
 		if (stat != IO_NORMAL)
 			return stat;
@@ -3278,7 +3283,10 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			MCObjectOutputStream *t_stream = nil;
 			/* UNCHECKED */ MCStackSecurityCreateObjectOutputStream(stream, t_stream);
 			getstack() -> unsecurescript(this);
-			stat = t_stream -> WriteCString(MCStringGetCString(_script));
+            char *t_script;
+            /* UNCHECKED */ MCStringConvertToCString(_script, t_script);
+			stat = t_stream -> WriteCString(t_script);
+            delete t_script;
 			getstack() -> securescript(this);
 			if (stat == IO_NORMAL)
 				stat = extendedsave(*t_stream, p_part);
@@ -3306,7 +3314,10 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	else if (addflags & AF_LONG_SCRIPT)
 	{
 		getstack() -> unsecurescript(this);
-		stat = IO_write_string(MCStringGetCString(_script), stream, false, 4);
+        char *t_script;
+        /* UNCHECKED */ MCStringConvertToCString(_script, t_script);
+		stat = IO_write_string(t_script, stream, false, 4);
+        delete t_script;
 		getstack() -> securescript(this);
 		if (stat != IO_NORMAL)
 			return stat;

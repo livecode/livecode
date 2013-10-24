@@ -1725,7 +1725,7 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
 	case FU_WORD:
         {
             MCAutoStringRefAsUTF8String t_data;
-            t_data . Lock(p_data);
+            /* UNCHECKED */ t_data . Lock(p_data);
             r_stat = MCS_write(*t_data, sizeof(char), len, p_stream);
             break;
         }

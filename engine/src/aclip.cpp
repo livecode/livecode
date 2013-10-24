@@ -607,7 +607,7 @@ Boolean MCAudioClip::import(MCStringRef fname, IO_handle stream)
 			}
 	}
     MCAutoStringRefAsUTF8String t_fname;
-    t_fname . Lock(fname);
+    /* UNCHECKED */ t_fname . Lock(fname);
 	const char *tname = strrchr(*t_fname, PATH_SEPARATOR);
 	if (tname != NULL)
 		tname += 1;

@@ -1019,13 +1019,15 @@ static void compute_stop_hw_color(MCGradientFillStop *p_stop)
 #endif
 }
 
-Boolean MCGradientFillRampParse(MCGradientFillStop* &r_stops, uint1 &r_stop_count, MCStringRef r_data)
+Boolean MCGradientFillRampParse(MCGradientFillStop* &r_stops, uint1 &r_stop_count, MCStringRef p_data)
 {
 	Boolean allvalid = True;
 	bool ordered = true;
 	uint4 t_nstops = 0;
-	uint4 l = MCStringGetLength(r_data);
-	const char *sptr = MCStringGetCString(r_data);
+	uint4 l = MCStringGetLength(p_data);
+    char *t_data;
+    /* UNCHECKED */ MCStringConvertToCString(p_data, t_data);
+	const char *sptr = t_data;
 	// avoid overflow in the case of extremely long ramps
 	while(t_nstops < 255 && (l != 0))
 	{
@@ -1073,6 +1075,7 @@ Boolean MCGradientFillRampParse(MCGradientFillStop* &r_stops, uint1 &r_stop_coun
 			if (r_stops[i].offset != r_stops[i - 1].offset)
 				r_stops[i - 1].difference = STOP_DIFF_MULT / (r_stops[i].offset - r_stops[i - 1].offset);
 	}
+    delete t_data;
 	return allvalid;
 }
 

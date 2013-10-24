@@ -130,7 +130,9 @@ static void MCInterfaceDecorationParse(MCExecContext& ctxt, MCStringRef p_input,
         else
         {
             uint4 l = MCStringGetLength(p_input);
-            const char *sptr = MCStringGetCString(p_input);
+            char *t_input;
+            /* UNCHECKED */ MCStringConvertToCString(p_input, t_input);
+            const char *sptr = t_input;
             MCU_skip_spaces(sptr, l);
             if (decorations & WD_WDEF)
                 decorations |= ~WD_WDEF;
@@ -144,50 +146,51 @@ static void MCInterfaceDecorationParse(MCExecContext& ctxt, MCStringRef p_input,
                         sptr += l;
                         l = 0;
                     }
-                    MCString tdata(startptr, sptr - startptr);
+                    MCAutoStringRef tdata;
+					/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)startptr, sptr - startptr, &tdata);
                     MCU_skip_char(sptr, l);
                     MCU_skip_spaces(sptr, l);
-                    if (tdata == MCtitlestring)
+                    if (MCStringIsEqualToCString(*tdata, MCtitlestring, kMCCompareCaseless))
                     {
                         decorations |= WD_TITLE;
                         continue;
                     }
-                    if (tdata == MCmenustring)
+                    if (MCStringIsEqualToCString(*tdata, MCmenustring, kMCCompareCaseless))
                     {
                         decorations |= WD_MENU | WD_TITLE;
                         continue;
                     }
-                    if (tdata == MCminimizestring)
+                    if (MCStringIsEqualToCString(*tdata, MCminimizestring, kMCCompareCaseless))
                     {
                         decorations |= WD_MINIMIZE | WD_TITLE;
                         continue;
                     }
-                    if (tdata == MCmaximizestring)
+                    if (MCStringIsEqualToCString(*tdata, MCmaximizestring, kMCCompareCaseless))
                     {
                         decorations |= WD_MAXIMIZE | WD_TITLE;
                         continue;
                     }
-                    if (tdata == MCclosestring)
+                    if (MCStringIsEqualToCString(*tdata, MCclosestring, kMCCompareCaseless))
                     {
                         decorations |= WD_CLOSE | WD_TITLE;
                         continue;
                     }
-                    if (tdata == MCmetalstring)
+                    if (MCStringIsEqualToCString(*tdata, MCmetalstring, kMCCompareCaseless))
                     {
                         decorations |= WD_METAL; //metal can not have title
                         continue;
                     }
-                    if (tdata == MCutilitystring)
+                    if (MCStringIsEqualToCString(*tdata, MCutilitystring, kMCCompareCaseless))
                     {
                         decorations |= WD_UTILITY;
                         continue;
                     }
-                    if (tdata == MCnoshadowstring)
+                    if (MCStringIsEqualToCString(*tdata, MCnoshadowstring, kMCCompareCaseless))
                     {
                         decorations |= WD_NOSHADOW;
                         continue;
                     }
-                    if (tdata == MCforcetaskbarstring)
+                    if (MCStringIsEqualToCString(*tdata, MCforcetaskbarstring, kMCCompareCaseless))
                     {
                         decorations |= WD_FORCETASKBAR;
                         continue;
@@ -195,6 +198,8 @@ static void MCInterfaceDecorationParse(MCExecContext& ctxt, MCStringRef p_input,
                     ctxt . LegacyThrow(EE_STACK_BADDECORATION);
                     return;
                 }
+                
+                delete t_input;
             }
         }
     }

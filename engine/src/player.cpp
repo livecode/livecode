@@ -1674,10 +1674,13 @@ Boolean MCPlayer::playstop()
 void MCPlayer::setfilename(MCStringRef vcname,
                            MCStringRef fname, Boolean istmp)
 {
-	setname_cstring(MCStringGetCString(vcname));
+    char *t_vcname;
+    /* UNCHECKED */ MCStringConvertToCString(vcname, t_vcname);
+	setname_cstring(t_vcname);
 	filename = MCValueRetain(fname);
 	istmpfile = istmp;
 	disposable = True;
+    delete t_vcname;
 }
 
 void MCPlayer::setvolume(uint2 tloudness)
@@ -1787,7 +1790,7 @@ Boolean MCPlayer::setenabledtracks(MCStringRef s)
 	if (getstate(CS_PREPARED))
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED)
-			return qt_setenabledtracks(MCStringGetCString(s));
+			return qt_setenabledtracks(s);
 #ifdef TARGET_PLATFORM_WINDOWS
 		else
 			return avi_setenabledtracks(MCStringGetCString(s));
@@ -2652,7 +2655,9 @@ Boolean MCPlayer::qt_prepare(void)
 			Handle myHandle = NewHandleClear(mySize);
 			if (myHandle != NULL)
 			{
-				BlockMove(MCStringGetCString(filename), *myHandle, mySize);
+                MCAutoStringRefAsUTF8String t_utf8_filename;
+                /* UNCHECKED */ t_utf8_filename . Lock(filename);
+				BlockMove(*t_utf8_filename, *myHandle, mySize);
 				NewMovieFromDataRef((Movie *)&theMovie, newMovieActive, NULL, myHandle, URLDataHandlerSubType);
 				DisposeHandle(myHandle);
 			}
@@ -3181,7 +3186,7 @@ void MCPlayer::qt_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks)
     t_tracks . Take(r_tracks, r_count);
 }
 
-Boolean MCPlayer::qt_setenabledtracks(const MCString& s)
+Boolean MCPlayer::qt_setenabledtracks(MCStringRef s)
 {
 	uint2 trackcount = (uint2)GetMovieTrackCount((Movie)theMovie);
 	uint2 i;
@@ -3190,31 +3195,38 @@ Boolean MCPlayer::qt_setenabledtracks(const MCString& s)
 		Track trak = GetMovieIndTrack((Movie)theMovie,i);
 		SetTrackEnabled(trak, False);
 	}
-	char *data = s.clone();
-	char *sptr = data;
+	
+    uindex_t t_start, t_end;
+    t_start = 0;
+    t_end = t_start;
 	uint2 offset = 0;
-	while (*sptr)
+	while (t_start != MCStringGetLength(s))
 	{
-		char *tptr;
-		if ((tptr = strchr(sptr, '\n')) != NULL)
-			*tptr++ = '\0';
-		else
-			tptr = &sptr[strlen(sptr)];
-		if (strlen(sptr) != 0)
-		{
-			Track trak = GetMovieTrack((Movie)theMovie,strtol(sptr, NULL, 10));
-			if (trak == NULL)
-			{
-				delete data;
-				return False;
-			}
-			SetTrackEnabled(trak, True);
-		}
-		sptr = tptr;
+        MCAutoStringRef t_substring;
+        if (!MCStringFirstIndexOfChar(s, '\n', t_start, kMCCompareExact, t_end))
+        {
+            MCStringCopySubstring(s, MCRangeMake(t_start, MCStringGetLength(s) - t_start), &t_substring);
+            t_start = MCStringGetLength(s);
+        }
+        else
+        {
+            /* UNCHECKED */ MCStringCopySubstring(s, MCRangeMake(t_start, t_end - t_start), &t_substring);
+            t_start = t_end + 1;
+        }
+		
+        integer_t t_integer;
+        /* UNCHECKED */ MCStringToInteger(*t_substring, t_integer);
+        Track trak = GetMovieTrack((Movie)theMovie, t_integer);
+        if (trak == NULL)
+        {
+            return False;
+        }
+        SetTrackEnabled(trak, True);
+		
 		if (++offset >= trackcount)
 			break;
 	}
-	delete data;
+    
 	MCMovieChanged((MovieController)theMC, (Movie)theMovie);
 	Rect movieRect;
 	GetMovieBox((Movie)theMovie, &movieRect);
@@ -4087,7 +4099,10 @@ Boolean MCPlayer::installUserCallbacks(void)
 	// if movie is prepared,
 	if (MCStringIsEmpty(userCallbackStr))
 		return True;
-	char *cblist = strclone(MCStringGetCString(userCallbackStr));
+    char *t_userCallbackStr;
+    /* UNCHECKED */ MCStringConvertToCString(userCallbackStr, t_userCallbackStr);
+	char *cblist = strclone(t_userCallbackStr);
+    delete t_userCallbackStr;
 	char *str;
 	str = cblist;
 	while (*str)
@@ -4441,8 +4456,13 @@ static void exportToSoundFile(const char *sourcefile, const char *destfile)
 	
 	if (t_success)
 	{
-		t_success = path_to_dataref(MCStringGetCString(*t_src_resolved_str), t_src_rec) &&
-			path_to_dataref(MCStringGetCString(*t_dst_resolved_str), t_dst_rec);
+        char *t_src_res, *t_dst_res;
+        /* UNCHECKED */ MCStringConvertToCString(*t_src_resolved_str, t_src_res);
+        /* UNCHECKED */ MCStringConvertToCString(*t_src_resolved_str, t_src_res);
+		t_success = path_to_dataref(t_src_res, t_src_rec) &&
+			path_to_dataref(t_dst_res, t_dst_rec);
+        delete t_src_res;
+        delete t_dst_res;
 	}
 
 	Boolean isActive = true;
@@ -4542,8 +4562,13 @@ void MCPlayer::stoprecording()
 #endif
 		{
 			MCS_unlink(recordexportfile);
-			exportToSoundFile(MCStringGetCString(recordtempfile), MCStringGetCString(recordexportfile));
+            char *t_recordtempfile, *t_recordexportfile;
+            /* UNCHECKED */ MCStringConvertToCString(recordtempfile, t_recordtempfile);
+            /* UNCHECKED */ MCStringConvertToCString(recordexportfile, t_recordexportfile);
+			exportToSoundFile(t_recordtempfile, t_recordexportfile);
 			MCS_unlink(recordtempfile);
+            delete t_recordtempfile;
+            delete t_recordexportfile;
 		}
 		recordexportfile = NULL;
 		//delete recordexportfile;
@@ -4602,7 +4627,9 @@ void MCPlayer::recordsound(MCStringRef fname)
 		// MW-2008-03-15: [[ Bug 6076 ]] Make sure we create the file before we start recording to it
 		//   otherwise no recording happens.
 		FILE *t_file;
-		t_file = fopen(MCStringGetCString(recordtempfile), "w");
+        MCAutoStringRefAsUTF8String t_utf8_recordtempfile;
+        /* UNCHECKED */ t_utf8_recordtempfile . Lock(recordtempfile);
+		t_file = fopen(*t_utf8_recordtempfile, "w");
 		if (t_file != NULL)
 			fclose(t_file);
 

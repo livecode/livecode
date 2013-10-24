@@ -532,7 +532,7 @@ static void domenu(short menu, short item)
 			if (t_menuhastags && MCMacGetMenuItemTag(mhandle, item, &t_tag_ref))
 			{
                 MCAutoStringRefAsUTF8String t_utf8_tag_ref;
-                t_utf8_tag_ref . Lock(*t_tag_ref);
+                /* UNCHECKED */ t_utf8_tag_ref . Lock(*t_tag_ref);
 				menuitemname = strclone(*t_utf8_tag_ref);
 				menuitemlen = strlen(menuitemname);
 			}
@@ -1664,7 +1664,7 @@ public:
 			// This property does not appear to get queried at any point
 			MCStringRef t_tag = p_menuitem->tag;
             MCAutoStringRefAsUTF8String t_utf8_tag;
-            t_utf8_tag . Lock(t_tag);
+            /* UNCHECKED */ t_utf8_tag . Lock(t_tag);
 			SetMenuItemProperty(p_menu, p_item,'RRev','MTag', MCStringGetLength(t_tag), *t_utf8_tag);
 			
 			static const struct { const char *tag; MenuCommand id; } s_tag_to_id[] =

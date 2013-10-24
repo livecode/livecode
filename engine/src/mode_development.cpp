@@ -143,7 +143,7 @@ static void restart_revolution(void)
 	if (fork() == 0)
 	{
         MCAutoStringRefAsUTF8String t_utf8_mccmd;
-        t_utf8_mccmd . Lock(MCcmd);
+        /* UNCHECKED */ t_utf8_mccmd . Lock(MCcmd);
 		usleep(250000);
 		execl(*t_utf8_mccmd, *t_utf8_mccmd, NULL);
 	}
