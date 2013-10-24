@@ -2093,7 +2093,7 @@ bool MCAndroidLoadDeviceConfiguration()
 		t_success = MCAndroidInitBuildInfo();
 
 	if (t_success)
-		t_success = MCStringFormat(&t_config_file_path, "%s/lc_device_config.txt", MCStringGetCString(MCcmd));
+		t_success = MCStringFormat(&t_config_file_path, "%@/lc_device_config.txt", MCcmd);
 
 	if (t_success)
 	{

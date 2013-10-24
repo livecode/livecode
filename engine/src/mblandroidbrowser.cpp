@@ -506,7 +506,10 @@ void MCAndroidBrowserControl::ExecExecute(MCExecContext& ctxt, MCStringRef p_scr
     if (t_view == nil)
         return;
     
-    t_success = MCStringCreateWithCString(ExecuteJavaScript(MCStringGetCString(p_script)), &t_result);
+    char *t_script;
+    /* UNCHECKED */ MCStringConvertToCString(p_script, t_script);
+    t_success = MCStringCreateWithCString(ExecuteJavaScript(t_script), &t_result);
+    delete t_script;
     
     if (!t_success || *t_result == nil)
     {
@@ -545,7 +548,10 @@ char *MCAndroidBrowserControl::ExecuteJavaScript(const char *p_script)
         return nil;
     }
     
-    t_result = strdup(MCStringGetCString(s_js_result));
+    char *t_js_result;
+    /* UNCHECKED */ MCStringConvertToCString(s_js_result, t_js_result);
+    t_result = strdup(t_js_result);
+    delete t_js_result;
     MCValueRelease(s_js_result);
 	s_js_result = nil;
     
