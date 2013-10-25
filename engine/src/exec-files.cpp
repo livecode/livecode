@@ -733,21 +733,20 @@ void MCFilesExecRename(MCExecContext& ctxt, MCStringRef p_from, MCStringRef p_to
 
 void MCFilesExecLaunchUrl(MCExecContext& ctxt, MCStringRef p_url)
 {
-	char *t_url;
-    /* UNCHECKED */ MCStringConvertToCString(p_url, t_url);
 	
 	// MW-2008-04-02: [[ Bug 6306 ]] Make sure we escape invalid URL characters to save
 	//   the user having to do so.
 	MCAutoStringRef t_mutable_string;
     /* UNCHECKED */ MCStringCreateMutable(0, &t_mutable_string);
 
-	while(*t_url != '\0')
+    uindex_t t_index = 0;
+	while(t_index != MCStringGetLength(p_url))
 	{
 		// MW-2008-08-14: [[ Bug 6898 ]] Interpreting this as a signed char causes sprintf
 		//   to produce bad results.
 
 		unsigned char t_char;
-		t_char = *((unsigned char *)t_url);
+        t_char = MCStringGetNativeCharAtIndex(p_url, t_index);
 
 		// MW-2008-06-12: [[ Bug 6446 ]] We must not escape '#' because this breaks URL
 		//   anchors.
@@ -756,10 +755,8 @@ void MCFilesExecLaunchUrl(MCExecContext& ctxt, MCStringRef p_url)
 		else
 			/* UNCHECKED */ MCStringAppendFormat(*t_mutable_string, "%%%02X", t_char);
 
-		t_url += 1;
+		t_index += 1;
 	}
-
-    delete t_url;
     
 	MCStringRef t_new_url;
 	t_new_url = MCValueRetain(*t_mutable_string);
@@ -1723,12 +1720,8 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
 	case FU_ITEM:
 	case FU_LINE:
 	case FU_WORD:
-        {
-            MCAutoStringRefAsUTF8String t_data;
-            /* UNCHECKED */ t_data . Lock(p_data);
-            r_stat = MCS_write(*t_data, sizeof(char), len, p_stream);
+            IO_write_stringref(p_data, p_stream);
             break;
-        }
 	default:
 		{
 			while (len)

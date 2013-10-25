@@ -80,7 +80,6 @@ inline FourCharCode FourCharCodeFromString(const char *p_string)
 	return MCSwapInt32HostToNetwork(*(FourCharCode *)p_string);
 }
 
-
 bool FourCharCodeFromString(MCStringRef p_string, uindex_t p_start, uint32& r_four_char_code)
 {
     char *temp;
@@ -101,6 +100,11 @@ inline char *FourCharCodeToString(FourCharCode p_code)
 	*(FourCharCode *)t_result = MCSwapInt32NetworkToHost(p_code);
 	t_result[4] = '\0';
 	return t_result;
+}
+
+bool FourCharCodeToStringRef(FourCharCode p_code, MCStringRef& r_string)
+{
+    return MCStringCreateWithCString(FourCharCodeToString(p_code), r_string);
 }
 
 struct triplets
@@ -416,22 +420,13 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 	MCParameter p1, p2, p3;
 	MCAutoStringRef s1;
 	MCAutoStringRef s2;
-	char *t_temp;
-	
-	char t_aeclass_string[4];
-	t_temp = FourCharCodeToString(aeclass);
-	memcpy(t_aeclass_string, t_temp, 4);
-    /* UNCHECKED */ MCStringCreateWithCString(t_aeclass_string, &s1);
-	delete t_temp;
+    
+    /* UNCHECKED */ FourCharCodeToStringRef(aeclass, &s1);
 	
 	p1.setvalueref_argument(*s1);
 	p1.setnext(&p2);
 	
-	char t_aeid_string[4];
-	t_temp = FourCharCodeToString(aeid);
-	memcpy(t_aeid_string, t_temp, 4);
-    /* UNCHECKED */ MCStringCreateWithCString(t_aeid_string, &s2);
-	delete t_temp;
+    /* UNCHECKED */ FourCharCodeToStringRef(aeid, &s2);
 	
 	p2.setvalueref_argument(*s2);
 	p2.setnext(&p3);
@@ -1676,10 +1671,8 @@ static bool MCS_mac_openresourcefile_with_fsref(FSRef& p_ref, SInt8 p_permission
 		}
 		else
 		{
-            char *t_char_ptr;
-            /* UNCHECKED */ MCStringConvertToCString(MCfiletype, t_char_ptr);
-			t_creator = MCSwapInt32NetworkToHost(*(OSType*)t_char_ptr);
-			t_ftype = MCSwapInt32NetworkToHost(*(OSType*)(t_char_ptr + 4));
+            FourCharCodeFromString(MCfiletype, 0, (uint32&)t_creator);
+            FourCharCodeFromString(MCfiletype, 4, (uint32&)t_ftype);
 		}
 		/* DEPRECATED */ FSpCreateResFile(&fspec, t_creator, t_ftype, smRoman);
 		
@@ -1741,12 +1734,8 @@ static const char *MCS_mac_openresourcefile_with_fsref(FSRef *p_ref, SInt8 permi
 			}
 			else
 			{
-                char *t_char_ptr;
-                /* UNCHECKED */ MCStringConvertToCString(MCfiletype, t_char_ptr);
-				memcpy((char*)&creator, t_char_ptr, 4);
-				memcpy((char*)&ftype, t_char_ptr + 4, 4);
-				creator = MCSwapInt32NetworkToHost(creator);
-				ftype = MCSwapInt32NetworkToHost(ftype);
+                FourCharCodeFromString(MCfiletype, 0, (uint32&)creator);
+                FourCharCodeFromString(MCfiletype, 4, (uint32&)ftype);
 			}
 			FSpCreateResFile(&fspec, creator, ftype, smRoman);
 			
@@ -3451,20 +3440,12 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         short fRefNum;
         MCS_mac_openresourcefork_with_path(p_filename, fsRdPerm, false, &fRefNum, &t_open_res_error_string); // RESFORK
         
-        bool t_success;
-        t_success = false;
-        char *t_open_res_error;
         if (!MCStringIsEmpty(*t_open_res_error_string))
-            t_success = MCStringConvertToCString(*t_open_res_error_string, t_open_res_error);
-        
-        if (t_success)
         {
-            MCresult -> sets(t_open_res_error);
-            delete t_open_res_error;
+            MCresult -> setvalueref(*t_open_res_error_string);
             return;
         }
-        delete t_open_res_error;
-		
+        		
         //file mark should be pointing to 0 which is the begining of the file
         //let's get the end of file mark to determine the file size
         long fsize, toread;
@@ -5748,27 +5729,27 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         return t_success;
 #endif /* MCS_tmpnam_dsk_mac */
         bool t_success = false;
-        MCAutoStringRef t_temp_file_auto;
+        MCStringRef t_temp_file_auto;
         FSRef t_folder_ref;
         char* t_temp_file_chars;
         
         t_temp_file_chars = nil;        
-        t_success = MCStringCreateMutable(0, &t_temp_file_auto);
+        t_success = MCStringCreateMutable(0, t_temp_file_auto);
         
         if (t_success && FSFindFolder(kOnSystemDisk, kTemporaryFolderType, TRUE, &t_folder_ref) == noErr)
         {
             int t_fd;
-            t_success = MCS_mac_fsref_to_path(t_folder_ref, &t_temp_file_auto);
+            t_success = MCS_mac_fsref_to_path(t_folder_ref, t_temp_file_auto);
             
             if (t_success)
-                t_success = MCStringAppendFormat(*t_temp_file_auto, "/tmp.%d.XXXXXXXX", getpid());
+                t_success = MCStringAppendFormat(t_temp_file_auto, "/tmp.%d.XXXXXXXX", getpid());
             
             if (t_success)
             {
-                char *temp;
-                /* UNCHECKED */ MCStringConvertToCString(*t_temp_file_auto, temp);
-                t_success = MCMemoryAllocateCopy(temp, MCStringGetLength(*t_temp_file_auto) + 1, t_temp_file_chars);
-                delete temp;
+                MCAutoPointer<char> temp;
+                /* UNCHECKED */ MCStringConvertToCString(t_temp_file_auto, &temp);
+                t_success = MCMemoryAllocateCopy(*temp, strlen(*temp) + 1, t_temp_file_chars);
+                
             }
             
             if (t_success)
@@ -5791,6 +5772,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             r_tmp_name = MCValueRetain(kMCEmptyString);
         
         MCMemoryDeallocate(t_temp_file_chars);
+        MCValueRelease(t_temp_file_auto);
         
         return t_success;
     }
@@ -6448,10 +6430,9 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 MCAutoStringRef t_username;
                 if (!MCStringCopySubstring(p_path, MCRangeMake(1, t_user_end - 1), &t_username))
                     return false;
-                char *temp_username;
-                /* UNCHECKED */ MCStringConvertToCString(*t_username, temp_username);
-                t_password = getpwnam(temp_username);
-                delete temp_username;
+                MCAutoStringRefAsUTF8String t_utf8_username;
+                /* UNCHECKED */ t_utf8_username . Lock(*t_username);
+                t_password = getpwnam(*t_utf8_username);
             }
             
             if (t_password != NULL)
@@ -6774,10 +6755,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	return t_symbol_ptr;
 #endif /* MCS_resolvemodulesymbol_dsk_mac */
         CFStringRef t_cf_symbol;
-        char *t_symbol;
-        /* UNCHECKED */ MCStringConvertToCString(p_symbol, t_symbol);
-        t_cf_symbol = CFStringCreateWithCString(NULL, t_symbol, CFStringGetSystemEncoding());
-        delete t_symbol;
+       
+        MCStringConvertToCFStringRef(p_symbol, t_cf_symbol);
         if (t_cf_symbol == NULL)
             return NULL;
         
@@ -7281,8 +7260,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         int tochild[2];
         int toparent[2];
         int4 index = MCnprocesses;
-        MCAutoStringRefAsUTF8String t_utf_path;
-        /* UNCHECKED */ t_utf_path . Lock(p_command);
+
         if (pipe(tochild) == 0)
         {
             if (pipe(toparent) == 0)
@@ -7313,7 +7291,9 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 CheckProcesses();
                 close(tochild[0]);
                 
-                write(tochild[1], *t_utf_path, strlen(*t_utf_path));
+                MCAutoStringRefAsUTF8String t_utf_path;
+                /* UNCHECKED */ t_utf_path . Lock(p_command);
+                write(tochild[1], *t_utf_path, MCStringGetLength(p_command));
 
                 write(tochild[1], "\n", 1);
                 close(tochild[1]);
@@ -7324,9 +7304,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                     if (MCprocesses[index].pid > 0)
                         Kill(MCprocesses[index].pid, SIGKILL);
                     MCprocesses[index].pid = 0;
-                    MCeerror->add
-
-                    (EE_SHELL_BADCOMMAND, 0, 0, *t_utf_path);
+                    MCeerror->add(EE_SHELL_BADCOMMAND, 0, 0, p_command);
                     return IO_ERROR;
 
                 }
@@ -7335,16 +7313,13 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             {
                 close(tochild[0]);
                 close(tochild[1]);
-                MCeerror->add
-
-                (EE_SHELL_BADCOMMAND, 0, 0, *t_utf_path);
+                MCeerror->add(EE_SHELL_BADCOMMAND, 0, 0, p_command);
                 return IO_ERROR;
             }
         }
         else
         {
-            MCeerror->add
-            (EE_SHELL_BADCOMMAND, 0, 0, *t_utf_path);
+            MCeerror->add(EE_SHELL_BADCOMMAND, 0, 0, p_command);
             return IO_ERROR;
         }
         char *buffer;
@@ -8415,14 +8390,14 @@ static OSErr osacompile(MCStringRef s, ComponentInstance compinstance,
                         OSAID &scriptid)
 {
 	AEDesc aedscript;
+    /* UNCHECKED */ MCStringMutableCopyAndRelease(s, s);
 	/* UNCHECKED */ MCStringFindAndReplaceChar(s, '\n', '\r', kMCCompareExact);
 	scriptid = kOSANullScript;
-    char *temp_s;
-    /* UNCHECKED */ MCStringConvertToCString(s, temp_s);
-	AECreateDesc(typeChar, temp_s, MCStringGetLength(s), &aedscript);
+    MCAutoPointer<char> temp_s;
+    /* UNCHECKED */ MCStringConvertToCString(s, &temp_s);
+	AECreateDesc(typeChar, *temp_s, MCStringGetLength(s), &aedscript);
 	OSErr err = OSACompile(compinstance, &aedscript, kOSAModeNull, &scriptid);
 	AEDisposeDesc(&aedscript);
-	delete temp_s;
 	return err;
 }
 

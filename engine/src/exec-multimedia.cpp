@@ -375,7 +375,7 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 			if (!MCS_exists(p_filename, True))
 			{
 				MCU_geturl(ctxt, p_filename, &t_file);
-				if (MCStringGetLength(*t_file) == 0)
+				if (MCStringIsEmpty(*t_file))
 				{
 					ctxt . SetTheResultToStaticCString("no data in videoClip");
 					return;
@@ -396,9 +396,7 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 				ctxt . SetTheResultToStaticCString("error opening temp file");
 				return;
 			}
-            MCAutoStringRefAsUTF8String t_utf8_file;
-            /* UNCHECKED */ t_utf8_file . Lock(*t_file);
-			IO_stat stat = IO_write(*t_utf8_file, sizeof(int1), MCStringGetLength(*t_file), t_stream);
+			IO_stat stat = IO_write_stringref_utf8(*t_file, t_stream, MCStringGetLength(*t_file));
 			MCS_close(t_stream);
 			if (stat != IO_NORMAL)
 			{

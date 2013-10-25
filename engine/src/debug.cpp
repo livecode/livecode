@@ -116,10 +116,8 @@ void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_string)
 {
 	if (MCnoui)
 	{
-        MCAutoStringRefAsUTF8String t_utf8_string;
-        /* UNCHECKED */ t_utf8_string . Lock(p_string);
-		MCS_write(*t_utf8_string, sizeof(char), MCStringGetLength(p_string), IO_stdout);
-		uint4 length = MCStringGetLength(p_string);
+        IO_write_stringref(p_string, IO_stdout);
+        uint4 length = MCStringGetLength(p_string);
 		if (length && MCStringGetCharAtIndex(p_string, length - 1) != '\n')
 			MCS_write("\n", sizeof(char), 1, IO_stdout);
 		return;
@@ -661,9 +659,9 @@ void MCB_parsewatches(MCExecContext& ctxt, MCStringRef p_input)
 					else
 						MCwatchedvars[MCnwatchedvars] . handlername = nil;
 					/* UNCHECKED */ MCNameCreate(*t_vname, MCwatchedvars[MCnwatchedvars] . varname);
-                    char *t_express_cstring;
-                    /* UNCHECKED */ MCStringConvertToCString(*t_express, t_express_cstring);
-					MCwatchedvars[MCnwatchedvars] . expression = strclone(t_express_cstring);
+                    MCAutoPointer<char> t_express_cstring;
+                    /* UNCHECKED */ MCStringConvertToCString(*t_express, &t_express_cstring);
+					MCwatchedvars[MCnwatchedvars] . expression = strclone(*t_express_cstring);
 					MCnwatchedvars++;
 				}
 			}

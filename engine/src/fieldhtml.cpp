@@ -407,11 +407,10 @@ static void export_html_add_tag(export_html_t& ctxt, export_html_tag_type_t p_ta
 			{
 				ctxt . buffer . appendtextf("<a %s=\"", p_value . link . is_href ? "href" : "name");
 				// MW-2012-09-19: [[ Bug 10228 ]] Make sure we generate the string in quote context.
-                char *t_target;
-                /* UNCHECKED */ MCStringConvertToCString(p_value . link . target, t_target);
-				export_html_emit_cstring(ctxt . buffer, t_target, kExportHtmlEscapeTypeAttribute);
+                MCAutoPointer<char> t_target;
+                /* UNCHECKED */ MCStringConvertToCString(p_value . link . target, &t_target);
+				export_html_emit_cstring(ctxt . buffer, *t_target, kExportHtmlEscapeTypeAttribute);
 				ctxt . buffer . appendcstring("\">");
-                delete t_target;
 			}
 			else
 				ctxt . buffer . appendcstring("<a>");
