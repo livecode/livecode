@@ -492,7 +492,9 @@ void MCImage::rotate_transform(int32_t p_angle)
 
 	// IM-2013-04-22: [[ BZ 10858 ]] A transformed rep is needed if the angle is non-zero,
 	// or the rect is locked and doesn't match the source dimensions.
-	if (p_angle == 0 && !(getflag(F_LOCK_LOCATION) && (t_src_width != rect.width || t_src_height != rect.height)))
+	// MW-2013-10-25: [[ Bug 11300 ]] Additionally a transform is needed if flipped on
+	//   either axis.
+	if (p_angle == 0 && !(getflag(F_LOCK_LOCATION) && (t_src_width != rect.width || t_src_height != rect.height)) && !m_flip_x && !m_flip_y)
 		m_has_transform = false;
 	else
 	{
@@ -502,8 +504,13 @@ void MCImage::rotate_transform(int32_t p_angle)
 
 		MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-(int32_t)t_src_width / 2.0, -(int32_t)t_src_height / 2.0);
 		t_transform = MCGAffineTransformRotate(t_transform, -p_angle);
+		
+		// MW-2013-10-25: [[ Bug 11300 ]] If needed, flip the transform appropriately.
+		if (m_flip_x || m_flip_y)
+			t_transform = MCGAffineTransformScale(t_transform, m_flip_x ? -1.0f : 1.0f, m_flip_y ? -1.0f : 1.0f);
+		
 		t_transform = MCGAffineTransformTranslate(t_transform, t_trans_width / 2.0, t_trans_height / 2.0);
-
+		
 		if (getflag(F_LOCK_LOCATION))
 		{
 			t_transform = MCGAffineTransformScale(t_transform, rect.width / (MCGFloat)t_trans_width, rect.height / (MCGFloat)t_trans_height);
@@ -530,16 +537,47 @@ void MCImage::resize_transform()
 {
 	uint32_t t_src_width = rect.width, t_src_height = rect.height;
 	/* UNCHECKED */ getsourcegeometry(t_src_width, t_src_height);
-
-	if (rect.width == t_src_width && rect.height == t_src_height)
-		m_has_transform = nil;
+	
+	// MW-2013-10-25: [[ Bug 11300 ]] Additionally a transform is needed if flipped on
+	//   either axis.
+	if (rect.width == t_src_width && rect.height == t_src_height && !m_flip_x && !m_flip_y)
+		m_has_transform = false;
 	else
 	{
 		m_has_transform = true;
-		MCGFloat t_mid_x = (MCGFloat)t_src_width / 2.0;
-		MCGFloat t_mid_y = (MCGFloat)t_src_height / 2.0;
-		m_transform = MCGAffineTransformMakeScale(rect.width / (MCGFloat)t_src_width, rect.height / (MCGFloat)t_src_height);
+		
+		MCGAffineTransform t_transform;
+
+		// MW-2013-10-25: [[ Bug 11300 ]] If needed, flip the transform appropriately.
+		if (m_flip_x || m_flip_y)
+		{
+			t_transform = MCGAffineTransformMakeTranslation(-(signed)t_src_width / 2.0f, -(signed)t_src_height / 2.0f);
+			t_transform = MCGAffineTransformScale(t_transform, m_flip_x ? -1.0f : 1.0f, m_flip_y ? -1.0f : 1.0f);
+			t_transform = MCGAffineTransformTranslate(t_transform, t_src_width / 2.0, t_src_height / 2.0);
+		}
+		else
+			t_transform = MCGAffineTransformMakeIdentity();
+		
+		m_transform = MCGAffineTransformScale(t_transform, rect.width / (MCGFloat)t_src_width, rect.height / (MCGFloat)t_src_height);
 	}
+}
+
+// MW-2013-05-25: [[ Bug 11300 ]] This applies the flip transform if needed.
+void MCImage::flip_transform()
+{
+	uint32_t t_src_width = rect.width, t_src_height = rect.height;
+	/* UNCHECKED */ getsourcegeometry(t_src_width, t_src_height);
+	
+	if (!m_flip_x && !m_flip_y)
+		m_has_transform = false;
+	else
+	{
+		m_has_transform = true;
+		
+		m_transform = MCGAffineTransformMakeTranslation(-(signed)t_src_width / 2.0, -(signed)t_src_height / 2.0);
+		m_transform = MCGAffineTransformScale(m_transform, m_flip_x ? -1.0f : 1.0f, m_flip_y ? -1.0f : 1.0f);
+		m_transform = MCGAffineTransformTranslate(m_transform, t_src_width / 2.0, t_src_height / 2.0);
+	}	
 }
 
 void MCImage::createbrush(Properties which)
