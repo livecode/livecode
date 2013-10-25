@@ -295,7 +295,9 @@ GtkWidget * create_open_dialog (MCStringRef p_title , GtkFileChooserAction actio
 	
 	GtkWidget *dialog;
 
-    dialog = gtk_file_chooser_dialog_new_ptr(MCStringGetCString(p_title), NULL, action,
+    MCAutoStringRefAsSysString t_title;
+    t_title.Lock(p_title);
+    dialog = gtk_file_chooser_dialog_new_ptr(*t_title, NULL, action,
 											 GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
 											 (action == GTK_FILE_CHOOSER_ACTION_SAVE) ? GTK_STOCK_SAVE : GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
 											 NULL);
@@ -343,7 +345,7 @@ void run_dialog(GtkWidget *dialog, MCStringRef &r_value)
         {
             gchar *t_cstr_filename;
             t_cstr_filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-            /* UNCHECKED */ MCStringCreateWithCString((char*)t_cstr_filename, &t_filename);
+            /* UNCHECKED */ MCStringCreateWithSysString((char*)t_cstr_filename, &t_filename);
             g_free(t_cstr_filename);
 		}
 
@@ -373,9 +375,11 @@ void add_dialog_filters(GtkWidget *dialog, MCStringRef *p_types, uint4 p_type_co
 	{
 		for (uint4 a=0; a < p_type_count; a++)
 		{
-			char *t_filter_name, *t_filter_masks;
-            t_filter_name = get_filter_name(MCStringGetCString(p_types[a]));
-            t_filter_masks = get_filter_masks(MCStringGetCString(p_types[a]));
+            MCAutoStringRefAsSysString t_type_str;
+            t_type_str.Lock(p_types[a]);
+            char *t_filter_name, *t_filter_masks;
+            t_filter_name = get_filter_name(*t_type_str);
+            t_filter_masks = get_filter_masks(*t_type_str);
 
 			filter = gtk_file_filter_new();
 			gtk_file_filter_set_name(filter, t_filter_name);
@@ -457,10 +461,12 @@ void set_initial_file ( GtkWidget *dialog, MCStringRef p_initial, char * p_last_
             /* UNCHECKED */ MCS_resolvepath(*t_folder, &t_resolved);
         }
 			
+        MCAutoStringRefAsSysString t_resolved_sys;
+        t_resolved_sys.Lock(*t_resolved);
         if (MCS_exists(*t_resolved, True)) // file
-            gtk_file_chooser_set_filename ( GTK_FILE_CHOOSER ( dialog ), MCStringGetCString(*t_resolved));
+            gtk_file_chooser_set_filename ( GTK_FILE_CHOOSER ( dialog ), *t_resolved_sys);
         else // folder
-            gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), MCStringGetCString(*t_resolved));
+            gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), *t_resolved_sys);
 
 	}
 	else
@@ -571,7 +577,7 @@ int MCA_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *
     if (r_value == nil)
         /* UNCHECKED */ MCStringCreateWithCString(MCcancelstring, r_result);
     else if (p_options & MCA_OPTION_RETURN_FILTER != 0)
-    /* UNCHECKED */ MCStringCreateWithCString(get_current_filter_name(dialog), r_result);
+        /* UNCHECKED */ MCStringCreateWithSysString(get_current_filter_name(dialog), r_result);
 
 	
 	if (G_last_opened_path != nil)
@@ -629,7 +635,9 @@ int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringR
         {
             MCAutoStringRef t_resolved;
             /* UNCHECKED */ MCS_resolvepath(p_initial, &t_resolved);
-            gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog), MCStringGetCString(*t_resolved));
+            MCAutoStringRefAsSysString t_resolved_sys;
+            t_resolved_sys.Lock(*t_resolved);
+            gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog), *t_resolved_sys);
 		}
 		else
 		{
@@ -657,8 +665,11 @@ int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringR
                 t_folder_exists = true;
             }
 
-            gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), t_folder_exists ? MCStringGetCString(*t_folder) : G_last_saved_path);
-            gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog),MCStringGetCString(*t_name));
+            MCAutoStringRefAsSysString t_folder_sys, t_name_sys;
+            /* UNCHECKED */ t_folder_sys.Lock(*t_folder);
+            /* UNCHECKED */ t_name_sys.Lock(*t_name);
+            gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), t_folder_exists ? *t_folder_sys : G_last_saved_path);
+            gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog), *t_name_sys);
 		}
 	}
 	else
@@ -668,7 +679,7 @@ int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringR
 	
     run_dialog(dialog, r_value) ;
 
-    MCStringCreateWithCString(get_current_filter_name(dialog), r_result);
+    MCStringCreateWithSysString(get_current_filter_name(dialog), r_result);
 
 	if (G_last_saved_path != NULL)
 		g_free(G_last_saved_path);
@@ -701,8 +712,10 @@ int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial,
 	
     dialog = create_open_dialog(p_title == nil || MCStringGetLength(p_title) == 0  ? p_prompt : p_title, GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER );
 
+    MCAutoStringRefAsSysString t_resolved_sys;
+    /* UNCHECKED */ t_resolved_sys.Lock(*t_resolved);
     if (p_initial != NULL)
-        gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), MCStringGetCString(*t_resolved));
+        gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), *t_resolved_sys);
 
 	
     run_dialog(dialog, r_value);
@@ -735,7 +748,9 @@ bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bo
     gdk_color . green = p_initial_color . green;
     gdk_color . blue = p_initial_color . blue;
 		
-	dialog = gtk_color_selection_dialog_new  (MCStringGetCString(p_title));
+    MCAutoStringRefAsSysString t_title;
+    /* UNCHECKED */ t_title.Lock(p_title);
+    dialog = gtk_color_selection_dialog_new  (*t_title);
 	make_front_widget ( dialog ) ;
 	colorsel = GTK_COLOR_SELECTION ( GTK_COLOR_SELECTION_DIALOG (dialog)->colorsel );
 

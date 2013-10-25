@@ -78,6 +78,12 @@ struct MCSystemFileHandle
 	virtual int64_t GetFileSize(void) = 0;
     
     virtual bool TakeBuffer(void*& r_buffer, size_t& r_length) = 0;
+
+    // Polymorphic - needs virtual destructor
+    virtual ~MCSystemFileHandle()
+    {
+        ;
+    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////

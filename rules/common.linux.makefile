@@ -40,9 +40,9 @@ DEFINES += __LITTLE_ENDIAN__
 INCLUDES=$(CUSTOM_INCLUDES) $(TYPE_INCLUDES) $(GLOBAL_INCLUDES)
 
 ifeq ($(MODE),release)
-	CCFLAGS=$(CUSTOM_CCFLAGS) $(TYPE_CCFLAGS) -O2 -fvisibility=hidden -g
+	CCFLAGS=-m32 $(CUSTOM_CCFLAGS) $(TYPE_CCFLAGS) -O2 -fvisibility=hidden -g
 else
-	CCFLAGS=$(CUSTOM_CCFLAGS) $(TYPE_CCFLAGS) -g -fvisibility=hidden
+	CCFLAGS=-m32 $(CUSTOM_CCFLAGS) $(TYPE_CCFLAGS) -g -fvisibility=hidden
 endif
 
 DEPS=$(addprefix $(BUILD_DIR)/, $(CUSTOM_DEPS))

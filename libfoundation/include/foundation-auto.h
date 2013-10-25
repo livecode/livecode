@@ -325,6 +325,50 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef __LINUX__
+class MCAutoStringRefAsSysString
+{
+public:
+    MCAutoStringRefAsSysString()
+    {
+        m_sysstring = nil;
+    }
+
+    ~MCAutoStringRefAsSysString()
+    {
+        Unlock();
+    }
+
+    bool Lock(MCStringRef p_string)
+    {
+        bool t_success =  MCStringConvertToSysString(p_string, m_sysstring);
+        if (!t_success)
+        {
+            int x = 42;
+        }
+        return t_success;
+    }
+
+    void Unlock()
+    {
+        if (m_sysstring != nil)
+            free((void*)m_sysstring);
+        m_sysstring = nil;
+    }
+
+    const char * operator * () const
+    {
+        return m_sysstring;
+    }
+
+private:
+    const char *m_sysstring;
+};
+
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
 #if 0
 #ifdef __WINDOWS__
 #include <WTypes.h>

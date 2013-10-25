@@ -952,13 +952,15 @@ int xerror(Display *dpy, XErrorEvent *ev)
 	{
 		if (ev->request_code != 88 && ev->request_code != 42)
 		{
-			if (ev->request_code == 53)
+            MCAutoStringRefAsSysString t_cmd;
+            t_cmd.Lock(MCcmd);
+            if (ev->request_code == 53)
 				fprintf(stderr,
-						"%s: XCreatePixmap failed, X server is out of memory --- oops\n", MCStringGetCString(MCcmd));
+                        "%s: XCreatePixmap failed, X server is out of memory --- oops\n", *t_cmd);
 			else
 				fprintf(stderr,
 						"%s: X error major code %d minor code %d error was %d\n",
-						MCStringGetCString(MCcmd), ev->request_code, ev->minor_code, ev->error_code);
+                        *t_cmd, ev->request_code, ev->minor_code, ev->error_code);
 		}
 	}
 	return 0;

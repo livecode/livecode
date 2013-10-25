@@ -30,6 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 
 #include <locale.h>
+#include <langinfo.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -58,7 +59,7 @@ int main(int argc, char *argv[], char *envp[])
 	/* UNCHECKED */ MCMemoryNewArray(argc, t_argv);
 	for (int i = 0; i < argc; i++)
 	{
-		/* UNCHECKED */ MCStringCreateWithSysString(argv[i], strlen(argv[i]), t_argv[i]);
+        /* UNCHECKED */ MCStringCreateWithSysString(argv[i], t_argv[i]);
 	}
 	
 	// Convert the envp array to StringRefs
@@ -68,7 +69,7 @@ int main(int argc, char *argv[], char *envp[])
 	{
 		uindex_t t_count = envc + 1;
 		/* UNCHECKED */ MCMemoryResizeArray(t_count + 1, t_envp, t_count);
-		/* UNCHECKED */ MCStringCreateWithSysString(envp[envc], strlen(envp[envc]), t_envp[envc]);
+        /* UNCHECKED */ MCStringCreateWithSysString(envp[envc], t_envp[envc]);
 		envc++;
 	}
 	

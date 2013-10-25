@@ -20,8 +20,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "foundation-private.h"
 
 #ifdef __LINUX__
+#include <errno.h>
 #include <iconv.h>
 #include <langinfo.h>
+#include <locale.h>
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2616,17 +2618,23 @@ void __MCStringFinalize(void)
 
 #ifdef __LINUX__
 
+#define ALLOC_PAD 64
 static bool do_iconv(iconv_t fd, const char *in, size_t in_len, char * &out, size_t &out_len)
 {
 	// Begin conversion. As a start, assume both encodings take the same
 	// space. This is probably wrong but the array is grown as needed.
 	size_t t_status = 0;
 	uindex_t t_alloc_remain = 0;
-	MCAutoArray<char> t_out;
+    char * t_out;
 	char * t_out_cursor;
-	t_out.New(in_len);
-	t_alloc_remain = t_out.Size();
-	t_out_cursor = t_out.Ptr();
+
+    t_out = (char*)malloc(in_len);
+    if (t_out == nil)
+        return false;
+
+    t_alloc_remain = in_len;
+    t_out_cursor = t_out;
+
 	while (in_len > 0)
 	{
 		// Resize the destination array if it has been exhausted
@@ -2640,12 +2648,20 @@ static bool do_iconv(iconv_t fd, const char *in, size_t in_len, char * &out, siz
 			{
 				// Increase the size of the output array
 				uindex_t t_offset;
-				t_offset = t_out_cursor - t_out.Ptr();
-				t_out.Extend(t_offset + t_alloc_remain + 1);
+                t_offset = t_out_cursor - t_out;
+
+                char *t_new_out = (char*)realloc(t_out, t_offset + t_alloc_remain + ALLOC_PAD);
+                if (t_new_out == nil)
+                {
+                    free(t_out);
+                    return false;
+                }
+
+                t_out = t_new_out;
 				
 				// Adjust the pointers because the output buffer may have moved
-				t_out_cursor = t_out.Ptr() + t_offset;
-				t_alloc_remain = t_out.Size() - t_offset;		// Remaining size, not total size
+                t_out_cursor = t_out + t_offset;
+                t_alloc_remain += ALLOC_PAD;		// Remaining size, not total size
 				
 				// Try the conversion again
 				continue;
@@ -2657,6 +2673,7 @@ static bool do_iconv(iconv_t fd, const char *in, size_t in_len, char * &out, siz
 				//	EINVAL	-	incomplete multibyte character at end of input
 				//	EBADF	-	invalid conversion file descriptor
 				// None of these are recoverable so abort
+                free(t_out);
 				return false;
 			}
 		}
@@ -2668,25 +2685,51 @@ static bool do_iconv(iconv_t fd, const char *in, size_t in_len, char * &out, siz
 	}
     
 	// Conversion has been completed
-	t_out.Take(out, out_len);
+    out_len = t_out_cursor - t_out;
+    out = t_out;
 	return true;
 }
 
-bool MCStringCreateWithSysString(const char *p_system_string, size_t p_len, MCStringRef &r_string)
+bool MCStringCreateWithSysString(const char *p_system_string, MCStringRef &r_string)
 {
-	// Create the pseudo-FD that iconv uses for character conversion. The most
+    // Is the string empty?
+    if (p_system_string == nil)
+    {
+        r_string = MCValueRetain(kMCEmptyString);
+        return true;
+    }
+
+    // What is the system character encoding?
+    //
+    // Doing this here is unpleasant but the MCString*SysString functions are
+    // needed before the libfoundation initialise call is made
+    if (__MCSysCharset == nil)
+    {
+        setlocale(LC_CTYPE, "");
+        __MCSysCharset = nl_langinfo(CODESET);
+    }
+
+    // Create the pseudo-FD that iconv uses for character conversion. The most
 	// convenient form is UTF-16 as StringRefs can be constructed directly from that.
 #ifdef __LITTLE_ENDIAN__
-	iconv_t t_fd = iconv_open("UTF-16LE", MCsysencoding);
+    iconv_t t_fd = iconv_open("UTF-16LE", __MCSysCharset);
 #else
-    iconv_t t_fd = iconv_open("UTF-16BE", MCsysencoding);
+    iconv_t t_fd = iconv_open("UTF-16BE", __MCSysCharset);
 #endif
 	
+    // Was creation of the iconv FD successful?
+    if (t_fd == (iconv_t)-1)
+        return false;
+
+    // Measure the string
+    size_t t_len;
+    t_len = strlen(p_system_string);
+
 	// Convert the string
 	char *t_utf16_bytes;
 	size_t t_utf16_byte_len;
 	bool t_success;
-	t_success = do_iconv(t_fd, p_system_string, p_len, t_utf16_bytes, t_utf16_byte_len);
+    t_success = do_iconv(t_fd, p_system_string, t_len, t_utf16_bytes, t_utf16_byte_len);
 	iconv_close(t_fd);
 	
 	if (!t_success)
@@ -2704,29 +2747,33 @@ bool MCStringCreateWithSysString(const char *p_system_string, size_t p_len, MCSt
 	return true;
 }
 
-bool MCStringConvertToSysString(MCStringRef p_string, const char * &r_system_string, size_t &r_len)
+bool MCStringConvertToSysString(MCStringRef p_string, const char * &r_system_string)
 {
-	// Create the pseudo-FD that iconv uses for character conversion. For
+    // Create the pseudo-FD that iconv uses for character conversion. For
 	// efficiency, convert straight from the internal format.
 	iconv_t t_fd;
 	const char *t_mc_string;
 	size_t t_mc_len;
 	if (MCStringIsNative(p_string) && MCStringGetNativeCharPtr(p_string) != nil)
 	{
-		t_fd = iconv_open(MCsysencoding, "ISO-8859-1");
+        t_fd = iconv_open(__MCSysCharset, "ISO-8859-1");
 		t_mc_string = (const char *)MCStringGetNativeCharPtr(p_string);
 		t_mc_len = MCStringGetLength(p_string);
 	}
 	else
 	{
 #ifdef __LITTLE_ENDIAN__
-		t_fd = iconv_open(MCsysencoding, "UTF-16LE");
+        t_fd = iconv_open(__MCSysCharset, "UTF-16LE");
 #else
-        t_fd = iconv_open(MCsysencoding, "UTF-16BE");
+        t_fd = iconv_open(__MCSysCharset, "UTF-16BE");
 #endif
 		t_mc_string = (const char *)MCStringGetCharPtr(p_string);
 		t_mc_len = MCStringGetLength(p_string) * sizeof(unichar_t);
 	}
+
+    // Was creation of the iconv FD successful?
+    if (t_fd == (iconv_t)-1)
+        return false;
 	
 	// Perform the conversion
 	bool t_success;
@@ -2738,8 +2785,17 @@ bool MCStringConvertToSysString(MCStringRef p_string, const char * &r_system_str
 	if (!t_success)
 		return false;
 	
+    // iconv doesn't append a null character
+    char *t_term = (char*)realloc(t_sys_string, t_sys_len + 1);
+    if (t_term == nil)
+    {
+        free(t_sys_string);
+        return false;
+    }
+    t_sys_string = t_term;
+    t_sys_string[t_sys_len] = '\0';
+
 	r_system_string = t_sys_string;
-	r_len = t_sys_len;
 	return true;
 }
 

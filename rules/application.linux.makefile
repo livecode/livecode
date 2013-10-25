@@ -21,7 +21,7 @@ TARGET_PATH=$(BUILD_DIR)/$(NAME)
 
 $(TARGET_PATH): $(OBJECTS) $(DEPS)
 	mkdir -p $(dir $(TARGET_PATH))
-	gcc -fvisibility=hidden -o$(TARGET_PATH) $(LDFLAGS) $(OBJECTS) $(CUSTOM_OBJECTS) \
+	gcc -m32 -fvisibility=hidden -o$(TARGET_PATH) $(LDFLAGS) $(OBJECTS) $(CUSTOM_OBJECTS) \
 			-Wl,-Bstatic \
 			-Wl,--start-group \
 				$(addsuffix .a,$(addprefix $(PRODUCT_DIR)/lib,$(LIBS))) \
