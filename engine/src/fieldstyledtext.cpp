@@ -590,10 +590,7 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	{
 		MCAutoStringRef t_string;
 		/* UNCHECKED */ ctxt . ConvertToString(t_valueref, &t_string);
-        char *temp;
-        /* UNCHECKED */ MCStringConvertToCString(*t_string, temp);
-		t_block -> setatts(P_TEXT_FONT, (void *)temp);
-        delete temp;
+		t_block -> setatts(P_TEXT_FONT, (void *)MCStringGetCString(*t_string));
 	}
 	
 	// Set textsize
@@ -692,12 +689,10 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 	if (MCValueIsEmpty(t_valueref) || MCValueGetTypeCode(t_valueref) == kMCValueTypeCodeArray)
 		return;
 	
-	MCAutoStringRef t_string;
-	/* UNCHECKED */ ctxt . ConvertToString(t_valueref, &t_string);
-    char *temp;
-    /* UNCHECKED */ MCStringConvertToCString(*t_string, temp);
-	t_text_ptr = temp;
-	t_text_length = MCStringGetLength(*t_string);
+	MCAutoStringRef t_temp;
+	/* UNCHECKED */ ctxt . ConvertToString(t_valueref, &t_temp);
+	t_text_ptr = MCStringGetCString(*t_temp);
+	t_text_length = MCStringGetLength(*t_temp);
 	while(t_text_length != 0)
 	{
 		bool t_add_paragraph;
@@ -731,7 +726,6 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 		if (t_add_paragraph)
 			t_paragraph = parsestyledtextappendparagraph(nil, nil, true, x_paragraphs);
 	}
-    delete temp;
 }
 
 void MCField::parsestyledtextarray(MCArrayRef p_styled_text, bool p_paragraph_break, MCParagraph*& x_paragraphs)
