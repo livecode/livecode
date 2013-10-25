@@ -1927,17 +1927,14 @@ bool revandroid_loadExternalLibrary(MCStringRef p_external, MCStringRef &r_path)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCAndroidGetBuildInfo(const char *p_key, char *&r_value)
+bool MCAndroidGetBuildInfo(MCStringRef p_key, MCStringRef& r_value)
 {
-	char *t_value;
-	t_value = NULL;
-	MCAndroidEngineCall("getBuildInfo", "ss", &t_value, p_key);
+	MCAndroidEngineCall("getBuildInfo", "xx", r_value, p_key);
 
-	if (t_value == NULL)
+	if (r_value == nil)
 		return false;
 
-	r_value = t_value;
-	return true;
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1974,7 +1971,7 @@ bool MCAndroidInitBuildInfo()
 		return true;
 
 	bool t_success = true;
-	char **t_build_info = NULL;
+	MCStringRef *t_build_info = NULL;
 
 	uint32_t t_key_count;
 	t_key_count = kMCBuildInfoKeyCount;
@@ -1984,18 +1981,18 @@ bool MCAndroidInitBuildInfo()
 
 	for (uint32_t i = 0; i < t_key_count && t_success; i++)
 	{
-		t_success = MCAndroidGetBuildInfo(s_build_keys[i], t_build_info[i]);
+		t_success = MCAndroidGetBuildInfo(MCSTR(s_build_keys[i]), t_build_info[i]);
 	}
 
 	if (t_success)
-		s_build_info = t_build_info;
+		s_build_info = (char**)t_build_info;
 	else
 	{
 		if (t_build_info != NULL)
 		{
 			for (uint32_t i = 0; i < t_key_count; i++)
 			{
-				MCCStringFree(t_build_info[i]);
+				MCValueRelease(t_build_info[i]);
 			}
 			MCMemoryDeleteArray(t_build_info);
 		}

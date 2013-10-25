@@ -284,7 +284,9 @@ IO_handle MCAndroidSystem::OpenFile(MCStringRef p_path, intenum_t p_mode, Boolea
 		if (!apk_get_file_length(p_path, t_size) || !apk_get_file_offset(p_path, t_offset))
 			return NULL;
         
-		t_stream = fopen(MCStringGetCString(MCcmd), s_modes[t_mode]);
+        MCAutoStringRefAsUTF8String t_utf8_mccmd;
+        /* UNCHECKED */ t_utf8_mccmd . Lock(MCcmd);
+		t_stream = fopen(*t_utf8_mccmd, s_modes[t_mode]);
 		if (t_stream == NULL)
 			return NULL;
 		
@@ -299,12 +301,14 @@ IO_handle MCAndroidSystem::OpenFile(MCStringRef p_path, intenum_t p_mode, Boolea
 	else
 	{
         FILE *t_stream;
-		t_stream = fopen(MCStringGetCString(p_path), s_modes[t_mode]);
+        MCAutoStringRefAsUTF8String t_utf8_path;
+        /* UNCHECKED */ t_utf8_path . Lock(p_path);
+		t_stream = fopen(*t_utf8_path, s_modes[t_mode]);
 		if (t_stream == NULL)
 			return NULL;
         
 		if (t_stream == NULL && p_mode == kMCSystemFileModeUpdate)
-			t_stream = fopen(MCStringGetCString(p_path), "w+");
+			t_stream = fopen(*t_utf8_path, "w+");
         
         if (t_stream == NULL)
             return NULL;

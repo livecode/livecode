@@ -412,7 +412,9 @@ static bool purchase_confirm(MCPurchase *p_purchase)
     
     bool t_result = false;
     
-    MCLog("confirming notification: purchaseId=%d, notificationId=%s", p_purchase->id, MCStringGetCString(t_android_data->notification_id));
+    MCAutoPointer<char> t_id;
+    /* UNCHECKED */ MCStringConvertToCString(t_android_data->notification_id, &t_id);
+    MCLog("confirming notification: purchaseId=%d, notificationId=%s", p_purchase->id, *t_id);
     MCAndroidEngineRemoteCall("purchaseConfirmDelivery", "bix", &t_result, p_purchase->id, t_android_data->notification_id);
     
     return t_result;
@@ -560,13 +562,15 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPurchaseStateChanged(JNI
     MCJavaStringToStringRef(env, signedData, &t_signed_data) && \
     MCJavaStringToStringRef(env, signature, &t_signature);
     
-    MCLog("doPurchaseStateChanged(verified=%s, purchaseState=%d, productId=%s, ...)", verified?"TRUE":"FALSE", purchaseState, MCStringGetCString(*t_product_id));
+    char *t_product_id_cstring;
+    /* UNCHECKED */ MCStringConvertToCString(*t_product_id, t_product_id_cstring);
+    MCLog("doPurchaseStateChanged(verified=%s, purchaseState=%d, productId=%s, ...)", verified?"TRUE":"FALSE", purchaseState, t_product_id_cstring);
     
     if (t_success)
     {
         if (!MCPurchaseFindByProductId(*t_product_id, t_purchase))
         {
-            MCLog("unrecognized purchase for %s", MCStringGetCString(*t_product_id));
+            MCLog("unrecognized purchase for %s", t_product_id_cstring);
             bool t_success = true;
             MCAndroidPurchase *t_android_data = nil;
             
@@ -581,7 +585,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPurchaseStateChanged(JNI
 
         if (t_purchase != NULL)
         {
-            MCLog("found purchase for %s", MCStringGetCString(*t_product_id));
+            MCLog("found purchase for %s", t_product_id_cstring);
             MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)t_purchase->platform_data;
             
 			t_android_data->product_id = MCValueRetain(*t_product_id);
@@ -605,6 +609,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPurchaseStateChanged(JNI
             }
         }
     }
+    delete t_product_id_cstring;
 }
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doConfirmNotificationResponse(JNIEnv *env, jobject object,

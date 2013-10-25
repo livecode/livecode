@@ -407,7 +407,10 @@ Boolean MCAndroidSystem::GetStandardFolder(MCNameRef p_folder, MCStringRef &r_fo
 	else
 		MCAndroidEngineCall("getSpecialFolderPath", "xx", &(&t_stdfolder), MCNameGetString(p_folder));
 
-	MCLog("GetStandardFolder(\"%s\") -> \"%s\"", MCNameGetCString(p_folder), *t_stdfolder == nil ? "" : MCStringGetCString(*t_stdfolder));
+    char *t_stdfolder_cstring;
+    /* UNCHECKED */ MCStringConvertToCString(*t_stdfolder, t_stdfolder_cstring);
+	MCLog("GetStandardFolder(\"%s\") -> \"%s\"", MCNameGetCString(p_folder), *t_stdfolder == nil ? "" : t_stdfolder_cstring);
+    delete t_stdfolder_cstring;
     
 	return MCStringCopy(*t_stdfolder, r_folder);
 }
@@ -452,21 +455,22 @@ bool MCAndroidSystem::ResolvePath(MCStringRef p_path, MCStringRef& r_resolved)
 	}
 	else
 		t_absolute_path = (MCStringRef)MCValueRetain(p_path);
-    
-	char *t_absolute_cstring;
-	t_absolute_cstring = strdup((const char *)MCStringGetCString(*t_absolute_path));
-	
-	// IM-2012-10-09 - [[ BZ 10432 ]] strip out extra slashes from paths
-	uindex_t t_length = MCCStringLength(t_absolute_cstring);
-	char *t_str_ptr = t_absolute_cstring + 1;
-	for (uindex_t i = 1; i < t_length; i++)
+  
+    // IM-2012-10-09 - [[ BZ 10432 ]] strip out extra slashes from paths
+    MCAutoStringRef t_path_no_extra_slashes;
+    /* UNCHECKED */ MCStringMutableCopy(*t_absolute_path, &t_path_no_extra_slashes);
+    uindex_t t_length;
+    t_length = 0; 
+    while (t_length != MCStringGetLength(*t_path_no_extra_slashes) - 1);
 	{
-		if (t_absolute_cstring[i - 1] != '/' || t_absolute_cstring[i] != '/')
-			*t_str_ptr++ = t_absolute_cstring[i];
+		if (MCStringGetNativeCharAtIndex(*t_path_no_extra_slashes, t_length) == '/' && MCStringGetNativeCharAtIndex(*t_path_no_extra_slashes, t_length + 1) == '/')
+			MCStringRemove(*t_path_no_extra_slashes, MCRangeMake(t_length, 1));
+        else
+            t_length++;
 	}
-	*t_str_ptr = '\0';
-	
-	return MCStringCreateWithCString(t_absolute_cstring, r_resolved);
+    
+    r_resolved = MCValueRetain(*t_path_no_extra_slashes);
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////
