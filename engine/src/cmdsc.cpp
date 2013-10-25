@@ -1310,12 +1310,21 @@ Exec_stat MCFlip::exec(MCExecPoint &ep)
 			return ES_ERROR;
 		}
 		// MW-2013-07-01: [[ Bug 10999 ]] Throw an error if the image is not editable.
-		if (optr->gettype() != CT_IMAGE || optr->getflag(F_HAS_FILENAME))
+		if (optr->gettype() != CT_IMAGE)
 		{
 			MCeerror->add(EE_FLIP_NOTIMAGE, line, pos);
 			return ES_ERROR;
 		}
 		MCImage *iptr = (MCImage *)optr;
+		
+		// MW-2013-10-25: [[ Bug 11300 ]] If this is referenced set the flip flags
+		//   of the image appropriately.
+		if (optr->getflag(F_HAS_FILENAME))
+		{
+			iptr -> setflip(direction == FL_HORIZONTAL);
+			return ES_NORMAL;
+		}
+		
 		iptr->selimage();
 		t_created_selection = true;
 	}
