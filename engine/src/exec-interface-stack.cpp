@@ -140,8 +140,8 @@ static void MCInterfaceDecorationParse(MCExecContext& ctxt, MCStringRef p_input,
                 {
                     t_start_pos = t_end_pos;
                     // skip spaces at the beginning or after a comma (if any)
-                    while (MCStringGetNativeCharAtIndex(p_input, t_start_pos) == ' ')
-                        t_start_pos++;
+                    MCU_skip_spaces(p_input, t_start_pos);
+                    
                     uindex_t t_comma;
                     if (!MCStringFirstIndexOfChar(p_input, ',', t_start_pos, kMCCompareExact, t_comma))
                         t_end_pos = MCStringGetLength(p_input);

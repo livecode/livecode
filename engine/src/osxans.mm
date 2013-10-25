@@ -596,8 +596,7 @@ int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p
         {
             char *t_type;
             /* UNCHECKED */ MCStringConvertToCString(p_types[i], t_type);
-            t_types[i] = strclone(t_type);
-            delete t_type;
+            t_types[i] = t_type;
         }
 		
         FileDialogAccessoryView *t_accessory;

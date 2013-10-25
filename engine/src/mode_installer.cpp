@@ -219,7 +219,7 @@ public:
 			MCAutoStringRef t_payload_file;
             uindex_t t_last_slash;
             /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', 0, kMCCompareExact, t_last_slash);
-			/* FRAGILE */ if (MCStringFormat(&t_payload_file, "%.*@/payload", t_last_slash - 1, MCcmd))
+			/* FRAGILE */ if (MCStringFormat(&t_payload_file, "%.*@/payload", MCRangeMake(0, t_last_slash), MCcmd))
 			{
                 MCAutoStringRefAsUTF8String t_utf8_payload_file;
                 /* UNCHECKED */ t_utf8_payload_file . Lock(*t_payload_file);

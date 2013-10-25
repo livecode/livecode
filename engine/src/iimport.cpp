@@ -275,8 +275,7 @@ bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotsp
                 {
                     char *temp;
                     /* UNCHECKED */ MCStringConvertToCString(*t_name, temp);
-					r_name = strdup(temp);
-                    delete temp;
+					r_name = temp;
                 }
             }
 

@@ -802,8 +802,7 @@ void navEventProc(NavEventCallbackMessage callBackSelector,
 								/* UNCHECKED */ MCS_mac_fsref_to_path(t_fsref, &t_navfile_path);
                                 char *t_navfile_path_cstring;
                                 /* UNCHECKED */ MCStringConvertToCString(*t_navfile_path, t_navfile_path_cstring);
-                                navfilepath = strclone(t_navfile_path_cstring);
-                                delete t_navfile_path_cstring;
+                                navfilepath = t_navfile_path_cstring;
 							}
 						}
 						else
@@ -843,11 +842,8 @@ OSErr navAnswerFolder(MCStringRef prompt, Boolean hasDefaultPath, const FSRef *p
 	OSErr	anErr = noErr;
 	NavGetDefaultDialogCreationOptions(&dOptions);
 	if (prompt != NULL)
-    {
-        char *t_prompt;
-        /* UNCHECKED */ MCStringConvertToCString(prompt, t_prompt);
-		dOptions.windowTitle = CFStringCreateWithCString(NULL, t_prompt, CFStringGetSystemEncoding());
-    }
+        /* UNCHECKED */ MCStringConvertToCFStringRef(prompt, dOptions.windowTitle);
+    
 	MCStack *parentwindowstack = NULL;
 	if (sheet)
 	{

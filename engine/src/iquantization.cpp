@@ -372,30 +372,24 @@ bool MCImageParseColourList(MCStringRef p_input, uint32_t &r_ncolours, MCColor *
 	}
 	if (t_success && t_ncolours > 0)
 	{
-		uint32_t t_colourindex = 0;
-        uindex_t t_start_pos, t_end_pos;
-        t_start_pos = 0;
-        t_end_pos = t_start_pos;
-		while (t_success && t_colourindex < t_ncolours)
-		{
-            MCAutoStringRef t_color_substring;
+        MCAutoArrayRef t_lines;
+        uindex_t t_nlines = 0;
+        /* UNCHECKED */ MCStringSplit(p_input, MCSTR("\n"), nil, kMCStringOptionCompareExact, &t_lines);
+        t_nlines = MCArrayGetCount(*t_lines);
+       
+        for (uindex_t i = 0; i < t_nlines; i++)
+        {
+            MCValueRef t_line = nil;
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_lines, i, t_line);
+            MCStringRef t_color;
+            t_color = (MCStringRef)t_line;
             
-            if (!MCStringFirstIndexOfChar(p_input, '\n', t_start_pos, kMCCompareExact, t_end_pos))
-                MCStringCopySubstring(p_input, MCRangeMake(t_start_pos, MCStringGetLength(p_input) - t_start_pos), &t_color_substring);
-            
-            else
-            {
-                MCStringCopySubstring(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), &t_color_substring);
-                t_start_pos = t_end_pos + 1;
-            }
-            
-            if (!MCscreen->parsecolor(*t_color_substring, t_colours[t_colourindex], NULL))
+            if (!MCscreen->parsecolor(t_color, t_colours[i], NULL))
 			{
 				t_success = false;
 				break;
 			}
-			t_colourindex++;
-		}
+        }
 	}
 	
 	if (t_success)

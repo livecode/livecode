@@ -3164,10 +3164,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (flags & F_SCRIPT && !(addflags & AF_LONG_SCRIPT))
 	{
 		getstack() -> unsecurescript(this);
-        char *t_script;
-        /* UNCHECKED */ MCStringConvertToCString(_script, t_script);
-		stat = IO_write_string(t_script, stream);
-        delete t_script;
+		stat = IO_write_stringref(_script, stream);
 		getstack() -> securescript(this);
 		if (stat != IO_NORMAL)
 			return stat;
@@ -3314,10 +3311,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	else if (addflags & AF_LONG_SCRIPT)
 	{
 		getstack() -> unsecurescript(this);
-        char *t_script;
-        /* UNCHECKED */ MCStringConvertToCString(_script, t_script);
-		stat = IO_write_string(t_script, stream, false, 4);
-        delete t_script;
+		stat = IO_write_stringref(_script, stream, false, 4);
 		getstack() -> securescript(this);
 		if (stat != IO_NORMAL)
 			return stat;

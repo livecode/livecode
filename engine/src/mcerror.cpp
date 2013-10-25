@@ -117,11 +117,10 @@ void MCError::copystringref(MCStringRef s, Boolean t)
 	delete buffer;
     char *t_buffer;
     /* UNCHECKED */ MCStringConvertToCString(s, t_buffer);
-	buffer = strdup(t_buffer);
+	buffer = t_buffer;
 	thrown = t;
 	if (thrown)
 		svalue.set(buffer, strlen(buffer));
-    delete t_buffer;
 }
 
 bool MCError::copyasstringref(MCStringRef &r_string)

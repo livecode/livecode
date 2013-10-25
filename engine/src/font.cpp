@@ -394,28 +394,31 @@ Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
 		{
 			// MW-2012-02-17: [[ SplitTextAttrs ]] If the string is empty, then
 			//   return 0 for the style - indicating to unset the property.
-			uint4 l = MCStringGetLength(data);
-            char *t_data;
-            /* UNCHECKED */ MCStringConvertToCString(data, t_data);
-			const char *sptr = t_data;
-			if (l == 0)
+            if (MCStringIsEmpty(data))
 				style = 0;
-			else
-			{
-				style = FA_DEFAULT_STYLE;
-				while (l)
-				{
-					const char *startptr = sptr;
-					if (!MCU_strchr(sptr, l, ','))
-					{
-						sptr += l;
-						l = 0;
-					}
+            ///////////////////////////////////////////////////
+            else
+            {
+                style = FA_DEFAULT_STYLE;
+                uindex_t t_start_pos, t_end_pos;
+                t_end_pos = 0;
+                
+                while (t_end_pos != MCStringGetLength(data))
+                {
+                    t_start_pos = t_end_pos;
+                    // skip spaces at the beginning or after a comma (if any)
+                    MCU_skip_spaces(data, t_start_pos);
+                    
+                    uindex_t t_comma;
+                    if (!MCStringFirstIndexOfChar(data, ',', t_start_pos, kMCCompareExact, t_comma))
+                        t_end_pos = MCStringGetLength(data);
+                    else
+                        t_end_pos = t_comma;
+                    
                     MCAutoStringRef tdata;
-					/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)startptr, sptr - startptr, &tdata);
-					MCU_skip_char(sptr, l);
-					MCU_skip_spaces(sptr, l);
-					if (MCF_setweightstring(style, *tdata))
+                    /* UNCHECKED */ MCStringCopySubstring(data, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), &tdata);
+                    
+                    if (MCF_setweightstring(style, *tdata))
 						continue;
 					if (MCF_setexpandstring(style, *tdata))
 						continue;
@@ -437,7 +440,7 @@ Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
 						style |= FA_BOX;
 						continue;
                     }
-                
+                    
 					if (MCStringIsEqualToCString(*tdata, MCthreedboxstring, kMCCompareCaseless))
 					{
 						style &= ~FA_BOX;
@@ -460,11 +463,10 @@ Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
 						continue;
 					}
 					MCeerror->add(EE_OBJECT_BADSTYLE, 0, 0, data);
-                    delete t_data;
 					return ES_ERROR;
-				}
-			}
-            delete  t_data;
+                    
+                }
+            }
 		}
 		break;
 	default:

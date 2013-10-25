@@ -1751,8 +1751,7 @@ char *MCSocket::sslgraberror()
 	{
         char *t_sslerror;
         /* UNCHECKED */ MCStringConvertToCString(sslerror, t_sslerror);
-		terror = strdup(t_sslerror);
-        delete t_sslerror;
+		terror = t_sslerror;
 		sslerror = NULL;
 	}
 	else

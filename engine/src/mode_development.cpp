@@ -238,8 +238,8 @@ IO_stat MCDispatch::startup(void)
     char *t_startdir_cstring, *t_mccmd;
 	/* UNCHECKED */ MCStringConvertToCString(*t_startdir, t_startdir_cstring);
     /* UNCHECKED */ MCStringConvertToCString(MCcmd, t_mccmd);
-    startdir = strdup(t_startdir_cstring);
-	enginedir = strdup(t_mccmd);
+    startdir = t_startdir_cstring;
+	enginedir = t_mccmd;
 
 	char *eptr;
 	eptr = strrchr(enginedir, PATH_SEPARATOR);
