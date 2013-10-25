@@ -2277,6 +2277,47 @@ void MCMutableImageRep::rotatesel(int2 angle)
 	m_owner->sourcerectchanged(rect);
 }
 
+bool MCImageBitmapFlipVerticalInPlace(MCImageBitmap *self)
+{
+	uint32_t *t_row;
+	if (!MCMemoryNewArray(self -> width, t_row))
+		return false;
+	
+	for(uindex_t y = 0; y < self -> height / 2; y++)
+	{
+		uint32_t *t_top;
+		t_top = self -> data + y * (self -> stride >> 2);
+		uint32_t *t_bottom;
+		t_bottom = self -> data + (self -> height - y - 1) * (self -> stride >> 2);
+		
+		MCMemoryCopy(t_row, t_top, self -> width * sizeof(uint32_t));
+		MCMemoryCopy(t_top, t_bottom, self -> width * sizeof(uint32_t));
+		MCMemoryCopy(t_bottom, t_row, self -> width * sizeof(uint32_t));
+	}
+	
+	MCMemoryDeleteArray(t_row);
+	
+	return true;
+}
+
+bool MCImageBitmapFlipHorizontalInPlace(MCImageBitmap *self)
+{
+	for(uindex_t y = 0; y < self -> height; y++)
+	{
+		uint32_t *t_row;
+		t_row = self -> data + y * (self -> stride >> 2);
+		for(uindex_t x = 0; x < self -> width / 2; x++)
+		{
+			uint32_t t;
+			t = t_row[x];
+			t_row[x] = t_row[self -> width - x - 1];
+			t_row[self -> width - x - 1] = t;
+		}
+	}
+	
+	return true;
+}
+
 bool MCImageBitmapFlipVertical(MCImageBitmap *p_src, MCImageBitmap *&r_flipped)
 {
 	if (!MCImageBitmapCreate(p_src->width, p_src->height, r_flipped))

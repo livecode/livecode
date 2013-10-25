@@ -28,7 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCTransformedImageRep::MCTransformedImageRep(uindex_t p_width, uindex_t p_height, int32_t p_angle, bool p_lock_rect, uint32_t p_quality, MCImageRep *p_source)
+MCTransformedImageRep::MCTransformedImageRep(uindex_t p_width, uindex_t p_height, int32_t p_angle, bool p_lock_rect, uint32_t p_quality, bool p_flip_x, bool p_flip_y, MCImageRep *p_source)
 {
 	m_width = p_width;
 	m_height = p_height;
@@ -36,6 +36,9 @@ MCTransformedImageRep::MCTransformedImageRep(uindex_t p_width, uindex_t p_height
 	m_lock_rect = p_lock_rect;
 	
 	m_quality = p_quality;
+	
+	m_flip_x = p_flip_x;
+	m_flip_y = p_flip_y;
 	
 	m_source = p_source->Retain();
 }
@@ -144,6 +147,14 @@ bool MCTransformedImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r
 				else
 					t_success = MCImageScaleBitmap(t_src_frame->image, t_target_width, t_target_height, m_quality, t_frames[i].image);
 			}
+			
+			// MW-2013-10-25: [[ Bug 11300 ]] Apply horizontal flip.
+			if (t_success && m_flip_x)
+				t_success = MCImageBitmapFlipHorizontalInPlace(t_frames[i] . image);
+			
+			// MW-2013-10-25: [[ Bug 11300 ]] Apply vertical flip.
+			if (t_success && m_flip_y)
+				t_success = MCImageBitmapFlipVerticalInPlace(t_frames[i] . image);
 		}
 		m_source->UnlockImageFrame(i, t_src_frame);
 	}
@@ -161,7 +172,7 @@ bool MCTransformedImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCTransformedImageRep::Matches(uint32_t p_width, uint32_t p_height, int32_t p_angle, bool p_lock_rect, uint32_t p_quality, MCImageRep *p_source)
+bool MCTransformedImageRep::Matches(uint32_t p_width, uint32_t p_height, int32_t p_angle, bool p_lock_rect, uint32_t p_quality, bool p_flip_x, bool p_flip_y, MCImageRep *p_source)
 {
 	if (p_source != m_source)
 		return false;
@@ -170,6 +181,14 @@ bool MCTransformedImageRep::Matches(uint32_t p_width, uint32_t p_height, int32_t
 		return false;
 	
 	if (p_angle != m_angle)
+		return false;
+	
+	// MW-2013-10-25: [[ Bug 11300 ]] Check flip-x field matches.
+	if (p_flip_x != m_flip_x)
+		return false;
+	
+	// MW-2013-10-25: [[ Bug 11300 ]] Check flip-y field matches.
+	if (p_flip_y != m_flip_y)
 		return false;
 	
 	if (p_angle != 0 && !p_lock_rect)
