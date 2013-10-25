@@ -1096,17 +1096,16 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 				uint8_t *t_dst_ptr = (uint8_t*)t_copy->data;
 				for (uindex_t y = 0; y < t_copy->height; y++)
 				{
-					uint8_t *t_src_row = t_src_ptr;
+					uint32_t *t_src_row = (uint32_t*)t_src_ptr;
 					uint32_t *t_dst_row = (uint32_t*)t_dst_ptr;
 					for (uindex_t x = 0; x < t_width; x++)
 					{
 						uint8_t a, r, g, b;
-						a = *t_src_row++;
-						r = *t_src_row++;
-						g = *t_src_row++;
-						b = *t_src_row++;
+						MCGPixelUnpack(kMCGPixelFormatARGB, *t_src_row++, r, g, b, a);
 
-						*t_dst_row++ = MCGPixelPackNative(r, g, b, 255);
+						// IM-2013-10-25: [[ Bug 11314 ]] Preserve current alpha values when setting the imagedata
+						*t_dst_row = MCGPixelPackNative(r, g, b, MCGPixelGetNativeAlpha(*t_dst_row));
+						t_dst_row++;
 					}
 					t_src_ptr += t_stride;
 					t_dst_ptr += t_copy->stride;
