@@ -183,6 +183,11 @@ bool MCDeployCapsuleDefine(MCDeployCapsuleRef self, MCCapsuleSectionType p_type,
 	return t_success;
 }
 
+bool MCDeployCapsuleDefineString(MCDeployCapsuleRef self, MCCapsuleSectionType p_type, MCStringRef p_string)
+{
+	return MCDeployCapsuleDefine(self, p_type, MCStringGetNativeCharPtr(p_string), MCStringGetLength(p_string));
+}
+
 bool MCDeployCapsuleDefineFromFile(MCDeployCapsuleRef self, MCCapsuleSectionType p_type, MCDeployFileRef p_file)
 {
 	MCAssert(self != nil);

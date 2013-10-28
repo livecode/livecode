@@ -1320,7 +1320,7 @@ void MCStack::SetEditBackground(MCExecContext& ctxt, bool p_value)
 		{
 			MCGroup *gptr = (MCGroup *)curcard->getchild(CT_FIRST, kMCEmptyString, CT_GROUP, CT_UNDEFINED);
 			if (gptr == nil)
-				gptr = getbackground(CT_FIRST, MCnullmcstring, CT_GROUP);
+				gptr = getbackground(CT_FIRST, kMCEmptyString, CT_GROUP);
 			if (gptr != nil)
 				startedit(gptr);
 		}

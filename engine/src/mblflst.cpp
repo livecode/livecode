@@ -34,7 +34,7 @@ extern void *iphone_font_create(MCStringRef name, uint32_t size, bool bold, bool
 extern void iphone_font_destroy(void *font);
 extern void iphone_font_get_metrics(void *font, float& a, float& d);
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
-extern void *android_font_create(const char *name, uint32_t size, bool bold, bool italic);
+extern void *android_font_create(MCStringRef name, uint32_t size, bool bold, bool italic);
 extern void android_font_destroy(void *font);
 extern void android_font_get_metrics(void *font, float& a, float& d);
 #endif
@@ -116,13 +116,13 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 		MCAutoStringRef t_before_comma;
         /* UNCHECKED */ MCStringCopySubstring(*reqname_str, MCRangeMake(0, t_comma - 1), &t_before_comma);
 		font -> unicode = True;
-		font -> fid = (MCSysFontHandle)android_font_create(MCStringGetCString(*t_before_comma), reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
+		font -> fid = (MCSysFontHandle)android_font_create(*t_before_comma, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
 	}
 	
 	else
 	{
 		font -> unicode = False;
-		font -> fid = (MCSysFontHandle)android_font_create(MCStringGetCString(*reqname_str), reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
+		font -> fid = (MCSysFontHandle)android_font_create(*reqname_str, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
 	}
 	
 	font -> ascent = size - 1;

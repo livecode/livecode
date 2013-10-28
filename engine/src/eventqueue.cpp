@@ -339,7 +339,7 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 			MCeventtime = t_event -> mouse . time;
 			MCmodifierstate = t_event -> mouse . wheel . modifiers;
 			if (t_event -> mouse . wheel . dv != 0)
-				mfocused -> kdown("", t_event -> mouse . wheel . dv < 0 ? XK_WheelUp : XK_WheelDown);
+				mfocused -> kdown(kMCEmptyString, t_event -> mouse . wheel . dv < 0 ? XK_WheelUp : XK_WheelDown);
 			
 			mfocused = MCmousestackptr->getcard()->getmfocused();
 			if (mfocused == NULL)
@@ -348,7 +348,7 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 				mfocused = MCmousestackptr;
 			
 			if (t_event -> mouse . wheel . dh != 0)
-				mfocused -> kdown("", t_event -> mouse . wheel . dh < 0 ? XK_WheelLeft : XK_WheelRight);
+				mfocused -> kdown(kMCEmptyString, t_event -> mouse . wheel . dh < 0 ? XK_WheelLeft : XK_WheelRight);
 		}
 		break;
 
@@ -393,8 +393,8 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 			// character.
 			if (t_event -> key . press . char_code == 0)
 			{
-				t_target -> kdown(MCnullstring, t_event -> key . press . key_code);
-				t_target -> kup(MCnullstring, t_event -> key . press . key_code);
+				t_target -> kdown(kMCEmptyString, t_event -> key . press . key_code);
+				t_target -> kup(kMCEmptyString, t_event -> key . press . key_code);
 				break;
 			}
 
@@ -404,29 +404,10 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 			t_unichar = (uint2)t_event -> key . press . char_code;
 
 			// If we successfully map to native, then we can dispatch as a normal kdown
-			uint1 t_char;
-			if (MCUnicodeMapToNative(&t_unichar, 1, t_char))
-			{
-				char t_buffer[2];
-				t_buffer[0] = t_char;
-				t_buffer[1] = '\0';
-				t_target -> kdown(t_buffer, t_event -> key . press . key_code);
-				t_target -> kup(t_buffer, t_event -> key . press . key_code);
-				break;
-			}
-
-			// Otherwise we dispatch in a unicode way...
-			if (!t_target -> kdown(MCnullstring, t_event -> key . press . key_code))
-				if (MCactivefield != nil)
-				{
-					MCString t_unibuffer;
-					t_unibuffer . set((char *)&t_unichar, 2);
-
-					// MW-2012-02-13: [[ Block Unicode ]] Use the new 'finsert' method in
-					//   unicode mode.
-					MCactivefield -> finsertnew(FT_IMEINSERT, t_unibuffer, LCH_UNICODE, true);
-				}
-			t_target -> kup(MCnullstring, t_event -> key . press . key_code);
+			MCAutoStringRef t_buffer;
+			MCStringFormat(&t_buffer, "%lc", t_unichar);
+			t_target -> kdown(*t_buffer, t_event -> key . press . key_code);
+			t_target -> kup(*t_buffer, t_event -> key . press . key_code);
 		}
 		break;
 
@@ -442,12 +423,12 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 
 			MCactivefield -> setcompositioncursoroffset(t_event -> ime . compose . offset * 2);
 
-			MCString t_unichars;
-			t_unichars . set((const char *)t_event -> ime . compose . chars, t_event -> ime . compose . char_count * sizeof(uint16_t));
+			MCAutoStringRef t_unichars;
+			MCStringCreateWithChars((const unichar_t *)t_event->ime.compose.chars, t_event->ime.compose.char_count, &t_unichars);
 			
 			// MW-2012-02-13: [[ Block Unicode ]] Use the new 'finsert' method in
 			//   unicode mode.
-			MCactivefield -> finsertnew(FT_IMEINSERT, t_unichars, LCH_UNICODE, true);
+			MCactivefield -> finsertnew(FT_IMEINSERT, *t_unichars, LCH_UNICODE);
 			if (t_event -> ime . compose . enabled)
 			{
 				MCRectangle r;

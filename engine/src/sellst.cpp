@@ -84,7 +84,7 @@ bool MCSellist::getids(MCListRef& r_list)
 		MCSelnode *tptr = objects;
 		do
 		{
-			MCAutoStringRef t_string;
+			MCAutoValueRef t_string;
 			if (!tptr->ref->names(P_LONG_ID, &t_string))
 				return false;
 			if (!MCListAppend(*t_list, *t_string))

@@ -436,7 +436,7 @@ void MCGroup::kunfocus()
 	state &= ~CS_KFOCUSED;
 }
 
-Boolean MCGroup::kdown(const char *string, KeySym key)
+Boolean MCGroup::kdown(MCStringRef p_string, KeySym key)
 {
 	if (kfocused == NULL)
 		kfocused = oldkfocused;
@@ -468,7 +468,7 @@ Boolean MCGroup::kdown(const char *string, KeySym key)
 		default:
 			newkfocused = kfocused;
 			MCControl *oldfocused = kfocused;
-			if (kfocused->kdown(string, key))
+			if (kfocused->kdown(p_string, key))
 			{
 				radio(0, oldfocused);
 				newkfocused = NULL;
@@ -477,14 +477,14 @@ Boolean MCGroup::kdown(const char *string, KeySym key)
 			newkfocused = NULL;
 			return False;
 		}
-	return kfocused->kdown(string, key);
+	return kfocused->kdown(p_string, key);
 }
 
-Boolean MCGroup::kup(const char *string, KeySym key)
+Boolean MCGroup::kup(MCStringRef p_string, KeySym key)
 {
 	if (kfocused == NULL)
 		return False;
-	return kfocused->kup(string, key);
+	return kfocused->kup(p_string, key);
 }
 
 void MCGroup::mdrag(void)
@@ -1504,10 +1504,10 @@ MCControl *MCGroup::findnum(Chunk_term type, uint2 &num)
 	return NULL;
 }
 
-MCControl *MCGroup::findname(Chunk_term type, const MCString &inname)
+MCControl *MCGroup::findname(Chunk_term type, MCNameRef p_name)
 {
 	if (type == CT_GROUP || type == CT_LAYER)
-		if (MCU_matchname(inname, CT_GROUP, getname()))
+		if (MCU_matchname(p_name, CT_GROUP, getname()))
 			return this;
 	if (controls != NULL)
 	{
@@ -1515,7 +1515,7 @@ MCControl *MCGroup::findname(Chunk_term type, const MCString &inname)
 		do
 		{
 			MCControl *foundobj;
-			if ((foundobj = cptr->findname(type, inname)) != NULL)
+			if ((foundobj = cptr->findname(type, p_name)) != NULL)
 				return foundobj;
 			cptr = cptr->next();
 		}
@@ -1961,7 +1961,9 @@ MCControl *MCGroup::getchild(Chunk_term etype, MCStringRef p_expression, Chunk_t
 			do
 			{
 				MCControl *foundobj;
-				if ((foundobj = cptr->findname(otype, MCStringGetOldString(p_expression))) != NULL)
+				MCNewAutoNameRef t_name;
+				/* UNCHECKED */ MCNameCreate(p_expression, &t_name);
+				if ((foundobj = cptr->findname(otype, *t_name)) != NULL)
 					return foundobj;
 				cptr = cptr->next();
 			}
@@ -2179,7 +2181,7 @@ MCControl *MCGroup::getchildbyname(MCNameRef p_name, Chunk_term p_object_type)
     do
     {
         MCControl *foundobj;
-        if ((foundobj = cptr->findname(p_object_type, MCNameGetOldString(p_name))) != NULL)
+        if ((foundobj = cptr->findname(p_object_type, p_name)) != NULL)
             return foundobj;
         cptr = cptr->next();
     }

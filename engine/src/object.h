@@ -294,8 +294,8 @@ public:
 	virtual Boolean kfocusnext(Boolean top);
 	virtual Boolean kfocusprev(Boolean bottom);
 	virtual void kunfocus();
-	virtual Boolean kdown(const char *string, KeySym key);
-	virtual Boolean kup(const char *string, KeySym key);
+	virtual Boolean kdown(MCStringRef p_string, KeySym key);
+	virtual Boolean kup(MCStringRef p_string, KeySym key);
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual void mfocustake(MCControl *target);
 	virtual void munfocus();
@@ -608,7 +608,7 @@ public:
 	
 	// New method for returning the various 'names' of an object. This should really
 	// return an 'MCValueRef' at some point, but as it stands that causes issues.
-	bool names(Properties which, MCStringRef& r_name);
+	bool names(Properties which, MCValueRef& r_name);
 	// Wrapper for 'names()' working in the old way (for convenience).
 	Exec_stat names_old(Properties which, MCExecPoint& ep, uint32_t parid);
 

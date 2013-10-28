@@ -181,8 +181,8 @@ void MCScreenDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode 
 void MCScreenDC::expose()
 {
 	MSG msg;
-	while (PeekMessageA(&msg, NULL, WM_PAINT, WM_PAINT, PM_REMOVE))
-		DispatchMessageA(&msg);
+	while (PeekMessageW(&msg, NULL, WM_PAINT, WM_PAINT, PM_REMOVE))
+		DispatchMessageW(&msg);
 }
 
 Boolean MCScreenDC::abortkey()
@@ -539,7 +539,10 @@ uint1 MCScreenDC::fontnametocharset(MCStringRef p_font)
 	LOGFONTA logfont;
 	memset(&logfont, 0, sizeof(LOGFONTA));
 	uint4 maxlength = MCU_min(LF_FACESIZE - 1U, MCStringGetLength(p_font));
-	strncpy(logfont.lfFaceName, MCStringGetCString(p_font), maxlength);
+	char *temp;
+	/* UNCHECKED */ MCStringConvertToCString(p_font, temp);
+	strncpy(logfont.lfFaceName, temp, maxlength);
+	delete temp;
 	logfont.lfFaceName[maxlength] = '\0';
 	//parse font and encoding
 	logfont.lfCharSet = DEFAULT_CHARSET;

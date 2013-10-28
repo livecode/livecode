@@ -318,8 +318,7 @@ bool MCSystemPickOption(MCPickList *p_pick_lists, uindex_t p_pick_list_count, ui
     {
         for (uint32_t i = 0; t_success && i < p_pick_lists[0] . option_count; i++)
         {
-            MCString t_string = MCStringGetOldString(p_pick_lists[0] . options[i]);
-            t_success = MCJavaListAppendString(t_env, t_joptionlist, &t_string);
+            t_success = MCJavaListAppendStringRef(t_env, t_joptionlist, p_pick_lists[0] . options[i]);
         }
     }
     

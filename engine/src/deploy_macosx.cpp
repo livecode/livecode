@@ -1685,12 +1685,12 @@ Exec_stat MCDeployToMacOSX(const MCDeployParameters& p_params)
 	MCDeployFileRef t_engine, t_engine_ppc, t_engine_x86, t_output;
 	t_engine = t_engine_ppc = t_engine_x86 = t_output = NULL;
 	if (t_success &&
-		(p_params . engine != NULL && !MCDeployFileOpen(p_params . engine, "rb", t_engine) ||
-		 p_params . engine_ppc != NULL && !MCDeployFileOpen(p_params . engine_ppc, "rb", t_engine_ppc) ||
-		 p_params . engine_x86 != NULL && !MCDeployFileOpen(p_params . engine_x86, "rb", t_engine_x86)))
+		(p_params . engine != NULL && !MCDeployFileOpen(p_params . engine, kMCSOpenFileModeRead, t_engine) ||
+		 p_params . engine_ppc != NULL && !MCDeployFileOpen(p_params . engine_ppc, kMCSOpenFileModeRead, t_engine_ppc) ||
+		 p_params . engine_x86 != NULL && !MCDeployFileOpen(p_params . engine_x86, kMCSOpenFileModeRead, t_engine_x86)))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
-	if (t_success && !MCDeployFileOpen(p_params . output, "wb+", t_output))
+	if (t_success && !MCDeployFileOpen(p_params . output, kMCSOpenFileModeWrite, t_output))
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 
 	// MW-2013-06-13:  If we have a single engine, process that in the appropriate
@@ -1765,25 +1765,15 @@ Exec_stat MCDeployToMacOSX(const MCDeployParameters& p_params)
 	MCDeployFileClose(t_engine_ppc);
 	
 	// OK-2010-02-22: [[Bug 8624]] - Standalones not being made executable if they contain accented chars in path.
-	char *t_path;
-	t_path = nil;
-#if defined(_MACOSX)
-	if (t_success)
-		t_success = MCCStringFromNative(p_params . output, t_path);
-#else
-	t_path = p_params . output;
-#endif
+	MCStringRef t_path;
+	t_path = p_params.output;
 	
 	// If on Mac OS X or Linux, make the file executable
 #if defined(_MACOSX) || defined(_LINUX)
 	if (t_success)
-		chmod(t_path, 0755);
+		chmod(MCStringGetCString(t_path), 0755);
 #endif
-	
-#if defined(_MACOSX)
-	MCCStringFree(t_path);
-#endif
-	
+
 	return t_success ? ES_NORMAL : ES_ERROR;
 }
 
@@ -1829,11 +1819,11 @@ Exec_stat MCDeployToIOS(const MCDeployParameters& p_params, bool p_embedded)
 	MCDeployFileRef t_engine, t_output;
 	t_engine = t_output = NULL;
 	if (t_success &&
-		(p_params . engine == NULL || !MCDeployFileOpen(p_params . engine, "rb", t_engine)))
+		(p_params . engine == NULL || !MCDeployFileOpen(p_params . engine, kMCSOpenFileModeRead, t_engine)))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
 	// Make sure we can open the output file.
-	if (t_success && !MCDeployFileOpen(p_params . output, "wb+", t_output))
+	if (t_success && !MCDeployFileOpen(p_params . output, kMCSOpenFileModeWrite, t_output))
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 	
 	// Generate the binary.
@@ -1925,23 +1915,13 @@ Exec_stat MCDeployToIOS(const MCDeployParameters& p_params, bool p_embedded)
 	MCDeployFileClose(t_engine);
 	
 	// OK-2010-02-22: [[Bug 8624]] - Standalones not being made executable if they contain accented chars in path.
-	char *t_path;
-#if defined(_MACOSX)
-	t_path = nil;
-	if (t_success)
-		t_success = MCCStringFromNative(p_params . output, t_path);
-#else
-	t_path = p_params . output;
-#endif
+	MCStringRef t_path;
+	t_path = p_params.output;
 	
 	// If on Mac OS X or Linux, make the file executable
 #if defined(_MACOSX) || defined(_LINUX)
 	if (t_success)
-		chmod(t_path, 0755);
-#endif
-	
-#if defined(_MACOSX)
-	MCCStringFree(t_path);
+		chmod(MCStringGetCString(t_path), 0755);
 #endif
 	
 	return t_success ? ES_NORMAL : ES_ERROR;
@@ -2444,10 +2424,10 @@ Exec_stat MCDeployDietMacOSX(const MCDeployDietParameters& p_params)
 	// First thing we do is open the files.
 	MCDeployFileRef t_engine, t_output;
 	t_engine = t_output = NULL;
-	if (t_success && !MCDeployFileOpen(p_params . input, "rb", t_engine))
+	if (t_success && !MCDeployFileOpen(p_params . input, kMCSOpenFileModeRead, t_engine))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
-	if (t_success && !MCDeployFileOpen(p_params . output, "wb+", t_output))
+	if (t_success && !MCDeployFileOpen(p_params . output, kMCSOpenFileModeWrite, t_output))
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 
 	// Next we count the number of architectures that we will be including in
@@ -2578,7 +2558,7 @@ static bool MCDeployExtractArchCallback(void *p_context, MCDeployFileRef p_exe, 
 
 // This method extracts a segment from a Mach-O file - if the file is a fat
 // binary, it uses the first image in the file.
-Exec_stat MCDeployExtractMacOSX(const char *p_filename, const char *p_segment, const char *p_section, void*& r_data, uint32_t& r_data_size)
+Exec_stat MCDeployExtractMacOSX(MCStringRef p_filename, MCStringRef p_segment, MCStringRef p_section, void*& r_data, uint32_t& r_data_size)
 {
 	bool t_success;
 	t_success = true;
@@ -2586,7 +2566,7 @@ Exec_stat MCDeployExtractMacOSX(const char *p_filename, const char *p_segment, c
 	// First thing we do is open the input file.
 	MCDeployFileRef t_input;
 	t_input = NULL;
-	if (t_success && !MCDeployFileOpen(p_filename, "rb", t_input))
+	if (t_success && !MCDeployFileOpen(p_filename, kMCSOpenFileModeRead, t_input))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
 	// Next just run the callback to get the offset of the section within the
@@ -2594,8 +2574,8 @@ Exec_stat MCDeployExtractMacOSX(const char *p_filename, const char *p_segment, c
 	MCDeployExtractContext t_context;
 	if (t_success)
 	{
-		t_context . section = p_section;
-		t_context . segment = p_segment;
+		t_context . section = (const char *)MCStringGetNativeCharPtr(p_section);
+		t_context . segment = (const char *)MCStringGetNativeCharPtr(p_segment);
 		t_context . offset = 0;
 		t_context . size = 0;
 		t_context . error = false;

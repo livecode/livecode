@@ -7619,7 +7619,10 @@ Exec_stat MCShell::eval(MCExecPoint &ep)
 	MCFilesEvalShell(ctxt, *t_command, &t_output);
 
 	if (!ctxt . HasError())
+    {        
+        ep.setvalueref(*t_output);
 		return ES_NORMAL;
+    }
 
 	return ctxt . Catch(line, pos);
 }

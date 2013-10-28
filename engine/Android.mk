@@ -69,7 +69,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	exec-strings.cpp exec-strings-chunk.cpp exec-text.cpp exec-graphics.cpp exec-security.cpp exec-printing.cpp exec-debugging.cpp \
 	exec-ide.cpp exec-server.cpp exec-interface2.cpp exec.cpp \
 	exec-interface-aclip.cpp exec-interface-button.cpp exec-interface-card.cpp exec-interface-control.cpp \
-	exec-interface-field.cpp exec-interface-graphic.cpp exec-interface-group.cpp exec-interface-image.cpp \
+	exec-interface-field.cpp exec-interface-field-chunk.cpp exec-interface-graphic.cpp exec-interface-group.cpp exec-interface-image.cpp \
 	exec-interface-object.cpp exec-interface-player.cpp exec-interface-scrollbar.cpp exec-interface-stack.cpp \
 	exec-interface-vclip.cpp exec-legacy.cpp exec-dialog.cpp \
 	syntax.cpp \

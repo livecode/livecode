@@ -403,6 +403,9 @@ extern MCPoint MCgroupedobjectoffset;
 //   addresses will work.
 extern Boolean MCallowdatagrambroadcasts;
 
+// Character encoding used by the system
+extern char *MCsysencoding;
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #endif

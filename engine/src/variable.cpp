@@ -527,24 +527,6 @@ MCVariable *MCVariable::lookupglobal(MCNameRef p_name)
 	return nil;
 }
 
-bool MCVariable::ensureglobal_cstring(const char *p_name, MCVariable*& r_var)
-{
-	bool t_success;
-	t_success = true;
-
-	MCNameRef t_name;
-	t_name = nil;
-	if (t_success)
-		t_success = MCNameCreateWithCString(p_name, t_name);
-
-	if (t_success)
-		t_success = ensureglobal(t_name, r_var);
-
-	MCNameDelete(t_name);
-	
-	return t_success;
-}
-
 bool MCVariable::ensureglobal(MCNameRef p_name, MCVariable*& r_var)
 {
 	// First check to see if the global variable already exists
@@ -579,6 +561,7 @@ bool MCVariable::ensureglobal(MCNameRef p_name, MCVariable*& r_var)
 #if 0
 void MCVariable::synchronize(MCExecPoint& ep, Boolean notify)
 {
+	MCExecContext ctxt(ep);
 	if (is_env)
 	{
 		if (!isdigit(MCNameGetCharAtIndex(name, 1)) && MCNameGetCharAtIndex(name, 1) != '#')
@@ -595,7 +578,9 @@ void MCVariable::synchronize(MCExecPoint& ep, Boolean notify)
 	else if (is_msg)
 	{
 		eval(ep);
-		MCB_setmsg(ep);
+		MCAutoStringRef t_string;
+		/* UNCHECPED */ ep.copyasstringref(&t_string);
+		MCB_setmsg(ctxt, *t_string);
 	}
 
 	if (notify && MCnwatchedvars)
@@ -616,16 +601,18 @@ void MCVariable::synchronize(MCExecPoint& ep, Boolean notify)
 
 				// Otherwise, trigger the setvar message.
 				eval(ep);
+				MCAutoStringRef t_string;
+				/* UNCHECKED */ ep.copyasstringref(&t_string);
 				if (*MCwatchedvars[i].expression)
 				{
 					MCExecPoint ep2(ep);
 					ep2.setsvalue(MCwatchedvars[i].expression);
 					Boolean d;
 					if (ep.gethandler()->eval(ep2) == ES_NORMAL && MCU_stob(ep2.getsvalue(), d) && d)
-						MCB_setvar(ep, name);
+						MCB_setvar(ctxt, *t_string, name);
 				}
 				else
-					MCB_setvar(ep, name);
+					MCB_setvar(ctxt, *t_string, name);
 
 				break;
 			}

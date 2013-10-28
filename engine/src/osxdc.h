@@ -148,8 +148,8 @@ extern pascal OSErr DragTrackingHandler(DragTrackingMessage message,
 extern pascal OSErr DragReceiveHandler(WindowPtr theWindow, void *hRefCon,
 	                                       DragReference theDrag);
 
-extern uint4 MCMacGlyphToKeysym(uint2 glyph);
-extern uint2 MCMacKeysymToGlyph(uint4 key);
+extern KeySym MCMacGlyphToKeysym(uint2 glyph);
+extern uint2 MCMacKeysymToGlyph(KeySym key);
 
 static inline Rect MCRectToMacRect(const MCRectangle &p_rect)
 {
@@ -472,6 +472,11 @@ public:
 	Boolean getowndnd()
 	{
 		return owndnd;
+	}
+	
+	Window getactivewindow() const
+	{
+		return activewindow;
 	}
 	
 	// This routine converts a UTF-8 string into a CFString suitable for passing

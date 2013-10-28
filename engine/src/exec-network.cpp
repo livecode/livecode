@@ -347,10 +347,9 @@ void MCNetworkEvalHTTPProxyForURLWithPAC(MCExecContext& ctxt, MCStringRef p_url,
 
 			if (t_success)
 			{
-				char *t_result;
-				t_result = s_pac_engine -> Run(MCStringGetCString(p_pac));
-				t_success = t_result != NULL;
-				delete t_result;
+				MCAutoStringRef t_result;
+				s_pac_engine -> Run(p_pac, &t_result);
+				t_success = *t_result != NULL;
 			}
 			
 			if (!t_success)

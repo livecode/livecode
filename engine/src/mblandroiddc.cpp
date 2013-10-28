@@ -1034,7 +1034,7 @@ void MCStack::preservescreenforvisualeffect(const MCRectangle& p_rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool X_init(int argc, char *argv[], char *envp[]);
+Bool X_init(int argc, MCStringRef argv[], int envc, MCStringRef envp[]);
 bool X_main_loop_iteration(void);
 int X_close(void);
 void send_startup_message(bool p_do_relaunch = true);
@@ -1047,7 +1047,7 @@ IO_handle android_get_mainstack_stream(void)
 
 	MCAutoStringRef t_asset_filename;
 
-	if (!MCStringFormat(&t_asset_filename, "%s/revandroidmain.rev", MCStringGetCString(MCcmd)))
+	if (!MCStringFormat(&t_asset_filename, "%@/revandroidmain.rev", MCcmd))
 		return nil;
 
 	return MCS_open(*t_asset_filename, kMCSOpenFileModeRead, False, False, 0);
@@ -1090,11 +1090,14 @@ static void *mobile_main(void *arg)
 	sigaction(SIGINT, &t_sig_action, nil);
 
 	// We don't care too much about args and env vars at the moment.
-	char *t_args[1], *t_env[1];
-	MCAndroidEngineCall("getPackagePath", "s", &t_args[0]);
+	// (The only argument is the name and there are no env vars)
+	MCStringRef t_args[1], t_env[1];
+	int argc = 1;
+	int envc = 0;
+	MCAndroidEngineCall("getPackagePath", "x", &t_args[0]);
 	t_env[0] = nil;
 
-	MCLog("args[0] = %s", t_args[0]);
+	MCLog("args[0] = %@", t_args[0]);
 
 	// Make sure MCquit is false before we start running things
 	MCquit = False;
@@ -1105,7 +1108,7 @@ static void *mobile_main(void *arg)
 
 	MCLog("Calling X_init", 0);
 
-	if (!X_init(1, t_args, t_env))
+	if (!X_init(argc, t_args, envc, t_env))
 	{
 		MCLog("X_init failed", 0);
 
@@ -1165,8 +1168,11 @@ static void *mobile_main(void *arg)
 	while (s_engine_running)
 		co_yield_to_android();
 	
-	// Free argument.
-	MCCStringFree(t_args[0]);
+	// Free arguments and environment vars
+	for (int i = 0; i < argc; i++)
+		MCValueRelease(t_args[i]);
+	for (int i = 0; i < envc; i++)
+		MCValueRelease(t_env[i]);
 
 	// We have finished with the engine now, so detach from the thread
 	s_java_vm -> DetachCurrentThread();

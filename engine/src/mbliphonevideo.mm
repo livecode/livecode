@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mcerror.h"
 #include "execpt.h"
+#include "exec.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -169,8 +170,8 @@ static NSObject *s_movie_player_delegate = nil;
 
 - (void)movieWindowTouched: (UIControl*) p_sender
 {
-	extern MCExecPoint *MCEPptr;
-	MCEventQueuePostCustom(new MCMovieTouchedEvent(MCEPptr -> getobj()));
+	extern MCExecContext *MCECptr;
+	MCEventQueuePostCustom(new MCMovieTouchedEvent(MCECptr -> GetObject()));
 }
 
 @end

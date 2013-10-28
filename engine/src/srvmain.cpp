@@ -30,6 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "dispatch.h"
 #include "mcerror.h"
 #include "execpt.h"
+#include "exec.h"
 #include "object.h"
 #include "hndlrlst.h"
 #include "handler.h"
@@ -293,24 +294,25 @@ MCUIDC *MCCreateScreenDC(void)
 
 static uint2 nvars;
 
-static void create_var(char *v)
+static void create_var(MCStringRef p_var)
 {
-	char vname[U2L + 1];
-	sprintf(vname, "$%d", nvars);
-	nvars++;
+	MCAutoStringRef t_vname;
+	/* UNCHECKED */ MCStringFormat(&t_vname, "$%d", nvars++);
 	
 	MCVariable *tvar;
-	/* UNCHECKED */ MCVariable::ensureglobal_cstring(vname, tvar);
-	tvar->copysvalue(v);
-
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreate(*t_vname, &t_name);
+	/* UNCHECKED */ MCVariable::ensureglobal(*t_name, tvar);
+	tvar->setvalueref(p_var);
+	
 	MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(MCStringRef));
-	/* UNCHECHED */ MCStringCreateWithCString(v, MCstacknames[MCnstacks++]);
+	MCstacknames[MCnstacks++] = MCValueRetain(p_var);
 }
 
 static void create_var(uint4 p_v)
 {
 	MCVariable *tvar;
-	/* UNCHECKED */ MCVariable::ensureglobal_cstring("$#", tvar);
+	/* UNCHECKED */ MCVariable::ensureglobal(MCNAME("$#"), tvar);
 	tvar->setnvalue(p_v);
 }
 
@@ -322,7 +324,7 @@ static Boolean byte_swapped()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool X_open(int argc, char *argv[], char *envp[]);
+bool X_open(int argc, MCStringRef argv[], MCStringRef envp[]);
 int X_close();
 
 extern bool cgi_initialize();
@@ -530,19 +532,19 @@ void X_main_loop(void)
 #endif
 	
 	MCExecPoint ep;
-	if (!MCserverscript -> Include(ep, MCserverinitialscript, false) &&
+	MCExecContext ctxt(ep);
+	if (!MCserverscript -> Include(ctxt, MCserverinitialscript, false) &&
 		MCS_get_errormode() != kMCSErrorModeDebugger)
 	{
-		char *t_eerror, *t_efiles;
-		t_eerror = MCeerror -> getsvalue() . clone();
-		MCserverscript -> ListFiles(ep);
-		t_efiles = ep . getsvalue() . clone();
+		MCAutoStringRef t_eerror, t_efiles;
+		/* UNCHECKED */ MCeerror->copyasstringref(&t_eerror);
+		MCserverscript -> ListFiles(&t_efiles);
 		MCeerror -> clear();
 		
 		MCParameter t_exec_stack, t_files;
-		t_exec_stack . sets_argument(t_eerror);
+		t_exec_stack . setvalueref_argument(*t_eerror);
 		t_exec_stack . setnext(&t_files);
-		t_files . sets_argument(t_efiles);
+		t_files . setvalueref_argument(*t_efiles);
 		
 		Exec_stat t_stat;
 		t_stat = MCserverscript -> message(MCM_script_execution_error, &t_exec_stack);
@@ -566,12 +568,9 @@ void X_main_loop(void)
 		
 		if ((t_stat != ES_NORMAL && t_stat != ES_PASS) && MCS_get_errormode() != kMCSErrorModeQuiet)
 		{
-			IO_printf(IO_stderr, "ERROR:\n%s\n", t_eerror);
-			IO_printf(IO_stderr, "FILES:\n%s\n", t_efiles);
+			IO_printf(IO_stderr, "ERROR:\n%@\n", *t_eerror);
+			IO_printf(IO_stderr, "FILES:\n%@\n", *t_efiles);
 		}
-
-		delete t_eerror;
-		delete t_efiles;
 	}
 	
 	if (s_server_cgi)

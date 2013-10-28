@@ -376,7 +376,7 @@ void MCPasteboardExecPaste(MCExecContext& ctxt)
 			return;
 		else
 		{
-			MCAutoStringRef t_target;
+			MCAutoValueRef t_target;
 			if (p_object->names(P_LONG_ID, &t_target))
 			{
 				ctxt . SetItToValue(*t_target);

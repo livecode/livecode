@@ -26,6 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "param.h"
 #include "mcerror.h"
 #include "execpt.h"
+#include "exec.h"
 #include "util.h"
 #include "object.h"
 #include "socket.h"
@@ -781,9 +782,9 @@ void MCS_seturlsslverification(bool p_enabled)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, MCStringRef p_data)
+bool MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_data)
 {
-	/* UNCHECKED */ ep . setvalueref(p_data);
+	/* UNCHECKED */ ctxt . SetTheResultToValue(p_data);
 
 	switch(p_kind)
 	{
@@ -798,6 +799,12 @@ bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, MCStringRef p_data)
 		break;
 	}
 	return true;
+}
+
+// Missing implementation. What to write here? Panos.
+bool MCS_put_binary(MCExecContext& ctxt, MCSPutKind p_kind, MCDataRef p_data)
+{
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

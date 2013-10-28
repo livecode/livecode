@@ -41,7 +41,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 extern "C" UIView *LiveCodeGetView(void);
 
-xtern MCExecPoint *MCEPptr;
+extern MCExecPoint *MCEPptr;
 
 ////////////////////
 

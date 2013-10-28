@@ -69,8 +69,8 @@ public:
 	virtual Boolean kfocusnext(Boolean top);
 	virtual Boolean kfocusprev(Boolean bottom);
 	virtual void kunfocus();
-	virtual Boolean kdown(const char *string, KeySym key);
-	virtual Boolean kup(const char *string, KeySym key);
+	virtual Boolean kdown(MCStringRef p_string, KeySym key);
+	virtual Boolean kup(MCStringRef p_string, KeySym key);
 	virtual void mdrag(void);
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual void munfocus();
@@ -100,7 +100,7 @@ public:
 	virtual void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_sprite);
 
 	virtual MCControl *findnum(Chunk_term type, uint2 &num);
-	virtual MCControl *findname(Chunk_term type, const MCString &);
+	virtual MCControl *findname(Chunk_term type, MCNameRef);
 	virtual MCControl *findid(Chunk_term type, uint4 inid, Boolean alt);
 	virtual Boolean count(Chunk_term otype, MCObject *stop, uint2 &num);
 	virtual Boolean maskrect(const MCRectangle &srect);

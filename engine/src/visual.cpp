@@ -37,13 +37,13 @@ MCEffectList::~MCEffectList()
 	{
 		MCEffectArgument *t_kv = arguments;
 		arguments = t_kv -> next;
-		delete[] t_kv -> key;
-		delete[] t_kv -> value;
+		MCValueRelease(t_kv -> key);
+		MCValueRelease(t_kv -> value);
 		delete t_kv;
 	}
 	
-	delete name;
-	delete sound;
+	MCValueRelease(name);
+	MCValueRelease(sound);
 }
 
 MCVisualEffect::~MCVisualEffect()

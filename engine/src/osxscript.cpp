@@ -186,7 +186,7 @@ public:
 
 	bool Define(const char *p_function, MCScriptEnvironmentCallback p_callback);
 
-	char *Run(const char *p_script);
+	void Run(MCStringRef p_script, MCStringRef& r_out);
 
 	char *Call(const char *p_method, const char **p_arguments, unsigned int p_argument_count);
 
@@ -432,15 +432,17 @@ bool MCMacOSXNewJavaScriptEnvironment::Define(const char *p_name, MCScriptEnviro
 	return true;
 }
 
-char *MCMacOSXNewJavaScriptEnvironment::Run(const char *p_script)
+void MCMacOSXNewJavaScriptEnvironment::Run(MCStringRef p_script, MCStringRef& r_out)
 {
 	bool t_success;
 	t_success = true;
 
 	JSStringRef t_js_script;
 	t_js_script = NULL;
-	if (t_success)
-		t_success = ConvertCStringToJSString(p_script, t_js_script);
+	char *temp;
+	if (t_success && MCStringConvertToCString(p_script, temp))
+		t_success = ConvertCStringToJSString(temp, t_js_script);
+	delete temp;
 
 	JSGlobalContextRef t_runtime;
 	t_runtime = NULL;
@@ -515,19 +517,18 @@ char *MCMacOSXNewJavaScriptEnvironment::Run(const char *p_script)
 	if (t_js_script != NULL)
 		JSStringRelease(t_js_script);
 	
-	char *t_result;
 	if (t_success)
 	{
 		m_runtime = t_runtime;
-		t_result = strdup("");
+		r_out = MCValueRetain(kMCEmptyString);
 	}
 	else
 	{
 		JSGlobalContextRelease(t_runtime);
-		t_result = NULL;
+		r_out = nil;
 	}
 
-	return t_result;
+	return;
 }
 
 char *MCMacOSXNewJavaScriptEnvironment::Call(const char *p_method, const char **p_arguments, unsigned int p_argument_count)

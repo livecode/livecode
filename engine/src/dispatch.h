@@ -96,8 +96,8 @@ public:
 	void wclose(Window w);
 	void wkfocus(Window w);
 	void wkunfocus(Window w);
-	Boolean wkdown(Window w, const char *string, KeySym key);
-	void wkup(Window w, const char *string, KeySym key);
+	Boolean wkdown(Window w, MCStringRef p_string, KeySym key);
+	void wkup(Window w, MCStringRef p_string, KeySym key);
 
 	void wmfocus(Window w, int2 x, int2 y);
 	void wmunfocus(Window w);
@@ -184,7 +184,7 @@ public:
 	MCStack *findstackd(Window w);
 	MCStack *findchildstackd(Window w,uint2 index);
 	MCObject *getobjid(Chunk_term type, uint4 inid);
-	MCObject *getobjname(Chunk_term type, MCStringRef);
+	MCObject *getobjname(Chunk_term type, MCNameRef);
 	MCStack *gethome();
 	Boolean ismainstack(MCStack *sptr);
 	void addmenu(MCObject *target);

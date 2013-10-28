@@ -100,7 +100,7 @@ bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImage
 		MCEffectArgument *t_argument;
 		
 		for(t_argument = p_arguments; t_argument != NULL; t_argument = t_argument -> next)
-			if (strcasecmp(t_argument -> key, t_info -> parameters[t_parameter] . name) == 0)
+			if (MCStringIsEqualToCString(t_argument -> key, t_info -> parameters[t_parameter] . name, kMCCompareExact))
 			{
 				t_name = t_info -> parameters[t_parameter] . name;
 				t_type = t_info -> parameters[t_parameter] . type;
@@ -116,19 +116,17 @@ bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImage
 		switch(t_type)
 		{
 			case REI_VISUALEFFECT_PARAMETER_TYPE_NUMBER:
-				t_parameters -> entries[t_index] . value . number = atof(t_argument -> value);
+                /* UNCHECKED */ MCStringToDouble(t_argument -> value, t_parameters -> entries[t_index] . value . number);
 			break;
 			
 			case REI_VISUALEFFECT_PARAMETER_TYPE_STRING:
-				t_parameters -> entries[t_index] . value . string = t_argument -> value;
+				t_parameters -> entries[t_index] . value . string = MCStringGetCString(t_argument -> value);
 			break;
 			
 			case REI_VISUALEFFECT_PARAMETER_TYPE_COLOUR:
 			{
 				MCColor t_colour;
-                MCAutoStringRef t_value;
-                /* UNCHECKED */ MCStringCreateWithCString(t_argument -> value, &t_value);
-				if (MCscreen -> parsecolor(*t_value, t_colour, NULL))
+				if (MCscreen -> parsecolor(t_argument -> value, t_colour, NULL))
 				{
 					t_parameters -> entries[t_index] . value . colour . red = t_colour . red >> 8;
 					t_parameters -> entries[t_index] . value . colour . green = t_colour . green >> 8;
@@ -144,24 +142,23 @@ bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImage
 			{
 				double t_vector[4];
 				unsigned int t_count = 0;
-				const char *t_string;
-				char *t_next;
-				t_string = t_argument -> value;
+				uindex_t t_pos = 0;
+				uindex_t t_comma;
 				do
 				{
-					t_vector[t_count] = strtod(t_string, &t_next);
-					if (t_next != t_string)
-					{
-						if (*t_next == ',')
-							t_string = t_next + 1;
-						else
-							t_string = NULL;
-					}
-					else
+					if (!MCStringFirstIndexOfChar(t_argument -> value, ',', t_pos, kMCCompareExact, t_comma))
 						t_success = false;
+					MCAutoStringRef t_substring;
+					if (!MCStringCopySubstring(t_argument -> value, MCRangeMake(t_pos, t_comma - t_pos), &t_substring))
+						t_success = false;
+
+					if (!MCStringToDouble(*t_substring, t_vector[t_count]))
+						t_success = false;
+					
+					t_pos = t_comma + 1;
 					t_count += 1;
 				}
-				while(t_string != NULL && t_success && t_count < 4);
+				while(t_success && t_count < 4);
 				if (t_success)
 				{
 					t_parameters -> entries[t_index] . value . vector . length = t_count;
@@ -178,12 +175,18 @@ bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImage
 			
 			case REI_VISUALEFFECT_PARAMETER_TYPE_IMAGE:
 				MCImage *t_image;
-				if (strncmp(t_argument -> value, "id ", 3) == 0)
-					t_image = (MCImage *)(MCdefaultstackptr -> getobjid(CT_IMAGE, atoi(t_argument -> value + 3)));
+				if (MCStringBeginsWith(t_argument -> value, MCSTR("id "), kMCCompareExact))
+                {
+                    MCAutoStringRef t_id;
+                    /* UNCHECKED */ MCStringCopySubstring(t_argument -> value, MCRangeMake(3, MCStringGetLength(t_argument -> value) - 3), &t_id); 
+                    integer_t t_int;
+                    /* UNCHECKED */ MCStringToInteger(*t_id, t_int);
+					t_image = (MCImage *)(MCdefaultstackptr -> getobjid(CT_IMAGE, t_int));
+                }
 				else
                 {
-                    MCAutoStringRef t_value;
-                    /* UNCHECKED */ MCStringCreateWithCString(t_argument -> value, &t_value);
+                    MCNewAutoNameRef t_value;
+                    /* UNCHECKED */ MCNameCreate(t_argument -> value, &t_value);
 					t_image = (MCImage *)(MCdefaultstackptr -> getobjname(CT_IMAGE, *t_value));
                 }
 				if (t_image != NULL)

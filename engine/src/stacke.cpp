@@ -350,18 +350,16 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 		if (t_effects -> sound != NULL)
 		{
 			MCAudioClip *acptr;
-            MCAutoStringRef t_sound;
-            /* UNCHECKED */ MCStringCreateWithCString(t_effects->sound, &t_sound);
+            MCNewAutoNameRef t_sound;
+            /* UNCHECKED */ MCNameCreate(t_effects->sound, &t_sound);
 			if ((acptr = (MCAudioClip *)getobjname(CT_AUDIO_CLIP, *t_sound)) == NULL)
 			{
 				IO_handle stream;
-				MCAutoStringRef t_sound;
-				/* UNCHECKED */ MCStringCreateWithCString(t_effects->sound, &t_sound);
-				if ((stream = MCS_open(*t_sound, kMCSOpenFileModeRead, True, False, 0)) != NULL)
+				if ((stream = MCS_open(t_effects->sound, kMCSOpenFileModeRead, True, False, 0)) != NULL)
 				{
 					acptr = new MCAudioClip;
 					acptr->setdisposable();
-					if (!acptr->import(*t_sound, stream))
+					if (!acptr->import(t_effects->sound, stream))
 					{
 						delete acptr;
 						acptr = NULL;
@@ -391,13 +389,13 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 		{
 #ifdef _MAC_DESKTOP
 			// IM-2013-08-29: [[ ResIndependence ]] use scaled effect rect for CI effects
-			if (t_effects -> type == VE_UNDEFINED && MCCoreImageEffectBegin(t_effects -> name, t_initial_image, t_final_image, t_device_rect, t_device_height, t_effects -> arguments))
+			if (t_effects -> type == VE_UNDEFINED && MCCoreImageEffectBegin(MCStringGetCString(t_effects -> name), t_initial_image, t_final_image, t_device_rect, t_device_height, t_effects -> arguments))
 				t_effects -> type = VE_CIEFFECT;
 			else
 #endif
 #ifdef FEATURE_QUICKTIME
 				// IM-2013-08-29: [[ ResIndependence ]] use scaled effect rect for QT effects
-				if (t_effects -> type == VE_UNDEFINED && MCQTEffectBegin(t_effects -> type, t_effects -> name, t_effects -> direction, t_initial_image, t_final_image, t_device_rect))
+				if (t_effects -> type == VE_UNDEFINED && MCQTEffectBegin(t_effects -> type, MCStringGetCString(t_effects -> name), t_effects -> direction, t_initial_image, t_final_image, t_device_rect))
 					t_effects -> type = VE_QTEFFECT;
 #endif
 		}

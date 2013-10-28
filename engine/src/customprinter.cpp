@@ -1124,8 +1124,8 @@ const char *MCCustomPrinterDevice::Error(void) const
 struct convert_options_array_t
 {
 	uindex_t index;
-	char **option_keys;
-	char **option_values;
+	MCStringRef *option_keys;
+	MCStringRef *option_values;
 };
 
 static bool convert_options_array(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
@@ -1133,15 +1133,15 @@ static bool convert_options_array(void *p_context, MCArrayRef p_array, MCNameRef
 	convert_options_array_t *ctxt;
 	ctxt = (convert_options_array_t *)p_context;
 
-	if (!MCCStringClone(MCStringGetCString(MCNameGetString(p_key)), ctxt -> option_keys[ctxt -> index]))
+	if (!MCStringCopy(MCNameGetString(p_key), ctxt -> option_keys[ctxt -> index]))
 		return false;
-	MCStringRef t_value;
-	if (MCValueGetTypeCode(p_value) != kMCValueTypeCodeString)
-		return false;
-	t_value = (MCStringRef) MCValueRetain(p_value);
 	
-    ctxt -> option_values[ctxt -> index] = strdup(MCStringGetCString(t_value));
-	MCValueRelease(t_value);
+    if (MCValueGetTypeCode(p_value) != kMCValueTypeCodeString)
+		return false;
+	
+	if (!MCStringCopy((MCStringRef)p_value, ctxt -> option_values[ctxt -> index]))
+		return false;
+	
 	ctxt -> index += 1;
 	return true;
 }
@@ -1161,7 +1161,7 @@ MCPrinterResult MCCustomPrinterDevice::Start(const char *p_title, MCArrayRef p_o
 	t_document . filename = MCprinter -> GetDeviceOutputLocation();
 
 	// Extract the option strings
-	char **t_option_keys, **t_option_values;
+	MCStringRef *t_option_keys, *t_option_values;
 	uint32_t t_option_count;
 	t_option_keys = t_option_values = nil;
 	t_option_count = 0;
@@ -1195,8 +1195,8 @@ MCPrinterResult MCCustomPrinterDevice::Start(const char *p_title, MCArrayRef p_o
 	if (t_option_values != nil)
 		for(uint32_t i = 0; i < t_document . option_count; i++)
 		{
-			MCCStringFree(t_option_keys[i]);
-			MCCStringFree(t_option_values[i]);
+			MCValueRelease(t_option_keys[i]);
+			MCValueRelease(t_option_values[i]);
 		}
 
 	MCMemoryDeleteArray(t_option_values);
