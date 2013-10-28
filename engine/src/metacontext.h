@@ -168,7 +168,7 @@ public:
 	void drawline(int2 x1, int2 y1, int2 x2, int2 y2);
 	void drawlines(MCPoint *points, uint2 npoints, bool p_closed = false);
 	void drawsegments(MCSegment *segments, uint2 nsegs);
-	void drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontStruct *f, Boolean image, bool p_unicode_override = false);
+	void drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_unicode_override = false);
 	void drawrect(const MCRectangle& rect, bool inside);
 	void fillrect(const MCRectangle& rect);
 	void fillrects(MCRectangle *rects, uint2 nrects);
@@ -188,7 +188,7 @@ public:
 
 	void drawlink(const char *link, const MCRectangle& region);
 
-	int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
+	//int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
 
 	void applywindowshape(MCWindowShape *p_mask, unsigned int p_update_width, unsigned int p_update_height);
 
@@ -334,7 +334,7 @@ struct MCMarkMetafile
 struct MCMarkText
 {
 	MCMarkFill *background;
-	MCFontStruct *font;
+    MCFontRef font;
 	MCPoint position;
 	void *data;
 	uint2 length;

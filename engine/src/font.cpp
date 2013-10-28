@@ -32,6 +32,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 #include "stacklst.h"
 
+#include "graphics_util.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct MCFont
@@ -150,14 +152,33 @@ int32_t MCFontGetDescent(MCFontRef self)
 	return self -> fontstruct -> descent;
 }
 
-int32_t MCFontMeasureText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode)
+int32_t MCFontMeasureText(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode)
 {
-	return MCscreen -> textwidth(font -> fontstruct, chars, char_count, is_unicode);
+    if (p_length == 0 || p_text == NULL)
+		return 0;
+	
+    MCGFont t_font;
+	t_font = MCFontStructToMCGFont(p_font->fontstruct);
+	
+	MCExecPoint ep;
+	ep . setsvalue(MCString(p_text, p_length));
+	if (!p_font -> fontstruct -> unicode && !p_is_unicode)
+		ep . nativetoutf16();
+	
+	return MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
 }
 
-void MCFontDrawText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode, MCContext *context, int32_t x, int32_t y, bool image)
+void MCFontDrawText(MCGContextRef ctxt, int32_t x, int32_t y, const char *p_chars, uint32_t p_char_count, MCFontRef p_font, bool p_is_unicode)
 {
-	context -> drawtext(x, y, chars, char_count, font -> fontstruct, image, is_unicode);
+    MCGFont t_font;
+	t_font = MCFontStructToMCGFont(p_font->fontstruct);
+	
+	MCExecPoint ep;
+	ep . setsvalue(MCString(p_chars, p_char_count));
+	if (!p_font -> fontstruct -> unicode && !p_is_unicode)
+		ep . nativetoutf16();
+	
+	MCGContextDrawPlatformText(ctxt, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), MCGPointMake(x, y), t_font);
 }
 
 MCFontStyle MCFontStyleFromTextStyle(uint2 p_text_style)
@@ -744,4 +765,10 @@ void MCF_changetextstyle(uint2& x_style_set, Font_textstyle p_style, bool p_new_
 		x_style_set |= t_flag;
 	else
 		x_style_set &= ~t_flag;
+}
+
+/* LEGACY */
+MCFontStruct* MCFontGetFontStruct(MCFontRef font)
+{
+    return font->fontstruct;
 }

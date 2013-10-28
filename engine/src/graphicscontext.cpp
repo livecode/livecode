@@ -18,6 +18,7 @@
 #include "graphicscontext.h"
 #include "graphics.h"
 #include "graphics_util.h"
+#include "font.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -952,17 +953,9 @@ void MCGraphicsContext::drawlink(const char *link, const MCRectangle& region)
 }
 
 
-void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontStruct *f, Boolean image, bool p_unicode_override)
+void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_is_unicode)
 {
-	MCGFont t_font;
-	t_font = MCFontStructToMCGFont(f);
-	
-	MCExecPoint ep;
-	ep . setsvalue(MCString(s, length));	
-	if (!f -> unicode && !p_unicode_override)
-		ep . nativetoutf16();
-	
-	MCGContextDrawPlatformText(m_gcontext, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), MCGPointMake(x, y), t_font);
+	MCFontDrawText(m_gcontext, x, y, s, length, p_font, p_is_unicode);
 }	
 
 int4 MCGraphicsContext::textwidth(MCFontStruct *f, const char *s, uint2 length, bool p_unicode_override)
