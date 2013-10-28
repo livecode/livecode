@@ -134,8 +134,19 @@ bool MCAndroidControl::GetViewBackgroundColor(jobject p_view, uint16_t &r_red, u
 
 void MCAndroidControl::SetRect(MCExecContext& ctxt, MCRectangle p_rect)
 {
+    int16_t i1, i2, i3, i4;
+    // MM-2013-09-30: [[ Bug 11227 ]] Make sure we take into account device scale when positioning native controls.
+    //   We take into account the scale at this point as it's most convenient. This way, we assume that the on the Java
+    //   side everything is in pixels. A better abtraction may be needed going forward (if there is to be more drawing on the java side).
+    MCGFloat t_device_scale;
+    t_device_scale = MCResGetDeviceScale();
+    i1 = (int16_t) p_rect . x * t_device_scale;
+    i2 = (int16_t) p_rect . y * t_device_scale;
+    i3 = (int16_t) p_rect . x + p_rect . width * t_device_scale;
+    i4 = (int16_t) p_rect . y + p_rect . height * t_device_scale;
+    
     if (m_view != nil)
-        MCAndroidObjectRemoteCall(m_view, "setRect", "viiii", nil, p_rect . x, p_rect . y, p_rect . x + p_rect . width, p_rect . y + p_rect . height);
+        MCAndroidObjectRemoteCall(m_view, "setRect", "viiii", nil, i1, i2, i3, i4);
 }
 
 void MCAndroidControl::SetVisible(MCExecContext& ctxt, bool p_visible)
@@ -162,6 +173,15 @@ void MCAndroidControl::GetRect(MCExecContext& ctxt, MCRectangle& r_rect)
     {
         int16_t i1, i2, i3, i4;
         GetViewRect(m_view, i1, i2, i3, i4);
+        
+        // MM-2013-09-30: [[ Bug 11227 ]] Make sure we take into account device scale when positioning native controls.
+        MCGFloat t_device_scale;
+        t_device_scale = MCResGetDeviceScale();
+        i1 = (int16_t) i1 / t_device_scale;
+        i1 = (int16_t) i2 / t_device_scale;
+        i1 = (int16_t) i3 / t_device_scale;
+        i1 = (int16_t) i4 / t_device_scale;
+        
         r_rect . x = i1;
         r_rect . y = i2;
         r_rect . width = i3 - i1;
