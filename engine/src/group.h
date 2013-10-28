@@ -288,6 +288,8 @@ public:
     void GetControlIds(MCExecContext& ctxt, uint32_t part_id, MCStringRef& r_ids);
     void GetChildControlNames(MCExecContext& ctxt, MCStringRef& r_names);
     void GetChildControlIds(MCExecContext& ctxt, MCStringRef& r_ids);
+    void GetLockUpdates(MCExecContext& ctxt, bool& r_locked);
+    void SetLockUpdates(MCExecContext& ctxt, bool p_locked);
     
 	virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
 	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);

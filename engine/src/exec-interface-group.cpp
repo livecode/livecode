@@ -758,3 +758,18 @@ void MCGroup::GetChildControlIds(MCExecContext& ctxt, MCStringRef& r_ids)
 {
     GetPropList(ctxt, P_CHILD_CONTROL_IDS, 0, r_ids);
 }
+
+void MCGroup::GetLockUpdates(MCExecContext& ctxt, bool& r_locked)
+{
+    // MW-2013-06-20: [[ GrpLckUpdates ]] [[ Bug 10960 ]] Add accessor for 'the lockUpdates'
+    r_locked = m_updates_locked;
+}
+
+void MCGroup::SetLockUpdates(MCExecContext& ctxt, bool p_locked)
+{
+    m_updates_locked = p_locked;
+    
+    // When the lock is turned off, make sure we update the group.
+    if (!p_locked)
+        computeminrect(True);
+}

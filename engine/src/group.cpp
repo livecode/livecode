@@ -94,6 +94,8 @@ MCPropertyInfo MCGroup::kProperties[] =
 	DEFINE_RO_OBJ_PART_PROPERTY(P_CONTROL_NAMES, String, MCGroup, ControlNames)
     DEFINE_RO_OBJ_PROPERTY(P_CHILD_CONTROL_IDS, String, MCGroup, ChildControlIds)
 	DEFINE_RO_OBJ_PROPERTY(P_CHILD_CONTROL_NAMES, String, MCGroup, ChildControlNames)
+    // MERG-2013-06-02: [[ GrpLckUpdates ]] Handle setting of the lockUpdates property.
+    DEFINE_RW_OBJ_PROPERTY(P_LOCK_UPDATES, Bool, MCGroup, LockUpdates)
 };
 
 MCObjectPropertyTable MCGroup::kPropertyTable =
