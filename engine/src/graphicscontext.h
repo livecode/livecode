@@ -32,7 +32,6 @@ public:
 	uint1 getfunction(void);
 	void setopacity(uint1 opacity);
 	uint1 getopacity(void);
-	void setfont(const char *fontname, uint2 fontsize, uint2 fontstyle, MCFontStruct *font);
 	void setforeground(const MCColor& c);
 	void setbackground(const MCColor& c);
 	void setdashes(uint2 offset, const uint1 *dashes, uint2 ndashes);

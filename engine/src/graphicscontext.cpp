@@ -944,10 +944,6 @@ void MCGraphicsContext::applywindowshape(MCWindowShape *p_mask, uint4 p_u_width,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCGraphicsContext::setfont(const char *fontname, uint2 fontsize, uint2 fontstyle, MCFontStruct *font)
-{
-}
-
 void MCGraphicsContext::drawlink(const char *link, const MCRectangle& region)
 {
 }
