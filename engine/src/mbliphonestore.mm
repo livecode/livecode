@@ -707,10 +707,7 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product);
         for (NSString *t_invalid_id in response.invalidProductIdentifiers)
         {
             MCAutoStringRef t_string;
-            /* UNCHECKED */ MCStringCreateWithCString([t_invalid_id
-                                                       cStringUsingEncoding:
-                                                       NSMacOSRomanStringEncoding],
-                                                      &t_string);
+            /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_invalid_id, &t_string);
             MCStorePostProductRequestError(*t_string, MCSTR("invalid product identifier"));
         }
     }
@@ -731,12 +728,11 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product);
 
 - (void)request:(SKRequest *)request didFailWithError:(NSError *)error
 {
-    const char *t_product_id = [[(MCProductsRequest*)request getProductId] cStringUsingEncoding: NSMacOSRomanStringEncoding];
-    const char *t_error_str = [[error description] cStringUsingEncoding:
-                               NSMacOSRomanStringEncoding];
     MCAutoStringRef t_product, t_error;
-    /* UNCHECKED */ MCStringCreateWithCString(t_product_id, &t_product);
-    /* UNCHECKED */ MCStringCreateWithCString(t_error_str, &t_error);
+    
+    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[(MCProductsRequest*)request getProductId], &t_product);
+    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error description], &t_error);
+
     MCStorePostProductRequestError(*t_product, *t_error);
     [request release];
 }
