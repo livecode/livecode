@@ -839,17 +839,16 @@ static bool MCS_mac_specialfolder_to_mac_folder(MCStringRef p_type, uint32_t& r_
 
 // Utilities
 
-static void parseSerialControlStr(char *setting, struct termios *theTermios)
+static void parseSerialControlStr(MCStringRef setting, struct termios *theTermios)
 {
-	int baud = 0;
-	char *type = setting;
-	char *value = NULL;
-	if ((value = strchr(type, '=')) != NULL)
-	{
-		*value++ = '\0';
-		if (MCU_strncasecmp(type, "baud", strlen(type)) == 0)
-		{
-			long baudrate = strtol(value, NULL, 10);
+    int baud = 0;
+    MCAutoStringRef t_property, t_value;
+    if (MCStringDivideAtChar(setting, '=', kMCCompareExact, &t_property, &t_value))
+    {
+        if (MCStringIsEqualToCString(*t_property, "baud", kMCCompareCaseless))
+        {
+            integer_t baudrate;
+            /* UNCHECKED */ MCStringToInteger(*t_value, baudrate);
 			if (baudrate == 57600)
 				baud = B57600;
 			else if (baudrate == 38400)
@@ -882,19 +881,25 @@ static void parseSerialControlStr(char *setting, struct termios *theTermios)
 				baud = B300;
 			cfsetispeed(theTermios, baud);
 			cfsetospeed(theTermios, baud);
-		}
-		else if (MCU_strncasecmp(type, "parity", strlen(type)) == 0)
-		{
-			if (value[0] == 'N' || value[0] == 'n')
+            
+        }
+        
+        else if (MCStringIsEqualToCString(*t_property, "parity", kMCCompareCaseless))
+        {
+            char first;
+            first = MCStringGetNativeCharAtIndex(*t_value, 0);
+            if (first == 'N' || first == 'n')
 				theTermios->c_cflag &= ~(PARENB | PARODD);
-			else if (value[0] == 'O' || value[0] == 'o')
+			else if (first == 'O' || first == 'o')
 				theTermios->c_cflag |= PARENB | PARODD;
-			else if (value[0] == 'E' || value[0] == 'e')
+			else if (first == 'E' || first == 'e')
 				theTermios->c_cflag |= PARENB;
-		}
-		else if (MCU_strncasecmp(type, "data", strlen(type)) == 0)
-		{
-			short data = atoi(value);
+        }
+        
+        else if (MCStringIsEqualToCString(*t_property, "data", kMCCompareCaseless))
+        {
+            integer_t data;
+            /* UNCHECKED */ MCStringToInteger(*t_value, data);
 			switch (data)
 			{
                 case 5:
@@ -910,18 +915,20 @@ static void parseSerialControlStr(char *setting, struct termios *theTermios)
                     theTermios->c_cflag |= CS8;
                     break;
 			}
-		}
-		else if (MCU_strncasecmp(type, "stop", strlen(type)) == 0)
-		{
-			double stopbit = strtol(value, NULL, 10);
+        }
+        
+        else if (MCStringIsEqualToCString(*t_property, "stop", kMCCompareCaseless))
+        {
+            double stopbit;
+            /* UNCHECKED */ MCStringToDouble(*t_value, stopbit);
 			if (stopbit == 1.0)
 				theTermios->c_cflag &= ~CSTOPB;
 			else if (stopbit == 1.5)
 				theTermios->c_cflag &= ~CSTOPB;
 			else if (stopbit == 2.0)
 				theTermios->c_cflag |= CSTOPB;
-		}
-	}
+        }
+    }
 }
 
 static void configureSerialPort(int sRefNum)
@@ -937,24 +944,22 @@ static void configureSerialPort(int sRefNum)
 	}
 	cfsetispeed(&theTermios,  B9600);
 	theTermios.c_cflag = CS8;
+ 
+    // Split the string on the spaces
+    MCAutoArrayRef t_settings;
+    /* UNCHECKED */ MCStringSplit(MCserialcontrolsettings, MCSTR(" "), nil, kMCCompareExact, &t_settings);
+    uindex_t nsettings = MCArrayGetCount(*t_settings);
     
-    char *temp;
-    /* UNCHECKED */ MCStringConvertToCString(MCserialcontrolsettings, temp);
-	char *controlptr = strclone(temp);
-	char *str = controlptr;
-	char *each = NULL;
-	while ((each = strchr(str, ' ')) != NULL)
-	{
-		*each = '\0';
-		each++;
-		if (str != NULL)
-			parseSerialControlStr(str, &theTermios);
-		str = each;
-	}
-	delete controlptr;
-    delete temp;
-	//configure the serial output device
-	parseSerialControlStr(str,&theTermios);
+    for (int i = 0 ; i < nsettings ; i++)
+    {
+        // Note: 't_settings' is an array of strings
+        MCValueRef t_settingval = nil;
+        /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_settings, i, t_settingval);
+        MCStringRef t_setting = (MCStringRef)t_settingval;
+        parseSerialControlStr(t_setting, &theTermios);
+        MCValueRelease(t_setting);
+    }
+    //configure the serial output device
 	if (tcsetattr(sRefNum, TCSANOW, &theTermios) < 0)
 	{
 		// TODO: handle error appropriately
@@ -1107,7 +1112,7 @@ extern "C"
 
 static void configureSerialPort(int sRefNum);
 static bool getResourceInfo(MCListRef p_list, ResType p_type);
-static void parseSerialControlStr(char *set, struct termios *theTermios);
+static void parseSerialControlStr(MCStringRef set, struct termios *theTermios);
 
 
 static UnicodeToTextInfo unicodeconvertors[32];
