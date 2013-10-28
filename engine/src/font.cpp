@@ -152,7 +152,18 @@ int32_t MCFontGetDescent(MCFontRef self)
 	return self -> fontstruct -> descent;
 }
 
-int32_t MCFontMeasureText(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode)
+void MCFontBreakText(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, breaktext_callback p_callback, void *p_callback_data)
+{
+    // No-op implementation currently
+    p_callback(p_font, p_text, p_length, p_is_unicode, p_callback_data);
+}
+
+struct font_measure_text_context
+{
+    uint32_t m_width;
+};
+
+void MCFontMeasureTextCallback(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, font_measure_text_context *ctxt)
 {
     if (p_length == 0 || p_text == NULL)
 		return 0;
@@ -165,20 +176,46 @@ int32_t MCFontMeasureText(MCFontRef p_font, const char *p_text, uint32_t p_lengt
 	if (!p_font -> fontstruct -> unicode && !p_is_unicode)
 		ep . nativetoutf16();
 	
-	return MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
+    ctxt -> m_width += MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
 }
 
-void MCFontDrawText(MCGContextRef ctxt, int32_t x, int32_t y, const char *p_chars, uint32_t p_char_count, MCFontRef p_font, bool p_is_unicode)
+int32_t MCFontMeasureText(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode)
+{
+    font_measure_text_context ctxt;
+    ctxt.m_width = 0;
+    
+    MCFontBreakText(p_font, p_text, p_length, p_is_unicode, (breaktext_callback)MCFontMeasureTextCallback, &ctxt);
+    return ctxt.m_width;
+}
+
+struct font_draw_text_context
+{
+    MCGContextRef m_gcontext;
+    int32_t x;
+    int32_t y;
+};
+
+void MCFontDrawTextCallback(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, font_draw_text_context *ctxt)
 {
     MCGFont t_font;
 	t_font = MCFontStructToMCGFont(p_font->fontstruct);
 	
 	MCExecPoint ep;
-	ep . setsvalue(MCString(p_chars, p_char_count));
+	ep . setsvalue(MCString(p_text, p_length));
 	if (!p_font -> fontstruct -> unicode && !p_is_unicode)
 		ep . nativetoutf16();
 	
-	MCGContextDrawPlatformText(ctxt, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), MCGPointMake(x, y), t_font);
+	MCGContextDrawPlatformText(ctxt->m_gcontext, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), MCGPointMake(ctxt->x, ctxt->y), t_font);
+}
+
+void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, const char *p_text, uint32_t p_length, MCFontRef p_font, bool p_is_unicode)
+{
+    font_draw_text_context ctxt;
+    ctxt.x = x;
+    ctxt.y = y;
+    ctxt.m_gcontext = p_gcontext;
+    
+    MCFontBreakText(p_font, p_text, p_length, p_is_unicode, (breaktext_callback)MCFontDrawTextCallback, &ctxt);
 }
 
 MCFontStyle MCFontStyleFromTextStyle(uint2 p_text_style)
