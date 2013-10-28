@@ -181,8 +181,6 @@ public:
 
 	virtual void drawlink(const char *link, const MCRectangle& region) = 0;
 
-	//virtual int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false) = 0;
-
 	virtual void applywindowshape(MCWindowShape *p_mask, uint4 p_u_width, uint4 p_u_height) = 0;
 
 	virtual void drawtheme(MCThemeDrawType p_type, MCThemeDrawInfo* p_parameters) = 0;

@@ -69,7 +69,7 @@ public:
 	
 	void drawlink(const char *link, const MCRectangle& region);
 	
-	int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
+	//int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
 	
 	void applywindowshape(MCWindowShape *p_mask, uint4 p_u_width, uint4 p_u_height);
 	

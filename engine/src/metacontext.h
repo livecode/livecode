@@ -188,8 +188,6 @@ public:
 
 	void drawlink(const char *link, const MCRectangle& region);
 
-	//int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
-
 	void applywindowshape(MCWindowShape *p_mask, unsigned int p_update_width, unsigned int p_update_height);
 
 	void drawtheme(MCThemeDrawType type, MCThemeDrawInfo* p_parameters);

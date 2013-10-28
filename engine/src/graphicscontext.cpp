@@ -958,22 +958,6 @@ void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MC
 	MCFontDrawText(m_gcontext, x, y, s, length, p_font, p_is_unicode);
 }	
 
-int4 MCGraphicsContext::textwidth(MCFontStruct *f, const char *s, uint2 length, bool p_unicode_override)
-{	
-	if (length == 0 || s == NULL)
-		return 0;
-
-	MCGFont t_font;
-	t_font = MCFontStructToMCGFont(f);
-	
-	MCExecPoint ep;
-	ep . setsvalue(MCString(s, length));	
-	if (!f -> unicode && !p_unicode_override)
-		ep . nativetoutf16();
-	
-	return MCGContextMeasurePlatformText(m_gcontext, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 uint2 MCGraphicsContext::getdepth(void) const

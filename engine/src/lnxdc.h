@@ -171,8 +171,6 @@ public:
 
 	virtual bool hasfeature(MCPlatformFeature p_feature);
 
-	virtual int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
-	
 	virtual uint2 getdepth();
 	virtual uint2 getrealdepth(void);
 	

@@ -301,8 +301,6 @@ public:
 	
 	Boolean getmenubarhidden(void) { return menubarhidden; };
 
-	//virtual int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
-	
 	virtual bool hasfeature(MCPlatformFeature p_feature);
 	
 			// in macdcs.cc   Screen routines
