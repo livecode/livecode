@@ -658,26 +658,31 @@ void MCInterfaceEvalMouseH(MCExecContext& ctxt, integer_t& r_value)
 {
 	int16_t x, y;
 	MCscreen->querymouse(x, y);
-	MCRectangle t_rect = MCdefaultstackptr->getrect();
-	r_value = x - t_rect.x;
+    
+	// IM-2013-10-10: [[ FullscreenMode ]] Update to use stack coord conversion methods
+	MCPoint t_mouseloc;
+	t_mouseloc = MCdefaultstackptr->globaltostackloc(MCPointMake(x, y));
+    r_value = t_mouseloc . x;
 }
 
 void MCInterfaceEvalMouseV(MCExecContext& ctxt, integer_t& r_value)
 {
 	int16_t x, y;
 	MCscreen->querymouse(x, y);
-	MCRectangle t_rect = MCdefaultstackptr->getrect();
-	r_value = y - t_rect.y;
+    
+	// IM-2013-10-10: [[ FullscreenMode ]] Update to use stack coord conversion methods
+	MCPoint t_mouseloc;
+	t_mouseloc = MCdefaultstackptr->globaltostackloc(MCPointMake(x, y));
+    r_value = t_mouseloc . y;
 }
 
-void MCInterfaceEvalMouseLoc(MCExecContext& ctxt, MCStringRef& r_string)
+void MCInterfaceEvalMouseLoc(MCExecContext& ctxt, MCPoint& r_loc)
 {
 	int16_t x, y;
 	MCscreen->querymouse(x, y);
-	MCRectangle t_rect = MCdefaultstackptr->getrect();
-	if (MCStringFormat(r_string, "%d,%d", x - t_rect.x, y - t_rect.y))
-		return;
-	ctxt . Throw();
+    
+	// IM-2013-10-10: [[ FullscreenMode ]] Update to use stack coord conversion methods
+	r_loc = MCdefaultstackptr->globaltostackloc(MCPointMake(x, y));
 }
 
 //////////
@@ -1258,45 +1263,14 @@ void MCInterfaceEvalFlushEvents(MCExecContext& ctxt, MCNameRef p_name, MCStringR
 
 void MCInterfaceEvalGlobalLoc(MCExecContext& ctxt, MCPoint p_point, MCPoint& r_global_point)
 {
-	MCRectangle t_rect;
-	t_rect = MCdefaultstackptr->getrect();
-	
-	r_global_point . x = p_point . x + t_rect . x;
-	r_global_point . y = p_point . y + t_rect . y - MCdefaultstackptr -> getscroll();
-
-/*	int16_t t_x, t_y;
-	if (!MCU_stoi2x2(p_point, t_x, t_y))
-	{
-		ctxt . LegacyThrow(EE_GLOBALLOC_NAP, p_point);
-		return;
-	}
-
-	if (MCStringFormat(r_string, "%d,%d", t_x + t_rect.x, t_y + t_rect.y - MCdefaultstackptr->getscroll()))
-		return;
-
-	ctxt.Throw();*/
+	// IM-2013-10-09: [[ FullscreenMode ]] Update to use stack coord conversion methods
+	r_global_point = MCdefaultstackptr->stacktogloballoc(p_point);
 }
 
 void MCInterfaceEvalLocalLoc(MCExecContext& ctxt, MCPoint p_point, MCPoint& r_local_point)
 {
-	MCRectangle t_rect;
-	t_rect = MCdefaultstackptr->getrect();
-	
-	r_local_point . x = p_point . x - t_rect . x;
-	r_local_point . y = p_point . y - t_rect . y + MCdefaultstackptr -> getscroll();
-
-/*	int16_t t_x, t_y;
-	if (!MCU_stoi2x2(p_point, t_x, t_y))
-	{
-		ctxt . LegacyThrow(EE_LOCALLOC_NAP, p_point);
-		return;
-	}
-
-	MCRectangle t_rect = MCdefaultstackptr->getrect();
-	if (MCStringFormat(r_string, "%d,%d", t_x - t_rect.x, t_y - t_rect.y + MCdefaultstackptr->getscroll()))
-		return;
-
-	ctxt.Throw();*/
+	// IM-2013-10-09: [[ FullscreenMode ]] Update to use stack coord conversion methods
+	r_local_point = MCdefaultstackptr->stacktogloballoc(p_point);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1582,23 +1556,23 @@ void MCInterfaceEvalControlAtLoc(MCExecContext& ctxt, MCPoint p_location, MCStri
 void MCInterfaceEvalControlAtScreenLoc(MCExecContext& ctxt, MCPoint p_location, MCStringRef& r_control)
 {
 	MCStack *t_stack;
+    MCPoint t_location;
 	t_stack = MCscreen -> getstackatpoint(p_location . x, p_location . y);
-	if (t_stack != nil)
-	{
-		MCRectangle t_rect;
-		t_rect = t_stack -> getrect();
-		p_location . x -= t_rect . x;
-		p_location . y -= t_rect . y - t_stack -> getscroll();
-	}
+    
+    // IM-2013-10-11: [[ FullscreenMode ]] Update to use stack coord conversion methods
+    if (t_stack != nil)
+        t_location = t_stack->globaltostackloc(p_location);
 
+	// If the location is not over a stack, then return empty.    
 	if (t_stack == nil)
 	{
 		r_control = MCValueRetain(kMCEmptyString);
 		return;
 	}
 
+    // We now have a stack and a location in card co-ords so let's do the hittest.
 	MCObject *t_object;
-	t_object = MCInterfaceEvalControlAtLocInStack(MCdefaultstackptr, p_location);
+	t_object = MCInterfaceEvalControlAtLocInStack(t_stack, p_location);
 
 	MCAutoValueRef t_control;
 	if (t_object -> names(P_LONG_ID, &t_control))

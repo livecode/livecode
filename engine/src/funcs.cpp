@@ -5805,12 +5805,12 @@ Exec_stat MCMouseLoc::eval(MCExecPoint &ep)
 
 	MCExecContext ctxt(ep);
 
-	MCAutoStringRef t_result;
-	MCInterfaceEvalMouseLoc(ctxt, &t_result);
+	MCPoint t_result;
+	MCInterfaceEvalMouseLoc(ctxt, t_result);
 
 	if (!ctxt . HasError())
 	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
+        ep . setpoint(t_result);
 		return ES_NORMAL;
 	}
 

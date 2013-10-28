@@ -2067,7 +2067,7 @@ void MCInterfaceEvalMouseColor(MCExecContext& ctxt, MCColor& r_color);
 
 void MCInterfaceEvalMouseH(MCExecContext& ctxt, integer_t& r_value);
 void MCInterfaceEvalMouseV(MCExecContext& ctxt, integer_t& r_value);
-void MCInterfaceEvalMouseLoc(MCExecContext& ctxt, MCStringRef& r_string);
+void MCInterfaceEvalMouseLoc(MCExecContext& ctxt, MCPoint& r_loc);
 void MCInterfaceEvalMouseChar(MCExecContext& ctxt, MCStringRef& r_result);
 void MCInterfaceEvalMouseText(MCExecContext& ctxt, MCStringRef& r_result);
 void MCInterfaceEvalMouseCharChunk(MCExecContext& ctxt, MCStringRef& r_result);
