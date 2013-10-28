@@ -580,7 +580,7 @@ bool MCJavaMapPutStringToObject(JNIEnv *env, jobject p_map, const char *p_key, j
 	return t_success;
 }
 
-bool MCJavaMapPutStringToString(JNIEnv *env, jobject p_map, const char *p_key, const char *p_value)
+bool MCJavaMapPutStringToString(JNIEnv *env, jobject p_map, const char *p_key, MCStringRef p_value)
 {
     bool t_success;
     t_success = true;
@@ -588,7 +588,7 @@ bool MCJavaMapPutStringToString(JNIEnv *env, jobject p_map, const char *p_key, c
     jstring t_value;
     t_value = nil;
     if (t_success)
-        t_success = MCJavaStringFromNative(env, p_value, t_value);
+        t_success = MCJavaStringFromStringRef(env, p_value, t_value);
     
     if (t_success)
         t_success = MCJavaMapPutStringToObject(env, p_map, p_key, t_value);
