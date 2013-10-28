@@ -16,6 +16,7 @@
 		4CAFB58E17C5041E0076F2ED /* osxtext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CAFB58C17C504100076F2ED /* osxtext.cpp */; };
 		4CF7963617D6249F009DDCC2 /* legacyblendmodes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CF7963517D6249F009DDCC2 /* legacyblendmodes.cpp */; };
 		4D6762EC17C3B3D600EE62C2 /* blur.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6762EB17C3B3D600EE62C2 /* blur.cpp */; };
+		76EF31F8181ECF1700FAC195 /* spread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF31F7181ECF1700FAC195 /* spread.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -49,6 +50,7 @@
 		4DCDCA230B80890D0040D436 /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = SOURCE_ROOT; };
 		4DCDCA240B80890D0040D436 /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../rules/Debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		4DCDCA320B8089D00040D436 /* Global.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Global.xcconfig; path = ../rules/Global.xcconfig; sourceTree = SOURCE_ROOT; };
+		76EF31F7181ECF1700FAC195 /* spread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = spread.cpp; path = src/spread.cpp; sourceTree = "<group>"; };
 		D2AAC046055464E500DB518D /* libgraphics.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libgraphics.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -77,6 +79,7 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				76EF31F7181ECF1700FAC195 /* spread.cpp */,
 				4C4463D416C3ACBD00C5CE3C /* graphics-internal.h */,
 				4C4463D316C3ACBD00C5CE3C /* context.cpp */,
 				4C4463D516C3ACBD00C5CE3C /* image.cpp */,
@@ -179,6 +182,7 @@
 				4C03161B17D4D7BB00D6BDB7 /* cachetable.cpp in Sources */,
 				4CF7963617D6249F009DDCC2 /* legacyblendmodes.cpp in Sources */,
 				4C313A9518059BE1004232E1 /* legacygradients.cpp in Sources */,
+				76EF31F8181ECF1700FAC195 /* spread.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
