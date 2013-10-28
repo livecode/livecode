@@ -679,3 +679,82 @@ void MCGroup::GetCardIds(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_
 {
     MCObject::GetCardIds(ctxt, getstack()->getcards(), false, getid(), r_count, r_ids);
 }
+
+void MCGroup::GetPropList(MCExecContext& ctxt, Properties which, uint32_t part_id, MCStringRef& r_props)
+{
+	MCAutoListRef t_prop_list;
+    
+	bool t_success;
+	t_success = true;
+    
+	if (t_success)
+		t_success = MCListCreateMutable('\n', &t_prop_list);
+    
+    // MERG-2013-08-14: [[ ChildControlProps ]] Resolved crash when group contains no controls
+	if (t_success && controls != nil)
+	{
+        MCObject *t_object = controls;
+        MCObject *t_start_object = t_object;
+		uint2 i = 0;
+		do
+		{
+			MCAutoStringRef t_property;
+            
+			if (which == P_CHILD_CONTROL_NAMES)
+			{
+				t_object -> GetShortName(ctxt, &t_property);
+				t_success = !ctxt . HasError();
+			}
+			else
+			{
+				uint32_t t_id;
+				t_object -> GetId(ctxt, t_id);
+				t_success = MCStringFormat(&t_property, "%d", t_id);
+			}
+            
+			if (t_success)
+				t_success = MCListAppend(*t_prop_list, *t_property);
+            
+            if (t_success && t_object->gettype() == CT_GROUP && (which == P_CONTROL_IDS || which == P_CONTROL_NAMES))
+            {
+                MCAutoStringRef t_group_props;
+                if (which ==  P_CONTROL_IDS)
+                    static_cast<MCGroup *>(t_object) -> GetControlIds(ctxt, part_id, &t_group_props);
+                else
+                    static_cast<MCGroup *>(t_object) -> GetControlNames(ctxt, part_id, &t_group_props);
+                t_success = MCListAppend(*t_prop_list, *t_group_props);
+            }
+            
+            t_object = t_object -> next();
+		}
+		while (t_success && t_object != t_start_object);
+	}
+    
+	if (t_success)
+		t_success = MCListCopyAsString(*t_prop_list, r_props);
+    
+	if (t_success)
+		return;
+    
+	ctxt . Throw();
+}
+
+void MCGroup::GetControlNames(MCExecContext& ctxt, uint32_t part_id, MCStringRef& r_names)
+{
+    GetPropList(ctxt, P_CONTROL_NAMES, part_id, r_names);
+}
+
+void MCGroup::GetControlIds(MCExecContext& ctxt, uint32_t part_id, MCStringRef& r_ids)
+{
+    GetPropList(ctxt, P_CONTROL_IDS, part_id, r_ids);
+}
+
+void MCGroup::GetChildControlNames(MCExecContext& ctxt, MCStringRef& r_names)
+{
+    GetPropList(ctxt, P_CHILD_CONTROL_NAMES, 0, r_names);
+}
+
+void MCGroup::GetChildControlIds(MCExecContext& ctxt, MCStringRef& r_ids)
+{
+    GetPropList(ctxt, P_CHILD_CONTROL_IDS, 0, r_ids);
+}

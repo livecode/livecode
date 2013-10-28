@@ -101,7 +101,7 @@ void MCCard::SetShowPict(MCExecContext& ctxt, bool value)
 	// NO OP
 }
 
-void MCCard::GetGroupProps(MCExecContext& ctxt, Properties which, MCStringRef& r_props)
+void MCCard::GetPropList(MCExecContext& ctxt, Properties which, uint32_t part_id, MCStringRef& r_props)
 {
 	clean();
 
@@ -121,41 +121,57 @@ void MCCard::GetGroupProps(MCExecContext& ctxt, Properties which, MCStringRef& r
 		bool t_want_shared;
 		t_want_shared = which == P_SHARED_GROUP_NAMES || which == P_SHARED_GROUP_IDS;
 
+        bool t_controls;
+        t_controls = which == P_CHILD_CONTROL_NAMES ||  which == P_CHILD_CONTROL_IDS || which == P_CONTROL_NAMES || which == P_CONTROL_IDS;
+        
 		MCObjptr *optr = objptrs;
 		uint2 i = 0;
 		do
 		{
-			// MW-2011-08-08: [[ Groups ]] Use 'getrefasgroup()' to test for groupness.
-			MCGroup *t_group;
-			t_group = optr -> getrefasgroup();
-
-			optr = optr -> next();
-
-			if (t_group == nil)
-				continue;
-
-			if (t_want_background && !t_group -> isbackground())
-				continue;
-
-			if (t_want_shared && !t_group -> isshared())
-				continue;
+            MCObject *t_object;
+            t_object = optr -> getref();
+            
+            optr = optr -> next();
+            
+            if (t_object->gettype() == CT_GROUP)
+            {
+                if (t_want_background && !static_cast<MCGroup *>(t_object)  -> isbackground())
+                    continue;
+                
+                if (t_want_shared && !static_cast<MCGroup *>(t_object) -> isshared())
+                    continue;
+            }
+            else if (!t_controls)
+                continue;
+            
 
 			MCAutoStringRef t_property;
 
-			if (which == P_BACKGROUND_NAMES || which == P_SHARED_GROUP_NAMES || which == P_GROUP_NAMES)
+			if (which == P_BACKGROUND_NAMES || which == P_SHARED_GROUP_NAMES || which == P_GROUP_NAMES ||
+                which == P_CONTROL_NAMES || which == P_CHILD_CONTROL_NAMES)
 			{
-				t_group -> GetShortName(ctxt, &t_property);
+				t_object -> GetShortName(ctxt, &t_property);
 				t_success = !ctxt . HasError();
 			}
 			else
 			{
 				uint32_t t_id;
-				t_group -> GetId(ctxt, t_id);
+				t_object -> GetId(ctxt, t_id);
 				t_success = MCStringFormat(&t_property, "%d", t_id);
 			}
 
 			if (t_success)
 				t_success = MCListAppend(*t_prop_list, *t_property);
+            
+            if (t_success && t_object->gettype() == CT_GROUP && (which == P_CONTROL_IDS || which == P_CONTROL_NAMES))
+            {
+                MCAutoStringRef t_group_props;
+                if (which ==  P_CONTROL_IDS)
+                    static_cast<MCGroup *>(t_object) -> GetControlIds(ctxt, part_id, &t_group_props);
+                else
+                    static_cast<MCGroup *>(t_object) -> GetControlNames(ctxt, part_id, &t_group_props);
+                t_success = MCListAppend(*t_prop_list, *t_group_props);
+            }
 
 		}
 		while (t_success && optr != objptrs);
@@ -175,32 +191,52 @@ void MCCard::GetGroupProps(MCExecContext& ctxt, Properties which, MCStringRef& r
 
 void MCCard::GetBackgroundNames(MCExecContext& ctxt, MCStringRef& r_names)
 {
-	GetGroupProps(ctxt, P_BACKGROUND_NAMES, r_names);
+	GetPropList(ctxt, P_BACKGROUND_NAMES, 0, r_names);
 }
 
 void MCCard::GetBackgroundIds(MCExecContext& ctxt, MCStringRef& r_ids)
 {
-	GetGroupProps(ctxt, P_BACKGROUND_IDS, r_ids);
+	GetPropList(ctxt, P_BACKGROUND_IDS, 0, r_ids);
 }
 
 void MCCard::GetSharedGroupNames(MCExecContext& ctxt, MCStringRef& r_names)
 {
-	GetGroupProps(ctxt, P_SHARED_GROUP_NAMES, r_names);
+	GetPropList(ctxt, P_SHARED_GROUP_NAMES, 0, r_names);
 }
 
 void MCCard::GetSharedGroupIds(MCExecContext& ctxt, MCStringRef& r_ids)
 {
-	GetGroupProps(ctxt, P_SHARED_GROUP_IDS, r_ids);
+	GetPropList(ctxt, P_SHARED_GROUP_IDS, 0, r_ids);
 }
 
 void MCCard::GetGroupNames(MCExecContext& ctxt, MCStringRef& r_names)
 {
-	GetGroupProps(ctxt, P_GROUP_NAMES, r_names);
+	GetPropList(ctxt, P_GROUP_NAMES, 0, r_names);
 }
 
 void MCCard::GetGroupIds(MCExecContext& ctxt, MCStringRef& r_ids)
 {
-	GetGroupProps(ctxt, P_GROUP_IDS, r_ids);
+	GetPropList(ctxt, P_GROUP_IDS, 0, r_ids);
+}
+
+void MCCard::GetControlNames(MCExecContext& ctxt, uint32_t part_id, MCStringRef& r_names)
+{
+    GetPropList(ctxt, P_CONTROL_NAMES, part_id, r_names);
+}
+
+void MCCard::GetControlIds(MCExecContext& ctxt, uint32_t part_id, MCStringRef& r_ids)
+{
+    GetPropList(ctxt, P_CONTROL_IDS, part_id, r_ids);
+}
+
+void MCCard::GetChildControlNames(MCExecContext& ctxt, MCStringRef& r_names)
+{
+    GetPropList(ctxt, P_CHILD_CONTROL_NAMES, 0, r_names);
+}
+
+void MCCard::GetChildControlIds(MCExecContext& ctxt, MCStringRef& r_ids)
+{
+    GetPropList(ctxt, P_CHILD_CONTROL_IDS, 0, r_ids);
 }
 
 void MCCard::GetFormattedLeft(MCExecContext& ctxt, integer_t& r_value)

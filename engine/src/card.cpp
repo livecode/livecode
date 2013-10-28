@@ -95,6 +95,12 @@ MCPropertyInfo MCCard::kProperties[] =
 	DEFINE_RO_OBJ_PROPERTY(P_SHARED_GROUP_IDS, String, MCCard, SharedGroupIds)
 	DEFINE_RO_OBJ_PROPERTY(P_GROUP_IDS, String, MCCard, GroupIds)
 	DEFINE_RO_OBJ_PROPERTY(P_GROUP_NAMES, String, MCCard, GroupNames)
+    // MERG-2015-05-01: [[ ChildControlProps ]] Add ability to list both
+    //   immediate and all descendent controls of a card.
+    DEFINE_RO_OBJ_PART_PROPERTY(P_CONTROL_IDS, String, MCCard, ControlIds)
+	DEFINE_RO_OBJ_PART_PROPERTY(P_CONTROL_NAMES, String, MCCard, ControlNames)
+    DEFINE_RO_OBJ_PROPERTY(P_CHILD_CONTROL_IDS, String, MCCard, ChildControlIds)
+	DEFINE_RO_OBJ_PROPERTY(P_CHILD_CONTROL_NAMES, String, MCCard, ChildControlNames)
 	DEFINE_RO_OBJ_PROPERTY(P_DEFAULT_BUTTON, OptionalString, MCCard, DefaultButton)
 
 	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_VISIBLE)

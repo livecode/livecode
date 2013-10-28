@@ -263,7 +263,7 @@ public:
 
 	////////// PROPERTY SUPPORT METHODS
 
-	void GetGroupProps(MCExecContext& ctxt, Properties which, MCStringRef& r_props);
+	void GetPropList(MCExecContext& ctxt, Properties which, uint32_t part_id, MCStringRef& r_props);
 
 	////////// PROPERTY ACCESSORS
 
@@ -283,6 +283,10 @@ public:
 	void GetSharedGroupIds(MCExecContext& ctxt, MCStringRef& r_ids);
 	void GetGroupNames(MCExecContext& ctxt, MCStringRef& r_names);
 	void GetGroupIds(MCExecContext& ctxt, MCStringRef& r_ids);
+    void GetControlNames(MCExecContext& ctxt, uint32_t part_id, MCStringRef& r_names);
+    void GetControlIds(MCExecContext& ctxt, uint32_t part_id, MCStringRef& r_ids);
+    void GetChildControlNames(MCExecContext& ctxt, MCStringRef& r_names);
+    void GetChildControlIds(MCExecContext& ctxt, MCStringRef& r_ids);
 	void GetFormattedLeft(MCExecContext& ctxt, integer_t& r_value);
 	void GetFormattedTop(MCExecContext& ctxt, integer_t& r_value);
 	void GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_value);
