@@ -408,7 +408,7 @@ bool MCIPhoneSystem::GetAddress(MCStringRef& r_address)
 //        return true;
 //    }    
 	extern MCStringRef MCcmd;
-    return MCStringFormat(r_address, "iphone:%s", MCStringGetCString(MCcmd));
+    return MCStringFormat(r_address, "iphone:%@", MCcmd);
 }
 
 void MCIPhoneSystem::Alarm(real64_t p_when)
@@ -422,17 +422,24 @@ void MCIPhoneSystem::Sleep(real64_t p_when)
 
 void MCIPhoneSystem::SetEnv(MCStringRef p_name, MCStringRef p_value)
 {
-	setenv(MCStringGetCString(p_name), MCStringGetCString(p_value), 1);
+    MCAutoStringRefAsUTF8String t_utf8_name, t_utf8_value;
+    /* UNCHECKED */ t_utf8_name . Lock(p_name);
+    /* UNCHECKED */ t_utf8_value . Lock(p_value);
+	setenv(*t_utf8_name, *t_utf8_value, 1);
 }
 
 bool MCIPhoneSystem::GetEnv(MCStringRef p_name, MCStringRef& r_env)
 {
-    return MCStringCreateWithCString(getenv(MCStringGetCString(p_name)), r_env);
+    MCAutoStringRefAsUTF8String t_utf8_name;
+    /* UNCHECKED */ t_utf8_name . Lock(p_name);
+    return MCStringCreateWithCString(getenv(*t_utf8_name), r_env);
 }
 
 Boolean MCIPhoneSystem::CreateFolder(MCStringRef p_path)
 {
-	if (mkdir(MCStringGetCString(p_path), 0777) != 0)
+    MCAutoStringRefAsUTF8String t_utf8_path;
+    /* UNCHECKED */ t_utf8_path . Lock(p_path);
+	if (mkdir(*t_utf8_path, 0777) != 0)
         return False;
     
     return True;
@@ -440,7 +447,9 @@ Boolean MCIPhoneSystem::CreateFolder(MCStringRef p_path)
 
 Boolean MCIPhoneSystem::DeleteFolder(MCStringRef p_path)
 {
-	if (rmdir(MCStringGetCString(p_path)) != 0)
+    MCAutoStringRefAsUTF8String t_utf8_path;
+    /* UNCHECKED */ t_utf8_path . Lock(p_path);
+	if (rmdir(*t_utf8_path) != 0)
         return False;
     
     return True;
@@ -448,7 +457,9 @@ Boolean MCIPhoneSystem::DeleteFolder(MCStringRef p_path)
 
 Boolean MCIPhoneSystem::DeleteFile(MCStringRef p_path)
 {
-	if (unlink(MCStringGetCString(p_path)) != 0)
+    MCAutoStringRefAsUTF8String t_utf8_path;
+    /* UNCHECKED */ t_utf8_path . Lock(p_path);
+	if (unlink(*t_utf8_path) != 0)
         return False;
     
     return True;
@@ -456,7 +467,11 @@ Boolean MCIPhoneSystem::DeleteFile(MCStringRef p_path)
 
 Boolean MCIPhoneSystem::RenameFileOrFolder(MCStringRef p_old_name, MCStringRef p_new_name)
 {
-	if (rename(MCStringGetCString(p_old_name), MCStringGetCString(p_new_name)) != 0)
+    MCAutoStringRefAsUTF8String t_old_name_utf8, t_new_name_utf8;
+    /* UNCHECKED */ t_old_name_utf8 . Lock(p_old_name);
+    /* UNCHECKED */ t_new_name_utf8 . Lock(p_new_name);
+    
+	if (rename(*t_old_name_utf8, *t_new_name_utf8) != 0)
         return False;
     
     return True;
@@ -464,7 +479,10 @@ Boolean MCIPhoneSystem::RenameFileOrFolder(MCStringRef p_old_name, MCStringRef p
 
 Boolean MCIPhoneSystem::BackupFile(MCStringRef p_old_name, MCStringRef p_new_name)
 {
-	if (rename(MCStringGetCString(p_old_name), MCStringGetCString(p_new_name)) != 0)
+    MCAutoStringRefAsUTF8String t_old_name_utf8, t_new_name_utf8;
+    /* UNCHECKED */ t_old_name_utf8 . Lock(p_old_name);
+    /* UNCHECKED */ t_new_name_utf8 . Lock(p_new_name);
+	if (rename(*t_old_name_utf8, *t_new_name_utf8) != 0)
         return False;
     
     return True;
@@ -472,7 +490,10 @@ Boolean MCIPhoneSystem::BackupFile(MCStringRef p_old_name, MCStringRef p_new_nam
 
 Boolean MCIPhoneSystem::UnbackupFile(MCStringRef p_old_name, MCStringRef p_new_name)
 {
-	if (rename(MCStringGetCString(p_old_name), MCStringGetCString(p_new_name)) != 0)
+    MCAutoStringRefAsUTF8String t_old_name_utf8, t_new_name_utf8;
+    /* UNCHECKED */ t_old_name_utf8 . Lock(p_old_name);
+    /* UNCHECKED */ t_new_name_utf8 . Lock(p_new_name);
+	if (rename(*t_old_name_utf8, *t_new_name_utf8) != 0)
         return False;
     
     return True;
@@ -480,7 +501,10 @@ Boolean MCIPhoneSystem::UnbackupFile(MCStringRef p_old_name, MCStringRef p_new_n
 
 Boolean MCIPhoneSystem::CreateAlias(MCStringRef p_target, MCStringRef p_alias)
 {
-	if (symlink(MCStringGetCString(p_target), MCStringGetCString(p_alias)) != 0)
+    MCAutoStringRefAsUTF8String t_target_utf8, t_alias_utf8;
+    /* UNCHECKED */ t_target_utf8 . Lock(p_target);
+    /* UNCHECKED */ t_alias_utf8 . Lock(p_alias);
+	if (symlink(*t_target_utf8, *t_alias_utf8) != 0)
         return False;
     
     return True;
@@ -505,7 +529,9 @@ bool MCIPhoneSystem::GetCurrentFolder(MCStringRef& r_path)
 
 Boolean MCIPhoneSystem::SetCurrentFolder(MCStringRef p_path)
 {
-	if (chdir(MCStringGetCString(p_path)) != 0)
+    MCAutoStringRefAsUTF8String t_utf8_path;
+    /* UNCHECKED */ t_utf8_path . Lock(p_path);
+	if (chdir(*t_utf8_path) != 0)
         return False;
     
     return True;
@@ -514,9 +540,12 @@ Boolean MCIPhoneSystem::SetCurrentFolder(MCStringRef p_path)
 Boolean MCIPhoneSystem::FileExists(MCStringRef p_path)
 {
 	struct stat t_info;
+    
+    MCAutoStringRefAsUTF8String t_utf8_path;
+    /* UNCHECKED */ t_utf8_path . Lock(p_path);
 	
 	bool t_found;
-	t_found = stat(MCStringGetCString(p_path), &t_info) == 0;
+	t_found = stat(*t_utf8_path, &t_info) == 0;
 	if (t_found && (t_info.st_mode & S_IFDIR) == 0)
 		return True;
 	
@@ -527,8 +556,10 @@ Boolean MCIPhoneSystem::FolderExists(MCStringRef p_path)
 {
 	struct stat t_info;
 	
+    MCAutoStringRefAsUTF8String t_utf8_path;
+    /* UNCHECKED */ t_utf8_path . Lock(p_path);
 	bool t_found;
-	t_found = stat(MCStringGetCString(p_path), &t_info) == 0;
+	t_found = stat(*t_utf8_path, &t_info) == 0;
 	if (t_found && (t_info.st_mode & S_IFDIR) != 0)
 		return True;
 	
@@ -538,7 +569,9 @@ Boolean MCIPhoneSystem::FolderExists(MCStringRef p_path)
 Boolean MCIPhoneSystem::FileNotAccessible(MCStringRef p_path)
 {
 	struct stat t_info;
-	if (stat(MCStringGetCString(p_path), &t_info) != 0)
+    MCAutoStringRefAsUTF8String t_utf8_path;
+    /* UNCHECKED */ t_utf8_path . Lock(p_path);
+	if (stat(*t_utf8_path, &t_info) != 0)
 		return false;
 	
 	if ((t_info . st_mode & S_IFDIR) != 0)
@@ -552,7 +585,9 @@ Boolean MCIPhoneSystem::FileNotAccessible(MCStringRef p_path)
 
 Boolean MCIPhoneSystem::ChangePermissions(MCStringRef p_path, uint2 p_mask)
 {
-	if (chmod(MCStringGetCString(p_path), p_mask) != 0)
+    MCAutoStringRefAsUTF8String t_utf8_path;
+    /* UNCHECKED */ t_utf8_path . Lock(p_path);
+	if (chmod(*t_utf8_path, p_mask) != 0)
         return False;
     
     return True;
@@ -585,10 +620,12 @@ IO_handle MCIPhoneSystem::OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean
     }
     
     FILE *t_stream;
-    t_stream = fopen(MCStringGetCString(p_path), s_modes[t_mode]);
+    MCAutoStringRefAsUTF8String t_utf8_path;
+    /* UNCHECKED */ t_utf8_path . Lock(p_path);
+    t_stream = fopen(*t_utf8_path, s_modes[t_mode]);
     
 	if (t_stream == NULL && p_mode == kMCSystemFileModeUpdate)
-		t_stream = fopen(MCStringGetCString(p_path), "w+");
+		t_stream = fopen(*t_utf8_path, "w+");
     
     if (t_stream == NULL)
         return NULL;
@@ -663,7 +700,9 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
 	else if (MCNameIsEqualToCString(p_type, "engine", kMCCompareExact))
 	{
 		extern MCStringRef MCcmd;
-		t_path = my_strndup(MCStringGetCString(MCcmd), strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd));
+        MCAutoPointer<char> t_mccmd;
+        /* UNCHECKED */ MCStringConvertToCString(MCcmd, &t_mccmd);
+		t_path = my_strndup(*t_mccmd, strrchr(*t_mccmd, '/') - *t_mccmd);
 	}
 	else if (MCNameIsEqualToCString(p_type, "library", kMCCompareExact))
 	{
@@ -684,21 +723,25 @@ MCSysModuleHandle MCIPhoneSystem::LoadModule(MCStringRef p_path)
 {
     
 	void *t_module;
-	t_module = load_module(MCStringGetCString(p_path));
+    MCAutoPointer<char> t_path;
+    /* UNCHECKED */ MCStringConvertToCString(p_path, &t_path);
+	t_module = load_module(*t_path);
 	if (t_module != NULL)
 		return (MCSysModuleHandle)t_module;
     
-    t_module = dlopen(MCStringGetCString(p_path), RTLD_LAZY);
+    t_module = dlopen(*t_path, RTLD_LAZY);
     
 	return (MCSysModuleHandle)t_module;
 }
 
 MCSysModuleHandle MCIPhoneSystem::ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
 {
+    MCAutoPointer<char> t_symbol;
+    /* UNCHECKED */ MCStringConvertToCString(p_symbol, &t_symbol);
 	if (is_static_module((void*)p_module))
-		return (MCSysModuleHandle)resolve_symbol((void*)p_module, MCStringGetCString(p_symbol));
+		return (MCSysModuleHandle)resolve_symbol((void*)p_module, *t_symbol);
 
-	return (MCSysModuleHandle)dlsym(p_module, MCStringGetCString(p_symbol));
+	return (MCSysModuleHandle)dlsym(p_module, *t_symbol);
 }
 
 void MCIPhoneSystem::UnloadModule(MCSysModuleHandle p_module)
@@ -863,7 +906,9 @@ bool MCIPhoneSystem::Shell(MCStringRef filename, MCDataRef& r_data, int& r_retco
 			// Close the reading side of the pipe <parent -> child>
 			close(t_to_child[0]);
 			// Write the command to it
-			write(t_to_child[1], MCStringGetCString(MCcmd), MCStringGetLength(MCcmd));
+            MCAutoStringRefAsUTF8String t_mccmd_utf8;
+            t_mccmd_utf8 . Lock(MCcmd);
+			write(t_to_child[1], *t_mccmd_utf8, MCStringGetLength(MCcmd));
 			write(t_to_child[1], "\n", 1);
 			
 			// Close the writing side of the pipe <parent -> child>
@@ -974,7 +1019,7 @@ void MCIPhoneSystem::Debug(MCStringRef p_string)
 {
     // MM-2012-09-07: [[ Bug 10320 ]] put does not write to console on Mountain Lion
     NSString *t_msg;
-    t_msg = [[NSString alloc] initWithCString: MCStringGetCString(p_string) encoding: NSMacOSRomanStringEncoding];
+    t_msg = [[NSString alloc] initWithString: [NSString stringWithMCStringRef: p_string]];
     NSLog(@"%@", t_msg);
     [t_msg release];
 }

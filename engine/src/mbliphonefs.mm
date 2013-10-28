@@ -181,7 +181,9 @@ NSString *MCStringRefToNSString(MCStringRef p_string, bool p_unicode)
 {
 	if (p_unicode)
 		return [NSString stringWithCharacters: MCStringGetCharPtr(p_string) length: MCStringGetLength(p_string)];
-	return [[[NSString alloc] initWithBytes: MCStringGetCString(p_string) length: MCStringGetLength(p_string) encoding: NSMacOSRomanStringEncoding] autorelease];
+    MCAutoPointer<char> t_string;
+    /* UNCHECKED */ MCStringConvertToCString(p_string, &t_string);
+	return [[[NSString alloc] initWithBytes: *t_string length: MCStringGetLength(p_string) encoding: NSMacOSRomanStringEncoding] autorelease];
 }
 
 bool NSStringToMCStringRef(NSString *p_string, MCStringRef& r_string)

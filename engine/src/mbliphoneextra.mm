@@ -1114,14 +1114,16 @@ bool MCSystemFileSetDoNotBackup(MCStringRef p_path, bool p_no_backup)
     return t_success;
 #endif /* MCiOSFileSetDoNotBackup */
    bool t_success = true;
+    MCAutoStringRefAsUTF8String t_utf8_path;
+    t_utf8_path . Lock(p_path);
     if (p_no_backup)
     {
         uint8_t t_val = 1;
-        t_success = 0 == setxattr(MCStringGetCString(p_path), FILEATTR_DONOTBACKUP, &t_val, sizeof(t_val), 0, 0);
+        t_success = 0 == setxattr(*t_utf8_path, FILEATTR_DONOTBACKUP, &t_val, sizeof(t_val), 0, 0);
     }
     else
     {
-        t_success = 0 == removexattr(MCStringGetCString(p_path), FILEATTR_DONOTBACKUP, 0);
+        t_success = 0 == removexattr(*t_utf8_path, FILEATTR_DONOTBACKUP, 0);
     }
     return t_success;
 }
@@ -1134,8 +1136,10 @@ bool MCSystemFileGetDoNotBackup(MCStringRef p_path, bool& r_no_backup)
         return false;
     return t_val != 0;
 #endif /* MCiOSFileGetDoNotBackup */
+    MCAutoStringRefAsUTF8String t_utf8_path;
+    t_utf8_path . Lock(p_path);
     uint8_t t_val = 0;
-    if (-1 == getxattr(MCStringGetCString(p_path), FILEATTR_DONOTBACKUP, &t_val, sizeof(t_val), 0, 0))
+    if (-1 == getxattr(*t_utf8_path, FILEATTR_DONOTBACKUP, &t_val, sizeof(t_val), 0, 0))
         return false;
     return t_val != 0;
 }

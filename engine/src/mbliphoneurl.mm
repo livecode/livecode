@@ -26,54 +26,42 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <UIKit/UIKit.h>
 
 typedef bool (*MCHTTPParseHeaderCallback)(const char *p_key, uint32_t p_key_length, const char *p_value, uint32_t p_value_length, void *p_context);
-bool MCHTTPParseHeaders(const char *p_headers, MCHTTPParseHeaderCallback p_callback, void *p_context)
+bool MCHTTPParseHeaders(MCStringRef p_headers, MCHTTPParseHeaderCallback p_callback, void *p_context)
 {
-	bool t_success = true;
-	uint32_t t_index;
-	
-	const char *t_current_line = p_headers;
-	const char *t_next_line;
-	t_success = p_headers != nil;
-	
-	while (t_success && t_current_line != nil && !(t_current_line[0] == '\0' || t_current_line[0] == '\n'))
-	{
-		uint32_t t_line_length;
-		if (MCCStringFirstIndexOf(t_current_line, '\n', t_line_length))
-			t_next_line = t_current_line + t_line_length + 1;
-		else
-		{
-			t_next_line = nil;
-			t_line_length = MCCStringLength(t_current_line);
-		}
-		
-		t_success = MCCStringFirstIndexOf(t_current_line, ':', t_index);
-
-		if (t_success)
-			t_success = t_next_line == nil || t_index < (t_next_line - t_current_line);
-		if (t_success)
-		{
-			uint32_t t_key_length, t_value_length;
-			const char *t_key, *t_value;
-			
-			t_key = t_current_line;
-			t_key_length = t_index;
-			
-			t_value = t_current_line + t_index + 1;
-			t_value_length = t_line_length - (t_index + 1);
-			
-			while (t_value[0] == ' ')
-			{
-				t_value ++;
-				t_value_length --;
-			}
-			
-			t_success = p_callback(t_key, t_key_length, t_value, t_value_length, p_context);
-		}
-		
-		t_current_line = t_next_line;
-	}
-	
-	return t_success;
+    bool t_success = true;
+    MCAutoArrayRef t_lines;
+    if (!MCStringSplit(p_headers, MCSTR("\n"), nil, kMCCompareExact, &t_lines))
+        return false;
+    uindex_t nlines = MCArrayGetCount(*t_lines);
+    for (int i = 0 ; i < nlines && t_success == true; i++)
+    {
+        // Note: 'lines' is an array of strings
+        MCValueRef t_lineval = nil;
+        if (!MCArrayFetchValueAtIndex(*t_lines, i, t_lineval))
+            t_success = false;
+        MCStringRef t_line = (MCStringRef)(t_lineval);
+        
+        MCAutoStringRef t_key, t_val;
+        if (!MCStringDivideAtChar(t_line, ':', kMCCompareExact, &t_key, &t_val))
+            return false;
+        
+        uindex_t t_start;
+        t_start = 0;
+        
+        while (MCStringGetNativeCharAtIndex(*t_val, t_start) == ' ')
+            t_start ++;
+        
+        MCAutoStringRef t_val_no_spaces;
+        if (!MCStringCopySubstring(*t_val, MCRangeMake(t_start, MCStringGetLength(*t_val) - t_start), &t_val_no_spaces))
+            t_success = false;
+        
+        MCAutoPointer<char> t_key_ptr, t_val_no_spaces_ptr;
+        /* UNCHECKED */ MCStringConvertToCString(*t_key, &t_key_ptr);
+        /* UNCHECKED */ MCStringConvertToCString(*t_val_no_spaces, &t_val_no_spaces_ptr);
+        t_success = p_callback(*t_key_ptr, MCStringGetLength(*t_key), *t_val_no_spaces_ptr, MCStringGetLength(*t_val_no_spaces), p_context);
+        
+    }
+    return t_success;
 }
 
 bool UrlRequestSetHTTPHeader(const char *p_key, uint32_t p_key_length, const char *p_value, uint32_t p_value_length, void *p_context)
@@ -245,7 +233,7 @@ extern MCStringRef MChttpheaders;
 
 struct load_url_t
 {
-	const char *url;
+	MCStringRef url;
 	MCSystemUrlCallback callback;
 	void *context;
 	bool success;
@@ -264,7 +252,7 @@ static void do_system_load_url(void *p_ctxt)
 	t_request = nil;
 	if (t_success)
 	{
-		t_url = [NSURL URLWithString: [NSString stringWithCString: ctxt -> url encoding: NSMacOSRomanStringEncoding]];
+		t_url = [NSURL URLWithString: [NSString stringWithMCStringRef: ctxt -> url ]];
 		t_request = [NSMutableURLRequest requestWithURL: t_url
 											cachePolicy: NSURLRequestUseProtocolCachePolicy
 										timeoutInterval: MCsockettimeout];
@@ -275,7 +263,7 @@ static void do_system_load_url(void *p_ctxt)
 	if (t_success && MChttpheaders != nil && !MCStringIsEmpty(MChttpheaders))
 	{
 		if ([[t_url scheme] isEqualToString: @"http"] || [[t_url scheme] isEqualToString: @"https"])
-			t_success = MCHTTPParseHeaders(MCStringGetCString(MChttpheaders), UrlRequestSetHTTPHeader, t_request);
+			t_success = MCHTTPParseHeaders(MChttpheaders, UrlRequestSetHTTPHeader, t_request);
 	}
 	
 	MCSystemUrlDelegate *t_delegate;
@@ -310,7 +298,7 @@ static void do_system_load_url(void *p_ctxt)
 bool MCSystemLoadUrl(MCStringRef p_url, MCSystemUrlCallback p_callback, void *p_context)
 {
 	load_url_t ctxt;
-	ctxt . url = MCStringGetCString(p_url);
+	ctxt . url = p_url;
 	ctxt . callback = p_callback;
 	ctxt . context = p_context;
 	
@@ -360,7 +348,7 @@ bool MCSystemLoadUrl(MCStringRef p_url, MCSystemUrlCallback p_callback, void *p_
 
 struct post_url_t
 {
-	const char *url;
+	MCStringRef url;
 	MCDataRef data;
 	uint32_t length;
 	MCSystemUrlCallback callback;
@@ -384,7 +372,7 @@ static void do_post_url(void *p_ctxt)
 	if (t_success)
 	{
 		t_request = [NSMutableURLRequest
-					 requestWithURL:[NSURL URLWithString: [NSString stringWithCString: ctxt -> url encoding: NSMacOSRomanStringEncoding]]
+					 requestWithURL:[NSURL URLWithString: [NSString stringWithMCStringRef: ctxt -> url ]]
 					 cachePolicy: NSURLRequestUseProtocolCachePolicy
 					 timeoutInterval: MCsockettimeout];
 		t_success = (t_request != nil);
@@ -401,7 +389,7 @@ static void do_post_url(void *p_ctxt)
 	}
 	
 	if (t_success && MChttpheaders != nil && !MCStringIsEmpty(MChttpheaders))
-		t_success = MCHTTPParseHeaders(MCStringGetCString(MChttpheaders), UrlRequestSetHTTPHeader, t_request);
+		t_success = MCHTTPParseHeaders(MChttpheaders, UrlRequestSetHTTPHeader, t_request);
 	
 	if (t_success)
 	{
@@ -445,7 +433,7 @@ static void do_post_url(void *p_ctxt)
 bool MCSystemPostUrl(MCStringRef p_url, MCDataRef p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context)
 {
 	post_url_t ctxt;
-	ctxt . url = MCStringGetCString(p_url);
+	ctxt . url = MCValueRetain(p_url);
 
     ctxt . data = p_data;
 	ctxt . length = p_length;
@@ -673,7 +661,7 @@ bool MCSystemPutFTPUrl(NSURL *p_url, const void *p_data, uint32_t p_length, MCSy
 
 struct put_url_t
 {
-	const char *url;
+	MCStringRef url;
 	MCDataRef data;
 	uint32_t length;
 	MCSystemUrlCallback callback;
@@ -688,7 +676,7 @@ static void do_put_url(void *p_ctxt)
 	
 	bool t_success = true;
 	NSURL *t_url = nil;
-	t_url = [NSURL URLWithString: [NSString stringWithCString: ctxt -> url encoding: NSMacOSRomanStringEncoding]];
+	t_url = [NSURL URLWithString: [NSString stringWithMCStringRef: ctxt -> url ]];
 	t_success = t_url != nil;
 	
 	if (t_success)
@@ -707,7 +695,7 @@ static void do_put_url(void *p_ctxt)
 bool MCSystemPutUrl(MCStringRef p_url, MCDataRef p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context)
 {
 	put_url_t ctxt;
-	ctxt . url = strclone(MCStringGetCString(p_url));
+	ctxt . url = MCValueRetain(p_url);
 	ctxt . data = p_data;
 	ctxt . length = p_length;
 	ctxt . callback = p_callback;
@@ -715,7 +703,6 @@ bool MCSystemPutUrl(MCStringRef p_url, MCDataRef p_data, uint32_t p_length, MCSy
 	
 	MCIPhoneRunOnMainFiber(do_put_url, &ctxt);
     
-    delete[] ctxt . url;
 	
 	return ctxt . success;
 }

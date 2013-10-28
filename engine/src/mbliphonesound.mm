@@ -54,12 +54,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 class MCFinishedPlayingSound: public MCCustomEvent
 {
 private:
-	MCString m_media;
+	MCStringRef m_media;
     
 public:
-	MCFinishedPlayingSound (MCString p_media)
+	MCFinishedPlayingSound (MCStringRef p_media)
 	{
-        m_media = p_media.clone();
+        m_media = MCValueRetain(p_media);
 	}
     
 	void Destroy(void)
@@ -69,11 +69,11 @@ public:
 	
 	void Dispatch(void)
 	{
-        MCdefaultstackptr -> getcurcard() -> message_with_args (MCM_play_stopped, m_media);
+        MCdefaultstackptr -> getcurcard() -> message_with_valueref_args (MCM_play_stopped, m_media);
 	}
 };
 
-void MCIHandleFinishedPlayingSound(MCString p_payload)
+void MCIHandleFinishedPlayingSound(MCStringRef p_payload)
 {
 	MCEventQueuePostCustom(new MCFinishedPlayingSound (p_payload));
 }
@@ -169,7 +169,7 @@ bool MCSystemSoundFinalize()
         {
             // HC-2012-02-01: [[ Bug 9983 ]] - Added "playStopped" message to "play" so users can track when their tracks have finished playing
             // Send a message to indicate that we have finished playing a track.
-            MCIHandleFinishedPlayingSound (MCStringGetCString(s_sound_file));
+            MCIHandleFinishedPlayingSound (s_sound_file);
             MCValueAssign(s_sound_file, kMCEmptyString);
         }
     }

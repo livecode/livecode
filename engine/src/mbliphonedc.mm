@@ -391,7 +391,7 @@ struct MCScreenDCDoSnapshotEnv
 {
 	MCRectangle r;
 	uint4 window;
-	const char *displayname;
+	MCStringRef displayname;
 	MCBitmap *result;
 };
 
@@ -403,10 +403,8 @@ static void MCScreenDCDoSnapshot(void *p_env)
 	
 	MCRectangle r;
 	uint4 window;
-	const char *displayname;
 	r = env -> r;
 	window = env -> window;
-	displayname = env -> displayname;
 	
 	/////
 	
@@ -566,7 +564,7 @@ MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef display
 	MCScreenDCDoSnapshotEnv env;
 	env . r = r;
 	env . window = window;
-	env . displayname = MCStringGetCString(displayname);
+	env . displayname = MCValueRetain(displayname);
 
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 	/* REMOTE */ MCFiberCall(s_main_fiber, MCScreenDCDoSnapshot, &env);
@@ -727,7 +725,7 @@ Window MCScreenDC::get_current_window(void)
 
 struct do_iphone_font_create_env
 {
-	const char *name;
+	MCStringRef name;
 	uint32_t size;
 	bool bold;
 	bool italic;
@@ -740,11 +738,11 @@ static void do_iphone_font_create(void *p_env)
 	do_iphone_font_create_env *env;
 	env = (do_iphone_font_create_env *)p_env;
 	
-	const char *p_name;
+	MCAutoStringRef p_name;
 	uint32_t p_size;
 	bool p_bold;
 	bool p_italic;
-	p_name = env -> name;
+	p_name = MCValueRetain(env -> name);
 	p_size = env -> size;
 	p_bold = env -> bold;
 	p_italic = env -> italic;
@@ -756,13 +754,17 @@ static void do_iphone_font_create(void *p_env)
     // MW-2012-03-22: [[ Bug ]] First see if we can find the font with the given name. We
     //   use this to get the correct 'family' name so styled names work correctly.
     UIFont *t_base_font;
-    t_base_font = [ UIFont fontWithName: [ NSString stringWithCString: p_name encoding: NSMacOSRomanStringEncoding ] size: p_size ];
+    t_base_font = [ UIFont fontWithName: [ NSString stringWithMCStringRef: *p_name  ] size: p_size ];
     
     char t_base_name[256];
     if (t_base_font != nil)
         sprintf(t_base_name, "%s", [[t_base_font fontName] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
     else
-        strcpy(t_base_name, p_name);
+    {
+        MCAutoPointer<char> t_name;
+        /* UNCHECKED */ MCStringConvertToCString(*p_name, &t_name);
+        strcpy(t_base_name, *t_name);
+    }
     
 	if (p_bold && p_italic)
 	{
@@ -808,7 +810,7 @@ static void do_iphone_font_create(void *p_env)
 void *iphone_font_create(MCStringRef p_name, uint32_t p_size, bool p_bold, bool p_italic)
 {
 	do_iphone_font_create_env env;
-	env . name = MCStringGetCString(p_name);
+	env . name = MCValueRetain(p_name);
 	env . size = p_size;
 	env . bold = p_bold;
 	env . italic = p_italic;
