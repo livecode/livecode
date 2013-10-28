@@ -672,21 +672,10 @@ void MCGroup::SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margin
 
 void MCGroup::GetCardNames(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_list)
 {
-    MCAutoArray<MCStringRef> t_names;
-    MCCard *startcard = getstack()->getcards();
-    MCCard *cptr = startcard;
-    uint2 j = 0;
-    do
-    {
-        if (cptr->countme(getid(), False))
-        {
-            MCStringRef t_name;
-            cptr->getstringprop(ctxt, 0, P_SHORT_NAME, False, t_name);
-            t_names . Push(t_name);
-        }
-        cptr = cptr->next();
-    }
-    while (cptr != startcard);
-    
-    t_names . Take(r_list, r_count);
+    MCObject::GetCardNames(ctxt, getstack()->getcards(), false, getid(), r_count, r_list);
+}
+
+void MCGroup::GetCardIds(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_ids)
+{
+    MCObject::GetCardIds(ctxt, getstack()->getcards(), false, getid(), r_count, r_ids);
 }

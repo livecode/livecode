@@ -224,6 +224,8 @@ public:
 	////////// PROPERTY SUPPORT METHODS
 
 	void SetChildDisabled(MCExecContext& ctxt, uint32_t part, bool setting);
+    void GetCardProps(MCExecContext& ctxt, Properties which, uindex_t& r_count, MCStringRef*& r_list);
+    void GetPropList(MCExecContext& ctxt, Properties which, uint32_t part_id, MCStringRef& r_props);
     
     void UpdateMargins(void);
 
@@ -281,6 +283,11 @@ public:
 	void GetSelectGroupedControls(MCExecContext& ctxt, bool& r_setting);
 	void SetSelectGroupedControls(MCExecContext& ctxt, bool setting);
     void GetCardNames(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_list);
+    void GetCardIds(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_list);
+    void GetControlNames(MCExecContext& ctxt, uint32_t part_id, MCStringRef& r_names);
+    void GetControlIds(MCExecContext& ctxt, uint32_t part_id, MCStringRef& r_ids);
+    void GetChildControlNames(MCExecContext& ctxt, MCStringRef& r_names);
+    void GetChildControlIds(MCExecContext& ctxt, MCStringRef& r_ids);
     
 	virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
 	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);

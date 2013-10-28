@@ -1263,48 +1263,12 @@ void MCStack::GetSharedGroupIds(MCExecContext& ctxt, MCStringRef& r_ids)
 
 void MCStack::GetCardIds(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_ids)
 {
-	MCAutoArray<uinteger_t> t_ids;
-    bool t_success;
-    
-    t_success = true;
-    if (cards != nil)
-	{
-		MCCard *cptr = cards;
-		do
-		{
-            uint32_t t_id;
-            t_id = cptr -> getid();
-			t_success = t_ids . Push(t_id);
-			cptr = cptr -> next();
-		}
-		while (cptr != cards && t_success);
-	}
-    
-    t_ids . Take(r_ids, r_count);
+    MCObject::GetCardIds(ctxt, cards, true, 0, r_count, r_ids);
 }
 
 void MCStack::GetCardNames(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_names)
 {
-	MCAutoArray<MCStringRef> t_names;
-    bool t_success;
-    
-    t_success = true;
-    if (cards != nil)
-	{
-		MCCard *cptr = cards;
-		do
-		{
-            MCStringRef t_name;
-            cptr -> getstringprop(ctxt, 0, P_SHORT_NAME, False, t_name);
-            t_success = !ctxt . HasError();
-            if (t_success)
-                t_success = t_names . Push(t_name);
-			cptr = cptr -> next();
-		}
-		while (cptr != cards && t_success);
-	}
-    
-    t_names . Take(r_names, r_count);
+    MCObject::GetCardNames(ctxt, cards, true, 0, r_count, r_names);
 }
 
 void MCStack::GetEditBackground(MCExecContext& ctxt, bool& r_value)

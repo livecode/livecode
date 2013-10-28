@@ -799,6 +799,9 @@ public:
 	bool TextPropertyMapFont();
 	void TextPropertyUnmapFont(bool p_unmap);
 	
+    void GetCardIds(MCExecContext& ctxt, MCCard *p_cards, bool p_all, uint32_t p_id, uindex_t& r_count, uinteger_t*& r_ids);
+    void GetCardNames(MCExecContext& ctxt, MCCard *p_cards, bool p_all, uint32_t p_id, uindex_t& r_count, MCStringRef*& r_names);
+    
 	////////// PROPERTY ACCESSORS
 	
 	void GetId(MCExecContext& ctxt, uint32_t& r_id);

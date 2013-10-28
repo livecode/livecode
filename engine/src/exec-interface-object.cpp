@@ -3810,3 +3810,55 @@ void MCObject::SetCustomKeys(MCExecContext& ctxt, MCStringRef p_string)
 {
     SetCustomKeysElement(ctxt, kMCEmptyName, p_string);
 }
+
+void MCObject::GetCardIds(MCExecContext& ctxt, MCCard *p_cards, bool p_all, uint32_t p_id, uindex_t& r_count, uinteger_t*& r_ids)
+{
+	MCAutoArray<uinteger_t> t_ids;
+    bool t_success;
+    
+    t_success = true;
+    if (p_cards != nil)
+	{
+		MCCard *cptr = p_cards;
+		do
+		{
+            if (p_all || cptr -> countme(p_id, False))
+            {
+                uint32_t t_id;
+                t_id = cptr -> getid();
+                t_success = t_ids . Push(t_id);
+                cptr = cptr -> next();
+            }
+		}
+		while (cptr != p_cards && t_success);
+	}
+    
+    t_ids . Take(r_ids, r_count);
+}
+
+void MCObject::GetCardNames(MCExecContext& ctxt, MCCard *p_cards, bool p_all, uint32_t p_id, uindex_t& r_count, MCStringRef*& r_names)
+{
+	MCAutoArray<MCStringRef> t_names;
+    bool t_success;
+    
+    t_success = true;
+    if (p_cards != nil)
+	{
+		MCCard *cptr = p_cards;
+		do
+		{
+            if (p_all || cptr -> countme(p_id, False))
+            {
+                MCStringRef t_name;
+                cptr -> GetShortName(ctxt, t_name);
+                t_success = !ctxt . HasError();
+                if (t_success)
+                    t_success = t_names . Push(t_name);
+                cptr = cptr -> next();
+            }
+		}
+		while (cptr != p_cards && t_success);
+	}
+    
+    t_names . Take(r_names, r_count);
+}
