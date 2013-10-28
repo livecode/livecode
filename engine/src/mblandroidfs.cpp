@@ -407,10 +407,7 @@ Boolean MCAndroidSystem::GetStandardFolder(MCNameRef p_folder, MCStringRef &r_fo
 	else
 		MCAndroidEngineCall("getSpecialFolderPath", "xx", &(&t_stdfolder), MCNameGetString(p_folder));
 
-    char *t_stdfolder_cstring;
-    /* UNCHECKED */ MCStringConvertToCString(*t_stdfolder, t_stdfolder_cstring);
-	MCLog("GetStandardFolder(\"%s\") -> \"%s\"", MCNameGetCString(p_folder), *t_stdfolder == nil ? "" : t_stdfolder_cstring);
-    delete t_stdfolder_cstring;
+	MCLog("GetStandardFolder(\"%s\") -> \"%s\"", MCNameGetCString(p_folder), *t_stdfolder == nil ? "" : MCStringGetCString(*t_stdfolder));
     
 	return MCStringCopy(*t_stdfolder, r_folder);
 }
