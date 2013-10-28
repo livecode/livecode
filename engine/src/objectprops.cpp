@@ -33,7 +33,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "sellst.h"
 #include "undolst.h"
-#include "pxmaplst.h"
 #include "hndlrlst.h"
 #include "handler.h"
 #include "scriptpt.h"
@@ -294,6 +293,7 @@ static const char *ink_names[] =
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+
 #ifdef /* MCObject::getrectprop */ LEGACY_EXEC
 Exec_stat MCObject::getrectprop(Properties p_which, MCExecPoint& ep, Boolean p_effective)
 {
@@ -360,7 +360,9 @@ Exec_stat MCObject::sendgetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef
 		t_getprop_name = p_set_name, t_param_name = p_prop_name;
 
 	Exec_stat t_stat = ES_NOT_HANDLED;
-	if (!MClockmessages && (ep.getobj() != this || !ep.gethandler()->hasname(t_getprop_name)))
+    // SN-2013-07-26: [[ Bug 11020 ]] ep.gethandler() result was not checked
+    // before calling hasname and caused a crash with undefined properties
+	if (!MClockmessages && (ep.getobj() != this || (ep.gethandler() != nil && !ep.gethandler()->hasname(t_getprop_name))))
 	{
 		MCParameter p1;
 		p1.setvalueref_argument(t_param_name);
@@ -583,11 +585,11 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 	{
 		uint2 i;
 		if (getpindex(which - P_FORE_PATTERN, i))
-			if (pixmapids[i] < PI_END && pixmapids[i] > PI_PATTERNS)
-				ep.setint(pixmapids[i] - PI_PATTERNS);
+			if (patterns[i].id < PI_END && patterns[i].id > PI_PATTERNS)
+				ep.setint(patterns[i].id - PI_PATTERNS);
 
 			else
-				ep.setint(pixmapids[i]);
+				ep.setint(patterns[i].id);
 		else
 			if (effective && parent != NULL)
 				return parent->getprop(parid, which, ep, effective);
@@ -669,11 +671,21 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 	case P_3D:
 		ep.setboolean(getflag(F_3D));
 		break;
-	case P_VISIBLE:
-		ep.setboolean(getflag(F_VISIBLE));
-		break;
-	case P_INVISIBLE:
-		ep.setboolean(!(flags & F_VISIBLE));
+    case P_VISIBLE:
+    case P_INVISIBLE:
+        {
+			// MERG-2013-05-01: [[ EffVisible ]] Add 'effective' adjective to
+			//   the visible property.
+            bool t_vis;
+			t_vis = getflag(F_VISIBLE);
+			
+            // if visible and effective and parent is a
+            // group then keep searching parent properties 
+            if (t_vis && effective && parent != NULL && parent->gettype() == CT_GROUP)
+                return parent->getprop(parid, which, ep, effective);
+			
+			ep.setboolean(which == P_VISIBLE ? t_vis : !t_vis);
+        }
 		break;
 	case P_DISABLED:
 		ep.setboolean(getflag(F_DISABLED));
@@ -696,7 +708,9 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 		ep.clear();
 		break;
 	case P_PROPERTIES:
-		return getproparray(ep, parid);
+		// MERG-2013-05-07: [[ RevisedPropsProp ]] Add support for 'the effective
+		//   properties of object ...'.
+		return getproparray(ep, parid, effective);
 	case P_CUSTOM_PROPERTY_SET:
 		ep . setnameref_unsafe(getdefaultpropsetname());
 		break;
@@ -777,6 +791,7 @@ static bool string_contains_item(const char *p_string, const char *p_item)
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCObject::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
+#ifdef /* MCObject::getarrayprop */ LEGACY_EXEC
 	switch(which)
 	{
 #ifdef LEGACY_EXEC
@@ -830,9 +845,11 @@ Exec_stat MCObject::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 		}
 	}
 	return ES_NORMAL;
+#endif /* MCObject::getarrayprop */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 #ifdef /* MCObject::setrectprop */ LEGACY_EXEC
 Exec_stat MCObject::setrectprop(Properties p_which, MCExecPoint& ep, Boolean p_effective)
 {
@@ -1030,6 +1047,7 @@ Exec_stat MCObject::setscriptprop(MCExecPoint& ep)
 	else
 	{
 		char *oldscript = script;
+		bool t_old_script_encrypted = m_script_encrypted;
 		if (data.getstring()[length - 1] != '\n')
 		{
 			script = new char[length + 2];
@@ -1040,6 +1058,8 @@ Exec_stat MCObject::setscriptprop(MCExecPoint& ep)
 		else
 			script = data.clone();
 			
+		// IM-2013-05-29: [[ BZ 10916 ]] flag new script as unencrypted
+		m_script_encrypted = false;
 		getstack() -> securescript(this);
 		
 		if (MCModeCanSetObjectScript(obj_id))
@@ -1052,6 +1072,7 @@ Exec_stat MCObject::setscriptprop(MCExecPoint& ep)
 				hlist = NULL;
 				delete script;
 				script = oldscript;
+				m_script_encrypted = t_old_script_encrypted;
 				oldscript = NULL;
 				if (script == NULL)
 					flags &= ~F_SCRIPT;
@@ -1124,11 +1145,34 @@ Exec_stat MCObject::setparentscriptprop(MCExecPoint& ep)
 	// Check that the object is a button
 	if (t_stat == ES_NORMAL && t_object -> gettype() != CT_BUTTON)
 		t_stat = ES_ERROR;
-
-	// MW-2009-01-28: [[ Bug ]] Make sure we aren't setting the parentScript of
-	//   an object to itself.
-	if (t_stat == ES_NORMAL && t_object == this)
-		t_stat = ES_ERROR;
+	
+	// MW-2013-07-18: [[ Bug 11037 ]] Make sure the object isn't in the hierarchy
+	//   of the parentScript.
+	bool t_is_cyclic;
+	t_is_cyclic = false;
+	if (t_stat == ES_NORMAL)
+	{
+		MCObject *t_parent_object;
+		t_parent_object = t_object;
+		while(t_parent_object != nil)
+		{
+			if (t_parent_object == this)
+			{
+				t_is_cyclic = true;
+				break;
+			}
+			
+			MCParentScript *t_super_parent_script;
+			t_super_parent_script = t_parent_object -> getparentscript();
+			if (t_super_parent_script != nil)
+				t_parent_object = t_super_parent_script -> GetObject();
+			else
+				t_parent_object = nil;
+		}
+		
+		if (t_is_cyclic)
+			t_stat = ES_ERROR;
+	}
 
 	if (t_stat == ES_NORMAL)
 	{
@@ -1154,21 +1198,16 @@ Exec_stat MCObject::setparentscriptprop(MCExecPoint& ep)
 			t_use = MCParentScript::Acquire(this, t_id, t_stack);
 			if (t_use == NULL)
 				t_stat = ES_ERROR;
-
-			// MW-2009-01-28: [[ Inherited parentScripts ]]
-			// Next we have to ensure the inheritence hierarchy is in place (The
-			// inherit call will create super-uses, and will return false if there
-				// is not enough memory).
-#ifdef FEATURE_INHERITED_PARENTSCRIPTS
+				
+			// MW-2013-05-30: [[ InheritedPscripts ]] Make sure we resolve the the
+			//   parent script as pointing to the object (so Inherit works correctly).
+			t_use -> GetParent() -> Resolve(t_object);
+			
+			// MW-2013-05-30: [[ InheritedPscripts ]] Next we have to ensure the
+			//   inheritence hierarchy is in place (The inherit call will create
+			//   super-uses, and will return false if there is not enough memory).
 			if (!t_use -> Inherit())
 				t_stat = ES_ERROR;
-
-			// TODO: Update all the Uses of this object, if it is currently
-			// being used as a parentScript, because we have now changed the
-			// inheritence hierarchy dynamically, and the various uses need
-			// their super_use chains updated.
-			// 
-#endif
 
 			// We have succeeded in creating a new use of an object as a parent
 			// script, so now release the old parent script this object points
@@ -1178,12 +1217,29 @@ Exec_stat MCObject::setparentscriptprop(MCExecPoint& ep)
 
 			parent_script = t_use;
 
-			// Finally resolve the parent script as pointing to the object.
-			parent_script -> GetParent() -> Resolve(t_object);
+			// MW-2013-05-30: [[ InheritedPscripts ]] Make sure we update all the
+			//   uses of this object if it is being used as a parentScript. This
+			//   is because the inheritence hierarchy has been updated and so the
+			//   super_use chains need to be remade.
+			MCParentScript *t_this_parent;
+			if (getstate(CS_IS_PARENTSCRIPT))
+			{
+				t_this_parent = MCParentScript::Lookup(this);
+				if (t_this_parent != nil)
+					if (!t_this_parent -> Reinherit())
+						t_stat = ES_ERROR;
+			}
 		}
 	}
 	else
-		MCeerror -> add(EE_PARENTSCRIPT_BADOBJECT, 0, 0, data);
+	{
+		// MW-2013-07-18: [[ Bug 11037 ]] Report an appropriate error if the hierarchy
+		//   is cyclic.
+		if (!t_is_cyclic)
+			MCeerror -> add(EE_PARENTSCRIPT_BADOBJECT, 0, 0, data);
+		else
+			MCeerror -> add(EE_PARENTSCRIPT_CYCLICOBJECT, 0, 0, data);
+	}
 
 	// Delete our temporary chunk object.
 	delete t_chunk;
@@ -1326,8 +1382,10 @@ Exec_stat MCObject::sendsetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef
 	//   setProp pPropName, pValue
 	// The parameter list is auto-adjusted if it is of array type in MCHandler::exec.
 
-	Exec_stat t_stat = ES_NOT_HANDLED;
-	if (!MClockmessages && (ep.getobj() != this || !ep.gethandler()->hasname(t_setprop_name)))
+	Exec_stat t_stat = ES_NOT_HANDLED;    
+    // SN-2013-07-26: [[ Bug 11020 ]] ep.gethandler() result was not checked
+    // before calling hasname and caused a crash with undefined properties
+	if (!MClockmessages && (ep.getobj() != this || (ep.gethandler() != nil && !ep.gethandler()->hasname(t_setprop_name))))
 	{
 		MCParameter p1, p2;
 		p1.setnext(&p2);
@@ -1838,6 +1896,9 @@ Exec_stat MCObject::setprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCObject::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
+#ifdef /* MCObject::setarrayprop */ LEGACY_EXEC
+	MCString data;
+	data = ep . getsvalue();
 	switch(which)
 	{
 	case P_TEXT_STYLE:
@@ -1930,6 +1991,7 @@ Exec_stat MCObject::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 		}
 	}
 	return ES_NORMAL;
+#endif /* MCObject::setarrayprop */
 }
 
 #ifdef OLD_EXEC

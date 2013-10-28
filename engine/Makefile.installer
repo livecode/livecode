@@ -1,13 +1,15 @@
 NAME=installer
 TYPE=application
 
+include ../rules/environment.linux.makefile
+
 MODE_SOURCES= \
 	lextable.cpp minizip.cpp mode_installer.cpp mode_installer_lnx.cpp bsdiff_apply.cpp
 
 MODE_DEFINES=\
 	MODE_INSTALLER
-	
+
 MODE_LDFLAGS=\
-	-Wl,--script=installer.link
+	-Wl,--script=installer-$(ARCH).link
 
 include Makefile.common

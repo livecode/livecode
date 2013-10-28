@@ -945,11 +945,11 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 					//   list labels.
 					if (IsMacLF() && !parent->isautoarm())
 					{
-						Pixmap p;
+						MCPatternRef t_pattern;
 						int2 x, y;
 						MCColor fc, hc;
-						parent->getforecolor(DI_FORE, False, True, fc, p, x, y, dc, parent);
-						parent->getforecolor(DI_HILITE, False, True, hc, p, x, y, dc, parent);
+						parent->getforecolor(DI_FORE, False, True, fc, t_pattern, x, y, dc, parent);
+						parent->getforecolor(DI_HILITE, False, True, hc, t_pattern, x, y, dc, parent);
 						if (hc.pixel == fc.pixel)
 							parent->setforeground(dc, DI_BACK, False, True);
 					}
@@ -1017,10 +1017,12 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 				//   sure we adjust the prev inner rect for padding.
 				// MW-2012-03-19: [[ Bug 10069 ]] Make sure the appropriate h/v padding is used to
 				//   adjust the rect.
-				t_prev_inner . x = t_inner_rect . x - prev() -> gethpadding();
-				t_prev_inner . width = t_inner_rect . width + 2 * prev() -> gethpadding();
-				t_prev_inner . y = t_inner_rect . y - prev() -> getvpadding();
-				t_prev_inner . height = t_inner_rect . height + 2 * prev() -> getvpadding();
+				// MW-2013-08-08: [[ Bug 10616 ]] Previously was making t_prev_inner equal to t_inner_rect
+				//   adjusted for padding, causing incorrect length of hline.
+				t_prev_inner . x = t_prev_inner . x - prev() -> gethpadding();
+				t_prev_inner . width = t_prev_inner . width + 2 * prev() -> gethpadding();
+				t_prev_inner . y = t_prev_inner . y - prev() -> getvpadding();
+				t_prev_inner . height = t_prev_inner . height + 2 * prev() -> getvpadding();
 				
 				// MW-2012-02-10: [[ FixedTable ]] Adjust the outer rect to take into account any
 				//   fixed width table mode.
@@ -1084,7 +1086,9 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 
 				// MW-2012-02-10: [[ FixedTable ]] If we have reached the final tab in fixed
 				//   table mode, we are done.
-				if (ct == nt - 2 && t[nt - 2] == t[nt - 1])
+				// MW-2013-05-20: [[ Bug 10878 ]] Tweaked conditions to work for min two tabStops
+				//   rather than 3.
+				if (ct >= nt - 2 && t[nt - 2] == t[nt - 1])
 					break;
 			}
 		}
@@ -1488,7 +1492,9 @@ void MCParagraph::join()
 
 	if (gettextsizecr() + pgptr->textsize > buffersize)
 	{
-		buffersize += pgptr->gettextsizecr() + PG_PAD;
+		// FG-2013-09-20 [[ Bugfix 11191 ]]
+		// Buffer was being set to wrong size (didn't include size of existing text)
+		buffersize = textsize + pgptr->gettextsizecr() + PG_PAD;
 		buffersize &= PG_MASK;
 		text = new char[buffersize];
 		memcpy(text, oldtext, textsize);
@@ -3052,7 +3058,9 @@ void MCParagraph::getxextents(int4 &si, int4 &ei, int2 &minx, int2 &maxx)
 	ei -= gettextsizecr();
 }
 
-Boolean MCParagraph::extendup(MCBlock *bptr, uint2 &si)
+// MW-2013-05-21: [[ Bug 10794 ]] Changed signature to return the block the search
+//   ends up in.
+MCBlock *MCParagraph::extendup(MCBlock *bptr, uint2 &si)
 {
 	Boolean isgroup = True;
 	Boolean found = False;
@@ -3077,10 +3085,12 @@ Boolean MCParagraph::extendup(MCBlock *bptr, uint2 &si)
 		bptr = bptr->next();
 	uint2 l;
 	bptr->getindex(si, l);
-	return found;
+	return bptr;
 }
 
-Boolean MCParagraph::extenddown(MCBlock *bptr, uint2 &ei)
+// MW-2013-05-21: [[ Bug 10794 ]] Changed signature to return the block the search
+//   ends up in.
+MCBlock *MCParagraph::extenddown(MCBlock *bptr, uint2 &ei)
 {
 	Boolean isgroup = True;
 	Boolean found = False;
@@ -3106,7 +3116,7 @@ Boolean MCParagraph::extenddown(MCBlock *bptr, uint2 &ei)
 	uint2 l;
 	bptr->getindex(ei, l);
 	ei += l;
-	return found;
+	return bptr;
 }
 
 void MCParagraph::getclickindex(int2 x, int2 y,
@@ -3344,7 +3354,7 @@ bool MCParagraph::getflagstate(uint32_t flag, uint2 si, uint2 ei, bool& r_state)
 // This method accumulates the ranges of the paragraph that have 'flagged' set
 // to true. The output is placed in ep as a return-delimited list, with indices
 // adjusted by the 'delta'.
-void MCParagraph::getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, uint2 si, uint2 ei, int32_t p_delta)
+void MCParagraph::getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, uint2 si, uint2 ei, int32_t p_paragraph_start)
 {
 	// If the paragraph is empty, there is nothing to do.
 	if (textsize == 0)
@@ -3393,10 +3403,10 @@ void MCParagraph::getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, uint2 si
 				
 				// MW-2012-02-24: [[ FieldChars ]] Map the field indices back to char indices.
 				int32_t t_start, t_end;
-				t_start = t_flagged_start;
-				t_end = t_flagged_end;
+				t_start = p_paragraph_start + t_flagged_start;
+				t_end = p_paragraph_start + t_flagged_end;
 				parent -> unresolvechars(p_part_id, t_start, t_end);
-				ep.appendstringf("%d,%d", t_start + p_delta + 1, t_end + p_delta);
+				ep.appendstringf("%d,%d", t_start + 1, t_end);
 
 				t_flagged_start = t_flagged_end = -1;
 			}
@@ -3415,7 +3425,7 @@ void MCParagraph::getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, uint2 si
 // This method accumulates the ranges of the paragraph that have 'flagged' set
 // to true. The output is placed in the uinteger_t array, with indices
 // adjusted by the 'delta'.
-void MCParagraph::getflaggedranges(uint32_t p_part_id, uint2 si, uint2 ei, int32_t p_delta, MCInterfaceFlaggedRanges& r_ranges)
+void MCParagraph::getflaggedranges(uint32_t p_part_id, uint2 si, uint2 ei, int32_t p_paragraph_start, MCInterfaceFlaggedRanges& r_ranges)
 {
 	// If the paragraph is empty, there is nothing to do.
 	if (textsize == 0)
@@ -3464,11 +3474,11 @@ void MCParagraph::getflaggedranges(uint32_t p_part_id, uint2 si, uint2 ei, int32
 			{				
 				// MW-2012-02-24: [[ FieldChars ]] Map the field indices back to char indices.
 				int32_t t_start, t_end;
-				t_start = t_flagged_start;
-				t_end = t_flagged_end;
+				t_start = p_paragraph_start + t_flagged_start;
+				t_end = p_paragraph_start + t_flagged_end;
 				parent -> unresolvechars(p_part_id, t_start, t_end);
-                t_range . start = t_start + p_delta + 1;
-                t_range . end = t_end + p_delta;
+                t_range . start = t_start + 1;
+                t_range . end = t_end;
                 t_ranges . Push(t_range);
                 
 				t_flagged_start = t_flagged_end = -1;
@@ -3513,6 +3523,28 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
 		if (lheight > theight)
 			return False;
 		theight -= lheight;
+		lptr = lptr->next();
+	}
+	while (lptr != lines);
+	lptr = NULL;
+	return True;
+}
+
+// JS-2013-05-15: [[ PageRanges ]] pagerange as variant of pageheight
+Boolean MCParagraph::pagerange(uint2 fixedheight, uint2 &theight,
+                               uint2 &tend, MCLine *&lptr)
+{
+	if (lptr == NULL)
+		lptr = lines;
+	do
+	{
+		uint2 lheight = fixedheight == 0 ? lptr->getheight() : fixedheight;
+		if (lheight > theight)
+			return False;
+		theight -= lheight;
+        uint2 li, ll;
+        lptr->getindex(li, ll);
+        tend += ll;
 		lptr = lptr->next();
 	}
 	while (lptr != lines);

@@ -1864,24 +1864,18 @@ void MCStack::SetModifiedMark(MCExecContext& ctxt, bool setting)
 
 void MCStack::GetAcceleratedRendering(MCExecContext& ctxt, bool& r_value)
 {
-	r_value = getacceleratedrendering();
+	r_value = view_getacceleratedrendering();
 }
 
 void MCStack::SetAcceleratedRendering(MCExecContext& ctxt, bool p_value)
 {
-	setacceleratedrendering(p_value);
+	view_setacceleratedrendering(p_value);
 }
 
 void MCStack::GetCompositorType(MCExecContext& ctxt, intenum_t*& r_type)
 {
-	if (m_tilecache == nil)
-	{
-		r_type = nil;
-		return;
-	}
-
 	intenum_t t_type;
-	t_type = (intenum_t)MCTileCacheGetCompositor(m_tilecache);
+	t_type = (intenum_t)view_getcompositortype();
 	r_type = &t_type;
 }
 
@@ -1906,7 +1900,8 @@ void MCStack::SetCompositorType(MCExecContext& ctxt, intenum_t* p_type)
 		ctxt . LegacyThrow(EE_COMPOSITOR_NOTSUPPORTED);
 		return;
 	}
-
+//TODO - TILECACHE REFACTOR
+    /*
 	if (t_type == kMCTileCacheCompositorNone)
 	{
 		MCTileCacheDestroy(m_tilecache);
@@ -1922,7 +1917,7 @@ void MCStack::SetCompositorType(MCExecContext& ctxt, intenum_t* p_type)
 	
 		MCTileCacheSetCompositor(m_tilecache, t_type);
 	}
-	
+	*/
 	dirtyall();
 }
 
@@ -1938,7 +1933,10 @@ void MCStack::SetDeferScreenUpdates(MCExecContext& ctxt, bool p_value)
 
 void MCStack::GetEffectiveDeferScreenUpdates(MCExecContext& ctxt, bool& r_value)
 {
+    //TODO - TILECACHE REFACTOR
+    /*
 	r_value = m_defer_updates && m_tilecache != nil;
+     */
 }
 
 void MCStack::SetDecorations(MCExecContext& ctxt, const MCInterfaceDecoration& p_value)
@@ -1977,6 +1975,8 @@ void MCStack::GetDecorations(MCExecContext& ctxt, MCInterfaceDecoration& r_value
 
 void MCStack::SetCompositorTileSize(MCExecContext& ctxt, uinteger_t *p_value)
 {
+    //TODO - TILECACHE REFACTOR
+    /*
     if (m_tilecache == nil)
         return;
     
@@ -1988,10 +1988,13 @@ void MCStack::SetCompositorTileSize(MCExecContext& ctxt, uinteger_t *p_value)
     }
 
     ctxt . LegacyThrow(EE_COMPOSITOR_INVALIDTILESIZE);
+    */
 }
 
 void MCStack::GetCompositorTileSize(MCExecContext& ctxt, uinteger_t*& r_value)
 {
+    //TODO - TILECACHE REFACTOR
+    /*
     if (m_tilecache == nil)
         r_value = nil;
     else
@@ -2000,19 +2003,25 @@ void MCStack::GetCompositorTileSize(MCExecContext& ctxt, uinteger_t*& r_value)
         t_value = MCTileCacheGetTileSize(m_tilecache);
         *r_value = t_value;
     }
+     */
 }
 
 void MCStack::SetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t *p_value)
 {
+    //TODO - TILECACHE REFACTOR
+    /*
     if (m_tilecache == nil)
         return;
     
     MCTileCacheSetCacheLimit(m_tilecache, *p_value);
     dirtyall();
+     */
 }
 
 void MCStack::GetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t*& r_value)
 {
+    //TODO - TILECACHE REFACTOR
+    /*
     if (m_tilecache == nil)
         r_value = nil;
     else
@@ -2021,6 +2030,7 @@ void MCStack::GetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t*& r_value)
         t_value = MCTileCacheGetCacheLimit(m_tilecache);
         *r_value = t_value;
     }
+     */
 }
 
 void MCStack::SetForePixel(MCExecContext& ctxt, uinteger_t* pixel)

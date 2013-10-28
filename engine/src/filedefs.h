@@ -186,7 +186,6 @@ struct MCSystemFileHandle;
 //};
 
 typedef MCSystemFileHandle * IO_handle;
-
 typedef struct _Streamnode
 {
 	MCNameRef name;

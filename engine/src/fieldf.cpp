@@ -577,7 +577,7 @@ void MCField::drawcursor(MCContext *p_context, const MCRectangle &dirty)
 			{
 				p_context->setforeground(p_context->getwhite());
 				p_context->setbackground(p_context->getblack());
-				p_context->setfillstyle(FillSolid, DNULL, 0, 0);
+				p_context->setfillstyle(FillSolid, nil, 0, 0);
 				p_context->setlineatts(0, LineDoubleDash, CapButt, JoinBevel);
 				p_context->setdashes(0, dotlist, 2);
 				p_context->setfunction(GXxor);
@@ -591,19 +591,35 @@ void MCField::drawcursor(MCContext *p_context, const MCRectangle &dirty)
 	}
 	else
 	{
-		// MW-2012-08-06: Use XOR to render the caret so it remains visible regardless
-		//   of background color (apart from 128,128,128!).
-		p_context->setforeground(p_context->getwhite());
-		p_context->setfunction(GXxor);
-
-		// MW-2012-09-19: [[ Bug 10393 ]] Draw the caret inside a layer to ensure the XOR
-		//   ink works correctly.
-		p_context->begin(false);
-		p_context->drawline(cursorrect.x, cursorrect.y, cursorrect.x, cursorrect.y + cursorrect.height - 1);
-		p_context->end();
+		// MW-2013-08-07: [[ Bug 10840 ]] If the background is opaque then use XOR otherwise
+		//   just black (XORing against transparent has no effect).
+		bool t_is_opaque;
+		t_is_opaque = p_context -> changeopaque(true);
+		p_context -> changeopaque(t_is_opaque);
 		
-		p_context->setfunction(GXcopy);
-}
+		if (!t_is_opaque)
+			p_context -> setforeground(p_context -> getblack());
+		else
+		{
+			// MW-2012-08-06: Use XOR to render the caret so it remains visible regardless
+			//   of background color (apart from 128,128,128!).
+			p_context->setforeground(p_context->getwhite());
+			p_context->setfunction(GXxor);
+			
+			// MW-2012-09-19: [[ Bug 10393 ]] Draw the caret inside a layer to ensure the XOR
+			//   ink works correctly.
+			p_context->begin(false);
+		}
+		
+		p_context->drawline(cursorrect.x, cursorrect.y, cursorrect.x, cursorrect.y + cursorrect.height - 1);
+		
+		if (t_is_opaque)
+		{
+			p_context->end();
+		
+			p_context->setfunction(GXcopy);
+		}
+	}
 }
 
 void MCField::replacecursor(Boolean force, Boolean goal)
@@ -826,7 +842,7 @@ void MCField::adjustpixmapoffset(MCContext *dc, uint2 index, int4 dy)
 		return;
 	
 	uint2 t_current_style;
-	Pixmap t_current_pixmap;
+	MCPatternRef t_current_pixmap;
 	int2 t_current_x;
 	int2 t_current_y;
 	dc -> getfillstyle(t_current_style, t_current_pixmap, t_current_x, t_current_y);
@@ -840,8 +856,9 @@ void MCField::adjustpixmapoffset(MCContext *dc, uint2 index, int4 dy)
 	if (MCU_abs(t_offset_y) > 32767 || MCU_abs(t_offset_x) > 32767)
 	{
 		uint2 t_width, t_height, t_depth;
-		MCscreen -> getpixmapgeometry(t_current_pixmap, t_width, t_height, t_depth);
-		
+		t_width = MCGImageGetWidth(t_current_pixmap->image) / t_current_pixmap->scale;
+		t_height = MCGImageGetHeight(t_current_pixmap->image) / t_current_pixmap->scale;
+
 		t_offset_x %= t_width;
 		if (t_offset_x < 0)
 			t_offset_x += t_width;
@@ -921,7 +938,7 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 			{
 				setforeground(dc, DI_BACK, False);
 				dc->setbackground(dc->getblack());
-				dc->setfillstyle(FillOpaqueStippled, DNULL, 0, 0);
+				dc->setfillstyle(FillOpaqueStippled, nil, 0, 0);
 				MCRectangle xrect;
 				xrect.x = textrect.x - 2 - textx;
 				xrect.y = cury + frect.y + fixeda - TEXT_Y_OFFSET;
@@ -933,7 +950,7 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 						dc->fillrect(xrect);
 					xrect.y += fixedheight;
 				}
-				dc->setfillstyle(FillSolid, DNULL, 0, 0);
+				dc->setfillstyle(FillSolid, nil, 0, 0);
 				dc->setbackground(MCzerocolor);
 			}
 		}

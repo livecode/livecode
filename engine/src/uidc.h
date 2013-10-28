@@ -32,6 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "transfer.h"
 #endif
 
+#include "graphics.h"
 #include "imagebitmap.h"
 
 enum Flush_events {
@@ -112,6 +113,9 @@ MCMessageList;
 struct MCDisplay
 {
 	uint4 index;
+	MCRectangle device_viewport;
+	MCRectangle device_workarea;
+	
 	MCRectangle viewport;
 	MCRectangle workarea;
 };
@@ -280,8 +284,6 @@ public:
 	virtual void grabpointer(Window w);
 	virtual void ungrabpointer();
 	
-	virtual uint2 getwidth();
-	virtual uint2 getheight();
 	virtual uint2 getwidthmm();
 	virtual uint2 getheightmm();
 	virtual uint2 getmaxpoints();
@@ -289,8 +291,55 @@ public:
 	virtual uint2 getdepth();
 	virtual uint2 getrealdepth(void);
 
-	virtual uint4 getdisplays(MCDisplay const *& p_displays, bool effective);
-	virtual const MCDisplay *getnearestdisplay(const MCRectangle& p_rectangle);
+////////////////////////////////////////////////////////////////////////////////
+
+	// IM-2013-09-23: [[ FullscreenMode ]] Part of view abstraction
+	// get/set mouse location in view coordinates, translating to/from stack coordinates
+	void setmouseloc(MCStack *p_target, MCPoint p_loc);
+	void getmouseloc(MCStack *&r_target, MCPoint &r_loc);
+
+	// get/set click location in view coordinates, translating to/from stack coordinates
+	void setclickloc(MCStack *p_target, MCPoint p_loc);
+	void getclickloc(MCStack *&r_target, MCPoint &r_loc);
+
+////////////////////////////////////////////////////////////////////////////////
+	
+	// IM-2013-07-31: [[ ResIndependence ]] refactor logical coordinate based methods
+	uint2 getwidth();
+	uint2 getheight();
+	uint4 getdisplays(MCDisplay const *& p_displays, bool effective);
+	const MCDisplay *getnearestdisplay(const MCRectangle& p_rectangle);
+	Boolean getwindowgeometry(Window w, MCRectangle &drect);
+	void boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	void querymouse(int2 &x, int2 &y);
+	void setmouse(int2 x, int2 y);
+
+	// MW-2012-10-08: [[ HitTest ]] Get the stack at the given screen location.
+	MCStack *getstackatpoint(int32_t x, int32_t y);
+	
+//////////
+	
+	const MCDisplay *device_getnearestdisplay(const MCRectangle& p_rectangle);
+	
+	virtual uint16_t device_getwidth(void);
+	virtual uint16_t device_getheight(void);
+	virtual bool device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
+	virtual bool device_getwindowgeometry(Window w, MCRectangle &drect);
+	virtual void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	virtual void device_querymouse(int16_t &r_x, int16_t &r_y);
+	virtual void device_setmouse(int16_t p_x, int16_t p_y);
+
+	virtual MCStack *device_getstackatpoint(int32_t x, int32_t y);
+	
+////////////////////////////////////////////////////////////////////////////////
+	
+	// IM-2013-09-30: [[ FullscreenMode ]] Returns true if windows on this display are 
+	// always fullscreen (i.e. on mobile devices)
+	virtual bool fullscreenwindows(void);
+
+	// IM-2013-09-30: [[ FullscreenMode ]] Return the rect that will be occupied by
+	// fullscreen windows on the given display
+	virtual MCRectangle fullscreenrect(const MCDisplay *p_display);
 
 	virtual void openwindow(Window w, Boolean override);
 	virtual void closewindow(Window window);
@@ -310,51 +359,20 @@ public:
 	virtual void beep();
 
 	virtual void setinputfocus(Window window);
-	virtual void freepixmap(Pixmap &pixmap);
-	virtual Pixmap createpixmap(uint2 width, uint2 height,
-	                            uint2 depth, Boolean purge);
-
-	virtual bool lockpixmap(Pixmap p_pixmap, void*& r_data, uint4& r_stride);
-	virtual void unlockpixmap(Pixmap p_pixmap, void *p_data, uint4 p_stride);
-
-	virtual Pixmap createstipple(uint2 width, uint2 height, uint4 *bits);
-
-	virtual Boolean getwindowgeometry(Window w, MCRectangle &drect);
-	virtual Boolean getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d);
-
-	virtual MCContext *createcontext(Drawable p_drawable, MCBitmap *p_mask);
-	virtual MCContext *createcontext(Drawable p_drawable, bool p_alpha = false, bool p_transient = false);
-	virtual MCContext *creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient);
-	virtual void freecontext(MCContext *p_context);
 
 	virtual void setgraphicsexposures(Boolean on, MCStack *sptr);
 	virtual void copyarea(Drawable source, Drawable dest, int2 depth,
 	                      int2 sx, int2 sy, uint2 sw, uint2 sh,
 	                      int2 dx, int2 dy, uint4 rop);
-	virtual void copyplane(Drawable source, Drawable dest, int2 sx, int2 sy,
-	                       uint2 sw, uint2 sh, int2 dx, int2 dy,
-	                       uint4 rop, uint4 pixel);
-	virtual MCBitmap *createimage(uint2 depth, uint2 width, uint2 height,
-	                              Boolean set
-		                              , uint1 value,
-		                              Boolean shm, Boolean forceZ);
-	virtual void destroyimage(MCBitmap *image);
-	virtual MCBitmap *copyimage(MCBitmap *source, Boolean invert);
-	virtual void putimage(Drawable dest, MCBitmap *source, int2 sx, int2 sy,
-	                      int2 dx, int2 dy, uint2 w, uint2 h);
-	virtual MCBitmap *getimage(Drawable pm, int2 x, int2 y,
-	                           uint2 w, uint2 h, Boolean shm = False);
-	virtual void flipimage(MCBitmap *image, int2 byte_order, int2 bit_order);
 
 	virtual MCColorTransformRef createcolortransform(const MCColorSpaceInfo& info);
 	virtual void destroycolortransform(MCColorTransformRef transform);
 	virtual bool transformimagecolors(MCColorTransformRef transform, MCImageBitmap *image);
 
-	virtual MCCursorRef createcursor(MCImageBuffer *image, int2 xhot, int2 yhot);
+	virtual MCCursorRef createcursor(MCImageBitmap *image, int2 xhot, int2 yhot);
 	virtual void freecursor(MCCursorRef c);
 
 	virtual uint4 dtouint4(Drawable d);
-	virtual Boolean uint4topixmap(uint4, Pixmap &p);
 	virtual Boolean uint4towindow(uint4, Window &w);
 
 	virtual void getbeep(uint4 property, int4& r_value);
@@ -362,12 +380,12 @@ public:
 	virtual MCNameRef getvendorname(void);
 	virtual uint2 getpad();
 	virtual Window getroot();
-	virtual MCBitmap *snapshot(MCRectangle &r, uint4 window,
-	                           MCStringRef displayname);
+
+	virtual MCImageBitmap *snapshot(MCRectangle &r, MCGFloat p_scale, uint4 window, MCStringRef displayname);
 
 	virtual void enablebackdrop(bool p_hard = false);
 	virtual void disablebackdrop(bool p_hard = false);
-	virtual void configurebackdrop(const MCColor& p_colour, Pixmap p_pattern, MCImage *p_badge);
+	virtual void configurebackdrop(const MCColor& p_colour, MCPatternRef p_pattern, MCImage *p_badge);
 	virtual void assignbackdrop(Window_mode p_mode, Window p_window);
 
 	virtual void hidemenu();
@@ -377,16 +395,12 @@ public:
 
 	virtual MCColor *getaccentcolors();
 
-	virtual void boundrect(MCRectangle &rect, Boolean title, Window_mode m);
-
 	virtual void expose();
 	virtual Boolean abortkey();
 	virtual void waitconfigure(Window w);
 	virtual void waitreparent(Window w);
 	virtual void waitfocus();
-	virtual void querymouse(int2 &x, int2 &y);
 	virtual uint2 querymods();
-	virtual void setmouse(int2 x, int2 y);
 	virtual Boolean getmouse(uint2 button, Boolean& r_abort);
 	virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
 	virtual void addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
@@ -518,11 +532,12 @@ public:
 	virtual bool popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result);
 	
 	//
-
-	// MW-2012-10-08: [[ HitTest ]] Get the stack at the given screen location.
-	virtual MCStack *getstackatpoint(int32_t x, int32_t y);
-	
-	//
+    
+    // TD-2013-05-29: [[ DynamicFonts ]]
+	virtual bool loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle);
+    virtual bool unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle);
+    
+    //
 
 	void addtimer(MCObject *optr, MCNameRef name, uint4 delay);
 	void cancelmessageindex(uint2 i, Boolean dodelete);
@@ -537,7 +552,7 @@ public:
 	void handlemoves(real8 &curtime, real8 &eventtime);
 	void siguser();
 	Boolean lookupcolor(MCStringRef s, MCColor *color);
-	void dropper(Drawable d, int2 mx, int2 my, MCColor *cptr);
+	void dropper(Window w, int2 mx, int2 my, MCColor *cptr);
 	bool parsecolor(MCStringRef p_string, MCColor& r_color);
 	Boolean parsecolor(MCStringRef s, MCColor& r_color, MCStringRef *cname);
 	Boolean parsecolors(const MCString &values, MCColor *colors,
@@ -548,10 +563,7 @@ public:
 	Boolean setcolors(const MCString &);
 	bool getcolornames(MCStringRef&);
 	void getpaletteentry(uint4 n, MCColor &c);
-	uint4 getpixel(MCBitmap *image, int2 x, int2 y);
-	void getfixed(uint2 &rs, uint2 &gs, uint2 &bs,
-	              uint2 &rb, uint2 &gb, uint2 &bb);
-	void setpixel(MCBitmap *image, int2 x, int2 y, uint4 pixel);
+
 	Boolean hasmessages()
 	{
 		return nmessages != 0;
@@ -568,8 +580,6 @@ public:
 	{
 		return lockmods;
 	}
-	void scaleimage(MCBitmap *source, MCBitmap *dest);
-	void scaleimage_bicubic(MCBitmap *source, MCBitmap *dest);
 	void dodrop(MCStack *dropstack);
 
 	const MCColor& getblack(void) const

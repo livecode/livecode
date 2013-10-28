@@ -130,6 +130,10 @@
 		</Configuration>
 	</Configurations>
 	<References>
+		<ProjectReference
+			ReferencedProjectIdentifier="{F9B1E2E6-8FD9-48C2-8D5C-9900865E7096}"
+			RelativePathToProject=".\libgraphics\libgraphics.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -172,14 +176,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\contextscalewrapper.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\contextscalewrapper.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\customprinter.cpp"
 				>
 			</File>
@@ -209,6 +205,14 @@
 			</File>
 			<File
 				RelativePath=".\src\gradient.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\graphicscontext.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\graphicscontext.h"
 				>
 			</File>
 			<File
@@ -273,6 +277,10 @@
 			</File>
 			<File
 				RelativePath=".\src\round.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\srvtheme.cpp"
 				>
 			</File>
 			<File
@@ -776,14 +784,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\pxmaplst.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\pxmaplst.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\regex.cpp"
 				>
 			</File>
@@ -905,6 +905,14 @@
 			</File>
 			<File
 				RelativePath=".\src\util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\uuid.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\uuid.h"
 				>
 			</File>
 		</Filter>
@@ -1100,15 +1108,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\image_rep_transformed.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\src\imagebitmap.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\src\imagebitmap.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\imagelist.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\imagelist.h"
 				>
 			</File>
 			<File
@@ -1316,6 +1328,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\stackview.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\styledtext.cpp"
 				>
 			</File>
@@ -1384,6 +1400,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\sysw32random.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\sysw32registry.cpp"
 				>
 			</File>
@@ -1446,6 +1466,14 @@
 			<File
 				RelativePath=".\src\srvflst.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\srvflst.h"
@@ -1533,6 +1561,10 @@
 			</File>
 			<File
 				RelativePath=".\src\srvwindows.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\w32flst.cpp"
 				>
 			</File>
 		</Filter>

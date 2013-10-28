@@ -501,7 +501,7 @@ const char *strchr_limit(const char *s, const char *l, char c)
 
 static int convxdigit(char c)
 {
-	c = tolower(c);
+	c = MCS_tolower(c);
 	if (isdigit(c))
 		return c - '0';
 	return 10 + (c - 'a');

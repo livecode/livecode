@@ -57,6 +57,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 #include "exec-interface.h"
+#include "graphics_util.h"
 
 #define UNLICENSED_TIME 6.0
 #ifdef _DEBUG_MALLOC_INC
@@ -233,7 +234,7 @@ Exec_stat MCDispatch::getprop_legacy(uint4 parid, Properties which, MCExecPoint 
 	case P_TEXT_STYLE:
 		ep.setstaticcstring(MCplainstring);
 		return ES_NORMAL;
-#endif /* MCDispatch::getprop */
+#endif /* MCDispatch::getprop */ 
 	default:
 		MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
 		return ES_ERROR;
@@ -245,7 +246,6 @@ Exec_stat MCDispatch::setprop_legacy(uint4 parid, Properties which, MCExecPoint 
 #ifdef /* MCDispatch::setprop */ LEGACY_EXEC
 	return ES_NORMAL;
 #endif /* MCDispatch::setprop */
-	return ES_NORMAL;
 }
 
 // bogus "cut" call actually checks license
@@ -1082,12 +1082,20 @@ void MCDispatch::wkup(Window w, const char *string, KeySym key)
 
 void MCDispatch::wmfocus_stack(MCStack *target, int2 x, int2 y)
 {
+	// IM-2013-09-23: [[ FullscreenMode ]] transform view -> stack coordinates
+	MCPoint t_stackloc;
 	if (menu != NULL)
-		menu->mfocus(x, y);
+	{
+		t_stackloc = menu->getstack()->windowtostackloc(MCPointMake(x, y));
+		menu->mfocus(t_stackloc.x, t_stackloc.y);
+	}
 	else
 	{
 		if (target != NULL)
-			target->mfocus(x, y);
+		{
+			t_stackloc = target->windowtostackloc(MCPointMake(x, y));
+			target->mfocus(t_stackloc.x, t_stackloc.y);
+		}
 	}
 }
 
@@ -1267,12 +1275,17 @@ MCDragAction MCDispatch::wmdragmove(Window w, int2 x, int2 y)
 	static uint4 s_old_modifiers = 0;
 
 	MCStack *target = findstackd(w);
-	if (MCmousex != x || MCmousey != y || MCmodifierstate != s_old_modifiers)
+	
+	// IM-2013-10-08: [[ FullscreenMode ]] Translate mouse location to stack coords
+	MCPoint t_mouseloc;
+	t_mouseloc = target->windowtostackloc(MCPointMake(x, y));
+	
+	if (MCmousex != t_mouseloc.x || MCmousey != t_mouseloc.y || MCmodifierstate != s_old_modifiers)
 	{
-		MCmousex = x;
-		MCmousey = y;
+		MCmousex = t_mouseloc.x;
+		MCmousey = t_mouseloc.y;
 		s_old_modifiers = MCmodifierstate;
-		target -> mfocus(x, y);
+		target -> mfocus(t_mouseloc.x, t_mouseloc.y);
 	}
 	return MCdragaction;
 }
@@ -1317,7 +1330,7 @@ void MCDispatch::configure(Window w)
 {
 	MCStack *target = findstackd(w);
 	if (target != NULL)
-		target->configure(True);
+		target->view_configure(true);
 }
 
 void MCDispatch::enter(Window w)
@@ -1338,11 +1351,15 @@ void MCDispatch::redraw(Window w, MCRegionRef p_dirty_region)
 
 MCFontStruct *MCDispatch::loadfont(MCNameRef fname, uint2 &size, uint2 style, Boolean printer)
 {
-#ifdef _LINUX
+#if defined(_LINUX_DESKTOP)
 	if (fonts == NULL)
 		fonts = MCFontlistCreateNew();
 	if (fonts == NULL)
 		fonts = MCFontlistCreateOld();
+#elif defined(_LINUX_SERVER)
+	// MM-2013-09-13: [[ RefactorGraphics ]] Server font support.
+	if (fonts == NULL)
+		fonts = MCFontlistCreateNew();
 #else
 	if (fonts == nil)
 		fonts = new MCFontlist;
@@ -1622,15 +1639,35 @@ bool MCDispatch::loadexternal(MCStringRef p_external)
 	MCStringRef t_filename;
 #if defined(TARGET_SUBPLATFORM_ANDROID)
 	extern bool revandroid_loadExternalLibrary(MCStringRef p_external, MCStringRef &r_filename);
-	if (!revandroid_loadExternalLibrary(p_external, t_filename))
+	// MW-2013-08-07: [[ ExternalsApiV5 ]] Make sure we only use the leaf name
+	//   of the external when loading.
+    uindex_t t_slash_index;
+    uindex_t t_ext_length = MCStringGetLength(p_external);
+    MCStringRef t_external_leaf;
+    
+	if (MCStringLastIndexOfChar(p_external, '/', t_ext_length, kMCStringOptionCompareExact, t_slash_index))
+    {
+		if (!MCStringCopySubstring(p_external, MCRangeMake(t_slash_index + 1, t_ext_length - t_slash_index - 1), t_external_leaf))
+            return false;
+    }
+    else
+        t_external_leaf = MCValueRetain(p_external);
+
+	if (!revandroid_loadExternalLibrary(t_external_leaf, t_filename))
+    {
+        MCValueRelease(t_external_leaf);
 		return false;
+    }
 
 	// Don't try and load any drivers as externals.
-	if (MCStringBeginsWithCString(p_external, (const char_t *)"db", kMCStringOptionCompareExact))
+	if (MCStringBeginsWithCString(t_external_leaf, (const char_t *)"db", kMCStringOptionCompareExact))
 	{
+        MCValueRelease(t_external_leaf);
 		MCValueRelease(t_filename);
 		return true;
 	}
+    
+    MCValueRelease(t_external_leaf);
 #elif !defined(_SERVER)
 	if (MCStringBeginsWithCString(p_external, (const char_t *)"/", kMCStringOptionCompareExact))
 	{
@@ -2027,6 +2064,12 @@ void MCDispatch::freeprinterfonts()
 	fonts->freeprinterfonts();
 }
 #endif
+
+void MCDispatch::flushfonts(void)
+{
+	delete fonts;
+	fonts = nil;
+}
 
 MCFontlist *MCFontlistGetCurrent(void)
 {

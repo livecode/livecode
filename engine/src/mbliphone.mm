@@ -41,6 +41,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #include <mach-o/loader.h>
+#include <mach-o/getsect.h>
+#include <mach-o/dyld.h>
+#include <Security/SecRandom.h>
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIDevice.h>
@@ -108,48 +111,31 @@ void *load_module(const char *p_path)
 	else
 		t_last_component += 1;
 	
-	Dl_info t_dl_info;
-	const mach_header *t_header;
-	dladdr((void *)load_module, &t_dl_info);
-	t_header = (const mach_header *)t_dl_info . dli_fbase;
-	
-	const load_command *t_command;
-	t_command = (const load_command *)(t_header + 1);
-	for(uint32_t i = 0; i < t_header -> ncmds; i++)
-	{
-		if (t_command -> cmd == LC_SEGMENT)
+    // MW-2013-06-26: [[ Bug 10914 ]] Make sure we fetch the section in a way
+    //   compatible with ASLR (the section address needs to be modified by the
+    //   'slide' for the image).
+    unsigned long t_section_data_size;
+    char *t_section_data;
+    t_section_data = getsectdata("__DATA", "__libs", &t_section_data_size);
+    if (t_section_data != nil)
+    {  
+        t_section_data += (unsigned long)_dyld_get_image_vmaddr_slide(0);
+        
+        LibInfo **t_libs;
+		t_libs = (LibInfo **)t_section_data;
+		for(uint32_t k = 0; k < t_section_data_size / sizeof(void *); k++)
 		{
-			const segment_command *t_segment;
-			t_segment = (segment_command *)t_command;
-			if (memcmp(t_segment -> segname, "__DATA", 7) == 0)
-			{
-				for(uint32_t j = 0; j < t_segment -> nsects; j++)
-				{
-					const section *t_section;
-					t_section = (const section *)(t_segment + 1) + j;
-					
-					if (memcmp(t_section -> sectname, "__libs", 7) == 0)
-					{
-						LibInfo **t_libs;
-						t_libs = (LibInfo **)(t_section -> addr);
-						for(uint32_t k = 0; k < t_section -> size / sizeof(void *); k++)
-						{
-							const char *t_lib_name;
-							t_lib_name = *(t_libs[k] -> name);
-							if (!MCCStringBeginsWithCaseless(t_last_component, t_lib_name))
-								continue;
-							if (MCCStringLength(t_last_component) != MCCStringLength(t_lib_name) + 6)
-								continue;
-							
-							return (void *)((uintptr_t)t_libs[k] | 1);
-						}
-					}
-				}
-			}
+			const char *t_lib_name;
+			t_lib_name = *(t_libs[k] -> name);
+			if (!MCCStringBeginsWithCaseless(t_last_component, t_lib_name))
+				continue;
+			if (MCCStringLength(t_last_component) != MCCStringLength(t_lib_name) + 6)
+				continue;
+			
+			return (void *)((uintptr_t)t_libs[k] | 1);
 		}
-		
-		t_command = (const struct load_command *)((uint8_t *)t_command + t_command -> cmdsize);
-	}
+
+    }
 	
 	return NULL;	
 }
@@ -1102,3 +1088,13 @@ MCSystemInterface *MCMobileCreateIPhoneSystem(void)
 {
 	return new MCIPhoneSystem;
 }
+
+//////////////////
+
+// MW-2013-05-21: [[ RandomBytes ]] System function for random bytes on iOS.
+bool MCS_random_bytes(size_t p_count, MCDataRef& r_buffer)
+{
+	return SecRandomCopyBytes(kSecRandomDefault, p_count, (uint8_t *)p_buffer) != 0;
+}
+
+//////////////////

@@ -722,6 +722,7 @@ Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCGraphic::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
+#ifdef /* MCGraphic::getarrayprop */ LEGACY_EXEC
 	switch(which)
 	{
 	case P_GRADIENT_FILL:
@@ -734,6 +735,7 @@ Exec_stat MCGraphic::getarrayprop_legacy(uint4 parid, Properties which, MCExecPo
 		return MCControl::getarrayprop_legacy(parid, which, ep, key, effective);
 	}
 	return ES_NORMAL;
+#endif /* MCGraphic::getarrayprop */
 }
 
 Exec_stat MCGraphic::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
@@ -1248,6 +1250,7 @@ Exec_stat MCGraphic::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCGraphic::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
+#ifdef /* MCGraphic::setarrayprop */ LEGACY_EXEC
 	Boolean dirty;
 	dirty = False;
 	switch(which)
@@ -1290,6 +1293,7 @@ Exec_stat MCGraphic::setarrayprop_legacy(uint4 parid, Properties which, MCExecPo
 		layer_redrawall();
 	}
 	return ES_NORMAL;
+#endif /* MCGraphic::setarrayprop */
 }
 
 
@@ -1823,8 +1827,6 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		drawfocus(dc, p_dirty);
 	if (flags & F_SHOW_BORDER)
 		trect = MCU_reduce_rect(trect, borderwidth);
-	if (linesize != 0)
-		trect = MCU_reduce_rect(trect, linesize >> 1);
 	if (points == NULL && getstyleint(flags) == F_REGULAR)
 	{
 		if (npoints <= nsides)
@@ -1895,12 +1897,14 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		{
 		case F_G_RECTANGLE:
 			dc->setlineatts(linesize, lstyle, CapButt, JoinMiter);
-			dc->setmiterlimit(10.0);
-			dc->drawrect(trect);
+				dc->setmiterlimit(10.0);
+				// MW-2013-09-06: [[ RefactorGraphics ]] Make sure we draw on the inside of the rect.
+			dc->drawrect(trect, true);
 			break;
 		case F_ROUNDRECT:
 			dc->setlineatts(linesize, lstyle, CapButt, JoinBevel);
-			dc->drawroundrect(trect, roundradius);
+			// MW-2013-09-06: [[ RefactorGraphics ]] Make sure we draw on the inside of the rect.
+			dc->drawroundrect(trect, roundradius, true);
 			break;
 		case F_REGULAR:
 			dc->setlineatts(linesize, lstyle, CapButt, JoinRound);
@@ -1935,10 +1939,11 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 			break;
 		case F_OVAL:
 			dc->setlineatts(linesize, lstyle, CapButt, JoinBevel);
+			// MW-2013-09-06: [[ RefactorGraphics ]] Make sure we draw on the inside of the rect.
 			if (getflag(F_OPAQUE) && arcangle != 360)
-				dc -> drawsegment(trect, startangle, arcangle);
+				dc -> drawsegment(trect, startangle, arcangle, true);
 			else
-				dc -> drawarc(trect, startangle, arcangle);
+				dc -> drawarc(trect, startangle, arcangle, true);
 			break;
 		}
 		if (m_stroke_gradient != NULL)

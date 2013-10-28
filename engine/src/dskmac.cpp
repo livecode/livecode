@@ -5453,7 +5453,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (NULL == getcwd(namebuf, PATH_MAX))
             return false;
         
-        if (!MCStringCreateWithBytesAndRelease((byte_t*)namebuf, strlen(namebuf), kMCStringEncodingUTF8, false, r_path))
+        if (!MCStringCreateWithBytes((byte_t*)namebuf, strlen(namebuf), kMCStringEncodingUTF8, false, r_path))
         {
             r_path = MCValueRetain(kMCEmptyString);
             return false;
@@ -8048,6 +8048,16 @@ static bool fetch_ae_as_fsref_list(char*& string, uint4& length)
 	return true;
 }
 
+OSErr MCS_fsspec_to_fsref(const FSSpec *p_fsspec, FSRef *r_fsref)
+{
+	return FSpMakeFSRef(p_fsspec, r_fsref);
+}
+
+OSErr MCS_fsref_to_fsspec(const FSRef *p_fsref, FSSpec *r_fsspec)
+{
+	return FSGetCatalogInfo(p_fsref, 0, NULL, NULL, r_fsspec, NULL);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //**************************************************************************
 // * Utility functions used by this module only
@@ -9027,4 +9037,27 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 	}
 	else
 		MCresult->clear(False);
+}
+
+bool MCS_generate_uuid(char p_buffer[128])
+{
+	CFUUIDRef t_uuid;
+	t_uuid = CFUUIDCreate(kCFAllocatorDefault);
+	if (t_uuid != NULL)
+	{
+		CFStringRef t_uuid_string;
+		
+		t_uuid_string = CFUUIDCreateString(kCFAllocatorDefault, t_uuid);
+		if (t_uuid_string != NULL)
+		{
+			CFStringGetCString(t_uuid_string, p_buffer, 127, kCFStringEncodingMacRoman);
+			CFRelease(t_uuid_string);
+		}
+		
+		CFRelease(t_uuid);
+        
+		return true;
+	}
+    
+	return false;
 }

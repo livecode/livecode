@@ -1243,13 +1243,13 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 {
 	switch (which)
 	{
-	// MW-2012-02-11: [[ TabWidths ]] Handle both tabStops and tabWidths by deferring
-	//   to the format method.
-	case P_TAB_STOPS:
-	case P_TAB_WIDTHS:
-		formattabstops(which, ep, tabs, ntabs);
-		break;
 #ifdef /* MCField::getprop */ LEGACY_EXEC
+    // MW-2012-02-11: [[ TabWidths ]] Handle both tabStops and tabWidths by deferring
+    //   to the format method.
+    case P_TAB_STOPS:
+    case P_TAB_WIDTHS:
+        formattabstops(which, ep, tabs, ntabs);
+        break;
 	case P_AUTO_TAB:
 		ep.setboolean(getflag(F_AUTO_TAB));
 		break;
@@ -1484,6 +1484,7 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 		return gettextatts(parid, P_FLAGGED_RANGES, ep, nil, False, 0, INT32_MAX, false);
 	// MW-2012-02-22: [[ IntrinsicUnicode ]] Fetch the encoding property of the field, this is
 	//   actually the encoding of the content.
+	// MW-2013-08-27: [[ Bug 11129 ]] Use INT32_MAX as upper limit.
 	case P_ENCODING:
 		// MW-2013-08-27: [[ Bug 11129 ]] Use INT32_MAX as upper limit.
 		return gettextatts(parid, P_ENCODING, ep, nil, False, 0, INT32_MAX, false);
@@ -1570,6 +1571,7 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 	MCExecPoint *oldep;
 	switch (p)
 	{
+#ifdef /* MCField::setprop */ LEGACY_EXEC
 	// MW-2012-02-11: [[ TabWidths ]] Handle the new tabWidths property (parsetabstops
 	//   can now do either stops or widths).
 	case P_TAB_WIDTHS:
@@ -1600,7 +1602,6 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 			reset = True;
 		}
 		break;
-#ifdef /* MCField::setprop */ LEGACY_EXEC
 	case P_AUTO_TAB:
 		if (!MCU_matchflags(data, flags, F_AUTO_TAB, dummy))
 		{

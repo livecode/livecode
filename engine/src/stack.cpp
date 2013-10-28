@@ -62,6 +62,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbldc.h"
 #endif
 
+#include "resolution.h"
+
 static int4 s_last_stack_time = 0;
 static int4 s_last_stack_index = 0;
 
@@ -238,12 +240,6 @@ MCStack::MCStack()
 	f_extended_state = 0;
 	m_externals = NULL;
 
-	// MW-2011-08-19: [[ Redraw ]] Initialize the stack's update region
-	m_update_region = nil;
-
-	// MW-2011-08-26: [[ TileCache ]] Stacks start off with no tilecache.
-	m_tilecache = nil;
-	
 	// MW-2011-09-12: [[ MacScroll ]] There is no scroll to start with.
 	m_scroll = 0;
 
@@ -261,6 +257,8 @@ MCStack::MCStack()
 
 	cursoroverride = false ;
 	old_rect.x = old_rect.y = old_rect.width = old_rect.height = 0 ;
+
+	view_init();
 
 	mode_create();
 }
@@ -427,12 +425,6 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 
 	m_externals = NULL;
 
-	// MW-2011-08-19: [[ Redraw ]] Initialize the stack's update region
-	m_update_region = nil;
-
-	// MW-2011-08-26: [[ TileCache ]] Stacks start off with no tilecache.
-	m_tilecache = nil;
-	
 	// MW-2011-09-12: [[ MacScroll ]] There is no scroll to start with.
 	m_scroll = 0;
 	
@@ -447,6 +439,8 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	
 	// MW-2010-11-17: [[ Valgrind ]] Uninitialized value.
 	cursoroverride = false;
+
+	view_copy(sref);
 
 	mode_copy(sref);
 }
@@ -561,17 +555,14 @@ MCStack::~MCStack()
 
 	MCEventQueueFlush(this);
 
-	// MW-2011-08-19: [[ Redraw ]] Destroy the stack's update region.
-	MCRegionDestroy(m_update_region);
-
-	// MW-2011-08-26: [[ TileCache ]] Destroy the stack's tilecache - if any.
-	MCTileCacheDestroy(m_tilecache);
-	
 	// MW-2011-09-13: [[ Redraw ]] If there is snapshot, get rid of it.
-	MCscreen -> freepixmap(m_snapshot);
+	MCGImageRelease(m_snapshot);
+	m_snapshot = nil;
 	
 	// MW-2012-10-10: [[ IdCache ]] Free the idcache.
 	freeobjectidcache();
+	
+	view_destroy();
 }
 
 Chunk_term MCStack::gettype() const
@@ -714,7 +705,8 @@ void MCStack::close()
 		opened--;
 
 	// MW-2011-09-13: [[ Effects ]] Free any snapshot that we have.
-	MCscreen -> freepixmap(m_snapshot);
+	MCGImageRelease(m_snapshot);
+	m_snapshot = nil;
 	
 	state &= ~(CS_IGNORE_CLOSE | CS_KFOCUSED | CS_ISOPENING);
 }
@@ -1118,30 +1110,19 @@ MCRectangle MCStack::getrectangle(bool p_effective) const
 
 void MCStack::setrect(const MCRectangle &nrect)
 {
-#ifdef _MOBILE
-	// MW-2012-11-14: [[ Bug 10514 ]] If on mobile and this stack is currently
-	//   being displayed, don't let its rect be set.
-	if (((MCScreenDC *)MCscreen) -> get_current_window() == (Window)this)
-		return;
-#endif
+	// IM-2013-09-30: [[ FullscreenMode ]] allow setrect on mobile,
+	// which now has an effect on fullscreen scaled stacks
 
-	// MW-2012-10-04: [[ Bug 10436 ]] Make sure we constrain stack size to screen size
-	//   if in fullscreen mode.
+	// IM-2013-09-23: [[ FullscreenMode ]] Use view to determine adjusted stack size
 	MCRectangle t_new_rect;
-	if (getextendedstate(ECS_FULLSCREEN)) 
-	{
-		const MCDisplay *t_display;
-		t_display = MCscreen -> getnearestdisplay(rect);
-		t_new_rect = t_display -> viewport;
-	}
-	else
-		t_new_rect = nrect;
-
+	t_new_rect = view_constrainstackviewport(nrect);
+	
 	if (rect.x != t_new_rect.x || rect.y != t_new_rect.y)
 		state |= CS_BEEN_MOVED;
 
 	MCRectangle oldrect = rect;
-	rect = t_new_rect;
+	// IM-2013-09-30: [[ FullscreenMode ]] update old_rect when modifying the stack rect
+	old_rect = rect = t_new_rect;
 	
 	menuy = menuheight = 0;
 	if (opened && mode_haswindow())
@@ -1181,11 +1162,16 @@ Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 
 	switch (which)
 	{
-#ifdef /* MCStack::getprop */ LEGACY_EXEC
+#ifdef /* MCStack::getprop */ LEGACY_EXEC		
 	case P_FULLSCREEN:
-		ep.setsvalue( MCU_btos(getextendedstate(ECS_FULLSCREEN)));
+			ep.setsvalue( MCU_btos(getextendedstate(ECS_FULLSCREEN)));
+	break;
+
+	// IM-2013-09-23: [[ FullscreenMode ]] Add stack fullscreenMode property
+	case P_FULLSCREENMODE:
+		ep.setsvalue(MCStackFullscreenModeToString(view_getfullscreenmode()));
 		break;
-			
+		
 	case P_LONG_ID:
 	case P_LONG_NAME:
 		if (filename == NULL)
@@ -1613,56 +1599,53 @@ Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 	
 	// MW-2011-11-23: [[ AccelRender ]] Return the accelerated rendering state.
 	case P_ACCELERATED_RENDERING:
-		ep . setboolean(getacceleratedrendering());
+		ep . setboolean(view_getacceleratedrendering());
 		break;
 	
 	case P_COMPOSITOR_TYPE:
 	{
-		if (m_tilecache == nil)
-			ep . clear();
-		else
+		switch(view_getcompositortype())
 		{
-			const char *t_type;
-			switch(MCTileCacheGetCompositor(m_tilecache))
-			{
-			case kMCTileCacheCompositorSoftware:
-				t_type = "Software";
-				break;
-			case kMCTileCacheCompositorCoreGraphics:
-				t_type = "CoreGraphics";
-				break;
-			case kMCTileCacheCompositorStaticOpenGL:
-				t_type = "Static OpenGL";
-				break;
-			case kMCTileCacheCompositorDynamicOpenGL:
-				t_type = "Dynamic OpenGL";
-				break;
-			default:
-				assert(false);
-				break;	
-			}
-			ep . setstaticcstring(t_type);
+		case kMCTileCacheCompositorNone:
+			ep . clear();
+			break;
+				
+		case kMCTileCacheCompositorSoftware:
+			ep . setstaticcstring("Software");
+			break;
+		case kMCTileCacheCompositorCoreGraphics:
+			ep . setstaticcstring("CoreGraphics");
+			break;
+		case kMCTileCacheCompositorStaticOpenGL:
+			ep . setstaticcstring("Static OpenGL");
+			break;
+		case kMCTileCacheCompositorDynamicOpenGL:
+			ep . setstaticcstring("Dynamic OpenGL");
+			break;
+		default:
+			assert(false);
+			break;	
 		}
 	}
 	break;
 			
 	case P_COMPOSITOR_TILE_SIZE:
-		if (m_tilecache == nil)
+		if (!view_getacceleratedrendering())
 			ep . clear();
 		else
-			ep . setuint(MCTileCacheGetTileSize(m_tilecache));
+			ep . setuint(view_getcompositortilesize());
 	break;
 
 	case P_COMPOSITOR_CACHE_LIMIT:
-		if (m_tilecache == nil)
+		if (!view_getacceleratedrendering())
 			ep . clear();
 		else
-			ep . setuint(MCTileCacheGetCacheLimit(m_tilecache));
+			ep . setuint(view_getcompositorcachelimit());
 	break;
 		
 	// MW-2011-11-24: [[ UpdateScreen ]] Get the updateScreen properties.
 	case P_DEFER_SCREEN_UPDATES:
-		ep . setboolean(effective ? m_defer_updates && m_tilecache != nil : m_defer_updates);
+		ep . setboolean(effective ? m_defer_updates && view_getacceleratedrendering() : m_defer_updates);
 		break;
 #endif /* MCStack::getprop */
 	default:
@@ -1708,6 +1691,7 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 			if ( v_changed)
 			{
 				setextendedstate(t_bval, ECS_FULLSCREEN);
+				view_setfullscreen(t_bval);
 				
 				// MW-2012-10-04: [[ Bug 10436 ]] Use 'setrect' to change the rect
 				//   field.
@@ -1722,6 +1706,26 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 		}
 	break;
 		
+	// IM-2013-09-23: [[ FullscreenMode ]] Add stack fullscreenMode property
+	case P_FULLSCREENMODE:
+		{
+			MCStackFullscreenMode t_mode;
+			if (!MCStackFullscreenModeFromString(ep.getcstring(), t_mode))
+			{
+				MCeerror->add(EE_STACK_BADFULLSCREENMODE, 0, 0, data);
+				return ES_ERROR;
+			}
+
+			if (t_mode != view_getfullscreenmode())
+			{
+				view_setfullscreenmode(t_mode);
+				if (view_getfullscreen() && opened > 0)
+					// IM-2013-10-04: [[ FullscreenMode ]] Change the rect back to old_rect,
+					// rather than reopening the window.
+					setrect(old_rect);
+			}
+		}
+		break;
 	case P_NAME:
 		{
 			// MW-2008-10-28: [[ ParentScripts ]] If this stack has its 'has parentscripts'
@@ -2583,7 +2587,7 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 			MCeerror->add(EE_OBJECT_NAB, 0, 0, data);
 			return ES_ERROR;
 		}
-		setacceleratedrendering(t_accel_render == True);
+		view_setacceleratedrendering(t_accel_render == True);
 	}
 	break;
 	
@@ -2620,23 +2624,7 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 			return ES_ERROR;
 		}
 		
-		if (t_type == kMCTileCacheCompositorNone)
-		{
-			MCTileCacheDestroy(m_tilecache);
-			m_tilecache = nil;
-		}
-		else
-		{
-			if (m_tilecache == nil)
-			{
-				MCTileCacheCreate(32, 4096 * 1024, m_tilecache);
-				MCTileCacheSetViewport(m_tilecache, curcard -> getrect());
-			}
-		
-			MCTileCacheSetCompositor(m_tilecache, t_type);
-		}
-		
-		dirtyall();
+		view_setcompositortype(t_type);
 	}
 	break;
 			
@@ -2649,11 +2637,7 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 			MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
 			return ES_ERROR;
 		}
-		if (m_tilecache != nil)
-		{
-			MCTileCacheSetCacheLimit(m_tilecache, t_new_cachelimit);
-			dirtyall();
-		}
+		view_setcompositorcachelimit(t_new_cachelimit);
 	}
 	break;
 
@@ -2666,16 +2650,12 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 			MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
 			return ES_ERROR;
 		}
-		if (!MCIsPowerOfTwo(t_new_tilesize) || t_new_tilesize < 16 || t_new_tilesize > 256)
+		if (!view_isvalidcompositortilesize(t_new_tilesize))
 		{
 			MCeerror->add(EE_COMPOSITOR_INVALIDTILESIZE, 0, 0, data);
 			return ES_ERROR;
 		}
-		if (m_tilecache != nil)
-		{
-			MCTileCacheSetTileSize(m_tilecache, t_new_tilesize);
-			dirtyall();
-		}
+		view_setcompositortilesize(t_new_tilesize);
 	}
 	break;
 
@@ -2692,42 +2672,43 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 		m_defer_updates = (t_defer_updates == True);
 	}
 	break;
-        case P_FORE_PIXEL:
-        case P_BACK_PIXEL:
-        case P_HILITE_PIXEL:
-        case P_BORDER_PIXEL:
-        case P_TOP_PIXEL:
-        case P_BOTTOM_PIXEL:
-        case P_SHADOW_PIXEL:
-        case P_FOCUS_PIXEL:
-        case P_FORE_COLOR:
-        case P_BACK_COLOR:
-        case P_HILITE_COLOR:
-        case P_BORDER_COLOR:
-        case P_TOP_COLOR:
-        case P_BOTTOM_COLOR:
-        case P_SHADOW_COLOR:
-        case P_FOCUS_COLOR:
-        case P_COLORS:
-        case P_FORE_PATTERN:
-        case P_BACK_PATTERN:
-        case P_HILITE_PATTERN:
-        case P_BORDER_PATTERN:
-        case P_TOP_PATTERN:
-        case P_BOTTOM_PATTERN:
-        case P_SHADOW_PATTERN:
-        case P_FOCUS_PATTERN:
-        case P_TEXT_FONT:
-        case P_TEXT_SIZE:
-        case P_TEXT_STYLE:
-        case P_TEXT_HEIGHT:
-            if (MCObject::setprop(parid, which, ep, effective) != ES_NORMAL)
-                return ES_ERROR;
-            // MW-2011-08-18: [[ Redraw ]] This could be restricted to just children
-            //   of this stack - but for now do the whole screen.
-            MCRedrawDirtyScreen();
-            return ES_NORMAL;
-    #endif /* MCStack::setprop */
+            
+    case P_FORE_PIXEL:
+    case P_BACK_PIXEL:
+    case P_HILITE_PIXEL:
+    case P_BORDER_PIXEL:
+    case P_TOP_PIXEL:
+    case P_BOTTOM_PIXEL:
+    case P_SHADOW_PIXEL:
+    case P_FOCUS_PIXEL:
+    case P_FORE_COLOR:
+    case P_BACK_COLOR:
+    case P_HILITE_COLOR:
+    case P_BORDER_COLOR:
+    case P_TOP_COLOR:
+    case P_BOTTOM_COLOR:
+    case P_SHADOW_COLOR:
+    case P_FOCUS_COLOR:
+    case P_COLORS:
+    case P_FORE_PATTERN:
+    case P_BACK_PATTERN:
+    case P_HILITE_PATTERN:
+    case P_BORDER_PATTERN:
+    case P_TOP_PATTERN:
+    case P_BOTTOM_PATTERN:
+    case P_SHADOW_PATTERN:
+    case P_FOCUS_PATTERN:
+    case P_TEXT_FONT:
+    case P_TEXT_SIZE:
+    case P_TEXT_STYLE:
+    case P_TEXT_HEIGHT:
+        if (MCObject::setprop(parid, which, ep, effective) != ES_NORMAL)
+            return ES_ERROR;
+        // MW-2011-08-18: [[ Redraw ]] This could be restricted to just children
+        //   of this stack - but for now do the whole screen.
+        MCRedrawDirtyScreen();
+        return ES_NORMAL;
+#endif /* MCStack::setprop */
 	default:
 	{
 		Exec_stat t_stat;
@@ -3009,22 +2990,38 @@ bool MCStack::resolve_filename(MCStringRef filename, MCStringRef& r_resolved)
 
 MCRectangle MCStack::recttoroot(const MCRectangle& p_rect)
 {
-	MCRectangle drect = p_rect;
-	MCRectangle srect;
-	srect = getrect();
-	drect.x += srect.x;
-	drect.y += srect.y - getscroll();
-	return drect;
+	// IM-2013-10-08: [[ FullscreenMode ]] Use view transform when converting stack -> global coords
+	MCRectangle t_view_rect;
+	t_view_rect = view_getrect();
+	
+	MCRectangle t_rect = p_rect;
+	t_rect.y -= getscroll();
+	
+	MCRectangle t_screen_rect;
+	t_screen_rect = MCRectangleGetTransformedBounds(t_rect, view_getviewtransform());
+	
+	t_screen_rect.x += t_view_rect.x;
+	t_screen_rect.y += t_view_rect.y;
+	
+	return t_screen_rect;
 }
 
 MCRectangle MCStack::rectfromroot(const MCRectangle& p_rect)
 {
-	MCRectangle drect = p_rect;
-	MCRectangle srect;
-	srect = getrect();
-	drect . x -= srect . x;
-	drect . y -= srect . y - getscroll();
-	return drect;
+	// IM-2013-10-08: [[ FullscreenMode ]] Use view transform when converting global -> stack coords
+	MCRectangle t_view_rect;
+	t_view_rect = view_getrect();
+	
+	MCRectangle t_screen_rect;
+	t_screen_rect = p_rect;
+	t_screen_rect.x -= t_view_rect.x;
+	t_screen_rect.y -= t_view_rect.y;
+	
+	MCRectangle t_rect;
+	t_rect = MCRectangleGetTransformedBounds(t_screen_rect, MCGAffineTransformInvert(view_getviewtransform()));
+	t_rect.y += getscroll();
+	
+	return t_rect;
 }
 
 // MW-2011-09-20: [[ Collision ]] The stack's shape is its rect. At some point it
@@ -3138,10 +3135,25 @@ bool MCStack::changeextendedstate(bool setting, uint32_t mask)
 
 void MCStack::purgefonts()
 {
-#ifdef _WINDOWS_DESKTOP
 	recomputefonts(parent -> getfontref());
+	recompute();
 	
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
 	dirtyall();
-#endif
 }
+
+//////////
+
+MCRectangle MCStack::getwindowrect(void) const
+{
+	if (window == nil)
+		return rect;
+		
+	MCRectangle t_rect;
+	t_rect = device_getwindowrect();
+	
+	// IM-2013-09-30: [[ FullscreenMode ]] Use inverse stack transform to get stack coords
+	return MCRectangleGetTransformedBounds(t_rect, MCGAffineTransformInvert(getdevicetransform()));
+}
+
+//////////

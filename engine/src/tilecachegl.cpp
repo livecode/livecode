@@ -28,6 +28,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "packed.h"
 #include "mbldc.h"
 
+#include <pthread.h>
+
 #if defined(_IOS_MOBILE)
 #include <CoreGraphics/CoreGraphics.h>
 #import <OpenGLES/ES1/gl.h>
@@ -186,6 +188,7 @@ static bool MCTileCacheOpenGLCompositorCreateTile(MCTileCacheOpenGLCompositorCon
 	super_tile *t_super_tile;
 	if (!MCMemoryAllocate(8 + self -> super_tile_arity, t_super_tile))
 		return false;
+    
 	
 	// Generate a texture id, and bind an empty texture.
 	glGenTextures(1, &t_super_tile -> texture);
@@ -195,13 +198,8 @@ static bool MCTileCacheOpenGLCompositorCreateTile(MCTileCacheOpenGLCompositorCon
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     
-    // MW-2011-10-07: iOS 5 doesn't like an inconsistency in input format between
-    //   TexImage2D and TexSubImage2D.
-#ifdef _IOS_MOBILE
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, kSuperTileSize, kSuperTileSize, 0, GL_BGRA, GL_UNSIGNED_BYTE, nil);
-#else
+	// IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, kSuperTileSize, kSuperTileSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nil);
-#endif
     
 	// Fill in the free list - subtile 0 is the one we will allocate.
 	for(uint32_t i = 1; i < self -> super_tile_arity; i++)
@@ -213,7 +211,7 @@ static bool MCTileCacheOpenGLCompositorCreateTile(MCTileCacheOpenGLCompositorCon
 	
 	// Make sure we don't make redundent bind calls.
 	self -> current_texture = t_super_tile -> texture;
-	
+
 	// And compute the id (note the subtile index is 0!).
 	MCTileCacheOpenGLCompositorEncodeTile(self, t_super_tile_index, 0, r_tile);
 
@@ -253,6 +251,7 @@ static void MCTileCacheOpenGLCompositorFlushSuperTiles(MCTileCacheOpenGLComposit
 			glDeleteTextures(1, &self -> super_tiles[i] -> texture);
 			MCMemoryDelete(self -> super_tiles[i]);
 			self -> super_tiles[i] = nil;
+            
 		}
 	}
 }
@@ -277,7 +276,9 @@ bool MCTileCacheOpenGLCompositor_BeginTiling(void *p_context)
 	if (t_super_tile_arity != self -> super_tile_arity ||
 		self -> needs_flush)
 	{
-		MCTileCacheOpenGLCompositorFlushSuperTiles(self, true);
+		// MW-2013-06-26: [[ Bug 10991 ]] Don't force flushing of the tilecache, otherwise
+		//   we end up discarding tiles that are still needed after a 'compact()' operation.
+		MCTileCacheOpenGLCompositorFlushSuperTiles(self, false);
 	
 		self -> super_tile_arity = t_super_tile_arity;
 		self -> needs_flush = false;
@@ -351,11 +352,8 @@ bool MCTileCacheOpenGLCompositor_AllocateTile(void *p_context, int32_t p_size, c
 		t_y = t_sub_tile_index / (kSuperTileSize / self -> tile_size);
 		
 		// Fill the texture.
-#ifdef _IOS_MOBILE
-		glTexSubImage2D(GL_TEXTURE_2D, 0, t_x * self -> tile_size, t_y * self -> tile_size, self -> tile_size, self -> tile_size, GL_BGRA, GL_UNSIGNED_BYTE, t_data);
-#else
+		// IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
 		glTexSubImage2D(GL_TEXTURE_2D, 0, t_x * self -> tile_size, t_y * self -> tile_size, self -> tile_size, self -> tile_size, GL_RGBA, GL_UNSIGNED_BYTE, t_data);
-#endif
 
 		// Set the tile id.
 		t_tile = (void *)t_tile_id;
@@ -466,7 +464,7 @@ bool MCTileCacheOpenGLCompositor_EndFrame(void *p_context, MCStackSurface *p_sur
 	return true;
 }
 
-bool MCTileCacheOpenGLCompositor_BeginSnapshot(void *p_context, MCRectangle p_area, Pixmap p_target)
+bool MCTileCacheOpenGLCompositor_BeginSnapshot(void *p_context, MCRectangle p_area, MCGRaster &p_target)
 {
 	MCTileCacheOpenGLCompositorContext *self;
 	self = (MCTileCacheOpenGLCompositorContext *)p_context;
@@ -506,15 +504,14 @@ bool MCTileCacheOpenGLCompositor_BeginSnapshot(void *p_context, MCRectangle p_ar
 	return true;
 }
 
-bool MCTileCacheOpenGLCompositor_EndSnapshot(void *p_context, MCRectangle p_area, Pixmap p_target)
+bool MCTileCacheOpenGLCompositor_EndSnapshot(void *p_context, MCRectangle p_area, MCGRaster &p_target)
 {
 	MCTileCacheOpenGLCompositorContext *self;
 	self = (MCTileCacheOpenGLCompositorContext *)p_context;
 	
-	MCMobileBitmap *t_bitmap;
-	t_bitmap = (MCMobileBitmap *)((Pixmap)p_target) -> handle . pixmap;
-	t_bitmap -> is_swapped = true;
-	glReadPixels(0, 0, p_area . width, p_area . height, GL_RGBA, GL_UNSIGNED_BYTE, t_bitmap -> data);
+	/* OVERHAUL - REVISIT: check byte order? */
+	// t_bitmap -> is_swapped = true;
+	glReadPixels(0, 0, p_area . width, p_area . height, GL_RGBA, GL_UNSIGNED_BYTE, p_target . pixels);
 	
 	glBindFramebufferOES(GL_FRAMEBUFFER_OES, self -> original_framebuffer);
 
@@ -639,7 +636,12 @@ bool MCTileCacheOpenGLCompositor_CompositeRect(void *p_context, int32_t p_x, int
 		// MW-2012-08-30: [[ Bug 10341 ]] Premultiply the color value as that's how
 		//   our blending function is set up.
 		t_new_color = packed_scale_bounded((t_new_color & 0xffffff) | 0xff000000, t_new_color >> 24);
-		glvColor4ub(self -> opengl_version, (t_new_color >> 16) & 0xff, (t_new_color >> 8) & 0xff, (t_new_color >> 0) & 0xff, (t_new_color >> 24) & 0xff);
+		
+		// IM-2013-08-23: [[ RefactorGraphics ]] Use MCGPixelUnpackNative to fix color swap issues
+		uint8_t a, r, g, b;
+		MCGPixelUnpackNative(t_new_color, r, g, b, a);
+		
+		glvColor4ub(self -> opengl_version, r, g, b, a);
 	}
 	
     GLshort *v;

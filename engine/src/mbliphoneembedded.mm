@@ -41,7 +41,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 extern "C" UIView *LiveCodeGetView(void);
 
-extern MCExecPoint *MCEPptr;
+xtern MCExecPoint *MCEPptr;
 
 ////////////////////
 
@@ -101,7 +101,7 @@ struct DelegateMethod
 	MCNameRef message_name;
 	ObjcType *native_args;
 	uindex_t native_arg_count;
-	ObjcType native_return_type;
+ObjcType native_return_type;
 	SEL selector;
 };
 
@@ -262,7 +262,7 @@ static const char *native_signature_to_objc(ObjcType p_type)
 		t_tag = "@";
 		break;
 	default:
-		t_tag = "v";
+	t_tag = "v";
 		break;
 	}
 	return t_tag;
@@ -755,7 +755,7 @@ static void post_message_to_engine(MCObject *p_target, NSString *p_message, void
 			m_delegate_methods[i] . native_args = t_native_args;
 			m_delegate_methods[i] . native_arg_count = t_native_arg_count;
 			m_delegate_methods[i] . native_return_type = t_native_return_type;
-			m_delegate_methods[i] . selector = p_selector;
+		m_delegate_methods[i] . selector = p_selector;
 			return YES;
 		}
 
@@ -994,7 +994,7 @@ static void post_message_to_engine(MCObject *p_target, NSString *p_message, void
 	}
 	
 	[super activateKeyboard];
-	
+
 	m_activate_keyboard_pending = false;
 }
 

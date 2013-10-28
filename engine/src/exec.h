@@ -1297,12 +1297,18 @@ void MCMathEvalSqrt(MCExecContext& ctxt, real64_t p_in, real64_t& r_result);
 void MCMathEvalAnnuity(MCExecContext& ctxt, real64_t p_rate, real64_t p_periods, real64_t& r_result);
 void MCMathEvalCompound(MCExecContext& ctxt, real64_t p_rate, real64_t p_periods, real64_t& r_result);
 
-void MCMathEvalAverage(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result);
+void MCMathEvalArithmeticMean(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result);
 void MCMathEvalMedian(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result);
 void MCMathEvalMin(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result);
 void MCMathEvalMax(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result);
-void MCMathEvalStdDev(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result);
+void MCMathEvalSampleStdDev(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result);
 void MCMathEvalSum(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result);
+
+void MCMathEvalAverageDeviation(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result);
+void MCMathEvalGeometricMean(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result);
+void MCMathEvalHarmonicMean(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result);
+void MCMathEvalPopulationStdDev(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result);
+void MCMathEvalPopulationVariance(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result);
 
 void MCMathEvalRandom(MCExecContext& ctxt, real64_t p_in, real64_t& r_result);
 
@@ -1342,7 +1348,8 @@ void MCMathEvalIsNotANumber(MCExecContext& ctxt, MCValueRef p_value, bool& r_res
 
 void MCMathGetRandomSeed(MCExecContext& ctxt, integer_t& r_value);
 void MCMathSetRandomSeed(MCExecContext& ctxt, integer_t p_value);
-
+void MCMathEvaluateStatsFunction(MCExecContext& ctxt, Functions p_func, real64_t *p_values, uindex_t p_count, real64_t& r_result);
+                                 
 #define MCMathExecAddNumberToNumber(ctxt, a, b, r) MCMathEvalAdd(ctxt, a, b, r)
 #define MCMathExecAddNumberToArray(ctxt, a, b, r) MCMathEvalAddNumberToArray(ctxt, b, a, r)
 #define MCMathExecAddArrayToArray(ctxt, a, b, r) MCMathEvalAddArrayToArray(ctxt, a, b, r)

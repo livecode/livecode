@@ -60,7 +60,10 @@ MCAdd::~MCAdd()
 {
 	delete source;
 	delete dest;
-	delete destvar;
+	// MW-2013-08-01: [[ Bug 10925 ]] Only delete the destvar varref if dest is NULL,
+	//   otherwise its owned by dest.
+	if (dest == NULL)
+		delete destvar;
 }
 
 Parse_stat MCAdd::parse(MCScriptPoint &sp)
@@ -91,6 +94,10 @@ Parse_stat MCAdd::parse(MCScriptPoint &sp)
 	}
 	else
 		destvar->parsearray(sp);
+	
+	// MW-2013-08-01: [[ Bug 10925 ]] If the dest chunk is just a var, extract the varref.
+	if (dest != NULL && dest -> isvarchunk())
+		destvar = dest -> getrootvarref();
 
 	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
@@ -174,6 +181,7 @@ Exec_stat MCAdd::exec(MCExecPoint &ep)
 	
 	return ES_NORMAL;
 #endif /* MCAdd */
+
 	MCAutoValueRef t_src;
 	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
@@ -274,7 +282,10 @@ MCDivide::~MCDivide()
 {
 	delete source;
 	delete dest;
-	delete destvar;
+	// MW-2013-08-01: [[ Bug 10925 ]] Only delete the destvar varref if dest is NULL,
+	//   otherwise its owned by dest.
+	if (dest == NULL)
+		delete destvar;
 }
 
 Parse_stat MCDivide::parse(MCScriptPoint &sp)
@@ -306,7 +317,11 @@ Parse_stat MCDivide::parse(MCScriptPoint &sp)
 		MCperror->add(PE_DIVIDE_BADEXP, sp);
 		return PS_ERROR;
 	}
-
+	
+	// MW-2013-08-01: [[ Bug 10925 ]] If the dest chunk is just a var, extract the varref.
+	if (dest != NULL && dest -> isvarchunk())
+		destvar = dest -> getrootvarref();
+	
 	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
 	return PS_NORMAL;
@@ -409,6 +424,7 @@ Exec_stat MCDivide::exec(MCExecPoint &ep)
 	
 	return ES_NORMAL;
 #endif /* MCDivide */
+
 	MCAutoValueRef t_src;
 	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
@@ -509,7 +525,10 @@ MCMultiply::~MCMultiply()
 {
 	delete source;
 	delete dest;
-	delete destvar;
+	// MW-2013-08-01: [[ Bug 10925 ]] Only delete the destvar varref if dest is NULL,
+	//   otherwise its owned by dest.
+	if (dest == NULL)
+		delete destvar;
 }
 
 Parse_stat MCMultiply::parse(MCScriptPoint &sp)
@@ -544,7 +563,11 @@ Parse_stat MCMultiply::parse(MCScriptPoint &sp)
 		(PE_MULTIPLY_BADEXP, sp);
 		return PS_ERROR;
 	}
-
+	
+	// MW-2013-08-01: [[ Bug 10925 ]] If the dest chunk is just a var, extract the varref.
+	if (dest != NULL && dest -> isvarchunk())
+		destvar = dest -> getrootvarref();
+	
 	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
 	return PS_NORMAL;
@@ -641,6 +664,7 @@ Exec_stat MCMultiply::exec(MCExecPoint &ep)
 	
 	return ES_NORMAL;
 #endif /* MCMultiply */
+
 	MCAutoValueRef t_src;
 	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
@@ -741,7 +765,10 @@ MCSubtract::~MCSubtract()
 {
 	delete source;
 	delete dest;
-	delete destvar;
+	// MW-2013-08-01: [[ Bug 10925 ]] Only delete the destvar varref if dest is NULL,
+	//   otherwise its owned by dest.
+	if (dest == NULL)
+		delete destvar;
 }
 
 Parse_stat MCSubtract::parse(MCScriptPoint &sp)
@@ -776,7 +803,11 @@ Parse_stat MCSubtract::parse(MCScriptPoint &sp)
 	}
 	else
 		destvar->parsearray(sp);
-
+	
+	// MW-2013-08-01: [[ Bug 10925 ]] If the dest chunk is just a var, extract the varref.
+	if (dest != NULL && dest -> isvarchunk())
+		destvar = dest -> getrootvarref();
+	
 	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
 	return PS_NORMAL;
@@ -856,6 +887,7 @@ Exec_stat MCSubtract::exec(MCExecPoint &ep)
 	
 	return ES_NORMAL;
 #endif /* MCSubtract */
+
 	MCAutoValueRef t_src;
 	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
@@ -1115,6 +1147,7 @@ Exec_stat MCArrayOp::exec(MCExecPoint &ep)
     
 	return ES_NORMAL;
 #endif /* MCArrayOp */
+
 	MCExecContext ctxt(ep);
 
 	MCAutoStringRef t_element_del;
@@ -1294,6 +1327,9 @@ Parse_stat MCSetOp::parse(MCScriptPoint &sp)
 		MCperror->add(PE_ARRAYOP_BADEXP, sp);
 		return PS_ERROR;
 	}
+    
+    // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+    recursive = sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_RECURSIVELY) == PS_NORMAL;
 
 	return PS_NORMAL;
 }
@@ -1334,14 +1370,16 @@ Exec_stat MCSetOp::exec(MCExecPoint &ep)
 		if (t_src_ref == NULL)
 			t_dst_ref -> assign_empty();
 		else
-			t_dst_ref -> intersectarray(*t_src_ref);
+			// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+            t_dst_ref -> intersectarray(*t_src_ref,recursive);
 	}
 	else
 	{
 		if (t_src_ref == NULL)
 			return ES_NORMAL;
-        
-		t_dst_ref -> unionarray(*t_src_ref);
+
+		// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+        t_dst_ref -> unionarray(*t_src_ref,recursive);
 	}
     
 	if (t_dst_var != NULL)
@@ -1349,6 +1387,7 @@ Exec_stat MCSetOp::exec(MCExecPoint &ep)
     
 	return ES_NORMAL;
 #endif /* MCSetOp */
+
 	// ARRAYEVAL
 	if (source -> eval(ep) != ES_NORMAL)
 	{

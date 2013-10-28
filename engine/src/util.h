@@ -189,6 +189,11 @@ extern Exec_stat MCU_change_color(MCColor &c, MCStringRef&n, MCExecPoint &ep, ui
 //extern void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c);
 extern void MCU_get_color(MCExecPoint &ep, MCStringRef name, MCColor &c);
 extern void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output);
+extern void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
+	                       real8 tn, real8 oldn, MCSortnode *titems);
+// MW-2013-07-01: [[ Bug 10975 ]] This method returns true if the given string could be a url
+//   (as used by MCU_geturl, to determine whether to try and fetch via libUrl).
+extern bool MCU_couldbeurl(const MCString& potential_url);
 extern void MCU_geturl(MCExecPoint &ep);
 extern void MCU_puturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef p_data);
 extern void MCU_puturl(MCExecPoint &ep, MCExecPoint &data);
@@ -219,6 +224,10 @@ extern bool MCU_mapunicode(const MCString& p_src, bool is_unicode, bool to_unico
 extern bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char *p_b, bool p_b_isunicode);
 extern double MCU_squared_distance_from_line(int4 sx, int4 sy, int4 ex, int4 ey, int4 x, int4 y);
 
+// MW-2013-05-21: [[ RandomBytes ]] Generate random bytes using either OpenSSL (if available)
+//   or platform support (if not).
+extern bool MCU_random_bytes(size_t p_bytecount, MCDataRef& r_bytes);
+
 // 
 
 struct MCInterval
@@ -232,7 +241,9 @@ extern bool MCU_disjointrangecontains(MCInterval* p_ranges, int p_count, int p_e
 
 //
 
-IO_stat MCU_dofakewrite(char*& x_buffer, uint4& x_length, const void *p_data, uint4 p_size, uint4 p_count);
+// MW-2013-05-02: [[ x64 ]] The 'x_length' parameter is always IO_header::len
+//   which is now size_t, so match it.
+IO_stat MCU_dofakewrite(char*& x_buffer, size_t& x_length, const void *p_data, uint4 p_size, uint4 p_count);
 
 //
 

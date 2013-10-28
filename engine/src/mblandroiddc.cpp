@@ -40,8 +40,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbldc.h"
 
 #include "mblandroidutil.h"
-#include "mblandroidcontext.h"
 #include "mblandroidjava.h"
+
+#include "graphics.h"
+#include "resolution.h"
 
 #include <jni.h>
 #include <pthread.h>
@@ -104,6 +106,9 @@ static bool s_schedule_wakeup_was_broken = false;
 static co_yield_callback_t s_yield_callback = nil;
 static void *s_yield_callback_context = nil;
 
+// IM-2013-07-26: [[ ResIndependence ]] the user -> device resolution scale
+static MCGFloat s_android_device_scale = 1.0;
+
 // The bitmap containing the current visible state of the view
 static jobject s_android_bitmap = nil;
 static int s_android_bitmap_width = 0;
@@ -154,6 +159,15 @@ static bool revandroid_getAssetOffsetAndLength(JNIEnv *env, jobject object, cons
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2013-07-26: [[ ResIndependence ]] return the device scale - this is initialised
+// on screen open
+MCGFloat MCResGetDeviceScale(void)
+{
+	return s_android_device_scale;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 Boolean MCScreenDC::open(void)
 {
 	common_open();
@@ -161,6 +175,10 @@ Boolean MCScreenDC::open(void)
 	// We don't need to do anything to initialize the view, as that is done
 	// by the Java wrapper.
 
+	// IM-2013-07-26: [[ ResIndependence ]] Use the display metrics pixel density to
+	// scale drawing
+	MCAndroidEngineCall("getPixelDensity", "f", &s_android_device_scale);
+	
 	return True;
 }
 
@@ -186,12 +204,12 @@ MCNameRef MCScreenDC::getvendorname(void)
 	return MCN_android;
 }
 
-uint2 MCScreenDC::getwidth()
+uint2 MCScreenDC::device_getwidth()
 {
 	return 320;
 }
 
-uint2 MCScreenDC::getheight()
+uint2 MCScreenDC::device_getheight()
 {
 	return 480;
 }
@@ -236,7 +254,7 @@ Window MCScreenDC::getroot()
 	return NULL;
 }
 
-uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
+bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& r_displays, uint32_t &r_count)
 {
 	static MCDisplay s_display;
 	memset(&s_display, 0, sizeof(MCDisplay));
@@ -250,66 +268,62 @@ uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
 	MCAndroidEngineCall("getWorkareaAsString", "s", &t_rect_string);
 	MCU_stoi2x4(t_rect_string, t_left, t_top, t_right, t_bottom);
 
-	s_display.workarea.x = t_left;
-	s_display.workarea.y = t_top;
-	s_display.workarea.width = t_right - t_left;
-	s_display.workarea.height = t_bottom - t_top;
+	s_display.device_workarea.x = t_left;
+	s_display.device_workarea.y = t_top;
+	s_display.device_workarea.width = t_right - t_left;
+	s_display.device_workarea.height = t_bottom - t_top;
 
 	MCAndroidEngineCall("getViewportAsString", "s", &t_rect_string);
 	MCU_stoi2x4(t_rect_string, t_left, t_top, t_right, t_bottom);
 
-	s_display.viewport.x = t_left;
-	s_display.viewport.y = t_top;
-	s_display.viewport.width = t_right - t_left;
-	s_display.viewport.height = t_bottom - t_top;
+	s_display.device_viewport.x = t_left;
+	s_display.device_viewport.y = t_top;
+	s_display.device_viewport.width = t_right - t_left;
+	s_display.device_viewport.height = t_bottom - t_top;
 	if (p_effective)
-		s_display.viewport.height -= s_current_keyboard_height;
+		s_display.device_viewport.height -= s_current_keyboard_height;
 
 	MCLog("getdisplays: workarea(%d,%d,%d,%d) viewport(%d,%d,%d,%d)",
-		s_display.workarea.x, s_display.workarea.y, s_display.workarea.width, s_display.workarea.height,
-		s_display.viewport.x, s_display.viewport.y, s_display.viewport.width, s_display.viewport.height);
+		s_display.device_workarea.x, s_display.device_workarea.y, s_display.device_workarea.width, s_display.device_workarea.height,
+		s_display.device_viewport.x, s_display.device_viewport.y, s_display.device_viewport.width, s_display.device_viewport.height);
 
-	p_displays = &s_display;
-	return 1;
+	r_displays = &s_display;
+	r_count = 1;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Boolean MCScreenDC::getwindowgeometry(Window w, MCRectangle &drect)
+bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 {
 	drect = android_view_get_bounds();
-	return True;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCContext *MCScreenDC::createcontext(Drawable p_drawable, MCBitmap *p_mask)
-{
-	return NULL;
-}
-
-MCContext *MCScreenDC::createcontext(Drawable p_drawable, bool p_alpha, bool p_transient)
-{
-	MCMobileBitmap *t_bitmap;
-	t_bitmap = (MCMobileBitmap *)p_drawable -> handle . pixmap;
-	return new MCAndroidContext(t_bitmap -> width, t_bitmap -> height, t_bitmap -> stride, t_bitmap -> data, p_alpha);
-}
-
-MCContext *MCScreenDC::creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient)
-{
-	return new MCAndroidContext(p_width, p_height, p_alpha);
-}
-
-void MCScreenDC::freecontext(MCContext *p_context)
-{
-	delete p_context;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
+#if 0
 int4 MCScreenDC::textwidth(MCFontStruct *f, const char *p_string, uint2 p_length, bool p_unicode_override)
 {
 	return android_font_measure_text(f->fid, p_string, p_length, f->unicode || p_unicode_override);
+}
+#endif
+
+// MM-2013-08-30: [[ RefactorGraphics ]] Move text measuring to libgraphics.
+int4 MCScreenDC::textwidth(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override)
+{
+	if (p_length == 0 || p_text == NULL)
+		return 0;
+	
+    MCGFont t_font;
+	t_font = MCFontStructToMCGFont(p_font);
+	
+	MCExecPoint ep;
+	ep . setsvalue(MCString(p_text, p_length));
+	if (!p_font -> unicode && !p_unicode_override)
+		ep . nativetoutf16();
+	
+	return MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -340,7 +354,7 @@ void MCScreenDC::setbeep(uint4 property, int4 beep)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef displayname)
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale, uint4 window, MCStringRef displayname)
 {
 	return NULL;
 }
@@ -478,7 +492,7 @@ void MCScreenDC::do_fit_window(bool p_immediate_resize, bool p_post_message)
 	if (p_post_message)
 	{
 		if (p_immediate_resize)
-			((MCStack *)m_current_window) -> configure(True);
+			((MCStack *)m_current_window) -> view_configure(true);
 		else
 			MCEventQueuePostWindowReshape((MCStack *)m_current_window);
 
@@ -507,158 +521,254 @@ static MCRectangle android_view_get_bounds(void)
 class MCAndroidStackSurface: public MCStackSurface
 {
 	MCRegionRef m_region;
-	Drawable m_target;
-	MCContext *m_context;
+	void *m_pixels;
+	
+	MCGContextRef m_locked_context;
+	MCRectangle m_locked_area;
+	bool m_locked;
 
 public:
 	MCAndroidStackSurface(MCRegionRef p_region)
 	{
 		m_region = p_region;
-		m_target = nil;
-		m_context = nil;
+		m_pixels = nil;
+		
+		m_locked_context = nil;
+		m_locked = false;
 	}
 
-	bool LockGraphics(MCRegionRef p_area, MCContext*& r_context)
+	bool Lock(void)
 	{
-		MCRectangle t_area;
-		t_area = MCU_intersect_rect(MCRegionGetBoundingBox(p_area), MCRegionGetBoundingBox(m_region));
-
-		void *t_pixmap;
-		if (!LockTarget(kMCStackSurfaceTargetPixmap, t_pixmap))
+		MCRectangle t_rect = MCRegionGetBoundingBox(m_region);
+		if (s_android_bitmap == nil)
 			return false;
-
-		m_context = MCscreen -> createcontext((Drawable)t_pixmap, false, true);
-		m_context -> setorigin(0, 0);
-		m_context -> setclip(t_area);
-
-		r_context = m_context;
-
+		
+		if (m_pixels != nil)
+			return false;
+		
+		if (AndroidBitmap_lockPixels(s_java_env, s_android_bitmap, &m_pixels) < 0)
+			return false;
+		
 		return true;
+	}
+	
+	void Unlock(void)
+	{
+		if (m_pixels == nil)
+			return;
+		
+		AndroidBitmap_unlockPixels(s_java_env, s_android_bitmap);
+		m_pixels = nil;
+	}
+	
+	bool LockGraphics(MCRegionRef p_area, MCGContextRef &r_context)
+	{
+		MCGRaster t_raster;
+		if (LockPixels(p_area, t_raster))
+		{
+			if (MCGContextCreateWithRaster(t_raster, m_locked_context))
+			{
+				// Set origin
+				MCGContextTranslateCTM(m_locked_context, -m_locked_area.x, -m_locked_area.y);
+				// Set clipping rect
+				MCGContextClipToRect(m_locked_context, MCRectangleToMCGRectangle(m_locked_area));
+				
+				r_context = m_locked_context;
+				
+				return true;
+			}
+			
+			UnlockPixels(false);
+		}
+		
+		return false;
 	}
 
 	void UnlockGraphics(void)
 	{
-		MCscreen -> freecontext(m_context);
-
-		UnlockTarget();
+		if (m_locked_context == nil)
+			return;
+		
+		MCGContextRelease(m_locked_context);
+		m_locked_context = nil;
+		
+		UnlockPixels();
 	}
 
-	bool LockPixels(MCRegionRef p_area, void*& r_bits, uint32_t& r_stride)
+	bool LockPixels(MCRegionRef p_area, MCGRaster &r_raster)
 	{
+		if (m_locked)
+			return false;
+		
 		MCRectangle t_area;
 		t_area = MCU_intersect_rect(MCRegionGetBoundingBox(p_area), MCRegionGetBoundingBox(m_region));
 
-		void *t_pixmap;
-		if (!LockTarget(kMCStackSurfaceTargetPixmap, t_pixmap))
-			return false;
-
-		MCMobileBitmap *t_bitmap;
-		t_bitmap = (MCMobileBitmap *)((Pixmap)t_pixmap) -> handle . pixmap;
-
-		r_bits = (char *)t_bitmap -> data + t_area . y * t_bitmap -> stride + t_area . x * sizeof(uint32_t);
-		r_stride = t_bitmap -> stride;
-
+		m_locked_area = t_area;
+		
+		r_raster.width = t_area.width;
+		r_raster.height = t_area.height;
+		r_raster.stride = s_android_bitmap_stride;
+		r_raster.pixels = (uint8_t*)m_pixels + t_area.y * s_android_bitmap_stride + t_area.x * sizeof(uint32_t);
+		r_raster.format = kMCGRasterFormat_ARGB;
+		
+		m_locked = true;
+		
 		return true;
 	}
 
 	void UnlockPixels(void)
 	{
-		UnlockTarget();
+		UnlockPixels(true);
+	}
+	
+	void UnlockPixels(bool p_update)
+	{
+		if (!m_locked)
+			return;
+		
+		if (p_update)
+			s_android_bitmap_dirty = MCU_union_rect(s_android_bitmap_dirty, m_locked_area);
+		
+		m_locked = false;
 	}
 
 	bool LockTarget(MCStackSurfaceTargetType p_type, void*& r_target)
 	{
-		if (p_type != kMCStackSurfaceTargetPixmap)
-			return false;
-
-		if (s_android_bitmap == nil)
-			return NULL;
-
-		void *t_pixels;
-		if (AndroidBitmap_lockPixels(s_java_env, s_android_bitmap, &t_pixels) < 0)
-			return NULL;
-
-		MCMobileBitmap *t_bitmap;
-		t_bitmap = new MCMobileBitmap;
-		t_bitmap -> width = s_android_bitmap_width;
-		t_bitmap -> height = s_android_bitmap_height;
-		t_bitmap -> stride = s_android_bitmap_stride;
-		t_bitmap -> is_mono = false;
-		t_bitmap -> data = t_pixels;
-
-		m_target = new _Drawable;
-		m_target -> type = DC_BITMAP;
-		m_target -> handle . pixmap = (MCSysBitmapHandle)t_bitmap;
-
-		r_target = m_target;
-
-		return true;
+		return false;
 	}
 
 	void UnlockTarget(void)
 	{
-		MCMobileBitmap *t_bitmap;
-		t_bitmap = (MCMobileBitmap *)m_target -> handle . pixmap;
-		delete t_bitmap;
-		delete m_target;
+	}
 
-		AndroidBitmap_unlockPixels(s_java_env, s_android_bitmap);
-
-		s_android_bitmap_dirty = MCU_union_rect(s_android_bitmap_dirty, MCRegionGetBoundingBox(m_region));
+	bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
+	{
+		bool t_success = true;
+		
+		MCGContextRef t_context = nil;
+		MCRegionRef t_region = nil;
+		
+		t_success = MCRegionCreate(t_region);
+		
+		if (t_success)
+			t_success = MCRegionSetRect(t_region, MCGRectangleGetIntegerBounds(p_dst_rect));
+		
+		if (t_success)
+			t_success = LockGraphics(t_region, t_context);
+		
+		if (t_success)
+		{
+			MCGContextSetBlendMode(t_context, p_blend);
+			MCGContextSetOpacity(t_context, p_alpha);
+			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNearest);
+		}
+		
+		UnlockGraphics();
+		
+		MCRegionDestroy(t_region);
+		
+		return t_success;
 	}
 };
 
 class MCOpenGLStackSurface: public MCStackSurface
 {
-	Pixmap m_pixmap;
-	MCContext *m_context;
+	void *m_buffer_pixels;
+	uint32_t m_buffer_stride;
+	
+	MCGContextRef m_locked_context;
+	MCRectangle m_locked_area;
+	bool m_locked;
+	bool m_update;
 
 public:
 	MCOpenGLStackSurface(void)
 	{
-		m_pixmap = nil;
+		m_buffer_pixels = nil;
+		m_locked_context = nil;
+		m_locked = false;
+		m_update = false;
 	}
 
-	bool LockGraphics(MCRegionRef p_area, MCContext*& r_context)
+	bool Lock(void)
 	{
-		m_pixmap = MCscreen -> createpixmap(s_android_bitmap_width, s_android_bitmap_height, 0, False);
-		m_context = MCscreen -> createcontext(m_pixmap, false, true);
-
-		r_context = m_context;
-
+		if (m_buffer_pixels != nil)
+			return false;
+		
+		m_buffer_stride = s_android_bitmap_width * sizeof(uint32_t);
+		if (!MCMemoryAllocate(s_android_bitmap_height * m_buffer_stride, m_buffer_pixels))
+			return false;
+		
 		return true;
+	}
+	
+	void Unlock()
+	{
+		if (m_buffer_pixels == nil)
+			return;
+		
+		if (m_update)
+			FlushBits(m_buffer_pixels, m_buffer_stride);
+		
+		MCMemoryDeallocate(m_buffer_pixels);
+		m_buffer_pixels = nil;
+	}
+	
+	bool LockGraphics(MCRegionRef p_area, MCGContextRef &r_context)
+	{
+		MCGRaster t_raster;
+		if (LockPixels(p_area, t_raster))
+		{
+			if (MCGContextCreateWithRaster(t_raster, r_context))
+				return true;
+			
+			UnlockPixels(false);
+		}
+		
+		return false;
 	}
 
 	void UnlockGraphics(void)
 	{
-		MCscreen -> freecontext(m_context);
-
-		MCMobileBitmap *t_bitmap;
-		t_bitmap = (MCMobileBitmap *)m_pixmap -> handle . pixmap;
-		FlushBits(t_bitmap -> data, t_bitmap -> stride);
-
-		MCscreen -> freepixmap(m_pixmap);
+		if (m_locked_context == nil)
+			return;
+		
+		MCGContextRelease(m_locked_context);
+		m_locked_context = nil;
+		
+		UnlockPixels();
 	}
 
-	bool LockPixels(MCRegionRef p_area, void*& r_bits, uint32_t& r_stride)
+	bool LockPixels(MCRegionRef p_area, MCGRaster &r_raster)
 	{
-		m_pixmap = MCscreen -> createpixmap(s_android_bitmap_width, s_android_bitmap_height, 0, False);
+		if (m_locked)
+			return false;
+		
+		r_raster.width = s_android_bitmap_width;
+		r_raster.height = s_android_bitmap_height;
+		r_raster.stride = m_buffer_stride;
+		r_raster.pixels = m_buffer_pixels;
+		r_raster.format = kMCGRasterFormat_ARGB;
 
-		MCMobileBitmap *t_bitmap;
-		t_bitmap = (MCMobileBitmap *)m_pixmap -> handle . pixmap;
-		r_bits = t_bitmap -> data;
-		r_stride = t_bitmap -> stride;
-
+		m_locked = true;
+		
 		return true;
 	}
 
 	void UnlockPixels(void)
 	{
-		MCMobileBitmap *t_bitmap;
-		t_bitmap = (MCMobileBitmap *)m_pixmap -> handle . pixmap;
-		FlushBits(t_bitmap -> data, t_bitmap -> stride);
-
-		MCscreen -> freepixmap(m_pixmap);
+		UnlockPixels(true);
+	}
+	
+	void UnlockPixels(bool p_update)
+	{
+		if (!m_locked)
+			return;
+		
+		if (p_update)
+			m_update = true;
+		
+		m_locked = false;
 	}
 
 	bool LockTarget(MCStackSurfaceTargetType p_type, void*& r_context)
@@ -673,6 +783,35 @@ public:
 	{
 	}
 
+	bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
+	{
+		bool t_success = true;
+		
+		MCGContextRef t_context = nil;
+		MCRegionRef t_region = nil;
+		
+		t_success = MCRegionCreate(t_region);
+		
+		if (t_success)
+			t_success = MCRegionSetRect(t_region, MCGRectangleGetIntegerBounds(p_dst_rect));
+		
+		if (t_success)
+			t_success = LockGraphics(t_region, t_context);
+		
+		if (t_success)
+		{
+			MCGContextSetBlendMode(t_context, p_blend);
+			MCGContextSetOpacity(t_context, p_alpha);
+			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNearest);
+		}
+		
+		UnlockGraphics();
+		
+		MCRegionDestroy(t_region);
+		
+		return t_success;
+	}
+	
 protected:
 	static void FlushBits(void *p_bits, uint32_t p_stride)
 	{
@@ -738,7 +877,7 @@ protected:
 	}
 };
 
-void MCStack::updatewindow(MCRegionRef p_region)
+void MCStack::device_updatewindow(MCRegionRef p_region)
 {
 	if (!s_android_opengl_enabled)
 	{
@@ -755,7 +894,11 @@ void MCStack::updatewindow(MCRegionRef p_region)
 		MCRegionSetRect(t_actual_region, MCU_intersect_rect(t_rect, MCU_make_rect(0, 0, s_android_bitmap_width, s_android_bitmap_height)));
 
 		MCAndroidStackSurface t_surface(t_actual_region);
-		redrawwindow(&t_surface, t_actual_region);
+		if (t_surface.Lock())
+		{
+			device_redrawwindow(&t_surface, t_actual_region);
+			t_surface.Unlock();
+		}
 
 		MCRegionDestroy(t_actual_region);
 
@@ -784,7 +927,13 @@ void MCStack::updatewindow(MCRegionRef p_region)
 		MCRegionRef t_dirty_rgn;
 		MCRegionCreate(t_dirty_rgn);
 		MCRegionSetRect(t_dirty_rgn, MCU_make_rect(0, 0, s_android_bitmap_width, s_android_bitmap_height));
-		redrawwindow(&t_surface, t_dirty_rgn);
+		
+		if (t_surface.Lock())
+		{
+			device_redrawwindow(&t_surface, t_dirty_rgn);
+			t_surface.Unlock();
+		}
+		
 		s_java_env -> CallVoidMethod(s_android_opengl_view, s_openglview_swap_method, nil);
 		MCRegionDestroy(t_dirty_rgn);
 
@@ -796,7 +945,7 @@ void MCStack::updatewindow(MCRegionRef p_region)
 
 			// MW-2011-12-12: [[ Bug 9908 ]] Make sure both front and back buffers hold the same image
 			//   to prevent a flicker back to an old frame when making the opengl layer visible.
-			updatewindow(p_region);
+			device_updatewindow(p_region);
 
 			MCAndroidEngineRemoteCall("hideBitmapView", "v", nil);
 		}
@@ -804,7 +953,7 @@ void MCStack::updatewindow(MCRegionRef p_region)
 
 }
 
-void MCStack::updatewindowwithbuffer(Drawable p_pixmap, MCRegionRef p_region)
+void MCStack::device_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
 {
 	MCRectangle t_rect;
 	t_rect = MCRegionGetBoundingBox(p_region);
@@ -815,12 +964,11 @@ void MCStack::updatewindowwithbuffer(Drawable p_pixmap, MCRegionRef p_region)
 
 	MCAndroidStackSurface t_surface(t_actual_region);
 
-	// Copy the partial update to the bitmap view pixmap.
-	void *t_target;
-	if (t_surface . LockTarget(kMCStackSurfaceTargetPixmap, t_target))
+	if (t_surface . Lock())
 	{
-		MCscreen -> copyarea(p_pixmap, (Pixmap)t_target, 0, 0, 0, t_rect . width, t_rect . height, t_rect . x, t_rect . y, GXcopy);
-		t_surface . UnlockTarget();
+		// update the bitmap view using the callback
+		p_callback(&t_surface, t_actual_region, p_context);
+		t_surface . Unlock();
 	}
 
 	MCRegionDestroy(t_actual_region);
@@ -839,9 +987,13 @@ void MCStack::preservescreenforvisualeffect(const MCRectangle& p_rect)
 	if (!s_android_opengl_enabled || !s_android_opengl_visible)
 		return;
 
+	// IM-2013-10-03: [[ FullscreenMode ]] get region in device coords for comparison
+	MCRectangle t_device_rect;
+	t_device_rect = MCRectangleGetTransformedBounds(p_rect, getdevicetransform());
+	
 	// If we are doing a full screen effect, we don't need to ensure the rest
 	// of the bitmap is in sync.
-	if (p_rect . width == s_android_bitmap_width && p_rect . height == s_android_bitmap_height)
+	if (t_device_rect . width == s_android_bitmap_width && t_device_rect . height == s_android_bitmap_height)
 		return;
 
 	MCRegionRef t_actual_region;
@@ -850,31 +1002,32 @@ void MCStack::preservescreenforvisualeffect(const MCRectangle& p_rect)
 
 	MCAndroidStackSurface t_surface(t_actual_region);
 
-	// Lock the whole surface of the bitmap.
-	void *t_target;
-	if (t_surface . LockTarget(kMCStackSurfaceTargetPixmap, t_target))
+	if (t_surface . Lock())
 	{
-		// We need the contents of the last presented framebuffer. To ensure
-		// we get that, force an (OpenGL) update before reading the pixels.
-		updatewindow(nil);
-
-		// Fetch the contents of the framebuffer.
-		MCMobileBitmap *t_bitmap;
-		t_bitmap = (MCMobileBitmap *)((Pixmap)t_target) -> handle . pixmap;
-		glReadPixels(0, 0, s_android_bitmap_width, s_android_bitmap_height, GL_RGBA, GL_UNSIGNED_BYTE, t_bitmap -> data);
-
-		// glReadPixels gives us the bitmap the wrong way up, so swap it round.
-		void *t_scanline;
-		t_scanline = malloc(t_bitmap -> stride);
-		for(int y = 0; y < s_android_bitmap_height / 2; y++)
+		MCGRaster t_raster;
+		// Lock the whole surface of the bitmap.
+		if (t_surface . LockPixels(t_actual_region, t_raster))
 		{
-			memcpy(t_scanline, (char *)t_bitmap -> data + y * t_bitmap -> stride, t_bitmap -> stride);
-			memcpy((char *)t_bitmap -> data + y * t_bitmap -> stride, (char *)t_bitmap -> data + (s_android_bitmap_height - y - 1) * t_bitmap -> stride, t_bitmap -> stride);
-			memcpy((char *)t_bitmap -> data + (s_android_bitmap_height - y - 1) * t_bitmap -> stride, t_scanline, t_bitmap -> stride);
+			// We need the contents of the last presented framebuffer. To ensure
+			// we get that, force an (OpenGL) update before reading the pixels.
+			device_updatewindow(t_actual_region);
+			
+			// Fetch the contents of the framebuffer.
+			glReadPixels(0, 0, s_android_bitmap_width, s_android_bitmap_height, GL_RGBA, GL_UNSIGNED_BYTE, t_raster . pixels);
+			
+			// glReadPixels gives us the bitmap the wrong way up, so swap it round.
+			void *t_scanline;
+			/* UNCHECKED */ t_scanline = malloc(t_raster . stride);
+			for(int y = 0; y < s_android_bitmap_height / 2; y++)
+			{
+				memcpy(t_scanline, (char *)t_raster . pixels + y * t_raster . stride, t_raster . stride);
+				memcpy((char *)t_raster . pixels + y * t_raster . stride, (char *)t_raster . pixels + (s_android_bitmap_height - y - 1) * t_raster . stride, t_raster . stride);
+				memcpy((char *)t_raster . pixels + (s_android_bitmap_height - y - 1) * t_raster . stride, t_scanline, t_raster . stride);
+			}
+			free(t_scanline);
 		}
-		free(t_scanline);
+		t_surface . Unlock();
 	}
-	t_surface . UnlockTarget();
 
 	MCRegionDestroy(t_actual_region);
 }
@@ -956,6 +1109,10 @@ static void *mobile_main(void *arg)
 	{
 		MCLog("X_init failed", 0);
 
+		// IM-2013-05-01: [[ BZ 10586 ]] signal java ui thread to exit
+		// finish LiveCodeActivity
+		MCAndroidEngineRemoteCall("finishActivity", "v", nil);
+		
 		// Yield for now as we don't detect error states correctly.
 		co_yield_to_android();
 
@@ -997,16 +1154,17 @@ static void *mobile_main(void *arg)
 	}
 
 	MCLog("Shutting down project", 0);
-	MCexitall = False;
-	MCdefaultstackptr->getcard()->message(MCM_shut_down);
-	MCQuit();
-
-	while(s_engine_running)
-		X_main_loop_iteration();
-
+	
 	MCLog("Calling X_close", 0);
 	X_close();
 
+	// IM-2013-05-01: [[ BZ 10586 ]] signal java ui thread
+	// and wait for it to exit
+	MCAndroidEngineRemoteCall("finishActivity", "v", nil);
+	
+	while (s_engine_running)
+		co_yield_to_android();
+	
 	// Free argument.
 	MCCStringFree(t_args[0]);
 
@@ -1280,7 +1438,7 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 		case kMCJavaTypeMCStringUnicode:
 			{
 				jstring t_java_string;
-				t_java_string = (jstring)t_env -> CallObjectMethodA(context->object, t_method_id, t_params->params);
+			t_java_string = (jstring)t_env -> CallObjectMethodA(context->object, t_method_id, t_params->params);
 				if (t_cleanup_java_refs && t_env -> ExceptionCheck())
 				{
 					t_exception_thrown = true;
@@ -1473,6 +1631,26 @@ void *MCAndroidGetContainer(void)
 	return (void *)s_android_container;
 }
 
+// MW-2013-06-14: [[ ExternalsApiV5 ]] Return the JavaEnv of the Android system
+//   thread.
+void *MCAndroidGetSystemJavaEnv(void)
+{
+	return s_android_ui_env;
+}
+
+// MW-2013-06-14: [[ ExternalsApiV5 ]] Return the JavaEnv of the engine's script
+//   thread.
+void *MCAndroidGetScriptJavaEnv(void)
+{
+	return s_java_env;
+}
+
+// MW-2013-07-25: [[ ExternalsApiV5 ]] Return the engine object (EngineApi really)
+void *MCAndroidGetEngine(void)
+{
+	return s_android_view;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobject object, jobject activity, jobject container, jobject view) __attribute__((visibility("default")));
@@ -1484,6 +1662,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPause(JNIEnv 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doResume(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLowMemory(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProcess(JNIEnv *env, jobject object, bool timedout) __attribute__((visibility("default")));
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doWait(JNIEnv *env, jobject object, double time, bool dispatch, bool anyevent) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doReconfigure(JNIEnv *env, jobject object, int w, int h, jobject bitmap) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doTouch(JNIEnv *env, jobject object, int action, int id, int timestamp, int x, int y) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doKeyPress(JNIEnv *env, jobject object, int modifiers, int char_code, int key_code) __attribute__((visibility("default")));
@@ -1576,11 +1755,10 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doDestroy(JNIEnv *env, job
 
 	s_engine_running = false;
 
-	// Set the global exit vars appropriately and yield to the engine thread
-	// which should heed them and exit.
+	// IM-2013-05-01: [[ BZ 10586 ]] we should now only be called when the
+	// engine thread is about to exit, so set s_engine_running to false & yield
+	// so it can finish terminating
 	MCLog("Yielding to engine thread to perform finalization phase", 0);
-	MCquit = True;
-	MCexitall = True;
 	co_yield_to_engine();
 
 	// Finalize bitmap mutex
@@ -1651,6 +1829,16 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProcess(JNIEnv *env, job
 
 	s_schedule_wakeup_was_broken = !timedout;
 	co_yield_to_engine();
+}
+
+// MW-2013-08-07: [[ ExternalsApiV5 ]] Native implementation of the Engine 'doWait'
+//   method - just calls MCScreenDC::wait().
+JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doWait(JNIEnv *env, jobject object, double time, bool dispatch, bool anyevent)
+{
+	if (!s_engine_running)
+		return;
+	
+	MCscreen -> wait(time, dispatch, anyevent);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doReconfigure(JNIEnv *env, jobject object, int w, int h, jobject bitmap)
@@ -2015,7 +2203,7 @@ bool MCAndroidSignatureMatch(const char *p_signature)
 			if (MCCStringLength(s_build_info[t_component_index]) != t_component_length ||
 			!MCCStringEqualSubstringCaseless(s_build_info[t_component_index], t_component, t_component_length))
 			{
-				return false;
+			return false;
 			}
 		}
 

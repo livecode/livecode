@@ -1092,7 +1092,8 @@ private:
 	MCNameRef m_notification;
 };
 
-static struct { NSString * const *name; SEL selector; } s_player_notifications[] =
+// MM-2013-09-23: [[ iOS7 Support ]] Tweaked type to appease llvm 5.0.
+static struct { NSString* const* name; SEL selector; } s_player_notifications[] =
 {
 	{ &MPMovieDurationAvailableNotification, @selector(movieDurationAvailable:) },
 	{ &MPMovieMediaTypesAvailableNotification, @selector(movieMediaTypesAvailable:) },

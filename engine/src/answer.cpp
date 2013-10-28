@@ -192,7 +192,7 @@ Parse_errors MCAnswer::parse_colour(MCScriptPoint& sp)
 	if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
 		if (sp . parseexp(False, True, &colour . initial) != PS_NORMAL)
 			t_error = PE_ANSWER_BADRESPONSE;
-			
+	
 	return t_error;
 }
 

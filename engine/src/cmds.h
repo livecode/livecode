@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "statemnt.h"
 #include "objdefs.h"
+#include "regex.h"
 #include "util.h"
 #include "uidc.h"
 
@@ -129,11 +130,14 @@ public:
 class MCEdit : public MCStatement
 {
 	MCChunk *target;
+    // MERG 2013-9-13: [[ EditScriptChunk ]] Added at expression that's passed through as a second parameter to editScript
+    MCExpression *m_at;
 public:
 	MCEdit()
 	{
 		target = NULL;
-	}
+        m_at = NULL;
+    }
 	virtual ~MCEdit();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual Exec_stat exec(MCExecPoint &);
@@ -1217,6 +1221,9 @@ class MCStart : public MCStatement
 {
 	MCChunk *target;
 	MCExpression *stack;
+    // TD-2013-06-12: [[ DynamicFonts ]] Property to store font path
+    MCExpression *font;
+    bool is_globally : 1;
 protected:
 	Start_constants mode;
 public:
@@ -1225,6 +1232,9 @@ public:
 		target = NULL;
 		stack = NULL;
 		mode = SC_UNDEFINED;
+        // TD-2013-06-20: [[ DynamicFonts ]] Property to store font path
+        font = NULL;
+        is_globally = 0;
 	}
 	virtual ~MCStart();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -1245,12 +1255,16 @@ class MCStop : public MCStatement
 {
 	MCChunk *target;
 	MCExpression *stack;
+    // TD-2013-06-20: [[ DynamicFonts ]] Property to store font path
+    MCExpression *font;
 	Start_constants mode;
 public:
 	MCStop()
 	{
 		target = NULL;
 		stack = NULL;
+        // TD-2013-06-20: [[ DynamicFonts ]] Property to store font path
+        font = NULL;
 	}
 	virtual ~MCStop();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -1388,21 +1402,81 @@ public:
 	}
 };
 
+// JS-2013-07-01: [[ EnhancedFilter ]] Utility class and descendents handling the
+//   regex and wildcard style pattern matchers.
+class MCPatternMatcher
+{
+protected:
+	MCStringRef pattern;
+	Boolean casesensitive;
+public:
+	// MW-2013-07-01: [[ EnhancedFilter ]] Tweaked to take 'const char *' since class
+	//   copies the string.
+	MCPatternMatcher(MCStringRef p, Boolean cs)
+	{
+		pattern = MCValueRetain(p);
+		casesensitive = cs;
+	}
+	virtual ~MCPatternMatcher();
+	virtual Exec_stat compile(uint2 line, uint2 pos) = 0;
+	virtual Boolean match(MCStringRef s) = 0;
+};
+
+class MCRegexMatcher : public MCPatternMatcher
+{
+protected:
+	regexp *compiled;
+public:
+	MCRegexMatcher(MCStringRef p, Boolean cs) : MCPatternMatcher(p, cs)
+	{
+		compiled = NULL;
+	}
+	virtual Exec_stat compile(uint2 line, uint2 pos);
+	virtual Boolean match(MCStringRef s);
+};
+
+class MCWildcardMatcher : public MCPatternMatcher
+{
+public:
+	MCWildcardMatcher(MCStringRef p, Boolean cs) : MCPatternMatcher(p, cs)
+	{
+	}
+	virtual Exec_stat compile(uint2 line, uint2 pos);
+	virtual Boolean match(MCStringRef s);
+protected:
+	static Boolean match(const char *s, const char *p, Boolean cs);
+};
+
 class MCFilter : public MCStatement
 {
+	// JS-2013-07-01: [[ EnhancedFilter ]] Type of the filter (items or lines).
+	Chunk_term chunktype;
 	MCChunk *container;
+	// JS-2013-07-01: [[ EnhancedFilter ]] Optional output container (into ... clause).
+	MCChunk *target;
+	// JS-2013-07-01: [[ EnhancedFilter ]] 'it' reference to use if source is an expr.
+	MCVarref *it;
+	// JS-2013-07-01: [[ EnhancedFilter ]] Source expression if source not a container.
+	MCExpression *source;
 	MCExpression *pattern;
-	Boolean out;
+	// JS-2013-07-01: [[ EnhancedFilter ]] Whether to use regex or wildcard pattern matcher.
+	Match_mode matchmode;
+	// JS-2013-07-01: [[ EnhancedFilter ]] Whether it is 'matching' (False) or 'not matching' (True)
+	Boolean discardmatches;
 public:
 	MCFilter()
 	{
+		chunktype = CT_UNDEFINED;
 		container = NULL;
+		target = NULL;
+		it = NULL;
+		source = NULL;
 		pattern = NULL;
-		out = False;
+		matchmode = MA_UNDEFINED;
+		discardmatches = False;
 	}
 	virtual ~MCFilter();
-	Boolean match(char *s, char *p, Boolean casesensitive);
-	char *filterlines(char *sstring, char *pstring, Boolean casesensitive);
+	char *filterdelimited(char *sstring, char delimiter, MCPatternMatcher *matcher);
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual Exec_stat exec(MCExecPoint &);
 	virtual void compile(MCSyntaxFactoryRef);
@@ -1711,6 +1785,9 @@ class MCSetOp : public MCStatement
 	MCExpression *source;
 protected:
 	Boolean intersect : 1;
+	bool overlap : 1;
+    // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+    bool recursive : 1;
 public:
 	MCSetOp()
 	{
@@ -2068,5 +2145,46 @@ public:
 private:
 	MCStringRef data;
 };
+
+// Feature:
+//   resolve-image
+//
+// Contributor:
+//   Monte Goulding (2013-04-17)
+//
+// Syntax:
+//   resolve image [id] <id or name> relative to <object reference>
+//
+// Action:
+//   This command resolves a short id or name of an image as would be used for
+//   an icon and sets it to the long ID of the image according to the documented
+//   rules for resolving icons.
+//
+//   it is set empty if the command fails to resolve the image which means it's
+//   not on any stack in memory.
+
+class MCResolveImage : public MCStatement
+{
+public:
+    MCResolveImage(void)
+    {
+        m_relative_object = nil;
+        m_id_or_name  = nil;
+        m_it = nil;
+    }
+	
+    virtual ~MCResolveImage(void);
+    
+    virtual Parse_stat parse(MCScriptPoint &p_sp);
+    
+    virtual Exec_stat exec(MCExecPoint &p_ep);
+    
+private:
+    MCChunk *m_relative_object;
+    MCExpression *m_id_or_name;
+    MCVarref *m_it;
+    bool m_is_id : 1;
+};
+
 
 #endif

@@ -62,6 +62,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacksecurity.h"
 
 #include "exec-interface.h"
+#include "graphics_util.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 MC_EXEC_DEFINE_MAKE_METHOD(Interface, CustomImagePaletteSettings, 2)
@@ -3325,17 +3326,18 @@ void MCInterfaceExecImportSnapshot(MCExecContext& ctxt, MCStringRef p_display, M
 	}
 	else	
 		t_rect = *p_region;
-	
+	// TODO - graphics refactor
+    /*
 	MCBitmap *t_bitmap = nil;
 	t_bitmap = MCscreen->snapshot(t_rect, p_window, p_display);
 	
 	if (t_bitmap != nil)
 	{
-		/* UNCHECKED */ MCImage *iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
+		MCImage *iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
 		iptr->compress(t_bitmap, true, true);
 		iptr->attach(OP_CENTER, false);
 		MCscreen->destroyimage(t_bitmap);
-	}
+	} */
 }
 void MCInterfaceExecImportSnapshotOfScreen(MCExecContext& ctxt, MCRectangle *p_region)
 {
@@ -3352,6 +3354,8 @@ void MCInterfaceExecImportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_sta
 }
 void MCInterfaceExecImportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size)
 {
+// TODO - graphics refactor
+/*
 	if (MCdefaultstackptr->islocked())
 	{	
 		ctxt . LegacyThrow(EE_IMPORT_LOCKED);
@@ -3371,11 +3375,12 @@ void MCInterfaceExecImportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_targ
 	
 	if (t_bitmap != nil)
 	{
-		/* UNCHECKED */ MCImage *iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
+		MCImage *iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
 		iptr->compress(t_bitmap, true, true);
 		iptr->attach(OP_CENTER, false);
 		MCscreen->destroyimage(t_bitmap);
 	}
+ */
 }
 
 void MCInterfaceExecImportGetStream(MCExecContext& ctxt, MCStringRef p_filename, IO_handle &r_stream)
@@ -3596,7 +3601,8 @@ MCImageBitmap* MCInterfaceGetSnapshotBitmap(MCExecContext &ctxt, MCStringRef p_d
 	
 	MCBitmap *t_bitmap = nil;
 	MCImageBitmap *t_image_bitmap = nil;
-	
+    // TODO - graphics refactor
+    /*
 	t_bitmap = MCscreen->snapshot(t_rect, p_window, p_display);
 	if (t_bitmap == nil)
 	{
@@ -3604,10 +3610,10 @@ MCImageBitmap* MCInterfaceGetSnapshotBitmap(MCExecContext &ctxt, MCStringRef p_d
 	}
 	else
 	{
-		/* UNCHECKED */ MCImageBitmapCreateWithOldBitmap(t_bitmap, t_image_bitmap);
+		MCImageBitmapCreateWithOldBitmap(t_bitmap, t_image_bitmap);
 		MCscreen->destroyimage(t_bitmap);
 	}
-	
+    */
 	return t_image_bitmap;
 }
 
@@ -3663,14 +3669,16 @@ MCImageBitmap *MCInterfaceGetSnapshotOfObjectBitmap(MCObject *p_target, MCRectan
 {
 	MCBitmap *t_bitmap = nil;
 	MCImageBitmap *t_image_bitmap = nil;
-	
+    // TODO - graphics refactor
+    /*
 	t_bitmap = p_target -> snapshot(p_region, p_at_size, p_with_effects);
 	if (!t_bitmap == nil)
 	{
-		/* UNCHECKED */ MCImageBitmapCreateWithOldBitmap(t_bitmap, t_image_bitmap);
+		MCImageBitmapCreateWithOldBitmap(t_bitmap, t_image_bitmap);
 		MCscreen->destroyimage(t_bitmap);
 	}
 	return t_image_bitmap;
+     */
 }
 
 void MCInterfaceExecExportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef &r_data)
@@ -3718,11 +3726,13 @@ void MCInterfaceExecExportImage(MCExecContext& ctxt, MCImage *p_target, int p_fo
 			MCStringCopy(kMCEmptyString, r_data);
 			return;
 		}
-
+        // TODO - graphics refactor
+        /*
 		MCImageBitmap *t_bitmap;
 		if (p_target->lockbitmap(t_bitmap))
 			MCInterfaceExportBitmap(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(p_target), r_data);
 		p_target->unlockbitmap(t_bitmap);
+         */
 	}
 }
 void MCInterfaceExecExportImageToFile(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename)
@@ -3731,10 +3741,13 @@ void MCInterfaceExecExportImageToFile(MCExecContext& ctxt, MCImage *p_target, in
 		p_target = MCInterfaceExecExportSelectImage(ctxt);
 	if (p_target != nil)
 	{
+        // TODO - graphics refactor
+        /*
 		MCImageBitmap *t_bitmap;
 		if (p_target->lockbitmap(t_bitmap))
 			MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(p_target), p_filename, p_mask_filename);
 		p_target->unlockbitmap(t_bitmap);
+         */
 	}
 }
 

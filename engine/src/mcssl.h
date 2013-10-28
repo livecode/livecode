@@ -36,6 +36,4 @@ bool MCCrypt_rsa_op(bool p_encrypt, RSA_KEYTYPE p_key_type, const char *p_messag
 bool MCCrypt_rsa_op(bool p_encrypt, bool p_is_public, MCStringRef p_message_in, MCStringRef p_key, 
 					MCStringRef p_passphrase, MCStringRef &r_message_out, MCStringRef &r_result, uint32_t &r_error);
 
-bool MCCrypt_random_bytes(uint32_t p_bytecount, MCDataRef& r_bytes);
-
 #endif

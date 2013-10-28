@@ -49,7 +49,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 MCCompact::~MCCompact()
 {
-	delete target;
+delete target;
 }
 
 Parse_stat MCCompact::parse(MCScriptPoint &sp)
@@ -68,7 +68,7 @@ Parse_stat MCCompact::parse(MCScriptPoint &sp)
 Exec_stat MCCompact::exec(MCExecPoint &ep)
 {
 #ifdef /* MCCompact */ LEGACY_EXEC
-MCObject *optr;
+	MCObject *optr;
 	uint4 parid;
 
 	if (target->getobj(ep, optr, parid, True) != ES_NORMAL)
@@ -957,7 +957,7 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 		
 		// MW-2011-10-17: [[ Bug 9811 ]] Make sure we configure the new card now.
 		MCRedrawDisableScreenUpdates();
-		sptr -> configure(True);
+		sptr -> view_configure(True);
 		MCRedrawEnableScreenUpdates();
 			
 		Boolean t_abort;
@@ -1527,78 +1527,78 @@ Exec_stat MCHide::exec(MCExecPoint &ep)
 	default:
 		break;
 	}
-	return ES_NORMAL; 
+	return ES_NORMAL;
 #endif /* MCHide */
-
-
+    
+    
 	MCExecContext ctxt(ep);
 	switch (which)
 	{
-	case SO_GROUPS:
-		MCInterfaceExecHideGroups(ctxt);
-		break;
-	case SO_OBJECT:
-		MCObjectPtr t_target;
-		if (object->getobj(ep, t_target, True) != ES_NORMAL)
-		{
-			MCeerror->add(EE_HIDE_NOOBJ, line, pos);
-			return ES_ERROR;
-		}
-		if (effect != NULL)
-			MCInterfaceExecHideObjectWithEffect(ctxt, t_target, effect);
-		else
-			MCInterfaceExecHideObject(ctxt, t_target);
-		break;
-	case SO_MENU:
-		MCInterfaceExecHideMenuBar(ctxt);
-		break;
-	case SO_TASKBAR:
-		MCInterfaceExecHideTaskBar(ctxt);
-		break;
-	case SO_MESSAGE:
-		MCIdeExecHideMessageBox(ctxt);
-		break;
-	default:
-		break;
+        case SO_GROUPS:
+            MCInterfaceExecHideGroups(ctxt);
+            break;
+        case SO_OBJECT:
+            MCObjectPtr t_target;
+            if (object->getobj(ep, t_target, True) != ES_NORMAL)
+            {
+                MCeerror->add(EE_HIDE_NOOBJ, line, pos);
+                return ES_ERROR;
+            }
+            if (effect != NULL)
+                MCInterfaceExecHideObjectWithEffect(ctxt, t_target, effect);
+            else
+                MCInterfaceExecHideObject(ctxt, t_target);
+            break;
+        case SO_MENU:
+            MCInterfaceExecHideMenuBar(ctxt);
+            break;
+        case SO_TASKBAR:
+            MCInterfaceExecHideTaskBar(ctxt);
+            break;
+        case SO_MESSAGE:
+            MCIdeExecHideMessageBox(ctxt);
+            break;
+        default:
+            break;
 	}
 	if (!ctxt . HasError())
 		return ES_NORMAL;
-
+    
 	return ctxt . Catch(line, pos);
 }
 
 void MCHide::compile(MCSyntaxFactoryRef ctxt)
 {
 	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
+    
 	switch (which)
 	{
-	case SO_GROUPS:
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHideGroupsMethodInfo);
-		break;
-	case SO_OBJECT:
-		object -> compile_object_ptr(ctxt);
-		if (effect != nil)
-		{
-			effect -> compile_effect(ctxt);
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHideObjectWithEffectMethodInfo);
-		}
-		else
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHideObjectMethodInfo);
-		break;
-	case SO_MENU:
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHideMenuBarMethodInfo);
-		break;
-	case SO_TASKBAR:
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHideTaskBarMethodInfo);
-		break;
-	case SO_MESSAGE:
-		MCSyntaxFactoryExecMethod(ctxt, kMCIdeExecHideMessageBoxMethodInfo);
-		break;
-	default:
-		break;
+        case SO_GROUPS:
+            MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHideGroupsMethodInfo);
+            break;
+        case SO_OBJECT:
+            object -> compile_object_ptr(ctxt);
+            if (effect != nil)
+            {
+                effect -> compile_effect(ctxt);
+                MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHideObjectWithEffectMethodInfo);
+            }
+            else
+                MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHideObjectMethodInfo);
+            break;
+        case SO_MENU:
+            MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHideMenuBarMethodInfo);
+            break;
+        case SO_TASKBAR:
+            MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHideTaskBarMethodInfo);
+            break;
+        case SO_MESSAGE:
+            MCSyntaxFactoryExecMethod(ctxt, kMCIdeExecHideMessageBoxMethodInfo);
+            break;
+        default:
+            break;
 	}
-
+    
 	MCSyntaxFactoryEndStatement(ctxt);
 }
 
@@ -1881,7 +1881,7 @@ Parse_stat MCPop::parse(MCScriptPoint &sp)
 Exec_stat MCPop::exec(MCExecPoint &ep)
 {
 #ifdef /* MCPop */ LEGACY_EXEC
-MCCard *cptr = MCcstack->popcard();
+	MCCard *cptr = MCcstack->popcard();
 	if (dest == NULL)
 	{
 		MCStack *sptr = cptr->getstack();
@@ -1913,7 +1913,6 @@ MCCard *cptr = MCcstack->popcard();
 	}
 	return ES_NORMAL;
 #endif /* MCPop */
-
 
 	MCExecContext ctxt(ep);
 	if (dest == NULL) 
@@ -1998,7 +1997,7 @@ Parse_stat MCPush::parse(MCScriptPoint &sp)
 Exec_stat MCPush::exec(MCExecPoint &ep)
 {
 #ifdef /* MCPush */ LEGACY_EXEC
-MCObject *optr;
+	MCObject *optr;
 	uint4 parid;
 	if (card == NULL)
 		if (recent)
@@ -2113,7 +2112,7 @@ Parse_stat MCSave::parse(MCScriptPoint &sp)
 Exec_stat MCSave::exec(MCExecPoint &ep)
 {
 #ifdef /* MCSave */ LEGACY_EXEC
-MCObject *optr;
+	MCObject *optr;
 	uint4 parid;
 
 	MCresult->clear(False);
@@ -2852,7 +2851,6 @@ Exec_stat MCSubwindow::exec(MCExecPoint &ep)
 		MCdefaultstackptr = olddefault;
 	return ES_NORMAL;
 #endif /* MCSubwindow */
-
 
 	MCExecContext ctxt(ep);
 	MCObject *optr;

@@ -97,7 +97,7 @@ bool MCEncodedImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_fra
 bool MCEncodedImageRep::CalculateGeometry(uindex_t &r_width, uindex_t &r_height)
 {
 	MCImageFrame *t_frame = nil;
-	if (!LockImageFrame(0, t_frame))
+	if (!LockImageFrame(0, m_premultiplied, t_frame))
 		return false;
 
 	r_width = t_frame->image->width;
@@ -117,7 +117,7 @@ uint32_t MCEncodedImageRep::GetDataCompression()
 		return m_compression;
 
 	MCImageFrame *t_frame = nil;
-	if (LockImageFrame(0, t_frame))
+	if (LockImageFrame(0, m_premultiplied, t_frame))
 		UnlockImageFrame(0, t_frame);
 
 	return m_compression;
@@ -129,6 +129,9 @@ MCReferencedImageRep::MCReferencedImageRep(MCStringRef p_file_name)
 {
 	m_file_name = MCValueRetain(p_file_name);
 	m_url_data = nil;
+	
+	// MW-2013-09-25: [[ Bug 10983 ]] No load has yet been attempted.
+	m_url_load_attempted = false;
 }
 
 MCReferencedImageRep::~MCReferencedImageRep()
@@ -142,20 +145,23 @@ bool MCReferencedImageRep::GetDataStream(IO_handle &r_stream)
 	IO_handle t_stream = nil;
 	if (MCSecureModeCanAccessDisk())
 		t_stream = MCS_open(m_file_name, kMCSOpenFileModeRead, false, false, 0);
-
-	if (t_stream == nil)
+	
+	// MW-2013-09-25: [[ Bug 10983 ]] Only ever try to load the rep as a url once.
+	if (t_stream == nil && !m_url_load_attempted)
 	{
-		if (m_url_data == nil)
-		{
-			MCExecPoint ep(MCdefaultstackptr, nil, nil);
-			ep.setvalueref(m_file_name);
-			MCU_geturl(ep);
-			if (ep.getsvalue().getlength() == 0)
-				return false;
+		// MW-2013-09-25: [[ Bug 10983 ]] Mark the rep has having attempted url load.
+		m_url_load_attempted = true;
+		
+		MCExecPoint ep(MCdefaultstackptr, nil, nil);
+		ep.setvalueref(m_file_name);
+		
+		MCU_geturl(ep);
+		
+		if (ep.getsvalue().getlength() == 0)
+			return false;
 
-			/* UNCHECKED */ MCMemoryAllocateCopy(ep.getsvalue().getstring(), ep.getsvalue().getlength(), m_url_data);
-			m_url_data_size = ep.getsvalue().getlength();
-		}
+		/* UNCHECKED */ MCMemoryAllocateCopy(ep.getsvalue().getstring(), ep.getsvalue().getlength(), m_url_data);
+		m_url_data_size = ep.getsvalue().getlength();
 
 		t_stream = MCS_fakeopen(MCString((const char *)m_url_data, m_url_data_size));
 	}

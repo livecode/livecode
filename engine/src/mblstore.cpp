@@ -308,7 +308,6 @@ void MCPurchaseNotifyUpdate(MCPurchase *p_purchase)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// No longer needed
 static bool list_purchases(void *context, MCPurchase* p_purchase)
 {
 	MCExecPoint *ep;

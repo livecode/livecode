@@ -56,10 +56,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "license.h"
 #include "mode.h"
 #include "stacksecurity.h"
+#include "uuid.h"
+#include "font.h"
 
 #include "exec.h"
 
 #include "syntax.h"
+#include "resolution.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -287,7 +290,7 @@ Exec_stat MCArrayEncode::eval(MCExecPoint& ep)
 	}
 
 	MCeerror -> add(EE_ARRAYENCODE_FAILED, line, pos);
-	return ES_ERROR;
+	return ctxt . Catch(line, pos);
 }
 
 ////
@@ -1504,7 +1507,7 @@ Parse_stat MCCharToNum::parse(MCScriptPoint &sp, Boolean the)
 Exec_stat MCCharToNum::eval(MCExecPoint &ep)
 {
 #ifdef /* MCCharToNum */ LEGACY_EXEC
-  if (source->eval(ep) != ES_NORMAL)
+	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_CHARTONUM_BADSOURCE, line, pos);
 		return ES_ERROR;
@@ -2829,7 +2832,7 @@ Parse_stat MCExists::parse(MCScriptPoint &sp, Boolean the)
 Exec_stat MCExists::eval(MCExecPoint &ep)
 {
 #ifdef /* MCExists */ LEGACY_EXEC
-MCObject *optr;
+	MCObject *optr;
 	uint4 parid;
 	MCerrorlock++;
 	ep.setboolean(object->getobj(ep, optr, parid, True) == ES_NORMAL);
@@ -3793,8 +3796,14 @@ Exec_stat MCGlobalLoc::eval(MCExecPoint &ep)
 		MCeerror->add(EE_GLOBALLOC_NAP, line, pos, ep.getsvalue());
 		return ES_ERROR;
 	}
-	MCRectangle trect = MCdefaultstackptr->getrect();
-	ep.setpoint(x + trect.x, y + trect.y - MCdefaultstackptr->getscroll());
+
+	// IM-2013-10-09: [[ FullscreenMode ]] Update to use stack coord conversion methods
+	MCPoint t_loc;
+	t_loc = MCPointMake(x, y);
+	t_loc = MCdefaultstackptr->stacktogloballoc(t_loc);
+
+	ep.setpoint(t_loc.x, t_loc.y);
+
 	return ES_NORMAL;
 #endif /* MCGlobalLoc */
 
@@ -4615,7 +4624,7 @@ Exec_stat MCKeys::eval(MCExecPoint &ep)
 
 					default:
 						// MW-2009-04-05: Stop GCC warning
-						break;
+					break;
 					}
 				}
 			}
@@ -4828,8 +4837,14 @@ Exec_stat MCLocalLoc::eval(MCExecPoint &ep)
 		MCeerror->add(EE_LOCALLOC_NAP, line, pos, ep.getsvalue());
 		return ES_ERROR;
 	}
-	MCRectangle trect = MCdefaultstackptr->getrect();
-	ep.setpoint(x - trect.x, y - trect.y + MCdefaultstackptr->getscroll());
+
+	// IM-2013-10-09: [[ FullscreenMode ]] Update to use stack coord conversion methods
+	MCPoint t_loc;
+	t_loc = MCPointMake(x, y);
+	t_loc = MCdefaultstackptr->globaltostackloc(t_loc);
+
+	ep.setpoint(t_loc.x, t_loc.y);
+
 	return ES_NORMAL;
 #endif /* MCLocalLoc */
 
@@ -5012,32 +5027,12 @@ Exec_stat MCMatch::eval(MCExecPoint &ep)
 		MCeerror->add(EE_MATCH_BADPATTERN, line, pos);
 		return ES_ERROR;
 	}
+    // JS-2013-06-21: [[ EnhancedFilter ]] refactored regex caching mechanism and case sentitivity
+	// MW-2013-07-01: [[ EnhancedFilter ]] Use ep directly as MCR_compile copies pattern (if needed).
+	// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
+	//   no reason not to use the cache.
+	regexp *compiled = MCR_compile(ep.getcstring(), True /* casesensitive */);
 
-	char *pstring = ep.getsvalue().clone();
-	regexp *compiled = NULL;
-	uint2 i;
-	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
-		if (strequal(pstring, MCregexpatterns[i]))
-		{
-			compiled = MCregexcache[i];
-			break;
-		}
-	if (compiled == NULL)
-	{
-		delete MCregexpatterns[PATTERN_CACHE_SIZE - 1];
-		MCR_free(MCregexcache[PATTERN_CACHE_SIZE - 1]);
-		for (i = PATTERN_CACHE_SIZE - 1 ; i ; i--)
-		{
-			MCregexcache[i] = MCregexcache[i - 1];
-			MCregexpatterns[i] = MCregexpatterns[i - 1];
-		}
-		MCregexpatterns[0] = pstring;
-		MCregexcache[0] = MCR_compile(MCregexpatterns[0]);
-		compiled = MCregexcache[0];
-	}
-	else
-		delete pstring;
-    
 	if (compiled == NULL)
 	{
         MCAutoStringRef t_error;
@@ -5058,7 +5053,7 @@ Exec_stat MCMatch::eval(MCExecPoint &ep)
 	match = MCR_exec(compiled, ep.getsvalue().getstring(), ep.getsvalue().getlength());
 
 	MCParameter *p = params->getnext()->getnext();
-	i = 1;
+	uint2 i = 1;
 	if (chunk)
 	{
 		while (p != NULL && p->getnext() != NULL)
@@ -5252,7 +5247,7 @@ Exec_stat MCMe::eval(MCExecPoint &ep)
 Exec_stat MCMenuObject::eval(MCExecPoint &ep)
 {
 #ifdef /* MCMenuObject */ LEGACY_EXEC
-if (MCmenuobjectptr == NULL)
+	if (MCmenuobjectptr == NULL)
 	{
 		ep.clear();
 		return ES_NORMAL;
@@ -5556,7 +5551,7 @@ void MCMouse::compile(MCSyntaxFactoryRef ctxt)
 Exec_stat MCMouseChar::eval(MCExecPoint &ep)
 {
 #ifdef /* MCMouseChar */ LEGACY_EXEC
-    ep.clear();
+	ep.clear();
 	if (MCmousestackptr != NULL)
 	{
 		MCControl *mfocused = MCmousestackptr->getcard()->getmfocused();
@@ -5732,15 +5727,18 @@ Exec_stat MCMouseControl::eval(MCExecPoint &ep)
 	return ctxt . Catch(line, pos);
 }
 
-
-
 Exec_stat MCMouseH::eval(MCExecPoint &ep)
 {
 #ifdef /* MCMouseH */ LEGACY_EXEC
 	int2 x, y;
 	MCscreen->querymouse(x, y);
-	MCRectangle trect = MCdefaultstackptr->getrect();
-	ep.setint(x - trect.x);
+
+	// IM-2013-10-10: [[ FullscreenMode ]] Update to use stack coord conversion methods
+	MCPoint t_mouseloc;
+	t_mouseloc = MCdefaultstackptr->globaltostackloc(MCPointMake(x, y));
+	
+	ep.setint(t_mouseloc.x);
+	
 	return ES_NORMAL;
 #endif /* MCMouseH */
 
@@ -5794,8 +5792,13 @@ Exec_stat MCMouseLoc::eval(MCExecPoint &ep)
 #ifdef /* MCMouseLoc */ LEGACY_EXEC
 	int2 x, y;
 	MCscreen->querymouse(x, y);
-	MCRectangle trect = MCdefaultstackptr->getrect();
-	ep.setpoint(x - trect.x, y - trect.y + MCdefaultstackptr->getscroll());
+	
+	// IM-2013-10-09: [[ FullscreenMode ]] Update to use stack coord conversion methods
+	MCPoint t_mouseloc;
+	t_mouseloc = MCdefaultstackptr->globaltostackloc(MCPointMake(x, y));
+
+	ep.setpoint(t_mouseloc.x, t_mouseloc.y);
+	
 	return ES_NORMAL;
 #endif /* MCMouseLoc */
 
@@ -5874,8 +5877,13 @@ Exec_stat MCMouseV::eval(MCExecPoint &ep)
 #ifdef /* MCMouseV */ LEGACY_EXEC
 	int2 x, y;
 	MCscreen->querymouse(x, y);
-	MCRectangle trect = MCdefaultstackptr->getrect();
-	ep.setint(y - trect.y + MCdefaultstackptr->getscroll());
+	
+	// IM-2013-10-09: [[ FullscreenMode ]] Update to use stack coord conversion methods
+	MCPoint t_mouseloc;
+	t_mouseloc = MCdefaultstackptr->globaltostackloc(MCPointMake(x, y));
+	
+	ep.setint(t_mouseloc.y);
+	
 	return ES_NORMAL;
 #endif /* MCMouseV */
 
@@ -6037,7 +6045,7 @@ Parse_stat MCNumToByte::parse(MCScriptPoint &sp, Boolean the)
 Exec_stat MCNumToByte::eval(MCExecPoint &ep)
 {
 #ifdef /* MCNumToByte */ LEGACY_EXEC
-if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_NUMTOBYTE_BADSOURCE, line, pos);
 		return ES_ERROR;
@@ -6242,7 +6250,6 @@ Exec_stat MCParam::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-     
 #endif /* MCParam */
 
 	MCExecContext ctxt(ep);
@@ -6282,7 +6289,6 @@ Exec_stat MCParamCount::eval(MCExecPoint &ep)
 	h->getnparams(count);
 	ep.setnvalue(count);
 	return ES_NORMAL;
-     
 #endif /* MCParamCount */
 
     
@@ -6428,7 +6434,6 @@ Exec_stat MCPid::eval(MCExecPoint &ep)
 #ifdef /* MCPid */ LEGACY_EXEC
 	ep.setnvalue(MCS_getpid());
 	return ES_NORMAL;
-    
 #endif /* MCPid */
 
     MCExecContext ctxt(ep);
@@ -6450,7 +6455,6 @@ Exec_stat MCPlatform::eval(MCExecPoint &ep)
 #ifdef /* MCPlatform */ LEGACY_EXEC
 	ep.setstaticcstring(MCplatformstring);
 	return ES_NORMAL;
-    
 #endif /* MCPlatform */
 
     MCExecContext ctxt(ep);
@@ -6472,7 +6476,6 @@ Exec_stat MCProcessor::eval(MCExecPoint &ep)
 #ifdef /* MCProcessor */ LEGACY_EXEC
 	ep.setstaticcstring(MCS_getprocessor());
 	return ES_NORMAL;
-    
 #endif /* MCProcessor */
 
     MCExecContext ctxt(ep);
@@ -6516,7 +6519,6 @@ Exec_stat MCQTVersion::eval(MCExecPoint &ep)
 #ifdef /* MCQTVersion */ LEGACY_EXEC
 	MCtemplateplayer->getversion(ep);
 	return ES_NORMAL;
-     
 #endif /* MCQTVersion */
 
     MCExecContext ctxt(ep);
@@ -6531,7 +6533,6 @@ Exec_stat MCQTVersion::eval(MCExecPoint &ep)
 	}
     
 	return ctxt . Catch(line, pos);
-
 }
 
 MCReplaceText::~MCReplaceText()
@@ -6593,34 +6594,14 @@ Exec_stat MCReplaceText::eval(MCExecPoint &ep)
 		delete rstring;
 		return ES_NORMAL;
 	}
-	char *pstring = ep.getsvalue().clone();
-
-	regexp *compiled = NULL;
-	const char *pattern = NULL;
-	uint2 i;
-	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
-		if (strequal(pstring, MCregexpatterns[i]))
-		{
-			compiled = MCregexcache[i];
-			pattern = MCregexpatterns[i];
-			break;
-		}
-	if (compiled == NULL)
-	{
-		delete MCregexpatterns[PATTERN_CACHE_SIZE - 1];
-		MCR_free(MCregexcache[PATTERN_CACHE_SIZE - 1]);
-		uint2 i;
-		for (i = PATTERN_CACHE_SIZE - 1 ; i ; i--)
-		{
-			MCregexcache[i] = MCregexcache[i - 1];
-			MCregexpatterns[i] = MCregexpatterns[i - 1];
-		}
-		pattern = MCregexpatterns[0] = pstring;
-		MCregexcache[0] = MCR_compile(MCregexpatterns[0]);
-		compiled = MCregexcache[0];
-	}
-	else
-		delete pstring;
+    const char *pattern = NULL;
+    // JS-2013-06-21: [[ EnhancedFilter ]] refactored regex caching mechanism and case sentitivity
+	// MW-2013-07-01: [[ EnhancedFilter ]] Use ep directly since MCR_compile copies pattern string (if needed).
+	// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
+	//   no reason not to use the cache.
+	regexp *compiled = MCR_compile(ep.getcstring(), True /*casesensitive*/);
+    if (compiled != NULL)
+        pattern = compiled->pattern;
 	if (compiled == NULL)
 	{
 		delete rstring;
@@ -6684,7 +6665,6 @@ Exec_stat MCReplaceText::eval(MCExecPoint &ep)
 	}
 	delete rstring;
 	return ES_NORMAL;
-    
 #endif /* MCReplaceText */
 
     
@@ -6759,7 +6739,6 @@ Exec_stat MCTheResult::eval(MCExecPoint &ep)
 	}
     
 	return ctxt . Catch(line, pos);
-
 }
 
 Exec_stat MCScreenColors::eval(MCExecPoint &ep)
@@ -6767,7 +6746,6 @@ Exec_stat MCScreenColors::eval(MCExecPoint &ep)
 #ifdef /* MCScreenColors */ LEGACY_EXEC
 	ep.setnvalue(pow(2.0, MCscreen->getdepth()));
 	return ES_NORMAL;
-     
 #endif /* MCScreenColors */
 
     MCExecContext ctxt(ep);
@@ -6789,7 +6767,6 @@ Exec_stat MCScreenDepth::eval(MCExecPoint &ep)
 #ifdef /* MCScreenDepth */ LEGACY_EXEC
 	ep.setnvalue(MCscreen->getdepth());
 	return ES_NORMAL;
-     
 #endif /* MCScreenDepth */
 
     MCExecContext ctxt(ep);
@@ -6811,9 +6788,9 @@ Exec_stat MCScreenLoc::eval(MCExecPoint &ep)
 #ifdef /* MCScreenLoc */ LEGACY_EXEC
 	MCDisplay const *t_displays;
 	MCscreen -> getdisplays(t_displays, false);
-	ep.setpoint(t_displays -> viewport . x + (t_displays -> viewport . width >> 1), t_displays -> viewport . y + (t_displays -> viewport . height >> 1));
+	MCRectangle t_viewport = t_displays -> viewport;
+	ep.setpoint(t_viewport . x + (t_viewport . width / 2), t_viewport . y + (t_viewport . height / 2));
 	return ES_NORMAL;
-     
 #endif /* MCScreenLoc */
 
     MCExecContext ctxt(ep);
@@ -6836,7 +6813,7 @@ Exec_stat MCScreenName::eval(MCExecPoint &ep)
 	ep.setstaticcstring(MCscreen->getdisplayname());
 	return ES_NORMAL;
 #endif /* MCScreenName */
-
+    
     MCExecContext ctxt(ep);
     
     MCNewAutoNameRef t_result;
@@ -6857,7 +6834,6 @@ Exec_stat MCScreenRect::eval(MCExecPoint &ep)
 	evaluate(ep, false, f_plural, false);
 	return ES_NORMAL;
 #endif /* MCScreenRect */
-
 
     MCExecContext ctxt(ep);
     
@@ -6901,7 +6877,7 @@ void MCScreenRect::evaluate(MCExecPoint& ep, bool p_working, bool p_plural, bool
 	{
 		char t_buffer[U2L * 4 + 4];
 		MCRectangle t_rectangle;
-		t_rectangle =  p_working ? t_displays[t_index] . workarea : t_displays[t_index] . viewport;
+		t_rectangle = p_working ? t_displays[t_index] . workarea : t_displays[t_index] . viewport;
 		sprintf(t_buffer, "%d,%d,%d,%d", t_rectangle . x, t_rectangle . y,
 				t_rectangle . x + t_rectangle . width,
 				t_rectangle . y + t_rectangle . height);
@@ -7190,11 +7166,17 @@ Exec_stat MCSelectedChunk::eval(MCExecPoint &ep)
 			return ES_ERROR;
 		}
 	}
+	else if (MCactivefield == NULL)
+		ep.clear();
 	else
-		if (MCactivefield == NULL)
-			ep.clear();
+	{
+		// MW-2013-08-07: [[ Bug 10689 ]] If the parent of the field is a button
+		//   then return the chunk of the button, not the embedded field.
+		if (MCactivefield -> getparent() -> gettype() == CT_BUTTON)
+			static_cast<MCButton *>(MCactivefield -> getparent()) -> selectedchunk(ep);
 		else
 			MCactivefield->selectedchunk(ep);
+	}
 	return ES_NORMAL;
 #endif /* MCSelectedChunk */
 
@@ -7431,11 +7413,11 @@ Exec_stat MCSelectedLoc::eval(MCExecPoint &ep)
 			MCactivefield->selectedloc(ep);
 	return ES_NORMAL;
 #endif /* MCSelectedLoc */
-
-	MCExecContext ctxt(ep);
+    
+    MCExecContext ctxt(ep);
 	MCAutoStringRef t_result;
-
-	if (object != NULL)
+    
+    if (object != NULL)
 	{
 		MCObjectPtr optr;
 		if (object->getobj(ep, optr, True) != ES_NORMAL)
@@ -7449,28 +7431,28 @@ Exec_stat MCSelectedLoc::eval(MCExecPoint &ep)
 	{
 		MCInterfaceEvalSelectedLoc(ctxt, &t_result);
 	}
-
+    
 	if (!ctxt . HasError())
 	{
 		/* UNCHECKED */ ep . setvalueref(*t_result);
 		return ES_NORMAL;
 	}
-
+    
 	return ctxt . Catch(line, pos);
 }
 
 void MCSelectedLoc::compile(MCSyntaxFactoryRef ctxt)
 {
 	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
+    
 	if (object != nil)
 	{
 		object -> compile_object_ptr(ctxt);
 		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalSelectedLocOfMethodInfo);
 	}
 	else
-		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalSelectedLocMethodInfo);	
-
+		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalSelectedLocMethodInfo);
+    
 	MCSyntaxFactoryEndExpression(ctxt);
 }
 
@@ -7604,7 +7586,7 @@ Parse_stat MCShell::parse(MCScriptPoint &sp, Boolean the)
 Exec_stat MCShell::eval(MCExecPoint &ep)
 {
 #ifdef /* MCShell */ LEGACY_EXEC
-if (source->eval(ep) != ES_NORMAL)
+	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_SHELL_BADSOURCE, line, pos);
 		return ES_ERROR;
@@ -7621,7 +7603,6 @@ if (source->eval(ep) != ES_NORMAL)
 	}
 	return ES_NORMAL;
 #endif /* MCShell */
-
 
 	MCExecContext ctxt(ep);
 
@@ -10235,7 +10216,7 @@ Parse_stat MCHTTPProxyForURL::parse(MCScriptPoint &sp, Boolean the)
 Exec_stat MCHTTPProxyForURL::eval(MCExecPoint& ep)
 {
 #ifdef /* MCHTTPProxyForURL */ LEGACY_EXEC
-Exec_stat t_result;
+	Exec_stat t_result;
 	t_result = ES_NORMAL;
 
 	char *t_url;
@@ -10396,6 +10377,8 @@ char *MCHTTPProxyForURL::PACmyIpAddress(const char* const* p_arguments, unsigned
 	return t_address;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 MCRandomBytes::~MCRandomBytes()
 {
 	delete byte_count;
@@ -10419,29 +10402,29 @@ Exec_stat MCRandomBytes::eval(MCExecPoint &ep)
 		MCeerror->add(EE_RANDOMBYTES_BADCOUNT, line, pos);
 		return ES_ERROR;
 	}
-
-	if (!InitSSLCrypt())
+	
+	size_t t_count;
+	t_count = ep.getuint4();
+	
+	// MW-2013-05-21: [[ RandomBytes ]] Updated to use system primitive, rather
+	//   than SSL.
+	
+	void *t_bytes;
+	t_bytes = ep . getbuffer(t_count);
+	if (t_bytes == nil)
 	{
-		MCeerror->add(EE_SECURITY_NOLIBRARY, line, pos);
+		MCeerror -> add(EE_NO_MEMORY, line, pos);
 		return ES_ERROR;
 	}
-	bool t_success = true;
-	void *t_bytes = nil;
-	uint32_t t_count;
-
-	t_count = ep.getuint4();
-
-	t_success = MCCrypt_random_bytes(t_count, t_bytes);
-
-	if (t_success)
-		ep.copysvalue((char*)t_bytes, t_count);
+	
+	if (MCU_random_bytes(t_count, t_bytes))
+		ep . setlength(t_count);
 	else
 	{
-		ep.clear();
+		ep . clear();
 		MCresult->copysvalue(MCString("error: could not get random bytes"));
 	}
-
-	MCMemoryDeallocate(t_bytes);
+	
 	return ES_NORMAL;
 #endif /* MCRandomBytes */
 
@@ -10469,6 +10452,8 @@ Exec_stat MCRandomBytes::eval(MCExecPoint &ep)
 	
 	return ctxt.Catch(line, pos);
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 MCControlAtLoc::~MCControlAtLoc()
 {
@@ -10502,13 +10487,9 @@ Exec_stat MCControlAtLoc::eval(MCExecPoint &ep)
 	else
 	{
 		t_stack = MCscreen -> getstackatpoint(t_location . x, t_location . y);
+		// IM-2013-10-11: [[ FullscreenMode ]] Update to use stack coord conversion methods
 		if (t_stack != nil)
-		{
-			MCRectangle t_rect;
-			t_rect = t_stack -> getrect();
-			t_location . x -= t_rect . x;
-			t_location . y -= t_rect . y - t_stack -> getscroll();
-		}
+			t_location = t_stack->globaltostackloc(t_location);
 	}
 
 	// If the location is over a stack, then return nil.
@@ -10563,4 +10544,274 @@ Exec_stat MCControlAtLoc::eval(MCExecPoint &ep)
 	}
 
 	return ctxt . Catch(line, pos);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+MCUuidFunc::~MCUuidFunc(void)
+{
+	delete type;
+	delete name;
+	delete namespace_id;
+}
+
+// Syntax:
+//   uuid() - random uuid
+//   uuid("random") - random uuid
+//   uuid("md5" | "sha1", <namespace_id>, <name>)
+// So either 0, 1, or 3 parameters.
+Parse_stat MCUuidFunc::parse(MCScriptPoint& sp, Boolean the)
+{
+	// Parameters are parsed by 'getexps' into this array.
+	MCExpression *earray[MAX_EXP];
+	uint2 ecount = 0;
+	
+	// Parse the parameters and check that there are 0, 1 or 3 of them.
+	if (getexps(sp, earray, ecount) != PS_NORMAL || (ecount != 0 && ecount != 1 && ecount != 3))
+	{
+		// If there are the wrong number of params, free the exps.
+		freeexps(earray, ecount);
+		
+		// Throw a parse error.
+		MCperror -> add(PE_UUID_BADPARAM, sp);
+		return PS_ERROR;
+	}
+	
+	// Assign the expressions as appropriate.
+	if (ecount > 0)
+	{
+		type = earray[0];
+	
+		if (ecount > 1)
+		{
+			namespace_id = earray[1];
+			name = earray[2];
+		}
+	}
+	
+	// We are done, so return.
+	return PS_NORMAL;
+}
+
+Exec_stat MCUuidFunc::eval(MCExecPoint& ep)
+{
+#ifdef /* MCUuidFunc */ LEGACY_EXEC
+	// First work out what type we want.
+	MCUuidType t_type;
+	if (type == nil)
+		t_type = kMCUuidTypeRandom;
+	else
+	{
+		if (type -> eval(ep) != ES_NORMAL)
+		{
+			MCeerror -> add(EE_UUID_BADTYPE, line, pos);
+			return ES_ERROR;
+		}
+		
+		if (ep . getsvalue() == "random")
+		{
+			// If there is more than one parameter, it's an error.
+			if (name != nil)
+			{
+				MCeerror -> add(EE_UUID_TOOMANYPARAMS, line, pos);
+				return ES_ERROR;
+			}
+			
+			t_type = kMCUuidTypeRandom;
+		}
+		else if (ep . getsvalue() == "md5")
+			t_type = kMCUuidTypeMD5;
+		else if (ep . getsvalue() == "sha1")
+			t_type = kMCUuidTypeSHA1;
+		else
+		{
+			// If the type isn't one of 'random', 'md5', 'sha1' then it's
+			// an error.
+			MCeerror -> add(EE_UUID_UNKNOWNTYPE, line, pos);
+			return ES_ERROR;
+		}
+	}
+	
+	// If it is not of random type, then evaluate the other params.
+	MCUuid t_namespace_id;
+	MCString t_name;
+	if (t_type != kMCUuidTypeRandom)
+	{
+		// If there aren't namespace_id and name exprs, its an error.
+		if (namespace_id == nil || name == nil)
+		{
+			MCeerror -> add(EE_UUID_TOOMANYPARAMS, line, pos);
+			return ES_ERROR;
+		}
+	
+		// Evaluate the namespace parameter.
+		if (namespace_id -> eval(ep) != ES_NORMAL)
+		{
+			MCeerror -> add(EE_UUID_BADNAMESPACEID, line, pos);
+			return ES_ERROR;
+		}
+		
+		// Attempt to convert it to a uuid.
+		if (!MCUuidFromCString(ep . getcstring(), t_namespace_id))
+		{
+			MCeerror -> add(EE_UUID_NAMESPACENOTAUUID, line, pos);
+			return ES_ERROR;
+		}
+		
+		// Evaluate the name parameter.
+		if (name -> eval(ep) != ES_NORMAL)
+		{
+			MCeerror -> add(EE_UUID_BADNAME, line, pos);
+			return ES_ERROR;
+		}
+		
+		// Borrow the value from the ep - this is okay in this instance because
+		// ep isn't used again until the name has been utilised.
+		t_name = ep . getsvalue();
+	}
+	
+	// Generate the uuid.
+	MCUuid t_uuid;
+	switch(t_type)
+	{
+	case kMCUuidTypeRandom:
+		if (!MCUuidGenerateRandom(t_uuid))
+		{
+			MCeerror -> add(EE_UUID_NORANDOMNESS, line, pos);
+			return ES_ERROR;
+		}
+		break;
+	
+	case kMCUuidTypeMD5:
+		MCUuidGenerateMD5(t_namespace_id, t_name, t_uuid);
+		break;
+		
+	case kMCUuidTypeSHA1:
+		MCUuidGenerateSHA1(t_namespace_id, t_name, t_uuid);
+		break;
+		
+	default:
+		assert(false);
+		break;
+	}
+	
+	// Convert the uuid to a string.
+	char t_uuid_buffer[kMCUuidCStringLength];
+	MCUuidToCString(t_uuid, t_uuid_buffer);
+	
+	// And set it as the return value (in the ep).
+	ep . copysvalue(t_uuid_buffer);
+	
+	return ES_NORMAL;
+#endif /* MCUuidFunc */
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
+MCMeasureText::~MCMeasureText(void)
+{
+	delete m_object;
+	delete m_text;
+	delete m_mode;
+}
+
+// Syntax:
+// measure[Unicode]Text(<text>,<object>,[<mode>])
+Parse_stat MCMeasureText::parse(MCScriptPoint &sp, Boolean the)
+{
+    initpoint(sp);
+    
+	if (sp.skip_token(SP_FACTOR, TT_LPAREN) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_FACTOR_NOLPAREN, sp);
+		return PS_ERROR;
+	}
+    
+    if (sp.parseexp(True, False, &m_text) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_MEASURE_TEXT_BADTEXT, sp);
+		return PS_ERROR;
+	}
+	
+	Symbol_type type;
+	m_object = new MCChunk(False);
+	if (sp.next(type) != PS_NORMAL || type != ST_SEP
+        || m_object->parse(sp, False) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_MEASURE_TEXT_NOOBJECT, sp);
+		return PS_ERROR;
+	}
+    
+    if (sp.next(type) != PS_NORMAL || (type != ST_RP && type != ST_SEP))
+    {
+        MCperror->add
+        (PE_FACTOR_NORPAREN, sp);
+        return PS_ERROR;
+    }
+    if (type == ST_SEP)
+    {
+        if (sp.parseexp(True, False, &m_mode) != PS_NORMAL)
+        {
+            MCperror->add
+            (PE_MEASURE_TEXT_BADMODE, sp);
+            return PS_ERROR;
+        }
+        
+        if (sp.next(type) != PS_NORMAL || (type != ST_RP && type != ST_SEP))
+        {
+            MCperror->add
+            (PE_FACTOR_NORPAREN, sp);
+            return PS_ERROR;
+        }
+    }
+
+	return PS_NORMAL;
+}
+
+Exec_stat MCMeasureText::eval(MCExecPoint &ep)
+{
+    MCObject *t_object_ptr;
+	uint4 parid;
+	if (m_object->getobj(ep, t_object_ptr, parid, True) != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_MEASURE_TEXT_NOOBJECT, line, pos);
+		return ES_ERROR;
+	}
+    
+    if (m_text -> eval(ep) != ES_NORMAL)
+    {
+        MCeerror -> add(EE_CHUNK_BADTEXT, line, pos);
+        return ES_ERROR;
+    }
+    
+    MCRectangle t_bounds = t_object_ptr -> measuretext(ep.getsvalue(), m_is_unicode);
+    
+    if (m_mode)
+    {
+        if (m_mode -> eval(ep) != ES_NORMAL)
+        {
+            MCeerror -> add(EE_CHUNK_BADTEXT, line, pos);
+            return ES_ERROR;
+        }
+        
+        if (ep.getsvalue() == "size")
+        {
+            ep.setpoint(t_bounds . width,t_bounds . height);
+            return ES_NORMAL;
+        }
+        
+        if(ep.getsvalue() == "bounds")
+        {
+            ep.setrectangle(t_bounds);
+            return ES_NORMAL;
+        }
+    }
+    
+    ep.setuint(t_bounds . width);
+    return ES_NORMAL;
 }

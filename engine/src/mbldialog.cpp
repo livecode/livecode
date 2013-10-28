@@ -305,7 +305,7 @@ bool SplitOptionListsByChunk(MCChunkType p_chunk_type, const_cstring_array_t *p_
     }
 
 	return t_success;
-}	
+}
 
 void MCDialogExecPickOption(MCExecContext &p_ctxt, MCChunkType p_chunk_type, const_cstring_array_t *p_option_lists, const char *p_initial_choice, bool p_use_hilite_type, bool p_use_picker, bool p_use_cancel, bool p_use_done, char *&r_picked_options, MCRectangle p_button_rect)
 {
@@ -373,5 +373,3 @@ void MCDialogExecPickOption(MCExecContext &p_ctxt, MCChunkType p_chunk_type, con
     FreeIndexArray (t_option_result);
 }
 #endif /* MCDialogExecPickOption */
-
-////////////////////////////////////////////////////////////////////////////////

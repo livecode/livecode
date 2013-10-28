@@ -325,8 +325,22 @@ typedef unsigned short uint16_t;
 typedef signed short int16_t;
 typedef unsigned int uint32_t;
 typedef signed int int32_t;
-typedef unsigned long long uint64_t;
-typedef signed long long int64_t;
+
+// MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
+#if !defined(uint64_t)
+#ifndef __LP64__
+typedef unsigned long long int uint64_t;
+#else
+typedef unsigned long int uint64_t;
+#endif
+#endif
+#if !defined(int64_t)
+#ifndef __LP64__
+typedef signed long long int int64_t;
+#else
+typedef signed long int int64_t;
+#endif
+#endif
 
 #define UINT8_MIN (0U)
 #define UINT8_MAX (255U)
@@ -391,11 +405,24 @@ typedef unsigned long size_t;
 
 #else
 
-typedef long signed int intptr_t;
-typedef long unsigned int uintptr_t;
-typedef int64_t integer_t;
-typedef uint64_t uinteger_t;
-typedef long unsigned int size_t;
+// MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
+#ifndef _UINTPTR_T
+#define _UINTPTR_T
+#ifdef __LP64__
+typedef uint64_t uintptr_t;
+#else
+typedef uint32_t uintptr_t;
+#endif
+#endif
+
+#ifndef _INTPTR_T
+#define _INTPTR_T
+#ifdef __LP64__
+typedef int64_t intptr_t;
+#else
+typedef int32_t intptr_t;
+#endif
+#endif
 
 #define INTPTR_MIN INT64_MIN
 #define INTPTR_MAX INT64_MAX
@@ -580,6 +607,8 @@ inline compare_t MCCompare(uintptr_t a, uintptr_t b) { return a < b ? -1 : (a > 
 //
 
 inline bool MCIsPowerOfTwo(uint32_t x) { return (x & (x - 1)) == 0; }
+
+inline float MCClamp(float value, float min, float max) {return MCMax(min, MCMin(max, value));}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -1664,6 +1693,11 @@ bool MCDataRemove(MCDataRef r_data, MCRange p_range);
 bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data);
 
 bool MCDataPad(MCDataRef data, byte_t byte, uindex_t count);
+
+// convert the given data to CFDataRef
+#if defined(__MAC__) || defined (__IOS__)
+bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cfdata);
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //

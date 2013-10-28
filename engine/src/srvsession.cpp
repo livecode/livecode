@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "osspec.h"
 
+#include "util.h"
 #include "mcssl.h"
 
 #include "variable.h"
@@ -690,7 +691,10 @@ bool MCSessionGenerateID(char *&r_id)
 	time(&t_time);
 	
 	MCAutoDataRef t_randombytes;
-	/* UNCHECKED */ MCCrypt_random_bytes(64, &t_randombytes);
+    
+    // MW-2013-05-21; [[ RandomBytes ]] Use system primitive rather than SSL
+	//   directly.
+	/* UNCHECKED */ MCU_random_bytes(64, &t_randombytes);
 	
 	md5_state_t t_state;
 	md5_byte_t t_digest[16];

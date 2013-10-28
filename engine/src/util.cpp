@@ -36,10 +36,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "osspec.h"
 #include "redraw.h"
+#include "mcssl.h"
 
 #include "globals.h"
 #include "exec.h"
 #include "system.h"
+
+#ifdef MCSSL
+#include <openssl/rand.h>
+#endif
 
 #define QA_NPOINTS 10
 
@@ -486,12 +491,20 @@ int4 MCU_strtol(const char *&sptr, uint4 &l, int1 c, Boolean &done,
 						if (startlength > 1)
 						{
 							if (reals)
+							{
+								// MDW-2013-06-09: [[ Bug 10964 ]] Round integral values to nearest
+								//   (consistent with getuint4() and round()).
+								if (*(sptr+1) > '4')
+								{
+									value++;
+								}
 								do
 								{
 									sptr++;
 									l--;
 								}
 								while (l && isdigit((uint1)*sptr));
+							}
 							else
 								do
 								{
@@ -1160,7 +1173,8 @@ void MCU_break_string(const MCString &s, MCString *&ptrs, uint2 &nptrs,
 	}
 }
 
-#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
+// AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
+#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 extern compare_t MCSystemCompareInternational(const char *, const char *);
 #endif
 
@@ -1194,11 +1208,13 @@ static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean
 				s2 = MCStringGetCString(b2->svalue);
 				
 				// WARNING: this will *not* work properly on anything other
-				// that OSX or iOS: the LC_COLLATE locale facet is set to the
+				// than OSX, iOS or Android: the LC_COLLATE locale facet is set to the
 				// locale "en_US.<native encoding>"...
 				//
 				// Additionally, UTF-16 strings don't work at all.
-#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
+                
+                // AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
+#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 				int result = MCSystemCompareInternational(s1, s2);
 #else
 				int result = strcoll(s1, s2);
@@ -1298,8 +1314,12 @@ void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize, const 
 
 Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
 {
-	if (name == nil || MCNameIsEmpty(name) || test == MCnullmcstring)
-		return False;
+    if (name == nil)
+        return False;
+    
+    // AL-2013-07-29: [[ Bug 10981 ]] Allow the empty name for objects.
+	if (MCNameIsEmpty(name) && test == MCnullmcstring)
+		return True;
 
 	if (MCNameIsEqualToOldString(name, test, kMCCompareCaseless))
 		return True;
@@ -1318,16 +1338,25 @@ Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
 	        MCepsstring, MCmagnifierstring,
 	        MCcolorstring, MCfieldstring
 	    };
+	
+	// MW-2013-07-29: [[ Bug 11068 ]] Make sure that we only match a reference
+	//   of the form 'field "..."', and throw an error if not.
 	const char *sptr = test.getstring();
 	uint4 l = test.getlength();
 	if (MCU_strchr(sptr, l, '"')
-	        && l > tname.getlength() + 1
+			&& l > tname.getlength() + 1
 	        && sptr[tname.getlength() + 1] == '"'
 	        && !MCU_strncasecmp(sptr + 1, tname.getstring(), tname.getlength())
 	        && sptr - test.getstring() >= (int)strlen(nametable[type - CT_STACK])
 	        && !MCU_strncasecmp(test.getstring(), nametable[type - CT_STACK],
 	                            strlen(nametable[type - CT_STACK])))
-		match = True;
+	{
+		if (l == tname.getlength() + 2)
+			match = True;
+		
+		if (!match)
+			MCLog("[[ Bug 11068 ]] match name '%s' to '%.*s' attempted and failed due to better checking", MCNameGetCString(name), test . getlength(), test . getstring());
+	}
 
 	return match;
 }
@@ -1432,8 +1461,9 @@ Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data
 	while (l)
 	{
 		Boolean done1, done2;
-		int2 i1= MCU_strtol(sptr, l, ',', done1);
-		int2 i2 = MCU_strtol(sptr, l, ',', done2);
+		// MDW-2013-06-09: [[ Bug 11041 ]] Round non-integer values to nearest.
+		int2 i1= (int2)MCU_strtol(sptr, l, ',', done1, True);
+		int2 i2 = (int2)MCU_strtol(sptr, l, ',', done2, True);
 		while (l && !isdigit((uint1)*sptr) && *sptr != '-' && *sptr != '+')
 		{
 			l--;
@@ -1467,8 +1497,9 @@ Boolean MCU_parsepoint(MCPoint &point, MCStringRef data)
 	const char *sptr = MCStringGetCString(data);
 	uint4 l = MCStringGetLength(data);
 	Boolean done1, done2;
-	int2 i1= MCU_strtol(sptr, l, ',', done1);
-	int2 i2 = MCU_strtol(sptr, l, ',', done2);
+	// MDW-2013-06-09: [[ Bug 11041 ]] Round non-integer values to nearest.
+	int2 i1= (int2)(MCU_strtol(sptr, l, ',', done1, True));
+	int2 i2 = (int2)(MCU_strtol(sptr, l, ',', done2, True));
 	if (!done1 || !done2)
 	{
 		i1 = i2 = MININT2;
@@ -1955,7 +1986,8 @@ Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool, uint2 line, uint2 pos)
 		}
 		uint2 i;
 		for (i = 0 ; i <= T_TEXT ; i++)
-			if (strncmp(MCtoolnames[i], ep.getsvalue().getstring(), 3) == 0)
+            // SN-13-10-04: [[ Bug 11193 ]] set the tool to Browse fails - case-sensitive
+			if (MCU_strncasecmp(MCtoolnames[i], ep.getsvalue().getstring(), 3) == 0)
 			{
 				t_new_tool = (Tool)i;
 				break;
@@ -2288,6 +2320,105 @@ void MCU_get_color(MCExecPoint& ep, MCStringRef name, MCColor& c)
 	ep.setcolor(c, name != nil ? MCStringGetCString(name) : nil);
 }
 
+void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
+                real8 tn, real8 oldn, MCSortnode *titems)
+{
+	real8 tp;
+	switch (func)
+	{
+            // JS-2013-06-19: [[ StatsFunctions ]] Support for 'arithmeticMean' (was average)
+        case F_ARI_MEAN:
+            n += tn;
+            nparams++;
+			break;
+            // JS-2013-06-19: [[ StatsFunctions ]] Support for 'averageDeviation'
+        case F_AVG_DEV:
+            tn = tn - oldn;
+            n += abs(tn);
+            nparams++;
+            break;
+            // JS-2013-06-19: [[ StatsFunctions ]] Support for 'geometricMean'
+        case F_GEO_MEAN:
+            if (nparams == 0)
+                n = 1;
+            tp = 1 / oldn;
+            n *= pow(tn, tp);
+            nparams++;
+            break;
+            // JS-2013-06-19: [[ StatsFunctions ]] Support for 'harmonicMean'
+        case F_HAR_MEAN:
+            n += 1/tn;
+            nparams++;
+            break;
+        case F_MAX:
+            if (nparams++ == 0 || tn > n)
+                n = tn;
+            break;
+        case F_MIN:
+            if (nparams++ == 0 || tn < n)
+                n = tn;
+            break;
+        case F_SUM:
+            n += tn;
+            break;
+        case F_MEDIAN:
+            /* UNCHECKED */ MCNumberCreateWithReal(tn, titems[nparams].nvalue);
+            nparams++;
+            break;
+            // JS-2013-06-19: [[ StatsFunctions ]] Support for 'populationStdDev', 'populationVariance', 'sampleStdDev' (was stdDev), 'sampleVariance'
+        case F_POP_STD_DEV:
+        case F_POP_VARIANCE:
+        case F_SMP_STD_DEV:
+        case F_SMP_VARIANCE:
+            tn = tn - oldn;
+            n += tn * tn;
+            nparams++;
+            break;
+        case  F_UNDEFINED:
+            nparams++;
+            break;
+        default:
+            break;
+	}
+}
+
+// MW-2013-06-25: [[ Bug 10983 ]] This function returns true if the given string
+//   could be a url. It checks for strings of the form:
+//     <letter> (<letter> | <digit> | '+' | '.' | '-')+ ':' <char>+
+// MW-2013-07-01: [[ Bug 10975 ]] Update to a MCU_* utility function.
+bool MCU_couldbeurl(const MCString& p_potential_url)
+{
+	uint4 t_length;
+	const char *t_url;
+	t_length = p_potential_url . getlength();
+	t_url = p_potential_url . getstring();
+	
+	// If the first char isn't a letter, then we are done.
+	if (t_length == 0 || !isalpha(t_url[0]))
+		return false;
+	
+	uint4 t_colon_index;
+	for(t_colon_index = 0; t_colon_index < t_length; t_colon_index++)
+	{
+		char t_char;
+		t_char = t_url[t_colon_index];
+		
+		// If we find the ':' we are done (end of scheme).
+		if (t_url[t_colon_index] == ':')
+			break;
+		
+		// If the character isn't something allowed in a scheme name, we are done.
+		if (!isalpha(t_char) && !isdigit(t_char) && t_char != '+' && t_char != '.' && t_char != '-')
+			return false;
+	}
+	
+	// If the scheme name < 2 chars, or there is nothing after it, we are done.
+	if (t_colon_index < 2 || t_colon_index + 1 == t_length)
+		return false;
+	
+	// If we get here then we could well have a url.
+	return true;
+}
 
 void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output)
 {
@@ -2319,15 +2450,19 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output
 		MCS_loadresfile(*t_filename, r_output);
         /* UNCHECKED */ ep . copyasstringref(r_output);
 	}
-	else
+    else
 	{
-		const char *sptr = MCStringGetCString(p_target);
-		uint4 l = MCStringGetLength(p_target);
-		if (sptr != NULL && sptr[1] != ':' && MCU_strchr(sptr, l, ':'))
+        // MW-2013-06-25: [[ Bug 10983 ]] Take more care to check if we do in fact
+		//   have something that could be a url.
+		// MW-2013-07-01: [[ Bug 10975 ]] Change to use MCU_couldbeurl utility function.
+		if (MCU_couldbeurl(MCStringGetOldString(p_target)))
 		{
-			MCS_geturl(ctxt . GetObject(), p_target);
+			MCS_geturl(ep . getobj(), p_target);
 			MCurlresult->eval(ep);
 		}
+		else
+			ep . clear();
+
         /* UNCHECKED */ ep . copyasstringref(r_output);
 	}
 }
@@ -2714,7 +2849,9 @@ bool MCU_disjointrangecontains(MCInterval* p_ranges, int p_count, int p_element)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-IO_stat MCU_dofakewrite(char*& x_buffer, uint4& x_length, const void *p_data, uint4 p_size, uint4 p_count)
+// MW-2013-05-02: [[ x64 ]] The 'x_length' parameter is always IO_header::len
+//   which is now size_t, so match it.
+IO_stat MCU_dofakewrite(char*& x_buffer, size_t& x_length, const void *p_data, uint4 p_size, uint4 p_count)
 {
 	uint4 t_capacity;
 	if (x_length > 65536)
@@ -2956,3 +3093,28 @@ bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char 
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+// MW-2013-05-21: [[ RandomBytes ]] Utility function for generating random bytes
+//   which uses OpenSSL if available, otherwise falls back on system support.
+bool MCU_random_bytes(size_t p_bytecount, MCDataRef& r_bytes)
+{
+#ifdef MCSSL
+	// If SSL is available, then use that.
+	static bool s_donotuse_ssl = false;
+	if (!s_donotuse_ssl)
+	{
+        MCAutoByteArray t_buffer;
+        
+        if (InitSSLCrypt())
+        {
+            return (t_buffer.New(p_bytecount) &&
+                    (RAND_bytes(t_buffer.Bytes(), p_bytecount) == 1) &&
+                    t_buffer.CreateData(r_bytes));
+        }
+		s_donotuse_ssl = true;
+	}
+#endif
+
+	// Otherwise use the system provided CPRNG.
+	return MCS_random_bytes(p_bytecount, r_bytes);
+}

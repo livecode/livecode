@@ -112,6 +112,10 @@ MCGroup::MCGroup()
 	scrollx = scrolly = 0;
 	scrollbarwidth = MCscrollbarwidth;
 	minrect.x = minrect.y = minrect.width = minrect.height = 0;
+	
+	// MERG-2013-06-02: [[ GrpLckUpdates ]] Make sure the group's updates are unlocked
+	//   when created.
+    m_updates_locked = false;
 }
 
 MCGroup::MCGroup(const MCGroup &gref) : MCControl(gref)
@@ -175,6 +179,10 @@ MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
 	scrollx = gref.scrollx;
 	scrolly = gref.scrolly;
 	scrollbarwidth = gref.scrollbarwidth;
+	
+	// MERG-2013-06-02: [[ GrpLckUpdates ]] Make sure the group's updates are unlocked
+	//   when cloned.
+    m_updates_locked = false;
 }
 
 MCGroup::~MCGroup()
@@ -599,6 +607,8 @@ void MCGroup::munfocus()
 	{
 		MCControl *oldfocused = mfocused;
 		mfocused = NULL;
+		// IM-2013-08-07: [[ Bug 10671 ]] Release grabbed controls when removing focus
+		state &= ~CS_GRAB;
 		oldfocused->munfocus();
 	}
 	else
@@ -906,7 +916,7 @@ Exec_stat MCGroup::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 		break;
 	case P_SHARED_BEHAVIOR:
 		// MW-2011-08-09: [[ Groups ]] Returns whether the group is shared.
-		ep.setboolean(isshared());
+		ep.setboolean(isshared() && (parent == nil || parent -> gettype() == CT_CARD));
 		break;
 	case P_BOUNDING_RECT:
 		if (flags & F_BOUNDING_RECT)
@@ -918,17 +928,25 @@ Exec_stat MCGroup::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 		ep.setpoint(rect.width, rect.height);
 		break;
 	case P_CARD_NAMES:
+    case P_CARD_IDS:
 		{
+			// MERG-2013-05-01: [[ GrpCardIds ]] Add 'the cardIds' property to
+			//   groups (returns ids rather than names).
 			ep.clear();
 			MCExecPoint ep2(ep);
 			MCCard *startcard = getstack()->getcards();
 			MCCard *cptr = startcard;
 			uint2 j = 0;
-			do
+            Properties t_prop;
+            if (which == P_CARD_NAMES)
+                t_prop = P_SHORT_NAME;
+            else
+                t_prop = P_SHORT_ID;
+            do
 			{
 				if (cptr->countme(obj_id, False))
 				{
-					cptr->getprop(0, P_SHORT_NAME, ep2, False);
+					cptr->getprop(0, t_prop, ep2, False);
 					ep.concatmcstring(ep2.getsvalue(), EC_RETURN, j++ == 0);
 				}
 				cptr = cptr->next();
@@ -936,8 +954,54 @@ Exec_stat MCGroup::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 			while (cptr != startcard);
 		}
 		break;
+	case P_CONTROL_NAMES:
+	case P_CONTROL_IDS:
+	case P_CHILD_CONTROL_NAMES:
+	case P_CHILD_CONTROL_IDS:
+        {
+			// MERG-2013-05-01: [[ ChildControlProps ]] Add ability to list both
+			//   immediate and all descendent controls of a group.
+		
+            ep.clear();
+		
+            // MERG-2013-08-14: [[ ChildControlProps ]] Resolved crash when group contains no controls
+            if (controls != NULL)
+            {
+                MCExecPoint t_other_ep(ep);
+                MCObject *t_object = controls;
+                MCObject *t_start_object = t_object;
+                uint2 i = 0;
+                do
+                {
+                    Properties t_prop;
+                    if (which == P_CHILD_CONTROL_NAMES)
+                        t_prop = P_SHORT_NAME;
+                    else
+                        t_prop = P_SHORT_ID;
+                    
+                    t_object->getprop(0, t_prop, t_other_ep, False);
+                    
+                    ep.concatmcstring(t_other_ep.getsvalue(), EC_RETURN, i++ == 0);
+                    
+                    if (t_object->gettype() == CT_GROUP && (which == P_CONTROL_IDS || which == P_CONTROL_NAMES))
+                    {
+                        t_object->getprop(parid, which, t_other_ep, false);
+                        ep.concatmcstring(t_other_ep.getsvalue(), EC_RETURN, i++ == 0);
+                    }
+                    
+                    t_object = t_object -> next();
+                    
+                }
+                while (t_object != t_start_object);
+            }
+        }
+        break;
 	case P_SELECT_GROUPED_CONTROLS:
 		ep.setboolean(!(flags & F_SELECT_GROUP));
+		break;
+	// MW-2013-06-20: [[ GrpLckUpdates ]] [[ Bug 10960 ]] Add accessor for 'the lockUpdates'
+	case P_LOCK_UPDATES:
+		ep.setboolean(m_updates_locked);
 		break;
 #endif /* MCGroup::getprop */
 	default:
@@ -1285,6 +1349,23 @@ Exec_stat MCGroup::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 		dirty = False;
 		flags ^= F_SELECT_GROUP;
 		break;
+	// MERG-2013-06-02: [[ GrpLckUpdates ]] Handle setting of the lockUpdates property.
+    case P_LOCK_UPDATES:
+	{
+		Exec_stat t_stat;
+		Boolean t_lock;
+		
+		t_stat = ep.getboolean(t_lock, 0, 0, EE_PROPERTY_NAB);
+		if (t_stat == ES_NORMAL)
+			m_updates_locked = (t_lock == True);
+			
+		// When the lock is turned off, make sure we update the group.
+		if (!t_lock)
+			computeminrect(True);
+			
+		return t_stat;
+	}
+	break;
 #endif /* MCGroup::setprop */
 	default:
 		return MCControl::setprop_legacy(parid, p, ep, effective);
@@ -1781,14 +1862,14 @@ void MCGroup::setsbrects()
 	{
 		// MW-2012-03-16: [[ Bug ]] Make sure we have a font to use to
 		//   calculate the label height.
-		if (!opened && m_font == nil)
-			mapfont();
+		// MW-2013-08-22: [[ MeasureText ]] Update to use new object method.
+		MCRectangle t_font_metrics;
+		t_font_metrics = measuretext(MCnullmcstring, false);
+		
 		int32_t fheight;
-		fheight = MCFontGetAscent(m_font) + MCFontGetDescent(m_font);
+		fheight = t_font_metrics . height;
 		grect.y += fheight >> 1;
 		grect.height -= fheight >> 1;
-		if (!opened && m_font == nil)
-			unmapfont();
 	}
 	if (flags & F_HSCROLLBAR)
 	{
@@ -2416,12 +2497,13 @@ MCRectangle MCGroup::getgrect()
 		//   the font mapped (i.e. not open) so map/unmap the font as required.
 		// MW-2012-03-16: [[ Bug ]] Make sure we only map/unmap a font if the group is
 		//   closed *and* has no font since hscroll/vscroll set opened to 0 temporarily.
-		if (!opened && m_font == nil)
-			mapfont();
+		// MW-2013-08-23: [[ MeasureText ]] Update to use measuretext() method for
+		//   better encapsulation.
+		MCRectangle t_font_metrics;
+		t_font_metrics = measuretext(MCnullmcstring, false);
+		
 		int32_t fascent;
-		fascent = MCFontGetAscent(m_font);
-		if (!opened && m_font == nil)
-			unmapfont();
+		fascent = -t_font_metrics . y;
 		
 		grect.y += fascent;
 		grect.height -= fascent;
@@ -2496,14 +2578,14 @@ bool MCGroup::computeminrect(Boolean scrolling)
 		{
 			// MW-2012-03-16: [[ Bug ]] Make sure we have a font to use to
 			//   calculate the label height.
-			if (!opened && m_font == nil)
-				mapfont();
+			// MW-2013-08-22: [[ MeasureText ]] Update to use new object method.
+			MCRectangle t_font_metrics;
+			t_font_metrics = measuretext(MCnullmcstring, false);
+			
 			int32_t fheight;
-			fheight = MCFontGetAscent(m_font) + MCFontGetDescent(m_font);
+			fheight = t_font_metrics . height;
 			rect.y -= fheight - borderwidth;
 			rect.height += fheight - borderwidth;
-			if (!opened && m_font == nil)
-				unmapfont();
 		}
 		if (flags & F_HSCROLLBAR)
 			rect.height += scrollbarwidth;

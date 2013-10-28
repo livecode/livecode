@@ -1,0 +1,48 @@
+<doc>
+  <legacy_id>1973</legacy_id>
+  <name>scriptLimits</name>
+  <type>function</type>
+  <syntax>
+    <example>the scriptLimits</example>
+    <example>scriptLimits()</example>
+  </syntax>
+  <library></library>
+  <objects>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+  </classification>
+  <references>
+    <command tag="edit">edit Command</command>
+    <function tag="revLicenseType">revLicenseType Function</function>
+    <command tag="start using">start using Command</command>
+    <keyword tag="\">\ Keyword</keyword>
+    <keyword tag=";">; Keyword</keyword>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+    <changed version="2.5"></changed>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary><glossary tag="return">Returns</glossary> the limits on <property tag="script">script</property> length for <glossary tag="script">scripts</glossary> that are edited in a LiveCode.</summary>
+  <examples>
+  </examples>
+  <description>
+    <p>Use the <b>scriptLimits</b> <control_st tag="function">function</control_st> to determine the limits on changing <glossary tag="script">scripts</glossary> when using <glossary tag="standalone application">standalone applications</glossary> created with LiveCode.</p><p/><p><b>Value:</b></p><p>The <b>scriptLimits</b> <control_st tag="function">function</control_st> <glossary tag="return">returns</glossary> a comma-separated list of four positive <glossary tag="integer">integers</glossary>. Where 0 occurs in the list it indicates that the limit is unchecked and therefore unlimited.</p><p/><p><b>Comments:</b></p><p>The four numbers returned by the <b>scriptLimits</b> <control_st tag="function">function</control_st> are:</p><p/><p>* the number of statements permitted when changing a script (normally 10 in a standalone application)</p><p>* the number of statements permitted in a <b>do</b> <glossary tag="command">command</glossary> (normally 10 in a standalone application)</p><p>* the number of stacks permitted in the <b>stacksInUse</b> (normally 50 in a standalone application)</p><p>* the number of objects permitted in the <b>frontScripts</b> and <function tag="backScripts">backScripts</function> (normally 10 in a standalone application)</p><p/><p><code/><img src="202653"/> <b>Important!</b><code/> The first number does not limit scripts that are already written. In other words, <glossary tag="standalone application">standalone applications</glossary> can run <glossary tag="script">scripts</glossary> of any length. However, if the <glossary tag="standalone application">standalone</glossary> attempts to change an <glossary tag="object">object's</glossary> <property tag="script">script</property> <glossary tag="property">property</glossary>, and the <property tag="script">script</property> contains more than the allowable number of <glossary tag="statement">statements</glossary>, the attempt to set the <property tag="script">script</property> causes an <glossary tag="error">error</glossary>.</p>
+  </description>
+</doc>

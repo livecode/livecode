@@ -82,7 +82,6 @@
 		4DABCDAC15ECD4700085E214 /* cmdss.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DDCE1040AC5C00CAC7EF /* cmdss.cpp */; };
 		4DABCDAD15ECD4700085E214 /* combiners.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DDCD1040AC5C00CAC7EF /* combiners.cpp */; };
 		4DABCDAE15ECD4700085E214 /* constant.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DDCC1040AC5C00CAC7EF /* constant.cpp */; };
-		4DABCDAF15ECD4700085E214 /* contextscalewrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DDC91040AC5C00CAC7EF /* contextscalewrapper.cpp */; };
 		4DABCDB015ECD4700085E214 /* control.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DDC71040AC5C00CAC7EF /* control.cpp */; };
 		4DABCDB115ECD4700085E214 /* cpalette.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DDC31040AC5C00CAC7EF /* cpalette.cpp */; };
 		4DABCDB315ECD4700085E214 /* customprinter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDD7F52134BA80E009037A0 /* customprinter.cpp */; };
@@ -133,10 +132,7 @@
 		4DABCDE315ECD4700085E214 /* line.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE5E1040AD2800CAC7EF /* line.cpp */; };
 		4DABCDE415ECD4700085E214 /* literal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE5C1040AD2800CAC7EF /* literal.cpp */; };
 		4DABCDE515ECD4700085E214 /* magnify.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE701040AD3D00CAC7EF /* magnify.cpp */; };
-		4DABCDE615ECD4700085E214 /* mblactivityindicator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6FF08F2148F848D005572E6 /* mblactivityindicator.cpp */; };
 		4DABCDE715ECD4700085E214 /* mblad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C3454FC14F3FE56008D7E50 /* mblad.cpp */; };
-		4DABCDE815ECD4700085E214 /* mblalert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F66DE83314BC7E1900991D8C /* mblalert.cpp */; };
-		4DABCDE915ECD4700085E214 /* mblbusyindicator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F60A5A3F148003E9000982BF /* mblbusyindicator.cpp */; };
 		4DABCDEA15ECD4700085E214 /* mblcalendar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6DF4C9F1559561D00450B64 /* mblcalendar.cpp */; };
 		4DABCDEB15ECD4700085E214 /* mblcamera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C7D1CE5147674C300129F01 /* mblcamera.cpp */; };
 		4DABCDEC15ECD4700085E214 /* mblcontact.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F68B5683154195C200097647 /* mblcontact.cpp */; };
@@ -146,13 +142,11 @@
 		4DABCDF015ECD4700085E214 /* mblflst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE761040AD4D00CAC7EF /* mblflst.cpp */; };
 		4DABCDF115ECD4700085E214 /* mbliphone.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E1B11041192800CAC7EF /* mbliphone.mm */; };
 		4DABCDF215ECD4700085E214 /* mbliphoneactivityindicator.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6FF08F6148F869A005572E6 /* mbliphoneactivityindicator.mm */; };
-		4DABCDF415ECD4700085E214 /* mbliphonealert.mm in Sources */ = {isa = PBXBuildFile; fileRef = F66DE83114BB34D600991D8C /* mbliphonealert.mm */; };
 		4DABCDF515ECD4970085E214 /* mbliphonebrowser.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D7E3A2A12817DC700E7F80A /* mbliphonebrowser.mm */; };
 		4DABCDF615ECD4970085E214 /* mbliphonebusyindicator.mm in Sources */ = {isa = PBXBuildFile; fileRef = F60A5A4114800404000982BF /* mbliphonebusyindicator.mm */; };
 		4DABCDF715ECD4970085E214 /* mbliphonecalendar.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6DF4CA31559638600450B64 /* mbliphonecalendar.mm */; };
 		4DABCDF815ECD4970085E214 /* mbliphonecamera.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4C7D1CF714767FD000129F01 /* mbliphonecamera.mm */; };
 		4DABCDF915ECD4970085E214 /* mbliphonecontact.mm in Sources */ = {isa = PBXBuildFile; fileRef = F68B56881541960200097647 /* mbliphonecontact.mm */; };
-		4DABCDFA15ECD4970085E214 /* mbliphonecontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE9C63D113813A00059588F /* mbliphonecontext.cpp */; };
 		4DABCDFB15ECD4970085E214 /* mbliphonecontrol.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D7E389B1281527500E7F80A /* mbliphonecontrol.mm */; };
 		4DABCDFC15ECD4970085E214 /* mbliphonedc.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E1DE10411A0A00CAC7EF /* mbliphonedc.mm */; };
 		4DABCDFD15ECD4970085E214 /* mbliphonedialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D6F954B12AC157100026A72 /* mbliphonedialog.mm */; };
@@ -184,7 +178,6 @@
 		4DABCE1815ECD4B50085E214 /* mblspec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE791040AD4D00CAC7EF /* mblspec.cpp */; };
 		4DABCE1915ECD4B50085E214 /* mblstack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE781040AD4D00CAC7EF /* mblstack.cpp */; };
 		4DABCE1A15ECD4B50085E214 /* mblstore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E86481701439BC9400775960 /* mblstore.cpp */; };
-		4DABCE1B15ECD4B50085E214 /* mbltextmessaging.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F62D52A314DBF68300E7C1CD /* mbltextmessaging.cpp */; };
 		4DABCE1C15ECD4B50085E214 /* mcerror.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE811040AD6200CAC7EF /* mcerror.cpp */; };
 		4DABCE1D15ECD4B50085E214 /* mcio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE7F1040AD6200CAC7EF /* mcio.cpp */; };
 		4DABCE1F15ECD4B50085E214 /* mcstring.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE841040AD8500CAC7EF /* mcstring.cpp */; };
@@ -213,7 +206,6 @@
 		4DABCE3815ECD4B50085E214 /* player.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DEB81040ADBC00CAC7EF /* player.cpp */; };
 		4DABCE3915ECD4B50085E214 /* printer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DECD1040ADC500CAC7EF /* printer.cpp */; };
 		4DABCE3A15ECD4B50085E214 /* property.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DED61040ADCE00CAC7EF /* property.cpp */; };
-		4DABCE3B15ECD4B50085E214 /* pxmaplst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DED21040ADCE00CAC7EF /* pxmaplst.cpp */; };
 		4DABCE3C15ECD4B50085E214 /* redraw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6E5952140833FA00EE960D /* redraw.cpp */; };
 		4DABCE3D15ECD4B50085E214 /* regex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DED01040ADCE00CAC7EF /* regex.cpp */; };
 		4DABCE3E15ECD4B50085E214 /* rtf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DEDF1040ADE500CAC7EF /* rtf.cpp */; };
@@ -330,7 +322,6 @@
 		E8111F90154193AB00DB16E3 /* AddressBookUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8F154193AB00DB16E3 /* AddressBookUI.framework */; };
 		E84A254E1680BFFD00EA7ACC /* image_rep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E84A254C1680BFF600EA7ACC /* image_rep.cpp */; };
 		E85A91BF16C2B4D300C07FA9 /* stackcache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E85A91BE16C2B4D300C07FA9 /* stackcache.cpp */; };
-		E85E2C0B1697347300E5A78A /* image_rep_transformed.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E85E2C0A1697347300E5A78A /* image_rep_transformed.cpp */; };
 		E86481931439BCE100775960 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E86481921439BCE100775960 /* StoreKit.framework */; };
 		F670DB6A147D462B008FEA1E /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F62512621455C7F100BDAACF /* CoreMedia.framework */; };
 		F6DF4CA615597DD000450B64 /* EventKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6DF4CA515597DD000450B64 /* EventKit.framework */; };
@@ -641,8 +632,6 @@
 		4DD3DDC31040AC5C00CAC7EF /* cpalette.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cpalette.cpp; path = src/cpalette.cpp; sourceTree = "<group>"; };
 		4DD3DDC61040AC5C00CAC7EF /* control.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = control.h; path = src/control.h; sourceTree = "<group>"; };
 		4DD3DDC71040AC5C00CAC7EF /* control.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = control.cpp; path = src/control.cpp; sourceTree = "<group>"; };
-		4DD3DDC81040AC5C00CAC7EF /* contextscalewrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = contextscalewrapper.h; path = src/contextscalewrapper.h; sourceTree = "<group>"; };
-		4DD3DDC91040AC5C00CAC7EF /* contextscalewrapper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = contextscalewrapper.cpp; path = src/contextscalewrapper.cpp; sourceTree = "<group>"; };
 		4DD3DDCA1040AC5C00CAC7EF /* context.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = context.h; path = src/context.h; sourceTree = "<group>"; };
 		4DD3DDCB1040AC5C00CAC7EF /* constant.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = constant.h; path = src/constant.h; sourceTree = "<group>"; };
 		4DD3DDCC1040AC5C00CAC7EF /* constant.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = constant.cpp; path = src/constant.cpp; sourceTree = "<group>"; };
@@ -794,8 +783,6 @@
 		4DD3DECD1040ADC500CAC7EF /* printer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = printer.cpp; path = src/printer.cpp; sourceTree = "<group>"; };
 		4DD3DECF1040ADCE00CAC7EF /* regex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = regex.h; path = src/regex.h; sourceTree = "<group>"; };
 		4DD3DED01040ADCE00CAC7EF /* regex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = regex.cpp; path = src/regex.cpp; sourceTree = "<group>"; };
-		4DD3DED11040ADCE00CAC7EF /* pxmaplst.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pxmaplst.h; path = src/pxmaplst.h; sourceTree = "<group>"; };
-		4DD3DED21040ADCE00CAC7EF /* pxmaplst.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pxmaplst.cpp; path = src/pxmaplst.cpp; sourceTree = "<group>"; };
 		4DD3DED41040ADCE00CAC7EF /* props.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = props.cpp; path = src/props.cpp; sourceTree = "<group>"; };
 		4DD3DED51040ADCE00CAC7EF /* property.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = property.h; path = src/property.h; sourceTree = "<group>"; };
 		4DD3DED61040ADCE00CAC7EF /* property.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = property.cpp; path = src/property.cpp; sourceTree = "<group>"; };
@@ -867,7 +854,6 @@
 		4DE7ED6413B33CEA002634F5 /* sysspec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysspec.cpp; path = src/sysspec.cpp; sourceTree = "<group>"; };
 		4DE9499D142762490072D9C6 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
 		4DE9C634113810030059588F /* mbliphonecontext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mbliphonecontext.h; path = src/mbliphonecontext.h; sourceTree = "<group>"; };
-		4DE9C63D113813A00059588F /* mbliphonecontext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mbliphonecontext.cpp; path = src/mbliphonecontext.cpp; sourceTree = "<group>"; };
 		4DF9A3F6142E24FD0063E6FF /* executionerrors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = executionerrors.h; path = src/executionerrors.h; sourceTree = "<group>"; };
 		4DF9A3F7142E24FD0063E6FF /* parseerrors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = parseerrors.h; path = src/parseerrors.h; sourceTree = "<group>"; };
 		4DF9A9AE142FABAB0063E6FF /* mbliphoneapp.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneapp.mm; path = src/mbliphoneapp.mm; sourceTree = "<group>"; };
@@ -946,7 +932,6 @@
 		E8111F8B1541938E00DB16E3 /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		E8111F8D154193A500DB16E3 /* AddressBook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBook.framework; path = System/Library/Frameworks/AddressBook.framework; sourceTree = SDKROOT; };
 		E8111F8F154193AB00DB16E3 /* AddressBookUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBookUI.framework; path = System/Library/Frameworks/AddressBookUI.framework; sourceTree = SDKROOT; };
-		E8111F911541A66A00DB16E3 /* mblandroidalert.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidalert.cpp; path = src/mblandroidalert.cpp; sourceTree = "<group>"; };
 		E8111F921541A66A00DB16E3 /* mblandroidinput.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidinput.cpp; path = src/mblandroidinput.cpp; sourceTree = "<group>"; };
 		E8111F931541A66B00DB16E3 /* mblandroidtextmessaging.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidtextmessaging.cpp; path = src/mblandroidtextmessaging.cpp; sourceTree = "<group>"; };
 		E8137EC31525C15500CCEE6E /* mblandroidplayer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidplayer.cpp; path = src/mblandroidplayer.cpp; sourceTree = "<group>"; };
@@ -978,7 +963,6 @@
 		E85A405A14D8470900AF2300 /* mblandroidbrowser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidbrowser.cpp; path = src/mblandroidbrowser.cpp; sourceTree = "<group>"; };
 		E85A91BE16C2B4D300C07FA9 /* stackcache.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stackcache.cpp; path = src/stackcache.cpp; sourceTree = "<group>"; };
 		E85D136F1461A99700219867 /* mblandroidstore.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidstore.cpp; path = src/mblandroidstore.cpp; sourceTree = "<group>"; };
-		E85E2C0A1697347300E5A78A /* image_rep_transformed.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_transformed.cpp; path = src/image_rep_transformed.cpp; sourceTree = "<group>"; };
 		E864816E1439BC9400775960 /* mblevent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblevent.h; path = src/mblevent.h; sourceTree = "<group>"; };
 		E864816F1439BC9400775960 /* mbliphonestore.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonestore.mm; path = src/mbliphonestore.mm; sourceTree = "<group>"; };
 		E86481701439BC9400775960 /* mblstore.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblstore.cpp; path = src/mblstore.cpp; sourceTree = "<group>"; };
@@ -1007,17 +991,13 @@
 		E8EB28D0147D12660081452B /* SensorModule.java */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.java; path = SensorModule.java; sourceTree = "<group>"; };
 		E8EB28D1147D36790081452B /* ScreenOrientationEventListener.java */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.java; path = ScreenOrientationEventListener.java; sourceTree = "<group>"; };
 		E8F7CAE91497ACF600A5D60B /* NetworkModule.java */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.java; path = NetworkModule.java; sourceTree = "<group>"; };
-		F60A5A3F148003E9000982BF /* mblbusyindicator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblbusyindicator.cpp; path = src/mblbusyindicator.cpp; sourceTree = "<group>"; };
 		F60A5A4114800404000982BF /* mbliphonebusyindicator.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonebusyindicator.mm; path = src/mbliphonebusyindicator.mm; sourceTree = "<group>"; };
 		F622A6421490E57600383FF2 /* mbliphonepickdate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonepickdate.mm; path = src/mbliphonepickdate.mm; sourceTree = "<group>"; };
 		F62512621455C7F100BDAACF /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
-		F62D52A314DBF68300E7C1CD /* mbltextmessaging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mbltextmessaging.cpp; path = src/mbltextmessaging.cpp; sourceTree = "<group>"; };
 		F62D52A714DC00FB00E7C1CD /* mbliphonetextmessaging.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonetextmessaging.mm; path = src/mbliphonetextmessaging.mm; sourceTree = "<group>"; };
 		F6436EA314D7F5FF00A4FF60 /* mblandroidbusyindicator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidbusyindicator.cpp; path = src/mblandroidbusyindicator.cpp; sourceTree = "<group>"; };
 		F6436EA514D8354900A4FF60 /* BusyIndicator.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = BusyIndicator.java; sourceTree = "<group>"; };
 		F6471193156D273B00894A13 /* CalendarEvents.java */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.java; path = CalendarEvents.java; sourceTree = "<group>"; };
-		F66DE83114BB34D600991D8C /* mbliphonealert.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonealert.mm; path = src/mbliphonealert.mm; sourceTree = "<group>"; };
-		F66DE83314BC7E1900991D8C /* mblalert.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblalert.cpp; path = src/mblalert.cpp; sourceTree = "<group>"; };
 		F68B5683154195C200097647 /* mblcontact.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblcontact.cpp; path = src/mblcontact.cpp; sourceTree = "<group>"; };
 		F68B5684154195C200097647 /* mblcontact.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblcontact.h; path = src/mblcontact.h; sourceTree = "<group>"; };
 		F68B56881541960200097647 /* mbliphonecontact.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonecontact.mm; path = src/mbliphonecontact.mm; sourceTree = "<group>"; };
@@ -1032,7 +1012,6 @@
 		F6DF4CA515597DD000450B64 /* EventKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = EventKit.framework; path = System/Library/Frameworks/EventKit.framework; sourceTree = SDKROOT; };
 		F6DF4CA715597DEA00450B64 /* EventKitUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = EventKitUI.framework; path = System/Library/Frameworks/EventKitUI.framework; sourceTree = SDKROOT; };
 		F6E610F4156B9D4B00E87FD6 /* mblandroidcalendar.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcalendar.cpp; path = src/mblandroidcalendar.cpp; sourceTree = "<group>"; };
-		F6FF08F2148F848D005572E6 /* mblactivityindicator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblactivityindicator.cpp; path = src/mblactivityindicator.cpp; sourceTree = "<group>"; };
 		F6FF08F6148F869A005572E6 /* mbliphoneactivityindicator.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneactivityindicator.mm; path = src/mbliphoneactivityindicator.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -1131,7 +1110,6 @@
 				4DD3E1B11041192800CAC7EF /* mbliphone.mm */,
 				F6FF08F6148F869A005572E6 /* mbliphoneactivityindicator.mm */,
 				4C34550114F3FEA1008D7E50 /* mbliphonead.mm */,
-				F66DE83114BB34D600991D8C /* mbliphonealert.mm */,
 				4D839B351431F52E00984D5D /* mbliphoneapp.h */,
 				4DF9A9AE142FABAB0063E6FF /* mbliphoneapp.mm */,
 				4D839A0F1430BBE300984D5D /* mbliphoneappview.mm */,
@@ -1140,7 +1118,6 @@
 				F6DF4CA31559638600450B64 /* mbliphonecalendar.mm */,
 				4C7D1CF714767FD000129F01 /* mbliphonecamera.mm */,
 				F68B56881541960200097647 /* mbliphonecontact.mm */,
-				4DE9C63D113813A00059588F /* mbliphonecontext.cpp */,
 				4DE9C634113810030059588F /* mbliphonecontext.h */,
 				4D7E38A6128152EF00E7F80A /* mbliphonecontrol.h */,
 				4D7E389B1281527500E7F80A /* mbliphonecontrol.mm */,
@@ -1231,11 +1208,8 @@
 			children = (
 				4DB983BF130BB1BD008A03DC /* Android */,
 				4D7E389E1281528500E7F80A /* iOS */,
-				F6FF08F2148F848D005572E6 /* mblactivityindicator.cpp */,
 				4C3454FC14F3FE56008D7E50 /* mblad.cpp */,
 				4C3454FD14F3FE56008D7E50 /* mblad.h */,
-				F66DE83314BC7E1900991D8C /* mblalert.cpp */,
-				F60A5A3F148003E9000982BF /* mblbusyindicator.cpp */,
 				F6DF4C9F1559561D00450B64 /* mblcalendar.cpp */,
 				F6DF4CA115595BA400450B64 /* mblcalendar.h */,
 				4C7D1CE5147674C300129F01 /* mblcamera.cpp */,
@@ -1262,7 +1236,6 @@
 				E86481701439BC9400775960 /* mblstore.cpp */,
 				E86481711439BC9400775960 /* mblstore.h */,
 				4C7D1CFA1476863600129F01 /* mblsyntax.h */,
-				F62D52A314DBF68300E7C1CD /* mbltextmessaging.cpp */,
 			);
 			name = Mobile;
 			sourceTree = "<group>";
@@ -1275,7 +1248,6 @@
 				4DB983C1130BB1DF008A03DC /* mblandroid.h */,
 				4D91B3ED134CB7AE000D7AA5 /* mblandroid.java */,
 				4C34550014F3FE8D008D7E50 /* mblandroidad.cpp */,
-				E8111F911541A66A00DB16E3 /* mblandroidalert.cpp */,
 				E85A405A14D8470900AF2300 /* mblandroidbrowser.cpp */,
 				BE8EA6891768A78700EF66EE /* mblandroidcamera.cpp */,
 				F6436EA314D7F5FF00A4FF60 /* mblandroidbusyindicator.cpp */,
@@ -1496,8 +1468,6 @@
 				4DD3DDB51040AC1A00CAC7EF /* bitmapeffectblur.h */,
 				4DD3DDCD1040AC5C00CAC7EF /* combiners.cpp */,
 				4DD3DDCA1040AC5C00CAC7EF /* context.h */,
-				4DD3DDC91040AC5C00CAC7EF /* contextscalewrapper.cpp */,
-				4DD3DDC81040AC5C00CAC7EF /* contextscalewrapper.h */,
 				4DDD7F52134BA80E009037A0 /* customprinter.cpp */,
 				4DD3DE271040AD0300CAC7EF /* font.cpp */,
 				4DD3DE261040AD0300CAC7EF /* font.h */,
@@ -1646,7 +1616,6 @@
 				E865A51D1695BF3E00C4CBC3 /* image_rep.h */,
 				4D8C6999167A22B500D3CCE7 /* image_rep_encoded.cpp */,
 				4D8C699A167A22B500D3CCE7 /* image_rep_mutable.cpp */,
-				E85E2C0A1697347300E5A78A /* image_rep_transformed.cpp */,
 				4D8C699B167A22B500D3CCE7 /* imagebitmap.cpp */,
 				E865A51E1695BF3E00C4CBC3 /* imagebitmap.h */,
 				4DD3DE661040AD2800CAC7EF /* ipng.cpp */,
@@ -1808,8 +1777,6 @@
 				4DD3DEA61040AD9300CAC7EF /* opensslsocket.cpp */,
 				4DD3DEBF1040ADBC00CAC7EF /* parsedef.h */,
 				4DD3DEB61040ADBC00CAC7EF /* ports.cpp */,
-				4DD3DED21040ADCE00CAC7EF /* pxmaplst.cpp */,
-				4DD3DED11040ADCE00CAC7EF /* pxmaplst.h */,
 				4DD3DED01040ADCE00CAC7EF /* regex.cpp */,
 				4DD3DECF1040ADCE00CAC7EF /* regex.h */,
 				4DD3DEDF1040ADE500CAC7EF /* rtf.cpp */,
@@ -2132,7 +2099,6 @@
 				4DABCDAC15ECD4700085E214 /* cmdss.cpp in Sources */,
 				4DABCDAD15ECD4700085E214 /* combiners.cpp in Sources */,
 				4DABCDAE15ECD4700085E214 /* constant.cpp in Sources */,
-				4DABCDAF15ECD4700085E214 /* contextscalewrapper.cpp in Sources */,
 				4DABCDB015ECD4700085E214 /* control.cpp in Sources */,
 				4DABCDB115ECD4700085E214 /* cpalette.cpp in Sources */,
 				4DABCDB315ECD4700085E214 /* customprinter.cpp in Sources */,
@@ -2177,7 +2143,6 @@
 				E84A254E1680BFFD00EA7ACC /* image_rep.cpp in Sources */,
 				4D8C699C167A22B500D3CCE7 /* image_rep_encoded.cpp in Sources */,
 				4D8C699D167A22B500D3CCE7 /* image_rep_mutable.cpp in Sources */,
-				E85E2C0B1697347300E5A78A /* image_rep_transformed.cpp in Sources */,
 				4D8C699E167A22B500D3CCE7 /* imagebitmap.cpp in Sources */,
 				4DABCDDB15ECD4700085E214 /* ipng.cpp in Sources */,
 				4DABCDDC15ECD4700085E214 /* iquantization.cpp in Sources */,
@@ -2190,10 +2155,7 @@
 				4DABCDE315ECD4700085E214 /* line.cpp in Sources */,
 				4DABCDE415ECD4700085E214 /* literal.cpp in Sources */,
 				4DABCDE515ECD4700085E214 /* magnify.cpp in Sources */,
-				4DABCDE615ECD4700085E214 /* mblactivityindicator.cpp in Sources */,
 				4DABCDE715ECD4700085E214 /* mblad.cpp in Sources */,
-				4DABCDE815ECD4700085E214 /* mblalert.cpp in Sources */,
-				4DABCDE915ECD4700085E214 /* mblbusyindicator.cpp in Sources */,
 				4DABCDEA15ECD4700085E214 /* mblcalendar.cpp in Sources */,
 				4DABCDEB15ECD4700085E214 /* mblcamera.cpp in Sources */,
 				4DABCDEC15ECD4700085E214 /* mblcontact.cpp in Sources */,
@@ -2203,7 +2165,6 @@
 				4DABCDF015ECD4700085E214 /* mblflst.cpp in Sources */,
 				4DABCDF115ECD4700085E214 /* mbliphone.mm in Sources */,
 				4DABCDF215ECD4700085E214 /* mbliphoneactivityindicator.mm in Sources */,
-				4DABCDF415ECD4700085E214 /* mbliphonealert.mm in Sources */,
 				4D222096171D777400E7E557 /* mbliphoneapp.mm in Sources */,
 				4DABCE7A15ECD62C0085E214 /* mbliphoneappview.mm in Sources */,
 				4DABCDF515ECD4970085E214 /* mbliphonebrowser.mm in Sources */,
@@ -2211,7 +2172,6 @@
 				4DABCDF715ECD4970085E214 /* mbliphonecalendar.mm in Sources */,
 				4DABCDF815ECD4970085E214 /* mbliphonecamera.mm in Sources */,
 				4DABCDF915ECD4970085E214 /* mbliphonecontact.mm in Sources */,
-				4DABCDFA15ECD4970085E214 /* mbliphonecontext.cpp in Sources */,
 				4DABCDFB15ECD4970085E214 /* mbliphonecontrol.mm in Sources */,
 				4DABCDFC15ECD4970085E214 /* mbliphonedc.mm in Sources */,
 				4DABCDFD15ECD4970085E214 /* mbliphonedialog.mm in Sources */,
@@ -2244,7 +2204,6 @@
 				4DABCE1815ECD4B50085E214 /* mblspec.cpp in Sources */,
 				4DABCE1915ECD4B50085E214 /* mblstack.cpp in Sources */,
 				4DABCE1A15ECD4B50085E214 /* mblstore.cpp in Sources */,
-				4DABCE1B15ECD4B50085E214 /* mbltextmessaging.cpp in Sources */,
 				4DABCE1C15ECD4B50085E214 /* mcerror.cpp in Sources */,
 				4DABCE1D15ECD4B50085E214 /* mcio.cpp in Sources */,
 				4DABCE1F15ECD4B50085E214 /* mcstring.cpp in Sources */,
@@ -2273,7 +2232,6 @@
 				4DABCE3815ECD4B50085E214 /* player.cpp in Sources */,
 				4DABCE3915ECD4B50085E214 /* printer.cpp in Sources */,
 				4DABCE3A15ECD4B50085E214 /* property.cpp in Sources */,
-				4DABCE3B15ECD4B50085E214 /* pxmaplst.cpp in Sources */,
 				4DABCE3C15ECD4B50085E214 /* redraw.cpp in Sources */,
 				4DABCE3D15ECD4B50085E214 /* regex.cpp in Sources */,
 				4DABCE3E15ECD4B50085E214 /* rtf.cpp in Sources */,

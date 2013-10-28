@@ -45,6 +45,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "socket.h"
 
+#include "resolution.h"
+
 #define VK_LAST 0xDE   //last is 222
 #define LEAVE_CHECK_INTERVAL 500
 #ifndef WM_MOUSEWHEEL
@@ -475,6 +477,11 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 	uint2 button;
 	Boolean down;
 	char buffer[XLOOKUPSTRING_SIZE];
+
+	// IM-2013-08-08: [[ ResIndependence ]] scale mouse position from device to user space
+	MCPoint t_mouseloc;
+	t_mouseloc.x = LOWORD(lParam) / MCResGetDeviceScale();
+	t_mouseloc.y = HIWORD(lParam) / MCResGetDeviceScale();
 
 	// MW-2005-02-20: Seed the SSL random number generator
 #ifdef MCSSL
@@ -971,23 +978,29 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		break;
 	case WM_MOUSEMOVE:  //MotionNotify:
 	case WM_NCMOUSEMOVE:
-		if (MCmousex != LOWORD(lParam) || MCmousey != HIWORD(lParam))
+		// IM-2013-09-23: [[ FullscreenMode ]] Update mouseloc with MCscreen getters & setters
+		MCStack *t_old_mousestack;
+		MCPoint t_old_mouseloc;
+		MCscreen->getmouseloc(t_old_mousestack, t_old_mouseloc);
+		if (t_old_mouseloc.x != t_mouseloc.x || t_old_mouseloc.y != t_mouseloc.y)
 		{
-			MCmousex = LOWORD(lParam);
-			MCmousey = HIWORD(lParam);
+			MCscreen->setmouseloc(t_old_mousestack, t_mouseloc);
 			if (curinfo->dispatch)
 			{
-				MCStack *oms = MCmousestackptr;
 				if (msg != WM_NCMOUSEMOVE)
-					MCmousestackptr = MCdispatcher->findstackd(dw);
+					MCscreen->setmouseloc(MCdispatcher->findstackd(dw), t_mouseloc);
 				if (MCtracewindow == DNULL || hwnd != (HWND)MCtracewindow->handle.window)
 				{
-					if (oms != NULL && MCmousestackptr != oms)
-						oms->munfocus();
+					if (t_old_mousestack != NULL && MCmousestackptr != t_old_mousestack)
+						t_old_mousestack->munfocus();
 					if (msg == WM_MOUSEMOVE)
 					{
-						MCdispatcher->wmfocus(dw, MCmousex, MCmousey);
-						if (capturehwnd != NULL && MCbuttonstate != 0 && !dragclick && (MCU_abs(MCmousex - MCclicklocx) >= MCdragdelta || MCU_abs(MCmousey - MCclicklocy) >= MCdragdelta))
+						MCPoint t_clickloc;
+						MCStack *t_stackptr;
+						MCscreen->getclickloc(t_stackptr, t_clickloc);
+
+						MCdispatcher->wmfocus(dw, t_mouseloc.x, t_mouseloc.y);
+						if (capturehwnd != NULL && MCbuttonstate != 0 && !dragclick && (MCU_abs(t_mouseloc.x - t_clickloc.x) >= MCdragdelta || MCU_abs(t_mouseloc.y - t_clickloc.y) >= MCdragdelta))
 						{
 							dragclick = True;
 							MCdispatcher -> wmdrag(dw);
@@ -1078,17 +1091,16 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					else
 					{
 						if (doubleclick && MCeventtime - clicktime < MCdoubletime
-						        && MCU_abs(MCclicklocx - LOWORD(lParam)) < MCdoubledelta
-						        && MCU_abs(MCclicklocy - HIWORD(lParam)) < MCdoubledelta)
+						        && MCU_abs(MCclicklocx - t_mouseloc.x) < MCdoubledelta
+						        && MCU_abs(MCclicklocy - t_mouseloc.y) < MCdoubledelta)
 							tripleclick = True;
 						else
 							tripleclick = False;
 						doubleclick = False;
-						MCclicklocx = LOWORD(lParam);
-						MCclicklocy = HIWORD(lParam);
-						MCclickstackptr = MCmousestackptr;
+						// IM-2013-09-23: [[ FullscreenMode ]] Update clickloc with MCscreen getters & setters
+						MCscreen->setclickloc(MCmousestackptr, t_mouseloc);
 						dragclick = False;
-						MCdispatcher->wmfocus(dw, LOWORD(lParam), HIWORD(lParam));
+						MCdispatcher->wmfocus(dw, t_mouseloc.x, t_mouseloc.y);
 						MCdispatcher->wmdown(dw, button);
 					}
 				else
@@ -1123,12 +1135,12 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					if (target->isiconic())
 					{
 						MCstacks->restack(target);
-						target->configure(True);
+						target->view_configure(true);
 						target->uniconify();
 						SetWindowPos((HWND)target -> getwindow() -> handle . window, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
 					}
 					else
-						target->configure(True);
+						target->view_configure(true);
 				curinfo->handled = True;
 			}
 		}

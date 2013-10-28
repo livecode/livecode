@@ -17,7 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef XIMAGECACHE_H
 #define XIMAGECACHE_H
 
-#include <Xft.h>
+#include <X11/Xft/Xft.h>
 
 #include "typedefs.h"
 #include "lnxgtkthemedrawing.h"

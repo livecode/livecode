@@ -56,7 +56,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "redraw.h"
 #include "visual.h"
-#include "pxmaplst.h"
 #include "mctheme.h"
 
 #include "exec-interface.h"
@@ -600,7 +599,6 @@ MCExecEnumTypeInfo *kMCInterfaceSelectionModeTypeInfo = &_kMCInterfaceSelectionM
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCInterfaceBackdrop MCbackdrop;
-static Pixmap MCbackdroppm;
 static uint4 MCiconid;
 static MCStringRef MCiconmenu;
 static uint4 MCstatusiconid;
@@ -610,7 +608,6 @@ static MCStringRef MCstatusicontooltip;
 void MCInterfaceInitialize(MCExecContext& ctxt)
 {
 	MCInterfaceBackdropInit(ctxt, MCbackdrop);
-	MCbackdroppm = DNULL;
 	MCiconid = 0;
 	MCiconmenu = (MCStringRef)MCValueRetain(kMCEmptyString);
 	MCstatusiconid = 0;
@@ -739,10 +736,10 @@ void MCInterfaceSetBackdrop(MCExecContext& ctxt, const MCInterfaceBackdrop& p_ba
 	if (ctxt . HasError())
 		return;
 
-	if (MCbackdroppm != DNULL)
+	if (MCbackdroppattern != nil)
 	{
-		MCpatterns -> freepat(MCbackdroppm);
-		MCbackdroppm = DNULL;
+		MCpatternlist -> freepat(MCbackdroppattern);
+		MCbackdroppattern = nil;
 	}
 
 	switch (p_backdrop . type)
@@ -752,12 +749,12 @@ void MCInterfaceSetBackdrop(MCExecContext& ctxt, const MCInterfaceBackdrop& p_ba
 		MCscreen -> configurebackdrop(MCscreen -> getwhite(), NULL, nil);
 		return;
 	case kMCInterfaceBackdropTypeColor:
-		MCscreen -> configurebackdrop(MCbackdrop . named_color . color, DNULL, nil);
+		MCscreen -> configurebackdrop(MCbackdrop . named_color . color, nil, nil);
 		MCscreen -> enablebackdrop();
 		break;
 	case kMCInterfaceBackdropTypePattern:
-		MCbackdroppm = MCpatterns->allocpat(p_backdrop . pattern, ctxt . GetObject());
-		MCscreen -> configurebackdrop(MCbackdrop . named_color . color, MCbackdroppm, nil);
+		MCbackdroppattern = MCpatternlist->allocpat(p_backdrop . pattern, ctxt . GetObject());
+		MCscreen -> configurebackdrop(MCbackdrop . named_color . color, MCbackdroppattern, nil);
 		MCscreen -> enablebackdrop();
 		break;
 	}
@@ -861,7 +858,7 @@ void MCInterfaceGetBrushColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_colo
 void MCInterfaceSetBrushColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color)
 {
 	MCeditingimage = nil;
-	MCpatterns->freepat(MCbrushpm);
+	MCpatternlist->freepat(MCbrushpattern);
 	set_interface_color(MCbrushcolor, MCbrushcolorname, p_color);
 	MCscreen -> alloccolor(MCbrushcolor);
 }
@@ -874,7 +871,7 @@ void MCInterfaceGetPenColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
 void MCInterfaceSetPenColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color)
 {
 	MCeditingimage = nil;
-	MCpatterns->freepat(MCpenpm);
+	MCpatternlist->freepat(MCpenpattern);
 	set_interface_color(MCpencolor, MCpencolorname, p_color);
 	MCscreen -> alloccolor(MCpencolor);
 }
@@ -890,18 +887,18 @@ void MCInterfaceGetBrushPattern(MCExecContext& ctxt, uinteger_t& r_pattern)
 
 void MCInterfaceSetBrushPattern(MCExecContext& ctxt, uinteger_t pattern)
 {
-	Pixmap newpm;
+	MCPatternRef newpm;
 	if (MCbrushpmid < PI_END)
 		MCbrushpmid += PI_PATTERNS;
-	newpm = MCpatterns->allocpat(MCbrushpmid, ctxt . GetObject());
+	newpm = MCpatternlist->allocpat(MCbrushpmid, ctxt . GetObject());
 	if (newpm == None)
 	{
 		ctxt . LegacyThrow(EE_PROPERTY_BRUSHPATNOIMAGE);
 		return;
 	}
 	MCeditingimage = nil;
-	MCpatterns->freepat(MCbrushpm);
-	MCbrushpm = newpm;
+	MCpatternlist->freepat(MCbrushpattern);
+	MCbrushpattern = newpm;
 }
 
 void MCInterfaceGetPenPattern(MCExecContext& ctxt, uinteger_t& r_pattern)
@@ -914,18 +911,18 @@ void MCInterfaceGetPenPattern(MCExecContext& ctxt, uinteger_t& r_pattern)
 
 void MCInterfaceSetPenPattern(MCExecContext& ctxt, uinteger_t pattern)
 {
-	Pixmap newpm;
+	MCPatternRef newpm;
 	if (MCpenpmid < PI_END)
 		MCpenpmid += PI_PATTERNS;
-	newpm = MCpatterns->allocpat(MCpenpmid, ctxt . GetObject());
-	if (newpm == None)
+	newpm = MCpatternlist->allocpat(MCpenpmid, ctxt . GetObject());
+	if (newpm == nil)
 	{
 		ctxt . LegacyThrow(EE_PROPERTY_PENPATNOIMAGE);
 		return;
 	}
 	MCeditingimage = nil;
-	MCpatterns->freepat(MCpenpm);
-	MCpenpm = newpm;
+	MCpatternlist->freepat(MCpenpattern);
+	MCpenpattern = newpm;
 }
 
 void MCInterfaceGetFilled(MCExecContext& ctxt, bool& r_filled)
@@ -3296,7 +3293,6 @@ void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wh
     	return;
     }
     r_mark . text = nil;
-    ctxt . LegacyThrow(EE_CHUNK_BADCONTAINER);
 }
 
 void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCMarkedText& r_mark)

@@ -25,7 +25,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "stacklst.h"
 #include "sellst.h"
-#include "pxmaplst.h"
 #include "undolst.h"
 #include "image.h"
 #include "uidc.h"
@@ -39,18 +38,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "iquantization.h"
 
-extern void surface_merge_with_mask(void *p_pixels, uint4 p_pixel_stride, void *p_mask, uint4 p_mask_stride, uint4 p_offset, uint4 p_width, uint4 p_height);
-extern void surface_merge_with_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
-extern void surface_merge_with_alpha_non_pre(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
-extern void surface_extract_mask(void *p_pixels, uint4 p_pixel_stride, void *p_mask, uint4 p_mask_stride, uint4 p_width, uint4 p_height, uint1 p_threshold);
-extern void surface_extract_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
-extern void surface_unmerge_pre(void *p_pixels, uint4 p_pixel_stride, uint4 p_width, uint4 p_height);
-extern void surface_unmerge_pre_checking(void *p_pixels, uint4 p_pixel_stride, uint4 p_width, uint4 p_height);
-
-
 void MCImage::init()
 {
-	brush.data = spray.data = eraser.data = NULL;
+	brush.image = spray.image = eraser.image = nil;
 
 	MCImage *im;
 	if ((im = (MCImage *)MCdispatcher->getobjid(CT_IMAGE, 108)) != NULL)
@@ -71,12 +61,9 @@ void MCImage::init()
 
 void MCImage::shutdown()
 {
-	if (brush.data != NULL)
-		delete brush.data;
-	if (spray.data != NULL)
-		delete spray.data;
-	if (eraser.data != NULL)
-		delete eraser.data;
+	MCGImageRelease(brush.image);
+	MCGImageRelease(spray.image);
+	MCGImageRelease(eraser.image);
 
 	MCMutableImageRep::shutdown();
 }
@@ -349,7 +336,7 @@ void MCImage::pasteimage(MCImage *clipimage)
 	if (isediting() || convert_to_mutable())
 	{
 		MCImageBitmap *t_bitmap = nil;
-		if (clipimage->lockbitmap(t_bitmap))
+		if (clipimage->lockbitmap(t_bitmap, false))
 		{
 			static_cast<MCMutableImageRep*>(m_rep)->pasteimage(t_bitmap);
 		}
@@ -361,10 +348,8 @@ void MCImage::compute_gravity(MCRectangle &trect, int2 &xorigin, int2 &yorigin)
 {
 	MCImageBitmap *t_bitmap = nil;
 	uint16_t t_width, t_height;
-	/* UNCHECKED */ lockbitmap(t_bitmap, false);
-	t_width = t_bitmap->width;
-	t_height = t_bitmap->height;
-	unlockbitmap(t_bitmap);
+	t_width = m_current_width;
+	t_height = m_current_height;
 
 	trect = rect;
 	xorigin = yorigin = 0;
@@ -416,15 +401,6 @@ void MCImage::crop(MCRectangle *newrect)
 	if (m_rep == nil || m_rep->GetType() == kMCImageRepVector)
 		return;
 
-	MCImageBitmap *t_bitmap = nil;
-	/* UNCHECKED */ lockbitmap(t_bitmap, false);
-
-	MCImageBitmap *t_cropimage = nil;
-	/* UNCHECKED */ MCImageBitmapCreate(rect.width, rect.height, t_cropimage);
-
-	if (rect.width > t_bitmap->width || rect.height > t_bitmap->height || newrect)
-		MCImageBitmapClear(t_cropimage);
-
 	MCRectangle trect;
 	int2 xorigin, yorigin;
 	if (!newrect)
@@ -448,14 +424,20 @@ void MCImage::crop(MCRectangle *newrect)
 		trect.height = newrect->height;
 	}
 
-	MCPoint t_dst_point;
-	t_dst_point.x = trect.x; t_dst_point.y = trect.y;
-	MCRectangle t_src_rect = MCU_make_rect(xorigin, yorigin, trect.width, trect.height);
-	MCImageBitmapCopyRegionToBitmap(t_cropimage, t_bitmap, t_dst_point, t_src_rect);
+	MCImageBitmap *t_bitmap = nil;
+	/* UNCHECKED */ lockbitmap(t_bitmap, false, false);
+
+	MCImageBitmap *t_cropimage = nil;
+	/* UNCHECKED */ MCImageBitmapCreate(rect.width, rect.height, t_cropimage);
+
+	if (rect.width > t_bitmap->width || rect.height > t_bitmap->height || newrect)
+		MCImageBitmapClear(t_cropimage);
+
+	MCImageBitmapCopyRegionToBitmap(t_bitmap, t_cropimage, xorigin, yorigin, trect.x, trect.y, trect.width, trect.height);
 
 	unlockbitmap(t_bitmap);
 
-	/* UNCHECKED */ setbitmap(t_cropimage);
+	/* UNCHECKED */ setbitmap(t_cropimage, 1.0);
 
 	uint32_t t_pixwidth, t_pixheight;
 	getgeometry(t_pixwidth, t_pixheight);
@@ -486,129 +468,116 @@ void MCImage::crop(MCRectangle *newrect)
 // of the image, but large enough to maintain the same pixel centre.
 //
 
-void MCImage::rotate(uint32_t p_angle)
+void MCCalculateRotatedGeometry(uint32_t p_width, uint32_t p_height, int32_t p_angle, uint32_t &r_width, uint32_t &r_height)
 {
-	uint32_t width, height;
+	real8 t_angle = p_angle * M_PI / 180.0;
+	real8 t_cos = cos(t_angle);
+	real8 t_sin = sin(t_angle);
 
-	MCImageRep *t_rep = nil;
+	r_width = (uint32_t)ceil(p_width * fabs(t_cos) + p_height * fabs(t_sin));
+	r_height = (uint32_t)ceil(p_width * fabs(t_sin) + p_height * fabs(t_cos));
+}
 
-	if (m_transformed != nil && m_transformed->Matches(rect.width, rect.height, p_angle, getflag(F_LOCK_LOCATION), resizequality, m_rep))
-		t_rep = m_transformed->Retain();
+void MCImage::rotate_transform(int32_t p_angle)
+{
+	uint32_t t_src_width = rect.width, t_src_height = rect.height;
+	/* UNCHECKED */ getsourcegeometry(t_src_width, t_src_height);
+	
+	uint32_t t_trans_width = t_src_width;
+	uint32_t t_trans_height = t_src_height;
+
 	// IM-2013-04-22: [[ BZ 10858 ]] A transformed rep is needed if the angle is non-zero,
 	// or the rect is locked and doesn't match the source dimensions.
-	else if ((p_angle != 0) || (getflag(F_LOCK_LOCATION) && m_rep != nil && m_rep->GetGeometry(width, height) && (width != rect.width || height != rect.height)))
-		/* UNCHECKED */ MCImageRepGetTranformed(rect.width, rect.height, p_angle, (flags & F_LOCK_LOCATION) != 0, resizequality, m_rep, t_rep);
-	
-	if (m_transformed != nil)
-	{
-		m_transformed->Release();
-		m_transformed = nil;
-	}
-	m_transformed = static_cast<MCTransformedImageRep*>(t_rep);
-
-	if (m_transformed != nil)
-	{
-		// IM-2013-04-22: [[ BZ 10864 ]] if we can't get the transformed image dimensions
-		// then keep the current rect size
-		if (!m_transformed->GetGeometry(width, height))
-		{
-			width = rect.width;
-			height = rect.height;
-		}
-	}
+	if (p_angle == 0 && !(getflag(F_LOCK_LOCATION) && (t_src_width != rect.width || t_src_height != rect.height)))
+		m_has_transform = false;
 	else
-		getgeometry(width, height);
-
-	if (width != rect.width || height != rect.height)
 	{
-		int2 diff = rect.width - width;
+		m_has_transform = true;
+
+		MCCalculateRotatedGeometry(t_src_width, t_src_height, p_angle, t_trans_width, t_trans_height);
+
+		MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-(int32_t)t_src_width / 2.0, -(int32_t)t_src_height / 2.0);
+		t_transform = MCGAffineTransformRotate(t_transform, -p_angle);
+		t_transform = MCGAffineTransformTranslate(t_transform, t_trans_width / 2.0, t_trans_height / 2.0);
+
+		if (getflag(F_LOCK_LOCATION))
+		{
+			t_transform = MCGAffineTransformScale(t_transform, rect.width / (MCGFloat)t_trans_width, rect.height / (MCGFloat)t_trans_height);
+			t_trans_width = rect.width;
+			t_trans_height = rect.height;
+		}
+		
+		// MM-2013-09-16: [[ Bug 11179 ]] Make sure we store the transform.
+		m_transform = t_transform;
+	}
+
+	if (t_trans_width != rect.width || t_trans_height != rect.height)
+	{
+		int2 diff = rect.width - t_trans_width;
 		rect.x += (diff >> 1) + (diff & 0x1 ? rect.width & 1 : 0);
-		diff = rect.height - height;
+		diff = rect.height - t_trans_height;
 		rect.y += (diff >> 1) + (diff & 0x1 ? rect.height & 1 : 0);
-		rect.width = width;
-		rect.height = height;
+		rect.width = t_trans_width;
+		rect.height = t_trans_height;
 	}
 }
 
-void MCImage::resize()
+void MCImage::resize_transform()
 {
-	if (m_transformed != nil)
-	{
-		m_transformed->Release();
-		m_transformed = nil;
-	}
-	
-	if (m_rep != nil)
-	{
-		uint32_t t_pixwidth, t_pixheight;
-		getgeometry(t_pixwidth, t_pixheight);
+	uint32_t t_src_width = rect.width, t_src_height = rect.height;
+	/* UNCHECKED */ getsourcegeometry(t_src_width, t_src_height);
 
-		if (rect.width != t_pixwidth || rect.height != t_pixheight)
-		{
-			MCImageRep *t_rep = nil;
-			
-			/* UNCHECKED */ MCImageRepGetTranformed(rect.width, rect.height, 0, true, resizequality, m_rep, t_rep);
-			m_transformed = static_cast<MCTransformedImageRep*>(t_rep);
-		}
+	if (rect.width == t_src_width && rect.height == t_src_height)
+		m_has_transform = nil;
+	else
+	{
+		m_has_transform = true;
+		MCGFloat t_mid_x = (MCGFloat)t_src_width / 2.0;
+		MCGFloat t_mid_y = (MCGFloat)t_src_height / 2.0;
+		m_transform = MCGAffineTransformMakeScale(rect.width / (MCGFloat)t_src_width, rect.height / (MCGFloat)t_src_height);
 	}
-
-	// MW-2011-09-20: [[ Bug 9739 ]] We've changed the content of the layer, so make sure
-	//   we mark it for redraw.
-	layer_redrawall();
 }
 
 void MCImage::createbrush(Properties which)
 {
-	Pixmap m = nil, d = nil;
-	MCBitmap *mi = nil;
-	/* UNCHECKED */ decompressbrush(m, d, mi);
-	MCbrushmask tmp;
-	tmp.width = mi->width;
-	tmp.height = mi->height;
-	tmp.bytes = mi->bytes_per_line;
-	uint4 bytes = tmp.bytes * tmp.height;
-	tmp.data = new uint1[bytes];
-	memcpy(tmp.data, mi->data, bytes);
-	tmp.xhot = xhot;
-	tmp.yhot = yhot;
-	MCscreen->destroyimage(mi);
+	MCGImageRef t_image = nil;
+	/* UNCHECKED */ decompressbrush(t_image);
+	MCBrush t_brush;
+	t_brush.image = t_image;
+	t_brush.xhot = xhot;
+	t_brush.yhot = yhot;
 
 	uint2 index;
 	switch (which)
 	{
 	case P_BRUSH:
-		if (brush.data != NULL)
-			delete brush.data;
-		brush = tmp;
+		MCGImageRelease(brush.image);
+		brush = t_brush;
 		index = PI_BRUSH;
 		break;
 	case P_SPRAY:
-		if (spray.data != NULL)
-			delete spray.data;
-		spray = tmp;
+		MCGImageRelease(spray.image);
+		spray = t_brush;
 		index = PI_SPRAY;
 		break;
 	case P_ERASER:
-		if (eraser.data != NULL)
-			delete eraser.data;
-		eraser = tmp;
+		MCGImageRelease(eraser.image);
+		eraser = t_brush;
 		index = PI_ERASER;
 		break;
 	default:
 		index = 0;
 		break;
 	}
-	if (m != DNULL)
+
+	if (t_image)
 	{
 		MCscreen->freecursor(MCcursors[index]);
 		MCcursors[index] = createcursor();
 	}
-
-	MCscreen -> freepixmap(m);
-	MCscreen -> freepixmap(d);
 }
 
-MCbrushmask *MCImage::getbrush(Tool p_which)
+MCBrush *MCImage::getbrush(Tool p_which)
 {
 	switch (p_which)
 	{
@@ -653,14 +622,20 @@ MCCursorRef MCImage::createcursor()
 	t_width = rect . width;
 	t_height = rect . height;
 
+	// if the cursor cannot have color or it cannot have alpha then we need to transform
+	// the original color image
+	bool t_premultiply = MCcursorcanbealpha && MCcursorcanbecolor;
+
 	MCImageBitmap *t_bitmap = nil;
 	MCImageBitmap *t_cursor_bitmap = nil;
-	/* UNCHECKED */ lockbitmap(t_bitmap);
+	/* UNCHECKED */ lockbitmap(t_bitmap, t_premultiply);
 	/* UNCHECKED */ MCImageCopyBitmap(t_bitmap, t_cursor_bitmap);
 	unlockbitmap(t_bitmap);
 
 	closeimage();
 
+	MCbufferimages = ob;
+	
 	int32_t t_largest_side;
 	t_largest_side = MCMax(t_width, t_height);
 
@@ -719,21 +694,12 @@ MCCursorRef MCImage::createcursor()
 			MCMemoryDeleteArray(t_colors);
 	}
 
-	// Now build the image buffer
-	MCImageBuffer t_buffer;
-	t_buffer . width = t_width;
-	t_buffer . height = t_height;
-	t_buffer . stride = t_cursor_bitmap->stride;
-	t_buffer . data = t_cursor_bitmap->data;
-
 	// Create the cursor
-	t_cursor = MCscreen -> createcursor(&t_buffer, t_xhot, t_yhot);
+	t_cursor = MCscreen -> createcursor(t_cursor_bitmap, t_xhot, t_yhot);
 
 	// Destroy the transient bitmaps we needed
 	MCImageFreeBitmap(t_cursor_bitmap);
 
-	MCbufferimages = ob;
-	
 	return t_cursor;
 }
 
@@ -763,41 +729,62 @@ MCCursorRef MCImage::getcursor(bool p_is_default)
 	return cursor;
 }
 
-void MCImage::createpat(Pixmap &newpixmap,
-                        MCColor *&newcolors, uint2 &newncolors)
+bool MCImage::createpattern(MCPatternRef &r_image)
 {
-	Boolean ob = MCbufferimages;
-	MCbufferimages = True;
+	bool t_success = true;
+
+	MCImageBitmap *t_bitmap = nil;
+	MCImageBitmap *t_blank = nil;
+
+	MCGImageRef t_image = nil;
+	
+	MCPatternRef t_pattern;
+	t_pattern = nil;
+
+	openimage();
 
 	if (m_rep == nil)
 	{
-		/* UNCHECKED */ newpixmap = MCscreen->createpixmap(rect.width, rect.height, 0, False);
-		MCscreen->copyarea(newpixmap, newpixmap, 0, 0, 0,
-		                   rect.width, rect.height, 0, 0, GXclear);
+		// create blank bitmap;
+		t_success = MCImageBitmapCreate(rect.width, rect.height, t_blank);
+		if (t_success)
+		{
+			MCImageBitmapClear(t_blank);
+			t_bitmap = t_blank;
+		}
 	}
 	else
+		t_success = lockbitmap(t_bitmap, true);
+
+	if (t_success)
 	{
-		openimage();
+		MCGRaster t_raster;
+		t_raster.width = t_bitmap->width;
+		t_raster.height = t_bitmap->height;
+		t_raster.pixels = t_bitmap->data;
+		t_raster.stride = t_bitmap->stride;
+		t_raster.format = t_bitmap->has_transparency ? kMCGRasterFormat_ARGB : kMCGRasterFormat_xRGB;
 	
-		MCImageBitmap *t_bitmap = nil;
-		Pixmap t_drawmask = nil;
-		MCBitmap *t_maskimagealpha = nil;
-
-		/* UNCHECKED */ lockbitmap(t_bitmap);
-		/* UNCHECKED */	MCImageSplitPixmaps(t_bitmap, newpixmap, t_drawmask, t_maskimagealpha);
-		unlockbitmap(t_bitmap);
-
-		MCscreen->freepixmap(t_drawmask);
-		if (t_maskimagealpha != nil)
-			MCscreen->destroyimage(t_maskimagealpha);
-
-		closeimage();
+		t_success = MCGImageCreateWithRaster(t_raster, t_image);
 	}
 
-	newncolors = 0;
-	newcolors = nil;
+	// IM-2013-08-14: [[ ResIndependence ]] Wrap image in MCPattern with scale factor
+	if (t_success)
+		t_success = MCPatternCreate(t_image, m_scale_factor, t_pattern);
+		
+	if (t_blank != nil)
+		MCImageFreeBitmap(t_blank);
+	else
+		unlockbitmap(t_bitmap);
 
-	MCbufferimages = ob;
+	closeimage();
+	
+	MCGImageRelease(t_image);
+	
+	if (t_success)
+		r_image = t_pattern;
+
+	return t_success;
 }
 
 template <uint1 quality>
@@ -1027,16 +1014,6 @@ bool MCImageRotateRotate(MCImageBitmap *p_src, real64_t p_angle, uint32_t p_back
 	return true;
 }
 
-#define RGBAtoFOUR(r, g, b, a) ((uint4)(((a) << 24) | ((r) << 16)\
-         | ((g) << 8) | (b)))
-#define FOURtoB(rgb) ((rgb) & 0xff)
-#define FOURtoG(rgb) (((rgb) >> 8) & 0xff)
-#define FOURtoR(rgb) (((rgb) >> 16) & 0xff)
-#define FOURtoA(rgb) ((rgb) >> 24)
-
-extern void surface_merge_with_mask(void *p_pixels, uint4 p_pixel_stride, void *p_mask, uint4 p_mask_stride, uint4 p_offset, uint4 p_width, uint4 p_height);
-extern void surface_merge_with_alpha(void *p_src, uint4 p_src_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCImage::resetimage()
@@ -1100,98 +1077,6 @@ bool MCImageBitmapApplyColorTransform(MCImageBitmap *p_bitmap, MCColorTransformR
 
 // Legacy Functions
 
-bool MCImageBitmapCreateWithOldBitmap(MCBitmap *p_old, MCImageBitmap *&r_new)
-{
-	MCImageBitmap *t_bitmap;
-	uindex_t t_width = p_old->width;
-	uindex_t t_height = p_old->height;
-
-	if (!MCImageBitmapCreate(t_width, t_height, t_bitmap))
-		return false;
-
-	uint8_t *t_src_ptr = (uint8_t*)p_old->data;
-	uint8_t *t_dst_ptr = (uint8_t*)t_bitmap->data;
-	while (t_height--)
-	{
-		MCMemoryCopy(t_dst_ptr, t_src_ptr, t_width * 4);
-		t_src_ptr += p_old->bytes_per_line;
-		t_dst_ptr += t_bitmap->stride;
-	}
-
-	r_new = t_bitmap;
-	return true;
-}
-
-void MCImageBitmapSetAlpha(MCImageBitmap *p_bitmap, MCBitmap *p_maskimagealpha)
-{
-	uint8_t *t_src_ptr = (uint8_t*)p_maskimagealpha->data;
-	uint8_t *t_dst_ptr = (uint8_t*)p_bitmap->data;
-	uindex_t t_height = p_bitmap->height;
-	bool t_has_alpha = false;
-	bool t_has_transparency = false;
-	while (t_height--)
-	{
-		uint8_t *t_src_row = (uint8_t*)t_src_ptr;
-		uint32_t *t_dst_row = (uint32_t*)t_dst_ptr;
-		uindex_t t_width = p_bitmap->width;
-		while (t_width--)
-		{
-			uint8_t t_alpha = *t_src_row++;
-			uint32_t t_colors = *t_dst_row & 0x00FFFFFF;
-			
-			if (t_alpha != 0xFF)
-			{
-				t_has_transparency = true;
-				if (t_alpha != 0x00)
-					t_has_alpha = true;
-			}
-			*t_dst_row++ = t_colors | (t_alpha << 24);
-		}
-		t_src_ptr += p_maskimagealpha->bytes_per_line;
-		t_dst_ptr += p_bitmap->stride;
-	}
-	
-	p_bitmap->has_transparency = t_has_transparency;
-	p_bitmap->has_alpha = t_has_alpha;
-}
-
-void MCImageBitmapSetAlphaFromMask(MCImageBitmap *p_bitmap, MCBitmap *p_maskimage)
-{
-	uint8_t *t_src_ptr = (uint8_t*)p_maskimage->data;
-	uint8_t *t_dst_ptr = (uint8_t*)p_bitmap->data;
-	uindex_t t_height = p_bitmap->height;
-	bool t_has_transparency = false;
-	while (t_height--)
-	{
-		uint8_t *t_src_row = (uint8_t*)t_src_ptr;
-		uint32_t *t_dst_row = (uint32_t*)t_dst_ptr;
-		uindex_t t_width = p_bitmap->width;
-		uint8_t t_bit = 0;
-		uint8_t t_byte = 0;
-		while (t_width--)
-		{
-			if (t_bit == 0)
-			{
-				t_bit = 0x80;
-				t_byte = *t_src_row++;
-			}
-			if (t_bit & t_byte)
-				*t_dst_row++ |= 0xFF000000;
-			else
-			{
-				t_has_transparency = true;
-				*t_dst_row++ &= 0x00FFFFFF;
-			}
-			t_bit >>= 1;
-		}
-		t_src_ptr += p_maskimage->bytes_per_line;
-		t_dst_ptr += p_bitmap->stride;
-	}
-	
-	p_bitmap->has_transparency = t_has_transparency;
-	p_bitmap->has_alpha = false;
-}
-
 void MCImageBitmapSetAlphaValue(MCImageBitmap *p_bitmap, uint8_t p_alpha)
 {
 	uint8_t *t_dst_ptr = (uint8_t*)p_bitmap->data;
@@ -1210,179 +1095,6 @@ void MCImageBitmapSetAlphaValue(MCImageBitmap *p_bitmap, uint8_t p_alpha)
 	
 	p_bitmap->has_transparency = p_alpha != 0xFF;
 	p_bitmap->has_alpha = p_alpha != 0x00 && p_alpha != 0xFF;
-}
-
-bool MCImageSplitPixmaps(MCImageBitmap *p_bitmap, Pixmap &r_drawdata, Pixmap &r_drawmask, MCBitmap *&r_maskimagealpha)
-{
-	bool t_success = true;
-
-	MCBitmap *t_color = nil, *t_mask = nil, *t_alpha = nil;
-	Pixmap t_drawdata = nil, t_drawmask = nil;
-
-	t_success = MCImageSplitRasters(p_bitmap, t_color, t_mask, t_alpha);
-
-	if (t_success && t_color != nil)
-		t_success = MCImagePixmapFromBitmap(t_color, 0, t_drawdata);
-	if (t_success && t_mask != nil)
-		t_success = MCImagePixmapFromBitmap(t_mask, 1, t_drawmask);
-
-	if (t_color != nil)
-		MCscreen->destroyimage(t_color);
-	if (t_mask != nil)
-		MCscreen->destroyimage(t_mask);
-
-	if (t_success)
-	{
-		r_drawdata = t_drawdata;
-		r_drawmask = t_drawmask;
-		r_maskimagealpha = t_alpha;
-	}
-	else
-	{
-		MCscreen->freepixmap(t_drawdata);
-		MCscreen->freepixmap(t_drawmask);
-		if (t_alpha != nil)
-			MCscreen->destroyimage(t_alpha);
-	}
-
-	return t_success;
-}
-
-bool MCImageMergePixmaps(uint16_t p_pixwidth, uint16_t p_pixheight, Pixmap p_drawdata, Pixmap p_drawmask, MCBitmap *p_maskimagealpha, MCImageBitmap *&r_bitmap)
-{
-	bool t_success = true;
-
-	MCImageBitmap *t_bitmap = nil;
-	MCBitmap *t_image = nil, *t_maskimage = nil;
-
-	t_success = nil != (t_image = MCscreen->getimage(p_drawdata, 0, 0, p_pixwidth, p_pixheight));
-	if (t_success)
-		t_success = MCImageBitmapCreateWithOldBitmap(t_image, t_bitmap);
-
-	if (t_success)
-	{
-		if (p_maskimagealpha != nil)
-			MCImageBitmapSetAlpha(t_bitmap, p_maskimagealpha);
-		else if (p_drawmask != nil)
-		{
-			t_success = nil != (t_maskimage = MCscreen->getimage(p_drawmask, 0, 0, p_pixwidth, p_pixheight));
-			if (t_success)
-				MCImageBitmapSetAlphaFromMask(t_bitmap, t_maskimage);
-		}
-		else
-			MCImageBitmapSetAlphaValue(t_bitmap, 0xFF);
-	}
-
-	if (t_image != nil)
-		MCscreen->destroyimage(t_image);
-	if (t_maskimage != nil)
-		MCscreen->destroyimage(t_maskimage);
-
-	if (t_success)
-		r_bitmap = t_bitmap;
-	else
-		MCImageFreeBitmap(t_bitmap);
-
-	return t_success;
-}
-
-bool MCImageSplitRasters(MCImageBitmap *p_image, MCBitmap *&r_drawimage, MCBitmap *&r_maskimage, MCBitmap *&r_maskimagealpha)
-{
-	bool t_success = true;
-
-	MCBitmap *t_bitmap = nil;
-	MCBitmap *t_mask = nil;
-	MCBitmap *t_alpha_mask = nil;
-
-	t_success = nil != (t_bitmap = MCscreen->createimage(32, p_image->width, p_image->height, False, 0, False, True));
-
-	bool t_need_mask = false;
-	bool t_need_alpha = false;
-
-	t_need_mask = MCImageBitmapHasTransparency(p_image, t_need_alpha);
-
-	if (t_success && t_need_mask)
-		t_success = nil != (t_mask = MCscreen->createimage(1, p_image->width, p_image->height, False, 0xFF, False, False));
-	if (t_success && t_need_alpha)
-		t_success = nil != (t_alpha_mask = MCscreen->createimage(8, p_image->width, p_image->height, False, 0xFF, False, False));
-
-	if (t_success)
-	{
-		uint8_t *t_src_ptr = (uint8_t*)p_image->data;
-		uint8_t *t_dst_ptr = (uint8_t*)t_bitmap->data;
-		uint8_t *t_mask_ptr = t_need_mask ? (uint8_t*)t_mask->data : nil;
-		uint8_t *t_alpha_ptr = t_need_alpha ? (uint8_t*)t_alpha_mask->data : nil;
-
-		for (uindex_t y = 0; t_success && y < p_image->height; y++)
-		{
-			uint32_t *t_src_row = (uint32_t*)t_src_ptr;
-			uint32_t *t_dst_row = (uint32_t*)t_dst_ptr;
-			uint8_t *t_mask_row = t_mask_ptr;
-			uint8_t *t_alpha_row = t_alpha_ptr;
-			uint8_t t_bit = 0x80;
-			uint8_t t_byte = 0;
-
-			for (uindex_t x = 0; t_success && x < p_image->width; x++)
-			{
-				uint32_t t_alpha = *t_src_row >> 24;
-				*t_dst_row++ = *t_src_row++;// | 0xFF000000;
-
-				if (t_need_mask)
-				{
-					if (t_alpha > 0)
-						t_byte |= t_bit;
-
-					t_bit >>= 1;
-					if (t_bit == 0)
-					{
-						t_bit = 0x80;
-						*t_mask_row++ = t_byte;
-						t_byte = 0;
-					}
-				}
-
-				if (t_need_alpha)
-					*t_alpha_row++ = t_alpha;
-			}
-
-			if (t_need_mask && t_bit != 0x80)
-				*t_mask_row = t_byte;
-
-			t_src_ptr += p_image->stride;
-			t_dst_ptr += t_bitmap->bytes_per_line;
-			if (t_need_mask)
-				t_mask_ptr += t_mask->bytes_per_line;
-			if (t_need_alpha)
-				t_alpha_ptr += t_alpha_mask->bytes_per_line;
-		}
-	}
-
-	if (t_success)
-	{
-		r_drawimage = t_bitmap;
-		r_maskimage = t_mask;
-		r_maskimagealpha = t_alpha_mask;
-	}
-	else
-	{
-		if (t_bitmap != nil)
-			MCscreen->destroyimage(t_bitmap);
-		if (t_mask != nil)
-			MCscreen->destroyimage(t_mask);
-		if (t_alpha_mask != nil)
-			MCscreen->destroyimage(t_alpha_mask);
-	}
-
-	return t_success;
-}
-
-bool MCImagePixmapFromBitmap(MCBitmap *p_bitmap, uindex_t p_depth, Pixmap &r_pixmap)
-{
-	if (nil == (r_pixmap = MCscreen->createpixmap(p_bitmap->width, p_bitmap->height, p_depth, False)))
-		return false;
-
-	MCscreen->putimage(r_pixmap, p_bitmap, 0, 0, 0, 0, p_bitmap->width, p_bitmap->height);
-	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

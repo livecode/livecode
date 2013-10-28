@@ -1079,10 +1079,11 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
 	if (t_success && p_validate_header_callback != nil)
 		t_success = p_validate_header_callback(p_params, t_header, t_commands);
 
+	// MW-2013-05-04: [[ iOSDeployMisc ]] Search for a rogue 'misc' segment.
 	// Next check that the executable is in a form we can work with
-	segment_command *t_linkedit_segment, *t_project_segment, *t_payload_segment;
-	uint32_t t_linkedit_index, t_project_index, t_payload_index;
-	t_linkedit_segment = t_project_segment = t_payload_segment = NULL;
+	segment_command *t_linkedit_segment, *t_project_segment, *t_payload_segment, *t_misc_segment;
+	uint32_t t_linkedit_index, t_project_index, t_payload_index, t_misc_index;
+	t_linkedit_segment = t_project_segment = t_payload_segment = t_misc_segment = NULL;
 	if (t_success)
 		for(uint32_t i = 0; i < t_header . ncmds; i++)
 			if (t_commands[i] -> cmd == LC_SEGMENT)
@@ -1104,6 +1105,11 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
 					t_payload_index = i;
 					t_payload_segment = t_command;
 				}
+				else if (memcmp(t_command -> segname, "__MISC", 6) == 0)
+				{
+					t_misc_index = i;
+					t_misc_segment = t_command;
+				}
 			}
 
 	// Make sure we have both segments we think should be there
@@ -1113,9 +1119,19 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
 		t_success = MCDeployThrow(kMCDeployErrorMacOSXNoProjectSegment);
 	if (t_success && p_params . payload != NULL && t_payload_segment == NULL)
 		t_success = MCDeployThrow(kMCDeployErrorMacOSXNoPayloadSegment);
-
-	// Make sure linkedit follows project
-	if (t_success && t_linkedit_index != t_project_index + 1)
+	
+	// MW-2013-05-04: [[ iOSDeployMisc ]] If 'misc' segment is present but not between
+	//   linkedit and project, then all is well.
+	if (t_success &&
+		t_misc_segment != nil && (t_linkedit_index != t_misc_index + 1 || t_misc_index != t_project_index + 1))
+		t_misc_segment = nil;
+	
+	// MW-2013-05-04: [[ iOSDeployMisc ]] Check 'misc' segment (if potentially an issue) is
+	//   in a place we can handle it.
+	// Make sure linkedit follows project, or linkedit follows misc, follows project
+	if (t_success &&
+		(t_linkedit_index != t_project_index + 1) &&
+		(t_misc_segment != nil && (t_linkedit_index != t_misc_index + 1 || t_misc_index != t_project_index + 1)))
 		t_success = MCDeployThrow(kMCDeployErrorMacOSXBadSegmentOrder);
 
 	// Make sure project follows payload (if required)
@@ -1189,7 +1205,12 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
 			relocate_segment_command(t_project_segment, (t_payload_segment -> fileoff + t_payload_size) - t_old_project_offset, (t_payload_segment -> fileoff + t_payload_size) - t_old_project_offset);
 		}
 		
-		t_old_linkedit_offset = t_linkedit_segment -> fileoff;
+		// MW-2013-05-04: [[ iOSDeployMisc ]] If there is a 'misc' segment then use a different
+		//   'post' project offset (which will include 'misc').
+		if (t_misc_segment == nil)
+			t_old_linkedit_offset = t_linkedit_segment -> fileoff;
+		else
+			t_old_linkedit_offset = t_misc_segment -> fileoff;
 
 		// Now go through, updating the offsets for all load commands after
 		// and including linkedit.
@@ -1524,6 +1545,94 @@ static bool MCDeployToMacOSXEmbedded(const MCDeployParameters& p_params, bool p_
 	return t_success;
 }
 
+// MW-2013-06-13: This method builds a capsule into each part of a (potentially) fat binary.
+static bool MCDeployToMacOSXFat(const MCDeployParameters& p_params, bool p_embedded, MCDeployFileRef p_engine, MCDeployFileRef p_output, MCDeployValidateHeaderCallback p_validate_header_callback)
+{
+	bool t_success;
+	t_success = true;
+	
+	// Next read in the fat header.
+	fat_header t_fat_header;
+	if (t_success && !MCDeployFileReadAt(p_engine, &t_fat_header, sizeof(fat_header), 0))
+		t_success = MCDeployThrow(kMCDeployErrorMacOSXNoHeader);
+	
+	// Swap the header - note that the 'fat_*' structures are always in network
+	// byte-order.
+	if (t_success)
+		swap_fat_header(true, t_fat_header);
+	
+	// If this isn't a fat binary, then we assume its just a single arch binary.
+	if (t_success && t_fat_header . magic != FAT_MAGIC)
+	{
+		uint32_t t_output_offset;
+		t_output_offset = 0;
+		if (!p_embedded)
+			t_success = MCDeployToMacOSXMain(p_params, false, p_engine, 0, 0, t_output_offset, p_output, p_validate_header_callback);
+		else
+			t_success = MCDeployToMacOSXEmbedded(p_params, false, p_engine, 0, 0, t_output_offset, p_output);
+	}
+	else
+	{
+		// The output offset starts at 4096 - the fat header is updated as we go.
+		uint32_t t_output_offset;
+		t_output_offset = 4096;
+		
+		// The fat_arch structures follow the fat header directly
+		uint32_t t_header_offset;
+		t_header_offset = sizeof(fat_header);
+		
+		// Loop through all the fat headers.
+		for(uint32_t i = 0; i < t_fat_header . nfat_arch && t_success; i++)
+		{
+			fat_arch t_fat_arch;
+			if (!MCDeployFileReadAt(p_engine, &t_fat_arch, sizeof(fat_arch), t_header_offset))
+				t_success = MCDeployThrow(kMCDeployErrorMacOSXBadHeader);
+			
+			uint32_t t_last_output_offset;
+			if (t_success)
+			{
+				swap_fat_arch(true, t_fat_arch);
+				
+				// Round the end of the last engine up to the nearest page boundary.
+				t_output_offset = (t_output_offset + 4095) & ~4095;
+				
+				// Record the end of the last engine.
+				t_last_output_offset = t_output_offset;
+				
+				// Write out this arch's portion.
+				if (!p_embedded)
+					t_success = MCDeployToMacOSXMain(p_params, false, p_engine, t_fat_arch . offset, t_fat_arch . size, t_output_offset, p_output, p_validate_header_callback);
+				else
+					t_success = MCDeployToMacOSXEmbedded(p_params, false, p_engine, 0, 0, t_output_offset, p_output);
+			}
+			
+			if (t_success)
+			{
+				// Update the fat header.
+				t_fat_arch . offset = t_last_output_offset;
+				t_fat_arch . size = t_output_offset - t_last_output_offset;
+				
+				// Put it back to network byte order.
+				swap_fat_arch(true, t_fat_arch);
+				
+				// Write out the header.
+				t_success = MCDeployFileWriteAt(p_output, &t_fat_arch, sizeof(t_fat_arch), t_header_offset);
+			}
+			
+			t_header_offset += sizeof(fat_arch);
+		}
+		
+		// Final step is to update the fat header.
+		if (t_success)
+		{
+			swap_fat_header(true, t_fat_header);
+			t_success = MCDeployFileWriteAt(p_output, &t_fat_header, sizeof(t_fat_header), 0);
+		}
+	}
+	
+	return true;
+}
+
 // This method verifies that the given engine is for Mac. It checks the CPU is
 // is either PPC or x86, and that the executable loads Cocoa.
 static bool MCDeployValidateMacEngine(const MCDeployParameters& p_params, mach_header& p_header, load_command **p_commands)
@@ -1562,20 +1671,34 @@ Exec_stat MCDeployToMacOSX(const MCDeployParameters& p_params)
 	bool t_success;
 	t_success = true;
 
-	// First thing we do is open the files.
-	MCDeployFileRef t_engine_ppc, t_engine_x86, t_output;
-	t_engine_ppc = t_engine_x86 = t_output = NULL;
+	// MW-2013-06-13: First check that we either have 'engine' or (ppc and/or x86).
 	if (t_success &&
-		(p_params . engine_ppc != NULL && !MCDeployFileOpen(p_params . engine_ppc, "rb", t_engine_ppc) ||
+		(p_params . engine != NULL && (p_params . engine_ppc != NULL || p_params . engine_x86 != NULL)))
+		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
+	
+	// MW-2013-06-13: Next check that we have at least one engine.
+	if (t_success &&
+		(p_params . engine == NULL && p_params . engine_ppc == NULL && p_params . engine_x86 == NULL))
+		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
+	
+	// Now open the files.
+	MCDeployFileRef t_engine, t_engine_ppc, t_engine_x86, t_output;
+	t_engine = t_engine_ppc = t_engine_x86 = t_output = NULL;
+	if (t_success &&
+		(p_params . engine != NULL && !MCDeployFileOpen(p_params . engine, "rb", t_engine) ||
+		 p_params . engine_ppc != NULL && !MCDeployFileOpen(p_params . engine_ppc, "rb", t_engine_ppc) ||
 		 p_params . engine_x86 != NULL && !MCDeployFileOpen(p_params . engine_x86, "rb", t_engine_x86)))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
 	if (t_success && !MCDeployFileOpen(p_params . output, "wb+", t_output))
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 
-	// Now, if we have two engines specified, we need to build a fat binary
-	// otherwise, we just build a single architecture binary.
-	if (t_success)
+	// MW-2013-06-13:  If we have a single engine, process that in the appropriate
+	//   architecture (or for all archs if fat). Otherwise, use the specific ppc or
+	//   x86 engines.
+	if (t_success && t_engine != NULL)
+		t_success = MCDeployToMacOSXFat(p_params, false, t_engine, t_output, MCDeployValidateMacEngine);
+	else if (t_success)
 	{
 		uint32_t t_offset;
 		t_offset = 0;
@@ -1637,6 +1760,7 @@ Exec_stat MCDeployToMacOSX(const MCDeployParameters& p_params)
 	}
 
 	MCDeployFileClose(t_output);
+	MCDeployFileClose(t_engine);
 	MCDeployFileClose(t_engine_x86);
 	MCDeployFileClose(t_engine_ppc);
 	
@@ -1712,6 +1836,11 @@ Exec_stat MCDeployToIOS(const MCDeployParameters& p_params, bool p_embedded)
 	if (t_success && !MCDeployFileOpen(p_params . output, "wb+", t_output))
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 	
+	// Generate the binary.
+	if (t_success)
+		t_success = MCDeployToMacOSXFat(p_params, p_embedded, t_engine, t_output, MCDeployValidateIOSEngine);
+	
+#if 0
 	// Next read in the fat header.
 	fat_header t_fat_header;
 	if (t_success && !MCDeployFileReadAt(t_engine, &t_fat_header, sizeof(fat_header), 0))
@@ -1790,7 +1919,8 @@ Exec_stat MCDeployToIOS(const MCDeployParameters& p_params, bool p_embedded)
 			t_success = MCDeployFileWriteAt(t_output, &t_fat_header, sizeof(t_fat_header), 0);
 		}
 	}
-
+#endif
+	
 	MCDeployFileClose(t_output);
 	MCDeployFileClose(t_engine);
 	

@@ -39,6 +39,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "tilecache.h"
 #include "context.h"
 
+#include "graphicscontext.h"
+
+#include "resolution.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // This method resets the layer-related attribtues to defaults and marks them
@@ -442,11 +446,19 @@ void MCControl::layer_contentoriginchanged(int32_t p_dx, int32_t p_dy)
 
 	// Fetch the tilecache we are using.
 	MCTileCacheRef t_tilecache;
-	t_tilecache = getstack() -> gettilecache();
+	t_tilecache = getstack() -> view_gettilecache();
 
 	// Scroll the sprite - note that this method is only called if
 	// layer_isscrolling() is true, which is only possible if we have a tilecache.
-	MCTileCacheScrollSprite(t_tilecache, m_layer_id, p_dx, p_dy);
+	// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+	// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+	
+	MCGPoint t_device_point;
+	t_device_point = MCGPointApplyAffineTransform(MCGPointMake(p_dx, p_dy), getstack()->getdevicetransform());
+	MCGFloat t_dx, t_dy;
+	t_dx = t_device_point.x;
+	t_dy = t_device_point.y;
+	MCTileCacheScrollSprite(t_tilecache, m_layer_id, t_dx, t_dy);
 }
 
 void MCControl::layer_scrolled(void)
@@ -485,12 +497,22 @@ void MCControl::layer_dirtycontentrect(const MCRectangle& p_updated_rect, bool p
 	t_content_rect = layer_getcontentrect();
 	
 	MCTileCacheRef t_tilecache;
-	t_tilecache = getstack() -> gettilecache();
+	t_tilecache = getstack() -> view_gettilecache();
 
 	// Note that this method is only called if layer_isscrolling() is true, which is only
 	// possible if we have a tilecache.
 	if (m_layer_id != 0)
-		MCTileCacheUpdateSprite(t_tilecache, m_layer_id, MCU_offset_rect(p_updated_rect, -t_content_rect . x, -t_content_rect . y));
+	{
+		// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+		// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+		MCGAffineTransform t_transform;
+		t_transform = getstack()->getdevicetransform();
+		
+		MCRectangle t_device_updated_rect, t_device_content_rect;
+		t_device_updated_rect = MCRectangleGetTransformedBounds(p_updated_rect, t_transform);
+		t_device_content_rect = MCRectangleGetTransformedBounds(t_content_rect, t_transform);
+		MCTileCacheUpdateSprite(t_tilecache, m_layer_id, MCU_offset_rect(t_device_updated_rect, -t_device_content_rect . x, -t_device_content_rect . y));
+	}
 		
 	// Add the rect to the update region - but only if instructed (update_card will be
 	// false if the object was invisible).
@@ -533,8 +555,16 @@ void MCControl::layer_dirtyeffectiverect(const MCRectangle& p_effective_rect, bo
 
 	// Fetch the tilecache we are using (if any).
 	MCTileCacheRef t_tilecache;
-	t_tilecache = t_control -> getstack() -> gettilecache();
+	t_tilecache = t_control -> getstack() -> view_gettilecache();
 
+	// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+	// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+	MCGAffineTransform t_transform;
+	t_transform = getstack()->getdevicetransform();
+	
+	MCRectangle t_device_rect;
+	t_device_rect = MCRectangleGetTransformedBounds(t_dirty_rect, t_transform);
+	
 	// Notify any tilecache of the changes.
 	if (t_tilecache != nil)
 	{
@@ -548,13 +578,19 @@ void MCControl::layer_dirtyeffectiverect(const MCRectangle& p_effective_rect, bo
 		{
 			// Non-dynamic layers are scenery in the tilecache, their rect is in
 			// canvas co-ords.
-			MCTileCacheUpdateScenery(t_tilecache, t_control -> m_layer_id, t_dirty_rect);
+			MCTileCacheUpdateScenery(t_tilecache, t_control -> m_layer_id, t_device_rect);
 		}
 		else
 		{
 			// Dynamic layers are sprites in the tilecache, their rect is in
 			// sprite co-ords.
-			MCTileCacheUpdateSprite(t_tilecache, t_control -> m_layer_id, MCU_offset_rect(t_dirty_rect, -t_control -> rect . x, -t_control -> rect . y));
+			MCRectangle t_offset_rect;
+			t_offset_rect = MCU_offset_rect(t_dirty_rect, -t_control -> rect . x, -t_control -> rect . y);
+			
+			// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+			// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+			t_device_rect = MCRectangleGetTransformedBounds(t_offset_rect, t_transform);
+			MCTileCacheUpdateSprite(t_tilecache, t_control -> m_layer_id, t_device_rect);
 		}
 	}
 
@@ -595,7 +631,7 @@ void MCControl::layer_changeeffectiverect(const MCRectangle& p_old_effective_rec
 	// latter case, this is just a dirty op).
 	MCTileCacheRef t_tilecache;
 	if (parent -> gettype() != CT_GROUP)
-		t_tilecache = getstack() -> gettilecache();
+		t_tilecache = getstack() -> view_gettilecache();
 	else
 		t_tilecache = nil;
 	
@@ -628,7 +664,16 @@ void MCControl::layer_changeeffectiverect(const MCRectangle& p_old_effective_rec
 		// new effective rects so that the appropriate tiles get flushed. Note
 		// that 'force_update' has no effect here as reshaping a scenery layer
 		// implicitly invalidates all tiles it touches.
-		MCTileCacheReshapeScenery(t_tilecache, m_layer_id, p_old_effective_rect, t_new_effective_rect);
+		// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+		// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+		MCGAffineTransform t_transform;
+		t_transform = getstack()->getdevicetransform();
+		
+		MCRectangle t_old_device_rect, t_new_device_rect;
+		t_old_device_rect = MCRectangleGetTransformedBounds(p_old_effective_rect, t_transform);
+		t_new_device_rect = MCRectangleGetTransformedBounds(t_new_effective_rect, t_transform);
+		
+		MCTileCacheReshapeScenery(t_tilecache, m_layer_id, t_old_device_rect, t_new_device_rect);
 	}
 	else
 	{
@@ -648,7 +693,16 @@ void MCControl::layer_changeeffectiverect(const MCRectangle& p_old_effective_rec
 			else
 				t_rect = layer_getcontentrect();
 				
-			MCTileCacheUpdateSprite(t_tilecache, m_layer_id, MCU_make_rect(0, 0, t_rect . width, t_rect . height));
+			t_rect . x = t_rect . y = 0;
+			
+			// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+			// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+			MCGAffineTransform t_transform;
+			t_transform = getstack()->getdevicetransform();
+			
+			MCRectangle t_device_rect;
+			t_device_rect = MCRectangleGetTransformedBounds(t_rect, t_transform);
+			MCTileCacheUpdateSprite(t_tilecache, m_layer_id, t_device_rect);
 		}
 	}
 }
@@ -658,7 +712,7 @@ void MCControl::layer_changeeffectiverect(const MCRectangle& p_old_effective_rec
 void MCCard::layer_added(MCControl *p_control, MCObjptr *p_previous, MCObjptr *p_next)
 {
 	MCTileCacheRef t_tilecache;
-	t_tilecache = getstack() -> gettilecache();
+	t_tilecache = getstack() -> view_gettilecache();
 
 	// Add the rects to the update region (for clarity, would prefer this at the end
 	// but there is 'return' fall through in the rest :-( ).
@@ -691,8 +745,18 @@ void MCCard::layer_added(MCControl *p_control, MCObjptr *p_previous, MCObjptr *p
 		if (t_before_layer_id == 0)
 			return;
 
+		// MW-2013-06-21: [[ Bug 10974 ]] If the previous layer is a sprite then this layer
+		//   will change the lower limit of the scenery layers above, thus there is
+		//   nothing to do.
+		if (p_previous -> getref() -> layer_issprite())
+			return;
+		
 		// Now insert the scenery.
-		MCTileCacheInsertScenery(t_tilecache, t_before_layer_id, p_control -> geteffectiverect());
+		// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+		// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+		MCRectangle t_device_rect;
+		t_device_rect = MCRectangleGetTransformedBounds(p_control->geteffectiverect(), getstack()->getdevicetransform());
+		MCTileCacheInsertScenery(t_tilecache, t_before_layer_id, t_device_rect);
 
 		// Finally, set the id of the layer to that of the one before. This causes
 		// the layer to be treated 'as one' with that layer until a redraw is done.
@@ -705,7 +769,7 @@ void MCCard::layer_added(MCControl *p_control, MCObjptr *p_previous, MCObjptr *p
 void MCCard::layer_removed(MCControl *p_control, MCObjptr *p_previous, MCObjptr *p_next)
 {
 	MCTileCacheRef t_tilecache;
-	t_tilecache = getstack() -> gettilecache();
+	t_tilecache = getstack() -> view_gettilecache();
 
 	// Add the rects to the update region (for clarity, would prefer this at the end
 	// but there is 'return' fall through in the rest :-( )
@@ -731,8 +795,13 @@ void MCCard::layer_removed(MCControl *p_control, MCObjptr *p_previous, MCObjptr 
 		}
 
 		// Remove the scenery.
-		MCTileCacheRemoveScenery(t_tilecache, p_control -> layer_getid(), p_control -> geteffectiverect());
 
+		// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+		// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+		MCRectangle t_device_rect;
+		t_device_rect = MCRectangleGetTransformedBounds(p_control->geteffectiverect(), getstack()->getdevicetransform());
+		MCTileCacheRemoveScenery(t_tilecache, p_control -> layer_getid(), t_device_rect);
+		
 		// MW-2012-10-11: [[ Bug ]] Redraw glitch caused by resetting the layer id
 		//   before removing the layer.
 		// MW-2012-09-21: [[ Bug 10005 ]] Make sure we reset the layer attrs so we
@@ -755,6 +824,12 @@ void MCCard::layer_removed(MCControl *p_control, MCObjptr *p_previous, MCObjptr 
 		// removing a 'new' layer before its been redrawn.
 		if (t_before_layer_id == p_control -> layer_getid())
 			return;
+		
+		// MW-2013-06-21: [[ Bug 10974 ]] If the layer below is a sprite, then removing
+		//   this layer will increase the lower limit of the scenery stack above
+		//   thus there is nothing to do.
+		if (p_previous -> getref() -> layer_issprite())
+			return;
 
 		// The layer below us has a different id, so this is an existing layer
 		// and thus we must ensure all layers above us now use the id of the
@@ -771,13 +846,6 @@ void MCCard::layer_removed(MCControl *p_control, MCObjptr *p_previous, MCObjptr 
 
 void MCCard::layer_setviewport(int32_t p_x, int32_t p_y, int32_t p_width, int32_t p_height)
 {
-	MCTileCacheRef t_tilecache;
-	t_tilecache = getstack() -> gettilecache();
-
-	// Notify any tilecache of the changes.
-	if (t_tilecache != nil)
-		MCTileCacheSetViewport(t_tilecache, MCU_make_rect(p_x, p_y, p_width, p_height));
-
 	// Get the current rect, before updating it.
 	MCRectangle t_old_rect;
 	t_old_rect = rect;
@@ -803,10 +871,20 @@ void MCCard::layer_setviewport(int32_t p_x, int32_t p_y, int32_t p_width, int32_
 void MCCard::layer_selectedrectchanged(const MCRectangle& p_old_rect, const MCRectangle& p_new_rect)
 {
 	MCTileCacheRef t_tilecache;
-	t_tilecache = getstack() -> gettilecache();
+	t_tilecache = getstack() -> view_gettilecache();
 
 	if (t_tilecache != nil)
-		MCTileCacheReshapeScenery(t_tilecache, m_fg_layer_id, p_old_rect, p_new_rect);
+	{
+		// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+		// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+		MCGAffineTransform t_transform;
+		t_transform = getstack()->getdevicetransform();
+		
+		MCRectangle t_new_device_rect, t_old_device_rect;
+		t_new_device_rect = MCRectangleGetTransformedBounds(p_new_rect, t_transform);
+		t_old_device_rect = MCRectangleGetTransformedBounds(p_old_rect, t_transform);
+		MCTileCacheReshapeScenery(t_tilecache, m_fg_layer_id, t_old_device_rect, t_new_device_rect);
+	}
 
 	layer_dirtyrect(p_old_rect);
 	layer_dirtyrect(p_new_rect);
@@ -818,6 +896,37 @@ void MCCard::layer_dirtyrect(const MCRectangle& p_dirty_rect)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// IM-2013-08-21: [[ ResIndependence ]] callback wrapper function to create scaled MCContext
+// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+typedef bool (*MCTileCacheDeviceRenderCallback)(void *context, MCContext *target, const MCRectangle& region);
+static bool tilecache_device_renderer(MCTileCacheDeviceRenderCallback p_callback, void *p_context, MCGContextRef p_target, const MCRectangle &p_rectangle)
+{
+	MCControl *t_control;
+	t_control = static_cast<MCControl*>(p_context);
+	
+	// IM-2013-09-30: [[ FullscreenMode ]] Apply stack transform to device context
+	MCGAffineTransform t_transform;
+	t_transform = t_control->getstack()->getdevicetransform();
+
+	MCGContextSave(p_target);
+	MCGContextConcatCTM(p_target, t_transform);
+	
+	MCGraphicsContext *t_gfx_context;
+	/* UNCHECKED */ t_gfx_context = new MCGraphicsContext(p_target);
+	
+	MCRectangle t_user_rect;
+	t_user_rect = MCRectangleGetTransformedBounds(p_rectangle, MCGAffineTransformInvert(t_transform));
+	
+	bool t_success;
+	t_success = p_callback(p_context, t_gfx_context, t_user_rect);
+	
+	delete t_gfx_context;
+	
+	MCGContextRestore(p_target);
+	
+	return t_success;
+}
 
 static bool testtilecache_sprite_renderer(void *p_context, MCContext *p_target, const MCRectangle& p_rectangle)
 {
@@ -853,6 +962,11 @@ static bool testtilecache_sprite_renderer(void *p_context, MCContext *p_target, 
 	return true;
 }
 
+static bool testtilecache_device_sprite_renderer(void *p_context, MCGContextRef p_target, const MCRectangle& p_rectangle)
+{
+	return tilecache_device_renderer(testtilecache_sprite_renderer, p_context, p_target, p_rectangle);
+}
+
 static bool testtilecache_scenery_renderer(void *p_context, MCContext *p_target, const MCRectangle& p_rectangle)
 {
 	MCControl *t_control;
@@ -880,7 +994,12 @@ static bool testtilecache_scenery_renderer(void *p_context, MCContext *p_target,
 	return true;
 }
 
-bool MCCard::render_foreground(void *p_context, MCContext *p_target, const MCRectangle& p_dirty)
+static bool testtilecache_device_scenery_renderer(void *p_context, MCGContextRef p_target, const MCRectangle& p_rectangle)
+{
+	return tilecache_device_renderer(testtilecache_scenery_renderer, p_context, p_target, p_rectangle);
+}
+
+bool MCCard::tilecache_render_foreground(void *p_context, MCContext *p_target, const MCRectangle& p_dirty)
 {
 	MCCard *t_card;
 	t_card = (MCCard *)p_context;
@@ -889,18 +1008,18 @@ bool MCCard::render_foreground(void *p_context, MCContext *p_target, const MCRec
 	p_target -> setfunction(GXcopy);
 	p_target -> setopacity(255);
 
-	p_target->setlineatts(0, LineDoubleDash, CapButt, JoinBevel);
-	p_target->setforeground(p_target->getblack());
-	p_target->setbackground(p_target->getwhite());
-	p_target->setdashes(0, MCCard::dashlist, 2);
-	p_target->drawrect(t_card -> selrect);
-	p_target->setlineatts(0, LineSolid, CapButt, JoinBevel);
-	p_target->setbackground(MCzerocolor);
+	// IM-2013-09-13: [[ RefactorGraphics ]] Use shared code to render card foreground
+	t_card -> drawselectionrect(p_target);
 
 	return true;
 }
 
-bool MCCard::render_background(void *p_context, MCContext *p_target, const MCRectangle& p_dirty)
+bool device_render_foreground(void *p_context, MCGContextRef p_target, const MCRectangle& p_rectangle)
+{
+	return tilecache_device_renderer(MCCard::tilecache_render_foreground, p_context, p_target, p_rectangle);
+}
+
+bool MCCard::tilecache_render_background(void *p_context, MCContext *p_target, const MCRectangle& p_dirty)
 {
 	MCCard *t_card;
 	t_card = (MCCard *)p_context;
@@ -909,22 +1028,21 @@ bool MCCard::render_background(void *p_context, MCContext *p_target, const MCRec
 	p_target -> setfunction(GXcopy);
 	p_target -> setopacity(255);
 
-	// MW-2011-09-23: Make sure background is rendered consistently with non-tilecache mode.
-	Window_mode wm = t_card -> getstack()->getmode();
-	if (MCcurtheme == nil || !t_card -> getstack() -> ismetal() ||
-		!MCcurtheme -> drawmetalbackground(p_target, p_dirty, t_card -> getrect(), t_card -> parent))
-	{
-		t_card -> setforeground(p_target, DI_BACK, False, MClook == LF_WIN95 && (wm == WM_COMBO || wm == WM_OPTION));
-		p_target -> fillrect(p_dirty);
-	}
+	// IM-2013-09-13: [[ RefactorGraphics ]] Use shared code to render card background
+	t_card -> drawbackground(p_target, p_dirty);
 
 	return true;
+}
+
+bool device_render_background(void *p_context, MCGContextRef p_target, const MCRectangle& p_rectangle)
+{
+	return tilecache_device_renderer(MCCard::tilecache_render_background, p_context, p_target, p_rectangle);
 }
 
 void MCCard::render(void)
 {
 	MCTileCacheRef t_tiler;
-	t_tiler = getstack() -> gettilecache();
+	t_tiler = getstack() -> view_gettilecache();
 
 	bool t_reset_ids;
 	t_reset_ids = MCTileCacheIsClean(t_tiler);
@@ -937,7 +1055,7 @@ void MCCard::render(void)
 		t_fg_layer . is_opaque = false;
 		t_fg_layer . opacity = 255;
 		t_fg_layer . ink = GXblendSrcOver;
-		t_fg_layer . callback = render_foreground;
+		t_fg_layer . callback = device_render_foreground;
 		t_fg_layer . context = this;
 		MCTileCacheRenderScenery(t_tiler, t_fg_layer);
 		m_fg_layer_id = t_fg_layer . id;
@@ -945,6 +1063,16 @@ void MCCard::render(void)
 	else
 		m_fg_layer_id = 0;
 
+	// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+	MCGAffineTransform t_transform;
+	t_transform = getstack()->getdevicetransform();
+	
+	// IM-2013-10-14: [[ FullscreenMode ]] Get the visible area of the stack
+	MCRectangle t_visible_rect;
+	t_visible_rect = getstack()->getrect();
+	t_visible_rect.x = 0;
+	t_visible_rect.y = getstack()->getscroll();
+	
 	MCObjptr *t_objptrs;
 	t_objptrs = getobjptrs();
 	if (t_objptrs != nil)
@@ -999,6 +1127,14 @@ void MCCard::render(void)
 				t_layer . clip = t_control -> geteffectiverect();
 			}
 
+			// IM-2013-10-14: [[ FullscreenMode ]] Constrain each layer to the visible area
+			t_layer . region = MCU_intersect_rect(t_layer . region, t_visible_rect);
+			t_layer . clip = MCU_intersect_rect(t_layer . clip, t_visible_rect);
+			// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+			// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+			t_layer . region = MCRectangleGetTransformedBounds(t_layer . region, t_transform);
+			t_layer . clip = MCRectangleGetTransformedBounds(t_layer . clip, t_transform);
+			
 			// Now render the layer - what method we use depends on whether the
 			// layer is a sprite or not.
 			if (t_control -> layer_issprite())
@@ -1007,11 +1143,15 @@ void MCCard::render(void)
 				// layer that it was.
 				if (!t_old_is_sprite && t_layer . id != 0)
 				{
-					MCTileCacheRemoveScenery(t_tiler, t_layer . id, t_control -> geteffectiverect());
+					// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+					// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+					MCRectangle t_device_rect;
+					t_device_rect = MCRectangleGetTransformedBounds(t_control -> geteffectiverect(), t_transform);
+					MCTileCacheRemoveScenery(t_tiler, t_layer . id, t_device_rect);
 					t_layer . id = 0;
 				}
-
-				t_layer . callback = testtilecache_sprite_renderer;
+				
+				t_layer . callback = testtilecache_device_sprite_renderer;
 				MCTileCacheRenderSprite(t_tiler, t_layer);
 			}
 			else
@@ -1024,7 +1164,7 @@ void MCCard::render(void)
 					t_layer . id = 0;
 				}
 
-				t_layer . callback = testtilecache_scenery_renderer;
+				t_layer . callback = testtilecache_device_scenery_renderer;
 				MCTileCacheRenderScenery(t_tiler, t_layer);
 			}
 			
@@ -1037,87 +1177,18 @@ void MCCard::render(void)
 		while(t_objptr != t_objptrs -> prev());
 	}
 
-	// Final step is to render the background. Note that the background layer
-	// really only needs to be the rect rounded outward to the nearest tile
-	// boundaries, but 8192, 8192 is bigger than it can ever be at present so
-	// is an easier alternative.
+	// IM-2013-10-14: [[ FullscreenMode ]] Render the background into the card's visible area
 	MCTileCacheLayer t_bg_layer;
 	t_bg_layer . id = m_bg_layer_id;
-	t_bg_layer . region = MCU_make_rect(0, 0, 8192, 8192);
+	t_bg_layer . region = t_visible_rect;
+	t_bg_layer . clip = t_visible_rect;
 	t_bg_layer . is_opaque = true;
 	t_bg_layer . opacity = 255;
 	t_bg_layer . ink = GXblendSrcOver;
-	t_bg_layer . callback = render_background;
+	t_bg_layer . callback = device_render_background;
 	t_bg_layer . context = this;
 	MCTileCacheRenderScenery(t_tiler, t_bg_layer);
 	m_bg_layer_id = t_bg_layer . id;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool MCStack::getacceleratedrendering(void)
-{
-	return m_tilecache != nil;
-}
-
-void MCStack::setacceleratedrendering(bool p_value)
-{
-	// If we are turning accelerated rendering off, then destroy the tilecache.
-	if (!p_value)
-	{
-		MCTileCacheDestroy(m_tilecache);
-		m_tilecache = nil;
-		
-		// MW-2012-03-15: [[ Bug ]] Make sure we dirty the stack to ensure all the
-		//   layer mode attrs are rest.
-		dirtyall();
-		
-		return;
-	}
-	
-	// If we are turning accelerated rendering on, and we already have a tile-
-	// cache, then do nothing.
-	if (m_tilecache != nil)
-		return;
-		
-	// Otherwise, we configure based on platform settings.
-	int32_t t_tile_size;
-	int32_t t_cache_limit;
-	MCTileCacheCompositorType t_compositor_type;
-#ifdef _MAC_DESKTOP
-	t_compositor_type = kMCTileCacheCompositorCoreGraphics;
-	t_tile_size = 32;
-	t_cache_limit = 32 * 1024 * 1024;
-#elif defined(_WINDOWS_DESKTOP) || defined(_LINUX_DESKTOP)
-	t_compositor_type = kMCTileCacheCompositorSoftware;
-	t_tile_size = 32;
-	t_cache_limit = 32 * 1024 * 1024;
-#elif defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
-	t_compositor_type = kMCTileCacheCompositorStaticOpenGL;
-	
-	const MCDisplay *t_display;
-	MCscreen -> getdisplays(t_display, false);
-	
-	MCRectangle t_viewport;
-	t_viewport = t_display -> viewport;
-	
-	bool t_small_screen, t_medium_screen;
-	t_small_screen = MCMin(t_viewport . width, t_viewport . height) <= 480 && MCMax(t_viewport . width, t_viewport . height) <= 640;
-	t_medium_screen = MCMin(t_viewport . width, t_viewport . height) <= 768 && MCMax(t_viewport . width, t_viewport . height) <= 1024;
-	
-	if (t_small_screen)
-		t_tile_size = 32, t_cache_limit = 16 * 1024 * 1024;
-	else if (t_medium_screen)
-		t_tile_size = 64, t_cache_limit = 32 * 1024 * 1024;
-	else
-		t_tile_size = 64, t_cache_limit = 64 * 1024 * 1024;
-#endif
-
-	MCTileCacheCreate(t_tile_size, t_cache_limit, m_tilecache);
-	MCTileCacheSetViewport(m_tilecache, curcard -> getrect());
-	MCTileCacheSetCompositor(m_tilecache, t_compositor_type);
-	
-	dirtyall();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1205,7 +1276,7 @@ void MCRedrawDirtyScreen(void)
 	do
 	{
 		MCStack *sptr = tptr->getstack();
-		sptr -> dirtyall();
+		sptr -> view_dirty_all();
 		tptr = tptr->prev();
 	}
 	while (tptr != t_stacks -> prev());

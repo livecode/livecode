@@ -320,6 +320,7 @@ LT command_table[] =
         {"request", TT_STATEMENT, S_REQUEST},
 		{"require", TT_STATEMENT, S_REQUIRE},
         {"reset", TT_STATEMENT, S_RESET},
+        {"resolve", TT_STATEMENT, S_RESOLVE},
         {"return", TT_STATEMENT, S_RETURN},
         {"revert", TT_STATEMENT, S_REVERT},
 #ifdef MODE_DEVELOPMENT
@@ -501,6 +502,8 @@ LT factor_table[] =
 		{"antialiased", TT_PROPERTY, P_ANTI_ALIASED},
         {"any", TT_CHUNK, CT_ANY},
         {"arcangle", TT_PROPERTY, P_ARC_ANGLE},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'arithmeticMean' (aka mean / average / avg)
+        {"arithmeticmean", TT_FUNCTION, F_ARI_MEAN},
         {"arm", TT_PROPERTY, P_ARM},
         {"armborder", TT_PROPERTY, P_ARM_BORDER},
         {"armed", TT_PROPERTY, P_ARM},
@@ -522,8 +525,14 @@ LT factor_table[] =
         {"autoselect", TT_PROPERTY, P_LIST_BEHAVIOR},
         {"autotab", TT_PROPERTY, P_AUTO_TAB},
 		{"availableprinters", TT_PROPERTY, P_PRINTER_NAMES},
-        {"average", TT_FUNCTION, F_AVERAGE},
-        {"avg", TT_FUNCTION, F_AVERAGE},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'arithmeticMean' (aka mean / average / avg)
+        {"average", TT_FUNCTION, F_ARI_MEAN},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'averageDeviation' (aka avgDev)
+        {"averagedeviation", TT_FUNCTION, F_AVG_DEV},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'arithmeticMean' (aka mean / average / avg)
+        {"avg", TT_FUNCTION, F_ARI_MEAN},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'arithmeticMean' (aka mean / average / avg)
+        {"avgdev", TT_FUNCTION, F_AVG_DEV},
         {"backcolor", TT_PROPERTY, P_BACK_COLOR},
         {"backdrop", TT_PROPERTY, P_BACK_DROP},
         {"background", TT_CHUNK, CT_BACKGROUND},
@@ -618,6 +627,8 @@ LT factor_table[] =
         {"charset", TT_PROPERTY, P_CHARSET},
         {"chartonum", TT_FUNCTION, F_CHAR_TO_NUM},
         {"checkmark", TT_PROPERTY, P_CHECK_MARK},
+        {"childcontrolids", TT_PROPERTY, P_CHILD_CONTROL_IDS},
+        {"childcontrolnames", TT_PROPERTY, P_CHILD_CONTROL_NAMES},
         {"ciphernames", TT_FUNCTION, F_CIPHER_NAMES},
         {"clickchar", TT_FUNCTION, F_CLICK_CHAR},
         {"clickcharchunk", TT_FUNCTION, F_CLICK_CHAR_CHUNK},
@@ -634,6 +645,8 @@ LT factor_table[] =
         {"closebox", TT_PROPERTY, P_CLOSE_BOX},
         {"cmdkey", TT_FUNCTION, F_COMMAND_KEY},
         {"collapsebox", TT_PROPERTY, P_COLLAPSE_BOX},
+		// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
+		{"colordialogcolors", TT_PROPERTY, P_COLOR_DIALOG_COLORS},
         {"colormap", TT_PROPERTY, P_COLORMAP},
         {"colornames", TT_FUNCTION, F_COLOR_NAMES},
 		{"coloroverlay", TT_PROPERTY, P_BITMAP_EFFECT_COLOR_OVERLAY},
@@ -663,7 +676,9 @@ LT factor_table[] =
 		// MW-2012-10-08: [[ HitTest ]] New functions for determining the control at a point.
 		{"controlatloc", TT_FUNCTION, F_CONTROL_AT_LOC},
 		{"controlatscreenloc", TT_FUNCTION, F_CONTROL_AT_SCREEN_LOC},
+        {"controlids", TT_PROPERTY, P_CONTROL_IDS},
         {"controlkey", TT_FUNCTION, F_CONTROL_KEY},
+        {"controlnames", TT_PROPERTY, P_CONTROL_NAMES},
         {"controls", TT_CLASS, CT_LAYER},
         {"convertoctals", TT_PROPERTY, P_CONVERT_OCTALS},
         {"copyresource", TT_FUNCTION, F_COPY_RESOURCE},
@@ -818,6 +833,8 @@ LT factor_table[] =
         {"focuspixel", TT_PROPERTY, P_FOCUS_PIXEL},
         {"folder", TT_PROPERTY, P_DIRECTORY},
         {"folders", TT_FUNCTION, F_DIRECTORIES},
+        // TD-2013-06-20: [[ DynamicFonts ]] global property for list of font files
+        {"fontfilesinuse", TT_PROPERTY, P_FONTFILES_IN_USE},
         {"fontlanguage", TT_FUNCTION, F_FONT_LANGUAGE},
         {"fontnames", TT_FUNCTION, F_FONT_NAMES},
         {"fontsizes", TT_FUNCTION, F_FONT_SIZES},
@@ -853,7 +870,11 @@ LT factor_table[] =
         {"frontscripts", TT_FUNCTION, F_FRONT_SCRIPTS},
         {"ftpproxy", TT_PROPERTY, P_FTP_PROXY},
 		{"fullscreen", TT_PROPERTY, P_FULLSCREEN},
+		// IM-2013-09-23: [[ FullscreenMode ]] New property for 'fullscreenmode'
+		{"fullscreenmode", TT_PROPERTY, P_FULLSCREENMODE},
         {"functionnames", TT_FUNCTION, F_FUNCTION_NAMES},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'geometricMean'
+        {"geometricmean", TT_FUNCTION, F_GEO_MEAN},
         {"getresource", TT_FUNCTION, F_GET_RESOURCE},
         {"getresources", TT_FUNCTION, F_GET_RESOURCES},
         {"globalloc", TT_FUNCTION, F_GLOBAL_LOC},
@@ -871,6 +892,8 @@ LT factor_table[] =
         {"groups", TT_CLASS, CT_GROUP},
         {"grp", TT_CHUNK, CT_GROUP},
         {"grps", TT_CLASS, CT_GROUP},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'harmonicMean'
+        {"harmonicmean", TT_FUNCTION, F_HAR_MEAN},
         {"hasmemory", TT_FUNCTION, F_HAS_MEMORY},
         {"hcaddressing", TT_PROPERTY, P_HC_ADDRESSING},
         {"hcimportstat", TT_PROPERTY, P_HC_IMPORT_STAT},
@@ -1013,6 +1036,8 @@ LT factor_table[] =
         {"lockrecent", TT_PROPERTY, P_LOCK_RECENT},
         {"lockscreen", TT_PROPERTY, P_LOCK_SCREEN},
         {"locktext", TT_PROPERTY, P_LOCK_TEXT},
+		// MERG-2013-06-02: [[ GrpLckUpdates ]] The lockUpdates group property.
+        {"lockupdates", TT_PROPERTY, P_LOCK_UPDATES},
         {"log10", TT_FUNCTION, F_LOG10},
         {"log2", TT_FUNCTION, F_LOG2},
         {"long", TT_PROPERTY, P_LONG},
@@ -1053,6 +1078,11 @@ LT factor_table[] =
         {"mcisendstring", TT_FUNCTION, F_MCI_SEND_STRING},
         {"md5digest", TT_FUNCTION, F_MD5_DIGEST},
         {"me", TT_FUNCTION, F_ME},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'arithmeticMean' (aka mean / average / avg)
+        {"mean", TT_FUNCTION, F_ARI_MEAN},
+        // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
+        {"measuretext", TT_FUNCTION, F_MEASURE_TEXT},
+        {"measureunicodetext", TT_FUNCTION, F_MEASURE_UNICODE_TEXT},
         {"median", TT_FUNCTION, F_MEDIAN},
         {"mediatypes", TT_PROPERTY, P_MEDIA_TYPES},
         {"menu", TT_CHUNK, CT_MENU},
@@ -1150,6 +1180,8 @@ LT factor_table[] =
         {"pageheights", TT_PROPERTY, P_PAGE_HEIGHTS},
         {"pageinc", TT_PROPERTY, P_PAGE_INC},
         {"pageincrement", TT_PROPERTY, P_PAGE_INC},
+        // JS-2013-05-15: [[ PageRanges ]] New 'pageRanges' field property.
+        {"pageranges", TT_PROPERTY, P_PAGE_RANGES},
         {"paintcompression", TT_PROPERTY, P_PAINT_COMPRESSION},
         {"palindromeframes", TT_PROPERTY, P_PALINDROME_FRAMES},
         {"pan", TT_PROPERTY, P_PAN},
@@ -1186,6 +1218,14 @@ LT factor_table[] =
         {"pointerfocus", TT_PROPERTY, P_POINTER_FOCUS},
         {"points", TT_PROPERTY, P_POINTS},
         {"polysides", TT_PROPERTY, P_POLY_SIDES},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'populationStandarddDeviation' (aka popStdDev)
+        {"popstddev", TT_FUNCTION, F_POP_STD_DEV},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'populationStandarddDeviation' (aka popStdDev)
+        {"populationstandarddeviation", TT_FUNCTION, F_POP_STD_DEV},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'populationVariance' (aka popVariance)
+        {"populationvariance", TT_FUNCTION, F_POP_VARIANCE},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'populationStandarddDeviation' (aka popStdDev)
+        {"popvariance", TT_FUNCTION, F_POP_VARIANCE},
         {"postscript", TT_PROPERTY, P_POSTSCRIPT},
         {"powerkeys", TT_PROPERTY, P_POWER_KEYS},
 		{"preservevariables", TT_PROPERTY, P_PRESERVE_VARIABLES},
@@ -1320,6 +1360,12 @@ LT factor_table[] =
 		{"rowdel", TT_PROPERTY, P_ROW_DELIMITER},
 		{"rowdelimiter", TT_PROPERTY, P_ROW_DELIMITER},
         {"rtftext", TT_PROPERTY, P_RTF_TEXT},
+        {"samplestandarddeviation", TT_FUNCTION, F_SMP_STD_DEV},
+        {"samplevariance", TT_FUNCTION, F_SMP_VARIANCE},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'sampleStandardDeviation' (aka stdDev / standardDeviation)
+        {"sampstddev", TT_FUNCTION, F_SMP_STD_DEV},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'sampleVariance' (aka sampVariance)
+        {"sampvariance", TT_FUNCTION, F_SMP_VARIANCE},
         {"savecompressed", TT_PROPERTY, P_SAVE_COMPRESSED},
         {"sb", TT_CHUNK, CT_SCROLLBAR},
         {"sbs", TT_CLASS, CT_SCROLLBAR},
@@ -1443,7 +1489,8 @@ LT factor_table[] =
         {"stacks", TT_FUNCTION, F_STACKS},
         {"stacksinuse", TT_PROPERTY, P_STACKS_IN_USE},
         {"stackspace", TT_FUNCTION, F_STACK_SPACE},
-        {"standarddeviation", TT_FUNCTION, F_STD_DEV},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'sampleStandardDeviation' (aka stdDev / standardDeviation)
+        {"standarddeviation", TT_FUNCTION, F_SMP_STD_DEV},
         {"startangle", TT_PROPERTY, P_START_ANGLE},
         {"startarrow", TT_PROPERTY, P_START_ARROW},
         {"startframe", TT_PROPERTY, P_START_FRAME},
@@ -1454,7 +1501,8 @@ LT factor_table[] =
 		{"statusicon", TT_PROPERTY, P_STATUS_ICON},
 		{"statusiconmenu", TT_PROPERTY, P_STATUS_ICON_MENU},
 		{"statusicontooltip", TT_PROPERTY, P_STATUS_ICON_TOOLTIP},
-        {"stddev", TT_FUNCTION, F_STD_DEV},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'sampleStandardDeviation' (aka stdDev / standardDeviation)
+        {"stddev", TT_FUNCTION, F_SMP_STD_DEV},
 		{"strokegradient", TT_PROPERTY, P_GRADIENT_STROKE},
         {"style", TT_PROPERTY, P_STYLE},
 		// MW-2011-12-08: [[ StyledText ]] Keyword for 'styledText' reserved word.
@@ -1580,8 +1628,12 @@ LT factor_table[] =
         {"userproperties", TT_PROPERTY, P_CUSTOM_KEYS},
         {"usesystemdate", TT_PROPERTY, P_USE_SYSTEM_DATE},
         {"useunicode", TT_PROPERTY, P_USE_UNICODE},
+		// MW-2013-05-08: [[ Uuid ]] The uuid function token.
+		{"uuid", TT_FUNCTION, F_UUID},
         {"value", TT_FUNCTION, F_VALUE},
         {"variablenames", TT_FUNCTION, F_VARIABLES},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'sampleVariance' (aka variance)
+        {"variance", TT_FUNCTION, F_SMP_VARIANCE},
         {"vc", TT_CHUNK, CT_VIDEO_CLIP},
         {"vcplayer", TT_PROPERTY, P_VC_PLAYER},
         {"vcs", TT_CLASS, CT_VIDEO_CLIP},
@@ -1889,6 +1941,12 @@ static LT sugar_table[] =
 		{"effects", TT_UNDEFINED, SG_EFFECTS},
 		{"elevated", TT_UNDEFINED, SG_ELEVATED},
         {"empty", TT_CHUNK, CT_UNDEFINED},
+        
+        // TD-2013-06-14: [[ DynamicFonts ]] start using font theFont [globally]
+        {"file", TT_UNDEFINED, SG_FILE},
+        {"font", TT_UNDEFINED, SG_FONT},
+        {"globally", TT_UNDEFINED, SG_GLOBALLY},
+        
 		{"initially", TT_UNDEFINED, SG_INITIALLY},
         {"keyword", TT_CHUNK, CT_UNDEFINED},
 		{"level", TT_UNDEFINED, SG_LEVEL},
@@ -1897,15 +1955,27 @@ static LT sugar_table[] =
 		// MM-2012-09-05: [[ Property Listener ]] Syntax: cancel listener for [object]
 		{"listener", TT_UNDEFINED, SG_LISTENER},
 #endif
+		// JS-2013-07-01: [[ EnhancedFilter ]] Token for 'matching'.
+        {"matching", TT_UNDEFINED, SG_MATCHING},
         {"message", TT_CHUNK, CT_UNDEFINED},
         {"new", TT_CHUNK, CT_UNDEFINED},
 		{"nothing", TT_UNDEFINED, SG_NOTHING},
 		{"open", TT_UNDEFINED, SG_OPEN},
 		{"optimized", TT_UNDEFINED, SG_OPTIMIZED},
 		{"options", TT_UNDEFINED, SG_OPTIONS},
+		// JS-2013-07-01: [[ EnhancedFilter ]] Token for 'pattern'.
+		{"pattern", TT_UNDEFINED, SG_PATTERN},
+		// JS-2013-07-01: [[ EnhancedFilter ]] Token for 'regex'.
+		{"regex", TT_UNDEFINED, SG_REGEX},
+        // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+        {"recursively", TT_UNDEFINED, SG_RECURSIVELY},
 		{"standard", TT_UNDEFINED, SG_STANDARD},
+		// MERG-2013-06-24: [[ IsAnAsciiString ]] Token for 'string'.
+        {"string", TT_UNDEFINED, SG_STRING},
 		{"unicode", TT_UNDEFINED, SG_UNICODE},
 		{"url", TT_UNDEFINED, SG_URL},
+		// JS-2013-07-01: [[ EnhancedFilter ]] Token for 'wildcard'.
+		{"wildcard", TT_UNDEFINED, SG_WILDCARD},
 		{"without", TT_PREP, PT_WITHOUT},
     };
 
@@ -1999,8 +2069,10 @@ static LT validation_table[] =
     {"a", TT_UNDEFINED, IV_UNDEFINED},
     {"among", TT_UNDEFINED, IV_AMONG},
     {"an", TT_UNDEFINED, IV_UNDEFINED},
-	{"array", TT_UNDEFINED, IV_ARRAY},
-    {"boolean", TT_UNDEFINED, IV_LOGICAL},
+    {"array", TT_UNDEFINED, IV_ARRAY},
+	// MERG-2013-06-24: [[ IsAnAsciiString ]] Token for 'ascii'.
+    {"ascii", TT_UNDEFINED, IV_ASCII},
+	{"boolean", TT_UNDEFINED, IV_LOGICAL},
     {"color", TT_UNDEFINED, IV_COLOR},
     {"date", TT_UNDEFINED, IV_DATE},
     {"integer", TT_UNDEFINED, IV_INTEGER},
@@ -2008,7 +2080,7 @@ static LT validation_table[] =
     {"number", TT_UNDEFINED, IV_NUMBER},
     {"point", TT_UNDEFINED, IV_POINT},
     {"rect", TT_UNDEFINED, IV_RECT},
-    {"rectangle", TT_UNDEFINED, IV_RECT}
+    {"rectangle", TT_UNDEFINED, IV_RECT},
 };
 
 static LT visual_table[] =

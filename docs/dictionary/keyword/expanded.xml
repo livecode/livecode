@@ -1,0 +1,46 @@
+<doc>
+  <legacy_id>1915</legacy_id>
+  <name>expanded</name>
+  <type>keyword</type>
+  <syntax>
+  </syntax>
+  <library></library>
+  <objects>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Appearance &amp; Positioning</category>
+  </classification>
+  <references>
+    <keyword tag="condensed">condensed Keyword</keyword>
+    <keyword tag="plain">plain Keyword</keyword>
+    <property tag="textStyle">textStyle Property</property>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary>Used with the <property tag="textStyle">textStyle</property> <glossary tag="property">property</glossary> to indicate horizontally extended text.</summary>
+  <examples>
+    <example>set the textStyle of field "Title Bar" to expanded</example>
+    <example>if the textStyle of the mouseControl is "condensed" then beep</example>
+  </examples>
+  <description>
+    <p>Use the <b>expanded</b> <glossary tag="keyword">keyword</glossary> to increase the width of text without changing its size.</p><p/><p><b>Comments:</b></p><p>You can extend an object (which extends all the text displayed by the object) or  a chunk in a field or button.</p><p/><p>To extend text without removing other styles (such as bold or italic), add the <b>expanded</b> <glossary tag="keyword">keyword</glossary> to the end of the <property tag="textStyle">textStyle</property>. The following example extends the text of a <keyword tag="field">field</keyword> without affecting its existing <property tag="textStyle">textStyle</property>:</p><p/><p><code>  if the textStyle of field "List" is empty then</code></p><p><code>    set the textStyle of field "List" to expanded</code></p><p><code>  else</code></p><p><code>    set the textStyle of field "List" to \</code></p><p><code>   (the textStyle of field "List") &amp; comma &amp; "expanded"</code></p><p><code>  end if</code></p>
+  </description>
+</doc>

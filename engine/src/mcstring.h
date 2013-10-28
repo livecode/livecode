@@ -576,5 +576,8 @@ extern MCNameRef MCM_product_details_received;
 extern MCNameRef MCM_product_request_error;
 extern MCNameRef MCM_protected_data_available;
 extern MCNameRef MCM_protected_data_unavailable;
+
+// MW-2013-05-30: [[ RemoteControl ]] Message sent when a remote control event is received.
+extern MCNameRef MCM_remote_control_received;
 #endif
 

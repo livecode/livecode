@@ -99,4 +99,8 @@ extern int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_i
 //
 extern bool MCA_color(MCStringRef title, MCColor initial_color, bool as_sheet, bool& r_chosen, MCColor& r_chosen_color);
 
+extern void MCA_getcolordialogcolors(MCExecPoint &ep);
+
+extern void MCA_setcolordialogcolors(MCExecPoint &ep);
+
 #endif

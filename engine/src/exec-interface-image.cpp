@@ -284,7 +284,7 @@ void MCImage::SetRepeatCount(MCExecContext& ctxt, integer_t p_count)
 	{
 		setframe(currentframe == m_rep->GetFrameCount() - 1 ? 0 : currentframe + 1);
 		MCImageFrame *t_frame = nil;
-		if (m_rep->LockImageFrame(currentframe, t_frame))
+		if (m_rep->LockImageFrame(currentframe, true, t_frame))
 		{
 			MCscreen->addtimer(this, MCM_internal, t_frame->duration);
 			m_rep->UnlockImageFrame(currentframe, t_frame);
@@ -377,7 +377,7 @@ void MCImage::SetText(MCExecContext& ctxt, MCDataRef p_text)
 			if (t_compressed != nil)
 				t_success = setcompressedbitmap(t_compressed);
 			else if (t_bitmap != nil)
-				t_success = setbitmap(t_bitmap);
+				t_success = setbitmap(t_bitmap, 1.0);
 		}
 		
 		MCImageFreeBitmap(t_bitmap);
@@ -415,7 +415,7 @@ void MCImage::GetImageData(MCExecContext& ctxt, MCDataRef& r_data)
 			
 			MCImageBitmap *t_bitmap = nil;
 			
-			t_success = lockbitmap(t_bitmap);
+			t_success = copybitmap(1.0, false, t_bitmap);
 			if (t_success)
 			{
 				MCMemoryCopy(t_data_ptr, t_bitmap->data, t_data_size);
@@ -448,7 +448,7 @@ void MCImage::SetImageData(MCExecContext& ctxt, MCDataRef p_data)
 		if (m_rep != nil)
 		{
 			MCImageBitmap *t_bitmap = nil;
-			t_success = lockbitmap(t_bitmap);
+			t_success = copybitmap(1.0, false, t_bitmap);
 			if (t_success)
 				t_success = MCImageCopyBitmap(t_bitmap, t_copy);
 			unlockbitmap(t_bitmap);
@@ -486,7 +486,7 @@ void MCImage::SetImageData(MCExecContext& ctxt, MCDataRef p_data)
 				t_dst_ptr += t_copy->stride;
 			}
 			
-			setbitmap(t_copy);
+			setbitmap(t_copy, 1.0);
 		}
 		
 		MCImageFreeBitmap(t_copy);
@@ -517,7 +517,7 @@ void MCImage::GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
 			
 			MCImageBitmap *t_bitmap = nil;
 			
-			t_success = lockbitmap(t_bitmap);
+			t_success = copybitmap(1.0, false, t_bitmap);
 			if (t_success)
 			{
 				uint8_t *t_src_ptr = (uint8_t*)t_bitmap->data;
@@ -562,7 +562,7 @@ void MCImage::SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
 		if (m_rep != nil)
 		{
 			MCImageBitmap *t_bitmap = nil;
-			t_success = lockbitmap(t_bitmap);
+			t_success = copybitmap(1.0, false, t_bitmap);
 			if (t_success)
 				t_success = MCImageCopyBitmap(t_bitmap, t_copy);
 			unlockbitmap(t_bitmap);
@@ -577,7 +577,7 @@ void MCImage::SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
 		if (t_success)
 		{
 			MCImageSetMask(t_copy, (uint8_t*)MCDataGetBytePtr(p_data), t_length, !p_flatten);
-			setbitmap(t_copy);
+			setbitmap(t_copy, 1.0);
 		}
 		
 		MCImageFreeBitmap(t_copy);
@@ -641,7 +641,7 @@ void MCImage::SetAngle(MCExecContext& ctxt, integer_t p_angle)
 		//   odd things happen with the rect.
 		MCRectangle oldrect = rect;
 		if (m_rep != nil)
-			rotate(p_angle);
+			rotate_transform(p_angle);
 		
 		angle = p_angle;
 		
@@ -684,7 +684,7 @@ void MCImage::SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, 
     if (isvisible() && !wasvisible && m_rep != nil && m_rep->GetFrameCount() > 1)
     {
         MCImageFrame *t_frame = nil;
-        if (m_rep->LockImageFrame(currentframe, t_frame))
+        if (m_rep->LockImageFrame(currentframe, true, t_frame))
         {
             MCscreen->addtimer(this, MCM_internal, t_frame->duration);
             m_rep->UnlockImageFrame(currentframe, t_frame);

@@ -700,26 +700,26 @@ Exec_stat MCBeginsWith::eval(MCExecPoint& ep)
 
 	if (left->eval(ep) != ES_NORMAL)
 	{
-		MCeerror->add(EE_CONCAT_BADLEFT, line, pos);
+		MCeerror->add(EE_BEGINSENDS_BADLEFT, line, pos);
 		return ES_ERROR;
 	}
 	/* UNCHECKED */ ep.copyasstringref(&t_left);
-
+    
 	if (right->eval(ep) != ES_NORMAL)
 	{
-		MCeerror->add(EE_CONCAT_BADRIGHT, line, pos);
+		MCeerror->add(EE_BEGINSENDS_BADRIGHT, line, pos);
 		return ES_ERROR;
 	}
 	/* UNCHECKED */ ep.copyasstringref(&t_right);
-
+    
 	MCStringsEvalBeginsWith(ctxt, *t_left, *t_right, t_result);
-
+    
 	if (!ctxt.HasError())
 	{
 		/* UNCHECKED */ ep.setboolean(t_result);
 		return ES_NORMAL;
 	}
-
+    
 	return ctxt.Catch(line, pos);
 }
 
@@ -765,14 +765,14 @@ Exec_stat MCEndsWith::eval(MCExecPoint& ep)
 
 	if (left->eval(ep) != ES_NORMAL)
 	{
-		MCeerror->add(EE_CONCAT_BADLEFT, line, pos);
+		MCeerror->add(EE_BEGINSENDS_BADLEFT, line, pos);
 		return ES_ERROR;
 	}
 	/* UNCHECKED */ ep.copyasstringref(&t_left);
 
 	if (right->eval(ep) != ES_NORMAL)
 	{
-		MCeerror->add(EE_CONCAT_BADRIGHT, line, pos);
+		MCeerror->add(EE_BEGINSENDS_BADRIGHT, line, pos);
 		return ES_ERROR;
 	}
 	/* UNCHECKED */ ep.copyasstringref(&t_right);
@@ -1167,7 +1167,7 @@ Exec_stat MCWrap::eval(MCExecPoint &ep)
 		MCeerror->add
 		(EE_WRAP_ZERO, line, pos);
 		return ES_ERROR;
-	}
+}
 	if (ep.getformat() == VF_ARRAY)
 	{
 		MCVariableValue *v = new MCVariableValue(*ep.getarray());
@@ -1437,7 +1437,7 @@ Exec_stat MCPlus::eval(MCExecPoint &ep)
 	MCAutoValueRef t_result;
 
 	if (left == nil)
-	{
+    {
 		/* UNCHECKED */ ep.setnvalue(0);
 	}
 	else if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
@@ -1446,14 +1446,14 @@ Exec_stat MCPlus::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	/* UNCHECKED */ ep.copyasvalueref(&t_left);
-
+    
 	if (right->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
 		MCeerror->add(EE_PLUS_BADRIGHT, line, pos);
 		return ES_ERROR;
 	}
 	/* UNCHECKED */ ep.copyasvalueref(&t_right);
-
+    
 	if (MCValueGetTypeCode(*t_left) == kMCValueTypeCodeArray)
 	{
 		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
@@ -1481,13 +1481,13 @@ Exec_stat MCPlus::eval(MCExecPoint &ep)
 			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
 		}
 	}
-
+    
 	if (!ctxt.HasError())
 	{
 		/* UNCHECKED */ ep.setvalueref(*t_result);
 		return ES_NORMAL;
 	}
-
+    
 	return ctxt.Catch(line, pos);
 }
 
@@ -1866,7 +1866,19 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 				MCperror->add(PE_IS_BADVALIDTYPE, sp);
 				return PS_ERROR;
 			}
-			valid = (Is_validation)te->which;
+            
+            valid = (Is_validation)te->which;
+			
+			// MERG-2013-06-24: [[ IsAnAsciiString ]] Parse 'is an ascii string'.
+            if (te->which == IV_ASCII)
+            {
+				if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_STRING) != PS_NORMAL)
+                {
+                	MCperror->add(PE_IS_BADVALIDTYPE, sp);
+                    return PS_ERROR;
+                }
+            }
+			
 			return PS_BREAK;
 		}
 		else
@@ -1946,7 +1958,7 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 			}
 		return PS_NORMAL;
 	}
-	if (te->type == TT_IN)
+   	if (te->type == TT_IN)
 	{
 		rank = FR_COMPARISON;
 		if (form == IT_NOT)
@@ -2021,6 +2033,21 @@ Exec_stat MCIs::eval(MCExecPoint &ep)
 			case IV_RECT:
 				cond = MCU_stoi2x4(ep.getsvalue(), i2, i2, i2, i2);
 				break;
+			// MERG-2013-06-24: [[ IsAnAsciiString ]] Implementation for ascii string
+			//   check.
+            case IV_ASCII:
+                {
+                    cond = True;
+                    uint1* t_string = (uint1 *) ep.getsvalue().getstring();
+                    int t_length = ep.getsvalue().getlength();
+                    for (int i=0; i < t_length ;i++)
+                        if (t_string[i] > 127)
+                        {
+                            cond = False;
+                            break;
+                        }
+                }
+                break;
 			default:
 				break;
 			}

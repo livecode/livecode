@@ -25,6 +25,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "uidc.h"
 #endif
 
+#include "tilecache.h"
+
 #define EXTERNAL_WAIT 10.0
 #define MENU_SPACE 8
 #define MENU_ARROW_SIZE 16
@@ -66,17 +68,38 @@ enum MCStackSurfaceTargetType
 
 struct MCInterfaceDecoration;
 
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2013-09-23: [[ FullscreenMode ]] Available fullscreen modes
+enum MCStackFullscreenMode
+{
+	kMCStackFullscreenModeNone,
+
+	kMCStackFullscreenResize,	// ""			stack is resized to fill screen without scaling
+	kMCStackFullscreenExactFit,	// "exact fit"	stack is stretched to fill screen
+	kMCStackFullscreenShowAll,	// "show all"	whole stack is shown, scaled to take up as much screen space as possible. Both full width and height are visible
+	kMCStackFullscreenNoBorder, // "no border"	scaled to cover whole screen, top+bottom or left+right of stack may be clipped
+	kMCStackFullscreenNoScale,	// "no scale"	stack is centered on screen with no scaling
+};
+
+extern const char *MCStackFullscreenModeToString(MCStackFullscreenMode p_mode);
+extern bool MCStackFullscreenModeFromString(const char *p_string, MCStackFullscreenMode &r_mode);
+
+#define kMCStackFullscreenModeDefault (kMCStackFullscreenResize)
+
+////////////////////////////////////////////////////////////////////////////////
+
 class MCStackSurface
 {
 public:
-	// Lock the surface for access with an MCContext
-	virtual bool LockGraphics(MCRegionRef area, MCContext*& r_context) = 0;
+	// Lock the surface for access with an MCGContextRef
+	virtual bool LockGraphics(MCRegionRef area, MCGContextRef& r_context) = 0;
 	// Unlock the surface.
 	virtual void UnlockGraphics(void) = 0;
 	
 	// Lock the pixels within the given region. The bits are returned relative
 	// to the top-left of the region.
-	virtual bool LockPixels(MCRegionRef area, void*& r_bits, uint32_t& r_stride) = 0;
+	virtual bool LockPixels(MCRegionRef area, MCGRaster& r_raster) = 0;
 	// Unlock the surface.
 	virtual void UnlockPixels(void) = 0;
 	
@@ -84,7 +107,18 @@ public:
 	virtual bool LockTarget(MCStackSurfaceTargetType type, void*& r_context) = 0;
 	// Unlock the target.
 	virtual void UnlockTarget(void) = 0;
+	
+	// Composite the source image onto the surface using the given blend mode & opacity
+	virtual bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_source, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend) = 0;
+
+	/* OVERHAUL - REVISIT: ideally, these methods should not be part of the public MCStackSurface interface */
+	// Prepare surface for use - do not call from within drawing code
+	virtual bool Lock(void) = 0;
+	// Atomically update target surface with drawn image - do not call from within drawing code
+	virtual void Unlock(void) = 0;
 };
+
+typedef bool (*MCStackUpdateCallback)(MCStackSurface *p_surface, MCRegionRef p_region, void *p_context);
 
 class MCStack : public MCObject
 {
@@ -148,19 +182,12 @@ protected:
 	
 	MCExternalHandlerList *m_externals;
 
-	// MW-2011-08-19: [[ Redraw ]] The region of the stack that needs to be
-	//   drawn to the screen on the next update.
-	MCRegionRef m_update_region;
-
-	// MW-2011-08-26: [[ TileCache ]] The stack's tilecache renderer - if any.
-	MCTileCacheRef m_tilecache;
-
 	// MW-2011-09-12: [[ MacScroll ]] The current y-scroll setting of the stack.
 	int32_t m_scroll;
 	
 	// MW-2011-09-13: [[ Effects ]] The temporary snapshot of a rect of the
 	//  window.
-	Pixmap m_snapshot;
+	MCGImageRef m_snapshot;
 	
 	// MW-2011-09-13: [[ Masks ]] The window mask for the stack.
 	MCWindowShape *m_window_shape;
@@ -179,6 +206,30 @@ protected:
 	
 	static uint2 ibeam;
 
+	//////////
+
+	// Stack view properties
+	bool m_view_fullscreen;
+	MCStackFullscreenMode m_view_fullscreenmode;
+
+	MCRectangle m_view_stack_rect;
+	MCRectangle m_view_rect;
+
+	// IM-2013-10-14: [[ FullscreenMode ]] Indicates whether the view needs to be redrawn
+	bool m_view_need_redraw;
+	
+	MCGAffineTransform m_view_transform;
+
+	// MW-2011-08-26: [[ TileCache ]] The stack's tilecache renderer - if any.
+	MCTileCacheRef m_view_tilecache;
+
+	// IM-2013-10-14: [[ FullscreenMode ]] The tilecache layer ID of the view background
+	uint32_t m_view_bg_layer_id;
+	
+	// MW-2011-08-19: [[ Redraw ]] The region of the view that needs to be
+	//   drawn to the screen on the next update.
+	MCRegionRef m_view_update_region;
+	
 public:
 	Boolean menuwindow;
 
@@ -228,12 +279,161 @@ public:
 	// MW-2011-08-17: [[ Redraw ]] Render the stack into the given context 'dirty' is the
 	//   hull of the clipping region.
     virtual void render(MCContext *dc, const MCRectangle& dirty);
+	void render(MCGContextRef p_context, const MCRectangle &p_dirty);
 
 	// MW-2012-02-14: [[ FontRefs ]] Recompute the font inheritence hierarchy.
 	virtual bool recomputefonts(MCFontRef parent_font);
 	
+	//////////
+	// device interface
+
+	MCRectangle device_getwindowrect() const;
+	MCRectangle device_setgeom(const MCRectangle &p_rect);
+	
+	// IM-2013-08-29: [[ ResIndependence ]] add device-specific version of updatewindow.
+	//   device_updatewindow takes a region in device coordinates.
+	void device_updatewindow(MCRegionRef p_region);
+	// MW-2011-09-13: [[ Redraw ]] Request an immediate update of the given region of the
+	//   window using the presented pixmap. This is a platform-specific method - note that
+	//   any window-mask is ignored with per-pixel alpha assumed to come from the the image.
+	//   (although a window-mask needs to be present in the stack for it not to be ignored).
+	// IM-2013-06-19: [[ RefactorGraphics ]] Replace pixmap update method with this
+	//   version which uses a callback function to perform the actual drawing using a
+	//    provided MCStackSurface instance. The MCStackSurface class is now responsible
+	//    for handling any window mask present.
+	// IM-2013-08-29: [[ ResIndependence ]] change updatewindowwithcallback to device-specific version.
+	//   device_updatewindowwithcallback takes a region in device coordinates.
+	void device_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context);
+	
+	// MW-2011-09-10: [[ Redraw ]] Perform a redraw of the window's content to the given
+	//   surface.
+	void device_redrawwindow(MCStackSurface *surface, MCRegionRef region);
+	
+	//////////
+	// view interface
+
+	void view_init(void);
+	void view_copy(const MCStack &p_view);
+	void view_destroy(void);
+
+	// Get visible stack region
+	MCRectangle view_getstackviewport(void);
+	// Set the visible stack region. Returns modified rect if constrained by fullscreen mode
+	MCRectangle view_setstackviewport(const MCRectangle &p_viewport);
+
+	// Return the visible stack region constrained by the fullscreen settings
+	MCRectangle view_constrainstackviewport(const MCRectangle &p_viewport);
+	
+	// Return the rect of the view in logical screen coords.
+	MCRectangle view_getrect(void) const;
+
+	// Set view to fullscreen 
+	void view_setfullscreen(bool p_fullscreen);
+	// Return whether this view is fullscreen or not
+	bool view_getfullscreen(void) const;
+
+	// Set scaling mode when fullscreen
+	void view_setfullscreenmode(MCStackFullscreenMode p_mode);
+	// Get the fullscreen scaling mode
+	MCStackFullscreenMode view_getfullscreenmode(void) const;
+
+	// Request update of the given stack region
+	void view_updatestack(MCRegionRef p_region);
+	// Redraw the given view rect
+	void view_render(MCGContextRef p_target, MCRectangle p_rect);
+	
+	// Translate local stack coords to view space
+	MCPoint view_viewtostackloc(const MCPoint &p_loc) const;
+	// Translate view coords to local stack space
+	MCPoint view_stacktoviewloc(const MCPoint &p_loc) const;
+
+	// Return the stack -> view coordinates transform
+	MCGAffineTransform view_getviewtransform(void) const;
+	
+	//////////
+	
+	// IM-2013-10-03: [[ FullscreenMode ]] Move implementation of tilecache operations into stackview
+	
+	// MW-2011-11-23: [[ AccelRender ]] Set / get the accelerated rendering derived property.
+	bool view_getacceleratedrendering(void);
+	void view_setacceleratedrendering(bool value);
+	
+	// IM-2013-01-03: [[ FullscreenMode ]] Set / get the compositor type
+	MCTileCacheCompositorType view_getcompositortype(void);
+	void view_setcompositortype(MCTileCacheCompositorType p_type);
+	
+	// IM-2013-01-03: [[ FullscreenMode ]] Set / get the compositor cache limit
+	uint32_t view_getcompositorcachelimit(void);
+	void view_setcompositorcachelimit(uint32_t p_limit);
+	
+	// IM-2013-01-03: [[ FullscreenMode ]] Set / get the compositor tile size
+	uint32_t view_getcompositortilesize(void);
+	void view_setcompositortilesize(uint32_t p_size);
+	// IM-2013-01-03: [[ FullscreenMode ]] Check the validity of the tilesize (accepted tile sizes are powers of two between 16 & 256 pixels)
+	bool view_isvalidcompositortilesize(uint32_t p_size);
+	
+	// MW-2011-08-26: [[ TileCache ]] Fetch the stack's tilecache.
+	MCTileCacheRef view_gettilecache(void) { return m_view_tilecache; }
+	
+	void view_updatetilecache(void);
+	void view_deactivatetilecache(void);
+	bool view_snapshottilecache(const MCRectangle &p_stack_rect, MCGImageRef &r_image);
+	
+	void view_flushtilecache(void);
+	void view_activatetilecache(void);
+	void view_compacttilecache(void);
+	
+	// IM-2013-10-10: [[ FullscreenMode ]] Reconfigure view after window rect changes
+	void view_configure(bool p_user);
+	
+	// IM-2013-10-10: [[ FullscreenMode ]] Update the on-screen bounds of the view
+	void view_setrect(const MCRectangle &p_new_rect);
+	// IM-2013-10-10: [[ FullscreenMode ]] Notify view of changes to its bounds
+	void view_on_rect_changed(void);
+	
+	bool view_need_redraw(void) const { return m_view_need_redraw; }
+	
+	// IM-2013-10-14: [[ FullscreenMode ]] Clear any pending updates of the view
+	void view_reset_updates(void);
+	// IM-2013-10-14: [[ FullscreenMode ]] Mark the given view region as needing redrawn
+	void view_dirty_rect(const MCRectangle &p_rect);
+	// IM-2013-10-14: [[ FullscreenMode ]] Mark the entire view surface as needing redrawn
+	void view_dirty_all(void);
+	// IM-2013-10-14: [[ FullscreenMode ]] Request a redraw of the marked areas
+	void view_updatewindow(void);
+	// IM-2013-10-14: [[ FullscreenMode ]] Ensure the view content is up to date
+	void view_apply_updates(void);
+	
+	//////////
+	
+	// IM-2013-10-14: [[ FullscreenMode ]] Return the stack -> stack viewport coordinate transform (Currently only applies the stack vertical scroll)
+	MCGAffineTransform gettransform(void) const;
+	// IM-2013-10-14: [[ FullscreenMode ]] Return the stack -> view coordinate transform
+	MCGAffineTransform getviewtransform(void) const;
+	// IM-2013-10-14: [[ FullscreenMode ]] Return the stack -> device coordinate transform
+	MCGAffineTransform getdevicetransform(void) const;
+	
+	//////////
+	
+	// IM-2013-10-08: [[ FullscreenMode ]] Ensure rect of resizable stacks is within min/max width & height
+	MCRectangle constrainstackrect(const MCRectangle &p_rect);
+	// IM-2013-10-08: [[ FullscreenMode ]] Ensure rect of resizable stacks is within screen bounds
+	MCRectangle constrainstackrecttoscreen(const MCRectangle &p_rect);
+	
     // IM-2012-05-15: [[ Effective Rect ]] get the rect of the window (including decorations)
     MCRectangle getwindowrect() const;
+	
+	// IM-2013-10-08: [[ FullscreenMode ]] transform to / from stack & window coords, taking stack scroll into account
+	MCPoint stacktowindowloc(const MCPoint &p_stackloc) const;
+	MCPoint windowtostackloc(const MCPoint &p_windowloc) const;
+	
+	// IM-2013-10-09: [[ FullscreenMode ]] transform to / from stack & global coords, taking stack scroll into account
+	MCPoint stacktogloballoc(const MCPoint &p_stackloc) const;
+	MCPoint globaltostackloc(const MCPoint &p_globalloc) const;
+
+	void setgeom();
+	//////////
+	
     virtual MCRectangle getrectangle(bool p_effective) const;
     
 	void external_idle();
@@ -495,25 +695,13 @@ public:
 	}
 
 	void effectrect(const MCRectangle &drect, Boolean &abort);
-	Boolean ve_barn(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_checkerboard(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_dissolve(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration, MCBitmap *on);
-	Boolean ve_iris(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_push(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_reveal(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_scroll(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_shrink(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration, MCBitmap *on);
-	Boolean ve_stretch(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_venetian(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_wipe(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_zoom(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_qteffect(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration, long sequence, void  *effectdescription, void *timebase);
 	
 	MCStack *findstackd(Window w);
 	MCStack *findchildstackd(Window w,uint2 &ccount, uint2 cindex);
 	void realize();
 	void sethints();
-	void setgeom();
+	// IM-2013-10-08: [[ FullscreenMode ]] Separate out window sizing hints
+	void setsizehints();
 	void destroywindowshape();
 
 	// MW-2011-08-17: [[ Redraw ]] Mark the whole content area as needing redrawn.
@@ -530,22 +718,15 @@ public:
 	//   window. This is a platform-specific method which causes 'redrawwindow' to be
 	//   invoked.
 	void updatewindow(MCRegionRef region);
-	// MW-2011-09-13: [[ Redraw ]] Request an immediate update of the given region of the
-	//   window using the presented pixmap. This is a platform-specific method - note that
-	//   any window-mask is ignored with per-pixel alpha assumed to come from the the image.
-	//   (although a window-mask needs to be present in the stack for it not to be ignored).
-	void updatewindowwithbuffer(Pixmap buffer, MCRegionRef region);
 	
 	// MW-2012-08-06: [[ Fibers ]] Ensure the tilecache is updated to reflect the current
 	//   frame.
 	void updatetilecache(void);
 	// MW-2013-01-08: Snapshot the contents of the tilecache (if any).
-	bool snapshottilecache(MCRectangle area, Pixmap& r_pixmap);
-	
-	// MW-2011-09-10: [[ Redraw ]] Perform a redraw of the window's content to the given
-	//   surface.
-	void redrawwindow(MCStackSurface *surface, MCRegionRef region);
-	
+	bool snapshottilecache(MCRectangle area, MCGImageRef& r_image);
+	// MW-2013-06-26: [[ Bug 10990 ]] Deactivate the tilecache.
+    void deactivatetilecache(void);
+    
 	// MW-2011-09-08: [[ Redraw ]] Capture the contents of the given rect of the window
 	//   into a temporary buffer. The buffer is ditched at the next update.
 	void snapshotwindow(const MCRectangle& rect);
@@ -556,13 +737,6 @@ public:
 	// MW-2012-12-09: [[ Bug 9901 ]] Preserve the contents of the android bitmap view before
 	//   locking screen for a visual effect.
 	void preservescreenforvisualeffect(const MCRectangle& p_rect);
-
-	// MW-2011-08-26: [[ TileCache ]] Fetch the stack's tilecache.
-	MCTileCacheRef gettilecache(void) { return m_tilecache; }
-
-	// MW-2011-11-23: [[ AccelRender ]] Set / get the accelerated rendering derived property.
-	bool getacceleratedrendering(void);
-	void setacceleratedrendering(bool value);
 
 	// MW-2012-10-10: [[ IdCache ]] Add and remove an object from the id cache.
 	void cacheobjectbyid(MCObject *object);
@@ -611,9 +785,6 @@ public:
 	//   window.
 	void composite(void);
 	
-	void scrollpm(Pixmap tpm, int2 newy) { }
-	void drawgrowicon(const MCRectangle &dirty) { }
-	void property(Window w, Atom atom) { }
 	void getstyle(uint32_t &wstyle, uint32_t &exstyle);
 	void constrain(intptr_t lp);
 #elif defined(_MAC_DESKTOP)
@@ -623,16 +794,10 @@ public:
 	}
 	MCSysWindowHandle getqtwindow(void);
 	void showmenubar();
-	void scrollpm(Pixmap tpm, int2 newy);
-	void property(Window w, Atom atom) { }
 	void getWinstyle(uint32_t &wstyle, uint32_t &wclass);
 
 	void getminmax(MCMacSysRect *winrect);
-	void drawgrowicon(const MCRectangle &dirty);
 #elif defined(_LINUX_DESKTOP)
-	void scrollpm(Pixmap tpm, int2 newy) { }
-	void drawgrowicon(const MCRectangle &dirty) { }
-	void property(Window w, Atom atom);
 	void setmodalhints(void);
 
 	// MW-201-09-15: [[ Redraw ]] The 'onexpose()' method is called when a sequence

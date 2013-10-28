@@ -452,14 +452,23 @@ public:
 	//   flagged status set to true - these are then adjusted by delta.
 	// MW-2012-02-24: [[ FieldChars ]] Pass in the part_id so the paragraph can map
 	//   field indices to char indices.
-	void getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, uint2 si, uint2 ei, int32_t p_delta);
-    void getflaggedranges(uint32_t p_part_id, uint2 si, uint2 ei, int32_t p_delta, MCInterfaceFlaggedRanges& r_ranges);
+	// MW-2013-07-31: [[ Bug 10957 ]] Pass in the start of the paragraph as a byte
+	//   offset so that the correct char offset can be calculated.
+	void getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, uint2 si, uint2 ei, int32_t p_paragraph_start);
+    void getflaggedranges(uint32_t p_part_id, uint2 si, uint2 ei, int32_t p_paragraph_start, MCInterfaceFlaggedRanges& r_ranges);
     
 	// Return true if the paragraph completely fits in theight. Otherwise, return
 	// false and set lastline to the line that would be clipped.
 	// Called by:
 	//   MCField::getprop
 	Boolean pageheight(uint2 fixedheight, uint2 &theight, MCLine *&lastline);
+
+    // JS-2013-05-15: [[ PageRanges ]] pagerange as variant of pageheight
+	// Return true if the paragraph completely fits in theight. Otherwise, return
+	// false and set lastline to the line that would be clipped.
+	// Called by:
+	//   MCField::getprop
+	Boolean pagerange(uint2 fixedheight, uint2 &theight, uint2 &tend, MCLine *&lastline);
 
 	// Returns true if any of the paragraph attributes are non-default.
 	bool hasattrs(void);
@@ -747,13 +756,13 @@ private:
 
 	MCLine *indextoline(uint2 tindex);
 
-	// Returns true if the given block is part of a link, in which case si is
-	// the start index of the link.
-	Boolean extendup(MCBlock *bptr, uint2 &si);
-
-	// Returns true if the given block is part of a link, in which case ei is
-	// the end index of the link.
-	Boolean extenddown(MCBlock *bptr, uint2 &ei);
+	// Searches forward for the end of a link, returning the last index in si
+	// and returning the block containing it.
+	MCBlock *extendup(MCBlock *bptr, uint2 &si);
+	
+	// Searches backward for the start of a link, returning the first index in ei
+	// and returning the block containing it.
+	MCBlock *extenddown(MCBlock *bptr, uint2 &ei);
 
 	int2 getx(uint2 tindex, MCLine *lptr);
 

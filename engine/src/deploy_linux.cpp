@@ -389,32 +389,74 @@ typedef struct
 
 ////////////////////////////////////////////////////////////////////////////////
 
+struct MCLinuxELF32Traits
+{
+	typedef Elf32_Ehdr Ehdr;
+	typedef Elf32_Shdr Shdr;
+	typedef Elf32_Phdr Phdr;
+	
+	inline static uint32_t round(uint32_t x)
+	{
+		return (x + 3) & ~3;
+	}
+};
+
+struct MCLinuxELF64Traits
+{
+	typedef Elf64_Ehdr Ehdr;
+	typedef Elf64_Shdr Shdr;
+	typedef Elf64_Phdr Phdr;
+	
+	inline static uint32_t round(uint32_t x)
+	{
+		return (x + 7) & ~7;
+	}
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 static void swap_uint32(uint32_t& x)
 {
 	MCDeployByteSwap32(false, x);
 }
 
-static void swap_Elf32_Ehdr(Elf32_Ehdr& x)
+static void swap_ElfX_Ehdr(Elf32_Ehdr& x)
 {
 	MCDeployByteSwapRecord(false, "bbbbbbbbbbbbbbbbsslllllssssss", &x, sizeof(Elf32_Ehdr));
 }
 
-static void swap_Elf32_Shdr(Elf32_Shdr& x)
+static void swap_ElfX_Shdr(Elf32_Shdr& x)
 {
 	MCDeployByteSwapRecord(false, "llllllllll", &x, sizeof(Elf32_Shdr));
 }
 
-static void swap_Elf32_Phdr(Elf32_Phdr& x)
+static void swap_ElfX_Phdr(Elf32_Phdr& x)
 {
 	MCDeployByteSwapRecord(false, "llllllll", &x, sizeof(Elf32_Phdr));
 }
 
+static void swap_ElfX_Ehdr(Elf64_Ehdr& x)
+{
+	MCDeployByteSwapRecord(false, "bbbbbbbbbbbbbbbbsslqqqlssssss", &x, sizeof(Elf64_Ehdr));
+}
+
+static void swap_ElfX_Shdr(Elf64_Shdr& x)
+{
+	MCDeployByteSwapRecord(false, "llqqqqllqq", &x, sizeof(Elf64_Shdr));
+}
+
+static void swap_ElfX_Phdr(Elf64_Phdr& x)
+{
+	MCDeployByteSwapRecord(false, "llqqqqqq", &x, sizeof(Elf64_Phdr));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool MCDeployToLinuxReadHeader(MCDeployFileRef p_file, bool p_is_android, Elf32_Ehdr& r_header)
+template<typename T>
+static bool MCDeployToLinuxReadHeader(MCDeployFileRef p_file, bool p_is_android, typename T::Ehdr& r_header)
 {
 	// Read the header
-	if (!MCDeployFileRead(p_file, &r_header, sizeof(Elf32_Ehdr)))
+	if (!MCDeployFileRead(p_file, &r_header, sizeof(typename T::Ehdr)))
 		return MCDeployThrow(kMCDeployErrorLinuxNoHeader);
 
 	// Validate the ident field to make sure the exe is what we expect.
@@ -424,19 +466,21 @@ static bool MCDeployToLinuxReadHeader(MCDeployFileRef p_file, bool p_is_android,
 		r_header . e_ident[EI_MAG3] != ELFMAG3)
 		return MCDeployThrow(kMCDeployErrorLinuxBadHeaderMagic);
 
-	if (r_header . e_ident[EI_CLASS] != ELFCLASS32 ||
+	// MW-2013-05-03: [[ Linux64 ]] Class could be 32 or 64-bit.
+	if ((r_header . e_ident[EI_CLASS] != ELFCLASS32 && r_header . e_ident[EI_CLASS] != ELFCLASS64) ||
 		r_header . e_ident[EI_DATA] != ELFDATA2LSB ||
 		r_header . e_ident[EI_VERSION] != EV_CURRENT)
 		return MCDeployThrow(kMCDeployErrorLinuxBadHeaderType);
 
 	// Swap the fields as appropriate
-	swap_Elf32_Ehdr(r_header);
+	swap_ElfX_Ehdr(r_header);
 
 	// Now check the header fields that aren't part of the ident
 	if (!p_is_android)
 	{
+		// MW-2013-04-29: [[ Linux64 ]] Allow any type of machine architecture.
+		//   (in particular, ARM and x64 in addition to x386).
 		if (r_header . e_type != ET_EXEC ||
-			r_header . e_machine != EM_386 ||
 			r_header . e_version != EV_CURRENT)
 			return MCDeployThrow(kMCDeployErrorLinuxBadImage);
 	}
@@ -451,55 +495,58 @@ static bool MCDeployToLinuxReadHeader(MCDeployFileRef p_file, bool p_is_android,
 	return true;
 }
 
-static bool MCDeployToLinuxReadSectionHeaders(MCDeployFileRef p_file, Elf32_Ehdr& p_header, Elf32_Shdr*& r_table)
+template<typename T>
+static bool MCDeployToLinuxReadSectionHeaders(MCDeployFileRef p_file, typename T::Ehdr& p_header, typename T::Shdr*& r_table)
 {
 	// First check that we can read the section headers - they must be the size
 	// we think they should be.
-	if (p_header . e_shentsize != sizeof(Elf32_Shdr))
+	if (p_header . e_shentsize != sizeof(typename T::Shdr))
 		return MCDeployThrow(kMCDeployErrorLinuxBadSectionSize);
 
 	// Allocate the array of the entries
-	r_table = new Elf32_Shdr[p_header . e_shnum];
+	r_table = new typename T::Shdr[p_header . e_shnum];
 	if (r_table == NULL)
 		return MCDeployThrow(kMCDeployErrorNoMemory);
 
 	// Next read each entry in from the file
 	for(uint32_t i = 0; i < p_header . e_shnum; i++)
 	{
-		if (!MCDeployFileReadAt(p_file, &r_table[i], sizeof(Elf32_Shdr), p_header . e_shoff + i * p_header . e_shentsize))
+		if (!MCDeployFileReadAt(p_file, &r_table[i], sizeof(typename T::Shdr), p_header . e_shoff + i * p_header . e_shentsize))
 			return MCDeployThrow(kMCDeployErrorLinuxBadSectionTable);
 
-		swap_Elf32_Shdr(r_table[i]);
+		swap_ElfX_Shdr(r_table[i]);
 	}
 
 	return true;
 }
 
-static bool MCDeployToLinuxReadProgramHeaders(MCDeployFileRef p_file, Elf32_Ehdr& p_header, Elf32_Phdr*& r_table)
+template<typename T>
+static bool MCDeployToLinuxReadProgramHeaders(MCDeployFileRef p_file, typename T::Ehdr& p_header, typename T::Phdr*& r_table)
 {
 	// First check that we can read the program headers - they must be the size
 	// we think they should be.
-	if (p_header . e_phentsize != sizeof(Elf32_Phdr))
+	if (p_header . e_phentsize != sizeof(typename T::Phdr))
 		return MCDeployThrow(kMCDeployErrorLinuxBadSegmentSize);
 
 	// Allocate the array of the entries
-	r_table = new Elf32_Phdr[p_header . e_phnum];
+	r_table = new typename T::Phdr[p_header . e_phnum];
 	if (r_table == NULL)
 		return MCDeployThrow(kMCDeployErrorNoMemory);
 
 	// Next read each entry in from the file
 	for(uint32_t i = 0; i < p_header . e_phnum; i++)
 	{
-		if (!MCDeployFileReadAt(p_file, &r_table[i], sizeof(Elf32_Phdr), p_header . e_phoff + i * p_header . e_phentsize))
+		if (!MCDeployFileReadAt(p_file, &r_table[i], sizeof(typename T::Phdr), p_header . e_phoff + i * p_header . e_phentsize))
 			return MCDeployThrow(kMCDeployErrorLinuxBadProgramTable);
 
-		swap_Elf32_Phdr(r_table[i]);
+		swap_ElfX_Phdr(r_table[i]);
 	}
 
 	return true;
 }
 
-static bool MCDeployToLinuxReadString(MCDeployFileRef p_file, Elf32_Shdr& p_string_header, uint32_t p_index, char*& r_string)
+template<typename T>
+static bool MCDeployToLinuxReadString(MCDeployFileRef p_file, typename T::Shdr& p_string_header, uint32_t p_index, char*& r_string)
 {
 	bool t_success;
 	t_success = true;
@@ -603,6 +650,7 @@ static bool MCDeployToLinuxReadString(MCDeployFileRef p_file, Elf32_Shdr& p_stri
 // Note that this method validates the structure to a good extent so build
 // errors should be caught relatively easily.
 //
+template<typename T>
 Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 {
 	bool t_success;
@@ -617,31 +665,31 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 
 	// Now read in the main ELF header
-	Elf32_Ehdr t_header;
+	typename T::Ehdr t_header;
 	if (t_success)
-		t_success = MCDeployToLinuxReadHeader(t_engine, p_is_android, t_header);
+		t_success = MCDeployToLinuxReadHeader<T>(t_engine, p_is_android, t_header);
 
 	// Next read in the section header table
-	Elf32_Shdr *t_section_headers;
+	typename T::Shdr *t_section_headers;
 	t_section_headers = NULL;
 	if (t_success)
-		t_success = MCDeployToLinuxReadSectionHeaders(t_engine, t_header, t_section_headers);
+		t_success = MCDeployToLinuxReadSectionHeaders<T>(t_engine, t_header, t_section_headers);
 
 	// Next read in the program header table
-	Elf32_Phdr *t_program_headers;
+	typename T::Phdr *t_program_headers;
 	t_program_headers = NULL;
 	if (t_success)
-		t_success = MCDeployToLinuxReadProgramHeaders(t_engine, t_header, t_program_headers);
+		t_success = MCDeployToLinuxReadProgramHeaders<T>(t_engine, t_header, t_program_headers);
 
 	// Now we have the section header, we search for the 'project' and
 	// 'payload' sections.
-	Elf32_Shdr *t_project_section, *t_payload_section;
+	typename T::Shdr *t_project_section, *t_payload_section;
 	t_project_section = NULL;
 	t_payload_section = NULL;
 	for(uint32_t i = 0; i < t_header . e_shnum && t_project_section == NULL && t_success; i++)
 	{
 		char *t_section_name;
-		t_success = MCDeployToLinuxReadString(t_engine, t_section_headers[t_header . e_shstrndx], t_section_headers[i] . sh_name, t_section_name);
+		t_success = MCDeployToLinuxReadString<T>(t_engine, t_section_headers[t_header . e_shstrndx], t_section_headers[i] . sh_name, t_section_name);
 
 		// Notice that we compare 9 bytes, this is to ensure we match .project
 		// only and not .project<otherchar> (i.e. we match the NUL char).
@@ -664,7 +712,7 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	// since the section table is ordered by vaddr and segments can only
 	// contain stuff in sections).
 	if (t_success)
-		for(Elf32_Shdr *t_section = t_project_section + 1; t_section < t_section_headers + t_header . e_shnum; t_section += 1)
+		for(typename T::Shdr *t_section = t_project_section + 1; t_section < t_section_headers + t_header . e_shnum; t_section += 1)
 			 if (t_section -> sh_addr > t_project_section -> sh_addr)
 			 {
 				 t_success = MCDeployThrow(kMCDeployErrorLinuxBadSectionOrder);
@@ -674,7 +722,7 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	// Now we must search for the segment containing the payload/project sections.
 	// At present, we required that these sections sit in their own segment and
 	// that segment must be the last.
-	Elf32_Phdr *t_project_segment;
+	typename T::Phdr *t_project_segment;
 	t_project_segment = NULL;
 	for(uint32_t i = 0; i < t_header . e_phnum && t_success; i++)
 		if (t_project_section -> sh_addr >= t_program_headers[i] . p_vaddr &&
@@ -719,7 +767,10 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	{
 		t_success = MCDeployWritePayload(p_params, false, t_output, t_output_offset, t_payload_size);
 		if (t_success)
+		{
+			t_payload_size = T::round(t_payload_size);
 			t_output_offset += t_payload_size;
+		}
 	}
 
 	// Write out the project info struct
@@ -731,7 +782,10 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 		t_project_offset = t_output_offset;
 		t_success = MCDeployWriteProject(p_params, false, t_output, t_output_offset, t_project_size);
 		if (t_success)
+		{
+			t_project_size = T::round(t_project_size);
 			t_output_offset += t_project_size;
+		}
 	}
 
 	// Next use the project size to compute the updated header values we need.
@@ -770,7 +824,7 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 		t_project_segment -> p_filesz = t_payload_size + t_project_size;
 		t_project_segment -> p_memsz = t_payload_size + t_project_size;
 
-		for(Elf32_Shdr *t_section = t_project_section + 1; t_section < t_section_headers + t_header . e_shnum; t_section += 1)
+		for(typename T::Shdr *t_section = t_project_section + 1; t_section < t_section_headers + t_header . e_shnum; t_section += 1)
 			if (t_section -> sh_offset >= t_end_offset)
 				t_section -> sh_offset += t_project_delta + t_payload_delta;
 
@@ -778,26 +832,26 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 
 		//
 
-		t_section_table_size = t_header . e_shnum * sizeof(Elf32_Shdr);
+		t_section_table_size = t_header . e_shnum * sizeof(typename T::Shdr);
 		t_section_table_offset = t_header . e_shoff;
 
-		t_segment_table_size = t_header . e_phnum * sizeof(Elf32_Phdr);
+		t_segment_table_size = t_header . e_phnum * sizeof(typename T::Phdr);
 		t_segment_table_offset = t_header . e_phoff;
 
 		//
 
 		for(uint32_t i = 0; i < t_header . e_shnum; i++)
-			swap_Elf32_Shdr(t_section_headers[i]);
+			swap_ElfX_Shdr(t_section_headers[i]);
 
 		for(uint32_t i = 0; i < t_header . e_phnum; i++)
-			swap_Elf32_Phdr(t_program_headers[i]);
+			swap_ElfX_Phdr(t_program_headers[i]);
 
-		swap_Elf32_Ehdr(t_header);
+		swap_ElfX_Ehdr(t_header);
 	}
 
 	// Overwrite the updated header and program headers
 	if (t_success)
-		t_success = MCDeployFileWriteAt(t_output, &t_header, sizeof(Elf32_Ehdr), 0);
+		t_success = MCDeployFileWriteAt(t_output, &t_header, sizeof(typename T::Ehdr), 0);
 	if (t_success)
 		t_success = MCDeployFileWriteAt(t_output, t_program_headers, t_segment_table_size, t_segment_table_offset);
 
@@ -840,12 +894,36 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// This method attempts to build an Linux standalone using the given deployment
+// This method attempts to build a Linux standalone using the given deployment
 // parameters.
 //
 Exec_stat MCDeployToLinux(const MCDeployParameters& p_params)
 {
-	return MCDeployToELF(p_params, false);
+	bool t_success;
+	t_success = true;
+
+	// MW-2013-05-03: [[ Linux64 ]] Snoop the engine type from the ident field.
+	
+	MCDeployFileRef t_engine;
+	t_engine = NULL;
+	if (t_success && !MCDeployFileOpen(p_params . engine, "rb", t_engine))
+		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
+		
+	char t_ident[EI_NIDENT];
+	if (t_success && !MCDeployFileRead(t_engine, t_ident, EI_NIDENT))
+		t_success = MCDeployThrow(kMCDeployErrorLinuxNoHeader);
+		
+	if (t_success)
+	{
+		if (t_ident[EI_CLASS] == ELFCLASS32)
+			return MCDeployToELF<MCLinuxELF32Traits>(p_params, false);
+		else if (t_ident[EI_CLASS] == ELFCLASS64)
+			return MCDeployToELF<MCLinuxELF64Traits>(p_params, false);
+	
+		t_success = MCDeployThrow(kMCDeployErrorLinuxBadHeaderType);
+	}
+	
+	return t_success ? ES_NORMAL : ES_ERROR;
 }
 
 // This method attempts to build an Android standalone using the given deployment
@@ -853,7 +931,7 @@ Exec_stat MCDeployToLinux(const MCDeployParameters& p_params)
 //
 Exec_stat MCDeployToAndroid(const MCDeployParameters& p_params)
 {
-	return MCDeployToELF(p_params, true);
+	return MCDeployToELF<MCLinuxELF32Traits>(p_params, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

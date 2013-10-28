@@ -1863,6 +1863,19 @@ static void *MCExecutableFindSection(const char *p_name)
 #elif defined(_LINUX)
 #include <elf.h>
 
+// MW-2013-05-03: [[ Linux64 ]] Make sure we use the correct structs for section
+//   searching.
+
+#ifdef __LP64__
+typedef Elf64_Ehdr Elf_Ehdr;
+typedef Elf64_Shdr Elf_Shdr;
+typedef Elf64_Phdr Elf_Phdr;
+#else
+typedef Elf32_Ehdr Elf_Ehdr;
+typedef Elf32_Shdr Elf_Shdr;
+typedef Elf32_Phdr Elf_Phdr;
+#endif
+
 static void *MCExecutableFindSection(const char *p_name)
 {
 	bool t_success;
@@ -1880,22 +1893,22 @@ static void *MCExecutableFindSection(const char *p_name)
 	}
 
 	// Load the header
-	Elf32_Ehdr t_header;
+	Elf_Ehdr t_header;
 	if (t_success)
-		if (fread(&t_header, sizeof(Elf32_Ehdr), 1, t_exe) != 1)
+		if (fread(&t_header, sizeof(Elf_Ehdr), 1, t_exe) != 1)
 			t_success = false;
 
 	// Allocate memory for the section table
-	Elf32_Shdr *t_sections;
+	Elf_Shdr *t_sections;
 	t_sections = nil;
 	if (t_success)
-		t_success = MCMemoryAllocate(sizeof(Elf32_Shdr) * t_header . e_shnum, t_sections);
+		t_success = MCMemoryAllocate(sizeof(Elf_Shdr) * t_header . e_shnum, t_sections);
 
 	// Now read in the sections
 	for(uint32_t i = 0; i < t_header . e_shnum && t_success; i++)
 	{
 		if (fseek(t_exe, t_header . e_shoff + i * t_header . e_shentsize, SEEK_SET) != 0 ||
-			fread(&t_sections[i], sizeof(Elf32_Shdr), 1, t_exe) != 1)
+			fread(&t_sections[i], sizeof(Elf_Shdr), 1, t_exe) != 1)
 			t_success = false;
 	}
 

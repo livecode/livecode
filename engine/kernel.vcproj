@@ -162,6 +162,10 @@
 			ReferencedProjectIdentifier="{09751ABE-310B-4324-BACE-F7FFDA2299DE}"
 			RelativePathToProject=".\thirdparty\libgif\libgif.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{F9B1E2E6-8FD9-48C2-8D5C-9900865E7096}"
+			RelativePathToProject=".\libgraphics\libgraphics.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -361,10 +365,6 @@
 			</File>
 			<File
 				RelativePath=".\src\image_rep_mutable.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\image_rep_transformed.cpp"
 				>
 			</File>
 			<File
@@ -569,6 +569,10 @@
 			</File>
 			<File
 				RelativePath="src\stacklst.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\stackview.cpp"
 				>
 			</File>
 			<File
@@ -904,14 +908,6 @@
 				>
 			</File>
 			<File
-				RelativePath="src\contextscalewrapper.cpp"
-				>
-			</File>
-			<File
-				RelativePath="src\contextscalewrapper.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\customprinter.cpp"
 				>
 			</File>
@@ -1148,6 +1144,14 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\src\imagelist.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\imagelist.h"
+				>
+			</File>
+			<File
 				RelativePath="src\license.h"
 				>
 			</File>
@@ -1272,14 +1276,6 @@
 				>
 			</File>
 			<File
-				RelativePath="src\pxmaplst.cpp"
-				>
-			</File>
-			<File
-				RelativePath="src\pxmaplst.h"
-				>
-			</File>
-			<File
 				RelativePath="src\regex.cpp"
 				>
 			</File>
@@ -1385,6 +1381,14 @@
 			</File>
 			<File
 				RelativePath="src\util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\uuid.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\uuid.h"
 				>
 			</File>
 		</Filter>
@@ -1607,46 +1611,6 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\src\lnxcontext.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\src\lnxcontext.h"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2423,30 +2387,6 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="src\osxcontext.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="src\osxcontext.h"
-					>
-				</File>
-				<File
 					RelativePath=".\src\osxcoreimage.cpp"
 					>
 					<FileConfiguration
@@ -2965,34 +2905,6 @@
 							PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
 						/>
 					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="src\w32context.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="2"
-							PrecompiledHeaderThrough="w32prefix.h"
-							PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="2"
-							PrecompiledHeaderThrough="w32prefix.h"
-							PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="src\w32context.h"
-					>
 				</File>
 				<File
 					RelativePath=".\src\w32cursor.cpp"
@@ -7966,6 +7878,14 @@
 		</Filter>
 		<File
 			RelativePath=".\ChangeLog.txt"
+			>
+		</File>
+		<File
+			RelativePath=".\src\graphicscontext.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\src\graphicscontext.h"
 			>
 		</File>
 		<File

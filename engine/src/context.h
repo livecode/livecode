@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define CONTEXT_H
 
 #include "imagebitmap.h"
+#include "graphics.h"
 
 typedef real4 MCScalar;
 
@@ -71,14 +72,15 @@ enum MCImageDataType
 
 struct MCImageDescriptor
 {
-	// The scaled/rotate image
+	bool has_transform;
+	MCGAffineTransform transform;
+	MCGImageFilter filter;
+	
+	// IM-2013-07-19: [[ ResIndependence ]] add scale factor field for scaled images
+	MCGFloat scale_factor;
+
+	// The image bitmap
 	MCImageBitmap *bitmap;
-
-	// The angle of the image
-	uint32_t angle;
-
-	// The original image
-	MCImageBitmap *original_bitmap;
 
 	// The image source data
 	MCImageDataType data_type;
@@ -101,6 +103,8 @@ enum MCThemeDrawType
 	THEME_DRAW_TYPE_MENU,
 	THEME_DRAW_TYPE_GTK
 };
+
+bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInfo *p_info_ptr);
 
 class MCContext
 {
@@ -129,7 +133,7 @@ public:
 	virtual void setprintmode(void) = 0;
 
 	virtual void setclip(const MCRectangle& rect) = 0;
-	virtual const MCRectangle& getclip(void) const = 0;
+	virtual MCRectangle getclip(void) const = 0;
 	virtual void clearclip(void) = 0;
 
 	virtual void setorigin(int2 x, int2 y) = 0;
@@ -143,24 +147,26 @@ public:
 	virtual void setforeground(const MCColor& c) = 0;
 	virtual void setbackground(const MCColor& c) = 0;
 	virtual void setdashes(uint2 offset, const uint1 *dashes, uint2 ndashes) = 0;
-	virtual void setfillstyle(uint2 style, Pixmap p, int2 x, int2 y) = 0;
-	virtual void getfillstyle(uint2& style, Pixmap& p, int2& x, int2& y) = 0;
+	virtual void setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y) = 0;
+	virtual void getfillstyle(uint2& style, MCPatternRef &p, int2& x, int2& y) = 0;
 	virtual void setlineatts(uint2 linesize, uint2 linestyle, uint2 capstyle, uint2 joinstyle) = 0;
+	virtual void getlineatts(uint2 &r_linesize, uint2 &r_linestyle, uint2 &r_capstyle, uint2 &r_joinstyle) = 0;
 	virtual void setmiterlimit(real8 p_limit) = 0;
+	virtual void getmiterlimit(real8 &r_limit) = 0;
 	virtual void setgradient(MCGradientFill *p_gradient) = 0;
 
 	virtual void drawline(int2 x1, int2 y1, int2 x2, int2 y2) = 0;
 	virtual void drawlines(MCPoint *points, uint2 npoints, bool p_closed = false) = 0;
 	virtual void drawsegments(MCSegment *segments, uint2 nsegs) = 0;
 	virtual void drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontStruct *f, Boolean image, bool p_unicode_override = false) = 0;
-	virtual void drawrect(const MCRectangle& rect) = 0;
+	virtual void drawrect(const MCRectangle& rect, bool inside = false) = 0;
 	virtual void fillrect(const MCRectangle& rect) = 0;
 	virtual void fillrects(MCRectangle *rects, uint2 nrects) = 0;
 	virtual void fillpolygon(MCPoint *points, uint2 npoints) = 0;
-	virtual void drawroundrect(const MCRectangle& rect, uint2 radius) = 0;
+	virtual void drawroundrect(const MCRectangle& rect, uint2 radius, bool inside = false) = 0;
 	virtual void fillroundrect(const MCRectangle& rect, uint2 radius) = 0;
-	virtual void drawarc(const MCRectangle& rect, uint2 start, uint2 angle) = 0;
-	virtual void drawsegment(const MCRectangle& rect, uint2 start, uint2 angle) = 0;
+	virtual void drawarc(const MCRectangle& rect, uint2 start, uint2 angle, bool inside = false) = 0;
+	virtual void drawsegment(const MCRectangle& rect, uint2 start, uint2 angle, bool inside = false) = 0;
 	virtual void fillarc(const MCRectangle& rect, uint2 start, uint2 angle) = 0;
 
 	virtual void drawpath(MCPath *path) = 0;
@@ -180,12 +186,7 @@ public:
 	virtual void applywindowshape(MCWindowShape *p_mask, uint4 p_u_width, uint4 p_u_height) = 0;
 
 	virtual void drawtheme(MCThemeDrawType p_type, MCThemeDrawInfo* p_parameters) = 0;
-	virtual void copyarea(Drawable p_src, uint4 p_dx, uint4 p_dy, uint4 p_sx, uint4 p_sy, uint4 p_sw, uint4 p_sh) = 0;
 
-	virtual void combine(Pixmap p_src, int4 p_dx, int4 p_dy, int4 p_sx, int4 p_sy, uint4 p_sw, uint4 p_sh) = 0;
-
-	virtual MCBitmap *lock(void) = 0;
-	virtual void unlock(MCBitmap *p_bitmap) = 0;
 	
 	virtual MCRegionRef computemaskregion(void) = 0;
 	virtual void clear(const MCRectangle* rect) = 0;

@@ -187,6 +187,12 @@ bool MCSystemPutUrl(MCStringRef p_url, MCDataRef p_data, uint32_t p_length, MCSy
     return t_success;
 }
 
+// MW-2013-10-02: [[ MobileSSLVerify ]] Enable or disable SSL verification.
+void MCSystemSetUrlSSLVerification(bool enabled)
+{
+	MCAndroidEngineCall("setURLSSLVerification", "vb", nil, enabled);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCSystemLaunchUrl(MCStringRef p_url)

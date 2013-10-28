@@ -856,6 +856,18 @@ bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bo
 	return true;
 }
 
+
+// MERG-2013-08-18: Stubs for colorDialogColors. Possibly implement when color dialog moves to Cocoa
+void MCA_setcolordialogcolors(MCExecPoint& p_ep)
+{
+    
+}
+
+void MCA_getcolordialogcolors(MCExecPoint& p_ep)
+{
+	p_ep.clear();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // MM-2012-04-02: Added new MC*Window functions which wrap the corresponding cocoa/carbon window calls.
 //  If a NSWindow has been fetched for the given WinowdRef, the use the appropriate cocoa call.

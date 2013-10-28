@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "control.h"
 #include "imagebitmap.h"
+#include "graphics.h"
 
 #define MAG_WIDTH 8
 #define MAX_PLANES 8
@@ -37,13 +38,10 @@ typedef struct
 
 typedef struct
 {
-	uint1 *data;
-	uint2 width;
-	uint2 height;
-	uint2 bytes;
-	int2 xhot;
-	int2 yhot;
-} MCbrushmask;
+	MCGImageRef image;
+	int32_t xhot;
+	int32_t yhot;
+} MCBrush;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -85,13 +83,6 @@ bool MCImageDecodeXPM(IO_handle p_stream, MCImageBitmap *&r_bitmap);
 bool MCImageDecodeXWD(IO_handle stream, MCStringRef &r_name, MCImageBitmap *&r_bitmap);
 
 // Legacy Functions
-bool MCImageSplitPixmaps(MCImageBitmap *p_bitmap, Pixmap &r_drawdata, Pixmap &r_drawmask, MCBitmap *&r_maskimagealpha);
-bool MCImageMergePixmaps(uint16_t p_pixwidth, uint16_t p_pixheight, Pixmap p_drawdata, Pixmap p_drawmask, MCBitmap *p_maskimagealpha, MCImageBitmap *&r_bitmap);
-bool MCImageSplitRasters(MCImageBitmap *p_image, MCBitmap *&r_drawimage, MCBitmap *&r_maskimage, MCBitmap *&r_maskimagealpha);
-bool MCImagePixmapFromBitmap(MCBitmap *p_bitmap, uindex_t p_depth, Pixmap &r_pixmap);
-bool MCImageBitmapCreateWithOldBitmap(MCBitmap *p_old, MCImageBitmap *&r_new);
-void MCImageBitmapSetAlpha(MCImageBitmap *p_bitmap, MCBitmap *p_maskimagealpha);
-void MCImageBitmapSetAlphaFromMask(MCImageBitmap *p_bitmap, MCBitmap *p_maskimage);
 void MCImageBitmapSetAlphaValue(MCImageBitmap *p_bitmap, uint8_t p_alpha);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -135,26 +126,26 @@ bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCDataRef &r_data);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2013-07-30: [[ ResIndependence ]] support for retrieving the density-mapped file list
+struct MCImageScaledFile
+{
+	char *filename;
+	MCGFloat scale;
+};
+
+bool MCImageGetScaledFiles(MCStringRef p_filename, MCStack *p_stack, MCImageScaledFile *&r_list, uint32_t &r_count);
+void MCImageFreeScaledFileList(MCImageScaledFile *p_list, uint32_t p_count);
+
+////////////////////////////////////////////////////////////////////////////////
+
 #if defined(TARGET_PLATFORM_WINDOWS)
 bool MCImageBitmapToDIB(MCImageBitmap *p_bitmap, MCWinSysHandle &r_dib);
 bool MCImageBitmapToV5DIB(MCImageBitmap *p_bitmap, MCWinSysHandle &r_dib);
 bool MCImageBitmapToMetafile(MCImageBitmap *p_bitmap, MCWinSysMetafileHandle &r_metafile);
-
+bool MCImageBitmapToEnhancedMetafile(MCImageBitmap *p_bitmap, MCWinSysEnhMetafileHandle &r_metafile);
 #elif defined(TARGET_PLATFORM_MACOS_X)
 bool MCImageBitmapToPICT(MCImageBitmap *p_bitmap, MCMacSysPictHandle &r_pict);
 #endif
-
-////////////////////////////////////////////////////////////////////////////////
-
-// An ImageBuffer is a RGBA premultiplied representation of image data
-//
-struct MCImageBuffer
-{
-	int4 width;
-	int4 height;
-	int4 stride;
-	void *data;
-};
 
 #include "image_rep.h"
 
@@ -167,7 +158,7 @@ public:
 	// Image Rep interface
 	virtual MCImageRepType GetType() { return kMCImageRepMutable; }
 	virtual uindex_t GetFrameCount();
-	virtual bool LockImageFrame(uindex_t p_index, MCImageFrame *&r_frame);
+	virtual bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCImageFrame *&r_frame);
 	virtual void UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame);
 	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
 
@@ -201,16 +192,15 @@ public:
 	void startseldrag();
 	void endsel();
 
-	void put_brush(MCBitmap *image, int2 x, int2 y,
-	               uint2 maxwidth, uint2 maxheight, MCbrushmask *which);
-	void fill_line(MCBitmap *plane, int2 left, int2 right, int2 y);
+	void put_brush(int2 x, int2 y, MCBrush *which);
+	void fill_line(MCGRaster &plane, int2 left, int2 right, int2 y);
 	bool bucket_line(MCImageBitmap *simage, uint4 color,
 	                    int2 x, int2 y, int2 &l, int2 &r);
-	bool bucket_point(MCImageBitmap *simage, uint4 color, MCBitmap *dimage,
+	bool bucket_point(MCImageBitmap *simage, uint4 color, MCGRaster &dimage,
 	                     MCstacktype pstack[], uint2 &pstacktop,
 	                     uint2 &pstackptr, int2 xin, int2 yin, int2 direction,
 	                     int2 &xleftout, int2 &xrightout, bool &collide);
-	void bucket_fill(MCImageBitmap *simage, uint4 scolor, MCBitmap *dimage,
+	void bucket_fill(MCImageBitmap *simage, uint4 scolor, MCGRaster &dimage,
 	                 int2 xleft, int2 oldy);
 
 	MCRectangle drawbrush(Tool which);
@@ -222,10 +212,14 @@ public:
 	MCRectangle drawpencil();
 	MCRectangle drawrectangle();
 
-	void pattson(MCContext *ctxt, Boolean miter, uint2 depth);
-	void pattsoff(MCContext *ctxt, uint2 depth);
+	void fill_path(MCGPathRef p_path);
+	void stroke_path(MCGPathRef p_path);
+	void draw_path(MCGPathRef p_path);
+	void apply_stroke_style(MCGContextRef p_context, bool p_miter);
+	void apply_fill_paint(MCGContextRef p_context, MCPatternRef p_pattern, const MCColor &p_color);
+	void apply_stroke_paint(MCGContextRef p_context, MCPatternRef p_pattern, const MCColor &p_color);
+
 	void battson(MCContext *ctxt, uint2 depth);
-	void battsoff(MCContext *ctxt, uint2 depth);
 
 	void fillimage(const MCRectangle &drect);
 	void eraseimage(const MCRectangle &drect);
@@ -251,9 +245,11 @@ private:
 	MCImageFrame m_frame;
 
 	MCImageBitmap *m_bitmap;
+	MCImageBitmap *m_unpre_bitmap;
 	MCImageBitmap *m_selection_image;
 	MCImageBitmap *m_undo_image;
 	MCImageBitmap *m_rub_image;
+	MCGRaster m_draw_mask;
 
 	/* DUPE */ MCRectangle rect;
 
@@ -265,12 +261,6 @@ private:
 	/* DUPE */int16_t startx, starty;
 
 	static Boolean erasing;
-
-	static Pixmap editmask;
-	static Pixmap editdata;
-	static MCBitmap *editimage;
-	static MCBitmap *editmaskimage;
-	static MCBitmap *editmaskimagealpha;
 
 	static Tool oldtool;
 	static MCRectangle newrect;
@@ -303,18 +293,20 @@ class MCImage : public MCControl
 	friend class MCHcbmap;
 	
 	MCImageRep *m_rep;
-	MCTransformedImageRep *m_transformed;
 	MCImageFrame *m_locked_frame;
+	MCImageBitmap *m_transformed_bitmap;
 	uint32_t m_image_opened;
 
-	MCImageNeed *m_needs;
+	bool m_has_transform;
+	MCGAffineTransform m_transform;
+	// IM-2013-07-19: [[ ResIndependence ]] added scale factor for hi-res images
+	MCGFloat m_scale_factor;
 
-	bool m_have_control_colors;
-	MCColor *m_control_colors;
-	MCStringRef *m_control_color_names;
-	uint16_t m_control_color_count;
-	uint16_t m_control_color_flags;
+	MCImageNeed *m_needs;
 	
+	uint32_t m_current_width;
+	uint32_t m_current_height;
+
 	int2 xhot;
 	int2 yhot;
 	uint2 angle;
@@ -329,18 +321,32 @@ class MCImage : public MCControl
 	static MCObject *magtoredraw;
 
 	static Boolean filledborder;
-	static MCbrushmask brush;
-	static MCbrushmask spray;
-	static MCbrushmask eraser;
+	static MCBrush brush;
+	static MCBrush spray;
+	static MCBrush eraser;
 	static MCCursorRef cursor;
 	static MCCursorRef defaultcursor;
 	static uint2 cmasks[8];
 	
+public:
+	// replace the current image data with the new bitmap
+	// IM-2013-07-19: [[ ResIndependence ]] add scale param for hi-res images
+	bool setbitmap(MCImageBitmap *p_bitmap, MCGFloat p_scale, bool p_update_geometry = false);
+
+	// MW-2013-09-05: [[ Bug 11127 ]] These are used when saving / loading an image
+	//   they hold the control's colors, as the ones serialized in MCObject are the
+	//   image colors (for <= 8 color RLE images).
+	static bool s_have_control_colors;
+	static uint16_t s_control_color_count;
+	static MCColor *s_control_colors;
+	static MCStringRef *s_control_color_names;
+	static uint16_t s_control_pixmap_count;
+	static MCPatternInfo *s_control_pixmapids;
+	static uint16_t s_control_color_flags;
+	
 private:
 	void setrep(MCImageRep *p_rep);
 	
-	// replace the current image data with the new bitmap
-	bool setbitmap(MCImageBitmap *p_bitmap);
 	bool setcompressedbitmap(MCImageCompressedBitmap *p_compressed);
 	bool setfilename(MCStringRef p_filename);
 	bool setdata(void *p_data, uindex_t p_size);
@@ -408,6 +414,9 @@ public:
 
 	void resetimage();
 
+	void rotate_transform(int32_t p_angle);
+	void resize_transform();
+
 	void apply_transform();
 
 	uint8_t getresizequality()
@@ -421,11 +430,21 @@ public:
 	uint32_t getcompression();
 
 	// get the current (transformed) image data
-	bool lockbitmap(MCImageBitmap *&r_bitmap, bool p_update_transform = true);
+	bool lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_update_transform = true);
 	void unlockbitmap(MCImageBitmap *p_bitmap);
+	
+	// IM-2013-07-26: [[ ResIndependence ]] create bitmap copy of transformed image at the given scale
+	bool copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *&r_bitmap);
 
+	// IM-2013-07-19: [[ ResIndependence ]] get image source size (in points)
+	bool getsourcegeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight);
 	void getgeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight);
 
+	MCGFloat getscalefactor(void)
+	{
+		return m_scale_factor;
+	}
+	
 	void addneed(MCObject *p_object);
 
 	void endsel();
@@ -462,20 +481,17 @@ public:
 	void compute_gravity(MCRectangle &trect, int2 &xorigin, int2 &yorigin);
 	void compute_offset(MCRectangle &p_rect, int16_t &r_xoffset, int16_t &r_yoffset);
 	void crop(MCRectangle *newrect);
-	void rotate(uint32_t p_angle);
-	void resize();
 	void createbrush(Properties which);
 
-	static MCbrushmask *getbrush(Tool p_which);
+	static MCBrush *getbrush(Tool p_which);
 
 	MCCursorRef createcursor();
 	MCCursorRef getcursor(bool p_is_default = false);
-	void createpat(Pixmap &newpm, MCColor *&newcolors, uint2 &newncolors);
+	bool createpattern(MCPatternRef &r_pattern);
 	// in ifile.cc
 	Boolean noblack();
-	void compress(MCBitmap *dataimage, bool p_take_geometry = false, bool p_includes_alpha = false);
 	void recompress();
-	void decompressbrush(Pixmap &m, Pixmap &d, MCBitmap *&b);
+	bool decompressbrush(MCGImageRef &r_brush);
 	void openimage();
 	void closeimage();
 	void prepareimage();
@@ -498,10 +514,6 @@ public:
 #elif defined(_WINDOWS_DESKTOP)
 	MCWinSysIconHandle makeicon(uint4 p_width, uint4 p_height);
 	void converttodragimage(MCDataRef& r_output);
-#elif defined(_LINUX_DESKTOP)
-	Pixmap makewindowregion();
-#else
-	MCRegionRef makewindowregion(void);
 #endif
 
 	void set_gif(uint1 *data, uint4 length);

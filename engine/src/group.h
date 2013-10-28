@@ -42,6 +42,10 @@ class MCGroup : public MCControl
 	MCRectangle minrect;
 	uint2 number;
 	Boolean mgrabbed;
+	
+	// MERG-2013-06-02: [[ GrpLckUpdates ]] True if updates to bounding rect and
+	//   parents locked.
+    bool m_updates_locked : 1;
 
 	static uint2 labeloffset;
 	static MCPropertyInfo kProperties[];
@@ -178,6 +182,10 @@ public:
 	// MW-2012-03-01: [[ Bug 10045 ]] Clear the mfocus setting of the group without
 	//   dispatching any messages.
 	void clearmfocus(void);
+	
+	// MERG-2013-06-02: [[ GrpLckUpdates ]] Returns the update locking state of the
+	//   group.
+    bool islocked(void) { return m_updates_locked; }
 
 	MCGroup *next()
 	{

@@ -44,7 +44,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "scriptpt.h"
 #include "mcerror.h"
 #include "chunk.h"
-#include "pxmaplst.h"
 #include "util.h"
 #include "sellst.h"
 #include "redraw.h"
@@ -1727,7 +1726,7 @@ void MCObject::SetColor(MCExecContext& ctxt, int index, const MCInterfaceNamedCo
 		if (getpindex(index, j))
 		{
 			if (opened)
-				MCpatterns->freepat(pixmaps[j]);
+				MCpatternlist->freepat(patterns[j].pattern);
 			destroypindex(index, j);
 		}
 		if (opened)
@@ -1979,7 +1978,7 @@ void MCObject::SetColors(MCExecContext& ctxt, MCStringRef p_input)
 				if (getpindex(index, j))
 				{
 					if (opened)
-						MCpatterns->freepat(pixmaps[j]);
+						MCpatternlist->freepat(patterns[j].pattern);
 					destroypindex(index, j);
 				}
 				if (!getcindex(index, i))
@@ -2041,13 +2040,14 @@ void MCObject::GetEffectiveColors(MCExecContext& ctxt, MCStringRef& r_colors)
 
 bool MCObject::GetPattern(MCExecContext& ctxt, Properties which, bool effective, uint4& r_pattern)
 {
+
 	uint2 i;
 	if (getpindex(which - P_FORE_PATTERN, i))
 	{
-		if (pixmapids[i] < PI_END && pixmapids[i] > PI_PATTERNS)
-			r_pattern = pixmapids[i] - PI_PATTERNS;
+		if (patterns[i].id < PI_END && patterns[i].id > PI_PATTERNS)
+			r_pattern = patterns[i].id - PI_PATTERNS;
 		else
-			r_pattern = pixmapids[i];
+			r_pattern = patterns[i].id;
 		return true;
 	}
 	else
@@ -2069,7 +2069,7 @@ void MCObject::SetPattern(MCExecContext& ctxt, uint2 p_new_pixmap, uint4* p_new_
 		if (getpindex(p_new_pixmap, i))
 		{
 			if (t_isopened)
-				MCpatterns->freepat(pixmaps[i]);
+				MCpatternlist->freepat(patterns[i].pattern);
 			destroypindex(p_new_pixmap, i);
 		}
 	}
@@ -2079,12 +2079,12 @@ void MCObject::SetPattern(MCExecContext& ctxt, uint2 p_new_pixmap, uint4* p_new_
 			i = createpindex(p_new_pixmap);
 		else
 			if (t_isopened)
-				MCpatterns->freepat(pixmaps[i]);
+				MCpatternlist->freepat(patterns[i].pattern);
 		if (*p_new_id < PI_PATTERNS)
 			*p_new_id += PI_PATTERNS;
-		pixmapids[i] = *p_new_id;
+		patterns[i].id = *p_new_id;
 		if (t_isopened)
-			pixmaps[i] = MCpatterns->allocpat(pixmapids[i], this);
+			patterns[i].pattern = MCpatternlist->allocpat(patterns[i].id, this);
 		if (getcindex(p_new_pixmap, i))
 			destroycindex(p_new_pixmap, i);
 	}

@@ -53,6 +53,7 @@ bool MCImageCopyBitmapRegion(MCImageBitmap *p_bitmap, MCRectangle &p_region, MCI
 void MCImageBitmapClear(MCImageBitmap *p_bitmap);
 void MCImageBitmapClearRegion(MCImageBitmap *p_bitmap, MCRectangle p_region);
 void MCImageBitmapSet(MCImageBitmap *p_bitmap, uint32_t p_pixel_value);
+void MCImageBitmapCopyRegionToBitmap(MCImageBitmap *p_src, MCImageBitmap *p_dst, int32_t sx, int32_t sy, int32_t dx, int32_t dy, uint32_t sw, uint32_t sh);
 void MCImageBitmapCopyRegionToBitmap(MCImageBitmap *p_dst, MCImageBitmap *p_src, MCPoint p_dst_offset, MCRectangle p_src_rect);
 void MCImageBitmapCopyRegionToBuffer(MCImageBitmap *p_bitmap, int32_t p_sx, int32_t p_sy, int32_t p_sw, int32_t p_sh, uindex_t p_buffer_stride, uint8_t *p_buffer);
 void MCImageBitmapCopyRegionFromBuffer(MCImageBitmap *p_bitmap, MCRectangle &p_region, const uint8_t *p_buffer, uindex_t p_buffer_stride);
@@ -67,6 +68,7 @@ void MCImageBitmapPremultiply(MCImageBitmap *p_bitmap);
 void MCImageBitmapPremultiplyRegion(MCImageBitmap *p_bitmap, int32_t p_sx, int32_t p_sy, int32_t p_sw, int32_t p_sh, uint32_t p_pixel_stride, uint32_t *p_pixel_ptr);
 void MCImageBitmapUnpremultiply(MCImageBitmap *p_bitmap);
 void MCImageBitmapUnpremultiplyChecking(MCImageBitmap *p_bitmap);
+void MCImageBitmapFixPremultiplied(MCImageBitmap *p_bitmap);
 
 //////////
 
@@ -82,6 +84,10 @@ bool MCImageConvertIndexedToBitmap(MCImageIndexedBitmap *p_indexed, MCImageBitma
 bool MCImageConvertBitmapToIndexed(MCImageBitmap *p_bitmap, bool p_ignore_transparent, MCImageIndexedBitmap *&r_indexed);
 bool MCImageForceBitmapToIndexed(MCImageBitmap *p_bitmap, bool p_dither, MCImageIndexedBitmap *&r_indexed);
 
+//////////
+
+void MCImageBitmapExtractMask(MCImageBitmap *p_bitmap, void *p_mask, uint32_t p_mask_stride, uint8_t p_threshold);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct MCImageFrame
@@ -91,6 +97,13 @@ struct MCImageFrame
 };
 
 void MCImageFreeFrames(MCImageFrame *p_frames, uindex_t p_count);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// MW-2013-05-04: Methods to determine the type of potential image data.
+bool MCImageDataIsJPEG(MCDataRef p_data);
+bool MCImageDataIsPNG(MCDataRef p_data);
+bool MCImageDataIsGIF(MCDataRef p_data);
 
 ////////////////////////////////////////////////////////////////////////////////
 

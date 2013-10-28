@@ -1,0 +1,1 @@
+# 'filter' does not honour the lineDelimiter property.

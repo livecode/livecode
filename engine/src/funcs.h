@@ -1410,6 +1410,34 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalPlatformMethodInfo; }
 };
 
+// JS-2013-06-19: [[ StatsFunctions ]] Definition of populationStdDev
+class MCPopulationStdDev : public MCFunction
+{
+	MCParameter *params;
+public:
+	MCPopulationStdDev()
+	{
+		params = NULL;
+	}
+	virtual ~MCPopulationStdDev();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
+// JS-2013-06-19: [[ StatsFunctions ]] Definition of populationVariance
+class MCPopulationVariance : public MCFunction
+{
+	MCParameter *params;
+public:
+	MCPopulationVariance()
+	{
+		params = NULL;
+	}
+	virtual ~MCPopulationVariance();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
 class MCProcessor : public MCConstantFunction
 {
 public:
@@ -2204,6 +2232,20 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
+// JS-2013-06-19: [[ StatsFunctions ]] Definition of arithmeticMean
+class MCArithmeticMean : public MCFunction
+{
+	MCParameter *params;
+public:
+	MCArithmeticMean()
+	{
+		params = NULL;
+	}
+	virtual ~MCArithmeticMean();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
 class MCAsin : public MCUnaryFunction
 {
 	MCExpression *source;
@@ -2251,15 +2293,16 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCAverage : public MCFunction
+// JS-2013-06-19: [[ StatsFunctions ]] Definition of averageDev (was average)
+class MCAvgDev : public MCFunction
 {
 	MCParameter *params;
 public:
-	MCAverage()
+	MCAvgDev()
 	{
 		params = NULL;
 	}
-	virtual ~MCAverage();
+	virtual ~MCAvgDev();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual Exec_stat eval(MCExecPoint &);
 
@@ -2360,6 +2403,34 @@ public:
 
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalExp10MethodInfo; }
 	virtual MCExpression *getmethodarg(void) const { return source; }
+};
+
+// JS-2013-06-19: [[ StatsFunctions ]] Definition of geometricMean
+class MCGeometricMean : public MCFunction
+{
+	MCParameter *params;
+public:
+	MCGeometricMean()
+	{
+		params = NULL;
+	}
+	virtual ~MCGeometricMean();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
+// JS-2013-06-19: [[ StatsFunctions ]] Definition of harmonicMean
+class MCHarmonicMean : public MCFunction
+{
+	MCParameter *params;
+public:
+	MCHarmonicMean()
+	{
+		params = NULL;
+	}
+	virtual ~MCHarmonicMean();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
 };
 
 class MCLn : public MCUnaryFunction
@@ -2569,6 +2640,34 @@ public:
 	virtual MCExpression *getmethodarg(void) const { return source; }
 };
 
+// JS-2013-06-19: [[ StatsFunctions ]] Definition of sampleStdDev (was stdDev)
+class MCSampleStdDev : public MCFunction
+{
+	MCParameter *params;
+public:
+	MCSampleStdDev()
+	{
+		params = NULL;
+	}
+	virtual ~MCSampleStdDev();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
+// JS-2013-06-19: [[ StatsFunctions ]] Definition of sampleVariance
+class MCSampleVariance : public MCFunction
+{
+	MCParameter *params;
+public:
+	MCSampleVariance()
+	{
+		params = NULL;
+	}
+	virtual ~MCSampleVariance();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
 class MCSqrt : public MCUnaryFunction
 {
 	MCExpression *source;
@@ -2757,6 +2856,49 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return is_screen ? kMCInterfaceEvalControlAtScreenLocMethodInfo : kMCInterfaceEvalControlAtLocMethodInfo; }
 	virtual MCExpression *getmethodarg(void) const { return location; }
 };
+
+// MW-20113-05-08: [[ Uuid ]] The uuid generation function.
+class MCUuidFunc: public MCFunction
+{
+	MCExpression *type;
+	MCExpression *namespace_id;
+	MCExpression *name;
+	
+public:
+	MCUuidFunc(void)
+	{
+		type = nil;
+		namespace_id = nil;
+		name = nil;
+	}
+	
+	virtual ~MCUuidFunc(void);
+	virtual Parse_stat parse(MCScriptPoint &sp, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &ep);
+};
+
+// MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
+class MCMeasureText: public MCFunction
+{
+    MCChunk *m_object;
+    MCExpression *m_text;
+    MCExpression *m_mode;
+    bool m_is_unicode;
+    
+public:
+    MCMeasureText(bool p_is_unicode)
+    {
+        m_object = nil;
+        m_text = nil;
+        m_mode = nil;
+        m_is_unicode = p_is_unicode;
+    }
+    
+    virtual ~MCMeasureText(void);
+	virtual Parse_stat parse(MCScriptPoint &sp, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &ep);
+};
+
 
 #endif
 

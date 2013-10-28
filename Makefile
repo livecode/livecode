@@ -2,7 +2,7 @@
 # Engine Targets
 
 .PHONY: libopenssl liburlcache libstubs libfoundation
-.PHONY: libexternal libexternalv1 libz libjpeg libpcre libpng libplugin libcore
+.PHONY: libexternal libexternalv1 libz libjpeg libpcre libpng libplugin libcore libgraphics libskia
 .PHONY: revsecurity libgif
 .PHONY: kernel development standalone webruntime webplugin webplayer server
 .PHONY: kernel-standalone kernel-development kernel-server
@@ -32,13 +32,23 @@ libgif:
 libopenssl:
 	$(MAKE) -C ./thirdparty/libopenssl libopenssl
 
+libskia:
+	$(MAKE) -C ./thirdparty/libskia libskia
+
 libcore:
 	$(MAKE) -C ./libcore libcore
 
 libfoundation:
 	$(MAKE) -C ./libfoundation libfoundation
 
-kernel: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore
+revsecurity:
+	$(MAKE) -C ./thirdparty/libopenssl -f Makefile.revsecurity revsecurity
+	
+libgraphics: libskia
+	$(MAKE) -C ./libgraphics libgraphics
+
+kernel: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore libgraphics
+
 	$(MAKE) -C ./engine -f Makefile.kernel libkernel
 	
 kernel-standalone: kernel
@@ -50,13 +60,14 @@ kernel-development: kernel
 kernel-server:
 	$(MAKE) -C ./engine -f Makefile.kernel-server libkernel-server
 
-development: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation kernel kernel-development
+development: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation kernel kernel-development revsecurity
 	$(MAKE) -C ./engine -f Makefile.development engine-community
 
-standalone: libz libgif libjpeg libpcre libpng libopenssl libfoundation kernel revsecurity kernel-standalone
+standalone: libz libgif libjpeg libpcre libpng libopenssl libfoundation kernel revsecurity kernel-standalone revsecurity
 	$(MAKE) -C ./engine -f Makefile.standalone standalone-community
 
-installer: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation kernel
+installer: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation kernel revsecurity
+
 	$(MAKE) -C ./engine -f Makefile.installer installer
 
 server: libz libgif  libjpeg libpcre libpng libopenssl libexternal libfoundation kernel kernel-server revsecurity
@@ -70,7 +81,7 @@ server: libz libgif  libjpeg libpcre libpng libopenssl libexternal libfoundation
 libcairopdf:
 	$(MAKE) -C ./thirdparty/libcairo libcairopdf
 
-revpdfprinter: libcairopdf
+revpdfprinter: libcairopdf libcore
 	$(MAKE) -C ./revpdfprinter revpdfprinter
 
 ###############################################################################
@@ -97,7 +108,7 @@ libiodbc:
 dbpostgresql: libpq
 	$(MAKE) -C ./revdb dbpostgresql
 
-dbmysql: libmysql libz
+dbmysql: libmysql libz libopenssl
 	$(MAKE) -C ./revdb dbmysql
 
 dbsqlite: libsqlite libexternal
@@ -131,15 +142,18 @@ server-revdb: libexternal
 ###############################################################################
 # revXML Targets
 
-.PHONY: libxml revxml server-revxml
+.PHONY: libxml libxslt revxml server-revxml
 
 libxml:
 	$(MAKE) -C ./thirdparty/libxml libxml
 
-revxml: libxml libexternal
+libxslt:
+	$(MAKE) -C ./thirdparty/libxslt libxslt
+
+revxml: libxml libxslt libexternal
 	$(MAKE) -C ./revxml revxml
 
-server-revxml: libxml libexternal
+server-revxml: libxml libxslt libexternal
 	$(MAKE) -C ./revxml server-revxml
 
 ###############################################################################
@@ -168,6 +182,7 @@ revandroid: libexternalv1
 # All Targets
 
 .PHONY: all clean
+.DEFAULT_GOAL := all
 
 all: revzip server-revzip
 all: revxml server-revxml
@@ -175,4 +190,6 @@ all: revpdfprinter revandroid
 all: revdb dbodbc dbsqlite dbmysql dbpostgresql
 all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
 all: development standalone installer server
-	#
+
+clean:
+	@rm -r _build/linux _cache/linux

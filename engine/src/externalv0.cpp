@@ -205,7 +205,10 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
 
 		while (p_parameters != NULL)
 		{
-			if (p_parameters->eval(ep) != ES_NORMAL)
+			// MW-2013-06-20: [[ Bug 10961 ]] Make sure we evaluate the parameter as an
+			//   argument. This takes the value from the variable (by-ref), or built-in
+			//   value (by-value).
+			if (p_parameters->eval_argument(ep) != ES_NORMAL)
 				return ES_ERROR;
 			MCU_realloc((char **)&args, nargs, nargs + 1, sizeof(char *));
 			args[nargs++] = ep.getsvalue().clone();

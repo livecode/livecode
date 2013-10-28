@@ -276,12 +276,18 @@ static bool MCS_geturl_callback(void *p_context, MCSystemUrlStatus p_status, con
 
 void MCS_geturl(MCObject *p_target, MCStringRef p_url)
 {
+	MCAutoStringRef t_processed_url;
+	
+	// IM-2013-07-30: [[ Bug 10800 ]] strip whitespace chars from url before attempting to fetch
+	if (!MCSystemProcessUrl(p_url, kMCSystemUrlOperationStrip, &t_processed_url))
+		return;
+	
 	MCSGetUrlState t_state;
-	t_state . url = strclone(MCStringGetCString(p_url));
+	t_state . url = strclone(MCStringGetCString(*t_processed_url));
 	t_state . status = kMCSystemUrlStatusNone;
 	t_state . object = p_target -> gethandle();
 	
-	if (!MCSystemLoadUrl(p_url, MCS_geturl_callback, &t_state))
+	if (!MCSystemLoadUrl(*t_processed_url, MCS_geturl_callback, &t_state))
 	{
 		t_state . object -> Release();
 		return;
@@ -765,6 +771,13 @@ void MCS_unloadurl(MCObject *p_object, MCStringRef p_url)
 	MCresult -> sets("not implemented");
 }
 
+//////////
+
+void MCS_seturlsslverification(bool p_enabled)
+{
+	MCSystemSetUrlSSLVerification(p_enabled);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -894,6 +907,18 @@ bool MCA_color(MCStringRef title, MCColor initial_color, bool as_sheet, bool& r_
 {
 	return true;
 }
+
+// MERG-2013-08-18: Stubs for colorDialogColors.
+void MCA_setcolordialogcolors(MCExecPoint& p_ep)
+{
+    
+}
+
+void MCA_getcolordialogcolors(MCExecPoint& p_ep)
+{
+	p_ep.clear();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -1406,6 +1406,7 @@ bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP& r_bi
 
 void MCGDIContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy)
 {
+#ifdef LIBGRAPHICS_BROKEN
 	HBITMAP t_bitmap;
 	void *t_bits;
 	HDC t_src_dc, t_dst_dc;
@@ -1499,6 +1500,7 @@ void MCGDIContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy,
 	SelectObject(t_dst_dc, t_old_dst);
 
 	DeleteObject(t_bitmap);
+#endif
 }
 
 int4 MCGDIContext::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override)

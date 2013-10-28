@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
+#include "osspec.h"
 #include "dispatch.h"
 #include "image.h"
 #include "stack.h"
@@ -30,14 +31,24 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "notify.h"
 
 #include "osxdc.h"
-#include "osxcontext.h"
 #include "osxprinter.h"
+#include "securemode.h"
+#include "mcerror.h"
+
+#include "graphicscontext.h"
+#include "graphics_util.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
 extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true);
 
 ///////////////////////////////////////////////////////////////////////////////
+
+// IM-2013-08-01: [[ ResIndependence ]] OSX implementation currently returns 1.0
+MCGFloat MCResGetDeviceScale(void)
+{
+	return 1.0;
+}
 
 MCScreenDC::MCScreenDC()
 {
@@ -134,116 +145,169 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 	return false;
 }
 
-extern int4 OSX_DrawUnicodeText(int2 x, int2 y, const void *p_text, uint4 p_text_byte_length, MCFontStruct *f, bool p_fill_background, bool p_measure_only = false);
 
-int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override)
+///////////////////////////////////////////////////////////////////////////////
+
+// TD-2013-07-01 [[ DynamicFonts ]]
+bool MCScreenDC::loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle)
+{	
+	FSRef t_ref;
+    FSSpec t_fsspec;
+	OSErr t_os_error;
+	
+	t_os_error = MCS_mac_pathtoref(p_path, t_ref); // resolves and converts to UTF8.
+	if (t_os_error != noErr)
+		return false;
+    
+    t_os_error = MCS_fsref_to_fsspec(&t_ref, &t_fsspec);
+    if (t_os_error != noErr)
+		return false;
+    
+    ATSFontContext t_context = kATSFontContextLocal;
+    if (p_globally)
+        t_context = kATSFontContextGlobal;
+    
+    ATSFontContainerRef t_container = NULL;
+    
+    // Note: ATSFontActivateFromFileReference should be used from 10.5 onward.
+    //       ATSFontActivateFromFileSpecification deprecated in 10.5.
+    t_os_error = ATSFontActivateFromFileSpecification(&t_fsspec, t_context, kATSFontFormatUnspecified, NULL, kATSOptionFlagsDefault, &t_container);
+    if (t_os_error != noErr)
+        return false;
+    
+    r_loaded_font_handle = (void *)t_container;
+    
+    return true;
+}
+
+
+bool MCScreenDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle)
 {
-	if (len == 0)
-		return 0;
-	if (f->unicode || p_unicode_override)
+    OSStatus t_status;
+    t_status = ATSFontDeactivate((ATSFontContainerRef)r_loaded_font_handle, NULL, kATSOptionFlagsDefault);
+    
+    return (t_status == noErr);
+}
+
+// MM-2013-08-16: [[ RefactorGraphics ]] Refactored from previous ATSUI drawing method.
+//	If context is NULL, the bounds of the text is calculated. Otherwise, the text is rendered into the context at the given location.
+static bool drawtexttocgcontext(int2 x, int2 y, const void *p_text, uint4 p_length, MCFontStruct *p_font, CGContextRef p_cg_context, MCRectangle& r_bounds)
+{	
+	OSStatus t_err;
+	t_err = noErr;	
+	
+	ATSUFontID t_font_id;
+	Fixed t_font_size;
+	t_font_size = p_font -> size << 16;	
+	
+	ATSUAttributeTag t_tags[] =
 	{
-		if (MCmajorosversion >= 0x1050)
+		kATSUFontTag,
+		kATSUSizeTag,
+	};
+	ByteCount t_sizes[] =
+	{
+		sizeof(ATSUFontID),
+		sizeof(Fixed),
+	};
+	ATSUAttributeValuePtr t_attrs[] =
+	{
+		&t_font_id,
+		&t_font_size,
+	};	
+	
+	ATSLineLayoutOptions t_layout_options;
+	ATSUAttributeTag t_layout_tags[] =
+	{
+		kATSULineLayoutOptionsTag,
+		kATSUCGContextTag,
+	};
+	ByteCount t_layout_sizes[] =
+	{
+		sizeof(ATSLineLayoutOptions),
+		sizeof(CGContextRef),
+	};
+	ATSUAttributeValuePtr t_layout_attrs[] =
+	{
+		&t_layout_options,
+		&p_cg_context,
+	};	
+	
+	if (t_err == noErr)
+		t_err = ATSUFONDtoFontID((short)(intptr_t)p_font -> fid, p_font -> style, &t_font_id);
+	
+	ATSUStyle t_style;
+	t_style = nil;
+	if (t_err == noErr)
+		t_err = ATSUCreateStyle(&t_style);
+	if (t_err == noErr)
+		t_err = ATSUSetAttributes(t_style, sizeof(t_tags) / sizeof(ATSUAttributeTag), t_tags, t_sizes, t_attrs);
+	
+	ATSUTextLayout t_layout;
+	t_layout = nil;
+	if (t_err == noErr)
+	{
+		UniCharCount t_run;
+		t_run = p_length / 2;
+		t_err = ATSUCreateTextLayoutWithTextPtr((const UniChar *)p_text, 0, p_length / 2, p_length / 2, 1, &t_run, &t_style, &t_layout);
+	}
+	if (t_err == noErr)
+		t_err = ATSUSetTransientFontMatching(t_layout, true);
+	if (t_err == noErr)
+	{
+		t_layout_options = kATSLineUseDeviceMetrics | kATSLineFractDisable;
+		t_err = ATSUSetLayoutControls(t_layout, sizeof(t_layout_tags) / sizeof(ATSUAttributeTag), t_layout_tags, t_layout_sizes, t_layout_attrs);
+	}	
+	
+	MCRectangle t_bounds;
+	if (p_cg_context == nil)
+	{
+		ATSUTextMeasurement t_before, t_after, t_ascent, t_descent;
+		if (t_err == noErr)
+			t_err = ATSUGetUnjustifiedBounds(t_layout, 0, p_length / 2, &t_before, &t_after, &t_ascent, &t_descent);
+		
+		if (t_err == noErr)
 		{
-			return OSX_DrawUnicodeText(0, 0, s, len, f, false, true);
-		}
-		else
-		{
-			int4 fwidth;
-			short oldfid = GetPortTextFont(GetQDGlobalsThePort());
-			short oldsize = GetPortTextSize(GetQDGlobalsThePort());
-			short oldstyle = GetPortTextFace(GetQDGlobalsThePort());
-			TextFont((short)(intptr_t)f->fid);
-			TextSize(f->size);
-			TextFace(f->style);
-
-
-			SInt16  baseline;
-			CFStringRef cfstring;
-
-			char *tempbuffer = NULL;
-
-
-			if (len)
-			{
-				uint2 *testchar = (uint2 *)s;
-				if (testchar[(len - 2 )>> 1] == 12398)
-				{
-					tempbuffer = new char[len+2];
-					memcpy(tempbuffer,s,len);
-					uint2 *tchar = (uint2 *)&tempbuffer[len];
-					*tchar = 0;
-				}
-			}
-
-			cfstring = CFStringCreateWithCharactersNoCopy(NULL, (UniChar *)(tempbuffer != NULL? tempbuffer : s), (tempbuffer != NULL? len + 2:len) >> 1,
-					   kCFAllocatorNull);
-			Point dimensions = {0, 0};
-			GetThemeTextDimensions(cfstring, kThemeCurrentPortFont, kThemeStateActive, false, &dimensions, &baseline);
-			fwidth = dimensions.h;
-			CFRelease(cfstring);
-			if (tempbuffer)
-				delete tempbuffer;
-
-			TextFont(oldfid);
-			TextSize(oldsize);
-			TextFace(oldstyle);
-			return fwidth;
+			t_ascent = (t_ascent + 0xffff) >> 16;
+			t_descent = (t_descent + 0xffff) >> 16;
+			t_after = (t_after + 0xffff) >> 16;
+			
+			t_bounds . x = x;
+			t_bounds . y = y - p_font -> ascent;
+			t_bounds . width = t_after;
+			t_bounds . height = t_descent + t_ascent;
+			
+			r_bounds = t_bounds;
 		}
 	}
-	else
-	{
-		// MW-2012-09-21: [[ Bug 3884 ]] If the font is wide, measure using OS routine.
-		if (f -> wide)
-		{
-			int4 fwidth;
-			short oldfid = GetPortTextFont(GetQDGlobalsThePort());
-			short oldsize = GetPortTextSize(GetQDGlobalsThePort());
-			short oldstyle = GetPortTextFace(GetQDGlobalsThePort());
-			TextFont((short)(intptr_t)f->fid);
-			TextSize(f->size);
-			TextFace(f->style);
-
-			fwidth = TextWidth(s, 0, len);
-
-			TextFont(oldfid);
-			TextSize(oldsize);
-			TextFace(oldstyle);
-			return fwidth;
-		}
-		else
-		{
-            int4 iwidth = 0;
-            while (len--)
-            {
-                iwidth += f->widths[(uint1)*s++];
-                
-            }
-            return iwidth;
-        }
-    }
+	
+	if (t_err == noErr)
+		if (p_cg_context != nil)
+			t_err = ATSUDrawText(t_layout, 0, p_length / 2, x << 16, y << 16);
+	
+	if (t_layout != nil)
+		ATSUDisposeTextLayout(t_layout);
+	if (t_style != nil)
+		ATSUDisposeStyle(t_style);
+	
+	return t_err == noErr;
 }
 
-MCContext *MCScreenDC::createcontext(Drawable p_drawable, MCBitmap *p_alpha)
+// MM-2013-08-30: [[ RefactorGraphics ]] Move text measuring to libgraphics.
+int4 MCScreenDC::textwidth(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override)
 {
-	MCQuickDrawContext *t_context;
-	t_context = MCQuickDrawContext::create_with_port(p_drawable -> type == DC_WINDOW ? GetWindowPort((WindowPtr)p_drawable -> handle . window) : (CGrafPtr)p_drawable -> handle . pixmap, false, true);
-	t_context -> setexternalalpha(p_alpha);
-	return t_context;
-}
-
-MCContext *MCScreenDC::createcontext(Drawable p_drawable, bool p_alpha, bool p_transient)
-{
-	return MCQuickDrawContext::create_with_port(p_drawable -> type == DC_WINDOW ? GetWindowPort((WindowPtr)p_drawable -> handle . window) : (CGrafPtr)p_drawable -> handle . pixmap, p_transient, p_alpha);
-}
-
-MCContext *MCScreenDC::creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient)
-{
-	return MCQuickDrawContext::create_with_parameters(p_width, p_height, p_transient, p_alpha);
-}
-
-void MCScreenDC::freecontext(MCContext *p_context)
-{
-	delete p_context;
+	if (p_length == 0 || p_text == NULL)
+		return 0;
+	
+    MCGFont t_font;
+	t_font = MCFontStructToMCGFont(p_font);
+	
+	MCExecPoint ep;
+	ep . setsvalue(MCString(p_text, p_length));
+	if (!p_font -> unicode && !p_unicode_override)
+		ep . nativetoutf16();
+	
+	return MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -277,7 +341,7 @@ MCPrinter *MCScreenDC::createprinter(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCStack *MCScreenDC::getstackatpoint(int32_t x, int32_t y)
+MCStack *MCScreenDC::device_getstackatpoint(int32_t x, int32_t y)
 {
 	Point t_location;
 	t_location . h = x;
