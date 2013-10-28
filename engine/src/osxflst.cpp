@@ -74,6 +74,7 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 	
 	/* UNCHECKED */ MCStringConvertToCString(MCNameGetString(fname), temp);
 	tmpname = strclone(temp);//make a copy of the font name
+
 	StringPtr reqnamePascal = c2pstr(tmpname);
 	
 	// MW-2005-05-10: Update this call to FM rountines
@@ -240,7 +241,10 @@ bool MCFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
 bool MCFontlist::getfontsizes(MCStringRef p_fname, MCListRef& r_sizes)
 {
 	FMFontFamily ffamilyID;
-	/* UNCHECKED */ char *tmpname = strclone(MCStringGetCString(p_fname));
+    char *t_fname;
+    /* UNCHECKED */ MCStringConvertToCString(p_fname, t_fname);
+	/* UNCHECKED */ char *tmpname = strclone(t_fname);
+    delete t_fname;
 	StringPtr reqnamePascal = c2pstr((char *)tmpname);
 	// MW-2005-05-10: Update this call to FM rountines
 	ffamilyID = FMGetFontFamilyFromName(reqnamePascal);

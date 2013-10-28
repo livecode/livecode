@@ -2978,35 +2978,26 @@ bool MCStack::resolve_filename(MCStringRef filename, MCStringRef& r_resolved)
 		}
 		if (!MCStringIsEmpty(t_stack_filename))
 		{
-			const char *t_last_separator;
-			t_last_separator = strrchr(MCStringGetCString(t_stack_filename), '/');
-			if (t_last_separator != NULL)
-			{
-				char *t_filename;
-				t_filename = new char[MCStringGetLength(t_stack_filename) + MCStringGetLength(filename) + 2];
-				strcpy(t_filename, MCStringGetCString(t_stack_filename));
-
-				// If the relative path begins with "./" or ".\", we must remove this, otherwise
+            uindex_t t_slash;
+            if (MCStringLastIndexOfChar(t_stack_filename, '/', 0, kMCCompareExact, t_slash))
+            {
+                MCAutoStringRef t_new_filename;
+                MCStringCreateMutable(0, &t_new_filename);
+                /* UNCHECKED */ MCStringAppendSubstring(*t_new_filename, t_stack_filename, MCRangeMake(0, t_slash + 1));
+                
+                // If the relative path begins with "./" or ".\", we must remove this, otherwise
 				// certain system calls will get confused by the path.
-				const char *t_leaf;
-				if (MCStringGetNativeCharAtIndex(filename, 0) == '.' && (MCStringGetNativeCharAtIndex(filename, 1) == '/' || MCStringGetNativeCharAtIndex(filename, 1) == '\\'))
-					t_leaf = MCStringGetCString(filename) + 2;
+                if (MCStringGetNativeCharAtIndex(filename, 0) == '.' && (MCStringGetNativeCharAtIndex(filename, 1) == '/' || MCStringGetNativeCharAtIndex(filename, 1) == '\\'))
+                    /* UNCHECKED */ MCStringAppendSubstring(*t_new_filename, filename, MCRangeMake(2, MCStringGetLength(filename) - 2));
 				else
-					t_leaf = MCStringGetCString(filename);
-
-				strcpy(t_filename + (t_last_separator - MCStringGetCString(t_stack_filename) + 1), t_leaf);
-
-				MCAutoStringRef t_filename_string;
-				/* UNCHECKED */ MCStringCreateWithCString(t_filename, &t_filename_string);
-
-				if (MCS_exists(*t_filename_string, True))
+                    /* UNCHECKED */ MCStringAppend(*t_new_filename, filename);
+                
+                if (MCS_exists(*t_new_filename, True))
 				{
-					r_resolved = MCValueRetain(*t_filename_string);
+					r_resolved = MCValueRetain(*t_new_filename);
 					return true;
 				}
-				
-				delete t_filename;
-			}
+            }
 		}
 	}
 	r_resolved = MCValueRetain(filename);

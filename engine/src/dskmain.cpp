@@ -150,6 +150,9 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 
 	if (MCModeIsExecutableFirstArgument())
 		create_var(argv[0]);
+    
+    MCAutoStringRefAsUTF8String t_utf8_mccmd;
+    /* UNCHECKED */ t_utf8_mccmd . Lock(MCcmd);
 
 	for (int i = 1; i < argc; i++)
 	{
@@ -158,7 +161,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 		{
 			if (++i >= argc || MCStringGetCharAtIndex(argv[i], 0) == '-')
 			{
-				fprintf(stderr, "%s: bad display name\n", MCStringGetCString(MCcmd));
+				fprintf(stderr, "%s: bad display name\n", *t_utf8_mccmd);
 				return False;
 			}
 			MCdisplayname = strclone((const char *)MCStringGetNativeCharPtr(argv[i]));
@@ -180,7 +183,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 			char *geometry = NULL;
 			if (++i >= argc)
 			{
-				fprintf(stderr, "%s: bad geometry\n", MCStringGetCString(MCcmd));
+				fprintf(stderr, "%s: bad geometry\n", *t_utf8_mccmd);
 				return False;
 			}
 			geometry = strclone((const char *)MCStringGetNativeCharPtr(argv[i]));
@@ -242,7 +245,8 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 			uint4 visualid = 0;
 			if (++i >= argc || MCStringGetCharAtIndex(argv[i], 0) == '-' || !MCU_stoui4(argv[i], visualid))
 			{
-				fprintf(stderr, "%s: bad visual id\n", MCStringGetCString(MCcmd));
+				fprintf(stderr, "%s: bad visual id\n", *t_utf8_mccmd
+                        );
 				return False;
 			}
 			MCvisualid = visualid;

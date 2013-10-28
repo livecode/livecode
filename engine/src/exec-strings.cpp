@@ -661,8 +661,10 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 					ctxt.LegacyThrow(EE_FORMAT_BADSOURCE, t_value);
 					return;
 				}
-
-				t_success = MCStringAppendFormat(*t_result, newFormat, MCStringGetCString(*t_string));
+                char *temp;
+                /* UNCHECKED */ MCStringConvertToCString(*t_string, temp);
+				t_success = MCStringAppendFormat(*t_result, newFormat, temp);
+                    delete temp;
 				break;
 			}
 		}
@@ -1292,7 +1294,10 @@ bool match(const char *s, uindex_t s_length, const char *p, uindex_t p_length, b
 
 bool MCStringsExecFilterMatch(MCStringRef p_source, MCStringRef p_pattern, MCStringOptions p_options)
 {
-	return match(MCStringGetCString(p_source), MCStringGetLength(p_source), MCStringGetCString(p_pattern), MCStringGetLength(p_pattern), p_options != kMCCompareCaseless); 
+    char *t_source, *t_pattern;
+    /* UNCHECKED */ MCStringConvertToCString(p_source, t_source);
+    /* UNCHECKED */ MCStringConvertToCString(p_pattern, t_pattern);
+	return match(t_source, MCStringGetLength(p_source), t_pattern, MCStringGetLength(p_pattern), p_options != kMCCompareCaseless);
 }
 
 MCStringRef MCStringsExecFilterLines(MCStringRef p_source, MCStringRef p_pattern, bool p_without, MCStringOptions p_options)

@@ -429,13 +429,16 @@ IO_stat MCDispatch::startup(void)
 IO_stat MCDispatch::startup(void)
 {
 	startdir = MCS_getcurdir();
-	enginedir = strdup(MCStringGetCString(MCcmd));
+    char *t_mccmd;
+    /* UNCHECKED */ MCStringConvertToCString(MCcmd, t_mccmd);
+	enginedir = strdup(t_mccmd);
 	char *eptr = strrchr(enginedir, PATH_SEPARATOR);
 	if (eptr != NULL)
 		*eptr = '\0';
 	else
 		*enginedir = '\0';
-	char *openpath = strdup(MCStringGetCString(MCcmd)); //point to MCcmd string
+	char *openpath = strdup(t_mccmd); //point to MCcmd string
+    delete t_mccmd;
 
 #ifdef _DEBUG
 #ifdef _WINDOWS

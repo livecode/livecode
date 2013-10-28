@@ -1287,8 +1287,7 @@ void MCInterfaceSetStackFileVersion(MCExecContext& ctxt, MCStringRef p_value)
 	uint4 count;
 	// MW-2006-03-24: This should be snscanf - except it doesn't exist on BSD!!
 	char *t_version;
-	
-	t_version = strclone(MCStringGetCString(p_value));
+	/* UNCHECKED */ MCStringConvertToCString(p_value, t_version);
 	count = sscanf(t_version, "%d.%d.%d", &major, &minor, &revision);
 	delete t_version;
 	
@@ -2250,8 +2249,10 @@ static MCStack *MCInterfaceTryToEvalBinaryStack(MCStringRef p_data, bool& r_bina
     
     t_stack = nil;
     t_binary_fail = false;
+    char *t_data;
+    /* UNCHECKED */ MCStringConvertToCString(p_data, t_data);
     
-    if (MCU_offset(SIGNATURE, MCStringGetCString(p_data), offset) && (MCStringGetLength(p_data) > 8 && strncmp(MCStringGetCString(p_data), "REVO", 4) == 0))
+    if (MCU_offset(SIGNATURE, t_data, offset) && (MCStringGetLength(p_data) > 8 && strncmp(t_data, "REVO", 4) == 0))
     {
         IO_handle stream = MCS_fakeopen(MCStringGetOldString(p_data));
         /* UNCHECKED */ MCdispatcher->readfile(NULL, NULL, stream, t_stack);
@@ -2259,6 +2260,7 @@ static MCStack *MCInterfaceTryToEvalBinaryStack(MCStringRef p_data, bool& r_bina
         t_binary_fail = t_stack == nil;
     }
 
+    delete t_data;
     r_binary_fail = t_binary_fail;
     return t_stack;
 }
@@ -2324,12 +2326,14 @@ void MCInterfaceEvalStackOfStackById(MCExecContext& ctxt, MCObjectPtr p_parent, 
 void MCInterfaceEvalStackByValue(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_stack)
 {
     uint4 offset;
-    if (MCU_offset(SIGNATURE, MCStringGetCString((MCStringRef)p_value), offset) && (MCStringGetLength((MCStringRef)p_value) > 8 && strncmp(MCStringGetCString((MCStringRef)p_value), "REVO", 4) == 0))
+    char *t_value;
+    /* UNCHECKED */ MCStringConvertToCString((MCStringRef)p_value, t_value);
+    if (MCU_offset(SIGNATURE, t_value, offset) && strlen(t_value) > 8 && strncmp(t_value, "REVO", 4) == 0)
     {
         MCInterfaceEvalBinaryStackAsObject(ctxt, (MCStringRef)p_value, r_stack);
         return;
     }
-    
+    delete t_value;
     MCStack *t_stack;
     
     integer_t t_id;                            

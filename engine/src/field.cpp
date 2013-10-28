@@ -1503,7 +1503,9 @@ bool MCField::parsetabstops(Properties which, MCStringRef data, uint16_t*& r_tab
 	newntabs = 0;
 
 	uint4 l = MCStringGetLength(data);
-	const char *sptr = MCStringGetCString(data);
+	char *t_data;
+    /* UNCHECKED */ MCStringConvertToCString(data, t_data);
+    const char *sptr = t_data;
 	while (l)
 	{
 		int32_t i1;
@@ -1515,6 +1517,7 @@ bool MCField::parsetabstops(Properties which, MCStringRef data, uint16_t*& r_tab
 		{
 			MCeerror->add(EE_FIELD_TABSNAN, 0, 0, data);
 			delete newtabs;
+            delete t_data;
 			return false;
 		}
 		MCU_realloc((char **)&newtabs, newntabs, newntabs + 1, sizeof(uint2));
@@ -1529,7 +1532,7 @@ bool MCField::parsetabstops(Properties which, MCStringRef data, uint16_t*& r_tab
 
 	r_tabs = newtabs;
 	r_tab_count = newntabs;
-
+    delete t_data;
 	return true;
 }
 

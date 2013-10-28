@@ -208,7 +208,12 @@ void MCPrinter::SetDeviceOutput(MCPrinterOutputType p_type, MCStringRef p_locati
 	m_device_output_location = NULL;
 	
 	if (p_location != NULL)
-		m_device_output_location = strdup(MCStringGetCString(p_location));
+    {
+        char *t_location;
+        /* UNCHECKED */ MCStringConvertToCString(p_location, t_location);
+		m_device_output_location = strdup(t_location);
+        delete t_location;
+    }
 }
 
 void MCPrinter::SetDeviceCommand(MCStringRef p_command)
@@ -217,13 +222,21 @@ void MCPrinter::SetDeviceCommand(MCStringRef p_command)
 	if (MCStringIsEmpty(p_command))
 		m_device_command = NULL;
 	else
-		m_device_command = strdup(MCStringGetCString(p_command));
+    {
+        char *t_command;
+        /* UNCHECKED */ MCStringConvertToCString(p_command, t_command);
+		m_device_command = strdup(t_command);
+        delete t_command;
+    }
 }
 
 void MCPrinter::SetDeviceFontTable(MCStringRef p_font_table)
 {
 	delete m_device_font_table;
-	m_device_font_table = strdup(MCStringGetCString(p_font_table));
+    char *t_font_table;
+    /* UNCHECKED */ MCStringConvertToCString(p_font_table, t_font_table);
+	m_device_font_table = strdup(t_font_table);
+    delete t_font_table;
 }
 
 
@@ -303,7 +316,10 @@ void MCPrinter::SetJobCollate(bool p_collate)
 void MCPrinter::SetJobName(MCStringRef p_name)
 {
 	delete m_job_name;
-	m_job_name = strdup(MCStringGetCString(p_name));
+    char *t_name;
+    /* UNCHECKED */ MCStringConvertToCString(p_name, t_name);
+	m_job_name = strdup(t_name);
+    delete t_name;
 }
 
 void MCPrinter::SetJobDuplex(MCPrinterDuplexMode p_mode)
@@ -732,7 +748,12 @@ void MCPrinter::DoPrint(MCCard *p_card, const MCRectangle& p_src, const MCRectan
 void MCPrinter::DoMakeAnchor(MCStringRef p_name, int2 x, int2 y)
 {
 	if (m_loop_nesting > 0 && m_loop_status == STATUS_READY && (m_job_range_count <= 0 || MCU_disjointrangecontains(m_job_ranges, m_job_range_count, m_loop_page)))
-		SetStatusFromResult(m_device -> Anchor(MCStringGetCString(p_name), x, y));
+    {
+        char *t_name;
+        /* UNCHECKED */ MCStringConvertToCString(p_name, t_name);
+		SetStatusFromResult(m_device -> Anchor(t_name, x, y));
+        delete t_name;
+    }
 }
 
 void MCPrinter::DoMakeLink(MCStringRef p_dest, const MCRectangle& p_area, MCPrinterLinkType p_type)
@@ -744,7 +765,10 @@ void MCPrinter::DoMakeLink(MCStringRef p_dest, const MCRectangle& p_area, MCPrin
 		t_print_area . top = p_area . y;
 		t_print_area . right = p_area . x + p_area . width;
 		t_print_area . bottom = p_area . y + p_area . height;
-		SetStatusFromResult(m_device -> Link(MCStringGetCString(p_dest), t_print_area, p_type));
+        char *t_dest;
+        /* UNCHECKED */ MCStringConvertToCString(p_dest, t_dest);
+		SetStatusFromResult(m_device -> Link(t_dest, t_print_area, p_type));
+        delete t_dest;
 	}
 }
 
@@ -752,7 +776,10 @@ void MCPrinter::DoMakeBookmark(MCStringRef p_title, int2 x, int2 y, uint32_t lev
 {
 	if (m_loop_nesting > 0 && m_loop_status == STATUS_READY && (m_job_range_count <= 0 || MCU_disjointrangecontains(m_job_ranges, m_job_range_count, m_loop_page)))
 	{
-		SetStatusFromResult(m_device -> Bookmark(MCStringGetCString(p_title), x, y, level, closed));
+        char *t_title;
+        /* UNCHECKED */ MCStringConvertToCString(p_title, t_title);
+		SetStatusFromResult(m_device -> Bookmark(t_title, x, y, level, closed));
+        delete t_title;
 	}
 }
 
@@ -852,7 +879,12 @@ void MCPrinter::SetStatus(uint32_t p_status, MCStringRef p_error)
 	}
 	
 	if (p_error != nil)
-		m_loop_error = strdup(MCStringGetCString(p_error));
+    {
+        char *t_error;
+        /* UNCHECKED */ MCStringConvertToCString(p_error, t_error);
+		m_loop_error = strdup(t_error);
+        delete t_error;
+    }
 }
 
 void MCPrinter::SetStatusFromResult(MCPrinterResult p_result)

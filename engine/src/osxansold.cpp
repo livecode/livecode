@@ -527,7 +527,10 @@ static void build_filter_records_from_types(MCStringRef *p_types, uint4 p_type_c
 	
 	for(uint4 t_type_index = 0; t_type_index < p_type_count; ++t_type_index)
 	{
-		Meta::itemised_string t_type(MCStringGetCString(p_types[t_type_index]), '|');
+        char *temp;
+        /* UNCHECKED */ MCStringConvertToCString(p_types[t_type_index], temp);
+		Meta::itemised_string t_type(temp, '|');
+        delete temp;
 		if (t_type . count() < 1)
 			continue;
 		
@@ -585,8 +588,11 @@ int MCA_file_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filt
 		
 		t_filters = new FilterRecord[1];
 		t_filters[0] . tag = "";
-        t_filters[0] . file_types . assign(MCStringGetCString(*t_filetypes), t_filetype_count * 5 - 1, ',', false);
+        char *t_filetypes_cstring;
+        /* UNCHECKED */ MCStringConvertToCString(*t_filetypes, t_filetypes_cstring);
+        t_filters[0] . file_types . assign(t_filetypes_cstring, t_filetype_count * 5 - 1, ',', false);
 		t_filter_count = 1;
+        delete t_filetypes_cstring;
 	}
     t_result = MCA_do_file_dialog_tiger(p_title, p_prompt, t_filters, t_filter_count, p_initial, p_options, r_value, r_result);
 	delete[] t_filters;
@@ -624,8 +630,11 @@ int MCA_ask_file_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_
 		
 		t_filters = new FilterRecord[1];
 		t_filters[0] . tag = "";
-		t_filters[0] . file_types . assign(MCStringGetCString(*t_filetypes), t_filetype_count * 5 - 1, ',');
+        char *t_filetypes_cstring;
+        /* UNCHECKED */ MCStringConvertToCString(*t_filetypes, t_filetypes_cstring);
+		t_filters[0] . file_types . assign(t_filetypes_cstring, t_filetype_count * 5 - 1, ',');
 		t_filter_count = 1;
+        delete t_filetypes_cstring;
 	}
 	t_result = MCA_do_file_dialog_tiger(nil, p_prompt, t_filters, t_filter_count, p_initial, p_options | MCA_OPTION_SAVE_DIALOG, r_value, r_result);
 	delete[] t_filters;
@@ -761,8 +770,11 @@ void navEventProc(NavEventCallbackMessage callBackSelector,
 									uint2 tpathsize = MCStringGetLength(*t_path);
 									navfilepath = new char[tpathsize + 32 + PATH_MAX];
 									navfilepath[0] = 0;
-									strcpy(navfilepath, MCStringGetCString(*t_path));
+                                    char *t_path_cstring;
+                                    /* UNCHECKED */ MCStringConvertToCString(*t_path, t_path_cstring);
+									strcpy(navfilepath, t_path_cstring);
 									strcat(navfilepath, "/");
+                                    delete t_path_cstring;
 									CFStringRef fileName
 									= NavDialogGetSaveFileName(callBackParms->context);
 									if (fileName != NULL)
@@ -788,7 +800,9 @@ void navEventProc(NavEventCallbackMessage callBackSelector,
                                 MCAutoStringRef t_navfile_path;
                                 
 								/* UNCHECKED */ MCS_mac_fsref_to_path(t_fsref, &t_navfile_path);
-                                navfilepath = strclone(MCStringGetCString(*t_navfile_path));
+                                char *t_navfile_path_cstring;
+                                /* UNCHECKED */ MCStringConvertToCString(*t_navfile_path, t_navfile_path_cstring);
+                                navfilepath = t_navfile_path_cstring;
 							}
 						}
 						else
@@ -828,8 +842,8 @@ OSErr navAnswerFolder(MCStringRef prompt, Boolean hasDefaultPath, const FSRef *p
 	OSErr	anErr = noErr;
 	NavGetDefaultDialogCreationOptions(&dOptions);
 	if (prompt != NULL)
-		dOptions.windowTitle
-		= CFStringCreateWithCString(NULL, MCStringGetCString(prompt), CFStringGetSystemEncoding());
+        /* UNCHECKED */ MCStringConvertToCFStringRef(prompt, dOptions.windowTitle);
+    
 	MCStack *parentwindowstack = NULL;
 	if (sheet)
 	{

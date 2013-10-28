@@ -507,8 +507,11 @@ uint1 MCScreenDC::fontnametocharset(MCStringRef p_fontname)
 {
 	// MW-2006-06-09: [[ Bug 3670 ]] Fixed length buffer can cause a crash
 	char fname[256];
-	strncpy(fname, (const char *)MCStringGetCString(p_fontname), 255);
+    char *t_fontname;
+    /* UNCHECKED */ MCStringConvertToCString(p_fontname, t_fontname);
+	strncpy(fname, (const char *)t_fontname, 255);
 	fname[255] = '\0';
+    delete t_fontname;
 	
 	char *sptr = fname;
 	short ffamilyid;		    //font family ID

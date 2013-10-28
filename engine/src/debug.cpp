@@ -116,8 +116,8 @@ void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_string)
 {
 	if (MCnoui)
 	{
-		MCS_write(MCStringGetCString(p_string), sizeof(char), MCStringGetLength(p_string), IO_stdout);
-		uint4 length = MCStringGetLength(p_string);
+        IO_write_stringref(p_string, IO_stdout);
+        uint4 length = MCStringGetLength(p_string);
 		if (length && MCStringGetCharAtIndex(p_string, length - 1) != '\n')
 			MCS_write("\n", sizeof(char), 1, IO_stdout);
 		return;
@@ -225,8 +225,7 @@ void MCB_prepmessage(MCExecContext &ctxt, MCNameRef mess, uint2 line, uint2 pos,
 	{
 		p3.setnext(&p4);
 		MCeerror->add(id, line, pos);
-
-		MCAutoValueRef t_val;
+        MCAutoValueRef t_val;
 		ctxt.GetObject()->getvariantprop(ctxt, 0, P_LONG_ID, False, &t_val);
 		MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_val);
 		p4.sets_argument(MCeerror->getsvalue());
@@ -660,7 +659,9 @@ void MCB_parsewatches(MCExecContext& ctxt, MCStringRef p_input)
 					else
 						MCwatchedvars[MCnwatchedvars] . handlername = nil;
 					/* UNCHECKED */ MCNameCreate(*t_vname, MCwatchedvars[MCnwatchedvars] . varname);
-					MCwatchedvars[MCnwatchedvars] . expression = strclone(MCStringGetCString(*t_express));
+                    MCAutoPointer<char> t_express_cstring;
+                    /* UNCHECKED */ MCStringConvertToCString(*t_express, &t_express_cstring);
+					MCwatchedvars[MCnwatchedvars] . expression = strclone(*t_express_cstring);
 					MCnwatchedvars++;
 				}
 			}
