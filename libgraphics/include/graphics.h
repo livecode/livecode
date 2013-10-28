@@ -1,3 +1,19 @@
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
 #ifndef __MC_GRAPHICS__
 #define __MC_GRAPHICS__
 
@@ -97,6 +113,23 @@ static inline void MCGPixelUnpack(MCGPixelFormat p_format, uint32_t p_pixel, uin
 static inline void MCGPixelUnpackNative(uint32_t p_pixel, uint8_t &r_red, uint8_t &r_green, uint8_t &r_blue, uint8_t &r_alpha)
 {
 	return MCGPixelUnpack(kMCGPixelFormatNative, p_pixel, r_red, r_green, r_blue, r_alpha);
+}
+
+static inline uint8_t MCGPixelGetAlpha(MCGPixelFormat p_format, uint32_t p_pixel)
+{
+	if (p_format & kMCGPixelAlphaPositionFirst)
+		return p_pixel & 0xFF;
+	else
+		return p_pixel >> 24;
+}
+
+static inline uint8_t MCGPixelGetNativeAlpha(uint32_t p_pixel)
+{
+#if kMCGPixelFormatNative & kMCGPixelAlphaPositionFirst
+	return p_pixel & 0xFF;
+#else
+	return p_pixel >> 24;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -362,6 +395,11 @@ inline MCGRectangle MCGRectangleScale(MCGRectangle p_rect, MCGFloat p_scale)
 	t_rect.size.height = p_rect.size.height * p_scale;
 	
 	return t_rect;
+}
+
+inline bool MCGRectangleIsEmpty(const MCGRectangle &p_rect)
+{
+	return p_rect.size.width == 0.0 || p_rect.size.height == 0.0;
 }
 
 MCGRectangle MCGRectangleIntersection(const MCGRectangle &rect_1, const MCGRectangle &rect_2);

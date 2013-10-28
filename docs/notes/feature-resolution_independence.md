@@ -10,7 +10,7 @@ The first step to supporting resolution independence was to completely refactor 
 
 Since all of the updates are internal, the end LiveCode developer should see no major changes: Where possible, we've tried to match previous behaviors as closely as possible. However, in the early DPs, we do expect some rendering irregularities.
 
-Though the primary reason for the updates is to support resolution independence, we do get the side benefits of having a modern 2D graphics library. These include a clean developer API allowing for easy integration into other modules, potential performance improvements and support for graphic rendering on the server platforms (planned for a future release).
+Though the primary reason for the updates is to support resolution independence, we do get the side benefits of having a modern 2D graphics library. These include a clean developer API allowing for easy integration into other modules, potential performance improvements and support for graphic rendering on the server platforms.
 
 ##Multiple Density Support
 
@@ -55,23 +55,7 @@ A useful rule of thumb is for images to have natural width and height values tha
 
 Currently, on Android and iOS the scale factor is automatically applied. On iOS, this can be overridden by calling the existing command "iphoneUseDeviceResolution true", which will turn off scaling so one point is equal to one pixel. This capability will be generalized to all platforms supporting resolution independence, and extended to allow configuration of the display scale.
 
-###Full screen scaling mode.
-
-There are multiple ways in which a stack can be resized or scaled to take full advantage of the available screen space. The full screen scaling mode will allow the developer to choose the most appropraite for their application:
-
-* empty (default) - the existing behaviour - the stack is resized (not scaled) to fit the screen.
-* "exact fit" - scale the stack to fill the screen. This will stretch the stack if the aspect ratio of the screen does not match that of the stack.
-* "show all" - scale the stack preserving aspect ratio so all content is visible. Some blank space may remain if the screen & stack aspect ratios do not match.
-* "no border" - scale the stack to fill the screen preserving aspect ratio. If the stack & screen aspect ratios do not match, the left / right or top / bottom extremes of the stack will not be visible.
-* "no scale" - the stack will not be scaled, being centered on the screen instead.
-
-This will be available on all desktop platforms and operates independently from Hi-DPI support.
-
 ###Hi-DPI support on desktop platforms.
 
 Automatically scale stacks on desktop systems with high resolution displays. This will function in the same way as the current support for mobile devices.
 Support for automatic scaling will be added for desktop operating systems that support high resolution displays. This currently includes Windows 7 & 8 and OSX Mountain Lion.
-
-###Server graphics.
-
-Support for creating images for output on a web server, for example by composing a set of objects and using "export snapshot ... " to generate the image data.

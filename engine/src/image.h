@@ -384,6 +384,8 @@ public:
 	// MW-2011-09-20: [[ Collision ]] Compute shape of image - will use mask directly if possible.
 	virtual bool lockshape(MCObjectShape& r_shape);
 	virtual void unlockshape(MCObjectShape& shape);
+	// IM-2013-10-16: [[ ResIndependence ]] Compute the shape from the image bitmap data
+	bool lockbitmapshape(const MCRectangle &p_bounds, const MCPoint &p_origin, MCObjectShape &r_shape);
 
 	// MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
 	virtual void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_sprite);

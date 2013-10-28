@@ -11,7 +11,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 		image.cpp \
 		path.cpp \
 		utils.cpp \
-		blur.cpp \
+		blur.cpp spread.cpp \
 		mblandroidtext.cpp \
 		cachetable.cpp \
 		legacyblendmodes.cpp \

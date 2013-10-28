@@ -1,3 +1,19 @@
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
 #include "graphics.h"
 #include "graphics-internal.h"
 
@@ -824,7 +840,9 @@ MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, 
 		t_ramp[i] . hw_color = t_ramp[i] . color;
 #endif
 	}
-	t_ramp[i] . difference = (uint4) (STOP_DIFF_MULT / STOP_INT_MAX);		
+	
+	// MW-2013-10-26: [[ Bug 11315 ]] Index shuold be i - 1 (otherwise memory overrun occurs!).
+	t_ramp[i - 1] . difference = (uint4) (STOP_DIFF_MULT / STOP_INT_MAX);		
 	
 	s_gradient_affine_combiner . origin . x = (int2) p_gradient_ref -> transform . tx;
 	s_gradient_affine_combiner . origin . y = (int2) p_gradient_ref -> transform . ty;	

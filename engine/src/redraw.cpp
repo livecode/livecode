@@ -1023,8 +1023,14 @@ bool MCCard::tilecache_render_background(void *p_context, MCContext *p_target, c
 {
 	MCCard *t_card;
 	t_card = (MCCard *)p_context;
-
-	p_target -> setclip(p_dirty);
+	
+	// MW-2013-10-23: [[ FullscreenMode ]] Make sure we set the clip to the visible rect.
+	MCRectangle t_visible_rect;
+	t_visible_rect = t_card -> getstack()->getrect();
+	t_visible_rect.x = 0;
+	t_visible_rect.y = t_card -> getstack()->getscroll();
+	
+	p_target -> setclip(MCU_intersect_rect(t_visible_rect, p_dirty));
 	p_target -> setfunction(GXcopy);
 	p_target -> setopacity(255);
 
@@ -1047,11 +1053,22 @@ void MCCard::render(void)
 	bool t_reset_ids;
 	t_reset_ids = MCTileCacheIsClean(t_tiler);
 
+	// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+	MCGAffineTransform t_transform;
+	t_transform = getstack()->getdevicetransform();
+	
+	// IM-2013-10-14: [[ FullscreenMode ]] Get the visible area of the stack
+	MCRectangle t_visible_rect;
+	t_visible_rect = getstack()->getrect();
+	t_visible_rect.x = 0;
+	t_visible_rect.y = getstack()->getscroll();
+	
 	if (getstate(CS_SIZE))
 	{
 		MCTileCacheLayer t_fg_layer;
 		t_fg_layer . id = m_fg_layer_id;
-		t_fg_layer . region = selrect;
+		t_fg_layer . region = MCRectangleGetTransformedBounds(selrect, t_transform);
+		t_fg_layer . clip = MCRectangleGetTransformedBounds(t_visible_rect, t_transform);
 		t_fg_layer . is_opaque = false;
 		t_fg_layer . opacity = 255;
 		t_fg_layer . ink = GXblendSrcOver;
@@ -1062,16 +1079,6 @@ void MCCard::render(void)
 	}
 	else
 		m_fg_layer_id = 0;
-
-	// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
-	MCGAffineTransform t_transform;
-	t_transform = getstack()->getdevicetransform();
-	
-	// IM-2013-10-14: [[ FullscreenMode ]] Get the visible area of the stack
-	MCRectangle t_visible_rect;
-	t_visible_rect = getstack()->getrect();
-	t_visible_rect.x = 0;
-	t_visible_rect.y = getstack()->getscroll();
 	
 	MCObjptr *t_objptrs;
 	t_objptrs = getobjptrs();
@@ -1128,7 +1135,6 @@ void MCCard::render(void)
 			}
 
 			// IM-2013-10-14: [[ FullscreenMode ]] Constrain each layer to the visible area
-			t_layer . region = MCU_intersect_rect(t_layer . region, t_visible_rect);
 			t_layer . clip = MCU_intersect_rect(t_layer . clip, t_visible_rect);
 			// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
 			// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
@@ -1180,8 +1186,8 @@ void MCCard::render(void)
 	// IM-2013-10-14: [[ FullscreenMode ]] Render the background into the card's visible area
 	MCTileCacheLayer t_bg_layer;
 	t_bg_layer . id = m_bg_layer_id;
-	t_bg_layer . region = t_visible_rect;
-	t_bg_layer . clip = t_visible_rect;
+	t_bg_layer . region = MCRectangleGetTransformedBounds(t_visible_rect, t_transform);
+	t_bg_layer . clip = t_bg_layer . region;
 	t_bg_layer . is_opaque = true;
 	t_bg_layer . opacity = 255;
 	t_bg_layer . ink = GXblendSrcOver;

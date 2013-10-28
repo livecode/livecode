@@ -1,3 +1,19 @@
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
 #include "graphics.h"
 #include "graphics-internal.h"
 
@@ -7,37 +23,22 @@
 #define UINDEX_MAX 4294967295U
 #endif
 
-#define ELF_STEP(B) T1 = (H << 4) + B; T2 = T1 & 0xF0000000; if (T2) T1 ^= (T2 >> 24); T1 &= (~T2); H = T1;
-
 static hash_t MCGHashBytes(const void *p_bytes, size_t length)
 {
-	uint8_t *bytes = (uint8_t *)p_bytes;
-	
-    /* The ELF hash algorithm, used in the ELF object file format */
-    uint32_t H = 0, T1, T2;
-    int32_t rem = length;
-	
-    while (3 < rem)
-	{
-		ELF_STEP(bytes[length - rem]);
-		ELF_STEP(bytes[length - rem + 1]);
-		ELF_STEP(bytes[length - rem + 2]);
-		ELF_STEP(bytes[length - rem + 3]);
-		rem -= 4;
+    // 32-bit FNV-1a hash algorithm
+    const uint32_t t_prime = 16777619;
+    const uint32_t t_bias = 2166136261;
+    
+    const uint8_t *t_data = (const uint8_t*)p_bytes;
+    uint32_t t_hash = t_bias;
+    for (size_t i = 0; i < length; i++)
+    {
+        t_hash ^= t_data[i];
+        t_hash *= t_prime;
     }
-	
-    switch (rem)
-	{
-		case 3:  ELF_STEP(bytes[length - 3]);
-		case 2:  ELF_STEP(bytes[length - 2]);
-		case 1:  ELF_STEP(bytes[length - 1]);
-		case 0:  ;
-    }
-	
-    return H;
+    
+    return t_hash;
 }
-
-#undef ELF_STEP
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -175,7 +176,7 @@ void MCGCacheTableSet(MCGCacheTableRef self, void *p_key, uint32_t p_key_length,
 		t_discard_bucket = rand() % self -> total_buckets;
 		while (self -> bytes_used >= self -> max_bytes)
 		{			
-			while (self -> pairs[t_discard_bucket] . key != NULL)
+			while (self -> pairs[t_discard_bucket] . key == NULL)
 			{
 				t_discard_bucket++;
 				if (t_discard_bucket >= self -> total_buckets)
@@ -192,7 +193,7 @@ void MCGCacheTableSet(MCGCacheTableRef self, void *p_key, uint32_t p_key_length,
 	{
 		uindex_t t_discard_bucket;
 		t_discard_bucket = rand() % self -> total_buckets;			
-		while (self -> pairs[t_discard_bucket] . key != NULL)
+		while (self -> pairs[t_discard_bucket] . key == NULL)
 		{
 			t_discard_bucket++;
 			if (t_discard_bucket >= self -> total_buckets)

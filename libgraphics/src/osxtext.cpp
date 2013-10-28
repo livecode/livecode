@@ -1,7 +1,25 @@
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
 #include "graphics.h"
 #include "graphics-internal.h"
 
 #import <ApplicationServices/ApplicationServices.h>
+
+#define kMCGMeasureTextFudge 3
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -16,34 +34,51 @@ static bool osx_prepare_text(const void *p_text, uindex_t p_length, const MCGFon
 	if (t_err == noErr)
 		if (s_layout == NULL)
 			t_err = ATSUCreateTextLayout(&s_layout);
-
+	
 	if (t_err == noErr)
 		if (s_style == NULL)
-			t_err = ATSUCreateStyle(&s_style);
+			t_err = ATSUCreateStyle(&s_style);	
 	
 	ATSUFontID t_font_id;
 	Fixed t_font_size;
+	Boolean t_font_is_italic;
     if (t_err == noErr)
     {
         t_font_size = p_font . size << 16;
+		
+		// MM-2013-09-16: [[ Bug 11283 ]] It appears that ATSUI doesn't like italic being passed as a style parameter to ATSUFONDtoFontID.
+		//   Instead, set italic as an attribute tag.
+		uint8_t t_style;
+		t_style = p_font . style & ~italic;
+		t_font_is_italic = p_font . style & italic;
+		
 		// if the specified font can't be found, just use the default
-		if (ATSUFONDtoFontID((short)(intptr_t)p_font . fid, p_font . style, &t_font_id) != noErr)
-			t_err = ATSUFONDtoFontID(0, p_font . style, &t_font_id);
+		// MM-2013-09-16: [[ Bug 11283 ]] Do the same for font styles - if the font/style paring cannot be found, try font with no style.
+		t_err = ATSUFONDtoFontID((short)(intptr_t)p_font . fid, t_style, &t_font_id);
+		if (t_err != noErr)
+			t_err = ATSUFONDtoFontID((short)(intptr_t)p_font . fid, 0, &t_font_id);
+		if (t_err != noErr)
+			t_err = ATSUFONDtoFontID(0, t_style, &t_font_id);
+		if (t_err != noErr)
+			t_err = ATSUFONDtoFontID(0, 0, &t_font_id);
     }
 	ATSUAttributeTag t_tags[] =
 	{
 		kATSUFontTag,
 		kATSUSizeTag,
+		kATSUQDItalicTag,
 	};
 	ByteCount t_sizes[] =
 	{
 		sizeof(ATSUFontID),
 		sizeof(Fixed),
+		sizeof(Boolean),
 	};
 	ATSUAttributeValuePtr t_attrs[] =
 	{
 		&t_font_id,
 		&t_font_size,
+		&t_font_is_italic,
 	};
 	if (t_err == noErr)
 		t_err = ATSUSetAttributes(s_style, sizeof(t_tags) / sizeof(ATSUAttributeTag), t_tags, t_sizes, t_attrs);
@@ -82,12 +117,41 @@ static bool osx_measure_text_substring_width(uindex_t p_length, int32_t &r_width
     OSStatus t_err;
 	t_err = noErr;
     
-    ATSUTextMeasurement t_before, t_after, t_ascent, t_descent;
-    if (t_err == noErr)
-        t_err = ATSUGetUnjustifiedBounds(s_layout, 0, p_length / 2, &t_before, &t_after, &t_ascent, &t_descent);
-    
+	int32_t t_width;	
+	if (t_err == noErr)
+	{
+		ATSUTextMeasurement t_before, t_after, t_ascent, t_descent;
+		t_err = ATSUGetUnjustifiedBounds(s_layout, 0, p_length / 2, &t_before, &t_after, &t_ascent, &t_descent);
+		t_width = (t_after + 0xffff) >> 16;		
+	}
+	
     if (t_err == noErr)         
-        r_width = (t_after + 0xffff) >> 16;
+        r_width = t_width;
+    
+    return t_err == noErr;
+}
+
+// MM-2013-10-23: [[ RefactorGraphics ]] Move over to using (a fudged) ATSUMeasureTextImage when calculating the bounds.
+//   Using the ATSUGetUnjustifiedBounds for the width and the fonts ascent/descent for the height was causing clipping issues for certain fonts.
+static bool osx_measure_text_substring_bounds(uindex_t p_length, MCGIntRectangle &r_bounds)
+{
+	if (s_layout == NULL || s_style == NULL)
+		return false;
+	
+    OSStatus t_err;
+	t_err = noErr;
+    
+	Rect t_bounds;
+	if (t_err == noErr)
+		t_err = ATSUMeasureTextImage(s_layout, 0, p_length / 2, 0, 0, &t_bounds);
+	
+    if (t_err == noErr)
+	{
+		r_bounds . x = t_bounds . left - kMCGMeasureTextFudge;
+		r_bounds . y = t_bounds . top - kMCGMeasureTextFudge;
+		r_bounds . width = t_bounds . right - t_bounds . left + 2 * kMCGMeasureTextFudge;
+		r_bounds . height = t_bounds . bottom - t_bounds . top + 2 * kMCGMeasureTextFudge;
+	}
     
     return t_err == noErr;
 }
@@ -96,10 +160,10 @@ static bool osx_draw_text_substring_to_cgcontext_at_location(uindex_t p_length, 
 {
 	if (s_layout == NULL || s_style == NULL)
 		return false;
-
+	
     OSStatus t_err;
 	t_err = noErr;
-
+	
 	ATSUAttributeTag t_layout_tags[] =
 	{
 		kATSUCGContextTag,
@@ -114,7 +178,7 @@ static bool osx_draw_text_substring_to_cgcontext_at_location(uindex_t p_length, 
 	};
 	if (t_err == noErr)
 		t_err = ATSUSetLayoutControls(s_layout, sizeof(t_layout_tags) / sizeof(ATSUAttributeTag), t_layout_tags, t_layout_sizes, t_layout_attrs);
-
+	
     if (t_err == noErr)
         t_err = ATSUDrawText(s_layout, 0, p_length / 2, ((int32_t)p_location . x) << 16, ((int32_t)p_location . y) << 16);
     
@@ -245,7 +309,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 {
 	if (!MCGContextIsValid(self))
 		return;	
-
+	
 	bool t_success;
 	t_success = true;
 	
@@ -254,21 +318,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
     
 	MCGIntRectangle t_text_bounds;
 	if (t_success)
-    {
-        t_text_bounds . x = 0;
-        t_text_bounds . y = 0 - p_font . ascent;
-        t_text_bounds . height = p_font . descent + p_font . ascent + 1; // the +1 fudge is to make sure chars with descent are not clipped
-        //t_success = osx_measure_text_substring_width(p_length, t_text_bounds . width);
-		//t_success = osx_draw_text_to_cgcontext_at_location(p_text, p_length, MCGPointMake(0.0, 0.0), p_font, NULL, t_text_bounds);
-        
-		// if the text is short enough to have it's width potentailly cached, use MCGContextMeasurePlatformText
-        // this will potentially result in osx_prepare_text being called again
-        // though ideally not, as hopefully the text will have been recently measured and in the cache
-		if (p_length >= kMCGTextMeasureCacheMaxStringLength)
-			t_success = osx_measure_text_substring_width(p_length, t_text_bounds . width);
-		else
-			t_text_bounds . width = MCGContextMeasurePlatformText(self, p_text, p_length, p_font);
-    }
+		t_success = osx_measure_text_substring_bounds(p_length, t_text_bounds);
 	
 	MCGIntRectangle t_clipped_bounds;
 	MCGAffineTransform t_transform;
@@ -311,7 +361,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	
 	if (t_success)
 	{
-		CGContextTranslateCTM(t_cgcontext, -(t_clipped_bounds . x - t_text_bounds . x), t_clipped_bounds . height + t_clipped_bounds . y);
+		CGContextTranslateCTM(t_cgcontext, -t_clipped_bounds . x, t_clipped_bounds . height + t_clipped_bounds . y);
 		CGContextConcatCTM(t_cgcontext, CGAffineTransformMake(t_transform . a, t_transform . b, t_transform . c, t_transform . d, t_transform . tx, t_transform . ty));
 		CGContextSetRGBFillColor(t_cgcontext, 0.0, 0.0, 0.0, 1.0);
 		//t_success = osx_draw_text_to_cgcontext_at_location(p_text, p_length, MCGPointMake(0.0, 0.0), p_font, t_cgcontext, t_clipped_bounds);
@@ -321,7 +371,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	if (t_success)
 	{
 		CGContextFlush(t_cgcontext);
-			
+		
 		SkPaint t_paint;
 		t_paint . setStyle(SkPaint::kFill_Style);	
 		t_paint . setAntiAlias(self -> state -> should_antialias);
@@ -350,13 +400,13 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
 {	
 	//if (!MCGContextIsValid(self))
 	//	return 0.0;
-
+	
 	bool t_success;
 	t_success = true;
 	
     if (t_success)
         t_success = osx_prepare_text(p_text, p_length, p_font);
-
+	
     int32_t t_width;
     t_width = 0;
     if (t_success)

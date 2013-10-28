@@ -623,63 +623,13 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 	else
 		t_next_block_char = -1;
 
-	// If this is a text block and we fit inside maxwidth fully then check
-	// for a break point at the end.
-	if (getwidth(NULL, x) <= maxwidth)
-	{
-		uint2 t_last_char, t_break_index;
-		if (hasunicode() && (size & 1) == 0)
-			t_last_char = *(uint2 *)&text[index + size - 2], t_break_index = index + size - 2;
-		else
-			t_last_char = MCUnicodeMapFromNative(text[index + size - 1]), t_break_index = index + size - 1;
-
-		// If this is the last block, or we can break between this and the
-		// next block, return the end point.
-		if (t_next_block_char != -2)
-		{
-			if (t_next_block_char == -1 || MCUnicodeCanBreakBetween(t_last_char, t_next_block_char))
-			{
-				r_break_index = index + size;
-				r_break_fits = true;
-				return true;
-			}
-		}
-			
-		// Compute the last possible break position in the block by looping
-		// back over the characters;
-		if (t_break_index > index)
-		{
-			do
-			{
-				uint2 i;
-				i = t_break_index;
-				
-				uint2 t_prev_char;
-				if (hasunicode())
-				{
-					i -= 2;
-					t_prev_char = *(uint2 *)&text[i];
-				}
-				else
-				{
-					i -= 1;
-					t_prev_char = MCUnicodeMapFromNative(text[i]);
-				}
-				
-				if (MCUnicodeCanBreakBetween(t_prev_char, t_last_char))
-					break;
-				
-				t_break_index = i;
-				
-				t_last_char = t_prev_char;
-			}
-			while(t_break_index > index);
-		}
-		
-		r_break_index = t_break_index;
-		r_break_fits = true;
-		return true;
-	}
+    // FG-2013-10-21 [[ Field speedups ]]
+    // Previously, we used to calculate the length of the entire block here in order
+    // to determine if splitting was required. Unfortunately, this tends to bypass
+    // the text layout cache resulting in very slow laying out now that the "proper"
+    // Unicode text layout APIs are in use.
+    //
+    // Now, all text is laid out word-at-a-time.
 	
 	// We don't completely fit within maxwidth, so compute the last break point in
 	// the block by measuring
@@ -710,6 +660,8 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 	
 	// MW-2013-08-01: [[ Bug 10932 ]] Optimized loop only measuring between potential break
 	//   points, rather than char by char.
+    bool t_whole_block;
+    t_whole_block = false;
 	while(i < index + size)
 	{
 		uint4 initial_i;
@@ -719,6 +671,8 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 		t_can_break = false;
 		
 		uint2 t_this_char;
+        bool t_end_of_block;
+        t_end_of_block = false;
 		while(i < index + size)
 		{
 			t_this_char = (uint2)t_next_char;
@@ -730,14 +684,20 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 				if (i < index + size)
 					t_next_char = *(uint2 *)&text[i];
 				else
-					t_next_char = t_next_block_char;
+                {
+                    t_next_char = t_next_block_char;
+                    t_end_of_block = true;
+                }
 			}
 			else
 			{
 				if (i < index + size)
 					t_next_char = (uint2)MCUnicodeMapFromNative(text[i]);
 				else
-					t_next_char = t_next_block_char;
+                {
+                    t_next_char = t_next_block_char;
+                    t_end_of_block = true;
+                }
 			}
 			
 			if (t_this_char == '\t' ||
@@ -778,15 +738,16 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 			break;
 
 		if (t_can_break)
-		{
 			t_break_index = i;
 
-			if (twidth <= maxwidth)
-				t_can_fit = true;
+        if (twidth <= maxwidth)
+        {
+            t_can_fit = true;
+            t_whole_block = t_end_of_block;
+        }
 
-			if (twidth >= maxwidth)
-				break;
-		}
+		if (twidth >= maxwidth)
+			break;
 	}
 
 	// We now have a suitable break point in t_break_index. This could be index if
@@ -794,11 +755,12 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 	// any suitable run of spaces.
 	while(t_break_index < index + size && textisspace(&text[t_break_index]))
 		t_break_index += indexincrement(t_break_index);
-		
+    	
 	r_break_fits = t_can_fit;
 	r_break_index = t_break_index;
 	
-	return false;
+    // If we found a break, was it before the end of the block?
+    return t_whole_block;
 }
 
 void MCBlock::split(uint2 p_index)

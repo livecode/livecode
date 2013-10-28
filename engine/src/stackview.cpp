@@ -189,6 +189,11 @@ MCGAffineTransform MCStack::view_getviewtransform(void) const
 	return m_view_transform;
 }
 
+MCGAffineTransform MCStack::view_getroottransform(void) const
+{
+	return MCGAffineTransformMakeTranslation(m_view_rect.x, m_view_rect.y);
+}
+
 MCRectangle MCStack::view_getrect(void) const
 {
 	return m_view_rect;
@@ -670,6 +675,7 @@ void MCStack::view_updatetilecache(void)
 	MCTileCacheLayer t_bg_layer;
 	t_bg_layer . id = m_view_bg_layer_id;
 	t_bg_layer . region = MCU_make_rect(0, 0, 8192, 8192);
+	t_bg_layer . clip = MCU_make_rect(0, 0, 8192, 8192);
 	t_bg_layer . is_opaque = true;
 	t_bg_layer . opacity = 255;
 	t_bg_layer . ink = GXblendSrcOver;
