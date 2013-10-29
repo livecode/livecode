@@ -38,6 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "region.h"
 
 #include "graphicscontext.h"
+#include "font.h"
 
 #ifdef _LINUX_DESKTOP
 #include "flst.h"
@@ -1000,8 +1001,9 @@ void MCCustomMetaContext::dotextmark(MCMark *p_mark)
 	// Note we can use 'setstaticbytes' here because the ep is just being used
 	// for conversion.
 	MCExecPoint ep(nil, nil, nil);
+    MCFontStruct *f = MCFontGetFontStruct(p_mark -> text . font);
 	ep . setstaticbytes(p_mark -> text . data, p_mark -> text . length);
-	if (!p_mark -> text . font -> unicode && !p_mark -> text . unicode_override)
+	if (!f -> unicode && !p_mark -> text . unicode_override)
 		ep . nativetoutf16();
 
 	const unichar_t *t_chars;
@@ -1025,7 +1027,7 @@ void MCCustomMetaContext::dotextmark(MCMark *p_mark)
 	t_state . transform . translate_y = m_translate_y + m_scale_y * p_mark -> text . position . y;
 
 #if defined(_MACOSX)
-	t_state . font_size = p_mark -> text . font -> size;
+	t_state . font_size = f -> size;
 #elif defined(_LINUX)
 	extern MCFontlist *MCFontlistGetCurrent(void);
 	const char *t_name;
@@ -1041,11 +1043,11 @@ void MCCustomMetaContext::dotextmark(MCMark *p_mark)
 	//   by 'unicode_override' - so temporarily update the font unicode field to match
 	//   appropriately.
 	Bool t_old_unicode;
-	t_old_unicode = p_mark -> text . font -> unicode;
-	p_mark -> text . font -> unicode = p_mark -> text . unicode_override;
-	if (!MCTextLayout(t_chars, t_char_count, p_mark -> text . font, dotextmark_callback, &t_state))
+	t_old_unicode = f -> unicode;
+	f -> unicode = p_mark -> text . unicode_override;
+	if (!MCTextLayout(t_chars, t_char_count, f, dotextmark_callback, &t_state))
 		m_execute_error = true;
-	p_mark -> text . font -> unicode = t_old_unicode;
+	f -> unicode = t_old_unicode;
 }
 
 //////////

@@ -166,23 +166,6 @@ bool MCScreenDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_
 	return t_success;
 }
 
-// MM-2013-08-30: [[ RefactorGraphics ]] Move text measuring to libgraphics.
-int4 MCScreenDC::textwidth(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override)
-{
-	if (p_length == 0 || p_text == NULL)
-		return 0;
-	
-    MCGFont t_font;
-	t_font = MCFontStructToMCGFont(p_font);
-	
-	MCExecPoint ep;
-	ep . setsvalue(MCString(p_text, p_length));
-	if (!p_font -> unicode && !p_unicode_override)
-		ep . nativetoutf16();
-	
-	return MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
-}	
-
 ///////////////////////////////////////////////////////////////////////////////
 
 extern int UTF8ToUnicode(const char *p_source_str, int p_source, uint2 *p_dest_str, int p_dest);
