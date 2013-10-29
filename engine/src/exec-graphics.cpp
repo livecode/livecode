@@ -131,6 +131,13 @@ void MCGraphicsEvalIsNotWithin(MCExecContext& ctxt, MCPoint p_point, MCRectangle
 
 void MCGraphicsExecFlipSelection(MCExecContext& ctxt, bool p_horizontal)
 {
+    // MW-2013-07-01: [[ Bug 10999 ]] Throw an error if the image is not editable.
+    if (MCactiveimage->getflag(F_HAS_FILENAME))
+    {
+        ctxt . LegacyThrow(EE_FLIP_NOTIMAGE);
+        return;
+    }
+    
 	if (MCactiveimage != nil)
 		MCactiveimage->flipsel(p_horizontal);
 }
@@ -143,7 +150,10 @@ void MCGraphicsExecFlipImage(MCExecContext& ctxt, MCImage *p_image, bool p_horiz
 	MCGraphicsExecFlipSelection(ctxt, p_horizontal);
 
 	MCcurtool = MColdtool;
-	MCactiveimage -> endsel();
+    
+    // IM-2013-06-28: [[ Bug 10999 ]] ensure MCactiveimage is not null when calling endsel() method
+    if (MCactiveimage != nil)
+        MCactiveimage -> endsel();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
