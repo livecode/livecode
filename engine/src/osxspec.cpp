@@ -807,6 +807,7 @@ char *path2utf(char *path)
 
 void MCS_init()
 {
+#ifdef /* MCS_init_dsk_mac */ LEGACY_SYSTEM
 	IO_stdin = new IO_header(stdin, 0, 0, 0, NULL, 0, 0);
 	IO_stdout = new IO_header(stdout, 0, 0, 0, NULL, 0, 0);
 	IO_stderr = new IO_header(stderr, 0, 0, 0, NULL, 0, 0);
@@ -988,10 +989,12 @@ void MCS_init()
 		setlinebuf(stdout);
 		setlinebuf(stderr);
 	}
+#endif /* MCS_init_dsk_mac */
 }
 
 void MCS_shutdown()
 {
+#ifdef /* MCS_shutdown_dsk_mac */ LEGACY_SYSTEM    
 	uint2 i;
 
 	// MW-2005-04-04: [[CoreImage]] Unload CoreImage extension
@@ -1012,6 +1015,7 @@ void MCS_shutdown()
 
 
 	DisposeEventHandlerUPP(MCS_weh);
+#endif /* MCS_shutdown_dsk_mac */
 }
 
 void MCS_seterrno(int value)
@@ -1025,9 +1029,12 @@ int MCS_geterrno()
 }
 
 void MCS_alarm(real8 seconds)
-{ //is used for checking event loop periodically
+{
+#ifdef /* MCS_alarm_dsk_mac */ LEGACY_SYSTEM
+    //is used for checking event loop periodically
 	// InsTime() or
 	//PrimeTime(pass handle to a function, in the function set MCalarm to True)
+#endif /* MCS_alarm_dsk_mac */
 }
 
 // MW-2005-08-15: We have two types of process starting in MacOS X it seems:
@@ -1407,40 +1414,51 @@ real8 curtime;
 
 real8 MCS_time()
 {
-	struct timezone tz;
+#ifdef /* MCS_time_dsk_mac */ LEGACY_SYSTEM	
+    struct timezone tz;
 	struct timeval tv;
 
 	gettimeofday(&tv, &tz);
 	curtime = tv.tv_sec + (real8)tv.tv_usec / 1000000.0;
 
 	return curtime;
+#endif /* MCS_time_dsk_mac */
 }
 
 void MCS_reset_time()
 {
+#ifdef /* MCS_reset_time_dsk_mac */ LEGACY_SYSTEM
+    
+#endif /* MCS_reset_time_dsk_mac */
 }
 
 void MCS_sleep(real8 duration)
 {
+#ifdef /* MCS_sleep_dsk_mac */ LEGACY_SYSTEM    
 	unsigned long finalTicks;
 	Delay((unsigned long)duration * 60, &finalTicks);
+#endif /* MCS_sleep_dsk_mac */
 }
 
 char *MCS_getenv(const char *name)
 {
+#ifdef /* MCS_getenv_dsk_mac */ LEGACY_SYSTEM    
 	return getenv(name); //always returns NULL under CodeWarrier env.
+#endif /* MCS_getenv_dsk_mac */    
 }
 
 extern void MCS_setenv(const char *name, const char *value)
 {
+#ifdef /* MCS_setenv_dsk_mac */ LEGACY_SYSTEM    
 	setenv(name, value, True);
-
+#endif /* MCS_setenv_dsk_mac */
 }
 
 extern void MCS_unsetenv(const char *name)
 {
+#ifdef /* MCS_unsetenv_dsk_mac */ LEGACY_SYSTEM    
 	unsetenv(name);
-
+#endif /* MCS_unsetenv_dsk_mac */
 }
 
 int4 MCS_rawopen(const char *path, int flags)
@@ -1546,8 +1564,11 @@ Boolean MCS_getdevices(MCExecPoint &ep)
 
 Boolean MCS_nodelay(int4 fd)
 {
+#ifdef /* MCS_nodelay_dsk_mac */ LEGACY_SYSTEM
 	return fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) & O_APPEND | O_NONBLOCK)
 				 >= 0;
+#endif /* MCS_nodelay_dsk_mac */
+
 }
 
 IO_stat MCS_shellread(int fd, char *&buffer, uint4 &buffersize, uint4 &size)
@@ -1709,11 +1730,14 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 
 uint4 MCS_getpid()
 {
+#ifdef /* MCS_getpid_dsk_mac */ LEGACY_SYSTEM    
 	return getpid();
+#endif /* MCS_getpid_dsk_mac */
 }
 
 const char *MCS_getaddress()
 {
+#ifdef /* MCS_getaddress_dsk_mac */ LEGACY_SYSTEM    
 	static struct utsname u;
 	static char *buffer;
 	uname(&u);
@@ -1721,10 +1745,12 @@ const char *MCS_getaddress()
 		buffer = new char[strlen(u.nodename) + strlen(MCcmd) + 4];
 	sprintf(buffer, "%s:%s", u.nodename, MCcmd);
 	return buffer;
+#endif /* MCS_getaddress_dsk_mac */
 }
 
 const char *MCS_getmachine()
 {
+#ifdef /* MCS_getmachine_dsk_mac */ LEGACY_SYSTEM    
 	static Str255 machineName;
 	long response;
 	if ((errno = Gestalt(gestaltMachineType, &response)) == noErr)
@@ -1737,16 +1763,20 @@ const char *MCS_getmachine()
 		}
 	}
 	return "unknown";
+#endif /* MCS_getmachine_dsk_mac */
 }
 
 // MW-2006-05-03: [[ Bug 3524 ]] - Make sure processor returns something appropriate in Intel
 const char *MCS_getprocessor()
-{ //get machine processor
+{
+#ifdef /* MCS_getprocessor_dsk_mac */ LEGACY_SYSTEM    
+    //get machine processor
 #ifdef __LITTLE_ENDIAN__
 	return "x86";
 #else
   return "Motorola PowerPC";
 #endif
+#endif /* MCS_getprocessor_dsk_mac */
 }
 
 real8 MCS_getfreediskspace(void)
@@ -1779,6 +1809,7 @@ real8 MCS_getfreediskspace(void)
 
 const char *MCS_getsystemversion()
 {
+#ifdef /* MCS_getsystemversion_dsk_mac */ LEGACY_SYSTEM    
 	static char versioninfo[12];
 	
 	long response;
@@ -1808,6 +1839,7 @@ const char *MCS_getsystemversion()
 	}
 	
 	return NULL;
+#endif /* MCS_getsystemversion_dsk_mac */
 }
 
 void MCS_query_registry(MCExecPoint &dest, const char** type)
@@ -1928,7 +1960,9 @@ Boolean MCS_poll(real8 delay, int fd)
 // MW-2006-08-05: Vetted for Endian issues
 void MCS_send(const MCString &message, const char *program,
               const char *eventtype, Boolean needReply)
-{ //send "" to program "" with/without reply
+{
+#ifdef /* MCS_send_dsk_mac */ LEGACY_SYSTEM
+    //send "" to program "" with/without reply
 	if (!MCSecureModeCheckAppleScript())
 		return;
 
@@ -2046,11 +2080,13 @@ void MCS_send(const MCString &message, const char *program,
 	}
 	else
 		MCresult->clear(False);
+#endif /* MCS_send_dsk_mac */
 }
 
 // MW-2006-08-05: Vetted for Endian issues
 void MCS_reply(const MCString &message, const char *keyword, Boolean error)
 {
+#ifdef /* MCS_reply_dsk_mac */ LEGACY_SYSTEM    
 	delete replymessage;
 	replylength = message.getlength();
 	replymessage = new char[replylength];
@@ -2068,6 +2104,7 @@ void MCS_reply(const MCString &message, const char *keyword, Boolean error)
 		else
 			replykeyword = '----';
 	}
+#endif /* MCS_reply_dsk_mac */
 }
 
 static bool fetch_ae_as_fsref_list(char*& string, uint4& length)
@@ -2112,6 +2149,7 @@ static bool fetch_ae_as_fsref_list(char*& string, uint4& length)
 // MW-2006-08-05: Vetted for Endian issues
 char *MCS_request_ae(const MCString &message, uint2 ae)
 {
+#ifdef /* MCS_request_ae_dsk_mac */ LEGACY_SYSTEM    
 	if (aePtr == NULL)
 		return strdup("No current Apple event"); //as specified in HyperTalk
 	errno = noErr;
@@ -2220,11 +2258,13 @@ char *MCS_request_ae(const MCString &message, uint2 ae)
 	if (errno == errAECoercionFail) //data could not display as text
 		return strclone("unknown type");
 	return strclone("not found");
+#endif /* MCS_request_ae_dsk_mac */
 }
 
 // MW-2006-08-05: Vetted for Endian issues
 char *MCS_request_program(const MCString &message, const char *program)
 {
+#ifdef /* MCS_request_program_dsk_mac */ LEGACY_SYSTEM
 	AEAddressDesc receiver;
 	errno = getDescFromAddress(program, &receiver);
 	if (errno != noErr)
@@ -2284,10 +2324,12 @@ char *MCS_request_program(const MCString &message, const char *program)
 		AEanswerData = NULL;
 		return retval;
 	}
+#endif /* MCS_request_program_dsk_mac */
 }
 
 char *MCS_FSSpec2path(FSSpec *fSpec)
 {
+#ifdef /* MCS_mac_FSSpec2path_dsk_mac */ LEGACY_SYSTEM    
 	char *path = new char[PATH_MAX + 1];
 
 
@@ -2339,6 +2381,7 @@ char *MCS_FSSpec2path(FSSpec *fSpec)
 	delete fname;
 	delete path;
 	return tutfpath;
+#endif /* MCS_mac_FSSpec2path_dsk_mac */
 }
 
 char *MCS_fsref_to_path(FSRef& p_ref)
@@ -2362,6 +2405,7 @@ char *MCS_fsref_to_path(FSRef& p_ref)
 
 OSErr MCS_pathtoref_and_leaf(const char *p_path, FSRef& r_ref, UniChar*& r_leaf, UniCharCount& r_leaf_length)
 {
+#ifdef /* MCS_pathtoref_and_leaf */ LEGACY_SYSTEM
 	OSErr t_error;
 	t_error = noErr;
 
@@ -2416,6 +2460,7 @@ OSErr MCS_pathtoref_and_leaf(const char *p_path, FSRef& r_ref, UniChar*& r_leaf,
 		delete t_utf8_path;
 		
 	return t_error;
+#endif /* MCS_pathtoref_and_leaf */
 }
 
 OSErr MCS_fsspec_to_fsref(const FSSpec *p_fsspec, FSRef *r_fsref)
@@ -2443,6 +2488,7 @@ OSErr MCS_pathtoref(const MCString& p_path, FSRef *r_ref)
 
 OSErr MCS_pathtoref(const char *p_path, FSRef *r_ref)
 {
+#ifdef /* MCS_pathtoref_dsk_mac */ LEGACY_SYSTEM    
 	char *t_resolved_path;
 	t_resolved_path = MCS_resolvepath(p_path);
 	
@@ -2458,11 +2504,13 @@ OSErr MCS_pathtoref(const char *p_path, FSRef *r_ref)
 	// delete t_resolved_path;
 	
 	return t_error;
+#endif /* MCS_pathtoref_dsk_mac */
 }
 
 // based on MoreFiles (Apple DTS)
 OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec)
 {
+#ifdef /* MCS_path2FSSpec_dsk_mac */ LEGACY_SYSTEM    
 	char *path = MCS_resolvepath(fname);
 	memset(fspec, 0, sizeof(FSSpec));
 
@@ -2496,6 +2544,7 @@ OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec)
 	delete fspecname;
 	delete path;
 	return errno;
+#endif /* MCS_path2FSSpec_dsk_mac */
 }
 
 /**************************************************************************
