@@ -164,8 +164,12 @@ MCPropertyInfo MCObject::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_SHADOW_OFFSET, Int16, MCObject, ShadowOffset)
 	DEFINE_RW_OBJ_PROPERTY(P_3D, Bool, MCObject, 3D)
 
-	DEFINE_RW_OBJ_PART_PROPERTY(P_VISIBLE, Bool, MCObject, Visible)
-	DEFINE_RW_OBJ_PART_PROPERTY(P_INVISIBLE, Bool, MCObject, Invisible)
+    // MERG-2013-05-01: [[ EffVisible ]] Add 'effective' adjective to
+    //   the visible property.
+	DEFINE_RW_OBJ_PART_NON_EFFECTIVE_PROPERTY(P_VISIBLE, Bool, MCObject, Visible)
+    DEFINE_RO_OBJ_PART_EFFECTIVE_PROPERTY(P_VISIBLE, Bool, MCObject, Visible)
+	DEFINE_RW_OBJ_PART_NON_EFFECTIVE_PROPERTY(P_INVISIBLE, Bool, MCObject, Invisible)
+    DEFINE_RO_OBJ_PART_EFFECTIVE_PROPERTY(P_INVISIBLE, Bool, MCObject, Invisible)
 	DEFINE_RW_OBJ_PART_PROPERTY(P_ENABLED, Bool, MCObject, Enabled)
 	DEFINE_RW_OBJ_PART_PROPERTY(P_DISABLED, Bool, MCObject, Disabled)
 	DEFINE_RW_OBJ_PROPERTY(P_SELECTED, Bool, MCObject, Selected)

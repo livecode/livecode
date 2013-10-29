@@ -954,8 +954,10 @@ public:
 
 	void GetVisible(MCExecContext& ctxt, uint32_t part, bool& r_setting);
 	virtual void SetVisible(MCExecContext& ctxt, uint32_t part, bool setting);
+    void GetEffectiveVisible(MCExecContext& ctxt, uint32_t part, bool& r_setting);
 	void GetInvisible(MCExecContext& ctxt, uint32_t part, bool& r_setting);
 	virtual void SetInvisible(MCExecContext& ctxt, uint32_t part, bool setting);
+    void GetEffectiveInvisible(MCExecContext& ctxt, uint32_t part, bool& r_setting);
 	void GetEnabled(MCExecContext& ctxt, uint32_t part, bool& r_setting);
 	virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
 	void GetDisabled(MCExecContext& ctxt, uint32_t part, bool& r_setting);
