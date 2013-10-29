@@ -869,9 +869,21 @@ Exec_stat MCEdit::exec(MCExecPoint &ep)
 		MCeerror->add(EE_EDIT_BADTARGET, line, pos);
 		return ES_ERROR;
 	}
+    
+    // MERG 2013-9-13: [[ EditScriptChunk ]] Added at expression that's passed through as a second parameter to editScript
+    MCAutoStringRef t_at;
+    if (m_at != NULL)
+    {
+        if (m_at->eval(ep) != ES_NORMAL)
+        {
+            MCeerror->add(EE_EDIT_BADAT, line, pos);
+            return ES_ERROR;
+        }
+        /* UNCHECKED */ ep . copyasstringref(&t_at);
+    }
 
 	MCExecContext ctxt(ep);
-	MCIdeExecEditScriptOfObject(ctxt, optr);
+	MCIdeExecEditScriptOfObject(ctxt, optr, *t_at);
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 

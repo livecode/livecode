@@ -3809,7 +3809,7 @@ extern MCExecMethodInfo *kMCIdeExecShowMessageBoxMethodInfo;
 
 void MCIdeExecPutIntoMessage(MCExecContext& ctxt, MCStringRef value, int where);
 
-void MCIdeExecEditScriptOfObject(MCExecContext& ctxt, MCObject *p_object);
+void MCIdeExecEditScriptOfObject(MCExecContext& ctxt, MCObject *p_object, MCStringRef p_at);
 void MCIdeExecHideMessageBox(MCExecContext& ctxt);
 void MCIdeExecShowMessageBox(MCExecContext& ctxt);
 
