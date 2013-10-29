@@ -1420,10 +1420,33 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 	if (t_success)
 		t_success =	t_object -> gettype() == CT_BUTTON;
 
-	// MW-2009-01-28: [[ Bug ]] Make sure we aren't setting the parentScript of
-	//   an object to itself.
+	// MW-2013-07-18: [[ Bug 11037 ]] Make sure the object isn't in the hierarchy
+	//   of the parentScript.
+	bool t_is_cyclic;
+	t_is_cyclic = false;
 	if (t_success)
-		t_success = t_object != this;
+	{
+		MCObject *t_parent_object;
+		t_parent_object = t_object;
+		while(t_parent_object != nil)
+		{
+			if (t_parent_object == this)
+			{
+				t_is_cyclic = true;
+				break;
+			}
+			
+			MCParentScript *t_super_parent_script;
+			t_super_parent_script = t_parent_object -> getparentscript();
+			if (t_super_parent_script != nil)
+				t_parent_object = t_super_parent_script -> GetObject();
+			else
+				t_parent_object = nil;
+		}
+		
+		if (t_is_cyclic)
+			t_success = false;
+	}
 
 	if (t_success)
 	{
@@ -1449,20 +1472,15 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 			t_use = MCParentScript::Acquire(this, t_id, t_stack);
 			t_success = t_use != nil;
 
-			// MW-2009-01-28: [[ Inherited parentScripts ]]
-			// Next we have to ensure the inheritence hierarchy is in place (The
-			// inherit call will create super-uses, and will return false if there
-				// is not enough memory).
-#ifdef FEATURE_INHERITED_PARENTSCRIPTS
+            // MW-2013-05-30: [[ InheritedPscripts ]] Make sure we resolve the the
+			//   parent script as pointing to the object (so Inherit works correctly).
+			t_use -> GetParent() -> Resolve(t_object);
+            
+            // MW-2013-05-30: [[ InheritedPscripts ]] Next we have to ensure the
+			//   inheritence hierarchy is in place (The inherit call will create
+			//   super-uses, and will return false if there is not enough memory).
 			if (t_success)
 				t_success = t_use -> Inherit();
-
-			// TODO: Update all the Uses of this object, if it is currently
-			// being used as a parentScript, because we have now changed the
-			// inheritence hierarchy dynamically, and the various uses need
-			// their super_use chains updated.
-			// 
-#endif
 
 			// We have succeeded in creating a new use of an object as a parent
 			// script, so now release the old parent script this object points
@@ -1472,15 +1490,27 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 
 			parent_script = t_use;
 
-			// Finally resolve the parent script as pointing to the object.
-			parent_script -> GetParent() -> Resolve(t_object);
+			// MW-2013-05-30: [[ InheritedPscripts ]] Make sure we update all the
+			//   uses of this object if it is being used as a parentScript. This
+			//   is because the inheritence hierarchy has been updated and so the
+			//   super_use chains need to be remade.
+			MCParentScript *t_this_parent;
+			if (getstate(CS_IS_PARENTSCRIPT))
+			{
+				t_this_parent = MCParentScript::Lookup(this);
+				if (t_success && t_this_parent != nil)
+					t_success = t_this_parent -> Reinherit();
+			}
 		}
 	}
 	else
 	{
-		ctxt . LegacyThrow(EE_PARENTSCRIPT_BADOBJECT);
-		delete t_chunk;
-		return;
+		// MW-2013-07-18: [[ Bug 11037 ]] Report an appropriate error if the hierarchy
+		//   is cyclic.
+		if (!t_is_cyclic)
+			ctxt . LegacyThrow(EE_PARENTSCRIPT_BADOBJECT);
+		else
+			ctxt . LegacyThrow(EE_PARENTSCRIPT_CYCLICOBJECT);
 	}
 
 	// Delete our temporary chunk object.
