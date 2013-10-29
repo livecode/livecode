@@ -3313,18 +3313,28 @@ void MCInterfaceExecImportSnapshot(MCExecContext& ctxt, MCStringRef p_display, M
 	}
 	else	
 		t_rect = *p_region;
-	// TODO - graphics refactor
-    /*
-	MCBitmap *t_bitmap = nil;
-	t_bitmap = MCscreen->snapshot(t_rect, p_window, p_display);
+
+    // IM-2013-08-01: [[ ResIndependence ]] Resolution scale for snapshots - unless specified should produce point-scale image
+    MCGFloat t_image_scale;
+    t_image_scale = 1.0;
+    
+	MCImageBitmap *t_bitmap = nil;
+	t_bitmap = MCscreen->snapshot(t_rect, t_image_scale, p_window, p_display);
 	
 	if (t_bitmap != nil)
 	{
+        MCImageBitmapCheckTransparency(t_bitmap);
+        
 		MCImage *iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
-		iptr->compress(t_bitmap, true, true);
-		iptr->attach(OP_CENTER, false);
-		MCscreen->destroyimage(t_bitmap);
-	} */
+        if (iptr != nil)
+        {
+            // IM-2013-08-01: [[ ResIndependence ]] pass image scale when setting bitmap
+            iptr->setbitmap(t_bitmap, t_image_scale, true);
+            iptr->attach(OP_CENTER, false);
+        }
+        
+        MCImageFreeBitmap(t_bitmap);
+    }
 }
 void MCInterfaceExecImportSnapshotOfScreen(MCExecContext& ctxt, MCRectangle *p_region)
 {
@@ -3341,16 +3351,18 @@ void MCInterfaceExecImportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_sta
 }
 void MCInterfaceExecImportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size)
 {
-// TODO - graphics refactor
-/*
 	if (MCdefaultstackptr->islocked())
 	{	
 		ctxt . LegacyThrow(EE_IMPORT_LOCKED);
 		return;
 	}
 
-	MCBitmap *t_bitmap = nil;
-	t_bitmap = p_target -> snapshot(p_region, p_at_size, p_with_effects);
+    // IM-2013-08-01: [[ ResIndependence ]] Resolution scale for snapshots - unless specified should produce point-scale image
+    MCGFloat t_image_scale;
+    t_image_scale = 1.0;
+    
+	MCImageBitmap *t_bitmap = nil;
+	t_bitmap = p_target -> snapshot(p_region, p_at_size, t_image_scale, p_with_effects);
 	
 	// OK-2007-04-24: If the import rect doesn't intersect with the object, MCobject::snapshot
 	// may return null. In this case, return an error.
@@ -3360,14 +3372,22 @@ void MCInterfaceExecImportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_targ
 		return;
 	}
 	
-	if (t_bitmap != nil)
-	{
-		MCImage *iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
-		iptr->compress(t_bitmap, true, true);
-		iptr->attach(OP_CENTER, false);
-		MCscreen->destroyimage(t_bitmap);
-	}
- */
+    // MW-2013-05-20: [[ Bug 10897 ]] Object snapshot returns a premultipled
+	//   bitmap, which needs to be processed before compression.
+    
+    MCImageBitmapUnpremultiply(t_bitmap);
+    MCImageBitmapCheckTransparency(t_bitmap);
+    
+    MCImage *iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
+    
+    if (iptr != nil)
+    {
+        // IM-2013-08-01: [[ ResIndependence ]] pass image scale when setting bitmap
+        iptr->setbitmap(t_bitmap, t_image_scale, true);
+        iptr->attach(OP_CENTER, false);
+    }
+    
+    MCImageFreeBitmap(t_bitmap);
 }
 
 void MCInterfaceExecImportGetStream(MCExecContext& ctxt, MCStringRef p_filename, IO_handle &r_stream)
