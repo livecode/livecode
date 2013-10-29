@@ -1402,51 +1402,6 @@ public:
 	}
 };
 
-// JS-2013-07-01: [[ EnhancedFilter ]] Utility class and descendents handling the
-//   regex and wildcard style pattern matchers.
-class MCPatternMatcher
-{
-protected:
-	MCStringRef pattern;
-	Boolean casesensitive;
-public:
-	// MW-2013-07-01: [[ EnhancedFilter ]] Tweaked to take 'const char *' since class
-	//   copies the string.
-	MCPatternMatcher(MCStringRef p, Boolean cs)
-	{
-		pattern = MCValueRetain(p);
-		casesensitive = cs;
-	}
-	virtual ~MCPatternMatcher();
-	virtual Exec_stat compile(uint2 line, uint2 pos) = 0;
-	virtual Boolean match(MCStringRef s) = 0;
-};
-
-class MCRegexMatcher : public MCPatternMatcher
-{
-protected:
-	regexp *compiled;
-public:
-	MCRegexMatcher(MCStringRef p, Boolean cs) : MCPatternMatcher(p, cs)
-	{
-		compiled = NULL;
-	}
-	virtual Exec_stat compile(uint2 line, uint2 pos);
-	virtual Boolean match(MCStringRef s);
-};
-
-class MCWildcardMatcher : public MCPatternMatcher
-{
-public:
-	MCWildcardMatcher(MCStringRef p, Boolean cs) : MCPatternMatcher(p, cs)
-	{
-	}
-	virtual Exec_stat compile(uint2 line, uint2 pos);
-	virtual Boolean match(MCStringRef s);
-protected:
-	static Boolean match(const char *s, const char *p, Boolean cs);
-};
-
 class MCFilter : public MCStatement
 {
 	// JS-2013-07-01: [[ EnhancedFilter ]] Type of the filter (items or lines).
@@ -1476,7 +1431,9 @@ public:
 		discardmatches = False;
 	}
 	virtual ~MCFilter();
-	char *filterdelimited(char *sstring, char delimiter, MCPatternMatcher *matcher);
+#ifdef LEGACY_EXEC
+    char *filterdelimited(char *sstring, char delimiter, MCPatternMatcher *matcher);
+#endif
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual Exec_stat exec(MCExecPoint &);
 	virtual void compile(MCSyntaxFactoryRef);

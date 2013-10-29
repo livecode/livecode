@@ -1713,42 +1713,10 @@ void MCExport::compile(MCSyntaxFactoryRef ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// JS-2013-07-01: [[ EnhancedFilter ]] Implementation of pattern matching classes.
-
-MCPatternMatcher::~MCPatternMatcher()
-{
-	MCValueRelease(pattern);
-}
-
-Exec_stat MCRegexMatcher::compile(uint2 line, uint2 pos)
-{
-	// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
-	//   no reason not to use the cache.
-	compiled = MCR_compile(pattern, casesensitive);
-	if (compiled == NULL)
-	{
-        MCAutoStringRef t_error;
-        MCR_copyerror(&t_error);
-		MCeerror->add(EE_MATCH_BADPATTERN, line, pos, MCStringGetOldString(*t_error));
-		return ES_ERROR;
-	}
-    return ES_NORMAL;
-}
-
-Boolean MCRegexMatcher::match(MCStringRef s)
-{
-	return MCR_exec(compiled, s);
-}
-
-Exec_stat MCWildcardMatcher::compile(uint2 line, uint2 pos)
-{
-    // wildcard patterns are not compiled
-    return ES_NORMAL;
-}
-
 #define OPEN_BRACKET '['
 #define CLOSE_BRACKET ']'
 
+#ifdef /* MCWildcardMatcher::match */ LEGACY_EXEC
 /* static */ Boolean MCWildcardMatcher::match(const char *s, const char *p, Boolean casesensitive)
 {
 	uint1 scc, c;
@@ -1844,11 +1812,7 @@ Exec_stat MCWildcardMatcher::compile(uint2 line, uint2 pos)
 		p++;
 	return *p == 0;
 }
-
-Boolean MCWildcardMatcher::match(MCStringRef s)
-{
-	return match(MCStringGetCString(s), MCStringGetCString(pattern), casesensitive);
-}
+#endif /* MCWildcardMatcher::match */
 
 MCFilter::~MCFilter()
 {
@@ -2144,11 +2108,15 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCFilter */
 
-
-	MCExecContext ctxt(ep);
-
 	MCAutoStringRef t_source;
-	if (container->eval(ep) != ES_NORMAL)
+	Exec_stat stat;
+    
+	// Evaluate the container or source expression
+	if (container != NULL)
+		stat = container->eval(ep);
+	else
+		stat = source->eval(ep);
+	if (stat != ES_NORMAL)
 	{
 		MCeerror->add(EE_FILTER_CANTGET, line, pos);
 		return ES_ERROR;
@@ -2164,14 +2132,38 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
 	/* UNCHECKED */ ep . copyasstringref(&t_pattern);
 
 	MCAutoStringRef t_output;
-	MCStringsExecFilter(ctxt, *t_source, *t_pattern, discardmatches == True, &t_output);
-
-	if (container->set(ep, PT_INTO, *t_output) != ES_NORMAL)
-	{
-		MCeerror->add(EE_FILTER_CANTSET, line, pos);
-		return ES_ERROR;
+    MCExecContext ctxt(ep, it);
+    
+    if (it != nil)
+    {
+        if (matchmode == MA_REGEX)
+            MCStringsExecFilterRegexIntoIt(ctxt, *t_source, *t_pattern, discardmatches == True, chunktype == CT_LINE);
+        else
+            MCStringsExecFilterWildcardIntoIt(ctxt, *t_source, *t_pattern, discardmatches == True, chunktype == CT_LINE);
+    }
+    else
+    {
+        if (matchmode == MA_REGEX)
+            MCStringsExecFilterRegex(ctxt, *t_source, *t_pattern, discardmatches == True, chunktype == CT_LINE, &t_output);
+        else
+            MCStringsExecFilterWildcard(ctxt, *t_source, *t_pattern, discardmatches == True, chunktype == CT_LINE, &t_output);
+    }
+    
+    
+    if (it == nil && *t_output != nil)
+    {
+        if (target != nil)
+            stat = target -> set(ep, PT_INTO, *t_output);
+        else
+            stat = container -> set(ep, PT_INTO, *t_output);
+        
+        if (stat != ES_NORMAL)
+        {
+            MCeerror->add(EE_FILTER_CANTSET, line, pos);
+            return ES_ERROR;
+        }
 	}
-	
+    
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
@@ -2182,12 +2174,43 @@ void MCFilter::compile(MCSyntaxFactoryRef ctxt)
 {
 	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
 
-	container -> compile_inout(ctxt);
+    if (container != nil)
+    {
+        if (target != nil)
+            container -> compile_in(ctxt);
+        else
+            container -> compile_inout(ctxt);
+    }
+    else
+        source -> compile(ctxt);
+    
 	pattern -> compile(ctxt);
 	MCSyntaxFactoryEvalConstantBool(ctxt, discardmatches);
-
-	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCStringsExecFilterMethodInfo, 0, 1, 2, 0);
-
+    MCSyntaxFactoryEvalConstantBool(ctxt, chunktype == CT_LINE);
+    
+    if (it != nil)
+    {
+        if (matchmode == MA_REGEX)
+            MCSyntaxFactoryExecMethod(ctxt, kMCStringsExecFilterRegexIntoItMethodInfo);
+        else
+            MCSyntaxFactoryExecMethod(ctxt, kMCStringsExecFilterWildcardIntoItMethodInfo);
+    }
+    else
+    {
+        if (target != nil)
+            target -> compile_out(ctxt);
+        
+        if (matchmode == MA_REGEX)
+        {
+            MCSyntaxFactoryExecMethod(ctxt, kMCStringsExecFilterRegexMethodInfo);
+            MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCStringsExecFilterRegexMethodInfo, 0, 1, 2, 0);
+        }
+        else
+        {
+            MCSyntaxFactoryExecMethod(ctxt, kMCStringsExecFilterWildcardMethodInfo);
+            MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCStringsExecFilterWildcardMethodInfo, 0, 1, 2, 0);
+        }
+    }
 	MCSyntaxFactoryEndStatement(ctxt);
 }
 

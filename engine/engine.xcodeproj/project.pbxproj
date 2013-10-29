@@ -1557,6 +1557,7 @@
 		76EF31A3181E7CCE00FAC195 /* osxcisupport.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = osxcisupport.mm; path = src/osxcisupport.mm; sourceTree = "<group>"; };
 		76EF31A5181E7D8000FAC195 /* cgimageutil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cgimageutil.cpp; path = src/cgimageutil.cpp; sourceTree = "<group>"; };
 		76EF31A9181E801800FAC195 /* sysosxrandom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysosxrandom.cpp; path = src/sysosxrandom.cpp; sourceTree = "<group>"; };
+		76EF31F9181FF2EE00FAC195 /* exec-strings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "exec-strings.h"; sourceTree = "<group>"; };
 		76F71741181135FE007301F6 /* osxtransfer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = osxtransfer.mm; path = src/osxtransfer.mm; sourceTree = "<group>"; };
 		76FA930917FC72FB003DB770 /* exec-strings-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-strings-chunk.cpp"; path = "src/exec-strings-chunk.cpp"; sourceTree = "<group>"; };
 		A04643DB0BAAA63A0030A830 /* w32ans.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = w32ans.cpp; path = src/w32ans.cpp; sourceTree = "<group>"; };
@@ -2414,6 +2415,7 @@
 				4D6C27FC1647D942007C96B7 /* exec-security.cpp */,
 				4D83866316789E27003BEC7C /* exec-server.cpp */,
 				4DE3B0FF15888AB8008EB6B5 /* exec-strings.cpp */,
+				76EF31F9181FF2EE00FAC195 /* exec-strings.h */,
 				4DE3B10115888AB8008EB6B5 /* exec-text.cpp */,
 				4DE3B10215888AB8008EB6B5 /* exec.cpp */,
 				4DE3B10315888AB8008EB6B5 /* exec.h */,

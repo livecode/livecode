@@ -1411,7 +1411,10 @@ extern MCExecMethodInfo *kMCStringsEvalLineOffsetMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalWordOffsetMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalOffsetMethodInfo;
 extern MCExecMethodInfo *kMCStringsExecReplaceMethodInfo;
-extern MCExecMethodInfo *kMCStringsExecFilterMethodInfo;
+extern MCExecMethodInfo *kMCStringsExecFilterWildcardMethodInfo;
+extern MCExecMethodInfo *kMCStringsExecFilterRegexMethodInfo;
+extern MCExecMethodInfo *kMCStringsExecFilterWildcardIntoItMethodInfo;
+extern MCExecMethodInfo *kMCStringsExecFilterRegexIntoItMethodInfo;
 
 extern MCExecMethodInfo *kMCStringsEvalLinesOfTextByRangeMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalLinesOfTextByExpressionMethodInfo;
@@ -1471,7 +1474,10 @@ void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p
 
 void MCStringsExecReplace(MCExecContext& ctxt, MCStringRef p_pattern, MCStringRef p_replacement, MCStringRef p_target);
 
-void MCStringsExecFilter(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, MCStringRef &r_result);
+void MCStringsExecFilterWildcard(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines, MCStringRef &r_result);
+void MCStringsExecFilterRegex(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines, MCStringRef &r_result);
+void MCStringsExecFilterWildcardIntoIt(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines);
+void MCStringsExecFilterRegexIntoIt(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines);
 
 void MCStringsEvalTextChunkByRange(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, bool p_eval_mutable, MCStringRef& x_string);
 void MCStringsEvalTextChunkByExpression(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, bool p_eval_mutable, MCStringRef &x_string);

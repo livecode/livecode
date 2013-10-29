@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 
 #include "exec.h"
+#include "exec-strings.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,7 +65,10 @@ MC_EXEC_DEFINE_EVAL_METHOD(Strings, LineOffset, 4)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, WordOffset, 4)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, Offset, 4)
 MC_EXEC_DEFINE_EXEC_METHOD(Strings, Replace, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Strings, Filter, 4)
+MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterWildcard, 5)
+MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterRegex, 5)
+MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterWildcardIntoIt, 4)
+MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterRegexIntoIt, 4)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1174,10 +1178,35 @@ void MCStringsExecReplace(MCExecContext& ctxt, MCStringRef p_pattern, MCStringRe
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// JS-2013-07-01: [[ EnhancedFilter ]] Implementation of pattern matching classes.
+bool MCRegexMatcher::compile(MCStringRef& r_error)
+{
+	// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
+	//   no reason not to use the cache.
+	compiled = MCR_compile(pattern, casesensitive);
+	if (compiled == nil)
+	{
+        MCR_copyerror(r_error);
+		return false;
+	}
+    return true;
+}
+
+bool MCRegexMatcher::match(MCStringRef s)
+{
+	return MCR_exec(compiled, s);
+}
+
+bool MCWildcardMatcher::compile(MCStringRef& r_error)
+{
+    // wildcard patterns are not compiled
+    return true;
+}
+
 #define OPEN_BRACKET '['
 #define CLOSE_BRACKET ']'
 
-bool match(const char *s, uindex_t s_length, const char *p, uindex_t p_length, bool casesensitive)
+bool MCStringsWildcardMatch(const char *s, uindex_t s_length, const char *p, uindex_t p_length, bool casesensitive)
 {
 	uindex_t s_index = 0;
 	uindex_t p_index = 0;
@@ -1208,7 +1237,7 @@ bool match(const char *s, uindex_t s_length, const char *p, uindex_t p_length, b
 					c = *p++;
 					p_index++;
 					if (c == CLOSE_BRACKET && lc >= 0)
-						return ok ? match(s, s_length - s_index, p, p_length - p_index, casesensitive) : false;
+						return ok ? MCStringsWildcardMatch(s, s_length - s_index, p, p_length - p_index, casesensitive) : false;
 					else
 						if (c == '-' && lc >= 0 && *p != CLOSE_BRACKET)
 						{
@@ -1265,7 +1294,7 @@ bool match(const char *s, uindex_t s_length, const char *p, uindex_t p_length, b
 					s_index++;
 				}
 				else
-					if (match(s++, s_length - s_index++, p, p_length - p_index, casesensitive))
+					if (MCStringsWildcardMatch(s++, s_length - s_index++, p, p_length - p_index, casesensitive))
 						return true;
 			return false;
 		case 0:
@@ -1290,12 +1319,17 @@ bool match(const char *s, uindex_t s_length, const char *p, uindex_t p_length, b
 	return p_index == p_length;
 }
 
-bool MCStringsExecFilterMatch(MCStringRef p_source, MCStringRef p_pattern, MCStringOptions p_options)
+bool MCStringsExecWildcardMatch(MCStringRef p_source, MCStringRef p_pattern, bool casesensitive)
 {
-	return match(MCStringGetCString(p_source), MCStringGetLength(p_source), MCStringGetCString(p_pattern), MCStringGetLength(p_pattern), p_options != kMCCompareCaseless); 
+	return MCStringsWildcardMatch(MCStringGetCString(p_source), MCStringGetLength(p_source), MCStringGetCString(p_pattern), MCStringGetLength(p_pattern), casesensitive);
 }
 
-MCStringRef MCStringsExecFilterLines(MCStringRef p_source, MCStringRef p_pattern, bool p_without, MCStringOptions p_options)
+bool MCWildcardMatcher::match(MCStringRef s)
+{
+	return MCStringsExecWildcardMatch(s, pattern, casesensitive);
+}
+
+MCStringRef MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, bool p_without, char_t p_delimiter, MCPatternMatcher *p_matcher)
 {
 	uint32_t t_length = MCStringGetLength(p_source);
 	if (t_length == 0)
@@ -1306,38 +1340,88 @@ MCStringRef MCStringsExecFilterLines(MCStringRef p_source, MCStringRef p_pattern
 	MCStringCreateMutable(0, t_output);
 
 	// OK-2010-01-11: Bug 7649 - Filter command was incorrectly removing empty lines.
-	// Now ignores line delimiter for matching but includes it in the append.
+	// Now ignores delimiter for matching but includes it in the append.
 
 	uindex_t t_return_offset = 0;
 	uindex_t t_last_offset = 0;
 	MCStringRef t_line;
 	bool t_found = true;
-	while (t_found)
+    bool t_success = true;
+	while (t_found && t_success)
 	{
-		t_found = MCStringFirstIndexOfChar(p_source, '\n', t_last_offset, kMCCompareCaseless, t_return_offset);
-		if (!t_found) //last line
-			MCStringCopySubstring(p_source, MCRangeMake(t_last_offset, t_length - t_last_offset), t_line);
+		t_found = MCStringFirstIndexOfChar(p_source, p_delimiter, t_last_offset, kMCCompareCaseless, t_return_offset);
+		if (!t_found) //last line or item
+			t_success = MCStringCopySubstring(p_source, MCRangeMake(t_last_offset, t_length - t_last_offset), t_line);
 		else
-			MCStringCopySubstring(p_source, MCRangeMake(t_last_offset, t_return_offset - t_last_offset), t_line);
-		
-		if (MCStringsExecFilterMatch(t_line, p_pattern, p_options) != p_without)
+			t_success = MCStringCopySubstring(p_source, MCRangeMake(t_last_offset, t_return_offset - t_last_offset), t_line);
+        
+		if (t_success && p_matcher -> match(t_line) != p_without)
 		{
 			if (!t_found)
-				MCStringAppend(t_output, t_line);
+				t_success = MCStringAppend(t_output, t_line);
 			else
-				MCStringAppendSubstring(t_output, p_source, MCRangeMake(t_last_offset, 1 + t_return_offset - t_last_offset)); 
+				t_success = MCStringAppendSubstring(t_output, p_source, MCRangeMake(t_last_offset, 1 + t_return_offset - t_last_offset));
 		}
 		t_last_offset = t_return_offset + 1;
 	}
 	
-	if (MCStringGetLength(t_output) != 0)
+    if (!t_success)
+    {
+        // IM-2013-07-26: [[ Bug 10774 ]] if filterlines fails throw a "no memory" error
+        ctxt . LegacyThrow(EE_NO_MEMORY);
+        return kMCEmptyString;
+    }
+    else if (MCStringGetLength(t_output) != 0)
 		return t_output;
 	else
 		return kMCEmptyString;
 }
 
-void MCStringsExecFilter(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, MCStringRef &r_result)
+void MCStringsExecFilterWildcard(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines, MCStringRef &r_result)
 {
-	MCStringCopy(MCStringsExecFilterLines(p_source, p_pattern, p_without, ctxt . GetCaseSensitive() ? kMCStringOptionCompareExact: kMCStringOptionCompareCaseless), r_result);
+    // Create the pattern matcher
+	MCPatternMatcher *matcher;
+    matcher = new MCWildcardMatcher(p_pattern, ctxt . GetCaseSensitive());
+    
+	MCStringCopy(MCStringsExecFilterDelimited(ctxt, p_source, p_without, p_lines ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), matcher), r_result);
 }
+
+void MCStringsExecFilterRegex(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines, MCStringRef &r_result)
+{
+	// Create the pattern matcher
+	MCPatternMatcher *matcher;
+    matcher = new MCRegexMatcher(p_pattern, ctxt . GetCaseSensitive());
+    
+    MCAutoStringRef t_regex_error;
+    if (!matcher -> compile(&t_regex_error))
+    {
+        ctxt . LegacyThrow(EE_MATCH_BADPATTERN);
+        return;
+    }
+    
+	MCStringCopy(MCStringsExecFilterDelimited(ctxt, p_source, p_without, p_lines ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), matcher), r_result);
+}
+
+void MCStringsExecFilterWildcardIntoIt(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines)
+{
+    MCAutoStringRef t_result;
+    MCStringsExecFilterWildcard(ctxt, p_source, p_pattern, p_without, p_lines, &t_result);
+    
+    if (*t_result != nil)
+        ctxt . SetItToValue(*t_result);
+    else
+        ctxt . SetItToEmpty();
+}
+
+void MCStringsExecFilterRegexIntoIt(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines)
+{
+    MCAutoStringRef t_result;
+    MCStringsExecFilterRegex(ctxt, p_source, p_pattern, p_without, p_lines, &t_result);
+
+    if (*t_result != nil)
+        ctxt . SetItToValue(*t_result);
+    else
+        ctxt . SetItToEmpty();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
