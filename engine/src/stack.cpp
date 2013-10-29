@@ -161,7 +161,7 @@ MCPropertyInfo MCStack::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_MODIFIED_MARK, Bool, MCStack, ModifiedMark)
 	DEFINE_RW_OBJ_PROPERTY(P_ACCELERATED_RENDERING, Bool, MCStack, AcceleratedRendering)
 
-	DEFINE_RW_OBJ_OPTIONAL_ENUM_PROPERTY(P_COMPOSITOR_TYPE, InterfaceCompositorType, MCStack, CompositorType)
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_COMPOSITOR_TYPE, InterfaceCompositorType, MCStack, CompositorType)
 	DEFINE_RW_OBJ_PROPERTY(P_COMPOSITOR_CACHE_LIMIT, OptionalUInt32, MCStack, CompositorCacheLimit)
     DEFINE_RW_OBJ_PROPERTY(P_COMPOSITOR_TILE_SIZE, OptionalUInt32, MCStack, CompositorTileSize)
 	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_DEFER_SCREEN_UPDATES, Bool, MCStack, DeferScreenUpdates)
@@ -179,6 +179,9 @@ MCPropertyInfo MCStack::kProperties[] =
 	// MW-2012-03-13: [[ UnicodeToolTip ]] Stacks don't have tooltips.
 	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_UNICODE_TOOL_TIP)
 	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_LAYER)
+    
+   	// IM-2013-09-23: [[ FullscreenMode ]] Add stack fullscreenMode property
+    DEFINE_RW_OBJ_ENUM_PROPERTY(P_FULLSCREENMODE, InterfaceStackFullscreenMode, MCStack, FullscreenMode)
 };
 
 MCObjectPropertyTable MCStack::kPropertyTable =

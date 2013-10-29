@@ -869,6 +869,8 @@ public:
 
 	void GetFullscreen(MCExecContext& ctxt, bool &r_flag);
 	void SetFullscreen(MCExecContext& ctxt, bool setting);
+    void GetFullscreenMode(MCExecContext& ctxt, intenum_t& r_mode);
+    void SetFullscreenMode(MCExecContext& ctxt, intenum_t p_mode);
 	virtual void SetName(MCExecContext& ctxt, MCStringRef p_name);
 	virtual void SetId(MCExecContext& ctxt, uinteger_t p_new_id);
 	virtual void SetVisible(MCExecContext& ctxt, uint32_t part, bool setting);
@@ -997,8 +999,8 @@ public:
 	void SetModifiedMark(MCExecContext& ctxt, bool setting);
 	void GetAcceleratedRendering(MCExecContext& ctxt, bool& r_value);
 	void SetAcceleratedRendering(MCExecContext& ctxt, bool p_value);
-	void GetCompositorType(MCExecContext& ctxt, intenum_t*& r_type);
-	void SetCompositorType(MCExecContext& ctxt, intenum_t* p_type);
+	void GetCompositorType(MCExecContext& ctxt, intenum_t& r_type);
+	void SetCompositorType(MCExecContext& ctxt, intenum_t p_type);
 	void GetDeferScreenUpdates(MCExecContext& ctxt, bool& r_value);
 	void SetDeferScreenUpdates(MCExecContext& ctxt, bool p_value);
 	void GetEffectiveDeferScreenUpdates(MCExecContext& ctxt, bool& r_value);

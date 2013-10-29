@@ -2583,6 +2583,7 @@ extern MCExecEnumTypeInfo *kMCInterfacePlayDestinationTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceStackStyleTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceCharsetTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceCompositorTypeTypeInfo;
+extern MCExecEnumTypeInfo *kMCInterfaceStackFullscreenModeTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceDecorationTypeInfo;
 
 ///////////
