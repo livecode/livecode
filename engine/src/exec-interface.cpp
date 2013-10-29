@@ -1923,15 +1923,22 @@ void MCInterfaceExecRevert(MCExecContext& ctxt)
 
 void MCInterfaceExecGroupControls(MCExecContext& ctxt, MCObjectPtr *p_controls, uindex_t p_control_count)
 {
+    // MW-2013-06-20: [[ Bug 10863 ]] Make sure all objects have this parent, after
+    //   the first object has been resolved.
+    MCObject *t_required_parent;
+    t_required_parent = nil;
+    
 	if (p_control_count != 0)
 	{
-		MCCard *t_card = NULL;
-		MCControl *controls = NULL;
+		MCCard *t_card = nil;
+		MCControl *controls = nil;
+        MCObject *t_this_parent = nil;
 		for (uindex_t i = 0; i < p_control_count; ++i)
 		{
-			if ((p_controls[i] . object) -> getparent() -> gettype() != CT_CARD)
+            t_this_parent = (p_controls[i] . object) -> getparent();
+			if (t_this_parent == nil || t_this_parent -> gettype() != CT_CARD)
 			{
-				ctxt . LegacyThrow(EE_GROUP_NOOBJ);
+				ctxt . LegacyThrow(EE_GROUP_NOTGROUPABLE);
 				return;
 			}
 			MCControl *cptr = (MCControl *)p_controls[i] . object;
@@ -1941,6 +1948,20 @@ void MCInterfaceExecGroupControls(MCExecContext& ctxt, MCObjectPtr *p_controls, 
 				ctxt . LegacyThrow(EE_GROUP_NOBG);
 				return;
 			}
+            
+            // MW-2013-06-20: [[ Bug 10863 ]] Take the parent of the first object for
+			//   future comparisons.
+			if (t_required_parent == nil)
+				t_required_parent = t_this_parent;
+            
+            // MERG-2013-05-07: [[ Bug 10863 ]] Make sure all objects have the same
+			//   parent.
+            if (t_this_parent != t_required_parent)
+            {
+                ctxt . LegacyThrow(EE_GROUP_DIFFERENTPARENT);
+				return;
+            }
+            
 			t_card = cptr->getcard(p_controls[i] . part_id);
 			t_card -> removecontrol(cptr, False, True);
 			cptr -> getstack() -> removecontrol(cptr);
