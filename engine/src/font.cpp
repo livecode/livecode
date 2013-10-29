@@ -51,7 +51,7 @@ struct MCFont
 struct MCLoadedFont
 {
     MCLoadedFont *next;
-    char *path;
+    MCStringRef path;
     bool is_global;
     void *handle;
 };
@@ -245,41 +245,41 @@ void MCFontRemap(void)
 
 // TD-2013-07-02: [[ DynamicFonts ]]
 // MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCLoadedFont
-Exec_stat MCFontLoad(MCExecPoint& ep, MCStringRef p_path, bool p_globally)
+bool MCFontLoad(MCStringRef p_path, bool p_globally)
 {
-    Exec_stat t_stat;
-    t_stat = ES_NORMAL;
+    bool t_success;
+    t_success = true;
     
-    if (t_stat == ES_NORMAL)
+    if (t_success)
     {
         // check if already loaded and unload if globally is not the same as loaded version
         for(MCLoadedFont *t_font = s_loaded_fonts; t_font != nil; t_font = t_font -> next)
-            if (MCU_strcasecmp(t_font -> path, MCStringGetCString(p_path)) == 0)
+            if (MCStringIsEqualTo(t_font -> path, p_path, kMCStringOptionCompareCaseless))
 			{
 				if (t_font -> is_global != p_globally)
 				{
-					t_stat = MCFontUnload(ep,MCStringGetCString(p_path));
+					t_success = MCFontUnload(p_path);
 					break;
 				}
 				else
-					return ES_NORMAL;
+					return true;
 			}
     }
     
-    if (t_stat == ES_NORMAL)
+    if (t_success)
     {
         void * t_loaded_font_handle;
         
         if (!MCscreen -> loadfont(p_path, p_globally, t_loaded_font_handle))
-            return ES_ERROR;
+            return false;
     
         MCLoadedFontRef self;
         if (!MCMemoryNew(self))
-            return ES_ERROR;
+            return false;
         
         self -> is_global = p_globally;
         self -> handle = t_loaded_font_handle;
-        self -> path = strdup(MCStringGetCString(p_path));
+        MCValueAssign(self -> path, p_path);
 		self -> next = s_loaded_fonts;
 		s_loaded_fonts = self;
 		
@@ -288,19 +288,19 @@ Exec_stat MCFontLoad(MCExecPoint& ep, MCStringRef p_path, bool p_globally)
 		MCstacks -> purgefonts();
     }
 
-    return t_stat;
+    return t_success;
 }
 
-Exec_stat MCFontUnload(MCExecPoint& ep, const char *p_path)
+bool MCFontUnload(MCStringRef p_path)
 {
     MCLoadedFont *t_prev_font;
     t_prev_font = nil;
     for(MCLoadedFont *t_font = s_loaded_fonts; t_font != nil; t_font = t_font -> next)
     {
-        if (MCU_strcasecmp(t_font -> path, p_path) == 0)
+        if (MCStringIsEqualTo(t_font -> path, p_path, kMCStringOptionCompareCaseless))
         {
             if (!MCscreen -> unloadfont(p_path, t_font -> is_global, t_font -> handle))
-                return ES_ERROR;
+                return false;
             
             if (t_prev_font != nil)
                 t_prev_font -> next = t_font -> next;
@@ -320,16 +320,17 @@ Exec_stat MCFontUnload(MCExecPoint& ep, const char *p_path)
         t_prev_font = t_font;
     }
     
-    return ES_NORMAL;
+    return true;
 }
 
-Exec_stat MCFontListLoaded(MCExecPoint& ep)
+bool MCFontListLoaded(uindex_t& r_count, MCStringRef*& r_list)
 {
-    ep.clear();
-    for(MCLoadedFont *t_font = s_loaded_fonts; t_font != nil; t_font = t_font -> next)
-        ep.concatcstring(t_font -> path, EC_RETURN, t_font == s_loaded_fonts);
+    MCAutoArray<MCStringRef> t_list;
     
-    return ES_NORMAL;
+    for(MCLoadedFont *t_font = s_loaded_fonts; t_font != nil; t_font = t_font -> next)
+        t_list . Push(t_font -> path);
+    
+    t_list . Take(r_list, r_count);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

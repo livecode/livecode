@@ -1646,7 +1646,7 @@ bool MCUIDC::loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_
 	return false;
 }
 
-bool MCUIDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle)
+bool MCUIDC::unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font_handle)
 {
 	return false;
 }

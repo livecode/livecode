@@ -3113,7 +3113,26 @@ Exec_stat MCStart::exec(MCExecPoint &ep)
 	MCExecContext ctxt(ep);
 	if (mode == SC_USING)
 	{
-		if (target != NULL)
+        // TD-2013-06-12: [[ DynamicFonts ]] Look for font.
+        if (font != NULL)
+        {
+            if (MCsecuremode & MC_SECUREMODE_DISK)
+            {
+                MCeerror->add(EE_DISK_NOPERM, line, pos);
+                return ES_ERROR;
+            }
+            
+            MCAutoStringRef t_font;
+            if (font->eval(ep) != ES_NORMAL)
+            {
+				MCeerror->add(EE_FONT_BADFILEEXP, line, pos);
+				return ES_ERROR;
+			}
+            /* UNCHECKED */ ep . copyasstringref(&t_font);
+
+            MCEngineExecStartUsingFont(ctxt, *t_font, is_globally);
+        }
+		else if (target != NULL)
 		{
 			MCObject *optr;
 			uint4 parid;
@@ -3182,7 +3201,13 @@ void MCStart::compile(MCSyntaxFactoryRef ctxt)
 
 	if (mode == SC_USING)
 	{
-		if (target != nil)
+        if (font != nil)
+        {
+            font -> compile(ctxt);
+            MCSyntaxFactoryEvalConstantBool(ctxt, is_globally);
+            MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecStartUsingFontMethodInfo);
+        }
+		else if (target != nil)
 		{
 			target -> compile_object_ptr(ctxt);
 
@@ -3475,7 +3500,19 @@ Exec_stat MCStop::exec(MCExecPoint &ep)
 		break;
 	case SC_USING:
 		{
-			MCStack *sptr = NULL;
+            // TD-2013-06-12: [[ DynamicFonts ]] Look for font.
+            if (font != NULL)
+            {
+                MCAutoStringRef t_font;
+                if (font->eval(ep) != ES_NORMAL)
+				{
+					MCeerror->add(EE_FONT_BADFILEEXP, line, pos);
+					return ES_ERROR;
+				}
+                /* UNCHECKED */ ep . copyasstringref(&t_font);
+                MCEngineExecStopUsingFont(ctxt, *t_font);
+            }
+
 			if (target != NULL)
 			{
 				MCObject *optr;
@@ -3490,6 +3527,7 @@ Exec_stat MCStop::exec(MCExecPoint &ep)
 			}
 			else
 			{
+                MCStack *sptr = NULL;
 				if (stack->eval(ep) != ES_NORMAL)
 				{
 					MCeerror->add(EE_STOP_BADTARGET, line, pos);
@@ -3528,7 +3566,12 @@ void MCStop::compile(MCSyntaxFactoryRef ctxt)
 	switch (mode)
 	{
 	case SC_EDITING:
-		if (target != nil)
+        if (font != nil)
+        {
+            font -> compile(ctxt);
+            MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecStopUsingFontMethodInfo);
+        }
+		else if (target != nil)
 		{
 			target -> compile_object_ptr(ctxt);
 

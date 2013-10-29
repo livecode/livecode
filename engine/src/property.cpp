@@ -307,6 +307,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 
 	DEFINE_RO_PROPERTY(P_ADDRESS, String, Engine, Address)
 	DEFINE_RO_PROPERTY(P_STACKS_IN_USE, String, Engine, StacksInUse)
+    // TD-2013-06-20: [[ DynamicFonts ]] global property for list of font files
+    DEFINE_RO_PROPERTY(P_FONTFILES_IN_USE, LinesOfString, Engine, FontfilesInUse)
 
 	DEFINE_RW_PROPERTY(P_SHELL_COMMAND, String, Files, ShellCommand)
 	DEFINE_RW_PROPERTY(P_DIRECTORY, String, Files, CurrentFolder)

@@ -97,13 +97,13 @@ typedef struct MCLoadedFont *MCLoadedFontRef;
 // loaded for all applications, otherwise just for the current one. If the
 // font is already loaded and the globally flag has changed an attempt is first
 // made to unload it before loading it again.
-Exec_stat MCFontLoad(MCExecPoint& ep, const char *p_path, bool p_globally);
+bool MCFontLoad(MCStringRef p_path, bool p_globally);
 
 // Attempt to unload the given file as a font.
-Exec_stat MCFontUnload(MCExecPoint& ep, const char *p_path);
+bool MCFontUnload(MCStringRef p_path);
 
 // List all currently loaded font files (loaded via MCFontLoad).
-Exec_stat MCFontListLoaded(MCExecPoint& ep);
+bool MCFontListLoaded(uindex_t& r_count, MCStringRef*& r_list);
 
 ////////////////////////////////////////////////////////////////////////////////
 
