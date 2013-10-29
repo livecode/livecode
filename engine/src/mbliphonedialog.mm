@@ -170,6 +170,10 @@ int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button
 	
 	MCIPhoneRunOnMainFiber(dopopupanswerdialog_postwait, &ctxt);
 	
+    for (uindex_t i = 0; i < p_button_count; i++)
+		MCValueRelease(ctxt . buttons[i]);
+    MCValueRelease(ctxt . title);
+    MCValueRelease(ctxt . message);
 	return ctxt . result;
 }
 
@@ -504,6 +508,9 @@ bool MCScreenDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRe
 
 	MCIPhoneRunOnMainFiber(dopopupaskdialog_postwait, &ctxt);
 	
+    MCValueRelease(ctxt . title);
+    MCValueRelease(ctxt . message);
+    MCValueRelease(ctxt . initial);
 	return MCStringCreateWithCString(ctxt . result, r_result);
 }
 

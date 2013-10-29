@@ -270,7 +270,7 @@ static void content_to_url(MCStringRef p_file, NSURL*& r_url)
 	NSURL *t_url;
 	t_url = nil;
     
-	if (MCStringSubstringIsEqualTo(p_file, MCRangeMake(0, 7), MCSTR("http://"), kMCCompareExact) || MCStringSubstringIsEqualTo(p_file, MCRangeMake(0, 8), MCSTR("https://"), kMCCompareExact))
+	if (MCStringBeginsWith(p_file, MCSTR("http://"), kMCCompareExact) || MCStringBeginsWith(p_file, MCSTR("https://"), kMCCompareExact))
 		t_url = [NSURL URLWithString: [NSString stringWithMCStringRef: p_file ]];
 	else if (!MCStringIsEmpty(p_file))
 	{

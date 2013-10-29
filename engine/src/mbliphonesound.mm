@@ -64,6 +64,7 @@ public:
     
 	void Destroy(void)
 	{
+        MCValueRelease(m_media);
 		delete this;
 	}
 	

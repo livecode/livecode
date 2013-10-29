@@ -537,7 +537,7 @@ bool MCSystemShowEvent(MCStringRef p_event_id, MCStringRef& r_result)
 {
     bool t_result = false;
     NSString* t_ns_result = nil;
-    NSString* t_ns_event = [[NSString alloc] initWithString: [NSString stringWithMCStringRef: p_event_id]];
+    NSString* t_ns_event = [NSString stringWithMCStringRef: p_event_id];
     MCIPhonePickEventDelegate *t_show_event;
     t_show_event = [[MCIPhonePickEventDelegate alloc] init];
 	[t_show_event showViewEvent:t_ns_event withResult: t_ns_result];
@@ -565,7 +565,7 @@ bool MCSystemUpdateEvent(MCStringRef p_event_id, MCStringRef& r_result)
 {
     bool t_result = false;
     NSString* t_ns_result = nil; 
-    NSString* t_ns_event = [[NSString alloc] initWithString: [NSString stringWithMCStringRef: p_event_id]];
+    NSString* t_ns_event = [NSString stringWithMCStringRef: p_event_id];
     MCIPhonePickEventDelegate *t_update_event;
     t_update_event = [[MCIPhonePickEventDelegate alloc] init];
 
@@ -585,7 +585,7 @@ bool MCSystemUpdateEvent(MCStringRef p_event_id, MCStringRef& r_result)
 bool MCSystemGetEventData(MCExecContext &r_ctxt, MCStringRef p_event_id, MCArrayRef &r_event_data)
 {
     bool t_result = false;
-    NSString* t_ns_event = [[NSString alloc] initWithString: [NSString stringWithMCStringRef: p_event_id]];
+    NSString* t_ns_event = [NSString stringWithMCStringRef: p_event_id];
     MCCalendar t_event_result;
     MCIPhonePickEventDelegate *t_get_event;
     t_get_event = [[MCIPhonePickEventDelegate alloc] init];
@@ -601,7 +601,7 @@ bool MCSystemRemoveEvent(MCStringRef p_event_id, bool p_reocurring, MCStringRef&
 {
     bool t_result = false;
     NSString* t_ns_result = NULL;
-    NSString* t_ns_event = [[NSString alloc] initWithString: [NSString stringWithMCStringRef: p_event_id]];
+    NSString* t_ns_event = [NSString stringWithMCStringRef: p_event_id];
     MCIPhonePickEventDelegate *t_delete_event;
     t_delete_event = [[MCIPhonePickEventDelegate alloc] init];
     [t_delete_event deleteEvent: t_ns_event withInstances:p_reocurring withResult: t_ns_result];

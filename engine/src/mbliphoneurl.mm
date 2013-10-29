@@ -25,7 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-typedef bool (*MCHTTPParseHeaderCallback)(const char *p_key, uint32_t p_key_length, const char *p_value, uint32_t p_value_length, void *p_context);
+typedef bool (*MCHTTPParseHeaderCallback)(MCStringRef p_key, MCStringRef p_value, void *p_context);
 bool MCHTTPParseHeaders(MCStringRef p_headers, MCHTTPParseHeaderCallback p_callback, void *p_context)
 {
     bool t_success = true;
@@ -55,16 +55,13 @@ bool MCHTTPParseHeaders(MCStringRef p_headers, MCHTTPParseHeaderCallback p_callb
         if (!MCStringCopySubstring(*t_val, MCRangeMake(t_start, MCStringGetLength(*t_val) - t_start), &t_val_no_spaces))
             t_success = false;
         
-        MCAutoPointer<char> t_key_ptr, t_val_no_spaces_ptr;
-        /* UNCHECKED */ MCStringConvertToCString(*t_key, &t_key_ptr);
-        /* UNCHECKED */ MCStringConvertToCString(*t_val_no_spaces, &t_val_no_spaces_ptr);
-        t_success = p_callback(*t_key_ptr, MCStringGetLength(*t_key), *t_val_no_spaces_ptr, MCStringGetLength(*t_val_no_spaces), p_context);
+        t_success = p_callback(*t_key, *t_val, p_context);
         
     }
     return t_success;
 }
 
-bool UrlRequestSetHTTPHeader(const char *p_key, uint32_t p_key_length, const char *p_value, uint32_t p_value_length, void *p_context)
+bool UrlRequestSetHTTPHeader(MCStringRef p_key, MCStringRef p_value, void *p_context)
 {
 	NSMutableURLRequest *t_request;
 	t_request = (NSMutableURLRequest*)p_context;
@@ -73,8 +70,8 @@ bool UrlRequestSetHTTPHeader(const char *p_key, uint32_t p_key_length, const cha
 	NSString *t_key = nil;
 	NSString *t_value = nil;
 	
-	t_key = [[NSString alloc] initWithBytes: p_key length: p_key_length encoding:NSMacOSRomanStringEncoding];
-	t_value = [[NSString alloc] initWithBytes: p_value length: p_value_length encoding:NSMacOSRomanStringEncoding];
+    t_key = [NSString stringWithMCStringRef: p_key];
+    t_value = [NSString stringWithMCStringRef: p_value];
 	
 	t_success = (t_key != nil && t_value != nil);
 	
@@ -442,6 +439,7 @@ bool MCSystemPostUrl(MCStringRef p_url, MCDataRef p_data, uint32_t p_length, MCS
 	
 	MCIPhoneRunOnMainFiber(do_post_url, &ctxt);
 	
+    MCValueRelease(ctxt . url);
 	return ctxt . success;
 }
 
@@ -702,7 +700,7 @@ bool MCSystemPutUrl(MCStringRef p_url, MCDataRef p_data, uint32_t p_length, MCSy
 	ctxt . context = p_context;
 	
 	MCIPhoneRunOnMainFiber(do_put_url, &ctxt);
-    
+    MCValueRelease(ctxt . url);
 	
 	return ctxt . success;
 }

@@ -569,6 +569,7 @@ MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef display
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 	/* REMOTE */ MCFiberCall(s_main_fiber, MCScreenDCDoSnapshot, &env);
 
+    MCValueRelease(env . displayname);
 	return env . result;
 }
 
@@ -742,7 +743,7 @@ static void do_iphone_font_create(void *p_env)
 	uint32_t p_size;
 	bool p_bold;
 	bool p_italic;
-	p_name = MCValueRetain(env -> name);
+	p_name = env -> name;
 	p_size = env -> size;
 	p_bold = env -> bold;
 	p_italic = env -> italic;
@@ -760,11 +761,7 @@ static void do_iphone_font_create(void *p_env)
     if (t_base_font != nil)
         sprintf(t_base_name, "%s", [[t_base_font fontName] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
     else
-    {
-        MCAutoPointer<char> t_name;
-        /* UNCHECKED */ MCStringConvertToCString(*p_name, &t_name);
-        strcpy(t_base_name, *t_name);
-    }
+        /* UNCHECKED */ MCStringConvertToCString(*p_name, (char*&)t_base_name);
     
 	if (p_bold && p_italic)
 	{
@@ -816,6 +813,7 @@ void *iphone_font_create(MCStringRef p_name, uint32_t p_size, bool p_bold, bool 
 	env . italic = p_italic;
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 	/* REMOTE */ MCFiberCall(s_main_fiber, do_iphone_font_create, &env);
+    MCValueRelease(env . name);
 	return env . result;
 }
 

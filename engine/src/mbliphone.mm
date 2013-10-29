@@ -670,50 +670,57 @@ bool MCIPhoneSystem::GetTemporaryFileName(MCStringRef& r_tmp_name)
 
 Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folder)
 {
-	char *t_path;
-	t_path = nil;
+	MCAutoStringRef t_path;
+	
 	if (MCNameIsEqualToCString(p_type, "temporary", kMCCompareExact))
 	{
-		t_path = strdup([NSTemporaryDirectory() cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+        MCAutoStringRef t_temp;
+        MCStringCreateWithCFString((CFStringRef)NSTemporaryDirectory() , &t_temp);
 		
 		// MW-2012-09-18: [[ Bug 10279 ]] Remove trailing slash, if any.
 		// MW-2012-10-04: [[ Bug 10435 ]] Actually use a NUL character, rather than a '0'!
-		if (t_path[strlen(t_path) - 1] == '/')
-			t_path[strlen(t_path) - 1] = '\0';
+		if (MCStringEndsWith(*t_temp, MCSTR("/"), kMCCompareExact))
+			/* UNCHECKED */ MCStringCopySubstring(*t_temp, MCRangeMake(0, MCStringGetLength(*t_temp) - 1), &t_path);
+        else
+            /* UNCHECKED */ MCStringCopy(*t_temp, &t_path);
 	}
 	else if (MCNameIsEqualToCString(p_type, "documents", kMCCompareExact))
 	{
 		NSArray *t_paths;
 		t_paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-		t_path = strdup([[t_paths objectAtIndex: 0] cString]);
+        MCStringCreateWithCFString((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
 	}
 	else if (MCNameIsEqualToCString(p_type, "home", kMCCompareExact))
 	{
-		t_path = strdup([NSHomeDirectory() cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+        MCStringCreateWithCFString((CFStringRef)NSHomeDirectory() , &t_path);
 	}
 	else if (MCNameIsEqualToCString(p_type, "cache", kMCCompareExact))
 	{
 		NSArray *t_paths;
 		t_paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-		t_path = strdup([[t_paths objectAtIndex: 0] cString]);
+		MCStringCreateWithCFString((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
 	}
 	else if (MCNameIsEqualToCString(p_type, "engine", kMCCompareExact))
 	{
 		extern MCStringRef MCcmd;
-        MCAutoPointer<char> t_mccmd;
-        /* UNCHECKED */ MCStringConvertToCString(MCcmd, &t_mccmd);
-		t_path = my_strndup(*t_mccmd, strrchr(*t_mccmd, '/') - *t_mccmd);
+        uindex_t t_index;
+        t_index = MCStringGetLength(MCcmd);
+        /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', 0, kMCCompareExact, t_index);
+        /* UNCHECKED */ MCStringCopySubstring(MCcmd, MCRangeMake(0, t_index), &t_path);
+                    
 	}
 	else if (MCNameIsEqualToCString(p_type, "library", kMCCompareExact))
 	{
 		NSArray *t_paths;
 		t_paths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);
-		t_path = strdup([[t_paths objectAtIndex: 0] cString]);
+		MCStringCreateWithCFString((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
+
 	}
     
-    if (t_path == nil || !MCStringCreateWithCStringAndRelease((char_t*)t_path, r_folder))
+    if (*t_path == nil)
         return False;
     
+    r_folder = MCValueRetain(*t_path);
     return True;
 }
 
@@ -1019,7 +1026,7 @@ void MCIPhoneSystem::Debug(MCStringRef p_string)
 {
     // MM-2012-09-07: [[ Bug 10320 ]] put does not write to console on Mountain Lion
     NSString *t_msg;
-    t_msg = [[NSString alloc] initWithString: [NSString stringWithMCStringRef: p_string]];
+    t_msg = [NSString stringWithMCStringRef: p_string];
     NSLog(@"%@", t_msg);
     [t_msg release];
 }
