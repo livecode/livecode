@@ -133,13 +133,17 @@ void MCImage::GetFileName(MCExecContext& ctxt, MCStringRef& r_name)
 
 void MCImage::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
 {
-	if (m_rep == nil || m_rep->GetType() != kMCImageRepReferenced ||
-		MCStringIsEmpty(p_name) || !MCStringIsEqualTo(p_name, filename, kMCCompareExact))
+    // MW-2013-06-24: [[ Bug 10977 ]] If we are setting the filename to
+    //   empty, and the filename is already empty, do nothing.
+	if ((m_rep != nil && m_rep->GetType() == kMCImageRepReferenced &&
+		MCStringIsEmpty(p_name)) || !MCStringIsEqualTo(p_name, filename, kMCCompareExact))
 	{
 		setfilename(p_name);
 		resetimage();
 
-		if (m_rep != nil)
+        // MW-2013-06-25: [[ Bug 10980 ]] Only set the result to an error if we were
+        //   attempting to set a non-empty filename.
+		if (m_rep != nil || MCStringIsEmpty(p_name))
 			ctxt . SetTheResultToEmpty();
 		else
 			ctxt . SetTheResultToStaticCString("could not open image");
@@ -295,8 +299,7 @@ void MCImage::SetRepeatCount(MCExecContext& ctxt, integer_t p_count)
 void MCImage::GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_height)
 {
 	uindex_t t_width = 0, t_height = 0;
-	if (m_rep != nil)
-		m_rep->GetGeometry(t_width, t_height);
+    /* UNCHECKED */ getsourcegeometry(t_width, t_height);
 	
 	r_height = t_height;
 }
@@ -304,8 +307,7 @@ void MCImage::GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_height)
 void MCImage::GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width)
 {
 	uindex_t t_width = 0, t_height = 0;
-	if (m_rep != nil)
-		m_rep->GetGeometry(t_width, t_height);
+    /* UNCHECKED */ getsourcegeometry(t_width, t_height);
 	
 	r_width = t_width;
 }
@@ -362,9 +364,15 @@ void MCImage::SetText(MCExecContext& ctxt, MCDataRef p_text)
 	
 	if (MCDataGetLength(p_text) == 0)
 	{
-		// MW-2013-09-05: [[ UnicodifyImage ]] Setting the text to nil is equivalent
-		//   to setting the filename to empty.
-		setfilename(kMCEmptyString);
+        // MERG-2013-06-24: [[ Bug 10977 ]] If we have a filename then setting the
+        //   text to empty shouldn't have an effect; otherwise we are unsetting the
+        //   current text.
+        if (!getflag(F_HAS_FILENAME))
+        {
+            // empty text - unset flags & set rep to nil;
+            flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_HAS_FILENAME);
+            setrep(nil);
+        }
 	}
 	else
 	{
@@ -419,10 +427,17 @@ void MCImage::GetImageData(MCExecContext& ctxt, MCDataRef& r_data)
 			if (t_success)
 			{
 				MCMemoryCopy(t_data_ptr, t_bitmap->data, t_data_size);
-				while (t_pixel_count--)
-					swap_uint4(t_data_ptr++);
-			}
-			unlockbitmap(t_bitmap);
+                // IM-2013-09-16: [[ RefactorGraphics ]] [[ Bug 11185 ]] Use correct pixel format (xrgb) for imagedata
+#if (kMCGPixelFormatNative != kMCGPixelFormatARGB)
+                while (t_pixel_count--)
+                {
+                    uint8_t t_r, t_g, t_b, t_a;
+                    MCGPixelUnpackNative(*t_data_ptr, t_r, t_g, t_b, t_a);
+                    *t_data_ptr++ = MCGPixelPack(kMCGPixelFormatARGB, t_r, t_g, t_b, t_a);
+                }
+#endif
+            }
+            MCImageFreeBitmap(t_bitmap);
 			
 			closeimage();
 		}
@@ -447,17 +462,13 @@ void MCImage::SetImageData(MCExecContext& ctxt, MCDataRef p_data)
 		MCImageBitmap *t_copy = nil;
 		if (m_rep != nil)
 		{
-			MCImageBitmap *t_bitmap = nil;
-			t_success = copybitmap(1.0, false, t_bitmap);
-			if (t_success)
-				t_success = MCImageCopyBitmap(t_bitmap, t_copy);
-			unlockbitmap(t_bitmap);
+            t_success = copybitmap(1.0, false, t_copy);
 		}
 		else
 		{
 			t_success = MCImageBitmapCreate(rect.width, rect.height, t_copy);
 			if (t_success)
-				MCImageBitmapSet(t_copy, 0xFF000000); // set to opaque black
+                MCImageBitmapSet(t_copy, MCGPixelPackNative(0, 0, 0, 255)); // set to opaque black
 		}
 		
 		if (t_success)
@@ -469,18 +480,16 @@ void MCImage::SetImageData(MCExecContext& ctxt, MCDataRef p_data)
 			uint8_t *t_dst_ptr = (uint8_t*)t_copy->data;
 			for (uindex_t y = 0; y < t_copy->height; y++)
 			{
-				uint8_t *t_src_row = t_src_ptr;
-				uint32_t *t_dst_row = (uint32_t*)t_dst_ptr;
+                uint32_t *t_src_row = (uint32_t*)t_src_ptr;
+                uint32_t *t_dst_row = (uint32_t*)t_dst_ptr;
 				for (uindex_t x = 0; x < t_width; x++)
 				{
 					uint8_t a, r, g, b;
-					a = *t_src_row++;
-					r = *t_src_row++;
-					g = *t_src_row++;
-					b = *t_src_row++;
-					
-					uint32_t t_pixel = (*t_dst_row & 0xFF000000) | (r << 16) | (g << 8) | b;
-					*t_dst_row++ = t_pixel;
+                    MCGPixelUnpack(kMCGPixelFormatARGB, *t_src_row++, r, g, b, a);
+                    
+                    // IM-2013-10-25: [[ Bug 11314 ]] Preserve current alpha values when setting the imagedata
+                    *t_dst_row = MCGPixelPackNative(r, g, b, MCGPixelGetNativeAlpha(*t_dst_row));
+                    t_dst_row++;
 				}
 				t_src_ptr += t_stride;
 				t_dst_ptr += t_copy->stride;
@@ -535,7 +544,7 @@ void MCImage::GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
 					t_src_ptr += t_bitmap->stride;
 				}
 			}
-			unlockbitmap(t_bitmap);
+            MCImageFreeBitmap(t_bitmap);
 			
 			closeimage();
 		}
@@ -561,17 +570,13 @@ void MCImage::SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
 		MCImageBitmap *t_copy = nil;
 		if (m_rep != nil)
 		{
-			MCImageBitmap *t_bitmap = nil;
-			t_success = copybitmap(1.0, false, t_bitmap);
-			if (t_success)
-				t_success = MCImageCopyBitmap(t_bitmap, t_copy);
-			unlockbitmap(t_bitmap);
+            t_success = copybitmap(1.0, false, t_copy);
 		}
 		else
 		{
 			t_success = MCImageBitmapCreate(rect.width, rect.height, t_copy);
 			if (t_success)
-				MCImageBitmapSet(t_copy, 0xFF000000); // set to opaque black
+					MCImageBitmapSet(t_copy, MCGPixelPackNative(0, 0, 0, 255)); // set to opaque black
 		}
 		
 		if (t_success)
@@ -640,8 +645,7 @@ void MCImage::SetAngle(MCExecContext& ctxt, integer_t p_angle)
 		// MW-2010-11-25: [[ Bug 9195 ]] Make sure we have some image data to rotate, otherwise
 		//   odd things happen with the rect.
 		MCRectangle oldrect = rect;
-		if (m_rep != nil)
-			rotate_transform(p_angle);
+        rotate_transform(p_angle);
 		
 		angle = p_angle;
 		
