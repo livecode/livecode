@@ -1270,7 +1270,7 @@ void MCInterfaceEvalGlobalLoc(MCExecContext& ctxt, MCPoint p_point, MCPoint& r_g
 void MCInterfaceEvalLocalLoc(MCExecContext& ctxt, MCPoint p_point, MCPoint& r_local_point)
 {
 	// IM-2013-10-09: [[ FullscreenMode ]] Update to use stack coord conversion methods
-	r_local_point = MCdefaultstackptr->stacktogloballoc(p_point);
+	r_local_point = MCdefaultstackptr->globaltostackloc(p_point);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
