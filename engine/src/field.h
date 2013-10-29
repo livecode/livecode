@@ -75,7 +75,7 @@ struct MCFieldParagraphStyle
 	uint16_t *tabs;
 	uint32_t background_color;
 	uint32_t border_color;
-	MCNameRef metadata;
+    MCStringRef metadata;
 	uint16_t list_index;
 };
 
@@ -483,7 +483,7 @@ public:
 	MCParagraph *styledtexttoparagraphs(MCArrayRef p_array);
 	MCParagraph *texttoparagraphs(const MCString &data, Boolean isunicode);
 	
-	MCParagraph *parsestyledtextappendparagraph(MCArrayRef p_style, MCNameRef metadata, bool p_split, MCParagraph*& x_paragraphs);
+    MCParagraph *parsestyledtextappendparagraph(MCArrayRef p_style, MCStringRef metadata, bool p_split, MCParagraph*& x_paragraphs);
 	void parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_style, const char *p_initial, const char *p_final, MCStringRef p_metadata, bool p_is_unicode);
 	void parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& x_paragraphs);
 	void parsestyledtextarray(MCArrayRef p_styled_text, bool p_paragraph_break, MCParagraph*& x_paragraphs);
@@ -531,7 +531,7 @@ public:
 	bool exportashtmltext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCStringRef& r_string);
 
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to styled text arrays.
-	void exportasstyledtext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool p_formatted, bool p_effective);
+    void exportasstyledtext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool p_formatted, bool p_effective);
 	bool exportasstyledtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective, MCArrayRef &r_array);
 
 	// MW-2012-03-07: [[ FieldImport ]] Conver the htmlText string to a list of paragraphs.
@@ -736,7 +736,7 @@ public:
     void GetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCInterfaceFlaggedRanges& r_value);
     void SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceFlaggedRanges& value);
 	void GetListStyleOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, intenum_t& r_value);
-	void SetListStyleOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, intenum_t r_value);
+    void SetListStyleOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, intenum_t value);
 	void GetListDepthOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t*& r_value);
 	void SetListDepthOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t *value);
 	void GetListIndentOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, integer_t*& r_value);
@@ -784,7 +784,7 @@ public:
 	
 	void GetHGridOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool*& r_value);
     void SetHGridOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool *p_has_hgrid);
-	void GetEffectiveHGridOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& value);
+    void GetEffectiveHGridOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& r_value);
 	void GetVGridOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool*& r_value);
     void SetVGridOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool *p_has_vgrid);
 	void GetEffectiveVGridOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& value);

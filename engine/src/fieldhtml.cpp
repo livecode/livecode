@@ -507,7 +507,7 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 			if (t_style . has_metadata)
 			{
 				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " metadata=`\"");
-				export_html_emit_cstring(ctxt.m_text, MCNameGetString(t_style.metadata), kExportHtmlEscapeTypeAttribute);
+                export_html_emit_cstring(ctxt.m_text, t_style.metadata, kExportHtmlEscapeTypeAttribute);
 				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\"");
 			}
 			if (ctxt . effective || t_style . has_text_align)
@@ -1796,14 +1796,16 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 			case kImportHtmlAttrMetadata:
 				if (r_style . has_metadata)
 				{
-					MCNameDelete(r_style . metadata);
+                    MCValueRelease(r_style . metadata);
 					r_style . metadata = nil;
 					r_style . has_metadata = false;
 				}
 
 				if (*t_value != '\0')
 				{
-					/* UNCHECKED */ MCNameCreateWithCString(t_value, r_style . metadata);
+                    MCStringRef t_valueref;
+                    /* UNCHECKED */ MCStringCreateWithCString(t_value, t_valueref);
+                    /* UNCHECKED */ MCValueInterAndRelease(t_valueref, r_style . metadata);
 					r_style . has_metadata = true;
 				}
 				break;
@@ -2061,7 +2063,7 @@ MCParagraph *MCField::importhtmltext(const MCString& p_data)
 							import_html_parse_paragraph_attrs(t_tag, t_style);
 							import_html_begin(ctxt, &t_style);
 							delete t_style . tabs;
-							MCNameDelete(t_style . metadata);
+                            MCValueRelease(t_style . metadata);
 						}
 					}
 					break;

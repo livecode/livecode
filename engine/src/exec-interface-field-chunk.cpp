@@ -1782,12 +1782,12 @@ void MCParagraph::GetMetadata(MCExecContext& ctxt, MCStringRef &r_metadata)
     if (attrs == nil || (attrs -> flags & PA_HAS_METADATA) == 0)
         r_metadata = nil;
     else
-        r_metadata = MCValueRetain(MCNameGetString(getmetadata()));
+        r_metadata = MCValueRetain(getmetadata());
 }
 
 void MCParagraph::GetEffectiveMetadata(MCExecContext& ctxt, MCStringRef &r_metadata)
 {
-    r_metadata = MCValueRetain(MCNameGetString(getmetadata()));
+    r_metadata = MCValueRetain(getmetadata());
 }
 
 // MW-2012-11-13: [[ ParaMetadata ]] Set the metadata attribute.
@@ -1808,7 +1808,7 @@ void MCParagraph::SetMetadata(MCExecContext& ctxt, MCStringRef p_metadata)
             attrs = new MCParagraphAttrs;
 
         attrs -> flags |= PA_HAS_METADATA;
-        MCNameCreate(p_metadata, attrs -> metadata);
+        MCValueInter(p_metadata, attrs -> metadata);
     }
 }
 

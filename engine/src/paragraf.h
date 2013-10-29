@@ -117,7 +117,7 @@ struct MCParagraphAttrs
 	uint16_t list_index;
 	uint32_t background_color;
 	uint32_t border_color;
-    MCNameRef metadata;
+    MCStringRef metadata;
 
 	MCParagraphAttrs(void)
 	{
@@ -610,9 +610,9 @@ public:
 	int32_t gettablewidth(void) const;
 
 	// Returns the metadata for the current paragraph.
-    MCNameRef getmetadata(void) const;
+    MCStringRef getmetadata(void) const;
 	// Set the metadata property for the current paragraph.
-    void setmetadata(MCNameRef metadata);
+    void setmetadata(MCStringRef metadata);
 
 	// Returns true if the top border will be elided due to hGrid
 	bool elidetopborder(void) const;

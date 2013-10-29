@@ -925,7 +925,7 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 				t_style . background_color = p_paragraph -> background_color, t_style . has_background_color = true, t_count += 1;
 			if (p_paragraph -> border_color != 0xffffffff)
 				t_style . border_color = p_paragraph -> border_color, t_style . has_border_color = true, t_count += 1;
-			if (p_paragraph -> metadata != nil && p_paragraph -> metadata != kMCEmptyName)
+            if (p_paragraph -> metadata != nil && !MCStringIsEmpty(p_paragraph -> metadata))
 				t_style . metadata = p_paragraph -> metadata, t_style . has_metadata = true, t_count += 1;
 
 			// MW-2012-03-14: [[ RtfParaStyles ]] Apply the listStyle attrs, if applicable.
@@ -984,7 +984,7 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 			t_block -> setatts(P_LINK_TEXT, (void *)MCNameGetCString(p_block -> text_link));
 
 		if (p_block -> text_metadata != nil)
-			t_block -> setatts(P_METADATA, (void *)MCNameGetCString(p_block -> text_metadata));
+            t_block -> setatts(P_METADATA, (void *)MCStringGetCString(p_block -> text_metadata));
 
 		const char *t_font_name;
 		t_font_name = p_block -> font_name == NULL ? "" : p_block -> font_name;
