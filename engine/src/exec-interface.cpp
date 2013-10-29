@@ -4199,7 +4199,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 		
 		// MW-2011-10-17: [[ Bug 9811 ]] Make sure we configure the new card now.
 		MCRedrawDisableScreenUpdates();
-		t_stack -> configure(True);
+		t_stack -> view_configure(True);
 		MCRedrawEnableScreenUpdates();
 			
 		Boolean t_abort;
