@@ -2298,6 +2298,10 @@ static inline void gen_3d_bottom_points(MCPoint p_points[6], int32_t p_left, int
 void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
                       Etch style, uint2 bwidth)
 {
+	// MW-2013-10-29: [[ Bug 11324 ]] If the border width is zero, then don't render.
+	if (bwidth == 0)
+		return;
+	
 	bwidth = MCU_min(bwidth, drect.height >> 1);
 	if (bwidth == 0)
 		return;
@@ -2390,6 +2394,10 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 
 void MCObject::drawborder(MCDC *dc, const MCRectangle &drect, uint2 bwidth)
 {
+	// MW-2013-10-29: [[ Bug 11324 ]] If the border width is zero, then don't render.
+	if (bwidth == 0)
+		return;
+	
 	// MM-2013-09-30: [[ Bug 11241 ]] Make sure we set the foreground color of the dc before drawing.
 	setforeground(dc, DI_BORDER, False);
 	
