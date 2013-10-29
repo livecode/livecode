@@ -1218,7 +1218,7 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
 	uint4 x = p_mark -> text . position . x ;
 	uint4 y = p_mark -> text . position . y ;
 	uint2 l = p_mark -> text . length ;
-	MCFontStruct *f = p_mark -> text . font ;
+    MCFontStruct *f = MCFontGetFontStruct(p_mark -> text . font);
 
 	if ( f != oldfont )
 	{
@@ -1233,8 +1233,7 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
 	char *text = new char[l + 1];
 	memcpy(text, p_mark -> text . data , l);
 	
-	uint2 w = MCscreen->textwidth(f, text, l);
-	
+    uint2 w = MCFontMeasureText(p_mark -> text . font, text, l, false);
 	
 	text[l] = '\0';
 	const char *sptr = text;

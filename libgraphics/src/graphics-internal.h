@@ -33,9 +33,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define kMCGTextMeasureCacheTableSize 65535
 #endif
 
-#define kMCGTextMeasureCacheByteSize kMCGTextMeasureCacheTableSize * 64
+#define kMCGTextMeasureCacheByteSize kMCGTextMeasureCacheTableSize * 256
 #define kMCGTextMeasureCacheMaxOccupancy kMCGTextMeasureCacheTableSize * 0.5
-#define kMCGTextMeasureCacheMaxStringLength 128
+#define kMCGTextMeasureCacheMaxStringLength 65536
 
 ////////////////////////////////////////////////////////////////////////////////
 
