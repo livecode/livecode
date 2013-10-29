@@ -185,7 +185,11 @@ bool MCMacOSXTransferData::Subscribe(ScrapFlavorType p_type, MCDataRef& r_data)
 					return false;
 				
 				MCValueRelease(m_entries[i] . data);
-				m_entries[i] . data = MCValueRetain(*t_converted_data);
+                if (*t_converted_data != nil)
+                    m_entries[i] . data = MCValueRetain(*t_converted_data);
+                else
+                    m_entries[i] . data = nil;
+                
 				m_entries[i] . converter = NULL;
 			}
 

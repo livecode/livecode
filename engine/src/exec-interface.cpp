@@ -3478,8 +3478,11 @@ void MCInterfaceExecImportImage(MCExecContext& ctxt, MCStringRef p_filename, MCS
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCInterfaceExportBitmap(MCExecContext &ctxt, MCImageBitmap *p_bitmap, int p_format, MCInterfaceImagePaletteSettings *p_palette, bool p_dither, MCStringRef &r_data)
+void MCInterfaceExportBitmap(MCExecContext &ctxt, MCImageBitmap *p_bitmap, int p_format, MCInterfaceImagePaletteSettings *p_palette, bool p_dither, MCDataRef &r_data)
 {
+    if (p_bitmap == nil)
+        return;
+    
 	bool t_success = true;
 	
 	MCImagePaletteSettings t_palette_settings;
@@ -3503,7 +3506,7 @@ void MCInterfaceExportBitmap(MCExecContext &ctxt, MCImageBitmap *p_bitmap, int p
 	/* UNCHECKED */ t_stream = MCS_fakeopenwrite();
 	t_success = MCImageExport(p_bitmap, (Export_format)p_format, t_ps_ptr, p_dither, t_stream, nil);
 	
-	MCAutoNativeCharArray t_autobuffer;
+	MCAutoByteArray t_autobuffer;
 	void *t_buffer = nil;
 	size_t t_size = 0;
 	MCS_closetakingbuffer(t_stream, t_buffer, t_size);
@@ -3516,7 +3519,7 @@ void MCInterfaceExportBitmap(MCExecContext &ctxt, MCImageBitmap *p_bitmap, int p
 		return;
 	}
 	
-	/* UNCHECKED */ t_autobuffer.CreateStringAndRelease(r_data);
+	/* UNCHECKED */ t_autobuffer.CreateDataAndRelease(r_data);
 }
 
 void MCInterfaceExportBitmapToFile(MCExecContext& ctxt, MCImageBitmap *p_bitmap, int p_format, MCInterfaceImagePaletteSettings *p_palette, bool p_dither, MCStringRef p_filename, MCStringRef p_mask_filename)
@@ -3586,22 +3589,17 @@ MCImageBitmap* MCInterfaceGetSnapshotBitmap(MCExecContext &ctxt, MCStringRef p_d
 	else	
 		t_rect = *p_region;
 	
-	MCBitmap *t_bitmap = nil;
-	MCImageBitmap *t_image_bitmap = nil;
-    // TODO - graphics refactor
-    /*
-	t_bitmap = MCscreen->snapshot(t_rect, p_window, p_display);
+	MCImageBitmap *t_bitmap = nil;
+
+	t_bitmap = MCscreen->snapshot(t_rect, 1.0, p_window, p_display);
 	if (t_bitmap == nil)
 	{
 		ctxt . LegacyThrow(EE_EXPORT_NOSELECTED);
+        return nil;
 	}
-	else
-	{
-		MCImageBitmapCreateWithOldBitmap(t_bitmap, t_image_bitmap);
-		MCscreen->destroyimage(t_bitmap);
-	}
-    */
-	return t_image_bitmap;
+    
+    MCImageBitmapCheckTransparency(t_bitmap);
+	return t_bitmap;
 }
 
 bool MCInterfaceGetDitherImage(MCImage *p_image)
@@ -3612,7 +3610,7 @@ bool MCInterfaceGetDitherImage(MCImage *p_image)
 	return !p_image->getflag(F_DONT_DITHER);
 }
 
-void MCInterfaceExecExportSnapshotOfScreen(MCExecContext& ctxt, MCRectangle *p_region, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef &r_data)
+void MCInterfaceExecExportSnapshotOfScreen(MCExecContext& ctxt, MCRectangle *p_region, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data)
 {
 	MCImageBitmap *t_bitmap;
 	t_bitmap = MCInterfaceGetSnapshotBitmap(ctxt, nil, p_region, 0);
@@ -3626,7 +3624,7 @@ void MCInterfaceExecExportSnapshotOfScreenToFile(MCExecContext& ctxt, MCRectangl
 	MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_filename, p_mask_filename);
 }
 
-void MCInterfaceExecExportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef &r_data)
+void MCInterfaceExecExportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data)
 {
 	uint4 t_window;
 	if (!MCU_stoui4(p_stack, t_window))
@@ -3652,32 +3650,37 @@ void MCInterfaceExecExportSnapshotOfStackToFile(MCExecContext& ctxt, MCStringRef
 	}
 }
 
-MCImageBitmap *MCInterfaceGetSnapshotOfObjectBitmap(MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size)
+MCImageBitmap *MCInterfaceGetSnapshotOfObjectBitmap(MCExecContext &ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size)
 {
-	MCBitmap *t_bitmap = nil;
-	MCImageBitmap *t_image_bitmap = nil;
-    // TODO - graphics refactor
-    /*
-	t_bitmap = p_target -> snapshot(p_region, p_at_size, p_with_effects);
-	if (!t_bitmap == nil)
-	{
-		MCImageBitmapCreateWithOldBitmap(t_bitmap, t_image_bitmap);
-		MCscreen->destroyimage(t_bitmap);
-	}
-	return t_image_bitmap;
-     */
+	MCImageBitmap *t_bitmap = nil;
+	/* UNCHECKED */ t_bitmap = p_target -> snapshot(p_region, p_at_size, 1.0, p_with_effects);
+    
+    if (t_bitmap == nil)
+    {
+        ctxt . LegacyThrow(EE_EXPORT_EMPTYRECT);
+        return nil;
+    }
+    
+    // MW-2013-05-20: [[ Bug 10897 ]] The 'snapshot' command produces a premultiplied bitmap
+    //   so unpremultiply.
+    MCImageBitmapUnpremultiply(t_bitmap);
+    MCImageBitmapCheckTransparency(t_bitmap);
+    
+	return t_bitmap;
 }
 
-void MCInterfaceExecExportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef &r_data)
+void MCInterfaceExecExportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data)
 {
 	MCImageBitmap *t_bitmap;
-	t_bitmap = MCInterfaceGetSnapshotOfObjectBitmap(p_target, p_region, p_with_effects, p_at_size);
+	t_bitmap = MCInterfaceGetSnapshotOfObjectBitmap(ctxt, p_target, p_region, p_with_effects, p_at_size);
+    
 	MCInterfaceExportBitmap(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), r_data);
 }
 void MCInterfaceExecExportSnapshotOfObjectToFile(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename)
 {
 	MCImageBitmap *t_bitmap;
-	t_bitmap = MCInterfaceGetSnapshotOfObjectBitmap(p_target, p_region, p_with_effects, p_at_size);
+	t_bitmap = MCInterfaceGetSnapshotOfObjectBitmap(ctxt, p_target, p_region, p_with_effects, p_at_size);
+    
 	MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_filename, p_mask_filename);
 }
 
@@ -3702,39 +3705,72 @@ MCImage* MCInterfaceExecExportSelectImage(MCExecContext& ctxt)
 	return (MCImage *)optr;
 }
 
-void MCInterfaceExecExportImage(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef &r_data)
+void MCInterfaceExecExportImage(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data)
 {
+    bool t_image_locked;
+    t_image_locked = false;
+    
 	if (p_target == nil)
 		p_target = MCInterfaceExecExportSelectImage(ctxt);
 	if (p_target != nil)
 	{
 		if (p_target->getrect() . width == 0 || p_target -> getrect() . height == 0)
 		{
-			MCStringCopy(kMCEmptyString, r_data);
+			r_data = MCValueRetain(kMCEmptyData);
 			return;
 		}
-        // TODO - graphics refactor
-        /*
-		MCImageBitmap *t_bitmap;
-		if (p_target->lockbitmap(t_bitmap))
-			MCInterfaceExportBitmap(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(p_target), r_data);
-		p_target->unlockbitmap(t_bitmap);
-         */
+        
+        MCImageBitmap *t_bitmap;
+        
+		// IM-2013-07-26: [[ ResIndependence ]] the exported image needs to be unscaled,
+		// so if the image has a scale factor we need to get a 1:1 copy
+		if (p_target->getscalefactor() == 1.0)
+		{
+			/* UNCHECKED */ p_target->lockbitmap(t_bitmap, false);
+			t_image_locked = true;
+		}
+		else
+		{
+			/* UNCHECKED */ p_target->copybitmap(1.0, false, t_bitmap);
+		}
+        
+        MCInterfaceExportBitmap(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(p_target), r_data);
+        
+        if (t_image_locked)
+            p_target->unlockbitmap(t_bitmap);
+        else
+            MCImageFreeBitmap(t_bitmap);
 	}
 }
 void MCInterfaceExecExportImageToFile(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename)
 {
+    bool t_image_locked;
+    t_image_locked = false;
+    
 	if (p_target == nil)
 		p_target = MCInterfaceExecExportSelectImage(ctxt);
 	if (p_target != nil)
 	{
-        // TODO - graphics refactor
-        /*
-		MCImageBitmap *t_bitmap;
-		if (p_target->lockbitmap(t_bitmap))
-			MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(p_target), p_filename, p_mask_filename);
-		p_target->unlockbitmap(t_bitmap);
-         */
+        MCImageBitmap *t_bitmap;
+        
+		// IM-2013-07-26: [[ ResIndependence ]] the exported image needs to be unscaled,
+		// so if the image has a scale factor we need to get a 1:1 copy
+		if (p_target->getscalefactor() == 1.0)
+		{
+			/* UNCHECKED */ p_target->lockbitmap(t_bitmap, false);
+			t_image_locked = true;
+		}
+		else
+		{
+			/* UNCHECKED */ p_target->copybitmap(1.0, false, t_bitmap);
+		}
+        
+        MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(p_target), p_filename, p_mask_filename);
+        
+        if (t_image_locked)
+            p_target->unlockbitmap(t_bitmap);
+        else
+            MCImageFreeBitmap(t_bitmap);
 	}
 }
 

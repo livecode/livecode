@@ -1420,7 +1420,7 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 #endif /* MCExport */
 
 	MCExecContext ctxt(ep);
-	MCAutoStringRef t_return_data;
+	MCAutoDataRef t_return_data;
 	MCAutoStringRef t_filename;
 	if (fname != NULL)
 	{
