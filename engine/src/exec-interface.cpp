@@ -921,8 +921,15 @@ void MCInterfaceEvalSelectedChunk(MCExecContext& ctxt, MCStringRef& r_string)
 		return;
 	}
 
-	if (MCactivefield -> selectedchunk(r_string))
-		return;
+    // MW-2013-08-07: [[ Bug 10689 ]] If the parent of the field is a button
+    //   then return the chunk of the button, not the embedded field.
+    if (MCactivefield -> getparent() -> gettype() == CT_BUTTON)
+    {
+        if (static_cast<MCButton *>(MCactivefield -> getparent()) -> selectedchunk(r_string));
+            return;
+    }
+    else if (MCactivefield->selectedchunk(r_string))
+        return;
 
 	ctxt . Throw();
 }
