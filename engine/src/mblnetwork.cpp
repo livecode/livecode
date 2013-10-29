@@ -51,7 +51,9 @@
 static bool MCS_mbl_hostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context)
 {
 	struct hostent *he;
-	he = gethostbyname(MCStringGetCString(p_hostname));
+    MCAutoPointer<char> t_hostname;
+    /* UNCHECKED */ MCStringConvertToCString(p_hostname, &t_hostname);
+	he = gethostbyname(*t_hostname);
 	if (he == NULL)
 		return false;
     
@@ -75,7 +77,9 @@ static bool MCS_mbl_hostNameToAddress(MCStringRef p_hostname, MCSystemHostResolv
 bool MCS_mbl_addressToHostName(MCStringRef p_address, MCSystemHostResolveCallback p_callback, void *p_context)
 {
 	struct in_addr addr;
-	if (!inet_aton(MCStringGetCString(p_address), &addr))
+    MCAutoPointer<char> t_address;
+    /* UNCHECKED */ MCStringConvertToCString(p_address, &t_address);
+	if (!inet_aton(*t_address, &addr))
 		return false;
     
 	struct hostent *he;

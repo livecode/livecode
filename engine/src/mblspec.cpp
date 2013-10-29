@@ -278,7 +278,9 @@ static bool MCS_geturl_callback(void *p_context, MCSystemUrlStatus p_status, con
 void MCS_geturl(MCObject *p_target, MCStringRef p_url)
 {
 	MCSGetUrlState t_state;
-	t_state . url = strclone(MCStringGetCString(p_url));
+    MCAutoPointer<char> t_url;
+    /* UNCHECKED */ MCStringConvertToCString(p_url, &t_url);
+	t_state . url = strclone(*t_url);
 	t_state . status = kMCSystemUrlStatusNone;
 	t_state . object = p_target -> gethandle();
 	
@@ -475,7 +477,9 @@ void MCS_loadurl(MCObject *p_object, MCStringRef p_url, MCNameRef p_message)
 	
 	if (t_success)
 	{
-		t_state->url = strclone(MCStringGetCString(*t_processed));
+        MCAutoPointer<char> t_url;
+        /* UNCHECKED */ MCStringConvertToCString(*t_processed, &t_url);
+		t_state->url = strclone(*t_url);
 		t_state->message = p_message;
 		t_state->status = kMCSystemUrlStatusNone;
 		t_state->object = p_object -> gethandle();
@@ -555,7 +559,9 @@ void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 	
 	if (t_success)
 	{
-		t_state . url = strclone(MCStringGetCString(*t_processed));
+        MCAutoPointer<char> t_url;
+        /* UNCHECKED */ MCStringConvertToCString(*t_processed, &t_url);
+		t_state . url = strclone(*t_url);
 		t_state . status = kMCSystemUrlStatusNone;
 		t_state . object = t_obj;
 		t_state . post_sent = 0;
@@ -643,7 +649,9 @@ void MCS_putintourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 	
 	if (t_success)
 	{
-		t_state.url = strclone(MCStringGetCString(*t_processed));
+        MCAutoPointer<char> t_url;
+        /* UNCHECKED */ MCStringConvertToCString(*t_processed, &t_url);
+		t_state.url = strclone(*t_url);
 		t_state.status = kMCSystemUrlStatusNone;
 		t_state.object = t_obj;
 		t_state.put_sent = 0;
@@ -725,7 +733,9 @@ void MCS_downloadurl(MCObject *p_target, MCStringRef p_url, MCStringRef p_file)
 	
 	if (t_success)
 	{
-		t_state . url = strclone(MCStringGetCString(*t_processed));
+        MCAutoPointer<char> t_url;
+        /* UNCHECKED */ MCStringConvertToCString(*t_processed, &t_url);
+		t_state . url = strclone(*t_url);
 		t_state . status = kMCSystemUrlStatusNone;
 		t_state . object = t_obj;
 		t_state . output = t_output;

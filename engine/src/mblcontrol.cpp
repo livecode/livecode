@@ -508,7 +508,10 @@ static bool MCParseRGBA(MCStringRef p_data, bool p_require_alpha, uint1 &r_red, 
 	bool t_success = true;
 	Boolean t_parsed;
 	uint2 r, g, b, a;
-	const char *t_data = MCStringGetCString(p_data);
+   
+    MCAutoPointer<char> temp;
+    /* UNCHECKED */ MCStringConvertToCString(p_data, &temp);
+	const char *t_data = *temp;
 	uint32_t l = MCStringGetLength(p_data);
 	if (t_success)
 	{
