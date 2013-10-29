@@ -571,11 +571,6 @@ void MCUIDC::beep()
 void MCUIDC::setinputfocus(Window window)
 { }
 
-int4 MCUIDC::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override)
-{
-	return 0;
-}
-
 uint2 MCUIDC::getrealdepth(void)
 {
 	//fprintf(stderr,"UIDC::getrealdepth() called\n");
