@@ -1032,7 +1032,7 @@ void MCCustomMetaContext::dotextmark(MCMark *p_mark)
 	extern MCFontlist *MCFontlistGetCurrent(void);
 	const char *t_name;
 	uint2 t_size, t_style;
-	MCFontlistGetCurrent() -> getfontreqs(p_mark -> text . font, t_name, t_size, t_style);
+    MCFontlistGetCurrent() -> getfontreqs(f, t_name, t_size, t_style);
 	t_state . font_size = t_size;
 #endif
 
