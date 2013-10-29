@@ -21,6 +21,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_FONT__
 #define __MC_FONT__
 
+#include "graphics.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct MCFont *MCFontRef;
@@ -49,11 +51,16 @@ bool MCFontHasPrinterMetrics(MCFontRef font);
 int32_t MCFontGetAscent(MCFontRef font);
 int32_t MCFontGetDescent(MCFontRef font);
 
+typedef void (*MCFontBreakTextCallback)(MCFontRef font, const char *start, uindex_t length, bool is_unicode, void *ctxt);
+void MCFontBreakText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode, MCFontBreakTextCallback callback, void *callback_data);
 int32_t MCFontMeasureText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode);
-void MCFontDrawText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode, MCContext *context, int32_t x, int32_t y, bool image);
+void MCFontDrawText(MCGContextRef ctxt, int32_t x, int32_t y, const char *p_chars, uint32_t p_char_count, MCFontRef p_font, bool is_unicode);
 
 MCFontStyle MCFontStyleFromTextStyle(uint2 text_style);
 uint16_t MCFontStyleToTextStyle(MCFontStyle font_style);
+
+/* LEGACY */
+MCFontStruct* MCFontGetFontStruct(MCFontRef font);
 
 ////////////////////////////////////////////////////////////////////////////////
 

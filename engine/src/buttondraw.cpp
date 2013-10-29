@@ -491,7 +491,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			{
 				MCString t_name_oldstring;
 				t_name_oldstring = getname_oldstring();
-				MCFontDrawText(m_font, t_name_oldstring . getstring(), t_name_oldstring . getlength(), false, dc, rect.x + leftmargin, starty, False);
+                dc -> drawtext(rect.x + leftmargin, starty, t_name_oldstring.getstring(), t_name_oldstring.getlength(), m_font, false, false);
 			}
 
 			// MW-2012-01-27: [[ Bug 9432 ]] Native GTK handles focus borders itself
@@ -572,14 +572,14 @@ void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectan
 	        && (getstyleint(flags) == F_STANDARD  || getstyleint(flags) == F_MENU
 	            && menumode == WM_OPTION))
 		sy--;
-	MCFontDrawText(m_font, s.getstring(), s.getlength(), isunicode, dc, sx, sy, False);
+    dc -> drawtext(sx, sy, s.getstring(), s.getlength(), m_font, false, isunicode);
 	if (acceltext != NULL)
 	{
 		uint2 awidth = MCFontMeasureText(m_font, acceltext, acceltextsize, isunicode);
 		if (rightmargin == defaultmargin || menucontrol == MENUCONTROL_ITEM)
-			MCFontDrawText(m_font, acceltext, acceltextsize, hasunicode(), dc, srect.x + srect.width - rightmargin - awidth, sy, False);
+            dc -> drawtext(srect.x + srect.width - rightmargin - awidth, sy, acceltext, acceltextsize, m_font, false, false);
 		else
-			MCFontDrawText(m_font, acceltext, acceltextsize, hasunicode(), dc, srect.x + srect.width - rightmargin, sy, False);
+            dc -> drawtext(srect.x + srect.width - rightmargin, sy, acceltext, acceltextsize, m_font, false, false);
 	}
 	if (fstyle & FA_UNDERLINE)
 		dc->drawline(sx, sy + 1, sx + twidth, sy + 1);
@@ -1483,7 +1483,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 				break;
 			default:
 				setforeground(dc, DI_TOP, False);
-				MCFontDrawText(m_font, sptr, length, hasunicode(), dc, textx, cury + yoffset + 1, False);
+                dc -> drawtext(textx, cury + yoffset + 1, sptr, length, m_font, false, hasunicode());
 				setforeground(dc, DI_BOTTOM, False);
 				break;
 			}
@@ -1493,7 +1493,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 				setforeground(dc, DI_BACK, False, True);
 			else
 				setforeground(dc, DI_FORE, False);
-		MCFontDrawText(m_font, sptr, length, hasunicode(), dc, textx, cury + yoffset, False);
+        dc -> drawtext(textx, cury + yoffset, sptr, length, m_font, false, hasunicode());
 		if ((disabled || flags & F_DISABLED) && MClook == LF_MOTIF)
 			dc->setfillstyle(FillSolid, nil, 0 , 0);
 		curx += twidth;

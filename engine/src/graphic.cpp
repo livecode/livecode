@@ -1741,7 +1741,7 @@ void MCGraphic::getlabeltext(MCString &s, bool& isunicode)
 
 void MCGraphic::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, const MCString &s, bool isunicode, uint2 fstyle)
 {
-	MCFontDrawText(m_font, s.getstring(), s.getlength(), isunicode, dc, sx, sy, False);
+	dc -> drawtext(sx, sy, s.getstring(), s.getlength(), m_font, false, isunicode);
 	if (fstyle & FA_UNDERLINE)
 		dc->drawline(sx, sy + 1, sx + twidth, sy + 1);
 	if (fstyle & FA_STRIKEOUT)
