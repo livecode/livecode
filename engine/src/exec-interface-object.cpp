@@ -1306,6 +1306,8 @@ void MCObject::SetScript(MCExecContext& ctxt, MCStringRef new_script)
 		MCAutoStringRef t_old_script;
 		t_old_script = _script;
 		
+        bool t_old_script_encrypted = m_script_encrypted;
+        
 		MCAutoStringRef t_new_script;
 		if (MCStringGetNativeCharAtIndex(new_script, length - 1) != '\n')
 		{
@@ -1322,6 +1324,8 @@ void MCObject::SetScript(MCExecContext& ctxt, MCStringRef new_script)
 		
 		MCValueAssign(_script, *t_new_script);
 
+        // IM-2013-05-29: [[ BZ 10916 ]] flag new script as unencrypted
+		m_script_encrypted = false;
 		getstack() -> securescript(this);
 		
 		if (t_success)
@@ -1335,6 +1339,7 @@ void MCObject::SetScript(MCExecContext& ctxt, MCStringRef new_script)
 					delete hlist;
 					hlist = NULL;
 					MCValueAssign(_script, *t_old_script);
+                    m_script_encrypted = t_old_script_encrypted;
 					MCperror->add(PE_OBJECT_NOTLICENSED, 0, 0);
 				}
 				if (!MCperror->isempty())
