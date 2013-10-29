@@ -761,9 +761,9 @@ void MCEngineExecQuit(MCExecContext& ctxt, integer_t p_retcode)
 		default:
 			return;
 	}
-#ifndef TARGET_SUBPLATFORM_ANDROID
+	// IM-2013-05-01: [[ BZ 10586 ]] remove #ifdefs so this message is sent
+	// here on Android in the same place as (almost) everything else
 	MCdefaultstackptr->getcard()->message(MCM_shut_down);
-#endif
 #endif
 
 	MCretcode = p_retcode;
