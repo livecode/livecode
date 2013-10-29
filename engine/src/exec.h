@@ -31,6 +31,17 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Defined for convenience in exec-interface-field-chunk.cpp
+// where the template system needs only one parameter
+template<typename T>
+struct vector_t
+{
+    T* elements;
+    uindex_t count;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 enum MCExecType
 {
 	/* A */ kMCExecTypeAny,

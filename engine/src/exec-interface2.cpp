@@ -367,7 +367,7 @@ void MCInterfaceNamedColorFormat(MCExecContext& ctxt, const MCInterfaceNamedColo
 	ctxt . Throw();
 }
 
-static void MCInterfaceNamedColorInit(MCExecContext& ctxt, MCInterfaceNamedColor& r_output)
+void MCInterfaceNamedColorInit(MCExecContext& ctxt, MCInterfaceNamedColor& r_output)
 {
 	MCMemoryClear(&r_output, sizeof(MCInterfaceNamedColor));
 }
@@ -377,14 +377,14 @@ void MCInterfaceNamedColorFree(MCExecContext& ctxt, MCInterfaceNamedColor& p_inp
 	MCValueRelease(p_input . name);
 }
 
-static void MCInterfaceNamedColorCopy(MCExecContext& ctxt, const MCInterfaceNamedColor& p_source, MCInterfaceNamedColor& r_target)
+void MCInterfaceNamedColorCopy(MCExecContext& ctxt, const MCInterfaceNamedColor& p_source, MCInterfaceNamedColor& r_target)
 {
 	r_target . color = p_source . color;
 	if (p_source . name != nil)
 		r_target . name = (MCStringRef)MCValueRetain(p_source . name);
 }
 
-static bool MCInterfaceNamedColorIsEqualTo(const MCInterfaceNamedColor& p_left, const MCInterfaceNamedColor& p_right)
+bool MCInterfaceNamedColorIsEqualTo(const MCInterfaceNamedColor& p_left, const MCInterfaceNamedColor& p_right)
 {
 	if (p_left . name != nil && p_right . name != nil)
 		return MCStringIsEqualTo(p_left . name, p_right . name, kMCStringOptionCompareCaseless);

@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 #include "sysdefs.h"
 
+#include "exec.h"
 #include "globals.h"
 #include "object.h"
 #include "stack.h"
@@ -50,27 +51,21 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCField::GetUnicodeTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCDataRef& r_value)
-{
-	MCAutoStringRef t_value;
-    if (exportastext(p_part_id, p_start, p_finish, &t_value) &&
-		MCStringEncode(*t_value, kMCStringEncodingUTF16, false, r_value))
-		return;
-	
-    ctxt . Throw();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 template<typename T> struct PodFieldPropType
 {
     typedef T value_type;
     typedef T stack_type;
     typedef T return_type;
+    typedef T arg_type;
 
     template<typename X> static void getter(MCExecContext& ctxt, X *sptr, void (X::*getter)(MCExecContext& ctxt, T&), T& r_value)
     {
         (sptr ->* getter)(ctxt, r_value);
+    }
+
+    template<typename X> static void setter(MCExecContext &ctxt, X *sptr, void (X::*p_setter)(MCExecContext& ctxt, T), T p_value)
+    {
+        (sptr ->* p_setter)(ctxt, p_value);
     }
 
     static void input(T p_value, T& r_value)
@@ -94,6 +89,154 @@ template<typename T> struct PodFieldPropType
     }
 };
 
+template <>
+struct PodFieldPropType<MCInterfaceNamedColor>
+{
+    typedef MCInterfaceNamedColor value_type;
+    typedef MCInterfaceNamedColor stack_type;
+    typedef MCInterfaceNamedColor return_type;
+    typedef const MCInterfaceNamedColor& arg_type;
+
+    template<typename X> static void getter(MCExecContext& ctxt, X *sptr, void (X::*p_getter)(MCExecContext& ctxt, return_type&), return_type& r_value)
+    {
+        (sptr ->* p_getter)(ctxt, r_value);
+    }
+
+    template<typename X> static void setter(MCExecContext &ctxt, X *sptr, void (X::*p_setter)(MCExecContext& ctxt, arg_type), arg_type p_value)
+    {
+        (sptr ->* p_setter)(ctxt, p_value);
+    }
+
+    static void input(MCInterfaceNamedColor p_value, MCInterfaceNamedColor& r_value)
+    {
+        assign(r_value, p_value);
+    }
+
+    static bool equal(MCInterfaceNamedColor a, MCInterfaceNamedColor b)
+    {
+        if (a . name != nil && b . name != nil)
+            return MCStringIsEqualTo(a . name, b . name, kMCCompareExact);
+        else if (a . name == nil || b . name == nil)
+            return false;
+        else
+            return (a . color . blue == b . color . blue
+                    && a . color . red == b . color . red
+                    && a . color . green == b . color . green);
+    }
+
+    static void assign(MCInterfaceNamedColor& x, MCInterfaceNamedColor y)
+    {
+        if (y . name != nil)
+        {
+            if (x . name != nil)
+                MCValueRelease(x . name);
+
+            x . name = MCValueRetain(y . name);
+        }
+        else
+            x . color = y . color;
+    }
+
+    static void output(MCInterfaceNamedColor p_value, MCInterfaceNamedColor& r_value)
+    {
+        assign(r_value, p_value);
+    }
+};
+
+template <>
+struct PodFieldPropType<MCInterfaceTextStyle>
+{
+    typedef MCInterfaceTextStyle value_type;
+    typedef MCInterfaceTextStyle stack_type;
+    typedef MCInterfaceTextStyle return_type;
+    typedef const MCInterfaceTextStyle& arg_type;
+
+    template<typename X> static void getter(MCExecContext& ctxt, X *sptr, void (X::*p_getter)(MCExecContext& ctxt, return_type&), return_type& r_value)
+    {
+        (sptr ->* p_getter)(ctxt, r_value);
+    }
+
+    template<typename X> static void setter(MCExecContext &ctxt, X *sptr, void (X::*p_setter)(MCExecContext& ctxt, arg_type), arg_type p_value)
+    {
+        (sptr ->* p_setter)(ctxt, p_value);
+    }
+
+    static void input(value_type p_value, stack_type& r_value)
+    {
+        r_value . style = p_value . style;
+    }
+
+    static bool equal(const stack_type& a, const stack_type& b)
+    {
+        return a . style == b . style;
+    }
+
+    static void assign(stack_type& x, stack_type y)
+    {
+         x . style = y . style;
+    }
+
+    static void output(stack_type p_value, return_type& r_value)
+    {
+        r_value . style = p_value . style;
+    }
+};
+
+
+template<typename T> struct VectorFieldPropType
+{
+    typedef vector_t<T> value_type;
+    struct stack_type
+    {
+        vector_t<T> list;
+        ~stack_type()
+        {
+            if (list.elements != nil)
+                delete list.elements;
+        }
+    };
+    typedef vector_t<T> return_type;
+    typedef const vector_t<T>& arg_type;
+
+    template<typename X> static void getter(MCExecContext ctxt, X *sptr, void (X::*p_getter)(MCExecContext& ctxt, return_type&), stack_type& r_value)
+    {
+        (sptr ->* p_getter)(ctxt, r_value . list);
+    }
+
+    template <typename X> static void setter(MCExecContext ctxt, X *sptr, void (X::*p_setter)(MCExecContext& ctxt, arg_type), arg_type p_value)
+    {
+        (sptr ->* p_setter)(ctxt, p_value);
+    }
+
+    static void input(const value_type& p_value, stack_type& r_value)
+    {
+        r_value . list = p_value;
+    }
+
+    static bool equal(const stack_type& a, const stack_type& b)
+    {
+        if (a . list . count == 0 && a . list . count == 0)
+            return true;
+        else if (a . list . count != b . list . count)
+            return false;
+        else
+        {
+            for (unsigned int i = 0; i < a . list . count && i < b . list . count; ++i)
+                if (a . list . elements[i] != b . list . elements[i])
+                    return false;
+        }
+        return true;
+    }
+
+    static void output(stack_type a, return_type& r_value)
+    {
+        r_value . elements = a . list . elements;
+        r_value . count = a . list . count;
+        a . list . elements = nil;
+    }
+
+};
+
 template<typename T> struct OptionalFieldPropType
 {
     typedef typename T::value_type value_type;
@@ -103,11 +246,17 @@ template<typename T> struct OptionalFieldPropType
         typename T::return_type *value_ptr;
     };
     typedef typename T::return_type *return_type;
+    typedef typename T::value_type *arg_type;
 
     template<typename X> static void getter(MCExecContext& ctxt, X *sptr, void (X::*getter)(MCExecContext& ctxt, typename T::value_type*&), stack_type& r_value)
     {
         r_value . value_ptr = &r_value . value;
         (sptr ->* getter)(ctxt, r_value . value_ptr);
+    }
+
+    template<typename X> static void setter(MCExecContext& ctxt, X *sptr, void (X::*p_setter)(MCExecContext&, arg_type), arg_type p_value)
+    {
+        (sptr ->* p_setter)(ctxt, p_value);
     }
 
     static void input(typename T::value_type p_value, stack_type& r_value)
@@ -241,6 +390,58 @@ template<typename T> void GetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
     T::output(t_value, r_value);
 }
 
+template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCField *p_field, uint32_t p_part_id, findex_t si, findex_t ei, void (MCParagraph::*p_setter)(MCExecContext&, typename T::arg_type), typename T::arg_type p_value)
+{
+    MCParagraph *t_paragraph;
+    t_paragraph = p_field -> resolveparagraphs(p_part_id);
+
+    findex_t t_line_index;
+    MCParagraph *sptr = p_field -> indextoparagraph(t_paragraph, si, ei, &t_line_index);
+
+    T::setter(ctxt, sptr, p_setter, p_value);
+}
+
+template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p_field, uint32_t p_part_id, findex_t si, findex_t ei, void (MCBlock::*p_setter)(MCExecContext&, typename T::arg_type), typename T::arg_type p_value)
+{
+    MCParagraph *t_paragraph;
+    t_paragraph = p_field -> resolveparagraphs(p_part_id);
+
+    findex_t t_line_index;
+    MCParagraph *sptr = p_field -> indextoparagraph(t_paragraph, si, ei, &t_line_index);
+
+    do
+    {
+        MCBlock *t_block;
+        t_block = sptr -> getblocks();
+
+        for(;;)
+        {
+            if (t_block -> GetOffset() <= si)
+                break;
+            t_block = t_block -> next();
+        }
+
+        for(;;)
+        {
+            if (t_block -> GetOffset() >= ei)
+                break;
+
+            if (t_block -> GetLength() != 0)
+            {
+                T::setter(ctxt, t_block, p_setter, p_value);
+                if (ctxt . HasError())
+                    return;
+            }
+
+            t_block = t_block -> next();
+        }
+
+        ei -= sptr->gettextlengthcr();
+        sptr = sptr->next();
+    }
+    while(ei > 0);
+}
+
 //////////
 
 template<typename T, int Min, int Max> static void setparagraphattr_int(MCParagraphAttrs*& attrs, uint32_t p_flag, size_t p_field_offset, T *p_value)
@@ -276,26 +477,34 @@ static void setparagraphattr_int16(MCParagraphAttrs*& attrs, uint32_t p_flag, si
     setparagraphattr_int<integer_t, INT16_MIN, INT16_MAX>(attrs, p_flag, p_field_offset, p_value);
 }
 
-static void setparagraphattr_color(MCParagraphAttrs*& attrs, uint32_t p_flag, size_t p_field_offset, MCColor *p_color)
+static void setparagraphattr_color(MCParagraphAttrs*& attrs, uint32_t p_flag, size_t p_field_offset, const MCInterfaceNamedColor& p_color)
 {
-    if (p_color == nil)
+    MCColor t_color;
+    if (p_color . name != nil) // name no null: must interpret the string
     {
-        if (attrs != nil)
+        if (MCStringIsEmpty(p_color . name)) // Empty color name: no color set
         {
-            ((uint32_t *)((char *)attrs + p_field_offset))[0] = 0;
-            attrs -> flags &= ~p_flag;
+            if (attrs != nil)
+            {
+                ((uint32_t *)((char *)attrs + p_field_offset))[0] = 0;
+                attrs -> flags &= ~p_flag;
+            }
+            return;
         }
-    }
-    else
-    {
-        MCscreen -> alloccolor(*p_color);
 
-        if (attrs == nil)
-            attrs = new MCParagraphAttrs;
-
-        attrs -> flags |= p_flag;
-        ((uint32_t *)((char *)attrs + p_field_offset))[0] = p_color -> pixel;
+        MCscreen -> parsecolor(p_color . name, t_color, nil);
     }
+    else // name null: must interpret the MCColor
+        t_color = p_color . color;
+
+    // Make sure the pixel attribute has been generated
+    MCscreen -> alloccolor(t_color);
+
+    if (attrs == nil)
+        attrs = new MCParagraphAttrs;
+
+    attrs -> flags |= p_flag;
+    ((uint32_t *)((char *)attrs + p_field_offset))[0] = t_color . pixel;
 }
 
 static void setparagraphattr_bool(MCParagraphAttrs*& attrs, uint32_t p_flag, bool *p_value, bool &r_new_value)
@@ -346,21 +555,696 @@ void MCField::GetEffectiveTextAlignOfLineChunk(MCExecContext& ctxt, uint32_t p_p
     GetParagraphPropOfCharChunk< PodFieldPropType<intenum_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveTextAlign, r_mixed, r_value);
 }
 
+void MCField::SetTextAlignOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, intenum_t* value)
+{
+    SetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<intenum_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::SetTextAlign, value);
+}
+
 void MCField::GetTextSizeOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t*& r_value)
 {
     GetCharPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<uinteger_t> > >(ctxt, this, p_part_id, si, ei, &MCBlock::GetTextSize, false, 0, r_mixed, r_value);
-}
-
-void MCField::SetTextSizeOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t* p_value)
-{
-
 }
 
 void MCField::GetEffectiveTextSizeOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t& r_value)
 {
     uinteger_t t_default;
     GetEffectiveTextSize(ctxt, t_default);
-    //GetCharPropOfCharChunk< PodFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetTextSize, true, t_default, r_mixed, r_value);
+    GetCharPropOfCharChunk< PodFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetEffectiveTextSize, true, t_default, r_mixed, r_value);
+}
+
+void MCField::SetTextSizeOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t* p_value)
+{
+    SetCharPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<uinteger_t> > >(ctxt, this, p_part_id, si, ei, &MCBlock::SetTextSize, p_value);
+}
+
+void MCField::GetTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef& r_value)
+{
+    if (exportastext(p_part_id, p_start, p_finish, r_value))
+        return;
+
+    ctxt . Throw();
+}
+
+void MCField::SetTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef value)
+{
+    // TODO Implement
+}
+
+void MCField::GetUnicodeTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCDataRef& r_value)
+{
+    MCAutoStringRef t_value;
+    if (exportastext(p_part_id, p_start, p_finish, &t_value) &&
+        MCStringEncode(*t_value, kMCStringEncodingUTF16, false, r_value))
+        return;
+
+    ctxt . Throw();
+}
+
+void MCField::SetUnicodeTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCDataRef r_value)
+{
+    // TODO Implement
+}
+
+void MCField::GetPlainTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef& r_value)
+{
+    if (exportasplaintext(p_part_id, p_start, p_finish, r_value))
+        return;
+
+    ctxt . Throw();
+}
+
+void MCField::GetUnicodePlainTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCDataRef& r_value)
+{
+    MCAutoStringRef t_text;
+    GetPlainTextOfCharChunk(ctxt, p_part_id, p_start, p_finish, &t_text);
+    if (!ctxt . HasError() &&
+        MCStringEncode(*t_text, kMCStringEncodingUTF16, false, r_value))
+        return;
+
+    ctxt . Throw();
+}
+
+void MCField::GetFormattedTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef& r_value)
+{
+    if (exportasformattedtext(p_part_id, p_start, p_finish, r_value))
+        return;
+
+    ctxt . Throw();
+}
+
+void MCField::GetUnicodeFormattedTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCDataRef& r_value)
+{
+    MCAutoStringRef t_string;
+    if (exportasformattedtext(p_part_id, p_start, p_finish, &t_string)
+            && MCStringEncode(*t_string, kMCStringEncodingUTF16, false, r_value))
+        return;
+
+    ctxt . Throw();
+}
+
+void MCField::GetRtfTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef& r_value)
+{
+    if (exportasrtftext(p_part_id, p_start, p_finish, r_value))
+        return;
+
+    ctxt . Throw();
+}
+
+void MCField::SetRtfTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef value)
+{
+    // TODO Implement
+}
+
+void MCField::GetHtmlTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef& r_value)
+{
+    if (exportashtmltext(p_part_id, p_start, p_finish, false, r_value))
+        return;
+
+    ctxt . Throw();
+}
+
+void MCField::GetEffectiveHtmlTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef& r_value)
+{
+    if (exportashtmltext(p_part_id, p_start, p_finish, true, r_value))
+        return;
+
+    ctxt . Throw();
+}
+
+void MCField::SetHtmlTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef value)
+{
+    // TODO Implement
+}
+
+void MCField::GetStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCArrayRef& r_value)
+{
+    if (exportasstyledtext(p_part_id, p_start, p_finish, false, false, r_value))
+        return;
+
+    ctxt . Throw();
+}
+
+void MCField::GetEffectiveStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCArrayRef& r_value)
+{
+    if (exportasstyledtext(p_part_id, p_start, p_finish, false, true, r_value))
+        return;
+
+    ctxt . Throw();
+}
+
+void MCField::SetStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCArrayRef value)
+{
+    // TODO Implement
+}
+
+void MCField::GetFormattedStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCArrayRef& r_value)
+{
+    if (exportasstyledtext(p_part_id, p_start, p_finish, true, false, r_value))
+        return;
+
+    ctxt . Throw();
+}
+
+void MCField::GetEffectiveFormattedStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCArrayRef& r_value)
+{
+    if (exportasstyledtext(p_part_id, p_start, p_finish, true, true, r_value))
+        return;
+
+    ctxt . Throw();
+}
+
+
+//////////
+
+void MCField::GetLineIndexOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t& r_value)
+{
+    // TODO Implement
+}
+
+void MCField::GetFormattedTopOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t& r_value)
+{
+    // TODO Implement
+}
+
+void MCField::GetFormattedLeftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t& r_value)
+{
+    // TODO Implement
+}
+
+void MCField::GetFormattedWidthOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t& r_value)
+{
+    // TODO Implement
+}
+
+void MCField::GetFormattedHeightOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t& r_value)
+{
+    // TODO Implement
+}
+
+void MCField::GetFormattedRectOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCRectangle& r_value)
+{
+    // TODO Implement
+}
+
+
+//////////
+
+void MCField::GetLinkTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCStringRef& r_value)
+{
+    bool t_mixed;
+    GetCharPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetLinkText, false, (MCStringRef)nil, t_mixed, r_value);
+}
+
+void MCField::SetLinkTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCStringRef value)
+{
+    SetCharPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, p_part_id, si, ei, &MCBlock::SetLinktext, value);
+}
+
+void MCField::GetMetadataOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCStringRef& r_value)
+{
+    bool t_mixed;
+    MCAutoStringRef t_metadata;
+    GetParagraphPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetMetadata, t_mixed, &t_metadata);
+
+    if (*t_metadata == nil)
+        r_value = nil;
+    else
+        r_value = MCValueRetain(*t_metadata);
+}
+
+void MCField::SetMetadataOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCStringRef value)
+{
+    SetParagraphPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, p_part_id, si, ei, &MCParagraph::SetMetadata, value);
+}
+
+void MCField::GetMetadataOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCStringRef& r_value)
+{
+    bool t_mixed;
+    GetCharPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetMetadata, false, (MCStringRef)nil, t_mixed, r_value);
+}
+
+void MCField::SetMetadataOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCStringRef value)
+{
+    SetCharPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, p_part_id, si, ei, &MCBlock::SetMetadata, value);
+}
+
+void MCField::GetImageSourceOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCStringRef& r_value)
+{
+    bool t_mixed;
+    GetCharPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetImageSource, false, (MCStringRef)nil, t_mixed, r_value);
+}
+
+void MCField::SetImageSourceOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCStringRef value)
+{
+    SetCharPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, p_part_id, si, ei, &MCBlock::SetImageSource, value);
+}
+
+void MCField::GetVisitedOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_value)
+{
+    bool t_mixed;
+    GetCharPropOfCharChunk< PodFieldPropType<bool> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetVisited, false, false, t_mixed, r_value);
+}
+
+void MCField::GetEncodingOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, intenum_t& r_encoding)
+{
+    // TODO implement
+}
+
+void MCField::GetFlaggedOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& r_value)
+{
+    GetCharPropOfCharChunk< PodFieldPropType<bool> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetFlagged, false, false, r_mixed, r_value);
+}
+
+void MCField::SetFlaggedOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool value)
+{
+    SetCharPropOfCharChunk< PodFieldPropType<bool> >(ctxt, this, p_part_id, si, ei, &MCBlock::SetFlagged, value);
+}
+
+void MCField::GetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCInterfaceFlaggedRanges& r_value)
+{
+    // TODO Implement
+}
+
+void MCField::SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceFlaggedRanges& value)
+{
+    // TODO Implement
+}
+
+//////////
+// Paragraph list properties
+//////////
+
+void MCField::GetListStyleOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, intenum_t& r_value)
+{
+    GetParagraphPropOfCharChunk< PodFieldPropType<intenum_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetListStyle, r_mixed, r_value);
+}
+
+void MCField::SetListStyleOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, intenum_t value)
+{
+    SetParagraphPropOfCharChunk< PodFieldPropType<intenum_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::SetListStyle, value);
+}
+
+void MCField::GetListDepthOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t*& r_value)
+{
+    GetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<uinteger_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetListDepth, r_mixed, r_value);
+}
+
+void MCField::SetListDepthOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t *value)
+{
+    SetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<uinteger_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::SetListDepth, value);
+}
+
+void MCField::GetListIndentOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, integer_t*& r_value)
+{
+    GetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<integer_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetListIndent, r_mixed, r_value);
+}
+
+void MCField::SetListIndentOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t *value)
+{
+    SetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<integer_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::SetListIndent, value);
+}
+
+void MCField::GetListIndexOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t*& r_value)
+{
+    GetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<uinteger_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetListIndex, r_mixed, r_value);
+}
+
+void MCField::GetEffectiveListIndexOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t& r_value)
+{
+    GetParagraphPropOfCharChunk< PodFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveListIndex, r_mixed, r_value);
+}
+void MCField::SetListIndexOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t *value)
+{
+    SetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<uinteger_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::SetListIndex, value);
+}
+
+//////////
+// Paragraph indent properties
+//////////
+
+void MCField::GetFirstIndentOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, integer_t*& r_value)
+{
+    GetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<integer_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetFirstIndent, r_mixed, r_value);
+}
+
+void MCField::GetEffectiveFirstIndentOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, integer_t& r_value)
+{
+    GetParagraphPropOfCharChunk< PodFieldPropType<integer_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveFirstIndent, r_mixed, r_value);
+}
+
+void MCField::SetFirstIndentOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t *p_indent)
+{
+    SetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<integer_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::SetFirstIndent, p_indent);
+}
+
+void MCField::GetLeftIndentOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, integer_t*& r_value)
+{
+    GetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<integer_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetLeftIndent, r_mixed, r_value);
+}
+
+void MCField::GetEffectiveLeftIndentOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, integer_t& r_value)
+{
+    GetParagraphPropOfCharChunk< PodFieldPropType<integer_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveLeftIndent, r_mixed, r_value);
+}
+
+void MCField::SetLeftIndentOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t *p_indent)
+{
+    SetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<integer_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::SetLeftIndent, p_indent);
+}
+
+void MCField::GetRightIndentOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, integer_t*& r_value)
+{
+    GetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<integer_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetLeftIndent, r_mixed, r_value);
+}
+
+void MCField::GetEffectiveRightIndentOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, integer_t& r_value)
+{
+    GetParagraphPropOfCharChunk< PodFieldPropType<integer_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveRightIndent, r_mixed, r_value);
+}
+
+void MCField::SetRightIndentOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t *p_indent)
+{
+    SetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<integer_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::SetRightIndent, p_indent);
+}
+
+void MCField::GetSpaceAboveOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t*& r_value)
+{
+    GetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<uinteger_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetSpaceAbove, r_mixed, r_value);
+}
+
+void MCField::GetEffectiveSpaceAboveOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t& r_value)
+{
+    GetParagraphPropOfCharChunk< PodFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveSpaceAbove, r_mixed, r_value);
+}
+
+void MCField::SetSpaceAboveOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t *p_space)
+{
+    SetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<uinteger_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::SetSpaceAbove, p_space);
+}
+
+void MCField::GetSpaceBelowOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t*& r_value)
+{
+    GetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<uinteger_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetSpaceBelow, r_mixed, r_value);
+}
+
+void MCField::GetEffectiveSpaceBelowOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t& r_value)
+{
+    GetParagraphPropOfCharChunk< PodFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveSpaceBelow, r_mixed, r_value);
+}
+
+void MCField::SetSpaceBelowOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t *p_space)
+{
+    SetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<uinteger_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::SetSpaceBelow, p_space);
+}
+
+//////////
+// Paragraph tabs Properties
+//////////
+
+void MCField::GetTabStopsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uindex_t& r_count, uinteger_t*& r_values)
+{
+    vector_t<uinteger_t> t_vector;
+    GetParagraphPropOfCharChunk< VectorFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetTabStops, r_mixed, t_vector);
+
+    r_count = t_vector . count;
+    r_values = t_vector . elements;
+}
+
+void MCField::GetEffectiveTabStopsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uindex_t& r_count, uinteger_t*& r_values)
+{
+    vector_t<uinteger_t> t_vector;
+    GetParagraphPropOfCharChunk< VectorFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveTabStops, r_mixed, t_vector);
+
+    r_count = t_vector.count;
+    r_values = t_vector.elements;
+}
+
+void MCField::SetTabStopsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uindex_t count, uinteger_t *values)
+{
+    vector_t<uinteger_t> t_vector;
+    t_vector . count = count;
+    t_vector . elements = values;
+
+    SetParagraphPropOfCharChunk< VectorFieldPropType<uinteger_t > >(ctxt, this, p_part_id, si, ei, &MCParagraph::SetTabStops, t_vector);
+}
+
+void MCField::GetTabWidthsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uindex_t& r_count, uinteger_t*& r_values)
+{
+    vector_t<uinteger_t> t_vector;
+    GetParagraphPropOfCharChunk< VectorFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetTabWidths, r_mixed, t_vector);
+
+    r_count = t_vector . count;
+    r_values = t_vector . elements;
+}
+
+void MCField::GetEffectiveTabWidthsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uindex_t& r_count, uinteger_t*& r_values)
+{
+    vector_t<uinteger_t> t_vector;
+    GetParagraphPropOfCharChunk< VectorFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveTabWidths, r_mixed, t_vector);
+
+    r_count = t_vector.count;
+    r_values = t_vector.elements;
+}
+
+void MCField::SetTabWidthsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uindex_t count, uinteger_t *values)
+{
+    vector_t<uinteger_t> t_vector;
+    t_vector . count = count;
+    t_vector . elements = values;
+
+    SetParagraphPropOfCharChunk< VectorFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::SetTabWidths, t_vector);
+}
+
+//////////
+// Paragraph border properties
+//////////
+
+void MCField::GetBorderWidthOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t*& r_value)
+{
+    GetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<uinteger_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetBorderWidth, r_mixed, r_value);
+}
+
+void MCField::GetEffectiveBorderWidthOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t& r_value)
+{
+    GetParagraphPropOfCharChunk< PodFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveBorderWidth, r_mixed, r_value);
+}
+
+void MCField::SetBorderWidthOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t *p_width)
+{
+    SetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<uinteger_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::SetBorderWidth, p_width);
+}
+
+//////////
+// Paragraph color properties
+//////////
+
+void MCField::GetBackColorOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, MCInterfaceNamedColor& r_color)
+{
+    GetParagraphPropOfCharChunk< PodFieldPropType<MCInterfaceNamedColor> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetBackColor, r_mixed, r_color);
+}
+
+void MCField::GetEffectiveBackColorOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, MCInterfaceNamedColor& r_color)
+{
+    GetParagraphPropOfCharChunk< PodFieldPropType<MCInterfaceNamedColor> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveBackColor, r_mixed, r_color);
+}
+
+void MCField::SetBackColorOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceNamedColor& p_color)
+{
+    SetParagraphPropOfCharChunk< PodFieldPropType<MCInterfaceNamedColor> >(ctxt, this, p_part_id, si, ei, &MCParagraph::SetBackColor, p_color);
+}
+
+void MCField::GetBorderColorOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, MCInterfaceNamedColor& r_color)
+{
+    GetParagraphPropOfCharChunk< PodFieldPropType<MCInterfaceNamedColor> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetBorderColor, r_mixed, r_color);
+}
+
+void MCField::GetEffectiveBorderColorOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, MCInterfaceNamedColor& r_color)
+{
+    GetParagraphPropOfCharChunk< PodFieldPropType<MCInterfaceNamedColor> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveBorderColor, r_mixed, r_color);
+}
+
+void MCField::SetBorderColorOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceNamedColor& p_color)
+{
+    SetParagraphPropOfCharChunk< PodFieldPropType<MCInterfaceNamedColor> >(ctxt, this, p_part_id, si, ei, &MCParagraph::SetBorderColor, p_color);
+}
+
+//////////
+// Paragraph grid properties
+//////////
+
+void MCField::GetHGridOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool*& r_value)
+{
+    GetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<bool> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetHGrid, r_mixed, r_value);
+}
+
+void MCField::GetEffectiveHGridOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& r_value)
+{
+    GetParagraphPropOfCharChunk< PodFieldPropType<bool> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveHGrid, r_mixed, r_value);
+}
+
+void MCField::SetHGridOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool *p_has_hgrid)
+{
+    SetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<bool> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::SetHGrid, p_has_hgrid);
+}
+
+void MCField::GetVGridOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool*& r_value)
+{
+    GetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<bool> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetVGrid, r_mixed, r_value);
+}
+
+void MCField::GetEffectiveVGridOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& value)
+{
+    GetParagraphPropOfCharChunk< PodFieldPropType<bool> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveVGrid, r_mixed, value);
+}
+
+void MCField::SetVGridOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool *p_has_vgrid)
+{
+    SetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<bool> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::SetVGrid, p_has_vgrid);
+}
+
+void MCField::GetDontWrapOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool*& r_value)
+{
+    GetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<bool> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetDontWrap, r_mixed, r_value);
+}
+
+void MCField::GetEffectiveDontWrapOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& value)
+{
+    GetParagraphPropOfCharChunk< PodFieldPropType<bool> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveDontWrap, r_mixed, value);
+}
+
+void MCField::SetDontWrapOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool *p_has_dont_wrap)
+{
+    SetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<bool> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::SetDontWrap, p_has_dont_wrap);
+}
+
+//////////
+// Paragraph padding properties
+//////////
+
+void MCField::GetPaddingOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t*& r_value)
+{
+    GetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<uinteger_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetPadding, r_mixed, r_value);
+}
+
+void MCField::GetEffectivePaddingOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t& r_value)
+{
+    GetParagraphPropOfCharChunk< PodFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectivePadding, r_mixed, r_value);
+}
+
+void MCField::SetPaddingOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t *p_padding)
+{
+    SetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<uinteger_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::SetPadding, p_padding);
+}
+
+//////////
+// Paragraph invisible properties
+//////////
+
+void MCField::GetInvisibleOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& r_value)
+{
+    GetParagraphPropOfCharChunk< PodFieldPropType<bool> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveInvisible, r_mixed, r_value);
+}
+
+void MCField::SetInvisibleOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool p_invisible)
+{
+    SetParagraphPropOfCharChunk< PodFieldPropType<bool> >(ctxt, this, p_part_id, si, ei, &MCParagraph::SetInvisible, p_invisible);
+}
+
+//////////
+// Block color properties
+//////////
+
+void MCField::GetForeColorOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, MCInterfaceNamedColor& r_color)
+{
+    MCInterfaceNamedColor t_parent_color;
+    GetCharPropOfCharChunk< PodFieldPropType<MCInterfaceNamedColor> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetForeColor, false, t_parent_color, r_mixed, r_color);
+}
+
+void MCField::GetEffectiveForeColorOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, MCInterfaceNamedColor& r_color)
+{
+    MCInterfaceNamedColor t_default;
+    GetForeColor(ctxt, t_default);
+    GetCharPropOfCharChunk< PodFieldPropType<MCInterfaceNamedColor> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetForeColor, true, t_default, r_mixed, r_color);
+    MCInterfaceNamedColorFree(ctxt, t_default);
+}
+
+void MCField::SetForeColorOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceNamedColor& color)
+{
+    SetCharPropOfCharChunk< PodFieldPropType<MCInterfaceNamedColor> >(ctxt, this, p_part_id, si, ei, &MCBlock::SetForeColor, color);
+}
+
+void MCField::GetBackColorOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, MCInterfaceNamedColor& r_color)
+{
+    MCInterfaceNamedColor t_parent_color;
+    GetCharPropOfCharChunk< PodFieldPropType<MCInterfaceNamedColor> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetBackColor, false, t_parent_color, r_mixed, r_color);
+}
+
+void MCField::GetEffectiveBackColorOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, MCInterfaceNamedColor& r_color)
+{
+    MCInterfaceNamedColor t_default;
+    GetForeColor(ctxt, t_default);
+    GetCharPropOfCharChunk< PodFieldPropType<MCInterfaceNamedColor> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetBackColor, true, t_default, r_mixed, r_color);
+    MCInterfaceNamedColorFree(ctxt, t_default);
+}
+
+void MCField::SetBackColorOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceNamedColor& color)
+{
+    SetCharPropOfCharChunk< PodFieldPropType<MCInterfaceNamedColor> >(ctxt, this, p_part_id, si, ei, &MCBlock::SetBackColor, color);
+}
+
+//////////
+// Block text properties
+//////////
+
+void MCField::GetTextFontOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, MCStringRef& r_value)
+{
+    GetCharPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetTextFont, false, (MCStringRef)nil, r_mixed, r_value);
+}
+
+void MCField::GetEffectiveTextFontOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, MCStringRef& r_value)
+{
+    MCAutoStringRef t_default;
+    GetTextFont(ctxt, &t_default);
+    GetCharPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetTextFont, true, *t_default, r_mixed, r_value);
+}
+
+void MCField::SetTextFontOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCStringRef p_value)
+{
+    SetCharPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, p_part_id, si, ei, &MCBlock::SetTextFont, p_value);
+}
+
+void MCField::GetTextStyleOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, MCInterfaceTextStyle& r_value)
+{
+    MCInterfaceTextStyle t_dummy;
+    GetCharPropOfCharChunk< PodFieldPropType<MCInterfaceTextStyle> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetTextStyle, false, t_dummy, r_mixed, r_value);
+}
+
+void MCField::GetEffectiveTextStyleOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, MCInterfaceTextStyle& r_value)
+{
+    MCInterfaceTextStyle t_default;
+    GetTextStyle(ctxt, t_default);
+    GetCharPropOfCharChunk< PodFieldPropType<MCInterfaceTextStyle> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetTextStyle, true, t_default, r_mixed, r_value);
+}
+
+void MCField::SetTextStyleOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceTextStyle& p_value)
+{
+    SetCharPropOfCharChunk< PodFieldPropType<MCInterfaceTextStyle> >(ctxt, this, p_part_id, si, ei, &MCBlock::SetTextStyle, p_value);
+}
+
+void MCField::GetTextShiftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, integer_t*& r_value)
+{
+    GetCharPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<integer_t> > >(ctxt, this, p_part_id, si, ei, &MCBlock::GetTextShift, false, 0, r_mixed, r_value);
+}
+
+void MCField::GetEffectiveTextShiftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, integer_t& r_value)
+{
+    // TODO no shift value defined for the field
+    GetCharPropOfCharChunk< PodFieldPropType<integer_t> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetEffectiveTextShift, false, 0, r_mixed, r_value);
+}
+
+void MCField::SetTextShiftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t* p_value)
+{
+    SetCharPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<integer_t> > >(ctxt, this, p_part_id, si, ei, &MCBlock::SetTextShift, p_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -397,15 +1281,7 @@ void MCParagraph::SetTextAlign(MCExecContext& ctxt, intenum_t* p_value)
     }
 }
 
-void MCParagraph::GetListStyle(MCExecContext& ctxt, intenum_t*& r_style)
-{
-    if (attrs == nil || (attrs -> flags & PA_HAS_LIST_STYLE) == 0)
-        r_style = nil;
-    else
-        *r_style = getliststyle();
-}
-
-void MCParagraph::GetEffectiveListStyle(MCExecContext& ctxt, intenum_t& r_style)
+void MCParagraph::GetListStyle(MCExecContext& ctxt, intenum_t& r_style)
 {
     r_style = getliststyle();
 }
@@ -428,9 +1304,16 @@ void MCParagraph::GetEffectiveListDepth(MCExecContext& ctxt, uinteger_t& r_depth
     r_depth = getlistdepth();
 }
 
-void MCParagraph::SetListDepth(MCExecContext& ctxt, uinteger_t p_depth)
+void MCParagraph::SetListDepth(MCExecContext& ctxt, uinteger_t* p_depth)
 {
-    if (p_depth < 1 || p_depth > 16)
+    uinteger_t t_depth;
+
+    if (p_depth == nil)
+        t_depth = 1;
+    else
+        t_depth = *p_depth;
+
+    if (t_depth < 1 || t_depth > 16)
     {
         ctxt . Throw();
         return;
@@ -445,7 +1328,7 @@ void MCParagraph::SetListDepth(MCExecContext& ctxt, uinteger_t p_depth)
         attrs -> list_style = kMCParagraphListStyleDisc;
     }
 
-    attrs -> list_depth = p_depth - 1;
+    attrs -> list_depth = t_depth - 1;
 }
 
 void MCParagraph::GetListIndent(MCExecContext& ctxt, integer_t*& r_indent)
@@ -550,43 +1433,43 @@ void MCParagraph::SetRightIndent(MCExecContext& ctxt, integer_t *p_indent)
     setparagraphattr_int16(attrs, PA_HAS_RIGHT_INDENT, offsetof(MCParagraphAttrs, right_indent), p_indent);
 }
 
-void MCParagraph::GetSpaceAbove(MCExecContext& ctxt, integer_t*& r_space)
+void MCParagraph::GetSpaceAbove(MCExecContext& ctxt, uinteger_t*& r_space)
 {
     if (attrs == nil || (attrs -> flags & PA_HAS_SPACE_ABOVE) == 0)
         r_space = nil;
     else
-        *r_space = getspaceabove();
+        *r_space = (uinteger_t)getspaceabove();
 }
 
-void MCParagraph::GetEffectiveSpaceAbove(MCExecContext& ctxt, integer_t& r_space)
+void MCParagraph::GetEffectiveSpaceAbove(MCExecContext& ctxt, uinteger_t& r_space)
 {
-    r_space = getspaceabove();
+    r_space = (uinteger_t)getspaceabove();
 }
 
-void MCParagraph::SetSpaceAbove(MCExecContext& ctxt, integer_t* p_space)
+void MCParagraph::SetSpaceAbove(MCExecContext& ctxt, uinteger_t *p_space)
 {
-    setparagraphattr_int<integer_t, 0, 32767>(attrs, PA_HAS_SPACE_ABOVE, offsetof(MCParagraphAttrs, space_above), p_space);
+    setparagraphattr_int<uinteger_t, 0, 32767>(attrs, PA_HAS_SPACE_ABOVE, offsetof(MCParagraphAttrs, space_above), p_space);
 }
 
-void MCParagraph::GetSpaceBelow(MCExecContext& ctxt, integer_t*& r_space)
+void MCParagraph::GetSpaceBelow(MCExecContext& ctxt, uinteger_t *&r_space)
 {
     if (attrs == nil || (attrs -> flags & PA_HAS_SPACE_BELOW) == 0)
         r_space = nil;
     else
-        *r_space = getspacebelow();
+        *r_space = (uinteger_t)getspacebelow();
 }
 
-void MCParagraph::GetEffectiveSpaceBelow(MCExecContext& ctxt, integer_t& r_space)
+void MCParagraph::GetEffectiveSpaceBelow(MCExecContext& ctxt, uinteger_t& r_space)
 {
-    r_space = getspacebelow();
+    r_space = (uinteger_t)getspacebelow();
 }
 
-void MCParagraph::SetSpaceBelow(MCExecContext& ctxt, integer_t* p_space)
+void MCParagraph::SetSpaceBelow(MCExecContext& ctxt, uinteger_t *p_space)
 {
-    setparagraphattr_int<integer_t, 0, 32767>(attrs, PA_HAS_SPACE_BELOW, offsetof(MCParagraphAttrs, space_below), p_space);
+    setparagraphattr_int<uinteger_t, 0, 32767>(attrs, PA_HAS_SPACE_BELOW, offsetof(MCParagraphAttrs, space_below), p_space);
 }
 
-void MCParagraph::DoSetTabStops(MCExecContext &ctxt, bool p_is_relative, uindex_t p_count, uinteger_t* p_tabs)
+void MCParagraph::DoSetTabStops(MCExecContext &ctxt, bool p_is_relative, const vector_t<uinteger_t>& p_tabs)
 {
     MCAutoArray<uint2> t_new_tabs;
 
@@ -596,9 +1479,9 @@ void MCParagraph::DoSetTabStops(MCExecContext &ctxt, bool p_is_relative, uindex_
     uint2 t_previous_tab_stop;
     t_previous_tab_stop = 0;
 
-    for (uindex_t i = 0; i < p_count; i++)
+    for (uindex_t i = 0; i < p_tabs . count; i++)
     {
-        if (p_tabs[i] > 65535)
+        if (p_tabs . elements[i] > 65535)
         {
             ctxt . LegacyThrow(EE_PROPERTY_NAN);
             return;
@@ -606,11 +1489,11 @@ void MCParagraph::DoSetTabStops(MCExecContext &ctxt, bool p_is_relative, uindex_
 
         if (p_is_relative)
         {
-            t_new_tabs . Push(p_tabs[i] + t_previous_tab_stop);
+            t_new_tabs . Push(p_tabs . elements[i] + t_previous_tab_stop);
             t_previous_tab_stop = t_new_tabs[i];
         }
         else
-            t_new_tabs . Push(p_tabs[i]);
+            t_new_tabs . Push(p_tabs . elements[i]);
     }
 
     t_new_tabs . Take(t_new, t_new_count);
@@ -634,7 +1517,7 @@ void MCParagraph::DoSetTabStops(MCExecContext &ctxt, bool p_is_relative, uindex_
     }
 }
 
-void MCParagraph::DoGetTabStops(MCExecContext &ctxt, bool p_is_relative, uindex_t &r_count, uinteger_t *&r_tabs)
+void MCParagraph::DoGetTabStops(MCExecContext &ctxt, bool p_is_relative, vector_t<uinteger_t>& r_tabs)
 {
     uint16_t t_count;
     uint16_t *t_tabs;
@@ -660,85 +1543,105 @@ void MCParagraph::DoGetTabStops(MCExecContext &ctxt, bool p_is_relative, uindex_
             t_tabs_formatted . Push((uinteger_t)t_tabs[i]);
     }
 
-    t_tabs_formatted . Take(r_tabs, r_count);
+    t_tabs_formatted . Take(r_tabs . elements, r_tabs . count);
 }
 
-void MCParagraph::GetTabStops(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tabs)
+void MCParagraph::GetTabStops(MCExecContext& ctxt, vector_t<uinteger_t> &r_tabs)
 {
     if (attrs == nil || (attrs -> flags & PA_HAS_TABS) == 0)
     {
-        r_count = 0;
-        r_tabs = nil;
+        r_tabs . count = 0;
+        r_tabs . elements = nil;
     }
     else
-        DoGetTabStops(ctxt, false, r_count, r_tabs);
+        DoGetTabStops(ctxt, false, r_tabs);
 }
 
-void MCParagraph::GetEffectiveTabStops(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tabs)
+void MCParagraph::GetEffectiveTabStops(MCExecContext& ctxt, vector_t<uinteger_t> &r_tabs)
 {
-    DoGetTabStops(ctxt, false, r_count, r_tabs);
+    DoGetTabStops(ctxt, false, r_tabs);
 }
 
-void MCParagraph::SetTabStops(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_stops)
+void MCParagraph::SetTabStops(MCExecContext& ctxt, const vector_t<uinteger_t>& p_tabs)
 {
-    DoSetTabStops(ctxt, false, p_count, p_stops);
+    DoSetTabStops(ctxt, false, p_tabs);
 }
 
-void MCParagraph::GetTabWidths(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tabs)
+void MCParagraph::GetTabWidths(MCExecContext& ctxt, vector_t<uinteger_t> &r_tabs)
 {
     if (attrs == nil || (attrs -> flags & PA_HAS_TABS) == 0)
     {
-        r_count = 0;
-        r_tabs = nil;
+        r_tabs . count = 0;
+        r_tabs . elements = nil;
     }
     else
-        DoGetTabStops(ctxt, true, r_count, r_tabs);
+        DoGetTabStops(ctxt, true, r_tabs);
 }
 
-void MCParagraph::GetEffectiveTabWidths(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tabs)
+void MCParagraph::GetEffectiveTabWidths(MCExecContext& ctxt, vector_t<uinteger_t> &r_tabs)
 {
-    DoGetTabStops(ctxt, true, r_count, r_tabs);
+    DoGetTabStops(ctxt, true, r_tabs);
 }
 
-void MCParagraph::SetTabWidths(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_tabs)
+void MCParagraph::SetTabWidths(MCExecContext& ctxt, const vector_t<uinteger_t>& p_tabs)
 {
-    DoSetTabStops(ctxt, true, p_count, p_tabs);
+    DoSetTabStops(ctxt, true, p_tabs);
 }
 
-void MCParagraph::GetBackColor(MCExecContext& ctxt, MCColor *&r_color)
+void MCParagraph::GetBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color)
 {
     if (attrs == nil || (attrs -> flags & PA_HAS_BACKGROUND_COLOR) == 0)
-        r_color = nil;
+        r_color . name = MCValueRetain(kMCEmptyString);
     else
-        r_color -> pixel = attrs -> background_color;
+    {
+        MCColor t_color;
+        t_color . pixel = attrs -> background_color;
+        MCscreen -> querycolor(t_color);
+        get_interface_color(t_color, nil, r_color);
+    }
 }
 
-void MCParagraph::GetEffectiveBackColor(MCExecContext& ctxt, MCColor &r_color)
+void MCParagraph::GetEffectiveBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color)
 {
     if (attrs != nil && (attrs -> flags & PA_HAS_BACKGROUND_COLOR) != 0)
-        r_color . pixel = attrs -> background_color;
+    {
+        MCColor t_color;
+        t_color . pixel = attrs -> background_color;
+        MCscreen -> querycolor(t_color);
+        get_interface_color(t_color, nil, r_color);
+    }
 }
 
-void MCParagraph::SetBackColor(MCExecContext& ctxt, MCColor *p_color)
+void MCParagraph::SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color)
 {
     setparagraphattr_color(attrs, PA_HAS_BACKGROUND_COLOR, offsetof(MCParagraphAttrs, background_color), p_color);
 }
 
-void MCParagraph::GetBorderColor(MCExecContext& ctxt, MCColor*& r_color)
+void MCParagraph::GetBorderColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color)
 {
     if (attrs == nil || (attrs -> flags & PA_HAS_BORDER_COLOR) == 0)
-        r_color = nil;
+        r_color . name = MCValueRetain(kMCEmptyString); // an empty name is an empty MCInterfaceNamedColor
     else
-        r_color -> pixel = attrs -> border_color;
+    {
+        MCColor t_color;
+        t_color . pixel = attrs -> background_color;
+        MCscreen -> querycolor(t_color);
+        get_interface_color(t_color, nil, r_color);
+    }
 }
 
-void MCParagraph::GetEffectiveBorderColor(MCExecContext& ctxt, MCColor& r_color)
+void MCParagraph::GetEffectiveBorderColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
 {
     if (attrs != nil && (attrs -> flags & PA_HAS_BORDER_COLOR) != 0)
-        r_color . pixel = attrs -> border_color;
+    {
+        MCColor t_color;
+        t_color . pixel = attrs -> background_color;
+        MCscreen -> querycolor(t_color);
+        get_interface_color(t_color, nil, r_color);
+    }
 }
 
-void MCParagraph::SetBorderColor(MCExecContext& ctxt, MCColor* p_color)
+void MCParagraph::SetBorderColor(MCExecContext& ctxt, const MCInterfaceNamedColor &p_color)
 {
     setparagraphattr_color(attrs, PA_HAS_BORDER_COLOR, offsetof(MCParagraphAttrs, border_color), p_color);
 }
@@ -861,10 +1764,10 @@ void MCParagraph::GetEffectiveInvisible(MCExecContext &ctxt, bool &r_invisible)
 // MW-2012-03-05: [[ HiddenText ]] Set the 'hidden' property. Notice that if the
 //   setting becomes false, we unset the 'has_hidden' flag thus allowing the attrs
 //   to be freed if its the only setting.
-void MCParagraph::SetInvisible(MCExecContext &ctxt, bool *p_invisible)
+void MCParagraph::SetInvisible(MCExecContext &ctxt, bool p_invisible)
 {
     bool t_new_value;
-    setparagraphattr_bool(attrs, PA_HAS_HIDDEN, p_invisible, t_new_value);
+    setparagraphattr_bool(attrs, PA_HAS_HIDDEN, &p_invisible, t_new_value);
 
     if (attrs != nil)
     {
@@ -874,27 +1777,30 @@ void MCParagraph::SetInvisible(MCExecContext &ctxt, bool *p_invisible)
     }
 }
 
-void MCParagraph::GetMetadata(MCExecContext& ctxt, MCNameRef *&r_metadata)
+void MCParagraph::GetMetadata(MCExecContext& ctxt, MCStringRef &r_metadata)
 {
     if (attrs == nil || (attrs -> flags & PA_HAS_METADATA) == 0)
         r_metadata = nil;
     else
-        *r_metadata = MCValueRetain(getmetadata());
+        r_metadata = MCValueRetain(MCNameGetString(getmetadata()));
 }
 
-void MCParagraph::GetEffectiveMetadata(MCExecContext& ctxt, MCNameRef &r_metadata)
+void MCParagraph::GetEffectiveMetadata(MCExecContext& ctxt, MCStringRef &r_metadata)
 {
-    r_metadata = MCValueRetain(getmetadata());
+    r_metadata = MCValueRetain(MCNameGetString(getmetadata()));
 }
 
 // MW-2012-11-13: [[ ParaMetadata ]] Set the metadata attribute.
-void MCParagraph::SetMetadata(MCExecContext& ctxt, MCNameRef *p_metadata)
+void MCParagraph::SetMetadata(MCExecContext& ctxt, MCStringRef p_metadata)
 {
-    if (p_metadata == nil && attrs != nil)
+    if (p_metadata == nil)
     {
-        attrs -> flags &= ~PA_HAS_METADATA;
-        MCNameDelete(attrs -> metadata);
-        attrs -> metadata = nil;
+        if (attrs != nil)
+        {
+            attrs -> flags &= ~PA_HAS_METADATA;
+            MCValueRelease(attrs -> metadata);
+            attrs -> metadata = nil;
+        }
     }
     else
     {
@@ -902,23 +1808,303 @@ void MCParagraph::SetMetadata(MCExecContext& ctxt, MCNameRef *p_metadata)
             attrs = new MCParagraphAttrs;
 
         attrs -> flags |= PA_HAS_METADATA;
-        MCNameDelete(attrs -> metadata);
-        attrs -> metadata = MCValueRetain(*p_metadata);
+        MCNameCreate(p_metadata, attrs -> metadata);
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
-void MCBlock::GetTextSize(MCExecContext& ctxt, uinteger_t*& r_value)
+void MCBlock::GetLinkText(MCExecContext& ctxt, MCStringRef& r_linktext)
 {
-   uint2 t_text_size;
-   if (gettextsize(t_text_size))
-   {
-       *r_value = t_text_size;
-       return;
-   }
+    if (getlinktext())
+        r_linktext = MCValueRetain(getlinktext());
+}
 
-   r_value = nil;
+void MCBlock::SetLinktext(MCExecContext& ctxt, MCStringRef p_linktext)
+{
+    if (flags & F_HAS_LINK)
+    {
+        MCValueRelease(atts -> linktext);
+        atts -> linktext = nil;
+    }
+
+    if (MCStringIsEmpty(p_linktext))
+        flags &= ~F_HAS_LINK;
+    else
+    {
+        if (atts == NULL)
+            atts = new Blockatts;
+
+        /* UNCHECKED */ MCValueInter(p_linktext, atts -> linktext);
+
+        flags |= F_HAS_LINK;
+    }
+}
+
+void MCBlock::GetMetadata(MCExecContext& ctxt, MCStringRef& r_metadata)
+{
+    if (getmetadata())
+        r_metadata = MCValueRetain(getmetadata());
+}
+
+void MCBlock::SetMetadata(MCExecContext& ctxt, MCStringRef p_metadata)
+{
+    // MW-2012-01-06: [[ Block Metadata ]] Handle setting/unsetting the metadata
+    //   property.
+    if (flags & F_HAS_METADATA)
+    {
+        MCValueRelease(atts -> metadata);
+        atts -> metadata = nil;
+    }
+
+    if (MCStringIsEmpty(p_metadata))
+        flags &= ~F_HAS_METADATA;
+    else
+    {
+        if (atts == nil)
+            atts = new Blockatts;
+
+        /* UNCHECKED */ MCValueInter((MCStringRef)p_metadata, atts -> metadata);
+
+        flags |= F_HAS_METADATA;
+    }
+}
+
+void MCBlock::GetImageSource(MCExecContext& ctxt, MCStringRef& r_image_source)
+{
+    if (getimagesource())
+        r_image_source = MCValueRetain(getimagesource());
+}
+
+void MCBlock::SetImageSource(MCExecContext& ctxt, MCStringRef p_image_source)
+{
+    if (flags & F_HAS_IMAGE)
+    {
+        if (opened)
+            closeimage();
+
+        MCValueRelease(atts -> imagesource);
+        atts -> imagesource = nil;
+    }
+
+    if (MCStringIsEmpty(p_image_source))
+        flags &= ~F_HAS_IMAGE;
+    else
+    {
+        if (atts == NULL)
+            atts = new Blockatts;
+
+        /* UNCHECKED */ MCValueInter(p_image_source, atts -> imagesource);
+
+        atts->image = NULL;
+        flags |= F_HAS_IMAGE;
+    }
+    if (opened)
+        openimage();
+}
+
+void MCBlock::GetVisited(MCExecContext& ctxt, bool& r_value)
+{
+    r_value = getvisited() == True;
+}
+
+//void MCBlock::GetEncoding(MCExecContext& ctxt, intenum_t r_encoding)
+
+void MCBlock::GetFlagged(MCExecContext& ctxt, bool &r_value)
+{
+    r_value = getflagged();
+}
+
+void MCBlock::SetFlagged(MCExecContext& ctxt, bool p_value)
+{
+    // MW-2012-01-26: [[ FlaggedField ]] Set the appropriate flag.
+    if (p_value)
+        flags |= F_FLAGGED;
+    else
+        flags &= ~F_FLAGGED;
+}
+
+void MCBlock::GetTextFont(MCExecContext& ctxt, MCStringRef &r_fontname)
+{
+    MCNewAutoNameRef t_fontname;
+    if (!gettextfont(&t_fontname))
+        r_fontname = nil;
+    else
+        r_fontname = MCValueRetain(MCNameGetString(*t_fontname));
+}
+
+void MCBlock::GetEffectiveTextFont(MCExecContext &ctxt, MCStringRef &r_fontname)
+{
+    MCNewAutoNameRef t_fontname;
+    /* UNCHECKED */ gettextfont(&t_fontname);
+    r_fontname = MCValueRetain(MCNameGetString(*t_fontname));
+}
+
+void MCBlock::SetTextFont(MCExecContext& ctxt, MCStringRef p_fontname)
+{
+    if (p_fontname == nil || MCStringIsEmpty(p_fontname))
+    {
+        flags &= ~F_HAS_FNAME;
+        if (atts != nil)
+        {
+            MCNameDelete(atts -> fontname);
+            atts -> fontname = nil;
+        }
+    }
+    else
+    {
+        flags |= F_HAS_FNAME;
+        /* UNCHECKED */ MCNameCreate(p_fontname, atts -> fontname);
+    }
+}
+
+void MCBlock::GetTextSize(MCExecContext& ctxt, uinteger_t*& r_size)
+{
+    uint2 t_size;
+    if (!gettextsize(t_size))
+        r_size = nil;
+    else
+        *r_size = t_size;
+}
+
+void MCBlock::GetEffectiveTextSize(MCExecContext& ctxt, uinteger_t& r_size)
+{
+    uint2 t_size;
+    if (gettextsize(t_size))
+        r_size = t_size;
+}
+
+void MCBlock::SetTextSize(MCExecContext& ctxt, uinteger_t* p_size)
+{
+    if (p_size == nil)
+        flags &= ~F_HAS_FSTYLE;
+    else
+    {
+        flags |= F_HAS_FSTYLE;
+        atts -> fontsize = *p_size;
+    }
+}
+
+void MCBlock::GetTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& r_style)
+{
+    if (!gettextstyle(r_style . style))
+        ctxt . Throw();
+}
+
+void MCBlock::SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style)
+{
+    if (p_style . style == 0)
+        flags &= ~F_HAS_FSTYLE;
+    else
+    {
+        flags |= F_HAS_FSTYLE;
+        atts -> fontstyle = p_style . style;
+    }
+}
+
+void MCBlock::GetTextShift(MCExecContext& ctxt, integer_t*& r_shift)
+{
+    int2 t_shift;
+    if (getshift(t_shift) != True)
+        r_shift = nil;
+    else
+        *r_shift = t_shift;
+}
+
+void MCBlock::GetEffectiveTextShift(MCExecContext& ctxt, integer_t& r_shift)
+{
+    int2 t_shift;
+    if (getshift(t_shift))
+        r_shift = t_shift;
+}
+
+void MCBlock::SetTextShift(MCExecContext& ctxt, integer_t* p_shift)
+{
+    if (p_shift == nil)
+        flags &= ~F_HAS_SHIFT;
+    else
+    {
+        if (atts == NULL)
+            atts = new Blockatts;
+        atts->shift = *p_shift;
+        flags |= F_HAS_SHIFT;
+    }
+}
+
+void MCBlock::GetForeColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color)
+{
+    const MCColor *t_color_ptr;
+    if (getcolor(t_color_ptr))
+        get_interface_color(*t_color_ptr, nil, r_color);
+    else
+        ctxt . Throw();
+}
+
+void MCBlock::GetEffectiveForeColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color)
+{
+    const MCColor *t_color_ptr;
+    if (getcolor(t_color_ptr))
+        get_interface_color(*t_color_ptr, nil, r_color);
+}
+
+void MCBlock::SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color)
+{
+    MCColor t_color;
+    if (p_color . name != nil)
+    {
+        if (MCStringIsEmpty(p_color . name)) // no color set
+        {
+            if (flags & F_HAS_COLOR)
+            {
+                delete atts -> color;
+                flags &= ~F_HAS_COLOR;
+            }
+            return;
+        }
+        MCscreen -> parsecolor(p_color . name, t_color, nil);
+    }
+    else
+        t_color = p_color . color;
+
+    setcolor(&t_color);
+}
+
+void MCBlock::GetBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color)
+{
+    const MCColor *t_color_ptr;
+    if (getbackcolor(t_color_ptr))
+        get_interface_color(*t_color_ptr, nil, r_color);
+    else
+        ctxt . Throw();
+}
+
+void MCBlock::GetEffectiveBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color)
+{
+    const MCColor *t_color_ptr;
+    if (getbackcolor(t_color_ptr))
+        get_interface_color(*t_color_ptr, nil, r_color);
+}
+
+void MCBlock::SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor &p_color)
+{
+    MCColor t_color;
+    if (p_color . name != nil)
+    {
+        if (MCStringIsEmpty(p_color . name)) // no color set
+        {
+            if (flags & F_HAS_BACK_COLOR)
+            {
+                delete atts -> color;
+                flags &= ~F_HAS_BACK_COLOR;
+            }
+            return;
+        }
+        MCscreen -> parsecolor(p_color . name, t_color, nil);
+    }
+    else
+        t_color = p_color . color;
+
+    setbackcolor(&t_color);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
