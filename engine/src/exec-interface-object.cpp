@@ -161,6 +161,8 @@ static PropList groupprops[] =
         {"patterns", P_PATTERNS},
         {"radioBehavior", P_RADIO_BEHAVIOR},
         {"rect", P_RECTANGLE},
+		// MERG-2013-06-24: [[ RevisedPropsProp ]] Include 'selectGroupedControls' in the group prop-list.
+        {"selectGroupedControls", P_SELECT_GROUPED_CONTROLS},
         {"scrollbarWidth", P_SCROLLBAR_WIDTH},
         {"showBorder", P_SHOW_BORDER},
         {"showName", P_SHOW_NAME},
@@ -2989,7 +2991,7 @@ void MCObject::GetLongOwner(MCExecContext& ctxt, MCStringRef& r_owner)
 		parent -> GetLongName(ctxt, r_owner);
 }
 
-void MCObject::GetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_props)
+void MCObject::DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effective, MCArrayRef& r_props)
 {
 	PropList *table;
 	uint2 tablesize;
@@ -3059,11 +3061,61 @@ void MCObject::GetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_p
 		t_success = MCArrayCreateMutable(&t_array);
 	if (t_success)
 	{
+        MCExecPoint& ep = ctxt . GetEP();
 		MCerrorlock++;
 		while (tablesize--)
 		{
-			getprop(part, (Properties)table[tablesize].value, ctxt . GetEP(), False);
-			ctxt . GetEP() . storearrayelement_cstring(*t_array, table[tablesize].token);
+            const char* t_token = table[tablesize].token;
+            
+            if ((Properties)table[tablesize].value > P_FIRST_ARRAY_PROP)
+                getarrayprop(part, (Properties)table[tablesize].value, ep, kMCEmptyName, p_effective);
+            else
+            {
+                MCAutoStringRef t_unicode_prop;
+                // MERG-2013-05-07: [[ RevisedPropsProp ]] Special-case the props that could
+                //   be either Unicode or native (ensure minimal encoding is used).
+                // MERG-2013-06-24: [[ RevisedPropsProp ]] Treat the short name specially to ensure
+                //   round-tripping. If the name is empty, then return empty for 'name'.
+                switch ((Properties)table[tablesize].value) {
+                    case P_SHORT_NAME:
+                        if (isunnamed())
+                            ep.clear();
+                        else
+                            getprop(part, P_SHORT_NAME, ep, p_effective);
+                        break;
+                    case P_LABEL:
+                        getstringprop(ctxt, part, P_UNICODE_LABEL, p_effective, &t_unicode_prop);
+                        if (!MCStringIsNative(*t_unicode_prop))
+                        {
+                            if (gettype() == CT_STACK)
+                                t_token = "unicodeTitle";
+                            else
+                                t_token = "unicodeLabel";
+                        }
+                        ep . setvalueref(*t_unicode_prop);
+                        break;
+                    case P_TOOL_TIP:
+                        getstringprop(ctxt, part, P_UNICODE_TOOL_TIP, p_effective, &t_unicode_prop);
+                        if (!MCStringIsNative(*t_unicode_prop))
+                            t_token = "unicodeToolTip";
+                        ep . setvalueref(*t_unicode_prop);
+                        break;
+                    case P_TEXT:
+                        if (gettype() == CT_BUTTON)
+                        {
+                            getstringprop(ctxt, part, P_UNICODE_TEXT, p_effective, &t_unicode_prop);
+                            if (!MCStringIsNative(*t_unicode_prop))
+                                t_token = "unicodeText";
+                            ep . setvalueref(*t_unicode_prop);
+                            break;
+                        }
+                    default:
+                        getprop(part, (Properties)table[tablesize].value, ep, p_effective);
+                        break;
+                }
+            }
+            
+            ctxt . GetEP() . storearrayelement_cstring(*t_array, table[tablesize].token);
 		}
 		MCerrorlock--;
 		t_success = MCArrayCopy(*t_array, r_props);
@@ -3073,6 +3125,11 @@ void MCObject::GetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_p
 		return;
 
 	ctxt . Throw();
+}
+
+void MCObject::GetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_props)
+{
+    DoGetProperties(ctxt, part, false, r_props);
 }
 
 void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef props)
@@ -3098,6 +3155,11 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
 	}	
 	MCerrorlock--;
 	MCRedrawUnlockScreen();
+}
+
+void MCObject::GetEffectiveProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_props)
+{
+    DoGetProperties(ctxt, part, true, r_props);
 }
 
 void MCObject::GetCustomPropertySet(MCExecContext& ctxt, MCStringRef& r_propset)

@@ -180,7 +180,10 @@ MCPropertyInfo MCObject::kProperties[] =
 	DEFINE_RO_OBJ_PROPERTY(P_ABBREV_OWNER, OptionalString, MCObject, AbbrevOwner)
 	DEFINE_RO_OBJ_PROPERTY(P_LONG_OWNER, OptionalString, MCObject, LongOwner)
 
-	DEFINE_RW_OBJ_PART_PROPERTY(P_PROPERTIES, Array, MCObject, Properties)
+	DEFINE_RW_OBJ_PART_NON_EFFECTIVE_PROPERTY(P_PROPERTIES, Array, MCObject, Properties)
+    // MERG-2013-05-07: [[ RevisedPropsProp ]] Add support for 'the effective
+    //   properties of object ...'.
+	DEFINE_RO_OBJ_PART_EFFECTIVE_PROPERTY(P_PROPERTIES, Array, MCObject, Properties)
 	DEFINE_RW_OBJ_PROPERTY(P_CUSTOM_PROPERTY_SET, String, MCObject, CustomPropertySet)
 	DEFINE_RW_OBJ_LIST_PROPERTY(P_CUSTOM_PROPERTY_SETS, LinesOfString, MCObject, CustomPropertySets)
     

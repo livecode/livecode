@@ -802,6 +802,8 @@ public:
     void GetCardIds(MCExecContext& ctxt, MCCard *p_cards, bool p_all, uint32_t p_id, uindex_t& r_count, uinteger_t*& r_ids);
     void GetCardNames(MCExecContext& ctxt, MCCard *p_cards, bool p_all, uint32_t p_id, uindex_t& r_count, MCStringRef*& r_names);
     
+    void DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effective, MCArrayRef& r_props);
+    
 	////////// PROPERTY ACCESSORS
 	
 	void GetId(MCExecContext& ctxt, uint32_t& r_id);
@@ -974,6 +976,7 @@ public:
 
 	void GetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_props);
 	void SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef props);
+    void GetEffectiveProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_props);
 	void GetCustomPropertySet(MCExecContext& ctxt, MCStringRef& r_propset);
 	void SetCustomPropertySet(MCExecContext& ctxt, MCStringRef propset);
 	void GetCustomPropertySets(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_propsets);
