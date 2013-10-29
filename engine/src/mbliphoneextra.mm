@@ -1080,8 +1080,12 @@ bool MCSystemGetSystemIdentifier(MCStringRef& r_identifier)
     MCresult -> copysvalue([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding]);
     return ES_NORMAL;
 #endif /* MCHandleSystemIdentifier */
-	NSString *t_identifier = nil;
-	t_identifier = [[UIDevice currentDevice] uniqueIdentifier];
+
+    // MM-2013-05-21: [[ Bug 10895 ]] The method uniqueIdentifier of UIDevice is now deprecated (as of May 2013).
+    //  Calling the method dynamically prevents apps from being rejected by the app store
+    //  but preserves functionality for testing and backwards compatibility.
+    NSString *t_identifier;
+    t_identifier = objc_msgSend([UIDevice currentDevice], sel_getUid("uniqueIdentifier"));
 	
     return MCStringCreateWithCString([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding], r_identifier);
 }

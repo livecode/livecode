@@ -64,6 +64,8 @@ MC_EXEC_DEFINE_EVAL_METHOD(Strings, ItemOffset, 4)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, LineOffset, 4)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, WordOffset, 4)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, Offset, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAscii, 2)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAscii, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Strings, Replace, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterWildcard, 5)
 MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterRegex, 5)
@@ -1422,6 +1424,48 @@ void MCStringsExecFilterRegexIntoIt(MCExecContext& ctxt, MCStringRef p_source, M
         ctxt . SetItToValue(*t_result);
     else
         ctxt . SetItToEmpty();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCStringsEvalIsAscii(MCExecContext& ctxt, MCValueRef p_value, bool& r_result)
+{
+    MCAutoStringRef t_string;
+	if (!ctxt . ConvertToString(p_value, &t_string))
+    {
+        r_result = false;
+        return;
+    }
+    
+    const char *t_cstring;
+    t_cstring = MCStringGetCString(*t_string);
+    
+    if (!MCStringIsEqualToCString(*t_string, t_cstring, kMCCompareExact))
+    {
+        r_result = false;
+        return;
+    }
+    
+    bool t_is_ascii;
+    t_is_ascii = true;
+    
+    const uint1* t_chars = (const uint1 *) MCStringGetCString(*t_string);
+    int t_length = MCStringGetLength(*t_string);
+    for (int i=0; i < t_length ;i++)
+        if (t_chars[i] > 127)
+        {
+            t_is_ascii = false;
+            break;
+        }
+    
+    r_result = t_is_ascii;
+}
+
+void MCStringsEvalIsNotAscii(MCExecContext& ctxt, MCValueRef p_value, bool& r_result)
+{
+    bool t_result;
+    MCStringsEvalIsAscii(ctxt, p_value, t_result);
+    r_result = !t_result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

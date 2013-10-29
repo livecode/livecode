@@ -2289,7 +2289,15 @@ Exec_stat MCIs::eval(MCExecPoint &ep)
 			else
 				MCGraphicsEvalIsNotARectangle(ctxt, *t_value, t_result);
 			break;
-		}
+        // MERG-2013-06-24: [[ IsAnAsciiString ]] Implementation for ascii string
+        //   check.
+        case IV_ASCII:
+            if (form == IT_NORMAL)
+                MCStringsEvalIsAscii(ctxt, *t_value, t_result);
+            else
+                MCStringsEvalIsNotAscii(ctxt, *t_value, t_result);
+            break;
+        }
 
 		if (!ctxt . HasError())
 		{
