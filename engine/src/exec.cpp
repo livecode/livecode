@@ -530,6 +530,11 @@ void MCExecContext::SetTheResultToCString(const char *p_string)
     MCresult -> copysvalue(p_string);
 }
 
+void MCExecContext::SetTheResultToBool(bool p_bool)
+{
+    MCresult -> sets(MCU_btos(p_bool));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool MCPropertyFormatUIntList(uinteger_t *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)

@@ -455,6 +455,7 @@ bool MCSystemClearTouches();
 
 bool MCSystemGetSystemIdentifier(MCStringRef& r_identifier);
 bool MCSystemGetApplicationIdentifier(MCStringRef& r_identifier);
+bool MCSystemGetIdentifierForVendor(MCStringRef& r_identifier);
 
 bool MCSystemSetReachabilityTarget(MCStringRef p_hostname);
 bool MCSystemGetReachabilityTarget(MCStringRef& r_hostname);
@@ -470,6 +471,11 @@ bool MCSystemFileSetDataProtection(MCStringRef p_path, MCStringRef p_protection_
 bool MCSystemFileGetDataProtection(MCStringRef p_path, MCStringRef& r_protection_string);
 
 bool MCSystemBuildInfo(MCStringRef p_key, MCStringRef& r_value);
+
+bool MCSystemEnableRemoteControl();
+bool MCSystemDisableRemoteControl();
+bool MCSystemGetRemoteControlEnabled(bool& r_enabled);
+bool MCSystemSetRemoteControlDisplayProperties(MCArrayRef p_array);
 
 enum MCMiscStatusBarStyle
 {

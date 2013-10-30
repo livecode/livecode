@@ -441,6 +441,7 @@ static Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_para
 #endif /* MCHandleLibUrlDownloadToFileAndroid */
 
 // MW-2013-10-02: [[ MobileSSLVerify ]] Handle libUrlSetSSLVerification for Android.
+#ifdef /* MCHandleLibUrlSetSSLVerificationAndroid */ LEGACY_EXEC
 static Exec_stat MCHandleLibUrlSetSSLVerification(void *context, MCParameter *p_parameters)
 {
 	bool t_success;
@@ -456,6 +457,7 @@ static Exec_stat MCHandleLibUrlSetSSLVerification(void *context, MCParameter *p_
 	
 	return ES_NORMAL;
 }
+#endif /* MCHandleLibUrlSetSSLVerificationAndroid */
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1752,3 +1754,37 @@ int MCSystemCompareInternational(const char *p_left, const char *p_right)
     MCAndroidEngineCall("compareInternational", "iss", &t_compare, p_left, p_right);
     return t_compare;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCSystemGetIdentifierForVendor(MCStringRef& r_identifier)
+{
+    // not applicable on android
+    return false;
+}
+
+bool MCSystemEnableRemoteControl()
+{
+    // not applicable on android
+    return false;
+}
+
+bool MCSystemDisableRemoteControl()
+{
+    // not applicable on android
+    return false;
+}
+
+bool MCSystemGetRemoteControlEnabled(bool& r_enabled)
+{
+    // not applicable on android
+    return false;
+}
+
+bool MCSystemSetRemoteControlDisplayProperties(MCArrayRef p_array)
+{
+    // not applicable on android
+    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////

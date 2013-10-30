@@ -254,7 +254,6 @@ void MCClone::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCloneMethodInfo);
 
 	MCSyntaxFactoryEndStatement(ctxt);
-	return ES_NORMAL;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

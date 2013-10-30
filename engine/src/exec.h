@@ -1090,6 +1090,7 @@ public:
     void SetTheResultToNumber(real64_t p_value);
     void GiveCStringToResult(char *p_cstring);
     void SetTheResultToCString(const char *p_string);
+    void SetTheResultToBool(bool p_bool);
     
 private:
 	MCExecPoint& m_ep;
@@ -4483,6 +4484,7 @@ void MCMiscExecClearTouches(MCExecContext& ctxt);
 
 void MCMiscGetSystemIdentifier(MCExecContext& ctxt, MCStringRef& r_identifier);
 void MCMiscGetApplicationIdentifier(MCExecContext& ctxt, MCStringRef& r_identifier);
+void MCMiscGetIdentifierForVendor(MCExecContext& ctxt, MCStringRef& r_identifier);
 
 void MCMiscSetReachabilityTarget(MCExecContext& ctxt, MCStringRef p_hostname);
 void MCMiscGetReachabilityTarget(MCExecContext& ctxt, MCStringRef& r_hostname);
@@ -4498,7 +4500,13 @@ void MCMiscGetFileDataProtection(MCExecContext& ctxt, MCStringRef p_path, MCStri
 void MCMiscSetFileDataProtection(MCExecContext& ctxt, MCStringRef p_path, MCStringRef p_protection_string);
 
 void MCMiscExecLibUrlDownloadToFile(MCExecContext& ctxt, MCStringRef p_url, MCStringRef p_filename);
+void MCMiscExecLibUrlSetSSLVerification(MCExecContext& ctxt, bool p_enabled);
 
 void MCMiscGetBuildInfo(MCExecContext& ctxt, MCStringRef p_key, MCStringRef& r_value);
+
+void MCMiscExecEnableRemoteControl(MCExecContext& ctxt);
+void MCMiscExecDisableRemoteControl(MCExecContext& ctxt);
+void MCMiscGetRemoteControlEnabled(MCExecContext& ctxt, bool& r_enabled);
+void MCMiscSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p_props);
 
 #endif

@@ -4491,13 +4491,17 @@ Exec_stat MCHandleApplicationIdentifier(void *context, MCParameter *p_parameters
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
-    MCAutoStringRef r_identifier;
+    MCAutoStringRef t_identifier;
     
-    MCMiscGetApplicationIdentifier(ctxt, &r_identifier);
+    MCMiscGetApplicationIdentifier(ctxt, &t_identifier);
     
     if (!ctxt.HasError())
+    {
+        ctxt.SetTheResultToValue(*t_identifier);
         return ES_NORMAL;
+    }
     
+    ctxt.SetTheResultToEmpty();
 	return ES_ERROR;
 }
 
@@ -6413,6 +6417,106 @@ Exec_stat MCHandleControlList(void *context, MCParameter *p_parameters)
 	return ES_NORMAL;
 }
 
+// MW-2013-10-02: [[ MobileSSLVerify ]] Handle libUrlSetSSLVerification
+Exec_stat MCHandleLibUrlSetSSLVerification(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+	
+	bool t_enabled;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "b", &t_enabled);
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCMiscExecLibUrlSetSSLVerification(ctxt, t_enabled);
+    
+    if (!ctxt . HasError())
+        return ES_NORMAL;
+	
+	return ES_NORMAL;
+}
+
+// MM-2013-05-21: [[ Bug 10895 ]] Added iphoneIdentifierForVendor as an initial replacement for iphoneSystemIdentifier.
+//  identifierForVendor was only added to UIDevice in iOS 6.1 so make sure we weakly link.
+Exec_stat MCHandleIdentifierForVendor(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCAutoStringRef t_id;
+    MCMiscGetIdentifierForVendor(ctxt, &t_id);
+    
+    if (!ctxt.HasError())
+    {
+        ctxt.SetTheResultToValue(*t_id);
+        return ES_NORMAL;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleEnableRemoteControl(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCMiscExecEnableRemoteControl(ctxt);
+
+    if (!ctxt . HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleDisableRemoteControl(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCMiscExecDisableRemoteControl(ctxt);
+
+    if (!ctxt . HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleRemoteControlEnabled(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    bool t_enabled;
+    MCMiscGetRemoteControlEnabled(ctxt, t_enabled);
+    
+    if (!ctxt.HasError())
+    {
+        ctxt.SetTheResultToBool(t_enabled);
+        return ES_NORMAL;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleSetRemoteControlDisplay(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    bool t_success;
+	t_success = true;
+    
+    MCAutoArrayRef t_props;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "a", &(&t_props));
+    
+    if (t_success)
+        MCMiscSetRemoteControlDisplayProperties(ctxt, *t_props);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -6451,6 +6555,9 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "iphoneAds", MCHandleAds, nil},
 	
 	{true, "libUrlDownloadToFile", MCHandleLibUrlDownloadToFile, nil},
+    
+    // MW-2013-10-02: [[ MobileSSLVerify ]] Added support for libUrlSetSSLVerification.
+    {true, "libUrlSetSSLVerification", MCHandleLibUrlSetSSLVerification, nil},
     
     {false, "mobileStartTrackingSensor", MCHandleStartTrackingSensor, nil},
     {false, "mobileStopTrackingSensor", MCHandleStopTrackingSensor, nil},
@@ -6603,7 +6710,11 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	
 	{false, "iphoneApplicationIdentifier", MCHandleApplicationIdentifier, nil},
 	{false, "iphoneSystemIdentifier", MCHandleSystemIdentifier, nil},
-	
+
+    // MM-2013-05-21: [[ Bug 10895 ]] Added iphoneIdentifierForVendor as an initial replacement for iphoneSystemIdentifier.
+    {false, "mobileIdentifierForVendor", MCHandleIdentifierForVendor, nil},
+    {false, "iphoneIdentifierForVendor", MCHandleIdentifierForVendor, nil},
+    
 	{false, "iphoneSetReachabilityTarget", MCHandleSetReachabilityTarget, nil},
 	{false, "iphoneReachabilityTarget", MCHandleReachabilityTarget, nil},
     
@@ -6691,6 +6802,12 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	
 	{false, "iphoneClearTouches", MCHandleClearTouches, nil},
 	{false, "mobileClearTouches", MCHandleClearTouches, nil},
+    
+    // MW-2013-05-30: [[ RemoteControl ]] Support for iOS 'remote controls' and metadata display.
+    {false, "iphoneEnableRemoteControl", MCHandleEnableRemoteControl, nil},
+    {false, "iphoneDisableRemoteControl", MCHandleDisableRemoteControl, nil},
+    {false, "iphoneRemoteControlEnabled", MCHandleRemoteControlEnabled, nil},
+    {false, "iphoneSetRemoteControlDisplay", MCHandleSetRemoteControlDisplay, nil},
     
 	{nil, nil, nil}    
 };

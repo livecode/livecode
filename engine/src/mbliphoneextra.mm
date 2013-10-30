@@ -1090,6 +1090,8 @@ bool MCSystemGetSystemIdentifier(MCStringRef& r_identifier)
     return MCStringCreateWithCString([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding], r_identifier);
 }
 
+bool MCSystemGetIdentifierForVendor(MCStringRef& r_identifier)
+{
 // MM-2013-05-21: [[ Bug 10895 ]] Added iphoneIdentifierForVendor as an initial replacement for iphoneSystemIdentifier.
 //  identifierForVendor was only added to UIDevice in iOS 6.1 so make sure we weakly link.
 #ifdef /* MCHandleIdentifierForVendor */ LEGACY_EXEC
@@ -1106,6 +1108,18 @@ static Exec_stat MCHandleIdentifierForVendor(void *context, MCParameter *p_param
     return ES_NORMAL;
 }
 #endif /* MCHandleIdentifierForVendor */
+    
+    if ([UIDevice instancesRespondToSelector:@selector(identifierForVendor)])
+    {
+        NSString *t_identifier;
+        t_identifier = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
+        return MCStringCreateWithCString([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding], r_identifier);
+    }
+
+    r_identifier = MCValueRetain(kMCEmptyString);
+    return true;
+}
+
 
 bool MCSystemGetApplicationIdentifier(MCStringRef& r_identifier)
 {
@@ -1297,7 +1311,7 @@ private:
 	UIEventSubtype m_type;
 };
 
-static Exec_stat MCHandleEnableRemoteControl(void *context, MCParameter *p_parameters)
+bool MCSystemEnableRemoteControl()
 {
 	if (!s_remote_control_enabled)
 	{
@@ -1305,10 +1319,10 @@ static Exec_stat MCHandleEnableRemoteControl(void *context, MCParameter *p_param
 		s_remote_control_enabled = true;
 	}
 	
-	return ES_NORMAL;
+	return true;
 }
 
-static Exec_stat MCHandleDisableRemoteControl(void *context, MCParameter *p_parameters)
+bool MCSystemDisableRemoteControl()
 {
 	if (s_remote_control_enabled)
 	{
@@ -1316,13 +1330,12 @@ static Exec_stat MCHandleDisableRemoteControl(void *context, MCParameter *p_para
 		s_remote_control_enabled = false;
 	}
 	
-	return ES_NORMAL;
+	return true;
 }
 
-static Exec_stat MCHandleRemoteControlEnabled(void *context, MCParameter *p_parameters)
+bool MCSystemGetRemoteControlEnabled(bool& r_enabled)
 {
-	MCresult -> sets(MCU_btos(s_remote_control_enabled));
-	return ES_NORMAL;
+	return s_remote_control_enabled;
 }
 
 enum RCDPropType
@@ -1332,6 +1345,8 @@ enum RCDPropType
 	kRCDPropTypeImage,
 };
 
+bool MCSystemSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p_props)
+{
 #ifdef /* MCHandleSetRemoteControlDisplay */ LEGACY_EXEC
 static Exec_stat MCHandleSetRemoteControlDisplay(void *context, MCParameter *p_parameters)
 {
@@ -1446,6 +1461,131 @@ static Exec_stat MCHandleSetRemoteControlDisplay(void *context, MCParameter *p_p
 	return ES_NORMAL;
 }
 #endif  /* MCHandleSetRemoteControlDisplay */
+    
+    static bool s_resolved = false;
+	static Class s_info_center = nil;
+	static struct { const char *key; const char *property_symbol; RCDPropType type; NSString *property; } s_props[] =
+	{
+		{ "title", "MPMediaItemPropertyTitle", kRCDPropTypeString },
+		{ "artist", "MPMediaItemPropertyArtist", kRCDPropTypeString },
+		{ "artwork", "MPMediaItemPropertyArtwork", kRCDPropTypeImage },
+		{ "composer", "MPMediaItemPropertyComposer", kRCDPropTypeString },
+		{ "genre", "MPMediaItemPropertyGenre", kRCDPropTypeString },
+		{ "album title", "MPMediaItemPropertyAlbumTitle", kRCDPropTypeString},
+		{ "album track count", "MPMediaItemPropertyAlbumTrackCount", kRCDPropTypeNumber },
+		{ "album track number", "MPMediaItemPropertyAlbumTrackNumber", kRCDPropTypeNumber },
+		{ "disc count", "MPMediaItemPropertyDiscCount", kRCDPropTypeNumber },
+		{ "disc number", "MPMediaItemPropertyDiscNumber", kRCDPropTypeNumber },
+		{ "chapter number", "MPNowPlayingInfoPropertyChapterNumber", kRCDPropTypeNumber },
+		{ "chapter count", "MPNowPlayingInfoPropertyChapterCount", kRCDPropTypeNumber },
+		{ "playback duration", "MPMediaItemPropertyPlaybackDuration", kRCDPropTypeNumber },
+		{ "elapsed playback time", "MPNowPlayingInfoPropertyElapsedPlaybackTime", kRCDPropTypeNumber },
+		{ "playback rate", "MPNowPlayingInfoPropertyPlaybackRate", kRCDPropTypeNumber },
+		{ "playback queue index", "MPNowPlayingInfoPropertyPlaybackQueueIndex", kRCDPropTypeNumber },
+		{ "playback queue count", "MPNowPlayingInfoPropertyPlaybackQueueCount", kRCDPropTypeNumber },
+	};
+	
+	
+	// MW-2013-10-01: [[ Bug 11136 ]] Make sure we don't do anything if on anything less
+	//   than 5.0.
+	if (MCmajorosversion < 500)
+		return ES_NORMAL;
+	
+	// MW-2013-10-01: [[ Bug 11136 ]] Fetch the symbols we cannot link to for 4.3.
+	if (!s_resolved)
+	{
+		s_resolved = true;
+		for(int i = 0; i < sizeof(s_props) / sizeof(s_props[0]); i++)
+			s_props[i] . property = (NSString *)dlsym(RTLD_SELF, s_props[i] . property_symbol);
+		s_info_center = NSClassFromString(@"MPNowPlayingInfoCenter");
+	}
+	
+	bool t_success;
+	t_success = true;
+	
+	NSMutableDictionary *t_info_dict;
+	t_info_dict = nil;
+    
+	if (t_success && p_props != nil)
+	{
+        MCValueRef t_prop_value;
+		t_info_dict = [[NSMutableDictionary alloc] initWithCapacity: 8];
+		for(uindex_t i = 0; i < sizeof(s_props) / sizeof(s_props[0]); i++)
+		{
+            MCNewAutoNameRef t_key;
+            if (!MCNameCreateWithCString(s_props[i] . key, &t_key))
+                return false;
+            
+			if (!MCArrayFetchValue(p_props, false, *t_key, t_prop_value))
+				continue;
+            
+			NSObject *t_value;
+			t_value = nil;
+			switch(s_props[i] . type)
+			{
+				case kRCDPropTypeNumber:
+                {
+                    real8 t_number;
+                    if (!ctxt . ConvertToReal(t_prop_value, t_number))
+                        continue;
+					t_value = [[NSNumber alloc] initWithDouble: t_number];
+                }
+                    break;
+				case kRCDPropTypeString:
+                {
+                    MCAutoStringRef t_string;
+                    if (!ctxt . ConvertToString(t_prop_value, &t_string))
+                        continue;
+					t_value = [NSString stringWithMCStringRef: *t_string];
+                }
+					break;
+				case kRCDPropTypeImage:
+                {
+                    MCAutoDataRef t_data;
+                    ctxt . ConvertToData(t_prop_value, &t_data);
+                    UIImage *t_image;
+                    if (MCImageDataIsJPEG(*t_data) ||
+                        MCImageDataIsGIF(*t_data) ||
+                        MCImageDataIsPNG(*t_data))
+                    {
+                        t_image = [[UIImage alloc] initWithData: [NSData dataWithMCDataRef : *t_data]];
+                    }
+                    else
+                    {
+                        MCAutoStringRef t_string;
+                        MCAutoStringRef t_resolved;
+                        if (!ctxt . ConvertToString(t_prop_value, &t_string))
+                            continue;
+                        if (MCS_exists(*t_string, true))
+                        {
+                            /* UNCHECKED */ MCS_resolvepath(*t_string, &t_resolved);
+                            t_image = [[UIImage alloc] initWithContentsOfFile: [NSString stringWithMCStringRef: *t_resolved]];
+                        }
+                    }
+                    
+                    if (t_image != nil)
+                    {
+                        t_value = [[MPMediaItemArtwork alloc] initWithImage: t_image];
+                        [t_image release];
+                    }
+                }
+                    break;
+			}
+            
+			if (t_value == nil)
+				continue;
+			
+			[t_info_dict setObject: t_value forKey: s_props[i] . property];
+            
+            [t_value release];
+		}
+	}
+	
+	if (t_success)
+		[[s_info_center defaultCenter] setNowPlayingInfo: t_info_dict];
+	
+	return ES_NORMAL;
+}
 
 void MCIPhoneHandleRemoteControlEvent(UIEventSubtype p_type, NSTimeInterval p_timestamp)
 {

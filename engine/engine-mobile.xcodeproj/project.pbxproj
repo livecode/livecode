@@ -880,6 +880,7 @@
 		768D66C41765E11300F203A3 /* exec-pick.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-pick.cpp"; path = "src/exec-pick.cpp"; sourceTree = "<group>"; };
 		76B298B1180448AF0053EC38 /* exec-interface-field-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-field-chunk.cpp"; path = "src/exec-interface-field-chunk.cpp"; sourceTree = "<group>"; };
 		76EF321F182124AA00FAC195 /* exec-strings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "exec-strings.h"; path = "src/exec-strings.h"; sourceTree = "<group>"; };
+		76EF323E182145CA00FAC195 /* sysunxrandom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxrandom.cpp; path = src/sysunxrandom.cpp; sourceTree = "<group>"; };
 		BE02B4FA17FEC639001BAFF0 /* exec-strings-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-strings-chunk.cpp"; path = "src/exec-strings-chunk.cpp"; sourceTree = "<group>"; };
 		BE096E7D175CD79D00F92F90 /* libfoundation-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libfoundation-mobile.xcodeproj"; path = "../libfoundation/libfoundation-mobile.xcodeproj"; sourceTree = SOURCE_ROOT; };
 		BE0A3CD317E1FC9E00C2361B /* mblnetwork.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblnetwork.cpp; path = src/mblnetwork.cpp; sourceTree = "<group>"; };
@@ -1737,6 +1738,7 @@
 				4DE7ED6413B33CEA002634F5 /* sysspec.cpp */,
 				4DD3DF041040ADFC00CAC7EF /* System.h */,
 				4C6D0A371407D04D003B1BA3 /* sysunxnetwork.cpp */,
+				76EF323E182145CA00FAC195 /* sysunxrandom.cpp */,
 			);
 			name = System;
 			sourceTree = "<group>";
