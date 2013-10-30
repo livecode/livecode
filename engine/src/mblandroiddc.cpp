@@ -1958,7 +1958,7 @@ static const char *s_build_keys[] = {
 	"VERSION.INCREMENTAL",
 };
 
-static char **s_build_info = NULL;
+static MCStringRef *s_build_info = NULL;
 
 MCAndroidDeviceConfiguration s_device_configuration = {
 	false,
@@ -1985,7 +1985,7 @@ bool MCAndroidInitBuildInfo()
 	}
 
 	if (t_success)
-		s_build_info = (char**)t_build_info;
+		s_build_info = t_build_info;
 	else
 	{
 		if (t_build_info != NULL)
@@ -2003,34 +2003,22 @@ bool MCAndroidInitBuildInfo()
 
 bool MCAndroidSignatureMatch(const char *p_signature)
 {
-	const char *t_component = p_signature;
-	uint32_t t_component_length = 0;
-	uint32_t t_component_index = 0;
-
-	while (t_component != NULL && t_component_index < kMCBuildInfoKeyCount)
+    MCAutoStringRef t_signature;
+    MCAutoArrayRef t_signature_array;
+    /* UNCHECKED */ MCStringCreateWithCString(p_signature, &t_signature);
+    /* UNCHECKED */ MCStringSplit(*t_signature, MCSTR("|"), nil, kMCCompareExact, &t_signature_array);
+    uindex_t t_count;
+	t_count = MCArrayGetCount(*t_signature_array);
+	for (uindex_t i = 0; i < t_count; i++)
 	{
-		if (!MCCStringFirstIndexOf(t_component, '|', t_component_length))
-			t_component_length = MCCStringLength(t_component);
-
-		if (t_component_length > 0)
-		{
-			MCLog("testing component (%.*s)", t_component_length, t_component);
-			if (MCCStringLength(s_build_info[t_component_index]) != t_component_length ||
-			!MCCStringEqualSubstringCaseless(s_build_info[t_component_index], t_component, t_component_length))
-			{
-				return false;
-			}
-		}
-
-		t_component_index++;
-		t_component += t_component_length;
-		if (t_component[0] == '\0')
-			t_component = NULL;
-		else
-			t_component++;
-	}
-
-	return true;
+		MCValueRef t_val;
+		/* UNCHECKED */ MCArrayFetchValueAtIndex(*t_signature_array, i, t_val);
+        MCStringRef t_val_str = (MCStringRef)t_val;
+        MCLog("testing component (%s)", MCStringGetCString(t_val_str));
+        if (!MCStringIsEqualTo(t_val_str, s_build_info[i], kMCCompareCaseless))
+            return false;
+    }
+    return true;
 }
 
 bool MCAndroidSetOrientationMap(int p_map[4], const char *p_mapping)
