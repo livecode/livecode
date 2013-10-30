@@ -940,7 +940,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 l
 
 			t_cell_clip = MCU_intersect_rect(t_cell_clip, t_old_clip);
 			dc -> setclip(t_cell_clip);
-			MCFontDrawText(m_font, t_text + t_index, t_next_index - t_index, hasunicode(), dc, x, y, image == True);
+            dc -> drawtext(x, y, t_text + t_index, t_next_index - t_index, m_font, image == True, hasunicode());
 
 			// Only draw the various boxes/lines if there is any content.
 			if (t_next_index - t_index > 0)
@@ -1013,7 +1013,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 l
 				twidth = MCFontMeasureText(m_font, sptr, l, hasunicode());
 				twidth += gettabwidth(cx + twidth, tptr, eptr - tptr);
 
-				MCFontDrawText(m_font, sptr, l, hasunicode(), dc, x, y, image == True);
+				dc -> drawtext(x, y, sptr, l, m_font, image == True, hasunicode());
 
 				cx += twidth;
 				x += twidth;
@@ -1025,7 +1025,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 l
 				size -= l;
 			}
 		}
-		MCFontDrawText(m_font, sptr, size, hasunicode(), dc, x, y, image == True);
+        dc -> drawtext(x, y, sptr, size, m_font, image == True, hasunicode());
 
 		// Apply strike/underline.
 		if ((style & FA_UNDERLINE) != 0)

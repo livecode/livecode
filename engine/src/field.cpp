@@ -1166,14 +1166,21 @@ uint2 MCField::gettransient() const
 
 void MCField::setrect(const MCRectangle &nrect)
 {
-	rect = nrect;
+	// The contents only need to be laid out if the size changes. In particular,
+    // it is the width that is important; the height does not affect layout.
+    bool t_resized = false;
+    if (nrect.width != rect.width)
+        t_resized = true;
+    
+    rect = nrect;
 	setsbrects();
 
 	// MW-2007-07-05: [[ Bug 2435 ]] - 'Caret' doesn't move with the field when its rect changes
 	if (cursoron)
 		replacecursor(False, False);
     
-    do_recompute(true);
+    if (t_resized)
+        do_recompute(true);
 }
 
 Exec_stat MCField::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)

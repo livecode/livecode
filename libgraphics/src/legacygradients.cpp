@@ -840,7 +840,9 @@ MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, 
 		t_ramp[i] . hw_color = t_ramp[i] . color;
 #endif
 	}
-	t_ramp[i] . difference = (uint4) (STOP_DIFF_MULT / STOP_INT_MAX);		
+	
+	// MW-2013-10-26: [[ Bug 11315 ]] Index shuold be i - 1 (otherwise memory overrun occurs!).
+	t_ramp[i - 1] . difference = (uint4) (STOP_DIFF_MULT / STOP_INT_MAX);		
 	
 	s_gradient_affine_combiner . origin . x = (int2) p_gradient_ref -> transform . tx;
 	s_gradient_affine_combiner . origin . y = (int2) p_gradient_ref -> transform . ty;	

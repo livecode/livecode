@@ -1,3 +1,0 @@
-# Getting 'the short name' of an object returns the abbrev id if the name property is empty
-
-Previously the empty name for objects was not allowed, and the abbreviated id was returned instead for both 'the name' and 'the short name' of an object. This change allows objects to have the empty name, and adjusts the properties accordingly: 'the name' of such an object returns '<object type> ""', and 'the short name' returns empty. 
