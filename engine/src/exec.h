@@ -2576,6 +2576,21 @@ void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCMa
 void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Functions p_function, bool p_whole_chunk, MCMarkedText& r_mark);
 void MCInterfaceMarkCharsOfField(MCExecContext& ctxt, MCObjectPtr t_field, MCCRef *character, MCMarkedText &x_mark);
 
+void MCInterfaceEvalTextOfContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCStringRef &r_text);
+
+void MCInterfaceExecMarkCard(MCExecContext& ctxt, MCObjectPtr t_object);
+void MCInterfaceExecUnmarkCard(MCExecContext& ctxt, MCObjectPtr t_object);
+void MCInterfaceExecMarkCardsConditional(MCExecContext& ctxt, MCExpression *p_where);
+void MCInterfaceExecMarkAllCards(MCExecContext& ctxt);
+void MCInterfaceExecUnmarkCardsConditional(MCExecContext& ctxt, MCExpression *p_where);
+void MCInterfaceExecUnmarkAllCards(MCExecContext& ctxt);
+void MCInterfaceExecMarkFind(MCExecContext& ctxt, Find_mode p_mode, MCStringRef p_needle, MCChunk *p_field);
+void MCInterfaceExecUnmarkFind(MCExecContext& ctxt, Find_mode p_mode, MCStringRef p_needle, MCChunk *p_field);
+
+void MCInterfaceExecRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_source, uinteger_t p_layer);
+void MCInterfaceExecRelayerRelativeToControl(MCExecContext& ctxt, int p_relation, MCObjectPtr p_source, MCObjectPtr p_target);
+void MCInterfaceExecRelayerRelativeToOwner(MCExecContext& ctxt, int p_relation, MCObjectPtr p_source);
+
 ///////////
 
 struct MCInterfaceLayer;
@@ -3010,6 +3025,10 @@ void MCEngineExecStartUsingFont(MCExecContext& ctxt, MCStringRef p_path, bool p_
 void MCEngineExecStopUsingFont(MCExecContext& ctxt, MCStringRef p_path);
 
 void MCEngineMarkVariable(MCExecContext& ctxt, MCVarref *p_variable, MCMarkedText& r_mark);
+
+void MCEngineEvalRandomUuid(MCExecContext& ctxt, MCStringRef& r_uuid);
+void MCEngineEvalMD5Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStringRef p_name, MCStringRef& r_uuid);
+void MCEngineEvalSHA1Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStringRef p_name, MCStringRef& r_uuid);
 
 ///////////
 

@@ -351,6 +351,7 @@
 		4D8387201678B2C9003BEC7C /* image_rep_mutable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D83871B1678B2C9003BEC7C /* image_rep_mutable.cpp */; };
 		4D8387211678B2C9003BEC7C /* imagebitmap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D83871C1678B2C9003BEC7C /* imagebitmap.cpp */; };
 		4D8387221678B2C9003BEC7C /* irle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D83871D1678B2C9003BEC7C /* irle.cpp */; };
+		4D8589F9173AAA0900B20951 /* uuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D8589AA173A856600B20951 /* uuid.cpp */; };
 		4D8B47990BE7B3240046CD2F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8B47960BE7B3240046CD2F /* Cocoa.framework */; };
 		4D8B479A0BE7B3240046CD2F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8B47960BE7B3240046CD2F /* Cocoa.framework */; };
 		4D8BEC4011B9379500DED42A /* osxicon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D8BEC3F11B9379500DED42A /* osxicon.cpp */; };
@@ -363,6 +364,7 @@
 		4DAB7D280FF3A0100009F91E /* md5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DAB7D270FF3A0100009F91E /* md5.cpp */; };
 		4DADCD5B12392EAF003CD17C /* sha1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DADCD5912392EAF003CD17C /* sha1.cpp */; };
 		4DADCDFD12393F55003CD17C /* Installer.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4DADCDFC12393F26003CD17C /* Installer.icns */; };
+		4DB3235E174BE8E400046FFE /* uuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D8589AA173A856600B20951 /* uuid.cpp */; };
 		4DB382EE1714418A00D3F102 /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C797917134897000BCF78 /* libz.a */; };
 		4DB382EF1714418A00D3F102 /* libpng.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7981171348A6000BCF78 /* libpng.a */; };
 		4DB382F01714418A00D3F102 /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7989171348B4000BCF78 /* libjpeg.a */; };
@@ -1284,6 +1286,8 @@
 		4D8387251678B2F4003BEC7C /* image_rep.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = image_rep.h; path = src/image_rep.h; sourceTree = "<group>"; };
 		4D8387261678B2F4003BEC7C /* imagebitmap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imagebitmap.h; path = src/imagebitmap.h; sourceTree = "<group>"; };
 		4D8395DD17FECEB30002D53E /* dsklnx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dsklnx.cpp; path = src/dsklnx.cpp; sourceTree = "<group>"; };
+		4D8589AA173A856600B20951 /* uuid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = uuid.cpp; path = src/uuid.cpp; sourceTree = "<group>"; };
+		4D8589AC173A88D700B20951 /* uuid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = uuid.h; path = src/uuid.h; sourceTree = "<group>"; };
 		4D88B73815F4C66F002CFBD6 /* libgif.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libgif.xcodeproj; path = ../thirdparty/libgif/libgif.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4D8B47960BE7B3240046CD2F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		4D8BEC3F11B9379500DED42A /* osxicon.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = osxicon.cpp; path = src/osxicon.cpp; sourceTree = "<group>"; };
@@ -2836,6 +2840,8 @@
 				4DD27ACC0D5B3A280000CC15 /* unicode.h */,
 				4D587E8D0B8096FD00200116 /* util.cpp */,
 				4D587E1D0B8096E600200116 /* util.h */,
+				4D8589AA173A856600B20951 /* uuid.cpp */,
+				4D8589AC173A88D700B20951 /* uuid.h */,
 			);
 			name = "Core - Misc";
 			sourceTree = "<group>";
@@ -3841,6 +3847,7 @@
 				76EF31A6181E7D8700FAC195 /* cgimageutil.cpp in Sources */,
 				76EF31A7181E7DEF00FAC195 /* surface.cpp in Sources */,
 				76EF31AA181E803C00FAC195 /* sysosxrandom.cpp in Sources */,
+				4D8589F9173AAA0900B20951 /* uuid.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3891,6 +3898,7 @@
 				4D02A3E417A6CE55009D8AF4 /* legacy_spec.cpp in Sources */,
 				76FA930B17FC7301003DB770 /* exec-strings-chunk.cpp in Sources */,
 				76D47DEA18030E52006F9102 /* exec-interface-field-chunk.cpp in Sources */,
+				4DB3235E174BE8E400046FFE /* uuid.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

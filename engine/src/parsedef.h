@@ -1622,6 +1622,15 @@ enum Look_and_feel {
     LF_NATIVEGTK
 };
 
+enum Relayer_relation
+{
+	RR_NONE,
+	RR_BEFORE,
+	RR_AFTER,
+	RR_FRONT,
+	RR_BACK
+};
+
 enum Repeat_form {
     RF_UNDEFINED,
     RF_EACH,

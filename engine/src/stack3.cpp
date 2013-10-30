@@ -58,6 +58,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mctheme.h"
 #include "license.h"
 #include "stacksecurity.h"
+#include "exec.h"
 
 #include "exec.h"
 #include "graphics_util.h"
@@ -2010,6 +2011,39 @@ void MCStack::mark(MCExecPoint &ep, MCExpression *where, Boolean mark)
 			{
 				if (ep.getsvalue() == MCtruemcstring)
 					curcard->setmark(mark);
+			}
+			curcard = (MCCard *)curcard->next();
+		}
+		while (curcard != cards);
+		curcard = oldcard;
+		MCerrorlock--;
+	}
+}
+
+void MCStack::mark(MCExecContext& ctxt, MCExpression *p_where, bool p_mark)
+{
+	if (p_where == nil)
+	{
+		MCCard *cptr = cards;
+		do
+		{
+			cptr->setmark(p_mark);
+			cptr = (MCCard *)cptr->next();
+		}
+		while (cptr != cards);
+	}
+	else
+	{
+		MCCard *oldcard = curcard;
+		curcard = cards;
+		MCerrorlock++;
+		do
+		{
+            MCAutoValueRef t_condition;
+			if (ctxt . EvaluateExpression(p_where, &t_condition))
+			{
+				if ((MCBooleanRef)*t_condition == kMCTrue)
+					curcard->setmark(p_mark);
 			}
 			curcard = (MCCard *)curcard->next();
 		}

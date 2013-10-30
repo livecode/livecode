@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -49,9 +48,11 @@ bool MCUuidGenerateRandom(MCUuid& r_uuid)
 {
 	// Fill the UUID with random bytes (returns false if not enough random data
 	// is available).
-	if (!MCU_random_bytes(sizeof(MCUuid), &r_uuid))
+    MCAutoDataRef t_data;
+	if (!MCU_random_bytes(sizeof(MCUuid), &t_data))
 		return false;
-		
+    MCMemoryCopy(&r_uuid, MCDataGetBytePtr(*t_data), sizeof(MCUuid));
+    
 	// Now 'brand' the UUID with version 4.
 	MCUuidBrand(r_uuid, 4);
 	

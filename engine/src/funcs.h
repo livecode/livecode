@@ -2899,7 +2899,6 @@ public:
 	virtual Exec_stat eval(MCExecPoint &ep);
 };
 
-
 #endif
 
 

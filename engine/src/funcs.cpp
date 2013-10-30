@@ -10523,7 +10523,6 @@ Exec_stat MCControlAtLoc::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCControlAtLoc */
 
-
 	MCExecContext ctxt(ep);
 	
 	MCPoint t_location;
@@ -10707,6 +10706,101 @@ Exec_stat MCUuidFunc::eval(MCExecPoint& ep)
 	
 	return ES_NORMAL;
 #endif /* MCUuidFunc */
+
+    // First work out what type we want.
+	MCUuidType t_type;
+	if (type == nil)
+		t_type = kMCUuidTypeRandom;
+	else
+	{
+		if (type -> eval(ep) != ES_NORMAL)
+		{
+			MCeerror -> add(EE_UUID_BADTYPE, line, pos);
+			return ES_ERROR;
+		}
+		
+		if (ep . getsvalue() == "random")
+		{
+			// If there is more than one parameter, it's an error.
+			if (name != nil)
+			{
+				MCeerror -> add(EE_UUID_TOOMANYPARAMS, line, pos);
+				return ES_ERROR;
+			}
+			
+			t_type = kMCUuidTypeRandom;
+		}
+		else if (ep . getsvalue() == "md5")
+			t_type = kMCUuidTypeMD5;
+		else if (ep . getsvalue() == "sha1")
+			t_type = kMCUuidTypeSHA1;
+		else
+		{
+			// If the type isn't one of 'random', 'md5', 'sha1' then it's
+			// an error.
+			MCeerror -> add(EE_UUID_UNKNOWNTYPE, line, pos);
+			return ES_ERROR;
+		}
+	}
+	
+	// If it is not of random type, then evaluate the other params.
+	MCAutoStringRef t_namespace_id;
+	MCAutoStringRef t_name;
+	if (t_type != kMCUuidTypeRandom)
+	{
+		// If there aren't namespace_id and name exprs, its an error.
+		if (namespace_id == nil || name == nil)
+		{
+			MCeerror -> add(EE_UUID_TOOMANYPARAMS, line, pos);
+			return ES_ERROR;
+		}
+        
+		// Evaluate the namespace parameter.
+		if (namespace_id -> eval(ep) != ES_NORMAL)
+		{
+			MCeerror -> add(EE_UUID_BADNAMESPACEID, line, pos);
+			return ES_ERROR;
+		}
+		/* UNCHECKED */ ep . copyasstringref(&t_namespace_id);
+        
+		// Evaluate the name parameter.
+		if (name -> eval(ep) != ES_NORMAL)
+		{
+			MCeerror -> add(EE_UUID_BADNAME, line, pos);
+			return ES_ERROR;
+		}
+		/* UNCHECKED */ ep . copyasstringref(&t_name);
+	}
+	
+    MCExecContext ctxt(ep);
+	// Generate the uuid.
+	MCAutoStringRef t_uuid;
+	switch(t_type)
+	{
+        case kMCUuidTypeRandom:
+            MCEngineEvalRandomUuid(ctxt, &t_uuid);
+            break;
+            
+        case kMCUuidTypeMD5:
+            MCEngineEvalMD5Uuid(ctxt, *t_namespace_id, *t_name, &t_uuid);
+            break;
+            
+        case kMCUuidTypeSHA1:
+            MCEngineEvalSHA1Uuid(ctxt, *t_namespace_id, *t_name, &t_uuid);
+            break;
+            
+        default:
+            assert(false);
+            break;
+	}
+	
+    if (!ctxt . HasError())
+    {
+        ep . setvalueref(*t_uuid);
+        return ES_NORMAL;
+    }
+	
+	return ctxt . Catch(line, pos);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -10777,6 +10871,7 @@ Parse_stat MCMeasureText::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCMeasureText::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMeasureText */ LEGACY_EXEC
     MCObject *t_object_ptr;
 	uint4 parid;
 	if (m_object->getobj(ep, t_object_ptr, parid, True) != ES_NORMAL)
@@ -10817,4 +10912,5 @@ Exec_stat MCMeasureText::eval(MCExecPoint &ep)
     
     ep.setuint(t_bounds . width);
     return ES_NORMAL;
+#endif /* MCMeasureText */ 
 }
