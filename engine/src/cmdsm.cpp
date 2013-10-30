@@ -1419,9 +1419,21 @@ Exec_stat MCSetOp::exec(MCExecPoint &ep)
 
 	MCExecContext ctxt(ep);
 	if (intersect)
-		MCArraysExecIntersect(ctxt, *t_dst_array, *t_src_array);
+    {
+        // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+        if (recursive)
+            MCArraysExecIntersectRecursive(ctxt, *t_dst_array, *t_src_array);
+        else
+            MCArraysExecIntersect(ctxt, *t_dst_array, *t_src_array);
+    }
 	else
-		MCArraysExecUnion(ctxt, *t_dst_array, *t_src_array);
+    {
+        // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+        if (recursive)
+            MCArraysExecUnionRecursive(ctxt, *t_dst_array, *t_src_array);
+        else
+            MCArraysExecUnion(ctxt, *t_dst_array, *t_src_array);
+    }
 
 	if (!ctxt . HasError())
 	{
