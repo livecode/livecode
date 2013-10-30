@@ -276,13 +276,11 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 			Rect t_rect;
 			GetWindowPortBounds((WindowPtr)t_window . handle . window, &t_rect);
 			
+			// IM-2013-10-11: [[ FullscreenMode ]] Move stack scroll handling into stack transform
 			t_rect . right -= t_rect . left;
 			t_rect . bottom -= t_rect . top;
 			t_rect . left = 0;
-			
-			// MW-2011-09-12: [[ MacScroll ]] Make sure the top of the HIView takes into
-			//   account the scroll.
-			t_rect . top = -sptr -> getscroll();
+			t_rect . top = 0;
 			
 			ControlRef t_root_control;
 			GetRootControl((WindowPtr)t_window . handle . window, &t_root_control);
@@ -293,7 +291,7 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 			
 			// MW-2007-08-29: [[ Bug 4846 ]] Ensure a moveStack message is sent whenever the window moves
 			if ((attributes & kWindowBoundsChangeSizeChanged) != 0 || ((attributes & kWindowBoundsChangeUserDrag) != 0 && (attributes & kWindowBoundsChangeOriginChanged) != 0))
-				sptr->configure(True);//causes a redraw and recalculation
+				sptr->view_configure(True);//causes a redraw and recalculation
 		}
 		else if (GetEventKind(event) == kEventWindowInit && sptr != NULL)
 		{
@@ -362,7 +360,9 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 
 static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refCon)
 {
-	if (!MCSecureModeCheckAppleScript())
+	// MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
+	//   don't handle the event.
+	if (!MCSecureModeCanAccessAppleScript())
 		return errAEEventNotHandled;
     
 	OSErr err = errAEEventNotHandled;  //class, id, sender
@@ -505,9 +505,12 @@ static pascal OSErr DoOpenApp(const AppleEvent *theAppleEvent, AppleEvent *reply
 static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
 { //Apple Event for opening documnets, in our use is to open stacks when user
 	//double clicked on a MC stack icon
-	if (!MCSecureModeCheckAppleScript())
+
+    // MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
+	//   don't handle the event.
+	if (!MCSecureModeCanAccessAppleScript())
 		return errAEEventNotHandled;
-	
+    
 	AEDescList docList; //get a list of alias records for the documents
 	errno = AEGetParamDesc(theAppleEvent, keyDirectObject, typeAEList, &docList);
 	if (errno != noErr)
@@ -552,8 +555,11 @@ static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply
 
 static pascal OSErr DoPrintDoc(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
 {
-	if (!MCSecureModeCheckAppleScript())
-		return errAEEventNotHandled;
+	// MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
+	//   don't handle the event.
+	if (!MCSecureModeCanAccessAppleScript())
+        if (!MCSecureModeCheckAppleScript())
+            return errAEEventNotHandled;
     
 	errno = errAEEventNotHandled;
 	if (reply != NULL)
@@ -566,8 +572,10 @@ static pascal OSErr DoPrintDoc(const AppleEvent *theAppleEvent, AppleEvent *repl
 
 static pascal OSErr DoQuitApp(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
 {
-	if (!MCSecureModeCheckAppleScript())
-		return errAEEventNotHandled;
+	// MW-2013-08-07: [[ Bug 10865 ]] Even if AppleScript is disabled we still need
+	//   to handle the 'quit' message.
+	// if (!MCSecureModeCanAccessAppleScript())
+	//	return errAEEventNotHandled;
     
 	errno = errAEEventNotHandled;
 	switch (MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
@@ -592,8 +600,10 @@ static pascal OSErr DoQuitApp(const AppleEvent *theAppleEvent, AppleEvent *reply
 
 static pascal OSErr DoAppPreferences(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
 {
-	if (!MCSecureModeCheckAppleScript())
-		return errAEEventNotHandled;
+	// MW-2013-08-07: [[ Bug 10865 ]] Even if AppleScript is disabled we still need
+	//   to handle the 'preferences' message.
+	//if (!MCSecureModeCanAccessAppleScript())
+	//	return errAEEventNotHandled;
     
 	MCGroup *mb = MCmenubar != NULL ? MCmenubar : MCdefaultmenubar;
 	if (mb == NULL)
@@ -633,7 +643,9 @@ static pascal OSErr DoAppDied(const AppleEvent *theAppleEvent, AppleEvent *reply
 
 static pascal OSErr DoAEAnswer(const AppleEvent *ae, AppleEvent *reply, long refCon)
 {
-	if (!MCSecureModeCheckAppleScript())
+	// MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
+	//   don't handle the event.
+	if (!MCSecureModeCanAccessAppleScript())
 		return errAEEventNotHandled;
     
     //process the repy(answer) returned from a server app. When MCS_send() with
@@ -7952,16 +7964,12 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     virtual bool AlternateLanguages(MCListRef& r_list)
     {
 #ifdef /* MCS_alternatelanguages_dsk_mac */ LEGACY_SYSTEM
-	MCAutoListRef t_list;
-	if (!MCListCreateMutable('\n', &t_list))
-		return false;
+    ep . clear();
 	
 	getosacomponents();
-	for (uindex_t i = 0; i < osancomponents; i++)
-		if (!MCListAppendCString(*t_list, osacomponents[i].compname))
-			return false;
-	
-	return MCListCopy(*t_list, r_list);
+    uint2 i;
+    for (i = 0; i < osancomponents; i++)
+        ep.concatcstring(osacomponents[i].compname, EC_RETURN, i == 0);
 #endif /* MCS_alternatelanguages_dsk_mac */
         MCAutoListRef t_list;
         if (!MCListCreateMutable('\n', &t_list))

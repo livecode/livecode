@@ -250,6 +250,7 @@ MCNameRef MCN_bold_italic;
 
 MCNameRef MCN_unknown;
 MCNameRef MCN_x86;
+MCNameRef MCN_x86_64;
 MCNameRef MCN_motorola_powerpc;
 MCNameRef MCN_i386;
 MCNameRef MCN_arm;
@@ -680,6 +681,7 @@ void MCU_initialize_names(void)
 
 	/* UNCHECKED */ MCNameCreateWithCString("unknown", MCN_unknown);
 	/* UNCHECKED */ MCNameCreateWithCString("x86", MCN_x86);
+    /* UNCHECKED */ MCNameCreateWithCString("x86_64", MCN_x86_64);
 	/* UNCHECKED */ MCNameCreateWithCString("Motorola PowerPC", MCN_motorola_powerpc);
 	/* UNCHECKED */ MCNameCreateWithCString("i386", MCN_i386);
 	/* UNCHECKED */ MCNameCreateWithCString("ARM", MCN_arm);
@@ -1112,6 +1114,7 @@ void MCU_finalize_names(void)
 
 	MCNameDelete(MCN_unknown);
 	MCNameDelete(MCN_x86);
+	MCNameDelete(MCN_x86_64);
     MCNameDelete(MCN_motorola_powerpc);
     MCNameDelete(MCN_i386);
     MCNameDelete(MCN_arm);

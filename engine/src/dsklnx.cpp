@@ -272,7 +272,7 @@ bool MCS_lnx_readlink(MCStringRef p_path, MCStringRef& r_link)
     t_size = readlink(MCStringGetCString(p_path), (char*)t_buffer.Chars(), t_stat.st_size);
 
     return (t_size == t_stat.st_size) && t_buffer.CreateStringAndRelease(r_link);
-#endif /* MCS_readlink_dsl_lnx */
+#endif /* MCS_readlink_dsk_lnx */
     struct stat64 t_stat;
     ssize_t t_size;
     MCAutoNativeCharArray t_buffer;
@@ -908,21 +908,13 @@ public:
     #endif
     #endif
 
-
         if (!MCS_isatty(0))
             MCS_nodelay(0);
-
-        MCValueAssign(MCshellcmd, MCSTR("/bin/sh"));
-
-        // Initialize our case mapping tables
-
-        MCuppercasingtable = new uint1[256];
-        for(uint4 i = 0; i < 256; ++i)
-            MCuppercasingtable[i] = (uint1)toupper((uint1)i);
-
-        MClowercasingtable = new uint1[256];
-        for(uint4 i = 0; i < 256; ++i)
-            MClowercasingtable[i] = (uint1)tolower((uint1)i);
+        
+        // MW-2013-10-01: [[ Bug 11160 ]] At the moment NBSP is not considered a space.
+        MCctypetable[160] &= ~(1 << 4);
+        
+        MCshellcmd = strclone("/bin/sh");
 #endif /* MCS_init_dsk_lnx */
         IO_stdin = MCsystem -> OpenFd(0, kMCSOpenFileModeRead);
         IO_stdout = MCsystem -> OpenFd(1, kMCSOpenFileModeWrite);
@@ -967,19 +959,11 @@ public:
 
         if (!IsInteractiveConsole(0))
             MCS_lnx_nodelay(0);
+        
+        // MW-2013-10-01: [[ Bug 11160 ]] At the moment NBSP is not considered a space.
+        MCctypetable[160] &= ~(1 << 4);
 
         MCValueAssign(MCshellcmd, MCSTR("/bin/sh"));
-
-        // Initialize our case mapping tables
-
-        MCuppercasingtable = new uint1[256];
-        for(uint4 i = 0; i < 256; ++i)
-            MCuppercasingtable[i] = (uint1)toupper((uint1)i);
-
-        MClowercasingtable = new uint1[256];
-        for(uint4 i = 0; i < 256; ++i)
-            MClowercasingtable[i] = (uint1)tolower((uint1)i);
-
         return true;
     }
 
@@ -1039,7 +1023,11 @@ public:
 #ifdef /* MCS_getprocessor_dsk_lnx */ LEGACY_SYSTEM
         return MCN_unknown;
 #endif /* MCS_getprocessor_dsk_lnx */
-        return MCN_unknown;
+#ifdef __LP64__
+        return MCN_x86_64;
+#else
+        return MCN_x86;
+#endif
     }
 
     virtual bool GetAddress(MCStringRef& r_address)
@@ -1065,7 +1053,6 @@ public:
     virtual void Alarm(real64_t p_when)
     {
 #ifdef /* MCS_alarm_dsk_lnx */ LEGACY_SYSTEM
-#ifndef _DEBUG
     if (!MCnoui)
     {
 #ifdef NOITIMERS
@@ -1092,9 +1079,7 @@ public:
         else
             alarmpending = True;
     }
-#endif
 #endif /* MCS_alarm_dsk_lnx */
-#ifndef _DEBUG
         if (!MCnoui)
         {
 #ifdef NOITIMERS
@@ -1121,7 +1106,6 @@ public:
             else
                 alarmpending = True;
         }
-#endif
     }
 
     virtual void Sleep(real64_t p_when)
@@ -1546,7 +1530,9 @@ public:
                 {
                     char *buffer = (char *)mmap(NULL, len, PROT_READ, MAP_SHARED,
                                                 fd, offset);
-                    if ((int)buffer != -1)
+                    // MW-2013-05-02: [[ x64 ]] Make sure we use the MAP_FAILED constant
+                    //   rather than '-1'.
+                    if (buffer != MAP_FAILED)
                     {
                         handle = new IO_header(NULL, buffer, len, fd, 0);
                         return handle;
@@ -1594,7 +1580,9 @@ public:
                 {
                     char *t_buffer = (char *)mmap(NULL, t_len, PROT_READ, MAP_SHARED,
                                                 t_fd, 0);
-                    if ((int)t_buffer != -1)
+                    // MW-2013-05-02: [[ x64 ]] Make sure we use the MAP_FAILED constant
+                    //   rather than '-1'.
+                    if (buffer != MAP_FAILED)
                     {
                         t_handle = new MCMemoryMappedFileHandle(t_fd, t_buffer, t_len);
                         return t_handle;
@@ -3168,8 +3156,7 @@ public:
     virtual bool AlternateLanguages(MCListRef& r_list)
     {
 #ifdef /* MCS_alternatelanguages_dsk_lnx */ LEGACY_SYSTEM
-        r_list = MCValueRetain(kMCEmptyList);
-        return true;
+        ep . clear();
 #endif /* MCS_alternatelanguages_dsk_lnx */
         r_list = MCValueRetain(kMCEmptyList);
         return true;

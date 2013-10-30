@@ -196,6 +196,7 @@ extern MCNameRef MCN_bold_italic;
 
 extern MCNameRef MCN_unknown;
 extern MCNameRef MCN_x86;
+extern MCNameRef MCN_x86_64;
 extern MCNameRef MCN_motorola_powerpc;
 extern MCNameRef MCN_i386;
 extern MCNameRef MCN_arm;

@@ -3099,7 +3099,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 	return MCStringCopy(p_path, r_native_path);
 #endif
 }
-#endif /* MCS_path2native */
+#endif /* MCU_path2native */
 		uindex_t t_length = MCStringGetLength(p_path);
 		if (t_length == 0)
 			return MCStringCopy(p_path, r_native);
