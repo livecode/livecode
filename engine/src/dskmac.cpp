@@ -957,7 +957,6 @@ static void configureSerialPort(int sRefNum)
         /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_settings, i, t_settingval);
         MCStringRef t_setting = (MCStringRef)t_settingval;
         parseSerialControlStr(t_setting, &theTermios);
-        MCValueRelease(t_setting);
     }
     //configure the serial output device
 	if (tcsetattr(sRefNum, TCSANOW, &theTermios) < 0)
@@ -1541,11 +1540,7 @@ bool MCS_mac_FSSpec2path(FSSpec *fSpec, MCStringRef& r_path)
     
 	/* UNCHECKED */ MCS_pathfromnative(*t_filename_std, &t_filename);
     
-    char *temp;
-    /* UNCHECKED */ MCStringConvertToCString(*t_filename, temp);
-    
-    t_char_ptr = strclone(temp);
-    delete temp;
+    /* UNCHECKED */ MCStringConvertToCString(*t_filename, t_char_ptr);
     
 	char oldchar = fSpec->name[0];
 	Boolean dontappendname = False;
@@ -1805,17 +1800,23 @@ OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
     
 	if (!MCS_resolvepath(p_filename, &t_resolved_path))
         return memFullErr;
+    memset(fspec, 0, sizeof(FSSpec));
     
-	memset(fspec, 0, sizeof(FSSpec));
-    char *temp;
-    /* UNCHECKED */ MCStringConvertToCString(*t_resolved_path, temp);
+    uindex_t t_last_slash;
+    MCAutoStringRef t_resolved_path_new, t_fspecname;
+    char *fspecname;
+    if (MCStringLastIndexOfChar(*t_resolved_path, '/', 0, kMCCompareExact, t_last_slash) && t_last_slash != 0)
+    {
+        /* UNCHECKED */ MCStringDivideAtIndex(*t_resolved_path, t_last_slash, &t_resolved_path_new, &t_fspecname);
+        /* UNCHECKED */ MCStringConvertToCString(*t_fspecname, fspecname);        
+    }
+    else
+    {
+        /* UNCHECKED */ MCStringCopy(*t_resolved_path, &t_resolved_path_new);
+        fspecname = NULL;
+    }
     
-	char *f2 = strrchr(temp, '/');
-	if (f2 != NULL && f2 != (const char*)temp)
-		*f2++ = '\0';
-	char *fspecname = strclone(f2);
-    delete temp;
-    if (!t_utf_path.Lock(*t_resolved_path))
+    if (!t_utf_path.Lock(*t_resolved_path_new))
         return memFullErr;
     
 	FSRef ref;
@@ -3821,7 +3822,6 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
 #endif /* MCS_reply_dsk_mac */
         delete[] replymessage;
         replylength = MCStringGetLength(p_message);
-        replymessage = new char[replylength];
         /* UNCHECKED */ MCStringConvertToCString(p_message, replymessage);
         
         //at any one time only either keyword or error is set
@@ -5747,6 +5747,9 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             t_success = MCS_mac_fsref_to_path(t_folder_ref, t_temp_file_auto);
             
             if (t_success)
+                t_success = MCStringMutableCopyAndRelease(t_temp_file_auto, t_temp_file_auto);
+            
+            if (t_success)
                 t_success = MCStringAppendFormat(t_temp_file_auto, "/tmp.%d.XXXXXXXX", getpid());
             
             if (t_success)
@@ -7310,7 +7313,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                         Kill(MCprocesses[index].pid, SIGKILL);
                     MCprocesses[index].pid = 0;
                     MCeerror->add(EE_SHELL_BADCOMMAND, 0, 0, p_command);
-                    return IO_ERROR;
+                    return false;
 
                 }
             }
@@ -7319,13 +7322,13 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 close(tochild[0]);
                 close(tochild[1]);
                 MCeerror->add(EE_SHELL_BADCOMMAND, 0, 0, p_command);
-                return IO_ERROR;
+                return false;
             }
         }
         else
         {
             MCeerror->add(EE_SHELL_BADCOMMAND, 0, 0, p_command);
-            return IO_ERROR;
+            return false;
         }
         char *buffer;
         uint4 buffersize;
@@ -8124,7 +8127,7 @@ static OSErr getDescFromAddress(MCStringRef address, AEDesc *retDesc)
     
 	if (t_index == 0)
 	{ //address contains application name only. Form # 3
-		char *appname = new char[MCStringGetLength(address) +1];
+		char *appname;
         /* UNCHECKED */ MCStringConvertToCString(address, appname);
 		c2pstr(appname);  //convert c string to pascal string
 		errno = getDesc(0, NULL, NULL, (unsigned char*)appname, retDesc);
@@ -8395,12 +8398,13 @@ static OSErr osacompile(MCStringRef s, ComponentInstance compinstance,
                         OSAID &scriptid)
 {
 	AEDesc aedscript;
-    /* UNCHECKED */ MCStringMutableCopyAndRelease(s, s);
-	/* UNCHECKED */ MCStringFindAndReplaceChar(s, '\n', '\r', kMCCompareExact);
+    MCAutoStringRef t_mutable_copy;
+    /* UNCHECKED */ MCStringMutableCopy(s, &t_mutable_copy);
+	/* UNCHECKED */ MCStringFindAndReplaceChar(*t_mutable_copy, '\n', '\r', kMCCompareExact);
 	scriptid = kOSANullScript;
     MCAutoPointer<char> temp_s;
-    /* UNCHECKED */ MCStringConvertToCString(s, &temp_s);
-	AECreateDesc(typeChar, *temp_s, MCStringGetLength(s), &aedscript);
+    /* UNCHECKED */ MCStringConvertToCString(*t_mutable_copy, &temp_s);
+	AECreateDesc(typeChar, *temp_s, MCStringGetLength(*t_mutable_copy), &aedscript);
 	OSErr err = OSACompile(compinstance, &aedscript, kOSAModeNull, &scriptid);
 	AEDisposeDesc(&aedscript);
 	return err;

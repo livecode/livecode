@@ -572,6 +572,7 @@ int MCA_file_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filt
 	int t_result;
 	FilterRecord *t_filters = NULL;
 	unsigned int t_filter_count = 0;
+    char *t_filetypes_cstring;
     if (p_filter != NULL && MCStringGetLength(p_filter) >= 4)
 	{
 		unsigned int t_filetype_count;
@@ -588,13 +589,14 @@ int MCA_file_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filt
 		
 		t_filters = new FilterRecord[1];
 		t_filters[0] . tag = "";
-        char *t_filetypes_cstring;
+        
         /* UNCHECKED */ MCStringConvertToCString(*t_filetypes, t_filetypes_cstring);
         t_filters[0] . file_types . assign(t_filetypes_cstring, t_filetype_count * 5 - 1, ',', false);
 		t_filter_count = 1;
-        delete t_filetypes_cstring;
+        
 	}
     t_result = MCA_do_file_dialog_tiger(p_title, p_prompt, t_filters, t_filter_count, p_initial, p_options, r_value, r_result);
+    delete t_filetypes_cstring;
 	delete[] t_filters;
 	return t_result;
 }
@@ -615,6 +617,7 @@ int MCA_ask_file_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_
 	int t_result;
 	FilterRecord *t_filters = NULL;
 	unsigned int t_filter_count = 0;
+    char *t_filetypes_cstring;
 	if (p_filter != NULL && MCStringGetLength(p_filter) >= 4)
 	{
 		unsigned int t_filetype_count;
@@ -630,13 +633,14 @@ int MCA_ask_file_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_
 		
 		t_filters = new FilterRecord[1];
 		t_filters[0] . tag = "";
-        char *t_filetypes_cstring;
+        
         /* UNCHECKED */ MCStringConvertToCString(*t_filetypes, t_filetypes_cstring);
 		t_filters[0] . file_types . assign(t_filetypes_cstring, t_filetype_count * 5 - 1, ',');
 		t_filter_count = 1;
-        delete t_filetypes_cstring;
+        
 	}
 	t_result = MCA_do_file_dialog_tiger(nil, p_prompt, t_filters, t_filter_count, p_initial, p_options | MCA_OPTION_SAVE_DIALOG, r_value, r_result);
+    delete t_filetypes_cstring;
 	delete[] t_filters;
 	return t_result;
 }
