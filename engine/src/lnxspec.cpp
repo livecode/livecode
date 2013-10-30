@@ -223,6 +223,7 @@ static IO_handle MCS_dopen(int4 fd, const char *mode)
 
 void MCS_init()
 {
+#ifdef /* MCS_init_dsk_lnx */ LEGACY_SYSTEM
 	IO_stdin = new IO_header(stdin, NULL, 0, 0, 0);
 	IO_stdout = new IO_header(stdout, NULL, 0, 0, 0);
 	IO_stderr = new IO_header(stderr, NULL, 0, 0, 0);
@@ -266,23 +267,32 @@ void MCS_init()
 	MCctypetable[160] &= ~(1 << 4);
 
 	MCshellcmd = strclone("/bin/sh");
+#endif /* MCS_init_dsk_lnx */
 }
 
 void MCS_shutdown()
-{}
+{
+#ifdef /* MCS_shutdown_dsk_lnx */ LEGACY_SYSTEM
+#endif /* MCS_shutdown_dsk_lnx */ 
+}
 
 void MCS_seterrno(int value)
 {
+#ifdef /* MCS_seterrno_dsk_lnx */ LEGACY_SYSTEM
 	errno = value;
+#endif /* MCS_seterrno_dsk_lnx */
 }
 
 int MCS_geterrno()
 {
+#ifdef /* MCS_geterrno_dsk_lnx */ LEGACY_SYSTEM
 	return errno;
+#endif /* MCS_geterrno_dsk_lnx */ 
 }
 
 void MCS_alarm(real8 secs)
 {
+#ifdef /* MCS_alarm_dsk_lnx */ LEGACY_SYSTEM
 	if (!MCnoui)
 	{
 #ifdef NOITIMERS
@@ -309,10 +319,12 @@ void MCS_alarm(real8 secs)
 		else
 			alarmpending = True;
 	}
+#endif /* MCS_alarm_dsk_lnx */
 }
 
 void MCS_startprocess(char *name, char *doc, Open_mode mode, Boolean elevated)
 {
+#ifdef /* MCS_startprocess_dsk_lnx */ LEGACY_SYSTEM
 	Boolean noerror = True;
 	Boolean reading = mode == OM_READ || mode == OM_UPDATE;
 	Boolean writing = mode == OM_APPEND || mode == OM_WRITE || mode == OM_UPDATE;
@@ -456,10 +468,12 @@ void MCS_startprocess(char *name, char *doc, Open_mode mode, Boolean elevated)
 	}
 	else
 		MCresult->clear(False);
+#endif /* MCS_startprocess_dsk_lnx */ 
 }
 
 void MCS_checkprocesses()
-{	
+{
+#ifdef /* MCS_checkprocesses_dsk_lnx */ LEGACY_SYSTEM
 	uint2 i;
 	bool cleanPID = false ;
 	
@@ -479,11 +493,13 @@ void MCS_checkprocesses()
 			MCprocesses[i].retcode = WEXITSTATUS(wstat);
 		}
 	}
-	
+
+#endif /* MCS_checkprocesses_dsk_lnx */
 }
 
 void MCS_closeprocess(uint2 index)
 {
+#ifdef /* MCS_closeprocess_dsk_lnx */ LEGACY_SYSTEM
 	if (MCprocesses[index].ihandle != NULL)
 	{
 		MCS_close(MCprocesses[index].ihandle);
@@ -495,15 +511,19 @@ void MCS_closeprocess(uint2 index)
 		MCprocesses[index].ohandle = NULL;
 	}
 	MCprocesses[index].mode = OM_NEITHER;
+#endif /* MCS_closeprocess_dsk_lnx */ 
 }
 
 void MCS_kill(int4 pid, int4 sig)
 {
+#ifdef /* MCS_kill_dsk_lnx */ LEGACY_SYSTEM
 	kill(pid, sig);
+#endif /* MCS_kill_dsk_lnx */ 
 }
 
 void MCS_killall()
 {
+#ifdef /* MCS_killall_dsk_lnx */ LEGACY_SYSTEM
 	struct sigaction action;
 	memset((char *)&action, 0, sizeof(action));
 	action.sa_handler = (void (*)(int))SIG_IGN;
@@ -520,18 +540,21 @@ void MCS_killall()
 			waitpid(MCprocesses[MCnprocesses].pid, NULL, 0);
 		}
 	}
+#endif /* MCS_killall_dsk_lnx */
 }
 
 // MW-2005-02-22: Make global for now so opensslsocket.cpp can access it
 real8 curtime;
 real8 MCS_time()
 {
+#ifdef /* MCS_time_dsk_lnx */ LEGACY_SYSTEM
 	struct timezone tz;
 	struct timeval tv;
 
 	gettimeofday(&tv, &tz);
 	curtime = tv.tv_sec + (real8)tv.tv_usec / 1000000.0;
 	return curtime;
+#endif /* MCS_time_dsk_lnx */
 }
 
 void MCS_reset_time()
@@ -539,6 +562,7 @@ void MCS_reset_time()
 
 void MCS_sleep(real8 duration)
 {
+#ifdef /* MCS_sleep_dsk_lnx */ LEGACY_SYSTEM
 	Boolean wasalarm = alarmpending;
 	if (alarmpending)
 		MCS_alarm(0.0);
@@ -550,15 +574,19 @@ void MCS_sleep(real8 duration)
 
 	if (wasalarm)
 		MCS_alarm(CHECK_INTERVAL);
+#endif /* MCS_sleep_dsk_lnx */ 
 }
 
 char *MCS_getenv(const char *name)
 {
+#ifdef /* MCS_getenv_dsk_lnx */ LEGACY_SYSTEM
 	return getenv(name);
+#endif /* MCS_getenv_dsk_lnx */
 }
 
 void MCS_setenv(const char *name, const char *value)
 {
+#ifdef /* MCS_setenv_dsk_lnx */ LEGACY_SYSTEM
 #ifdef NOSETENV
 	char *dptr = new char[strlen(name) + strlen(value) + 2];
 	sprintf(dptr, "%s=%s", name, value);
@@ -567,13 +595,16 @@ void MCS_setenv(const char *name, const char *value)
 
 	setenv(name, value, True);
 #endif
+#endif /* MCS_setenv_dsk_lnx */
 }
 
 void MCS_unsetenv(const char *name)
 {
+#ifdef /* MCS_unsetenv_dsk_lnx */ LEGACY_SYSTEM
 #ifndef NOSETENV
 	unsetenv(name);
 #endif
+#endif /* MCS_unsetenv_dsk_lnx */
 }
 
 int4 MCS_rawopen(const char *path, int flags)
@@ -591,6 +622,7 @@ int4 MCS_rawclose(int4 fd)
 
 Boolean MCS_rename(const char *oname, const char *nname)
 {
+#ifdef /* MCS_rename_dsk_lnx */ LEGACY_SYSTEM
 	char *oldpath = MCS_resolvepath(oname);
 	char *newpath = MCS_resolvepath(nname);
 #ifndef NORENAME
@@ -611,33 +643,43 @@ Boolean MCS_rename(const char *oname, const char *nname)
 	delete oldpath;
 	delete newpath;
 	return done;
+#endif /* MCS_rename_dsk_lnx */
 }
 
 Boolean MCS_backup(const char *oname, const char *nname)
 {
+#ifdef /* MCS_backup_dsk_lnx */ LEGACY_SYSTEM
 	return MCS_rename(oname, nname);
+#endif /* MCS_backup_dsk_lnx */ 
 }
 
 Boolean MCS_unbackup(const char *oname, const char *nname)
 {
+#ifdef /* MCS_unbackup_dsk_lnx */ LEGACY_SYSTEM
 	return MCS_rename(oname, nname);
+#endif /* MCS_unbackup_dsk_lnx */
 }
 
 Boolean MCS_unlink(const char *path)
 {
+#ifdef /* MCS_unlink_dsk_lnx */ LEGACY_SYSTEM
 	char *newpath = MCS_resolvepath(path);
 	Boolean done = unlink(newpath) == 0;
 	delete newpath;
 	return done;
+#endif /* MCS_unlink_dsk_lnx */
 }
 
 const char *MCS_tmpnam()
 {
+#ifdef /* MCS_tmpnam_dsk_lnx */ LEGACY_SYSTEM
 	return tmpnam(NULL);
+#endif /* MCS_tmpnam_dsk_lnx */
 }
 
 char *MCS_resolvepath(const char *path)
 {
+#ifdef /* MCS_resolvepath_dsk_lnx */ LEGACY_SYSTEM
 	if (path == NULL)
 		return MCS_getcurdir();
 	char *tildepath;
@@ -700,6 +742,7 @@ char *MCS_resolvepath(const char *path)
 		delete fullpath;
 	}
 	return newname;
+#endif /* MCS_resolvepath_dsk_lnx */ 
 }
 
 char *MCS_get_canonical_path(const char *p_path)
@@ -714,23 +757,28 @@ char *MCS_get_canonical_path(const char *p_path)
 
 char *MCS_getcurdir()
 {
+#ifdef /* MCS_getcurdir_dsk_lnx */ LEGACY_SYSTEM
 	char *dptr = new char[PATH_MAX + 2];
 	getcwd(dptr, PATH_MAX);
 	return dptr;
+#endif /* MCS_getcurdir_dsk_lnx */
 }
 
 Boolean MCS_setcurdir(const char *path)
 {
+#ifdef /* MCS_setcurdir_dsk_lnx */ LEGACY_SYSTEM
 	char *newpath = MCS_resolvepath(path);
 	Boolean done = chdir(newpath) == 0;
 	delete newpath;
 	return done;
+#endif /* MCS_setcurdir_dsk_lnx */
 }
 
 #define ENTRIES_CHUNK 4096
 
 void MCS_getentries(char **dptr, bool files, bool islong)
 {
+#ifdef /* MCS_getentries_dsk_lnx */ LEGACY_SYSTEM
 	uint4 flag = files ? S_IFREG : S_IFDIR;
 	DIR *dirptr;
 
@@ -787,6 +835,7 @@ void MCS_getentries(char **dptr, bool files, bool islong)
 	}
 	closedir(dirptr);
 	*dptr = tptr;
+#endif /* MCS_getentries_dsk_lnx */
 }
 
 void MCS_getentries(MCExecPoint& p_exec, bool p_files, bool p_islong)
@@ -803,26 +852,33 @@ delete last char of it; return it"
 
 void MCS_getDNSservers(MCExecPoint &ep)
 {
+#ifdef /* MCS_getDNSservers_dsk_lnx */ LEGACY_SYSTEM
 	ep . clear();
 	MCresult->store(ep, False);
 	MCdefaultstackptr->domess(DNS_SCRIPT);
 	MCresult->fetch(ep);
+#endif /* MCS_getDNSservers_dsk_lnx */
 }
 
 Boolean MCS_getdevices(MCExecPoint &ep)
 {
+#ifdef /* MCS_getdevices_dsk_lnx */ LEGACY_SYSTEM
 	ep.clear();
 	return True;
+#endif /* MCS_getdevices_dsk_lnx */ 
 }
 
 Boolean MCS_getdrives(MCExecPoint &ep)
 {
+#ifdef /* MCS_getdrives_dsk_lnx */ LEGACY_SYSTEM
 	ep.clear();
 	return True;
+#endif /* MCS_getdrives_dsk_lnx */
 }
 
 Boolean MCS_noperm(const char *path)
 {
+#ifdef /* MCS_noperm_dsk_lnx */ LEGACY_SYSTEM
 	struct stat64 buf;
 	if (stat64(path, &buf))
 		return False;
@@ -831,10 +887,12 @@ Boolean MCS_noperm(const char *path)
 	if (!(buf.st_mode & S_IWUSR))
 		return True;
 	return False;
+#endif /* MCS_noperm_dsk_lnx */
 }
 
 Boolean MCS_exists(const char *path, Boolean file)
 {
+#ifdef /* MCS_exists_dsk_lnx */ LEGACY_SYSTEM
 	// MM-2011-08-24: [[ Bug 9691 ]] Updated to use stat64 so no longer fails on files larger than 2GB
 	char *newpath = MCS_resolvepath(path);
 	struct stat64 buf;
@@ -851,10 +909,12 @@ Boolean MCS_exists(const char *path, Boolean file)
 				found = False;
 	delete newpath;
 	return found;
+#endif /* MCS_exists_dsk_lnx */
 }
 
 int64_t MCS_fsize(IO_handle stream)
 {
+#ifdef /* MCS_fsize_dsk_lnx */ LEGACY_SYSTEM
 	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
 		return MCS_fake_fsize(stream);
 
@@ -867,6 +927,7 @@ int64_t MCS_fsize(IO_handle stream)
 	if (fstat64(fd, &buf))
 		return 0;
 	return buf.st_size;
+#endif /* MCS_fsize_dsk_lnx */
 }
 
 Boolean MCS_nodelay(int4 fd)
@@ -878,6 +939,7 @@ Boolean MCS_nodelay(int4 fd)
 IO_handle MCS_open(const char *path, const char *mode,
                    Boolean map, Boolean driver, uint4 offset)
 {
+#ifdef /* MCS_open_dsk_lnx */ LEGACY_SYSTEM
 	char *newpath = MCS_resolvepath(path);
 	IO_handle handle = NULL;
 	
@@ -920,10 +982,12 @@ IO_handle MCS_open(const char *path, const char *mode,
 			fseek(handle->fptr, offset, SEEK_SET);
 	}
 	return handle;
+#endif /* MCS_open_dsk_lnx */ 
 }
 
 IO_stat MCS_close(IO_handle &stream)
 {
+#ifdef /* MCS_close_dsk_lnx */ LEGACY_SYSTEM
 	if (stream->fptr == NULL)
 	{
 		if (stream->fd == 0)
@@ -945,6 +1009,7 @@ IO_stat MCS_close(IO_handle &stream)
 	delete stream;
 	stream = NULL;
 	return IO_NORMAL;
+#endif /* MCS_close_dsk_lnx */
 }
 
 
@@ -985,6 +1050,7 @@ IO_stat MCS_shellread(int fd, char *&buffer, uint4 &buffersize, uint4 &size)
 
 IO_stat MCS_runcmd(MCExecPoint &ep)
 {
+#ifdef /* MCS_runcmd_dsk_lnx */ LEGACY_SYSTEM
 	IO_cleanprocesses();
 	int tochild[2];
 	int toparent[2];
@@ -1094,7 +1160,7 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 	else
 		MCresult->clear(False);
 	return IO_NORMAL;
-
+#endif /* MCS_runcmd_dsk_lnx */ 
 }
 
 uint2 MCS_umask(uint2 mask)
@@ -1102,62 +1168,79 @@ uint2 MCS_umask(uint2 mask)
 
 
 {
+#ifdef /* MCS_umask_dsk_lnx */ LEGACY_SYSTEM
 	return umask(mask);
+#endif /* MCS_umask_dsk_lnx */
 }
 
 IO_stat MCS_chmod(const char *path, uint2 mask)
 {
+#ifdef /* MCS_chmod_dsk_lnx */ LEGACY_SYSTEM
 	if (chmod(path, mask) != 0)
 		return IO_ERROR;
 	return IO_NORMAL;
+#endif /* MCS_chmod_dsk_lnx */
 }
 
 int4 MCS_getumask()
 {
+#ifdef /* MCS_getumask_dsk_lnx */ LEGACY_SYSTEM
 	int4 oldmask = umask(0);
 	umask(oldmask);
 	return oldmask;
+#endif /* MCS_getumask_dsk_lnx */
 }
 
 void MCS_setumask(int4 newmask)
 {
+#ifdef /* MCS_setumask_dsk_lnx */ LEGACY_SYSTEM
 	umask(newmask);
+#endif /* MCS_setumask_dsk_lnx */
 }
 
 Boolean MCS_mkdir(const char *path)
 {
+#ifdef /* MCS_mkdir_dsk_lnx */ LEGACY_SYSTEM
 	char *newpath = MCS_resolvepath(path);
 	Boolean done = mkdir(path, 0777) == 0;
 	delete newpath;
 	return done;
+#endif /* MCS_mkdir_dsk_lnx */
 }
 
 Boolean MCS_rmdir(const char *path)
 {
+#ifdef /* MCS_rmdir_dsk_lnx */ LEGACY_SYSTEM
 	char *newpath = MCS_resolvepath(path);
 	Boolean done = rmdir(path) == 0;
 	delete newpath;
 	return done;
+#endif /* MCS_rmdir_dsk_lnx */ 
 }
 
 IO_stat MCS_trunc(IO_handle stream)
 {
+#ifdef /* MCS_trunc_dsk_lnx */ LEGACY_SYSTEM
 	if (ftruncate(fileno(stream->fptr), ftell(stream->fptr)))
 		return IO_ERROR;
 	return IO_NORMAL;
+#endif /* MCS_trunc_dsk_lnx */
 }
 
 IO_stat MCS_flush(IO_handle stream)
 {
+#ifdef /* MCS_flush_dsk_lnx */ LEGACY_SYSTEM
 	if (stream->fptr != NULL)
 		if (fflush(stream->fptr))
 			return IO_ERROR;
 
 	return IO_NORMAL;
+#endif /* MCS_flush_dsk_lnx */
 }
 
 IO_stat MCS_sync(IO_handle stream)
 {
+#ifdef /* MCS_sync_dsk_lnx */ LEGACY_SYSTEM
 	if (stream->fptr != NULL)
 	{
 		int64_t pos = ftello64(stream->fptr);
@@ -1165,6 +1248,7 @@ IO_stat MCS_sync(IO_handle stream)
 			return IO_ERROR;
 	}
 	return IO_NORMAL;
+#endif /* MCS_sync_dsk_lnx */
 }
 
 Boolean MCS_eof(IO_handle stream)
@@ -1176,6 +1260,7 @@ Boolean MCS_eof(IO_handle stream)
 
 IO_stat MCS_seek_cur(IO_handle stream, int64_t offset)
 {
+#ifdef /* MCS_seek_cur_dsk_lnx */ LEGACY_SYSTEM
 	// MW-2009-06-25: If this is a custom stream, call the appropriate callback.
 	// MW-2009-06-30: Refactored to common implementation in mcio.cpp.
 	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
@@ -1187,10 +1272,12 @@ IO_stat MCS_seek_cur(IO_handle stream, int64_t offset)
 		if (fseeko64(stream->fptr, offset, SEEK_CUR) != 0)
 			return IO_ERROR;
 	return IO_NORMAL;
+#endif /* MCS_seek_cur_dsk_lnx */
 }
 
 IO_stat MCS_seek_set(IO_handle stream, int64_t offset)
 {
+#ifdef /* MCS_seek_set_dsk_lnx */ LEGACY_SYSTEM
 	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
 	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
 		return MCS_fake_seek_set(stream, offset);
@@ -1201,20 +1288,24 @@ IO_stat MCS_seek_set(IO_handle stream, int64_t offset)
 		if (fseeko64(stream->fptr, offset, SEEK_SET) != 0)
 			return IO_ERROR;
 	return IO_NORMAL;
+#endif /* MCS_seek_set_dsk_lnx */
 }
 
 IO_stat MCS_seek_end(IO_handle stream, int64_t offset)
 {
+#ifdef /* MCS_seek_end_dsk_lnx */ LEGACY_SYSTEM
 	if (stream->fptr == NULL)
 		IO_set_stream(stream, stream->buffer + stream->len + offset);
 	else
 		if (fseeko64(stream->fptr, offset, SEEK_END) != 0)
 			return IO_ERROR;
 	return IO_NORMAL;
+#endif /* MCS_seek_end_dsk_lnx */
 }
 
 int64_t MCS_tell(IO_handle stream)
 {
+#ifdef /* MCS_tell_dsk_lnx */ LEGACY_SYSTEM
 	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
 	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
 		return MCS_fake_tell(stream);
@@ -1223,10 +1314,12 @@ int64_t MCS_tell(IO_handle stream)
 		return ftello64(stream->fptr);
 	else
 		return stream->ioptr - stream->buffer;
+#endif /* MCS_tell_dsk_lnx */
 }
 
 IO_stat MCS_putback(char c, IO_handle stream)
 {
+#ifdef /* MCS_putback_dsk_lnx */ LEGACY_SYSTEM
 	if (stream -> fptr == NULL)
 		return MCS_seek_cur(stream, -1);
 	
@@ -1234,10 +1327,12 @@ IO_stat MCS_putback(char c, IO_handle stream)
 		return IO_ERROR;
 		
 	return IO_NORMAL;
+#endif /* MCS_putback_dsk_lnx */
 }
 
 IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
 {
+#ifdef /* MCS_read_dsk_lnx */ LEGACY_SYSTEM
 	if (MCabortscript || ptr == NULL)
 		return IO_ERROR;
 
@@ -1305,60 +1400,73 @@ IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
 		}
 	}
 	return stat;
+#endif /* MCS_read_dsk_lnx */
 }
 
 IO_stat MCS_write(const void *ptr, uint4 size, uint4 n, IO_handle stream)
 {
+#ifdef /* MCS_write_dsk_lnx */ LEGACY_SYSTEM
 	if ((stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
 		return MCU_dofakewrite(stream -> buffer, stream -> len, ptr, size, n);
 
 	if (fwrite(ptr, size, n, stream->fptr) != n)
 		return IO_ERROR;
 	return IO_NORMAL;
+#endif /* MCS_write_dsk_lnx */
 }
 
 uint4 MCS_getpid()
 {
+#ifdef /* MCS_getpid_dsk_lnx */ LEGACY_SYSTEM
 	return getpid();
+#endif /* MCS_getpid_dsk_lnx */
 }
 
 static struct utsname u;
 
 const char *MCS_getaddress()
 {
+#ifdef /* MCS_getaddress_dsk_lnx */ LEGACY_SYSTEM
 	static char *buffer;
 	uname(&u);
 	if (buffer == NULL)
 		buffer = new char[strlen(u.nodename) + strlen(MCcmd) + 4];
 	sprintf(buffer, "%s:%s", u.nodename, MCcmd);
 	return buffer;
+#endif /* MCS_getaddress_dsk_lnx */
 }
 
 const char *MCS_getmachine()
 {
+#ifdef /* MCS_getmachine_dsk_lnx */ LEGACY_SYSTEM
 	uname(&u);
 	return u.machine;
+#endif /* MCS_getmachine_dsk_lnx */
 }
 
 // MW-2013-05-02: [[ x64 ]] If 64-bit then return x86_64, else we must be
 //   32-bit Intel so x86.
 const char *MCS_getprocessor()
 {
+#ifdef /* MCS_getprocessor_dsk_lnx */ LEGACY_SYSTEM
 #ifdef __LP64__
 	return "x86_64";
 #else
 	return "x86";
 #endif
+#endif /* MCS_getprocessor_dsk_lnx */
 }
 
 const char *MCS_getsystemversion()
 {
+#ifdef /* MCS_getsystemversion_dsk_lnx */ LEGACY_SYSTEM
 	static char *buffer;
 	uname(&u);
 	if (buffer == NULL)
 		buffer = new char[strlen(u.sysname) + strlen(u.release) + 2];
 	sprintf(buffer, "%s %s", u.sysname, u.release);
 	return buffer;
+#endif /* MCS_getsystemversion_dsk_lnx */
 }
 
 void MCS_loadfile(MCExecPoint &ep, Boolean binary)
@@ -1550,7 +1658,9 @@ void MCS_list_registry(MCExecPoint &dest)
 
 double MCS_getfreediskspace(void)
 {
+#ifdef /* MCS_getfreediskspace_dsk_lnx */ LEGACY_SYSTEM
 	return 1.0;
+#endif /* MCS_getfreediskspace_dsk_lnx */ 
 }
 
 void MCS_exec_command ( char * command ) 
@@ -1569,7 +1679,7 @@ void MCS_exec_command ( char * command )
 
 void MCS_launch_document(char *p_document)
 {
-	
+#ifdef /* MCS_launch_document_dsk_lnx */ LEGACY_SYSTEM	
 	const char * p_mime_type ;
 	const char * p_command ;
 	GList * p_args = NULL;
@@ -1598,6 +1708,7 @@ void MCS_launch_document(char *p_document)
 		// p_document will be deleted by MCS_launch_url ()
 		MCS_launch_url (p_document);
 	}
+#endif /* MCS_launch_document_dsk_lnx */ 
 }
 
 
@@ -1625,6 +1736,7 @@ void MCS_launch_document(char *p_document)
 
 void MCS_launch_url(char *p_document)
 {
+#ifdef /* MCS_launch_url_dsk_lnx */ LEGACY_SYSTEM
 	GError *err = NULL;
 	if ( MCuselibgnome )
 	{
@@ -1643,10 +1755,12 @@ void MCS_launch_url(char *p_document)
 
 	// MW-2007-12-13: <p_document> is owned by the callee
 	delete p_document;
+#endif /* MCS_launch_url_dsk_lnx */
 }
 
 MCSysModuleHandle MCS_loadmodule(const char *p_filename)
 {
+#ifdef /* MCS_loadmodule_dsk_lnx */ LEGACY_SYSTEM
 #ifdef _DEBUG
 	// dlopen loads whole 4-byte words when accessing the filename. This causes valgrind to make
 	// spurious noise - so in DEBUG mode we make sure we allocate a 4-byte aligned block of memory.
@@ -1663,20 +1777,26 @@ MCSysModuleHandle MCS_loadmodule(const char *p_filename)
 #else
 	return ( (MCSysModuleHandle)dlopen ( p_filename , (RTLD_NOW | RTLD_LOCAL) ));
 #endif
+#endif /* MCS_loadmodule_dsk_lnx */
 }
 
 void *MCS_resolvemodulesymbol(MCSysModuleHandle p_module, const char *p_symbol)
 {
+#ifdef /* MCS_resolvemodulesymbol_dsk_lnx */ LEGACY_SYSTEM
 	return ( dlsym ( p_module, p_symbol ) ) ;
+#endif /* MCS_resolvemodulesymbol_dsk_lnx */ 
 }
 
 void MCS_unloadmodule(MCSysModuleHandle p_module)
 {
+#ifdef /* MCS_unloadmodule_dsk_lnx */ LEGACY_SYSTEM
 	dlclose ( p_module ) ;
+#endif /* MCS_unloadmodule_dsk_lnx */ 
 }
 
 Boolean MCS_poll(real8 delay, int fd)
 {
+#ifdef /* MCS_poll_dsk_lnx */ LEGACY_SYSTEM
 	Boolean readinput = False;
 	int4 n;
 	uint2 i;
@@ -1795,6 +1915,7 @@ Boolean MCS_poll(real8 delay, int fd)
 	if (wasalarm)
 		MCS_alarm(CHECK_INTERVAL);
 	return True;
+#endif /* MCS_poll_dsk_lnx */
 }
 
 void MCS_send(const MCString &message, const char *program,
@@ -1972,6 +2093,7 @@ static void configureSerialPort(int sRefNum)
 
 void MCS_getspecialfolder(MCExecPoint &ep)
 {
+#ifdef /* MCS_getspecialfolder_dsk_lnx */ LEGACY_SYSTEM
 	char *c_dir = MCS_resolvepath("~/");
 
 	if ( ep.getsvalue() == "desktop" )
@@ -1991,42 +2113,57 @@ void MCS_getspecialfolder(MCExecPoint &ep)
 	}
 
 	delete c_dir ;
+#endif /* MCS_getspecialfolder_dsk_lnx */
 }
 
 void MCS_longfilepath(MCExecPoint &ep)
-{}
+{
+#ifdef /* MCS_longfilepath_dsk_lnx */ LEGACY_SYSTEM
+#endif /* MCS_longfilepath_dsk_lnx */
+}
 
 void MCS_shortfilepath(MCExecPoint &ep)
-{}
+{
+#ifdef /* MCS_shortfilepath_dsk_lnx */ LEGACY_SYSTEM
+#endif /* MCS_shortfilepath_dsk_lnx */ 
+}
 
 Boolean MCS_createalias(char *srcpath, char *dstpath)
 {
+#ifdef /* MCS_createalias_dsk_lnx */ LEGACY_SYSTEM
 	char *source = MCS_resolvepath(srcpath);
 	char *dest = MCS_resolvepath(dstpath);
 	Boolean done = symlink(source,dest) == 0;
 	delete source;
 	delete dest;
 	return done;
+#endif /* MCS_createalias_dsk_lnx */
 }
 
 
 void MCS_resolvealias(MCExecPoint &ep)
 {
+#ifdef /* MCS_resolvealias_dsk_lnx */ LEGACY_SYSTEM
 	char *tpath = ep.getsvalue().clone();
 	char *dest = MCS_resolvepath(tpath);
 	delete tpath;
 	ep.copysvalue(dest, strlen(dest));
 	delete dest;
+#endif /* MCS_resolvealias_dsk_lnx */ 
 }
 
 void MCS_alternatelanguages(MCExecPoint &ep)
 {
+#ifdef /* MCS_alternatelanguages_dsk_lnx */ LEGACY_SYSTEM
 	ep.clear();
+#endif /* MCS_alternatelanguages_dsk_lnx */ 
 }
 
 void MCS_doalternatelanguage(MCString &s, const char *langname)
 {
+#ifdef /* MCS_doalternatelanguage_dsk_lnx */ LEGACY_SYSTEM
 	MCresult->sets("alternate language not found");
+#endif /* MCS_doalternatelanguage_dsk_lnx */ 
 }
 
 void abbrevdatefmt(char *sptr)
@@ -2068,6 +2205,7 @@ Boolean MCS_isleadbyte(uint1 charset, char *s)
 void MCS_multibytetounicode(const char *p_mbstring, uint4 p_mblength,
                             char *p_buffer, uint4 p_capacity, uint4& r_used, uint1 p_mbcharset)
 {
+#ifdef /* MCS_multibytetounicode_dsk_lnx */ LEGACY_SYSTEM
 	if (p_capacity == 0)
 		r_used = p_mblength * 2;
 	else
@@ -2077,11 +2215,13 @@ void MCS_multibytetounicode(const char *p_mbstring, uint4 p_mblength,
 			((uint2 *)p_buffer)[i] = (unsigned char)p_mbstring[i];
 		r_used = i * 2;
 	}
+#endif /* MCS_multibytetounicode_dsk_lnx */
 }
 
 void MCS_unicodetomultibyte(const char *p_ucstring, uint4 p_uclength,
                             char *p_buffer, uint4 p_capacity, uint4& r_used, uint1 p_mbcharset)
 {
+#ifdef /* MCS_unicodetomultibyte_dsk_lnx */ LEGACY_SYSTEM
 	if (p_capacity == 0)
 		r_used = p_uclength / 2;
 	else
@@ -2092,6 +2232,7 @@ void MCS_unicodetomultibyte(const char *p_ucstring, uint4 p_uclength,
 			((unsigned char *)p_buffer)[i] = (unsigned char)((uint2 *)p_ucstring)[i];
 		r_used = t_count;
 	}
+#endif /* MCS_unicodetomultibyte_dsk_lnx */ 
 }
 
 bool MCS_processtypeisforeground(void)
@@ -2108,7 +2249,9 @@ bool MCS_changeprocesstype(bool to_foreground)
 
 bool MCS_isatty(int fd)
 {
+#ifdef /* MCS_isatty_dsk_lnx */ LEGACY_SYSTEM
 	return isatty(fd) != 0;
+#endif /* MCS_isatty_dsk_lnx */ 
 }
 
 bool MCS_isnan(double v)
@@ -2118,7 +2261,9 @@ bool MCS_isnan(double v)
 
 uint32_t MCS_getsyserror(void)
 {
+#ifdef /* MCS_getsyserror_dsk_lnx */ LEGACY_SYSTEM
 	return errno;
+#endif /* MCS_getsyserror_dsk_lnx */ 
 }
 
 bool MCS_mcisendstring(const char *command, char buffer[256])

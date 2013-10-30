@@ -1871,6 +1871,7 @@ Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef mess, MCParameter *pa
 
 void MCU_path2std(char *dptr)
 {
+#ifdef /* MCU_path2std */ LEGACY_SYSTEM
 	if (dptr == NULL || !*dptr)
 		return;
 	do
@@ -1890,10 +1891,12 @@ void MCU_path2std(char *dptr)
 				*dptr = '/';
 	}
 	while (*++dptr);
+#endif /* MCU_path2std */
 }
 
 void MCU_path2native(char *dptr)
 {
+#ifdef /* MCU_path2native */ LEGACY_SYSTEM
 	if (dptr == NULL || !*dptr)
 		return;
 #if defined _WIN32
@@ -1906,6 +1909,7 @@ void MCU_path2native(char *dptr)
 	}
 	while (*++dptr);
 #endif
+#endif /* MCU_path2native */ 
 }
 
 // MW-2004-11-26: Copy null-terminated string at p_src to p_dest, the strings

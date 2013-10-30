@@ -121,6 +121,7 @@ int32_t MCCustomPrinterComputeFontSize(void *p_font)
 
 bool MCSTextConvertToUnicode(MCTextEncoding p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4 p_output_length, uint4& r_used)
 {
+#ifdef /* MCSTextConvertToUnicode_dsk_w32 */ LEGACY_SYSTEM
 	if (p_input_length == 0)
 	{
 		r_used = 0;
@@ -154,6 +155,7 @@ bool MCSTextConvertToUnicode(MCTextEncoding p_input_encoding, const void *p_inpu
 	r_used = t_used * 2;
 
 	return true;
+#endif /* MCSTextConvertToUnicode_dsk_w32 */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
