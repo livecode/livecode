@@ -245,7 +245,7 @@ static Boolean MCS_lnx_nodelay(int4 fd)
 
 bool MCS_lnx_is_link(MCStringRef p_path)
 {
-#ifdef /* MCS_is_link_dsk_lnx */ LEGACY_SYSTEM
+#ifdef /* MCS_is_link_dsk_lnx */ LEGACY_SYSTEM_ORPHAN
     struct stat64 buf;
     return (lstat64(MCStringGetCString(p_path), &buf) == 0 && S_ISLNK(buf.st_mode));
 #endif /* MCS_is_link_dsk_lnx */
@@ -255,7 +255,7 @@ bool MCS_lnx_is_link(MCStringRef p_path)
 
 bool MCS_lnx_readlink(MCStringRef p_path, MCStringRef& r_link)
 {
-#ifdef /* MCS_readlink_dsk_lnx */ LEGACY_SYSTEM
+#ifdef /* MCS_readlink_dsk_lnx */ LEGACY_SYSTEM_ORPHAN
     struct stat64 t_stat;
     ssize_t t_size;
     MCAutoNativeCharArray t_buffer;
