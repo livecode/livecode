@@ -154,6 +154,7 @@ int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button
 		return -1;
 
 	popupanswerdialog_t ctxt;
+    /* UNCHECKED */ MCMemoryAllocate(p_button_count * sizeof(MCStringRef), ctxt . buttons);
 	ctxt . buttons = p_buttons;
 	for (uindex_t i = 0; i < p_button_count; i++)
 		ctxt . buttons[i] = MCValueRetain(p_buttons[i]);
@@ -172,6 +173,7 @@ int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button
 	
     for (uindex_t i = 0; i < p_button_count; i++)
 		MCValueRelease(ctxt . buttons[i]);
+    /* UNCHECKED */ MCMemoryDeallocate(ctxt . buttons);
     MCValueRelease(ctxt . title);
     MCValueRelease(ctxt . message);
 	return ctxt . result;

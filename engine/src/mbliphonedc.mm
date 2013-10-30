@@ -761,7 +761,11 @@ static void do_iphone_font_create(void *p_env)
     if (t_base_font != nil)
         sprintf(t_base_name, "%s", [[t_base_font fontName] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
     else
-        /* UNCHECKED */ MCStringConvertToCString(*p_name, (char*&)t_base_name);
+    {
+        MCAutoPointer<char> t_name;
+        /* UNCHECKED */ MCStringConvertToCString(*p_name, &t_name);
+        strcpy(t_base_name, *t_name);
+    }
     
 	if (p_bold && p_italic)
 	{
