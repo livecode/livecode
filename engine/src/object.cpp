@@ -2082,21 +2082,19 @@ Exec_stat MCObject::names(Properties which, MCExecPoint &ep, uint4 parid)
 			ep.appendmcstring(ep2.getsvalue());
 		}
 		break;
-    case P_NAME:
-    case P_ABBREV_NAME:
-        if (isunnamed())
-            // AL-2013-07-29: [[ Bug 10981 ]] Allow the empty name for objects.
-            ep.setstringf("%s \"\"", itypestring);
-        else
-            ep.setstringf("%s \"%s\"", itypestring, getname_cstring());
-        break;
-    case P_SHORT_NAME:
-        if (isunnamed())
-            // AL-2013-07-29: [[ Bug 10981 ]] Allow the empty name for objects.
-            ep . clear();
-        else
-            ep.setnameref_unsafe(getname());
-        break;
+	case P_NAME:
+	case P_ABBREV_NAME:
+		if (isunnamed())
+			stat = getprop(parid, P_ABBREV_ID, ep, False);
+		else
+			ep.setstringf("%s \"%s\"", itypestring, getname_cstring());
+		break;
+	case P_SHORT_NAME:
+		if (isunnamed())
+			stat = names(P_ABBREV_ID, ep, parid);
+		else
+			ep.setnameref_unsafe(getname());
+		break;
 	case P_LONG_NAME:
 		// MW-2013-01-15: [[ Bug 2629 ]] If this control is unnamed, use the abbrev id form
 		//   but *only* for this control (continue with names the rest of the way).
