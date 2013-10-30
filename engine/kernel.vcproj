@@ -359,6 +359,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\image_rep_densitymapped.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\image_rep_encoded.cpp"
 				>
 			</File>
