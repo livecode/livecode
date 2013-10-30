@@ -2831,8 +2831,6 @@ extern MCExecMethodInfo *kMCEngineExecStartUsingStackMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecStartUsingStackByNameMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecStopUsingStackMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecStopUsingStackByNameMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecStartUsingFontMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecStopUsingFontMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecDispatchMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecSendMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecSendInTimeMethodInfo;
@@ -3019,10 +3017,6 @@ void MCEngineSetRecursionLimit(MCExecContext& ctxt, uinteger_t p_value);
 
 void MCEngineGetAddress(MCExecContext& ctxt, MCStringRef &r_value);
 void MCEngineGetStacksInUse(MCExecContext& ctxt, MCStringRef &r_value);
-
-void MCEngineGetFontfilesInUse(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_list);
-void MCEngineExecStartUsingFont(MCExecContext& ctxt, MCStringRef p_path, bool p_is_globally);
-void MCEngineExecStopUsingFont(MCExecContext& ctxt, MCStringRef p_path);
 
 void MCEngineMarkVariable(MCExecContext& ctxt, MCVarref *p_variable, MCMarkedText& r_mark);
 
@@ -3347,11 +3341,18 @@ extern MCExecMethodInfo *kMCTextEvalFontNamesMethodInfo;
 extern MCExecMethodInfo *kMCTextEvalFontLanguageMethodInfo;
 extern MCExecMethodInfo *kMCTextEvalFontSizesMethodInfo;
 extern MCExecMethodInfo *kMCTextEvalFontStylesMethodInfo;
+extern MCExecMethodInfo *kMCTextEvalMeasureTextMethodInfo;
+extern MCExecMethodInfo *kMCTextExecStartUsingFontMethodInfo;
+extern MCExecMethodInfo *kMCTextExecStopUsingFontMethodInfo;
 
 void MCTextEvalFontNames(MCExecContext& ctxt, MCStringRef p_type, MCStringRef& r_names);
 void MCTextEvalFontLanguage(MCExecContext& ctxt, MCStringRef p_font, MCNameRef& r_lang);
 void MCTextEvalFontSizes(MCExecContext& ctxt, MCStringRef p_font, MCStringRef& r_sizes);
 void MCTextEvalFontStyles(MCExecContext& ctxt, MCStringRef p_font, integer_t p_size, MCStringRef& r_styles);
+void MCTextEvalMeasureText(MCExecContext& ctxt, MCObject *p_obj, MCStringRef p_text, MCStringRef p_mode, bool p_unicode, MCStringRef& r_result);
+void MCTextGetFontfilesInUse(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_list);
+void MCTextExecStartUsingFont(MCExecContext& ctxt, MCStringRef p_path, bool p_is_globally);
+void MCTextExecStopUsingFont(MCExecContext& ctxt, MCStringRef p_path);
 
 ///////////
 

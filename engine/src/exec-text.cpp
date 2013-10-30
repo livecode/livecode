@@ -27,6 +27,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "flst.h"
 #include "uidc.h"
 #include "util.h"
+#include "font.h"
+#include "osspec.h"
 
 #include "exec.h"
 
@@ -36,6 +38,9 @@ MC_EXEC_DEFINE_EVAL_METHOD(Text, FontNames, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Text, FontLanguage, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Text, FontSizes, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Text, FontStyles, 3)
+
+MC_EXEC_DEFINE_EXEC_METHOD(Text, StartUsingFont, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Text, StopUsingFont, 1)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -101,6 +106,54 @@ void MCTextEvalFontStyles(MCExecContext& ctxt, MCStringRef p_font, integer_t p_s
 		return;
 
 	ctxt . Throw();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCTextEvalMeasureText(MCExecContext& ctxt, MCObject *p_obj, MCStringRef p_text, MCStringRef p_mode, bool p_unicode, MCStringRef& r_result)
+{
+    MCRectangle t_bounds = p_obj -> measuretext(p_text, p_unicode);
+    
+    bool t_success;
+    t_success = false;
+    
+    if (p_mode == nil)
+        t_success = MCStringFormat(r_result, "%d", t_bounds . width);
+    else if (MCStringIsEqualTo(p_mode, MCSTR("size"), kMCStringOptionCompareCaseless))
+        t_success = MCStringFormat(r_result, "%d, %d", t_bounds . width, t_bounds . height);
+    else if (MCStringIsEqualTo(p_mode, MCSTR("bounds"), kMCStringOptionCompareCaseless))
+        t_success = MCStringFormat(r_result, "%d, %d, %d, %d", t_bounds . x, t_bounds . y, t_bounds . x + t_bounds . width, t_bounds . y + t_bounds . height);
+
+    if (t_success)
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCTextGetFontfilesInUse(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_list)
+{
+    MCFontListLoaded(r_count, r_list);
+}
+
+void MCTextExecStartUsingFont(MCExecContext& ctxt, MCStringRef p_path, bool p_is_globally)
+{
+    // MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCFontLoad
+    MCAutoStringRef t_resolved_path;
+    /* UNCHECKED */ MCS_resolvepath(p_path, &t_resolved_path);
+    if (!MCFontLoad(*t_resolved_path , p_is_globally))
+        ctxt . SetTheResultToStaticCString("can't load font file");
+    else
+        ctxt . SetTheResultToEmpty();
+}
+void MCTextExecStopUsingFont(MCExecContext& ctxt, MCStringRef p_path)
+{
+    // MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCFontUnload
+    MCAutoStringRef t_resolved_path;
+    /* UNCHECKED */ MCS_resolvepath(p_path, &t_resolved_path);
+    if (!MCFontUnload(*t_resolved_path))
+        ctxt . SetTheResultToStaticCString("can't unload font file");
+    else
+        ctxt . SetTheResultToEmpty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -10913,4 +10913,43 @@ Exec_stat MCMeasureText::eval(MCExecPoint &ep)
     ep.setuint(t_bounds . width);
     return ES_NORMAL;
 #endif /* MCMeasureText */ 
+    
+    MCObject *t_object_ptr;
+	uint4 parid;
+	if (m_object->getobj(ep, t_object_ptr, parid, True) != ES_NORMAL)
+	{
+		MCeerror->add(EE_MEASURE_TEXT_NOOBJECT, line, pos);
+		return ES_ERROR;
+	}
+    
+    MCAutoStringRef t_text;
+    if (m_text -> eval(ep) != ES_NORMAL)
+    {
+        MCeerror -> add(EE_CHUNK_BADTEXT, line, pos);
+        return ES_ERROR;
+    }
+    /* UNCHECKED */ ep . copyasstringref(&t_text);
+    
+    MCAutoStringRef t_result;
+    MCAutoStringRef t_mode;
+    if (m_mode)
+    {
+        if (m_mode -> eval(ep) != ES_NORMAL)
+        {
+            MCeerror -> add(EE_CHUNK_BADTEXT, line, pos);
+            return ES_ERROR;
+        }
+        /* UNCHECKED */ ep . copyasstringref(&t_mode);
+    }
+    
+    MCExecContext ctxt(ep);
+    MCTextEvalMeasureText(ctxt, t_object_ptr, *t_text, *t_mode, m_is_unicode, &t_result);
+
+    if (!ctxt . HasError())
+    {
+        ep . setvalueref(*t_result);
+        return ES_NORMAL;
+    }
+	
+	return ctxt . Catch(line, pos);
 }

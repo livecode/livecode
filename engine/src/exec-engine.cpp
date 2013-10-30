@@ -45,7 +45,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "securemode.h"
 #include "dispatch.h"
 
-#include "font.h"
 #include "uuid.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -100,8 +99,6 @@ MC_EXEC_DEFINE_EXEC_METHOD(Engine, StartUsingStack, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, StartUsingStackByName, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, StopUsingStack, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, StopUsingStackByName, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, StartUsingFont, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, StopUsingFont, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, Dispatch, 4)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, Send, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, SendInTime, 4)
@@ -1560,34 +1557,6 @@ void MCEngineGetStacksInUse(MCExecContext& ctxt, MCStringRef &r_value)
 		return;
 
 	ctxt . Throw();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void MCEngineGetFontfilesInUse(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_list)
-{
-    MCFontListLoaded(r_count, r_list);
-}
-
-void MCEngineExecStartUsingFont(MCExecContext& ctxt, MCStringRef p_path, bool p_is_globally)
-{
-    // MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCFontLoad
-    MCAutoStringRef t_resolved_path;
-    /* UNCHECKED */ MCS_resolvepath(p_path, &t_resolved_path);
-    if (!MCFontLoad(*t_resolved_path , p_is_globally))
-       ctxt . SetTheResultToStaticCString("can't load font file");
-    else
-        ctxt . SetTheResultToEmpty();
-}
-void MCEngineExecStopUsingFont(MCExecContext& ctxt, MCStringRef p_path)
-{
-    // MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCFontUnload
-    MCAutoStringRef t_resolved_path;
-    /* UNCHECKED */ MCS_resolvepath(p_path, &t_resolved_path);
-    if (!MCFontUnload(*t_resolved_path))
-        ctxt . SetTheResultToStaticCString("can't unload font file");
-    else
-        ctxt . SetTheResultToEmpty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

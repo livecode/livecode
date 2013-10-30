@@ -1873,7 +1873,7 @@ void MCGroup::setsbrects()
 		//   calculate the label height.
 		// MW-2013-08-22: [[ MeasureText ]] Update to use new object method.
 		MCRectangle t_font_metrics;
-		t_font_metrics = measuretext(MCnullmcstring, false);
+		t_font_metrics = measuretext(kMCEmptyString, false);
 		
 		int32_t fheight;
 		fheight = t_font_metrics . height;
@@ -2511,7 +2511,7 @@ MCRectangle MCGroup::getgrect()
 		// MW-2013-08-23: [[ MeasureText ]] Update to use measuretext() method for
 		//   better encapsulation.
 		MCRectangle t_font_metrics;
-		t_font_metrics = measuretext(MCnullmcstring, false);
+		t_font_metrics = measuretext(kMCEmptyString, false);
 		
 		int32_t fascent;
 		fascent = -t_font_metrics . y;
@@ -2591,7 +2591,7 @@ bool MCGroup::computeminrect(Boolean scrolling)
 			//   calculate the label height.
 			// MW-2013-08-22: [[ MeasureText ]] Update to use new object method.
 			MCRectangle t_font_metrics;
-			t_font_metrics = measuretext(MCnullmcstring, false);
+			t_font_metrics = measuretext(kMCEmptyString, false);
 			
 			int32_t fheight;
 			fheight = t_font_metrics . height;

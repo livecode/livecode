@@ -3130,7 +3130,7 @@ Exec_stat MCStart::exec(MCExecPoint &ep)
 			}
             /* UNCHECKED */ ep . copyasstringref(&t_font);
 
-            MCEngineExecStartUsingFont(ctxt, *t_font, is_globally);
+            MCTextExecStartUsingFont(ctxt, *t_font, is_globally);
         }
 		else if (target != NULL)
 		{
@@ -3205,7 +3205,7 @@ void MCStart::compile(MCSyntaxFactoryRef ctxt)
         {
             font -> compile(ctxt);
             MCSyntaxFactoryEvalConstantBool(ctxt, is_globally);
-            MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecStartUsingFontMethodInfo);
+            MCSyntaxFactoryExecMethod(ctxt, kMCTextExecStartUsingFontMethodInfo);
         }
 		else if (target != nil)
 		{
@@ -3510,7 +3510,7 @@ Exec_stat MCStop::exec(MCExecPoint &ep)
 					return ES_ERROR;
 				}
                 /* UNCHECKED */ ep . copyasstringref(&t_font);
-                MCEngineExecStopUsingFont(ctxt, *t_font);
+                MCTextExecStopUsingFont(ctxt, *t_font);
             }
 
 			if (target != NULL)
@@ -3566,12 +3566,7 @@ void MCStop::compile(MCSyntaxFactoryRef ctxt)
 	switch (mode)
 	{
 	case SC_EDITING:
-        if (font != nil)
-        {
-            font -> compile(ctxt);
-            MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecStopUsingFontMethodInfo);
-        }
-		else if (target != nil)
+        if (target != nil)
 		{
 			target -> compile_object_ptr(ctxt);
 
@@ -3602,9 +3597,14 @@ void MCStop::compile(MCSyntaxFactoryRef ctxt)
 		MCSyntaxFactoryExecMethod(ctxt, kMCMultimediaExecStopRecordingMethodInfo);
 		break;
 
-	case SC_USING:
-		if (target != nil)
-		{
+    case SC_USING:
+        if (font != nil)
+        {
+            font -> compile(ctxt);
+            MCSyntaxFactoryExecMethod(ctxt, kMCTextExecStopUsingFontMethodInfo);
+        }
+        else if (target != nil)
+        {
 			target -> compile_object_ptr(ctxt);
 
 			MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecStopUsingStackMethodInfo);

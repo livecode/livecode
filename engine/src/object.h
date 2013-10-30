@@ -772,7 +772,7 @@ public:
 		return m_in_id_cache;
 	}
     
-    MCRectangle measuretext(const MCString& p_text, bool p_is_unicode);
+    MCRectangle measuretext(MCStringRef p_text, bool p_is_unicode);
     
 	////////// PROPERTY SUPPORT METHODS
 
