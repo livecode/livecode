@@ -290,7 +290,7 @@ struct font_measure_text_context
 static void MCFontMeasureTextCallback(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, font_measure_text_context *ctxt)
 {
     if (p_length == 0 || p_text == NULL)
-		return 0;
+		return;
 	
     MCGFont t_font;
 	t_font = MCFontStructToMCGFont(p_font->fontstruct);
