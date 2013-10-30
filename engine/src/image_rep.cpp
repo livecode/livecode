@@ -136,7 +136,7 @@ bool MCLoadableImageRep::EnsureImageFrames(bool p_premultiplied)
 	return true;
 }
 
-bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, bool p_premultiplied, MCImageFrame *&r_frame)
+bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame)
 {
 	if (!EnsureImageFrames(p_premultiplied))
 		return false;
@@ -313,7 +313,26 @@ void MCCachedImageRep::MoveRepToHead(MCCachedImageRep *p_rep)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//stand-in implementation which just returns a new image rep
+bool MCImageRepCreateReferencedWithSearchKey(const char *p_filename, const char *p_searchkey, MCImageRep *&r_rep)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCReferencedImageRep *t_rep;
+	t_rep = nil;
+	
+	if (t_success)
+		t_success = nil != (t_rep = new MCReferencedImageRep(p_filename, p_searchkey));
+	
+	if (t_success)
+	{
+		MCCachedImageRep::AddRep(t_rep);
+		r_rep = t_rep->Retain();
+	}
+	
+	return t_success;
+}
+
 bool MCImageRepGetReferenced(const char *p_filename, MCImageRep *&r_rep)
 {
 	bool t_success = true;
@@ -327,17 +346,10 @@ bool MCImageRepGetReferenced(const char *p_filename, MCImageRep *&r_rep)
 		return true;
 	}
 	
-	t_rep = new MCReferencedImageRep(p_filename);
-	
-	t_success = t_rep != nil;
-	if (t_success)
-	{
-		MCCachedImageRep::AddRep(t_rep);
-		r_rep = t_rep->Retain();
-	}
-	
-	return t_success;
+	return MCImageRepCreateReferencedWithSearchKey(p_filename, p_filename, r_rep);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 bool MCImageRepGetResident(void *p_data, uindex_t p_size, MCImageRep *&r_rep)
 {

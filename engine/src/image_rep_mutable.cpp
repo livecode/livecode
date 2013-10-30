@@ -98,7 +98,7 @@ uint2 MCMutableImageRep::polypoints;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCMutableImageRep::LockImageFrame(uindex_t p_frame, bool p_premultiplied, MCImageFrame *&r_frame)
+bool MCMutableImageRep::LockImageFrame(uindex_t p_frame, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame)
 {
 	if (p_frame > 0)
 		return false;
@@ -146,6 +146,11 @@ bool MCMutableImageRep::GetGeometry(uindex_t &r_width, uindex_t &r_height)
 	return true;
 }
 
+uint32_t MCMutableImageRep::GetDataCompression()
+{
+	return F_RLE;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCMutableImageRep::MCMutableImageRep(MCImage *p_owner, MCImageBitmap *p_bitmap)
@@ -164,6 +169,7 @@ MCMutableImageRep::MCMutableImageRep(MCImage *p_owner, MCImageBitmap *p_bitmap)
 
 	m_frame.image = nil;
 	m_frame.duration = 0;
+	m_frame.density = 1.0;
 }
 
 MCMutableImageRep::~MCMutableImageRep()

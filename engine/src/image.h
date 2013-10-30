@@ -126,18 +126,6 @@ bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCSharedString *&r_data
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// IM-2013-07-30: [[ ResIndependence ]] support for retrieving the density-mapped file list
-struct MCImageScaledFile
-{
-	char *filename;
-	MCGFloat scale;
-};
-
-bool MCImageGetScaledFiles(const char *p_filename, MCStack *p_stack, MCImageScaledFile *&r_list, uint32_t &r_count);
-void MCImageFreeScaledFileList(MCImageScaledFile *p_list, uint32_t p_count);
-
-////////////////////////////////////////////////////////////////////////////////
-
 #if defined(TARGET_PLATFORM_WINDOWS)
 bool MCImageBitmapToDIB(MCImageBitmap *p_bitmap, MCWinSysHandle &r_dib);
 bool MCImageBitmapToV5DIB(MCImageBitmap *p_bitmap, MCWinSysHandle &r_dib);
@@ -147,7 +135,13 @@ bool MCImageBitmapToEnhancedMetafile(MCImageBitmap *p_bitmap, MCWinSysEnhMetafil
 bool MCImageBitmapToPICT(MCImageBitmap *p_bitmap, MCMacSysPictHandle &r_pict);
 #endif
 
+////////////////////////////////////////////////////////////////////////////////
+
 #include "image_rep.h"
+
+// IM-2013-10-30: [[ FullscreenMode ]] Factor out image rep creation & preparation
+bool MCImageGetFileRepForStackContext(const char *p_filename, MCStack *p_stack, MCImageRep *&r_rep);
+void MCImagePrepareRepForDisplayAtDensity(MCImageRep *p_rep, MCGFloat p_density);
 
 class MCMutableImageRep : public MCImageRep
 {
@@ -156,11 +150,13 @@ public:
 	~MCMutableImageRep();
 
 	// Image Rep interface
-	virtual MCImageRepType GetType() { return kMCImageRepMutable; }
-	virtual uindex_t GetFrameCount();
-	virtual bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCImageFrame *&r_frame);
-	virtual void UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame);
-	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
+	MCImageRepType GetType() { return kMCImageRepMutable; }
+	uindex_t GetFrameCount();
+	bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame);
+	void UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame);
+	bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
+	
+	uint32_t GetDataCompression();
 
 	// implementation
 	bool copy_selection(MCImageBitmap *&r_bitmap);
@@ -299,8 +295,6 @@ class MCImage : public MCControl
 
 	bool m_has_transform;
 	MCGAffineTransform m_transform;
-	// IM-2013-07-19: [[ ResIndependence ]] added scale factor for hi-res images
-	MCGFloat m_scale_factor;
 
 	MCImageNeed *m_needs;
 	
@@ -434,10 +428,10 @@ public:
 	bool getsourcegeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight);
 	void getgeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight);
 
-	MCGFloat getscalefactor(void)
-	{
-		return m_scale_factor;
-	}
+	MCGFloat getscalefactor(void);
+	
+	// IM-2013-10-30: [[ FullscreenMode ]] Returns the stack device scale or 1.0 if image object not attached
+	MCGFloat getdevicescale(void);
 	
 	void addneed(MCObject *p_object);
 

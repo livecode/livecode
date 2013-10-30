@@ -2611,6 +2611,16 @@ MCGAffineTransform MCStack::getroottransform(void) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCGFloat MCStack::getdevicescale(void) const
+{
+	MCGAffineTransform t_transform;
+	t_transform = getdevicetransform();
+	
+	return MCMax(fabsf(t_transform.a), fabsf(t_transform.d));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // IM-2013-10-08: [[ FullscreenMode ]] Ensure rect of resizable stacks is within min/max width & height
 MCRectangle MCStack::constrainstackrect(const MCRectangle &p_rect)
 {

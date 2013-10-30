@@ -26,8 +26,6 @@ typedef enum
 	kMCImageRepResident,
 	kMCImageRepVector,
 	kMCImageRepCompressed,
-	
-	kMCImageRepTransformed,
 } MCImageRepType;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,11 +38,15 @@ public:
 	virtual ~MCImageRep();
 
 	virtual MCImageRepType GetType() = 0;
+	virtual uint32_t GetDataCompression() = 0;
+	
 	virtual uindex_t GetFrameCount() = 0;
-	virtual bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCImageFrame *&r_frame) = 0;
+	virtual bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame) = 0;
 	virtual void UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame) = 0;
 	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height) = 0;
 
+	virtual MCGFloat GetDensity() { return 1.0; };
+	
 	//////////
 
 	MCImageRep *Retain();
@@ -106,7 +108,7 @@ public:
 	virtual ~MCLoadableImageRep();
 
 	virtual uindex_t GetFrameCount();
-	virtual bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCImageFrame *&r_frame);
+	virtual bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame);
 	virtual void UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame);
 
 	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
@@ -170,7 +172,7 @@ protected:
 class MCReferencedImageRep : public MCEncodedImageRep
 {
 public:
-	MCReferencedImageRep(const char *p_filename);
+	MCReferencedImageRep(const char *p_filename, const char *p_searchkey);
 	~MCReferencedImageRep();
 
 	MCImageRepType GetType() { return kMCImageRepReferenced; }
@@ -179,7 +181,7 @@ public:
 
 	const char *GetSearchKey()
 	{
-		return m_file_name;
+		return m_search_key;
 	}
 
 	//////////
@@ -189,6 +191,7 @@ protected:
 	bool GetDataStream(IO_handle &r_stream);
 
 	char *m_file_name;
+	char *m_search_key;
 
 	// hold data from remote image
 	void *m_url_data;
@@ -234,6 +237,7 @@ public:
 	~MCVectorImageRep();
 
 	MCImageRepType GetType() { return kMCImageRepVector; }
+	uint32_t GetDataCompression();
 
 	uindex_t GetFrameCount() { return 1; }
 
@@ -265,6 +269,7 @@ public:
 	~MCCompressedImageRep();
 
 	MCImageRepType GetType() { return kMCImageRepCompressed; }
+	uint32_t GetDataCompression();
 
 	uindex_t GetFrameCount() { return 1; }
 
@@ -285,11 +290,63 @@ protected:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+// Image representation that can return different images for specific density values
+
+class MCDensityMappedImageRep : public MCCachedImageRep
+{
+public:
+	MCDensityMappedImageRep(const char *p_filename);
+	~MCDensityMappedImageRep();
+	
+	MCImageRepType GetType() { return kMCImageRepReferenced; }
+	uint32_t GetDataCompression();
+	
+	uindex_t GetFrameCount();
+	bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame);
+	void UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame);
+	bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
+	
+	MCGFloat GetDensity();
+	
+	//////////
+
+	const char *GetSearchKey() { return m_filename; }
+	
+	uint32_t GetFrameByteCount() { return 0; }
+	void ReleaseFrames() {};
+	
+	//////////
+	
+	bool AddImageSourceWithDensity(MCReferencedImageRep *p_source, MCGFloat p_density);
+	
+	//////////
+	
+protected:
+	
+	bool GetBestMatch(MCGFloat p_density, uindex_t &r_match);
+	
+	//////////
+	
+	MCReferencedImageRep **m_sources;
+	MCGFloat *m_source_densities;
+	uindex_t m_source_count;
+	
+	MCGFloat m_last_density;
+	bool m_locked;
+	uint32_t m_locked_source;
+	
+	char *m_filename;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCImageRepCreateReferencedWithSearchKey(const char *p_filename, const char *p_searchkey, MCImageRep *&r_rep);
 
 bool MCImageRepGetReferenced(const char *p_filename, MCImageRep *&r_rep);
 bool MCImageRepGetResident(void *p_data, uindex_t p_size, MCImageRep *&r_rep);
 bool MCImageRepGetVector(void *p_data, uindex_t p_size, MCImageRep *&r_rep);
 bool MCImageRepGetCompressed(MCImageCompressedBitmap *p_compressed, MCImageRep *&r_rep);
+bool MCImageRepGetDensityMapped(const char *p_filename, MCImageRep *&r_rep);
 
 ////////////////////////////////////////////////////////////////////////////////
 

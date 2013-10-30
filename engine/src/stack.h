@@ -411,6 +411,10 @@ public:
 	// IM-2013-10-17: [[ FullscreenMode ]] Return the stack -> root window transform
 	MCGAffineTransform getroottransform(void) const;
 	
+	// IM-2013-10-30: [[ FullscreenMode ]] Return the maximum horizontal / vertical scaling
+	// factor of the stack -> device coordinate transform
+	MCGFloat getdevicescale(void) const;
+	
 	//////////
 	
 	// IM-2013-10-08: [[ FullscreenMode ]] Ensure rect of resizable stacks is within min/max width & height
@@ -473,6 +477,10 @@ public:
 	void extraclose(bool p_force);
 
 	char *resolve_filename(const char *filename);
+	
+	// IM-2013-10-30: [[ FullscreenMode ]] Resolve the given path relative to the location of the stack file
+	// - Will return a path regardless of whether or not the file exists.
+	bool resolve_relative_path(const char *p_path, char *&r_resolved);
 
 	void setopacity(uint1 p_value);
 	
