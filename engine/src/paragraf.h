@@ -304,7 +304,16 @@ public:
 	//   MCField::insertparagraph
 	//   
 	void join();
-	void split();
+    void split();
+    void split(findex_t p_position);
+
+    // Replace the text from p_start to p_finish
+    // with the paragraphs list provided.
+    // Called by:
+    //   MCField::SetRtfTextOfCharChunk
+    //   MCField::SetHtmlTextOfCharChunk
+    //   MCField::SetStyledTextOfCharChunk
+    void replacetextwithparagraphs(findex_t p_start, findex_t p_finish, MCParagraph *p_pglist);
 
 	// Delete the text from si to ei in the paragraph.
 	// Called by:

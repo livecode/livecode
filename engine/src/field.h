@@ -385,7 +385,7 @@ public:
 	//   the specified 'parid'.
 	MCParagraph *resolveparagraphs(uint4 parid);
 
-	void setparagraphs(MCParagraph *newpgptr, uint4 parid);
+    void setparagraphs(MCParagraph *newpgptr, uint4 parid);
 	Exec_stat settext(uint4 parid, MCStringRef p_text, Boolean p_formatted);
 	Exec_stat settext_oldstring(uint4 parid, const MCString &newtext, Boolean formatted, Boolean asunicode = False);
 	// MW-2012-02-23: [[ PutUnicode ]] Added parameter to specify whether 'is' is unicode or native.
@@ -478,6 +478,7 @@ public:
 	static bool macmatchfontname(const char *p_font_name, char p_derived_font_name[]);
 #endif
 
+    MCParagraph *rtftoparagraphs(MCStringRef p_data);
 	MCParagraph *rtftoparagraphs(const MCString &data);
 	MCParagraph *styledtexttoparagraphs(MCExecPoint& ep);
 	MCParagraph *styledtexttoparagraphs(MCArrayRef p_array);
@@ -536,6 +537,7 @@ public:
 
 	// MW-2012-03-07: [[ FieldImport ]] Conver the htmlText string to a list of paragraphs.
 	MCParagraph *importhtmltext(const MCString& p_data);
+    MCParagraph *importhtmltext(MCStringRef p_data);
 
 	// MW-2012-03-05: [[ FieldImport ]] Add a paragraph with the given styling to the end of the supplied
 	//   paragraphs list.

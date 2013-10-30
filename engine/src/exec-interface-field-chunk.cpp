@@ -587,7 +587,7 @@ void MCField::GetTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_
 
 void MCField::SetTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef value)
 {
-    // TODO Implement
+    settextindex(p_part_id, p_start, p_finish, value, false);
 }
 
 void MCField::GetUnicodeTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCDataRef& r_value)
@@ -602,7 +602,9 @@ void MCField::GetUnicodeTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id,
 
 void MCField::SetUnicodeTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCDataRef r_value)
 {
-    // TODO Implement
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringDecode(r_value, kMCStringEncodingUTF16, false, &t_string);
+    /* UNCHECKED */ settextindex(p_part_id, p_start, p_finish, *t_string, false);
 }
 
 void MCField::GetPlainTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef& r_value)
@@ -652,7 +654,11 @@ void MCField::GetRtfTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int
 
 void MCField::SetRtfTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef value)
 {
-    // TODO Implement
+    state |= CS_NO_FILE; // prevent interactions while downloading images
+
+    resolveparagraphs(p_part_id) -> replacetextwithparagraphs(p_start, p_finish, rtftoparagraphs(value));
+
+    state &= ~CS_NO_FILE;
 }
 
 void MCField::GetHtmlTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef& r_value)
@@ -673,7 +679,16 @@ void MCField::GetEffectiveHtmlTextOfCharChunk(MCExecContext& ctxt, uint32_t p_pa
 
 void MCField::SetHtmlTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef value)
 {
-    // TODO Implement
+    if (state & CS_NO_FILE)
+    {
+        MCresult->sets("can't set HTMLtext while images are loading");
+        return;
+    }
+    state |= CS_NO_FILE; // prevent interactions while downloading images
+    // MW-2012-03-08: [[ FieldImport ]] Use the new htmlText importer.
+    resolveparagraphs(p_part_id) -> replacetextwithparagraphs(p_start, p_finish, importhtmltext(value));
+
+    state &= ~CS_NO_FILE;
 }
 
 void MCField::GetStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCArrayRef& r_value)
@@ -694,7 +709,13 @@ void MCField::GetEffectiveStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_
 
 void MCField::SetStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCArrayRef value)
 {
-    // TODO Implement
+    state |= CS_NO_FILE; // prevent interactions while downloading images
+    MCParagraph *stpgptr = styledtexttoparagraphs(value);
+    if (stpgptr == nil)
+        resolveparagraphs(p_part_id) -> deletestring(p_start , p_finish);
+    else
+        resolveparagraphs(p_part_id) -> replacetextwithparagraphs(p_start, p_finish, stpgptr);
+    state &= ~CS_NO_FILE;
 }
 
 void MCField::GetFormattedStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCArrayRef& r_value)

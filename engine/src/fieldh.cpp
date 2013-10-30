@@ -1012,6 +1012,11 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 
 extern bool RTFRead(const char *p_rtf, uint4 p_length, MCTextConvertCallback p_writer, void *p_writer_context);
 
+MCParagraph *MCField::rtftoparagraphs(MCStringRef p_data)
+{
+    return rtftoparagraphs(MCString(MCStringGetCString(p_data), MCStringGetLength(p_data)));
+}
+
 MCParagraph *MCField::rtftoparagraphs(const MCString& p_data)
 {
 	MCParagraph *t_paragraphs;
