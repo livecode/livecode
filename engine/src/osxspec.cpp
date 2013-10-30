@@ -1020,12 +1020,16 @@ void MCS_shutdown()
 
 void MCS_seterrno(int value)
 {
+#ifdef /* MCS_seterrno_dsk_mac */ LEGACY_SYSTEM
 	errno = value;
+#endif /* MCS_seterrno_dsk_mac */
 }
 
 int MCS_geterrno()
 {
+#ifdef /* MCS_geterrno_dsk_mac */ LEGACY_SYSTEM    
 	return errno;
+#endif /* MCS_geterrno_dsk_mac */
 }
 
 void MCS_alarm(real8 seconds)
@@ -1046,11 +1050,13 @@ void MCS_startprocess_launch(char *name, char *docname, Open_mode mode);
 
 void MCS_startprocess(char *name, char *docname, Open_mode mode, Boolean elevated)
 {
+#ifdef /* MCS_startprocess_dsk_mac */ LEGACY_SYSTEM    
 	uint4 t_length = strlen(name);
 	if (t_length > 4 && strcmp(name + t_length - 4, ".app") == 0 || docname != NULL)
 	  MCS_startprocess_launch(name, docname, mode);
 	else
 	  MCS_startprocess_unix(name, NULL, mode, elevated);
+#endif /* MCS_startprocess_dsk_mac */
 }
 
 void MCS_startprocess_launch(char *name, char *docname, Open_mode mode)
@@ -1206,6 +1212,7 @@ void MCS_startprocess_launch(char *name, char *docname, Open_mode mode)
 
 static IO_handle MCS_dopen(int4 fd, const char *mode)
 {
+#ifdef /* MCS_dopen_dsk_mac */ LEGACY_SYSTEM    
 	IO_handle handle = NULL;
 	FILE *fptr = fdopen(fd, mode);
 	
@@ -1218,6 +1225,7 @@ static IO_handle MCS_dopen(int4 fd, const char *mode)
 		handle = new IO_header(fptr, 0, 0, NULL, NULL, 0, 0);
 	}	
 	return handle;
+#endif /* MCS_dopen_dsk_mac */
 }
 
 static void MCS_launch_set_result_from_lsstatus(void)
@@ -1272,6 +1280,7 @@ static void MCS_launch_set_result_from_lsstatus(void)
 
 void MCS_launch_document(char *p_document)
 {
+#ifdef /* MCS_launch_document_dsk_mac */ LEGACY_SYSTEM
 	int t_error = 0;
 	
 	FSRef t_document_ref;
@@ -1293,10 +1302,12 @@ void MCS_launch_document(char *p_document)
 	}
 	
 	delete p_document;
+#endif /* MCS_launch_document_dsk_mac */
 }
 
 void MCS_launch_url(char *p_document)
 {
+#ifdef /* MCS_launch_url_dsk_mac */ LEGACY_SYSTEM
 	bool t_success;
 	t_success = true;
 
@@ -1331,10 +1342,12 @@ void MCS_launch_url(char *p_document)
 		CFRelease(t_cf_document);
 
 	delete p_document;
+#endif /* MCS_launch_url_dsk_mac */
 }
 
 void MCS_checkprocesses()
 {
+#ifdef /* MCS_checkprocesses_dsk_mac */ LEGACY_SYSTEM    
 	uint2 i;
 	int wstat;
 	for (i = 0 ; i < MCnprocesses ; i++)
@@ -1346,11 +1359,12 @@ void MCS_checkprocesses()
 			MCprocesses[i].pid = 0;
 			MCprocesses[i].retcode = WEXITSTATUS(wstat);
 		}
-
+#endif /* MCS_checkprocesses_dsk_mac */
 }
 
 void MCS_closeprocess(uint2 index)
 {
+#ifdef /* MCS_closeprocess_dsk_mac */ LEGACY_SYSTEM    
 	if (MCprocesses[index].ihandle != NULL)
 	{
 		MCS_close(MCprocesses[index].ihandle);
@@ -1362,10 +1376,12 @@ void MCS_closeprocess(uint2 index)
 		MCprocesses[index].ohandle = NULL;
 	}
 	MCprocesses[index].mode = OM_NEITHER;
+#endif /* MCS_closeprocess_dsk_mac */
 }
 
 void MCS_kill(int4 pid, int4 sig)
 {
+#ifdef /* MCS_kill_dsk_mac */ LEGACY_SYSTEM    
 	if (pid == 0)
 		return;
 
@@ -1387,10 +1403,12 @@ void MCS_kill(int4 pid, int4 sig)
     }
 
 	kill(pid, sig);
+#endif /* MCS_kill_dsk_mac */
 }
 
 void MCS_killall()
 {
+#ifdef /* MCS_killall_dsk_mac */ LEGACY_SYSTEM    
 	struct sigaction action;
 	memset((char *)&action, 0, sizeof(action));
 	action.sa_handler = (void (*)(int))SIG_IGN;
@@ -1406,6 +1424,7 @@ void MCS_killall()
 			waitpid(MCprocesses[MCnprocesses].pid, NULL, 0);
 		}
 	}
+#endif /* MCS_killall_dsk_mac */
 }
 
 // MW-2005-02-22: Make this global scope for now to enable opensslsocket.cpp
@@ -1517,15 +1536,18 @@ static void getIOKitProp(io_object_t sObj, const char *propName,
 
 void MCS_getDNSservers(MCExecPoint &ep)
 {
+#ifdef /* MCS_getDNSservers_dsk_mac */ LEGACY_SYSTEM
 #define DNS_SCRIPT "repeat for each line l in url \"binfile:/etc/resolv.conf\";if word 1 of l is \"nameserver\" then put word 2 of l & cr after it; end repeat;delete last char of it; return it"
 	ep . clear();
 	MCresult->store(ep, False);
 	MCdefaultstackptr->domess(DNS_SCRIPT);
 	MCresult->fetch(ep);
+#endif /* MCS_getDNSservers_dsk_mac */
 }
 
 Boolean MCS_getdevices(MCExecPoint &ep)
 {
+#ifdef /* MCS_getdevices_dsk_mac */ LEGACY_SYSTEM    
 	ep.clear();
 
 
@@ -1559,6 +1581,7 @@ Boolean MCS_getdevices(MCExecPoint &ep)
 	}
 	
 	return True;
+#endif /* MCS_getdevices_dsk_mac */    
 }
 
 
@@ -1609,7 +1632,7 @@ IO_stat MCS_shellread(int fd, char *&buffer, uint4 &buffersize, uint4 &size)
 
 IO_stat MCS_runcmd(MCExecPoint &ep)
 {
-
+#ifdef /* MCS_runcmd_dsk_mac */ LEGACY_SYSTEM
 	IO_cleanprocesses();
 	int tochild[2];
 	int toparent[2];
@@ -1720,6 +1743,7 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 
 
 	return IO_NORMAL;
+#endif /* MCS_runcmd_dsk_mac */
 }
 
 
@@ -1781,6 +1805,7 @@ const char *MCS_getprocessor()
 
 real8 MCS_getfreediskspace(void)
 {
+#ifdef /* MCS_getfreediskspace_dsk_mac */ LEGACY_SYSTEM    
 	char t_defaultfolder[PATH_MAX + 1];
 	getcwd(t_defaultfolder, PATH_MAX);
 	
@@ -1804,7 +1829,8 @@ real8 MCS_getfreediskspace(void)
 	if (t_os_error == noErr)
 		t_free_space = (real8) t_volume_info . freeBytes;
 		
-	return t_free_space;	
+	return t_free_space;
+#endif /* MCS_getfreediskspace_dsk_mac */
 }
 
 const char *MCS_getsystemversion()
@@ -1868,6 +1894,7 @@ void MCS_list_registry(MCExecPoint& p_dest)
 
 Boolean MCS_poll(real8 delay, int fd)
 {
+#ifdef /* MCS_poll_dsk_mac */ LEGACY_SYSTEM    
 	Boolean handled = False;
 	fd_set rmaskfd, wmaskfd, emaskfd;
 	FD_ZERO(&rmaskfd);
@@ -1951,6 +1978,7 @@ Boolean MCS_poll(real8 delay, int fd)
 	}
 
 	return True;
+#endif /* MCS_poll_dsk_mac */
 }
 
 /*****************************************************************************
@@ -2823,11 +2851,13 @@ static OSErr getAddressFromDesc(AEAddressDesc targetDesc, char *address)
 
 void MCS_alternatelanguages(MCExecPoint &ep)
 {
+#ifdef /* MCS_alternatelanguages_dsk_mac */ LEGACY_SYSTEM
 	ep.clear();
 	getosacomponents();
 	uint2 i;
 	for (i = 0; i < osancomponents; i++)
 		ep.concatcstring(osacomponents[i].compname, EC_RETURN, i == 0);
+#endif /* MCS_alternatelanguages_dsk_mac */
 }
 
 static OSErr osacompile(MCString &s, ComponentInstance compinstance,
@@ -2909,6 +2939,7 @@ static void getosacomponents()
 
 void MCS_doalternatelanguage(MCString &s, const char *langname)
 {
+#ifdef /* MCS_doalternatelanguage_dsk_mac */ LEGACY_SYSTEM
 	getosacomponents();
 	OSAcomponent *posacomp = NULL;
 	uint2 i;
@@ -2961,6 +2992,7 @@ void MCS_doalternatelanguage(MCString &s, const char *langname)
 		MCresult->sets("execution error");
 	
 	OSADispose(posacomp->compinstance, scriptid);
+#endif /* MCS_doalternatelanguage_dsk_mac */
 }
 
 struct  LangID2Charset
@@ -3012,6 +3044,7 @@ void MCS_unicodetomultibyte(const char *s, uint4 len, char *d,
                             uint4 destbufferlength, uint4 &destlen,
                             uint1 charset)
 {
+#ifdef /* MCS_unicodetomultibyte_dsk_mac */ LEGACY_SYSTEM    
 	ScriptCode fscript = MCS_charsettolangid(charset);
 	//we cache unicode convertors for speed
 	if (!destbufferlength)
@@ -3058,12 +3091,14 @@ void MCS_unicodetomultibyte(const char *s, uint4 len, char *d,
 		s += processedbytes;
 		d += outlength;
 	}
+#endif /* MCS_unicodetomultibyte_dsk_mac */    
 }
 
 void MCS_multibytetounicode(const char *s, uint4 len, char *d,
                             uint4 destbufferlength,
                             uint4 &destlen, uint1 charset)
 {
+#ifdef /* MCS_multibytetounicode_dsk_mac */ LEGACY_SYSTEM    
 	// MW-2012-06-14: [[ Bug ]] If used for charset 0 before any other, causes a crash.
 	static int oldcharset = -1;
 	if (!destbufferlength)
@@ -3092,6 +3127,7 @@ void MCS_multibytetounicode(const char *s, uint4 len, char *d,
 	                         &outlength, (UniChar *)d);
 	destlen = outlength;
 	oldcharset = charset;
+#endif /* MCS_multibytetounicode_dsk_mac */
 }
 
 void MCS_nativetoutf16(const char *p_native, uint4 p_native_length, unsigned short *p_utf16, uint4& x_utf16_length)
@@ -3128,6 +3164,7 @@ Boolean MCS_imeisunicode()
 
 MCSysModuleHandle MCS_loadmodule(const char *p_filename)
 {
+#ifdef /* MCS_loadmodule_dsk_mac */ LEGACY_SYSTEM    
 	char *t_native_path;
 	t_native_path = path2utf(MCS_resolvepath(p_filename));
 	
@@ -3144,15 +3181,19 @@ MCSysModuleHandle MCS_loadmodule(const char *p_filename)
 	CFRelease(t_url);
 	
 	return (MCSysModuleHandle)t_result;
+#endif /* MCS_loadmodule_dsk_mac */
 }
 
 void MCS_unloadmodule(MCSysModuleHandle p_module)
 {
+#ifdef /* MCS_unloadmodule_dsk_mac */ LEGACY_SYSTEM    
 	CFRelease((CFBundleRef)p_module);
+#endif /* MCS_unloadmodule_dsk_mac */    
 }
 
 void *MCS_resolvemodulesymbol(MCSysModuleHandle p_module, const char *p_symbol)
 {
+#ifdef /* MCS_resolvemodulesymbol_dsk_mac */ LEGACY_SYSTEM    
 	CFStringRef t_cf_symbol;
 	t_cf_symbol = CFStringCreateWithCString(NULL, p_symbol, CFStringGetSystemEncoding());
 	if (t_cf_symbol == NULL)
@@ -3164,10 +3205,12 @@ void *MCS_resolvemodulesymbol(MCSysModuleHandle p_module, const char *p_symbol)
 	CFRelease(t_cf_symbol);
 	
 	return t_symbol_ptr;
+#endif /* MCS_resolvemodulesymbol_dsk_mac */
 }
 
 bool MCS_processtypeisforeground(void)
 {
+#ifdef /* MCS_processtypeisforeground_dsk_mac */ LEGACY_SYSTEM    
 	ProcessSerialNumber t_psn = { 0, kCurrentProcess };
 	
 	CFDictionaryRef t_info;
@@ -3185,6 +3228,7 @@ bool MCS_processtypeisforeground(void)
 	}
 	
 	return t_result;
+#endif /* MCS_processtypeisforeground_dsk_mac */
 }
 
 bool MCS_changeprocesstype(bool to_foreground)
@@ -3208,7 +3252,9 @@ bool MCS_changeprocesstype(bool to_foreground)
 
 bool MCS_isatty(int fd)
 {
+#ifdef /* MCS_isatty_dsk_mac */ LEGACY_SYSTEM    
 	return isatty(fd) != 0;
+#endif /* MCS_isatty_dsk_mac */
 }
 
 bool MCS_isnan(double v)
@@ -3218,7 +3264,9 @@ bool MCS_isnan(double v)
 
 uint32_t MCS_getsyserror(void)
 {
+#ifdef /* MCS_getsyserror_dsk_mac */ LEGACY_SYSTEM    
 	return errno;
+#endif /* MCS_getsyserror_dsk_mac */
 }
 
 bool MCS_mcisendstring(const char *command, char buffer[256])

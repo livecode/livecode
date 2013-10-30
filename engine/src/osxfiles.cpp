@@ -92,6 +92,7 @@ void MCS_setfiletype(const char *newpath);
 IO_handle MCS_open(const char *path, const char *mode,
 									 Boolean map, Boolean driver, uint4 offset)
 {
+#ifdef /* MCS_open_dsk_mac */ LEGACY_SYSTEM    
 	IO_handle handle = NULL;
 		//opening regular files
 		//set the file type and it's creator. These are 2 global variables
@@ -155,6 +156,7 @@ IO_handle MCS_open(const char *path, const char *mode,
 		}
 
 	return handle;
+#endif /* MCS_open_dsk_mac */    
 }
 
 IO_handle MCS_fakeopen(const MCString &data)
@@ -598,7 +600,9 @@ void MCS_setfiletype(const char *p_new_path)
 
 uint2 MCS_umask(uint2 mask)
 {
+#ifdef /* MCS_umask_dsk_mac */ LEGACY_SYSTEM    
 	return 0;
+#endif /* MCS_umask_dsk_mac */
 }
 
 int4 MCS_getumask()
@@ -615,7 +619,7 @@ IO_stat MCS_chmod(const char *path, uint2 mask)
 {
 #ifdef /* MCS_chmod_dsk_mac */ LEGACY_SYSTEM    
 	return IO_NORMAL;
-#endif /* MCS_chmod_dsk_mac */    
+#endif /* MCS_chmod_dsk_mac */
 }
 
 Boolean MCS_noperm(const char *path)
@@ -812,6 +816,7 @@ IO_stat MCS_trunc(IO_handle stream)
 
 const char *MCS_tmpnam()
 {
+#ifdef /* MCS_tmpnam_dsk_mac */ LEGACY_SYSTEM    
 	static char *s_last_path;
 	
 	free(s_last_path);
@@ -838,7 +843,8 @@ const char *MCS_tmpnam()
 		return "";
 	
 	return s_last_path;
-	}
+#endif /* MCS_tmpnam_dsk_mac */
+}
 	
 	
 /********************************************************************/
@@ -2154,6 +2160,7 @@ void MCS_getspecialfolder(MCExecPoint &p_context)
 #define CATALOG_MAX_ENTRIES 16
 void MCS_getentries(MCExecPoint& p_context, bool p_files, bool p_detailed)
 {
+#ifdef /* MCS_getentries_dsk_mac */ LEGACY_SYSTEM    
 	OSStatus t_os_status;
 
 	p_context . clear();
@@ -2301,17 +2308,26 @@ void MCS_getentries(MCExecPoint& p_context, bool p_files, bool p_detailed)
 	} while(t_oserror != errFSNoMoreItems);
 	
 	FSCloseIterator(t_catalog_iterator);
+#endif /* MCS_getentries_dsk_mac */    
 }
 
 void MCS_longfilepath(MCExecPoint &ep)
-{}
+{
+#ifdef /* MCS_longfilepath_dsk_mac */ LEGACY_SYSTEM
+
+#endif /* MCS_longfilepath_dsk_mac */    
+}
 
 void MCS_shortfilepath(MCExecPoint &ep)
-{}
+{
+#ifdef /* MCS_shortfilepath_dsk_mac */ LEGACY_SYSTEM
+
+#endif /* MCS_shortfilepath_dsk_mac */
+}
 
 char *MCS_resolvepath(const char *path)
 {
-
+#ifdef /* MCS_resolvepath_dsk_mac */ LEGACY_SYSTEM
 	if (path == NULL)
 		return MCS_getcurdir();
 	char *tildepath;
@@ -2384,6 +2400,7 @@ char *MCS_resolvepath(const char *path)
 		delete fullpath;
 	}
 	return newname;
+#endif /* MCS_resolvepath_dsk_mac */
 }
 
 Boolean MCS_rename(const char *oname, const char *nname)
@@ -2403,6 +2420,7 @@ Boolean MCS_rename(const char *oname, const char *nname)
 
 Boolean MCS_getdrives(MCExecPoint &ep)
 {
+#ifdef /* MCS_getdrives_dsk_mac */ LEGACY_SYSTEM    
 	OSErr t_err;
 	ItemCount t_index;
 	bool t_first;
@@ -2438,4 +2456,5 @@ Boolean MCS_getdrives(MCExecPoint &ep)
 	}
 	
 	return True;
+#endif /* MCS_getdrives_dsk_mac */
 }
