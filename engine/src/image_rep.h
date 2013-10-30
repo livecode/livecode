@@ -60,10 +60,50 @@ private:
 class MCCachedImageRep : public MCImageRep
 {
 public:
-	MCCachedImageRep();
 	virtual ~MCCachedImageRep();
 
-	virtual MCImageRepType GetType() = 0;
+	static void init();
+	static void AddRep(MCCachedImageRep *p_rep);
+	static void RemoveRep(MCCachedImageRep *p_rep);
+	static void MoveRepToHead(MCCachedImageRep *p_rep);
+
+	virtual const char *GetSearchKey() { return nil; };
+	
+	//////////
+	
+	virtual uint32_t GetFrameByteCount() = 0;
+	virtual void ReleaseFrames() = 0;
+	
+	//////////
+	
+	static bool FindWithKey(const char *p_key, MCCachedImageRep *&r_rep);
+	
+	static uint32_t GetCacheUsage() { return s_cache_size; }
+	static void SetCacheLimit(uint32_t p_limit)	{ s_cache_limit = p_limit; }
+	static uint32_t GetCacheLimit() { return s_cache_limit; }
+
+	static void FlushCache();
+	static void FlushCacheToLimit();
+	
+protected:
+	MCCachedImageRep *m_next;
+	MCCachedImageRep *m_prev;
+	
+	static MCCachedImageRep *s_head;
+	static MCCachedImageRep *s_tail;
+
+	//////////
+	
+	static uint32_t s_cache_size;
+	static uint32_t s_cache_limit;
+};
+
+// Base CachedImageRep class for loadable image sources
+class MCLoadableImageRep : public MCCachedImageRep
+{
+public:
+	MCLoadableImageRep();
+	virtual ~MCLoadableImageRep();
 
 	virtual uindex_t GetFrameCount();
 	virtual bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCImageFrame *&r_frame);
@@ -73,26 +113,9 @@ public:
 
 	//////////
 
-	uint32_t GetFrameByteCount();
-	void ReleaseFrames();
-
-	//////////
-
-	static void init();
-	static void AddRep(MCCachedImageRep *p_rep);
-	static void RemoveRep(MCCachedImageRep *p_rep);
-	static void MoveRepToHead(MCCachedImageRep *p_rep);
-
-	static bool FindReferencedWithFilename(const char *p_filename, MCCachedImageRep *&r_rep);
-
-	static void FlushCache();
-	static void FlushCacheToLimit();
+	virtual uint32_t GetFrameByteCount();
+	virtual void ReleaseFrames();
 	
-	static uint32_t GetCacheUsage() { return s_cache_size; }
-	static void SetCacheLimit(uint32_t p_limit)	{ s_cache_limit = p_limit; }
-	static uint32_t GetCacheLimit() { return s_cache_limit; }
-	
-
 protected:
 	virtual bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height) = 0;
 	virtual bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count) = 0;
@@ -110,25 +133,12 @@ private:
 
 	MCImageFrame *m_frames;
 	uindex_t m_frame_count;
-
-	//////////
-
-	MCCachedImageRep *m_next;
-	MCCachedImageRep *m_prev;
-
-	static MCCachedImageRep *s_head;
-	static MCCachedImageRep *s_tail;
-
-	//////////
-
-	static uint32_t s_cache_size;
-	static uint32_t s_cache_limit;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 // Encoded image representation
 
-class MCEncodedImageRep : public MCCachedImageRep
+class MCEncodedImageRep : public MCLoadableImageRep
 {
 public:
 	MCEncodedImageRep()
@@ -167,7 +177,7 @@ public:
 
 	//////////
 
-	const char *GetFilename()
+	const char *GetSearchKey()
 	{
 		return m_file_name;
 	}
@@ -217,7 +227,7 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCVectorImageRep : public MCCachedImageRep
+class MCVectorImageRep : public MCLoadableImageRep
 {
 public:
 	MCVectorImageRep(const void *p_data, uindex_t p_size);
@@ -248,7 +258,7 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCCompressedImageRep : public MCCachedImageRep
+class MCCompressedImageRep : public MCLoadableImageRep
 {
 public:
 	MCCompressedImageRep(MCImageCompressedBitmap *p_bitmap);
