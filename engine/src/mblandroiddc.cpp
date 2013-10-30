@@ -2001,6 +2001,20 @@ bool MCAndroidInitBuildInfo()
 	return t_success;
 }
 
+void MCAndroidFinalizeBuildInfo()
+{
+    if (s_build_info != NULL)
+    {
+        uint32_t t_count;
+        t_count = kMCBuildInfoKeyCount;
+        for (uint32_t i = 0; i < t_count; i++)
+        {
+            MCValueRelease(s_build_info[i]);
+        }
+        MCMemoryDeleteArray(s_build_info);
+    }        
+}
+
 bool MCAndroidSignatureMatch(const char *p_signature)
 {
     MCAutoStringRef t_signature;
