@@ -303,7 +303,6 @@ public:
     void GetImageSource(MCExecContext& ctxt, MCStringRef &r_image_source);
     void SetImageSource(MCExecContext& ctxt, MCStringRef p_image_source);
     void GetVisited(MCExecContext& ctxt, bool& r_value);
-    void GetEncoding(MCExecContext& ctxt, intenum_t r_encoding);
     void GetFlagged(MCExecContext& ctxt, bool &r_value);
     void SetFlagged(MCExecContext& ctxt, bool p_value);
 

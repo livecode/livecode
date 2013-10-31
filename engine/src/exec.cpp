@@ -1525,6 +1525,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
+        case kMCPropertyTypeMixedCustom:
         case kMCPropertyTypeCustom:
         {
             MCExecCustomTypeInfo *t_custom_info;

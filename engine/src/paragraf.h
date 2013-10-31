@@ -798,6 +798,10 @@ public:
 	// the end index of the link.
     Boolean extenddown(MCBlock *bptr, findex_t &ei);
 
+    //////////
+
+    void GetEncoding(MCExecContext &ctxt, intenum_t& r_encoding);
+
     void GetTextAlign(MCExecContext& ctxt, intenum_t*& r_value);
     void GetEffectiveTextAlign(MCExecContext& ctxt, intenum_t& r_value);
     void SetTextAlign(MCExecContext& ctxt, intenum_t *p_value);

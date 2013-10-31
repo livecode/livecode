@@ -529,22 +529,6 @@ static void setparagraphattr_bool(MCParagraphAttrs*& attrs, uint32_t p_flag, boo
 
 //////////
 
-void MCField::GetCharIndexOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t& r_value)
-{
-    MCParagraph *t_paragraph;
-    t_paragraph = resolveparagraphs(p_part_id);
-
-    findex_t t_line_index, t_char_index;
-    findex_t t_si = si;
-    findex_t t_ei = ei;
-    t_char_index = si;
-    MCParagraph *sptr = indextoparagraph(t_paragraph, t_si, t_ei, &t_line_index);
-
-    unresolvechars(p_part_id, t_char_index, t_char_index);
-
-    r_value = t_char_index + 1;
-}
-
 void MCField::GetTextAlignOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, intenum_t*& r_value)
 {
     GetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<intenum_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetTextAlign, r_mixed, r_value);
@@ -737,34 +721,170 @@ void MCField::GetEffectiveFormattedStyledTextOfCharChunk(MCExecContext& ctxt, ui
 
 //////////
 
+void MCField::GetCharIndexOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t& r_value)
+{
+    MCParagraph *t_paragraph;
+    t_paragraph = resolveparagraphs(p_part_id);
+
+    findex_t t_line_index, t_char_index;
+    findex_t t_si = si;
+    findex_t t_ei = ei;
+    t_char_index = si;
+    MCParagraph *sptr = indextoparagraph(t_paragraph, t_si, t_ei, &t_line_index);
+
+    unresolvechars(p_part_id, t_char_index, t_char_index);
+
+    r_value = t_char_index + 1;
+}
+
 void MCField::GetLineIndexOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t& r_value)
 {
-    // TODO Implement
+    findex_t t_value;
+    findex_t t_si = si;
+    findex_t t_ei = ei;
+    indextoparagraph(resolveparagraphs(p_part_id), t_si, t_ei, &t_value);
+    r_value = t_value;
 }
 
 void MCField::GetFormattedTopOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t& r_value)
 {
-    // TODO Implement
+    if (opened)
+    {
+        int2 x, y;
+        MCParagraph *pgptr = resolveparagraphs(p_part_id);
+        MCParagraph *sptr = indextoparagraph(pgptr, si, ei, nil);
+        sptr -> indextoloc(si, fixedheight, x, y);
+        r_value = getcontenty() + paragraphtoy(sptr) + y;
+    }
+    else
+        r_value = 0;
 }
 
 void MCField::GetFormattedLeftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t& r_value)
 {
-    // TODO Implement
+    // MW-2005-07-16: [[Bug 2938]] We must check to see if the field is open, if not we cannot do this.
+    if (opened)
+    {
+        MCParagraph *pgptr = resolveparagraphs(p_part_id);
+        MCParagraph *sptr = indextoparagraph(pgptr, si, ei, nil);
+        int2 minx, maxx;
+        findex_t t_si, t_ei; // needed to call MCParagraph::getextents
+
+        // MW-2008-07-08: [[ Bug 6331 ]] the formattedWidth can return gibberish for empty lines.
+        //   This is because minx/maxx are uninitialized and it seems that they have to be for
+        //   calls to getxextents() to make sense.
+        minx = MAXINT2;
+        maxx = MININT2;
+
+        do
+        {
+            sptr->getxextents(t_si, t_ei, minx, maxx);
+            sptr = sptr->next();
+        }
+        while (ei > 0 && sptr != pgptr);
+
+        // MW-2008-07-08: [[ Bug 6331 ]] the formattedWidth can return gibberish for empty lines.
+        //   If minx > maxx then just assume both are 0.
+        if (minx > maxx)
+            minx = maxx = 0;
+
+        r_value = getcontentx() + minx;
+    }
+    else
+        r_value = 0;
 }
 
 void MCField::GetFormattedWidthOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t& r_value)
 {
-    // TODO Implement
+    if (opened)
+    {
+        MCParagraph *pgptr = resolveparagraphs(p_part_id);
+        MCParagraph *sptr = indextoparagraph(pgptr, si, ei, nil);
+        int2 minx, maxx;
+
+        // MW-2008-07-08: [[ Bug 6331 ]] the formattedWidth can return gibberish for empty lines.
+        //   This is because minx/maxx are uninitialized and it seems that they have to be for
+        //   calls to getxextents() to make sense.
+        minx = MAXINT2;
+        maxx = MININT2;
+
+        do
+        {
+            sptr->getxextents(si, ei, minx, maxx);
+            sptr = sptr->next();
+        }
+        while (ei > 0 && sptr != pgptr);
+
+        // MW-2008-07-08: [[ Bug 6331 ]] the formattedWidth can return gibberish for empty lines.
+        //   If minx > maxx then just assume both are 0.
+        if (minx > maxx)
+            minx = maxx = 0;
+
+        r_value = maxx - minx;
+    }
+    else
+        r_value = 0;
 }
 
 void MCField::GetFormattedHeightOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t& r_value)
 {
-    // TODO Implement
+    // MW-2005-07-16: [[Bug 2938]] We must check to see if the field is open, if not we cannot do this.
+    if (opened)
+    {
+        int2 x, y;
+        MCParagraph *pgptr = resolveparagraphs(p_part_id);
+        MCParagraph *sptr = indextoparagraph(resolveparagraphs(p_part_id), si, ei, nil);
+        sptr->indextoloc(si, fixedheight, x, y);
+        int4 maxy = 0;
+        do
+        {
+            if (maxy != 0)
+                maxy += sptr -> prev() -> computebottommargin() + sptr -> computetopmargin();
+            maxy += sptr->getyextent(ei, fixedheight);
+            ei -= sptr->gettextlengthcr();
+            sptr = sptr->next();
+        }
+        while (ei > 0 && sptr != pgptr);
+
+        r_value = maxy - y;
+    }
+    else
+        r_value = 0;
 }
 
 void MCField::GetFormattedRectOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCRectangle& r_value)
 {
-    // TODO Implement
+    // MW-2005-07-16: [[Bug 2938]] We must check to see if the field is open, if not we cannot do this.
+    if (opened)
+    {
+        int2 x, y;
+        MCParagraph *pgptr = resolveparagraphs(p_part_id);
+        MCParagraph *sptr = indextoparagraph(resolveparagraphs(p_part_id), si, ei, nil);
+        sptr->indextoloc(si, fixedheight, x, y);
+        // MW-2012-01-25: [[ FieldMetrics ]] Compute the yoffset in card-coords.
+        int4 yoffset = getcontenty() + paragraphtoy(sptr);
+        int2 minx, maxx;
+        int4 maxy = y;
+        minx = INT16_MAX;
+        maxx = INT16_MIN;
+        do
+        {
+            // MW-2012-01-25: [[ FieldMetrics ]] Increment the y-extent by the height of the
+            //   paragraph up to ei.
+            maxy += sptr->getyextent(ei, fixedheight);
+            sptr->getxextents(si, ei, minx, maxx);
+            sptr = sptr->next();
+        }
+        while (ei > 0 && sptr != pgptr);
+
+        // MW-2012-01-25: [[ FieldMetrics ]] Make sure the rect we return is in card coords.
+        r_value . height = y - (maxy - y);
+        r_value . width = maxx - minx;
+        r_value . x = minx + getcontentx();
+        r_value . y = (maxy - y) + yoffset;
+    }
+    else
+        memset(&r_value, 0, sizeof(MCRectangle));
 }
 
 
@@ -826,9 +946,16 @@ void MCField::GetVisitedOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int
     GetCharPropOfCharChunk< PodFieldPropType<bool> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetVisited, false, false, t_mixed, r_value);
 }
 
-void MCField::GetEncodingOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, intenum_t& r_encoding)
+void MCField::GetEncodingOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, intenum_t &r_encoding)
 {
-    // TODO implement
+    intenum_t t_encoding;
+    bool t_mixed;
+    GetParagraphPropOfCharChunk< PodFieldPropType<intenum_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEncoding, t_mixed, t_encoding);
+
+    if (!t_mixed)
+        r_encoding = t_encoding;
+    else
+        r_encoding = 2;
 }
 
 void MCField::GetFlaggedOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& r_value)
@@ -843,12 +970,171 @@ void MCField::SetFlaggedOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int
 
 void MCField::GetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCInterfaceFlaggedRanges& r_value)
 {
-    // TODO Implement
+    integer_t t_index_offset;
+    t_index_offset = -countchars(p_part_id, 0, si);
+
+    MCParagraph *pgptr = resolveparagraphs(p_part_id);
+    MCParagraph *sptr = indextoparagraph(pgptr, si, ei, nil);
+
+    MCAutoArray<MCInterfaceFlaggedRange> t_ranges;
+
+    do
+    {
+        MCInterfaceFlaggedRanges t_paragraphRanges;
+        sptr -> getflaggedranges(p_part_id, si, ei, t_index_offset, t_paragraphRanges);
+
+        for (uindex_t i = 0; i < t_paragraphRanges . count; ++i)
+            t_ranges . Push(t_paragraphRanges . ranges[i]);
+
+        sptr = sptr -> next();
+    }
+    while (sptr -> gettextlengthcr() < ei);
+
+    t_ranges . Take(r_value . ranges, r_value . count);
 }
 
 void MCField::SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceFlaggedRanges& value)
 {
-    // TODO Implement
+    MCParagraph *pgptr = resolveparagraphs(p_part_id);
+    MCParagraph *sptr;
+
+    // ----------------------------
+    // Unflag the range [si;ei]
+    // ----------------------------
+    findex_t t_si = si;
+    findex_t t_ei = ei;
+    sptr = indextoparagraph(pgptr, t_si, t_ei, nil);
+    MCBlock *t_block = sptr -> getblocks();
+
+    // skip the blocks outside [si;ei]
+    while (t_si + t_block -> GetLength() < si)
+    {
+        t_si += t_block -> GetLength();
+        t_block = t_block -> next();
+    }
+
+    // block flagged and we're not at its exact beginning: must split it
+    // and skip the first part
+    if (t_block -> getflagged()
+            && t_si != si)
+    {
+        t_block -> split(si);
+        t_si += t_block -> GetLength();
+        t_block = t_block -> next();
+    }
+
+    // Unflag all the blocks within [si;ei[
+    while (t_si  + t_block -> GetLength() < ei)
+    {
+        t_block  -> SetFlagged(ctxt, false);
+        t_si += t_block -> GetLength();
+        t_block = t_block -> next();
+    }
+
+    // block flagged and we're not at its exact end: must split it
+    // and unflag the first part
+    if (t_block ->getflagged()
+            && t_si != ei)
+    {
+        t_block -> split(ei);
+        t_block -> SetFlagged(ctxt, false);
+    }
+
+    // ---------------------------------
+    // Flag the appropriate ranges
+    // ---------------------------------
+
+    // 'set the flaggedRanges of char 10 to 20 to "1,4"' affects char 10 to 14
+    integer_t t_range_offset = si;
+
+    // The position of the beginning of the current paragraph.
+    integer_t t_paragraph_offset = si;
+
+    // get the first paragraph within the bounds given and update the position in the text
+    sptr = indextoparagraph(pgptr, t_paragraph_offset, ei, nil);
+
+    // The index of the range currently considered
+    integer_t t_range_index;
+    t_range_index = 0;
+
+    // Contains the remaining range to flag in case a range
+    // covers more than one paragraph
+    MCInterfaceFlaggedRange t_next_range;
+    t_next_range = value . ranges[t_range_index];
+    t_next_range . start += t_range_offset;
+    t_next_range . end += t_range_offset;
+
+    // Loop while there is a range to flag and and we haven't gone further than ei
+    while (t_range_index < value . count
+           && t_next_range . start < ei
+           && t_paragraph_offset < ei)
+    {
+        // if the next range doesn't cover this paragraph, we skip the paragraph
+        if (t_next_range . start > t_paragraph_offset + sptr -> gettextlengthcr())
+        {
+            t_paragraph_offset += sptr -> gettextlengthcr();
+            sptr = sptr -> next();
+            continue;
+        }
+
+        MCBlock *bptr = sptr -> getblocks();
+
+        // t_block_offset keeps the position in the text
+        integer_t t_block_offset = t_paragraph_offset;
+
+        // while there is a range to flaf and we haven't gone further than ei
+        // and there are blocks to be checked
+        while (t_range_index < value . count
+               && t_block_offset < sptr -> gettextlengthcr()
+               && t_block_offset < ei)
+        {
+            // skip block if it's not covered by the next range
+            if (t_next_range . start > t_block_offset + bptr -> GetLength())
+            {
+                t_block_offset += bptr -> GetLength();
+                bptr = bptr -> next();
+                continue;
+            }
+
+            // if the range doesn't start at the beginning of the block
+            // we must split the block and skip the first part
+            if (t_next_range . start > t_block_offset)
+            {
+                bptr -> split(t_next_range . start);
+                t_block_offset += bptr -> GetLength();
+                bptr = bptr -> next();
+            }
+
+            // if the range doesn't cover the block up to its end
+            // we must split it
+            if (t_next_range . end < t_block_offset + bptr -> GetLength())
+                bptr -> split(t_next_range . end);
+
+            // Flag the block
+            bptr -> SetFlagged(ctxt, True);
+
+            // if the range went further than the block
+            // we must keep track of this and update the next range to be flagged
+            if (t_next_range . end > t_block_offset + bptr -> GetLength())
+                t_next_range . start = t_block_offset + bptr -> GetLength();
+            // otherwise we set the next range to the appropriate value
+            else if (t_range_index < value . count)
+            {
+                t_next_range = value . ranges[t_range_index++];
+                t_next_range . start += t_range_offset;
+                t_next_range . end += t_range_offset;
+            }
+
+            // update the position in the text
+            // and switch to the next block
+            t_block_offset += bptr -> GetLength();
+            bptr = bptr -> next();
+        }
+
+        // update the paragraph offset
+        t_paragraph_offset += sptr -> gettextlengthcr();
+    }
+
 }
 
 //////////
@@ -1269,6 +1555,14 @@ void MCField::SetTextShiftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, i
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCParagraph::GetEncoding(MCExecContext &ctxt, intenum_t &r_encoding)
+{
+    if (MCStringIsNative(m_text))
+        r_encoding = 0; // nativestring
+    else
+        r_encoding = 1; // unicode
+}
 
 void MCParagraph::GetTextAlign(MCExecContext& ctxt, intenum_t*& r_value)
 {
@@ -1928,8 +2222,6 @@ void MCBlock::GetVisited(MCExecContext& ctxt, bool& r_value)
 {
     r_value = getvisited() == True;
 }
-
-//void MCBlock::GetEncoding(MCExecContext& ctxt, intenum_t r_encoding)
 
 void MCBlock::GetFlagged(MCExecContext& ctxt, bool &r_value)
 {
