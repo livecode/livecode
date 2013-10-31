@@ -1084,29 +1084,57 @@ static void MCGContextRenderEffect(MCGContextRef self, const SkMask& p_mask, MCG
 	// TODO: Handle sub-pixel case!
 	t_blurred_mask . fBounds . offset(t_transformed_offset . width, t_transformed_offset . height);
 	
+	// Compute the intersection.
+	SkIRect t_inside;
+	bool t_overlap;
+	t_overlap = t_inside . intersect(p_mask . fBounds, t_blurred_mask . fBounds);
+	
+	// MW-2013-10-31: [[ Bug 11325 ]] An outer blur with no intersection is just a normal
+	//   blur.
+	if (!t_overlap && (p_attenuation == kMCGBlurTypeOuter))
+		p_attenuation = kMCGBlurTypeNormal;
+	
 	// Now process the mask according to the attenuation.
 	uint8_t *t_old_blurred_mask_fImage;
 	t_old_blurred_mask_fImage = t_blurred_mask . fImage;
 	switch(p_attenuation)
 	{
 		case kMCGBlurTypeNormal:
-			// Nothing to do.
-			break;
+		{
+			uint8_t *t_blur_ptr, *t_mask_ptr;
+			t_blur_ptr = t_blurred_mask . fImage;
+			
+			// MW-2013-10-31: [[ Bug 11325 ]] Attenuate the mask appropriately, including
+			//   applying the opacity.
+			for(int y = 0; y < t_blurred_mask . fBounds . height(); y++)
+			{
+				for(int x = 0; x < t_blurred_mask . fBounds . width(); x++)
+					t_blur_ptr[x] = SkAlphaMul(t_blur_ptr[x], SkAlpha255To256(p_color >> 24));
+				
+				t_blur_ptr += t_blurred_mask . fRowBytes;
+			}
+		}
+		break;
 			
 		case kMCGBlurTypeInner:
 		{
 			// We process the generated mask so that the mask consists only of pixels
 			// in the intersection of blur-mask and mask.
-			SkIRect t_inside;
-			if (t_inside . intersect(p_mask . fBounds, t_blurred_mask . fBounds))
+			if (t_overlap)
 			{
 				uint8_t *t_blur_ptr, *t_mask_ptr;
 				t_blur_ptr = t_blurred_mask . getAddr8(t_inside . x(), t_inside . y());
 				t_mask_ptr = p_mask . getAddr8(t_inside . x(), t_inside . y());
+				
+				// MW-2013-10-31: [[ Bug 11325 ]] Attenuate the mask appropriately, including
+				//   applying the opacity.
 				for(int y = 0; y < t_inside . height(); y++)
 				{
 					for(int x = 0; x < t_inside . width(); x++)
+					{
 						t_blur_ptr[x] = SkAlphaMul(t_blur_ptr[x], SkAlpha255To256(t_mask_ptr[x]));
+						t_blur_ptr[x] = SkAlphaMul(t_blur_ptr[x], SkAlpha255To256(p_color >> 24));
+					}
 					
 					t_blur_ptr += t_blurred_mask . fRowBytes;
 					t_mask_ptr += p_mask . fRowBytes;
@@ -1122,16 +1150,56 @@ static void MCGContextRenderEffect(MCGContextRef self, const SkMask& p_mask, MCG
 		{
 			// We process the generated mask so that the mask consists only of pixels
 			// in the intersection of not(blur-mask) and mask.
-			SkIRect t_inside;
-			if (t_inside . intersect(p_mask . fBounds, t_blurred_mask . fBounds))
+			SkMask t_tmp_mask;
+			t_tmp_mask . fFormat = p_mask . fFormat;
+			t_tmp_mask . fBounds = p_mask . fBounds;
+			t_tmp_mask . fRowBytes = p_mask . fRowBytes;
+			t_tmp_mask . fImage = SkMask::AllocImage(p_mask . computeImageSize());
+			
+			uint8_t *t_blur_ptr, *t_mask_ptr, *t_shape_ptr;
+			t_shape_ptr = p_mask . fImage;
+			t_shape_ptr -= p_mask . fBounds . left();
+			t_blur_ptr = t_tmp_mask . fImage;
+			t_blur_ptr -= t_tmp_mask . fBounds . left();
+			if (t_overlap)
 			{
-				SkMask t_tmp_mask;
-				t_tmp_mask . fFormat = p_mask . fFormat;
-				t_tmp_mask . fBounds = p_mask . fBounds;
-				t_tmp_mask . fRowBytes = p_mask . fRowBytes;
-				t_tmp_mask . fImage = SkMask::AllocImage(p_mask . computeImageSize());
-				memcpy(t_tmp_mask . fImage, p_mask . fImage, p_mask . computeImageSize());
+				t_mask_ptr = t_blurred_mask . getAddr8(t_inside . x(), t_inside . y());
+				t_mask_ptr -= t_inside . left();
+			}
+			
+			// MW-2013-10-31: [[ Bug 11325 ]] Attenuate the mask appropriately, including
+			//   applying the opacity.
+			for(int y = t_tmp_mask . fBounds . top(); y < t_tmp_mask . fBounds . bottom(); y++)
+			{
+				if (!t_overlap || y < t_inside . top() || y >= t_inside . bottom())
+				{
+					for(int x = t_tmp_mask . fBounds . left(); x < t_tmp_mask . fBounds . right(); x++)
+						t_blur_ptr[x] = SkAlphaMul(t_shape_ptr[x], SkAlpha255To256(p_color >> 24));
+				}
+				else
+				{
+					int x;
+					for(x = t_tmp_mask . fBounds . left(); x < t_inside . left(); x++)
+						t_blur_ptr[x] = SkAlphaMul(t_shape_ptr[x], SkAlpha255To256(p_color >> 24));
+					
+					for(x = t_inside . left(); x < t_inside . right(); x++)
+					{
+						t_blur_ptr[x] = SkAlphaMul(t_shape_ptr[x], SkAlpha255To256(255 - t_mask_ptr[x]));
+						t_blur_ptr[x] = SkAlphaMul(t_blur_ptr[x], SkAlpha255To256(p_color >> 24));
+					}
+					
+					for(x = t_inside . right(); x < t_tmp_mask . fBounds . right(); x++)
+						t_blur_ptr[x] = SkAlphaMul(t_shape_ptr[x], SkAlpha255To256(p_color >> 24));
+					
+					t_mask_ptr += t_blurred_mask . fRowBytes;
+				}
 				
+				t_blur_ptr += t_tmp_mask . fRowBytes;
+				t_shape_ptr += p_mask . fRowBytes;
+			}
+			
+			/*if (t_overlap)
+			{
 				uint8_t *t_blur_ptr, *t_tmp_mask_ptr;
 				t_blur_ptr = t_blurred_mask . getAddr8(t_inside . x(), t_inside . y());
 				t_tmp_mask_ptr = t_tmp_mask . getAddr8(t_inside . x(), t_inside . y());
@@ -1143,14 +1211,14 @@ static void MCGContextRenderEffect(MCGContextRef self, const SkMask& p_mask, MCG
 					t_blur_ptr += t_blurred_mask . fRowBytes;
 					t_tmp_mask_ptr += t_tmp_mask . fRowBytes;
 				}
-				
-				SkMask::FreeImage(t_blurred_mask . fImage);
-				
-				t_blurred_mask . fImage = t_tmp_mask . fImage;
-				t_blurred_mask . fBounds = t_tmp_mask . fBounds;
-				t_blurred_mask . fRowBytes = t_tmp_mask . fRowBytes;
-				t_old_blurred_mask_fImage = t_blurred_mask . fImage;
-			}
+			}*/
+			
+			SkMask::FreeImage(t_blurred_mask . fImage);
+			
+			t_blurred_mask . fImage = t_tmp_mask . fImage;
+			t_blurred_mask . fBounds = t_tmp_mask . fBounds;
+			t_blurred_mask . fRowBytes = t_tmp_mask . fRowBytes;
+			t_old_blurred_mask_fImage = t_blurred_mask . fImage;
 		}
 		break;
 			
@@ -1158,20 +1226,41 @@ static void MCGContextRenderEffect(MCGContextRef self, const SkMask& p_mask, MCG
 		{
 			// We process the generated mask so that the mask consists only of pixels
 			// in the intersection of blur-mask and not(mask).
-			SkIRect t_inside;
-			if (t_inside . intersect(p_mask . fBounds, t_blurred_mask . fBounds))
+			
+			uint8_t *t_blur_ptr, *t_mask_ptr;
+			t_blur_ptr = t_blurred_mask . fImage;
+			t_blur_ptr -= t_blurred_mask . fBounds . left();
+			t_mask_ptr = p_mask . getAddr8(t_inside . x(), t_inside . y());
+			t_mask_ptr -= t_inside . left();
+			
+			// MW-2013-10-31: [[ Bug 11325 ]] Attenuate the mask appropriately, including
+			//   applying the opacity.
+			for(int y = t_blurred_mask . fBounds . top(); y < t_blurred_mask . fBounds . bottom(); y++)
 			{
-				uint8_t *t_blur_ptr, *t_mask_ptr;
-				t_blur_ptr = t_blurred_mask . getAddr8(t_inside . x(), t_inside . y());
-				t_mask_ptr = p_mask . getAddr8(t_inside . x(), t_inside . y());
-				for(int y = 0; y < t_inside . height(); y++)
+				if (y < t_inside . top() || y >= t_inside . bottom())
 				{
-					for(int x = 0; x < t_inside . width(); x++)
-						t_blur_ptr[x] = SkAlphaMul(t_blur_ptr[x], SkAlpha255To256(255 - t_mask_ptr[x]));
+					for(int x = t_blurred_mask . fBounds . left(); x < t_blurred_mask . fBounds . right(); x++)
+						t_blur_ptr[x] = SkAlphaMul(t_blur_ptr[x], SkAlpha255To256(p_color >> 24));
+				}
+				else
+				{
+					int x;
+					for(x = t_blurred_mask . fBounds . left(); x < t_inside . left(); x++)
+						t_blur_ptr[x] = SkAlphaMul(t_blur_ptr[x], SkAlpha255To256(p_color >> 24));
 					
-					t_blur_ptr += t_blurred_mask . fRowBytes;
+					for(x = t_inside . left(); x < t_inside . right(); x++)
+					{
+						t_blur_ptr[x] = SkAlphaMul(t_blur_ptr[x], SkAlpha255To256(255 - t_mask_ptr[x]));
+						t_blur_ptr[x] = SkAlphaMul(t_blur_ptr[x], SkAlpha255To256(p_color >> 24));
+					}
+					
+					for(x = t_inside . right(); x < t_blurred_mask . fBounds . right(); x++)
+						t_blur_ptr[x] = SkAlphaMul(t_blur_ptr[x], SkAlpha255To256(p_color >> 24));
+					
 					t_mask_ptr += p_mask . fRowBytes;
 				}
+				
+				t_blur_ptr += t_blurred_mask . fRowBytes;
 			}
 		}
 		break;
@@ -1184,6 +1273,9 @@ static void MCGContextRenderEffect(MCGContextRef self, const SkMask& p_mask, MCG
 	SkColorShader t_color_shader;
 	MCGContextEffectInnerShader t_shader(&p_mask, &t_blurred_mask, &t_color_shader);
 #endif
+	
+	// MW-2013-10-31: [[ Bug 11325 ]] We fill the mask with a solid color.
+	p_color |= 0xff000000;
 	
 	// Configure the paint.
 	SkPaint t_paint;
@@ -1280,9 +1372,25 @@ static void MCGContextRenderEffects(MCGContextRef self, MCGContextLayerRef p_chi
 	
 	if (p_effects . has_color_overlay)
 	{
+		MCGColor t_color;
+		t_color = p_effects . color_overlay . color;
+		
+		// MW-2013-10-31: [[ Bug 11325 ]] Apply the opacity to the mask.
+		uint8_t *t_blur_ptr;
+		t_blur_ptr = t_child_mask . fImage;
+		for(int y = 0; y < t_child_mask . fBounds . height(); y++)
+		{
+			for(int x = 0; x < t_child_mask . fBounds . width(); x++)
+				t_blur_ptr[x] = SkAlphaMul(t_blur_ptr[x], SkAlpha255To256(t_color >> 24));
+			
+			t_blur_ptr += t_child_mask . fRowBytes;
+		}
+		
+		t_color |= 0xff000000;
+		
 		SkPaint t_paint;
 		t_paint . setStyle(SkPaint::kFill_Style);
-		t_paint . setColor(MCGColorToSkColor(p_effects . color_overlay . color));
+		t_paint . setColor(MCGColorToSkColor(t_color));
 		
 		SkXfermode *t_blend_mode;
 		t_blend_mode = MCGBlendModeToSkXfermode(p_effects . color_overlay . blend_mode);
