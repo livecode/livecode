@@ -819,6 +819,7 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 		t_radii = MCGSizeApplyAffineTransform(MCGSizeMake(p_effects . inner_shadow . size, p_effects . inner_shadow . size), t_device_transform);
 		t_offset = MCGSizeApplyAffineTransform(MCGSizeMake(p_effects . inner_shadow . x_offset, p_effects . inner_shadow . y_offset), t_device_transform);
 		
+		// MW-2013-10-31: [[ Bug 11359 ]] Offset by -t_offset, not t_offset.
 		t_layer_clip = MCGIRectangleUnion(
 							t_layer_clip,
 							MCGIRectangleIntersect(
@@ -827,10 +828,10 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 									MCGIRectangleUnion(
 										MCGIRectangleOffset(
 											MCGIRectangleIntersect(t_device_shape, t_device_clip),
-											floor(t_offset . width), floor(t_offset . height)),
+											-floor(t_offset . width), -floor(t_offset . height)),
 										MCGIRectangleOffset(
 											MCGIRectangleIntersect(t_device_shape, t_device_clip),
-											ceil(t_offset . width), ceil(t_offset . height))),
+											-ceil(t_offset . width), -ceil(t_offset . height))),
 									ceil(t_radii . width), ceil(t_radii . height))));
 	}
 	
@@ -860,8 +861,9 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 	// Finally we add this rectangle to the layer clip (union).
 	if (p_effects . has_inner_glow)
 	{
+		// MW-2013-10-31: [[ Bug 11359 ]] Make sure we use the inner_glow size size field, not the outer_glow one.
 		MCGSize t_radii;
-		t_radii = MCGSizeApplyAffineTransform(MCGSizeMake(p_effects . outer_glow . size, p_effects . outer_glow . size), t_device_transform);
+		t_radii = MCGSizeApplyAffineTransform(MCGSizeMake(p_effects . inner_glow . size, p_effects . inner_glow . size), t_device_transform);
 		
 		t_layer_clip = MCGIRectangleUnion(
 							t_layer_clip,
@@ -873,7 +875,9 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 	}
 
 	t_layer_clip = MCGIRectangleIntersect(t_layer_clip, t_device_shape);
-	
+
+	MCLog("layer clip = %d, %d, %d, %d", t_layer_clip . left, t_layer_clip . top, t_layer_clip . right, t_layer_clip . bottom);
+
 	// Create a suitable bitmap.
 	SkBitmap t_new_bitmap;
 	t_new_bitmap . setConfig(SkBitmap::kARGB_8888_Config, t_layer_clip . right - t_layer_clip . left, t_layer_clip . bottom - t_layer_clip . top);
