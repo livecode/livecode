@@ -42,6 +42,16 @@ struct MCStackFullscreenModeNames
 
 static MCStackFullscreenModeNames s_fullscreenmode_names[] = {
 	{"", kMCStackFullscreenResize},
+	
+	// MW-2013-10-31: [[ Bug 11336 ]] Change the modes to be camel-case.
+	{"exactFit", kMCStackFullscreenExactFit},
+	{"showAll", kMCStackFullscreenShowAll},
+	{"noBorder", kMCStackFullscreenNoBorder},
+	{"noScale", kMCStackFullscreenNoScale},
+	
+	// MW-2013-10-31: [[ Bug 1136 ]] REMOVE FOR RELEASE - these are here
+	//   for continuity between dp-2 and the next build, will be removed
+	//   for release.
 	{"exact fit", kMCStackFullscreenExactFit},
 	{"show all", kMCStackFullscreenShowAll},
 	{"no border", kMCStackFullscreenNoBorder},
