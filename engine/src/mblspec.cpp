@@ -232,7 +232,7 @@ static void send_url_progress(MCObjectHandle *p_object, MCSystemUrlStatus p_stat
 
 struct MCSGetUrlState
 {
-	const char *url;
+	MCStringRef url;
 	MCSystemUrlStatus status;
 	MCStringRef data;
 	MCObjectHandle *object;
@@ -246,13 +246,15 @@ static bool MCS_geturl_callback(void *p_context, MCSystemUrlStatus p_status, con
 	context = static_cast<MCSGetUrlState *>(p_context);
 	
 	context -> status = p_status;
+    MCAutoPointer<char> t_url;
+    /* UNCHECKED */ MCStringConvertToCString(context -> url, &t_url);
 	
 	if (p_status == kMCSystemUrlStatusError)
     {
         if (context -> error != nil)
             MCValueRelease(context -> error);
 		MCStringCreateWithCString((const char *)p_data, context -> error);
-        send_url_progress(context -> object, p_status, context -> url, MCStringGetLength(context -> error), context -> total, (const char *)p_data);
+        send_url_progress(context -> object, p_status, *t_url, MCStringGetLength(context -> error), context -> total, (const char *)p_data);
     }
 	else
     {
@@ -270,7 +272,7 @@ static bool MCS_geturl_callback(void *p_context, MCSystemUrlStatus p_status, con
             /* UNCHECKED */ MCStringAppendFormat(*t_new_data, "%s", (const char *)p_data);
             /* UNCHECKED */ MCStringCopy(*t_new_data, context -> data);
         }
-        send_url_progress(context -> object, p_status, context -> url, MCStringGetLength(context -> data), context -> total, (const char *)p_data);
+        send_url_progress(context -> object, p_status, *t_url, MCStringGetLength(context -> data), context -> total, (const char *)p_data);
     }
 	return true;
 }
@@ -278,9 +280,7 @@ static bool MCS_geturl_callback(void *p_context, MCSystemUrlStatus p_status, con
 void MCS_geturl(MCObject *p_target, MCStringRef p_url)
 {
 	MCSGetUrlState t_state;
-    MCAutoPointer<char> t_url;
-    /* UNCHECKED */ MCStringConvertToCString(p_url, &t_url);
-	t_state . url = strclone(*t_url);
+	t_state . url = p_url;
 	t_state . status = kMCSystemUrlStatusNone;
 	t_state . object = p_target -> gethandle();
 	
@@ -309,7 +309,7 @@ void MCS_geturl(MCObject *p_target, MCStringRef p_url)
         MCresult -> setvalueref(t_state . error);
 
     if (t_state . url != nil)
-        delete[] t_state . url;
+        MCValueRelease(t_state . url);
     
     if (t_state . error != nil)
         MCValueRelease(t_state . error);
@@ -505,7 +505,7 @@ void MCS_loadurl(MCObject *p_object, MCStringRef p_url, MCNameRef p_message)
 
 struct MCSPostUrlState
 {
-	const char *url;
+	MCStringRef url;
 	MCSystemUrlStatus status;
 	MCStringRef data;
 	MCObjectHandle *object;
@@ -520,6 +520,8 @@ static bool MCS_posturl_callback(void *p_context, MCSystemUrlStatus p_status, co
 	context = static_cast<MCSPostUrlState *>(p_context);
 	
 	context -> status = p_status;
+    MCAutoPointer<char> t_url;
+    /* UNCHECKED */ MCStringConvertToCString(context -> url, &t_url);
 	
 	if (p_status == kMCSystemUrlStatusError)
 		/* UNCHECKED */ MCStringCreateWithCString((const char *)p_data, context -> data);
@@ -537,10 +539,10 @@ static bool MCS_posturl_callback(void *p_context, MCSystemUrlStatus p_status, co
 	if (p_status == kMCSystemUrlStatusUploading || p_status == kMCSystemUrlStatusUploaded)
 	{
 		context -> post_sent = *(uint32_t*)p_data;
-		send_url_progress(context -> object, p_status, context -> url, context -> post_sent, context -> post_length, nil);
+		send_url_progress(context -> object, p_status, *t_url, context -> post_sent, context -> post_length, nil);
 	}
 	else
-		send_url_progress(context -> object, p_status, context -> url, MCStringGetLength(context -> data), context -> total, (const char *)p_data);
+		send_url_progress(context -> object, p_status, *t_url, MCStringGetLength(context -> data), context -> total, (const char *)p_data);
 	
 	return true;
 }
@@ -559,9 +561,7 @@ void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 	
 	if (t_success)
 	{
-        MCAutoPointer<char> t_url;
-        /* UNCHECKED */ MCStringConvertToCString(*t_processed, &t_url);
-		t_state . url = strclone(*t_url);
+		t_state . url = p_url;
 		t_state . status = kMCSystemUrlStatusNone;
 		t_state . object = t_obj;
 		t_state . post_sent = 0;
@@ -596,7 +596,7 @@ void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
         MCValueRelease(t_state . data);
     
     if (t_state . url != nil)
-        delete[] t_state . url;
+        MCValueRelease(t_state . url);
     
 	if (t_obj != nil)
 		t_obj -> Release();
@@ -606,7 +606,7 @@ void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 
 struct MCSPutUrlState
 {
-	const char *url;
+	MCStringRef url;
 	MCSystemUrlStatus status;
 	MCObjectHandle *object;
 	int32_t put_sent;
@@ -620,6 +620,8 @@ static bool MCS_puturl_callback(void *p_context, MCSystemUrlStatus p_status, con
 	context = static_cast<MCSPutUrlState*>(p_context);
 	
 	context->status = p_status;
+    MCAutoPointer<char> t_url;
+    /* UNCHECKED */ MCStringConvertToCString(context->url, &t_url);
 	
 	if (p_status == kMCSystemUrlStatusError)
 		MCCStringClone((const char*)p_data, context->error);
@@ -627,10 +629,10 @@ static bool MCS_puturl_callback(void *p_context, MCSystemUrlStatus p_status, con
 	if (p_status == kMCSystemUrlStatusUploading || p_status == kMCSystemUrlStatusUploaded)
 	{
 		context->put_sent = *(uint32_t*)p_data;
-		send_url_progress(context->object, p_status, context->url, context->put_sent, context->put_length, nil);
+		send_url_progress(context->object, p_status, *t_url, context->put_sent, context->put_length, nil);
 	}
 	else
-		send_url_progress(context->object, p_status, context->url, context->put_sent, context->put_length, (const char*)p_data);
+		send_url_progress(context->object, p_status, *t_url, context->put_sent, context->put_length, (const char*)p_data);
 
 	return true;
 }
@@ -649,9 +651,7 @@ void MCS_putintourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 	
 	if (t_success)
 	{
-        MCAutoPointer<char> t_url;
-        /* UNCHECKED */ MCStringConvertToCString(*t_processed, &t_url);
-		t_state.url = strclone(*t_url);
+        t_state.url = *t_processed;
 		t_state.status = kMCSystemUrlStatusNone;
 		t_state.object = t_obj;
 		t_state.put_sent = 0;
@@ -674,7 +674,7 @@ void MCS_putintourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 	}
 	
 	if (t_state . url != nil)
-        delete[] t_state . url;
+        MCValueRelease(t_state . url);
 	if (t_obj != nil)
 		t_obj->Release();
 }
@@ -683,7 +683,7 @@ void MCS_putintourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 
 struct MCSDownloadUrlState
 {
-	const char *url;
+	MCStringRef url;
 	MCSystemUrlStatus status;
 	IO_handle output;
 	MCObjectHandle *object;
@@ -697,6 +697,8 @@ static bool MCS_downloadurl_callback(void *p_context, MCSystemUrlStatus p_status
 	context = static_cast<MCSDownloadUrlState *>(p_context);
 	
 	context -> status = p_status;
+    MCAutoPointer<char> t_url;
+    /* UNCHECKED */ MCStringConvertToCString(context -> url, &t_url);
 	
 	if (p_status == kMCSystemUrlStatusError)
 		MCresult -> sets((const char *)p_data);
@@ -706,7 +708,7 @@ static bool MCS_downloadurl_callback(void *p_context, MCSystemUrlStatus p_status
 		MCS_write(((const MCString *)p_data) -> getstring(), ((const MCString *)p_data) -> getlength(), 1, context -> output);
 	}
 	
-	send_url_progress(context -> object, p_status, context -> url, context -> length, context -> total, (const char *)p_data);
+	send_url_progress(context -> object, p_status, *t_url, context -> length, context -> total, (const char *)p_data);
 	
 	return true;
 }
@@ -733,9 +735,7 @@ void MCS_downloadurl(MCObject *p_target, MCStringRef p_url, MCStringRef p_file)
 	
 	if (t_success)
 	{
-        MCAutoPointer<char> t_url;
-        /* UNCHECKED */ MCStringConvertToCString(*t_processed, &t_url);
-		t_state . url = strclone(*t_url);
+		t_state . url = *t_processed;
 		t_state . status = kMCSystemUrlStatusNone;
 		t_state . object = t_obj;
 		t_state . output = t_output;
@@ -755,7 +755,7 @@ void MCS_downloadurl(MCObject *p_target, MCStringRef p_url, MCStringRef p_file)
 	}
 
 	if (t_state . url != nil)
-        delete[] t_state . url;
+        MCValueRelease(t_state . url);
 	if (t_output != nil)
 		MCS_close(t_output);
 	if (t_obj != nil)
