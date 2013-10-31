@@ -1187,6 +1187,10 @@ void MCCard::render(void)
 					t_layer . id = 0;
 				}
 
+				// MW-2013-10-29: [[ Bug 11349 ]] Scenery layers regions are clipped
+				//   by the clip directly.
+				t_layer . region = MCU_intersect_rect(t_layer . region, t_layer . clip);
+				
 				t_layer . callback = testtilecache_device_scenery_renderer;
 				MCTileCacheRenderScenery(t_tiler, t_layer);
 			}
