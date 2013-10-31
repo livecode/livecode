@@ -321,12 +321,14 @@ real8 MCS_time()
 
 void MCS_reset_time()
 {
+#ifdef /* MCS_reset_time_dsk_w32 */ LEGACY_SYSTEM
 	if (!MClowrestimers)
 	{
 		startcount = 0;
 		MCS_time();
 		startcount = timeGetTime();
 	}
+#endif /* MCS_reset_time_dsk_w32 */
 }
 
 void MCS_sleep(real8 delay)
@@ -670,7 +672,7 @@ void MCS_getDNSservers(MCExecPoint &ep)
 			if (sptr[l] == ' ' || sptr[l] == ',')
 				sptr[l] = '\n';
 	}
-#iendif /* MCS_getDNSservers_dsk_w32 */
+#endif /* MCS_getDNSservers_dsk_w32 */
 }
 
 Boolean MCS_getdevices(MCExecPoint &ep)
@@ -1183,15 +1185,11 @@ IO_stat MCS_chmod(const char *path, uint2 mask)
 
 int4 MCS_getumask()
 {
-#ifdef /* MCS_getumask_dsk_w32 */ LEGACY_SYSTEM
 	return 0;
-#endif /* MCS_getumask_dsk_w32 */
 }
 
 void MCS_setumask(int4 newmask)
 {
-#ifdef /* MCS_setumask_dsk_w32 */ LEGACY_SYSTEM
-#endif /* MCS_setumask_dsk_w32 */ 
 }
 
 IO_stat MCS_trunc(IO_handle stream)
@@ -1264,6 +1262,7 @@ Boolean MCS_eof(IO_handle stream)
 
 static IO_stat MCS_seek_do(HANDLE p_file, int64_t p_offset, DWORD p_type)
 {
+#ifdef /* MCS_seek_do_dsk_w32 */ LEGACY_SYSTEM
 	LONG high_offset;
 	high_offset = (LONG)(p_offset >> 32);
 	DWORD fp;
@@ -1272,6 +1271,7 @@ static IO_stat MCS_seek_do(HANDLE p_file, int64_t p_offset, DWORD p_type)
 	if (fp == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
 		return IO_ERROR;
 	return IO_NORMAL;
+#endif /* MCS_seek_do_dsk_w32 */
 }
 
 IO_stat MCS_seek_cur(IO_handle stream, int64_t offset)
@@ -1638,7 +1638,7 @@ const char *MCS_getsystemversion()
 }
 
 
-
+#ifdef /* MCS_loadfile_dsk_w32 */ LEGACY_SYSTEM
 void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 {
 	if (!MCSecureModeCanAccessDisk())
@@ -1682,6 +1682,7 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 		CloseHandle(hf);
 	}
 }
+#endif /* MCS_loadfile_dsk_w32 */
 
 void MCS_loadresfile(MCExecPoint &ep)
 {
@@ -1689,6 +1690,7 @@ void MCS_loadresfile(MCExecPoint &ep)
 	MCresult->sets("not supported");
 }
 
+#ifdef /* MCS_savefile_dsk_w32 */ LEGACY_SYSTEM
 void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean binary)
 {
 	if (!MCSecureModeCanAccessDisk())
@@ -1728,6 +1730,7 @@ void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean binary)
 		CloseHandle(hf);
 	}
 }
+#endif /* MCS_savefile_dsk_w32 */
 
 void MCS_saveresfile(const MCString &s, const MCString data)
 {
@@ -2487,9 +2490,7 @@ bool MCS_changeprocesstype(bool to_foreground)
 
 bool MCS_isatty(int fd)
 {
-#ifdef /* MCS_isatty_dsk_w32 */ LEGACY_SYSTEM
 	return _isatty(fd) != 0;
-#endif /* MCS_isatty_dsk_w32 */
 }
 
 bool MCS_isnan(double v)

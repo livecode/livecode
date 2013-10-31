@@ -208,6 +208,7 @@ void MCS_fakewriteat(IO_handle stream, uint4 p_pos, const void *p_buffer, uint4 
 	memcpy(stream -> buffer + p_pos, p_buffer, p_size);
 }
 
+#ifdef /* MCS_loadfile_dsk_mac */ LEGACY_SYSTEM
 void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 {
 	if (!MCSecureModeCanAccessDisk())
@@ -264,7 +265,9 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 		}
 	}
 }
+#endif /* MCS_loadfile_dsk_mac */
 
+#ifdef /* MCS_savefile_dsk_mac */ LEGACY_SYSTEM
 void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean binary)
 {
 	if (!MCSecureModeCanAccessDisk())
@@ -308,6 +311,7 @@ void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean binary)
 	delete tpath;
 	delete newpath;
 }
+#endif /* MCS_savefile_dsk_mac */
 
 IO_stat MCS_close(IO_handle &stream)
 {
