@@ -81,6 +81,10 @@ MCImage::MCImage()
 	m_image_opened = false;
 	m_has_transform = false;
 
+	// MW-2013-10-25: [[ Bug 11300 ]] Images start off unflipped.
+	m_flip_x = false;
+	m_flip_y = false;
+
 	m_locked_frame = nil;
 	m_needs = nil;
 
@@ -99,6 +103,10 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 	m_image_opened = false;
 	m_has_transform = false;
 
+	// MW-2013-10-25: [[ Bug 11300 ]]  Images start off unflipped.
+	m_flip_x = false;
+	m_flip_y = false;
+	
 	m_locked_frame = nil;
 	m_needs = nil;
 
@@ -2030,16 +2038,36 @@ MCSharedString *MCImage::getclipboardtext(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+void MCImage::flip(bool p_horz)
+{
+	// Invert the flip states.
+	if (p_horz)
+		m_flip_x = !m_flip_x;
+	else
+		m_flip_y = !m_flip_y;
+	
+	// Update the transform.
+	apply_transform();
+
+	// Ensure we redraw.
+	layer_redrawall();
+	notifyneeds(false);
+}
+
 void MCImage::apply_transform()
 {
 	uindex_t t_width = rect.width;
 	uindex_t t_height = rect.height;
 	/* UNCHECKED */ getsourcegeometry(t_width, t_height);
 
+	// MW-2013-10-25: [[ Bug 11300 ]] Make sure we apply a flip transform if
+	//   required and there are no other transforms to apply.
 	if (angle != 0)
 		rotate_transform(angle);
 	else if (rect.width != t_width || rect.height != t_height)
 		resize_transform();
+	else if (m_flip_x || m_flip_y)
+		flip_transform();
 	else
 		m_has_transform = false;
 }
