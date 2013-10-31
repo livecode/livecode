@@ -5739,7 +5739,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         char* t_temp_file_chars;
         
         t_temp_file_chars = nil;        
-        t_success = MCStringCreateMutable(0, t_temp_file_auto);
         
         if (t_success && FSFindFolder(kOnSystemDisk, kTemporaryFolderType, TRUE, &t_folder_ref) == noErr)
         {
