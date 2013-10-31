@@ -41,6 +41,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphics.h"
 #include "graphicscontext.h"
 
+#include "font.h"
+
 ///////////////////////////////////////////////////////////////////////////////
 
 extern void Windows_RenderMetaFile(HDC p_color_dc, HDC p_mask_dc, uint1 *p_data, uint4 p_length, const MCRectangle& p_dst_rect);
@@ -723,8 +725,11 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 
 		case MARK_TYPE_TEXT:
 		{
+			MCFontStruct *f;
+			f = MCFontGetFontStruct(p_mark->text.font);
+
 			HGDIOBJ t_old_font;
-			t_old_font = SelectObject(t_dc, p_mark -> text . font -> fid);
+			t_old_font = SelectObject(t_dc, f -> fid);
 			SetTextColor(t_dc, colour_to_pixel(p_mark -> fill -> colour));
 			if (p_mark -> text . background != NULL)
 			{
@@ -733,7 +738,7 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 			}
 			else
 				SetBkMode(t_dc, TRANSPARENT);
-			if (p_mark -> text . font -> unicode || p_mark -> text . unicode_override)
+			if (f -> unicode || p_mark -> text . unicode_override)
 				TextOutW(t_dc, p_mark -> text . position . x, p_mark -> text . position . y, (LPCWSTR)p_mark -> text . data, p_mark -> text . length >> 1);
 			else
 				TextOutA(t_dc, p_mark -> text . position . x, p_mark -> text . position . y, (LPCSTR)p_mark -> text . data, p_mark -> text . length);
