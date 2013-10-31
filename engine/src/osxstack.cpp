@@ -300,7 +300,7 @@ void MCStack::realize()
 	{
 		if ( getextendedstate(ECS_FULLSCREEN) )
 		{
-		//TS-2008-08-01 : [[Bug 5703 - fullscreen stack prop interacts badly with HideMenuBar]]
+			//TS-2008-08-01 : [[Bug 5703 - fullscreen stack prop interacts badly with HideMenuBar]]
 			if (!((MCScreenDC*)MCscreen)->getmenubarhidden())
 				SetSystemUIMode(kUIModeAllHidden, kUIOptionAutoShowMenuBar);
 
@@ -780,7 +780,8 @@ void  MCStack::getWinstyle(uint32_t &wstyle, uint32_t &wclass)
 	if (flags & F_RESIZABLE &&
 	        (wclass == kDocumentWindowClass || wclass ==  kFloatingWindowClass
 	         || wclass == kUtilityWindowClass || wclass == kSheetWindowClass ||
-	         wclass == kMovableModalWindowClass || wclass == kDrawerWindowClass))
+	         wclass == kMovableModalWindowClass || wclass == kDrawerWindowClass) &&
+			!getextendedstate(ECS_FULLSCREEN))
 		wstyle |= kWindowResizableAttribute;
 		
 // MW-2005-04-20: Fix shadow alteration on window-shaped windows

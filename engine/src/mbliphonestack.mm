@@ -559,6 +559,10 @@ void MCStack::effectrect(const MCRectangle& p_rect, Boolean& r_abort)
 		t_effect_area = MCU_intersect_rect(t_effect_area, p_rect);
 		
 		ctxt . effect_area = MCRectangleGetTransformedBounds(t_effect_area, view_getviewtransform());
+        
+        // MW-2013-10-29: [[ Bug 11330 ]] Make sure the effect area is cropped to the visible
+        //   area.
+        ctxt . effect_area = MCU_intersect_rect(ctxt . effect_area, MCU_make_rect(0, 0, view_getrect() . width, view_getrect() . height));
 		
 		// MW-2011-09-24: [[ Effects ]] Get the current snapshot as a UIImage
 		// MW-2011-11-18: [[ Bug ]] Make sure we grab a UIImage copy of the snapshot

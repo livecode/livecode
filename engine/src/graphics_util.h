@@ -34,15 +34,27 @@ inline MCGRectangle MCRectangleToMCGRectangle(MCRectangle p_rect)
 }
 
 inline MCRectangle MCGRectangleGetIntegerBounds(MCGRectangle p_rect)
-{
+{	
 	int32_t t_left, t_right, t_top, t_bottom;
 	t_left = floor(p_rect.origin.x);
 	t_top = floor(p_rect.origin.y);
 	t_right = ceil(p_rect.origin.x + p_rect.size.width);
 	t_bottom = ceil(p_rect.origin.y + p_rect.size.height);
+
+	int32_t t_width, t_height;
+	t_width = t_right - t_left;
+	t_height = t_bottom - t_top;
+	
+	// [[ Bug 11349 ]] Out of bounds content displayed since getting integer
+	//   bounds of an empty rect is not empty.
+	if (p_rect . size . width == 0.0f || p_rect . size . height == 0.0f)
+	{
+		t_width = 0;
+		t_height = 0;
+	}
 	
 	MCRectangle t_rect;
-	t_rect = MCRectangleMake(t_left, t_top, t_right - t_left, t_bottom - t_top);
+	t_rect = MCRectangleMake(t_left, t_top, t_width, t_height);
 	
 	return t_rect;
 }
