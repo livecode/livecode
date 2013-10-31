@@ -812,7 +812,7 @@ bool MCImage::createpattern(MCPatternRef &r_image)
 
 	// IM-2013-08-14: [[ ResIndependence ]] Wrap image in MCPattern with scale factor
 	if (t_success)
-		t_success = MCPatternCreate(t_image, m_scale_factor, t_pattern);
+		t_success = MCPatternCreate(t_image, getscalefactor(), t_pattern);
 		
 	if (t_blank != nil)
 		MCImageFreeBitmap(t_blank);

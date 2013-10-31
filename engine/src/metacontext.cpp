@@ -396,7 +396,7 @@ void MCMetaContext::drawsegments(MCSegment *segments, uint2 nsegs)
 		drawline(segments[t_segment] . x1, segments[t_segment] . y1, segments[t_segment] . x2, segments[t_segment] . y2);
 }
 
-void MCMetaContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontStruct *f, Boolean image, bool p_unicode_override)
+void MCMetaContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_unicode_override)
 {
 	// MW-2009-12-22: Make sure we don't generate 0 length text mark records
 	if (length == 0)
@@ -408,7 +408,7 @@ void MCMetaContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MCFont
 	{
 		// MW-2012-02-28: [[ Bug ]] Use the fontstruct from the parameter as 'setfont()' is no
 		//   longer used.
-		t_mark -> text . font = f;
+		t_mark -> text . font = p_font;
 		t_mark -> text . position . x = x;
 		t_mark -> text . position . y = y;
 		if (image && f_fill_background != NULL)
@@ -562,11 +562,6 @@ void MCMetaContext::drawlink(const char *p_link, const MCRectangle& p_region)
 		if (t_mark -> link . text != NULL)
 			strcpy(t_mark -> link . text, p_link);
 	}
-}
-
-int4 MCMetaContext::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override)
-{
-	return MCscreen->textwidth(f, s, l, p_unicode_override);
 }
 
 void MCMetaContext::applywindowshape(MCWindowShape *p_mask, unsigned int p_update_width, unsigned int p_update_height)

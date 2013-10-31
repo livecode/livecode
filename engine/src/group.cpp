@@ -2634,7 +2634,7 @@ void MCGroup::drawthemegroup(MCDC *dc, const MCRectangle &dirty, Boolean drawfra
 		if (showtextlabel && drawframe)
 		{
 			setforeground(dc, DI_FORE, False);
-			MCFontDrawText(m_font, slabel.getstring(), slabel.getlength(), isunicode,dc, textrect.x + 2, textrect.y + fascent, False);
+            dc -> drawtext(textrect.x + 2, textrect.y + fascent, slabel.getstring(), slabel.getlength(), m_font, false, isunicode);
 		}
 	}
 }
@@ -2754,7 +2754,7 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 				}
 			}
 			setforeground(dc, DI_FORE, False);
-			MCFontDrawText(m_font, slabel.getstring(), slabel.getlength(), isunicode, dc, textrect.x + 2, textrect.y + fascent, False);
+            dc -> drawtext(textrect.x + 2, textrect.y + fascent, slabel.getstring(), slabel.getlength(), m_font, false, isunicode);
 		}
 		else
 		{

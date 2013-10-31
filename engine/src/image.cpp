@@ -80,12 +80,10 @@ MCImage::MCImage()
 	m_transformed_bitmap = nil;
 	m_image_opened = false;
 	m_has_transform = false;
-	
+
 	// MW-2013-10-25: [[ Bug 11300 ]] Images start off unflipped.
 	m_flip_x = false;
 	m_flip_y = false;
-	
-	m_scale_factor = 1.0;
 
 	m_locked_frame = nil;
 	m_needs = nil;
@@ -104,13 +102,11 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 	m_transformed_bitmap = nil;
 	m_image_opened = false;
 	m_has_transform = false;
-	
+
 	// MW-2013-10-25: [[ Bug 11300 ]]  Images start off unflipped.
 	m_flip_x = false;
 	m_flip_y = false;
 	
-	m_scale_factor = 1.0;
-
 	m_locked_frame = nil;
 	m_needs = nil;
 
@@ -133,10 +129,7 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 		xhot = iref.xhot;
 		yhot = iref.yhot;
 		if (iref . m_rep != nil)
-		{
 			m_rep = iref . m_rep->Retain();
-			m_scale_factor = iref.m_scale_factor;
-		}
 	}
 
 	if (iref.flags & F_HAS_FILENAME)
@@ -479,7 +472,7 @@ void MCImage::timer(MCNameRef mptr, MCParameter *params)
 				if (irepeatcount)
 				{
 					MCImageFrame *t_frame = nil;
-					if (m_rep->LockImageFrame(currentframe, true, t_frame))
+					if (m_rep->LockImageFrame(currentframe, true, getdevicescale(), t_frame))
 					{
 						MCscreen->addtimer(this, MCM_internal, t_frame->duration);
 						m_rep->UnlockImageFrame(currentframe, t_frame);
@@ -604,10 +597,10 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 		ep.setpoint(xhot, yhot);
 		break;
 	case P_FILE_NAME:
-		if (m_rep == nil || m_rep->GetType() != kMCImageRepReferenced)
-			ep.clear();
-		else
+		if (getflag(F_HAS_FILENAME))
 			ep.setcstring(filename);
+		else
+			ep.clear();
 		break;
 	case P_ALWAYS_BUFFER:
 		ep.setboolean(getflag(F_I_ALWAYS_BUFFER));
@@ -688,7 +681,7 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 		break;
 	case P_TEXT:
 		recompress();
-		if (m_rep == nil || m_rep->GetType() == kMCImageRepReferenced)
+		if (m_rep == nil || getflag(F_HAS_FILENAME))
 			ep.clear();
 		else
 		{
@@ -873,7 +866,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			if (isvisible() && !wasvisible && m_rep != nil && m_rep->GetFrameCount() > 1)
 			{
 				MCImageFrame *t_frame = nil;
-				if (m_rep->LockImageFrame(currentframe, true, t_frame))
+				if (m_rep->LockImageFrame(currentframe, true, getdevicescale(), t_frame))
 				{
 					MCscreen->addtimer(this, MCM_internal, t_frame->duration);
 					m_rep->UnlockImageFrame(currentframe, t_frame);
@@ -921,7 +914,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 	case P_FILE_NAME:
 		// MW-2013-06-24: [[ Bug 10977 ]] If we are setting the filename to
 		//   empty, and the filename is already empty, do nothing.
-		if ((m_rep != nil && m_rep -> GetType() == kMCImageRepReferenced && data == MCnullmcstring) ||
+		if ((m_rep != nil && getflag(F_HAS_FILENAME) && data == MCnullmcstring) ||
 			data != filename)
 		{
 			char *t_filename = nil;
@@ -1022,7 +1015,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			{
 				setframe(currentframe == m_rep->GetFrameCount() - 1 ? 0 : currentframe + 1);
 				MCImageFrame *t_frame = nil;
-				if (m_rep->LockImageFrame(currentframe, true, t_frame))
+				if (m_rep->LockImageFrame(currentframe, true, getdevicescale(), t_frame))
 				{
 					MCscreen->addtimer(this, MCM_internal, t_frame->duration);
 					m_rep->UnlockImageFrame(currentframe, t_frame);
@@ -1106,17 +1099,16 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 				uint8_t *t_dst_ptr = (uint8_t*)t_copy->data;
 				for (uindex_t y = 0; y < t_copy->height; y++)
 				{
-					uint8_t *t_src_row = t_src_ptr;
+					uint32_t *t_src_row = (uint32_t*)t_src_ptr;
 					uint32_t *t_dst_row = (uint32_t*)t_dst_ptr;
 					for (uindex_t x = 0; x < t_width; x++)
 					{
 						uint8_t a, r, g, b;
-						a = *t_src_row++;
-						r = *t_src_row++;
-						g = *t_src_row++;
-						b = *t_src_row++;
+						MCGPixelUnpack(kMCGPixelFormatARGB, *t_src_row++, r, g, b, a);
 
-						*t_dst_row++ = MCGPixelPackNative(r, g, b, 255);
+						// IM-2013-10-25: [[ Bug 11314 ]] Preserve current alpha values when setting the imagedata
+						*t_dst_row = MCGPixelPackNative(r, g, b, MCGPixelGetNativeAlpha(*t_dst_row));
+						t_dst_row++;
 					}
 					t_src_ptr += t_stride;
 					t_dst_ptr += t_copy->stride;
@@ -1315,7 +1307,7 @@ Boolean MCImage::maskrect(const MCRectangle &srect)
 
 	// MW-2007-09-11: [[ Bug 5177 ]] If the object is currently selected, make its mask the whole rectangle
 	MCImageFrame *t_frame = nil;
-	if (!getstate(CS_SELECTED) && m_rep != nil && m_rep->LockImageFrame(currentframe, true, t_frame))
+	if (!getstate(CS_SELECTED) && m_rep != nil && m_rep->LockImageFrame(currentframe, true, getdevicescale(), t_frame))
 	{
 		int32_t t_x = srect.x - rect.x;
 		int32_t t_y = srect.y - rect.y;
@@ -1326,6 +1318,11 @@ Boolean MCImage::maskrect(const MCRectangle &srect)
 			t_x = t_src_point.x;
 			t_y = t_src_point.y;
 		}
+		
+		// IM-2013-10-30: [[ FullscreenMode ]] Account for image density when locating pixel position
+		t_x = t_x * t_frame->density;
+		t_y = t_y * t_frame->density;
+		
 		uint32_t t_pixel = 0;
 		if (t_x >= 0 && t_y >= 0 && t_x <t_frame->image->width && t_y < t_frame->image->height)
 			t_pixel = MCImageBitmapGetPixel(t_frame->image, t_x, t_y);
@@ -1392,7 +1389,7 @@ bool MCImage::lockbitmapshape(const MCRectangle &p_bounds, const MCPoint &p_orig
 	r_shape . mask . origin . x = p_origin . x;
 	r_shape . mask . origin . y = p_origin . y;
 	r_shape . mask . bits = t_bitmap;
-	r_shape . mask . scale = m_has_transform ? 1.0f : m_scale_factor;
+	r_shape . mask . scale = m_has_transform ? 1.0f : getscalefactor();
 	return true;
 }
 
@@ -2100,7 +2097,7 @@ bool MCImage::isediting() const
 bool MCImage::convert_to_mutable()
 {
 	// referenced images cannot be edited
-	if (m_rep != nil && m_rep->GetType() == kMCImageRepReferenced)
+	if (getflag(F_HAS_FILENAME))
 		return false;
 
 	if (m_rep != nil && m_rep->GetType() == kMCImageRepMutable)
@@ -2168,7 +2165,7 @@ void MCImage::finishediting()
 	MCImageRep *t_rep = m_rep;
 	MCImageFrame *t_frame = nil;
 
-	t_success = t_rep->LockImageFrame(0, false, t_frame);
+	t_success = t_rep->LockImageFrame(0, false, 1.0, t_frame);
 	if (t_success)
 		t_success = setbitmap(t_frame->image, 1.0);
 	t_rep->UnlockImageFrame(0, t_frame);
@@ -2193,7 +2190,6 @@ void MCImage::setrep(MCImageRep *p_rep)
 	m_rep = t_rep;
 
 	m_has_transform = false;
-	m_scale_factor = 1.0;
 
 	// IM-2013-03-11: [[ BZ 10723 ]] If we have a new image, ensure that the current frame falls within the new framecount
 	// IM-2013-04-15: [[ BZ 10827 ]] Skip this check if the currentframe is 0 (preventing unnecessary image loading)
@@ -2212,89 +2208,31 @@ bool MCImage::setfilename(const char *p_filename)
 		setrep(nil);
 		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
 		flags &= ~F_HAS_FILENAME;
+		
+		MCCStringFree(filename);
+		filename = nil;
+		
 		return true;
 	}
-
-	const char *t_src_filename;
-	t_src_filename = nil;
 	
 	char *t_filename = nil;
-	char *t_resolved = nil;
 	MCImageRep *t_rep = nil;
-
-	// get list of matching scaled images
-	MCImageScaledFile *t_scaled_files;
-	t_scaled_files = nil;
-	uint32_t t_scaled_file_count;
-	t_scaled_file_count = 0;
 	
-	MCGFloat t_scale;
-	t_scale = 1.0;
-	
-	// IM-2013-07-30: [[ ResIndependence ]] search for set of density-mapped files matching given filename
-	if (t_success)
-		t_success = MCImageGetScaledFiles(p_filename, getstack(), t_scaled_files, t_scaled_file_count);
+	t_success = MCCStringClone(p_filename, t_filename);
 	
 	if (t_success)
-	{
-		if (t_scaled_file_count == 0)
-		{
-			// can't find scaled files, so revert to given filename
-			t_src_filename = p_filename;
-		}
-		else
-		{
-			// use image with lowest res higher than the device scale (or highest res if all are lower)
-			MCGFloat t_device_scale;
-			t_device_scale = MCResGetDeviceScale();
-			
-			const char *t_scaled_filename;
-			t_scaled_filename = nil;
-			
-			// set scale & filename to first scaled file in list
-			t_scale = t_scaled_files[0].scale;
-			t_scaled_filename = t_scaled_files[0].filename;
-			
-			for (uint32_t i = 0; i < t_scaled_file_count; i++)
-			{
-				// if current scale is lower than device scale then take any higher-res image
-				// else if current scale is higher than device res then take any lower-res image not lower than the device res
-				if ((t_scale < t_device_scale && t_scaled_files[i].scale > t_scale) ||
-					(t_scale > t_device_scale && t_scaled_files[i].scale < t_scale && t_scaled_files[i].scale >= t_device_scale))
-				{
-					t_scale = t_scaled_files[i].scale;
-					t_scaled_filename = t_scaled_files[i].filename;
-				}
-			}
-			
-			t_src_filename = t_scaled_filename;
-		}
-	}
+		t_success = MCImageGetFileRepForStackContext(p_filename, getstack(), t_rep);
 	
-	if (t_success)
-		t_success = MCCStringClone(p_filename, t_filename);
-	
-	if (t_success)
-		t_success = nil != (t_resolved = getstack() -> resolve_filename(t_src_filename));
-	
-	if (t_success)
-		t_success = MCImageRepGetReferenced(t_resolved != nil ? t_resolved : t_filename, t_rep);
-
-	MCCStringFree(t_resolved);
-	MCImageFreeScaledFileList(t_scaled_files, t_scaled_file_count);
-
 	if (t_success)
 	{
 		setrep(t_rep);
-		t_rep->Release();
-		
-		m_scale_factor = t_scale;
+		if (t_rep != nil)
+			t_rep->Release();
 		
 		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
 		flags |= F_HAS_FILENAME;
 
-		if (filename != nil)
-			MCCStringFree(filename);
+		MCCStringFree(filename);
 		filename = t_filename;
 	}
 	else
@@ -2337,7 +2275,8 @@ bool MCImage::setbitmap(MCImageBitmap *p_bitmap, MCGFloat p_scale, bool p_update
 	if (t_success)
 	{
 		angle = 0;
-		m_scale_factor = p_scale;
+		// IM-2013-10-30: [[ FullscreenMode ]] REVISIT: currently, the scale will always be 1.0 but if it becomes
+		// possible to set the bitmap at some other scale this section will need to be revised
 		
 		if (p_update_geometry)
 		{
@@ -2414,14 +2353,19 @@ bool MCImage::copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *
 	
 	t_success = m_rep != nil;
 	
+	// IM-2013-10-30: [[ FullscreenMode ]] REVISIT: This needs more work to figure out if
+	// we can get a better match to the requested scale & transform
+	MCGFloat t_scale_factor;
+	t_scale_factor = getscalefactor();
+	
 	bool t_copy_pixels;
-	t_copy_pixels = !m_has_transform && p_scale == m_scale_factor;
+	t_copy_pixels = !m_has_transform && p_scale == t_scale_factor;
 	
 	bool t_premultiplied;
 	t_premultiplied = p_premultiplied || !t_copy_pixels;
 	
 	if (t_success)
-		t_success = m_rep->LockImageFrame(currentframe, t_premultiplied, t_frame);
+		t_success = m_rep->LockImageFrame(currentframe, t_premultiplied, p_scale, t_frame);
 	
 	bool t_mask, t_alpha;
 	if (t_success)
@@ -2468,7 +2412,7 @@ bool MCImage::copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *
 					MCGContextConcatCTM(t_context, m_transform);
 				
 				MCGRectangle t_dst;
-				t_dst = MCGRectangleMake(0, 0, t_frame->image->width / m_scale_factor, t_frame->image->height / m_scale_factor);
+				t_dst = MCGRectangleMake(0, 0, rect.width, rect.height);
 				
 				MCGImageFilter t_filter;
 				t_filter = resizequality == INTERPOLATION_BICUBIC ? kMCGImageFilterBicubic : (resizequality == INTERPOLATION_BILINEAR ? kMCGImageFilterBilinear : kMCGImageFilterNearest);
@@ -2504,7 +2448,9 @@ bool MCImage::lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_
 
 	if (m_rep != nil)
 	{
-		if (!m_rep->LockImageFrame(currentframe, p_premultiplied || m_has_transform, m_locked_frame))
+		// IM-2013-10-30: [[ FullscreenMode ]] REVISIT: Use appropriate density value if
+		// transforming image. For now just use 1.0
+		if (!m_rep->LockImageFrame(currentframe, p_premultiplied || m_has_transform, 1.0, m_locked_frame))
 			return false;
 
 		if (!m_has_transform)
@@ -2591,22 +2537,9 @@ uint32_t MCImage::getcompression()
 {
 	uint32_t t_compression = F_RLE;
 
+	// IM-2013-10-30: [[ FullscreenMode ]] getDataCompression() now part of base MCImageRep class
 	if (m_rep != nil)
-	{
-		switch (m_rep->GetType())
-		{
-		case kMCImageRepCompressed:
-			t_compression = F_RLE;
-			break;
-		case kMCImageRepVector:
-			t_compression = F_PICT;
-			break;
-		case kMCImageRepReferenced:
-		case kMCImageRepResident:
-			t_compression = static_cast<MCEncodedImageRep*>(m_rep)->GetDataCompression();
-			break;
-		}
-	}
+		t_compression = m_rep->GetDataCompression();
 
 	return t_compression;
 }
@@ -2628,8 +2561,11 @@ bool MCImage::getsourcegeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)
 	if (m_rep == nil || !m_rep->GetGeometry(r_pixwidth, r_pixheight))
 		return false;
 	
-	r_pixwidth = r_pixwidth / m_scale_factor;
-	r_pixheight = r_pixheight / m_scale_factor;
+	MCGFloat t_scale_factor;
+	t_scale_factor = getscalefactor();
+	
+	r_pixwidth = r_pixwidth / t_scale_factor;
+	r_pixheight = r_pixheight / t_scale_factor;
 	
 	// MM-2013-09-16: [[ Bug 11178 ]] Missing return statement.
 	return true;
@@ -2650,6 +2586,22 @@ void MCImage::getgeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)
 
 	r_pixwidth = rect.width;
 	r_pixheight = rect.height;
+}
+
+MCGFloat MCImage::getscalefactor(void)
+{
+	if (m_rep == nil)
+		return 1.0;
+	else
+		return m_rep->GetDensity();
+}
+
+MCGFloat MCImage::getdevicescale(void)
+{
+	if (getstack() == nil)
+		return 1.0;
+	else
+		return getstack()->getdevicescale();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

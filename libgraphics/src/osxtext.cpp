@@ -25,6 +25,8 @@
 
 static ATSUStyle s_style = NULL;
 static ATSUTextLayout s_layout = NULL;
+static CGColorSpaceRef s_colour_space = NULL;
+static CGColorRef s_colour = NULL;
 
 static bool osx_prepare_text(const void *p_text, uindex_t p_length, const MCGFont &p_font)
 {
@@ -37,7 +39,19 @@ static bool osx_prepare_text(const void *p_text, uindex_t p_length, const MCGFon
 	
 	if (t_err == noErr)
 		if (s_style == NULL)
-			t_err = ATSUCreateStyle(&s_style);	
+			t_err = ATSUCreateStyle(&s_style);
+    
+    if (t_err == noErr)
+        if (s_colour_space == NULL)
+            s_colour_space = CGColorSpaceCreateWithName(kCGColorSpaceGenericGray);
+    
+    if (t_err == noErr)
+        if (s_colour == NULL)
+        {
+            // Components are grey and alpha
+            const float t_colour_components[] = {1.0, 1.0};
+            s_colour = CGColorCreate(s_colour_space, t_colour_components);
+        }
 	
 	ATSUFontID t_font_id;
 	Fixed t_font_size;
@@ -176,6 +190,7 @@ static bool osx_draw_text_substring_to_cgcontext_at_location(uindex_t p_length, 
 	{
 		&p_cgcontext,
 	};
+
 	if (t_err == noErr)
 		t_err = ATSUSetLayoutControls(s_layout, sizeof(t_layout_tags) / sizeof(ATSUAttributeTag), t_layout_tags, t_layout_sizes, t_layout_attrs);
 	
@@ -301,6 +316,10 @@ void MCGPlatformInitialize(void)
 
 void MCGPlatformFinalize(void)
 {
+    if (s_colour != NULL)
+        CGColorRelease(s_colour);
+    if (s_colour_space != NULL)
+        CGColorSpaceRelease(s_colour_space);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -349,21 +368,21 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	void *t_data;
 	t_data = NULL;
 	if (t_success)
-		t_success = MCMemoryNew(t_clipped_bounds . width * t_clipped_bounds . height, t_data);
-	
+		t_success = MCMemoryNew(t_clipped_bounds . width * t_clipped_bounds . height * 1, t_data);
+
 	CGContextRef t_cgcontext;
 	t_cgcontext = NULL;
 	if (t_success)
 	{
-		t_cgcontext = CGBitmapContextCreate(t_data, t_clipped_bounds . width, t_clipped_bounds . height, 8, t_clipped_bounds . width, NULL, kCGImageAlphaOnly);
+        t_cgcontext = CGBitmapContextCreate(t_data, t_clipped_bounds . width, t_clipped_bounds . height, 8, t_clipped_bounds . width * 1, s_colour_space, kCGImageAlphaNone);
 		t_success = t_cgcontext != NULL;
 	}
-	
+    
 	if (t_success)
 	{
 		CGContextTranslateCTM(t_cgcontext, -t_clipped_bounds . x, t_clipped_bounds . height + t_clipped_bounds . y);
 		CGContextConcatCTM(t_cgcontext, CGAffineTransformMake(t_transform . a, t_transform . b, t_transform . c, t_transform . d, t_transform . tx, t_transform . ty));
-		CGContextSetRGBFillColor(t_cgcontext, 0.0, 0.0, 0.0, 1.0);
+		CGContextSetFillColorWithColor(t_cgcontext, s_colour);
 		//t_success = osx_draw_text_to_cgcontext_at_location(p_text, p_length, MCGPointMake(0.0, 0.0), p_font, t_cgcontext, t_clipped_bounds);
         t_success = osx_draw_text_substring_to_cgcontext_at_location(p_length, t_cgcontext, MCGPointMake(0.0, 0.0));
 	}

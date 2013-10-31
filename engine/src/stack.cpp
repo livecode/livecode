@@ -2782,6 +2782,41 @@ void MCStack::unloadexternals(void)
 	m_externals = NULL;
 }
 
+bool MCStack::resolve_relative_path(const char *p_path, char *&r_resolved)
+{
+	if (MCCStringIsEmpty(p_path))
+		return false;
+	
+	const char *t_stack_filename;
+	t_stack_filename = getfilename();
+	if (t_stack_filename == nil)
+	{
+		MCStack *t_parent_stack;
+		t_parent_stack = static_cast<MCStack *>(getparent());
+		if (t_parent_stack != nil)
+			t_stack_filename = t_parent_stack -> getfilename();
+	}
+	
+	if (t_stack_filename == nil)
+		return false;
+	
+	const char *t_last_separator;
+	t_last_separator = strrchr(t_stack_filename, '/');
+	
+	if (t_last_separator == nil)
+		return false;
+
+	// If the relative path begins with "./" or ".\", we must remove this, otherwise
+	// certain system calls will get confused by the path.
+	const char *t_leaf;
+	if (p_path[0] == '.' && (p_path[1] == '/' || p_path[1] == '\\'))
+		t_leaf = p_path + 2;
+	else
+		t_leaf = p_path;
+	
+	return MCCStringFormat(r_resolved, "%.*s%s", t_last_separator - t_stack_filename + 1, t_stack_filename, t_leaf);
+}
+
 // OK-2009-01-09: [[Bug 1161]]
 // This function will attempt to resolve the specified filename relative to the stack
 // and will either return an absolute path if the filename was found relative to the stack,
@@ -2793,44 +2828,17 @@ char *MCStack::resolve_filename(const char *filename)
 	if (t_mode_filename != NULL)
 		return t_mode_filename;
 
-	if (filename != NULL && filename[0] != '\0' && filename[0] != '/' && filename[1] != ':')
+	char *t_filename;
+	t_filename = nil;
+	
+	if (resolve_relative_path(filename, t_filename))
 	{
-		const char *t_stack_filename;
-		t_stack_filename = getfilename();
-		if (t_stack_filename == NULL)
-		{
-			MCStack *t_parent_stack;
-			t_parent_stack = static_cast<MCStack *>(getparent());
-			if (t_parent_stack != NULL)
-				t_stack_filename = t_parent_stack -> getfilename();
-		}
-		if (t_stack_filename != NULL)
-		{
-			const char *t_last_separator;
-			t_last_separator = strrchr(t_stack_filename, '/');
-			if (t_last_separator != NULL)
-			{
-				char *t_filename;
-				t_filename = new char[strlen(t_stack_filename) + strlen(filename) + 2];
-				strcpy(t_filename, t_stack_filename);
-
-				// If the relative path begins with "./" or ".\", we must remove this, otherwise
-				// certain system calls will get confused by the path.
-				const char *t_leaf;
-				if (filename[0] == '.' && (filename[1] == '/' || filename[1] == '\\'))
-					t_leaf = filename + 2;
-				else
-					t_leaf = filename;
-
-				strcpy(t_filename + (t_last_separator - t_stack_filename + 1), t_leaf);
-
-				if (MCS_exists(t_filename, True))
-					return t_filename;
-				else if (t_filename != NULL)
-					delete t_filename;
-			}
-		}
+		if (MCS_exists(t_filename, True))
+			return t_filename;
+		else
+			MCCStringFree(t_filename);
 	}
+	
 	return strdup(filename);
 }
 
