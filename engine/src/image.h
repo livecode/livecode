@@ -295,6 +295,11 @@ class MCImage : public MCControl
 
 	bool m_has_transform;
 	MCGAffineTransform m_transform;
+	
+	// MW-2013-10-25: [[ Bug 11300 ]] These control whether a horz/vert flip is
+	//   applied to the transform on referenced images (set by the flip cmd).
+	bool m_flip_x : 1;
+	bool m_flip_y : 1;
 
 	MCImageNeed *m_needs;
 	
@@ -402,9 +407,11 @@ public:
 
 	void resetimage();
 
+	void flip(bool horz);
+	
 	void rotate_transform(int32_t p_angle);
 	void resize_transform();
-
+	void flip_transform();
 	void apply_transform();
 
 	uint8_t getresizequality()

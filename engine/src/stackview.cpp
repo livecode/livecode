@@ -136,6 +136,8 @@ void MCStack::view_init(void)
 	
 	// MW-2011-08-19: [[ Redraw ]] Initialize the view's update region
 	m_view_update_region = nil;
+	
+	m_view_transform = MCGAffineTransformMakeIdentity();
 }
 
 void MCStack::view_copy(const MCStack &p_view)
