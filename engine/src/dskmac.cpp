@@ -1213,7 +1213,7 @@ real8 curtime;
 
 bool MCS_mac_is_link(MCStringRef p_path)
 {
-#ifdef /* MCS_is_link_mac_dsk */ LEGACY_SYSTEM
+#ifdef /* MCS_is_link_mac_dsk */ LEGACY_SYSTEM_ORPHAN
 	struct stat buf;
 	return (lstat(MCStringGetCString(p_path), &buf) == 0 && S_ISLNK(buf.st_mode));
 #endif /* MCS_is_link_mac_dsk */
@@ -1223,7 +1223,7 @@ bool MCS_mac_is_link(MCStringRef p_path)
 
 bool MCS_mac_readlink(MCStringRef p_path, MCStringRef& r_link)
 {
-#ifdef /* MCS_readlink_mac_dsk */ LEGACY_SYSTEM
+#ifdef /* MCS_readlink_mac_dsk */ LEGACY_SYSTEM_ORPHAN
 	struct stat t_stat;
 	ssize_t t_size;
 	MCAutoNativeCharArray t_buffer;
