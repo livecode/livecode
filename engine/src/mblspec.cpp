@@ -308,9 +308,6 @@ void MCS_geturl(MCObject *p_target, MCStringRef p_url)
 	else
         MCresult -> setvalueref(t_state . error);
 
-    if (t_state . url != nil)
-        MCValueRelease(t_state . url);
-    
     if (t_state . error != nil)
         MCValueRelease(t_state . error);
 	
@@ -595,9 +592,6 @@ void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
     if (t_state . data != nil)
         MCValueRelease(t_state . data);
     
-    if (t_state . url != nil)
-        MCValueRelease(t_state . url);
-    
 	if (t_obj != nil)
 		t_obj -> Release();
 }
@@ -673,8 +667,6 @@ void MCS_putintourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 			MCresult->sets(MCString(t_state.error));
 	}
 	
-	if (t_state . url != nil)
-        MCValueRelease(t_state . url);
 	if (t_obj != nil)
 		t_obj->Release();
 }
@@ -754,8 +746,6 @@ void MCS_downloadurl(MCObject *p_target, MCStringRef p_url, MCStringRef p_file)
 			MCresult -> clear();
 	}
 
-	if (t_state . url != nil)
-        MCValueRelease(t_state . url);
 	if (t_output != nil)
 		MCS_close(t_output);
 	if (t_obj != nil)
