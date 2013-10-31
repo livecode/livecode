@@ -799,10 +799,9 @@ static bool string_contains_item(const char *p_string, const char *p_item)
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCObject::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
-#ifdef /* MCObject::getarrayprop */ LEGACY_EXEC
 	switch(which)
 	{
-#ifdef LEGACY_EXEC
+#ifdef /* MCObject::getarrayprop */ LEGACY_EXEC
 	// MW-2011-11-23: [[ Array TextStyle ]] We now treat textStyle as (potentially) an
 	//   an array.
 	case P_TEXT_STYLE:
@@ -839,7 +838,7 @@ Exec_stat MCObject::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 				ep.clear();
 		}
 		break;
-#endif
+#endif /* MCObject::getarrayprop */
 	default:
 		{
 			Exec_stat t_stat;
@@ -853,7 +852,6 @@ Exec_stat MCObject::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 		}
 	}
 	return ES_NORMAL;
-#endif /* MCObject::getarrayprop */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2001,6 +1999,15 @@ Exec_stat MCObject::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 	}
 	return ES_NORMAL;
 #endif /* MCObject::setarrayprop */
+    
+    Exec_stat t_stat;
+    t_stat = mode_getprop(parid, which, ep, MCNameGetString(key), False);
+    if (t_stat == ES_NOT_HANDLED)
+    {
+        MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
+        return ES_ERROR;
+    }
+    return t_stat;
 }
 
 #ifdef OLD_EXEC

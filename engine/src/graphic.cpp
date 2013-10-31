@@ -722,20 +722,20 @@ Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCGraphic::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
-#ifdef /* MCGraphic::getarrayprop */ LEGACY_EXEC
 	switch(which)
 	{
+#ifdef /* MCGraphic::getarrayprop */ LEGACY_EXEC
 	case P_GRADIENT_FILL:
 		return MCGradientFillGetProperty(m_fill_gradient, ep, key);
 	break;
 	case P_GRADIENT_STROKE:
 		return MCGradientFillGetProperty(m_stroke_gradient, ep, key);
 	break;
+#endif /* MCGraphic::getarrayprop */
 	default:
 		return MCControl::getarrayprop_legacy(parid, which, ep, key, effective);
 	}
 	return ES_NORMAL;
-#endif /* MCGraphic::getarrayprop */
 }
 
 Exec_stat MCGraphic::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
@@ -1292,8 +1292,8 @@ Exec_stat MCGraphic::setarrayprop_legacy(uint4 parid, Properties which, MCExecPo
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
 	}
-	return ES_NORMAL;
 #endif /* MCGraphic::setarrayprop */
+	return ES_NORMAL;
 }
 
 

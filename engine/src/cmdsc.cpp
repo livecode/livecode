@@ -1390,6 +1390,7 @@ Exec_stat MCCustomProp::exec(MCExecPoint &ep)
 #ifdef /* MCCustomProp */ LEGACY_EXEC
 	return ES_NORMAL;
 #endif /* MCCustomProp */
+    return ES_NORMAL;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

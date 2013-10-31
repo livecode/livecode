@@ -328,9 +328,12 @@ bool MCFontListLoaded(uindex_t& r_count, MCStringRef*& r_list)
     MCAutoArray<MCStringRef> t_list;
     
     for(MCLoadedFont *t_font = s_loaded_fonts; t_font != nil; t_font = t_font -> next)
-        t_list . Push(t_font -> path);
+        if (!t_list . Push(t_font -> path))
+            return false;
     
     t_list . Take(r_list, r_count);
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
