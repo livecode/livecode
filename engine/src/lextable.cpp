@@ -1965,10 +1965,11 @@ static LT sugar_table[] =
 		{"options", TT_UNDEFINED, SG_OPTIONS},
 		// JS-2013-07-01: [[ EnhancedFilter ]] Token for 'pattern'.
 		{"pattern", TT_UNDEFINED, SG_PATTERN},
+		// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+		// AL-2013-10-30: [[ Bug 11351 ]] Ensure table is in alphabetical order.
+        {"recursively", TT_UNDEFINED, SG_RECURSIVELY},
 		// JS-2013-07-01: [[ EnhancedFilter ]] Token for 'regex'.
 		{"regex", TT_UNDEFINED, SG_REGEX},
-        // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
-        {"recursively", TT_UNDEFINED, SG_RECURSIVELY},
 		{"standard", TT_UNDEFINED, SG_STANDARD},
 		// MERG-2013-06-24: [[ IsAnAsciiString ]] Token for 'string'.
         {"string", TT_UNDEFINED, SG_STRING},
