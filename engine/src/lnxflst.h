@@ -52,7 +52,7 @@ MCFontlist *MCFontlistGetCurrent(void);
 struct MCNewFontStruct: public MCFontStruct
 {
 	// The requested details of the font
-	char *family;
+	MCNameRef family;
 	uint16_t style;
 	
 	// The pango description

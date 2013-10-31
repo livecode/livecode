@@ -43,7 +43,7 @@ SOURCES=\
 	sysspec.cpp dsklnx.cpp dskspec.cpp sysunxdate.cpp sysunxnetwork.cpp sysunxrandom.cpp \
 	lnxpasteboard.cpp lnxtransfer.cpp lnxclipboard.cpp \
 	lnxdc.cpp lnxdce.cpp lnxdcs.cpp lnxdclnx.cpp lnxflst.cpp lnxflstold.cpp \
-	lnxstack.cpp lnxspec.cpp lnxans.cpp \
+	lnxstack.cpp lnxans.cpp \
 	lnxgtktheme.cpp lnxgtkthemedrawing.cpp lnximagecache.cpp lnxpsprinter.cpp \
 	lnxdnd.cpp lnxmplayer.cpp lnxaudio.cpp lnxkeymapping.cpp \
 	lnxtextlayout.cpp lnxcolor.cpp lnxcursor.cpp lnxelevate.cpp lnxflst.cpp lnxmisc.cpp \

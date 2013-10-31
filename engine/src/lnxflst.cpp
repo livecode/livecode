@@ -53,15 +53,6 @@ extern "C" int initialise_weak_link_gobject();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct MCNewFontStruct: public MCFontStruct
-{
-	// The requested details of the font
-	MCNameRef family;
-	uint16_t size;
-	uint16_t style;
-
-////////////////////////////////////////////////////////////////////////////////
-
 class MCNewFontlist: public MCFontlist
 {
 public:

@@ -241,6 +241,7 @@ public:
 
 	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, MCStringRef displayname);
 	
+    virtual void createbackdrop(const char *color);
 	virtual void destroybackdrop();
 	
 	void createbackdrop_window(void);

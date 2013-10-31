@@ -1093,9 +1093,9 @@ public:
             if (p_when != oldsecs)
             {
                 itimerval val;
-                val.it_interval.tv_sec = (long)secs;
+                val.it_interval.tv_sec = (long)p_when;
                 val.it_interval.tv_usec
-                    = (long)((secs - (double)(long)secs) * 1000000.0);
+                    = (long)((p_when - (double)(long)p_when) * 1000000.0);
                 val.it_value = val.it_interval;
                 setitimer(ITIMER_REAL, &val, NULL);
                 oldsecs = p_when;
@@ -1532,7 +1532,7 @@ public:
                                                 fd, offset);
                     // MW-2013-05-02: [[ x64 ]] Make sure we use the MAP_FAILED constant
                     //   rather than '-1'.
-                    if (buffer != MAP_FAILED)
+                    if (t_buffer != MAP_FAILED)
                     {
                         handle = new IO_header(NULL, buffer, len, fd, 0);
                         return handle;
