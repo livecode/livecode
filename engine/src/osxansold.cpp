@@ -73,6 +73,43 @@ OSErr navSaveFile(char *prompt, char *defaultDir,
 
 struct FilterRecord
 {
+    MCStringRef tag;
+    MCArrayRef extensions;
+    MCArrayRef file_types;
+    
+    bool matchesExtension(const char *p_extension, unsigned int t_length)
+	{
+        uindex_t t_count = MCArrayGetCount(extensions);
+		for(unsigned int t_index = 0; t_index < t_count; ++t_index)
+        {
+    
+            MCValueRef t_value;
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(extensions, t_index, t_value);
+            MCAutoStringRef t_substring;
+            /* UNCHECKED */ MCStringCopySubstring((MCStringRef)t_value, MCRangeMake(0, t_length), &t_substring);
+            if (MCStringIsEqualToCString((MCStringRef)t_value, "*", kMCCompareExact) || MCStringIsEqualToCString(*t_substring, p_extension, kMCCompareExact))
+				return true;
+        }
+		return false;
+	}
+    
+    bool matchesType(const char *p_type)
+	{
+        uindex_t t_count = MCArrayGetCount(extensions);
+		for(unsigned int t_index = 0; t_index < t_count; ++t_index)
+        {
+            
+            MCValueRef t_value;
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(file_types, t_index, t_value);
+            MCAutoStringRef t_substring;
+            /* UNCHECKED */ MCStringCopySubstring((MCStringRef)t_value, MCRangeMake(0, 4), &t_substring);
+            if (MCStringIsEqualToCString((MCStringRef)t_value, "*", kMCCompareExact) || MCStringIsEqualToCString(*t_substring, p_type, kMCCompareExact))
+				return true;
+        }
+		return false;
+	}
+    
+#if 0
 	Meta::simple_string tag;
 	Meta::itemised_string extensions;
 	Meta::itemised_string file_types;
@@ -92,6 +129,7 @@ struct FilterRecord
 				return true;
 		return false;
 	}
+#endif
 };
 
 static bool sg_navigation_dialog_busy = false;
@@ -137,9 +175,10 @@ static void navigation_event_callback(NavEventCallbackMessage p_message, NavCBRe
 			NavMenuItemSpec *t_item;
 			t_item = (NavMenuItemSpec *)p_params -> eventData . eventDataParms . param;
 			
-			Meta::simple_string t_item_name((const char *)&t_item -> menuItemName[1], t_item -> menuItemName[0]);
+            MCAutoStringRef t_item_name;
+            /* UNCHECKED */ MCStringCreateWithCString((const char *)&t_item -> menuItemName[1], &t_item_name);
 			for(unsigned int t_index = 0; t_index < sg_navigation_filter_record_count; ++t_index)
-				if (t_item_name == sg_navigation_filter_records[t_index] . tag)
+				if (MCStringIsEqualTo(*t_item_name, sg_navigation_filter_records[t_index] . tag, kMCCompareExact))
 					sg_navigation_filter_record_index = t_index;
 		}
 			break;
@@ -430,7 +469,7 @@ int MCA_do_file_dialog_tiger(MCStringRef p_title, MCStringRef p_prompt, FilterRe
 	
 	CFStringRef t_tags[p_filter_count];
 	for(unsigned int t_index = 0; t_index < p_filter_count; ++t_index)
-		t_tags[t_index] = CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)*(p_filters[t_index] . tag), p_filters[t_index] . tag . length(), CFStringGetSystemEncoding(), false);
+        /* UNCHECKED */ MCStringConvertToCFStringRef(p_filters[t_index] . tag, t_tags[t_index]);
 	
 	t_dialog_options . popupExtension = CFArrayCreate(kCFAllocatorDefault, (const void **)t_tags, p_filter_count, NULL);
 	
@@ -489,7 +528,7 @@ int MCA_do_file_dialog_tiger(MCStringRef p_title, MCStringRef p_prompt, FilterRe
             /* UNCHECKED */ MCStringCreateWithCString(*sg_navigation_files, r_value);
 			
 			if (p_options & MCA_OPTION_RETURN_FILTER && p_filter_count > 0)
-                MCStringCreateWithCString(*p_filters[sg_navigation_filter_record_index] . tag, r_result);
+                r_result = MCValueRetain(p_filters[sg_navigation_filter_record_index] . tag);
 		}
 	}
 	
@@ -522,6 +561,47 @@ int MCA_do_file_dialog_tiger(MCStringRef p_title, MCStringRef p_prompt, FilterRe
 
 static void build_filter_records_from_types(MCStringRef *p_types, uint4 p_type_count, FilterRecord*& r_filter_records, unsigned int& r_filter_record_count)
 {
+    r_filter_records = new FilterRecord[p_type_count];
+	r_filter_record_count = p_type_count;
+	
+	for(uint4 t_type_index = 0; t_type_index < p_type_count; ++t_type_index)
+	{
+        MCAutoArrayRef t_type;
+        /* UNCHECKED */ MCStringSplit(p_types[t_type_index], MCSTR("|"), nil, kMCCompareExact, &t_type);
+        uindex_t t_index;
+        t_index = MCArrayGetCount(*t_type);
+        if (t_index < 1)
+			continue;
+        
+        MCValueRef t_first;
+        /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_type, 0, t_first);
+        r_filter_records[t_type_index] . tag = (MCStringRef)t_first;
+        
+        if (t_index < 2)
+		{
+            /* UNCHECKED */ MCArrayStoreValueAtIndex(r_filter_records[t_type_index] . extensions, 0, MCSTR("*"));
+            /* UNCHECKED */ MCArrayStoreValueAtIndex(r_filter_records[t_type_index] . file_types, 0, MCSTR("*"));
+        }
+        else
+		{
+            MCValueRef t_second;
+            MCAutoArrayRef t_extensions;
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_type, 0, t_second);
+            /* UNCHECKED */ MCStringSplit((MCStringRef)t_second, MCSTR(","), nil, kMCCompareExact, &t_extensions);
+            MCArrayCopy(*t_extensions, r_filter_records[t_type_index] . extensions);
+			if (t_index > 2)
+            {
+                MCValueRef t_third;
+                MCAutoArrayRef t_file_types;
+                /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_type, 0, t_third);
+                /* UNCHECKED */ MCStringSplit((MCStringRef)t_third, MCSTR(","), nil, kMCCompareExact, &t_file_types);
+                MCArrayCopy(*t_file_types, r_filter_records[t_type_index] . file_types);
+            }
+		}
+        
+	}
+    
+#if 0
 	r_filter_records = new FilterRecord[p_type_count];
 	r_filter_record_count = p_type_count;
 	
@@ -548,6 +628,7 @@ static void build_filter_records_from_types(MCStringRef *p_types, uint4 p_type_c
 				r_filter_records[t_type_index] . file_types . assign(t_type[2], ',');
 		}
 	}
+#endif
 }
 
 static void build_types_from_filter_records(FilterRecord* p_filter_records, unsigned int p_filter_record_count, MCStringRef* &r_types, uint4 &r_type_count)
@@ -559,7 +640,7 @@ static void build_types_from_filter_records(FilterRecord* p_filter_records, unsi
     t_success = true;
     
     for (uint32_t t_filter_index = 0 ; t_filter_index < p_filter_record_count && t_success; ++t_filter_index)
-        t_success = MCStringCreateWithCString(*p_filter_records[t_filter_index].tag, t_types[t_filter_index]);
+        t_success = MCStringCopy(p_filter_records[t_filter_index].tag, t_types[t_filter_index]);
     
     if (!t_success)
         r_type_count = 0;
@@ -588,10 +669,11 @@ int MCA_file_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filt
         }
 		
 		t_filters = new FilterRecord[1];
-		t_filters[0] . tag = "";
+		t_filters[0] . tag = MCValueRetain(kMCEmptyString);
         
-        /* UNCHECKED */ MCStringConvertToCString(*t_filetypes, t_filetypes_cstring);
-        t_filters[0] . file_types . assign(t_filetypes_cstring, t_filetype_count * 5 - 1, ',', false);
+        MCAutoArrayRef t_file_types;
+        /* UNCHECKED */ MCStringSplit(*t_filetypes, MCSTR(","), nil, kMCCompareExact, &t_file_types);
+        /* UNCHECKED */ MCArrayCopy(*t_file_types, t_filters[0] . file_types);
 		t_filter_count = 1;
         
 	}
@@ -632,10 +714,11 @@ int MCA_ask_file_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_
         }
 		
 		t_filters = new FilterRecord[1];
-		t_filters[0] . tag = "";
+		t_filters[0] . tag = MCValueRetain(kMCEmptyString);
         
-        /* UNCHECKED */ MCStringConvertToCString(*t_filetypes, t_filetypes_cstring);
-		t_filters[0] . file_types . assign(t_filetypes_cstring, t_filetype_count * 5 - 1, ',');
+        MCAutoArrayRef t_file_types;
+        /* UNCHECKED */ MCStringSplit(*t_filetypes, MCSTR(","), nil, kMCCompareExact, &t_file_types);
+        /* UNCHECKED */ MCArrayCopy(*t_file_types, t_filters[0] . file_types);
 		t_filter_count = 1;
         
 	}
