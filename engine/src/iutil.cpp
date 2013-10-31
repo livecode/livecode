@@ -499,12 +499,13 @@ void MCImage::rotate(uint32_t p_angle)
 	// IM-2013-08-02: [[ Bugfix 11087 ]] only get a transformed rep if there is an image rep to transform
 	if (m_rep != nil)
 	{
-		if (m_transformed != nil && m_transformed->Matches(rect.width, rect.height, p_angle, getflag(F_LOCK_LOCATION), resizequality, m_rep))
+		// MW-2013-10-25: [[ Bug 11300 ]] Pass in flip parameters.
+		if (m_transformed != nil && m_transformed->Matches(rect.width, rect.height, p_angle, getflag(F_LOCK_LOCATION), resizequality, m_flip_x, m_flip_y, m_rep))
 			t_rep = m_transformed->Retain();
 		// IM-2013-04-22: [[ BZ 10858 ]] A transformed rep is needed if the angle is non-zero,
 		// or the rect is locked and doesn't match the source dimensions.
 		else if ((p_angle != 0) || (getflag(F_LOCK_LOCATION) && m_rep->GetGeometry(width, height) && (width != rect.width || height != rect.height)))
-			/* UNCHECKED */ MCImageRepGetTranformed(rect.width, rect.height, p_angle, (flags & F_LOCK_LOCATION) != 0, resizequality, m_rep, t_rep);
+			/* UNCHECKED */ MCImageRepGetTranformed(rect.width, rect.height, p_angle, (flags & F_LOCK_LOCATION) != 0, resizequality, m_flip_x, m_flip_y, m_rep, t_rep);
 	}
 	
 	if (m_transformed != nil)
@@ -555,7 +556,8 @@ void MCImage::resize()
 		{
 			MCImageRep *t_rep = nil;
 			
-			/* UNCHECKED */ MCImageRepGetTranformed(rect.width, rect.height, 0, true, resizequality, m_rep, t_rep);
+			// MW-2013-10-25: [[ Bug 11300 ]] Pass in flip parameters.
+			/* UNCHECKED */ MCImageRepGetTranformed(rect.width, rect.height, 0, true, resizequality, m_flip_x, m_flip_y, m_rep, t_rep);
 			m_transformed = static_cast<MCTransformedImageRep*>(t_rep);
 		}
 	}
@@ -563,6 +565,32 @@ void MCImage::resize()
 	// MW-2011-09-20: [[ Bug 9739 ]] We've changed the content of the layer, so make sure
 	//   we mark it for redraw.
 	layer_redrawall();
+}
+
+// MW-2013-10-25: [[ Bug 11300 ]] Ensure we create a flipped rep if needed.
+void MCImage::flip(void)
+{
+	if (m_transformed != nil)
+	{
+		m_transformed->Release();
+		m_transformed = nil;
+	}
+	
+	if (m_rep != nil)
+	{
+		if (m_flip_x || m_flip_y)
+		{
+			MCImageRep *t_rep = nil;
+			
+			/* UNCHECKED */ MCImageRepGetTranformed(rect.width, rect.height, 0, true, resizequality, m_flip_x, m_flip_y, m_rep, t_rep);
+			m_transformed = static_cast<MCTransformedImageRep*>(t_rep);
+		}
+	}
+	
+	// MW-2011-09-20: [[ Bug 9739 ]] We've changed the content of the layer, so make sure
+	//   we mark it for redraw.
+	layer_redrawall();
+	
 }
 
 void MCImage::createbrush(Properties which)
