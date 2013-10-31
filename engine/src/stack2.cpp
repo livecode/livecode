@@ -2542,7 +2542,8 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 
 		// Only enter a modal loop if we are making local windows.
 		// the rev supplied answer/ask dialogs.
-		if (mode == WM_MODAL || mode == WM_SHEET)
+		if ((mode == WM_MODAL || mode == WM_SHEET) &&
+			MCModeMakeLocalWindows())
 		{
 			// If opening the dialog failed for some reason, this will return false.
 			if (mode_openasdialog())

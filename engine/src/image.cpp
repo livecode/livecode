@@ -1575,7 +1575,7 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 		for (uint16_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
 			t_stat = p_stream . WriteColor(s_control_colors[i]);
 		for (uint16_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
-			t_stat = p_stream . WriteCString(s_control_color_names[i] != nil ? MCStringGetCString(s_control_color_names[i]) : "");
+			t_stat = p_stream . WriteStringRef(s_control_color_names[i] != nil ? s_control_color_names[i] : kMCEmptyString);
 		
 		if (t_stat == IO_NORMAL)
 			t_stat = p_stream . WriteU16(s_control_pixmap_count);

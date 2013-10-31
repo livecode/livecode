@@ -962,7 +962,7 @@ IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
 ////////////////////////////////////////////////////////////////////////////////
 
 /* LEGACY */
-#ifdef /* MCS_open */ LEGACY_SYSTEM
+#if 0
 IO_handle MCS_open(const char *p_path, const char *p_mode, Boolean p_map, Boolean p_driver, uint4 p_offset)
 {
     char *t_resolved_path;
@@ -995,7 +995,7 @@ IO_handle MCS_open(const char *p_path, const char *p_mode, Boolean p_map, Boolea
     
     return new IO_header(t_handle, 0);;
 }
-#endif /* MCS_open */
+#endif 
 
 
 IO_handle MCS_open(MCStringRef path, intenum_t p_mode, Boolean p_map, Boolean p_driver, uint32_t p_offset)

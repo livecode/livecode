@@ -1071,8 +1071,14 @@ protected:
 	//   font attrs after the font table loads.
 	void loadfontattrs(uint2 index);
 	
-	void setscript_cstring(const char *script);
-    
+	void setscript(MCStringRef);
+	void setscript_cstring(const char *script)
+	{
+		MCAutoStringRef t_script;
+		/* UNCHECKED */ MCStringCreateWithCString(script, &t_script);
+		setscript(*t_script);
+	}
+
 private:
 #ifdef OLD_EXEC
 	Exec_stat setvisibleprop(uint4 parid, Properties which, MCExecPoint& ep);
