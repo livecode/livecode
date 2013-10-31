@@ -267,7 +267,7 @@ bool MCS_lnx_readlink(MCStringRef p_path, MCStringRef& r_link)
     t_size = readlink(MCStringGetCString(p_path), (char*)t_buffer.Chars(), t_stat.st_size);
 
     return (t_size == t_stat.st_size) && t_buffer.CreateStringAndRelease(r_link);
-#endif /* MCS_readlink_dsl_lnx */
+#endif /* MCS_readlink_dsk_lnx */
     struct stat64 t_stat;
     ssize_t t_size;
     MCAutoNativeCharArray t_buffer;
