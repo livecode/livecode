@@ -72,7 +72,6 @@
 		4D02A38817A6CA3C009D8AF4 /* exec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE3B10215888AB8008EB6B5 /* exec.cpp */; };
 		4D02A3C517A6CB9B009D8AF4 /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7FA7BB1594E0FA00EEF440 /* libfoundation.a */; };
 		4D02A3CA17A6CBE1009D8AF4 /* syntax.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDC6CA616A2CFBF007B6879 /* syntax.cpp */; };
-		4D02A3CF17A6CC14009D8AF4 /* foundation-legacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE3B0D415888A93008EB6B5 /* foundation-legacy.cpp */; };
 		4D02A3E417A6CE55009D8AF4 /* legacy_spec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E864B41F15BDAB3F00F5361C /* legacy_spec.cpp */; };
 		4D05B91013E06AB3001CD82A /* dskmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D05B90D13E06AAB001CD82A /* dskmain.cpp */; };
 		4D05B91113E06AB4001CD82A /* dskosxmain.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D05B90E13E06AAC001CD82A /* dskosxmain.mm */; };
@@ -410,7 +409,6 @@
 		4DE18D100B82296A0086DB92 /* zh_TW.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885690B80DEAC00200116 /* zh_TW.lproj */; };
 		4DE18D870B82296A0086DB92 /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5880850B80BDF000200116 /* QuickTime.framework */; };
 		4DE18D880B82296A0086DB92 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881200B80BF1E00200116 /* IOKit.framework */; };
-		4DE3B0E415888A94008EB6B5 /* foundation-legacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE3B0D415888A93008EB6B5 /* foundation-legacy.cpp */; };
 		4DE3B10415888AB9008EB6B5 /* exec-array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE3B0EF15888AB8008EB6B5 /* exec-array.cpp */; };
 		4DE3B10515888AB9008EB6B5 /* exec-engine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE3B0F115888AB8008EB6B5 /* exec-engine.cpp */; };
 		4DE3B10615888AB9008EB6B5 /* exec-files.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE3B0F315888AB8008EB6B5 /* exec-files.cpp */; };
@@ -572,6 +570,8 @@
 		76EF31A6181E7D8700FAC195 /* cgimageutil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF31A5181E7D8000FAC195 /* cgimageutil.cpp */; };
 		76EF31A7181E7DEF00FAC195 /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4F9DFA13CDE63000B9B15D /* surface.cpp */; };
 		76EF31AA181E803C00FAC195 /* sysosxrandom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF31A9181E801800FAC195 /* sysosxrandom.cpp */; };
+		76EF32CC182268BF00FAC195 /* foundation-legacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF32CA182268BC00FAC195 /* foundation-legacy.cpp */; };
+		76EF32CD182268C100FAC195 /* foundation-legacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF32CA182268BC00FAC195 /* foundation-legacy.cpp */; };
 		76F717611811A2DE007301F6 /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 766E32A1180EE5BC00CF7FCF /* libgraphics.a */; };
 		76FA930A17FC7301003DB770 /* exec-strings-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76FA930917FC72FB003DB770 /* exec-strings-chunk.cpp */; };
 		76FA930B17FC7301003DB770 /* exec-strings-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76FA930917FC72FB003DB770 /* exec-strings-chunk.cpp */; };
@@ -1361,8 +1361,6 @@
 		4DD54D20134F591500981610 /* mblandroid.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; name = mblandroid.java; path = src/java/mblandroid.java; sourceTree = "<group>"; };
 		4DD54D21134F591500981610 /* mblandroid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroid.cpp; path = src/mblandroid.cpp; sourceTree = "<group>"; };
 		4DD54D22134F591500981610 /* mblandroid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblandroid.h; path = src/mblandroid.h; sourceTree = "<group>"; };
-		4DD54D23134F591500981610 /* mblandroidcontext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcontext.cpp; path = src/mblandroidcontext.cpp; sourceTree = "<group>"; };
-		4DD54D24134F591500981610 /* mblandroidcontext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblandroidcontext.h; path = src/mblandroidcontext.h; sourceTree = "<group>"; };
 		4DD54D26134F591500981610 /* mblandroiddc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroiddc.cpp; path = src/mblandroiddc.cpp; sourceTree = "<group>"; };
 		4DD54D27134F591500981610 /* mblandroiddialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroiddialog.cpp; path = src/mblandroiddialog.cpp; sourceTree = "<group>"; };
 		4DD54D28134F591500981610 /* mblandroidfs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidfs.cpp; path = src/mblandroidfs.cpp; sourceTree = "<group>"; };
@@ -1421,8 +1419,6 @@
 		4DDDEC8712F6E6F90056D206 /* mode_installer_w32.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mode_installer_w32.cpp; path = src/mode_installer_w32.cpp; sourceTree = "<group>"; };
 		4DE18D930B82296A0086DB92 /* Standalone-Community.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Standalone-Community.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DE2AB01100CCA9300A69884 /* deploy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = deploy.h; path = src/deploy.h; sourceTree = "<group>"; };
-		4DE3B0D415888A93008EB6B5 /* foundation-legacy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-legacy.cpp"; path = "src/foundation-legacy.cpp"; sourceTree = "<group>"; };
-		4DE3B0D515888A93008EB6B5 /* foundation-legacy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-legacy.h"; path = "src/foundation-legacy.h"; sourceTree = "<group>"; };
 		4DE3B0EF15888AB8008EB6B5 /* exec-array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-array.cpp"; path = "src/exec-array.cpp"; sourceTree = "<group>"; };
 		4DE3B0F115888AB8008EB6B5 /* exec-engine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-engine.cpp"; path = "src/exec-engine.cpp"; sourceTree = "<group>"; };
 		4DE3B0F315888AB8008EB6B5 /* exec-files.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-files.cpp"; path = "src/exec-files.cpp"; sourceTree = "<group>"; };
@@ -1562,6 +1558,8 @@
 		76EF31A5181E7D8000FAC195 /* cgimageutil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cgimageutil.cpp; path = src/cgimageutil.cpp; sourceTree = "<group>"; };
 		76EF31A9181E801800FAC195 /* sysosxrandom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysosxrandom.cpp; path = src/sysosxrandom.cpp; sourceTree = "<group>"; };
 		76EF322A1821256200FAC195 /* exec-strings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "exec-strings.h"; path = "src/exec-strings.h"; sourceTree = "<group>"; };
+		76EF32CA182268BC00FAC195 /* foundation-legacy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-legacy.cpp"; path = "src/foundation-legacy.cpp"; sourceTree = "<group>"; };
+		76EF32CB182268BC00FAC195 /* foundation-legacy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-legacy.h"; path = "src/foundation-legacy.h"; sourceTree = "<group>"; };
 		76F71741181135FE007301F6 /* osxtransfer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = osxtransfer.mm; path = src/osxtransfer.mm; sourceTree = "<group>"; };
 		76FA930917FC72FB003DB770 /* exec-strings-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-strings-chunk.cpp"; path = "src/exec-strings-chunk.cpp"; sourceTree = "<group>"; };
 		A04643DB0BAAA63A0030A830 /* w32ans.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = w32ans.cpp; path = src/w32ans.cpp; sourceTree = "<group>"; };
@@ -1825,10 +1823,10 @@
 		4D587DCC0B8096B000200116 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				76EF32C9182268A700FAC195 /* Foundation */,
 				E864B42215BDABB400F5361C /* Legacy */,
 				4D838B06167B92FD003BEC7C /* Syntax */,
 				4DE3B0EE15888AA1008EB6B5 /* Exec */,
-				4DE3B0CD15888A75008EB6B5 /* Foundation */,
 				E8A49105170F16DA00769C7A /* Core - Graphics */,
 				E8A49108170F17A700769C7A /* Core - Language */,
 				E8A4910A170F1F9F00769C7A /* Core - Misc */,
@@ -2209,8 +2207,6 @@
 				4DD54D20134F591500981610 /* mblandroid.java */,
 				4DD54D21134F591500981610 /* mblandroid.cpp */,
 				4DD54D22134F591500981610 /* mblandroid.h */,
-				4DD54D23134F591500981610 /* mblandroidcontext.cpp */,
-				4DD54D24134F591500981610 /* mblandroidcontext.h */,
 				4DD54D26134F591500981610 /* mblandroiddc.cpp */,
 				4DD54D27134F591500981610 /* mblandroiddialog.cpp */,
 				4DD54D28134F591500981610 /* mblandroidfs.cpp */,
@@ -2375,15 +2371,6 @@
 			name = Mobile;
 			sourceTree = "<group>";
 		};
-		4DE3B0CD15888A75008EB6B5 /* Foundation */ = {
-			isa = PBXGroup;
-			children = (
-				4DE3B0D415888A93008EB6B5 /* foundation-legacy.cpp */,
-				4DE3B0D515888A93008EB6B5 /* foundation-legacy.h */,
-			);
-			name = Foundation;
-			sourceTree = "<group>";
-		};
 		4DE3B0EE15888AA1008EB6B5 /* Exec */ = {
 			isa = PBXGroup;
 			children = (
@@ -2508,6 +2495,15 @@
 				76EF3191181E74E600FAC195 /* libskia.a */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		76EF32C9182268A700FAC195 /* Foundation */ = {
+			isa = PBXGroup;
+			children = (
+				76EF32CA182268BC00FAC195 /* foundation-legacy.cpp */,
+				76EF32CB182268BC00FAC195 /* foundation-legacy.h */,
+			);
+			name = Foundation;
 			sourceTree = "<group>";
 		};
 		E864B42215BDABB400F5361C /* Legacy */ = {
@@ -3787,7 +3783,6 @@
 				4C6F241E1529B33000C5AFB6 /* osxsnapshot.mm in Sources */,
 				4CAA94D015EF6E64007CD4C5 /* osxansold.cpp in Sources */,
 				4D407C0C15F8D15600AA3ABC /* osxscriptold.cpp in Sources */,
-				4DE3B0E415888A94008EB6B5 /* foundation-legacy.cpp in Sources */,
 				4DE3B10415888AB9008EB6B5 /* exec-array.cpp in Sources */,
 				4DE3B10515888AB9008EB6B5 /* exec-engine.cpp in Sources */,
 				4DE3B10615888AB9008EB6B5 /* exec-files.cpp in Sources */,
@@ -3848,6 +3843,7 @@
 				76EF31A7181E7DEF00FAC195 /* surface.cpp in Sources */,
 				76EF31AA181E803C00FAC195 /* sysosxrandom.cpp in Sources */,
 				4D8589F9173AAA0900B20951 /* uuid.cpp in Sources */,
+				76EF32CC182268BF00FAC195 /* foundation-legacy.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3894,11 +3890,11 @@
 				4D02A38617A6CA3A009D8AF4 /* exec-text.cpp in Sources */,
 				4D02A38817A6CA3C009D8AF4 /* exec.cpp in Sources */,
 				4D02A3CA17A6CBE1009D8AF4 /* syntax.cpp in Sources */,
-				4D02A3CF17A6CC14009D8AF4 /* foundation-legacy.cpp in Sources */,
 				4D02A3E417A6CE55009D8AF4 /* legacy_spec.cpp in Sources */,
 				76FA930B17FC7301003DB770 /* exec-strings-chunk.cpp in Sources */,
 				76D47DEA18030E52006F9102 /* exec-interface-field-chunk.cpp in Sources */,
 				4DB3235E174BE8E400046FFE /* uuid.cpp in Sources */,
+				76EF32CD182268C100FAC195 /* foundation-legacy.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

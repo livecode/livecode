@@ -621,46 +621,6 @@ static int32_t MCMiscAndroidKeyboardEnumFromMCExecEnum(MCMiscKeyboardType p_type
     }
 }
 
-void MCAndroidPhotoPickDone(const char *p_data, uint32_t p_size)
-{
-#ifdef /* MCAndroidPhotoPickDone */ LEGACY_EXEC
-	if (s_pick_photo_data != nil)
-	{
-		MCMemoryDeallocate(s_pick_photo_data);
-		s_pick_photo_data = nil;
-	}
-
-	if (p_data != nil)
-	{
-		MCMemoryAllocateCopy(p_data, p_size, (void*&)s_pick_photo_data);
-		s_pick_photo_size = p_size;
-	}
-	s_pick_photo_returned = true;
-#endif /* MCAndroidPhotoPickDone */
-}
-
-void MCAndroidPhotoPickError(const char *p_error)
-{
-#ifdef /* MCAndroidPhotoPickError */ LEGACY_EXEC
-	if (s_pick_photo_data != nil)
-	{
-		MCMemoryDeallocate(s_pick_photo_data);
-		s_pick_photo_data = nil;
-	}
-	if (s_pick_photo_err != nil)
-		MCCStringFree(s_pick_photo_err);
-	MCCStringClone(p_error, s_pick_photo_err);
-	s_pick_photo_returned = true;
-#endif /* MCAndroidPhotoPickError */
-}
-
-void MCAndroidPhotoPickCanceled()
-{
-#ifdef /* MCAndroidPhotoPickCanceled */ LEGACY_EXEC
-	MCAndroidPhotoPickError("cancel");
-#endif /* MCAndroidPhotoPickCanceled */
-}
-
 bool MCSystemSetKeyboardType(intenum_t p_type)
 {
     int32_t t_type = MCMiscAndroidKeyboardEnumFromMCExecEnum((MCMiscKeyboardType)p_type);
@@ -681,46 +641,28 @@ bool MCSystemSetKeyboardReturnType(intenum_t p_type)
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCSystemSetStatusBarStyle(intenum_t p_status_bar_style)
-
-////////////////////////////////////////////////////////////////////////////////
-
-#ifdef /* MCHandleSetKeyboardTypeAndroid */ LEGACY_EXEC
-Exec_stat MCHandleSetKeyboardType(void *context, MCParameter *p_parameters)
 {
-	MCExecPoint ep(nil, nil, nil);
-    
-	if (p_parameters != nil)
-	{
-		int32_t t_type;
-		
-		p_parameters -> eval_argument(ep);
-		if (ep . getsvalue() == "default")
-			t_type = 1;
-		else if (ep . getsvalue() == "alphabet")
-			t_type = 1;
-		else if (ep . getsvalue() == "numeric" || ep . getsvalue() == "decimal")
-			t_type = 3;
-		else if (ep . getsvalue() == "number")
-			t_type = 2;
-		else if (ep . getsvalue() == "phone")
-			t_type = 4;
-		else if (ep . getsvalue() == "email")
-			t_type = 5;
-		else
-			t_type = 1;
-		
-		g_android_keyboard_type = t_type;
-	}
-	
-	MCAndroidEngineRemoteCall("setTextInputMode", "vi", nil, g_android_keyboard_type);
-	
-	return ES_NORMAL;
+    // not implemented on Android
+    return false;
 }
-#endif /* MCHandleSetKeyboardTypeAndroid */
 
 bool MCSystemShowStatusBar()
 {
+#ifdef /* MCHandleSetStatusbarVisibility */ LEGACY_EXEC
+    Exec_stat MCHandleSetStatusbarVisibility(void *context, MCParameter *parameters)
+    {
+        
+        bool t_visible;
+        t_visible = ((uint32_t)context) != 0;
+        
+        MCAndroidEngineRemoteCall("setStatusbarVisibility", "vb", nil, t_visible);
+        
+        return ES_NORMAL;
+        
+    }
+#endif /* MCHandleSetStatusbarVisibility */
     MCAndroidEngineRemoteCall("setStatusbarVisibility", "vb", nil, true);
+    
     return true;
 }
 
@@ -754,52 +696,10 @@ bool MCSystemVibrate (int32_t p_number_of_vibrates)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Exec_stat MCHandlePixelDensity(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandlePixelDensity */ LEGACY_EXEC
-	float t_density;
-	MCAndroidEngineRemoteCall("getPixelDensity", "f", &t_density);
-	MCresult -> setnvalue(t_density);
-	return ES_NORMAL;
-#endif /* MCHandlePixelDensity */
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 bool MCSystemGetPixelDensity(real64_t& r_density)
 {
     MCAndroidEngineRemoteCall("getPixelDensity", "f", &r_density);
     return true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-Exec_stat MCHandleBuildInfo(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandleBuildInfo */ LEGACY_EXEC
-	MCExecPoint ep(nil, nil, nil);
-    
-	if (p_parameters != nil)
-	{
-		char *t_value;
-		t_value = NULL;
-        
-		char *t_key;
-		t_key = NULL;
-        
-		p_parameters -> eval_argument(ep);
-		t_key = ep . getsvalue() . clone();
-        
-		if (!MCAndroidGetBuildInfo(t_key, t_value))
-			return ES_ERROR;
-        
-		MCresult->grab(t_value, MCCStringLength(t_value));
-        
-		MCCStringFree(t_key);
-	}
-    
-	return ES_NORMAL;
-#endif /* MCHandleBuildInfo */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1187,88 +1087,6 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 ////////////////////////////////////////////////////////////////////////////////
 
 // MOVED TO mblmhandlers.cpp
-typedef enum
-{
-    kMCAndroidMediaWaiting,
-    kMCAndroidMediaDone,
-    kMCAndroidMediaCanceled,
-} MCAndroidMediaStatus;
-
-static MCAndroidMediaStatus s_media_status = kMCAndroidMediaWaiting; 
-static char *s_media_content = NULL;
-
-Exec_stat MCHandlePickMedia(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandlePickMedia */ LEGACY_EXEC
-	bool t_success;
-    bool t_audio = false;
-    bool t_video = false;
-    char *t_option_list;
-
-    s_media_status = kMCAndroidMediaWaiting;
-    
-	t_success = MCParseParameters(p_parameters, "s", &t_option_list);
-	while (t_success)
-	{
-		if ((MCCStringEqualCaseless(t_option_list, "music")) ||
-		    (MCCStringEqualCaseless(t_option_list, "podCast")) ||
-		    (MCCStringEqualCaseless(t_option_list, "audioBook")) ||
-            (MCCStringEqualCaseless(t_option_list, "anyAudio")))
-        {
-            t_audio = true;
-        }
-		if ((MCCStringEqualCaseless(t_option_list, "movie")) || 
-			(MCCStringEqualCaseless(t_option_list, "tv")) ||
-            (MCCStringEqualCaseless(t_option_list, "videoPodcast")) ||
-            (MCCStringEqualCaseless(t_option_list, "musicVideo")) ||
-            (MCCStringEqualCaseless(t_option_list, "videoITunesU")) ||
-            (MCCStringEqualCaseless(t_option_list, "anyVideo")))
-        {
-            t_video = true;
-		}
-		t_success = MCParseParameters(p_parameters, "s", &t_option_list);
-	}
-	if (t_audio && !t_video)
-	{
-        MCAndroidEngineCall("pickMedia", "vs", nil, "audio/*");
-	}
-	else if (!t_audio && t_video)
-	{
-        MCAndroidEngineCall("pickMedia", "vs", nil, "video/*");
-	}
-    else
-	{
-        MCAndroidEngineCall("pickMedia", "vs", nil, "audio/* video/*");
-	}
-
-    while (s_media_status == kMCAndroidMediaWaiting)
-        MCscreen->wait(60.0, False, True);
-    MCresult -> sets (s_media_content);
-//    MCLog("Media Types Returned: %s", s_media_content);
-    
-	return ES_NORMAL;
-#endif /* MCHandlePickMedia */
-}
-
-void MCAndroidMediaDone(char *p_media_content)
-{
-#ifdef /* MCAndroidMediaDone */ LEGACY_EXEC
-    s_media_content = p_media_content;
-//    MCLog("MCAndroidMediaDone() called %s", p_media_content);
-	s_media_status = kMCAndroidMediaDone;
-#endif /* MCAndroidMediaDone */
-}
-
-void MCAndroidMediaCanceled()
-{
-#ifdef /* MCAndroidMediaCanceled */ LEGACY_EXEC
-//    MCLog("MCAndroidMediaCanceled() called", nil);
-	s_media_status = kMCAndroidMediaCanceled;
-#endif /* MCAndroidMediaCanceled */
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 extern Exec_stat MCHandleCanMakePurchase(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleEnablePurchaseUpdates(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleDisablePurchaseUpdates(void *context, MCParameter *p_parameters);
@@ -1781,7 +1599,7 @@ bool MCSystemGetRemoteControlEnabled(bool& r_enabled)
     return false;
 }
 
-bool MCSystemSetRemoteControlDisplayProperties(MCArrayRef p_array)
+bool MCSystemSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p_array)
 {
     // not applicable on android
     return false;

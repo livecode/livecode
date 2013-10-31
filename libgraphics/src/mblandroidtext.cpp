@@ -19,6 +19,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern bool MCCStringFromUnicodeSubstring(const unichar_t * p_text, uindex_t p_length, char*& r_text);
+extern void MCCStringFree(char *p_string);
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCGPlatformInitialize(void)
 {
 }

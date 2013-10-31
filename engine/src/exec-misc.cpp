@@ -553,7 +553,7 @@ void MCMiscGetRemoteControlEnabled(MCExecContext& ctxt, bool& r_enabled)
 
 void MCMiscSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p_props)
 {
-    if (MCSystemSetRemoteControlDisplayProperties(p_props))
+    if (MCSystemSetRemoteControlDisplayProperties(ctxt, p_props))
         return;
     
     ctxt . Throw();

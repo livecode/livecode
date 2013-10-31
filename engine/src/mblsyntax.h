@@ -475,7 +475,7 @@ bool MCSystemBuildInfo(MCStringRef p_key, MCStringRef& r_value);
 bool MCSystemEnableRemoteControl();
 bool MCSystemDisableRemoteControl();
 bool MCSystemGetRemoteControlEnabled(bool& r_enabled);
-bool MCSystemSetRemoteControlDisplayProperties(MCArrayRef p_array);
+bool MCSystemSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p_array);
 
 enum MCMiscStatusBarStyle
 {

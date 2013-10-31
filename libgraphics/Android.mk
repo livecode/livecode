@@ -20,7 +20,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/include \
-	$(LOCAL_PATH)/../libcore/include \
+	$(LOCAL_PATH)/../libfoundation/include \
 	$(LOCAL_PATH)/../thirdparty/libskia/include/config \
 	$(LOCAL_PATH)/../thirdparty/libskia/include/core \
 	$(LOCAL_PATH)/../thirdparty/libskia/include/effects \
