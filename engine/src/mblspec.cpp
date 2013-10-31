@@ -916,14 +916,14 @@ bool MCA_color(MCStringRef title, MCColor initial_color, bool as_sheet, bool& r_
 }
 
 // MERG-2013-08-18: Stubs for colorDialogColors.
-void MCA_setcolordialogcolors(MCExecPoint& p_ep)
+void MCA_setcolordialogcolors(MCColor* p_colors, uindex_t p_count)
 {
     
 }
 
-void MCA_getcolordialogcolors(MCExecPoint& p_ep)
+void MCA_getcolordialogcolors(MCColor*& r_colors, uindex_t& r_count)
 {
-	p_ep.clear();
+	r_count = 0;
 }
 
 

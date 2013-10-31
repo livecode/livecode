@@ -935,6 +935,7 @@ bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bo
 	return t_success;
 }
 
+#ifdef /* MCA_setdialogcolors */ LEGACY_EXEC
 void MCA_setcolordialogcolors(MCExecPoint& p_ep)
 {
 	const char * t_color_list;
@@ -964,7 +965,9 @@ void MCA_setcolordialogcolors(MCExecPoint& p_ep)
         
 	}
 }
+#endif /* MCA_setdialogcolors */
 
+#ifdef /* MCA_getdialogcolors */ LEGACY_EXEC
 void MCA_getcolordialogcolors(MCExecPoint& p_ep)
 {
 	p_ep.clear();
@@ -979,6 +982,46 @@ void MCA_getcolordialogcolors(MCExecPoint& p_ep)
         
 		p_ep.concatmcstring(t_ep.getsvalue(), EC_RETURN, i==0);
 	}
+}
+#endif /* MCA_getdialogcolors */
+
+void MCA_setcolordialogcolors(MCColor* p_colors, uindex_t p_count)
+{
+    for(i=0;i < 16;i++)
+    {
+        if (p_colors[i] . flags != 0)
+            s_colordialogcolors[i] = RGB(p_colors[i] -> red >> 8, p_colors[i] -> green >> 8,
+                                             p_colors[i] -> blue >> 8);
+        else
+            s_colordialogcolors[i] = NULL;
+		}
+        
+	}
+}
+
+void MCA_getcolordialogcolors(MCColor*& r_colors, uindex_t& r_count)
+{
+    MCAutoArray<MCColor> t_list;
+    
+	for(int i=0;i < 16;i++)
+	{
+        MCColor t_color;
+        if (s_colordialogcolors[i] != 0)
+        {
+            t_color . red = GetRValue(s_colordialogcolors[i]);
+            t_color . green = GetGValue(s_colordialogcolors[i]);
+            t_color . blue = GetBValue(s_colordialogcolors[i]);
+            t_color . flags = DoRed | DoGreen | DoBlue;
+            t_list . Push(t_color);
+        }
+		else
+        {
+            t_color . flags = 0;
+			t_list . Push(t_color);
+        }
+	}
+    
+    t_list . Take(r_colors, r_count);
 }
 
 int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)

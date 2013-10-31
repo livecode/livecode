@@ -352,6 +352,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 
 	DEFINE_RW_INDEXED_PROPERTY(P_CLIPBOARD_DATA, BinaryString, Pasteboard, ClipboardData)
 	DEFINE_RW_INDEXED_PROPERTY(P_DRAG_DATA, BinaryString, Pasteboard, DragData)
+	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog    
+    DEFINE_RW_PROPERTY(P_COLOR_DIALOG_COLORS, LinesOfString, Dialog, ColorDialogColors)
 };
 
 static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, const MCPropertyInfo*& r_info)

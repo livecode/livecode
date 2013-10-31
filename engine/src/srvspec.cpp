@@ -787,7 +787,7 @@ void MCA_setcolordialogcolors(MCExecPoint& p_ep)
     
 }
 
-void MCA_getcolordialogcolors(MCExecPoint& p_ep)
+void MCA_getcolordialogcolors(MCColor*& r_colors, uindex_t& r_count)
 {
 	p_ep.clear();
 }

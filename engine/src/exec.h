@@ -321,6 +321,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyThunkSetArray(mth) MCPropertyThunkImp(mth, MCArrayRef)
 #define MCPropertyThunkSetName(mth) MCPropertyThunkImp(mth, MCNameRef)
 #define MCPropertyThunkSetItemsOfUInt(mth) MCPropertyListThunkImp(mth,uindex_t,uinteger_t*)
+#define MCPropertyThunkSetLinesOfString(mth) MCPropertyListThunkImp(mth,uindex_t,MCStringRef*)
 
 #define MCPropertyObjectThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectPtr*,typ))MCPropertyObjectThunk<obj,typ,&obj::mth>
 #define MCPropertyObjectPartThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectPtr*,typ))MCPropertyObjectPartThunk<obj,typ,&obj::mth>
@@ -2686,6 +2687,9 @@ void MCDialogExecAskFile(MCExecContext& ctxt, MCStringRef prompt, MCStringRef in
 void MCDialogExecAskFileWithFilter(MCExecContext& ctxt, MCStringRef prompt, MCStringRef initial, MCStringRef filter, MCStringRef title, bool as_sheet);
 void MCDialogExecAskFileWithTypes(MCExecContext& ctxt, MCStringRef prompt, MCStringRef intial, MCStringRef *types, uindex_t type_count, MCStringRef title, bool as_sheet);
 void MCDialogExecCustomAskDialog(MCExecContext& ctxt, MCNameRef p_stack, MCNameRef p_type, bool p_sheet, MCStringRef *p_arglist, uindex_t p_arg_count, bool& r_cancelled, MCStringRef& r_result);
+
+void MCDialogGetColorDialogColors(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_color_list);
+void MCDialogSetColorDialogColors(MCExecContext& ctxt, uindex_t p_count, MCStringRef* p_color_list);
 
 ///////////
 
