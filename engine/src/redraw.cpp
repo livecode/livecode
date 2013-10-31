@@ -588,6 +588,11 @@ void MCControl::layer_dirtyeffectiverect(const MCRectangle& p_effective_rect, bo
 			MCRectangle t_offset_rect;
 			t_offset_rect = MCU_offset_rect(t_dirty_rect, -t_control -> rect . x, -t_control -> rect . y);
 			
+			// MW-2013-10-29: [[ Bug 11329 ]] Tilecache expects sprite rects to be
+			//   relative to top-left of sprite.
+			t_transform . tx = 0.0f;
+			t_transform . ty = 0.0f;
+			
 			// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
 			// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
 			t_device_rect = MCRectangleGetTransformedBounds(t_offset_rect, t_transform);
@@ -700,6 +705,11 @@ void MCControl::layer_changeeffectiverect(const MCRectangle& p_old_effective_rec
 			// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
 			MCGAffineTransform t_transform;
 			t_transform = getstack()->getdevicetransform();
+			
+			// MW-2013-10-29: [[ Bug 11329 ]] Tilecache expects sprite rects to be
+			//   relative to top-left of sprite.
+			t_transform . tx = 0.0f;
+			t_transform . ty = 0.0f;
 			
 			MCRectangle t_device_rect;
 			t_device_rect = MCRectangleGetTransformedBounds(t_rect, t_transform);
@@ -900,7 +910,7 @@ void MCCard::layer_dirtyrect(const MCRectangle& p_dirty_rect)
 // IM-2013-08-21: [[ ResIndependence ]] callback wrapper function to create scaled MCContext
 // IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
 typedef bool (*MCTileCacheDeviceRenderCallback)(void *context, MCContext *target, const MCRectangle& region);
-static bool tilecache_device_renderer(MCTileCacheDeviceRenderCallback p_callback, void *p_context, MCGContextRef p_target, const MCRectangle &p_rectangle)
+static bool tilecache_device_renderer(MCTileCacheDeviceRenderCallback p_callback, void *p_context, MCGContextRef p_target, const MCRectangle &p_rectangle, bool p_is_sprite)
 {
 	MCControl *t_control;
 	t_control = static_cast<MCControl*>(p_context);
@@ -908,7 +918,15 @@ static bool tilecache_device_renderer(MCTileCacheDeviceRenderCallback p_callback
 	// IM-2013-09-30: [[ FullscreenMode ]] Apply stack transform to device context
 	MCGAffineTransform t_transform;
 	t_transform = t_control->getstack()->getdevicetransform();
-
+	
+	// MW-2013-10-29: [[ Bug 11329 ]] Tilecache expects sprite rects to be
+	//   relative to top-left of sprite.
+	if (p_is_sprite)
+	{
+		t_transform . tx = 0.0f;
+		t_transform . ty = 0.0f;
+	}
+	
 	MCGContextSave(p_target);
 	MCGContextConcatCTM(p_target, t_transform);
 	
@@ -964,7 +982,7 @@ static bool testtilecache_sprite_renderer(void *p_context, MCContext *p_target, 
 
 static bool testtilecache_device_sprite_renderer(void *p_context, MCGContextRef p_target, const MCRectangle& p_rectangle)
 {
-	return tilecache_device_renderer(testtilecache_sprite_renderer, p_context, p_target, p_rectangle);
+	return tilecache_device_renderer(testtilecache_sprite_renderer, p_context, p_target, p_rectangle, true);
 }
 
 static bool testtilecache_scenery_renderer(void *p_context, MCContext *p_target, const MCRectangle& p_rectangle)
@@ -996,7 +1014,7 @@ static bool testtilecache_scenery_renderer(void *p_context, MCContext *p_target,
 
 static bool testtilecache_device_scenery_renderer(void *p_context, MCGContextRef p_target, const MCRectangle& p_rectangle)
 {
-	return tilecache_device_renderer(testtilecache_scenery_renderer, p_context, p_target, p_rectangle);
+	return tilecache_device_renderer(testtilecache_scenery_renderer, p_context, p_target, p_rectangle, false);
 }
 
 bool MCCard::tilecache_render_foreground(void *p_context, MCContext *p_target, const MCRectangle& p_dirty)
@@ -1016,7 +1034,7 @@ bool MCCard::tilecache_render_foreground(void *p_context, MCContext *p_target, c
 
 bool device_render_foreground(void *p_context, MCGContextRef p_target, const MCRectangle& p_rectangle)
 {
-	return tilecache_device_renderer(MCCard::tilecache_render_foreground, p_context, p_target, p_rectangle);
+	return tilecache_device_renderer(MCCard::tilecache_render_foreground, p_context, p_target, p_rectangle, false);
 }
 
 bool MCCard::tilecache_render_background(void *p_context, MCContext *p_target, const MCRectangle& p_dirty)
@@ -1042,7 +1060,7 @@ bool MCCard::tilecache_render_background(void *p_context, MCContext *p_target, c
 
 bool device_render_background(void *p_context, MCGContextRef p_target, const MCRectangle& p_rectangle)
 {
-	return tilecache_device_renderer(MCCard::tilecache_render_background, p_context, p_target, p_rectangle);
+	return tilecache_device_renderer(MCCard::tilecache_render_background, p_context, p_target, p_rectangle, false);
 }
 
 void MCCard::render(void)
@@ -1136,6 +1154,7 @@ void MCCard::render(void)
 
 			// IM-2013-10-14: [[ FullscreenMode ]] Constrain each layer to the visible area
 			t_layer . clip = MCU_intersect_rect(t_layer . clip, t_visible_rect);
+			
 			// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
 			// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
 			t_layer . region = MCRectangleGetTransformedBounds(t_layer . region, t_transform);
@@ -1151,9 +1170,7 @@ void MCCard::render(void)
 				{
 					// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
 					// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
-					MCRectangle t_device_rect;
-					t_device_rect = MCRectangleGetTransformedBounds(t_control -> geteffectiverect(), t_transform);
-					MCTileCacheRemoveScenery(t_tiler, t_layer . id, t_device_rect);
+					MCTileCacheRemoveScenery(t_tiler, t_layer . id, t_layer . region);
 					t_layer . id = 0;
 				}
 				
