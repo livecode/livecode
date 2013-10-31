@@ -86,11 +86,9 @@ MCAdType MCAdTypeFromCString(const char *p_string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const char *MCAdGetInneractiveKey(void)
+MCStringRef MCAdGetInneractiveKey(void)
 {
-    MCAutoPointer<char> t_key;
-    /* UNCHECKED */ MCStringConvertToCString(s_inneractive_ad_key, &t_key);
-    return *t_key;
+    return s_inneractive_ad_key;
 }
 
 bool MCAdInneractiveKeyIsNil(void)

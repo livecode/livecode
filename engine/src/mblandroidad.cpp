@@ -91,7 +91,7 @@ MCAndroidInneractiveAd::MCAndroidInneractiveAd(MCAdType p_type, uint32_t p_top_l
 
 bool MCAndroidInneractiveAd::Create(void)
 {
-	MCAndroidObjectRemoteCall(s_admodule, "createInneractiveAd", "osiiiim", &m_view, MCAdGetInneractiveKey(), m_type, m_top_left.x, m_top_left.y, m_timeout, m_meta_data);
+	MCAndroidObjectRemoteCall(s_admodule, "createInneractiveAd", "oxiiiim", &m_view, MCAdGetInneractiveKey(), m_type, m_top_left.x, m_top_left.y, m_timeout, m_meta_data);
     if (m_meta_data != nil)
     {
         JNIEnv *env;

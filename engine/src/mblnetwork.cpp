@@ -51,8 +51,8 @@
 static bool MCS_mbl_hostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context)
 {
 	struct hostent *he;
-    MCAutoPointer<char> t_hostname;
-    /* UNCHECKED */ MCStringConvertToCString(p_hostname, &t_hostname);
+    MCAutoStringRefAsUTF8String t_hostname;
+    /* UNCHECKED */ t_hostname . Lock(p_hostname);
 	he = gethostbyname(*t_hostname);
 	if (he == NULL)
 		return false;

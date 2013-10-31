@@ -279,7 +279,7 @@ static void do_display_ad(void *p_context)
     display_ad_context_t *ctxt;
     ctxt = (display_ad_context_t *)p_context;
     
-    ctxt -> result = [InneractiveAd DisplayAd:[NSString stringWithCString: MCAdGetInneractiveKey() encoding: NSMacOSRomanStringEncoding] 
+    ctxt -> result = [InneractiveAd DisplayAd:[NSString stringWithMCStringRef: MCAdGetInneractiveKey()]
                                      withType:ctxt -> type 
                                      withRoot:ctxt -> view
                                    withReload:ctxt -> timeout
