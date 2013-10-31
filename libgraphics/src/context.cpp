@@ -876,8 +876,6 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 
 	t_layer_clip = MCGIRectangleIntersect(t_layer_clip, t_device_shape);
 
-	MCLog("layer clip = %d, %d, %d, %d", t_layer_clip . left, t_layer_clip . top, t_layer_clip . right, t_layer_clip . bottom);
-
 	// Create a suitable bitmap.
 	SkBitmap t_new_bitmap;
 	t_new_bitmap . setConfig(SkBitmap::kARGB_8888_Config, t_layer_clip . right - t_layer_clip . left, t_layer_clip . bottom - t_layer_clip . top);
