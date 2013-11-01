@@ -3585,17 +3585,28 @@ Exec_stat MCMerge::eval(MCExecPoint &ep)
 		else
 			if (*sptr == '[' && ++sptr < eptr && *sptr == '[')
 			{
+                // AL-2013-10-15 [[ Bug 11274 ]] Merge function should ignore square bracket if part of inner expression
+                uint4 t_skip;
+                t_skip = 0;
 				pstart = sptr - 1;
 				sptr++;
 				while (sptr < eptr)
-					if (*sptr == ']' && ++sptr < eptr && *sptr == ']')
+                {
+                    if (*sptr == '[')
+                        t_skip++;
+					else if (*sptr == ']')
 					{
-						match = True;
-						isexpression = True;
-						break;
+                        if (t_skip > 0)
+                            t_skip--;
+                        else if (++sptr < eptr && *sptr == ']')
+                        {
+                            match = True;
+                            isexpression = True;
+                            break;
+                        }
 					}
-					else
-						sptr++;
+                    sptr++;
+                }
 				if (!match)
 					sptr = pstart + 2;//no end tags (stray ?>) jump back)
 			}

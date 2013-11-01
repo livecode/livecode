@@ -351,6 +351,10 @@ void add_dialog_filters(GtkWidget *dialog, char * const p_types[], uint4 p_type_
 			t_filter_name = get_filter_name(p_types[a]);
 			t_filter_masks = get_filter_masks(p_types[a]);
 
+            // [[ bug 11268 ]] - Ensure there is a filter alongside with the name
+            if (t_filter_masks == nil)
+                continue;
+
 			filter = gtk_file_filter_new();
 			gtk_file_filter_set_name(filter, t_filter_name);
 			
