@@ -554,9 +554,9 @@ Boolean MCField::kdown(MCStringRef p_string, KeySym key)
 		return False;
 	if (key == XK_Return || key == XK_KP_Enter || key == XK_Tab)
 	{
-		char kstring[U4L];
-		sprintf(kstring, "%d", (int)key);
-		if (message_with_args(MCM_raw_key_down, kstring) == ES_NORMAL)
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ MCStringFormat(&t_string, "%d", key);
+		if (message_with_valueref_args(MCM_raw_key_down, *t_string) == ES_NORMAL)
 			return True;
 	}
 	Exec_stat stat;
@@ -910,7 +910,7 @@ Boolean MCField::mdown(uint2 which)
 					layer_redrawrect(linkrect);
 					if (!getflag(F_LIST_BEHAVIOR))
 					{
-						message_with_args(MCM_mouse_down, "1");
+						message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 						return True;
 					}
 					
@@ -943,16 +943,16 @@ Boolean MCField::mdown(uint2 which)
 					// MW-2012-01-25: [[ FieldMetrics ]] Co-ordinates are now card-based.
 					startselection(mx, my, False);
 					if (flags & F_LOCK_TEXT || flags & F_LIST_BEHAVIOR)
-						message_with_args(MCM_mouse_down, "1");
+						message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 					if (t_is_link_in_list)
 						endselection();
 				}
 				else
 					if (flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL)
-						message_with_args(MCM_mouse_down, "1");
+						message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 			}
 			else
-				message_with_args(MCM_mouse_down, "1");
+				message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 		}
 		break;
 		case T_FIELD:
@@ -976,14 +976,14 @@ Boolean MCField::mdown(uint2 which)
 			MCclickfield = this;
 			clickx = mx;
 			clicky = my;
-			message_with_args(MCM_mouse_down, "2");
+			message_with_valueref_args(MCM_mouse_down, MCSTR("2"));
 		}
 		break;
 	case Button3:
 		MCclickfield = this;
 		clickx = mx;
 		clicky = my;
-		message_with_args(MCM_mouse_down, "3");
+		message_with_valueref_args(MCM_mouse_down, MCSTR("3"));
 		break;
 	}
 	return True;
@@ -1048,7 +1048,7 @@ Boolean MCField::mup(uint2 which)
 						        && (my - rect.y > (int4)(textheight + topmargin - texty)
 						            || paragraphs == paragraphs->next()
 						            && !paragraphs->gettextsize()))
-							message_with_args(MCM_mouse_release, "1");
+							message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
 						else
 						{
 							if (linkstart != NULL)
@@ -1070,15 +1070,15 @@ Boolean MCField::mup(uint2 which)
 									else
 										ep.setvalueref(linkstart->getlinktext());
 									linkstart = linkend = NULL;
-									if (message_with_args(MCM_link_clicked, ep.getsvalue()) == ES_NORMAL)
+									if (message_with_valueref_args(MCM_link_clicked, ep.getvalueref()) == ES_NORMAL)
 										return True;
 								}
 								else
 									linkstart = linkend = NULL;
-							message_with_args(MCM_mouse_up, "1");
+							message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 						}
 					else
-						message_with_args(MCM_mouse_release, "1");
+						message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
 			break;
 		case T_FIELD:
 		case T_POINTER:
@@ -1095,27 +1095,29 @@ Boolean MCField::mup(uint2 which)
 		if (flags & F_LOCK_TEXT || getstack()->gettool(this) != T_BROWSE)
 		{
 			if (MCU_point_in_rect(rect, mx, my))
-				message_with_args(MCM_mouse_up, "2");
+				message_with_valueref_args(MCM_mouse_up, MCSTR("2"));
 			else
-				message_with_args(MCM_mouse_release, "2");
+				message_with_valueref_args(MCM_mouse_release, MCSTR("2"));
 		}
 		else if (MCscreen -> hasfeature(PLATFORM_FEATURE_TRANSIENT_SELECTION) && MCselectiondata -> HasText())
 		{
 			MCAutoDataRef t_text;
-			if (MCselectiondata -> Fetch(TRANSFER_TYPE_TEXT, &t_text))
+			if (MCselectiondata -> Fetch(TRANSFER_TYPE_UNICODE_TEXT, &t_text))
 			{
 				extend = extendwords = False;
 				// MW-2012-01-25: [[ FieldMetrics ]] Co-ordinates are now card-based.
 				setfocus(mx, my);
-				typetext(MCDataGetOldString(*t_text));
+                MCAutoStringRef t_text_str;
+                /* UNCHECKED */ MCStringDecode(*t_text, kMCStringEncodingUTF16, false, &t_text_str);
+				typetext(*t_text_str);
 			}
 		}
 		break;
 	case Button3:
 		if (MCU_point_in_rect(rect, mx, my))
-			message_with_args(MCM_mouse_up, "3");
+			message_with_valueref_args(MCM_mouse_up, MCSTR("3"));
 		else
-			message_with_args(MCM_mouse_release, "3");
+			message_with_valueref_args(MCM_mouse_release, MCSTR("3"));
 		break;
 	}
 	return True;
