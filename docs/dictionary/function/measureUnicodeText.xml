@@ -42,7 +42,7 @@
     <example>put measureUnicodeText(theText,me,"bounds") into theTextBounds</example>
   </examples>
   <description>
-    <p>Use the <b>measureUnicodeText</b> <control_st tag="function">function</control_st> to find the dimensions of unicode text drawn with the effective font attributes of an object.</p><p><b>Parameters:</b></p><p>The <i>text</i> is any unicode string. For native strings use <function tag="messureText">measureText</function>.</p><p>The <i>object reference</i> is an expression that evaluates to an object reference.</p><p>The <i>mode</i> is one of:</p>
+    <p>Use the <b>measureUnicodeText</b> <control_st tag="function">function</control_st> to find the dimensions of unicode text drawn with the effective font attributes of an object.</p><p><b>Parameters:</b></p><p>The <i>text</i> is any unicode string. For native strings use <function tag="measureText">measureText</function>.</p><p>The <i>object reference</i> is an expression that evaluates to an object reference.</p><p>The <i>mode</i> is one of:</p>
 	<ul>
 		<li>width - (default if not specified) - returns the width of the text</li>
 		<li>size - returns the width,height of the text</li>

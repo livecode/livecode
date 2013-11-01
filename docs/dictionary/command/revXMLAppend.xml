@@ -8,7 +8,7 @@
   <library>XML library</library>
   <objects>
   </objects>
-  <synonyms>revAppendXML
+  <synonyms>
   </synonyms>
   <classification>
     <category>Text and Data Processing</category>
@@ -17,7 +17,7 @@
   <references>
     <command tag="revXMLAddNode">revXMLAddNode Command</command>
     <function tag="revXMLCreateTree">revXMLCreateTree Function</function>
-    <function tag="revXMLCreateXTreeFromFile">revXMLCreateXTreeFromFile Function</function>
+    <function tag="revXMLCreateTreeFromFile">revXMLCreateTreeFromFile Function</function>
     <command tag="revXMLPutIntoNode">revXMLPutIntoNode Command</command>
     <command tag="revXMLSetAttribute">revXMLSetAttribute Command</command>
     <command tag="revXMLAddDTD">revXMLAddDTD Command</command>

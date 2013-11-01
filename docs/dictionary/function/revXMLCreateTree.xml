@@ -8,7 +8,7 @@
   <library>XML library</library>
   <objects>
   </objects>
-  <synonyms>revCreateXMLTree
+  <synonyms>revXMLCreateTree
   </synonyms>
   <classification>
     <category>Text and Data Processing</category>
