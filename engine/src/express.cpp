@@ -640,6 +640,20 @@ void MCExpression::eval_valueref(MCExecContext& ctxt, MCValueRef& r_value)
 	}
 }
 
+void MCExpression::eval_booleanref(MCExecContext& ctxt, MCBooleanRef& r_value)
+{
+	MCAssert(getvaluetype() != kMCExecValueTypeBooleanRef);
+	
+	MCAutoValueRef t_value;
+	eval_valueref(ctxt, &t_value);
+	if (!ctxt . HasError())
+	{
+		if (ctxt . ConvertToBoolean(*t_value, r_value))
+			return;
+		ctxt . Throw();
+	}
+}
+
 void MCExpression::eval_stringref(MCExecContext& ctxt, MCStringRef& r_value)
 {
 	MCAssert(getvaluetype() != kMCExecValueTypeStringRef);
@@ -649,6 +663,76 @@ void MCExpression::eval_stringref(MCExecContext& ctxt, MCStringRef& r_value)
 	if (!ctxt . HasError())
 	{
 		if (ctxt . ConvertToString(*t_value, r_value))
+			return;
+		ctxt . Throw();
+	}
+}
+
+void MCExpression::eval_dataref(MCExecContext& ctxt, MCDataRef& r_data)
+{
+	MCAssert(getvaluetype() != kMCExecValueTypeDataRef);
+	
+	MCAutoValueRef t_value;
+	eval_valueref(ctxt, &t_value);
+	if (!ctxt . HasError())
+	{
+		if (ctxt . ConvertToData(*t_value, r_data))
+			return;
+		ctxt . Throw();
+	}
+}
+
+void MCExpression::eval_nameref(MCExecContext& ctxt, MCNameRef& r_name)
+{
+	MCAssert(getvaluetype() != kMCExecValueTypeNameRef);
+	
+	MCAutoValueRef t_value;
+	eval_valueref(ctxt, &t_value);
+	if (!ctxt . HasError())
+	{
+		if (ctxt . ConvertToName(*t_value, r_name))
+			return;
+		ctxt . Throw();
+	}
+}
+
+void MCExpression::eval_numberref(MCExecContext& ctxt, MCNumberRef& r_number)
+{
+	MCAssert(getvaluetype() != kMCExecValueTypeNumberRef);
+	
+	MCAutoValueRef t_value;
+	eval_valueref(ctxt, &t_value);
+	if (!ctxt . HasError())
+	{
+		if (ctxt . ConvertToNumber(*t_value, r_number))
+			return;
+		ctxt . Throw();
+	}
+}
+
+void MCExpression::eval_arrayref(MCExecContext& ctxt, MCArrayRef& r_array)
+{
+	MCAssert(getvaluetype() != kMCExecValueTypeArrayRef);
+	
+	MCAutoValueRef t_value;
+	eval_valueref(ctxt, &t_value);
+	if (!ctxt . HasError())
+	{
+		if (ctxt . ConvertToArray(*t_value, r_array))
+			return;
+		ctxt . Throw();
+	}
+}
+
+void MCExpression::eval_bool(MCExecContext& ctxt, bool& r_bool)
+{
+	MCAssert(getvaluetype() != kMCExecValueTypeBool);
+	
+	MCAutoValueRef t_value;
+	eval_valueref(ctxt, &t_value);
+	if (!ctxt . HasError())
+	{
+		if (ctxt . ConvertToBool(*t_value, r_bool))
 			return;
 		ctxt . Throw();
 	}
@@ -677,6 +761,76 @@ void MCExpression::eval_int(MCExecContext& ctxt, integer_t& r_value)
 	if (!ctxt . HasError())
 	{
 		if (ctxt . ConvertToInteger(*t_value, r_value))
+			return;
+		ctxt . Throw();
+	}
+}
+
+void MCExpression::eval_double(MCExecContext& ctxt, double& r_double)
+{
+	MCAssert(getvaluetype() != kMCExecValueTypeDouble);
+	
+	MCAutoValueRef t_value;
+	eval_valueref(ctxt, &t_value);
+	if (!ctxt . HasError())
+	{
+		if (ctxt . ConvertToReal(*t_value, r_double))
+			return;
+		ctxt . Throw();
+	}
+}
+
+void MCExpression::eval_char(MCExecContext& ctxt, char_t& r_char)
+{
+	MCAssert(getvaluetype() != kMCExecValueTypeChar);
+	
+	MCAutoValueRef t_value;
+	eval_valueref(ctxt, &t_value);
+	if (!ctxt . HasError())
+	{
+		if (ctxt . ConvertToChar(*t_value, r_char))
+			return;
+		ctxt . Throw();
+	}
+}
+
+void MCExpression::eval_point(MCExecContext& ctxt, MCPoint& r_point)
+{
+	MCAssert(getvaluetype() != kMCExecValueTypePoint);
+	
+	MCAutoValueRef t_value;
+	eval_valueref(ctxt, &t_value);
+	if (!ctxt . HasError())
+	{
+		if (ctxt . ConvertToLegacyPoint(*t_value, r_point))
+			return;
+		ctxt . Throw();
+	}
+}
+
+void MCExpression::eval_color(MCExecContext& ctxt, MCColor& r_color)
+{
+	MCAssert(getvaluetype() != kMCExecValueTypeColor);
+	
+	MCAutoValueRef t_value;
+	eval_valueref(ctxt, &t_value);
+	if (!ctxt . HasError())
+	{
+		if (ctxt . ConvertToLegacyColor(*t_value, r_color))
+			return;
+		ctxt . Throw();
+	}
+}
+
+void MCExpression::eval_rectangle(MCExecContext& ctxt, MCRectangle& r_rec)
+{
+	MCAssert(getvaluetype() != kMCExecValueTypeRectangle);
+	
+	MCAutoValueRef t_value;
+	eval_valueref(ctxt, &t_value);
+	if (!ctxt . HasError())
+	{
+		if (ctxt . ConvertToLegacyRectangle(*t_value, r_rec))
 			return;
 		ctxt . Throw();
 	}
