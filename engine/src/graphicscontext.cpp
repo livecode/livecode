@@ -578,7 +578,8 @@ void MCGraphicsContext::getmiterlimit(real8 &r_limit)
 
 void MCGraphicsContext::setgradient(MCGradientFill *p_gradient)
 {
-	if (p_gradient != NULL && p_gradient -> kind != kMCGradientKindNone)
+	// MM-2013-10-32: [[ Bug 11367 ]] Added check to make sure ramp lenght isn't 0. Was causing issues with gradient inspector.
+	if (p_gradient != NULL && p_gradient -> kind != kMCGradientKindNone && p_gradient -> ramp_length != 0)
 	{	
 		MCGGradientFunction t_function;
 		t_function = kMCGGradientFunctionLinear;
