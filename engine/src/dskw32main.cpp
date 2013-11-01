@@ -80,7 +80,10 @@ static void DisplayStartupErrorAndExit(void)
 	MCAutoStringRef mcap;
 	MCAutoStringRef mtext;
 	MCModeGetStartupErrorMessage(&mcap, &mtext);
-	MessageBoxA(HWND_DESKTOP, MCStringGetCString(*mtext), MCStringGetCString(*mcap), MB_APPLMODAL | MB_OK);
+	MCAutoStringRefAsWString t_cap_wstr, t_text_wstr;
+	/* UNCHECKED */ t_cap_wstr.Lock(*mcap);
+	/* UNCHECKED */ t_text_wstr.Lock(*mtext);
+	MessageBoxW(HWND_DESKTOP, *t_text_wstr, *t_cap_wstr, MB_APPLMODAL | MB_OK);
 	exit(-1);
 }
 

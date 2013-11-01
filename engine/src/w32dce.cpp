@@ -40,6 +40,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "meta.h"
 
+#include <strsafe.h>
+
 // Used to be in w32defs.h, but only used by MCScreenDC::boundrect.
 #define WM_TITLE_HEIGHT 16
 
@@ -526,17 +528,17 @@ void MCScreenDC::flushevents(uint2 e)
 uint1 MCScreenDC::fontnametocharset(MCStringRef p_font)
 {
 	HDC hdc = f_src_dc;
-	LOGFONTA logfont;
-	memset(&logfont, 0, sizeof(LOGFONTA));
-	uint4 maxlength = MCU_min(LF_FACESIZE - 1U, MCStringGetLength(p_font));
-	char *temp;
-	/* UNCHECKED */ MCStringConvertToCString(p_font, temp);
-	strncpy(logfont.lfFaceName, temp, maxlength);
-	delete temp;
-	logfont.lfFaceName[maxlength] = '\0';
+	LOGFONTW logfont;
+	memset(&logfont, 0, sizeof(LOGFONTW));
+
+	MCAutoStringRefAsWString t_font_wstr;
+	/* UNCHECKED */ t_font_wstr.Lock(p_font);
+
+	/* UNCHECKED */ StringCchCopy(logfont.lfFaceName, LF_FACESIZE, *t_font_wstr);
+
 	//parse font and encoding
 	logfont.lfCharSet = DEFAULT_CHARSET;
-	HFONT newfont = CreateFontIndirectA(&logfont);
+	HFONT newfont = CreateFontIndirectW(&logfont);
 	HFONT oldfont = (HFONT)SelectObject(hdc, newfont);
 	uint1 charset = MCU_wincharsettocharset(GetTextCharset(hdc));
 	SelectObject(hdc, oldfont);

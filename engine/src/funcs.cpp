@@ -9171,7 +9171,7 @@ Exec_stat MCQueryRegistry::eval(MCExecPoint &ep)
 
 	MCExecContext ctxt(ep);
 	MCAutoStringRef t_key;
-	MCAutoStringRef t_result;
+	MCAutoValueRef t_result;
 	MCAutoStringRef t_type;
 
 	if (key->eval(ep) != ES_NORMAL)
