@@ -3316,14 +3316,13 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 	return t_path.CreateStringAndRelease(r_native_path);
 #else
 	return MCStringCopy(p_path, r_native_path);
-#endif
-}
 #endif /* MCS_path2native */
 		if (MCStringIsEmpty(p_path))
 		{
 			r_native = MCValueRetain(kMCEmptyString);
 			return true;
 		}
+
 
 		// The / and \ characters in the path need to be swapped
 		MCAutoArray<unichar_t> t_swapped;

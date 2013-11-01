@@ -47,7 +47,7 @@ bool MCSystemCreateLocalNotification (MCStringRef p_alert_body, MCStringRef p_al
 	/* UNCHECKED */ MCD_convert_from_datetime(ctxt, p_date, CF_SECONDS, CF_UNDEFINED, &t_val);
     /* UNCHECKED */ ctxt.ConvertToInteger(*t_val, t_seconds);
 
-    MCAndroidEngineRemoteCall("createLocalNotification", "jsssibi", &t_id, MCStringGetCString(p_alert_body), MCStringGetCString(p_alert_action), MCStringGetCString(p_user_info), t_seconds, p_play_sound, p_badge_value);
+    MCAndroidEngineRemoteCall("createLocalNotification", "jxxxibi", &t_id, p_alert_body, p_alert_action, p_user_info, t_seconds, p_play_sound, p_badge_value);
     r_id = (int32_t) t_id;
     return t_id >= 0;
 }

@@ -62,7 +62,7 @@ void MCAndroidEngineRemoteCall(const char *method, const char *signature, void *
 void MCAndroidObjectCall(jobject p_object, const char *p_method, const char *p_signature, void *p_return_value, ...);
 void MCAndroidObjectRemoteCall(jobject p_object, const char *p_method, const char *p_signature, void *p_return_value, ...);
 
-bool MCAndroidGetBuildInfo(const char *t_key, char *&r_value);
+bool MCAndroidGetBuildInfo(MCStringRef t_key, MCStringRef &r_value);
 
 typedef struct _android_device_configuration
 {

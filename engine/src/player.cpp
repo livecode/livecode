@@ -430,7 +430,7 @@ Boolean MCPlayer::mdown(uint2 which)
 			if (qtstate == QT_INITTED)
 				qt_click(true, 1);
 #endif
-			if (message_with_args(MCM_mouse_down, "1") == ES_NORMAL)
+			if (message_with_valueref_args(MCM_mouse_down, MCSTR("1")) == ES_NORMAL)
 				return True;
 			break;
 		case T_POINTER:
@@ -449,7 +449,7 @@ Boolean MCPlayer::mdown(uint2 which)
 		if (qtstate == QT_INITTED)
 			qt_click(true, 2);
 #endif
-		if (message_with_args(MCM_mouse_down, "2") == ES_NORMAL)
+		if (message_with_valueref_args(MCM_mouse_down, MCSTR("2")) == ES_NORMAL)
 			return True;
 		break;
 	case Button3:
@@ -457,7 +457,7 @@ Boolean MCPlayer::mdown(uint2 which)
 		if (qtstate == QT_INITTED)
 			qt_click(true, 3);
 #endif
-		message_with_args(MCM_mouse_down, "3");
+		message_with_valueref_args(MCM_mouse_down, MCSTR("3"));
 		break;
 	}
 	return True;
@@ -497,9 +497,9 @@ Boolean MCPlayer::mup(uint2 which) //mouse up
 #endif
 
 			if (MCU_point_in_rect(rect, mx, my))
-				message_with_args(MCM_mouse_up, "1");
+				message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 			else
-				message_with_args(MCM_mouse_release, "1");
+				message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
 
 			break;
 		case T_PLAYER:

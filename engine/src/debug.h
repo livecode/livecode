@@ -33,7 +33,7 @@ struct Watchvar
 	MCObject *object;
 	MCNameRef handlername;
 	MCNameRef varname;
-	char *expression;
+	MCStringRef expression;
 };
 
 // set the watchedvariables to "button 1, somehandler, somevar, someexp"
@@ -78,7 +78,5 @@ extern void MCB_unparsebreaks(MCExecPoint& breaks);
 extern void MCB_clearbreaks(MCObject *object);
 
 extern void MCB_parsewatches(MCExecContext& ctxt, MCStringRef p_input);
-extern Exec_stat MCB_parsewatches(MCExecPoint& watches);
 extern bool MCB_unparsewatches(MCStringRef &r_watches);
-extern void MCB_unparsewatches(MCExecPoint& watches);
 extern void MCB_clearwatches(void);

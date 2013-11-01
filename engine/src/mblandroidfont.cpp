@@ -439,7 +439,7 @@ static bool load_custom_font_file_into_buffer_from_path(const char *p_path, char
     MCAutoStringRef t_font_path;
     
     if (t_success)
-        t_success = MCStringFormat(&t_font_path, "%s/%s%s", MCStringGetCString(MCcmd), s_font_folder, p_path);
+        t_success = MCStringFormat(&t_font_path, "%@/%s%s", MCcmd, s_font_folder, p_path);
     
     if (t_success)
         t_success = MCS_exists(*t_font_path, true);
@@ -620,7 +620,12 @@ void *android_font_create(MCStringRef name, uint32_t size, bool bold, bool itali
         
         // MM-2012-03-06: Check to see if we have a custom font of the given style and name available
         if (!create_skia_font_face_from_custom_font_name_and_style(name, bold, italic, t_font->sk_typeface))
-            t_font->sk_typeface = SkTypeface::CreateFromName(MCStringGetCString(name), t_style);
+        {
+            char *t_name;
+            /* UNCHECKED */ MCStringConvertToCString(name, t_name);
+            t_font->sk_typeface = SkTypeface::CreateFromName(t_name, t_style);
+            delete t_name;
+        }
         
 		MCAssert(t_font->sk_typeface != NULL);
 		t_font->size = size;

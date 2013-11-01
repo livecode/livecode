@@ -129,7 +129,7 @@ Boolean MCColors::mdown(uint2 which)
 			selectedcolor = color.pixel;
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 			layer_redrawall();
-			message_with_args(MCM_mouse_down, "1");
+			message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 			break;
 		case T_POINTER:
 			start(True);
@@ -157,7 +157,7 @@ Boolean MCColors::mup(uint2 which)
 		switch (getstack()->gettool(this))
 		{
 		case T_BROWSE:
-			message_with_args(MCM_mouse_up, "1");
+			message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 			break;
 		case T_POINTER:
 			end();
