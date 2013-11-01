@@ -859,7 +859,7 @@ void MCHandler::doscript(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p
 		if (MCexitall || stat != ES_NORMAL)
 		{
 			deletestatements(statements);
-			if (stat != ES_ERROR)
+			if (stat == ES_ERROR)
 				ctxt.Throw();
 			return;
 		}
