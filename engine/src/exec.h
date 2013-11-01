@@ -41,9 +41,18 @@ enum MCExecValueType
 	kMCExecValueTypeNameRef,
 	kMCExecValueTypeDataRef,
 	kMCExecValueTypeArrayRef,
+    kMCExecValueTypeNumberRef,
     
 	kMCExecValueTypeUInt,
 	kMCExecValueTypeInt,
+    kMCExecValueTypeBool,
+    kMCExecValueTypeDouble,
+    kMCExecValueTypeChar,
+    kMCExecValueTypePoint,
+    kMCExecValueTypeColor,
+    kMCExecValueTypeRectangle,
+    
+    
 };
 
 ////////////////////////////////////////////////////////////////////////////////

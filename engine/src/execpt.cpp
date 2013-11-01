@@ -1282,6 +1282,12 @@ bool MCExecPoint::convertvaluereftonumber(MCValueRef p_value, MCNumberRef& r_num
 	return false;
 }
 
+bool MCExecPoint::convertvaluereftobool(MCValueRef p_value, bool& r_bool)
+{
+    //TO DO
+    return false;
+}
+
 bool MCExecPoint::convertvaluereftouint(MCValueRef p_value, uinteger_t& r_uinteger)
 {
 	MCAutoNumberRef t_number;
