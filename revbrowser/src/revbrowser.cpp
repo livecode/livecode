@@ -14,6 +14,8 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include "core.h"
+
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
@@ -22,6 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <revolution/external.h>
 
 #include "revbrowser.h"
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -51,30 +54,33 @@ inline bool StrToBool(char *boolstr)
 
 inline char *IntToStr(int p_value)
 {
-	char t_string[16];
-	sprintf(t_string, "%d", p_value);
-	return istrdup(t_string);
+    char *t_string;
+    t_string = nil;
+    // AL-2013-11-01 [[ Bug 11289 ]] Use libcore methods to prevent potential buffer overflows in revbrowser
+    MCCStringFormat(t_string, "%d", p_value);
+	return t_string;
 }
 
 void DispatchMetaCardMessage(const char *messagename, const char *tmessage)
 {
 	int retvalue = 0;
 	SetGlobal("XBrowservar",tmessage,&retvalue);
-	char * mcmessage = NULL;
-	mcmessage = (char *)malloc(2048);
-	memset(mcmessage,0,2048);  //fix for very large messages
-	sprintf(mcmessage,"global XBrowservar;send \"%s\" && %s to current card of stack the topstack;put current card of stack topstack;put 0 into Xbrowservar",messagename,tmessage);  //of stack the topstack
+	char *mcmessage = nil;
+    // AL-2013-11-01 [[ Bug 11289 ]] Use libcore methods to prevent potential buffer overflows in revbrowser
+    MCCStringFormat(mcmessage,"global XBrowservar;send \"%s\" && %s to current card of stack the topstack;put current card of stack topstack;put 0 into Xbrowservar",messagename,tmessage); //of stack the topstack
 	SendCardMessage(mcmessage, &retvalue);
-	free(mcmessage);
+	delete mcmessage;
 }
 
 void DispatchMetaCardMessage(const char *messagename, const char *tmessage, int instID)
 {
 	int retvalue = 0;
 	SetGlobal("XBrowservar",tmessage,&retvalue);
-	char mcmessage[256];
-	sprintf(mcmessage,"global XBrowservar;send \"%s %s,%s\" to current card of stack the topstack;put 0 into Xbrowservar",messagename,tmessage,instID);
+	char *mcmessage = nil;
+    // AL-2013-11-01 [[ Bug 11289 ]] Use libcore methods to prevent potential buffer overflows in revbrowser
+    MCCStringFormat(mcmessage, "global XBrowservar;send \"%s %s,%s\" to current card of stack the topstack;put 0 into Xbrowservar",messagename,tmessage,instID);
 	SendCardMessage(mcmessage, &retvalue);
+    delete mcmessage;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -227,26 +233,16 @@ void BrowserInstances::SetActiveInstanceId(int p_id)
 
 char *BrowserInstances::GetInstanceIds(void)
 {
-	int t_length;
-	t_length = 0;
-
 	char *t_buffer;
-	t_buffer = (char *)malloc(1);
-	*t_buffer = '\0';
+    t_buffer = nil;
 	
 	for(BrowserInstance *t_instance = m_instances; t_instance != NULL; t_instance = t_instance -> next)
 	{
-		char t_id_buffer[16];
-		sprintf(t_id_buffer, "%d", t_instance -> instance_id);
-
-		t_buffer = (char *)realloc(t_buffer, t_length + strlen(t_id_buffer) + 2);
-		
-		if (t_length != 0)
-			strcat(t_buffer, ",");
-
-		strcat(t_buffer, t_id_buffer);
-
-		t_length += strlen(t_id_buffer) + 1;
+        // AL-2013-11-01 [[ Bug 11289 ]] Use libcore methods to prevent potential buffer overflows in revbrowser
+        if (t_instance == m_instances)
+            MCCStringFormat(t_buffer, "%d", t_instance -> instance_id);
+        else
+            MCCStringAppendFormat(t_buffer, ",%d", t_instance -> instance_id);
 	}
 
 	return t_buffer;
@@ -321,15 +317,18 @@ send \"browser%s\" && %d, quote & \"%s\" & quote to this card of XBrowservar";
 	int t_window_id;
 	t_window_id = t_instance -> browser -> GetWindowId();
 
-	char t_message[2048];
+	char *t_message;
+    t_message = nil;
+    
+    // AL-2013-11-01 [[ Bug 11289 ]] Use libcore methods to prevent potential buffer overflows in revbrowser
 	if (p_argument == NULL)
-		sprintf(t_message, s_message_template, t_window_id, t_window_id, t_instance -> xbrowser_callbacks ? "XBrowser_" : "browser", p_message, p_id);
+		MCCStringFormat(t_message, s_message_template, t_window_id, t_window_id, t_instance -> xbrowser_callbacks ? "XBrowser_" : "browser", p_message, p_id);
 	else
 	{
 		if (t_instance -> xbrowser_callbacks)
-			sprintf(t_message, s_xbrowser_message_template_with_argument, t_window_id, t_window_id, p_message, p_argument, p_id);
+			MCCStringFormat(t_message, s_xbrowser_message_template_with_argument, t_window_id, t_window_id, p_message, p_argument, p_id);
 		else
-			sprintf(t_message, s_message_template_with_argument, t_window_id, t_window_id, p_message, p_id, p_argument);
+			MCCStringFormat(t_message, s_message_template_with_argument, t_window_id, t_window_id, p_message, p_id, p_argument);
 	}
 
 	SetGlobal(t_instance -> xbrowser_callbacks ? "XBrowserCancel" : "browserCancel", "FALSE", &t_retval);
@@ -338,6 +337,8 @@ send \"browser%s\" && %d, quote & \"%s\" & quote to this card of XBrowservar";
 	SendCardMessage(t_message, &t_retval);
 	t_instance -> callback_depth -= 1;
 	
+    delete t_message;
+    
 	if (t_instance -> stack_id != NULL)
 		free(t_instance -> stack_id);
 
@@ -1153,9 +1154,8 @@ void revBrowserGetProp(CWebBrowserBase *p_instance, char *args[], int nargs, cha
 	{
 		int t_left, t_top, t_right, t_bottom;
 		t_browser -> GetRect(t_left, t_top, t_right, t_bottom);
-
-		 result = (char *)malloc(64);
-		 sprintf(result,"%d,%d,%d,%d", t_left, t_top, t_right, t_bottom);
+        // AL-2013-11-01 [[ Bug 11289 ]] Use libcore methods to prevent potential buffer overflows in revbrowser
+        MCCStringFormat(result,"%d,%d,%d,%d", t_left, t_top, t_right, t_bottom);
 	}
 	break;
 	
@@ -1163,9 +1163,8 @@ void revBrowserGetProp(CWebBrowserBase *p_instance, char *args[], int nargs, cha
 	{
 		int t_left, t_top, t_right, t_bottom;
 		t_browser -> GetFormattedRect(t_left, t_top, t_right, t_bottom);
-
-		 result = (char *)malloc(64);
-		 sprintf(result,"%d,%d,%d,%d", t_left, t_top, t_right, t_bottom);
+        // AL-2013-11-01 [[ Bug 11289 ]] Use libcore methods to prevent potential buffer overflows in revbrowser
+		 MCCStringFormat(result,"%d,%d,%d,%d", t_left, t_top, t_right, t_bottom);
 	}
 	break;
 
