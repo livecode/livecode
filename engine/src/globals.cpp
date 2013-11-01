@@ -51,6 +51,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "external.h"
 #include "parentscript.h"
 #include "osspec.h"
+#include "variable.h"
 
 #include "printer.h"
 

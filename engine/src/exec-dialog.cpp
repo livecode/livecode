@@ -26,6 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "field.h"
 #include "stack.h"
 #include "card.h"
+#include "variable.h"
 
 #include "exec.h"
 #include "debug.h"

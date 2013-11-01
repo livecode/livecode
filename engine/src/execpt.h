@@ -20,10 +20,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	EXECPOINT_H
 #define	EXECPOINT_H
 
-#ifndef __MC_VARIABLE__
-#include "variable.h"
-#endif
-
 #define EP_PAD 256
 #define EP_MASK 0xFFFFFF00
 

@@ -55,6 +55,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "iquantization.h"
 #include "syntax.h"
+#include "variable.h"
 
 #include "exec-interface.h"
 

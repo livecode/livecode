@@ -32,6 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "debug.h"
 #include "parentscript.h"
+#include "variable.h"
 
 #include "globals.h"
 

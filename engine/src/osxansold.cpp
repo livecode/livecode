@@ -32,6 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "stacklst.h"
 #include "osspec.h"
+#include "variable.h"
 
 #include "globals.h"
 #include "dispatch.h"

@@ -53,6 +53,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "redraw.h"
 #include "font.h"
+#include "variable.h"
 
 #include "globals.h"
 #include "mctheme.h"

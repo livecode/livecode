@@ -36,6 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parentscript.h"
 #include "osspec.h"
 #include "syntax.h"
+#include "variable.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 

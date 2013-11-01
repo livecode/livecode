@@ -47,6 +47,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "aclip.h"
 #include "vclip.h"
 #include "osspec.h"
+#include "variable.h"
 
 #include "debug.h"
 #include "card.h"

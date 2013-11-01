@@ -36,6 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "newobj.h"
 #include "mcerror.h"
 #include "util.h"
+#include "variable.h"
 
 #include "globals.h"
 

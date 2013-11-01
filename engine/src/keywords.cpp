@@ -33,6 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "newobj.h"
 #include "cmds.h"
 #include "redraw.h"
+#include "variable.h"
 
 #include "globals.h"
 

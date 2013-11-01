@@ -22,6 +22,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define MAX_EXP 7
 
+#ifndef __MC_EXEC__
+#include "exec.h"
+#endif
+
 class MCExpression
 {
 protected:
@@ -36,10 +40,21 @@ public:
 	MCExpression();
 	virtual ~MCExpression();
 
+	virtual MCExecValueType getvaluetype(void);
+	
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 
 	// Evaluate the exoression as a value, and place its value into ep.
 	virtual Exec_stat eval(MCExecPoint &ep);
+	
+	// valueref, stringref, dataref, nameref, arrayref
+	// bool, uint, int, double
+	// enum, set, custom (?)
+	virtual void eval_valueref(MCExecContext& ctxt, MCValueRef& r_value);
+    virtual void eval_stringref(MCExecContext& ctxt, MCStringRef& r_value);
+	virtual void eval_uint(MCExecContext& ctxt, uinteger_t& r_value);
+	virtual void eval_int(MCExecContext& ctxt, integer_t& r_value);
+	
 	// Compile the syntax into the (new) tree for use by the new evaluator.
 	virtual void compile(MCSyntaxFactoryRef);
 	virtual void compile_out(MCSyntaxFactoryRef);

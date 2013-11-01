@@ -4729,7 +4729,7 @@ Parse_stat MCLength::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCLength::eval(MCExecPoint &ep)
+void MCLength::eval_int(MCExecContext& ctxt, integer_t& r_value)
 {
 #ifdef /* MCLength */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
@@ -4740,28 +4740,12 @@ Exec_stat MCLength::eval(MCExecPoint &ep)
 	ep.setnvalue(ep.getsvalue().getlength());
 	return ES_NORMAL;
 #endif /* MCLength */
-
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_LENGTH_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_string;
-
-	/* UNCHECKED */ ep.copyasstringref(&t_string);
-
-	integer_t t_result;
-	MCStringsEvalLength(ctxt, *t_string, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep . setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
+    
+    MCAutoStringRef t_string;
+    if (!ctxt . EvalExprAsStringRef(source, EE_LENGTH_BADSOURCE, &t_string))
+        return;
+    
+    MCStringsEvalLength(ctxt, *t_string, r_value);
 }
 
 MCLicensed::~MCLicensed()

@@ -203,7 +203,7 @@ Parse_stat MCBeep::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCBeep::exec(MCExecPoint &ep)
+void MCBeep::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCBeep */ LEGACY_EXEC
 uint4 i = 1;
@@ -234,24 +234,11 @@ uint4 i = 1;
 	return ES_NORMAL;
 #endif /* MCBeep */
 
-
-	uint4 i = 1;
-	if (times != NULL)
-	{
-		if (times->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-		{
-			MCeerror->add(EE_BEEP_BADEXP, line, pos);
-			return ES_ERROR;
-		}
-		i = ep.getuint4();
-	}
-
-	MCExecContext ctxt(ep);
-	MCInterfaceExecBeep(ctxt, i);
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+	uinteger_t t_count;
+	if (!ctxt . EvalOptionalExprAsUInt(times, 1, EE_BEEP_BADEXP, t_count))
+		return;
+	
+	MCInterfaceExecBeep(ctxt, t_count);
 }
 
 void MCBeep::compile(MCSyntaxFactoryRef ctxt)

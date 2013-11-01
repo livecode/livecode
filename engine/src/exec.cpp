@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "securemode.h"
 #include "exec.h"
 #include "field.h"
+#include "variable.h"
 
 #include "osspec.h"
 
@@ -401,6 +402,58 @@ bool MCExecContext::EvaluateExpression(MCExpression *p_expr, MCValueRef& r_resul
 	}
 
 	return true;
+}
+
+//////////
+
+bool MCExecContext::EvalExprAsUInt(MCExpression *p_expr, Exec_errors p_error, uinteger_t& r_value)
+{
+	MCAssert(p_expr != nil);
+	
+	p_expr -> eval_uint(*this, r_value);
+	
+	if (!HasError())
+		return true;
+	
+	LegacyThrow(p_error);
+	
+	return false;
+}
+
+bool MCExecContext::EvalOptionalExprAsUInt(MCExpression *p_expr, uinteger_t p_default, Exec_errors p_error, uinteger_t& r_value)
+{
+	if (p_expr == nil)
+	{
+		r_value = p_default;
+		return true;
+	}
+	
+	return EvalExprAsUInt(p_expr, p_error, r_value);
+}
+
+bool MCExecContext::EvalExprAsStringRef(MCExpression *p_expr, Exec_errors p_error, MCStringRef& r_value)
+{
+	MCAssert(p_expr != nil);
+	
+	p_expr -> eval_stringref(*this, r_value);
+	
+	if (!HasError())
+		return true;
+	
+	LegacyThrow(p_error);
+	
+	return false;
+}
+
+bool MCExecContext::EvalOptionalExprAsStringRef(MCExpression *p_expr, MCStringRef p_default, Exec_errors p_error, MCStringRef& r_value)
+{
+	if (p_expr == nil)
+	{
+		r_value = MCValueRetain(p_default);
+		return true;
+	}
+	
+	return EvalExprAsStringRef(p_expr, p_error, r_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

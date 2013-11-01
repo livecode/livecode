@@ -30,6 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "syntax.h"
 #include "exec.h"
 #include "exec-interface.h"
+#include "variable.h"
 
 MCEffectList::~MCEffectList()
 {

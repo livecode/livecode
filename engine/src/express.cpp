@@ -576,9 +576,110 @@ Parse_stat MCExpression::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
+MCExecValueType MCExpression::getvaluetype(void)
+{
+	return kMCExecValueTypeNone;
+}
+
 Exec_stat MCExpression::eval(MCExecPoint &ep)
 {
-	return ES_ERROR;
+	MCAssert(getvaluetype() != kMCExecValueTypeNone);
+	
+	MCExecContext ctxt(ep);
+	
+	MCAutoValueRef t_value;
+	eval_valueref(ctxt, &t_value);
+	if (!ctxt . HasError())
+    {
+        ep . setvalueref(*t_value);
+		return ES_NORMAL;
+    }
+	
+	return ctxt . Catch(line, pos);
+}
+
+void MCExpression::eval_valueref(MCExecContext& ctxt, MCValueRef& r_value)
+{
+	MCAssert(getvaluetype() != kMCExecValueTypeValueRef);
+	
+	switch(getvaluetype())
+	{
+        case kMCExecValueTypeNone:
+        {
+            if (eval(ctxt . GetEP()) == ES_NORMAL)
+                if (ctxt . GetEP() . copyasvalueref(r_value))
+                    return;
+            
+            ctxt . Throw();
+        }
+        break;
+		
+        case kMCExecValueTypeUInt:
+		{
+			uinteger_t t_value;
+			eval_uint(ctxt, t_value);
+			if (!ctxt . HasError())
+				if (!MCNumberCreateWithUnsignedInteger(t_value, (MCNumberRef&)r_value))
+					ctxt . Throw();
+		}
+		break;
+			
+		case kMCExecValueTypeInt:
+		{
+			integer_t t_value;
+			eval_int(ctxt, t_value);
+			if (!ctxt . HasError())
+				if (!MCNumberCreateWithInteger(t_value, (MCNumberRef&)r_value))
+					ctxt . Throw();
+		}
+		break;
+			
+		default:
+			ctxt . Unimplemented();
+			break;
+	}
+}
+
+void MCExpression::eval_stringref(MCExecContext& ctxt, MCStringRef& r_value)
+{
+	MCAssert(getvaluetype() != kMCExecValueTypeStringRef);
+	
+	MCAutoValueRef t_value;
+	eval_valueref(ctxt, &t_value);
+	if (!ctxt . HasError())
+	{
+		if (ctxt . ConvertToString(*t_value, r_value))
+			return;
+		ctxt . Throw();
+	}
+}
+
+void MCExpression::eval_uint(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	MCAssert(getvaluetype() != kMCExecValueTypeUInt);
+	
+	MCAutoValueRef t_value;
+	eval_valueref(ctxt, &t_value);
+	if (!ctxt . HasError())
+	{
+		if (ctxt . ConvertToUnsignedInteger(*t_value, r_value))
+			return;
+		ctxt . Throw();
+	}
+}
+
+void MCExpression::eval_int(MCExecContext& ctxt, integer_t& r_value)
+{
+	MCAssert(getvaluetype() != kMCExecValueTypeInt);
+	
+	MCAutoValueRef t_value;
+	eval_valueref(ctxt, &t_value);
+	if (!ctxt . HasError())
+	{
+		if (ctxt . ConvertToInteger(*t_value, r_value))
+			return;
+		ctxt . Throw();
+	}
 }
 
 void MCExpression::initpoint(MCScriptPoint &sp)

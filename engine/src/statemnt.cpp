@@ -58,8 +58,16 @@ Parse_stat MCStatement::parse(MCScriptPoint &sp)
 
 Exec_stat MCStatement::exec(MCExecPoint &ep)
 {
-	fprintf(stderr, "ERROR: tried to exec a statement\n");
-	return ES_ERROR;
+	MCExecContext ctxt(ep);
+	exec_ctxt(ctxt);
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+	return ctxt . Catch(line, pos);
+}
+
+void MCStatement::exec_ctxt(MCExecContext&)
+{
+	fprintf(stderr, "ERROR: exec method for statement not implemented properly\n");
 }
 
 uint4 MCStatement::linecount()

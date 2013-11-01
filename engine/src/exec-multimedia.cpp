@@ -28,6 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "uidc.h"
 #include "util.h"
 #include "aclip.h"
+#include "variable.h"
 
 #include "exec.h"
 #include "stack.h"

@@ -31,6 +31,23 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+enum MCExecValueType
+{
+	kMCExecValueTypeNone,
+	
+	kMCExecValueTypeValueRef,
+	kMCExecValueTypeBooleanRef,
+	kMCExecValueTypeStringRef,
+	kMCExecValueTypeNameRef,
+	kMCExecValueTypeDataRef,
+	kMCExecValueTypeArrayRef,
+    
+	kMCExecValueTypeUInt,
+	kMCExecValueTypeInt,
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 enum MCExecType
 {
 	/* A */ kMCExecTypeAny,
@@ -1090,6 +1107,18 @@ public:
     void GiveCStringToResult(char *p_cstring);
     void SetTheResultToCString(const char *p_string);
     
+	//////////
+	
+	bool EvalExprAsValueRef(MCExpression *expr, Exec_errors error, MCValueRef& r_value);
+	bool EvalOptionalExprAsValueRef(MCExpression *expr, MCValueRef default_value, Exec_errors error, MCValueRef& r_value);
+	
+	bool EvalExprAsUInt(MCExpression *expr, Exec_errors error, uinteger_t& r_uint);
+	bool EvalOptionalExprAsUInt(MCExpression *expr, uinteger_t default_value, Exec_errors error, uinteger_t& r_uint);
+	
+	bool EvalExprAsStringRef(MCExpression *expr, Exec_errors error, MCStringRef& r_value);
+	bool EvalOptionalExprAsStringRef(MCExpression *expr, MCStringRef default_value, Exec_errors error, MCStringRef& r_value);
+	
+	
 private:
 	MCExecPoint& m_ep;
 	Exec_stat m_stat;
