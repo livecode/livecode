@@ -1637,6 +1637,7 @@ static bool InterfaceGenerateExports(InterfaceRef self, CoderRef p_coder)
 		{ "InterfaceQueryActivity", "jobject", nil, nil },
 		{ "InterfaceQueryContainer", "jobject", nil, nil },
 		{ "InterfaceQueryEngine", "jobject", nil, nil },
+		{ "InterfaceQueryViewScale", "jdouble", nil, nil },
 		{ "ObjectResolve", "jlong", "jobject chunk", "chunk" },
 		{ "ObjectRetain", "void", "jlong object", "object" },
 		{ "ObjectRelease", "void", "jlong object", "object" },
