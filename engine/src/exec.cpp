@@ -119,6 +119,60 @@ bool MCExecContext::ConvertToData(MCValueRef p_value, MCDataRef& r_data)
 	return MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_string), MCStringGetLength(*t_string), r_data);
 }
 
+bool MCExecContext::ConvertToName(MCValueRef p_value, MCNameRef& r_name)
+{
+    MCAutoStringRef t_string;
+    if (!ConvertToString(p_value, &t_string))
+        return false;
+    
+    return MCNameCreate(*t_string, r_name);
+}
+
+bool MCExecContext::ConvertToChar(MCValueRef p_value, char_t& r_char)
+{
+    MCAutoStringRef t_string;
+    if (!ConvertToString(p_value, &t_string) || MCStringGetLength(*t_string) > 1)
+        return false;
+    
+    r_char = MCStringGetNativeCharAtIndex(*t_string, 0);
+    return true;
+}
+
+bool MCExecContext::ConvertToLegacyColor(MCValueRef p_value, MCColor& r_color)
+{
+    MCAutoStringRef t_string;
+	return ConvertToString(p_value, &t_string) && MCscreen -> parsecolor(*t_string, r_color);
+}
+
+bool MCExecContext::ConvertToBool(MCValueRef p_value, bool& r_bool)
+{
+    return m_ep . convertvaluereftobool(p_value, r_bool);
+}
+
+bool MCExecContext::ConvertToLegacyPoint(MCValueRef p_value, MCPoint& r_point)
+{
+    MCAutoStringRef t_string;
+	return ConvertToString(p_value, &t_string) && MCU_stoi2x2(MCStringGetOldString(*t_string), r_point . x, r_point . y);
+}
+
+bool MCExecContext::ConvertToLegacyRectangle(MCValueRef p_value, MCRectangle& r_rect)
+{
+    MCAutoStringRef t_string;
+	int16_t t_left, t_top, t_right, t_bottom;
+	if (ConvertToString(p_value, &t_string) &&
+		MCU_stoi2x4(MCStringGetOldString(*t_string), t_left, t_top, t_right, t_bottom))
+	{
+		r_rect . x = t_left;
+		r_rect . y = t_top;
+		r_rect . width = t_right - t_left;
+		r_rect . height = t_bottom - t_top;
+    
+		return true;
+	}
+    
+	return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCExecContext::FormatReal(real64_t p_real, MCStringRef& r_value)
