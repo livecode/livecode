@@ -131,33 +131,19 @@ MCUrlProgressEvent *MCUrlProgressEvent::CreateUrlProgressEvent(MCObjectHandle *p
 	t_event->m_status = kMCSystemUrlStatusNone;
 	t_event->m_error = nil;
 	
-	bool t_success;
-	t_success = true;
-	
-	
     t_event -> m_url = MCValueRetain(p_url);
 		
 	if (p_status == kMCSystemUrlStatusError)
         t_event -> m_error = MCValueRetain(p_error);
 	
-	if (t_success)
-	{
-		t_event->m_status = p_status;
-		t_event->m_object = p_object;
-		t_event->m_object->Retain();
-		if (t_event->m_status == kMCSystemUrlStatusUploading || t_event->m_status == kMCSystemUrlStatusLoading)
-		{
-			t_event->m_transferred.amount = p_amount;
-			t_event->m_transferred.total = p_total;
-		}
-	}
-	else
-	{
-		MCValueRelease(t_event->m_url);
-		MCValueRelease(t_event->m_error);
-		delete t_event;
-		return nil;
-	}
+    t_event->m_status = p_status;
+    t_event->m_object = p_object;
+    t_event->m_object->Retain();
+    if (t_event->m_status == kMCSystemUrlStatusUploading || t_event->m_status == kMCSystemUrlStatusLoading)
+    {
+        t_event->m_transferred.amount = p_amount;
+        t_event->m_transferred.total = p_total;
+    }
 	
 	return t_event;
 }
@@ -218,13 +204,15 @@ void MCUrlProgressEvent::Dispatch(void)
 	}
 }
 
-static void send_url_progress(MCObjectHandle *p_object, MCSystemUrlStatus p_status, MCStringRef p_url, int32_t p_amount, int32_t& x_total, MCStringRef p_data)
+static void send_url_progress(MCObjectHandle *p_object, MCSystemUrlStatus p_status, MCStringRef p_url, int32_t p_amount, int32_t& x_total, void* p_data)
 {
 	if (p_status == kMCSystemUrlStatusNegotiated)
 		x_total = *(int32_t*)p_data;
 	
 	MCUrlProgressEvent *t_event;
-	t_event = MCUrlProgressEvent::CreateUrlProgressEvent(p_object, p_url, p_status, p_amount, x_total, p_data);
+    MCAutoStringRef t_data;
+    /* UNCHECKED */ MCStringCreateWithCString((const char_t *)p_data, &t_data);
+	t_event = MCUrlProgressEvent::CreateUrlProgressEvent(p_object, p_url, p_status, p_amount, x_total, *t_data);
 	if (t_event)
 		MCEventQueuePostCustom(t_event);
 }
@@ -271,7 +259,7 @@ static bool MCS_geturl_callback(void *p_context, MCSystemUrlStatus p_status, con
             /* UNCHECKED */ MCStringAppendFormat(*t_new_data, "%s", (const char *)p_data);
             /* UNCHECKED */ MCStringCopy(*t_new_data, context -> data);
         }
-        send_url_progress(context -> object, p_status, context -> url, MCStringGetLength(context -> data), context -> total, context -> error);
+        send_url_progress(context -> object, p_status, context -> url, MCStringGetLength(context -> data), context -> total, context -> data);
     }
 	return true;
 }
