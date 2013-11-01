@@ -109,6 +109,16 @@ struct FilterRecord
 		return false;
 	}
     
+    ~FilterRecord()
+    {
+        if (tag != nil)
+            MCValueRelease(tag);
+        if (extensions != nil)
+            MCValueRelease(extensions);
+        if (file_types != nil)
+            MCValueRelease(file_types);
+    }
+    
 #if 0
 	Meta::simple_string tag;
 	Meta::itemised_string extensions;
