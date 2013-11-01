@@ -388,7 +388,7 @@ Boolean MCImage::mdown(uint2 which)
 			}
 		break;
 	case Button2:
-		message_with_args(MCM_mouse_down, "2");
+		message_with_valueref_args(MCM_mouse_down, MCSTR("2"));
 		break;
 	}
 	return True;

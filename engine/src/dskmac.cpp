@@ -603,7 +603,7 @@ static pascal OSErr DoAppPreferences(const AppleEvent *theAppleEvent, AppleEvent
 		return errAEEventNotHandled;
 	if (bptr != NULL)
 	{
-		bptr->message_with_args(MCM_menu_pick, "Preferences");
+		bptr->message_with_valueref_args(MCM_menu_pick, MCSTR("Preferences"));
 	}
 	return noErr;
 }

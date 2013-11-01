@@ -125,7 +125,7 @@ Boolean MCEPS::mdown(uint2 which)
 		switch (getstack()->gettool(this))
 		{
 		case T_BROWSE:
-			message_with_args(MCM_mouse_down, "1");
+			message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 			break;
 		case T_POINTER:
 			start(True);
@@ -156,7 +156,7 @@ Boolean MCEPS::mup(uint2 which)
 		{
 		case T_BROWSE:
 			if (MCU_point_in_rect(rect, mx, my))
-				message_with_args(MCM_mouse_up, "1");
+				message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 			break;
 		case T_POINTER:
 			end();
