@@ -1969,6 +1969,12 @@ extern void *MCAndroidGetEngine(void);
 
 static MCExternalError MCExternalInterfaceQuery(MCExternalInterfaceQueryTag op, void *r_value)
 {
+    if (op == kMCExternalInterfaceQueryViewScale)
+    {
+        *(double *)r_value = MCResGetDeviceScale();
+    	return kMCExternalErrorNone;
+    }
+    
 #if defined(TARGET_SUBPLATFORM_IPHONE)
 	switch(op)
 	{
@@ -1977,9 +1983,6 @@ static MCExternalError MCExternalInterfaceQuery(MCExternalInterfaceQueryTag op, 
 			break;
 		case kMCExternalInterfaceQueryViewController:
 			*(void **)r_value = MCIPhoneGetViewController();
-			break;
-		case kMCExternalInterfaceQueryViewScale:
-			*(double *)r_value = MCIPhoneGetResolutionScale();
 			break;
 		default:
 			return kMCExternalErrorInvalidInterfaceQuery;
