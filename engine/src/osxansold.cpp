@@ -575,7 +575,7 @@ static void build_filter_records_from_types(MCStringRef *p_types, uint4 p_type_c
         
         MCValueRef t_first;
         /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_type, 0, t_first);
-        r_filter_records[t_type_index] . tag = (MCStringRef)t_first;
+        r_filter_records[t_type_index] . tag = MCValueRetain((MCStringRef)t_first);
         
         if (t_index < 2)
 		{
@@ -586,14 +586,14 @@ static void build_filter_records_from_types(MCStringRef *p_types, uint4 p_type_c
 		{
             MCValueRef t_second;
             MCAutoArrayRef t_extensions;
-            /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_type, 0, t_second);
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_type, 1, t_second);
             /* UNCHECKED */ MCStringSplit((MCStringRef)t_second, MCSTR(","), nil, kMCCompareExact, &t_extensions);
             MCArrayCopy(*t_extensions, r_filter_records[t_type_index] . extensions);
 			if (t_index > 2)
             {
                 MCValueRef t_third;
                 MCAutoArrayRef t_file_types;
-                /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_type, 0, t_third);
+                /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_type, 2, t_third);
                 /* UNCHECKED */ MCStringSplit((MCStringRef)t_third, MCSTR(","), nil, kMCCompareExact, &t_file_types);
                 MCArrayCopy(*t_file_types, r_filter_records[t_type_index] . file_types);
             }
@@ -653,32 +653,24 @@ int MCA_file_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filt
 	int t_result;
 	FilterRecord *t_filters = NULL;
 	unsigned int t_filter_count = 0;
-    char *t_filetypes_cstring;
     if (p_filter != NULL && MCStringGetLength(p_filter) >= 4)
 	{
 		unsigned int t_filetype_count;
         t_filetype_count = MCStringGetLength(p_filter) / 4;
         
-        MCAutoStringRef t_filetypes;
-        /* UNCHECKED */ MCStringCreateMutable(0, &t_filetypes);
+        t_filters = new FilterRecord[1];
+		t_filters[0] . tag = MCValueRetain(kMCEmptyString);
         
         for(unsigned int t_index = 0; t_index < t_filetype_count; ++t_index)
         {
-            /* UNCHECKED */ MCStringAppendSubstring(*t_filetypes, p_filter, MCRangeMake(t_index * 4, 4));
-            /* UNCHECKED */ MCStringAppendNativeChar(*t_filetypes, ',');
+            MCAutoStringRef t_file_type;
+            /* UNCHECKED */ MCStringCopySubstring(p_filter, MCRangeMake(t_index * 4, 4), &t_file_type);
+            MCArrayStoreValueAtIndex(t_filters[0] . file_types, t_index, *t_file_type);
         }
-		
-		t_filters = new FilterRecord[1];
-		t_filters[0] . tag = MCValueRetain(kMCEmptyString);
-        
-        MCAutoArrayRef t_file_types;
-        /* UNCHECKED */ MCStringSplit(*t_filetypes, MCSTR(","), nil, kMCCompareExact, &t_file_types);
-        /* UNCHECKED */ MCArrayCopy(*t_file_types, t_filters[0] . file_types);
-		t_filter_count = 1;
-        
+
+		t_filter_count = 1;        
 	}
     t_result = MCA_do_file_dialog_tiger(p_title, p_prompt, t_filters, t_filter_count, p_initial, p_options, r_value, r_result);
-    delete t_filetypes_cstring;
 	delete[] t_filters;
 	return t_result;
 }
@@ -699,31 +691,26 @@ int MCA_ask_file_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_
 	int t_result;
 	FilterRecord *t_filters = NULL;
 	unsigned int t_filter_count = 0;
-    char *t_filetypes_cstring;
+
 	if (p_filter != NULL && MCStringGetLength(p_filter) >= 4)
 	{
 		unsigned int t_filetype_count;
 		t_filetype_count = MCStringGetLength(p_filter) / 4;
         
-        MCAutoStringRef t_filetypes;
-        /* UNCHECKED */ MCStringCreateMutable(0, &t_filetypes);
-        for (unsigned int t_index = 0; t_index < t_filetype_count; ++t_index)
-        {
-            /* UNCHECKED */ MCStringAppendSubstring(*t_filetypes, p_filter, MCRangeMake(t_index * 4, 4));
-            MCStringAppendChar(*t_filetypes, ',');
-        }
-		
-		t_filters = new FilterRecord[1];
+        t_filters = new FilterRecord[1];
 		t_filters[0] . tag = MCValueRetain(kMCEmptyString);
         
-        MCAutoArrayRef t_file_types;
-        /* UNCHECKED */ MCStringSplit(*t_filetypes, MCSTR(","), nil, kMCCompareExact, &t_file_types);
-        /* UNCHECKED */ MCArrayCopy(*t_file_types, t_filters[0] . file_types);
-		t_filter_count = 1;
+        for(unsigned int t_index = 0; t_index < t_filetype_count; ++t_index)
+        {
+            MCAutoStringRef t_file_type;
+            /* UNCHECKED */ MCStringCopySubstring(p_filter, MCRangeMake(t_index * 4, 4), &t_file_type);
+            MCArrayStoreValueAtIndex(t_filters[0] . file_types, t_index, *t_file_type);
+        }
         
-	}
+        t_filter_count = 1;
+    }
 	t_result = MCA_do_file_dialog_tiger(nil, p_prompt, t_filters, t_filter_count, p_initial, p_options | MCA_OPTION_SAVE_DIALOG, r_value, r_result);
-    delete t_filetypes_cstring;
+
 	delete[] t_filters;
 	return t_result;
 }
