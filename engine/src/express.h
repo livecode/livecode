@@ -51,10 +51,22 @@ public:
 	// bool, uint, int, double
 	// enum, set, custom (?)
 	virtual void eval_valueref(MCExecContext& ctxt, MCValueRef& r_value);
+    virtual void eval_booleanref(MCExecContext& ctxt, MCBooleanRef& r_value);
     virtual void eval_stringref(MCExecContext& ctxt, MCStringRef& r_value);
-	virtual void eval_uint(MCExecContext& ctxt, uinteger_t& r_value);
+    virtual void eval_dataref(MCExecContext& ctxt, MCDataRef& r_value);
+    virtual void eval_nameref(MCExecContext& ctxt, MCNameRef& r_value);
+    virtual void eval_numberref(MCExecContext& ctxt, MCNumberRef& r_value);
+    virtual void eval_arrayref(MCExecContext& ctxt, MCArrayRef& r_value);
+    
+	virtual void eval_bool(MCExecContext& ctxt, bool& r_value);
 	virtual void eval_int(MCExecContext& ctxt, integer_t& r_value);
-	
+	virtual void eval_uint(MCExecContext& ctxt, uinteger_t& r_value);
+	virtual void eval_double(MCExecContext& ctxt, double& r_value);
+	virtual void eval_char(MCExecContext& ctxt, char_t& r_value);
+	virtual void eval_point(MCExecContext& ctxt, MCPoint& r_value);
+	virtual void eval_rectangle(MCExecContext& ctxt, MCRectangle& r_value);
+	virtual void eval_color(MCExecContext& ctxt, MCColor& r_value);
+    
 	// Compile the syntax into the (new) tree for use by the new evaluator.
 	virtual void compile(MCSyntaxFactoryRef);
 	virtual void compile_out(MCSyntaxFactoryRef);

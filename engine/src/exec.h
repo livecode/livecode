@@ -976,16 +976,21 @@ public:
 	//    empty array).
 	bool ConvertToBoolean(MCValueRef value, MCBooleanRef& r_boolean);
 	bool ConvertToString(MCValueRef value, MCStringRef& r_string);
+    bool ConvertToData(MCValueRef p_value, MCDataRef& r_data);
+    bool ConvertToName(MCValueRef p_value, MCNameRef& r_data);
 	bool ConvertToNumber(MCValueRef value, MCNumberRef& r_number);
+	bool ConvertToArray(MCValueRef value, MCArrayRef& r_array);
+    
+    bool ConvertToBool(MCValueRef value, bool& r_bool);
 	bool ConvertToInteger(MCValueRef value, integer_t& r_integer);
 	bool ConvertToUnsignedInteger(MCValueRef value, uinteger_t& r_integer);
 	bool ConvertToReal(MCValueRef value, real64_t& r_real);
-	bool ConvertToArray(MCValueRef value, MCArrayRef& r_array);
+	bool ConvertToChar(MCValueRef value, char_t& r_real);
 	bool ConvertToLegacyPoint(MCValueRef value, MCPoint& r_point);
 	bool ConvertToLegacyRectangle(MCValueRef value, MCRectangle& r_rectangle);
 	bool ConvertToLegacyColor(MCValueRef value, MCColor& r_color);
+    
     bool ConvertToMutableString(MCValueRef p_value, MCStringRef &r_string);
-    bool ConvertToData(MCValueRef p_value, MCDataRef& r_data);
     
 	// These attempt to convert the given value as specified. If conversion
 	// was successful then 'r_converted' is set to true, else 'false'. If
