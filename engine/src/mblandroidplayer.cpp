@@ -157,7 +157,7 @@ void MCAndroidPlayerControl::SetContent(MCExecContext& ctxt, MCStringRef p_conte
     
     bool t_success = true;
     MCCStringFree(m_path);
-    t_success = MCCStringClone(MCStringGetCString(p_content), m_path);
+    t_success = MCStringConvertToCString(p_content, m_path);
     if (MCCStringBeginsWith(m_path, "http://") || MCCStringBeginsWith(m_path, "https://"))
     {
         MCAndroidObjectRemoteCall(t_view, "setUrl", "bs", &t_success, m_path);
@@ -174,7 +174,7 @@ void MCAndroidPlayerControl::SetContent(MCExecContext& ctxt, MCStringRef p_conte
         /* UNCHECKED */ MCS_resolvepath(*t_path, &t_resolved_path);
         t_is_asset = path_to_apk_path(*t_resolved_path, &t_asset_path);
         
-        MCAndroidObjectRemoteCall(t_view, "setFile", "bsb", &t_success, t_is_asset ? MCStringGetCString(*t_asset_path) : MCStringGetCString(*t_resolved_path), t_is_asset);
+        MCAndroidObjectRemoteCall(t_view, "setFile", "bxb", &t_success, t_is_asset ? *t_asset_path : *t_resolved_path, t_is_asset);
     }
 }
 
