@@ -378,7 +378,10 @@ template<typename T> void GetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
                 }
             }
 
-            t_block = t_block -> next();
+            if (t_block == t_block -> next())
+                break;
+            else
+                t_block = t_block -> next();
         }
 
         ei -= sptr->gettextlengthcr();
@@ -433,7 +436,10 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
                     return;
             }
 
-            t_block = t_block -> next();
+            if (t_block == t_block -> next())
+                break;
+            else
+                t_block = t_block -> next();
         }
 
         ei -= sptr->gettextlengthcr();
