@@ -56,9 +56,12 @@ static volatile int *s_mainthread_errno;
 static int *s_mainthread_errno;
 #endif
 
-
+// MW-2013-10-08: [[ Bug 11259 ]] We use our own tables on linux since
+//   we use a fixed locale which isn't available on all systems.
+#if !defined(_LINUX_SERVER) && !defined(_LINUX_DESKTOP)
 uint1 *MClowercasingtable = NULL;
 uint1 *MCuppercasingtable = NULL;
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -74,6 +77,9 @@ void MCS_common_init(void)
 	
 	MCinfinity = HUGE_VAL;
 
+	// MW-2013-10-08: [[ Bug 11259 ]] We use our own tables on linux since
+	//   we use a fixed locale which isn't available on all systems.
+#if !defined(_LINUX_SERVER) && !defined(_LINUX_DESKTOP)
 	MCuppercasingtable = new uint1[256];
 	for(uint4 i = 0; i < 256; ++i)
 		MCuppercasingtable[i] = (uint1)toupper((uint1)i);
@@ -81,6 +87,7 @@ void MCS_common_init(void)
 	MClowercasingtable = new uint1[256];
 	for(uint4 i = 0; i < 256; ++i)
 		MClowercasingtable[i] = (uint1)tolower((uint1)i);
+#endif
 	
 	MCStackSecurityInit();
 }
@@ -1145,6 +1152,10 @@ IO_stat MCS_runcmd(MCExecPoint& ep)
 		return IO_ERROR;
 	}
 	ep . grabbuffer((char *)t_data, t_data_length);
+	
+	// MW-2013-08-07: [[ Bug 11089 ]] The MCSystem::Shell() call returns binary data,
+	//   so since uses of MCS_runcmd() expect text, we need to do EOL conversion.
+	ep . texttobinary();
 	
 	MCresult -> setnvalue(t_return_code);
 	

@@ -1021,7 +1021,8 @@ void MCU_break_string(const MCString &s, MCString *&ptrs, uint2 &nptrs,
 	}
 }
 
-#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
+// AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
+#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 extern compare_t MCSystemCompareInternational(const char *, const char *);
 #endif
 
@@ -1046,7 +1047,8 @@ static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean
 			switch (form)
 			{
 			case ST_INTERNATIONAL:
-#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
+// AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
+#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 				first = MCSystemCompareInternational(b1->svalue, b2->svalue) >= 0;
 #else
 				first = strcoll(b1->svalue, b2->svalue) >= 0;
@@ -1063,7 +1065,8 @@ static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean
 			switch (form)
 			{
 			case ST_INTERNATIONAL:
-#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
+// AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
+#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 				first = MCSystemCompareInternational(b1->svalue, b2->svalue) <= 0;
 #else
 				first = strcoll(b1->svalue, b2->svalue) <= 0;
@@ -1770,7 +1773,8 @@ Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool, uint2 line, uint2 pos)
 		}
 		uint2 i;
 		for (i = 0 ; i <= T_TEXT ; i++)
-			if (strncmp(MCtoolnames[i], ep.getsvalue().getstring(), 3) == 0)
+            // SN-13-10-04: [[ Bug 11193 ]] set the tool to Browse fails - case-sensitive
+			if (MCU_strncasecmp(MCtoolnames[i], ep.getsvalue().getstring(), 3) == 0)
 			{
 				t_new_tool = (Tool)i;
 				break;

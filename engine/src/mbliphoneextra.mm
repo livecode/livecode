@@ -59,6 +59,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mblstore.h"
 
+#include <dlfcn.h>
 #import <objc/message.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1166,27 +1167,43 @@ enum RCDPropType
 
 static Exec_stat MCHandleSetRemoteControlDisplay(void *context, MCParameter *p_parameters)
 {
-#ifdef __IPHONE_5_0
-	static struct { const char *key; NSString *property; RCDPropType type; } s_props[] =
+	static bool s_resolved = false;
+	static Class s_info_center = nil;
+	static struct { const char *key; const char *property_symbol; RCDPropType type; NSString *property; } s_props[] =
 	{
-		{ "title", MPMediaItemPropertyTitle, kRCDPropTypeString },
-		{ "artist", MPMediaItemPropertyArtist, kRCDPropTypeString },
-		{ "artwork", MPMediaItemPropertyArtwork, kRCDPropTypeImage },
-		{ "composer", MPMediaItemPropertyComposer, kRCDPropTypeString },
-		{ "genre", MPMediaItemPropertyGenre, kRCDPropTypeString },
-		{ "album title", MPMediaItemPropertyAlbumTitle, kRCDPropTypeString},
-		{ "album track count", MPMediaItemPropertyAlbumTrackCount, kRCDPropTypeNumber },
-		{ "album track number", MPMediaItemPropertyAlbumTrackNumber, kRCDPropTypeNumber },
-		{ "disc count", MPMediaItemPropertyDiscCount, kRCDPropTypeNumber },
-		{ "disc number", MPMediaItemPropertyDiscNumber, kRCDPropTypeNumber },
-		{ "chapter number", MPNowPlayingInfoPropertyChapterNumber, kRCDPropTypeNumber },
-		{ "chapter count", MPNowPlayingInfoPropertyChapterCount, kRCDPropTypeNumber },
-		{ "playback duration", MPMediaItemPropertyPlaybackDuration, kRCDPropTypeNumber },
-		{ "elapsed playback time", MPNowPlayingInfoPropertyElapsedPlaybackTime, kRCDPropTypeNumber },
-		{ "playback rate", MPNowPlayingInfoPropertyPlaybackRate, kRCDPropTypeNumber },
-		{ "playback queue index", MPNowPlayingInfoPropertyPlaybackQueueIndex, kRCDPropTypeNumber },
-		{ "playback queue count", MPNowPlayingInfoPropertyPlaybackQueueCount, kRCDPropTypeNumber },
+		{ "title", "MPMediaItemPropertyTitle", kRCDPropTypeString },
+		{ "artist", "MPMediaItemPropertyArtist", kRCDPropTypeString },
+		{ "artwork", "MPMediaItemPropertyArtwork", kRCDPropTypeImage },
+		{ "composer", "MPMediaItemPropertyComposer", kRCDPropTypeString },
+		{ "genre", "MPMediaItemPropertyGenre", kRCDPropTypeString },
+		{ "album title", "MPMediaItemPropertyAlbumTitle", kRCDPropTypeString},
+		{ "album track count", "MPMediaItemPropertyAlbumTrackCount", kRCDPropTypeNumber },
+		{ "album track number", "MPMediaItemPropertyAlbumTrackNumber", kRCDPropTypeNumber },
+		{ "disc count", "MPMediaItemPropertyDiscCount", kRCDPropTypeNumber },
+		{ "disc number", "MPMediaItemPropertyDiscNumber", kRCDPropTypeNumber },
+		{ "chapter number", "MPNowPlayingInfoPropertyChapterNumber", kRCDPropTypeNumber },
+		{ "chapter count", "MPNowPlayingInfoPropertyChapterCount", kRCDPropTypeNumber },
+		{ "playback duration", "MPMediaItemPropertyPlaybackDuration", kRCDPropTypeNumber },
+		{ "elapsed playback time", "MPNowPlayingInfoPropertyElapsedPlaybackTime", kRCDPropTypeNumber },
+		{ "playback rate", "MPNowPlayingInfoPropertyPlaybackRate", kRCDPropTypeNumber },
+		{ "playback queue index", "MPNowPlayingInfoPropertyPlaybackQueueIndex", kRCDPropTypeNumber },
+		{ "playback queue count", "MPNowPlayingInfoPropertyPlaybackQueueCount", kRCDPropTypeNumber },
 	};
+	
+	
+	// MW-2013-10-01: [[ Bug 11136 ]] Make sure we don't do anything if on anything less
+	//   than 5.0.
+	if (MCmajorosversion < 500)
+		return ES_NORMAL;
+	
+	// MW-2013-10-01: [[ Bug 11136 ]] Fetch the symbols we cannot link to for 4.3.
+	if (!s_resolved)
+	{
+		s_resolved = true;
+		for(int i = 0; i < sizeof(s_props) / sizeof(s_props[0]); i++)
+			s_props[i] . property = (NSString *)dlsym(RTLD_SELF, s_props[i] . property_symbol);
+		s_info_center = NSClassFromString(@"MPNowPlayingInfoCenter");
+	}
 	
 	bool t_success;
 	t_success = true;
@@ -1256,8 +1273,7 @@ static Exec_stat MCHandleSetRemoteControlDisplay(void *context, MCParameter *p_p
 	}
 	
 	if (t_success)
-		[[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo: t_info_dict];
-#endif
+		[[s_info_center defaultCenter] setNowPlayingInfo: t_info_dict];
 	
 	return ES_NORMAL;
 }

@@ -397,7 +397,12 @@ bool MCImageCompressRLE(MCImageIndexedBitmap *p_indexed, MCImageCompressedBitmap
 				uindex_t t_mask_plane_stride = 0;
 				t_success = rle_split_planes(p_indexed, p_indexed->transparent_index, 1, t_mask_plane, t_mask_plane_stride);
 				if (t_success)
+				{
+					// IM-2013-07-23: Invert bits of mask (split plane will produce transparent == 1, opaque == 0 bitmap)
+					for (uint32_t i = 0; i < t_mask_plane_stride * p_indexed->height; i++)
+						t_mask_plane[i] ^= 0xFF;
 					t_success = rle_plane_encode(t_mask_plane, t_mask_plane_stride, p_indexed->height, t_compressed->mask, t_compressed->mask_size);
+				}
 				MCMemoryDeleteArray(t_mask_plane);
 			}
 		}

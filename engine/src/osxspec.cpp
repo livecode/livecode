@@ -360,7 +360,9 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 
 static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refCon)
 {
-	if (!MCSecureModeCheckAppleScript())
+	// MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
+	//   don't handle the event.
+	if (!MCSecureModeCanAccessAppleScript())
 		return errAEEventNotHandled;
 
 	OSErr err = errAEEventNotHandled;  //class, id, sender
@@ -495,9 +497,13 @@ static pascal OSErr DoOpenApp(const AppleEvent *theAppleEvent, AppleEvent *reply
 }
 
 static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
-{ //Apple Event for opening documnets, in our use is to open stacks when user
+{
+	//Apple Event for opening documnets, in our use is to open stacks when user
 	//double clicked on a MC stack icon
-	if (!MCSecureModeCheckAppleScript())
+	
+	// MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
+	//   don't handle the event.
+	if (!MCSecureModeCanAccessAppleScript())
 		return errAEEventNotHandled;
 	
 	AEDescList docList; //get a list of alias records for the documents
@@ -544,6 +550,9 @@ static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply
 
 static pascal OSErr DoPrintDoc(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
 {
+	// MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
+	//   don't handle the event.
+	if (!MCSecureModeCanAccessAppleScript())
 	if (!MCSecureModeCheckAppleScript())
 		return errAEEventNotHandled;
 
@@ -558,8 +567,10 @@ static pascal OSErr DoPrintDoc(const AppleEvent *theAppleEvent, AppleEvent *repl
 
 static pascal OSErr DoQuitApp(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
 {
-	if (!MCSecureModeCheckAppleScript())
-		return errAEEventNotHandled;
+	// MW-2013-08-07: [[ Bug 10865 ]] Even if AppleScript is disabled we still need
+	//   to handle the 'quit' message.
+	// if (!MCSecureModeCanAccessAppleScript())
+	//	return errAEEventNotHandled;
 
 	errno = errAEEventNotHandled;
 	switch (MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
@@ -584,8 +595,10 @@ static pascal OSErr DoQuitApp(const AppleEvent *theAppleEvent, AppleEvent *reply
 
 static pascal OSErr DoAppPreferences(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
 {
-	if (!MCSecureModeCheckAppleScript())
-		return errAEEventNotHandled;
+	// MW-2013-08-07: [[ Bug 10865 ]] Even if AppleScript is disabled we still need
+	//   to handle the 'preferences' message.
+	//if (!MCSecureModeCanAccessAppleScript())
+	//	return errAEEventNotHandled;
 
 	MCGroup *mb = MCmenubar != NULL ? MCmenubar : MCdefaultmenubar;
 	if (mb == NULL)
@@ -625,7 +638,9 @@ static pascal OSErr DoAppDied(const AppleEvent *theAppleEvent, AppleEvent *reply
 
 static pascal OSErr DoAEAnswer(const AppleEvent *ae, AppleEvent *reply, long refCon)
 {
-	if (!MCSecureModeCheckAppleScript())
+	// MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
+	//   don't handle the event.
+	if (!MCSecureModeCanAccessAppleScript())
 		return errAEEventNotHandled;
 
  //process the repy(answer) returned from a server app. When MCS_send() with

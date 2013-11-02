@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 #include "tilecache.h"
 #include "eventqueue.h"
+#include "notify.h"
 
 #include "mbldc.h"
 #include "core.h"
@@ -108,6 +109,9 @@ MCScreenDC::MCScreenDC(void)
 	
 	// Initialize the list of active touches.
 	m_active_touches = nil;
+	
+	// MW-2013-06-18: [[ XPlatNotify ]] Initialize the notify module.
+	MCNotifyInitialize();
 }
 
 MCScreenDC::~MCScreenDC(void)
@@ -117,6 +121,9 @@ MCScreenDC::~MCScreenDC(void)
 	
 	// Delete the main windows stack.
 	delete m_main_windows;
+	
+	// MW-2013-06-18: [[ XPlatNotify ]] Finalize the notify module.
+	MCNotifyFinalize();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -212,6 +219,11 @@ void MCScreenDC::handle_key_press(uint32_t p_modifiers, uint32_t p_char_code, ui
 	
 	MCStack *t_stack;
 	t_stack = (MCStack *)m_current_window;
+	
+	// MW-2013-10-01: [[ Bug 11199 ]] If the char code is ASCII, then make the keycode
+	//   match.
+	if (p_char_code >= 32 && p_char_code < 128)
+		p_key_code = p_char_code;
 	
 	MCEventQueuePostKeyPress(t_stack, p_modifiers, p_char_code, p_key_code);
 }

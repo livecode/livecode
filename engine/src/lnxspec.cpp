@@ -92,9 +92,6 @@ static void configureSerialPort(int sRefNum);
 
 static Boolean alarmpending;
 
-uint1 *MClowercasingtable = NULL;
-uint1 *MCuppercasingtable = NULL;
-
 #ifdef NOATON
 int inet_aton(const char *cp, struct in_addr *inp)
 {
@@ -262,21 +259,13 @@ void MCS_init()
 #endif
 #endif
 
-
 	if (!MCS_isatty(0))
 		MCS_nodelay(0);
+	
+	// MW-2013-10-01: [[ Bug 11160 ]] At the moment NBSP is not considered a space.
+	MCctypetable[160] &= ~(1 << 4);
 
 	MCshellcmd = strclone("/bin/sh");
-
-	// Initialize our case mapping tables
-	
-	MCuppercasingtable = new uint1[256];
-	for(uint4 i = 0; i < 256; ++i)
-		MCuppercasingtable[i] = (uint1)toupper((uint1)i);
-
-	MClowercasingtable = new uint1[256];
-	for(uint4 i = 0; i < 256; ++i)
-		MClowercasingtable[i] = (uint1)tolower((uint1)i);
 }
 
 void MCS_shutdown()

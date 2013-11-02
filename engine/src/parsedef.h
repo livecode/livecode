@@ -221,7 +221,9 @@ enum Dest_type {
 	
 	// MW-2008-11-05: [[ Owner Reference ]] This desttype is used for chunks of the form:
 	//   ... of the owner of ...
-	DT_OWNER
+	DT_OWNER,
+	// MW-2013-08-05: [[ ThisMe ]] Access to the behavior object (this me).
+	DT_THIS_ME,
 };
 
 
