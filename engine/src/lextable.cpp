@@ -641,6 +641,8 @@ LT factor_table[] =
         {"clickv", TT_FUNCTION, F_CLICK_V},
         {"clipboard", TT_FUNCTION, F_CLIPBOARD},
         {"clipboarddata", TT_PROPERTY, P_CLIPBOARD_DATA},
+        // MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
+        {"clipstorect", TT_PROPERTY, P_CLIPS_TO_RECT},
         {"closebox", TT_PROPERTY, P_CLOSE_BOX},
         {"cmdkey", TT_FUNCTION, F_COMMAND_KEY},
         {"collapsebox", TT_PROPERTY, P_COLLAPSE_BOX},

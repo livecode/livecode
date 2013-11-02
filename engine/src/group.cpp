@@ -966,6 +966,10 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	case P_LOCK_UPDATES:
 		ep.setboolean(m_updates_locked);
 		break;
+    // MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
+    case P_CLIPS_TO_RECT:
+        ep.setboolean(getflag(F_CLIPS_TO_RECT));
+        break;
 	default:
 		return MCControl::getprop(parid, which, ep, effective);
 	}
@@ -1327,7 +1331,23 @@ Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 		return t_stat;
 	}
 	break;
-	default:
+    // MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
+    case P_CLIPS_TO_RECT:
+    {
+        Exec_stat t_stat;
+        Boolean t_clips_to_rect;
+        
+        t_stat = ep.getboolean(t_clips_to_rect, 0, 0, EE_PROPERTY_NAB);
+        if (t_stat == ES_NORMAL)
+            if (t_clips_to_rect != getflag(F_CLIPS_TO_RECT))
+            {
+                setflag(t_clips_to_rect, F_CLIPS_TO_RECT);
+                computeminrect(True);
+            }
+        return t_stat;
+    }
+        break;
+    default:
 		return MCControl::setprop(parid, p, ep, effective);
 	}
 	if (dirty && opened)
@@ -2306,7 +2326,8 @@ Boolean MCGroup::computeminrect(Boolean scrolling)
 		if (flags & F_SHOW_BORDER)
 			minrect = MCU_reduce_rect(minrect, -borderwidth);
 	}
-	if (flags & F_LOCK_LOCATION)
+	// MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
+    if (flags & (F_LOCK_LOCATION | F_CLIPS_TO_RECT))
 	{
 		boundcontrols();
 		if (scrolling && flags & F_BOUNDING_RECT)

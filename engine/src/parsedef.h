@@ -1581,7 +1581,10 @@ enum Properties {
     P_CONTROL_NAMES,
 	P_CHILD_CONTROL_IDS,
     P_CHILD_CONTROL_NAMES,
-	
+    
+    // MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
+    P_CLIPS_TO_RECT,
+    
 	// ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,
     P_CUSTOM_KEYS = P_FIRST_ARRAY_PROP,
