@@ -1954,6 +1954,8 @@ static MCExternalError MCExternalWaitBreak(void *unused, unsigned int p_options)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern MCGFloat MCResGetDeviceScale(void);
+
 extern void *MCIPhoneGetView(void);
 extern void *MCIPhoneGetViewController(void);
 extern float MCIPhoneGetResolutionScale(void);
