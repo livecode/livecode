@@ -108,6 +108,6 @@ else
 fi
 
 # Cleanup
-if [ -f "$LIVECODE_DEP_FILE.tmp"]
+if [ -f "$LIVECODE_DEP_FILE.tmp"]; then
     rm "$LIVECODE_DEP_FILE.tmp"
 fi
