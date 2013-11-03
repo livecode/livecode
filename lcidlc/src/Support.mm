@@ -3510,6 +3510,19 @@ static jobject java_lcapi_InterfaceQueryEngine(JNIEnv *env)
 {
 	return java__get_engine();
 }
+    
+static jdouble java_lcapi_InterfaceQueryViewScale(JNIEnv *env)
+{
+    LCError t_error;
+    double t_scale;
+    t_error = LCInterfaceQueryViewScale(&t_scale);
+    if (t_error != kLCErrorNone)
+    {
+        java_lcapi__throw(env, t_error);
+        return (jdouble)0.0;
+    }
+    return (jdouble)t_scale;
+}
 
 static void java_lcapi_RunOnSystemThread_callback(void *context)
 {

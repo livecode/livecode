@@ -279,6 +279,11 @@ public class LC
 	{
 		return getEngineApi() . getContainer();
 	}
+    
+    public static double InterfaceQueryViewScale()
+    {
+        return __InterfaceQueryViewScale();
+    }
 	
 	//////////
 	
@@ -369,4 +374,5 @@ public class LC
 	
 	//private static native Activity __InterfaceQueryActivity();
 	//private static native ViewGroup __InterfaceQueryContainer();
+    private static native double __InterfaceQueryViewScale();
 };
