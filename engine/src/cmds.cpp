@@ -2622,7 +2622,7 @@ Parse_stat MCWait::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCWait::exec(MCExecPoint &ep)
+void MCWait::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCWait */ LEGACY_EXEC
 while (True)
@@ -2693,40 +2693,32 @@ while (True)
 	return ES_NORMAL;
 #endif /* MCWait */
 
-
-	MCExecContext ctxt(ep);
-	if (duration == NULL)
+    if (duration == NULL)
 		MCEngineExecWaitFor(ctxt, MCmaxwait, F_UNDEFINED, messages == True);
-	else
+
+    else
 	{
 		switch (condition)
 		{
-		case RF_FOR:
-			if (duration->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_WAIT_BADEXP, line, pos);
-				return ES_ERROR;
-			}
-			real8 delay;
-			if (ep.getreal8(delay, line, pos, EE_WAIT_NAN) != ES_NORMAL)
-				return ES_ERROR;
-			MCEngineExecWaitFor(ctxt, delay, units, messages == True);
-			break;
-		case RF_UNTIL:
-			MCEngineExecWaitUntil(ctxt, duration, messages == True);
-			break;
-		case RF_WHILE:
-			MCEngineExecWaitWhile(ctxt, duration, messages == True);
-			break;
-		default:
-			return ES_ERROR;
+            case RF_FOR:
+            {
+                double t_delay;
+                if (!ctxt . EvalExprAsDouble(duration, EE_WAIT_BADEXP, t_delay))
+                    return;
+                
+                MCEngineExecWaitFor(ctxt, t_delay, units, messages == True);
+                break;
+            }
+            case RF_UNTIL:
+                MCEngineExecWaitUntil(ctxt, duration, messages == True);
+                break;
+            case RF_WHILE:
+                MCEngineExecWaitWhile(ctxt, duration, messages == True);
+                break;
+            default:
+                return ES_ERROR;
 		}
 	}
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line,pos);
 }
 
 void MCWait::compile(MCSyntaxFactoryRef ctxt)
