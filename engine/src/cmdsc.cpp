@@ -2222,18 +2222,14 @@ if (MCsecuremode & MC_SECUREMODE_PROCESS)
 #endif /* MCLaunch */
 
     MCNewAutoNameRef t_app;
-	if (app != NULL)
-	{
-		if (!ctxt. EvalOptionalExprAsNameRef(app, kMCEmptyName, EE_LAUNCH_BADAPPEXP, &t_app))
-            return;
-	}
-
+		
+    if (!ctxt. EvalOptionalExprAsNameRef(app, kMCEmptyName, EE_LAUNCH_BADAPPEXP, &t_app))
+        return;
+	
     MCAutoStringRef t_document;
-	if (doc != NULL)
-	{
-		if (!ctxt . EvalOptionalExprAsStringRef(doc, kMCEmptyString, EE_LAUNCH_BADAPPEXP, &t_document))
-            return;
-	}
+	
+    if (!ctxt . EvalOptionalExprAsStringRef(doc, kMCEmptyString, EE_LAUNCH_BADAPPEXP, &t_document))
+        return;
     
 	if (app != NULL)
 		MCFilesExecLaunchApp(ctxt, *t_app, *t_document);
@@ -2300,7 +2296,7 @@ Parse_stat MCLoad::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCLoad::exec(MCExecPoint &ep)
+void MCLoad::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCLoad */ LEGACY_EXEC
 	char *mptr;
@@ -2328,36 +2324,16 @@ Exec_stat MCLoad::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCLoad */
 
-
-	MCExecContext ctxt(ep);
-
-	MCNewAutoNameRef t_message;
-	if (message != NULL)
-	{
-		if (message->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_LOAD_BADMESSAGEEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasnameref(&t_message);
-	}
-	else
-		t_message = kMCEmptyName;
-
-	if (url->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_LOAD_BADURLEXP, line, pos);
-		return ES_ERROR;
-	}	
-
-	MCAutoStringRef t_url;
-	/* UNCHECKED */ ep . copyasstringref(&t_url);
-	MCNetworkExecLoadUrl(ctxt, *t_url, *t_message);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    MCNewAutoNameRef t_message;
+    
+    if (!ctxt . EvalOptionalExprAsNameRef(message, kMCEmptyName, EE_LOAD_BADMESSAGEEXP, &t_message))
+            return;
+	
+    MCAutoStringRef t_url;
+    if (!ctxt . EvalOptionalExprAsStringRef(url, kMCEmptyString, EE_LOAD_BADURLEXP, &t_url))
+        return;    
+    
+    MCNetworkExecLoadUrl(ctxt, *t_url, *t_message);
 }
 
 void MCLoad::compile(MCSyntaxFactoryRef ctxt)
