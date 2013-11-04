@@ -211,7 +211,7 @@ static void send_url_progress(MCObjectHandle *p_object, MCSystemUrlStatus p_stat
 	
 	MCUrlProgressEvent *t_event;
     MCAutoStringRef t_data;
-    /* UNCHECKED */ MCStringCreateWithCString((const char_t *)p_data, &t_data);
+    /* UNCHECKED */ MCStringCreateWithCString((const char*)p_data, &t_data);
 	t_event = MCUrlProgressEvent::CreateUrlProgressEvent(p_object, p_url, p_status, p_amount, x_total, *t_data);
 	if (t_event)
 		MCEventQueuePostCustom(t_event);
@@ -410,7 +410,7 @@ void MCUrlLoadEvent::Dispatch(void)
 
 struct MCSLoadUrlState
 {
-	MCStringRef url;
+	MCDataRef url;
 	MCSystemUrlStatus status;
 	struct
 	{
@@ -440,12 +440,14 @@ static bool MCS_loadurl_callback(void *p_context, MCSystemUrlStatus p_status, co
 		context->data.size += MCStringGetLength(*t_data);
 	}
 
-	send_url_progress(context -> object, p_status, context -> url, context -> data . size, context -> total, *t_data);
+    MCAutoStringRef t_url;
+    /* UNCHECKED */ MCStringDecode(context -> url, kMCStringEncodingNative, false, &t_url);
+	send_url_progress(context -> object, p_status, *t_url, context -> data . size, context -> total, *t_data);
 	
 	if (p_status == kMCSystemUrlStatusError || p_status == kMCSystemUrlStatusFinished)
 	{
 		MCUrlLoadEvent *t_event;
-		t_event = MCUrlLoadEvent::CreateUrlLoadEvent(context->object, context->message, context->url, p_status, context->data.bytes, context->data.size, *t_data);
+		t_event = MCUrlLoadEvent::CreateUrlLoadEvent(context->object, context->message, *t_url, p_status, context->data.bytes, context->data.size, *t_data);
 		if (t_event)
 			MCEventQueuePostCustom(t_event);
 		context->object->Release();
@@ -466,7 +468,9 @@ void MCS_loadurl(MCObject *p_object, MCStringRef p_url, MCNameRef p_message)
 	
 	if (t_success)
 	{
-        t_state->url = *t_processed;
+        MCAutoDataRef t_url;
+        /* UNCHECKED */ MCStringEncode(*t_processed, kMCStringEncodingNative, false, &t_url);
+        t_state->url = *t_url;
 		t_state->message = p_message;
 		t_state->status = kMCSystemUrlStatusNone;
 		t_state->object = p_object -> gethandle();
