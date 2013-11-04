@@ -106,7 +106,7 @@ Parse_stat MCChoose::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCChoose::exec(MCExecPoint &ep)
+void MCChoose::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCChoose */ LEGACY_EXEC
 	if (etool != NULL)
@@ -119,22 +119,11 @@ Exec_stat MCChoose::exec(MCExecPoint &ep)
 	return MCU_choose_tool(ep, littool, line, pos); 
 #endif /* MCChoose */
 
-
-	MCExecContext ctxt(ep);
-	if (etool != NULL)
-		if (etool->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_CHOOSE_BADEXP, line, pos);
-			return ES_ERROR;
-		}
-	MCAutoStringRef t_string;
-	/* UNCHECKED */ ep.copyasstringref(&t_string);
-	MCInterfaceExecChooseTool(ctxt, *t_string, littool);
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    MCAutoStringRef t_string;
+    if (!ctxt . EvalOptionalExprAsStringRef(etool, kMCEmptyString, EE_CHOOSE_BADEXP, &t_string))
+        return;
+    
+    MCInterfaceExecChooseTool(ctxt, *t_string, littool);
 }
 
 void MCChoose::compile(MCSyntaxFactoryRef ctxt)
