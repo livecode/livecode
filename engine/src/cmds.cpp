@@ -674,7 +674,7 @@ Parse_stat MCDoMenu::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCDoMenu::exec(MCExecPoint &ep)
+void MCDoMenu::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCDoMenu */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
@@ -699,22 +699,11 @@ Exec_stat MCDoMenu::exec(MCExecPoint &ep)
 	return ES_NORMAL; 
 #endif /* MCDoMenu */
 
-
-	MCExecContext ctxt(ep); 
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_DOMENU_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-	MCAutoStringRef t_option;
-	/* UNCHECKED */ ep . copyasstringref(&t_option);
-	MCLegacyExecDoMenu(ctxt, *t_option);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
-
+    MCAutoStringRef t_option;
+    if (!ctxt . EvalOptionalExprAsStringRef(source, kMCEmptyString, EE_DOMENU_BADEXP, &t_option))
+        return;
+    
+    MCLegacyExecDoMenu(ctxt, *t_option);
 }
 
 void MCDoMenu::compile(MCSyntaxFactoryRef ctxt)
