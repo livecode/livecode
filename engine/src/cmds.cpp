@@ -916,6 +916,7 @@ void MCGet::exec_ctxt(MCExecContext& ctxt)
     if (!ctxt . EvalExprAsValueRef(value, EE_GET_BADEXP, &t_value))
         return;
     
+    ctxt . SetIt(it);
     MCEngineExecGet(ctxt, *t_value);
 }
 
@@ -1714,7 +1715,7 @@ Parse_stat MCQuit::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCQuit::exec(MCExecPoint &ep)
+void MCQuit::exec_ctxt(MCExecContext& ctxt)
 {
 // MW-2011-06-22: [[ SERVER ]] Don't send messages in server-mode.
 #ifdef /* MCQuit */ LEGACY_EXEC
@@ -1743,20 +1744,11 @@ Exec_stat MCQuit::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCQuit */
 
-	integer_t t_retcode;
-	t_retcode = 0;
-
-	if (retcode != NULL && retcode->eval(ep) == ES_NORMAL
-	        && ep.ton() == ES_NORMAL)
-		t_retcode = ep.getint4();
-
-	MCExecContext ctxt(ep);
-	MCEngineExecQuit(ctxt, t_retcode);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    integer_t t_retcode;
+    if (!ctxt . EvalOptionalExprAsInt(retcode, 0, EE_UNDEFINED, t_retcode))
+        return;
+    
+    MCEngineExecQuit(ctxt, t_retcode);
 }
 
 void MCQuit::compile(MCSyntaxFactoryRef ctxt)
