@@ -2045,7 +2045,7 @@ public:
 	
 	virtual ~MCInclude(void);
 	virtual Parse_stat parse(MCScriptPoint& sp);
-	virtual Exec_stat exec(MCExecPoint& ep);
+	virtual void exec_ctxt(MCExecContext& ctxt);
 	virtual void compile(MCSyntaxFactoryRef);
 
 private:

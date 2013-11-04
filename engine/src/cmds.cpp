@@ -2780,7 +2780,7 @@ Parse_stat MCInclude::parse(MCScriptPoint& sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCInclude::exec(MCExecPoint& ep)
+void MCInclude::exec_ctxt(MCExecContext& ctxt)
 {	
 #ifdef /* MCInclude */ LEGACY_EXEC
 	if (filename -> eval(ep) != ES_NORMAL)
@@ -2812,20 +2812,11 @@ Exec_stat MCInclude::exec(MCExecPoint& ep)
 #endif
 #endif /* MCInclude */
 
-
-	MCAutoStringRef t_filename;
-	if (filename -> eval(ep) != ES_NORMAL)
-	{
-		MCeerror -> add(EE_INCLUDE_BADFILENAME, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	MCServerExecInclude(ctxt, *t_filename, is_require);
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-		
-	return ctxt . Catch(line, pos);
+    MCAutoStringRef t_filename;
+    if (!ctxt . EvalOptionalExprAsStringRef(filename, kMCEmptyString, EE_INCLUDE_BADFILENAME, &t_filename))
+        return;
+    
+    MCServerExecInclude(ctxt, *t_filename, is_require);
 }
 
 void MCInclude::compile(MCSyntaxFactoryRef ctxt)
