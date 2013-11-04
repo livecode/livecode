@@ -223,6 +223,7 @@ Exec_stat MCClone::exec(MCExecPoint &ep)
 		MCeerror->add(EE_CLONE_NOTARGET, line, pos);
 		return ES_ERROR;
 	}
+   
 	MCAutoStringRef t_new_name;
 	if (newname != NULL)
 	{
@@ -2133,7 +2134,7 @@ Parse_stat MCLaunch::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCLaunch::exec(MCExecPoint &ep)
+void MCLaunch::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCLaunch */ LEGACY_EXEC
 if (MCsecuremode & MC_SECUREMODE_PROCESS)
@@ -2220,30 +2221,20 @@ if (MCsecuremode & MC_SECUREMODE_PROCESS)
 	return ES_NORMAL;
 #endif /* MCLaunch */
 
-
-	MCExecContext ctxt(ep);
-	MCNewAutoNameRef t_app;
+    MCNewAutoNameRef t_app;
 	if (app != NULL)
 	{
-		if (app->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_LAUNCH_BADAPPEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasnameref(&t_app); 
+		if (!ctxt. EvalOptionalExprAsNameRef(app, kMCEmptyName, EE_LAUNCH_BADAPPEXP, &t_app))
+            return;
 	}
 
-	MCAutoStringRef t_document;
+    MCAutoStringRef t_document;
 	if (doc != NULL)
 	{
-		if (doc->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_LAUNCH_BADAPPEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&t_document); 
+		if (!ctxt . EvalOptionalExprAsStringRef(doc, kMCEmptyString, EE_LAUNCH_BADAPPEXP, &t_document))
+            return;
 	}
-
+    
 	if (app != NULL)
 		MCFilesExecLaunchApp(ctxt, *t_app, *t_document);
 	else if (doc != NULL)
@@ -2253,11 +2244,6 @@ if (MCsecuremode & MC_SECUREMODE_PROCESS)
 		else
 			MCFilesExecLaunchDocument(ctxt, *t_document);
 	}
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line,pos);
 }
 
 void MCLaunch::compile(MCSyntaxFactoryRef ctxt)
