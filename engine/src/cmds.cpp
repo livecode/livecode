@@ -2716,7 +2716,7 @@ while (True)
                 MCEngineExecWaitWhile(ctxt, duration, messages == True);
                 break;
             default:
-                return ES_ERROR;
+                return;
 		}
 	}
 }
