@@ -1200,25 +1200,16 @@ Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
 	        MCepsstring, MCmagnifierstring,
 	        MCcolorstring, MCfieldstring
 	    };
-	
-	// MW-2013-07-29: [[ Bug 11068 ]] Make sure that we only match a reference
-	//   of the form 'field "..."', and throw an error if not.
 	const char *sptr = test.getstring();
 	uint4 l = test.getlength();
 	if (MCU_strchr(sptr, l, '"')
-			&& l > tname.getlength() + 1
+	        && l > tname.getlength() + 1
 	        && sptr[tname.getlength() + 1] == '"'
 	        && !MCU_strncasecmp(sptr + 1, tname.getstring(), tname.getlength())
 	        && sptr - test.getstring() >= (int)strlen(nametable[type - CT_STACK])
 	        && !MCU_strncasecmp(test.getstring(), nametable[type - CT_STACK],
 	                            strlen(nametable[type - CT_STACK])))
-	{
-		if (l == tname.getlength() + 2)
-			match = True;
-		
-		if (!match)
-			MCLog("[[ Bug 11068 ]] match name '%s' to '%.*s' attempted and failed due to better checking", MCNameGetCString(name), test . getlength(), test . getstring());
-	}
+		match = True;
 
 	return match;
 }
