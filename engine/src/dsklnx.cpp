@@ -245,7 +245,7 @@ static Boolean MCS_lnx_nodelay(int4 fd)
 
 bool MCS_lnx_is_link(MCStringRef p_path)
 {
-#ifdef /* MCS_is_link_dsk_lnx */ LEGACY_SYSTEM
+#ifdef /* MCS_is_link_dsk_lnx */ LEGACY_SYSTEM_ORPHAN
     struct stat64 buf;
     return (lstat64(MCStringGetCString(p_path), &buf) == 0 && S_ISLNK(buf.st_mode));
 #endif /* MCS_is_link_dsk_lnx */
@@ -255,7 +255,7 @@ bool MCS_lnx_is_link(MCStringRef p_path)
 
 bool MCS_lnx_readlink(MCStringRef p_path, MCStringRef& r_link)
 {
-#ifdef /* MCS_readlink_dsk_lnx */ LEGACY_SYSTEM
+#ifdef /* MCS_readlink_dsk_lnx */ LEGACY_SYSTEM_ORPHAN
     struct stat64 t_stat;
     ssize_t t_size;
     MCAutoNativeCharArray t_buffer;
@@ -267,7 +267,7 @@ bool MCS_lnx_readlink(MCStringRef p_path, MCStringRef& r_link)
     t_size = readlink(MCStringGetCString(p_path), (char*)t_buffer.Chars(), t_stat.st_size);
 
     return (t_size == t_stat.st_size) && t_buffer.CreateStringAndRelease(r_link);
-#endif /* MCS_readlink_dsl_lnx */
+#endif /* MCS_readlink_dsk_lnx */
     struct stat64 t_stat;
     ssize_t t_size;
     MCAutoNativeCharArray t_buffer;
@@ -922,9 +922,13 @@ public:
         IO_stdin = MCsystem -> OpenFd(0, kMCSOpenFileModeRead);
         IO_stdout = MCsystem -> OpenFd(1, kMCSOpenFileModeWrite);
         IO_stderr = MCsystem -> OpenFd(2, kMCSOpenFileModeWrite);
-
-        setlocale(LC_CTYPE, MCnullstring);
-        setlocale(LC_COLLATE, MCnullstring);
+		
+		// Internally, LiveCode assumes sorting orders etc are those of en_US.
+		// Additionally, the "native" string encoding for Linux is ISO-8859-1
+		// (even if the Linux system is using something different).
+		const char *t_internal_locale = "en_US.ISO-8859-1";
+		setlocale(LC_CTYPE, t_internal_locale);
+		setlocale(LC_COLLATE, t_internal_locale);
 
         MCinfinity = HUGE_VAL;
 
@@ -2186,10 +2190,10 @@ public:
             if (MCprocesses[index].pid != 0)
                 Kill(MCprocesses[index].pid, SIGKILL);
 
-            return MCDataCreateWithBytesAndRelease((byte_t*)buffer, buffersize, r_data);
+            return MCDataCreateWithBytesAndRelease((byte_t*)buffer, size, r_data);
         }
 
-        if (!MCDataCreateWithBytesAndRelease((byte_t*)buffer, buffersize, r_data))
+        if (!MCDataCreateWithBytesAndRelease((byte_t*)buffer, size, r_data))
             return false;
 
         close(toparent[0]);
@@ -2676,9 +2680,9 @@ public:
         }
         else
         {
-            extern bool MCSystemOpenElevatedProcess(const char *p_command, int32_t& r_pid, int32_t& r_input_fd, int32_t& r_output_fd);
+            extern bool MCSystemOpenElevatedProcess(MCStringRef p_command, int32_t& r_pid, int32_t& r_input_fd, int32_t& r_output_fd);
             int32_t t_pid, t_input_fd, t_output_fd;
-            if (MCSystemOpenElevatedProcess(MCNameGetCString(p_name), t_pid, t_input_fd, t_output_fd))
+            if (MCSystemOpenElevatedProcess(MCNameGetString(p_name), t_pid, t_input_fd, t_output_fd))
             {
                 MCprocesses[MCnprocesses++] . pid = t_pid;
                 CheckProcesses();

@@ -55,7 +55,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern Bool X_init(int argc, char *argv[], char *envp[]);
+extern Bool X_init(int argc, MCStringRef argv[], int envc, MCStringRef envp[]);
 extern void X_main_loop(void);
 extern bool X_main_loop_iteration(void);
 extern int X_close(void);
@@ -1281,8 +1281,22 @@ static void MCIPhoneDoDidBecomeActive(void *)
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
 	
-	char *args[1];
-	args[0] = (char *)[[[[NSProcessInfo processInfo] arguments] objectAtIndex: 0] cString];
+	// Convert the arguments into stringrefs
+	MCStringRef args[1];
+	MCStringCreateWithCFString((CFStringRef)[[[NSProcessInfo processInfo] arguments] objectAtIndex: 0], args[0]);
+	
+	// Convert the environment variables into stringrefs
+	uindex_t envc = 0;
+	MCAutoArray<MCStringRef> t_envp;
+    t_envp.New(1);
+	while (env[envc] != 0)
+	{
+		t_envp.Extend(envc);
+		MCStringCreateWithBytes((const byte_t*)env[envc], strlen(env[envc]), kMCStringEncodingUTF8, false, t_envp[envc]);
+		envc++;
+	}
+	t_envp.Extend(envc + 1);
+	t_envp[envc] = nil;
 	
 	// Setup the value of the major OS version global.
 	NSString *t_sys_version;
@@ -1294,7 +1308,7 @@ static void MCIPhoneDoDidBecomeActive(void *)
 	
 	// Initialize the engine.
 	Bool t_init_success;
-	t_init_success = X_init(1, args, env);
+	t_init_success = X_init(1, args, envc, t_envp.Ptr());
 	
 	[t_pool release];
 	

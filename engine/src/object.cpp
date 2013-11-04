@@ -325,12 +325,9 @@ void MCObject::setname_cstring(const char *p_new_name)
 	/* UNCHECKED */ MCNameCreateWithCString(p_new_name, _name);
 }
 
-void MCObject::setscript_cstring(const char *cstring)
+void MCObject::setscript(MCStringRef p_script)
 {
-	MCStringRef t_script;
-	/* UNCHECKED */ MCStringCreateWithCString(cstring, t_script);
-	
-	MCValueAssign(_script, t_script);
+	MCValueAssign(_script, p_script);
 }
 
 void MCObject::open()
@@ -407,15 +404,15 @@ void MCObject::kunfocus()
 
 Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
 {
-	char kstring[U4L];
-	sprintf(kstring, "%d", (int)key);
-	if (message_with_args(MCM_raw_key_down, kstring) == ES_NORMAL)
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCStringFormat(&t_string, "%d", key);
+	if (message_with_valueref_args(MCM_raw_key_down, *t_string) == ES_NORMAL)
 		return True;
 	if (key >= XK_F1 && key <= XK_F35)
 	{
-		char cstring[U2L];
-		sprintf(cstring, "%d", (int)(key - XK_F1 + 1));
-		if (message_with_args(MCM_function_key, cstring) == ES_NORMAL)
+		MCAutoStringRef t_cstring;
+		/* UNCHECKED */ MCStringFormat(&t_cstring, "%d", key - XK_F1 + 1);
+		if (message_with_valueref_args(MCM_function_key, *t_cstring) == ES_NORMAL)
 			return True;
 		if (key == XK_F1 && message_with_valueref_args(MCM_help, p_string) == ES_NORMAL)
 			return True;
@@ -498,19 +495,19 @@ Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
 			}
 		break;
 	case XK_Left:
-		if (message_with_args(MCM_arrow_key, "left") == ES_NORMAL)
+		if (message_with_valueref_args(MCM_arrow_key, MCSTR("left")) == ES_NORMAL)
 			return True;
 		break;
 	case XK_Right:
-		if (message_with_args(MCM_arrow_key, "right") == ES_NORMAL)
+		if (message_with_valueref_args(MCM_arrow_key, MCSTR("right")) == ES_NORMAL)
 			return True;
 		break;
 	case XK_Up:
-		if (message_with_args(MCM_arrow_key, "up") == ES_NORMAL)
+		if (message_with_valueref_args(MCM_arrow_key, MCSTR("up")) == ES_NORMAL)
 			return True;
 		break;
 	case XK_Down:
-		if (message_with_args(MCM_arrow_key, "down") == ES_NORMAL)
+		if (message_with_valueref_args(MCM_arrow_key, MCSTR("down")) == ES_NORMAL)
 			return True;
 		break;
 	default:
@@ -610,9 +607,9 @@ Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
 
 Boolean MCObject::kup(MCStringRef p_string, KeySym key)
 {
-	char kstring[U4L];
-	sprintf(kstring, "%d", (int)key);
-	if (message_with_args(MCM_raw_key_up, kstring) == ES_NORMAL)
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCStringFormat(&t_string, "%d", key);
+	if (message_with_valueref_args(MCM_raw_key_up, *t_string) == ES_NORMAL)
 		return True;
 
 	// MW-2005-08-31: We need an unsigned comparison here - otherwise accented characters
@@ -1962,46 +1959,6 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	return stat;
 }
 
-Exec_stat MCObject::message_with_args(MCNameRef mess, const MCString &v1)
-{
-	MCParameter p1;
-	p1.sets_argument(v1);
-	return message(mess, &p1);
-}
-
-Exec_stat MCObject::message_with_args(MCNameRef mess, const MCString &v1, const MCString &v2)
-{
-	MCParameter p1, p2;
-	p1.sets_argument(v1);
-	p1.setnext(&p2);
-	p2.sets_argument(v2);
-	return message(mess, &p1);
-}
-
-Exec_stat MCObject::message_with_args(MCNameRef mess, const MCString &v1, const MCString &v2, const MCString& v3)
-{
-	MCParameter p1, p2, p3;
-	p1.sets_argument(v1);
-	p1.setnext(&p2);
-	p2.sets_argument(v2);
-	p2.setnext(&p3);
-	p3.sets_argument(v3);
-	return message(mess, &p1);
-}
-
-Exec_stat MCObject::message_with_args(MCNameRef mess, const MCString &v1, const MCString &v2, const MCString& v3, const MCString& v4)
-{
-	MCParameter p1, p2, p3, p4;
-	p1.sets_argument(v1);
-	p1.setnext(&p2);
-	p2.sets_argument(v2);
-	p2.setnext(&p3);
-	p3.sets_argument(v3);
-	p3.setnext(&p4);
-	p4.sets_argument(v4);
-	return message(mess, &p1);
-}
-
 Exec_stat MCObject::message_with_valueref_args(MCNameRef mess, MCValueRef v1)
 {
 	MCParameter p1;
@@ -2113,9 +2070,9 @@ void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)
 	MCresult->eval(ep);
 
 	if (h)
-		message_with_args(MCM_message_handled, htypes[htype], MCNameGetOldString(m));
+		message_with_valueref_args(MCM_message_handled, MCSTR(htypes[htype]), m);
 	else
-		message_with_args(MCM_message_not_handled, htypes[htype], MCNameGetOldString(m));
+		message_with_valueref_args(MCM_message_not_handled, MCSTR(htypes[htype]), m);
 
 	MCresult->set(ep);
 
@@ -2275,7 +2232,9 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 					MCExecPoint ep(this, NULL, NULL);
 					getprop(0, P_LONG_ID, ep, False);
 					MCperror->add(PE_OBJECT_NAME, 0, 0, ep.getsvalue());
-					message_with_args(MCM_script_error, MCperror->getsvalue());
+					MCAutoStringRef t_string;
+					/* UNCHECKED */ MCperror->copyasstringref(&t_string);
+					message_with_valueref_args(MCM_script_error, *t_string);
 					MCperror->clear();
 				}
 				delete hlist;
@@ -2611,7 +2570,7 @@ void MCObject::editscript()
 {
 	MCExecPoint ep(this, NULL, NULL);
 	getprop(0, P_LONG_ID, ep, False);
-	getcard()->message_with_args(MCM_edit_script, ep.getsvalue());
+	getcard()->message_with_valueref_args(MCM_edit_script, ep.getvalueref());
 }
 
 void MCObject::removefrom(MCObjectList *l)
@@ -2980,25 +2939,20 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 			/* UNCHECKED */ MCStackSecurityCreateObjectInputStream(stream, t_length, t_stream);
 			t_length -= 1;
 			
-			char *t_script_cstring;
-			stat = t_stream -> ReadCString(t_script_cstring);
+			MCAutoStringRef t_script_string;
+			stat = t_stream -> ReadTranslatedStringRef(&t_script_string);
 			if (stat == IO_NORMAL)
 			{
-				if (MCtranslatechars && t_script_cstring != NULL)
-				{
-#ifdef __MACROMAN__
-					IO_iso_to_mac(t_script_cstring, strlen(t_script_cstring));
-#else
-					IO_mac_to_iso(t_script_cstring, strlen(t_script_cstring));
-#endif
-				}
-				t_length -= t_script_cstring == NULL ? 1 : strlen(t_script_cstring) + 1;
-				
-				if (t_script_cstring != nil)
+				// Adjust the remaining length based on the length of the string read
+				if (MCStringIsEmpty(*t_script_string))
+					t_length -= 1;
+				else
+					t_length -= MCStringGetLength(*t_script_string) + 1;
+
+				if (!MCStringIsEmpty(*t_script_string))
 					getstack() -> securescript(this);
 				
-				setscript_cstring(t_script_cstring);
-				delete t_script_cstring;
+				setscript(*t_script_string);
 			}
 
 			if (stat == IO_NORMAL && t_length > 0)
@@ -3025,12 +2979,11 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 	}
 	else if (addflags & AF_LONG_SCRIPT)
 	{
-		char *t_script_cstring;
-		if ((stat = IO_read_string(t_script_cstring, stream, 4)) != IO_NORMAL)
+		MCAutoStringRef t_script_string;
+		if ((stat = IO_read_stringref(&t_script_string, stream, false, 4)) != IO_NORMAL)
 			return stat;
 		
-		setscript_cstring(t_script_cstring);
-		delete t_script_cstring;
+		setscript(*t_script_string);
 		
 		getstack() -> securescript(this);
 	}
@@ -3160,7 +3113,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (flags & F_SCRIPT && !(addflags & AF_LONG_SCRIPT))
 	{
 		getstack() -> unsecurescript(this);
-		stat = IO_write_string(MCStringGetCString(_script), stream);
+		stat = IO_write_stringref(_script, stream, false);
 		getstack() -> securescript(this);
 		if (stat != IO_NORMAL)
 			return stat;
@@ -3276,7 +3229,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			MCObjectOutputStream *t_stream = nil;
 			/* UNCHECKED */ MCStackSecurityCreateObjectOutputStream(stream, t_stream);
 			getstack() -> unsecurescript(this);
-			stat = t_stream -> WriteCString(MCStringGetCString(_script));
+			stat = t_stream -> WriteStringRef(_script);
 			getstack() -> securescript(this);
 			if (stat == IO_NORMAL)
 				stat = extendedsave(*t_stream, p_part);
@@ -3457,7 +3410,7 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 		if (t_stat == IO_NORMAL)
 			t_stat = p_stream . WriteNameRef(parent_script -> GetParent() -> GetObjectStack());
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . WriteCString(nil); // was mainstack reference
+			t_stat = p_stream . WriteStringRef(kMCEmptyString); // was mainstack reference
 	}
 
 	if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_BITMAPEFFECTS) != 0)
@@ -3514,10 +3467,9 @@ IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, const char *p_vers
 			t_stat = p_stream . ReadNameRef(t_stack);
 
 		// This is no longer used, but might remain in older stackfiles.
-		char *t_mainstack;
-		t_mainstack = NULL;
+		MCAutoStringRef t_mainstack;
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . ReadCString(t_mainstack);
+			t_stat = p_stream . ReadStringRef(&t_mainstack);
 
 		if (t_stat == IO_NORMAL)
 		{
@@ -3529,7 +3481,6 @@ IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, const char *p_vers
 		}
 
 		MCNameDelete(t_stack);
-		delete t_mainstack;
 	}
 	
 	if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_BITMAPEFFECTS) != 0)

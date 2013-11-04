@@ -341,7 +341,7 @@ public:
 	// Called by any client that does text insertion.
 
 	void finsertnobreak(MCStringRef p_string, MCRange p_range);
-	Boolean finsertnew(MCStringRef p_string);
+    Boolean finsertnew(MCStringRef p_string);
 
 	// Delete the specified chunk at the focusedindex and return the deleted
 	// string in undopgptr.

@@ -584,10 +584,6 @@ public:
 	Exec_stat dispatch(Handler_type type, MCNameRef name, MCParameter *params);
 
 	Exec_stat message(MCNameRef name, MCParameter *p = NULL, Boolean changedefault = True, Boolean send = False, Boolean p_force = False);
-	Exec_stat message_with_args(MCNameRef name, const MCString &v1);
-	Exec_stat message_with_args(MCNameRef name, const MCString &v1, const MCString &v2);
-	Exec_stat message_with_args(MCNameRef name, const MCString &v1, const MCString &v2, const MCString& v3);
-	Exec_stat message_with_args(MCNameRef name, const MCString &v1, const MCString &v2, const MCString& v3, const MCString& v4);
 	Exec_stat message_with_valueref_args(MCNameRef name, MCValueRef v1);
 	Exec_stat message_with_valueref_args(MCNameRef name, MCValueRef v1, MCValueRef v2);
     Exec_stat message_with_valueref_args(MCNameRef name, MCValueRef v1, MCValueRef v2, MCValueRef v3);
@@ -1054,7 +1050,13 @@ protected:
 	void mapfont(void);
 	void unmapfont(void);
 	
-	void setscript_cstring(const char *script);
+	void setscript(MCStringRef);
+	void setscript_cstring(const char *script)
+	{
+		MCAutoStringRef t_script;
+		/* UNCHECKED */ MCStringCreateWithCString(script, &t_script);
+		setscript(*t_script);
+	}
 	
 private:
 #ifdef OLD_EXEC

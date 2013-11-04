@@ -745,7 +745,6 @@ public:
 	// Ensure that a global variable with the given name exists. If the variable
 	// does not exist it is created.
 	/* CAN FAIL */ static bool ensureglobal(MCNameRef name, MCVariable*& r_var);
-	/* CAN FAIL */ static bool ensureglobal_cstring(const char *name, MCVariable*& r_var);
 
 	/* CAN FAIL */ static bool create(MCVariable*& r_var);
 	/* CAN FAIL */ static bool createwithname(MCNameRef name, MCVariable*& r_var);

@@ -679,9 +679,9 @@ Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringR
 	Boolean t_need_recompute = False;
 
 	// MW-2012-02-13: [[ Block Unicode ]] Use the new finsert method in native mode.
-	// MW-2012-02-23: [[ PutUnicode ]] Pass through the encoding to finsertnew.
+    // MW-2012-02-23: [[ PutUnicode ]] Pass through the encoding to finsertnew.
 	if (!MCStringIsEmpty(p_text))
-		t_need_recompute = pgptr->finsertnew(p_text);
+        t_need_recompute = pgptr->finsertnew(p_text);
 
 	if (opened && fptr == fdata)
 	{

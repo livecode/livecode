@@ -719,37 +719,23 @@ Exec_stat MCHandler::getvarnames(MCExecPoint& ep, Boolean all)
 	return ES_NORMAL;
 }
 
-Exec_stat MCHandler::eval(MCExecPoint &ep)
+void MCHandler::eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &r_value)
 {
-	MCScriptPoint sp(ep);
+	ctxt.GetEP().setvalueref(p_expression);
+	MCScriptPoint sp(ctxt);
 	sp.sethandler(this);
 	MCExpression *exp = NULL;
 	Symbol_type type;
 	Exec_stat stat = ES_ERROR;
 	if (sp.parseexp(False, True, &exp) == PS_NORMAL && sp.next(type) == PS_EOF)
-		stat = exp->eval(ep);
+		stat = exp->eval(ctxt.GetEP());
+
 	delete exp;
-	return stat;
-}
+	/* UNCHECKED */ ctxt.GetEP().copyasvalueref(r_value);
 
-/* WRAPPER */ Exec_stat MCHandler::eval_ctxt(MCExecContext& ctxt, MCValueRef& r_value)
-{
-	Exec_stat t_stat;
-	t_stat = eval(ctxt . GetEP());
-	if (t_stat == ES_NORMAL)
-		/* UNCHECKED */ ctxt . GetEP() . copyasvalueref(r_value);
-	return t_stat;
-}
-
-/*WRAPPER */ void MCHandler::eval(MCExecContext& ctxt, MCStringRef p_expression, MCValueRef& r_value)
-{
-	MCExecPoint ep(ctxt.GetEP());
-	/* UNCHECKED */ ep.setvalueref(p_expression);
-	Exec_stat stat = eval(ep);
-	/* UNCHECKED */ ep.copyasvalueref(r_value);
 	if (stat != ES_ERROR)
 		return;
-
+	
 	ctxt.Throw();
 }
 
@@ -775,9 +761,10 @@ void MCHandler::deletestatements(MCStatement *statements)
 	}
 }
 
-Exec_stat MCHandler::doscript(MCExecPoint &ep, uint2 line, uint2 pos)
+void MCHandler::doscript(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos)
 {
-	MCScriptPoint sp(ep);
+	ctxt.GetEP().setvalueref(p_script);
+	MCScriptPoint sp(ctxt);
 	MCStatement *curstatement = NULL;
 	MCStatement *statements = NULL;
 	MCStatement *newstatement = NULL;
@@ -787,7 +774,7 @@ Exec_stat MCHandler::doscript(MCExecPoint &ep, uint2 line, uint2 pos)
 	Boolean oldexplicit = MCexplicitvariables;
 	MCexplicitvariables = False;
 	uint4 count = 0;
-	sp.setline(line - 1);
+	sp.setline(p_line - 1);
 	while (stat == ES_NORMAL)
 	{
 		switch (sp.next(type))
@@ -800,7 +787,7 @@ Exec_stat MCHandler::doscript(MCExecPoint &ep, uint2 line, uint2 pos)
 				{
 					if (te->type != TT_STATEMENT)
 					{
-						MCeerror->add(EE_DO_NOTCOMMAND, line, pos, sp.gettoken_stringref());
+						MCeerror->add(EE_DO_NOTCOMMAND, p_line, p_pos, sp.gettoken_stringref());
 						stat = ES_ERROR;
 					}
 					else
@@ -808,7 +795,7 @@ Exec_stat MCHandler::doscript(MCExecPoint &ep, uint2 line, uint2 pos)
 				}
 			else
 			{
-				MCeerror->add(EE_DO_NOCOMMAND, line, pos, sp.gettoken_stringref());
+				MCeerror->add(EE_DO_NOCOMMAND, p_line, p_pos, sp.gettoken_stringref());
 				stat = ES_ERROR;
 			}
 			if (stat == ES_NORMAL)
@@ -822,7 +809,7 @@ Exec_stat MCHandler::doscript(MCExecPoint &ep, uint2 line, uint2 pos)
 				}
 				if (curstatement->parse(sp) != PS_NORMAL)
 				{
-					MCeerror->add(EE_DO_BADCOMMAND, line, pos, ep.getsvalue());
+					MCeerror->add(EE_DO_BADCOMMAND, p_line, p_pos, p_script);
 					stat = ES_ERROR;
 				}
 				count += curstatement->linecount();
@@ -831,7 +818,7 @@ Exec_stat MCHandler::doscript(MCExecPoint &ep, uint2 line, uint2 pos)
 		case PS_EOL:
 			if (sp.skip_eol() != PS_NORMAL)
 			{
-				MCeerror->add(EE_DO_BADLINE, line, pos, ep.getsvalue());
+				MCeerror->add(EE_DO_BADLINE, p_line, p_pos, p_script);
 				stat = ES_ERROR;
 			}
 			break;
@@ -846,31 +833,35 @@ Exec_stat MCHandler::doscript(MCExecPoint &ep, uint2 line, uint2 pos)
 
 	if (MClicenseparameters . do_limit > 0 && count >= MClicenseparameters . do_limit)
 	{
-		MCeerror -> add(EE_DO_NOTLICENSED, line, pos, ep . getsvalue());
+		MCeerror -> add(EE_DO_NOTLICENSED, p_line, p_pos, p_script);
 		stat = ES_ERROR;
 	}
 
 	if (stat == ES_ERROR)
 	{
 		deletestatements(statements);
-		return ES_ERROR;
+		ctxt.Throw();
+		return;
 	}
-	MCExecPoint ep2(ep);
+
+	MCExecPoint ep2(ctxt.GetEP());
+	MCExecContext ctxt2(ep2);
 	while (statements != NULL)
 	{
-		Exec_stat stat = statements->exec(ep2);
+		Exec_stat stat = statements->exec(ctxt2.GetEP());
 		if (stat == ES_ERROR)
 		{
 			deletestatements(statements);
-			MCeerror->add(EE_DO_BADEXEC, line, pos, ep.getsvalue());
-			return ES_ERROR;
+			MCeerror->add(EE_DO_BADEXEC, p_line, p_pos, p_script);
+			ctxt.Throw();
+			return;
 		}
 		if (MCexitall || stat != ES_NORMAL)
 		{
 			deletestatements(statements);
-			if (stat != ES_ERROR)
-				stat = ES_NORMAL;
-			return stat;
+			if (stat == ES_ERROR)
+				ctxt.Throw();
+			return;
 		}
 		else
 		{
@@ -881,21 +872,11 @@ Exec_stat MCHandler::doscript(MCExecPoint &ep, uint2 line, uint2 pos)
 	}
 	if (MCscreen->abortkey())
 	{
-		MCeerror->add(EE_DO_ABORT, line, pos);
-		return ES_ERROR;
-	}
-	return ES_NORMAL;
-}
-
-/* WRAPPER */ void MCHandler::doscript(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos)
-{
-	MCExecPoint ep(ctxt.GetEP());
-	/* UNCHECKED */ ep.setvalueref(p_script);
-	Exec_stat stat = doscript(ep, p_line, p_pos);
-	if (stat != ES_ERROR)
+		MCeerror->add(EE_DO_ABORT, p_line, p_pos);
+		ctxt.Throw();
 		return;
-
-	ctxt.Throw();
+	}
+	return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

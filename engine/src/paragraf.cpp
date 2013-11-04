@@ -1932,9 +1932,9 @@ Boolean MCParagraph::finsertnew(MCStringRef p_string)
 		if (TextFindNextParagraph(p_string, t_index, t_nextpara))
 		{
 			// We found a line-break, so insert it into the current paragraph and then split at
-			// the end.
+            // the end.
 			MCRange t_range = MCRangeMake(t_index, t_nextpara - t_index - 1);
-			t_paragraph -> finsertnobreak(p_string, t_range);
+            t_paragraph -> finsertnobreak(p_string, t_range);
 			t_paragraph -> split();
 			t_paragraph = t_paragraph -> next();
 

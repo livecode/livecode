@@ -527,24 +527,6 @@ MCVariable *MCVariable::lookupglobal(MCNameRef p_name)
 	return nil;
 }
 
-bool MCVariable::ensureglobal_cstring(const char *p_name, MCVariable*& r_var)
-{
-	bool t_success;
-	t_success = true;
-
-	MCNameRef t_name;
-	t_name = nil;
-	if (t_success)
-		t_success = MCNameCreateWithCString(p_name, t_name);
-
-	if (t_success)
-		t_success = ensureglobal(t_name, r_var);
-
-	MCNameDelete(t_name);
-	
-	return t_success;
-}
-
 bool MCVariable::ensureglobal(MCNameRef p_name, MCVariable*& r_var)
 {
 	// First check to see if the global variable already exists
@@ -621,12 +603,15 @@ void MCVariable::synchronize(MCExecPoint& ep, Boolean notify)
 				eval(ep);
 				MCAutoStringRef t_string;
 				/* UNCHECKED */ ep.copyasstringref(&t_string);
-				if (*MCwatchedvars[i].expression)
+				if (MCwatchedvars[i].expression != nil && !MCStringIsEmpty(MCwatchedvars[i].expression))
 				{
 					MCExecPoint ep2(ep);
-					ep2.setsvalue(MCwatchedvars[i].expression);
-					Boolean d;
-					if (ep.gethandler()->eval(ep2) == ES_NORMAL && MCU_stob(ep2.getsvalue(), d) && d)
+					MCExecContext ctxt(ep2);
+					MCAutoValueRef t_val;
+					ctxt.GetHandler()->eval(ctxt, MCwatchedvars[i].expression, &t_val);
+					
+					MCAutoBooleanRef t_bool;
+					if (!ctxt.HasError() && ctxt.ConvertToBoolean(*t_val, &t_bool) && *t_bool == kMCTrue)
 						MCB_setvar(ctxt, *t_string, name);
 				}
 				else
@@ -677,18 +662,14 @@ void MCVariable::synchronize(MCExecContext& ctxt, bool p_notify)
 					!is_global)
 					continue;
 
-				if (*MCwatchedvars[i].expression)
+				if (MCwatchedvars[i].expression != nil && !MCStringIsEmpty(MCwatchedvars[i].expression))
 				{
-					MCAutoStringRef t_expression;
-                    MCStringCreateWithCString(MCwatchedvars[i].expression, &t_expression);
-                    MCAutoValueRef t_value;
-                    MCAutoBooleanRef t_bool_value;
+                    MCAutoValueRef t_val;
+					ctxt.GetHandler() -> eval(ctxt, MCwatchedvars[i].expression, &t_val);
                     
-                    ctxt . GetHandler() -> eval(ctxt, *t_expression, &t_value);
-                    if (!ctxt . HasError() &&
-                            ctxt . ConvertToBoolean(*t_value, &t_bool_value))
-                    if (!ctxt . HasError() && *t_bool_value == kMCTrue)
-                        MCB_setvar(ctxt, value, name);
+					MCAutoBooleanRef t_bool;
+					if (!ctxt.HasError() && ctxt.ConvertToBoolean(*t_val, &t_bool) && *t_bool == kMCTrue)
+						MCB_setvar(ctxt, value, name);
 				}
 				else
                     MCB_setvar(ctxt, value, name);

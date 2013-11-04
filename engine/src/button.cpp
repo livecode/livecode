@@ -1237,7 +1237,7 @@ Boolean MCButton::mdown(uint2 which)
 			if ((!IsMacLF() || entry != NULL)
 			        && flags & F_TRAVERSAL_ON && !(state & CS_KFOCUSED))
 				getstack()->kfocusset(this);
-			message_with_args(MCM_mouse_down, "1");
+			message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 			break;
 		case T_POINTER:
 		case T_BUTTON:
@@ -1482,10 +1482,10 @@ Boolean MCButton::mup(uint2 which)
 				if (MCU_point_in_rect(rect, mx, my))
 				{
 					state |= CS_VISITED;
-					message_with_args(MCM_mouse_up, "1");
+					message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 				}
 				else
-					message_with_args(MCM_mouse_release, "1");
+					message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
 			}
 			break;
 		case T_BUTTON:
@@ -2824,7 +2824,7 @@ void MCButton::activate(Boolean notify, KeySym p_key)
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 			layer_redrawall();
 		}
-		message_with_args(MCM_mouse_up, "1");
+		message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 		MCdispatcher->closemenus();
 	}
 }
