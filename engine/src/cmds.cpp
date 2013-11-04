@@ -837,7 +837,7 @@ Parse_stat MCFind::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCFind::exec(MCExecPoint &ep)
+void MCFind::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCFind */ LEGACY_EXEC
 	if (tofind->eval(ep) != ES_NORMAL)
@@ -857,22 +857,11 @@ Exec_stat MCFind::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCFind */
 
+    MCAutoStringRef t_needle;
+    if (ctxt . EvalOptionalExprAsStringRef(tofind, kMCEmptyString, EE_FIND_BADSTRING, &t_needle))
+        return;
 
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_needle;
-	if (tofind->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_FIND_BADSTRING, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep . copyasstringref(&t_needle);
-
-	MCInterfaceExecFind(ctxt, mode, *t_needle, field);
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    MCInterfaceExecFind(ctxt, mode, *t_needle, field);
 }
 
 void MCFind::compile(MCSyntaxFactoryRef ctxt)
