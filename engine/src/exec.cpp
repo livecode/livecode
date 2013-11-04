@@ -460,6 +460,181 @@ bool MCExecContext::EvaluateExpression(MCExpression *p_expr, MCValueRef& r_resul
 
 //////////
 
+bool MCExecContext::EvalExprAsStringRef(MCExpression *p_expr, Exec_errors p_error, MCStringRef& r_value)
+{
+	MCAssert(p_expr != nil);
+	
+	p_expr -> eval_stringref(*this, r_value);
+	
+	if (!HasError())
+		return true;
+	
+	LegacyThrow(p_error);
+	
+	return false;
+}
+
+bool MCExecContext::EvalOptionalExprAsStringRef(MCExpression *p_expr, MCStringRef p_default, Exec_errors p_error, MCStringRef& r_value)
+{
+	if (p_expr == nil)
+	{
+		r_value = MCValueRetain(p_default);
+		return true;
+	}
+	
+	return EvalExprAsStringRef(p_expr, p_error, r_value);
+}
+
+bool MCExecContext::EvalExprAsBooleanRef(MCExpression *p_expr, Exec_errors p_error, MCBooleanRef& r_value)
+{
+	MCAssert(p_expr != nil);
+	
+	p_expr -> eval_booleanref(*this, r_value);
+	
+	if (!HasError())
+		return true;
+	
+	LegacyThrow(p_error);
+	
+	return false;
+}
+
+bool MCExecContext::EvalOptionalExprAsBooleanRef(MCExpression *p_expr, MCBooleanRef p_default, Exec_errors p_error, MCBooleanRef& r_value)
+{
+	if (p_expr == nil)
+	{
+		r_value = MCValueRetain(p_default);
+		return true;
+	}
+	
+	return EvalExprAsBooleanRef(p_expr, p_error, r_value);
+}
+
+bool MCExecContext::EvalExprAsDataRef(MCExpression *p_expr, Exec_errors p_error, MCDataRef& r_value)
+{
+	MCAssert(p_expr != nil);
+	
+	p_expr -> eval_dataref(*this, r_value);
+	
+	if (!HasError())
+		return true;
+	
+	LegacyThrow(p_error);
+	
+	return false;
+}
+
+bool MCExecContext::EvalOptionalExprAsDataRef(MCExpression *p_expr, MCDataRef p_default, Exec_errors p_error, MCDataRef& r_value)
+{
+	if (p_expr == nil)
+	{
+		r_value = MCValueRetain(p_default);
+		return true;
+	}
+	
+	return EvalExprAsDataRef(p_expr, p_error, r_value);
+}
+
+bool MCExecContext::EvalExprAsNameRef(MCExpression *p_expr, Exec_errors p_error, MCNameRef& r_value)
+{
+	MCAssert(p_expr != nil);
+	
+	p_expr -> eval_nameref(*this, r_value);
+	
+	if (!HasError())
+		return true;
+	
+	LegacyThrow(p_error);
+	
+	return false;
+}
+
+bool MCExecContext::EvalOptionalExprAsNameRef(MCExpression *p_expr, MCNameRef p_default, Exec_errors p_error, MCNameRef& r_value)
+{
+	if (p_expr == nil)
+	{
+		r_value = MCValueRetain(p_default);
+		return true;
+	}
+	
+	return EvalExprAsNameRef(p_expr, p_error, r_value);
+}
+
+bool MCExecContext::EvalExprAsArrayRef(MCExpression *p_expr, Exec_errors p_error, MCArrayRef& r_value)
+{
+	MCAssert(p_expr != nil);
+	
+	p_expr -> eval_arrayref(*this, r_value);
+	
+	if (!HasError())
+		return true;
+	
+	LegacyThrow(p_error);
+	
+	return false;
+}
+
+bool MCExecContext::EvalOptionalExprAsArrayRef(MCExpression *p_expr, MCArrayRef p_default, Exec_errors p_error, MCArrayRef& r_value)
+{
+	if (p_expr == nil)
+	{
+		r_value = MCValueRetain(p_default);
+		return true;
+	}
+	
+	return EvalExprAsArrayRef(p_expr, p_error, r_value);
+}
+
+bool MCExecContext::EvalExprAsNumberRef(MCExpression *p_expr, Exec_errors p_error, MCNumberRef& r_value)
+{
+	MCAssert(p_expr != nil);
+	
+	p_expr -> eval_numberref(*this, r_value);
+	
+	if (!HasError())
+		return true;
+	
+	LegacyThrow(p_error);
+	
+	return false;
+}
+
+bool MCExecContext::EvalOptionalExprAsNumberRef(MCExpression *p_expr, MCNumberRef p_default, Exec_errors p_error, MCNumberRef& r_value)
+{
+	if (p_expr == nil)
+	{
+		r_value = MCValueRetain(p_default);
+		return true;
+	}
+	
+	return EvalExprAsNumberRef(p_expr, p_error, r_value);
+}
+
+bool MCExecContext::EvalExprAsValueRef(MCExpression *p_expr, Exec_errors p_error, MCValueRef& r_value)
+{
+	MCAssert(p_expr != nil);
+	
+	p_expr -> eval_valueref(*this, r_value);
+	
+	if (!HasError())
+		return true;
+	
+	LegacyThrow(p_error);
+	
+	return false;
+}
+
+bool MCExecContext::EvalOptionalExprAsValueRef(MCExpression *p_expr, MCValueRef p_default, Exec_errors p_error, MCValueRef& r_value)
+{
+	if (p_expr == nil)
+	{
+		r_value = MCValueRetain(p_default);
+		return true;
+	}
+	
+	return EvalExprAsValueRef(p_expr, p_error, r_value);
+}
+
 bool MCExecContext::EvalExprAsUInt(MCExpression *p_expr, Exec_errors p_error, uinteger_t& r_value)
 {
 	MCAssert(p_expr != nil);
@@ -485,11 +660,11 @@ bool MCExecContext::EvalOptionalExprAsUInt(MCExpression *p_expr, uinteger_t p_de
 	return EvalExprAsUInt(p_expr, p_error, r_value);
 }
 
-bool MCExecContext::EvalExprAsStringRef(MCExpression *p_expr, Exec_errors p_error, MCStringRef& r_value)
+bool MCExecContext::EvalExprAsInt(MCExpression *p_expr, Exec_errors p_error, integer_t& r_value)
 {
 	MCAssert(p_expr != nil);
 	
-	p_expr -> eval_stringref(*this, r_value);
+	p_expr -> eval_int(*this, r_value);
 	
 	if (!HasError())
 		return true;
@@ -499,16 +674,168 @@ bool MCExecContext::EvalExprAsStringRef(MCExpression *p_expr, Exec_errors p_erro
 	return false;
 }
 
-bool MCExecContext::EvalOptionalExprAsStringRef(MCExpression *p_expr, MCStringRef p_default, Exec_errors p_error, MCStringRef& r_value)
+bool MCExecContext::EvalOptionalExprAsInt(MCExpression *p_expr, integer_t p_default, Exec_errors p_error, integer_t& r_value)
 {
 	if (p_expr == nil)
 	{
-		r_value = MCValueRetain(p_default);
+		r_value = p_default;
 		return true;
 	}
 	
-	return EvalExprAsStringRef(p_expr, p_error, r_value);
+	return EvalExprAsInt(p_expr, p_error, r_value);
 }
+
+bool MCExecContext::EvalExprAsBool(MCExpression *p_expr, Exec_errors p_error, bool& r_value)
+{
+	MCAssert(p_expr != nil);
+	
+	p_expr -> eval_bool(*this, r_value);
+	
+	if (!HasError())
+		return true;
+	
+	LegacyThrow(p_error);
+	
+	return false;
+}
+
+bool MCExecContext::EvalOptionalExprAsBool(MCExpression *p_expr, bool p_default, Exec_errors p_error, bool& r_value)
+{
+	if (p_expr == nil)
+	{
+		r_value = p_default;
+		return true;
+	}
+	
+	return EvalExprAsBool(p_expr, p_error, r_value);
+}
+
+bool MCExecContext::EvalExprAsDouble(MCExpression *p_expr, Exec_errors p_error, double& r_value)
+{
+	MCAssert(p_expr != nil);
+	
+	p_expr -> eval_double(*this, r_value);
+	
+	if (!HasError())
+		return true;
+	
+	LegacyThrow(p_error);
+	
+	return false;
+}
+
+bool MCExecContext::EvalOptionalExprAsDouble(MCExpression *p_expr, double p_default, Exec_errors p_error, double& r_value)
+{
+	if (p_expr == nil)
+	{
+		r_value = p_default;
+		return true;
+	}
+	
+	return EvalExprAsDouble(p_expr, p_error, r_value);
+}
+
+bool MCExecContext::EvalExprAsChar(MCExpression *p_expr, Exec_errors p_error, char_t& r_value)
+{
+	MCAssert(p_expr != nil);
+	
+	p_expr -> eval_char(*this, r_value);
+	
+	if (!HasError())
+		return true;
+	
+	LegacyThrow(p_error);
+	
+	return false;
+}
+
+bool MCExecContext::EvalOptionalExprAsChar(MCExpression *p_expr, char_t p_default, Exec_errors p_error, char_t& r_value)
+{
+	if (p_expr == nil)
+	{
+		r_value = p_default;
+		return true;
+	}
+	
+	return EvalExprAsChar(p_expr, p_error, r_value);
+}
+
+bool MCExecContext::EvalExprAsPoint(MCExpression *p_expr, Exec_errors p_error, MCPoint& r_value)
+{
+	MCAssert(p_expr != nil);
+	
+	p_expr -> eval_point(*this, r_value);
+	
+	if (!HasError())
+		return true;
+	
+	LegacyThrow(p_error);
+	
+	return false;
+}
+
+bool MCExecContext::EvalOptionalExprAsPoint(MCExpression *p_expr, MCPoint p_default, Exec_errors p_error, MCPoint& r_value)
+{
+	if (p_expr == nil)
+	{
+		r_value = p_default;
+		return true;
+	}
+	
+	return EvalExprAsPoint(p_expr, p_error, r_value);
+}
+
+bool MCExecContext::EvalExprAsColor(MCExpression *p_expr, Exec_errors p_error, MCColor& r_value)
+{
+	MCAssert(p_expr != nil);
+	
+	p_expr -> eval_color(*this, r_value);
+	
+	if (!HasError())
+		return true;
+	
+	LegacyThrow(p_error);
+	
+	return false;
+}
+
+bool MCExecContext::EvalOptionalExprAsColor(MCExpression *p_expr, MCColor p_default, Exec_errors p_error, MCColor& r_value)
+{
+	if (p_expr == nil)
+	{
+		r_value = p_default;
+		return true;
+	}
+	
+	return EvalExprAsColor(p_expr, p_error, r_value);
+}
+
+bool MCExecContext::EvalExprAsRectangle(MCExpression *p_expr, Exec_errors p_error, MCRectangle& r_value)
+{
+	MCAssert(p_expr != nil);
+	
+	p_expr -> eval_rectangle(*this, r_value);
+	
+	if (!HasError())
+		return true;
+	
+	LegacyThrow(p_error);
+	
+	return false;
+}
+
+bool MCExecContext::EvalOptionalExprAsRectangle(MCExpression *p_expr, MCRectangle p_default, Exec_errors p_error, MCRectangle& r_value)
+{
+	if (p_expr == nil)
+	{
+		r_value = p_default;
+		return true;
+	}
+	
+	return EvalExprAsRectangle(p_expr, p_error, r_value);
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
