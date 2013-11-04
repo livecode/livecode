@@ -761,183 +761,217 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
     MCExecPoint ep(nil,nil,nil);
     switch(prop -> type)
     {
-        case kMCPropertyTypeAny:
+    case kMCPropertyTypeAny:
+    {
+        MCAutoValueRef t_any;
+        ((void(*)(MCExecContext&, void *, MCValueRef&))prop -> getter)(ctxt, mark, &t_any);
+        if (!ctxt . HasError())
         {
-            MCAutoValueRef t_any;
-            ((void(*)(MCExecContext&, void *, MCValueRef&))prop -> getter)(ctxt, mark, &t_any);
-            if (!ctxt . HasError())
-            {
-                ep . setvalueref(*t_any);
-            }
+            ep . setvalueref(*t_any);
         }
-            break;
-            
-        case kMCPropertyTypeBool:
+    }
+        break;
+
+    case kMCPropertyTypeBool:
+    {
+        bool t_value;
+        ((void(*)(MCExecContext&, void *, bool&))prop -> getter)(ctxt, mark, t_value);
+        if (!ctxt . HasError())
         {
-            bool t_value;
-            ((void(*)(MCExecContext&, void *, bool&))prop -> getter)(ctxt, mark, t_value);
-            if (!ctxt . HasError())
-            {
-                ep . setboolean(t_value ? True : False);
-            }
+            ep . setboolean(t_value ? True : False);
         }
-            break;
-            
-        case kMCPropertyTypeInt16:
-        case kMCPropertyTypeInt32:
+    }
+        break;
+
+
+    case kMCPropertyTypeInt16:
+    case kMCPropertyTypeInt32:
+    {
+        integer_t t_value;
+        ((void(*)(MCExecContext&, void *, integer_t&))prop -> getter)(ctxt, mark, t_value);
+        if (!ctxt . HasError())
         {
-            integer_t t_value;
-            ((void(*)(MCExecContext&, void *, integer_t&))prop -> getter)(ctxt, mark, t_value);
-            if (!ctxt . HasError())
-            {
-                ep . setint(t_value);
-            }
+            ep . setint(t_value);
         }
-            break;
-            
-        case kMCPropertyTypeUInt8:
-        case kMCPropertyTypeUInt16:
-        case kMCPropertyTypeUInt32:
+    }
+        break;
+
+    case kMCPropertyTypeUInt8:
+    case kMCPropertyTypeUInt16:
+    case kMCPropertyTypeUInt32:
+    {
+        uinteger_t t_value;
+        ((void(*)(MCExecContext&, void *, uinteger_t&))prop -> getter)(ctxt, mark, t_value);
+        if (!ctxt . HasError())
         {
-            uinteger_t t_value;
-            ((void(*)(MCExecContext&, void *, uinteger_t&))prop -> getter)(ctxt, mark, t_value);
-            if (!ctxt . HasError())
-            {
-                ep . setuint(t_value);
-            }
+            ep . setuint(t_value);
         }
-            break;
-            
-        case kMCPropertyTypeDouble:
+    }
+        break;
+
+    case kMCPropertyTypeDouble:
+    {
+        double t_value;
+        ((void(*)(MCExecContext&, void *, double&))prop -> getter)(ctxt, mark, t_value);
+        if (!ctxt . HasError())
         {
-            double t_value;
-            ((void(*)(MCExecContext&, void *, double&))prop -> getter)(ctxt, mark, t_value);
-            if (!ctxt . HasError())
-            {
-                ep . setnvalue(t_value);
-            }
+            ep . setnvalue(t_value);
         }
-            break;
-            
-        case kMCPropertyTypeChar:
+    }
+        break;
+
+    case kMCPropertyTypeChar:
+    {
+        char_t t_value;
+        ((void(*)(MCExecContext&, void *, char_t&))prop -> getter)(ctxt, mark, t_value);
+        if (!ctxt . HasError())
         {
-            char_t t_value;
-            ((void(*)(MCExecContext&, void *, char_t&))prop -> getter)(ctxt, mark, t_value);
-            if (!ctxt . HasError())
-            {
-                ep . setchar((char)t_value);
-            }
+            ep . setchar((char)t_value);
         }
-            break;
-            
-        case kMCPropertyTypeString:
+    }
+        break;
+
+    case kMCPropertyTypeString:
+    {
+        MCAutoStringRef t_value;
+        ((void(*)(MCExecContext&, void *, MCStringRef&))prop -> getter)(ctxt, mark, &t_value);
+        if (!ctxt . HasError())
         {
-            MCAutoStringRef t_value;
-            ((void(*)(MCExecContext&, void *, MCStringRef&))prop -> getter)(ctxt, mark, &t_value);
-            if (!ctxt . HasError())
-            {
+            ep . setvalueref(*t_value);
+        }
+    }
+        break;
+
+    case kMCPropertyTypeBinaryString:
+    {
+        MCAutoDataRef t_value;
+        ((void(*)(MCExecContext&, void *, MCDataRef&))prop -> getter)(ctxt, mark, &t_value);
+        if (!ctxt . HasError())
+        {
+            ep . setvalueref(*t_value);
+        }
+    }
+        break;
+
+
+    case kMCPropertyTypeName:
+    {
+        MCNewAutoNameRef t_value;
+        ((void(*)(MCExecContext&, void *, MCNameRef&))prop->getter)(ctxt, mark, &t_value);
+        if (!ctxt.HasError())
+        {
+            ep.setvalueref(*t_value);
+        }
+    }
+        break;
+
+    case kMCPropertyTypeColor:
+    {
+        MCColor t_value;
+        ((void(*)(MCExecContext&, void *, MCColor&))prop -> getter)(ctxt, mark, t_value);
+        if (!ctxt . HasError())
+        {
+            ep . setcolor(t_value);
+        }
+    }
+        break;
+
+    case kMCPropertyTypeRectangle:
+    {
+        MCRectangle t_value;
+        ((void(*)(MCExecContext&, void *, MCRectangle&))prop -> getter)(ctxt, mark, t_value);
+        if (!ctxt . HasError())
+        {
+            ep . setrectangle(t_value);
+        }
+    }
+        break;
+
+    case kMCPropertyTypePoint:
+    {
+        MCPoint t_value;
+        ((void(*)(MCExecContext&, void *, MCPoint&))prop -> getter)(ctxt, mark, t_value);
+        if (!ctxt . HasError())
+        {
+            ep . setpoint(t_value);
+        }
+    }
+        break;
+
+    case kMCPropertyTypeInt16X2:
+    {
+        integer_t t_value[2];
+        ((void(*)(MCExecContext&, void *, integer_t[2]))prop -> getter)(ctxt, mark, t_value);
+        if (!ctxt . HasError())
+        {
+            ep . setstringf("%d,%d", t_value[0], t_value[1]);
+        }
+    }
+        break;
+
+    case kMCPropertyTypeInt16X4:
+    {
+        integer_t t_value[4];
+        ((void(*)(MCExecContext&, void *, integer_t[4]))prop -> getter)(ctxt, mark, t_value);
+        if (!ctxt . HasError())
+        {
+            ep . setstringf("%d,%d,%d,%d", t_value[0], t_value[1], t_value[2], t_value[3]);
+        }
+    }
+        break;
+
+    case kMCPropertyTypeArray:
+    {
+        MCAutoArrayRef t_value;
+        ((void(*)(MCExecContext&, void *, MCArrayRef&))prop -> getter)(ctxt, mark, &t_value);
+        if (!ctxt . HasError())
+        {
+            if (*t_value != nil)
                 ep . setvalueref(*t_value);
-            }
+            else
+                ep . clear();
         }
-            break;
-			
-        case kMCPropertyTypeBinaryString:
+    }
+        break;
+
+    case kMCPropertyTypeEnum:
+    {
+        int t_value;
+        ((void(*)(MCExecContext&, void *, int&))prop -> getter)(ctxt, mark, t_value);
+        if (!ctxt . HasError())
         {
-            MCAutoDataRef t_value;
-            ((void(*)(MCExecContext&, void *, MCDataRef&))prop -> getter)(ctxt, mark, &t_value);
-            if (!ctxt . HasError())
+            bool t_found = false;
+            MCExecEnumTypeInfo *t_enum_info;
+            t_enum_info = (MCExecEnumTypeInfo *)(prop -> type_info);
+            for(uindex_t i = 0; i < t_enum_info -> count; i++)
+                if (t_enum_info -> elements[i] . value == t_value)
+                {
+                    ep . setcstring(t_enum_info -> elements[i] . tag);
+                    t_found = true;
+                    break;
+                }
+
+            if (!t_found)
             {
-                ep . setvalueref(*t_value);
+                // THIS MEANS A METHOD HAS RETURNED AN ILLEGAL VALUE
+                MCAssert(false);
+                return;
             }
         }
-		break;
-			
-            
-        case kMCPropertyTypeName:
+    }
+        break;
+
+    case kMCPropertyTypeOptionalEnum:
+    {
+        int t_value;
+        int *t_value_ptr;
+        t_value_ptr = &t_value;
+        ((void(*)(MCExecContext&, void *, int*&))prop -> getter)(ctxt, mark, t_value_ptr);
+        if (!ctxt . HasError())
         {
-            MCNewAutoNameRef t_value;
-            ((void(*)(MCExecContext&, void *, MCNameRef&))prop->getter)(ctxt, mark, &t_value);
-            if (!ctxt.HasError())
-            {
-                ep.setvalueref(*t_value);
-            }
-        }
-            break;
-            
-        case kMCPropertyTypeColor:
-        {
-            MCColor t_value;
-            ((void(*)(MCExecContext&, void *, MCColor&))prop -> getter)(ctxt, mark, t_value);
-            if (!ctxt . HasError())
-            {
-                ep . setcolor(t_value);
-            }
-        }
-            break;
-            
-        case kMCPropertyTypeRectangle:
-        {
-            MCRectangle t_value;
-            ((void(*)(MCExecContext&, void *, MCRectangle&))prop -> getter)(ctxt, mark, t_value);
-            if (!ctxt . HasError())
-            {
-                ep . setrectangle(t_value);
-            }
-        }
-            break;
-            
-        case kMCPropertyTypePoint:
-        {
-            MCPoint t_value;
-            ((void(*)(MCExecContext&, void *, MCPoint&))prop -> getter)(ctxt, mark, t_value);
-            if (!ctxt . HasError())
-            {
-                ep . setpoint(t_value);
-            }
-        }
-            break;
-            
-        case kMCPropertyTypeInt16X2:
-        {
-            integer_t t_value[2];
-            ((void(*)(MCExecContext&, void *, integer_t[2]))prop -> getter)(ctxt, mark, t_value);
-            if (!ctxt . HasError())
-            {
-                ep . setstringf("%d,%d", t_value[0], t_value[1]);
-            }
-        }
-            break;
-            
-        case kMCPropertyTypeInt16X4:
-        {
-            integer_t t_value[4];
-            ((void(*)(MCExecContext&, void *, integer_t[4]))prop -> getter)(ctxt, mark, t_value);
-            if (!ctxt . HasError())
-            {
-                ep . setstringf("%d,%d,%d,%d", t_value[0], t_value[1], t_value[2], t_value[3]);
-            }
-        }
-            break;
-            
-        case kMCPropertyTypeArray:
-        {
-            MCAutoArrayRef t_value;
-            ((void(*)(MCExecContext&, void *, MCArrayRef&))prop -> getter)(ctxt, mark, &t_value);
-            if (!ctxt . HasError())
-            {
-                if (*t_value != nil)
-                    ep . setvalueref(*t_value);
-                else
-                    ep . clear();
-            }
-        }
-            break;
-            
-        case kMCPropertyTypeEnum:
-        {
-            int t_value;
-            ((void(*)(MCExecContext&, void *, int&))prop -> getter)(ctxt, mark, t_value);
-            if (!ctxt . HasError())
+            if (t_value_ptr == nil)
+                ep . clear();
+            else
             {
                 bool t_found = false;
                 MCExecEnumTypeInfo *t_enum_info;
@@ -949,7 +983,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                         t_found = true;
                         break;
                     }
-                
+
                 if (!t_found)
                 {
                     // THIS MEANS A METHOD HAS RETURNED AN ILLEGAL VALUE
@@ -958,76 +992,331 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 }
             }
         }
-            break;
-            
-        case kMCPropertyTypeOptionalEnum:
+    }
+        break;
+
+    case kMCPropertyTypeSet:
+    {
+        unsigned int t_value;
+        ((void(*)(MCExecContext&, void *, unsigned int&))prop -> getter)(ctxt, mark, t_value);
+        if (!ctxt . HasError())
         {
-            int t_value;
-            int *t_value_ptr;
-            t_value_ptr = &t_value;
-            ((void(*)(MCExecContext&, void *, int*&))prop -> getter)(ctxt, mark, t_value_ptr);
+            MCExecSetTypeInfo *t_seprop;
+            t_seprop = (MCExecSetTypeInfo *)(prop -> type_info);
+
+            bool t_first;
+            t_first = true;
+
+            ep . clear();
+            for(uindex_t i = 0; i < t_seprop -> count; i++)
+                if (((1 << t_seprop -> elements[i] . bit) & t_value) != 0)
+                {
+                    ep . concatcstring(t_seprop -> elements[i] . tag, EC_COMMA, t_first);
+                    t_first = false;
+                }
+
+        }
+    }
+        break;
+
+    case kMCPropertyTypeCustom:
+    {
+        MCExecCustomTypeInfo *t_custom_info;
+        t_custom_info = (MCExecCustomTypeInfo *)(prop -> type_info);
+
+        MCAssert(t_custom_info -> size <= 64);
+
+        char t_value[64];
+        ((void(*)(MCExecContext&, void *, void *))prop -> getter)(ctxt, mark, t_value);
+        if (!ctxt . HasError())
+        {
+            MCAutoStringRef t_value_ref;
+            ((MCExecCustomTypeFormatProc)t_custom_info -> format)(ctxt, t_value, &t_value_ref);
+            ((MCExecCustomTypeFreeProc)t_custom_info -> free)(ctxt, t_value);
             if (!ctxt . HasError())
             {
-                if (t_value_ptr == nil)
+                ep . setvalueref(*t_value_ref);
+            }
+        }
+
+    }
+        break;
+
+    case kMCPropertyTypeOptionalInt16:
+    {
+        integer_t t_value;
+        integer_t *t_value_ptr;
+        t_value_ptr = &t_value;
+        ((void(*)(MCExecContext&, void *, integer_t*&))prop -> getter)(ctxt, mark, t_value_ptr);
+        if (!ctxt . HasError())
+        {
+            if (t_value_ptr == nil)
+                ep . clear();
+            else
+                ep . setint(t_value);
+        }
+    }
+        break;
+
+    case kMCPropertyTypeOptionalUint8:
+    case kMCPropertyTypeOptionalUInt16:
+    case kMCPropertyTypeOptionalUInt32:
+    {
+        uinteger_t t_value;
+        uinteger_t *t_value_ptr;
+        t_value_ptr = &t_value;
+        ((void(*)(MCExecContext&, void *, uinteger_t*&))prop -> getter)(ctxt, mark, t_value_ptr);
+        if (!ctxt . HasError())
+        {
+            if (t_value_ptr == nil)
+                ep . clear();
+            else
+                ep . setint(t_value);
+        }
+    }
+        break;
+
+    case kMCPropertyTypeOptionalString:
+    {
+        MCAutoStringRef t_value;
+        ((void(*)(MCExecContext&, void *, MCStringRef&))prop -> getter)(ctxt, mark, &t_value);
+        if (!ctxt . HasError())
+        {
+            if (*t_value == nil)
+                ep . clear();
+            else
+                ep . setvalueref(*t_value);
+        }
+
+    }
+        break;
+
+    case kMCPropertyTypeOptionalPoint:
+    {
+        MCPoint t_value;
+        MCPoint *t_value_ptr;
+        t_value_ptr = &t_value;
+        ((void(*)(MCExecContext&, void *, MCPoint*&))prop -> getter)(ctxt, mark, t_value_ptr);
+        if (!ctxt . HasError())
+        {
+            if (t_value_ptr == nil)
+                ep . clear();
+            else
+                ep . setpoint(t_value);
+        }
+    }
+        break;
+
+    case kMCPropertyTypeOptionalRectangle:
+    {
+        MCRectangle t_value;
+        MCRectangle *t_value_ptr;
+        t_value_ptr = &t_value;
+        ((void(*)(MCExecContext&, void *, MCRectangle*&))prop -> getter)(ctxt, mark, t_value_ptr);
+        if (!ctxt . HasError())
+        {
+            if (t_value_ptr == nil)
+                ep . clear();
+            else
+                ep . setrectangle(t_value);
+        }
+    }
+        break;
+
+    case kMCPropertyTypeLinesOfString:
+    {
+        MCStringRef* t_value;
+        uindex_t t_count;
+        ((void(*)(MCExecContext&, void *, uindex_t&, MCStringRef*&))prop -> getter)(ctxt, mark, t_count, t_value);
+        if (!ctxt . HasError())
+        {
+            MCAutoStringRef t_output;
+            if (MCPropertyFormatStringList(t_value, t_count, '\n', &t_output))
+            {
+                ep . setvalueref(*t_output);
+            }
+        }
+    }
+        break;
+
+    case kMCPropertyTypeLinesOfUInt:
+    case kMCPropertyTypeItemsOfUInt:
+    {
+        uinteger_t* t_value;
+        uindex_t t_count;
+        ((void(*)(MCExecContext&, void *, uindex_t&, uinteger_t*&))prop -> getter)(ctxt, mark, t_count, t_value);
+        if (!ctxt . HasError())
+        {
+            MCAutoStringRef t_output;
+            char_t t_delimiter;
+            t_delimiter = prop -> type == kMCPropertyTypeLinesOfUInt ? '\n' : ',';
+            if (MCPropertyFormatUIntList(t_value, t_count, t_delimiter, &t_output))
+            {
+                ep . setvalueref(*t_output);
+            }
+        }
+    }
+        break;
+
+    case kMCPropertyTypeLinesOfPoint:
+    {
+        MCPoint* t_value;
+        uindex_t t_count;
+        ((void(*)(MCExecContext&, void *, uindex_t&, MCPoint*&))prop -> getter)(ctxt, mark, t_count, t_value);
+        if (!ctxt . HasError())
+        {
+            MCAutoStringRef t_output;
+            if (MCPropertyFormatPointList(t_value, t_count, '\n', &t_output))
+            {
+                ep . setvalueref(*t_output);
+            }
+        }
+    }
+        break;
+
+    case kMCPropertyTypeMixedBool:
+    {
+        bool t_value;
+        bool t_mixed;
+        ((void(*)(MCExecContext&, void *, bool&, bool&))prop -> getter)(ctxt, mark, t_mixed, t_value);
+        if (!ctxt . HasError())
+        {
+            if(t_mixed)
+                ep . setcstring(MCmixedstring);
+            else
+                ep . setboolean(t_value ? True : False);
+        }
+    }
+        break;
+
+    case kMCPropertyTypeMixedInt16:
+    {
+        bool t_mixed;
+        integer_t t_value;
+        ((void(*)(MCExecContext&, void *, bool&, integer_t&))prop -> getter)(ctxt, mark, t_mixed, t_value);
+        if (!ctxt . HasError())
+        {
+            if (t_mixed)
+                ep . setcstring(MCmixedstring);
+            else
+                ep . setint(t_value);
+        }
+    }
+        break;
+
+    case kMCPropertyTypeMixedUInt8:
+    case kMCPropertyTypeMixedUInt16:
+    {
+        bool t_mixed;
+        uinteger_t t_value;
+        ((void(*)(MCExecContext&, void *, bool&, uinteger_t&))prop -> getter)(ctxt, mark, t_mixed, t_value);
+        if (!ctxt . HasError())
+        {
+            if (t_mixed)
+                ep . setcstring(MCmixedstring);
+            else
+                ep . setuint(t_value);
+        }
+    }
+        break;
+
+    case kMCPropertyTypeMixedOptionalBool:
+    {
+        bool t_mixed;
+        bool t_value;
+        bool *t_value_ptr;
+        t_value_ptr = &t_value;
+        ((void(*)(MCExecContext&, void *, bool&, bool*&))prop -> getter)(ctxt, mark, t_mixed, t_value_ptr);
+        if (!ctxt . HasError())
+        {
+            if (t_mixed)
+                ep . setcstring(MCmixedstring);
+            else if (*t_value_ptr != nil)
+                ep . setboolean(*t_value_ptr ? True : False);
+            else
+                ep . clear();
+        }
+    }
+        break;
+
+    case kMCPropertyTypeMixedOptionalInt16:
+    case kMCPropertyTypeMixedOptionalInt32:
+    {
+        bool t_mixed;
+        integer_t t_value;
+        integer_t *t_value_ptr;
+        t_value_ptr = &t_value;
+        ((void(*)(MCExecContext&, void *, bool&, integer_t*&))prop -> getter)(ctxt, mark, t_mixed, t_value_ptr);
+        if (!ctxt . HasError())
+        {
+            if (t_mixed)
+                ep . setcstring(MCmixedstring);
+            else if (t_value_ptr == nil)
+                ep . clear();
+            else
+                ep . setint(t_value);
+        }
+    }
+        break;
+
+    case kMCPropertyTypeMixedOptionalUInt8:
+    case kMCPropertyTypeMixedOptionalUInt16:
+    case kMCPropertyTypeMixedOptionalUInt32:
+    {
+        bool t_mixed;
+        uinteger_t t_value;
+        uinteger_t *t_value_ptr;
+        t_value_ptr = &t_value;
+        ((void(*)(MCExecContext&, void *, bool&, uinteger_t*&))prop -> getter)(ctxt, mark, t_mixed, t_value_ptr);
+        if (!ctxt . HasError())
+        {
+            if (t_mixed)
+                ep . setcstring(MCmixedstring);
+            else if (*t_value_ptr != nil)
+                ep . setuint(*t_value_ptr);
+            else
+                ep . clear();
+        }
+    }
+        break;
+
+    case kMCPropertyTypeMixedOptionalString:
+    {
+        MCAutoStringRef t_value;
+        bool t_mixed;
+        ((void(*)(MCExecContext&, void *, bool&, MCStringRef&))prop -> getter)(ctxt, mark, t_mixed, &t_value);
+        if (!ctxt . HasError())
+        {
+            if (t_mixed)
+                ep . setcstring(MCmixedstring);
+            else
+            {
+                if (*t_value == nil)
                     ep . clear();
                 else
-                {
-                    bool t_found = false;
-                    MCExecEnumTypeInfo *t_enum_info;
-                    t_enum_info = (MCExecEnumTypeInfo *)(prop -> type_info);
-                    for(uindex_t i = 0; i < t_enum_info -> count; i++)
-                        if (t_enum_info -> elements[i] . value == t_value)
-                        {
-                            ep . setcstring(t_enum_info -> elements[i] . tag);
-                            t_found = true;
-                            break;
-                        }
-                    
-                    if (!t_found)
-                    {
-                        // THIS MEANS A METHOD HAS RETURNED AN ILLEGAL VALUE
-                        MCAssert(false);
-                        return;
-                    }
-                }
+                    ep . setvalueref(*t_value);
             }
         }
-            break;
-            
-        case kMCPropertyTypeSet:
+
+    }
+        break;
+
+    case kMCPropertyTypeMixedCustom:
+    {
+        MCExecCustomTypeInfo *t_custom_info;
+        t_custom_info = (MCExecCustomTypeInfo *)(prop -> type_info);
+
+        MCAssert(t_custom_info -> size <= 64);
+
+        char t_value[64];
+        bool t_mixed;
+        ((void(*)(MCExecContext&, void*, bool&, void*))prop -> getter)(ctxt, mark, t_mixed, t_value);
+
+        if (!ctxt . HasError())
         {
-            unsigned int t_value;
-            ((void(*)(MCExecContext&, void *, unsigned int&))prop -> getter)(ctxt, mark, t_value);
-            if (!ctxt . HasError())
-            {
-                MCExecSetTypeInfo *t_seprop;
-                t_seprop = (MCExecSetTypeInfo *)(prop -> type_info);
-                
-                bool t_first;
-                t_first = true;
-                
-                ep . clear();
-                for(uindex_t i = 0; i < t_seprop -> count; i++)
-                    if (((1 << t_seprop -> elements[i] . bit) & t_value) != 0)
-                    {
-                        ep . concatcstring(t_seprop -> elements[i] . tag, EC_COMMA, t_first);
-                        t_first = false;
-                    }
-                
-            }
-        }
-            break;
-            
-        case kMCPropertyTypeCustom:
-        {
-            MCExecCustomTypeInfo *t_custom_info;
-            t_custom_info = (MCExecCustomTypeInfo *)(prop -> type_info);
-            
-            MCAssert(t_custom_info -> size <= 64);
-            
-            char t_value[64];
-            ((void(*)(MCExecContext&, void *, void *))prop -> getter)(ctxt, mark, t_value);
-            if (!ctxt . HasError())
+            if (t_mixed)
+                ep . setcstring(MCmixedstring);
+            else
             {
                 MCAutoStringRef t_value_ref;
                 ((MCExecCustomTypeFormatProc)t_custom_info -> format)(ctxt, t_value, &t_value_ref);
@@ -1037,114 +1326,90 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                     ep . setvalueref(*t_value_ref);
                 }
             }
-            
         }
-            break;
+    }
+        break;
 
-        case kMCPropertyTypeOptionalInt16:
+    case kMCPropertyTypeMixedEnum:
+    {
+        int t_value;
+        bool t_mixed;
+        ((void(*)(MCExecContext&, void *, bool&, int&))prop -> getter)(ctxt, mark, t_mixed, t_value);
+        if (!ctxt . HasError())
         {
-            integer_t t_value;
-            integer_t *t_value_ptr;
-            t_value_ptr = &t_value;
-            ((void(*)(MCExecContext&, void *, integer_t*&))prop -> getter)(ctxt, mark, t_value_ptr);
-            if (!ctxt . HasError())
+            if (t_mixed)
+                ep . setcstring(MCmixedstring);
+            else
             {
-                if (t_value_ptr == nil)
-                    ep . clear();
-                else
-                    ep . setint(t_value);
-            }
-        }
-            break;
-
-        case kMCPropertyTypeOptionalUint8:
-        case kMCPropertyTypeOptionalUInt16:
-        case kMCPropertyTypeOptionalUInt32:
-        {
-            uinteger_t t_value;
-            uinteger_t *t_value_ptr;
-            t_value_ptr = &t_value;
-            ((void(*)(MCExecContext&, void *, uinteger_t*&))prop -> getter)(ctxt, mark, t_value_ptr);
-            if (!ctxt . HasError())
-            {
-                if (t_value_ptr == nil)
-                    ep . clear();
-                else
-                    ep . setint(t_value);
-            }
-        }
-            break;
-            
-        case kMCPropertyTypeOptionalString:
-        {
-            MCAutoStringRef t_value;
-            ((void(*)(MCExecContext&, void *, MCStringRef&))prop -> getter)(ctxt, mark, &t_value);
-            if (!ctxt . HasError())
-            {
-                if (*t_value == nil)
-                    ep . clear();
-                else
-                    ep . setvalueref(*t_value);
-            }
-            
-        }
-            break;
-            
-        case kMCPropertyTypeOptionalPoint:
-        {
-            MCPoint t_value;
-            MCPoint *t_value_ptr;
-            t_value_ptr = &t_value;
-            ((void(*)(MCExecContext&, void *, MCPoint*&))prop -> getter)(ctxt, mark, t_value_ptr);
-            if (!ctxt . HasError())
-            {
-                if (t_value_ptr == nil)
-                    ep . clear();
-                else
-                    ep . setpoint(t_value);
-            }
-        }
-            break;
-            
-        case kMCPropertyTypeOptionalRectangle:
-        {
-            MCRectangle t_value;
-            MCRectangle *t_value_ptr;
-            t_value_ptr = &t_value;
-            ((void(*)(MCExecContext&, void *, MCRectangle*&))prop -> getter)(ctxt, mark, t_value_ptr);
-            if (!ctxt . HasError())
-            {
-                if (t_value_ptr == nil)
-                    ep . clear();
-                else
-                    ep . setrectangle(t_value);
-            }
-        }
-            break;
-            
-        case kMCPropertyTypeLinesOfString:
-        {
-            MCStringRef* t_value;
-            uindex_t t_count;
-            ((void(*)(MCExecContext&, void *, uindex_t&, MCStringRef*&))prop -> getter)(ctxt, mark, t_count, t_value);
-            if (!ctxt . HasError())
-            {
-                MCAutoStringRef t_output;
-                if (MCPropertyFormatStringList(t_value, t_count, '\n', &t_output))
+                bool t_found = false;
+                MCExecEnumTypeInfo *t_enum_info;
+                t_enum_info = (MCExecEnumTypeInfo *)(prop -> type_info);
+                for(uindex_t i = 0; i < t_enum_info -> count; i++)
+                    if (t_enum_info -> elements[i] . value == t_value)
+                    {
+                        ep . setcstring(t_enum_info -> elements[i] . tag);
+                        t_found = true;
+                        break;
+                    }
+                if (!t_found)
                 {
-                    ep . setvalueref(*t_output);
+                    // THIS MEANS A METHOD HAS RETURNED AN ILLEGAL VALUE
+                    MCAssert(false);
+                    return;
                 }
             }
         }
-            break;
-            
-        case kMCPropertyTypeLinesOfUInt:
-        case kMCPropertyTypeItemsOfUInt:
+    }
+        break;
+
+    case kMCPropertyTypeMixedOptionalEnum:
+    {
+        bool t_mixed;
+        int t_value;
+        int *t_value_ptr;
+        t_value_ptr = &t_value;
+        ((void(*)(MCExecContext&, void *, bool&, int*&))prop -> getter)(ctxt, mark, t_mixed, t_value_ptr);
+        if (!ctxt . HasError())
         {
-            uinteger_t* t_value;
-            uindex_t t_count;
-            ((void(*)(MCExecContext&, void *, uindex_t&, uinteger_t*&))prop -> getter)(ctxt, mark, t_count, t_value);
-            if (!ctxt . HasError())
+            if (t_mixed)
+                ep . setcstring(MCmixedstring);
+            else if (t_value_ptr == nil)
+                ep . clear();
+            else
+            {
+                bool t_found = false;
+                MCExecEnumTypeInfo *t_enum_info;
+                t_enum_info = (MCExecEnumTypeInfo *)(prop -> type_info);
+                for(uindex_t i = 0; i < t_enum_info -> count; i++)
+                    if (t_enum_info -> elements[i] . value == t_value)
+                    {
+                        ep . setcstring(t_enum_info -> elements[i] . tag);
+                        t_found = true;
+                        break;
+                    }
+
+                if (!t_found)
+                {
+                    // THIS MEANS A METHOD HAS RETURNED AN ILLEGAL VALUE
+                    MCAssert(false);
+                    return;
+                }
+            }
+        }
+    }
+        break;
+
+    case kMCPropertyTypeMixedItemsOfUInt:
+    {
+        bool t_mixed;
+        uinteger_t* t_value;
+        uindex_t t_count;
+        ((void(*)(MCExecContext&, void *, bool&, uindex_t&, uinteger_t*&))prop -> getter)(ctxt, mark, t_mixed, t_count, t_value);
+        if (!ctxt . HasError())
+        {
+            if (t_mixed)
+                ep . setcstring(MCmixedstring);
+            else
             {
                 MCAutoStringRef t_output;
                 char_t t_delimiter;
@@ -1155,66 +1420,12 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 }
             }
         }
-            break;
-            
-        case kMCPropertyTypeLinesOfPoint:
-        {
-            MCPoint* t_value;
-            uindex_t t_count;
-            ((void(*)(MCExecContext&, void *, uindex_t&, MCPoint*&))prop -> getter)(ctxt, mark, t_count, t_value);
-            if (!ctxt . HasError())
-            {
-                MCAutoStringRef t_output;
-                if (MCPropertyFormatPointList(t_value, t_count, '\n', &t_output))
-                {
-                    ep . setvalueref(*t_output);
-                }
-            }
-        }
-            break;
-            
-        case kMCPropertyTypeMixedOptionalBool:
-        {
-            bool t_mixed;
-            bool t_value;
-            bool *t_value_ptr;
-            t_value_ptr = &t_value;
-            ((void(*)(MCExecContext&, void *, bool&, bool*&))prop -> getter)(ctxt, mark, t_mixed, t_value_ptr);
-            if (!ctxt . HasError())
-            {
-                if (t_mixed)
-                    ep . setcstring(MCmixedstring);
-                else if (*t_value_ptr != nil)
-                    ep . setboolean(*t_value_ptr ? True : False);
-				else
-					ep . clear();
-            }
-        }
-            break;
-            
-        case kMCPropertyTypeMixedOptionalUInt16:
-        case kMCPropertyTypeMixedOptionalUInt32:
-        {
-            bool t_mixed;
-            uinteger_t t_value;
-            uinteger_t *t_value_ptr;
-            t_value_ptr = &t_value;
-            ((void(*)(MCExecContext&, void *, bool&, uinteger_t*&))prop -> getter)(ctxt, mark, t_mixed, t_value_ptr);
-            if (!ctxt . HasError())
-            {
-                if (t_mixed)
-                    ep . setcstring(MCmixedstring);
-                else if (*t_value_ptr != nil)
-                    ep . setuint(*t_value_ptr);
-				else
-					ep . clear();
-            }
-        }
-		break;
-			
-        default:
-            ctxt . Unimplemented();
-            break;
+    }
+        break;
+
+    default:
+        ctxt . Unimplemented();
+        break;
     }
     
     ep . copyasvalueref(r_value);
@@ -1239,6 +1450,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
+        case kMCPropertyTypeMixedBool:
         case kMCPropertyTypeBool:
         {
             bool t_value;
@@ -1248,7 +1460,8 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 ((void(*)(MCExecContext&, void *, bool))prop -> setter)(ctxt, mark, t_value);
         }
             break;
-            
+
+        case kMCPropertyTypeMixedInt16:
         case kMCPropertyTypeInt16:
         {
             integer_t t_value;
@@ -1270,6 +1483,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
          
+        case kMCPropertyTypeMixedUInt16:
         case kMCPropertyTypeUInt16:
         {
             uinteger_t t_value;
@@ -1445,6 +1659,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
+        case kMCPropertyTypeMixedEnum:
         case kMCPropertyTypeEnum:
         {
             MCExecEnumTypeInfo *t_enum_info;
@@ -1467,7 +1682,8 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 ((void(*)(MCExecContext&, void *, int))prop -> setter)(ctxt, mark, t_value);
         }
             break;
-            
+
+        case kMCPropertyTypeMixedOptionalEnum:
         case kMCPropertyTypeOptionalEnum:
         {
             MCExecEnumTypeInfo *t_enum_info;
@@ -1546,6 +1762,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
+        case kMCPropertyTypeMixedOptionalInt16:
         case kMCPropertyTypeOptionalInt16:
         {
             integer_t t_value;
@@ -1585,6 +1802,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
+        case kMCPropertyTypeMixedOptionalUInt32:
         case kMCPropertyTypeOptionalUInt32:
         {
             uinteger_t t_value;
@@ -1603,6 +1821,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
+        case kMCPropertyTypeMixedOptionalString:
         case kMCPropertyTypeOptionalString:
         {
             MCAutoStringRef t_value;
@@ -1663,8 +1882,9 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, uindex_t, MCStringRef*))prop -> setter)(ctxt, mark, t_count, t_value);
         }
-            break;
-            
+            break;     
+
+        case kMCPropertyTypeMixedItemsOfUInt:
         case kMCPropertyTypeLinesOfUInt:
         case kMCPropertyTypeItemsOfUInt:
         {

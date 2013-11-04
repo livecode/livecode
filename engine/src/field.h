@@ -230,6 +230,13 @@ class MCField : public MCControl
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
 public:
+
+    template<typename T>
+    friend void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCField *p_field, bool all, uint32_t p_part_id, findex_t si, findex_t ei, void (MCParagraph::*p_setter)(MCExecContext&, typename T::arg_type), typename T::arg_type p_value);
+
+    template <typename T>
+    friend void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p_field, bool all, uint32_t p_part_id, findex_t si, findex_t ei, void (MCBlock::*p_setter)(MCExecContext&, typename T::arg_type), typename T::arg_type p_value);
+
 	MCField();
 	MCField(const MCField &fref);
 	// virtual functions from MCObject
@@ -573,7 +580,7 @@ public:
 	bool imagechanged(MCImage *p_image, bool p_deleting);
 
 
-	////////// PROPERTY SUPPORT METHODS
+    ////////// PROPERTY SUPPORT METHODS
 
 	void Redraw(bool reset = false, int4 xoffset = 0, int4 yoffset = 0);
     void UpdateScrollbars(void);

@@ -798,6 +798,9 @@ public:
 	// the end index of the link.
     Boolean extenddown(MCBlock *bptr, findex_t &ei);
 
+    // Set the flag Lines not synched
+    void setDirty() { state |= PS_LINES_NOT_SYNCHED; }
+
     //////////
 
     void GetEncoding(MCExecContext &ctxt, intenum_t& r_encoding);
