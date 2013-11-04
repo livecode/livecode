@@ -602,3 +602,11 @@ bool SSL_ciphernames(MCListRef& r_list, MCStringRef& r_error)
 	return true;
 }
 #endif
+
+bool SSL_random_bytes(const void *p_buffer, uindex_t p_count)
+{
+#ifdef MCSSL
+	return RAND_bytes((BYTE *)p_buffer, p_count) == 1;
+#endif
+	return false;
+}

@@ -16,20 +16,19 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "w32prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+#include "osspec.h"
 
 #include <Wincrypt.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCS_random_bytes(size_t p_count, void *p_buffer)
+bool MCS_random_bytes(size_t p_count, MCDataRef& r_bytes)
 {
 	// Acquire crypt provider.
 	HCRYPTPROV t_provider;
@@ -39,8 +38,11 @@ bool MCS_random_bytes(size_t p_count, void *p_buffer)
 
 	// Attempt to generate random bytes.
 	bool t_success;
-	t_success = true;
-	if (CryptGenRandom(t_provider, p_count, (BYTE *)p_buffer) == 0)
+
+	MCAutoByteArray t_bytes;
+	t_success = t_bytes . New(p_count);
+
+	if (t_success && CryptGenRandom(t_provider, p_count, (BYTE *)t_bytes . Bytes()) == 0)
 		t_success = false;
 
 	// Release the provider.

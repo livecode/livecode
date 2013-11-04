@@ -561,10 +561,10 @@ bool MCImageGetScaledFiles(MCStringRef p_filename, MCStack *p_stack, MCImageScal
 	bool t_has_scale;
 	
 	t_success = MCImageSplitScaledFilename(MCStringGetCString(p_filename), t_base, t_extension, t_has_scale, t_scale);
-	
-    MCAutoStringRef t_resolved;
+
 	if (t_success)
 	{
+		MCAutoStringRef t_resolved;
 		// if given filename is tagged for a scale then we just return that scaled file
 		if (t_has_scale)
 		{
@@ -584,6 +584,7 @@ bool MCImageGetScaledFiles(MCStringRef p_filename, MCStack *p_stack, MCImageScal
 			
 			while (t_success && t_scale_labels->label != nil)
 			{
+			    MCAutoStringRef t_resolved;
 				MCAutoStringRef t_filename;
 				t_success = MCStringFormat(&t_filename, "%s%s%s", t_base, t_scale_labels->label, t_extension);
 				
