@@ -896,7 +896,7 @@ Parse_stat MCGet::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCGet::exec(MCExecPoint &ep)
+void MCGet::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCGet */ LEGACY_EXEC
 	if (value->eval(ep) != ES_NORMAL)
@@ -912,21 +912,11 @@ Exec_stat MCGet::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCGet */
 
-	
-	MCAutoValueRef t_value;
-	if (value -> eval(ep) != ES_NORMAL)
-	{
-		MCeerror -> add(EE_GET_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep . copyasvalueref(&t_value);
-	
-	MCExecContext ctxt(ep, it);
-	MCEngineExecGet(ctxt, *t_value);
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-	
-	return ctxt . Catch(line, pos);
+    MCAutoValueRef t_value;
+    if (!ctxt . EvalExprAsValueRef(value, EE_GET_BADEXP, &t_value))
+        return;
+    
+    MCEngineExecGet(ctxt, *t_value);
 }
 
 void MCGet::compile(MCSyntaxFactoryRef ctxt)
