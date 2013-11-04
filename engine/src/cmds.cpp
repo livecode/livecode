@@ -427,7 +427,7 @@ Parse_stat MCDo::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCDo::exec(MCExecPoint &ep)
+void MCDo::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCDo */ LEGACY_EXEC
 	MCExecPoint *epptr;
@@ -509,93 +509,43 @@ Exec_stat MCDo::exec(MCExecPoint &ep)
 	return stat;
 #endif /* MCDo */
 
-
-	if (browser)
+    if (browser)
+    {
+        MCAutoStringRef t_script;
+        if (!ctxt . EvalOptionalExprAsStringRef(source, kMCEmptyString, EE_DO_BADEXP, &t_script))
+            return;
+        
+        MCLegacyExecDoInBrowser(ctxt, *t_script);
+        
+    }
+    
+    if (alternatelang != NULL)
 	{
-		if (source->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_DO_BADEXP, line, pos);
-			return ES_ERROR;
-		}
-		
+        MCAutoStringRef t_language;
+        if (!ctxt . EvalOptionalExprAsStringRef(alternatelang, kMCEmptyString, EE_DO_BADLANG, &t_language))
+            return;
+        
 		MCAutoStringRef t_script;
-		/* UNCHECKED */ ep . copyasstringref(&t_script);
-
-		MCExecContext ctxt(ep);
-
-		MCLegacyExecDoInBrowser(ctxt, *t_script);
-		if (!ctxt . HasError())
-			return ES_NORMAL;
-
-		return ctxt . Catch(line, pos);
+        if (!ctxt . EvalOptionalExprAsStringRef(source, kMCEmptyString, EE_DO_BADEXP, &t_script))
+            return;
+        
+        MCScriptingExecDoAsAlternateLanguage(ctxt, *t_script, *t_language);
 	}
-
-	if (alternatelang != NULL)
+    
+    if (debug)
 	{
-		if (alternatelang->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_DO_BADLANG, line, pos);
-			return ES_ERROR;
-		}
-
-		MCAutoStringRef t_language;
-		/* UNCHECKED */ ep . copyasstringref(&t_language);
-
-		if (source->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_DO_BADEXP, line, pos);
-			return ES_ERROR;
-		}
-
 		MCAutoStringRef t_script;
-		/* UNCHECKED */ ep . copyasstringref(&t_script);
+        if (!ctxt . EvalOptionalExprAsStringRef(source, kMCEmptyString, EE_DO_BADEXP, &t_script))
+            return;
 
-		MCExecContext ctxt(ep);
-		MCScriptingExecDoAsAlternateLanguage(ctxt, *t_script, *t_language);
-
-		if (!ctxt . HasError())
-			return ES_NORMAL;
-
-		return ctxt . Catch(line, pos);
-	}
-	
-	if (debug)
-	{
-		if (source->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_DO_BADEXP, line, pos);
-			return ES_ERROR;
-		}
-
-		MCAutoStringRef t_script;
-		/* UNCHECKED */ ep . copyasstringref(&t_script);
-
-		MCExecContext ctxt(ep);
 		MCDebuggingExecDebugDo(ctxt, *t_script, line, pos);
-
-		if (!ctxt . HasError())
-			return ES_NORMAL;
-
-		return ctxt . Catch(line, pos);
 	}
+    
+    MCAutoStringRef t_script;
+    if (!ctxt . EvalOptionalExprAsStringRef(source, kMCEmptyString, EE_DO_BADEXP, &t_script))
+        return;
 
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_DO_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-
-	MCAutoStringRef t_script;
-	/* UNCHECKED */ ep . copyasstringref(&t_script);
-
-	MCExecContext ctxt(ep);
-	
 	MCEngineExecDo(ctxt, *t_script, line, pos);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCDo::compile(MCSyntaxFactoryRef ctxt)
