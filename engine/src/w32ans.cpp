@@ -987,15 +987,13 @@ void MCA_getcolordialogcolors(MCExecPoint& p_ep)
 
 void MCA_setcolordialogcolors(MCColor* p_colors, uindex_t p_count)
 {
-    for(i=0;i < 16;i++)
+    for(int i = 0; i < 16; i++)
     {
         if (p_colors[i] . flags != 0)
-            s_colordialogcolors[i] = RGB(p_colors[i] -> red >> 8, p_colors[i] -> green >> 8,
-                                             p_colors[i] -> blue >> 8);
+            s_colordialogcolors[i] = RGB(p_colors[i] . red >> 8, p_colors[i] . green >> 8,
+                                             p_colors[i] . blue >> 8);
         else
             s_colordialogcolors[i] = NULL;
-		}
-        
 	}
 }
 
@@ -1003,7 +1001,7 @@ void MCA_getcolordialogcolors(MCColor*& r_colors, uindex_t& r_count)
 {
     MCAutoArray<MCColor> t_list;
     
-	for(int i=0;i < 16;i++)
+	for(int i = 0; i < 16; i++)
 	{
         MCColor t_color;
         if (s_colordialogcolors[i] != 0)
