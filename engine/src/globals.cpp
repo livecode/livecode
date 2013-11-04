@@ -499,6 +499,7 @@ extern void MCReachabilityEventFinalize();
 #ifdef _ANDROID_MOBILE
 void MCAndroidCustomFontsInitialize();
 void MCAndroidCustomFontsFinalize();
+void MCAndroidFinalizeBuildInfo();
 #endif
 	
 // Reset all global variables to their on-load defaults. This is required on
@@ -1196,6 +1197,7 @@ int X_close(void)
     MCAdFinalize();
     MCNativeControlFinalize();
     MCSensorFinalize();
+    MCAndroidFinalizeBuildInfo();
     MCAndroidCustomFontsFinalize();
 	MCSystemSoundFinalize();
 #endif

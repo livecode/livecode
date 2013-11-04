@@ -226,7 +226,12 @@ typedef struct __MCWinSysMetafileHandle *MCWinSysMetafileHandle;
 inline void *operator new(size_t size, const char *fnm, int line) {return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);}
 inline void *operator new[](size_t size, const char *fnm, int line) {return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);}
 
-#define new new( __FILE__, __LINE__ )
+inline void *operator new(size_t, void *p, const char *, int)
+{
+	return p;
+}
+
+#define new(...) new(__VA_ARGS__, __FILE__, __LINE__ )
 #define delete delete
 
 #define malloc(len) _malloc_dbg(len, _NORMAL_BLOCK, __FILE__,__LINE__)

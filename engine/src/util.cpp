@@ -1161,7 +1161,7 @@ void MCU_break_string(const MCString &s, MCString *&ptrs, uint2 &nptrs,
 }
 
 #if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
-extern compare_t MCSystemCompareInternational(const char *, const char *);
+extern compare_t MCSystemCompareInternational(MCStringRef, MCStringRef);
 #endif
 
 static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean reverse)
@@ -1199,7 +1199,7 @@ static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean
 				//
 				// Additionally, UTF-16 strings don't work at all.
 #if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
-				int result = MCSystemCompareInternational(s1, s2);
+				int result = MCSystemCompareInternational(b1->svalue, b2->svalue);
 #else
 				int result = strcoll(s1, s2);
 #endif
@@ -1988,7 +1988,7 @@ Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool, uint2 line, uint2 pos)
 		MCstacks->restartidle();
 	if (MCtopstackptr != NULL)
 		MCtopstackptr->updatemenubar();
-	ep.getobj()->message_with_args(MCM_new_tool, ep.getsvalue());
+	ep.getobj()->message_with_valueref_args(MCM_new_tool, ep.getvalueref());
 	return ES_NORMAL;
 }
 
@@ -2272,7 +2272,6 @@ void MCU_get_color(MCExecPoint& ep, MCStringRef name, MCColor& c)
 {
 	ep.setcolor(c, name != nil ? MCStringGetCString(name) : nil);
 }
-
 
 void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output)
 {

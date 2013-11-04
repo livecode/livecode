@@ -674,7 +674,7 @@ Boolean MCCard::mdown(uint2 which)
 #ifdef _MACOSX
 			if (!MCosxmenupoppedup)
 #endif
-				message_with_args(MCM_mouse_down, "1");
+				message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 		}
 		if (!(MCbuttonstate & (0x1L << (which - 1))))
 		{
@@ -704,7 +704,7 @@ Boolean MCCard::mdown(uint2 which)
 				// click.
 				MCscreen -> closeIME();
 #endif
-				message_with_args(MCM_mouse_down, "1");
+				message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 				if (!(MCbuttonstate & (0x1L << (which - 1))))
 				{
 					Boolean oldstate = MClockmessages;
@@ -715,7 +715,7 @@ Boolean MCCard::mdown(uint2 which)
 				break;
 			case T_POINTER:
 				// MW-2010-10-15: [[ Bug 9055 ]] Make sure the card script gets a chance to cancel selection handling
-				if (message_with_args(MCM_mouse_down, "1") == ES_NORMAL && !MCexitall)
+				if (message_with_valueref_args(MCM_mouse_down, MCSTR("1")) == ES_NORMAL && !MCexitall)
 					return True;
 
 				// MW-2010-11-24: [[ Bug 9194 ]] Make sure we reset exitall, otherwise the selectedObjectChanged message
@@ -835,7 +835,7 @@ Boolean MCCard::mup(uint2 which)
 				case T_POINTER:
 				case T_BROWSE:
 					// MW-2010-10-15: [[ Bug 9055 ]] Mouse message consistency improvement
-					message_with_args(MCM_mouse_up, "1");
+					message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 					break;
 				case T_HELP:
 					help();
@@ -865,7 +865,7 @@ Boolean MCCard::doubledown(uint2 which)
 		MCControl *oldfocused = mfocused->getref();
 		if (!mfocused->getref()->doubledown(which)
 		        && getstack()->gettool(this) == T_BROWSE)
-			message_with_args(MCM_mouse_double_down, "1");
+			message_with_valueref_args(MCM_mouse_double_down, MCSTR("1"));
 		if (!(MCbuttonstate & (0x1L << (which - 1))))
 		{
 			Boolean oldstate = MClockmessages;
@@ -885,7 +885,7 @@ Boolean MCCard::doubledown(uint2 which)
 			{
 			case T_BROWSE:
 			case T_POINTER:
-				message_with_args(MCM_mouse_double_down, "1");
+				message_with_valueref_args(MCM_mouse_double_down, MCSTR("1"));
 				break;
 			default:
 				break;
@@ -916,7 +916,7 @@ Boolean MCCard::doubleup(uint2 which)
 			switch (getstack()->gettool(this))
 			{
 			case T_BROWSE:
-				message_with_args(MCM_mouse_double_up, "1");
+				message_with_valueref_args(MCM_mouse_double_up, MCSTR("1"));
 				break;
 			case T_POINTER:
 				getstack()->kfocusset(NULL);
@@ -925,7 +925,7 @@ Boolean MCCard::doubleup(uint2 which)
 				else
 				{
 					MCselected->replace(this);
-					message_with_args(MCM_mouse_double_up, "1");
+					message_with_valueref_args(MCM_mouse_double_up, MCSTR("1"));
 				}
 				break;
 			default:

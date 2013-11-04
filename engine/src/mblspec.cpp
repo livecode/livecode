@@ -162,6 +162,7 @@ void MCUrlProgressEvent::Dispatch(void)
 {
 	MCObject *t_object;
 	t_object = m_object -> Get();
+    
 	if (t_object != nil)
 	{
 		switch (m_status)
@@ -392,7 +393,7 @@ void MCUrlLoadEvent::Dispatch(void)
 	t_object = m_object -> Get();
 	if (t_object != nil)
 	{
-		switch (m_status)
+        switch (m_status)
 		{
 			case kMCSystemUrlStatusFinished:
             {
@@ -404,6 +405,7 @@ void MCUrlLoadEvent::Dispatch(void)
 			case kMCSystemUrlStatusError:
 				t_object -> message_with_valueref_args(m_message, m_url, MCSTR("error"), m_error);
 				break;
+            
 		}
 	}
 }
