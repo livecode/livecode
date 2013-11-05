@@ -35,6 +35,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 ////////////////////////////////////////////////////////////////////////////////
 
 #define DELAYS_TOUCHES_WORKAROUND_MIN 700
+#define DELAYS_TOUCHES_PROCESS_DELAY 0.3
 
 ////////////////////////////////////////////////////////////////////////////////
 	
@@ -597,7 +598,7 @@ UIView *MCNativeScrollerControl::CreateView(void)
 	[t_view addSubview: m_forwarder];
 	
 	if (MCmajorosversion >= DELAYS_TOUCHES_WORKAROUND_MIN)
-		[t_view setDelaysContentTouches: false];
+		[t_view setDelaysContentTouches: NO];
 	
 	return t_view;
 }
@@ -851,7 +852,7 @@ bool MCNativeScrollerControlCreate(MCNativeControl *&r_control)
 		for(UITouch *t_touch in touches)
 		{
 			[m_delayed_touches addObject: t_touch];
-			[self performSelector: @selector(processTouch:) withObject: t_touch afterDelay: 0.1];
+			[self performSelector: @selector(processTouch:) withObject: t_touch afterDelay: DELAYS_TOUCHES_PROCESS_DELAY];
 		}
 
 		return;
