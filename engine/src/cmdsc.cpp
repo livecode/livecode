@@ -2434,7 +2434,7 @@ Parse_stat MCPost::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCPost::exec(MCExecPoint &ep)
+void MCPost::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCPost */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
@@ -2453,30 +2453,16 @@ Exec_stat MCPost::exec(MCExecPoint &ep)
 	return it->set(ep);
 #endif /* MCPost */
 
-
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_POST_BADSOURCEEXP, line, pos);
-		return ES_ERROR;
-	}
-	MCAutoDataRef t_data;
-	/* UNCHECKED */ ep . copyasdataref(&t_data);
-
-	if (dest->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_POST_BADDESTEXP, line, pos);
-		return ES_ERROR;
-	}
-	MCAutoStringRef t_url;
-	/* UNCHECKED */ ep . copyasstringref(&t_url);
-
-	MCExecContext ctxt(ep, it);
-	MCNetworkExecPostToUrl(ctxt, *t_data, *t_url);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    MCAutoDataRef t_data;
+    if (!ctxt . EvalOptionalExprAsDataRef(source, kMCEmptyData, EE_POST_BADSOURCEEXP, &t_data))
+        return;
+    
+    MCAutoStringRef t_url;
+    if (!ctxt . EvalOptionalExprAsStringRef(dest, kMCEmptyString, EE_POST_BADDESTEXP, &t_url))
+        return;
+    
+    ctxt . SetIt(it);
+    MCNetworkExecPostToUrl(ctxt, *t_data, *t_url);
 }
 
 void MCPost::compile(MCSyntaxFactoryRef ctxt)
