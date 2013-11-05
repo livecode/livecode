@@ -305,121 +305,111 @@ static bool evaluate_stringref(MCExecPoint &ep, MCExpression *p_expr, uint16_t p
 	return true;
 }
 
-Exec_stat MCAnswer::exec(MCExecPoint& ep)
+void MCAnswer::exec_ctxt(MCExecContext& ctxt)
 {
-	Exec_errors t_error = EE_UNDEFINED;
-
-	MCExecContext ctxt(ep, it);
+    Exec_errors t_error = EE_UNDEFINED;
+    ctxt . SetIt(it);
+    
 	MCAutoStringRef t_title;
-
-	if (!evaluate_stringref(ep, title, EE_ANSWER_BADTITLE, line, pos, &t_title))
-		return ES_ERROR;
-
-	switch(mode)
+    if (!ctxt . EvalOptionalExprAsStringRef(title, kMCEmptyString, EE_ANSWER_BADTITLE, &t_title))
+        return;
+        
+    switch(mode)
 	{
-	case AT_PAGESETUP:
-		MCPrintingExecAnswerPageSetup(ctxt, sheet == True);
-		break;
-
-	case AT_PRINTER:
-		MCPrintingExecAnswerPrinter(ctxt, sheet == True);
-		break;
-	
-	case AT_EFFECT:
-		MCMultimediaExecAnswerEffect(ctxt);
-		break;
-
-	case AT_RECORD:
-		MCMultimediaExecAnswerRecord(ctxt);
-		break;
-
-	case AT_COLOR:
+        case AT_PAGESETUP:
+            MCPrintingExecAnswerPageSetup(ctxt, sheet == True);
+            break;
+            
+        case AT_PRINTER:
+            MCPrintingExecAnswerPrinter(ctxt, sheet == True);
+            break;
+            
+        case AT_EFFECT:
+            MCMultimediaExecAnswerEffect(ctxt);
+            break;
+            
+        case AT_RECORD:
+            MCMultimediaExecAnswerRecord(ctxt);
+            break;
+            
+        case AT_COLOR:
 		{
 			MCColor t_initial_color;
 			MCColor *t_initial_color_ptr;
 			if (colour . initial != nil)
 			{
-				if (colour . initial -> eval(ep) != ES_NORMAL)
-				{
-					MCeerror -> add(EE_ANSWER_BADQUESTION, line, pos);
-					return ES_ERROR;
-				}
-				/* UNCHECKED */ ep . copyaslegacycolor(t_initial_color);
+                if (!ctxt . EvalExprAsColor(colour . initial, EE_ANSWER_BADQUESTION, t_initial_color))
+                    return;
 				t_initial_color_ptr = &t_initial_color;
 			}
 			else
 				t_initial_color_ptr = nil;
-
+            
 			MCDialogExecAnswerColor(ctxt, t_initial_color_ptr, *t_title, sheet == True);
 			break;
 		}
-
-	case AT_FILE:
-	case AT_FILES:
+            
+        case AT_FILE:
+        case AT_FILES:
 		{
 			MCAutoStringRef t_prompt, t_initial, t_filter;
 			MCAutoStringRefArray t_types;
-			if (!evaluate_stringref(ep, file.prompt, EE_ANSWER_BADQUESTION, line, pos, &t_prompt))
-				return ES_ERROR;
-			if (!evaluate_stringref(ep, file.initial, EE_ANSWER_BADQUESTION, line, pos, &t_initial))
-				return ES_ERROR;
-			if (!evaluate_stringref(ep, file.filter, EE_ANSWER_BADQUESTION, line, pos, &t_filter))
-				return ES_ERROR;
-
-			/* UNCHECKED */ t_types.Extend(file.type_count);
+            if (!ctxt . EvalOptionalExprAsStringRef(file.prompt, kMCEmptyString, EE_ANSWER_BADQUESTION, &t_prompt))
+                return;
+			if (!ctxt . EvalOptionalExprAsStringRef(file.initial, kMCEmptyString, EE_ANSWER_BADQUESTION, &t_initial))
+                return;
+			if (!ctxt . EvalOptionalExprAsStringRef(file.filter, kMCEmptyString, EE_ANSWER_BADQUESTION, &t_filter))
+                return;
+            
+            /* UNCHECKED */ t_types.Extend(file.type_count);
 			for (uindex_t i = 0; i < file.type_count; i++)
 			{
-				if (!evaluate_stringref(ep, file.types[i], EE_ANSWER_BADQUESTION, line, pos, t_types[i]))
-					return ES_ERROR;
+                if (!ctxt . EvalOptionalExprAsStringRef(file.types[i], kMCEmptyString, EE_ANSWER_BADQUESTION, t_types[i]))
+                    return;
 			}
-
+            
 			if (t_types.Count() > 0)
 				MCDialogExecAnswerFileWithTypes(ctxt, mode == AT_FILES, *t_prompt, *t_initial, *t_types, t_types.Count(), *t_title, sheet == True);
 			else if (*t_filter != nil)
 				MCDialogExecAnswerFileWithFilter(ctxt, mode == AT_FILES, *t_prompt, *t_initial, *t_filter, *t_title, sheet == True);
 			else
 				MCDialogExecAnswerFile(ctxt, mode == AT_FILES, *t_prompt, *t_initial, *t_title, sheet == True);
-
+            
 			break;
 		}
 
-	case AT_FOLDER:
-	case AT_FOLDERS:
+        case AT_FOLDER:
+        case AT_FOLDERS:
 		{
 			MCAutoStringRef t_prompt, t_initial;
-			if (!evaluate_stringref(ep, file.prompt, EE_ANSWER_BADQUESTION, line, pos, &t_prompt))
-				return ES_ERROR;
-			if (!evaluate_stringref(ep, file.initial, EE_ANSWER_BADQUESTION, line, pos, &t_initial))
-				return ES_ERROR;
-
+            if (!ctxt . EvalOptionalExprAsStringRef(file.prompt, kMCEmptyString, EE_ANSWER_BADQUESTION, &t_prompt))
+                return;
+			if (!ctxt . EvalOptionalExprAsStringRef(file.initial, kMCEmptyString, EE_ANSWER_BADQUESTION, &t_initial))
+                return;
+            
 			MCDialogExecAnswerFolder(ctxt, mode == AT_FOLDERS, *t_prompt, *t_initial, *t_title, sheet == True);
-
+            
 			break;
 		}
-
-	default:
+            
+        default:
 		{
 			MCAutoStringRef t_prompt;
 			MCAutoStringRefArray t_buttons;
-	
-			if (!evaluate_stringref(ep, notify.prompt, EE_ANSWER_BADRESPONSE, line, pos, &t_prompt))
-				return ES_ERROR;
-
+            
+            if (!ctxt . EvalOptionalExprAsStringRef(notify.prompt, kMCEmptyString, EE_ANSWER_BADRESPONSE, &t_prompt))
+                return;
+			            
 			/* UNCHECKED */ t_buttons.Extend(notify.button_count);
 			for (uindex_t i = 0; i < notify.button_count; i++)
 			{
-				if (!evaluate_stringref(ep, notify.buttons[i], EE_ANSWER_BADRESPONSE, line, pos, t_buttons[i]))
-					return ES_ERROR;
+                if (!ctxt . EvalOptionalExprAsStringRef(notify.buttons[i], kMCEmptyString, EE_ANSWER_BADRESPONSE, t_buttons[i]))
+                    return;
 			}
-
+            
 			MCDialogExecAnswerNotify(ctxt, mode, *t_prompt, *t_buttons, t_buttons.Count(), *t_title, sheet == True);
 		}
 	}
-
-	if (!ctxt.HasError())
-		return ES_NORMAL;
-
-	return ctxt.Catch(line, pos);
 }
 
 #ifdef /* MCAnswer::exec */ LEGACY_EXEC
