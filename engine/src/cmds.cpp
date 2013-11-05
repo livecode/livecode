@@ -1889,7 +1889,7 @@ Parse_stat MCReset::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCReset::exec(MCExecPoint &ep)
+void MCReset::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCReset */ LEGACY_EXEC
 	switch (which)
@@ -1986,8 +1986,7 @@ Exec_stat MCReset::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCReset */
 
-	MCExecContext ctxt(ep);
-	switch (which)
+    switch (which)
 	{
 		case RT_CURSORS:
 			MCInterfaceExecResetCursors(ctxt);
@@ -2002,10 +2001,8 @@ Exec_stat MCReset::exec(MCExecPoint &ep)
 			MCInterfaceExecResetTemplate(ctxt, which);
 		break;
 	}
-	if (!ctxt . HasError()) 
-		return ES_NORMAL;
 
-	return ctxt . Catch(line, pos);
+	return;
 }
 
 void MCReset::compile(MCSyntaxFactoryRef ctxt)
