@@ -3409,7 +3409,7 @@ Parse_stat MCType::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCType::exec(MCExecPoint &ep)
+void MCType::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCType */ LEGACY_EXEC
 	if (message->eval(ep) != ES_NORMAL)
@@ -3453,21 +3453,11 @@ Exec_stat MCType::exec(MCExecPoint &ep)
 	return ES_NORMAL; 
 #endif /* MCType */
 
+    MCAutoStringRef t_typing;
+    if (!ctxt . EvalExprAsStringRef(message, EE_TYPE_BADSTRINGEXP, &t_typing))
+        return;
 
-	if (message->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_TYPE_BADSTRINGEXP, line, pos);
-		return ES_ERROR;
-	}
-	MCAutoStringRef t_typing;
-	ep . copyasstringref(&t_typing);
-	MCExecContext ctxt(ep);
-	MCInterfaceExecType(ctxt, *t_typing, mstate);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    MCInterfaceExecType(ctxt, *t_typing, mstate);
 }
 
 void MCType::compile(MCSyntaxFactoryRef ctxt)
