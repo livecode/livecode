@@ -3432,7 +3432,7 @@ void MCReplace::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndStatement(ctxt);
 }
 
-Exec_stat MCRevert::exec(MCExecPoint &ep)
+void MCRevert::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCRevert */ LEGACY_EXEC
 	if (MCtopstackptr != NULL)
@@ -3465,14 +3465,7 @@ Exec_stat MCRevert::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCRevert */
 
-
-	MCExecContext ctxt(ep);
 	MCInterfaceExecRevert(ctxt);
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCRevert::compile(MCSyntaxFactoryRef ctxt)
