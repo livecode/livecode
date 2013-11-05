@@ -426,8 +426,8 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_STACK_FILE_TYPE:
 	case P_STACK_FILE_VERSION:
 	case P_SECURE_MODE:
-	case P_SECURITY_CATEGORIES: // RUNTIME only
-	case P_SECURITY_PERMISSIONS: // RUNTIME only
+	case P_SECURITY_CATEGORIES:
+	case P_SECURITY_PERMISSIONS:
 	case P_SERIAL_CONTROL_STRING:
 	case P_EDIT_SCRIPTS:
 	case P_COLOR_WORLD:
@@ -1719,6 +1719,54 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 			MCstackfileversion = version;
 		}
 		return ES_NORMAL;
+	// MW-2013-11-05: [[ Bug 11114 ]] Reinstate ability to set the securityPermissions.
+	case P_SECURITY_PERMISSIONS:
+		uint4 t_secmode;
+		t_secmode = 0;
+		
+		const char *t_modes;
+		t_modes = ep . getcstring();
+		while(t_modes[0] != '\0')
+		{
+			const char *t_next_mode;
+			t_next_mode = strchr(t_modes, ',');
+			if (t_next_mode == NULL)
+				t_next_mode = t_modes + strlen(t_modes);
+			
+			MCString t_token(t_modes, t_next_mode - t_modes);
+			
+			// MW-2009-06-29: If the token is empty, ignore it.
+			if (t_token . getlength() != 0)
+			{
+				int i = 0;
+				int t_bitmask = 1;
+				while (i < MC_SECUREMODE_MODECOUNT)
+				{
+					if (t_token == MCsecuremode_strings[i])
+					{
+						t_secmode |= t_bitmask;
+						break;
+					}
+					i++;
+					t_bitmask <<= 1;
+				}
+				
+				if (i == MC_SECUREMODE_MODECOUNT)
+				{
+					// MW-2009-06-29: Pass the token as a hint.
+					MCeerror -> add(EE_SECUREMODE_BADCATEGORY, line, pos, t_token);
+					return ES_ERROR;
+				}
+			}
+			
+			if (*t_next_mode == ',')
+				t_modes = t_next_mode + 1;
+			else
+				t_modes = t_next_mode;
+		}
+		
+		MCsecuremode |= (~t_secmode) & MC_SECUREMODE_ALL;
+		break;
 	case P_SECURE_MODE:
 		MCnofiles = True;
 		MCsecuremode = MC_SECUREMODE_ALL;
