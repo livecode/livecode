@@ -2330,7 +2330,7 @@ void MCLoad::exec_ctxt(MCExecContext& ctxt)
             return;
 	
     MCAutoStringRef t_url;
-    if (!ctxt . EvalOptionalExprAsStringRef(url, kMCEmptyString, EE_LOAD_BADURLEXP, &t_url))
+    if (!ctxt . EvalExprAsStringRef(url, EE_LOAD_BADURLEXP, &t_url))
         return;    
     
     MCNetworkExecLoadUrl(ctxt, *t_url, *t_message);
@@ -2384,7 +2384,7 @@ void MCUnload::exec_ctxt(MCExecContext &ctxt)
 #endif /* MCUnload */
 
     MCAutoStringRef t_url;
-    if (!ctxt . EvalOptionalExprAsStringRef(url, kMCEmptyString, EE_LOAD_BADURLEXP, &t_url))
+    if (!ctxt . EvalExprAsStringRef(url, EE_LOAD_BADURLEXP, &t_url))
         return;
     
     MCNetworkExecUnloadUrl(ctxt, *t_url);
@@ -2454,11 +2454,11 @@ void MCPost::exec_ctxt(MCExecContext &ctxt)
 #endif /* MCPost */
 
     MCAutoDataRef t_data;
-    if (!ctxt . EvalOptionalExprAsDataRef(source, kMCEmptyData, EE_POST_BADSOURCEEXP, &t_data))
+    if (!ctxt . EvalExprAsDataRef(source, EE_POST_BADSOURCEEXP, &t_data))
         return;
     
     MCAutoStringRef t_url;
-    if (!ctxt . EvalOptionalExprAsStringRef(dest, kMCEmptyString, EE_POST_BADDESTEXP, &t_url))
+    if (!ctxt . EvalExprAsStringRef(dest, EE_POST_BADDESTEXP, &t_url))
         return;
     
     ctxt . SetIt(it);
@@ -2812,7 +2812,7 @@ if (MCsecuremode & MC_SECUREMODE_PRIVACY)
 #endif /* MCRecord */
 
     MCAutoStringRef t_filename;
-    if (!ctxt . EvalOptionalExprAsStringRef(file, kMCEmptyString, EE_RECORD_BADFILE, &t_filename))
+    if (!ctxt . EvalExprAsStringRef(file, EE_RECORD_BADFILE, &t_filename))
         return;
     
     MCMultimediaExecRecord(ctxt, *t_filename);

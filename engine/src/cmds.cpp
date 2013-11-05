@@ -512,7 +512,7 @@ void MCDo::exec_ctxt(MCExecContext& ctxt)
     if (browser)
     {
         MCAutoStringRef t_script;
-        if (!ctxt . EvalOptionalExprAsStringRef(source, kMCEmptyString, EE_DO_BADEXP, &t_script))
+        if (!ctxt . EvalExprAsStringRef(source, EE_DO_BADEXP, &t_script))
             return;
         
         MCLegacyExecDoInBrowser(ctxt, *t_script);
@@ -523,11 +523,11 @@ void MCDo::exec_ctxt(MCExecContext& ctxt)
     if (alternatelang != NULL)
 	{
         MCAutoStringRef t_language;
-        if (!ctxt . EvalOptionalExprAsStringRef(alternatelang, kMCEmptyString, EE_DO_BADLANG, &t_language))
+        if (!ctxt . EvalExprAsStringRef(alternatelang, EE_DO_BADLANG, &t_language))
             return;
         
 		MCAutoStringRef t_script;
-        if (!ctxt . EvalOptionalExprAsStringRef(source, kMCEmptyString, EE_DO_BADEXP, &t_script))
+        if (!ctxt . EvalExprAsStringRef(source, EE_DO_BADEXP, &t_script))
             return;
         
         MCScriptingExecDoAsAlternateLanguage(ctxt, *t_script, *t_language);
@@ -537,7 +537,7 @@ void MCDo::exec_ctxt(MCExecContext& ctxt)
     if (debug)
 	{
 		MCAutoStringRef t_script;
-        if (!ctxt . EvalOptionalExprAsStringRef(source, kMCEmptyString, EE_DO_BADEXP, &t_script))
+        if (!ctxt . EvalExprAsStringRef(source, EE_DO_BADEXP, &t_script))
             return;
 
 		MCDebuggingExecDebugDo(ctxt, *t_script, line, pos);
@@ -545,7 +545,7 @@ void MCDo::exec_ctxt(MCExecContext& ctxt)
 	}
     
     MCAutoStringRef t_script;
-    if (!ctxt . EvalOptionalExprAsStringRef(source, kMCEmptyString, EE_DO_BADEXP, &t_script))
+    if (!ctxt . EvalExprAsStringRef(source, EE_DO_BADEXP, &t_script))
         return;
 
 	MCEngineExecDo(ctxt, *t_script, line, pos);
@@ -703,7 +703,7 @@ void MCDoMenu::exec_ctxt(MCExecContext& ctxt)
 #endif /* MCDoMenu */
 
     MCAutoStringRef t_option;
-    if (!ctxt . EvalOptionalExprAsStringRef(source, kMCEmptyString, EE_DOMENU_BADEXP, &t_option))
+    if (!ctxt . EvalExprAsStringRef(source, EE_DOMENU_BADEXP, &t_option))
         return;
     
     MCLegacyExecDoMenu(ctxt, *t_option);
@@ -861,7 +861,7 @@ void MCFind::exec_ctxt(MCExecContext& ctxt)
 #endif /* MCFind */
 
     MCAutoStringRef t_needle;
-    if (ctxt . EvalOptionalExprAsStringRef(tofind, kMCEmptyString, EE_FIND_BADSTRING, &t_needle))
+    if (ctxt . EvalExprAsStringRef(tofind, EE_FIND_BADSTRING, &t_needle))
         return;
 
     MCInterfaceExecFind(ctxt, mode, *t_needle, field);
@@ -2816,7 +2816,7 @@ void MCInclude::exec_ctxt(MCExecContext& ctxt)
 #endif /* MCInclude */
 
     MCAutoStringRef t_filename;
-    if (!ctxt . EvalOptionalExprAsStringRef(filename, kMCEmptyString, EE_INCLUDE_BADFILENAME, &t_filename))
+    if (!ctxt . EvalExprAsStringRef(filename, EE_INCLUDE_BADFILENAME, &t_filename))
         return;
     
     MCServerExecInclude(ctxt, *t_filename, is_require);
