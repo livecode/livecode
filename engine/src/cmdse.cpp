@@ -527,7 +527,7 @@ Parse_stat MCDrag::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCDrag::exec(MCExecPoint &ep)
+void MCDrag::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCDrag */ LEGACY_EXEC
 	if (button != NULL)
@@ -641,51 +641,20 @@ Exec_stat MCDrag::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCDrag */
 
-
-if (button != NULL)
-	{
-		if (button->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-		{
-			MCeerror->add(EE_DRAG_BADBUTTON, line, pos);
-			return ES_ERROR;
-		}
-		which = ep.getuint2();
-	}
-
-	if (startloc->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_DRAG_BADSTARTLOC, line, pos);
-		return ES_ERROR;
-	}
-
-	MCPoint t_start;
-
-	if (!ep . copyaslegacypoint(t_start))
-	{
-		MCeerror->add(EE_DRAG_STARTNAP, line, pos, ep.getsvalue());
-		return ES_ERROR;
-	}
-	if (endloc->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_DRAG_BADENDLOC, line, pos);
-		return ES_ERROR;
-	}
-
-	MCPoint t_end;
-
-	if (!ep . copyaslegacypoint(t_end))
-	{
-		MCeerror->add(EE_DRAG_ENDNAP, line, pos, ep.getsvalue());
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	MCInterfaceExecDrag(ctxt, which, t_start, t_end, mstate);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    uinteger_t t_which;
+    if (!ctxt . EvalOptionalExprAsUInt(button, which, EE_DRAG_BADBUTTON, t_which))
+        return;
+    which = t_which;
+    
+    MCPoint t_start;
+    if (!ctxt . EvalExprAsPoint(startloc, EE_DRAG_BADSTARTLOC, t_start))
+        return;
+    
+    MCPoint t_end;
+    if (!ctxt . EvalExprAsPoint(endloc, EE_DRAG_BADENDLOC, t_end))
+        return;
+    
+    MCInterfaceExecDrag(ctxt, which, t_start, t_end, mstate);
 }
 
 void MCDrag::compile(MCSyntaxFactoryRef ctxt)
