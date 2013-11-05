@@ -551,7 +551,7 @@ Exec_stat MCEncryptionOp::exec_rsa(MCExecPoint &ep)
 }
 #endif /* MCEncryptionOp::exec_rsa */
 
-Exec_stat MCEncryptionOp::exec(MCExecPoint &ep)
+void MCEncryptionOp::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCEncryptionOp */ LEGACY_EXEC
 MCresult->clear(False);
@@ -666,38 +666,25 @@ MCresult->clear(False);
 	return ES_NORMAL;
 #endif /* MCEncryptionOp */
 
-	
-	MCresult->clear(False);
-	MCExecContext ctxt(ep, it);
-
 	if (is_rsa)
 	{
-		if (rsa_key->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_OPEN_BADNAME, line, pos);
-			return ES_ERROR;
-		}
-		MCAutoStringRef t_key;
-		/* UNCHECKED */  ep . copyasstringref(&t_key);
+        MCAutoStringRef t_key;
+        ctxt . EvalExprAsStringRef(rsa_key, EE_OPEN_BADNAME, &t_key);
+
+        if (ctxt . HasError())
+            return;
 
 		MCAutoStringRef t_passphrase;
-		if (rsa_passphrase != nil)
-		{
-			if (rsa_passphrase->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_OPEN_BADNAME, line, pos);
-				return ES_ERROR;
-			}
-			/* UNCHECKED */  ep . copyasstringref(&t_passphrase);
-		}
+        ctxt . EvalOptionalExprAsStringRef(rsa_passphrase, kMCEmptyString, EE_OPEN_BADNAME, &t_passphrase);
+
+        if (ctxt . HasError())
+            return;
 		
-		if (source->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_OPEN_BADNAME, line, pos);
-			return ES_ERROR;
-		}
-		MCAutoStringRef t_data;
-		/* UNCHECKED */  ep . copyasstringref(&t_data);
+        MCAutoStringRef t_data;
+        ctxt . EvalExprAsStringRef(source, EE_OPEN_BADNAME, &t_data);
+
+        if (ctxt . HasError())
+            return;
 
 		if (isdecrypt)
 			MCSecurityExecRsaDecrypt(ctxt, *t_data, rsa_keytype != RSAKEY_PRIVKEY, *t_key, *t_passphrase);
@@ -706,61 +693,42 @@ MCresult->clear(False);
 	}
 	else
 	{
-		if (ciphername->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_OPEN_BADNAME, line, pos);
-			return ES_ERROR;
-		}
-		MCNewAutoNameRef t_cipher;
-		/* UNCHECKED */  ep . copyasnameref(&t_cipher);
+        MCNewAutoNameRef t_cipher;
+        ctxt . EvalExprAsNameRef(ciphername, EE_OPEN_BADNAME, &t_cipher);
 
-		if (keystr->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_OPEN_BADNAME, line, pos);
-			return ES_ERROR;
-		}
-		MCAutoStringRef t_key;
-		/* UNCHECKED */  ep . copyasstringref(&t_key);
+        if (ctxt . HasError())
+            return;
+
+        MCAutoStringRef t_key;
+        ctxt . EvalExprAsStringRef(keystr, EE_OPEN_BADNAME, &t_key);
+
+        if (ctxt . HasError())
+            return;
 		
-		uint2 keybits = 0;
-		if (keylen)
-		{
-			if (keylen->eval(ep) != ES_NORMAL || !ep.ton())
-			{
-				MCeerror->add(EE_OPEN_BADNAME, line, pos);
-				return ES_ERROR;
-			}
-			keybits = ep.getuint2();
-		}
+        uint2 keybits;
+        ctxt . EvalOptionalExprAsUInt(keylen, 0, EE_OPEN_BADNAME, keybits);
+
+        if (ctxt . HasError())
+            return;
 
 		MCAutoStringRef t_iv;
 		MCAutoStringRef t_salt;
-		if (salt)
-		{
-			if (salt->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_OPEN_BADNAME, line, pos);
-				return ES_ERROR;
-			}
-		/* UNCHECKED */  ep . copyasstringref(&t_salt);
-		}
-		if (iv)
-		{
-			if (iv->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_OPEN_BADNAME, line, pos);
-				return ES_ERROR;
-			}
-		/* UNCHECKED */  ep . copyasstringref(&t_iv);
-		}
 
-		if (source->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_READ_BADAT, line, pos);
-			return ES_ERROR;
-		}
-		MCAutoStringRef t_data;
-		/* UNCHECKED */  ep . copyasstringref(&t_data);
+        ctxt . EvalOptionalExprAsStringRef(salt, kMCEmptyString, EE_OPEN_BADNAME, &t_salt);
+
+        if (ctxt . HasError())
+            return;
+
+        ctxt . EvalOptionalExprAsStringRef(iv, kMCEmptyString, EE_OPEN_BADNAME, &t_iv);
+
+        if (ctxt . HasError())
+            return;
+
+        MCAutoStringRef t_data;
+        ctxt . EvalExprAsStringRef(source, EE_READ_BADAT, &t_data);
+
+        if (ctxt . HasError())
+            return;
 
 		if (ispassword)
 		{
@@ -779,9 +747,9 @@ MCresult->clear(False);
 	}
 
 	if (!ctxt . HasError())
-		return ES_NORMAL;
+        return;
 	
-	return ctxt . Catch(line, pos);
+    ctxt . Catch(line, pos);
 }
 
 void MCEncryptionOp::compile(MCSyntaxFactoryRef ctxt)
