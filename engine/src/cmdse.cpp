@@ -2556,7 +2556,7 @@ Parse_stat MCReply::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCReply::exec(MCExecPoint &ep)
+void MCReply::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCReply */ LEGACY_EXEC
 	char *k = NULL;
@@ -2580,36 +2580,22 @@ Exec_stat MCReply::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCReply */
 
-	
-	MCAutoStringRef t_message;
-	if (message -> eval(ep) != ES_NORMAL)
+    MCAutoStringRef t_message;
+    if (!ctxt . EvalExprAsStringRef(message, EE_REPLY_BADMESSAGEEXP, &t_message))
+        return;
+    
+    MCAutoStringRef t_keyword;
+    if (!error && keyword != nil)
 	{
-		MCeerror -> add(EE_REPLY_BADMESSAGEEXP, line, pos);
-		return ES_ERROR;
+        MCAutoStringRef t_keyword;
+		if (!ctxt . EvalExprAsStringRef(keyword, EE_REPLY_BADKEYWORDEXP, &t_keyword))
+            return;
 	}
-	/* UNCHECKED */ ep . copyasstringref(&t_message);
-	
-	MCAutoStringRef t_keyword;
-	if (!error && keyword != nil)
-	{
-		if (keyword -> eval(ep) != ES_NORMAL)
-		{
-			MCeerror -> add(EE_REPLY_BADKEYWORDEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&t_keyword);
-	}
-	
-	MCExecContext ctxt(ep);
-	if (!error)
+    
+    if (!error)
 		MCScriptingExecReply(ctxt, *t_message, *t_keyword);
 	else
 		MCScriptingExecReplyError(ctxt, *t_message);
-		
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-	
-	return ctxt . Catch(line, pos);
 }
 
 void MCReply::compile(MCSyntaxFactoryRef ctxt)
