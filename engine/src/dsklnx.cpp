@@ -1582,7 +1582,7 @@ public:
                                                 t_fd, 0);
                     // MW-2013-05-02: [[ x64 ]] Make sure we use the MAP_FAILED constant
                     //   rather than '-1'.
-                    if (buffer != MAP_FAILED)
+                    if (t_buffer != MAP_FAILED)
                     {
                         t_handle = new MCMemoryMappedFileHandle(t_fd, t_buffer, t_len);
                         return t_handle;

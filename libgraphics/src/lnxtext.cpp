@@ -27,6 +27,9 @@ extern "C" int initialise_weak_link_pangoft2();
 extern "C" int initialise_weak_link_glib();
 extern "C" int initialise_weak_link_gobject();
 
+extern void MCCStringFree(char *p_string);
+extern bool MCCStringFromUnicodeSubstring(const unichar_t *p_chars, uint32_t p_char_count, char*& r_string);
+
 static PangoFontMap *s_font_map = NULL;
 static PangoContext *s_pango = NULL;
 static PangoLayout *s_layout = NULL;
