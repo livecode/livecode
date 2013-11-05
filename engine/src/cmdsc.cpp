@@ -2793,7 +2793,7 @@ Parse_stat MCRecord::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCRecord::exec(MCExecPoint &ep)
+void MCRecord::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCRecord */ LEGACY_EXEC
 if (MCsecuremode & MC_SECUREMODE_PRIVACY)
@@ -2811,25 +2811,11 @@ if (MCsecuremode & MC_SECUREMODE_PRIVACY)
 	return ES_NORMAL;
 #endif /* MCRecord */
 
-
-	MCExecContext ctxt(ep);
-
-	if (file->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_RECORD_BADFILE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCAutoStringRef t_filename;
-	/* UNCHECKED */ ep . copyasstringref(&t_filename);
-
-	MCMultimediaExecRecord(ctxt, *t_filename);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
-
+    MCAutoStringRef t_filename;
+    if (ctxt . EvalOptionalExprAsStringRef(file, kMCEmptyString, EE_RECORD_BADFILE, &t_filename))
+        return;
+    
+    MCMultimediaExecRecord(ctxt, *t_filename);
 }
 
 void MCRecord::compile(MCSyntaxFactoryRef ctxt)
