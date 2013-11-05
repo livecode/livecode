@@ -116,9 +116,9 @@ Exec_stat MCAndroidControl::Set(MCNativeControlProperty p_property, MCExecPoint 
                 MCGFloat t_device_scale;
                 t_device_scale = MCResGetDeviceScale();
                 i1 = (int16_t) i1 * t_device_scale;
-                i1 = (int16_t) i2 * t_device_scale;
-                i1 = (int16_t) i3 * t_device_scale;
-                i1 = (int16_t) i4 * t_device_scale;
+                i2 = (int16_t) i2 * t_device_scale;
+                i3 = (int16_t) i3 * t_device_scale;
+                i4 = (int16_t) i4 * t_device_scale;
 
                 if (m_view != nil)
                     MCAndroidObjectRemoteCall(m_view, "setRect", "viiii", nil, i1, i2, i3, i4);
@@ -208,9 +208,9 @@ Exec_stat MCAndroidControl::Get(MCNativeControlProperty p_property, MCExecPoint 
                 MCGFloat t_device_scale;
                 t_device_scale = MCResGetDeviceScale();
                 i1 = (int16_t) i1 / t_device_scale;
-                i1 = (int16_t) i2 / t_device_scale;
-                i1 = (int16_t) i3 / t_device_scale;
-                i1 = (int16_t) i4 / t_device_scale;
+                i2 = (int16_t) i2 / t_device_scale;
+                i3 = (int16_t) i3 / t_device_scale;
+                i4 = (int16_t) i4 / t_device_scale;
                 
                 MCExecPointSetRect(ep, i1, i2, i3, i4);
             }

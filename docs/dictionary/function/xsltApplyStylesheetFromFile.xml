@@ -55,9 +55,9 @@
 
 	<references>
 		<function tag="revXMLEvaluateXpath">revXMLEvaluateXpath</function>
-		<function tag="revCreateXMLTree">revXMLCreateTree</function>
-		<function tag="revCreateXMLTreeFromFile">revXMLCreateTreeFromFile</function>
-		<function tag="xsltApplyStylesheetFile">xsltApplyStylesheetFile</function>
+		<function tag="revXMLCreateTree">revXMLCreateTree</function>
+		<function tag="revXMLCreateTreeFromFile">revXMLCreateTreeFromFile</function>
+		<function tag="xsltApplyStylesheetFromFile">xsltApplyStylesheetFromFile</function>
 		<function tag="xsltLoadStylesheet">xsltLoadStylesheet</function>
 		<function tag="xsltLoadStylesheetFromFile">xsltLoadStylesheetFromFile</function>
 	</references>

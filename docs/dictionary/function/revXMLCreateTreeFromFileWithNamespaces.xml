@@ -7,7 +7,7 @@
 		<example>revXMLCreateTreeFromFileWithNamespaces(<i>filePath</i>,<i>parseBadData</i>,<i>createTree</i>,<i>sendMessages</i>)</example>
 	</syntax>
 
-	<synonyms>revCreateXMLTreeFromFileWithNamespaces
+	<synonyms>revXMLCreateTreeFromFileWithNamespaces
 	</synonyms>
 
 	<summary>Reads an <glossary tag="XML">XML</glossary> <keyword tag="file">file</keyword>, optionally creating an <glossary tag="XML tree">XML</glossary> tree and returning XML namespace tags and attributes as part of the tree.</summary>

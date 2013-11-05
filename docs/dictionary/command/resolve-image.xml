@@ -4,6 +4,11 @@
   <syntax>
     <example>resolve image [id] <i>id or name</i> relative to <i>object reference</i></example>
   </syntax>
+  <library></library>
+  <objects>
+  </objects>
+  <synonyms>
+  </synonyms>
   <references>
     <property tag="icon">icon Property</property>
   </references>
@@ -17,6 +22,14 @@
     <ios/>
     <android/>
   </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
   <summary>Resolves a short id or name of an image relative to an object to find the long id of the image that will use as an icon or pattern on the object.</summary>
   <examples>
     <example>resolve image id 1007 relative to button "Cancel"</example>
