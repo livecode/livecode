@@ -2812,7 +2812,7 @@ if (MCsecuremode & MC_SECUREMODE_PRIVACY)
 #endif /* MCRecord */
 
     MCAutoStringRef t_filename;
-    if (ctxt . EvalOptionalExprAsStringRef(file, kMCEmptyString, EE_RECORD_BADFILE, &t_filename))
+    if (!ctxt . EvalOptionalExprAsStringRef(file, kMCEmptyString, EE_RECORD_BADFILE, &t_filename))
         return;
     
     MCMultimediaExecRecord(ctxt, *t_filename);
