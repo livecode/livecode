@@ -241,21 +241,15 @@ void MCBeep::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndStatement(ctxt);
 }
 
-Exec_stat MCBreakPoint::exec(MCExecPoint &ep)
+void MCBreakPoint::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCBreakPoint */ LEGACY_EXEC
 MCB_break(ep, getline(), getpos());
 	return ES_NORMAL;
 #endif /* MCBreakPoint */
 
-
-	MCExecContext ctxt(ep);
 	MCDebuggingExecBreakpoint(ctxt, line, pos);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+	return;
 }
 
 void MCBreakPoint::compile(MCSyntaxFactoryRef ctxt)
