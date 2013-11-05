@@ -2678,7 +2678,7 @@ Parse_stat MCPasteCmd::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCPasteCmd::exec(MCExecPoint &ep)
+void MCPasteCmd::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCPasteCmd */ LEGACY_EXEC
 MCObject *optr;
@@ -2694,13 +2694,9 @@ MCObject *optr;
 #endif /* MCPasteCmd */
 
 
-	MCExecContext ctxt(ep, it);
+	ctxt . SetIt(it);
 	MCPasteboardExecPaste(ctxt);
-	//it->set(ep);
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    return;
 }
 
 void MCPasteCmd::compile(MCSyntaxFactoryRef ctxt)
