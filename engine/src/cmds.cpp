@@ -2971,7 +2971,7 @@ Parse_stat MCEcho::parse(MCScriptPoint& sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCEcho::exec(MCExecPoint& ep)
+void MCEcho::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCEcho */ LEGACY_EXEC
 	if (!MCS_put(ep, kMCSPutBinaryOutput, data) != IO_NORMAL)
@@ -2980,12 +2980,8 @@ Exec_stat MCEcho::exec(MCExecPoint& ep)
 	return ES_NORMAL;
 #endif /* MCEcho */
 
-	MCExecContext ctxt(ep);
 	MCServerExecEcho(ctxt, data);
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-	
-	return ctxt . Catch(line, pos);
+	return;
 }
 
 void MCEcho::compile(MCSyntaxFactoryRef ctxt)
