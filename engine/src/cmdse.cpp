@@ -377,7 +377,7 @@ Parse_stat MCClickCmd::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCClickCmd::exec(MCExecPoint &ep)
+void MCClickCmd::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCClickCmd */ LEGACY_EXEC
 if (button != NULL)
@@ -454,36 +454,16 @@ if (button != NULL)
 	return ES_NORMAL;
 #endif /* MCClickCmd */
 
-
-	if (button != NULL)
-	{
-		if (button->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-		{
-			MCeerror->add(EE_CLICK_BADBUTTON, line, pos);
-			return ES_ERROR;
-		}
-		which = ep.getuint2();
-	}
-	if (location->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_CLICK_BADLOCATION, line, pos);
-		return ES_ERROR;
-	}
-
-	MCPoint t_location;
-	if (!ep . copyaslegacypoint(t_location))
-	{
-		MCeerror->add(EE_CLICK_NAP, line, pos, ep.getsvalue());
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	MCInterfaceExecClickCmd(ctxt, which, t_location, mstate);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    uinteger_t t_which;
+    if (!ctxt . EvalOptionalExprAsUInt(button, which, EE_CLICK_BADBUTTON, t_which))
+        return;
+    which = t_which;
+    
+    MCPoint t_location;
+    if (!ctxt . EvalExprAsPoint(location, EE_CLICK_BADLOCATION, t_location))
+        return;
+    
+    MCInterfaceExecClickCmd(ctxt, which, t_location, mstate);
 }
 
 void MCClickCmd::compile(MCSyntaxFactoryRef ctxt)
