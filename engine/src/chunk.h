@@ -80,6 +80,10 @@ public:
 	Exec_stat evalurlchunk(MCExecPoint& ep, bool whole_chunk, bool force, MCUrlChunkPtr& r_chunk);
 	
 	void take_components(MCChunk *tchunk);
+
+    void getobj(MCExecContext &ctxt, MCObject *& objptr, uint4 &parid, Boolean recurse);
+    void getobj(MCExecContext &ctxt,MCObjectPtr&, Boolean recurse);
+
 	Exec_stat getobj(MCExecPoint &, MCObject *&, uint4 &parid, Boolean recurse);
 	Exec_stat getobj(MCExecPoint&, MCObjectPtr&, Boolean recurse);
 #ifdef LEGACY_EXEC    
