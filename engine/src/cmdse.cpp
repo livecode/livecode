@@ -2668,7 +2668,7 @@ Parse_stat MCRequest::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCRequest::exec(MCExecPoint &ep)
+void MCRequest::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCRequest */ LEGACY_EXEC
 if (MCsecuremode & MC_SECUREMODE_PROCESS)
@@ -2717,45 +2717,26 @@ if (MCsecuremode & MC_SECUREMODE_PROCESS)
 	return ES_NORMAL;
 #endif /* MCRequest */
 
-	
-	MCExecContext ctxt(ep, it);
-	
-	if (ae != AE_UNDEFINED)
+	ctxt . SetIt(it);
+    if (ae != AE_UNDEFINED)
 	{
 		MCAutoStringRef t_program;
-		if (program != nil)
-		{
-			if (program -> eval(ep) != ES_NORMAL)
-			{
-				MCeerror -> add(EE_REQUEST_BADKEYWORDEXP, line, pos);
-				return ES_ERROR;
-			}
-			/* UNCHECKED */ ep . copyasstringref(&t_program);
-		}
+        if (!ctxt . EvalOptionalExprAsStringRef(program, kMCEmptyString, EE_REQUEST_BADKEYWORDEXP, &t_program))
+            return;
 		MCScriptingExecRequestAppleEvent(ctxt, ae, *t_program);
 	}
-	else
+    
+    else
 	{
 		MCAutoStringRef t_message;
-		if (message -> eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_REQUEST_BADMESSAGEEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&t_message);
-	
+        if (!ctxt . EvalExprAsStringRef(message, EE_REQUEST_BADMESSAGEEXP, &t_message))
+            return;
+        
 		MCAutoStringRef t_program;
-		if (program -> eval(ep) != ES_NORMAL)
-		{
-			MCeerror -> add(EE_REQUEST_BADPROGRAMEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&t_program);
-		
-		MCScriptingExecRequestFromProgram(ctxt, *t_message, *t_program);
+        if (!ctxt . EvalExprAsStringRef(program, EE_REQUEST_BADPROGRAMEXP, &t_program))
+            return;
+        MCScriptingExecRequestFromProgram(ctxt, *t_message, *t_program);
 	}
-	
-	return ctxt . Catch(line, pos);
 }
 
 void MCRequest::compile(MCSyntaxFactoryRef ctxt)
