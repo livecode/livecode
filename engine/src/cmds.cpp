@@ -516,6 +516,7 @@ void MCDo::exec_ctxt(MCExecContext& ctxt)
             return;
         
         MCLegacyExecDoInBrowser(ctxt, *t_script);
+        return;
         
     }
     
@@ -530,6 +531,7 @@ void MCDo::exec_ctxt(MCExecContext& ctxt)
             return;
         
         MCScriptingExecDoAsAlternateLanguage(ctxt, *t_script, *t_language);
+        return;
 	}
     
     if (debug)
@@ -539,6 +541,7 @@ void MCDo::exec_ctxt(MCExecContext& ctxt)
             return;
 
 		MCDebuggingExecDebugDo(ctxt, *t_script, line, pos);
+        return;
 	}
     
     MCAutoStringRef t_script;
