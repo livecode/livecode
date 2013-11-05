@@ -3949,21 +3949,15 @@ void MCSelect::compile(MCSyntaxFactoryRef ctxt)
 	}
 }
 
-Exec_stat MCUndoCmd::exec(MCExecPoint &ep)
+void MCUndoCmd::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCUndoCmd */ LEGACY_EXEC
 MCundos->undo();
 	return ES_NORMAL;
 #endif /* MCUndoCmd */
 
-	
-	MCExecContext ctxt(ep);
 	MCInterfaceExecUndo(ctxt);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    return;
 }
 
 void MCUndoCmd::compile(MCSyntaxFactoryRef ctxt)
