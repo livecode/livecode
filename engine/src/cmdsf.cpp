@@ -705,10 +705,11 @@ MCresult->clear(False);
         if (ctxt . HasError())
             return;
 		
-        uint2 keybits;
+        uinteger_t keybits;
         ctxt . EvalOptionalExprAsUInt(keylen, 0, EE_OPEN_BADNAME, keybits);
 
-        if (ctxt . HasError())
+        // Ensure that keybits is an uint2
+        if (ctxt . HasError() || keybits > 65535)
             return;
 
 		MCAutoStringRef t_iv;
@@ -1056,7 +1057,7 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCExport::exec(MCExecPoint &ep)
+void MCExport::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCExport */ LEGACY_EXEC
 	MCBitmap *t_img = nil;
@@ -1362,39 +1363,32 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 	return t_status;
 #endif /* MCExport */
 
-	MCExecContext ctxt(ep);
+    MCExecPoint ep;
 	MCAutoStringRef t_return_data;
 	MCAutoStringRef t_filename;
-	if (fname != NULL)
-	{
-		if (fname->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_EXPORT_BADNAME, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&t_filename);
-	}
+    ctxt . EvalOptionalExprAsStringRef(fname, kMCEmptyString, EE_EXPORT_BADNAME, &t_filename);
+
+    if (ctxt . HasError())
+        return;
+
 	MCAutoStringRef t_mask_filename;
-	if (mname != NULL)
-	{
-		if (mname->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_EXPORT_BADNAME, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&t_mask_filename);
-	}
+    ctxt . EvalOptionalExprAsStringRef(mname, kMCEmptyString, EE_EXPORT_BADNAME, &t_mask_filename);
+
+    if (ctxt . HasError())
+        return;
 
 	MCObject *optr = NULL;
 	if (image != NULL)
 	{
 		//get image from chunk
 		uint4 parid;
-		if (image->getobj(ep, optr, parid, True) != ES_NORMAL)
-		{
-			MCeerror->add(EE_EXPORT_NOSELECTED, line, pos);
-			return ES_ERROR;
-		}
+        image->getobj(ctxt, optr, parid, True);
+
+        if (ctxt . HasError())
+        {
+            ctxt . LegacyThrow(EE_EXPORT_NOSELECTED);
+            return;
+        }
 	}
 
 	MCInterfaceImagePaletteSettings t_settings;
@@ -1407,11 +1401,17 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 		MCColor *t_colors;
 		uindex_t t_count;
 		MCAutoStringRef t_input;
-		if (palette_color_list -> eval(ep) != ES_NORMAL || ep . isempty() || !ep . copyasstringref(&t_input) || !MCImageParseColourList(*t_input, t_count, t_colors))
-		{
-			MCeerror -> add(EE_EXPORT_BADPALETTE, line, pos);
-			return ES_ERROR;
-		}
+        ctxt . EvalExprAsStringRef(palette_color_list, EE_EXPORT_BADPALETTE, &t_input);
+
+        if (ctxt . HasError())
+            return;
+
+        if (!MCImageParseColourList(*t_input, t_count, t_colors))
+        {
+            ctxt . LegacyThrow(EE_EXPORT_BADPALETTE);
+            return;
+        }
+
 		MCInterfaceMakeCustomImagePaletteSettings(ctxt, t_colors, t_count, t_settings);
 		t_settings_ptr = &t_settings;
 		}
@@ -1419,16 +1419,15 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 	case kMCImagePaletteTypeOptimal:
 		{
 		integer_t *t_count_ptr = nil;
-		if (palette_color_count != nil)
-		{
-			if (palette_color_count->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-			{
-				MCeerror -> add(EE_EXPORT_BADPALETTESIZE, line, pos);
-				return ES_ERROR;
-			}
-			int32_t t_ncolors = ep.getint4();
-			t_count_ptr = &t_ncolors;
-		}
+        integer_t t_count;
+        ctxt . EvalOptionalExprAsInt(palette_color_count, 0, EE_EXPORT_BADPALETTESIZE, t_count);
+
+        if (ctxt . HasError())
+            return;
+
+        if (t_count != 0)
+            t_count_ptr = &t_count;
+
 		MCInterfaceMakeOptimalImagePaletteSettings(ctxt, t_count_ptr, t_settings);
 		t_settings_ptr = &t_settings;
 		}
@@ -1439,53 +1438,33 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 		break;
 	case kMCImagePaletteTypeEmpty:
 		break;
-	}
-
-	Exec_stat t_stat = ES_NORMAL;
+    }
 
 	if (sformat == EX_SNAPSHOT)
 	{
 		MCRectangle *t_rect_ptr = nil;
+        MCRectangle t_rect;
+
 		if (exsrect != NULL)
 		{
-			MCRectangle t_rect;
-			if (exsrect->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_IMPORT_BADNAME, line, pos);
-				t_stat = ES_ERROR;
-			}
-			else
-			{
-				/* UNCHECKED */ ep . copyaslegacyrectangle(t_rect);
-				t_rect_ptr = &t_rect;
-			}
+            ctxt . EvalExprAsRectangle(exsrect, EE_IMPORT_BADNAME, t_rect);
+
+            if (!ctxt . HasError())
+                t_rect_ptr = &t_rect;
 		}
 
-		if (t_stat == ES_NORMAL && exsstack != NULL)
+        if (!ctxt . HasError() && exsstack != NULL)
 		{
 			MCAutoStringRef t_stack_name;
-			if (exsstack->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_EXPORT_NOSELECTED, line, pos);
-				t_stat = ES_ERROR;
-			}
-			else
-			{
-				/* UNCHECKED */ ep . copyasstringref(&t_stack_name);
-			
+            ctxt . EvalExprAsStringRef(exsstack, EE_EXPORT_NOSELECTED, &t_stack_name);
+
+            if (!ctxt . HasError())
+            {
 				MCAutoStringRef t_display;
-				if (exsdisplay != NULL)
-				{
-					if (exsdisplay->eval(ep) != ES_NORMAL)
-					{
-						MCeerror->add(EE_EXPORT_NOSELECTED, line, pos);
-						t_stat = ES_ERROR;
-					}
-					else
-					/* UNCHECKED */ ep . copyasstringref(&t_display);
-				}
-				if (t_stat == ES_NORMAL)
-				{
+                ctxt . EvalOptionalExprAsStringRef(exsdisplay, kMCEmptyString, EE_EXPORT_NOSELECTED, &t_display);
+
+                if (!ctxt . HasError())
+                {
 					if (*t_filename == nil)
 						MCInterfaceExecExportSnapshotOfStack(ctxt, *t_stack_name, *t_display, t_rect_ptr, format, t_settings_ptr, &t_return_data);
 					else
@@ -1494,29 +1473,22 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 			}
 		}
 		else if (optr != NULL)
-		{
+		{            
+            MCPoint t_size;
 			MCPoint *t_size_ptr = nil;
-			if (size != nil) 
-			{
-				MCPoint t_size;
-				if (size -> eval(ep) != ES_NORMAL)
-				{
-					MCeerror->add(EE_EXPORT_NOSELECTED, line, pos);
-					t_stat = ES_ERROR;
-				}
-				else
-				{
-					ep . copyaspoint(t_size);
-					t_size_ptr = &t_size;
-				}
-			}
-			if (t_stat == ES_NORMAL)
-			{
-				if (*t_filename == nil)
-					MCInterfaceExecExportSnapshotOfObject(ctxt, optr, t_rect_ptr, with_effects, t_size_ptr, format, t_settings_ptr, &t_return_data);
-				else
-					MCInterfaceExecExportSnapshotOfObjectToFile(ctxt, optr, t_rect_ptr, with_effects, t_size_ptr, format, t_settings_ptr, *t_filename, *t_mask_filename);		
-			}
+
+            if (size != nil)
+            {
+                ctxt . EvalExprAsPoint(size, EE_EXPORT_NOSELECTED, t_size);
+
+                if (!ctxt . HasError())
+                    t_size_ptr = &t_size;
+            }
+
+            if (*t_filename == nil)
+                MCInterfaceExecExportSnapshotOfObject(ctxt, optr, t_rect_ptr, with_effects, t_size_ptr, format, t_settings_ptr, &t_return_data);
+            else
+                MCInterfaceExecExportSnapshotOfObjectToFile(ctxt, optr, t_rect_ptr, with_effects, t_size_ptr, format, t_settings_ptr, *t_filename, *t_mask_filename);
 		}
 		else
 		{
@@ -1536,21 +1508,21 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 
 	MCInterfaceImagePaletteSettingsFree(ctxt, t_settings);
 
-	if (t_stat != ES_NORMAL)
-		return t_stat;
+    if (ctxt . HasError())
+        return;
 
 	if (*t_return_data != nil)
 	{
-		if (dest->set(ep, PT_INTO, *t_return_data) != ES_NORMAL)
+        dest->set(ctxt, PT_INTO, *t_return_data);
+
+        if (ctxt . HasError())
 		{
-			MCeerror->add(EE_EXPORT_CANTWRITE, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_EXPORT_CANTWRITE);
+            return;
 		}
-	} 
-	if (!ctxt . HasError())
-		return ES_NORMAL;
+    }
 	
-	return ctxt . Catch(line, pos);
+    ctxt . Catch(line, pos);
 }
 
 void MCExport::compile(MCSyntaxFactoryRef ctxt)
