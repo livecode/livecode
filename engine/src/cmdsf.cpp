@@ -112,7 +112,7 @@ Parse_stat MCClose::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCClose::exec(MCExecPoint &ep)
+void MCClose::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCClose */ LEGACY_EXEC
 char *name;
@@ -201,21 +201,22 @@ char *name;
 	return ES_NORMAL;
 #endif /* MCClose */
 
-
-	MCExecContext ctxt(ep);
 	if (arg == OA_OBJECT)
-	{
+    {
 		if (stack == NULL)
 			MCInterfaceExecCloseDefaultStack(ctxt);
 		else
 		{
 			MCObject *optr;
-			uint4 parid;
-			if (stack->getobj(ep, optr, parid, True) != ES_NORMAL || 
+            uint4 parid;
+
+            stack->getobj(ctxt, optr, parid, True);
+
+            if (ctxt . HasError() ||
 				optr->gettype() != CT_STACK)
 			{
-				MCeerror->add(EE_CLOSE_NOOBJ, line, pos);
-				return ES_ERROR;
+                ctxt . LegacyThrow(EE_CLOSE_NOOBJ);
+                return;
 			}
 			MCInterfaceExecCloseStack(ctxt, (MCStack *)optr);
 		}
@@ -223,15 +224,13 @@ char *name;
 	else if (arg == OA_PRINTING)
 		MCPrintingExecClosePrinting(ctxt);
 	else
-	{
-		if (fname->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_CLOSE_BADNAME, line, pos);
-			return ES_ERROR;
-		}
+    {
+        MCNewAutoNameRef t_name;
+        ctxt . EvalExprAsNameRef(fname, EE_CLOSE_BADNAME, &t_name);
 
-		MCNewAutoNameRef t_name;
-		/* UNCHECKED */ ep . copyasnameref(&t_name);	
+        if (ctxt . HasError())
+            return;
+
 		switch (arg)	
 		{	
 		case OA_DRIVER:
@@ -252,9 +251,9 @@ char *name;
 	}
 	
 	if (!ctxt . HasError())
-		return ES_NORMAL;	
+        return;
 
-	return ctxt . Catch(line, pos);
+    ctxt . Catch(line, pos);
 }
 
 void MCClose::compile(MCSyntaxFactoryRef ctxt)
