@@ -77,6 +77,7 @@ MCImage::MCImage()
 	flags &= ~(F_SHOW_BORDER | F_TRAVERSAL_ON);
 
 	m_rep = nil;
+	m_resampled_rep = nil;
 	m_transformed_bitmap = nil;
 	m_image_opened = false;
 	m_has_transform = false;
@@ -99,6 +100,7 @@ MCImage::MCImage()
 MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 {
 	m_rep = nil;
+	m_resampled_rep = nil;
 	m_transformed_bitmap = nil;
 	m_image_opened = false;
 	m_has_transform = false;
@@ -155,6 +157,12 @@ MCImage::~MCImage()
 		m_rep = nil;
 	}
 
+	if (m_resampled_rep != nil)
+	{
+		m_resampled_rep->Release();
+		m_resampled_rep = nil;
+	}
+	
 	if (filename != nil)
 		MCCStringFree(filename);
 }
@@ -2070,6 +2078,12 @@ void MCImage::apply_transform()
 		flip_transform();
 	else
 		m_has_transform = false;
+	
+	if (m_resampled_rep != nil && !(m_has_transform && MCGAffineTransformIsRectangular(m_transform) && m_resampled_rep->Matches(m_transform.a, m_transform.d, m_rep)))
+	{
+		m_resampled_rep->Release();
+		m_resampled_rep = nil;
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2190,7 +2204,12 @@ void MCImage::setrep(MCImageRep *p_rep)
 	m_rep = t_rep;
 
 	m_has_transform = false;
-
+	if (m_resampled_rep != nil)
+	{
+		m_resampled_rep->Release();
+		m_resampled_rep = nil;
+	}
+	
 	// IM-2013-03-11: [[ BZ 10723 ]] If we have a new image, ensure that the current frame falls within the new framecount
 	// IM-2013-04-15: [[ BZ 10827 ]] Skip this check if the currentframe is 0 (preventing unnecessary image loading)
 	if (currentframe != 0)
