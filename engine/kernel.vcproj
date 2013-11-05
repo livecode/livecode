@@ -3295,30 +3295,6 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="src\w32spec.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="2"
-							PrecompiledHeaderThrough="w32prefix.h"
-							PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="2"
-							PrecompiledHeaderThrough="w32prefix.h"
-							PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
 					RelativePath="src\w32stack.cpp"
 					>
 					<FileConfiguration
@@ -6162,6 +6138,28 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\src\sysw32random.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="w32prefix.h"
+						PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="w32prefix.h"
+						PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\src\sysw32region.cpp"
 				>
 				<FileConfiguration
@@ -7881,14 +7879,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\src\graphicscontext.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\src\graphicscontext.h"
-			>
-		</File>
-		<File
 			RelativePath=".\encode_version.rev"
 			>
 			<FileConfiguration
@@ -7913,6 +7903,14 @@
 					Outputs="$(ProjectDir)include\revbuild.h"
 				/>
 			</FileConfiguration>
+		</File>
+		<File
+			RelativePath=".\src\graphicscontext.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\src\graphicscontext.h"
+			>
 		</File>
 		<File
 			RelativePath=".\Makefile"

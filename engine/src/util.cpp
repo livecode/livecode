@@ -15,7 +15,6 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
-#include "osxprefix-legacy.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -41,10 +40,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "exec.h"
 #include "system.h"
-
-#ifdef MCSSL
-#include <openssl/rand.h>
-#endif
 
 #define QA_NPOINTS 10
 
@@ -3090,7 +3085,7 @@ bool MCU_random_bytes(size_t p_bytecount, MCDataRef& r_bytes)
         if (InitSSLCrypt())
         {
             return (t_buffer.New(p_bytecount) &&
-                    (RAND_bytes(t_buffer.Bytes(), p_bytecount) == 1) &&
+                    (SSL_random_bytes(t_buffer.Bytes(), p_bytecount)) &&
                     t_buffer.CreateData(r_bytes));
         }
 		s_donotuse_ssl = true;

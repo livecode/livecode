@@ -31,9 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "region.h"
 
-#include "sserialize.h"
-#include "sserialize_w32.h"
-
 #include "w32dc.h"
 #include "w32context.h"
 #include "w32printer.h"
