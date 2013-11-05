@@ -95,7 +95,7 @@ Parse_stat MCAccept::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCAccept::exec(MCExecPoint &ep)
+void MCAccept::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCAccept */ LEGACY_EXEC
 	// MW-2005-01-28: Fix bug 2412 - accept doesn't clear the result.
@@ -131,35 +131,21 @@ Exec_stat MCAccept::exec(MCExecPoint &ep)
 
 	return ES_NORMAL;
 #endif /* MCAccept */
-
-
-	MCExecContext ctxt(ep);
-	if (port->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_ACCEPT_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-	uint2 port = ep.getuint2();
-	if (message->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_ACCEPT_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-
-	MCNewAutoNameRef t_message;
-	/* UNCHECKED */ ep . copyasnameref(&t_message);
-	
-	if (datagram)
-		MCNetworkExecAcceptDatagramConnectionsOnPort(ctxt, port, *t_message);
+    
+    uinteger_t t_port;
+    if (!ctxt . EvalExprAsUInt(port, EE_ACCEPT_BADEXP, t_port))
+        return;
+    
+    MCNewAutoNameRef t_message;
+    if (!ctxt . EvalExprAsNameRef(message, EE_ACCEPT_BADEXP, &t_message))
+        return;
+    
+    if (datagram)
+		MCNetworkExecAcceptDatagramConnectionsOnPort(ctxt, t_port, *t_message);
 	else if (secure)
-		MCNetworkExecAcceptSecureConnectionsOnPort(ctxt, port, *t_message, secureverify == True);
+		MCNetworkExecAcceptSecureConnectionsOnPort(ctxt, t_port, *t_message, secureverify == True);
 	else
-		MCNetworkExecAcceptConnectionsOnPort(ctxt, port, *t_message);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+		MCNetworkExecAcceptConnectionsOnPort(ctxt, t_port, *t_message);
 }
 
 void MCAccept::compile(MCSyntaxFactoryRef ctxt)
