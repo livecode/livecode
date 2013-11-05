@@ -527,7 +527,12 @@ void *android_font_create(MCStringRef name, uint32_t size, bool bold, bool itali
 	{
         // MM-2012-03-06: Check to see if we have a custom font of the given style and name available
         if (!create_font_face_from_custom_font_name_and_style(name, bold, italic, t_font->typeface))
-			/* UNCHECKED */ MCAndroidTypefaceCreateWithName(MCStringGetCString(name), bold, italic, t_font->typeface);
+        {
+            char *t_name;
+            /* UNCHECKED */ MCStringConvertToCString(name, t_name);
+			/* UNCHECKED */ MCAndroidTypefaceCreateWithName(t_name, bold, italic, t_font->typeface);
+            delete t_name;
+        }
         
 		MCAssert(t_font->typeface != NULL);
 		t_font->size = size;

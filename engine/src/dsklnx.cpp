@@ -2183,10 +2183,10 @@ public:
             if (MCprocesses[index].pid != 0)
                 Kill(MCprocesses[index].pid, SIGKILL);
 
-            return MCDataCreateWithBytesAndRelease((byte_t*)buffer, buffersize, r_data);
+            return MCDataCreateWithBytesAndRelease((byte_t*)buffer, size, r_data);
         }
 
-        if (!MCDataCreateWithBytesAndRelease((byte_t*)buffer, buffersize, r_data))
+        if (!MCDataCreateWithBytesAndRelease((byte_t*)buffer, size, r_data))
             return false;
 
         close(toparent[0]);

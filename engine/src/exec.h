@@ -809,6 +809,11 @@ public:
 	{
 		m_stat = ES_ERROR;
 	}
+	
+	void IgnoreLastError()
+	{
+		m_stat = ES_NORMAL;
+	}
 
 	Exec_stat Catch(uint2 line, uint2 pos);
 

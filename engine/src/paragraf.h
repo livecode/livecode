@@ -254,8 +254,8 @@ public:
 	// Insert the given string into the paragraph at the focusedindex.
 	// Called by any client that does text insertion.
 
-	void finsertnobreak(const MCString& text, bool is_unicode);
-	Boolean finsertnew(const MCString& text, bool is_unicode);
+	void finsertnobreak(MCStringRef text, bool is_unicode);
+	Boolean finsertnew(MCStringRef text, bool is_unicode);
 
 	// Delete the specified chunk at the focusedindex and return the deleted
 	// string in undopgptr.

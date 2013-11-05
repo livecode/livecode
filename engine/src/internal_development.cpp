@@ -602,7 +602,7 @@ void MCInternalObjectListenerMessagePendingListeners(void)
 							else
 							{
 								// MM-2012-11-06: Added resizeControl(Started/Ended) and gradientEdit(Started/Ended) messages.
-								if (t_properties_changed & kMCPropertyChangedMessageTypePropertyChanged)								
+								if (t_properties_changed & kMCPropertyChangedMessageTypePropertyChanged)				
 									t_target -> target -> Get() -> message_with_valueref_args(MCM_property_changed, *t_string);
 								if (t_properties_changed & kMCPropertyChangedMessageTypeResizeControlStarted)								
 									t_target -> target -> Get() -> message_with_valueref_args(MCM_resize_control_started, *t_string);

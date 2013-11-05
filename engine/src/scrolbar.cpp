@@ -193,7 +193,7 @@ Boolean MCScrollbar::kdown(MCStringRef p_string, KeySym key)
 		break;
 	}
 	if (done)
-		message_with_args(MCM_mouse_up, "1");
+		message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 	return done;
 }
 
@@ -327,7 +327,7 @@ Boolean MCScrollbar::mdown(uint2 which)
 		switch (tool)
 		{
 		case T_BROWSE:
-			message_with_args(MCM_mouse_down, "1");
+			message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 			if (flags & F_PROGRESS) //progress bar does not respond to mouse down event
 				return False;
 			if (MCcurtheme && MCcurtheme->iswidgetsupported(winfo.type))
@@ -460,7 +460,7 @@ Boolean MCScrollbar::mdown(uint2 which)
 		}
 		break;
 	case Button2:
-		if (message_with_args(MCM_mouse_down, "2") == ES_NORMAL)
+		if (message_with_valueref_args(MCM_mouse_down, MCSTR("2")) == ES_NORMAL)
 			return True;
 		state |= CS_SCROLL;
 		{
@@ -488,7 +488,7 @@ Boolean MCScrollbar::mdown(uint2 which)
 		}
 		break;
 	case Button3:
-		message_with_args(MCM_mouse_down, "3");
+		message_with_valueref_args(MCM_mouse_down, MCSTR("3"));
 		break;
 	}
 	return True;
@@ -537,9 +537,9 @@ Boolean MCScrollbar::mup(uint2 which)
 					redrawarrow(oldmode);
 			}
 			if (MCU_point_in_rect(rect, mx, my))
-				message_with_args(MCM_mouse_up, "1");
+				message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 			else
-				message_with_args(MCM_mouse_release, "1");
+				message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
 			break;
 		case T_SCROLLBAR:
 		case T_POINTER:
@@ -1147,19 +1147,17 @@ void MCScrollbar::update(real8 newpos, MCNameRef mess)
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 			redrawall();
 		}
-		char *data = NULL;
-		uint4 length = 0;
-		length = MCU_r8tos(data, length, thumbpos, nffw, nftrailing, nfforce);
-		switch (message_with_args(mess, data))
+		MCAutoStringRef t_data;
+		MCU_r8tos(thumbpos, nffw, nftrailing, nfforce, &t_data);
+		switch (message_with_valueref_args(mess, *t_data))
 		{
 		case ES_NOT_HANDLED:
 		case ES_PASS:
 			if (!MCNameIsEqualTo(mess, MCM_scrollbar_drag, kMCCompareCaseless))
-				message_with_args(MCM_scrollbar_drag, data);
+				message_with_valueref_args(MCM_scrollbar_drag, *t_data);
 		default:
 			break;
 		}
-		delete data;
 
 		if (linked_control != NULL)
 			linked_control -> readscrollbars();

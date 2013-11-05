@@ -1267,12 +1267,12 @@ void MCUIDC::siguser()
 	while (MCsiguser1)
 	{
 		MCsiguser1--;
-		MCdefaultstackptr->getcurcard()->message_with_args(MCM_signal, "1");
+		MCdefaultstackptr->getcurcard()->message_with_valueref_args(MCM_signal, MCSTR("1"));
 	}
 	while (MCsiguser2)
 	{
 		MCsiguser2--;
-		MCdefaultstackptr->getcurcard()->message_with_args(MCM_signal, "2");
+		MCdefaultstackptr->getcurcard()->message_with_valueref_args(MCM_signal, MCSTR("2"));
 	}
 }
 

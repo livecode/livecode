@@ -1747,7 +1747,7 @@ MCParagraph *MCParagraph::copyselection()
 
 // MW-2012-02-13: [[ Unicode Block ]] This variant of finsert assumes that the incoming
 //   text contains no line-breaks.
-void MCParagraph::finsertnobreak(const MCString& p_text, bool p_is_unicode)
+void MCParagraph::finsertnobreak(MCStringRef p_text, bool p_is_unicode)
 {
 	const char *t_bytes;
 	uint32_t t_byte_length;
@@ -1758,9 +1758,9 @@ void MCParagraph::finsertnobreak(const MCString& p_text, bool p_is_unicode)
 	if (p_is_unicode)
 	{
 		uint32_t t_used, t_made;
-		t_native_text = new char[p_text . getlength() / 2];
-		MCTextRunnify((const uint2 *)p_text . getstring(), p_text . getlength() / 2, (uint1 *)t_native_text, t_used, t_made);
-		if (t_used == p_text . getlength() / 2 && t_made != 0)
+		t_native_text = new char[MCStringGetLength(p_text) / 2];
+		MCTextRunnify((const uint2 *)MCStringGetCString(p_text), MCStringGetLength(p_text) / 2, (uint1 *)t_native_text, t_used, t_made);
+		if (t_used == MCStringGetLength(p_text) / 2 && t_made != 0)
 		{
 			// We managed to map it all, so we are actually native.
 			t_bytes = t_native_text;
@@ -1770,14 +1770,14 @@ void MCParagraph::finsertnobreak(const MCString& p_text, bool p_is_unicode)
 		else
 		{
 			// We didn't manage to map it all, so keep it all as Unicode.
-			t_bytes = p_text . getstring();
-			t_byte_length = (p_text . getlength() & ~1);
+			t_bytes = MCStringGetCString(p_text);
+			t_byte_length = (MCStringGetLength(p_text) & ~1);
 		}
 	}
 	else
 	{
-		t_bytes = p_text . getstring();
-		t_byte_length = p_text . getlength();
+		t_bytes = MCStringGetCString(p_text);
+		t_byte_length = MCStringGetLength(p_text);
 	}
 
 	// If the byte length exceeds the space we have, truncate it.
@@ -1852,7 +1852,7 @@ void MCParagraph::finsertnobreak(const MCString& p_text, bool p_is_unicode)
 }
 
 // MW-2012-02-13: [[ Block Unicode ]] New implementation of finsert which understands unicodeness.
-Boolean MCParagraph::finsertnew(const MCString& p_text, bool p_is_unicode)
+Boolean MCParagraph::finsertnew(MCStringRef p_text, bool p_is_unicode)
 {
 	Boolean t_need_recompute;
 	t_need_recompute = False;
@@ -1862,8 +1862,8 @@ Boolean MCParagraph::finsertnew(const MCString& p_text, bool p_is_unicode)
 
 	const char *t_start;
 	uint32_t t_length;
-	t_start = p_text . getstring();
-	t_length = p_text . getlength();
+	t_start = MCStringGetCString(p_text);
+	t_length = MCStringGetLength(p_text);
 
 	// Loop through the string, inserting each line into a separate paragraph.
 	while(t_length > 0)
@@ -1874,7 +1874,9 @@ Boolean MCParagraph::finsertnew(const MCString& p_text, bool p_is_unicode)
 		{
 			// We found a line-break, so insert it into the current paragraph and then split at
 			// the end.
-			t_paragraph -> finsertnobreak(MCString(t_start, t_finish - t_start), p_is_unicode);
+            MCAutoStringRef t_text;
+            /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)t_start, t_finish - t_start, &t_text);
+			t_paragraph -> finsertnobreak(*t_text, p_is_unicode);
 			t_paragraph -> split();
 			t_paragraph = t_paragraph -> next();
 
@@ -1889,7 +1891,9 @@ Boolean MCParagraph::finsertnew(const MCString& p_text, bool p_is_unicode)
 		{
 			// We didn't find a line-break, so insert the string into the current paragraph and
 			// we must be done.
-			t_paragraph -> finsertnobreak(MCString(t_start, t_length), p_is_unicode);
+            MCAutoStringRef t_text;
+            /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)t_start, t_length, &t_text);
+			t_paragraph -> finsertnobreak(*t_text, p_is_unicode);
 			t_length = 0;
 		}
 	}
@@ -1908,7 +1912,7 @@ Boolean MCParagraph::finsertnew(const MCString& p_text, bool p_is_unicode)
 			// then set the line's width to 0 to force it to be redrawn
 			uint2 i, l;
 			t_line -> getindex(i, l);
-			if (i < focusedindex + p_text . getlength() && i + l >= focusedindex)
+			if (i < focusedindex + MCStringGetLength(p_text) && i + l >= focusedindex)
 				t_line -> setwidth(0);
 			
 			t_line = t_line -> next();

@@ -362,9 +362,22 @@ static char *eval_expr(const char *arg1, const char *arg2,
 		*retval = xresFail;
 		return NULL;
 	}
-	MCECptr->GetEP().setsvalue(arg1);
-	*retval = trans_stat(MCECptr->GetHandler()->eval(MCECptr->GetEP()));
-	return MCECptr->GetEP().getsvalue().clone();
+	
+	MCAutoStringRef t_string;
+	MCAutoValueRef t_result;
+	/* UNCHECKED */ MCStringCreateWithCString(arg1, &t_string);
+	MCECptr->GetHandler()->eval(*MCECptr, *t_string, &t_result);
+	
+	if (MCECptr->HasError())
+	{
+		*retval = xresFail;
+		return NULL;
+	}
+	
+	MCAutoStringRef t_return;
+	/* UNCHECKED */ MCECptr->ConvertToString(*t_result, &t_return);
+	*retval = xresSucc;
+	return MCStringGetOldString(*t_return).clone();
 }
 
 static char *get_global(const char *arg1, const char *arg2,

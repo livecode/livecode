@@ -2115,17 +2115,14 @@ bool revandroid_loadExternalLibrary(MCStringRef p_external, MCStringRef &r_path)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCAndroidGetBuildInfo(const char *p_key, char *&r_value)
+bool MCAndroidGetBuildInfo(MCStringRef p_key, MCStringRef& r_value)
 {
-	char *t_value;
-	t_value = NULL;
-	MCAndroidEngineCall("getBuildInfo", "ss", &t_value, p_key);
+	MCAndroidEngineCall("getBuildInfo", "xx", r_value, p_key);
 
-	if (t_value == NULL)
+	if (r_value == nil)
 		return false;
 
-	r_value = t_value;
-	return true;
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2149,7 +2146,7 @@ static const char *s_build_keys[] = {
 	"VERSION.INCREMENTAL",
 };
 
-static char **s_build_info = NULL;
+static MCStringRef *s_build_info = NULL;
 
 MCAndroidDeviceConfiguration s_device_configuration = {
 	false,
@@ -2162,7 +2159,7 @@ bool MCAndroidInitBuildInfo()
 		return true;
 
 	bool t_success = true;
-	char **t_build_info = NULL;
+	MCStringRef *t_build_info = NULL;
 
 	uint32_t t_key_count;
 	t_key_count = kMCBuildInfoKeyCount;
@@ -2172,7 +2169,7 @@ bool MCAndroidInitBuildInfo()
 
 	for (uint32_t i = 0; i < t_key_count && t_success; i++)
 	{
-		t_success = MCAndroidGetBuildInfo(s_build_keys[i], t_build_info[i]);
+		t_success = MCAndroidGetBuildInfo(MCSTR(s_build_keys[i]), t_build_info[i]);
 	}
 
 	if (t_success)
@@ -2183,7 +2180,7 @@ bool MCAndroidInitBuildInfo()
 		{
 			for (uint32_t i = 0; i < t_key_count; i++)
 			{
-				MCCStringFree(t_build_info[i]);
+				MCValueRelease(t_build_info[i]);
 			}
 			MCMemoryDeleteArray(t_build_info);
 		}
@@ -2192,36 +2189,38 @@ bool MCAndroidInitBuildInfo()
 	return t_success;
 }
 
+void MCAndroidFinalizeBuildInfo()
+{
+    if (s_build_info != NULL)
+    {
+        uint32_t t_count;
+        t_count = kMCBuildInfoKeyCount;
+        for (uint32_t i = 0; i < t_count; i++)
+        {
+            MCValueRelease(s_build_info[i]);
+        }
+        MCMemoryDeleteArray(s_build_info);
+    }        
+}
+
 bool MCAndroidSignatureMatch(const char *p_signature)
 {
-	const char *t_component = p_signature;
-	uint32_t t_component_length = 0;
-	uint32_t t_component_index = 0;
-
-	while (t_component != NULL && t_component_index < kMCBuildInfoKeyCount)
+    MCAutoStringRef t_signature;
+    MCAutoArrayRef t_signature_array;
+    /* UNCHECKED */ MCStringCreateWithCString(p_signature, &t_signature);
+    /* UNCHECKED */ MCStringSplit(*t_signature, MCSTR("|"), nil, kMCCompareExact, &t_signature_array);
+    uindex_t t_count;
+	t_count = MCArrayGetCount(*t_signature_array);
+	for (uindex_t i = 0; i < t_count; i++)
 	{
-		if (!MCCStringFirstIndexOf(t_component, '|', t_component_length))
-			t_component_length = MCCStringLength(t_component);
-
-		if (t_component_length > 0)
-		{
-			MCLog("testing component (%.*s)", t_component_length, t_component);
-			if (MCCStringLength(s_build_info[t_component_index]) != t_component_length ||
-			!MCCStringEqualSubstringCaseless(s_build_info[t_component_index], t_component, t_component_length))
-			{
-			return false;
-			}
-		}
-
-		t_component_index++;
-		t_component += t_component_length;
-		if (t_component[0] == '\0')
-			t_component = NULL;
-		else
-			t_component++;
-	}
-
-	return true;
+		MCValueRef t_val;
+		/* UNCHECKED */ MCArrayFetchValueAtIndex(*t_signature_array, i, t_val);
+        MCStringRef t_val_str = (MCStringRef)t_val;
+        MCLog("testing component (%s)", MCStringGetCString(t_val_str));
+        if (!MCStringIsEqualTo(t_val_str, s_build_info[i], kMCCompareCaseless))
+            return false;
+    }
+    return true;
 }
 
 bool MCAndroidSetOrientationMap(int p_map[4], const char *p_mapping)
@@ -2281,7 +2280,7 @@ bool MCAndroidLoadDeviceConfiguration()
 		t_success = MCAndroidInitBuildInfo();
 
 	if (t_success)
-		t_success = MCStringFormat(&t_config_file_path, "%s/lc_device_config.txt", MCStringGetCString(MCcmd));
+		t_success = MCStringFormat(&t_config_file_path, "%@/lc_device_config.txt", MCcmd);
 
 	if (t_success)
 	{

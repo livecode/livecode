@@ -501,7 +501,7 @@ void MCScreenDC::processtaskbarnotify(HWND hwnd, WPARAM wparam, LPARAM lparam)
 					MCExecPoint ep;
 					build_pick_string(ep, t_menu, t_command);
 					if (MCdefaultstackptr != NULL)
-						MCdefaultstackptr -> getcurcard() -> message_with_args(MCM_status_icon_menu_pick, ep . getsvalue());
+						MCdefaultstackptr -> getcurcard() -> message_with_valueref_args(MCM_status_icon_menu_pick, ep . getvalueref());
 				}
 			}
 		}

@@ -446,32 +446,32 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 	case kMCEventTypeMotion:
 		{
 			MCNameRef t_message;
-			const char *t_motion;
+			MCStringRef t_motion;
 			switch(t_event -> motion . type)
 			{
 				case kMCEventMotionShakeBegan:
-					t_motion = "shake";
+					t_motion = MCSTR("shake");
 					t_message = MCM_motion_start;
 					break;
 				case kMCEventMotionShakeEnded:
-					t_motion = "shake";
+					t_motion = MCSTR("shake");
 					t_message = MCM_motion_end;
 					break;
 				case kMCEventMotionShakeCancelled:
-					t_motion = "shake";
+					t_motion = MCSTR("shake");
 					t_message = MCM_motion_release;
 					break;
 			}
 			
-			MCdefaultstackptr -> getcurcard() -> message_with_args(t_message, t_motion);
+			MCdefaultstackptr -> getcurcard() -> message_with_valueref_args(t_message, t_motion);
 		}
 		break;
 		
 	case kMCEventTypeAcceleration:
 		{
-			char t_value[64 * 4 + 4];
-			sprintf(t_value, "%.6f,%.6f,%.6f,%f", t_event -> acceleration . x, t_event -> acceleration . y, t_event -> acceleration . z, t_event -> acceleration . t);
-			MCdefaultstackptr -> getcurcard() -> message_with_args(MCM_acceleration_changed, t_value);
+			MCAutoStringRef t_value;
+            /* UNCHECKED */ MCStringFormat(&t_value, "%.6f,%.6f,%.6f,%f", t_event -> acceleration . x, t_event -> acceleration . y, t_event -> acceleration . z, t_event -> acceleration . t);
+			MCdefaultstackptr -> getcurcard() -> message_with_valueref_args(MCM_acceleration_changed, *t_value);
 		}
 		break;
 		

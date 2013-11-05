@@ -853,17 +853,7 @@ bool MCSystemFileGetDataProtection(MCStringRef p_path, MCStringRef& r_protection
 
 bool MCSystemBuildInfo(MCStringRef p_key, MCStringRef& r_value)
 {
-    char* t_value;
-    if (MCAndroidGetBuildInfo(MCStringGetCString(p_key), t_value))
-    {
-        if(MCStringCreateWithCString(t_value, r_value))
-        {
-            MCCStringFree(t_value);
-            return true;
-        }
-    }
-    
-    return false;
+    return MCAndroidGetBuildInfo(p_key, r_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

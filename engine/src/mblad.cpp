@@ -143,10 +143,10 @@ public:
             switch(m_event)
             {
                 case kMCAdEventTypeReceive:
-                    MCdefaultstackptr->getcurcard()->message_with_args(MCM_ad_loaded, MCfalsemcstring);
+                    MCdefaultstackptr->getcurcard()->message_with_valueref_args(MCM_ad_loaded, kMCFalse);
                     break;
                 case kMCAdEventTypeReceiveDefault:
-                    MCdefaultstackptr->getcurcard()->message_with_args(MCM_ad_loaded, MCtruemcstring);
+                    MCdefaultstackptr->getcurcard()->message_with_valueref_args(MCM_ad_loaded, kMCTrue);
                     break;
                 case kMCAdEventTypeReceiveFailed:
                     MCdefaultstackptr->getcurcard()->message(MCM_ad_load_failed);

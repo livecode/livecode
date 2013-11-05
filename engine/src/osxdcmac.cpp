@@ -596,8 +596,10 @@ static void domenu(short menu, short item)
 			}
 			if (bptr != NULL)
 			{
+				MCAutoStringRef t_menupick;
+				/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)menupick, menupicklen, &t_menupick);
 				bptr->setmenuhistoryprop(item);
-				bptr->message_with_args(MCM_menu_pick,MCString(menupick,menupicklen));
+				bptr->message_with_valueref_args(MCM_menu_pick, *t_menupick);
 			}
 			delete menupick;
 		}
@@ -899,7 +901,7 @@ Boolean MCScreenDC::dispatchevent(EventRecord &event, Boolean dispatch,
 						MCGroup *mb = MCmenubar != NULL ? MCmenubar : MCdefaultmenubar;
 						if (mb != NULL)
 						{
-							mb->message_with_args(MCM_mouse_down, "1");
+							mb->message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 						}
 						long mChoice = MenuSelect(event.where);
 						if (mChoice != 0)

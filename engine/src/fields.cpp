@@ -711,12 +711,14 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 	// MW-2012-02-23: [[ PutUnicode ]] Pass through the encoding to finsertnew.
 	if (s.getlength())
 	{
+        MCAutoStringRef t_s;
+        /* UNCHECKED */ MCStringCreateWithOldString(s, &t_s);
 		// MW-2013-10-24: [[ FasterField ]] If finsertnew() returns true then multiple
 		//   paragraphs were created, so we've affected many.
-		if (pgptr->finsertnew(s, p_as_unicode))
+		if (pgptr->finsertnew(*t_s, p_as_unicode))
 			t_affect_many = true;
 	}
-	
+
 	if (opened && fptr == fdata)
 	{
 		oldsi += s.getlength();

@@ -408,8 +408,8 @@ bool MCTransferData::Fetch(MCTransferType p_type, MCDataRef &r_data)
 	if (p_type == TRANSFER_TYPE_TEXT && t_current_type == TRANSFER_TYPE_UNICODE_TEXT)
 	{
 		MCAutoStringRef t_text;
-		if (!MCStringDecode(*t_current_data, kMCStringEncodingNative, false, &t_text) ||
-			!MCStringEncode(*t_text, kMCStringEncodingUTF16, false, r_data))
+		if (!MCStringDecode(*t_current_data, kMCStringEncodingUTF16, false, &t_text) ||
+			!MCStringEncode(*t_text, kMCStringEncodingNative, false, r_data))
 			return false;
 		return true;
 	}
@@ -417,8 +417,8 @@ bool MCTransferData::Fetch(MCTransferType p_type, MCDataRef &r_data)
 	if (p_type == TRANSFER_TYPE_UNICODE_TEXT && (t_current_type == TRANSFER_TYPE_TEXT || t_current_type == TRANSFER_TYPE_FILES))
 	{
 		MCAutoStringRef t_text;
-		if (!MCStringDecode(*t_current_data, kMCStringEncodingUTF16, false, &t_text) ||
-			!MCStringEncode(*t_text, kMCStringEncodingNative, false, r_data))
+		if (!MCStringDecode(*t_current_data, kMCStringEncodingNative, false, &t_text) ||
+			!MCStringEncode(*t_text, kMCStringEncodingUTF16, false, r_data))
 			return false;
 		return true;
 	}
