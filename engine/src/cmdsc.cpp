@@ -2371,7 +2371,7 @@ Parse_stat MCUnload::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCUnload::exec(MCExecPoint &ep)
+void MCUnload::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCUnload */ LEGACY_EXEC
 	if (url->eval(ep) != ES_NORMAL)
@@ -2383,23 +2383,11 @@ Exec_stat MCUnload::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCUnload */
 
-
-	MCExecContext ctxt(ep);
-
-	if (url->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_LOAD_BADURLEXP, line, pos);
-		return ES_ERROR;
-	}	
-
-	MCAutoStringRef t_url;
-	/* UNCHECKED */ ep . copyasstringref(&t_url);
-	MCNetworkExecUnloadUrl(ctxt, *t_url);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    MCAutoStringRef t_url;
+    if (!ctxt . EvalOptionalExprAsStringRef(url, kMCEmptyString, EE_LOAD_BADURLEXP, &t_url))
+        return;
+    
+    MCNetworkExecUnloadUrl(ctxt, *t_url);
 }
 
 void MCUnload::compile(MCSyntaxFactoryRef ctxt)
