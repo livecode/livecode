@@ -290,7 +290,7 @@ Parse_stat MCCancel::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCCancel::exec(MCExecPoint &ep)
+void MCCancel::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCCancel */ LEGACY_EXEC
 if (id == NULL)
@@ -315,28 +315,16 @@ if (id == NULL)
 	return ES_NORMAL;
 #endif /* MCCancel */
 
-	MCExecContext ctxt(ep);
-
-	if (id == NULL)
+    if (id == NULL)
 		MCPrintingExecCancelPrinting(ctxt);
 	
 	else
 	{
-		if (id->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-		{
-			MCeerror->add(EE_CANCEL_IDNAN, line, pos);
-			return ES_ERROR;
-		}
-
-		integer_t t_id;
-		t_id = ep.getuint4();
-		MCEngineExecCancelMessage(ctxt, t_id);
-	}
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+        integer_t t_id;
+        if (!ctxt . EvalExprAsInt(id, EE_CANCEL_IDNAN, t_id))
+            return;
+        MCEngineExecCancelMessage(ctxt, t_id);
+    }
 }
 
 void MCCancel::compile(MCSyntaxFactoryRef ctxt)
