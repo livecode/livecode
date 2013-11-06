@@ -2850,7 +2850,7 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCOpen::exec(MCExecPoint &ep)
+void MCOpen::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCOpen */ LEGACY_EXEC
 if (go != NULL)
@@ -3033,11 +3033,8 @@ if (go != NULL)
 	return ES_NORMAL;
 #endif /* MCOpen */
 
-
-	MCExecContext ctxt(ep);
-
 	if (go != NULL)
-		return go->exec(ep);
+        return go->exec_ctxt(ctxt);
 
 	MCresult->clear(False);
 
@@ -3046,25 +3043,17 @@ if (go != NULL)
 		// Handle custom printer formt
 		if (destination != NULL)
 		{
-			if (fname -> eval(ep) != ES_NORMAL)
-			{
-				MCeerror -> add(EE_OPEN_BADNAME, line, pos);
-				return ES_ERROR;
-			}
+            MCAutoStringRef t_filename;
+            MCAutoArrayRef t_options;
+            ctxt . EvalExprAsStringRef(fname, EE_OPEN_BADNAME, &t_filename);
 
-			MCAutoStringRef t_filename;
-			/* UNCHECKED */ ep . copyasstringref(&t_filename);
+            if (ctxt . HasError())
+                return;
 
-			if (options != nil && options -> eval(ep) != ES_NORMAL)
-			{
-				MCeerror -> add(EE_OPEN_BADOPTIONS, line, pos);
-				return ES_ERROR;
-			}
+            ctxt . EvalOptionalExprAsNullableArrayRef(options, EE_OPEN_BADOPTIONS, &t_options);
 
-			MCAutoArrayRef t_options;
-			if (ep . isarray())
-				if (!ep . copyasarrayref(&t_options))
-					return ES_ERROR;
+            if (ctxt . HasError())
+                return;
 
 			MCAutoStringRef t_dest;
 			/* UNCHECKED */ MCStringCreateWithCString(destination, &t_dest);
@@ -3083,15 +3072,13 @@ if (go != NULL)
 	}
 	else
 	{
-		if (fname->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_OPEN_BADNAME, line, pos);
-			return ES_ERROR;
-		}
-		
-		MCNewAutoNameRef t_name;
-		/* UNCHECKED */ ep . copyasnameref(&t_name);
-		MCNewAutoNameRef t_message_name;
+        MCNewAutoNameRef t_name;
+        MCNewAutoNameRef t_message_name;
+
+        ctxt . EvalExprAsNameRef(fname, EE_OPEN_BADNAME, &t_name);
+
+        if (ctxt . HasError())
+            return;
 
 		switch (arg)
 		{
@@ -3108,15 +3095,11 @@ if (go != NULL)
 				MCFilesExecOpenProcess(ctxt, *t_name, mode, textmode == True);
 			break;
 		case OA_SOCKET:
-			if (message != NULL)
-			{
-				if (message->eval(ep) != ES_NORMAL)
-				{
-					MCeerror->add(EE_OPEN_BADMESSAGE, line, pos);
-					return ES_ERROR;
-				}
-				/* UNCHECKED */ ep . copyasnameref(&t_message_name);
-			}
+            ctxt . EvalOptionalExprAsNullableNameRef(message, EE_OPEN_BADMESSAGE, &t_message_name);
+
+            if (ctxt . HasError())
+                return;
+
 			if (datagram)
 				MCNetworkExecOpenDatagramSocket(ctxt, *t_name, *t_message_name);
 			else if (secure)
@@ -3129,9 +3112,9 @@ if (go != NULL)
 		}
 	}
 	if (!ctxt . HasError())
-		return ES_NORMAL;
+        return;
 
-	return ctxt . Catch(line, pos);
+    ctxt . Catch(line, pos);
 }
 
 void MCOpen::compile(MCSyntaxFactoryRef ctxt)
