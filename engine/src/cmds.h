@@ -293,7 +293,7 @@ class MCReset : public MCStatement
 	Reset_type which;
 public:
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -744,7 +744,7 @@ public:
 	}
 	virtual ~MCPasteCmd();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -815,7 +815,7 @@ public:
 	}
 	virtual ~MCRename();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -839,7 +839,7 @@ public:
 class MCRevert : public MCStatement
 {
 public:
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -894,7 +894,7 @@ public:
 class MCUndoCmd : public MCStatement
 {
 public:
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -919,7 +919,7 @@ public:
 	}
 	virtual ~MCAccept();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -941,7 +941,7 @@ public:
 class MCBreakPoint : public MCStatement
 {
 public:
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -955,7 +955,7 @@ public:
 	}
 	virtual ~MCCancel();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -974,7 +974,7 @@ public:
 	}
 	virtual ~MCClickCmd();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -995,7 +995,7 @@ public:
 	}
 	virtual ~MCDrag();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -1191,7 +1191,7 @@ public:
 	}
 	virtual ~MCReply();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -1210,7 +1210,7 @@ public:
 	}
 	virtual ~MCRequest();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -1272,7 +1272,7 @@ public:
 	}
 	virtual ~MCType();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -2063,7 +2063,7 @@ public:
 	
 	virtual ~MCEcho(void);
 	virtual Parse_stat parse(MCScriptPoint& sp);
-	virtual Exec_stat exec(MCExecPoint& ep);
+	virtual void exec_ctxt(MCExecContext& ctxt);
 	virtual void compile(MCSyntaxFactoryRef);
 
 private:

@@ -2678,7 +2678,7 @@ Parse_stat MCPasteCmd::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCPasteCmd::exec(MCExecPoint &ep)
+void MCPasteCmd::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCPasteCmd */ LEGACY_EXEC
 MCObject *optr;
@@ -2694,13 +2694,9 @@ MCObject *optr;
 #endif /* MCPasteCmd */
 
 
-	MCExecContext ctxt(ep, it);
+	ctxt . SetIt(it);
 	MCPasteboardExecPaste(ctxt);
-	//it->set(ep);
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    return;
 }
 
 void MCPasteCmd::compile(MCSyntaxFactoryRef ctxt)
@@ -3156,7 +3152,7 @@ Parse_stat MCRename::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCRename::exec(MCExecPoint &ep)
+void MCRename::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCRename */ LEGACY_EXEC
  if (source->eval(ep) != ES_NORMAL)
@@ -3183,32 +3179,15 @@ Exec_stat MCRename::exec(MCExecPoint &ep)
 	return ES_NORMAL; 
 #endif /* MCRename */
 
-
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add
-		(EE_RENAME_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	MCAutoStringRef t_from;
-	/* UNCHECKED */ ep . copyasstringref(&t_from);
-
-	if (dest->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add
-		(EE_RENAME_BADDEST, line, pos);
-		return ES_ERROR;
-	}
-
-	MCAutoStringRef t_to;
-	/* UNCHECKED */ ep.copyasstringref(&t_to);
-	MCExecContext ctxt(ep);
-	MCFilesExecRename(ctxt, *t_from, *t_to);
-
-	if (!ctxt.HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    MCAutoStringRef t_from;
+    if (!ctxt . EvalExprAsStringRef(source, EE_RENAME_BADSOURCE, &t_from))
+        return;
+    
+    MCAutoStringRef t_to;
+    if (!ctxt . EvalExprAsStringRef(dest, EE_RENAME_BADDEST, &t_to))
+        return;
+    
+    MCFilesExecRename(ctxt, *t_from, *t_to);
 }
 
 void MCRename::compile(MCSyntaxFactoryRef ctxt)
@@ -3453,7 +3432,7 @@ void MCReplace::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndStatement(ctxt);
 }
 
-Exec_stat MCRevert::exec(MCExecPoint &ep)
+void MCRevert::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCRevert */ LEGACY_EXEC
 	if (MCtopstackptr != NULL)
@@ -3486,14 +3465,7 @@ Exec_stat MCRevert::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCRevert */
 
-
-	MCExecContext ctxt(ep);
 	MCInterfaceExecRevert(ctxt);
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCRevert::compile(MCSyntaxFactoryRef ctxt)
@@ -3977,21 +3949,15 @@ void MCSelect::compile(MCSyntaxFactoryRef ctxt)
 	}
 }
 
-Exec_stat MCUndoCmd::exec(MCExecPoint &ep)
+void MCUndoCmd::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCUndoCmd */ LEGACY_EXEC
 MCundos->undo();
 	return ES_NORMAL;
 #endif /* MCUndoCmd */
 
-	
-	MCExecContext ctxt(ep);
 	MCInterfaceExecUndo(ctxt);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    return;
 }
 
 void MCUndoCmd::compile(MCSyntaxFactoryRef ctxt)
