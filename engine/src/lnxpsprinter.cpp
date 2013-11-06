@@ -33,6 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "region.h"
 #include "osspec.h"
+#include "variable.h"
  
 #include "card.h"
 #include "mcerror.h"

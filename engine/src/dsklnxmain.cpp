@@ -28,6 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "globals.h"
 #include "util.h"
+#include "variable.h"
 
 #include <locale.h>
 #include <iconv.h>

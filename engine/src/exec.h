@@ -1136,7 +1136,8 @@ public:
     
     bool EvalExprAsStringRef(MCExpression *expr, Exec_errors error, MCStringRef& r_value);
 	bool EvalOptionalExprAsStringRef(MCExpression *expr, MCStringRef default_value, Exec_errors error, MCStringRef& r_value);
-    
+    bool EvalOptionalExprAsNullableStringRef(MCExpression *p_expr, Exec_errors p_error, MCStringRef& r_value);
+
     bool EvalExprAsNameRef(MCExpression *expr, Exec_errors error, MCNameRef& r_value);
 	bool EvalOptionalExprAsNameRef(MCExpression *expr, MCNameRef default_value, Exec_errors error, MCNameRef& r_value);
     
@@ -1165,13 +1166,13 @@ public:
 	bool EvalOptionalExprAsChar(MCExpression *expr, char_t default_value, Exec_errors error, char_t& r_char);
     
     bool EvalExprAsPoint(MCExpression *expr, Exec_errors error, MCPoint& r_point);
-	bool EvalOptionalExprAsPoint(MCExpression *expr, MCPoint default_value, Exec_errors error, MCPoint& r_point);
+    bool EvalOptionalExprAsPoint(MCExpression *expr, MCPoint *default_value, Exec_errors error, MCPoint *&r_point);
     
     bool EvalExprAsColor(MCExpression *expr, Exec_errors error, MCColor& r_color);
-	bool EvalOptionalExprAsColor(MCExpression *expr, MCColor default_value, Exec_errors error, MCColor& r_color);
+    bool EvalOptionalExprAsColor(MCExpression *expr, MCColor* default_value, Exec_errors error, MCColor*& r_color);
 	
 	bool EvalExprAsRectangle(MCExpression *expr, Exec_errors error, MCRectangle& r_rectangle);
-	bool EvalOptionalExprAsRectangle(MCExpression *expr, MCRectangle default_value, Exec_errors error, MCRectangle& r_rectangle);
+    bool EvalOptionalExprAsRectangle(MCExpression *expr, MCRectangle *default_value, Exec_errors error, MCRectangle *&r_rectangle);
 	
 private:
 	MCExecPoint& m_ep;
