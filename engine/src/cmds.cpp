@@ -293,7 +293,7 @@ Parse_stat MCConvert::parsedtformat(MCScriptPoint &sp, Convert_form &firstform,
 	return PS_NORMAL;
 }
 
-Exec_stat MCConvert::exec(MCExecPoint &ep)
+void MCConvert::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCConvert */ LEGACY_EXEC
 	MCresult->clear(False);
@@ -334,44 +334,24 @@ Exec_stat MCConvert::exec(MCExecPoint &ep)
 	return ES_NORMAL; 
 #endif /* MCConvert */
 
-
-	MCExecContext ctxt(ep, it);
-	MCAutoStringRef t_input;
+    ctxt . SetIt(it);
+    MCAutoStringRef t_input;
 	MCAutoStringRef t_output;
 	if (container != NULL)
-	{
-		if (container->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_CONVERT_CANTGET, line, pos);
-			return ES_ERROR;
-		}
-	}
+		container->eval(ctxt, &t_input);		
 	else
 	{
-		if (source->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_CONVERT_CANTGET, line, pos);
-			return ES_ERROR;
-		}
+        if (!ctxt . EvalExprAsStringRef(source, EE_CONVERT_CANTGET, &t_input))
+            return;
 	}
-	/* UNCHECKED */ ep . copyasstringref(&t_input);
-
+    
 	if (it != NULL)
 		MCDateTimeExecConvertIntoIt(ctxt, *t_input, fform, fsform, pform, sform, &t_output);
 	else
 	{
 		MCDateTimeExecConvert(ctxt, *t_input, fform, fsform, pform, sform, &t_output);
-		if (container -> set(ep, PT_INTO, *t_output) != ES_NORMAL)
-		{
-			MCeerror->add(EE_CONVERT_CANTSET, line, pos);
-			return ES_ERROR;
-		}
+		container -> set(ctxt, PT_INTO, *t_output);
 	}
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCConvert::compile(MCSyntaxFactoryRef ctxt)

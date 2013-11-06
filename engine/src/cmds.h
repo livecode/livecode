@@ -62,7 +62,7 @@ public:
 	}
 	virtual ~MCConvert();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 	Parse_stat parsedtformat(MCScriptPoint &sp, Convert_form &firstform,
 	                         Convert_form &secondform);
