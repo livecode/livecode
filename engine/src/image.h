@@ -289,6 +289,9 @@ class MCImage : public MCControl
 	friend class MCHcbmap;
 	
 	MCImageRep *m_rep;
+	// IM-2013-11-05: [[ RefactorGraphics ]] Resampled image rep used to store cached
+	// best-quality scaled image
+	MCResampledImageRep *m_resampled_rep;
 	MCImageFrame *m_locked_frame;
 	MCImageBitmap *m_transformed_bitmap;
 	uint32_t m_image_opened;
