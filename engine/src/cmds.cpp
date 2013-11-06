@@ -2522,14 +2522,17 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
 	{
 		MCerrorlock++;
         of->getoptionalobj(ctxt, t_object, False);
-        //Program crashes at this point, message says "Program received signal : EXC_BAD_ACCESS "
 		if (t_object . object == nil || t_object . object->gettype() == CT_BUTTON)
 		{
 			MCerrorlock--;
             of -> eval(ctxt, &t_target);
+            if (ctxt . HasError())
+                return;
 		}
 		else
+        {
 			MCerrorlock--;
+        }
 		if (t_object . object != nil && t_object . object->gettype() > CT_GROUP && chunktype <= CT_GROUP)
 			chunktype = CT_LINE;
 	}
