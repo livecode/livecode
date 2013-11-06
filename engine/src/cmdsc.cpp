@@ -2223,7 +2223,7 @@ if (MCsecuremode & MC_SECUREMODE_PROCESS)
 
     MCNewAutoNameRef t_app;
 		
-    if (!ctxt. EvalOptionalExprAsNameRef(app, kMCEmptyName, EE_LAUNCH_BADAPPEXP, &t_app))
+    if (!ctxt. EvalOptionalExprAsNullableNameRef(app, EE_LAUNCH_BADAPPEXP, &t_app))
         return;
 	
     MCAutoStringRef t_document;
@@ -2326,7 +2326,7 @@ void MCLoad::exec_ctxt(MCExecContext& ctxt)
 
     MCNewAutoNameRef t_message;
     
-    if (!ctxt . EvalOptionalExprAsNameRef(message, kMCEmptyName, EE_LOAD_BADMESSAGEEXP, &t_message))
+    if (!ctxt . EvalOptionalExprAsNullableNameRef(message, EE_LOAD_BADMESSAGEEXP, &t_message))
             return;
 	
     MCAutoStringRef t_url;
