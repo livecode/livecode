@@ -675,7 +675,7 @@ MCresult->clear(False);
             return;
 
 		MCAutoStringRef t_passphrase;
-        ctxt . EvalOptionalExprAsStringRef(rsa_passphrase, kMCEmptyString, EE_OPEN_BADNAME, &t_passphrase);
+        ctxt . EvalOptionalExprAsNullableStringRef(rsa_passphrase, EE_OPEN_BADNAME, &t_passphrase);
 
         if (ctxt . HasError())
             return;
@@ -715,12 +715,12 @@ MCresult->clear(False);
 		MCAutoStringRef t_iv;
 		MCAutoStringRef t_salt;
 
-        ctxt . EvalOptionalExprAsStringRef(salt, kMCEmptyString, EE_OPEN_BADNAME, &t_salt);
+        ctxt . EvalOptionalExprAsNullableStringRef(salt, EE_OPEN_BADNAME, &t_salt);
 
         if (ctxt . HasError())
             return;
 
-        ctxt . EvalOptionalExprAsStringRef(iv, kMCEmptyString, EE_OPEN_BADNAME, &t_iv);
+        ctxt . EvalOptionalExprAsNullableStringRef(iv, EE_OPEN_BADNAME, &t_iv);
 
         if (ctxt . HasError())
             return;
@@ -1365,13 +1365,13 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 
 	MCAutoStringRef t_return_data;
 	MCAutoStringRef t_filename;
-    ctxt . EvalOptionalExprAsStringRef(fname, kMCEmptyString, EE_EXPORT_BADNAME, &t_filename);
+    ctxt . EvalOptionalExprNullableAsStringRef(fname, EE_EXPORT_BADNAME, &t_filename);
 
     if (ctxt . HasError())
         return;
 
 	MCAutoStringRef t_mask_filename;
-    ctxt . EvalOptionalExprAsStringRef(mname, kMCEmptyString, EE_EXPORT_BADNAME, &t_mask_filename);
+    ctxt . EvalOptionalExprAsNullableStringRef(mname, EE_EXPORT_BADNAME, &t_mask_filename);
 
     if (ctxt . HasError())
         return;
@@ -1456,7 +1456,7 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
             if (!ctxt . HasError())
             {
 				MCAutoStringRef t_display;
-                ctxt . EvalOptionalExprAsStringRef(exsdisplay, kMCEmptyString, EE_EXPORT_NOSELECTED, &t_display);
+                ctxt . EvalOptionalExprAsNullableStringRef(exsdisplay, EE_EXPORT_NOSELECTED, &t_display);
 
                 if (!ctxt . HasError())
                 {
@@ -2365,7 +2365,7 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
                 return;
 
 			MCAutoStringRef t_display;
-            ctxt . EvalOptionalExprAsStringRef(dname, kMCEmptyString, EE_IMPORT_BADNAME, &t_display);
+            ctxt . EvalOptionalExprAsNullableStringRef(dname, EE_IMPORT_BADNAME, &t_display);
 
             if (ctxt . HasError())
                 return;
@@ -2378,7 +2378,7 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 	else
 	{
 		MCAutoStringRef t_filename;
-        ctxt . EvalOptionalExprAsStringRef(fname, kMCEmptyString, EE_IMPORT_BADNAME, &t_filename);
+        ctxt . EvalOptionalExprAsNullableStringRef(fname, EE_IMPORT_BADNAME, &t_filename);
 
         if (ctxt . HasError())
             return;
@@ -2413,7 +2413,7 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 					}
 				}
 				MCAutoStringRef t_mask_filename;
-                ctxt . EvalOptionalExprAsStringRef(mname, kMCEmptyString, EE_IMPORT_BADNAME, &t_mask_filename);
+                ctxt . EvalOptionalExprAsNullableStringRef(mname, EE_IMPORT_BADNAME, &t_mask_filename);
 
 				MCInterfaceExecImportImage(ctxt, *t_filename, *t_mask_filename, parent);
 			}
