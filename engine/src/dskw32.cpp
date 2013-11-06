@@ -536,6 +536,7 @@ bool MCS_getlongfilepath(MCStringRef p_short_path, MCStringRef& r_long_path)
 	}
 
 	r_long_path = MCValueRetain(p_short_path);
+	return true;
 }
 
 bool MCS_getcurdir_native(MCStringRef& r_path)
@@ -560,9 +561,12 @@ bool MCS_getcurdir_native(MCStringRef& r_path)
 
 bool MCS_native_path_exists(MCStringRef p_path, bool p_is_file)
 {
+	MCAutoStringRefAsWString t_path_wstr;
+	/* UNCHECKED */ t_path_wstr.Lock(p_path);
+	
 	// MW-2010-10-22: [[ Bug 8259 ]] Use a proper Win32 API function - otherwise network shares don't work.
 	DWORD t_attrs;
-	t_attrs = GetFileAttributesW(MCStringGetCharPtr(p_path));
+	t_attrs = GetFileAttributesW(*t_path_wstr);
 
 	if (t_attrs == INVALID_FILE_ATTRIBUTES)
 		return false;
@@ -641,7 +645,11 @@ bool MCS_path_append(MCStringRef p_base, unichar_t p_separator, MCStringRef p_co
 		!MCStringAppendChars(*t_path, &p_separator, 1))
 		return false;
     
-	return MCStringAppend(*t_path, p_component) && MCStringCopy(*t_path, r_path);
+	if (!MCStringAppend(*t_path, p_component))
+		return false;
+	
+	r_path = MCValueRetain(*t_path);
+	return true;
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -748,10 +756,13 @@ bool dns_servers_from_registry(MCListRef& r_list)
 
 static void MCS_do_launch(MCStringRef p_document)
 {
+	MCAutoStringRefAsWString t_document_wstr;
+	/* UNCHECKED */ t_document_wstr.Lock(p_document);
+	
 	// MW-2011-02-01: [[ Bug 9332 ]] Adjust the 'show' hint to normal to see if that makes
 	//   things always appear on top...
 	int t_result;
-	t_result = (int)ShellExecuteW(NULL, L"open", MCStringGetCharPtr(p_document), NULL, NULL, SW_SHOWNORMAL);
+	t_result = (int)ShellExecuteW(NULL, L"open", *t_document_wstr, NULL, NULL, SW_SHOWNORMAL);
 
 	if (t_result < 32)
 	{
@@ -792,10 +803,13 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
 {
     virtual bool MCISendString(MCStringRef p_command, MCStringRef& r_result, bool& r_error)
     {
-        DWORD t_error_code;
+        MCAutoStringRefAsWString t_command_wstr;
+		/* UNCHECKED */ t_command_wstr.Lock(p_command);
+		
+		DWORD t_error_code;
         WCHAR t_buffer[256];
         t_buffer[0] = '\0';
-        t_error_code = mciSendStringW(MCStringGetCharPtr(p_command), t_buffer, 255, NULL);
+        t_error_code = mciSendStringW(*t_command_wstr, t_buffer, 255, NULL);
         r_error = t_error_code != 0;
         if (!r_error)
 		{
@@ -835,8 +849,11 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
         
         uint32_t t_access_mode = KEY_READ;
         
+		MCAutoStringRefAsWString t_key_wstr;
+		/* UNCHECKED */ t_key_wstr.Lock(*t_key);
+		
 		if (!MCS_registry_root_to_hkey(*t_root, t_hkey, t_access_mode) ||
-            (RegOpenKeyExW(t_hkey, MCStringGetCharPtr(*t_key), 0, t_access_mode, &t_regkey) != ERROR_SUCCESS))
+            (RegOpenKeyExW(t_hkey, *t_key_wstr, 0, t_access_mode, &t_regkey) != ERROR_SUCCESS))
         {
             /* RESULT */ //MCresult->sets("bad key");
 			r_error = MCSTR("bad key");
@@ -848,13 +865,16 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
         DWORD t_buffer_len = 0;
         DWORD t_type;
         
+		MCAutoStringRefAsWString t_value_wstr;
+		/* UNCHECKED */ t_value_wstr.Lock(*t_value);
+
         //determine the size of value buffer needed
-		err = RegQueryValueExW(*t_regkey, MCStringGetCharPtr(*t_value), 0, NULL, NULL, &t_buffer_len);
+		err = RegQueryValueExW(*t_regkey, *t_value_wstr, 0, NULL, NULL, &t_buffer_len);
 		if (err == ERROR_SUCCESS)
         {
             if (!t_buffer.New(t_buffer_len))
                 return false;
-			if ((err = RegQueryValueExW(*t_regkey, MCStringGetCharPtr(*t_value), 0, &t_type, t_buffer.Ptr(), &t_buffer_len))
+			if ((err = RegQueryValueExW(*t_regkey, *t_value_wstr, 0, &t_type, t_buffer.Ptr(), &t_buffer_len))
 				== ERROR_SUCCESS && t_buffer_len > 0)
             {
 				// Convert the value from the registry to the appropriate value type
@@ -934,7 +954,10 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
         MCAutoRegistryKey t_regkey;
         DWORD t_keystate;
         
-        if (RegCreateKeyExW(t_root_hkey, MCStringGetCharPtr(*t_key), 0, NULL, REG_OPTION_NON_VOLATILE,
+		MCAutoStringRefAsWString t_key_wstr;
+		/* UNCHECKED */ t_key_wstr.Lock(*t_key);
+
+        if (RegCreateKeyExW(t_root_hkey, *t_key_wstr, 0, NULL, REG_OPTION_NON_VOLATILE,
                             KEY_ALL_ACCESS, NULL, &t_regkey, &t_keystate) != ERROR_SUCCESS)
         {
             MCS_seterrno(GetLastError());
@@ -943,9 +966,12 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
 			return true;
         }
         
+		MCAutoStringRefAsWString t_value_wstr;
+		/* UNCHECKED */ t_value_wstr.Lock(*t_value);
+
         if (MCValueIsEmpty(p_value))
         {//delete this value
-            if ((errno = RegDeleteValueW(*t_regkey, MCStringGetCharPtr(*t_value))) != ERROR_SUCCESS)
+            if ((errno = RegDeleteValueW(*t_regkey, *t_value_wstr)) != ERROR_SUCCESS)
             {
                 MCS_seterrno(GetLastError());
                 /* RESULT */ //MCresult->sets("can't delete value");
@@ -970,9 +996,12 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
 					if (MCValueGetTypeCode(p_value) != kMCValueTypeCodeString)
 						return false;
 
+					MCAutoStringRefAsWString t_wstring;
+					/* UNCHECKED */ t_wstring.Lock((MCStringRef)p_value);
+
 					// NOTE: for string types, the length *must* include the terminating NULL
-					if (RegSetValueExW(*t_regkey, MCStringGetCharPtr(*t_value), 0, t_type, 
-						(const BYTE*)MCStringGetCharPtr((MCStringRef)p_value), (MCStringGetLength((MCStringRef)p_value) + 1) * sizeof(unichar_t)) == ERROR_SUCCESS)
+					if (RegSetValueExW(*t_regkey, *t_value_wstr, 0, t_type, 
+						(const BYTE*)*t_wstring, (MCStringGetLength((MCStringRef)p_value) + 1) * sizeof(unichar_t)) == ERROR_SUCCESS)
 					{
 						r_error = nil;
 						return true;
@@ -983,7 +1012,7 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
 			case REG_NONE:
 				{
 					// There is no value to set but the type still needs to be specified
-					if (RegSetValueExW(*t_regkey, MCStringGetCharPtr(*t_value), 0, t_type, NULL, 0) == ERROR_SUCCESS)
+					if (RegSetValueExW(*t_regkey, *t_value_wstr, 0, t_type, NULL, 0) == ERROR_SUCCESS)
 					{
 						r_error = nil;
 						return true;
@@ -1001,7 +1030,7 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
 					if (MCValueGetTypeCode(p_value) != kMCValueTypeCodeData)
 						return false;
 
-					if (RegSetValueExW(*t_regkey, MCStringGetCharPtr(*t_value), 0, t_type,
+					if (RegSetValueExW(*t_regkey, *t_value_wstr, 0, t_type,
 						MCDataGetBytePtr((MCDataRef)p_value), MCDataGetLength((MCDataRef)p_value)) == ERROR_SUCCESS)
 					{
 						r_error = nil;
@@ -1019,6 +1048,7 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
         
 		// Shouldn't get here
 		MCAssert(false);
+		return false;
     }
     
     virtual bool DeleteRegistry(MCStringRef p_key, MCStringRef& r_error)
@@ -1044,8 +1074,11 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
 			return true;
         }
 
+		MCAutoStringRefAsWString t_key_wstr;
+		/* UNCHECKED */ t_key_wstr.Lock(*t_key);
+
         LSTATUS t_error;
-		t_error = SHDeleteKeyW(hkey, MCStringGetCharPtr(*t_key));
+		t_error = SHDeleteKeyW(hkey, *t_key_wstr);
 
         if (t_error != ERROR_SUCCESS)
         {
@@ -1069,8 +1102,12 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
         
         if (!MCS_registry_split_key(p_path, &t_root, &t_key))
             return false;
+
+		MCAutoStringRefAsWString t_key_wstr;
+		/* UNCHECKED */ t_key_wstr.Lock(*t_key);
+
         if (!MCS_registry_root_to_hkey(*t_root, t_hkey) ||
-            RegOpenKeyExW(t_hkey, MCStringGetCharPtr(*t_key), 0, KEY_READ, &t_regkey) != ERROR_SUCCESS)
+            RegOpenKeyExW(t_hkey, *t_key_wstr, 0, KEY_READ, &t_regkey) != ERROR_SUCCESS)
         {
             r_error = MCSTR("bad key");
 			return true;
@@ -1957,7 +1994,8 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 #ifdef /* MCS_getmachine_dsk_w32 */ LEGACY_SYSTEM
 	return MCStringCopy(MCNameGetString(MCN_x86), r_string);
 #endif /* MCS_getmachine_dsk_w32 */
-        return MCStringCopy(MCNameGetString(MCN_x86), r_string);
+		r_string = MCValueRetain(MCNameGetString(MCN_x86));
+		return true;
     }
     
 	virtual MCNameRef GetProcessor(void)
@@ -2058,7 +2096,11 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	// MW-2005-10-29: Memory leak
 	delete[] dptr;
 #endif /* MCS_unsetenv_dsk_w32 */
-		/* UNCHECKED */ SetEnvironmentVariableW(MCStringGetCharPtr(p_name), MCStringGetCharPtr(p_value));
+		MCAutoStringRefAsWString t_name_wstr, t_value_wstr;
+		/* UNCHECKED */ t_name_wstr.Lock(p_name);
+		/* UNCHECKED */ t_value_wstr.Lock(p_value);
+
+		/* UNCHECKED */ SetEnvironmentVariableW(*t_name_wstr, *t_value_wstr);
     }
                 
 	virtual bool GetEnv(MCStringRef p_name, MCStringRef& r_value)
@@ -2066,9 +2108,12 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 #ifdef /* MCS_getenv_dsk_w32 */ LEGACY_SYSTEM
 	return getenv(name);
 #endif /* MCS_getenv_dsk_w32 */
-    // Get the size of the named environment variable
+	MCAutoStringRefAsWString t_name_wstr;
+	/* UNCHECKED */ t_name_wstr.Lock(p_name);
+	
+	// Get the size of the named environment variable
 	size_t t_size;
-	t_size = GetEnvironmentVariableW(MCStringGetCharPtr(p_name), NULL, 0);
+	t_size = GetEnvironmentVariableW(*t_name_wstr, NULL, 0);
 
 	if (t_size == 0)
 	{
@@ -2091,7 +2136,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		return false;
 
 	DWORD t_result;
-	t_result = GetEnvironmentVariableW(MCStringGetCharPtr(p_name), t_string.Ptr(), t_size);
+	t_result = GetEnvironmentVariableW(*t_name_wstr, t_string.Ptr(), t_size);
 
 	if (t_result == 0 || t_result > t_size)
 	{
@@ -2113,7 +2158,10 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	delete tpath;
 	return result;
 #endif /* MCS_mkdir_dsk_w32 */
-		if (!CreateDirectoryW(MCStringGetCharPtr(p_path), NULL))
+		MCAutoStringRefAsWString t_path_wstr;
+		/* UNCHECKED */ t_path_wstr.Lock(p_path);
+	
+		if (!CreateDirectoryW(*t_path_wstr, NULL))
             return False;
         
         return True;
@@ -2129,7 +2177,10 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	delete tpath;
 	return result;
 #endif /* MCS_rmdir_dsk_w32 */
-        if (!RemoveDirectoryW(MCStringGetCharPtr(p_path)))
+		MCAutoStringRefAsWString t_path_wstr;
+		/* UNCHECKED */ t_path_wstr.Lock(p_path);
+
+        if (!RemoveDirectoryW(*t_path_wstr))
             return False;
         
         return True;
@@ -2171,7 +2222,10 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         delete p;
         return done;
 #endif /* MCS_unlink_dsk_w32 */
-		return DeleteFileW(MCStringGetCharPtr(p_path));
+		MCAutoStringRefAsWString t_path_wstr;
+		/* UNCHECKED */ t_path_wstr.Lock(p_path);
+
+		return DeleteFileW(*t_path_wstr);
     }
 	
 	virtual Boolean RenameFileOrFolder(MCStringRef p_old_name, MCStringRef p_new_name)
@@ -2184,10 +2238,13 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	delete np;
 	return done;
 #endif /* MCS_rename_dsk_w32 */
+		MCAutoStringRefAsWString t_old_wstr, t_new_wstr;
+		/* UNCHECKED */ t_old_wstr.Lock(p_old_name);
+		/* UNCHECKED */ t_new_wstr.Lock(p_new_name);
+	
 		// The Ex form is used to allow directory renaming across drives.
 		// Write-through means this doesn't return until a cross-drive move is complete.
-		return MoveFileExW(MCStringGetCharPtr(p_old_name), MCStringGetCharPtr(p_new_name),
-			MOVEFILE_COPY_ALLOWED|MOVEFILE_WRITE_THROUGH);
+		return MoveFileExW(*t_old_wstr, *t_new_wstr, MOVEFILE_COPY_ALLOWED|MOVEFILE_WRITE_THROUGH);
     }
 	
 	virtual Boolean BackupFile(MCStringRef p_old_name, MCStringRef p_new_name)
@@ -2937,7 +2994,11 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		}
 		else
 			sharemode = FILE_SHARE_READ | FILE_SHARE_WRITE;
-		t_file_handle = CreateFileW(MCStringGetCharPtr(p_path), omode, sharemode, NULL,
+
+		MCAutoStringRefAsWString t_path_wstr;
+		/* UNCHECKED */ t_path_wstr.Lock(p_path);
+
+		t_file_handle = CreateFileW(*t_path_wstr, omode, sharemode, NULL,
 							 createmode, fa, NULL);
 		
 		if (t_file_handle == INVALID_HANDLE_VALUE)
@@ -3078,13 +3139,17 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         
         if (t_ptr == nil)
 		{
-			return MCStringCopy(*t_long_path, r_tmp_name);
+			r_tmp_name = MCValueRetain(*t_long_path);
+			return true;
 		}
         
         MCAutoStringRef t_tmp_name;
-        return MCStringMutableCopy(*t_long_path, &t_tmp_name) &&
-			MCStringAppendFormat(*t_tmp_name, "/%s", t_ptr + 1) &&
-			MCStringCopy(*t_tmp_name, r_tmp_name);
+        if (!MCStringMutableCopy(*t_long_path, &t_tmp_name) &&
+			MCStringAppendFormat(*t_tmp_name, "/%s", t_ptr + 1))
+			return false;
+	
+		r_tmp_name = MCValueRetain(*t_tmp_name);
+		return true;
     }
 	
 	virtual MCSysModuleHandle LoadModule(MCStringRef p_path)
@@ -3316,13 +3381,13 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 	return t_path.CreateStringAndRelease(r_native_path);
 #else
 	return MCStringCopy(p_path, r_native_path);
+#endif
 #endif /* MCS_path2native */
 		if (MCStringIsEmpty(p_path))
 		{
 			r_native = MCValueRetain(kMCEmptyString);
 			return true;
 		}
-
 
 		// The / and \ characters in the path need to be swapped
 		MCAutoArray<unichar_t> t_swapped;
@@ -4282,7 +4347,11 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
                     siStartInfo.hStdInput = hChildStdinRd;
                     siStartInfo.hStdOutput = hChildStdoutWr;
                     siStartInfo.hStdError = hChildStderrWr;
-                    if (CreateProcessW(NULL, (LPWSTR)MCStringGetCharPtr(*t_cmdline), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &siStartInfo, &piProcInfo))
+
+					MCAutoStringRefAsWString t_cmdline_wstr;
+					/* UNCHECKED */ t_cmdline_wstr.Lock(*t_cmdline);
+
+                    if (CreateProcessW(NULL, *t_cmdline_wstr, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &siStartInfo, &piProcInfo))
                     {
                         t_process_handle = piProcInfo . hProcess;
                         t_process_id = piProcInfo . dwProcessId;
@@ -4313,13 +4382,16 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
                 unichar_t t_parameters[64];
                 wsprintf(t_parameters, L"-elevated-slave%08x", GetCurrentThreadId());
                 
+				MCAutoStringRefAsWString t_cmd_wstr;
+				/* UNCHECKED */ t_cmd_wstr.Lock(MCcmd);
+
                 SHELLEXECUTEINFOW t_info;
                 memset(&t_info, 0, sizeof(SHELLEXECUTEINFOW));
                 t_info . cbSize = sizeof(SHELLEXECUTEINFOW);
                 t_info . fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_FLAG_NO_UI | SEE_MASK_NO_CONSOLE ;
                 t_info . hwnd = (HWND)MCdefaultstackptr -> getrealwindow();
                 t_info . lpVerb = L"runas";
-                t_info . lpFile = MCStringGetCharPtr(MCcmd);
+                t_info . lpFile = *t_cmd_wstr;
                 t_info . lpParameters = t_parameters;
                 t_info . nShow = SW_HIDE;
                 if (ShellExecuteExW(&t_info) && (uintptr_t)t_info . hInstApp > 32)
@@ -5072,4 +5144,3 @@ MCSystemInterface *MCDesktopCreateWindowsSystem(void)
 {
 	return new MCWindowsDesktop;
 }
-

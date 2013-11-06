@@ -95,6 +95,8 @@ static void CALLBACK InitializeFiberRoutine(void *p_context)
 
 	g_mainthread_errno = _errno();
 
+	_CrtSetDbgFlag(_CRTDBG_CHECK_ALWAYS_DF|_CRTDBG_DELAY_FREE_MEM_DF|_CRTDBG_CHECK_CRT_DF);
+
 	context -> success = X_init(context -> argc, context -> argv, context -> envp);
 
 	SwitchToFiber(s_main_fiber);

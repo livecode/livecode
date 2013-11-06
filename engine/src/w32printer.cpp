@@ -169,7 +169,9 @@ static DEVMODEW *WindowsGetPrinterInfo(MCStringRef p_printer_name, DEVMODEW *p_i
 	DEVMODEW *t_devmode;
 	if (t_success)
 	{
-		t_devmode = new DEVMODEW;
+		// NOTE: the memory required for the DEVMODE buffer can be bigger than
+		// the DEVMODE structure as the printer driver may append extra data
+		t_devmode = (DEVMODEW*)malloc(t_devmode_size);
 		if (DocumentPropertiesW(NULL, t_printer, NULL, t_devmode, p_indevmode, (p_indevmode != NULL ? DM_IN_BUFFER : 0) | DM_OUT_BUFFER) < 0)
 			t_success = false;
 		else
@@ -194,7 +196,7 @@ bool WindowsGetPrinterPaperSize(MCStringRef p_name, DEVMODEW *p_devmode, POINT& 
 	/* UNCHECKED */ t_name_wstr.Lock(p_name);
 	
 	DWORD t_papers_size;
-	t_papers_size = DeviceCapabilitiesW(*t_name_wstr, NULL, DC_PAPERS, NULL, p_devmode);
+	t_papers_size = DeviceCapabilitiesW(*t_name_wstr, L"", DC_PAPERS, NULL, p_devmode);
 
 	DWORD t_papersizes_size;
 	t_papersizes_size = DeviceCapabilitiesW(*t_name_wstr, NULL, DC_PAPERNAMES, NULL, p_devmode);
@@ -1187,7 +1189,7 @@ MCPrinterResult MCWindowsPrinterDevice::Bookmark(const char *title, double x, do
 void MCWindowsPrinter::DoInitialize(void)
 {
 	m_valid = false;
-	m_name = NULL;
+	m_name = MCValueRetain(kMCEmptyString);
 	m_devmode = NULL;
 	
 	m_dc = NULL;

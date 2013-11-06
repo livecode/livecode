@@ -71,7 +71,7 @@ static void getfilter(MCStringRef p_filter, MCStringRef &r_filter)
 		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_filterstring, '\n', '\0', kMCStringOptionCompareCaseless);
 		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_filterstring, ',', '\0', kMCStringOptionCompareCaseless);
 
-		/* UNCHECKED */ MCStringCopy(*t_filterstring, r_filter);
+		r_filter = MCValueRetain(*t_filterstring);
 	}
 	else
 		r_filter = MCSTR("All Files (*.*)\0*.*\0");
@@ -93,11 +93,11 @@ static void waitonbutton()
 	MCmodifierstate = MCscreen->querymods();
 }
 
-static Meta::simple_string_buffer sg_chosen_folder;
-static Meta::simple_string_buffer sg_chosen_files;
+static MCAutoArray<unichar_t> s_chosen_folder;
+static MCAutoArray<unichar_t> s_chosen_files;
 
 static UINT_PTR CALLBACK open_dialog_hook(HWND p_dialog, UINT p_message, WPARAM p_wparam, LPARAM p_lparam)
-{
+{	
 	if (p_message != WM_NOTIFY)
 		return 0;
 
@@ -110,14 +110,14 @@ static UINT_PTR CALLBACK open_dialog_hook(HWND p_dialog, UINT p_message, WPARAM 
 			t_length = SendMessageW(GetParent(p_dialog), CDM_GETSPEC, (WPARAM)0, (LPARAM)NULL);
 			if (t_length >= 0)
 			{
-				sg_chosen_files . resize(t_length == 0 ? 0 : t_length - 1);
-				SendMessageW(GetParent(p_dialog), CDM_GETSPEC, (WPARAM)t_length, (LPARAM)*sg_chosen_files);
+				/* UNCHECKED */ s_chosen_files.New(t_length);
+				SendMessageW(GetParent(p_dialog), CDM_GETSPEC, (WPARAM)t_length, (LPARAM)s_chosen_files.Ptr());
 			}
-			t_length = SendMessageA(GetParent(p_dialog), CDM_GETFOLDERPATH, (WPARAM)0, (LPARAM)NULL);
+			t_length = SendMessageW(GetParent(p_dialog), CDM_GETFOLDERPATH, (WPARAM)0, (LPARAM)NULL);
 			if (t_length >= 0)
 			{
-				sg_chosen_folder . resize(t_length == 0 ? 0 : t_length - 1);
-				SendMessageW(GetParent(p_dialog), CDM_GETFOLDERPATH, (WPARAM)t_length, (LPARAM)*sg_chosen_folder);
+				/* UNCHECKED */ s_chosen_folder.New(t_length);
+				SendMessageW(GetParent(p_dialog), CDM_GETFOLDERPATH, (WPARAM)t_length, (LPARAM)s_chosen_files.Ptr());
 			}
 		}
 		break;
@@ -173,30 +173,35 @@ static void build_paths(MCStringRef &r_path)
 	/* UNCHECKED */ MCStringCreateMutable(0, &t_path);
 	MCAutoStringRef t_std_path;
 	MCAutoStringRef t_native_path;
-	/* UNCHECKED */ MCStringCreateWithCString(*sg_chosen_folder, &t_native_path);
+	/* UNCHECKED */ MCStringCreateWithChars(s_chosen_folder.Ptr(), s_chosen_folder.Size(), &t_native_path);
 	/* UNCHECKED */ MCS_pathfromnative(*t_native_path, &t_std_path);
 
-	sg_chosen_folder.resize(MCStringGetLength(*t_std_path));
-	strcpy(*sg_chosen_folder, MCStringGetCString(*t_std_path));
-
-	if (**sg_chosen_files == '"')
+	if (MCStringGetCharAtIndex(*t_std_path, 0) == '"')
 	{
-		Meta::itemised_string t_items(sg_chosen_files, ' ', true);
+		// Does this ever actually receive a quoted path?
+		/*Meta::itemised_string t_items(sg_chosen_files, ' ', true);
 		for(unsigned int t_index = 0; t_index < t_items . count(); ++t_index)
 		{
 			if (t_index != 0)
-				/* UNCHECKED */ MCStringAppendChar(*t_path, '\n');
+				/* UNCHECKED * / MCStringAppendChar(*t_path, '\n');
 
-			build_path(*sg_chosen_folder, t_items[t_index], *t_path);
-		}
+			build_path(*t_std_path, t_items[t_index], *t_path);
+		}*/
+		MCAutoStringRef t_item;
+		/* UNCHECKED */ MCStringCreateWithChars(s_chosen_files.Ptr(), s_chosen_files.Size(), &t_item);
+		build_path(*t_std_path, *t_item, *t_path);
 	}
 	else
-		build_path(*sg_chosen_folder, *sg_chosen_files, *t_path);
+	{
+		MCAutoStringRef t_files;
+		/* UNCHECKED */ MCStringCreateWithChars(s_chosen_files.Ptr(), s_chosen_files.Size(), &t_files);
+		build_path(*t_std_path, *t_files, *t_path);
+	}
 
-	sg_chosen_files . clear();
-	sg_chosen_folder . clear();
+	s_chosen_files.Delete();
+	s_chosen_folder.Delete();
 
-	/* UNCHECKED */ MCStringCopy(*t_path, r_path);
+	r_path = MCValueRetain(*t_path);
 }
 
 static HRESULT append_shellitem_path_and_release(IShellItem *p_item, bool p_first, MCStringRef &x_string)
@@ -696,26 +701,26 @@ static void get_new_filter(MCStringRef *p_types, uint4 p_type_count, MCStringRef
 			continue;
 
 		if (t_type_index != 0)
-			/* UNCHECKED */ MCStringAppendNativeChar(*t_filters, '\0');
+			/* UNCHECKED */ MCStringAppendChar(*t_filters, '\0');
 
 		/* UNCHECKED */ MCStringAppend(*t_filters, t_split[0]);
 
 		if (t_split.Count() < 2)
-			/* UNCHECKED */ MCStringAppendNativeChars(*t_filters, (char_t*)"\0*.*", 4);
+			/* UNCHECKED */ MCStringAppendChars(*t_filters, L"\0*.*", 4);
 		else
 		{
 			MCAutoStringRefArray t_extensions;
 			/* UNCHECKED */ MCStringsSplit(t_split[1], ',', t_extensions.PtrRef(), t_extensions.CountRef());
 			if (t_extensions.Count() == 0)
-				/* UNCHECKED */ MCStringAppendNativeChars(*t_filters, (char_t*)"\0*.*", 4);
+				/* UNCHECKED */ MCStringAppendChars(*t_filters, L"\0*.*", 4);
 			else
 			{
 				for (unsigned int i = 0; i < t_extensions.Count(); ++i)
 				{
 					if (i != 0)
-						/* UNCHECKED*/ MCStringAppendNativeChar(*t_filters, ';');
+						/* UNCHECKED*/ MCStringAppendChar(*t_filters, ';');
 					else
-						/* UNCHECKED*/ MCStringAppendNativeChar(*t_filters, '\0');
+						/* UNCHECKED*/ MCStringAppendChar(*t_filters, '\0');
 
 					/* UNCHECKED */ MCStringAppendFormat(*t_filters, "*.%@", t_extensions[i]);
 				}
@@ -728,7 +733,7 @@ static void get_new_filter(MCStringRef *p_types, uint4 p_type_count, MCStringRef
 	else
 	{
 		/* UNCHECKED */ MCStringAppendChar(*t_filters, '\0');
-		/* UNCHECKED */ MCStringCopy(*t_filters, r_filters);
+		r_filters = MCValueRetain(*t_filters);
 	}
 }
 
