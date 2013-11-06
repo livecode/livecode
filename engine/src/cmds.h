@@ -268,7 +268,7 @@ public:
 	}
 	virtual ~MCPut();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 	
 	Exec_stat exec_cookie(MCExecPoint &);

@@ -1336,7 +1336,7 @@ Parse_stat MCPut::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCPut::exec(MCExecPoint &ep)
+void MCPut::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCPut */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
@@ -1412,24 +1412,17 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 		return ES_NORMAL;
 	}
 #endif /* MCPut */
-	MCAutoValueRef t_value;
-	if (source -> eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_PUT_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep . copyasvalueref(&t_value);
+    
+    MCAutoValueRef t_value;
+    if (!ctxt . EvalExprAsValueRef(source, EE_PUT_BADEXP, &t_value))
+        return;
 	
-	MCExecContext ctxt(ep);
-
-	if (dest != nil)
+    if (dest != nil)
 	{
 		if (dest -> isvarchunk())
 		{
 			MCVariableChunkPtr t_var_chunk;
-			if (dest -> evalvarchunk(ep, false, true, t_var_chunk) != ES_NORMAL)
-				return ES_ERROR;
-			
+			dest -> evalvarchunk(ctxt, false, true, t_var_chunk);
 			MCEngineExecPutIntoVariable(ctxt, *t_value, prep, t_var_chunk);
 		}
 		else if (dest -> isurlchunk())
@@ -1443,8 +1436,7 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 			
 			MCUrlChunkPtr t_url_chunk;
 			t_url_chunk . url = nil;
-			if (dest -> evalurlchunk(ep, false, true, t_url_chunk) != ES_NORMAL)
-				return ES_ERROR;
+			dest -> evalurlchunk(ctxt, false, true, t_url_chunk);
 			
 			MCNetworkExecPutIntoUrl(ctxt, *t_string, prep, t_url_chunk);
 			
@@ -1453,8 +1445,7 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 		else
 		{
             MCObjectChunkPtr t_obj_chunk;
-			if (dest -> evalobjectchunk(ep, false, true, t_obj_chunk) != ES_NORMAL)
-				return ES_ERROR;
+			dest -> evalobjectchunk(ctxt, false, true, t_obj_chunk);
             
             if (is_unicode)
             {
@@ -1480,7 +1471,7 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
                     MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
                     return ES_ERROR;
                 }
-			            
+                
                 if (t_obj_chunk . object -> gettype() == CT_FIELD)
                     MCInterfaceExecPutIntoField(ctxt, *t_string, prep, t_obj_chunk);
                 else
@@ -1488,7 +1479,7 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 			}
 		}
 	}
-	else
+    else
 	{
 		MCAutoValueRef t_val;
 		if (is_unicode && (prep == PT_UNDEFINED || prep == PT_CONTENT || prep == PT_MARKUP))
@@ -1502,7 +1493,7 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 		else
         {
 			if (!ctxt . ConvertToString(*t_value, (MCStringRef&)&t_val))
-
+                
 			{
 				MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
 				return ES_ERROR;
@@ -1516,55 +1507,20 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 		if (prep == PT_COOKIE)
 		{
 			MCAutoStringRef t_name;
-			if (name -> eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_PUT_CANTSETINTO, line, pos);
-				return ES_ERROR;
-			}
-			if (!ep . copyasstringref(&t_name))
-				t_name = kMCEmptyString;
-			
+            if (!ctxt . EvalOptionalExprAsStringRef(name, kMCEmptyString, EE_PUT_CANTSETINTO, &t_name))
+                return;
+						
 			uinteger_t t_expires;
-			t_expires = 0;
-			if (expires != nil)
-			{
-				if (expires -> eval(ep) != ES_NORMAL ||
-					(!ep . isempty() && ep . ton() != ES_NORMAL))
-				{
-					MCeerror->add(EE_PUT_CANTSETINTO, line, pos);
-					return ES_ERROR;
-				}
-				if (!ep . isempty())
-					t_expires = ep . getuint4();
-			}
-			
-			MCAutoStringRef t_path;
-			if (path != nil)
-			{
-				if (path -> eval(ep) != ES_NORMAL)
-				{
-					MCeerror->add(EE_PUT_CANTSETINTO, line, pos);
-					return ES_ERROR;
-				}
-				if (!ep . copyasstringref(&t_path))
-					t_path = kMCEmptyString;
-			}
-			else
-				t_path = kMCEmptyString;
+            if (!ctxt . EvalOptionalExprAsUInt(expires, 0, EE_PUT_CANTSETINTO, t_expires))
+                return;
+						
+			MCAutoStringRef t_path;            
+			if (!ctxt . EvalOptionalExprAsStringRef(path, kMCEmptyString, EE_PUT_CANTSETINTO, &t_path))
+                return;			
 			
 			MCAutoStringRef t_domain;
-			if (domain != nil)
-			{
-				if (domain -> eval(ep) != ES_NORMAL)
-				{
-					MCeerror->add(EE_PUT_CANTSETINTO, line, pos);
-					return ES_ERROR;
-				}
-				if (!ep . copyasstringref(&t_domain))
-					t_domain = kMCEmptyString;
-			}
-			else
-				t_domain = kMCEmptyString;
+			if (!ctxt . EvalOptionalExprAsStringRef(domain, kMCEmptyString, EE_PUT_CANTSETINTO, &t_domain))
+                return;
 			
 			MCServerExecPutCookie(ctxt, *t_name, t_string, t_expires, *t_path, *t_domain, is_secure, is_httponly);
 		}
@@ -1596,11 +1552,6 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 		else if (prep == PT_BINARY)
             MCServerExecPutBinaryOutput(ctxt, t_data);
 	}
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-	
-	return ctxt . Catch(line, pos);
 }
 
 void MCPut::compile(MCSyntaxFactoryRef ctxt)
