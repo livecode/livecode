@@ -4478,7 +4478,7 @@ Parse_stat MCSeek::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCSeek::exec(MCExecPoint &ep)
+void MCSeek::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCSeek */ LEGACY_EXEC
 	if (fname->eval(ep) != ES_NORMAL)
@@ -4528,38 +4528,29 @@ Exec_stat MCSeek::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCSeek */
 
-
-	MCExecContext ctxt(ep);
-	if (fname->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_SEEK_BADNAME, line, pos);
-		return ES_ERROR;
-	}
-	MCNewAutoNameRef t_file;
-	/* UNCHECKED */ ep . copyasnameref(&t_file);
-	if (where->eval(ep) == ES_NORMAL)
-	{
-		if (ep.getsvalue().getstring()[0] == '\004' || ep.getsvalue() == "eof")
-			MCFilesExecSeekToEofInFile(ctxt, *t_file);	
-		else
-		{
-			double n;
-			if (ep.getreal8(n, line, pos, EE_SEEK_BADWHERE) != ES_NORMAL)
-			{
-				MCeerror->add(EE_SEEK_BADWHERE, line, pos, ep.getsvalue());
-				return ES_ERROR;
-			}
-			if (mode == PT_TO)
+    MCNewAutoNameRef t_file;
+    if (!ctxt . EvalExprAsNameRef(fname, EE_SEEK_BADNAME, &t_file))
+        return;
+    
+    MCAutoStringRef t_temp;
+    if (ctxt . EvalExprAsStringRef(where, EE_UNDEFINED, &t_temp))
+    {
+        if (MCStringGetNativeCharAtIndex(*t_temp, 0) == '\004' || MCStringIsEqualToCString(*t_temp, "eof", kMCCompareCaseless))
+            MCFilesExecSeekToEofInFile(ctxt, *t_file);
+        else
+        {
+            double n;
+            if (!MCStringToDouble(*t_temp, n))
+            {
+                MCeerror->add(EE_SEEK_BADWHERE, line, pos, *t_temp);
+				return;
+            }
+            if (mode == PT_TO)
 				MCFilesExecSeekAbsoluteInFile(ctxt,(int64_t)n, *t_file);
 			else
 				MCFilesExecSeekRelativeInFile(ctxt, (int64_t)n, *t_file);
-		}
-	}
-	
-	if (!ctxt .HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+        }
+    }
 }
 
 void MCSeek::compile(MCSyntaxFactoryRef ctxt)
