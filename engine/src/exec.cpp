@@ -543,7 +543,18 @@ bool MCExecContext::EvalOptionalExprAsDataRef(MCExpression *p_expr, MCDataRef p_
 		return true;
 	}
 	
-	return EvalExprAsDataRef(p_expr, p_error, r_value);
+    return EvalExprAsDataRef(p_expr, p_error, r_value);
+}
+
+bool MCExecContext::EvalOptionalExprAsNullableDataRef(MCExpression *p_expr, Exec_errors p_error, MCDataRef &r_value)
+{
+    if (p_expr == nil)
+    {
+        r_value = nil;
+        return true;
+    }
+
+    return EvalExprAsDataRef(p_expr, p_error, r_value);
 }
 
 bool MCExecContext::EvalExprAsNameRef(MCExpression *p_expr, Exec_errors p_error, MCNameRef& r_value)
@@ -557,7 +568,18 @@ bool MCExecContext::EvalExprAsNameRef(MCExpression *p_expr, Exec_errors p_error,
 	
 	LegacyThrow(p_error);
 	
-	return false;
+    return false;
+}
+
+bool MCExecContext::EvalOptionalExprAsNullableNameRef(MCExpression *p_expr, Exec_errors p_error, MCNameRef &r_value)
+{
+    if (p_expr == nil)
+    {
+        r_value = nil;
+        return true;
+    }
+
+    return EvalExprAsNameRef(p_expr, p_error, r_value);
 }
 
 bool MCExecContext::EvalOptionalExprAsNameRef(MCExpression *p_expr, MCNameRef p_default, Exec_errors p_error, MCNameRef& r_value)
@@ -593,7 +615,18 @@ bool MCExecContext::EvalOptionalExprAsArrayRef(MCExpression *p_expr, MCArrayRef 
 		return true;
 	}
 	
-	return EvalExprAsArrayRef(p_expr, p_error, r_value);
+    return EvalExprAsArrayRef(p_expr, p_error, r_value);
+}
+
+bool MCExecContext::EvalOptionalExprAsNullableArrayRef(MCExpression *p_expr, Exec_errors p_error, MCArrayRef &r_value)
+{
+    if (p_expr == nil)
+    {
+        r_value = nil;
+        return true;
+    }
+
+    return EvalExprAsArrayRef(p_expr, p_error, r_value);
 }
 
 bool MCExecContext::EvalExprAsNumberRef(MCExpression *p_expr, Exec_errors p_error, MCNumberRef& r_value)
