@@ -262,7 +262,7 @@ void MCAsk::exec_ctxt(class MCExecContext& ctxt)
 	ctxt . SetIt(it);
     
     MCAutoStringRef t_title;
-    if (!ctxt . EvalOptionalExprAsStringRef(title, kMCEmptyString, EE_ANSWER_BADTITLE, &t_title))
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(title, EE_ANSWER_BADTITLE, &t_title))
         return;
     
 	switch(mode)
@@ -271,9 +271,9 @@ void MCAsk::exec_ctxt(class MCExecContext& ctxt)
         case AT_CLEAR:
         {
             MCAutoStringRef t_prompt, t_answer;
-            if (!ctxt . EvalOptionalExprAsStringRef(password . prompt, kMCEmptyString, EE_ASK_BADREPLY, &t_prompt))
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(password . prompt, EE_ASK_BADREPLY, &t_prompt))
                 return;
-            if (!ctxt . EvalOptionalExprAsStringRef(password . answer, kMCEmptyString, EE_ASK_BADREPLY, &t_answer))
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(password . answer, EE_ASK_BADREPLY, &t_answer))
                 return;
             MCDialogExecAskPassword(ctxt, mode == AT_CLEAR, *t_prompt, *t_answer, password . hint, *t_title, sheet == True);
         }
@@ -284,11 +284,11 @@ void MCAsk::exec_ctxt(class MCExecContext& ctxt)
             MCAutoStringRef t_prompt, t_initial, t_filter;
             MCAutoStringRefArray t_types;
             
-            if (!ctxt . EvalOptionalExprAsStringRef(file.prompt, kMCEmptyString, EE_ANSWER_BADQUESTION, &t_prompt))
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(file.prompt, EE_ANSWER_BADQUESTION, &t_prompt))
                 return;
-            if (!ctxt . EvalOptionalExprAsStringRef(file.initial, kMCEmptyString, EE_ANSWER_BADQUESTION, &t_initial))
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(file.initial, EE_ANSWER_BADQUESTION, &t_initial))
                 return;
-            if (!ctxt . EvalOptionalExprAsStringRef(file.filter, kMCEmptyString, EE_ANSWER_BADQUESTION, &t_filter))
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(file.filter, EE_ANSWER_BADQUESTION, &t_filter))
                 return;
             
             if (file . type_count > 0)
@@ -296,7 +296,7 @@ void MCAsk::exec_ctxt(class MCExecContext& ctxt)
                 /* UNCHECKED */ t_types.Extend(file.type_count);
                 for (uindex_t i = 0; i < file.type_count; i++)
                 {
-                    if (!ctxt . EvalOptionalExprAsStringRef(file.types[i], kMCEmptyString, EE_ANSWER_BADQUESTION, t_types[i]))
+                    if (!ctxt . EvalOptionalExprAsNullableStringRef(file.types[i], EE_ANSWER_BADQUESTION, t_types[i]))
                         return;
                 }
             }
@@ -313,9 +313,9 @@ void MCAsk::exec_ctxt(class MCExecContext& ctxt)
         default:
         {
             MCAutoStringRef t_prompt, t_answer;
-            if (!ctxt . EvalOptionalExprAsStringRef(question . prompt, kMCEmptyString, EE_ASK_BADREPLY, &t_prompt))
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(question . prompt, EE_ASK_BADREPLY, &t_prompt))
                 return;
-            if (!ctxt . EvalOptionalExprAsStringRef(question . answer, kMCEmptyString, EE_ASK_BADREPLY, &t_answer))
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(question . answer, EE_ASK_BADREPLY, &t_answer))
                 return;
             MCDialogExecAskQuestion(ctxt, mode, *t_prompt, *t_answer, question . hint, *t_title, sheet == True);
         }

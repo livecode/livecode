@@ -2721,7 +2721,7 @@ if (MCsecuremode & MC_SECUREMODE_PROCESS)
     if (ae != AE_UNDEFINED)
 	{
 		MCAutoStringRef t_program;
-        if (!ctxt . EvalOptionalExprAsStringRef(program, kMCEmptyString, EE_REQUEST_BADKEYWORDEXP, &t_program))
+        if (!ctxt . EvalOptionalExprAsNullableStringRef(program, EE_REQUEST_BADKEYWORDEXP, &t_program))
             return;
 		MCScriptingExecRequestAppleEvent(ctxt, ae, *t_program);
 	}

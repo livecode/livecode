@@ -311,7 +311,7 @@ void MCAnswer::exec_ctxt(MCExecContext& ctxt)
     ctxt . SetIt(it);
     
 	MCAutoStringRef t_title;
-    if (!ctxt . EvalOptionalExprAsStringRef(title, kMCEmptyString, EE_ANSWER_BADTITLE, &t_title))
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(title, EE_ANSWER_BADTITLE, &t_title))
         return;
         
     switch(mode)
@@ -349,17 +349,17 @@ void MCAnswer::exec_ctxt(MCExecContext& ctxt)
 		{
 			MCAutoStringRef t_prompt, t_initial, t_filter;
 			MCAutoStringRefArray t_types;
-            if (!ctxt . EvalOptionalExprAsStringRef(file.prompt, kMCEmptyString, EE_ANSWER_BADQUESTION, &t_prompt))
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(file.prompt, EE_ANSWER_BADQUESTION, &t_prompt))
                 return;
-			if (!ctxt . EvalOptionalExprAsStringRef(file.initial, kMCEmptyString, EE_ANSWER_BADQUESTION, &t_initial))
+			if (!ctxt . EvalOptionalExprAsNullableStringRef(file.initial, EE_ANSWER_BADQUESTION, &t_initial))
                 return;
-			if (!ctxt . EvalOptionalExprAsStringRef(file.filter, kMCEmptyString, EE_ANSWER_BADQUESTION, &t_filter))
+			if (!ctxt . EvalOptionalExprAsNullableStringRef(file.filter, EE_ANSWER_BADQUESTION, &t_filter))
                 return;
             
             /* UNCHECKED */ t_types.Extend(file.type_count);
 			for (uindex_t i = 0; i < file.type_count; i++)
 			{
-                if (!ctxt . EvalOptionalExprAsStringRef(file.types[i], kMCEmptyString, EE_ANSWER_BADQUESTION, t_types[i]))
+                if (!ctxt . EvalOptionalExprAsNullableStringRef(file.types[i], EE_ANSWER_BADQUESTION, t_types[i]))
                     return;
 			}
             
@@ -377,9 +377,9 @@ void MCAnswer::exec_ctxt(MCExecContext& ctxt)
         case AT_FOLDERS:
 		{
 			MCAutoStringRef t_prompt, t_initial;
-            if (!ctxt . EvalOptionalExprAsStringRef(file.prompt, kMCEmptyString, EE_ANSWER_BADQUESTION, &t_prompt))
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(file.prompt, EE_ANSWER_BADQUESTION, &t_prompt))
                 return;
-			if (!ctxt . EvalOptionalExprAsStringRef(file.initial, kMCEmptyString, EE_ANSWER_BADQUESTION, &t_initial))
+			if (!ctxt . EvalOptionalExprAsNullableStringRef(file.initial, EE_ANSWER_BADQUESTION, &t_initial))
                 return;
             
 			MCDialogExecAnswerFolder(ctxt, mode == AT_FOLDERS, *t_prompt, *t_initial, *t_title, sheet == True);
@@ -392,13 +392,13 @@ void MCAnswer::exec_ctxt(MCExecContext& ctxt)
 			MCAutoStringRef t_prompt;
 			MCAutoStringRefArray t_buttons;
             
-            if (!ctxt . EvalOptionalExprAsStringRef(notify.prompt, kMCEmptyString, EE_ANSWER_BADRESPONSE, &t_prompt))
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(notify.prompt, EE_ANSWER_BADRESPONSE, &t_prompt))
                 return;
 			            
 			/* UNCHECKED */ t_buttons.Extend(notify.button_count);
 			for (uindex_t i = 0; i < notify.button_count; i++)
 			{
-                if (!ctxt . EvalOptionalExprAsStringRef(notify.buttons[i], kMCEmptyString, EE_ANSWER_BADRESPONSE, t_buttons[i]))
+                if (!ctxt . EvalOptionalExprAsNullableStringRef(notify.buttons[i], EE_ANSWER_BADRESPONSE, t_buttons[i]))
                     return;
 			}
             
