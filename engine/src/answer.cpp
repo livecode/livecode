@@ -335,15 +335,10 @@ void MCAnswer::exec_ctxt(MCExecContext& ctxt)
         case AT_COLOR:
 		{
 			MCColor t_initial_color;
-			MCColor *t_initial_color_ptr;
-			if (colour . initial != nil)
-			{
-                if (!ctxt . EvalExprAsColor(colour . initial, EE_ANSWER_BADQUESTION, t_initial_color))
-                    return;
-				t_initial_color_ptr = &t_initial_color;
-			}
-			else
-				t_initial_color_ptr = nil;
+			MCColor *t_initial_color_ptr = &t_initial_color;
+			
+            if (!ctxt . EvalOptionalExprAsColor(colour . initial, nil, EE_ANSWER_BADQUESTION, t_initial_color_ptr))
+                return;
             
 			MCDialogExecAnswerColor(ctxt, t_initial_color_ptr, *t_title, sheet == True);
 			break;

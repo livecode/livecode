@@ -41,6 +41,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "player.h"
 #include "text.h"
+#include "variable.h"
 
 #include <sys/utsname.h>
 #include <sys/ioctl.h>

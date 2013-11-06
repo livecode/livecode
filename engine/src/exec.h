@@ -1165,13 +1165,13 @@ public:
 	bool EvalOptionalExprAsChar(MCExpression *expr, char_t default_value, Exec_errors error, char_t& r_char);
     
     bool EvalExprAsPoint(MCExpression *expr, Exec_errors error, MCPoint& r_point);
-	bool EvalOptionalExprAsPoint(MCExpression *expr, MCPoint default_value, Exec_errors error, MCPoint& r_point);
+    bool EvalOptionalExprAsPoint(MCExpression *expr, MCPoint *default_value, Exec_errors error, MCPoint *&r_point);
     
     bool EvalExprAsColor(MCExpression *expr, Exec_errors error, MCColor& r_color);
-	bool EvalOptionalExprAsColor(MCExpression *expr, MCColor default_value, Exec_errors error, MCColor& r_color);
+    bool EvalOptionalExprAsColor(MCExpression *expr, MCColor* default_value, Exec_errors error, MCColor*& r_color);
 	
 	bool EvalExprAsRectangle(MCExpression *expr, Exec_errors error, MCRectangle& r_rectangle);
-	bool EvalOptionalExprAsRectangle(MCExpression *expr, MCRectangle default_value, Exec_errors error, MCRectangle& r_rectangle);
+    bool EvalOptionalExprAsRectangle(MCExpression *expr, MCRectangle *default_value, Exec_errors error, MCRectangle *&r_rectangle);
 	
 private:
 	MCExecPoint& m_ep;

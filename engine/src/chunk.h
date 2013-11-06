@@ -61,7 +61,8 @@ public:
 	~MCChunk();
 
 	Parse_stat parse(MCScriptPoint &spt, Boolean the);
-	Exec_stat eval(MCExecPoint &);
+    /* WRAPPER */ Exec_stat eval(MCExecPoint &);
+    void eval(MCExecContext &ctxt, MCStringRef &p_string);
 
 #ifdef LEGACY_EXEC
     Exec_stat eval_legacy(MCExecPoint &ep);
@@ -74,14 +75,31 @@ public:
 	void compile_inout(MCSyntaxFactoryRef factory);	
 	void compile_object_ptr(MCSyntaxFactoryRef factory);
 
-	Chunk_term getlastchunktype(void);
-	Exec_stat evalobjectchunk(MCExecPoint& ep, bool whole_chunk, bool force, MCObjectChunkPtr& r_chunk);
-	Exec_stat evalvarchunk(MCExecPoint& ep, bool whole_chunk, bool force, MCVariableChunkPtr& r_chunk);
-	Exec_stat evalurlchunk(MCExecPoint& ep, bool whole_chunk, bool force, MCUrlChunkPtr& r_chunk);
+	Chunk_term getlastchunktype(void);    
+    /* WRAPPER */ Exec_stat evalobjectchunk(MCExecPoint& ep, bool whole_chunk, bool force, MCObjectChunkPtr& r_chunk);
+    void evalobjectchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCObjectChunkPtr& r_chunk);
+
+    /* WRAPPER */ Exec_stat evalvarchunk(MCExecPoint& ep, bool whole_chunk, bool force, MCVariableChunkPtr& r_chunk);
+    void evalvarchunk(MCExecContext& ctxt, bool whole_chunk, bool force, MCVariableChunkPtr& r_chunk);
+
+    /* WRAPPER */ Exec_stat evalurlchunk(MCExecPoint& ep, bool whole_chunk, bool force, MCUrlChunkPtr& r_chunk);
+    void evalurlchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCUrlChunkPtr& r_chunk);
 	
 	void take_components(MCChunk *tchunk);
-	Exec_stat getobj(MCExecPoint &, MCObject *&, uint4 &parid, Boolean recurse);
-	Exec_stat getobj(MCExecPoint&, MCObjectPtr&, Boolean recurse);
+
+    // getobj calls getoptionalobj and throws in case nothing is returned.
+    /* WRAPPER */ Exec_stat getobj(MCExecPoint &, MCObject *&, uint4 &parid, Boolean recurse);
+    void getobj(MCExecContext &ctxt, MCObject *& objptr, uint4 &parid, Boolean recurse);
+
+    /* WRAPPER */ Exec_stat getobj(MCExecPoint&, MCObjectPtr&, Boolean recurse);
+    void getobj(MCExecContext &ctxt,MCObjectPtr&, Boolean recurse);
+
+    // Added for MCChunk::count:
+    //  in some cases there is no object to return but no error either
+    //  and caller might want to default to something else
+    void getoptionalobj(MCExecContext& ctxt, MCObject *&r_object, uint4 r_parid, Boolean p_recurse);
+    void getoptionalobj(MCExecContext &ctxt, MCObjectPtr &r_object, Boolean p_recurse);
+
 #ifdef LEGACY_EXEC    
     Exec_stat getobj_legacy(MCExecPoint &ep, MCObject *&objptr, uint4 &parid, Boolean recurse);
     
@@ -90,7 +108,8 @@ public:
 	                  int4 (*count)(MCExecPoint &ep, const char *sptr,
 	                                const char *eptr));
 #endif
-    Exec_stat mark(MCExecPoint &ep, Boolean force, Boolean wholechunk, MCMarkedText& r_mark, bool includechars = true);
+    /* WRAPPER */ Exec_stat mark(MCExecPoint &ep, Boolean force, Boolean wholechunk, MCMarkedText& r_mark, bool includechars = true);
+    void mark(MCExecContext &ctxt, Boolean force, Boolean wholechunk, MCMarkedText& x_mark, bool includechars = true);
 #ifdef LEGACY_EXEC
 	Exec_stat mark_legacy(MCExecPoint &, int4 &start, int4 &end, Boolean force, Boolean wholechunk, bool include_characters = true);
 
@@ -102,7 +121,8 @@ public:
 	Exec_stat set(MCExecPoint &, Preposition_type ptype);
 
 #endif
-    Exec_stat set(MCExecPoint& ep, Preposition_type p_type, MCValueRef p_text);
+    /* WRAPPER */ Exec_stat set(MCExecPoint& ep, Preposition_type p_type, MCValueRef p_text);
+    void set(MCExecContext& ctxt, Preposition_type p_type, MCValueRef p_value);
 #ifdef LEGACY_EXEC 
 	Exec_stat gets(MCExecPoint &);
 	Exec_stat set_legacy(MCExecPoint &, Preposition_type ptype);
@@ -110,7 +130,8 @@ public:
 	// MW-2012-02-23: [[ PutUnicode ]] Set the chunk to the UTF-16 encoded text in ep.
 	Exec_stat setunicode(MCExecPoint& ep, Preposition_type ptype);
 #endif
-	Exec_stat count(Chunk_term tocount, Chunk_term ptype, MCExecPoint &);
+    /* WRAPPER */ Exec_stat count(Chunk_term tocount, Chunk_term ptype, MCExecPoint &);
+    void count(MCExecContext &ctxt, Chunk_term tocount, Chunk_term ptype, uinteger_t &r_count);
 #ifdef LEGACY_EXEC	
 	Exec_stat fmark(MCField *fptr, int4 &start, int4 &end, Boolean wholechunk);
 
