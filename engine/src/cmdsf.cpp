@@ -226,9 +226,7 @@ char *name;
 	else
     {
         MCNewAutoNameRef t_name;
-        ctxt . EvalExprAsNameRef(fname, EE_CLOSE_BADNAME, &t_name);
-
-        if (ctxt . HasError())
+        if (!ctxt . EvalExprAsNameRef(fname, EE_CLOSE_BADNAME, &t_name))
             return;
 
 		switch (arg)	
@@ -248,12 +246,7 @@ char *name;
 		default:
 			break;
 		}
-	}
-	
-	if (!ctxt . HasError())
-        return;
-
-    ctxt . Catch(line, pos);
+    }
 }
 
 void MCClose::compile(MCSyntaxFactoryRef ctxt)
@@ -669,21 +662,15 @@ MCresult->clear(False);
 	if (is_rsa)
 	{
         MCAutoStringRef t_key;
-        ctxt . EvalExprAsStringRef(rsa_key, EE_OPEN_BADNAME, &t_key);
-
-        if (ctxt . HasError())
+        if (!ctxt . EvalExprAsStringRef(rsa_key, EE_OPEN_BADNAME, &t_key))
             return;
 
 		MCAutoStringRef t_passphrase;
-        ctxt . EvalOptionalExprAsNullableStringRef(rsa_passphrase, EE_OPEN_BADNAME, &t_passphrase);
-
-        if (ctxt . HasError())
+        if (!ctxt . EvalOptionalExprAsNullableStringRef(rsa_passphrase, EE_OPEN_BADNAME, &t_passphrase))
             return;
 		
         MCAutoStringRef t_data;
-        ctxt . EvalExprAsStringRef(source, EE_OPEN_BADNAME, &t_data);
-
-        if (ctxt . HasError())
+        if (!ctxt . EvalExprAsStringRef(source, EE_OPEN_BADNAME, &t_data))
             return;
 
 		if (isdecrypt)
@@ -694,41 +681,29 @@ MCresult->clear(False);
 	else
 	{
         MCNewAutoNameRef t_cipher;
-        ctxt . EvalExprAsNameRef(ciphername, EE_OPEN_BADNAME, &t_cipher);
-
-        if (ctxt . HasError())
+        if (!ctxt . EvalExprAsNameRef(ciphername, EE_OPEN_BADNAME, &t_cipher))
             return;
 
         MCAutoStringRef t_key;
-        ctxt . EvalExprAsStringRef(keystr, EE_OPEN_BADNAME, &t_key);
-
-        if (ctxt . HasError())
+        if (!ctxt . EvalExprAsStringRef(keystr, EE_OPEN_BADNAME, &t_key))
             return;
 		
         uinteger_t keybits;
-        ctxt . EvalOptionalExprAsUInt(keylen, 0, EE_OPEN_BADNAME, keybits);
-
-        // Ensure that keybits is an uint2
-        if (ctxt . HasError() || keybits > 65535)
+        if (!ctxt . EvalOptionalExprAsUInt(keylen, 0, EE_OPEN_BADNAME, keybits)
+                || keybits > 65535) // Ensure that keybits is an uint2
             return;
 
 		MCAutoStringRef t_iv;
 		MCAutoStringRef t_salt;
 
-        ctxt . EvalOptionalExprAsNullableStringRef(salt, EE_OPEN_BADNAME, &t_salt);
-
-        if (ctxt . HasError())
+        if (!ctxt . EvalOptionalExprAsNullableStringRef(salt, EE_OPEN_BADNAME, &t_salt))
             return;
 
-        ctxt . EvalOptionalExprAsNullableStringRef(iv, EE_OPEN_BADNAME, &t_iv);
-
-        if (ctxt . HasError())
+        if (!ctxt . EvalOptionalExprAsNullableStringRef(iv, EE_OPEN_BADNAME, &t_iv))
             return;
 
         MCAutoStringRef t_data;
-        ctxt . EvalExprAsStringRef(source, EE_READ_BADAT, &t_data);
-
-        if (ctxt . HasError())
+        if (!ctxt . EvalExprAsStringRef(source, EE_READ_BADAT, &t_data))
             return;
 
 		if (ispassword)
@@ -745,12 +720,7 @@ MCresult->clear(False);
 			else
 				MCSecurityExecBlockEncryptWithKey(ctxt, *t_data, *t_cipher, *t_key, *t_iv, keybits);
 		}
-	}
-
-	if (!ctxt . HasError())
-        return;
-	
-    ctxt . Catch(line, pos);
+    }
 }
 
 void MCEncryptionOp::compile(MCSyntaxFactoryRef ctxt)
@@ -1365,15 +1335,11 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 
 	MCAutoStringRef t_return_data;
     MCAutoStringRef t_filename;
-    ctxt . EvalOptionalExprAsNullableStringRef(fname, EE_EXPORT_BADNAME, &t_filename);
-
-    if (ctxt . HasError())
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(fname, EE_EXPORT_BADNAME, &t_filename))
         return;
 
 	MCAutoStringRef t_mask_filename;
-    ctxt . EvalOptionalExprAsNullableStringRef(mname, EE_EXPORT_BADNAME, &t_mask_filename);
-
-    if (ctxt . HasError())
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(mname, EE_EXPORT_BADNAME, &t_mask_filename))
         return;
 
 	MCObject *optr = NULL;
@@ -1400,9 +1366,7 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 		MCColor *t_colors;
 		uindex_t t_count;
 		MCAutoStringRef t_input;
-        ctxt . EvalExprAsStringRef(palette_color_list, EE_EXPORT_BADPALETTE, &t_input);
-
-        if (ctxt . HasError())
+        if (!ctxt . EvalExprAsStringRef(palette_color_list, EE_EXPORT_BADPALETTE, &t_input))
             return;
 
         if (!MCImageParseColourList(*t_input, t_count, t_colors))
@@ -1419,9 +1383,7 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 		{
 		integer_t *t_count_ptr = nil;
         integer_t t_count;
-        ctxt . EvalOptionalExprAsInt(palette_color_count, 0, EE_EXPORT_BADPALETTESIZE, t_count);
-
-        if (ctxt . HasError())
+        if (!ctxt . EvalOptionalExprAsInt(palette_color_count, 0, EE_EXPORT_BADPALETTESIZE, t_count))
             return;
 
         if (t_count != 0)
@@ -1451,9 +1413,8 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
         if (!ctxt . HasError() && exsstack != NULL)
 		{
 			MCAutoStringRef t_stack_name;
-            ctxt . EvalExprAsStringRef(exsstack, EE_EXPORT_NOSELECTED, &t_stack_name);
 
-            if (!ctxt . HasError())
+            if (ctxt . EvalExprAsStringRef(exsstack, EE_EXPORT_NOSELECTED, &t_stack_name))
             {
 				MCAutoStringRef t_display;
                 ctxt . EvalOptionalExprAsNullableStringRef(exsdisplay, EE_EXPORT_NOSELECTED, &t_display);
@@ -1474,12 +1435,13 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 
             t_size_ptr = &t_size;
 
-            ctxt . EvalOptionalExprAsPoint(size, nil, EE_EXPORT_NOSELECTED, t_size_ptr);
-
-            if (*t_filename == nil)
-                MCInterfaceExecExportSnapshotOfObject(ctxt, optr, t_rect_ptr, with_effects, t_size_ptr, format, t_settings_ptr, &t_return_data);
-            else
-                MCInterfaceExecExportSnapshotOfObjectToFile(ctxt, optr, t_rect_ptr, with_effects, t_size_ptr, format, t_settings_ptr, *t_filename, *t_mask_filename);
+            if (ctxt . EvalOptionalExprAsPoint(size, nil, EE_EXPORT_NOSELECTED, t_size_ptr))
+            {
+                if (*t_filename == nil)
+                    MCInterfaceExecExportSnapshotOfObject(ctxt, optr, t_rect_ptr, with_effects, t_size_ptr, format, t_settings_ptr, &t_return_data);
+                else
+                    MCInterfaceExecExportSnapshotOfObjectToFile(ctxt, optr, t_rect_ptr, with_effects, t_size_ptr, format, t_settings_ptr, *t_filename, *t_mask_filename);
+            }
 		}
 		else
 		{
@@ -1512,8 +1474,6 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
             return;
 		}
     }
-	
-    ctxt . Catch(line, pos);
 }
 
 void MCExport::compile(MCSyntaxFactoryRef ctxt)
@@ -1865,14 +1825,10 @@ void MCFilter::exec_ctxt(MCExecContext &ctxt)
     MCAutoStringRef t_pattern;
     MCAutoStringRef t_output;
 
-    ctxt . EvalExprAsStringRef(container, EE_FILTER_CANTGET, &t_source);
-
-    if (ctxt . HasError())
+    if (!ctxt . EvalExprAsStringRef(container, EE_FILTER_CANTGET, &t_source))
         return;
 
-    ctxt . EvalExprAsStringRef(pattern, EE_FILTER_CANTGETPATTERN, &t_pattern);
-
-    if (ctxt . HasError())
+    if (!ctxt . EvalExprAsStringRef(pattern, EE_FILTER_CANTGETPATTERN, &t_pattern))
         return;
 
 	MCStringsExecFilter(ctxt, *t_source, *t_pattern, out == True, &t_output);
@@ -1880,10 +1836,7 @@ void MCFilter::exec_ctxt(MCExecContext &ctxt)
     container -> set(ctxt, PT_INTO, *t_output);
 
     if (ctxt . HasError())
-    {
         ctxt . LegacyThrow(EE_FILTER_CANTSET);
-        return;
-    }
 }
 
 void MCFilter::compile(MCSyntaxFactoryRef ctxt)
@@ -2319,8 +2272,6 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 	return stat;
 #endif /* MCImport */
 
-    MCExecPoint ep;
-
 	if (format == EX_SNAPSHOT)
     {
         MCRectangle t_rectangle;
@@ -2328,9 +2279,7 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 
         t_rect_ptr = &t_rectangle;
 
-        ctxt . EvalOptionalExprAsRectangle(fname, nil, EE_IMPORT_BADNAME, t_rect_ptr);
-
-        if (ctxt . HasError())
+        if (!ctxt . EvalOptionalExprAsRectangle(fname, nil, EE_IMPORT_BADNAME, t_rect_ptr))
             return;
 
 		if (container != NULL)
@@ -2338,9 +2287,7 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
             MCPoint t_size;
             MCPoint *t_size_ptr = &t_size;
 
-            ctxt . EvalOptionalExprAsPoint(size, nil, EE_IMPORT_NOSELECTED, t_size_ptr);
-
-            if (ctxt . HasError())
+            if (!ctxt . EvalOptionalExprAsPoint(size, nil, EE_IMPORT_NOSELECTED, t_size_ptr))
                 return;
 
 			MCObject *t_parent = nil;
@@ -2359,15 +2306,11 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 		else if (mname != NULL)
 		{
 			MCAutoStringRef t_stack;
-            ctxt . EvalExprAsStringRef(mname, EE_IMPORT_BADNAME, &t_stack);
-
-            if (ctxt . HasError())
+            if (!ctxt . EvalExprAsStringRef(mname, EE_IMPORT_BADNAME, &t_stack))
                 return;
 
 			MCAutoStringRef t_display;
-            ctxt . EvalOptionalExprAsNullableStringRef(dname, EE_IMPORT_BADNAME, &t_display);
-
-            if (ctxt . HasError())
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(dname, EE_IMPORT_BADNAME, &t_display))
                 return;
 
 			MCInterfaceExecImportSnapshotOfStack(ctxt, *t_stack, *t_display, t_rect_ptr);
@@ -2378,9 +2321,7 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 	else
 	{
 		MCAutoStringRef t_filename;
-        ctxt . EvalOptionalExprAsNullableStringRef(fname, EE_IMPORT_BADNAME, &t_filename);
-
-        if (ctxt . HasError())
+        if (!ctxt . EvalOptionalExprAsNullableStringRef(fname, EE_IMPORT_BADNAME, &t_filename))
             return;
 
 		switch (format)
@@ -2413,18 +2354,15 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 					}
 				}
 				MCAutoStringRef t_mask_filename;
-                ctxt . EvalOptionalExprAsNullableStringRef(mname, EE_IMPORT_BADNAME, &t_mask_filename);
+
+                if (!ctxt . EvalOptionalExprAsNullableStringRef(mname, EE_IMPORT_BADNAME, &t_mask_filename))
+                    return;
 
 				MCInterfaceExecImportImage(ctxt, *t_filename, *t_mask_filename, parent);
 			}
 			break;
 		}
 	}
-	
-	if (!ctxt . HasError())
-        return;
-
-    ctxt . Catch(line, pos);
 }
 
 void MCImport::compile(MCSyntaxFactoryRef ctxt)
@@ -3045,14 +2983,10 @@ if (go != NULL)
 		{
             MCAutoStringRef t_filename;
             MCAutoArrayRef t_options;
-            ctxt . EvalExprAsStringRef(fname, EE_OPEN_BADNAME, &t_filename);
-
-            if (ctxt . HasError())
+            if (!ctxt . EvalExprAsStringRef(fname, EE_OPEN_BADNAME, &t_filename))
                 return;
 
-            ctxt . EvalOptionalExprAsNullableArrayRef(options, EE_OPEN_BADOPTIONS, &t_options);
-
-            if (ctxt . HasError())
+            if (!ctxt . EvalOptionalExprAsNullableArrayRef(options, EE_OPEN_BADOPTIONS, &t_options))
                 return;
 
 			MCAutoStringRef t_dest;
@@ -3075,9 +3009,7 @@ if (go != NULL)
         MCNewAutoNameRef t_name;
         MCNewAutoNameRef t_message_name;
 
-        ctxt . EvalExprAsNameRef(fname, EE_OPEN_BADNAME, &t_name);
-
-        if (ctxt . HasError())
+        if (!ctxt . EvalExprAsNameRef(fname, EE_OPEN_BADNAME, &t_name))
             return;
 
 		switch (arg)
@@ -3095,9 +3027,7 @@ if (go != NULL)
 				MCFilesExecOpenProcess(ctxt, *t_name, mode, textmode == True);
 			break;
 		case OA_SOCKET:
-            ctxt . EvalOptionalExprAsNullableNameRef(message, EE_OPEN_BADMESSAGE, &t_message_name);
-
-            if (ctxt . HasError())
+            if (!ctxt . EvalOptionalExprAsNullableNameRef(message, EE_OPEN_BADMESSAGE, &t_message_name))
                 return;
 
 			if (datagram)
@@ -3110,11 +3040,7 @@ if (go != NULL)
 		default:
 			break;
 		}
-	}
-	if (!ctxt . HasError())
-        return;
-
-    ctxt . Catch(line, pos);
+    }
 }
 
 void MCOpen::compile(MCSyntaxFactoryRef ctxt)
