@@ -797,7 +797,7 @@ Parse_stat MCEdit::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCEdit::exec(MCExecPoint &ep)
+void MCEdit::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCEdit */ LEGACY_EXEC
 MCObject *optr;
@@ -822,18 +822,9 @@ MCObject *optr;
 
 	MCObject *optr;
 	uint4 parid;
-	if (target->getobj(ep, optr, parid, True) != ES_NORMAL)
-	{
-		MCeerror->add(EE_EDIT_BADTARGET, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
+	target->getobj(ctxt, optr, parid, True);
+	
 	MCIdeExecEditScriptOfObject(ctxt, optr);
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCEdit::compile(MCSyntaxFactoryRef ctxt)
