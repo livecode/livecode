@@ -2753,7 +2753,7 @@ void MCKill::exec_ctxt(MCExecContext& ctxt)
 #endif /* MCKill */
 
     MCAutoStringRef t_signal;
-    if (!ctxt . EvalOptionalExprAsStringRef(sig, kMCEmptyString, EE_KILL_BADNUMBER, &t_signal))
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(sig, EE_KILL_BADNUMBER, &t_signal))
         return;
     
     MCAutoStringRef t_process;
@@ -4190,7 +4190,7 @@ void MCRead::exec_ctxt(MCExecContext& ctxt)
         case RF_UNTIL:
         {
             MCAutoStringRef t_sentinel;
-            if (!ctxt . EvalOptionalExprAsStringRef(stop, kMCEmptyString, EE_READ_NOCHARACTER, &t_sentinel))
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(stop, EE_READ_NOCHARACTER, &t_sentinel))
             {
                 MCshellfd = -1;
                 return;
