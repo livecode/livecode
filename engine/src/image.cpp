@@ -2431,7 +2431,8 @@ bool MCImage::copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *
 					MCGContextConcatCTM(t_context, m_transform);
 				
 				MCGRectangle t_dst;
-				t_dst = MCGRectangleMake(0, 0, rect.width, rect.height);
+				// IM-2013-11-06: [[ Bug 11397 ]] Draw image at logical size into the context. The transfrom takes care of any scaling.
+				t_dst = MCGRectangleMake(0, 0, t_raster.width / t_frame->density, t_raster.height / t_frame->density);
 				
 				MCGImageFilter t_filter;
 				t_filter = resizequality == INTERPOLATION_BICUBIC ? kMCGImageFilterBicubic : (resizequality == INTERPOLATION_BILINEAR ? kMCGImageFilterBilinear : kMCGImageFilterNearest);
