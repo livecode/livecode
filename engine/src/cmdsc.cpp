@@ -1949,7 +1949,7 @@ Parse_stat MCGrab::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCGrab::exec(MCExecPoint &ep)
+void MCGrab::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCGrab */ LEGACY_EXEC
 MCObject *optr;
@@ -1969,19 +1969,13 @@ MCObject *optr;
 
 	MCObject *optr;
 	uint4 parid;
-	if (control->getobj(ep, optr, parid, True) != ES_NORMAL
-	        || optr->gettype() < CT_GROUP)
+    control->getobj(ctxt, optr, parid, True);
+	if (optr->gettype() < CT_GROUP)
 	{
 		MCeerror->add(EE_GRAB_NOOBJ, line, pos);
-		return ES_ERROR;
+		return;
 	}
-	MCExecContext ctxt(ep);
 	MCInterfaceExecGrab(ctxt, static_cast<MCControl *>(optr));
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCGrab::compile(MCSyntaxFactoryRef ctxt)
