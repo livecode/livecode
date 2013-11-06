@@ -507,7 +507,7 @@ public:
 	}
 	virtual ~MCCreate();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	MCControl *getobject(MCObject *&parent);
 	virtual void compile(MCSyntaxFactoryRef);
 };

@@ -989,7 +989,7 @@ MCControl *MCCreate::getobject(MCObject *&parent)
 	}
 }
 
-Exec_stat MCCreate::exec(MCExecPoint &ep)
+void MCCreate::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCCreate */ LEGACY_EXEC
 	if (directory)
@@ -1153,96 +1153,73 @@ Exec_stat MCCreate::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCCreate */
 
-
-	MCExecContext ctxt(ep, it);
-	if (directory)
+    ctxt . SetIt(it);
+    if (directory)
 	{
-		if (newname->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_CREATE_BADEXP, line, pos);
-			return ES_ERROR;
-		}
-		MCAutoStringRef t_filename;
-		/* UNCHECKED */ ep . copyasstringref(&t_filename);
+        MCAutoStringRef t_filename;
+        if (!ctxt . EvalExprAsStringRef(newname, EE_CREATE_BADEXP, &t_filename))
+            return;
 		MCFilesExecCreateFolder(ctxt, *t_filename);
 	}
 	else if (alias)
 	{
-		if (newname->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_CREATE_BADFILEEXP, line, pos);
-			return ES_ERROR;
-		}
-		MCAutoStringRef t_alias_name;
-		/* UNCHECKED */ ep . copyasstringref(&t_alias_name);
+        MCAutoStringRef t_alias_name;
+        if (!ctxt . EvalExprAsStringRef(newname, EE_CREATE_BADFILEEXP, &t_alias_name))
+            return;
 		
-		if (file->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_CREATE_BADEXP, line, pos);
-			return ES_ERROR;
-		}
 		MCAutoStringRef t_target_filename;
-		/* UNCHECKED */ ep . copyasstringref(&t_target_filename);
-
+        if (!ctxt . EvalExprAsStringRef(file, EE_CREATE_BADEXP, &t_target_filename))
+            return;
+        
 		MCFilesExecCreateAlias(ctxt, *t_target_filename, *t_alias_name);
 	}
-	else 
+    else
 	{
 		MCAutoStringRef t_new_name;
-		if (newname != NULL)
+        if (!ctxt . EvalOptionalExprAsStringRef(newname, kMCEmptyString, EE_CREATE_BADEXP, &t_new_name))
+            return;
+        switch (otype)
 		{
-			if (newname->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_CREATE_BADEXP, line, pos);
-				return ES_ERROR;
-			}
-			/* UNCHECKED */ ep . copyasstringref(&t_new_name);
-		}
-		switch (otype)
-		{
-		case CT_STACK:
-		{
-			MCObject *tptr = nil;
-			if (container != nil)
-			{
-				uint4 parid;
-				if (container->getobj(ep, tptr, parid, True) != ES_NORMAL || 
-					tptr->gettype() != CT_GROUP && tptr->gettype() != CT_STACK)
-				{
-					MCeerror->add(EE_CREATE_BADBGORCARD, line, pos);
-					return ES_ERROR;
-				}
-			}
-			if (tptr != nil && tptr->gettype() == CT_GROUP)
-				MCInterfaceExecCreateStackWithGroup(ctxt, (MCGroup *)tptr, *t_new_name, visible == False);
-			else 
-				MCInterfaceExecCreateStack(ctxt, (MCStack *)tptr, *t_new_name, visible == False);
-		}
-			break;
-		case CT_CARD:
-			MCInterfaceExecCreateCard(ctxt, *t_new_name, visible == False);
-			break;
-		default:
-		{
-			MCObject *parent = nil;
-			if (container != nil)
-			{
-				uint4 parid;
-				if (container->getobj(ep, parent, parid, True) != ES_NORMAL || parent->gettype() != CT_GROUP)
-				{
-					MCeerror->add(EE_CREATE_BADBGORCARD, line, pos);
-					return ES_ERROR;
-				}
-			}
-			MCInterfaceExecCreateControl(ctxt, *t_new_name, otype, (MCGroup *)parent, visible == False);
-		}
-			break;
+            case CT_STACK:
+            {
+                MCObject *tptr = nil;
+                if (container != nil)
+                {
+                    uint4 parid;
+                    container->getobj(ctxt, tptr, parid, True);
+                    if (tptr->gettype() != CT_GROUP && tptr->gettype() != CT_STACK)
+                    {
+                        MCeerror->add(EE_CREATE_BADBGORCARD, line, pos);
+                        return;
+                    }
+                }
+                if (tptr != nil && tptr->gettype() == CT_GROUP)
+                    MCInterfaceExecCreateStackWithGroup(ctxt, (MCGroup *)tptr, *t_new_name, visible == False);
+                else
+                    MCInterfaceExecCreateStack(ctxt, (MCStack *)tptr, *t_new_name, visible == False);
+            }
+                break;
+            case CT_CARD:
+                MCInterfaceExecCreateCard(ctxt, *t_new_name, visible == False);
+                break;
+            default:
+            {
+                MCObject *parent = nil;
+                if (container != nil)
+                {
+                    uint4 parid;
+                    container->getobj(ctxt, parent, parid, True);
+                    if (parent->gettype() != CT_GROUP)
+                    {
+                        MCeerror->add(EE_CREATE_BADBGORCARD, line, pos);
+                        return;
+                    }
+                }
+                MCInterfaceExecCreateControl(ctxt, *t_new_name, otype, (MCGroup *)parent, visible == False);
+            }
+                break;
 		}
 	}
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-	
-	return ctxt . Catch(line, pos);
 }
 
 void MCCreate::compile(MCSyntaxFactoryRef ctxt)
