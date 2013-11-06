@@ -4638,7 +4638,7 @@ Parse_stat MCWrite::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCWrite::exec(MCExecPoint &ep)
+void MCWrite::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCWrite */ LEGACY_EXEC
 	uint2 index;
@@ -4871,19 +4871,12 @@ Exec_stat MCWrite::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCWrite */
 
-
-	MCExecContext ctxt(ep);
-	MCresult->clear(False);
-	
+    MCresult->clear(False);    
 	MCAutoStringRef t_data;
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_WRITE_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep . copyasstringref(&t_data);
-
-	if (arg == OA_STDERR)
+    if (!ctxt . EvalExprAsStringRef(source, EE_WRITE_BADEXP, &t_data))
+        return;
+	
+    if (arg == OA_STDERR)
 		MCFilesExecWriteToStderr(ctxt, *t_data, unit);
 	else
 		if (arg == OA_STDOUT)
@@ -4891,66 +4884,48 @@ Exec_stat MCWrite::exec(MCExecPoint &ep)
 		else
 		{
 			MCNewAutoNameRef t_target;
-			if (fname->eval(ep) != ES_NORMAL)
+            if (!ctxt . EvalExprAsNameRef(fname, EE_WRITE_BADEXP, &t_target))
+                return;
+            switch (arg)
 			{
-				MCeerror->add(EE_WRITE_BADEXP, line, pos);
-				return ES_ERROR;
-			}
-			/* UNCHECKED */ ep . copyasnameref(&t_target);
-			switch (arg)
-			{
-			case OA_DRIVER:
-			case OA_FILE:
-				if (at != NULL)
+                case OA_DRIVER:
+                case OA_FILE:
+                    if (at != NULL)
+                    {
+                        MCAutoStringRef t_temp;
+                        if (!ctxt . EvalExprAsStringRef(at, EE_WRITE_BADEXP, &t_temp))
+                            return;
+                        if (MCStringGetNativeCharAtIndex(*t_temp, 0) == '\004' || MCStringIsEqualToCString(*t_temp, "eof", kMCCompareCaseless))
+                            MCFilesExecWriteToFileOrDriverAtEnd(ctxt, *t_target, *t_data, unit);
+                        else
+                        {
+                            double n;
+                            if (!MCStringToDouble(*t_temp, n))
+                            {
+                                MCresult->sets("error seeking in file");
+                                return;
+                            }
+                            MCFilesExecWriteToFileOrDriverAt(ctxt, *t_target, *t_data, unit, (int64_t)n);
+                        }
+                    }
+                    else
+                        MCFilesExecWriteToFileOrDriver(ctxt, *t_target, *t_data, unit);
+                    break;
+                case OA_PROCESS:
+                    MCFilesExecWriteToProcess(ctxt, *t_target, *t_data, unit);
+                    break;
+                case OA_SOCKET:
 				{
-					if (at->eval(ep) != ES_NORMAL)
-					{
-						MCeerror->add(EE_WRITE_BADEXP, line, pos);
-						return ES_ERROR;
-					}
-					if (ep.getsvalue().getstring()[0] == '\004' || ep.getsvalue() == "eof")
-						MCFilesExecWriteToFileOrDriverAtEnd(ctxt, *t_target, *t_data, unit);
-					else
-					{
-						double n;
-						if (ep.getreal8(n, line, pos, EE_WRITE_BADEXP) != ES_NORMAL)
-						{
-							MCresult->sets("error seeking in file");
-							return ES_NORMAL;
-						}
-						MCFilesExecWriteToFileOrDriverAt(ctxt, *t_target, *t_data, unit, (int64_t)n);
-					}
+                    MCNewAutoNameRef t_message;
+                    if (!ctxt . EvalOptionalExprAsNullableNameRef(at, EE_WRITE_BADEXP, &t_message))
+                        return;
+                    MCNetworkExecWriteToSocket(ctxt, *t_target, *t_data, *t_message);
 				}
-				else
-					MCFilesExecWriteToFileOrDriver(ctxt, *t_target, *t_data, unit);
-				break;
-			case OA_PROCESS:
-				MCFilesExecWriteToProcess(ctxt, *t_target, *t_data, unit);
-				break;
-			case OA_SOCKET:
-				{
-				MCNewAutoNameRef t_message;
-				if (at != NULL)
-				{
-					if (at->eval(ep) != ES_NORMAL)
-					{
-						MCeerror->add(EE_WRITE_BADEXP, line, pos);
-						return ES_ERROR;
-					}
-					/* UNCHECKED */ ep . copyasnameref(&t_message);
-				}
-				MCNetworkExecWriteToSocket(ctxt, *t_target, *t_data, *t_message);
-				}
-				break;
-			default:
-				break;
+                    break;
+                default:
+                    break;
 			}
 		}
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCWrite::compile(MCSyntaxFactoryRef ctxt)
