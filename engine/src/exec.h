@@ -1173,6 +1173,7 @@ public:
 	
 	bool EvalExprAsRectangle(MCExpression *expr, Exec_errors error, MCRectangle& r_rectangle);
     bool EvalOptionalExprAsRectangle(MCExpression *expr, MCRectangle *default_value, Exec_errors error, MCRectangle *&r_rectangle);
+    
 	
 private:
 	MCExecPoint& m_ep;

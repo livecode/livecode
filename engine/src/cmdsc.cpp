@@ -2228,7 +2228,7 @@ if (MCsecuremode & MC_SECUREMODE_PROCESS)
 	
     MCAutoStringRef t_document;
 	
-    if (!ctxt . EvalOptionalExprAsStringRef(doc, kMCEmptyString, EE_LAUNCH_BADAPPEXP, &t_document))
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(doc, EE_LAUNCH_BADAPPEXP, &t_document))
         return;
     
 	if (app != NULL)
