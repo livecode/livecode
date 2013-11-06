@@ -4774,7 +4774,6 @@ Exec_stat MCChunk::setprop(Properties which, MCExecPoint &ep, MCNameRef index, B
                 t_object . part_id = t_obj_chunk . part_id;
                 t_object . index = index;
                 
-                MCAutoValueRef t_value;
                 MCExecStoreProperty(ctxt, t_info, &t_object, *t_value);
             }
             else

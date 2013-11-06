@@ -94,7 +94,7 @@ void MCB_break(MCExecContext &ctxt, uint2 line, uint2 pos)
 
 void MCB_error(MCExecContext &ctxt, uint2 line, uint2 pos, uint2 id)
 {
-	MCServerDebugError(ctct, line, pos, id);
+	MCServerDebugError(ctxt, line, pos, id);
 	
 	// Increasing the error lock means that more MCB_error invocations won't occur as
 	// we step back up the (script) call stack.
@@ -107,7 +107,7 @@ void MCB_done(MCExecPoint &ep)
 
 void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name)
 {
-	MCServerDebugVariableChanged(ctxt, p_value, name);
+	MCServerDebugVariableChanged(ctxt, name);
 }
 
 #else

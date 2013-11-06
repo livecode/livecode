@@ -745,10 +745,10 @@ void X_clear_globals(void)
     MCttfont = MCSTR("Lucida Grande");
     MCttsize = 11;
 #else
-    uint2 MClook = LF_MOTIF;
-    MCStringRef MCttbgcolor = MCSTR("255,255,207");
-    MCStringRef MCttfont = MCSTR("Helvetica");
-    uint2 MCttsize = 12;
+    MClook = LF_MOTIF;
+    MCttbgcolor = MCSTR("255,255,207");
+    MCttfont = MCSTR("Helvetica");
+    MCttsize = 12;
 #endif
     MCttsize = 12;
 	MCtrylock = 0;

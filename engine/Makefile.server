@@ -19,7 +19,7 @@ CUSTOM_INCLUDES=\
 
 CUSTOM_DEPS=libkernel-server.a
 
-CUSTOM_LIBS=pcre png jpeg z core gif graphics skia kernel-server
+CUSTOM_LIBS=pcre png jpeg z foundation gif graphics skia kernel-server
 CUSTOM_STATIC_LIBS=curl ssl crypto rt
 CUSTOM_DYNAMIC_LIBS=dl m pthread
 

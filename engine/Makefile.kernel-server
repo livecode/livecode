@@ -34,11 +34,11 @@ SOURCES=\
 	combiners.cpp path.cpp metacontext.cpp \
 	printer.cpp unicode.cpp rtf.cpp rtfsupport.cpp text.cpp pathgray.cpp \
 	pathprocess.cpp \
-	variablearray.cpp objectstream.cpp \
+	objectstream.cpp \
 	menuparse.cpp parentscript.cpp securemode.cpp \
 	bitmapeffect.cpp bitmapeffectblur.cpp md5.cpp sha1.cpp capsule.cpp \
 	externalv0.cpp externalv1.cpp lextable.cpp uuid.cpp \
-	objectprops.cpp objectpropsets.cpp variablevalue.cpp mcutility.cpp notify.cpp customprinter.cpp \
+	objectprops.cpp objectpropsets.cpp mcutility.cpp notify.cpp customprinter.cpp \
 	sysspec.cpp mode_server.cpp sysunxdate.cpp sysunxnetwork.cpp sysunxrandom.cpp \
 	srvmain.cpp srvspec.cpp srvsession.cpp srvstack.cpp srvposix.cpp srvdebug.cpp \
 	srvscript.cpp srvcgi.cpp srvoutput.cpp srvmultipart.cpp srvtheme.cpp \

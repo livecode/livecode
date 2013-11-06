@@ -1556,10 +1556,10 @@ static Exec_stat MCHandleClearTouches(void *context, MCParameter *p_parameters)
 ////////////////////////////////////////////////////////////////////////////////
 
 // AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
-int MCSystemCompareInternational(const char *p_left, const char *p_right)
+int MCSystemCompareInternational(MCStringRef p_left, MCStringRef p_right)
 {
     int32_t t_compare;
-    MCAndroidEngineCall("compareInternational", "iss", &t_compare, p_left, p_right);
+    MCAndroidEngineCall("compareInternational", "ixx", &t_compare, p_left, p_right);
     return t_compare;
 }
 
