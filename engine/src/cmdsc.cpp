@@ -1451,7 +1451,7 @@ Parse_stat MCDelete::parse(MCScriptPoint &sp)
 }
 
 bool MCServerDeleteSession();
-Exec_stat MCDelete::exec(MCExecPoint &ep)
+void MCDelete::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCDelete */ LEGACY_EXEC
 if (var != NULL)
@@ -1555,25 +1555,20 @@ if (var != NULL)
 	return ES_NORMAL; 
 #endif /* MCDelete */
 
-
-	MCExecContext ctxt(ep);
-	if (var != NULL)
+    if (var != NULL)
 		MCEngineExecDeleteVariable(ctxt, var);
 	else if (file != NULL)
 	{
-		if (file->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_DELETE_BADFILEEXP, line, pos);
-			return ES_ERROR;
-		}
-		MCAutoStringRef t_target;
-		/* UNCHECKED */ ep.copyasstringref(&t_target);
+        MCAutoStringRef t_target;
+        if (!ctxt . EvalExprAsStringRef(file, EE_DELETE_BADFILEEXP, &t_target))
+            return;
+        
 		if (url)
 			MCNetworkExecDeleteUrl(ctxt, *t_target);
 		else
 			MCFilesExecDeleteFile(ctxt, *t_target);
 	}
-	else if (targets != NULL && targets -> issubstringchunk())
+    else if (targets != NULL && targets -> issubstringchunk())
 	{
 		MCAutoArray<MCVariableChunkPtr> t_chunks;
 		for(MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
@@ -1581,23 +1576,22 @@ if (var != NULL)
 			if (!t_chunk -> issubstringchunk())
 			{
 				MCeerror -> add(EE_CLIPBOARD_BADMIX, line, pos);
-				return ES_ERROR;
+				return;
 			}
             
 			MCVariableChunkPtr t_var_chunk;
-			if (t_chunk -> evalvarchunk(ep, true, false, t_var_chunk) != ES_NORMAL)
-				return ES_ERROR;
-
+			t_chunk -> evalvarchunk(ctxt, true, false, t_var_chunk);
+                        
 			if (!t_chunks . Push(t_var_chunk))
 			{
 				MCeerror -> add(EE_NO_MEMORY, line, pos);
 				break;
 			}
 		}
- 
+        
 		MCEngineExecDeleteVariableChunks(ctxt, t_chunks . Ptr(), t_chunks . Size());
 	}
-	else if (targets != nil && targets -> istextchunk())
+    else if (targets != nil && targets -> istextchunk())
 	{
 		MCAutoArray<MCObjectChunkPtr> t_chunks;
 		for(MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
@@ -1609,52 +1603,45 @@ if (var != NULL)
 			}
             
 			MCObjectChunkPtr t_obj_chunk;
-			if (t_chunk -> evalobjectchunk(ep, true, false, t_obj_chunk) != ES_NORMAL)
-				return ES_ERROR;
-
+			t_chunk -> evalobjectchunk(ctxt, true, false, t_obj_chunk);
+            
 			if (!t_chunks . Push(t_obj_chunk))
 			{
 				MCeerror -> add(EE_NO_MEMORY, line, pos);
 				break;
 			}
 		}
-
+        
 		MCInterfaceExecDeleteObjectChunks(ctxt, t_chunks . Ptr(), t_chunks . Size());
 	}
-	else if (targets != nil)
+    else if (targets != nil)
 	{
 		MCAutoArray<MCObjectPtr> t_objects;
 		for(MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
 		{
 			MCObjectPtr t_object;
-			if (t_chunk -> getobj(ep, t_object, True) != ES_NORMAL)
-				return ES_ERROR;
-
+			t_chunk -> getobj(ctxt, t_object, True);
+				            
 			if (!t_objects . Push(t_object))
 			{
 				MCeerror -> add(EE_NO_MEMORY, line, pos);
 				break;
 			}
 		}
-
-		MCInterfaceExecDeleteObjects(ctxt, t_objects . Ptr(), t_objects . Size()); 
+        
+		MCInterfaceExecDeleteObjects(ctxt, t_objects . Ptr(), t_objects . Size());
 	}
-	else if (session)
+    else if (session)
 	{
 #ifdef _SERVER
 		MCServerExecDeleteSession(ctxt);
 #else
 		MCeerror->add(EE_SESSION_BADCONTEXT, line, pos);
-		return ES_ERROR;
+		return;
 #endif
 	}
 	else
 		MCInterfaceExecDelete(ctxt);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCDelete::compile(MCSyntaxFactoryRef ctxt)
