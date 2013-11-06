@@ -2445,7 +2445,7 @@ void MCSort::additem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, Sort
 	nitems++;
 }
 
-Exec_stat MCSort::exec(MCExecPoint &ep)
+void MCSort::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCSort */ LEGACY_EXEC
 	if (of == NULL && chunktype == CT_FIELD)
@@ -2515,39 +2515,35 @@ Exec_stat MCSort::exec(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCSort */
-	MCExecContext ctxt(ep);
-	MCObjectPtr t_object;
+    
+    MCObjectPtr t_object;
+    MCAutoStringRef t_target;
 	if (of != NULL)
 	{
 		MCerrorlock++;
-		if (of->getobj(ep, t_object, False) != ES_NORMAL || t_object . object->gettype() == CT_BUTTON)
+        of->getoptionalobj(ctxt, t_object, False);
+        //Program crashes at this point, message says "Program received signal : EXC_BAD_ACCESS "
+		if (t_object . object == nil || t_object . object->gettype() == CT_BUTTON)
 		{
 			MCerrorlock--;
-			if (of->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_SORT_BADTARGET, line, pos);
-				return ES_ERROR;
-			}
+            of -> eval(ctxt, &t_target);
 		}
 		else
 			MCerrorlock--;
 		if (t_object . object != nil && t_object . object->gettype() > CT_GROUP && chunktype <= CT_GROUP)
 			chunktype = CT_LINE;
 	}
-
+    
 	if (chunktype == CT_CARD || chunktype == CT_MARKED)
 		MCInterfaceExecSortCardsOfStack(ctxt, (MCStack *)t_object . object, direction == ST_ASCENDING, format, by, chunktype == CT_MARKED);
 	else if (t_object . object == nil || t_object . object->gettype() == CT_BUTTON)
 	{
-		MCAutoStringRef t_target;
-		/* UNCHECKED */ ep . copyasstringref(&t_target);
-
-		MCStringRef t_sorted_target;
+        MCStringRef t_sorted_target;
 		t_sorted_target = *t_target;
 		MCInterfaceExecSortContainer(ctxt, t_sorted_target, chunktype, direction == ST_ASCENDING, format, by);
 		if (!ctxt . HasError())
 		{
-            of -> set(ep, PT_INTO, t_sorted_target);
+            of -> set(ctxt, PT_INTO, t_sorted_target);
 			MCValueRelease(t_sorted_target);
 		}
 	}
@@ -2560,11 +2556,6 @@ Exec_stat MCSort::exec(MCExecPoint &ep)
 		}
 		MCInterfaceExecSortField(ctxt, t_object, chunktype, direction == ST_ASCENDING, format, by);
 	}
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCSort::compile(MCSyntaxFactoryRef ctxt)
