@@ -746,7 +746,7 @@ bool MCExecContext::EvalExprAsChar(MCExpression *p_expr, Exec_errors p_error, ch
 	
 	LegacyThrow(p_error);
 	
-	return false;
+    return false;
 }
 
 bool MCExecContext::EvalOptionalExprAsChar(MCExpression *p_expr, char_t p_default, Exec_errors p_error, char_t& r_value)
@@ -774,15 +774,18 @@ bool MCExecContext::EvalExprAsPoint(MCExpression *p_expr, Exec_errors p_error, M
 	return false;
 }
 
-bool MCExecContext::EvalOptionalExprAsPoint(MCExpression *p_expr, MCPoint p_default, Exec_errors p_error, MCPoint& r_value)
+bool MCExecContext::EvalOptionalExprAsPoint(MCExpression *p_expr, MCPoint* p_default, Exec_errors p_error, MCPoint*& r_value)
 {
 	if (p_expr == nil)
 	{
 		r_value = p_default;
 		return true;
 	}
-	
-	return EvalExprAsPoint(p_expr, p_error, r_value);
+
+    // Makes sure the return parameter isn't a nil pointer
+    MCAssert(r_value != nil);
+
+    return EvalExprAsPoint(p_expr, p_error, *r_value);
 }
 
 bool MCExecContext::EvalExprAsColor(MCExpression *p_expr, Exec_errors p_error, MCColor& r_value)
@@ -799,15 +802,18 @@ bool MCExecContext::EvalExprAsColor(MCExpression *p_expr, Exec_errors p_error, M
 	return false;
 }
 
-bool MCExecContext::EvalOptionalExprAsColor(MCExpression *p_expr, MCColor p_default, Exec_errors p_error, MCColor& r_value)
+bool MCExecContext::EvalOptionalExprAsColor(MCExpression *p_expr, MCColor *p_default, Exec_errors p_error, MCColor *&r_value)
 {
 	if (p_expr == nil)
 	{
 		r_value = p_default;
-		return true;
-	}
-	
-	return EvalExprAsColor(p_expr, p_error, r_value);
+        return true;
+    }
+
+    // Makes sure the return parameter isn't a nil pointer
+    MCAssert(r_value != nil);
+
+    return EvalExprAsColor(p_expr, p_error, *r_value);
 }
 
 bool MCExecContext::EvalExprAsRectangle(MCExpression *p_expr, Exec_errors p_error, MCRectangle& r_value)
@@ -824,15 +830,18 @@ bool MCExecContext::EvalExprAsRectangle(MCExpression *p_expr, Exec_errors p_erro
 	return false;
 }
 
-bool MCExecContext::EvalOptionalExprAsRectangle(MCExpression *p_expr, MCRectangle p_default, Exec_errors p_error, MCRectangle& r_value)
+bool MCExecContext::EvalOptionalExprAsRectangle(MCExpression *p_expr, MCRectangle* p_default, Exec_errors p_error, MCRectangle*& r_value)
 {
 	if (p_expr == nil)
 	{
 		r_value = p_default;
-		return true;
-	}
-	
-	return EvalExprAsRectangle(p_expr, p_error, r_value);
+        return true;
+    }
+
+    // Makes sure the return parameter isn't a nil pointer
+    MCAssert(r_value != nil);
+
+    return EvalExprAsRectangle(p_expr, p_error, *r_value);
 }
 
 
