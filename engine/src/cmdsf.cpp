@@ -1363,7 +1363,6 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 	return t_status;
 #endif /* MCExport */
 
-    MCExecPoint ep;
 	MCAutoStringRef t_return_data;
 	MCAutoStringRef t_filename;
     ctxt . EvalOptionalExprAsStringRef(fname, kMCEmptyString, EE_EXPORT_BADNAME, &t_filename);
@@ -1841,7 +1840,7 @@ Parse_stat MCFilter::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCFilter::exec(MCExecPoint &ep)
+void MCFilter::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCFilter */ LEGACY_EXEC
 	if (container->eval(ep) != ES_NORMAL)
@@ -1870,38 +1869,29 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCFilter */
 
-
-	MCExecContext ctxt(ep);
-
 	MCAutoStringRef t_source;
-	if (container->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_FILTER_CANTGET, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
+    MCAutoStringRef t_pattern;
+    MCAutoStringRef t_output;
 
-	MCAutoStringRef t_pattern;
-	if (pattern->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_FILTER_CANTGETPATTERN, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep . copyasstringref(&t_pattern);
+    ctxt . EvalExprAsStringRef(container, EE_FILTER_CANTGET, &t_source);
 
-	MCAutoStringRef t_output;
+    if (ctxt . HasError())
+        return;
+
+    ctxt . EvalExprAsStringRef(pattern, EE_FILTER_CANTGETPATTERN, &t_pattern);
+
+    if (ctxt . HasError())
+        return;
+
 	MCStringsExecFilter(ctxt, *t_source, *t_pattern, out == True, &t_output);
 
-	if (container->set(ep, PT_INTO, *t_output) != ES_NORMAL)
-	{
-		MCeerror->add(EE_FILTER_CANTSET, line, pos);
-		return ES_ERROR;
-	}
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
+    container -> set(ctxt, PT_INTO, *t_output);
 
-	return ctxt . Catch(line, pos);
+    if (ctxt . HasError())
+    {
+        ctxt . LegacyThrow(EE_FILTER_CANTSET);
+        return;
+    }
 }
 
 void MCFilter::compile(MCSyntaxFactoryRef ctxt)
