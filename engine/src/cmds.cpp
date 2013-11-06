@@ -1431,7 +1431,7 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
 			if (!ctxt . ConvertToString(*t_value, &t_string))
 			{
 				MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
-				return ES_ERROR;
+				return;
 			}
 			
 			MCUrlChunkPtr t_url_chunk;
@@ -1452,14 +1452,14 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
                 if (t_obj_chunk . object -> gettype() != CT_FIELD)
                 {
                     MCeerror -> add(EE_CHUNK_CANTSETUNICODEDEST, line, pos);
-                    return ES_ERROR;
+                    return;
                 }
                 
                 MCAutoDataRef t_data;
                 if (!ctxt . ConvertToData(*t_value, &t_data))
                 {
                     MCeerror -> add(EE_CHUNK_CANTSETUNICODEDEST, line, pos);
-                    return ES_ERROR;
+                    return;
                 }
                 MCInterfaceExecPutUnicodeIntoField(ctxt, *t_data, prep, t_obj_chunk);
             }
@@ -1469,7 +1469,7 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
                 if (!ctxt . ConvertToString(*t_value, &t_string))
                 {
                     MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
-                    return ES_ERROR;
+                    return;
                 }
                 
                 if (t_obj_chunk . object -> gettype() == CT_FIELD)
@@ -1487,7 +1487,7 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
 			if (!ctxt . ConvertToData(*t_value, (MCDataRef&)&t_val))
 			{
 				MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
-				return ES_ERROR;
+				return;
 			}
         }
 		else
@@ -1496,7 +1496,7 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
                 
 			{
 				MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
-				return ES_ERROR;
+				return;
 			}
         }
 		
@@ -2552,7 +2552,7 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
 		if (t_object . object->gettype() != CT_FIELD || !of->nochunks())
 		{
 			MCeerror->add(EE_SORT_CANTSORT, line, pos);
-			return ES_ERROR;
+			return;
 		}
 		MCInterfaceExecSortField(ctxt, t_object, chunktype, direction == ST_ASCENDING, format, by);
 	}
