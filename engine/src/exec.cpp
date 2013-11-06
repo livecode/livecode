@@ -482,7 +482,18 @@ bool MCExecContext::EvalOptionalExprAsStringRef(MCExpression *p_expr, MCStringRe
 		return true;
 	}
 	
-	return EvalExprAsStringRef(p_expr, p_error, r_value);
+    return EvalExprAsStringRef(p_expr, p_error, r_value);
+}
+
+bool MCExecContext::EvalOptionalExprAsNullableStringRef(MCExpression *p_expr, Exec_errors p_error, MCStringRef &r_value)
+{
+    if (p_expr == nil)
+    {
+        r_value = nil;
+        return true;
+    }
+
+    return EvalExprAsStringRef(p_expr, p_error, r_value);
 }
 
 bool MCExecContext::EvalExprAsBooleanRef(MCExpression *p_expr, Exec_errors p_error, MCBooleanRef& r_value)
