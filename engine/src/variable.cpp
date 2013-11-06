@@ -866,6 +866,14 @@ MCVariable *MCVarref::evalvar(MCExecPoint& ep)
 	return fetchvar(ep);
 }
 
+MCVariable *MCVarref::evalvar(MCExecContext& ctxt)
+{
+    if (dimensions != 0)
+        return NULL;
+
+    return fetchvar(ctxt);
+}
+
 Exec_stat MCVarref::eval(MCExecPoint& ep)
 {
 	if (dimensions == 0)
@@ -914,6 +922,17 @@ Exec_stat MCVarref::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
 	}
 
 	return resolve(ep, r_container);
+}
+
+void MCVarref::evalcontainer(MCExecContext& ctxt, MCContainer*& r_container)
+{
+    if (dimensions == 0)
+    {
+        if (!MCContainer::createwithvariable(fetchvar(ctxt), r_container))
+            ctxt . Throw();
+    }
+    else
+        resolve(ctxt, r_container);
 }
 
 void MCVarref::compile(MCSyntaxFactoryRef ctxt)
@@ -1248,65 +1267,54 @@ bool MCVarref::resolve(MCExecContext& ctxt, MCContainer*& r_container)
     
 	Exec_stat t_stat;
 	t_stat = ES_NORMAL;
-    
-	MCExecPoint& ep = ctxt . GetEP();
-	for(uindex_t i = 0; i < dimensions && t_stat == ES_NORMAL; i++)
+
+    for(uindex_t i = 0; i < dimensions && !ctxt . HasError(); i++)
 	{
-		t_stat = t_dimensions[i] -> eval(ep);
-        
-		if (t_stat == ES_NORMAL)
-		{
-			if (ep . isarray() && !ep . isempty())
-			{
-				MCArrayRef t_array;
-				t_array = ep . getarrayref();
-                
-				if (!MCArrayIsSequence(t_array))
-				{
-					MCeerror -> add(EE_VARIABLE_BADINDEX, line, pos);
-					t_stat = ES_ERROR;
-				}
-                
-				if (t_stat == ES_NORMAL)
+        MCAutoValueRef t_value;
+        ctxt . EvalExprAsValueRef(t_dimensions[i], EE_VARIABLE_BADINDEX, &t_value);
+
+        if (!ctxt . HasError())
+        {
+            MCAutoArrayRef t_array;
+
+            if (ctxt . ConvertToArray(*t_value, &t_array)
+                    && !MCArrayIsEmpty(*t_array))
+            {
+                if (!MCArrayIsSequence(*t_array))
+                    ctxt . LegacyThrow(EE_VARIABLE_BADINDEX);
+                else
 				{
 					uindex_t t_length;
-					t_length = MCArrayGetCount(t_array);
+                    t_length = MCArrayGetCount(*t_array);
                     
 					/* UNCHECKED */ MCMemoryResizeArray(t_dimension_count + t_length, t_path, t_dimension_count);
-                    
-					MCExecPoint ep2(ep);
+
 					for(uindex_t t_index = 1; t_index <= t_length; t_index += 1)
-					{
-						if (!ep2 . fetcharrayindex(t_array, t_index))
-							ep2 . clear();
-						
-						if (!ep2 . copyasnameref(t_path[t_path_length++]))
-						{
-							MCeerror -> add(EE_VARIABLE_BADINDEX, line, pos);
-							t_stat = ES_ERROR;
+                    {
+                        MCAutoValueRef t_value_fetched;
+                        /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_array, t_index, &t_value_fetched);
+
+                        if (!ctxt . ConvertToName(*t_value_fetched, t_path[t_path_length++]))
+                        {
+                            ctxt . LegacyThrow(EE_VARIABLE_BADINDEX);
 							break;
 						}
 					}
 				}
 			}
-			else if (!ep . copyasnameref(t_path[t_path_length++]))
-			{
-				MCeerror -> add(EE_VARIABLE_BADINDEX, line, pos);
-				t_stat = ES_ERROR;
-			}
+            else if (!ctxt . ConvertToName(*t_value, t_path[t_path_length++]))
+                ctxt . LegacyThrow(EE_VARIABLE_BADINDEX);
 		}
 	}
     
-	if (t_stat == ES_NORMAL)
+    if (!ctxt . HasError())
     /* UNCHECKED */ MCContainer::createwithpath(t_var, t_path, t_path_length, r_container);
 	else
 	{
 		for(uindex_t i = 0; i < t_path_length; i++)
 			MCValueRelease(t_path[i]);
 		MCMemoryDeleteArray(t_path);
-	}
-    
-	return t_stat;
+    }
 }
 
 // Resolve references to the appropriate element refered to by this Varref.
