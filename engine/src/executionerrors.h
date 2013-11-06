@@ -2404,6 +2404,9 @@ enum Exec_errors
 
 	// {EE-0789} Property: value is not an array
 	EE_PROPERTY_NOTANARRAY,
+
+    // {EE-0790} Import: no image selected, or image not open
+    EE_IMPORT_NOSELECTED,
 };
 
 extern const char *MCexecutionerrors;
