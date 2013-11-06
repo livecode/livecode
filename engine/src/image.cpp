@@ -86,6 +86,7 @@ MCImage::MCImage()
 	m_flip_x = false;
 	m_flip_y = false;
 
+	m_locked_rep = nil;
 	m_locked_frame = nil;
 	m_needs = nil;
 
@@ -109,6 +110,7 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 	m_flip_x = false;
 	m_flip_y = false;
 	
+	m_locked_rep = nil;
 	m_locked_frame = nil;
 	m_needs = nil;
 
@@ -2431,7 +2433,16 @@ bool MCImage::copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *
 	
 	apply_transform();
 	
-	t_success = m_rep != nil;
+	// IM-2013-11-06: [[ RefactorGraphics ]] Use common method to get image rep & transform
+	// so imagedata & rendered image have the same appearance
+	MCImageRep *t_rep;
+	bool t_has_transform;
+	MCGAffineTransform t_transform;
+	
+	t_success = get_rep_and_transform(t_rep, t_has_transform, t_transform);
+	
+	if (t_success)
+		t_success = t_rep != nil;
 	
 	// IM-2013-10-30: [[ FullscreenMode ]] REVISIT: This needs more work to figure out if
 	// we can get a better match to the requested scale & transform
@@ -2439,7 +2450,7 @@ bool MCImage::copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *
 	t_scale_factor = getscalefactor();
 	
 	bool t_copy_pixels;
-	t_copy_pixels = !m_has_transform && p_scale == t_scale_factor;
+	t_copy_pixels = !t_has_transform && p_scale == t_scale_factor;
 	
 	bool t_premultiplied;
 	t_premultiplied = p_premultiplied || !t_copy_pixels;
@@ -2463,7 +2474,7 @@ bool MCImage::copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *
 			MCGAffineTransform t_combined_transform;
 			t_combined_transform = MCGAffineTransformMakeScale(p_scale, p_scale);
 			if (t_has_transform)
-				t_combined_transform = MCGAffineTransformConcat(t_combined_transform, m_transform);
+				t_combined_transform = MCGAffineTransformConcat(t_combined_transform, t_transform);
 			t_combined_transform = MCGAffineTransformConcat(t_combined_transform, MCGAffineTransformMakeScale(1.0 / t_frame->density, 1.0 / t_frame->density));
 			
 			MCGImageFilter t_filter;
@@ -2476,8 +2487,8 @@ bool MCImage::copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *
 		}
 	}
 	
-	if (m_rep != nil)
-		m_rep->UnlockImageFrame(currentframe, t_frame);
+	if (t_rep != nil)
+		t_rep->UnlockImageFrame(currentframe, t_frame);
 	
 	return t_success;
 }
@@ -2488,14 +2499,26 @@ bool MCImage::lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_
 	if (p_update_transform)
 		apply_transform();
 
-	if (m_rep != nil)
+	// IM-2013-11-06: [[ RefactorGraphics ]] Use common method to get image rep & transform
+	// so imagedata & rendered image have the same appearance
+	MCImageRep *t_rep;
+	bool t_has_transform;
+	MCGAffineTransform t_transform;
+	
+	if (!get_rep_and_transform(t_rep, t_has_transform, t_transform))
+		return false;
+	
+	if (t_rep != nil)
 	{
 		// IM-2013-10-30: [[ FullscreenMode ]] REVISIT: Use appropriate density value if
 		// transforming image. For now just use 1.0
-		if (!m_rep->LockImageFrame(currentframe, p_premultiplied || m_has_transform, 1.0, m_locked_frame))
+		if (!t_rep->LockImageFrame(currentframe, p_premultiplied || t_has_transform, 1.0, m_locked_frame))
 			return false;
 
-		if (!m_has_transform)
+		// IM-2013-11-06: [[ RefactorGraphics ]] Record the locked rep so we can unlock it later
+		m_locked_rep = t_rep;
+		
+		if (!t_has_transform)
 		{
 			r_bitmap = m_locked_frame->image;
 			return true;
@@ -2505,7 +2528,7 @@ bool MCImage::lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_
 		
 		// IM-2013-11-06: [[ RefactorGraphics ]] Apply density when calculating image transform.
 		MCGAffineTransform t_combined_transform;
-		t_combined_transform = MCGAffineTransformConcat(m_transform, MCGAffineTransformMakeScale(1.0 / m_locked_frame->density, 1.0 / m_locked_frame->density));
+		t_combined_transform = MCGAffineTransformConcat(t_transform, MCGAffineTransformMakeScale(1.0 / m_locked_frame->density, 1.0 / m_locked_frame->density));
 		
 		MCGImageFilter t_filter;
 		t_filter = resizequality == INTERPOLATION_BICUBIC ? kMCGImageFilterBicubic : (resizequality == INTERPOLATION_BILINEAR ? kMCGImageFilterBilinear : kMCGImageFilterNearest);
@@ -2528,17 +2551,15 @@ bool MCImage::lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_
 
 void MCImage::unlockbitmap(MCImageBitmap *p_bitmap)
 {
-	if (p_bitmap == nil || m_locked_frame == nil)
+	if (p_bitmap == nil || m_locked_rep == nil)
 		return;
 
 	MCImageFreeBitmap(m_transformed_bitmap);
 	m_transformed_bitmap = nil;
 
-	if (m_rep != nil)
-	{
-		m_rep->UnlockImageFrame(currentframe, m_locked_frame);
-		m_locked_frame = nil;
-	}
+	m_locked_rep->UnlockImageFrame(currentframe, m_locked_frame);
+	m_locked_rep = nil;
+	m_locked_frame = nil;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
