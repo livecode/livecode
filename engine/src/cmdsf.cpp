@@ -4140,7 +4140,7 @@ void MCRead::exec_ctxt(MCExecContext& ctxt)
                 }
                 break;
             case OA_SOCKET:
-                if (!ctxt . EvalOptionalExprAsNameRef(at, kMCEmptyName, EE_WRITE_BADEXP, &t_message))
+                if (!ctxt . EvalOptionalExprAsNullableNameRef(at, EE_WRITE_BADEXP, &t_message))
                     return;
                 break;
             default:
