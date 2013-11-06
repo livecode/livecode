@@ -1903,16 +1903,8 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
     }
 }
 
-/* WRAPPER */
 Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recurse)
 {
-
-    MCExecContext ctxt(ep);
-
-    getobj(ctxt, r_object, p_recurse);
-
-    return ctxt . HasError() ? ES_ERROR : ES_NORMAL;
-#ifdef LEGACY_EXEC
     MCExecPoint ep2(ep);
     MCExecContext ctxt(ep);
     
@@ -2516,7 +2508,6 @@ Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recu
     }
     
     return ES_ERROR;
-#endif
 }
 
 void MCChunk::getobj(MCExecContext &ctxt, MCObject *&objptr, uint4 &parid, Boolean recurse)
@@ -2535,14 +2526,21 @@ void MCChunk::getobj(MCExecContext &ctxt, MCObject *&objptr, uint4 &parid, Boole
     parid = t_object . part_id;
 }
 
-/* WRAPPER */
 Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr, uint4 &parid, Boolean recurse)
 {
-    MCExecContext ctxt(ep);
+    objptr = nil;
+    parid = 0;
 
-    getobj(ctxt, objptr, parid, recurse);
+    MCObjectPtr t_object;
 
-    return ctxt . HasError() ? ES_ERROR : ES_NORMAL;
+    if (getobj(ep, t_object, recurse) == ES_NORMAL)
+    {
+        objptr = t_object . object;
+        parid = t_object . part_id;
+        return ES_NORMAL;
+    }
+
+    return ES_ERROR;
 }
 
 #ifdef LEGACY_EXEC
@@ -3383,16 +3381,158 @@ static void skip_word(const char *&sptr, const char *&eptr)
 }
 #endif
 
-/* WRAPPER */
+
 Exec_stat MCChunk::mark(MCExecPoint &ep, Boolean force, Boolean wholechunk, MCMarkedText& x_mark, bool includechars)
 {
     MCExecContext ctxt(ep);
-    mark(ctxt, force, wholechunk, x_mark, includechars);
+    int4 t_first, t_last;
 
-    if (ctxt . HasError())
-        return ES_ERROR;
-    else
-        return ES_NORMAL;
+    if (cline != nil)
+    {
+        if (cline -> etype == CT_RANGE || cline -> etype == CT_EXPRESSION)
+        {
+            if (cline->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGESTART, line, pos);
+                return ES_ERROR;
+            }
+            t_first = ep . getint4();
+
+            if (cline -> etype == CT_RANGE)
+            {
+                    if (cline->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+                    {
+                        MCeerror->add(EE_CHUNK_BADRANGEEND, line, pos);
+                        return ES_ERROR;
+                    }
+                    t_last = ep.getint4();
+            }
+            else
+                t_last = t_first;
+
+            MCStringsMarkLinesOfTextByRange(ctxt, t_first, t_last, x_mark);
+        }
+        else
+            MCStringsMarkLinesOfTextByOrdinal(ctxt, cline -> etype, x_mark);
+    }
+
+    if (item != nil)
+    {
+        if (item -> etype == CT_RANGE || item -> etype == CT_EXPRESSION)
+        {
+            if (item->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGESTART, line, pos);
+                return ES_ERROR;
+            }
+            t_first = ep . getint4();
+
+            if (item -> etype == CT_RANGE)
+            {
+                    if (item->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+                    {
+                        MCeerror->add(EE_CHUNK_BADRANGEEND, line, pos);
+                        return ES_ERROR;
+                    }
+                    t_last = ep.getint4();
+            }
+            else
+                t_last = t_first;
+
+            MCStringsMarkItemsOfTextByRange(ctxt, t_first, t_last, x_mark);
+        }
+        else
+            MCStringsMarkItemsOfTextByOrdinal(ctxt, item -> etype, x_mark);
+    }
+
+    if (word != nil)
+    {
+        if (word -> etype == CT_RANGE || word -> etype == CT_EXPRESSION)
+        {
+            if (word->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGESTART, line, pos);
+                return ES_ERROR;
+            }
+            t_first = ep . getint4();
+
+            if (word -> etype == CT_RANGE)
+            {
+                    if (word->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+                    {
+                        MCeerror->add(EE_CHUNK_BADRANGEEND, line, pos);
+                        return ES_ERROR;
+                    }
+                    t_last = ep.getint4();
+            }
+            else
+                t_last = t_first;
+
+            MCStringsMarkWordsOfTextByRange(ctxt, t_first, t_last, x_mark);
+        }
+        else
+            MCStringsMarkWordsOfTextByOrdinal(ctxt, word -> etype, x_mark);
+    }
+
+    if (token != nil)
+    {
+        if (token -> etype == CT_RANGE || token -> etype == CT_EXPRESSION)
+        {
+            if (token->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGESTART, line, pos);
+                return ES_ERROR;
+            }
+            t_first = ep . getint4();
+
+            if (token -> etype == CT_RANGE)
+            {
+                    if (token->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+                    {
+                        MCeerror->add(EE_CHUNK_BADRANGEEND, line, pos);
+                        return ES_ERROR;
+                    }
+                    t_last = ep.getint4();
+            }
+            else
+                t_last = t_first;
+
+            MCStringsMarkTokensOfTextByRange(ctxt, t_first, t_last, x_mark);
+        }
+        else
+            MCStringsMarkTokensOfTextByOrdinal(ctxt, token -> etype, x_mark);
+    }
+
+    if (character != nil)
+    {
+        if (character -> etype == CT_RANGE || character -> etype == CT_EXPRESSION)
+        {
+            if (character->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGESTART, line, pos);
+                return ES_ERROR;
+            }
+            t_first = ep . getint4();
+
+            if (character -> etype == CT_RANGE)
+            {
+                    if (character->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+                    {
+                        MCeerror->add(EE_CHUNK_BADRANGEEND, line, pos);
+                        return ES_ERROR;
+                    }
+                    t_last = ep.getint4();
+            }
+            else
+                t_last = t_first;
+
+            MCStringsMarkCharsOfTextByRange(ctxt, t_first, t_last, x_mark);
+        }
+        else
+            MCStringsMarkCharsOfTextByOrdinal(ctxt, character -> etype, x_mark);
+    }
+
+    return ES_NORMAL;
 }
 
 void MCChunk::mark(MCExecContext &ctxt, Boolean force, Boolean wholechunk, MCMarkedText& x_mark, bool includechars)
@@ -4083,18 +4223,6 @@ Exec_stat MCChunk::evaltextchunk(MCExecPoint &ep, MCCRef *ref, MCStringRef p_sou
 
 Exec_stat MCChunk::eval(MCExecPoint &ep)
 {
-    MCAutoStringRef t_string;
-    MCExecContext ctxt(ep);
-
-    eval(ctxt, &t_string);
-
-    if (ctxt . HasError())
-        return ES_ERROR;
-
-    ep . setvalueref(*t_string);
-    return ES_NORMAL;
-
-#ifdef LEGACY_EXEC
     MCAutoStringRef t_text;
     MCExecContext ctxt(ep);
     
@@ -4234,7 +4362,6 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
         return ES_NORMAL;
     
     return ctxt . Catch(line, pos);
-#endif
 }
 
 void MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
@@ -4693,15 +4820,9 @@ Exec_stat MCChunk::set_legacy(MCExecPoint &ep, Preposition_type ptype)
 }
 #endif
 
-/* WRAPPER */
+
 Exec_stat MCChunk::set(MCExecPoint& ep, Preposition_type p_type, MCValueRef p_value)
 {
-    MCExecContext ctxt(ep);
-
-    set(ctxt, p_type, p_value);
-
-    return ctxt . HasError() ? ES_ERROR : ES_NORMAL;
-#ifdef LEGACY_EXEC
     MCExecContext ctxt(ep);
     
     if (isvarchunk())
@@ -4753,7 +4874,6 @@ Exec_stat MCChunk::set(MCExecPoint& ep, Preposition_type p_type, MCValueRef p_va
         return ES_NORMAL;
     
     return ES_ERROR;
-#endif
 }
 
 void MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_value)
@@ -4883,16 +5003,6 @@ Exec_stat MCChunk::setunicode(MCExecPoint& ep, Preposition_type p_prep)
 
 Exec_stat MCChunk::count(Chunk_term tocount, Chunk_term ptype, MCExecPoint &ep)
 {
-    uint4 t_count;
-    MCExecContext ctxt(ep);
-    count(ctxt, tocount, ptype, t_count);
-
-    if (ctxt . HasError())
-        return ES_ERROR;
-
-    ep . setnvalue(t_count);
-    return ES_NORMAL;
-#ifdef LEGACY_EXEC
 	// MW-2009-07-22: First non-control chunk is now CT_ELEMENT.
 	if (tocount < CT_ELEMENT)
 	{
@@ -4979,7 +5089,6 @@ Exec_stat MCChunk::count(Chunk_term tocount, Chunk_term ptype, MCExecPoint &ep)
 		ep.setnvalue(i);
 	}
     return ES_NORMAL;
-#endif
 }
 
 void MCChunk::count(MCExecContext &ctxt, Chunk_term tocount, Chunk_term ptype, uinteger_t& r_count)
@@ -5753,9 +5862,18 @@ Chunk_term MCChunk::getlastchunktype(void)
 Exec_stat MCChunk::evalvarchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_force, MCVariableChunkPtr& r_chunk)
 {
     MCExecContext ctxt(ep);
-    evalvarchunk(ctxt, p_whole_chunk, p_force, r_chunk);
+    MCEngineMarkVariable(ctxt, destvar, r_chunk . mark);
 
-    return ctxt . HasError() ? ES_ERROR : ES_NORMAL;
+    if (mark(ep, p_force, p_whole_chunk, r_chunk . mark) != ES_NORMAL)
+    {
+        MCeerror->add(EE_CHUNK_CANTMARK, line, pos);
+        return ES_ERROR;
+    }
+
+    r_chunk . variable = destvar;
+    r_chunk . chunk = getlastchunktype();
+
+    return ES_NORMAL;
 }
 
 void MCChunk::evalvarchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCVariableChunkPtr& r_chunk)
@@ -5776,10 +5894,6 @@ void MCChunk::evalvarchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force
 
 Exec_stat MCChunk::evalurlchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_force, MCUrlChunkPtr& r_chunk)
 {
-    MCExecContext ctxt(ep);
-    evalurlchunk(ctxt, p_whole_chunk, p_force, r_chunk);
-    return ctxt . HasError() ? ES_ERROR : ES_NORMAL;
-#ifdef LEGACY_EXEC
 	if (url->startpos->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_CHUNK_BADEXPRESSION, line, pos);
@@ -5803,7 +5917,6 @@ Exec_stat MCChunk::evalurlchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_forc
 	r_chunk . chunk = getlastchunktype();
 	
     return ES_NORMAL;
-#endif
 }
 
 void MCChunk::evalurlchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force, MCUrlChunkPtr &r_chunk)
@@ -5830,11 +5943,6 @@ void MCChunk::evalurlchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force
 
 Exec_stat MCChunk::evalobjectchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_force, MCObjectChunkPtr& r_chunk)
 {
-    MCExecContext ctxt(ep);
-    evalobjectchunk(ctxt, p_whole_chunk, p_force, r_chunk);
-
-    return ctxt . HasError() ? ES_ERROR : ES_NORMAL;
-#ifdef LEGACY_EXEC
 	MCObjectPtr t_object;
 	if (getobj(ep, t_object, True) != ES_NORMAL)
 	{
@@ -5879,7 +5987,6 @@ Exec_stat MCChunk::evalobjectchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_f
     r_chunk . chunk = !t_function ? getlastchunktype() : CT_CHARACTER;
     
     return ES_NORMAL;
-#endif
 }
 
 void MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force, MCObjectChunkPtr &r_chunk)
