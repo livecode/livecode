@@ -1364,8 +1364,8 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 #endif /* MCExport */
 
 	MCAutoStringRef t_return_data;
-	MCAutoStringRef t_filename;
-    ctxt . EvalOptionalExprNullableAsStringRef(fname, EE_EXPORT_BADNAME, &t_filename);
+    MCAutoStringRef t_filename;
+    ctxt . EvalOptionalExprAsNullableStringRef(fname, EE_EXPORT_BADNAME, &t_filename);
 
     if (ctxt . HasError())
         return;
