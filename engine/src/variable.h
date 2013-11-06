@@ -857,7 +857,9 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
     bool eval(MCExecContext& ctxt, MCValueRef& r_value);
 	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
+    void evalcontainer(MCExecContext &ctxt, MCContainer*& r_container);
 	virtual MCVariable *evalvar(MCExecPoint& ep);
+    virtual MCVariable *evalvar(MCExecContext& ctxt);
 	
 	virtual void compile(MCSyntaxFactoryRef);
 	virtual void compile_in(MCSyntaxFactoryRef);
