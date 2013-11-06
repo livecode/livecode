@@ -2684,7 +2684,7 @@ Parse_stat MCKill::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCKill::exec(MCExecPoint &ep)
+void MCKill::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCKill */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_PROCESS)
@@ -2752,33 +2752,15 @@ Exec_stat MCKill::exec(MCExecPoint &ep)
 	return ES_NORMAL; 
 #endif /* MCKill */
 
-
-	MCExecContext ctxt(ep);
-	
-	MCAutoStringRef t_signal;
-	if (sig != NULL)
-	{
-		if (sig->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_KILL_BADNUMBER, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&t_signal);
-	}
-	if (pname->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_KILL_BADNAME, line, pos);
-		return ES_ERROR;
-	}
-	MCAutoStringRef t_process;
-	/* UNCHECKED */ ep . copyasstringref(&t_process);
-
-	MCFilesExecKillProcess(ctxt, *t_process, *t_signal);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    MCAutoStringRef t_signal;
+    if (!ctxt . EvalOptionalExprAsStringRef(sig, kMCEmptyString, EE_KILL_BADNUMBER, &t_signal))
+        return;
+    
+    MCAutoStringRef t_process;
+    if (!ctxt . EvalExprAsStringRef(pname, EE_KILL_BADNAME, &t_process))
+        return;
+    
+    MCFilesExecKillProcess(ctxt, *t_process, *t_signal);
 }
 
 void MCKill::compile(MCSyntaxFactoryRef ctxt)
