@@ -1855,7 +1855,7 @@ Parse_stat MCFlip::parse(MCScriptPoint &sp)
 
 // MW-2007-09-22: [[ Bug 5083 ]] Ensure if we flip a targetted image, we restore
 //   back to current tool.
-Exec_stat MCFlip::exec(MCExecPoint &ep)
+void MCFlip::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCFlip */ LEGACY_EXEC
 bool t_created_selection;
@@ -1892,32 +1892,23 @@ bool t_created_selection;
 
 	return ES_NORMAL;
 #endif /* MCFlip */
-
-	MCExecContext ctxt(ep);
-	if (image != NULL)
+    
+    if (image != NULL)
 	{
 		MCObject *optr;
 		uint4 parid;
-		if (image->getobj(ep, optr, parid, True) != ES_NORMAL)
-		{
-			MCeerror->add(EE_FLIP_NOIMAGE, line, pos);
-			return ES_ERROR;
-		}
+		image->getobj(ctxt, optr, parid, True);
+		
 		if (optr->gettype() != CT_IMAGE)
 		{
 			MCeerror->add(EE_FLIP_NOTIMAGE, line, pos);
-			return ES_ERROR;
+			return;
 		}
 		MCImage *iptr = (MCImage *)optr;
 		MCGraphicsExecFlipImage(ctxt, iptr, direction == FL_HORIZONTAL);
 	}
-	else
+    else
 		MCGraphicsExecFlipSelection(ctxt, direction == FL_HORIZONTAL);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line,pos);
 }
 
 void MCFlip::compile(MCSyntaxFactoryRef ctxt)
