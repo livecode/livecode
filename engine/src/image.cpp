@@ -2484,9 +2484,18 @@ bool MCImage::lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_
 		MCGContextRef t_context = nil;
 		MCGRaster t_raster;
 
-		uint32_t t_trans_width = rect.width;
-		uint32_t t_trans_height = rect.height;
+		// IM-2013-11-06: [[ RefactorGraphics ]] Apply density when calculating image dimensions.
+		MCGRectangle t_image_rect;
+		t_image_rect = MCGRectangleMake(0, 0, m_locked_frame->image->width / m_locked_frame->density, m_locked_frame->image->height / m_locked_frame->density);
+		
+		// IM-2013-11-06: [[ Bug 11390 ]] Calculate target bitmap dimensions by transforming the source image rect.
+		// This prevents the resulting bitmap from being the wrong size when cropping. 
+		MCGRectangle t_trans_rect;
+		t_trans_rect = MCGRectangleApplyAffineTransform(t_image_rect, m_transform);
 
+		uint32_t t_trans_width = ceilf(t_trans_rect.size.width);
+		uint32_t t_trans_height = ceilf(t_trans_rect.size.height);
+		
 		// while cropping
 		if ((state & CS_SIZE) && (state & CS_EDITED))
 		{
@@ -2495,7 +2504,7 @@ bool MCImage::lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_
 			t_trans_height = m_current_height;
 		}
 
-		MCLog("locking transformed image: (%d,%d) -> (%d,%d)", m_locked_frame->image->width, m_locked_frame->image->height, t_trans_width, t_trans_height);
+		MCLog("locking transformed image: (%f,%f) -> (%d,%d)", t_image_rect.size.width, t_image_rect.size.height, t_trans_width, t_trans_height);
 
 		t_success = MCImageBitmapCreate(t_trans_width, t_trans_height, m_transformed_bitmap);
 		MCImageBitmapClear(m_transformed_bitmap);
@@ -2511,10 +2520,9 @@ bool MCImage::lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_
 			t_raster.pixels = m_locked_frame->image->data;
 			t_raster.format = kMCGRasterFormat_ARGB;
 
-			MCGRectangle t_dst = MCGRectangleMake(0, 0, m_locked_frame->image->width, m_locked_frame->image->height);
 			MCGImageFilter t_filter = resizequality == INTERPOLATION_BICUBIC ? kMCGImageFilterBicubic : (resizequality == INTERPOLATION_BILINEAR ? kMCGImageFilterBilinear : kMCGImageFilterNearest);
 			MCGContextConcatCTM(t_context, m_transform);
-			MCGContextDrawPixels(t_context, t_raster, t_dst, t_filter);
+			MCGContextDrawPixels(t_context, t_raster, t_image_rect, t_filter);
 		}
 
 		MCGContextRelease(t_context);
