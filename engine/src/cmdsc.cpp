@@ -2326,7 +2326,7 @@ void MCLoad::exec_ctxt(MCExecContext& ctxt)
 
     MCNewAutoNameRef t_message;
     
-    if (!ctxt . EvalOptionalExprAsNullableNameRef(message, EE_LOAD_BADMESSAGEEXP, &t_message))
+    if (!ctxt . EvalOptionalExprAsNameRef(message, kMCEmptyName, EE_LOAD_BADMESSAGEEXP, &t_message))
             return;
 	
     MCAutoStringRef t_url;

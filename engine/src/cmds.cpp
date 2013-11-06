@@ -120,7 +120,7 @@ void MCChoose::exec_ctxt(MCExecContext &ctxt)
 #endif /* MCChoose */
 
     MCAutoStringRef t_string;
-    if (!ctxt . EvalOptionalExprAsNullableStringRef(etool, EE_CHOOSE_BADEXP, &t_string))
+    if (!ctxt . EvalOptionalExprAsStringRef(etool, kMCEmptyString, EE_CHOOSE_BADEXP, &t_string))
         return;
     
     MCInterfaceExecChooseTool(ctxt, *t_string, littool);
