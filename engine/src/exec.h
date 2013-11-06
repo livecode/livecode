@@ -1130,16 +1130,20 @@ public:
 	bool EvalOptionalExprAsBooleanRef(MCExpression *expr, MCBooleanRef default_value, Exec_errors error, MCBooleanRef& r_value);
     
     bool EvalExprAsStringRef(MCExpression *expr, Exec_errors error, MCStringRef& r_value);
-	bool EvalOptionalExprAsStringRef(MCExpression *expr, MCStringRef default_value, Exec_errors error, MCStringRef& r_value);
-    
+    bool EvalOptionalExprAsStringRef(MCExpression *expr, MCStringRef default_value, Exec_errors error, MCStringRef& r_value);
+    bool EvalOptionalExprAsNullableStringRef(MCExpression *p_expr, Exec_errors p_error, MCStringRef& r_value);
+
     bool EvalExprAsNameRef(MCExpression *expr, Exec_errors error, MCNameRef& r_value);
 	bool EvalOptionalExprAsNameRef(MCExpression *expr, MCNameRef default_value, Exec_errors error, MCNameRef& r_value);
+    bool EvalOptionalExprAsNullableNameRef(MCExpression *p_expr, Exec_errors p_error, MCNameRef& r_value);
     
     bool EvalExprAsDataRef(MCExpression *expr, Exec_errors error, MCDataRef& r_value);
 	bool EvalOptionalExprAsDataRef(MCExpression *expr, MCDataRef default_value, Exec_errors error, MCDataRef& r_value);
+    bool EvalOptionalExprAsNullableDataRef(MCExpression *p_expr, Exec_errors p_error, MCDataRef& r_value);
     
     bool EvalExprAsArrayRef(MCExpression *expr, Exec_errors error, MCArrayRef& r_value);
 	bool EvalOptionalExprAsArrayRef(MCExpression *expr, MCArrayRef default_value, Exec_errors error, MCArrayRef& r_value);
+    bool EvalOptionalExprAsNullableArrayRef(MCExpression *p_expr, Exec_errors p_error, MCArrayRef& r_value);
     
     bool EvalExprAsNumberRef(MCExpression *expr, Exec_errors error, MCNumberRef& r_value);
 	bool EvalOptionalExprAsNumberRef(MCExpression *expr, MCNumberRef default_value, Exec_errors error, MCNumberRef& r_value);
