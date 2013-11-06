@@ -100,7 +100,7 @@ Parse_stat MCClone::parse(MCScriptPoint &sp)
 //     if target is not this stack then only if keyed and target valid
 //   clone an object of a stack - only if not locked
 // where a target is valid only if it is not locked and not protected
-Exec_stat MCClone::exec(MCExecPoint &ep)
+void MCClone::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCClone */ LEGACY_EXEC
 	MCStack *odefaultstackptr = MCdefaultstackptr;
@@ -213,32 +213,16 @@ Exec_stat MCClone::exec(MCExecPoint &ep)
 	return ES_NORMAL; 
 #endif /* MCClone */
 
-
-	MCExecContext ctxt(ep, it);
-	MCObject *optr = NULL;
+    ctxt . SetIt(it);
+    MCObject *optr = NULL;
 	uint4 parid;
-
-	if (source->getobj(ep, optr, parid, True) != ES_NORMAL)
-	{
-		MCeerror->add(EE_CLONE_NOTARGET, line, pos);
-		return ES_ERROR;
-	}
-	MCAutoStringRef t_new_name;
-	if (newname != NULL)
-	{
-		if (newname->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_CLONE_BADNAME, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&t_new_name);
-	}
+    source->getobj(ctxt, optr, parid, True);
+    
+    MCAutoStringRef t_new_name;    
+    if (!ctxt . EvalOptionalExprAsStringRef(newname, kMCEmptyString, EE_CLONE_BADNAME, &t_new_name))
+        return;
+    
 	MCInterfaceExecClone(ctxt, optr, *t_new_name, visible == False);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCClone::compile(MCSyntaxFactoryRef ctxt)
@@ -290,7 +274,7 @@ Parse_stat MCClipboardCmd::parse(MCScriptPoint& sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCClipboardCmd::exec(MCExecPoint& ep)
+void MCClipboardCmd::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCClipboardCmd */ LEGACY_EXEC
 // Implicit form - use current context
@@ -443,10 +427,8 @@ Exec_stat MCClipboardCmd::exec(MCExecPoint& ep)
 	return t_stat;
 #endif /* MCClipboardCmd */
 
-
-	MCExecContext ctxt(ep, it);
-
-	if (targets == NULL)
+    ctxt . SetIt(it);
+    if (targets == NULL)
 	{
 		// Implicit form - use current context
 		if (iscut())
@@ -460,63 +442,49 @@ Exec_stat MCClipboardCmd::exec(MCExecPoint& ep)
 		if (targets -> next != NULL)
 		{
 			MCeerror -> add(EE_CLIPBOARD_BADMIX, line, pos);
-			return ES_ERROR;
+			return;
 		}
         
         MCObjectChunkPtr t_obj_chunk;
-        if (targets -> evalobjectchunk(ep, true, false, t_obj_chunk) != ES_NORMAL)
-		{
-			MCeerror -> add(EE_CLIPBOARD_BADTEXT, line, pos);
-			return ES_ERROR;
-		}
+        targets -> evalobjectchunk(ctxt, true, false, t_obj_chunk);
         
 		if (iscut())
 			MCPasteboardExecCutTextToClipboard(ctxt, t_obj_chunk);
 		else
 			MCPasteboardExecCopyTextToClipboard(ctxt, t_obj_chunk);
-	}	
-	else
+	}
+    else
 	{
 		// Explicit form (2)/(3) - object chunks
-
+        
 		MCChunk *chunkptr = targets;
 		MCObjectPtr t_object;
 		MCAutoArray<MCObjectPtr> t_objects;
-
+        
 		while (chunkptr != NULL)
 		{
 			if (chunkptr -> istextchunk())
 			{
 				MCeerror->add(EE_CLIPBOARD_BADMIX, line, pos);
-				return ES_ERROR;
+				return;
 			}
-
-			if (chunkptr -> getobj(ep, t_object, True) != ES_NORMAL)
-			{
-				MCeerror->add(EE_CLIPBOARD_BADOBJ, line, pos);
-				return ES_ERROR;
-			}
+            
+			chunkptr -> getobj(ctxt, t_object, True);
 			
 			if (!t_objects . Push(t_object))
 			{
 				MCeerror -> add(EE_NO_MEMORY, line, pos);
 				break;
 			}
-
+            
 			chunkptr = chunkptr->next;
 		}
-
+        
 		// Calculate destination object (if applicable)
 		MCObjectPtr t_dst_object;
 		if (dest != NULL)
-		{
-			if (dest -> getobj(ep, t_dst_object, True) != ES_NORMAL)
-			{
-				MCeerror->add(EE_CLIPBOARD_NODEST, line, pos);
-				return ES_ERROR;
-			}
-		}
-
+			dest -> getobj(ctxt, t_dst_object, True);
+        
 		if (t_objects . Size() > 0)
 		{
 			if (dest != NULL)
@@ -535,11 +503,6 @@ Exec_stat MCClipboardCmd::exec(MCExecPoint& ep)
 			}
 		}
 	}
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCClipboardCmd::compile(MCSyntaxFactoryRef ctxt)
