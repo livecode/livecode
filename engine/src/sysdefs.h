@@ -301,11 +301,7 @@ struct MCFontStruct
 	uint16_t size;
 	int ascent;
 	int descent;
-	uint1 widths[256];
-	uint1 charset;
-	Boolean wide;
 	Boolean printer;
-	Boolean unicode;
 };
 
 #define SECONDS_MIN 0.0

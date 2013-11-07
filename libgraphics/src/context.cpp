@@ -2669,12 +2669,20 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
 		
 		MCMemoryCopy(t_key_ptr, p_text, p_length);
 		t_key_ptr += p_length;
+
 		MCMemoryCopy(t_key_ptr, &p_length, sizeof(p_length));
 		t_key_ptr += sizeof(p_length);
+
 		MCMemoryCopy(t_key_ptr, &p_font . fid, sizeof(p_font . fid));
 		t_key_ptr += sizeof(p_font . fid);
-		MCMemoryCopy(t_key_ptr, &p_font . size, sizeof(p_font . size));
+
+		// MW-2013-11-07: [[ Bug 11393 ]] Make sure we take into account the 'ideal' flag
+		//   when looking up metrics.
+		int16_t t_size;
+		t_size = p_font . ideal ? -p_font . size : t_size;
+		MCMemoryCopy(t_key_ptr, &t_size, sizeof(p_font . size));
 		t_key_ptr += sizeof(p_font . size);
+
 		MCMemoryCopy(t_key_ptr, &p_font . style, sizeof(p_font . style));
 		t_key_ptr += sizeof(p_font . style);
 		
