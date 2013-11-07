@@ -216,10 +216,15 @@ void MCClone::exec_ctxt(MCExecContext& ctxt)
     ctxt . SetIt(it);
     MCObject *optr = NULL;
     uint4 parid;
-    source->getobj(ctxt, optr, parid, True);
+
+    if (!source->getobj(ctxt, optr, parid, True))
+    {
+        ctxt . LegacyThrow(EE_CLONE_NOTARGET);
+        return;
+    }
     
     MCAutoStringRef t_new_name;    
-    if (!ctxt . EvalOptionalExprAsStringRef(newname, kMCEmptyString, EE_CLONE_BADNAME, &t_new_name))
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(newname, EE_CLONE_BADNAME, &t_new_name))
         return;
 
 	MCInterfaceExecClone(ctxt, optr, *t_new_name, visible == False);
@@ -441,12 +446,17 @@ void MCClipboardCmd::exec_ctxt(MCExecContext& ctxt)
 		// Explicit form (1) - text chunk-
 		if (targets -> next != NULL)
 		{
-            MCeerror -> add(EE_CLIPBOARD_BADMIX, line, pos);
+            ctxt . LegacyThrow(EE_CLIPBOARD_BADMIX);
 			return;
 		}
         
         MCObjectChunkPtr t_obj_chunk;
-        targets -> evalobjectchunk(ctxt, true, false, t_obj_chunk);
+
+        if (!targets -> evalobjectchunk(ctxt, true, false, t_obj_chunk))
+        {
+            ctxt . LegacyThrow(EE_CLIPBOARD_BADTEXT);
+            return;
+        }
         
 		if (iscut())
 			MCPasteboardExecCutTextToClipboard(ctxt, t_obj_chunk);
@@ -465,14 +475,18 @@ void MCClipboardCmd::exec_ctxt(MCExecContext& ctxt)
 		{
 			if (chunkptr -> istextchunk())
 			{
-				MCeerror->add(EE_CLIPBOARD_BADMIX, line, pos);
+                ctxt . LegacyThrow(EE_CLIPBOARD_BADMIX);
 				return;
 			}
             
-			chunkptr -> getobj(ctxt, t_object, True);
+            if (!chunkptr -> getobj(ctxt, t_object, True))
+            {
+                ctxt . LegacyThrow(EE_CLIPBOARD_BADOBJ);
+                return;
+            }
 			
 			if (!t_objects . Push(t_object))
-			{
+            {
 				MCeerror -> add(EE_NO_MEMORY, line, pos);
 				break;
 			}
@@ -483,7 +497,13 @@ void MCClipboardCmd::exec_ctxt(MCExecContext& ctxt)
 		// Calculate destination object (if applicable)
 		MCObjectPtr t_dst_object;
 		if (dest != NULL)
-			dest -> getobj(ctxt, t_dst_object, True);
+        {
+            if (!dest -> getobj(ctxt, t_dst_object, True))
+            {
+                ctxt  . LegacyThrow(EE_CLIPBOARD_BADOBJ);
+                return;
+            }
+        }
         
 		if (t_objects . Size() > 0)
 		{
@@ -1176,7 +1196,7 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
     else
 	{
 		MCAutoStringRef t_new_name;
-        if (!ctxt . EvalOptionalExprAsStringRef(newname, kMCEmptyString, EE_CREATE_BADEXP, &t_new_name))
+        if (!ctxt . EvalOptionalExprAsNullableStringRef(newname, EE_CREATE_BADEXP, &t_new_name))
             return;
         switch (otype)
 		{
@@ -1186,10 +1206,11 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
                 if (container != nil)
                 {
                     uint4 parid;
-                    container->getobj(ctxt, tptr, parid, True);
-                    if (tptr->gettype() != CT_GROUP && tptr->gettype() != CT_STACK)
+
+                    if (!container -> getobj(ctxt, tptr, parid, True)
+                            || (tptr->gettype() != CT_GROUP && tptr->gettype() != CT_STACK))
                     {
-                        MCeerror->add(EE_CREATE_BADBGORCARD, line, pos);
+                        ctxt . LegacyThrow(EE_CREATE_BADBGORCARD);
                         return;
                     }
                 }
@@ -1208,10 +1229,11 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
                 if (container != nil)
                 {
                     uint4 parid;
-                    container->getobj(ctxt, parent, parid, True);
-                    if (parent->gettype() != CT_GROUP)
+
+                    if (!container->getobj(ctxt, parent, parid, True)
+                            || parent->gettype() != CT_GROUP)
                     {
-                        MCeerror->add(EE_CREATE_BADBGORCARD, line, pos);
+                        ctxt . LegacyThrow(EE_CREATE_BADBGORCARD);
                         return;
                     }
                 }
@@ -1575,16 +1597,18 @@ if (var != NULL)
 		{
 			if (!t_chunk -> issubstringchunk())
 			{
-				MCeerror -> add(EE_CLIPBOARD_BADMIX, line, pos);
+                ctxt . LegacyThrow(EE_CLIPBOARD_BADMIX);
 				return;
 			}
             
 			MCVariableChunkPtr t_var_chunk;
-			t_chunk -> evalvarchunk(ctxt, true, false, t_var_chunk);
+
+            if (!t_chunk -> evalvarchunk(ctxt, true, false, t_var_chunk))
+                return;
                         
 			if (!t_chunks . Push(t_var_chunk))
 			{
-				MCeerror -> add(EE_NO_MEMORY, line, pos);
+                MCeerror -> add(EE_NO_MEMORY, line, pos);
 				break;
 			}
 		}
@@ -1598,12 +1622,13 @@ if (var != NULL)
 		{
 			if (!t_chunk -> istextchunk())
 			{
-				MCeerror -> add(EE_CLIPBOARD_BADMIX, line, pos);
-				return ES_ERROR;
+                ctxt . LegacyThrow(EE_CLIPBOARD_BADMIX);
+                return;
 			}
             
 			MCObjectChunkPtr t_obj_chunk;
-			t_chunk -> evalobjectchunk(ctxt, true, false, t_obj_chunk);
+            if (!t_chunk -> evalobjectchunk(ctxt, true, false, t_obj_chunk))
+                return;
             
 			if (!t_chunks . Push(t_obj_chunk))
 			{
@@ -1620,7 +1645,8 @@ if (var != NULL)
 		for(MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
 		{
 			MCObjectPtr t_object;
-			t_chunk -> getobj(ctxt, t_object, True);
+            if (!t_chunk -> getobj(ctxt, t_object, True))
+                return;
 				            
 			if (!t_objects . Push(t_object))
 			{
@@ -1636,7 +1662,7 @@ if (var != NULL)
 #ifdef _SERVER
 		MCServerExecDeleteSession(ctxt);
 #else
-		MCeerror->add(EE_SESSION_BADCONTEXT, line, pos);
+        ctxt . LegacyThrow(EE_SESSION_BADCONTEXT);
 		return;
 #endif
 	}
@@ -1897,11 +1923,16 @@ bool t_created_selection;
 	{
 		MCObject *optr;
 		uint4 parid;
-		image->getobj(ctxt, optr, parid, True);
+
+        if (!image->getobj(ctxt, optr, parid, True))
+        {
+            ctxt . LegacyThrow(EE_FLIP_NOIMAGE);
+            return;
+        }
 		
 		if (optr->gettype() != CT_IMAGE)
 		{
-			MCeerror->add(EE_FLIP_NOTIMAGE, line, pos);
+            ctxt . LegacyThrow(EE_FLIP_NOTIMAGE);
 			return;
 		}
 		MCImage *iptr = (MCImage *)optr;
@@ -1969,10 +2000,11 @@ MCObject *optr;
 
 	MCObject *optr;
 	uint4 parid;
-    control->getobj(ctxt, optr, parid, True);
-	if (optr->gettype() < CT_GROUP)
+
+    if (!control->getobj(ctxt, optr, parid, True)
+            || optr->gettype() < CT_GROUP)
 	{
-		MCeerror->add(EE_GRAB_NOOBJ, line, pos);
+        ctxt . LegacyThrow(EE_GRAB_NOOBJ);
 		return;
 	}
 	MCInterfaceExecGrab(ctxt, static_cast<MCControl *>(optr));
