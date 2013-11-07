@@ -80,6 +80,10 @@ public:
 	Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
 	MCVariable *evalvar(MCExecPoint& ep);
 
+    bool eval(MCExecContext& ctxt, MCValueRef &r_value);
+    bool evalcontainer(MCExecContext& ctxt, MCContainer*& r_container);
+    MCVariable *evalvar(MCExecContext& ctxt);
+
 	Parse_stat parse(MCScriptPoint &);
 
 	void compile(MCSyntaxFactoryRef);

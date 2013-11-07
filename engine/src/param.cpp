@@ -82,7 +82,15 @@ MCVariable *MCParameter::evalvar(MCExecPoint& ep)
 	if (exp == NULL)
 		return NULL;
 
-	return exp -> evalvar(ep);
+    return exp -> evalvar(ep);
+}
+
+MCVariable *MCParameter::evalvar(MCExecContext &ctxt)
+{
+    if (exp == NULL)
+        return NULL;
+
+    return exp -> evalvar(ctxt);
 }
 
 Exec_stat MCParameter::eval(MCExecPoint& ep)
@@ -98,12 +106,32 @@ Exec_stat MCParameter::eval(MCExecPoint& ep)
 	return ES_NORMAL;
 }
 
+bool MCParameter::eval(MCExecContext &ctxt, MCValueRef &r_value)
+{
+    // Can't give a nil ValueRef to EvalOptionalExprAsValueRef
+    if (value == nil)
+    {
+        r_value = nil;
+        return true;
+    }
+    else
+        return ctxt . EvalOptionalExprAsValueRef(exp , value, EE_PARAM_BADEXP, r_value);
+}
+
 Exec_stat MCParameter::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
 {
 	if (exp == NULL)
 		return ES_ERROR;
 
 	return exp -> evalcontainer(ep, r_container);
+}
+
+bool MCParameter::evalcontainer(MCExecContext &ctxt, MCContainer *&r_container)
+{
+    if (exp == NULL)
+        return false;
+
+    return exp -> evalcontainer(ctxt, r_container);
 }
 
 Exec_stat MCParameter::eval_argument(MCExecPoint& ep)

@@ -79,6 +79,10 @@ public:
 	// ep, or NULL if it is not just a variable expression.
 	virtual MCVariable *evalvar(MCExecPoint& ep);
 
+    // EP-less version of evaluation functions
+    virtual bool evalcontainer(MCExecContext& ctxt, MCContainer*& r_container);
+    virtual MCVariable *evalvar(MCExecContext& ctxt);
+
 	// Return the var-ref which lies at the root of this expression. 
 	// A return value of NULL means that there is no root variable.
 	// The purpose of this call is to analyze (after parsing) whether the
