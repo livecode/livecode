@@ -481,7 +481,7 @@ bool MCExecContext::EvalOptionalExprAsStringRef(MCExpression *p_expr, MCStringRe
 		r_value = MCValueRetain(p_default);
 		return true;
 	}
-	
+
     return EvalExprAsStringRef(p_expr, p_error, r_value);
 }
 
@@ -542,7 +542,7 @@ bool MCExecContext::EvalOptionalExprAsDataRef(MCExpression *p_expr, MCDataRef p_
 		r_value = MCValueRetain(p_default);
 		return true;
 	}
-	
+
     return EvalExprAsDataRef(p_expr, p_error, r_value);
 }
 
@@ -567,7 +567,7 @@ bool MCExecContext::EvalExprAsNameRef(MCExpression *p_expr, Exec_errors p_error,
 		return true;
 	
 	LegacyThrow(p_error);
-	
+
     return false;
 }
 
@@ -614,7 +614,7 @@ bool MCExecContext::EvalOptionalExprAsArrayRef(MCExpression *p_expr, MCArrayRef 
 		r_value = MCValueRetain(p_default);
 		return true;
 	}
-	
+
     return EvalExprAsArrayRef(p_expr, p_error, r_value);
 }
 
@@ -722,7 +722,7 @@ bool MCExecContext::EvalOptionalExprAsInt(MCExpression *p_expr, integer_t p_defa
 {
 	if (p_expr == nil)
 	{
-		r_value = p_default;
+        r_value = p_default;
 		return true;
 	}
 	
@@ -822,7 +822,7 @@ bool MCExecContext::EvalOptionalExprAsPoint(MCExpression *p_expr, MCPoint* p_def
 {
 	if (p_expr == nil)
 	{
-		r_value = p_default;
+        r_value = p_default;
 		return true;
 	}
 
@@ -863,15 +863,15 @@ bool MCExecContext::EvalOptionalExprAsColor(MCExpression *p_expr, MCColor *p_def
 bool MCExecContext::EvalExprAsRectangle(MCExpression *p_expr, Exec_errors p_error, MCRectangle& r_value)
 {
 	MCAssert(p_expr != nil);
-	
-	p_expr -> eval_rectangle(*this, r_value);
+
+    p_expr -> eval_rectangle(*this, r_value);
 	
 	if (!HasError())
 		return true;
 	
 	LegacyThrow(p_error);
 	
-	return false;
+    return false;
 }
 
 bool MCExecContext::EvalOptionalExprAsRectangle(MCExpression *p_expr, MCRectangle* p_default, Exec_errors p_error, MCRectangle*& r_value)

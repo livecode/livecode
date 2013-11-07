@@ -1135,7 +1135,7 @@ public:
 	bool EvalOptionalExprAsBooleanRef(MCExpression *expr, MCBooleanRef default_value, Exec_errors error, MCBooleanRef& r_value);
     
     bool EvalExprAsStringRef(MCExpression *expr, Exec_errors error, MCStringRef& r_value);
-	bool EvalOptionalExprAsStringRef(MCExpression *expr, MCStringRef default_value, Exec_errors error, MCStringRef& r_value);
+    bool EvalOptionalExprAsStringRef(MCExpression *expr, MCStringRef default_value, Exec_errors error, MCStringRef& r_value);
     bool EvalOptionalExprAsNullableStringRef(MCExpression *p_expr, Exec_errors p_error, MCStringRef& r_value);
 
     bool EvalExprAsNameRef(MCExpression *expr, Exec_errors error, MCNameRef& r_value);
