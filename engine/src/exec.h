@@ -1106,6 +1106,11 @@ public:
     {
         m_it = p_it;
     }
+
+    void SetLine(uint2 p_line)
+    {
+        m_ep . setline(p_line);
+    }
     
 	void SetParentScript(MCParentScriptUse *p_parentscript)
 	{
