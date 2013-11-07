@@ -3893,8 +3893,8 @@ void MCRead::exec_ctxt(MCExecContext& ctxt)
     real8 t_max_wait;
     if (!ctxt . EvalOptionalExprAsDouble(maxwait, MAXUINT4, EE_READ_BADEXP, t_max_wait))
         return;
-    
-    MCresult->clear(False);
+
+    ctxt . SetTheResultToEmpty();
     MCNewAutoNameRef t_message;
 	MCNewAutoNameRef t_source;
 	bool t_is_end = false;
@@ -3924,7 +3924,7 @@ void MCRead::exec_ctxt(MCExecContext& ctxt)
                         double n;
                         if (!MCStringToDouble(*t_temp, n))
                         {
-                            MCresult->sets("error seeking in file");
+                            ctxt . SetTheResultToCString("error seeking in file");
                             return;
                         }
                         else
@@ -4029,7 +4029,7 @@ void MCRead::exec_ctxt(MCExecContext& ctxt)
         }
             break;
 		default:
-		MCeerror->add(EE_READ_BADCOND, line, pos);
+        ctxt . LegacyThrow(EE_READ_BADCOND);
 		MCshellfd = -1;
 		return;
 	}
@@ -4346,7 +4346,7 @@ void MCSeek::exec_ctxt(MCExecContext& ctxt)
             double n;
             if (!MCStringToDouble(*t_temp, n))
             {
-                MCeerror->add(EE_SEEK_BADWHERE, line, pos, *t_temp);
+                ctxt . LegacyThrow(EE_SEEK_BADWHERE);
 				return;
             }
             if (mode == PT_TO)
@@ -4675,7 +4675,7 @@ void MCWrite::exec_ctxt(MCExecContext& ctxt)
 	return ES_NORMAL;
 #endif /* MCWrite */
 
-    MCresult->clear(False);    
+    ctxt . SetTheResultToEmpty();
 	MCAutoStringRef t_data;
     if (!ctxt . EvalExprAsStringRef(source, EE_WRITE_BADEXP, &t_data))
         return;
@@ -4706,7 +4706,7 @@ void MCWrite::exec_ctxt(MCExecContext& ctxt)
                             double n;
                             if (!MCStringToDouble(*t_temp, n))
                             {
-                                MCresult->sets("error seeking in file");
+                                ctxt . SetTheResultToCString("error seeking in file");
                                 return;
                             }
                             MCFilesExecWriteToFileOrDriverAt(ctxt, *t_target, *t_data, unit, (int64_t)n);

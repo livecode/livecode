@@ -1106,11 +1106,6 @@ public:
     {
         m_it = p_it;
     }
-
-    void SetIt(MCVarref *p_it)
-    {
-        m_it = p_it;
-    }
     
 	void SetParentScript(MCParentScriptUse *p_parentscript)
 	{
