@@ -1112,7 +1112,7 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
 		tptr = tptr->getnext();
 	}
 
-//	ctxt . setline(line);
+    ctxt . SetLine(line);
     ctxt . SetIt(it);
     MCEngineExecDispatch(ctxt, is_function ? HT_FUNCTION : HT_MESSAGE, *t_message, t_target_ptr, params);
 }
@@ -1173,7 +1173,7 @@ Parse_stat MCMessage::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCMessage::exec(MCExecPoint &ep)
+void MCMessage::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCMessage */ LEGACY_EXEC
 	if (program)
@@ -1358,91 +1358,64 @@ Exec_stat MCMessage::exec(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCMessage */
-	MCExecContext ctxt(ep);
 		
 	if (program)
 	{
-		MCAutoStringRef t_message;
-		if (message -> eval(ep) != ES_NORMAL)
-		{
-			MCeerror -> add(EE_SEND_BADEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&t_message);
-		
-		MCAutoStringRef t_program;
-		if (in -> eval(ep) != ES_NORMAL)
-		{
-			MCeerror -> add(EE_SEND_BADPROGRAMEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&t_program);
-		
-		MCAutoStringRef t_event_type;
-		if (eventtype != nil)
-		{
-			if (eventtype -> eval(ep) != ES_NORMAL)
-			{
-				MCeerror -> add(EE_SEND_BADEXP, line, pos);
-				return ES_ERROR;
-			}
-			/* UNCHECKED */ ep . copyasstringref(&t_event_type);
-		}
+        MCAutoStringRef t_message;
+        if (!ctxt . EvalExprAsStringRef(message, EE_SEND_BADEXP, &t_message))
+            return;
+
+        MCAutoStringRef t_program;
+        if (!ctxt . EvalExprAsStringRef(in, EE_SEND_BADPROGRAMEXP, &t_program))
+            return;
+
+        MCAutoStringRef t_event_type;
+        if (!ctxt . EvalOptionalExprAsNullableStringRef(eventtype, EE_SEND_BADEXP, &t_event_type))
+            return;
 
 		MCScriptingExecSendToProgram(ctxt, *t_message, *t_program, *t_event_type, reply == True);
 	}
 	else
 	{
-		MCAutoStringRef t_message;
-		if (message -> eval(ep) != ES_NORMAL)
-		{
-			MCeerror -> add(EE_SEND_BADEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&t_message);
+        MCAutoStringRef t_message;
+        if (!ctxt . EvalExprAsStringRef(message, EE_SEND_BADEXP, &t_message))
+            return;
 		
 		MCObjectPtr t_target;
 		MCObjectPtr *t_target_ptr;
 		if (target != nil)
 		{
-			if (target -> getobj(ep, t_target, True) != ES_NORMAL)
+            if (!target -> getobj(ctxt, t_target, True))
 			{
-				MCeerror->add(EE_SEND_BADTARGET, line, pos);
-				return ES_ERROR;
+                ctxt . LegacyThrow(EE_SEND_BADTARGET);
+                return;
 			}
 			t_target_ptr = &t_target;
 		}
 		else
 			t_target_ptr = nil;
-			
-		double t_delay;
+
+
+        ctxt . SetLine(line);
 		if (in != nil)
 		{
-			if (in->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-			{
-				MCeerror->add(EE_SEND_BADINEXP, line, pos);
-				return ES_ERROR;
-			}
-			t_delay = ep.getnvalue();
+            double t_delay;
+
+            if (!ctxt . EvalExprAsDouble(in, EE_SEND_BADINEXP, t_delay))
+                return;
+
+            MCEngineExecSendInTime(ctxt, *t_message, t_target, t_delay, units);
 		}
-		
-		if (in == nil)
-		{
-			ep . setline(line);
-		
-			if (!send)
-				MCEngineExecCall(ctxt, *t_message, t_target_ptr);
-			else
-				MCEngineExecSend(ctxt, *t_message, t_target_ptr);
-		}
-		else
-			MCEngineExecSendInTime(ctxt, *t_message, t_target, t_delay, units);
-	}
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-		
-	return ctxt . Catch(line, pos);
+        else
+        {
+            ep . setline(line);
+
+            if (!send)
+                MCEngineExecCall(ctxt, *t_message, t_target_ptr);
+            else
+                MCEngineExecSend(ctxt, *t_message, t_target_ptr);
+        }
+    }
 }
 
 void MCMessage::compile(MCSyntaxFactoryRef ctxt)
