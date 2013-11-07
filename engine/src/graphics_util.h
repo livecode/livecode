@@ -154,7 +154,7 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 	return t_font;
 }
 
-#else
+#elif defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 {
@@ -165,6 +165,20 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 	t_font . fid = p_font -> fid;
 	t_font . style = 0;
 	t_font . ideal = p_font -> printer == True;
+	return t_font;
+}
+
+#else
+
+static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
+{
+	MCGFont t_font;
+	t_font . size = p_font -> size;
+	t_font . ascent = p_font -> ascent;
+	t_font . descent = p_font -> descent;
+	t_font . fid = p_font -> fid;
+	t_font . style = 0;
+	t_font . ideal = false;
 	return t_font;
 }
 
