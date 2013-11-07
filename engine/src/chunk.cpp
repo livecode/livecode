@@ -1295,12 +1295,17 @@ bool MCChunk::getobj(MCExecContext& ctxt, MCObjectPtr& r_object, bool p_recurse)
 }
 #endif
 
-void MCChunk::getobj(MCExecContext& ctxt, MCObjectPtr& r_object, Boolean p_recurse)
+bool MCChunk::getobj(MCExecContext& ctxt, MCObjectPtr& r_object, Boolean p_recurse)
 {
     getoptionalobj(ctxt, r_object, p_recurse);
 
     if (r_object . object == nil)
+    {
         ctxt . Throw();
+        return false;
+    }
+
+    return true;
 }
 
 void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObject *&r_object, uint4 r_parid, Boolean p_recurse)
@@ -1324,7 +1329,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
     {
         if (desttype == DT_EXPRESSION || desttype == DT_VARIABLE)
         {
-            bool t_error = false;
+            bool t_error = true;
             MCAutoStringRef t_value;
             if (p_recurse)
             {
@@ -1347,23 +1352,26 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                 Symbol_type type;
                 if (tchunk->parse(sp, False) == PS_NORMAL
                         && sp.next(type) == PS_EOF)
-                    t_error = true;
-
+                    t_error = false;
+                
                 MCerrorlock--;
-
+                
                 if (!t_error)
-                    tchunk->getobj(ctxt, t_object, False);
-
-                if (ctxt . HasError())
-                    t_error = true;
-                else if (!t_error)
-                    take_components(tchunk);
-
+                {
+                    if (tchunk->getobj(ctxt, t_object, False))
+                        take_components(tchunk);
+                    else
+                        t_error= true;
+                }
+                
                 delete tchunk;
             }
             if (t_error)
             {
-                ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP, *t_value);
+                if (*t_value != nil)
+                    ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP, *t_value);
+                else
+                    ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP);
                 return;
             }
         }
@@ -1373,8 +1381,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             //   must point to an MCChunk object (as that's how its parsed).
             //   In this case attempt to evaluate it and then step up one in the ownership chain. Note
             //   that we can't step higher than a mainstack, so we set objptr to NULL in this case.
-            static_cast<MCChunk *>(source) -> getobj(ctxt, t_object, True);
-            if (ctxt . HasError())
+            if (!static_cast<MCChunk *>(source) -> getobj(ctxt, t_object, True))
             {
                 ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP);
                 return;
@@ -1522,9 +1529,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
         if (stack -> etype == CT_EXPRESSION)
         {
             MCAutoStringRef t_data;
-            ctxt . EvalExprAsStringRef(url -> startpos, EE_CHUNK_BADSTACKEXP, &t_data);
-
-            if (ctxt . HasError())
+            if (!ctxt . EvalExprAsStringRef(url -> startpos, EE_CHUNK_BADSTACKEXP, &t_data))
                 return;
 
             MCInterfaceEvalBinaryStackAsObject(ctxt, *t_data, t_object);
@@ -1543,9 +1548,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             case CT_EXPRESSION:
             {
                 MCNewAutoNameRef t_expression;
-                ctxt . EvalExprAsNameRef(stack -> startpos, EE_CHUNK_BADSTACKEXP, &t_expression);
-
-                if (ctxt . HasError())
+                if (!ctxt . EvalExprAsNameRef(stack -> startpos, EE_CHUNK_BADSTACKEXP, &t_expression))
                     return;
 
                 MCInterfaceEvalStackOfStackByName(ctxt, t_object, *t_expression, t_object);
@@ -1555,9 +1558,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             case CT_ID:
             {
                 uint4 t_id;
-                ctxt . EvalExprAsUInt(stack -> startpos, EE_CHUNK_BADSTACKEXP, t_id);
-
-                if (ctxt . HasError())
+                if (!ctxt . EvalExprAsUInt(stack -> startpos, EE_CHUNK_BADSTACKEXP, t_id))
                     return;
 
                 MCInterfaceEvalStackOfStackById(ctxt, t_object, t_id, t_object);
@@ -1577,9 +1578,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                 case CT_EXPRESSION:
                 {
                     MCNewAutoNameRef t_expression;
-                    ctxt . EvalExprAsNameRef(stack -> next -> startpos, EE_CHUNK_BADSTACKEXP, &t_expression);
-
-                    if (ctxt . HasError())
+                    if (!ctxt . EvalExprAsNameRef(stack -> next -> startpos, EE_CHUNK_BADSTACKEXP, &t_expression))
                         return;
 
                     MCInterfaceEvalSubstackOfStackByName(ctxt, t_object, *t_expression, t_object);
@@ -1588,9 +1587,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                 case CT_ID:
                 {
                     uint4 t_id;
-                    ctxt . EvalExprAsUInt(stack -> next -> startpos, EE_CHUNK_BADSTACKEXP, t_id);
-
-                    if (ctxt . HasError())
+                    if (!ctxt . EvalExprAsUInt(stack -> next -> startpos, EE_CHUNK_BADSTACKEXP, t_id))
                         return;
 
                     MCInterfaceEvalSubstackOfStackById(ctxt, t_object, t_id, t_object);
@@ -1619,9 +1616,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             case CT_ID:
             {
                 uint4 t_id;
-                ctxt . EvalExprAsUInt(object -> startpos, EE_CHUNK_BADOBJECTEXP, t_id);
-
-                if (ctxt . HasError())
+                if (!ctxt . EvalExprAsUInt(object -> startpos, EE_CHUNK_BADOBJECTEXP, t_id))
                     return;
 
                 if (object -> otype == CT_AUDIO_CLIP)
@@ -1633,9 +1628,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             case CT_EXPRESSION:
             {
                 MCNewAutoNameRef t_expression;
-                ctxt . EvalExprAsNameRef(object -> startpos, EE_CHUNK_BADOBJECTEXP, &t_expression);
-
-                if (ctxt . HasError())
+                if (!ctxt . EvalExprAsNameRef(object -> startpos, EE_CHUNK_BADOBJECTEXP, &t_expression))
                     return;
 
                 if (object -> otype == CT_AUDIO_CLIP)
@@ -1671,9 +1664,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             case CT_ID:
             {
                 uint4 t_id;
-                ctxt . EvalExprAsUInt(background -> startpos, EE_CHUNK_BADBACKGROUNDEXP, t_id);
-
-                if (ctxt . HasError())
+                if (!ctxt . EvalExprAsUInt(background -> startpos, EE_CHUNK_BADBACKGROUNDEXP, t_id))
                     return;
 
                 if (card == nil)
@@ -1685,9 +1676,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             case CT_EXPRESSION:
             {
                 MCNewAutoNameRef t_expression;
-                ctxt . EvalExprAsNameRef(background -> startpos, EE_CHUNK_BADBACKGROUNDEXP, &t_expression);
-
-                if (ctxt . HasError())
+                if (!ctxt . EvalExprAsNameRef(background -> startpos, EE_CHUNK_BADBACKGROUNDEXP, &t_expression))
                     return;
 
                 if (card == nil)
@@ -1719,9 +1708,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             case CT_ID:
             {
                 uint4 t_id;
-                ctxt . EvalExprAsUInt(card -> startpos, EE_CHUNK_BADCARDEXP, t_id);
-
-                if (ctxt . HasError())
+                if (!ctxt . EvalExprAsUInt(card -> startpos, EE_CHUNK_BADCARDEXP, t_id))
                     return;
 
                 if (background != nil)
@@ -1733,9 +1720,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             case CT_EXPRESSION:
             {
                 MCNewAutoNameRef t_expression;
-                ctxt . EvalExprAsNameRef(card -> startpos, EE_CHUNK_BADCARDEXP, &t_expression);
-
-                if (ctxt . HasError())
+                if (!ctxt . EvalExprAsNameRef(card -> startpos, EE_CHUNK_BADCARDEXP, &t_expression))
                     return;
 
                 if (background != nil)
@@ -1777,9 +1762,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             case CT_ID:
             {
                 uint4 t_id;
-                ctxt . EvalExprAsUInt(tgptr -> startpos, EE_CHUNK_BADBACKGROUNDEXP, t_id);
-
-                if (ctxt . HasError())
+                if (!ctxt . EvalExprAsUInt(tgptr -> startpos, EE_CHUNK_BADBACKGROUNDEXP, t_id))
                     return;
 
                 // MW-2011-08-09: [[ Groups ]] If there was an explicit stack reference,
@@ -1804,9 +1787,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             case CT_EXPRESSION:
             {
                 MCNewAutoNameRef t_expression;
-                ctxt . EvalExprAsNameRef(tgptr -> startpos, EE_CHUNK_BADBACKGROUNDEXP, &t_expression);
-
-                if (ctxt . HasError())
+                if (!ctxt . EvalExprAsNameRef(tgptr -> startpos, EE_CHUNK_BADBACKGROUNDEXP, &t_expression))
                     return;
 
                 if (t_object . object -> gettype() == CT_CARD)
@@ -1851,9 +1832,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                     case CT_ID:
                     {
                         uint4 t_id;
-                        ctxt . EvalExprAsUInt(toptr -> startpos, EE_CHUNK_BADOBJECTEXP, t_id);
-
-                        if (ctxt . HasError())
+                        if (!ctxt . EvalExprAsUInt(toptr -> startpos, EE_CHUNK_BADOBJECTEXP, t_id))
                             return;
 
                         // If we are in stack override mode, then search the stack *after*
@@ -1876,9 +1855,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                     case CT_EXPRESSION:
                     {
                         MCNewAutoNameRef t_expression;
-                        ctxt . EvalExprAsNameRef(toptr -> startpos, EE_CHUNK_BADOBJECTEXP, &t_expression);
-
-                        if (ctxt . HasError())
+                        if (!ctxt . EvalExprAsNameRef(toptr -> startpos, EE_CHUNK_BADOBJECTEXP, &t_expression))
                             return;
 
                         if (t_object . object -> gettype() == CT_CARD)
@@ -2510,20 +2487,20 @@ Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recu
     return ES_ERROR;
 }
 
-void MCChunk::getobj(MCExecContext &ctxt, MCObject *&objptr, uint4 &parid, Boolean recurse)
+bool MCChunk::getobj(MCExecContext &ctxt, MCObject *&objptr, uint4 &parid, Boolean recurse)
 {
     objptr = nil;
     parid = 0;
 
     MCObjectPtr t_object;
 
-    getobj(ctxt, t_object, recurse);
-
-    if (ctxt . HasError())
-        return;
+    if (!getobj(ctxt, t_object, recurse))
+        return false;
 
     objptr = t_object . object;
     parid = t_object . part_id;
+
+    return true;
 }
 
 Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr, uint4 &parid, Boolean recurse)
@@ -3543,16 +3520,12 @@ void MCChunk::mark(MCExecContext &ctxt, Boolean force, Boolean wholechunk, MCMar
     {
         if (cline -> etype == CT_RANGE || cline -> etype == CT_EXPRESSION)
         {
-            ctxt . EvalExprAsInt(cline -> startpos, EE_CHUNK_BADRANGESTART, t_first);
-
-            if (ctxt . HasError())
+            if (!ctxt . EvalExprAsInt(cline -> startpos, EE_CHUNK_BADRANGESTART, t_first))
                 return;
         
             if (cline -> etype == CT_RANGE)
             {
-                ctxt . EvalExprAsInt(cline -> endpos, EE_CHUNK_BADRANGEEND, t_last);
-
-                if (ctxt . HasError())
+                if (!ctxt . EvalExprAsInt(cline -> endpos, EE_CHUNK_BADRANGEEND, t_last))
                     return;
             }
             else
@@ -3568,16 +3541,12 @@ void MCChunk::mark(MCExecContext &ctxt, Boolean force, Boolean wholechunk, MCMar
     {
         if (item -> etype == CT_RANGE || item -> etype == CT_EXPRESSION)
         {
-            ctxt . EvalExprAsInt(item -> startpos, EE_CHUNK_BADRANGESTART, t_first);
-
-            if (ctxt . HasError())
+            if (!ctxt . EvalExprAsInt(item -> startpos, EE_CHUNK_BADRANGESTART, t_first))
                 return;
             
             if (item -> etype == CT_RANGE)
             {
-                ctxt . EvalExprAsInt(item -> endpos, EE_CHUNK_BADRANGEEND, t_last);
-
-                if (ctxt . HasError())
+                if (!ctxt . EvalExprAsInt(item -> endpos, EE_CHUNK_BADRANGEEND, t_last))
                     return;
             }
             else
@@ -3593,16 +3562,12 @@ void MCChunk::mark(MCExecContext &ctxt, Boolean force, Boolean wholechunk, MCMar
     {
         if (word -> etype == CT_RANGE || word -> etype == CT_EXPRESSION)
         {
-            ctxt . EvalExprAsInt(word -> startpos, EE_CHUNK_BADRANGESTART, t_first);
-
-            if (ctxt . HasError())
+            if (!ctxt . EvalExprAsInt(word -> startpos, EE_CHUNK_BADRANGESTART, t_first))
                 return;
             
             if (word -> etype == CT_RANGE)
             {
-                ctxt . EvalExprAsInt(word -> endpos, EE_CHUNK_BADRANGEEND, t_last);
-
-                if (ctxt . HasError())
+                if (!ctxt . EvalExprAsInt(word -> endpos, EE_CHUNK_BADRANGEEND, t_last))
                     return;
             }
             else
@@ -3618,16 +3583,12 @@ void MCChunk::mark(MCExecContext &ctxt, Boolean force, Boolean wholechunk, MCMar
     {
         if (token -> etype == CT_RANGE || token -> etype == CT_EXPRESSION)
         {
-            ctxt . EvalExprAsInt(token -> startpos, EE_CHUNK_BADRANGESTART, t_first);
-
-            if (ctxt . HasError())
+            if (!ctxt . EvalExprAsInt(token -> startpos, EE_CHUNK_BADRANGESTART, t_first))
                 return;
 
             if (token -> etype == CT_RANGE)
             {
-                ctxt . EvalExprAsInt(token -> endpos, EE_CHUNK_BADRANGEEND, t_last);
-
-                if (ctxt . HasError())
+                if (!ctxt . EvalExprAsInt(token -> endpos, EE_CHUNK_BADRANGEEND, t_last))
                     return;
             }
             else
@@ -3643,16 +3604,12 @@ void MCChunk::mark(MCExecContext &ctxt, Boolean force, Boolean wholechunk, MCMar
     {
         if (character -> etype == CT_RANGE || character -> etype == CT_EXPRESSION)
         {
-            ctxt . EvalExprAsInt(character -> startpos, EE_CHUNK_BADRANGESTART, t_first);
-
-            if (ctxt . HasError())
+            if (!ctxt . EvalExprAsInt(character -> startpos, EE_CHUNK_BADRANGESTART, t_first))
                 return;
 
             if (character -> etype == CT_RANGE)
             {
-                ctxt . EvalExprAsInt(character -> endpos, EE_CHUNK_BADRANGEEND, t_last);
-
-                if (ctxt . HasError())
+                if (!ctxt . EvalExprAsInt(character -> endpos, EE_CHUNK_BADRANGEEND, t_last))
                     return;
             }
             else
@@ -4364,7 +4321,7 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
     return ctxt . Catch(line, pos);
 }
 
-void MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
+bool MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
 {
     MCAutoStringRef t_text;
 
@@ -4373,10 +4330,8 @@ void MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
     {
         if (desttype != DT_OWNER)
         {
-            ctxt . EvalExprAsStringRef(source, EE_CHUNK_CANTGETSOURCE, &t_text);
-
-            if (ctxt . HasError())
-                return;
+            if (!ctxt . EvalExprAsStringRef(source, EE_CHUNK_CANTGETSOURCE, &t_text))
+                return false;
         }
         else
         {
@@ -4384,12 +4339,10 @@ void MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
             //     <text chunk> of the owner of ...
             //   In this case we evaluate the owner property of the resolved object.
             MCObjectPtr t_object;
-            static_cast<MCChunk *>(source) -> getobj(ctxt, t_object, True);
-
-            if (ctxt . HasError())
+            if (!static_cast<MCChunk *>(source) -> getobj(ctxt, t_object, True))
             {
                 ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP);
-                return;
+                return false;
             }
 
             MCEngineEvalOwner(ctxt, t_object, &t_text);
@@ -4397,10 +4350,8 @@ void MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
     }
     else if (destvar != NULL)
     {
-        ctxt . EvalExprAsStringRef(destvar, EE_CHUNK_CANTGETDEST, &t_text);
-
-        if (ctxt . HasError())
-            return;
+        if (!ctxt . EvalExprAsStringRef(destvar, EE_CHUNK_CANTGETDEST, &t_text))
+            return false;
     }
     else
     {
@@ -4408,24 +4359,22 @@ void MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
         if (url != NULL)
         {
             MCAutoStringRef t_target;
-            ctxt . EvalExprAsStringRef(url -> startpos, EE_CHUNK_CANTGETDEST, &t_target);
-
-            if (ctxt . HasError())
-                return;
+            if (!ctxt . EvalExprAsStringRef(url -> startpos, EE_CHUNK_CANTGETDEST, &t_target))
+                return false;
 
             MCU_geturl(ctxt, *t_target, &t_url_output);
         }
 
         MCObjectPtr t_object;
-        getobj(ctxt, t_object, True);
+        getoptionalobj(ctxt, t_object, True);
 
-        if (ctxt . HasError())
+        if (t_object . object == nil)
         {
             if (url == NULL || stack != NULL || background != NULL ||
                 card != NULL || group != NULL || object != NULL)
             {
                 ctxt . LegacyThrow(EE_CHUNK_CANTFINDOBJECT);
-                return;
+                return false;
             }
             t_text = *t_url_output;
         }
@@ -4501,11 +4450,10 @@ void MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
         else
             r_text = MCValueRetain(*t_text);
     }
+    else
+        r_text = MCValueRetain(kMCEmptyString);
 
-    if (!ctxt . HasError())
-        return;
-
-    ctxt . Catch(line, pos);
+    return !ctxt . HasError();
 }
 
 #ifdef LEGACY_EXEC
@@ -4881,9 +4829,7 @@ void MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
     if (isvarchunk())
     {
         MCVariableChunkPtr t_var_chunk;
-        evalvarchunk(ctxt, false, true, t_var_chunk);
-
-        if (ctxt . HasError())
+        if (!evalvarchunk(ctxt, false, true, t_var_chunk))
             return;
 
         MCEngineExecPutIntoVariable(ctxt, p_value, p_type, t_var_chunk);
@@ -4899,9 +4845,7 @@ void MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
 
         MCUrlChunkPtr t_url_chunk;
         t_url_chunk . url = nil;
-        evalurlchunk(ctxt, false, true, t_url_chunk);
-
-        if (ctxt . HasError())
+        if (!evalurlchunk(ctxt, false, true, t_url_chunk))
             return;
 
         MCNetworkExecPutIntoUrl(ctxt, *t_string, p_type, t_url_chunk);
@@ -4918,9 +4862,7 @@ void MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
         }
 
         MCObjectChunkPtr t_obj_chunk;
-        evalobjectchunk(ctxt, false, true, t_obj_chunk);
-
-        if (ctxt . HasError())
+        if (!evalobjectchunk(ctxt, false, true, t_obj_chunk))
             return;
 
         if (t_obj_chunk . object -> gettype() == CT_FIELD)
@@ -5156,9 +5098,7 @@ void MCChunk::count(MCExecContext &ctxt, Chunk_term tocount, Chunk_term ptype, u
         //   the count will be zero (if a string chunk has been requested),
         //   otherwise it will be the count of the keys...
         // SN-2013-11-5: Apperently eval() is no longer able to return an array
-        eval(ctxt, &t_string);
-
-        if (ctxt . HasError())
+        if (!eval(ctxt, &t_string))
             return;
 
         MCStringsCountChunks(ctxt, tocount, *t_string, r_count);
@@ -5876,7 +5816,7 @@ Exec_stat MCChunk::evalvarchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_forc
     return ES_NORMAL;
 }
 
-void MCChunk::evalvarchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCVariableChunkPtr& r_chunk)
+bool MCChunk::evalvarchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCVariableChunkPtr& r_chunk)
 {
     MCEngineMarkVariable(ctxt, destvar, r_chunk . mark);
 
@@ -5885,11 +5825,13 @@ void MCChunk::evalvarchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force
     if (ctxt . HasError())
     {
         ctxt . LegacyThrow(EE_CHUNK_CANTMARK);
-        return;
+        return false;
 	}
 
 	r_chunk . variable = destvar;
     r_chunk . chunk = getlastchunktype();
+
+    return true;
 }
 
 Exec_stat MCChunk::evalurlchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_force, MCUrlChunkPtr& r_chunk)
@@ -5919,13 +5861,12 @@ Exec_stat MCChunk::evalurlchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_forc
     return ES_NORMAL;
 }
 
-void MCChunk::evalurlchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force, MCUrlChunkPtr &r_chunk)
+bool MCChunk::evalurlchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force, MCUrlChunkPtr &r_chunk)
 {
     MCAutoStringRef t_url;
-    ctxt . EvalExprAsStringRef(url -> startpos, EE_CHUNK_BADEXPRESSION, &t_url);
 
-    if (ctxt . HasError())
-        return;
+    if (!ctxt . EvalExprAsStringRef(url -> startpos, EE_CHUNK_BADEXPRESSION, &t_url))
+        return false;
 
     MCNetworkMarkUrl(ctxt, *t_url, r_chunk . mark);
 
@@ -5934,11 +5875,13 @@ void MCChunk::evalurlchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force
     if (ctxt . HasError())
     {
         ctxt . LegacyThrow(EE_CHUNK_CANTMARK);
-        return;
+        return false;
     }
 
     r_chunk . url = MCValueRetain(*t_url);
     r_chunk . chunk = getlastchunktype();
+
+    return true;
 }
 
 Exec_stat MCChunk::evalobjectchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_force, MCObjectChunkPtr& r_chunk)
@@ -5989,16 +5932,15 @@ Exec_stat MCChunk::evalobjectchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_f
     return ES_NORMAL;
 }
 
-void MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force, MCObjectChunkPtr &r_chunk)
+bool MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force, MCObjectChunkPtr &r_chunk)
 {
     MCObjectPtr t_object;
-    getobj(ctxt, t_object, True);
-
-    if (ctxt . HasError())
+    if (!getobj(ctxt, t_object, True))
     {
         ctxt . LegacyThrow(EE_CHUNK_CANTFINDOBJECT);
-        return;
+        return false;
     }
+
     bool t_function = false;
     if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
         && function != F_SELECTED_FIELD && function != F_FOUND_FIELD
@@ -6017,7 +5959,7 @@ void MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_fo
         r_chunk . part_id = t_object.part_id;
         r_chunk . chunk = CT_UNDEFINED;
         r_chunk . mark = t_mark;
-        return;
+        return true;
     }
 
     if (t_function)
@@ -6030,12 +5972,14 @@ void MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_fo
     if (ctxt . HasError())
     {
         ctxt . LegacyThrow(EE_CHUNK_CANTMARK);
-        return;
+        return false;
     }
 
     r_chunk . object = t_object . object;
     r_chunk . part_id = t_object . part_id;
     r_chunk . chunk = !t_function ? getlastchunktype() : CT_CHARACTER;
+
+    return true;
 }
 
 #if 0
