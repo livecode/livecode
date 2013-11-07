@@ -794,7 +794,7 @@ Parse_stat MCInsert::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCInsert::exec(MCExecPoint &ep)
+void MCInsert::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCInsert */ LEGACY_EXEC
 	MCObject *optr;
@@ -831,18 +831,13 @@ Exec_stat MCInsert::exec(MCExecPoint &ep)
 
 	MCObject *optr;
 	uint4 parid;
-	if (target->getobj(ep, optr, parid, True) != ES_NORMAL)
+    if (!target->getobj(ctxt, optr, parid, True))
 	{
-		MCeerror->add(EE_INSERT_BADTARGET, line, pos);
-		return ES_ERROR;
-	}
-	MCExecContext ctxt(ep);
-	MCEngineExecInsertScriptOfObjectInto(ctxt, optr, where == IP_FRONT);
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
+        ctxt . LegacyThrow(EE_INSERT_BADTARGET);
+        return;
+    }
 
-	return ctxt . Catch(line, pos);
+    MCEngineExecInsertScriptOfObjectInto(ctxt, optr, where == IP_FRONT);
 }
 
 void MCInsert::compile(MCSyntaxFactoryRef ctxt)
