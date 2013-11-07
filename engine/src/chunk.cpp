@@ -1366,6 +1366,11 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                 
                 delete tchunk;
             }
+            // SN-2013-11-7: If no recurse, there is no error to trigger
+            // Otherwise, the caller gets a 'marred' context with an error
+            else
+                return;
+
             if (t_error)
             {
                 if (*t_value != nil)
@@ -4350,8 +4355,13 @@ bool MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
     }
     else if (destvar != NULL)
     {
-        if (!ctxt . EvalExprAsStringRef(destvar, EE_CHUNK_CANTGETDEST, &t_text))
+        MCAutoValueRef t_value;
+        if (!destvar -> eval(ctxt, &t_value)
+                || !ctxt . ConvertToString(*t_value, &t_text))
+        {
+            ctxt . LegacyThrow(EE_CHUNK_CANTGETDEST);
             return false;
+        }
     }
     else
     {
