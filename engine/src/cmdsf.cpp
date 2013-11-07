@@ -1408,18 +1408,15 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 
         t_rect_ptr = &t_rect;
 
-        ctxt . EvalOptionalExprAsRectangle(exsrect, nil, EE_IMPORT_BADNAME, t_rect_ptr);
-
-        if (!ctxt . HasError() && exsstack != NULL)
+        if (ctxt . EvalOptionalExprAsRectangle(exsrect, nil, EE_IMPORT_BADNAME, t_rect_ptr)
+                && exsstack != NULL)
 		{
 			MCAutoStringRef t_stack_name;
 
             if (ctxt . EvalExprAsStringRef(exsstack, EE_EXPORT_NOSELECTED, &t_stack_name))
             {
 				MCAutoStringRef t_display;
-                ctxt . EvalOptionalExprAsNullableStringRef(exsdisplay, EE_EXPORT_NOSELECTED, &t_display);
-
-                if (!ctxt . HasError())
+                if (ctxt . EvalOptionalExprAsNullableStringRef(exsdisplay, EE_EXPORT_NOSELECTED, &t_display))
                 {
 					if (*t_filename == nil)
 						MCInterfaceExecExportSnapshotOfStack(ctxt, *t_stack_name, *t_display, t_rect_ptr, format, t_settings_ptr, &t_return_data);
