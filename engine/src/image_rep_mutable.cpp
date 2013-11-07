@@ -164,6 +164,8 @@ MCMutableImageRep::MCMutableImageRep(MCImage *p_owner, MCImageBitmap *p_bitmap)
 	m_undo_image = nil;
 	m_rub_image = nil;
 
+	m_draw_mask.pixels = nil;
+
 	mx = my = 0;
 	state = 0;
 
@@ -636,8 +638,7 @@ void MCMutableImageRep::enddraw()
 	case T_BRUSH:
 	case T_SPRAY:
 	case T_ERASER:
-		MCMemoryDeallocate(m_draw_mask.pixels);
-		m_draw_mask.pixels = nil;
+		MCImageFreeMask(m_draw_mask);
 		break;
 	case T_POLYGON:
 		endrub();
