@@ -927,17 +927,9 @@ Exec_stat MCVarref::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
 bool MCVarref::evalcontainer(MCExecContext& ctxt, MCContainer*& r_container)
 {
     if (dimensions == 0)
-    {
-        if (!MCContainer::createwithvariable(fetchvar(ctxt), r_container))
-        {
-            ctxt . Throw();
-            return false;
-        }
-    }
+        return MCContainer::createwithvariable(fetchvar(ctxt), r_container);
     else
         return resolve(ctxt, r_container);
-
-    return true;
 }
 
 void MCVarref::compile(MCSyntaxFactoryRef ctxt)

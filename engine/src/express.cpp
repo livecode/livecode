@@ -64,9 +64,19 @@ MCVariable *MCExpression::evalvar(MCExecPoint& ep)
 	return NULL;
 }
 
+MCVariable *MCExpression::evalvar(MCExecContext& ctxt)
+{
+    return NULL;
+}
+
 Exec_stat MCExpression::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
 {
 	return ES_ERROR;
+}
+
+bool MCExpression::evalcontainer(MCExecContext& ctxt, MCContainer*& r_container)
+{
+    return false;
 }
 
 Parse_stat MCExpression::getexps(MCScriptPoint &sp, MCExpression *earray[],
