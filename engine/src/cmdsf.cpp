@@ -210,10 +210,8 @@ char *name;
 			MCObject *optr;
             uint4 parid;
 
-            stack->getobj(ctxt, optr, parid, True);
-
-            if (ctxt . HasError() ||
-				optr->gettype() != CT_STACK)
+            if (!stack->getobj(ctxt, optr, parid, True)
+                    || optr->gettype() != CT_STACK)
 			{
                 ctxt . LegacyThrow(EE_CLOSE_NOOBJ);
                 return;
@@ -1347,9 +1345,7 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 	{
 		//get image from chunk
 		uint4 parid;
-        image->getobj(ctxt, optr, parid, True);
-
-        if (ctxt . HasError())
+        if (!image->getobj(ctxt, optr, parid, True))
         {
             ctxt . LegacyThrow(EE_EXPORT_NOSELECTED);
             return;
@@ -2290,9 +2286,7 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 			MCObject *t_parent = nil;
 			uint4 parid;
 
-            container->getobj(ctxt, t_parent, parid, True);
-
-            if (ctxt . HasError())
+            if (!container->getobj(ctxt, t_parent, parid, True))
 			{
                 ctxt . LegacyThrow(EE_IMPORT_BADNAME);
                 return;
@@ -2341,9 +2335,7 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 				if (container != NULL)
 				{
 					uint4 parid;
-                    container->getobj(ctxt, parent, parid, True);
-
-                    if (ctxt . HasError()
+                    if (!container->getobj(ctxt, parent, parid, True)
                             || (parent->gettype() != CT_GROUP && parent->gettype() != CT_CARD))
 					{
                         ctxt . LegacyThrow(EE_CREATE_BADBGORCARD);
