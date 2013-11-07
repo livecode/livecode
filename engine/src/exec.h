@@ -1102,9 +1102,9 @@ public:
 		m_ep.setobj(p_object);
 	}
 
-    void SetIt(MCVarref* it)
+    void SetIt(MCVarref *p_it)
     {
-        m_it = it;
+        m_it = p_it;
     }
 
 	void SetParentScript(MCParentScriptUse *p_parentscript)

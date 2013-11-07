@@ -95,7 +95,7 @@ Parse_stat MCAccept::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCAccept::exec(MCExecPoint &ep)
+void MCAccept::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCAccept */ LEGACY_EXEC
 	// MW-2005-01-28: Fix bug 2412 - accept doesn't clear the result.
@@ -131,35 +131,21 @@ Exec_stat MCAccept::exec(MCExecPoint &ep)
 
 	return ES_NORMAL;
 #endif /* MCAccept */
-
-
-	MCExecContext ctxt(ep);
-	if (port->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_ACCEPT_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-	uint2 port = ep.getuint2();
-	if (message->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_ACCEPT_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-
-	MCNewAutoNameRef t_message;
-	/* UNCHECKED */ ep . copyasnameref(&t_message);
-	
-	if (datagram)
-		MCNetworkExecAcceptDatagramConnectionsOnPort(ctxt, port, *t_message);
+    
+    uinteger_t t_port;
+    if (!ctxt . EvalExprAsUInt(port, EE_ACCEPT_BADEXP, t_port))
+        return;
+    
+    MCNewAutoNameRef t_message;
+    if (!ctxt . EvalExprAsNameRef(message, EE_ACCEPT_BADEXP, &t_message))
+        return;
+    
+    if (datagram)
+		MCNetworkExecAcceptDatagramConnectionsOnPort(ctxt, t_port, *t_message);
 	else if (secure)
-		MCNetworkExecAcceptSecureConnectionsOnPort(ctxt, port, *t_message, secureverify == True);
+		MCNetworkExecAcceptSecureConnectionsOnPort(ctxt, t_port, *t_message, secureverify == True);
 	else
-		MCNetworkExecAcceptConnectionsOnPort(ctxt, port, *t_message);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+		MCNetworkExecAcceptConnectionsOnPort(ctxt, t_port, *t_message);
 }
 
 void MCAccept::compile(MCSyntaxFactoryRef ctxt)
@@ -255,21 +241,15 @@ void MCBeep::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndStatement(ctxt);
 }
 
-Exec_stat MCBreakPoint::exec(MCExecPoint &ep)
+void MCBreakPoint::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCBreakPoint */ LEGACY_EXEC
 MCB_break(ep, getline(), getpos());
 	return ES_NORMAL;
 #endif /* MCBreakPoint */
 
-
-	MCExecContext ctxt(ep);
 	MCDebuggingExecBreakpoint(ctxt, line, pos);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+	return;
 }
 
 void MCBreakPoint::compile(MCSyntaxFactoryRef ctxt)
@@ -304,7 +284,7 @@ Parse_stat MCCancel::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCCancel::exec(MCExecPoint &ep)
+void MCCancel::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCCancel */ LEGACY_EXEC
 if (id == NULL)
@@ -329,28 +309,16 @@ if (id == NULL)
 	return ES_NORMAL;
 #endif /* MCCancel */
 
-	MCExecContext ctxt(ep);
-
-	if (id == NULL)
+    if (id == NULL)
 		MCPrintingExecCancelPrinting(ctxt);
 	
 	else
 	{
-		if (id->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-		{
-			MCeerror->add(EE_CANCEL_IDNAN, line, pos);
-			return ES_ERROR;
-		}
-
-		integer_t t_id;
-		t_id = ep.getuint4();
-		MCEngineExecCancelMessage(ctxt, t_id);
-	}
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+        integer_t t_id;
+        if (!ctxt . EvalExprAsInt(id, EE_CANCEL_IDNAN, t_id))
+            return;
+        MCEngineExecCancelMessage(ctxt, t_id);
+    }
 }
 
 void MCCancel::compile(MCSyntaxFactoryRef ctxt)
@@ -403,7 +371,7 @@ Parse_stat MCClickCmd::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCClickCmd::exec(MCExecPoint &ep)
+void MCClickCmd::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCClickCmd */ LEGACY_EXEC
 if (button != NULL)
@@ -480,36 +448,16 @@ if (button != NULL)
 	return ES_NORMAL;
 #endif /* MCClickCmd */
 
-
-	if (button != NULL)
-	{
-		if (button->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-		{
-			MCeerror->add(EE_CLICK_BADBUTTON, line, pos);
-			return ES_ERROR;
-		}
-		which = ep.getuint2();
-	}
-	if (location->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_CLICK_BADLOCATION, line, pos);
-		return ES_ERROR;
-	}
-
-	MCPoint t_location;
-	if (!ep . copyaslegacypoint(t_location))
-	{
-		MCeerror->add(EE_CLICK_NAP, line, pos, ep.getsvalue());
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	MCInterfaceExecClickCmd(ctxt, which, t_location, mstate);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    uinteger_t t_which;
+    if (!ctxt . EvalOptionalExprAsUInt(button, which, EE_CLICK_BADBUTTON, t_which))
+        return;
+    which = t_which;
+    
+    MCPoint t_location;
+    if (!ctxt . EvalExprAsPoint(location, EE_CLICK_BADLOCATION, t_location))
+        return;
+    
+    MCInterfaceExecClickCmd(ctxt, which, t_location, mstate);
 }
 
 void MCClickCmd::compile(MCSyntaxFactoryRef ctxt)
@@ -573,7 +521,7 @@ Parse_stat MCDrag::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCDrag::exec(MCExecPoint &ep)
+void MCDrag::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCDrag */ LEGACY_EXEC
 	if (button != NULL)
@@ -687,51 +635,20 @@ Exec_stat MCDrag::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCDrag */
 
-
-if (button != NULL)
-	{
-		if (button->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-		{
-			MCeerror->add(EE_DRAG_BADBUTTON, line, pos);
-			return ES_ERROR;
-		}
-		which = ep.getuint2();
-	}
-
-	if (startloc->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_DRAG_BADSTARTLOC, line, pos);
-		return ES_ERROR;
-	}
-
-	MCPoint t_start;
-
-	if (!ep . copyaslegacypoint(t_start))
-	{
-		MCeerror->add(EE_DRAG_STARTNAP, line, pos, ep.getsvalue());
-		return ES_ERROR;
-	}
-	if (endloc->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_DRAG_BADENDLOC, line, pos);
-		return ES_ERROR;
-	}
-
-	MCPoint t_end;
-
-	if (!ep . copyaslegacypoint(t_end))
-	{
-		MCeerror->add(EE_DRAG_ENDNAP, line, pos, ep.getsvalue());
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	MCInterfaceExecDrag(ctxt, which, t_start, t_end, mstate);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    uinteger_t t_which;
+    if (!ctxt . EvalOptionalExprAsUInt(button, which, EE_DRAG_BADBUTTON, t_which))
+        return;
+    which = t_which;
+    
+    MCPoint t_start;
+    if (!ctxt . EvalExprAsPoint(startloc, EE_DRAG_BADSTARTLOC, t_start))
+        return;
+    
+    MCPoint t_end;
+    if (!ctxt . EvalExprAsPoint(endloc, EE_DRAG_BADENDLOC, t_end))
+        return;
+    
+    MCInterfaceExecDrag(ctxt, which, t_start, t_end, mstate);
 }
 
 void MCDrag::compile(MCSyntaxFactoryRef ctxt)
@@ -2633,7 +2550,7 @@ Parse_stat MCReply::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCReply::exec(MCExecPoint &ep)
+void MCReply::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCReply */ LEGACY_EXEC
 	char *k = NULL;
@@ -2657,36 +2574,22 @@ Exec_stat MCReply::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCReply */
 
-	
-	MCAutoStringRef t_message;
-	if (message -> eval(ep) != ES_NORMAL)
+    MCAutoStringRef t_message;
+    if (!ctxt . EvalExprAsStringRef(message, EE_REPLY_BADMESSAGEEXP, &t_message))
+        return;
+    
+    MCAutoStringRef t_keyword;
+    if (!error && keyword != nil)
 	{
-		MCeerror -> add(EE_REPLY_BADMESSAGEEXP, line, pos);
-		return ES_ERROR;
+        MCAutoStringRef t_keyword;
+		if (!ctxt . EvalExprAsStringRef(keyword, EE_REPLY_BADKEYWORDEXP, &t_keyword))
+            return;
 	}
-	/* UNCHECKED */ ep . copyasstringref(&t_message);
-	
-	MCAutoStringRef t_keyword;
-	if (!error && keyword != nil)
-	{
-		if (keyword -> eval(ep) != ES_NORMAL)
-		{
-			MCeerror -> add(EE_REPLY_BADKEYWORDEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&t_keyword);
-	}
-	
-	MCExecContext ctxt(ep);
-	if (!error)
+    
+    if (!error)
 		MCScriptingExecReply(ctxt, *t_message, *t_keyword);
 	else
 		MCScriptingExecReplyError(ctxt, *t_message);
-		
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-	
-	return ctxt . Catch(line, pos);
 }
 
 void MCReply::compile(MCSyntaxFactoryRef ctxt)
@@ -2765,7 +2668,7 @@ Parse_stat MCRequest::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCRequest::exec(MCExecPoint &ep)
+void MCRequest::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCRequest */ LEGACY_EXEC
 if (MCsecuremode & MC_SECUREMODE_PROCESS)
@@ -2814,45 +2717,26 @@ if (MCsecuremode & MC_SECUREMODE_PROCESS)
 	return ES_NORMAL;
 #endif /* MCRequest */
 
-	
-	MCExecContext ctxt(ep, it);
-	
-	if (ae != AE_UNDEFINED)
+	ctxt . SetIt(it);
+    if (ae != AE_UNDEFINED)
 	{
 		MCAutoStringRef t_program;
-		if (program != nil)
-		{
-			if (program -> eval(ep) != ES_NORMAL)
-			{
-				MCeerror -> add(EE_REQUEST_BADKEYWORDEXP, line, pos);
-				return ES_ERROR;
-			}
-			/* UNCHECKED */ ep . copyasstringref(&t_program);
-		}
+        if (!ctxt . EvalOptionalExprAsNullableStringRef(program, EE_REQUEST_BADKEYWORDEXP, &t_program))
+            return;
 		MCScriptingExecRequestAppleEvent(ctxt, ae, *t_program);
 	}
-	else
+    
+    else
 	{
 		MCAutoStringRef t_message;
-		if (message -> eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_REQUEST_BADMESSAGEEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&t_message);
-	
+        if (!ctxt . EvalExprAsStringRef(message, EE_REQUEST_BADMESSAGEEXP, &t_message))
+            return;
+        
 		MCAutoStringRef t_program;
-		if (program -> eval(ep) != ES_NORMAL)
-		{
-			MCeerror -> add(EE_REQUEST_BADPROGRAMEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&t_program);
-		
-		MCScriptingExecRequestFromProgram(ctxt, *t_message, *t_program);
+        if (!ctxt . EvalExprAsStringRef(program, EE_REQUEST_BADPROGRAMEXP, &t_program))
+            return;
+        MCScriptingExecRequestFromProgram(ctxt, *t_message, *t_program);
 	}
-	
-	return ctxt . Catch(line, pos);
 }
 
 void MCRequest::compile(MCSyntaxFactoryRef ctxt)
@@ -3500,7 +3384,7 @@ Parse_stat MCType::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCType::exec(MCExecPoint &ep)
+void MCType::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCType */ LEGACY_EXEC
 	if (message->eval(ep) != ES_NORMAL)
@@ -3544,21 +3428,11 @@ Exec_stat MCType::exec(MCExecPoint &ep)
 	return ES_NORMAL; 
 #endif /* MCType */
 
+    MCAutoStringRef t_typing;
+    if (!ctxt . EvalExprAsStringRef(message, EE_TYPE_BADSTRINGEXP, &t_typing))
+        return;
 
-	if (message->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_TYPE_BADSTRINGEXP, line, pos);
-		return ES_ERROR;
-	}
-	MCAutoStringRef t_typing;
-	ep . copyasstringref(&t_typing);
-	MCExecContext ctxt(ep);
-	MCInterfaceExecType(ctxt, *t_typing, mstate);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    MCInterfaceExecType(ctxt, *t_typing, mstate);
 }
 
 void MCType::compile(MCSyntaxFactoryRef ctxt)
