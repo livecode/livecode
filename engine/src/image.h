@@ -53,6 +53,8 @@ bool MCImageQuantizeColors(MCImageBitmap *p_bitmap, MCImagePaletteSettings *p_pa
 
 bool MCImageScaleBitmap(MCImageBitmap *p_src_bitmap, uindex_t p_width, uindex_t p_height, uint8_t p_quality, MCImageBitmap *&r_scaled);
 bool MCImageRotateBitmap(MCImageBitmap *p_src, real64_t p_angle, uint8_t p_quality, uint32_t p_backing_color, MCImageBitmap *&r_rotated);
+// IM-2013-11-07: [[ RefactorGraphics ]] Flip the pixels of the given image in the specified directions
+void MCImageFlipBitmapInPlace(MCImageBitmap *p_bitmap, bool p_horizontal, bool p_vertical);
 
 // Image format encode / decode function
 bool MCImageEncodeGIF(MCImageBitmap *p_image, IO_handle p_stream, bool p_dither, uindex_t &r_bytes_written);

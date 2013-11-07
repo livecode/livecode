@@ -320,6 +320,7 @@ protected:
 	//////////
 	
 	MCGFloat m_h_scale, m_v_scale;
+	bool m_h_flip, m_v_flip;
 	MCImageRep *m_source;
 };
 

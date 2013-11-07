@@ -32,8 +32,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 MCResampledImageRep::MCResampledImageRep(MCGFloat p_h_scale, MCGFloat p_v_scale, MCImageRep *p_source)
 {
-	m_h_scale = p_h_scale;
-	m_v_scale = p_v_scale;
+	// IM-2013-11-07: [[ RefactorGraphics ]] If the scale values are negative we need to flip the resulting resampled image
+	m_h_scale = abs(p_h_scale);
+	m_v_scale = abs(p_v_scale);
+	m_h_flip = p_h_scale < 0.0;
+	m_v_flip = p_v_scale < 0.0;
 	m_source = p_source->Retain();
 }
 
@@ -95,6 +98,8 @@ bool MCResampledImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_f
 			t_frames[i].duration = t_src_frame->duration;
 			
 			t_success = MCImageScaleBitmap(t_src_frame->image, t_target_width, t_target_height, INTERPOLATION_BICUBIC, t_frames[i].image);
+			if (t_success)
+				MCImageFlipBitmapInPlace(t_frames[i].image, m_h_flip, m_v_flip);
 		}
 		m_source->UnlockImageFrame(i, t_src_frame);
 	}
@@ -115,7 +120,10 @@ bool MCResampledImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_f
 
 bool MCResampledImageRep::Matches(MCGFloat p_h_scale, MCGFloat p_v_scale, const MCImageRep *p_source)
 {
-	return m_source == p_source && m_h_scale == p_h_scale && m_v_scale == p_v_scale;
+	MCGFloat t_h_scale, t_v_scale;
+	t_h_scale = m_h_flip ? -m_h_scale : m_h_scale;
+	t_v_scale = m_v_flip ? -m_v_scale : m_v_scale;
+	return m_source == p_source && t_h_scale == p_h_scale && t_v_scale == p_v_scale;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
