@@ -519,8 +519,8 @@ bool MCImageRepGetDensityMapped(const char *p_filename, MCImageRep *&r_rep)
 	MCImageRep *t_rep = nil;
 	
 	char *t_base, *t_extension;
-	t_base =t_extension = nil;
-	
+	t_base = t_extension = nil;
+
 	MCGFloat t_density;
 	
 	bool t_has_tag;
@@ -563,6 +563,9 @@ bool MCImageRepGetDensityMapped(const char *p_filename, MCImageRep *&r_rep)
 	{
 		r_rep = t_rep;
 	}
+
+	MCCStringFree(t_base);
+	MCCStringFree(t_extension);
 	
 	return t_success;
 }

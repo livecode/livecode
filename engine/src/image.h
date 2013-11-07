@@ -292,6 +292,7 @@ class MCImage : public MCControl
 	// IM-2013-11-05: [[ RefactorGraphics ]] Resampled image rep used to store cached
 	// best-quality scaled image
 	MCResampledImageRep *m_resampled_rep;
+	MCImageRep *m_locked_rep;
 	MCImageFrame *m_locked_frame;
 	MCImageBitmap *m_transformed_bitmap;
 	uint32_t m_image_opened;
@@ -438,6 +439,9 @@ public:
 	bool getsourcegeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight);
 	void getgeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight);
 
+	// IM-2013-11-06: [[ RefactorGraphics ]] get the image rep & transform used to render the image
+	bool get_rep_and_transform(MCImageRep *&r_rep, bool &r_has_transform, MCGAffineTransform &r_transform);
+	
 	MCGFloat getscalefactor(void);
 	
 	// IM-2013-10-30: [[ FullscreenMode ]] Returns the stack device scale or 1.0 if image object not attached

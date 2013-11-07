@@ -86,6 +86,7 @@ MCImage::MCImage()
 	m_flip_x = false;
 	m_flip_y = false;
 
+	m_locked_rep = nil;
 	m_locked_frame = nil;
 	m_needs = nil;
 
@@ -109,6 +110,7 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 	m_flip_x = false;
 	m_flip_y = false;
 	
+	m_locked_rep = nil;
 	m_locked_frame = nil;
 	m_needs = nil;
 
@@ -2358,6 +2360,67 @@ bool MCImage::setcompressedbitmap(MCImageCompressedBitmap *p_compressed)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// IM-2013-11-06: [[ RefactorGraphics ]] Return a copy of the bitmap with the given transform applied
+bool MCImageBitmapCopyWithTransform(MCImageBitmap *p_src, bool p_src_premultiplied, MCGAffineTransform p_transform, MCGImageFilter p_quality, MCImageBitmap *&r_bitmap)
+{
+	if (p_src == nil)
+		return false;
+	
+	bool t_success;
+	t_success = true;
+	
+	MCImageFrame *t_frame;
+	t_frame = nil;
+	
+	MCGRectangle t_image_rect;
+	t_image_rect = MCGRectangleMake(0, 0, p_src->width, p_src->height);
+	
+	// IM-2013-11-06: [[ Bug 11390 ]] Calculate target bitmap dimensions by transforming the source image rect.
+	MCGRectangle t_trans_rect;
+	t_trans_rect = MCGRectangleApplyAffineTransform(t_image_rect, p_transform);
+	
+	uint32_t t_trans_width = ceilf(t_trans_rect.size.width);
+	uint32_t t_trans_height = ceilf(t_trans_rect.size.height);
+
+	MCGRaster t_raster;
+	t_raster.width = p_src->width;
+	t_raster.height = p_src->height;
+	t_raster.stride = p_src->stride;
+	t_raster.pixels = p_src->data;
+	t_raster.format = MCImageBitmapHasTransparency(p_src) ? (p_src_premultiplied ? kMCGRasterFormat_ARGB : kMCGRasterFormat_U_ARGB) : kMCGRasterFormat_xRGB;
+	
+	MCImageBitmap *t_bitmap;
+	t_bitmap = nil;
+	
+	t_success = MCImageBitmapCreate(t_trans_width, t_trans_height, t_bitmap);
+	
+	MCGContextRef t_context;
+	t_context = nil;
+	
+	if (t_success)
+	{
+		MCImageBitmapClear(t_bitmap);
+		t_success = MCGContextCreateWithPixels(t_bitmap->width, t_bitmap->height, t_bitmap->stride, t_bitmap->data, true, t_context);
+	}
+	
+	if (t_success)
+	{
+		MCGContextConcatCTM(t_context, p_transform);
+		MCGContextDrawPixels(t_context, t_raster, t_image_rect, p_quality);
+		
+		MCImageBitmapCheckTransparency(t_bitmap);
+	}
+	
+	MCGContextRelease(t_context);
+	
+	if (t_success)
+		r_bitmap = t_bitmap;
+	else
+		MCImageFreeBitmap(t_bitmap);
+	
+	return t_success;
+}
+
 // IM-2013-07-26: [[ ResIndependence ]] render the image at the requested scale,
 // with any transformations (scale, angle) applied
 bool MCImage::copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *&r_bitmap)
@@ -2370,7 +2433,16 @@ bool MCImage::copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *
 	
 	apply_transform();
 	
-	t_success = m_rep != nil;
+	// IM-2013-11-06: [[ RefactorGraphics ]] Use common method to get image rep & transform
+	// so imagedata & rendered image have the same appearance
+	MCImageRep *t_rep;
+	bool t_has_transform;
+	MCGAffineTransform t_transform;
+	
+	t_success = get_rep_and_transform(t_rep, t_has_transform, t_transform);
+	
+	if (t_success)
+		t_success = t_rep != nil;
 	
 	// IM-2013-10-30: [[ FullscreenMode ]] REVISIT: This needs more work to figure out if
 	// we can get a better match to the requested scale & transform
@@ -2378,7 +2450,7 @@ bool MCImage::copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *
 	t_scale_factor = getscalefactor();
 	
 	bool t_copy_pixels;
-	t_copy_pixels = !m_has_transform && p_scale == t_scale_factor;
+	t_copy_pixels = !t_has_transform && p_scale == t_scale_factor;
 	
 	bool t_premultiplied;
 	t_premultiplied = p_premultiplied || !t_copy_pixels;
@@ -2398,63 +2470,25 @@ bool MCImage::copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *
 		}
 		else
 		{
-			MCGRaster t_raster;
-			t_raster.width = t_frame->image->width;
-			t_raster.height = t_frame->image->height;
-			t_raster.stride = t_frame->image->stride;
-			t_raster.pixels = t_frame->image->data;
-			t_raster.format = MCImageBitmapHasTransparency(t_frame->image) ? (t_premultiplied ? kMCGRasterFormat_ARGB : kMCGRasterFormat_U_ARGB) : kMCGRasterFormat_xRGB;
+			// IM-2013-11-06: [[ RefactorGraphics ]] Factor out transformed image creation code
+			MCGAffineTransform t_combined_transform;
+			t_combined_transform = MCGAffineTransformMakeScale(p_scale, p_scale);
+			if (t_has_transform)
+				t_combined_transform = MCGAffineTransformConcat(t_combined_transform, t_transform);
+			t_combined_transform = MCGAffineTransformConcat(t_combined_transform, MCGAffineTransformMakeScale(1.0 / t_frame->density, 1.0 / t_frame->density));
 			
-			uint32_t t_width, t_height;
-			t_width = ceil(rect.width * p_scale);
-			t_height = ceil(rect.height * p_scale);
+			MCGImageFilter t_filter;
+			t_filter = resizequality == INTERPOLATION_BICUBIC ? kMCGImageFilterBicubic : (resizequality == INTERPOLATION_BILINEAR ? kMCGImageFilterBilinear : kMCGImageFilterNearest);
 			
-			MCImageBitmap *t_bitmap;
-			t_bitmap = nil;
+			t_success = MCImageBitmapCopyWithTransform(t_frame->image, t_premultiplied, t_combined_transform, t_filter, r_bitmap);
 			
-			t_success = MCImageBitmapCreate(t_width, t_height, t_bitmap);
-			
-			if (t_success)
-				MCImageBitmapClear(t_bitmap);
-			
-			MCGContextRef t_context;
-			t_context = nil;
-			
-			if (t_success)
-				t_success = MCGContextCreateWithPixels(t_bitmap->width, t_bitmap->height, t_bitmap->stride, t_bitmap->data, true, t_context);
-			
-			if (t_success)
-			{
-				MCGContextScaleCTM(t_context, p_scale, p_scale);
-				
-				if (m_has_transform)
-					MCGContextConcatCTM(t_context, m_transform);
-				
-				MCGRectangle t_dst;
-				t_dst = MCGRectangleMake(0, 0, rect.width, rect.height);
-				
-				MCGImageFilter t_filter;
-				t_filter = resizequality == INTERPOLATION_BICUBIC ? kMCGImageFilterBicubic : (resizequality == INTERPOLATION_BILINEAR ? kMCGImageFilterBilinear : kMCGImageFilterNearest);
-				
-				MCGContextDrawPixels(t_context, t_raster, t_dst, t_filter);
-				
-				MCGContextRelease(t_context);
-				
-				MCImageBitmapCheckTransparency(t_bitmap);
-				
-				if (!p_premultiplied)
-					MCImageBitmapUnpremultiply(t_bitmap);
-			}
-			
-			if (t_success)
-				r_bitmap = t_bitmap;
-			else
-				MCImageFreeBitmap(t_bitmap);
+			if (t_success && !p_premultiplied)
+				MCImageBitmapUnpremultiply(r_bitmap);
 		}
 	}
 	
-	if (m_rep != nil)
-		m_rep->UnlockImageFrame(currentframe, t_frame);
+	if (t_rep != nil)
+		t_rep->UnlockImageFrame(currentframe, t_frame);
 	
 	return t_success;
 }
@@ -2465,71 +2499,51 @@ bool MCImage::lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_
 	if (p_update_transform)
 		apply_transform();
 
-	if (m_rep != nil)
+	// IM-2013-11-06: [[ RefactorGraphics ]] Use common method to get image rep & transform
+	// so imagedata & rendered image have the same appearance
+	MCImageRep *t_rep;
+	bool t_has_transform;
+	MCGAffineTransform t_transform;
+	
+	if (!get_rep_and_transform(t_rep, t_has_transform, t_transform))
+		return false;
+	
+	if (t_rep != nil)
 	{
 		// IM-2013-10-30: [[ FullscreenMode ]] REVISIT: Use appropriate density value if
 		// transforming image. For now just use 1.0
-		if (!m_rep->LockImageFrame(currentframe, p_premultiplied || m_has_transform, 1.0, m_locked_frame))
+		if (!t_rep->LockImageFrame(currentframe, p_premultiplied || t_has_transform, 1.0, m_locked_frame))
 			return false;
 
-		if (!m_has_transform)
+		// IM-2013-11-06: [[ RefactorGraphics ]] Record the locked rep so we can unlock it later
+		m_locked_rep = t_rep;
+		
+		if (!t_has_transform)
 		{
 			r_bitmap = m_locked_frame->image;
 			return true;
 		}
 
-		// Create a copy of the bitmap rendered with the current transform
-		bool t_success = true;
-
-		MCGContextRef t_context = nil;
-		MCGRaster t_raster;
-
-		uint32_t t_trans_width = rect.width;
-		uint32_t t_trans_height = rect.height;
-
-		// while cropping
-		if ((state & CS_SIZE) && (state & CS_EDITED))
-		{
-			/* OVERHAUL - REVISIT: compute from transform? */
-			t_trans_width = m_current_width;
-			t_trans_height = m_current_height;
-		}
-
-		MCLog("locking transformed image: (%d,%d) -> (%d,%d)", m_locked_frame->image->width, m_locked_frame->image->height, t_trans_width, t_trans_height);
-
-		t_success = MCImageBitmapCreate(t_trans_width, t_trans_height, m_transformed_bitmap);
-		MCImageBitmapClear(m_transformed_bitmap);
-
-		if (t_success)
-			t_success = MCGContextCreateWithPixels(t_trans_width, t_trans_height, m_transformed_bitmap->stride, m_transformed_bitmap->data, true, t_context);
-
+		// IM-2013-11-06: [[ RefactorGraphics ]] Factor out transformed image creation code
+		
+		// IM-2013-11-06: [[ RefactorGraphics ]] Apply density when calculating image transform.
+		MCGAffineTransform t_combined_transform;
+		t_combined_transform = MCGAffineTransformConcat(t_transform, MCGAffineTransformMakeScale(1.0 / m_locked_frame->density, 1.0 / m_locked_frame->density));
+		
+		MCGImageFilter t_filter;
+		t_filter = resizequality == INTERPOLATION_BICUBIC ? kMCGImageFilterBicubic : (resizequality == INTERPOLATION_BILINEAR ? kMCGImageFilterBilinear : kMCGImageFilterNearest);
+		
+		bool t_success;
+		t_success = MCImageBitmapCopyWithTransform(m_locked_frame->image, true, t_combined_transform, t_filter, m_transformed_bitmap);
+		
 		if (t_success)
 		{
-			t_raster.width = m_locked_frame->image->width;
-			t_raster.height = m_locked_frame->image->height;
-			t_raster.stride = m_locked_frame->image->stride;
-			t_raster.pixels = m_locked_frame->image->data;
-			t_raster.format = kMCGRasterFormat_ARGB;
-
-			MCGRectangle t_dst = MCGRectangleMake(0, 0, m_locked_frame->image->width, m_locked_frame->image->height);
-			MCGImageFilter t_filter = resizequality == INTERPOLATION_BICUBIC ? kMCGImageFilterBicubic : (resizequality == INTERPOLATION_BILINEAR ? kMCGImageFilterBilinear : kMCGImageFilterNearest);
-			MCGContextConcatCTM(t_context, m_transform);
-			MCGContextDrawPixels(t_context, t_raster, t_dst, t_filter);
-		}
-
-		MCGContextRelease(t_context);
-
-		if (t_success)
-		{
-			MCImageBitmapCheckTransparency(m_transformed_bitmap);
+			MCLog("locking transformed image: (%d,%d) -> (%d,%d)", m_locked_frame->image->width, m_locked_frame->image->height, m_transformed_bitmap->width, m_transformed_bitmap->height);
 			if (!p_premultiplied)
 				MCImageBitmapUnpremultiply(m_transformed_bitmap);
 			r_bitmap = m_transformed_bitmap;
 			return true;
 		}
-
-		MCImageFreeBitmap(m_transformed_bitmap);
-		m_transformed_bitmap = nil;
 	}
 
 	return false;
@@ -2537,17 +2551,15 @@ bool MCImage::lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_
 
 void MCImage::unlockbitmap(MCImageBitmap *p_bitmap)
 {
-	if (p_bitmap == nil || m_locked_frame == nil)
+	if (p_bitmap == nil || m_locked_rep == nil)
 		return;
 
 	MCImageFreeBitmap(m_transformed_bitmap);
 	m_transformed_bitmap = nil;
 
-	if (m_rep != nil)
-	{
-		m_rep->UnlockImageFrame(currentframe, m_locked_frame);
-		m_locked_frame = nil;
-	}
+	m_locked_rep->UnlockImageFrame(currentframe, m_locked_frame);
+	m_locked_rep = nil;
+	m_locked_frame = nil;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
