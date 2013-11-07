@@ -657,6 +657,9 @@ MCresult->clear(False);
 	return ES_NORMAL;
 #endif /* MCEncryptionOp */
 
+    ctxt . SetTheResultToEmpty();
+    ctxt . SetIt(it);
+
 	if (is_rsa)
 	{
         MCAutoStringRef t_key;
@@ -2963,7 +2966,7 @@ if (go != NULL)
 	if (go != NULL)
         return go->exec_ctxt(ctxt);
 
-	MCresult->clear(False);
+    ctxt . SetTheResultToEmpty();
 
 	if (arg == OA_PRINTING)
 	{
