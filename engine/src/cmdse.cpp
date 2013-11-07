@@ -248,8 +248,7 @@ MCB_break(ep, getline(), getpos());
 	return ES_NORMAL;
 #endif /* MCBreakPoint */
 
-	MCDebuggingExecBreakpoint(ctxt, line, pos);
-	return;
+    MCDebuggingExecBreakpoint(ctxt, line, pos);
 }
 
 void MCBreakPoint::compile(MCSyntaxFactoryRef ctxt)
@@ -2579,10 +2578,9 @@ void MCReply::exec_ctxt(MCExecContext& ctxt)
         return;
     
     MCAutoStringRef t_keyword;
-    if (!error && keyword != nil)
-	{
-        MCAutoStringRef t_keyword;
-		if (!ctxt . EvalExprAsStringRef(keyword, EE_REPLY_BADKEYWORDEXP, &t_keyword))
+    if (!error)
+    {
+        if (!ctxt . EvalOptionalExprAsNullableStringRef(keyword, EE_REPLY_BADKEYWORDEXP, &t_keyword))
             return;
 	}
     

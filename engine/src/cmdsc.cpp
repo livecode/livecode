@@ -2695,8 +2695,7 @@ MCObject *optr;
 
 
 	ctxt . SetIt(it);
-	MCPasteboardExecPaste(ctxt);
-    return;
+    MCPasteboardExecPaste(ctxt);
 }
 
 void MCPasteCmd::compile(MCSyntaxFactoryRef ctxt)
@@ -3956,8 +3955,7 @@ MCundos->undo();
 	return ES_NORMAL;
 #endif /* MCUndoCmd */
 
-	MCInterfaceExecUndo(ctxt);
-    return;
+    MCInterfaceExecUndo(ctxt);
 }
 
 void MCUndoCmd::compile(MCSyntaxFactoryRef ctxt)
