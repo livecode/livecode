@@ -1062,7 +1062,7 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
 #endif /* MCDispatchCmd */
 	
     MCNewAutoNameRef t_message;
-    if (!ctxt . EvalExprAsStringRef(message, EE_DISPATCH_BADMESSAGEEXP, &t_message))
+    if (!ctxt . EvalExprAsNameRef(message, EE_DISPATCH_BADMESSAGEEXP, &t_message))
         return;
 	
 	// Evaluate the target object (if we parsed a 'target' chunk).
@@ -1395,8 +1395,6 @@ void MCMessage::exec_ctxt(MCExecContext &ctxt)
 		else
 			t_target_ptr = nil;
 
-
-        ctxt . SetLine(line);
 		if (in != nil)
 		{
             double t_delay;
@@ -1408,7 +1406,7 @@ void MCMessage::exec_ctxt(MCExecContext &ctxt)
 		}
         else
         {
-            ep . setline(line);
+            ctxt . SetLine(line);
 
             if (!send)
                 MCEngineExecCall(ctxt, *t_message, t_target_ptr);
@@ -1519,7 +1517,7 @@ Parse_stat MCMove::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCMove::exec(MCExecPoint &ep)
+void MCMove::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCMove */ LEGACY_EXEC
 	MCObject *optr;
@@ -1625,72 +1623,46 @@ Exec_stat MCMove::exec(MCExecPoint &ep)
 	return ES_NORMAL; 
 #endif /* MCMove */
 
-
-	MCExecContext ctxt(ep);
 	MCObject *optr;
 	uint4 parid;
 
-	if (object->getobj(ep, optr, parid, True) != ES_NORMAL)
+    if (!object->getobj(ctxt, optr, parid, True))
 	{
-		MCeerror->add(EE_MOVE_BADOBJECT, line, pos);
-		return ES_ERROR;
+        ctxt . LegacyThrow(EE_MOVE_BADOBJECT);
+        return;
 	}
 
 	real8 duration = 0.0;
-	if (durationexp != NULL)
-	{
-		if (durationexp->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_MOVE_BADDURATION, line, pos);
-			return ES_ERROR;
-		}
-		if (ep.getreal8(duration, line, pos, EE_MOVE_DURATIONNAN) != ES_NORMAL)
-			return ES_ERROR;
-	}
-	if (endloc->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_MOVE_BADENDLOC, line, pos);
-		return ES_ERROR;
-	}	
+    if (!ctxt . EvalOptionalExprAsDouble(durationexp, 0.0, EE_MOVE_BADDURATION, duration))
+        return;
+
 	if (startloc != NULL)
-	{
-		MCPoint t_to;
-		if (!ep . copyaspoint(t_to))
-		{
-			MCeerror->add(EE_MOVE_ENDNAP, line, pos);
-			return ES_ERROR;
-		}
-		if (startloc->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_MOVE_BADSTARTLOC, line, pos);
-			return ES_ERROR;
-		}
-		MCPoint t_from;
-		if (!ep . copyaspoint(t_from))
-		{
-			MCeerror->add(EE_MOVE_STARTNAP, line, pos);
-			return ES_ERROR;
-		}
+    {
+        MCPoint t_to, t_from;
+
+        if (!ctxt . EvalExprAsPoint(endloc, EE_MOVE_BADENDLOC, t_to))
+            return;
+
+        if (!ctxt . EvalExprAsPoint(startloc, EE_MOVE_BADSTARTLOC, t_from))
+            return;
+
 		MCInterfaceExecMoveObjectBetween(ctxt, optr, t_from, t_to, duration, units, waiting == True, messages == True);
 	}
 	else
 	{	
 		MCAutoArray<MCPoint> t_points;
 		MCAutoStringRef t_motion;
-		/* UNCHECKED */ ep . copyasstringref(&t_motion);
+        if (!ctxt . EvalExprAsStringRef(startloc, EE_MOVE_BADSTARTLOC, &t_motion))
+            return;
+
 		if (!MCU_parsepoints(t_points.PtrRef(), t_points.SizeRef(), *t_motion))
 		{
-			MCeerror->add(EE_MOVE_ENDNAP, line, pos, *t_motion);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_MOVE_ENDNAP);
+            return;
 		}
+
 		MCInterfaceExecMoveObjectAlong(ctxt, optr, t_points.Ptr(), t_points.Size(), relative == True, duration, units, waiting == True, messages == True);		
-	}	
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
-
+   }
 }
 
 void MCMove::compile(MCSyntaxFactoryRef ctxt)
