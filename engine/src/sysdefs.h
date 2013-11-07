@@ -364,10 +364,6 @@ struct MCFontStruct
 	uint2 style;
 	int ascent;
 	int descent;
-	Boolean wide;
-	uint1 charset;
-	Boolean unicode;
-	uint1 widths[256];
 };
 
 #define fixmaskrop(a) (a)
@@ -431,8 +427,6 @@ struct MCFontStruct
 	uint16_t size;
 	uint2 ascent;
 	uint2 descent;
-	uint1 charset;
-	Boolean unicode;
 };
 
 #define fixmaskrop(a) (a)
@@ -480,10 +474,6 @@ struct MCFontStruct
 	uint2 style;
 	int ascent;
 	int descent;
-	Boolean wide;
-	uint1 charset;
-	Boolean unicode;
-	uint1 widths[256];
 };
 
 #define fixmaskrop(a) (a)
@@ -529,8 +519,6 @@ struct MCFontStruct
 	uint16_t size;
 	int ascent;
 	int descent;
-	Boolean unicode;
-	uint1 charset;
 	MCSysFontHandle fid;
 };
 
