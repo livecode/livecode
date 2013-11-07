@@ -293,7 +293,7 @@ Parse_stat MCConvert::parsedtformat(MCScriptPoint &sp, Convert_form &firstform,
 	return PS_NORMAL;
 }
 
-Exec_stat MCConvert::exec(MCExecPoint &ep)
+void MCConvert::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCConvert */ LEGACY_EXEC
 	MCresult->clear(False);
@@ -334,44 +334,24 @@ Exec_stat MCConvert::exec(MCExecPoint &ep)
 	return ES_NORMAL; 
 #endif /* MCConvert */
 
-
-	MCExecContext ctxt(ep, it);
-	MCAutoStringRef t_input;
+    ctxt . SetIt(it);
+    MCAutoStringRef t_input;
 	MCAutoStringRef t_output;
 	if (container != NULL)
-	{
-		if (container->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_CONVERT_CANTGET, line, pos);
-			return ES_ERROR;
-		}
-	}
+		container->eval(ctxt, &t_input);		
 	else
 	{
-		if (source->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_CONVERT_CANTGET, line, pos);
-			return ES_ERROR;
-		}
+        if (!ctxt . EvalExprAsStringRef(source, EE_CONVERT_CANTGET, &t_input))
+            return;
 	}
-	/* UNCHECKED */ ep . copyasstringref(&t_input);
-
+    
 	if (it != NULL)
 		MCDateTimeExecConvertIntoIt(ctxt, *t_input, fform, fsform, pform, sform, &t_output);
 	else
 	{
 		MCDateTimeExecConvert(ctxt, *t_input, fform, fsform, pform, sform, &t_output);
-		if (container -> set(ep, PT_INTO, *t_output) != ES_NORMAL)
-		{
-			MCeerror->add(EE_CONVERT_CANTSET, line, pos);
-			return ES_ERROR;
-		}
+		container -> set(ctxt, PT_INTO, *t_output);
 	}
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCConvert::compile(MCSyntaxFactoryRef ctxt)
@@ -817,7 +797,7 @@ Parse_stat MCEdit::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCEdit::exec(MCExecPoint &ep)
+void MCEdit::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCEdit */ LEGACY_EXEC
 MCObject *optr;
@@ -842,18 +822,9 @@ MCObject *optr;
 
 	MCObject *optr;
 	uint4 parid;
-	if (target->getobj(ep, optr, parid, True) != ES_NORMAL)
-	{
-		MCeerror->add(EE_EDIT_BADTARGET, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
+	target->getobj(ctxt, optr, parid, True);
+	
 	MCIdeExecEditScriptOfObject(ctxt, optr);
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCEdit::compile(MCSyntaxFactoryRef ctxt)
@@ -1365,7 +1336,7 @@ Parse_stat MCPut::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCPut::exec(MCExecPoint &ep)
+void MCPut::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCPut */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
@@ -1441,24 +1412,17 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 		return ES_NORMAL;
 	}
 #endif /* MCPut */
-	MCAutoValueRef t_value;
-	if (source -> eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_PUT_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep . copyasvalueref(&t_value);
+    
+    MCAutoValueRef t_value;
+    if (!ctxt . EvalExprAsValueRef(source, EE_PUT_BADEXP, &t_value))
+        return;
 	
-	MCExecContext ctxt(ep);
-
-	if (dest != nil)
+    if (dest != nil)
 	{
 		if (dest -> isvarchunk())
 		{
 			MCVariableChunkPtr t_var_chunk;
-			if (dest -> evalvarchunk(ep, false, true, t_var_chunk) != ES_NORMAL)
-				return ES_ERROR;
-			
+			dest -> evalvarchunk(ctxt, false, true, t_var_chunk);
 			MCEngineExecPutIntoVariable(ctxt, *t_value, prep, t_var_chunk);
 		}
 		else if (dest -> isurlchunk())
@@ -1467,13 +1431,12 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 			if (!ctxt . ConvertToString(*t_value, &t_string))
 			{
 				MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
-				return ES_ERROR;
+				return;
 			}
 			
 			MCUrlChunkPtr t_url_chunk;
 			t_url_chunk . url = nil;
-			if (dest -> evalurlchunk(ep, false, true, t_url_chunk) != ES_NORMAL)
-				return ES_ERROR;
+			dest -> evalurlchunk(ctxt, false, true, t_url_chunk);
 			
 			MCNetworkExecPutIntoUrl(ctxt, *t_string, prep, t_url_chunk);
 			
@@ -1482,22 +1445,21 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 		else
 		{
             MCObjectChunkPtr t_obj_chunk;
-			if (dest -> evalobjectchunk(ep, false, true, t_obj_chunk) != ES_NORMAL)
-				return ES_ERROR;
+			dest -> evalobjectchunk(ctxt, false, true, t_obj_chunk);
             
             if (is_unicode)
             {
                 if (t_obj_chunk . object -> gettype() != CT_FIELD)
                 {
                     MCeerror -> add(EE_CHUNK_CANTSETUNICODEDEST, line, pos);
-                    return ES_ERROR;
+                    return;
                 }
                 
                 MCAutoDataRef t_data;
                 if (!ctxt . ConvertToData(*t_value, &t_data))
                 {
                     MCeerror -> add(EE_CHUNK_CANTSETUNICODEDEST, line, pos);
-                    return ES_ERROR;
+                    return;
                 }
                 MCInterfaceExecPutUnicodeIntoField(ctxt, *t_data, prep, t_obj_chunk);
             }
@@ -1507,9 +1469,9 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
                 if (!ctxt . ConvertToString(*t_value, &t_string))
                 {
                     MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
-                    return ES_ERROR;
+                    return;
                 }
-			            
+                
                 if (t_obj_chunk . object -> gettype() == CT_FIELD)
                     MCInterfaceExecPutIntoField(ctxt, *t_string, prep, t_obj_chunk);
                 else
@@ -1517,7 +1479,7 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 			}
 		}
 	}
-	else
+    else
 	{
 		MCAutoValueRef t_val;
 		if (is_unicode && (prep == PT_UNDEFINED || prep == PT_CONTENT || prep == PT_MARKUP))
@@ -1525,16 +1487,16 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 			if (!ctxt . ConvertToData(*t_value, (MCDataRef&)&t_val))
 			{
 				MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
-				return ES_ERROR;
+				return;
 			}
         }
 		else
         {
 			if (!ctxt . ConvertToString(*t_value, (MCStringRef&)&t_val))
-
+                
 			{
 				MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
-				return ES_ERROR;
+				return;
 			}
         }
 		
@@ -1545,55 +1507,20 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 		if (prep == PT_COOKIE)
 		{
 			MCAutoStringRef t_name;
-			if (name -> eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_PUT_CANTSETINTO, line, pos);
-				return ES_ERROR;
-			}
-			if (!ep . copyasstringref(&t_name))
-				t_name = kMCEmptyString;
-			
+            if (!ctxt . EvalOptionalExprAsStringRef(name, kMCEmptyString, EE_PUT_CANTSETINTO, &t_name))
+                return;
+						
 			uinteger_t t_expires;
-			t_expires = 0;
-			if (expires != nil)
-			{
-				if (expires -> eval(ep) != ES_NORMAL ||
-					(!ep . isempty() && ep . ton() != ES_NORMAL))
-				{
-					MCeerror->add(EE_PUT_CANTSETINTO, line, pos);
-					return ES_ERROR;
-				}
-				if (!ep . isempty())
-					t_expires = ep . getuint4();
-			}
-			
-			MCAutoStringRef t_path;
-			if (path != nil)
-			{
-				if (path -> eval(ep) != ES_NORMAL)
-				{
-					MCeerror->add(EE_PUT_CANTSETINTO, line, pos);
-					return ES_ERROR;
-				}
-				if (!ep . copyasstringref(&t_path))
-					t_path = kMCEmptyString;
-			}
-			else
-				t_path = kMCEmptyString;
+            if (!ctxt . EvalOptionalExprAsUInt(expires, 0, EE_PUT_CANTSETINTO, t_expires))
+                return;
+						
+			MCAutoStringRef t_path;            
+			if (!ctxt . EvalOptionalExprAsStringRef(path, kMCEmptyString, EE_PUT_CANTSETINTO, &t_path))
+                return;			
 			
 			MCAutoStringRef t_domain;
-			if (domain != nil)
-			{
-				if (domain -> eval(ep) != ES_NORMAL)
-				{
-					MCeerror->add(EE_PUT_CANTSETINTO, line, pos);
-					return ES_ERROR;
-				}
-				if (!ep . copyasstringref(&t_domain))
-					t_domain = kMCEmptyString;
-			}
-			else
-				t_domain = kMCEmptyString;
+			if (!ctxt . EvalOptionalExprAsStringRef(domain, kMCEmptyString, EE_PUT_CANTSETINTO, &t_domain))
+                return;
 			
 			MCServerExecPutCookie(ctxt, *t_name, t_string, t_expires, *t_path, *t_domain, is_secure, is_httponly);
 		}
@@ -1625,11 +1552,6 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 		else if (prep == PT_BINARY)
             MCServerExecPutBinaryOutput(ctxt, t_data);
 	}
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-	
-	return ctxt . Catch(line, pos);
 }
 
 void MCPut::compile(MCSyntaxFactoryRef ctxt)
@@ -2523,7 +2445,7 @@ void MCSort::additem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, Sort
 	nitems++;
 }
 
-Exec_stat MCSort::exec(MCExecPoint &ep)
+void MCSort::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCSort */ LEGACY_EXEC
 	if (of == NULL && chunktype == CT_FIELD)
@@ -2593,39 +2515,38 @@ Exec_stat MCSort::exec(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCSort */
-	MCExecContext ctxt(ep);
-	MCObjectPtr t_object;
+    
+    MCObjectPtr t_object;
+    MCAutoStringRef t_target;
 	if (of != NULL)
 	{
 		MCerrorlock++;
-		if (of->getobj(ep, t_object, False) != ES_NORMAL || t_object . object->gettype() == CT_BUTTON)
+        of->getoptionalobj(ctxt, t_object, False);
+		if (t_object . object == nil || t_object . object->gettype() == CT_BUTTON)
 		{
 			MCerrorlock--;
-			if (of->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_SORT_BADTARGET, line, pos);
-				return ES_ERROR;
-			}
+            of -> eval(ctxt, &t_target);
+            if (ctxt . HasError())
+                return;
 		}
 		else
+        {
 			MCerrorlock--;
+        }
 		if (t_object . object != nil && t_object . object->gettype() > CT_GROUP && chunktype <= CT_GROUP)
 			chunktype = CT_LINE;
 	}
-
+    
 	if (chunktype == CT_CARD || chunktype == CT_MARKED)
 		MCInterfaceExecSortCardsOfStack(ctxt, (MCStack *)t_object . object, direction == ST_ASCENDING, format, by, chunktype == CT_MARKED);
 	else if (t_object . object == nil || t_object . object->gettype() == CT_BUTTON)
 	{
-		MCAutoStringRef t_target;
-		/* UNCHECKED */ ep . copyasstringref(&t_target);
-
-		MCStringRef t_sorted_target;
+        MCStringRef t_sorted_target;
 		t_sorted_target = *t_target;
 		MCInterfaceExecSortContainer(ctxt, t_sorted_target, chunktype, direction == ST_ASCENDING, format, by);
 		if (!ctxt . HasError())
 		{
-            of -> set(ep, PT_INTO, t_sorted_target);
+            of -> set(ctxt, PT_INTO, t_sorted_target);
 			MCValueRelease(t_sorted_target);
 		}
 	}
@@ -2634,15 +2555,10 @@ Exec_stat MCSort::exec(MCExecPoint &ep)
 		if (t_object . object->gettype() != CT_FIELD || !of->nochunks())
 		{
 			MCeerror->add(EE_SORT_CANTSORT, line, pos);
-			return ES_ERROR;
+			return;
 		}
 		MCInterfaceExecSortField(ctxt, t_object, chunktype, direction == ST_ASCENDING, format, by);
 	}
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCSort::compile(MCSyntaxFactoryRef ctxt)
