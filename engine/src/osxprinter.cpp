@@ -1729,7 +1729,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			}
 		
 			bool t_is_unicode;
-			t_is_unicode = f -> unicode || p_mark -> text . unicode_override;
+			t_is_unicode = p_mark -> text . unicode_override;
 							
 			MCExecPoint text_ep(NULL, NULL, NULL);
 			text_ep . setsvalue(MCString((const char *)s, len));
@@ -1797,37 +1797,16 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			t_err = ATSUCreateTextLayout(&t_layout);
 			t_err = ATSUSetTransientFontMatching(t_layout, true);
 			
-			if (t_is_unicode)
-			{
-				t_layout_options = kATSLineUseDeviceMetrics | kATSLineFractDisable;
-			}
-			else
-				t_layout_options = 0; //kATSLineDisableAllLayoutOperations | kATSLineUseDeviceMetrics | kATSLineFractDisable; //kATSLineUseQDRendering | kATSLineUseDeviceMetrics | kATSLineDisableAllLayoutOperations | kATSLineUseDeviceMetrics | kATSLineFractDisable; /*| kATSLineDisableAutoAdjustDisplayPos | kATSLineUseQDRendering*/;
+			t_layout_options = kATSLineUseDeviceMetrics | kATSLineFractDisable;
 			
 			t_err = ATSUSetLayoutControls(t_layout, sizeof(t_layout_tags) / sizeof(ATSUAttributeTag), t_layout_tags, t_layout_sizes, t_layout_attrs);
 			
 			CGContextSaveGState(m_context);
 			CGContextConcatCTM(m_context, CGAffineTransformMake(1, 0, 0, -1, 0, m_page_height));
-			if (t_is_unicode)
-			{
-				t_err = ATSUSetTextPointerLocation(t_layout, (const UniChar *)s, 0, len / 2, len / 2);
-				t_err = ATSUSetRunStyle(t_layout, t_style, 0, len / 2);
-				t_err = ATSUSetTransientFontMatching(t_layout, true);
-				t_err = ATSUDrawText(t_layout, 0, len / 2, x << 16, (m_page_height - y) << 16);
-			}
-			else
-			{
-				int4 t_screen_x;
-				t_screen_x = x;
-				for(uint4 i = 0; i < p_mark -> text . length; i++)
-				{
-					t_err = ATSUSetTextPointerLocation(t_layout, (const UniChar *)s + i, 0, 1, 1);
-					t_err = ATSUSetRunStyle(t_layout, t_style, 0, 1);
-					t_err = ATSUSetTransientFontMatching(t_layout, true);
-					t_err = ATSUDrawText(t_layout, 0, 1, t_screen_x << 16, (m_page_height - y) << 16);
-					t_screen_x += f -> widths[((uint1 *)p_mark -> text . data)[i]];
-				}
-			}
+			t_err = ATSUSetTextPointerLocation(t_layout, (const UniChar *)s, 0, len / 2, len / 2);
+			t_err = ATSUSetRunStyle(t_layout, t_style, 0, len / 2);
+			t_err = ATSUSetTransientFontMatching(t_layout, true);
+			t_err = ATSUDrawText(t_layout, 0, len / 2, x << 16, (m_page_height - y) << 16);
 			CGContextRestoreGState(m_context);
 			
 			t_err = ATSUDisposeTextLayout(t_layout);
