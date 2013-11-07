@@ -846,6 +846,7 @@ bool MCExecContext::EvalExprAsColor(MCExpression *p_expr, Exec_errors p_error, M
 	return false;
 }
 
+
 bool MCExecContext::EvalOptionalExprAsColor(MCExpression *p_expr, MCColor *p_default, Exec_errors p_error, MCColor *&r_value)
 {
 	if (p_expr == nil)
