@@ -16,6 +16,7 @@ SOURCES=\
 	image_rep_encoded.cpp \
 	image_rep_mutable.cpp \
 	image_rep_densitymapped.cpp \
+	image_rep_resampled.cpp \
 	imagebitmap.cpp ipng.cpp \
 	iquantization.cpp iquantize_new.cpp irle.cpp iutil.cpp \
 	itransform.cpp keywords.cpp line.cpp literal.cpp magnify.cpp mcerror.cpp \
