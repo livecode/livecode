@@ -1034,7 +1034,7 @@ public:
 	}
 	virtual ~MCFocus();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+    virtual void exec(MCExecContext &ctxt);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 

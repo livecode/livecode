@@ -694,7 +694,7 @@ Parse_stat MCFocus::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCFocus::exec(MCExecPoint &ep)
+void MCFocus::exec(MCExecContext &ctxt)
 {
 #ifdef /* MCFocus */ LEGACY_EXEC
 MCObject *optr;
@@ -721,27 +721,21 @@ MCObject *optr;
 	return ES_NORMAL;
 #endif /* MCFocus */
 
-
-	MCExecContext ctxt(ep);
 	if (object == NULL)
 		MCInterfaceExecFocusOnNothing(ctxt);
 	else
 	{
 		MCObject *optr;
 		uint4 parid;
-		if (object->getobj(ep, optr, parid, True) != ES_NORMAL || 
-			optr->gettype() < CT_FIRST_CONTROL || optr->gettype() > CT_LAST_CONTROL)
+        if (!object->getobj(ctxt, optr, parid, True)
+                || optr->gettype() < CT_FIRST_CONTROL
+                || optr->gettype() > CT_LAST_CONTROL)
 		{
-			MCeerror->add(EE_FOCUS_BADOBJECT, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_FOCUS_BADOBJECT);
+            return;
 		}
 		MCInterfaceExecFocusOn(ctxt, optr);
-	}
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    }
 }
 
 void MCFocus::compile(MCSyntaxFactoryRef ctxt)
