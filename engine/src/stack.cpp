@@ -1590,6 +1590,12 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	// IM-2013-09-23: [[ FullscreenMode ]] Add stack fullscreenMode property
 	case P_FULLSCREENMODE:
 		{
+			// MW-2013-11-07: [[ Bug 11393 ]] Whether we need to reset fonts depends
+			//   on both formatForPrinting and fullscreenmode (on Windows).
+
+			bool t_ideal_layout;
+			t_ideal_layout = getuseideallayout();
+
 			MCStackFullscreenMode t_mode;
 			if (!MCStackFullscreenModeFromString(ep.getcstring(), t_mode))
 			{
@@ -1605,6 +1611,9 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 					// rather than reopening the window.
 					setrect(old_rect);
 			}
+
+			if ((t_ideal_layout != getuseideallayout()) && opened)
+				purgefonts();
 		}
 		break;
 	case P_NAME:
@@ -2307,14 +2316,22 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		}
 		break;
 	case P_FORMAT_FOR_PRINTING:
-
-		if (!MCU_matchflags(data, flags, F_FORMAT_FOR_PRINTING, dirty))
 		{
-			MCeerror->add(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
+			// MW-2013-11-07: [[ Bug 11393 ]] Whether we need to reset fonts depends
+			//   on both formatForPrinting and fullscreenmode (on Windows).
+
+			bool t_ideal_layout;
+			t_ideal_layout = getuseideallayout();
+
+			if (!MCU_matchflags(data, flags, F_FORMAT_FOR_PRINTING, dirty))
+			{
+				MCeerror->add(EE_OBJECT_NAB, 0, 0, data);
+				return ES_ERROR;
+			}
+
+			if ((getuseideallayout() != t_ideal_layout) && opened)
+				purgefonts();
 		}
-		if (dirty && opened)
-			purgefonts();
 		break;
 	case P_LINK_COLOR:
 	case P_LINK_HILITE_COLOR:
@@ -2903,7 +2920,7 @@ bool MCStack::recomputefonts(MCFontRef p_parent_font)
 	// MW-2012-02-17: [[ FontRefs ]] If the stack has formatForPrinting set,
 	//   make sure all its children inherit from a font with printer metrics
 	//   set.
-	if (getflag(F_FORMAT_FOR_PRINTING))
+	if (getuseideallayout())
 	{
 		MCNameRef t_textfont;
 		uint2 t_textsize;
@@ -2977,6 +2994,24 @@ void MCStack::purgefonts()
 	
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
 	dirtyall();
+}
+
+// MW-2013-11-07: [[ Bug 11393 ]] If the stack is formatForPrinting or has fullscreenmode
+//   set then ideal layout should be used (on Windows).
+bool MCStack::getuseideallayout(void)
+{
+#if !defined(_WINDOWS)
+	// If we are not on Windows, then we are already using ideal layout.
+	return false;
+#else
+	if (getflag(F_FORMAT_FOR_PRINTING))
+		return true;
+
+	if (m_view_fullscreenmode != kMCStackFullscreenResize)
+		return true;
+
+	return false;
+#endif
 }
 
 //////////

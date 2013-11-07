@@ -699,6 +699,9 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 			}
 		}
 
+		// MW-2013-11-07: [[ Bug 11393 ]] Previous per-platform implementations all fold into the optimized
+		//   case now (previously iOS / Windows printer were measuring break by break, which is what we do
+		//   generally now).
 		if (t_this_char == '\t')
 		{
 			twidth += gettabwidth(x + twidth, text, initial_i);
@@ -707,22 +710,7 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 			t_last_break_i = i;
 		}
 		else
-		{
-#ifdef _IOS_MOBILE
-			// MW-2012-02-01: [[ Bug 9982 ]] iOS uses sub-pixel positioning, so make sure we measure
-			//   complete runs.
-			twidth = t_last_break_width + MCFontMeasureText(m_font, &text[t_last_break_i], i - t_last_break_i, hasunicode());
-#else
-#ifdef TARGET_PLATFORM_WINDOWS
-			// MW-2009-04-23: [[ Bug ]] For printing, we measure complete runs of text otherwise we get
-			//   positioning issues.
-			if (MCFontHasPrinterMetrics(m_font))
-				twidth = t_last_break_width + MCFontMeasureText(m_font, &text[t_last_break_i], i - t_last_break_i, hasunicode());
-			else
-#endif
-				twidth += MCFontMeasureText(m_font, &text[initial_i], i - initial_i, hasunicode());
-#endif
-		}
+			twidth += MCFontMeasureText(m_font, &text[initial_i], i - initial_i, hasunicode());
 
 		if (t_can_fit && twidth > maxwidth)
 			break;
@@ -1624,9 +1612,11 @@ uint2 MCBlock::getcursorindex(int2 x, int2 cx, Boolean chunk, Boolean last)
 	uint2 tlen = 0;
 	uint2 twidth = 0;
 	uint2 toldwidth = 0;
-#ifdef _IOS_MOBILE
+
 	// MW-2012-02-01: [[ Bug 9982 ]] iOS uses sub-pixel positioning, so make sure we measure
 	//   complete runs.
+	// MW-2013-11-07: [[ Bug 11393 ]] We only want to measure complete runs now regardless of
+	//   platform.
 	int32_t t_last_width;
 	t_last_width = 0;
 	while(i < index + size)
@@ -1650,36 +1640,7 @@ uint2 MCBlock::getcursorindex(int2 x, int2 cx, Boolean chunk, Boolean last)
 		
 		i = t_new_i;
 	}
-#else
-	while (i < index + size)
-	{
-		if (textcomparechar(&text[i],'\t'))
-			cwidth = gettabwidth(x, text, i);
-		else
-#if defined(_MACOSX)
-			if (hasunicode())
-			{
-				tlen += indexincrement(i);
-				twidth = MCFontMeasureText(m_font, &text[index], tlen, hasunicode());
-				cwidth = twidth - toldwidth;
-				toldwidth = twidth;
-			}
-			else
-#endif
-				cwidth = MCFontMeasureText(m_font, &text[i], indexincrement(i), hasunicode());
-		if (chunk)
-		{
-			if (cx < cwidth)
-				break;
-		}
-		else
-			if (cx < cwidth >> 1)
-				break;
-		cx -= cwidth;
-		x += cwidth;
-		i +=  indexincrement(i);
-	}
-#endif
+
 	if (i == index + size && last && (index + size != parent->gettextsize()) && !hasunicode())
 		return i - indexdecrement(i);
 	else

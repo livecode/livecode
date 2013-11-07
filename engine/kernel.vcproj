@@ -947,6 +947,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\graphics_util.h"
+				>
+			</File>
+			<File
 				RelativePath="src\mctheme.cpp"
 				>
 			</File>
