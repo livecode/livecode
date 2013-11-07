@@ -3004,7 +3004,8 @@ Parse_stat MCStop::parse(MCScriptPoint &sp)
 }
 
 bool MCServerStopSession();
-Exec_stat MCStop::exec(MCExecPoint &ep)
+
+void MCStop::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCStop */ LEGACY_EXEC
 MCObject *optr = NULL;
@@ -3111,19 +3112,17 @@ MCObject *optr = NULL;
 	return ES_NORMAL;
 #endif /* MCStop */
 
-
 	MCObject *optr = NULL;
 	uint4 parid;
 
 	if (target != NULL)
-		if (target->getobj(ep, optr, parid, True) != ES_NORMAL
+        if (!target->getobj(ctxt, optr, parid, True)
 		        || optr == NULL && mode != SC_EDITING)
 		{
-			MCeerror->add(EE_STOP_BADTARGET, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_STOP_BADTARGET);
+            return;
 		}
 
-	MCExecContext ctxt(ep);
 	switch (mode)
 	{
 	case SC_EDITING:
@@ -3131,8 +3130,8 @@ MCObject *optr = NULL;
 		{
 			if (optr->gettype() != CT_GROUP)
 			{
-				MCeerror->add(EE_STOP_NOTABACKGROUND, line, pos);
-				return ES_ERROR;
+                ctxt . LegacyThrow(EE_STOP_NOTABACKGROUND);
+                return;
 			}
 			MCInterfaceExecStopEditingGroup(ctxt, (MCGroup *)optr);
 		}
@@ -3153,29 +3152,25 @@ MCObject *optr = NULL;
 		MCMultimediaExecStopRecording(ctxt);
 		break;
 	case SC_USING:
-		{
-			MCStack *sptr = NULL;
+        {
 			if (target != NULL)
 			{
 				MCObject *optr;
 				uint4 parid;
-				if (target->getobj(ep, optr, parid, True) != ES_NORMAL
+                if (!target->getobj(ctxt, optr, parid, True)
 				        || optr->gettype() != CT_STACK)
 				{
-					MCeerror->add(EE_STOP_BADTARGET, line, pos);
-					return ES_ERROR;
+                    ctxt . LegacyThrow(EE_STOP_BADTARGET);
+                    return;
 				}
 				MCEngineExecStopUsingStack(ctxt, (MCStack *)optr);
 			}
 			else
 			{
-				if (stack->eval(ep) != ES_NORMAL)
-				{
-					MCeerror->add(EE_STOP_BADTARGET, line, pos);
-					return ES_ERROR;
-				}
-				MCAutoStringRef t_name;
-				/* UNCHECKED */ ep . copyasstringref(&t_name);
+                MCAutoStringRef t_name;
+                if (!ctxt . EvalExprAsStringRef(stack, EE_STOP_BADTARGET, &t_name))
+                    return;
+
 				MCEngineExecStopUsingStackByName(ctxt, *t_name);
 			}
 		}
@@ -3185,19 +3180,13 @@ MCObject *optr = NULL;
 #ifdef _SERVER
 			MCServerExecStopSession(ctxt);
 #else
-			MCeerror->add(EE_SESSION_BADCONTEXT, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_SESSION_BADCONTEXT);
+            return;
 #endif
 		}
 	default:
 		break;
-	}
-	
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos); 
+    }
 }
 
 void MCStop::compile(MCSyntaxFactoryRef ctxt)
