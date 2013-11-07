@@ -327,7 +327,13 @@ void MCConvert::exec_ctxt(MCExecContext& ctxt)
     MCAutoStringRef t_input;
 	MCAutoStringRef t_output;
 	if (container != NULL)
-		container->eval(ctxt, &t_input);		
+    {
+        if (!container->eval(ctxt, &t_input))
+        {
+            ctxt . LegacyThrow(EE_CONVERT_CANTGET);
+            return;
+        }
+    }
 	else
 	{
         if (!ctxt . EvalExprAsStringRef(source, EE_CONVERT_CANTGET, &t_input))
@@ -339,7 +345,10 @@ void MCConvert::exec_ctxt(MCExecContext& ctxt)
 	else
 	{
 		MCDateTimeExecConvert(ctxt, *t_input, fform, fsform, pform, sform, &t_output);
-		container -> set(ctxt, PT_INTO, *t_output);
+        container -> set(ctxt, PT_INTO, *t_output);
+
+        if (ctxt . HasError())
+            ctxt . LegacyThrow(EE_CONVERT_CANTSET);
 	}
 }
 
@@ -753,7 +762,11 @@ MCObject *optr;
 
 	MCObject *optr;
 	uint4 parid;
-	target->getobj(ctxt, optr, parid, True);
+    if (!target->getobj(ctxt, optr, parid, True))
+    {
+        ctxt . LegacyThrow(EE_EDIT_BADTARGET);
+        return;
+    }
 	
 	MCIdeExecEditScriptOfObject(ctxt, optr);
 }
@@ -1333,7 +1346,12 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
 		if (dest -> isvarchunk())
 		{
 			MCVariableChunkPtr t_var_chunk;
-			dest -> evalvarchunk(ctxt, false, true, t_var_chunk);
+            if (!dest -> evalvarchunk(ctxt, false, true, t_var_chunk))
+            {
+                ctxt . Throw();
+                return;
+            }
+
 			MCEngineExecPutIntoVariable(ctxt, *t_value, prep, t_var_chunk);
 		}
 		else if (dest -> isurlchunk())
@@ -1341,13 +1359,18 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
 			MCAutoStringRef t_string;
 			if (!ctxt . ConvertToString(*t_value, &t_string))
 			{
-				MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
+                ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
 				return;
 			}
 			
 			MCUrlChunkPtr t_url_chunk;
 			t_url_chunk . url = nil;
-			dest -> evalurlchunk(ctxt, false, true, t_url_chunk);
+
+            if (!dest -> evalurlchunk(ctxt, false, true, t_url_chunk))
+            {
+                ctxt . Throw();
+                return;
+            }
 			
 			MCNetworkExecPutIntoUrl(ctxt, *t_string, prep, t_url_chunk);
 			
@@ -1356,20 +1379,25 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
 		else
 		{
             MCObjectChunkPtr t_obj_chunk;
-			dest -> evalobjectchunk(ctxt, false, true, t_obj_chunk);
+
+            if (!dest -> evalobjectchunk(ctxt, false, true, t_obj_chunk))
+            {
+                ctxt . Throw();
+                return;
+            }
             
             if (is_unicode)
             {
                 if (t_obj_chunk . object -> gettype() != CT_FIELD)
                 {
-                    MCeerror -> add(EE_CHUNK_CANTSETUNICODEDEST, line, pos);
+                    ctxt . LegacyThrow(EE_CHUNK_CANTSETUNICODEDEST);
                     return;
                 }
                 
                 MCAutoDataRef t_data;
                 if (!ctxt . ConvertToData(*t_value, &t_data))
                 {
-                    MCeerror -> add(EE_CHUNK_CANTSETUNICODEDEST, line, pos);
+                    ctxt . LegacyThrow(EE_CHUNK_CANTSETUNICODEDEST);
                     return;
                 }
                 MCInterfaceExecPutUnicodeIntoField(ctxt, *t_data, prep, t_obj_chunk);
@@ -1379,7 +1407,7 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
                 MCAutoStringRef t_string;
                 if (!ctxt . ConvertToString(*t_value, &t_string))
                 {
-                    MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
+                    ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
                     return;
                 }
                 
@@ -1397,7 +1425,7 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
         {
 			if (!ctxt . ConvertToData(*t_value, (MCDataRef&)&t_val))
 			{
-				MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
+                ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
 				return;
 			}
         }
@@ -1406,7 +1434,7 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
 			if (!ctxt . ConvertToString(*t_value, (MCStringRef&)&t_val))
                 
 			{
-				MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
+                ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
 				return;
 			}
         }
@@ -1417,7 +1445,7 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
 		
 		if (prep == PT_COOKIE)
 		{
-			MCAutoStringRef t_name;
+            MCAutoStringRef t_name;
             if (!ctxt . EvalOptionalExprAsStringRef(name, kMCEmptyString, EE_PUT_CANTSETINTO, &t_name))
                 return;
 						
@@ -2412,9 +2440,12 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
 		if (t_object . object == nil || t_object . object->gettype() == CT_BUTTON)
 		{
 			MCerrorlock--;
-            of -> eval(ctxt, &t_target);
-            if (ctxt . HasError())
+
+            if (!of -> eval(ctxt, &t_target))
+            {
+                ctxt . LegacyThrow(EE_SORT_BADTARGET);
                 return;
+            }
 		}
 		else
         {
@@ -2429,19 +2460,23 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
 	else if (t_object . object == nil || t_object . object->gettype() == CT_BUTTON)
 	{
         MCStringRef t_sorted_target;
-		t_sorted_target = *t_target;
-		MCInterfaceExecSortContainer(ctxt, t_sorted_target, chunktype, direction == ST_ASCENDING, format, by);
-		if (!ctxt . HasError())
-		{
+
+        if (*t_target == nil)
+            t_sorted_target = MCValueRetain(kMCEmptyString);
+        else
+            t_sorted_target = MCValueRetain(*t_target);
+
+        MCInterfaceExecSortContainer(ctxt, t_sorted_target, chunktype, direction == ST_ASCENDING, format, by);
+        if (!ctxt . HasError())
             of -> set(ctxt, PT_INTO, t_sorted_target);
-			MCValueRelease(t_sorted_target);
-		}
+
+        MCValueRelease(t_sorted_target);
 	}
 	else
 	{
 		if (t_object . object->gettype() != CT_FIELD || !of->nochunks())
 		{
-			MCeerror->add(EE_SORT_CANTSORT, line, pos);
+            ctxt . LegacyThrow(EE_SORT_CANTSORT);
 			return;
 		}
 		MCInterfaceExecSortField(ctxt, t_object, chunktype, direction == ST_ASCENDING, format, by);
