@@ -223,6 +223,7 @@ Exec_stat MCClone::exec(MCExecPoint &ep)
 		MCeerror->add(EE_CLONE_NOTARGET, line, pos);
 		return ES_ERROR;
 	}
+   
 	MCAutoStringRef t_new_name;
 	if (newname != NULL)
 	{
@@ -2133,7 +2134,7 @@ Parse_stat MCLaunch::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCLaunch::exec(MCExecPoint &ep)
+void MCLaunch::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCLaunch */ LEGACY_EXEC
 if (MCsecuremode & MC_SECUREMODE_PROCESS)
@@ -2220,30 +2221,16 @@ if (MCsecuremode & MC_SECUREMODE_PROCESS)
 	return ES_NORMAL;
 #endif /* MCLaunch */
 
-
-	MCExecContext ctxt(ep);
-	MCNewAutoNameRef t_app;
-	if (app != NULL)
-	{
-		if (app->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_LAUNCH_BADAPPEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasnameref(&t_app); 
-	}
-
-	MCAutoStringRef t_document;
-	if (doc != NULL)
-	{
-		if (doc->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_LAUNCH_BADAPPEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&t_document); 
-	}
-
+    MCNewAutoNameRef t_app;
+		
+    if (!ctxt. EvalOptionalExprAsNullableNameRef(app, EE_LAUNCH_BADAPPEXP, &t_app))
+        return;
+	
+    MCAutoStringRef t_document;
+	
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(doc, EE_LAUNCH_BADAPPEXP, &t_document))
+        return;
+    
 	if (app != NULL)
 		MCFilesExecLaunchApp(ctxt, *t_app, *t_document);
 	else if (doc != NULL)
@@ -2253,11 +2240,6 @@ if (MCsecuremode & MC_SECUREMODE_PROCESS)
 		else
 			MCFilesExecLaunchDocument(ctxt, *t_document);
 	}
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line,pos);
 }
 
 void MCLaunch::compile(MCSyntaxFactoryRef ctxt)
@@ -2314,7 +2296,7 @@ Parse_stat MCLoad::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCLoad::exec(MCExecPoint &ep)
+void MCLoad::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCLoad */ LEGACY_EXEC
 	char *mptr;
@@ -2342,36 +2324,16 @@ Exec_stat MCLoad::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCLoad */
 
-
-	MCExecContext ctxt(ep);
-
-	MCNewAutoNameRef t_message;
-	if (message != NULL)
-	{
-		if (message->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_LOAD_BADMESSAGEEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasnameref(&t_message);
-	}
-	else
-		t_message = kMCEmptyName;
-
-	if (url->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_LOAD_BADURLEXP, line, pos);
-		return ES_ERROR;
-	}	
-
-	MCAutoStringRef t_url;
-	/* UNCHECKED */ ep . copyasstringref(&t_url);
-	MCNetworkExecLoadUrl(ctxt, *t_url, *t_message);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    MCNewAutoNameRef t_message;
+    
+    if (!ctxt . EvalOptionalExprAsNameRef(message, kMCEmptyName, EE_LOAD_BADMESSAGEEXP, &t_message))
+            return;
+	
+    MCAutoStringRef t_url;
+    if (!ctxt . EvalExprAsStringRef(url, EE_LOAD_BADURLEXP, &t_url))
+        return;    
+    
+    MCNetworkExecLoadUrl(ctxt, *t_url, *t_message);
 }
 
 void MCLoad::compile(MCSyntaxFactoryRef ctxt)
@@ -2409,7 +2371,7 @@ Parse_stat MCUnload::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCUnload::exec(MCExecPoint &ep)
+void MCUnload::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCUnload */ LEGACY_EXEC
 	if (url->eval(ep) != ES_NORMAL)
@@ -2421,23 +2383,11 @@ Exec_stat MCUnload::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCUnload */
 
-
-	MCExecContext ctxt(ep);
-
-	if (url->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_LOAD_BADURLEXP, line, pos);
-		return ES_ERROR;
-	}	
-
-	MCAutoStringRef t_url;
-	/* UNCHECKED */ ep . copyasstringref(&t_url);
-	MCNetworkExecUnloadUrl(ctxt, *t_url);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    MCAutoStringRef t_url;
+    if (!ctxt . EvalExprAsStringRef(url, EE_LOAD_BADURLEXP, &t_url))
+        return;
+    
+    MCNetworkExecUnloadUrl(ctxt, *t_url);
 }
 
 void MCUnload::compile(MCSyntaxFactoryRef ctxt)
@@ -2484,7 +2434,7 @@ Parse_stat MCPost::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCPost::exec(MCExecPoint &ep)
+void MCPost::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCPost */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
@@ -2503,30 +2453,16 @@ Exec_stat MCPost::exec(MCExecPoint &ep)
 	return it->set(ep);
 #endif /* MCPost */
 
-
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_POST_BADSOURCEEXP, line, pos);
-		return ES_ERROR;
-	}
-	MCAutoDataRef t_data;
-	/* UNCHECKED */ ep . copyasdataref(&t_data);
-
-	if (dest->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_POST_BADDESTEXP, line, pos);
-		return ES_ERROR;
-	}
-	MCAutoStringRef t_url;
-	/* UNCHECKED */ ep . copyasstringref(&t_url);
-
-	MCExecContext ctxt(ep, it);
-	MCNetworkExecPostToUrl(ctxt, *t_data, *t_url);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    MCAutoDataRef t_data;
+    if (!ctxt . EvalExprAsDataRef(source, EE_POST_BADSOURCEEXP, &t_data))
+        return;
+    
+    MCAutoStringRef t_url;
+    if (!ctxt . EvalExprAsStringRef(dest, EE_POST_BADDESTEXP, &t_url))
+        return;
+    
+    ctxt . SetIt(it);
+    MCNetworkExecPostToUrl(ctxt, *t_data, *t_url);
 }
 
 void MCPost::compile(MCSyntaxFactoryRef ctxt)
@@ -2852,7 +2788,7 @@ Parse_stat MCRecord::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCRecord::exec(MCExecPoint &ep)
+void MCRecord::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCRecord */ LEGACY_EXEC
 if (MCsecuremode & MC_SECUREMODE_PRIVACY)
@@ -2870,25 +2806,11 @@ if (MCsecuremode & MC_SECUREMODE_PRIVACY)
 	return ES_NORMAL;
 #endif /* MCRecord */
 
-
-	MCExecContext ctxt(ep);
-
-	if (file->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_RECORD_BADFILE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCAutoStringRef t_filename;
-	/* UNCHECKED */ ep . copyasstringref(&t_filename);
-
-	MCMultimediaExecRecord(ctxt, *t_filename);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
-
+    MCAutoStringRef t_filename;
+    if (!ctxt . EvalExprAsStringRef(file, EE_RECORD_BADFILE, &t_filename))
+        return;
+    
+    MCMultimediaExecRecord(ctxt, *t_filename);
 }
 
 void MCRecord::compile(MCSyntaxFactoryRef ctxt)

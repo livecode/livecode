@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #import <UIKit/UIKit.h>
 #include "mbliphoneapp.h"
-
+#include "variable.h"
 ////////////////////////////////////////////////////////////////////////////////
 
 UIView *MCIPhoneGetView(void);
