@@ -274,8 +274,6 @@ public:
 
 	virtual void setstatus(MCStringRef status);
 
-	virtual int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
-
 	virtual Boolean open();
 	virtual Boolean close(Boolean force);
 

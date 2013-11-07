@@ -2934,8 +2934,13 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 		// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
 		MCGAffineTransform t_transform = getdevicetransform();
 		
+		// MW-2013-10-29: [[ Bug 11330 ]] Make sure the effect area is cropped to the visible
+		//   area.
+		t_effect_area = MCRectangleGetTransformedBounds(t_effect_area, getviewtransform());
+		t_effect_area = MCU_intersect_rect(t_effect_area, MCU_make_rect(0, 0, view_getrect() . width, view_getrect() . height));
+		
 		MCRectangle t_device_rect, t_user_rect;
-		t_device_rect = MCRectangleGetTransformedBounds(t_effect_area, t_transform);
+		t_device_rect = MCRectangleGetTransformedBounds(t_effect_area, MCResGetDeviceTransform());		
 		t_user_rect = MCRectangleGetTransformedBounds(t_device_rect, MCGAffineTransformInvert(t_transform));
 		
 		if (t_success)
@@ -3018,6 +3023,16 @@ MCGAffineTransform MCStack::getdevicetransform(void) const
 MCGAffineTransform MCStack::getroottransform(void) const
 {
 	return MCGAffineTransformConcat(view_getroottransform(), getviewtransform());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCGFloat MCStack::getdevicescale(void) const
+{
+	MCGAffineTransform t_transform;
+	t_transform = getdevicetransform();
+	
+	return MCMax(fabsf(t_transform.a), fabsf(t_transform.d));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

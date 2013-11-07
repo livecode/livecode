@@ -502,7 +502,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			if (labelwidth != 0 && !isunnamed())
 			{
 				MCStringRef t_name = MCNameGetString(getname());
-				MCFontDrawText(m_font, t_name, dc, rect.x + leftmargin, starty, False);
+                dc -> drawtext(rect.x + leftmargin, starty, t_name, m_font, false);
 			}
 
 			// MW-2012-01-27: [[ Bug 9432 ]] Native GTK handles focus borders itself
@@ -583,15 +583,16 @@ void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectan
 	        && (getstyleint(flags) == F_STANDARD  || getstyleint(flags) == F_MENU
 	            && menumode == WM_OPTION))
 		sy--;
-	MCFontDrawText(m_font, p_label, dc, sx, sy, False);
+
+    dc -> drawtext(sx, sy, p_label, m_font, false);
 	
 	if (!MCStringIsEmpty(acceltext))
 	{
 		uint2 awidth = MCFontMeasureText(m_font, acceltext);
 		if (rightmargin == defaultmargin || menucontrol == MENUCONTROL_ITEM)
-			MCFontDrawText(m_font, acceltext, dc, srect.x + srect.width - rightmargin - awidth, sy, False);
+            dc -> drawtext(srect.x + srect.width - rightmargin - awidth, sy, acceltext, m_font, false);
 		else
-			MCFontDrawText(m_font, acceltext, dc, srect.x + srect.width - rightmargin, sy, False);
+            dc -> drawtext(srect.x + srect.width - rightmargin, sy, acceltext, m_font, false);
 	}
 
 	if (fstyle & FA_UNDERLINE)
@@ -1499,7 +1500,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 				break;
 			default:
 				setforeground(dc, DI_TOP, False);
-				MCFontDrawTextSubstring(m_font, t_tab, t_range, dc, textx, cury + yoffset + 1, False);
+                dc -> drawtext(textx, cury + yoffset + 1, t_tab, m_font, false);
 				setforeground(dc, DI_BOTTOM, False);
 				break;
 			}
@@ -1509,7 +1510,8 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 				setforeground(dc, DI_BACK, False, True);
 			else
 				setforeground(dc, DI_FORE, False);
-		MCFontDrawTextSubstring(m_font, t_tab, t_range, dc, textx, cury + yoffset, False);
+        
+        dc -> drawtext(textx, cury + yoffset, t_tab, m_font, false);
 		if ((disabled || flags & F_DISABLED) && MClook == LF_MOTIF)
 			dc->setfillstyle(FillSolid, nil, 0 , 0);
 		curx += twidth;

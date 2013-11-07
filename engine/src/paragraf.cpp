@@ -980,7 +980,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 					else
 						parent->setforeground(dc, DI_BACK, False, True);
 				}
-				MCFontDrawText(parent -> getfontref(), t_string, t_string_length, t_is_unicode, dc, t_current_x - getlistlabelwidth(), t_current_y + ascent - 1, false);
+                dc -> drawtext_legacy(t_current_x - getlistlabelwidth(), t_current_y + ascent - 1, t_string, t_string_length, parent-> getfontref(), false, t_is_unicode);
 				if ((state & PS_FRONT) != 0 && this != parent -> getparagraphs())
 					parent -> setforeground(dc, DI_FORE, False, True);
 			}

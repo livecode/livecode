@@ -11,8 +11,11 @@ SOURCES=\
 	execpt.cpp express.cpp field.cpp fieldf.cpp fieldh.cpp fields.cpp \
 	font.cpp funcs.cpp funcsm.cpp globals.cpp graphic.cpp group.cpp \
 	handler.cpp hc.cpp hndlrlst.cpp ibmp.cpp idraw.cpp ifile.cpp \
-	igif.cpp iimport.cpp ijpg.cpp image.cpp image_rep.cpp imagelist.cpp \
-	image_rep_encoded.cpp image_rep_mutable.cpp \
+	igif.cpp iimport.cpp ijpg.cpp image.cpp imagelist.cpp \
+	image_rep.cpp \
+	image_rep_encoded.cpp \
+	image_rep_mutable.cpp \
+	image_rep_densitymapped.cpp \
 	imagebitmap.cpp ipng.cpp \
 	iquantization.cpp iquantize_new.cpp irle.cpp iutil.cpp \
 	itransform.cpp keywords.cpp line.cpp literal.cpp magnify.cpp mcerror.cpp \

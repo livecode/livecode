@@ -806,7 +806,7 @@ void MCScrollbar::drawvalue(MCDC *dc, MCRectangle &thumb)
 			uint2 sx = thumb.x + thumb.width + ((rect.width - thumb.width - tw) >> 1);
 			uint2 sy = thumb.y + ((thumb.height + fascent) >> 1);
 			setforeground(dc, DI_FORE, False);
-			MCFontDrawText(m_font, *t_data, dc, sx, sy, False);
+            dc -> drawtext(sx, sy, *t_data, m_font, false);
 		}
 		else
 		{
@@ -821,7 +821,7 @@ void MCScrollbar::drawvalue(MCDC *dc, MCRectangle &thumb)
 			else
 				sy = rect.y + rect.height - fdescent;
 			setforeground(dc, DI_FORE, False);
-			MCFontDrawText(m_font, *t_data, dc, sx, sy, False);
+            dc -> drawtext(sx, sy, *t_data, m_font, false);
 		}
 	}
 }

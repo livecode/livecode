@@ -17,6 +17,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_IMAGE_BITMAP_H__
 #define __MC_IMAGE_BITMAP_H__
 
+#include "graphics.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // An MCImageBitmap is a non-premultiplied ARGB image, as decoded from the storage format
@@ -94,6 +96,9 @@ struct MCImageFrame
 {
 	MCImageBitmap *image;
 	uint32_t duration;
+	
+	// IM-2013-10-30: [[ FullscreenMode ]] add density value to image frames
+	MCGFloat density;
 };
 
 void MCImageFreeFrames(MCImageFrame *p_frames, uindex_t p_count);

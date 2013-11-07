@@ -1225,7 +1225,7 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
 	uint4 x = p_mark -> text . position . x ;
 	uint4 y = p_mark -> text . position . y ;
 	uint2 l = p_mark -> text . length ;
-	MCFontStruct *f = p_mark -> text . font ;
+    MCFontStruct *f = MCFontGetFontStruct(p_mark -> text . font);
 
 	if ( f != oldfont )
 	{
@@ -1240,7 +1240,13 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
 	char *text = new char[l + 1];
 	memcpy(text, p_mark -> text . data , l);
 	
-	uint2 w = MCscreen->textwidth(f, text, l);
+	bool t_is_unicode;
+	t_is_unicode = f -> unicode || p_mark -> text . unicode_override;
+    
+	MCAutoStringRef t_text_string;
+	/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)p_mark -> text . data, p_mark -> text . length, t_is_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative, false, &t_text_string);
+    
+    uint2 w = MCFontMeasureText(p_mark -> text . font, *t_text_string);
 	
 	text[l] = '\0';
 	const char *sptr = text;

@@ -99,8 +99,6 @@ public:
 	void setcmap(MCStack *sptr);
 	void setgraphicsexposures(Boolean on, MCStack *sptr);
 
-	int4 textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override);
-
 	void copyarea(Drawable source, Drawable dest, int2 depth, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint4 rop);
 
 	MCCursorRef createcursor(MCImageBitmap *p_image, int2 p_hotspot_x, int2 p_hotspot_y);

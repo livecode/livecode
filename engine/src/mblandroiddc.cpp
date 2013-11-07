@@ -302,32 +302,6 @@ bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if 0
-int4 MCScreenDC::textwidth(MCFontStruct *f, const char *p_string, uint2 p_length, bool p_unicode_override)
-{
-	return android_font_measure_text(f->fid, p_string, p_length, f->unicode || p_unicode_override);
-}
-#endif
-
-// MM-2013-08-30: [[ RefactorGraphics ]] Move text measuring to libgraphics.
-int4 MCScreenDC::textwidth(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override)
-{
-	if (p_length == 0 || p_text == NULL)
-		return 0;
-	
-    MCGFont t_font;
-	t_font = MCFontStructToMCGFont(p_font);
-	
-	MCExecPoint ep;
-	ep . setsvalue(MCString(p_text, p_length));
-	if (!p_font -> unicode && !p_unicode_override)
-		ep . nativetoutf16();
-	
-	return MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCScreenDC::beep(void)
 {
 	MCAndroidEngineRemoteCall("doBeep", "vi", nil, 1);

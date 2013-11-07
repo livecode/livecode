@@ -17,6 +17,7 @@
 #include "graphicscontext.h"
 #include "graphics.h"
 #include "graphics_util.h"
+#include "font.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -576,7 +577,8 @@ void MCGraphicsContext::getmiterlimit(real8 &r_limit)
 
 void MCGraphicsContext::setgradient(MCGradientFill *p_gradient)
 {
-	if (p_gradient != NULL && p_gradient -> kind != kMCGradientKindNone)
+	// MM-2013-10-32: [[ Bug 11367 ]] Added check to make sure ramp lenght isn't 0. Was causing issues with gradient inspector.
+	if (p_gradient != NULL && p_gradient -> kind != kMCGradientKindNone && p_gradient -> ramp_length != 0)
 	{	
 		MCGGradientFunction t_function;
 		t_function = kMCGGradientFunctionLinear;
@@ -942,42 +944,45 @@ void MCGraphicsContext::applywindowshape(MCWindowShape *p_mask, uint4 p_u_width,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCGraphicsContext::setfont(const char *fontname, uint2 fontsize, uint2 fontstyle, MCFontStruct *font)
-{
-}
-
 void MCGraphicsContext::drawlink(MCStringRef link, const MCRectangle& region)
 {
 }
 
 
-void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontStruct *f, Boolean image, bool p_unicode_override)
+void MCGraphicsContext::drawtext(int2 x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image)
 {
-	MCGFont t_font;
-	t_font = MCFontStructToMCGFont(f);
-	
-	MCExecPoint ep;
-	ep . setsvalue(MCString(s, length));	
-	if (!f -> unicode && !p_unicode_override)
-		ep . nativetoutf16();
-	
-	MCGContextDrawPlatformText(m_gcontext, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), MCGPointMake(x, y), t_font);
+	// MW-2013-10-29: [[ Bug 11338 ]] If 'image' is true, then render the background
+	//   rect.
+	if (image)
+	{
+		int32_t t_width;
+		t_width = MCFontMeasureText(p_font, p_string);
+		
+		MCGContextSave(m_gcontext);
+		setforeground(m_background);
+		fillrect(MCU_make_rect(x, y - MCFontGetAscent(p_font), t_width, MCFontGetAscent(p_font) + MCFontGetDescent(p_font)));
+		MCGContextRestore(m_gcontext);
+	}
+		
+	MCFontDrawText(m_gcontext, x, y, p_string, p_font);
 }	
 
-int4 MCGraphicsContext::textwidth(MCFontStruct *f, const char *s, uint2 length, bool p_unicode_override)
-{	
-	if (length == 0 || s == NULL)
-		return 0;
-
-	MCGFont t_font;
-	t_font = MCFontStructToMCGFont(f);
-	
-	MCExecPoint ep;
-	ep . setsvalue(MCString(s, length));	
-	if (!f -> unicode && !p_unicode_override)
-		ep . nativetoutf16();
-	
-	return MCGContextMeasurePlatformText(m_gcontext, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
+void MCGraphicsContext::drawtext_legacy(int2 x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_is_unicode)
+{
+	// MW-2013-10-29: [[ Bug 11338 ]] If 'image' is true, then render the background
+	//   rect.
+	if (image)
+	{
+		int32_t t_width;
+		t_width = MCFontMeasureText(p_font, s, length, p_is_unicode);
+		
+		MCGContextSave(m_gcontext);
+		setforeground(m_background);
+		fillrect(MCU_make_rect(x, y - MCFontGetAscent(p_font), t_width, MCFontGetAscent(p_font) + MCFontGetDescent(p_font)));
+		MCGContextRestore(m_gcontext);
+	}
+    
+	MCFontDrawText(m_gcontext, x, y, s, length, p_font, p_is_unicode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

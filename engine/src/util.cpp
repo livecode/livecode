@@ -1309,12 +1309,8 @@ void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize, const 
 
 Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
 {
-    if (name == nil)
-        return False;
-    
-    // AL-2013-07-29: [[ Bug 10981 ]] Allow the empty name for objects.
-	if (MCNameIsEmpty(name) && test == MCnullmcstring)
-		return True;
+	if (name == nil || MCNameIsEmpty(name) || test == MCnullmcstring)
+		return False;
 
 	if (MCNameIsEqualToOldString(name, test, kMCCompareCaseless))
 		return True;

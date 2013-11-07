@@ -396,7 +396,39 @@ void MCMetaContext::drawsegments(MCSegment *segments, uint2 nsegs)
 		drawline(segments[t_segment] . x1, segments[t_segment] . y1, segments[t_segment] . x2, segments[t_segment] . y2);
 }
 
-void MCMetaContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontStruct *f, Boolean image, bool p_unicode_override)
+void MCMetaContext::drawtext(int2 x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image)
+{
+	// MW-2009-12-22: Make sure we don't generate 0 length text mark records
+	if (MCStringIsEmpty(p_string))
+		return;
+	
+	MCMark *t_mark;
+	t_mark = new_mark(MARK_TYPE_TEXT, false, true);
+	if (t_mark != NULL)
+	{
+		// MW-2012-02-28: [[ Bug ]] Use the fontstruct from the parameter as 'setfont()' is no
+		//   longer used.
+		t_mark -> text . font = p_font;
+		t_mark -> text . position . x = x;
+		t_mark -> text . position . y = y;
+		if (image && f_fill_background != NULL)
+		{
+			t_mark -> text . background = f_fill_background;
+			f_fill_background_used = true;
+		}
+		else
+			t_mark -> text . background = NULL;
+        
+        uindex_t t_length = MCStringGetLength(p_string);
+		t_mark -> text . data = new_array<char>(t_length);
+		t_mark -> text . length = t_length;
+		if (t_mark -> text . data != NULL)
+			memcpy(t_mark -> text . data, MCStringGetCString(p_string), t_length);
+		t_mark -> text . unicode_override = MCStringGetNativeCharPtr(p_string) == nil;
+	}
+}
+
+void MCMetaContext::drawtext_legacy(int2 x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_unicode_override)
 {
 	// MW-2009-12-22: Make sure we don't generate 0 length text mark records
 	if (length == 0)
@@ -408,7 +440,7 @@ void MCMetaContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MCFont
 	{
 		// MW-2012-02-28: [[ Bug ]] Use the fontstruct from the parameter as 'setfont()' is no
 		//   longer used.
-		t_mark -> text . font = f;
+		t_mark -> text . font = p_font;
 		t_mark -> text . position . x = x;
 		t_mark -> text . position . y = y;
 		if (image && f_fill_background != NULL)
@@ -564,11 +596,6 @@ void MCMetaContext::drawlink(MCStringRef p_link, const MCRectangle& p_region)
 	}
 }
 
-int4 MCMetaContext::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override)
-{
-	return MCscreen->textwidth(f, s, l, p_unicode_override);
-}
-
 void MCMetaContext::applywindowshape(MCWindowShape *p_mask, unsigned int p_update_width, unsigned int p_update_height)
 {
 	MCUnreachable();
@@ -717,7 +744,7 @@ static bool mark_indirect(MCContext *p_context, MCMark *p_mark, MCMark *p_upto_m
 			case MARK_TYPE_TEXT:
 				if (p_mark -> text . background != NULL)
 					p_context -> setbackground(p_mark -> text . background -> colour);
-				p_context -> drawtext(p_mark -> text . position . x, p_mark -> text . position . y, (const char *)p_mark -> text . data, p_mark -> text . length, p_mark -> text . font, p_mark -> text . background != NULL, p_mark -> text . unicode_override);
+				p_context -> drawtext_legacy(p_mark -> text . position . x, p_mark -> text . position . y, (const char *)p_mark -> text . data, p_mark -> text . length, p_mark -> text . font, p_mark -> text . background != NULL, p_mark -> text . unicode_override);
 			break;
 			
 			case MARK_TYPE_RECTANGLE:

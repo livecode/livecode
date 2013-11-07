@@ -38,6 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "region.h"
 
 #include "graphicscontext.h"
+#include "font.h"
 
 #ifdef _LINUX_DESKTOP
 #include "flst.h"
@@ -991,8 +992,10 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 
 void MCCustomMetaContext::dotextmark(MCMark *p_mark)
 {
+    MCFontStruct *f = MCFontGetFontStruct(p_mark -> text . font);
+    
 	bool t_is_unicode;
-	t_is_unicode = p_mark -> text . font -> unicode || p_mark -> text . unicode_override;
+	t_is_unicode = f -> unicode || p_mark -> text . unicode_override;
 
 	MCAutoStringRef t_text_str;
 	/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)p_mark -> text . data, p_mark -> text . length, t_is_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative, false, &t_text_str);
@@ -1017,12 +1020,12 @@ void MCCustomMetaContext::dotextmark(MCMark *p_mark)
 	t_state . transform . translate_y = m_translate_y + m_scale_y * p_mark -> text . position . y;
 
 #if defined(_MACOSX)
-	t_state . font_size = p_mark -> text . font -> size;
+	t_state . font_size = f -> size;
 #elif defined(_LINUX)
 	extern MCFontlist *MCFontlistGetCurrent(void);
 	MCNameRef t_name;
 	uint2 t_size, t_style;
-	MCFontlistGetCurrent() -> getfontreqs(p_mark -> text . font, t_name, t_size, t_style);
+    MCFontlistGetCurrent() -> getfontreqs(f, t_name, t_size, t_style);
 	t_state . font_size = t_size;
 #endif
 
@@ -1033,11 +1036,11 @@ void MCCustomMetaContext::dotextmark(MCMark *p_mark)
 	//   by 'unicode_override' - so temporarily update the font unicode field to match
 	//   appropriately.
 	Bool t_old_unicode;
-	t_old_unicode = p_mark -> text . font -> unicode;
-	p_mark -> text . font -> unicode = p_mark -> text . unicode_override;
-	if (!MCTextLayout(t_chars, t_char_count, p_mark -> text . font, dotextmark_callback, &t_state))
+	t_old_unicode = f -> unicode;
+	f -> unicode = p_mark -> text . unicode_override;
+	if (!MCTextLayout(t_chars, t_char_count, f, dotextmark_callback, &t_state))
 		m_execute_error = true;
-	p_mark -> text . font -> unicode = t_old_unicode;
+	f -> unicode = t_old_unicode;
 }
 
 //////////

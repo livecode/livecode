@@ -2943,56 +2943,65 @@ void MCStack::unloadexternals(void)
 	m_externals = NULL;
 }
 
+bool MCStack::resolve_relative_path(MCStringRef p_path, MCStringRef& r_resolved)
+{
+    if (MCStringIsEmpty(p_path))
+		return false;
+
+	MCStringRef t_stack_filename;
+	t_stack_filename = getfilename();
+	if (MCStringIsEmpty(t_stack_filename))
+	{
+		MCStack *t_parent_stack;
+		t_parent_stack = static_cast<MCStack *>(getparent());
+		if (t_parent_stack != NULL)
+			t_stack_filename = t_parent_stack -> getfilename();
+	}
+
+	if (!MCStringIsEmpty(t_stack_filename))
+	{
+		char *t_filename;
+		t_filename = nil;
+		const char *t_last_separator;
+		t_last_separator = strrchr(MCStringGetCString(t_stack_filename), '/');
+		if (t_last_separator != NULL)
+		{
+			t_filename = new char[MCStringGetLength(t_stack_filename) + MCStringGetLength(p_path) + 2];
+			strcpy(t_filename, MCStringGetCString(t_stack_filename));
+            
+			// If the relative path begins with "./" or ".\", we must remove this, otherwise
+			// certain system calls will get confused by the path.
+			const char *t_leaf;
+			if (MCStringGetNativeCharAtIndex(p_path, 0) == '.' && (MCStringGetNativeCharAtIndex(p_path, 1) == '/' || MCStringGetNativeCharAtIndex(p_path, 1) == '\\'))
+				t_leaf = MCStringGetCString(p_path) + 2;
+			else
+				t_leaf = MCStringGetCString(p_path);
+            
+			strcpy(t_filename + (t_last_separator - MCStringGetCString(t_stack_filename) + 1), t_leaf);
+		}
+		MCStringCreateWithCString(t_filename, r_resolved);
+		return true;
+	}
+    
+    return false;
+}
+
 // OK-2009-01-09: [[Bug 1161]]
 // This function will attempt to resolve the specified filename relative to the stack
 // and will either return an absolute path if the filename was found relative to the stack,
 // or a copy of the original buffer. The returned buffer should be freed by the caller.
 bool MCStack::resolve_filename(MCStringRef filename, MCStringRef& r_resolved)
 {
-	if (!MCStringIsEmpty(filename) && MCStringGetNativeCharAtIndex(filename, 0) != '/' && MCStringGetNativeCharAtIndex(filename, 1) != ':')
-	{
-		MCStringRef t_stack_filename;
-		t_stack_filename = getfilename();
-		if (MCStringIsEmpty(t_stack_filename))
-		{
-			MCStack *t_parent_stack;
-			t_parent_stack = static_cast<MCStack *>(getparent());
-			if (t_parent_stack != NULL)
-				t_stack_filename = t_parent_stack -> getfilename();
-		}
-		if (!MCStringIsEmpty(t_stack_filename))
-		{
-			const char *t_last_separator;
-			t_last_separator = strrchr(MCStringGetCString(t_stack_filename), '/');
-			if (t_last_separator != NULL)
-			{
-				char *t_filename;
-				t_filename = new char[MCStringGetLength(t_stack_filename) + MCStringGetLength(filename) + 2];
-				strcpy(t_filename, MCStringGetCString(t_stack_filename));
-
-				// If the relative path begins with "./" or ".\", we must remove this, otherwise
-				// certain system calls will get confused by the path.
-				const char *t_leaf;
-				if (MCStringGetNativeCharAtIndex(filename, 0) == '.' && (MCStringGetNativeCharAtIndex(filename, 1) == '/' || MCStringGetNativeCharAtIndex(filename, 1) == '\\'))
-					t_leaf = MCStringGetCString(filename) + 2;
-				else
-					t_leaf = MCStringGetCString(filename);
-
-				strcpy(t_filename + (t_last_separator - MCStringGetCString(t_stack_filename) + 1), t_leaf);
-
-				MCAutoStringRef t_filename_string;
-				/* UNCHECKED */ MCStringCreateWithCString(t_filename, &t_filename_string);
-
-				if (MCS_exists(*t_filename_string, True))
-				{
-					r_resolved = MCValueRetain(*t_filename_string);
-					return true;
-				}
-				
-				delete t_filename;
-			}
-		}
-	}
+    MCAutoStringRef t_filename;
+    if (resolve_relative_path(filename, &t_filename))
+    {
+        if (MCS_exists(*t_filename, True))
+        {
+            r_resolved = MCValueRetain(*t_filename);
+            return true;
+        }
+    }
+    
 	r_resolved = MCValueRetain(filename);
 	return true;
 }
