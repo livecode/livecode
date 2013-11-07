@@ -427,8 +427,6 @@ struct MCFontStruct
 	uint16_t size;
 	uint2 ascent;
 	uint2 descent;
-	uint1 charset;
-	Boolean unicode;
 };
 
 #define fixmaskrop(a) (a)

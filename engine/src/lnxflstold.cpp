@@ -385,67 +385,47 @@ MCOldFontnode::MCOldFontnode(const MCString &fname, uint2 &size, uint2 style)
 	
 	memset(&font, 0, sizeof(MCFontStruct));
 	
-	font.charset = 0;
 	if (MCnoui)
 		return;
 
-		Boolean t_is_unicode = False;
+	sprintf(fontname, "-*-%.*s-%s-%s-%s--%d-*-*-*-*-*-iso8859-%d",
+			strchr(reqname, ',') - reqname, reqname, MCF_getweightstring(style),
+			MCF_getslantshortstring(style),
+			MCF_getexpandstring(style), size, MCcharset);
+	
+	if ((fs = XLoadQueryFont(MCdpy, fontname)) == NULL)
+		fs = lookup(reqname, size, style);
 
-		// MW-2005-02-08: We aren't going to use XMBTEXT for now, instead we will
-		//   search for an appropriate ISO10646 font if in 'encoding mode'.
-		if (strchr(reqname, ',') != NULL)
+	if (fs == NULL)
+		if ((fs = XLoadQueryFont(MCdpy, reqname)) != NULL)
 		{
-			sprintf(fontname, "-*-%.*s-%s-%s-%s--%d-*-*-*-*-*-iso10646-*",
-			        strchr(reqname, ',') - reqname, reqname, MCF_getweightstring(style),
-			        MCF_getslantshortstring(style),
-			        MCF_getexpandstring(style), size);
-			t_is_unicode = True;
+			if (pixelsize == 0)
+				pixelsize = XInternAtom(MCdpy, "PIXEL_SIZE", True);
+			uint2 i = fs->n_properties;
+			while (i--)
+				if (fs->properties[i].name == pixelsize)
+				{
+					size = reqsize = fs->properties[i].card32;
+					break;
+				}
+			size = reqsize = fs->ascent + fs->descent - 2;
 		}
-		else
-			sprintf(fontname, "-*-%s-%s-%s-%s--%d-*-*-*-*-*-iso8859-%d",
-			        reqname, MCF_getweightstring(style),
-			        MCF_getslantshortstring(style),
-			        MCF_getexpandstring(style), size, MCcharset);
-		
-		if ((fs = XLoadQueryFont(MCdpy, fontname)) == NULL)
-			fs = lookup(reqname, size, style);
-		else
-			font.unicode = t_is_unicode;
 
-		if (fs == NULL)
-			if ((fs = XLoadQueryFont(MCdpy, reqname)) != NULL)
-			{
-				if (pixelsize == 0)
-					pixelsize = XInternAtom(MCdpy, "PIXEL_SIZE", True);
-				uint2 i = fs->n_properties;
-				while (i--)
-					if (fs->properties[i].name == pixelsize)
-					{
-						size = reqsize = fs->properties[i].card32;
-						break;
-					}
-				size = reqsize = fs->ascent + fs->descent - 2;
-			}
+	if (fs == NULL)
+		fs = lookup(DEFAULT_TEXT_FONT, size, style);
+	if (fs == NULL)
+		fs = XLoadQueryFont(MCdpy, "fixed");
 
-		if (fs == NULL)
-			fs = lookup(DEFAULT_TEXT_FONT, size, style);
-		if (fs == NULL)
-			fs = XLoadQueryFont(MCdpy, "fixed");
 
-	
-		font.reqname = strdup(reqname) ;
-		font.reqsize = reqsize ;
-		font.reqstyle = reqstyle ;
-	
-		font.fstruct = fs;
-		font.max_byte1 = fs -> max_byte1;
+	font.reqname = strdup(reqname) ;
+	font.reqsize = reqsize ;
+	font.reqstyle = reqstyle ;
 
-		font.ascent = fs -> ascent;
-		font.descent = fs -> descent;
+	font.fstruct = fs;
+	font.max_byte1 = fs -> max_byte1;
 
-		font.unicode = t_is_unicode;
-		if (t_is_unicode)
-			font.charset = LCH_UNICODE;
+	font.ascent = fs -> ascent;
+	font.descent = fs -> descent;
 }
 
 MCOldFontnode::MCOldFontnode()
@@ -684,7 +664,7 @@ int4 MCOldFontlist::ctxt_textwidth(MCFontStruct *of, const char *s, uint2 l, boo
 	MCOldFontStruct *f;
 	f = static_cast<MCOldFontStruct *>(of);
 
-	bool useUnicode = (f->max_byte1 > 0 || f->unicode) || p_unicode_override;
+	bool useUnicode = f->max_byte1 > 0 || p_unicode_override;
 
 	if ( useUnicode )
 	{
