@@ -2456,7 +2456,7 @@ bool MCImage::copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *
 	t_premultiplied = p_premultiplied || !t_copy_pixels;
 	
 	if (t_success)
-		t_success = m_rep->LockImageFrame(currentframe, t_premultiplied, p_scale, t_frame);
+		t_success = t_rep->LockImageFrame(currentframe, t_premultiplied, p_scale, t_frame);
 	
 	bool t_mask, t_alpha;
 	if (t_success)
