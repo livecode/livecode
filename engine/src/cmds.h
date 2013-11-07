@@ -1293,7 +1293,7 @@ public:
 	}
 	virtual ~MCClose();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -1334,7 +1334,7 @@ public:
 	}
 	virtual ~MCExport();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -1366,7 +1366,7 @@ public:
 	}
 	virtual ~MCEncryptionOp();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 //	virtual Exec_stat exec_rsa(MCExecPoint &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
@@ -1405,7 +1405,7 @@ public:
 	Boolean match(char *s, char *p, Boolean casesensitive);
 	char *filterlines(char *sstring, char *pstring, Boolean casesensitive);
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+    virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -1428,7 +1428,7 @@ public:
 	}
 	virtual ~MCImport();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -1488,7 +1488,7 @@ public:
 	}
 	virtual ~MCOpen();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
