@@ -924,15 +924,20 @@ Exec_stat MCVarref::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
 	return resolve(ep, r_container);
 }
 
-void MCVarref::evalcontainer(MCExecContext& ctxt, MCContainer*& r_container)
+bool MCVarref::evalcontainer(MCExecContext& ctxt, MCContainer*& r_container)
 {
     if (dimensions == 0)
     {
         if (!MCContainer::createwithvariable(fetchvar(ctxt), r_container))
+        {
             ctxt . Throw();
+            return false;
+        }
     }
     else
-        resolve(ctxt, r_container);
+        return resolve(ctxt, r_container);
+
+    return true;
 }
 
 void MCVarref::compile(MCSyntaxFactoryRef ctxt)
@@ -1018,7 +1023,7 @@ bool MCVarref::set(MCExecContext& ctxt, MCValueRef p_value, bool p_append)
 	}
     
 	MCAutoPointer<MCContainer> t_container;
-	if (resolve(ctxt, &t_container) != ES_NORMAL)
+    if (!resolve(ctxt, &t_container))
 		return false;
 	
 	if (!p_append)
@@ -1142,8 +1147,8 @@ bool MCVarref::dofree(MCExecContext& ctxt)
 	}
 	
 	MCAutoPointer<MCContainer> t_container;
-	if (resolve(ctxt, &t_container) != ES_NORMAL)
-		return ES_ERROR;
+    if (!resolve(ctxt, &t_container))
+        return false;
     
 	return t_container -> remove(ctxt);
 }
@@ -1247,7 +1252,7 @@ bool MCVarref::resolve(MCExecContext& ctxt, MCContainer*& r_container)
 	if (dimensions == 0)
 	{
 		/* UNCHECKED */ MCContainer::createwithvariable(t_var, r_container);
-		return ES_NORMAL;
+        return true;
 	}
     
 	MCExpression **t_dimensions;
@@ -1263,17 +1268,12 @@ bool MCVarref::resolve(MCExecContext& ctxt, MCContainer*& r_container)
 	t_path_length = 0;
     
 	MCNameRef *t_path;
-	/* UNCHECKED */ MCMemoryNewArray(dimensions, t_path);
-    
-	Exec_stat t_stat;
-	t_stat = ES_NORMAL;
+	/* UNCHECKED */ MCMemoryNewArray(dimensions, t_path);    
 
     for(uindex_t i = 0; i < dimensions && !ctxt . HasError(); i++)
 	{
         MCAutoValueRef t_value;
-        ctxt . EvalExprAsValueRef(t_dimensions[i], EE_VARIABLE_BADINDEX, &t_value);
-
-        if (!ctxt . HasError())
+        if (ctxt . EvalExprAsValueRef(t_dimensions[i], EE_VARIABLE_BADINDEX, &t_value))
         {
             MCAutoArrayRef t_array;
 
@@ -1308,12 +1308,17 @@ bool MCVarref::resolve(MCExecContext& ctxt, MCContainer*& r_container)
 	}
     
     if (!ctxt . HasError())
-    /* UNCHECKED */ MCContainer::createwithpath(t_var, t_path, t_path_length, r_container);
+    {
+        /* UNCHECKED */ MCContainer::createwithpath(t_var, t_path, t_path_length, r_container);
+        return true;
+    }
 	else
 	{
 		for(uindex_t i = 0; i < t_path_length; i++)
 			MCValueRelease(t_path[i]);
 		MCMemoryDeleteArray(t_path);
+
+        return false;
     }
 }
 

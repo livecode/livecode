@@ -1295,12 +1295,17 @@ bool MCChunk::getobj(MCExecContext& ctxt, MCObjectPtr& r_object, bool p_recurse)
 }
 #endif
 
-void MCChunk::getobj(MCExecContext& ctxt, MCObjectPtr& r_object, Boolean p_recurse)
+bool MCChunk::getobj(MCExecContext& ctxt, MCObjectPtr& r_object, Boolean p_recurse)
 {
     getoptionalobj(ctxt, r_object, p_recurse);
 
     if (r_object . object == nil)
+    {
         ctxt . Throw();
+        return false;
+    }
+
+    return true;
 }
 
 void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObject *&r_object, uint4 r_parid, Boolean p_recurse)
@@ -1353,9 +1358,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                 
                 if (!t_error)
                 {
-                    tchunk->getobj(ctxt, t_object, False);
-                    
-                    if (!ctxt . HasError())
+                    if (tchunk->getobj(ctxt, t_object, False))
                         take_components(tchunk);
                     else
                         t_error= true;
@@ -1378,8 +1381,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             //   must point to an MCChunk object (as that's how its parsed).
             //   In this case attempt to evaluate it and then step up one in the ownership chain. Note
             //   that we can't step higher than a mainstack, so we set objptr to NULL in this case.
-            static_cast<MCChunk *>(source) -> getobj(ctxt, t_object, True);
-            if (ctxt . HasError())
+            if (!static_cast<MCChunk *>(source) -> getobj(ctxt, t_object, True))
             {
                 ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP);
                 return;
@@ -2485,20 +2487,20 @@ Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recu
     return ES_ERROR;
 }
 
-void MCChunk::getobj(MCExecContext &ctxt, MCObject *&objptr, uint4 &parid, Boolean recurse)
+bool MCChunk::getobj(MCExecContext &ctxt, MCObject *&objptr, uint4 &parid, Boolean recurse)
 {
     objptr = nil;
     parid = 0;
 
     MCObjectPtr t_object;
 
-    getobj(ctxt, t_object, recurse);
-
-    if (ctxt . HasError())
-        return;
+    if (!getobj(ctxt, t_object, recurse))
+        return false;
 
     objptr = t_object . object;
     parid = t_object . part_id;
+
+    return true;
 }
 
 Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr, uint4 &parid, Boolean recurse)
@@ -4319,7 +4321,7 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
     return ctxt . Catch(line, pos);
 }
 
-void MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
+bool MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
 {
     MCAutoStringRef t_text;
 
@@ -4329,7 +4331,7 @@ void MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
         if (desttype != DT_OWNER)
         {
             if (!ctxt . EvalExprAsStringRef(source, EE_CHUNK_CANTGETSOURCE, &t_text))
-                return;
+                return false;
         }
         else
         {
@@ -4337,12 +4339,10 @@ void MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
             //     <text chunk> of the owner of ...
             //   In this case we evaluate the owner property of the resolved object.
             MCObjectPtr t_object;
-            static_cast<MCChunk *>(source) -> getobj(ctxt, t_object, True);
-
-            if (ctxt . HasError())
+            if (!static_cast<MCChunk *>(source) -> getobj(ctxt, t_object, True))
             {
                 ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP);
-                return;
+                return false;
             }
 
             MCEngineEvalOwner(ctxt, t_object, &t_text);
@@ -4351,7 +4351,7 @@ void MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
     else if (destvar != NULL)
     {
         if (!ctxt . EvalExprAsStringRef(destvar, EE_CHUNK_CANTGETDEST, &t_text))
-            return;
+            return false;
     }
     else
     {
@@ -4360,21 +4360,21 @@ void MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
         {
             MCAutoStringRef t_target;
             if (!ctxt . EvalExprAsStringRef(url -> startpos, EE_CHUNK_CANTGETDEST, &t_target))
-                return;
+                return false;
 
             MCU_geturl(ctxt, *t_target, &t_url_output);
         }
 
         MCObjectPtr t_object;
-        getobj(ctxt, t_object, True);
+        getoptionalobj(ctxt, t_object, True);
 
-        if (ctxt . HasError())
+        if (t_object . object == nil)
         {
             if (url == NULL || stack != NULL || background != NULL ||
                 card != NULL || group != NULL || object != NULL)
             {
                 ctxt . LegacyThrow(EE_CHUNK_CANTFINDOBJECT);
-                return;
+                return false;
             }
             t_text = *t_url_output;
         }
@@ -4452,6 +4452,8 @@ void MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
     }
     else
         r_text = MCValueRetain(kMCEmptyString);
+
+    return !ctxt . HasError();
 }
 
 #ifdef LEGACY_EXEC
@@ -4827,9 +4829,7 @@ void MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
     if (isvarchunk())
     {
         MCVariableChunkPtr t_var_chunk;
-        evalvarchunk(ctxt, false, true, t_var_chunk);
-
-        if (ctxt . HasError())
+        if (!evalvarchunk(ctxt, false, true, t_var_chunk))
             return;
 
         MCEngineExecPutIntoVariable(ctxt, p_value, p_type, t_var_chunk);
@@ -4845,9 +4845,7 @@ void MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
 
         MCUrlChunkPtr t_url_chunk;
         t_url_chunk . url = nil;
-        evalurlchunk(ctxt, false, true, t_url_chunk);
-
-        if (ctxt . HasError())
+        if (!evalurlchunk(ctxt, false, true, t_url_chunk))
             return;
 
         MCNetworkExecPutIntoUrl(ctxt, *t_string, p_type, t_url_chunk);
@@ -4864,9 +4862,7 @@ void MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
         }
 
         MCObjectChunkPtr t_obj_chunk;
-        evalobjectchunk(ctxt, false, true, t_obj_chunk);
-
-        if (ctxt . HasError())
+        if (!evalobjectchunk(ctxt, false, true, t_obj_chunk))
             return;
 
         if (t_obj_chunk . object -> gettype() == CT_FIELD)
@@ -5102,9 +5098,7 @@ void MCChunk::count(MCExecContext &ctxt, Chunk_term tocount, Chunk_term ptype, u
         //   the count will be zero (if a string chunk has been requested),
         //   otherwise it will be the count of the keys...
         // SN-2013-11-5: Apperently eval() is no longer able to return an array
-        eval(ctxt, &t_string);
-
-        if (ctxt . HasError())
+        if (!eval(ctxt, &t_string))
             return;
 
         MCStringsCountChunks(ctxt, tocount, *t_string, r_count);
@@ -5822,7 +5816,7 @@ Exec_stat MCChunk::evalvarchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_forc
     return ES_NORMAL;
 }
 
-void MCChunk::evalvarchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCVariableChunkPtr& r_chunk)
+bool MCChunk::evalvarchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCVariableChunkPtr& r_chunk)
 {
     MCEngineMarkVariable(ctxt, destvar, r_chunk . mark);
 
@@ -5831,11 +5825,13 @@ void MCChunk::evalvarchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force
     if (ctxt . HasError())
     {
         ctxt . LegacyThrow(EE_CHUNK_CANTMARK);
-        return;
+        return false;
 	}
 
 	r_chunk . variable = destvar;
     r_chunk . chunk = getlastchunktype();
+
+    return true;
 }
 
 Exec_stat MCChunk::evalurlchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_force, MCUrlChunkPtr& r_chunk)
@@ -5865,13 +5861,12 @@ Exec_stat MCChunk::evalurlchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_forc
     return ES_NORMAL;
 }
 
-void MCChunk::evalurlchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force, MCUrlChunkPtr &r_chunk)
+bool MCChunk::evalurlchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force, MCUrlChunkPtr &r_chunk)
 {
     MCAutoStringRef t_url;
-    ctxt . EvalExprAsStringRef(url -> startpos, EE_CHUNK_BADEXPRESSION, &t_url);
 
-    if (ctxt . HasError())
-        return;
+    if (!ctxt . EvalExprAsStringRef(url -> startpos, EE_CHUNK_BADEXPRESSION, &t_url))
+        return false;
 
     MCNetworkMarkUrl(ctxt, *t_url, r_chunk . mark);
 
@@ -5880,11 +5875,13 @@ void MCChunk::evalurlchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force
     if (ctxt . HasError())
     {
         ctxt . LegacyThrow(EE_CHUNK_CANTMARK);
-        return;
+        return false;
     }
 
     r_chunk . url = MCValueRetain(*t_url);
     r_chunk . chunk = getlastchunktype();
+
+    return true;
 }
 
 Exec_stat MCChunk::evalobjectchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_force, MCObjectChunkPtr& r_chunk)
@@ -5935,16 +5932,15 @@ Exec_stat MCChunk::evalobjectchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_f
     return ES_NORMAL;
 }
 
-void MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force, MCObjectChunkPtr &r_chunk)
+bool MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force, MCObjectChunkPtr &r_chunk)
 {
     MCObjectPtr t_object;
-    getobj(ctxt, t_object, True);
-
-    if (ctxt . HasError())
+    if (!getobj(ctxt, t_object, True))
     {
         ctxt . LegacyThrow(EE_CHUNK_CANTFINDOBJECT);
-        return;
+        return false;
     }
+
     bool t_function = false;
     if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
         && function != F_SELECTED_FIELD && function != F_FOUND_FIELD
@@ -5963,7 +5959,7 @@ void MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_fo
         r_chunk . part_id = t_object.part_id;
         r_chunk . chunk = CT_UNDEFINED;
         r_chunk . mark = t_mark;
-        return;
+        return true;
     }
 
     if (t_function)
@@ -5976,12 +5972,14 @@ void MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_fo
     if (ctxt . HasError())
     {
         ctxt . LegacyThrow(EE_CHUNK_CANTMARK);
-        return;
+        return false;
     }
 
     r_chunk . object = t_object . object;
     r_chunk . part_id = t_object . part_id;
     r_chunk . chunk = !t_function ? getlastchunktype() : CT_CHARACTER;
+
+    return true;
 }
 
 #if 0

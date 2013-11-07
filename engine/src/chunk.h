@@ -61,8 +61,8 @@ public:
 	~MCChunk();
 
 	Parse_stat parse(MCScriptPoint &spt, Boolean the);
-    /* WRAPPER */ Exec_stat eval(MCExecPoint &);
-    void eval(MCExecContext &ctxt, MCStringRef &p_string);
+    Exec_stat eval(MCExecPoint &);
+    bool eval(MCExecContext &ctxt, MCStringRef &p_string);
 
 #ifdef LEGACY_EXEC
     Exec_stat eval_legacy(MCExecPoint &ep);
@@ -77,22 +77,22 @@ public:
 
 	Chunk_term getlastchunktype(void);    
     /* WRAPPER */ Exec_stat evalobjectchunk(MCExecPoint& ep, bool whole_chunk, bool force, MCObjectChunkPtr& r_chunk);
-    void evalobjectchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCObjectChunkPtr& r_chunk);
+    bool evalobjectchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCObjectChunkPtr& r_chunk);
 
     /* WRAPPER */ Exec_stat evalvarchunk(MCExecPoint& ep, bool whole_chunk, bool force, MCVariableChunkPtr& r_chunk);
-    void evalvarchunk(MCExecContext& ctxt, bool whole_chunk, bool force, MCVariableChunkPtr& r_chunk);
+    bool evalvarchunk(MCExecContext& ctxt, bool whole_chunk, bool force, MCVariableChunkPtr& r_chunk);
 
     /* WRAPPER */ Exec_stat evalurlchunk(MCExecPoint& ep, bool whole_chunk, bool force, MCUrlChunkPtr& r_chunk);
-    void evalurlchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCUrlChunkPtr& r_chunk);
+    bool evalurlchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCUrlChunkPtr& r_chunk);
 	
 	void take_components(MCChunk *tchunk);
 
     // getobj calls getoptionalobj and throws in case nothing is returned.
     /* WRAPPER */ Exec_stat getobj(MCExecPoint &, MCObject *&, uint4 &parid, Boolean recurse);
-    void getobj(MCExecContext &ctxt, MCObject *& objptr, uint4 &parid, Boolean recurse);
+    bool getobj(MCExecContext &ctxt, MCObject *& objptr, uint4 &parid, Boolean recurse);
 
     /* WRAPPER */ Exec_stat getobj(MCExecPoint&, MCObjectPtr&, Boolean recurse);
-    void getobj(MCExecContext &ctxt,MCObjectPtr&, Boolean recurse);
+    bool getobj(MCExecContext &ctxt,MCObjectPtr&, Boolean recurse);
 
     // Added for MCChunk::count:
     //  in some cases there is no object to return but no error either
