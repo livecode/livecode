@@ -913,7 +913,7 @@ Parse_stat MCDispatchCmd::parse(MCScriptPoint& sp)
 }
 
 // This method follows along the same lines as MCComref::exec
-Exec_stat MCDispatchCmd::exec(MCExecPoint& ep)
+void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCDispatchCmd */ LEGACY_EXEC
 	if (MCscreen->abortkey())
@@ -1061,23 +1061,19 @@ Exec_stat MCDispatchCmd::exec(MCExecPoint& ep)
 	return stat;
 #endif /* MCDispatchCmd */
 	
-	MCNewAutoNameRef t_message;
-	if (message -> eval(ep) != ES_NORMAL)
-	{
-		MCeerror -> add(EE_DISPATCH_BADMESSAGEEXP, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep . copyasnameref(&t_message);
+    MCNewAutoNameRef t_message;
+    if (!ctxt . EvalExprAsStringRef(message, EE_DISPATCH_BADMESSAGEEXP, &t_message))
+        return;
 	
 	// Evaluate the target object (if we parsed a 'target' chunk).
 	MCObjectPtr t_target;
 	MCObjectPtr *t_target_ptr;
 	if (target != nil)
 	{
-		if (target->getobj(ep, t_target, True) != ES_NORMAL)
+        if (!target->getobj(ctxt, t_target, True))
 		{
-			MCeerror->add(EE_DISPATCH_BADTARGET, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_DISPATCH_BADTARGET);
+            return;
 		}
 		t_target_ptr = &t_target;
 	}
@@ -1085,27 +1081,30 @@ Exec_stat MCDispatchCmd::exec(MCExecPoint& ep)
 		t_target_ptr = nil;
 	
 	// Evaluate the parameter list
-	Exec_stat stat;
+    bool t_error;
 	MCParameter *tptr = params;
 	while (tptr != NULL)
 	{
 		// Get the pointer to the variable this parameter maps to or NULL
 		// if it is an expression.
 		MCVariable* t_var;
-		t_var = tptr -> evalvar(ep);
+        t_var = tptr -> evalvar(ctxt);
 
 		if (t_var == NULL)
-		{
-			MCExecContext ctxt(ep);
-			tptr -> clear_argument();
-			while ((stat = tptr->eval(ep)) != ES_NORMAL && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
+        {
+            MCAutoValueRef t_value;
+            tptr -> clear_argument();
+            while (!(t_error = tptr->eval(ctxt, &t_value))
+                   && (MCtrace || MCnbreakpoints)
+                   && !MCtrylock && !MClockerrors)
 				MCB_error(ctxt, line, pos, EE_STATEMENT_BADPARAM);
-			if (stat != ES_NORMAL)
+            if (t_error)
 			{
-				MCeerror->add(EE_STATEMENT_BADPARAM, line, pos);
-				return ES_ERROR;
+                ctxt . LegacyThrow(EE_STATEMENT_BADPARAM);
+                return;
 			}
-			tptr->set_argument(ep);
+
+            tptr->setvalueref_argument(*t_value);
 		}
 		else
 			tptr->set_argument_var(t_var);
@@ -1113,14 +1112,9 @@ Exec_stat MCDispatchCmd::exec(MCExecPoint& ep)
 		tptr = tptr->getnext();
 	}
 
-	ep . setline(line);
-	
-	MCExecContext ctxt(ep, it);
-	MCEngineExecDispatch(ctxt, is_function ? HT_FUNCTION : HT_MESSAGE, *t_message, t_target_ptr, params);
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-		
-	return ctxt . Catch(line, pos);
+//	ctxt . setline(line);
+    ctxt . SetIt(it);
+    MCEngineExecDispatch(ctxt, is_function ? HT_FUNCTION : HT_MESSAGE, *t_message, t_target_ptr, params);
 }
 
 MCMessage::~MCMessage()

@@ -1021,7 +1021,7 @@ public:
 	~MCDispatchCmd(void);
 	
 	virtual Parse_stat parse(MCScriptPoint& sp);
-	virtual Exec_stat exec(MCExecPoint& ep);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 };
 
 class MCFocus : public MCStatement
