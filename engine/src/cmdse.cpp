@@ -1632,7 +1632,7 @@ void MCMove::exec_ctxt(MCExecContext &ctxt)
         return;
 	}
 
-	real8 duration = 0.0;
+    real8 duration;
     if (!ctxt . EvalOptionalExprAsDouble(durationexp, 0.0, EE_MOVE_BADDURATION, duration))
         return;
 
@@ -1853,7 +1853,7 @@ Parse_stat MCMM::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCMM::exec(MCExecPoint &ep)
+void MCMM::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCMM */ LEGACY_EXEC
 	MCresult->clear(False);
@@ -2193,32 +2193,26 @@ Exec_stat MCMM::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCMM */
 
-
-	MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
 	
 	if (prepare && image)
 	{
 		uint4 parid;
 		MCObject *t_object;
-		if (stack -> getobj(ep, t_object, parid, True) != ES_NORMAL ||
+        if (!stack -> getobj(ctxt, t_object, parid, True) ||
 			t_object -> gettype() != CT_IMAGE)
 		{
-			MCeerror->add(EE_PLAY_BADCLIP, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_PLAY_BADCLIP);
+            return;
 		}
 		
 		MCGraphicsExecPrepareImage(ctxt, static_cast<MCImage *>(t_object));
 	}
 	else if (prepare && image_file)
-	{
-		if (clip->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_PLAY_BADCLIP, line, pos);
-			return ES_ERROR;
-		}
+    {
 		MCAutoStringRef t_filename;
-		/* UNCHECKED */ ep.copyasstringref(&t_filename);
+        if (!ctxt . EvalExprAsStringRef(clip, EE_PLAY_BADCLIP, &t_filename))
+            return;
 		
 		MCGraphicsExecPrepareImageFile(ctxt, *t_filename);
 	}
@@ -2246,20 +2240,16 @@ Exec_stat MCMM::exec(MCExecPoint &ep)
 		if (stack != NULL)
 		{
 			uint4 parid;
-			if (stack->getobj(ep, optr, parid, True) != ES_NORMAL ||
+            if (!stack->getobj(ctxt, optr, parid, True) ||
 				optr -> gettype() != CT_STACK)
 			{
-				MCeerror->add(EE_PLAY_BADCLIP, line, pos);
-				return ES_ERROR;
+                ctxt . LegacyThrow(EE_PLAY_BADCLIP);
+                return;
 			}
 		}
 		MCAutoStringRef t_clip_name;
-		if (clip->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_PLAY_BADCLIP, line, pos);
-			return ES_ERROR;
-		}
-		ep . copyasstringref(&t_clip_name);
+        if (!ctxt . EvalExprAsStringRef(clip, EE_PLAY_BADCLIP, &t_clip_name))
+            return;
 
 		if (player)
 		{
@@ -2290,28 +2280,16 @@ Exec_stat MCMM::exec(MCExecPoint &ep)
 				MCMultimediaExecPlayVideoOperation(ctxt, (MCStack *)optr, etype, *t_clip_name, PP_RESUME);
 			else
 			{
-				MCPoint *t_loc_ptr = nil;
-				if (loc != NULL)
-				{
-					MCPoint t_loc;
-					if (loc->eval(ep) != ES_NORMAL)
-					{
-						MCeerror->add(EE_PLAY_BADLOC, line, pos);
-						return ES_ERROR;
-					}
-					/* UNCHECKED */  ep . copyaspoint(t_loc);
-					t_loc_ptr = &t_loc;
-				}
+                MCPoint t_loc;
+                MCPoint *t_loc_ptr = &t_loc;
+
+                if (!ctxt . EvalOptionalExprAsPoint(loc, nil, EE_PLAY_BADLOC, t_loc_ptr))
+                    return;
+
 				MCAutoStringRef t_options;
-				if (options != NULL)
-				{
-					if (options->eval(ep) != ES_NORMAL)
-					{
-						MCeerror->add(EE_PLAY_BADOPTIONS, line, pos);
-						return ES_ERROR;
-					}
-					/* UNCHECKED */  ep . copyasstringref(&t_options);
-				}
+                if (!ctxt . EvalOptionalExprAsNullableStringRef(options, EE_PLAY_BADOPTIONS, &t_options))
+                    return;
+
 				if (!prepare)
 					MCMultimediaExecPlayVideoClip(ctxt, (MCStack *)optr, etype, *t_clip_name, looping == True, t_loc_ptr, *t_options);
 				else
@@ -2320,12 +2298,7 @@ Exec_stat MCMM::exec(MCExecPoint &ep)
 		}
 		else
 			MCMultimediaExecPlayAudioClip(ctxt, (MCStack *)optr, etype, *t_clip_name, looping == True);
-	}
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    }
 }
 
 void MCMM::compile(MCSyntaxFactoryRef ctxt)
