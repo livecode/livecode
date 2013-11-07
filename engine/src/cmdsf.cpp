@@ -2517,7 +2517,7 @@ Parse_stat MCKill::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCKill::exec(MCExecPoint &ep)
+void MCKill::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCKill */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_PROCESS)
@@ -2585,33 +2585,15 @@ Exec_stat MCKill::exec(MCExecPoint &ep)
 	return ES_NORMAL; 
 #endif /* MCKill */
 
-
-	MCExecContext ctxt(ep);
-	
-	MCAutoStringRef t_signal;
-	if (sig != NULL)
-	{
-		if (sig->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_KILL_BADNUMBER, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&t_signal);
-	}
-	if (pname->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_KILL_BADNAME, line, pos);
-		return ES_ERROR;
-	}
-	MCAutoStringRef t_process;
-	/* UNCHECKED */ ep . copyasstringref(&t_process);
-
-	MCFilesExecKillProcess(ctxt, *t_process, *t_signal);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    MCAutoStringRef t_signal;
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(sig, EE_KILL_BADNUMBER, &t_signal))
+        return;
+    
+    MCAutoStringRef t_process;
+    if (!ctxt . EvalExprAsStringRef(pname, EE_KILL_BADNAME, &t_process))
+        return;
+    
+    MCFilesExecKillProcess(ctxt, *t_process, *t_signal);
 }
 
 void MCKill::compile(MCSyntaxFactoryRef ctxt)
@@ -3620,7 +3602,7 @@ Parse_stat MCRead::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCRead::exec(MCExecPoint &ep)
+void MCRead::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCRead */ LEGACY_EXEC
 	IO_handle stream = NULL;
@@ -3907,181 +3889,150 @@ Exec_stat MCRead::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCRead */
 
-
-	MCExecContext ctxt(ep, it);
-
-	real8 t_max_wait = MAXUINT4;
-	if (maxwait != NULL)
-	{
-		if (maxwait->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_READ_BADEXP, line, pos);
-			return ES_ERROR;
-		}
-		if (ep.getreal8(t_max_wait, line, pos, EE_READ_NAN) != ES_NORMAL)
-			return ES_ERROR;
-	}
-
-	MCresult->clear(False);
-
-	MCNewAutoNameRef t_message;
-	MCNewAutoNameRef t_source; 
+    ctxt . SetIt(it);
+    real8 t_max_wait;
+    if (!ctxt . EvalOptionalExprAsDouble(maxwait, MAXUINT4, EE_READ_BADEXP, t_max_wait))
+        return;
+    
+    MCresult->clear(False);
+    MCNewAutoNameRef t_message;
+	MCNewAutoNameRef t_source;
 	bool t_is_end = false;
 	int64_t t_at = 0;
-
+    
 	if (arg != OA_STDIN)
 	{
-		if (fname->eval(ep) != ES_NORMAL)
+        if (!ctxt . EvalExprAsNameRef(fname, EE_OPEN_BADNAME, &t_source))
+            return;
+        switch (arg)
 		{
-			MCeerror->add(EE_OPEN_BADNAME, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasnameref(&t_source);
-		switch (arg)
-		{
-		case OA_DRIVER:
-		case OA_FILE:
-			if (at != NULL)
-			{
-				if (at->eval(ep) != ES_NORMAL)
-				{
-					MCeerror->add(EE_READ_BADAT, line, pos);
-					return ES_ERROR;
-				}
-				if (ep.getsvalue().getstring()[0] == '\004' || ep.getsvalue() == "eof")
-				{
-					t_is_end = true;
-					t_at = 0;
-				}
-				else
-				{
-					double n;
-					if (ep.getreal8(n, line, pos, EE_READ_BADAT) != ES_NORMAL)
-					{
-						MCresult->sets("error seeking in file");
-						return ES_NORMAL;
-					}
-					else
-					{
-						if (n < 0)
-						{
-							t_is_end = true;
-							t_at = (int64_t)n;
-						}
-						else
-						{
-							t_is_end = false;
-							t_at = (int64_t)n - 1;
-						}
-					}
-				}
-			}
-			break;
-		case OA_SOCKET:
-			if (at != NULL)
-			{
-				if (at->eval(ep) != ES_NORMAL)
-				{
-					MCeerror->add(EE_WRITE_BADEXP, line, pos);
-					return ES_ERROR;
-				}
-				/* UNCHECKED */ ep . copyasnameref(&t_message);
-			}
-			break;
-		default:
-			break;
+            case OA_DRIVER:
+            case OA_FILE:
+                if (at != NULL)
+                {
+                    MCAutoStringRef t_temp;
+                    if (!ctxt . EvalExprAsStringRef(at, EE_READ_BADAT, &t_temp))
+                        return;
+                    
+                    if (MCStringGetNativeCharAtIndex(*t_temp, 0) == '\004' || MCStringIsEqualToCString(*t_temp, "eof", kMCCompareCaseless))
+                    {
+                        t_is_end = true;
+                        t_at = 0;
+                    }
+                    else
+                    {
+                        double n;
+                        if (!MCStringToDouble(*t_temp, n))
+                        {
+                            MCresult->sets("error seeking in file");
+                            return;
+                        }
+                        else
+                        {
+                            if (n < 0)
+                            {
+                                t_is_end = true;
+                                t_at = (int64_t)n;
+                            }
+                            else
+                            {
+                                t_is_end = false;
+                                t_at = (int64_t)n - 1;
+                            }
+                        }
+                    }
+                }
+                break;
+            case OA_SOCKET:
+                if (!ctxt . EvalOptionalExprAsNullableNameRef(at, EE_WRITE_BADEXP, &t_message))
+                    return;
+                break;
+            default:
+                break;
 		}
 	}
-	switch (cond)
+    switch (cond)
 	{
-	case RF_FOR:
-	{
-		if (stop->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-		{
-			MCeerror->add(EE_READ_NONUMBER, line, pos);
-			MCshellfd = -1;
-			return ES_ERROR;
-		}
-		uint4 size = ep.getuint4();
-		switch (arg)
-		{
-		case OA_FILE:
-		case OA_DRIVER:
-			if (at != NULL)
-			{
-				if (t_is_end)
-					MCFilesExecReadFromFileOrDriverAtEndFor(ctxt, arg == OA_DRIVER, *t_source, t_at, size, unit, t_max_wait, timeunits);
-				else
-					MCFilesExecReadFromFileOrDriverAtFor(ctxt, arg == OA_DRIVER, *t_source, t_at, size, unit, t_max_wait, timeunits);
-			}
-			else
-				MCFilesExecReadFromFileOrDriverFor(ctxt, arg == OA_DRIVER, *t_source, size, unit, t_max_wait, timeunits);
-			break;
-		case OA_PROCESS:
-			MCFilesExecReadFromProcessFor(ctxt, *t_source, size, unit, t_max_wait, timeunits);
-			break;
-		case OA_SOCKET:
-			MCNetworkExecReadFromSocketFor(ctxt, *t_source, size, unit, *t_message);
-			break;
-		case OA_STDIN:
-			MCFilesExecReadFromStdinFor(ctxt, size, unit);
-			break;
+        case RF_FOR:
+        {
+            uint4 size;
+            if (!ctxt . EvalExprAsUInt(stop, EE_READ_NONUMBER, size))
+            {
+                MCshellfd = -1;
+                return;
+            }
+            
+            switch (arg)
+            {
+                case OA_FILE:
+                case OA_DRIVER:
+                    if (at != NULL)
+                    {
+                        if (t_is_end)
+                            MCFilesExecReadFromFileOrDriverAtEndFor(ctxt, arg == OA_DRIVER, *t_source, t_at, size, unit, t_max_wait, timeunits);
+                        else
+                            MCFilesExecReadFromFileOrDriverAtFor(ctxt, arg == OA_DRIVER, *t_source, t_at, size, unit, t_max_wait, timeunits);
+                    }
+                    else
+                        MCFilesExecReadFromFileOrDriverFor(ctxt, arg == OA_DRIVER, *t_source, size, unit, t_max_wait, timeunits);
+                    break;
+                case OA_PROCESS:
+                    MCFilesExecReadFromProcessFor(ctxt, *t_source, size, unit, t_max_wait, timeunits);
+                    break;
+                case OA_SOCKET:
+                    MCNetworkExecReadFromSocketFor(ctxt, *t_source, size, unit, *t_message);
+                    break;
+                case OA_STDIN:
+                    MCFilesExecReadFromStdinFor(ctxt, size, unit);
+                    break;
+                default:
+                    break;
+            }
+            break;
+        }
+            
+        case RF_UNTIL:
+        {
+            MCAutoStringRef t_sentinel;
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(stop, EE_READ_NOCHARACTER, &t_sentinel))
+            {
+                MCshellfd = -1;
+                return;
+            }
+        
+            switch (arg)
+            {
+                case OA_FILE:
+                case OA_DRIVER:
+                    if (at != NULL)
+                    {
+                        if (t_is_end)
+                            MCFilesExecReadFromFileOrDriverAtEndUntil(ctxt, arg == OA_DRIVER, *t_source, t_at, *t_sentinel, t_max_wait, timeunits);
+                        else
+                            MCFilesExecReadFromFileOrDriverAtUntil(ctxt, arg == OA_DRIVER, *t_source, t_at, *t_sentinel, t_max_wait, timeunits);
+                    }
+                    else
+                        MCFilesExecReadFromFileOrDriverUntil(ctxt, arg == OA_DRIVER, *t_source, *t_sentinel, t_max_wait, timeunits);
+                    break;
+                case OA_PROCESS:
+                    MCFilesExecReadFromProcessUntil(ctxt, *t_source, *t_sentinel, t_max_wait, timeunits);
+                    break;
+                case OA_SOCKET:
+                    MCNetworkExecReadFromSocketUntil(ctxt, *t_source, *t_sentinel, *t_message);
+                    break;
+                case OA_STDIN:
+                    MCFilesExecReadFromStdinUntil(ctxt, *t_sentinel);
+                    break;
+                default:
+                    break;
+            }
+        }
+            break;
 		default:
-			break;
-		}
-		break;
-	}
-	case RF_UNTIL:
-	{
-		MCAutoStringRef t_sentinel;
-		if (stop != NULL)
-		{
-			if (stop->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_READ_NOCHARACTER, line, pos);
-				MCshellfd = -1;
-				return ES_ERROR;
-			}
-		/* UNCHECKED */ ep . copyasstringref(&t_sentinel);
-		}
-		switch (arg)
-		{
-		case OA_FILE:
-		case OA_DRIVER:
-			if (at != NULL)
-			{
-				if (t_is_end)
-					MCFilesExecReadFromFileOrDriverAtEndUntil(ctxt, arg == OA_DRIVER, *t_source, t_at, *t_sentinel, t_max_wait, timeunits);
-				else
-					MCFilesExecReadFromFileOrDriverAtUntil(ctxt, arg == OA_DRIVER, *t_source, t_at, *t_sentinel, t_max_wait, timeunits);
-			}
-			else
-				MCFilesExecReadFromFileOrDriverUntil(ctxt, arg == OA_DRIVER, *t_source, *t_sentinel, t_max_wait, timeunits);
-			break;
-		case OA_PROCESS:
-			MCFilesExecReadFromProcessUntil(ctxt, *t_source, *t_sentinel, t_max_wait, timeunits);
-			break;
-		case OA_SOCKET:
-			MCNetworkExecReadFromSocketUntil(ctxt, *t_source, *t_sentinel, *t_message);
-			break;
-		case OA_STDIN:
-			MCFilesExecReadFromStdinUntil(ctxt, *t_sentinel);
-			break;
-		default:
-			break;
-		}
-	}
-		break;
-	default:
 		MCeerror->add(EE_READ_BADCOND, line, pos);
 		MCshellfd = -1;
-		return ES_ERROR;
+		return;
 	}
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCRead::compile(MCSyntaxFactoryRef ctxt)
@@ -4331,7 +4282,7 @@ Parse_stat MCSeek::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCSeek::exec(MCExecPoint &ep)
+void MCSeek::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCSeek */ LEGACY_EXEC
 	if (fname->eval(ep) != ES_NORMAL)
@@ -4381,38 +4332,29 @@ Exec_stat MCSeek::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCSeek */
 
-
-	MCExecContext ctxt(ep);
-	if (fname->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_SEEK_BADNAME, line, pos);
-		return ES_ERROR;
-	}
-	MCNewAutoNameRef t_file;
-	/* UNCHECKED */ ep . copyasnameref(&t_file);
-	if (where->eval(ep) == ES_NORMAL)
-	{
-		if (ep.getsvalue().getstring()[0] == '\004' || ep.getsvalue() == "eof")
-			MCFilesExecSeekToEofInFile(ctxt, *t_file);	
-		else
-		{
-			double n;
-			if (ep.getreal8(n, line, pos, EE_SEEK_BADWHERE) != ES_NORMAL)
-			{
-				MCeerror->add(EE_SEEK_BADWHERE, line, pos, ep.getsvalue());
-				return ES_ERROR;
-			}
-			if (mode == PT_TO)
+    MCNewAutoNameRef t_file;
+    if (!ctxt . EvalExprAsNameRef(fname, EE_SEEK_BADNAME, &t_file))
+        return;
+    
+    MCAutoStringRef t_temp;
+    if (ctxt . EvalExprAsStringRef(where, EE_UNDEFINED, &t_temp))
+    {
+        if (MCStringGetNativeCharAtIndex(*t_temp, 0) == '\004' || MCStringIsEqualToCString(*t_temp, "eof", kMCCompareCaseless))
+            MCFilesExecSeekToEofInFile(ctxt, *t_file);
+        else
+        {
+            double n;
+            if (!MCStringToDouble(*t_temp, n))
+            {
+                MCeerror->add(EE_SEEK_BADWHERE, line, pos, *t_temp);
+				return;
+            }
+            if (mode == PT_TO)
 				MCFilesExecSeekAbsoluteInFile(ctxt,(int64_t)n, *t_file);
 			else
 				MCFilesExecSeekRelativeInFile(ctxt, (int64_t)n, *t_file);
-		}
-	}
-	
-	if (!ctxt .HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+        }
+    }
 }
 
 void MCSeek::compile(MCSyntaxFactoryRef ctxt)
@@ -4500,7 +4442,7 @@ Parse_stat MCWrite::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCWrite::exec(MCExecPoint &ep)
+void MCWrite::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCWrite */ LEGACY_EXEC
 	uint2 index;
@@ -4733,19 +4675,12 @@ Exec_stat MCWrite::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCWrite */
 
-
-	MCExecContext ctxt(ep);
-	MCresult->clear(False);
-	
+    MCresult->clear(False);    
 	MCAutoStringRef t_data;
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_WRITE_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep . copyasstringref(&t_data);
-
-	if (arg == OA_STDERR)
+    if (!ctxt . EvalExprAsStringRef(source, EE_WRITE_BADEXP, &t_data))
+        return;
+	
+    if (arg == OA_STDERR)
 		MCFilesExecWriteToStderr(ctxt, *t_data, unit);
 	else
 		if (arg == OA_STDOUT)
@@ -4753,66 +4688,48 @@ Exec_stat MCWrite::exec(MCExecPoint &ep)
 		else
 		{
 			MCNewAutoNameRef t_target;
-			if (fname->eval(ep) != ES_NORMAL)
+            if (!ctxt . EvalExprAsNameRef(fname, EE_WRITE_BADEXP, &t_target))
+                return;
+            switch (arg)
 			{
-				MCeerror->add(EE_WRITE_BADEXP, line, pos);
-				return ES_ERROR;
-			}
-			/* UNCHECKED */ ep . copyasnameref(&t_target);
-			switch (arg)
-			{
-			case OA_DRIVER:
-			case OA_FILE:
-				if (at != NULL)
+                case OA_DRIVER:
+                case OA_FILE:
+                    if (at != NULL)
+                    {
+                        MCAutoStringRef t_temp;
+                        if (!ctxt . EvalExprAsStringRef(at, EE_WRITE_BADEXP, &t_temp))
+                            return;
+                        if (MCStringGetNativeCharAtIndex(*t_temp, 0) == '\004' || MCStringIsEqualToCString(*t_temp, "eof", kMCCompareCaseless))
+                            MCFilesExecWriteToFileOrDriverAtEnd(ctxt, *t_target, *t_data, unit);
+                        else
+                        {
+                            double n;
+                            if (!MCStringToDouble(*t_temp, n))
+                            {
+                                MCresult->sets("error seeking in file");
+                                return;
+                            }
+                            MCFilesExecWriteToFileOrDriverAt(ctxt, *t_target, *t_data, unit, (int64_t)n);
+                        }
+                    }
+                    else
+                        MCFilesExecWriteToFileOrDriver(ctxt, *t_target, *t_data, unit);
+                    break;
+                case OA_PROCESS:
+                    MCFilesExecWriteToProcess(ctxt, *t_target, *t_data, unit);
+                    break;
+                case OA_SOCKET:
 				{
-					if (at->eval(ep) != ES_NORMAL)
-					{
-						MCeerror->add(EE_WRITE_BADEXP, line, pos);
-						return ES_ERROR;
-					}
-					if (ep.getsvalue().getstring()[0] == '\004' || ep.getsvalue() == "eof")
-						MCFilesExecWriteToFileOrDriverAtEnd(ctxt, *t_target, *t_data, unit);
-					else
-					{
-						double n;
-						if (ep.getreal8(n, line, pos, EE_WRITE_BADEXP) != ES_NORMAL)
-						{
-							MCresult->sets("error seeking in file");
-							return ES_NORMAL;
-						}
-						MCFilesExecWriteToFileOrDriverAt(ctxt, *t_target, *t_data, unit, (int64_t)n);
-					}
+                    MCNewAutoNameRef t_message;
+                    if (!ctxt . EvalOptionalExprAsNullableNameRef(at, EE_WRITE_BADEXP, &t_message))
+                        return;
+                    MCNetworkExecWriteToSocket(ctxt, *t_target, *t_data, *t_message);
 				}
-				else
-					MCFilesExecWriteToFileOrDriver(ctxt, *t_target, *t_data, unit);
-				break;
-			case OA_PROCESS:
-				MCFilesExecWriteToProcess(ctxt, *t_target, *t_data, unit);
-				break;
-			case OA_SOCKET:
-				{
-				MCNewAutoNameRef t_message;
-				if (at != NULL)
-				{
-					if (at->eval(ep) != ES_NORMAL)
-					{
-						MCeerror->add(EE_WRITE_BADEXP, line, pos);
-						return ES_ERROR;
-					}
-					/* UNCHECKED */ ep . copyasnameref(&t_message);
-				}
-				MCNetworkExecWriteToSocket(ctxt, *t_target, *t_data, *t_message);
-				}
-				break;
-			default:
-				break;
+                    break;
+                default:
+                    break;
 			}
 		}
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCWrite::compile(MCSyntaxFactoryRef ctxt)

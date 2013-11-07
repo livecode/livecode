@@ -1445,7 +1445,7 @@ public:
 	int4 lookup(MCStringRef s);
 	virtual ~MCKill();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -1521,7 +1521,7 @@ public:
 	                  real8 duration);
 	IO_stat readuntil_binary(IO_handle stream, int4 pindex, uint4 count, const MCString &sptr, MCExecPoint &ep,Boolean words, real8 duration);
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -1538,7 +1538,7 @@ public:
 	}
 	virtual ~MCSeek();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -1559,7 +1559,7 @@ public:
 	}
 	virtual ~MCWrite();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
