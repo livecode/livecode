@@ -456,54 +456,84 @@ IO_stat MCDispatch::startup(void)
 	}
 #endif
 	
-	// The info structure that will be filled in while parsing the capsule.
-	MCStandaloneCapsuleInfo t_info;
-	memset(&t_info, 0, sizeof(MCStandaloneCapsuleInfo));
-
-	// Create a capsule and fill with the standalone data
-	MCCapsuleRef t_capsule;
-	t_capsule = nil;
-	if (!MCCapsuleOpen(MCStandaloneCapsuleCallback, &t_info, t_capsule))
-		return IO_ERROR;
-
-	if (((MCcapsule . size) & (1U << 31)) == 0)
+	// MW-2013-11-07: [[ CmdLineStack ]] If there is a capsule, load the mainstack
+	//   from that. Otherwise, if there is at least one argument, load that as the
+	//   stack. Otherwise it's an error.
+	MCStack *t_mainstack;
+	t_mainstack = nil;
+	if (MCcapsule . size != 0)
 	{
-		// Capsule is not spilled - just use the project section.
-		// MW-2010-05-08: Capsule size includes 'size' field, so need to adjust
-		if (!MCCapsuleFillNoCopy(t_capsule, (const void *)&MCcapsule . data, MCcapsule . size - sizeof(uint32_t), true))
+		// The info structure that will be filled in while parsing the capsule.
+		MCStandaloneCapsuleInfo t_info;
+		memset(&t_info, 0, sizeof(MCStandaloneCapsuleInfo));
+
+		// Create a capsule and fill with the standalone data
+		MCCapsuleRef t_capsule;
+		t_capsule = nil;
+		if (!MCCapsuleOpen(MCStandaloneCapsuleCallback, &t_info, t_capsule))
+			return IO_ERROR;
+
+		if (((MCcapsule . size) & (1U << 31)) == 0)
+		{
+			// Capsule is not spilled - just use the project section.
+			// MW-2010-05-08: Capsule size includes 'size' field, so need to adjust
+			if (!MCCapsuleFillNoCopy(t_capsule, (const void *)&MCcapsule . data, MCcapsule . size - sizeof(uint32_t), true))
+			{
+				MCCapsuleClose(t_capsule);
+				return IO_ERROR;
+			}
+		}
+		else
+		{
+			// Capsule is spilled fill from:
+			//   0..2044 from project section
+			//   spill file
+			//   rest from project section
+			char *t_spill;
+			t_spill = (char *)malloc(strlen(openpath) + 5);
+			sprintf(t_spill, "%s.dat", openpath);
+			if (!MCCapsuleFillFromFile(t_capsule, t_spill, 0, true))
+			{
+				free(t_spill);
+				MCCapsuleClose(t_capsule);
+				return IO_ERROR;
+			}
+			free(t_spill);
+		}
+
+		// Process the capsule
+		if (!MCCapsuleProcess(t_capsule))
 		{
 			MCCapsuleClose(t_capsule);
 			return IO_ERROR;
 		}
+		
+		MCCapsuleClose(t_capsule);
+		
+		t_mainstack = t_info . stack;
+	}
+	else if (MCnstacks > 1 && MClicenseparameters . license_class == kMCLicenseClassCommunity)
+	{
+		MCStack *sptr;
+		if (MCdispatcher -> loadfile(MCstacknames[1], sptr) != IO_NORMAL)
+		{
+			MCresult -> sets("failed to read stackfile");
+			return IO_ERROR;
+		}
+		
+		t_mainstack = sptr;
+		
+		MCMemoryMove(MCstacknames, MCstacknames + 1, sizeof(MCStack *) * (MCnstacks - 1));
+		MCnstacks -= 1;
 	}
 	else
 	{
-		// Capsule is spilled fill from:
-		//   0..2044 from project section
-		//   spill file
-		//   rest from project section
-		char *t_spill;
-		t_spill = (char *)malloc(strlen(openpath) + 5);
-		sprintf(t_spill, "%s.dat", openpath);
-		if (!MCCapsuleFillFromFile(t_capsule, t_spill, 0, true))
-		{
-			free(t_spill);
-			MCCapsuleClose(t_capsule);
-			return IO_ERROR;
-		}
-		free(t_spill);
-	}
-
-	// Process the capsule
-	if (!MCCapsuleProcess(t_capsule))
-	{
-		MCCapsuleClose(t_capsule);
+		MCresult -> sets("no stackfile to run");
 		return IO_ERROR;
 	}
 
+	MCdefaultstackptr = MCstaticdefaultstackptr = t_mainstack;
 	MCcmd = openpath;
-	MCdefaultstackptr = MCstaticdefaultstackptr = t_info . stack;
-	MCCapsuleClose(t_capsule);
 
 	// Initialization required.
 	MCModeResetCursors();
@@ -513,10 +543,10 @@ IO_stat MCDispatch::startup(void)
 	MCallowinterrupts = False;
 
 	// Now open the main stack.
-	t_info . stack -> extraopen(false);
+	t_mainstack-> extraopen(false);
 	send_startup_message();
 	if (!MCquit)
-		t_info . stack -> open();
+		t_mainstack -> open();
 
 	return IO_NORMAL;
 }

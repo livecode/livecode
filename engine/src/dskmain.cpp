@@ -38,6 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "redraw.h"
 #include "font.h"
+#include "stacksecurity.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -81,7 +82,9 @@ bool X_init(int argc, char *argv[], char *envp[])
 {
 	int i;
 	MCstackbottom = (char *)&i;
-
+	
+	MCStackSecurityInit();
+	
 #ifdef _WINDOWS_DESKTOP
 	// MW-2011-07-26: Make sure errno pointer is initialized - this won't be
 	//   if the engine is running through the plugin.
