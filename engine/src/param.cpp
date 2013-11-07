@@ -108,14 +108,13 @@ Exec_stat MCParameter::eval(MCExecPoint& ep)
 
 bool MCParameter::eval(MCExecContext &ctxt, MCValueRef &r_value)
 {
-    // Can't give a nil ValueRef to EvalOptionalExprAsValueRef
     if (value == nil)
+        return ctxt . EvalOptionalExprAsValueRef(exp, (MCValueRef)kMCEmptyString, EE_PARAM_BADEXP, r_value);
+    else
     {
-        r_value = nil;
+        r_value = MCValueRetain(value);
         return true;
     }
-    else
-        return ctxt . EvalOptionalExprAsValueRef(exp , value, EE_PARAM_BADEXP, r_value);
 }
 
 Exec_stat MCParameter::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)

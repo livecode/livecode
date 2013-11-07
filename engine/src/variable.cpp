@@ -1476,6 +1476,18 @@ Exec_stat MCDeferredVarref::eval(MCExecPoint& ep)
 	return t_stat;
 }
 
+bool MCDeferredVarref::eval(MCExecContext& ctxt, MCValueRef &r_value)
+{
+    bool t_error;
+    if (ref -> isdeferred())
+        t_error = static_cast<MCDeferredVariable *>(ref) -> compute() != ES_NORMAL;
+
+    if (!t_error)
+        t_error = MCVarref::eval(ctxt, r_value);
+
+    return t_error;
+}
+
 Exec_stat MCDeferredVarref::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
 {
 	Exec_stat t_stat;
@@ -1490,12 +1502,32 @@ Exec_stat MCDeferredVarref::evalcontainer(MCExecPoint& ep, MCContainer*& r_conta
 	return t_stat;
 }
 
+bool MCDeferredVarref::evalcontainer(MCExecContext &ctxt, MCContainer *&r_container)
+{
+    bool t_error = false;
+    if (ref -> isdeferred())
+        t_error = static_cast<MCDeferredVariable *>(ref) -> compute() != ES_NORMAL;
+
+    if (!t_error)
+        t_error = MCVarref::evalcontainer(ctxt, r_container);
+
+    return t_error;
+}
+
 MCVariable *MCDeferredVarref::evalvar(MCExecPoint& ep)
 {
 	if (ref -> isdeferred())
 		static_cast<MCDeferredVariable *>(ref) -> compute();
 
 	return MCVarref::evalvar(ep);
+}
+
+MCVariable *MCDeferredVarref::evalvar(MCExecContext &ctxt)
+{
+    if (ref -> isdeferred())
+        static_cast<MCDeferredVariable *>(ref) -> compute();
+
+    return MCVarref::evalvar(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
