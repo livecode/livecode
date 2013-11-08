@@ -2143,7 +2143,7 @@ bool MCObject::names(Properties which, MCValueRef& r_name_val)
 			else
 				return MCStringFormat(r_name, "stack \"%s\"", MCStringGetCString(t_filename));
 		}
-		
+
 		// MW-2013-01-15: [[ Bug 2629 ]] If this control is unnamed, use the abbrev id form
 		//   but *only* for this control (continue with names the rest of the way).
 		Properties t_which_requested;
@@ -2166,16 +2166,11 @@ bool MCObject::names(Properties which, MCValueRef& r_name_val)
 	case P_NAME:
 	case P_ABBREV_NAME:
 		if (isunnamed())
-
-            // AL-2013-07-29: [[ Bug 10981 ]] Allow the empty name for objects.
-			return MCStringFormat(r_name, "%s \"\"", itypestring);
-            
+            return names(P_ABBREV_ID, r_name_val);
 		return MCStringFormat(r_name, "%s \"%s\"", itypestring, getname_cstring());
 	case P_SHORT_NAME:
-		if (isunnamed())
-            // AL-2013-07-29: [[ Bug 10981 ]] Allow the empty name for objects. 
-            r_name = MCValueRetain(kMCEmptyString);
-        else
+            if (isunnamed())
+                return names(P_ABBREV_ID, r_name_val);
             r_name = MCValueRetain(MCNameGetString(getname()));
 		return true;
 	default:
@@ -2358,6 +2353,10 @@ static inline void gen_3d_bottom_points(MCPoint p_points[6], int32_t p_left, int
 void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
                       Etch style, uint2 bwidth)
 {
+	// MW-2013-10-29: [[ Bug 11324 ]] If the border width is zero, then don't render.
+	if (bwidth == 0)
+		return;
+	
 	bwidth = MCU_min(bwidth, drect.height >> 1);
 	if (bwidth == 0)
 		return;
@@ -2450,6 +2449,10 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 
 void MCObject::drawborder(MCDC *dc, const MCRectangle &drect, uint2 bwidth)
 {
+	// MW-2013-10-29: [[ Bug 11324 ]] If the border width is zero, then don't render.
+	if (bwidth == 0)
+		return;
+	
 	// MM-2013-09-30: [[ Bug 11241 ]] Make sure we set the foreground color of the dc before drawing.
 	setforeground(dc, DI_BORDER, False);
 	

@@ -2055,18 +2055,17 @@ Exec_stat MCMM::exec(MCExecPoint &ep)
 			return ES_ERROR;
 		}
 		
-		char *t_filename;
-		t_filename = MCS_resolvepath(ep . getcstring());
-		
-		MCU_fix_path(t_filename);
-		
+		// IM-2013-10-30: [[ FullscreenMode ]] Use refactored functions to fetch & prepare
+		// image rep using the scale of the current stack.
 		MCImageRep *t_rep;
-		MCImageRepGetReferenced(t_filename, t_rep);
+		t_rep = nil;
 		
-		uindex_t t_width, t_height;
-		t_rep -> GetGeometry(t_width, t_height);
-		
-		t_rep -> Release();
+		if (MCImageGetFileRepForStackContext(ep.getcstring(), MCdefaultstackptr, t_rep))
+		{
+			MCImagePrepareRepForDisplayAtDensity(t_rep, MCdefaultstackptr->getdevicescale());
+			
+			t_rep->Release();
+		}
 		
 		return ES_NORMAL;
 	}

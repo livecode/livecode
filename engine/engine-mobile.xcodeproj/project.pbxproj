@@ -1021,6 +1021,7 @@
 		E891124A148675C900B554CF /* DialogModule.java */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.java; path = DialogModule.java; sourceTree = "<group>"; };
 		E89112EB148E73EB00B554CF /* mbldialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mbldialog.cpp; path = src/mbldialog.cpp; sourceTree = "<group>"; };
 		E89A45D314EE7603007250AA /* mblnotification.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblnotification.h; path = src/mblnotification.h; sourceTree = "<group>"; };
+		E8AB9052180E9DCD0050A249 /* image_rep_densitymapped.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_densitymapped.cpp; path = src/image_rep_densitymapped.cpp; sourceTree = "<group>"; };
 		E8B4FDD8152CAF8300CBAF90 /* mbliphonefs.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonefs.mm; path = src/mbliphonefs.mm; sourceTree = "<group>"; };
 		E8C8A774147BC020003780F0 /* mblsensor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblsensor.cpp; path = src/mblsensor.cpp; sourceTree = "<group>"; };
 		E8C8A776147BCA60003780F0 /* mblsensor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblsensor.h; path = src/mblsensor.h; sourceTree = "<group>"; };
@@ -1683,6 +1684,7 @@
 				E865A51D1695BF3E00C4CBC3 /* image_rep.h */,
 				4D8C6999167A22B500D3CCE7 /* image_rep_encoded.cpp */,
 				4D8C699A167A22B500D3CCE7 /* image_rep_mutable.cpp */,
+				E8AB9052180E9DCD0050A249 /* image_rep_densitymapped.cpp */,
 				4D8C699B167A22B500D3CCE7 /* imagebitmap.cpp */,
 				E865A51E1695BF3E00C4CBC3 /* imagebitmap.h */,
 				4DD3DE661040AD2800CAC7EF /* ipng.cpp */,

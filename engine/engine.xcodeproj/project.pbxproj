@@ -549,6 +549,8 @@
 		4DFFC7E013DD8A91006233A4 /* syscfdate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC7DE13DD8A91006233A4 /* syscfdate.cpp */; };
 		4DFFC7E113DD8A91006233A4 /* sysunxnetwork.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC7DF13DD8A91006233A4 /* sysunxnetwork.cpp */; };
 		4DFFC7E713DD8AB9006233A4 /* objectpropsets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC7E613DD8AB9006233A4 /* objectpropsets.cpp */; };
+		7635171D182A8D3D00C31FA2 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */; };
+		7635171E182A8D3D00C31FA2 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */; };
 		766E3298180EE4ED00CF7FCF /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766E3293180EE4E000CF7FCF /* graphicscontext.cpp */; };
 		766E3299180EE4ED00CF7FCF /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766E3295180EE4E000CF7FCF /* imagelist.cpp */; };
 		766E329A180EE4EE00CF7FCF /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766E3293180EE4E000CF7FCF /* graphicscontext.cpp */; };
@@ -1236,7 +1238,6 @@
 		4D7740F51226B930001C9150 /* lnxaudio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lnxaudio.h; path = src/lnxaudio.h; sourceTree = "<group>"; };
 		4D7740F61226B930001C9150 /* lnxclipboard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lnxclipboard.cpp; path = src/lnxclipboard.cpp; sourceTree = "<group>"; };
 		4D7740F71226B930001C9150 /* lnxcolor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lnxcolor.cpp; path = src/lnxcolor.cpp; sourceTree = "<group>"; };
-		4D7740F81226B930001C9150 /* lnxcontext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lnxcontext.cpp; path = src/lnxcontext.cpp; sourceTree = "<group>"; };
 		4D7740F91226B930001C9150 /* lnxcontext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lnxcontext.h; path = src/lnxcontext.h; sourceTree = "<group>"; };
 		4D7740FA1226B930001C9150 /* lnxcursor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lnxcursor.cpp; path = src/lnxcursor.cpp; sourceTree = "<group>"; };
 		4D7740FC1226B930001C9150 /* lnxdc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lnxdc.cpp; path = src/lnxdc.cpp; sourceTree = "<group>"; };
@@ -1480,6 +1481,7 @@
 		4DFFC7DE13DD8A91006233A4 /* syscfdate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syscfdate.cpp; path = src/syscfdate.cpp; sourceTree = "<group>"; };
 		4DFFC7DF13DD8A91006233A4 /* sysunxnetwork.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxnetwork.cpp; path = src/sysunxnetwork.cpp; sourceTree = "<group>"; };
 		4DFFC7E613DD8AB9006233A4 /* objectpropsets.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectpropsets.cpp; path = src/objectpropsets.cpp; sourceTree = "<group>"; };
+		7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_densitymapped.cpp; path = src/image_rep_densitymapped.cpp; sourceTree = "<group>"; };
 		766E3292180EE4E000CF7FCF /* graphics_util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = graphics_util.h; path = src/graphics_util.h; sourceTree = "<group>"; };
 		766E3293180EE4E000CF7FCF /* graphicscontext.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = graphicscontext.cpp; path = src/graphicscontext.cpp; sourceTree = "<group>"; };
 		766E3294180EE4E000CF7FCF /* graphicscontext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = graphicscontext.h; path = src/graphicscontext.h; sourceTree = "<group>"; };
@@ -1563,7 +1565,6 @@
 		76F71741181135FE007301F6 /* osxtransfer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = osxtransfer.mm; path = src/osxtransfer.mm; sourceTree = "<group>"; };
 		76FA930917FC72FB003DB770 /* exec-strings-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-strings-chunk.cpp"; path = "src/exec-strings-chunk.cpp"; sourceTree = "<group>"; };
 		A04643DB0BAAA63A0030A830 /* w32ans.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = w32ans.cpp; path = src/w32ans.cpp; sourceTree = "<group>"; };
-		A04643DC0BAAA63A0030A830 /* w32context.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = w32context.cpp; path = src/w32context.cpp; sourceTree = "<group>"; };
 		A04643DD0BAAA63A0030A830 /* w32context.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = w32context.h; path = src/w32context.h; sourceTree = "<group>"; };
 		A04643DE0BAAA63A0030A830 /* w32dc.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = w32dc.cpp; path = src/w32dc.cpp; sourceTree = "<group>"; };
 		A04643DF0BAAA63A0030A830 /* w32dc.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = w32dc.h; path = src/w32dc.h; sourceTree = "<group>"; };
@@ -2044,7 +2045,6 @@
 				4D6F92F512AA5CC000026A72 /* w32textlayout.cpp */,
 				A04643DB0BAAA63A0030A830 /* w32ans.cpp */,
 				4DAC56740D869D1600CE5BAF /* w32clipboard.cpp */,
-				A04643DC0BAAA63A0030A830 /* w32context.cpp */,
 				4DAC56750D869D1600CE5BAF /* w32date.cpp */,
 				A04643DE0BAAA63A0030A830 /* w32dc.cpp */,
 				A04643E10BAAA63A0030A830 /* w32dce.cpp */,
@@ -2075,7 +2075,6 @@
 				4D7740F51226B930001C9150 /* lnxaudio.h */,
 				4D7740F61226B930001C9150 /* lnxclipboard.cpp */,
 				4D7740F71226B930001C9150 /* lnxcolor.cpp */,
-				4D7740F81226B930001C9150 /* lnxcontext.cpp */,
 				4D7740F91226B930001C9150 /* lnxcontext.h */,
 				4D7740FA1226B930001C9150 /* lnxcursor.cpp */,
 				4D7740FC1226B930001C9150 /* lnxdc.cpp */,
@@ -2713,6 +2712,7 @@
 				4D8387251678B2F4003BEC7C /* image_rep.h */,
 				4D83871A1678B2C9003BEC7C /* image_rep_encoded.cpp */,
 				4D83871B1678B2C9003BEC7C /* image_rep_mutable.cpp */,
+				7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */,
 				4D83871C1678B2C9003BEC7C /* imagebitmap.cpp */,
 				4D8387261678B2F4003BEC7C /* imagebitmap.h */,
 				4D587E580B8096FD00200116 /* ipng.cpp */,
@@ -3558,6 +3558,7 @@
 				766E329A180EE4EE00CF7FCF /* graphicscontext.cpp in Sources */,
 				766E329B180EE4EE00CF7FCF /* imagelist.cpp in Sources */,
 				76EF31A1181E7A1400FAC195 /* stackview.cpp in Sources */,
+				7635171E182A8D3D00C31FA2 /* image_rep_densitymapped.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3844,6 +3845,7 @@
 				76EF31AA181E803C00FAC195 /* sysosxrandom.cpp in Sources */,
 				4D8589F9173AAA0900B20951 /* uuid.cpp in Sources */,
 				76EF32CC182268BF00FAC195 /* foundation-legacy.cpp in Sources */,
+				7635171D182A8D3D00C31FA2 /* image_rep_densitymapped.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

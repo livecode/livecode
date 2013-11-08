@@ -42,6 +42,16 @@ struct MCStackFullscreenModeNames
 
 static MCStackFullscreenModeNames s_fullscreenmode_names[] = {
 	{"", kMCStackFullscreenResize},
+	
+	// MW-2013-10-31: [[ Bug 11336 ]] Change the modes to be camel-case.
+	{"exactFit", kMCStackFullscreenExactFit},
+	{"showAll", kMCStackFullscreenShowAll},
+	{"noBorder", kMCStackFullscreenNoBorder},
+	{"noScale", kMCStackFullscreenNoScale},
+	
+	// MW-2013-10-31: [[ Bug 1136 ]] REMOVE FOR RELEASE - these are here
+	//   for continuity between dp-2 and the next build, will be removed
+	//   for release.
 	{"exact fit", kMCStackFullscreenExactFit},
 	{"show all", kMCStackFullscreenShowAll},
 	{"no border", kMCStackFullscreenNoBorder},
@@ -136,6 +146,8 @@ void MCStack::view_init(void)
 	
 	// MW-2011-08-19: [[ Redraw ]] Initialize the view's update region
 	m_view_update_region = nil;
+	
+	m_view_transform = MCGAffineTransformMakeIdentity();
 }
 
 void MCStack::view_copy(const MCStack &p_view)
@@ -726,10 +738,15 @@ bool MCStack::view_snapshottilecache(const MCRectangle &p_stack_rect, MCGImageRe
 	if (m_view_tilecache == nil)
 		return false;
 	
+	// MW-2013-10-29: [[ Bug 11330 ]] Transform stack to (local) view co-ords.
+	MCRectangle t_view_rect;
+	t_view_rect = MCRectangleGetTransformedBounds(p_stack_rect, getviewtransform());
+	t_view_rect = MCU_intersect_rect(t_view_rect, MCU_make_rect(0, 0, view_getrect() . width, view_getrect() . height));
+	
 	// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
 	// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
 	MCRectangle t_device_rect;
-	t_device_rect = MCRectangleGetTransformedBounds(p_stack_rect, getdevicetransform());
+	t_device_rect = MCRectangleGetTransformedBounds(t_view_rect, MCResGetDeviceTransform());
 	return MCTileCacheSnapshot(m_view_tilecache, t_device_rect, r_image);
 }
 

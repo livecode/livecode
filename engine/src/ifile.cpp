@@ -128,14 +128,17 @@ bool MCImageDecompress(MCImageCompressedBitmap *p_compressed, MCImageFrame *&r_f
 			break;
 
 		case F_PNG:
+			t_frames[0].density = 1.0;
 			t_success = MCImageDecodePNG(t_stream, t_frames[0].image);
 			break;
 
 		case F_JPEG:
+			t_frames[0].density = 1.0;
 			t_success = MCImageDecodeJPEG(t_stream, t_frames[0].image);
 			break;
 
 		case F_RLE:
+			t_frames[0].density = 1.0;
 			t_success = MCImageDecompressRLE(p_compressed, t_frames[0].image);
 			break;
 		}
@@ -170,7 +173,10 @@ bool MCImage::decompressbrush(MCGImageRef &r_brush)
 
 	MCImageFrame *t_frame = nil;
 
-	t_success = m_rep->LockImageFrame(0, true, t_frame);
+	// IM-2013-10-30: [[ FullscreenMode ]] REVISIT: We try here to acquire the brush
+	// bitmap at 1.0 scale, but currently ignore the set density value of the returned frame.
+	// We may have to add support for hi-res brushes OR scale the resulting bitmap appropriately.
+	t_success = m_rep->LockImageFrame(0, true, 1.0, t_frame);
 
 	if (t_success)
 	{
@@ -189,17 +195,25 @@ bool MCImage::decompressbrush(MCGImageRef &r_brush)
 	return t_success;
 }
 
-void MCImage::prepareimage()
+void MCImagePrepareRepForDisplayAtDensity(MCImageRep *p_rep, MCGFloat p_density)
 {
-	if (m_rep != nil)
+	if (p_rep != nil)
 	{
 		/* OVERHAUL - REVISIT: for the moment, prepared images are premultiplied
 		 * as we expect them to be rendered, but if not then this is actually
 		 * causing more work to be done than needed */
 		MCImageFrame *t_frame = nil;
-		m_rep->LockImageFrame(0, true, t_frame);
-		m_rep->UnlockImageFrame(0, t_frame);
+		p_rep->LockImageFrame(0, true, p_density, t_frame);
+		p_rep->UnlockImageFrame(0, t_frame);
 	}
+}
+
+void MCImage::prepareimage()
+{
+	MCStack *t_stack;
+	t_stack = getstack();
+	
+	MCImagePrepareRepForDisplayAtDensity(m_rep, getdevicescale());
 }
 
 void MCImage::openimage()
@@ -413,216 +427,76 @@ void MCImage::reopen(bool p_newfile, bool p_lock_size)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// IM-2013-07-30: [[ ResIndependence ]] Density-mapped Image Support
 
-typedef struct _MCImageScaleLabels_t
+bool MCPathIsAbsolute(MCStringRef p_path)
 {
-	const char *label;
-	MCGFloat scale;
-} MCImageScaleLabel;
-
-static MCImageScaleLabel s_image_scale_labels[] = {
-	{"@ultra-low", 0.25},
-	{"@extra-low", 0.5},
-	{"@low", 0.75},
-	{"@medium", 1.0},
-	{"@high", 1.5},
-	{"@extra-high", 2.0},
-	{"@ultra-high", 4.0},
-	
-	// MM-2012-10-03: [[ ResIndependence ]] Added missing @2x
-	{"@2x", 2.0},
-	
-	// unlabeled default scale
-	{"", 1.0},
-	
-	{nil, 0.0}
-};
-
-bool MCImageGetScaleForLabel(const char *p_label, uint32_t p_length, MCGFloat &r_scale)
-{
-	MCImageScaleLabel *t_scale_label;
-	t_scale_label = s_image_scale_labels;
-	
-	while (t_scale_label->label != nil)
-	{
-		if (MCCStringEqualSubstring(p_label, t_scale_label->label, p_length))
-		{
-			r_scale = t_scale_label->scale;
-			return true;
-		}
-		t_scale_label++;
-	}
-	
-	return false;
-}
-
-void MCImageFreeScaledFileList(MCImageScaledFile *p_list, uint32_t p_count)
-{
-	if (p_list == nil)
-		return;
-	
-	for (uint32_t i = 0; i < p_count; i++)
-		MCCStringFree(p_list[i].filename);
-	
-	MCMemoryDeleteArray(p_list);
-}
-
-bool MCImageSplitScaledFilename(const char *p_filename, char *&r_base, char *&r_extension, bool &r_has_scale, MCGFloat &r_scale)
-{
-	if (p_filename == nil)
+	if (p_path == nil)
 		return false;
 	
-	bool t_success;
-	t_success = true;
-	
-	MCGFloat t_scale;
-	bool t_has_scale = false;
-	
-	uint32_t t_length;
-	t_length = MCCStringLength(p_filename);
-	
-	uint32_t t_index, t_name_start, t_label_start, t_label_search_start, t_ext_start;
-	
-	if (MCCStringLastIndexOf(p_filename, '/', t_index))
-		t_name_start = t_index + 1;
-	else
-		t_name_start = 0;
-	
-	if (MCCStringLastIndexOf(p_filename + t_name_start, '.', t_index))
-		t_ext_start = t_name_start + t_index;
-	else
-		t_ext_start = t_length;
-	
-	// find first '@' char before the extension part
-	t_label_start = t_label_search_start = t_name_start;
-	while (MCCStringFirstIndexOf(p_filename + t_label_search_start, '@', t_index))
-	{
-		if (t_label_start + t_index > t_ext_start)
-			break;
-		
-		t_label_start += t_index;
-		t_label_search_start = t_label_start + 1;
-	}
-	
-	// check label begins with '@'
-	if (p_filename[t_label_start] != '@')
-	{
-		// no scale label
-		t_label_start = t_ext_start;
-	}
-	else
-	{
-		t_has_scale = MCImageGetScaleForLabel(p_filename + t_label_start, t_ext_start - t_label_start, t_scale);
-		
-		if (!t_has_scale)
-		{
-			// @... is not a recognised scale
-			t_label_start = t_ext_start;
-		}
-	}
-	
-	char *t_base, *t_extension;
-	t_base = t_extension = nil;
-	
-	t_success = MCCStringCloneSubstring(p_filename, t_label_start, t_base) && MCCStringCloneSubstring(p_filename + t_ext_start, t_length - t_ext_start, t_extension);
-	
-	if (t_success)
-	{
-		r_base = t_base;
-		r_extension = t_extension;
-		r_has_scale = t_has_scale;
-		r_scale = t_has_scale ? t_scale : 1.0;
-	}
-	else
-	{
-		MCCStringFree(t_base);
-		MCCStringFree(t_extension);
-	}
-	
-	return t_success;
+	return (MCStringBeginsWith(p_path, MCSTR("/"), kMCStringOptionCompareExact) ||
+            MCStringBeginsWith(p_path, MCSTR(":"), kMCStringOptionCompareExact));
 }
 
-bool MCImageGetScaledFiles(MCStringRef p_filename, MCStack *p_stack, MCImageScaledFile *&r_list, uint32_t &r_count)
+bool MCPathIsRemoteURL(MCStringRef p_path)
 {
-	bool t_success;
-	t_success = nil;
-	
-	MCImageScaledFile *t_filelist;
-	t_filelist = nil;
-	
-	char *t_base, *t_extension, *t_scale_label;
-	t_base = t_extension = t_scale_label = nil;
-	
-	uint32_t t_count;
-	t_count = 0;
-	
-	MCGFloat t_scale;
-	bool t_has_scale;
-	
-	t_success = MCImageSplitScaledFilename(MCStringGetCString(p_filename), t_base, t_extension, t_has_scale, t_scale);
+	return (MCStringBeginsWith(p_path, MCSTR("http://"), kMCStringOptionCompareCaseless) ||
+            MCStringBeginsWith(p_path, MCSTR("https://"), kMCStringOptionCompareCaseless) ||
+            MCStringBeginsWith(p_path, MCSTR("ftp://"), kMCStringOptionCompareCaseless));
+}
 
-	if (t_success)
+bool MCImageGetFileRepForStackContext(MCStringRef p_filename, MCStack *p_stack, MCImageRep *&r_rep)
+{
+	bool t_success = true;
+	
+	MCImageRep *t_rep;
+	t_rep = nil;
+	
+    MCAutoStringRef t_prefixless;
+	// skip over any file: / binfile: url prefix
+	if (MCStringBeginsWith(p_filename, MCSTR("file:"), kMCStringOptionCompareCaseless))
+    {
+		MCStringCopySubstring(p_filename, MCRangeMake(5, UINDEX_MAX), &t_prefixless);
+        p_filename = *t_prefixless;
+    }
+	else if (MCStringBeginsWith(p_filename, MCSTR("binfile:"), kMCStringOptionCompareCaseless))
+    {
+		MCStringCopySubstring(p_filename, MCRangeMake(8, UINDEX_MAX), &t_prefixless);
+        p_filename = *t_prefixless;
+    }
+
+	if (MCPathIsRemoteURL(p_filename))
+		t_success = MCImageRepGetReferenced(p_filename, t_rep);
+	else
 	{
-		MCAutoStringRef t_resolved;
-		// if given filename is tagged for a scale then we just return that scaled file
-		if (t_has_scale)
-		{
-			t_success = MCMemoryNewArray(1, t_filelist);
-			if (t_success)
-			{
-				t_count = 1;
-				t_filelist[0].scale = t_scale;
-				t_success = p_stack->resolve_filename(p_filename, &t_resolved) &&
-                            MCCStringClone(MCStringGetCString(*t_resolved), t_filelist[0].filename);
-			}
-		}
+		// with local filenames, first check if absolute path
+		if (MCPathIsAbsolute(p_filename))
+			t_success = MCImageRepGetDensityMapped(p_filename, t_rep);
 		else
 		{
-			MCImageScaleLabel *t_scale_labels;
-			t_scale_labels = s_image_scale_labels;
+			// else try to resolve from stack file location
+			MCAutoStringRef t_path;
+			t_success = p_stack->resolve_relative_path(p_filename, &t_path);
+			if (t_success)
+				t_success = MCImageRepGetDensityMapped(*t_path, t_rep);
 			
-			while (t_success && t_scale_labels->label != nil)
+			// else try to resolve from current folder
+			if (t_success && t_rep == nil)
 			{
-			    MCAutoStringRef t_resolved;
-				MCAutoStringRef t_filename;
-				t_success = MCStringFormat(&t_filename, "%s%s%s", t_base, t_scale_labels->label, t_extension);
+                MCAutoStringRef t_resolved;
+				t_success = MCS_resolvepath(p_filename, &t_resolved);
+				if (t_success)
+					t_success = MCImageRepGetDensityMapped(*t_resolved, t_rep);
 				
 				if (t_success)
-                    t_success = p_stack->resolve_filename(*t_filename, &t_resolved);
-				
-				if (t_success)
-				{
-					if (MCS_exists(*t_resolved, true))
-					{
-						t_success = MCMemoryResizeArray(t_count + 1, t_filelist, t_count);
-						
-						if (t_success)
-						{
-							MCCStringClone(MCStringGetCString(*t_resolved), t_filelist[t_count - 1].filename);
-							t_filelist[t_count - 1].scale = t_scale_labels->scale;
-						}
-					}
-				}
-								
-				t_scale_labels++;
+					t_success = t_rep != nil;
 			}
 		}
 	}
 	
 	if (t_success)
-	{
-		r_list = t_filelist;
-		r_count = t_count;
-	}
-	else
-		MCImageFreeScaledFileList(t_filelist, t_count);
-	
-	MCCStringFree(t_base);
-	MCCStringFree(t_extension);
+		r_rep = t_rep;
 	
 	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-

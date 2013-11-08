@@ -1786,7 +1786,7 @@ MCStringRef MCGraphic::getlabeltext()
 
 void MCGraphic::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, const MCStringRef &s, uint2 fstyle)
 {
-	MCFontDrawText(m_font, s, dc, sx, sy, False);
+	dc -> drawtext(sx, sy, s, m_font, false);
 	if (fstyle & FA_UNDERLINE)
 		dc->drawline(sx, sy + 1, sx + twidth, sy + 1);
 	if (fstyle & FA_STRIKEOUT)

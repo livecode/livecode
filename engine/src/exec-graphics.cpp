@@ -26,6 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "uidc.h"
 #include "util.h"
 #include "image.h"
+#include "image_rep.h"
 
 #include "osspec.h"
 

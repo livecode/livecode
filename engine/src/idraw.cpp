@@ -62,7 +62,8 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 
 			if (t_update)
 				apply_transform();
-			t_success = m_rep->LockImageFrame(currentframe, true, t_frame);
+			// IM-2013-10-30: [[ FullscreenMode ]] Get appropriate image for current stack scale transform
+			t_success = m_rep->LockImageFrame(currentframe, true, getdevicescale(), t_frame);
 			if (t_success)
 			{
 				MCImageDescriptor t_image;
@@ -71,7 +72,8 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 				t_image.has_transform = m_has_transform;
 				t_image.transform = m_transform;
 				// IM-2013-07-19: [[ ResIndependence ]] set scale factor so hi-res image draws at the right size
-				t_image.scale_factor = m_scale_factor;
+				// IM-2013-10-30: [[ FullscreenMode ]] Get scale factor from the returned frame
+				t_image.scale_factor = t_frame->density;
 
 				switch (resizequality)
 				{
@@ -127,7 +129,7 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 		if (state & CS_DO_START)
 		{
 			MCImageFrame *t_frame = nil;
-			if (m_rep->LockImageFrame(currentframe, true, t_frame))
+			if (m_rep->LockImageFrame(currentframe, true, getdevicescale(), t_frame))
 			{
 				MCscreen->addtimer(this, MCM_internal, t_frame->duration);
 				m_rep->UnlockImageFrame(currentframe, t_frame);

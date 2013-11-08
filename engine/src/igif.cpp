@@ -346,6 +346,7 @@ bool MCImageDecodeGIF(IO_handle p_stream, MCImageFrame *&r_frames, uindex_t &r_f
 			MCImageBitmapCheckTransparency(t_frame_bitmap);
 			t_frames[t_frame_count - 1].image = t_frame_bitmap;
 			t_frames[t_frame_count - 1].duration = t_image_delay * 10; // convert 1/100 seconds to milliseconds
+			t_frames[t_frame_count - 1].density = 1.0;
 		}
 
 		t_disposal_region = t_image_region;

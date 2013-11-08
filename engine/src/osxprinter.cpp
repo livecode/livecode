@@ -1715,7 +1715,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			y = p_mark -> text . position . y;
 		
 			MCFontStruct *f;
-			f = p_mark -> text . font;
+			f = MCFontGetFontStruct(p_mark -> text . font);
 			
 			void *s;
 			s = p_mark -> text . data;
@@ -1741,13 +1741,13 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 
 				CGContextFillRect(m_context,
 					CGRectMake(x, y - f -> ascent,
-						MCscreen -> textwidth(f, (const char *)s, len), f -> ascent + f -> descent));
+                               MCFontMeasureText(p_mark -> text . font, (const char *)s, len, false), f -> ascent + f -> descent));
 
 				CGContextRestoreGState(m_context);
 			}
 		
 			bool t_is_unicode;
-			t_is_unicode = p_mark -> text . font -> unicode || p_mark -> text . unicode_override;
+			t_is_unicode = f -> unicode || p_mark -> text . unicode_override;
 							
 			if (!t_is_unicode)
 			{
