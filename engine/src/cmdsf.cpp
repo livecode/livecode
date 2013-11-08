@@ -1816,7 +1816,6 @@ MCFilter::~MCFilter()
 {
 	delete container;
 	delete target;
-	delete it;
 	delete source;
 	delete pattern;
 }
@@ -2130,7 +2129,7 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
 	MCAutoStringRef t_output;
     MCExecContext ctxt(ep);
     
-    if (it != nil)
+    if (container == nil && target == nil)
     {
         if (matchmode == MA_REGEX)
             MCStringsExecFilterRegexIntoIt(ctxt, *t_source, *t_pattern, discardmatches == True, chunktype == CT_LINE);
@@ -2184,7 +2183,7 @@ void MCFilter::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEvalConstantBool(ctxt, discardmatches);
     MCSyntaxFactoryEvalConstantBool(ctxt, chunktype == CT_LINE);
     
-    if (it != nil)
+    if (container == nil && target == nil)
     {
         if (matchmode == MA_REGEX)
             MCSyntaxFactoryExecMethod(ctxt, kMCStringsExecFilterRegexIntoItMethodInfo);

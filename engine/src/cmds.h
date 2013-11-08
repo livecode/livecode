@@ -1380,8 +1380,6 @@ class MCFilter : public MCStatement
 	MCChunk *container;
 	// JS-2013-07-01: [[ EnhancedFilter ]] Optional output container (into ... clause).
 	MCChunk *target;
-	// JS-2013-07-01: [[ EnhancedFilter ]] 'it' reference to use if source is an expr.
-	MCVarref *it;
 	// JS-2013-07-01: [[ EnhancedFilter ]] Source expression if source not a container.
 	MCExpression *source;
 	MCExpression *pattern;
@@ -1395,7 +1393,6 @@ public:
 		chunktype = CT_UNDEFINED;
 		container = NULL;
 		target = NULL;
-		it = NULL;
 		source = NULL;
 		pattern = NULL;
 		matchmode = MA_UNDEFINED;
