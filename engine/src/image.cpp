@@ -2476,12 +2476,12 @@ bool MCImage::copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *
 			if (t_has_transform)
 				t_combined_transform = MCGAffineTransformConcat(t_combined_transform, t_transform);
 			t_combined_transform = MCGAffineTransformConcat(t_combined_transform, MCGAffineTransformMakeScale(1.0 / t_frame->density, 1.0 / t_frame->density));
-			
-			MCGImageFilter t_filter;
-			t_filter = resizequality == INTERPOLATION_BICUBIC ? kMCGImageFilterBicubic : (resizequality == INTERPOLATION_BILINEAR ? kMCGImageFilterBilinear : kMCGImageFilterNearest);
-			
+				
+				MCGImageFilter t_filter;
+				t_filter = resizequality == INTERPOLATION_BICUBIC ? kMCGImageFilterBicubic : (resizequality == INTERPOLATION_BILINEAR ? kMCGImageFilterBilinear : kMCGImageFilterNearest);
+				
 			t_success = MCImageBitmapCopyWithTransform(t_frame->image, t_premultiplied, t_combined_transform, t_filter, r_bitmap);
-			
+				
 			if (t_success && !p_premultiplied)
 				MCImageBitmapUnpremultiply(r_bitmap);
 		}
@@ -2525,17 +2525,17 @@ bool MCImage::lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_
 		}
 
 		// IM-2013-11-06: [[ RefactorGraphics ]] Factor out transformed image creation code
-		
+
 		// IM-2013-11-06: [[ RefactorGraphics ]] Apply density when calculating image transform.
 		MCGAffineTransform t_combined_transform;
 		t_combined_transform = MCGAffineTransformConcat(t_transform, MCGAffineTransformMakeScale(1.0 / m_locked_frame->density, 1.0 / m_locked_frame->density));
-		
+
 		MCGImageFilter t_filter;
 		t_filter = resizequality == INTERPOLATION_BICUBIC ? kMCGImageFilterBicubic : (resizequality == INTERPOLATION_BILINEAR ? kMCGImageFilterBilinear : kMCGImageFilterNearest);
-		
+
 		bool t_success;
 		t_success = MCImageBitmapCopyWithTransform(m_locked_frame->image, true, t_combined_transform, t_filter, m_transformed_bitmap);
-		
+
 		if (t_success)
 		{
 			MCLog("locking transformed image: (%d,%d) -> (%d,%d)", m_locked_frame->image->width, m_locked_frame->image->height, m_transformed_bitmap->width, m_transformed_bitmap->height);
@@ -2559,7 +2559,7 @@ void MCImage::unlockbitmap(MCImageBitmap *p_bitmap)
 
 	m_locked_rep->UnlockImageFrame(currentframe, m_locked_frame);
 	m_locked_rep = nil;
-	m_locked_frame = nil;
+		m_locked_frame = nil;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
