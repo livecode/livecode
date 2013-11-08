@@ -1586,18 +1586,21 @@ static XImage * drawtheme_calc_alpha ( MCThemeDrawInfo &p_info)
 	GdkVisual *best_vis ;
 	
 	uint4	t_w ;
-	uint4	t_h ;
-	
+	uint4	t_h ;	
 		
 	t_w = p_info.drect.width ;
 	t_h = p_info.drect.height ;
 
+	// MM-2013-11-06: [[ Bug 11360 ]] Make sure we take into account the screen depth when creating pixmaps.
+	uint4 t_screen_depth;
+	t_screen_depth = ((MCScreenDC*) MCscreen) -> getdepth();
+	
 	// Create two new pixmaps
-	t_black = gdk_pixmap_new( NULL, t_w, t_h, 32);
-	t_white = gdk_pixmap_new( NULL, t_w, t_h, 32);
+	t_black = gdk_pixmap_new( NULL, t_w, t_h, t_screen_depth);
+	t_white = gdk_pixmap_new( NULL, t_w, t_h, t_screen_depth);
 	
 	// We need to attach a colourmap to the Drawables in GDK
-	best_vis = gdk_visual_get_best_with_depth(32);
+	best_vis = gdk_visual_get_best_with_depth(t_screen_depth);
 	cm = gdk_colormap_new( best_vis , False ) ;
 	gdk_drawable_set_colormap( t_black, cm);
 	gdk_drawable_set_colormap( t_white, cm);
