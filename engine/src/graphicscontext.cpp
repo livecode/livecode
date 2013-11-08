@@ -512,7 +512,7 @@ void MCGraphicsContext::setlineatts(uint2 linesize, uint2 linestyle, uint2 capst
 	m_cap_style = capstyle;
 	m_join_style = joinstyle;
 	
-	MCGContextSetStrokeWidth(m_gcontext, (MCGFloat) linesize + 0.5f);
+	MCGContextSetStrokeWidth(m_gcontext, (MCGFloat) linesize);
 	
 	switch (capstyle)
 	{
