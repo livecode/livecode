@@ -512,7 +512,7 @@ void MCGraphicsContext::setlineatts(uint2 linesize, uint2 linestyle, uint2 capst
 	m_cap_style = capstyle;
 	m_join_style = joinstyle;
 	
-	MCGContextSetStrokeWidth(m_gcontext, (MCGFloat) linesize);
+	MCGContextSetStrokeWidth(m_gcontext, (MCGFloat) linesize + 0.5f);
 	
 	switch (capstyle)
 	{
@@ -649,6 +649,171 @@ void MCGraphicsContext::setgradient(MCGradientFill *p_gradient)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// MM-2013-11-06: [[ Bug 11389 ]] Add legacy drawing functions for rounded rects and arcs.
+
+static void add_legacy_move_to(MCGContextRef p_gcontext, int4 x, int4 y)
+{
+	MCGContextMoveTo(p_gcontext, MCGPointMake(x / 2.0f, y / 2.0f));
+}
+
+static void add_legacy_line_to(MCGContextRef p_gcontext, int4 x, int4 y)
+{
+	MCGContextLineTo(p_gcontext, MCGPointMake(x / 2.0f, y / 2.0f));
+}
+
+static void add_legacy_cubic_to(MCGContextRef p_gcontext, int4 ax, int4 ay, int4 bx, int4 by, int4 x, int4 y)
+{
+	MCGContextCubicTo(p_gcontext, MCGPointMake(ax / 2.0f, ay / 2.0f), MCGPointMake(bx / 2.0f, by / 2.0f), MCGPointMake(x / 2.0f, y / 2.0f));
+}
+
+static void add_legacy_arc_to(MCGContextRef p_gcontext, int4 cx, int4 cy, int4 hr, int4 vr, int4 s, int4 e, bool first)
+{
+	int4 hk, vk;
+	
+	if (e - s == 90)
+	{
+		hk = hr * 36195 / 65536;
+		vk = vr * 36195 / 65536;
+	}
+	else
+	{
+		double h = tan(M_PI * (e - s) / 720.0);
+		hk = int4(4.0 * h * hr / 3.0);
+		vk = int4(4.0 * h * vr / 3.0);
+	}
+	
+	double ca, sa;
+	double cb, sb;
+	
+	ca = cos(M_PI * s / 180);
+	sa = sin(M_PI * s / 180);
+	
+	cb = cos(M_PI * e / 180);
+	sb = sin(M_PI * e / 180);
+	
+	if (first)
+		add_legacy_move_to(p_gcontext, int4(cx + hr * ca), int4(cy - vr * sa));
+	
+	add_legacy_cubic_to(p_gcontext, int4(cx + hr * ca - hk * sa), int4(cy - vr * sa - vk * ca), int4(cx + hr * cb + hk * sb), int4(cy - vr * sb + vk * cb), int4(cx + hr * cb), int4(cy - vr * sb));	
+}
+
+static void add_legacy_rounded_rectangle(MCGContextRef p_gcontext, const MCGRectangle& p_rect, MCGFloat p_radius)
+{
+	int4 x, y;
+	x = (int4)(p_rect . origin . x * 2);
+	y = (int4)(p_rect . origin . y * 2);
+	
+	int4 aw, ah;
+	aw = (int4)(p_rect . size . width * 2);
+	ah = (int4)(p_rect . size . height * 2);
+	
+	int4 hr, vr;
+	hr = MCU_min(aw / 2, (int4)(p_radius * 2));
+	vr = MCU_min(ah / 2, (int4)(p_radius * 2));
+	
+	int4 h, v;
+	h = aw - hr * 2;
+	v = ah - vr * 2;
+	
+	int4 l, t, r, b;
+	l = x + hr;
+	t = y + vr;
+	r = x + hr + h;
+	b = y + vr + v;	
+	
+	int4 hk, vk;
+	hk = signed(hr * 36195 / 65536);
+	vk = signed(vr * 36195 / 65536);
+	
+	add_legacy_move_to(p_gcontext, r, t - vr);
+	add_legacy_cubic_to(p_gcontext, r + hk, t - vr, r + hr, t - vk, r + hr, t);
+	add_legacy_line_to(p_gcontext, r + hr, b);
+	add_legacy_cubic_to(p_gcontext, r + hr, b + vk, r + hk, b + vr, r, b + vr);
+	add_legacy_line_to(p_gcontext, l, b + vr);
+	add_legacy_cubic_to(p_gcontext, l - hk, b + vr, l - hr, b + vk, l - hr, b);
+	add_legacy_line_to(p_gcontext, l - hr, t);
+	add_legacy_cubic_to(p_gcontext, l - hr, t - vk, l - hk, t - vr, l, t - vr);
+	
+	MCGContextCloseSubpath(p_gcontext);
+}
+
+static void add_legacy_arc(MCGContextRef p_gcontext, const MCGRectangle& p_rect, uint2 p_start, uint2 p_angle, bool adjust)
+{
+	if (p_rect . size . width == 0.0f || p_rect . size . height == 0.0f)
+		return;
+	
+	if (p_angle == 0)
+		return;
+	
+	if (p_angle > 360)
+		p_angle = 360;
+	
+	bool closed = (p_angle == 360);
+	
+	p_start = p_start % 360;
+	
+	int4 cx, cy, hr, vr;
+	cx = (int4)(p_rect . origin . x * 2 + p_rect . size . width);
+	cy = (int4)(p_rect . origin . y * 2 + p_rect . size . height);
+	hr = (int4)p_rect . size . width;
+	vr = (int4)p_rect . size . height;
+	
+	if (adjust)
+		hr -= 1, vr -= 1;
+	
+	bool t_first = true;
+	int4 t_delta;
+	
+	while(p_angle > 0)
+	{
+		t_delta = MCU_min(90 - p_start % 90, p_angle);
+		p_angle -= t_delta;
+		add_legacy_arc_to(p_gcontext, cx, cy, hr, vr, p_start, p_start + t_delta, t_first);
+		p_start += t_delta;
+		t_first = false;
+	}
+	if (closed)
+		MCGContextCloseSubpath(p_gcontext);
+}
+
+static void add_legacy_segment(MCGContextRef p_gcontext, const MCGRectangle& p_rect, uint2 p_start, uint2 p_angle, bool adjust)
+{
+	if (p_rect . size . width == 0.0f || p_rect . size . height == 0.0f)
+		return;
+	
+	if (p_angle == 0)
+		return;
+		
+	if (p_angle > 360)
+		p_angle = 360;
+	
+	p_start = p_start % 360;
+	
+	int4 cx, cy, hr, vr;
+	cx = (int4)(p_rect . origin . x * 2 + p_rect . size . width);
+	cy = (int4)(p_rect . origin . y * 2 + p_rect . size . height);
+	hr = (int4)p_rect . size . width;
+	vr = (int4)p_rect . size . height;	
+	
+	if (adjust)
+		hr -= 1, vr -= 1;
+	
+	bool t_first = true;
+	int4 t_delta;
+	
+	while(p_angle > 0)
+	{
+		t_delta = MCU_min(90 - p_start % 90, p_angle);
+		p_angle -= t_delta;
+		add_legacy_arc_to(p_gcontext, cx, cy, hr, vr, p_start, p_start + t_delta, t_first);
+		p_start += t_delta;
+		t_first = false;
+	}
+	add_legacy_line_to(p_gcontext, cx, cy);
+	MCGContextCloseSubpath(p_gcontext);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void MCGraphicsContext::drawline(int2 x1, int2 y1, int2 x2, int2 y2)
 {
@@ -696,63 +861,61 @@ void MCGraphicsContext::fillpolygon(MCPoint *points, uint2 npoints)
 	MCMemoryDeleteArray(t_points);	
 }
 
-void MCGraphicsContext::drawarc(const MCRectangle& rect, uint2 start, uint2 angle, bool inside)
+static MCGRectangle MCGRectangleInset(const MCGRectangle &p_rect, MCGFloat p_inset)
 {
+	MCGRectangle t_rect;
+	t_rect = MCGRectangleMake(p_rect.origin.x + p_inset, p_rect.origin.y + p_inset, p_rect.size.width - (p_inset * 2.0), p_rect.size.height - (p_inset * 2.0));
+	
+	if (t_rect.size.width < 0.0)
+		t_rect.size.width = 0.0;
+	if (t_rect.size.height < 0.0)
+		t_rect.size.height = 0.0;
+	
+	return t_rect;
+}
+
+void MCGraphicsContext::drawarc(const MCRectangle& rect, uint2 start, uint2 angle, bool inside)
+{	
+	MCGRectangle t_rect = MCRectangleToMCGRectangle(rect);	
 	MCGFloat t_adjustment;
 	if (m_line_width == 0.0f || inside)
-		t_adjustment = (m_line_width == 0.0f ? 1.0f : m_line_width);
+		t_adjustment = (m_line_width == 0.0f ? 0.5f : m_line_width / 2.0f);
 	else
-		t_adjustment = 0.0f;
+		t_adjustment = 0.0f;	
+	t_rect = MCGRectangleInset(t_rect, t_adjustment);
 	
-	MCGPoint t_center;
-	t_center . x = (MCGFloat) (rect . x + 0.5f * rect . width);
-	t_center . y = (MCGFloat) (rect . y + 0.5f * rect . height);
-	
-	MCGSize t_radii;
-	t_radii . width = (MCGFloat) rect . width - t_adjustment;
-	t_radii . height = (MCGFloat) rect . height - t_adjustment;
-
 	MCGContextBeginPath(m_gcontext);
-	MCGContextAddArc(m_gcontext, t_center, t_radii, 0.0f, (MCGFloat) (360 - (start + angle)), (MCGFloat) (360 - start));
+	add_legacy_arc(m_gcontext, t_rect, start, angle, false);
 	MCGContextStroke(m_gcontext);
 }
 
 void MCGraphicsContext::fillarc(const MCRectangle& rect, uint2 start, uint2 angle)
-{
-	MCGPoint t_center;
-	t_center . x = (MCGFloat) (rect . x + 0.5f * rect . width);
-	t_center . y = (MCGFloat) (rect . y + 0.5f * rect . height);
-	
-	MCGSize t_radii;
-	t_radii . width = (MCGFloat) rect . width;
-	t_radii . height = (MCGFloat) rect . height;
+{	
+	MCGRectangle t_rect = MCRectangleToMCGRectangle(rect);	
+	MCGFloat t_adjustment;
+	if (m_line_width == 0.0f)
+		t_adjustment = (m_line_width == 0.0f ? 0.5f : m_line_width / 2.0f);
+	else
+		t_adjustment = 0.0f;	
+	t_rect = MCGRectangleInset(t_rect, t_adjustment);	
 	
 	MCGContextBeginPath(m_gcontext);
-	if (angle != 0 && angle % 360 == 0)
-		MCGContextAddArc(m_gcontext, t_center, t_radii, 0.0f, (MCGFloat) (360 - (start + angle)), (MCGFloat) (360 - start));
-	else
-		MCGContextAddSegment(m_gcontext, t_center, t_radii, 0.0f, (MCGFloat) (360 - (start + angle)), (MCGFloat) (360 - start));
+	add_legacy_arc(m_gcontext, MCRectangleToMCGRectangle(rect), start, angle, false);
 	MCGContextFill(m_gcontext);
 }
 
 void MCGraphicsContext::drawsegment(const MCRectangle& rect, uint2 start, uint2 angle, bool inside)
-{
+{	
+	MCGRectangle t_rect = MCRectangleToMCGRectangle(rect);	
 	MCGFloat t_adjustment;
 	if (m_line_width == 0.0f || inside)
-		t_adjustment = (m_line_width == 0.0f ? 1.0f : m_line_width);
+		t_adjustment = (m_line_width == 0.0f ? 0.5f : m_line_width / 2.0f);
 	else
-		t_adjustment = 0.0f;
-	
-	MCGPoint t_center;
-	t_center . x = (MCGFloat) (rect . x + 0.5f * rect . width);
-	t_center . y = (MCGFloat) (rect . y + 0.5f * rect . height);
-	
-	MCGSize t_radii;
-	t_radii . width = (MCGFloat) rect . width - t_adjustment;
-	t_radii . height = (MCGFloat) rect . height - t_adjustment;
+		t_adjustment = 0.0f;	
+	t_rect = MCGRectangleInset(t_rect, t_adjustment);	
 	
 	MCGContextBeginPath(m_gcontext);
-	MCGContextAddSegment(m_gcontext, t_center, t_radii, 0.0f, (MCGFloat) (360 - (start + angle)), (MCGFloat) (360 - start));
+	add_legacy_segment(m_gcontext, t_rect, start, angle, false);
 	MCGContextStroke(m_gcontext);
 }
 
@@ -770,19 +933,6 @@ void MCGraphicsContext::drawsegments(MCSegment *segments, uint2 nsegs)
 		MCGContextLineTo(m_gcontext, t_point);		
 	}
 	MCGContextStroke(m_gcontext);
-}
-
-static MCGRectangle MCGRectangleInset(const MCGRectangle &p_rect, MCGFloat p_inset)
-{
-	MCGRectangle t_rect;
-	t_rect = MCGRectangleMake(p_rect.origin.x + p_inset, p_rect.origin.y + p_inset, p_rect.size.width - (p_inset * 2.0), p_rect.size.height - (p_inset * 2.0));
-
-	if (t_rect.size.width < 0.0)
-		t_rect.size.width = 0.0;
-	if (t_rect.size.height < 0.0)
-		t_rect.size.height = 0.0;
-
-	return t_rect;
 }
 
 void MCGraphicsContext::drawrect(const MCRectangle& rect, bool inside)
@@ -817,68 +967,9 @@ void MCGraphicsContext::fillrects(MCRectangle *rects, uint2 nrects)
 	MCGContextFill(m_gcontext);
 }
 
-static void add_legacy_move_to(MCGContextRef p_gcontext, int4 x, int4 y)
-{
-	MCGContextMoveTo(p_gcontext, MCGPointMake(x / 2.0f, y / 2.0f));
-}
-
-static void add_legacy_line_to(MCGContextRef p_gcontext, int4 x, int4 y)
-{
-	MCGContextLineTo(p_gcontext, MCGPointMake(x / 2.0f, y / 2.0f));
-}
-
-static void add_legacy_cubic_to(MCGContextRef p_gcontext, int4 ax, int4 ay, int4 bx, int4 by, int4 x, int4 y)
-{
-	MCGContextCubicTo(p_gcontext, MCGPointMake(ax / 2.0f, ay / 2.0f), MCGPointMake(bx / 2.0f, by / 2.0f), MCGPointMake(x / 2.0f, y / 2.0f));
-}
-
-static void add_legacy_rounded_rectangle(MCGContextRef p_gcontext, const MCGRectangle& p_rect, MCGFloat p_radius)
-{
-	int4 x, y;
-	x = (int4)(p_rect . origin . x * 2);
-	y = (int4)(p_rect . origin . y * 2);
-
-	int4 aw, ah;
-	aw = (int4)(p_rect . size . width * 2);
-	ah = (int4)(p_rect . size . height * 2);
-	
-	int4 hr, vr;
-	hr = MCU_min(aw / 2, (int4)(p_radius * 2));
-	vr = MCU_min(ah / 2, (int4)(p_radius * 2));
-
-	int4 h, v;
-	h = aw - hr * 2;
-	v = ah - vr * 2;
-
-	int4 l, t, r, b;
-	l = x + hr;
-	t = y + vr;
-	r = x + hr + h;
-	b = y + vr + v;	
-
-	int4 hk, vk;
-	hk = signed(hr * 36195 / 65536);
-	vk = signed(vr * 36195 / 65536);
-	
-	add_legacy_move_to(p_gcontext, r, t - vr);
-	add_legacy_cubic_to(p_gcontext, r + hk, t - vr, r + hr, t - vk, r + hr, t);
-	add_legacy_line_to(p_gcontext, r + hr, b);
-	add_legacy_cubic_to(p_gcontext, r + hr, b + vk, r + hk, b + vr, r, b + vr);
-	add_legacy_line_to(p_gcontext, l, b + vr);
-	add_legacy_cubic_to(p_gcontext, l - hk, b + vr, l - hr, b + vk, l - hr, b);
-	add_legacy_line_to(p_gcontext, l - hr, t);
-	add_legacy_cubic_to(p_gcontext, l - hr, t - vk, l - hk, t - vr, l, t - vr);
-	
-	MCGContextCloseSubpath(p_gcontext);
-}
-
 void MCGraphicsContext::drawroundrect(const MCRectangle& rect, uint2 radius, bool inside)
 {
 	MCGRectangle t_rect = MCRectangleToMCGRectangle(rect);
-	
-	//MCGSize t_corner_radii;
-	//t_corner_radii . width = radius * 0.5;
-	//t_corner_radii . height = radius * 0.5;
 	
 	MCGFloat t_adjustment;
 	if (m_line_width == 0.0f || inside)
@@ -888,23 +979,15 @@ void MCGraphicsContext::drawroundrect(const MCRectangle& rect, uint2 radius, boo
 	
 	t_rect = MCGRectangleInset(t_rect, t_adjustment);
 	
-	MCGContextBeginPath(m_gcontext);
-	
-	add_legacy_rounded_rectangle(m_gcontext, t_rect, radius * 0.5);
-			
-	//MCGContextAddRoundedRectangle(m_gcontext, t_rect, t_corner_radii);	
+	MCGContextBeginPath(m_gcontext);	
+	add_legacy_rounded_rectangle(m_gcontext, t_rect, radius * 0.5);			
 	MCGContextStroke(m_gcontext);
 }
 
 void MCGraphicsContext::fillroundrect(const MCRectangle& rect, uint2 radius)
-{
-	//MCGSize t_corner_radii;
-	//t_corner_radii . width = radius * 0.5;
-	//t_corner_radii . height = radius * 0.5;
-	
+{	
 	MCGContextBeginPath(m_gcontext);
 	add_legacy_rounded_rectangle(m_gcontext, MCRectangleToMCGRectangle(rect), radius * 0.5);
-	//MCGContextAddRoundedRectangle(m_gcontext, MCRectangleToMCGRectangle(rect), t_corner_radii);	
 	MCGContextFill(m_gcontext);
 }
 
