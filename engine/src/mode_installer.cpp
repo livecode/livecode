@@ -422,19 +422,15 @@ class MCInternalPayloadList: public MCStatement
 public:
 	MCInternalPayloadList(void)
 	{
-		m_it_var = nil;
 	}
 	
 	~MCInternalPayloadList(void)
 	{
-		delete m_it_var;
 	}
 
 	Parse_stat parse(MCScriptPoint& sp)
 	{
 		initpoint(sp);
-
-		getit(sp, m_it_var);
 
 		return PS_NORMAL;
 	}
@@ -450,7 +446,7 @@ public:
 
 		ep . clear();
 		MCMiniZipListItems(s_payload_minizip, list_items, &ep);
-		m_it_var -> set(ep, False);
+		ep.getit() -> set(ep, False);
 
 		return ES_NORMAL;
 	}
@@ -465,8 +461,6 @@ private:
 
 		return true;
 	}
-
-	MCVarref *m_it_var;
 };
 
 class MCInternalPayloadDescribe: public MCStatement
@@ -474,13 +468,11 @@ class MCInternalPayloadDescribe: public MCStatement
 public:
 	MCInternalPayloadDescribe(void)
 	{
-		m_it_var = nil;
 		m_item_expr = nil;
 	}
 
 	~MCInternalPayloadDescribe(void)
 	{
-		delete m_it_var;
 		delete m_item_expr;
 	}
 
@@ -488,7 +480,6 @@ public:
 	{
 		initpoint(sp);
 
-		getit(sp, m_it_var);
 		if (sp . parseexp(False, True, &m_item_expr) != PS_NORMAL)
 		{
 			MCperror -> add(PE_PUT_BADEXP, sp);
@@ -514,7 +505,7 @@ public:
 			if (MCMiniZipDescribeItem(s_payload_minizip, *t_name, t_info))
 			{
 				ep . setstringf(",%u,%u,,%u,", t_info . checksum, t_info . uncompressed_size, t_info . compressed_size);
-				m_it_var -> set(ep, False);
+				ep.getit() -> set(ep, False);
 			}
 			else
 				MCresult -> sets("describe failed");
@@ -526,7 +517,6 @@ public:
 	}
 
 private:
-	MCVarref *m_it_var;
 	MCExpression *m_item_expr;
 };
 
@@ -535,14 +525,12 @@ class MCInternalPayloadExtract: public MCStatement
 public:
 	MCInternalPayloadExtract(void)
 	{
-		m_it_var = nil;
 		m_item_expr = nil;
 		m_file_expr = nil;
 	}
 
 	~MCInternalPayloadExtract(void)
 	{
-		delete m_it_var;
 		delete m_item_expr;
 		delete m_file_expr;
 	}
@@ -551,7 +539,6 @@ public:
 	{
 		initpoint(sp);
 
-		getit(sp, m_it_var);
 		if (sp . parseexp(False, True, &m_item_expr) != PS_NORMAL)
 		{
 			MCperror -> add(PE_PUT_BADEXP, sp);
@@ -593,8 +580,8 @@ public:
 		{
 			ExtractContext t_context;
 			t_context . target = MCtargetptr -> gethandle();
-			t_context . name = *t_item;
-			t_context . var = m_it_var -> evalvar(ep);
+			t_context . name = t_item;
+			t_context . var = ep.getit() -> evalvar(ep);
 			t_context . stream = nil;
 
 			if (!MCStringIsEmpty(*t_file))
@@ -675,7 +662,6 @@ private:
 		return true;
 	}
 
-	MCVarref *m_it_var;
 	MCExpression *m_item_expr;
 	MCExpression *m_file_expr;
 };

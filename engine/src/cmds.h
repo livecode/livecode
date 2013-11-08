@@ -45,7 +45,6 @@ class MCConvert : public MCStatement
 {
 	MCChunk *container;
 	MCExpression *source;
-	MCVarref *it;
 	Convert_form fform;
 	Convert_form fsform;
 	Convert_form pform;
@@ -55,7 +54,6 @@ public:
 	{
 		container = NULL;
 		source = NULL;
-		it = NULL;
 		fform = CF_UNDEFINED;
 		fsform = CF_UNDEFINED;
 		pform = CF_UNDEFINED;
@@ -165,12 +163,10 @@ public:
 class MCGet : public MCStatement
 {
 	MCExpression *value;
-	MCVarref *it;
 public:
 	MCGet()
 	{
 		value = NULL;
-		it = NULL;
 	}
 	virtual ~MCGet();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -221,12 +217,10 @@ class MCPost : public MCStatement
 {
 	MCExpression *source;
 	MCExpression *dest;
-	MCVarref *it;
 public:
 	MCPost()
 	{
 		source = dest = NULL;
-		it = NULL;
 	}
 	virtual ~MCPost();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -421,14 +415,12 @@ class MCClone : public MCStatement
 {
 	MCChunk *source;
 	MCExpression *newname;
-	MCVarref *it;
 	Boolean visible;
 public:
 	MCClone()
 	{
 		source = NULL;
 		newname = NULL;
-		it = NULL;
 		visible = True;
 	}
 	virtual ~MCClone();
@@ -441,14 +433,12 @@ class MCClipboardCmd: public MCStatement
 {
 	MCChunk *targets;
 	MCChunk *dest;
-	MCVarref *it;
 
 public:
 	MCClipboardCmd(void)
 	{
 		targets = NULL;
 		dest = NULL;
-		it = NULL;
 	}
 
 	virtual ~MCClipboardCmd(void);
@@ -461,8 +451,8 @@ protected:
 	virtual bool iscut(void) const = 0;
 
 private:
-	Exec_errors processtocontainer(MCObjectRef *p_objects, uint4 p_object_count, MCObject *p_dst);
-	Exec_errors processtoclipboard(MCObjectRef *p_objects, uint4 p_object_count);
+	Exec_errors processtocontainer(MCExecPoint& ep, MCObjectRef *p_objects, uint4 p_object_count, MCObject *p_dst);
+	Exec_errors processtoclipboard(MCExecPoint& ep, MCObjectRef *p_objects, uint4 p_object_count);
 };
 
 class MCCopyCmd: public MCClipboardCmd
@@ -484,7 +474,6 @@ class MCCreate : public MCStatement
 	MCExpression *newname;
 	MCExpression *file;
 	MCChunk *container;
-	MCVarref *it;
 	Boolean directory;
 	Boolean visible;
 	Boolean alias;
@@ -495,7 +484,6 @@ public:
 		newname = NULL;
 		file = NULL;
 		container = NULL;
-		it = NULL;
 		directory = False;
 		alias = False;
 		visible = True;
@@ -731,11 +719,9 @@ public:
 
 class MCPasteCmd : public MCStatement
 {
-	MCVarref *it;
 public:
 	MCPasteCmd()
 	{
-		it = NULL;
 	}
 	virtual ~MCPasteCmd();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -1000,7 +986,6 @@ class MCDispatchCmd: public MCStatement
 	MCExpression *message;
 	MCChunk *target;
 	MCParameter *params;
-	MCVarref *it;
 	bool is_function;
 
 public:
@@ -1009,7 +994,6 @@ public:
 		message = NULL;
 		target = NULL;
 		params = NULL;
-		it = NULL;
 		is_function = false;
 	}
 	~MCDispatchCmd(void);
@@ -1193,13 +1177,11 @@ class MCRequest : public MCStatement
 {
 	MCExpression *message;
 	MCExpression *program;
-	MCVarref *it;
 	Apple_event ae;
 public:
 	MCRequest()
 	{
 		message = program = NULL;
-		it = NULL;
 		ae = AE_UNDEFINED;
 	}
 	virtual ~MCRequest();
@@ -1351,7 +1333,6 @@ class MCEncryptionOp : public MCStatement
 	MCExpression *salt;
 	MCExpression *iv;
 	Boolean ispassword;
-	MCVarref *it;
 
 	bool is_rsa;
 	RSA_KEYTYPE rsa_keytype;
@@ -1363,7 +1344,6 @@ public:
 	MCEncryptionOp()
 	{
 		source = ciphername = keystr = keylen = NULL;
-		it = NULL;
 		salt = NULL;
 		iv = NULL;
 		rsa_key = rsa_passphrase = NULL;
@@ -1522,7 +1502,6 @@ class MCRead : public MCStatement
 	File_unit unit;
 	MCExpression *maxwait;
 	Functions timeunits;
-	MCVarref *it;
 	MCExpression *at;
 public:
 	MCRead()
@@ -1531,7 +1510,6 @@ public:
 		maxwait = NULL;
 		stop = NULL;
 		unit = FU_CHARACTER;
-		it = NULL;
 		at = NULL;
 	}
 	virtual ~MCRead();
@@ -2118,7 +2096,6 @@ public:
     {
         m_relative_object = nil;
         m_id_or_name  = nil;
-        m_it = nil;
     }
 	
     virtual ~MCResolveImage(void);
@@ -2130,7 +2107,6 @@ public:
 private:
     MCChunk *m_relative_object;
     MCExpression *m_id_or_name;
-    MCVarref *m_it;
     bool m_is_id : 1;
 };
 

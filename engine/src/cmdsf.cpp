@@ -308,7 +308,6 @@ MCEncryptionOp::~MCEncryptionOp()
 	delete source;
 	delete keystr;
 	delete keylen;
-	delete it;
 	delete salt;
 	delete iv;
 
@@ -464,7 +463,6 @@ Parse_stat MCEncryptionOp::parse(MCScriptPoint &sp)
 			}
 		}
 	}
-	getit(sp, it);
 	return PS_NORMAL;
 
 }
@@ -530,7 +528,7 @@ Exec_stat MCEncryptionOp::exec_rsa(MCExecPoint &ep)
 			t_rsa_key, t_rsa_keylength, t_rsa_passphrase, t_rsa_out, t_rsa_out_length, t_result, t_error))
 		{
 			MCVariable *t_var;
-			t_var = it -> evalvar(ep);
+			t_var = ep.getit() -> evalvar(ep);
 			if (t_var != NULL)
 				t_var -> grab(t_rsa_out, t_rsa_out_length);
 			else
@@ -657,7 +655,7 @@ Exec_stat MCEncryptionOp::exec(MCExecPoint &ep)
 	else
 	{
 		MCVariable *t_var;
-		t_var = it -> evalvar(ep);
+		t_var = ep.getit() -> evalvar(ep);
 		if (t_var != NULL)
 			t_var -> grab(outstr, outlen);
 		else
@@ -673,7 +671,7 @@ Exec_stat MCEncryptionOp::exec(MCExecPoint &ep)
 
 	
 	MCresult->clear(False);
-	MCExecContext ctxt(ep, it);
+	MCExecContext ctxt(ep);
 
 	if (is_rsa)
 	{
@@ -2012,8 +2010,6 @@ Parse_stat MCFilter::parse(MCScriptPoint &sp)
 			if (target->parse(sp, False) != PS_NORMAL)
 				t_error = PE_FILTER_BADDEST;
         }
-        else if (container == NULL)
-			getit(sp, it);
 	}
 
 	// If we encountered an error, add it to the parse error stack and fail.
@@ -2092,8 +2088,8 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
 	delete dptr;
 
 	// Now put the filtered data into the correct container
-	if (it != NULL)
-		stat = it->set(ep);
+	if (container == NULL && target == NULL)
+		stat = ep.getit()->set(ep);
 	else if (target != NULL)
 		stat = target->set(ep, PT_INTO);
 	else
@@ -2132,7 +2128,7 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
 	/* UNCHECKED */ ep . copyasstringref(&t_pattern);
 
 	MCAutoStringRef t_output;
-    MCExecContext ctxt(ep, it);
+    MCExecContext ctxt(ep);
     
     if (it != nil)
     {
@@ -2150,7 +2146,7 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
     }
     
     
-    if (it == nil && *t_output != nil)
+    if ((target != nil || container != nil) && *t_output != nil)
     {
         if (target != nil)
             stat = target -> set(ep, PT_INTO, *t_output);
@@ -3388,7 +3384,6 @@ Exec_stat MCOpen::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCOpen */
 
-
 	MCExecContext ctxt(ep);
 
 	if (go != NULL)
@@ -3583,7 +3578,6 @@ MCRead::~MCRead()
 	delete fname;
 	delete maxwait;
 	delete stop;
-	delete it;
 	delete at;
 }
 
@@ -4070,7 +4064,6 @@ Parse_stat MCRead::parse(MCScriptPoint &sp)
 			(PE_READ_BADMESS, sp);
 			return PS_ERROR;
 		}
-	getit(sp, it);
 	return PS_NORMAL;
 }
 
@@ -4111,7 +4104,7 @@ Exec_stat MCRead::exec(MCExecPoint &ep)
 		if (!MCnoui && MCS_isatty(0))
 		{
 			MCresult->sets("eof");
-			it->clear();
+			ep.getit()->clear();
 			return ES_NORMAL;
 		}
 		else
@@ -4249,7 +4242,7 @@ Exec_stat MCRead::exec(MCExecPoint &ep)
 					MCS_read_socket(MCsockets[index], ep, 0, sptr, t_message_name);
 				}
 				if (t_message_name == NULL)
-					it->set(ep);
+					ep.getit()->set(ep);
 			}
 			else
 				MCresult->sets("socket is not open");
@@ -4351,7 +4344,7 @@ Exec_stat MCRead::exec(MCExecPoint &ep)
 	}
 	if (textmode)
 		ep.texttobinary();
-	it->set(ep);
+	ep.getit()->set(ep);
 
 #if !defined _WIN32 && !defined _MACOSX
 	if (arg == OA_FILE || arg == OA_DRIVER)
@@ -4362,7 +4355,7 @@ Exec_stat MCRead::exec(MCExecPoint &ep)
 #endif /* MCRead */
 
 
-	MCExecContext ctxt(ep, it);
+	MCExecContext ctxt(ep);
 
 	real8 t_max_wait = MAXUINT4;
 	if (maxwait != NULL)

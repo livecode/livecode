@@ -156,7 +156,6 @@ MCConvert::~MCConvert()
 {
 	delete container;
 	delete source;
-	delete it;
 }
 
 Parse_stat MCConvert::parse(MCScriptPoint &sp)
@@ -177,7 +176,6 @@ Parse_stat MCConvert::parse(MCScriptPoint &sp)
 			(PE_CONVERT_NOCONTAINER, sp);
 			return PS_ERROR;
 		}
-		getit(sp, it);
 	}
 	else
 		MCerrorlock--;
@@ -318,12 +316,11 @@ Exec_stat MCConvert::exec(MCExecPoint &ep)
 		return ES_NORMAL;
 	}
 	Exec_stat stat;
-	if (it != NULL)
-		stat = it->set
-		       (ep);
+	if (container == NULL)
+		stat = ep . getit() -> set(ep);
 	else
-		stat = container->set
-		       (ep, PT_INTO);
+		stat = container->set(ep, PT_INTO);
+	
 	if (stat != ES_NORMAL)
 	{
 		MCeerror->add
@@ -334,7 +331,7 @@ Exec_stat MCConvert::exec(MCExecPoint &ep)
 #endif /* MCConvert */
 
 
-	MCExecContext ctxt(ep, it);
+	MCExecContext ctxt(ep);
 	MCAutoStringRef t_input;
 	MCAutoStringRef t_output;
 	if (container != NULL)
@@ -355,8 +352,8 @@ Exec_stat MCConvert::exec(MCExecPoint &ep)
 	}
 	/* UNCHECKED */ ep . copyasstringref(&t_input);
 
-	if (it != NULL)
-		MCDateTimeExecConvertIntoIt(ctxt, *t_input, fform, fsform, pform, sform, &t_output);
+	if (container == NULL)
+		MCDateTimeExecConvertIntoIt(ctxt, *t_input, fform, fsform, pform, sform);
 	else
 	{
 		MCDateTimeExecConvert(ctxt, *t_input, fform, fsform, pform, sform, &t_output);
@@ -377,7 +374,7 @@ void MCConvert::compile(MCSyntaxFactoryRef ctxt)
 {
 	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
 	
-	if (it != nil)
+	if (container == nil)
 		source -> compile(ctxt);
 	else
 		container -> compile_inout(ctxt);
@@ -387,7 +384,7 @@ void MCConvert::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEvalConstantInt(ctxt, pform);
 	MCSyntaxFactoryEvalConstantInt(ctxt, sform);
 	
-	if (it != nil)
+	if (container == nil)
 		MCSyntaxFactoryExecMethod(ctxt, kMCDateTimeExecConvertIntoItMethodInfo);
 	else
 		MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCDateTimeExecConvertMethodInfo, 0, 1, 2, 3, 4, 0);
@@ -996,7 +993,6 @@ void MCFind::compile(MCSyntaxFactoryRef ctxt)
 MCGet::~MCGet()
 {
 	delete value;
-	delete it;
 }
 
 Parse_stat MCGet::parse(MCScriptPoint &sp)
@@ -1008,7 +1004,6 @@ Parse_stat MCGet::parse(MCScriptPoint &sp)
 		(PE_GET_BADEXP, sp);
 		return PS_ERROR;
 	}
-	getit(sp, it);
 	return PS_NORMAL;
 }
 
@@ -1020,7 +1015,7 @@ Exec_stat MCGet::exec(MCExecPoint &ep)
 		MCeerror->add(EE_GET_BADEXP, line, pos);
 		return ES_ERROR;
 	}
-	if (it->set(ep) != ES_NORMAL)
+	if (ep.getit()->set(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_GET_CANTSET, line, pos, ep.getsvalue());
 		return ES_ERROR;
@@ -1036,7 +1031,7 @@ Exec_stat MCGet::exec(MCExecPoint &ep)
 	}
 	/* UNCHECKED */ ep . copyasvalueref(&t_value);
 	
-	MCExecContext ctxt(ep, it);
+	MCExecContext ctxt(ep);
 	MCEngineExecGet(ctxt, *t_value);
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -2992,16 +2987,12 @@ MCResolveImage::~MCResolveImage(void)
 {
     delete m_relative_object;
     delete m_id_or_name;
-    delete m_it;
 }
 
 Parse_stat MCResolveImage::parse(MCScriptPoint &p_sp)
 {
     Parse_stat t_stat;
     t_stat = PS_NORMAL;
-    
-    // Fetch a reference to 'it'
-    getit(p_sp, m_it);
     
     if (t_stat == PS_NORMAL)
         t_stat =  p_sp.skip_token(SP_FACTOR, TT_CHUNK, CT_IMAGE);
@@ -3083,7 +3074,7 @@ Exec_stat MCResolveImage::exec(MCExecPoint &p_ep)
     }
     
     if (t_stat == ES_NORMAL)
-        t_stat = m_it -> set(p_ep);
+        t_stat = p_ep.getit() -> set(p_ep);
     
     return t_stat;
     

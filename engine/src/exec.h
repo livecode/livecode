@@ -776,13 +776,8 @@ public:
 	{
 	}
 	
-	MCExecContext(MCExecPoint& ep, MCVarref *p_it)
-		: m_ep(ep), m_stat(ES_NORMAL), m_it(p_it)
-	{
-	}
-	
 	MCExecContext(MCExecContext& p_ctxt)
-		: m_ep(p_ctxt.GetEP()), m_stat(ES_NORMAL), m_it(p_ctxt . m_it)
+		: m_ep(p_ctxt.GetEP()), m_stat(ES_NORMAL)
 	{
 	}
 
@@ -1101,7 +1096,6 @@ public:
 private:
 	MCExecPoint& m_ep;
 	Exec_stat m_stat;
-	MCVarref *m_it;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3514,7 +3508,7 @@ void MCDateTimeEvalIsADate(MCExecContext& ctxt, MCValueRef p_value, bool& r_resu
 void MCDateTimeEvalIsNotADate(MCExecContext& ctxt, MCValueRef p_value, bool& r_result);
 
 void MCDateTimeExecConvert(MCExecContext &ctxt, MCStringRef p_input, int p_from_first, int p_from_second, int p_to_first, int p_to_second, MCStringRef &r_output);
-void MCDateTimeExecConvertIntoIt(MCExecContext &ctxt, MCStringRef p_input, int p_from_first, int p_from_second, int p_to_first, int p_to_second, MCStringRef &r_output);
+void MCDateTimeExecConvertIntoIt(MCExecContext &ctxt, MCStringRef p_input, int p_from_first, int p_from_second, int p_to_first, int p_to_second);
 
 void MCDateTimeGetTwelveTime(MCExecContext &ctxt, bool& r_value);
 void MCDateTimeSetTwelveTime(MCExecContext &ctxt, bool p_value);

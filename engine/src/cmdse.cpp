@@ -980,7 +980,6 @@ MCDispatchCmd::~MCDispatchCmd(void)
 	
 	delete target;
 	delete message;
-	delete it;
 }
 
 // Syntax is:
@@ -1021,8 +1020,6 @@ Parse_stat MCDispatchCmd::parse(MCScriptPoint& sp)
 			return PS_ERROR;
 		}
 	}
-	
-	getit(sp, it);
 	
 	return PS_NORMAL;
 }
@@ -1136,23 +1133,23 @@ Exec_stat MCDispatchCmd::exec(MCExecPoint& ep)
 	{
 	case ES_NOT_HANDLED:
 	case ES_NOT_FOUND:
-		it -> sets(MCString("unhandled"));
+		ep.getit() -> sets(MCString("unhandled"));
 		stat = ES_NORMAL;
 		break;
 		
 	case ES_PASS:
-		it -> sets(MCString("passed"));
+		ep.getit() -> sets(MCString("passed"));
 		stat = ES_NORMAL;
 		break;
 	
 	case ES_EXIT_HANDLER:
 	case ES_NORMAL:
-		it -> sets(MCString("handled"));
+		ep.getit() -> sets(MCString("handled"));
 		stat = ES_NORMAL;
 	break;
 	
 	default:
-		it -> clear();
+		ep.getit() -> clear();
 	break;
 	}
 	
@@ -1230,7 +1227,7 @@ Exec_stat MCDispatchCmd::exec(MCExecPoint& ep)
 
 	ep . setline(line);
 	
-	MCExecContext ctxt(ep, it);
+	MCExecContext ctxt(ep);
 	MCEngineExecDispatch(ctxt, is_function ? HT_FUNCTION : HT_MESSAGE, *t_message, t_target_ptr, params);
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -2733,7 +2730,6 @@ MCRequest::~MCRequest()
 {
 	delete message;
 	delete program;
-	delete it;
 }
 
 Parse_stat MCRequest::parse(MCScriptPoint &sp)
@@ -2780,7 +2776,6 @@ Parse_stat MCRequest::parse(MCScriptPoint &sp)
 			return PS_ERROR;
 		}
 	}
-	getit(sp, it);
 	return PS_NORMAL;
 }
 
@@ -2829,12 +2824,12 @@ Exec_stat MCRequest::exec(MCExecPoint &ep)
 		ep.copysvalue(result, strlen(result));
 		delete result;
 	}
-	it->set(ep);
+	ep.getit()->set(ep);
 	return ES_NORMAL;
 #endif /* MCRequest */
 
 	
-	MCExecContext ctxt(ep, it);
+	MCExecContext ctxt(ep);
 	
 	if (ae != AE_UNDEFINED)
 	{
