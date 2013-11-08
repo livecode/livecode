@@ -18,7 +18,7 @@
   <references>
     <command tag="launch">launch Command</command>
     <property tag="securityPermissions">securityPermissions Property</property>
-    <property tag="securityCategory">securityCategory Property</property>
+    <property tag="securityCategories">securityCategories Property</property>
   </references>
   <history>
     <introduced version="1.0">Added.</introduced>

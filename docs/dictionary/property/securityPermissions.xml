@@ -18,7 +18,7 @@
   <references>
     <command tag="launch">launch Command</command>
     <property tag="secureMode">securMode Property</property>
-    <property tag="securityCategory">securityCategory Property</property>
+    <property tag="securityCategories"> securityCategories Property</property>
   </references>
   <history>
     <introduced version="6.1.3">Added.</introduced>
