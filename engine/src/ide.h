@@ -148,8 +148,6 @@ private:
 	MCExpression *f_start;
 	MCExpression *f_end;
 	MCChunk *f_target;
-
-	MCVarref *f_output;
 };
 
 // This command tokenizes the string contents of a container eliminating
@@ -182,7 +180,6 @@ public:
 private:
 	MCExpression *m_script;
 	MCChunk *m_target;
-	MCVarref *m_output;
 };
 
 enum MCIdeFilterControlsProperty
@@ -222,7 +219,6 @@ private:
 	MCIdeFilterControlsOperator m_operator;
 	MCExpression *m_pattern;
 	MCChunk *m_stack;
-	MCVarref *m_it;
 };
 
 class MCIdeDeploy: public MCStatement
@@ -338,7 +334,6 @@ private:
 	MCExpression *m_filename;
 	MCExpression *m_segment_name;
 	MCExpression *m_section_name;
-	MCVarref *m_it;
 };
 
 #endif

@@ -46,7 +46,6 @@ extern const char *MCdialogtypes[];
 
 MCAsk::~MCAsk(void)
 {
-	delete it;
 	delete title;
 
 	switch(mode)
@@ -81,7 +80,6 @@ Parse_stat MCAsk::parse(MCScriptPoint &sp)
 	const LT *t_literal;
 
 	initpoint(sp);
-	getit(sp, it);
 
 	if (sp . next(t_type) == PS_NORMAL)
 		if (sp . lookup(SP_ASK, t_literal) == PS_NORMAL)
@@ -248,7 +246,7 @@ Exec_stat MCAsk::exec(class MCExecPoint& ep)
 		}
 
 	if (!t_error)
-		it -> set(ep);
+		ep . getit() -> set(ep);
 	else
 		MCeerror -> add(t_error, line, pos);
 

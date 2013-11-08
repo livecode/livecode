@@ -1276,8 +1276,7 @@ MCIdeScriptStrip::MCIdeScriptStrip(void)
 	: f_type(CT_UNDEFINED),
 	  f_start(NULL),
 	  f_end(NULL),
-	  f_target(NULL),
-	  f_output(NULL)
+	  f_target(NULL)
 {
 }
 
@@ -1286,7 +1285,6 @@ MCIdeScriptStrip::~MCIdeScriptStrip(void)
 	delete f_start;
 	delete f_end;
 	delete f_target;
-	delete f_output;
 }
 
 Parse_stat MCIdeScriptStrip::parse(MCScriptPoint& p_script)
@@ -1296,9 +1294,6 @@ Parse_stat MCIdeScriptStrip::parse(MCScriptPoint& p_script)
 
 	if (t_status == PS_NORMAL)
 		t_status = parse_target_range(p_script, f_type, f_start, f_end, f_target);
-
-	if (t_status == PS_NORMAL)
-		getit(p_script, f_output);
 
 	return t_status;
 }
@@ -1348,7 +1343,7 @@ Exec_stat MCIdeScriptStrip::exec(MCExecPoint& p_exec)
 		MCExecPoint ep(NULL, NULL, NULL);
 		s_strip_paragraph_ep = &ep;
 		TokenizeField(t_target, t_state, f_type, t_start, t_end, strip_paragraph, false);
-		f_output -> set(ep);
+		ep.getit() -> set(ep);
 	}
 
 	return t_status;
@@ -1529,7 +1524,7 @@ Exec_stat MCIdeScriptTokenize::exec(MCExecPoint& ep)
 ///////////////////////////////////////////////////////////////////////////////
 
 MCIdeScriptClassify::MCIdeScriptClassify(void)
-	: m_script(NULL), m_target(NULL), m_output(NULL)
+	: m_script(NULL), m_target(NULL)
 {
 }
 
@@ -1537,7 +1532,6 @@ MCIdeScriptClassify::~MCIdeScriptClassify(void)
 {
 	delete m_script;
 	delete m_target;
-	delete m_output;
 }
 
 Parse_stat MCIdeScriptClassify::parse(MCScriptPoint& p_script)
@@ -1556,9 +1550,6 @@ Parse_stat MCIdeScriptClassify::parse(MCScriptPoint& p_script)
 		m_target = new MCChunk(False);
 		t_status = m_target -> parse(p_script, False);
 	}
-	
-	if (t_status == PS_NORMAL)
-		getit(p_script, m_output);
 
 	return t_status;
 }
@@ -1830,9 +1821,9 @@ Exec_stat MCIdeScriptClassify::exec(MCExecPoint& ep)
 	// If we have a call expression, then its a command.
 	if (t_call_error == nil ||
 		t_cmd_error == nil)
-		m_output -> sets("command");
+		ep.getit() -> sets("command");
 	else if (t_expr_error == nil)
-		m_output -> sets("expression");
+		ep.getit() -> sets("expression");
 	else
 	{
 		const char *t_error;
@@ -1844,7 +1835,7 @@ Exec_stat MCIdeScriptClassify::exec(MCExecPoint& ep)
 			t_error = t_cmd_error;
 		
 		MCresult -> copysvalue(t_error);
-		m_output -> sets("neither");
+		ep.getit() -> sets("neither");
 	}
 
 	delete t_expr_error;
@@ -1976,7 +1967,7 @@ struct MCIdeFilterControlsVisitor: public MCObjectVisitor
 };
 
 MCIdeFilterControls::MCIdeFilterControls(void)
-	: m_property(kMCIdeFilterPropertyNone), m_operator(kMCIdeFilterOperatorNone), m_pattern(nil), m_stack(nil), m_it(nil)
+	: m_property(kMCIdeFilterPropertyNone), m_operator(kMCIdeFilterOperatorNone), m_pattern(nil), m_stack(nil)
 {
 }
 
@@ -1984,7 +1975,6 @@ MCIdeFilterControls::~MCIdeFilterControls(void)
 {
 	delete m_pattern;
 	delete m_stack;
-	delete m_it;
 }
 
 Parse_stat MCIdeFilterControls::parse(MCScriptPoint& sp)
@@ -2056,9 +2046,6 @@ Parse_stat MCIdeFilterControls::parse(MCScriptPoint& sp)
 	
 	if (t_stat == PS_NORMAL)
 		t_stat = sp . parseexp(False, True, &m_pattern);
-		
-	if (t_stat == PS_NORMAL)
-		getit(sp, m_it);
 	
 	return t_stat;
 }
@@ -2100,7 +2087,7 @@ Exec_stat MCIdeFilterControls::exec(MCExecPoint& ep)
 		}
 		while(t_card != t_cards);
 
-		m_it -> set(ep, False);
+		ep.getit() -> set(ep, False);
 	}
 	
 	return t_stat;

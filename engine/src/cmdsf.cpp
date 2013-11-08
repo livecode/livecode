@@ -205,7 +205,6 @@ MCEncryptionOp::~MCEncryptionOp()
 	delete source;
 	delete keystr;
 	delete keylen;
-	delete it;
 	delete salt;
 	delete iv;
 
@@ -361,7 +360,6 @@ Parse_stat MCEncryptionOp::parse(MCScriptPoint &sp)
 			}
 		}
 	}
-	getit(sp, it);
 	return PS_NORMAL;
 
 }
@@ -426,7 +424,7 @@ Exec_stat MCEncryptionOp::exec_rsa(MCExecPoint &ep)
 			t_rsa_key, t_rsa_keylength, t_rsa_passphrase, t_rsa_out, t_rsa_out_length, t_result, t_error))
 		{
 			MCVariable *t_var;
-			t_var = it -> evalvar(ep);
+			t_var = ep.getit() -> evalvar(ep);
 			if (t_var != NULL)
 				t_var -> grab(t_rsa_out, t_rsa_out_length);
 			else
@@ -551,7 +549,7 @@ Exec_stat MCEncryptionOp::exec(MCExecPoint &ep)
 	else
 	{
 		MCVariable *t_var;
-		t_var = it -> evalvar(ep);
+		t_var = ep.getit() -> evalvar(ep);
 		if (t_var != NULL)
 			t_var -> grab(outstr, outlen);
 		else
@@ -2304,7 +2302,6 @@ MCRead::~MCRead()
 	delete fname;
 	delete maxwait;
 	delete stop;
-	delete it;
 	delete at;
 }
 
@@ -2778,7 +2775,6 @@ Parse_stat MCRead::parse(MCScriptPoint &sp)
 			(PE_READ_BADMESS, sp);
 			return PS_ERROR;
 		}
-	getit(sp, it);
 	return PS_NORMAL;
 }
 
@@ -2818,7 +2814,7 @@ Exec_stat MCRead::exec(MCExecPoint &ep)
 		if (!MCnoui && MCS_isatty(0))
 		{
 			MCresult->sets("eof");
-			it->clear();
+			ep.getit()->clear();
 			return ES_NORMAL;
 		}
 		else
@@ -2956,7 +2952,7 @@ Exec_stat MCRead::exec(MCExecPoint &ep)
 					MCS_read_socket(MCsockets[index], ep, 0, sptr, t_message_name);
 				}
 				if (t_message_name == NULL)
-					it->set(ep);
+					ep.getit()->set(ep);
 			}
 			else
 				MCresult->sets("socket is not open");
@@ -3058,7 +3054,7 @@ Exec_stat MCRead::exec(MCExecPoint &ep)
 	}
 	if (textmode)
 		ep.texttobinary();
-	it->set(ep);
+	ep.getit()->set(ep);
 
 #if !defined _WIN32 && !defined _MACOSX
 	if (arg == OA_FILE || arg == OA_DRIVER)

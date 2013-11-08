@@ -63,7 +63,6 @@ const char *MCdialogtypes[] =
 
 MCAnswer::~MCAnswer()
 {
-	delete it;
 	delete title;
 	
 	switch(mode)
@@ -105,7 +104,6 @@ Parse_stat MCAnswer::parse(MCScriptPoint &sp)
 	const LT *t_literal;
 
 	initpoint(sp);
-	getit(sp, it);
 
 	if (sp . skip_token(SP_ASK, TT_UNDEFINED, AT_PAGE) == PS_NORMAL)
 	{
@@ -352,7 +350,7 @@ Exec_stat MCAnswer::exec(MCExecPoint& ep)
 		}
 
 	if (!t_error)
-		it -> set(ep);
+		ep . getit() -> set(ep);
 	else
 		MCeerror -> add(t_error, line, pos);
 

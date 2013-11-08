@@ -46,6 +46,9 @@ MCServerScript::MCServerScript(void)
 	m_ep = NULL;
 	m_include_depth = 0;
 	m_current_file = nil;
+	
+	// MW-2013-11-08: [[ RefactorIt ]] This varref is created when hlist is.
+	m_it = nil;
 }
 
 MCServerScript::~MCServerScript(void)
@@ -62,6 +65,9 @@ MCServerScript::~MCServerScript(void)
 		delete t_file -> script;
 		delete t_file;
 	}
+	
+	// MW-2013-11-08: [[ RefactorIt ]] Dispose of the it varref.
+	delete m_it;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -311,7 +317,12 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, const char *p_filename, bool
 	}
 
 	if (hlist == NULL)
+	{
 		hlist = new MCHandlerlist;
+	
+		// MW-2013-11-08: [[ RefactorIt ]] Make sure we have an 'it' var in global context.
+		/* UNCHECKED */ hlist -> newvar(MCN_it, nil, &m_it, False);
+	}
 	
 	if (m_ep == NULL)
 		m_ep = new MCExecPoint(this, hlist, NULL);

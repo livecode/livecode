@@ -955,8 +955,9 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, void
 		break;
 	case kMCExternalContextQueryIt:
 		{
+			// MW-2013-11-08: [[ RefactorIt ]] MCHandler::getit() now returns a varref.
 			MCVariable *t_var;
-			t_var = MCEPptr -> gethandler() -> getit();
+			t_var = MCEPptr -> gethandler() -> getit() -> evalvar(*MCEPptr);
 			*(MCExternalVariableRef *)result = (t_var != NULL) ? &t_var -> getvalue() : NULL;
 		}
 		break;

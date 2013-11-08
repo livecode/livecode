@@ -121,7 +121,6 @@ MCConvert::~MCConvert()
 {
 	delete container;
 	delete source;
-	delete it;
 }
 
 Parse_stat MCConvert::parse(MCScriptPoint &sp)
@@ -142,7 +141,6 @@ Parse_stat MCConvert::parse(MCScriptPoint &sp)
 			(PE_CONVERT_NOCONTAINER, sp);
 			return PS_ERROR;
 		}
-		getit(sp, it);
 	}
 	else
 		MCerrorlock--;
@@ -282,12 +280,11 @@ Exec_stat MCConvert::exec(MCExecPoint &ep)
 		return ES_NORMAL;
 	}
 	Exec_stat stat;
-	if (it != NULL)
-		stat = it->set
-		       (ep);
+	if (container == NULL)
+		stat = ep . getit() -> set(ep);
 	else
-		stat = container->set
-		       (ep, PT_INTO);
+		stat = container->set(ep, PT_INTO);
+	
 	if (stat != ES_NORMAL)
 	{
 		MCeerror->add
@@ -656,7 +653,6 @@ Exec_stat MCFind::exec(MCExecPoint &ep)
 MCGet::~MCGet()
 {
 	delete value;
-	delete it;
 }
 
 Parse_stat MCGet::parse(MCScriptPoint &sp)
@@ -668,7 +664,6 @@ Parse_stat MCGet::parse(MCScriptPoint &sp)
 		(PE_GET_BADEXP, sp);
 		return PS_ERROR;
 	}
-	getit(sp, it);
 	return PS_NORMAL;
 }
 
@@ -680,8 +675,7 @@ Exec_stat MCGet::exec(MCExecPoint &ep)
 		(EE_GET_BADEXP, line, pos);
 		return ES_ERROR;
 	}
-	if (it->set
-	        (ep) != ES_NORMAL)
+	if (ep.getit()->set(ep) != ES_NORMAL)
 	{
 		MCeerror->add
 		(EE_GET_CANTSET, line, pos, ep.getsvalue());

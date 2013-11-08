@@ -60,7 +60,6 @@ MCClone::~MCClone()
 {
 	delete source;
 	delete newname;
-	delete it;
 }
 
 Parse_stat MCClone::parse(MCScriptPoint &sp)
@@ -87,7 +86,6 @@ Parse_stat MCClone::parse(MCScriptPoint &sp)
 			return PS_ERROR;
 		}
 	}
-	getit(sp, it);
 	return PS_NORMAL;
 }
 
@@ -204,8 +202,7 @@ Exec_stat MCClone::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	optr->getprop(0, P_LONG_ID, ep, False);
-	it->set
-	(ep);
+	ep.getit()->set(ep);
 	MCdefaultstackptr = odefaultstackptr;
 	return ES_NORMAL;
 }
@@ -216,7 +213,6 @@ MCClipboardCmd::~MCClipboardCmd(void)
 {
 	deletetargets(&targets);
 	delete dest;
-	delete it;
 }
 
 Parse_stat MCClipboardCmd::parse(MCScriptPoint& sp)
@@ -238,7 +234,6 @@ Parse_stat MCClipboardCmd::parse(MCScriptPoint& sp)
 			MCperror->add(PE_COPY_BADDEST, sp);
 			return PS_ERROR;
 		}
-		getit(sp, it);
 	}
 	return PS_NORMAL;
 }
@@ -374,10 +369,12 @@ Exec_stat MCClipboardCmd::exec(MCExecPoint& ep)
 
 	if (t_object_count > 0)
 	{
+		// MW-2013-11-08: [[ RefactorIt ]] Both 'processto' methods in theory need context so
+		//   pass ep.
 		if (t_error == EE_UNDEFINED && dest != NULL)
-			t_error = processtocontainer(t_objects, t_object_count, t_dst_object);
+			t_error = processtocontainer(ep, t_objects, t_object_count, t_dst_object);
 		else if (t_error == EE_UNDEFINED)
-			t_error = processtoclipboard(t_objects, t_object_count);
+			t_error = processtoclipboard(ep, t_objects, t_object_count);
 	}
 
 	Exec_stat t_stat;
@@ -396,7 +393,7 @@ Exec_stat MCClipboardCmd::exec(MCExecPoint& ep)
 
 }
 
-Exec_errors MCClipboardCmd::processtocontainer(MCObjectRef *p_objects, uint4 p_object_count, MCObject *p_dst)
+Exec_errors MCClipboardCmd::processtocontainer(MCExecPoint& ep, MCObjectRef *p_objects, uint4 p_object_count, MCObject *p_dst)
 {
 	bool t_cut;
 	t_cut = iscut();
@@ -513,15 +510,17 @@ Exec_errors MCClipboardCmd::processtocontainer(MCObjectRef *p_objects, uint4 p_o
 
 	if (t_new_object != NULL)
 	{
-		MCExecPoint ep(NULL, NULL, NULL);
-		t_new_object -> getprop(0, P_LONG_ID, ep, False);
-		it -> set(ep);
+		// MW-2013-11-08: [[ RefactorIt ]] Use a temp-ep for the value, but use the real ep for
+		//   it setting.
+		MCExecPoint ep2(NULL, NULL, NULL);
+		t_new_object -> getprop(0, P_LONG_ID, ep2, False);
+		ep.getit() -> set(ep2);
 	}
 
 	return EE_UNDEFINED;
 }
 
-Exec_errors MCClipboardCmd::processtoclipboard(MCObjectRef *p_objects, uint4 p_object_count)
+Exec_errors MCClipboardCmd::processtoclipboard(MCExecPoint& ep, MCObjectRef *p_objects, uint4 p_object_count)
 {
 	// Pickle the list of objects. The only reason this could fail is due to lack of
 	// memory.
@@ -690,7 +689,6 @@ MCCreate::~MCCreate()
 	delete newname;
 	delete file;
 	delete container;
-	delete it;
 }
 
 Parse_stat MCCreate::parse(MCScriptPoint &sp)
@@ -739,7 +737,6 @@ Parse_stat MCCreate::parse(MCScriptPoint &sp)
 			(PE_CREATE_BADTYPE, sp);
 			return PS_ERROR;
 		}
-		getit(sp, it);
 	}
 	else
 		if (te->type == TT_PROPERTY && te->which == P_DIRECTORY)
@@ -978,7 +975,7 @@ Exec_stat MCCreate::exec(MCExecPoint &ep)
 		optr->setprop(0, P_NAME, ep, False);
 	}
 	optr->getprop(0, P_LONG_ID, ep, False);
-	it->set(ep);
+	ep.getit()->set(ep);
 	return ES_NORMAL;
 }
 
@@ -1602,7 +1599,6 @@ MCPost::~MCPost()
 {
 	delete source;
 	delete dest;
-	delete it;
 }
 
 Parse_stat MCPost::parse(MCScriptPoint &sp)
@@ -1627,7 +1623,6 @@ Parse_stat MCPost::parse(MCScriptPoint &sp)
 		(PE_POST_BADDESTEXP, sp);
 		return PS_ERROR;
 	}
-	getit(sp, it);
 	return PS_NORMAL;
 }
 
@@ -1646,7 +1641,7 @@ Exec_stat MCPost::exec(MCExecPoint &ep)
 	}
 	MCS_posttourl(ep . getobj(), ep . getsvalue(), ep2 . getcstring());
 	MCurlresult->fetch(ep);
-	return it->set(ep);
+	return ep.getit()->set(ep);
 }
 
 MCMakeGroup::~MCMakeGroup()
@@ -1750,13 +1745,11 @@ Exec_stat MCMakeGroup::exec(MCExecPoint &ep)
 
 MCPasteCmd::~MCPasteCmd()
 {
-	delete it;
 }
 
 Parse_stat MCPasteCmd::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
-	getit(sp, it);
 	return PS_NORMAL;
 }
 
@@ -1769,7 +1762,7 @@ Exec_stat MCPasteCmd::exec(MCExecPoint &ep)
 		if (optr != NULL)
 		{
 			optr->getprop(0, P_LONG_ID, ep, False);
-			it->set(ep);
+			ep.getit()->set(ep);
 		}
 	return ES_NORMAL;
 }

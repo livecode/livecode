@@ -340,14 +340,6 @@ void MCStatement::initpoint(MCScriptPoint &sp)
 	pos = sp.getpos();
 }
 
-void MCStatement::getit(MCScriptPoint &sp, MCVarref *&it)
-{
-	// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
-	//   execution outwith a handler.
-	if (sp.findnewvar(MCN_it, kMCEmptyName, &it) != PS_NORMAL)
-		it = it; // This should handle an error.
-}
-
 MCComref::MCComref(MCNameRef n)
 {
 	/* UNCHECKED */ MCNameClone(n, name);

@@ -900,23 +900,18 @@ public:
     {
         m_relative_object = nil;
         m_id_or_name  = nil;
-        m_it = nil;
     }
 	
     ~MCInternalResolveImage(void)
     {
 		delete m_relative_object;
 		delete m_id_or_name;
-		delete m_it;
     }
     
     Parse_stat parse(MCScriptPoint &p_sp)
     {
         Parse_stat t_stat;
         t_stat = PS_NORMAL;
-		
-		// Fetch a reference to 'it'
-        getit(p_sp, m_it);
 		
         // Parse the optional 'id' token
         m_is_id = (PS_NORMAL == p_sp . skip_token(SP_FACTOR, TT_PROPERTY, P_ID));
@@ -977,7 +972,7 @@ public:
         }
         
         if (t_stat == ES_NORMAL)
-            t_stat = m_it -> set(p_ep);
+            t_stat = p_ep.getit() -> set(p_ep);
         
         return t_stat;
         
@@ -986,7 +981,6 @@ public:
 private:
     MCChunk *m_relative_object;
     MCExpression *m_id_or_name;
-    MCVarref *m_it;
     bool m_is_id : 1;
 };
 

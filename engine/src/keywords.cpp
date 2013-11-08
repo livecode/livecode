@@ -104,24 +104,27 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 		MCAutoNameRef t_token_name;
 		/* UNCHECKED */ t_token_name . Clone(sp . gettoken_nameref());
 
-		MCExpression *e = NULL;
-		MCVarref *v = NULL;
-		if (sp.gethandler() == NULL)
-			if (constant)
-				sp.gethlist()->findconstant(t_token_name, &e);
-			else
-				sp.gethlist()->findvar(t_token_name, false, &v);
-		else
-			if (constant)
-				sp.gethandler()->findconstant(t_token_name, &e);
-			else
-				sp.gethandler()->findvar(t_token_name, &v);
-		if (e != NULL || v != NULL)
+		if (!MCNameIsEqualTo(t_token_name, MCN_it, kMCCompareCaseless))
 		{
-			MCperror->add(PE_LOCAL_SHADOW, sp);
-			delete v;
-			delete e;
-			return PS_ERROR;
+			MCExpression *e = NULL;
+			MCVarref *v = NULL;
+			if (sp.gethandler() == NULL)
+				if (constant)
+					sp.gethlist()->findconstant(t_token_name, &e);
+				else
+					sp.gethlist()->findvar(t_token_name, false, &v);
+			else
+				if (constant)
+					sp.gethandler()->findconstant(t_token_name, &e);
+				else
+					sp.gethandler()->findvar(t_token_name, &v);
+			if (e != NULL || v != NULL)
+			{
+				MCperror->add(PE_LOCAL_SHADOW, sp);
+				delete v;
+				delete e;
+				return PS_ERROR;
+			}
 		}
 
 		MCVariable *tmp;

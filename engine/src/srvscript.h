@@ -90,6 +90,9 @@ private:
 
 	// The execpoint in which global code is executed.
 	MCExecPoint *m_ep;
+	
+	// MW-2013-11-08: [[ RefactorIt ]] The 'it' var at global scope.
+	MCVarref *m_it;
 };
 
 #endif

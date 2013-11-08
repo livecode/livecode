@@ -58,6 +58,9 @@ MCHandler::MCHandler(uint1 htype, bool p_is_private)
 	fileindex = 0;
 	is_private = p_is_private ? True : False;
 	name = nil;
+
+	// MW-2013-11-08: [[ RefactorIt ]] The it varref is created on parsing.
+	m_it = nil;
 }
 
 MCHandler::~MCHandler()
@@ -87,8 +90,11 @@ MCHandler::~MCHandler()
 	{
 		MCNameDelete(cinfo[i] . name);
 		MCNameDelete(cinfo[i] . value);
-}
+	}
 	delete cinfo;
+	
+	// MW-2013-11-08: [[ RefactorIt ]] Delete the it varref.
+	delete m_it;
 
 	MCNameDelete(name);
 }
@@ -138,6 +144,10 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 	Parse_stat stat;
 	Symbol_type type;
 
+	// MW-2013-11-08: [[ RefactorIt ]] Make sure 'it' is always defined as the first
+	//   local variable.
+	/* UNCHECKED */ newvar(MCN_it, kMCEmptyName, &m_it);
+	
 	firstline = sp.getline();
 	hlist = sp.gethlist();
 	prop = isprop;
@@ -514,12 +524,10 @@ Exec_stat MCHandler::getparam(uint2 index, MCExecPoint &ep)
 	return ES_NORMAL;
 }
 
-MCVariable *MCHandler::getit(void)
+// MW-2013-11-08: [[ RefactorIt ]] Changed to return the 'm_it' varref we always have now.
+MCVarref *MCHandler::getit(void)
 {
-	for(uint32_t i = 0; i < nvnames; i++)
-		if (MCNameIsEqualTo(vinfo[i] . name, MCN_it, kMCCompareCaseless))
-			return vars[i];
-	return NULL;
+	return m_it;
 }
 
 Parse_stat MCHandler::findvar(MCNameRef p_name, MCVarref **dptr)

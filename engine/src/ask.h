@@ -36,7 +36,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 class MCAsk : public MCStatement
 {
 	Ask_type mode;
-	MCVarref *it;
 	MCExpression *title;
 	Boolean sheet;
 
@@ -72,7 +71,6 @@ public:
 		file . types = NULL;
 		file . type_count = 0;
 		mode = AT_UNDEFINED;
-		it = NULL;
 		sheet = False;
 	}
 	virtual ~MCAsk(void);
