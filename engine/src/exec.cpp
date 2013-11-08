@@ -1107,7 +1107,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                     ep . setrectangle(t_value);
             }
         }
-            break;
+			break;
             
         case kMCPropertyTypeLinesOfString:
         {
@@ -1122,6 +1122,9 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                     ep . setvalueref(*t_output);
                 }
             }
+			for(uindex_t i = 0; i < t_count; i++)
+				MCValueRelease(t_value[i]);
+			MCMemoryDeleteArray(t_value);
         }
             break;
             
@@ -1141,6 +1144,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                     ep . setvalueref(*t_output);
                 }
             }
+			MCMemoryDeleteArray(t_value);
         }
             break;
             
@@ -1157,6 +1161,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                     ep . setvalueref(*t_output);
                 }
             }
+			MCMemoryDeleteArray(t_value);
         }
             break;
             
@@ -1630,7 +1635,12 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 ctxt . LegacyThrow(EE_PROPERTY_NAS);
             
             if (!ctxt . HasError())
+			{
                 ((void(*)(MCExecContext&, void *, uindex_t, MCStringRef*))prop -> setter)(ctxt, mark, t_count, t_value);
+				for(uindex_t i = 0; i < t_count; i++)
+					MCValueRelease(t_value[i]);
+				MCMemoryDeleteArray(t_value);
+			}
         }
             break;
             
@@ -1649,6 +1659,8 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, uindex_t, uinteger_t*))prop -> setter)(ctxt, mark, t_count, t_value);
+			
+			MCMemoryDeleteArray(t_value);
         }
             break;
             
@@ -1663,6 +1675,8 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, uindex_t, MCPoint*))prop -> setter)(ctxt, mark, t_count, t_value);
+			
+			MCMemoryDeleteArray(t_value);
         }
             break;
             
