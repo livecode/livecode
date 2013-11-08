@@ -34,6 +34,39 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 #include "graphicscontext.h"
 
+bool MCImage::get_rep_and_transform(MCImageRep *&r_rep, bool &r_has_transform, MCGAffineTransform &r_transform)
+{
+	// IM-2013-11-05: [[ RefactorGraphics ]] Use resampled image rep for best-quality scaling
+	if (m_has_transform && MCGAffineTransformIsRectangular(m_transform) && resizequality == INTERPOLATION_BICUBIC)
+	{
+		MCGFloat t_h_scale, t_v_scale;
+		t_h_scale = m_transform.a;
+		t_v_scale = m_transform.d;
+		
+		if (m_resampled_rep != nil && m_resampled_rep->Matches(t_h_scale, t_v_scale, m_rep))
+			r_rep = m_resampled_rep;
+		else
+		{
+			if (!MCImageRepGetResampled(t_h_scale, t_v_scale, m_rep, r_rep))
+				return false;
+			
+			if (m_resampled_rep != nil)
+				m_resampled_rep->Release();
+			m_resampled_rep = static_cast<MCResampledImageRep*>(r_rep);
+		}
+		
+		r_has_transform = false;
+	}
+	else
+	{
+		r_rep = m_rep;
+		r_has_transform = m_has_transform;
+		r_transform = m_transform;
+	}
+	
+	return true;
+}
+
 void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy)
 {
 	MCRectangle drect, crect;
@@ -61,15 +94,25 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 
 			if (t_update)
 				apply_transform();
+			
+			// IM-2013-11-06: [[ RefactorGraphics ]] Use common method to get image rep & transform
+			// so imagedata & rendered image have the same appearance
+			MCImageRep *t_rep;
+			bool t_has_transform;
+			MCGAffineTransform t_transform;
+			/* UNCHECKED */ get_rep_and_transform(t_rep, t_has_transform, t_transform);
+			
 			// IM-2013-10-30: [[ FullscreenMode ]] Get appropriate image for current stack scale transform
-			t_success = m_rep->LockImageFrame(currentframe, true, getdevicescale(), t_frame);
+			t_success = t_rep->LockImageFrame(currentframe, true, getdevicescale(), t_frame);
 			if (t_success)
 			{
 				MCImageDescriptor t_image;
 				MCMemoryClear(&t_image, sizeof(MCImageDescriptor));
 
-				t_image.has_transform = m_has_transform;
-				t_image.transform = m_transform;
+				t_image.has_transform = t_has_transform;
+				if (t_has_transform)
+					t_image.transform = t_transform;
+				
 				// IM-2013-07-19: [[ ResIndependence ]] set scale factor so hi-res image draws at the right size
 				// IM-2013-10-30: [[ FullscreenMode ]] Get scale factor from the returned frame
 				t_image.scale_factor = t_frame->density;
@@ -84,7 +127,7 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 					t_image . filter = kMCGImageFilterBilinear;
 					break;
 				case INTERPOLATION_BICUBIC:
-					t_image . filter = kMCGImageFilterBicubic;
+					t_image . filter = kMCGImageFilterBilinear;
 					break;
 				}
 
@@ -122,7 +165,7 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 				dc->setfillstyle(FillSolid, nil, 0, 0);
 			}
 
-			m_rep->UnlockImageFrame(currentframe, t_frame);
+			t_rep->UnlockImageFrame(currentframe, t_frame);
 		}
 
 		if (state & CS_DO_START)

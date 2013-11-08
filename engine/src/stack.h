@@ -733,6 +733,10 @@ public:
 	MCObject *findobjectbyid(uint32_t object);
 	void freeobjectidcache(void);
 
+	// MW-2013-11-07: [[ Bug 11393 ]] This returns true if the stack should use device-independent
+	//   metrics.
+	bool getuseideallayout(void);
+
 	inline bool getextendedstate(uint4 flag) const
 	{
 		return (f_extended_state & flag) != 0;

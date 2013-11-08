@@ -185,7 +185,7 @@ void MCFontBreakText(MCFontRef p_font, const char *p_text, uint32_t p_length, bo
     while (p_length > 0)
     {
         int t_break_quality;
-        uint32_t t_break_point, t_after_break, t_index;
+        uint32_t t_break_point, t_index;
         t_break_quality = 0;
         t_break_point = 0;
         t_index = 0;
@@ -297,7 +297,7 @@ static void MCFontMeasureTextCallback(MCFontRef p_font, const char *p_text, uint
 	
 	MCExecPoint ep;
 	ep . setsvalue(MCString(p_text, p_length));
-	if (!p_font -> fontstruct -> unicode && !p_is_unicode)
+	if (!p_is_unicode)
 		ep . nativetoutf16();
 	
     ctxt -> m_width += MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
@@ -326,7 +326,7 @@ static void MCFontDrawTextCallback(MCFontRef p_font, const char *p_text, uint32_
 	
 	MCExecPoint ep;
 	ep . setsvalue(MCString(p_text, p_length));
-	if (!p_font -> fontstruct -> unicode && !p_is_unicode)
+	if (!p_is_unicode)
 		ep . nativetoutf16();
 	
 	MCGContextDrawPlatformText(ctxt->m_gcontext, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), MCGPointMake(ctxt->x, ctxt->y), t_font);

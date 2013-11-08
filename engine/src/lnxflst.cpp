@@ -157,16 +157,6 @@ MCFontStruct *MCNewFontlist::getfont(const MCString& p_family, uint2& p_size, ui
 
 	const char *t_charset;
 	t_charset = strchr(t_font -> family, ',');
-	if (t_charset != nil)
-	{
-		t_font -> charset = MCU_languagetocharset(t_charset + 1);
-		t_font -> unicode = (t_font -> charset != 0);
-	}
-	else
-	{
-		t_font -> charset = 0;
-		t_font -> unicode = False;
-	}
 
 	char *t_family_name;
 	if (t_charset != nil)
@@ -308,7 +298,7 @@ void MCNewFontlist::getfontreqs(MCFontStruct *p_font, const char*& r_name, uint2
 int4 MCNewFontlist::ctxt_textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override)
 {
 	bool t_is_unicode;
-	t_is_unicode = (f -> unicode || p_unicode_override);
+	t_is_unicode = p_unicode_override;
 
 	char *t_utf8;
 	if (t_is_unicode)

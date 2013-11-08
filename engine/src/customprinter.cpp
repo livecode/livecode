@@ -966,8 +966,10 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 	double t_font_size;
 	void *t_font_handle;
 #if defined(_WINDOWS_DESKTOP)
-	extern int32_t MCCustomPrinterComputeFontSize(void *font);
-	t_font_size = MCCustomPrinterComputeFontSize(p_span -> font);
+	// MW-2013-11-07: [[ Bug 10508 ]] Pass the font size into computefontsize so it can
+	//   be scaled (layout uses 256px fonts).
+	extern int32_t MCCustomPrinterComputeFontSize(double size, void *font);
+	t_font_size = MCCustomPrinterComputeFontSize(context -> font_size, p_span -> font);
 	t_font_handle = p_span -> font;
 #elif defined(_MAC_DESKTOP)
 	t_font_size = context -> font_size;
@@ -1003,7 +1005,7 @@ void MCCustomMetaContext::dotextmark(MCMark *p_mark)
 	MCExecPoint ep(nil, nil, nil);
     MCFontStruct *f = MCFontGetFontStruct(p_mark -> text . font);
 	ep . setstaticbytes(p_mark -> text . data, p_mark -> text . length);
-	if (!f -> unicode && !p_mark -> text . unicode_override)
+	if (!p_mark -> text . unicode_override)
 		ep . nativetoutf16();
 
 	const unichar_t *t_chars;
@@ -1026,7 +1028,7 @@ void MCCustomMetaContext::dotextmark(MCMark *p_mark)
 	t_state . transform . translate_x = m_translate_x + m_scale_x * p_mark -> text . position . x;
 	t_state . transform . translate_y = m_translate_y + m_scale_y * p_mark -> text . position . y;
 
-#if defined(_MACOSX)
+#if defined(_MACOSX) || defined(_WINDOWS)
 	t_state . font_size = f -> size;
 #elif defined(_LINUX)
 	extern MCFontlist *MCFontlistGetCurrent(void);
@@ -1038,16 +1040,8 @@ void MCCustomMetaContext::dotextmark(MCMark *p_mark)
 
 	compute_clip(p_mark -> clip, t_state . clip);
 
-	// MW-2012-09-04: [[ Bug 10350 ]] The OS X MCTextLayout function uses the unicode
-	//   of the font to determine whether to use QD type spacing. This is determined
-	//   by 'unicode_override' - so temporarily update the font unicode field to match
-	//   appropriately.
-	Bool t_old_unicode;
-	t_old_unicode = f -> unicode;
-	f -> unicode = p_mark -> text . unicode_override;
 	if (!MCTextLayout(t_chars, t_char_count, f, dotextmark_callback, &t_state))
 		m_execute_error = true;
-	f -> unicode = t_old_unicode;
 }
 
 //////////

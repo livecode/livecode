@@ -371,6 +371,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\image_rep_resampled.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\imagebitmap.cpp"
 				>
 			</File>
@@ -940,6 +944,10 @@
 			</File>
 			<File
 				RelativePath="src\gradient.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\graphics_util.h"
 				>
 			</File>
 			<File
@@ -5318,14 +5326,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\src\graphicscontext.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\src\graphicscontext.h"
-			>
-		</File>
-		<File
 			RelativePath=".\encode_version.rev"
 			>
 			<FileConfiguration
@@ -5350,6 +5350,14 @@
 					Outputs="$(ProjectDir)include\revbuild.h"
 				/>
 			</FileConfiguration>
+		</File>
+		<File
+			RelativePath=".\src\graphicscontext.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\src\graphicscontext.h"
+			>
 		</File>
 		<File
 			RelativePath=".\Makefile"

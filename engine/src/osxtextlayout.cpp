@@ -153,9 +153,6 @@ static bool MCTextLayoutDraw(ATSUTextLayout p_layout, const unichar_t *p_chars, 
 
 bool MCTextLayout(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct *p_font, MCTextLayoutCallback p_callback, void *p_context)
 {	
-	bool t_is_unicode;
-	t_is_unicode = p_font -> unicode;
-	
 	OSStatus t_err;
 	ATSUTextLayout t_layout;
 	ATSUStyle t_style;
@@ -210,12 +207,7 @@ bool MCTextLayout(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct 
 	t_err = ATSUCreateTextLayout(&t_layout);
 	t_err = ATSUSetTransientFontMatching(t_layout, false);
 	
-	if (t_is_unicode)
-	{
-		t_layout_options = kATSLineUseDeviceMetrics | kATSLineFractDisable;
-	}
-	else
-		t_layout_options = 0; 
+	t_layout_options = kATSLineUseDeviceMetrics | kATSLineFractDisable;
 	
 	t_err = ATSUSetLayoutControls(t_layout, sizeof(t_layout_tags) / sizeof(ATSUAttributeTag), t_layout_tags, t_layout_sizes, t_layout_attrs);
 	
@@ -223,50 +215,33 @@ bool MCTextLayout(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct 
 	uint32_t t_new_style_count;
 	t_new_styles = nil;
 	t_new_style_count = 0;
-	if (t_is_unicode)
+	
+	t_err = ATSUSetTextPointerLocation(t_layout, (const UniChar *)p_chars, 0, p_char_count, p_char_count);
+	t_err = ATSUSetRunStyle(t_layout, t_style, 0, p_char_count);
+	
+	uint32_t t_frontier;
+	t_frontier = 0;
+	while(t_frontier < p_char_count)
 	{
-		t_err = ATSUSetTextPointerLocation(t_layout, (const UniChar *)p_chars, 0, p_char_count, p_char_count);
-		t_err = ATSUSetRunStyle(t_layout, t_style, 0, p_char_count);
+		UniCharArrayOffset t_new_run_start;
+		UniCharCount t_new_run_length;
+		t_err = ATSUMatchFontsToText(t_layout, t_frontier, p_char_count - t_frontier, &t_font_id, &t_new_run_start, &t_new_run_length);
+		if (t_err == noErr)
+			break;
 		
-		uint32_t t_frontier;
-		t_frontier = 0;
-		while(t_frontier < p_char_count)
-		{
-			UniCharArrayOffset t_new_run_start;
-			UniCharCount t_new_run_length;
-			t_err = ATSUMatchFontsToText(t_layout, t_frontier, p_char_count - t_frontier, &t_font_id, &t_new_run_start, &t_new_run_length);
-			if (t_err == noErr)
-				break;
-			
-			MCMemoryResizeArray(t_new_style_count + 1, t_new_styles, t_new_style_count);
-			
-			ATSUStyle t_new_style;
-			t_err = ATSUCreateStyle(&t_new_style);
-			t_err = ATSUSetAttributes(t_new_style, sizeof(t_tags) / sizeof(ATSUAttributeTag), t_tags, t_sizes, t_attrs);
-			t_err = ATSUSetRunStyle(t_layout, t_new_style, t_new_run_start, t_new_run_length);
-			
-			t_new_styles[t_new_style_count - 1] = t_new_style;
-			
-			t_frontier = t_new_run_start + t_new_run_length;
-		}
+		MCMemoryResizeArray(t_new_style_count + 1, t_new_styles, t_new_style_count);
 		
-		MCTextLayoutDraw(t_layout, p_chars, p_char_count, 0, p_callback, p_context);
+		ATSUStyle t_new_style;
+		t_err = ATSUCreateStyle(&t_new_style);
+		t_err = ATSUSetAttributes(t_new_style, sizeof(t_tags) / sizeof(ATSUAttributeTag), t_tags, t_sizes, t_attrs);
+		t_err = ATSUSetRunStyle(t_layout, t_new_style, t_new_run_start, t_new_run_length);
+		
+		t_new_styles[t_new_style_count - 1] = t_new_style;
+		
+		t_frontier = t_new_run_start + t_new_run_length;
 	}
-	else
-	{
-		int4 t_screen_x;
-		t_screen_x = 0;
-		for(uint4 i = 0; i < p_char_count; i++)
-		{
-			t_err = ATSUSetTextPointerLocation(t_layout, (const UniChar *)p_chars + i, 0, 1, 1);
-			t_err = ATSUSetRunStyle(t_layout, t_style, 0, 1);
-			MCTextLayoutDraw(t_layout, p_chars + i, 1, t_screen_x, p_callback, p_context);
-			
-			uint1 t_native;
-			MCUnicodeMapToNative(p_chars + i, 1, t_native);
-			t_screen_x += p_font -> widths[t_native];
-		}
-	}
+	
+	MCTextLayoutDraw(t_layout, p_chars, p_char_count, 0, p_callback, p_context);
 	
 	t_err = ATSUDisposeTextLayout(t_layout);
 	

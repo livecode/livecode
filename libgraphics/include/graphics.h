@@ -412,6 +412,7 @@ struct MCGFont
 	int32_t		ascent;
 	int32_t		descent;
 	uint8_t		style;
+	bool		ideal : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -705,6 +706,16 @@ MCGSize MCGSizeApplyAffineTransform(const MCGSize& p_size, const MCGAffineTransf
 static inline bool MCGAffineTransformIsEqual(const MCGAffineTransform &p_left, const MCGAffineTransform &p_right)
 {
 	return p_left.a == p_right.a && p_left.b == p_right.b && p_left.c == p_right.c && p_left.d == p_right.d && p_left.tx == p_right.tx && p_left.ty == p_right.ty;
+}
+
+static inline bool MCGAffineTransformIsRectangular(const MCGAffineTransform &p_transform)
+{
+	return p_transform.b == 0.0 && p_transform.c == 0.0;
+}
+
+static inline bool MCGAffineTransformIsIdentity(const MCGAffineTransform &p_transform)
+{
+	return p_transform.a == 1.0 && p_transform.b == 0.0 && p_transform.c == 0.0 && p_transform.d == 1.0 && p_transform.tx == 0.0 && p_transform.ty == 0.0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

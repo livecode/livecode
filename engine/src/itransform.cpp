@@ -564,3 +564,95 @@ bool MCImageScaleBitmap(MCImageBitmap *p_src_bitmap, uindex_t p_width, uindex_t 
 
 	return true;
 }
+
+static inline void MCSwap(uint32_t &x_a, uint32_t &x_b)
+{
+	uint32_t t_tmp;
+	t_tmp = x_a;
+	x_a = x_b;
+	x_b = t_tmp;
+}
+
+void MCImageFlipBitmapInPlaceVertical(MCImageBitmap *p_bitmap)
+{
+	if (p_bitmap == nil)
+		return;
+
+	uint8_t *t_src_ptr, *t_dst_ptr;
+	t_src_ptr = t_dst_ptr = (uint8_t*)p_bitmap->data;
+	t_dst_ptr += (p_bitmap->height - 1) * (p_bitmap->stride);
+
+	for (uint32_t y = 0; y < p_bitmap->height / 2; y++)
+	{
+		uint32_t *t_src_pixel, *t_dst_pixel;
+		t_src_pixel = (uint32_t*)t_src_ptr;
+		t_dst_pixel = (uint32_t*)t_dst_ptr;
+
+		for (uint32_t x = 0; x < p_bitmap->width; x++)
+		{
+			MCSwap(*t_dst_pixel++, *t_src_pixel++);
+		}
+
+		t_src_ptr += p_bitmap->stride;
+		t_dst_ptr -= p_bitmap->stride;
+	}
+}
+
+void MCImageFlipBitmapInPlaceHorizontal(MCImageBitmap *p_bitmap)
+{
+	if (p_bitmap == nil)
+		return;
+
+	uint8_t *t_src_ptr, *t_dst_ptr;
+	t_src_ptr = t_dst_ptr = (uint8_t*)p_bitmap->data;
+	t_dst_ptr += (p_bitmap->width - 1) * sizeof(uint32_t);
+
+	for (uint32_t y = 0; y < p_bitmap->height; y++)
+	{
+		uint32_t *t_src_pixel, *t_dst_pixel;
+		t_src_pixel = (uint32_t*)t_src_ptr;
+		t_dst_pixel = (uint32_t*)t_dst_ptr;
+
+		for (uint32_t x = 0; x < p_bitmap->width / 2; x++)
+			MCSwap(*t_dst_pixel--, *t_src_pixel++);
+
+		t_src_ptr += p_bitmap->stride;
+		t_dst_ptr += p_bitmap->stride;
+	}
+}
+
+void MCImageFlipBitmapInPlaceHV(MCImageBitmap *p_bitmap)
+{
+	if (p_bitmap == nil)
+		return;
+
+	uint8_t *t_src_ptr, *t_dst_ptr;
+	t_src_ptr = t_dst_ptr = (uint8_t*)p_bitmap->data;
+	t_dst_ptr += (p_bitmap->height - 1) * p_bitmap->stride + (p_bitmap->width - 1) * sizeof(uint32_t);
+
+	for (uint32_t y = 0; y < p_bitmap->height; y++)
+	{
+		uint32_t *t_src_pixel, *t_dst_pixel;
+		t_src_pixel = (uint32_t*)t_src_ptr;
+		t_dst_pixel = (uint32_t*)t_dst_ptr;
+
+		for (uint32_t x = 0; x < p_bitmap->width / 2; x++)
+			MCSwap(*t_dst_pixel--, *t_src_pixel++);
+
+		t_src_ptr += p_bitmap->stride;
+		t_dst_ptr -= p_bitmap->stride;
+	}
+}
+
+void MCImageFlipBitmapInPlace(MCImageBitmap *p_bitmap, bool p_horizontal, bool p_vertical)
+{
+	if (p_bitmap == nil)
+		return;
+
+	if (p_horizontal && p_vertical)
+		MCImageFlipBitmapInPlaceHV(p_bitmap);
+	else if (p_horizontal)
+		MCImageFlipBitmapInPlaceHorizontal(p_bitmap);
+	else if (p_vertical)
+		MCImageFlipBitmapInPlaceVertical(p_bitmap);
+}

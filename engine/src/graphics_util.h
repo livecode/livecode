@@ -120,6 +120,7 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 	t_font . descent = p_font -> descent;
 	t_font . fid = t_android_font -> typeface;
 	t_font . style = 0;
+	t_font . ideal = false;
 	return t_font;
 }
 
@@ -133,6 +134,7 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 	t_font . descent = p_font -> descent;
 	t_font . style = p_font -> style;
 	t_font . fid = p_font -> fid;
+	t_font . ideal = false;
 	return t_font;
 }
 
@@ -148,6 +150,21 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 	t_font . descent = p_font -> descent;
 	t_font . fid = static_cast<MCNewFontStruct *>(p_font) -> description;
 	t_font . style = 0;
+	t_font . ideal = false;
+	return t_font;
+}
+
+#elif defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
+
+static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
+{
+	MCGFont t_font;
+	t_font . size = p_font -> size;
+	t_font . ascent = p_font -> ascent;
+	t_font . descent = p_font -> descent;
+	t_font . fid = p_font -> fid;
+	t_font . style = 0;
+	t_font . ideal = p_font -> printer == True;
 	return t_font;
 }
 
@@ -161,6 +178,7 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 	t_font . descent = p_font -> descent;
 	t_font . fid = p_font -> fid;
 	t_font . style = 0;
+	t_font . ideal = false;
 	return t_font;
 }
 

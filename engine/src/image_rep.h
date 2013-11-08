@@ -26,6 +26,8 @@ typedef enum
 	kMCImageRepResident,
 	kMCImageRepVector,
 	kMCImageRepCompressed,
+	
+	kMCImageRepResampled,
 } MCImageRepType;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -120,7 +122,9 @@ public:
 	
 protected:
 	virtual bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height) = 0;
-	virtual bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count) = 0;
+	// IM-2013-11-05: [[ RefactorGraphics ]] Add return parameter to indicate whether or not
+	// returned frames are premultiplied
+	virtual bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied) = 0;
 
 	bool m_have_geometry;
 	uindex_t m_width, m_height;
@@ -130,11 +134,13 @@ protected:
 private:
 	bool EnsureImageFrames(bool p_premultiplied);
 	void PremultiplyFrames();
+	void UnpremultiplyFrames();
 	
 	uindex_t m_lock_count;
 
 	MCImageFrame *m_frames;
 	uindex_t m_frame_count;
+	bool m_frames_premultiplied;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -154,7 +160,7 @@ public:
 
 protected:
 	// returns the image frames as decoded from the input stream
-	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count);
+	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
 	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
 
 	//////////
@@ -251,7 +257,7 @@ public:
 	bool Render(MCDC *p_context, bool p_embed, MCRectangle &p_image_rect, MCRectangle &p_clip_rect);
 
 protected:
-	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count);
+	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
 	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
 
 	//////////
@@ -281,12 +287,41 @@ public:
 	}
 
 protected:
-	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count);
+	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
 	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
 
 	//////////
 
 	MCImageCompressedBitmap *m_compressed;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Image representation that will return the given source at the specified scale using
+// bicubic filter
+
+class MCResampledImageRep : public MCLoadableImageRep
+{
+public:
+	MCResampledImageRep(MCGFloat p_h_scale, MCGFloat p_v_scale, MCImageRep *p_source);
+	~MCResampledImageRep();
+	
+	MCImageRepType GetType() { return kMCImageRepResampled; }
+	uindex_t GetFrameCount() { return m_source->GetFrameCount(); }
+	uint32_t GetDataCompression() { return m_source->GetDataCompression(); }
+	
+	//////////
+	
+	bool Matches(MCGFloat p_h_scale, MCGFloat p_v_scale, const MCImageRep *p_source);
+	
+protected:
+	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
+	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
+	
+	//////////
+	
+	MCGFloat m_h_scale, m_v_scale;
+	bool m_h_flip, m_v_flip;
+	MCImageRep *m_source;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -347,6 +382,8 @@ bool MCImageRepGetResident(void *p_data, uindex_t p_size, MCImageRep *&r_rep);
 bool MCImageRepGetVector(void *p_data, uindex_t p_size, MCImageRep *&r_rep);
 bool MCImageRepGetCompressed(MCImageCompressedBitmap *p_compressed, MCImageRep *&r_rep);
 bool MCImageRepGetDensityMapped(const char *p_filename, MCImageRep *&r_rep);
+
+bool MCImageRepGetResampled(MCGFloat p_h_scale, MCGFloat p_v_scale, MCImageRep *p_source, MCImageRep *&r_rep);
 
 ////////////////////////////////////////////////////////////////////////////////
 
