@@ -347,15 +347,15 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay * &r_displays, u
             
             t_monitor_displays[a] . index = a;
             
-            t_monitor_displays[a] . viewport . x = monitors[a] . x_org ;
-            t_monitor_displays[a] . viewport . y = monitors[a] . y_org ;
-            t_monitor_displays[a] . viewport . width = monitors[a] . width ;
-            t_monitor_displays[a] . viewport . height = monitors[a] . height ;
+            t_monitor_displays[a] . device_viewport . x = monitors[a] . x_org ;
+            t_monitor_displays[a] . device_viewport . y = monitors[a] . y_org ;
+            t_monitor_displays[a] . device_viewport . width = monitors[a] . width ;
+            t_monitor_displays[a] . device_viewport . height = monitors[a] . height ;
             
-            t_monitor_displays[a] . workarea . x = monitors[a] . x_org ;
-            t_monitor_displays[a] . workarea . y = monitors[a] . y_org ;
-            t_monitor_displays[a] . workarea . width = monitors[a] . width ;
-            t_monitor_displays[a] . workarea . height = monitors[a] . height ;
+            t_monitor_displays[a] . device_viewport . x = monitors[a] . x_org ;
+            t_monitor_displays[a] . device_viewport . y = monitors[a] . y_org ;
+            t_monitor_displays[a] . device_viewport . width = monitors[a] . width ;
+            t_monitor_displays[a] . device_viewport . height = monitors[a] . height ;
         }
         
         XFree(monitors);
@@ -365,8 +365,8 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay * &r_displays, u
     else
     {
         t_monitor_displays = new MCDisplay[1];
-        MCU_set_rect(t_monitor_displays[0] . viewport, 0, 0, getwidth(), getheight());
-        MCU_set_rect(t_monitor_displays[0] . workarea, 0, 0, getwidth(), getheight());
+        MCU_set_rect(t_monitor_displays[0] . device_viewport, 0, 0, device_getwidth(), device_getheight());
+        MCU_set_rect(t_monitor_displays[0] . device_workarea, 0, 0, device_getwidth(), device_getheight());
         t_monitor_displays[0] . index = 0 ;
         s_monitor_count = 1 ;
         s_monitor_displays = t_monitor_displays ;
