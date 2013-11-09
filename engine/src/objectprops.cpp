@@ -811,20 +811,33 @@ Exec_stat MCObject::setrectprop(Properties p_which, MCExecPoint& ep, Boolean p_e
 				if (MCU_point_in_rect(t_rect, MCmousex, MCmousey) && this != mfocused)
 					needmfocus = True;
 		}
-
+        
+        // MERG-2013-11-10: [[ RecursiveConditionalMessages ]] Notify objects of movement
+        bool t_moved = t_rect.width == rect.width && t_rect.height == rect.height;
+        
 		if (gettype() >= CT_GROUP)
 		{
 			// MW-2011-08-18: [[ Layers ]] Notify of change of rect.
 			static_cast<MCControl *>(this) -> layer_setrect(t_rect, false);
 			// Notify the parent of the resize.
 			resizeparent();
-		}
+  		}
 		else
 			setrect(t_rect);
+        
+        if (t_moved)
+        {
+            conditionalmessage(HH_CONTROL_MOVED, MCM_control_moved);
+            if (gettype() == CT_GROUP)
+                static_cast<MCGroup *>(this)->recursiveconditionalmessage(HH_CONTROL_MOVED, MCM_control_moved);
+        
+        }
+        
 
 		if (needmfocus)
 			MCmousestackptr->getcard()->mfocus(MCmousex, MCmousey);
-	}
+    
+    }
 	
 	return ES_NORMAL;
 }
@@ -1159,7 +1172,13 @@ Exec_stat MCObject::setvisibleprop(uint4 parid, Properties which, MCExecPoint& e
 
 		if (resizeparent())
 			dirty = False;
-	}
+        
+        // MERG-2013-11-10: [[ RecursiveConditionalMessages ]] Notify objects of visbility change
+        conditionalmessage(HH_VISIBILITY_CHANGED, MCM_visibility_changed);
+        if (gettype() == CT_GROUP)
+            static_cast<MCGroup *>(this)->recursiveconditionalmessage(HH_VISIBILITY_CHANGED, MCM_visibility_changed);
+           
+    }
 
 	if (dirty)
 		signallisteners(P_VISIBLE);

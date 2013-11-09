@@ -2213,6 +2213,10 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 					hashandlers |= HH_CLOSE_CONTROL;
 				if (should_send_message(hlist, MCM_resize_control))
 					hashandlers |= HH_RESIZE_CONTROL;
+                if (should_send_message(hlist, MCM_visibility_changed))
+                    hashandlers |= HH_VISIBILITY_CHANGED;
+                if (should_send_message(hlist, MCM_control_moved))
+                    hashandlers |= HH_CONTROL_MOVED;
 			}
 		}
 	return True;

@@ -147,6 +147,10 @@ extern MCNameRef MCM_close_stack_request;
 extern MCNameRef MCM_color_changed;
 extern MCNameRef MCM_command_key_down;
 extern MCNameRef MCM_control_key_down;
+
+// MERG-2013-11-10: [[ RecursiveConditionalMessages ]] notify controls of movement to themselves or parent groups
+extern MCNameRef MCM_control_moved;
+
 extern MCNameRef MCM_copy_key;
 extern MCNameRef MCM_current_time_changed;
 extern MCNameRef MCM_cut_key;
@@ -322,6 +326,9 @@ extern MCNameRef MCM_undo_key;
 extern MCNameRef MCM_uniconify_stack;
 extern MCNameRef MCM_unload_url;
 extern MCNameRef MCM_update_var;
+
+// MERG-2013-11-10: [[ RecursiveConditionalMessages ]] notify controls of visibility changes to themselves or parent groups
+extern MCNameRef MCM_visibility_changed;
 
 #ifdef _MOBILE
 extern MCNameRef MCN_firstname;

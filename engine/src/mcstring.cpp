@@ -202,6 +202,7 @@ MCNameRef MCM_close_stack_request;
 MCNameRef MCM_color_changed;
 MCNameRef MCM_command_key_down;
 MCNameRef MCM_control_key_down;
+MCNameRef MCM_control_moved;
 MCNameRef MCM_copy_key;
 MCNameRef MCM_current_time_changed;
 MCNameRef MCM_cut_key;
@@ -361,6 +362,7 @@ MCNameRef MCM_uniconify_stack;
 MCNameRef MCM_unload_url;
 MCNameRef MCM_update_screen;
 MCNameRef MCM_update_var;
+MCNameRef MCM_visibility_changed;
 
 #ifdef _MOBILE
 MCNameRef MCN_firstname;
@@ -485,6 +487,7 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("colorChanged", MCM_color_changed);
 	/* UNCHECKED */ MCNameCreateWithCString("commandKeyDown", MCM_command_key_down);
 	/* UNCHECKED */ MCNameCreateWithCString("controlKeyDown", MCM_control_key_down);
+	/* UNCHECKED */ MCNameCreateWithCString("controlMoved", MCM_control_moved);
 	/* UNCHECKED */ MCNameCreateWithCString("copyKey", MCM_copy_key);
 	/* UNCHECKED */ MCNameCreateWithCString("currentTimeChanged", MCM_current_time_changed);
 	/* UNCHECKED */ MCNameCreateWithCString("cutKey", MCM_cut_key);
@@ -642,6 +645,7 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("unloadURL", MCM_unload_url);
 	/* UNCHECKED */ MCNameCreateWithCString("updateScreen", MCM_update_screen);
 	/* UNCHECKED */ MCNameCreateWithCString("updateVariable", MCM_update_var);
+	/* UNCHECKED */ MCNameCreateWithCString("visibilityChanged", MCM_visibility_changed);
 
 #ifdef _MOBILE
 	/* UNCHECKED */ MCNameCreateWithCString("firstname", MCN_firstname);
@@ -770,6 +774,7 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCM_color_changed);
 	MCNameDelete(MCM_command_key_down);
 	MCNameDelete(MCM_control_key_down);
+	MCNameDelete(MCM_control_moved);
 	MCNameDelete(MCM_copy_key);
 	MCNameDelete(MCM_current_time_changed);
 	MCNameDelete(MCM_cut_key);
@@ -924,6 +929,7 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCM_unload_url);
 	MCNameDelete(MCM_update_screen);
 	MCNameDelete(MCM_update_var);
+	MCNameDelete(MCM_visibility_changed);
 
 #ifdef _MOBILE
 	MCNameDelete(MCN_firstname);

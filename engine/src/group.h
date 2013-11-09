@@ -147,6 +147,9 @@ public:
 	void computecrect();
 	Boolean computeminrect(Boolean scrolling);
 	void boundcontrols();
+    
+    // MERG-2013-11-10: [[ RecursiveConditionalMessages ]] recurse through the object heirarchy to send a conditional message
+    void recursiveconditionalmessage(uint32_t p_flag, MCNameRef p_message);
 	
 	Exec_stat opencontrols(bool p_is_preopen);
 	Exec_stat closecontrols(void);

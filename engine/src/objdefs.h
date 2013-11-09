@@ -512,6 +512,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define HH_RESIZE_CONTROL		(1UL << 6)
 #define HH_CLOSE_CONTROL		(1UL << 7)
 
+// MERG-2013-11-10: [[ RecursiveConditionalMessages ]] notify controls of visibility changes to themseves or parent groups
+#define HH_VISIBILITY_CHANGED	(1UL << 8)
+// MERG-2013-11-10: [[ RecursiveConditionalMessages ]] notify controls of location changes to themseves or parent groups
+#define HH_CONTROL_MOVED        (1UL << 9)
+
 // MCParagraph state
 #define PS_FRONT                (1UL << 0)
 #define PS_BACK                 (1UL << 1)

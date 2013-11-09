@@ -1338,6 +1338,29 @@ Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 	return ES_NORMAL;
 }
 
+// MERG-2013-11-10: [[ RecursiveConditionalMessages ]] recurse through the object heirarchy to send a conditional message
+void MCGroup::recursiveconditionalmessage(uint32_t p_flag, MCNameRef p_message)
+{
+    if (controls != NULL)
+    {
+        MCObject *t_object = controls;
+        MCObject *t_start_object = t_object;
+        uint2 i = 0;
+        do
+        {
+            if (t_object->gettype() == CT_GROUP)
+                (static_cast<MCGroup *>(t_object))->recursiveconditionalmessage(p_flag, p_message);
+            else
+                t_object->conditionalmessage(p_flag, p_message);
+            
+            t_object = t_object -> next();
+            
+        }
+        while (t_object != t_start_object);
+    }
+}
+
+
 Boolean MCGroup::del()
 {
 	if (flags & F_G_CANT_DELETE)
@@ -1724,6 +1747,10 @@ Exec_stat MCGroup::hscroll(int4 offset, Boolean doredraw)
 		// MW-2011-09-07: [[ Layers ]] Notify that the layer has scrolled.
 		layer_scrolled();
 	}
+    
+    // MERG-2013-11-10: [[ RecursiveConditionalMessages ]] Notify child objects of movement
+	recursiveconditionalmessage(HH_CONTROL_MOVED, MCM_control_moved);
+    
 	if (opened)
 		return message_with_args(MCM_scrollbar_drag, scrollx);
 	return ES_NORMAL;
@@ -1762,7 +1789,11 @@ Exec_stat MCGroup::vscroll(int4 offset, Boolean doredraw)
 		// MW-2011-09-07: [[ Layers ]] Notify that the layer has scrolled.
 		layer_scrolled();
 	}
-	if (opened)
+    
+    // MERG-2013-11-10: [[ RecursiveConditionalMessages ]] Notify child objects of movement
+	recursiveconditionalmessage(HH_CONTROL_MOVED, MCM_control_moved);
+    
+    if (opened)
 		return message_with_args(MCM_scrollbar_drag, scrolly);
 	return ES_NORMAL;
 }
