@@ -2729,7 +2729,7 @@ Parse_stat MCStart::parse(MCScriptPoint &sp)
 }
 
 bool MCServerStartSession();
-Exec_stat MCStart::exec(MCExecPoint &ep)
+void MCStart::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCStart */ LEGACY_EXEC
 	if (mode == SC_USING)
@@ -2824,31 +2824,26 @@ Exec_stat MCStart::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCStart */
 
-
-	MCExecContext ctxt(ep);
 	if (mode == SC_USING)
 	{
 		if (target != NULL)
 		{
 			MCObject *optr;
 			uint4 parid;
-			if (target->getobj(ep, optr, parid, True) != ES_NORMAL
+            if (!target->getobj(ctxt, optr, parid, True)
 			        || optr->gettype() != CT_STACK)
 			{
-				MCeerror->add(EE_START_BADTARGET, line, pos);
-				return ES_ERROR;
+                ctxt . LegacyThrow(EE_START_BADTARGET);
+                return;
 			}
 			MCEngineExecStartUsingStack(ctxt, (MCStack *)optr);
 		}
 		else
-		{
-			if (stack->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_START_BADTARGET, line, pos);
-				return ES_ERROR;
-			}
+        {
 			MCAutoStringRef t_name;
-			/* UNCHECKED */ ep . copyasstringref(&t_name);
+            if (!ctxt . EvalExprAsStringRef(stack, EE_START_BADTARGET, &t_name))
+                return;
+
 			MCEngineExecStartUsingStackByName(ctxt, *t_name);
 		}
 	}
@@ -2857,18 +2852,19 @@ Exec_stat MCStart::exec(MCExecPoint &ep)
 #ifdef _SERVER
 		MCServerExecStartSession(ctxt);
 #else
-		MCeerror->add(EE_SESSION_BADCONTEXT, line, pos);
-		return ES_ERROR;
+        ctxt . LegacyThrow(EE_SESSION_BADCONTEXT);
+        return;
 #endif
 	}
 	else
 	{
 		MCObject *optr;
 		uint4 parid;
-		if (target->getobj(ep, optr, parid, True) != ES_NORMAL)
+        if (!target->getobj(ctxt, optr, parid, True))
 		{
 			MCeerror->add(EE_START_BADTARGET, line, pos);
-			return ES_ERROR;
+            ctxt . Throw();
+            return;
 		}
 		if (optr->gettype() == CT_PLAYER)
 		{
@@ -2879,16 +2875,12 @@ Exec_stat MCStart::exec(MCExecPoint &ep)
 			if (optr->gettype() != CT_GROUP)
 			{
 				MCeerror->add(EE_START_NOTABACKGROUND, line, pos);
-				return ES_ERROR;
+                ctxt . Throw();
+                return;
 			}
 			MCInterfaceExecStartEditingGroup(ctxt, (MCGroup *)optr);
 		}
-	}
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    }
 }
 
 void MCStart::compile(MCSyntaxFactoryRef ctxt)
