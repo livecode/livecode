@@ -2560,7 +2560,7 @@ Parse_stat MCSubwindow::parse(MCScriptPoint &sp)
 }
 
 
-Exec_stat MCSubwindow::exec(MCExecPoint &ep)
+void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCSubwindow */ LEGACY_EXEC
 	MCObject *optr;
@@ -2787,24 +2787,22 @@ Exec_stat MCSubwindow::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCSubwindow */
 
-
-	MCExecContext ctxt(ep);
 	MCObject *optr;
 	MCAutoStringRef optr_name;
 	uint4 parid;
 	MCresult->clear(False);
 	MCerrorlock++;
-	if (target->getobj(ep, optr, parid, True) != ES_NORMAL
+    // Need to have a second MCExecContext as getoptionalobj may throw an error
+    MCExecContext ctxt2(ctxt);
+    target->getoptionalobj(ctxt2, optr, parid, True);
+
+    if (optr == nil
 	        || optr->gettype() != CT_BUTTON && optr->gettype() != CT_STACK)
 	{
 		MCerrorlock--;
-		if (target->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_SUBWINDOW_BADEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&optr_name);
-	}
+        if (!ctxt . EvalExprAsStringRef(target, EE_SUBWINDOW_BADEXP, &optr_name))
+            return;
+    }
 	else
 		MCerrorlock--;
 
@@ -2812,24 +2810,14 @@ Exec_stat MCSubwindow::exec(MCExecPoint &ep)
 	{
 		if (mode != WM_POPUP)
 		{
-			MCeerror -> add(EE_SUBWINDOW_NOSTACK, line, pos, ep.getsvalue());
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_SUBWINDOW_NOSTACK, *optr_name);
+            return;
 		}
 
 		MCPoint t_location;
-		MCPoint *t_location_ptr;
-		if (at != NULL)
-		{
-			if (at->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_SUBWINDOW_BADEXP, line, pos);
-				return ES_ERROR;
-			}
-			ep . copyaspoint(t_location);
-			t_location_ptr = &t_location;
-		}
-		else
-			t_location_ptr = nil;
+        MCPoint *t_location_ptr = &t_location;
+        if (!ctxt . EvalOptionalExprAsPoint(at, nil, EE_SUBWINDOW_BADEXP, t_location_ptr))
+            return;
 
 		MCInterfaceExecPopupButton(ctxt, (MCButton *)optr, t_location_ptr);
 	}
@@ -2851,15 +2839,8 @@ Exec_stat MCSubwindow::exec(MCExecPoint &ep)
 			{
 				MCerrorlock++;
 				MCAutoStringRef t_parent_name;
-				if (parent != NULL)
-				{
-					if (parent->eval(ep) != ES_NORMAL)
-					{
-						MCeerror->add(EE_SUBWINDOW_BADEXP, line, pos);
-						return ES_ERROR;
-					}
-					/* UNCHECKED */ ep . copyasstringref(&t_parent_name);
-				}
+                if (!ctxt . EvalOptionalExprAsNullableStringRef(parent, EE_SUBWINDOW_BADEXP, &t_parent_name))
+                    return;
 
 				if (mode == WM_SHEET)
 				{
@@ -2874,26 +2855,21 @@ Exec_stat MCSubwindow::exec(MCExecPoint &ep)
 					Object_pos t_align = OP_CENTER;
 					if (at != NULL)
 					{
-						if (at->eval(ep) != ES_NORMAL)
-						{
-							MCeerror->add(EE_SUBWINDOW_BADEXP, line, pos);
-							return ES_ERROR;
-						}
-						MCAutoStringRef t_position_data;
-						/* UNCHECKED */ ep . copyasstringref(&t_position_data);
+                        MCAutoStringRef t_position_data;
+                        if (!ctxt . EvalExprAsStringRef(at, EE_SUBWINDOW_BADEXP, &t_position_data))
+                            return;
+
 						MCAutoStringRef t_position;
 						MCAutoStringRef t_alignment;
 						uindex_t t_delimiter;
-						if (aligned != NULL)
-						{
-							if (aligned->eval(ep) != ES_NORMAL)
-							{
-								MCeerror->add(EE_SUBWINDOW_BADEXP, line, pos);
-								return ES_ERROR;
-							}
-							/* UNCHECKED */ ep . copyasstringref(&t_alignment);
-							MCStringCopy(*t_position_data, &t_position);
-						}
+
+                        if (aligned != NULL)
+                        {
+                            if (!ctxt . EvalExprAsStringRef(aligned, EE_SUBWINDOW_BADEXP, &t_alignment))
+                                return;
+
+                            MCStringCopy(*t_position_data, &t_position);
+                        }
 						else if (MCStringFirstIndexOfChar(*t_position_data, ',', 0, kMCCompareCaseless, t_delimiter))
 						{
 							MCStringCopySubstring(*t_position_data, MCRangeMake(0, t_delimiter), &t_position);
@@ -2934,19 +2910,10 @@ Exec_stat MCSubwindow::exec(MCExecPoint &ep)
 		case WM_OPTION:
 		{
 			MCPoint t_location;
-			MCPoint *t_location_ptr;
-			if (at != NULL)
-			{
-				if (at->eval(ep) != ES_NORMAL)
-				{
-					MCeerror->add(EE_SUBWINDOW_BADEXP, line, pos);
-					return ES_ERROR;
-				}
-				ep . copyaspoint(t_location);
-				t_location_ptr = &t_location;
-			}
-			else
-				t_location_ptr = nil;
+            MCPoint *t_location_ptr = &t_location;
+            if (!ctxt . EvalOptionalExprAsPoint(at, nil, EE_SUBWINDOW_BADEXP, t_location_ptr))
+                return;
+
 			if (optr == nil)
 				MCInterfaceExecPopupStackByName(ctxt, *optr_name, t_location_ptr, mode);
 			else
@@ -2957,12 +2924,7 @@ Exec_stat MCSubwindow::exec(MCExecPoint &ep)
 			fprintf(stderr, "Subwindow: ERROR bad mode\n");
 			break;
 		}
-	}
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    }
 }
 
 void MCSubwindow::compile(MCSyntaxFactoryRef ctxt)
