@@ -512,42 +512,47 @@ MCStack *MCGo::findstack(MCExecPoint &ep, Chunk_term etype, MCCard *&cptr)
 }
 #endif /* MCGo::findstack */
 
-MCStack *MCGo::findstack(MCExecPoint &ep, Chunk_term etype, MCCard *&cptr)
+MCStack *MCGo::findstack(MCExecContext &ctxt, MCStringRef p_value, Chunk_term etype, MCCard *&cptr)
 {
 	MCStack *sptr = NULL;
-	uint4 offset;
-	if (MCU_offset(SIGNATURE, ep.getsvalue(), offset) || (ep . getsvalue() . getlength() > 8 && strncmp(ep . getsvalue() . getstring(), "REVO", 4) == 0))
+    uint4 offset;
+    if (MCStringFirstIndexOf(p_value, MCSTR(SIGNATURE), 0, kMCCompareExact, offset)
+            || (MCStringGetLength(p_value) > 8 && MCStringBeginsWithCString(p_value, (char_t*)"REVO", kMCCompareExact)))
 	{
-		IO_handle stream = MCS_fakeopen(ep.getsvalue());
+        IO_handle stream = MCS_fakeopen(MCStringGetOldString(p_value));
 		if (MCdispatcher->readfile(NULL, NULL, stream, sptr) != IO_NORMAL)
 		{
 			MCS_close(stream);
 			if (MCresult->isclear())
-				MCresult->sets("can't build stack from string");
+                ctxt . SetTheResultToCString("can't build stack from string");
             return nil;
 		}
 		MCS_close(stream);
 		return sptr;
 	}
 	if (etype == CT_STACK)
-		return NULL;
-	if (etype == CT_ID)
-		sptr = MCdefaultstackptr->findstackid(ep.getuint4());
+        return NULL;
 	else
-		sptr = MCdefaultstackptr->findstackname_oldstring(ep.getsvalue());
+    {
+        MCNewAutoNameRef t_name;
+        MCNameCreate(p_value, &t_name);
+        sptr = MCdefaultstackptr->findstackname(*t_name);
+    }
+
 	if (sptr != NULL)
 		return sptr;
+
 	MCObject *objptr;
 	MCChunk *tchunk = new MCChunk(False);
 	MCerrorlock++;
-	MCScriptPoint sp(ep);
+    MCScriptPoint sp(p_value);
 	Parse_stat stat = tchunk->parse(sp, False);
 	if (stat == PS_NORMAL)
 	{
 		uint4 parid;
-		if (tchunk->getobj(ep, objptr, parid, True) == ES_NORMAL)
-			stat = PS_NORMAL;
-		else
+        if (tchunk->getobj(ctxt, objptr, parid, True))
+            stat = PS_NORMAL;
+        else
 			stat = PS_ERROR;
 	}
 	MCerrorlock--;
@@ -569,11 +574,11 @@ MCStack *MCGo::findstack(MCExecPoint &ep, Chunk_term etype, MCCard *&cptr)
 	}
     else
 		if (MCresult->isclear())
-			MCresult->sets("no such card");
+            ctxt . SetTheResultToCString("no such card");
 	return sptr;
 }
 
-Exec_stat MCGo::exec(MCExecPoint &ep)
+void MCGo::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCGo */ LEGACY_EXEC
 	MCStack *sptr = MCdefaultstackptr;
@@ -621,10 +626,10 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 			}
 			break;
 		case CT_THIS:
-		case CT_EXPRESSION:
-		case CT_ID:
+        case CT_EXPRESSION:
+        case CT_ID:
 			if (stack->etype == CT_THIS)
-				sptr = MCdefaultstackptr;
+                sptr = MCdefaultstackptr;
 			else
 			{
 				if (stack->startpos->eval(ep) != ES_NORMAL)
@@ -778,7 +783,7 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 				}
 				cptr = (MCCard *)sptr->getchild(CT_THIS, MCnullmcstring, CT_CARD);
 			}
-			break;
+            break;
 		default:
 			sptr->clearbackground();
 			fprintf(stderr, "Go: ERROR no card type %d\n", card->etype);
@@ -976,12 +981,12 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 	MCControl *bptr = NULL;
 	MCCard *cptr = NULL;
 
-    MCresult->clear(False);
+    ctxt . SetTheResultToEmpty();
     
 	if (stack == NULL && background == NULL && card == NULL)
 	{
-		MCeerror->add(EE_GO_NODEST, line, pos);
-		return ES_ERROR;
+        ctxt . LegacyThrow(EE_GO_NODEST);
+        return;
 	}
 
 	bool t_is_home;
@@ -1002,39 +1007,54 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 		case CT_ID:
 			if (stack->etype == CT_THIS)
 				sptr = MCdefaultstackptr;
-			else
+            else if (stack -> etype == CT_ID)
+            {
+                uinteger_t t_stack_id;
+                if (!ctxt . EvalExprAsUInt(stack -> startpos, EE_GO_BADSTACKEXP, t_stack_id))
+                    return;
+
+                sptr = MCdefaultstackptr->findstackid(t_stack_id);
+            }
+            else
 			{
-				if (stack->startpos->eval(ep) != ES_NORMAL)
-				{
-					MCeerror->add(EE_GO_BADSTACKEXP, line, pos);
-					return ES_ERROR;
-				}
-				sptr = findstack(ep, stack->etype, cptr);
+                MCAutoStringRef t_value;
+                if (!ctxt . EvalExprAsStringRef(stack -> startpos, EE_GO_BADSTACKEXP, &t_value))
+                    return;
+
+                sptr = findstack(ctxt, *t_value, stack->etype, cptr);
 			}
+
 			if (sptr != nil && stack->next != NULL)
 			{
 				switch (stack->next->etype)
 				{
 				case CT_ID:
+                {
+                    uinteger_t t_stack_id;
+                    if (!ctxt . EvalExprAsUInt(stack -> next -> startpos, EE_CHUNK_BADSTACKEXP, t_stack_id))
+                        return;
+
+                    sptr = sptr -> findsubstackid(t_stack_id);
+                }
+                    break;
 				case CT_EXPRESSION:
-					if (stack->next->startpos->eval(ep) != ES_NORMAL)
-					{
-						MCeerror->add(EE_CHUNK_BADSTACKEXP, line, pos);
-						return ES_ERROR;
-					}
-					if (stack->next->etype == CT_ID)
-						sptr = sptr->findsubstackid(ep.getuint4());
-					else
-						sptr = sptr->findsubstackname_oldstring(ep.getsvalue());
+                {
+                    MCNewAutoNameRef t_name;
+                    if (!ctxt . EvalExprAsNameRef(stack -> next -> startpos, EE_CHUNK_BADSTACKEXP, &t_name))
+                        return;
+
+                    sptr = sptr -> findsubstackname(*t_name);
+                }
 					break;
 				default:
-					MCeerror->add(EE_CHUNK_BADSTACKEXP, line, pos);
-					return ES_ERROR;
+                    ctxt . LegacyThrow(EE_CHUNK_BADSTACKEXP);
+                    return;
 				}
 			}
 			break;
 		default:
-			return ES_ERROR;
+            ctxt . Throw();
+            return;
 		}
 	}
 	
@@ -1047,16 +1067,13 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 			break;
 		case CT_ID:
 		case CT_EXPRESSION:
-			if (background->startpos->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_GO_BADBACKGROUNDEXP, line, pos);
-				return ES_ERROR;
-			}
-			{
-				MCAutoStringRef t_string;
-				/* UNCHECKED */ ep.copyasstringref(&t_string);
-				bptr = sptr->getbackground(background->etype, *t_string, CT_GROUP);
-			}
+        {
+            MCAutoStringRef t_string;
+            if (!ctxt . EvalExprAsStringRef(background -> startpos, EE_GO_BADBACKGROUNDEXP, &t_string))
+                return;
+
+            bptr = sptr->getbackground(background->etype, *t_string, CT_GROUP);
+        }
 			break;
 		default:
 			break;
@@ -1080,23 +1097,16 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 			{
             case CT_BACKWARD:
             case CT_FORWARD:
-                if (card->startpos != NULL)
-                {
-                    if (card->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-                    {
-                        MCeerror->add(EE_GO_BADCARDEXP, line, pos);
-                        return ES_ERROR;
-                    }
-                    n = ep.getnvalue();
-                }
-                else
-                    n = 1.0;
+                if (!ctxt . EvalOptionalExprAsDouble(card -> startpos, 1.0, EE_GO_BADCARDEXP, n))
+                    return;
+
                 break;
             case CT_START:
             case CT_FINISH:
                 break;
             default:
-                return ES_ERROR;
+                ctxt . Throw();
+                return;
 			}
 			break;
 		case CT_ORDINAL:
@@ -1107,21 +1117,21 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 		case CT_ID:
 		case CT_EXPRESSION:
 		{
-			if (card->startpos->eval(ep) != ES_NORMAL)
-			{
+            MCAutoStringRef t_exp;
+            if (!ctxt . EvalExprAsStringRef(card -> startpos, EE_GO_BADCARDEXP, &t_exp))
+            {
                 sptr -> clearbackground();
-				MCeerror->add(EE_GO_BADCARDEXP, line, pos);
-				return ES_ERROR;
-			}
-			MCAutoStringRef t_exp;
-			/* UNCHECKED */ ep . copyasstringref(&t_exp);
+                return;
+            }
+
 			cptr = sptr->getchild(card->etype, *t_exp, card->otype);
 		}
 			break;
 		default:
             sptr -> clearbackground();
 			fprintf(stderr, "Go: ERROR no card type %d\n", card->etype);
-			return ES_ERROR;
+            ctxt . Throw();
+            return;
 		}
         sptr -> clearbackground();
 	}
@@ -1130,18 +1140,13 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
             cptr = (MCCard *)sptr->getchild(CT_THIS, kMCEmptyString, CT_CARD);
     
 	MCAutoStringRef t_window;
-	if (window != NULL && !thisstack)
-	{
-		if (window->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_GO_BADWINDOWEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&t_window);
+    if (!thisstack)
+    {
+        if (!ctxt . EvalOptionalExprAsNullableStringRef(window, EE_GO_BADWINDOWEXP, &t_window))
+            return;
 	}
 
-	ep . setline(line);
-	MCExecContext ctxt(ep);
+    ctxt . SetLine(line);
 	if (t_is_home)
 		MCInterfaceExecGoHome(ctxt, cptr);
 	else if (t_is_recent)
@@ -1173,12 +1178,7 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 	else if (window != nil)
 		MCInterfaceExecGoCardInWindow(ctxt, cptr, *t_window, visible == True, thisstack == True);
 	else
-		MCInterfaceExecGoCardAsMode(ctxt, cptr, mode, visible == True, thisstack == True);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+        MCInterfaceExecGoCardAsMode(ctxt, cptr, mode, visible == True, thisstack == True);
 }
 
 void MCGo::compile(MCSyntaxFactoryRef ctxt)
