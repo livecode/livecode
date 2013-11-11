@@ -303,7 +303,6 @@
 		BE449505175CE13900346B49 /* legacy_spec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449504175CE13900346B49 /* legacy_spec.cpp */; };
 		BE44950A175CE8AC00346B49 /* syntax.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449508175CE8AC00346B49 /* syntax.cpp */; };
 		BE44950B175CEEF300346B49 /* exec-security.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494D8175CDE7400346B49 /* exec-security.cpp */; };
-		BE44950D175CF03F00346B49 /* iphone_test.rev in Resources */ = {isa = PBXBuildFile; fileRef = BE44950C175CF03E00346B49 /* iphone_test.rev */; };
 		BE449998175D02AE00346B49 /* exec-textmessaging.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449997175D02AE00346B49 /* exec-textmessaging.cpp */; };
 		BE7506E3175DE36000A339DA /* mblhandlers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449995175D029600346B49 /* mblhandlers.cpp */; };
 		BE7506E6175DEB7700A339DA /* exec-idletimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE7506E1175DE05E00A339DA /* exec-idletimer.cpp */; };
@@ -922,7 +921,6 @@
 		BE449504175CE13900346B49 /* legacy_spec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = legacy_spec.cpp; path = src/legacy_spec.cpp; sourceTree = "<group>"; };
 		BE449508175CE8AC00346B49 /* syntax.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syntax.cpp; path = src/syntax.cpp; sourceTree = "<group>"; };
 		BE449509175CE8AC00346B49 /* syntax.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = syntax.h; path = src/syntax.h; sourceTree = "<group>"; };
-		BE44950C175CF03E00346B49 /* iphone_test.rev */ = {isa = PBXFileReference; lastKnownFileType = file; name = iphone_test.rev; path = ../iphone_test.rev; sourceTree = "<group>"; };
 		BE449995175D029600346B49 /* mblhandlers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = mblhandlers.cpp; path = src/mblhandlers.cpp; sourceTree = "<group>"; };
 		BE449997175D02AE00346B49 /* exec-textmessaging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-textmessaging.cpp"; path = "src/exec-textmessaging.cpp"; sourceTree = "<group>"; };
 		BE7506E1175DE05E00A339DA /* exec-idletimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-idletimer.cpp"; path = "src/exec-idletimer.cpp"; sourceTree = "<group>"; };
@@ -1331,7 +1329,6 @@
 				4D82FCE71714864F00C48403 /* template-ResourceRules.plist */,
 				4D7E3A581281835D00E7F80A /* Default.png */,
 				4CD038F216C8FE1700EBCCBA /* Default-568h@2x.png */,
-				BE44950C175CF03E00346B49 /* iphone_test.rev */,
 				4D82FCD8171485CA00C48403 /* mobile-template.plist */,
 				4D82FCD9171485D000C48403 /* mobile-remote-notification-template.plist */,
 				4D82FCDA171485D600C48403 /* mobile-url-scheme-template.plist */,
@@ -2043,7 +2040,6 @@
 			files = (
 				4D7E3A591281835D00E7F80A /* Default.png in Resources */,
 				4CD038F316C8FE1700EBCCBA /* Default-568h@2x.png in Resources */,
-				BE44950D175CF03F00346B49 /* iphone_test.rev in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
