@@ -30,6 +30,8 @@ inline char *pStrcpy(unsigned char *dest, const unsigned char *src)
 extern OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec);
 extern OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec);
 
+extern OSErr MCS_fsref_to_fsspec(const FSRef *p_fsref, FSSpec *r_fsspec);
+
 extern OSErr MCS_mac_pathtoref(MCStringRef p_path, FSRef& r_ref);
 extern bool MCS_mac_fsref_to_path(FSRef& p_ref, MCStringRef& r_path);
 

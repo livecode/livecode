@@ -43,6 +43,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mctheme.h"
 
 #include "context.h"
+#include "graphics_util.h"
 
 // MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
 void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p_sprite)
@@ -338,12 +339,12 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			if (MClook == LF_MOTIF)
 			{
 				setforeground(dc, DI_FORE, False);
-				dc->setfillstyle(FillStippled, DNULL, 0, 0);
+				dc->setfillstyle(FillStippled, nil, 0, 0);
 			}
 			else if (IsMacLF())
 			{
 				dc->setforeground(dc->getgray());
-				dc->setfillstyle(FillSolid, DNULL, 0, 0);
+				dc->setfillstyle(FillSolid, nil, 0, 0);
 			}
 			else
 				setforeground(dc, DI_TOP, False);
@@ -501,7 +502,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			if (labelwidth != 0 && !isunnamed())
 			{
 				MCStringRef t_name = MCNameGetString(getname());
-				MCFontDrawText(m_font, t_name, dc, rect.x + leftmargin, starty, False);
+                dc -> drawtext(rect.x + leftmargin, starty, t_name, m_font, false);
 			}
 
 			// MW-2012-01-27: [[ Bug 9432 ]] Native GTK handles focus borders itself
@@ -516,7 +517,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 
 #if defined(X11) || defined(_WINDOWS)
 				dc->setforeground(dc->getblack());
-				dc->setfillstyle(FillSolid, DNULL, 0, 0);
+				dc->setfillstyle(FillSolid, nil, 0, 0);
 				dc->setlineatts(0, LineOnOffDash, CapButt, JoinBevel);
 				dc->setdashes(0, dotlist, 2);
 				dc->setfunction(GXinvert);
@@ -527,7 +528,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				// Windows 95 and Mac don't support user line styles, so kludge away
 				setforeground(dc, DI_BACK, False);
 				dc->setbackground(dc->getblack());
-				dc->setfillstyle(FillOpaqueStippled, DNULL, 0, 0);
+				dc->setfillstyle(FillOpaqueStippled, nil, 0, 0);
 				MCRectangle xrect = trect;
 				xrect.height = 1;
 				dc->fillrect(xrect);
@@ -539,13 +540,13 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				xrect.x = trect.x + trect.width - 1;
 				dc->fillrect(xrect);
 				dc->setbackground(MCzerocolor);
-				dc->setfillstyle(FillSolid, DNULL, 0 , 0);
+				dc->setfillstyle(FillSolid, nil, 0 , 0);
 #endif
 
 			}
 		}
 		if (flags & F_DISABLED && MClook == LF_MOTIF)
-			dc->setfillstyle(FillSolid, DNULL, 0 , 0);
+			dc->setfillstyle(FillSolid, nil, 0 , 0);
 		if (indicator && !(flags & F_SHOW_ICON)
 		        && (state & CS_HILITED || !(flags & F_SHOW_HILITE)))
 		{
@@ -582,15 +583,16 @@ void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectan
 	        && (getstyleint(flags) == F_STANDARD  || getstyleint(flags) == F_MENU
 	            && menumode == WM_OPTION))
 		sy--;
-	MCFontDrawText(m_font, p_label, dc, sx, sy, False);
+
+    dc -> drawtext(sx, sy, p_label, m_font, false);
 	
 	if (!MCStringIsEmpty(acceltext))
 	{
 		uint2 awidth = MCFontMeasureText(m_font, acceltext);
 		if (rightmargin == defaultmargin || menucontrol == MENUCONTROL_ITEM)
-			MCFontDrawText(m_font, acceltext, dc, srect.x + srect.width - rightmargin - awidth, sy, False);
+            dc -> drawtext(srect.x + srect.width - rightmargin - awidth, sy, acceltext, m_font, false);
 		else
-			MCFontDrawText(m_font, acceltext, dc, srect.x + srect.width - rightmargin, sy, False);
+            dc -> drawtext(srect.x + srect.width - rightmargin, sy, acceltext, m_font, false);
 	}
 
 	if (fstyle & FA_UNDERLINE)
@@ -642,9 +644,9 @@ void MCButton::drawcheck(MCDC *dc, MCRectangle &srect, Boolean white)
 			trect = MCU_reduce_rect(trect, 1);
 			if (flags & F_DISABLED)
 			{
-				dc->setfillstyle(FillSolid, DNULL, 0, 0);
+				dc->setfillstyle(FillSolid, nil, 0, 0);
 				dc->setforeground(dc->getgray());
-				dc->setfillstyle(FillSolid, DNULL, 0, 0);
+				dc->setfillstyle(FillSolid, nil, 0, 0);
 				dc->drawrect(trect);
 				break;
 			}
@@ -652,7 +654,7 @@ void MCButton::drawcheck(MCDC *dc, MCRectangle &srect, Boolean white)
 			        && MCU_point_in_rect(rect, mx, my))
 			{
 				dc->setforeground(maccolors[MAC_SHADOW]);
-				dc->setfillstyle(FillSolid, DNULL, 0, 0);
+				dc->setfillstyle(FillSolid, nil, 0, 0);
 				dc->fillrect(trect);
 				draw3d(dc, trect, ETCH_SUNKEN, 1);
 			}
@@ -675,7 +677,7 @@ void MCButton::drawcheck(MCDC *dc, MCRectangle &srect, Boolean white)
 				p[2].y = p[3].y = trect.y;
 				p[4].y = trect.y + 6;
 				dc->setforeground(dc->getblack());
-				dc->setfillstyle(FillSolid, DNULL, 0, 0);
+				dc->setfillstyle(FillSolid, nil, 0, 0);
 				dc->drawlines(p, 6);
 				p[0].x = trect.x + 2;
 				p[1].x = p[0].x + 2;
@@ -690,12 +692,12 @@ void MCButton::drawcheck(MCDC *dc, MCRectangle &srect, Boolean white)
 				p[1] = p[3];
 				p[1].x--;
 				dc->setforeground(maccolors[MAC_SHADOW]);
-				dc->setfillstyle(FillSolid, DNULL, 0, 0);
+				dc->setfillstyle(FillSolid, nil, 0, 0);
 				dc->drawlines(p, 2);
 			}
 			trect = MCU_reduce_rect(trect, -1);
 			dc->setforeground(dc->getblack());
-			dc->setfillstyle(FillSolid, DNULL, 0, 0);
+			dc->setfillstyle(FillSolid, nil, 0, 0);
 			dc->drawrect(trect);
 			break;
 		}
@@ -716,7 +718,7 @@ void MCButton::drawcheck(MCDC *dc, MCRectangle &srect, Boolean white)
 					dc->setforeground(dc->getgray());
 				else
 					dc->setforeground(dc->getwhite());
-				dc->setfillstyle(FillSolid, DNULL, 0, 0);
+				dc->setfillstyle(FillSolid, nil, 0, 0);
 			}
 			if (!(flags & F_DISABLED))
 				dc->fillrect(trect);
@@ -740,7 +742,7 @@ void MCButton::drawcheck(MCDC *dc, MCRectangle &srect, Boolean white)
 				dc->setforeground(dc->getwhite());
 			else
 				dc->setforeground(dc->getblack());
-			dc->setfillstyle(FillSolid, DNULL, 0, 0);
+			dc->setfillstyle(FillSolid, nil, 0, 0);
 			dc->drawlines(p, 9);
 		}
 		break;
@@ -803,7 +805,7 @@ void MCButton::drawradio(MCDC *dc, MCRectangle &srect, Boolean white)
 			if (flags & F_DISABLED)
 			{
 				dc->setforeground(dc->getgray());
-				dc->setfillstyle(FillSolid, DNULL, 0, 0);
+				dc->setfillstyle(FillSolid, nil, 0, 0);
 			}
 			else
 			{
@@ -882,7 +884,7 @@ void MCButton::drawradio(MCDC *dc, MCRectangle &srect, Boolean white)
 			p[4].y = p[5].y = p[8].y = p[9].y = ty + 2;
 			p[6].y = p[7].y = ty + 1;
 			dc->setforeground(dc->getblack());
-			dc->setfillstyle(FillSolid, DNULL, 0, 0);
+			dc->setfillstyle(FillSolid, nil, 0, 0);
 			dc->drawlines(p, 10);
 			p[0].x = p[1].x = lx + 2;
 			p[2].x = p[7].x = lx + 4;
@@ -904,7 +906,7 @@ void MCButton::drawradio(MCDC *dc, MCRectangle &srect, Boolean white)
 					dc->setforeground(dc->getgray());
 				else
 					dc->setforeground(dc->getwhite());
-				dc->setfillstyle(FillSolid, DNULL, 0, 0);
+				dc->setfillstyle(FillSolid, nil, 0, 0);
 			}
 			if (!(flags & F_DISABLED))
 			{
@@ -926,7 +928,7 @@ void MCButton::drawradio(MCDC *dc, MCRectangle &srect, Boolean white)
 						dc->setforeground(dc->getwhite());
 					else
 						dc->setforeground(dc->getblack());
-					dc->setfillstyle(FillSolid, DNULL, 0, 0);
+					dc->setfillstyle(FillSolid, nil, 0, 0);
 				}
 			trect.x = lx + 4;
 			trect.y = ty + 5;
@@ -941,37 +943,54 @@ void MCButton::drawradio(MCDC *dc, MCRectangle &srect, Boolean white)
 		}
 		break;
 	case LF_MOTIF:
+		// IM-2013-09-09: [[ RefactorGraphics ]] draw with polygons to improve scaled appearance
 		p[0].x = ++lx;
-		p[0].y = p[2].y = --cy;
-		p[1].x = p[3].x = lx + (CHECK_SIZE >> 1);
+		p[0].y = --cy;
+		p[1].x = lx + (CHECK_SIZE >> 1);
 		p[1].y = ty;
 		p[2].x = lx + CHECK_SIZE - 1;
+		p[2].y = cy;
+		p[3].x = lx + (CHECK_SIZE >> 1);
 		p[3].y = cy + (CHECK_SIZE >> 1);
-		p[4].x = lx + 1;
-		p[4].y = cy + 1;
+		//p[4].x = lx + 1;
+		//p[4].y = cy + 1;
 		setforeground(dc, DI_BACK, (state & CS_HILITED) != 0);
-		dc->fillpolygon(p, 5);
+		//dc->fillpolygon(p, 5);
+		dc->fillpolygon(p, 4);
 
-		uint1 i;
-		for (i = 0 ; i < 3 ; i++)
+		MCPoint t_top_points[6];
+		t_top_points[0] = p[0];
+		t_top_points[1] = p[1];
+		t_top_points[2] = p[2];
+		t_top_points[3] = p[2];
+		t_top_points[3].x -= 3;
+		t_top_points[4] = p[1];
+		t_top_points[4].y += 3;
+		t_top_points[5] = p[0];
+		t_top_points[5].x += 3;
+
+		MCPoint t_bottom_points[6];
+		t_bottom_points[0] = p[2];
+		t_bottom_points[1] = p[3];
+		t_bottom_points[2] = p[0];
+		t_bottom_points[3] = p[0];
+		t_bottom_points[3].x += 3;
+		t_bottom_points[4] = p[3];
+		t_bottom_points[4].y -= 3;
+		t_bottom_points[5] = p[2];
+		t_bottom_points[5].x -= 3;
+		if (flags & F_3D)
 		{
-			if (flags & F_3D)
-			{
-				setforeground(dc, DI_TOP, (state & CS_HILITED) != 0);
-				dc->drawlines(p, 3);
-				setforeground(dc, DI_BOTTOM, (state & CS_HILITED) != 0);
-				dc->drawlines(&p[2], 3);
-			}
-			else
-			{
-				setforeground(dc, DI_BORDER, False);
-				dc->drawlines(p, 5);
-			}
-			p[0].x++;
-			p[4].x++;
-			p[1].y++;
-			p[2].x--;
-			p[3].y--;
+			setforeground(dc, DI_TOP, (state & CS_HILITED) != 0);
+			dc->fillpolygon(t_top_points, 6);
+			setforeground(dc, DI_BOTTOM, (state & CS_HILITED) != 0);
+			dc->fillpolygon(t_bottom_points, 6);
+		}
+		else
+		{
+			setforeground(dc, DI_BORDER, False);
+			dc->fillpolygon(t_top_points, 6);
+			dc->fillpolygon(t_bottom_points, 6);
 		}
 		break;
 	}
@@ -1323,7 +1342,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 					if (i == curtab)
 					{
 						dc->setforeground(maccolors[MAC_SHADOW]);
-						dc->setfillstyle(FillSolid, DNULL, 0, 0);
+						dc->setfillstyle(FillSolid, nil, 0, 0);
 						reversetext = True;
 					}
 					else
@@ -1334,7 +1353,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 
 				//draw Black outline
 				dc->setforeground(dc->getblack());
-				dc->setfillstyle(FillSolid, DNULL, 0, 0);
+				dc->setfillstyle(FillSolid, nil, 0, 0);
 				dc->drawlines(p, 8);
 
 				if (i + 1 == menuhistory)
@@ -1429,7 +1448,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 					p[0].y--;
 					p[1].y = p[0].y + 1;
 					dc->setforeground(dc->getblack());
-					dc->setfillstyle(FillSolid, DNULL, 0, 0);
+					dc->setfillstyle(FillSolid, nil, 0, 0);
 					dc->drawlines(p, 3);
 				}
 
@@ -1461,7 +1480,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 						p[0].y--;
 						p[1].y = p[0].y + 1;
 						dc->setforeground(dc->getblack());
-						dc->setfillstyle(FillSolid, DNULL, 0, 0);
+						dc->setfillstyle(FillSolid, nil, 0, 0);
 						dc->drawlines(p, 3);
 					}
 				}
@@ -1473,15 +1492,15 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 			{
 			case LF_MOTIF:
 				setforeground(dc, DI_FORE, False);
-				dc->setfillstyle(FillStippled, DNULL, 0, 0);
+				dc->setfillstyle(FillStippled, nil, 0, 0);
 				break;
 			case LF_MAC:
 				dc->setforeground(dc->getgray());
-				dc->setfillstyle(FillSolid, DNULL, 0, 0);
+				dc->setfillstyle(FillSolid, nil, 0, 0);
 				break;
 			default:
 				setforeground(dc, DI_TOP, False);
-				MCFontDrawTextSubstring(m_font, t_tab, t_range, dc, textx, cury + yoffset + 1, False);
+                dc -> drawtext(textx, cury + yoffset + 1, t_tab, m_font, false);
 				setforeground(dc, DI_BOTTOM, False);
 				break;
 			}
@@ -1491,9 +1510,10 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 				setforeground(dc, DI_BACK, False, True);
 			else
 				setforeground(dc, DI_FORE, False);
-		MCFontDrawTextSubstring(m_font, t_tab, t_range, dc, textx, cury + yoffset, False);
+        
+        dc -> drawtext(textx, cury + yoffset, t_tab, m_font, false);
 		if ((disabled || flags & F_DISABLED) && MClook == LF_MOTIF)
-			dc->setfillstyle(FillSolid, DNULL, 0 , 0);
+			dc->setfillstyle(FillSolid, nil, 0 , 0);
 		curx += twidth;
 	} //end of tab buttons loop
 	if (!(MCcurtheme && MCcurtheme->iswidgetsupported(WTHEME_TYPE_TABPANE) &&
@@ -1509,7 +1529,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 			box[3].x = box[4].x = srect.x + srect.width - 1;
 			box[4].y = box[5].y;
 			dc->setforeground(dc->getblack());
-			dc->setfillstyle(FillSolid, DNULL, 0, 0);
+			dc->setfillstyle(FillSolid, nil, 0, 0);
 			dc->drawlines(box, 6);
 			//draw gray box(inside of black box) under the tab
 			box[0].x += 1;
@@ -1548,7 +1568,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 			dc->drawlines(p, 3);
 			dc->setforeground(dc->getblack());
 
-			dc->setfillstyle(FillSolid, DNULL, 0, 0);
+			dc->setfillstyle(FillSolid, nil, 0, 0);
 			p[0].x--;
 			p[0].y = ++p[1].y;
 			p[1].x = ++p[2].x;
@@ -1574,12 +1594,12 @@ void MCButton::drawmacdefault(MCDC *dc, const MCRectangle &srect)
 	if (flags & F_DISABLED)
 	{
 		dc->setforeground(dc->getgray());
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 		dc->drawlines(p, 9);
 		return;
 	}
 	dc->setforeground(dc->getblack());
-	dc->setfillstyle(FillSolid, DNULL, 0, 0);
+	dc->setfillstyle(FillSolid, nil, 0, 0);
 	dc->drawlines(p, 9);
 	p[0].x = p[12].x = p[19].x = srect.x + 4;
 	p[1].x = p[2].x = p[9].x = rx - 4;
@@ -1602,7 +1622,7 @@ void MCButton::drawmacdefault(MCDC *dc, const MCRectangle &srect)
 	p[2].y = by - 3;
 	p[3].y = srect.y + 3;
 	dc->setforeground(maccolors[MAC_SHADOW]);
-	dc->setfillstyle(FillSolid, DNULL, 0, 0);
+	dc->setfillstyle(FillSolid, nil, 0, 0);
 	dc->drawlines(p, 4);
 }
 
@@ -1664,7 +1684,7 @@ void MCButton::drawstandardbutton(MCDC *dc, MCRectangle &srect)
 	if (state & CS_HILITED)
 	{
 		dc->setforeground(maccolors[MAC_SHADOW]);
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 	}
 	else
 		setforeground(dc, DI_BOTTOM, False);
@@ -1693,7 +1713,7 @@ void MCButton::drawstandardbutton(MCDC *dc, MCRectangle &srect)
 	{
 
 		dc->setforeground(maccolors[MAC_SHADOW]);
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 	}
 	dc->drawlines(p, 5);
 }
@@ -1717,7 +1737,7 @@ void MCButton::drawmacborder(MCDC *dc, MCRectangle &srect)
 		dc->setforeground(dc->getgray());
 	else
 		dc->setforeground(dc->getblack());
-	dc->setfillstyle(FillSolid, DNULL, 0, 0);
+	dc->setfillstyle(FillSolid, nil, 0, 0);
 	dc->drawlines(p, 9);
 }
 
@@ -1726,14 +1746,14 @@ void MCButton::drawmacpopup(MCDC *dc, MCRectangle &srect)
 	if (flags & F_DISABLED)
 	{
 		dc->setforeground(dc->getgray());
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 		dc->drawline(srect.x, srect.y - 1, srect.x, srect.y + srect.height);
 	}
 	else
 	{
 		draw3d(dc, srect, state & CS_SUBMENU ? ETCH_SUNKEN : ETCH_RAISED, 1);
 		dc->setforeground(maccolors[MAC_SHADOW]);
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 		MCPoint p[5];
 		p[0].x = srect.x;
 		p[1].x = p[2].x = srect.x + srect.width - 1;
@@ -1855,28 +1875,14 @@ bool MCButton::lockshape(MCObjectShape& r_shape)
 	
 	MCRectangle t_image_rect;
 	t_image_rect = t_image -> getrect();
+	
+	MCRectangle t_bounds;
+	t_bounds = getrect();
+	
+	MCPoint t_origin;
+	t_origin = MCPointMake(centerx - t_image_rect . width / 2, centery - t_image_rect . height / 2);
 
-	MCImageBitmap *t_icon_bitmap = nil;
-	if (!t_image->lockbitmap(t_icon_bitmap))
-		return false;
-
-	// If the icon has no transparent pixels, then we are an opaque rectangle.
-	if (!MCImageBitmapHasTransparency(t_icon_bitmap))
-	{
-		t_image->unlockbitmap(t_icon_bitmap);
-
-		r_shape . type = kMCObjectShapeRectangle;
-		r_shape . bounds = getrect();
-		r_shape . rectangle = MCU_make_rect(centerx - t_image_rect . width / 2, centery - t_image_rect . height / 2, t_image_rect . width, t_image_rect . height);
-		return true;
-	}
-
-	r_shape . type = kMCObjectShapeMask;
-	r_shape . bounds = getrect();
-	r_shape . mask . origin . x = centerx - t_image_rect . width / 2;
-	r_shape . mask . origin . y = centery - t_image_rect . height / 2;
-	r_shape . mask . bits = t_icon_bitmap;
-	return true;
+	return t_image -> lockbitmapshape(t_bounds, t_origin, r_shape);
 }
 
 void MCButton::unlockshape(MCObjectShape& p_shape)

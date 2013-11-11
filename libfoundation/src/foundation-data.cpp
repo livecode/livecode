@@ -386,6 +386,14 @@ bool MCDataPad(MCDataRef p_data, byte_t p_byte, uindex_t p_count)
 	return true;
 }
 
+#if defined(__MAC__) || defined (__IOS__)
+bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cfdata)
+{
+    r_cfdata = CFDataCreate(nil, MCDataGetBytePtr(p_data), MCDataGetLength(p_data));
+    return r_cfdata != nil;
+}
+#endif
+
 static void __MCDataClampRange(MCDataRef p_data, MCRange& x_range)
 {
 	uindex_t t_left, t_right;

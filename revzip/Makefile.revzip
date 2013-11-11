@@ -1,6 +1,8 @@
 NAME=revzip
 TYPE=library
 
+include ../rules/environment.linux.makefile
+
 SOURCES=revzip.cpp
 
 CUSTOM_DEFINES=
@@ -8,8 +10,6 @@ CUSTOM_DEFINES=
 CUSTOM_INCLUDES=./src
 
 CUSTOM_LIBS=zip external z
-
-CUSTOM_STATIC_LIBS=stdc++
 
 CUSTOM_CCFLAGS=
 

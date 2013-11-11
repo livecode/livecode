@@ -1,6 +1,8 @@
 NAME=revandroid
 TYPE=library
 
+include ../rules/environment.linux.makefile
+
 SOURCES=revandroid.cpp
 
 CUSTOM_DEFINES=
@@ -8,9 +10,6 @@ CUSTOM_DEFINES=
 CUSTOM_INCLUDES=./src ../libexternalv1/include
 
 CUSTOM_LIBS=externalv1
-
-CUSTOM_STATIC_LIBS=stdc++
-
 CUSTOM_DYNAMIC_LIBS=pthread
 
 CUSTOM_CCFLAGS=

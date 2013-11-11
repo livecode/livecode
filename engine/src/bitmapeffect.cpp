@@ -53,78 +53,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// The list of all possible bitmap effect types.
-enum MCBitmapEffectType
-{
-	kMCBitmapEffectTypeDropShadow,
-	kMCBitmapEffectTypeInnerShadow,
-	kMCBitmapEffectTypeOuterGlow,
-	kMCBitmapEffectTypeInnerGlow,
-	kMCBitmapEffectTypeColorOverlay,
-	// kMCBitmapEffectTypeBevelAndEmboss, // NOT YET SUPPORTED
-	// kMCBitmapEffectTypeGradientOverlay, // NOT YET SUPPORTED
-	// kMCBitmapEffectTypePatternOverlay, // NOT YET SUPPORTED
-	// kMCBitmapEffectTypeStroke, // NOT YET SUPPORTED
-	kMCBitmapEffectType_Count
-};
-
-// The list of all possible bitmap effect properties.
-enum MCBitmapEffectProperty
-{
-	kMCBitmapEffectPropertyColor, // ALL
-	kMCBitmapEffectPropertyOpacity, // ALL
-	kMCBitmapEffectPropertyBlendMode, // ALL
-	kMCBitmapEffectPropertyFilter, // BLUR EFFECTS
-	kMCBitmapEffectPropertySize, // BLUR EFFECTS
-	kMCBitmapEffectPropertySpread, // BLUR EFFECTS
-	kMCBitmapEffectPropertyRange, // GLOW EFFECTS
-	kMCBitmapEffectPropertyKnockOut, // DROP SHADOW EFFECT
-	kMCBitmapEffectPropertyDistance, // SHADOW EFFECTS
-	kMCBitmapEffectPropertyAngle, // SHADOW EFFECTS
-	kMCBitmapEffectPropertySource, // INNER GLOW EFFECT
-};
-
-// The list of blend modes applicable to the bitmap effects.
-enum MCBitmapEffectBlendMode
-{
-	kMCBitmapEffectBlendModeNormal,
-	kMCBitmapEffectBlendModeMultiply,
-	kMCBitmapEffectBlendModeScreen,
-	kMCBitmapEffectBlendModeOverlay,
-	kMCBitmapEffectBlendModeDarken,
-	kMCBitmapEffectBlendModeLighten,
-	kMCBitmapEffectBlendModeColorDodge,
-	kMCBitmapEffectBlendModeColorBurn,
-	kMCBitmapEffectBlendModeHardLight,
-	kMCBitmapEffectBlendModeSoftLight,
-	kMCBitmapEffectBlendModeDifference,
-	kMCBitmapEffectBlendModeExclusion,
-	kMCBitmapEffectBlendModeHue,
-	kMCBitmapEffectBlendModeSaturation,
-	kMCBitmapEffectBlendModeColor,
-	kMCBitmapEffectBlendModeLuminosity
-};
-
-enum MCBitmapEffectSource
-{
-	kMCBitmapEffectSourceEdge,
-	kMCBitmapEffectSourceCenter
-};
-
-enum
-{
-	kMCBitmapEffectTypeDropShadowBit = 1 << kMCBitmapEffectTypeDropShadow,
-	kMCBitmapEffectTypeInnerShadowBit = 1 << kMCBitmapEffectTypeInnerShadow,
-	kMCBitmapEffectTypeOuterGlowBit = 1 << kMCBitmapEffectTypeOuterGlow,
-	kMCBitmapEffectTypeInnerGlowBit = 1 << kMCBitmapEffectTypeInnerGlow,
-	kMCBitmapEffectTypeColorOverlayBit = 1 << kMCBitmapEffectTypeColorOverlay,
-
-	kMCBitmapEffectTypeAllShadowBits = kMCBitmapEffectTypeDropShadowBit | kMCBitmapEffectTypeInnerShadowBit,
-	kMCBitmapEffectTypeAllGlowBits = kMCBitmapEffectTypeOuterGlowBit | kMCBitmapEffectTypeInnerGlowBit,
-	kMCBitmapEffectTypeAllBlurBits = kMCBitmapEffectTypeAllShadowBits | kMCBitmapEffectTypeAllGlowBits,
-	kMCBitmapEffectTypeAllBits = (1 << (kMCBitmapEffectType_Count + 1)) - 1
-};
-
 // This record represents a mapping from token to property.
 struct MCBitmapEffectPropertyMap
 {
@@ -184,75 +112,6 @@ static Exec_stat MCBitmapEffectLookupProperty(MCBitmapEffectType p_type, MCNameR
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// Fields common to all effects
-struct MCLayerEffect
-{
-	uint4 color;
-	unsigned blend_mode : 4;
-	unsigned : 28;
-};
-#define kMCLayerEffectPickleSize 5
-
-// Fields common to all blur-based effects (shadow and glow)
-struct MCBlurEffect
-{
-	uint4 color;
-	unsigned blend_mode : 4;
-	unsigned filter : 3;
-	unsigned size : 8;
-	unsigned spread : 8;
-	unsigned : 8;
-};
-#define kMCBlurEffectPickleSize 8
-
-// Fields common to all shadow effects
-struct MCShadowEffect
-{
-	uint4 color;
-	unsigned blend_mode : 4;
-	unsigned filter : 3;
-	unsigned size : 8; // blurs only
-	unsigned spread : 8; // blurs only
-	unsigned angle : 9; // shadows only
-	unsigned distance : 15; // shadows only
-	bool knockout: 1; // drop shadow only
-	unsigned : 16;
-};
-#define kMCShadowEffectPickleSize 10
-
-// Fields common to all glow effects
-struct MCGlowEffect
-{
-	uint4 color;
-	unsigned blend_mode : 4;
-	unsigned filter : 3;
-	unsigned size : 8; // blurs only
-	unsigned spread : 8; // blurs only
-	unsigned range : 8; // glows only
-	unsigned source : 1; // innerGlow only
-};
-#define kMCGlowEffectPickleSize 8
-
-union MCBitmapEffect
-{
-	MCLayerEffect layer;
-	MCBlurEffect blur;
-	MCShadowEffect shadow;
-	MCGlowEffect glow;
-};
-
-// The opaque MCBitmapEffects object that gets managed by the public API. For
-// now we'll just make this a flat array, although it could be improved to be a
-// bit-field compressed one (like the color arrays on objects).
-struct MCBitmapEffects
-{
-	// The mask determines which of the effects is present.
-	uint32_t mask;
-
-	// The effect fields.
-	MCBitmapEffect effects[kMCBitmapEffectType_Count];
-};
 
 void MCBitmapEffectsInitialize(MCBitmapEffectsRef& self)
 {
@@ -345,7 +204,7 @@ bool MCBitmapEffectsScale(MCBitmapEffectsRef& self, int32_t p_scale)
 
 static void MCBitmapEffectColorToMCColor(uint32_t p_color, MCColor &r_color)
 {
-	r_color.pixel = p_color & 0x00FFFFFF;
+	r_color.pixel = p_color;
 	MCscreen->querycolor(r_color);
 }
 
@@ -384,7 +243,7 @@ static Exec_stat MCBitmapEffectGetProperty(MCBitmapEffect *effect, MCBitmapEffec
 			break;
 
 		case kMCBitmapEffectPropertyOpacity:
-			ep . setuint((effect -> layer . color >> 24) & 0xff);
+			ep . setuint(MCGPixelGetNativeAlpha(effect -> layer . color));
 			break;
 		
 		// BLUR EFFECTS
@@ -595,7 +454,7 @@ bool MCBitmapEffectsGetProperties(MCBitmapEffectsRef& self, Properties which_typ
 static void MCBitmapEffectDefault(MCBitmapEffect *p_effect, MCBitmapEffectType p_type)
 {
 	// Default color is 75% black
-	p_effect -> layer . color = 0xbf000000;
+	p_effect -> layer . color = MCGPixelPackNative(0, 0, 0, 0xbf);
 
 	// Default blend mode is normal
 	p_effect -> layer . blend_mode = kMCBitmapEffectBlendModeNormal;
@@ -688,10 +547,11 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 			}
 
 			uint4 t_new_color;
-			MCBitmapEffectColorFromMCColor(t_mc_color, t_new_color);
-			if (t_new_color != (self -> layer . color & 0xffffff))
+			t_new_color = MCGPixelPackNative(t_mc_color.red >> 8, t_mc_color.green >> 8, t_mc_color.blue >> 8, MCGPixelGetNativeAlpha(self->layer.color));
+
+			if (t_new_color != self -> layer . color)
 			{
-				self -> layer . color = (self -> layer . color & 0xff000000) | t_new_color;
+				self -> layer . color = t_new_color;
 				r_dirty = True;
 			}
 		}
@@ -723,10 +583,13 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 		case kMCBitmapEffectPropertyOpacity:
 		{
 			uint4 t_value;
-			if (MCBitmapEffectSetCardinalProperty(255, *t_data, self -> layer . color >> 24, t_value, r_dirty) != ES_NORMAL)
+			if (MCBitmapEffectSetCardinalProperty(255, *t_data, MCGPixelGetNativeAlpha(self -> layer . color), t_value, r_dirty) != ES_NORMAL)
 				return ES_ERROR;
-
-			self -> layer . color = (self -> layer . color & 0xffffff) | (t_value << 24);
+			
+			uint8_t r, g, b, a;
+			MCGPixelUnpackNative(self->layer.color, r, g, b, a);
+			
+			self -> layer . color = MCGPixelPackNative(r, g, b, t_value);
 		}
 		break;
 
@@ -1183,7 +1046,8 @@ uint32_t MCBitmapEffectsWeigh(MCBitmapEffectsRef self)
 static IO_stat MCLayerEffectPickle(MCLayerEffect *self, MCObjectOutputStream& p_stream)
 {
 	IO_stat t_stat;
-	t_stat = p_stream . WriteU32(self -> color);
+	// IM-2013-10-18: [[ RefactorGraphics ]] Convert color to standard format when saving
+	t_stat = p_stream . WriteU32(MCGPixelFromNative(kMCGPixelFormatBGRA, self -> color));
 	if (t_stat == IO_NORMAL)
 		t_stat = p_stream . WriteU8(self -> blend_mode << 4);
 	return t_stat;
@@ -1192,7 +1056,8 @@ static IO_stat MCLayerEffectPickle(MCLayerEffect *self, MCObjectOutputStream& p_
 static IO_stat MCShadowEffectPickle(MCShadowEffect *self, MCObjectOutputStream& p_stream)
 {
 	IO_stat t_stat;
-	t_stat = p_stream . WriteU32(self -> color);
+	// IM-2013-10-18: [[ RefactorGraphics ]] Convert color to standard format when saving
+	t_stat = p_stream . WriteU32(MCGPixelFromNative(kMCGPixelFormatBGRA, self -> color));
 	if (t_stat == IO_NORMAL)
 		t_stat = p_stream . WriteU32((self -> blend_mode << 28) | (self -> filter << 25) | (self -> size << 17) | (self -> spread << 9) | (self -> angle << 0));
 	if (t_stat == IO_NORMAL)
@@ -1203,7 +1068,8 @@ static IO_stat MCShadowEffectPickle(MCShadowEffect *self, MCObjectOutputStream& 
 static IO_stat MCGlowEffectPickle(MCGlowEffect *self, MCObjectOutputStream& p_stream)
 {
 	IO_stat t_stat;
-	t_stat = p_stream . WriteU32(self -> color);
+	// IM-2013-10-18: [[ RefactorGraphics ]] Convert color to standard format when saving
+	t_stat = p_stream . WriteU32(MCGPixelFromNative(kMCGPixelFormatBGRA, self -> color));
 	if (t_stat == IO_NORMAL)
 		t_stat = p_stream . WriteU32((self -> blend_mode << 28) | (self -> filter << 25) | (self -> size << 17) | (self -> spread << 9) | (self -> range << 1) | (self -> source << 0));
 	return t_stat;
@@ -1250,7 +1116,8 @@ static IO_stat MCLayerEffectUnpickle(MCLayerEffect *self, MCObjectInputStream& p
 	IO_stat t_stat;
 	uint32_t t_color;
 	t_stat = p_stream . ReadU32(t_color);
-	self -> color = t_color;
+	// IM-2013-10-18: [[ RefactorGraphics ]] Convert color from standard format when loading
+	self -> color = MCGPixelToNative(kMCGPixelFormatBGRA, t_color);
 	
 	uint8_t t_flags;
 	if (t_stat == IO_NORMAL)
@@ -1269,7 +1136,8 @@ static IO_stat MCShadowEffectUnpickle(MCShadowEffect *self, MCObjectInputStream&
 	IO_stat t_stat;
 	uint32_t t_color;
 	t_stat = p_stream . ReadU32(t_color);
-	self -> color = t_color;
+	// IM-2013-10-18: [[ RefactorGraphics ]] Convert color from standard format when loading
+	self -> color = MCGPixelToNative(kMCGPixelFormatBGRA, t_color);
 	
 	uint32_t t_data_a;
 	if (t_stat == IO_NORMAL)
@@ -1298,7 +1166,8 @@ static IO_stat MCGlowEffectUnpickle(MCGlowEffect *self, MCObjectInputStream& p_s
 	IO_stat t_stat;
 	uint32_t t_color;
 	t_stat = p_stream . ReadU32(t_color);
-	self -> color = t_color;
+	// IM-2013-10-18: [[ RefactorGraphics ]] Convert color from standard format when loading
+	self -> color = MCGPixelToNative(kMCGPixelFormatBGRA, t_color);
 	
 	uint32_t t_data;
 	if (t_stat == IO_NORMAL)
@@ -1476,6 +1345,7 @@ void MCBitmapEffectsComputeBounds(MCBitmapEffectsRef self, const MCRectangle& p_
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef OLD_GRAPHICS
 PACKED_INLINE uint8_t _scale_bounded(uint8_t a, uint8_t b)
 {
 	uint32_t u;
@@ -1839,3 +1709,4 @@ void MCBitmapEffectsRender(MCBitmapEffectsRef self, const MCRectangle& shape, MC
 	if ((self -> mask & kMCBitmapEffectTypeColorOverlayBit) != 0)
 		MCColorOverlayEffectRender(&self -> effects[kMCBitmapEffectTypeColorOverlay] . layer, shape, dst, src);
 }
+#endif

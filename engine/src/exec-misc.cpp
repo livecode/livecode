@@ -82,6 +82,12 @@ MC_EXEC_DEFINE_SET_METHOD(Misc, FileDateProtection, 2)
 MC_EXEC_DEFINE_GET_METHOD(Misc, BuildInfo, 2)
 
 MC_EXEC_DEFINE_EXEC_METHOD(Misc, LibUrlDownloadToFile, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Misc, LibUrlSetSSLVerification, 1)
+
+MC_EXEC_DEFINE_EXEC_METHOD(Misc, EnableRemoteControl, 0)
+MC_EXEC_DEFINE_EXEC_METHOD(Misc, DisableRemoteControl, 0)
+MC_EXEC_DEFINE_GET_METHOD(Misc, RemoteControlEnabled, 1)
+MC_EXEC_DEFINE_SET_METHOD(Misc, RemoteControlDisplayProperties, 1)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -321,6 +327,14 @@ void MCMiscGetApplicationIdentifier(MCExecContext& ctxt, MCStringRef& r_identifi
     ctxt.Throw();
 }
 
+void MCMiscGetIdentifierForVendor(MCExecContext& ctxt, MCStringRef& r_identifier)
+{
+    if (MCSystemGetIdentifierForVendor(r_identifier))
+        return;
+    
+    ctxt . Throw();
+}
+
 void MCMiscSetReachabilityTarget(MCExecContext& ctxt, MCStringRef p_hostname)
 {
     if (MCSystemSetReachabilityTarget(p_hostname))
@@ -341,6 +355,12 @@ void MCMiscGetReachabilityTarget(MCExecContext& ctxt, MCStringRef& r_hostname)
 void MCMiscExecLibUrlDownloadToFile(MCExecContext& ctxt, MCStringRef p_url, MCStringRef p_filename)
 {
     MCS_downloadurl(MCtargetptr, p_url, p_filename);
+}
+
+void MCMiscExecLibUrlSetSSLVerification(MCExecContext& ctxt, bool p_enabled)
+{
+    extern void MCS_seturlsslverification(bool enabled);
+    MCS_seturlsslverification(p_enabled);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -507,3 +527,34 @@ void MCMiscGetBuildInfo(MCExecContext& ctxt, MCStringRef p_key, MCStringRef& r_v
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCMiscExecEnableRemoteControl(MCExecContext& ctxt)
+{
+    if (MCSystemEnableRemoteControl())
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCMiscExecDisableRemoteControl(MCExecContext& ctxt)
+{
+    if (MCSystemDisableRemoteControl())
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCMiscGetRemoteControlEnabled(MCExecContext& ctxt, bool& r_enabled)
+{
+    if (MCSystemGetRemoteControlEnabled(r_enabled))
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCMiscSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p_props)
+{
+    if (MCSystemSetRemoteControlDisplayProperties(ctxt, p_props))
+        return;
+    
+    ctxt . Throw();
+}

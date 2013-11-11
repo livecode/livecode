@@ -36,7 +36,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface MCIPhoneImagePickerDialog : UIImagePickerController
+// MM-2013-09-23: [[ iOS7 Support ]] Added missing delegates implemented in order to appease llvm 5.0.
+@interface MCIPhoneImagePickerDialog : UIImagePickerController<UIImagePickerControllerDelegate, UIPopoverControllerDelegate, UINavigationControllerDelegate>
 {
 	bool m_cancelled;
 	bool m_running;
@@ -144,7 +145,8 @@ static MCIPhoneImagePickerDialog *s_image_picker = nil;
 
 	// 19/10/2010 IM - fix crash in iOS4.0
 	// UIPopoverController only available on iPad but NSClassFromString returns non-nil in iOS4 phone/pod
-	id t_popover;
+    // AL-2013-10-04 [[ Bug 11255 ]] Uninitialised variable can cause crash in iPhonePickPhoto
+	id t_popover = nil;
 	if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad)
 		t_popover = NSClassFromString(@"UIPopoverController");
 	
@@ -158,7 +160,7 @@ static MCIPhoneImagePickerDialog *s_image_picker = nil;
 		{
 			MCRectangle t_mc_rect;
 			t_mc_rect = MCtargetptr -> getrect();
-			t_rect = MCRectangleToLogicalCGRect(t_mc_rect);
+			t_rect = MCUserRectToLogicalCGRect(t_mc_rect);
 		}
 		else
 			t_rect = [[t_main_controller view] frame];

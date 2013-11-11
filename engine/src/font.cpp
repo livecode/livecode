@@ -29,6 +29,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "uidc.h"
 #include "context.h"
+#include "stacklst.h"
+
+#include "graphics_util.h"
+#include "unicode.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+#define kMCFontBreakTextCharLimit   64
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -45,11 +53,23 @@ struct MCFont
 	MCFontStruct *fontstruct;
 };
 
+
+// TD-2013-07-01: [[ DynamicFonts ]]
+struct MCLoadedFont
+{
+    MCLoadedFont *next;
+    MCStringRef path;
+    bool is_global;
+    void *handle;
+};
+
+static MCLoadedFont *s_loaded_fonts = nil;
 static MCFont *s_fonts = nil;
 
 bool MCFontInitialize(void)
 {
 	s_fonts = nil;
+	s_loaded_fonts = nil;
 	return true;
 }
 
@@ -136,46 +156,225 @@ int32_t MCFontGetDescent(MCFontRef self)
 	return self -> fontstruct -> descent;
 }
 
+void MCFontBreakText(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, MCFontBreakTextCallback p_callback, void *p_callback_data)
+{
+    // If the text is small enough, don't bother trying to break it
+    /*if (p_length <= (kMCFontBreakTextCharLimit * (p_is_unicode ? 2 : 1)))
+     {
+     p_callback(p_font, p_text, p_length, p_is_unicode, p_callback_data);
+     return;
+     }*/
+    
+    //p_callback(p_font, p_text, p_length, p_is_unicode, p_callback_data);
+    //return;
+    
+    // Scan forward in the string for possible break locations. Breaks are
+    // assigned a quality value as some locations are better for breaking than
+    // others. The qualities are:
+    //
+    //  0.  no break found
+    //  1.  grapheme break found
+    //  2.  URL break found ('/' char)
+    //  3.  word break found
+    //
+    // This isn't a particularly good algorithm but should suffice until full
+    // Unicode support is added and a proper breaking algorithm implemented.
+    uint32_t t_stride;
+    t_stride = kMCFontBreakTextCharLimit * (p_is_unicode ? 2 : 1);
+    while (p_length > 0)
+    {
+        int t_break_quality;
+        uint32_t t_break_point, t_after_break, t_index;
+        t_break_quality = 0;
+        t_break_point = 0;
+        t_index = 0;
+        
+        uint32_t t_length;
+        t_length = p_length / (p_is_unicode ? 2 : 1);
+
+        // Find the best break within the next stride characters. If there are
+        // no breaking points, extend beyond the stride until one is found.
+        while ((t_index < t_stride || t_break_quality == 0) && t_index < t_length)
+        {
+            uint32_t t_char;
+            uint32_t t_advance;
+            
+            if (p_is_unicode)
+            {
+                t_char = ((unichar_t*)p_text)[t_index];
+                if (0xD800 <= t_char && t_char < 0xDC00)
+                {
+                    // Surrogate pair
+                    t_char = ((t_char - 0xD800) << 10) + (((unichar_t*)p_text)[t_index+1] - 0xDC00);
+                    t_advance = 2;
+                }
+                else
+                {
+                    t_advance = 1;
+                }
+            }
+            else
+            {
+                t_char = p_text[t_index];
+                t_advance = 1;
+            }
+            
+            // Prohibit breaks at the beginning of the string
+            if (t_index == 0)
+            {
+                t_index += t_advance;
+                continue;
+            }
+            
+            if (t_char == ' ')
+            {
+                t_break_point = t_index;
+                t_break_quality = 3;
+            }
+            else if (t_break_quality < 3 && t_char == '/')
+            {
+                t_break_point = t_index;
+                t_break_quality = 2;
+            }
+            else if (t_break_quality < 2 && MCUnicodeCodepointIsBase(t_char))
+            {
+                t_break_point = t_index;
+                t_break_quality = 1;
+            }
+            else if (t_break_quality < 2 && 0xDC00 <= t_char && t_char <= 0xDFFF)
+            {
+                // Trailing character of surrogate pair
+                t_break_point = t_index;
+                t_break_quality = 1;
+            }
+            
+            // If the break point is a word boundary, don't look for a later
+            // breaking point. Words are cached as-is where possible.
+            if (t_break_quality == 3)
+                break;
+            
+            // Advance to the next character
+            t_index += t_advance;
+        }
+        
+        // If no word break was found and the whole of the remaining text was
+        // searched and the remaining text is smaller than the break size then
+        // don't attempt a break just for the sake of it.
+        if (t_break_quality < 3 && t_length < kMCFontBreakTextCharLimit)
+            t_break_point = t_length;
+        
+        // If no break point was found, just process the whole line
+        if (t_break_quality == 0)
+            t_break_point = t_length;
+        
+        // Process this chunk of text
+        uint32_t t_byte_len;
+        t_byte_len = t_break_point * (p_is_unicode ? 2 : 1);
+        p_callback(p_font, p_text, t_byte_len, p_is_unicode, p_callback_data);
+        
+        // Explicitly show breaking points
+        //p_callback(p_font, "|", 1, false, p_callback_data);
+        
+        // Move on to the next chunk
+        p_text += t_byte_len;
+        p_length -= t_byte_len;
+    }
+}
+
+struct font_measure_text_context
+{
+    uint32_t m_width;
+};
+
+static void MCFontMeasureTextCallback(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, font_measure_text_context *ctxt)
+{
+    if (p_length == 0 || p_text == NULL)
+		return;
+	
+    MCGFont t_font;
+	t_font = MCFontStructToMCGFont(p_font->fontstruct);
+	
+	MCExecPoint ep;
+	ep . setsvalue(MCString(p_text, p_length));
+	if (!p_font -> fontstruct -> unicode && !p_is_unicode)
+		ep . nativetoutf16();
+	
+    ctxt -> m_width += MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
+}
+
+int32_t MCFontMeasureText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode)
+{
+    font_measure_text_context ctxt;
+    ctxt.m_width = 0;
+    
+    MCFontBreakText(font, chars, char_count, is_unicode, (MCFontBreakTextCallback)MCFontMeasureTextCallback, &ctxt);
+    
+    return ctxt . m_width;
+}
+
 int32_t MCFontMeasureText(MCFontRef p_font, MCStringRef p_text)
 {
 	MCRange t_range = MCRangeMake(0, MCStringGetLength(p_text));
 	return MCFontMeasureTextSubstring(p_font, p_text, t_range);
 }
 
-int32_t MCFontMeasureText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode)
-{
-	return MCscreen -> textwidth(font -> fontstruct, chars, char_count, is_unicode);
-}
-
 int32_t MCFontMeasureTextSubstring(MCFontRef p_font, MCStringRef p_text, MCRange p_range)
 {
-	const char_t *t_native_text;
-	t_native_text = MCStringGetNativeCharPtr(p_text);
-	if (t_native_text != nil)
-		return MCFontMeasureText(p_font, (const char *)(t_native_text + p_range.offset), p_range.length, false);
-	
-	return MCFontMeasureText(p_font, (const char *)(MCStringGetCharPtr(p_text) + p_range.offset), p_range.length, true);
+	if (MCStringIsNative(p_text))
+        return MCFontMeasureText(p_font, (const char *)(MCStringGetNativeCharPtr(p_text) + p_range.offset), p_range.length, false);
+	else
+       return MCFontMeasureText(p_font, (const char *)(MCStringGetCharPtr(p_text) + p_range.offset), p_range.length, true);
 }
 
-void MCFontDrawText(MCFontRef font, MCStringRef p_text, MCContext *context, int32_t x, int32_t y, bool image)
+struct font_draw_text_context
+{
+    MCGContextRef m_gcontext;
+    int32_t x;
+    int32_t y;
+};
+
+static void MCFontDrawTextCallback(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, font_draw_text_context *ctxt)
+{
+    MCGFont t_font;
+	t_font = MCFontStructToMCGFont(p_font->fontstruct);
+
+	MCExecPoint ep;
+	ep . setsvalue(MCString(p_text, p_length));
+	if (!p_font -> fontstruct -> unicode && !p_is_unicode)
+		ep . nativetoutf16();
+	
+	MCGContextDrawPlatformText(ctxt->m_gcontext, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), MCGPointMake(ctxt->x, ctxt->y), t_font);
+    
+    // The draw position needs to be advanced. Can this be done more efficiently?
+    ctxt -> x += MCGContextMeasurePlatformText(NULL, (unichar_t*)ep.getsvalue().getstring(), ep.getsvalue().getlength(), t_font);
+}
+
+void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, const char *p_text, uint32_t p_length, MCFontRef p_font, bool p_is_unicode)
+{
+    font_draw_text_context ctxt;
+    ctxt.x = x;
+    ctxt.y = y;
+    ctxt.m_gcontext = p_gcontext;
+    
+    MCFontBreakText(p_font, p_text, p_length, p_is_unicode, (MCFontBreakTextCallback)MCFontDrawTextCallback, &ctxt);
+}
+
+
+void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCFontRef font)
 {
 	MCRange t_range = MCRangeMake(0, MCStringGetLength(p_text));
-	return MCFontDrawTextSubstring(font, p_text, t_range, context, x, y, image);
+	return MCFontDrawTextSubstring(p_gcontext, x, y, p_text, t_range, font);
 }
 
-void MCFontDrawText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode, MCContext *context, int32_t x, int32_t y, bool image)
+void MCFontDrawTextSubstring(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef font)
 {
-	context -> drawtext(x, y, chars, char_count, font -> fontstruct, image, is_unicode);
-}
-
-void MCFontDrawTextSubstring(MCFontRef font, MCStringRef p_text, MCRange p_range, MCContext *context, int32_t x, int32_t y, bool image)
-{
-	const char_t *t_native_text;
-	t_native_text = MCStringGetNativeCharPtr(p_text);
-	if (t_native_text != nil)
-		return MCFontDrawText(font, (const char *)(t_native_text + p_range.offset), p_range.length, false, context, x, y, image);
+	if (MCStringIsNative(p_text))
+    {
+        MCFontDrawText(p_gcontext, x, y, (const char *)(MCStringGetNativeCharPtr(p_text) + p_range.offset), p_range.length, font, false);
+        return;
+    }
 	
-	return MCFontDrawText(font, (const char *)(MCStringGetCharPtr(p_text) + p_range.offset), p_range.length, true, context, x, y, image);
+	MCFontDrawText(p_gcontext, x, y, (const char *)(MCStringGetCharPtr(p_text) + p_range.offset), p_range.length, font, true);
 }
 
 MCFontStyle MCFontStyleFromTextStyle(uint2 p_text_style)
@@ -212,6 +411,115 @@ uint16_t MCFontStyleToTextStyle(MCFontStyle p_font_style)
 	if ((p_font_style & kMCFontStyleCondensed) != 0)
 		t_style = (t_style & ~FA_EXPAND) | 0x30;
 	return t_style;
+}
+
+void MCFontRemap(void)
+{
+	// Make sure the fontlist is flushed (deletes all fontstructs).
+	MCdispatcher -> flushfonts();
+	
+	// Now reload the new fontstruct for each font.
+	for(MCFont *t_font = s_fonts; t_font != nil; t_font = t_font -> next)
+	{
+		uint2 t_temp_size;
+		t_temp_size = t_font -> size;
+		t_font -> fontstruct = MCdispatcher -> loadfont(t_font -> name, t_temp_size, MCFontStyleToTextStyle(t_font -> style), (t_font -> style & kMCFontStylePrinterMetrics) != 0);
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// TD-2013-07-02: [[ DynamicFonts ]]
+// MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCLoadedFont
+bool MCFontLoad(MCStringRef p_path, bool p_globally)
+{
+    bool t_success;
+    t_success = true;
+    
+    if (t_success)
+    {
+        // check if already loaded and unload if globally is not the same as loaded version
+        for(MCLoadedFont *t_font = s_loaded_fonts; t_font != nil; t_font = t_font -> next)
+            if (MCStringIsEqualTo(t_font -> path, p_path, kMCStringOptionCompareCaseless))
+			{
+				if (t_font -> is_global != p_globally)
+				{
+					t_success = MCFontUnload(p_path);
+					break;
+				}
+				else
+					return true;
+			}
+    }
+    
+    if (t_success)
+    {
+        void * t_loaded_font_handle;
+        
+        if (!MCscreen -> loadfont(p_path, p_globally, t_loaded_font_handle))
+            return false;
+    
+        MCLoadedFontRef self;
+        if (!MCMemoryNew(self))
+            return false;
+        
+        self -> is_global = p_globally;
+        self -> handle = t_loaded_font_handle;
+        MCValueAssign(self -> path, p_path);
+		self -> next = s_loaded_fonts;
+		s_loaded_fonts = self;
+		
+		// MW-2013-09-11: [[ DynamicFonts ]] Make sure the engine reloads all fonts.
+		MCFontRemap();
+		MCstacks -> purgefonts();
+    }
+
+    return t_success;
+}
+
+bool MCFontUnload(MCStringRef p_path)
+{
+    MCLoadedFont *t_prev_font;
+    t_prev_font = nil;
+    for(MCLoadedFont *t_font = s_loaded_fonts; t_font != nil; t_font = t_font -> next)
+    {
+        if (MCStringIsEqualTo(t_font -> path, p_path, kMCStringOptionCompareCaseless))
+        {
+            if (!MCscreen -> unloadfont(p_path, t_font -> is_global, t_font -> handle))
+                return false;
+            
+            if (t_prev_font != nil)
+                t_prev_font -> next = t_font -> next;
+            else
+                s_loaded_fonts = t_font -> next;
+			
+			MCMemoryDelete(t_font -> path);
+            MCMemoryDelete(t_font);
+			
+			// MW-2013-09-11: [[ DynamicFonts ]] Make sure the engine reloads all fonts.
+			MCFontRemap();
+			MCstacks -> purgefonts();
+			
+            break;
+        }
+		
+        t_prev_font = t_font;
+    }
+    
+    return true;
+}
+
+bool MCFontListLoaded(uindex_t& r_count, MCStringRef*& r_list)
+{
+    MCAutoArray<MCStringRef> t_list;
+    
+    for(MCLoadedFont *t_font = s_loaded_fonts; t_font != nil; t_font = t_font -> next)
+        if (!t_list . Push(t_font -> path))
+            return false;
+    
+    t_list . Take(r_list, r_count);
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -656,4 +964,10 @@ void MCF_changetextstyle(uint2& x_style_set, Font_textstyle p_style, bool p_new_
 		x_style_set |= t_flag;
 	else
 		x_style_set &= ~t_flag;
+}
+
+/* LEGACY */
+MCFontStruct* MCFontGetFontStruct(MCFontRef font)
+{
+    return font->fontstruct;
 }

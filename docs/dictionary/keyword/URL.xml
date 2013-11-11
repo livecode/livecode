@@ -1,0 +1,74 @@
+<doc>
+	<legacy_id>2120</legacy_id>
+	<name>URL</name>
+	<type>keyword</type>
+
+	<syntax>
+	</syntax>
+
+	<synonyms>
+	</synonyms>
+
+	<summary>Designates a <glossary tag="container">container</glossary> consisting of an Internet <glossary tag="resource">resource</glossary> or local <keyword tag="file">file</keyword> in the form of a <keyword tag="URL">URL</keyword>.</summary>
+
+	<examples>
+<example>get URL &quot;http://www.xworlds.com/index.html&quot;</example>
+<example>put URL &quot;binfile:/Mac HD/Files/example.gif&quot; into image &quot;Example Logo&quot;</example>
+<example><p>post field &quot;Results&quot; to URL &quot;http://www.example.org/current.txt&quot;</p></example>
+<example>get URL &quot;http://www.xworlds.com/index.html&quot;</example>
+	</examples>
+
+	<history>
+		<introduced version="1.0">Added.</introduced>
+		<deprecated version=""></deprecated>
+		<removed version=""></removed>
+		<changed version="4.6.1">Updated for iOS and Android Support.</changed>
+	</history>
+
+	<objects>
+	</objects>
+
+	<platforms>
+		<mac/>
+		<windows/>
+		<linux/>
+		<ios/>
+		<android/>
+	</platforms>
+
+	<classes>
+		<desktop/>
+		<server/>
+		<web/>
+		<mobile/>
+	</classes>
+
+	<security>
+		<network/>
+	</security>
+
+
+	<classification>
+		<category>Files, Folders, &amp; Resources</category>
+		<category>Networks &amp; Communication</category>
+		<category>Standalone Applications</category>
+	</classification>
+
+	<references>
+		<command tag="libURLSetAuthCallback">libURLSetAuthCallback Command</command>
+		<command tag="launch url">launch url Command</command>
+		<command tag="libURLSetExpect100">libURLSetExpect100 Command</command>
+		<command tag="load">load Command</command>
+		<property tag="HTMLText">HTMLText Property</property>
+	</references>
+
+	<description>
+	<overview>Use the <b>URL</b> <glossary tag="keyword">keyword</glossary> to access the contents of a local <keyword tag="file">file</keyword> or a <keyword tag="file">file</keyword> accessible on the Web.</overview>
+
+		<parameters>
+		</parameters>
+
+	<value></value>
+	<comments>A URL is a method of designating a file or other resource. You can use a URL like any other container. You can get the contents of a URL or use its contents in any expression. LiveCode supports the following URL schemes:<p></p><p><b>http</b>: a page from a web server</p><p><b>ftp</b>: a directory or <keyword tag="file">file</keyword> on an FTP server</p><p><b>file</b>: a <glossary tag="text file">text file</glossary> on the local disk (not on a <glossary tag="server">server</glossary>)</p><p><b>binfile</b>: a binary file</p><p><b>resfile</b>: on <glossary tag="Mac OS">Mac OS</glossary> and <glossary tag="OS X">OS X systems</glossary>, the <glossary tag="resource fork">resource fork</glossary> of a file</p><p></p><p>All actions that refer to a URL container are blocking: that is, the handler pauses until LiveCode is finished accessing the URL. Since fetching a web page may take some time due to network lag, accessing URLs may take long enough to be noticeable to the user. To avoid this delay, use the <command tag="load">load</command> <glossary tag="command">command</glossary> (which is non-blocking) to <glossary tag="cache">cache</glossary> web pages before you need them.</p><p></p><p>For technical information about URLs and URL schemes, see RFC 1630 at <u>http://www.ietf.org/rfc/rfc1630.txt</u>.</p><p></p><p><code tag=""><important></code><code tag="">The</code> <keyword tag="http">http</keyword> and <keyword tag="ftp">ftp</keyword> <glossary tag="keyword">keywords</glossary> are part of the <glossary tag="Internet library">Internet library on desktop platforms</glossary>. To ensure that these <keyword tag="URL">URL</keyword> types work in a desktop <glossary tag="standalone application">standalone application</glossary>, you must include this <glossary tag="LiveCode custom library">custom library</glossary> when you create your <glossary tag="standalone application">standalone</glossary>. In the Inclusions section of the <glossary tag="Standalone Application Settings">Standalone Application Settings</glossary> window, make sure Internet Library is selected in the list of script libraries. The iOS and Android engines do not support 'libUrl' but allow you to use URL. When specifying URLs for iOS and Android, you must use the appropriate form that confirms to the RFC standards. Ensure that you <function tag="urlEncode">urlEncode</function> any username and password fields appropriately for FTP urls.</important></comments>
+	</description>
+</doc>

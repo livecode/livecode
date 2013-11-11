@@ -1,0 +1,48 @@
+<doc>
+  <legacy_id>2321</legacy_id>
+  <name>character</name>
+  <type>keyword</type>
+  <syntax>
+  </syntax>
+  <library></library>
+  <objects>
+  </objects>
+  <synonyms>
+    <synonym>char</synonym>
+  </synonyms>
+  <classification>
+    <category>Text and Data Processing</category>
+  </classification>
+  <references>
+    <keyword tag="word">word Keyword</keyword>
+    <keyword tag="characters">characters Keyword</keyword>
+    <keyword tag="line">line Keyword</keyword>
+    <property tag="imageSource">imageSource Property</property>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary>Designates a single <keyword tag="character">character</keyword> as part of a <glossary tag="chunk expression">chunk expression</glossary>.</summary>
+  <examples>
+    <example>get char 1 of field "Answers"</example>
+    <example>put char 12 to 14 of it into oldAnswer</example>
+  </examples>
+  <description>
+    <p>Use the <b>character</b> <glossary tag="keyword">keyword</glossary> to refer to a specific <keyword tag="character">character</keyword> or <keyword tag="characters">characters</keyword> in a <glossary tag="container">container</glossary>.</p><p/><p><b>Comments:</b></p><p>A character is a single letter, digit, punctuation mark, or control character. Spaces, tabs, and returns are all characters.</p><p/><p><img src="202653"/> <b>Important!</b> Characters in <glossary tag="chunk expression">chunk expressions</glossary> are assumed to be <href tag="../glossary/singledashbyte_character.xml">single-byte characters</href>. To successfully use <glossary tag="chunk expression">chunk expressions</glossary> with <glossary tag="Unicode">Unicode</glossary> (<href tag="../glossary/doubledashbyte_character.xml">double-byte</href>) text, you must treat each <href tag="../glossary/doubledashbyte_character.xml">double-byte character</href> as a set of two <href tag="../glossary/singledashbyte_character.xml">single-byte characters</href>. For example, to get the numeric value of the third <glossary tag="Unicode">Unicode</glossary> <keyword tag="character">character</keyword> in a <keyword tag="field">field</keyword>, use <glossary tag="statement">statements</glossary> like the following:</p><p/><p>  set the useUnicode to true <i>-- makes charToNum assume Unicode</i></p><p>  get charToNum(char 5 to 6 of field "Chinese Text") <i>-- gets bytes 5-6</i></p>
+  </description>
+</doc>
