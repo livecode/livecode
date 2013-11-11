@@ -289,6 +289,8 @@ public:
 	static Field_translations trans_lookup(Keytranslations table[], KeySym key, uint2 modifiers);
 	static Field_translations lookup_mac_keybinding(KeySym key, uint32_t modifiers);
 	
+    void do_recompute(bool p_force_layout);
+    
 	void redrawcheck(MCRectangle &drect);
 	void resetparagraphs();
 
@@ -310,6 +312,7 @@ public:
 	int32_t getcontenty(void) const;
 	int32_t gettexty(void) const;
 	int32_t getfirstindent(void) const;
+	int32_t getfixedheight(void) const { return fixedheight; }
 
 	bool getshowlines(void) const;
 
@@ -398,7 +401,9 @@ public:
 	//   the array.
 	// MW-2012-01-25: [[ ParaStyles ]] Add a line chunk parameter for disambiguating things
 	//   like backColor.
-	Exec_stat settextatts(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef index, int4 si, int4 ei, bool is_line);
+	// MW-2013-08-01: [[ Bug 10932 ]] Added dont_layout property which stops layout of paragraphs and
+	//   added P_UNDEFINED support, which just causes a full reflow of the field.
+	Exec_stat settextatts(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef index, int4 si, int4 ei, bool is_line, bool dont_layout = false);
 	Exec_stat seltext(int4 si, int4 ei, Boolean focus, Boolean update = False);
 	uint2 hilitedline();
 	void hilitedlines(MCExecPoint &ep);

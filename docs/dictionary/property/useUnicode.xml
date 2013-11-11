@@ -1,0 +1,47 @@
+<doc>
+  <legacy_id>1150</legacy_id>
+  <name>useUnicode</name>
+  <type>property</type>
+  <syntax>
+    <example>set the useUnicode to {true | false}</example>
+  </syntax>
+  <library></library>
+  <objects>
+    <local/>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Text and Data Processing</category>
+  </classification>
+  <references>
+    <function tag="numToChar">numToChar Function</function>
+    <property tag="allowInlineInput">allowInlineInput Property</property>
+  </references>
+  <history>
+    <introduced version="2.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary>Specifies whether the <function tag="charToNum">charToNum</function> and <function tag="numToChar">numToChar</function> <glossary tag="function">functions</glossary> assume a <keyword tag="character">character</keyword> is <href tag="../glossary/doubledashbyte_character.xml">double-byte</href>.</summary>
+  <examples>
+    <example>set the useUnicode to true</example>
+    <example>set the useUnicode to (the number of items of myFont is 2)</example>
+  </examples>
+  <description>
+    <p>Use the <b>useUnicode</b> <glossary tag="property">property</glossary> to prepare to convert between <glossary tag="Unicode">Unicode</glossary> <keyword tag="characters">characters</keyword> and their numeric values.</p><p/><p><b>Value:</b></p><p>By default, the <b>useUnicode</b> <glossary tag="property">property</glossary> is false.</p><p/><p><b>Comments:</b></p><p>If the <b>useUnicode</b> <glossary tag="property">property</glossary> is set to true, the <function tag="numToChar">numToChar</function> and <function tag="charToNum">charToNum</function> <glossary tag="function">functions</glossary> use <href tag="../glossary/doubledashbyte_character.xml">double-byte characters</href>. You can <control_st tag="pass">pass</control_st> a number greater than 255 to the <function tag="numToChar">numToChar</function> <control_st tag="function">function</control_st> in order to generate a <href tag="../glossary/doubledashbyte_character.xml">double-byte character</href>, and you can <control_st tag="pass">pass</control_st> a <href tag="../glossary/doubledashbyte_character.xml">double-byte character</href> to the <function tag="charToNum">charToNum</function> <control_st tag="function">function</control_st>.</p><p/><p>If the <b>useUnicode</b> is false, the <function tag="numToChar">numToChar</function> and <function tag="charToNum">charToNum</function> <glossary tag="function">functions</glossary> use <href tag="../glossary/singledashbyte_character.xml">single-byte characters</href>. Passing a <href tag="../glossary/doubledashbyte_character.xml">double-byte character</href> to <function tag="charToNum">charToNum</function> or a number larger than 255 to <function tag="numToChar">numToChar</function> will produce incorrect results if the <b>useUnicode</b> is false.</p><p/><p>Since the <b>useUnicode</b> is a <href tag="../dictionary/local_property.xml">local property</href>, its <function tag="value">value</function> is <command tag="reset">reset</command> to false when the current <glossary tag="handler">handler</glossary> finishes <glossary tag="execute">executing</glossary>. It retains its <function tag="value">value</function> only for the current <glossary tag="handler">handler</glossary>, and setting it in one <glossary tag="handler">handler</glossary> does not affect its <function tag="value">value</function> in other <glossary tag="handler">handlers</glossary> it <glossary tag="call">calls</glossary>.</p>
+  </description>
+</doc>

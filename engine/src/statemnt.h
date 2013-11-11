@@ -60,7 +60,6 @@ public:
 	Parse_stat getmods(MCScriptPoint &, uint2 &mstate);
 	Parse_stat gettime(MCScriptPoint &sp, MCExpression **in, Functions &units);
 	void initpoint(MCScriptPoint &);
-	void getit(MCScriptPoint &sp, MCVarref *&it);
 	uint2 getline()
 	{
 		return line;

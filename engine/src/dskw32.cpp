@@ -5144,3 +5144,67 @@ MCSystemInterface *MCDesktopCreateWindowsSystem(void)
 {
 	return new MCWindowsDesktop;
 }
+
+struct  LangID2Charset
+{
+	Lang_charset charset;
+	LANGID langid;
+};
+
+static LangID2Charset langidtocharsets[] = {
+    { LCH_ENGLISH, MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT) },
+    { LCH_ROMAN, MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT)},
+    { LCH_JAPANESE, MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT) },
+    { LCH_CHINESE, MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL) },
+    { LCH_ARABIC, MAKELANGID(LANG_ARABIC, SUBLANG_DEFAULT) },
+    { LCH_RUSSIAN, MAKELANGID(LANG_RUSSIAN, SUBLANG_DEFAULT) },
+    { LCH_TURKISH, MAKELANGID(LANG_TURKISH, SUBLANG_DEFAULT) },
+    { LCH_BULGARIAN, MAKELANGID(LANG_BULGARIAN, SUBLANG_DEFAULT) },
+    { LCH_POLISH, MAKELANGID(LANG_POLISH, SUBLANG_DEFAULT) },
+    { LCH_UKRAINIAN, MAKELANGID(LANG_UKRAINIAN, SUBLANG_DEFAULT) },
+    { LCH_HEBREW, MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT)},
+    { LCH_GREEK, MAKELANGID(LANG_GREEK, SUBLANG_DEFAULT) },
+    { LCH_KOREAN, MAKELANGID(LANG_KOREAN, SUBLANG_DEFAULT) },
+    { LCH_THAI,	MAKELANGID(LANG_THAI, SUBLANG_DEFAULT) },
+    { LCH_SIMPLE_CHINESE, MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED)},
+    { LCH_UNICODE, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT)}
+};
+
+uint1 MCS_langidtocharset(uint2 langid)
+{
+	uint2 i;
+	for (i = 0; i < ELEMENTS(langidtocharsets); i++)
+		if (langidtocharsets[i].langid == langid)
+			return langidtocharsets[i].charset;
+	return 0;
+}
+
+uint2 MCS_charsettolangid(uint1 charset)
+{
+	uint2 i;
+	for (i = 0; i < ELEMENTS(langidtocharsets); i++)
+		if (langidtocharsets[i].charset == charset)
+			return langidtocharsets[i].langid;
+	return 0;
+}
+
+bool MCS_generate_uuid(char p_buffer[128])
+{
+	GUID t_guid;
+	if (CoCreateGuid(&t_guid) == S_OK)
+	{
+		unsigned char __RPC_FAR *t_guid_string;
+		if (UuidToStringA(&t_guid, &t_guid_string) == RPC_S_OK)
+		{
+			strcpy(p_buffer, (char *)t_guid_string);
+			RpcStringFreeA(&t_guid_string);
+		}
+        
+		return true;
+	}
+    
+	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+

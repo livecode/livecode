@@ -309,26 +309,71 @@ void MCR_copyerror(MCStringRef &r_error)
         r_error = MCValueRetain(regexperror);
 }
 
-regexp *MCR_compile(MCStringRef exp)
+regexp *MCregexcache[PATTERN_CACHE_SIZE];
+
+// JS-2013-07-01: [[ EnhancedFilter ]] Updated to support case-sensitivity and caching.
+// MW-2013-07-01: [[ EnhancedFilter ]] Tweak to take 'const char *' and copy pattern as required.
+// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
+//   no reason not to use the cache.
+regexp *MCR_compile(MCStringRef exp, bool casesensitive)
 {
-	regexp *re = new regexp;
-	int status;
+	Boolean found = False;
+	regexp *re = nil;
 	int flags = REG_EXTENDED;
-	status = regcomp(&re->rexp, exp, flags);
-	if (status != REG_OKAY)
+    if (!casesensitive)
+        flags |= REG_ICASE;
+
+	// Search the cache.
+	uint2 i;
+	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
 	{
-		regerror(status, NULL, regexperror);
-		delete re;
-		return(NULL);
+		if (MCregexcache[i] &&
+            MCStringIsEqualTo(exp, MCregexcache[i]->pattern, casesensitive ? kMCStringOptionCompareExact : kMCStringOptionCompareCaseless) &&
+			flags == MCregexcache[i]->flags)
+		{
+			found = True;
+			re = MCregexcache[i];
+			break;
+		}
 	}
+	
+	// If the pattern isn't found with the given flags, then create a new one.
+	if (re == nil)
+	{
+		/* UNCHECKED */ re = new regexp;
+		/* UNCHECKED */ re->pattern = MCValueRetain(exp);
+		re->flags = flags;
+		int status;
+		status = regcomp(&re->rexp, exp, flags);
+		if (status != REG_OKAY)
+		{
+			regerror(status, nil, regexperror);
+			MCValueRelease(re->pattern);
+			delete re;
+			return(nil);
+		}
+	}
+	
+	// If the pattern is new, put it in the cache.
+	if (!found)
+	{
+		uint2 i;
+		MCR_free(MCregexcache[PATTERN_CACHE_SIZE - 1]);
+		for (i = PATTERN_CACHE_SIZE - 1 ; i ; i--)
+		{
+			MCregexcache[i] = MCregexcache[i - 1];
+		}
+		MCregexcache[0] = re;
+	}
+	
 	return re;
 }
 
-int MCR_exec(regexp *prog, MCStringRef string, uint4 len)
+int MCR_exec(regexp *prog, MCStringRef string)
 {
 	int status;
 	int flags = 0;
-	status = regexec(&prog->rexp, string, len, NSUBEXP, prog->matchinfo, flags);
+	status = regexec(&prog->rexp, string, MCStringGetLength(string), NSUBEXP, prog->matchinfo, flags);
 	if (status != REG_OKAY)
 	{
 		if (status == REG_NOMATCH)
@@ -347,6 +392,18 @@ void MCR_free(regexp *prog)
 	if (prog)
 	{
 		regfree(&prog->rexp);
+		// MW-2013-07-01: [[ EnhancedFilter ]] Release the pattern.
+		MCValueRelease(prog->pattern);
 		delete prog;
+	}
+}
+
+// JS-2013-07-01: [[ EnhancedFilter ]] Clear out the cache.
+void MCR_clearcache()
+{
+	uint2 i;
+	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
+	{
+		MCR_free(MCregexcache[i]);
 	}
 }

@@ -1596,10 +1596,13 @@ UIView *MCiOSInputFieldControl::CreateView(void)
 void MCiOSInputFieldControl::DeleteView(UIView *p_view)
 {
 	[p_view setDelegate: nil];
-	[p_view release];
 	
+	// MW-2013-05-22: [[ Bug 10880 ]] Make sure we release the delegate here as
+	//   it might need to refer to the view to deregister itself.
 	[m_delegate release];
 	m_delegate = nil;
+	
+	[p_view release];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2375,7 +2378,7 @@ void MCiOSMultiLineControl::HandleScrollEvent(void)
 	int32_t t_x, t_y;
 	m_post_scroll_event = true;
 	if (t_target != nil && MCScrollViewGetContentOffset(GetView(), t_x, t_y))
-	{
+{
 		MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
 		t_target->message_with_args(MCM_scroller_did_scroll, m_content_rect.x + t_x, m_content_rect.y + t_y);
@@ -2401,10 +2404,13 @@ UIView *MCiOSMultiLineControl::CreateView(void)
 void MCiOSMultiLineControl::DeleteView(UIView *p_view)
 {
 	[p_view setDelegate: nil];
-	[p_view release];
 	
+	// MW-2013-05-22: [[ Bug 10880 ]] Make sure we release the delegate here as
+	//   it might need to refer to the view to deregister itself.
 	[m_delegate release];
 	m_delegate = nil;
+	
+	[p_view release];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2651,6 +2657,15 @@ private:
 	
 	return self;
 }
+
+// MW-2013-05-22: [[ Bug 10880 ]] Make sure we have a 'dealloc' method so observers
+//   can be removed that reference this object.
+- (void)dealloc
+{
+	[m_instance -> GetView() removeObserver: self forKeyPath:@"contentSize"];
+	[super dealloc];
+}
+   
 
 - (void)scrollViewWillBeginDragging: (UIScrollView*)scrollView
 {

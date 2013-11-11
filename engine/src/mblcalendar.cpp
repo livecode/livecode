@@ -32,8 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mblcalendar.h"
 
-
-//////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 #ifdef /* MCParameterDataToCalendar */ LEGACY_EXEC
 MCCalendar MCParameterDataToCalendar (MCParameter *p_parameters, MCCalendar p_result)
@@ -378,6 +377,7 @@ bool MCCalendarToArrayData (MCExecContext &ctxt, MCCalendar p_calendar, MCArrayR
         }
     }
 #endif /* MCCalendarToArrayData */
+
     bool t_success = false;
     
     if (!MCArrayIsMutable(r_result))
@@ -396,7 +396,6 @@ bool MCCalendarToArrayData (MCExecContext &ctxt, MCCalendar p_calendar, MCArrayR
         
         t_success = MCArrayStoreValue(r_result, false, *t_key_allday, *t_str_allday);
     }
-    
     if (t_success)
     {
         MCNewAutoNameRef t_key_note;
@@ -406,7 +405,6 @@ bool MCCalendarToArrayData (MCExecContext &ctxt, MCCalendar p_calendar, MCArrayR
             t_success = MCArrayStoreValue(r_result, false, *t_key_note, p_calendar.mcnote);
         }
     }
-    
     if (t_success)
     {
         MCNewAutoNameRef t_key_title;
@@ -417,7 +415,6 @@ bool MCCalendarToArrayData (MCExecContext &ctxt, MCCalendar p_calendar, MCArrayR
             t_success = MCArrayStoreValue(r_result, false, *t_key_title, p_calendar.mctitle);
         }
     }
-    
     if (t_success)
     {
         MCNewAutoNameRef t_key_location;
@@ -427,7 +424,6 @@ bool MCCalendarToArrayData (MCExecContext &ctxt, MCCalendar p_calendar, MCArrayR
             MCArrayStoreValue(r_result, false, *t_key_location, p_calendar.mclocation);
         }
     }
-    
     if (t_success)
     {
         MCNewAutoNameRef t_key_calendar;
@@ -468,7 +464,6 @@ bool MCCalendarToArrayData (MCExecContext &ctxt, MCCalendar p_calendar, MCArrayR
                 t_success = MCArrayStoreValue(r_result, false, *t_key_frequency_interval, *t_int_frequency_interval);
         }
     }
-    
     if (t_success)
     {
         MCNewAutoNameRef t_key_alert1;

@@ -1,0 +1,46 @@
+<doc>
+  <legacy_id>1041</legacy_id>
+  <name>cancel</name>
+  <type>command</type>
+  <syntax>
+    <example>cancel <i>messageQueueID</i></example>
+  </syntax>
+  <library></library>
+  <objects>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Objects &amp; Messages</category>
+  </classification>
+  <references>
+    <function tag="pendingMessages">pendingMessages Function</function>
+    <command tag="send">send Command</command>
+    <function tag="flushEvents">flushEvents Function</function>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+  </classes>
+  <security>
+  </security>
+  <summary>Removes a <keyword tag="message box">message</keyword> that was queued with the <command tag="send">send</command> <glossary tag="command">command</glossary> and is waiting to be sent.</summary>
+  <examples>
+    <example>cancel 2298</example>
+    <example>cancel item 1 of last line of the pendingMessages</example>
+  </examples>
+  <description>
+    <p>Use the <b>cancel</b> <glossary tag="command">command</glossary> to get rid of <glossary tag="message">messages</glossary> that were set up but are no longer required.</p><p/><p><b>Parameters:</b></p><p>The <i>messageQueueID</i> is the ID number of the <keyword tag="message box">message</keyword>.</p><p/><p><b>Comments:</b></p><p>The ID number of the message is returned by the <b>send</b> <glossary tag="command">command</glossary> that sent the <keyword tag="message box">message</keyword>. This number is also the first <keyword tag="item">item</keyword> of the line corresponding to the message in the <function tag="pendingMessages">pendingMessages</function> <control_st tag="function">function</control_st>.</p><p/><p>All pending messages are automatically canceled when the application quits.</p><p/><p>It is common to need to cancel a number of messages when leaving a card or stack, if the messages only pertain to that card or stack. For example, you might have queued a number of messages that create an animated display on the current card, and need to cancel them when the user goes to another card. The best solution in a case like this is to place each message ID number in a global variable or custom property at the time the <keyword tag="message box">message</keyword> is sent. Then you can cancel all those <glossary tag="message">messages</glossary> in a <control_st tag="repeat">repeat</control_st> <glossary tag="loop">loop</glossary>:</p><p/><p><code>  on closeCard</p><p>    global myPendingMessages -- you've stored the message IDs here</i></p><p>    repeat for each line thisMessageID in myPendingMessages</p><p>     cancel thisMessageID</p><p>    end repeat</p><p>  end closeCard</code></p><p/><p>You can also cancel all pending messages with a similar handler, using the <b>pendingMessages</b> <control_st tag="function">function</control_st>:</p><p/><p><code>  on closeCard </code><code><i>-- brute-force method</i></code></p><p><code>    repeat until the pendingMessages is empty</code></p><p><code>      cancel item 1 of line 1 of the pendingMessages</code></p><p><code>    end repeat</code></p><p><code>  end closeCard</code></p><p/><p><code/><img src="202650"/> <b>Caution!</b><code/> LiveCode uses the <command tag="send">send</command> <glossary tag="command">command</glossary> to control Animation Builder animations and to control aspects of the <glossary tag="development environment">development environment</glossary>, so canceling LiveCode's pending <glossary tag="message">messages</glossary> may cause unexpected behavior. All of LiveCode's <glossary tag="message">messages</glossary> begin with "rev", so before canceling a pending <keyword tag="message box">message</keyword>, if you're using the <glossary tag="development environment">development environment</glossary>, make sure the <keyword tag="message box">message</keyword> name does not begin with "rev".</p>
+  </description>
+</doc>

@@ -912,14 +912,40 @@ int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial,
 	return 0;
 }
 
+// MERG-2013-08-18: Updated to allow script access to colorDialogColors
+static COLORREF s_colordialogcolors[16];
+
+/* WRAPPER */
+/*bool MCA_folder(bool p_plural, MCStringRef p_prompt, MCStringRef p_initial,
+ MCStringRef p_title, bool p_sheet, MCStringRef &r_value, MCStringRef &r_result)
+{
+	const char *t_title = p_title == nil ? "" : MCStringGetCString(p_title);
+	const char *t_prompt = p_prompt == nil ? "" : MCStringGetCString(p_prompt);
+	const char *t_initial = p_initial == nil ? "" : MCStringGetCString(p_initial);
+
+	uint32_t t_options = 0;
+	if (p_plural)
+		t_options |= MCA_OPTION_PLURAL;
+	if (p_sheet)
+		t_options |= MCA_OPTION_SHEET;
+
+	MCExecPoint ep(nil, nil, nil);
+	int t_error;
+	t_error = MCA_folder(ep, t_title, t_prompt, t_initial, t_options);
+	if (ep.isempty())
+		return MCStringCreateWithCString(MCcancelstring, r_result);
+	else
+		return ep.copyasstringref(r_value);
+}*/
+
 // MW-2005-05-15: Updated for new answer command restructuring
 bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bool& r_chosen, MCColor& r_chosen_color)
 {
 	CHOOSECOLORW chooseclr ;
-	static COLORREF custclr[16]; //save custom colors
+
 	memset(&chooseclr, 0, sizeof(CHOOSECOLORW));
 	chooseclr.lStructSize = sizeof (CHOOSECOLORW);
-	chooseclr.lpCustColors = (LPDWORD)custclr;
+	chooseclr.lpCustColors = (LPDWORD)s_colordialogcolors;
 
 	Window t_parent_window;
 	t_parent_window = MCModeGetParentWindow();
@@ -950,6 +976,93 @@ bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bo
 	waitonbutton();
 
 	return t_success;
+}
+
+#ifdef /* MCA_setdialogcolors */ LEGACY_EXEC
+void MCA_setcolordialogcolors(MCExecPoint& p_ep)
+{
+	const char * t_color_list;
+	t_color_list = p_ep.getcstring();
+    
+	if (t_color_list != NULL)
+	{
+		MCColor t_colors[16];
+		char *t_colornames[16];
+		int i;
+        
+		for (i = 0 ; i < 16 ; i++)
+			t_colornames[i] = NULL;
+        
+		MCscreen->parsecolors(t_color_list, t_colors, t_colornames, 16);
+        
+		for(i=0;i < 16;i++)
+		{
+			if (t_colors[i] . flags != 0)
+				s_colordialogcolors[i] = RGB(t_colors[i].red >> 8, t_colors[i].green >> 8,
+                                             t_colors[i].blue >> 8);
+			else
+				s_colordialogcolors[i] = NULL;
+            
+            delete t_colornames[i];
+		}
+        
+	}
+}
+#endif /* MCA_setdialogcolors */
+
+#ifdef /* MCA_getdialogcolors */ LEGACY_EXEC
+void MCA_getcolordialogcolors(MCExecPoint& p_ep)
+{
+	p_ep.clear();
+	MCExecPoint t_ep(p_ep);
+    
+	for(int i=0;i < 16;i++)
+	{
+		if (s_colordialogcolors[i] != 0)
+			t_ep.setcolor(GetRValue(s_colordialogcolors[i]), GetGValue(s_colordialogcolors[i]), GetBValue(s_colordialogcolors[i]));
+		else
+			t_ep.clear();
+        
+		p_ep.concatmcstring(t_ep.getsvalue(), EC_RETURN, i==0);
+	}
+}
+#endif /* MCA_getdialogcolors */
+
+void MCA_setcolordialogcolors(MCColor* p_colors, uindex_t p_count)
+{
+    for(int i = 0; i < 16; i++)
+    {
+        if (p_colors[i] . flags != 0)
+            s_colordialogcolors[i] = RGB(p_colors[i] . red >> 8, p_colors[i] . green >> 8,
+                                             p_colors[i] . blue >> 8);
+        else
+            s_colordialogcolors[i] = NULL;
+	}
+}
+
+void MCA_getcolordialogcolors(MCColor*& r_colors, uindex_t& r_count)
+{
+    MCAutoArray<MCColor> t_list;
+    
+	for(int i = 0; i < 16; i++)
+	{
+        MCColor t_color;
+        if (s_colordialogcolors[i] != 0)
+        {
+            t_color . red = GetRValue(s_colordialogcolors[i]);
+            t_color . green = GetGValue(s_colordialogcolors[i]);
+            t_color . blue = GetBValue(s_colordialogcolors[i]);
+            t_color . flags = DoRed | DoGreen | DoBlue;
+            t_list . Push(t_color);
+        }
+		else
+        {
+            t_color . flags = 0;
+			t_list . Push(t_color);
+        }
+	}
+    
+    t_list . Take(r_colors, r_count);
 }
 
 int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)

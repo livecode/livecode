@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 
 #include <objc/runtime.h>
+#include <objc/message.h>
 #include <unistd.h>
 
 #include "mbliphoneview.h"
@@ -305,7 +306,10 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     if (t_allowed_notifications != UIRemoteNotificationTypeNone)
     {
         // Inform the device what kind of push notifications we can handle.
-        [[UIApplication sharedApplication] registerForRemoteNotificationTypes:t_allowed_notifications];
+		
+		// MW-2013-07-29: [[ Bug 10979 ]] Dynamically call the 'registerForRemoteNotificationTypes' to
+		//   avoid app-store warnings.
+		objc_msgSend([UIApplication sharedApplication], sel_getUid("registerForRemoteNotificationTypes:"), t_allowed_notifications);
     }
 }
 
@@ -648,8 +652,9 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	
 	// MW-2011-10-24: [[ Bug ]] The status bar only clips the display if actually
 	//   hidden, or on iPhone with black translucent style.
+    // MM-2013-09-25: [[ iOS7Support ]] The status bar is always overlaid ontop of the view, irrespective of its style.
 	CGFloat t_status_bar_size;
-	if (m_status_bar_hidden || ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone && m_status_bar_style == UIStatusBarStyleBlackTranslucent))
+	if (m_status_bar_hidden || MCmajorosversion >= 700 || ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone && m_status_bar_style == UIStatusBarStyleBlackTranslucent))
 		t_status_bar_size = 0.0f;
 	else
 		t_status_bar_size = 20.0f;
@@ -1022,6 +1027,14 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	MCIPhoneHandleMotionEnded(motion, [event timestamp]);
 }
 
+// MW-2013-05-30: [[ RemoteControl ]] Handle the remote control event and pass
+//   on if applicable.
+- (void)remoteControlReceivedWithEvent: (UIEvent *)event
+{
+	if ([event type] == UIEventTypeRemoteControl)
+		MCIPhoneHandleRemoteControlEvent([event subtype], [event timestamp]);
+}
+
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1371,6 +1384,7 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 - (void)viewDidAppear:(BOOL)animated
 {
 	MCLog("MainViewController: viewDidAppear\n");
+	
     // MM-2012-09-25: [[ iOS 6.0 ]] When the startup view controller is visible, it appears that didRotateFromInterfaceOrientation is not called.
     //   Set current orientation here instead.
     if (MCmajorosversion >= 600)

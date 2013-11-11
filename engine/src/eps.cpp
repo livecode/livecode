@@ -503,7 +503,7 @@ void MCEPS::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_spr
 		dc->setlineatts(0, LineDoubleDash, CapButt, JoinBevel);
 		dc->setforeground(dc->getblack());
 		dc->setbackground(dc->getwhite());
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 		dc->setdashes(0, dashlist, 2);
 		MCSegment segs[2];
 		segs[0].x1 = segs[1].x1 = trect.x;

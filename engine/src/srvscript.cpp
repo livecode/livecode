@@ -46,6 +46,9 @@ MCServerScript::MCServerScript(void)
 	m_ctxt = NULL;
 	m_include_depth = 0;
 	m_current_file = nil;
+	
+	// MW-2013-11-08: [[ RefactorIt ]] This varref is created when hlist is.
+	m_it = nil;
 }
 
 MCServerScript::~MCServerScript(void)
@@ -62,6 +65,9 @@ MCServerScript::~MCServerScript(void)
 		delete t_file -> script;
 		delete t_file;
 	}
+	
+	// MW-2013-11-08: [[ RefactorIt ]] Dispose of the it varref.
+	delete m_it;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -314,10 +320,15 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 	}
 
 	if (hlist == NULL)
+	{
 		hlist = new MCHandlerlist;
 	
 	if (m_ctxt == NULL)
+	{
 		m_ctxt = new MCExecContext(*new MCExecPoint(this, hlist, NULL));
+		// MW-2013-11-08: [[ RefactorIt ]] Make sure we have an 'it' var in global context.
+		/* UNCHECKED */ hlist -> newvar(MCN_it, nil, &m_it, False);
+	}
 
 	// Save the old default folder
 	MCAutoStringRef t_old_folder;

@@ -36,6 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 
 #include "syntax.h"
+#include "graphics_util.h"
 
 MCPrint::MCPrint()
 {
