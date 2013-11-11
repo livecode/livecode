@@ -1853,7 +1853,7 @@ Parse_stat MCPop::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCPop::exec(MCExecPoint &ep)
+void MCPop::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCPop */ LEGACY_EXEC
 MCCard *cptr = MCcstack->popcard();
@@ -1889,25 +1889,18 @@ MCCard *cptr = MCcstack->popcard();
 	return ES_NORMAL;
 #endif /* MCPop */
 
-
-	MCExecContext ctxt(ep);
 	if (dest == NULL) 
 		MCInterfaceExecPopToLast(ctxt);
 	else
 	{
 		MCAutoStringRef t_element;
 		MCInterfaceExecPop(ctxt, &t_element);
-		if (dest->set(ep, prep, *t_element) != ES_NORMAL)
-		{
-			MCeerror->add(EE_POP_CANTSET, line, pos);
-			return ES_ERROR;
-		}
-	}
 
-	if (!ctxt . HasError())
-		return ES_NORMAL;
+        dest->set(ctxt, prep, *t_element);
 
-	return ctxt . Catch(line, pos);
+        if (ctxt . HasError())
+            ctxt . LegacyThrow(EE_POP_CANTSET);
+    }
 
 }
 
