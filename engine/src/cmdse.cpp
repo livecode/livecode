@@ -1081,7 +1081,7 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
 		t_target_ptr = nil;
 	
 	// Evaluate the parameter list
-    bool t_error;
+    bool t_success;
 	MCParameter *tptr = params;
 	while (tptr != NULL)
 	{
@@ -1094,11 +1094,11 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
         {
             MCAutoValueRef t_value;
             tptr -> clear_argument();
-            while (!(t_error = tptr->eval(ctxt, &t_value))
+            while (!(t_success = tptr->eval(ctxt, &t_value))
                    && (MCtrace || MCnbreakpoints)
                    && !MCtrylock && !MClockerrors)
 				MCB_error(ctxt, line, pos, EE_STATEMENT_BADPARAM);
-            if (t_error)
+            if (!t_success)
 			{
                 ctxt . LegacyThrow(EE_STATEMENT_BADPARAM);
                 return;
