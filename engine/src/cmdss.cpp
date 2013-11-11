@@ -1655,7 +1655,7 @@ Parse_stat MCLock::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCLock::exec(MCExecPoint &ep)
+void MCLock::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCLock */ LEGACY_EXEC
 	switch(which)
@@ -1721,9 +1721,6 @@ Exec_stat MCLock::exec(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCLock */
-
-	
-	MCExecContext ctxt(ep);
 	
 	switch(which)
 	{
@@ -1756,31 +1753,17 @@ Exec_stat MCLock::exec(MCExecPoint &ep)
 	case LC_SCREEN_FOR_EFFECT:
 		{
 			MCRectangle t_region;
-			MCRectangle *t_region_ptr;
-			if (rect != nil)
-			{
-				if (rect -> eval(ep) != ES_NORMAL)
-				{
-					MCeerror -> add(EE_LOCK_BADRECT, line, pos);
-					return ES_ERROR;
-				}
-				ep . copyaslegacyrectangle(t_region);
-				t_region_ptr = &t_region;
-			}
-			else
-				t_region_ptr = nil;
+            MCRectangle *t_region_ptr;
+            t_region_ptr = &t_region;
+            if (!ctxt . EvalOptionalExprAsRectangle(rect, nil, EE_LOCK_BADRECT, t_region_ptr))
+                return;
 			
 			MCInterfaceExecLockScreenForEffect(ctxt, t_region_ptr);
 		}
 		break;
 	default:
 		break;
-	}
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-	
-	return ctxt . Catch(line, pos);
+    }
 }
 
 void MCLock::compile(MCSyntaxFactoryRef ctxt)
