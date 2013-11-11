@@ -2497,8 +2497,7 @@ if (targets != NULL)
 		for(MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
 		{
 			MCObjectPtr t_object;
-            t_chunk -> getobj(ctxt, t_object, True);
-			if (t_object . object -> gettype() < CT_FIRST_CONTROL || t_object . object -> gettype() > CT_LAST_CONTROL)
+			if (!t_chunk -> getobj(ctxt, t_object, True) || t_object . object -> gettype() < CT_FIRST_CONTROL || t_object . object -> gettype() > CT_LAST_CONTROL)
 				return;
             
 			if (!t_objects . Push(t_object))
@@ -2667,9 +2666,8 @@ MCObject *gptr;
 		return;
 	}
     MCObject *optr;
-	card->getobj(ctxt, optr, parid, True);
 	
-	if (optr->gettype() != CT_CARD)
+	if (!card->getobj(ctxt, optr, parid, True) || optr->gettype() != CT_CARD)
 	{
 		MCeerror->add(EE_PLACE_NOTACARD, line, pos);
 		return;
@@ -2896,7 +2894,8 @@ if (all)
 	{
 		MCObjectPtr optr;
 		uint4 parid;
-		target->getobj(ctxt, optr, True);
+		if (!target->getobj(ctxt, optr, True))
+            return;
 		
 		if (script)
 			MCEngineExecRemoveScriptOfObjectFrom(ctxt, optr . object, where == IP_FRONT);
@@ -2909,7 +2908,8 @@ if (all)
 			}
             
 			MCObject *cptr;
-			card->getobj(ctxt, cptr, parid, True);
+			if (!card->getobj(ctxt, cptr, parid, True))
+                return;
                     
 			if (cptr->gettype() != CT_CARD)
 			{
@@ -3378,9 +3378,8 @@ void MCRotate::exec_ctxt(MCExecContext& ctxt)
 	{
 		MCObject *optr;
 		uint4 parid;
-		image->getobj(ctxt, optr, parid, True);
         
-		if (optr->gettype() != CT_IMAGE)
+		if (!image->getobj(ctxt, optr, parid, True) || optr->gettype() != CT_IMAGE)
 		{
 			MCeerror->add(EE_ROTATE_NOTIMAGE, line, pos);
 			return;
@@ -3503,8 +3502,8 @@ void MCCrop::exec_ctxt(MCExecContext& ctxt)
 	{
 		MCObject *optr;
 		uint4 parid;
-		image->getobj(ctxt, optr, parid, True);
-		if (optr->gettype() != CT_IMAGE)
+    
+		if (!image->getobj(ctxt, optr, parid, True) || optr->gettype() != CT_IMAGE)
 		{
 			MCeerror->add(EE_CROP_NOTIMAGE, line, pos);
 			return;
@@ -3585,7 +3584,7 @@ Parse_stat MCSelect::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCSelect::exec(MCExecPoint &ep)
+void MCSelect::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCSelect */ LEGACY_EXEC
 if (targets == NULL)
@@ -3612,31 +3611,21 @@ if (targets == NULL)
 	return ES_NORMAL;
 #endif /* MCSelect */
 
-
-	MCExecContext ctxt(ep);
 	if (targets == NULL)
 		MCInterfaceExecSelectEmpty(ctxt);
 	else if (text)
 	{
 		MCObjectPtr t_object;
-		
-		if (targets -> getobj(ep, t_object, True) != ES_NORMAL)
-		{
-			MCeerror->add(EE_SELECT_BADTARGET, line, pos);
-			return ES_ERROR;
-		}
-		
+        if (!targets -> getobj(ctxt, t_object, True))
+            return;
 		MCInterfaceExecSelectAllTextOfField(ctxt, t_object);
 	}
-	else if (targets -> next == nil)
+    else if (targets -> next == nil)
 	{
 		MCObjectChunkPtr t_chunk;
 		
-		if (targets -> evalobjectchunk(ep, false, false, t_chunk) != ES_NORMAL)
-		{
-			MCeerror->add(EE_SELECT_BADTARGET, line, pos);
-			return ES_ERROR;
-		}
+		if (!targets -> evalobjectchunk(ctxt, false, false, t_chunk))
+            return;
 		
 		if (t_chunk . chunk != CT_UNDEFINED || where == PT_BEFORE || where == PT_AFTER)
 		{
@@ -3647,7 +3636,7 @@ if (targets == NULL)
 			else
 			{
 				MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
-				return ES_ERROR;
+				return;
 			}
 		}
 		else
@@ -3658,35 +3647,27 @@ if (targets == NULL)
 			MCInterfaceExecSelectObjects(ctxt, &t_object, 1);
 		}
 	}
-	else
+    else
 	{
 		MCChunk *chunkptr = targets;
 		MCObjectPtr t_object;
 		MCAutoArray<MCObjectPtr> t_objects;
-
+        
 		while (chunkptr != NULL)
 		{
-			if (chunkptr->getobj(ep, t_object, True) != ES_NORMAL)
-			{
-				MCeerror->add(EE_SELECT_BADTARGET, line, pos);
-				return ES_ERROR;
-			}	
+			if (!chunkptr->getobj(ctxt, t_object, True))
+                return;
 			
 			if (!t_objects . Push(t_object))
 			{
 				MCeerror -> add(EE_NO_MEMORY, line, pos);
-				return ES_ERROR;
+				return;
 			}
-
+            
 			chunkptr = chunkptr->next;
 		}
 		MCInterfaceExecSelectObjects(ctxt, t_objects . Ptr(), t_objects . Size());
 	}
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCSelect::compile(MCSyntaxFactoryRef ctxt)
