@@ -9133,4 +9133,3 @@ bool MCS_generate_uuid(char p_buffer[128])
     
 	return false;
 }
-
