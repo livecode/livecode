@@ -914,7 +914,6 @@ MCIdeExtract::MCIdeExtract(void)
 	m_filename = nil;
 	m_segment_name = nil;
 	m_section_name = nil;
-	m_it = nil;
 }
 
 MCIdeExtract::~MCIdeExtract(void)
@@ -922,7 +921,6 @@ MCIdeExtract::~MCIdeExtract(void)
 	delete m_filename;
 	delete m_segment_name;
 	delete m_section_name;
-	delete m_it;
 }
 
 // _internal extract x y from z
@@ -936,8 +934,6 @@ Parse_stat MCIdeExtract::parse(MCScriptPoint& sp)
 		return PS_ERROR;
 	if (sp . parseexp(False, True, &m_filename) != PS_NORMAL)
 		return PS_ERROR;
-	
-	getit(sp, m_it);
 	
 	return PS_NORMAL;
 }
@@ -973,10 +969,10 @@ Exec_stat MCIdeExtract::exec(MCExecPoint& ep)
 	if (t_stat == ES_NORMAL)
 	{
 		ep . grabbuffer((char *)t_data, t_data_size);
-		m_it -> set(ep);
+		ep.getit() -> set(ep);
 	}
 	else
-		m_it -> clear();
+		ep.getit() -> clear();
 	
 	return ES_NORMAL;
 }

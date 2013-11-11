@@ -64,7 +64,9 @@ MCServiceInterface *MCAndroidSystem::QueryService(MCServiceType type)
 
 void MCAndroidSystem::Debug(MCStringRef p_string)
 {
-	__android_log_print(ANDROID_LOG_INFO, "LiveCode", "%s", MCStringGetCString(p_string));
+    MCAutoStringRefAsUTF8String t_utf8_string;
+    /* UNCHECKED */ t_utf8_string . Lock(p_string);
+	__android_log_print(ANDROID_LOG_INFO, "LiveCode", "%s", *t_utf8_string);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,14 +74,18 @@ void MCAndroidSystem::Debug(MCStringRef p_string)
 MCSysModuleHandle MCAndroidSystem::LoadModule(MCStringRef p_path)
 {
 	void *t_result;
-	t_result = dlopen(MCStringGetCString(p_path), RTLD_LAZY);
-	MCLog("LoadModule(%s) - %p\n", MCStringGetCString(p_path), t_result);
+    MCAutoStringRefAsUTF8String t_utf8_path;
+    /* UNCHECKED */ t_utf8_path . Lock(p_path);
+	t_result = dlopen(*t_utf8_path, RTLD_LAZY);
+	MCLog("LoadModule(%s) - %p\n", *t_utf8_path, t_result);
 	return (MCSysModuleHandle)t_result;
 }
 
 MCSysModuleHandle MCAndroidSystem::ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
 {
-	return (MCSysModuleHandle)dlsym((void*)p_module, MCStringGetCString(p_symbol));
+    MCAutoStringRefAsUTF8String t_utf8_symbol;
+    /* UNCHECKED */ t_utf8_symbol . Lock(p_symbol);
+	return (MCSysModuleHandle)dlsym((void*)p_module, *t_utf8_symbol);
 }
 
 void MCAndroidSystem::UnloadModule(MCSysModuleHandle p_module)

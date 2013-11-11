@@ -1279,6 +1279,11 @@
 		4D9B68CF171449D2001349F2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					_MAC_SERVER,
+					_SERVER,
+				);
 				PRODUCT_NAME = "server-dbpostgresql";
 			};
 			name = Debug;
@@ -1286,6 +1291,11 @@
 		4D9B68D0171449D2001349F2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					_MAC_SERVER,
+					_SERVER,
+				);
 				PRODUCT_NAME = "server-dbpostgresql";
 			};
 			name = Release;
@@ -1293,6 +1303,11 @@
 		4D9BF4D71714479700B32D29 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					_MAC_SERVER,
+					_SERVER,
+				);
 				PRODUCT_NAME = "server-revdb";
 			};
 			name = Debug;
@@ -1300,6 +1315,11 @@
 		4D9BF4D81714479700B32D29 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					_MAC_SERVER,
+					_SERVER,
+				);
 				PRODUCT_NAME = "server-revdb";
 			};
 			name = Release;
@@ -1307,6 +1327,11 @@
 		4D9BF4DE171447A000B32D29 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					_MAC_SERVER,
+					"_SERVER\n",
+				);
 				PRODUCT_NAME = "server-dbsqlite";
 			};
 			name = Debug;
@@ -1314,6 +1339,11 @@
 		4D9BF4DF171447A000B32D29 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					_MAC_SERVER,
+					"_SERVER\n",
+				);
 				PRODUCT_NAME = "server-dbsqlite";
 			};
 			name = Release;
@@ -1321,6 +1351,11 @@
 		4D9BF4F8171447C200B32D29 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					_MAC_SERVER,
+					_SERVER,
+				);
 				PRODUCT_NAME = "server-dbmysql";
 			};
 			name = Debug;
@@ -1328,6 +1363,11 @@
 		4D9BF4F9171447C200B32D29 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					_MAC_SERVER,
+					_SERVER,
+				);
 				PRODUCT_NAME = "server-dbmysql";
 			};
 			name = Release;
@@ -1335,6 +1375,11 @@
 		4D9BF4FF171447CB00B32D29 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					_MAC_SERVER,
+					_SERVER,
+				);
 				PRODUCT_NAME = "server-dbodbc";
 			};
 			name = Debug;
@@ -1342,6 +1387,11 @@
 		4D9BF500171447CB00B32D29 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					_MAC_SERVER,
+					_SERVER,
+				);
 				PRODUCT_NAME = "server-dbodbc";
 			};
 			name = Release;

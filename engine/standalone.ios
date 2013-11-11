@@ -19,3 +19,4 @@ framework AddressBook
 framework AddressBookUI
 framework EventKit
 framework EventKitUI
+framework Security

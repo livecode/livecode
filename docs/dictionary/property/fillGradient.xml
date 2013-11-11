@@ -1,0 +1,67 @@
+<doc>
+	<legacy_id>3508</legacy_id>
+	<name>fillGradient</name>
+	<type>property</type>
+
+	<syntax>
+		<example>set the fillGradient [of graphic] to <i>propertiesArray</i></example>
+	</syntax>
+
+	<synonyms>
+	</synonyms>
+
+	<summary>Specifies the gradient to use to fill the graphic object. </summary>
+
+	<examples>
+<example>set the fillGradient of graphic &quot;Circle 1&quot; of me to myArray</example>
+<example>set the fillGradient[&quot;type&quot;] of graphic &quot;Rectangle 1&quot; of me to &quot;linear&quot;</example>
+<example><p>set the fillGradient[&quot;ramp&quot;] of graphic &quot;Poly 1&quot; of me to 0.2,5,45,126,255 &amp; return &amp; 0.8,230,5,32,255</p></example>
+	</examples>
+
+	<history>
+		<introduced version="3.0">Added. </introduced>
+		<deprecated version=""></deprecated>
+		<removed version=""></removed>
+		
+	</history>
+
+	<objects>
+		<graphic/>
+	</objects>
+
+	<platforms>
+		<mac/>
+		<windows/>
+		<linux/>
+	  <ios/>
+    <android/>
+  </platforms>
+
+	<classes>
+		<desktop/>
+		<server/>
+		<web/>
+	  <mobile/>
+  </classes>
+
+	<security>
+	</security>
+
+
+	<classification>
+	</classification>
+
+	<references>
+		<property tag="antialiased">antialiased Property</property>
+		<property tag="opaque">opaque Property</property>
+	</references>
+
+	<description>
+	<overview>The fill gradient is an array style property, each key of the array controls a different gradient parameter that will affect its final appearance. The easiest way to adjust these properties is by using the gradient card of the property inspector which has full control over each parameter. The fill gradient will be observed in the background of the shape. The allowed keys are as follows:<p></p><p>fillGradient[&quot;<b>type</b>&quot;]</p><p>&#9;The type of gradient, can take the values, &quot;linear&quot;, &quot;radial&quot;, &quot;conical&quot;, &quot;spiral&quot;, &quot;diamond&quot;, &quot;xy&quot;, &quot;sqrtxy&quot;</p><p></p><p>fillGradient[&quot;<b>ramp</b>&quot;]</p><p>&#9;A return delimited list of gradient  stops (see below) that define the layout of the of the gradient. </p><p></p><p>fillGradient[&quot;<b>from</b>&quot;]</p><p>&#9;A coordinate specifying the starting point of the gradient</p><p></p><p>fillGradient[&quot;<b>to</b>&quot;]&#9;&#9;</p><p>&#9;A coordinate specifying the end point of the gradient</p><p></p><p>fillGradient[&quot;<b>via</b>&quot;]&#9;&#9;</p><p>&#9;A coordinate specifying the intermediate point of the gradient (affects scaling and shearing of the gradient)</p><p></p><p>fillGradient[&quot;<b>quality</b>&quot;]</p><p>&#9;The quality can be set to <i>normal</i> or <i>good</i> (higher detail but slower). This property is <i>normal</i> by default. </p><p></p><p>fillGradient[&quot;<b>repeat</b>&quot;]&#9;</p><p>&#9;A number between 1 and 255 that specifies the number of times the gradient ramp is repeated between</p><p>&#9;the start and end points. This property is 1 by default. </p><p></p><p>fillGradient[&quot;<b>mirror</b>&quot;]&#9;</p><p>&#9;A boolean value specifying whether alternating repetitions of the ramp are reversed. This property </p><p>&#9;is false by default. </p><p></p><p>fillGradient[&quot;<b>wrap</b>&quot;]</p><p>&#9;A boolean value specifying whether the ramp is repeated to fill the entire graphic a object. This </p><p>&#9;property is false by default. </p><p></p><p>A gradient is a comma delimited list of numbers that specify the following values:</p><p>position&#9;&#9; &#9;- number between 0 and 1</p><p>red, green, blue &#9;- numbers between 0 and 255</p><p>alpha &#9;&#9;&#9;- number between 0 (transparent) and 255 (opaque), if omitted it is assumed to be 255. </p></overview>
+
+	<parameters></parameters>
+
+	<value></value>
+	<comments></comments>
+	</description>
+</doc>

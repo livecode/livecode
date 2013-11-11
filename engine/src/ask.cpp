@@ -66,7 +66,6 @@ const char *MCdialogtypes[] =
 
 MCAsk::~MCAsk(void)
 {
-	delete it;
 	delete title;
 
 	switch(mode)
@@ -101,7 +100,6 @@ Parse_stat MCAsk::parse(MCScriptPoint &sp)
 	const LT *t_literal;
 
 	initpoint(sp);
-	getit(sp, it);
 
 	if (sp . next(t_type) == PS_NORMAL)
 		if (sp . lookup(SP_ASK, t_literal) == PS_NORMAL)
@@ -260,7 +258,7 @@ Exec_stat MCAsk::exec(class MCExecPoint& ep)
 {
 	Exec_errors t_error = EE_UNDEFINED;
 	
-	MCExecContext ctxt(ep, it);
+	MCExecContext ctxt(ep);
 	
 	MCAutoStringRef t_title;
 	if (!evaluate_stringref(ep, title, EE_ANSWER_BADTITLE, line, pos, &t_title))

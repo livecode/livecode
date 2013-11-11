@@ -250,6 +250,7 @@ MCNameRef MCN_bold_italic;
 
 MCNameRef MCN_unknown;
 MCNameRef MCN_x86;
+MCNameRef MCN_x86_64;
 MCNameRef MCN_motorola_powerpc;
 MCNameRef MCN_i386;
 MCNameRef MCN_arm;
@@ -598,6 +599,9 @@ MCNameRef MCM_product_details_received;
 MCNameRef MCM_product_request_error;
 MCNameRef MCM_protected_data_available;
 MCNameRef MCM_protected_data_unavailable;
+
+// MW-2013-05-30: [[ RemoteControl ]] Message sent when a remote control event is received.
+MCNameRef MCM_remote_control_received;
 #endif
 
 void MCU_initialize_names(void)
@@ -677,6 +681,7 @@ void MCU_initialize_names(void)
 
 	/* UNCHECKED */ MCNameCreateWithCString("unknown", MCN_unknown);
 	/* UNCHECKED */ MCNameCreateWithCString("x86", MCN_x86);
+    /* UNCHECKED */ MCNameCreateWithCString("x86_64", MCN_x86_64);
 	/* UNCHECKED */ MCNameCreateWithCString("Motorola PowerPC", MCN_motorola_powerpc);
 	/* UNCHECKED */ MCNameCreateWithCString("i386", MCN_i386);
 	/* UNCHECKED */ MCNameCreateWithCString("ARM", MCN_arm);
@@ -1026,6 +1031,9 @@ void MCU_initialize_names(void)
     /* UNCHECKED */ MCNameCreateWithCString("productRequestError", MCM_product_request_error);
     /* UNCHECKED */ MCNameCreateWithCString("protectedDataDidBecomeAvailable", MCM_protected_data_available);
     /* UNCHECKED */ MCNameCreateWithCString("protectedDataWillBecomeUnavailable", MCM_protected_data_unavailable);
+	
+	// MW-2013-05-30: [[ RemoteControl ]] Message sent when a remote control event is received.
+	/* UNCHECKED */ MCNameCreateWithCString("remoteControlReceived", MCM_remote_control_received);
 #endif
 }
 
@@ -1106,6 +1114,7 @@ void MCU_finalize_names(void)
 
 	MCNameDelete(MCN_unknown);
 	MCNameDelete(MCN_x86);
+	MCNameDelete(MCN_x86_64);
     MCNameDelete(MCN_motorola_powerpc);
     MCNameDelete(MCN_i386);
     MCNameDelete(MCN_arm);

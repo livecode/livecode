@@ -36,9 +36,9 @@ public:
 	IO_stat ReadS32(int32_t& r_value);
 	IO_stat ReadFloat32(float& r_value);
 	IO_stat ReadFloat64(double& r_value);
-	IO_stat ReadCString(char*& r_value);
 	IO_stat ReadNameRef(MCNameRef& r_value);
 	IO_stat ReadStringRef(MCStringRef& r_value);
+    IO_stat ReadTranslatedStringRef(MCStringRef& r_value);
 	IO_stat ReadColor(MCColor &r_color);
 
 	IO_stat Read(void *p_buffer, uint32_t p_amount);
@@ -86,7 +86,7 @@ public:
 	IO_stat WriteU16(uint16_t p_value);
 	IO_stat WriteU32(uint32_t p_value);
 	IO_stat WriteU64(uint64_t p_value);
-	IO_stat WriteCString(const char *p_value);
+	IO_stat WriteStringRef(MCStringRef p_value);
 	IO_stat WriteNameRef(MCNameRef p_value);
 	IO_stat WriteColor(const MCColor &p_value);
 

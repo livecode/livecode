@@ -1,6 +1,8 @@
 NAME=libkernel-standalone
 TYPE=archive
 
+include ../rules/environment.linux.makefile
+
 SOURCES= \
 	lextable.cpp mode_standalone.cpp
 

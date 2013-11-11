@@ -1,0 +1,48 @@
+<doc>
+  <legacy_id>2247</legacy_id>
+  <name>popup</name>
+  <type>command</type>
+  <syntax>
+    <example>popup {<i>stack</i> | <i>button</i>} [at <i>location</i>]</example>
+  </syntax>
+  <library></library>
+  <objects>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Menus</category>
+    <category>Math, Logic, &amp; Dates</category>
+  </classification>
+  <references>
+    <command tag="pulldown">pulldown Command</command>
+    <function tag="clickLoc">clickLoc Function</function>
+    <keyword tag="popup">popup Keyword</keyword>
+    <property tag="toolTip">toolTip Property</property>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+    <changed version="2.0"></changed>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+  </classes>
+  <security>
+  </security>
+  <summary>Displays a <glossary tag="popup menu">popup menu</glossary> whose <glossary tag="menu item">menu items</glossary> are either lines in a <keyword tag="button">button</keyword> or <glossary tag="button">buttons</glossary> in a <object tag="stack">stack</object>.</summary>
+  <examples>
+    <example>popup button "Contextual Menu"</example>
+    <example>popup stack "Button Properties"</example>
+    <example>popup stack (field "Which")</example>
+  </examples>
+  <description>
+    <p>Use the <b>popup</b> <glossary tag="command">command</glossary> to display a <glossary tag="contextual menu">contextual menu</glossary>.</p><p/><p><b>Parameters:</b></p><p>The <i>stack</i> is any <href tag="reference/object_reference.rev">stack reference</href>. The <glossary tag="stack">stack's</glossary> first <keyword tag="card">card</keyword> contains a <keyword tag="button">button</keyword> for each <glossary tag="menu item">menu item</glossary> in the <glossary tag="popup menu">popup menu</glossary>.</p><p/><p>The <i>button</i> is a reference to a <keyword tag="button">button</keyword> on the <glossary tag="current card">current card</glossary>.</p><p/><p>The <i>location</i> is an <glossary tag="expression">expression</glossary> that <glossary tag="evaluate">evaluates</glossary> to a <keyword tag="point">point</keyword>--two <glossary tag="integer">integers</glossary> separated by a comma.</p><p/><p><b>Comments:</b></p><p>Use the <b>popup</b> <glossary tag="command">command</glossary> in a <message tag="mouseDown">mouseDown</message> <glossary tag="handler">handler</glossary> to display the <keyword tag="menu">menu</keyword>. </p><p>The popup menu appears with its top left corner at the <i>location</i>. If no <i>location</i> is specified, the <glossary tag="menu">menu's</glossary> top left corner is at the mouse location. While the <glossary tag="popup menu">popup menu</glossary> is displayed, the <glossary tag="handler">handler</glossary> pauses.</p><p/><p>You can use the mouse button parameter of the <b>mouseDown</b> message to specify that the <keyword tag="menu">menu</keyword> should appear only when the user right-clicks (on <glossary tag="Unix">Unix</glossary> and <glossary tag="Windows">Windows systems</glossary>) or Control-clicks (on <glossary tag="Mac OS">Mac OS systems</glossary>):</p><p/><p><code>  on mouseDown theButton</code></p><p><code>    </code><code><i>-- pop up the menu on right-click or control-click</i></code></p><p><code>    if theButton is 3 then popup stack "Lookup Options"</code></p><p><code>    else pass mouseDown</code></p><p><code>  end mouseDown</code></p><p/><p>Choosing a menu item from the popup menu sends a <b>menuPick</b> <keyword tag="message box">message</keyword> to the <i>button</i> (for a <glossary tag="button menu">button menu</glossary>) or a <message tag="mouseUp">mouseUp</message> <keyword tag="message box">message</keyword> to the clicked <keyword tag="control">control</keyword> in the <i>stack</i> (for a <glossary tag="stack menu">stack menu</glossary>). The <keyword tag="button">button</keyword> or <glossary tag="stack menu">stack menu</glossary> <glossary tag="handle">handles</glossary> the menu choice.</p><p/><p>If you use a button to hold the contents of the menu, the button's <b>style</b> <glossary tag="property">property</glossary> must be set to "menu" and its <property tag="menuMode">menuMode</property> must be set to "popup". The <glossary tag="button">button's</glossary> <property tag="visible">visible</property> <glossary tag="property">property</glossary> may be set to either true or false.</p><p/><p><code/><img src="202653"/> <b>Important!</b><code/> The <property tag="menuMouseButton">menuMouseButton</property> <glossary tag="property">property</glossary> of a <keyword tag="button">button</keyword> used with the <b>popup</b> <glossary tag="command">command</glossary> must be set to zero. Setting it to any other value may result in unexpected behavior when the menu is used. To control which <glossary tag="mouse button">mouse buttons</glossary> may be used to access the <keyword tag="menu">menu</keyword>, use the <glossary tag="mouse button">mouse button</glossary> <glossary tag="parameter">parameter</glossary> of the <message tag="mouseDown">mouseDown</message> <keyword tag="message box">message</keyword>, as described above.</p><p/><p><b>Changes:</b></p><p>The option to pop up a button menu was introduced in version 1.1. In previous versions, only stack menus could be used with the <b>popup</b> <glossary tag="command">command</glossary>.</p><p/><p>The <i>location</i> <glossary tag="parameter">parameter</glossary> was introduced in version 2.0. In previous versions, the <glossary tag="popup menu">popup menu</glossary> always appeared with its top left corner at the mouse location.</p>
+  </description>
+</doc>

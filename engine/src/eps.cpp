@@ -125,7 +125,7 @@ Boolean MCEPS::mdown(uint2 which)
 		switch (getstack()->gettool(this))
 		{
 		case T_BROWSE:
-			message_with_args(MCM_mouse_down, "1");
+			message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 			break;
 		case T_POINTER:
 			start(True);
@@ -156,7 +156,7 @@ Boolean MCEPS::mup(uint2 which)
 		{
 		case T_BROWSE:
 			if (MCU_point_in_rect(rect, mx, my))
-				message_with_args(MCM_mouse_up, "1");
+				message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 			break;
 		case T_POINTER:
 			end();
@@ -503,7 +503,7 @@ void MCEPS::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_spr
 		dc->setlineatts(0, LineDoubleDash, CapButt, JoinBevel);
 		dc->setforeground(dc->getblack());
 		dc->setbackground(dc->getwhite());
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 		dc->setdashes(0, dashlist, 2);
 		MCSegment segs[2];
 		segs[0].x1 = segs[1].x1 = trect.x;
