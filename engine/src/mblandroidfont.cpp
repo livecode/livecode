@@ -14,6 +14,8 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include "prefix.h"
+
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -21,7 +23,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 
 #include "execpt.h"
-#include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
 #include "stack.h"
@@ -34,17 +35,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "eventqueue.h"
 
 #include "mode.h"
+#include "util.h"
 #include "osspec.h"
-#include "redraw.h"
-#include "region.h"
 
-#include "mbldc.h"
+#include "system.h"
 
 #include "mblandroidutil.h"
-#include "mblandroidcontext.h"
-#include "mblandroidjava.h"
+#include "mblandroidtypeface.h"
 
-#include <SkStream.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <freetype/ftsnames.h>
@@ -81,7 +79,7 @@ static const MCAndroidDroidFontMap s_droid_fonts[] = {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void MCAndroidCustomFontsList(char *&r_font_names);
+static bool MCAndroidCustomFontsList(MCStringRef& r_font_list);
 static MCAndroidFontStyle MCAndroidCustomFontsGetStyle(MCStringRef p_name);
 
 bool MCSystemListFontFamilies(MCListRef& r_names)
@@ -93,12 +91,10 @@ bool MCSystemListFontFamilies(MCListRef& r_names)
 		if (!MCListAppendCString(*t_list, s_droid_fonts[i].name))
 			return false;
     
-    char *t_custom_font_names;
-    MCAndroidCustomFontsList(t_custom_font_names);
-    if (!MCListAppendCString(*t_list, t_custom_font_names))
+    MCAutoStringRef t_custom_font_names;
+    if (!MCAndroidCustomFontsList(&t_custom_font_names) ||
+        !MCListAppend(*t_list, *t_custom_font_names))
         return false;
-    
-    MCCStringFree(t_custom_font_names);
     
 	return MCListCopy(*t_list, r_names);
 }
@@ -140,69 +136,24 @@ bool MCSystemListFontsForFamily(MCStringRef p_family, MCListRef& r_styles)
     
 	return MCListCopy(*t_list, r_styles);
 }
-/*
-void MCSystemListFontFamilies(MCExecPoint& ep)
-{
-    ep . clear();        
-    for (uint32_t i = 0; s_droid_fonts[i].name != nil; i++)
-        ep.concatcstring(s_droid_fonts[i].name, EC_RETURN, ep.getsvalue().getlength() == 0);
-    
-    char *t_custom_font_names;
-    t_custom_font_names = nil;
-    MCAndroidCustomFontsList(t_custom_font_names);
-    if (t_custom_font_names != nil)
-        ep.concatcstring(t_custom_font_names, EC_RETURN, ep.getsvalue().getlength() == 0);
-    MCCStringFree(t_custom_font_names);
-}
 
-
-bool MCSystemListFontsForFamily(MCExecPoint& ep, const char *p_family)
-{
-    uint32_t t_styles;
-    t_styles = 0;
-    
-    for (uint32_t i = 0; s_droid_fonts[i].name != nil; i++)
-    {
-        if (MCCStringEqualCaseless(s_droid_fonts[i].name, p_family))
-        {
-            t_styles = s_droid_fonts[i].styles;
-            break;
-        }
-    }
-    
-    if (t_styles == 0)
-        t_styles = MCAndroidCustomFontsGetStyle(p_family);
-    
-    ep . clear();        
-    if (t_styles & kMCAndroidFontStyleRegular)
-        ep.concatcstring("plain", EC_RETURN, ep.getsvalue().getlength() == 0);
-    if (t_styles & kMCAndroidFontStyleBold)
-        ep.concatcstring("bold", EC_RETURN, ep.getsvalue().getlength() == 0);
-    if (t_styles & kMCAndroidFontStyleItalic)
-        ep.concatcstring("italic", EC_RETURN, ep.getsvalue().getlength() == 0);
-    if (t_styles & kMCAndroidFontStyleBoldItalic)
-        ep.concatcstring("bold-italic", EC_RETURN, ep.getsvalue().getlength() == 0);
-
-	return false;
-}
-*/
 ////////////////////////////////////////////////////////////////////////////////
 
 struct MCAndroidCustomFont {
-    char *path;
-    char *name;
-    char *family;
+    MCStringRef path;
+    MCStringRef name;
+    MCStringRef family;
     MCAndroidFontStyle style;
     MCAndroidCustomFont *next;
 };
 
 static MCAndroidCustomFont *s_custom_fonts = nil;
-static const char *s_font_folder = "fonts/";
+static MCStringRef s_font_folder = MCSTR("fonts/");
 
 static MCAndroidCustomFont* look_up_custom_font_by_name(MCStringRef p_name);
 static MCAndroidCustomFont* look_up_custom_font_by_family_and_style(MCStringRef p_family, bool p_bold, bool p_italic);
 static MCAndroidCustomFont* look_up_custom_font(MCStringRef p_name, bool p_bold, bool p_italic);
-static bool create_custom_font_from_path(const char *p_path, FT_Library p_library, MCAndroidCustomFont *&r_custom_font);
+static bool create_custom_font_from_path(MCStringRef p_path, FT_Library p_library, MCAndroidCustomFont *&r_custom_font);
 static void delete_custom_font(MCAndroidCustomFont *p_font);
 
 void MCAndroidCustomFontsInitialize()
@@ -235,66 +186,54 @@ void MCAndroidCustomFontsLoad()
     if (t_success)
         t_success = FT_Init_FreeType(&t_ft_library) == 0;
     
-    char *t_file_list;
-    t_file_list = nil;
+    MCAutoStringRef t_file_list;
     if (t_success)
     {
-        MCAndroidEngineCall("getAssetFolderEntryList", "ss", &t_file_list, s_font_folder);
-        t_success = t_file_list != nil;
+        MCAndroidEngineCall("getAssetFolderEntryList", "xx", &(&t_file_list), s_font_folder);
+        t_success = *t_file_list != nil;
     }
     
-	char *t_next_entry;
-	t_next_entry = t_file_list;
     MCAndroidCustomFont *t_last_font;
     t_last_font = s_custom_fonts;
-	while (t_success && *t_next_entry != '\0')
+    
+    uindex_t t_offset = 0;
+    uindex_t t_old_offset;
+    uindex_t t_length = MCStringGetLength(*t_file_list);
+    
+	while (t_success && t_offset < t_length)
 	{
-        char *t_file_name;
-        t_file_name = nil;
-        char *t_file_name_end;
-        t_file_name_end = nil;        
+        t_old_offset = t_offset;
+        MCAutoStringRef t_file;
+        MCAutoStringRef t_is_folder_string;
+        bool t_is_folder;
+        
+        if (!MCStringFirstIndexOfChar(*t_file_list, '\n', t_old_offset, kMCCompareExact, t_offset))
+            break;
+            
+        t_success = MCStringCopySubstring(*t_file_list, MCRangeMake(t_old_offset, t_offset - t_old_offset), &t_file);
+        
         if (t_success)
         {
-            t_file_name = t_next_entry;
-            t_file_name_end = strchr(t_file_name, '\n');
-            t_success = t_file_name_end != nil;
+            if (!MCStringFirstIndexOfChar(*t_file_list, ',', ++t_offset, kMCCompareExact, t_offset))
+                break;
+            
+            t_old_offset = t_offset++;
+            
+            if (!MCStringFirstIndexOfChar(*t_file_list, '\n', t_old_offset, kMCCompareExact, t_offset))
+                break;
+            
+           t_success = MCStringCopySubstring(*t_file_list, MCRangeMake(t_old_offset, t_offset - t_old_offset), &t_is_folder_string);
         }
         
-        char *t_folder;
-        t_folder = nil;
         if (t_success)
-        {
-			*t_file_name_end = '\0';            
-			t_folder = strchr(t_file_name_end + 1, ',');
-            t_success = t_folder != nil;
-        }
-        
-        char *t_folder_end;
-        t_folder_end = nil;
-        if (t_success)
-        {
-            t_folder++;
-			t_folder_end = strchr(t_folder, '\n');
-            if (t_folder_end == nil)
-                t_folder_end = strchr(t_folder, '\0');
-            t_success = t_folder_end != nil;
-        }
-        
-        Boolean t_is_folder;
-        t_is_folder = false;
-        if (t_success)
-        {
-            if (*t_folder_end != '\0')
-                *t_folder_end++ = '\0';
-            t_success = MCU_stob(t_folder, t_is_folder);
-        }
+            t_success = MCU_stob(*t_is_folder_string, t_is_folder);
         
         if (t_success)
             if (!t_is_folder)
             {
                 MCAndroidCustomFont *t_font;
                 t_font = nil;
-                if (create_custom_font_from_path(t_file_name, t_ft_library, t_font))
+                if (create_custom_font_from_path(*t_file, t_ft_library, t_font))
                 {
                     if (t_last_font == nil)
                         s_custom_fonts = t_font;
@@ -303,33 +242,29 @@ void MCAndroidCustomFontsLoad()
                     t_last_font = t_font;
                 }                
             }
-        
-        t_next_entry = t_folder_end;
+        t_offset++;
 	}
     
     if (t_ft_library != nil)
         FT_Done_FreeType(t_ft_library);
 }
 
-static void MCAndroidCustomFontsList(char *&r_font_names)
+static bool MCAndroidCustomFontsList(MCStringRef& r_font_list)
 {
     bool t_success;
     t_success = true;
     
-    char *t_font_names;
-    t_font_names = nil;
+    MCAutoListRef t_list;
+    if (!MCListCreateMutable('\n', &t_list))
+		return false;
+    
     for (MCAndroidCustomFont *t_font = s_custom_fonts; t_success && t_font != nil; t_font = t_font->next)
-    {
-        if (t_font_names == nil)
-            t_success = MCCStringClone(t_font->name, t_font_names);
-        else
-            t_success = MCCStringAppendFormat(t_font_names, "\n%s", t_font->name);
-    }
+        t_success = MCListAppend(*t_list, t_font->name);
     
     if (t_success)
-        r_font_names = t_font_names;
-    else
-        /*UNCHECKED */ MCCStringFree(t_font_names);
+        return MCListCopyAsString(*t_list, r_font_list);
+    
+    return false;
 }
 
 static MCAndroidFontStyle MCAndroidCustomFontsGetStyle(MCStringRef p_name)
@@ -339,7 +274,7 @@ static MCAndroidFontStyle MCAndroidCustomFontsGetStyle(MCStringRef p_name)
     
     for (MCAndroidCustomFont *t_font = s_custom_fonts; t_font != nil; t_font = t_font->next)
     {
-        if (MCStringIsEqualToCString(p_name, t_font->family, kMCCompareCaseless))
+        if (MCStringIsEqualTo(p_name, t_font->family, kMCCompareCaseless))
             t_styles |= t_font->style;
     }
     
@@ -388,14 +323,14 @@ static MCAndroidCustomFont* look_up_custom_font(MCStringRef p_name, bool p_bold,
     // If we've still not found a matching font, look up based on the family and style.
     // This function will attempt to provide a closest match e.g. Arial Bold is requested but only Arial is installed.
     t_font = look_up_custom_font_by_family_and_style(p_name, p_bold, p_italic);
-    return t_font;
+   return t_font;
 }
 
 static MCAndroidCustomFont* look_up_custom_font_by_name(MCStringRef p_name)
 {
     for (MCAndroidCustomFont *t_font = s_custom_fonts; t_font != nil; t_font = t_font->next)
     {
-        if (MCStringIsEqualToCString(p_name, t_font->name, kMCCompareCaseless))
+        if (MCStringIsEqualTo(p_name, t_font->name, kMCCompareCaseless))
             return t_font;
     }
     return nil;
@@ -407,7 +342,7 @@ static MCAndroidCustomFont* look_up_custom_font_by_family_and_style(MCStringRef 
     t_closest_font = nil;
     for (MCAndroidCustomFont *t_font = s_custom_fonts; t_font != nil; t_font = t_font->next)
     {
-        if (MCStringIsEqualToCString(p_family, t_font->family, kMCCompareCaseless))
+        if (MCStringIsEqualTo(p_family, t_font->family, kMCCompareCaseless))
         {
             if ((p_bold && p_italic && t_font->style == kMCAndroidFontStyleBoldItalic) || 
                 (p_bold && t_font->style == kMCAndroidFontStyleBold) || 
@@ -424,14 +359,14 @@ static void delete_custom_font(MCAndroidCustomFont *p_font)
 {
     if (p_font != nil)
     {
-        /*UNCHECKED */ MCCStringFree(p_font->path);
-        /*UNCHECKED */ MCCStringFree(p_font->name);
-        /*UNCHECKED */ MCCStringFree(p_font->family);
+        /*UNCHECKED */ MCValueRelease(p_font->path);
+        /*UNCHECKED */ MCValueRelease(p_font->name);
+        /*UNCHECKED */ MCValueRelease(p_font->family);
         /*UNCHECKED */ MCMemoryDelete(p_font);
     }
 }
 
-static bool load_custom_font_file_into_buffer_from_path(const char *p_path, char *&r_buffer, uint32_t &r_size)
+static bool load_custom_font_file_into_buffer_from_path(MCStringRef p_path, char *&r_buffer, uint32_t &r_size)
 {     
     bool t_success;
     t_success = true;
@@ -439,7 +374,7 @@ static bool load_custom_font_file_into_buffer_from_path(const char *p_path, char
     MCAutoStringRef t_font_path;
     
     if (t_success)
-        t_success = MCStringFormat(&t_font_path, "%s/%s%s", MCStringGetCString(MCcmd), s_font_folder, p_path);
+        t_success = MCStringFormat(&t_font_path, "%@/%@%@", MCcmd, s_font_folder, p_path);
     
     if (t_success)
         t_success = MCS_exists(*t_font_path, true);
@@ -477,7 +412,7 @@ static bool load_custom_font_file_into_buffer_from_path(const char *p_path, char
     return t_success;
 }
 
-static bool create_custom_font_from_path(const char *p_path, FT_Library p_library, MCAndroidCustomFont *&r_custom_font)
+static bool create_custom_font_from_path(MCStringRef p_path, FT_Library p_library, MCAndroidCustomFont *&r_custom_font)
 {
     bool t_success;
     t_success = true;
@@ -500,10 +435,10 @@ static bool create_custom_font_from_path(const char *p_path, FT_Library p_librar
         t_success = MCMemoryNew(t_font);
     
     if (t_success)
-        t_success = MCCStringClone(p_path, t_font->path);
+        MCValueAssign(t_font->path, p_path);
     
     if (t_success)
-        t_success = MCCStringClone(t_font_face->family_name, t_font->family);
+        t_success = MCStringCreateWithCString(t_font_face->family_name, t_font->family);
     
     if (t_success)
     {
@@ -527,7 +462,7 @@ static bool create_custom_font_from_path(const char *p_path, FT_Library p_librar
             FT_Get_Sfnt_Name(t_font_face, i, &t_sft_name);
             if (t_sft_name.name_id == 4 && t_sft_name.platform_id == 1 && t_sft_name.encoding_id == 0 && t_sft_name.language_id == 0 && t_sft_name.string_len != 0)
             {
-                t_success = MCCStringCloneSubstring((char *)t_sft_name.string, t_sft_name.string_len, t_font->name); 
+                t_success = MCStringCreateWithNativeChars((char_t *)t_sft_name.string, t_sft_name.string_len, t_font->name);
                 break;
             }
         }
@@ -549,7 +484,7 @@ static bool create_custom_font_from_path(const char *p_path, FT_Library p_librar
     return t_success;
 }
 
-static bool create_skia_font_face_from_custom_font_name_and_style(MCStringRef p_name, bool p_bold, bool p_italic, SkTypeface *&r_type_face)
+static bool create_font_face_from_custom_font_name_and_style(MCStringRef p_name, bool p_bold, bool p_italic, MCAndroidTypefaceRef &r_typeface)
 {    
     bool t_success;
     t_success = true;
@@ -569,33 +504,16 @@ static bool create_skia_font_face_from_custom_font_name_and_style(MCStringRef p_
     if (t_success)
         t_success = load_custom_font_file_into_buffer_from_path(t_font->path, t_buffer, t_file_size);
     
-    SkMemoryStream *t_stream;
-    t_stream = nil;
+	MCAndroidTypefaceRef t_typeface;
+    t_typeface = nil;
     if (t_success)
-    {
-        t_stream = new SkMemoryStream(t_buffer, t_file_size, false);
-        t_success = t_stream != nil;
-    }
-    
-    SkTypeface *t_type_face;
-    t_type_face = nil;
-    if (t_success)
-    {
-        t_type_face = SkTypeface::CreateFromStream(t_stream);
-        t_success = t_type_face != nil;
-    }
+		t_success = MCAndroidTypefaceCreateWithData(t_buffer, t_file_size, t_typeface);
     
     if (t_success)
-        r_type_face = t_type_face;
+        r_typeface = t_typeface;
     else
-    {
-        if (t_type_face != nil)
-            delete t_type_face;
-        if (t_stream != nil)
-            delete t_stream;
-        /*UNCHECKED */ MCMemoryDelete(t_buffer); 
-    }
-        
+        MCMemoryDelete(t_buffer);
+    
     return t_success;
 }
 
@@ -607,22 +525,16 @@ void *android_font_create(MCStringRef name, uint32_t size, bool bold, bool itali
     
 	if (MCMemoryNew(t_font))
 	{
-		SkTypeface::Style t_style = SkTypeface::kNormal;
-		if (bold)
-		{
-			if (italic)
-				t_style = SkTypeface::kBoldItalic;
-			else
-				t_style = SkTypeface::kBold;
-		}
-		else if (italic)
-			t_style = SkTypeface::kItalic;
-        
         // MM-2012-03-06: Check to see if we have a custom font of the given style and name available
-        if (!create_skia_font_face_from_custom_font_name_and_style(name, bold, italic, t_font->sk_typeface))
-            t_font->sk_typeface = SkTypeface::CreateFromName(MCStringGetCString(name), t_style);
+        if (!create_font_face_from_custom_font_name_and_style(name, bold, italic, t_font->typeface))
+        {
+            char *t_name;
+            /* UNCHECKED */ MCStringConvertToCString(name, t_name);
+			/* UNCHECKED */ MCAndroidTypefaceCreateWithName(t_name, bold, italic, t_font->typeface);
+            delete t_name;
+        }
         
-		MCAssert(t_font->sk_typeface != NULL);
+		MCAssert(t_font->typeface != NULL);
 		t_font->size = size;
 	}
     
@@ -632,8 +544,8 @@ void *android_font_create(MCStringRef name, uint32_t size, bool bold, bool itali
 void android_font_destroy(void *font)
 {
 	MCAndroidFont *t_font = (MCAndroidFont*)font;
-	if (t_font != nil && t_font->sk_typeface != nil)
-		t_font->sk_typeface->unref();
+	if (t_font != nil && t_font->typeface != nil)
+		MCAndroidTypefaceRelease(t_font->typeface);
 	MCMemoryDelete(font);
 }
 
@@ -641,30 +553,17 @@ void android_font_get_metrics(void *font, float& a, float& d)
 {
 	MCAndroidFont *t_font = (MCAndroidFont*)font;
     
-	SkPaint t_paint;
-	t_paint.setTypeface(t_font->sk_typeface);
-	t_paint.setTextSize(t_font->size);
-    
-	SkPaint::FontMetrics t_metrics;
-    
-	t_paint.getFontMetrics(&t_metrics);
-    
-	a = t_metrics.fAscent;
-	d = t_metrics.fDescent;
+	/* UNCHECKED */ MCAndroidTypefaceGetMetrics(t_font->typeface, t_font->size, a, d);
 }
 
 float android_font_measure_text(void *p_font, const char *p_text, uint32_t p_text_length, bool p_is_unicode)
 {
 	MCAndroidFont *t_font = (MCAndroidFont*)p_font;
     
-	SkPaint t_paint;
-	t_paint.setTypeface(t_font->sk_typeface);
-	t_paint.setTextSize(t_font->size);
-    
+	float t_length;
 	if (p_is_unicode)
 	{
-		t_paint.setTextEncoding(SkPaint::kUTF16_TextEncoding);
-		return t_paint.measureText(p_text, p_text_length);
+		/* UNCHECKED */ MCAndroidTypefaceMeasureText(t_font->typeface, t_font->size, p_text, p_text_length, true, t_length);
 	}
 	else
 	{
@@ -675,10 +574,10 @@ float android_font_measure_text(void *p_font, const char *p_text, uint32_t p_tex
         
 		const MCString &t_utf_string = ep.getsvalue();
         
-		t_paint.setTextEncoding(SkPaint::kUTF8_TextEncoding);
-        
-		return t_paint.measureText(t_utf_string.getstring(), t_utf_string.getlength());
+		/* UNCHECKED */ MCAndroidTypefaceMeasureText(t_font->typeface, t_font->size, t_utf_string.getstring(), t_utf_string.getlength(), false, t_length);
 	}
+	
+	return t_length;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

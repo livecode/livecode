@@ -1035,7 +1035,7 @@ void MCiOSScrollerControl::HandleEndDragEvent(bool p_decelerate)
 	{
 		MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
-		t_target->message_with_args(MCM_scroller_end_drag, p_decelerate ? MCtruestring : MCfalsestring);
+		t_target->message_with_valueref_args(MCM_scroller_end_drag, p_decelerate ? kMCTrue : kMCFalse);
 		ChangeTarget(t_old_target);
 	}
 }

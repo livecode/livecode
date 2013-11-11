@@ -1,0 +1,1 @@
+# app identifier field in standalone applications settings on iOS and Android allows return characters.

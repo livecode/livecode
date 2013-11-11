@@ -1,0 +1,43 @@
+<doc>
+  <legacy_id>1667</legacy_id>
+  <name>compact</name>
+  <type>command</type>
+  <syntax>
+    <example>compact <i>stack</i></example>
+  </syntax>
+  <library></library>
+  <objects>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Objects &amp; Messages</category>
+    <category>Files, Folders, &amp; Resources</category>
+  </classification>
+  <references>
+    <command tag="delete">delete Command</command>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+  </classes>
+  <security>
+  </security>
+  <summary>Reclaims unused space within a <glossary tag="stack">stack's</glossary> <keyword tag="file">file</keyword> structure.</summary>
+  <examples>
+    <example>compact this stack</example>
+    <example>compact stack "Encyclopedia"</example>
+  </examples>
+  <description>
+    <p>When you cut or delete a card, some free space is left within the stack. This empty space is reclaimed when you choose <code/><b>File menu<img src="202656"/>Save</b><code/>. Use the <b>compact</b> <glossary tag="command">command</glossary> to reclaim this empty space without having to save the <object tag="stack">stack</object>.</p><p/><p><b>Parameters:</b></p><p>The <i>stack</i> is any <href tag="reference/object_reference.rev">stack reference</href>.</p><p/><p><b>Comments:</b></p><p>This command is especially useful when a handler performs multiple rearrangements of cards without saving the stack.</p><p/><p>The "Save" menu item in the File menu automatically compacts the stack. However, the <b>save</b> <glossary tag="command">command</glossary> does not do so.</p>
+  </description>
+</doc>

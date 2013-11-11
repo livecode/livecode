@@ -26,10 +26,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "uidc.h"
 
-#ifdef __LITTLE_ENDIAN__
+#if kMCGPixelFormatNative == kMCGPixelFormatBGRA
 #define NATIVE_IMAGE_FORMAT EX_RAW_BGRA
-#else
+#elif kMCGPixelFormatNative == kMCGPixelFormatRGBA
+#define NATIVE_IMAGE_FORMAT EX_RAW_RGBA
+#elif kMCGPixelFormatNative == kMCGPixelFormatARGB
 #define NATIVE_IMAGE_FORMAT EX_RAW_ARGB
+#elif kMCGPixelFormatNative == kMCGPixelFormatABGR
+#define NATIVE_IMAGE_FORMAT EX_RAW_ABGR
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -205,6 +209,13 @@ static void MCBitmapConvertRow(uint8_t *p_dst, const uint8_t *p_src, uint32_t p_
 			r = *p_src++;
 			a = 0xFF;
 			break;
+		case EX_RAW_BGRX:
+			b = *p_src++;
+			g = *p_src++;
+			r = *p_src++;
+			a = 0xFF;
+			p_src++;
+			break;
 		case EX_RAW_GRAY:
 			r = g = b = *p_src++;
 			a = 0xFF;
@@ -246,6 +257,12 @@ static void MCBitmapConvertRow(uint8_t *p_dst, const uint8_t *p_src, uint32_t p_
 			*p_dst++ = b;
 			*p_dst++ = g;
 			*p_dst++ = r;
+			break;
+		case EX_RAW_BGRX:
+			*p_dst++ = b;
+			*p_dst++ = g;
+			*p_dst++ = r;
+			*p_dst++ = 0;
 			break;
 		case EX_RAW_GRAY:
 			// simple averaging
@@ -369,7 +386,10 @@ bool MCImageEncodeBMP(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_b
 #define BMP_FILE_TYPE_OS2_ICON ('IC')
 #define BMP_FILE_TYPE_OS2_POINTER ('PT')
 
+// IM-2013-08-16: [[ Bugfix 10278 ]] Add support for reading RLE compressed BMP images
 #define BMP_COMPRESSION_RGB (0)
+#define BMP_COMPRESSION_RLE8 (1)
+#define BMP_COMPRESSION_RLE4 (2)
 #define BMP_COMPRESSION_BITFIELDS (3)
 
 #define BMP_FILE_HEADER_SIZE (14)
@@ -531,9 +551,9 @@ bool bmp_read_color_table(IO_handle p_stream, uindex_t &x_bytes_read, uint32_t p
 	for (uindex_t i = 0; t_success && i < p_color_count; i++)
 	{
 		uindex_t t_byte_count = t_color_size;
-		t_success = IO_NORMAL == MCS_readfixed(t_color, t_byte_count, p_stream);
-        if (t_success)
-            *t_dst_ptr++ = t_color[0] | (t_color[1] << 8) | (t_color[2] << 16) | 0xFF000000;
+		t_success = IO_NORMAL == MCS_readfixed(t_color, t_byte_count * sizeof(uint8_t), p_stream);
+		MCBitmapConvertRow<EX_RAW_RGB, NATIVE_IMAGE_FORMAT>((uint8_t*)t_dst_ptr, t_color, 1);
+		*t_dst_ptr++ = MCGPixelPackNative(t_color[2], t_color[1], t_color[0], 255);
 	}
 
 	if (t_success)
@@ -544,6 +564,196 @@ bool bmp_read_color_table(IO_handle p_stream, uindex_t &x_bytes_read, uint32_t p
 	else
 		MCMemoryDeleteArray(t_color_table);
 
+	return t_success;
+}
+
+// IM-2013-08-16: [[ Bugfix 10278 ]] Add support for reading RLE compressed BMP images
+bool bmp_read_rle4_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitmap *p_bitmap, uint32_t *p_color_table, uindex_t p_color_count, bool p_topdown)
+{
+	bool t_success;
+	t_success = true;
+	
+	bool t_end_bitmap;
+	t_end_bitmap = false;
+	
+	uint32_t x, y;
+	x = y = 0;
+	
+	while (t_success && !t_end_bitmap)
+	{
+		uint8_t t_count, t_value;
+		t_success = IO_NORMAL == IO_read_uint1(&t_count, p_stream);
+		if (t_success)
+			t_success = IO_NORMAL == IO_read_uint1(&t_value, p_stream);
+		if (t_success)
+		{
+			x_bytes_read += 2;
+			if (t_count > 0)
+			{
+				// encoded mode
+				uint8_t t_upper, t_lower;
+				t_upper = t_value >> 4;
+				t_lower = t_value & 0x0F;
+				
+				for (uint32_t i = 0; i < t_count; i++)
+				{
+					uint8_t t_index;
+					t_index = ((i & 0x1) == 0) ? t_upper : t_lower;
+					
+					if (t_index < p_color_count && x < p_bitmap->width && y < p_bitmap->height)
+						MCImageBitmapSetPixel(p_bitmap, x, p_topdown ? y : (p_bitmap->height - 1 - y), p_color_table[t_index]);
+					x++;
+				}
+			}
+			else if (t_value == 0)
+			{
+				// end-of-line escape
+				x = 0;
+				y++;
+			}
+			else if (t_value == 1)
+			{
+				// end-of-bitmap escape
+				t_end_bitmap = true;
+			}
+			else if (t_value == 2)
+			{
+				// delta escape
+				uint8_t t_dx, t_dy;
+				t_success = IO_NORMAL == IO_read_uint1(&t_dx, p_stream);
+				if (t_success)
+					t_success = IO_NORMAL == IO_read_uint1(&t_dy, p_stream);
+				if (t_success)
+				{
+					x_bytes_read += 2;
+					x += t_dx;
+					y += t_dy;
+				}
+			}
+			else
+			{
+				// absolute mode
+				uint8_t t_byte, t_upper, t_lower;
+				
+				uint8_t t_run_buffer[128];
+				uint32_t t_run_bytes;
+				t_run_bytes = (t_value + 1) / 2;
+				t_run_bytes = (t_run_bytes + 1) & ~0x1;
+				
+				t_success = IO_NORMAL == MCS_readfixed(t_run_buffer, t_run_bytes, p_stream);
+				
+				if (t_success)
+					x_bytes_read += t_run_bytes;
+				
+				for (uint32_t i = 0; t_success && i < t_value; i++)
+				{
+					if ((i & 0x1) == 0)
+					{
+						t_byte = t_run_buffer[i / 2];
+						t_upper = t_byte >> 4;
+						t_lower = t_byte & 0x0F;
+					}
+					
+					uint8_t t_index;
+					t_index = ((i & 0x1) == 0) ? t_upper : t_lower;
+					
+					if (t_index < p_color_count && x < p_bitmap->width && y < p_bitmap->height)
+						MCImageBitmapSetPixel(p_bitmap, x, p_topdown ? y : (p_bitmap->height - 1 - y), p_color_table[t_index]);
+					x++;
+				}
+			}
+		}
+	}
+	
+	return t_success;
+}
+
+// IM-2013-08-16: [[ Bugfix 10278 ]] Add support for reading RLE compressed BMP images
+bool bmp_read_rle8_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitmap *p_bitmap, uint32_t *p_color_table, uindex_t p_color_count, bool p_topdown)
+{
+	bool t_success;
+	t_success = true;
+	
+	bool t_end_bitmap;
+	t_end_bitmap = false;
+	
+	uint32_t x, y;
+	x = y = 0;
+	
+	while (t_success && !t_end_bitmap)
+	{
+		uint8_t t_count, t_value;
+		t_success = IO_NORMAL == IO_read_uint1(&t_count, p_stream);
+		if (t_success)
+			t_success = IO_NORMAL == IO_read_uint1(&t_value, p_stream);
+		if (t_success)
+		{
+			x_bytes_read += 2;
+			if (t_count > 0)
+			{
+				// encoded mode
+				for (uint32_t i = 0; i < t_count; i++)
+				{
+					uint8_t t_index;
+					t_index = t_value;
+					
+					if (t_index < p_color_count && x < p_bitmap->width && y < p_bitmap->height)
+						MCImageBitmapSetPixel(p_bitmap, x, p_topdown ? y : (p_bitmap->height - 1 - y), p_color_table[t_index]);
+					x++;
+				}
+			}
+			else if (t_value == 0)
+			{
+				// end-of-line escape
+				x = 0;
+				y++;
+			}
+			else if (t_value == 1)
+			{
+				// end-of-bitmap escape
+				t_end_bitmap = true;
+			}
+			else if (t_value == 2)
+			{
+				// delta escape
+				uint8_t t_dx, t_dy;
+				t_success = IO_NORMAL == IO_read_uint1(&t_dx, p_stream);
+				if (t_success)
+					t_success = IO_NORMAL == IO_read_uint1(&t_dy, p_stream);
+				if (t_success)
+				{
+					x_bytes_read += 2;
+					x += t_dx;
+					y += t_dy;
+				}
+			}
+			else
+			{
+				// absolute mode
+				uint8_t t_byte, t_upper, t_lower;
+				
+				uint8_t t_run_buffer[256];
+				uint32_t t_run_bytes;
+				t_run_bytes = (t_value + 1) & ~0x1;
+				
+				t_success = IO_NORMAL == MCS_readfixed(t_run_buffer, t_run_bytes, p_stream);
+				
+				if (t_success)
+					x_bytes_read += t_run_bytes;
+				
+				for (uint32_t i = 0; t_success && i < t_value; i++)
+				{
+					uint8_t t_index;
+					t_index = t_run_buffer[i];
+					
+					if (t_index < p_color_count && x < p_bitmap->width && y < p_bitmap->height)
+						MCImageBitmapSetPixel(p_bitmap, x, p_topdown ? y : (p_bitmap->height - 1 - y), p_color_table[t_index]);
+					x++;
+				}
+			}
+		}
+	}
+	
 	return t_success;
 }
 
@@ -573,11 +783,11 @@ bool bmp_read_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitmap *p
 		t_success = IO_NORMAL == MCS_readfixed(t_src_buffer, t_src_stride, p_stream);
 		if (t_success)
 		{
-			uint8_t *t_src_row = t_src_buffer;
-			uint32_t *t_dst_row = (uint32_t*)t_dst_ptr;
-
 			if (p_depth <= 8)
 			{
+				uint8_t *t_src_row = t_src_buffer;
+				uint32_t *t_dst_row = (uint32_t*)t_dst_ptr;
+				
 				uint32_t t_current_shift = t_first_shift;
 				uint8_t t_byte = 0;
 
@@ -586,7 +796,7 @@ bool bmp_read_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitmap *p
 					*t_dst_row++ = p_color_table[(*t_src_row >> t_current_shift) & t_pixel_mask];
 					if (t_current_shift == 0)
 					{
-						*t_src_row++;
+						t_src_row++;
 						t_current_shift = t_first_shift;
 					}
 					else
@@ -595,11 +805,10 @@ bool bmp_read_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitmap *p
 			}
 			else
 			{
-				for (uint32_t x = 0; x < p_bitmap->width; x++)
-				{
-					*t_dst_row++ = t_src_row[0] | (t_src_row[1] << 8) | (t_src_row[2] << 16) | 0xFF000000;
-					t_src_row += p_depth / 8;
-				}
+				if (p_depth == 24)
+					MCBitmapConvertRow<EX_RAW_BGR, NATIVE_IMAGE_FORMAT>(t_dst_ptr, t_src_buffer, p_bitmap->width);
+				else
+					MCBitmapConvertRow<EX_RAW_BGRX, NATIVE_IMAGE_FORMAT>(t_dst_ptr, t_src_buffer, p_bitmap->width);
 			}
 		}
 
@@ -671,7 +880,7 @@ static void bmp_convert_bitfield_row(uint32_t *p_dst, const uint8_t *p_src, uint
 		g = (g * 0xFF) / t_g_max;
 		b = (b * 0xFF) / t_b_max;
 
-		*p_dst++ = a << 24 | r << 16 | g << 8 | b;
+		*p_dst++ = MCGPixelPackNative(r, g, b, a);
 	}
 }
 
@@ -738,6 +947,13 @@ bool MCImageDecodeBMPStruct(IO_handle p_stream, uindex_t &x_bytes_read, MCImageB
 	if (t_success)
 		t_success = bmp_read_dib_header(p_stream, x_bytes_read, t_header, t_is_os2);
 
+	// IM-2013-08-16: [[ Bugfix 10278 ]] Add support for reading RLE compressed BMP images
+	if (t_success)
+		t_success = t_header.compression == BMP_COMPRESSION_RGB ||
+		t_header.compression == BMP_COMPRESSION_RLE8 ||
+		t_header.compression == BMP_COMPRESSION_RLE4 ||
+		t_header.compression == BMP_COMPRESSION_BITFIELDS;
+	
 	if (t_success)
 	{
 		if (t_header.compression == BMP_COMPRESSION_BITFIELDS)
@@ -754,11 +970,6 @@ bool MCImageDecodeBMPStruct(IO_handle p_stream, uindex_t &x_bytes_read, MCImageB
 				t_header.green_mask = 0x1F << 5;
 				t_header.blue_mask = 0x1F;
 			}
-		}
-		else
-		{
-			// we only support uncompressed images
-			t_success = false;
 		}
 	}
 
@@ -789,10 +1000,26 @@ bool MCImageDecodeBMPStruct(IO_handle p_stream, uindex_t &x_bytes_read, MCImageB
 
 	if (t_success)
 	{
-		if (t_header.compression == BMP_COMPRESSION_BITFIELDS)
-			t_success = bmp_read_bitfield_image(p_stream, x_bytes_read, t_bitmap, t_header.bits_per_pixel, t_header.alpha_mask, t_header.red_mask, t_header.green_mask, t_header.blue_mask, t_topdown);
-		else
-			t_success = bmp_read_image(p_stream, x_bytes_read, t_bitmap, t_header.bits_per_pixel, t_color_table, t_header.color_count, t_topdown);
+		switch (t_header.compression)
+		{
+			case BMP_COMPRESSION_RGB:
+				t_success = bmp_read_image(p_stream, x_bytes_read, t_bitmap, t_header.bits_per_pixel, t_color_table, t_header.color_count, t_topdown);
+				break;
+				
+			// IM-2013-08-16: [[ Bugfix 10278 ]] Add support for reading RLE compressed BMP images
+			case BMP_COMPRESSION_RLE8:
+				t_success = bmp_read_rle8_image(p_stream, x_bytes_read, t_bitmap, t_color_table, t_header.color_count, t_topdown);
+				break;
+				
+			// IM-2013-08-16: [[ Bugfix 10278 ]] Add support for reading RLE compressed BMP images
+			case BMP_COMPRESSION_RLE4:
+				t_success = bmp_read_rle4_image(p_stream, x_bytes_read, t_bitmap, t_color_table, t_header.color_count, t_topdown);
+				break;
+				
+			case BMP_COMPRESSION_BITFIELDS:
+				t_success = bmp_read_bitfield_image(p_stream, x_bytes_read, t_bitmap, t_header.bits_per_pixel, t_header.alpha_mask, t_header.red_mask, t_header.green_mask, t_header.blue_mask, t_topdown);
+				break;
+		}
 	}
 
 	if (t_success)
@@ -1456,6 +1683,9 @@ bool MCImageDecodeXBM(IO_handle p_stream, MCPoint &r_hotspot, char *&r_name, MCI
 		t_success = MCMemoryAllocate(t_stride, t_row_buffer);
 	}
 
+	uint32_t t_black_pixel, t_white_pixel;
+	t_black_pixel = MCGPixelPackNative(0, 0, 0, 255);
+	t_white_pixel = MCGPixelPackNative(255, 255, 255, 255);
 	for (uindex_t y = 0 ; t_success && y < t_height ; y++)
 	{
 		uindex_t t_stride = (t_width + 7) >> 3;
@@ -1488,7 +1718,7 @@ bool MCImageDecodeXBM(IO_handle p_stream, MCPoint &r_hotspot, char *&r_name, MCI
 			while (x--)
 			{
 				uint8_t t_index = *t_index_ptr--;
-				*t_pixel_ptr-- = t_index == 0 ? 0xFF000000 : 0xFFFFFFFF;
+				*t_pixel_ptr-- = t_index == 0 ? t_black_pixel : t_white_pixel;
 			}
 		}
 		t_dst_ptr += t_bitmap->stride;
@@ -1625,10 +1855,7 @@ static bool xpm_parse_color(const char *p_line, uindex_t p_color_start, uindex_t
         /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *) p_line + p_color_start, p_color_end - p_color_start, &t_s);
 		if (MCscreen->lookupcolor(*t_s, &t_color))
 		{
-			r_color = 0xFF000000 |
-				((t_color.red & 0xFF00) << 8) |
-				(t_color.green & 0xFF00) |
-				(t_color.blue >> 8);
+			r_color = MCGPixelPackNative(t_color.red >> 8, t_color.green >> 8, t_color.blue >> 8, 255);
 			return true;
 		}
 		if (MCCStringEqualSubstring(p_line + p_color_start, "none", p_color_end - p_color_start))
@@ -1638,16 +1865,22 @@ static bool xpm_parse_color(const char *p_line, uindex_t p_color_start, uindex_t
 		}
 		return false;
 	}
+	
+	// are there enough bytes for a rrggbb hex string?
+	if (p_color_end - p_color_start < 6)
+		return false;
+	
 	uint32_t t_value = 0;
-	for (uindex_t i = p_color_start + 1; i < p_color_end; i += 2)
+	uint8_t t_color[3];
+	for (uint32_t i = 0; i < 3; i++)
 	{
 		uint8_t t_high, t_low;
-		if (!hex_value(p_line[i], t_high) || !hex_value(p_line[i + 1], t_low))
+		if (!hex_value(p_line[p_color_start + i * 2], t_high) || !hex_value(p_line[p_color_start + i * 2 + 1], t_low))
 			return false;
-		t_value = (t_value << 8) | (t_high << 4) | t_low;
+		t_color[i] = (t_high << 4) | t_low;
 	}
 
-	r_color = t_value | 0xFF000000;
+	r_color = MCGPixelPackNative(t_color[0], t_color[1], t_color[2], 255);
 	return true;
 }
 
@@ -1982,7 +2215,7 @@ bool MCImageDecodeXPM(IO_handle p_stream, MCImageBitmap *&r_bitmap)
 			for (uindex_t i = 0; i < t_chars_per_pixel; i++)
 				t_index = (t_index << 8) | t_line[t_row_start++];
 			bool t_found_color = false;
-			uint32_t t_color = 0xFF000000;
+			uint32_t t_color = MCGPixelPackNative(0, 0, 0, 255);
 			for (uindex_t i = 0; !t_found_color && i < t_color_count; i++)
 			{
 				if (t_color_chars[i] == t_index)
@@ -2117,6 +2350,9 @@ bool MCImageDecodeXWD(IO_handle stream, MCStringRef &r_name, MCImageBitmap *&r_b
 			MCU_getshift(fh.blue_mask, blueshift, bluebits);
 		}
 
+		uint32_t t_black, t_white;
+		t_black = MCGPixelPackNative(0, 0, 0, 255);
+		t_white = MCGPixelPackNative(255, 255, 255, 255);
 		uint2 y;
 		for (y = 0 ; y < t_height ; y++)
 		{
@@ -2131,32 +2367,41 @@ bool MCImageDecodeXWD(IO_handle stream, MCStringRef &r_name, MCImageBitmap *&r_b
 				switch (fh.bits_per_pixel)
 				{
 				case 1:
-					*dptr++ = 0x80 >> (x & 0x7) & oneptr[x >> 3] ? 0xFFFFFFFF : 0xFF000000;
+					*dptr++ = 0x80 >> (x & 0x7) & oneptr[x >> 3] ? t_white : t_black;
 					break;
 				case 4:
 					pixel = oneptr[x >> 1] >> 4 * (x & 1) & 0x0F;
-					*dptr++ = 0xFF000000 | (colors[pixel].red & 0xFF00) << 8
-							  | colors[pixel].green & 0xFF00 | (colors[pixel].blue >> 8);
+					*dptr++ = MCGPixelPackNative(colors[pixel].red >> 8, colors[pixel].green >> 8,
+										   colors[pixel].blue >> 8, 255);
 					break;
 				case 8:
 					pixel = oneptr[x];
-					*dptr++ = 0xFF000000 | (colors[pixel].red & 0xFF00) << 8
-							  | colors[pixel].green & 0xFF00 | colors[pixel].blue >> 8;
+					*dptr++ = MCGPixelPackNative(colors[pixel].red >> 8, colors[pixel].green >> 8,
+										   colors[pixel].blue >> 8, 255);
 					break;
 				case 16:
 					pixel = twoptr[x];
-					*dptr++ = 0xFF000000 | 
-						((pixel & fh.red_mask) >> redshift) << (24 - redbits)
-						| ((pixel & fh.green_mask) >> greenshift) << (16 - greenbits)
-						| ((pixel & fh.blue_mask) >> blueshift) << (8 - bluebits);
+					*dptr++ = MCGPixelPackNative(
+										   ((pixel & fh.red_mask) >> redshift) << (8 - redbits),
+										   ((pixel & fh.green_mask) >> greenshift) << (8 - greenbits),
+										   ((pixel & fh.blue_mask) >> blueshift) << (8 - bluebits),
+										   255);
 					break;
 				case 32:
 					if (MCswapbytes)
 						swap_uint4(&fourptr[x]);
-					*dptr++ = 0xFF000000 | fourptr[x];
+					*dptr++ = MCGPixelPackNative(
+										   (fourptr[x] >> 24) & 0xFF,
+										   (fourptr[x] >> 16) & 0xFF,
+										   (fourptr[x] >> 8) & 0xFF,
+										   255);
 					break;
 				default:
-					*dptr++ = 0xFF000000 | fourptr[x];
+					*dptr++ = MCGPixelPackNative(
+										   (fourptr[x] >> 24) & 0xFF,
+										   (fourptr[x] >> 16) & 0xFF,
+										   (fourptr[x] >> 8) & 0xFF,
+										   255);
 					break;
 				}
 			}

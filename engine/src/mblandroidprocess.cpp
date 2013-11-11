@@ -59,11 +59,13 @@ MCNameRef MCAndroidSystem::GetProcessor(void)
 bool MCAndroidSystem::GetAddress(MCStringRef& r_address)
 {
 	extern MCStringRef MCcmd;
-	MCAutoNativeCharArray t_chars;
-    t_chars.New(MCStringGetLength(MCcmd) + strlen("android:") + 1);
+    MCAutoStringRef t_address;
+    bool t_success;
+    t_success = MCStringFormat(&t_address, "android:%@", MCcmd);
+    if (t_success)
+        r_address = MCValueRetain(*t_address);
     
-	sprintf((char*)t_chars.Chars(), "android:%s", MCStringGetCString(MCcmd));
-	return t_chars.CreateStringAndRelease(r_address);
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

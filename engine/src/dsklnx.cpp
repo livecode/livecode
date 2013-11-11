@@ -77,8 +77,13 @@ real8 curtime;
 
 static Boolean alarmpending;
 
+// MW-2013-10-08: [[ Bug 11259 ]] We use our own tables on linux since
+//   we use a fixed locale which isn't available on all systems.
+#if !defined(_LINUX_SERVER) && !defined(_LINUX_DESKTOP)
 uint1 *MClowercasingtable = NULL;
 uint1 *MCuppercasingtable = NULL;
+#endif
+
 //
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -247,7 +252,7 @@ static Boolean MCS_lnx_nodelay(int4 fd)
 
 bool MCS_lnx_is_link(MCStringRef p_path)
 {
-#ifdef /* MCS_is_link_dsk_lnx */ LEGACY_SYSTEM
+#ifdef /* MCS_is_link_dsk_lnx */ LEGACY_SYSTEM_ORPHAN
     struct stat64 buf;
     return (lstat64(MCStringGetCString(p_path), &buf) == 0 && S_ISLNK(buf.st_mode));
 #endif /* MCS_is_link_dsk_lnx */
@@ -259,7 +264,7 @@ bool MCS_lnx_is_link(MCStringRef p_path)
 
 bool MCS_lnx_readlink(MCStringRef p_path, MCStringRef& r_link)
 {
-#ifdef /* MCS_readlink_dsk_lnx */ LEGACY_SYSTEM
+#ifdef /* MCS_readlink_dsk_lnx */ LEGACY_SYSTEM_ORPHAN
     struct stat64 t_stat;
     ssize_t t_size;
     MCAutoNativeCharArray t_buffer;
@@ -271,7 +276,7 @@ bool MCS_lnx_readlink(MCStringRef p_path, MCStringRef& r_link)
     t_size = readlink(MCStringGetCString(p_path), (char*)t_buffer.Chars(), t_stat.st_size);
 
     return (t_size == t_stat.st_size) && t_buffer.CreateStringAndRelease(r_link);
-#endif /* MCS_readlink_dsl_lnx */
+#endif /* MCS_readlink_dsk_lnx */
     struct stat64 t_stat;
     ssize_t t_size;
     MCAutoArray<char> t_buffer;
@@ -916,21 +921,13 @@ public:
     #endif
     #endif
 
-
         if (!MCS_isatty(0))
             MCS_nodelay(0);
-
-        MCValueAssign(MCshellcmd, MCSTR("/bin/sh"));
-
-        // Initialize our case mapping tables
-
-        MCuppercasingtable = new uint1[256];
-        for(uint4 i = 0; i < 256; ++i)
-            MCuppercasingtable[i] = (uint1)toupper((uint1)i);
-
-        MClowercasingtable = new uint1[256];
-        for(uint4 i = 0; i < 256; ++i)
-            MClowercasingtable[i] = (uint1)tolower((uint1)i);
+        
+        // MW-2013-10-01: [[ Bug 11160 ]] At the moment NBSP is not considered a space.
+        MCctypetable[160] &= ~(1 << 4);
+        
+        MCshellcmd = strclone("/bin/sh");
 #endif /* MCS_init_dsk_lnx */
         IO_stdin = MCsystem -> OpenFd(0, kMCSOpenFileModeRead);
         IO_stdout = MCsystem -> OpenFd(1, kMCSOpenFileModeWrite);
@@ -975,19 +972,11 @@ public:
 
         if (!IsInteractiveConsole(0))
             MCS_lnx_nodelay(0);
+        
+        // MW-2013-10-01: [[ Bug 11160 ]] At the moment NBSP is not considered a space.
+        MCctypetable[160] &= ~(1 << 4);
 
         MCValueAssign(MCshellcmd, MCSTR("/bin/sh"));
-
-        // Initialize our case mapping tables
-
-        MCuppercasingtable = new uint1[256];
-        for(uint4 i = 0; i < 256; ++i)
-            MCuppercasingtable[i] = (uint1)toupper((uint1)i);
-
-        MClowercasingtable = new uint1[256];
-        for(uint4 i = 0; i < 256; ++i)
-            MClowercasingtable[i] = (uint1)tolower((uint1)i);
-
         return true;
     }
 
@@ -1050,7 +1039,11 @@ public:
 #ifdef /* MCS_getprocessor_dsk_lnx */ LEGACY_SYSTEM
         return MCN_unknown;
 #endif /* MCS_getprocessor_dsk_lnx */
-        return MCN_unknown;
+#ifdef __LP64__
+        return MCN_x86_64;
+#else
+        return MCN_x86;
+#endif
     }
 
     virtual bool GetAddress(MCStringRef& r_address)
@@ -1078,7 +1071,6 @@ public:
     virtual void Alarm(real64_t p_when)
     {
 #ifdef /* MCS_alarm_dsk_lnx */ LEGACY_SYSTEM
-#ifndef _DEBUG
     if (!MCnoui)
     {
 #ifdef NOITIMERS
@@ -1105,9 +1097,7 @@ public:
         else
             alarmpending = True;
     }
-#endif
 #endif /* MCS_alarm_dsk_lnx */
-#ifndef _DEBUG
         if (!MCnoui)
         {
 #ifdef NOITIMERS
@@ -1121,9 +1111,9 @@ public:
             if (p_when != oldsecs)
             {
                 itimerval val;
-                val.it_interval.tv_sec = (long)secs;
+                val.it_interval.tv_sec = (long)p_when;
                 val.it_interval.tv_usec
-                    = (long)((secs - (double)(long)secs) * 1000000.0);
+                    = (long)((p_when - (double)(long)p_when) * 1000000.0);
                 val.it_value = val.it_interval;
                 setitimer(ITIMER_REAL, &val, NULL);
                 oldsecs = p_when;
@@ -1134,7 +1124,6 @@ public:
             else
                 alarmpending = True;
         }
-#endif
     }
 
     virtual void Sleep(real64_t p_when)
@@ -1594,7 +1583,9 @@ public:
                 {
                     char *buffer = (char *)mmap(NULL, len, PROT_READ, MAP_SHARED,
                                                 fd, offset);
-                    if ((int)buffer != -1)
+                    // MW-2013-05-02: [[ x64 ]] Make sure we use the MAP_FAILED constant
+                    //   rather than '-1'.
+                    if (t_buffer != MAP_FAILED)
                     {
                         handle = new IO_header(NULL, buffer, len, fd, 0);
                         return handle;
@@ -1645,7 +1636,9 @@ public:
                 {
                     char *t_buffer = (char *)mmap(NULL, t_len, PROT_READ, MAP_SHARED,
                                                 t_fd, 0);
-                    if ((int)t_buffer != -1)
+                    // MW-2013-05-02: [[ x64 ]] Make sure we use the MAP_FAILED constant
+                    //   rather than '-1'.
+                    if (t_buffer != MAP_FAILED)
                     {
                         t_handle = new MCMemoryMappedFileHandle(t_fd, t_buffer, t_len);
                         return t_handle;
@@ -2260,10 +2253,10 @@ public:
             if (MCprocesses[index].pid != 0)
                 Kill(MCprocesses[index].pid, SIGKILL);
 
-            return MCDataCreateWithBytesAndRelease((byte_t*)buffer, buffersize, r_data);
+            return MCDataCreateWithBytesAndRelease((byte_t*)buffer, size, r_data);
         }
 
-        if (!MCDataCreateWithBytesAndRelease((byte_t*)buffer, buffersize, r_data))
+        if (!MCDataCreateWithBytesAndRelease((byte_t*)buffer, size, r_data))
             return false;
 
         close(toparent[0]);
@@ -3244,8 +3237,7 @@ public:
     virtual bool AlternateLanguages(MCListRef& r_list)
     {
 #ifdef /* MCS_alternatelanguages_dsk_lnx */ LEGACY_SYSTEM
-        r_list = MCValueRetain(kMCEmptyList);
-        return true;
+        ep . clear();
 #endif /* MCS_alternatelanguages_dsk_lnx */
         r_list = MCValueRetain(kMCEmptyList);
         return true;

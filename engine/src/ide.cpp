@@ -957,6 +957,13 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 						
 						t_char = next_valid_char(p_text, t_index);
 					}
+					// MW-2013-08-23: [[ Bug 11122 ]] Special-case '$#'.
+					if (t_index < p_length && t_klength == 1 && t_keyword[0] == '$' && p_text[t_index] == '#')
+					{
+						t_keyword[t_klength] = '#';
+						t_klength++;
+						t_index++;
+					}
 					t_end = t_index;
 					if (t_class == COLOURIZE_CLASS_KEYWORD)
 					{
@@ -1050,7 +1057,7 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 		t_first_line = t_start;
 		t_last_line = t_end;
 	}
-
+	
 	uint4 t_old_nesting, t_new_nesting;
 	t_old_nesting = t_new_nesting = t_state -> GetCommentNesting(t_first_line);
 
@@ -1060,10 +1067,17 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 	uint4 t_line;
 	t_line = t_first_line;
 	
+	// MW-2013-10-24: [[ FasterField ]] We calculate the initial height of all the affected
+	//   paragraphs.
+	int32_t t_initial_height;
+	t_initial_height = 0;
+	
 	MCExecPoint ep;
 
 	for(t_line = t_first_line, t_paragraph = t_first_paragraph; t_line <= t_last_line; t_line++, t_paragraph = t_paragraph -> next())
 	{
+		t_initial_height += t_paragraph -> getheight(t_target -> getfixedheight());
+		
 		// MW-2012-02-23: [[ FieldChars ]] Nativize the paragraph so tokenization
 		//   works.
 		char *t_text;
@@ -1085,6 +1099,8 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 	if (p_mutate)
 		while(t_paragraph != t_sentinal_paragraph && t_new_nesting != t_old_nesting)
 		{
+			t_initial_height += t_paragraph -> getheight(t_target -> getfixedheight());
+			
 			// MW-2012-02-23: [[ FieldChars ]] Nativize the paragraph so tokenization
 			//   works.
 			char *t_text;
@@ -1105,15 +1121,42 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 			t_line++;
 		}
 
+	// MW-2013-10-24: [[ FasterField ]] Rather than recomputing and redrawing all
+	//   let's be a little more selective - only relaying out and redrawing the
+	//   paragraphs that have changed.
+	
+	// MW-2013-10-24: [[ FasterField ]] Calculate the final height of the affected paragraphs.
+	int32_t t_final_height;
+	t_final_height = 0;
 	do
 	{
 		t_paragraph = t_paragraph -> prev();
-		t_paragraph -> layout();
+		t_paragraph -> layout(false);
+		t_final_height += t_paragraph -> getheight(t_target -> getfixedheight());
 	}
 	while(t_paragraph != t_first_paragraph);
-
-	// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
-	t_target -> layer_redrawall();
+	
+	// MW-2013-10-24: [[ FasterField ]] Get the y offset of the initial paragraph
+	int32_t t_paragraph_y;
+	t_paragraph_y = t_target -> getcontenty() + t_target -> paragraphtoy(t_first_paragraph);
+	
+	// MW-2013-10-24: [[ FasterField ]] If the final height has changed, then recompute and
+	//   redraw everything from initial paragraph down. Otherwise, just redraw the affected
+	//   paragraphs.
+	MCRectangle drect;
+	drect = t_target -> getfrect();
+	if (t_initial_height != t_final_height)
+	{
+		t_target -> do_recompute(false);
+		drect . height -= t_paragraph_y - drect . y;
+	}
+	else
+		drect . height = t_initial_height;
+	drect . y = t_paragraph_y;
+		
+	t_target -> removecursor();
+	t_target -> layer_redrawrect(drect);
+	t_target -> replacecursor(False, True);
 }
 
 Exec_stat MCIdeScriptColourize::exec(MCExecPoint& p_exec)
@@ -1305,8 +1348,7 @@ MCIdeScriptStrip::MCIdeScriptStrip(void)
 	: f_type(CT_UNDEFINED),
 	  f_start(NULL),
 	  f_end(NULL),
-	  f_target(NULL),
-	  f_output(NULL)
+	  f_target(NULL)
 {
 }
 
@@ -1315,7 +1357,6 @@ MCIdeScriptStrip::~MCIdeScriptStrip(void)
 	delete f_start;
 	delete f_end;
 	delete f_target;
-	delete f_output;
 }
 
 Parse_stat MCIdeScriptStrip::parse(MCScriptPoint& p_script)
@@ -1325,9 +1366,6 @@ Parse_stat MCIdeScriptStrip::parse(MCScriptPoint& p_script)
 
 	if (t_status == PS_NORMAL)
 		t_status = parse_target_range(p_script, f_type, f_start, f_end, f_target);
-
-	if (t_status == PS_NORMAL)
-		getit(p_script, f_output);
 
 	return t_status;
 }
@@ -1377,7 +1415,7 @@ Exec_stat MCIdeScriptStrip::exec(MCExecPoint& p_exec)
 		MCExecPoint ep(NULL, NULL, NULL);
 		s_strip_paragraph_ep = &ep;
 		TokenizeField(t_target, t_state, f_type, t_start, t_end, strip_paragraph, false);
-		f_output -> set(ep);
+		ep.getit() -> set(ep);
 	}
 
 	return t_status;
@@ -1560,7 +1598,7 @@ Exec_stat MCIdeScriptTokenize::exec(MCExecPoint& ep)
 ///////////////////////////////////////////////////////////////////////////////
 
 MCIdeScriptClassify::MCIdeScriptClassify(void)
-	: m_script(NULL), m_target(NULL), m_output(NULL)
+	: m_script(NULL), m_target(NULL)
 {
 }
 
@@ -1568,7 +1606,6 @@ MCIdeScriptClassify::~MCIdeScriptClassify(void)
 {
 	delete m_script;
 	delete m_target;
-	delete m_output;
 }
 
 Parse_stat MCIdeScriptClassify::parse(MCScriptPoint& p_script)
@@ -1587,9 +1624,6 @@ Parse_stat MCIdeScriptClassify::parse(MCScriptPoint& p_script)
 		m_target = new MCChunk(False);
 		t_status = m_target -> parse(p_script, False);
 	}
-	
-	if (t_status == PS_NORMAL)
-		getit(p_script, m_output);
 
 	return t_status;
 }
@@ -1634,6 +1668,44 @@ static bool searchforhandlerinexternallist(MCExternalHandlerList *p_list, MCName
 	return false;
 }
 
+static bool searchforhandlerinobject(MCObject *p_object, MCNameRef p_handler, Handler_type& r_type)
+{
+	if (p_object == nil)
+		return false;
+	
+	if (searchforhandlerinlist(p_object -> gethandlers(), p_handler, r_type))
+		return true;
+	
+	if (p_object -> getparentscript() != nil)
+	{
+		MCObject *t_behavior;
+		t_behavior = p_object -> getparentscript() -> GetObject();
+		if (t_behavior != nil)
+		{
+			t_behavior -> parsescript(True);
+			if (searchforhandlerinobject(t_behavior, p_handler, r_type))
+				return true;
+		}
+	}
+	
+	if (p_object -> gettype() == CT_STACK &&
+		searchforhandlerinexternallist(((MCStack *)p_object) -> getexternalhandlers(), p_handler, r_type))
+		return true;
+	
+	return false;
+}
+
+static bool searchforhandlerinlibrarystacks(MCNameRef p_handler, Handler_type& r_type)
+{
+	for (uint32_t i = 0; i < MCnusing; i++)
+	{
+		if (searchforhandlerinobject(MCusing[i], p_handler, r_type))
+			return true;
+	}
+	
+	return false;	
+}
+
 static bool searchforhandlerinobjectlist(MCObjectList *p_list, MCNameRef p_name, Handler_type& r_type)
 {
 	if (p_list == nil)
@@ -1644,47 +1716,50 @@ static bool searchforhandlerinobjectlist(MCObjectList *p_list, MCNameRef p_name,
 	do
 	{
 		if (!t_object_ref -> getremoved() &&
-			searchforhandlerinlist(t_object_ref -> getobject() -> gethandlers(), p_name, r_type))
+			searchforhandlerinobject(t_object_ref -> getobject(), p_name, r_type))
 			return true;
 		
 		t_object_ref = t_object_ref -> next();
 	}
-	while(t_object_ref != p_list);
+	while (t_object_ref != p_list);
 
 	return false;
 }
 
+// MM-2013-07-26: [[ Bug 11017 ]] Make sure we search the full message path for handler.
+//    FrontScripts
+//      Behavior chain of FrontScript objects
+//      (if stack, then externals)
+//    Object
+//      Behavior chain of object
+//      (if stack, then externals)
+//    Object's Ancestor's
+//      Behavior chain of object ancestors
+//      (if stack, then externals)
+//    Backscripts
+//      Behavior chain of backscript objects
+//      (if stack, then externals)
+//    Library Stacks
+//      Behavior chain of stack
+//      Externals of stack
 static bool searchforhandler(MCObject *p_object, MCNameRef p_handler, Handler_type& r_type)
 {
 	if (searchforhandlerinobjectlist(MCfrontscripts, p_handler, r_type))
 		return true;
 	
-	for(MCObject *t_object = p_object; t_object != NULL; t_object = t_object -> getparent())
+	for (MCObject *t_object = p_object; t_object != nil; t_object = t_object -> getparent())
 	{
 		t_object -> parsescript(False);
-		if (searchforhandlerinlist(t_object -> gethandlers(), p_handler, r_type))
-			return true;
-		
-		if (t_object -> getparentscript() != nil)
-		{
-			MCObject *t_behavior;
-			t_behavior = t_object -> getparentscript() -> GetObject();
-			if (t_behavior != nil)
-			{
-				t_behavior -> parsescript(True);
-				if (searchforhandlerinlist(t_behavior -> gethandlers(), p_handler, r_type))
-					return true;
-			}
-		}
-		
-		if (t_object -> gettype() == CT_STACK &&
-			searchforhandlerinexternallist(((MCStack *)t_object) -> getexternalhandlers(), p_handler, r_type))
-				return true;
+		if (searchforhandlerinobject(t_object, p_handler, r_type))
+			return true;	
 	}
 	
 	if (searchforhandlerinobjectlist(MCbackscripts, p_handler, r_type))
 		return true;
-
+	
+	if (searchforhandlerinlibrarystacks(p_handler, r_type))
+		return true;
+	
 	return false;
 }
 
@@ -1820,9 +1895,9 @@ Exec_stat MCIdeScriptClassify::exec(MCExecPoint& ep)
 	// If we have a call expression, then its a command.
 	if (t_call_error == nil ||
 		t_cmd_error == nil)
-		m_output -> sets("command");
+		ep.getit() -> sets("command");
 	else if (t_expr_error == nil)
-		m_output -> sets("expression");
+		ep.getit() -> sets("expression");
 	else
 	{
 		const char *t_error;
@@ -1834,7 +1909,7 @@ Exec_stat MCIdeScriptClassify::exec(MCExecPoint& ep)
 			t_error = t_cmd_error;
 		
 		MCresult -> copysvalue(t_error);
-		m_output -> sets("neither");
+		ep.getit() -> sets("neither");
 	}
 
 	delete t_expr_error;
@@ -2028,7 +2103,7 @@ Exec_stat MCIdeSyntaxRecognize::exec(MCExecPoint& ep)
 ///////////////////////////////////////////////////////////////////////////////
 
 MCIdeSyntaxCompile::MCIdeSyntaxCompile(void)
-	: m_target(NULL), m_it(NULL)
+	: m_target(NULL)
 {
 }
 
@@ -2049,8 +2124,6 @@ Parse_stat MCIdeSyntaxCompile::parse(MCScriptPoint& sp)
 		m_target = new MCChunk(False);
 		t_stat = m_target -> parse(sp, False);
 	}
-	
-	getit(sp, m_it);
 	
 	return t_stat;
 }
@@ -2081,7 +2154,7 @@ Exec_stat MCIdeSyntaxCompile::exec(MCExecPoint& ep)
 		
 		MCSyntaxFactoryDestroy(t_factory);
 
-		m_it -> evalvar(ep) -> setvalueref(*t_log);
+		ep.getit() -> evalvar(ep) -> setvalueref(*t_log);
 	}
 	delete t_hlist;
 	
@@ -2211,7 +2284,7 @@ struct MCIdeFilterControlsVisitor: public MCObjectVisitor
 };
 
 MCIdeFilterControls::MCIdeFilterControls(void)
-	: m_property(kMCIdeFilterPropertyNone), m_operator(kMCIdeFilterOperatorNone), m_pattern(nil), m_stack(nil), m_it(nil)
+	: m_property(kMCIdeFilterPropertyNone), m_operator(kMCIdeFilterOperatorNone), m_pattern(nil), m_stack(nil)
 {
 }
 
@@ -2219,7 +2292,6 @@ MCIdeFilterControls::~MCIdeFilterControls(void)
 {
 	delete m_pattern;
 	delete m_stack;
-	delete m_it;
 }
 
 Parse_stat MCIdeFilterControls::parse(MCScriptPoint& sp)
@@ -2291,9 +2363,6 @@ Parse_stat MCIdeFilterControls::parse(MCScriptPoint& sp)
 	
 	if (t_stat == PS_NORMAL)
 		t_stat = sp . parseexp(False, True, &m_pattern);
-		
-	if (t_stat == PS_NORMAL)
-		getit(sp, m_it);
 	
 	return t_stat;
 }
@@ -2335,7 +2404,7 @@ Exec_stat MCIdeFilterControls::exec(MCExecPoint& ep)
 		}
 		while(t_card != t_cards);
 
-		m_it -> set(ep, False);
+		ep.getit() -> set(ep, False);
 	}
 	
 	return t_stat;

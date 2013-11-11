@@ -43,7 +43,6 @@ void FreeNotification(MCNotification &p_notification)
     MCValueRelease(p_notification.user_info);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCNotificationEvent: public MCCustomEvent

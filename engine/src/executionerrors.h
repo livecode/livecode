@@ -659,7 +659,7 @@ enum Exec_errors
 	// {EE-0210} flip: can't find image
 	EE_FLIP_NOIMAGE,
 	
-	// {EE-0211} flip: object is not an image
+	// {EE-0211} flip: object is not an editable image
 	EE_FLIP_NOTIMAGE,
 	
 	// {EE-0212} flushEvents: bad event type
@@ -2326,7 +2326,10 @@ enum Exec_errors
 	
 	// {EE-0766} Chunk: can't store unicode to destination container
 	EE_CHUNK_CANTSETUNICODEDEST,
-
+	
+	// {EE-0767} relayer: target not a container
+	EE_RELAYER_TARGETNOTCONTAINER,
+	
 	// {EE-0768} relayer: couldn't resolve target object
 	EE_RELAYER_NOTARGET,
 
@@ -2336,40 +2339,37 @@ enum Exec_errors
 	// {EE-0770} relayer: source not a control
 	EE_RELAYER_SOURCENOTCONTROL,
 
-	// {EE-0767} relayer: target not a container
-	EE_RELAYER_TARGETNOTCONTAINER,
-
-	// {EE-0768} relayer: source and target not on the same card
+	// {EE-0771} relayer: source and target not on the same card
 	EE_RELAYER_CARDNOTSAME,
 
-	// {EE-0769} relayer: layer not an integer
+	// {EE-0772} relayer: layer not an integer
 	EE_RELAYER_LAYERNAN,
 
-	// {EE-0770} relayer: bad layer expression
+	// {EE-0773} relayer: bad layer expression
 	EE_RELAYER_BADLAYER,
 
-	// {EE-0771} relayer: target not a control
+	// {EE-0774} relayer: target not a control
 	EE_RELAYER_TARGETNOTCONTROL,
 
-	// {EE-0772} relayer: cannot move a control into a descendent
+	// {EE-0775} relayer: cannot move a control into a descendent
 	EE_RELAYER_ILLEGALMOVE,
 	
-	// {EE-0773} relayer: required objects disappeared while processing
+	// {EE-0776} relayer: required objects disappeared while processing
 	EE_RELAYER_OBJECTSVANISHED,
 	
-	// {EE-0774} controlAtLoc: location not a point
+	// {EE-0777} controlAtLoc: location not a point
 	EE_CONTROLATLOC_NAP,
 	
-	// {EE-0775} do: no caller
+	// {EE-0778} do: no caller
 	EE_DO_NOCALLER,
 	
-	// {EE-0776} read: invalid command for datagram socket
+	// {EE-0779} read: invalid command for datagram socket
 	EE_READ_NOTVALIDFORDATAGRAM,
 
-	// {EE-0777} field: listIndex must be an integer
+	// {EE-0780} field: listIndex must be an integer
 	EE_FIELD_LISTINDEXNAN,
 	
-	// {EE-0778} image cache limit: not a number
+	// {EE-0781} image cache limit: not a number
 	EE_PROPERTY_BADIMAGECACHELIMIT,
 
 	// {EE-0779} Error evaluating expression
@@ -2404,6 +2404,67 @@ enum Exec_errors
 
 	// {EE-0789} Property: value is not an array
 	EE_PROPERTY_NOTANARRAY,
+    
+    // {EE-0782} controls don't have the same owner
+	EE_GROUP_DIFFERENTPARENT,
+	
+	// {EE-0783} uuid: bad type expression
+	EE_UUID_BADTYPE,
+	
+	// {EE-0784} uuid: wrong number of arguments for specified type
+	EE_UUID_TOOMANYPARAMS,
+	
+	// {EE-0785} uuid: unsupported type
+	EE_UUID_UNKNOWNTYPE,
+	
+	// {EE-0786} uuid: bad namespace expression
+	EE_UUID_BADNAMESPACEID,
+	
+	// {EE-0787} uuid: namespace not a uuid
+	EE_UUID_NAMESPACENOTAUUID,
+	
+	// {EE-0788} uuid: bad name expression
+	EE_UUID_BADNAME,
+	
+	// {EE-0789} uuid: not enough randomness available
+	EE_UUID_NORANDOMNESS,
+	
+	// {EE-0790} avgDev: error in source expression
+	EE_AVGDEV_BADSOURCE,
+	
+	// {EE-0791} geometricMean: error in source expression
+	EE_GEO_MEAN_BADSOURCE,
+
+	// {EE-0792} harmonicMean: error in source expression
+	EE_HAR_MEAN_BADSOURCE,
+
+	// {EE-0793} pStdDev: error in source expression
+	EE_POP_STDDEV_BADSOURCE,
+	
+	// {EE-0794} pVariance: error in source expression
+	EE_POP_VARIANCE_BADSOURCE,
+	
+	// {EE-0795} variance: error in source expression
+	EE_VARIANCE_BADSOURCE,
+	
+	// {EE-0796} group: object cannot be grouped
+	EE_GROUP_NOTGROUPABLE,
+    
+    // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
+    // {EE-0797} measureText: no object
+    EE_MEASURE_TEXT_NOOBJECT,
+
+    // TD-2013-06-24: [[ DynamicFonts ]]
+    // {EE-0798} font: couldn't find font
+	EE_FONT_BADFILEEXP,
+	
+	// MERG-2013-10-04: [[ EditScriptAt ]] edit script of object at.
+    // {EE-0799} edit script: bad at expression
+	EE_EDIT_BADAT,
+
+	// IM-2013-09-22: [[ FullscreenMode ]]
+	// {EE-0800} fullscreenmode: not a valid mode
+	EE_STACK_BADFULLSCREENMODE,
 };
 
 extern const char *MCexecutionerrors;

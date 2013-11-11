@@ -781,11 +781,16 @@ bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bo
 	return true;
 }
 
+// MERG-2013-08-18: Stubs for colorDialogColors.
+void MCA_setcolordialogcolors(MCColor* p_colors, uindex_t p_count)
+{
 
+}
 
-
-
-
+void MCA_getcolordialogcolors(MCColor*& r_colors, uindex_t& r_count)
+{
+	r_count = 0;
+}
 
 // ---===================================================---
 //

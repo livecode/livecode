@@ -138,7 +138,11 @@ static MCCursorRef create_standard_cursor(LPCSTR p_cursor)
 {
 	MCCursorRef t_cursor;
 	t_cursor = new MCCursor;
-	t_cursor -> kind = kMCCursorStandard;
+	// IM-2013-07-17: [[ bug 9836 ]] set up the nil string as the empty 'none' cursor
+	if (p_cursor == nil)
+		t_cursor -> kind = kMCCursorNone;
+	else
+		t_cursor -> kind = kMCCursorStandard;
 	t_cursor -> standard = p_cursor;
 	return t_cursor;
 }
@@ -185,8 +189,8 @@ void MCScreenDC::resetcursors(void)
 	else
 		MCcursorbwonly = True;
 
-
-	for(uint32_t i = 1; i < PI_NCURSORS; i++)
+	// IM-2013-07-17: [[ bug 9836 ]] ensure we create an empty cursor at index 0
+	for(uint32_t i = 0; i < PI_NCURSORS; i++)
 	{
 		freecursor(MCcursors[i]);
 		MCcursors[i] = nil;
@@ -210,71 +214,11 @@ void MCScreenDC::setcursor(Window p_window, MCCursorRef p_cursor)
 		SetCursor(p_cursor -> custom);
 }
 
-MCCursorRef MCScreenDC::createcursor(MCImageBuffer *p_image, int2 p_xhot, int2 p_yhot)
+bool MCImageCreateIcon(MCImageBitmap *p_bitmap, uint32_t p_width, uint32_t p_height, bool p_cursor, uint32_t p_xhot, uint32_t p_yhot, HICON &r_icon);
+MCCursorRef MCScreenDC::createcursor(MCImageBitmap *p_image, int2 p_xhot, int2 p_yhot)
 {
-	DWORD t_cursor_width;
-	t_cursor_width = p_image -> width;
-
-	DWORD t_cursor_height;
-	t_cursor_height = p_image -> height;
-
-	BITMAPV4HEADER t_bitmap_header;
-	ZeroMemory(&t_bitmap_header, sizeof(BITMAPV4HEADER));
-    t_bitmap_header.bV4Size = sizeof(BITMAPV4HEADER);
-    t_bitmap_header.bV4Width = t_cursor_width;
-    t_bitmap_header.bV4Height = -(signed)t_cursor_height;
-    t_bitmap_header.bV4Planes = 1;
-    t_bitmap_header.bV4BitCount = 32;
-    t_bitmap_header.bV4V4Compression = BI_RGB;
-
-    // The following mask specification specifies a supported 32 BPP
-    // alpha format for Windows XP.
-    t_bitmap_header.bV4RedMask   =  0x00FF0000;
-    t_bitmap_header.bV4GreenMask =  0x0000FF00;
-    t_bitmap_header.bV4BlueMask  =  0x000000FF;
-    t_bitmap_header.bV4AlphaMask =  0xFF000000; 
-
-	HDC t_hdc;
-	t_hdc = GetDC(NULL);
-
-	HBITMAP t_bitmap;
-	t_bitmap = CreateDIBitmap(t_hdc, (BITMAPINFOHEADER *)&t_bitmap_header, CBM_INIT, p_image -> data, (BITMAPINFO *)&t_bitmap_header, DIB_RGB_COLORS);
-
-    ReleaseDC(NULL, t_hdc);
-
-	// Now build the mask bitmap
-    HBITMAP t_mask_bitmap;
-	uint32_t t_mask_stride;
-	uint8_t *t_mask_bits;
-	t_mask_bitmap = NULL;
-	t_mask_stride = ((p_image -> width + 15) & ~15) / 8;
-	t_mask_bits = (uint8_t *)malloc(t_mask_stride * p_image -> height);
-	if (t_mask_bits != nil)
-	{
-		memset(t_mask_bits, 255, t_mask_stride * p_image -> height);
-		for(int32_t y = 0; y < p_image -> height; y++)
-			for(int32_t x = 0; x < p_image -> width; x++)
-			{
-				if ((((uint32_t *)p_image -> data)[y * p_image -> stride / 4 + x] >> 24) != 0)
-					t_mask_bits[y * t_mask_stride + (x >> 3)] &= ~(1 << (7 - (x & 7)));
-			}
-		t_mask_bitmap = CreateBitmap(t_cursor_width, t_cursor_height, 1, 1, t_mask_bits);
-		free(t_mask_bits);
-	}
-
-	ICONINFO t_icon_info;
-	t_icon_info . fIcon = FALSE;  // Change fIcon to TRUE to create an alpha icon
-    t_icon_info . xHotspot = p_xhot;
-    t_icon_info . yHotspot = p_yhot;
-    t_icon_info . hbmMask = t_mask_bitmap;
-    t_icon_info . hbmColor = t_bitmap;
-
-	 // Create the alpha cursor with the alpha DIB section.
-    HCURSOR t_alpha_cursor;
-	t_alpha_cursor = CreateIconIndirect(&t_icon_info);
-
-    DeleteObject(t_bitmap);          
-    DeleteObject(t_mask_bitmap); 
+	HCURSOR t_alpha_cursor = nil;
+	/* UNCHECKED */ MCImageCreateIcon(p_image, p_image->width, p_image->height, true, p_xhot, p_yhot, t_alpha_cursor);
 
 	return create_custom_cursor(t_alpha_cursor);
 }
