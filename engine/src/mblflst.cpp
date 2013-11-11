@@ -48,6 +48,7 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 #if defined(TARGET_SUBPLATFORM_IPHONE)
 	font = new MCFontStruct;
 	font -> charset = 0;
+	font -> size = size;
 	
 	uindex_t t_comma;
 	MCAutoStringRef reqname_str;
@@ -93,6 +94,7 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
 	font = new MCFontStruct;
 	font -> charset = 0;
+	font -> size = size;
 	
 	uindex_t t_comma;
 	MCAutoStringRef reqname_str;

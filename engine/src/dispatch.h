@@ -200,6 +200,9 @@ public:
 	// Iterate through all stacks and substacks, invoking the callback for each one.
 	bool foreachstack(MCForEachStackCallback p_callback, void *p_state);
 
+	// Recreate the fontlist.
+	void flushfonts(void);
+	
 	MCStack *getstacks(void)
 	{
 		return stacks;

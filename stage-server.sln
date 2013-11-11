@@ -1,5 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual Studio 2005
+# Visual C++ Express 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libfoundation", "libfoundation\libfoundation-server.vcproj", "{8862ADC2-BEB0-4765-A1E4-0E3493578999}"
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libpcre", "thirdparty\libpcre\libpcre-server.vcproj", "{279EE836-3C2C-4BBB-8EBF-BEA4833957FA}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libpng", "thirdparty\libpng\libpng-server.vcproj", "{7E895BBC-4578-437D-A275-B58CA9F2DCB7}"
@@ -28,7 +29,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgif", "thirdparty\libgif
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kernel-server", "engine\kernel-server.vcproj", "{BFB6C63F-C119-45D6-96EB-23D717727D58}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libfoundation", "libfoundation\libfoundation-server.vcproj", "{8862ADC2-BEB0-4765-A1E4-0E3493578999}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgraphics", "libgraphics\libgraphics.vcproj", "{F9B1E2E6-8FD9-48C2-8D5C-9900865E7096}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libskia", "thirdparty\libskia\libskia.vcproj", "{24B711E0-E67B-4EC7-9EC5-913BE3D6A047}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -80,10 +83,14 @@ Global
 		{BFB6C63F-C119-45D6-96EB-23D717727D58}.Debug|Win32.Build.0 = Debug|Win32
 		{BFB6C63F-C119-45D6-96EB-23D717727D58}.Release|Win32.ActiveCfg = Release|Win32
 		{BFB6C63F-C119-45D6-96EB-23D717727D58}.Release|Win32.Build.0 = Release|Win32
-		{8862ADC2-BEB0-4765-A1E4-0E3493578999}.Debug|Win32.ActiveCfg = Debug|Win32
-		{8862ADC2-BEB0-4765-A1E4-0E3493578999}.Debug|Win32.Build.0 = Debug|Win32
-		{8862ADC2-BEB0-4765-A1E4-0E3493578999}.Release|Win32.ActiveCfg = Release|Win32
-		{8862ADC2-BEB0-4765-A1E4-0E3493578999}.Release|Win32.Build.0 = Release|Win32
+		{F9B1E2E6-8FD9-48C2-8D5C-9900865E7096}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F9B1E2E6-8FD9-48C2-8D5C-9900865E7096}.Debug|Win32.Build.0 = Debug|Win32
+		{F9B1E2E6-8FD9-48C2-8D5C-9900865E7096}.Release|Win32.ActiveCfg = Release|Win32
+		{F9B1E2E6-8FD9-48C2-8D5C-9900865E7096}.Release|Win32.Build.0 = Release|Win32
+		{24B711E0-E67B-4EC7-9EC5-913BE3D6A047}.Debug|Win32.ActiveCfg = Debug|Win32
+		{24B711E0-E67B-4EC7-9EC5-913BE3D6A047}.Debug|Win32.Build.0 = Debug|Win32
+		{24B711E0-E67B-4EC7-9EC5-913BE3D6A047}.Release|Win32.ActiveCfg = Release|Win32
+		{24B711E0-E67B-4EC7-9EC5-913BE3D6A047}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -39,7 +39,7 @@ bool MCSystemAcquirePhoto(MCPhotoSourceType p_source, int32_t p_max_width, int32
 
 ////////////////////////////////////////////////////////////////////////////////
 
- #ifdef /* MCHandlePickPhotoIphone */ LEGACY_EXEC
+#ifdef /* MCHandlePickPhotoIphone */ LEGACY_EXEC
 Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
 {
 	MCExecPoint ep(nil, nil, nil);
@@ -54,15 +54,21 @@ Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
 	t_width = t_height = 0;
 	if (t_width_param != nil)
 	{
-		t_width_param -> eval_argument(ep);
-		t_width = ep . getint4();
+		// MW-2013-07-01: [[ Bug 10989 ]] Make sure we force conversion to a number.
+		if (t_width_param -> eval_argument(ep) == ES_NORMAL &&
+			ep . ton() == ES_NORMAL)
+			t_width = ep . getint4();
 	}
 	if (t_height_param != nil)
 	{
-		t_height_param -> eval_argument(ep);
-		t_height = ep . getint4();
+		// MW-2013-07-01: [[ Bug 10989 ]] Make sure we force conversion to a number.
+		if (t_height_param -> eval_argument(ep) == ES_NORMAL &&
+			ep . ton() == ES_NORMAL)
+			t_height = ep . getint4();
 	}
 
+	MCLog("%d, %d", t_width, t_height);
+	
 	const char *t_source;
 	t_source = nil;
 	if (p_parameters != nil)

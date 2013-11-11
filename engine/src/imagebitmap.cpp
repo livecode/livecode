@@ -40,11 +40,17 @@ static bool check_bounds(MCImageBitmap *p_bitmap, int32_t x, int32_t y, uint32_t
 
 static void clamp_region(MCImageBitmap *p_bitmap, int32_t &x, int32_t &y, uint32_t &width, uint32_t &height)
 {
-	x = MCMax(0, x);
-	y = MCMax(0, y);
+	int32_t t_x1, t_y1, t_x2, t_y2;
 
-	width = MCMin((int32_t)p_bitmap->width - x, (int32_t)width);
-	height = MCMin((int32_t)p_bitmap->height - y, (int32_t)height);
+	t_x1 = MCMax(0, MCMin((int32_t)p_bitmap->width, x));
+	t_y1 = MCMax(0, MCMin((int32_t)p_bitmap->height, y));
+	t_x2 = MCMax(0, MCMin((int32_t)p_bitmap->width, x + (int32_t)width));
+	t_y2 = MCMax(0, MCMin((int32_t)p_bitmap->height, y + (int32_t)height));
+
+	x = t_x1;
+	y = t_y1;
+	width = t_x2 - t_x1;
+	height = t_y2 - t_y1;
 }
 
 bool MCImageBitmapCreate(uindex_t p_width, uindex_t p_height, MCImageBitmap *&r_bitmap)
@@ -106,7 +112,7 @@ bool MCImageCopyBitmapRegion(MCImageBitmap *p_bitmap, MCRectangle &p_region, MCI
 		return false;
 
 	MCPoint t_dst_offset = {0, 0};
-	MCImageBitmapCopyRegionToBitmap(r_copy, p_bitmap, t_dst_offset, p_region);
+	MCImageBitmapCopyRegionToBitmap(p_bitmap, r_copy, p_region.x, p_region.y, 0, 0, p_region.width, p_region.height);
 
 	if (p_bitmap->has_transparency)
 		MCImageBitmapCheckTransparency(r_copy);
@@ -152,6 +158,43 @@ void MCImageBitmapSet(MCImageBitmap *p_bitmap, uint32_t p_pixel_value)
 	}
 }
 
+void MCImageBitmapSetMask(MCImageBitmap *p_bitmap, uint8_t *p_mask_data, uint32_t p_mask_stride)
+{
+	uint8_t *t_src_ptr = p_mask_data;
+	uint8_t *t_dst_ptr = (uint8_t*)p_bitmap->data;
+	uindex_t t_height = p_bitmap->height;
+	bool t_has_transparency = false;
+	while (t_height--)
+	{
+		uint8_t *t_src_row = (uint8_t*)t_src_ptr;
+		uint32_t *t_dst_row = (uint32_t*)t_dst_ptr;
+		uindex_t t_width = p_bitmap->width;
+		uint8_t t_bit = 0;
+		uint8_t t_byte = 0;
+		while (t_width--)
+		{
+			if (t_bit == 0)
+			{
+				t_bit = 0x80;
+				t_byte = *t_src_row++;
+			}
+			if (t_bit & t_byte)
+				*t_dst_row++ |= 0xFF000000;
+			else
+			{
+				t_has_transparency = true;
+				*t_dst_row++ &= 0x00FFFFFF;
+			}
+			t_bit >>= 1;
+		}
+		t_src_ptr += p_mask_stride;
+		t_dst_ptr += p_bitmap->stride;
+	}
+	
+	p_bitmap->has_transparency = t_has_transparency;
+	p_bitmap->has_alpha = false;
+}
+
 //////////
 
 static void copy_bitmap_data(uint8_t *p_dst, uindex_t p_dst_stride, const uint8_t *p_src, uindex_t p_src_stride, uindex_t p_width, uindex_t p_height)
@@ -165,23 +208,50 @@ static void copy_bitmap_data(uint8_t *p_dst, uindex_t p_dst_stride, const uint8_
 	}
 }
 
+void MCImageBitmapCopyRegionToBitmap(MCImageBitmap *p_src, MCImageBitmap *p_dst, int32_t sx, int32_t sy, int32_t dx, int32_t dy, uint32_t sw, uint32_t sh)
+{
+	int32_t t_src_x, t_src_y;
+	int32_t t_dst_x, t_dst_y;
+	uint32_t t_width, t_height;
+
+	t_src_x = MCMax(0, sx);
+	t_src_y = MCMax(0, sy);
+
+	t_dst_x = MCMax(0, dx);
+	t_dst_y = MCMax(0, dy);
+
+	t_width = MCMin((int32_t)p_src->width - t_src_x, (int32_t)sw);
+	t_height = MCMin((int32_t)p_src->height - t_src_y, (int32_t)sh);
+
+	t_width = MCMin((int32_t)p_dst->width - t_dst_x, (int32_t)t_width);
+	t_height = MCMin((int32_t)p_dst->height - t_dst_y, (int32_t)t_height);
+
+	copy_bitmap_data((uint8_t*)p_dst->data + p_dst->stride * t_dst_y + t_dst_x * sizeof(uint32_t), p_dst->stride, (uint8_t*)p_src->data + p_src->stride * t_src_y + t_src_x * sizeof(uint32_t), p_src->stride, t_width, t_height);
+
+	if (p_src->has_transparency || p_dst->has_transparency)
+		MCImageBitmapCheckTransparency(p_dst);
+}
+
 void MCImageBitmapCopyRegionToBitmap(MCImageBitmap *p_dst, MCImageBitmap *p_src, MCPoint p_dst_offset, MCRectangle p_src_rect)
 {
 	int32_t t_src_x, t_src_y;
 	int32_t t_dst_x, t_dst_y;
 	uint32_t t_width, t_height;
 
-	t_src_x = MCMax(0, p_src_rect.x);
-	t_src_y = MCMax(0, p_src_rect.y);
+	t_src_x = p_src_rect.x;
+	t_src_y = p_src_rect.y;
 
-	t_dst_x = MCMax(0, p_dst_offset.x);
-	t_dst_y = MCMax(0, p_dst_offset.y);
+	t_width = p_src_rect.width;
+	t_height = p_src_rect.height;
 
-	t_width = MCMin((int32_t)p_src->width - t_src_x, (int32_t)p_src_rect.width);
-	t_height = MCMin((int32_t)p_src->height - t_src_y, (int32_t)p_src_rect.height);
+	t_dst_x = p_dst_offset.x;
+	t_dst_y = p_dst_offset.y;
 
-	t_width = MCMin((int32_t)p_dst->width - t_dst_x, (int32_t)t_width);
-	t_height = MCMin((int32_t)p_dst->height - t_dst_y, (int32_t)t_height);
+	clamp_region(p_src, t_src_x, t_src_y, t_width, t_height);
+	clamp_region(p_dst, t_dst_x, t_dst_y, t_width, t_height);
+
+	if (t_width == 0 || t_height == 0)
+		return;
 
 	copy_bitmap_data((uint8_t*)p_dst->data + p_dst->stride * t_dst_y + t_dst_x * sizeof(uint32_t), p_dst->stride, (uint8_t*)p_src->data + p_src->stride * t_src_y + t_src_x * sizeof(uint32_t), p_src->stride, t_width, t_height);
 
@@ -311,6 +381,9 @@ void MCImageBitmapPremultiplyRegion(MCImageBitmap *p_bitmap, int32_t p_sx, int32
 
 void MCImageBitmapPremultiply(MCImageBitmap *p_bitmap)
 {
+	if (!p_bitmap->has_transparency)
+		return;
+
 	uint8_t *t_src_ptr = (uint8_t*) p_bitmap->data;
 	for (uindex_t y = 0; y < p_bitmap->height; y++)
 	{
@@ -348,6 +421,9 @@ static inline uint32_t packed_divide_bounded(uint32_t x, uint8_t a)
 
 void MCImageBitmapUnpremultiply(MCImageBitmap *p_bitmap)
 {
+	if (!p_bitmap->has_transparency)
+		return;
+
 	uint8_t *t_src_ptr = (uint8_t*) p_bitmap->data;
 	for (uindex_t y = 0; y < p_bitmap->height; y++)
 	{
@@ -363,6 +439,39 @@ void MCImageBitmapUnpremultiply(MCImageBitmap *p_bitmap)
 				t_pixel = (t_alpha << 24) | packed_divide_bounded(t_pixel, t_alpha);
 
 			*t_src_row++ = t_pixel;
+		}
+		t_src_ptr += p_bitmap->stride;
+	}
+}
+
+void MCImageBitmapFixPremultiplied(MCImageBitmap *p_bitmap)
+{
+	if (!p_bitmap->has_transparency)
+		return;
+
+	uint8_t *t_src_ptr = (uint8_t*) p_bitmap->data;
+	for (uindex_t y = 0; y < p_bitmap->height; y++)
+	{
+		uint32_t *t_src_pixel = (uint32_t*)t_src_ptr;
+		for (uindex_t x = 0; x < p_bitmap->width; x++)
+		{
+			uint32_t t_pixel = *t_src_pixel;
+			uint8_t t_alpha = t_pixel >> 24;
+
+			if (t_alpha == 0)
+				t_pixel = 0;
+			else if (t_alpha != 255)
+			{
+				uint4 t_brokenbits = 0;
+				if ((t_pixel & 0xFF) > t_alpha)
+					t_pixel = (t_pixel & ~0xFF) | t_alpha;
+				if (((t_pixel >> 8) & 0xFF) > t_alpha)
+					t_pixel = (t_pixel & ~0xFF00) | (t_alpha << 8);
+				if (((t_pixel >> 16) & 0xFF) > t_alpha)
+					t_pixel = (t_pixel & ~0xFF0000) | (t_alpha << 16);
+			}
+
+			*t_src_pixel++ = t_pixel;
 		}
 		t_src_ptr += p_bitmap->stride;
 	}
@@ -461,7 +570,7 @@ bool MCImageIndexedBitmapAddTransparency(MCImageIndexedBitmap *p_bitmap)
 	p_bitmap->palette[p_bitmap->transparent_index].red = 0xFFFF;
 	p_bitmap->palette[p_bitmap->transparent_index].green = 0xFFFF;
 	p_bitmap->palette[p_bitmap->transparent_index].blue = 0xFFFF;
-	p_bitmap->palette[p_bitmap->transparent_index].pixel = 0x00FFFFFF;
+	p_bitmap->palette[p_bitmap->transparent_index].pixel = MCGPixelPackNative(255, 255, 255, 0);
 
 	return true;
 }
@@ -522,7 +631,8 @@ bool MCImageConvertBitmapToIndexed(MCImageBitmap *p_bitmap, bool p_ignore_transp
 			for (uindex_t x = 0; t_success && x < t_indexed->width; x++)
 			{
 				uint32_t t_pixel = *t_src_row++;
-				uint8_t t_alpha = t_pixel >> 24;
+				uint8_t t_r, t_g, t_b, t_alpha;
+				MCGPixelUnpackNative(t_pixel, t_r, t_g, t_b, t_alpha);
 				if (t_alpha > 0 && t_alpha < 255)
 				{
 					t_success = false;
@@ -543,7 +653,6 @@ bool MCImageConvertBitmapToIndexed(MCImageBitmap *p_bitmap, bool p_ignore_transp
 				}
 				else
 				{
-					t_pixel &= ~0xFF000000;
 					uint4 i = t_pixel % COLOR_HASH_SIZE;
 					MCimagehash *hashentry = hashtable[i];
 					while (hashentry != NULL && hashentry->pixel != t_pixel	&&
@@ -564,11 +673,11 @@ bool MCImageConvertBitmapToIndexed(MCImageBitmap *p_bitmap, bool p_ignore_transp
 							t_indexed->palette[t_indexed->palette_size].pixel = t_pixel;
 
 							uint16_t t_component;
-							t_component = (t_pixel >> 16) & 0xFF;
+							t_component = t_r;
 							t_indexed->palette[t_indexed->palette_size].red = t_component << 8 | t_component;
-							t_component = (t_pixel >> 8) & 0xFF;
+							t_component = t_g;
 							t_indexed->palette[t_indexed->palette_size].green = t_component << 8 | t_component;
-							t_component = t_pixel & 0xFF;
+							t_component = t_b;
 							t_indexed->palette[t_indexed->palette_size].blue = t_component << 8 | t_component;
 
 							hashentry->index = t_indexed->palette_size++;
@@ -614,10 +723,11 @@ bool MCImageConvertIndexedToBitmap(MCImageIndexedBitmap *p_indexed, MCImageBitma
 	{
 		for (uindex_t i = 0; i < p_indexed->palette_size; i++)
 		{
-			t_pixels[i] = 0xFF000000 |
-				((p_indexed->palette[i].red & 0xFF00) << 8) |
-				(p_indexed->palette[i].green & 0xFF00) |
-				((p_indexed->palette[i].blue & 0xFF00) >> 8);
+			t_pixels[i] = MCGPixelPackNative(
+									   p_indexed->palette[i].red >> 8,
+									   p_indexed->palette[i].green >> 8,
+									   p_indexed->palette[i].blue >> 8,
+									   255);
 		}
 
 		if (MCImageIndexedBitmapHasTransparency(p_indexed))
@@ -678,4 +788,61 @@ bool MCImageForceBitmapToIndexed(MCImageBitmap *p_bitmap, bool p_dither, MCImage
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void surface_extract_mask(void *p_pixels, uint4 p_pixel_stride, void *p_mask, uint4 p_mask_stride, uint4 p_width, uint4 p_height, uint1 p_threshold);
+void MCImageBitmapExtractMask(MCImageBitmap *p_bitmap, void *p_mask, uint32_t p_mask_stride, uint8_t p_threshold)
+{
+	surface_extract_mask(p_bitmap->data, p_bitmap->stride, p_mask, p_mask_stride, p_bitmap->width, p_bitmap->height, p_threshold);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCImageDataIsJPEG(MCDataRef p_input)
+{
+	const byte_t *t_data;
+	t_data = MCDataGetBytePtr(p_input);
+    
+	uint4 t_length;
+	t_length = MCDataGetLength(p_input);
+    
+	if (t_length < 9)
+		return false;
+    
+	if (t_data[0] != 0xFF || t_data[1] != 0xE0)
+		return false;
+    
+	if (memcmp(t_data + 4, "JFIF", 5) != 0)
+		return false;
+    
+	return true;
+}
+
+bool MCImageDataIsPNG(MCDataRef p_input)
+{
+	const byte_t *t_data;
+	t_data = MCDataGetBytePtr(p_input);
+	
+	uint4 t_length;
+	t_length = MCDataGetLength(p_input);
+    
+	if (t_length < 8)
+		return false;
+    
+	return memcmp(t_data, "\x89PNG\x0d\x0a\x1a\x0a", 8) == 0;
+}
+
+bool MCImageDataIsGIF(MCDataRef p_input)
+{
+    const byte_t *t_data;
+	t_data = MCDataGetBytePtr(p_input);
+	
+	uint4 t_length;
+	t_length = MCDataGetLength(p_input);
+    
+	if (t_length < 6)
+		return false;
+    
+	return memcmp(t_data, "GIF87a", 6) == 0 || memcmp(t_data, "GIF89a", 6) == 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 

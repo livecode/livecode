@@ -88,8 +88,9 @@ static MCExecEnumTypeInfo _kMCInterfaceCharsetTypeInfo =
 //////////
 
 static MCExecEnumTypeElementInfo _kMCInterfaceCompositorTypeElementInfo[] =
-{	
-	{ "none", kMCTileCacheCompositorNone, false },
+{
+    { "", kMCTileCacheCompositorNone, false },
+	{ "none", kMCTileCacheCompositorNone, true },
 	{ "Software", kMCTileCacheCompositorSoftware, false },
 	{ "CoreGraphics", kMCTileCacheCompositorCoreGraphics, false },
 	{ "opengl", kMCTileCacheCompositorOpenGL, false },
@@ -299,11 +300,32 @@ static MCExecCustomTypeInfo _kMCInterfaceStackPasswordTypeInfo =
 	(void *)MCInterfaceStackPasswordFree
 };
 
+//////////
+
+static MCExecEnumTypeElementInfo _kMCInterfaceStackFullscreenModeElementInfo[] =
+{
+	{"", kMCStackFullscreenResize},
+	{"exact fit", kMCStackFullscreenExactFit},
+	{"show all", kMCStackFullscreenShowAll},
+	{"no border", kMCStackFullscreenNoBorder},
+	{"no scale", kMCStackFullscreenNoScale},
+    
+	{nil, kMCStackFullscreenModeNone},
+};
+
+static MCExecEnumTypeInfo _kMCInterfaceStackFullscreenModeTypeInfo =
+{
+	"Interface.StackFullscreenMode",
+	sizeof(_kMCInterfaceStackFullscreenModeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCInterfaceStackFullscreenModeElementInfo
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExecEnumTypeInfo *kMCInterfaceStackStyleTypeInfo = &_kMCInterfaceStackStyleTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceCharsetTypeInfo = &_kMCInterfaceCharsetTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceCompositorTypeTypeInfo = &_kMCInterfaceCompositorTypeTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceStackFullscreenModeTypeInfo = &_kMCInterfaceStackFullscreenModeTypeInfo;
 MCExecCustomTypeInfo *kMCInterfaceDecorationTypeInfo = &_kMCInterfaceDecorationTypeInfo;
 MCExecCustomTypeInfo *kMCInterfaceStackPasswordTypeInfo = &_kMCInterfaceStackPasswordTypeInfo;
 
@@ -319,7 +341,8 @@ void MCStack::SetFullscreen(MCExecContext& ctxt, bool setting)
 	if (getextendedstate(ECS_FULLSCREEN) != setting)
 	{
 		setextendedstate(setting, ECS_FULLSCREEN);
-		
+        view_setfullscreen(setting);
+        
 		// MW-2012-10-04: [[ Bug 10436 ]] Use 'setrect' to change the rect
 		//   field.
 		if (setting)
@@ -330,6 +353,23 @@ void MCStack::SetFullscreen(MCExecContext& ctxt, bool setting)
 		if (opened > 0) 
 			reopenwindow();
 	}
+}
+
+void MCStack::GetFullscreenMode(MCExecContext& ctxt, intenum_t& r_mode)
+{
+    r_mode = view_getfullscreenmode();
+}
+
+void MCStack::SetFullscreenMode(MCExecContext& ctxt, intenum_t p_mode)
+{
+    if (p_mode != view_getfullscreenmode())
+    {
+        view_setfullscreenmode((MCStackFullscreenMode)p_mode);
+        if (view_getfullscreen() && opened > 0)
+            // IM-2013-10-04: [[ FullscreenMode ]] Change the rect back to old_rect,
+            // rather than reopening the window.
+            setrect(old_rect);
+    }
 }
 
 void MCStack::SetName(MCExecContext& ctxt, MCStringRef p_name)
@@ -1263,48 +1303,12 @@ void MCStack::GetSharedGroupIds(MCExecContext& ctxt, MCStringRef& r_ids)
 
 void MCStack::GetCardIds(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_ids)
 {
-	MCAutoArray<uinteger_t> t_ids;
-    bool t_success;
-    
-    t_success = true;
-    if (cards != nil)
-	{
-		MCCard *cptr = cards;
-		do
-		{
-            uint32_t t_id;
-            t_id = cptr -> getid();
-			t_success = t_ids . Push(t_id);
-			cptr = cptr -> next();
-		}
-		while (cptr != cards && t_success);
-	}
-    
-    t_ids . Take(r_ids, r_count);
+    MCObject::GetCardIds(ctxt, cards, true, 0, r_count, r_ids);
 }
 
 void MCStack::GetCardNames(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_names)
 {
-	MCAutoArray<MCStringRef> t_names;
-    bool t_success;
-    
-    t_success = true;
-    if (cards != nil)
-	{
-		MCCard *cptr = cards;
-		do
-		{
-            MCStringRef t_name;
-            cptr -> getstringprop(ctxt, 0, P_SHORT_NAME, False, t_name);
-            t_success = !ctxt . HasError();
-            if (t_success)
-                t_success = t_names . Push(t_name);
-			cptr = cptr -> next();
-		}
-		while (cptr != cards && t_success);
-	}
-    
-    t_names . Take(r_names, r_count);
+    MCObject::GetCardNames(ctxt, cards, true, 0, r_count, r_names);
 }
 
 void MCStack::GetEditBackground(MCExecContext& ctxt, bool& r_value)
@@ -1864,34 +1868,26 @@ void MCStack::SetModifiedMark(MCExecContext& ctxt, bool setting)
 
 void MCStack::GetAcceleratedRendering(MCExecContext& ctxt, bool& r_value)
 {
-	r_value = getacceleratedrendering();
+	r_value = view_getacceleratedrendering();
 }
 
 void MCStack::SetAcceleratedRendering(MCExecContext& ctxt, bool p_value)
 {
-	setacceleratedrendering(p_value);
+	view_setacceleratedrendering(p_value);
 }
 
-void MCStack::GetCompositorType(MCExecContext& ctxt, intenum_t*& r_type)
+void MCStack::GetCompositorType(MCExecContext& ctxt, intenum_t& r_type)
 {
-	if (m_tilecache == nil)
-	{
-		r_type = nil;
-		return;
-	}
-
 	intenum_t t_type;
-	t_type = (intenum_t)MCTileCacheGetCompositor(m_tilecache);
-	r_type = &t_type;
+	t_type = (intenum_t)view_getcompositortype();
+	r_type = t_type;
 }
 
-void MCStack::SetCompositorType(MCExecContext& ctxt, intenum_t* p_type)
+void MCStack::SetCompositorType(MCExecContext& ctxt, intenum_t p_type)
 {
 	MCTileCacheCompositorType t_type;
 
-	if (p_type == nil)
-		t_type = kMCTileCacheCompositorNone;
-	else if (*p_type == kMCTileCacheCompositorOpenGL)
+	if (p_type == kMCTileCacheCompositorOpenGL)
 	{
 		if (MCTileCacheSupportsCompositor(kMCTileCacheCompositorDynamicOpenGL))
 			t_type = kMCTileCacheCompositorDynamicOpenGL;
@@ -1899,7 +1895,7 @@ void MCStack::SetCompositorType(MCExecContext& ctxt, intenum_t* p_type)
 			t_type = kMCTileCacheCompositorStaticOpenGL;
 	}
 	else
-		t_type = (MCTileCacheCompositorType)*p_type;
+		t_type = (MCTileCacheCompositorType)p_type;
 
 	if (!MCTileCacheSupportsCompositor(t_type))
 	{
@@ -1907,22 +1903,8 @@ void MCStack::SetCompositorType(MCExecContext& ctxt, intenum_t* p_type)
 		return;
 	}
 
-	if (t_type == kMCTileCacheCompositorNone)
-	{
-		MCTileCacheDestroy(m_tilecache);
-		m_tilecache = nil;
-	}
-	else
-	{
-		if (m_tilecache == nil)
-		{
-			MCTileCacheCreate(32, 4096 * 1024, m_tilecache);
-			MCTileCacheSetViewport(m_tilecache, curcard -> getrect());
-		}
-	
-		MCTileCacheSetCompositor(m_tilecache, t_type);
-	}
-	
+    view_setcompositortype(t_type);
+    
 	dirtyall();
 }
 
@@ -1938,7 +1920,7 @@ void MCStack::SetDeferScreenUpdates(MCExecContext& ctxt, bool p_value)
 
 void MCStack::GetEffectiveDeferScreenUpdates(MCExecContext& ctxt, bool& r_value)
 {
-	r_value = m_defer_updates && m_tilecache != nil;
+	r_value = m_defer_updates && view_getacceleratedrendering();
 }
 
 void MCStack::SetDecorations(MCExecContext& ctxt, const MCInterfaceDecoration& p_value)
@@ -1977,48 +1959,52 @@ void MCStack::GetDecorations(MCExecContext& ctxt, MCInterfaceDecoration& r_value
 
 void MCStack::SetCompositorTileSize(MCExecContext& ctxt, uinteger_t *p_value)
 {
-    if (m_tilecache == nil)
-        return;
-    
-    if (MCIsPowerOfTwo(*p_value) && *p_value >= 16 && *p_value <= 256)
+    if (p_value == nil)
     {
-        MCTileCacheSetTileSize(m_tilecache, *p_value);
-        dirtyall();
+        ctxt . LegacyThrow(EE_OBJECT_NAN);
         return;
     }
-
-    ctxt . LegacyThrow(EE_COMPOSITOR_INVALIDTILESIZE);
+    
+    if (!view_isvalidcompositortilesize(*p_value))
+    {
+        ctxt . LegacyThrow(EE_COMPOSITOR_INVALIDTILESIZE);
+        return;
+    }
+    
+    view_setcompositortilesize(*p_value);
 }
 
 void MCStack::GetCompositorTileSize(MCExecContext& ctxt, uinteger_t*& r_value)
 {
-    if (m_tilecache == nil)
+    if (!view_getacceleratedrendering())
         r_value = nil;
     else
     {
         uint32_t t_value;
-        t_value = MCTileCacheGetTileSize(m_tilecache);
+        t_value = view_getcompositortilesize();
         *r_value = t_value;
     }
 }
 
 void MCStack::SetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t *p_value)
 {
-    if (m_tilecache == nil)
+    if (p_value == nil)
+    {
+        ctxt . LegacyThrow(EE_OBJECT_NAN);
         return;
+    }
     
-    MCTileCacheSetCacheLimit(m_tilecache, *p_value);
-    dirtyall();
+    view_setcompositorcachelimit(*p_value);
 }
 
 void MCStack::GetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t*& r_value)
 {
-    if (m_tilecache == nil)
+    if (!view_getacceleratedrendering())
         r_value = nil;
     else
     {
         uint32_t t_value;
-        t_value = MCTileCacheGetCacheLimit(m_tilecache);
+        t_value = view_getcompositorcachelimit();
         *r_value = t_value;
     }
 }

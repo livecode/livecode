@@ -628,10 +628,31 @@ static uint8_t s_mov_4000c_prefix[] =
 	0xb8, 0x0c, 0x00, 0x08, 0x00
 };
 
+// MM-2013-09-23: [[ iOS7 Support ]] Tweaked fopen for iOS7.
 static trampoline_info_t s_trampolines[] =
 {
-
-#if defined(__IPHONE_6_0)
+#if defined(__IPHONE_7_0)
+	{ (void *)open, (void *)open_wrapper, (void **)&open_trampoline, s_push_mov_sub_18_prefix },
+	{ (void *)fopen, (void *)fopen_wrapper, (void **)&fopen_trampoline, s_push_mov_push_ebx_push_edi_prefix },
+	
+	{ (void *)stat, (void *)stat_wrapper, (void **)&stat_trampoline, s_push_mov_sub_18_prefix },
+	{ (void *)lstat, (void *)lstat_wrapper, (void **)&lstat_trampoline, s_push_mov_sub_18_prefix },
+	
+	{ (void *)opendir, (void *)opendir_wrapper, (void **)&opendir_trampoline, s_push_mov_sub_8_prefix },
+	{ (void *)readdir, (void *)readdir_wrapper, (void **)&readdir_trampoline, s_push_mov_push_push_prefix },
+    
+    // MM-2013-10-04: [[ Bug ]] Changed readdir_r from s_push_mov_push_push_prefix to s_push_mov_push_ebx_push_edi_prefix.
+    //    This fix along with 11234 will hopefully fix bug 11252 (which looks to be simulator hook related).
+	{ (void *)readdir_r, (void *)readdir_r_wrapper, (void **)&readdir_r_trampoline, s_push_mov_push_ebx_push_edi_prefix },
+    
+    // MM-2013-10-04: [[ Bug 11234 ]] Changed closedir from s_push_mov_push_push_prefix to s_push_mov_push_ebx_push_edi_prefix.
+    //   This was causing ask/answer commands to hang.
+	{ (void *)closedir, (void *)closedir_wrapper, (void **)&closedir_trampoline, s_push_mov_push_ebx_push_edi_prefix },
+    
+	{ (void *)rewinddir, (void *)rewinddir_wrapper, (void **)&rewinddir_trampoline, s_push_mov_push_sub_14_prefix },
+	{ (void *)seekdir, (void *)seekdir_wrapper, (void **)&seekdir_trampoline, s_push_mov_push_push_prefix },
+	{ (void *)telldir, (void *)telldir_wrapper, (void **)&telldir_trampoline, s_push_mov_push_ebx_push_edi_prefix },
+#elif defined(__IPHONE_6_0)
 	{ (void *)open, (void *)open_wrapper, (void **)&open_trampoline, s_push_mov_sub_18_prefix },
 	{ (void *)fopen, (void *)fopen_wrapper, (void **)&fopen_trampoline, s_push_mov_sub_18_prefix },
 	
@@ -640,10 +661,21 @@ static trampoline_info_t s_trampolines[] =
 	
 	{ (void *)opendir, (void *)opendir_wrapper, (void **)&opendir_trampoline, s_push_mov_sub_8_prefix },
 	{ (void *)readdir, (void *)readdir_wrapper, (void **)&readdir_trampoline, s_push_mov_push_push_prefix },
-	{ (void *)readdir_r, (void *)readdir_r_wrapper, (void **)&readdir_r_trampoline, s_push_mov_push_push_prefix },
-	{ (void *)closedir, (void *)closedir_wrapper, (void **)&closedir_trampoline, s_push_mov_push_push_prefix },
+    
+    // MM-2013-10-04: [[ Bug ]] Changed readdir_r from s_push_mov_push_push_prefix to s_push_mov_push_ebx_push_edi_prefix.
+    //   The issue, though,  doesn't appear to have manifested itself as a bug in LiveCode.
+	{ (void *)readdir_r, (void *)readdir_r_wrapper, (void **)&readdir_r_trampoline, s_push_mov_push_ebx_push_edi_prefix },
+    
+    // MM-2013-10-04: [[ Bug 10888 ]] Changed closedir from s_push_mov_push_push_prefix to s_push_mov_push_ebx_push_edi_prefix.
+    //   This was causing video streaming to crash.
+	{ (void *)closedir, (void *)closedir_wrapper, (void **)&closedir_trampoline, s_push_mov_push_ebx_push_edi_prefix },
+    
 	{ (void *)rewinddir, (void *)rewinddir_wrapper, (void **)&rewinddir_trampoline, s_push_mov_push_sub_14_prefix },
-	{ (void *)seekdir, (void *)seekdir_wrapper, (void **)&seekdir_trampoline, s_push_mov_push_push_prefix },
+    
+    // MM-2013-10-04: [[ Bug ]] Changed seekdir from s_push_mov_push_push_prefix to s_push_mov_push_ebx_push_edi_prefix.
+    //   The issue, though,  doesn't appear to have manifested itself as a bug in LiveCode.
+	{ (void *)seekdir, (void *)seekdir_wrapper, (void **)&seekdir_trampoline, s_push_mov_push_ebx_push_edi_prefix },
+    
 	{ (void *)telldir, (void *)telldir_wrapper, (void **)&telldir_trampoline, s_push_mov_push_ebx_push_edi_prefix },
 #elif defined(__IPHONE_5_0)
 	{ (void *)open, (void *)open_wrapper, (void **)&open_trampoline, s_push_move_sub_14_prefix },
@@ -704,7 +736,7 @@ static void push_ints(uint8_t*& x_buffer, uint32_t p_count, ...)
 }
 
 void setup_simulator_hooks(void)
-{ 
+{
     // MW-2011-10-07: On Lion, you cannot execute pages which have not been
     //   explicitly marked as EXEC, so allocate a 4K page, and then protect
     //   it appropriately.

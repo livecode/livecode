@@ -179,6 +179,7 @@ bool MCFileGetDataProtection(MCStringRef p_filename, NSString *&r_protection)
 
 NSString *MCStringRefToNSString(MCStringRef p_string, bool p_unicode)
 {
+
 	if (p_unicode)
 		return [NSString stringWithCharacters: MCStringGetCharPtr(p_string) length: MCStringGetLength(p_string)];
 	return [[[NSString alloc] initWithBytes: MCStringGetCString(p_string) length: MCStringGetLength(p_string) encoding: NSMacOSRomanStringEncoding] autorelease];

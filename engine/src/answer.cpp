@@ -47,7 +47,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 MCAnswer::~MCAnswer()
 {
-	delete it;
 	delete title;
 	
 	switch(mode)
@@ -89,7 +88,6 @@ Parse_stat MCAnswer::parse(MCScriptPoint &sp)
 	const LT *t_literal;
 
 	initpoint(sp);
-	getit(sp, it);
 
 	if (sp . skip_token(SP_ASK, TT_UNDEFINED, AT_PAGE) == PS_NORMAL)
 	{
@@ -192,7 +190,7 @@ Parse_errors MCAnswer::parse_colour(MCScriptPoint& sp)
 	if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
 		if (sp . parseexp(False, True, &colour . initial) != PS_NORMAL)
 			t_error = PE_ANSWER_BADRESPONSE;
-			
+	
 	return t_error;
 }
 
@@ -309,7 +307,7 @@ Exec_stat MCAnswer::exec(MCExecPoint& ep)
 {
 	Exec_errors t_error = EE_UNDEFINED;
 
-	MCExecContext ctxt(ep, it);
+	MCExecContext ctxt(ep);
 	MCAutoStringRef t_title;
 
 	if (!evaluate_stringref(ep, title, EE_ANSWER_BADTITLE, line, pos, &t_title))
@@ -468,7 +466,7 @@ Exec_stat MCAnswer::exec(MCExecPoint& ep)
 		}
 
 	if (!t_error)
-		it -> set(ep);
+		ep . getit() -> set(ep);
 	else
 		MCeerror -> add(t_error, line, pos);
 
