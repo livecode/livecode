@@ -1963,7 +1963,7 @@ Parse_stat MCPush::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCPush::exec(MCExecPoint &ep)
+void MCPush::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCPush */ LEGACY_EXEC
 MCObject *optr;
@@ -1990,9 +1990,7 @@ MCObject *optr;
 	return ES_NORMAL;
 #endif /* MCPush */
 
-
-	MCExecContext ctxt(ep);
-	if (card == NULL)
+    if (card == NULL)
 	{
 		if (recent)
 			MCInterfaceExecPushRecentCard(ctxt);
@@ -2003,23 +2001,18 @@ MCObject *optr;
 	{
 		MCObject *optr;
 		uint4 parid;
-		if (card->getobj(ep, optr, parid, True) != ES_NORMAL)
+        if (!card->getobj(ctxt, optr, parid, True))
 		{
-			MCeerror->add(EE_PUSH_NOTARGET, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_PUSH_NOTARGET);
+            return;
 		}
 		if (optr->gettype() != CT_CARD)
 		{
-			MCeerror->add(EE_PUSH_NOTACARD, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_PUSH_NOTACARD);
+            return;
 		}
 		MCInterfaceExecPushCard(ctxt, (MCCard *)optr);
-	}
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    }
 }
 
 void MCPush::compile(MCSyntaxFactoryRef ctxt)
