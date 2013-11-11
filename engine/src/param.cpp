@@ -112,7 +112,9 @@ bool MCParameter::eval(MCExecContext &ctxt, MCValueRef &r_value)
         return ctxt . EvalOptionalExprAsValueRef(exp, (MCValueRef)kMCEmptyString, EE_PARAM_BADEXP, r_value);
     else
     {
-        r_value = MCValueRetain(value);
+        // ep.copyasvalueref() returns kMCEmptyString if there is no value in the
+        // EP, so eval(MCExecPoint) formely never allowed us to get a nil value.
+        r_value = MCValueRetain((MCValueRef) kMCEmptyString);
         return true;
     }
 }
