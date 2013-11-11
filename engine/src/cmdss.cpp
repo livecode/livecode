@@ -3043,7 +3043,7 @@ Parse_stat MCUnlock::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCUnlock::exec(MCExecPoint &ep)
+void MCUnlock::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCUnlock */ LEGACY_EXEC
 	switch (which)
@@ -3086,8 +3086,6 @@ Exec_stat MCUnlock::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCUnlock */
 
-	
-	MCExecContext ctxt(ep);
 	switch (which)
 	{
 		case LC_COLORMAP:
@@ -3119,12 +3117,7 @@ Exec_stat MCUnlock::exec(MCExecPoint &ep)
 			break;
 		default:
 			break;
-	}
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-	
-	return ctxt . Catch(line, pos);
+    }
 }
 
 void MCUnlock::compile(MCSyntaxFactoryRef ctxt)
