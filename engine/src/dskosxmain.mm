@@ -113,7 +113,10 @@ int main(int argc, char *argv[], char *envp[])
 		MCAutoStringRef t_caption;
 		MCAutoStringRef t_text;
 		MCModeGetStartupErrorMessage(&t_caption, &t_text);
-		fprintf(stderr, "%s - %s\n", MCStringGetCString(*t_caption), MCStringGetCString(*t_text));
+        MCAutoStringRefAsUTF8String t_utf8_caption, t_utf8_text;
+        /* UNCHECKED */ t_utf8_caption . Lock(*t_caption);
+        /* UNCHECKED */ t_utf8_text . Lock(*t_text);
+		fprintf(stderr, "%s - %s\n", *t_utf8_caption, *t_utf8_text);
 		exit(-1);
 	}
 

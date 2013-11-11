@@ -120,7 +120,12 @@ bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImage
 			break;
 			
 			case REI_VISUALEFFECT_PARAMETER_TYPE_STRING:
-				t_parameters -> entries[t_index] . value . string = MCStringGetCString(t_argument -> value);
+            {
+                char *t_value;
+                /* UNCHECKED */ MCStringConvertToCString(t_argument -> value, t_value);
+				t_parameters -> entries[t_index] . value . string = t_value;
+                delete t_value;
+            }
 			break;
 			
 			case REI_VISUALEFFECT_PARAMETER_TYPE_COLOUR:

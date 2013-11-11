@@ -272,6 +272,7 @@
 		76956893182277B200779255 /* cgimageutil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76956892182277AE00779255 /* cgimageutil.cpp */; };
 		769568951822796400779255 /* iphone_test.livecode in Resources */ = {isa = PBXBuildFile; fileRef = 769568941822791000779255 /* iphone_test.livecode */; };
 		76B298B2180448AF0053EC38 /* exec-interface-field-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76B298B1180448AF0053EC38 /* exec-interface-field-chunk.cpp */; };
+
 		76EF32BA182263E000FAC195 /* foundation-legacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF32B7182263DB00FAC195 /* foundation-legacy.cpp */; };
 		76EF32D918226C7300FAC195 /* sysunxrandom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF323E182145CA00FAC195 /* sysunxrandom.cpp */; };
 		76EF32DD18226EEB00FAC195 /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF32DB18226EE800FAC195 /* graphicscontext.cpp */; };
@@ -279,6 +280,7 @@
 		76EF32E41822749600FAC195 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 76EF32E31822749500FAC195 /* Security.framework */; };
 		76EF32E61822757A00FAC195 /* stackview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF32E51822756F00FAC195 /* stackview.cpp */; };
 		76EF32E9182275D500FAC195 /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF32E7182275D000FAC195 /* imagelist.cpp */; };
+
 		BE02B4FB17FEC652001BAFF0 /* exec-strings-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE02B4FA17FEC639001BAFF0 /* exec-strings-chunk.cpp */; };
 		BE096E8B175CD7CF00F92F90 /* libfoundationmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BE096E85175CD79D00F92F90 /* libfoundationmobile.a */; };
 		BE0A3CD417E1FD2500C2361B /* mblnetwork.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE0A3CD317E1FC9E00C2361B /* mblnetwork.cpp */; };
@@ -913,6 +915,7 @@
 		76956892182277AE00779255 /* cgimageutil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cgimageutil.cpp; path = src/cgimageutil.cpp; sourceTree = "<group>"; };
 		769568941822791000779255 /* iphone_test.livecode */ = {isa = PBXFileReference; lastKnownFileType = file; path = iphone_test.livecode; sourceTree = "<group>"; };
 		76B298B1180448AF0053EC38 /* exec-interface-field-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-field-chunk.cpp"; path = "src/exec-interface-field-chunk.cpp"; sourceTree = "<group>"; };
+
 		76EF321F182124AA00FAC195 /* exec-strings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "exec-strings.h"; path = "src/exec-strings.h"; sourceTree = "<group>"; };
 		76EF323E182145CA00FAC195 /* sysunxrandom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxrandom.cpp; path = src/sysunxrandom.cpp; sourceTree = "<group>"; };
 		76EF328D18217FA200FAC195 /* mblandroidtypeface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidtypeface.cpp; path = src/mblandroidtypeface.cpp; sourceTree = "<group>"; };
@@ -925,6 +928,7 @@
 		76EF32E51822756F00FAC195 /* stackview.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stackview.cpp; path = src/stackview.cpp; sourceTree = "<group>"; };
 		76EF32E7182275D000FAC195 /* imagelist.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imagelist.cpp; path = src/imagelist.cpp; sourceTree = "<group>"; };
 		76EF32E8182275D100FAC195 /* imagelist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imagelist.h; path = src/imagelist.h; sourceTree = "<group>"; };
+
 		BE02B4FA17FEC639001BAFF0 /* exec-strings-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-strings-chunk.cpp"; path = "src/exec-strings-chunk.cpp"; sourceTree = "<group>"; };
 		BE096E7D175CD79D00F92F90 /* libfoundation-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libfoundation-mobile.xcodeproj"; path = "../libfoundation/libfoundation-mobile.xcodeproj"; sourceTree = SOURCE_ROOT; };
 		BE0A3CD317E1FC9E00C2361B /* mblnetwork.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblnetwork.cpp; path = src/mblnetwork.cpp; sourceTree = "<group>"; };
@@ -2112,6 +2116,7 @@
 				4D7E3A591281835D00E7F80A /* Default.png in Resources */,
 				4CD038F316C8FE1700EBCCBA /* Default-568h@2x.png in Resources */,
 				769568951822796400779255 /* iphone_test.livecode in Resources */,
+
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
