@@ -2606,7 +2606,7 @@ Parse_stat MCPlace::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCPlace::exec(MCExecPoint &ep)
+void MCPlace::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCPlace */ LEGACY_EXEC
 MCObject *gptr;
@@ -2655,41 +2655,28 @@ MCObject *gptr;
 	return ES_NORMAL;
 #endif /* MCPlace */
 
-
-	MCObject *gptr;
+    MCObject *gptr;
 	uint4 parid;
-	if (group->getobj(ep, gptr, parid, True) != ES_NORMAL)
-	{
-		MCeerror->add(EE_PLACE_NOBACKGROUND, line, pos);
-		return ES_ERROR;
-	}
+	group->getobj(ctxt, gptr, parid, True);
 	// MW-2008-03-31: [[ Bug 6281 ]] A little too draconian here - it is possible
 	//   for a parent of a placeable group to be either a card or a stack.
-
+    
 	if (gptr->gettype() != CT_GROUP)
 	{
 		MCeerror->add(EE_PLACE_NOTABACKGROUND, line, pos);
-		return ES_ERROR;
+		return;
 	}
-	MCObject *optr;
-	if (card->getobj(ep, optr, parid, True) != ES_NORMAL)
-	{
-		MCeerror->add(EE_PLACE_NOCARD, line, pos);
-		return ES_ERROR;
-	}
+    MCObject *optr;
+	card->getobj(ctxt, optr, parid, True);
+	
 	if (optr->gettype() != CT_CARD)
 	{
 		MCeerror->add(EE_PLACE_NOTACARD, line, pos);
-		return ES_ERROR;
+		return;
 	}
+    
 	MCCard *cptr = (MCCard *)optr;
-	MCExecContext ctxt(ep);
 	MCInterfaceExecPlaceGroupOnCard(ctxt, gptr, cptr);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCPlace::compile(MCSyntaxFactoryRef ctxt)
