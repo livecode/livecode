@@ -3161,7 +3161,7 @@ Parse_stat MCReplace::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCReplace::exec(MCExecPoint &ep)
+void MCReplace::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCReplace */ LEGACY_EXEC
 	MCExecPoint epp(ep);
@@ -3215,37 +3215,25 @@ Exec_stat MCReplace::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCReplace */
 
-
-	if (pattern->eval(ep) != ES_NORMAL || ep.tos() != ES_NORMAL || ep.getsvalue().getlength() < 1)
-	{
-		MCeerror->add(EE_REPLACE_BADPATTERN, line, pos);
-		return ES_ERROR;
-	}
-	MCAutoStringRef t_pattern;
-	ep.copyasstringref(&t_pattern);
-	if (replacement->eval(ep) != ES_NORMAL || ep.tos() != ES_NORMAL)
-	{
-		MCeerror->add(EE_REPLACE_BADREPLACEMENT, line, pos);
-		return ES_ERROR;
-	}
-	MCAutoStringRef t_replacement;
-	ep.copyasstringref(&t_replacement);
-	if (container->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_REPLACE_BADCONTAINER, line, pos);
-		return ES_ERROR;
-	}
-	MCAutoStringRef t_target;
-	ep.copyasmutablestringref(&t_target);
-	MCExecContext ctxt(ep);
-	MCStringsExecReplace(ctxt, *t_pattern, *t_replacement, *t_target);
-
-	if (!ctxt . HasError())
-	{
-		return container -> set(ep, PT_INTO, *t_target);
-	}
-
-	return ctxt . Catch(line, pos);
+    MCAutoStringRef t_pattern;
+    if (!ctxt . EvalExprAsStringRef(pattern, EE_REPLACE_BADPATTERN, &t_pattern))
+        return;
+    
+    if (MCStringGetLength(*t_pattern) < 1)
+        return;
+    
+    MCAutoStringRef t_replacement;
+    if (!ctxt . EvalExprAsStringRef(replacement, EE_REPLACE_BADREPLACEMENT, &t_replacement))
+        return;
+    
+    MCStringRef t_target;
+    container->eval(ctxt, t_target);
+    if (ctxt . HasError())
+        return;
+    /* UNCHECKED */ MCStringMutableCopyAndRelease(t_target, t_target);
+    MCStringsExecReplace(ctxt, *t_pattern, *t_replacement, t_target);
+    
+    container -> set(ctxt, PT_INTO, t_target);
 }
 
 void MCReplace::compile(MCSyntaxFactoryRef ctxt)
