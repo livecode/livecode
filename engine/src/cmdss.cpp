@@ -2071,7 +2071,7 @@ Parse_stat MCSave::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCSave::exec(MCExecPoint &ep)
+void MCSave::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCSave */ LEGACY_EXEC
 MCObject *optr;
@@ -2112,40 +2112,29 @@ MCObject *optr;
 	return ES_NORMAL;
 #endif /* MCSave */
 
-
-	MCExecContext ctxt(ep);
-	MCObject *optr;
+    MCObject *optr;
 	uint4 parid;
 
-	if (target->getobj(ep, optr, parid, True) != ES_NORMAL)
+    if (!target->getobj(ctxt, optr, parid, True))
 	{
-		MCeerror->add(EE_SAVE_NOTARGET, line, pos);
-		return ES_ERROR;
+        ctxt . LegacyThrow(EE_SAVE_NOTARGET);
+        return;
 	}
 	if (optr->gettype() != CT_STACK)
 	{
-		MCeerror->add(EE_SAVE_NOTASTACK, line, pos);
-		return ES_ERROR;
+        ctxt . LegacyThrow(EE_SAVE_NOTASTACK);
+        return;
 	}
 	if (filename != NULL)
 	{
 		MCAutoStringRef t_filename;
-		if (filename->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add
-			(EE_SAVE_BADNOFILEEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&t_filename);
+        if (!ctxt . EvalExprAsStringRef(filename, EE_SAVE_BADNOFILEEXP, &t_filename))
+            return;
+
 		MCInterfaceExecSaveStackAs(ctxt, (MCStack *)optr, *t_filename);
 	}
 	else
-		MCInterfaceExecSaveStack(ctxt, (MCStack*) optr);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+        MCInterfaceExecSaveStack(ctxt, (MCStack*) optr);
 }
 
 void MCSave::compile(MCSyntaxFactoryRef ctxt)
