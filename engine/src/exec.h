@@ -2040,6 +2040,11 @@ extern MCExecMethodInfo *kMCInterfaceEvalThisCardOfOptionalStackMethodInfo;
 
 extern MCExecMethodInfo *kMCInterfaceEvalTextOfContainerMethodInfo;
 
+extern MCExecMethodInfo *kMCInterfaceExecRelayerMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceExecRelayerRelativeToControlMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceExecResolveImageByNameMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceExecResolveImageByIdMethodInfo;
+
 void MCInterfaceInitialize(MCExecContext& ctxt);
 void MCInterfaceFinalize(MCExecContext& ctxt);
 
@@ -2590,6 +2595,9 @@ void MCInterfaceExecUnmarkFind(MCExecContext& ctxt, Find_mode p_mode, MCStringRe
 void MCInterfaceExecRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_source, uinteger_t p_layer);
 void MCInterfaceExecRelayerRelativeToControl(MCExecContext& ctxt, int p_relation, MCObjectPtr p_source, MCObjectPtr p_target);
 void MCInterfaceExecRelayerRelativeToOwner(MCExecContext& ctxt, int p_relation, MCObjectPtr p_source);
+
+void MCInterfaceExecResolveImageById(MCExecContext& ctxt, MCObject *p_object, uinteger_t p_id);
+void MCInterfaceExecResolveImageByName(MCExecContext& ctxt, MCObject *p_object, MCStringRef p_name);
 
 ///////////
 

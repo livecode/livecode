@@ -331,6 +331,11 @@ MC_EXEC_DEFINE_EVAL_METHOD(Interface, ThisCardOfOptionalStack, 2)
 
 MC_EXEC_DEFINE_EVAL_METHOD(Interface, TextOfContainer, 2)
 
+MC_EXEC_DEFINE_EXEC_METHOD(Interface, Relayer, 3)
+MC_EXEC_DEFINE_EXEC_METHOD(Interface, RelayerRelativeToControl, 3)
+MC_EXEC_DEFINE_EXEC_METHOD(Interface, ResolveImageByName, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Interface, ResolveImageById, 2)
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCInterfaceNamedColorParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceNamedColor& r_output)
@@ -3657,4 +3662,37 @@ void MCInterfaceExecRelayerRelativeToOwner(MCExecContext& ctxt, int p_relation, 
     t_target . part_id = p_source . part_id;
     
     MCInterfaceDoRelayer(ctxt, p_relation, p_source, t_target);
+}
+
+void MCInterfaceExecResolveImageById(MCExecContext& ctxt, MCObject *p_object, uinteger_t p_id)
+{
+    MCImage *t_found_image;
+    t_found_image = p_object -> resolveimageid(p_id);
+    
+    MCAutoStringRef t_long_id;
+    
+    if (t_found_image != nil)
+    {
+        t_found_image -> GetLongId(ctxt, &t_long_id);
+        ctxt . SetItToValue(*t_long_id);
+    }
+    else
+        ctxt . SetItToEmpty();
+}
+
+
+void MCInterfaceExecResolveImageByName(MCExecContext& ctxt, MCObject *p_object, MCStringRef p_name)
+{
+    MCImage *t_found_image;
+    t_found_image = p_object -> resolveimagename(p_name);
+    
+    MCAutoStringRef t_long_id;
+    
+    if (t_found_image != nil)
+    {
+        t_found_image -> GetLongId(ctxt, &t_long_id);
+        ctxt . SetItToValue(*t_long_id);
+    }
+    else
+        ctxt . SetItToEmpty();
 }

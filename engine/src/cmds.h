@@ -2100,6 +2100,7 @@ public:
     virtual Parse_stat parse(MCScriptPoint &p_sp);
     
     virtual Exec_stat exec(MCExecPoint &p_ep);
+    virtual void compile(MCSyntaxFactoryRef);
     
 private:
     MCChunk *m_relative_object;
