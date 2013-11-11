@@ -2439,7 +2439,7 @@ Parse_stat MCMakeGroup::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCMakeGroup::exec(MCExecPoint &ep)
+void MCMakeGroup::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCMakeGroup */ LEGACY_EXEC
 if (targets != NULL)
@@ -2491,19 +2491,16 @@ if (targets != NULL)
 	return ES_NORMAL;
 #endif /* MCMakeGroup */
 
-
-	MCExecContext ctxt(ep);
-	if (targets != NULL)
+    if (targets != NULL)
 	{
 		MCAutoArray<MCObjectPtr> t_objects;
 		for(MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
 		{
 			MCObjectPtr t_object;
-			if (t_chunk -> getobj(ep, t_object, True) != ES_NORMAL ||
-				t_object . object -> gettype() < CT_FIRST_CONTROL ||
-				t_object . object -> gettype() > CT_LAST_CONTROL)
-				return ES_ERROR;
-
+            t_chunk -> getobj(ctxt, t_object, True);
+			if (t_object . object -> gettype() < CT_FIRST_CONTROL || t_object . object -> gettype() > CT_LAST_CONTROL)
+				return;
+            
 			if (!t_objects . Push(t_object))
 			{
 				MCeerror -> add(EE_NO_MEMORY, line, pos);
@@ -2512,13 +2509,8 @@ if (targets != NULL)
 		}
 		MCInterfaceExecGroupControls(ctxt, t_objects . Ptr(), t_objects . Size());
 	}
-	else
+    else
 		MCInterfaceExecGroupSelection(ctxt);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCMakeGroup::compile(MCSyntaxFactoryRef ctxt)
