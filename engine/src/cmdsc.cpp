@@ -3453,7 +3453,7 @@ Parse_stat MCCrop::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCCrop::exec(MCExecPoint &ep)
+void MCCrop::exec_ctxt(MCExecContext& ctxt)
 {	
 #ifdef /* MCCrop */ LEGACY_EXEC
 	if (image != NULL)
@@ -3496,8 +3496,6 @@ Exec_stat MCCrop::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCCrop */
 
-
-	MCExecContext ctxt(ep);
 	MCImage *iptr;
 	MCRectangle t_rect;
 	
@@ -3505,41 +3503,24 @@ Exec_stat MCCrop::exec(MCExecPoint &ep)
 	{
 		MCObject *optr;
 		uint4 parid;
-		if (image->getobj(ep, optr, parid, True) != ES_NORMAL)
-		{
-			MCeerror->add(EE_CROP_NOIMAGE, line, pos);
-			return ES_ERROR;
-		}
+		image->getobj(ctxt, optr, parid, True);
 		if (optr->gettype() != CT_IMAGE)
 		{
 			MCeerror->add(EE_CROP_NOTIMAGE, line, pos);
-			return ES_ERROR;
+			return;
 		}
 		iptr = (MCImage *)optr;
-		if (newrect->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_CROP_CANTGETRECT, line, pos);
-			return ES_ERROR;
-		}
-		if (!ep . copyaslegacyrectangle(t_rect))
-		{
-			MCeerror->add(EE_CROP_NAR, line, pos, ep.getsvalue());
-			return ES_ERROR;
-		}
-	}
-	else
+        if (!ctxt . EvalExprAsRectangle(newrect, EE_CROP_CANTGETRECT, t_rect))
+            return;
+    }
+    else
 	{
 		iptr = nil;
 		t_rect = MCRectangleMake(0,0,0,0);
 	}
-
+    
 	MCGraphicsExecCropImage(ctxt, iptr, t_rect);
-	
-	if (!ctxt . HasError()) 
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
-}
+ }
 
 void MCCrop::compile(MCSyntaxFactoryRef ctxt)
 {
