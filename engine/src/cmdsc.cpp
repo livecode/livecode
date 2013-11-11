@@ -3324,7 +3324,7 @@ Parse_stat MCRotate::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCRotate::exec(MCExecPoint &ep)
+void MCRotate::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCRotate */ LEGACY_EXEC
 	// MW-2012-01-05: [[ Bug 9909 ]] If we are a mobile platform, the image
@@ -3369,55 +3369,36 @@ Exec_stat MCRotate::exec(MCExecPoint &ep)
 
 	return ES_NORMAL;
 #endif /* MCRotate */
-
-	// MW-2012-01-05: [[ Bug 9909 ]] If we are a mobile platform, the image
-	//   editing operations are not supported yet.
-    MCExecContext ctxt(ep);
-
     
 #ifndef _MOBILE
 	MCImage *iptr;
 	iptr = NULL;
-
+    
 	if (image != NULL)
 	{
 		MCObject *optr;
 		uint4 parid;
-		if (image->getobj(ep, optr, parid, True) != ES_NORMAL)
-		{
-			MCeerror->add(EE_ROTATE_NOIMAGE, line, pos);
-			return ES_ERROR;
-		}
-
+		image->getobj(ctxt, optr, parid, True);
+        
 		if (optr->gettype() != CT_IMAGE)
 		{
 			MCeerror->add(EE_ROTATE_NOTIMAGE, line, pos);
-			return ES_ERROR;
+			return;
 		}
 		iptr = (MCImage *)optr;
 	}
-
-	if (angle->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_ROTATE_BADANGLE, line, pos);
-		return ES_ERROR;
-	}
-
-	integer_t t_angle;
-	t_angle = ep.getuint4();
-
+    
+    integer_t t_angle;
+    if (!ctxt . EvalExprAsInt(angle, EE_ROTATE_BADANGLE, t_angle))
+        return;
+    
 	if (iptr != NULL)
 		MCGraphicsExecRotateImage(ctxt, iptr, t_angle);
 	else
 		MCGraphicsExecRotateSelection(ctxt, t_angle);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    
 #else
-
-	return ES_NORMAL;
+	return;
 #endif
 }
 
