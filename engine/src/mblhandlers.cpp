@@ -800,7 +800,6 @@ Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameter
             else if (MCStringIsEqualToCString(t_orientation, "face down", kMCCompareCaseless))
                 t_orientations_set |= ORIENTATION_FACE_DOWN_BIT;
             
-            MCValueRelease(t_orientation);
         }
 	}
 

@@ -205,15 +205,16 @@ void MCUrlProgressEvent::Dispatch(void)
 	}
 }
 
-static void send_url_progress(MCObjectHandle *p_object, MCSystemUrlStatus p_status, MCStringRef p_url, int32_t p_amount, int32_t& x_total, void* p_data)
+static void send_url_progress(MCObjectHandle *p_object, MCSystemUrlStatus p_status, MCStringRef p_url, int32_t p_amount, int32_t& x_total, MCStringRef p_data)
 {
 	if (p_status == kMCSystemUrlStatusNegotiated)
-		x_total = *(int32_t*)p_data;
+        /* UNCHECKED */ MCStringToInteger(p_data, x_total);
 	
 	MCUrlProgressEvent *t_event;
-    MCAutoStringRef t_data;
-    /* UNCHECKED */ MCStringCreateWithCString((const char*)p_data, &t_data);
-	t_event = MCUrlProgressEvent::CreateUrlProgressEvent(p_object, p_url, p_status, p_amount, x_total, *t_data);
+    t_event = nil;
+    
+    if (p_data != nil)
+        t_event = MCUrlProgressEvent::CreateUrlProgressEvent(p_object, p_url, p_status, p_amount, x_total, p_data);
 	if (t_event)
 		MCEventQueuePostCustom(t_event);
 }
@@ -397,9 +398,11 @@ void MCUrlLoadEvent::Dispatch(void)
 		{
 			case kMCSystemUrlStatusFinished:
             {
-                MCAutoStringRef t_data;
-                /* UNCHECKED */ MCStringCreateWithCString(static_cast<char*>(m_data.bytes), &t_data);
-				t_object -> message_with_valueref_args(m_message, m_url, MCSTR("downloaded"), *t_data);
+                MCAutoDataRef t_data;
+                MCAutoNumberRef t_num;
+                /* UNCHECKED */ MCDataCreateWithBytes((const byte_t*)m_data.bytes, m_data.size, &t_data);
+                /* UNCHECKED */ MCNumberCreateWithUnsignedInteger(m_data.size, &t_num);
+                t_object -> message_with_valueref_args(m_message, m_url, MCSTR("downloaded"), *t_data, *t_num);
 				break;
             }
 			case kMCSystemUrlStatusError:
@@ -438,7 +441,7 @@ static bool MCS_loadurl_callback(void *p_context, MCSystemUrlStatus p_status, co
 	else if (p_status == kMCSystemUrlStatusLoading)
 	{
 		MCMemoryReallocate(context->data.bytes, context->data.size + MCStringGetLength(*t_data), context->data.bytes);
-		MCMemoryCopy(static_cast<uint8_t*>(context->data.bytes) + context->data.size, *t_data, MCStringGetLength(*t_data));
+		MCMemoryCopy(static_cast<uint8_t*>(context->data.bytes) + context->data.size, p_data, MCStringGetLength(*t_data));
 		context->data.size += MCStringGetLength(*t_data);
 	}
 
