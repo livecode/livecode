@@ -2265,7 +2265,7 @@ Parse_stat MCShow::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCShow::exec(MCExecPoint &ep)
+void MCShow::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCShow */ LEGACY_EXEC
 	uint2 count;
@@ -2389,8 +2389,6 @@ Exec_stat MCShow::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCShow */
 
-	
-	MCExecContext ctxt(ep);
 	switch (which)
 	{
 	case SO_GROUPS:
@@ -2404,42 +2402,33 @@ Exec_stat MCShow::exec(MCExecPoint &ep)
 		break;
 	case SO_CARD:
 	{
-		if (ton == NULL || ton->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-		{
-			MCeerror->add(EE_SHOW_BADNUMBER, line, pos);
-			return ES_ERROR;
-		}
-		uint2 t_count = ep.getuint2();
+        uinteger_t t_count;
+        if (!ctxt . EvalOptionalExprAsUInt(ton, 0, EE_SHOW_BADNUMBER, t_count))
+            return;
+
 		MCInterfaceExecShowCards(ctxt, t_count);
 	}
 		break;
 	case SO_PICTURE:
 		break;
 	case SO_OBJECT:
+    {
 		MCObjectPtr t_target;
-		if (ton->getobj(ep, t_target, True) != ES_NORMAL)
+        if (!ton->getobj(ctxt, t_target, True))
 		{
-			MCeerror->add(EE_SHOW_NOOBJ, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_SHOW_NOOBJ);
+            return;
 		}
 		MCPoint t_location;
-		MCPoint *t_location_ptr;
-		if (location != nil)
-		{
-			if (location->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_SHOW_NOLOCATION, line, pos);
-				return ES_ERROR;
-			}
-			/* UNCHECKED */ ep . copyaspoint(t_location);
-			t_location_ptr = &t_location;
-		}
-		else
-			t_location_ptr = nil;
+        MCPoint *t_location_ptr = &t_location;
+        if (!ctxt . EvalOptionalExprAsPoint(location, nil, EE_SHOW_NOLOCATION, t_location_ptr))
+            return;
+
 		if (effect != NULL)
 			MCInterfaceExecShowObjectWithEffect(ctxt, t_target, t_location_ptr, effect);
 		else
 			MCInterfaceExecShowObject(ctxt, t_target, t_location_ptr);
+    }
 		break;
 	case SO_MENU:
 		MCInterfaceExecShowMenuBar(ctxt);
@@ -2452,12 +2441,7 @@ Exec_stat MCShow::exec(MCExecPoint &ep)
 		break;
 	default:
 		break;
-	}
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    }
 }
 
 void MCShow::compile(MCSyntaxFactoryRef ctxt)
