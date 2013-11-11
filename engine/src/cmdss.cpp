@@ -1443,7 +1443,7 @@ Parse_stat MCHide::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCHide::exec(MCExecPoint &ep)
+void MCHide::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCHide */ LEGACY_EXEC
 	switch (which)
@@ -1528,8 +1528,6 @@ Exec_stat MCHide::exec(MCExecPoint &ep)
 	return ES_NORMAL; 
 #endif /* MCHide */
 
-
-	MCExecContext ctxt(ep);
 	switch (which)
 	{
 	case SO_GROUPS:
@@ -1537,10 +1535,10 @@ Exec_stat MCHide::exec(MCExecPoint &ep)
 		break;
 	case SO_OBJECT:
 		MCObjectPtr t_target;
-		if (object->getobj(ep, t_target, True) != ES_NORMAL)
+        if (!object->getobj(ctxt, t_target, True))
 		{
-			MCeerror->add(EE_HIDE_NOOBJ, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_HIDE_NOOBJ);
+            return;
 		}
 		if (effect != NULL)
 			MCInterfaceExecHideObjectWithEffect(ctxt, t_target, effect);
@@ -1558,11 +1556,7 @@ Exec_stat MCHide::exec(MCExecPoint &ep)
 		break;
 	default:
 		break;
-	}
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    }
 }
 
 void MCHide::compile(MCSyntaxFactoryRef ctxt)
