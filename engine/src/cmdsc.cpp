@@ -2825,7 +2825,7 @@ Parse_stat MCRemove::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCRemove::exec(MCExecPoint &ep)
+void MCRemove::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCRemove */ LEGACY_EXEC
 if (all)
@@ -2890,19 +2890,14 @@ if (all)
 	return ES_NORMAL;
 #endif /* MCRemove */
 
-	
-	MCExecContext ctxt(ep);
-	if (all)
+    if (all)
 		MCEngineExecRemoveAllScriptsFrom(ctxt, where == IP_FRONT);
-	else 
+	else
 	{
 		MCObjectPtr optr;
 		uint4 parid;
-		if (target->getobj(ep, optr, True) != ES_NORMAL)
-		{
-			MCeerror->add(EE_REMOVE_NOOBJECT, line, pos);
-			return ES_ERROR;
-		}
+		target->getobj(ctxt, optr, True);
+		
 		if (script)
 			MCEngineExecRemoveScriptOfObjectFrom(ctxt, optr . object, where == IP_FRONT);
 		else
@@ -2910,31 +2905,22 @@ if (all)
 			if (optr . object->gettype() != CT_GROUP)
 			{
 				MCeerror->add(EE_REMOVE_NOTABACKGROUND, line, pos);
-				return ES_ERROR;
+				return;
 			}
-
+            
 			MCObject *cptr;
-			if (card->getobj(ep, cptr, parid, True) != ES_NORMAL)
-			{
-				MCeerror->add(EE_REMOVE_NOOBJECT, line, pos);
-				return ES_ERROR;
-			}
-
+			card->getobj(ctxt, cptr, parid, True);
+                    
 			if (cptr->gettype() != CT_CARD)
 			{
 				MCeerror->add(EE_REMOVE_NOTACARD, line, pos);
-				return ES_ERROR;
+				return;
 			}
-
+            
 			MCCard *cardptr = (MCCard *)cptr;
 			MCInterfaceExecRemoveGroupFromCard(ctxt, optr, cardptr);
 		}
 	}
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);	
 }
 
 void MCRemove::compile(MCSyntaxFactoryRef ctxt)
