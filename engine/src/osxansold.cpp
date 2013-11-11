@@ -670,8 +670,7 @@ int MCA_file_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filt
         
         t_filters = new FilterRecord[1];
 		t_filters[0] . tag = MCValueRetain(kMCEmptyString);
-        /* UNCHECKED */ MCArrayMutableCopyAndRelease(t_filters[0] . file_types, t_filters[0] . file_types);
-        t_filters[0] . file_types = nil;
+        /* UNCHECKED */ MCArrayCreateMutable(t_filters[0] . file_types);
         
         for(unsigned int t_index = 0; t_index < t_filetype_count; ++t_index)
         {
@@ -711,8 +710,7 @@ int MCA_ask_file_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_
         
         t_filters = new FilterRecord[1];
 		t_filters[0] . tag = MCValueRetain(kMCEmptyString);
-        /* UNCHECKED */ MCArrayMutableCopyAndRelease(t_filters[0] . file_types, t_filters[0] . file_types);
-        t_filters[0] . file_types = nil;
+        /* UNCHECKED */ MCArrayCreateMutable(t_filters[0] . file_types);
         
         for(unsigned int t_index = 0; t_index < t_filetype_count; ++t_index)
         {
