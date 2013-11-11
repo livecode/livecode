@@ -2791,8 +2791,8 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 	MCAutoStringRef optr_name;
 	uint4 parid;
 	MCresult->clear(False);
-	MCerrorlock++;
-    // Need to have a second MCExecContext as getoptionalobj may throw an error
+    MCerrorlock++;
+    // Need to have a second MCExecContext as getoptionalobj may throw a non-fatal error
     MCExecContext ctxt2(ctxt);
     target->getoptionalobj(ctxt2, optr, parid, True);
 
