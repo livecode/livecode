@@ -66,7 +66,7 @@ Parse_stat MCCompact::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCCompact::exec(MCExecPoint &ep)
+void MCCompact::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCCompact */ LEGACY_EXEC
 MCObject *optr;
@@ -89,28 +89,23 @@ MCObject *optr;
 	return ES_NORMAL;
 #endif /* MCCompact */
 
-
 	MCObject *optr;
 	uint4 parid;
 
-	if (target->getobj(ep, optr, parid, True) != ES_NORMAL)
+    if (!target->getobj(ctxt, optr, parid, True))
 	{
 		MCeerror->add(EE_COMPACT_NOTARGET, line, pos);
-		return ES_ERROR;
+        ctxt . Throw();
+        return;
 	}
 	if (optr->gettype() != CT_STACK)
 	{
 		MCeerror->add(EE_COMPACT_NOTASTACK, line, pos);
-		return ES_ERROR;
+        ctxt . Throw();
+        return;
 	}
-	MCStack *sptr = (MCStack *)optr;
-	MCExecContext ctxt(ep);
-	MCLegacyExecCompactStack(ctxt, sptr);
-
-	if (!ctxt . HasError()) 
-		return ES_NORMAL;
-	
-	return ctxt . Catch(line, pos);
+    MCStack *sptr = (MCStack *)optr;
+    MCLegacyExecCompactStack(ctxt, sptr);
 }
 
 void MCCompact::compile(MCSyntaxFactoryRef ctxt)
