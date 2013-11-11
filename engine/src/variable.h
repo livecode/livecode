@@ -928,6 +928,10 @@ public:
 	virtual Exec_stat eval(MCExecPoint&);
 	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
 	virtual MCVariable *evalvar(MCExecPoint& ep);
+
+    virtual bool eval(MCExecContext& ctxt, MCValueRef &r_value);
+    virtual bool evalcontainer(MCExecContext& ctxt, MCContainer*& r_container);
+    virtual MCVariable *evalvar(MCExecContext& ctxt);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
