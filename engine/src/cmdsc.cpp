@@ -3749,7 +3749,7 @@ Parse_stat MCUngroup::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCUngroup::exec(MCExecPoint &ep)
+void MCUngroup::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCUngroup */ LEGACY_EXEC
 MCObject *gptr;
@@ -3775,32 +3775,22 @@ MCObject *gptr;
 	return ES_NORMAL;
 #endif /* MCUngroup */
 
-
-	MCExecContext ctxt(ep);
 	if (group != NULL)
 	{
 		MCObject *gptr;
 		uint4 parid;
-		if (group->getobj(ep, gptr, parid, True) != ES_NORMAL)
-		{
-			MCeerror->add(EE_UNGROUP_NOGROUP, line, pos);
-			return ES_ERROR;
-		}
+		if (!group->getobj(ctxt, gptr, parid, True))
+            return;
+
 		if (gptr->gettype() != CT_GROUP)
 		{
 			MCeerror->add(EE_UNGROUP_NOTAGROUP, line, pos);
-			return ES_ERROR;
+			return;
 		}
 		MCInterfaceExecUngroupObject(ctxt, gptr);
 	}
 	else
 		MCInterfaceExecUngroupSelection(ctxt);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
-
 }
 
 void MCUngroup::compile(MCSyntaxFactoryRef ctxt)
