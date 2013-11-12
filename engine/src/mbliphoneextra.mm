@@ -1304,7 +1304,7 @@ public:
 				return;
 		}
 		
-		MCdefaultstackptr -> getcurcard() -> message_with_args(MCM_remote_control_received, t_type_string);
+		MCdefaultstackptr -> getcurcard() -> message_with_valueref_args(MCM_remote_control_received, MCSTR(t_type_string));
 	}
 	
 private:
