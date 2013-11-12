@@ -1785,6 +1785,7 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
 						r_stat = IO_write_uint4((uint4)n, p_stream);
 					break;
 				default:
+                    r_stat = IO_ERROR;
 					break;
 				}
 			}
@@ -1916,6 +1917,7 @@ void MCFilesExecWriteToProcess(MCExecContext& ctxt, MCNameRef p_process, MCStrin
 	uint4 t_offset;
 	Boolean haseof = False;
 	IO_stat t_stat;
+    t_stat = IO_NORMAL;
 
 	if (t_textmode)
 	{

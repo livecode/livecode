@@ -463,7 +463,7 @@ void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input)
 			}
 		}
 
-		if (t_offset < t_length)
+		if (t_success && t_offset < t_length)
 		{
 			MCAutoStringRef t_head;
 			MCAutoStringRef t_tail;

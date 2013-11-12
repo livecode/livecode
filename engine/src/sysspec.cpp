@@ -1498,7 +1498,7 @@ bool MCS_changeprocesstype(bool p_to_foreground)
     MCMacSystemServiceInterface *t_service;
     t_service = (MCMacSystemServiceInterface*) MCsystem -> QueryService(kMCServiceTypeMacSystem);
     
-    if (!t_service != nil)
+    if (t_service != nil)
         return t_service -> ChangeProcessType(p_to_foreground);
     
     MCresult -> sets("not supported");
@@ -1510,7 +1510,7 @@ bool MCS_processtypeisforeground(void)
     MCMacSystemServiceInterface *t_service;
     t_service = (MCMacSystemServiceInterface*) MCsystem -> QueryService(kMCServiceTypeMacSystem);
     
-    if (!t_service != nil)
+    if (t_service != nil)
         return t_service -> ProcessTypeIsForeground();
     
     MCresult -> sets("not supported");

@@ -1164,7 +1164,7 @@ bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string)
 			MCAutoNameRef t_msg_changed;
 			/* UNCHECKED */ t_msg_changed . CreateWithCString("msgchanged");
 			
-			bool t_added;
+			bool t_added = false;
 			if (MCnexecutioncontexts < MAX_CONTEXTS && ctxt.GetObject() != nil)
 			{
 				MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;

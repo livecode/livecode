@@ -3354,7 +3354,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         t_source_fork_opened = false;
         
         MCS_mac_openresourcefork_with_path(p_source, fsRdPerm, false, &t_source_ref, &t_error);
-        if (*t_error != nil)
+        if (*t_error == nil)
             t_source_fork_opened = true;
         
         SInt16 t_dest_ref;
@@ -3364,7 +3364,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         if (t_source_fork_opened)
         {
             MCS_mac_openresourcefork_with_path(p_destination, fsWrPerm, true, &t_dest_ref, &t_error);
-            if (MCStringGetLength(*t_error))
+            if (*t_error == nil)
                 t_dest_fork_opened = true;
         }
         
@@ -3382,7 +3382,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                     if (t_os_write_error != noErr || t_actual_write != t_actual_read)
 					/* UNCHECKED */ MCStringCreateWithCString("can't copy resource", &t_error);
                 }
-            } while(MCStringGetLength(*t_error) && t_os_read_error == noErr);
+            } while(*t_error == nil && t_os_read_error == noErr);
         }
         
         delete[] t_buffer;

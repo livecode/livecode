@@ -617,6 +617,7 @@ static bool MCPropertyParseUIntList(MCStringRef p_input, char_t p_delimiter, uin
     if (t_length == 0)
     {
         r_count = 0;
+        r_list = nil;
         return true;
     }
     
@@ -667,6 +668,7 @@ static bool MCPropertyParseStringList(MCStringRef p_input, char_t p_delimiter, u
     if (t_length == 0)
     {
         r_count = 0;
+        r_list = nil;
         return true;
     }
     
@@ -713,6 +715,7 @@ static bool MCPropertyParsePointList(MCStringRef p_input, char_t p_delimiter, ui
     if (t_length == 0)
     {
         r_count = 0;
+        r_list = nil;
         return true;
     }
     
@@ -1627,7 +1630,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeLinesOfString:
         {
             MCAutoStringRef t_input;
-            MCStringRef *t_value;
+            MCStringRef *t_value = nil;
             uindex_t t_count;
             
             if (!ep . copyasstringref(&t_input) || !MCPropertyParseStringList(*t_input, '\n', t_count, t_value))
@@ -1647,7 +1650,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeItemsOfUInt:
         {
             MCAutoStringRef t_input;
-            uinteger_t* t_value;
+            uinteger_t* t_value = nil;
             uindex_t t_count;
             
             char_t t_delimiter;
@@ -1666,7 +1669,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeLinesOfPoint:
         {
             MCAutoStringRef t_input;
-            MCPoint *t_value;
+            MCPoint *t_value = nil;
             uindex_t t_count;
             
             if (!ep . copyasstringref(&t_input) || !MCPropertyParsePointList(*t_input, '\n', t_count, t_value))

@@ -768,7 +768,16 @@ void MCErrorSetHandler(MCErrorHandler handler);
 
 #ifdef _DEBUG
 
-extern void __MCAssert(const char *file, uint32_t line, const char *message);
+// If we are using GCC or Clang, we can give the compiler the hint that the
+// assertion functions do not return. This is particularly useful for Clang's
+// static analysis feature.
+#if defined(__GNUC__) || defined (__clang__) || defined (__llvm__)
+#define ATTRIBUTE_NORETURN  __attribute__((__noreturn__))
+#else
+#define ATTRIBUTE_NORETURN
+#endif
+
+extern void __MCAssert(const char *file, uint32_t line, const char *message) ATTRIBUTE_NORETURN;
 #define MCAssert(m_expr) (void)( (!!(m_expr)) || (__MCAssert(__FILE__, __LINE__, #m_expr), 0) )
 
 extern void __MCLog(const char *file, uint32_t line, const char *format, ...);
@@ -777,7 +786,7 @@ extern void __MCLog(const char *file, uint32_t line, const char *format, ...);
 extern void __MCLogWithTrace(const char *file, uint32_t line, const char *format, ...);
 #define MCLogWithTrace(m_format, ...) __MCLogWithTrace(__FILE__, __LINE__, m_format, __VA_ARGS__)
 
-extern void __MCUnreachable(void);
+extern void __MCUnreachable(void) ATTRIBUTE_NORETURN;
 #define MCUnreachable() __MCUnreachable();
 
 #else

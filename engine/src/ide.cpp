@@ -256,9 +256,9 @@ Exec_stat MCIdeScriptAction::eval_target_range(MCExecPoint& p_exec, MCExpression
 	Exec_stat t_status;
 	t_status = ES_NORMAL;
 
-	int4 t_start;
-	int4 t_end;
-	MCField *t_target;
+	int4 t_start = 0;
+	int4 t_end = 0;
+	MCField *t_target = nil;
 
 	if (t_status == ES_NORMAL)
 		t_status = p_start -> eval(p_exec);

@@ -140,6 +140,8 @@ void __MCUnreachable(void)
 
 void __MCAssert(const char *p_file, uint32_t p_line, const char *p_message)
 {
+    fprintf(stderr, "MCAssert failed: %s:%u \"%s\"", p_file, p_line, p_message);
+    abort();
 }
 
 void __MCLog(const char *p_file, uint32_t p_line, const char *p_format, ...)
