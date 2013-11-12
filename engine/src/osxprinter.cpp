@@ -1519,6 +1519,10 @@ bool MCQuartzMetaContext::candomark(MCMark *p_mark)
 	if (p_mark -> group . function != GXcopy && p_mark -> group . function != GXblendSrcOver)
 		return false;
 	
+	// MW-2013-11-11: [[ Bug ]] If the group contains a theme record, then rasterize.
+	if (p_mark -> group . head -> type == MARK_TYPE_THEME)
+		return false;
+	
 	// Otherwise we have a group which is potentially transparent which
 	// Quartz does support.
 	return true;
@@ -1883,6 +1887,10 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 
 			t_dst_x = p_mark->image.dx - p_mark->image.sx;
 			t_dst_y = p_mark->image.dy - p_mark->image.sy;
+			
+			// MW-2013-11-11: [[ Bug ]] Make sure we get the correct size of the image.
+			t_dst_width = p_mark -> image . descriptor . bitmap -> width;
+			t_dst_height = p_mark -> image . descriptor . bitmap -> height;
 
 			// MW-2013-10-01: [[ ImprovedPrint ]] First attempt to create a CGImage with the input data (PNG etc.)
 			CGImageRef t_image = nil;
