@@ -700,6 +700,16 @@ void MCExpression::eval_valueref(MCExecContext& ctxt, MCValueRef& r_value)
 				if (!MCNumberCreateWithReal(t_double, (MCNumberRef&)r_value))
 					ctxt . Throw();
         }
+        break;
+            
+        case kMCExecValueTypeColor:
+        {
+            MCColor t_color;
+            eval_color(ctxt, t_color);
+            if(!MCStringFormat((MCStringRef&)r_value, "%u,%u,%u", (t_color . red >> 8) & 0xff, (t_color . green >> 8) & 0xff, (t_color . blue >> 8) & 0xff))
+                ctxt . Throw();
+        }
+        break;
 			
 		default:
 			ctxt . Unimplemented();
