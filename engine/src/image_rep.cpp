@@ -355,11 +355,11 @@ bool MCImageRepGetCompressed(MCImageCompressedBitmap *p_compressed, MCImageRep *
 	return t_success;
 }
 
-bool MCImageRepGetTranformed(uindex_t p_width, uindex_t p_height, int32_t p_angle, bool p_lock_rect, uint32_t p_quality, MCImageRep *p_source, MCImageRep *&r_rep)
+bool MCImageRepGetTranformed(uindex_t p_width, uindex_t p_height, int32_t p_angle, bool p_lock_rect, uint32_t p_quality, bool p_flip_x, bool p_flip_y, MCImageRep *p_source, MCImageRep *&r_rep)
 {
 	bool t_success = true;
 	
-	MCCachedImageRep *t_rep = new MCTransformedImageRep(p_width, p_height, p_angle, p_lock_rect, p_quality, p_source);
+	MCCachedImageRep *t_rep = new MCTransformedImageRep(p_width, p_height, p_angle, p_lock_rect, p_quality, p_flip_x, p_flip_y, p_source);
 	
 	t_success = t_rep != nil;
 	if (t_success)

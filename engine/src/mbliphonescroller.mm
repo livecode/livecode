@@ -16,6 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
+#include "core.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
@@ -30,6 +31,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <UIKit/UIKit.h>
 
 #include "mbliphonecontrol.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+#define DELAYS_TOUCHES_WORKAROUND_MIN 700
+#define DELAYS_TOUCHES_PROCESS_DELAY 0.3
 
 ////////////////////////////////////////////////////////////////////////////////
 	
@@ -48,7 +54,20 @@ class MCNativeScrollerControl;
 @interface MCNativeViewEventForwarder : UIView
 {
 	UIView *m_target;
+	
+	// MW-2013-11-05: [[ Bug 11242 ]] If true then use our own version of delayTouches.
+	bool m_delay_touches : 1;
+	
+	// MW-2013-11-05: [[ Bug 11242 ]] The set of touches currently delayed.
+	NSMutableSet *m_delayed_touches;
 }
+
+// MW-2013-11-05: [[ Bug 11242 ]] Getter for m_delay_touches.
+- (BOOL)delayTouches;
+
+// MW-2013-11-05: [[ Bug 11242 ]] Setter for m_delay_touches.
+- (void)setDelayTouches:(BOOL)value;
+
 @end
 
 class MCNativeScrollerControl : public MCiOSControl
@@ -357,6 +376,27 @@ Exec_stat MCNativeScrollerControl::Set(MCNativeControlProperty p_property, MCExe
 			if (t_status == ES_NORMAL)
 				UpdateForwarderBounds();
 			return t_status;
+			
+		case kMCNativeControlPropertyDelayTouches:
+			// MW-2013-11-05: [[ Bug 11242 ]] If on iOS7+ override the UIScrollView delayTouches
+			//   property and use our own version.
+			if (MCmajorosversion >= DELAYS_TOUCHES_WORKAROUND_MIN)
+			{
+				Boolean t_bool;
+				if (MCU_stob(ep.getsvalue(), t_bool))
+				{
+					if (m_forwarder != nil)
+						[m_forwarder setDelayTouches: t_bool];
+				}
+				else
+				{
+					MCeerror->add(EE_OBJECT_NAB, 0, 0, ep.getsvalue());
+					return ES_ERROR;
+				}
+				
+				return ES_NORMAL;
+			}
+			break;
 	}
 	
 	Exec_stat t_state;
@@ -460,13 +500,26 @@ Exec_stat MCNativeScrollerControl::Get(MCNativeControlProperty p_property, MCExe
 {
 	UIScrollView *t_view;
 	t_view = (UIScrollView *)GetView();
-
+	
+	// MW-2013-11-05: [[ Bug 11242 ]] If on iOS7+ override the UIScrollView delayTouches
+	//   property and use our own version.
+	if (p_property == kMCNativeControlPropertyDelayTouches &&
+		MCmajorosversion >= DELAYS_TOUCHES_WORKAROUND_MIN)
+	{
+		if (m_forwarder != nil)
+			ep . setboolean([m_forwarder delayTouches]);
+		else
+			ep . setboolean(False);
+		
+		return ES_NORMAL;
+	}
+	
 	Exec_stat t_status;
 	t_status = scroller_get_property(t_view, m_content_rect, p_property, ep);
 	if (t_status == ES_NOT_HANDLED)
 		return MCiOSControl::Get(p_property, ep);
-	else
-		return t_status;
+
+	return t_status;
 }
 
 Exec_stat MCNativeScrollerControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
@@ -543,6 +596,9 @@ UIView *MCNativeScrollerControl::CreateView(void)
 	[t_view setDelegate: m_delegate];
 	m_forwarder = [[MCNativeViewEventForwarder alloc] initWithFrame: CGRectMake(0,0,0,0)];
 	[t_view addSubview: m_forwarder];
+	
+	if (MCmajorosversion >= DELAYS_TOUCHES_WORKAROUND_MIN)
+		[t_view setDelaysContentTouches: NO];
 	
 	return t_view;
 }
@@ -719,6 +775,7 @@ bool MCNativeScrollerControlCreate(MCNativeControl *&r_control)
 ////////////////////////////////////////////////////////////////////////////////
 
 @implementation MCNativeViewEventForwarder
+
 - (id) initWithFrame: (CGRect)withFrame
 {
 	self = [super initWithFrame: withFrame];
@@ -728,32 +785,140 @@ bool MCNativeScrollerControlCreate(MCNativeControl *&r_control)
 		//   'main' UIView anymore because it affects OpenGLness. Thus we now just
 		//   set target to be our main view.		
 		m_target = MCIPhoneGetView();
+		
+		// MW-2013-11-05: [[ Bug 11242 ]] The default value of delaysContentTouches in
+		//   the UIScrollView is true, so mimic that.
+		m_delay_touches = true;
+		
+		// MW-2013-11-05: [[ Bug 11242 ]] This set holds the currently delayed touches.
+		m_delayed_touches = [[NSMutableSet alloc] initWithCapacity: 0];
 	}
 	return self;
 }
 
+- (void) dealloc
+{
+	// MW-2013-11-05: [[ Bug 11242 ]] Make sure we have no outstanding requests on the
+	//   event loop.
+	[NSObject cancelPreviousPerformRequestsWithTarget: self];
+	
+	// MW-2013-11-05: [[ Bug 11242 ]] Dispose of the delayed touches set.
+	[m_delayed_touches release];
+	
+	[super dealloc];
+}
+
+- (void)setDelayTouches: (BOOL)value
+{
+	m_delay_touches = (value == YES);
+}
+
+- (BOOL)delayTouches
+{
+	return m_delay_touches;
+}
+
+// MW-2013-11-05: [[ Bug 11242 ]] Processes a touch after a short delay.
+- (void)processTouch: (UITouch *)touch
+{
+	// If the touch has already been cancelled, ignore.
+	if (![m_delayed_touches containsObject: touch])
+		return;
+	
+	// Remove the touch from the delayed set.
+	[m_delayed_touches removeObject: touch];
+	
+	if (m_target != nil)
+	{
+		NSSet *t_touch_set;
+		t_touch_set = [[NSSet alloc] initWithObjects: touch, nil];
+		
+		// Begin the touch.
+		[m_target touchesBegan: t_touch_set withEvent: nil];
+		
+		// If its already ended, then end it.
+		if ([touch phase] == UITouchPhaseEnded)
+			[m_target touchesEnded: t_touch_set withEvent: nil];
+		
+		[t_touch_set release];
+	}
+}
+
 - (void) touchesBegan: (NSSet*)touches withEvent: (UIEvent*)event
 {
+	// MW-2013-11-05: [[ Bug 11242 ]] If we are delaying touches, then defer processing.
+	if (m_delay_touches)
+	{
+		for(UITouch *t_touch in touches)
+		{
+			[m_delayed_touches addObject: t_touch];
+			[self performSelector: @selector(processTouch:) withObject: t_touch afterDelay: DELAYS_TOUCHES_PROCESS_DELAY];
+		}
+
+		return;
+	}
+	
 	if (m_target != nil)
 		[m_target touchesBegan: touches withEvent: event];
 }
 
 - (void)touchesCancelled: (NSSet*) touches withEvent: (UIEvent*)event
 {
+	// MW-2013-11-05: [[ Bug 11242 ]] If we are delaying touches, then remove all cancelled
+	//   touches from the delayed set, and process the rest.
+	if (m_delay_touches)
+	{
+		NSMutableSet *t_nondelayed_touches;
+		t_nondelayed_touches = [[NSMutableSet alloc] initWithSet: touches];
+		[t_nondelayed_touches minusSet: m_delayed_touches];
+		[m_delayed_touches minusSet: touches];
+		if (m_target != nil && [t_nondelayed_touches count] != 0)
+			[m_target touchesCancelled: t_nondelayed_touches withEvent: event];
+		[t_nondelayed_touches release];
+		return;
+	}
+	
 	if (m_target != nil)
 		[m_target touchesCancelled: touches withEvent: event];
 }
 
 - (void)touchesEnded: (NSSet*) touches withEvent: (UIEvent*)event
 {
+	// MW-2013-11-05: [[ Bug 11242 ]] If we are delaying touches, ignore any which
+	//   are in the delayed set.
+	if (m_delay_touches)
+	{
+		NSMutableSet *t_nondelayed_touches;
+		t_nondelayed_touches = [[NSMutableSet alloc] initWithSet: touches];
+		[t_nondelayed_touches minusSet: m_delayed_touches];
+		if (m_target != nil && [t_nondelayed_touches count] != 0)
+			[m_target touchesEnded: t_nondelayed_touches withEvent: event];
+		[t_nondelayed_touches release];
+		return;
+	}
+	
 	if (m_target != nil)
 		[m_target touchesEnded: touches withEvent: event];
 }
 
 - (void)touchesMoved: (NSSet*) touches withEvent: (UIEvent*)event
 {
+	// MW-2013-11-05: [[ Bug 11242 ]] If we are delaying touches, ignore any which
+	//   are in the delayed set.
+	if (m_delay_touches)
+	{
+		NSMutableSet *t_nondelayed_touches;
+		t_nondelayed_touches = [[NSMutableSet alloc] initWithSet: touches];
+		[t_nondelayed_touches minusSet: m_delayed_touches];
+		if (m_target != nil && [t_nondelayed_touches count] != 0)
+			[m_target touchesMoved: t_nondelayed_touches withEvent: event];
+		[t_nondelayed_touches release];
+		return;
+	}
+	
 	if (m_target != nil)
 		[m_target touchesMoved: touches withEvent: event];
 }
+
 @end
 

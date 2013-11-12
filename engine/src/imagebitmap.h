@@ -68,6 +68,9 @@ void MCImageBitmapPremultiplyRegion(MCImageBitmap *p_bitmap, int32_t p_sx, int32
 void MCImageBitmapUnpremultiply(MCImageBitmap *p_bitmap);
 void MCImageBitmapUnpremultiplyChecking(MCImageBitmap *p_bitmap);
 
+bool MCImageBitmapFlipVerticalInPlace(MCImageBitmap *self);
+bool MCImageBitmapFlipHorizontalInPlace(MCImageBitmap *self);
+
 //////////
 
 bool MCImageCreateIndexedBitmap(uindex_t p_width, uindex_t p_height, MCImageIndexedBitmap *&r_indexed);

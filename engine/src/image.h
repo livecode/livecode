@@ -305,6 +305,11 @@ class MCImage : public MCControl
 	MCTransformedImageRep *m_transformed;
 	MCImageFrame *m_locked_frame;
 	uint32_t m_image_opened;
+	
+	// MW-2013-10-25: [[ Bug 11300 ]] If either is true, flips are done
+	//   appropriately in a transformed rep.
+	bool m_flip_x : 1;
+	bool m_flip_y : 1;
 
 	MCImageNeed *m_needs;
 	
@@ -403,6 +408,8 @@ public:
 	bool convert_to_mutable();
 
 	void resetimage();
+	
+	void setflip(bool horz);
 
 	void apply_transform();
 
@@ -460,6 +467,7 @@ public:
 	void crop(MCRectangle *newrect);
 	void rotate(uint32_t p_angle);
 	void resize();
+	void flip(void);
 	void createbrush(Properties which);
 
 	static MCbrushmask *getbrush(Tool p_which);

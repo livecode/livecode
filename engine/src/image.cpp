@@ -87,6 +87,10 @@ MCImage::MCImage()
 	currentframe = 0;
 	repeatcount = 0;
 	resizequality = INTERPOLATION_BOX;
+	
+	// MW-2013-10-25: [[ Bug 11300 ]] Images are not flipped initially.
+	m_flip_x = false;
+	m_flip_y = false;
 }
 
 MCImage::MCImage(const MCImage &iref) : MCControl(iref)
@@ -127,6 +131,10 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 	currentframe = 0;
 	repeatcount = iref.repeatcount;
 	resizequality = iref.resizequality;
+	
+	// MW-2013-10-25: [[ Bug 11300 ]] Images are not flipped initially.
+	m_flip_x = false;
+	m_flip_y = false;
 }
 
 MCImage::~MCImage()
@@ -2003,13 +2011,26 @@ MCSharedString *MCImage::getclipboardtext(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// MW-2013-10-25: [[ Bug 11300 ]] Invert the appropriate flip flag and redraw.
+void MCImage::setflip(bool horz)
+{
+	if (horz)
+		m_flip_x = !m_flip_x;
+	else
+		m_flip_y = !m_flip_y;
+	
+	layer_redrawall();
+	notifyneeds(false);
+}
+
 void MCImage::apply_transform()
 {
 	uindex_t t_width = rect.width;
 	uindex_t t_height = rect.height;
 	if (m_rep != nil)
 		m_rep->GetGeometry(t_width, t_height);
-
+	
+	// MW-2013-10-25: [[ Bug 11300 ]] Make sure we apply flipping if necessary.
 	if (angle != 0)
 	{
 		rotate(angle);
@@ -2022,6 +2043,10 @@ void MCImage::apply_transform()
 		{
 			resize();
 		}
+	}
+	else if (m_flip_x || m_flip_y)
+	{
+		flip();
 	}
 	else
 	{

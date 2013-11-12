@@ -276,7 +276,8 @@ protected:
 class MCTransformedImageRep : public MCCachedImageRep
 {
 public:
-	MCTransformedImageRep(uindex_t p_width, uindex_t p_height, int32_t p_angle, bool p_lock_rect, uint32_t p_quality, MCImageRep *p_source);
+	// MW-2013-10-25: [[ Bug 11300 ]] Update to take the flipped parameters.
+	MCTransformedImageRep(uindex_t p_width, uindex_t p_height, int32_t p_angle, bool p_lock_rect, uint32_t p_quality, bool p_flip_x, bool p_flip_y, MCImageRep *p_source);
 	~MCTransformedImageRep();
 	
 	MCImageRepType GetType() { return kMCImageRepTransformed; }
@@ -291,7 +292,8 @@ public:
 	
 	//////////
 	
-	bool Matches(uint32_t p_width, uint32_t p_height, int32_t p_angle, bool p_lock_rect, uint32_t p_quality, MCImageRep *p_source);
+	// MW-2013-10-25: [[ Bug 11300 ]] Update to take the flipped parameters.
+	bool Matches(uint32_t p_width, uint32_t p_height, int32_t p_angle, bool p_lock_rect, uint32_t p_quality, bool p_flip_x, bool p_flip_y, MCImageRep *p_source);
 	
 protected:
 	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count);
@@ -302,8 +304,11 @@ protected:
 	MCImageRep *m_source;
 	uindex_t m_width, m_height;
 	int32_t m_angle;
-	bool m_lock_rect;
 	uint32_t m_quality;
+	bool m_lock_rect : 1;
+	// MW-2013-10-25: [[ Bug 11300 ]] These indicate whether the rep is flipped.
+	bool m_flip_x : 1;
+	bool m_flip_y : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -312,7 +317,7 @@ bool MCImageRepGetReferenced(const char *p_filename, MCImageRep *&r_rep);
 bool MCImageRepGetResident(void *p_data, uindex_t p_size, MCImageRep *&r_rep);
 bool MCImageRepGetVector(void *p_data, uindex_t p_size, MCImageRep *&r_rep);
 bool MCImageRepGetCompressed(MCImageCompressedBitmap *p_compressed, MCImageRep *&r_rep);
-bool MCImageRepGetTranformed(uindex_t p_width, uindex_t p_height, int32_t p_angle, bool p_lock_rect, uint32_t p_quality, MCImageRep *p_source, MCImageRep *&r_rep);
+bool MCImageRepGetTranformed(uindex_t p_width, uindex_t p_height, int32_t p_angle, bool p_lock_rect, uint32_t p_quality, bool p_flip_x, bool p_flip_y, MCImageRep *p_source, MCImageRep *&r_rep);
 
 ////////////////////////////////////////////////////////////////////////////////
 

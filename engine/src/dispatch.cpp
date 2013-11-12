@@ -475,7 +475,19 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 	MCStack *t_stack = nil;
 	/* UNCHECKED */ MCStackSecurityCreateStack(t_stack);
 	t_stack -> setparent(this);
-	t_stack -> setfilename(strclone(MCcmd));
+	
+	// MM-2013-10-30: [[ Bug 11333 ]] Set the filename of android mainstack to apk/mainstack (previously was just apk).
+	//   This solves relative file path referencing issues.
+#ifdef TARGET_SUBPLATFORM_ANDROID
+    char *t_filename;
+    /* UNCHECKED */ MCMemoryNewArray(MCCStringLength(MCcmd) + 11, t_filename);
+    MCCStringFormat(t_filename, "%s/mainstack", MCcmd);
+	t_stack -> setfilename(t_filename);
+#else
+   	t_stack -> setfilename(strclone(MCcmd));
+#endif
+	
+	
 	if (IO_read_uint1(&type, stream) != IO_NORMAL
 	        || type != OT_STACK && type != OT_ENCRYPT_STACK
 	        || t_stack->load(stream, version, type) != IO_NORMAL)
