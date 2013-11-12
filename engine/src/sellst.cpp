@@ -276,29 +276,41 @@ MCControl *MCSellist::clone(MCObject *target)
 	return t_result;
 }
 
-void MCSellist::group()
+Exec_stat MCSellist::group(uint2 line, uint2 pos)
 {
 	MCresult->clear(False);
 	if (objects != NULL && objects->ref->gettype() <= CT_FIELD
 	        && objects->ref->gettype() >= CT_GROUP)
 	{
 		MCObject *parent = objects->ref->getparent();
-		MCSelnode *tptr = objects->next();
-		while (tptr != objects)
+		MCSelnode *tptr = objects;
+		do
 		{
+			// MERG-2013-05-07: [[ Bug 10863 ]] If grouping a shared group, throw
+			//   an error.
+            if (tptr->ref->gettype() == CT_GROUP && static_cast<MCGroup *>(tptr->ref)->isshared())
+            {
+                MCeerror->add(EE_GROUP_NOBG, line, pos);
+				return ES_ERROR;
+            }
+			
+			// MERG-2013-05-07: [[ Bug 10863 ]] If the parent of all the objects
+			//   isn't the same, throw an error.
 			if (tptr->ref->getparent() != parent)
 			{
-				MCresult->sets("controls don't have the same owner");
-				return;
-			}
+                MCeerror->add(EE_GROUP_DIFFERENTPARENT, line, pos);
+				return ES_ERROR;
+            }
+			
 			tptr = tptr->next();
 		}
+		while (tptr != objects);
+        
 		sort();
 		MCControl *controls = NULL;
 		while (objects != NULL)
 		{
-			MCSelnode *tptr = objects->remove
-			                  (objects);
+			MCSelnode *tptr = objects->remove(objects);
 			MCControl *cptr = (MCControl *)tptr->ref;
 			delete tptr;
 			if (parent->gettype() == CT_CARD)
@@ -323,6 +335,7 @@ void MCSellist::group()
 		objects = new MCSelnode(gptr);
 		gptr->message(MCM_selected_object_changed);
 	}
+    return ES_NORMAL;
 }
 
 bool MCSellist::clipboard(bool p_is_cut)

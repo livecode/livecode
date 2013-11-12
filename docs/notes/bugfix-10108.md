@@ -1,0 +1,1 @@
+# Thumb and scrollbar appear over top of DataGrid

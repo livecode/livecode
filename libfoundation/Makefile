@@ -1,6 +1,8 @@
 NAME=libfoundation
 TYPE=archive
 
+include ../rules/environment.linux.makefile
+
 SOURCES=foundation-array.cpp foundation-core.cpp foundation-debug.cpp \
 	foundation-list.cpp foundation-name.cpp foundation-nativechars.cpp \
         foundation-data.cpp foundation-number.cpp foundation-set.cpp \

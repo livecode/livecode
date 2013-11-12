@@ -1,0 +1,69 @@
+<doc>
+	<legacy_id></legacy_id>
+	<name>unicodeFormattedText</name>
+	<type>property</type>
+
+	<syntax>
+		<example>set the unicodeFormattedText of [<i>chunk</i> of] <i>field </i>to <i>string</i></example>
+		<example>get the unicodeFormattedText of [<i>chunk</i> of] <i>field</i></example>
+	</syntax>
+
+	<synonyms>
+	</synonyms>
+
+	<summary>Unwraps hard-wrapped <keyword tag="lines">lines</keyword>, or provides the hard-wrapped contents of a <keyword tag="field">field</keyword>.</summary>
+
+	<examples>
+<example>write the unicodeFormattedText of field 1 to file myTextFile</example>
+<example>get the unicodeFormattedText of line 1 of field &quot;exampleText&quot;</example>
+	</examples>
+
+	<history>
+		<introduced version="4.6">Added.</introduced>
+		<deprecated version=""></deprecated>
+		<removed version=""></removed>
+		<changed version="5.5">Now works at field chunk level</changed>
+	</history>
+
+	<objects>
+		<field/>
+	</objects>
+
+	<platforms>
+		<mac/>
+		<windows/>
+		<linux/>
+		<ios/>
+		<android/>
+	</platforms>
+
+	<classes>
+		<desktop/>
+		<server/>
+		<web/>
+		<mobile/>
+	</classes>
+
+	<security>
+	</security>
+
+
+	<classification>
+		<category>Text and Data Processing</category>
+	</classification>
+
+	<references>
+		<property tag="dontWrap">dontWrap Property</property>
+		<property tag="formattedText">formattedText Property</property>
+	</references>
+
+	<description>
+	<overview>Use the <b>unicodeFormattedText</b> <glossary tag="property">property</glossary> to convert between unwrapped text (suitable for use in most programs) and wrapped text (suitable for use in programs that require fixed line lengths, such as some email systems).</overview>
+
+		<parameters>
+		</parameters>
+
+	<value>The <b>unicodeFormattedText</b> of a <keyword tag="field">field</keyword> is a string encoded in UTF-16 host byte-order.</value>
+	<comments>When you get a field's <b>unicodeFormattedText</b>, the <glossary tag="field">field's</glossary> text is converted to hard-wrapped text:  An end-of-line <keyword tag="character">character</keyword> is inserted at the end of each screen line, and wherever a <constant tag="return">return</constant> <keyword tag="character">character</keyword> occurs in the <keyword tag="field">field</keyword>, two end-of-line <keyword tag="characters">characters</keyword> are substituted. (If the <glossary tag="field">field's</glossary> <property tag="dontWrap">dontWrap</property> is true, each screen line ends in an end-of-line <keyword tag="character">character</keyword>, so two end-of-line characters are substituted for each <constant tag="return">return</constant> <keyword tag="character">character</keyword> in the field.)<p></p><p>When you set a field's <b>unicodeFormattedText</b> <glossary tag="property">property</glossary>, the <i>string</i> is unwrapped before being put in the <keyword tag="field">field</keyword>. Double end-of-line <keyword tag="characters">characters</keyword> are converted to a single end-of-line <keyword tag="character">character</keyword>, and single end-of-line characters are converted to spaces.</p></comments>
+	</description>
+</doc>

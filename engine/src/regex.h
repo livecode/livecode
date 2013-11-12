@@ -24,7 +24,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define REG_OKAY 0
 
 #define PATTERN_CACHE_SIZE 20
-extern MCStringRef MCregexpatterns[];
 
 //regex structure
 typedef struct
@@ -51,15 +50,25 @@ regmatch_t;
 typedef struct _regexp
 {
 	regex_t rexp;
+	// JS-2013-07-01: [[ EnhancedFilter ]] The pattern associated with the compiled
+	//   regexp (used by the cache).
+    MCStringRef pattern;
+	// JS-2013-07-01: [[ EnhancedFilter ]] The flags used to compile the pattern
+	//   (used to implement caseSensitive option).
+    int flags;
 	uint2 nsubs;
 	regmatch_t matchinfo[NSUBEXP];
 }
 regexp;
 
+// JS-2013-07-01: [[ EnhancedFilter ]] Updated to manage case and allow case-insensitive matching.
+// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's no reason not to use the cache.
+regexp *MCR_compile(MCStringRef exp, bool casesensitive);
+int MCR_exec(regexp *prog, MCStringRef string);
 void MCR_copyerror(MCStringRef &r_error);
-regexp *MCR_compile(MCStringRef exp);
-int MCR_exec(regexp *prog, MCStringRef string, uint4 len);
 void MCR_free(regexp *prog);
 
-extern regexp *MCregexcache[];
+// JS-2013-07-01: [[ EnhancedFilter ]] Clear out the PCRE cache.
+void MCR_clearcache();
+
 #endif

@@ -216,6 +216,7 @@ inline void *operator new(size_t, void *p)
 typedef struct __MCWinSysHandle *MCWinSysHandle;
 typedef struct __MCWinSysIconHandle *MCWinSysIconHandle;
 typedef struct __MCWinSysMetafileHandle *MCWinSysMetafileHandle;
+typedef struct __MCWinSysEnhMetafileHandle *MCWinSysEnhMetafileHandle;
 
 #if defined(_DEBUG)
 
@@ -250,6 +251,7 @@ extern void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize,
 struct MCFontStruct
 {
 	MCSysFontHandle fid;
+	uint16_t size;
 	int ascent;
 	int descent;
 	uint1 widths[256];
@@ -335,7 +337,6 @@ struct MCFontStruct
 
 #include <stdarg.h>
 #include <errno.h>
-#include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -343,6 +344,9 @@ struct MCFontStruct
 #include <math.h>
 #include <signal.h>
 #include <assert.h>
+#define _CTYPE_H
+
+#define _CTYPE_H
 
 #define SIGBOGUS 100
 
@@ -353,20 +357,35 @@ inline void *operator new(size_t, void *p)
 	return p;
 }
 
-extern uint1 *MClowercasingtable;
+extern uint1 MClowercasingtable[];
 inline uint1 MCS_tolower(uint1 p_char)
 {
 	return MClowercasingtable[p_char];
 }
 
-extern uint1 *MCuppercasingtable;
+extern uint1 MCuppercasingtable[];
 inline uint1 MCS_toupper(uint1 p_char)
 {
 	return MCuppercasingtable[p_char];
 }
 
+extern uint2 MCctypetable[];
+#define _ctype(x, y) ((MCctypetable[(x)] & (1 << (y))) != 0)
+#define isalpha(x) (_ctype(x, 0))
+#define isupper(x) (_ctype(x, 1))
+#define islower(x) (_ctype(x, 2))
+#define isdigit(x) (_ctype(x, 3))
+#define isspace(x) (_ctype(x, 4))
+#define isxdigit(x) (_ctype(x, 5))
+#define ispunct(x) (_ctype(x, 6))
+#define isalnum(x) (_ctype(x, 7))
+#define isprint(x) (_ctype(x, 8))
+#define isgraph(x) (_ctype(x, 9))
+#define iscntrl(x) (_ctype(x, 10))
+
 struct MCFontStruct
 {
+	uint16_t size;
 	uint2 ascent;
 	uint2 descent;
 	uint1 charset;
@@ -410,12 +429,18 @@ inline uint1 MCS_toupper(uint1 p_char)
 	return MCuppercasingtable[p_char];
 }
 
+// MM-2013-09-13: [[ RefactorGraphics ]] Updated for server font support.
 struct MCFontStruct
 {
+	MCSysFontHandle fid;
+	uint2 size;
+	uint2 style;
 	int ascent;
 	int descent;
-	Boolean unicode;
+	Boolean wide;
 	uint1 charset;
+	Boolean unicode;
+	uint1 widths[256];
 };
 
 #define fixmaskrop(a) (a)
@@ -458,6 +483,7 @@ inline uint1 MCS_toupper(uint1 p_char)
 
 struct MCFontStruct
 {
+	uint16_t size;
 	int ascent;
 	int descent;
 	Boolean unicode;
@@ -556,24 +582,6 @@ struct MCRectangle32
 	int32_t x, y;
 	int32_t width, height;
 };
-
-inline MCPoint MCPointMake(int2 x, int2 y)
-{
-	MCPoint r;
-	r . x = x;
-	r . y = y;
-	return r;
-}
-
-inline MCRectangle MCRectangleMake(int2 x, int2 y, uint2 width, uint2 height)
-{
-	MCRectangle r;
-	r . x = x;
-	r . y = y;
-	r . width = width;
-	r . height = height;
-	return r;
-}
 
 ////////////////////////////////////////
 
@@ -678,14 +686,27 @@ typedef  _Drawable *        Pixmap;
 typedef  _Drawable *        Drawable;
 #else
 
+// MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
 #ifndef __LP64__
-typedef unsigned long Window;
-typedef unsigned long Pixmap;
-typedef unsigned long Drawable;
+	#if !defined(Window)
+		typedef unsigned long Window;
+	#endif
+	#if !defined(Pixmap)
+		typedef unsigned long Pixmap;
+	#endif
+	#if !defined(Drawable)
+		typedef unsigned long Drawable;
+	#endif
 #else
-typedef unsigned int Window;
-typedef unsigned int Pixmap;
-typedef unsigned int Drawable;
+	#if !defined(Window)
+		typedef unsigned long int Window;
+	#endif
+	#if !defined(Pixmap)
+		typedef unsigned long int Pixmap;
+	#endif
+	#if !defined(Drawable)
+		typedef unsigned long int Drawable;
+	#endif
 #endif
 
 #endif
@@ -1057,6 +1078,8 @@ typedef struct ssl_ctx_st SSL_CTX;
 
 class MCContext;
 typedef class MCContext MCDC;
+struct MCPattern;
+typedef MCPattern *MCPatternRef;
 
 struct MCPickleContext;
 
@@ -1084,7 +1107,6 @@ class MCField;
 class MCObject;
 class MCObjectList;
 class MCMagnify;
-class MCPixmaplist;
 class MCPrinter;
 class MCPrinterDevice;
 class MCPrinterSetupDialog;

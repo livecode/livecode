@@ -3,7 +3,9 @@ export TOOLS=`dirname $0`
 export TRUNK=`cd $TOOLS/..; pwd`
 
 # Global variables needed later
-export MODE=release
+if [ "$MODE" == "" ]; then
+	export MODE=debug
+fi
 export DEBUGGABLE_FLAG=false
 export DEBUG_FLAG=0
 export ANDROID_NDK=$TRUNK/sdks/android-ndk

@@ -58,8 +58,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mctheme.h"
 #include "license.h"
 #include "stacksecurity.h"
+#include "exec.h"
 
 #include "exec.h"
+#include "graphics_util.h"
 
 #define STACK_EXTRA_ORIGININFO (1U << 0)
 
@@ -135,9 +137,15 @@ IO_stat MCStack::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 IO_stat MCStack::load(IO_handle stream, const char *version, uint1 type)
 {
 	IO_stat stat;
-
+	
+	// FG-2013-09-20 [[ Bugfix 10846 ]]
+	// Community edition cannot read encrypted stacks
 	if (type != OT_STACK)
+	{
+		if (MCresult->isclear() && type == OT_ENCRYPT_STACK)
+			MCresult->sets("Encrypted stacks cannot be opened in Community Edition");
 		return IO_ERROR;
+	}
 	
 	uint32_t t_reserved = 0;
 	
@@ -440,10 +448,18 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 			}
 			break;
 		default:
-			MCS_seek_cur(stream, -1);
-			return IO_NORMAL;
+            MCS_seek_cur(stream, -1);
+                
+            // IM-2013-09-30: [[ FullscreenMode ]] ensure old_rect is initialized for fullscreen stacks
+            old_rect = rect;
+			
+            return IO_NORMAL;
 		}
 	}
+	
+    // IM-2013-09-30: [[ FullscreenMode ]] ensure old_rect is initialized for fullscreen stacks
+	old_rect = rect;
+    
 	return IO_NORMAL;
 }
 
@@ -1272,12 +1288,15 @@ MCStack *MCStack::findsubstackid(uint4 fid)
 void MCStack::translatecoords(MCStack *dest, int2 &x, int2 &y)
 {
 	// WEBREV
-	MCRectangle srect;
-	
-	srect = getrect();
+	// IM-2013-10-09: [[ FullscreenMode ]] Reimplement using MCStack::stacktogloballoc
+	MCPoint t_loc;
+	t_loc = MCPointMake(x, y);
 
-	x += srect.x - dest->rect.x;
-	y += srect.y - dest->rect.y - getscroll();
+	t_loc = stacktogloballoc(t_loc);
+	t_loc = dest->globaltostackloc(t_loc);
+
+	x = t_loc.x;
+	y = t_loc.y;
 }
 
 uint4 MCStack::newid()
@@ -1992,6 +2011,39 @@ void MCStack::mark(MCExecPoint &ep, MCExpression *where, Boolean mark)
 			{
 				if (ep.getsvalue() == MCtruemcstring)
 					curcard->setmark(mark);
+			}
+			curcard = (MCCard *)curcard->next();
+		}
+		while (curcard != cards);
+		curcard = oldcard;
+		MCerrorlock--;
+	}
+}
+
+void MCStack::mark(MCExecContext& ctxt, MCExpression *p_where, bool p_mark)
+{
+	if (p_where == nil)
+	{
+		MCCard *cptr = cards;
+		do
+		{
+			cptr->setmark(p_mark);
+			cptr = (MCCard *)cptr->next();
+		}
+		while (cptr != cards);
+	}
+	else
+	{
+		MCCard *oldcard = curcard;
+		curcard = cards;
+		MCerrorlock++;
+		do
+		{
+            MCAutoValueRef t_condition;
+			if (ctxt . EvaluateExpression(p_where, &t_condition))
+			{
+				if ((MCBooleanRef)*t_condition == kMCTrue)
+					curcard->setmark(p_mark);
 			}
 			curcard = (MCCard *)curcard->next();
 		}

@@ -1,0 +1,52 @@
+<doc>
+  <legacy_id>1105</legacy_id>
+  <name>sort container</name>
+  <type>command</type>
+  <syntax>
+    <example>sort [{lines | items} of] <i>container</i> [<i>direction</i>] [<i>sortType</i>] [by <i>sortKey</i>]</example>
+  </syntax>
+  <library></library>
+  <objects>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Text and Data Processing</category>
+  </classification>
+  <references>
+    <keyword tag="ascending">ascending Keyword</keyword>
+    <command tag="convert">convert Command</command>
+    <keyword tag="descending">descending Keyword</keyword>
+    <function tag="offset">offset Function</function>
+    <command tag="sort">sort Command</command>
+    <keyword tag="text">text Keyword</keyword>
+    <keyword tag="each">each Keyword</keyword>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary><glossary tag="sort">Sorts</glossary> the <keyword tag="lines">lines</keyword> or <keyword tag="items">items</keyword> of a <glossary tag="container">container</glossary> into a new order.</summary>
+  <examples>
+    <example>sort field "Output"</example>
+    <example>sort items of myInfo by word 2 of each <i>-- sort by word 2 of the line</i></example>
+    <example>sort lines of field thisField descending numeric by item x of each</example>
+  </examples>
+  <description>
+    <p>Use the <b>sort container</b> <glossary tag="command">command</glossary> to shuffle the order of <keyword tag="lines">lines</keyword> or <keyword tag="items">items</keyword> in a <glossary tag="container">container</glossary>.</p><p/><p><b>Parameters:</b></p><p>The <i>container</i> is a <keyword tag="field">field</keyword>, <keyword tag="button">button</keyword>, or <glossary tag="variable">variable</glossary>, or the <keyword tag="message box">message box</keyword>.</p><p/><p>The <i>direction</i> is either ascending or descending. If you don't specify a <i>direction</i>, the <command tag="sort">sort</command> is ascending.</p><p/><p>The <i>sortType</i> is one of text, numeric, or dateTime. If you don't specify a <i>sortType</i>, the <command tag="sort">sort</command> is by text.</p><p/><p>The <i>sortKey</i> is an <glossary tag="expression">expression</glossary> that <glossary tag="evaluate">evaluates</glossary> to a <function tag="value">value</function> for each <keyword tag="line">line</keyword> or <keyword tag="item">item</keyword> in the <i>container</i>. If the <i>sortKey</i> contains a <glossary tag="chunk expression">chunk expression</glossary>, the <glossary tag="keyword">keyword</glossary> <keyword tag="each">each</keyword> indicates that the <glossary tag="chunk expression">chunk expression</glossary> is <glossary tag="evaluate">evaluated</glossary> for each <keyword tag="line">line</keyword> or <keyword tag="item">item</keyword>. If you don't specify a <i>sortKey</i>, the entire <keyword tag="line">line</keyword> (or <keyword tag="item">item</keyword>) is used as the <i>sortKey</i>.</p><p/><p><b>Comments:</b></p><p>If you don't specify lines or items, the lines of the container are sorted.</p><p/><p>The sort international form is like sort text, except that it sorts accented characters together with their unaccented counterparts. For example, "" sorts between "e" and "f", rather than at the end of the alphabet as it would using the sort text form.</p><p/><p>The <b>each</b> <glossary tag="keyword">keyword</glossary>, when used in the <i>sortKey</i>, specifies the entire <keyword tag="line">line</keyword> or <keyword tag="item">item</keyword>. You can use the <keyword tag="each">each</keyword> <glossary tag="keyword">keyword</glossary> in an expression, as a placeholder for the current <keyword tag="line">line</keyword> or <keyword tag="item">item</keyword>. For example, this <glossary tag="statement">statement</glossary> sorts the lines of a variable by the third <keyword tag="word">word</keyword> of each <keyword tag="line">line</keyword>:</p><p>  sort lines of myVariable by word 3 of each</p><p/><p>You can use the <b>each</b> <glossary tag="keyword">keyword</glossary> in any <glossary tag="expression">expression</glossary>, not just <glossary tag="chunk expression">chunk expressions</glossary>.</p><p/><p>The sort text form sorts by the ASCII value of each character. The sort numeric form sorts by number. Use this form if the <i>sortKey</i> consists of numbers. The sort dateTime form treats the <i>sortKey</i> as a date and/or time.</p><p/><p>The <b>sort container</b> command is a stable <command tag="sort">sort</command>. This means that if the <i>sortKey</i> for two <keyword tag="items">items</keyword> or lines is the same, <glossary tag="sort">sorting</glossary> does not change their order, so you can do two successive <glossary tag="sort">sorts</glossary> to create subcategories within the major <command tag="sort">sort</command> categories.</p><p/><p><img src="202651"/> <b>Tip:</b> To create a custom sort order, use the <keyword tag="each">each</keyword> <glossary tag="keyword">keyword</glossary> to pass each <keyword tag="line">line</keyword> or <keyword tag="item">item</keyword> to a <href tag="dictionary/property/2381.xml">custom function</href>. The <function tag="value">value</function> <glossary tag="return">returned</glossary> by the <control_st tag="function">function</control_st> is used as the <glossary tag="sort key">sort key</glossary> for that <keyword tag="line">line</keyword> or <keyword tag="item">item</keyword>. It is not currently possible to debug custom sort functions, and doing so could make the IDE unstable. It is recommended to use logging messages instead.</p><p/><p/><p/><p/><p/><p/><p/><p/><p/>
+  </description>
+</doc>

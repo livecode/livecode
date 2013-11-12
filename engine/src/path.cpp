@@ -162,11 +162,14 @@ void MCPath::retain(void)
 
 MCPath *MCPath::allocate(uint4 p_command_count, uint4 p_point_count)
 {
+	// MW-2013-05-02: [[ x64 ]] Make sure we use the actual size of MCPath
+	//   rather than 12 - as it changes in 64-bit (MCPath contains two
+	//   pointers).
 	MCPath *t_path;
-	t_path = (MCPath *)malloc(12 + ((p_command_count + 4) & ~3) + p_point_count * 8);
+	t_path = (MCPath *)malloc(sizeof(MCPath) + ((p_command_count + 4) & ~3) + p_point_count * 8);
 	t_path -> f_references = 1;
-	t_path -> f_commands = (uint1 *)t_path + 12;
-	t_path -> f_data = (int4 *)t_path + 3 + (((p_command_count + 4) & ~3) / 4);
+	t_path -> f_commands = (uint1 *)t_path + sizeof(MCPath);
+	t_path -> f_data = (int4 *)t_path + sizeof(MCPath) / sizeof(int4) + (((p_command_count + 4) & ~3) / 4);
 	return t_path;
 }
 
@@ -325,6 +328,9 @@ MCPath *MCPath::create_rounded_rectangle(const MCRectangle& rect, uint2 radius, 
 	if (rect . width == 0 || rect . height == 0)
 		return create_empty();
 
+	if (adjust && (rect . width <= 1 || rect . height <= 1))
+		return create_empty();
+
 	if (radius == 0)
 		return create_rectangle(rect, adjust);
 
@@ -332,36 +338,30 @@ MCPath *MCPath::create_rounded_rectangle(const MCRectangle& rect, uint2 radius, 
 	cache(t_round_rectangle, 9, 16);
 	s_round_rectangle_cache = t_round_rectangle;
 
+	int4 x, y;
+	x = rect . x * 2;
+	y = rect . y * 2;
+
 	int4 aw, ah;
-	aw = rect . width;
-	ah = rect . height;
+	aw = rect . width * 2;
+	ah = rect . height * 2;
 
 	if (adjust)
-		aw -= 1, ah -= 1;
-
-	aw *= 2;
-	ah *= 2;
+		x += 1, y += 1, aw -= 2, ah -= 2;
 
 	int4 hr, vr;
-	hr = MCU_min(aw / 2, radius);
-	vr = MCU_min(ah / 2, radius);
+	hr = MCU_min(aw / 2, radius * 2);
+	vr = MCU_min(ah / 2, radius * 2);
 
 	int4 h, v;
 	h = aw - hr * 2;
 	v = ah - vr * 2;
-
-	int4 x, y;
-	x = rect . x * 2;
-	y = rect . y * 2;
 
 	int4 l, t, r, b;
 	l = x + hr;
 	t = y + vr;
 	r = x + hr + h;
 	b = y + vr + v;	
-
-	if (adjust)
-		l += 1, t += 1, r += 1, b += 1;
 
 	int4 hk, vk;
 	hk = signed(hr * 36195 / 65536);

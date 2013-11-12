@@ -1606,3 +1606,46 @@ bool MCSystemLockFile(MCSystemFileHandle *p_file, bool p_shared, bool p_wait)
 	
 	return 0 == flock(t_fd, t_op);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// MM-2013-09-13: [[ RefactorGraphics ]] Required for server font support.
+
+#define ELEMENTS(table) (sizeof(table) / sizeof(table[0]))
+
+struct  LangID2Charset
+{
+	Lang_charset charset;
+	ScriptCode scriptcode;
+};
+
+static LangID2Charset scriptcodetocharsets[] = {
+	{ LCH_ENGLISH, smRoman },
+	{ LCH_ROMAN, smRoman },
+	{ LCH_JAPANESE, smJapanese },
+	{ LCH_CHINESE, smTradChinese },
+	{ LCH_RUSSIAN, smCyrillic },
+	{ LCH_TURKISH, smCyrillic },
+	{ LCH_BULGARIAN, smCyrillic },
+	{ LCH_UKRAINIAN, smCyrillic },
+	{ LCH_ARABIC, smArabic },
+	{ LCH_HEBREW, smHebrew },
+	{ LCH_GREEK, smGreek },
+	{ LCH_KOREAN, smKorean },
+	{ LCH_POLISH, smCentralEuroRoman },
+	{ LCH_VIETNAMESE, smVietnamese },
+	{ LCH_LITHUANIAN, smCentralEuroRoman },
+	{ LCH_THAI, smThai },
+	{ LCH_SIMPLE_CHINESE, smSimpChinese },
+	{ LCH_UNICODE, smUnicodeScript }
+};
+
+uint2 MCS_charsettolangid(uint1 charset)
+{
+	uint2 i;
+	for (i = 0; i < ELEMENTS(scriptcodetocharsets); i++)
+		if (scriptcodetocharsets[i].charset == charset)
+			return scriptcodetocharsets[i].scriptcode;
+	return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////

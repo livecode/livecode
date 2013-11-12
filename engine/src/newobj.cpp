@@ -224,7 +224,9 @@ MCStatement *MCN_new_statement(int2 which)
 		return new MCInclude(true);
 	case S_RESET:
 		return new MCReset;
-	case S_RETURN:
+    case S_RESOLVE:
+        return new MCResolveImage;
+    case S_RETURN:
 		return new MCReturn;
 	case S_REVERT:
 		return new MCRevert;
@@ -314,6 +316,9 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCAlternateLanguages;
 	case F_ANNUITY:
 		return new MCAnnuity;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'arithmeticMean' (was average)
+	case F_ARI_MEAN:
+		return new MCArithmeticMean;
 	case F_ARRAY_DECODE:
 		return new MCArrayDecode;
 	case F_ARRAY_ENCODE:
@@ -324,8 +329,9 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCAtan2;
 	case F_ATAN:
 		return new MCAtan;
-	case F_AVERAGE:
-		return new MCAverage;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'averageDeviation'
+	case F_AVG_DEV:
+		return new MCAvgDev;
 	case F_BACK_SCRIPTS:
 		return new MCBackScripts;
 	case F_BASE64_DECODE:
@@ -466,10 +472,16 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCGetResource;
 	case F_GET_RESOURCES:
 		return new MCGetResources;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'geometricMean'
+	case F_GEO_MEAN:
+		return new MCGeometricMean;
 	case F_GLOBAL_LOC:
 		return new MCGlobalLoc;
 	case F_GLOBALS:
 		return new MCGlobals;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'harmonicMean'
+	case F_HAR_MEAN:
+		return new MCHarmonicMean;
 	case F_HAS_MEMORY:
 		return new MCHasMemory;
 	case F_HEAP_SPACE:
@@ -618,6 +630,12 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCPendingMessages;
 	case F_PLATFORM:
 		return new MCPlatform;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'populationStdDev'
+	case F_POP_STD_DEV:
+			return new MCPopulationStdDev;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'populationVariance'
+	case F_POP_VARIANCE:
+		return new MCPopulationVariance;
 	case F_PROCESSOR:
 		return new MCProcessor;
 	case F_PROCESS_ID:
@@ -691,6 +709,12 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCShortFilePath;
 	case F_SIN:
 		return new MCSin;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'sampleStdDev' (was stdDev)
+	case F_SMP_STD_DEV:
+		return new MCSampleStdDev;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'sampleVariance'
+	case F_SMP_VARIANCE:
+		return new MCSampleVariance;
 	case F_SOUND:
 		return new MCSound;
 	case F_SPECIAL_FOLDER_PATH:
@@ -703,8 +727,6 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCStackSpace;
 	case F_STAT_ROUND:
 		return new MCStatRound;
-	case F_STD_DEV:
-		return new MCStdDev;
 	case F_SUM:
 		return new MCSum;
 	case F_SYS_ERROR:
@@ -763,8 +785,15 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCControlAtLoc(false);
 	case F_CONTROL_AT_SCREEN_LOC:
 		return new MCControlAtLoc(true);
-
-	default:
+	// MW-2013-05-08: [[ Uuid ]] Constructor for uuid function.
+	case F_UUID:
+		return new MCUuidFunc;
+    // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
+    case F_MEASURE_TEXT:
+        return new MCMeasureText(false);
+    case F_MEASURE_UNICODE_TEXT:
+        return new MCMeasureText(true);
+    default:
 		break;
 	}
 

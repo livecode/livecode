@@ -37,7 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 
 #include "globals.h"
-
 #include "exec.h"
 
 Exec_stat MCFunction::params_to_doubles(MCExecPoint& ep, MCParameter *p_params, real64_t*& r_doubles, uindex_t& r_count)
@@ -90,7 +89,7 @@ Exec_stat MCFunction::params_to_doubles(MCExecPoint& ep, MCParameter *p_params, 
 				}
 				if (s.getlength() == 0)
 					t_number = 0.0;
-				else
+  				else
 				{
 					if (!MCU_stor8(s, t_number))
 					{
@@ -114,16 +113,16 @@ Exec_stat MCFunction::params_to_doubles(MCExecPoint& ep, MCParameter *p_params, 
 				MCeerror->add(EE_FUNCTION_BADSOURCE, line, pos);
 				return ES_ERROR;
 			}
-
+            
 			if (!t_list.Push(ep.getnvalue()))
 				return ES_ERROR;
-
+            
 			t_param = t_param->getnext();
 		}
 	}
-
+    
 	t_list.Take(r_doubles, r_count);
-	return ES_NORMAL;
+ 	return ES_NORMAL;   
 }
 
 MCAbsFunction::~MCAbsFunction()
@@ -212,7 +211,6 @@ Exec_stat MCAcos::eval(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCAcos */
-
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;
@@ -305,6 +303,61 @@ Exec_stat MCAnnuity::eval(MCExecPoint &ep)
 void MCAnnuity::compile(MCSyntaxFactoryRef ctxt)
 {
 	compile_with_args(ctxt, kMCMathEvalAnnuityMethodInfo, rate, periods);
+}
+
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of arithmeticMean (was average)
+MCArithmeticMean::~MCArithmeticMean()
+{
+	while (params != NULL)
+	{
+		MCParameter *tparams = params;
+		params = params->getnext();
+		delete tparams;
+	}
+}
+
+Parse_stat MCArithmeticMean::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+	
+	if (getparams(sp, &params) != PS_NORMAL)
+	{
+		MCperror->add(PE_AVERAGE_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Exec_stat MCArithmeticMean::eval(MCExecPoint &ep)
+{
+#ifdef LEGACY_EXEC
+	if (evalparams(F_ARI_MEAN, params, ep) != ES_NORMAL)
+	{
+		MCeerror->add(EE_AVERAGE_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	return ES_NORMAL;
+#endif
+    
+	MCExecContext ctxt(ep);
+	MCAutoArray<real64_t> t_values;
+	real64_t t_result;
+    
+	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
+	{
+		MCeerror->add(EE_AVERAGE_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+    
+	MCMathEvalArithmeticMean(ctxt, t_values.Ptr(), t_values.Size(), t_result);
+    
+	if (!ctxt.HasError())
+	{
+		/* UNCHECKED */ ep.setnvalue(t_result);
+		return ES_NORMAL;
+	}
+    
+	return ctxt.Catch(line, pos);
 }
 
 MCAsin::~MCAsin()
@@ -402,7 +455,6 @@ Exec_stat MCAtan::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCAtan */
 
-
 	MCExecContext ctxt(ep);
 	real64_t t_source;
 	real64_t t_result;
@@ -470,7 +522,6 @@ Exec_stat MCAtan2::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCAtan2 */
 
-
 	MCExecContext ctxt(ep);
 	real64_t t_y, t_x;
 	real64_t t_result;
@@ -505,7 +556,8 @@ void MCAtan2::compile(MCSyntaxFactoryRef ctxt)
 	compile_with_args(ctxt, kMCMathEvalAtan2MethodInfo, s1, s2);
 }
 
-MCAverage::~MCAverage()
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of averageDeviation
+MCAvgDev::~MCAvgDev()
 {
 	while (params != NULL)
 	{
@@ -515,10 +567,10 @@ MCAverage::~MCAverage()
 	}
 }
 
-Parse_stat MCAverage::parse(MCScriptPoint &sp, Boolean the)
+Parse_stat MCAvgDev::parse(MCScriptPoint &sp, Boolean the)
 {
 	initpoint(sp);
-
+	
 	if (getparams(sp, &params) != PS_NORMAL)
 	{
 		MCperror->add(PE_AVERAGE_BADPARAM, line, pos);
@@ -527,17 +579,17 @@ Parse_stat MCAverage::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCAverage::eval(MCExecPoint &ep)
+Exec_stat MCAvgDev::eval(MCExecPoint &ep)
 {
 #ifdef /* MCAverage */ LEGACY_EXEC
-	if (evalparams(F_AVERAGE, params, ep) != ES_NORMAL)
+
+	if (evalparams(F_AVG_DEV, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_AVERAGE_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
 #endif /* MCAverage */
-
 
 	MCExecContext ctxt(ep);
 	MCAutoArray<real64_t> t_values;
@@ -549,7 +601,7 @@ Exec_stat MCAverage::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 
-	MCMathEvalAverage(ctxt, t_values.Ptr(), t_values.Size(), t_result);
+	MCMathEvalAverageDeviation(ctxt, t_values.Ptr(), t_values.Size(), t_result);
 
 	if (!ctxt.HasError())
 	{
@@ -726,7 +778,6 @@ Exec_stat MCExp::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCExp */
 
-
 	MCExecContext ctxt(ep);
 	real64_t t_source;
 	real64_t t_result;
@@ -788,7 +839,6 @@ Exec_stat MCExp1::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCExp1 */
 
-
 	MCExecContext ctxt(ep);
 	real64_t t_source;
 	real64_t t_result;
@@ -848,7 +898,6 @@ Exec_stat MCExp2::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCExp2 */
 
-
 	MCExecContext ctxt(ep);
 	real64_t t_source;
 	real64_t t_result;
@@ -907,7 +956,6 @@ Exec_stat MCExp10::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCExp10 */
 
-
 	MCExecContext ctxt(ep);
 	real64_t t_source;
 	real64_t t_result;
@@ -927,6 +975,116 @@ Exec_stat MCExp10::eval(MCExecPoint &ep)
 		return ES_NORMAL;
 	}
 
+	return ctxt.Catch(line, pos);
+}
+
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of geometricMean
+MCGeometricMean::~MCGeometricMean()
+{
+	while (params != NULL)
+	{
+		MCParameter *tparams = params;
+		params = params->getnext();
+		delete tparams;
+	}
+}
+
+Parse_stat MCGeometricMean::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+	
+	if (getparams(sp, &params) != PS_NORMAL)
+	{
+		MCperror->add(PE_GEO_MEAN_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Exec_stat MCGeometricMean::eval(MCExecPoint &ep)
+{
+#ifdef LEGACY_EXEC
+	if (evalparams(F_GEO_MEAN, params, ep) != ES_NORMAL)
+	{
+		MCeerror->add(EE_GEO_MEAN_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	return ES_NORMAL;
+#endif
+    
+	MCExecContext ctxt(ep);
+	MCAutoArray<real64_t> t_values;
+	real64_t t_result;
+    
+	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
+	{
+		MCeerror->add(EE_GEO_MEAN_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+    
+	MCMathEvalGeometricMean(ctxt, t_values.Ptr(), t_values.Size(), t_result);
+    
+	if (!ctxt.HasError())
+	{
+		/* UNCHECKED */ ep.setnvalue(t_result);
+		return ES_NORMAL;
+	}
+    
+	return ctxt.Catch(line, pos);
+}
+
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of harmonicMean
+MCHarmonicMean::~MCHarmonicMean()
+{
+	while (params != NULL)
+	{
+		MCParameter *tparams = params;
+		params = params->getnext();
+		delete tparams;
+	}
+}
+
+Parse_stat MCHarmonicMean::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+	
+	if (getparams(sp, &params) != PS_NORMAL)
+	{
+		MCperror->add(PE_HAR_MEAN_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Exec_stat MCHarmonicMean::eval(MCExecPoint &ep)
+{
+#ifdef LEGACY_EXEC
+	if (evalparams(F_HAR_MEAN, params, ep) != ES_NORMAL)
+	{
+		MCeerror->add(EE_HAR_MEAN_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	return ES_NORMAL;
+#endif
+    
+	MCExecContext ctxt(ep);
+	MCAutoArray<real64_t> t_values;
+	real64_t t_result;
+    
+	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
+	{
+		MCeerror->add(EE_STDDEV_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+    
+	MCMathEvalHarmonicMean(ctxt, t_values.Ptr(), t_values.Size(), t_result);
+    
+	if (!ctxt.HasError())
+	{
+		/* UNCHECKED */ ep.setnvalue(t_result);
+		return ES_NORMAL;
+	}
+    
 	return ctxt.Catch(line, pos);
 }
 
@@ -965,7 +1123,6 @@ Exec_stat MCLn::eval(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCLn */
-
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;
@@ -1024,7 +1181,6 @@ Exec_stat MCLn1::eval(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCLn1 */
-
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;
@@ -1142,7 +1298,6 @@ Exec_stat MCLog10::eval(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCLog10 */
-
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;
@@ -1303,7 +1458,6 @@ Exec_stat MCMaxFunction::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCMaxFunction */
 
-
 	MCExecContext ctxt(ep);
 	MCAutoArray<real64_t> t_values;
 	real64_t t_result;
@@ -1357,8 +1511,7 @@ Exec_stat MCMedian::eval(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCMedian */
-
-
+    
 	MCExecContext ctxt(ep);
 	MCAutoArray<real64_t> t_values;
 	real64_t t_result;
@@ -1413,7 +1566,6 @@ Exec_stat MCMD5Digest::eval(MCExecPoint &ep)
 	ep.copysvalue((char *)digest, 16);
 	return ES_NORMAL;
 #endif /* MCMD5Digest */
-
 
 	MCExecContext ctxt(ep);
 	MCAutoDataRef t_source;
@@ -1471,7 +1623,6 @@ Exec_stat MCSHA1Digest::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCSHA1Digest */
 
-
 	MCExecContext ctxt(ep);
 	MCAutoDataRef t_source;
 	MCAutoDataRef t_result;
@@ -1527,7 +1678,6 @@ Exec_stat MCMinFunction::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCMinFunction */
 
-
 	MCExecContext ctxt(ep);
 	MCAutoArray<real64_t> t_values;
 	real64_t t_result;
@@ -1546,6 +1696,116 @@ Exec_stat MCMinFunction::eval(MCExecPoint &ep)
 		return ES_NORMAL;
 	}
 
+	return ctxt.Catch(line, pos);
+}
+
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of populationStdDev
+MCPopulationStdDev::~MCPopulationStdDev()
+{
+	while (params != NULL)
+	{
+		MCParameter *tparams = params;
+		params = params->getnext();
+		delete tparams;
+	}
+}
+
+Parse_stat MCPopulationStdDev::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+	
+	if (getparams(sp, &params) != PS_NORMAL)
+	{
+		MCperror->add(PE_POP_STDDEV_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Exec_stat MCPopulationStdDev::eval(MCExecPoint &ep)
+{
+#ifdef LEGACY_EXEC
+	if (evalparams(F_POP_STD_DEV, params, ep) != ES_NORMAL)
+	{
+		MCeerror->add(EE_POP_VARIANCE_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	return ES_NORMAL;
+#endif
+    
+	MCExecContext ctxt(ep);
+	MCAutoArray<real64_t> t_values;
+	real64_t t_result;
+    
+	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
+	{
+		MCeerror->add(EE_POP_VARIANCE_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+    
+	MCMathEvalPopulationStdDev(ctxt, t_values.Ptr(), t_values.Size(), t_result);
+    
+	if (!ctxt.HasError())
+	{
+		/* UNCHECKED */ ep.setnvalue(t_result);
+		return ES_NORMAL;
+	}
+    
+	return ctxt.Catch(line, pos);
+}
+
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of populationVariance
+MCPopulationVariance::~MCPopulationVariance()
+{
+	while (params != NULL)
+	{
+		MCParameter *tparams = params;
+		params = params->getnext();
+		delete tparams;
+	}
+}
+
+Parse_stat MCPopulationVariance::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+	
+	if (getparams(sp, &params) != PS_NORMAL)
+	{
+		MCperror->add(PE_POP_VARIANCE_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Exec_stat MCPopulationVariance::eval(MCExecPoint &ep)
+{
+#ifdef LEGACY_EXEC
+	if (evalparams(F_POP_VARIANCE, params, ep) != ES_NORMAL)
+	{
+		MCeerror->add(EE_POP_VARIANCE_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	return ES_NORMAL;
+#endif
+    
+	MCExecContext ctxt(ep);
+	MCAutoArray<real64_t> t_values;
+	real64_t t_result;
+    
+	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
+	{
+		MCeerror->add(EE_POP_VARIANCE_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+    
+	MCMathEvalPopulationVariance(ctxt, t_values.Ptr(), t_values.Size(), t_result);
+    
+	if (!ctxt.HasError())
+	{
+		/* UNCHECKED */ ep.setnvalue(t_result);
+		return ES_NORMAL;
+	}
+    
 	return ctxt.Catch(line, pos);
 }
 
@@ -1595,7 +1855,6 @@ Exec_stat MCRandom::eval(MCExecPoint &ep)
 
 	return t_stat;
 #endif /* MCRandom */
-
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;
@@ -1666,7 +1925,6 @@ Exec_stat MCRound::eval(MCExecPoint &ep)
 	ep.setnvalue(value / factor);
 	return ES_NORMAL;
 #endif /* MCRound */
-
 
 	MCExecContext ctxt(ep);
 	real64_t t_source, t_digit;
@@ -1744,7 +2002,6 @@ Exec_stat MCSin::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCSin */
 
-
 	MCExecContext ctxt(ep);
 	real64_t t_source;
 	real64_t t_result;
@@ -1764,6 +2021,117 @@ Exec_stat MCSin::eval(MCExecPoint &ep)
 		return ES_NORMAL;
 	}
 
+	return ctxt.Catch(line, pos);
+}
+
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of sampleStdDev (was stdDev)
+MCSampleStdDev::~MCSampleStdDev()
+{
+	while (params != NULL)
+	{
+		MCParameter *tparams = params;
+		params = params->getnext();
+		delete tparams;
+	}
+}
+
+Parse_stat MCSampleStdDev::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+	
+	if (getparams(sp, &params) != PS_NORMAL)
+	{
+		MCperror->add(PE_STDDEV_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Exec_stat MCSampleStdDev::eval(MCExecPoint &ep)
+{
+#ifdef /* MCSampleStdDev */ LEGACY_EXEC
+	if (evalparams(F_SMP_STD_DEV, params, ep) != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_STDDEV_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	return ES_NORMAL;
+#endif /* MCSampleStdDev */
+    
+	MCExecContext ctxt(ep);
+	MCAutoArray<real64_t> t_values;
+	real64_t t_result;
+    
+	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
+	{
+		MCeerror->add(EE_STDDEV_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+    
+	MCMathEvalSampleStdDev(ctxt, t_values.Ptr(), t_values.Size(), t_result);
+    
+	if (!ctxt.HasError())
+	{
+		/* UNCHECKED */ ep.setnvalue(t_result);
+		return ES_NORMAL;
+	}
+    
+	return ctxt.Catch(line, pos);
+}
+
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of sampleVariance
+MCSampleVariance::~MCSampleVariance()
+{
+	while (params != NULL)
+	{
+		MCParameter *tparams = params;
+		params = params->getnext();
+		delete tparams;
+	}
+}
+
+Parse_stat MCSampleVariance::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+	
+	if (getparams(sp, &params) != PS_NORMAL)
+	{
+		MCperror->add(PE_VARIANCE_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Exec_stat MCSampleVariance::eval(MCExecPoint &ep)
+{
+#ifdef LEGACY_EXEC
+	if (evalparams(F_SMP_VARIANCE, params, ep) != ES_NORMAL)
+	{
+		MCeerror->add(EE_VARIANCE_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	return ES_NORMAL;
+#endif
+    
+	MCExecContext ctxt(ep);
+	MCAutoArray<real64_t> t_values;
+	real64_t t_result;
+    
+	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
+	{
+		MCeerror->add(EE_VARIANCE_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+    
+	MCMathEvalPopulationVariance(ctxt, t_values.Ptr(), t_values.Size(), t_result);
+    
+	if (!ctxt.HasError())
+	{
+		/* UNCHECKED */ ep.setnvalue(t_result);
+		return ES_NORMAL;
+	}
+    
 	return ctxt.Catch(line, pos);
 }
 
@@ -1883,7 +2251,6 @@ Exec_stat MCStatRound::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCStatRound */
 
-
 	MCExecContext ctxt(ep);
 	real64_t t_source, t_digit;
 	real64_t t_result;
@@ -1968,7 +2335,7 @@ Exec_stat MCStdDev::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 
-	MCMathEvalStdDev(ctxt, t_values.Ptr(), t_values.Size(), t_result);
+	MCMathEvalSampleStdDev(ctxt, t_values.Ptr(), t_values.Size(), t_result);
 
 	if (!ctxt.HasError())
 	{
@@ -2011,7 +2378,6 @@ Exec_stat MCSum::eval(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCSum */
-
 
 	MCExecContext ctxt(ep);
 	MCAutoArray<real64_t> t_values;
@@ -2113,7 +2479,7 @@ Parse_stat MCTranspose::parse(MCScriptPoint &sp, Boolean the)
 Exec_stat MCTranspose::eval(MCExecPoint &ep)
 {
 #ifdef /* MCTranspose */ LEGACY_EXEC
-    // ARRAYEVAL
+	// ARRAYEVAL
 	if (source -> eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_TRANSPOSE_BADSOURCE, line, pos);
@@ -2149,6 +2515,7 @@ Exec_stat MCTranspose::eval(MCExecPoint &ep)
     
 	return ES_NORMAL;
 #endif /* MCTranspose */
+
 	MCExecContext ctxt(ep);
 
 	// ARRAYEVAL
@@ -2209,7 +2576,6 @@ Exec_stat MCTrunc::eval(MCExecPoint &ep)
 		ep.setnvalue(floor(ep.getnvalue()));
 	return ES_NORMAL;
 #endif /* MCTrunc */
-
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;

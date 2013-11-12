@@ -606,10 +606,6 @@ MCImageData *MCImageDataFromObject(MCImage *p_object);
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCFormatImageIsPNG(MCDataRef p_string);
-bool MCFormatImageIsGIF(MCDataRef p_string);
-bool MCFormatImageIsJPEG(MCDataRef p_string);
-
 bool MCFormatStyledTextIsUnicode(MCDataRef p_string);
 
 #endif

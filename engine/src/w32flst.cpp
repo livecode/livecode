@@ -170,8 +170,11 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style, Boolean printe
 	HDC hdc;
 	if (printer)
 	{
+#ifdef _DESKTOP
+		// MM-2013-09-13:: [[ RefactorGraphics ]] Tweak to get things compiling for server.
 		hdc = static_cast<MCWindowsPrinter *>(MCsystemprinter) -> GetDC();
 		logfont.lfHeight = -size;
+#endif
 	}
 	else
 	{
@@ -215,6 +218,7 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style, Boolean printe
 	TEXTMETRICA tm;
 	GetTextMetricsA(hdc, &tm);
 	font->fid = (MCSysFontHandle)newfont;
+	font->size = size;
 	font->ascent = MulDiv(tm.tmAscent, 15, 16);
 	font->descent = tm.tmDescent;
 	font->printer = printer;
@@ -349,9 +353,12 @@ bool MCFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
 
 	MCScreenDC *pms = (MCScreenDC *)MCscreen;
 	HDC hdc;
+#ifdef _DESKTOP
+	// MM-2013-09-13:: [[ RefactorGraphics ]] Tweak to get things compiling for server.
 	if (MCStringIsEqualToCString(p_type, "printer", kMCCompareCaseless))
 		hdc = static_cast<MCWindowsPrinter *>(MCsystemprinter) -> GetDC();
 	else
+#endif
 		hdc = pms->getsrchdc();
 	if (EnumFontFamiliesA(hdc, NULL, (FONTENUMPROCA)fontnames_FontFamProc, (LPARAM)*t_list) != True)
 		return false;

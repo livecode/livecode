@@ -62,6 +62,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osxprefix.h"
 #endif
 
+#include "resolution.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Globals specific to STANDALONE mode
@@ -285,9 +287,60 @@ IO_stat MCDispatch::startup(void)
 	// set up image cache before the first stack is opened
 	MCCachedImageRep::init();
 	
-#if !defined(_DEBUG) && !defined(_SHARK) && (defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID))
-	// This is the 'built-as-standalone' iPhone path.
-
+#if defined(_DEBUG) || defined(_SHARK)
+	// MW-2013-06-13: [[ CloneAndRun ]] If there is no capsule and we are in profile/debug mode then
+	//   use a file directly.
+	if (MCcapsule . size == 0)
+	{
+		IO_handle t_stream;
+	
+		// In debug mode, we (for now) load a fixed stack
+#if defined(TARGET_SUBPLATFORM_ANDROID)
+        extern IO_handle android_get_mainstack_stream();
+        t_stream = android_get_mainstack_stream();
+#else
+        MCAutoStringRef t_path;
+        MCStringFormat(&t_path, "%.*s/iphone_test.livecode", strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd));
+        t_stream = MCS_open(*t_path, kMCSOpenFileModeRead, False, False, 0);
+#endif
+		
+		if (t_stream == NULL)
+			return IO_ERROR;
+		
+		MCStack *t_stack;
+		if (readstartupstack(t_stream, t_stack) != IO_NORMAL)
+			return IO_ERROR;
+		
+		MCS_close(t_stream);
+		
+		/* UNCHECKED */ MCStringCreateWithCString(openpath, MCcmd);
+		MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
+		
+		t_stack -> extraopen(false);
+		
+		// Resolve parent scripts *after* we've loaded aux stacks.
+		if (t_stack -> getextendedstate(ECS_USES_PARENTSCRIPTS))
+			t_stack -> resolveparentscripts();
+		
+		MCscreen->resetcursors();
+		MCImage::init();
+		
+#ifdef TARGET_SUBPLATFORM_ANDROID
+        MCdispatcher -> loadexternal(MCSTR("revzip"));
+        MCdispatcher -> loadexternal(MCSTR("revdb"));
+        MCdispatcher -> loadexternal(MCSTR("revxml"));
+        MCdispatcher -> loadexternal(MCSTR("dbsqlite"));
+        MCdispatcher -> loadexternal(MCSTR("dbmysql"));
+#else
+        MCdispatcher -> loadexternal(MCSTR("revzip.dylib"));
+        MCdispatcher -> loadexternal(MCSTR("revdb.dylib"));
+#endif
+		
+		// MW-2010-12-18: Startup message / stack init now down in 'main'
+		return IO_NORMAL;
+	}
+#endif
+	
 	// The info structure that will be filled in while parsing the capsule.
 	MCStandaloneCapsuleInfo t_info;
 	memset(&t_info, 0, sizeof(MCStandaloneCapsuleInfo));
@@ -338,25 +391,6 @@ IO_stat MCDispatch::startup(void)
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_info . stack;
 	MCCapsuleClose(t_capsule);
 
-	// Work out whether we are running in the emulator or not
-	bool t_is_device;
-#if defined(TARGET_SUBPLATFORM_IPHONE)
-#if defined(__i386__)
-	t_is_device = false;
-#else
-	t_is_device = true;
-#endif
-#elif defined(TARGET_SUBPLATFORM_ANDROID)
-	MCAutoStringRef t_machine_string;
-	/* UNCHECKED */ MCS_getmachine(&t_machine_string);
-	if (MCStringIsEqualToCString(*t_machine_string, "sdk", kMCCompareExact))
-		t_is_device = false;
-	else
-		t_is_device = true;
-#else
-#error Device detection not implemented
-#endif
-
 	if (!MCquit)
 	{
 		t_info . stack -> extraopen(false);
@@ -370,57 +404,7 @@ IO_stat MCDispatch::startup(void)
 	}
 	
 	// MW-2010-12-18: Startup message / stack init now down in 'main'
-
-#else
-	// This is the debug or Android path.
-	
-	IO_handle t_stream;
-
-	// In debug mode, we (for now) load a fixed stack
-#if defined(TARGET_SUBPLATFORM_ANDROID)
-	extern IO_handle android_get_mainstack_stream();
-	t_stream = android_get_mainstack_stream();
-#else
-	MCAutoStringRef t_path;
-	MCStringFormat(&t_path, "%.*s/iphone_test.rev", strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd));
-	t_stream = MCS_open(*t_path, kMCSOpenFileModeRead, False, False, 0);
-#endif
-
-	if (t_stream == NULL)
-		return IO_ERROR;
-
-	MCStack *t_stack;
-	if (readstartupstack(t_stream, t_stack) != IO_NORMAL)
-		return IO_ERROR;
-
-	MCS_close(t_stream);
-
-	/* UNCHECKED */ MCStringCreateWithCString(openpath, MCcmd);
-	MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
-	
-	t_stack -> extraopen(false);
-	
-	// Resolve parent scripts *after* we've loaded aux stacks.
-	if (t_stack -> getextendedstate(ECS_USES_PARENTSCRIPTS))
-		t_stack -> resolveparentscripts();
-	
-	MCscreen->resetcursors();
-	MCImage::init();
-	
-#ifdef TARGET_SUBPLATFORM_ANDROID
-	MCdispatcher -> loadexternal(MCSTR("revzip"));
-	MCdispatcher -> loadexternal(MCSTR("revdb"));
-	MCdispatcher -> loadexternal(MCSTR("revxml"));
-	MCdispatcher -> loadexternal(MCSTR("dbsqlite"));
-	MCdispatcher -> loadexternal(MCSTR("dbmysql"));
-#else
-	MCdispatcher -> loadexternal(MCSTR("revzip.dylib"));
-	MCdispatcher -> loadexternal(MCSTR("revdb.dylib"));
-#endif
-	
-	// MW-2010-12-18: Startup message / stack init now down in 'main'
-#endif
-
+    
 	return IO_NORMAL;
 }
 
@@ -438,6 +422,10 @@ IO_stat MCDispatch::startup(void)
 	char *openpath = strdup(MCStringGetCString(MCcmd)); //point to MCcmd string
 
 #ifdef _DEBUG
+	// MW-2013-06-13: [[ CloneAndRun ]] When compiling in DEBUG mode, first check
+	//   to see if there is an environment TEST_STACK specified; otherwise read
+	//   from the capsule.
+	
 #ifdef _WINDOWS
 	// This little snippet of code allows an easy way to attach VS to a standalone
 	// instance to debug startup.
@@ -447,13 +435,13 @@ IO_stat MCDispatch::startup(void)
 	DebugBreak();*/
 #endif
 
-	if (MCcapsule . size == 0)
-	{
-		MCStack *t_stack;
-		IO_handle t_stream;
-		MCAutoStringRef t_env;
-		/* UNCHECKED */ MCS_getenv(MCSTR("TEST_STACK"), &t_env);
-		t_stream = MCS_open(*t_env, kMCSystemFileModeRead, False, False, 0);
+    MCAutoStringRef t_env;
+    if (MCS_getenv(MCSTR("TEST_STACK"), &t_env))
+    {
+        MCStack *t_stack;
+        IO_handle t_stream;
+        t_stream = MCS_open(*t_env, kMCSystemFileModeRead, False, False, 0);
+
 		if (MCdispatcher -> readstartupstack(t_stream, t_stack) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read standalone stack");

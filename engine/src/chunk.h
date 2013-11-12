@@ -102,7 +102,7 @@ public:
 	Exec_stat set(MCExecPoint &, Preposition_type ptype);
 
 #endif
-    Exec_stat set(MCExecPoint& ep, Preposition_type p_type, MCValueRef p_text);
+    Exec_stat set(MCExecPoint& ep, Preposition_type p_type, MCValueRef p_text, bool p_unicode = false);
 #ifdef LEGACY_EXEC 
 	Exec_stat gets(MCExecPoint &);
 	Exec_stat set_legacy(MCExecPoint &, Preposition_type ptype);
@@ -140,12 +140,12 @@ public:
 
 	// Returns true if this chunk is of text type and stops at line
 	bool islinechunk(void) const;
+	
+	// Returns true if this chunk is a var, or indexed var
+	bool isvarchunk(void) const;
 
 	// Returns true if this chunk is a substring of a variable.
 	bool issubstringchunk(void) const;
-	
-	// Returns true if this chunk is of a variable.
-	bool isvarchunk(void) const;
 	
 	// Returns true if this chunk is of a url
 	bool isurlchunk(void) const;

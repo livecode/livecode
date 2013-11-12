@@ -114,6 +114,7 @@ bool MCRegionOffset(MCRegionRef self, int32_t p_dx, int32_t p_dy)
 	return true;
 }
 
+#ifdef OLD_GRAPHICS
 bool MCRegionCalculateMask(MCRegionRef self, int32_t w, int32_t h, MCBitmap*& r_mask)
 {
 	// Create a pixmap
@@ -148,6 +149,12 @@ bool MCRegionCalculateMask(MCRegionRef self, int32_t w, int32_t h, MCBitmap*& r_
 	
 	return true;
 }
+#endif
+
+static inline CGRect MCRectangleToCGRect(const MCRectangle &p_rect)
+{
+	return CGRectMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height);
+}
 
 struct MCRegionConvertToCGRectsState
 {
@@ -155,23 +162,17 @@ struct MCRegionConvertToCGRectsState
 	uint32_t count;
 };
 
-static OSStatus MCRegionConvertToCGRectsCallback(UInt16 p_message, RgnHandle p_region, const Rect *p_rect, void *p_state)
+static bool MCRegionConvertToCGRectsCallback(void *p_state, const MCRectangle &p_rect)
 {
 	MCRegionConvertToCGRectsState *state;
 	state = (MCRegionConvertToCGRectsState *)p_state;
 
-	if (p_message != kQDRegionToRectsMsgParse)
-		return noErr;
-	
 	if (!MCMemoryResizeArray(state -> count + 1, state -> rects, state -> count))
-		return memFullErr;
+		return false;
 	
-	state -> rects[state -> count - 1] . origin . x = p_rect -> left;
-	state -> rects[state -> count - 1] . origin . y = p_rect -> top;
-	state -> rects[state -> count - 1] . size . width = p_rect -> right - p_rect -> left;
-	state -> rects[state -> count - 1] . size . height = p_rect -> bottom - p_rect -> top;
+	state -> rects[state -> count - 1] = MCRectangleToCGRect(p_rect);
 	
-	return noErr;
+	return true;
 }
 
 bool MCRegionConvertToCGRects(MCRegionRef self, void*& r_cgrects, uint32_t& r_cgrect_count)
@@ -180,7 +181,7 @@ bool MCRegionConvertToCGRects(MCRegionRef self, void*& r_cgrects, uint32_t& r_cg
 	t_state . rects = nil;
 	t_state . count = 0;
 	
-	if (QDRegionToRects((RgnHandle)self, kQDParseRegionFromTopLeft, MCRegionConvertToCGRectsCallback, &t_state) != noErr)
+	if (!MCRegionForEachRect(self, MCRegionConvertToCGRectsCallback, &t_state))
 	{
 		MCMemoryDeleteArray(t_state . rects);
 		return false;
@@ -192,8 +193,52 @@ bool MCRegionConvertToCGRects(MCRegionRef self, void*& r_cgrects, uint32_t& r_cg
 	return true;
 }
 
-typedef bool (*MCRegionForEachRectCallback)(void *context, const MCRectangle& rect);
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2013-10-04: [[ FullscreenMode ]] Implement OSX version of MCRegionForEachRect
+
+struct MCRegionForEachRectContext
+{
+	MCRegionForEachRectCallback callback;
+	void *context;
+};
+
+static inline MCRectangle MCMacRectToMCRect(const Rect &p_rect)
+{
+	MCRectangle t_rect;
+	t_rect.x = p_rect.left;
+	t_rect.y = p_rect.top;
+	t_rect.width = p_rect.right - p_rect.left;
+	t_rect.height = p_rect.bottom - p_rect.top;
+	
+	return t_rect;
+}
+
+static OSStatus MCRegionForEachRectQDCallback(UInt16 p_message, RgnHandle p_region, const Rect *p_rect, void *p_state)
+{
+	if (p_message != kQDRegionToRectsMsgParse)
+		return noErr;
+	
+	MCRegionForEachRectContext *t_context;
+	t_context = static_cast<MCRegionForEachRectContext*>(p_state);
+	
+	MCRectangle t_rect;
+	t_rect = MCMacRectToMCRect(*p_rect);
+	
+	if (t_context->callback(t_context->context, t_rect))
+		return noErr;
+	else
+		return abortErr;
+}
+
 bool MCRegionForEachRect(MCRegionRef region, MCRegionForEachRectCallback callback, void *context)
 {
-	return false;
+	MCRegionForEachRectContext t_context;
+	t_context.callback = callback;
+	t_context.context = context;
+	
+	return noErr == QDRegionToRects((RgnHandle)region, kQDParseRegionFromTopLeft, MCRegionForEachRectQDCallback, &t_context);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+

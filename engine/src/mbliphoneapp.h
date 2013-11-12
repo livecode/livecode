@@ -259,6 +259,7 @@ enum MCIPhoneApplicationStatus
 - (void)motionBegan: (UIEventSubtype)motion withEvent: (UIEvent *)event;
 - (void)motionCancelled: (UIEventSubtype)motion withEvent: (UIEvent *)event;
 - (void)motionEnded:(UIEventSubtype)motion withEvent: (UIEvent *)event;
+- (void)remoteControlReceivedWithEvent:(UIEvent *)event;
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -351,6 +352,7 @@ void MCIPhoneHandleProcessTextInput(uint32_t t_char_code, uint32_t t_key_code);
 void MCIPhoneHandleMotionBegan(UIEventSubtype motion, NSTimeInterval timestamp);
 void MCIPhoneHandleMotionCancelled(UIEventSubtype motion, NSTimeInterval timestamp);
 void MCIPhoneHandleMotionEnded(UIEventSubtype motion, NSTimeInterval timestamp);
+void MCIPhoneHandleRemoteControlEvent(UIEventSubtype event, NSTimeInterval timestamp);
 void MCIPhoneHandleKeyboardWillActivate(float height);
 void MCIPhoneHandleKeyboardWillDeactivate(void);
 void MCIPhoneHandlePerformRedraw(void);
@@ -377,8 +379,8 @@ UIInterfaceOrientation MCIPhoneGetOrientation(void);
 bool MCIPhoneIsEmbedded(void);
 void MCIPhoneBreakWait(void);
 
-MCRectangle MCRectangleFromLogicalCGRect(const CGRect cgrect);
-CGRect MCRectangleToLogicalCGRect(const MCRectangle rect);
+MCRectangle MCDeviceRectFromLogicalCGRect(const CGRect cgrect);
+CGRect MCUserRectToLogicalCGRect(const MCRectangle rect);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -1,0 +1,1 @@
+# Plugin settings refers to Revolution. This has been updated to refer to LiveCode.

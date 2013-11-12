@@ -1,9 +1,18 @@
 ###############################################################################
 # Linux Static Library Makefile Template
 
+# Make sure the environment makefile has been included.
+ifeq ($(ARCH),)
+    $(error Environment Makefile not included!)
+endif
+
 TYPE_DEFINES=
 TYPE_INCLUDES=
 TYPE_CCFLAGS=
+
+ifeq ($(ARCH),x86_64)
+    TYPE_CCFLAGS=-fPIC
+endif
 
 include $(shell pwd)/$(dir $(lastword $(MAKEFILE_LIST)))/common.linux.makefile
 

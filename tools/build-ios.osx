@@ -1,9 +1,13 @@
-~/Builds/Platforms/Xcode_3_2_6/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator4.3
-~/Builds/Platforms/Xcode_4_2_0/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator5.0
-~/Builds/Platforms/Xcode_4_3_1/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator5.1
-~/Builds/Platforms/Xcode_4_5_0/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator6.0
-~/Builds/Platforms/Xcode_4_6_0/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator6.1
+BASEDIR=$(dirname $0)
+cd $BASEDIR/..
 
-~/Builds/Platforms/Xcode_4_2_0/usr/bin/xcodebuild  -project stage-mobile.xcodeproj -configuration Release -sdk iphoneos5.0 ARCHS="arm6 armv7"
-~/Builds/Platforms/Xcode_4_3_1/Xcode.app/Contents/Developer/usr/bin/xcodebuild  -project stage-mobile.xcodeproj -configuration Release -sdk iphoneos5.1 ARCHS="arm6 armv7"
-~/Builds/Platforms/Xcode_4_6_0/Xcode.app/Contents/Developer/usr/bin/xcodebuild  -project stage-mobile.xcodeproj -configuration Release -sdk iphoneos6.1 ARCHS=armv7
+./sdks/Xcode_3_2/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator4.3
+./sdks/Xcode_4_2/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator5.0
+./sdks/Xcode_4_3/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator5.1 GCC_VERSION=com.apple.compilers.llvmgcc42
+./sdks/Xcode_4_5/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator6.0
+./sdks/Xcode_4_6/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator6.1
+./sdks/Xcode_5_0/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator7.0
+
+./sdks/Xcode_4_2/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphoneos5.0 ARCHS=armv7
+./sdks/Xcode_4_6/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphoneos6.1 ARCHS=armv7
+./sdks/Xcode_5_0/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphoneos7.0 ARCHS=armv7
