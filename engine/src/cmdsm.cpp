@@ -1025,7 +1025,7 @@ Parse_stat MCArrayOp::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCArrayOp::exec(MCExecPoint &ep)
+void MCArrayOp::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCArrayOp */ LEGACY_EXEC
 	uint1 e;
@@ -1114,7 +1114,6 @@ Exec_stat MCArrayOp::exec(MCExecPoint &ep)
     
 	return ES_NORMAL;
 #endif /* MCArrayOp */
-	MCExecContext ctxt(ep);
 
 	MCAutoStringRef t_element_del;
 	MCAutoStringRef t_key_del;
@@ -1125,44 +1124,38 @@ Exec_stat MCArrayOp::exec(MCExecPoint &ep)
 		case TYPE_USER:
 			if (element != NULL)
 			{
-				if (element->eval(ep) != ES_NORMAL || 
-					!ep . copyasstringref(&t_element_del))
-				{
-					MCeerror->add(EE_ARRAYOP_BADEXP, line, pos);
-					return ES_ERROR;
-				}
+                if (!ctxt . EvalExprAsStringRef(element, EE_ARRAYOP_BADEXP, &t_element_del))
+                    return;
 
-				if (key != NULL)
-				{
-					if (key->eval(ep) != ES_NORMAL ||
-						!ep . copyasstringref(&t_key_del))
-					{
-						MCeerror->add(EE_ARRAYOP_BADEXP, line, pos);
-						return ES_ERROR;
-					}
-				}
+                if (!ctxt . EvalOptionalExprAsNullableStringRef(key, EE_ARRAYOP_BADEXP, &t_key_del))
+                    return;
 			}
 		break;
 		default:
-			return ES_ERROR;
+            ctxt . Throw();
+            return;
 		break;
 	}
 
 	MCAutoPointer<MCContainer> t_container;
-	if (destvar -> evalcontainer(ep, &t_container) != ES_NORMAL)
+    MCAutoValueRef t_container_value;
+    if (!destvar -> evalcontainer(ctxt, &t_container))
 	{
-		MCeerror -> add(EE_ARRAYOP_BADEXP, line, pos);
-		return ES_ERROR;
-	}
+        ctxt . LegacyThrow(EE_ARRAYOP_BADEXP);
+        return;
+    }
 
-	if (t_container -> eval(ep) != ES_NORMAL)
-		return ES_ERROR;
+    if (!t_container -> eval(ctxt, &t_container_value))
+    {
+        ctxt . Throw();
+        return;
+    }
 
 	if (is_combine)
 	{
-		MCAutoArrayRef t_array;
-		if (!ep . copyasarrayref(&t_array))
-			return ES_ERROR;
+        MCAutoArrayRef t_array;
+        if (!ctxt . ConvertToArray(*t_container_value, &t_array))
+            return;
 
 		MCAutoStringRef t_string;
 		if (form == FORM_NONE)
@@ -1177,17 +1170,14 @@ Exec_stat MCArrayOp::exec(MCExecPoint &ep)
 		else if (form == FORM_SET)
 			MCArraysExecCombineAsSet(ctxt, *t_array, *t_element_del, &t_string);
 
-		if (!ctxt . HasError())
-		{
-			ep . setvalueref(*t_string);
-			return t_container -> set(ep);
-		}
+        if (!ctxt . HasError())
+            t_container -> set(ctxt, *t_string);
 	}
 	else
 	{
 		MCAutoStringRef t_string;
-		if (!ep . copyasstringref(&t_string))
-			return ES_ERROR;
+        if (!ctxt . ConvertToString(*t_container_value, &t_string))
+            return;
 
 		MCAutoArrayRef t_array;
 		if (form == FORM_NONE)
@@ -1203,13 +1193,8 @@ Exec_stat MCArrayOp::exec(MCExecPoint &ep)
 			MCArraysExecSplitAsSet(ctxt, *t_string, *t_element_del, &t_array);
 
 		if (!ctxt . HasError())
-		{
-			ep . setvalueref(*t_array);
-			return t_container -> set(ep);
-		}
-	}
-
-	return ES_ERROR;
+            t_container -> set(ctxt, *t_array);
+    }
 }
 
 void MCArrayOp::compile(MCSyntaxFactoryRef ctxt)
