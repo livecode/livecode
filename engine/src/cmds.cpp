@@ -1025,9 +1025,9 @@ Parse_stat MCMarking::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCMarking::exec(MCExecPoint &ep)
+void MCMarking::exec_ctxt(MCExecContext &ctxt)
 {
-#ifdef LEGACY_EXEC
+#ifdef /* MCMarking */ LEGACY_EXEC
 	if (card != NULL)
 	{
 		MCObject *optr;
@@ -1057,36 +1057,31 @@ Exec_stat MCMarking::exec(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif
+
     if (card != NULL)
 	{
 		MCObject *optr;
 		uint4 parid;
-		if (card->getobj(ep, optr, parid, True) != ES_NORMAL
+        if (!card->getobj(ctxt, optr, parid, True)
             || optr->gettype() != CT_CARD)
 		{
-			MCeerror->add
-			(EE_MARK_BADCARD, line, pos);
-			return ES_ERROR;
-		}
-		ep.setboolean(mark);
-		return optr->setprop(0, P_MARKED, ep, False);
+            ctxt . LegacyThrow(EE_MARK_BADCARD);
+            return;
+        }
+
+        optr -> setboolprop(ctxt, 0, P_MARKED, False, mark);
 	}
-	if (tofind == NULL)
-		MCdefaultstackptr->mark(ep, where, mark);
+    if (tofind == NULL)
+        MCdefaultstackptr->mark(ctxt, where, mark == True? true: false);
 	else
 	{
-		if (tofind->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add
-			(EE_MARK_BADSTRING, line, pos);
-			return ES_ERROR;
-		}
         MCAutoStringRef t_value;
-        ep . copyasstringref(&t_value);
-		MCExecContext ctxt(ep);
+
+        if (!ctxt . EvalExprAsStringRef(tofind, EE_MARK_BADSTRING, &t_value))
+            return;
+
 		MCdefaultstackptr->markfind(ctxt, mode, *t_value, field, mark);
-	}
-	return ES_NORMAL;
+    }
 }
 
 MCPut::~MCPut()
