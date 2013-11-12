@@ -221,8 +221,11 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
             return;
     }
 
-    if (!valueref_tona(ctxt, EE_ADD_BADDEST, *t_dst, &t_dst_as_number))
+    if (!valueref_tona(ctxt, *t_dst, &t_dst_as_number))
+    {
+        ctxt . LegacyThrow(EE_ADD_BADDEST);
         return;
+    }
 
 	MCAutoValueRef t_result;
     if (MCValueIsArray(*t_src_as_number))
