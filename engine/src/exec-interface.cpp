@@ -3049,7 +3049,7 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 {
 	MCStack *odefaultstackptr = MCdefaultstackptr;
 
-	MCObject *t_object;
+	MCObject *t_object = nil;
 	switch (p_target->gettype())
 	{
 	case CT_STACK:

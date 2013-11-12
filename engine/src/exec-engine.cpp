@@ -1579,6 +1579,8 @@ bool MCEngineEvalValueAsObject(MCValueRef p_value, bool p_strict, MCObjectPtr& r
     t_parse_error = tchunk->parse(sp, False) == PS_NORMAL;
     if (!t_parse_error && (!p_strict || sp.next(type) == PS_EOF))
         stat = ES_NORMAL;
+    else
+        stat = ES_ERROR;
     MCerrorlock--;
     if (stat == ES_NORMAL)
         stat = tchunk->getobj(ep, r_object, False);

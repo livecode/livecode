@@ -3322,7 +3322,7 @@ IO_stat MCCard::load(IO_handle stream, const char *version)
 
 IO_stat MCCard::loadobjects(IO_handle stream, const char *version)
 {
-	IO_stat stat;
+	IO_stat stat = IO_NORMAL;
 	
 	if (objptrs != NULL)
 	{
