@@ -1282,7 +1282,7 @@ Parse_stat MCSetOp::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCSetOp::exec(MCExecPoint &ep)
+void MCSetOp::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCSetOp */ LEGACY_EXEC
 	// ARRAYEVAL
@@ -1334,47 +1334,44 @@ Exec_stat MCSetOp::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCSetOp */
 	// ARRAYEVAL
-	if (source -> eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_ARRAYOP_BADEXP, line, pos);
-		return ES_ERROR;
-	}
+    MCAutoValueRef t_src_value;
+    if (!ctxt . EvalExprAsValueRef(source, EE_ARRAYOP_BADEXP, &t_src_value))
+        return;
 
-	if (!ep . isarray())
-		ep . clear();
+    if (!MCValueIsArray(*t_src_value))
+    {
+        MCValueRelease(*t_src_value);
+        MCValueCopy((MCValueRef)kMCEmptyString, &t_src_value);
+    }
 
 	MCAutoPointer<MCContainer> t_container;
-	if (destvar -> evalcontainer(ep, &t_container) != ES_NORMAL)
+    if (!destvar -> evalcontainer(ctxt, &t_container))
 	{
-		MCeerror -> add(EE_ARRAYOP_BADEXP, line, pos);
-		return ES_ERROR;
+        ctxt . LegacyThrow(EE_ARRAYOP_BADEXP);
+        return;
 	}
 
-	MCExecPoint ep2(ep);
-	if (t_container -> eval(ep2) != ES_NORMAL)
-		return ES_ERROR;
+    MCAutoValueRef t_container_value;
+    if (!t_container -> eval(ctxt, &t_container_value))
+        return;
 
-	MCAutoArrayRef t_dst_array;
-	if (!ep2 . copyasmutablearrayref(&t_dst_array))
-		return ES_ERROR;
+    MCAutoArrayRef t_dst_immutable_array;
+    MCAutoArrayRef t_dst_array;
+    if (!ctxt . ConvertToArray(*t_container_value, &t_dst_immutable_array)
+            || !MCArrayMutableCopy(*t_dst_immutable_array, &t_dst_array))
+        return;
 
 	MCAutoArrayRef t_src_array;
-	if (!ep . copyasarrayref(&t_src_array))
-		return ES_ERROR;
+    if (!ctxt . ConvertToArray(*t_src_value, &t_src_array))
+        return;
 
-	MCExecContext ctxt(ep);
 	if (intersect)
 		MCArraysExecIntersect(ctxt, *t_dst_array, *t_src_array);
 	else
 		MCArraysExecUnion(ctxt, *t_dst_array, *t_src_array);
 
 	if (!ctxt . HasError())
-	{
-		ep2 . setvalueref(*t_dst_array);
-		return t_container -> set(ep2);
-	}
-
-	return ES_ERROR;
+        t_container -> set(ctxt, *t_dst_array);
 }
 
 void MCSetOp::compile(MCSyntaxFactoryRef ctxt)
