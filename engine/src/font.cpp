@@ -158,9 +158,6 @@ int32_t MCFontGetDescent(MCFontRef self)
 
 void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFontBreakTextCallback p_callback, void *p_callback_data)
 {
-    p_callback(p_font, p_text, p_range, p_callback_data);
-    return;
-    
     // Scan forward in the string for possible break locations. Breaks are
     // assigned a quality value as some locations are better for breaking than
     // others. The qualities are:
@@ -181,7 +178,7 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
     while (t_length > 0)
     {
         int t_break_quality;
-        uindex_t t_break_point, t_after_break, t_index;
+        uindex_t t_break_point, t_index;
         t_break_quality = 0;
         t_break_point = 0;
         t_index = 0;
@@ -227,9 +224,9 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
                 t_break_point = t_index;
                 t_break_quality = 1;
             }
-            else if (t_break_quality < 2 && 0xDC00 <= t_char && t_char <= 0xDFFF)
+            else if (t_break_quality < 2 && t_char > 0xFFFF)
             {
-                // Trailing character of surrogate pair
+                // Character outside BMP, assume can break here
                 t_break_point = t_index;
                 t_break_quality = 1;
             }
@@ -255,11 +252,11 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
         
         // Process this chunk of text
         MCRange t_range;
-        t_range = MCRangeMake(t_offset + t_index, t_break_point);
+        t_range = MCRangeMake(t_offset, t_index);
         p_callback(p_font, p_text, t_range, p_callback_data);
         
         // Explicitly show breaking points
-        //p_callback(p_font, "|", 1, false, p_callback_data);
+        //p_callback(p_font, MCSTR("|"), MCRangeMake(0, 1), p_callback_data);
         
         // Move on to the next chunk
         t_offset += t_break_point;
@@ -316,7 +313,7 @@ static void MCFontDrawTextCallback(MCFontRef p_font, MCStringRef p_text, MCRange
 	MCGContextDrawPlatformText(ctxt->m_gcontext, MCStringGetCharPtr(p_text) + p_range.offset, p_range.length*2, MCGPointMake(ctxt->x, ctxt->y), t_font);
     
     // The draw position needs to be advanced
-    ctxt -> x += MCGContextMeasurePlatformText(NULL, MCStringGetCharPtr(p_text) + p_range.offset, p_range.length, t_font);
+    ctxt -> x += MCGContextMeasurePlatformText(NULL, MCStringGetCharPtr(p_text) + p_range.offset, p_range.length*2, t_font);
 }
 
 void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCFontRef font)
