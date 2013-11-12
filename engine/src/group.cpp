@@ -750,6 +750,9 @@ void MCGroup::setrect(const MCRectangle &nrect)
 		}
 		else
 		{
+            // MERG-13-11-12: [[ RecursiveConditionalMessages ]] Don't send moveControl when adjusting the scrollbars here
+            messagestate |= HH_MOVE_CONTROL;
+            
 			uint1 oldopen = opened;
 			opened = 0;  // suppress all updates and messages
 			int4 oldx = scrollx;
@@ -778,6 +781,10 @@ void MCGroup::setrect(const MCRectangle &nrect)
 			vscroll(oldy, False);
 			resetscrollbars(False);
 			opened = oldopen;
+            
+            // MERG-13-11-12: [[ RecursiveConditionalMessages ]] Don't send moveControl when adjusting the scrollbars here
+            messagestate &= ~HH_MOVE_CONTROL;
+            
 		}
 	else
 	{
@@ -787,9 +794,7 @@ void MCGroup::setrect(const MCRectangle &nrect)
 	
     // MERG-13-11-12: [[ ConditionalMessageRe-entry ]] Conditional message rentry handling is now in conditionalmessage
 	if (t_size_changed)
-	{
-		conditionalmessage(HH_RESIZE_CONTROL, MCM_resize_control);
-	}
+        conditionalmessage(HH_RESIZE_CONTROL, MCM_resize_control);
 }
 
 Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
@@ -1352,10 +1357,10 @@ void MCGroup::recursiveconditionalmessage(uint32_t p_flag, MCNameRef p_message)
             if ((p_flag == HH_HIDE_CONTROL || p_flag == HH_SHOW_CONTROL) && !t_object->getflag(F_VISIBLE))
                 continue;
             
+            t_object->conditionalmessage(p_flag, p_message);
+            
             if (t_object->gettype() == CT_GROUP)
                 (static_cast<MCGroup *>(t_object))->recursiveconditionalmessage(p_flag, p_message);
-            else
-                t_object->conditionalmessage(p_flag, p_message);
             
             t_object = t_object -> next();
             
