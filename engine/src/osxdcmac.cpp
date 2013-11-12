@@ -537,7 +537,9 @@ static void domenu(short menu, short item)
 			extern bool MCMacGetMenuItemTag(MenuHandle menu, uint2 mitem, MCStringRef &r_string);
 			if (t_menuhastags && MCMacGetMenuItemTag(mhandle, item, &t_tag_ref))
 			{
-				menuitemname = strclone(MCStringGetCString(*t_tag_ref));
+                MCAutoPointer<char> temp_tag_ref;
+                /* UNCHECKED */ MCStringConvertToCString(*t_tag_ref, &temp_tag_ref);
+				menuitemname = strclone(*temp_tag_ref);
 				menuitemlen = strlen(menuitemname);
 			}
 			else
@@ -1601,7 +1603,9 @@ public:
 		{
 			// This property does not appear to get queried at any point
 			MCStringRef t_tag = p_menuitem->tag;
-			SetMenuItemProperty(p_menu, p_item,'RRev','MTag', MCStringGetLength(t_tag), MCStringGetCString(t_tag));
+            MCAutoPointer<char> temp_utf8_tag;
+            /* UNCHECKED */ MCStringConvertToCString(t_tag, &temp_utf8_tag);
+			SetMenuItemProperty(p_menu, p_item,'RRev','MTag', MCStringGetLength(t_tag), *temp_utf8_tag);
 			
 			static const struct { const char *tag; MenuCommand id; } s_tag_to_id[] =
 			{
