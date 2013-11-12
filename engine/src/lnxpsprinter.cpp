@@ -733,7 +733,11 @@ MCPrinterResult MCPSPrinter::DoBeginPrint(const char *p_document, MCPrinterDevic
 		t_output_file = C_FNAME;
 
 	stream = MCS_open(t_output_file, IO_CREATE_MODE, False, False, 0);
-
+	
+	// MW-2013-11-11: [[ Bug 11197 ]] Make sure we check we managed to open the file.
+	if (stream == nil)
+		return PRINTER_RESULT_FAILURE;
+	
 	PSwrite("%!PS-Adobe-3.0\n");
 	sprintf(buffer, "%%%%Creator: Revolution %s\n", MCversionstring); PSwrite(buffer);
 	PSwrite("%%DocumentData: Clean8Bit\n");
