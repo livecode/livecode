@@ -129,12 +129,12 @@ template<typename T> struct OptionalFieldPropType
     }
 };
 
-template<typename T> void GetParagraphPropOfCharChunk(MCExecContext& ctxt, MCField *p_field, uint32_t p_part_id, int32_t si, int32_t ei, void (MCParagraph::*p_getter)(MCExecContext& ctxt, typename T::return_type&), bool& r_mixed, typename T::return_type& r_value)
+template<typename T> void GetParagraphPropOfCharChunk(MCExecContext& ctxt, MCField *p_field, uint32_t p_part_id, findex_t si, findex_t ei, void (MCParagraph::*p_getter)(MCExecContext& ctxt, typename T::return_type&), bool& r_mixed, typename T::return_type& r_value)
 {
     MCParagraph *t_paragraph;
     t_paragraph = p_field -> resolveparagraphs(p_part_id);
 
-    int4 t_line_index;
+    findex_t t_line_index;
     MCParagraph *sptr = p_field -> indextoparagraph(t_paragraph, si, ei, &t_line_index);
 
     typename T::stack_type t_value;
@@ -155,7 +155,7 @@ template<typename T> void GetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
             return;
         }
 
-        ei -= sptr->gettextsizecr();
+        ei -= sptr->gettextlengthcr();
         sptr = sptr->next();
     }
     while(ei > 0);
@@ -164,12 +164,12 @@ template<typename T> void GetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
     T::output(t_value, r_value);
 }
 
-template<typename T> void GetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p_field, uint32_t p_part_id, int32_t si, int32_t ei, void (MCBlock::*p_getter)(MCExecContext& ctxt, typename T::return_type&), bool is_effective, typename T::value_type parent_value, bool& r_mixed, typename T::return_type& r_value)
+template<typename T> void GetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p_field, uint32_t p_part_id, findex_t si, findex_t ei, void (MCBlock::*p_getter)(MCExecContext& ctxt, typename T::return_type&), bool is_effective, typename T::value_type parent_value, bool& r_mixed, typename T::return_type& r_value)
 {
     MCParagraph *t_paragraph;
     t_paragraph = p_field -> resolveparagraphs(p_part_id);
 
-    int4 t_line_index;
+    findex_t t_line_index;
     MCParagraph *sptr = p_field -> indextoparagraph(t_paragraph, si, ei, &t_line_index);
 
     bool t_first;
@@ -190,17 +190,17 @@ template<typename T> void GetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
 
         for(;;)
         {
-            if (t_block -> getindex() <= si)
+            if (t_block -> GetOffset() <= si)
                 break;
             t_block = t_block -> next();
         }
 
         for(;;)
         {
-            if (t_block -> getindex() >= ei)
+            if (t_block -> GetOffset() >= ei)
                 break;
 
-            if (t_block -> getsize() != 0)
+            if (t_block -> GetLength() != 0)
             {
                 if (t_first)
                 {
@@ -228,7 +228,7 @@ template<typename T> void GetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
             t_block = t_block -> next();
         }
 
-        ei -= sptr->gettextsizecr();
+        ei -= sptr->gettextlengthcr();
         sptr = sptr->next();
     }
     while(ei > 0);
@@ -244,9 +244,11 @@ void MCField::GetCharIndexOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, i
     MCParagraph *t_paragraph;
     t_paragraph = resolveparagraphs(p_part_id);
 
-    int4 t_line_index, t_char_index;
+    findex_t t_line_index, t_char_index;
+    findex_t t_si = si;
+    findex_t t_ei = ei;
     t_char_index = si;
-    MCParagraph *sptr = indextoparagraph(t_paragraph, si, ei, &t_line_index);
+    MCParagraph *sptr = indextoparagraph(t_paragraph, t_si, t_ei, &t_line_index);
 
     unresolvechars(p_part_id, t_char_index, t_char_index);
 

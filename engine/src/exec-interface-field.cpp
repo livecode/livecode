@@ -852,9 +852,9 @@ void MCField::DoGetTextState(MCExecContext& ctxt, Properties which, uint32_t par
 	t_first = true;
 	t_state = false;
     
-	int4 t_line_index;
-	int4 ei = INT32_MAX;
-	int4 si = 0;
+	findex_t t_line_index;
+	findex_t ei = INT32_MAX;
+	findex_t si = 0;
 	MCParagraph *pgptr = getcarddata(fdata, part, True)->getparagraphs();
 	MCParagraph *sptr = indextoparagraph(pgptr, si, ei, &t_line_index);
     
@@ -876,7 +876,7 @@ void MCField::DoGetTextState(MCExecContext& ctxt, Properties which, uint32_t par
 		}
         
 		// Reduce ei until we get to zero, advancing through the paras.
-		ei -= sptr->gettextsizecr();
+		ei -= sptr->gettextlengthcr();
 		sptr = sptr->next();
 	}
 	while(ei > 0);
@@ -949,7 +949,7 @@ void MCField::GetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, MCInterface
 {
     MCAutoArray<MCInterfaceFlaggedRange> t_ranges;
     
-    int4 t_line_index, t_char_index, si, ei;
+    findex_t t_line_index, t_char_index, si, ei;
     si = 0;
     ei = INT32_MAX;
     
@@ -975,11 +975,11 @@ void MCField::GetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, MCInterface
             t_ranges . Push(t_para_ranges . ranges[i]);
         
         // Increment the offset by the size of the paragraph.
-        t_index_offset += sptr -> gettextsizecr();
+        t_index_offset += sptr -> gettextlengthcr();
         
         // Reduce ei until we get to zero, advancing through the paras.
         si = 0;
-        ei -= sptr -> gettextsizecr();
+        ei -= sptr -> gettextlengthcr();
         sptr = sptr -> next();
     }
     while(ei > 0);
@@ -1007,7 +1007,7 @@ void MCField::SetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, const MCInt
     for (uindex_t i = 0; i < p_ranges . count; i++)
     {
         // MW-2012-02-24: [[ FieldChars ]] Convert char indices to field indices.
-        int32_t t_range_start, t_range_end;
+        findex_t t_range_start, t_range_end;
         t_range_start = si;
         t_range_end = ei;
         resolvechars(p_part, t_range_start, t_range_end, p_ranges . ranges[i] . start - 1, p_ranges . ranges[i] . end - p_ranges . ranges[i] . start + 1);

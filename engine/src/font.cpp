@@ -156,18 +156,8 @@ int32_t MCFontGetDescent(MCFontRef self)
 	return self -> fontstruct -> descent;
 }
 
-void MCFontBreakText(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, MCFontBreakTextCallback p_callback, void *p_callback_data)
+void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFontBreakTextCallback p_callback, void *p_callback_data)
 {
-    // If the text is small enough, don't bother trying to break it
-    /*if (p_length <= (kMCFontBreakTextCharLimit * (p_is_unicode ? 2 : 1)))
-     {
-     p_callback(p_font, p_text, p_length, p_is_unicode, p_callback_data);
-     return;
-     }*/
-    
-    //p_callback(p_font, p_text, p_length, p_is_unicode, p_callback_data);
-    //return;
-    
     // Scan forward in the string for possible break locations. Breaks are
     // assigned a quality value as some locations are better for breaking than
     // others. The qualities are:
@@ -180,42 +170,35 @@ void MCFontBreakText(MCFontRef p_font, const char *p_text, uint32_t p_length, bo
     // This isn't a particularly good algorithm but should suffice until full
     // Unicode support is added and a proper breaking algorithm implemented.
     uint32_t t_stride;
-    t_stride = kMCFontBreakTextCharLimit * (p_is_unicode ? 2 : 1);
-    while (p_length > 0)
+    t_stride = kMCFontBreakTextCharLimit;
+    
+    uindex_t t_length = p_range.length;
+    uindex_t t_offset = p_range.offset;
+    
+    while (t_length > 0)
     {
         int t_break_quality;
-        uint32_t t_break_point, t_after_break, t_index;
+        uindex_t t_break_point, t_index;
         t_break_quality = 0;
         t_break_point = 0;
         t_index = 0;
-        
-        uint32_t t_length;
-        t_length = p_length / (p_is_unicode ? 2 : 1);
 
         // Find the best break within the next stride characters. If there are
         // no breaking points, extend beyond the stride until one is found.
         while ((t_index < t_stride || t_break_quality == 0) && t_index < t_length)
         {
-            uint32_t t_char;
-            uint32_t t_advance;
+            codepoint_t t_char;
+            uindex_t t_advance;
             
-            if (p_is_unicode)
+            t_char = MCStringGetCharAtIndex(p_text, t_offset + t_index);
+            if (0xD800 <= t_char && t_char < 0xDC00)
             {
-                t_char = ((unichar_t*)p_text)[t_index];
-                if (0xD800 <= t_char && t_char < 0xDC00)
-                {
-                    // Surrogate pair
-                    t_char = ((t_char - 0xD800) << 10) + (((unichar_t*)p_text)[t_index+1] - 0xDC00);
-                    t_advance = 2;
-                }
-                else
-                {
-                    t_advance = 1;
-                }
+                // Surrogate pair
+                t_char = ((t_char - 0xD800) << 10) + (MCStringGetCharAtIndex(p_text, t_offset + t_index + 1) - 0xDC00);
+                t_advance = 2;
             }
             else
             {
-                t_char = p_text[t_index];
                 t_advance = 1;
             }
             
@@ -241,9 +224,9 @@ void MCFontBreakText(MCFontRef p_font, const char *p_text, uint32_t p_length, bo
                 t_break_point = t_index;
                 t_break_quality = 1;
             }
-            else if (t_break_quality < 2 && 0xDC00 <= t_char && t_char <= 0xDFFF)
+            else if (t_break_quality < 2 && t_char > 0xFFFF)
             {
-                // Trailing character of surrogate pair
+                // Character outside BMP, assume can break here
                 t_break_point = t_index;
                 t_break_quality = 1;
             }
@@ -268,16 +251,16 @@ void MCFontBreakText(MCFontRef p_font, const char *p_text, uint32_t p_length, bo
             t_break_point = t_length;
         
         // Process this chunk of text
-        uint32_t t_byte_len;
-        t_byte_len = t_break_point * (p_is_unicode ? 2 : 1);
-        p_callback(p_font, p_text, t_byte_len, p_is_unicode, p_callback_data);
+        MCRange t_range;
+        t_range = MCRangeMake(t_offset, t_index);
+        p_callback(p_font, p_text, t_range, p_callback_data);
         
         // Explicitly show breaking points
-        //p_callback(p_font, "|", 1, false, p_callback_data);
+        //p_callback(p_font, MCSTR("|"), MCRangeMake(0, 1), p_callback_data);
         
         // Move on to the next chunk
-        p_text += t_byte_len;
-        p_length -= t_byte_len;
+        t_offset += t_break_point;
+        t_length -= t_break_point;
     }
 }
 
@@ -286,30 +269,15 @@ struct font_measure_text_context
     uint32_t m_width;
 };
 
-static void MCFontMeasureTextCallback(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, font_measure_text_context *ctxt)
+static void MCFontMeasureTextCallback(MCFontRef p_font, MCStringRef p_string, MCRange p_range, font_measure_text_context *ctxt)
 {
-    if (p_length == 0 || p_text == NULL)
-		return;
+    if (MCStringIsEmpty(p_string) || p_range.length == 0)
+        return;
 	
     MCGFont t_font;
 	t_font = MCFontStructToMCGFont(p_font->fontstruct);
 	
-	MCExecPoint ep;
-	ep . setsvalue(MCString(p_text, p_length));
-	if (!p_font -> fontstruct -> unicode && !p_is_unicode)
-		ep . nativetoutf16();
-	
-    ctxt -> m_width += MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
-}
-
-int32_t MCFontMeasureText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode)
-{
-    font_measure_text_context ctxt;
-    ctxt.m_width = 0;
-    
-    MCFontBreakText(font, chars, char_count, is_unicode, (MCFontBreakTextCallback)MCFontMeasureTextCallback, &ctxt);
-    
-    return ctxt . m_width;
+    ctxt -> m_width += MCGContextMeasurePlatformText(NULL, MCStringGetCharPtr(p_string) + p_range.offset, p_range.length*2, t_font);
 }
 
 int32_t MCFontMeasureText(MCFontRef p_font, MCStringRef p_text)
@@ -318,12 +286,14 @@ int32_t MCFontMeasureText(MCFontRef p_font, MCStringRef p_text)
 	return MCFontMeasureTextSubstring(p_font, p_text, t_range);
 }
 
-int32_t MCFontMeasureTextSubstring(MCFontRef p_font, MCStringRef p_text, MCRange p_range)
+int32_t MCFontMeasureTextSubstring(MCFontRef p_font, MCStringRef p_string, MCRange p_range)
 {
-	if (MCStringIsNative(p_text))
-        return MCFontMeasureText(p_font, (const char *)(MCStringGetNativeCharPtr(p_text) + p_range.offset), p_range.length, false);
-	else
-       return MCFontMeasureText(p_font, (const char *)(MCStringGetCharPtr(p_text) + p_range.offset), p_range.length, true);
+    font_measure_text_context ctxt;
+    ctxt.m_width = 0;
+    
+    MCFontBreakText(p_font, p_string, p_range, (MCFontBreakTextCallback)MCFontMeasureTextCallback, &ctxt);
+    
+    return ctxt . m_width;
 }
 
 struct font_draw_text_context
@@ -333,32 +303,18 @@ struct font_draw_text_context
     int32_t y;
 };
 
-static void MCFontDrawTextCallback(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, font_draw_text_context *ctxt)
+static void MCFontDrawTextCallback(MCFontRef p_font, MCStringRef p_text, MCRange p_range, font_draw_text_context *ctxt)
 {
     MCGFont t_font;
 	t_font = MCFontStructToMCGFont(p_font->fontstruct);
 
-	MCExecPoint ep;
-	ep . setsvalue(MCString(p_text, p_length));
-	if (!p_font -> fontstruct -> unicode && !p_is_unicode)
-		ep . nativetoutf16();
+	// The drawing is done on the UTF-16 form of the text
 	
-	MCGContextDrawPlatformText(ctxt->m_gcontext, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), MCGPointMake(ctxt->x, ctxt->y), t_font);
+	MCGContextDrawPlatformText(ctxt->m_gcontext, MCStringGetCharPtr(p_text) + p_range.offset, p_range.length*2, MCGPointMake(ctxt->x, ctxt->y), t_font);
     
-    // The draw position needs to be advanced. Can this be done more efficiently?
-    ctxt -> x += MCGContextMeasurePlatformText(NULL, (unichar_t*)ep.getsvalue().getstring(), ep.getsvalue().getlength(), t_font);
+    // The draw position needs to be advanced
+    ctxt -> x += MCGContextMeasurePlatformText(NULL, MCStringGetCharPtr(p_text) + p_range.offset, p_range.length*2, t_font);
 }
-
-void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, const char *p_text, uint32_t p_length, MCFontRef p_font, bool p_is_unicode)
-{
-    font_draw_text_context ctxt;
-    ctxt.x = x;
-    ctxt.y = y;
-    ctxt.m_gcontext = p_gcontext;
-    
-    MCFontBreakText(p_font, p_text, p_length, p_is_unicode, (MCFontBreakTextCallback)MCFontDrawTextCallback, &ctxt);
-}
-
 
 void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCFontRef font)
 {
@@ -366,15 +322,14 @@ void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef 
 	return MCFontDrawTextSubstring(p_gcontext, x, y, p_text, t_range, font);
 }
 
-void MCFontDrawTextSubstring(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef font)
+void MCFontDrawTextSubstring(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef p_font)
 {
-	if (MCStringIsNative(p_text))
-    {
-        MCFontDrawText(p_gcontext, x, y, (const char *)(MCStringGetNativeCharPtr(p_text) + p_range.offset), p_range.length, font, false);
-        return;
-    }
-	
-	MCFontDrawText(p_gcontext, x, y, (const char *)(MCStringGetCharPtr(p_text) + p_range.offset), p_range.length, font, true);
+    font_draw_text_context ctxt;
+    ctxt.x = x;
+    ctxt.y = y;
+    ctxt.m_gcontext = p_gcontext;
+    
+    MCFontBreakText(p_font, p_text, p_range, (MCFontBreakTextCallback)MCFontDrawTextCallback, &ctxt);
 }
 
 MCFontStyle MCFontStyleFromTextStyle(uint2 p_text_style)
