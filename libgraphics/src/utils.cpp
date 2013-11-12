@@ -499,7 +499,6 @@ void MCGBlendModesInitialize(void)
 	s_skia_blend_modes[kMCGBlendModeXor] = SkXfermode::Create(SkXfermode::kXor_Mode);		
 	
 	// the non porter duff blend modes don't appear to be officially documented
-	s_skia_blend_modes[kMCGBlendModeMultiply] = SkXfermode::Create(SkXfermode::kMultiply_Mode);
 	s_skia_blend_modes[kMCGBlendModePlusLighter] = SkXfermode::Create(SkXfermode::kPlus_Mode);
 	s_skia_blend_modes[kMCGBlendModeScreen] = SkXfermode::Create(SkXfermode::kScreen_Mode);
 	s_skia_blend_modes[kMCGBlendModeOverlay] = SkXfermode::Create(SkXfermode::kOverlay_Mode);
@@ -539,6 +538,9 @@ void MCGBlendModesInitialize(void)
 	s_skia_blend_modes[kMCGBlendModeLegacyAdMin] = new MCGLegacyBlendMode(kMCGBlendModeLegacyAdMin);		
 	s_skia_blend_modes[kMCGBlendModeLegacyBlendSource] = new MCGLegacyBlendMode(kMCGBlendModeLegacyBlendSource);
 	s_skia_blend_modes[kMCGBlendModeLegacyBlendDestination] = new MCGLegacyBlendMode(kMCGBlendModeLegacyBlendDestination);
+	
+	// MM-2013-11-11: [[ Bug 11422 ]] Use legacy multiply. Skia's multiply appears to blend differently.
+	s_skia_blend_modes[kMCGBlendModeMultiply] = new MCGLegacyBlendMode(kMCGBlendModeMultiply);
 	
 	// TODO: non-separable blend modes and plus darker?
 	// kMCGBlendModeHue
