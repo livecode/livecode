@@ -221,11 +221,8 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
             return;
     }
 
-    if (!valueref_tona(ctxt, *t_dst, &t_dst_as_number))
-    {
-        ctxt . LegacyThrow(EE_ADD_BADDEST);
+    if (!valueref_tona(ctxt, EE_ADD_BADDEST, *t_dst, &t_dst_as_number))
         return;
-    }
 
 	MCAutoValueRef t_result;
     if (MCValueIsArray(*t_src_as_number))
@@ -332,7 +329,7 @@ Parse_stat MCDivide::parse(MCScriptPoint &sp)
 
 // MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
 //   Here the source can be an array or number so we use 'tona'.
-Exec_stat MCDivide::exec(MCExecPoint &ep)
+void MCDivide::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCDivide */ LEGACY_EXEC
 	MCVariable *t_dst_var;
@@ -428,60 +425,53 @@ Exec_stat MCDivide::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCDivide */
 	MCAutoValueRef t_src;
-	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_DIVIDE_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep . copyasvalueref(&t_src);
+    MCAutoValueRef t_src_as_number;
+    if (!ctxt . EvalExprAsValueRef(source, EE_DIVIDE_BADSOURCE, &t_src)
+            || !valueref_tona(ctxt, EE_DIVIDE_BADSOURCE, *t_src, &t_src_as_number))
+        return;
 	
 	MCAutoValueRef t_dst;
+    MCAutoValueRef t_dst_as_number;
 	MCAutoPointer<MCContainer> t_dst_container;
 	if (destvar != nil)
 	{
-		if (destvar -> evalcontainer(ep, &t_dst_container) != ES_NORMAL)
+        if (!destvar -> evalcontainer(ctxt, &t_dst_container))
 		{
-			MCeerror->add(EE_DIVIDE_BADDEST, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_DIVIDE_BADDEST);
+            return;
 		}
 		
-		if (t_dst_container -> eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-			return ES_ERROR;
-		
-		/* UNCHECKED */ ep . copyasvalueref(&t_dst);
+        if (t_dst_container -> eval(ctxt, &t_dst))
+            return;
 	}
 	else
 	{
-		if (dest->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-		{
-			MCeerror->add(EE_DIVIDE_BADDEST, line, pos);
-			return ES_ERROR;
-		}
-		
-		/* UNCHECKED */ ep . copyasvalueref(&t_dst);
+        if (!ctxt . EvalExprAsValueRef(dest, EE_DIVIDE_BADDEST, &t_dst))
+            return;
 	}
-	
-	MCExecContext ctxt(ep);
+
+    if (!valueref_tona(ctxt, EE_DIVIDE_BADDEST, *t_dst, &t_dst_as_number))
+        return;
 	
 	MCAutoValueRef t_result;
-	if (MCValueGetTypeCode(*t_src) == kMCValueTypeCodeArray)
+    if (MCValueIsArray(*t_src_as_number))
 	{
-		if (MCValueGetTypeCode(*t_dst) == kMCValueTypeCodeArray)
-			MCMathExecDivideArrayByArray(ctxt, (MCArrayRef)*t_dst, (MCArrayRef)*t_src, (MCArrayRef&)&t_result);
+        if (MCValueIsArray(*t_dst_as_number))
+            MCMathExecDivideArrayByArray(ctxt, (MCArrayRef)*t_dst_as_number, (MCArrayRef)*t_src_as_number, (MCArrayRef&)&t_result);
 		else
 		{
-			MCeerror->add(EE_DIVIDE_MISMATCH, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_DIVIDE_MISMATCH);
+            return;
 		}
 	}
 	else
 	{
-		if (MCValueGetTypeCode(*t_dst) == kMCValueTypeCodeArray)
-			MCMathExecDivideArrayByNumber(ctxt, (MCArrayRef)*t_dst, MCNumberFetchAsReal((MCNumberRef)*t_src), (MCArrayRef&)&t_result);
+        if (MCValueIsArray(*t_dst_as_number))
+            MCMathExecDivideArrayByNumber(ctxt, (MCArrayRef)*t_dst_as_number, MCNumberFetchAsReal((MCNumberRef)*t_src_as_number), (MCArrayRef&)&t_result);
 		else
 		{
 			double t_real_result;
-			MCMathExecDivideNumberByNumber(ctxt, MCNumberFetchAsReal((MCNumberRef)*t_dst), MCNumberFetchAsReal((MCNumberRef)*t_src), t_real_result);
+            MCMathExecDivideNumberByNumber(ctxt, MCNumberFetchAsReal((MCNumberRef)*t_dst_as_number), MCNumberFetchAsReal((MCNumberRef)*t_src_as_number), t_real_result);
 			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
 		}
 	}
@@ -491,18 +481,19 @@ Exec_stat MCDivide::exec(MCExecPoint &ep)
 		if (destvar != nil)
 		{
 			if (t_dst_container -> set_valueref(*t_result))
-				return ES_NORMAL;
+                return;
 			ctxt . Throw();
 		}
 		else
 		{
-			if (dest->set(ep, PT_INTO, *t_result) == ES_NORMAL)
-				return ES_NORMAL;
+            dest->set(ctxt, PT_INTO, *t_result);
+
+            if (!ctxt . HasError())
+                return;
+
 			ctxt . LegacyThrow(EE_DIVIDE_CANTSET);
 		}
-	}
-	
-	return ctxt . Catch(line, pos);
+    }
 }
 
 void MCDivide::compile(MCSyntaxFactoryRef ctxt)
