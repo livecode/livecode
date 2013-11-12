@@ -244,6 +244,7 @@ MCNameRef MCM_get_url_status;
 MCNameRef MCM_gradient_edit_ended;
 MCNameRef MCM_gradient_edit_started;
 MCNameRef MCM_help;
+MCNameRef MCM_hide_control;
 MCNameRef MCM_hot_spot_clicked;
 MCNameRef MCM_icon_menu_pick;
 MCNameRef MCM_icon_menu_opening;
@@ -342,6 +343,7 @@ MCNameRef MCM_scrollbar_page_inc;
 MCNameRef MCM_selected_object_changed;
 MCNameRef MCM_selection_changed;
 MCNameRef MCM_signal;
+MCNameRef MCM_show_control;
 MCNameRef MCM_shut_down;
 MCNameRef MCM_shut_down_request;
 MCNameRef MCM_socket_error;
@@ -362,7 +364,6 @@ MCNameRef MCM_uniconify_stack;
 MCNameRef MCM_unload_url;
 MCNameRef MCM_update_screen;
 MCNameRef MCM_update_var;
-MCNameRef MCM_visibility_changed;
 
 #ifdef _MOBILE
 MCNameRef MCN_firstname;
@@ -529,6 +530,7 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("gradientEditEnded", MCM_gradient_edit_ended);
 	/* UNCHECKED */ MCNameCreateWithCString("gradientEditStarted", MCM_gradient_edit_started);
 	/* UNCHECKED */ MCNameCreateWithCString("help", MCM_help);
+	/* UNCHECKED */ MCNameCreateWithCString("hideControl", MCM_hide_control);
 	/* UNCHECKED */ MCNameCreateWithCString("hotSpotClicked", MCM_hot_spot_clicked);
 	/* UNCHECKED */ MCNameCreateWithCString("iconMenuPick", MCM_icon_menu_pick);
 	/* UNCHECKED */ MCNameCreateWithCString("iconMenuOpening", MCM_icon_menu_opening);
@@ -625,6 +627,7 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("selectedObjectChanged", MCM_selected_object_changed);
 	/* UNCHECKED */ MCNameCreateWithCString("selectionChanged", MCM_selection_changed);
 	/* UNCHECKED */ MCNameCreateWithCString("signal", MCM_signal);
+	/* UNCHECKED */ MCNameCreateWithCString("showControl", MCM_show_control);
 	/* UNCHECKED */ MCNameCreateWithCString("shutDown", MCM_shut_down);
 	/* UNCHECKED */ MCNameCreateWithCString("shutDownRequest", MCM_shut_down_request);
 	/* UNCHECKED */ MCNameCreateWithCString("socketError", MCM_socket_error);
@@ -645,7 +648,6 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("unloadURL", MCM_unload_url);
 	/* UNCHECKED */ MCNameCreateWithCString("updateScreen", MCM_update_screen);
 	/* UNCHECKED */ MCNameCreateWithCString("updateVariable", MCM_update_var);
-	/* UNCHECKED */ MCNameCreateWithCString("visibilityChanged", MCM_visibility_changed);
 
 #ifdef _MOBILE
 	/* UNCHECKED */ MCNameCreateWithCString("firstname", MCN_firstname);
@@ -816,6 +818,7 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCM_gradient_edit_ended);
 	MCNameDelete(MCM_gradient_edit_started);
 	MCNameDelete(MCM_help);
+	MCNameDelete(MCM_hide_control);
 	MCNameDelete(MCM_hot_spot_clicked);
 	MCNameDelete(MCM_icon_menu_pick);
 	MCNameDelete(MCM_icon_menu_opening);
@@ -909,6 +912,7 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCM_selected_object_changed);
 	MCNameDelete(MCM_selection_changed);
 	MCNameDelete(MCM_signal);
+	MCNameDelete(MCM_show_control);
 	MCNameDelete(MCM_shut_down);
 	MCNameDelete(MCM_shut_down_request);
 	MCNameDelete(MCM_socket_error);
@@ -929,7 +933,6 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCM_unload_url);
 	MCNameDelete(MCM_update_screen);
 	MCNameDelete(MCM_update_var);
-	MCNameDelete(MCM_visibility_changed);
 
 #ifdef _MOBILE
 	MCNameDelete(MCN_firstname);

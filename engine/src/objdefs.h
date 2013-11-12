@@ -389,6 +389,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define CS_GRAB                 (1UL << 30)
 #define CS_MENU_ATTACHED        (1UL << 31)
+
 // MCButton state
 #define CS_ARMED                (1UL << 13)
 #define CS_SUBMENU              (1UL << 14)
@@ -451,7 +452,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define CS_NEED_UPDATE          (1UL << 13)
 // Uses CS_HSCROLL 14
 // Uses CS_VSCROLL 15
-#define CS_SENDING_RESIZE		(1UL << 16)
+//#define CS_SENDING_RESIZE		(1UL << 16)
 // MCCard state
 #define CS_OWN_CONTROLS         (1UL << 14)
 #define CS_INSIDE               (1UL << 15)
@@ -513,15 +514,16 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define HH_CLOSE_CONTROL		(1UL << 7)
 
 // MERG-2013-11-10: [[ RecursiveConditionalMessages ]] notify controls of visibility changes to themseves or parent groups
-#define HH_VISIBILITY_CHANGED	(1UL << 8)
+#define HH_SHOW_CONTROL         (1UL << 8)
+#define HH_HIDE_CONTROL         (1UL << 9)
 // MERG-2013-11-10: [[ RecursiveConditionalMessages ]] notify controls of location changes to themseves or parent groups
-#define HH_CONTROL_MOVED        (1UL << 9)
+#define HH_MOVE_CONTROL         (1UL << 10)
 
 // MCParagraph state
 #define PS_FRONT                (1UL << 0)
 #define PS_BACK                 (1UL << 1)
 #define PS_HILITED              (PS_FRONT | PS_BACK)
-#define PS_LINES_NOT_SYNCHED		(1UL << 2)
+#define PS_LINES_NOT_SYNCHED	(1UL << 2)
 
 // MCStack decorations
 #define DECORATION_LENGTH     64

@@ -119,7 +119,7 @@ MCObject::MCObject()
 	ink = GXcopy;
 	extraflags = 0;
 	hashandlers = 0;
-
+    messagestate = 0;
 	blendlevel = 100;
 
 	// MW-2004-11-26: Initialise rect (VG)
@@ -1786,27 +1786,56 @@ void MCObject::allowmessages(Boolean allow)
 
 Exec_stat MCObject::conditionalmessage(uint32_t p_flag, MCNameRef p_message)
 {
-	// MW-2013-08-06: [[ Bug 11084 ]] Restructured to loop through object and
-	//   its behavior chain.
-	MCObject *t_object;
-	t_object = this;
-	while(t_object != nil)
-	{
-		// Make sure the script is parsed.
-		t_object -> parsescript(True);
-	
-		// If the current object has the relevant handler we are done.
-		if ((t_object -> hashandlers & p_flag) != 0)
-			return message(p_message);
-		
-		// If the object has a parent script, skip to its parent script (if any).
-		if (t_object -> parent_script != nil)
-			t_object = t_object -> parent_script -> GetParent() -> GetObject();
-		else
-			t_object = nil;
-	}
-
-	return ES_NORMAL;
+    // MERG-2013-11-12: [[ ConditionalMessageRe-entry ]] Protection from rentry is moved here so all conditional
+    //    messages have rentry protection by default
+    
+    Exec_stat t_stat;
+    t_stat = ES_NORMAL;
+    
+    
+    if ((messagestate & p_flag) == 0)
+    {
+        messagestate |= p_flag;
+        
+        // Special case for hide/showControl where both flags need to be set
+        if (p_flag == HH_SHOW_CONTROL)
+            messagestate |= HH_HIDE_CONTROL;
+        if (p_flag == HH_HIDE_CONTROL)
+            messagestate |= HH_SHOW_CONTROL;
+            
+        // MW-2013-08-06: [[ Bug 11084 ]] Restructured to loop through object and
+        //   its behavior chain.
+        MCObject *t_object;
+        t_object = this;
+        
+        while(t_object != nil && t_stat == ES_NORMAL)
+        {
+            // Make sure the script is parsed.
+            t_object -> parsescript(True);
+        
+            // If the current object has the relevant handler we are done.
+            if ((t_object -> hashandlers & p_flag) != 0)
+            {
+                t_stat = message(p_message);
+            }
+            
+            // If the object has a parent script, skip to its parent script (if any).
+            if (t_object -> parent_script != nil)
+                t_object = t_object -> parent_script -> GetParent() -> GetObject();
+            else
+                t_object = nil;
+        }
+        
+        messagestate &= ~p_flag;
+        
+        // Special case for hide/showControl where both flags need to be set
+        if (p_flag == HH_SHOW_CONTROL)
+            messagestate &= ~HH_HIDE_CONTROL;
+        if (p_flag == HH_HIDE_CONTROL)
+            messagestate &= ~HH_SHOW_CONTROL;
+        
+    }
+	return t_stat;
 }
 
 Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParameter *p_params)
@@ -2213,10 +2242,12 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 					hashandlers |= HH_CLOSE_CONTROL;
 				if (should_send_message(hlist, MCM_resize_control))
 					hashandlers |= HH_RESIZE_CONTROL;
-                if (should_send_message(hlist, MCM_visibility_changed))
-                    hashandlers |= HH_VISIBILITY_CHANGED;
-                if (should_send_message(hlist, MCM_control_moved))
-                    hashandlers |= HH_CONTROL_MOVED;
+                if (should_send_message(hlist, MCM_show_control))
+                    hashandlers |= HH_SHOW_CONTROL;
+                if (should_send_message(hlist, MCM_hide_control))
+                    hashandlers |= HH_HIDE_CONTROL;
+                if (should_send_message(hlist, MCM_move_control))
+                    hashandlers |= HH_MOVE_CONTROL;
 			}
 		}
 	return True;

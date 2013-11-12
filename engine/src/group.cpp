@@ -785,11 +785,10 @@ void MCGroup::setrect(const MCRectangle &nrect)
 		setsbrects();
 	}
 	
-	if (!getstate(CS_SENDING_RESIZE) && t_size_changed)
+    // MERG-13-11-12: [[ ConditionalMessageRe-entry ]] Conditional message rentry handling is now in conditionalmessage
+	if (t_size_changed)
 	{
-		setstate(True, CS_SENDING_RESIZE);
 		conditionalmessage(HH_RESIZE_CONTROL, MCM_resize_control);
-		setstate(False, CS_SENDING_RESIZE);
 	}
 }
 
@@ -1345,9 +1344,14 @@ void MCGroup::recursiveconditionalmessage(uint32_t p_flag, MCNameRef p_message)
     {
         MCObject *t_object = controls;
         MCObject *t_start_object = t_object;
-        uint2 i = 0;
+        
         do
         {
+            // When sending show and hide control we only send them if the effective visible has changed which means that
+            // all child controls of the group the property changed on must be visible to get the message
+            if ((p_flag == HH_HIDE_CONTROL || p_flag == HH_SHOW_CONTROL) && !t_object->getflag(F_VISIBLE))
+                continue;
+            
             if (t_object->gettype() == CT_GROUP)
                 (static_cast<MCGroup *>(t_object))->recursiveconditionalmessage(p_flag, p_message);
             else
@@ -1749,7 +1753,7 @@ Exec_stat MCGroup::hscroll(int4 offset, Boolean doredraw)
 	}
     
     // MERG-2013-11-10: [[ RecursiveConditionalMessages ]] Notify child objects of movement
-	recursiveconditionalmessage(HH_CONTROL_MOVED, MCM_control_moved);
+	recursiveconditionalmessage(HH_MOVE_CONTROL, MCM_move_control);
     
 	if (opened)
 		return message_with_args(MCM_scrollbar_drag, scrollx);
@@ -1791,7 +1795,7 @@ Exec_stat MCGroup::vscroll(int4 offset, Boolean doredraw)
 	}
     
     // MERG-2013-11-10: [[ RecursiveConditionalMessages ]] Notify child objects of movement
-	recursiveconditionalmessage(HH_CONTROL_MOVED, MCM_control_moved);
+	recursiveconditionalmessage(HH_MOVE_CONTROL, MCM_move_control);
     
     if (opened)
 		return message_with_args(MCM_scrollbar_drag, scrolly);

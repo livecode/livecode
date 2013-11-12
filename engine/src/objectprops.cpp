@@ -827,9 +827,9 @@ Exec_stat MCObject::setrectprop(Properties p_which, MCExecPoint& ep, Boolean p_e
         
         if (t_moved)
         {
-            conditionalmessage(HH_CONTROL_MOVED, MCM_control_moved);
+            conditionalmessage(HH_MOVE_CONTROL, MCM_move_control);
             if (gettype() == CT_GROUP)
-                static_cast<MCGroup *>(this)->recursiveconditionalmessage(HH_CONTROL_MOVED, MCM_control_moved);
+                static_cast<MCGroup *>(this)->recursiveconditionalmessage(HH_MOVE_CONTROL, MCM_move_control);
         
         }
         
@@ -1112,6 +1112,10 @@ Exec_stat MCObject::setvisibleprop(uint4 parid, Properties which, MCExecPoint& e
 {
 	Boolean dirty;
 	dirty = True;
+    
+    Boolean was_visible;
+    // Was the control visible before the change
+    was_visible = isvisible();
 
 	MCString data;
 	data = ep . getsvalue();
@@ -1126,7 +1130,7 @@ Exec_stat MCObject::setvisibleprop(uint4 parid, Properties which, MCExecPoint& e
 		flags ^= F_VISIBLE;
 		dirty = !dirty;
 	}
-
+    
 	// MW-2011-10-17: [[ Bug 9813 ]] Record the current effective rect of the object.
 	MCRectangle t_old_effective_rect;
 	if (dirty && opened && gettype() >= CT_GROUP)
@@ -1174,10 +1178,20 @@ Exec_stat MCObject::setvisibleprop(uint4 parid, Properties which, MCExecPoint& e
 			dirty = False;
         
         // MERG-2013-11-10: [[ RecursiveConditionalMessages ]] Notify objects of visbility change
-        conditionalmessage(HH_VISIBILITY_CHANGED, MCM_visibility_changed);
-        if (gettype() == CT_GROUP)
-            static_cast<MCGroup *>(this)->recursiveconditionalmessage(HH_VISIBILITY_CHANGED, MCM_visibility_changed);
-           
+        // Is the control invisible after the change
+        if (was_visible && !(flags & F_VISIBLE)) 
+        {
+            conditionalmessage(HH_HIDE_CONTROL, MCM_hide_control);
+            if (gettype() == CT_GROUP)
+                static_cast<MCGroup *>(this)->recursiveconditionalmessage(HH_HIDE_CONTROL, MCM_hide_control);
+        }
+        else if (isvisible()) // we are dirty so we know there's been a change
+        {
+            conditionalmessage(HH_SHOW_CONTROL, MCM_show_control);
+            if (gettype() == CT_GROUP)
+                static_cast<MCGroup *>(this)->recursiveconditionalmessage(HH_SHOW_CONTROL, MCM_show_control);
+        }
+        
     }
 
 	if (dirty)

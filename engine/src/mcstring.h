@@ -148,9 +148,6 @@ extern MCNameRef MCM_color_changed;
 extern MCNameRef MCM_command_key_down;
 extern MCNameRef MCM_control_key_down;
 
-// MERG-2013-11-10: [[ RecursiveConditionalMessages ]] notify controls of movement to themselves or parent groups
-extern MCNameRef MCM_control_moved;
-
 extern MCNameRef MCM_copy_key;
 extern MCNameRef MCM_current_time_changed;
 extern MCNameRef MCM_cut_key;
@@ -196,6 +193,10 @@ extern MCNameRef MCM_gradient_edit_ended;
 extern MCNameRef MCM_gradient_edit_started;
 
 extern MCNameRef MCM_help;
+
+// MERG-2013-11-10: [[ RecursiveConditionalMessages ]] notify controls of visibility changes
+extern MCNameRef MCM_hide_control;
+
 extern MCNameRef MCM_hot_spot_clicked;
 extern MCNameRef MCM_icon_menu_pick;
 extern MCNameRef MCM_icon_menu_opening;
@@ -306,6 +307,10 @@ extern MCNameRef MCM_scrollbar_page_inc;
 extern MCNameRef MCM_selected_object_changed;
 extern MCNameRef MCM_selection_changed;
 extern MCNameRef MCM_signal;
+
+// MERG-2013-11-10: [[ RecursiveConditionalMessages ]] notify controls of visibility changes
+extern MCNameRef MCM_show_control;
+
 extern MCNameRef MCM_shut_down;
 extern MCNameRef MCM_shut_down_request;
 extern MCNameRef MCM_socket_error;
@@ -326,9 +331,6 @@ extern MCNameRef MCM_undo_key;
 extern MCNameRef MCM_uniconify_stack;
 extern MCNameRef MCM_unload_url;
 extern MCNameRef MCM_update_var;
-
-// MERG-2013-11-10: [[ RecursiveConditionalMessages ]] notify controls of visibility changes to themselves or parent groups
-extern MCNameRef MCM_visibility_changed;
 
 #ifdef _MOBILE
 extern MCNameRef MCN_firstname;

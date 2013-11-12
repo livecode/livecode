@@ -186,6 +186,7 @@ protected:
 	uint2 npixmaps;
 	uint2 altid;
 	uint16_t hashandlers;
+    uint16_t messagestate;
 	uint1 scriptdepth;
 	uint1 borderwidth;
 	int1 shadowoffset;
