@@ -2426,6 +2426,10 @@ void MCPlayer::unbufferDraw()
 	SetMovieDrawingCompleteProc((Movie)theMovie, 0, NULL, 0);
 
 	MCRectangle trect = MCU_reduce_rect(rect, flags & F_SHOW_BORDER ? borderwidth : 0);
+	
+	// IM-2011-11-12: [[ Bug 11320 ]] Transform player rect to device coords
+	trect = MCRectangleGetTransformedBounds(trect, getstack()->getdevicetransform());
+	
 #ifdef _WINDOWS
 	MoveWindow((HWND)hwndMovie, trect.x, trect.y, trect.width, trect.height, False);
 	ShowWindow((HWND)hwndMovie, SW_SHOW);
@@ -2461,9 +2465,7 @@ void MCPlayer::unbufferDraw()
 		MCMemoryDelete(m_offscreen);
 		m_offscreen = nil;
 	}
-	// MW-2011-11-30: [[ Bug 9887 ]] Make sure the player rect is adjusted to account for
-	//   menubar.
-	trect . y -= getstack() -> getscroll();
+	
 	setMCposition(trect);
 	if (flags & F_SHOW_BADGE) //if the showbadge is supposed to be on, restore it
 		showbadge(True);
@@ -2699,8 +2701,12 @@ Boolean MCPlayer::qt_prepare(void)
 	
 	Rect movieRect, playingRect;
 	GetMovieBox((Movie)theMovie, &movieRect);
+	
 	MCRectangle trect = resize(RectToMCRectangle(movieRect));
 
+	// IM-2011-11-12: [[ Bug 11320 ]] Transform player rect to device coords
+	trect = MCRectangleGetTransformedBounds(trect, getstack()->getdevicetransform());
+	
 #ifdef _WINDOWS
 	hwndMovie = (MCSysWindowHandle)create_player_child_window(trect, (HWND)getstack()->getrealwindow(), MC_QTVIDEO_WIN_CLASS_NAME);
 	trect.x = trect.y = 0;
@@ -2718,10 +2724,6 @@ Boolean MCPlayer::qt_prepare(void)
 #elif defined _MACOSX
 	SetMovieGWorld((Movie)theMovie, GetWindowPort((WindowPtr)getstack()->getqtwindow()), GetMainDevice());
 #endif
-	
-	// MW-2011-11-30: [[ Bug 9887 ]] Make sure the player rect is adjusted to account for
-	//   menubar.
-	trect.y -= getstack() -> getscroll();
 	
 	//set the movie playing rect
 	playingRect.left = trect.x;
@@ -2899,9 +2901,9 @@ void MCPlayer::qt_setrect(const MCRectangle& nrect)
 		MoveWindow((HWND)hwndMovie, trect.x, trect.y, trect.width, trect.height, False);
 		trect.x = trect.y = 0;
 #endif
-		// MW-2011-11-30: [[ Bug 9887 ]] Make sure the player rect is adjusted to account for
-		//   menubar.
-		trect . y -= getstack() -> getscroll();
+		// IM-2011-11-12: [[ Bug 11320 ]] Transform player rect to device coords
+		trect = MCRectangleGetTransformedBounds(trect, getstack()->getdevicetransform());
+		
 		setMCposition(trect);
 	}
 }
