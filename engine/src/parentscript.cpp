@@ -77,10 +77,8 @@ MCParentScriptUse::MCParentScriptUse(MCParentScript *p_parent, MCObject *p_refer
 	m_next_use = NULL;
 	m_previous_use = NULL;
 
-#ifdef FEATURE_INHERITED_PARENTSCRIPTS
-	// When created the use has no super.
+	// MW-2013-05-30: [[ InheritedPscripts ]] When created the use has no super.
 	m_super_use = NULL;
-#endif
 
 	// Setup the parent and referrer correctly
 	m_parent = p_parent;
@@ -97,12 +95,9 @@ MCParentScriptUse::~MCParentScriptUse(void)
 	// Destroy the use's variable list
 	ClearVars();
 
-#ifdef FEATURE_INHERITED_PARENTSCRIPTS
-	// MW-2009-01-28: [[ Inherited parentScripts ]]
-	// Release the super-script, if any.
+	// MW-2013-05-30: [[ InheritedPscripts ]] Release the super-use chain, if any.
 	if (m_super_use != NULL)
 		m_super_use -> Release();
-#endif
 }
 
 MCVariable *MCParentScriptUse::GetVariable(uint32_t i)
@@ -220,9 +215,7 @@ MCParentScriptUse *MCParentScriptUse::Clone(MCObject *p_new_referrer)
 	if (t_new_use == NULL)
 		return NULL;
 
-	// MW-2009-01-28: [[ Inherited parentScripts ]]
-	// Clone the super-use, if any.
-#ifdef FEATURE_INHERITED_PARENTSCRIPTS
+	// MW-2013-05-30: [[ InheritedPscripts ]] Clone the super-use chain, if any.
 	if (m_super_use != NULL)
 	{
 		MCParentScriptUse *t_new_super_use;
@@ -238,7 +231,6 @@ MCParentScriptUse *MCParentScriptUse::Clone(MCObject *p_new_referrer)
 		// Set the new use's super use
 		t_new_use -> m_super_use = t_new_super_use;
 	}
-#endif
 
 	// Attach this use to the parent, this will initialize the next/previous
 	// links correctly.
@@ -247,9 +239,19 @@ MCParentScriptUse *MCParentScriptUse::Clone(MCObject *p_new_referrer)
 	return t_new_use;
 }
 
-#ifdef FEATURE_INHERITED_PARENTSCRIPTS
+// MW-2013-05-30: [[ InheritedPscripts ]] This method creates the super-use
+//   chain for the object.
 bool MCParentScriptUse::Inherit(void)
 {
+	// If this use already has a super_use then release it. This method
+	// is called both when first creating the super-use chain, as well
+	// as when it needs to be reset (if it changes dynamically).
+	if (m_super_use)
+	{
+		m_super_use -> Release();
+		m_super_use = NULL;
+	}
+
 	// Get the parentScript's object
 	MCObject *t_super_object;
 	t_super_object = m_parent -> GetObject();
@@ -290,7 +292,6 @@ bool MCParentScriptUse::Inherit(void)
 
 	return true;
 }
-#endif
 
 MCParentScript *MCParentScriptUse::GetParent(void) const
 {
@@ -300,6 +301,13 @@ MCParentScript *MCParentScriptUse::GetParent(void) const
 MCObject *MCParentScriptUse::GetReferrer(void) const
 {
 	return m_referrer;
+}
+
+// MW-2013-05-30: [[ InheritedPscripts ]] This method returns the super-use
+//   (if any).
+MCParentScriptUse *MCParentScriptUse::GetSuper(void) const
+{
+	return m_super_use;
 }
 
 ////////
@@ -388,6 +396,19 @@ void MCParentScript::Flush(void)
 	// Iterate through all the uses, clearing out variables
 	for(MCParentScriptUse *t_use = m_first_use; t_use != NULL; t_use = t_use -> m_next_use)
 		t_use -> ClearVars();
+}
+
+// MW-2013-05-30: [[ InheritedPscripts ]] Loop through all uses of this parentScript
+//   and ensure the super-use chains are correct.
+bool MCParentScript::Reinherit(void)
+{
+	// Iterate through all the uses, calling inherit on each one to make sure that
+	// the super-use chain is updated appropriately.
+	for(MCParentScriptUse *t_use = m_first_use; t_use != NULL; t_use = t_use -> m_next_use)
+		if (!t_use -> Inherit())
+			return false;
+			
+	return true;
 }
 
 ////
@@ -500,48 +521,49 @@ MCParentScriptUse *MCParentScript::Acquire(MCObject *p_referrer, uint32_t p_id, 
 	return t_use;
 }
 
-void MCParentScript::PreserveVars(MCObject *p_object, uint32_t *p_map, MCNameRef *p_new_var_inits, uint32_t p_new_var_count)
+MCParentScript *MCParentScript::Lookup(MCObject *p_object)
 {
 	for(uint32_t t_index = 0; t_index < s_table_capacity; ++t_index)
 	{
 		for(MCParentScript *t_script = s_table[t_index]; t_script != NULL; t_script = t_script -> m_chain)
 			if (t_script -> m_object == p_object)
-			{
-				for(MCParentScriptUse *t_use = t_script -> m_first_use; t_use != NULL; t_use = t_use -> m_next_use)
-					t_use -> PreserveVars(p_map, p_new_var_inits, p_new_var_count);
-
-				return;
-			}
+				return t_script;
 	}
+	
+	return nil;
+}
+
+void MCParentScript::PreserveVars(MCObject *p_object, uint32_t *p_map, MCNameRef *p_new_var_inits, uint32_t p_new_var_count)
+{
+	MCParentScript *t_script;
+	t_script = Lookup(p_object);
+	if (t_script == nil)
+		return;
+
+	for(MCParentScriptUse *t_use = t_script -> m_first_use; t_use != NULL; t_use = t_use -> m_next_use)
+		t_use -> PreserveVars(p_map, p_new_var_inits, p_new_var_count);
 }
 
 void MCParentScript::ClearVars(MCObject *p_object)
 {
-	for(uint32_t t_index = 0; t_index < s_table_capacity; ++t_index)
-	{
-		for(MCParentScript *t_script = s_table[t_index]; t_script != NULL; t_script = t_script -> m_chain)
-			if (t_script -> m_object == p_object)
-			{
-				for(MCParentScriptUse *t_use = t_script -> m_first_use; t_use != NULL; t_use = t_use -> m_next_use)
-					t_use -> ClearVars();
+	MCParentScript *t_script;
+	t_script = Lookup(p_object);
+	if (t_script == nil)
+		return;
 
-				return;
-			}
-	}
+	for(MCParentScriptUse *t_use = t_script -> m_first_use; t_use != NULL; t_use = t_use -> m_next_use)
+		t_use -> ClearVars();
 }
 
 // Remove all references to the given object
 void MCParentScript::FlushObject(MCObject *p_object)
 {
-	for(uint32_t t_index = 0; t_index < s_table_capacity; ++t_index)
-	{
-		for(MCParentScript *t_script = s_table[t_index]; t_script != NULL; t_script = t_script -> m_chain)
-			if (t_script -> m_object == p_object)
-			{
-				t_script -> Flush();
-				return;
-			}
-	}
+	MCParentScript *t_script;
+	t_script = Lookup(p_object);
+	if (t_script == nil)
+		return;
+
+	t_script -> Flush();
 }
 
 // Remove all references to the given object

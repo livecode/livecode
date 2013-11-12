@@ -206,7 +206,10 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
 
 		while (p_parameters != NULL)
 		{
-			if (p_parameters->eval(ep) != ES_NORMAL)
+			// MW-2013-06-20: [[ Bug 10961 ]] Make sure we evaluate the parameter as an
+			//   argument. This takes the value from the variable (by-ref), or built-in
+			//   value (by-value).
+			if (p_parameters->eval_argument(ep) != ES_NORMAL)
 				return ES_ERROR;
 			MCU_realloc((char **)&args, nargs, nargs + 1, sizeof(char *));
 			args[nargs++] = ep.getsvalue().clone();
@@ -359,9 +362,22 @@ static char *eval_expr(const char *arg1, const char *arg2,
 		*retval = xresFail;
 		return NULL;
 	}
-	MCECptr->GetEP().setsvalue(arg1);
-	*retval = trans_stat(MCECptr->GetHandler()->eval(MCECptr->GetEP()));
-	return MCECptr->GetEP().getsvalue().clone();
+	
+	MCAutoStringRef t_string;
+	MCAutoValueRef t_result;
+	/* UNCHECKED */ MCStringCreateWithCString(arg1, &t_string);
+	MCECptr->GetHandler()->eval(*MCECptr, *t_string, &t_result);
+	
+	if (MCECptr->HasError())
+	{
+		*retval = xresFail;
+		return NULL;
+	}
+	
+	MCAutoStringRef t_return;
+	/* UNCHECKED */ MCECptr->ConvertToString(*t_result, &t_return);
+	*retval = xresSucc;
+	return MCStringGetOldString(*t_return).clone();
 }
 
 static char *get_global(const char *arg1, const char *arg2,
@@ -383,8 +399,10 @@ static char *get_global(const char *arg1, const char *arg2,
 static char *set_global(const char *arg1, const char *arg2,
                         const char *arg3, int *retval)
 {
+	MCNewAutoNameRef t_arg1;
+	/* UNCHECKED */ MCNameCreateWithCString(arg1, &t_arg1);
 	MCVariable *tmp;
-	if (!MCVariable::ensureglobal_cstring(arg1, tmp))
+	if (!MCVariable::ensureglobal(*t_arg1, tmp))
 	{
 		*retval = xresFail;
 		return NULL;

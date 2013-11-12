@@ -801,9 +801,11 @@ void MCiOSBrowserControl::HandleStartEvent(void)
 	t_target = GetOwner();
 	if (t_target != nil)
 	{
-		MCNativeControl *t_old_target;
+		MCAutoStringRef t_string;
+        /* UNCHECKED */ MCStringCreateWithCString(GetUrl(), &t_string);
+        MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
-		t_target -> message_with_args(MCM_browser_started_loading, GetUrl());
+		t_target -> message_with_valueref_args(MCM_browser_started_loading, *t_string);
 		ChangeTarget(t_old_target);
 	}
 }
@@ -814,9 +816,11 @@ void MCiOSBrowserControl::HandleFinishEvent(void)
 	t_target = GetOwner();
 	if (t_target != nil)
 	{
-		MCNativeControl *t_old_target;
+        MCAutoStringRef t_string;
+        /* UNCHECKED */ MCStringCreateWithCString(GetUrl(), &t_string);
+        MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
-		t_target -> message_with_args(MCM_browser_finished_loading, GetUrl());
+		t_target -> message_with_valueref_args(MCM_browser_finished_loading, *t_string);
 		ChangeTarget(t_old_target);
 	}
 }
@@ -850,7 +854,10 @@ bool MCiOSBrowserControl::HandleLoadRequest(NSURLRequest *p_request, UIWebViewNa
 	
 	// Whether we send loadRequest or loadRequested depends on 'notify'.
 	Exec_stat t_stat;
-	t_stat = t_target -> message_with_args(p_notify ? MCM_browser_load_requested : MCM_browser_load_request, [[[p_request URL] absoluteString] cStringUsingEncoding: NSMacOSRomanStringEncoding], s_types[p_type]);
+    MCAutoStringRef t_url, t_type;
+    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[[p_request URL] absoluteString], &t_url);
+    /* UNCHECKED */ MCStringCreateWithCString(s_types[p_type], &t_type);
+	t_stat = t_target -> message_with_valueref_args(p_notify ? MCM_browser_load_requested : MCM_browser_load_request, *t_url, *t_type);
 	
 	// Only in the initial (non-notify) mode do we need to potentially re-request
 	// the load.
@@ -876,9 +883,12 @@ void MCiOSBrowserControl::HandleLoadFailed(NSError *p_error)
 	t_target = GetOwner();
 	if (t_target != nil)
 	{
-		MCNativeControl *t_old_target;
+        MCAutoStringRef t_url, t_description;
+        /* UNCHECKED */ MCStringCreateWithCString(GetUrl(), &t_url);
+        /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[p_error localizedDescription], &t_description);
+        MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
-		t_target -> message_with_args(MCM_browser_load_failed, GetUrl(), [[p_error localizedDescription] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+		t_target -> message_with_valueref_args(MCM_browser_load_failed, *t_url, *t_description);
 		ChangeTarget(t_old_target);
 	}
 }

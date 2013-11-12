@@ -97,7 +97,7 @@ protected:
     virtual jobject CreateView(void);
     virtual void DeleteView(jobject view);
     
-    char *ExecuteJavaScript(const char *p_javascript);
+    bool ExecuteJavaScript(MCStringRef p_javascript, MCStringRef& r_result);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -497,18 +497,15 @@ void MCAndroidBrowserControl::ExecStop(MCExecContext& ctxt)
 
 void MCAndroidBrowserControl::ExecExecute(MCExecContext& ctxt, MCStringRef p_script)
 {
-    bool t_success = true;
     jobject t_view;
     t_view = GetView();
-    
-    MCAutoStringRef t_result;
     
     if (t_view == nil)
         return;
     
-    t_success = MCStringCreateWithCString(ExecuteJavaScript(MCStringGetCString(p_script)), &t_result);
+    MCAutoStringRef t_result;
     
-    if (!t_success || *t_result == nil)
+    if (!ExecuteJavaScript(p_script, &t_result))
     {
         ctxt.SetTheResultToCString("error");
         return;
@@ -519,37 +516,37 @@ void MCAndroidBrowserControl::ExecExecute(MCExecContext& ctxt, MCStringRef p_scr
 
 ////////////////////////////////////////////////////////////////////////////////
 
-char *MCAndroidBrowserControl::ExecuteJavaScript(const char *p_script)
+bool MCAndroidBrowserControl::ExecuteJavaScript(MCStringRef p_script, MCStringRef& r_result)
 {
     char *t_result = nil;
-    if (!MCStringIsEqualTo(s_js_tag, kMCEmptyString, kMCCompareExact))
-        return nil;
+    if (!MCStringIsEmpty(s_js_tag))
+        return false;
     
-    MCAndroidObjectRemoteCall(GetView(), "executeJavaScript", "xs", &s_js_tag, p_script);
+    MCAndroidObjectRemoteCall(GetView(), "executeJavaScript", "xx", &s_js_tag, p_script);
     
     // wait for result, timeout after 30 seconds    
     real8 t_current_time = MCS_time();
     real8 t_timeout = t_current_time + 30.0;
     
-    while (!MCStringIsEqualTo(s_js_tag, kMCEmptyString, kMCCompareExact) && t_current_time < t_timeout)
+    while (!MCStringIsEmpty(s_js_tag) && t_current_time < t_timeout)
     {
         MCscreen->wait(t_timeout - t_current_time, False, True);
         t_current_time = MCS_time();
     }
     
-    if (!MCStringIsEqualTo(s_js_tag, kMCEmptyString, kMCCompareExact))
+    if (!MCStringIsEmpty(s_js_tag))
     {
         // timeout
         MCValueRelease(s_js_tag);
         s_js_tag = MCValueRetain(kMCEmptyString);
-        return nil;
+        return false;
     }
     
-    t_result = strdup(MCStringGetCString(s_js_result));
+    r_result = MCValueRetain(s_js_result);
     MCValueRelease(s_js_result);
 	s_js_result = nil;
     
-    return t_result;
+    return true;
 }
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_BrowserControl_doJSExecutionResult(JNIEnv *env, jobject object, jstring tag, jstring result) __attribute__((visibility("default")));
@@ -643,9 +640,11 @@ void MCAndroidBrowserControl::HandleStartEvent(const char *p_url)
     t_target = GetOwner();
     if (t_target != nil)
     {
+        MCAutoStringRef t_url;
+        /* UNCHECKED */ MCStringCreateWithCString(p_url, &t_url);
         MCNativeControl *t_old_target;
         t_old_target = ChangeTarget(this);
-        t_target -> message_with_args(MCM_browser_started_loading, p_url);
+        t_target -> message_with_valueref_args(MCM_browser_started_loading, *t_url);
         ChangeTarget(t_old_target);
     }
 }
@@ -656,9 +655,11 @@ void MCAndroidBrowserControl::HandleFinishEvent(const char *p_url)
     t_target = GetOwner();
     if (t_target != nil)
     {
+        MCAutoStringRef t_url;
+        /* UNCHECKED */ MCStringCreateWithCString(p_url, &t_url);
         MCNativeControl *t_old_target;
         t_old_target = ChangeTarget(this);
-        t_target -> message_with_args(MCM_browser_finished_loading, p_url);
+        t_target -> message_with_valueref_args(MCM_browser_finished_loading, *t_url);
         ChangeTarget(t_old_target);
     }
 }
@@ -669,9 +670,12 @@ void MCAndroidBrowserControl::HandleLoadFailed(const char *p_url, const char *p_
 	t_target = GetOwner();
 	if (t_target != nil)
 	{
-		MCNativeControl *t_old_target;
+		MCAutoStringRef t_url, t_error;
+        /* UNCHECKED */ MCStringCreateWithCString(p_url, &t_url);
+        /* UNCHECKED */ MCStringCreateWithCString(p_error, &t_error);
+        MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
-		t_target -> message_with_args(MCM_browser_load_failed, p_url, p_error);
+		t_target -> message_with_valueref_args(MCM_browser_load_failed, *t_url, *t_error);
 		ChangeTarget(t_old_target);
 	}
 }

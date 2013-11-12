@@ -441,16 +441,16 @@ bool TransferData::Publish(MCTransferType p_type, MCDataRef p_data)
 		}
 	break;
 	case TRANSFER_TYPE_IMAGE:
-		if (t_success && MCFormatImageIsPNG(p_data))
+		if (t_success && MCImageDataIsPNG(p_data))
 			t_success = Publish(CF_PNG(), TYMED_HGLOBAL, p_data, NULL);
-		if (t_success && MCFormatImageIsGIF(p_data))
+		if (t_success && MCImageDataIsGIF(p_data))
 			t_success = Publish(CF_GIF(), TYMED_HGLOBAL, p_data, NULL);
-		if (t_success && MCFormatImageIsJPEG(p_data))
+		if (t_success && MCImageDataIsJPEG(p_data))
 			t_success = Publish(CF_JFIF(), TYMED_HGLOBAL, p_data, NULL);
 		if (t_success)
 			t_success = Publish(CF_METAFILEPICT, TYMED_MFPICT, p_data, MCConvertImageToWindowsMetafile);
-//		if (t_success)
-//			t_success = Publish(CF_ENHMETAFILE, TYMED_ENHMF, p_data, MCConvertImageToWindowsMetafile);
+		if (t_success)
+			t_success = Publish(CF_ENHMETAFILE, TYMED_ENHMF, p_data, MCConvertImageToWindowsEnhancedMetafile);
 		if (t_success)
 			t_success = Publish(CF_DIB, TYMED_HGLOBAL, p_data, MCConvertImageToWindowsBitmap);
 		if (t_success)
@@ -1121,6 +1121,49 @@ static inline uint32_t packed_scale_bounded(uint32_t x, uint8_t a)
 	return u + v;
 }
 
+typedef void (*MCGDIDrawFunc)(HDC p_hdc, void *p_context);
+
+bool MCGDIDrawAlpha(uint32_t p_width, uint32_t p_height, MCGDIDrawFunc p_draw, void *p_context, MCImageBitmap *&r_bitmap);
+
+void MCGDIDrawMetafile(HDC p_dc, void *context)
+{
+	/* OVERHAUL - REVISIT - code for rendering metafile to a bitmap */
+	HENHMETAFILE t_metafile;	
+	t_metafile = (HENHMETAFILE)context;
+
+	bool t_success;
+	t_success = true;
+
+	ENHMETAHEADER t_header;
+	if (GetEnhMetaFileHeader(t_metafile, sizeof(ENHMETAHEADER), &t_header) == 0)
+		t_success = false;
+
+	// MW-2012-11-29: [[ Bug 10556 ]] Make sure we create a bitmap of the size of the bounds
+	//   of the metafile, rather than original device size.
+	uint4 t_width, t_height;
+	if (t_success)
+	{
+		t_width = t_header . rclBounds . right - t_header . rclBounds . left;
+		t_height = t_header . rclBounds . bottom - t_header . rclBounds . top;
+	}
+
+	if (t_success)
+	{
+		SaveDC(p_dc);
+		SetMapMode(p_dc, MM_ANISOTROPIC);
+		// MW-2012-11-29: [[ Bug 10556 ]] Map the top-left of the metafile frame to 0, 0 in device
+		//   coords.
+		SetWindowOrgEx(p_dc, t_header . rclFrame . left, t_header . rclFrame . top, NULL);
+		SetWindowExtEx(p_dc, t_header . szlMillimeters . cx * 100, t_header . szlMillimeters . cy * 100, NULL);
+		SetViewportExtEx(p_dc, t_header . szlDevice . cx, t_header . szlDevice . cy, NULL);
+
+		RECT t_rect;
+		SetRect(&t_rect, t_header . rclFrame . left, t_header . rclFrame . top, t_header . rclFrame . right, t_header . rclFrame . bottom);
+		PlayEnhMetaFile(p_dc, t_metafile, &t_rect);
+		RestoreDC(p_dc, -1);
+	}
+}
+
 bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 {
 	if (!m_valid)
@@ -1225,10 +1268,6 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 		HENHMETAFILE t_metafile;	
 		t_metafile = (HENHMETAFILE)t_in_data . GetHandle();
 
-		HDC t_dc;
-		t_dc = ((MCScreenDC *)MCscreen) -> getsrchdc();
-		SaveDC(t_dc);
-
 		bool t_success;
 		t_success = true;
 
@@ -1245,84 +1284,30 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 			t_height = t_header . rclBounds . bottom - t_header . rclBounds . top;
 		}
 
-		void *t_black_bits;
-		HBITMAP t_black_bitmap;
-		t_black_bitmap = NULL;
+		MCImageBitmap *t_bitmap = nil;
 		if (t_success)
-			t_success = create_temporary_dib(t_dc, t_width, t_height, t_black_bitmap, t_black_bits);
+			t_success = MCGDIDrawAlpha(t_width, t_height, MCGDIDrawMetafile, t_metafile, t_bitmap);
 
-		void *t_white_bits;
-		HBITMAP t_white_bitmap;
-		t_white_bitmap = NULL;
+		IO_handle t_stream = nil;
+		char *t_bytes = nil;
+		uindex_t t_byte_count = 0;
 		if (t_success)
-			t_success = create_temporary_dib(t_dc, t_width, t_height, t_white_bitmap, t_white_bits);
+			t_success = nil != (t_stream = MCS_fakeopenwrite());
 
 		if (t_success)
 		{
-			SetMapMode(t_dc, MM_ANISOTROPIC);
-			// MW-2012-11-29: [[ Bug 10556 ]] Map the top-left of the metafile frame to 0, 0 in device
-			//   coords.
-			SetWindowOrgEx(t_dc, t_header . rclFrame . left, t_header . rclFrame . top, NULL);
-			SetWindowExtEx(t_dc, t_header . szlMillimeters . cx * 100, t_header . szlMillimeters . cy * 100, NULL);
-			SetViewportExtEx(t_dc, t_header . szlDevice . cx, t_header . szlDevice . cy, NULL);
-
-			RECT t_rect;
-			SetRect(&t_rect, t_header . rclFrame . left, t_header . rclFrame . top, t_header . rclFrame . right, t_header . rclFrame . bottom);
-
-			HGDIOBJ t_old_bitmap;
-			t_old_bitmap = SelectObject(t_dc, t_black_bitmap);
-			FillRect(t_dc, &t_rect, (HBRUSH)GetStockObject(BLACK_BRUSH));
-			PlayEnhMetaFile(t_dc, t_metafile, &t_rect);
-
-			SelectObject(t_dc, t_white_bitmap);
-			FillRect(t_dc, &t_rect, (HBRUSH)GetStockObject(WHITE_BRUSH));
-			PlayEnhMetaFile(t_dc, t_metafile, &t_rect);
-
-			SelectObject(t_dc, t_old_bitmap);
-
-			GdiFlush();
-
-			for(uint4 y = 0; y < t_height; ++y)
-				for(uint4 x = 0; x < t_width; ++x)
-				{
-					uint1 rw;
-					rw = ((uint1 *)t_white_bits)[y * t_width * 4 + x * 4 + 0];
-
-					uint1 rb;
-					rb = ((uint1 *)t_black_bits)[y * t_width * 4 + x * 4 + 0];
-
-					uint1 a;
-					a = 255 - rw + rb;
-
-					((uint4 *)t_black_bits)[y * t_width + x] = packed_scale_bounded(((uint4 *)t_black_bits)[y * t_width + x] & 0xFFFFFF, a) | (a << 24);
-				}
-		
-			MCImageBitmap t_bitmap;
-			t_bitmap . width = t_width;
-			t_bitmap . height = t_height;
-			t_bitmap . data = (uint32_t*)t_black_bits;
-			t_bitmap . stride = t_width * 4;
-
-			IO_handle t_stream = MCS_fakeopenwrite();
-
-			char *t_bytes = nil;
-			uindex_t t_byte_count = 0;
-
-			MCImageEncodePNG(&t_bitmap, t_stream, t_byte_count);
-
+			MCImageBitmapUnpremultiply(t_bitmap);
+			t_success = MCImageEncodePNG(t_bitmap, t_stream, t_byte_count);
+		}
+        
+        if (t_success)
+        {
 			/* UNCHECKED */ MCS_closetakingbuffer(t_stream, *(void**)(&t_bytes), t_byte_count);
-
 			/* UNCHECKED */ MCDataCreateWithBytes((char_t*)t_bytes, t_byte_count, &t_out_data);
 			MCMemoryDeallocate(t_bytes);
 		}
 
-		if (t_black_bitmap != NULL)
-			DeleteObject(t_black_bitmap);
-
-		if (t_white_bitmap != NULL)
-			DeleteObject(t_white_bitmap);
-
-		RestoreDC(t_dc, -1);
+		MCImageFreeBitmap(t_bitmap);
 	}
 	break;
 	case CF_HDROP:
@@ -1577,6 +1562,31 @@ bool MCConvertImageToWindowsV5Bitmap(MCDataRef p_input, STGMEDIUM& r_storage)
 	{
 		r_storage . tymed = TYMED_HGLOBAL;
 		r_storage . hGlobal = t_handle;
+	}
+
+	return t_success;
+}
+
+bool MCConvertImageToWindowsEnhancedMetafile(MCDataRef p_input, STGMEDIUM& r_storage)
+{
+    const uint8_t *t_data = MCDataGetBytePtr(p_input);
+	uint32_t t_length = MCDataGetLength(p_input);
+    
+	bool t_success = true;
+
+	MCWinSysEnhMetafileHandle t_handle = nil;
+	MCImageFrame *t_frames = nil;
+	uindex_t t_frame_count = 0;
+
+	t_success = MCImageDecode(t_data, t_length, t_frames, t_frame_count) &&
+		MCImageBitmapToEnhancedMetafile(t_frames[0].image, t_handle);
+
+	MCImageFreeFrames(t_frames, t_frame_count);
+
+	if (t_success)
+	{
+		r_storage . tymed = TYMED_ENHMF;
+		r_storage . hEnhMetaFile = (HENHMETAFILE)t_handle;
 	}
 
 	return t_success;

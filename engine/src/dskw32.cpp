@@ -31,6 +31,7 @@
 #include "system.h"
 
 #include "execpt.h"
+#include "exec.h"
 #include "globals.h"
 #include "system.h"
 #include "osspec.h"
@@ -452,49 +453,32 @@ static void readThreadDone(void *param)
 
 static DWORD readThread(Streamnode *process)
 {
-	//MCMemoryFileHandle ihandle;
-	//ihandle = process -> ihandle -> handle;
+	DWORD nread;
+	uint32_t t_bufsize = READ_PIPE_SIZE;
+	char* t_buffer = new char[t_bufsize];
 
-	//DWORD nread;
-	//ihandle->buffer = new char[READ_PIPE_SIZE];
-	//uint4 bsize = READ_PIPE_SIZE;
-	//ihandle->ioptr = ihandle->buffer;   //set ioptr member
-	//ihandle->len = 0; //set len member
-	//while (ihandle->fhandle != NULL)
-	//{
-	//	if (!PeekNamedPipe(ihandle->fhandle, NULL, 0, NULL, &nread, NULL))
-	//		break;
-	//	if (nread == 0)
-	//	{
-	//		if (WaitForSingleObject(process -> phandle, 0) != WAIT_TIMEOUT)
-	//			break;
-	//		Sleep(100);
-	//		continue;
-	//	}
-	//	if (ihandle->len + nread >= bsize)
-	//	{
-	//		uint4 newsize = ihandle->len + nread + READ_PIPE_SIZE;
-	//		MCU_realloc(&ihandle->buffer, bsize, newsize, 1);
-	//		bsize = newsize;
-	//		ihandle->ioptr = ihandle->buffer;
-	//	}
-	//	if (!ReadFile(ihandle->fhandle, (LPVOID)&ihandle->buffer[ihandle->len],
-	//	              nread, &nread, NULL)
-	//	        || nread == 0)
-	//	{
-	//		ihandle->len += nread;
-	//		break;
-	//	}
-	//	ihandle->len += nread;
-	//	ihandle->flags = 0;
-	//	if (ihandle->ioptr != ihandle->buffer)
-	//	{
-	//		ihandle->len -= ihandle->ioptr - ihandle->buffer;
-	//		memcpy(ihandle->buffer, ihandle->ioptr, ihandle->len);
-	//		ihandle->ioptr = ihandle->buffer;
-	//	}
-	//}
-	//MCNotifyPush(readThreadDone, nil, false, false);
+	while (process -> ihandle != NULL)
+	{
+		if (!PeekNamedPipe(process -> ihandle -> GetFilePointer(), NULL, 0, NULL, &nread, NULL))
+			break;
+		if (nread == 0)
+		{
+			if (WaitForSingleObject(process -> phandle, 0) != WAIT_TIMEOUT)
+				break;
+			Sleep(100);
+			continue;
+		}
+		if (!ReadFile(process -> ihandle -> GetFilePointer(), (LPVOID)t_buffer,
+				t_bufsize, &nread, NULL)
+		        || nread == 0)
+					break;
+		
+		/* UNCHECKED */ process -> ohandle -> Write(t_buffer, nread);
+	}
+
+	delete[] t_buffer;
+	MCNotifyPush(readThreadDone, nil, false, false);
+
 	return 0;
 }
 
@@ -1595,9 +1579,14 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	IO_stdout -> is_pipe = handle_is_pipe(IO_stdout -> fhandle);
 	IO_stderr = new IO_header((MCWinSysHandle)GetStdHandle(STD_ERROR_HANDLE), NULL, 0, 0);
 	IO_stderr -> is_pipe = handle_is_pipe(IO_stderr -> fhandle);
-
-	setlocale(LC_CTYPE, MCnullstring);
-	setlocale(LC_COLLATE, MCnullstring);
+		
+	// Internally, LiveCode assumes sorting orders etc are those of en_US.
+	// Additionally, the "native" string encoding for Linux is CP1252
+	// (even if the Windows system is using something different).
+	const char *t_internal_locale = "English_United States.1252";
+	setlocale(LC_ALL, "");
+	setlocale(LC_CTYPE, t_internal_locale);
+	setlocale(LC_COLLATE, t_internal_locale);
 
 	// MW-2004-11-28: The ctype array seems to have changed in the latest version of VC++
 	((unsigned short *)_pctype)[160] &= ~_SPACE;
@@ -1908,7 +1897,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 #ifdef /* MCS_sleep_dsk_w32 */ LEGACY_SYSTEM
 	Sleep((DWORD)(delay * 1000.0));  //takes milliseconds as parameter
 #endif /* MCS_sleep_dsk_w32 */
-        Sleep((DWORD)(p_when * 1000.0));  //takes milliseconds as parameter
+        SleepEx((DWORD)(p_when * 1000.0), False);  //takes milliseconds as parameter
     }
 	
 	virtual void SetEnv(MCStringRef p_name, MCStringRef p_value)
@@ -3110,7 +3099,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 	return MCStringCopy(p_path, r_native_path);
 #endif
 }
-#endif /* MCS_path2native */
+#endif /* MCU_path2native */
 		uindex_t t_length = MCStringGetLength(p_path);
 		if (t_length == 0)
 			return MCStringCopy(p_path, r_native);
@@ -3502,7 +3491,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
             created = False;
         
         PROCESS_INFORMATION piProcInfo;
-        STARTUPINFOA siStartInfo;
+        STARTUPINFOW siStartInfo;
         memset(&siStartInfo, 0, sizeof(STARTUPINFOA));
         siStartInfo.cb = sizeof(STARTUPINFOA);
         siStartInfo.dwFlags = STARTF_USESTDHANDLES;
@@ -3514,17 +3503,16 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
         siStartInfo.hStdInput = hChildStdinRd;
         siStartInfo.hStdOutput = hChildStdoutWr;
         
-		MCAutoStringRef t_mutable_cmd;
-
-		/* UNCHECKED */ MCStringCreateMutable(0, &t_mutable_cmd);
-		/* UNCHECKED */ MCStringFormat(&t_mutable_cmd, "%s\"%s\"%x", " /C ", MCshellcmd, p_command);
-        char *pname = strclone(MCStringGetCString(*t_mutable_cmd));
+		MCStringRef t_cmd;
+		/* UNCHECKED */ MCStringFormat(t_cmd, "%@ /C %@", MCshellcmd, p_command);
+		MCAutoStringRefAsWString t_wcmd;
+		t_wcmd . Lock(t_cmd);
         MCU_realloc((char **)&MCprocesses, MCnprocesses,
                     MCnprocesses + 1, sizeof(Streamnode));
         uint4 index = MCnprocesses;
         MCprocesses[index].name = (MCNameRef)MCValueRetain(MCM_shell);
         MCprocesses[index].mode = OM_NEITHER;
-        MCprocesses[index].ohandle = NULL;
+        MCprocesses[index].ohandle = new MCMemoryFileHandle;
 		MCprocesses[index].ihandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd);
         if (created)
         {
@@ -3533,7 +3521,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
                             0, TRUE, DUPLICATE_SAME_ACCESS);
             siStartInfo.hStdError = hChildStderrWr;
             DWORD threadID = 0;
-            if (CreateProcessA(NULL, pname, NULL, NULL, TRUE, CREATE_NEW_CONSOLE,
+            if (CreateProcessW(NULL, *t_wcmd, NULL, NULL, TRUE, CREATE_NEW_CONSOLE,
                                NULL, NULL, &siStartInfo, &piProcInfo))
             {
                 MCprocesses[MCnprocesses].pid = piProcInfo.dwProcessId;
@@ -3558,8 +3546,8 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
         {
             CloseHandle(hChildStdoutRd);
             Sleep(0);
-            MCeerror->add(EE_SHELL_BADCOMMAND, 0, 0, pname);
-            delete pname;
+            MCeerror->add(EE_SHELL_BADCOMMAND, 0, 0, t_cmd);
+			MCValueRelease(t_cmd);
             return false;
         }
         
@@ -3569,7 +3557,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
         {
             if (MCscreen->wait(READ_INTERVAL, False, False))
             {
-                MCeerror->add(EE_SHELL_ABORT, 0, 0, pname);
+                MCeerror->add(EE_SHELL_ABORT, 0, 0, t_cmd);
                 if (MCprocesses[index].pid != 0)
                 {
                     TerminateProcess(MCprocesses[index].phandle, 0);
@@ -3579,8 +3567,8 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
                     CloseHandle(piProcInfo.hThread);
                 }
                 MCS_close(MCprocesses[index].ihandle);
-                IO_cleanprocesses();
-                delete pname;
+                IO_cleanprocesses();                
+				MCValueRelease(t_cmd);
                 return false;
             }
         }
@@ -3593,24 +3581,21 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
             CloseHandle(piProcInfo.hProcess);
             CloseHandle(piProcInfo.hThread);
         }
+		MCExecPoint ep(nil, nil, nil);
+		MCExecContext ctxt(ep);
         if (MCprocesses[index].retcode)
-        {
-			MCExecPoint t_ep(nil, nil, nil);
-			t_ep.setint(MCprocesses[index].retcode);
-			MCresult -> set(t_ep);
-        }
+			ctxt.SetTheResultToNumber((real64_t)MCprocesses[index].retcode);
         else
-            MCresult->clear(False);
+			ctxt.SetTheResultToEmpty();
 
-		MCExecPoint t_ep;
 		void *t_buffer;
 		uint32_t t_buf_size;
 		bool t_success;
 
-		t_success = MCS_closetakingbuffer(MCprocesses[index].ihandle, t_buffer, t_buf_size) == IO_NORMAL;
+		t_success = MCS_closetakingbuffer(MCprocesses[index].ohandle, t_buffer, t_buf_size) == IO_NORMAL;
 
         IO_cleanprocesses();
-        delete pname;
+        MCValueRelease(t_cmd);
 
 		if (t_success)
 			t_success = MCDataCreateWithBytes((byte_t*) t_buffer, t_buf_size, r_data);
@@ -4021,10 +4006,8 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
         if (created)
         {
             MCAutoStringRef t_cmdline;
-            if (p_doc != nil && MCStringGetNativeCharAtIndex(p_doc, 0) != '\0')
-			{
-				/* UNCHECKED */ MCStringFormat(&t_cmdline, "%s \"%s\"", MCNameGetCString(p_name), MCStringGetCString(p_doc));
-			}
+            if (p_doc != nil && !MCStringIsEmpty(p_doc))
+				/* UNCHECKED */ MCStringFormat(&t_cmdline, "%@ \"%@\"", p_name, p_doc);
             else
                 t_cmdline = (MCStringRef) MCValueRetain(MCNameGetString(p_name));
             
@@ -4051,9 +4034,9 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
                 if (created)
                 {
                     PROCESS_INFORMATION piProcInfo;
-                    STARTUPINFOA siStartInfo;
-                    memset(&siStartInfo, 0, sizeof(STARTUPINFOA));
-                    siStartInfo.cb = sizeof(STARTUPINFOA);
+                    STARTUPINFOW siStartInfo;
+                    memset(&siStartInfo, 0, sizeof(STARTUPINFOW));
+                    siStartInfo.cb = sizeof(STARTUPINFOW);
                     siStartInfo.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
                     if (MChidewindows)
                         siStartInfo.wShowWindow = SW_HIDE;
@@ -4062,7 +4045,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
                     siStartInfo.hStdInput = hChildStdinRd;
                     siStartInfo.hStdOutput = hChildStdoutWr;
                     siStartInfo.hStdError = hChildStderrWr;
-                    if (CreateProcessA(NULL, (LPSTR)MCStringGetCString(*t_cmdline), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &siStartInfo, &piProcInfo))
+                    if (CreateProcessW(NULL, (LPWSTR)MCStringGetCharPtr(*t_cmdline), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &siStartInfo, &piProcInfo))
                     {
                         t_process_handle = piProcInfo . hProcess;
                         t_process_id = piProcInfo . dwProcessId;
@@ -4090,23 +4073,23 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
                 //   5) Carry on with the handles we were given to start with
                 // If the launched process vanished before (4) it is treated as failure.
                 
-                char t_parameters[64];
-                sprintf(t_parameters, "-elevated-slave%08x", GetCurrentThreadId());
+                unichar_t t_parameters[64];
+                wsprintf(t_parameters, L"-elevated-slave%08x", GetCurrentThreadId());
                 
-                SHELLEXECUTEINFOA t_info;
-                memset(&t_info, 0, sizeof(SHELLEXECUTEINFO));
-                t_info . cbSize = sizeof(SHELLEXECUTEINFO);
+                SHELLEXECUTEINFOW t_info;
+                memset(&t_info, 0, sizeof(SHELLEXECUTEINFOW));
+                t_info . cbSize = sizeof(SHELLEXECUTEINFOW);
                 t_info . fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_FLAG_NO_UI | SEE_MASK_NO_CONSOLE ;
                 t_info . hwnd = (HWND)MCdefaultstackptr -> getrealwindow();
-                t_info . lpVerb = "runas";
-                t_info . lpFile = (LPCSTR)MCStringGetCString(MCcmd);
+                t_info . lpVerb = L"runas";
+                t_info . lpFile = MCStringGetCharPtr(MCcmd);
                 t_info . lpParameters = t_parameters;
                 t_info . nShow = SW_HIDE;
-                if (ShellExecuteExA(&t_info) && (uintptr_t)t_info . hInstApp > 32)
+                if (ShellExecuteExW(&t_info) && (uintptr_t)t_info . hInstApp > 32)
                 {
                     MSG t_msg;
                     t_msg . message = WM_QUIT;
-                    while(!PeekMessageA(&t_msg, (HWND)-1, WM_USER + 10, WM_USER + 10, PM_REMOVE))
+                    while(!PeekMessageW(&t_msg, (HWND)-1, WM_USER + 10, WM_USER + 10, PM_REMOVE))
                         if (MsgWaitForMultipleObjects(1, &t_info . hProcess, FALSE, INFINITE, QS_POSTMESSAGE) == WAIT_OBJECT_0)
                         {
                             created = False;
@@ -4120,23 +4103,21 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
                         t_output_pipe = (HANDLE)t_msg . lParam;
                         
                         // Get the environment strings to send across
-                        char *t_env_strings;
-                        uint32_t t_env_length;
-#undef GetEnvironmentStrings
-                        t_env_strings = GetEnvironmentStrings();
-                        if (t_env_strings != nil)
-                        {
-                            t_env_length = 0;
-                            while(t_env_strings[t_env_length] != '\0' || t_env_strings[t_env_length + 1] != '\0')
+						LPWCH lpEnvStrings;
+						lpEnvStrings = GetEnvironmentStringsW();
+						size_t t_env_length = 0;
+                        if (lpEnvStrings != nil)
+						{
+							// The environment block is terminated with a double-null                           
+							t_env_length = 0;
+                            while(lpEnvStrings[t_env_length] != '\0' || lpEnvStrings[t_env_length + 1] != '\0')
                                 t_env_length += 1;
                             t_env_length += 2;
                         }
                         
                         // Write out the cmd line and env strings
-                        const char *cmdline;
-                        cmdline = MCStringGetCString(*t_cmdline);
-                        if (write_blob_to_pipe(t_output_pipe, strlen(cmdline) + 1, cmdline) &&
-                            write_blob_to_pipe(t_output_pipe, t_env_length, t_env_strings))
+                        if (write_blob_to_pipe(t_output_pipe, sizeof(wchar_t) * (MCStringGetLength(*t_cmdline) + 1), MCStringGetCharPtr(*t_cmdline)) &&
+                            write_blob_to_pipe(t_output_pipe, sizeof(wchar_t) * t_env_length, lpEnvStrings))
                         {
                             // Now we should have a process id and handle waiting for us.
                             MSG t_msg;
@@ -4159,7 +4140,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
                         else
                             created = False;
                         
-                        FreeEnvironmentStringsA(t_env_strings);
+                        FreeEnvironmentStringsW(lpEnvStrings);
                         
                         hChildStdinWr = t_output_pipe;
                         hChildStdoutRd = t_input_pipe;
@@ -4854,4 +4835,67 @@ MCSystemInterface *MCDesktopCreateWindowsSystem(void)
 {
 	return new MCWindowsDesktop;
 }
+
+struct  LangID2Charset
+{
+	Lang_charset charset;
+	LANGID langid;
+};
+
+static LangID2Charset langidtocharsets[] = {
+    { LCH_ENGLISH, MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT) },
+    { LCH_ROMAN, MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT)},
+    { LCH_JAPANESE, MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT) },
+    { LCH_CHINESE, MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL) },
+    { LCH_ARABIC, MAKELANGID(LANG_ARABIC, SUBLANG_DEFAULT) },
+    { LCH_RUSSIAN, MAKELANGID(LANG_RUSSIAN, SUBLANG_DEFAULT) },
+    { LCH_TURKISH, MAKELANGID(LANG_TURKISH, SUBLANG_DEFAULT) },
+    { LCH_BULGARIAN, MAKELANGID(LANG_BULGARIAN, SUBLANG_DEFAULT) },
+    { LCH_POLISH, MAKELANGID(LANG_POLISH, SUBLANG_DEFAULT) },
+    { LCH_UKRAINIAN, MAKELANGID(LANG_UKRAINIAN, SUBLANG_DEFAULT) },
+    { LCH_HEBREW, MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT)},
+    { LCH_GREEK, MAKELANGID(LANG_GREEK, SUBLANG_DEFAULT) },
+    { LCH_KOREAN, MAKELANGID(LANG_KOREAN, SUBLANG_DEFAULT) },
+    { LCH_THAI,	MAKELANGID(LANG_THAI, SUBLANG_DEFAULT) },
+    { LCH_SIMPLE_CHINESE, MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED)},
+    { LCH_UNICODE, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT)}
+};
+
+uint1 MCS_langidtocharset(uint2 langid)
+{
+	uint2 i;
+	for (i = 0; i < ELEMENTS(langidtocharsets); i++)
+		if (langidtocharsets[i].langid == langid)
+			return langidtocharsets[i].charset;
+	return 0;
+}
+
+uint2 MCS_charsettolangid(uint1 charset)
+{
+	uint2 i;
+	for (i = 0; i < ELEMENTS(langidtocharsets); i++)
+		if (langidtocharsets[i].charset == charset)
+			return langidtocharsets[i].langid;
+	return 0;
+}
+
+bool MCS_generate_uuid(char p_buffer[128])
+{
+	GUID t_guid;
+	if (CoCreateGuid(&t_guid) == S_OK)
+	{
+		unsigned char __RPC_FAR *t_guid_string;
+		if (UuidToStringA(&t_guid, &t_guid_string) == RPC_S_OK)
+		{
+			strcpy(p_buffer, (char *)t_guid_string);
+			RpcStringFreeA(&t_guid_string);
+		}
+        
+		return true;
+	}
+    
+	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 

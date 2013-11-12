@@ -293,6 +293,8 @@ public:
 	static Field_translations trans_lookup(Keytranslations table[], KeySym key, uint2 modifiers);
 	static Field_translations lookup_mac_keybinding(KeySym key, uint32_t modifiers);
 	
+    void do_recompute(bool p_force_layout);
+    
 	void redrawcheck(MCRectangle &drect);
 	void resetparagraphs();
 
@@ -314,6 +316,7 @@ public:
 	int32_t getcontenty(void) const;
 	int32_t gettexty(void) const;
 	int32_t getfirstindent(void) const;
+	int32_t getfixedheight(void) const { return fixedheight; }
 
 	bool getshowlines(void) const;
 
@@ -354,7 +357,7 @@ public:
 	void fscroll(Field_translations function, MCStringRef p_string, KeySym key);
 	void setupmenu(MCStringRef p_string, uint2 fheight, Boolean scrolling);
 	void setupentry(MCButton *bptr, MCStringRef p_string);
-	void typetext(const MCString &newtext);
+	void typetext(MCStringRef newtext);
 	void startcomposition();
 	void stopcomposition(Boolean del, Boolean force);
 	void setcompositioncursoroffset(findex_t coffset);

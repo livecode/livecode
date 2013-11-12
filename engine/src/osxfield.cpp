@@ -660,7 +660,7 @@ Exec_stat MCField::getparagraphmacunicodestyles(MCParagraph *p_start, MCParagrap
 
 		// MW-2011-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
 		if (opened)
-			t_paragraph -> layout();
+			t_paragraph -> layout(false);
 		
 		t_paragraph = t_paragraph -> next();
 	}

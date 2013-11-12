@@ -90,7 +90,9 @@ struct MCObjectShape
 		struct
 		{
 			MCPoint origin;
-			MCImageBitmap *bits;
+			MCImageBitmap *bits;			
+			// MM-2012-10-03: [[ ResIndependence ]] The scale of the mask. Used when computing intersect of images with a scale factor.
+			MCGFloat scale;
 		} mask;
 	};
 };
@@ -178,6 +180,12 @@ struct MCInterfaceShadow;
 struct MCInterfaceTextStyle;
 struct MCInterfaceTriState;
 
+struct MCPatternInfo
+{
+	uint32_t id;
+	MCPatternRef pattern;
+};
+
 class MCObject : public MCDLlist
 {
 protected:
@@ -188,16 +196,15 @@ protected:
 	MCRectangle rect;
 	MCColor *colors;
 	MCStringRef *colornames;
-	uint4 *pixmapids;
-	Pixmap *pixmaps;
 	MCStringRef _script;
+	MCPatternInfo *patterns;
 	MCHandlerlist *hlist;
 	MCObjectPropertySet *props;
 	uint4 state;
 	uint2 fontheight;
 	uint2 dflags;
 	uint2 ncolors;
-	uint2 npixmaps;
+	uint2 npatterns;
 	uint2 altid;
 	uint1 hashandlers;
 	uint1 scriptdepth;
@@ -251,7 +258,6 @@ protected:
 	static uint1 menudepth;
 	static MCStack *attachedmenu;
 	static MCColor maccolors[MAC_NCOLORS];
-	static Pixmap pattern;
 
 	// MW-2012-02-17: [[ LogFonts ]] We store the last loaded font index for
 	//   the object being serialized. This is because the fonttable comes
@@ -535,7 +541,7 @@ public:
 	Boolean isvisible();
 	Boolean resizeparent();
 	Boolean getforecolor(uint2 di, Boolean reversed, Boolean hilite, MCColor &c,
-	                     Pixmap &pix, int2 &x, int2 &y, MCDC *dc, MCObject *o);
+	                     MCPatternRef &r_pattern, int2 &x, int2 &y, MCDC *dc, MCObject *o);
 	void setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite = False);
 	Boolean setcolor(uint2 index, const MCString &eptr);
 	Boolean setcolors(const MCString &data);
@@ -584,10 +590,6 @@ public:
 	Exec_stat dispatch(Handler_type type, MCNameRef name, MCParameter *params);
 
 	Exec_stat message(MCNameRef name, MCParameter *p = NULL, Boolean changedefault = True, Boolean send = False, Boolean p_force = False);
-	Exec_stat message_with_args(MCNameRef name, const MCString &v1);
-	Exec_stat message_with_args(MCNameRef name, const MCString &v1, const MCString &v2);
-	Exec_stat message_with_args(MCNameRef name, const MCString &v1, const MCString &v2, const MCString& v3);
-	Exec_stat message_with_args(MCNameRef name, const MCString &v1, const MCString &v2, const MCString& v3, const MCString& v4);
 	Exec_stat message_with_valueref_args(MCNameRef name, MCValueRef v1);
 	Exec_stat message_with_valueref_args(MCNameRef name, MCValueRef v1, MCValueRef v2);
     Exec_stat message_with_valueref_args(MCNameRef name, MCValueRef v1, MCValueRef v2, MCValueRef v3);
@@ -612,9 +614,12 @@ public:
 	            Etch style, uint2 bwidth);
 	void drawborder(MCDC *dc, const MCRectangle &drect, uint2 bwidth);
 	void positionrel(const MCRectangle &dptr, Object_pos xpos, Object_pos ypos);
+
 	Exec_stat domess(MCStringRef sptr);
 	void eval(MCExecContext& ctxt, MCStringRef p_script, MCValueRef& r_value);
-	void editscript();
+	// MERG 2013-9-13: [[ EditScriptChunk ]] Added at expression that's passed through as a second parameter to editScript
+    void editscript(MCStringRef p_at = nil);
+
 	void removefrom(MCObjectList *l);
 	Boolean attachmenu(MCStack *sptr);
 	void alloccolors();
@@ -639,12 +644,15 @@ public:
 	//   type.
 	Exec_stat handleparent(Handler_type type, MCNameRef message, MCParameter* parameters);
 
-	MCBitmap *snapshot(const MCRectangle *rect, const MCPoint *size, bool with_effects);
+	// IM-2013-07-24: [[ ResIndependence ]] Add scale factor to allow taking high-res snapshots
+	MCImageBitmap *snapshot(const MCRectangle *rect, const MCPoint *size, MCGFloat p_scale_factor, bool with_effects);
 
 #ifdef OLD_EXEC
 	// MW-2011-01-14: [[ Bug 9288 ]] Added 'parid' to make sure 'the properties of card id ...' returns
 	//   the correct result.
-	Exec_stat getproparray(MCExecPoint &ep, uint4 parid);
+	// MERG-2013-05-07: [[ RevisedPropsProp ]] Add 'effective' option to enable 'the effective
+	//   properties of object ...'.
+	Exec_stat getproparray(MCExecPoint &ep, uint4 parid, bool effective);
 #endif
 
 	MCObjectHandle *gethandle(void);
@@ -759,7 +767,9 @@ public:
 	{
 		return m_in_id_cache;
 	}
-	
+    
+    MCRectangle measuretext(MCStringRef p_text, bool p_is_unicode);
+    
 	////////// PROPERTY SUPPORT METHODS
 
 	void Redraw(void);
@@ -776,7 +786,6 @@ public:
 	bool GetPatterns(MCExecContext& ctxt, bool effective, MCStringRef& r_patterns);
 
 	void SetVisibility(MCExecContext& ctxt, uint32_t part, bool flag, bool visible);
-
 	void SetRectProp(MCExecContext& ctxt, bool effective, MCRectangle p_rect);
 	void GetRectPoint(MCExecContext& ctxt, bool effective, Properties which, MCPoint &r_point);
 	void SetRectPoint(MCExecContext& ctxt, bool effective, Properties which, MCPoint point);
@@ -786,6 +795,11 @@ public:
 	bool TextPropertyMapFont();
 	void TextPropertyUnmapFont(bool p_unmap);
 	
+    void GetCardIds(MCExecContext& ctxt, MCCard *p_cards, bool p_all, uint32_t p_id, uindex_t& r_count, uinteger_t*& r_ids);
+    void GetCardNames(MCExecContext& ctxt, MCCard *p_cards, bool p_all, uint32_t p_id, uindex_t& r_count, MCStringRef*& r_names);
+    
+    void DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effective, MCArrayRef& r_props);
+    
 	////////// PROPERTY ACCESSORS
 	
 	void GetId(MCExecContext& ctxt, uint32_t& r_id);
@@ -938,8 +952,10 @@ public:
 
 	void GetVisible(MCExecContext& ctxt, uint32_t part, bool& r_setting);
 	virtual void SetVisible(MCExecContext& ctxt, uint32_t part, bool setting);
+    void GetEffectiveVisible(MCExecContext& ctxt, uint32_t part, bool& r_setting);
 	void GetInvisible(MCExecContext& ctxt, uint32_t part, bool& r_setting);
 	virtual void SetInvisible(MCExecContext& ctxt, uint32_t part, bool setting);
+    void GetEffectiveInvisible(MCExecContext& ctxt, uint32_t part, bool& r_setting);
 	void GetEnabled(MCExecContext& ctxt, uint32_t part, bool& r_setting);
 	virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
 	void GetDisabled(MCExecContext& ctxt, uint32_t part, bool& r_setting);
@@ -956,6 +972,7 @@ public:
 
 	void GetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_props);
 	void SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef props);
+    void GetEffectiveProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_props);
 	void GetCustomPropertySet(MCExecContext& ctxt, MCStringRef& r_propset);
 	void SetCustomPropertySet(MCExecContext& ctxt, MCStringRef propset);
 	void GetCustomPropertySets(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_propsets);
@@ -1050,12 +1067,14 @@ protected:
 	//   font attrs after the font table loads.
 	void loadfontattrs(uint2 index);
 	
-	// MW-2012-02-14: [[ FontRefs ]] Called by open/close to map/unmap the concrete font.
-	void mapfont(void);
-	void unmapfont(void);
-	
-	void setscript_cstring(const char *script);
-	
+	void setscript(MCStringRef);
+	void setscript_cstring(const char *script)
+	{
+		MCAutoStringRef t_script;
+		/* UNCHECKED */ MCStringCreateWithCString(script, &t_script);
+		setscript(*t_script);
+	}
+
 private:
 #ifdef OLD_EXEC
 	Exec_stat setvisibleprop(uint4 parid, Properties which, MCExecPoint& ep);
@@ -1109,6 +1128,12 @@ private:
 	MCImage *resolveimage(MCStringRef name, uint4 image_id);
 	
 	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, MCStringRef carray, Boolean effective);
+
+	// MW-2012-02-14: [[ FontRefs ]] Called by open/close to map/unmap the concrete font.
+	// MW-2013-08-23: [[ MeasureText ]] Made private as external uses of them can be
+	//   done via measuretext() in a safe way.
+	void mapfont(void);
+	void unmapfont(void);
 
 	friend class MCObjectHandle;
 	friend class MCEncryptedStack;

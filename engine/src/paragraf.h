@@ -138,6 +138,8 @@ class MCParagraph : public MCDLlist
 	findex_t startindex, endindex, originalindex;
 	uint2 opened;
 	uint1 state;
+	// MP-2013-09-02: [[ FasterField ]] If true, it means the paragraph needs layout.
+	bool needs_layout : 1;
 	// MW-2012-01-25: [[ ParaStyles ]] This paragraphs collection of attrs.
 	MCParagraphAttrs *attrs;
 
@@ -329,7 +331,6 @@ public:
 
 	// Insert the given string into the paragraph at the focusedindex.
 	// Called by any client that does text insertion.
-
 	void finsertnobreak(MCStringRef p_string, MCRange p_range);
 	Boolean finsertnew(MCStringRef p_string);
 
@@ -516,6 +517,8 @@ public:
 	//   flagged status set to true - these are then adjusted by delta.
 	// MW-2012-02-24: [[ FieldChars ]] Pass in the part_id so the paragraph can map
 	//   field indices to char indices.
+    // MW-2013-07-31: [[ Bug 10957 ]] Pass in the start of the paragraph as a byte
+	//   offset so that the correct char offset can be calculated.
 	void getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, findex_t si, findex_t ei, int32_t p_delta);
     void getflaggedranges(uint32_t p_part_id, findex_t si, findex_t ei, int32_t p_delta, MCInterfaceFlaggedRanges& r_ranges);
     
@@ -524,6 +527,13 @@ public:
 	// Called by:
 	//   MCField::getprop
 	Boolean pageheight(uint2 fixedheight, uint2 &theight, MCLine *&lastline);
+
+    // JS-2013-05-15: [[ PageRanges ]] pagerange as variant of pageheight
+	// Return true if the paragraph completely fits in theight. Otherwise, return
+	// false and set lastline to the line that would be clipped.
+	// Called by:
+	//   MCField::getprop
+	Boolean pagerange(uint2 fixedheight, uint2 &theight, uint2 &tend, MCLine *&lastline);
 
 	// Returns true if any of the paragraph attributes are non-default.
 	bool hasattrs(void);
@@ -647,7 +657,7 @@ public:
 	void adjustrectsfortable(MCRectangle& x_inner_rect, MCRectangle& x_outer_rect);
 
 	// Force the paragraph to re-flow itself depending on its setting of dontWrap.
-	void layout(void);
+	void layout(bool p_force);
 	
 	// Draw the paragraph
 	void draw(MCDC *dc, int2 x, int2 y,
@@ -782,11 +792,11 @@ public:
 	
 	// Returns true if the given block is part of a link, in which case si is
 	// the start index of the link.
-	Boolean extendup(MCBlock *bptr, findex_t &si);
+	MCBlock* extendup(MCBlock *bptr, findex_t &si);
 	
 	// Returns true if the given block is part of a link, in which case ei is
 	// the end index of the link.
-	Boolean extenddown(MCBlock *bptr, findex_t &ei);
+	MCBlock* extenddown(MCBlock *bptr, findex_t &ei);
 
     void GetTextAlign(MCExecContext& ctxt, intenum_t*& r_value);
     void GetEffectiveTextAlign(MCExecContext& ctxt, intenum_t& r_value);

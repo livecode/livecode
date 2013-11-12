@@ -45,6 +45,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "socket.h"
 
+#include "resolution.h"
+
 #define VK_LAST 0xDE   //last is 222
 #define LEAVE_CHECK_INTERVAL 500
 #ifndef WM_MOUSEWHEEL
@@ -468,6 +470,11 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 	Boolean down;
 	char buffer[XLOOKUPSTRING_SIZE];
 
+	// IM-2013-08-08: [[ ResIndependence ]] scale mouse position from device to user space
+	MCPoint t_mouseloc;
+	t_mouseloc.x = LOWORD(lParam) / MCResGetDeviceScale();
+	t_mouseloc.y = HIWORD(lParam) / MCResGetDeviceScale();
+
 	// MW-2005-02-20: Seed the SSL random number generator
 #ifdef MCSSL
 	SeedSSL(msg, wParam, lParam);
@@ -493,30 +500,28 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				MCParameter *t_first_parameter = NULL;
 				MCParameter *t_current_parameter = NULL;
 
-				extern char *strndup(const char *, unsigned int);
-				char *t_command_line = strndup((char *)t_data -> lpData, t_data -> cbData);
+				MCStringRef t_tempstr;
+				MCAutoStringRef t_cmdline;
+				/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)t_data -> lpData, t_data -> cbData, kMCStringEncodingUTF16, false, t_tempstr);
+				/* UNCHECKED */ MCStringMutableCopyAndRelease(t_tempstr, &t_cmdline);
+				/* UNCHECKED */ MCStringFindAndReplaceChar(*t_cmdline, '\\', '/', kMCStringOptionCompareExact);
 
-				char *sptr = t_command_line;
-				while(*sptr)
+				uindex_t sptr = 0;
+				unichar_t t_char;
+				while((t_char = MCStringGetCharAtIndex(*t_cmdline, sptr)) != '\0')
 				{
-					if (*sptr == '\\')
-						*sptr = '/';
-					sptr++;
-				}
-				sptr = t_command_line;
-				while(*sptr)
-				{
-					char *t_argument;
+					uindex_t t_argument;
 					int t_argument_length;
 
-					while (isspace(*sptr))
-						sptr++;
+					while (iswspace(t_char))
+						t_char = MCStringGetCharAtIndex(*t_cmdline, ++sptr);
 
 					t_argument_length = 0;
-					if (*sptr == '"')
+					if (t_char == '"')
 					{
 						t_argument = ++sptr;
-						while (*sptr && *sptr != '"')
+						while ((t_char = MCStringGetCharAtIndex(*t_cmdline, sptr)) != '\0'
+							&& t_char != '"')
 						{
 							sptr++;
 							t_argument_length += 1;
@@ -525,9 +530,9 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					else
 					{
 						t_argument = sptr;
-						while(*sptr && !isspace(*sptr))
+						while (t_char != '\0' && iswspace(t_char))
 						{
-							sptr++;
+							t_char = MCStringGetCharAtIndex(*t_cmdline, ++sptr);
 							t_argument_length += 1;
 						}
 					}
@@ -535,10 +540,10 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					if (t_argument_length != 0)
 					{
 						MCParameter *t_parameter;
-						MCString t_param;
-						t_param . set(t_argument, t_argument_length);
+						MCAutoStringRef t_param;
+						/* UNCHECKED */ MCStringCopySubstring(*t_cmdline, MCRangeMake(t_argument, t_argument_length), &t_param);
 						t_parameter = new MCParameter;
-						t_parameter -> sets_argument(t_param);
+						t_parameter -> setvalueref_argument(*t_param);
 						if (t_first_parameter == NULL)
 							t_first_parameter = t_parameter;
 						else
@@ -546,8 +551,8 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 						t_current_parameter = t_parameter;
 					}
 
-					if (*sptr)
-						sptr++;
+					if (t_char != '\0')
+						t_char = MCStringGetCharAtIndex(*t_cmdline, ++sptr);
 				}
 
 				if (MCdispatcher -> gethome() -> message(MCM_relaunch, t_first_parameter, False, True) != ES_NORMAL)
@@ -570,8 +575,6 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					delete t_first_parameter;
 					t_first_parameter = t_next;
 				}
-
-				free(t_command_line);
 
 				MCresult -> clear();
 			}
@@ -990,23 +993,29 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		break;
 	case WM_MOUSEMOVE:  //MotionNotify:
 	case WM_NCMOUSEMOVE:
-		if (MCmousex != LOWORD(lParam) || MCmousey != HIWORD(lParam))
+		// IM-2013-09-23: [[ FullscreenMode ]] Update mouseloc with MCscreen getters & setters
+		MCStack *t_old_mousestack;
+		MCPoint t_old_mouseloc;
+		MCscreen->getmouseloc(t_old_mousestack, t_old_mouseloc);
+		if (t_old_mouseloc.x != t_mouseloc.x || t_old_mouseloc.y != t_mouseloc.y)
 		{
-			MCmousex = LOWORD(lParam);
-			MCmousey = HIWORD(lParam);
+			MCscreen->setmouseloc(t_old_mousestack, t_mouseloc);
 			if (curinfo->dispatch)
 			{
-				MCStack *oms = MCmousestackptr;
 				if (msg != WM_NCMOUSEMOVE)
-					MCmousestackptr = MCdispatcher->findstackd(dw);
+					MCscreen->setmouseloc(MCdispatcher->findstackd(dw), t_mouseloc);
 				if (MCtracewindow == DNULL || hwnd != (HWND)MCtracewindow->handle.window)
 				{
-					if (oms != NULL && MCmousestackptr != oms)
-						oms->munfocus();
+					if (t_old_mousestack != NULL && MCmousestackptr != t_old_mousestack)
+						t_old_mousestack->munfocus();
 					if (msg == WM_MOUSEMOVE)
 					{
-						MCdispatcher->wmfocus(dw, MCmousex, MCmousey);
-						if (capturehwnd != NULL && MCbuttonstate != 0 && !dragclick && (MCU_abs(MCmousex - MCclicklocx) >= MCdragdelta || MCU_abs(MCmousey - MCclicklocy) >= MCdragdelta))
+						MCPoint t_clickloc;
+						MCStack *t_stackptr;
+						MCscreen->getclickloc(t_stackptr, t_clickloc);
+
+						MCdispatcher->wmfocus(dw, t_mouseloc.x, t_mouseloc.y);
+						if (capturehwnd != NULL && MCbuttonstate != 0 && !dragclick && (MCU_abs(t_mouseloc.x - t_clickloc.x) >= MCdragdelta || MCU_abs(t_mouseloc.y - t_clickloc.y) >= MCdragdelta))
 						{
 							dragclick = True;
 							MCdispatcher -> wmdrag(dw);
@@ -1097,17 +1106,16 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					else
 					{
 						if (doubleclick && MCeventtime - clicktime < MCdoubletime
-						        && MCU_abs(MCclicklocx - LOWORD(lParam)) < MCdoubledelta
-						        && MCU_abs(MCclicklocy - HIWORD(lParam)) < MCdoubledelta)
+						        && MCU_abs(MCclicklocx - t_mouseloc.x) < MCdoubledelta
+						        && MCU_abs(MCclicklocy - t_mouseloc.y) < MCdoubledelta)
 							tripleclick = True;
 						else
 							tripleclick = False;
 						doubleclick = False;
-						MCclicklocx = LOWORD(lParam);
-						MCclicklocy = HIWORD(lParam);
-						MCclickstackptr = MCmousestackptr;
+						// IM-2013-09-23: [[ FullscreenMode ]] Update clickloc with MCscreen getters & setters
+						MCscreen->setclickloc(MCmousestackptr, t_mouseloc);
 						dragclick = False;
-						MCdispatcher->wmfocus(dw, LOWORD(lParam), HIWORD(lParam));
+						MCdispatcher->wmfocus(dw, t_mouseloc.x, t_mouseloc.y);
 						MCdispatcher->wmdown(dw, button);
 					}
 				else
@@ -1142,12 +1150,12 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					if (target->isiconic())
 					{
 						MCstacks->restack(target);
-						target->configure(True);
+						target->view_configure(true);
 						target->uniconify();
 						SetWindowPos((HWND)target -> getwindow() -> handle . window, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
 					}
 					else
-						target->configure(True);
+						target->view_configure(true);
 				curinfo->handled = True;
 			}
 		}

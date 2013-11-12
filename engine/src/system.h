@@ -114,11 +114,6 @@ public:
         return (r_buffer != nil);
 	}
 	
-	void WriteAt(uint32_t p_pos, const void *p_buffer, uint32_t p_length)
-	{
-		memcpy(m_buffer + p_pos, p_buffer, p_length);
-	}
-	
 	void Close(void)
 	{
 		if (m_capacity != 0)
@@ -249,10 +244,6 @@ public:
 	{
 		m_state = p_state;
 		m_callbacks = p_callbacks;
-	}
-	
-	void WriteAt(uint32_t p_pos, const void *p_buffer, uint32_t p_length)
-	{
 	}
 	
 	void Close(void)
@@ -524,6 +515,7 @@ bool MCSystemProcessUrl(MCStringRef p_url, MCSystemUrlOperation p_operations, MC
 bool MCSystemLoadUrl(MCStringRef p_url, MCSystemUrlCallback p_callback, void *p_context);
 bool MCSystemPostUrl(MCStringRef p_url, MCDataRef p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context);
 bool MCSystemPutUrl(MCStringRef p_url, MCDataRef p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context);
+void MCSystemSetUrlSSLVerification(bool enabled);
 
 //////////
 

@@ -66,7 +66,7 @@ struct message_t
 };
 
 extern void md5_compute(const char *p_data, unsigned int p_length, void *p_buffer);
-extern char *MCcmdline;
+extern MCStringRef MCcmdline;
 
 static char *s_previous_folder = NULL;
 
@@ -447,8 +447,8 @@ bool relaunch_startup(MCStringRef p_stack_name)
 			message_t t_message;
 			t_message . window = t_existing_instances[t_instance] . message_window;
 			t_message . id = CWM_RELAUNCH;
-			t_message . data = (void *)MCcmdline;
-			t_message . data_length = strlen(MCcmdline);
+			t_message . data = (void*)MCStringGetCharPtr(MCcmdline);
+			t_message . data_length = MCStringGetLength(MCcmdline);
 			t_message . timeout = 1 << 30;
 
 			unsigned int t_reply;

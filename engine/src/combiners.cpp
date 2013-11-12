@@ -23,6 +23,8 @@ typedef unsigned int uint32_t;
 typedef unsigned short uint16_t; 
 typedef unsigned char uint8_t;
 
+static uint32_t g_current_background_colour = 0;
+
 enum Operation
 {
 	// Bitwise

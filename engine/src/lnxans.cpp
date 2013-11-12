@@ -114,6 +114,8 @@ void gtk_init(void)
 		// We need to reset the locale to the C portable one here, as GTK
 		// breaks numbers for French systems.
 		
+		/* TODO */
+		// Revisit this as it is not ideal in a Unicode world...
 		setlocale(LC_ALL, "C");
 		//NOTE: Should this be :
 		//		setlocale(LC_NUMERIC, "C")
@@ -764,11 +766,16 @@ bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bo
 	return true;
 }
 
+// MERG-2013-08-18: Stubs for colorDialogColors.
+void MCA_setcolordialogcolors(MCColor* p_colors, uindex_t p_count)
+{
 
+}
 
-
-
-
+void MCA_getcolordialogcolors(MCColor*& r_colors, uindex_t& r_count)
+{
+	r_count = 0;
+}
 
 // ---===================================================---
 //

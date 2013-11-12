@@ -34,9 +34,11 @@ struct MCBitmapEffectBlur
 {
 	// We make the destructor virtual, although cleanup should happen in Finalize.
 	virtual ~MCBitmapEffectBlur(void) {}
-
+	
+	// MP-2013-02-05: [[ x64 ]] Change strides to be signed to avoid problems with
+	//   ptr arithmetic and promotions in 64-bit.
 	// This method is called by BlurBegin after its setup the common state.
-	virtual bool Initialize(const MCBitmapEffectBlurParameters& params, const MCRectangle& input_rect, const MCRectangle& output_rect, uint32_t *src_pixels, uint32_t src_stride) = 0;
+	virtual bool Initialize(const MCBitmapEffectBlurParameters& params, const MCRectangle& input_rect, const MCRectangle& output_rect, uint32_t *src_pixels, int32_t src_stride) = 0;
 
 	// This method is called by BlurContinue to produce the next scanline.
 	virtual void Process(uint8_t *mask) = 0;
@@ -51,7 +53,9 @@ struct MCBitmapEffectBlur
 // blur implementations :o)
 static bool MCBitmapEffectBlurFactory(MCBitmapEffectFilter type, MCBitmapEffectBlur*& r_blur);
 
-bool MCBitmapEffectBlurBegin(const MCBitmapEffectBlurParameters& p_params, const MCRectangle& p_input_rect, const MCRectangle& p_output_rect, uint32_t *p_src_pixels, uint32_t p_src_stride, MCBitmapEffectBlurRef& r_blur)
+// MP-2013-02-05: [[ x64 ]] Change strides to be signed to avoid problems with
+//   ptr arithmetic and promotions in 64-bit.
+bool MCBitmapEffectBlurBegin(const MCBitmapEffectBlurParameters& p_params, const MCRectangle& p_input_rect, const MCRectangle& p_output_rect, uint32_t *p_src_pixels, int32_t p_src_stride, MCBitmapEffectBlurRef& r_blur)
 {
 	MCBitmapEffectBlur *t_blur;
 	if (!MCBitmapEffectBlurFactory(p_params.filter, t_blur))
@@ -92,9 +96,11 @@ struct MCBitmapEffectGaussianBlurState
 {
 	int32_t radius;
 	uint32_t *kernel;
-
+	
+	// MP-2013-02-05: [[ x64 ]] Change strides to be signed to avoid problems with
+	//   ptr arithmetic and promotions in 64-bit.
 	uint32_t *pixels;
-	uint32_t stride;
+	int32_t stride;
 
 	int32_t width;
 	int32_t height;
@@ -106,7 +112,9 @@ struct MCBitmapEffectGaussianBlurState
 
 struct MCBitmapEffectGaussianBlur: public MCBitmapEffectBlur
 {
-	bool Initialize(const MCBitmapEffectBlurParameters& params, const MCRectangle& input_rect, const MCRectangle& output_rect, uint32_t *src_pixels, uint32_t src_stride);
+	// MP-2013-02-05: [[ x64 ]] Change strides to be signed to avoid problems with
+	//   ptr arithmetic and promotions in 64-bit.
+	bool Initialize(const MCBitmapEffectBlurParameters& params, const MCRectangle& input_rect, const MCRectangle& output_rect, uint32_t *src_pixels, int32_t src_stride);
 	void Process(uint8_t *mask);
 	void Finalize(void);
 
@@ -177,7 +185,9 @@ static uint32_t *MCBitmapEffectComputeBlurKernel(uint4 r)
 	return ik;
 }
 
-bool MCBitmapEffectGaussianBlur::Initialize(const MCBitmapEffectBlurParameters& params, const MCRectangle& input_rect, const MCRectangle& output_rect, uint32_t *src_pixels, uint32_t src_stride)
+// MP-2013-02-05: [[ x64 ]] Change strides to be signed to avoid problems with
+//   ptr arithmetic and promotions in 64-bit.
+bool MCBitmapEffectGaussianBlur::Initialize(const MCBitmapEffectBlurParameters& params, const MCRectangle& input_rect, const MCRectangle& output_rect, uint32_t *src_pixels, int32_t src_stride)
 {
 	state . radius = params . radius;
 	if (params . radius != 0)
@@ -279,15 +289,19 @@ void MCBitmapEffectGaussianBlur::Finalize(void)
 
 struct MCBitmapEffectFastGaussianBlur: public MCBitmapEffectBlur
 {
-	bool Initialize(const MCBitmapEffectBlurParameters& params, const MCRectangle& input_rect, const MCRectangle& output_rect, uint32_t *src_pixels, uint32_t src_stride);
+	// MP-2013-02-05: [[ x64 ]] Change strides to be signed to avoid problems with
+	//   ptr arithmetic and promotions in 64-bit.
+	bool Initialize(const MCBitmapEffectBlurParameters& params, const MCRectangle& input_rect, const MCRectangle& output_rect, uint32_t *src_pixels, int32_t src_stride);
 	void Process(uint8_t *mask);
 	void Finalize(void);
 
 	int32_t radius;
 	uint32_t *kernel;
-
+	
+	// MP-2013-02-05: [[ x64 ]] Change strides to be signed to avoid problems with
+	//   ptr arithmetic and promotions in 64-bit.
 	uint32_t *pixels;
-	uint32_t stride;
+	int32_t stride;
 
 	int32_t width;
 	int32_t height;
@@ -295,14 +309,18 @@ struct MCBitmapEffectFastGaussianBlur: public MCBitmapEffectBlur
 	int32_t left, top, right, bottom;
 
 	int32_t y;
-
+	
+	// MP-2013-02-05: [[ x64 ]] Change strides to be signed to avoid problems with
+	//   ptr arithmetic and promotions in 64-bit.
 	uint32_t *buffer;
-	uint32_t buffer_stride;
+	int32_t buffer_stride;
 	uint32_t buffer_height;
 	uint32_t buffer_nextrow;
 };
 
-bool MCBitmapEffectFastGaussianBlur::Initialize(const MCBitmapEffectBlurParameters& params, const MCRectangle& input_rect, const MCRectangle& output_rect, uint32_t *src_pixels, uint32_t src_stride)
+// MP-2013-02-05: [[ x64 ]] Change strides to be signed to avoid problems with
+//   ptr arithmetic and promotions in 64-bit.
+bool MCBitmapEffectFastGaussianBlur::Initialize(const MCBitmapEffectBlurParameters& params, const MCRectangle& input_rect, const MCRectangle& output_rect, uint32_t *src_pixels, int32_t src_stride)
 {
 	radius = params . radius;
 
@@ -507,7 +525,7 @@ struct MCBitmapEffectBoxBlurPassInfo
 	int32_t window;
 
 	int32_t width;
-	uint32_t stride;
+	int32_t stride;
 	uint32_t height;
 	uint32_t buffer_height;
 
@@ -517,7 +535,9 @@ struct MCBitmapEffectBoxBlurPassInfo
 
 struct MCBitmapEffectBoxBlur: public MCBitmapEffectBlur
 {
-	bool Initialize(const MCBitmapEffectBlurParameters& params, const MCRectangle& input_rect, const MCRectangle& output_rect, uint32_t *src_pixels, uint32_t src_stride);
+	// MP-2013-02-05: [[ x64 ]] Change strides to be signed to avoid problems with
+	//   ptr arithmetic and promotions in 64-bit.
+	bool Initialize(const MCBitmapEffectBlurParameters& params, const MCRectangle& input_rect, const MCRectangle& output_rect, uint32_t *src_pixels, int32_t src_stride);
 	void Process(uint8_t *mask);
 	void Finalize(void);
 
@@ -538,9 +558,11 @@ struct MCBitmapEffectBoxBlur: public MCBitmapEffectBlur
 	int32_t height;
 
 	int32_t top, bottom, left, right;
-
+	
+	// MP-2013-02-05: [[ x64 ]] Change strides to be signed to avoid problems with
+	//   ptr arithmetic and promotions in 64-bit.
 	uint32_t *pixels;
-	uint32_t stride;
+	int32_t stride;
 
 	MCBitmapEffectBoxBlurPassInfo *pass_info;
 
@@ -549,7 +571,9 @@ struct MCBitmapEffectBoxBlur: public MCBitmapEffectBlur
 	uint32_t spread;
 };
 
-bool MCBitmapEffectBoxBlur::Initialize(const MCBitmapEffectBlurParameters& params, const MCRectangle& input_rect, const MCRectangle& output_rect, uint32_t *src_pixels, uint32_t src_stride)
+// MP-2013-02-05: [[ x64 ]] Change strides to be signed to avoid problems with
+//   ptr arithmetic and promotions in 64-bit.
+bool MCBitmapEffectBoxBlur::Initialize(const MCBitmapEffectBlurParameters& params, const MCRectangle& input_rect, const MCRectangle& output_rect, uint32_t *src_pixels, int32_t src_stride)
 {
 	width = output_rect . width;
 	height = output_rect . height;
@@ -807,7 +831,7 @@ void MCBitmapEffectBoxBlur::Process(uint8_t *mask)
 			t_sleft = t_pass->left - t_pass->radius;
 			t_sright = MCU_min(width, t_pass->right + t_pass->radius + 1);
 
-			// MW_2012-04-05: [[ Bug 10146 ]] It is possible for spread to be 0, if it is
+			// MW-2012-04-05: [[ Bug 10146 ]] It is possible for spread to be 0, if it is
 			//   then the mask is all 0xff.
 			// calculate minimum sum for which sum * spread / area
 			// is greater than the maximum value

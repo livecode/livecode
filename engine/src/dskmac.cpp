@@ -276,13 +276,11 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 			Rect t_rect;
 			GetWindowPortBounds((WindowPtr)t_window . handle . window, &t_rect);
 			
+			// IM-2013-10-11: [[ FullscreenMode ]] Move stack scroll handling into stack transform
 			t_rect . right -= t_rect . left;
 			t_rect . bottom -= t_rect . top;
 			t_rect . left = 0;
-			
-			// MW-2011-09-12: [[ MacScroll ]] Make sure the top of the HIView takes into
-			//   account the scroll.
-			t_rect . top = -sptr -> getscroll();
+			t_rect . top = 0;
 			
 			ControlRef t_root_control;
 			GetRootControl((WindowPtr)t_window . handle . window, &t_root_control);
@@ -293,7 +291,7 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 			
 			// MW-2007-08-29: [[ Bug 4846 ]] Ensure a moveStack message is sent whenever the window moves
 			if ((attributes & kWindowBoundsChangeSizeChanged) != 0 || ((attributes & kWindowBoundsChangeUserDrag) != 0 && (attributes & kWindowBoundsChangeOriginChanged) != 0))
-				sptr->configure(True);//causes a redraw and recalculation
+				sptr->view_configure(True);//causes a redraw and recalculation
 		}
 		else if (GetEventKind(event) == kEventWindowInit && sptr != NULL)
 		{
@@ -362,7 +360,9 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 
 static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refCon)
 {
-	if (!MCSecureModeCheckAppleScript())
+	// MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
+	//   don't handle the event.
+	if (!MCSecureModeCanAccessAppleScript())
 		return errAEEventNotHandled;
     
 	OSErr err = errAEEventNotHandled;  //class, id, sender
@@ -505,9 +505,12 @@ static pascal OSErr DoOpenApp(const AppleEvent *theAppleEvent, AppleEvent *reply
 static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
 { //Apple Event for opening documnets, in our use is to open stacks when user
 	//double clicked on a MC stack icon
-	if (!MCSecureModeCheckAppleScript())
+
+    // MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
+	//   don't handle the event.
+	if (!MCSecureModeCanAccessAppleScript())
 		return errAEEventNotHandled;
-	
+    
 	AEDescList docList; //get a list of alias records for the documents
 	errno = AEGetParamDesc(theAppleEvent, keyDirectObject, typeAEList, &docList);
 	if (errno != noErr)
@@ -552,8 +555,11 @@ static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply
 
 static pascal OSErr DoPrintDoc(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
 {
-	if (!MCSecureModeCheckAppleScript())
-		return errAEEventNotHandled;
+	// MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
+	//   don't handle the event.
+	if (!MCSecureModeCanAccessAppleScript())
+        if (!MCSecureModeCheckAppleScript())
+            return errAEEventNotHandled;
     
 	errno = errAEEventNotHandled;
 	if (reply != NULL)
@@ -566,8 +572,10 @@ static pascal OSErr DoPrintDoc(const AppleEvent *theAppleEvent, AppleEvent *repl
 
 static pascal OSErr DoQuitApp(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
 {
-	if (!MCSecureModeCheckAppleScript())
-		return errAEEventNotHandled;
+	// MW-2013-08-07: [[ Bug 10865 ]] Even if AppleScript is disabled we still need
+	//   to handle the 'quit' message.
+	// if (!MCSecureModeCanAccessAppleScript())
+	//	return errAEEventNotHandled;
     
 	errno = errAEEventNotHandled;
 	switch (MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
@@ -592,8 +600,10 @@ static pascal OSErr DoQuitApp(const AppleEvent *theAppleEvent, AppleEvent *reply
 
 static pascal OSErr DoAppPreferences(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
 {
-	if (!MCSecureModeCheckAppleScript())
-		return errAEEventNotHandled;
+	// MW-2013-08-07: [[ Bug 10865 ]] Even if AppleScript is disabled we still need
+	//   to handle the 'preferences' message.
+	//if (!MCSecureModeCanAccessAppleScript())
+	//	return errAEEventNotHandled;
     
 	MCGroup *mb = MCmenubar != NULL ? MCmenubar : MCdefaultmenubar;
 	if (mb == NULL)
@@ -603,7 +613,7 @@ static pascal OSErr DoAppPreferences(const AppleEvent *theAppleEvent, AppleEvent
 		return errAEEventNotHandled;
 	if (bptr != NULL)
 	{
-		bptr->message_with_args(MCM_menu_pick, "Preferences");
+		bptr->message_with_valueref_args(MCM_menu_pick, MCSTR("Preferences"));
 	}
 	return noErr;
 }
@@ -633,7 +643,9 @@ static pascal OSErr DoAppDied(const AppleEvent *theAppleEvent, AppleEvent *reply
 
 static pascal OSErr DoAEAnswer(const AppleEvent *ae, AppleEvent *reply, long refCon)
 {
-	if (!MCSecureModeCheckAppleScript())
+	// MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
+	//   don't handle the event.
+	if (!MCSecureModeCanAccessAppleScript())
 		return errAEEventNotHandled;
     
     //process the repy(answer) returned from a server app. When MCS_send() with
@@ -1213,7 +1225,7 @@ real8 curtime;
 
 bool MCS_mac_is_link(MCStringRef p_path)
 {
-#ifdef /* MCS_is_link_mac_dsk */ LEGACY_SYSTEM
+#ifdef /* MCS_is_link_mac_dsk */ LEGACY_SYSTEM_ORPHAN
 	struct stat buf;
 	return (lstat(MCStringGetCString(p_path), &buf) == 0 && S_ISLNK(buf.st_mode));
 #endif /* MCS_is_link_mac_dsk */
@@ -1223,7 +1235,7 @@ bool MCS_mac_is_link(MCStringRef p_path)
 
 bool MCS_mac_readlink(MCStringRef p_path, MCStringRef& r_link)
 {
-#ifdef /* MCS_readlink_mac_dsk */ LEGACY_SYSTEM
+#ifdef /* MCS_readlink_mac_dsk */ LEGACY_SYSTEM_ORPHAN
 	struct stat t_stat;
 	ssize_t t_size;
 	MCAutoNativeCharArray t_buffer;
@@ -4392,7 +4404,13 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (!IsInteractiveConsole(0))
             MCS_mac_nodelay(0);
         
-        setlocale(LC_ALL, MCnullstring);
+		// Internally, LiveCode assumes sorting orders etc are those of en_US.
+		// Additionally, the "native" string encoding for Mac is MacRoman
+		// (even though the BSD components of the system are likely UTF-8).
+		const char *t_internal_locale = "en_US";
+		setlocale(LC_ALL, "");
+		setlocale(LC_CTYPE, t_internal_locale);
+		setlocale(LC_COLLATE, t_internal_locale);
         
         _CurrentRuneLocale->__runetype[202] = _CurrentRuneLocale->__runetype[201];
         
@@ -5451,7 +5469,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (NULL == getcwd(namebuf, PATH_MAX))
             return false;
         
-        if (!MCStringCreateWithBytesAndRelease((byte_t*)namebuf, strlen(namebuf), kMCStringEncodingUTF8, false, r_path))
+        if (!MCStringCreateWithBytes((byte_t*)namebuf, strlen(namebuf), kMCStringEncodingUTF8, false, r_path))
         {
             r_path = MCValueRetain(kMCEmptyString);
             return false;
@@ -7258,7 +7276,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                     MCprocesses[index].pid = 0;
                     MCeerror->add
                     (EE_SHELL_BADCOMMAND, 0, 0, MCStringGetCString(p_command));
-                    return IO_ERROR;
+                    return false;
                 }
             }
             else
@@ -7267,14 +7285,14 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 close(tochild[1]);
                 MCeerror->add
                 (EE_SHELL_BADCOMMAND, 0, 0, MCStringGetCString(p_command));
-                return IO_ERROR;
+                return false;
             }
         }
         else
         {
             MCeerror->add
             (EE_SHELL_BADCOMMAND, 0, 0, MCStringGetCString(p_command));
-            return IO_ERROR;
+            return false;
         }
         char *buffer;
         uint4 buffersize;
@@ -7316,7 +7334,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         r_retcode = MCprocesses[index].retcode;        
         
-        return IO_NORMAL;
+        return true;
     }
     
     virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, intenum_t p_mode, Boolean p_elevated)
@@ -7944,16 +7962,12 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     virtual bool AlternateLanguages(MCListRef& r_list)
     {
 #ifdef /* MCS_alternatelanguages_dsk_mac */ LEGACY_SYSTEM
-	MCAutoListRef t_list;
-	if (!MCListCreateMutable('\n', &t_list))
-		return false;
+    ep . clear();
 	
 	getosacomponents();
-	for (uindex_t i = 0; i < osancomponents; i++)
-		if (!MCListAppendCString(*t_list, osacomponents[i].compname))
-			return false;
-	
-	return MCListCopy(*t_list, r_list);
+    uint2 i;
+    for (i = 0; i < osancomponents; i++)
+        ep.concatcstring(osacomponents[i].compname, EC_RETURN, i == 0);
 #endif /* MCS_alternatelanguages_dsk_mac */
         MCAutoListRef t_list;
         if (!MCListCreateMutable('\n', &t_list))
@@ -8044,6 +8058,16 @@ static bool fetch_ae_as_fsref_list(char*& string, uint4& length)
 		AEDisposeDesc(&docList);
 	}
 	return true;
+}
+
+OSErr MCS_fsspec_to_fsref(const FSSpec *p_fsspec, FSRef *r_fsref)
+{
+	return FSpMakeFSRef(p_fsspec, r_fsref);
+}
+
+OSErr MCS_fsref_to_fsspec(const FSRef *p_fsref, FSSpec *r_fsspec)
+{
+	return FSGetCatalogInfo(p_fsref, 0, NULL, NULL, r_fsspec, NULL);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -8974,12 +8998,14 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 		if (t_status == noErr)
 		{
 			char *t_name_dup;
-			t_name_dup = strdup(MCNameGetCString(name));
+			/* UNCHECKED */ MCStringConvertToUTF8String(MCNameGetString(name), t_name_dup);
 			
 			// Split the arguments
 			uint32_t t_argc;
 			char **t_argv;
-			startprocess_create_argv(t_name_dup, const_cast<char *>(MCStringGetCString(doc)), t_argc, t_argv);
+			char *t_doc;
+			/* UNCHECKED */ MCStringConvertToUTF8String(doc, t_doc);
+			startprocess_create_argv(t_name_dup, t_doc, t_argc, t_argv);
 			startprocess_write_uint32_to_fd(fileno(t_stream), t_argc);
 			for(uint32_t i = 0; i < t_argc; i++)
 				startprocess_write_cstring_to_fd(fileno(t_stream), t_argv[i]);
@@ -8987,6 +9013,7 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 				t_status = errAuthorizationToolExecuteFailure;
 			
 			delete t_name_dup;
+			delete t_doc;
 			delete[] t_argv;
 		}
 		
@@ -9025,4 +9052,27 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 	}
 	else
 		MCresult->clear(False);
+}
+
+bool MCS_generate_uuid(char p_buffer[128])
+{
+	CFUUIDRef t_uuid;
+	t_uuid = CFUUIDCreate(kCFAllocatorDefault);
+	if (t_uuid != NULL)
+	{
+		CFStringRef t_uuid_string;
+		
+		t_uuid_string = CFUUIDCreateString(kCFAllocatorDefault, t_uuid);
+		if (t_uuid_string != NULL)
+		{
+			CFStringGetCString(t_uuid_string, p_buffer, 127, kCFStringEncodingMacRoman);
+			CFRelease(t_uuid_string);
+		}
+		
+		CFRelease(t_uuid);
+        
+		return true;
+	}
+    
+	return false;
 }

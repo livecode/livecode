@@ -42,24 +42,25 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 static uint2 nvars;
 
-static void create_var(char *v)
+static void create_var(MCStringRef p_var)
 {
-	char vname[U2L + 1];
-	sprintf(vname, "$%d", nvars);
-	nvars++;
+	MCAutoStringRef t_vname;
+	/* UNCHECKED */ MCStringFormat(&t_vname, "$%d", nvars++);
 	
 	MCVariable *tvar;
-	/* UNCHECKED */ MCVariable::ensureglobal_cstring(vname, tvar);
-	tvar->copysvalue(v);
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreate(*t_vname, &t_name);
+	/* UNCHECKED */ MCVariable::ensureglobal(*t_name, tvar);
+	tvar->setvalueref(p_var);
 	
 	MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(MCStringRef));
-	/* UNCHECHED */ MCStringCreateWithCString(v, MCstacknames[MCnstacks++]);
+	MCstacknames[MCnstacks++] = MCValueRetain(p_var);
 }
 
 static void create_var(uint4 p_v)
 {
 	MCVariable *tvar;
-	/* UNCHECKED */ MCVariable::ensureglobal_cstring("$#", tvar);
+	/* UNCHECKED */ MCVariable::ensureglobal(MCNAME("$#"), tvar);
 	tvar->setnvalue(p_v);
 }
 
@@ -71,7 +72,7 @@ static Boolean byte_swapped()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool X_open(int argc, char *argv[], char *envp[]);
+bool X_open(int argc, MCStringRef argv[], MCStringRef envp[]);
 int X_close();
 void X_clear_globals();
 
@@ -82,7 +83,7 @@ MCTheme *MCThemeCreateNative(void)
 	return nil;
 }
 
-bool X_init(int argc, char *argv[], char *envp[])
+bool X_init(int argc, MCStringRef argv[], int envc, MCStringRef envp[])
 {
 	X_clear_globals();
 	
@@ -104,15 +105,12 @@ bool X_init(int argc, char *argv[], char *envp[])
 	// MW-2012-02-23: [[ FontRefs ]] Initialize the logical font table module.
 	MCLogicalFontTableInitialize();
 	
-	////
-	MCAutoStringRef t_argv;
-    /* UNCHECKED */ MCStringCreateWithCString(argv[0], &t_argv);
-	/* UNCHECKED */ MCsystem -> PathFromNative(*t_argv, MCcmd);
+	/* UNCHECKED */ MCsystem -> PathFromNative(argv[0], MCcmd);
 	
 	// Create the $<n> variables.
 	for(uint32_t i = 2; i < argc; ++i)
 		if (argv[i] != nil)
-		create_var(argv[i]);
+			create_var(argv[i]);
 	create_var(nvars);
 
 	////

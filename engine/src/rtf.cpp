@@ -409,18 +409,20 @@ RTFStatus RTFReader::ParseToken(RTFToken& r_token, int4& r_parameter)
 	{
 	case kRTFInputStateNormal:
 	{
-		int t_char;
+		// MW-2013-07-31: [[ Bug 10972 ]] Don't use '\0' to indicate end
+		//   of RTF, just break directly (Adobe Reader 9 on Mac puts \0 in
+		//   font names sometimes causing premature end of RTF parsing).
 		if (m_input == m_input_end)
-			t_char = '\0';
-		else
-			t_char = *m_input;
+		{
+			r_token = kRTFTokenEnd;
+			break;
+		}
+		
+		int t_char;
+		t_char = *m_input;
 		
 		switch(t_char)
 		{
-		case '\0':
-			r_token = kRTFTokenEnd;
-		break;
-
 		case '{':
 			r_token = kRTFTokenBeginGroup;
 			m_input++;
@@ -714,7 +716,7 @@ RTFStatus RTFReader::ParseDocument(RTFToken p_token, int4 p_value)
 		{
 			if (p_value < 0)
 				p_value = 65536 + p_value;
-
+			
 			m_default_text_encoding = (MCTextEncoding)(kMCTextEncodingWindowsNative + p_value);
 		}
 	break;
