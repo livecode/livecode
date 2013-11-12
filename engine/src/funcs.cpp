@@ -1420,26 +1420,10 @@ void MCBinaryEncode::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndExpression(ctxt);
 }
 
-Exec_stat MCBuildNumber::eval(MCExecPoint &ep)
-{
 #ifdef /* MCBuildNumber */ LEGACY_EXEC
 	ep.setint(MCbuildnumber);
 	return ES_NORMAL;
 #endif /* MCBuildNumber */
-
-	MCExecContext ctxt(ep);
-
-	integer_t t_result;
-	MCEngineEvalBuildNumber(ctxt, t_result);
-
-	if (!ctxt . HasError())
-	{
-		ep . setint(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 Exec_stat MCCachedUrls::eval(MCExecPoint &ep)
 {

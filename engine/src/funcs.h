@@ -65,6 +65,23 @@ public:
 	virtual MCParameter *getmethodarg(void) const = 0;
 	virtual void compile(MCSyntaxFactoryRef ctxt);
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Helper class that simplifies evaluation of functions not taking any arguments.
+
+template<typename ReturnType, void (*EvalFunction)(MCExecContext&, typename MCExecValueTraits<ReturnType>::out_type)> class MCConstantFunctionCtxt: public MCConstantFunction
+{
+public:
+	void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+	{
+		ReturnType t_result;
+		EvalFunction(ctxt, t_result);
+		if (!ctxt . HasError())
+			MCExecValueTraits<ReturnType>::set(r_value, t_result);
+	}
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCArrayDecode: public MCUnaryFunction
@@ -175,10 +192,10 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCBuildNumber : public MCConstantFunction
+class MCBuildNumber : public MCConstantFunctionCtxt<integer_t, MCEngineEvalBuildNumber>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalBuildNumberMethodInfo; }
 };
 

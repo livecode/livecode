@@ -78,6 +78,22 @@ struct MCExecValue
 	};
 };
 
+template<typename T> struct MCExecValueTraits
+{
+};
+
+template<> struct MCExecValueTraits<integer_t>
+{
+	typedef integer_t in_type;
+	typedef integer_t& out_type;
+	
+	inline static void set(MCExecValue& self, integer_t p_value)
+	{
+		self . type = kMCExecValueTypeInt;
+		self . int_value = p_value;
+	}
+};
+
 // Convert the slot from_value of type from_type, to the slot to_type at
 // to_type. This method releases the from_type even if a type conversion
 // error occurs.
