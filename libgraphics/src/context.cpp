@@ -2682,8 +2682,10 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
 
 		// MW-2013-11-07: [[ Bug 11393 ]] Make sure we take into account the 'ideal' flag
 		//   when looking up metrics.
+		// MW-2013-11-12: [[ Bug 11415 ]] Make sure we use p_font.size and not t_size if not
+		//   ideal - otherwise uninitialized values abound...
 		int16_t t_size;
-		t_size = p_font . ideal ? -p_font . size : t_size;
+		t_size = p_font . ideal ? -p_font . size : p_font . size;
 		MCMemoryCopy(t_key_ptr, &t_size, sizeof(p_font . size));
 		t_key_ptr += sizeof(p_font . size);
 
