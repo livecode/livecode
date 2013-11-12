@@ -35,6 +35,22 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <float.h>
 
+////////////////////////////////////////////////////////////////////////
+
+bool valueref_tona(MCExecContext &ctxt, MCValueRef p_value, MCValueRef &r_value)
+{
+    if (!MCValueIsArray(p_value))
+    {
+        MCAutoNumberRef t_number;
+        if (!ctxt . ConvertToNumber(p_value, &t_number))
+            return false;
+
+        r_value = MCValueRetain((MCValueRef)*t_number);
+    }
+
+    return true;
+}
+
 //
 
 inline bool MCMathOpCommandComputeOverlap(MCExpression *p_source, MCExpression *p_dest, MCVarref *p_destvar)
@@ -100,7 +116,7 @@ Parse_stat MCAdd::parse(MCScriptPoint &sp)
 
 // MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
 //   Here the source can be an array or number so we use 'tona'.
-Exec_stat MCAdd::exec(MCExecPoint &ep)
+void MCAdd::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCAdd */ LEGACY_EXEC
 	MCVariable *t_dst_var;
@@ -175,61 +191,63 @@ Exec_stat MCAdd::exec(MCExecPoint &ep)
 	
 	return ES_NORMAL;
 #endif /* MCAdd */
-	MCAutoValueRef t_src;
-	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_ADD_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep . copyasvalueref(&t_src);
+
+    MCAutoValueRef t_src;
+    MCAutoValueRef t_src_as_number;
+    if (!ctxt . EvalExprAsValueRef(source, EE_ADD_BADSOURCE, &t_src))
+        return;
+
+    if (!valueref_tona(ctxt, *t_src, &t_src_as_number))
+    {
+        ctxt . LegacyThrow(EE_ADD_BADSOURCE);
+        return;
+    }
 	
 	MCAutoValueRef t_dst;
-	MCAutoPointer<MCContainer> t_dst_container;
+    MCAutoValueRef t_dst_as_number;
+    MCAutoPointer<MCContainer> t_dst_container;
 	if (destvar != nil)
 	{
-		if (destvar -> evalcontainer(ep, &t_dst_container) != ES_NORMAL)
-		{
-			MCeerror->add(EE_ADD_BADDEST, line, pos);
-			return ES_ERROR;
+        if (!destvar -> evalcontainer(ctxt, &t_dst_container))
+        {
+            ctxt . LegacyThrow(EE_ADD_BADDEST);
+            return;
 		}
 		
-		if (t_dst_container -> eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-			return ES_ERROR;
-		
-		/* UNCHECKED */ ep . copyasvalueref(&t_dst);
+        if (!t_dst_container -> eval(ctxt, &t_dst))
+            return;
 	}
 	else
-	{
-		if (dest->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-		{
-			MCeerror->add(EE_ADD_BADDEST, line, pos);
-			return ES_ERROR;
-		}
-		
-		/* UNCHECKED */ ep . copyasvalueref(&t_dst);
-	}
-	
-	MCExecContext ctxt(ep);
-	
+    {
+        if (!ctxt . EvalExprAsValueRef(dest, EE_ADD_BADDEST, &t_dst))
+            return;
+    }
+
+    if (!valueref_tona(ctxt, *t_dst, &t_dst_as_number))
+    {
+        ctxt . LegacyThrow(EE_ADD_BADDEST);
+        return;
+    }
+
 	MCAutoValueRef t_result;
-	if (MCValueGetTypeCode(*t_src) == kMCValueTypeCodeArray)
+    if (MCValueIsArray(*t_src_as_number))
 	{
-		if (MCValueGetTypeCode(*t_dst) == kMCValueTypeCodeArray)
-			MCMathExecAddArrayToArray(ctxt, (MCArrayRef)*t_src, (MCArrayRef)*t_dst, (MCArrayRef&)&t_result);
+        if (MCValueIsArray(*t_dst_as_number))
+            MCMathExecAddArrayToArray(ctxt, (MCArrayRef)*t_src_as_number, (MCArrayRef)*t_dst_as_number, (MCArrayRef&)&t_result);
 		else
 		{
-			MCeerror->add(EE_ADD_MISMATCH, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_ADD_MISMATCH);
+            return;
 		}
 	}
 	else
 	{
-		if (MCValueGetTypeCode(*t_dst) == kMCValueTypeCodeArray)
-			MCMathExecAddNumberToArray(ctxt, MCNumberFetchAsReal((MCNumberRef)*t_src), (MCArrayRef)*t_dst, (MCArrayRef&)&t_result);
+        if (MCValueIsArray(*t_dst_as_number))
+            MCMathExecAddNumberToArray(ctxt, MCNumberFetchAsReal((MCNumberRef)*t_src_as_number), (MCArrayRef)*t_dst_as_number, (MCArrayRef&)&t_result);
 		else
 		{
 			double t_real_result;
-			MCMathExecAddNumberToNumber(ctxt, MCNumberFetchAsReal((MCNumberRef)*t_src), MCNumberFetchAsReal((MCNumberRef)*t_dst), t_real_result);
+            MCMathExecAddNumberToNumber(ctxt, MCNumberFetchAsReal((MCNumberRef)*t_src_as_number), MCNumberFetchAsReal((MCNumberRef)*t_dst_as_number), t_real_result);
 			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
 		}
 	}
@@ -239,18 +257,19 @@ Exec_stat MCAdd::exec(MCExecPoint &ep)
 		if (destvar != nil)
 		{
 			if (t_dst_container -> set_valueref(*t_result))
-				return ES_NORMAL;
+                return;
 			ctxt . Throw();
 		}
 		else
 		{
-			if (dest->set(ep, PT_INTO, *t_result) == ES_NORMAL)
-				return ES_NORMAL;
-			ctxt . LegacyThrow(EE_ADD_CANTSET);
-		}
-	}
+            dest->set(ctxt, PT_INTO, *t_result);
 
-	return ctxt . Catch(line, pos);
+            if (!ctxt . HasError())
+                return;
+
+            ctxt . LegacyThrow(EE_ADD_CANTSET);
+		}
+    }
 }
 
 void MCAdd::compile(MCSyntaxFactoryRef ctxt)
