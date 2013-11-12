@@ -589,6 +589,9 @@ static void build_filter_records_from_types(MCStringRef *p_types, uint4 p_type_c
         
         if (t_index < 2)
 		{
+            /* UNCHECKED */ MCArrayCreateMutable(r_filter_records[t_type_index] . extensions);
+            /* UNCHECKED */ MCArrayCreateMutable(r_filter_records[t_type_index] . file_types);
+            
             /* UNCHECKED */ MCArrayStoreValueAtIndex(r_filter_records[t_type_index] . extensions, 0, MCSTR("*"));
             /* UNCHECKED */ MCArrayStoreValueAtIndex(r_filter_records[t_type_index] . file_types, 0, MCSTR("*"));
         }
