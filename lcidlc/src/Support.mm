@@ -2331,7 +2331,12 @@ LCError LCRunBlockOnSystemThread(void (^p_callback)(void))
 #endif
 	
 /////////
-
+    
+LCError LCInterfaceQueryViewScale(double* r_scale)
+{
+    return (LCError)s_interface -> interface_query(kMCExternalInterfaceQueryViewScale, r_scale);
+}
+    
 #if TARGET_OS_IPHONE
 	
 #import <UIKit/UIKit.h>
@@ -2339,11 +2344,6 @@ LCError LCRunBlockOnSystemThread(void (^p_callback)(void))
 LCError LCInterfaceQueryView(UIView** r_view)
 {
 	return (LCError)s_interface -> interface_query(kMCExternalInterfaceQueryView, r_view);
-}
-
-LCError LCInterfaceQueryViewScale(double* r_scale)
-{
-	return (LCError)s_interface -> interface_query(kMCExternalInterfaceQueryViewScale, r_scale);
 }
 
 LCError LCInterfaceQueryViewController(UIViewController** r_controller)
@@ -3519,7 +3519,7 @@ static jdouble java_lcapi_InterfaceQueryViewScale(JNIEnv *env)
     if (t_error != kLCErrorNone)
     {
         java_lcapi__throw(env, t_error);
-        return (jdouble)0.0;
+        return (jdouble)1.0;
     }
     return (jdouble)t_scale;
 }
