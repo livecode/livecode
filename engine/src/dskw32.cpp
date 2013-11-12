@@ -4514,8 +4514,11 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 
 			if (*t_result != nil)
 			{
+				MCAutoDataRef t_data;
 				MCAutoStringRef t_native;
-				MCU_utf8tonative(*t_result, &t_native);
+				MCDataCreateWithBytes((const byte_t*)MCStringGetCString(*t_result), MCStringGetLength(*t_result), &t_data);
+
+				MCStringDecode(*t_data, kMCStringEncodingUTF8, false, &t_native);
 				MCresult -> setvalueref(*t_native);
 			}
 			else

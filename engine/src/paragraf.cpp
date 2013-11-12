@@ -340,7 +340,7 @@ IO_stat MCParagraph::load(IO_handle stream, const char *version, bool is_ext)
 						newblock->SetRange(MCStringGetLength(*t_text), t_len);
 						
 						// Append to the paragraph text
-						if (!MCStringAppendChars(*t_text, dptr - t_len, t_len))
+						if (!MCStringAppendChars(*t_text, (const unichar_t*)dptr - t_len, t_len))
 							return IO_ERROR;
 					}
 				}
@@ -432,7 +432,7 @@ IO_stat MCParagraph::save(IO_handle stream, uint4 p_part)
 		memcpy(t_swapped_data, t_data, t_data_len);
 		for (uindex_t i = 0; i < MCStringGetLength(m_text); i++)
 		{
-			swap_uint2(&t_swapped_data[i]);
+			swap_uint2((uint2*)&t_swapped_data[i]);
 		}
 		t_data = (char *)t_swapped_data;
 	}
