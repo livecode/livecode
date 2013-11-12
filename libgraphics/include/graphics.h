@@ -165,6 +165,23 @@ static inline uint8_t MCGPixelGetNativeAlpha(uint32_t p_pixel)
 #endif
 }
 
+static inline uint32_t MCGPixelSetNativeAlpha(uint32_t p_pixel, uint8_t p_new_alpha)
+{
+#ifdef __LITTLE_ENDIAN__
+	#if kMCGPixelFormatNative & kMCGPixelAlphaPositionFirst
+		return (p_pixel & 0xFFFFFF00) | p_new_alpha;
+	#else
+		return (p_pixel & 0x00FFFFFF) | (p_new_alpha << 24);
+	#endif
+#else
+	#if (kMCGPixelFormatNative & kMCGPixelAlphaPositionFirst) == 0
+		return (p_pixel & 0xFFFFFF00) | p_new_alpha;
+	#else
+		return (p_pixel & 0x00FFFFFF) | (p_new_alpha << 24);
+	#endif
+#endif
+}
+
 static inline uint32_t MCGPixelToNative(MCGPixelFormat p_src_format, uint32_t p_src_pixel)
 {
 	uint8_t r, g, b, a;

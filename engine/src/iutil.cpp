@@ -649,8 +649,7 @@ MCBrush *MCImage::getbrush(Tool p_which)
 // Finally, any alpha mask is dithered to a 1-bit mask and the resulting image
 // use as the cursor.
 //
-extern bool MCImageDitherAlpha(MCImageBitmap *p_alpha, MCImageBitmap *&r_mask);
-extern bool MCImageBitmapApplyMask(MCImageBitmap *p_bitmap, MCImageBitmap *p_mask);
+extern bool MCImageDitherAlphaInPlace(MCImageBitmap *p_bitmap);
 MCCursorRef MCImage::createcursor()
 {
 	Boolean ob = MCbufferimages;
@@ -699,15 +698,16 @@ MCCursorRef MCImage::createcursor()
 		t_yhot = yhot;
 	}
 
+	// IM-2013-11-11: [[ RefactorGraphics ]] Check if image has alpha before dithering
+	bool t_has_mask, t_has_alpha;
+	t_has_mask = MCImageBitmapHasTransparency(t_cursor_bitmap, t_has_alpha);
+
 	// If the alpha mask is present, and cursors cannot have alpha then dither
 	// the mask down.
-	if (!MCcursorcanbealpha)
-	{
-		MCImageBitmap *t_mask = nil;
-		/* UNCHECKED */ MCImageDitherAlpha(t_cursor_bitmap, t_mask);
-		MCImageBitmapApplyMask(t_cursor_bitmap, t_mask);
-		MCImageFreeBitmap(t_mask);
-	}
+	if (t_has_alpha && !MCcursorcanbealpha)
+		// IM-2013-11-11: [[ RefactorGraphics ]] Replace copy operation with in-place version
+		// as the bitmap has already been copied from the source image.
+		/* UNCHECKED */ MCImageDitherAlphaInPlace(t_cursor_bitmap);
 
 	// If the cursor cannot be color, then we must reduce the colors of the image.
 	if (!MCcursorcanbecolor)
