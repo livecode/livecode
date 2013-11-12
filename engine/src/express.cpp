@@ -643,6 +643,73 @@ void MCExpression::eval_valueref(MCExecContext& ctxt, MCValueRef& r_value)
 					ctxt . Throw();
 		}
 		break;
+            
+        case kMCExecValueTypeArrayRef:
+        {
+            eval_arrayref(ctxt, (MCArrayRef&)r_value);
+            if (ctxt . HasError())
+                ctxt . Throw();
+        }
+        break;
+            
+        case kMCExecValueTypeDataRef:
+        {
+            eval_dataref(ctxt, (MCDataRef&)r_value);
+            if (ctxt . HasError())
+                ctxt . Throw();
+        }
+        break;
+            
+        case kMCExecValueTypeStringRef:
+        {
+            eval_stringref(ctxt, (MCStringRef&)r_value);
+            if (ctxt . HasError())
+                ctxt . Throw();
+        }
+        break;
+            
+        case kMCExecValueTypeNameRef:
+        {
+            eval_nameref(ctxt, (MCNameRef&)r_value);
+            if (ctxt . HasError())
+                ctxt . Throw();
+        }
+        break;
+
+        case kMCExecValueTypeBooleanRef:
+        {
+            eval_booleanref(ctxt, (MCBooleanRef&)r_value);
+            if (ctxt . HasError())
+                ctxt . Throw();
+        }
+        break;
+            
+        case kMCExecValueTypeNumberRef:
+        {
+            eval_numberref(ctxt, (MCNumberRef&)r_value);
+            if (ctxt . HasError())
+                ctxt . Throw();
+        }
+        break;
+            
+        case kMCExecValueTypeDouble:
+        {
+            double t_double;
+            eval_double(ctxt, t_double);
+            if (!ctxt . HasError())
+				if (!MCNumberCreateWithReal(t_double, (MCNumberRef&)r_value))
+					ctxt . Throw();
+        }
+        break;
+            
+        case kMCExecValueTypeColor:
+        {
+            MCColor t_color;
+            eval_color(ctxt, t_color);
+            if(!MCStringFormat((MCStringRef&)r_value, "%u,%u,%u", (t_color . red >> 8) & 0xff, (t_color . green >> 8) & 0xff, (t_color . blue >> 8) & 0xff))
+                ctxt . Throw();
+        }
+        break;
 			
 		default:
 			ctxt . Unimplemented();
