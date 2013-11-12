@@ -1332,6 +1332,11 @@ bool MCStringCreateWithCFString(CFStringRef cf_string, MCStringRef& r_string);
 bool MCStringCreateWithCFStringAndRelease(CFStringRef cf_string, MCStringRef& r_string);
 #endif
 
+#ifdef __LINUX__
+// Create a string from a C string in the system encoding
+bool MCStringCreateWithSysString(const char *sys_string, MCStringRef &r_string);
+#endif
+
 // Create a mutable string with the given initial capacity. Note that the
 // initial capacity is only treated as a hint, the string will extend itself
 // as necessary.
@@ -1478,6 +1483,10 @@ bool MCStringConvertToCFStringRef(MCStringRef string, CFStringRef& r_cfstring);
 
 #ifdef __WINDOWS__
 bool MCStringConvertToBSTR(MCStringRef string, BSTR& r_bstr);
+#endif
+
+#ifdef __LINUX__
+bool MCStringConvertToSysString(MCStringRef string, const char *&sys_string);
 #endif
 
 /////////

@@ -155,7 +155,9 @@ MCFontStruct *MCNewFontlist::getfont(MCNameRef p_family, uint2& p_size, uint2 p_
 	m_fonts = t_font;
 
 	t_font -> description = pango_font_description_new();
-	pango_font_description_set_family(t_font -> description, MCStringGetCString(MCNameGetString(t_font -> family)));
+    MCAutoStringRefAsSysString t_font_family;
+    /* UNCHECKED */ t_font_family.Lock(MCNameGetString(t_font->family));
+    pango_font_description_set_family(t_font -> description, *t_font_family);
 	pango_font_description_set_absolute_size(t_font -> description, p_size * PANGO_SCALE);
 	if ((p_style & (FA_ITALIC | FA_OBLIQUE)) != 0)
 		pango_font_description_set_style(t_font -> description, PANGO_STYLE_ITALIC);

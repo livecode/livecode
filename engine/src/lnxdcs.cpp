@@ -162,15 +162,20 @@ Boolean MCScreenDC::open()
 	
 	if ((dpy = XOpenDisplay(MCdisplayname)) == NULL)
 	{
-		fprintf(stderr, "%s: Can't open display %s\n",
-		        MCStringGetCString(MCcmd), XDisplayName(MCdisplayname));
+        MCAutoStringRefAsSysString t_cmd;
+        t_cmd.Lock(MCcmd);
+        fprintf(stderr, "%s: Can't open display %s\n",
+                *t_cmd, XDisplayName(MCdisplayname));
 		return False;
 	}
 	fcntl(ConnectionNumber(dpy), F_SETFD, 1);
-	/* UNCHECKED */ MCNameCreateWithCString(XDisplayName(MCdisplayname), displayname);
+    MCAutoStringRef t_displayname;
+    /* UNCHECKED */ MCStringCreateWithSysString(XDisplayName(MCdisplayname), &t_displayname);
+    /* UNCHECKED */ MCNameCreate(*t_displayname, displayname);
 	{
-		MCAutoStringRef t_vendor_string;
-		/* UNCHECKED */ MCStringFormat(&t_vendor_string, "%s %d", ServerVendor(dpy), VendorRelease(dpy));
+        MCAutoStringRef t_vendor_string, t_vendor;
+        /* UNCHECKED */ MCStringCreateWithSysString(ServerVendor(dpy), &t_vendor);
+        /* UNCHECKED */ MCStringFormat(&t_vendor_string, "%@ %d", *t_vendor, VendorRelease(dpy));
 		MCNameCreate(*t_vendor_string, vendorname);
 	}
 	
@@ -197,7 +202,9 @@ Boolean MCScreenDC::open()
 		                     &vis_template, &nitems);
 		if (nitems != 1)
 		{
-			fprintf(stderr, "%s: Bad visual id %x\n", MCStringGetCString(MCcmd), MCvisualid);
+            MCAutoStringRefAsSysString t_cmd;
+            t_cmd.Lock(MCcmd);
+            fprintf(stderr, "%s: Bad visual id %x\n", *t_cmd, MCvisualid);
 			MCvisualid = 0;
 		}
 		else
@@ -942,7 +949,9 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
 	uint2 screen = getscreen();
 	if (displayname != NULL)
 	{
-		if ((dpy = XOpenDisplay(MCStringGetCString(displayname))) == NULL)
+        MCAutoStringRefAsSysString t_displayname;
+        t_displayname.Lock(displayname);
+        if ((dpy = XOpenDisplay(*t_displayname)) == NULL)
 		{
 			dpy = olddpy;
 			return NULL;
