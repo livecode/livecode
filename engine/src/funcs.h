@@ -986,12 +986,10 @@ public:
 		source = NULL;
 	}
 	virtual ~MCLength();
-	
-    virtual MCExecValueType getvaluetype(void) { return kMCExecValueTypeInt; }
     
     virtual Parse_stat parse(MCScriptPoint &, Boolean the);
     
-	virtual void eval_int(MCExecContext& ctxt, integer_t& r_value);
+	virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
 
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalLengthMethodInfo; }
 	virtual MCExpression *getmethodarg(void) const { return source; }

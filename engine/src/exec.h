@@ -51,9 +51,37 @@ enum MCExecValueType
     kMCExecValueTypePoint,
     kMCExecValueTypeColor,
     kMCExecValueTypeRectangle,
-    
-    
 };
+
+struct MCExecValue
+{
+	MCExecValueType type;
+	union
+	{
+		MCValueRef valueref_value;
+		MCBooleanRef booleanref_value;
+		MCStringRef stringref_value;
+		MCNameRef nameref_value;
+		MCDataRef dataref_value;
+		MCArrayRef arrayref_value;
+		MCNumberRef numberref_value;
+		
+		uinteger_t uint_value;
+		integer_t int_value;
+		bool bool_value;
+		double double_value;
+		float float_value;
+		char_t char_value;
+		MCPoint point_value;
+		MCColor color_value;
+		MCRectangle rectangle_value;
+	};
+};
+
+// Convert the slot from_value of type from_type, to the slot to_type at
+// to_type. This method releases the from_type even if a type conversion
+// error occurs.
+void MCExecTypeConvertAndReleaseAlways(MCExecContext& ctxt, MCExecValueType from_type, void *from_value, MCExecValueType to_type, void *to_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 

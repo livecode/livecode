@@ -39,34 +39,19 @@ protected:
 public:
 	MCExpression();
 	virtual ~MCExpression();
-
-	virtual MCExecValueType getvaluetype(void);
 	
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 
-	// Evaluate the exoression as a value, and place its value into ep.
+	// Evaluate the expression as a value, and place its value into ep.
 	virtual Exec_stat eval(MCExecPoint &ep);
 	
-	// valueref, stringref, dataref, nameref, arrayref
-	// bool, uint, int, double
-	// enum, set, custom (?)
-	virtual void eval_valueref(MCExecContext& ctxt, MCValueRef& r_value);
-    virtual void eval_booleanref(MCExecContext& ctxt, MCBooleanRef& r_value);
-    virtual void eval_stringref(MCExecContext& ctxt, MCStringRef& r_value);
-    virtual void eval_dataref(MCExecContext& ctxt, MCDataRef& r_value);
-    virtual void eval_nameref(MCExecContext& ctxt, MCNameRef& r_value);
-    virtual void eval_numberref(MCExecContext& ctxt, MCNumberRef& r_value);
-    virtual void eval_arrayref(MCExecContext& ctxt, MCArrayRef& r_value);
-    
-	virtual void eval_bool(MCExecContext& ctxt, bool& r_value);
-	virtual void eval_int(MCExecContext& ctxt, integer_t& r_value);
-	virtual void eval_uint(MCExecContext& ctxt, uinteger_t& r_value);
-	virtual void eval_double(MCExecContext& ctxt, double& r_value);
-	virtual void eval_char(MCExecContext& ctxt, char_t& r_value);
-	virtual void eval_point(MCExecContext& ctxt, MCPoint& r_value);
-	virtual void eval_rectangle(MCExecContext& ctxt, MCRectangle& r_value);
-	virtual void eval_color(MCExecContext& ctxt, MCColor& r_value);
-    
+	// Evaluate the expression as its natural type basic type (note that
+	// execvalue's cannot be set/enum/custom, they should all be resolved
+	// to the appropriate basic type first!). This form should be used for
+	// descendents of MCExpression which are an umbrella for many syntax forms
+	// and thus have variant return type (such as MCProperty).
+	virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
+	
 	// Compile the syntax into the (new) tree for use by the new evaluator.
 	virtual void compile(MCSyntaxFactoryRef);
 	virtual void compile_out(MCSyntaxFactoryRef);
@@ -89,7 +74,35 @@ public:
 	// left and right hand side of an variable mutation command share the
 	// same variable. It is designed to be used at parse-time, not exec-time.
 	virtual MCVarref *getrootvarref(void);
-
+	
+	//////////
+	
+	// These helper methods simplify evaluating as specific values. They call
+	// 'eval_ctxt' then do a type conversion (which could fail, if there's a
+	// typecheck error) to the requested type if necessary.
+	void eval_valueref(MCExecContext& ctxt, MCValueRef& r_value);
+    void eval_booleanref(MCExecContext& ctxt, MCBooleanRef& r_value);
+    void eval_stringref(MCExecContext& ctxt, MCStringRef& r_value);
+    void eval_dataref(MCExecContext& ctxt, MCDataRef& r_value);
+    void eval_nameref(MCExecContext& ctxt, MCNameRef& r_value);
+	void eval_numberref(MCExecContext& ctxt, MCNumberRef& r_value);
+	void eval_arrayref(MCExecContext& ctxt, MCArrayRef& r_value);
+	void eval_bool(MCExecContext& ctxt, bool& r_value);
+	void eval_int(MCExecContext& ctxt, integer_t& r_value);
+	void eval_uint(MCExecContext& ctxt, uinteger_t& r_value);
+	void eval_double(MCExecContext& ctxt, double& r_value);
+	void eval_char(MCExecContext& ctxt, char_t& r_value);
+	void eval_point(MCExecContext& ctxt, MCPoint& r_value);
+	void eval_rectangle(MCExecContext& ctxt, MCRectangle& r_value);
+	void eval_color(MCExecContext& ctxt, MCColor& r_value);
+	
+	// This method evaluates the the MCExpression as the specified type. The
+	// value ptr should be a pointer to the appropriate native value to store
+	// the result.
+	void eval_typed(MCExecContext& ctxt, MCExecValueType return_type, void* return_value);
+	
+	//////////
+	
 	void setrank(Factor_rank newrank)
 	{
 		rank = newrank;

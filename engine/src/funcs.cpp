@@ -4729,7 +4729,7 @@ Parse_stat MCLength::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-void MCLength::eval_int(MCExecContext& ctxt, integer_t& r_value)
+void MCLength::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
 #ifdef /* MCLength */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
@@ -4745,7 +4745,8 @@ void MCLength::eval_int(MCExecContext& ctxt, integer_t& r_value)
     if (!ctxt . EvalExprAsStringRef(source, EE_LENGTH_BADSOURCE, &t_string))
         return;
     
-    MCStringsEvalLength(ctxt, *t_string, r_value);
+    MCStringsEvalLength(ctxt, *t_string, r_value . int_value);
+	r_value . type = kMCExecValueTypeInt;
 }
 
 MCLicensed::~MCLicensed()
