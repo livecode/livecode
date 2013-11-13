@@ -158,6 +158,11 @@ int32_t MCFontGetDescent(MCFontRef self)
 
 void MCFontBreakText(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, MCFontBreakTextCallback p_callback, void *p_callback_data)
 {
+    // REMOVE ME
+    // Temporary fix to prevent infinite loop
+    if (p_is_unicode)
+	p_length &= ~1;
+
     // If the text is small enough, don't bother trying to break it
     /*if (p_length <= (kMCFontBreakTextCharLimit * (p_is_unicode ? 2 : 1)))
      {
