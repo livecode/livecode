@@ -549,7 +549,7 @@ bool MCS_getcurdir_native(MCStringRef& r_path)
 	DWORD t_path_len = GetCurrentDirectoryW(0, NULL);
 	/* UNCHECKED */ t_buffer.New(t_path_len);
 
-	DWORD t_result = GetCurrentDirectory(t_path_len, t_buffer.Ptr());
+	DWORD t_result = GetCurrentDirectoryW(t_path_len, t_buffer.Ptr());
 	if (t_result == 0 || t_result >= t_path_len)
 	{
 		// Something went wrong
@@ -2025,7 +2025,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         char *buffer = new char[MAXHOSTNAMELEN + 1];
         gethostname(buffer, MAXHOSTNAMELEN);
 		buffer[MAXHOSTNAMELEN] = '\0';
-        return MCStringFormat(r_address, "%s:%s", buffer, MCcmd);
+        return MCStringFormat(r_address, "%s:%@", buffer, MCcmd);
     }
     
 	virtual uint32_t GetProcessId(void)
@@ -3148,7 +3148,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			MCStringAppendFormat(*t_tmp_name, "/%s", t_ptr + 1))
 			return false;
 	
-		r_tmp_name = MCValueRetain(*t_tmp_name);
+		MCStringCopy(*t_tmp_name, r_tmp_name);
 		return true;
     }
 	

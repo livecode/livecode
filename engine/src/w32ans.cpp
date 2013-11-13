@@ -71,7 +71,7 @@ static void getfilter(MCStringRef p_filter, MCStringRef &r_filter)
 		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_filterstring, '\n', '\0', kMCStringOptionCompareCaseless);
 		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_filterstring, ',', '\0', kMCStringOptionCompareCaseless);
 
-		r_filter = MCValueRetain(*t_filterstring);
+		MCStringCopy(*t_filterstring, r_filter);
 	}
 	else
 		r_filter = MCSTR("All Files (*.*)\0*.*\0");
@@ -201,7 +201,7 @@ static void build_paths(MCStringRef &r_path)
 	s_chosen_files.Delete();
 	s_chosen_folder.Delete();
 
-	r_path = MCValueRetain(*t_path);
+	MCStringCopy(*t_path, r_path);
 }
 
 static HRESULT append_shellitem_path_and_release(IShellItem *p_item, bool p_first, MCStringRef &x_string)
@@ -733,7 +733,7 @@ static void get_new_filter(MCStringRef *p_types, uint4 p_type_count, MCStringRef
 	else
 	{
 		/* UNCHECKED */ MCStringAppendChar(*t_filters, '\0');
-		r_filters = MCValueRetain(*t_filters);
+		MCStringCopy(*t_filters, r_filters);
 	}
 }
 
