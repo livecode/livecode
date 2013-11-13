@@ -13,9 +13,17 @@
 		4DA0B92512E82B0F00B4F692 /* xmldoc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA0B92112E82B0F00B4F692 /* xmldoc.cpp */; };
 		4DA0B92612E82B0F00B4F692 /* xmlelement.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA0B92212E82B0F00B4F692 /* xmlelement.cpp */; };
 		4DA0B93C12E82BDD00B4F692 /* libexternal.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DA0B93B12E82BD900B4F692 /* libexternal.a */; };
+		4DE75F5B17E099A100832B1D /* libxslt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE75F3217E0995F00832B1D /* libxslt.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		4D1CAFD217E0B08A00E5BF23 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DE75F2A17E0995F00832B1D /* libxslt-mobile.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D7EFD7912E72ABA00D67888 /* xslt */;
+			remoteInfo = xslt;
+		};
 		4D379C911714207A00B9037C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4DA0B91312E82AF100B4F692 /* libxml-mobile.xcodeproj */;
@@ -44,6 +52,13 @@
 			remoteGlobalIDString = 4D7EFD7912E72ABA00D67888;
 			remoteInfo = external;
 		};
+		4DE75F3117E0995F00832B1D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DE75F2A17E0995F00832B1D /* libxslt-mobile.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D7EFD7A12E72ABA00D67888;
+			remoteInfo = xml;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -57,6 +72,7 @@
 		4DA0B92112E82B0F00B4F692 /* xmldoc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = xmldoc.cpp; path = src/xmldoc.cpp; sourceTree = "<group>"; };
 		4DA0B92212E82B0F00B4F692 /* xmlelement.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = xmlelement.cpp; path = src/xmlelement.cpp; sourceTree = "<group>"; };
 		4DA0B93612E82BD900B4F692 /* libexternal-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libexternal-mobile.xcodeproj"; path = "../libexternal/libexternal-mobile.xcodeproj"; sourceTree = SOURCE_ROOT; };
+		4DE75F2A17E0995F00832B1D /* libxslt-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libxslt-mobile.xcodeproj"; path = "../thirdparty/libxslt/libxslt-mobile.xcodeproj"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,6 +80,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4DE75F5B17E099A100832B1D /* libxslt.a in Frameworks */,
 				4D376B22171426440084ACC9 /* libxml.a in Frameworks */,
 				4DA0B93C12E82BDD00B4F692 /* libexternal.a in Frameworks */,
 			);
@@ -124,6 +141,7 @@
 			children = (
 				4DA0B93612E82BD900B4F692 /* libexternal-mobile.xcodeproj */,
 				4DA0B91312E82AF100B4F692 /* libxml-mobile.xcodeproj */,
+				4DE75F2A17E0995F00832B1D /* libxslt-mobile.xcodeproj */,
 			);
 			name = References;
 			sourceTree = "<group>";
@@ -132,6 +150,14 @@
 			isa = PBXGroup;
 			children = (
 				4DA0B93B12E82BD900B4F692 /* libexternal.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4DE75F2B17E0995F00832B1D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4DE75F3217E0995F00832B1D /* libxslt.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -163,6 +189,7 @@
 			dependencies = (
 				4DA0B94A12E82C1100B4F692 /* PBXTargetDependency */,
 				4D379CAB1714209D00B9037C /* PBXTargetDependency */,
+				4D1CAFD317E0B08A00E5BF23 /* PBXTargetDependency */,
 			);
 			name = revxml;
 			productName = template;
@@ -196,6 +223,10 @@
 					ProductGroup = 4D379C8E1714207A00B9037C /* Products */;
 					ProjectRef = 4DA0B91312E82AF100B4F692 /* libxml-mobile.xcodeproj */;
 				},
+				{
+					ProductGroup = 4DE75F2B17E0995F00832B1D /* Products */;
+					ProjectRef = 4DE75F2A17E0995F00832B1D /* libxslt-mobile.xcodeproj */;
+				},
 			);
 			projectRoot = "";
 			targets = (
@@ -217,6 +248,13 @@
 			fileType = archive.ar;
 			path = libexternal.a;
 			remoteRef = 4DA0B93A12E82BD900B4F692 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4DE75F3217E0995F00832B1D /* libxslt.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libxslt.a;
+			remoteRef = 4DE75F3117E0995F00832B1D /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -256,6 +294,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		4D1CAFD317E0B08A00E5BF23 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = xslt;
+			targetProxy = 4D1CAFD217E0B08A00E5BF23 /* PBXContainerItemProxy */;
+		};
 		4D379CAB1714209D00B9037C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = xml;

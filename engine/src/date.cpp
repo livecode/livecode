@@ -425,7 +425,9 @@ static bool datetime_parse(const MCDateTimeLocale *p_locale, int4 p_century_cuto
 			}
 
 		}
-		else if (t_char != MCStringGetCharAtIndex(p_input, t_in_offset))
+		// FG-2013-10-08 [[ Bugfix 11261 ]]
+		// If there is an extra space in the format string, treat it as a match
+		else if (t_char != MCStringGetCharAtIndex(p_input, t_in_offset) && !isspace(t_char))
 		{
 			// Unrecognised padding is optional, so advance and skip
 			if (t_loose_separators)
@@ -444,7 +446,25 @@ static bool datetime_parse(const MCDateTimeLocale *p_locale, int4 p_century_cuto
 		}
 		else
 		{
-			t_in_offset++;
+			// FG-2013-09-10 [[ Bug 11162 ]]
+			// One or more spaces in the format string should accept any number of input spaces
+			// FG-2013-10-08 [[ Bug 11261 ]]
+			// Over-incrementing of format pointer caused internet dates to parse incorrectly
+			if (isspace(t_char))
+			{
+				while (t_in_offset < t_in_length && isspace(MCStringGetCharAtIndex(p_input, t_in_offset)))
+					t_in_offset++;
+				
+				// Format is incremented past the current char below so just
+				// remove additional spaces here and leave one for it.
+				while (MCStringGetCharAtIndex(p_format, t_offset + 1) != '\0' && isspace(MCStringGetCharAtIndex(p_format, t_offset + 1)))
+					t_offset++;
+			}
+			else
+			{
+				if (t_in_offset < t_in_length)
+					t_in_offset++;
+			}
 			t_valid = true;
 		}
 

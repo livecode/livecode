@@ -134,7 +134,9 @@ public:
 #error text_buffer_t::appendtextf not implemented
 #endif
 
-		if (!ensure(t_count))
+		// MW-2013-09-30: [[ Bug 11214 ]] Make sure we take into account room for
+		//   the NUL terminator.
+		if (!ensure(t_count + 1))
 			return false;
 	
 		va_start(t_args, p_format);

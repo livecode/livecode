@@ -58,6 +58,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "revbuild.h"
 #include "parentscript.h"
 
+#include "resolution.h"
+#include "group.h"
+
 #if defined(_WINDOWS_DESKTOP)
 #include "w32prefix.h"
 #include "w32dc.h"
@@ -547,6 +550,83 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
+
+static bool enumerate_handlers_for_object(MCObject *p_object, MCExecPoint &ep, bool p_first)
+{
+	if (p_object == NULL)
+		return p_first;
+	
+	if (!p_first)
+		ep . appendnewline();	
+	p_first = true;
+	
+	MCHandlerlist *t_handlers;
+	t_handlers = p_object -> gethandlers();
+	if (t_handlers != NULL && p_object -> getstack() -> iskeyed())
+		p_first = t_handlers -> enumerate(ep, p_first);
+	
+	if (p_object -> gettype() == CT_CARD)
+	{
+		MCCard *t_card;
+		t_card = (MCCard *) p_object;
+		
+		MCObjptr *t_card_objs;
+		t_card_objs = t_card -> getobjptrs();		
+		
+		if (t_card_objs != NULL)
+		{
+			MCObjptr *t_object_ptr;
+			t_object_ptr = t_card_objs -> prev();
+			do
+			{
+				MCGroup *t_group;
+				t_group = t_object_ptr -> getrefasgroup();
+				if (t_group != NULL && t_group -> isbackground())
+				{
+					t_group -> parsescript(False);
+					p_first = enumerate_handlers_for_object(t_group, ep, p_first);
+				}
+				t_object_ptr = t_object_ptr -> prev();
+			}
+			while (t_object_ptr != t_card_objs -> prev());
+		}
+	}
+	
+	if (p_object -> getparentscript() != NULL)
+	{
+		MCObject *t_behavior;
+		t_behavior = p_object -> getparentscript() -> GetObject();
+		if (t_behavior != NULL)
+		{
+			t_behavior -> parsescript(False);
+			p_first = enumerate_handlers_for_object(t_behavior, ep, p_first);
+		}
+	}
+	
+	return p_first;
+}
+
+static bool enumerate_handlers_for_list(MCObjectList *p_list, MCObject *p_ignore, MCExecPoint &ep, bool p_first)
+{
+	if (p_list == NULL)
+		return p_first;
+	
+	MCObjectList *t_object_ref;
+	t_object_ref = p_list;
+	do
+	{
+		if (p_ignore != t_object_ref -> getobject())
+			if (!t_object_ref -> getremoved())
+				p_first = enumerate_handlers_for_object(t_object_ref -> getobject(), ep, p_first);
+		
+		t_object_ref = t_object_ref -> next();
+	}
+	while (t_object_ref != p_list);
+	
+	return p_first;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of MCObject::getmodeprop for DEVELOPMENT mode.
 //
@@ -572,80 +652,23 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 		}
 		else
 		{
+			// MM-2013-09-10: [[ Bug 10634 ]] Make we search both parent scripts and library stacks for handlers.
+			t_first = enumerate_handlers_for_list(MCfrontscripts, this, ep, t_first);
 
-			if (MCfrontscripts != NULL)
+			for (MCObject *t_object = this; t_object != NULL; t_object = t_object -> parent)
 			{
-				MCObjectList *t_object_ref;
-				t_object_ref = MCfrontscripts;
-				do
-				{
-					// OK-2008-08-22: [[Check in case the object is itself a frontscript]]
-					if (t_object_ref -> getobject() == this)
-					{
-						t_object_ref = t_object_ref -> next();
-						continue;
-					}
-
-					if (!t_first)
-						ep . appendnewline();
-
-					t_first = true;
-					MCHandlerlist *t_handler_list;
-					if (!t_object_ref -> getremoved() && t_object_ref -> getobject() -> getstack() -> iskeyed())
-						t_handler_list = t_object_ref -> getobject() -> hlist;
-					else
-						t_handler_list = NULL;
-
-					if (t_handler_list != NULL)
-						t_first = t_handler_list -> enumerate(ep, t_first);
-
-					t_object_ref = t_object_ref -> next();
-				}
-				while(t_object_ref != MCfrontscripts);
-			}
-
-			for(MCObject *t_object = this; t_object != NULL; t_object = t_object -> parent)
-			{
-				if (!t_first)
-					ep . appendnewline();
-
-				t_first = true;
-
 				t_object -> parsescript(False);
-				if (t_object -> hlist != NULL && t_object -> getstack() -> iskeyed())
-					t_first = t_object -> hlist -> enumerate(ep, t_first);
+				t_first = enumerate_handlers_for_object(t_object, ep, t_first);
 			}
 
-			if (MCbackscripts != NULL)
+			t_first = enumerate_handlers_for_list(MCbackscripts, this, ep, t_first);
+
+			for (uint32_t i = 0; i < MCnusing; i++)
 			{
-				MCObjectList *t_object_ref;
-				t_object_ref = MCbackscripts;
-				do
-				{
-					// OK-2008-08-22: [[Check in case the object is itself a backscript]]
-					if (t_object_ref -> getobject() == this)
-					{
-						t_object_ref = t_object_ref -> next();
-						continue;
-					}
-
-					if (!t_first)
-						ep . appendnewline();
-
-					t_first = true;
-					MCHandlerlist *t_handler_list;
-					if (!t_object_ref -> getremoved() && t_object_ref -> getobject() -> getstack() -> iskeyed())
-						t_handler_list = t_object_ref -> getobject() -> hlist;
-					else
-						t_handler_list = NULL;
-
-					if (t_handler_list != NULL)
-						t_first = t_handler_list -> enumerate(ep, t_first);
-
-					t_object_ref = t_object_ref -> next();
-				}
-				while(t_object_ref != MCbackscripts);
-			}
+				if (MCusing[i] == this)
+					continue;
+				t_first = enumerate_handlers_for_object(MCusing[i], ep, t_first);
+			}			
 		}
 	}
 	break;

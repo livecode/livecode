@@ -958,9 +958,11 @@ void MCiOSPlayerControl::HandlePropertyAvailableEvent(const char *p_property)
 	t_target = GetOwner();
 	if (t_target != nil)
 	{
-		MCNativeControl *t_old_target;
+        MCAutoStringRef t_string;
+        /* UNCHECKED */ MCStringCreateWithCString(p_property, &t_string);
+        MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
-		t_target -> message_with_args(MCM_player_property_available, p_property);
+		t_target -> message_with_valueref_args(MCM_player_property_available, *t_string);
 		ChangeTarget(t_old_target);
 	}
 }
@@ -1093,7 +1095,8 @@ private:
 	MCNameRef m_notification;
 };
 
-static struct { NSString * const *name; SEL selector; } s_player_notifications[] =
+// MM-2013-09-23: [[ iOS7 Support ]] Tweaked type to appease llvm 5.0.
+static struct { NSString* const* name; SEL selector; } s_player_notifications[] =
 {
 	{ &MPMovieDurationAvailableNotification, @selector(movieDurationAvailable:) },
 	{ &MPMovieMediaTypesAvailableNotification, @selector(movieMediaTypesAvailable:) },

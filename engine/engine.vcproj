@@ -202,6 +202,10 @@
 			RelativePathToProject=".\thirdparty\libgif\libgif.vcproj"
 		/>
 		<ProjectReference
+			ReferencedProjectIdentifier="{24B711E0-E67B-4EC7-9EC5-913BE3D6A047}"
+			RelativePathToProject=".\thirdparty\libskia\libskia.vcproj"
+		/>
+		<ProjectReference
 			ReferencedProjectIdentifier="{0491E47C-B996-4DBF-8D26-C88263DF6176}"
 			RelativePathToProject=".\engine\kernel-development.vcproj"
 		/>

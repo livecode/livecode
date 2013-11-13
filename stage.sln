@@ -9,6 +9,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libpng", "thirdparty\libpng\libpng.vcproj", "{09791ABE-810B-4424-B3CE-F7FEDA2299DE}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "engine-community", "engine\engine.vcproj", "{FA4E9876-B625-48F4-8311-AA74B180E714}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F9B1E2E6-8FD9-48C2-8D5C-9900865E7096} = {F9B1E2E6-8FD9-48C2-8D5C-9900865E7096}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "standalone-community", "engine\standalone.vcproj", "{90699A04-E42A-460B-B294-40DDC3E6166B}"
 EndProject
@@ -88,6 +91,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kernel-standalone", "engine
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libfoundation", "libfoundation\libfoundation.vcproj", "{8862ADC2-BEB0-4765-A1E4-0E3493718999}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgraphics", "libgraphics\libgraphics.vcproj", "{F9B1E2E6-8FD9-48C2-8D5C-9900865E7096}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8862ADC2-BEB0-4765-A1E4-0E3493718999} = {8862ADC2-BEB0-4765-A1E4-0E3493718999}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libskia", "C:\Users\John Smith\Documents\GitHub\livecode-ali\thirdparty\libskia\libskia.vcproj", "{24B711E0-E67B-4EC7-9EC5-913BE3D6A047}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -235,6 +245,14 @@ Global
 		{8862ADC2-BEB0-4765-A1E4-0E3493718999}.Debug|Win32.Build.0 = Debug|Win32
 		{8862ADC2-BEB0-4765-A1E4-0E3493718999}.Release|Win32.ActiveCfg = Release|Win32
 		{8862ADC2-BEB0-4765-A1E4-0E3493718999}.Release|Win32.Build.0 = Release|Win32
+		{F9B1E2E6-8FD9-48C2-8D5C-9900865E7096}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F9B1E2E6-8FD9-48C2-8D5C-9900865E7096}.Debug|Win32.Build.0 = Debug|Win32
+		{F9B1E2E6-8FD9-48C2-8D5C-9900865E7096}.Release|Win32.ActiveCfg = Release|Win32
+		{F9B1E2E6-8FD9-48C2-8D5C-9900865E7096}.Release|Win32.Build.0 = Release|Win32
+		{24B711E0-E67B-4EC7-9EC5-913BE3D6A047}.Debug|Win32.ActiveCfg = Debug|Win32
+		{24B711E0-E67B-4EC7-9EC5-913BE3D6A047}.Debug|Win32.Build.0 = Debug|Win32
+		{24B711E0-E67B-4EC7-9EC5-913BE3D6A047}.Release|Win32.ActiveCfg = Release|Win32
+		{24B711E0-E67B-4EC7-9EC5-913BE3D6A047}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

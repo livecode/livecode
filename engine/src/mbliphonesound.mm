@@ -62,6 +62,11 @@ public:
         m_media = MCValueRetain(p_media);
 	}
     
+    ~MCFinishedPlayingSound()
+    {
+        MCValueRelease(m_media);
+    }
+    
 	void Destroy(void)
 	{
         MCValueRelease(m_media);

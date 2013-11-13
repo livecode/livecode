@@ -42,6 +42,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblandroidjava.h"
 
 #include "mblad.h"
+#include "resolution.h"
 
 #ifdef FEATURE_INNERACTIVE
 
@@ -91,7 +92,7 @@ MCAndroidInneractiveAd::MCAndroidInneractiveAd(MCAdType p_type, uint32_t p_top_l
 
 bool MCAndroidInneractiveAd::Create(void)
 {
-	MCAndroidObjectRemoteCall(s_admodule, "createInneractiveAd", "osiiiim", &m_view, MCAdGetInneractiveKey(), m_type, m_top_left.x, m_top_left.y, m_timeout, m_meta_data);
+	MCAndroidObjectRemoteCall(s_admodule, "createInneractiveAd", "oxiiiim", &m_view, MCAdGetInneractiveKey(), m_type, m_top_left.x, m_top_left.y, m_timeout, m_meta_data);
     if (m_meta_data != nil)
     {
         JNIEnv *env;
@@ -144,11 +145,24 @@ MCAdTopLeft MCAndroidInneractiveAd::GetTopLeft()
     MCAdTopLeft t_top_left = {0,0};
     MCAndroidObjectRemoteCall(m_view, "getLeft", "i", &t_top_left.x);
     MCAndroidObjectRemoteCall(m_view, "getTop", "i", &t_top_left.y);
+    
+    // MM-2013-09-30: [[ Bug 11227 ]] Make sure we take into account device scale when positioning ads.
+    MCGFloat t_device_scale;
+    t_device_scale = MCResGetDeviceScale();
+    t_top_left . x = (uint32_t) t_top_left . x / t_device_scale;
+    t_top_left . y = (uint32_t) t_top_left . y / t_device_scale;
+
     return t_top_left;     
 }
 
 void MCAndroidInneractiveAd::SetTopLeft(MCAdTopLeft p_top_left)
-{    
+{
+    // MM-2013-09-30: [[ Bug 11227 ]] Make sure we take into account device scale when positioning ads.
+    MCGFloat t_device_scale;
+    t_device_scale = MCResGetDeviceScale();
+    p_top_left . x = (uint32_t) p_top_left . x * t_device_scale;
+    p_top_left . y = (uint32_t) p_top_left . y * t_device_scale;
+    
     MCAndroidObjectRemoteCall(m_view, "setTopLeft", "vii", nil, p_top_left.x, p_top_left.y);
 }
 
@@ -210,13 +224,17 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_ty
     if (p_meta_data != nil)
     {
         MCValueRef t_value;
+        MCAutoStringRef t_value_string;
         if (t_success)
         {
             MCNewAutoNameRef t_age_key;
             MCNameCreateWithCString("age", &t_age_key);
             
             if (MCArrayFetchValue(p_meta_data, false, *t_age_key, t_value))
-                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "age", MCStringGetCString((MCStringRef)t_value));
+            {
+                /* UNCHECKED */ ctxt . ConvertToString(t_value, &t_value_string);
+                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "age", *t_value_string);
+            }
         }
         if (t_success)
         {            
@@ -224,8 +242,11 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_ty
             MCNameCreateWithCString("distribution id", &t_distrib_key);
             
             if (MCArrayFetchValue(p_meta_data, false, *t_distrib_key, t_value))
-                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "distribution id", MCStringGetCString((MCStringRef)t_value));
-        }        
+            {
+                /* UNCHECKED */ ctxt . ConvertToString(t_value, &t_value_string);
+                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "distribution id", *t_value_string);
+            }
+        }
 		
         if (t_success)
         {
@@ -233,7 +254,10 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_ty
             MCNameCreateWithCString("gender", &t_gender_key);
             
             if (MCArrayFetchValue(p_meta_data, false, *t_gender_key, t_value))
-                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "gender", MCStringGetCString((MCStringRef)t_value));
+            {
+                /* UNCHECKED */ ctxt . ConvertToString(t_value, &t_value_string);
+                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "gender", *t_value_string);
+            }
         }
         if (t_success)
         {
@@ -241,7 +265,10 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_ty
             MCNameCreateWithCString("keywords", &t_keywords_key);
             
             if (MCArrayFetchValue(p_meta_data, false, *t_keywords_key, t_value))
-                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "keywords", MCStringGetCString((MCStringRef)t_value));
+            {
+                /* UNCHECKED */ ctxt . ConvertToString(t_value, &t_value_string);
+                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "keywords", *t_value_string);
+            }
         }
         if (t_success)
         {
@@ -249,7 +276,10 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_ty
             MCNameCreateWithCString("phone number", &t_phone_key);
             
             if (MCArrayFetchValue(p_meta_data, false, *t_phone_key, t_value))
-                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "phone number", MCStringGetCString((MCStringRef)t_value));
+            {
+                /* UNCHECKED */ ctxt . ConvertToString(t_value, &t_value_string);
+                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "phone number", *t_value_string);
+            }
         }
     }
     

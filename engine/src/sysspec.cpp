@@ -78,8 +78,10 @@ void MCS_common_init(void)
     MCsystem -> SetErrno(errno);
 	
 	MCinfinity = HUGE_VAL;
-    
-#if !defined(_WINDOWS_DESKTOP) && !defined(_WINDOWS_SERVER)
+
+	// MW-2013-10-08: [[ Bug 11259 ]] We use our own tables on linux since
+	//   we use a fixed locale which isn't available on all systems.
+#if !defined(_LINUX_SERVER) && !defined(_LINUX_DESKTOP) && !defined(_WINDOWS_DESKTOP) && !defined(_WINDOWS_SERVER)
 	MCuppercasingtable = new uint1[256];
 	for(uint4 i = 0; i < 256; ++i)
 		MCuppercasingtable[i] = (uint1)toupper((uint1)i);
@@ -87,9 +89,9 @@ void MCS_common_init(void)
 	MClowercasingtable = new uint1[256];
 	for(uint4 i = 0; i < 256; ++i)
 		MClowercasingtable[i] = (uint1)tolower((uint1)i);
+#endif
 	
 	MCStackSecurityInit();
-#endif
 }
 
 void MCS_init(void)
@@ -960,7 +962,7 @@ IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
 ////////////////////////////////////////////////////////////////////////////////
 
 /* LEGACY */
-#ifdef /* MCS_open */ LEGACY_SYSTEM
+#if 0
 IO_handle MCS_open(const char *p_path, const char *p_mode, Boolean p_map, Boolean p_driver, uint4 p_offset)
 {
     char *t_resolved_path;
@@ -993,7 +995,7 @@ IO_handle MCS_open(const char *p_path, const char *p_mode, Boolean p_map, Boolea
     
     return new IO_header(t_handle, 0);;
 }
-#endif /* MCS_open */
+#endif 
 
 
 IO_handle MCS_open(MCStringRef path, intenum_t p_mode, Boolean p_map, Boolean p_driver, uint32_t p_offset)
@@ -1390,12 +1392,18 @@ IO_stat MCS_runcmd(MCStringRef p_command, MCStringRef& r_output)
     int t_retcode;
     if (!MCsystem -> Shell(p_command, &t_data, t_retcode))
         return IO_ERROR;
-    
+
     MCresult -> setnvalue(t_retcode);
-    if (!MCStringCreateWithNativeChars((char_t*)MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), r_output))
+    
+    MCAutoStringRef t_data_string;
+    // MW-2013-08-07: [[ Bug 11089 ]] The MCSystem::Shell() call returns binary data,
+	//   so since uses of MCS_runcmd() expect text, we need to do EOL conversion.
+    if (!MCStringCreateWithNativeChars((char_t*)MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), &t_data_string) ||
+        (!MCStringConvertLineEndingsToLiveCode(*t_data_string, r_output)))
     {
         r_output = MCValueRetain(kMCEmptyString);
     }
+    
     return IO_NORMAL;
 }
 

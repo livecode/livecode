@@ -192,6 +192,11 @@ public:
 	int2 getborderwidth(void);
 	void drawcardborder(MCDC *dc, const MCRectangle &dirty);
 	
+	// IM-2013-09-13: [[ RefactorGraphics ]] render the card background
+	void drawbackground(MCContext *p_context, const MCRectangle &p_dirty);
+	// IM-2013-09-13: [[ RefactorGraphics ]] render the card selection rect
+	void drawselectionrect(MCContext *);
+	
 	Exec_stat openbackgrounds(bool p_is_preopen, MCCard *p_other);
 	Exec_stat closebackgrounds(MCCard *p_other);
 	
@@ -212,10 +217,11 @@ public:
 	// MW-2011-08-26: [[ TileCache ]] Render all layers into the stack's tilecache.
 	void render(void);
 
+	// IM-2013-09-13: [[ RefactorGraphics ]] add tilecache_ prefix to render methods to make their purpose clearer
 	// MW-2011-09-23: [[ TileCache ]] Render the card's bg layer.
-	static bool render_background(void *context, MCContext *target, const MCRectangle& dirty);
+	static bool tilecache_render_background(void *context, MCContext *target, const MCRectangle& dirty);
 	// MW-2011-09-23: [[ TileCache ]] Render the card's fg layer.
-	static bool render_foreground(void *context, MCContext *target, const MCRectangle& dirty);
+	static bool tilecache_render_foreground(void *context, MCContext *target, const MCRectangle& dirty);
 
 	// MW-2012-06-08: [[ Relayer ]] This method returns the control on the card with
 	//   the given layer. If nil is returned the control doesn't exist.
@@ -257,7 +263,7 @@ public:
 
 	////////// PROPERTY SUPPORT METHODS
 
-	void GetGroupProps(MCExecContext& ctxt, Properties which, MCStringRef& r_props);
+	void GetPropList(MCExecContext& ctxt, Properties which, uint32_t part_id, MCStringRef& r_props);
 
 	////////// PROPERTY ACCESSORS
 
@@ -277,6 +283,10 @@ public:
 	void GetSharedGroupIds(MCExecContext& ctxt, MCStringRef& r_ids);
 	void GetGroupNames(MCExecContext& ctxt, MCStringRef& r_names);
 	void GetGroupIds(MCExecContext& ctxt, MCStringRef& r_ids);
+    void GetControlNames(MCExecContext& ctxt, uint32_t part_id, MCStringRef& r_names);
+    void GetControlIds(MCExecContext& ctxt, uint32_t part_id, MCStringRef& r_ids);
+    void GetChildControlNames(MCExecContext& ctxt, MCStringRef& r_names);
+    void GetChildControlIds(MCExecContext& ctxt, MCStringRef& r_ids);
 	void GetFormattedLeft(MCExecContext& ctxt, integer_t& r_value);
 	void GetFormattedTop(MCExecContext& ctxt, integer_t& r_value);
 	void GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_value);

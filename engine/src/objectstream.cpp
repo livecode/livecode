@@ -194,14 +194,12 @@ IO_stat MCObjectInputStream::ReadS16(int16_t& r_value)
 
 //
 
-IO_stat MCObjectInputStream::ReadCString(char*& r_value)
+IO_stat MCObjectInputStream::ReadStringRef(MCStringRef &r_value)
 {
-	uint32_t t_length;
-	t_length = 0;
-
-	char *t_output;
-	t_output = NULL;
-
+    MCStringRef t_string;
+	if (!MCStringCreateMutable(0, t_string))
+        return IO_ERROR;
+	
 	bool t_finished;
 	t_finished = false;
 
@@ -211,7 +209,7 @@ IO_stat MCObjectInputStream::ReadCString(char*& r_value)
 		{
 			IO_stat t_stat;
 			t_stat = Fill();
-			if (t_stat != IO_NORMAL)
+			if (t_stat != IO_NORMAL) 
 				return t_stat;
 		}
 
@@ -219,76 +217,80 @@ IO_stat MCObjectInputStream::ReadCString(char*& r_value)
 		for(t_offset = 0; t_offset < m_limit - m_frontier; ++t_offset)
 			if (((char *)m_buffer)[m_frontier + t_offset] == '\0')
 			{
-				t_offset += 1;
 				t_finished = true;
 				break;
 			}
 
-		uint32_t t_new_length;
-		t_new_length = t_length + t_offset;
-
-		char *t_new_output;
-		t_new_output = (char *)realloc(t_output, t_new_length);
-		if (t_new_output == NULL)
-		{
-			free(t_output);
-			return IO_ERROR;
-		}
-
-		memcpy(t_new_output + t_length, (char *)m_buffer + m_frontier, t_offset);
-
-		t_output = t_new_output;
-		t_length = t_new_length;
+		if(!MCStringAppendNativeChars(t_string, (const byte_t*)m_buffer + m_frontier, t_offset))
+            return IO_ERROR;
 
 		m_frontier += t_offset;
 	}
+    
+    m_frontier += 1;
 
-	if (t_output != NULL)
-	{
-		if (t_output[0] == '\0')
-		{
-			r_value = NULL;
-			free(t_output);
-		}
-		else
-			r_value = t_output;
-	}
-	else
-		r_value = NULL;
+	if (!MCStringCopyAndRelease(t_string, r_value))
+    {
+        MCValueRelease(t_string);
+        return IO_ERROR;
+    }
 
 	return IO_NORMAL;
 }
 
 IO_stat MCObjectInputStream::ReadNameRef(MCNameRef& r_value)
 {
-	char *t_name_cstring;
-	t_name_cstring = nil;
+	MCAutoStringRef t_name_string;
 
 	IO_stat t_stat;
-	t_stat = ReadCString(t_name_cstring);
-	if (t_stat == IO_NORMAL &&
-		!MCNameCreateWithCString(t_name_cstring != nil ? t_name_cstring : MCnullstring, r_value))
-		t_stat = IO_ERROR;
-
-	free(t_name_cstring);
+	t_stat = ReadStringRef(&t_name_string);
+	if (t_stat == IO_NORMAL)
+    {
+		if (MCNameCreate(*t_name_string, r_value))
+			return IO_NORMAL;
+		else
+			t_stat = IO_ERROR;
+    }
 
 	return t_stat;
 }
 
-IO_stat MCObjectInputStream::ReadStringRef(MCStringRef& r_value)
+IO_stat MCObjectInputStream::ReadTranslatedStringRef(MCStringRef &r_value)
 {
-	char *t_name_cstring;
-	t_name_cstring = nil;
-
-	IO_stat t_stat;
-	t_stat = ReadCString(t_name_cstring);
-	if (t_stat == IO_NORMAL &&
-		!MCStringCreateWithCString(t_name_cstring != nil ? t_name_cstring : MCnullstring, r_value))
-		t_stat = IO_ERROR;
-
-	free(t_name_cstring);
-
-	return t_stat;
+    // Read the text as a StringRef initially (because there is no support
+    // for loading as a CString anymore)
+    MCStringRef t_read;
+    IO_stat t_stat;
+    t_stat = ReadStringRef(t_read);
+    
+    // Abort if the string could not be read
+    if (t_stat != IO_NORMAL)
+        return t_stat;
+    
+    // If the string needs to be converted, do so
+    if (MCtranslatechars)
+    {
+        char *t_cstring;
+        t_cstring = MCStringGetOldString(t_read).clone();
+#ifdef __MACROMAN__
+        IO_iso_to_mac(t_cstring, strlen(t_cstring));
+#else
+        IO_mac_to_iso(t_cstring, strlen(t_cstring));
+#endif
+        
+        // Conversion complete
+        uindex_t t_length = MCStringGetLength(t_read);
+        MCValueRelease(t_read);
+        if (!MCStringCreateWithNativeCharsAndRelease((char_t*)t_cstring, t_length, t_read))
+        {
+            free(t_cstring);
+            return IO_ERROR;
+        }
+    }
+    
+    // All done
+    r_value = t_read;
+    return IO_NORMAL;
 }
 
 IO_stat MCObjectInputStream::ReadColor(MCColor &r_color)
@@ -443,19 +445,23 @@ IO_stat MCObjectOutputStream::WriteU64(uint64_t p_value)
 	return Write(&p_value, 8);
 }
 
-IO_stat MCObjectOutputStream::WriteCString(const char *p_value)
+IO_stat MCObjectOutputStream::WriteStringRef(MCStringRef p_value)
 {
-	if (p_value == NULL)
+	if (p_value == NULL || MCStringIsEmpty(p_value))
 		return WriteU8(0);
 
+	// StringRefs may contain '\0' internally but we can't write internal
+    // nulls without creating a corrupt file.
+	IO_stat t_stat;
 	uint32_t t_length;
-	t_length = strlen(p_value) + 1;
-	return Write(p_value, t_length);
+	t_length = strlen(MCStringGetCString(p_value));
+	t_stat = Write(MCStringGetCString(p_value), t_length + 1);
+	return t_stat;
 }
 
 IO_stat MCObjectOutputStream::WriteNameRef(MCNameRef p_value)
 {
-	return WriteCString(MCNameGetCString(p_value));
+	return WriteStringRef(MCNameGetString(p_value));
 }
 
 IO_stat MCObjectOutputStream::WriteColor(const MCColor &p_value)
