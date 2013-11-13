@@ -5017,8 +5017,7 @@ if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	return ctxt . Catch(line, pos);
 }
 
-Exec_stat MCOpenFiles::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCOpenFiles */ LEGACY_EXEC
 	ep.clear();
 	for(uint2 i = 0 ; i < MCnfiles ; i++)
@@ -5027,22 +5026,6 @@ Exec_stat MCOpenFiles::eval(MCExecPoint &ep)
 #endif /* MCOpenFiles */
 
 
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCFilesEvalOpenFiles(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCOpenProcesses::eval(MCExecPoint &ep)
-{
 #ifdef /* MCOpenProcesses */ LEGACY_EXEC
 	IO_cleanprocesses();
 	ep.clear();
@@ -5052,22 +5035,7 @@ Exec_stat MCOpenProcesses::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCOpenProcesses */
 
-	MCExecContext ctxt(ep);
 
-	MCAutoStringRef t_result;
-	MCFilesEvalOpenProcesses(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCOpenProcessIds::eval(MCExecPoint &ep)
-{
 #ifdef /* MCOpenProcessIds */ LEGACY_EXEC
 	IO_cleanprocesses();
 	ep.clear();
@@ -5076,22 +5044,7 @@ Exec_stat MCOpenProcessIds::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCOpenProcessIds */
 
-	MCExecContext ctxt(ep);
 
-	MCAutoStringRef t_result;
-	MCFilesEvalOpenProcessesIds(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCOpenSockets::eval(MCExecPoint &ep)
-{
 #ifdef /* MCOpenSockets */ LEGACY_EXEC
 	IO_cleansockets(MCS_time());
 	ep.clear();
@@ -5102,40 +5055,12 @@ Exec_stat MCOpenSockets::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCOpenSockets */
 
-	MCExecContext ctxt(ep);
 
-	MCAutoStringRef t_result;
-	MCNetworkEvalOpenSockets(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCOpenStacks::eval(MCExecPoint &ep)
-{
 #ifdef /* MCOpenStacks */ LEGACY_EXEC
 	MCstacks->stackprops(ep, P_SHORT_NAME);
 	return ES_NORMAL;
 #endif /* MCOpenStacks */
 
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCInterfaceEvalOpenStacks(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 Exec_stat MCOptionKey::eval(MCExecPoint &ep)
 {
