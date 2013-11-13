@@ -1793,8 +1793,6 @@ void MCChunkOffset::compile(MCSyntaxFactoryRef ctxt)
 	return ES_NORMAL;
 #endif /* MCClickLoc */
 
-Exec_stat MCClickStack::eval(MCExecPoint &ep)
-{
 #ifdef /* MCClickStack */ LEGACY_EXEC
 	if (MCclickstackptr == NULL)
 	{
@@ -1804,22 +1802,7 @@ Exec_stat MCClickStack::eval(MCExecPoint &ep)
 	return MCclickstackptr->getprop(0, P_LONG_NAME, ep, False);
 #endif /* MCClickStack */
 
-	MCExecContext ctxt(ep);
 
-	MCAutoStringRef t_result;
-	MCInterfaceEvalClickStack(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCClickText::eval(MCExecPoint &ep)
-{
 #ifdef /* MCClickText */ LEGACY_EXEC
 	if (MCclickfield == NULL)
 		ep.clear();
@@ -1827,20 +1810,6 @@ Exec_stat MCClickText::eval(MCExecPoint &ep)
 		MCclickfield->loctext(ep, True);
 	return ES_NORMAL;
 #endif /* MCClickText */
-
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCInterfaceEvalClickText(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 Exec_stat MCClickV::eval(MCExecPoint &ep)
 {
