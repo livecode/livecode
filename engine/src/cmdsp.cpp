@@ -715,8 +715,7 @@ void MCPrint::exec_ctxt(MCExecContext &ctxt)
 				t_initially_closed = false;
 			else
 			{
-                MCeerror->add(EE_PRINTBOOKMARK_BADINITIAL, line, pos, *t_state);
-                ctxt . Throw();
+                ctxt . LegacyThrow(EE_PRINTBOOKMARK_BADINITIAL);
                 return;
 			}
 		}
@@ -744,8 +743,7 @@ void MCPrint::exec_ctxt(MCExecContext &ctxt)
             if (!target -> getobj(ctxt, optr, parid, True)
                     || optr -> gettype() != CT_STACK)
 			{
-				MCeerror -> add(EE_PRINT_NOTARGET, line, pos);
-                ctxt . Throw();
+                ctxt . LegacyThrow(EE_PRINT_NOTARGET);
                 return;
 			}
 
@@ -770,14 +768,12 @@ void MCPrint::exec_ctxt(MCExecContext &ctxt)
 			uint32_t parid;
             if (!target -> getobj(ctxt, t_object, parid, True))
 			{
-				MCeerror -> add(EE_PRINT_NOTARGET, line, pos);
-                ctxt . Throw();
+                ctxt . LegacyThrow(EE_PRINT_NOTARGET);
                 return;
 			}
 			if (t_object -> gettype() != CT_CARD && t_object -> gettype() != CT_STACK)
 			{
-				MCeerror -> add(EE_PRINT_NOTACARD, line, pos);
-                ctxt . Throw();
+                ctxt . LegacyThrow(EE_PRINT_NOTACARD);
                 return;
 			}
 		}
