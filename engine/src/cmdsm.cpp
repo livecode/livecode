@@ -50,6 +50,8 @@ bool valueref_tona(MCExecContext &ctxt, Exec_errors p_error, MCValueRef p_value,
 
         r_value = MCValueRetain((MCValueRef)*t_number);
     }
+    else
+        r_value = MCValueRetain(p_value);
 
     return true;
 }
