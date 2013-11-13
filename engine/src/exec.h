@@ -47,6 +47,7 @@ enum MCExecValueType
 	kMCExecValueTypeInt,
     kMCExecValueTypeBool,
     kMCExecValueTypeDouble,
+    kMCExecValueTypeFloat,
     kMCExecValueTypeChar,
     kMCExecValueTypePoint,
     kMCExecValueTypeColor,
@@ -82,6 +83,90 @@ template<typename T> struct MCExecValueTraits
 {
 };
 
+template<> struct MCExecValueTraits<MCValueRef>
+{
+	typedef MCValueRef in_type;
+	typedef MCValueRef& out_type;
+	
+	inline static void set(MCExecValue& self, MCValueRef p_value)
+	{
+		self . type = kMCExecValueTypeValueRef;
+		self . valueref_value = p_value;
+	}
+};
+
+template<> struct MCExecValueTraits<MCBooleanRef>
+{
+	typedef MCBooleanRef in_type;
+	typedef MCBooleanRef& out_type;
+	
+	inline static void set(MCExecValue& self, MCBooleanRef p_value)
+	{
+		self . type = kMCExecValueTypeBooleanRef;
+		self . booleanref_value = p_value;
+	}
+};
+
+template<> struct MCExecValueTraits<MCNameRef>
+{
+	typedef MCNameRef in_type;
+	typedef MCNameRef& out_type;
+	
+	inline static void set(MCExecValue& self, MCNameRef p_value)
+	{
+		self . type = kMCExecValueTypeNameRef;
+		self . nameref_value = p_value;
+	}
+};
+
+template<> struct MCExecValueTraits<MCDataRef>
+{
+	typedef MCDataRef in_type;
+	typedef MCDataRef& out_type;
+	
+	inline static void set(MCExecValue& self, MCDataRef p_value)
+	{
+		self . type = kMCExecValueTypeDataRef;
+		self . dataref_value = p_value;
+	}
+};
+
+template<> struct MCExecValueTraits<MCArrayRef>
+{
+	typedef MCArrayRef in_type;
+	typedef MCArrayRef& out_type;
+	
+	inline static void set(MCExecValue& self, MCArrayRef p_value)
+	{
+		self . type = kMCExecValueTypeArrayRef;
+		self . arrayref_value = p_value;
+	}
+};
+
+template<> struct MCExecValueTraits<MCNumberRef>
+{
+	typedef MCNumberRef in_type;
+	typedef MCNumberRef& out_type;
+	
+	inline static void set(MCExecValue& self, MCNumberRef p_value)
+	{
+		self . type = kMCExecValueTypeNumberRef;
+		self . numberref_value = p_value;
+	}
+};
+
+template<> struct MCExecValueTraits<MCStringRef>
+{
+	typedef MCStringRef in_type;
+	typedef MCStringRef& out_type;
+	
+	inline static void set(MCExecValue& self, MCStringRef p_value)
+	{
+		self . type = kMCExecValueTypeStringRef;
+		self . stringref_value = p_value;
+	}
+};
+
 template<> struct MCExecValueTraits<integer_t>
 {
 	typedef integer_t in_type;
@@ -91,6 +176,102 @@ template<> struct MCExecValueTraits<integer_t>
 	{
 		self . type = kMCExecValueTypeInt;
 		self . int_value = p_value;
+	}
+};
+
+template<> struct MCExecValueTraits<uinteger_t>
+{
+	typedef uinteger_t in_type;
+	typedef uinteger_t& out_type;
+	
+	inline static void set(MCExecValue& self, uinteger_t p_value)
+	{
+		self . type = kMCExecValueTypeUInt;
+		self . uint_value = p_value;
+	}
+};
+
+template<> struct MCExecValueTraits<bool>
+{
+	typedef bool in_type;
+	typedef bool& out_type;
+	
+	inline static void set(MCExecValue& self, bool p_value)
+	{
+		self . type = kMCExecValueTypeBool;
+		self . bool_value = p_value;
+	}
+};
+
+template<> struct MCExecValueTraits<double>
+{
+	typedef double in_type;
+	typedef double& out_type;
+	
+	inline static void set(MCExecValue& self, double p_value)
+	{
+		self . type = kMCExecValueTypeDouble;
+		self . double_value = p_value;
+	}
+};
+
+template<> struct MCExecValueTraits<char_t>
+{
+	typedef char_t in_type;
+	typedef char_t& out_type;
+	
+	inline static void set(MCExecValue& self, char_t p_value)
+	{
+		self . type = kMCExecValueTypeChar;
+		self . char_value = p_value;
+	}
+};
+
+template<> struct MCExecValueTraits<MCPoint>
+{
+	typedef MCPoint in_type;
+	typedef MCPoint& out_type;
+	
+	inline static void set(MCExecValue& self, MCPoint p_value)
+	{
+		self . type = kMCExecValueTypePoint;
+		self . point_value = p_value;
+	}
+};
+
+template<> struct MCExecValueTraits<MCColor>
+{
+	typedef MCColor in_type;
+	typedef MCColor& out_type;
+	
+	inline static void set(MCExecValue& self, MCColor p_value)
+	{
+		self . type = kMCExecValueTypeColor;
+		self . color_value = p_value;
+	}
+};
+
+template<> struct MCExecValueTraits<MCRectangle>
+{
+	typedef MCRectangle in_type;
+	typedef MCRectangle& out_type;
+	
+	inline static void set(MCExecValue& self, MCRectangle p_value)
+	{
+		self . type = kMCExecValueTypeRectangle;
+		self . rectangle_value = p_value;
+	}
+};
+
+template<> struct MCExecValueTraits<float>
+{
+	typedef float in_type;
+	typedef float& out_type;
+	
+	inline static void set(MCExecValue& self, float p_value)
+	{
+		self . type = kMCExecValueTypeFloat;
+		self . float_value = p_value;
 	}
 };
 

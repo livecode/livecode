@@ -1425,27 +1425,12 @@ void MCBinaryEncode::compile(MCSyntaxFactoryRef ctxt)
 	return ES_NORMAL;
 #endif /* MCBuildNumber */
 
-Exec_stat MCCachedUrls::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCCachedUrls */ LEGACY_EXEC
 	ep.getobj()->message(MCM_get_cached_urls, (MCParameter*)NULL, False, True);
 	MCresult->fetch(ep);
 	return ES_NORMAL;
 #endif /* MCCachedUrls */
-
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCNetworkEvalCachedUrls(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 Exec_stat MCCapsLockKey::eval(MCExecPoint &ep)
 {
