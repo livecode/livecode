@@ -393,17 +393,17 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalClickTextMethodInfo; }
 };
 
-class MCClickV : public MCConstantFunction
+class MCClickV : public MCConstantFunctionCtxt<integer_t, MCInterfaceEvalClickV>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalClickVMethodInfo; }
 };
 
-class MCColorNames : public MCConstantFunction
+class MCColorNames : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalColorNames>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalColorNamesMethodInfo; }
 
 };

@@ -1811,27 +1811,10 @@ void MCChunkOffset::compile(MCSyntaxFactoryRef ctxt)
 	return ES_NORMAL;
 #endif /* MCClickText */
 
-Exec_stat MCClickV::eval(MCExecPoint &ep)
-{
 #ifdef /* MCClickV */ LEGACY_EXEC
 	ep.setnvalue(MCclicklocy);
 	return ES_NORMAL;
 #endif /* MCClickV */
-
-	MCExecContext ctxt(ep);
-
-	integer_t t_result;
-	MCInterfaceEvalClickV(ctxt, t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setint(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
 
 #ifdef /* MCClipboard */ LEGACY_EXEC
 	bool t_success;
@@ -1995,26 +1978,10 @@ Exec_stat MCControlKey::eval(MCExecPoint &ep)
 	return ctxt . Catch(line, pos);
 }
 
-Exec_stat MCColorNames::eval(MCExecPoint &ep)
-{
 #ifdef /* MCColorNames */ LEGACY_EXEC
 	MCscreen->getcolornames(ep);
 	return ES_NORMAL;
 #endif /* MCColorNames */
-
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCInterfaceEvalColorNames(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 Exec_stat MCCommandNames::eval(MCExecPoint &ep)
 {
