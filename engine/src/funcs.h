@@ -1351,10 +1351,10 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalOpenStacksMethodInfo; }
 };
 
-class MCOptionKey : public MCConstantFunction
+class MCOptionKey : public MCConstantFunctionCtxt<MCNameRef, MCInterfaceEvalOptionKey>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalOptionKeyMethodInfo; }
 };
 
@@ -1374,21 +1374,21 @@ public:
 	virtual MCExpression *getmethodarg(void) const { return source; }
 };
 
-class MCParamCount : public MCConstantFunction
+class MCParamCount : public MCConstantFunctionCtxt<integer_t, MCEngineEvalParamCount>
 {
 	MCHandler *h;
 public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalParamCountMethodInfo; }
 };
 
-class MCParams : public MCConstantFunction
+class MCParams : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalParams>
 {
 	MCHandler *h;
 public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalParamsMethodInfo; }
 };
 
@@ -1408,24 +1408,24 @@ public:
 	virtual MCExpression *getmethodarg(void) const { return socket; }
 };
 
-class MCPendingMessages : public MCConstantFunction
+class MCPendingMessages : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalPendingMessages>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalPendingMessagesMethodInfo; }
 };
 
-class MCPid : public MCConstantFunction
+class MCPid : public MCConstantFunctionCtxt<integer_t, MCFilesEvalProcessId>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalProcessIdMethodInfo; }
 };
 
-class MCPlatform : public MCConstantFunction
+class MCPlatform : public MCConstantFunctionCtxt<MCNameRef, MCEngineEvalPlatform>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalPlatformMethodInfo; }
 };
 

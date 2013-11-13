@@ -5062,27 +5062,11 @@ if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 #endif /* MCOpenStacks */
 
 
-Exec_stat MCOptionKey::eval(MCExecPoint &ep)
-{
 #ifdef /* MCOptionKey */ LEGACY_EXEC
 	ep.setstaticcstring(MCU_ktos((MCscreen->querymods() & MS_MOD1) != 0));
 	return ES_NORMAL;
 #endif /* MCOptionKey */
 
-
-	MCExecContext ctxt(ep);
-
-	MCNewAutoNameRef t_result;
-	MCInterfaceEvalOptionKey(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 MCParam::~MCParam()
 {
@@ -5148,8 +5132,7 @@ Parse_stat MCParamCount::parse(MCScriptPoint &sp, Boolean the)
 	return MCFunction::parse(sp, the);
 }
 
-Exec_stat MCParamCount::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCParamCount */ LEGACY_EXEC
 	uint2 count;
 	h->getnparams(count);
@@ -5158,21 +5141,6 @@ Exec_stat MCParamCount::eval(MCExecPoint &ep)
      
 #endif /* MCParamCount */
 
-    
-	MCExecContext ctxt(ep);
-    
-    integer_t t_result;
-    
-	MCEngineEvalParamCount(ctxt, t_result);
-    
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setnvalue(t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt . Catch(line, pos);
-}
 
 Parse_stat MCParams::parse(MCScriptPoint &sp, Boolean the)
 {
@@ -5180,8 +5148,7 @@ Parse_stat MCParams::parse(MCScriptPoint &sp, Boolean the)
 	return MCFunction::parse(sp, the);
 }
 
-Exec_stat MCParams::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCParams */ LEGACY_EXEC
 	ep . setnameref_unsafe(h -> getname());
 	ep . appendchar(h -> gettype() == HT_FUNCTION ? '(' : ' ');
@@ -5203,20 +5170,6 @@ Exec_stat MCParams::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCParams */
 
-    
-    MCExecContext ctxt(ep);
-    
-    MCAutoStringRef t_result;
-    MCEngineEvalParams(ctxt, &t_result);
-    
-    if (!ctxt . HasError())
-    {
-        /* UNCHECKED */ ep .setvalueref(*t_result);
-        return ES_NORMAL;
-    }
-    
-    return ctxt . Catch(line, pos);
-}
 
 MCPeerAddress::~MCPeerAddress()
 {
@@ -5275,70 +5228,26 @@ Exec_stat MCPeerAddress::eval(MCExecPoint &ep)
 	return ctxt . Catch(line, pos);
 }
 
-Exec_stat MCPendingMessages::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCPendingMessages */ LEGACY_EXEC
 	MCscreen->listmessages(ep);
 	return ES_NORMAL;
 #endif /* MCPendingMessages */
 
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_result;
 
-	MCEngineEvalPendingMessages(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCPid::eval(MCExecPoint &ep)
-{
 #ifdef /* MCPid */ LEGACY_EXEC
 	ep.setnvalue(MCS_getpid());
 	return ES_NORMAL;
     
 #endif /* MCPid */
 
-    MCExecContext ctxt(ep);
-    
-    integer_t t_result;
-    MCFilesEvalProcessId(ctxt, t_result);
-    
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setnvalue(t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt . Catch(line, pos);
-}
 
-Exec_stat MCPlatform::eval(MCExecPoint &ep)
-{
 #ifdef /* MCPlatform */ LEGACY_EXEC
 	ep.setstaticcstring(MCplatformstring);
 	return ES_NORMAL;
     
 #endif /* MCPlatform */
 
-    MCExecContext ctxt(ep);
-    
-	MCNewAutoNameRef t_result;
-	MCEngineEvalPlatform(ctxt, &t_result);
-    
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt . Catch(line, pos);
-}
 
 Exec_stat MCProcessor::eval(MCExecPoint &ep)
 {
