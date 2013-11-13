@@ -2403,7 +2403,13 @@ void MCShow::exec_ctxt(MCExecContext &ctxt)
 	case SO_CARD:
 	{
         uinteger_t t_count;
-        if (!ctxt . EvalOptionalExprAsUInt(ton, 0, EE_SHOW_BADNUMBER, t_count))
+
+        if (ton == nil)
+        {
+            ctxt . LegacyThrow(EE_SHOW_BADNUMBER);
+            return;
+        }
+        else if (!ctxt . EvalOptionalExprAsUInt(ton, 0, EE_SHOW_BADNUMBER, t_count))
             return;
 
 		MCInterfaceExecShowCards(ctxt, t_count);
@@ -2792,11 +2798,10 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 	uint4 parid;
 	MCresult->clear(False);
     MCerrorlock++;
-    // Need to have a second MCExecContext as getoptionalobj may throw a non-fatal error
-    MCExecContext ctxt2(ctxt);
-    target->getoptionalobj(ctxt2, optr, parid, True);
 
-    if (optr == nil
+    // Need to have a second MCExecContext as getobj may throw a non-fatal error
+    MCExecContext ctxt2(ctxt);
+    if (!target -> getobj(ctxt2, optr, parid, True)
 	        || optr->gettype() != CT_BUTTON && optr->gettype() != CT_STACK)
 	{
 		MCerrorlock--;
