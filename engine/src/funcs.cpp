@@ -3393,27 +3393,12 @@ Exec_stat MCHostAtoN::eval(MCExecPoint &ep)
 	return ctxt . Catch(line, pos);
 }
 
-Exec_stat MCHostName::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCHostName */ LEGACY_EXEC
 	MCS_hn(ep);
 	return ES_NORMAL;
 #endif /* MCHostName */
 
-
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCNetworkEvalHostName(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 MCHostNtoA::~MCHostNtoA()
 {
@@ -3555,26 +3540,12 @@ Exec_stat MCInsertScripts::eval(MCExecPoint &ep)
 	return ctxt . Catch(line, pos);
 }
 
-Exec_stat MCInterrupt::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCInterrupt */ LEGACY_EXEC
 	ep.setboolean(MCinterrupt);
 	return ES_NORMAL;
 #endif /* MCInterrupt */
 
-	MCExecContext ctxt(ep);
-
-	bool t_result;
-	MCEngineEvalInterrupt(ctxt, t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 MCIntersect::~MCIntersect()
 {
@@ -4050,27 +4021,12 @@ void MCKeys::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndExpression(ctxt);
 }
 
-Exec_stat MCKeysDown::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCKeysDown */ LEGACY_EXEC
 	MCscreen->getkeysdown(ep);
 	return ES_NORMAL;
 #endif /* MCKeysDown */
 
-
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCInterfaceEvalKeysDown(ctxt, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 MCLength::~MCLength()
 {
@@ -4124,27 +4080,12 @@ Parse_stat MCLicensed::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCLicensed::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCLicensed */ LEGACY_EXEC
 	ep . setboolean(MCModeGetLicensed());
 	return ES_NORMAL;
 #endif /* MCLicensed */
 
-
-	MCExecContext ctxt(ep);
-
-	bool t_result;
-	MCLegacyEvalLicensed(ctxt, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep . setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 MCLocalLoc::~MCLocalLoc()
 {
@@ -4204,25 +4145,11 @@ Parse_stat MCLocals::parse(MCScriptPoint &sp, Boolean the)
 	return MCFunction::parse(sp, the);
 }
 
-Exec_stat MCLocals::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCLocals */ LEGACY_EXEC
 	return h->getvarnames(ep, False);
 #endif /* MCLocals */
 
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCEngineEvalLocalNames(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 Exec_stat MCMachine::eval(MCExecPoint &ep)
 {

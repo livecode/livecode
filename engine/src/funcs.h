@@ -859,10 +859,10 @@ public:
 	virtual MCExpression *getmethodarg(void) const { return address; }
 };
 
-class MCHostName : public MCConstantFunction
+class MCHostName : public MCConstantFunctionCtxt<MCStringRef, MCNetworkEvalHostName>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCNetworkEvalHostNameMethodInfo; }
 
 };
@@ -911,10 +911,10 @@ public:
 	}
 };
 
-class MCInterrupt : public MCConstantFunction
+class MCInterrupt : public MCConstantFunctionCtxt<bool, MCEngineEvalInterrupt>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalInterruptMethodInfo; }
 
 };
@@ -986,10 +986,10 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCKeysDown : public MCConstantFunction
+class MCKeysDown : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalKeysDown>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalKeysDownMethodInfo; }
 
 };
@@ -1012,7 +1012,7 @@ public:
 	virtual MCExpression *getmethodarg(void) const { return source; }
 };
 
-class MCLicensed : public MCConstantFunction
+class MCLicensed : public MCConstantFunctionCtxt<bool, MCLegacyEvalLicensed>
 {
 	MCExpression *source;
 public:
@@ -1022,7 +1022,7 @@ public:
 	}
 	virtual ~MCLicensed();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCLegacyEvalLicensedMethodInfo; }
 };
 
@@ -1042,12 +1042,12 @@ public:
 	virtual MCExpression *getmethodarg(void) const { return point; }
 };
 
-class MCLocals : public MCConstantFunction
+class MCLocals : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalLocalNames>
 {
 	MCHandler *h;
 public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalLocalNamesMethodInfo; }
 };
 
