@@ -192,7 +192,7 @@ public:
 	}
 	virtual ~MCMarking();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 };
 
 class MCMarkCommand : public MCMarking
