@@ -5249,72 +5249,26 @@ Exec_stat MCPeerAddress::eval(MCExecPoint &ep)
 #endif /* MCPlatform */
 
 
-Exec_stat MCProcessor::eval(MCExecPoint &ep)
-{
 #ifdef /* MCProcessor */ LEGACY_EXEC
 	ep.setstaticcstring(MCS_getprocessor());
 	return ES_NORMAL;
     
 #endif /* MCProcessor */
 
-    MCExecContext ctxt(ep);
-    
-	MCNewAutoNameRef t_result;
-	MCEngineEvalProcessor(ctxt, &t_result);
-    
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt . Catch(line, pos);
-}
 
-Exec_stat MCPropertyNames::eval(MCExecPoint &ep)
-{
 #ifdef /* MCPropertyNames */ LEGACY_EXEC
 	ep.clear();
 	MCScriptPoint sp(ep);
 	return sp.getfactors(ep, TT_PROPERTY);
 #endif /* MCPropertyNames */
 
-	MCExecContext ctxt(ep);
 
-	MCAutoStringRef t_result;
-	MCEngineEvalPropertyNames(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCQTVersion::eval(MCExecPoint &ep)
-{
 #ifdef /* MCQTVersion */ LEGACY_EXEC
 	MCtemplateplayer->getversion(ep);
 	return ES_NORMAL;
      
 #endif /* MCQTVersion */
 
-    MCExecContext ctxt(ep);
-    
-	MCAutoStringRef t_result;
-	MCMultimediaEvalQTVersion(ctxt, &t_result);
-    
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt . Catch(line, pos);
-
-}
 
 MCReplaceText::~MCReplaceText()
 {
@@ -5520,8 +5474,7 @@ void MCReplaceText::compile(MCSyntaxFactoryRef ctxt)
 //   if it is modified by a function in an expression and used directly in that
 //   expression, bogus things can happen. i.e.
 //      the result = func_modifying_result()
-Exec_stat MCTheResult::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCTheResult */ LEGACY_EXEC
 	if (MCresult->fetch(ep) != ES_NORMAL)
 		return ES_ERROR;
@@ -5529,64 +5482,20 @@ Exec_stat MCTheResult::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCTheResult */
 
-    MCExecContext ctxt(ep);
-    
-    MCAutoValueRef t_result;
-    MCEngineEvalResult(ctxt, &t_result);
-    
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt . Catch(line, pos);
 
-}
-
-Exec_stat MCScreenColors::eval(MCExecPoint &ep)
-{
 #ifdef /* MCScreenColors */ LEGACY_EXEC
 	ep.setnvalue(pow(2.0, MCscreen->getdepth()));
 	return ES_NORMAL;
      
 #endif /* MCScreenColors */
 
-    MCExecContext ctxt(ep);
-    
-    real64_t t_result;
-    MCInterfaceEvalScreenColors(ctxt, t_result);
-    
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setnvalue(t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt . Catch(line, pos);
-}
 
-Exec_stat MCScreenDepth::eval(MCExecPoint &ep)
-{
 #ifdef /* MCScreenDepth */ LEGACY_EXEC
 	ep.setnvalue(MCscreen->getdepth());
 	return ES_NORMAL;
      
 #endif /* MCScreenDepth */
 
-    MCExecContext ctxt(ep);
-    
-    integer_t t_result;
-    MCInterfaceEvalScreenDepth(ctxt, t_result);
-    
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setnvalue(t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt . Catch(line, pos);
-}
 
 Exec_stat MCScreenLoc::eval(MCExecPoint &ep)
 {
