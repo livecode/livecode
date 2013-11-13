@@ -3255,7 +3255,7 @@ void MCObject::GetCustomPropertySets(MCExecContext& ctxt, uindex_t& r_count, MCS
 	while (t_success && p != NULL)
 	{
 		if (!p -> hasname(kMCEmptyName))
-			t_success = t_list . Push(MCNameGetString(p -> getname()));
+			t_success = t_list . Push(MCValueRetain(MCNameGetString(p -> getname())));
 		p = p -> getnext();
 	}
 
