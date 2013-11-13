@@ -4837,8 +4837,6 @@ void MCMouse::compile(MCSyntaxFactoryRef ctxt)
 #endif /* MCMouseLoc */
 
 
-Exec_stat MCMouseStack::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMouseStack */ LEGACY_EXEC
 	if (MCmousestackptr == NULL)
 	{
@@ -4848,22 +4846,7 @@ Exec_stat MCMouseStack::eval(MCExecPoint &ep)
 	return MCmousestackptr->getprop(0, P_SHORT_NAME, ep, False);
 #endif /* MCMouseStack */
 
-	MCExecContext ctxt(ep);
 
-	MCAutoStringRef t_result;
-	MCInterfaceEvalMouseStack(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCMouseText::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMouseText */ LEGACY_EXEC
 	ep.clear();
 	if (MCmousestackptr != NULL)
@@ -4878,22 +4861,7 @@ Exec_stat MCMouseText::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCMouseText */
 
-	MCExecContext ctxt(ep);
 
-	MCAutoStringRef t_result;
-	MCInterfaceEvalMouseText(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCMouseV::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMouseV */ LEGACY_EXEC
 	int2 x, y;
 	MCscreen->querymouse(x, y);
@@ -4902,22 +4870,7 @@ Exec_stat MCMouseV::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCMouseV */
 
-	MCExecContext ctxt(ep);
 
-	integer_t t_result;
-	MCInterfaceEvalMouseV(ctxt, t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setint(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCMovie::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMovie */ LEGACY_EXEC
 #ifdef X11
 	IO_cleanprocesses();
@@ -4950,40 +4903,12 @@ Exec_stat MCMovie::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCMovie */
 
-	MCExecContext ctxt(ep);
 
-	MCAutoStringRef t_result;
-	MCMultimediaEvalMovie(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCMovingControls::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMovingControls */ LEGACY_EXEC
 	MCscreen->listmoves(ep);
 	return ES_NORMAL;
 #endif /* MCMovingControls */
 
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCInterfaceEvalMovingControls(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 MCNumToChar::~MCNumToChar()
 {

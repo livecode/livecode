@@ -1249,38 +1249,38 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMouseLocMethodInfo; }
 };
 
-class MCMouseStack : public MCConstantFunction
+class MCMouseStack : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalMouseStack>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMouseStackMethodInfo; }
 };
 
-class MCMouseText : public MCConstantFunction
+class MCMouseText : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalMouseText>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMouseTextMethodInfo; }
 };
 
-class MCMouseV : public MCConstantFunction
+class MCMouseV : public MCConstantFunctionCtxt<integer_t, MCInterfaceEvalMouseV>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMouseVMethodInfo; }
 };
 
-class MCMovie : public MCConstantFunction
+class MCMovie : public MCConstantFunctionCtxt<MCStringRef, MCMultimediaEvalMovie>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMultimediaEvalMovieMethodInfo; }
 };
 
-class MCMovingControls : public MCConstantFunction
+class MCMovingControls : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalMovingControls>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMovingControlsMethodInfo; }
 };
 
