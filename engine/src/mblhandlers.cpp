@@ -772,37 +772,36 @@ Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameter
 	}
 
     bool t_success = true;
-	char **t_orientations_array;
-	uint32_t t_orientations_count;
-	t_orientations_array = nil;
-	t_orientations_count = 0;
-	if (t_success)
-		t_success = MCCStringSplit(MCStringGetCString(*t_orientations), ',', t_orientations_array, t_orientations_count);
-	
-	intset_t t_orientations_set;
+    MCAutoArrayRef t_orientations_array;
+    if (t_success)
+        t_success = MCStringSplit(*t_orientations, MCSTR(","), nil, kMCCompareExact, &t_orientations_array);
+    
+    uint32_t t_orientations_count = MCArrayGetCount(*t_orientations_array);
+    intset_t t_orientations_set;
 	t_orientations_set = 0;
 	if (t_success)
     {
 		for(uint32_t i = 0; i < t_orientations_count; i++)
         {
-            if (MCCStringEqualCaseless(t_orientations_array[i], "portrait"))
+            // Note: 't_orientations_array' is an array of strings
+			MCValueRef t_orien_value = nil;
+			/* UNCHECKED */ MCArrayFetchValueAtIndex(*t_orientations_array, i, t_orien_value);
+			MCStringRef t_orientation = (MCStringRef)(t_orien_value);
+            if (MCStringIsEqualToCString(t_orientation, "portrait", kMCCompareCaseless))
                 t_orientations_set |= ORIENTATION_PORTRAIT_BIT;
-            else if (MCCStringEqualCaseless(t_orientations_array[i], "portrait upside down"))
+            else if (MCStringIsEqualToCString(t_orientation, "portrait upside down", kMCCompareCaseless))
                 t_orientations_set |= ORIENTATION_PORTRAIT_UPSIDE_DOWN_BIT;
-            else if (MCCStringEqualCaseless(t_orientations_array[i], "landscape right"))
+            else if (MCStringIsEqualToCString(t_orientation, "landscape right", kMCCompareCaseless))
                 t_orientations_set |= ORIENTATION_LANDSCAPE_RIGHT_BIT;
-            else if (MCCStringEqualCaseless(t_orientations_array[i], "landscape left"))
+            else if (MCStringIsEqualToCString(t_orientation, "landscape left", kMCCompareCaseless))
                 t_orientations_set |= ORIENTATION_LANDSCAPE_LEFT_BIT;
-            else if (MCCStringEqualCaseless(t_orientations_array[i], "face up"))
+            else if (MCStringIsEqualToCString(t_orientation, "face up", kMCCompareCaseless))
                 t_orientations_set |= ORIENTATION_FACE_UP_BIT;
-            else if (MCCStringEqualCaseless(t_orientations_array[i], "face down"))
+            else if (MCStringIsEqualToCString(t_orientation, "face down", kMCCompareCaseless))
                 t_orientations_set |= ORIENTATION_FACE_DOWN_BIT;
+            
         }
 	}
-    
-	for(uint32_t i = 0; i < t_orientations_count; i++)
-		MCCStringFree(t_orientations_array[i]);
-	MCMemoryDeleteArray(t_orientations_array);
 
 	MCOrientationSetAllowedOrientations(ctxt, t_orientations_set);
 
@@ -4491,13 +4490,17 @@ Exec_stat MCHandleApplicationIdentifier(void *context, MCParameter *p_parameters
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
-    MCAutoStringRef r_identifier;
+    MCAutoStringRef t_identifier;
     
-    MCMiscGetApplicationIdentifier(ctxt, &r_identifier);
+    MCMiscGetApplicationIdentifier(ctxt, &t_identifier);
     
     if (!ctxt.HasError())
+    {
+        ctxt.SetTheResultToValue(*t_identifier);
         return ES_NORMAL;
+    }
     
+    ctxt.SetTheResultToEmpty();
 	return ES_ERROR;
 }
 
@@ -6095,14 +6098,20 @@ Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
 	t_width = t_height = 0;
 	if (t_width_param != nil)
 	{
-		t_width_param -> eval_argument(ep);
-		t_width = ep . getint4();
+		// MW-2013-07-01: [[ Bug 10989 ]] Make sure we force conversion to a number.
+		if (t_width_param -> eval_argument(ep) == ES_NORMAL &&
+			ep . ton() == ES_NORMAL)
+			t_width = ep . getint4();
 	}
 	if (t_height_param != nil)
 	{
-		t_height_param -> eval_argument(ep);
-		t_height = ep . getint4();
+		// MW-2013-07-01: [[ Bug 10989 ]] Make sure we force conversion to a number.
+		if (t_height_param -> eval_argument(ep) == ES_NORMAL &&
+			ep . ton() == ES_NORMAL)
+			t_height = ep . getint4();
 	}
+    
+    MCLog("%d, %d", t_width, t_height);
     
 	const char *t_source;
 	t_source = nil;
@@ -6407,6 +6416,106 @@ Exec_stat MCHandleControlList(void *context, MCParameter *p_parameters)
 	return ES_NORMAL;
 }
 
+// MW-2013-10-02: [[ MobileSSLVerify ]] Handle libUrlSetSSLVerification
+Exec_stat MCHandleLibUrlSetSSLVerification(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+	
+	bool t_enabled;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "b", &t_enabled);
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCMiscExecLibUrlSetSSLVerification(ctxt, t_enabled);
+    
+    if (!ctxt . HasError())
+        return ES_NORMAL;
+	
+	return ES_NORMAL;
+}
+
+// MM-2013-05-21: [[ Bug 10895 ]] Added iphoneIdentifierForVendor as an initial replacement for iphoneSystemIdentifier.
+//  identifierForVendor was only added to UIDevice in iOS 6.1 so make sure we weakly link.
+Exec_stat MCHandleIdentifierForVendor(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCAutoStringRef t_id;
+    MCMiscGetIdentifierForVendor(ctxt, &t_id);
+    
+    if (!ctxt.HasError())
+    {
+        ctxt.SetTheResultToValue(*t_id);
+        return ES_NORMAL;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleEnableRemoteControl(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCMiscExecEnableRemoteControl(ctxt);
+
+    if (!ctxt . HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleDisableRemoteControl(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCMiscExecDisableRemoteControl(ctxt);
+
+    if (!ctxt . HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleRemoteControlEnabled(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    bool t_enabled;
+    MCMiscGetRemoteControlEnabled(ctxt, t_enabled);
+    
+    if (!ctxt.HasError())
+    {
+        ctxt.SetTheResultToBool(t_enabled);
+        return ES_NORMAL;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleSetRemoteControlDisplay(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    bool t_success;
+	t_success = true;
+    
+    MCAutoArrayRef t_props;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "a", &(&t_props));
+    
+    if (t_success)
+        MCMiscSetRemoteControlDisplayProperties(ctxt, *t_props);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -6445,6 +6554,9 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "iphoneAds", MCHandleAds, nil},
 	
 	{true, "libUrlDownloadToFile", MCHandleLibUrlDownloadToFile, nil},
+    
+    // MW-2013-10-02: [[ MobileSSLVerify ]] Added support for libUrlSetSSLVerification.
+    {true, "libUrlSetSSLVerification", MCHandleLibUrlSetSSLVerification, nil},
     
     {false, "mobileStartTrackingSensor", MCHandleStartTrackingSensor, nil},
     {false, "mobileStopTrackingSensor", MCHandleStopTrackingSensor, nil},
@@ -6597,7 +6709,11 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	
 	{false, "iphoneApplicationIdentifier", MCHandleApplicationIdentifier, nil},
 	{false, "iphoneSystemIdentifier", MCHandleSystemIdentifier, nil},
-	
+
+    // MM-2013-05-21: [[ Bug 10895 ]] Added iphoneIdentifierForVendor as an initial replacement for iphoneSystemIdentifier.
+    {false, "mobileIdentifierForVendor", MCHandleIdentifierForVendor, nil},
+    {false, "iphoneIdentifierForVendor", MCHandleIdentifierForVendor, nil},
+    
 	{false, "iphoneSetReachabilityTarget", MCHandleSetReachabilityTarget, nil},
 	{false, "iphoneReachabilityTarget", MCHandleReachabilityTarget, nil},
     
@@ -6685,6 +6801,12 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	
 	{false, "iphoneClearTouches", MCHandleClearTouches, nil},
 	{false, "mobileClearTouches", MCHandleClearTouches, nil},
+    
+    // MW-2013-05-30: [[ RemoteControl ]] Support for iOS 'remote controls' and metadata display.
+    {false, "iphoneEnableRemoteControl", MCHandleEnableRemoteControl, nil},
+    {false, "iphoneDisableRemoteControl", MCHandleDisableRemoteControl, nil},
+    {false, "iphoneRemoteControlEnabled", MCHandleRemoteControlEnabled, nil},
+    {false, "iphoneSetRemoteControlDisplay", MCHandleSetRemoteControlDisplay, nil},
     
 	{nil, nil, nil}    
 };

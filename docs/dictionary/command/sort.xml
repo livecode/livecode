@@ -1,0 +1,54 @@
+<doc>
+  <legacy_id>2104</legacy_id>
+  <name>sort</name>
+  <type>command</type>
+  <syntax>
+    <example>sort [marked] cards [of <i>stack</i>] [<i>direction</i>] [<i>sortType</i>] by <i>sortKey</i></example>
+  </syntax>
+  <library></library>
+  <objects>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Database Operations</category>
+  </classification>
+  <references>
+    <command tag="sort container">sort container Command</command>
+    <command tag="find">find Command</command>
+    <command tag="filter">filter Command</command>
+    <keyword tag="text">text Keyword</keyword>
+    <keyword tag="dateTime">dateTime Keyword</keyword>
+    <keyword tag="numeric">numeric Keyword</keyword>
+    <property tag="mark">mark Property</property>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary><glossary tag="sort">Sorts</glossary> the <glossary tag="card">cards</glossary> of a <object tag="stack">stack</object> into a new order.</summary>
+  <examples>
+    <example>sort cards by field "Name"</example>
+    <example>sort cards of this stack by random(the number of cards)</example>
+    <example>sort marked cards of stack "Next" numeric by the number of buttons</example>
+    <example>sort cards numeric by the short ID of this card</example>
+    <example>sort cards of stack "Manson" descending dateTime by item 1 of field "Date"</example>
+  </examples>
+  <description>
+    <p>Use the <b>sort</b> <glossary tag="command">command</glossary> to shuffle the <glossary tag="card">cards</glossary> in a stack into a new order, or to shuffle a subset of the <glossary tag="card">cards</glossary> in a <object tag="stack">stack</object>.</p><p/><p><b>Parameters:</b></p><p>The <i>stack</i> is a <href tag="reference/object_reference.rev">reference</href> to any open <object tag="stack">stack</object>. If you don't specify a <i>stack</i>, the <glossary tag="card">cards</glossary> of the <glossary tag="current stack">current stack</glossary> are sorted.</p><p/><p>The <i>direction</i> is either<code> ascending </code>or<code> descending</code>. If you don't specify a <i>direction</i>, the <command tag="sort">sort</command> is<code> ascending</code>.</p><p/><p>The <i>sortType</i> is one of<code> text</code>, <code>international</code>,<code> numeric</code>, or<code> dateTime</code>. If you don't specify a <i>sortType</i>, the <command tag="sort">sort</command> is by<code> text</code>.</p><p/><p>The <i>sortKey</i> is an <glossary tag="expression">expression</glossary> that <glossary tag="evaluate">evaluates</glossary> to a <function tag="value">value</function> for each <keyword tag="card">card</keyword> in the <object tag="stack">stack</object>. Any <href tag="reference/object_reference.rev">object references</href> within the <i>sortKey</i> are treated as pertaining to each <keyword tag="card">card</keyword> being <glossary tag="evaluate">evaluated</glossary>, so for example, a <href tag="reference/object_reference.rev">reference</href> to a <keyword tag="field">field</keyword> is <glossary tag="evaluate">evaluated</glossary> according to that <glossary tag="field">field's</glossary> contents on each <keyword tag="card">card</keyword>.</p><p/><p><b>Comments:</b></p><p>The<code> sort text </code>form sorts by the ASCII value of each character.</p><p/><p>The<code> sort international </code>form is like<code> sort text</code>, except that it sorts accented characters together with their unaccented counterparts. For example, "é" sorts between "e" and "f", rather than at the end of the alphabet as it would using the<code> sort text </code>form.</p><p/><p>The <code>sort numeric</code>form sorts by number. (Use this form if the <i>sortKey</i> consists of numbers.)</p><p/><p>The<code> sort dateTime </code>form treats the <i>sortKey</i> as a date and/or time.</p><p/><p>The <b>sort</b> <glossary tag="command">command</glossary> is a stable <command tag="sort">sort</command>. This means that if the <i>sortKey</i> for two <glossary tag="card">cards</glossary> is the same, <glossary tag="sort">sorting</glossary> does not change their order, so you can do two successive <glossary tag="sort">sorts</glossary> to create subcategories within the major <command tag="sort">sort</command> categories. For example, to <command tag="sort">sort</command> the <glossary tag="card">cards</glossary> of a stack by ZIP code and <command tag="sort">sort</command> within each ZIP code by last names, use these two <glossary tag="statement">statements</glossary>:</p><p/><p><code>  sort cards by field "Last Name"</code></p><p><code>  sort cards numeric by field "ZIP code"</code></p>
+  </description>
+</doc>

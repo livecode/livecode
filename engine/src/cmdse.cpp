@@ -45,6 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "securemode.h"
 #include "osspec.h"
 #include "image.h"
+#include "font.h"
 
 #include "globals.h"
 
@@ -192,7 +193,7 @@ Parse_stat MCBeep::parse(MCScriptPoint &sp)
 void MCBeep::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCBeep */ LEGACY_EXEC
-uint4 i = 1;
+	uint4 i = 1;
 	if (times != NULL)
 	{
 		if (times->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
@@ -244,7 +245,7 @@ void MCBeep::compile(MCSyntaxFactoryRef ctxt)
 void MCBreakPoint::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCBreakPoint */ LEGACY_EXEC
-MCB_break(ep, getline(), getpos());
+    MCB_break(ep, getline(), getpos());
 	return ES_NORMAL;
 #endif /* MCBreakPoint */
 
@@ -286,7 +287,7 @@ Parse_stat MCCancel::parse(MCScriptPoint &sp)
 void MCCancel::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCCancel */ LEGACY_EXEC
-if (id == NULL)
+	if (id == NULL)
 	{
 		MCprinter -> Cancel();
 		if (MCprinter != MCsystemprinter)
@@ -334,7 +335,6 @@ void MCCancel::compile(MCSyntaxFactoryRef ctxt)
 	}
 
 	MCSyntaxFactoryEndStatement(ctxt);
-
 }
 
 MCClickCmd::~MCClickCmd()
@@ -355,7 +355,7 @@ Parse_stat MCClickCmd::parse(MCScriptPoint &sp)
 			return PS_ERROR;
 		}
 	}
-	if (sp.skip_token(SP_FACTOR, TT_PREP, PT_AT) != PS_NORMAL)
+if (sp.skip_token(SP_FACTOR, TT_PREP, PT_AT) != PS_NORMAL)
 	{
 		MCperror->add(PE_CLICK_NOAT, sp);
 		return PS_ERROR;
@@ -373,7 +373,7 @@ Parse_stat MCClickCmd::parse(MCScriptPoint &sp)
 void MCClickCmd::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCClickCmd */ LEGACY_EXEC
-if (button != NULL)
+	if (button != NULL)
 	{
 		if (button->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 		{
@@ -387,8 +387,9 @@ if (button != NULL)
 		MCeerror->add(EE_CLICK_BADLOCATION, line, pos);
 		return ES_ERROR;
 	}
-	int2 x, y;
-	if (!MCU_stoi2x2(ep.getsvalue(), x, y))
+
+	MCPoint t_clickloc;
+	if (!MCU_stoi2x2(ep.getsvalue(), t_clickloc.x, t_clickloc.y))
 	{
 		MCeerror->add(EE_CLICK_NAP, line, pos, ep.getsvalue());
 		return ES_ERROR;
@@ -399,17 +400,24 @@ if (button != NULL)
 		MCeerror->add(EE_CLICK_STACKNOTOPEN, line, pos, ep.getsvalue());
 		return ES_ERROR;
 	}
+
+	// IM-2013-09-23: [[ FullscreenMode ]] get / set mouseloc & clickloc in view coords
+	MCPoint t_view_clickloc;
+	t_view_clickloc = MCdefaultstackptr->view_stacktoviewloc(t_clickloc);
+
 	uint2 oldmstate = MCmodifierstate;
 	uint2 oldbstate = MCbuttonstate;
-	int2 oldmx = MCmousex;
-	int2 oldmy = MCmousey;
-	MCmousex = x;
-	MCmousey = y;
-	MCStack *oldms = MCmousestackptr;
+
+	MCStack *t_old_mousestack;
+	MCPoint t_old_mouseloc;
+
+	MCscreen->getmouseloc(t_old_mousestack, t_old_mouseloc);
+	MCscreen->setmouseloc(MCdefaultstackptr, t_view_clickloc);
+
 	MCmodifierstate = mstate;
 	MCbuttonstate |= 0x1L << (which - 1);
-	MCmousestackptr = MCdefaultstackptr;
-	MCdispatcher->wmfocus_stack(MCdefaultstackptr, x, y);
+
+	MCdispatcher->wmfocus_stack(MCdefaultstackptr, t_view_clickloc.x, t_view_clickloc.y);
 	MCmodifierstate = mstate;
 	MCbuttonstate |= 0x1L << (which - 1);
 	MCdispatcher->wmdown_stack(MCdefaultstackptr, which);
@@ -417,8 +425,9 @@ if (button != NULL)
 	if (MCmousestackptr != NULL)
 		MCscreen->sync(MCmousestackptr->getw());
 	Boolean abort = MCscreen->wait(CLICK_INTERVAL, False, False);
-	MCclicklocx = x;
-	MCclicklocy = y;
+
+	MCscreen->setclickloc(MCdefaultstackptr, t_view_clickloc);
+
 	MCmodifierstate = mstate;
 	MCbuttonstate &= ~(0x1L << (which - 1));
 	MCdispatcher->wmup_stack(MCdefaultstackptr, which);
@@ -431,13 +440,11 @@ if (button != NULL)
 	            || (mfocused->gettype() == CT_IMAGE && mfocused->getstate(CS_DRAW)
 	                && MCdefaultstackptr->gettool(mfocused) == T_POLYGON)))
 		mfocused->doubleup(1); // cancel polygon create
-	if (oldms == NULL || oldms->getmode() != 0)
+	if (t_old_mousestack == NULL || t_old_mousestack->getmode() != 0)
 	{
-		MCmousestackptr = oldms;
-		MCmousex = oldmx;
-		MCmousey = oldmy;
-		if (oldms != NULL)
-			MCdispatcher->wmfocus_stack(oldms, oldmx, oldmy);
+		MCscreen->setmouseloc(t_old_mousestack, t_old_mouseloc);
+		if (t_old_mousestack != NULL)
+			MCdispatcher->wmfocus_stack(t_old_mousestack, t_old_mouseloc.x, t_old_mouseloc.y);
 	}
 	if (abort)
 	{
@@ -697,7 +704,7 @@ Parse_stat MCFocus::parse(MCScriptPoint &sp)
 Exec_stat MCFocus::exec(MCExecPoint &ep)
 {
 #ifdef /* MCFocus */ LEGACY_EXEC
-MCObject *optr;
+	MCObject *optr;
 	uint4 parid;
 	if (object == NULL)
 	{
@@ -876,7 +883,6 @@ MCDispatchCmd::~MCDispatchCmd(void)
 	
 	delete target;
 	delete message;
-	delete it;
 }
 
 // Syntax is:
@@ -917,8 +923,6 @@ Parse_stat MCDispatchCmd::parse(MCScriptPoint& sp)
 			return PS_ERROR;
 		}
 	}
-	
-	getit(sp, it);
 	
 	return PS_NORMAL;
 }
@@ -1032,23 +1036,23 @@ Exec_stat MCDispatchCmd::exec(MCExecPoint& ep)
 	{
 	case ES_NOT_HANDLED:
 	case ES_NOT_FOUND:
-		it -> sets(MCString("unhandled"));
+		ep.getit() -> sets(MCString("unhandled"));
 		stat = ES_NORMAL;
 		break;
 		
 	case ES_PASS:
-		it -> sets(MCString("passed"));
+		ep.getit() -> sets(MCString("passed"));
 		stat = ES_NORMAL;
 		break;
 	
 	case ES_EXIT_HANDLER:
 	case ES_NORMAL:
-		it -> sets(MCString("handled"));
+		ep.getit() -> sets(MCString("handled"));
 		stat = ES_NORMAL;
 	break;
 	
 	default:
-		it -> clear();
+		ep.getit() -> clear();
 	break;
 	}
 	
@@ -1071,7 +1075,7 @@ Exec_stat MCDispatchCmd::exec(MCExecPoint& ep)
 	
 	return stat;
 #endif /* MCDispatchCmd */
-	
+
 	MCNewAutoNameRef t_message;
 	if (message -> eval(ep) != ES_NORMAL)
 	{
@@ -1126,7 +1130,7 @@ Exec_stat MCDispatchCmd::exec(MCExecPoint& ep)
 
 	ep . setline(line);
 	
-	MCExecContext ctxt(ep, it);
+	MCExecContext ctxt(ep);
 	MCEngineExecDispatch(ctxt, is_function ? HT_FUNCTION : HT_MESSAGE, *t_message, t_target_ptr, params);
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -1375,6 +1379,7 @@ Exec_stat MCMessage::exec(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCMessage */
+    
 	MCExecContext ctxt(ep);
 		
 	if (program)
@@ -1950,18 +1955,17 @@ Exec_stat MCMM::exec(MCExecPoint &ep)
 			return ES_ERROR;
 		}
 		
-		char *t_filename;
-		t_filename = MCS_resolvepath(ep . getcstring());
-		
-		MCU_fix_path(t_filename);
-		
+		// IM-2013-10-30: [[ FullscreenMode ]] Use refactored functions to fetch & prepare
+		// image rep using the scale of the current stack.
 		MCImageRep *t_rep;
-		MCImageRepGetReferenced(t_filename, t_rep);
+		t_rep = nil;
 		
-		uindex_t t_width, t_height;
-		t_rep -> GetGeometry(t_width, t_height);
-		
-		t_rep -> Release();
+		if (MCImageGetFileRepForStackContext(ep.getcstring(), MCdefaultstackptr, t_rep))
+		{
+			MCImagePrepareRepForDisplayAtDensity(t_rep, MCdefaultstackptr->getdevicescale());
+			
+			t_rep->Release();
+		}
 		
 		return ES_NORMAL;
 	}
@@ -2264,7 +2268,6 @@ Exec_stat MCMM::exec(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCMM */
-
 
 	MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -2615,7 +2618,6 @@ MCRequest::~MCRequest()
 {
 	delete message;
 	delete program;
-	delete it;
 }
 
 Parse_stat MCRequest::parse(MCScriptPoint &sp)
@@ -2662,14 +2664,13 @@ Parse_stat MCRequest::parse(MCScriptPoint &sp)
 			return PS_ERROR;
 		}
 	}
-	getit(sp, it);
 	return PS_NORMAL;
 }
 
 void MCRequest::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCRequest */ LEGACY_EXEC
-if (MCsecuremode & MC_SECUREMODE_PROCESS)
+	if (MCsecuremode & MC_SECUREMODE_PROCESS)
 	{
 		MCeerror->add(EE_REQUEST_NOPERM, line, pos);
 		return ES_ERROR;
@@ -2711,11 +2712,10 @@ if (MCsecuremode & MC_SECUREMODE_PROCESS)
 		ep.copysvalue(result, strlen(result));
 		delete result;
 	}
-	it->set(ep);
+	ep.getit()->set(ep);
 	return ES_NORMAL;
 #endif /* MCRequest */
 
-	ctxt . SetIt(it);
     if (ae != AE_UNDEFINED)
 	{
 		MCAutoStringRef t_program;
@@ -2767,6 +2767,7 @@ MCStart::~MCStart()
 {
 	delete target;
 	delete stack;
+    delete font;
 }
 
 Parse_stat MCStart::parse(MCScriptPoint &sp)
@@ -2790,7 +2791,7 @@ Parse_stat MCStart::parse(MCScriptPoint &sp)
 		mode = (Start_constants)te->which;
 	}
 	if (mode == SC_USING)
-	{
+	{        
 		if (sp.skip_token(SP_FACTOR, TT_CHUNK, CT_STACK) == PS_NORMAL
 		        || sp.skip_token(SP_FACTOR, TT_CHUNK, CT_THIS) == PS_NORMAL)
 		{
@@ -2802,12 +2803,31 @@ Parse_stat MCStart::parse(MCScriptPoint &sp)
 				return PS_ERROR;
 			}
 		}
+        // TD-2013-06-12: [[ DynamicFonts ]] Look for font
+        else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_FONT) == PS_NORMAL)
+        {
+            if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_FILE) != PS_NORMAL)
+            {
+                MCperror->add(PE_START_BADCHUNK, sp);
+                return PS_ERROR;
+            }
+            
+            if (sp . parseexp(False, True, &font) != PS_NORMAL)
+            {
+                MCperror->add(PE_START_BADCHUNK, sp);
+                return PS_ERROR;
+            }
+        
+            is_globally = (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_GLOBALLY) == PS_NORMAL);
+        }
 		else
+        {
 			if (sp.parseexp(False, True, &stack) != PS_NORMAL)
 			{
 				MCperror->add(PE_START_BADCHUNK, sp);
 				return PS_ERROR;
 			}
+        }
 	}
 	else if (mode == SC_SESSION)
 	{
@@ -2833,49 +2853,78 @@ Exec_stat MCStart::exec(MCExecPoint &ep)
 #ifdef /* MCStart */ LEGACY_EXEC
 	if (mode == SC_USING)
 	{
-		MCStack *sptr = NULL;
-		if (target != NULL)
-		{
-			MCObject *optr;
-			uint4 parid;
-			if (target->getobj(ep, optr, parid, True) != ES_NORMAL
-			        || optr->gettype() != CT_STACK)
-			{
-				MCeerror->add(EE_START_BADTARGET, line, pos);
+        // TD-2013-06-12: [[ DynamicFonts ]] Look for font.
+        if (font != NULL)
+        {
+            if (MCsecuremode & MC_SECUREMODE_DISK)
+            {
+                MCeerror->add(EE_DISK_NOPERM, line, pos);
+                return ES_ERROR;
+            }
+            
+            // MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCFontLoad
+            if (font->eval(ep) != ES_NORMAL)
+            {
+				MCeerror->add(EE_FONT_BADFILEEXP, line, pos);
 				return ES_ERROR;
 			}
-			sptr = (MCStack *)optr;
-		}
-		else
-			if (stack->eval(ep) != ES_NORMAL
-			        || (sptr = MCdefaultstackptr->findstackname(ep.getsvalue())) == NULL
-			        || !sptr->parsescript(True))
-			{
-				MCeerror->add(EE_START_BADTARGET, line, pos);
-				return ES_ERROR;
-			}
-		uint2 i = MCnusing;
-		while (i--)
-			if (MCusing[i] == sptr)
-			{
-				MCnusing--;
-				while (i < MCnusing)
-				{
-					MCusing[i] = MCusing[i + 1];
-					i++;
-				}
-				break;
-			}
+			
+			MCAutoPointer<char> t_resolved_path;
+			t_resolved_path = MCS_resolvepath(ep . getcstring());
+            if (MCFontLoad(ep, *t_resolved_path , is_globally) != ES_NORMAL)
+				MCresult -> sets("can't load font file");
+			else
+				MCresult -> clear();
+        }
+        else
+        {
+            MCStack *sptr = NULL;
+            if (target != NULL)
+            {
+                MCObject *optr;
+                uint4 parid;
+                
+                if (target->getobj(ep, optr, parid, True) != ES_NORMAL
+                        || optr->gettype() != CT_STACK)
+                {
+                    MCeerror->add(EE_START_BADTARGET, line, pos);
+                    return ES_ERROR;
+                }
+                sptr = (MCStack *)optr;
+            }
+            else
+            {
+                if (stack->eval(ep) != ES_NORMAL
+                        || (sptr = MCdefaultstackptr->findstackname(ep.getsvalue())) == NULL
+                        || !sptr->parsescript(True))
+                {
+                    MCeerror->add(EE_START_BADTARGET, line, pos);
+                    return ES_ERROR;
+                }
+            }
+            uint2 i = MCnusing;
+            while (i--)
+                if (MCusing[i] == sptr)
+                {
+                    MCnusing--;
+                    while (i < MCnusing)
+                    {
+                        MCusing[i] = MCusing[i + 1];
+                        i++;
+                    }
+                    break;
+                }
 
-		if (MClicenseparameters . using_limit > 0 && MCnusing >= MClicenseparameters . using_limit)
-		{
-			MCeerror->add(EE_START_NOTLICENSED, line, pos);
-			return ES_ERROR;
-		}
-		MCU_realloc((char **)&MCusing, MCnusing, MCnusing + 1, sizeof(MCStack *));
-		MCusing[MCnusing++] = sptr;
-		if (sptr->message(MCM_library_stack) == ES_ERROR)
-			return ES_ERROR;
+            if (MClicenseparameters . using_limit > 0 && MCnusing >= MClicenseparameters . using_limit)
+            {
+                MCeerror->add(EE_START_NOTLICENSED, line, pos);
+                return ES_ERROR;
+            }
+            MCU_realloc((char **)&MCusing, MCnusing, MCnusing + 1, sizeof(MCStack *));
+            MCusing[MCnusing++] = sptr;
+            if (sptr->message(MCM_library_stack) == ES_ERROR)
+                return ES_ERROR;
+        }
 	}
 	else if (mode == SC_SESSION)
 	{
@@ -2923,11 +2972,29 @@ Exec_stat MCStart::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCStart */
 
-
 	MCExecContext ctxt(ep);
 	if (mode == SC_USING)
 	{
-		if (target != NULL)
+        // TD-2013-06-12: [[ DynamicFonts ]] Look for font.
+        if (font != NULL)
+        {
+            if (MCsecuremode & MC_SECUREMODE_DISK)
+            {
+                MCeerror->add(EE_DISK_NOPERM, line, pos);
+                return ES_ERROR;
+            }
+            
+            MCAutoStringRef t_font;
+            if (font->eval(ep) != ES_NORMAL)
+            {
+				MCeerror->add(EE_FONT_BADFILEEXP, line, pos);
+				return ES_ERROR;
+			}
+            /* UNCHECKED */ ep . copyasstringref(&t_font);
+
+            MCTextExecStartUsingFont(ctxt, *t_font, is_globally);
+        }
+		else if (target != NULL)
 		{
 			MCObject *optr;
 			uint4 parid;
@@ -2996,7 +3063,13 @@ void MCStart::compile(MCSyntaxFactoryRef ctxt)
 
 	if (mode == SC_USING)
 	{
-		if (target != nil)
+        if (font != nil)
+        {
+            font -> compile(ctxt);
+            MCSyntaxFactoryEvalConstantBool(ctxt, is_globally);
+            MCSyntaxFactoryExecMethod(ctxt, kMCTextExecStartUsingFontMethodInfo);
+        }
+		else if (target != nil)
 		{
 			target -> compile_object_ptr(ctxt);
 
@@ -3030,6 +3103,7 @@ MCStop::~MCStop()
 {
 	delete target;
 	delete stack;
+    delete font;
 }
 
 Parse_stat MCStop::parse(MCScriptPoint &sp)
@@ -3067,6 +3141,21 @@ Parse_stat MCStop::parse(MCScriptPoint &sp)
 				return PS_ERROR;
 			}
 		}
+        // TD-2013-06-20: [[ DynamicFonts ]] Look for font
+        else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_FONT) == PS_NORMAL)
+        {
+            if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_FILE) != PS_NORMAL)
+            {
+                MCperror->add(PE_START_BADCHUNK, sp);
+                return PS_ERROR;
+            }
+            
+            if (sp . parseexp(False, True, &font) != PS_NORMAL)
+            {
+                MCperror->add(PE_START_BADCHUNK, sp);
+                return PS_ERROR;
+            }
+        }
 		else
 			if (sp.parseexp(False, True, &stack) != PS_NORMAL)
 			{
@@ -3106,7 +3195,7 @@ bool MCServerStopSession();
 Exec_stat MCStop::exec(MCExecPoint &ep)
 {
 #ifdef /* MCStop */ LEGACY_EXEC
-MCObject *optr = NULL;
+	MCObject *optr = NULL;
 	uint4 parid;
 
 	if (target != NULL)
@@ -3156,39 +3245,59 @@ MCObject *optr = NULL;
 		break;
 	case SC_USING:
 		{
-			MCStack *sptr = NULL;
-			if (target != NULL)
-			{
-				MCObject *optr;
-				uint4 parid;
-				if (target->getobj(ep, optr, parid, True) != ES_NORMAL
-				        || optr->gettype() != CT_STACK)
+            // TD-2013-06-12: [[ DynamicFonts ]] Look for font.
+            if (font != NULL)
+            {
+                // MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCFontUnload
+                if (font->eval(ep) != ES_NORMAL)
 				{
-					MCeerror->add(EE_STOP_BADTARGET, line, pos);
+					MCeerror->add(EE_FONT_BADFILEEXP, line, pos);
 					return ES_ERROR;
 				}
-				sptr = (MCStack *)optr;
-			}
-			else
-				if (stack->eval(ep) != ES_NORMAL
-				        || (sptr = MCdefaultstackptr->findstackname(ep.getsvalue())) == NULL)
-				{
-					MCeerror->add(EE_STOP_BADTARGET, line, pos);
-					return ES_ERROR;
-				}
-			uint2 i = MCnusing;
-			while (i--)
-				if (MCusing[i] == sptr)
-				{
-					MCnusing--;
-					while (i < MCnusing)
-					{
-						MCusing[i] = MCusing[i + 1];
-						i++;
-					}
-					break;
-				}
-			sptr->message(MCM_release_stack);
+                	
+				MCAutoPointer<char> t_resolved_path;
+				t_resolved_path = MCS_resolvepath(ep . getcstring());
+				if (MCFontUnload(ep, *t_resolved_path) != ES_NORMAL)
+					MCresult -> sets("can't unload font file");
+				else
+					MCresult -> clear();
+            }
+            else
+            {
+                MCStack *sptr = NULL;
+                if (target != NULL)
+                {
+                    MCObject *optr;
+                    uint4 parid;
+                    if (target->getobj(ep, optr, parid, True) != ES_NORMAL
+                            || optr->gettype() != CT_STACK)
+                    {
+                        MCeerror->add(EE_STOP_BADTARGET, line, pos);
+                        return ES_ERROR;
+                    }
+                    sptr = (MCStack *)optr;
+                }
+                else
+                    if (stack->eval(ep) != ES_NORMAL
+                            || (sptr = MCdefaultstackptr->findstackname(ep.getsvalue())) == NULL)
+                    {
+                        MCeerror->add(EE_STOP_BADTARGET, line, pos);
+                        return ES_ERROR;
+                    }
+                uint2 i = MCnusing;
+                while (i--)
+                    if (MCusing[i] == sptr)
+                    {
+                        MCnusing--;
+                        while (i < MCnusing)
+                        {
+                            MCusing[i] = MCusing[i + 1];
+                            i++;
+                        }
+                        break;
+                    }
+                sptr->message(MCM_release_stack);
+            }
 		}
 		break;
 	case SC_SESSION:
@@ -3253,7 +3362,19 @@ MCObject *optr = NULL;
 		break;
 	case SC_USING:
 		{
-			MCStack *sptr = NULL;
+            // TD-2013-06-12: [[ DynamicFonts ]] Look for font.
+            if (font != NULL)
+            {
+                MCAutoStringRef t_font;
+                if (font->eval(ep) != ES_NORMAL)
+				{
+					MCeerror->add(EE_FONT_BADFILEEXP, line, pos);
+					return ES_ERROR;
+				}
+                /* UNCHECKED */ ep . copyasstringref(&t_font);
+                MCTextExecStopUsingFont(ctxt, *t_font);
+            }
+
 			if (target != NULL)
 			{
 				MCObject *optr;
@@ -3268,6 +3389,7 @@ MCObject *optr = NULL;
 			}
 			else
 			{
+                MCStack *sptr = NULL;
 				if (stack->eval(ep) != ES_NORMAL)
 				{
 					MCeerror->add(EE_STOP_BADTARGET, line, pos);
@@ -3306,7 +3428,7 @@ void MCStop::compile(MCSyntaxFactoryRef ctxt)
 	switch (mode)
 	{
 	case SC_EDITING:
-		if (target != nil)
+        if (target != nil)
 		{
 			target -> compile_object_ptr(ctxt);
 
@@ -3337,9 +3459,14 @@ void MCStop::compile(MCSyntaxFactoryRef ctxt)
 		MCSyntaxFactoryExecMethod(ctxt, kMCMultimediaExecStopRecordingMethodInfo);
 		break;
 
-	case SC_USING:
-		if (target != nil)
-		{
+    case SC_USING:
+        if (font != nil)
+        {
+            font -> compile(ctxt);
+            MCSyntaxFactoryExecMethod(ctxt, kMCTextExecStopUsingFontMethodInfo);
+        }
+        else if (target != nil)
+        {
 			target -> compile_object_ptr(ctxt);
 
 			MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecStopUsingStackMethodInfo);

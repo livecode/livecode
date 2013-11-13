@@ -60,10 +60,11 @@ void MCImageRep::Release()
 #define DEFAULT_IMAGE_REP_CACHE_SIZE (1024 * 1024 * 256)
 #endif
 
-MCCachedImageRep::MCCachedImageRep()
+MCLoadableImageRep::MCLoadableImageRep()
 {
 	m_lock_count = 0;
 	m_have_geometry = false;
+	m_premultiplied = false;
 
 	m_frames = nil;
 	m_frame_count = 0;
@@ -71,29 +72,53 @@ MCCachedImageRep::MCCachedImageRep()
 	m_next = m_prev = nil;
 }
 
-MCCachedImageRep::~MCCachedImageRep()
+MCLoadableImageRep::~MCLoadableImageRep()
 {
 	ReleaseFrames();
-	RemoveRep(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uindex_t MCCachedImageRep::GetFrameCount()
+uindex_t MCLoadableImageRep::GetFrameCount()
 {
 	if (!m_have_geometry)
 	{
-		if (!EnsureImageFrames())
+		if (!EnsureImageFrames(m_premultiplied))
 			return false;
 	}
 
 	return m_frame_count;
 }
 
-bool MCCachedImageRep::EnsureImageFrames()
+void MCLoadableImageRep::PremultiplyFrames()
+{
+	if (m_premultiplied)
+		return;
+
+	for (uindex_t i = 0; i < m_frame_count; i++)
+		MCImageBitmapPremultiply(m_frames[i].image);
+
+	m_premultiplied = true;
+}
+
+bool MCLoadableImageRep::EnsureImageFrames(bool p_premultiplied)
 {
 	if (m_frames != nil)
-		return true;
+	{
+		if (p_premultiplied)
+		{
+			if (!m_premultiplied)
+				PremultiplyFrames();
+
+			return true;
+		}
+
+		if (!m_premultiplied)
+			return true;
+
+		MCLog("<%p> discarding premultiplied image frames", this);
+		ReleaseFrames();
+	}
 	
 	if (!LoadImageFrames(m_frames, m_frame_count))
 		return false;
@@ -110,13 +135,10 @@ bool MCCachedImageRep::EnsureImageFrames()
 	return true;
 }
 
-bool MCCachedImageRep::LockImageFrame(uindex_t p_frame, MCImageFrame *&r_frame)
+bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame)
 {
-	if (m_frames == nil)
-	{
-		if (!EnsureImageFrames())
-			return false;
-	}
+	if (!EnsureImageFrames(p_premultiplied))
+		return false;
 
 	if (p_frame < m_frame_count)
 	{
@@ -132,7 +154,7 @@ bool MCCachedImageRep::LockImageFrame(uindex_t p_frame, MCImageFrame *&r_frame)
 	return false;
 }
 
-void MCCachedImageRep::UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame)
+void MCLoadableImageRep::UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame)
 {
 	if (p_frame == nil || m_lock_count == 0)
 		return;
@@ -154,15 +176,15 @@ void MCCachedImageRep::UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uint32_t MCCachedImageRep::GetFrameByteCount()
+uint32_t MCLoadableImageRep::GetFrameByteCount()
 {
-	if (m_frames == nil)
+	if (m_frames == nil || m_frame_count == 0)
 		return 0;
 
 	return (m_frames[0].image->height * m_frames[0].image->stride + sizeof(MCImageBitmap) + sizeof(MCImageFrame)) * m_frame_count;
 }
 
-void MCCachedImageRep::ReleaseFrames()
+void MCLoadableImageRep::ReleaseFrames()
 {
 	if (m_lock_count > 0 || m_frames == nil)
 		return;
@@ -171,6 +193,35 @@ void MCCachedImageRep::ReleaseFrames()
 
 	MCImageFreeFrames(m_frames, m_frame_count);
 	m_frames = nil;
+	m_premultiplied = false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCLoadableImageRep::GetGeometry(uindex_t &r_width, uindex_t &r_height)
+{
+	if (m_have_geometry || CalculateGeometry(m_width, m_height))
+	{
+		m_have_geometry = true;
+		r_width = m_width;
+		r_height = m_height;
+
+		return true;
+	}
+
+	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCCachedImageRep *MCCachedImageRep::s_head = nil;
+MCCachedImageRep *MCCachedImageRep::s_tail = nil;
+uint32_t MCCachedImageRep::s_cache_size = 0;
+uint32_t MCCachedImageRep::s_cache_limit = DEFAULT_IMAGE_REP_CACHE_SIZE;
+
+MCCachedImageRep::~MCCachedImageRep()
+{
+	RemoveRep(this);
 }
 
 void MCCachedImageRep::FlushCache()
@@ -200,29 +251,6 @@ void MCCachedImageRep::FlushCacheToLimit()
 	MCLog("%d bytes remaining", s_cache_size);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-bool MCCachedImageRep::GetGeometry(uindex_t &r_width, uindex_t &r_height)
-{
-	if (m_have_geometry || CalculateGeometry(m_width, m_height))
-	{
-		m_have_geometry = true;
-		r_width = m_width;
-		r_height = m_height;
-
-		return true;
-	}
-
-	return false;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-MCCachedImageRep *MCCachedImageRep::s_head = nil;
-MCCachedImageRep *MCCachedImageRep::s_tail = nil;
-uint32_t MCCachedImageRep::s_cache_size = 0;
-uint32_t MCCachedImageRep::s_cache_limit = DEFAULT_IMAGE_REP_CACHE_SIZE;
-
 void MCCachedImageRep::init()
 {
 	s_head = s_tail = nil;
@@ -231,12 +259,13 @@ void MCCachedImageRep::init()
 	s_cache_limit = DEFAULT_IMAGE_REP_CACHE_SIZE;
 }
 
-bool MCCachedImageRep::FindReferencedWithFilename(MCStringRef p_filename, MCCachedImageRep *&r_rep)
+bool MCCachedImageRep::FindWithKey(MCStringRef p_key, MCCachedImageRep *&r_rep)
 {
 	for (MCCachedImageRep *t_rep = s_head; t_rep != nil; t_rep = t_rep->m_next)
 	{
-		if (t_rep->GetType() == kMCImageRepReferenced &&
-			MCStringIsEqualTo(static_cast<MCReferencedImageRep*>(t_rep)->GetFilename(), p_filename, kMCStringOptionCompareExact))
+		MCStringRef t_key;
+		t_key = t_rep->GetSearchKey();
+		if (t_key != nil && MCStringIsEqualTo(t_key, p_key, kMCStringOptionCompareExact))
 		{
 			r_rep = t_rep;
 			return true;
@@ -274,29 +303,26 @@ void MCCachedImageRep::RemoveRep(MCCachedImageRep *p_rep)
 
 void MCCachedImageRep::MoveRepToHead(MCCachedImageRep *p_rep)
 {
-	RemoveRep(p_rep);
-	AddRep(p_rep);
+	if (p_rep != s_head)
+	{
+		RemoveRep(p_rep);
+		AddRep(p_rep);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//stand-in implementation which just returns a new image rep
-bool MCImageRepGetReferenced(MCStringRef p_filename, MCImageRep *&r_rep)
+bool MCImageRepCreateReferencedWithSearchKey(MCStringRef p_filename, MCStringRef p_searchkey, MCImageRep *&r_rep)
 {
-	bool t_success = true;
+	bool t_success;
+	t_success = true;
 	
-	MCCachedImageRep *t_rep = nil;
+	MCReferencedImageRep *t_rep;
+	t_rep = nil;
 	
-	if (MCCachedImageRep::FindReferencedWithFilename(p_filename, t_rep))
-	{
-		MCLog("image rep cache hit for file %s", MCStringGetCString(p_filename));
-		r_rep = t_rep->Retain();
-		return true;
-	}
+	if (t_success)
+		t_success = nil != (t_rep = new MCReferencedImageRep(p_filename, p_searchkey));
 	
-	t_rep = new MCReferencedImageRep(p_filename);
-	
-	t_success = t_rep != nil;
 	if (t_success)
 	{
 		MCCachedImageRep::AddRep(t_rep);
@@ -305,6 +331,24 @@ bool MCImageRepGetReferenced(MCStringRef p_filename, MCImageRep *&r_rep)
 	
 	return t_success;
 }
+
+bool MCImageRepGetReferenced(MCStringRef p_filename, MCImageRep *&r_rep)
+{
+	bool t_success = true;
+	
+	MCCachedImageRep *t_rep = nil;
+	
+	if (MCCachedImageRep::FindWithKey(p_filename, t_rep))
+	{
+		MCLog("image rep cache hit for file %s", MCStringGetCString(p_filename));
+		r_rep = t_rep->Retain();
+		return true;
+	}
+	
+	return MCImageRepCreateReferencedWithSearchKey(p_filename, p_filename, r_rep);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 bool MCImageRepGetResident(void *p_data, uindex_t p_size, MCImageRep *&r_rep)
 {
@@ -352,23 +396,6 @@ bool MCImageRepGetCompressed(MCImageCompressedBitmap *p_compressed, MCImageRep *
 	}
 	
 	return t_success;
-}
-
-bool MCImageRepGetTranformed(uindex_t p_width, uindex_t p_height, int32_t p_angle, bool p_lock_rect, uint32_t p_quality, MCImageRep *p_source, MCImageRep *&r_rep)
-{
-	bool t_success = true;
-	
-	MCCachedImageRep *t_rep = new MCTransformedImageRep(p_width, p_height, p_angle, p_lock_rect, p_quality, p_source);
-	
-	t_success = t_rep != nil;
-	if (t_success)
-	{
-		MCCachedImageRep::AddRep(t_rep);
-		r_rep = t_rep->Retain();
-	}
-	
-	return t_success;
-	
 }
 
 ////////////////////////////////////////////////////////////////////////////////

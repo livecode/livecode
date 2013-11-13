@@ -70,12 +70,15 @@ MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskFile, 4)
 MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskFileWithFilter, 5)
 MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskFileWithTypes, 5)
 MC_EXEC_DEFINE_EXEC_METHOD(Dialog, CustomAskDialog, 7)
-
+MC_EXEC_DEFINE_GET_METHOD(Dialog, ColorDialogColors, 2)
+MC_EXEC_DEFINE_SET_METHOD(Dialog, ColorDialogColors, 2)
+    
 ////////////////////////////////////////////////////////////////////////////////
+
 void MCDialogExecAnswerColor(MCExecContext &ctxt, MCColor *p_initial_color, MCStringRef p_title, bool p_as_sheet)
 {
     MCAutoStringRef t_value;
-	bool t_chosen;
+	bool t_chosen = true;
 	if (MCsystemCS && MCscreen->hasfeature(PLATFORM_FEATURE_OS_COLOR_DIALOGS))
 	{
 		MCColor t_color;
@@ -679,3 +682,52 @@ void MCDialogExecCustomAskDialog(MCExecContext& ctxt, MCNameRef p_stack, MCNameR
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCDialogGetColorDialogColors(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_color_list)
+{
+    MCColor *t_list;
+    uindex_t t_count;
+    MCA_getcolordialogcolors(t_list, t_count);
+    
+    MCAutoArray<MCStringRef> t_colors;
+    
+    bool t_success;
+    t_success = true;
+    
+    for (uindex_t i = 0; t_success && i < t_count; i++)
+    {
+        if (t_list[i] . flags != 0)
+        {
+            MCStringRef t_color;
+            t_success = MCStringFormat(t_color, "%d,%d,%d", t_list[i] . red, t_list[i] . green, t_list[i] . blue) && t_colors . Push(t_color);
+        }
+        else
+            t_colors . Push(kMCEmptyString);
+    }
+    
+    t_colors . Take(r_color_list, r_count);
+}
+
+void MCDialogSetColorDialogColors(MCExecContext& ctxt, uindex_t p_count, MCStringRef* p_color_list)
+{
+    MCAutoArray<MCColor> t_list;
+    bool t_success;
+    t_success = true;
+    
+    for (uindex_t i = 0; t_success && i < 16; i++)
+    {
+        MCColor t_color;
+        if (MCStringIsEmpty(p_color_list[i]))
+        {
+            t_color . flags = 0;
+            t_success = t_list . Push(t_color);
+        }
+        else
+        {
+            t_color . flags = DoRed | DoGreen | DoBlue;
+            t_success = MCscreen -> parsecolor(p_color_list[i], t_color) && t_list . Push(t_color);
+        }
+    }
+    
+    MCA_setcolordialogcolors(t_list . Ptr(), p_count);
+}

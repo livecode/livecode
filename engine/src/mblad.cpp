@@ -86,9 +86,9 @@ MCAdType MCAdTypeFromCString(const char *p_string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const char *MCAdGetInneractiveKey(void)
+MCStringRef MCAdGetInneractiveKey(void)
 {
-    return MCStringGetCString(s_inneractive_ad_key);
+    return s_inneractive_ad_key;
 }
 
 bool MCAdInneractiveKeyIsNil(void)
@@ -143,10 +143,10 @@ public:
             switch(m_event)
             {
                 case kMCAdEventTypeReceive:
-                    MCdefaultstackptr->getcurcard()->message_with_args(MCM_ad_loaded, MCfalsemcstring);
+                    MCdefaultstackptr->getcurcard()->message_with_valueref_args(MCM_ad_loaded, kMCFalse);
                     break;
                 case kMCAdEventTypeReceiveDefault:
-                    MCdefaultstackptr->getcurcard()->message_with_args(MCM_ad_loaded, MCtruemcstring);
+                    MCdefaultstackptr->getcurcard()->message_with_valueref_args(MCM_ad_loaded, kMCTrue);
                     break;
                 case kMCAdEventTypeReceiveFailed:
                     MCdefaultstackptr->getcurcard()->message(MCM_ad_load_failed);
@@ -288,10 +288,8 @@ MCAd *MCAd::GetFirst()
 
 bool MCAd::FindByNameOrId(MCStringRef p_name, MCAd *&r_ad)
 {
-	char *t_id_end;
-	uint32_t t_id;
-	t_id = strtoul(MCStringGetCString(p_name), &t_id_end, 10);
-	if (t_id_end != MCStringGetCString(p_name))
+	integer_t t_id;
+    if (MCStringToInteger(p_name, t_id))
 		return FindById(t_id, r_ad);
 	
 	for(MCAd *t_ad = s_ads; t_ad != nil; t_ad = t_ad -> m_next)

@@ -1,6 +1,8 @@
 NAME=engine-community
 TYPE=application
 
+include ../rules/environment.linux.makefile
+
 MODE_SOURCES= \
 	stacksecurity.cpp \
 	deploysecurity.cpp \

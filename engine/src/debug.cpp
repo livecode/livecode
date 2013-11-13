@@ -94,7 +94,7 @@ void MCB_break(MCExecContext &ctxt, uint2 line, uint2 pos)
 
 void MCB_error(MCExecContext &ctxt, uint2 line, uint2 pos, uint2 id)
 {
-	MCServerDebugError(ctct, line, pos, id);
+	MCServerDebugError(ctxt, line, pos, id);
 	
 	// Increasing the error lock means that more MCB_error invocations won't occur as
 	// we step back up the (script) call stack.
@@ -107,7 +107,7 @@ void MCB_done(MCExecPoint &ep)
 
 void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name)
 {
-	MCServerDebugVariableChanged(ctxt, p_value, name);
+	MCServerDebugVariableChanged(ctxt, name);
 }
 
 #else
@@ -463,7 +463,7 @@ void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input)
 			}
 		}
 
-		if (t_offset < t_length)
+		if (t_success && t_offset < t_length)
 		{
 			MCAutoStringRef t_head;
 			MCAutoStringRef t_tail;
@@ -582,7 +582,7 @@ void MCB_clearwatches(void)
 	{
 		MCNameDelete(MCwatchedvars[MCnwatchedvars].handlername);
 		MCNameDelete(MCwatchedvars[MCnwatchedvars].varname);
-		delete MCwatchedvars[MCnwatchedvars].expression;
+		MCValueRelease(MCwatchedvars[MCnwatchedvars].expression);
 	}
 	MCnwatchedvars = 0;
 
@@ -660,81 +660,13 @@ void MCB_parsewatches(MCExecContext& ctxt, MCStringRef p_input)
 					else
 						MCwatchedvars[MCnwatchedvars] . handlername = nil;
 					/* UNCHECKED */ MCNameCreate(*t_vname, MCwatchedvars[MCnwatchedvars] . varname);
-					MCwatchedvars[MCnwatchedvars] . expression = strclone(MCStringGetCString(*t_express));
+					MCwatchedvars[MCnwatchedvars] . expression = MCValueRetain(*t_express);
 					MCnwatchedvars++;
 				}
 			}
 		}
 		t_last_offset = t_return_offset + 1;
 	}
-}
-
-
-Exec_stat MCB_parsewatches(MCExecPoint& ep)
-{
-	MCB_clearwatches();
-
-	char *buffer = ep.getsvalue().clone();
-	char *eptr = buffer;
-	while ((eptr = strtok(eptr, "\n")) != NULL)
-	{
-		char *expressptr, *vnameptr, *hnameptr;
-		MCObject *objptr;
-
-		objptr = nil;
-		vnameptr = nil;
-		hnameptr = nil;
-		expressptr = strrchr(eptr, ',');
-		
-		if (expressptr != NULL)
-		{
-			*expressptr++ = '\0';
-			vnameptr = strrchr(eptr, ',');
-		}
-
-		if (vnameptr != NULL)
-		{
-			*vnameptr++ = '\0';
-			hnameptr = strrchr(eptr, ',');
-		}
-
-		if (hnameptr != NULL)
-		{
-			*hnameptr++ = '\0';
-			ep.setsvalue(eptr);
-			objptr = getobj(ep);
-		}
-	
-		// OK-2010-01-14: [[Bug 6506]] - Allow globals in watchedVariables
-		//   If the object and handler are empty we assume its a global, otherwise
-		//   do the previous behavior.
-		// MW-2010-01-19: Just tidying up a bit - notice that strclone returns nil
-		//   if the input is nil, so we don't need two separate clauses.
-		if (strcmp(eptr, "") == 0 && strcmp(hnameptr, "") == 0 ||
-			objptr != nil)
-		{
-			Watchvar *t_new_watches;
-			t_new_watches = (Watchvar *)realloc(MCwatchedvars, sizeof(Watchvar) * (MCnwatchedvars + 1));
-			if (t_new_watches != nil)
-			{
-				MCwatchedvars = t_new_watches;
-				MCwatchedvars[MCnwatchedvars] . object = objptr;
-				if (strcmp(hnameptr, "") != 0)
-					/* UNCHECKED */ MCNameCreateWithCString(hnameptr, MCwatchedvars[MCnwatchedvars] . handlername);
-				else
-					MCwatchedvars[MCnwatchedvars] . handlername = nil;
-				/* UNCHECKED */ MCNameCreateWithCString(vnameptr, MCwatchedvars[MCnwatchedvars] . varname);
-				MCwatchedvars[MCnwatchedvars] . expression = strclone(expressptr);
-				MCnwatchedvars++;
-			}
-		}
-
-		eptr = NULL;
-	}
-
-	delete buffer;
-
-	return ES_NORMAL;
 }
 
 bool MCB_unparsewatches(MCStringRef &r_watches)
@@ -774,11 +706,9 @@ bool MCB_unparsewatches(MCStringRef &r_watches)
 				if (t_success)
 					t_success = MCListAppend(*t_watched_var, MCwatchedvars[i].varname);
 
-				if (t_success && MCwatchedvars[i].expression != NULL)
+				if (t_success && MCwatchedvars[i].expression != nil && !MCStringIsEmpty(MCwatchedvars[i].expression))
 				{
-					MCAutoStringRef t_expression;
-					t_success = MCStringCreateWithCString(MCwatchedvars[i].expression, &t_expression) &&
-								MCListAppend(*t_watched_var, *t_expression);
+					t_success = MCListAppend(*t_watched_var, MCwatchedvars[i].expression);
 				}
 
 				if (t_success)
@@ -792,30 +722,5 @@ bool MCB_unparsewatches(MCStringRef &r_watches)
 
 	return t_success;
 	
-}
-
-void MCB_unparsewatches(MCExecPoint& ep)
-{
-	ep.clear();
-	for (uint32_t i = 0 ; i < MCnwatchedvars ; i++)
-	{
-		MCExecPoint ep2(ep);
-		ep2 . clear();
-
-		// OK-2010-01-14: [[Bug 6506]] - WatchedVariables support for globals
-		if (MCwatchedvars[i] . object != NULL)
-			MCwatchedvars[i].object->getprop(0, P_LONG_ID, ep2, False);
-		
-		ep.concatmcstring(ep2.getsvalue(), EC_RETURN, i == 0);
-
-		if (MCwatchedvars[i] . handlername == NULL)
-			ep . concatcstring("", EC_COMMA, false);
-		else
-			ep . concatnameref(MCwatchedvars[i].handlername, EC_COMMA, false);
-
-		ep.concatnameref(MCwatchedvars[i].varname, EC_COMMA, false);
-		if (MCwatchedvars[i].expression != NULL)
-			ep.concatcstring(MCwatchedvars[i].expression, EC_COMMA, false);
-	}
 }
 

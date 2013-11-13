@@ -1,0 +1,69 @@
+<doc>
+	<legacy_id></legacy_id>
+	<name>byte</name>
+	<type>keyword</type>
+
+	<syntax>
+	</syntax>
+
+	<synonyms>
+	</synonyms>
+
+	<summary>Designates a single byte as part of a <glossary tag="chunk expression">chunk expression</glossary>.</summary>
+
+	<examples>
+<example>get byte 1 of tString</example>
+<example>put byte 12 to 14 of it into tAnswer</example>
+<example><p>get the first byte to tString</p></example>
+<example>repeat for each byte tByte of tString</example>
+	</examples>
+
+	<history>
+		<introduced version="4.0">Added.</introduced>
+		<deprecated version=""></deprecated>
+		<removed version=""></removed>
+		
+	</history>
+
+	<objects>
+	</objects>
+
+	<platforms>
+		<mac/>
+		<windows/>
+		<linux/>
+	  <ios/>
+    <android/>
+  </platforms>
+
+	<classes>
+		<desktop/>
+		<server/>
+		<web/>
+	  <mobile/>
+  </classes>
+
+	<security>
+	</security>
+
+
+	<classification>
+		<category>Text and Data Processing</category>
+	</classification>
+
+	<references>
+		<keyword tag="character">character Keyword</keyword>
+		<keyword tag="characters">characters Keyword</keyword>
+		<keyword tag="bytes">bytes Keyword</keyword>
+	</references>
+
+	<description>
+	<overview>Use the byte <glossary tag="keyword">keyword</glossary> to refer to a specific byte or bytes in a <glossary tag="container">container</glossary>.</overview>
+
+		<parameters>
+		</parameters>
+
+	<value></value>
+	<comments>A byte is a single letter, digit, punctuation mark, or control character. Spaces, tabs, and returns are all characters.<p></p><p></p><note>At present the <b>byte</b> chunk is identical in functionality to the <keyword tag="character">character</keyword> chunk. However, it should be used when strings containing binary data are being manipulated to ensure future efficiency: the expression <code><i>byte &lt;index&gt; of &lt;expr&gt;</i></code> will continue to remain constant time assuming &lt;expr&gt; is a binary string in the future (the same cannot be said of the 'char' chunk).</note></p></comments>
+	</description>
+</doc>

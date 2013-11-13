@@ -294,7 +294,6 @@ void __MCValueDestroy(__MCValue *self)
 	case kMCValueTypeCodeNull:
 	case kMCValueTypeCodeBoolean:
 	case kMCValueTypeCodeNumber:
-	default:
 		break;
 	case kMCValueTypeCodeString:
 		__MCStringDestroy((__MCString *)self);
@@ -311,8 +310,14 @@ void __MCValueDestroy(__MCValue *self)
 	case kMCValueTypeCodeSet:
 		__MCSetDestroy((__MCSet *)self);
 		break;
+    case kMCValueTypeCodeData:
+        __MCDataDestroy((__MCData *)self);
+        break;
 	case kMCValueTypeCodeCustom:
 		return ((__MCCustomValue *)self) -> callbacks -> destroy(self);
+    default:
+        // Shouldn't get here
+        MCAssert(false);
 	}
 
 	MCMemoryDelete(self);

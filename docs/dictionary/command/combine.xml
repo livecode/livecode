@@ -1,0 +1,79 @@
+<doc>
+	<legacy_id>2345</legacy_id>
+	<name>combine</name>
+	<type>command</type>
+
+	<syntax>
+		<example>combine <i>array</i> {using | by | with} <i>primaryDelimiter</i> [and <i>secondaryDelimiter</i>] [as set]</example>
+		<example>combine array {using | by | with} {row | column} [as set]</example>
+	</syntax>
+
+	<synonyms>
+	</synonyms>
+
+	<summary>Transforms an <glossary tag="array">array</glossary> into a list. </summary>
+
+	<examples>
+<example>combine myArray using comma</example>
+<example>combine monthlyReceivables using return and ";"</example>
+<example><p>combine myArray by row</p></example>
+<example>combine myArray using comma</example>
+	</examples>
+
+	<history>
+		<introduced version="1.1">Added. </introduced>
+		<deprecated version=""></deprecated>
+		<removed version=""></removed>
+		<changed version="2.8.1">2.8.1</changed>
+		<experimental version=""></experimental>
+		<nonexperimental version=""></nonexperimental>
+	</history>
+
+	<objects>
+	</objects>
+
+	<platforms>
+		<mac/>
+		<windows/>
+		<linux/>
+		<ios/>
+		<android/>
+	</platforms>
+
+	<classes>
+		<desktop/>
+		<server/>
+		<web/>
+		<mobile/>
+	</classes>
+
+	<security>
+	</security>
+
+
+	<classification>
+		<category>Values &amp; Properties</category>
+	</classification>
+
+	<references>
+		<function tag="extents">extents Function</function>
+		<function tag="keys">keys Function</function>
+		<command tag="split">split Command</command>
+		<property tag="columnDelimiter">columnDelimiter Property</property>
+		<property tag="rowDelimiter">rowDelimiter Property</property>
+		<keyword tag="using">using Keyword</keyword>
+		<keyword tag="[]">[] Keyword</keyword>
+	</references>
+
+	<description>
+	<overview>Use the <b>combine</b> <glossary tag="command">command</glossary> to display an <glossary tag="array">array</glossary> in a <keyword tag="field">field</keyword> or to process an <glossary tag="array">array</glossary> using <keyword tag="string">string</keyword> <glossary tag="operator">operators</glossary>, <glossary tag="function">functions</glossary>, and <glossary tag="chunk expression">chunk expressions</glossary>. </overview>
+
+		<parameters>
+  <parameter>The <i>arrayName</i> is an <glossary tag="array">array</glossary> <glossary tag="variable">variable</glossary>.</parameter>
+  <parameter>The <i>primaryDelimiter</i> is a <keyword tag="character">character</keyword>, or an <glossary tag="expression">expression</glossary> that <glossary tag="evaluate">evaluates</glossary> to a <keyword tag="character">character</keyword>.</parameter>
+  <parameter>The <i>secondaryDelimiter</i> is a character (other than the <i>primaryDelimiter</i>), or an <glossary tag="expression">expression</glossary> that <glossary tag="evaluate">evaluates</glossary> to a <keyword tag="character">character</keyword>.</parameter>		</parameters>
+
+	<value></value>
+	<comments>The <b>combine</b> <glossary tag="command">command</glossary> combines the <glossary tag="element">elements</glossary> of the <i>array</i> into a single <glossary tag="variable">variable</glossary>. After the <glossary tag="command">command</glossary> is finished <glossary tag="execute">executing</glossary>, the <glossary tag="variable">variable</glossary> specified by <i>array</i> is no longer an <glossary tag="array">array</glossary>. <p></p><p>If the first form of the command is used, the elements of the original <i>array</i> are separated by the <i>primaryDelimiter</i>. For example, if the <i>primaryDelimiter</i> is <constant tag="return">return</constant>, the content of each <keyword tag="element">element</keyword> of the original <i>array</i> appears on a separate line. </p><p></p><p>If you specify a <i>secondaryDelimiter</i>, the <glossary tag="key">key</glossary> corresponding to each <keyword tag="element">element</keyword> is added to the <glossary tag="element">element's</glossary> content, separated from the content by the <i>secondaryDelimiter</i>. For example, if the <i>primaryDelimiter</i> is <constant tag="return">return</constant> and the <i>secondaryDelimiter</i> is <constant tag="tab">tab</constant>, each line of the resulting <glossary tag="variable">variable</glossary> contains an <glossary tag="element">element's</glossary> <glossary tag="key">key</glossary>, a tab character, and the <glossary tag="element">element's</glossary> content. If you don't specify a <i>secondaryDelimiter</i>, then the <function tag="keys">keys</function> are lost in the transformation. </p><p></p><p>If you use the <b>as set</b> form the <b>combine</b> command rebuilds the list using the delimiter passed, the values of the array are ignored.</p><p></p><p></p><note>The order of the <glossary tag="element">elements</glossary> is not alphabetical or chronological; it is based on the internal hash order of the <glossary tag="array">array</glossary>. To alphabetize the list, use the <command tag="sort">sort</command> command:</note><p></p><p>  combine monthlyReceivables using return and comma</p><p>  sort lines of monthlyReceivables by item 2 of each</p><p></p><p>If the second form of the command is used, the elements of the original array are considered to be either columns or rows, separated by the columnDelimiter or rowDelimiter respectively.</p><p></p><p>Combining an array by row converts the array into a table with rows separated by the rowDelimiter. Each row in the resulting string is the contents of the corresponding key in the array. </p><p></p><p>Combining an array by column converts the array into a table with columns separated by the columnDelimiter. Each column of the resulting string is the contents of teh corresponding key in the array.</p><p></p><p></p><p></p><note>The combine by row and combine by column forms can only be used with numerically keyed arrays</note><p></p><p></p><p></p><change><p>The combine by row / column form was added in 2.8.1</change><p>&#9;</p></comments>
+	</description>
+</doc>

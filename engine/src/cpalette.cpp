@@ -129,7 +129,7 @@ Boolean MCColors::mdown(uint2 which)
 			selectedcolor = color.pixel;
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 			layer_redrawall();
-			message_with_args(MCM_mouse_down, "1");
+			message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 			break;
 		case T_POINTER:
 			start(True);
@@ -157,7 +157,7 @@ Boolean MCColors::mup(uint2 which)
 		switch (getstack()->gettool(this))
 		{
 		case T_BROWSE:
-			message_with_args(MCM_mouse_up, "1");
+			message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 			break;
 		case T_POINTER:
 			end();
@@ -185,7 +185,7 @@ Exec_stat MCColors::getprop_legacy(uint4 parid, Properties which, MCExecPoint& e
 		MCscreen->querycolor(color);
 		ep.setcolor(color);
 		break;
-#endif /* MCColors::getprop */
+#endif /* MCColors::getprop */ 
 	default:
 		return MCControl::getprop_legacy(parid, which, ep, effective);
 	}
@@ -215,7 +215,7 @@ Exec_stat MCColors::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 		MCscreen->alloccolor(color);
 		selectedcolor = color.pixel;
 	}
-	break;
+        break;
 #endif /* MCColors::setprop */
 	default:
 		return MCControl::setprop_legacy(parid, p, ep, effective);
@@ -259,7 +259,7 @@ void MCColors::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_
 	MCColor c;
 
 	c = dc->getwhite();
-	dc->setfillstyle(FillSolid, DNULL, 0, 0);
+	dc->setfillstyle(FillSolid, nil, 0, 0);
 	for (i = 0 ; i < ycells ; i++)
 		for (j = 0 ; j < xcells ; j++)
 		{

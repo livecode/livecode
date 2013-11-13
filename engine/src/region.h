@@ -39,7 +39,10 @@ bool MCRegionExcludeRect(MCRegionRef region, const MCRectangle& rect);
 bool MCRegionUnion(MCRegionRef dst, MCRegionRef x, MCRegionRef y);
 
 bool MCRegionOffset(MCRegionRef region, int32_t dx, int32_t dy);
+
+#ifdef OLD_GRAPHICS
 bool MCRegionCalculateMask(MCRegionRef region, int32_t width, int32_t height, MCBitmap*& r_mask);
+#endif
 
 typedef bool (*MCRegionForEachRectCallback)(void *context, const MCRectangle& rect);
 bool MCRegionForEachRect(MCRegionRef region, MCRegionForEachRectCallback callback, void *context);

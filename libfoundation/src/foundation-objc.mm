@@ -38,3 +38,16 @@
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
+
+@implementation NSData (com_runrev_livecode_foundation_NSDataAdditions)
+
++ (NSData *)dataWithMCDataRef: (MCDataRef)p_data_ref;
+{
+	CFDataRef t_data;
+	/* UNCHECKED */ MCDataConvertToCFDataRef(p_data_ref, t_data);
+	return [((NSData *)t_data) autorelease];
+}
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////

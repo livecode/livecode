@@ -196,6 +196,7 @@ extern MCNameRef MCN_bold_italic;
 
 extern MCNameRef MCN_unknown;
 extern MCNameRef MCN_x86;
+extern MCNameRef MCN_x86_64;
 extern MCNameRef MCN_motorola_powerpc;
 extern MCNameRef MCN_i386;
 extern MCNameRef MCN_arm;
@@ -576,5 +577,8 @@ extern MCNameRef MCM_product_details_received;
 extern MCNameRef MCM_product_request_error;
 extern MCNameRef MCM_protected_data_available;
 extern MCNameRef MCM_protected_data_unavailable;
+
+// MW-2013-05-30: [[ RemoteControl ]] Message sent when a remote control event is received.
+extern MCNameRef MCM_remote_control_received;
 #endif
 
