@@ -77,7 +77,7 @@ MC_EXEC_DEFINE_SET_METHOD(Dialog, ColorDialogColors, 2)
 void MCDialogExecAnswerColor(MCExecContext &ctxt, MCColor *p_initial_color, MCStringRef p_title, bool p_as_sheet)
 {
     MCAutoStringRef t_value;
-	bool t_chosen;
+	bool t_chosen = true;
 	if (MCsystemCS && MCscreen->hasfeature(PLATFORM_FEATURE_OS_COLOR_DIALOGS))
 	{
 		MCColor t_color;
