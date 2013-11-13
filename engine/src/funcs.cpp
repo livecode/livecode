@@ -3128,8 +3128,7 @@ void MCFormat::compile(MCSyntaxFactoryRef ctxt)
 #endif /* MCFoundLine */
 
 
-Exec_stat MCFoundLoc::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCFoundLoc */ LEGACY_EXEC
 	if (MCfoundfield == NULL)
 		ep.clear();
@@ -3138,22 +3137,7 @@ Exec_stat MCFoundLoc::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCFoundLoc */
 
-	MCExecContext ctxt(ep);
 
-	MCAutoStringRef t_result;
-	MCInterfaceEvalFoundLoc(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCFoundText::eval(MCExecPoint &ep)
-{
 #ifdef /* MCFoundText */ LEGACY_EXEC
 	if (MCfoundfield == NULL)
 		ep.clear();
@@ -3162,41 +3146,14 @@ Exec_stat MCFoundText::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCFoundText */
 
-	MCExecContext ctxt(ep);
 
-	MCAutoStringRef t_result;
-	MCInterfaceEvalFoundText(ctxt, &t_result);
 
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCFunctionNames::eval(MCExecPoint &ep)
-{
 #ifdef /* MCFunctionNames */ LEGACY_EXEC
 	ep.clear();
 	MCScriptPoint sp(ep);
 	return sp.getfactors(ep, TT_FUNCTION);
 #endif /* MCFunctionNames */
 
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCEngineEvalFunctionNames(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 MCGlobalLoc::~MCGlobalLoc()
 {
@@ -3248,8 +3205,7 @@ Exec_stat MCGlobalLoc::eval(MCExecPoint &ep)
 	return ctxt . Catch(line, pos);
 }
 
-Exec_stat MCGlobals::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCGlobals */ LEGACY_EXEC
 	ep.clear();
 	MCVariable *tmp;
@@ -3260,19 +3216,6 @@ Exec_stat MCGlobals::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCGlobals */
 
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCEngineEvalGlobalNames(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 MCHasMemory::~MCHasMemory()
 {
@@ -3328,26 +3271,12 @@ Exec_stat MCHasMemory::eval(MCExecPoint &ep)
 	return ctxt . Catch(line, pos);
 }
 
-Exec_stat MCHeapSpace::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCHeapSpace */ LEGACY_EXEC
 	ep.setstaticcstring(HEAP_SPACE);
 	return ES_NORMAL;
 #endif /* MCHeapSpace */
 
-
-	MCExecContext ctxt(ep);
-	integer_t t_result;
-	MCLegacyEvalHeapSpace(ctxt, t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 MCHostAddress::~MCHostAddress()
 {
