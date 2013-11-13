@@ -621,10 +621,10 @@ public:
 	virtual MCExpression *getmethodarg(void) const { return source; }
 };
 
-class MCTheFiles : public MCConstantFunction
+class MCTheFiles : public MCConstantFunctionCtxt<MCStringRef, MCFilesEvalFiles>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalFilesMethodInfo; }
 
 };
@@ -645,10 +645,10 @@ public:
 	virtual MCExpression *getmethodarg(void) const { return type; }
 };
 
-class MCFocusedObject : public MCConstantFunction
+class MCFocusedObject : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalFocusedObject>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalFocusedObjectMethodInfo; }
 
 };
@@ -732,25 +732,25 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCFoundChunk : public MCConstantFunction
+class MCFoundChunk : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalFoundChunk>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalFoundChunkMethodInfo; }
 
 };
 
-class MCFoundField : public MCConstantFunction
+class MCFoundField : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalFoundField>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalFoundFieldMethodInfo; }
 };
 
-class MCFoundLine : public MCConstantFunction
+class MCFoundLine : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalFoundLine>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalFoundLineMethodInfo; }
 
 };

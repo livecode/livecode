@@ -2434,8 +2434,7 @@ Exec_stat MCExtents::eval(MCExecPoint &ep)
 }
 
 
-Exec_stat MCTheFiles::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCTheFiles */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
@@ -2446,19 +2445,6 @@ Exec_stat MCTheFiles::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCTheFiles */
 
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCFilesEvalFiles(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 MCFlushEvents::~MCFlushEvents()
 {
@@ -2520,8 +2506,7 @@ Exec_stat MCFlushEvents::eval(MCExecPoint &ep)
 	return ctxt . Catch(line, pos);
 }
 
-Exec_stat MCFocusedObject::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCFocusedObject */ LEGACY_EXEC
 	if (MCfocusedstackptr != NULL)
 	{
@@ -2533,21 +2518,6 @@ Exec_stat MCFocusedObject::eval(MCExecPoint &ep)
 	ep.clear();
 	return ES_NORMAL;
 #endif /* MCFocusedObject */
-
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCInterfaceEvalFocusedObject(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
 
 
 MCFontNames::~MCFontNames()
@@ -3127,8 +3097,7 @@ void MCFormat::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndExpression(ctxt);
 }
 
-Exec_stat MCFoundChunk::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCFoundChunk */ LEGACY_EXEC
 	if (MCfoundfield == NULL)
 		ep.clear();
@@ -3137,22 +3106,7 @@ Exec_stat MCFoundChunk::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCFoundChunk */
 
-	MCExecContext ctxt(ep);
 
-	MCAutoStringRef t_result;
-	MCInterfaceEvalFoundChunk(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCFoundField::eval(MCExecPoint &ep)
-{
 #ifdef /* MCFoundField */ LEGACY_EXEC
 	if (MCfoundfield != NULL)
 	{
@@ -3165,22 +3119,6 @@ Exec_stat MCFoundField::eval(MCExecPoint &ep)
 #endif /* MCFoundField */
 
 
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCInterfaceEvalFoundField(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCFoundLine::eval(MCExecPoint &ep)
-{
 #ifdef /* MCFoundLine */ LEGACY_EXEC
 	if (MCfoundfield == NULL)
 		ep.clear();
@@ -3189,19 +3127,6 @@ Exec_stat MCFoundLine::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCFoundLine */
 
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCInterfaceEvalFoundLine(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 Exec_stat MCFoundLoc::eval(MCExecPoint &ep)
 {
