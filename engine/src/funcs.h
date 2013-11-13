@@ -464,34 +464,34 @@ public:
 	virtual MCExpression *getmethodarg(void) const { return source; }
 };
 
-class MCDirectories : public MCConstantFunction
+class MCDirectories : public MCConstantFunctionCtxt<MCStringRef, MCFilesEvalDirectories>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalDirectoriesMethodInfo; }
 
 };
 
-class MCDiskSpace : public MCConstantFunction
+class MCDiskSpace : public MCConstantFunctionCtxt<double, MCFilesEvalDiskSpace>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalDiskSpaceMethodInfo; }
 
 };
 
-class MCDNSServers : public MCConstantFunction
+class MCDNSServers : public MCConstantFunctionCtxt<MCStringRef, MCNetworkEvalDNSServers>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCNetworkEvalDNSServersMethodInfo; }
 
 };
 
-class MCDragDestination: public MCConstantFunction
+class MCDragDestination: public MCConstantFunctionCtxt<MCStringRef, MCPasteboardEvalDragDestination>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCPasteboardEvalDragDestinationMethodInfo; }
 
 };

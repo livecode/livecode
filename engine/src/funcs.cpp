@@ -2097,8 +2097,7 @@ Exec_stat MCDecompress::do_decompress(MCExecPoint& ep, uint2 line, uint2 pos)
 }
 #endif /* MCDecompress::do_decompress */
 
-Exec_stat MCDirectories::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCDirectories */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
@@ -2109,43 +2108,14 @@ Exec_stat MCDirectories::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCDirectories */
 
-	MCExecContext ctxt(ep);
 
-	MCAutoStringRef t_result;
-	MCFilesEvalDirectories(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCDiskSpace::eval(MCExecPoint &ep)
-{
 #ifdef /* MCDiskSpace */ LEGACY_EXEC
 	ep . setnvalue(MCS_getfreediskspace());
 	return ES_NORMAL;
 #endif /* MCDiskSpace */
 
-	MCExecContext ctxt(ep);
 
-	real64_t t_result;
-	MCFilesEvalDiskSpace(ctxt, t_result);
 
-	if (!ctxt . HasError())
-	{
-		ep . setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCDNSServers::eval(MCExecPoint &ep)
-{
 #ifdef /* MCDNSServers */ LEGACY_EXEC
 	if (!MCSecureModeCheckNetwork())
 		return ES_ERROR;
@@ -2154,22 +2124,7 @@ Exec_stat MCDNSServers::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCDNSServers */
 
-	MCExecContext ctxt(ep);
 
-	MCAutoStringRef t_result;
-	MCNetworkEvalDNSServers(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCDragDestination::eval(MCExecPoint &ep)
-{
 #ifdef /* MCDragDestination */ LEGACY_EXEC
 	if (MCdragdest != NULL)
 		return MCdragdest->getprop(0, P_LONG_ID, ep, False);
@@ -2178,19 +2133,6 @@ Exec_stat MCDragDestination::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCDragDestination */
 
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCPasteboardEvalDragDestination(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 Exec_stat MCDragSource::eval(MCExecPoint &ep)
 {
