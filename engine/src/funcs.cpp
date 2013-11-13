@@ -1941,27 +1941,11 @@ Exec_stat MCCompress::eval(MCExecPoint &ep)
 	return ctxt . Catch(line, pos);
 }
 
-Exec_stat MCControlKey::eval(MCExecPoint &ep)
-{
 #ifdef /* MCControlKey */ LEGACY_EXEC
 	ep.setstaticcstring(MCU_ktos((MCscreen->querymods() & MS_MAC_CONTROL) != 0));
 	return ES_NORMAL;
 #endif /* MCControlKey */
 
-
-	MCExecContext ctxt(ep);
-
-	MCNewAutoNameRef t_result;
-	MCInterfaceEvalControlKey(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 #ifdef /* MCColorNames */ LEGACY_EXEC
 	MCscreen->getcolornames(ep);
@@ -1982,47 +1966,18 @@ Exec_stat MCControlKey::eval(MCExecPoint &ep)
 	return sp.getconstants(ep);
 #endif /* MCConstantNames */
 
-Exec_stat MCDate::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCDate */ LEGACY_EXEC
 	MCD_date(P_UNDEFINED, ep);
 	return ES_NORMAL;
 #endif /* MCDate */
 
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_result;
 
-	MCDateTimeEvalDate(ctxt, &t_result);
 
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-Exec_stat MCDateFormat::eval(MCExecPoint &ep)
-{
 #ifdef /* MCDateFormat */ LEGACY_EXEC
 	MCD_dateformat(P_UNDEFINED, ep);
 	return ES_NORMAL;
 #endif /* MCDateFormat */
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_result;
-
-	MCDateTimeEvalDateFormat(ctxt, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 MCDecompress::~MCDecompress()
 {

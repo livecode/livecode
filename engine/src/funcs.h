@@ -423,25 +423,25 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalCommandKeyMethodInfo; }
 };
 
-class MCControlKey : public MCConstantFunction
+class MCControlKey : public MCConstantFunctionCtxt<MCNameRef, MCInterfaceEvalControlKey>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalControlKeyMethodInfo; }
 };
 
-class MCDate : public MCConstantFunction
+class MCDate : public MCConstantFunctionCtxt<MCStringRef, MCDateTimeEvalDate>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCDateTimeEvalDateMethodInfo; }
 
 };
 
-class MCDateFormat : public MCConstantFunction
+class MCDateFormat : public MCConstantFunctionCtxt<MCStringRef, MCDateTimeEvalDateFormat>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCDateTimeEvalDateFormatMethodInfo; }
 
 };
