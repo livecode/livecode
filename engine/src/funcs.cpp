@@ -4762,8 +4762,7 @@ void MCMouse::compile(MCSyntaxFactoryRef ctxt)
 	return ES_NORMAL;
 #endif /* MCMouseChunk */
 
-Exec_stat MCMouseClick::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCMouseClick */ LEGACY_EXEC
 	Boolean t_abort;
 	ep.setboolean(MCscreen->getmouseclick(0, t_abort));
@@ -4779,22 +4778,6 @@ Exec_stat MCMouseClick::eval(MCExecPoint &ep)
 #endif /* MCMouseClick */
 
 
-	MCExecContext ctxt(ep);
-
-	bool t_result;
-	MCInterfaceEvalMouseClick(ctxt, t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCMouseColor::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMouseColor */ LEGACY_EXEC
 	int2 mx, my;
 	MCscreen->querymouse(mx, my);
@@ -4805,22 +4788,6 @@ Exec_stat MCMouseColor::eval(MCExecPoint &ep)
 #endif /* MCMouseColor */
 
 
-	MCExecContext ctxt(ep);
-
-	MCColor t_result;
-	MCInterfaceEvalMouseColor(ctxt, t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setcolor(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCMouseControl::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMouseControl */ LEGACY_EXEC
 	ep.clear();
 	if (MCmousestackptr != NULL)
@@ -4837,24 +4804,6 @@ Exec_stat MCMouseControl::eval(MCExecPoint &ep)
 #endif /* MCMouseControl */
 
 
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCInterfaceEvalMouseControl(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-
-
-Exec_stat MCMouseH::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMouseH */ LEGACY_EXEC
 	int2 x, y;
 	MCscreen->querymouse(x, y);
@@ -4864,22 +4813,6 @@ Exec_stat MCMouseH::eval(MCExecPoint &ep)
 #endif /* MCMouseH */
 
 
-	MCExecContext ctxt(ep);
-
-	integer_t t_result;
-	MCInterfaceEvalMouseH(ctxt, t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setint(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCMouseLine::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMouseLine */ LEGACY_EXEC
 	ep.clear();
 	if (MCmousestackptr != NULL)
@@ -4894,22 +4827,7 @@ Exec_stat MCMouseLine::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCMouseLine */
 
-	MCExecContext ctxt(ep);
 
-	MCAutoStringRef t_result;
-	MCInterfaceEvalMouseLine(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCMouseLoc::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMouseLoc */ LEGACY_EXEC
 	int2 x, y;
 	MCscreen->querymouse(x, y);
@@ -4918,20 +4836,6 @@ Exec_stat MCMouseLoc::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCMouseLoc */
 
-
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCInterfaceEvalMouseLoc(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 Exec_stat MCMouseStack::eval(MCExecPoint &ep)
 {
