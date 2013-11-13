@@ -4617,47 +4617,18 @@ Exec_stat MCMerge::eval(MCExecPoint &ep)
 	return ctxt.Catch(line, pos);
 }
 
-Exec_stat MCMillisecs::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCMillisecs */ LEGACY_EXEC
 	ep.setnvalue(floor(MCS_time() * 1000.0));
 	return ES_NORMAL;
 #endif /* MCMillisecs */
 
-	MCExecContext ctxt(ep);
 
-	real64_t t_result;
-	MCDateTimeEvalMilliseconds(ctxt, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep . setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-Exec_stat MCMonthNames::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMonthNames */ LEGACY_EXEC
 	MCD_monthnames(P_UNDEFINED, ep);
 	return ES_NORMAL;
 #endif /* MCMonthNames */
 
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_result;
-
-	MCDateTimeEvalMonthNames(ctxt, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 MCMouse::~MCMouse()
 {
@@ -4746,8 +4717,7 @@ void MCMouse::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndExpression(ctxt);
 }
 
-Exec_stat MCMouseChar::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCMouseChar */ LEGACY_EXEC
     ep.clear();
 	if (MCmousestackptr != NULL)
@@ -4761,22 +4731,8 @@ Exec_stat MCMouseChar::eval(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCMouseChar */
-	MCExecContext ctxt(ep);
 
-	MCAutoStringRef t_result;
-	MCInterfaceEvalMouseChar(ctxt, &t_result);
 
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCMouseCharChunk::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMouseCharChunk */ LEGACY_EXEC
 	ep.clear();
 	if (MCmousestackptr != NULL)
@@ -4792,22 +4748,6 @@ Exec_stat MCMouseCharChunk::eval(MCExecPoint &ep)
 #endif /* MCMouseCharChunk */
 
 
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCInterfaceEvalMouseCharChunk(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCMouseChunk::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMouseChunk */ LEGACY_EXEC
 	ep.clear();
 	if (MCmousestackptr != NULL)
@@ -4821,20 +4761,6 @@ Exec_stat MCMouseChunk::eval(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCMouseChunk */
-
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCInterfaceEvalMouseChunk(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 Exec_stat MCMouseClick::eval(MCExecPoint &ep)
 {
