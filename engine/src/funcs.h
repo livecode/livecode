@@ -286,10 +286,10 @@ public:
 	virtual MCExpression *getmethodarg(void) const { return source; }
 };
 
-class MCConstantNames : public MCConstantFunction
+class MCConstantNames : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalConstantNames>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalConstantNamesMethodInfo; }
 
 };
@@ -330,10 +330,10 @@ public:
 	}
 };
 
-class MCClickChar : public MCConstantFunction
+class MCClickChar : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalClickChar>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalClickCharMethodInfo; }
 };
 

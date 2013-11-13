@@ -1743,22 +1743,6 @@ void MCChunkOffset::compile(MCSyntaxFactoryRef ctxt)
 	}
 }
 
-Exec_stat MCClickChar::eval(MCExecPoint &ep)
-{
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCInterfaceEvalClickChar(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
 Exec_stat MCClickCharChunk::eval(MCExecPoint &ep)
 {
 #ifdef /* MCClickCharChunk */ LEGACY_EXEC
@@ -2176,27 +2160,12 @@ Exec_stat MCCommandNames::eval(MCExecPoint &ep)
 	return ctxt . Catch(line, pos);
 }
 
-Exec_stat MCConstantNames::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCConstantNames */ LEGACY_EXEC
 	ep.clear();
 	MCScriptPoint sp(ep);
 	return sp.getconstants(ep);
 #endif /* MCConstantNames */
-
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCEngineEvalConstantNames(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 Exec_stat MCDate::eval(MCExecPoint &ep)
 {
