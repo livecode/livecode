@@ -694,7 +694,7 @@ Parse_stat MCFocus::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-void MCFocus::exec(MCExecContext &ctxt)
+void MCFocus::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCFocus */ LEGACY_EXEC
 MCObject *optr;
@@ -1652,7 +1652,7 @@ void MCMove::exec_ctxt(MCExecContext &ctxt)
 	{	
 		MCAutoArray<MCPoint> t_points;
 		MCAutoStringRef t_motion;
-        if (!ctxt . EvalExprAsStringRef(startloc, EE_MOVE_BADSTARTLOC, &t_motion))
+        if (!ctxt . EvalExprAsStringRef(endloc, EE_MOVE_BADENDLOC, &t_motion))
             return;
 
 		if (!MCU_parsepoints(t_points.PtrRef(), t_points.SizeRef(), *t_motion))
@@ -2797,8 +2797,8 @@ void MCStart::exec_ctxt(MCExecContext &ctxt)
 		uint4 parid;
 		if (target->getobj(ep, optr, parid, True) != ES_NORMAL)
 		{
-			MCeerror->add(EE_START_BADTARGET, line, pos);
-			return ES_ERROR;
+            MCeerror->add(EE_START_BADTARGET, line, pos);
+            return ES_ERROR;
 		}
 		if (optr->gettype() == CT_PLAYER)
 		{
@@ -2809,13 +2809,13 @@ void MCStart::exec_ctxt(MCExecContext &ctxt)
 		{
 			if (optr->gettype() != CT_GROUP)
 			{
-				MCeerror->add(EE_START_NOTABACKGROUND, line, pos);
-				return ES_ERROR;
+                MCeerror->add(EE_START_NOTABACKGROUND, line, pos);
+                return ES_ERROR;
 			}
 			if (optr->getstack()->islocked())
 			{
-				MCeerror->add(EE_START_LOCKED, line, pos);
-				return ES_ERROR;
+                MCeerror->add(EE_START_LOCKED, line, pos);
+                return ES_ERROR;
 			}
 			MCGroup *gptr = (MCGroup *)optr;
 			gptr->getstack()->startedit(gptr);
@@ -2862,8 +2862,7 @@ void MCStart::exec_ctxt(MCExecContext &ctxt)
 		uint4 parid;
         if (!target->getobj(ctxt, optr, parid, True))
 		{
-			MCeerror->add(EE_START_BADTARGET, line, pos);
-            ctxt . Throw();
+            ctxt . LegacyThrow(EE_START_BADTARGET);
             return;
 		}
 		if (optr->gettype() == CT_PLAYER)
@@ -2874,8 +2873,7 @@ void MCStart::exec_ctxt(MCExecContext &ctxt)
 		{
 			if (optr->gettype() != CT_GROUP)
 			{
-				MCeerror->add(EE_START_NOTABACKGROUND, line, pos);
-                ctxt . Throw();
+                ctxt . LegacyThrow(EE_START_NOTABACKGROUND);
                 return;
 			}
 			MCInterfaceExecStartEditingGroup(ctxt, (MCGroup *)optr);
