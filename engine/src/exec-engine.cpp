@@ -1734,14 +1734,14 @@ void MCEngineMarkVariable(MCExecContext& ctxt, MCVarref *p_variable, MCMarkedTex
 		return;
 	}
     
-    MCValueRef t_value;
-    if (!p_variable -> eval(ctxt, t_value))
+    MCAutoValueRef t_value;
+    if (!p_variable -> eval(ctxt, &t_value))
     {
         ctxt . LegacyThrow(EE_CHUNK_SETCANTGETDEST);
         return;
     }
     
-    if (!ctxt . ConvertToString(t_value, r_mark . text))
+    if (!ctxt . ConvertToString(*t_value, r_mark . text))
     {
         ctxt . LegacyThrow(EE_CHUNK_SETCANTGETDEST);
         return;
