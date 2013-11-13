@@ -337,17 +337,17 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalClickCharMethodInfo; }
 };
 
-class MCClickCharChunk : public MCConstantFunction
+class MCClickCharChunk : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalClickCharChunk>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalClickCharChunkMethodInfo; }
 };
 
-class MCClickChunk : public MCConstantFunction
+class MCClickChunk : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalClickChunk>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalClickChunkMethodInfo; }
 };
 
