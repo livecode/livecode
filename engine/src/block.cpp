@@ -1662,7 +1662,7 @@ findex_t MCBlock::GetCursorIndex(int2 x, int2 cx, Boolean chunk, Boolean last)
 		t_new_i = parent->IncrementIndex(i);
 		
 		int32_t t_new_width;
-		t_new_width = getcursorx(x, t_new_i);
+		t_new_width = GetCursorX(x, t_new_i);
 		
 		int32_t t_pos;
 		if (chunk)
