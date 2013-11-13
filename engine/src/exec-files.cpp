@@ -414,7 +414,7 @@ void MCFilesEvalListRegistry(MCExecContext& ctxt, MCStringRef p_key, MCStringRef
 	ctxt.Throw();
 }
 
-void MCFilesEvalQueryRegistry(MCExecContext& ctxt, MCStringRef p_key, MCStringRef& r_string)
+void MCFilesEvalQueryRegistry(MCExecContext& ctxt, MCStringRef p_key, MCValueRef& r_string)
 {
 	if (MCsecuremode & MC_SECUREMODE_REGISTRY_READ)
 	{
@@ -439,7 +439,7 @@ void MCFilesEvalQueryRegistry(MCExecContext& ctxt, MCStringRef p_key, MCStringRe
 	ctxt.Throw();
 }
 
-void MCFilesEvalQueryRegistryWithType(MCExecContext& ctxt, MCStringRef p_key, MCStringRef& r_type, MCStringRef& r_string)
+void MCFilesEvalQueryRegistryWithType(MCExecContext& ctxt, MCStringRef p_key, MCStringRef& r_type, MCValueRef& r_string)
 {
 	if (MCsecuremode & MC_SECUREMODE_REGISTRY_READ)
 	{
@@ -463,12 +463,12 @@ void MCFilesEvalQueryRegistryWithType(MCExecContext& ctxt, MCStringRef p_key, MC
 	ctxt.Throw();
 }
 
-void MCFilesEvalSetRegistry(MCExecContext& ctxt, MCStringRef p_key, MCStringRef p_value, bool& r_set)
+void MCFilesEvalSetRegistry(MCExecContext& ctxt, MCStringRef p_key, MCValueRef p_value, bool& r_set)
 {
 	MCFilesEvalSetRegistryWithType(ctxt, p_key, p_value, kMCEmptyString, r_set);
 }
 
-void MCFilesEvalSetRegistryWithType(MCExecContext& ctxt, MCStringRef p_key, MCStringRef p_value, MCStringRef p_type, bool& r_set)
+void MCFilesEvalSetRegistryWithType(MCExecContext& ctxt, MCStringRef p_key, MCValueRef p_value, MCStringRef p_type, bool& r_set)
 {
 	if (MCsecuremode & MC_SECUREMODE_REGISTRY_WRITE)
 	{
@@ -476,8 +476,24 @@ void MCFilesEvalSetRegistryWithType(MCExecContext& ctxt, MCStringRef p_key, MCSt
 		return;
 	}
 
+	// Convert the type string to a registry type
+	MCSRegistryValueType t_type;
+	t_type = MCS_registry_type_from_string(p_type);
+
+	// Ensure that the supplied value is of the correct type
+	MCAutoValueRef t_converted;
+	if (t_type == kMCSRegistryValueTypeSz || t_type == kMCSRegistryValueTypeMultiSz
+		|| t_type == kMCSRegistryValueTypeExpandSz || t_type == kMCSRegistryValueTypeLink)
+	{
+		/* UNCHECKED */ ctxt.ConvertToData(p_value, (MCDataRef&)&t_converted);
+	}
+	else
+	{
+		/* UNCHECKED */ ctxt.ConvertToString(p_value, (MCStringRef&)&t_converted);
+	}
+
 	MCAutoStringRef t_error;
-	if (MCS_set_registry(p_key, p_value, p_type, &t_error))
+	if (MCS_set_registry(p_key, *t_converted, t_type, &t_error))
 	{
 		r_set = *t_error == nil;
 		if (!r_set)

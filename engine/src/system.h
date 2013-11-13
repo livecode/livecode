@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __MC_SYSTEM__
 
 #include "mcio.h"
+#include "osspec.h"
 
 enum
 {
@@ -375,8 +376,8 @@ struct MCWindowsSystemServiceInterface: public MCServiceInterface
 {
     virtual bool MCISendString(MCStringRef p_command, MCStringRef& r_result, bool& r_error) = 0;
     
-    virtual bool QueryRegistry(MCStringRef p_key, MCStringRef& r_value, MCStringRef& r_type, MCStringRef& r_error) = 0;
-    virtual bool SetRegistry(MCStringRef p_key, MCStringRef p_value, MCStringRef p_type, MCStringRef& r_error) = 0;
+    virtual bool QueryRegistry(MCStringRef p_key, MCValueRef& r_value, MCStringRef& r_type, MCStringRef& r_error) = 0;
+    virtual bool SetRegistry(MCStringRef p_key, MCValueRef p_value, MCSRegistryValueType p_type, MCStringRef& r_error) = 0;
     virtual bool DeleteRegistry(MCStringRef p_key, MCStringRef& r_error) = 0;
     virtual bool ListRegistry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_error) = 0;
     
