@@ -139,6 +139,16 @@ bool MCObjectPropertySet::storeelement(MCExecPoint& ep, MCNameRef p_name)
 	return ep . storearrayelement(m_props, p_name);
 }
 
+bool MCObjectPropertySet::fetchelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef& r_value)
+{
+	return MCArrayFetchValue(m_props, ctxt . GetCaseSensitive(), p_name, r_value);
+}
+
+bool MCObjectPropertySet::storeelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef p_value)
+{
+	return MCArrayStoreValue(m_props, ctxt . GetCaseSensitive(), p_name, p_value);
+}
+
 bool MCObjectPropertySet::restrict(MCExecPoint& ep)
 {
 	if (ep.getsvalue().getstring()[ep.getsvalue().getlength() - 1] != '\n')

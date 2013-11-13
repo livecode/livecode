@@ -412,6 +412,80 @@ Exec_stat MCObject::getcustomprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameR
 	return t_stat;
 }
 
+Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCValueRef& r_value)
+{
+	// If the set name is nil, then we send a 'getProp <propname>' otherwise we
+	// send a 'getProp <setname> <propname>'.
+	//
+	MCNameRef t_getprop_name;
+	MCNameRef t_param_name;
+	if (MCNameIsEqualTo(p_set_name, kMCEmptyName, kMCCompareCaseless))
+		t_getprop_name = p_prop_name, t_param_name = kMCEmptyName;
+	else
+		t_getprop_name = p_set_name, t_param_name = p_prop_name;
+    
+	Exec_stat t_stat = ES_NOT_HANDLED;
+	if (!MClockmessages && (ctxt . GetObject() != this || !ctxt . GetHandler() -> hasname(t_getprop_name)))
+	{
+		MCParameter p1;
+		p1.setvalueref_argument(t_param_name);
+        
+		MCStack *oldstackptr = MCdefaultstackptr;
+		MCdefaultstackptr = getstack();
+		MCObject *oldtargetptr = MCtargetptr;
+		MCtargetptr = this;
+		Boolean added = False;
+		if (MCnexecutioncontexts < MAX_CONTEXTS)
+		{
+			MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+			added = True;
+		}
+		t_stat = MCU_dofrontscripts(HT_GETPROP, t_getprop_name, &p1);
+		if (t_stat == ES_NOT_HANDLED || t_stat == ES_PASS)
+			t_stat = handle(HT_GETPROP, t_getprop_name, &p1, this);
+		MCdefaultstackptr = oldstackptr;
+		MCtargetptr = oldtargetptr;
+		if (added)
+			MCnexecutioncontexts--;
+	}
+    
+	if (t_stat == ES_NORMAL)
+		t_stat = MCresult -> eval(ctxt, r_value) ? ES_NORMAL : ES_ERROR;
+    
+	return t_stat;
+}
+
+bool MCObject::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue& r_value)
+{
+	assert(p_set_name != nil);
+	assert(p_prop_name != nil);
+    
+	Exec_stat t_stat;
+	t_stat = sendgetprop(ctxt, p_set_name, p_prop_name, r_value . valueref_value);
+	if (t_stat == ES_NOT_HANDLED || t_stat == ES_PASS)
+	{
+        MCValueRef t_value;
+		MCObjectPropertySet *p;
+		if (!findpropset(p_set_name, false, p) ||
+			!p -> fetchelement(ctxt, p_prop_name, t_value))
+        {
+            r_value . stringref_value = MCValueRetain(kMCEmptyString);
+            r_value . type = kMCExecValueTypeStringRef;
+            return true;
+        }
+        r_value . valueref_value = MCValueRetain(t_value);
+		t_stat = ES_NORMAL;
+	}
+    
+	if (t_stat == ES_NORMAL)
+    {
+        r_value . type = kMCExecValueTypeValueRef;
+        return true;
+    }
+    
+    return false;
+}
+
 Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 #ifdef /* MCObject::getprop */ LEGACY_EXEC

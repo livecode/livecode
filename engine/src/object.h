@@ -177,6 +177,7 @@ struct MCInterfaceLayer;
 struct MCInterfaceShadow;
 struct MCInterfaceTextStyle;
 struct MCInterfaceTriState;
+struct MCExecValue;
 
 class MCObject : public MCDLlist
 {
@@ -382,7 +383,10 @@ public:
 	Exec_stat getcustomprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
 	Exec_stat sendsetprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
 	Exec_stat setcustomprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
-
+    
+    Exec_stat sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCValueRef& r_value);
+	bool getcustomprop(MCExecContext& ep, MCNameRef set_name, MCNameRef prop_name, MCExecValue& r_value);
+    
 #ifdef OLD_EXEC
 	Exec_stat setprops(uint32_t parid, MCExecPoint& ep);
 	Exec_stat changeid(uint32_t new_id);

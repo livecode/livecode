@@ -5127,11 +5127,9 @@ void MCProperty::eval_object_property_ctxt(MCExecContext& ctxt, MCExecValue& r_v
 		if (t_success)
 		{
 			if (t_index_name == nil)
-				t_success = t_object -> getcustomprop(ctxt . GetEP(), t_object -> getdefaultpropsetname(), t_prop_name);
+				t_success = t_object -> getcustomprop(ctxt, t_object -> getdefaultpropsetname(), t_prop_name, r_value);
 			else
-				t_success = t_object -> getcustomprop(ctxt . GetEP(), t_prop_name, t_index_name);
-            ctxt . GetEP() . copyasvalueref(r_value . valueref_value);
-            r_value . type = kMCExecValueTypeValueRef;
+				t_success = t_object -> getcustomprop(ctxt, t_prop_name, t_index_name, r_value);
 		}
 	}
 	else
