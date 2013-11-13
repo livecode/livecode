@@ -487,7 +487,7 @@ void MCClipboardCmd::exec_ctxt(MCExecContext& ctxt)
 			
 			if (!t_objects . Push(t_object))
             {
-				MCeerror -> add(EE_NO_MEMORY, line, pos);
+                ctxt . LegacyThrow(EE_NO_MEMORY);
 				break;
 			}
             
@@ -1608,7 +1608,7 @@ if (var != NULL)
                         
 			if (!t_chunks . Push(t_var_chunk))
 			{
-                MCeerror -> add(EE_NO_MEMORY, line, pos);
+                ctxt . LegacyThrow(EE_NO_MEMORY);
 				break;
 			}
 		}
@@ -1632,7 +1632,7 @@ if (var != NULL)
             
 			if (!t_chunks . Push(t_obj_chunk))
 			{
-				MCeerror -> add(EE_NO_MEMORY, line, pos);
+                ctxt . LegacyThrow(EE_NO_MEMORY);
 				break;
 			}
 		}
@@ -1650,8 +1650,8 @@ if (var != NULL)
 				            
 			if (!t_objects . Push(t_object))
 			{
-				MCeerror -> add(EE_NO_MEMORY, line, pos);
-				break;
+                ctxt . LegacyThrow(EE_NO_MEMORY);
+                break;
 			}
 		}
         
@@ -2439,7 +2439,7 @@ Parse_stat MCMakeGroup::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCMakeGroup::exec(MCExecPoint &ep)
+void MCMakeGroup::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCMakeGroup */ LEGACY_EXEC
 if (targets != NULL)
@@ -2491,34 +2491,28 @@ if (targets != NULL)
 	return ES_NORMAL;
 #endif /* MCMakeGroup */
 
-
-	MCExecContext ctxt(ep);
-	if (targets != NULL)
+    if (targets != NULL)
 	{
 		MCAutoArray<MCObjectPtr> t_objects;
 		for(MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
 		{
 			MCObjectPtr t_object;
-			if (t_chunk -> getobj(ep, t_object, True) != ES_NORMAL ||
-				t_object . object -> gettype() < CT_FIRST_CONTROL ||
-				t_object . object -> gettype() > CT_LAST_CONTROL)
-				return ES_ERROR;
-
+			if (!t_chunk -> getobj(ctxt, t_object, True) || t_object . object -> gettype() < CT_FIRST_CONTROL || t_object . object -> gettype() > CT_LAST_CONTROL)
+            {
+                ctxt .Throw();
+				return;
+            }
+            
 			if (!t_objects . Push(t_object))
 			{
-				MCeerror -> add(EE_NO_MEMORY, line, pos);
+                ctxt . LegacyThrow(EE_NO_MEMORY);
 				break;
 			}
 		}
 		MCInterfaceExecGroupControls(ctxt, t_objects . Ptr(), t_objects . Size());
 	}
-	else
+    else
 		MCInterfaceExecGroupSelection(ctxt);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCMakeGroup::compile(MCSyntaxFactoryRef ctxt)
@@ -2614,7 +2608,7 @@ Parse_stat MCPlace::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCPlace::exec(MCExecPoint &ep)
+void MCPlace::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCPlace */ LEGACY_EXEC
 MCObject *gptr;
@@ -2663,41 +2657,38 @@ MCObject *gptr;
 	return ES_NORMAL;
 #endif /* MCPlace */
 
-
-	MCObject *gptr;
+    MCObject *gptr;
 	uint4 parid;
-	if (group->getobj(ep, gptr, parid, True) != ES_NORMAL)
-	{
-		MCeerror->add(EE_PLACE_NOBACKGROUND, line, pos);
-		return ES_ERROR;
-	}
+	if (!group->getobj(ctxt, gptr, parid, True))
+    {
+        ctxt . LegacyThrow(EE_PLACE_NOBACKGROUND);
+        return;
+    }
 	// MW-2008-03-31: [[ Bug 6281 ]] A little too draconian here - it is possible
 	//   for a parent of a placeable group to be either a card or a stack.
-
+    
 	if (gptr->gettype() != CT_GROUP)
 	{
-		MCeerror->add(EE_PLACE_NOTABACKGROUND, line, pos);
-		return ES_ERROR;
+		ctxt . LegacyThrow(EE_PLACE_NOTABACKGROUND);
+		return;
 	}
-	MCObject *optr;
-	if (card->getobj(ep, optr, parid, True) != ES_NORMAL)
-	{
-		MCeerror->add(EE_PLACE_NOCARD, line, pos);
-		return ES_ERROR;
-	}
+    MCObject *optr;
+	
+    if (!card->getobj(ctxt, optr, parid, True))
+    {
+        ctxt . LegacyThrow(EE_PLACE_NOCARD);
+        return;
+    }
+    
+    
 	if (optr->gettype() != CT_CARD)
 	{
-		MCeerror->add(EE_PLACE_NOTACARD, line, pos);
-		return ES_ERROR;
+		ctxt . LegacyThrow(EE_PLACE_NOTACARD);
+		return;
 	}
+    
 	MCCard *cptr = (MCCard *)optr;
-	MCExecContext ctxt(ep);
 	MCInterfaceExecPlaceGroupOnCard(ctxt, gptr, cptr);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCPlace::compile(MCSyntaxFactoryRef ctxt)
@@ -2846,7 +2837,7 @@ Parse_stat MCRemove::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCRemove::exec(MCExecPoint &ep)
+void MCRemove::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCRemove */ LEGACY_EXEC
 if (all)
@@ -2911,51 +2902,45 @@ if (all)
 	return ES_NORMAL;
 #endif /* MCRemove */
 
-	
-	MCExecContext ctxt(ep);
-	if (all)
+    if (all)
 		MCEngineExecRemoveAllScriptsFrom(ctxt, where == IP_FRONT);
-	else 
+	else
 	{
 		MCObjectPtr optr;
 		uint4 parid;
-		if (target->getobj(ep, optr, True) != ES_NORMAL)
-		{
-			MCeerror->add(EE_REMOVE_NOOBJECT, line, pos);
-			return ES_ERROR;
-		}
+		if (!target->getobj(ctxt, optr, True))
+        {
+            ctxt . LegacyThrow(EE_REMOVE_NOOBJECT);
+            return;
+        }
+		
 		if (script)
 			MCEngineExecRemoveScriptOfObjectFrom(ctxt, optr . object, where == IP_FRONT);
 		else
 		{
 			if (optr . object->gettype() != CT_GROUP)
 			{
-				MCeerror->add(EE_REMOVE_NOTABACKGROUND, line, pos);
-				return ES_ERROR;
+				ctxt . LegacyThrow(EE_REMOVE_NOTABACKGROUND);
+				return;
 			}
-
+            
 			MCObject *cptr;
-			if (card->getobj(ep, cptr, parid, True) != ES_NORMAL)
-			{
-				MCeerror->add(EE_REMOVE_NOOBJECT, line, pos);
-				return ES_ERROR;
-			}
-
+			if (!card->getobj(ctxt, cptr, parid, True))
+            {
+                ctxt . LegacyThrow(EE_REMOVE_NOOBJECT);
+                return;
+            }
+            
 			if (cptr->gettype() != CT_CARD)
 			{
-				MCeerror->add(EE_REMOVE_NOTACARD, line, pos);
-				return ES_ERROR;
+				ctxt . LegacyThrow(EE_REMOVE_NOTACARD);
+				return;
 			}
-
+            
 			MCCard *cardptr = (MCCard *)cptr;
 			MCInterfaceExecRemoveGroupFromCard(ctxt, optr, cardptr);
 		}
 	}
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);	
 }
 
 void MCRemove::compile(MCSyntaxFactoryRef ctxt)
@@ -3196,7 +3181,7 @@ Parse_stat MCReplace::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCReplace::exec(MCExecPoint &ep)
+void MCReplace::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCReplace */ LEGACY_EXEC
 	MCExecPoint epp(ep);
@@ -3250,37 +3235,40 @@ Exec_stat MCReplace::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCReplace */
 
-
-	if (pattern->eval(ep) != ES_NORMAL || ep.tos() != ES_NORMAL || ep.getsvalue().getlength() < 1)
-	{
-		MCeerror->add(EE_REPLACE_BADPATTERN, line, pos);
-		return ES_ERROR;
-	}
-	MCAutoStringRef t_pattern;
-	ep.copyasstringref(&t_pattern);
-	if (replacement->eval(ep) != ES_NORMAL || ep.tos() != ES_NORMAL)
-	{
-		MCeerror->add(EE_REPLACE_BADREPLACEMENT, line, pos);
-		return ES_ERROR;
-	}
-	MCAutoStringRef t_replacement;
-	ep.copyasstringref(&t_replacement);
-	if (container->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_REPLACE_BADCONTAINER, line, pos);
-		return ES_ERROR;
-	}
-	MCAutoStringRef t_target;
-	ep.copyasmutablestringref(&t_target);
-	MCExecContext ctxt(ep);
-	MCStringsExecReplace(ctxt, *t_pattern, *t_replacement, *t_target);
-
-	if (!ctxt . HasError())
-	{
-		return container -> set(ep, PT_INTO, *t_target);
-	}
-
-	return ctxt . Catch(line, pos);
+    MCAutoStringRef t_pattern;
+    if (!ctxt . EvalExprAsStringRef(pattern, EE_REPLACE_BADPATTERN, &t_pattern))
+        return;
+    
+    if (MCStringGetLength(*t_pattern) < 1)
+    {
+        ctxt . LegacyThrow(EE_REPLACE_BADPATTERN);
+        return;
+    }
+    
+    MCAutoStringRef t_replacement;
+    if (!ctxt . EvalExprAsStringRef(replacement, EE_REPLACE_BADREPLACEMENT, &t_replacement))
+        return;
+    
+    
+    MCStringRef t_target;
+    if (!container->eval(ctxt, t_target))
+    {
+        ctxt . LegacyThrow(EE_REPLACE_BADCONTAINER);
+        MCValueRelease(t_target);
+        return;
+    }
+    
+    /* UNCHECKED */ MCStringMutableCopyAndRelease(t_target, t_target);
+    MCStringsExecReplace(ctxt, *t_pattern, *t_replacement, t_target);
+    
+    if (ctxt . HasError())
+    {
+        MCValueRelease(t_target);
+        return;
+    }
+    
+    container -> set(ctxt, PT_INTO, t_target);
+    MCValueRelease(t_target);
 }
 
 void MCReplace::compile(MCSyntaxFactoryRef ctxt)
@@ -3371,7 +3359,7 @@ Parse_stat MCRotate::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCRotate::exec(MCExecPoint &ep)
+void MCRotate::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCRotate */ LEGACY_EXEC
 	// MW-2012-01-05: [[ Bug 9909 ]] If we are a mobile platform, the image
@@ -3416,55 +3404,33 @@ Exec_stat MCRotate::exec(MCExecPoint &ep)
 
 	return ES_NORMAL;
 #endif /* MCRotate */
-
-	// MW-2012-01-05: [[ Bug 9909 ]] If we are a mobile platform, the image
-	//   editing operations are not supported yet.
-    MCExecContext ctxt(ep);
-
     
 #ifndef _MOBILE
 	MCImage *iptr;
 	iptr = NULL;
-
+    
 	if (image != NULL)
 	{
 		MCObject *optr;
 		uint4 parid;
-		if (image->getobj(ep, optr, parid, True) != ES_NORMAL)
+        
+		if (!image->getobj(ctxt, optr, parid, True) || optr->gettype() != CT_IMAGE)
 		{
-			MCeerror->add(EE_ROTATE_NOIMAGE, line, pos);
-			return ES_ERROR;
-		}
-
-		if (optr->gettype() != CT_IMAGE)
-		{
-			MCeerror->add(EE_ROTATE_NOTIMAGE, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_ROTATE_NOTIMAGE);
+			return;
 		}
 		iptr = (MCImage *)optr;
 	}
-
-	if (angle->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_ROTATE_BADANGLE, line, pos);
-		return ES_ERROR;
-	}
-
-	integer_t t_angle;
-	t_angle = ep.getuint4();
-
+    
+    integer_t t_angle;
+    if (!ctxt . EvalExprAsInt(angle, EE_ROTATE_BADANGLE, t_angle))
+        return;
+    
 	if (iptr != NULL)
 		MCGraphicsExecRotateImage(ctxt, iptr, t_angle);
 	else
 		MCGraphicsExecRotateSelection(ctxt, t_angle);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
-#else
-
-	return ES_NORMAL;
+    
 #endif
 }
 
@@ -3519,7 +3485,7 @@ Parse_stat MCCrop::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCCrop::exec(MCExecPoint &ep)
+void MCCrop::exec_ctxt(MCExecContext& ctxt)
 {	
 #ifdef /* MCCrop */ LEGACY_EXEC
 	if (image != NULL)
@@ -3562,8 +3528,6 @@ Exec_stat MCCrop::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCCrop */
 
-
-	MCExecContext ctxt(ep);
 	MCImage *iptr;
 	MCRectangle t_rect;
 	
@@ -3571,41 +3535,24 @@ Exec_stat MCCrop::exec(MCExecPoint &ep)
 	{
 		MCObject *optr;
 		uint4 parid;
-		if (image->getobj(ep, optr, parid, True) != ES_NORMAL)
+    
+		if (!image->getobj(ctxt, optr, parid, True) || optr->gettype() != CT_IMAGE)
 		{
-			MCeerror->add(EE_CROP_NOIMAGE, line, pos);
-			return ES_ERROR;
-		}
-		if (optr->gettype() != CT_IMAGE)
-		{
-			MCeerror->add(EE_CROP_NOTIMAGE, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_CROP_NOTIMAGE);
+			return;
 		}
 		iptr = (MCImage *)optr;
-		if (newrect->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_CROP_CANTGETRECT, line, pos);
-			return ES_ERROR;
-		}
-		if (!ep . copyaslegacyrectangle(t_rect))
-		{
-			MCeerror->add(EE_CROP_NAR, line, pos, ep.getsvalue());
-			return ES_ERROR;
-		}
-	}
-	else
+        if (!ctxt . EvalExprAsRectangle(newrect, EE_CROP_CANTGETRECT, t_rect))
+            return;
+    }
+    else
 	{
 		iptr = nil;
 		t_rect = MCRectangleMake(0,0,0,0);
 	}
-
+    
 	MCGraphicsExecCropImage(ctxt, iptr, t_rect);
-	
-	if (!ctxt . HasError()) 
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
-}
+ }
 
 void MCCrop::compile(MCSyntaxFactoryRef ctxt)
 {
@@ -3670,7 +3617,7 @@ Parse_stat MCSelect::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCSelect::exec(MCExecPoint &ep)
+void MCSelect::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCSelect */ LEGACY_EXEC
 if (targets == NULL)
@@ -3697,31 +3644,28 @@ if (targets == NULL)
 	return ES_NORMAL;
 #endif /* MCSelect */
 
-
-	MCExecContext ctxt(ep);
 	if (targets == NULL)
 		MCInterfaceExecSelectEmpty(ctxt);
 	else if (text)
 	{
 		MCObjectPtr t_object;
-		
-		if (targets -> getobj(ep, t_object, True) != ES_NORMAL)
-		{
-			MCeerror->add(EE_SELECT_BADTARGET, line, pos);
-			return ES_ERROR;
-		}
-		
+        if (!targets -> getobj(ctxt, t_object, True))
+        {
+            ctxt . LegacyThrow(EE_SELECT_BADTARGET);
+            return;
+        }
 		MCInterfaceExecSelectAllTextOfField(ctxt, t_object);
 	}
-	else if (targets -> next == nil)
+    else if (targets -> next == nil)
 	{
 		MCObjectChunkPtr t_chunk;
 		
-		if (targets -> evalobjectchunk(ep, false, false, t_chunk) != ES_NORMAL)
-		{
-			MCeerror->add(EE_SELECT_BADTARGET, line, pos);
-			return ES_ERROR;
-		}
+		if (!targets -> evalobjectchunk(ctxt, false, false, t_chunk))
+        {
+            ctxt . LegacyThrow(EE_SELECT_BADTARGET);
+            return;
+        }
+        
 		
 		if (t_chunk . chunk != CT_UNDEFINED || where == PT_BEFORE || where == PT_AFTER)
 		{
@@ -3731,8 +3675,8 @@ if (targets == NULL)
 				MCInterfaceExecSelectTextOfButton(ctxt, where, t_chunk);
 			else
 			{
-				MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
-				return ES_ERROR;
+                ctxt . LegacyThrow(EE_CHUNK_BADCONTAINER);
+				return;
 			}
 		}
 		else
@@ -3743,35 +3687,30 @@ if (targets == NULL)
 			MCInterfaceExecSelectObjects(ctxt, &t_object, 1);
 		}
 	}
-	else
+    else
 	{
 		MCChunk *chunkptr = targets;
 		MCObjectPtr t_object;
 		MCAutoArray<MCObjectPtr> t_objects;
-
+        
 		while (chunkptr != NULL)
 		{
-			if (chunkptr->getobj(ep, t_object, True) != ES_NORMAL)
-			{
-				MCeerror->add(EE_SELECT_BADTARGET, line, pos);
-				return ES_ERROR;
-			}	
+			if (!chunkptr->getobj(ctxt, t_object, True))
+            {
+                ctxt . LegacyThrow(EE_SELECT_BADTARGET);
+                return;
+            }
 			
 			if (!t_objects . Push(t_object))
 			{
-				MCeerror -> add(EE_NO_MEMORY, line, pos);
-				return ES_ERROR;
+                ctxt .LegacyThrow(EE_NO_MEMORY);
+				return;
 			}
-
+            
 			chunkptr = chunkptr->next;
 		}
 		MCInterfaceExecSelectObjects(ctxt, t_objects . Ptr(), t_objects . Size());
 	}
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCSelect::compile(MCSyntaxFactoryRef ctxt)
@@ -3853,7 +3792,7 @@ Parse_stat MCUngroup::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCUngroup::exec(MCExecPoint &ep)
+void MCUngroup::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCUngroup */ LEGACY_EXEC
 MCObject *gptr;
@@ -3879,32 +3818,25 @@ MCObject *gptr;
 	return ES_NORMAL;
 #endif /* MCUngroup */
 
-
-	MCExecContext ctxt(ep);
 	if (group != NULL)
 	{
 		MCObject *gptr;
 		uint4 parid;
-		if (group->getobj(ep, gptr, parid, True) != ES_NORMAL)
-		{
-			MCeerror->add(EE_UNGROUP_NOGROUP, line, pos);
-			return ES_ERROR;
-		}
+		if (!group->getobj(ctxt, gptr, parid, True))
+        {
+            ctxt . LegacyThrow(EE_UNGROUP_NOGROUP);
+            return;
+        }
+
 		if (gptr->gettype() != CT_GROUP)
 		{
-			MCeerror->add(EE_UNGROUP_NOTAGROUP, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_UNGROUP_NOTAGROUP);
+            return;
 		}
 		MCInterfaceExecUngroupObject(ctxt, gptr);
 	}
 	else
 		MCInterfaceExecUngroupSelection(ctxt);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
-
 }
 
 void MCUngroup::compile(MCSyntaxFactoryRef ctxt)
