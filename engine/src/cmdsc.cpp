@@ -3237,10 +3237,7 @@ void MCReplace::exec_ctxt(MCExecContext& ctxt)
 
     MCAutoStringRef t_pattern;
     if (!ctxt . EvalExprAsStringRef(pattern, EE_REPLACE_BADPATTERN, &t_pattern))
-    {
-        ctxt . Throw();
         return;
-    }
     
     if (MCStringGetLength(*t_pattern) < 1)
     {
@@ -3250,10 +3247,7 @@ void MCReplace::exec_ctxt(MCExecContext& ctxt)
     
     MCAutoStringRef t_replacement;
     if (!ctxt . EvalExprAsStringRef(replacement, EE_REPLACE_BADREPLACEMENT, &t_replacement))
-    {
-        ctxt . Throw();
         return;
-    }
     
     
     MCStringRef t_target;
