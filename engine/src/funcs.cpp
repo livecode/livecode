@@ -4151,27 +4151,12 @@ Parse_stat MCLocals::parse(MCScriptPoint &sp, Boolean the)
 #endif /* MCLocals */
 
 
-Exec_stat MCMachine::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCMachine */ LEGACY_EXEC
 	ep.setstaticcstring(MCS_getmachine());
 	return ES_NORMAL;
 #endif /* MCMachine */
 
-
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCEngineEvalMachine(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 MCMacToIso::~MCMacToIso()
 {
@@ -4225,27 +4210,11 @@ Exec_stat MCMacToIso::eval(MCExecPoint &ep)
 	return ctxt.Catch(line, pos);
 }
 
-Exec_stat MCMainStacks::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCMainStacks */ LEGACY_EXEC
 	MCdispatcher->getmainstacknames(ep);
 	return ES_NORMAL;
 #endif /* MCMainStacks */
-
-
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCInterfaceEvalMainStacks(ctxt, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 MCMatch::~MCMatch()
 {
@@ -4495,8 +4464,7 @@ Parse_stat MCMe::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCMe::eval(MCExecPoint &ep)
-{	
+	
 #ifdef /* MCMe */ LEGACY_EXEC
 	MCObject *target = ep.getobj();
 	if (target->gettype() != CT_FIELD && target->gettype() != CT_BUTTON)
@@ -4505,22 +4473,6 @@ Exec_stat MCMe::eval(MCExecPoint &ep)
 #endif /* MCMe */
 
 
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCEngineEvalMe(ctxt, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-Exec_stat MCMenuObject::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMenuObject */ LEGACY_EXEC
 if (MCmenuobjectptr == NULL)
 	{
@@ -4531,40 +4483,11 @@ if (MCmenuobjectptr == NULL)
 #endif /* MCMenuObject */
 
 
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCLegacyEvalMenuObject(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UMCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCMenus::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMenus */ LEGACY_EXEC
 	ep.clear();  // hc compatibility
 	return ES_NORMAL;
 #endif /* MCMenus */
 
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCLegacyEvalMenus(ctxt, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 MCMerge::~MCMerge()
 {

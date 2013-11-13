@@ -1051,10 +1051,10 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalLocalNamesMethodInfo; }
 };
 
-class MCMachine : public MCConstantFunction
+class MCMachine : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalMachine>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalMachineMethodInfo; }
 };
 
@@ -1074,10 +1074,10 @@ public:
 	virtual MCExpression *getmethodarg(void) const { return source; }
 };
 
-class MCMainStacks : public MCConstantFunction
+class MCMainStacks : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalMainStacks>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMainStacksMethodInfo; }
 };
 
@@ -1116,25 +1116,25 @@ public:
 };
 
 
-class MCMe : public MCConstantFunction
+class MCMe : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalMe>
 {
 public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalMeMethodInfo; }
 };
 
-class MCMenuObject : public MCConstantFunction
+class MCMenuObject : public MCConstantFunctionCtxt<MCStringRef, MCLegacyEvalMenuObject>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCLegacyEvalMenuObjectMethodInfo; }
 };
 
-class MCMenus : public MCConstantFunction
+class MCMenus : public MCConstantFunctionCtxt<MCStringRef, MCLegacyEvalMenus>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCLegacyEvalMenusMethodInfo; }
 };
 
