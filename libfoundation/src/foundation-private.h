@@ -308,6 +308,7 @@ bool __MCSetImmutableCopy(__MCSet *set, bool release, __MCSet*& r_immutable_valu
 
 bool __MCDataInitialize(void);
 void __MCDataFinalize(void);
+void __MCDataDestroy(__MCData *data);
 
 ////////////////////////////////////////////////////////////////////////////////
 
