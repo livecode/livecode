@@ -2234,68 +2234,25 @@ Parse_stat MCDrives::parse(MCScriptPoint &sp, Boolean the)
 #endif /* MCDropChunk */
 
 
-Exec_stat MCQTEffects::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCQTEffects */ LEGACY_EXEC
 	MCtemplateplayer->geteffectlist(ep);
 	return ES_NORMAL;
 #endif /* MCQTEffects */
 
-	MCExecContext ctxt(ep);
 
-	MCAutoStringRef t_result;
-	MCMultimediaEvalQTEffects(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCRecordCompressionTypes::eval(MCExecPoint &ep)
-{
 #ifdef /* MCRecordCompressionTypes */ LEGACY_EXEC
 	MCtemplateplayer->getrecordcompressionlist(ep);
 	return ES_NORMAL;
 #endif /* MCRecordCompressionTypes */
 
-	MCExecContext ctxt(ep);
 
-	MCAutoStringRef t_result;
-	MCMultimediaEvalRecordCompressionTypes(ctxt, &t_result);
 
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCRecordLoudness::eval(MCExecPoint &ep)
-{
 #ifdef /* MCRecordLoudness */ LEGACY_EXEC
 	MCtemplateplayer->getrecordloudness(ep);
 	return ES_NORMAL;
 #endif /* MCRecordLoudness */
 
-	MCExecContext ctxt(ep);
-
-	integer_t t_result;
-	MCMultimediaEvalRecordLoudness(ctxt, t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 MCEncrypt::~MCEncrypt()
 {
@@ -2356,26 +2313,12 @@ Exec_stat MCEncrypt::eval(MCExecPoint &ep)
 	return ctxt . Catch(line, pos);
 }
 
-Exec_stat MCEnvironment::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCEnvironment */ LEGACY_EXEC
 	ep . setstaticcstring(MCModeGetEnvironment());
 	return ES_NORMAL;
 #endif /* MCEnvironment */
 
-	MCExecContext ctxt(ep);
-
-	MCNewAutoNameRef t_result;
-	MCEngineEvalEnvironment(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 MCExists::~MCExists()
 {

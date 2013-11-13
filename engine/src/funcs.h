@@ -542,34 +542,34 @@ public:
 
 };
 
-class MCQTEffects : public MCConstantFunction
+class MCQTEffects : public MCConstantFunctionCtxt<MCStringRef, MCMultimediaEvalQTEffects>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMultimediaEvalQTEffectsMethodInfo; }
 
 };
 
-class MCRecordCompressionTypes: public MCConstantFunction
+class MCRecordCompressionTypes: public MCConstantFunctionCtxt<MCStringRef, MCMultimediaEvalRecordCompressionTypes>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMultimediaEvalRecordCompressionTypesMethodInfo; }
 
 };
 
-class MCRecordLoudness : public MCConstantFunction
+class MCRecordLoudness : public MCConstantFunctionCtxt<integer_t, MCMultimediaEvalRecordLoudness>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMultimediaEvalRecordLoudnessMethodInfo; }
 
 };
 
-class MCEnvironment : public MCConstantFunction
+class MCEnvironment : public MCConstantFunctionCtxt<MCNameRef, MCEngineEvalEnvironment>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalEnvironmentMethodInfo; }
 
 };
