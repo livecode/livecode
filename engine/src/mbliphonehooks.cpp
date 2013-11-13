@@ -53,7 +53,14 @@ void add_simulator_redirect(const char *p_redirect_def)
 		return;
 	
 	if (s_redirect_base == nil)
-		MCCStringCloneSubstring(MCStringGetCString(MCcmd), strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd), s_redirect_base);
+    {
+        MCAutoStringRef t_substring;
+        uindex_t t_index;
+        t_index = MCStringGetLength(MCcmd);
+        /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', 0, kMCCompareExact, t_index);
+        /* UNCHECKED */ MCStringCopySubstring(MCcmd, MCRangeMake(0, t_index), &t_substring);
+        /* UNCHECKED */ MCStringConvertToCString(*t_substring, s_redirect_base);
+    }
 
 	
 	MCCStringCloneSubstring(p_redirect_def, t_dst_offset - p_redirect_def, s_redirects[s_redirect_count - 1] . src);
