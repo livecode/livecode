@@ -1849,27 +1849,12 @@ void MCChunkOffset::compile(MCSyntaxFactoryRef ctxt)
 	return ES_NORMAL;
 #endif /* MCClipboard */
 
-Exec_stat MCCommandKey::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCCommandKey */ LEGACY_EXEC
 	ep.setstaticcstring(MCU_ktos((MCscreen->querymods() & MS_CONTROL) != 0));
 	return ES_NORMAL;
 #endif /* MCCommandKey */
 
-
-	MCExecContext ctxt(ep);
-
-	MCNewAutoNameRef t_result;
-	MCInterfaceEvalCommandKey(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 MCCompress::~MCCompress()
 {
@@ -1983,27 +1968,12 @@ Exec_stat MCControlKey::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCColorNames */
 
-Exec_stat MCCommandNames::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCCommandNames */ LEGACY_EXEC
 	ep.clear();
 	MCScriptPoint sp(ep);
 	return sp.getcommands(ep);
 #endif /* MCCommandNames */
-
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCEngineEvalCommandNames(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 
 #ifdef /* MCConstantNames */ LEGACY_EXEC
