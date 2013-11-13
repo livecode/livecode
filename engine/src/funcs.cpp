@@ -2134,8 +2134,6 @@ Exec_stat MCDecompress::do_decompress(MCExecPoint& ep, uint2 line, uint2 pos)
 #endif /* MCDragDestination */
 
 
-Exec_stat MCDragSource::eval(MCExecPoint &ep)
-{
 #ifdef /* MCDragSource */ LEGACY_EXEC
 	if (MCdragsource != NULL)
 		return MCdragsource->getprop(0, P_LONG_ID, ep, False);
@@ -2144,19 +2142,6 @@ Exec_stat MCDragSource::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCDragSource */
 
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCPasteboardEvalDragSource(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 MCDriverNames::~MCDriverNames()
 {
@@ -2178,8 +2163,7 @@ Parse_stat MCDriverNames::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCDriverNames::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCDriverNames */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
@@ -2199,19 +2183,6 @@ Exec_stat MCDriverNames::eval(MCExecPoint &ep)
 	return MCS_getdevices(ep) ? ES_NORMAL : ES_ERROR;
 #endif /* MCDriverNames */
 
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCFilesEvalDriverNames(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 MCDrives::~MCDrives()
 {
@@ -2233,8 +2204,7 @@ Parse_stat MCDrives::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCDrives::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCDrives */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
@@ -2254,22 +2224,7 @@ Exec_stat MCDrives::eval(MCExecPoint &ep)
 	return MCS_getdrives(ep) ? ES_NORMAL : ES_ERROR;
 #endif /* MCDrives */
 
-	MCExecContext ctxt(ep);
 
-	MCAutoStringRef t_result;
-	MCFilesEvalDrives(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCDropChunk::eval(MCExecPoint &ep)
-{
 #ifdef /* MCDropChunk */ LEGACY_EXEC
 	if (MCdropfield == NULL)
 		ep.clear();
@@ -2278,20 +2233,6 @@ Exec_stat MCDropChunk::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCDropChunk */
 
-
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCPasteboardEvalDropChunk(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 Exec_stat MCQTEffects::eval(MCExecPoint &ep)
 {

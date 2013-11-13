@@ -496,15 +496,15 @@ public:
 
 };
 
-class MCDragSource: public MCConstantFunction
+class MCDragSource: public MCConstantFunctionCtxt<MCStringRef, MCPasteboardEvalDragSource>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCPasteboardEvalDragSourceMethodInfo; }
 
 };
 
-class MCDriverNames : public MCConstantFunction
+class MCDriverNames : public MCConstantFunctionCtxt<MCStringRef, MCFilesEvalDriverNames>
 {
 	MCExpression *type;
 public:
@@ -514,12 +514,12 @@ public:
 	}
 	virtual ~MCDriverNames();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalDriverNamesMethodInfo; }
 
 };
 
-class MCDrives : public MCConstantFunction
+class MCDrives : public MCConstantFunctionCtxt<MCStringRef, MCFilesEvalDrives>
 {
 	MCExpression *type;
 public:
@@ -529,15 +529,15 @@ public:
 	}
 	virtual ~MCDrives();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalDrivesMethodInfo; }
 
 };
 
-class MCDropChunk: public MCConstantFunction
+class MCDropChunk: public MCConstantFunctionCtxt<MCStringRef, MCPasteboardEvalDropChunk>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCPasteboardEvalDropChunkMethodInfo; }
 
 };
