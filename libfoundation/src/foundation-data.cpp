@@ -477,3 +477,9 @@ void __MCDataFinalize(void)
 {
     MCValueRelease(kMCEmptyData);
 }
+
+void __MCDataDestroy(__MCData *self)
+{
+    if (self -> bytes != nil)
+        MCMemoryDeleteArray(self -> bytes);
+}
