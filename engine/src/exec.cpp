@@ -1738,21 +1738,14 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
     }
 }
 
-void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *mark, MCValueRef p_value)
+void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *mark, MCExecValue p_value)
 {
-    MCExecPoint ep(nil, nil, nil);
-    if (p_value != nil)
-        ep . setvalueref(p_value);
-    else
-        ep . clear();
-    
     switch(prop -> type)
     {
         case kMCPropertyTypeAny:
         {
             MCAutoValueRef t_value;
-            if (!ep . copyasvalueref(&t_value))
-                return;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeValueRef, &(&t_value));
             ((void(*)(MCExecContext&, void *, MCValueRef))prop -> setter)(ctxt, mark, *t_value);
         }
             break;
@@ -1760,8 +1753,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeBool:
         {
             bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_PROPERTY_NAB);
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeBool, &t_value);
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, bool))prop -> setter)(ctxt, mark, t_value);
         }
@@ -1770,8 +1762,8 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeInt16:
         {
             integer_t t_value;
-            if (!ep . copyasint(t_value) ||
-                t_value < -32768 || t_value > 32767)
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeInt, &t_value);
+            if (t_value < -32768 || t_value > 32767)
                 ctxt . LegacyThrow(EE_PROPERTY_NAN);
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, integer_t))prop -> setter)(ctxt, mark, t_value);
@@ -1781,8 +1773,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeInt32:
         {
             integer_t t_value;
-            if (!ep . copyasint(t_value))
-                ctxt . LegacyThrow(EE_PROPERTY_NAN);
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeInt, &t_value);
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, integer_t))prop -> setter)(ctxt, mark, t_value);
         }
@@ -1791,8 +1782,8 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeUInt16:
         {
             uinteger_t t_value;
-            if (!ep . copyasuint(t_value) ||
-                t_value < 0 || t_value > 65535)
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeUInt, &t_value);
+            if (t_value < 0 || t_value > 65535)
                 ctxt . LegacyThrow(EE_PROPERTY_NAN);
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, uinteger_t))prop -> setter)(ctxt, mark, t_value);
@@ -1802,8 +1793,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeUInt32:
         {
             uinteger_t t_value;
-            if (!ep . copyasuint(t_value))
-                ctxt . LegacyThrow(EE_PROPERTY_NAN);
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeUInt, &t_value);
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, uinteger_t))prop -> setter)(ctxt, mark, t_value);
         }
@@ -1812,8 +1802,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeDouble:
         {
             double t_value;
-            if (!ep . copyasdouble(t_value))
-                ctxt . LegacyThrow(EE_PROPERTY_NAN);
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeDouble, &t_value);
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, double))prop -> setter)(ctxt, mark, t_value);
         }
@@ -1822,29 +1811,34 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeChar:
         {
             char_t t_value;
-            if (!ep . copyaschar(t_value))
-                ctxt . LegacyThrow(EE_PROPERTY_NAC);
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeChar, &t_value);
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, char_t))prop -> setter)(ctxt, mark, t_value);
         }
             break;
             
         case kMCPropertyTypeString:
-        case kMCPropertyTypeBinaryString:
         {
             MCAutoStringRef t_value;
-            if (!ep . copyasstringref(&t_value))
-                ctxt . LegacyThrow(EE_PROPERTY_NAC);
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeStringRef, &(&t_value));
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, MCStringRef))prop -> setter)(ctxt, mark, *t_value);
+        }
+            break;
+            
+        case kMCPropertyTypeBinaryString:
+        {
+            MCAutoDataRef t_value;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeDataRef, &(&t_value));
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, MCDataRef))prop -> setter)(ctxt, mark, *t_value);
         }
             break;
             
         case kMCPropertyTypeName:
         {
             MCNewAutoNameRef t_value;
-            if (!ep.copyasnameref(&t_value))
-                ctxt.LegacyThrow(EE_PROPERTY_NAC);
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeNameRef, &(&t_value));
             if (!ctxt.HasError())
                 ((void(*)(MCExecContext&, void *, MCNameRef))prop->setter)(ctxt, mark, *t_value);
         }
@@ -1853,8 +1847,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeColor:
         {
             MCColor t_value;
-            if (!ep . copyaslegacycolor(t_value))
-                ctxt . LegacyThrow(EE_PROPERTY_NOTACOLOR);
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeColor, &t_value);
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, MCColor))prop -> setter)(ctxt, mark, t_value);
         }
@@ -1863,8 +1856,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeRectangle:
         {
             MCRectangle t_value;
-            if (!ep . copyaslegacyrectangle(t_value))
-                ctxt . LegacyThrow(EE_PROPERTY_NOTARECT);
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeRectangle, &t_value);
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, MCRectangle))prop -> setter)(ctxt, mark, t_value);
         }
@@ -1873,8 +1865,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypePoint:
         {
             MCPoint t_value;
-            if (!ep . copyaslegacypoint(t_value))
-                ctxt . LegacyThrow(EE_PROPERTY_NOTAPOINT);
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypePoint, &t_value);
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, MCPoint))prop -> setter)(ctxt, mark, t_value);
         }
@@ -1883,7 +1874,9 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeInt16X2:
         {
             int2 a, b;
-            if (!MCU_stoi2x2(ep . getsvalue(), a, b))
+            MCAutoStringRef t_value;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeStringRef, &(&t_value));
+            if (!MCU_stoi2x2(*t_value, a, b))
                 ctxt . LegacyThrow(EE_PROPERTY_NOTAINTPAIR);
             if (!ctxt . HasError())
             {
@@ -1898,7 +1891,9 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeInt16X4:
         {
             int2 a, b, c, d;
-            if (!MCU_stoi2x4(ep . getsvalue(), a, b, c, d))
+            MCAutoStringRef t_value;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeStringRef, &(&t_value));
+            if (!MCU_stoi2x4(*t_value, a, b, c, d))
                 ctxt . LegacyThrow(EE_PROPERTY_NOTAINTQUAD);
             if (!ctxt . HasError())
             {
@@ -1912,25 +1907,12 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
-        case kMCPropertyTypeInt32X2:
-        {
-            int4 a, b;
-            if (!MCU_stoi4x2(ep . getsvalue(), a, b))
-                ctxt . LegacyThrow(EE_PROPERTY_NOTAINTPAIR);
-            if (!ctxt . HasError())
-            {
-                integer_t t_value[2];
-                t_value[0] = a;
-                t_value[1] = b;
-                ((void(*)(MCExecContext&, void *, integer_t[2]))prop -> setter)(ctxt, mark, t_value);
-            }
-        }
-            break;
-            
         case kMCPropertyTypeInt32X4:
         {
             int4 a, b, c, d;
-            if (!MCU_stoi4x4(ep . getsvalue(), a, b, c, d))
+            MCAutoStringRef t_value;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeStringRef, &(&t_value));
+            if (!MCU_stoi4x4(*t_value, a, b, c, d))
                 ctxt . LegacyThrow(EE_PROPERTY_NOTAINTQUAD);
             if (!ctxt . HasError())
             {
@@ -1947,8 +1929,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeArray:
         {
             MCAutoArrayRef t_value;
-            if (!ep . copyasarrayref(&t_value))
-                ctxt . LegacyThrow(EE_PROPERTY_NOTANARRAY);
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeArrayRef, &(&t_value));
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, MCArrayRef))prop -> setter)(ctxt, mark, *t_value);
         }
@@ -1959,12 +1940,15 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             MCExecEnumTypeInfo *t_enum_info;
             t_enum_info = (MCExecEnumTypeInfo *)prop -> type_info;
             
+            MCAutoStringRef t_string;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeStringRef, &(&t_string));
+            
             bool t_found;
             t_found = false;
             intenum_t t_value;
             for(uindex_t i = 0; i < t_enum_info -> count; i++)
                 if (!t_enum_info -> elements[i] . read_only &&
-                    MCU_strcasecmp(ep . getcstring(), t_enum_info -> elements[i] . tag) == 0)
+                    MCStringIsEqualTo(*t_string, MCSTR(t_enum_info -> elements[i] . tag), kMCStringOptionCompareCaseless))
                 {
                     t_found = true;
                     t_value = t_enum_info -> elements[i] . value;
@@ -1982,9 +1966,12 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             MCExecEnumTypeInfo *t_enum_info;
             t_enum_info = (MCExecEnumTypeInfo *)prop -> type_info;
             
+            MCAutoStringRef t_string;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeStringRef, &(&t_string));
+            
             intenum_t t_value;
             intenum_t* t_value_ptr;
-            if (ep . isempty())
+            if (MCStringIsEmpty(*t_string))
                 t_value_ptr = nil;
             else
             {
@@ -1993,7 +1980,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 t_found = false;
                 for(uindex_t i = 0; i < t_enum_info -> count; i++)
                     if (!t_enum_info -> elements[i] . read_only &&
-                        MCU_strcasecmp(ep . getcstring(), t_enum_info -> elements[i] . tag) == 0)
+                    MCStringIsEqualTo(*t_string, MCSTR(t_enum_info -> elements[i] . tag), kMCStringOptionCompareCaseless))
                     {
                         t_found = true;
                         t_value = t_enum_info -> elements[i] . value;
@@ -2012,10 +1999,13 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             MCExecSetTypeInfo *t_seprop;
             t_seprop = (MCExecSetTypeInfo *)(prop -> type_info);
             
+            MCAutoStringRef t_string;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeStringRef, &(&t_string));
+            
             intset_t t_value = 0;
             char **t_elements;
             uindex_t t_element_count;
-            MCCStringSplit(ep . getcstring(), ',', t_elements, t_element_count);
+            MCCStringSplit(MCStringGetCString(*t_string), ',', t_elements, t_element_count);
             
             for (uindex_t i = 0; i < t_element_count; i++)
             {
@@ -2042,7 +2032,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             MCAssert(t_custom_info -> size <= 64);
             
             MCAutoStringRef t_input_value;
-            /* UNCHECKED */ ep . copyasstringref(&t_input_value);
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeStringRef, &(&t_input_value));
             
             char t_value[64];
             ((MCExecCustomTypeParseProc)t_custom_info -> parse)(ctxt, *t_input_value, t_value);
@@ -2058,13 +2048,13 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             integer_t t_value;
             integer_t *t_value_ptr;
-            if (ep . isempty())
+            if (p_value . type == kMCExecValueTypeStringRef && MCStringIsEmpty(p_value . stringref_value))
                 t_value_ptr = nil;
             else
             {
                 t_value_ptr = &t_value;
-                if (!ep . copyasint(t_value) ||
-                    t_value < -32768 || t_value > 32767)
+                MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeInt, &t_value);
+                if (t_value < -32768 || t_value > 32767)
                     ctxt . LegacyThrow(EE_PROPERTY_NAN);
             }
             
@@ -2078,13 +2068,13 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             uinteger_t t_value;
             uinteger_t *t_value_ptr;
-            if (ep . isempty())
+            if (p_value . type == kMCExecValueTypeStringRef && MCStringIsEmpty(p_value . stringref_value))
                 t_value_ptr = nil;
             else
             {
                 t_value_ptr = &t_value;
-                if (!ep . copyasuint(t_value) ||
-                    t_value < 0 || t_value > 65535)
+                MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeUInt, &t_value);
+                if (t_value < 0 || t_value > 65535)
                     ctxt . LegacyThrow(EE_PROPERTY_NAN);
             }
             
@@ -2097,13 +2087,12 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             uinteger_t t_value;
             uinteger_t *t_value_ptr;
-            if (ep . isempty())
+            if (p_value . type == kMCExecValueTypeStringRef && MCStringIsEmpty(p_value . stringref_value))
                 t_value_ptr = nil;
             else
             {
                 t_value_ptr = &t_value;
-                if (!ep . copyasuint(t_value))
-                    ctxt . LegacyThrow(EE_PROPERTY_NAN);
+                MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeUInt, &t_value);
             }
             
             if (!ctxt . HasError())
@@ -2114,11 +2103,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeOptionalString:
         {
             MCAutoStringRef t_value;
-            if (!ep . isempty())
-            {
-                if (!ep . copyasstringref(&t_value))
-                    ctxt . LegacyThrow(EE_PROPERTY_NAS);
-            }
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeStringRef, &(&t_value));
             
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, MCStringRef))prop -> setter)(ctxt, mark, *t_value);
@@ -2129,13 +2114,12 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             MCPoint t_value;
             MCPoint *t_value_ptr;
-            if (ep . isempty())
+            if (p_value . type == kMCExecValueTypeStringRef && MCStringIsEmpty(p_value . stringref_value))
                 t_value_ptr = nil;
             else
             {
                 t_value_ptr = &t_value;
-                if (!ep . copyaslegacypoint(t_value))
-                    ctxt . LegacyThrow(EE_PROPERTY_NOTARECT);
+                MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypePoint, &t_value);
             }
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, MCPoint*))prop -> setter)(ctxt, mark, t_value_ptr);
@@ -2146,13 +2130,12 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             MCRectangle t_value;
             MCRectangle *t_value_ptr;
-            if (ep . isempty())
+            if (p_value . type == kMCExecValueTypeStringRef && MCStringIsEmpty(p_value . stringref_value))
                 t_value_ptr = nil;
             else
             {
                 t_value_ptr = &t_value;
-                if (!ep . copyaslegacyrectangle(t_value))
-                    ctxt . LegacyThrow(EE_PROPERTY_NOTARECT);
+                MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeRectangle, &t_value);
             }
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, MCRectangle*))prop -> setter)(ctxt, mark, t_value_ptr);
@@ -2165,7 +2148,9 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             MCStringRef *t_value;
             uindex_t t_count;
             
-            if (!ep . copyasstringref(&t_input) || !MCPropertyParseStringList(*t_input, '\n', t_count, t_value))
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeStringRef, &(&t_input));
+            
+            if (!MCPropertyParseStringList(*t_input, '\n', t_count, t_value))
                 ctxt . LegacyThrow(EE_PROPERTY_NAS);
             
             if (!ctxt . HasError())
@@ -2183,7 +2168,8 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             char_t t_delimiter;
             t_delimiter = prop -> type == kMCPropertyTypeLinesOfUInt ? '\n' : ',';
             
-            if (!ep . copyasstringref(&t_input) || !MCPropertyParseUIntList(*t_input, t_delimiter, t_count, t_value))
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeStringRef, &(&t_input));
+            if (!MCPropertyParseUIntList(*t_input, t_delimiter, t_count, t_value))
                 ctxt . LegacyThrow(EE_PROPERTY_NAN);
             
             if (!ctxt . HasError())
@@ -2197,7 +2183,8 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             MCPoint *t_value;
             uindex_t t_count;
             
-            if (!ep . copyasstringref(&t_input) || !MCPropertyParsePointList(*t_input, '\n', t_count, t_value))
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypePoint, &(&t_input));
+            if (!MCPropertyParsePointList(*t_input, '\n', t_count, t_value))
                 ctxt . LegacyThrow(EE_PROPERTY_NAS);
             
             if (!ctxt . HasError())
@@ -2313,6 +2300,15 @@ static void MCExecTypeConvertFromValueRefAndReleaseAlways(MCExecContext& ctxt, M
 			break;
 		case kMCExecValueTypeDouble:
 			ctxt . ConvertToReal(p_from_value, *(double *)p_to_value);
+			break;
+		case kMCExecValueTypePoint:
+			ctxt . ConvertToLegacyPoint(p_from_value, *(MCPoint *)p_to_value);
+			break;
+		case kMCExecValueTypeRectangle:
+			ctxt . ConvertToLegacyRectangle(p_from_value, *(MCRectangle *)p_to_value);
+			break;
+		case kMCExecValueTypeChar:
+			ctxt . ConvertToChar(p_from_value, *(char_t *)p_to_value);
 			break;
 		default:
 			ctxt . Unimplemented();
@@ -2774,4 +2770,477 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
     }
     
     ep . copyasvalueref(r_value);
+}
+
+void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *mark, MCValueRef p_value)
+{
+    MCExecPoint ep(nil, nil, nil);
+    if (p_value != nil)
+        ep . setvalueref(p_value);
+    else
+        ep . clear();
+    
+    switch(prop -> type)
+    {
+        case kMCPropertyTypeAny:
+        {
+            MCAutoValueRef t_value;
+            if (!ep . copyasvalueref(&t_value))
+                return;
+            ((void(*)(MCExecContext&, void *, MCValueRef))prop -> setter)(ctxt, mark, *t_value);
+        }
+            break;
+            
+        case kMCPropertyTypeBool:
+        {
+            bool t_value;
+            if (!ep . copyasbool(t_value))
+                ctxt . LegacyThrow(EE_PROPERTY_NAB);
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, bool))prop -> setter)(ctxt, mark, t_value);
+        }
+            break;
+            
+        case kMCPropertyTypeInt16:
+        {
+            integer_t t_value;
+            if (!ep . copyasint(t_value) ||
+                t_value < -32768 || t_value > 32767)
+                ctxt . LegacyThrow(EE_PROPERTY_NAN);
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, integer_t))prop -> setter)(ctxt, mark, t_value);
+        }
+            break;
+            
+        case kMCPropertyTypeInt32:
+        {
+            integer_t t_value;
+            if (!ep . copyasint(t_value))
+                ctxt . LegacyThrow(EE_PROPERTY_NAN);
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, integer_t))prop -> setter)(ctxt, mark, t_value);
+        }
+            break;
+            
+        case kMCPropertyTypeUInt16:
+        {
+            uinteger_t t_value;
+            if (!ep . copyasuint(t_value) ||
+                t_value < 0 || t_value > 65535)
+                ctxt . LegacyThrow(EE_PROPERTY_NAN);
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, uinteger_t))prop -> setter)(ctxt, mark, t_value);
+        }
+            break;
+            
+        case kMCPropertyTypeUInt32:
+        {
+            uinteger_t t_value;
+            if (!ep . copyasuint(t_value))
+                ctxt . LegacyThrow(EE_PROPERTY_NAN);
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, uinteger_t))prop -> setter)(ctxt, mark, t_value);
+        }
+            break;
+            
+        case kMCPropertyTypeDouble:
+        {
+            double t_value;
+            if (!ep . copyasdouble(t_value))
+                ctxt . LegacyThrow(EE_PROPERTY_NAN);
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, double))prop -> setter)(ctxt, mark, t_value);
+        }
+            break;
+            
+        case kMCPropertyTypeChar:
+        {
+            char_t t_value;
+            if (!ep . copyaschar(t_value))
+                ctxt . LegacyThrow(EE_PROPERTY_NAC);
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, char_t))prop -> setter)(ctxt, mark, t_value);
+        }
+            break;
+            
+        case kMCPropertyTypeString:
+        case kMCPropertyTypeBinaryString:
+        {
+            MCAutoStringRef t_value;
+            if (!ep . copyasstringref(&t_value))
+                ctxt . LegacyThrow(EE_PROPERTY_NAC);
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, MCStringRef))prop -> setter)(ctxt, mark, *t_value);
+        }
+            break;
+            
+        case kMCPropertyTypeName:
+        {
+            MCNewAutoNameRef t_value;
+            if (!ep.copyasnameref(&t_value))
+                ctxt.LegacyThrow(EE_PROPERTY_NAC);
+            if (!ctxt.HasError())
+                ((void(*)(MCExecContext&, void *, MCNameRef))prop->setter)(ctxt, mark, *t_value);
+        }
+            break;
+            
+        case kMCPropertyTypeColor:
+        {
+            MCColor t_value;
+            if (!ep . copyaslegacycolor(t_value))
+                ctxt . LegacyThrow(EE_PROPERTY_NOTACOLOR);
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, MCColor))prop -> setter)(ctxt, mark, t_value);
+        }
+            break;
+            
+        case kMCPropertyTypeRectangle:
+        {
+            MCRectangle t_value;
+            if (!ep . copyaslegacyrectangle(t_value))
+                ctxt . LegacyThrow(EE_PROPERTY_NOTARECT);
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, MCRectangle))prop -> setter)(ctxt, mark, t_value);
+        }
+            break;
+            
+        case kMCPropertyTypePoint:
+        {
+            MCPoint t_value;
+            if (!ep . copyaslegacypoint(t_value))
+                ctxt . LegacyThrow(EE_PROPERTY_NOTAPOINT);
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, MCPoint))prop -> setter)(ctxt, mark, t_value);
+        }
+            break;
+            
+        case kMCPropertyTypeInt16X2:
+        {
+            int2 a, b;
+            if (!MCU_stoi2x2(ep . getsvalue(), a, b))
+                ctxt . LegacyThrow(EE_PROPERTY_NOTAINTPAIR);
+            if (!ctxt . HasError())
+            {
+                integer_t t_value[2];
+                t_value[0] = a;
+                t_value[1] = b;
+                ((void(*)(MCExecContext&, void *, integer_t[2]))prop -> setter)(ctxt, mark, t_value);
+            }
+        }
+            break;
+            
+        case kMCPropertyTypeInt16X4:
+        {
+            int2 a, b, c, d;
+            if (!MCU_stoi2x4(ep . getsvalue(), a, b, c, d))
+                ctxt . LegacyThrow(EE_PROPERTY_NOTAINTQUAD);
+            if (!ctxt . HasError())
+            {
+                integer_t t_value[4];
+                t_value[0] = a;
+                t_value[1] = b;
+                t_value[2] = c;
+                t_value[3] = d;
+                ((void(*)(MCExecContext&, void *, integer_t[4]))prop -> setter)(ctxt, mark, t_value);
+            }
+        }
+            break;
+            
+        case kMCPropertyTypeInt32X2:
+        {
+            int4 a, b;
+            if (!MCU_stoi4x2(ep . getsvalue(), a, b))
+                ctxt . LegacyThrow(EE_PROPERTY_NOTAINTPAIR);
+            if (!ctxt . HasError())
+            {
+                integer_t t_value[2];
+                t_value[0] = a;
+                t_value[1] = b;
+                ((void(*)(MCExecContext&, void *, integer_t[2]))prop -> setter)(ctxt, mark, t_value);
+            }
+        }
+            break;
+            
+        case kMCPropertyTypeInt32X4:
+        {
+            int4 a, b, c, d;
+            if (!MCU_stoi4x4(ep . getsvalue(), a, b, c, d))
+                ctxt . LegacyThrow(EE_PROPERTY_NOTAINTQUAD);
+            if (!ctxt . HasError())
+            {
+                integer_t t_value[4];
+                t_value[0] = a;
+                t_value[1] = b;
+                t_value[2] = c;
+                t_value[3] = d;
+                ((void(*)(MCExecContext&, void *, integer_t[4]))prop -> setter)(ctxt, mark, t_value);
+            }
+        }
+            break;
+            
+        case kMCPropertyTypeArray:
+        {
+            MCAutoArrayRef t_value;
+            if (!ep . copyasarrayref(&t_value))
+                ctxt . LegacyThrow(EE_PROPERTY_NOTANARRAY);
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, MCArrayRef))prop -> setter)(ctxt, mark, *t_value);
+        }
+            break;
+            
+        case kMCPropertyTypeEnum:
+        {
+            MCExecEnumTypeInfo *t_enum_info;
+            t_enum_info = (MCExecEnumTypeInfo *)prop -> type_info;
+            
+            bool t_found;
+            t_found = false;
+            intenum_t t_value;
+            for(uindex_t i = 0; i < t_enum_info -> count; i++)
+                if (!t_enum_info -> elements[i] . read_only &&
+                    MCU_strcasecmp(ep . getcstring(), t_enum_info -> elements[i] . tag) == 0)
+                {
+                    t_found = true;
+                    t_value = t_enum_info -> elements[i] . value;
+                }
+            
+            if (!t_found)
+                ctxt . LegacyThrow(EE_PROPERTY_BADENUMVALUE);
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, int))prop -> setter)(ctxt, mark, t_value);
+        }
+            break;
+            
+        case kMCPropertyTypeOptionalEnum:
+        {
+            MCExecEnumTypeInfo *t_enum_info;
+            t_enum_info = (MCExecEnumTypeInfo *)prop -> type_info;
+            
+            intenum_t t_value;
+            intenum_t* t_value_ptr;
+            if (ep . isempty())
+                t_value_ptr = nil;
+            else
+            {
+                t_value_ptr = &t_value;
+                bool t_found;
+                t_found = false;
+                for(uindex_t i = 0; i < t_enum_info -> count; i++)
+                    if (!t_enum_info -> elements[i] . read_only &&
+                        MCU_strcasecmp(ep . getcstring(), t_enum_info -> elements[i] . tag) == 0)
+                    {
+                        t_found = true;
+                        t_value = t_enum_info -> elements[i] . value;
+                    }
+				
+                if (!t_found)
+                    ctxt . LegacyThrow(EE_PROPERTY_BADENUMVALUE);
+            }
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, int*))prop -> setter)(ctxt, mark, t_value_ptr);
+        }
+            break;
+            
+        case kMCPropertyTypeSet:
+        {
+            MCExecSetTypeInfo *t_seprop;
+            t_seprop = (MCExecSetTypeInfo *)(prop -> type_info);
+            
+            intset_t t_value = 0;
+            char **t_elements;
+            uindex_t t_element_count;
+            MCCStringSplit(ep . getcstring(), ',', t_elements, t_element_count);
+            
+            for (uindex_t i = 0; i < t_element_count; i++)
+            {
+                for (uindex_t j = 0; j < t_seprop -> count; j++)
+                {
+                    if (MCU_strcasecmp(t_elements[i], t_seprop -> elements[j] . tag) == 0)
+                    {
+                        t_value |= 1 << t_seprop -> elements[j] . bit;
+                        break;
+                    }
+                }
+            }
+            
+            MCCStringArrayFree(t_elements, t_element_count);
+            ((void(*)(MCExecContext&, void *, unsigned int))prop -> setter)(ctxt, mark, t_value);
+        }
+            break;
+            
+        case kMCPropertyTypeCustom:
+        {
+            MCExecCustomTypeInfo *t_custom_info;
+            t_custom_info = (MCExecCustomTypeInfo *)(prop -> type_info);
+            
+            MCAssert(t_custom_info -> size <= 64);
+            
+            MCAutoStringRef t_input_value;
+            /* UNCHECKED */ ep . copyasstringref(&t_input_value);
+            
+            char t_value[64];
+            ((MCExecCustomTypeParseProc)t_custom_info -> parse)(ctxt, *t_input_value, t_value);
+            if (!ctxt . HasError())
+            {
+                ((void(*)(MCExecContext&, void *, void *))prop -> setter)(ctxt, mark, t_value);
+                ((MCExecCustomTypeFreeProc)t_custom_info -> free)(ctxt, t_value);
+            }
+        }
+            break;
+            
+        case kMCPropertyTypeOptionalInt16:
+        {
+            integer_t t_value;
+            integer_t *t_value_ptr;
+            if (ep . isempty())
+                t_value_ptr = nil;
+            else
+            {
+                t_value_ptr = &t_value;
+                if (!ep . copyasint(t_value) ||
+                    t_value < -32768 || t_value > 32767)
+                    ctxt . LegacyThrow(EE_PROPERTY_NAN);
+            }
+            
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, integer_t*))prop -> setter)(ctxt, mark, t_value_ptr);
+        }
+            break;
+            
+        case kMCPropertyTypeMixedUInt16:
+        case kMCPropertyTypeOptionalUInt16:
+        {
+            uinteger_t t_value;
+            uinteger_t *t_value_ptr;
+            if (ep . isempty())
+                t_value_ptr = nil;
+            else
+            {
+                t_value_ptr = &t_value;
+                if (!ep . copyasuint(t_value) ||
+                    t_value < 0 || t_value > 65535)
+                    ctxt . LegacyThrow(EE_PROPERTY_NAN);
+            }
+            
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, uinteger_t*))prop -> setter)(ctxt, mark, t_value_ptr);
+        }
+            break;
+            
+        case kMCPropertyTypeOptionalUInt32:
+        {
+            uinteger_t t_value;
+            uinteger_t *t_value_ptr;
+            if (ep . isempty())
+                t_value_ptr = nil;
+            else
+            {
+                t_value_ptr = &t_value;
+                if (!ep . copyasuint(t_value))
+                    ctxt . LegacyThrow(EE_PROPERTY_NAN);
+            }
+            
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, uinteger_t*))prop -> setter)(ctxt, mark, t_value_ptr);
+        }
+            break;
+            
+        case kMCPropertyTypeOptionalString:
+        {
+            MCAutoStringRef t_value;
+            if (!ep . isempty())
+            {
+                if (!ep . copyasstringref(&t_value))
+                    ctxt . LegacyThrow(EE_PROPERTY_NAS);
+            }
+            
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, MCStringRef))prop -> setter)(ctxt, mark, *t_value);
+        }
+            break;
+            
+        case kMCPropertyTypeOptionalPoint:
+        {
+            MCPoint t_value;
+            MCPoint *t_value_ptr;
+            if (ep . isempty())
+                t_value_ptr = nil;
+            else
+            {
+                t_value_ptr = &t_value;
+                if (!ep . copyaslegacypoint(t_value))
+                    ctxt . LegacyThrow(EE_PROPERTY_NOTARECT);
+            }
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, MCPoint*))prop -> setter)(ctxt, mark, t_value_ptr);
+        }
+            break;
+            
+        case kMCPropertyTypeOptionalRectangle:
+        {
+            MCRectangle t_value;
+            MCRectangle *t_value_ptr;
+            if (ep . isempty())
+                t_value_ptr = nil;
+            else
+            {
+                t_value_ptr = &t_value;
+                if (!ep . copyaslegacyrectangle(t_value))
+                    ctxt . LegacyThrow(EE_PROPERTY_NOTARECT);
+            }
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, MCRectangle*))prop -> setter)(ctxt, mark, t_value_ptr);
+        }
+            break;
+            
+        case kMCPropertyTypeLinesOfString:
+        {
+            MCAutoStringRef t_input;
+            MCStringRef *t_value;
+            uindex_t t_count;
+            
+            if (!ep . copyasstringref(&t_input) || !MCPropertyParseStringList(*t_input, '\n', t_count, t_value))
+                ctxt . LegacyThrow(EE_PROPERTY_NAS);
+            
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, uindex_t, MCStringRef*))prop -> setter)(ctxt, mark, t_count, t_value);
+        }
+            break;
+            
+        case kMCPropertyTypeLinesOfUInt:
+        case kMCPropertyTypeItemsOfUInt:
+        {
+            MCAutoStringRef t_input;
+            uinteger_t* t_value;
+            uindex_t t_count;
+            
+            char_t t_delimiter;
+            t_delimiter = prop -> type == kMCPropertyTypeLinesOfUInt ? '\n' : ',';
+            
+            if (!ep . copyasstringref(&t_input) || !MCPropertyParseUIntList(*t_input, t_delimiter, t_count, t_value))
+                ctxt . LegacyThrow(EE_PROPERTY_NAN);
+            
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, uindex_t, uinteger_t*))prop -> setter)(ctxt, mark, t_count, t_value);
+        }
+            break;
+            
+        case kMCPropertyTypeLinesOfPoint:
+        {
+            MCAutoStringRef t_input;
+            MCPoint *t_value;
+            uindex_t t_count;
+            
+            if (!ep . copyasstringref(&t_input) || !MCPropertyParsePointList(*t_input, '\n', t_count, t_value))
+                ctxt . LegacyThrow(EE_PROPERTY_NAS);
+            
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, uindex_t, MCPoint*))prop -> setter)(ctxt, mark, t_count, t_value);
+        }
+            break;
+            
+        default:
+            ctxt . Unimplemented();
+            break;
+    }
 }

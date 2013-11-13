@@ -1284,7 +1284,13 @@ bool MCExecPoint::convertvaluereftonumber(MCValueRef p_value, MCNumberRef& r_num
 
 bool MCExecPoint::convertvaluereftobool(MCValueRef p_value, bool& r_bool)
 {
-    //TO DO
+    MCAutoBooleanRef t_boolean;
+    if (convertvaluereftoboolean(p_value, &t_boolean))
+    {
+        r_bool = *t_boolean == kMCTrue;
+        return true;
+    }
+    
     return false;
 }
 

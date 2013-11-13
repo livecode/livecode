@@ -631,8 +631,12 @@ void MCEngineEvalValueWithObject(MCExecContext& ctxt, MCStringRef p_script, MCOb
 
 void MCEngineExecSet(MCExecContext& ctxt, MCProperty *p_target, MCValueRef p_value)
 {
-	/* UNCHECKED */ ctxt . GetEP() . setvalueref(p_value);
-	if (p_target -> set(ctxt . GetEP()) != ES_NORMAL)
+    MCExecValue t_value;
+    t_value . valueref_value = MCValueRetain(p_value);
+    t_value . type = kMCExecValueTypeValueRef;
+	
+    p_target -> set(ctxt, t_value);
+    if (ctxt . HasError())
 	{
 		ctxt . LegacyThrow(EE_SET_BADSET);
 		return;

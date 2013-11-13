@@ -1190,8 +1190,6 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Exec_stat MCProperty::set(MCExecPoint &ep)
-{
 #ifdef /* MCProperty::set */ LEGACY_EXEC
 	MCImage *newim;
 	Pixmap newpm;
@@ -3052,16 +3050,8 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCProperty::set */
-	
-	if (destvar != NULL && which != P_CUSTOM_VAR)
-		return set_variable(ep);
-	
-	if (target == nil)
-		return set_global_property(ep);
-	
-	return set_object_property(ep);
-}
 
+#ifdef LEGACY_EXEC
 Exec_stat MCProperty::set_variable(MCExecPoint& ep)
 {
 	return destvar->set(ep);
@@ -3166,7 +3156,7 @@ Exec_stat MCProperty::set_object_property(MCExecPoint& ep)
 
 	return t_stat;
 }
-
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef /* MCProperty::eval */ LEGACY_EXEC
@@ -5107,11 +5097,10 @@ void MCProperty::eval_global_property_ctxt(MCExecContext& ctxt, MCExecValue& r_v
 void MCProperty::eval_object_property_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
 	Properties t_prop;
-	MCNameRef t_prop_name, t_index_name;
-	t_prop_name = t_index_name = nil;
+	MCNewAutoNameRef t_prop_name, t_index_name;
     
     bool t_success;
-    t_success = resolveprop(ctxt, t_prop, t_prop_name, t_index_name);
+    t_success = resolveprop(ctxt, t_prop, &t_prop_name, &t_index_name);
 	
 	if (t_prop == P_CUSTOM)
 	{
@@ -5126,10 +5115,10 @@ void MCProperty::eval_object_property_ctxt(MCExecContext& ctxt, MCExecValue& r_v
 		//   MCChunk::setprop.
 		if (t_success)
 		{
-			if (t_index_name == nil)
-				t_success = t_object -> getcustomprop(ctxt, t_object -> getdefaultpropsetname(), t_prop_name, r_value);
+			if (*t_index_name == nil)
+				t_success = t_object -> getcustomprop(ctxt, t_object -> getdefaultpropsetname(), *t_prop_name, r_value);
 			else
-				t_success = t_object -> getcustomprop(ctxt, t_prop_name, t_index_name, r_value);
+				t_success = t_object -> getcustomprop(ctxt, *t_prop_name, *t_index_name, r_value);
 		}
 	}
 	else
@@ -5140,14 +5129,11 @@ void MCProperty::eval_object_property_ctxt(MCExecContext& ctxt, MCExecValue& r_v
 		if (t_prop < P_FIRST_ARRAY_PROP)
 			t_derived_index_name = nil;
 		else
-			t_derived_index_name = t_index_name != nil ? t_index_name : kMCEmptyName;
+			t_derived_index_name = *t_index_name != nil ? *t_index_name : kMCEmptyName;
 		
         if (t_success)
             t_success = target -> getprop(ctxt, t_prop, t_derived_index_name, effective, r_value);
 	}
-	
-	MCNameDelete(t_index_name);
-	MCNameDelete(t_prop_name);
 	
 	if (!t_success)
 		MCeerror->add(EE_PROPERTY_NOPROP, line, pos);
@@ -5178,4 +5164,101 @@ void MCProperty::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 		return eval_object_property_ctxt(ctxt, r_value);
 	
 	return eval_count_ctxt(ctxt, r_value);
+}
+
+void MCProperty::set_variable(MCExecContext& ctxt, MCExecValue p_value)
+{
+    MCAutoValueRef t_value;
+    MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeValueRef, &(&t_value));
+	return destvar -> set(ctxt, *t_value);
+}
+
+void MCProperty::set_global_property(MCExecContext& ctxt, MCExecValue p_value)
+{
+	const MCPropertyInfo *t_info;
+	if (MCPropertyInfoTableLookup(which, effective, t_info))
+	{
+        if (t_info -> custom_index)
+        {
+            MCNewAutoNameRef t_type;
+            if (customindex != nil)
+            {
+                if (!ctxt . EvalExprAsNameRef(customindex, EE_PROPERTY_BADEXPRESSION, &t_type))
+                    return;
+            }
+            MCExecStoreProperty(ctxt, t_info, *t_type, p_value);
+        }
+        else
+            MCExecStoreProperty(ctxt, t_info, nil, p_value);
+        
+        return;
+	}
+    
+    MCAutoValueRef t_value;
+    MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeValueRef, &(&t_value));
+    ctxt . GetEP() . setvalueref(*t_value);
+    
+	Exec_stat t_stat;
+	t_stat = mode_set(ctxt . GetEP());
+    
+	if (t_stat != ES_NORMAL)
+		MCeerror->add(EE_PROPERTY_CANTSET, line, pos);
+}
+
+void MCProperty::set_object_property(MCExecContext& ctxt, MCExecValue p_value)
+{
+	Properties t_prop;
+	MCNewAutoNameRef t_prop_name, t_index_name;
+	if (!resolveprop(ctxt, t_prop, &t_prop_name, &t_index_name))
+        return;
+	
+    bool t_success;
+    t_success = true;
+    
+	if (t_prop == P_CUSTOM)
+	{
+		MCObject *t_object;
+		uint4 t_parid;
+		t_success = target -> getobjforprop(ctxt, t_object, t_parid);
+		
+		// MW-2011-09-02: Moved handling of customprop != nil case into resolveprop,
+		//   so t_prop_name is always non-nil if t_prop == P_CUSTOM.
+		// MW-2011-11-23: [[ Array Chunk Props ]] Moved handling of arrayprops into
+		//   MCChunk::setprop.
+		if (t_success)
+		{
+			if (*t_index_name == nil)
+				t_success = t_object -> setcustomprop(ctxt, t_object -> getdefaultpropsetname(), *t_prop_name, p_value);
+			else
+				t_success = t_object -> setcustomprop(ctxt, *t_prop_name, *t_index_name, p_value);
+			// MM-2012-09-05: [[ Property Listener ]] Make sure setting a custom property sends propertyChanged message to listeners.
+			if (t_success)
+				t_object -> signallisteners(t_prop);
+		}
+	}
+	else
+	{   
+		// MW-2011-11-23: [[ Array Chunk Props ]] If the prop is an array-prop, then
+		//   a nil index translates to the empty name (the array[empty] <=> the array).
+		MCNameRef t_derived_index_name;
+		if (t_prop < P_FIRST_ARRAY_PROP)
+			t_derived_index_name = nil;
+		else
+			t_derived_index_name = *t_index_name != nil ? *t_index_name : kMCEmptyName;
+		
+		t_success = target -> setprop(ctxt, t_prop, t_derived_index_name, effective, p_value);
+	}
+    
+	if (!t_success)
+		MCeerror->add(EE_PROPERTY_CANTSETOBJECT, line, pos);
+}
+
+void MCProperty::set(MCExecContext& ctxt, MCExecValue p_value)
+{
+    if (destvar != NULL && which != P_CUSTOM_VAR)
+        set_variable(ctxt, p_value);
+    else if (target == nil)
+        set_global_property(ctxt, p_value);
+    else
+        set_object_property(ctxt, p_value);
 }

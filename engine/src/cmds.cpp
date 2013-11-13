@@ -1333,14 +1333,7 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
 		return ES_NORMAL;
 	}
 #endif /* MCPut */
-    
-    
-    if (line == 284 && pos == 1)
-    {
-        bool t_true = true;
-    }
-    
-    
+
     
     MCAutoValueRef t_value;
     if (!ctxt . EvalExprAsValueRef(source, EE_PUT_BADEXP, &t_value))

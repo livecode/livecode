@@ -61,7 +61,7 @@ public:
 	~MCChunk();
 
 	Parse_stat parse(MCScriptPoint &spt, Boolean the);
-    Exec_stat eval(MCExecPoint &);
+    //Exec_stat eval(MCExecPoint &);
     void eval_ctxt(MCExecContext &ctxt, MCExecValue& r_value);
 
 #ifdef LEGACY_EXEC
@@ -122,7 +122,7 @@ public:
 
 #endif
     /* WRAPPER */ Exec_stat set(MCExecPoint& ep, Preposition_type p_type, MCValueRef p_text);
-    void set(MCExecContext& ctxt, Preposition_type p_type, MCValueRef p_value);
+    bool set(MCExecContext& ctxt, Preposition_type p_type, MCValueRef p_value);
 #ifdef LEGACY_EXEC 
 	Exec_stat gets(MCExecPoint &);
 	Exec_stat set_legacy(MCExecPoint &, Preposition_type ptype);
@@ -141,16 +141,18 @@ public:
     
 	// MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
 	Exec_stat getprop(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
-#endif
+
 	Exec_stat setprop(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
-    
+#endif
+
     bool getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue& r_value);
+    bool setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue p_value);
     
 #ifdef LEGACY_EXEC
 	Exec_stat getprop_legacy(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
 	Exec_stat setprop_legacy(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
-#endif
 	Exec_stat getobjforprop(MCExecPoint& ep, MCObject*& r_object, uint4& r_parid);
+#endif
     bool getobjforprop(MCExecContext& ctxt, MCObject*& r_object, uint4& r_parid);
 	// REMOVE: Exec_stat select(MCExecPoint &, Preposition_type where, Boolean text, Boolean first);
 #ifdef LEGACY_EXEC

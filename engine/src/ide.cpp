@@ -1551,7 +1551,8 @@ Exec_stat MCIdeScriptTokenize::exec(MCExecPoint& ep)
 		// We have our output, so now set the chunk back to it
         MCAutoStringRef t_string;
         ep . copyasstringref(&t_string);
-		t_stat = m_script -> set(ep, PT_INTO, *t_string);
+        MCExecContext ctxt(ep);
+		t_stat = (m_script -> set(ctxt, PT_INTO, *t_string)) ? ES_NORMAL : ES_ERROR;
 	}
 
 	return t_stat;

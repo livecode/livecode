@@ -40,9 +40,10 @@ public:
 	MCProperty();
 	virtual ~MCProperty();
 	virtual Parse_stat parse(MCScriptPoint &sp, Boolean the);
-	virtual Exec_stat set(MCExecPoint &);
+	//virtual Exec_stat set(MCExecPoint &);
 	//virtual Exec_stat eval(MCExecPoint &);
     virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
+    virtual void set(MCExecContext& ctxt, MCExecValue p_value);
 	MCObject *getobj(MCExecPoint &ep);
 
 private:
@@ -52,17 +53,21 @@ private:
 	Exec_stat eval_global_property(MCExecPoint& ep);
 	Exec_stat eval_object_property(MCExecPoint& ep);
 	Exec_stat eval_count(MCExecPoint& ep);
-#endif 
-    
+  
+    Exec_stat set_variable(MCExecPoint& ep);
+	Exec_stat set_global_property(MCExecPoint& ep);
+	Exec_stat set_object_property(MCExecPoint& ep);
+#endif
+
     void eval_variable_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     void eval_function_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     void eval_global_property_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     void eval_object_property_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     void eval_count_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
-	
-	Exec_stat set_variable(MCExecPoint& ep);
-	Exec_stat set_global_property(MCExecPoint& ep);
-	Exec_stat set_object_property(MCExecPoint& ep);
+    void set_variable(MCExecContext& ctxt, MCExecValue p_value);
+	void set_global_property(MCExecContext& ctxt, MCExecValue p_value);
+	void set_object_property(MCExecContext& ctxt, MCExecValue p_value);
+
 	
 	Exec_stat resolveprop(MCExecPoint& ep, Properties& r_prop, MCNameRef& r_prop_name, MCNameRef& r_index_name);
     bool resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef& r_prop_name, MCNameRef& r_index_name);

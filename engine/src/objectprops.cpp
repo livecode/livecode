@@ -1452,6 +1452,74 @@ Exec_stat MCObject::setcustomprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameR
 	return t_stat;
 }
 
+Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCValueRef p_value)
+{
+	// If the set name is nil, then we send a 'setProp <propname> <value>'
+	// otherwise we send a 'setProp <setname>[<propname>] <value>'.
+	MCNameRef t_setprop_name;
+	MCNameRef t_param_name;
+	if (MCNameIsEqualTo(p_set_name, kMCEmptyName, kMCCompareCaseless))
+		t_setprop_name = p_prop_name, t_param_name = kMCEmptyName;
+	else
+		t_setprop_name = p_set_name, t_param_name = p_prop_name;
+    
+	// Note that in either case (non-array or array setProp), the param list is
+	// the same:
+	//   setProp pPropName, pValue
+	// The parameter list is auto-adjusted if it is of array type in MCHandler::exec.
+    
+	Exec_stat t_stat = ES_NOT_HANDLED;
+	if (!MClockmessages && (ctxt . GetObject() != this || !ctxt . GetHandler()->hasname(t_setprop_name)))
+	{
+		MCParameter p1, p2;
+		p1.setnext(&p2);
+        
+		p1.setvalueref_argument(t_param_name);
+		p2.setvalueref_argument(p_value);
+		
+		MCStack *oldstackptr = MCdefaultstackptr;
+		MCdefaultstackptr = getstack();
+		MCObject *oldtargetptr = MCtargetptr;
+		MCtargetptr = this;
+		Boolean added = False;
+		if (MCnexecutioncontexts < MAX_CONTEXTS)
+		{
+			MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+			added = True;
+		}
+        
+		t_stat = MCU_dofrontscripts(HT_SETPROP, t_setprop_name, &p1);
+		if (t_stat == ES_NOT_HANDLED || t_stat == ES_PASS)
+			t_stat = handle(HT_SETPROP, t_setprop_name, &p1, this);
+        
+		if (added)
+			MCnexecutioncontexts--;
+		MCdefaultstackptr = oldstackptr;
+		MCtargetptr = oldtargetptr;
+	}
+    
+	return t_stat;
+}
+
+bool MCObject::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue p_value)
+{
+    MCValueRef t_value;
+    MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeValueRef, &t_value);
+    
+	Exec_stat t_stat;
+	t_stat = sendsetprop(ctxt, p_set_name, p_prop_name, t_value);
+    
+	if (t_stat == ES_PASS || t_stat == ES_NOT_HANDLED)
+	{
+		MCObjectPropertySet *p;
+		/* UNCHECKED */ ensurepropset(p_set_name, false, p);
+		if (!p -> storeelement(ctxt, p_prop_name, t_value))
+			return false;
+		return true;
+	}
+	return t_stat == ES_NORMAL;
+}
+
 Exec_stat MCObject::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 #ifdef /* MCObject::setprop */ LEGACY_EXEC

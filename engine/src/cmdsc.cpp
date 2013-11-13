@@ -3277,7 +3277,8 @@ Exec_stat MCReplace::exec(MCExecPoint &ep)
 
 	if (!ctxt . HasError())
 	{
-		return container -> set(ep, PT_INTO, *t_target);
+		if (container -> set(ctxt, PT_INTO, *t_target))
+            return ES_NORMAL;
 	}
 
 	return ctxt . Catch(line, pos);

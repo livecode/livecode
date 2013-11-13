@@ -385,7 +385,9 @@ public:
 	Exec_stat setcustomprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
     
     Exec_stat sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCValueRef& r_value);
-	bool getcustomprop(MCExecContext& ep, MCNameRef set_name, MCNameRef prop_name, MCExecValue& r_value);
+	bool getcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue& r_value);
+    Exec_stat sendsetprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCValueRef p_value);
+	bool setcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue p_value);
     
 #ifdef OLD_EXEC
 	Exec_stat setprops(uint32_t parid, MCExecPoint& ep);
