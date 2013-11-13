@@ -1534,7 +1534,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
         if (stack -> etype == CT_EXPRESSION)
         {
             MCAutoStringRef t_data;
-            if (!ctxt . EvalExprAsStringRef(url -> startpos, EE_CHUNK_BADSTACKEXP, &t_data))
+            if (url -> startpos == nil || !ctxt . EvalExprAsStringRef(url -> startpos, EE_CHUNK_BADSTACKEXP, &t_data))
                 return;
 
             MCInterfaceEvalBinaryStackAsObject(ctxt, *t_data, t_object);
@@ -4326,7 +4326,7 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
     return ctxt . Catch(line, pos);
 }
 
-bool MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
+void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
 {
     MCAutoStringRef t_text;
 
@@ -4336,7 +4336,7 @@ bool MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
         if (desttype != DT_OWNER)
         {
             if (!ctxt . EvalExprAsStringRef(source, EE_CHUNK_CANTGETSOURCE, &t_text))
-                return false;
+                return;
         }
         else
         {
@@ -4347,7 +4347,7 @@ bool MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
             if (!static_cast<MCChunk *>(source) -> getobj(ctxt, t_object, True))
             {
                 ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP);
-                return false;
+                return;
             }
 
             MCEngineEvalOwner(ctxt, t_object, &t_text);
@@ -4360,7 +4360,7 @@ bool MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
                 || !ctxt . ConvertToString(*t_value, &t_text))
         {
             ctxt . LegacyThrow(EE_CHUNK_CANTGETDEST);
-            return false;
+            return;
         }
     }
     else
@@ -4384,7 +4384,7 @@ bool MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
                 card != NULL || group != NULL || object != NULL)
             {
                 ctxt . LegacyThrow(EE_CHUNK_CANTFINDOBJECT);
-                return false;
+                return;
             }
             t_text = *t_url_output;
         }
@@ -4455,15 +4455,18 @@ bool MCChunk::eval(MCExecContext &ctxt, MCStringRef &r_text)
             mark(ctxt, false, false, t_new_mark);
             MCAutoStringRef t_string;
             MCStringsEvalTextChunk(ctxt, t_new_mark, &t_string);
-            r_text = MCValueRetain(*t_string);
+            r_text . stringref_value = MCValueRetain(*t_string);
         }
         else
-            r_text = MCValueRetain(*t_text);
+            r_text . stringref_value = MCValueRetain(*t_text);
     }
     else
-        r_text = MCValueRetain(kMCEmptyString);
+        r_text . stringref_value = MCValueRetain(kMCEmptyString);
 
-    return !ctxt . HasError();
+    if (!ctxt . HasError())
+    {
+        r_text . type = kMCExecValueTypeStringRef;
+    }
 }
 
 #ifdef LEGACY_EXEC
@@ -5108,7 +5111,7 @@ void MCChunk::count(MCExecContext &ctxt, Chunk_term tocount, Chunk_term ptype, u
         //   the count will be zero (if a string chunk has been requested),
         //   otherwise it will be the count of the keys...
         // SN-2013-11-5: Apperently eval() is no longer able to return an array
-        if (!eval(ctxt, &t_string))
+        if (!ctxt . EvalExprAsStringRef(this, EE_CHUNK_BADEXPRESSION, &t_string))
             return;
 
         MCStringsCountChunks(ctxt, tocount, *t_string, r_count);
@@ -5390,6 +5393,35 @@ Exec_stat MCChunk::getobjforprop(MCExecPoint& ep, MCObject*& r_object, uint4& r_
 	return ES_ERROR;
 }
 
+bool MCChunk::getobjforprop(MCExecContext& ctxt, MCObject*& r_object, uint4& r_parid)
+{
+	MCObject *objptr;
+	uint4 parid;
+    
+	if (!getobj(ctxt, objptr, parid, True))
+	{
+		MCeerror->add(EE_CHUNK_CANTFINDOBJECT, line, pos);
+		return false;
+	}
+	Boolean tfunction = False;
+	if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
+        && function != F_SELECTED_FIELD && function != F_FOUND_FIELD
+        && function != F_MOUSE_CONTROL && function != F_FOCUSED_OBJECT
+        && function != F_SELECTED_IMAGE
+        && function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
+		tfunction = True;
+	if (!tfunction && cline == NULL && item == NULL
+        && word == NULL && token == NULL && character == NULL)
+	{
+		r_object = objptr;
+		r_parid = parid;
+		return true;
+	}
+    
+	MCeerror->add(EE_CHUNK_NOPROP, line, pos);
+	return false;
+}
+
 #ifdef LEGACY_EXEC
 // MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
 Exec_stat MCChunk::getprop_legacy(Properties which, MCExecPoint &ep, MCNameRef index, Boolean effective)
@@ -5566,6 +5598,7 @@ static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_tab
 	return nil;
 }
 
+#ifdef LEGACY_EXEC
 // MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
 Exec_stat MCChunk::getprop(Properties which, MCExecPoint &ep, MCNameRef index, Boolean effective)
 {
@@ -5679,6 +5712,7 @@ Exec_stat MCChunk::getprop(Properties which, MCExecPoint &ep, MCNameRef index, B
     
     return ctxt . Catch(line, pos);
 }
+#endif 
 
 // MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
 Exec_stat MCChunk::setprop(Properties which, MCExecPoint &ep, MCNameRef index, Boolean effective)
@@ -5791,6 +5825,106 @@ Exec_stat MCChunk::setprop(Properties which, MCExecPoint &ep, MCNameRef index, B
     t_obj_chunk . object -> signallisteners(which);
     
     return ES_NORMAL;
+}
+
+// MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
+bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue& r_value)
+{
+    MCObjectChunkPtr t_obj_chunk;
+    if (evalobjectchunk(ctxt, false, false, t_obj_chunk) != ES_NORMAL)
+        return false;
+
+    MCPropertyInfo *t_info;
+    if (t_obj_chunk . chunk == CT_UNDEFINED)
+    {
+        bool t_is_array_prop;
+        // MW-2011-11-23: [[ Array Chunk Props ]] If index is nil or empty, then its just a normal
+		//   prop, else its an array prop.
+		t_is_array_prop = (index != nil && !MCNameIsEmpty(index));
+        
+        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, false);
+        
+        if (t_info != nil && t_info -> getter == nil)
+        {
+            MCeerror -> add(EE_OBJECT_GETNOPROP, line, pos);
+            return false;
+        }
+        
+        if (t_is_array_prop)
+        {
+            if (t_info != nil)
+            {
+                MCObjectIndexPtr t_object;
+                t_object . object = t_obj_chunk . object;
+                t_object . part_id = t_obj_chunk . part_id;
+                t_object . index = index;
+                
+                MCAutoValueRef t_value;
+                MCExecFetchProperty(ctxt, t_info, &t_object, r_value);
+            }
+            else
+            {
+                Exec_stat t_stat = ES_NOT_HANDLED;
+                t_stat = t_obj_chunk . object -> getarrayprop_legacy(t_obj_chunk . part_id, which, ctxt . GetEP(), index, False);
+                if (t_stat == ES_NOT_HANDLED)
+                {
+                    MCeerror->add(EE_OBJECT_GETNOPROP, line, pos);
+                    return false;
+                }
+                ctxt . GetEP() . copyasvalueref(r_value . valueref_value);
+                r_value . type = kMCExecValueTypeValueRef;
+                return t_stat == ES_NORMAL;
+            }
+        }
+        else
+        {
+            if (t_info != nil)
+            {
+                MCObjectPtr t_object;
+                t_object . object = t_obj_chunk . object;
+                t_object . part_id = t_obj_chunk . part_id;
+                
+                MCExecFetchProperty(ctxt, t_info, &t_object, r_value);
+            }
+            else
+            {
+                t_obj_chunk . object -> getprop_legacy(t_obj_chunk . part_id, which, ctxt . GetEP(), effective);
+                ctxt . GetEP() . copyasvalueref(r_value . valueref_value);
+                r_value . type = kMCExecValueTypeValueRef;
+            }
+        }
+    }
+    else
+	{
+		if (t_obj_chunk . object->gettype() != CT_FIELD)
+		{
+			MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
+			return false;
+		}
+        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, false, true);
+        
+        if (t_info != nil)
+        {
+            MCExecFetchProperty(ctxt, t_info, &t_obj_chunk, r_value);
+        }
+        else
+        {
+            // MW-2011-11-23: [[ Array TextStyle ]] Pass the 'index' along to method to
+            //   handle specific styles.
+            MCField *fptr;
+            fptr = static_cast<MCField *>(t_obj_chunk . object);
+            if (fptr->gettextatts(t_obj_chunk . part_id, which, ctxt . GetEP(), index, effective, t_obj_chunk . mark . start, t_obj_chunk . mark . finish, islinechunk()) != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_CANTGETATTS, line, pos);
+                return false;
+            }
+            ctxt . GetEP() . copyasvalueref(r_value . valueref_value);
+            r_value . type = kMCExecValueTypeValueRef;
+            return true;
+        }
+	}
+    
+    return !ctxt . HasError();
 }
 
 Chunk_term MCChunk::getlastchunktype(void)

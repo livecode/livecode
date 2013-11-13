@@ -2310,7 +2310,7 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output
 	}
 	
 	r_output = MCValueRetain(kMCEmptyString);
-	ctxt.Throw();
+	//ctxt.Throw();
 }
 
 void MCU_geturl(MCExecPoint &ep)

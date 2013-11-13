@@ -815,8 +815,9 @@ template<typename A, void Method(MCExecContext&, MCPurchase *, A)> inline void M
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *mark, MCValueRef& r_value);
+void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *mark, MCExecValue& r_value);
 void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *mark, MCValueRef p_value);
+void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *mark, MCValueRef& r_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 
