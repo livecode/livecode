@@ -206,10 +206,10 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCNetworkEvalCachedUrlsMethodInfo; }
 };
 
-class MCCapsLockKey : public MCConstantFunction
+class MCCapsLockKey : public MCConstantFunctionCtxt<MCNameRef, MCInterfaceEvalCapsLockKey>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalCapsLockKeyMethodInfo; }
 };
 
@@ -263,10 +263,10 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCClipboard : public MCConstantFunction
+class MCClipboard : public MCConstantFunctionCtxt<MCNameRef, MCPasteboardEvalClipboard>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCPasteboardEvalClipboardMethodInfo; }
 };
 

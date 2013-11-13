@@ -1432,27 +1432,12 @@ void MCBinaryEncode::compile(MCSyntaxFactoryRef ctxt)
 	return ES_NORMAL;
 #endif /* MCCachedUrls */
 
-Exec_stat MCCapsLockKey::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCCapsLockKey */ LEGACY_EXEC
 	ep.setstaticcstring(MCU_ktos((MCscreen->querymods() & MS_CAPS_LOCK) != 0));
 	return ES_NORMAL;
 #endif /* MCCapsLockKey */
 
-
-	MCExecContext ctxt(ep);
-
-	MCNewAutoNameRef t_result;
-	MCInterfaceEvalCapsLockKey(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 MCCharToNum::~MCCharToNum()
 {
@@ -1985,8 +1970,7 @@ Exec_stat MCClickV::eval(MCExecPoint &ep)
 	return ctxt . Catch(line, pos);
 }
 
-Exec_stat MCClipboard::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCClipboard */ LEGACY_EXEC
 	bool t_success;
 	t_success = true;
@@ -2019,20 +2003,6 @@ Exec_stat MCClipboard::eval(MCExecPoint &ep)
 
 	return ES_NORMAL;
 #endif /* MCClipboard */
-
-	MCExecContext ctxt(ep);
-
-	MCNewAutoNameRef t_result;
-	MCPasteboardEvalClipboard(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 Exec_stat MCCommandKey::eval(MCExecPoint &ep)
 {
