@@ -1971,15 +1971,14 @@ extern void *MCAndroidGetEngine(void);
 
 static MCExternalError MCExternalInterfaceQuery(MCExternalInterfaceQueryTag op, void *r_value)
 {
-    if (op == kMCExternalInterfaceQueryViewScale)
-    {
-        *(double *)r_value = MCResGetDeviceScale();
-    	return kMCExternalErrorNone;
-    }
     
 #if defined(TARGET_SUBPLATFORM_IPHONE)
 	switch(op)
 	{
+		case kMCExternalInterfaceQueryView:
+			// MERG-2013-11-07: [[ DeviceScale ]] Return the resolution scale on platforms where the view is measured in points
+            *(double *)r_value = MCIPhoneGetResolutionScale();
+			break;
 		case kMCExternalInterfaceQueryView:
 			*(void **)r_value = MCIPhoneGetView();
 			break;
@@ -1990,7 +1989,14 @@ static MCExternalError MCExternalInterfaceQuery(MCExternalInterfaceQueryTag op, 
 			return kMCExternalErrorInvalidInterfaceQuery;
 	}
 	return kMCExternalErrorNone;
-#elif defined(TARGET_SUBPLATFORM_ANDROID)
+#else
+    // MERG-2013-11-07: [[ DeviceScale ]] Return 1/the device scale on platforms where the view is measured in pixels
+    if (op == kMCExternalInterfaceQueryViewScale)
+    {
+        *(double *)r_value = 1/MCResGetDeviceScale();
+    	return kMCExternalErrorNone;
+    }
+#if defined(TARGET_SUBPLATFORM_ANDROID)
 	switch(op)
 	{
 		case kMCExternalInterfaceQueryActivity:
@@ -2019,6 +2025,7 @@ static MCExternalError MCExternalInterfaceQuery(MCExternalInterfaceQueryTag op, 
 			return kMCExternalErrorInvalidInterfaceQuery;
 	}
 	return kMCExternalErrorNone;
+#endif
 #endif
 
 	return kMCExternalErrorInvalidInterfaceQuery;
