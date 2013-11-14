@@ -35,7 +35,7 @@ TARGET_PATH=$(BUILD_DIR)/$(NAME).so
 
 $(TARGET_PATH): $(OBJECTS) $(DEPS)
 	mkdir -p $(dir $(TARGET_PATH))
-	gcc -fvisibility=hidden -o$(TARGET_PATH) $(LDFLAGS) $(OBJECTS) $(addsuffix .a,$(addprefix $(PRODUCT_DIR)/lib,$(LIBS))) -Wl,-Bstatic $(addprefix -l,$(STATIC_LIBS)) -Wl,-Bdynamic $(addprefix -l,$(DYNAMIC_LIBS))
+	gcc -m32 -fvisibility=hidden -o$(TARGET_PATH) $(LDFLAGS) $(OBJECTS) $(addsuffix .a,$(addprefix $(PRODUCT_DIR)/lib,$(LIBS))) -Wl,-Bstatic $(addprefix -l,$(STATIC_LIBS)) -Wl,-Bdynamic $(addprefix -l,$(DYNAMIC_LIBS))
 	cd $(BUILD_DIR) && \
 		objcopy --only-keep-debug "$(NAME).so" "$(NAME).so.dbg" && \
 		strip --strip-debug --strip-unneeded "$(NAME).so" && \

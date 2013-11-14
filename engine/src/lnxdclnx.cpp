@@ -958,9 +958,11 @@ int xerror(Display *dpy, XErrorEvent *ev)
 	{
 		if (ev->request_code != 88 && ev->request_code != 42)
 		{
-			if (ev->request_code == 53)
+            MCAutoStringRefAsSysString t_cmd;
+            t_cmd.Lock(MCcmd);
+            if (ev->request_code == 53)
 				fprintf(stderr,
-						"%s: XCreatePixmap failed, X server is out of memory --- oops\n", MCStringGetCString(MCcmd));
+                        "%s: XCreatePixmap failed, X server is out of memory --- oops\n", *t_cmd);
 			else
 			{
 				// SB-2013-05-30: [[ XErrorMsg ]] Added 'XGetErrorText()' for more helpful error message.
