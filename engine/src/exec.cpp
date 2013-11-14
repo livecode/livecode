@@ -2216,7 +2216,12 @@ static void MCExecTypeConvertToValueRefAndReleaseAlways(MCExecContext& ctxt, MCE
             if(!MCStringFormat((MCStringRef&)r_value, "%u,%u,%u", (((MCColor *)p_from_type) -> red >> 8) & 0xff, (((MCColor *)p_from_type) -> green >> 8) & 0xff, (((MCColor *)p_from_type) -> blue >> 8) & 0xff))
                 ctxt . Throw();
 			break;
-			
+            
+        case kMCExecValueTypePoint:
+            if(!MCStringFormat((MCStringRef&)r_value, "%d,%d", ((MCPoint *)p_from_type) -> x, ((MCPoint *)p_from_type) -> y))
+                ctxt . Throw();
+			break;
+            			
 		default:
 			ctxt . Unimplemented();
 			break;
