@@ -889,11 +889,12 @@ void MCGraphicsContext::drawarc(const MCRectangle& rect, uint2 start, uint2 angl
 	MCGContextStroke(m_gcontext);
 }
 
-void MCGraphicsContext::fillarc(const MCRectangle& rect, uint2 start, uint2 angle)
+void MCGraphicsContext::fillarc(const MCRectangle& rect, uint2 start, uint2 angle, bool inside)
 {	
+	// MM-2013-11-14: [[ Bug 11426 ]] Make sure we take account line width when filling arcs with a border.
 	MCGRectangle t_rect = MCRectangleToMCGRectangle(rect);	
 	MCGFloat t_adjustment;
-	if (m_line_width == 0.0f)
+	if (inside)
 		t_adjustment = (m_line_width == 0.0f ? 0.5f : m_line_width / 2.0f);
 	else
 		t_adjustment = 0.0f;	
@@ -952,10 +953,19 @@ void MCGraphicsContext::drawrect(const MCRectangle& rect, bool inside)
 	MCGContextStroke(m_gcontext);
 }
 
-void MCGraphicsContext::fillrect(const MCRectangle& rect)
+void MCGraphicsContext::fillrect(const MCRectangle& rect, bool inside)
 {
+	// MM-2013-11-14: [[ Bug 11426 ]] Make sure we take account line width when filling rects with a border.
+	MCGRectangle t_rect = MCRectangleToMCGRectangle(rect);	
+	MCGFloat t_adjustment;
+	if (inside)
+		t_adjustment = (m_line_width == 0.0f ? 0.5f : m_line_width / 2.0f);
+	else
+		t_adjustment = 0.0f;	
+	t_rect = MCGRectangleInset(t_rect, t_adjustment);
+	
 	MCGContextBeginPath(m_gcontext);
-	MCGContextAddRectangle(m_gcontext, MCRectangleToMCGRectangle(rect));
+	MCGContextAddRectangle(m_gcontext, t_rect);
 	MCGContextFill(m_gcontext);
 }
 
@@ -984,10 +994,19 @@ void MCGraphicsContext::drawroundrect(const MCRectangle& rect, uint2 radius, boo
 	MCGContextStroke(m_gcontext);
 }
 
-void MCGraphicsContext::fillroundrect(const MCRectangle& rect, uint2 radius)
-{	
+void MCGraphicsContext::fillroundrect(const MCRectangle& rect, uint2 radius, bool inside)
+{		
+	// MM-2013-11-14: [[ Bug 11426 ]] Make sure we take account line width when filling rects with a border.
+	MCGRectangle t_rect = MCRectangleToMCGRectangle(rect);	
+	MCGFloat t_adjustment;
+	if (inside)
+		t_adjustment = (m_line_width == 0.0f ? 0.5f : m_line_width / 2.0f);
+	else
+		t_adjustment = 0.0f;	
+	t_rect = MCGRectangleInset(t_rect, t_adjustment);
+	
 	MCGContextBeginPath(m_gcontext);
-	add_legacy_rounded_rectangle(m_gcontext, MCRectangleToMCGRectangle(rect), radius * 0.5);
+	add_legacy_rounded_rectangle(m_gcontext, t_rect, radius * 0.5);
 	MCGContextFill(m_gcontext);
 }
 
@@ -1105,7 +1124,7 @@ void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MC
 		
 		MCGContextSave(m_gcontext);
 		setforeground(m_background);
-		fillrect(MCU_make_rect(x, y - MCFontGetAscent(p_font), t_width, MCFontGetAscent(p_font) + MCFontGetDescent(p_font)));
+		fillrect(MCU_make_rect(x, y - MCFontGetAscent(p_font), t_width, MCFontGetAscent(p_font) + MCFontGetDescent(p_font)), false);
 		MCGContextRestore(m_gcontext);
 	}
 		
