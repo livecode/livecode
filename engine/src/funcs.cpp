@@ -7177,7 +7177,7 @@ Parse_stat MCSelectedText::parse(MCScriptPoint &sp, Boolean the)
 	return parsetarget(sp, the, False, object);
 }
 
-Exec_stat MCSelectedText::eval(MCExecPoint &ep)
+void MCSelectedText::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCSelectedText */ LEGACY_EXEC
 	if (object != NULL)
@@ -7216,31 +7216,24 @@ Exec_stat MCSelectedText::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCSelectedText */
 
-	MCExecContext ctxt(ep);
 	MCAutoStringRef t_result;
 
 	if (object != NULL)
 	{
 		MCObjectPtr t_target;
-		if (object->getobj(ep, t_target . object, t_target . part_id, True) != ES_NORMAL)
+		if (!object->getobj(ctxt, t_target . object, t_target . part_id, True))
 		{
-			MCeerror->add(EE_SELECTED_BADSOURCE, line, pos);
-			return ES_ERROR;
+			ctxt . LegacyThrow(EE_SELECTED_BADSOURCE);
+			return;
 		}
-		MCInterfaceEvalSelectedTextOf(ctxt, t_target, &t_result);
+		MCInterfaceEvalSelectedTextOf(ctxt, t_target, r_value .stringref_value);
+        r_value .type = kMCExecValueTypeStringRef;
 	}
 	else
 	{
-		MCInterfaceEvalSelectedText(ctxt, &t_result);
+		MCInterfaceEvalSelectedText(ctxt, r_value .stringref_value);
+        r_value .type = kMCExecValueTypeStringRef;
 	}
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCSelectedText::compile(MCSyntaxFactoryRef ctxt)
@@ -7524,7 +7517,7 @@ Parse_stat MCOwner::parse(MCScriptPoint &sp, Boolean the)
 	return parsetarget(sp, the, True, object);
 }
 
-Exec_stat MCOwner::eval(MCExecPoint &ep)
+void MCOwner::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCOwner */ LEGACY_EXEC
 	MCObject *t_objptr;
@@ -7537,23 +7530,11 @@ Exec_stat MCOwner::eval(MCExecPoint &ep)
 #endif /* MCOwner */
 
 	MCObjectPtr t_objptr;
-	if (object -> getobj(ep, t_objptr, True) != ES_NORMAL)
-	{
-		return ES_ERROR;
-	}
+	if (!object -> getobj(ctxt, t_objptr, True))
+		return;
 
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_result;
-
-	MCEngineEvalOwner(ctxt, t_objptr, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
+    MCEngineEvalOwner(ctxt, t_objptr, r_value .stringref_value);
+    r_value .type = kMCExecValueTypeStringRef;
 }
 
 void MCOwner::compile(MCSyntaxFactoryRef ctxt)
@@ -7806,7 +7787,7 @@ Parse_stat MCTopStack::parse(MCScriptPoint &sp, Boolean the)
 
 }
 
-Exec_stat MCTopStack::eval(MCExecPoint &ep)
+void MCTopStack::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCTopStack */ LEGACY_EXEC
 	MCStack *sptr = MCtopstackptr;
@@ -7828,30 +7809,21 @@ Exec_stat MCTopStack::eval(MCExecPoint &ep)
 	}
 #endif /* MCTopStack */
 
-	MCExecContext ctxt(ep);
-	integer_t t_stack_number;
+	uinteger_t t_stack_number;
 	MCAutoStringRef t_result;
 
 	if (which != NULL)
 	{
-		if (which->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-		{
-			MCeerror->add(EE_TOPSTACK_BADSOURCE, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ t_stack_number = ep.getuint2();
-		MCInterfaceEvalTopStackOf(ctxt, t_stack_number, &t_result);
+        if (!ctxt . EvalExprAsUInt(which, EE_TOPSTACK_BADSOURCE, t_stack_number))
+            return;
+		MCInterfaceEvalTopStackOf(ctxt, t_stack_number, r_value . stringref_value);
+        r_value .type = kMCExecValueTypeStringRef;
 	}
 	else
-		MCInterfaceEvalTopStack(ctxt, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
+    {
+		MCInterfaceEvalTopStack(ctxt, r_value . stringref_value);
+        r_value .type = kMCExecValueTypeStringRef;
+    }
 }
 
 void MCTopStack::compile(MCSyntaxFactoryRef ctxt)
@@ -7879,7 +7851,7 @@ Parse_stat MCUniDecode::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCUniDecode::eval(MCExecPoint &ep)
+void MCUniDecode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCUniDecode */ LEGACY_EXEC
 	uint1 destcharset = 0;
@@ -7913,40 +7885,17 @@ Exec_stat MCUniDecode::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCUniDecode */
 
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
+	
 	MCNewAutoNameRef t_language;
-	MCAutoStringRef t_result;
+    if (!ctxt . EvalOptionalExprAsNameRef(language, kMCEmptyName, EE_UNIDECODE_BADLANGUAGE, &t_language))
+        return;
+	
+    MCAutoStringRef t_source;
+    if (!ctxt .EvalExprAsStringRef(source, EE_UNIDECODE_BADSOURCE, &t_source))
+        return;
 
-	if (language)
-	{
-		if (language->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_UNIDECODE_BADLANGUAGE, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep.copyasnameref(&t_language);
-	}
-	else
-		t_language = kMCEmptyName;
-
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_UNIDECODE_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	/* UNCHECKED */ ep.copyasstringref(&t_source);
-
-	MCFiltersEvalUniDecode(ctxt, *t_source, *t_language, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
+	MCFiltersEvalUniDecode(ctxt, *t_source, *t_language, r_value . stringref_value);
+    r_value .type = kMCExecValueTypeStringRef;
 }
 
 void MCUniDecode::compile(MCSyntaxFactoryRef ctxt)
@@ -7981,7 +7930,7 @@ Parse_stat MCUniEncode::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCUniEncode::eval(MCExecPoint &ep)
+void MCUniEncode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCUniEncode */ LEGACY_EXEC
 	uint1 srccharset = 0;
@@ -8015,41 +7964,17 @@ Exec_stat MCUniEncode::eval(MCExecPoint &ep)
 	delete startptr;
 	return ES_NORMAL;
 #endif /* MCUniEncode */
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
+	
 	MCNewAutoNameRef t_language;
-	MCAutoStringRef t_result;
+    if (!ctxt . EvalOptionalExprAsNameRef(language, kMCEmptyName, EE_UNIENCODE_BADLANGUAGE, &t_language))
+        return;
 
-	if (language)
-	{
-		if (language->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_UNIENCODE_BADLANGUAGE, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep.copyasnameref(&t_language);
-	}
-	else
-		t_language = kMCEmptyName;
+    MCAutoStringRef t_source;
+    if (!ctxt .EvalExprAsStringRef(source, EE_UNIENCODE_BADSOURCE, &t_source))
+        return;
 
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_UNIENCODE_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	/* UNCHECKED */ ep.copyasstringref(&t_source);
-
-	MCFiltersEvalUniEncode(ctxt, *t_source, *t_language, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
+	MCFiltersEvalUniEncode(ctxt, *t_source, *t_language, r_value .stringref_value);
+    r_value . type = kMCExecValueTypeStringRef;
 }
 
 void MCUniEncode::compile(MCSyntaxFactoryRef ctxt)
