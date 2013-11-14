@@ -6568,25 +6568,15 @@ Exec_stat MCScreenName::eval(MCExecPoint &ep)
 	return ctxt . Catch(line, pos);
 }
 
-Exec_stat MCScreenRect::eval(MCExecPoint &ep)
+void MCScreenRect::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCScreenRect */ LEGACY_EXEC
 	evaluate(ep, false, f_plural, false);
 	return ES_NORMAL;
 #endif /* MCScreenRect */
 
-    MCExecContext ctxt(ep);
-    
-	MCAutoStringRef t_result;
-    MCInterfaceEvalScreenRect(ctxt, false, f_plural, false, &t_result);
-    
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt . Catch(line, pos);
+    MCInterfaceEvalScreenRect(ctxt, false, f_plural, false, r_value . stringref_value);
+    r_value . type = kMCExecValueTypeStringRef;
 }
 
 void MCScreenRect::compile(MCSyntaxFactoryRef ctxt)
@@ -6770,7 +6760,7 @@ Parse_stat MCSelectedButton::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCSelectedButton::eval(MCExecPoint &ep)
+void MCSelectedButton::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCSelectedButton */ LEGACY_EXEC
 	if (family->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
@@ -6810,41 +6800,26 @@ Exec_stat MCSelectedButton::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCSelectedButton */
 
-	MCExecContext ctxt(ep);
 	integer_t t_family;
+    if (!ctxt . EvalExprAsInt(family, EE_SELECTEDBUTTON_BADFAMILY, t_family))
+        return;
 
-	if (family->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_SELECTEDBUTTON_BADFAMILY, line, pos);
-		return ES_ERROR;
-	}
-
-	/* UNCHECKED */ ep.copyasint(t_family);
-
-	MCAutoStringRef t_result;
-
-	if (object != NULL)
+    if (object != NULL)
 	{
 		MCObjectPtr t_object;
-		if (object->getobj(ep, t_object, True) != ES_NORMAL)
+		if (!object->getobj(ctxt, t_object, True))
 		{
-			MCeerror->add(EE_SELECTEDBUTTON_BADPARENT, line, pos);
-			return ES_ERROR;
+			ctxt . LegacyThrow(EE_SELECTEDBUTTON_BADPARENT);
+			return;
 		}	
-		MCLegacyEvalSelectedButtonOf(ctxt, bg == True, t_family, t_object, &t_result);
+		MCLegacyEvalSelectedButtonOf(ctxt, bg == True, t_family, t_object, r_value . stringref_value);
+        r_value . type = kMCExecValueTypeStringRef;
 	}
 	else
 	{
-		MCLegacyEvalSelectedButton(ctxt, bg == True, t_family, &t_result);
+		MCLegacyEvalSelectedButton(ctxt, bg == True, t_family, r_value . stringref_value);
+        r_value . type = kMCExecValueTypeStringRef;
 	}
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
 }
 
 void MCSelectedButton::compile(MCSyntaxFactoryRef ctxt)
@@ -6875,7 +6850,7 @@ Parse_stat MCSelectedChunk::parse(MCScriptPoint &sp, Boolean the)
 	return parsetarget(sp, the, False, object);
 }
 
-Exec_stat MCSelectedChunk::eval(MCExecPoint &ep)
+void MCSelectedChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCSelectedChunk */ LEGACY_EXEC
 	if (object != NULL)
@@ -6920,31 +6895,24 @@ Exec_stat MCSelectedChunk::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCSelectedChunk */
 
-	MCExecContext ctxt(ep);
 	MCAutoStringRef t_result;
 
 	if (object != NULL)
 	{
 		MCObjectPtr optr;
-		if (object->getobj(ep, optr, True) != ES_NORMAL)
+		if (!object->getobj(ctxt, optr, True))
 		{
-			MCeerror->add(EE_SELECTED_BADSOURCE, line, pos);
-			return ES_ERROR;
+			ctxt . LegacyThrow(EE_SELECTED_BADSOURCE);
+			return;
 		}
-		MCInterfaceEvalSelectedChunkOf(ctxt, optr, &t_result);
+		MCInterfaceEvalSelectedChunkOf(ctxt, optr, r_value . stringref_value);
+        r_value . type = kMCExecValueTypeStringRef;
 	}
 	else
 	{
-		MCInterfaceEvalSelectedChunk(ctxt, &t_result);
+		MCInterfaceEvalSelectedChunk(ctxt, r_value . stringref_value);
+        r_value . type = kMCExecValueTypeStringRef;
 	}
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCSelectedChunk::compile(MCSyntaxFactoryRef ctxt)
@@ -7027,7 +6995,7 @@ Parse_stat MCSelectedLine::parse(MCScriptPoint &sp, Boolean the)
 	return parsetarget(sp, the, False, object);
 }
 
-Exec_stat MCSelectedLine::eval(MCExecPoint &ep)
+void MCSelectedLine::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCSelectedLine */ LEGACY_EXEC
 	if (object != NULL)
@@ -7066,31 +7034,22 @@ Exec_stat MCSelectedLine::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCSelectedLine */
 
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_result;
-
 	if (object != NULL)
 	{
 		MCObjectPtr optr;
-		if (object->getobj(ep, optr, True) != ES_NORMAL)
+		if (!object->getobj(ctxt, optr, True))
 		{
-			MCeerror->add(EE_SELECTED_BADSOURCE, line, pos);
-			return ES_ERROR;
+			ctxt . LegacyThrow(EE_SELECTED_BADSOURCE);
+			return;
 		}
-		MCInterfaceEvalSelectedLineOf(ctxt, optr, &t_result);
+		MCInterfaceEvalSelectedLineOf(ctxt, optr, r_value . stringref_value);
+        r_value . type = kMCExecValueTypeStringRef;
 	}
 	else
 	{
-		MCInterfaceEvalSelectedLine(ctxt, &t_result);
+		MCInterfaceEvalSelectedLine(ctxt, r_value . stringref_value);
+        r_value . type = kMCExecValueTypeStringRef;
 	}
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
 }
 
 void MCSelectedLine::compile(MCSyntaxFactoryRef ctxt)
@@ -7118,7 +7077,7 @@ Parse_stat MCSelectedLoc::parse(MCScriptPoint &sp, Boolean the)
 	return parsetarget(sp, the, False, object);
 }
 
-Exec_stat MCSelectedLoc::eval(MCExecPoint &ep)
+void MCSelectedLoc::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCSelectedLoc */ LEGACY_EXEC
 	if (object != NULL)
@@ -7154,31 +7113,22 @@ Exec_stat MCSelectedLoc::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCSelectedLoc */
     
-    MCExecContext ctxt(ep);
-	MCAutoStringRef t_result;
-    
     if (object != NULL)
 	{
 		MCObjectPtr optr;
-		if (object->getobj(ep, optr, True) != ES_NORMAL)
+		if (!object->getobj(ctxt, optr, True))
 		{
-			MCeerror->add(EE_SELECTED_BADSOURCE, line, pos);
-			return ES_ERROR;
+			ctxt . LegacyThrow(EE_SELECTED_BADSOURCE);
+			return;
 		}
-		MCInterfaceEvalSelectedLocOf(ctxt, optr, &t_result);
+		MCInterfaceEvalSelectedLocOf(ctxt, optr, r_value . stringref_value);
+        r_value .type = kMCExecValueTypeStringRef;
 	}
 	else
 	{
-		MCInterfaceEvalSelectedLoc(ctxt, &t_result);
+		MCInterfaceEvalSelectedLoc(ctxt, r_value . stringref_value);
+        r_value .type = kMCExecValueTypeStringRef;
 	}
-    
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt . Catch(line, pos);
 }
 
 void MCSelectedLoc::compile(MCSyntaxFactoryRef ctxt)
