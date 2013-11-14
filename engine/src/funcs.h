@@ -1576,17 +1576,17 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCSelectedField : public MCConstantFunction
+class MCSelectedField : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalSelectedField>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalSelectedFieldMethodInfo; }
 };
 
-class MCSelectedImage : public MCConstantFunction
+class MCSelectedImage : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalSelectedImage>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalSelectedImageMethodInfo; }
 };
 
@@ -1618,10 +1618,10 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCSelectedObject : public MCConstantFunction
+class MCSelectedObject : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalSelectedObject>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalSelectedObjectMethodInfo; }
 };
 
@@ -1655,24 +1655,24 @@ public:
 	virtual MCExpression *getmethodarg(void) const { return source; }
 };
 
-class MCShiftKey : public MCConstantFunction
+class MCShiftKey : public MCConstantFunctionCtxt<MCNameRef, MCInterfaceEvalShiftKey>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalShiftKeyMethodInfo; }
 };
 
-class MCSound : public MCConstantFunction
+class MCSound : public MCConstantFunctionCtxt<MCStringRef, MCMultimediaEvalSound>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMultimediaEvalSoundMethodInfo; }
 };
 
-class MCStacks : public MCConstantFunction
+class MCStacks : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalStacks>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalStacksMethodInfo; }
 };
 

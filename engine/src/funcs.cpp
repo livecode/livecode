@@ -5842,8 +5842,7 @@ void MCSelectedChunk::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndExpression(ctxt);
 }
 
-Exec_stat MCSelectedField::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCSelectedField */ LEGACY_EXEC
 	if (MCactivefield != NULL)
 	{
@@ -5855,22 +5854,7 @@ Exec_stat MCSelectedField::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCSelectedField */
 
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_result;
 
-	MCInterfaceEvalSelectedField(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCSelectedImage::eval(MCExecPoint &ep)
-{
 #ifdef /* MCSelectedImage */ LEGACY_EXEC
 	if (MCactiveimage != NULL)
 	{
@@ -5883,19 +5867,6 @@ Exec_stat MCSelectedImage::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCSelectedImage */
 
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_result;
-
-	MCInterfaceEvalSelectedImage(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 MCSelectedLine::~MCSelectedLine()
 {
@@ -6076,26 +6047,12 @@ void MCSelectedLoc::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndExpression(ctxt);
 }
 
-Exec_stat MCSelectedObject::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCSelectedObject */ LEGACY_EXEC
 	MCselected->getids(ep);
 	return ES_NORMAL;
 #endif /* MCSelectedObject */
 
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_result;
-
-	MCInterfaceEvalSelectedObject(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 MCSelectedText::~MCSelectedText()
 {
@@ -6248,30 +6205,13 @@ if (source->eval(ep) != ES_NORMAL)
 	return ctxt . Catch(line, pos);
 }
 
-Exec_stat MCShiftKey::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCShiftKey */ LEGACY_EXEC
 	ep.setstaticcstring(MCU_ktos((MCscreen->querymods() & MS_SHIFT) != 0));
 	return ES_NORMAL;
 #endif /* MCShiftKey */
 
 
-	MCExecContext ctxt(ep);
-
-	MCNewAutoNameRef t_result;
-	MCInterfaceEvalShiftKey(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCSound::eval(MCExecPoint &ep)
-{
 #ifdef /* MCSound */ LEGACY_EXEC
 #ifdef _MOBILE
 	extern bool MCSystemGetPlayingSound(const char *& r_sound);
@@ -6294,40 +6234,11 @@ Exec_stat MCSound::eval(MCExecPoint &ep)
 #endif /* MCSound */
 
 
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_sound;
-	MCMultimediaEvalSound(ctxt, &t_sound);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_sound);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCStacks::eval(MCExecPoint &ep)
-{
 #ifdef /* MCStacks */ LEGACY_EXEC
 	MCstacks->stackprops(ep, P_FILE_NAME);
 	return ES_NORMAL;
 #endif /* MCStacks */
 
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCInterfaceEvalStacks(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 Exec_stat MCStackSpace::eval(MCExecPoint &ep)
 {
