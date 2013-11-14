@@ -115,7 +115,7 @@ static const char *s_export_html_tag_strings[] =
 	"b",
 	"strike",
 	"u",
-	"super",
+	"sup",
 	"sub",
 	"condensed",
 	"expanded",
@@ -1075,10 +1075,11 @@ static bool import_html_parse_entity(const char *& x_ptr, const char *p_limit, u
 		t_conv_end_ptr = nil;
 		
 		// MW-2012-11-19: Add support for hex-encoded html entities.
+		// MDW-2013-04-15: Corrected 't_is_hex == true' to 't_is_hex = true'.
 		bool t_is_hex;
 		const char *t_digit_start_ptr;
 		if (t_start_ptr[1] == 'x')
-			t_is_hex == true, t_digit_start_ptr = t_start_ptr + 2;
+			t_is_hex = true, t_digit_start_ptr = t_start_ptr + 2;
 		else
 			t_is_hex = false, t_digit_start_ptr = t_start_ptr + 1;
 		
@@ -2256,12 +2257,12 @@ MCParagraph *MCField::importhtmltext(const MCString& p_data)
 				t_ptr += 1;
 
 			if (!ctxt . preformatted)
-				while(*t_ptr == '\r' || *t_ptr == '\n')
-				{
-					if (t_ptr >= t_limit)
-						break;
+			{
+				// MW-2013-06-21: [[ Valgrind ]] Only scan t_ptr if it is within the
+				//   string.
+				while(t_ptr < t_limit && (*t_ptr == '\r' || *t_ptr == '\n'))
 					t_ptr += 1;
-				}
+			}
 			else
 				t_ptr += 1;
 

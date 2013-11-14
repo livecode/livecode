@@ -63,6 +63,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacksecurity.h"
 
 #include "exec-interface.h"
+#include "graphics_util.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 MC_EXEC_DEFINE_MAKE_METHOD(Interface, CustomImagePaletteSettings, 2)
@@ -364,17 +365,17 @@ MCExecEnumTypeInfo *kMCInterfaceWindowAlignmentTypeInfo = &_kMCInterfaceWindowAl
 
 bool MCInterfaceTryToResolveObject(MCExecContext& ctxt, MCStringRef long_id, MCObjectPtr& r_object)
 {
+	ctxt.GetEP().setvalueref(long_id);
+	
 	bool t_found;
 	t_found = false;
 	
-	MCExecPoint& ep = ctxt . GetEP();
-	ep . setvalueref(long_id);
 	MCChunk *tchunk = new MCChunk(False);
 	MCerrorlock++;
-	MCScriptPoint sp(ep);
+	MCScriptPoint sp(ctxt);
 	if (tchunk->parse(sp, False) == PS_NORMAL)
 	{
-		if (tchunk->getobj(ep, r_object, True) == ES_NORMAL)
+		if (tchunk->getobj(ctxt.GetEP(), r_object, True) == ES_NORMAL)
 			t_found = true;
 	}
 	MCerrorlock--;
@@ -658,26 +659,32 @@ void MCInterfaceEvalMouseH(MCExecContext& ctxt, integer_t& r_value)
 {
 	int16_t x, y;
 	MCscreen->querymouse(x, y);
-	MCRectangle t_rect = MCdefaultstackptr->getrect();
-	r_value = x - t_rect.x;
+    
+	// IM-2013-10-10: [[ FullscreenMode ]] Update to use stack coord conversion methods
+	MCPoint t_mouseloc;
+	t_mouseloc = MCdefaultstackptr->globaltostackloc(MCPointMake(x, y));
+    r_value = t_mouseloc . x;
 }
 
 void MCInterfaceEvalMouseV(MCExecContext& ctxt, integer_t& r_value)
 {
 	int16_t x, y;
 	MCscreen->querymouse(x, y);
-	MCRectangle t_rect = MCdefaultstackptr->getrect();
-	r_value = y - t_rect.y;
+    
+	// IM-2013-10-10: [[ FullscreenMode ]] Update to use stack coord conversion methods
+	MCPoint t_mouseloc;
+	t_mouseloc = MCdefaultstackptr->globaltostackloc(MCPointMake(x, y));
+    r_value = t_mouseloc . y;
 }
 
 void MCInterfaceEvalMouseLoc(MCExecContext& ctxt, MCStringRef& r_string)
 {
 	int16_t x, y;
 	MCscreen->querymouse(x, y);
-	MCRectangle t_rect = MCdefaultstackptr->getrect();
-	if (MCStringFormat(r_string, "%d,%d", x - t_rect.x, y - t_rect.y))
-		return;
-	ctxt . Throw();
+    MCRectangle t_rect = MCdefaultstackptr -> getrect();
+    if (MCStringFormat(r_string, "%d,%d", x - t_rect . x, y - t_rect . y))
+        return;
+    ctxt . Throw();
 }
 
 //////////
@@ -916,8 +923,15 @@ void MCInterfaceEvalSelectedChunk(MCExecContext& ctxt, MCStringRef& r_string)
 		return;
 	}
 
-	if (MCactivefield -> selectedchunk(r_string))
-		return;
+    // MW-2013-08-07: [[ Bug 10689 ]] If the parent of the field is a button
+    //   then return the chunk of the button, not the embedded field.
+    if (MCactivefield -> getparent() -> gettype() == CT_BUTTON)
+    {
+        if (static_cast<MCButton *>(MCactivefield -> getparent()) -> selectedchunk(r_string));
+            return;
+    }
+    else if (MCactivefield->selectedchunk(r_string))
+        return;
 
 	ctxt . Throw();
 }
@@ -1258,45 +1272,14 @@ void MCInterfaceEvalFlushEvents(MCExecContext& ctxt, MCNameRef p_name, MCStringR
 
 void MCInterfaceEvalGlobalLoc(MCExecContext& ctxt, MCPoint p_point, MCPoint& r_global_point)
 {
-	MCRectangle t_rect;
-	t_rect = MCdefaultstackptr->getrect();
-	
-	r_global_point . x = p_point . x + t_rect . x;
-	r_global_point . y = p_point . y + t_rect . y - MCdefaultstackptr -> getscroll();
-
-/*	int16_t t_x, t_y;
-	if (!MCU_stoi2x2(p_point, t_x, t_y))
-	{
-		ctxt . LegacyThrow(EE_GLOBALLOC_NAP, p_point);
-		return;
-	}
-
-	if (MCStringFormat(r_string, "%d,%d", t_x + t_rect.x, t_y + t_rect.y - MCdefaultstackptr->getscroll()))
-		return;
-
-	ctxt.Throw();*/
+	// IM-2013-10-09: [[ FullscreenMode ]] Update to use stack coord conversion methods
+	r_global_point = MCdefaultstackptr->stacktogloballoc(p_point);
 }
 
 void MCInterfaceEvalLocalLoc(MCExecContext& ctxt, MCPoint p_point, MCPoint& r_local_point)
 {
-	MCRectangle t_rect;
-	t_rect = MCdefaultstackptr->getrect();
-	
-	r_local_point . x = p_point . x - t_rect . x;
-	r_local_point . y = p_point . y - t_rect . y + MCdefaultstackptr -> getscroll();
-
-/*	int16_t t_x, t_y;
-	if (!MCU_stoi2x2(p_point, t_x, t_y))
-	{
-		ctxt . LegacyThrow(EE_LOCALLOC_NAP, p_point);
-		return;
-	}
-
-	MCRectangle t_rect = MCdefaultstackptr->getrect();
-	if (MCStringFormat(r_string, "%d,%d", t_x - t_rect.x, t_y - t_rect.y + MCdefaultstackptr->getscroll()))
-		return;
-
-	ctxt.Throw();*/
+	// IM-2013-10-09: [[ FullscreenMode ]] Update to use stack coord conversion methods
+	r_local_point = MCdefaultstackptr->globaltostackloc(p_point);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1582,23 +1565,23 @@ void MCInterfaceEvalControlAtLoc(MCExecContext& ctxt, MCPoint p_location, MCStri
 void MCInterfaceEvalControlAtScreenLoc(MCExecContext& ctxt, MCPoint p_location, MCStringRef& r_control)
 {
 	MCStack *t_stack;
+    MCPoint t_location;
 	t_stack = MCscreen -> getstackatpoint(p_location . x, p_location . y);
-	if (t_stack != nil)
-	{
-		MCRectangle t_rect;
-		t_rect = t_stack -> getrect();
-		p_location . x -= t_rect . x;
-		p_location . y -= t_rect . y - t_stack -> getscroll();
-	}
+    
+    // IM-2013-10-11: [[ FullscreenMode ]] Update to use stack coord conversion methods
+    if (t_stack != nil)
+        t_location = t_stack->globaltostackloc(p_location);
 
+	// If the location is not over a stack, then return empty.    
 	if (t_stack == nil)
 	{
 		r_control = MCValueRetain(kMCEmptyString);
 		return;
 	}
 
+    // We now have a stack and a location in card co-ords so let's do the hittest.
 	MCObject *t_object;
-	t_object = MCInterfaceEvalControlAtLocInStack(MCdefaultstackptr, p_location);
+	t_object = MCInterfaceEvalControlAtLocInStack(t_stack, p_location);
 
 	MCAutoValueRef t_control;
 	if (t_object -> names(P_LONG_ID, &t_control))
@@ -1785,17 +1768,24 @@ void MCInterfaceExecClickCmd(MCExecContext& ctxt, uint2 p_button, MCPoint p_loca
 		ctxt . LegacyThrow(EE_CLICK_STACKNOTOPEN);
 		return;
 	}
+    
+    // IM-2013-09-23: [[ FullscreenMode ]] get / set mouseloc & clickloc in view coords
+	MCPoint t_view_clickloc;
+	t_view_clickloc = MCdefaultstackptr->view_stacktoviewloc(p_location);
+    
 	uint2 oldmstate = MCmodifierstate;
 	uint2 oldbstate = MCbuttonstate;
-	int2 oldmx = MCmousex;
-	int2 oldmy = MCmousey;
-	MCmousex = p_location . x;
-	MCmousey = p_location . y;
-	MCStack *oldms = MCmousestackptr;
+    
+    MCStack *t_old_mousestack;
+	MCPoint t_old_mouseloc;
+    
+	MCscreen->getmouseloc(t_old_mousestack, t_old_mouseloc);
+	MCscreen->setmouseloc(MCdefaultstackptr, t_view_clickloc);
+    
 	MCmodifierstate = p_modifiers;
 	MCbuttonstate |= 0x1L << (p_button - 1);
-	MCmousestackptr = MCdefaultstackptr;
-	MCdispatcher->wmfocus_stack(MCdefaultstackptr, p_location . x, p_location . y);
+    
+	MCdispatcher->wmfocus_stack(MCdefaultstackptr, t_view_clickloc.x, t_view_clickloc.y);
 	MCmodifierstate = p_modifiers;
 	MCbuttonstate |= 0x1L << (p_button - 1);
 	MCdispatcher->wmdown_stack(MCdefaultstackptr, p_button);
@@ -1803,8 +1793,9 @@ void MCInterfaceExecClickCmd(MCExecContext& ctxt, uint2 p_button, MCPoint p_loca
 	if (MCmousestackptr != NULL)
 		MCscreen->sync(MCmousestackptr->getw());
 	Boolean abort = MCscreen->wait(CLICK_INTERVAL, False, False);
-	MCclicklocx = p_location . x;
-	MCclicklocy = p_location . y;
+    
+	MCscreen->setclickloc(MCdefaultstackptr, t_view_clickloc);
+    
 	MCmodifierstate = p_modifiers;
 	MCbuttonstate &= ~(0x1L << (p_button - 1));
 	MCdispatcher->wmup_stack(MCdefaultstackptr, p_button);
@@ -1817,13 +1808,11 @@ void MCInterfaceExecClickCmd(MCExecContext& ctxt, uint2 p_button, MCPoint p_loca
 	            || (mfocused->gettype() == CT_IMAGE && mfocused->getstate(CS_DRAW)
 	                && MCdefaultstackptr->gettool(mfocused) == T_POLYGON)))
 		mfocused->doubleup(1); // cancel polygon create
-	if (oldms == NULL || oldms->getmode() != 0)
+	if (t_old_mousestack == NULL || t_old_mousestack->getmode() != 0)
 	{
-		MCmousestackptr = oldms;
-		MCmousex = oldmx;
-		MCmousey = oldmy;
-		if (oldms != NULL)
-			MCdispatcher->wmfocus_stack(oldms, oldmx, oldmy);
+		MCscreen->setmouseloc(t_old_mousestack, t_old_mouseloc);
+		if (t_old_mousestack != NULL)
+			MCdispatcher->wmfocus_stack(t_old_mousestack, t_old_mouseloc.x, t_old_mouseloc.y);
 	}
 	if (abort)
 	{
@@ -1943,15 +1932,22 @@ void MCInterfaceExecRevert(MCExecContext& ctxt)
 
 void MCInterfaceExecGroupControls(MCExecContext& ctxt, MCObjectPtr *p_controls, uindex_t p_control_count)
 {
+    // MW-2013-06-20: [[ Bug 10863 ]] Make sure all objects have this parent, after
+    //   the first object has been resolved.
+    MCObject *t_required_parent;
+    t_required_parent = nil;
+    
 	if (p_control_count != 0)
 	{
-		MCCard *t_card = NULL;
-		MCControl *controls = NULL;
+		MCCard *t_card = nil;
+		MCControl *controls = nil;
+        MCObject *t_this_parent = nil;
 		for (uindex_t i = 0; i < p_control_count; ++i)
 		{
-			if ((p_controls[i] . object) -> getparent() -> gettype() != CT_CARD)
+            t_this_parent = (p_controls[i] . object) -> getparent();
+			if (t_this_parent == nil || t_this_parent -> gettype() != CT_CARD)
 			{
-				ctxt . LegacyThrow(EE_GROUP_NOOBJ);
+				ctxt . LegacyThrow(EE_GROUP_NOTGROUPABLE);
 				return;
 			}
 			MCControl *cptr = (MCControl *)p_controls[i] . object;
@@ -1961,6 +1957,20 @@ void MCInterfaceExecGroupControls(MCExecContext& ctxt, MCObjectPtr *p_controls, 
 				ctxt . LegacyThrow(EE_GROUP_NOBG);
 				return;
 			}
+            
+            // MW-2013-06-20: [[ Bug 10863 ]] Take the parent of the first object for
+			//   future comparisons.
+			if (t_required_parent == nil)
+				t_required_parent = t_this_parent;
+            
+            // MERG-2013-05-07: [[ Bug 10863 ]] Make sure all objects have the same
+			//   parent.
+            if (t_this_parent != t_required_parent)
+            {
+                ctxt . LegacyThrow(EE_GROUP_DIFFERENTPARENT);
+				return;
+            }
+            
 			t_card = cptr->getcard(p_controls[i] . part_id);
 			t_card -> removecontrol(cptr, False, True);
 			cptr -> getstack() -> removecontrol(cptr);
@@ -3041,7 +3051,7 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 {
 	MCStack *odefaultstackptr = MCdefaultstackptr;
 
-	MCObject *t_object;
+	MCObject *t_object = nil;
 	switch (p_target->gettype())
 	{
 	case CT_STACK:
@@ -3333,17 +3343,28 @@ void MCInterfaceExecImportSnapshot(MCExecContext& ctxt, MCStringRef p_display, M
 	}
 	else	
 		t_rect = *p_region;
-	
-	MCBitmap *t_bitmap = nil;
-	t_bitmap = MCscreen->snapshot(t_rect, p_window, p_display);
+
+    // IM-2013-08-01: [[ ResIndependence ]] Resolution scale for snapshots - unless specified should produce point-scale image
+    MCGFloat t_image_scale;
+    t_image_scale = 1.0;
+    
+	MCImageBitmap *t_bitmap = nil;
+	t_bitmap = MCscreen->snapshot(t_rect, t_image_scale, p_window, p_display);
 	
 	if (t_bitmap != nil)
 	{
-		/* UNCHECKED */ MCImage *iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
-		iptr->compress(t_bitmap, true, true);
-		iptr->attach(OP_CENTER, false);
-		MCscreen->destroyimage(t_bitmap);
-	}
+        MCImageBitmapCheckTransparency(t_bitmap);
+        
+		MCImage *iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
+        if (iptr != nil)
+        {
+            // IM-2013-08-01: [[ ResIndependence ]] pass image scale when setting bitmap
+            iptr->setbitmap(t_bitmap, t_image_scale, true);
+            iptr->attach(OP_CENTER, false);
+        }
+        
+        MCImageFreeBitmap(t_bitmap);
+    }
 }
 void MCInterfaceExecImportSnapshotOfScreen(MCExecContext& ctxt, MCRectangle *p_region)
 {
@@ -3366,8 +3387,12 @@ void MCInterfaceExecImportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_targ
 		return;
 	}
 
-	MCBitmap *t_bitmap = nil;
-	t_bitmap = p_target -> snapshot(p_region, p_at_size, p_with_effects);
+    // IM-2013-08-01: [[ ResIndependence ]] Resolution scale for snapshots - unless specified should produce point-scale image
+    MCGFloat t_image_scale;
+    t_image_scale = 1.0;
+    
+	MCImageBitmap *t_bitmap = nil;
+	t_bitmap = p_target -> snapshot(p_region, p_at_size, t_image_scale, p_with_effects);
 	
 	// OK-2007-04-24: If the import rect doesn't intersect with the object, MCobject::snapshot
 	// may return null. In this case, return an error.
@@ -3377,13 +3402,22 @@ void MCInterfaceExecImportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_targ
 		return;
 	}
 	
-	if (t_bitmap != nil)
-	{
-		/* UNCHECKED */ MCImage *iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
-		iptr->compress(t_bitmap, true, true);
-		iptr->attach(OP_CENTER, false);
-		MCscreen->destroyimage(t_bitmap);
-	}
+    // MW-2013-05-20: [[ Bug 10897 ]] Object snapshot returns a premultipled
+	//   bitmap, which needs to be processed before compression.
+    
+    MCImageBitmapUnpremultiply(t_bitmap);
+    MCImageBitmapCheckTransparency(t_bitmap);
+    
+    MCImage *iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
+    
+    if (iptr != nil)
+    {
+        // IM-2013-08-01: [[ ResIndependence ]] pass image scale when setting bitmap
+        iptr->setbitmap(t_bitmap, t_image_scale, true);
+        iptr->attach(OP_CENTER, false);
+    }
+    
+    MCImageFreeBitmap(t_bitmap);
 }
 
 void MCInterfaceExecImportGetStream(MCExecContext& ctxt, MCStringRef p_filename, IO_handle &r_stream)
@@ -3494,8 +3528,11 @@ void MCInterfaceExecImportImage(MCExecContext& ctxt, MCStringRef p_filename, MCS
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCInterfaceExportBitmap(MCExecContext &ctxt, MCImageBitmap *p_bitmap, int p_format, MCInterfaceImagePaletteSettings *p_palette, bool p_dither, MCStringRef &r_data)
+void MCInterfaceExportBitmap(MCExecContext &ctxt, MCImageBitmap *p_bitmap, int p_format, MCInterfaceImagePaletteSettings *p_palette, bool p_dither, MCDataRef &r_data)
 {
+    if (p_bitmap == nil)
+        return;
+    
 	bool t_success = true;
 	
 	MCImagePaletteSettings t_palette_settings;
@@ -3519,7 +3556,7 @@ void MCInterfaceExportBitmap(MCExecContext &ctxt, MCImageBitmap *p_bitmap, int p
 	/* UNCHECKED */ t_stream = MCS_fakeopenwrite();
 	t_success = MCImageExport(p_bitmap, (Export_format)p_format, t_ps_ptr, p_dither, t_stream, nil);
 	
-	MCAutoNativeCharArray t_autobuffer;
+	MCAutoByteArray t_autobuffer;
 	void *t_buffer = nil;
 	size_t t_size = 0;
 	MCS_closetakingbuffer(t_stream, t_buffer, t_size);
@@ -3532,7 +3569,7 @@ void MCInterfaceExportBitmap(MCExecContext &ctxt, MCImageBitmap *p_bitmap, int p
 		return;
 	}
 	
-	/* UNCHECKED */ t_autobuffer.CreateStringAndRelease(r_data);
+	/* UNCHECKED */ t_autobuffer.CreateDataAndRelease(r_data);
 }
 
 void MCInterfaceExportBitmapToFile(MCExecContext& ctxt, MCImageBitmap *p_bitmap, int p_format, MCInterfaceImagePaletteSettings *p_palette, bool p_dither, MCStringRef p_filename, MCStringRef p_mask_filename)
@@ -3602,21 +3639,17 @@ MCImageBitmap* MCInterfaceGetSnapshotBitmap(MCExecContext &ctxt, MCStringRef p_d
 	else	
 		t_rect = *p_region;
 	
-	MCBitmap *t_bitmap = nil;
-	MCImageBitmap *t_image_bitmap = nil;
-	
-	t_bitmap = MCscreen->snapshot(t_rect, p_window, p_display);
+	MCImageBitmap *t_bitmap = nil;
+
+	t_bitmap = MCscreen->snapshot(t_rect, 1.0, p_window, p_display);
 	if (t_bitmap == nil)
 	{
 		ctxt . LegacyThrow(EE_EXPORT_NOSELECTED);
+        return nil;
 	}
-	else
-	{
-		/* UNCHECKED */ MCImageBitmapCreateWithOldBitmap(t_bitmap, t_image_bitmap);
-		MCscreen->destroyimage(t_bitmap);
-	}
-	
-	return t_image_bitmap;
+    
+    MCImageBitmapCheckTransparency(t_bitmap);
+	return t_bitmap;
 }
 
 bool MCInterfaceGetDitherImage(MCImage *p_image)
@@ -3627,7 +3660,7 @@ bool MCInterfaceGetDitherImage(MCImage *p_image)
 	return !p_image->getflag(F_DONT_DITHER);
 }
 
-void MCInterfaceExecExportSnapshotOfScreen(MCExecContext& ctxt, MCRectangle *p_region, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef &r_data)
+void MCInterfaceExecExportSnapshotOfScreen(MCExecContext& ctxt, MCRectangle *p_region, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data)
 {
 	MCImageBitmap *t_bitmap;
 	t_bitmap = MCInterfaceGetSnapshotBitmap(ctxt, nil, p_region, 0);
@@ -3641,7 +3674,7 @@ void MCInterfaceExecExportSnapshotOfScreenToFile(MCExecContext& ctxt, MCRectangl
 	MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_filename, p_mask_filename);
 }
 
-void MCInterfaceExecExportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef &r_data)
+void MCInterfaceExecExportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data)
 {
 	uint4 t_window;
 	if (!MCU_stoui4(p_stack, t_window))
@@ -3667,30 +3700,37 @@ void MCInterfaceExecExportSnapshotOfStackToFile(MCExecContext& ctxt, MCStringRef
 	}
 }
 
-MCImageBitmap *MCInterfaceGetSnapshotOfObjectBitmap(MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size)
+MCImageBitmap *MCInterfaceGetSnapshotOfObjectBitmap(MCExecContext &ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size)
 {
-	MCBitmap *t_bitmap = nil;
-	MCImageBitmap *t_image_bitmap = nil;
-	
-	t_bitmap = p_target -> snapshot(p_region, p_at_size, p_with_effects);
-	if (!t_bitmap == nil)
-	{
-		/* UNCHECKED */ MCImageBitmapCreateWithOldBitmap(t_bitmap, t_image_bitmap);
-		MCscreen->destroyimage(t_bitmap);
-	}
-	return t_image_bitmap;
+	MCImageBitmap *t_bitmap = nil;
+	/* UNCHECKED */ t_bitmap = p_target -> snapshot(p_region, p_at_size, 1.0, p_with_effects);
+    
+    if (t_bitmap == nil)
+    {
+        ctxt . LegacyThrow(EE_EXPORT_EMPTYRECT);
+        return nil;
+    }
+    
+    // MW-2013-05-20: [[ Bug 10897 ]] The 'snapshot' command produces a premultiplied bitmap
+    //   so unpremultiply.
+    MCImageBitmapUnpremultiply(t_bitmap);
+    MCImageBitmapCheckTransparency(t_bitmap);
+    
+	return t_bitmap;
 }
 
-void MCInterfaceExecExportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef &r_data)
+void MCInterfaceExecExportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data)
 {
 	MCImageBitmap *t_bitmap;
-	t_bitmap = MCInterfaceGetSnapshotOfObjectBitmap(p_target, p_region, p_with_effects, p_at_size);
+	t_bitmap = MCInterfaceGetSnapshotOfObjectBitmap(ctxt, p_target, p_region, p_with_effects, p_at_size);
+    
 	MCInterfaceExportBitmap(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), r_data);
 }
 void MCInterfaceExecExportSnapshotOfObjectToFile(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename)
 {
 	MCImageBitmap *t_bitmap;
-	t_bitmap = MCInterfaceGetSnapshotOfObjectBitmap(p_target, p_region, p_with_effects, p_at_size);
+	t_bitmap = MCInterfaceGetSnapshotOfObjectBitmap(ctxt, p_target, p_region, p_with_effects, p_at_size);
+    
 	MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_filename, p_mask_filename);
 }
 
@@ -3715,34 +3755,72 @@ MCImage* MCInterfaceExecExportSelectImage(MCExecContext& ctxt)
 	return (MCImage *)optr;
 }
 
-void MCInterfaceExecExportImage(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef &r_data)
+void MCInterfaceExecExportImage(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data)
 {
+    bool t_image_locked;
+    t_image_locked = false;
+    
 	if (p_target == nil)
 		p_target = MCInterfaceExecExportSelectImage(ctxt);
 	if (p_target != nil)
 	{
 		if (p_target->getrect() . width == 0 || p_target -> getrect() . height == 0)
 		{
-			MCStringCopy(kMCEmptyString, r_data);
+			r_data = MCValueRetain(kMCEmptyData);
 			return;
 		}
-
-		MCImageBitmap *t_bitmap;
-		if (p_target->lockbitmap(t_bitmap))
-			MCInterfaceExportBitmap(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(p_target), r_data);
-		p_target->unlockbitmap(t_bitmap);
+        
+        MCImageBitmap *t_bitmap;
+        
+		// IM-2013-07-26: [[ ResIndependence ]] the exported image needs to be unscaled,
+		// so if the image has a scale factor we need to get a 1:1 copy
+		if (p_target->getscalefactor() == 1.0)
+		{
+			/* UNCHECKED */ p_target->lockbitmap(t_bitmap, false);
+			t_image_locked = true;
+		}
+		else
+		{
+			/* UNCHECKED */ p_target->copybitmap(1.0, false, t_bitmap);
+		}
+        
+        MCInterfaceExportBitmap(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(p_target), r_data);
+        
+        if (t_image_locked)
+            p_target->unlockbitmap(t_bitmap);
+        else
+            MCImageFreeBitmap(t_bitmap);
 	}
 }
 void MCInterfaceExecExportImageToFile(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename)
 {
+    bool t_image_locked;
+    t_image_locked = false;
+    
 	if (p_target == nil)
 		p_target = MCInterfaceExecExportSelectImage(ctxt);
 	if (p_target != nil)
 	{
-		MCImageBitmap *t_bitmap;
-		if (p_target->lockbitmap(t_bitmap))
-			MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(p_target), p_filename, p_mask_filename);
-		p_target->unlockbitmap(t_bitmap);
+        MCImageBitmap *t_bitmap;
+        
+		// IM-2013-07-26: [[ ResIndependence ]] the exported image needs to be unscaled,
+		// so if the image has a scale factor we need to get a 1:1 copy
+		if (p_target->getscalefactor() == 1.0)
+		{
+			/* UNCHECKED */ p_target->lockbitmap(t_bitmap, false);
+			t_image_locked = true;
+		}
+		else
+		{
+			/* UNCHECKED */ p_target->copybitmap(1.0, false, t_bitmap);
+		}
+        
+        MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(p_target), p_filename, p_mask_filename);
+        
+        if (t_image_locked)
+            p_target->unlockbitmap(t_bitmap);
+        else
+            MCImageFreeBitmap(t_bitmap);
 	}
 }
 
@@ -4151,7 +4229,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 		
 		// MW-2011-10-17: [[ Bug 9811 ]] Make sure we configure the new card now.
 		MCRedrawDisableScreenUpdates();
-		t_stack -> configure(True);
+		t_stack -> view_configure(True);
 		MCRedrawEnableScreenUpdates();
 			
 		Boolean t_abort;

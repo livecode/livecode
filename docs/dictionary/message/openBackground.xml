@@ -1,0 +1,50 @@
+<doc>
+  <legacy_id>2284</legacy_id>
+  <name>openBackground</name>
+  <type>message</type>
+  <syntax>
+    <example>openBackground <i>backgroundID</i></example>
+  </syntax>
+  <library></library>
+  <objects>
+    <card/>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Navigation &amp; Hypertext</category>
+  </classification>
+  <references>
+    <message tag="preOpenBackground">preOpenBackground Message</message>
+    <message tag="startup">startup Message</message>
+    <message tag="closeBackground">closeBackground Message</message>
+    <message tag="newBackground">newBackground Message</message>
+    <message tag="openCard">openCard Message</message>
+    <message tag="openStack">openStack Message</message>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary>Sent to the <glossary tag="current card">current card</glossary> right after you go from a <keyword tag="card">card</keyword> that does not have the <command tag="group">group</command> to a <keyword tag="card">card</keyword> that does.</summary>
+  <examples>
+    <example>on openBackground theBackgroundID <code><i>-- checkmark the current background</i></code></p><p>  put lineOffset(the short name of group ID theBackgroundID, \</p><p>     button "Forms") into thisBgLineNumber <code><i>-- button "Forms" is a menu</i></code></p><p>  put "!c" before line thisBgLineNumber of button "Forms"</p><p>end openBackground</example>
+  </examples>
+  <description>
+    <p>Handle the <b>openBackground</b> <keyword tag="message box">message</keyword> to change a <glossary tag="group">group's</glossary> <glossary tag="object">objects</glossary>, or perform other updates, when a <keyword tag="card">card</keyword> with the <command tag="group">group</command> on it is visited.</p><p/><p><b>Parameters:</b></p><p>The <i>backgroundID</i> is the ID number of the <object tag="group">background</object> being opened.</p><p/><p><b>Comments:</b></p><p>The <b>openBackground</b> <keyword tag="message box">message</keyword> is sent to the <keyword tag="card">card</keyword>, then (if the <keyword tag="card">card</keyword> does not <glossary tag="trap">trap</glossary> the <keyword tag="message box">message</keyword>) along the <glossary tag="message path">message path</glossary> to each <command tag="group">group</command> on the <keyword tag="card">card</keyword>. This means that if there is more than one <command tag="group">group</command> on the <keyword tag="card">card</keyword>, the <b>openBackground</b> <keyword tag="message box">message</keyword> is sent to each one.</p><p/><p>The <b>openBackground</b> <keyword tag="message box">message</keyword> is sent after the destination <keyword tag="card">card</keyword> is visible. To make changes that take effect before the <keyword tag="card">card</keyword> becomes visible on the screen, use the <message tag="preOpenBackground">preOpenBackground</message> <keyword tag="message box">message</keyword> instead.</p><p/><p>The actual navigation is not triggered by the <b>openBackground</b> <keyword tag="message box">message</keyword>, so <glossary tag="trap">trapping</glossary> the <keyword tag="message box">message</keyword> and not allowing it to <control_st tag="pass">pass</control_st> does not prevent the <keyword tag="card">card</keyword> with the <command tag="group">group</command> from opening.</p>
+  </description>
+</doc>

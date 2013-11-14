@@ -1,0 +1,47 @@
+<doc>
+  <legacy_id>1716</legacy_id>
+  <name>pageIncrement</name>
+  <type>property</type>
+  <syntax>
+    <example>set the pageIncrement of <i>scrollbar</i> to <i>pageAmount</i></example>
+  </syntax>
+  <library></library>
+  <objects>
+    <scrollbar/>
+  </objects>
+  <synonyms>
+    <synonym>pageInc</synonym>
+  </synonyms>
+  <classification>
+  </classification>
+  <references>
+    <message tag="scrollbarPageDec">scrollbarPageDec Message</message>
+    <message tag="scrollbarPageInc">scrollbarPageInc Message</message>
+    <property tag="lineIncrement">lineIncrement Property</property>
+    <property tag="repeatRate">repeatRate Property</property>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+  </classes>
+  <security>
+  </security>
+  <summary>Specifies how far a <keyword tag="scrollbar">scrollbar</keyword> moves when the user clicks somewhere in its gray region.</summary>
+  <examples>
+    <example>set the pageIncrement of scrollbar "Content" to 200</example>
+  </examples>
+  <description>
+    <p>Use the <b>pageIncrement</b> <glossary tag="property">property</glossary> to change the amount that is scrolled when the gray region is clicked.</p><p/><p><b>Value:</b></p><p>The <b>pageIncrement</b> of a scrollbar is a number between the <glossary tag="scrollbar">scrollbar's</glossary> <property tag="startValue">startValue</property> and <property tag="endValue">endValue</property>.</p><p/><p>By default, the <b>pageIncrement</b> <glossary tag="property">property</glossary> of newly created <glossary tag="scrollbar">scrollbars</glossary> is set to 8192.</p><p/><p><b>Comments:</b></p><p>When the user clicks in the gray region above or below the scrolling thumb (to the left or right, for a horizontal scrollbar), the scrollbar moves one page up or down (or to the left or right). Use the <b>pageIncrement</b> <glossary tag="property">property</glossary> to specify how far the scrolling thumb moves. The amont the scrollbar moves will equal the <b>pageIncrement</b> minus the <property tag="lineIncrement">lineIncrement</property>.
+Setting the <b>pageIncrement</b> to be less than the <property tag="lineIncrement">lineIncrement</property> causes the scrollbar to run backwards.
+</p><p/><p>The <b>startValue</b> and <property tag="endValue">endValue</property> <property tag="properties">properties</property> set the scale used for the <b>pageIncrement</b>, so for example, if the <b>pageIncrement</b> is set to one-tenth of the difference between the <property tag="startValue">startValue</property> and <property tag="endValue">endValue</property>, clicking the gray region moves the <keyword tag="scrollbar">scrollbar</keyword> one-tenth of its length.</p>
+  </description>
+</doc>

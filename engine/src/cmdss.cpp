@@ -50,7 +50,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 MCCompact::~MCCompact()
 {
-	delete target;
+delete target;
 }
 
 Parse_stat MCCompact::parse(MCScriptPoint &sp)
@@ -66,10 +66,10 @@ Parse_stat MCCompact::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCCompact::exec(MCExecPoint &ep)
+void MCCompact::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCCompact */ LEGACY_EXEC
-MCObject *optr;
+	MCObject *optr;
 	uint4 parid;
 
 	if (target->getobj(ep, optr, parid, True) != ES_NORMAL)
@@ -89,28 +89,21 @@ MCObject *optr;
 	return ES_NORMAL;
 #endif /* MCCompact */
 
-
 	MCObject *optr;
 	uint4 parid;
 
-	if (target->getobj(ep, optr, parid, True) != ES_NORMAL)
-	{
-		MCeerror->add(EE_COMPACT_NOTARGET, line, pos);
-		return ES_ERROR;
+    if (!target->getobj(ctxt, optr, parid, True))
+    {
+        ctxt . LegacyThrow(EE_COMPACT_NOTARGET);
+        return;
 	}
 	if (optr->gettype() != CT_STACK)
-	{
-		MCeerror->add(EE_COMPACT_NOTASTACK, line, pos);
-		return ES_ERROR;
+    {
+        ctxt . LegacyThrow(EE_COMPACT_NOTASTACK);
+        return;
 	}
-	MCStack *sptr = (MCStack *)optr;
-	MCExecContext ctxt(ep);
-	MCLegacyExecCompactStack(ctxt, sptr);
-
-	if (!ctxt . HasError()) 
-		return ES_NORMAL;
-	
-	return ctxt . Catch(line, pos);
+    MCStack *sptr = (MCStack *)optr;
+    MCLegacyExecCompactStack(ctxt, sptr);
 }
 
 void MCCompact::compile(MCSyntaxFactoryRef ctxt)
@@ -519,42 +512,47 @@ MCStack *MCGo::findstack(MCExecPoint &ep, Chunk_term etype, MCCard *&cptr)
 }
 #endif /* MCGo::findstack */
 
-MCStack *MCGo::findstack(MCExecPoint &ep, Chunk_term etype, MCCard *&cptr)
+MCStack *MCGo::findstack(MCExecContext &ctxt, MCStringRef p_value, Chunk_term etype, MCCard *&cptr)
 {
 	MCStack *sptr = NULL;
-	uint4 offset;
-	if (MCU_offset(SIGNATURE, ep.getsvalue(), offset) || (ep . getsvalue() . getlength() > 8 && strncmp(ep . getsvalue() . getstring(), "REVO", 4) == 0))
+    uint4 offset;
+    if (MCStringFirstIndexOf(p_value, MCSTR(SIGNATURE), 0, kMCCompareExact, offset)
+            || (MCStringGetLength(p_value) > 8 && MCStringBeginsWithCString(p_value, (char_t*)"REVO", kMCCompareExact)))
 	{
-		IO_handle stream = MCS_fakeopen(ep.getsvalue());
+        IO_handle stream = MCS_fakeopen(MCStringGetOldString(p_value));
 		if (MCdispatcher->readfile(NULL, NULL, stream, sptr) != IO_NORMAL)
 		{
 			MCS_close(stream);
 			if (MCresult->isclear())
-				MCresult->sets("can't build stack from string");
+                ctxt . SetTheResultToCString("can't build stack from string");
             return nil;
 		}
 		MCS_close(stream);
 		return sptr;
 	}
 	if (etype == CT_STACK)
-		return NULL;
-	if (etype == CT_ID)
-		sptr = MCdefaultstackptr->findstackid(ep.getuint4());
+        return NULL;
 	else
-		sptr = MCdefaultstackptr->findstackname_oldstring(ep.getsvalue());
+    {
+        MCNewAutoNameRef t_name;
+        MCNameCreate(p_value, &t_name);
+        sptr = MCdefaultstackptr->findstackname(*t_name);
+    }
+
 	if (sptr != NULL)
 		return sptr;
+
 	MCObject *objptr;
 	MCChunk *tchunk = new MCChunk(False);
 	MCerrorlock++;
-	MCScriptPoint sp(ep);
+    MCScriptPoint sp(p_value);
 	Parse_stat stat = tchunk->parse(sp, False);
 	if (stat == PS_NORMAL)
 	{
 		uint4 parid;
-		if (tchunk->getobj(ep, objptr, parid, True) == ES_NORMAL)
-			stat = PS_NORMAL;
-		else
+        if (tchunk->getobj(ctxt, objptr, parid, True))
+            stat = PS_NORMAL;
+        else
 			stat = PS_ERROR;
 	}
 	MCerrorlock--;
@@ -576,11 +574,11 @@ MCStack *MCGo::findstack(MCExecPoint &ep, Chunk_term etype, MCCard *&cptr)
 	}
     else
 		if (MCresult->isclear())
-			MCresult->sets("no such card");
+            ctxt . SetTheResultToCString("no such card");
 	return sptr;
 }
 
-Exec_stat MCGo::exec(MCExecPoint &ep)
+void MCGo::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCGo */ LEGACY_EXEC
 	MCStack *sptr = MCdefaultstackptr;
@@ -628,10 +626,10 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 			}
 			break;
 		case CT_THIS:
-		case CT_EXPRESSION:
-		case CT_ID:
+        case CT_EXPRESSION:
+        case CT_ID:
 			if (stack->etype == CT_THIS)
-				sptr = MCdefaultstackptr;
+                sptr = MCdefaultstackptr;
 			else
 			{
 				if (stack->startpos->eval(ep) != ES_NORMAL)
@@ -785,7 +783,7 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 				}
 				cptr = (MCCard *)sptr->getchild(CT_THIS, MCnullmcstring, CT_CARD);
 			}
-			break;
+            break;
 		default:
 			sptr->clearbackground();
 			fprintf(stderr, "Go: ERROR no card type %d\n", card->etype);
@@ -958,7 +956,7 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 		
 		// MW-2011-10-17: [[ Bug 9811 ]] Make sure we configure the new card now.
 		MCRedrawDisableScreenUpdates();
-		sptr -> configure(True);
+		sptr -> view_configure(True);
 		MCRedrawEnableScreenUpdates();
 			
 		Boolean t_abort;
@@ -983,12 +981,12 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 	MCControl *bptr = NULL;
 	MCCard *cptr = NULL;
 
-    MCresult->clear(False);
+    ctxt . SetTheResultToEmpty();
     
 	if (stack == NULL && background == NULL && card == NULL)
 	{
-		MCeerror->add(EE_GO_NODEST, line, pos);
-		return ES_ERROR;
+        ctxt . LegacyThrow(EE_GO_NODEST);
+        return;
 	}
 
 	bool t_is_home;
@@ -1009,39 +1007,54 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 		case CT_ID:
 			if (stack->etype == CT_THIS)
 				sptr = MCdefaultstackptr;
-			else
+            else if (stack -> etype == CT_ID)
+            {
+                uinteger_t t_stack_id;
+                if (!ctxt . EvalExprAsUInt(stack -> startpos, EE_GO_BADSTACKEXP, t_stack_id))
+                    return;
+
+                sptr = MCdefaultstackptr->findstackid(t_stack_id);
+            }
+            else
 			{
-				if (stack->startpos->eval(ep) != ES_NORMAL)
-				{
-					MCeerror->add(EE_GO_BADSTACKEXP, line, pos);
-					return ES_ERROR;
-				}
-				sptr = findstack(ep, stack->etype, cptr);
+                MCAutoStringRef t_value;
+                if (!ctxt . EvalExprAsStringRef(stack -> startpos, EE_GO_BADSTACKEXP, &t_value))
+                    return;
+
+                sptr = findstack(ctxt, *t_value, stack->etype, cptr);
 			}
+
 			if (sptr != nil && stack->next != NULL)
 			{
 				switch (stack->next->etype)
 				{
 				case CT_ID:
+                {
+                    uinteger_t t_stack_id;
+                    if (!ctxt . EvalExprAsUInt(stack -> next -> startpos, EE_CHUNK_BADSTACKEXP, t_stack_id))
+                        return;
+
+                    sptr = sptr -> findsubstackid(t_stack_id);
+                }
+                    break;
 				case CT_EXPRESSION:
-					if (stack->next->startpos->eval(ep) != ES_NORMAL)
-					{
-						MCeerror->add(EE_CHUNK_BADSTACKEXP, line, pos);
-						return ES_ERROR;
-					}
-					if (stack->next->etype == CT_ID)
-						sptr = sptr->findsubstackid(ep.getuint4());
-					else
-						sptr = sptr->findsubstackname_oldstring(ep.getsvalue());
+                {
+                    MCNewAutoNameRef t_name;
+                    if (!ctxt . EvalExprAsNameRef(stack -> next -> startpos, EE_CHUNK_BADSTACKEXP, &t_name))
+                        return;
+
+                    sptr = sptr -> findsubstackname(*t_name);
+                }
 					break;
 				default:
-					MCeerror->add(EE_CHUNK_BADSTACKEXP, line, pos);
-					return ES_ERROR;
+                    ctxt . LegacyThrow(EE_CHUNK_BADSTACKEXP);
+                    return;
 				}
 			}
 			break;
 		default:
-			return ES_ERROR;
+            ctxt . Throw();
+            return;
 		}
 	}
 	
@@ -1054,16 +1067,13 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 			break;
 		case CT_ID:
 		case CT_EXPRESSION:
-			if (background->startpos->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_GO_BADBACKGROUNDEXP, line, pos);
-				return ES_ERROR;
-			}
-			{
-				MCAutoStringRef t_string;
-				/* UNCHECKED */ ep.copyasstringref(&t_string);
-				bptr = sptr->getbackground(background->etype, *t_string, CT_GROUP);
-			}
+        {
+            MCAutoStringRef t_string;
+            if (!ctxt . EvalExprAsStringRef(background -> startpos, EE_GO_BADBACKGROUNDEXP, &t_string))
+                return;
+
+            bptr = sptr->getbackground(background->etype, *t_string, CT_GROUP);
+        }
 			break;
 		default:
 			break;
@@ -1087,23 +1097,16 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 			{
             case CT_BACKWARD:
             case CT_FORWARD:
-                if (card->startpos != NULL)
-                {
-                    if (card->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-                    {
-                        MCeerror->add(EE_GO_BADCARDEXP, line, pos);
-                        return ES_ERROR;
-                    }
-                    n = ep.getnvalue();
-                }
-                else
-                    n = 1.0;
+                if (!ctxt . EvalOptionalExprAsDouble(card -> startpos, 1.0, EE_GO_BADCARDEXP, n))
+                    return;
+
                 break;
             case CT_START:
             case CT_FINISH:
                 break;
             default:
-                return ES_ERROR;
+                ctxt . Throw();
+                return;
 			}
 			break;
 		case CT_ORDINAL:
@@ -1114,21 +1117,21 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 		case CT_ID:
 		case CT_EXPRESSION:
 		{
-			if (card->startpos->eval(ep) != ES_NORMAL)
-			{
+            MCAutoStringRef t_exp;
+            if (!ctxt . EvalExprAsStringRef(card -> startpos, EE_GO_BADCARDEXP, &t_exp))
+            {
                 sptr -> clearbackground();
-				MCeerror->add(EE_GO_BADCARDEXP, line, pos);
-				return ES_ERROR;
-			}
-			MCAutoStringRef t_exp;
-			/* UNCHECKED */ ep . copyasstringref(&t_exp);
+                return;
+            }
+
 			cptr = sptr->getchild(card->etype, *t_exp, card->otype);
 		}
 			break;
 		default:
             sptr -> clearbackground();
 			fprintf(stderr, "Go: ERROR no card type %d\n", card->etype);
-			return ES_ERROR;
+            ctxt . Throw();
+            return;
 		}
         sptr -> clearbackground();
 	}
@@ -1137,18 +1140,13 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
             cptr = (MCCard *)sptr->getchild(CT_THIS, kMCEmptyString, CT_CARD);
     
 	MCAutoStringRef t_window;
-	if (window != NULL && !thisstack)
-	{
-		if (window->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_GO_BADWINDOWEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&t_window);
+    if (!thisstack)
+    {
+        if (!ctxt . EvalOptionalExprAsNullableStringRef(window, EE_GO_BADWINDOWEXP, &t_window))
+            return;
 	}
 
-	ep . setline(line);
-	MCExecContext ctxt(ep);
+    ctxt . SetLine(line);
 	if (t_is_home)
 		MCInterfaceExecGoHome(ctxt, cptr);
 	else if (t_is_recent)
@@ -1180,12 +1178,7 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 	else if (window != nil)
 		MCInterfaceExecGoCardInWindow(ctxt, cptr, *t_window, visible == True, thisstack == True);
 	else
-		MCInterfaceExecGoCardAsMode(ctxt, cptr, mode, visible == True, thisstack == True);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+        MCInterfaceExecGoCardAsMode(ctxt, cptr, mode, visible == True, thisstack == True);
 }
 
 void MCGo::compile(MCSyntaxFactoryRef ctxt)
@@ -1450,7 +1443,7 @@ Parse_stat MCHide::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCHide::exec(MCExecPoint &ep)
+void MCHide::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCHide */ LEGACY_EXEC
 	switch (which)
@@ -1532,11 +1525,9 @@ Exec_stat MCHide::exec(MCExecPoint &ep)
 	default:
 		break;
 	}
-	return ES_NORMAL; 
+	return ES_NORMAL;
 #endif /* MCHide */
 
-
-	MCExecContext ctxt(ep);
 	switch (which)
 	{
 	case SO_GROUPS:
@@ -1544,10 +1535,10 @@ Exec_stat MCHide::exec(MCExecPoint &ep)
 		break;
 	case SO_OBJECT:
 		MCObjectPtr t_target;
-		if (object->getobj(ep, t_target, True) != ES_NORMAL)
+        if (!object->getobj(ctxt, t_target, True))
 		{
-			MCeerror->add(EE_HIDE_NOOBJ, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_HIDE_NOOBJ);
+            return;
 		}
 		if (effect != NULL)
 			MCInterfaceExecHideObjectWithEffect(ctxt, t_target, effect);
@@ -1565,45 +1556,41 @@ Exec_stat MCHide::exec(MCExecPoint &ep)
 		break;
 	default:
 		break;
-	}
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    }
 }
 
 void MCHide::compile(MCSyntaxFactoryRef ctxt)
 {
 	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
+    
 	switch (which)
 	{
-	case SO_GROUPS:
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHideGroupsMethodInfo);
-		break;
-	case SO_OBJECT:
-		object -> compile_object_ptr(ctxt);
-		if (effect != nil)
-		{
-			effect -> compile_effect(ctxt);
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHideObjectWithEffectMethodInfo);
-		}
-		else
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHideObjectMethodInfo);
-		break;
-	case SO_MENU:
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHideMenuBarMethodInfo);
-		break;
-	case SO_TASKBAR:
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHideTaskBarMethodInfo);
-		break;
-	case SO_MESSAGE:
-		MCSyntaxFactoryExecMethod(ctxt, kMCIdeExecHideMessageBoxMethodInfo);
-		break;
-	default:
-		break;
+        case SO_GROUPS:
+            MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHideGroupsMethodInfo);
+            break;
+        case SO_OBJECT:
+            object -> compile_object_ptr(ctxt);
+            if (effect != nil)
+            {
+                effect -> compile_effect(ctxt);
+                MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHideObjectWithEffectMethodInfo);
+            }
+            else
+                MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHideObjectMethodInfo);
+            break;
+        case SO_MENU:
+            MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHideMenuBarMethodInfo);
+            break;
+        case SO_TASKBAR:
+            MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHideTaskBarMethodInfo);
+            break;
+        case SO_MESSAGE:
+            MCSyntaxFactoryExecMethod(ctxt, kMCIdeExecHideMessageBoxMethodInfo);
+            break;
+        default:
+            break;
 	}
-
+    
 	MCSyntaxFactoryEndStatement(ctxt);
 }
 
@@ -1668,7 +1655,7 @@ Parse_stat MCLock::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCLock::exec(MCExecPoint &ep)
+void MCLock::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCLock */ LEGACY_EXEC
 	switch(which)
@@ -1734,9 +1721,6 @@ Exec_stat MCLock::exec(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCLock */
-
-	
-	MCExecContext ctxt(ep);
 	
 	switch(which)
 	{
@@ -1769,31 +1753,17 @@ Exec_stat MCLock::exec(MCExecPoint &ep)
 	case LC_SCREEN_FOR_EFFECT:
 		{
 			MCRectangle t_region;
-			MCRectangle *t_region_ptr;
-			if (rect != nil)
-			{
-				if (rect -> eval(ep) != ES_NORMAL)
-				{
-					MCeerror -> add(EE_LOCK_BADRECT, line, pos);
-					return ES_ERROR;
-				}
-				ep . copyaslegacyrectangle(t_region);
-				t_region_ptr = &t_region;
-			}
-			else
-				t_region_ptr = nil;
+            MCRectangle *t_region_ptr;
+            t_region_ptr = &t_region;
+            if (!ctxt . EvalOptionalExprAsRectangle(rect, nil, EE_LOCK_BADRECT, t_region_ptr))
+                return;
 			
 			MCInterfaceExecLockScreenForEffect(ctxt, t_region_ptr);
 		}
 		break;
 	default:
 		break;
-	}
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-	
-	return ctxt . Catch(line, pos);
+    }
 }
 
 void MCLock::compile(MCSyntaxFactoryRef ctxt)
@@ -1883,10 +1853,10 @@ Parse_stat MCPop::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCPop::exec(MCExecPoint &ep)
+void MCPop::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCPop */ LEGACY_EXEC
-MCCard *cptr = MCcstack->popcard();
+	MCCard *cptr = MCcstack->popcard();
 	if (dest == NULL)
 	{
 		MCStack *sptr = cptr->getstack();
@@ -1919,25 +1889,16 @@ MCCard *cptr = MCcstack->popcard();
 	return ES_NORMAL;
 #endif /* MCPop */
 
-
-	MCExecContext ctxt(ep);
 	if (dest == NULL) 
 		MCInterfaceExecPopToLast(ctxt);
 	else
 	{
 		MCAutoStringRef t_element;
 		MCInterfaceExecPop(ctxt, &t_element);
-		if (dest->set(ep, prep, *t_element) != ES_NORMAL)
-		{
-			MCeerror->add(EE_POP_CANTSET, line, pos);
-			return ES_ERROR;
-		}
-	}
 
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+        if (!dest->set(ctxt, prep, *t_element))
+            ctxt . LegacyThrow(EE_POP_CANTSET);
+    }
 
 }
 
@@ -2000,10 +1961,10 @@ Parse_stat MCPush::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCPush::exec(MCExecPoint &ep)
+void MCPush::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCPush */ LEGACY_EXEC
-MCObject *optr;
+	MCObject *optr;
 	uint4 parid;
 	if (card == NULL)
 		if (recent)
@@ -2027,9 +1988,7 @@ MCObject *optr;
 	return ES_NORMAL;
 #endif /* MCPush */
 
-
-	MCExecContext ctxt(ep);
-	if (card == NULL)
+    if (card == NULL)
 	{
 		if (recent)
 			MCInterfaceExecPushRecentCard(ctxt);
@@ -2040,23 +1999,18 @@ MCObject *optr;
 	{
 		MCObject *optr;
 		uint4 parid;
-		if (card->getobj(ep, optr, parid, True) != ES_NORMAL)
+        if (!card->getobj(ctxt, optr, parid, True))
 		{
-			MCeerror->add(EE_PUSH_NOTARGET, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_PUSH_NOTARGET);
+            return;
 		}
 		if (optr->gettype() != CT_CARD)
 		{
-			MCeerror->add(EE_PUSH_NOTACARD, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_PUSH_NOTACARD);
+            return;
 		}
 		MCInterfaceExecPushCard(ctxt, (MCCard *)optr);
-	}
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    }
 }
 
 void MCPush::compile(MCSyntaxFactoryRef ctxt)
@@ -2115,10 +2069,10 @@ Parse_stat MCSave::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCSave::exec(MCExecPoint &ep)
+void MCSave::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCSave */ LEGACY_EXEC
-MCObject *optr;
+	MCObject *optr;
 	uint4 parid;
 
 	MCresult->clear(False);
@@ -2156,40 +2110,29 @@ MCObject *optr;
 	return ES_NORMAL;
 #endif /* MCSave */
 
-
-	MCExecContext ctxt(ep);
-	MCObject *optr;
+    MCObject *optr;
 	uint4 parid;
 
-	if (target->getobj(ep, optr, parid, True) != ES_NORMAL)
+    if (!target->getobj(ctxt, optr, parid, True))
 	{
-		MCeerror->add(EE_SAVE_NOTARGET, line, pos);
-		return ES_ERROR;
+        ctxt . LegacyThrow(EE_SAVE_NOTARGET);
+        return;
 	}
 	if (optr->gettype() != CT_STACK)
 	{
-		MCeerror->add(EE_SAVE_NOTASTACK, line, pos);
-		return ES_ERROR;
+        ctxt . LegacyThrow(EE_SAVE_NOTASTACK);
+        return;
 	}
 	if (filename != NULL)
 	{
 		MCAutoStringRef t_filename;
-		if (filename->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add
-			(EE_SAVE_BADNOFILEEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&t_filename);
+        if (!ctxt . EvalExprAsStringRef(filename, EE_SAVE_BADNOFILEEXP, &t_filename))
+            return;
+
 		MCInterfaceExecSaveStackAs(ctxt, (MCStack *)optr, *t_filename);
 	}
 	else
-		MCInterfaceExecSaveStack(ctxt, (MCStack*) optr);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+        MCInterfaceExecSaveStack(ctxt, (MCStack*) optr);
 }
 
 void MCSave::compile(MCSyntaxFactoryRef ctxt)
@@ -2320,7 +2263,7 @@ Parse_stat MCShow::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCShow::exec(MCExecPoint &ep)
+void MCShow::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCShow */ LEGACY_EXEC
 	uint2 count;
@@ -2444,8 +2387,6 @@ Exec_stat MCShow::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCShow */
 
-	
-	MCExecContext ctxt(ep);
 	switch (which)
 	{
 	case SO_GROUPS:
@@ -2459,42 +2400,39 @@ Exec_stat MCShow::exec(MCExecPoint &ep)
 		break;
 	case SO_CARD:
 	{
-		if (ton == NULL || ton->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-		{
-			MCeerror->add(EE_SHOW_BADNUMBER, line, pos);
-			return ES_ERROR;
-		}
-		uint2 t_count = ep.getuint2();
+        uinteger_t t_count;
+
+        if (ton == nil)
+        {
+            ctxt . LegacyThrow(EE_SHOW_BADNUMBER);
+            return;
+        }
+        else if (!ctxt . EvalOptionalExprAsUInt(ton, 0, EE_SHOW_BADNUMBER, t_count))
+            return;
+
 		MCInterfaceExecShowCards(ctxt, t_count);
 	}
 		break;
 	case SO_PICTURE:
 		break;
 	case SO_OBJECT:
+    {
 		MCObjectPtr t_target;
-		if (ton->getobj(ep, t_target, True) != ES_NORMAL)
+        if (!ton->getobj(ctxt, t_target, True))
 		{
-			MCeerror->add(EE_SHOW_NOOBJ, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_SHOW_NOOBJ);
+            return;
 		}
 		MCPoint t_location;
-		MCPoint *t_location_ptr;
-		if (location != nil)
-		{
-			if (location->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_SHOW_NOLOCATION, line, pos);
-				return ES_ERROR;
-			}
-			/* UNCHECKED */ ep . copyaspoint(t_location);
-			t_location_ptr = &t_location;
-		}
-		else
-			t_location_ptr = nil;
+        MCPoint *t_location_ptr = &t_location;
+        if (!ctxt . EvalOptionalExprAsPoint(location, nil, EE_SHOW_NOLOCATION, t_location_ptr))
+            return;
+
 		if (effect != NULL)
 			MCInterfaceExecShowObjectWithEffect(ctxt, t_target, t_location_ptr, effect);
 		else
 			MCInterfaceExecShowObject(ctxt, t_target, t_location_ptr);
+    }
 		break;
 	case SO_MENU:
 		MCInterfaceExecShowMenuBar(ctxt);
@@ -2507,12 +2445,7 @@ Exec_stat MCShow::exec(MCExecPoint &ep)
 		break;
 	default:
 		break;
-	}
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    }
 }
 
 void MCShow::compile(MCSyntaxFactoryRef ctxt)
@@ -2631,7 +2564,7 @@ Parse_stat MCSubwindow::parse(MCScriptPoint &sp)
 }
 
 
-Exec_stat MCSubwindow::exec(MCExecPoint &ep)
+void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCSubwindow */ LEGACY_EXEC
 	MCObject *optr;
@@ -2858,24 +2791,21 @@ Exec_stat MCSubwindow::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCSubwindow */
 
-
-	MCExecContext ctxt(ep);
 	MCObject *optr;
 	MCAutoStringRef optr_name;
 	uint4 parid;
 	MCresult->clear(False);
-	MCerrorlock++;
-	if (target->getobj(ep, optr, parid, True) != ES_NORMAL
+    MCerrorlock++;
+
+    // Need to have a second MCExecContext as getobj may throw a non-fatal error
+    MCExecContext ctxt2(ctxt);
+    if (!target -> getobj(ctxt2, optr, parid, True)
 	        || optr->gettype() != CT_BUTTON && optr->gettype() != CT_STACK)
 	{
 		MCerrorlock--;
-		if (target->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_SUBWINDOW_BADEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&optr_name);
-	}
+        if (!ctxt . EvalExprAsStringRef(target, EE_SUBWINDOW_BADEXP, &optr_name))
+            return;
+    }
 	else
 		MCerrorlock--;
 
@@ -2883,24 +2813,14 @@ Exec_stat MCSubwindow::exec(MCExecPoint &ep)
 	{
 		if (mode != WM_POPUP)
 		{
-			MCeerror -> add(EE_SUBWINDOW_NOSTACK, line, pos, ep.getsvalue());
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_SUBWINDOW_NOSTACK, *optr_name);
+            return;
 		}
 
 		MCPoint t_location;
-		MCPoint *t_location_ptr;
-		if (at != NULL)
-		{
-			if (at->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_SUBWINDOW_BADEXP, line, pos);
-				return ES_ERROR;
-			}
-			ep . copyaspoint(t_location);
-			t_location_ptr = &t_location;
-		}
-		else
-			t_location_ptr = nil;
+        MCPoint *t_location_ptr = &t_location;
+        if (!ctxt . EvalOptionalExprAsPoint(at, nil, EE_SUBWINDOW_BADEXP, t_location_ptr))
+            return;
 
 		MCInterfaceExecPopupButton(ctxt, (MCButton *)optr, t_location_ptr);
 	}
@@ -2922,15 +2842,8 @@ Exec_stat MCSubwindow::exec(MCExecPoint &ep)
 			{
 				MCerrorlock++;
 				MCAutoStringRef t_parent_name;
-				if (parent != NULL)
-				{
-					if (parent->eval(ep) != ES_NORMAL)
-					{
-						MCeerror->add(EE_SUBWINDOW_BADEXP, line, pos);
-						return ES_ERROR;
-					}
-					/* UNCHECKED */ ep . copyasstringref(&t_parent_name);
-				}
+                if (!ctxt . EvalOptionalExprAsNullableStringRef(parent, EE_SUBWINDOW_BADEXP, &t_parent_name))
+                    return;
 
 				if (mode == WM_SHEET)
 				{
@@ -2945,26 +2858,21 @@ Exec_stat MCSubwindow::exec(MCExecPoint &ep)
 					Object_pos t_align = OP_CENTER;
 					if (at != NULL)
 					{
-						if (at->eval(ep) != ES_NORMAL)
-						{
-							MCeerror->add(EE_SUBWINDOW_BADEXP, line, pos);
-							return ES_ERROR;
-						}
-						MCAutoStringRef t_position_data;
-						/* UNCHECKED */ ep . copyasstringref(&t_position_data);
+                        MCAutoStringRef t_position_data;
+                        if (!ctxt . EvalExprAsStringRef(at, EE_SUBWINDOW_BADEXP, &t_position_data))
+                            return;
+
 						MCAutoStringRef t_position;
 						MCAutoStringRef t_alignment;
 						uindex_t t_delimiter;
-						if (aligned != NULL)
-						{
-							if (aligned->eval(ep) != ES_NORMAL)
-							{
-								MCeerror->add(EE_SUBWINDOW_BADEXP, line, pos);
-								return ES_ERROR;
-							}
-							/* UNCHECKED */ ep . copyasstringref(&t_alignment);
-							MCStringCopy(*t_position_data, &t_position);
-						}
+
+                        if (aligned != NULL)
+                        {
+                            if (!ctxt . EvalExprAsStringRef(aligned, EE_SUBWINDOW_BADEXP, &t_alignment))
+                                return;
+
+                            MCStringCopy(*t_position_data, &t_position);
+                        }
 						else if (MCStringFirstIndexOfChar(*t_position_data, ',', 0, kMCCompareCaseless, t_delimiter))
 						{
 							MCStringCopySubstring(*t_position_data, MCRangeMake(0, t_delimiter), &t_position);
@@ -3005,19 +2913,10 @@ Exec_stat MCSubwindow::exec(MCExecPoint &ep)
 		case WM_OPTION:
 		{
 			MCPoint t_location;
-			MCPoint *t_location_ptr;
-			if (at != NULL)
-			{
-				if (at->eval(ep) != ES_NORMAL)
-				{
-					MCeerror->add(EE_SUBWINDOW_BADEXP, line, pos);
-					return ES_ERROR;
-				}
-				ep . copyaspoint(t_location);
-				t_location_ptr = &t_location;
-			}
-			else
-				t_location_ptr = nil;
+            MCPoint *t_location_ptr = &t_location;
+            if (!ctxt . EvalOptionalExprAsPoint(at, nil, EE_SUBWINDOW_BADEXP, t_location_ptr))
+                return;
+
 			if (optr == nil)
 				MCInterfaceExecPopupStackByName(ctxt, *optr_name, t_location_ptr, mode);
 			else
@@ -3028,12 +2927,7 @@ Exec_stat MCSubwindow::exec(MCExecPoint &ep)
 			fprintf(stderr, "Subwindow: ERROR bad mode\n");
 			break;
 		}
-	}
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    }
 }
 
 void MCSubwindow::compile(MCSyntaxFactoryRef ctxt)
@@ -3152,7 +3046,7 @@ Parse_stat MCUnlock::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCUnlock::exec(MCExecPoint &ep)
+void MCUnlock::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCUnlock */ LEGACY_EXEC
 	switch (which)
@@ -3195,8 +3089,6 @@ Exec_stat MCUnlock::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCUnlock */
 
-	
-	MCExecContext ctxt(ep);
 	switch (which)
 	{
 		case LC_COLORMAP:
@@ -3228,12 +3120,7 @@ Exec_stat MCUnlock::exec(MCExecPoint &ep)
 			break;
 		default:
 			break;
-	}
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-	
-	return ctxt . Catch(line, pos);
+    }
 }
 
 void MCUnlock::compile(MCSyntaxFactoryRef ctxt)

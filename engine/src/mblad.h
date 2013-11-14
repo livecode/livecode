@@ -106,7 +106,7 @@ private:
 void MCAdInitialize(void);
 void MCAdFinalize(void);
 
-const char *MCAdGetInneractiveKey(void);
+MCStringRef MCAdGetInneractiveKey(void);
 bool MCAdInneractiveKeyIsNil(void);
 bool MCAdSetInneractiveKey(MCStringRef p_new_key);
 

@@ -281,7 +281,7 @@ IO_handle MCAndroidSystem::OpenFile(MCStringRef p_path, intenum_t p_mode, Boolea
 		if (p_mode != kMCSOpenFileModeRead)
 			return NULL;
         
-		if (!apk_get_file_length(p_path, t_size) || !apk_get_file_offset(p_path, t_offset))
+		if (!apk_get_file_length(*t_apk_path, t_size) || !apk_get_file_offset(*t_apk_path, t_offset))
 			return NULL;
         
         MCAutoStringRefAsUTF8String t_utf8_mccmd;

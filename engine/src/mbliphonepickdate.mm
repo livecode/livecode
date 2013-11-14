@@ -39,7 +39,9 @@ float MCIPhoneGetNativeControlScale(void);
 UIViewController *MCIPhoneGetViewController(void);
 
 ////////////////////////////////////////////////////////////////////////////////
-@interface MCIPhonePickDateWheelDelegate : UIViewController <UIPickerViewDelegate, UIPickerViewDataSource, UIActionSheetDelegate, UITableViewDelegate> 
+
+// MM-2013-09-23: [[ iOS7 Support ]] Added missing delegates implemented in order to appease llvm 5.0.
+@interface MCIPhonePickDateWheelDelegate : UIViewController <UIPickerViewDelegate, UIPickerViewDataSource, UIActionSheetDelegate, UITableViewDelegate, UIPopoverControllerDelegate>
 {
 	bool iSiPad;
 	bool m_running;
@@ -202,7 +204,7 @@ UIViewController *MCIPhoneGetViewController(void);
 			self.contentSizeForViewInPopover = CGSizeMake(320,216);
 		// create the popover controller
 		popoverController = [[t_popover alloc] initWithContentViewController:self];
-		[popoverController presentPopoverFromRect:MCRectangleToLogicalCGRect(p_button_rect)
+		[popoverController presentPopoverFromRect:MCUserRectToLogicalCGRect(p_button_rect)
 										   inView:MCIPhoneGetView()
 						 permittedArrowDirections:UIPopoverArrowDirectionAny
 										 animated:YES];

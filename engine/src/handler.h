@@ -65,6 +65,11 @@ class MCHandler
 	Boolean array;
 	Boolean is_private;
 	uint1 type;
+	
+	// MW-2013-11-08: [[ RefactorIt ]] The 'it' variable is now always defined
+	//   and this varref is used by things that want to set it.
+	MCVarref *m_it;
+	
 	static Boolean gotpass;
 public:
 	MCHandler(uint1 htype, bool p_is_private = false);
@@ -107,15 +112,14 @@ public:
 	Exec_stat getvarnames(MCExecPoint &, Boolean all);
 	Exec_stat eval_ctxt(MCExecContext& ctxt, MCValueRef& r_value);
 	void eval(MCExecContext& ctxt, MCStringRef p_expression, MCValueRef& r_value);
-	Exec_stat eval(MCExecPoint &);
+	//Exec_stat eval(MCExecPoint &);
 	uint4 linecount();
 	void deletestatements(MCStatement *statements);
 	void doscript(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line = 0, uinteger_t p_pos = 0);
-	Exec_stat doscript(MCExecPoint &ep, uint2 line, uint2 pos);
 
 	// Used by the externals API, this method returns the current incarnation of
 	// the 'it' variable in this handler - if any.
-	MCVariable *getit(void);
+	MCVarref *getit(void);
 
 	void clearpass()
 	{

@@ -26,11 +26,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "uidc.h"
 #include "util.h"
 #include "image.h"
+#include "image_rep.h"
 
 #include "osspec.h"
 
 #include "exec.h"
-#include "pxmaplst.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -132,6 +132,13 @@ void MCGraphicsEvalIsNotWithin(MCExecContext& ctxt, MCPoint p_point, MCRectangle
 
 void MCGraphicsExecFlipSelection(MCExecContext& ctxt, bool p_horizontal)
 {
+    // MW-2013-07-01: [[ Bug 10999 ]] Throw an error if the image is not editable.
+    if (MCactiveimage->getflag(F_HAS_FILENAME))
+    {
+        ctxt . LegacyThrow(EE_FLIP_NOTIMAGE);
+        return;
+    }
+    
 	if (MCactiveimage != nil)
 		MCactiveimage->flipsel(p_horizontal);
 }
@@ -144,7 +151,10 @@ void MCGraphicsExecFlipImage(MCExecContext& ctxt, MCImage *p_image, bool p_horiz
 	MCGraphicsExecFlipSelection(ctxt, p_horizontal);
 
 	MCcurtool = MColdtool;
-	MCactiveimage -> endsel();
+    
+    // IM-2013-06-28: [[ Bug 10999 ]] ensure MCactiveimage is not null when calling endsel() method
+    if (MCactiveimage != nil)
+        MCactiveimage -> endsel();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -193,29 +203,30 @@ void MCGraphicsExecCropImage(MCExecContext& ctxt, MCImage *p_image, MCRectangle 
 
 void MCGraphicsExecResetPaint(MCExecContext& ctxt) 
 {
-		MCeditingimage = nil;
-
-		MCbrush = 8;
-		MCspray = 31;
-		MCeraser = 2;
-		MCcentered = False;
-		MCfilled = False;
-		MCgrid = False;
-		MCgridsize = 8;
-		MClinesize = 1;
-		MCmultiple = False;
-		MCmultispace = 1;
-		MCpattern = 1;
-		MCpolysides = 4;
-		MCroundends = False;
-		MCslices = 16;
-		MCmagnification = 8;
-		MCpatterns->freepat(MCpenpm);
-		MCpencolor.red = MCpencolor.green = MCpencolor.blue = 0x0;
-		MCscreen->alloccolor(MCpencolor);
-		MCpatterns->freepat(MCbrushpm);
-		MCbrushcolor.red = MCbrushcolor.green = MCbrushcolor.blue = 0xFFFF;
-		MCscreen->alloccolor(MCbrushcolor);
+    MCeditingimage = nil;
+    
+    MCbrush = 8;
+    MCspray = 31;
+    MCeraser = 2;
+    MCcentered = False;
+    MCfilled = False;
+    MCgrid = False;
+    MCgridsize = 8;
+    MClinesize = 1;
+    MCmultiple = False;
+    MCmultispace = 1;
+    MCpattern = 1;
+    MCpolysides = 4;
+    MCroundends = False;
+    MCslices = 16;
+    MCmagnification = 8;
+    MCpatternlist->freepat(MCpenpattern);
+    MCpencolor.red = MCpencolor.green = MCpencolor.blue = 0x0;
+    MCscreen->alloccolor(MCpencolor);
+    
+    MCpatternlist->freepat(MCbrushpattern);
+    MCbrushcolor.red = MCbrushcolor.green = MCbrushcolor.blue = 0xFFFF;
+    MCscreen->alloccolor(MCbrushcolor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

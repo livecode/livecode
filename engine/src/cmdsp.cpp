@@ -36,6 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 
 #include "syntax.h"
+#include "graphics_util.h"
 
 MCPrint::MCPrint()
 {
@@ -287,41 +288,22 @@ Parse_stat MCPrint::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCPrint::evaluate_src_rect(MCExecPoint& ep, MCPoint& r_from, MCPoint& r_to)
+bool MCPrint::evaluate_src_rect(MCExecContext& ctxt, MCPoint& r_from, MCPoint& r_to)
 {
-	if (from -> eval(ep) != ES_NORMAL)
-	{
-		MCeerror -> add(EE_PRINT_CANTGETCOORD, line, pos);
-		return ES_ERROR;
-	}
+    MCPoint t_from, t_to;
+    if (!ctxt . EvalExprAsPoint(from, EE_PRINT_CANTGETCOORD, t_from))
+        return false;
 
-	MCPoint t_from;
-	if (!ep . copyaslegacypoint(t_from))
-	{
-		MCeerror -> add(EE_PRINT_NAP, line, pos, ep.getsvalue());
-		return ES_ERROR;
-	}
+    if (!ctxt . EvalExprAsPoint(to, EE_PRINT_CANTGETCOORD, t_to))
+        return false;
 
-	if (to -> eval(ep) != ES_NORMAL)
-	{
-		MCeerror -> add(EE_PRINT_CANTGETCOORD, line, pos);
-		return ES_ERROR;
-	}
+    r_from = t_from;
+    r_to = t_to;
 
-	MCPoint t_to;
-	if (!ep . copyaslegacypoint(t_to))
-	{
-		MCeerror -> add(EE_PRINT_NAP, line, pos, ep . getsvalue());
-		return ES_ERROR;
-	}
-
-	r_from = t_from;
-	r_to = t_to;
-
-	return ES_NORMAL;
+    return true;
 }
 
-Exec_stat MCPrint::exec(MCExecPoint &ep)
+void MCPrint::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCPrint */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_PRINT)
@@ -662,32 +644,15 @@ Exec_stat MCPrint::exec(MCExecPoint &ep)
 	return t_exec_stat;
 #endif /* MCPrint */
 
-
-	MCExecContext ctxt(ep);
-
 	if (mode == PM_ANCHOR)
-	{
-		if (from -> eval(ep) != ES_NORMAL)
-		{
-			MCeerror -> add(EE_DO_BADEXP, line, pos);
-			return ES_ERROR;
-		}
-
-		MCAutoStringRef t_name;
-		/* UNCHECKED */ ep . copyasstringref(&t_name);
-
-		if (rect -> eval(ep) != ES_NORMAL)
-		{
-			MCeerror -> add(EE_PRINTANCHOR_BADLOCATION, line, pos);
-			return ES_ERROR;
-		}
+    {
+        MCAutoStringRef t_name;
+        if (!ctxt . EvalExprAsStringRef(from, EE_DO_BADEXP, &t_name))
+            return;
 		
 		MCPoint t_location;
-		if (!ep . copyaslegacypoint(t_location))
-		{
-			MCeerror -> add(EE_PRINTANCHOR_LOCATIONNAP, line, pos, ep . getsvalue());
-			return ES_ERROR;
-		}
+        if (!ctxt . EvalExprAsPoint(rect, EE_PRINTANCHOR_BADLOCATION, t_location))
+            return;
 
 		MCPrintingExecPrintAnchor(ctxt, *t_name, t_location);
 	}
@@ -699,90 +664,60 @@ Exec_stat MCPrint::exec(MCExecPoint &ep)
 		else if (mode == PM_LINK_URL)
 			t_type = kMCPrinterLinkURI;
 		else
-			t_type = kMCPrinterLinkUnspecified;
-
-		if (to -> eval(ep) != ES_NORMAL)
-		{
-			MCeerror -> add(EE_PRINTLINK_BADDEST, line, pos);
-			return ES_ERROR;
-		}
+            t_type = kMCPrinterLinkUnspecified;
 
 		MCAutoStringRef t_target;
-		/* UNCHECKED */ ep . copyasstringref(&t_target);
-
-		if (rect -> eval(ep) != ES_NORMAL)
-		{
-			MCeerror -> add(EE_PRINTLINK_BADAREA, line, pos);
-			return ES_ERROR;
-		}
+        if (!ctxt . EvalExprAsStringRef(to, EE_PRINTLINK_BADDEST, &t_target))
+            return;
 
 		MCRectangle t_area;
-		if (!ep . copyaslegacyrectangle(t_area))
-		{
-			MCeerror->add(EE_PRINTLINK_AREANAR, line, pos, ep . getsvalue());
-			return ES_ERROR;
-		}
+        if (!ctxt . EvalExprAsRectangle(rect, EE_PRINTLINK_BADAREA, t_area))
+            return;
 
 		MCPrintingExecPrintLink(ctxt, (int)t_type, *t_target, t_area);
 	}
 	else if (mode == PM_BOOKMARK || mode == PM_UNICODE_BOOKMARK)
-	{
-		if (from->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_PRINTBOOKMARK_BADTITLE, line, pos, ep.getsvalue());
-			return ES_ERROR;
-		}
-
+    {
 		MCAutoValueRef t_title;
-		if (mode != PM_UNICODE_BOOKMARK)
-			/* UNCHECKED */ ep . copyasstringref((MCStringRef&)&t_title);
-		else
-			/* UNCHECKED */ ep . copyasdataref((MCDataRef&)&t_title);
+        if (mode != PM_UNICODE_BOOKMARK)
+        {
+            if (!ctxt . EvalExprAsStringRef(from, EE_PRINTBOOKMARK_BADTITLE, (MCStringRef&)&t_title))
+                return;
+        }
+        else
+        {
+            if (!ctxt . EvalExprAsDataRef(from, EE_PRINTBOOKMARK_BADTITLE, (MCDataRef&)&t_title))
+                return;
+        }
 
 		uint32_t t_level;
-		t_level = 0;
-		if (to != nil)
-		{
-			if (to->eval(ep) != ES_NORMAL ||
-				ep.ton() != ES_NORMAL)
-			{
-				MCeerror->add(EE_PRINTBOOKMARK_BADLEVEL, line, pos, ep.getsvalue());
-				return ES_ERROR;
-			}
-			else
-				t_level = ep.getuint4();
-		}
+        if (!ctxt . EvalOptionalExprAsUInt(to, 0, EE_PRINTBOOKMARK_BADLEVEL, t_level))
+            return;
 
 		MCPoint t_location;
-		t_location . x = t_location . y = 0;
-		if (rect != nil)
-		{
-			if (rect->eval(ep) != ES_NORMAL ||
-				ep . copyaslegacypoint(t_location))
-			{
-				MCeerror->add(EE_PRINTBOOKMARK_BADAT, line, pos, ep.getsvalue());
-				return ES_ERROR;
-			}
-		}
+        t_location . x = t_location . y = 0;
+
+        MCPoint *t_location_ptr;
+        t_location_ptr = &t_location;
+        if (!ctxt . EvalOptionalExprAsPoint(rect, t_location_ptr, EE_PRINTBOOKMARK_BADAT, t_location_ptr))
+            return;
 
 		bool t_initially_closed;
 		t_initially_closed = false;
 		if (initial_state != nil)
 		{
-			if (initial_state->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_PRINTBOOKMARK_BADINITIAL, line, pos, ep.getsvalue());
-				return ES_ERROR;
-			}
+            MCAutoStringRef t_state;
+            if (!ctxt . EvalExprAsStringRef(initial_state, EE_PRINTBOOKMARK_BADINITIAL, &t_state))
+                return;
 
-			if (ep . getsvalue() == "closed")
+            if (MCStringIsEqualToCString(*t_state, "closed", kMCCompareExact))
 				t_initially_closed = true;
-			else if (ep . getsvalue() == "open")
+            else if (MCStringIsEqualToCString(*t_state, "open", kMCCompareExact))
 				t_initially_closed = false;
 			else
 			{
-				MCeerror->add(EE_PRINTBOOKMARK_BADINITIAL, line, pos, ep.getsvalue());
-				return ES_ERROR;
+                ctxt . LegacyThrow(EE_PRINTBOOKMARK_BADINITIAL);
+                return;
 			}
 		}
 		else
@@ -790,9 +725,9 @@ Exec_stat MCPrint::exec(MCExecPoint &ep)
 
 
 		if (mode != PM_UNICODE_BOOKMARK)
-			MCPrintingExecPrintBookmark(ctxt, (MCStringRef)*t_title, t_location, t_level, t_initially_closed);
+            MCPrintingExecPrintBookmark(ctxt, (MCStringRef)*t_title, t_location, t_level, t_initially_closed);
 		else
-			MCPrintingExecPrintUnicodeBookmark(ctxt, (MCDataRef)*t_title, t_location, t_level, t_initially_closed);
+            MCPrintingExecPrintUnicodeBookmark(ctxt, (MCDataRef)*t_title, t_location, t_level, t_initially_closed);
 	}
 	else if (mode == PM_BREAK)
 	{
@@ -806,10 +741,11 @@ Exec_stat MCPrint::exec(MCExecPoint &ep)
 		{
 			MCObject *optr;
 			uint32_t parid;
-			if (target -> getobj(ep, optr, parid, True) != ES_NORMAL || optr -> gettype() != CT_STACK)
+            if (!target -> getobj(ctxt, optr, parid, True)
+                    || optr -> gettype() != CT_STACK)
 			{
-				MCeerror -> add(EE_PRINT_NOTARGET, line, pos);
-				return ES_ERROR;
+                ctxt . LegacyThrow(EE_PRINT_NOTARGET);
+                return;
 			}
 
 			t_stack = (MCStack *)optr;
@@ -817,8 +753,8 @@ Exec_stat MCPrint::exec(MCExecPoint &ep)
 
 		MCPoint t_area_from, t_area_to;
 		if (from != nil &&
-			evaluate_src_rect(ep, t_area_from, t_area_to) == ES_ERROR)
-			return ES_ERROR;
+                !evaluate_src_rect(ctxt, t_area_from, t_area_to))
+            return;
 
 		if (from == nil)
 			MCPrintingExecPrintAllCards(ctxt, t_stack, mode == PM_MARKED);
@@ -831,15 +767,15 @@ Exec_stat MCPrint::exec(MCExecPoint &ep)
 		if (target != NULL)
 		{
 			uint32_t parid;
-			if (target -> getobj(ep, t_object, parid, True) != ES_NORMAL)
+            if (!target -> getobj(ctxt, t_object, parid, True))
 			{
-				MCeerror -> add(EE_PRINT_NOTARGET, line, pos);
-				return ES_ERROR;
+                ctxt . LegacyThrow(EE_PRINT_NOTARGET);
+                return;
 			}
 			if (t_object -> gettype() != CT_CARD && t_object -> gettype() != CT_STACK)
 			{
-				MCeerror -> add(EE_PRINT_NOTACARD, line, pos);
-				return ES_ERROR;
+                ctxt . LegacyThrow(EE_PRINT_NOTACARD);
+                return;
 			}
 		}
 		else
@@ -847,8 +783,8 @@ Exec_stat MCPrint::exec(MCExecPoint &ep)
 
 		MCPoint t_from, t_to;
 		if (from != nil &&
-			evaluate_src_rect(ep, t_from, t_to) == ES_ERROR)
-			return ES_ERROR;
+                !evaluate_src_rect(ctxt, t_from, t_to))
+            return;
 
 		if (t_object -> gettype() == CT_STACK)
 		{
@@ -866,18 +802,9 @@ Exec_stat MCPrint::exec(MCExecPoint &ep)
 		}
 		else
 		{
-			if (rect -> eval(ep) != ES_NORMAL)
-			{
-				MCeerror -> add(EE_PRINT_CANTGETRECT, line, pos);
-				return ES_ERROR;
-			}
-
-			MCRectangle t_dst_area;
-			if (!ep . copyaslegacyrectangle(t_dst_area))
-			{
-				MCeerror->add(EE_PRINT_NAR, line, pos, ep . getsvalue());
-				return ES_ERROR;
-			}
+            MCRectangle t_dst_area;
+            if (!ctxt . EvalExprAsRectangle(rect, EE_PRINT_CANTGETRECT, t_dst_area))
+                return;
 
 			if (from == nil)
 				MCPrintingExecPrintCardIntoRect(ctxt, (MCCard *)t_object, t_dst_area);
@@ -887,30 +814,20 @@ Exec_stat MCPrint::exec(MCExecPoint &ep)
 	}
 	else if (mode == PM_SOME)
 	{
-		if (target -> eval(ep) != ES_NORMAL || ep . ton() != ES_NORMAL)
-		{
-			MCeerror -> add(EE_PRINT_CANTGETCOUNT, line, pos);
-			return ES_ERROR;
-		}
-
-		integer_t t_count;
-		t_count = ep . getint4();
+        integer_t t_count;
+        if (!ctxt . EvalExprAsInt(target, EE_PRINT_CANTGETCOUNT, t_count))
+            return;
 
 		MCPoint t_from, t_to;
 		if (from != nil &&
-			evaluate_src_rect(ep, t_from, t_to) == ES_ERROR)
-			return ES_ERROR;
+            !evaluate_src_rect(ctxt, t_from, t_to))
+            return;
 
 		if (from == nil)
 			MCPrintingExecPrintSomeCards(ctxt, t_count);
 		else
 			MCPrintingExecPrintRectOfSomeCards(ctxt, t_count, t_from, t_to);
-	}
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    }
 }
 
 void MCPrint::compile(MCSyntaxFactoryRef ctxt)

@@ -66,7 +66,6 @@ const char *MCdialogtypes[] =
 
 MCAsk::~MCAsk(void)
 {
-	delete it;
 	delete title;
 
 	switch(mode)
@@ -101,7 +100,6 @@ Parse_stat MCAsk::parse(MCScriptPoint &sp)
 	const LT *t_literal;
 
 	initpoint(sp);
-	getit(sp, it);
 
 	if (sp . next(t_type) == PS_NORMAL)
 		if (sp . lookup(SP_ASK, t_literal) == PS_NORMAL)
@@ -258,13 +256,11 @@ static bool evaluate_stringref(MCExecPoint &ep, MCExpression *p_expr, uint16_t p
 
 void MCAsk::exec_ctxt(class MCExecContext& ctxt)
 {
-	Exec_errors t_error = EE_UNDEFINED;
-	ctxt . SetIt(it);
     
     MCAutoStringRef t_title;
     if (!ctxt . EvalOptionalExprAsNullableStringRef(title, EE_ANSWER_BADTITLE, &t_title))
         return;
-    
+
 	switch(mode)
 	{
         case AT_PASSWORD:
