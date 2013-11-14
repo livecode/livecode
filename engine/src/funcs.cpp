@@ -1576,7 +1576,7 @@ Parse_stat MCChunkOffset::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCChunkOffset::eval(MCExecPoint &ep)
+void MCChunkOffset::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCChunkOffset */ LEGACY_EXEC
 	uint4 start = 0;
@@ -1654,59 +1654,37 @@ Exec_stat MCChunkOffset::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCChunkOffset */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_chunk, t_string;
-	uinteger_t t_start = 0;
-	uinteger_t t_result;
-
-	if (part->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_OFFSET_BADPART, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_chunk);
-
-	if (whole->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_OFFSET_BADWHOLE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_string);
-
-	if (offset != NULL)
-	{
-		if (offset->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-		{
-			MCeerror->add(EE_OFFSET_BADOFFSET, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep.copyasuint(t_start);
-	}
+    MCAutoStringRef t_chunk;
+    if (!ctxt . EvalExprAsStringRef(part, EE_OFFSET_BADPART, &t_chunk))
+        return;
+    
+    MCAutoStringRef t_string;
+    if (!ctxt . EvalExprAsStringRef(whole, EE_OFFSET_BADWHOLE, &t_string))
+        return;
+    
+    uinteger_t t_start;
+    if (!ctxt . EvalOptionalExprAsUInt(offset, 0, EE_OFFSET_BADOFFSET, t_start))
+        return;
 
 	switch (delimiter)
 	{
 	case CT_ITEM:
-		MCStringsEvalItemOffset(ctxt, *t_chunk, *t_string, t_start, t_result);
+		MCStringsEvalItemOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
+        r_value . type = kMCExecValueTypeUInt;
 		break;
 	case CT_LINE:
-		MCStringsEvalLineOffset(ctxt, *t_chunk, *t_string, t_start, t_result);
+		MCStringsEvalLineOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
+        r_value . type = kMCExecValueTypeUInt;
 		break;
 	case CT_WORD:
-		MCStringsEvalWordOffset(ctxt, *t_chunk, *t_string, t_start, t_result);
+		MCStringsEvalWordOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
+        r_value . type = kMCExecValueTypeUInt;
 		break;
 	case CT_CHARACTER:
-		MCStringsEvalOffset(ctxt, *t_chunk, *t_string, t_start, t_result);
+		MCStringsEvalOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
+        r_value . type = kMCExecValueTypeUInt;
 		break;
 	}
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
 }
 
 void MCChunkOffset::compile(MCSyntaxFactoryRef ctxt)
@@ -2775,7 +2753,7 @@ Parse_stat MCExists::parse(MCScriptPoint &sp, Boolean the)
 	return parsetarget(sp, the, True, object);
 }
 
-Exec_stat MCExists::eval(MCExecPoint &ep)
+void MCExists::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCExists */ LEGACY_EXEC
 	MCObject *optr;
@@ -2786,19 +2764,8 @@ Exec_stat MCExists::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCExists */
 
-
-	MCExecContext ctxt(ep);
-
-	bool t_exists;
-	MCInterfaceEvalThereIsAnObject(ctxt, object, t_exists);
-
-	if (!ctxt . HasError())
-	{
-		ep . setboolean(t_exists);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
+	MCInterfaceEvalThereIsAnObject(ctxt, object, r_value . bool_value);
+    r_value . type = kMCExecValueTypeBool;
 }
 
 void MCExists::compile(MCSyntaxFactoryRef ctxt)
@@ -3179,7 +3146,7 @@ Parse_stat MCFontStyles::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCFontStyles::eval(MCExecPoint &ep)
+void MCFontStyles::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCFontStyles */ LEGACY_EXEC
 	if (fontname->eval(ep) != ES_NORMAL)
@@ -3198,32 +3165,15 @@ Exec_stat MCFontStyles::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCFontStyles */
 
-
-	if (fontname->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_FONTSTYLES_BADFONTNAME, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_fontname;
-	/* UNCHECKED */ ep.copyasstringref(&t_fontname);
-
-	uint2 fsize;
-	if (fontsize->eval(ep) != ES_NORMAL
-	        || ep.getuint2(fsize, line, pos, EE_FONTSTYLES_BADFONTSIZE) != ES_NORMAL)
-		return ES_ERROR;
-
-	MCAutoStringRef t_result;
-	MCTextEvalFontStyles(ctxt, *t_fontname, fsize, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
+    MCAutoStringRef t_fontname;
+    if (!ctxt . EvalExprAsStringRef(fontname, EE_FONTSTYLES_BADFONTNAME, &t_fontname))
+        return;
+    uinteger_t fsize;
+    if (!ctxt . EvalExprAsUInt(fontsize, EE_FONTSTYLES_BADFONTSIZE, fsize))
+        return;
+    
+	MCTextEvalFontStyles(ctxt, *t_fontname, fsize, r_value . stringref_value);
+    r_value . type = kMCExecValueTypeStringRef;
 }
 
 void MCFontStyles::compile(MCSyntaxFactoryRef ctxt)

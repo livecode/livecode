@@ -259,7 +259,7 @@ public:
 	}
 	virtual ~MCChunkOffset();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -600,7 +600,7 @@ public:
 	}
 	virtual ~MCExists();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 
 	virtual void compile(MCSyntaxFactoryRef);
 };
@@ -713,7 +713,7 @@ public:
 	}
 	virtual ~MCFontStyles();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	
 	virtual void compile(MCSyntaxFactoryRef);
 };
