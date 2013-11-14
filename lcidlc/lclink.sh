@@ -65,14 +65,14 @@ fi
 
 # Build the 'dylib' form of the external - this is used by simulator builds, and as
 # a dependency check for device builds.
-"$PLATFORM_DEVELOPER_BIN_DIR/g++" -dynamiclib $ARCHS -isysroot "$SDKROOT" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $SYMBOL_ARGS $SYMBOLS $DEPS
+"$DEVELOPER_BIN_DIR/g++" -dynamiclib $ARCHS -isysroot "$SDKROOT" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $SYMBOL_ARGS $SYMBOLS $DEPS
 if [ $? != 0 ]; then
     echo "error: linking step of external dylib build failed, probably due to missing framework or library references - check the contents of the $PRODUCT_NAME.ios file"
     exit $?
 fi
 
 # Build the 'object file' form of the external - this is used by device builds.
-"$PLATFORM_DEVELOPER_BIN_DIR/g++" -nodefaultlibs -Wl,-r -Wl,-x $ARCHS -isysroot "$SDKROOT" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $DEPS_SECTION -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME
+"$DEVELOPER_BIN_DIR/g++" -nodefaultlibs -Wl,-r -Wl,-x $ARCHS -isysroot "$SDKROOT" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $DEPS_SECTION -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME
 if [ $? != 0 ]; then
     echo "error: linking step of external object build failed"
     exit $?
