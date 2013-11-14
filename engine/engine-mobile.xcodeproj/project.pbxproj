@@ -271,7 +271,6 @@
 		7695688A1822771000779255 /* libgraphicsmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 76EF329318217FC600FAC195 /* libgraphicsmobile.a */; };
 		769568911822776B00779255 /* libskiamobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 769568901822775200779255 /* libskiamobile.a */; };
 		76956893182277B200779255 /* cgimageutil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76956892182277AE00779255 /* cgimageutil.cpp */; };
-		769568951822796400779255 /* iphone_test.livecode in Resources */ = {isa = PBXBuildFile; fileRef = 769568941822791000779255 /* iphone_test.livecode */; };
 		76B298B2180448AF0053EC38 /* exec-interface-field-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76B298B1180448AF0053EC38 /* exec-interface-field-chunk.cpp */; };
 		76EF32BA182263E000FAC195 /* foundation-legacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF32B7182263DB00FAC195 /* foundation-legacy.cpp */; };
 		76EF32D918226C7300FAC195 /* sysunxrandom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF323E182145CA00FAC195 /* sysunxrandom.cpp */; };
@@ -322,7 +321,6 @@
 		BE940433175F6418003EAB87 /* exec-mail.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042B175F6308003EAB87 /* exec-mail.cpp */; };
 		BE940434175F6418003EAB87 /* exec-orientation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042C175F6308003EAB87 /* exec-orientation.cpp */; };
 		BE940435175F6418003EAB87 /* exec-sensor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042D175F6308003EAB87 /* exec-sensor.cpp */; };
-		BE940438175F6CD4003EAB87 /* mbliphonemail.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D84DF4F132D13C0004604F7 /* mbliphonemail.mm */; };
 		BE94043B175F74D2003EAB87 /* exec-ad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE940439175F74D2003EAB87 /* exec-ad.cpp */; };
 		BE94043F175F9D8C003EAB87 /* exec-calendar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94043E175F9D8B003EAB87 /* exec-calendar.cpp */; };
 		BE9459491761E250008408DE /* exec-sound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE9459481761E219008408DE /* exec-sound.cpp */; };
@@ -912,7 +910,6 @@
 		768D66C41765E11300F203A3 /* exec-pick.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-pick.cpp"; path = "src/exec-pick.cpp"; sourceTree = "<group>"; };
 		7695688B1822775100779255 /* libskia-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libskia-mobile.xcodeproj"; path = "../thirdparty/libskia/libskia-mobile.xcodeproj"; sourceTree = "<group>"; };
 		76956892182277AE00779255 /* cgimageutil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cgimageutil.cpp; path = src/cgimageutil.cpp; sourceTree = "<group>"; };
-		769568941822791000779255 /* iphone_test.livecode */ = {isa = PBXFileReference; lastKnownFileType = file; path = iphone_test.livecode; sourceTree = "<group>"; };
 		76B298B1180448AF0053EC38 /* exec-interface-field-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-field-chunk.cpp"; path = "src/exec-interface-field-chunk.cpp"; sourceTree = "<group>"; };
 		76EF321F182124AA00FAC195 /* exec-strings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "exec-strings.h"; path = "src/exec-strings.h"; sourceTree = "<group>"; };
 		76EF323E182145CA00FAC195 /* sysunxrandom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxrandom.cpp; path = src/sysunxrandom.cpp; sourceTree = "<group>"; };
@@ -1351,7 +1348,6 @@
 				4D82FCE51714863800C48403 /* template-remote-notification-entitlements.xcent */,
 				4D82FCE61714864100C48403 /* template-remote-notification-store-entitlements.xcent */,
 				4D82FCE71714864F00C48403 /* template-ResourceRules.plist */,
-				769568941822791000779255 /* iphone_test.livecode */,
 				4D7E3A581281835D00E7F80A /* Default.png */,
 				4CD038F216C8FE1700EBCCBA /* Default-568h@2x.png */,
 				4D82FCD8171485CA00C48403 /* mobile-template.plist */,
@@ -2112,7 +2108,6 @@
 			files = (
 				4D7E3A591281835D00E7F80A /* Default.png in Resources */,
 				4CD038F316C8FE1700EBCCBA /* Default-568h@2x.png in Resources */,
-				769568951822796400779255 /* iphone_test.livecode in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2441,7 +2436,6 @@
 				BE940433175F6418003EAB87 /* exec-mail.cpp in Sources */,
 				BE940434175F6418003EAB87 /* exec-orientation.cpp in Sources */,
 				BE940435175F6418003EAB87 /* exec-sensor.cpp in Sources */,
-				BE940438175F6CD4003EAB87 /* mbliphonemail.mm in Sources */,
 				BE94043B175F74D2003EAB87 /* exec-ad.cpp in Sources */,
 				768D66C317622FE200F203A3 /* exec-nativecontrol.cpp in Sources */,
 				768D66C61765E11300F203A3 /* exec-pick.cpp in Sources */,
@@ -2593,6 +2587,9 @@
 					"-Wl,-x",
 					"-Wl,-exported_symbol",
 					"-Wl,_main",
+					"-ObjC",
+					"-force_load",
+					"${BUILT_PRODUCTS_DIR}/libfoundationmobile.a",
 				);
 				PRODUCT_NAME = "standalone-mobile-community";
 				PROVISIONING_PROFILE = "";
@@ -2625,6 +2622,11 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = "rsrc/standalone-mobile-Info.plist";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-force_load",
+					"${BUILT_PRODUCTS_DIR}/libfoundationmobile.a",
+				);
 				PRODUCT_NAME = "standalone-mobile-community";
 				PROVISIONING_PROFILE = "";
 			};
