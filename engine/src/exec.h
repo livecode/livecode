@@ -92,7 +92,7 @@ template<> struct MCExecValueTraits<MCValueRef>
 	{
 		self . type = kMCExecValueTypeValueRef;
 		self . valueref_value = p_value;
-	}
+    }
 };
 
 template<> struct MCExecValueTraits<MCBooleanRef>
@@ -165,6 +165,11 @@ template<> struct MCExecValueTraits<MCStringRef>
 		self . type = kMCExecValueTypeStringRef;
 		self . stringref_value = p_value;
 	}
+
+    inline static void free(out_type self)
+    {
+        MCValueRelease(self);
+    }
 };
 
 template<> struct MCExecValueTraits<integer_t>
@@ -177,6 +182,8 @@ template<> struct MCExecValueTraits<integer_t>
 		self . type = kMCExecValueTypeInt;
 		self . int_value = p_value;
 	}
+
+    inline static void free(in_type){}
 };
 
 template<> struct MCExecValueTraits<uinteger_t>

@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define	FUNCTIONS_H
 
 #include "express.h"
+#include "executionerrors.h"
 
 #include "exec.h"
 
@@ -54,7 +55,7 @@ class MCUnaryFunction: public MCFunction
 public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const = 0;
 	virtual MCExpression *getmethodarg(void) const = 0;
-	virtual void compile(MCSyntaxFactoryRef ctxt);
+    virtual void compile(MCSyntaxFactoryRef ctxt);
 };
 
 // Helper class that simplifies compiling of functions taking a variable number of of MCParameters.
@@ -80,6 +81,34 @@ public:
 		if (!ctxt . HasError())
 			MCExecValueTraits<ReturnType>::set(r_value, t_result);
 	}
+};
+
+template<typename ParamType, typename ReturnType, bool (MCExecContext::*p_evalfunc)(MCExpression*, Exec_errors, typename MCExecValueTraits<ParamType>::out_type), void (*EvalFunction)(MCExecContext&, typename MCExecValueTraits<ParamType>::in_type, typename MCExecValueTraits<ReturnType>::out_type)> class MCUnaryFunctionCtxt: public MCUnaryFunction
+{
+public:
+    MCUnaryFunctionCtxt() { m_expression = nil; }
+
+    virtual ~MCUnaryFunctionCtxt() { delete m_expression; }
+
+    void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+    {
+        ReturnType t_result;
+        ParamType t_param;
+
+        if (!(ctxt .* p_evalfunc)(m_expression, m_error, t_param))
+            return;
+
+        EvalFunction(ctxt, t_param, t_result);
+
+        MCExecValueTraits<ParamType>::free(t_param);
+
+        if (!ctxt . HasError())
+            MCExecValueTraits<ReturnType>::set(r_value, t_result);
+    }
+
+protected:
+    Exec_errors m_error;
+    MCExpression *m_expression;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -215,18 +244,18 @@ public:
 
 class MCCharToNum : public MCUnaryFunction
 {
-	MCExpression *source;
+    MCExpression *source;
 public:
 	MCCharToNum()
-	{
-		source = NULL;
+    {
+        source = NULL;
 	}
 	virtual ~MCCharToNum();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    virtual Exec_stat eval(MCExecPoint &);
 
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalCharToNumMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    virtual MCExpression *getmethodarg(void) const { return source; }
 };
 
 class MCByteToNum : public MCUnaryFunction
@@ -994,22 +1023,22 @@ public:
 
 };
 
-class MCLength : public MCUnaryFunction
+class MCLength : public MCUnaryFunctionCtxt<MCStringRef, integer_t, &MCExecContext::EvalExprAsStringRef, MCStringsEvalLength>
 {
-	MCExpression *source;
 public:
-	MCLength()
-	{
-		source = NULL;
+    MCLength()
+    {
+        m_error = EE_LENGTH_BADSOURCE;
 	}
-	virtual ~MCLength();
+
+    virtual ~MCLength(){}
     
     virtual Parse_stat parse(MCScriptPoint &, Boolean the);
     
-	virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
+//	virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
 
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalLengthMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    virtual MCExpression *getmethodarg(void) const { return m_expression; }
 };
 
 class MCLicensed : public MCConstantFunctionCtxt<bool, MCLegacyEvalLicensed>

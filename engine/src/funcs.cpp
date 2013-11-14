@@ -4037,14 +4037,10 @@ void MCKeys::compile(MCSyntaxFactoryRef ctxt)
 #endif /* MCKeysDown */
 
 
-MCLength::~MCLength()
-{
-	delete source;
-}
 
 Parse_stat MCLength::parse(MCScriptPoint &sp, Boolean the)
 {
-	if (get1param(sp, &source, the) != PS_NORMAL)
+    if (get1param(sp, &m_expression, the) != PS_NORMAL)
 	{
 		MCperror->add(PE_LENGTH_BADPARAM, sp);
 		return PS_ERROR;
@@ -4052,8 +4048,8 @@ Parse_stat MCLength::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-void MCLength::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
-{
+//void MCLength::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+//{
 #ifdef /* MCLength */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
@@ -4064,13 +4060,13 @@ void MCLength::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 	return ES_NORMAL;
 #endif /* MCLength */
     
-    MCAutoStringRef t_string;
-    if (!ctxt . EvalExprAsStringRef(source, EE_LENGTH_BADSOURCE, &t_string))
-        return;
+//    MCAutoStringRef t_string;
+//    if (!ctxt . EvalExprAsStringRef(source, EE_LENGTH_BADSOURCE, &t_string))
+//        return;
     
-    MCStringsEvalLength(ctxt, *t_string, r_value . int_value);
-	r_value . type = kMCExecValueTypeInt;
-}
+//    MCStringsEvalLength(ctxt, *t_string, r_value . int_value);
+//	r_value . type = kMCExecValueTypeInt;
+//}
 
 MCLicensed::~MCLicensed()
 {
