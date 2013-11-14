@@ -1316,7 +1316,7 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 		t_hdrop = (HDROP)t_in_data . GetHandle();
 
 		UINT t_count;
-		t_count = DragQueryFileA(t_hdrop, 0xFFFFFFFF, NULL, 0);
+		t_count = DragQueryFileW(t_hdrop, 0xFFFFFFFF, NULL, 0);
 		
 		// Create a mutable list ref.
 		MCListRef t_output;
@@ -1324,21 +1324,19 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 		for(unsigned int i = 0; i < t_count; ++i)
 		{
 			UINT t_size;
-			t_size = DragQueryFileA(t_hdrop, i, NULL, 0);
+			t_size = DragQueryFileW(t_hdrop, i, NULL, 0);
 
-			char *t_file;
-			t_file = new char[t_size + 1];
-			if (t_file != NULL)
-			{
-				DragQueryFileA(t_hdrop, i, t_file, t_size + 1);
-				MCAutoStringRef t_std_path;
-				MCAutoStringRef t_native_path;
+			MCAutoArray<unichar_t> t_buffer;
+			/* UNCHECKED */ t_buffer.New(t_size);
 
-				/* UNCHECKED */ MCStringCreateWithCString(t_file, &t_std_path);
-				/* UNCHECKED */ MCS_pathtonative(*t_std_path, &t_native_path);
-				
-				/* UNCHECKED */ MCListAppend(t_output, *t_native_path);
-			}
+			DragQueryFileW(t_hdrop, i, t_buffer.Ptr(), t_buffer.Size());
+			MCAutoStringRef t_std_path;
+			MCAutoStringRef t_native_path;
+
+			/* UNCHECKED */ MCStringCreateWithChars(t_buffer.Ptr(), t_buffer.Size(), &t_native_path);
+			/* UNCHECKED */ MCS_pathtonative(*t_std_path, &t_native_path);
+			
+			/* UNCHECKED */ MCListAppend(t_output, *t_native_path);
 		}
 		MCAutoStringRef t_out_string;
 		/* UNCHECKED */ MCListCopyAsStringAndRelease(t_output, &t_out_string);
