@@ -136,6 +136,18 @@ const UProperty MCUnicodePropToICUProp[] =
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool __MCUnicodeInitialize()
+{
+    return true;
+}
+
+void __MCUnicodeFinalize()
+{
+    ;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCUnicodeGetBinaryProperty(codepoint_t p_codepoint, MCUnicodeProperty p_property)
 {
     return !!u_hasBinaryProperty(p_codepoint, MCUnicodePropToICUProp[p_property]);

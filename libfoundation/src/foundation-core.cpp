@@ -23,7 +23,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 bool MCInitialize(void)
 {
-	if (!__MCValueInitialize())
+	if (!__MCUnicodeInitialize())
+        return false;
+    
+    if (!__MCValueInitialize())
 		return false;
 
 	if (!__MCStringInitialize())
@@ -43,19 +46,24 @@ bool MCInitialize(void)
     
     if (!__MCDataInitialize())
         return false;
+    
+    if (!__MCLocaleInitialize())
+        return false;
 
 	return true;
 }
 
 void MCFinalize(void)
 {
-	__MCSetFinalize();
+	__MCLocaleFinalize();
+    __MCSetFinalize();
 	__MCListFinalize();
 	__MCArrayFinalize();
 	__MCNameFinalize();
 	__MCStringFinalize();
     __MCDataFinalize();
 	__MCValueFinalize();
+    __MCUnicodeFinalize();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

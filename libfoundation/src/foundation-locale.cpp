@@ -14,19 +14,34 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#ifndef __MC_FOUNDATION_UNICODE_PRIVATE__
-#define __MC_FOUNDATION_UNICODE_PRIVATE__
-
 #include "foundation-locale.h"
-#include "foundation-unicode.h"
+#include "foundation-unicode-private.h"
 
 #include "unicode/uloc.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Given a LocaleRef, returns the underlying ICU locale object
-const icu::Locale& MCLocaleGetICULocale(MCLocaleRef);
+struct __MCLocale
+{
+    const icu::Locale& m_icu_locale;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#endif  // ifndef __MC_FOUNDATION_UNICODE_PRIVATE__
+bool __MCLocaleInitialize()
+{
+    return true;
+}
+
+void __MCLocaleFinalize()
+{
+    ;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+const icu::Locale& MCLocaleGetICULocale(MCLocaleRef p_locale)
+{
+    MCAssert(p_locale != nil);
+    return p_locale->m_icu_locale;
+}

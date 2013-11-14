@@ -549,6 +549,13 @@
 		4DFFC7E013DD8A91006233A4 /* syscfdate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC7DE13DD8A91006233A4 /* syscfdate.cpp */; };
 		4DFFC7E113DD8A91006233A4 /* sysunxnetwork.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC7DF13DD8A91006233A4 /* sysunxnetwork.cpp */; };
 		4DFFC7E713DD8AB9006233A4 /* objectpropsets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC7E613DD8AB9006233A4 /* objectpropsets.cpp */; };
+		721CAAC118351E1800858545 /* libicui18n.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC018351E1800858545 /* libicui18n.a */; };
+		721CAAC818351E7400858545 /* libicudata.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC218351E7400858545 /* libicudata.a */; };
+		721CAAC918351E7400858545 /* libicuio.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC318351E7400858545 /* libicuio.a */; };
+		721CAACA18351E7400858545 /* libicule.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC418351E7400858545 /* libicule.a */; };
+		721CAACB18351E7400858545 /* libiculx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC518351E7400858545 /* libiculx.a */; };
+		721CAACC18351E7400858545 /* libicutu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC618351E7400858545 /* libicutu.a */; };
+		721CAACD18351E7400858545 /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC718351E7400858545 /* libicuuc.a */; };
 		7635171D182A8D3D00C31FA2 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */; };
 		7635171E182A8D3D00C31FA2 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */; };
 		766E3298180EE4ED00CF7FCF /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766E3293180EE4E000CF7FCF /* graphicscontext.cpp */; };
@@ -1481,6 +1488,13 @@
 		4DFFC7DE13DD8A91006233A4 /* syscfdate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syscfdate.cpp; path = src/syscfdate.cpp; sourceTree = "<group>"; };
 		4DFFC7DF13DD8A91006233A4 /* sysunxnetwork.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxnetwork.cpp; path = src/sysunxnetwork.cpp; sourceTree = "<group>"; };
 		4DFFC7E613DD8AB9006233A4 /* objectpropsets.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectpropsets.cpp; path = src/objectpropsets.cpp; sourceTree = "<group>"; };
+		721CAAC018351E1800858545 /* libicui18n.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicui18n.a; path = ../prebuilt/lib/mac/libicui18n.a; sourceTree = "<group>"; };
+		721CAAC218351E7400858545 /* libicudata.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicudata.a; path = ../prebuilt/lib/mac/libicudata.a; sourceTree = "<group>"; };
+		721CAAC318351E7400858545 /* libicuio.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicuio.a; path = ../prebuilt/lib/mac/libicuio.a; sourceTree = "<group>"; };
+		721CAAC418351E7400858545 /* libicule.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicule.a; path = ../prebuilt/lib/mac/libicule.a; sourceTree = "<group>"; };
+		721CAAC518351E7400858545 /* libiculx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libiculx.a; path = ../prebuilt/lib/mac/libiculx.a; sourceTree = "<group>"; };
+		721CAAC618351E7400858545 /* libicutu.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicutu.a; path = ../prebuilt/lib/mac/libicutu.a; sourceTree = "<group>"; };
+		721CAAC718351E7400858545 /* libicuuc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicuuc.a; path = ../prebuilt/lib/mac/libicuuc.a; sourceTree = "<group>"; };
 		7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_densitymapped.cpp; path = src/image_rep_densitymapped.cpp; sourceTree = "<group>"; };
 		766E3292180EE4E000CF7FCF /* graphics_util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = graphics_util.h; path = src/graphics_util.h; sourceTree = "<group>"; };
 		766E3293180EE4E000CF7FCF /* graphicscontext.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = graphicscontext.cpp; path = src/graphicscontext.cpp; sourceTree = "<group>"; };
@@ -1679,6 +1693,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				721CAAC818351E7400858545 /* libicudata.a in Frameworks */,
+				721CAAC918351E7400858545 /* libicuio.a in Frameworks */,
+				721CAACA18351E7400858545 /* libicule.a in Frameworks */,
+				721CAACB18351E7400858545 /* libiculx.a in Frameworks */,
+				721CAACC18351E7400858545 /* libicutu.a in Frameworks */,
+				721CAACD18351E7400858545 /* libicuuc.a in Frameworks */,
+				721CAAC118351E1800858545 /* libicui18n.a in Frameworks */,
 				76EF3195181E74FB00FAC195 /* libskia.a in Frameworks */,
 				76F717611811A2DE007301F6 /* libgraphics.a in Frameworks */,
 				4D7FA7BF1594E10500EEF440 /* libfoundation.a in Frameworks */,
@@ -1784,6 +1805,13 @@
 		4D587D920B80944100200116 = {
 			isa = PBXGroup;
 			children = (
+				721CAAC218351E7400858545 /* libicudata.a */,
+				721CAAC318351E7400858545 /* libicuio.a */,
+				721CAAC418351E7400858545 /* libicule.a */,
+				721CAAC518351E7400858545 /* libiculx.a */,
+				721CAAC618351E7400858545 /* libicutu.a */,
+				721CAAC718351E7400858545 /* libicuuc.a */,
+				721CAAC018351E1800858545 /* libicui18n.a */,
 				76EF3196181E762C00FAC195 /* LiveCode-Community.rsrc */,
 				4D587DA90B80948B00200116 /* Configurations */,
 				4D5880AA0B80BDFE00200116 /* Frameworks */,
@@ -4169,6 +4197,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4D587DB40B80949B00200116 /* Debug.xcconfig */;
 			buildSettings = {
+				LIBRARY_SEARCH_PATHS = "$(SOLUTION_DIR)/prebuilt/lib/mac";
 			};
 			name = Debug;
 		};
@@ -4176,6 +4205,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4D587DB20B80949B00200116 /* Release.xcconfig */;
 			buildSettings = {
+				LIBRARY_SEARCH_PATHS = "$(SOLUTION_DIR)/prebuilt/lib/mac";
 			};
 			name = Release;
 		};
@@ -4183,6 +4213,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "rsrc/Revolution-Info.plist";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../prebuilt/lib/mac\"",
+				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "LiveCode-Community";
 				SDKROOT = macosx10.6;
@@ -4194,6 +4228,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "rsrc/Revolution-Info.plist";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../prebuilt/lib/mac\"",
+				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "LiveCode-Community";
 				SDKROOT = macosx10.6;

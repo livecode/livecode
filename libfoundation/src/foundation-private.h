@@ -259,6 +259,11 @@ template<class T> inline bool __MCValueCreate(MCValueTypeCode p_type_code, T*& r
 
 //////////
 
+bool __MCUnicodeInitialize();
+bool __MCLocaleInitialize();
+void __MCUnicodeFinalize();
+void __MCLocaleFinalize();
+
 bool __MCValueInitialize(void);
 void __MCValueFinalize(void);
 
