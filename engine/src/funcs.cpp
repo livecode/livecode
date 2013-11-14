@@ -5497,8 +5497,6 @@ void MCReplaceText::compile(MCSyntaxFactoryRef ctxt)
 #endif /* MCScreenDepth */
 
 
-Exec_stat MCScreenLoc::eval(MCExecPoint &ep)
-{
 #ifdef /* MCScreenLoc */ LEGACY_EXEC
 	MCDisplay const *t_displays;
 	MCscreen -> getdisplays(t_displays, false);
@@ -5507,40 +5505,12 @@ Exec_stat MCScreenLoc::eval(MCExecPoint &ep)
      
 #endif /* MCScreenLoc */
 
-    MCExecContext ctxt(ep);
-    
-    MCAutoStringRef t_result;
-    MCInterfaceEvalScreenLoc(ctxt, &t_result);
-    
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt . Catch(line, pos);
-}
 
-Exec_stat MCScreenName::eval(MCExecPoint &ep)
-{
 #ifdef /* MCScreenName */ LEGACY_EXEC
 	ep.setstaticcstring(MCscreen->getdisplayname());
 	return ES_NORMAL;
 #endif /* MCScreenName */
 
-    MCExecContext ctxt(ep);
-    
-    MCNewAutoNameRef t_result;
-    MCInterfaceEvalScreenName(ctxt, &t_result);
-    
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt . Catch(line, pos);
-}
 
 Exec_stat MCScreenRect::eval(MCExecPoint &ep)
 {
@@ -5601,8 +5571,7 @@ void MCScreenRect::evaluate(MCExecPoint& ep, bool p_working, bool p_plural, bool
 }
 #endif /* MCScreenRect::evaluate */
 
-Exec_stat MCScreenType::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCScreenType */ LEGACY_EXEC
 	switch (MCscreen->getvclass())
 	{
@@ -5628,82 +5597,24 @@ Exec_stat MCScreenType::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCScreenType */
 
-    MCExecContext ctxt(ep);
-    
-    MCNewAutoNameRef t_result;
-    MCLegacyEvalScreenType(ctxt, &t_result);
-    
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt . Catch(line, pos);
-}
 
-Exec_stat MCScreenVendor::eval(MCExecPoint &ep)
-{
 #ifdef /* MCScreenVendor */ LEGACY_EXEC
 	MCscreen->getvendorstring(ep);
 	return ES_NORMAL;
 #endif /* MCScreenVendor */
 
-    MCExecContext ctxt(ep);
-    
-    MCNewAutoNameRef t_result;
-    MCLegacyEvalScreenVendor(ctxt, &t_result);
-    
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt . Catch(line, pos);
-}
 
-Exec_stat MCScriptLimits::eval(MCExecPoint &ep)
-{
 #ifdef /* MCScriptLimits */ LEGACY_EXEC
 	ep.setstringf("%d,%d,%d,%d", MClicenseparameters . script_limit, MClicenseparameters . do_limit, MClicenseparameters . using_limit, MClicenseparameters . insert_limit);
 	return ES_NORMAL;
 #endif /* MCScriptLimits */
 
-    MCExecContext ctxt(ep);
-    
-    MCAutoStringRef t_result;
-    MCEngineEvalScriptLimits(ctxt, &t_result);
-    
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt . Catch(line, pos);
-}
 
-Exec_stat MCSeconds::eval(MCExecPoint &ep)
-{
 #ifdef /* MCSeconds */ LEGACY_EXEC
 	ep.setnvalue(floor(MCS_time()));
 	return ES_NORMAL;
 #endif /* MCSeconds */
 
-	MCExecContext ctxt(ep);
-
-	real64_t t_result;
-	MCDateTimeEvalSeconds(ctxt, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep . setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 MCSelectedButton::~MCSelectedButton()
 {
