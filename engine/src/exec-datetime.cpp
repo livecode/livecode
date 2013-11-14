@@ -128,10 +128,11 @@ void MCDateTimeExecConvert(MCExecContext &ctxt, MCStringRef p_input, int p_from_
 		ctxt .SetTheResultToStaticCString("invalid date");
 	}
 }
-void MCDateTimeExecConvertIntoIt(MCExecContext &ctxt, MCStringRef p_input, int p_from_first, int p_from_second, int p_to_first, int p_to_second, MCStringRef &r_output)
+void MCDateTimeExecConvertIntoIt(MCExecContext &ctxt, MCStringRef p_input, int p_from_first, int p_from_second, int p_to_first, int p_to_second)
 {
-	MCDateTimeExecConvert(ctxt, p_input, p_from_first, p_from_second, p_to_first, p_to_second, r_output);
-	ctxt . SetItToValue(r_output);
+	MCAutoStringRef t_output;
+	MCDateTimeExecConvert(ctxt, p_input, p_from_first, p_from_second, p_to_first, p_to_second, &t_output);
+	ctxt . SetItToValue(*t_output);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

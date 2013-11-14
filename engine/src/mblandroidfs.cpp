@@ -50,7 +50,7 @@ bool path_to_apk_path(MCStringRef p_path, MCStringRef &r_apk_path)
     t_start = MCStringGetLength(MCcmd);
     
     if (MCStringGetNativeCharAtIndex(p_path, MCStringGetLength(MCcmd)) == '/')
-        t_start += + 1;    
+        t_start++;
         
     return MCStringCopySubstring(p_path, MCRangeMake(t_start, MCStringGetLength(p_path) - t_start), r_apk_path);
 }
@@ -438,6 +438,7 @@ bool MCAndroidSystem::PathFromNative(MCStringRef p_native, MCStringRef& r_path)
 
 bool MCAndroidSystem::ResolvePath(MCStringRef p_path, MCStringRef& r_resolved)
 {
+    MCAutoStringRef t_path_no_extra_slashes;
 	MCAutoStringRef t_absolute_path;
 	if (MCStringGetCharAtIndex(p_path, 0) != '/')
 	{
@@ -449,25 +450,28 @@ bool MCAndroidSystem::ResolvePath(MCStringRef p_path, MCStringRef& r_resolved)
 			!MCStringAppendChar(*t_absolute_path, '/') ||
 			!MCStringAppend(*t_absolute_path, p_path))
 			return false;
+        
+        /* UNCHECKED */ MCStringMutableCopy(*t_absolute_path, &t_path_no_extra_slashes);
 	}
 	else
-		t_absolute_path = (MCStringRef)MCValueRetain(p_path);
-  
+        /* UNCHECKED */ MCStringMutableCopy(p_path, &t_path_no_extra_slashes);
+
     // IM-2012-10-09 - [[ BZ 10432 ]] strip out extra slashes from paths
-    MCAutoStringRef t_path_no_extra_slashes;
-    /* UNCHECKED */ MCStringMutableCopy(*t_absolute_path, &t_path_no_extra_slashes);
     uindex_t t_length;
-    t_length = 0; 
-    while (t_length != MCStringGetLength(*t_path_no_extra_slashes) - 1);
+    t_length = MCStringGetLength(*t_path_no_extra_slashes);
+    uindex_t t_offset;
+    t_offset = 1;
+    while (t_offset < t_length && MCStringFirstIndexOfChar(*t_path_no_extra_slashes, '/', t_offset, kMCStringOptionCompareExact, t_offset))
 	{
-		if (MCStringGetNativeCharAtIndex(*t_path_no_extra_slashes, t_length) == '/' && MCStringGetNativeCharAtIndex(*t_path_no_extra_slashes, t_length + 1) == '/')
-			MCStringRemove(*t_path_no_extra_slashes, MCRangeMake(t_length, 1));
-        else
-            t_length++;
+        if (MCStringGetNativeCharAtIndex(*t_path_no_extra_slashes, ++t_offset) == '/')
+        {
+			MCStringRemove(*t_path_no_extra_slashes, MCRangeMake(t_offset, 1));
+            t_length--;
+        }
 	}
     
     r_resolved = MCValueRetain(*t_path_no_extra_slashes);
-    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

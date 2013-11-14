@@ -265,18 +265,19 @@ static void MCIPhoneImportUIImage(UIImage *p_image, int32_t p_max_width, int32_t
 	iptr -> setdataprop(ctxt, 0, P_TEXT, false, *t_dataref);	
 }
 
-static void content_to_url(const char *p_file, NSURL*& r_url)
+static void content_to_url(MCStringRef p_file, NSURL*& r_url)
 {
 	NSURL *t_url;
 	t_url = nil;
-	if (strncmp(p_file, "http://", 7) == 0 || strncmp(p_file, "https://", 8) == 0)
-		t_url = [NSURL URLWithString: [NSString stringWithCString: p_file encoding: NSMacOSRomanStringEncoding]];
-	else if (!MCCStringIsEmpty(p_file))
+    
+	if (MCStringBeginsWith(p_file, MCSTR("http://"), kMCCompareExact) || MCStringBeginsWith(p_file, MCSTR("https://"), kMCCompareExact))
+		t_url = [NSURL URLWithString: [NSString stringWithMCStringRef: p_file ]];
+	else if (!MCStringIsEmpty(p_file))
 	{
-		char *t_path;
-		t_path = MCS_resolvepath(p_file);
-		t_url = [NSURL fileURLWithPath: [NSString stringWithCString: t_path encoding: NSMacOSRomanStringEncoding]];
-		delete t_path;
+		MCAutoStringRef t_path;
+		
+        MCS_resolvepath(p_file, &t_path);
+		t_url = [NSURL fileURLWithPath: [NSString stringWithMCStringRef: *t_path ]];
 	}
 	else
 		t_url = [NSURL URLWithString: @""];
@@ -350,7 +351,7 @@ void MCiOSPlayerControl::SetContent(MCExecContext& ctxt, MCStringRef p_content)
 {
     NSURL *t_url;
     MPMovieSourceType t_type;
-    content_to_url(MCStringGetCString(p_content), t_url);
+    content_to_url(p_content, t_url);
     if (m_controller != nil)
     {
         [m_controller setContentURL: t_url];
@@ -1094,7 +1095,8 @@ private:
 	MCNameRef m_notification;
 };
 
-static struct { NSString * const *name; SEL selector; } s_player_notifications[] =
+// MM-2013-09-23: [[ iOS7 Support ]] Tweaked type to appease llvm 5.0.
+static struct { NSString* const* name; SEL selector; } s_player_notifications[] =
 {
 	{ &MPMovieDurationAvailableNotification, @selector(movieDurationAvailable:) },
 	{ &MPMovieMediaTypesAvailableNotification, @selector(movieMediaTypesAvailable:) },

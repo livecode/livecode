@@ -593,7 +593,11 @@ int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p
         //
         char **t_types = new char*[p_type_count];
         for (uint4 i = 0; i < p_type_count; ++i)
-            t_types[i] = strclone(MCStringGetCString(p_types[i]));
+        {
+            char *t_type;
+            /* UNCHECKED */ MCStringConvertToCString(p_types[i], t_type);
+            t_types[i] = t_type;
+        }
 		
         FileDialogAccessoryView *t_accessory;
         t_accessory = [[FileDialogAccessoryView alloc] init];
@@ -854,6 +858,18 @@ bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bo
 		CMCloseProfile(t_icc_profile);
 	
 	return true;
+}
+
+
+// MERG-2013-08-18: Stubs for colorDialogColors. Possibly implement when color dialog moves to Cocoa
+void MCA_setcolordialogcolors(MCColor* p_colors, uindex_t p_count)
+{
+    
+}
+
+void MCA_getcolordialogcolors(MCColor*& r_colors, uindex_t& r_count)
+{
+	r_count = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

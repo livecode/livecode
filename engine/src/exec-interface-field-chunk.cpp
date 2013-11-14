@@ -585,7 +585,7 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
             if (t_need_layout && !all)
             {
                 // MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
-                pgptr -> layout();
+                pgptr -> layout(false);
                 drect.height += pgptr->getheight(p_field -> fixedheight);
             }
         }

@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __MC_SYSTEM__
 
 #include "mcio.h"
+#include "osspec.h"
 
 enum
 {
@@ -78,6 +79,12 @@ struct MCSystemFileHandle
 	virtual int64_t GetFileSize(void) = 0;
     
     virtual bool TakeBuffer(void*& r_buffer, size_t& r_length) = 0;
+
+    // Polymorphic - needs virtual destructor
+    virtual ~MCSystemFileHandle()
+    {
+        ;
+    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -375,8 +382,8 @@ struct MCWindowsSystemServiceInterface: public MCServiceInterface
 {
     virtual bool MCISendString(MCStringRef p_command, MCStringRef& r_result, bool& r_error) = 0;
     
-    virtual bool QueryRegistry(MCStringRef p_key, MCStringRef& r_value, MCStringRef& r_type, MCStringRef& r_error) = 0;
-    virtual bool SetRegistry(MCStringRef p_key, MCStringRef p_value, MCStringRef p_type, MCStringRef& r_error) = 0;
+    virtual bool QueryRegistry(MCStringRef p_key, MCValueRef& r_value, MCStringRef& r_type, MCStringRef& r_error) = 0;
+    virtual bool SetRegistry(MCStringRef p_key, MCValueRef p_value, MCSRegistryValueType p_type, MCStringRef& r_error) = 0;
     virtual bool DeleteRegistry(MCStringRef p_key, MCStringRef& r_error) = 0;
     virtual bool ListRegistry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_error) = 0;
     
@@ -515,6 +522,7 @@ bool MCSystemProcessUrl(MCStringRef p_url, MCSystemUrlOperation p_operations, MC
 bool MCSystemLoadUrl(MCStringRef p_url, MCSystemUrlCallback p_callback, void *p_context);
 bool MCSystemPostUrl(MCStringRef p_url, MCDataRef p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context);
 bool MCSystemPutUrl(MCStringRef p_url, MCDataRef p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context);
+void MCSystemSetUrlSSLVerification(bool enabled);
 
 //////////
 

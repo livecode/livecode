@@ -21,6 +21,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_FONT__
 #define __MC_FONT__
 
+#include "graphics.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct MCFont *MCFontRef;
@@ -49,16 +51,20 @@ bool MCFontHasPrinterMetrics(MCFontRef font);
 int32_t MCFontGetAscent(MCFontRef font);
 int32_t MCFontGetDescent(MCFontRef font);
 
+typedef void (*MCFontBreakTextCallback)(MCFontRef font, MCStringRef p_text, MCRange p_range, void *ctxt);
+void MCFontBreakText(MCFontRef font, MCStringRef p_text, MCRange p_range, MCFontBreakTextCallback callback, void *callback_data);
+
 int32_t MCFontMeasureText(MCFontRef font, MCStringRef p_text);
-int32_t MCFontMeasureText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode);
 int32_t MCFontMeasureTextSubstring(MCFontRef font, MCStringRef p_text, MCRange p_range);
 
-void MCFontDrawText(MCFontRef font, MCStringRef p_text, MCContext *context, int32_t x, int32_t y, bool image);
-void MCFontDrawText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode, MCContext *context, int32_t x, int32_t y, bool image);
-void MCFontDrawTextSubstring(MCFontRef font, MCStringRef p_text, MCRange p_range, MCContext *context, int32_t x, int32_t y, bool image);
+void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCFontRef font);
+void MCFontDrawTextSubstring(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef font);
 
 MCFontStyle MCFontStyleFromTextStyle(uint2 text_style);
 uint16_t MCFontStyleToTextStyle(MCFontStyle font_style);
+
+/* LEGACY */
+MCFontStruct* MCFontGetFontStruct(MCFontRef font);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -87,6 +93,23 @@ uint2 MCLogicalFontTableMap(MCNameRef p_textfont, uint2 p_textstyle, uint2 p_tex
 
 // Lookup the given index in the logical font table, and return its attrs.
 void MCLogicalFontTableLookup(uint2 index, MCNameRef& r_textfont, uint2& r_textstyle, uint2& r_textsize, bool& r_unicode);
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef struct MCLoadedFont *MCLoadedFontRef;
+
+// Attempt to load the given file as a font. If globally is true, the font is
+// loaded for all applications, otherwise just for the current one. If the
+// font is already loaded and the globally flag has changed an attempt is first
+// made to unload it before loading it again.
+bool MCFontLoad(MCStringRef p_path, bool p_globally);
+
+// Attempt to unload the given file as a font.
+bool MCFontUnload(MCStringRef p_path);
+
+// List all currently loaded font files (loaded via MCFontLoad).
+bool MCFontListLoaded(uindex_t& r_count, MCStringRef*& r_list);
 
 ////////////////////////////////////////////////////////////////////////////////
 

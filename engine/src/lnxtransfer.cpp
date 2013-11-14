@@ -243,11 +243,11 @@ void 	MCXTransferStore::addRevType ( MCTransferType p_type, MCDataRef p_data  )
 		break ; 
 			
 		case TRANSFER_TYPE_IMAGE:
-			if ( MCFormatImageIsPNG ( p_data ) ) 
+			if ( MCImageDataIsPNG ( p_data ) )
 				addType ( new MCMIMEtype( m_display, "image/png"), p_type, p_data );
-			if ( MCFormatImageIsJPEG ( p_data ) )
+			if ( MCImageDataIsJPEG ( p_data ) )
 				addType ( new MCMIMEtype( m_display, "image/jpeg"), p_type, p_data );
-			if ( MCFormatImageIsGIF ( p_data ) ) 
+			if ( MCImageDataIsGIF ( p_data ) )
 				addType ( new MCMIMEtype( m_display, "image/gif"), p_type, p_data );
 		break ;
 			

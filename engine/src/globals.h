@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __MC_GLOBALS__
 
 #include "mcstring.h"
+#include "imagelist.h"
 
 typedef struct _Streamnode Streamnode;
 typedef struct _Linkatts Linkatts;
@@ -107,10 +108,12 @@ extern MCColor MChilitecolor;
 extern MCColor MCgraycolor;
 extern MCStringRef MCbrushcolorname;
 extern uint4 MCpenpmid;
-extern Pixmap MCpenpm;
+extern MCPatternRef MCpenpattern;
 extern uint4 MCbrushpmid;
-extern Pixmap MCbrushpm;
-extern MCPixmaplist *MCpatterns;
+extern MCPatternRef MCbrushpattern;
+extern uint4 MCbackdroppmid;
+extern MCPatternRef MCbackdroppattern;
+extern MCImageList *MCpatternlist;
 extern MCColor MCaccentcolor;
 extern MCStringRef MCaccentcolorname;
 extern MCColor MChilitecolor;
@@ -152,6 +155,7 @@ extern uint2 MCnusing;
 extern uint2 MCiconicstacks;
 extern uint2 MCwaitdepth;
 extern uint4 MCrecursionlimit;
+
 
 extern Boolean MCownselection;
 extern MCUndolist *MCundos;
@@ -277,9 +281,6 @@ extern MCStringRef MChcstat;
 extern Boolean MCexitall;
 extern int4 MCretcode;
 extern Boolean MCrecording;
-
-extern uint1 MCleftmasks[8];
-extern uint1 MCrightmasks[8];
 
 // MM-2012-09-05: [[ Property Listener ]] True if any listened objects have had any of thier props changed since last message loop.
 //  Saves time parsing through the list of object listeners if no properties have changed.

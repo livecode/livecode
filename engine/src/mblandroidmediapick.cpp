@@ -50,7 +50,12 @@ typedef enum
 } MCAndroidMediaStatus;
 
 static MCAndroidMediaStatus s_media_status = kMCAndroidMediaWaiting;
-static MCStringRef s_media_content = MCValueRetain(kMCEmptyString);
+static MCStringRef s_media_content = nil;
+
+void MCAndroidMediaPickInitialize()
+{
+    s_media_content = MCValueRetain(kMCEmptyString);
+}
 
 bool MCSystemPickMedia(MCMediaType p_types, bool p_multiple, MCStringRef& r_result)
 {

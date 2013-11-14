@@ -36,7 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "text.h"
 
-MCParagraph *MCField::macunicodestyletexttoparagraphs(const MCString& p_text, const MCString& p_style_data)
+MCParagraph *MCField::macunicodestyletexttoparagraphs(MCDataRef p_text, MCDataRef p_style_data)
 {
 	bool t_success;
 	t_success = true;
@@ -48,7 +48,7 @@ MCParagraph *MCField::macunicodestyletexttoparagraphs(const MCString& p_text, co
 	{
 		if (ATSUUnflattenStyleRunsFromStream(
 											 kATSUDataStreamUnicodeStyledText, 0,
-											 p_style_data . getlength(), p_style_data . getstring(),
+											 MCDataGetLength(p_style_data), MCDataGetBytePtr(p_style_data),
 											 0, 0, NULL, NULL,
 											 &t_run_count, &t_style_count) != noErr)
 			t_success = false;
@@ -77,7 +77,7 @@ MCParagraph *MCField::macunicodestyletexttoparagraphs(const MCString& p_text, co
 		
 		if (ATSUUnflattenStyleRunsFromStream(
 											 kATSUDataStreamUnicodeStyledText, 0,
-											 p_style_data . getlength(), p_style_data . getstring(),
+											 MCDataGetLength(p_style_data), MCDataGetBytePtr(p_style_data),
 											 t_run_count, t_style_count, t_runs, t_styles,
 											 &t_run_count, &t_style_count) != noErr)
 			t_success = false;
@@ -94,10 +94,10 @@ MCParagraph *MCField::macunicodestyletexttoparagraphs(const MCString& p_text, co
 		t_paragraphs -> inittext();
 		
 		const UniChar *t_text;
-		t_text = (UniChar *)p_text . getstring();
+		t_text = (UniChar *)MCDataGetBytePtr(p_text);
 		
 		uint4 t_text_length;
-		t_text_length = p_text . getlength();
+		t_text_length = MCDataGetLength(p_text);
 		
 		int4 t_run_start;
 		t_run_start = 0;
@@ -660,7 +660,7 @@ Exec_stat MCField::getparagraphmacunicodestyles(MCParagraph *p_start, MCParagrap
 
 		// MW-2011-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
 		if (opened)
-			t_paragraph -> layout();
+			t_paragraph -> layout(false);
 		
 		t_paragraph = t_paragraph -> next();
 	}

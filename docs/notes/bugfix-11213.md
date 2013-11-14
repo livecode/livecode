@@ -1,0 +1,1 @@
+# The width of the fields in the message box is wrong.

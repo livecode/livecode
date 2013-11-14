@@ -17,6 +17,28 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef OSSPEC_H
 #define OSSPEC_H
 
+///////////////////////////////////////////////////////////////////////////////
+
+// Types for values stored in the Win32 registry
+enum MCSRegistryValueType
+{
+	// Note that these are assigned the same values as their REG_* counterparts
+	kMCSRegistryValueTypeNone = 0,					// REG_NONE
+	kMCSRegistryValueTypeBinary = 3,				// REG_BINARY
+	kMCSRegistryValueTypeDword = 4,					// REG_DWORD
+	kMCSRegistryValueTypeDwordLittleEndian = 4,		// REG_DWORD_LITTLE_ENDIAN
+	kMCSRegistryValueTypeDwordBigEndian = 5,		// REG_DWORD_BIG_ENDIAN
+	kMCSRegistryValueTypeExpandSz = 2,				// REG_EXPAND_SZ
+	kMCSRegistryValueTypeLink = 6,					// REG_LINK
+	kMCSRegistryValueTypeMultiSz = 7,				// REG_MULTI_SZ
+	kMCSRegistryValueTypeQword = 11,				// REG_QWORD
+	kMCSRegistryValueTypeQwordLittleEndian = 11,	// REG_QWORD_LITTLE_ENDIAN
+	kMCSRegistryValueTypeSz	= 1						// REG_SZ
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+
 extern void MCS_init();
 extern void MCS_shutdown();
 extern void MCS_seterrno(int value);
@@ -84,11 +106,12 @@ extern bool MCS_savebinaryfile(MCStringRef f, MCDataRef data);
 extern bool MCS_savetextfile(MCStringRef f, MCStringRef data);
 extern void MCS_saveresfile(MCStringRef p_path, MCDataRef data);
 
-extern bool MCS_query_registry(MCStringRef p_key, MCStringRef& r_value, MCStringRef& r_type, MCStringRef& r_error);
+extern bool MCS_query_registry(MCStringRef p_key, MCValueRef& r_value, MCStringRef& r_type, MCStringRef& r_error);
 /* LEGACY */ extern void MCS_query_registry(MCExecPoint &dest);
 extern bool MCS_delete_registry(MCStringRef p_key, MCStringRef& r_error);
 extern bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_error);
-extern bool MCS_set_registry(MCStringRef p_key, MCStringRef p_value, MCStringRef p_type, MCStringRef& r_error);
+extern bool MCS_set_registry(MCStringRef p_key, MCValueRef p_value, MCSRegistryValueType p_type, MCStringRef& r_error);
+extern MCSRegistryValueType MCS_registry_type_from_string(MCStringRef);
 
 extern Boolean MCS_poll(real8 delay, int fd);
 // Mac AppleEvent calls
@@ -153,6 +176,11 @@ void MCS_unloadurl(MCObject *p_target, MCStringRef p_url);
 void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url);
 void MCS_putintourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url);
 void MCS_geturl(MCObject *p_target, MCStringRef p_url);
+
+// MW-2013-05-21: [[ RandomBytes ]] Attempt to generate a sequence of random
+//   bytes into the provided buffer. The function returns 'false' if there isnt
+//   enough entropy available to generate them.
+bool MCS_random_bytes(size_t p_count, MCDataRef& r_buffer);
 
 ///////////////////////////////////////////////////////////////////////////////
 

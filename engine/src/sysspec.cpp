@@ -78,8 +78,10 @@ void MCS_common_init(void)
     MCsystem -> SetErrno(errno);
 	
 	MCinfinity = HUGE_VAL;
-    
-#if !defined(_WINDOWS_DESKTOP) && !defined(_WINDOWS_SERVER)
+
+	// MW-2013-10-08: [[ Bug 11259 ]] We use our own tables on linux since
+	//   we use a fixed locale which isn't available on all systems.
+#if !defined(_LINUX_SERVER) && !defined(_LINUX_DESKTOP) && !defined(_WINDOWS_DESKTOP) && !defined(_WINDOWS_SERVER)
 	MCuppercasingtable = new uint1[256];
 	for(uint4 i = 0; i < 256; ++i)
 		MCuppercasingtable[i] = (uint1)toupper((uint1)i);
@@ -87,9 +89,9 @@ void MCS_common_init(void)
 	MClowercasingtable = new uint1[256];
 	for(uint4 i = 0; i < 256; ++i)
 		MClowercasingtable[i] = (uint1)tolower((uint1)i);
+#endif
 	
 	MCStackSecurityInit();
-#endif
 }
 
 void MCS_init(void)
@@ -286,7 +288,7 @@ uint32_t MCS_getpid(void)
 // the default 'dummy' functions here.
 
 // Fixed by using MCServiceInterface
-bool MCS_query_registry(MCStringRef p_key, MCStringRef& r_value, MCStringRef& r_type, MCStringRef& r_error)
+bool MCS_query_registry(MCStringRef p_key, MCValueRef& r_value, MCStringRef& r_type, MCStringRef& r_error)
 {
     MCWindowsSystemServiceInterface *t_service;
     t_service = (MCWindowsSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeWindowsSystem);
@@ -302,7 +304,8 @@ void MCS_query_registry(MCExecPoint &dest)
 {
 	MCAutoStringRef t_key;
 	/* UNCHECKED */ dest.copyasstringref(&t_key);
-	MCAutoStringRef t_value, t_type, t_error;
+	MCAutoStringRef t_type, t_error;
+	MCAutoValueRef t_value;
 	/* UNCHECKED */ MCS_query_registry(*t_key, &t_value, &t_type, &t_error);
 	if (*t_error != nil)
 	{
@@ -316,12 +319,12 @@ void MCS_query_registry(MCExecPoint &dest)
 	}
 }
 
-bool MCS_set_registry(MCStringRef p_key, MCStringRef p_value, MCStringRef p_type, MCStringRef& r_error)
+bool MCS_set_registry(MCStringRef p_key, MCValueRef p_value, MCSRegistryValueType p_type, MCStringRef& r_error)
 {
     MCWindowsSystemServiceInterface *t_service;
     t_service = (MCWindowsSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeWindowsSystem);
     
-    if (t_service != nil)
+if (t_service != nil)
         return t_service -> SetRegistry(p_key, p_value, p_type, r_error);
     
 	return MCStringCreateWithCString("not supported", r_error);
@@ -354,6 +357,16 @@ bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_err
     
 	return MCStringCreateWithCString("not supported", r_error);
 }
+
+#ifndef __WINDOWS__
+
+// For Win32, this function is implemented in dskw32.cpp
+MCSRegistryValueType MCS_registry_type_from_string(MCStringRef)
+{
+	return kMCSRegistryValueTypeNone;
+}
+
+#endif
 
 void MCS_reset_time(void)
 {
@@ -1390,12 +1403,18 @@ IO_stat MCS_runcmd(MCStringRef p_command, MCStringRef& r_output)
     int t_retcode;
     if (!MCsystem -> Shell(p_command, &t_data, t_retcode))
         return IO_ERROR;
-    
+
     MCresult -> setnvalue(t_retcode);
-    if (!MCStringCreateWithNativeChars((char_t*)MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), r_output))
+    
+    MCAutoStringRef t_data_string;
+    // MW-2013-08-07: [[ Bug 11089 ]] The MCSystem::Shell() call returns binary data,
+	//   so since uses of MCS_runcmd() expect text, we need to do EOL conversion.
+    if (!MCStringCreateWithNativeChars((char_t*)MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), &t_data_string) ||
+        (!MCStringConvertLineEndingsToLiveCode(*t_data_string, r_output)))
     {
         r_output = MCValueRetain(kMCEmptyString);
     }
+    
     return IO_NORMAL;
 }
 
@@ -1490,7 +1509,7 @@ bool MCS_changeprocesstype(bool p_to_foreground)
     MCMacSystemServiceInterface *t_service;
     t_service = (MCMacSystemServiceInterface*) MCsystem -> QueryService(kMCServiceTypeMacSystem);
     
-    if (!t_service != nil)
+    if (t_service != nil)
         return t_service -> ChangeProcessType(p_to_foreground);
     
     MCresult -> sets("not supported");
@@ -1502,7 +1521,7 @@ bool MCS_processtypeisforeground(void)
     MCMacSystemServiceInterface *t_service;
     t_service = (MCMacSystemServiceInterface*) MCsystem -> QueryService(kMCServiceTypeMacSystem);
     
-    if (!t_service != nil)
+    if (t_service != nil)
         return t_service -> ProcessTypeIsForeground();
     
     MCresult -> sets("not supported");

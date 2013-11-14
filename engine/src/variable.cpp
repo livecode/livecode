@@ -1296,7 +1296,7 @@ bool MCVarref::resolve(MCExecContext& ctxt, MCContainer*& r_container)
 	}
     
 	if (t_stat == ES_NORMAL)
-    /* UNCHECKED */ MCContainer::createwithpath(t_var, t_path, t_path_length, r_container);
+		return MCContainer::createwithpath(t_var, t_path, t_path_length, r_container);
 	else
 	{
 		for(uindex_t i = 0; i < t_path_length; i++)
@@ -1304,7 +1304,7 @@ bool MCVarref::resolve(MCExecContext& ctxt, MCContainer*& r_container)
 		MCMemoryDeleteArray(t_path);
 	}
     
-	return t_stat;
+	return false;
 }
 
 // Resolve references to the appropriate element refered to by this Varref.

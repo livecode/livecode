@@ -45,6 +45,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "securemode.h"
 #include "dispatch.h"
 
+#include "uuid.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EVAL_METHOD(Engine, Version, 1)
@@ -156,6 +158,7 @@ MC_EXEC_DEFINE_EVAL_METHOD(Engine, MeAsObject, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Engine, MenuObjectAsObject, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Engine, TargetAsObject, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Engine, ErrorObjectAsObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Engine, FontfilesInUse, 1)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -756,9 +759,9 @@ void MCEngineExecQuit(MCExecContext& ctxt, integer_t p_retcode)
 		default:
 			return;
 	}
-#ifndef TARGET_SUBPLATFORM_ANDROID
+	// IM-2013-05-01: [[ BZ 10586 ]] remove #ifdefs so this message is sent
+	// here on Android in the same place as (almost) everything else
 	MCdefaultstackptr->getcard()->message(MCM_shut_down);
-#endif
 #endif
 
 	MCretcode = p_retcode;
@@ -777,6 +780,7 @@ void MCEngineExecCancelMessage(MCExecContext& ctxt, integer_t p_id)
 		MCscreen->cancelmessageid(p_id);
 }
 ////////////////////////////////////////////////////////////////////////////////
+
 void MCEngineExecInsertScriptOfObjectInto(MCExecContext& ctxt, MCObject *p_script, bool p_in_front)
 {
 	if (!p_script->parsescript(True))
@@ -1575,6 +1579,8 @@ bool MCEngineEvalValueAsObject(MCValueRef p_value, bool p_strict, MCObjectPtr& r
     t_parse_error = tchunk->parse(sp, False) == PS_NORMAL;
     if (!t_parse_error && (!p_strict || sp.next(type) == PS_EOF))
         stat = ES_NORMAL;
+    else
+        stat = ES_ERROR;
     MCerrorlock--;
     if (stat == ES_NORMAL)
         stat = tchunk->getobj(ep, r_object, False);
@@ -1728,18 +1734,75 @@ void MCEngineMarkVariable(MCExecContext& ctxt, MCVarref *p_variable, MCMarkedTex
 		return;
 	}
     
-    MCValueRef t_value;
-    if (!p_variable -> eval(ctxt, t_value))
+    MCAutoValueRef t_value;
+    if (!p_variable -> eval(ctxt, &t_value))
     {
         ctxt . LegacyThrow(EE_CHUNK_SETCANTGETDEST);
         return;
     }
     
-    if (!ctxt . ConvertToString(t_value, r_mark . text))
+    if (!ctxt . ConvertToString(*t_value, r_mark . text))
     {
         ctxt . LegacyThrow(EE_CHUNK_SETCANTGETDEST);
         return;
     }
     r_mark . start = 0;
     r_mark . finish = MAXUINT4;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+static bool MCEngineUuidToStringRef(MCUuid p_uuid, MCStringRef& r_string)
+{
+    // Convert the uuid to a string.
+	char t_uuid_buffer[kMCUuidCStringLength];
+	MCUuidToCString(p_uuid, t_uuid_buffer);
+    
+    return MCStringCreateWithNativeChars((const char_t *)t_uuid_buffer, kMCUuidCStringLength, r_string);
+}
+
+void MCEngineEvalRandomUuid(MCExecContext& ctxt, MCStringRef& r_uuid)
+{
+    MCUuid t_uuid;
+    if (!MCUuidGenerateRandom(t_uuid))
+    {
+        ctxt . LegacyThrow(EE_UUID_NORANDOMNESS);
+        return;
+    }
+    
+    if (MCEngineUuidToStringRef(t_uuid, r_uuid))
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCEngineDoEvalUuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStringRef p_name, bool p_is_md5, MCStringRef& r_uuid)
+{
+    MCUuid t_namespace, t_uuid;
+    // Attempt to convert it to a uuid.
+    if (!MCUuidFromCString(MCStringGetCString(p_namespace_id), t_namespace))
+    {
+        ctxt . LegacyThrow(EE_UUID_NAMESPACENOTAUUID);
+        return;
+    }
+    
+    if (p_is_md5)
+        MCUuidGenerateMD5(t_namespace, MCStringGetOldString(p_name), t_uuid);
+    else
+        MCUuidGenerateSHA1(t_namespace, MCStringGetOldString(p_name), t_uuid);
+    
+    if (MCEngineUuidToStringRef(t_uuid, r_uuid))
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCEngineEvalMD5Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStringRef p_name, MCStringRef& r_uuid)
+{
+    MCEngineDoEvalUuid(ctxt, p_namespace_id, p_name, true, r_uuid);
+}
+
+void MCEngineEvalSHA1Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStringRef p_name, MCStringRef& r_uuid)
+{
+    MCEngineDoEvalUuid(ctxt, p_namespace_id, p_name, false, r_uuid);
 }

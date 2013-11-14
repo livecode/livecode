@@ -1,6 +1,8 @@
 NAME=standalone-community
 TYPE=application
 
+include ../rules/environment.linux.makefile
+
 MODE_SOURCES= \
 	stacksecurity.cpp
 
@@ -9,6 +11,6 @@ MODE_DEPS=libkernel-standalone.a
 MODE_LIBS=kernel-standalone
 
 MODE_LDFLAGS=\
-	-Wl,--script=standalone.link
+	-Wl,--script=standalone-$(ARCH).link
 
 include Makefile.common

@@ -707,7 +707,9 @@ bool MCConvertImageToWindowsV5Bitmap(MCDataRef p_input, STGMEDIUM& r_storage);
 //    object. The image data is rendered into the metafile using the AlphaBlend
 //    call.
 //
+
 bool MCConvertImageToWindowsMetafile(MCDataRef p_input, STGMEDIUM& r_storage);
+bool MCConvertImageToWindowsEnhancedMetafile(MCDataRef p_input, STGMEDIUM &r_storage);
 
 ///////////////////////////////////////////////////////////////////////////////
 //

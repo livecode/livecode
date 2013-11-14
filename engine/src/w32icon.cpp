@@ -31,6 +31,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "w32dc.h"
 
+#include <strsafe.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCScreenDC::seticon(uint4 p_icon)
@@ -39,6 +41,97 @@ void MCScreenDC::seticon(uint4 p_icon)
 
 void MCScreenDC::seticonmenu(MCStringRef p_menu)
 {
+}
+
+bool MCImageCreateIcon(MCImageBitmap *p_bitmap, uint32_t p_width, uint32_t p_height, bool p_cursor, uint32_t p_xhot, uint32_t p_yhot, HICON &r_icon)
+{
+	bool t_success = true;
+
+	HICON t_icon = nil;
+	HBITMAP t_bitmap = nil;
+	HBITMAP t_mask = nil;
+	HDC t_dc = nil;
+
+	void *t_bits = nil;
+	MCGContextRef t_context = nil;
+
+	// create dest bitmap at specified size
+	BITMAPV4HEADER t_bmp_header;
+	MCMemoryClear(&t_bmp_header, sizeof(BITMAPV4HEADER));
+	t_bmp_header . bV4Size = sizeof(BITMAPV4HEADER);
+	t_bmp_header . bV4Width = p_width;
+	t_bmp_header . bV4Height = -(signed)p_height;
+	t_bmp_header . bV4Planes = 1;
+	t_bmp_header . bV4BitCount = 32;
+	t_bmp_header . bV4V4Compression = BI_BITFIELDS;
+	t_bmp_header . bV4AlphaMask = 0xFF000000;
+	t_bmp_header . bV4RedMask   = 0x00FF0000;
+	t_bmp_header . bV4GreenMask = 0x0000FF00;
+	t_bmp_header . bV4BlueMask  = 0x000000FF;
+	//t_bmp_header . bV4CSType = LCS_WINDOWS_COLOR_SPACE;
+
+	t_success = nil != (t_dc = GetDC(NULL));
+
+	if (t_success)
+		t_success = nil != (t_bitmap = CreateDIBSection(t_dc, (BITMAPINFO*)&t_bmp_header, DIB_RGB_COLORS, &t_bits, NULL, 0));
+
+	if (t_success)
+		t_success = MCGContextCreateWithPixels(p_width, p_height, p_width * sizeof(uint32_t), t_bits, true, t_context);
+
+	if (t_success)
+	{
+		// draw image onto dib at the given size
+		MCGRaster t_raster;
+		t_raster.width = p_bitmap->width;
+		t_raster.height = p_bitmap->height;
+		t_raster.stride = p_bitmap->stride;
+		t_raster.pixels = p_bitmap->data;
+		t_raster.format = kMCGRasterFormat_ARGB;
+
+		MCGRectangle t_dst = MCGRectangleMake(0, 0, p_width, p_height);
+		MCGContextDrawPixels(t_context, t_raster, t_dst, kMCGImageFilterNearest);
+	}
+
+	MCGContextRelease(t_context);
+
+	if (t_dc != nil)
+		ReleaseDC(NULL, t_dc);
+
+	// mask is unused but has to be present in the ICONINFO struct
+	if (t_success)
+		t_success = nil != (t_mask = CreateBitmap(p_width, p_height, 1, 1, NULL));
+
+	if (t_success)
+	{
+		ICONINFO t_icon_data;
+		if (p_cursor)
+		{
+			t_icon_data . fIcon = FALSE;
+			t_icon_data . xHotspot = p_xhot;
+			t_icon_data . yHotspot = p_yhot;
+		}
+		else
+		{
+			t_icon_data . fIcon = TRUE;
+			t_icon_data . xHotspot = 0;
+			t_icon_data . yHotspot = 0;
+		}
+		t_icon_data . hbmMask = t_mask;
+		t_icon_data . hbmColor = t_bitmap;
+
+		t_success = nil != (t_icon = CreateIconIndirect(&t_icon_data));
+	}
+
+	if (t_bitmap != nil)
+		DeleteObject(t_bitmap);
+
+	if (t_mask != nil)
+		DeleteObject(t_mask);
+
+	if (t_success)
+		r_icon = t_icon;
+
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,86 +143,28 @@ static HICON create_status_icon(uint32_t p_icon_id)
 	if (t_image == nil)
 		return nil;
 
-	int t_image_width, t_image_height;
-	t_image->openimage();
+	HICON t_icon;
+	t_icon = nil;
+
+	int t_width, t_height;
+	t_width = GetSystemMetrics(SM_CXICON);
+	t_height = GetSystemMetrics(SM_CYICON);
+
+	bool t_success = true;
 
 	MCImageBitmap *t_bitmap = nil;
-	Pixmap t_drawdata = nil, t_drawmask = nil;
-	MCBitmap *t_maskimagealpha = nil;
-	/* UNCHECKED */ t_image->lockbitmap(t_bitmap);
-	/* UNCHECKED */ MCImageSplitPixmaps(t_bitmap, t_drawdata, t_drawmask, t_maskimagealpha);
-	t_image_width = t_bitmap->width;
-	t_image_height = t_bitmap->height;
+	t_image->openimage();
+	t_success = t_image->lockbitmap(t_bitmap, true);
+	if (t_success)
+		t_success = MCImageCreateIcon(t_bitmap, t_width, t_height, false, 0, 0, t_icon);
 	t_image->unlockbitmap(t_bitmap);
 
 	t_image->closeimage();
 
-	if (t_maskimagealpha != nil)
-		MCscreen->destroyimage(t_maskimagealpha);
-	MCscreen->freepixmap(t_drawmask);
-
-
-	int t_width, t_height;
-	HDC t_dc;
-	t_dc = GetDC(NULL);
-
-	t_width = GetSystemMetrics(SM_CXICON);
-	t_height = GetSystemMetrics(SM_CYICON);
-
-	HBITMAP t_data;
-	HBITMAP t_mask;
-	HICON t_icon;
-	t_icon = nil;
-
-	// This won't work on Win98/ME - seperate code-path needed.
-	t_data = CreateCompatibleBitmap(t_dc, t_width, t_height);
-	t_mask = CreateBitmap(t_width, t_height, 1, 1, NULL);
-
-	if (t_data != NULL && t_mask != NULL)
-	{
-		HDC t_src_dc, t_dst_dc;
-		t_src_dc = CreateCompatibleDC(t_dc);
-		t_dst_dc = CreateCompatibleDC(t_dc);
-
-		if (t_src_dc != NULL && t_dst_dc != NULL)
-		{
-			HGDIOBJ t_old_src, t_old_dst;
-
-			t_old_src = SelectObject(t_src_dc, t_drawdata -> handle . pixmap);
-			t_old_dst = SelectObject(t_dst_dc, t_data);
-
-			StretchBlt(t_dst_dc, 0, 0, t_width, t_height, t_src_dc, 0, 0, t_image_width, t_image_height, SRCCOPY);
-
-			SelectObject(t_dst_dc, t_old_dst);
-			SelectObject(t_src_dc, t_old_src);
-
-			ICONINFO t_icon_data;
-			t_icon_data . fIcon = TRUE;
-			t_icon_data . xHotspot = 0;
-			t_icon_data . yHotspot = 0;
-			t_icon_data . hbmMask = t_mask;
-			t_icon_data . hbmColor = t_data;
-			t_icon = CreateIconIndirect(&t_icon_data);
-		}
-
-		if (t_src_dc != NULL)
-			DeleteDC(t_src_dc);
-
-		if (t_dst_dc != NULL)
-			DeleteDC(t_dst_dc);
-	}
-
-	ReleaseDC(NULL, t_dc);
-
-	if (t_data != NULL)
-		DeleteObject(t_data);
-
-	if (t_mask != NULL)
-		DeleteObject(t_mask);
-
-	MCscreen->freepixmap(t_drawdata);
-
-	return t_icon;
+	if (t_success)
+		return t_icon;
+	else
+		return NULL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -141,34 +176,51 @@ struct MenuItemDescriptor
 	uint4 id;
 	bool disabled;
 	bool checked;
-	const char *name;
-	uint4 name_length;
-	const char *tag;
-	uint4 tag_length;
+	MCStringRef m_name;
+	MCStringRef m_tag;
 	MenuItemDescriptor *submenu;
+
+	MenuItemDescriptor()
+	{
+		m_name = MCValueRetain(kMCEmptyString);
+		m_tag = MCValueRetain(kMCEmptyString);
+
+		next = nil;
+		submenu = nil;
+
+		depth = 0;
+		id = 0;
+		disabled = false;
+		checked = false;
+	}
+
+	~MenuItemDescriptor()
+	{
+		MCValueRelease(m_name);
+		MCValueRelease(m_tag);
+
+		if (submenu != nil)
+			delete submenu;
+
+		if (next != nil)
+			delete next;
+	}
 };
 
 static void delete_menu_descriptor(MenuItemDescriptor *p_descriptor)
 {
-	while(p_descriptor != NULL)
-	{
-		MenuItemDescriptor *t_next;
-		t_next = p_descriptor -> next;
-		delete_menu_descriptor(p_descriptor -> submenu);
-		delete p_descriptor;
-		p_descriptor = t_next;
-	}
+	delete p_descriptor;
 }
 
 static void clear_menu(HMENU p_menu)
 {
 	for(int t_index = 0; t_index < GetMenuItemCount(p_menu); t_index++)
 	{
-		MENUITEMINFOA t_info;
-		memset(&t_info, 0, sizeof(MENUITEMINFOA));
-		t_info . cbSize = sizeof(MENUITEMINFOA);
+		MENUITEMINFOW t_info;
+		memset(&t_info, 0, sizeof(MENUITEMINFOW));
+		t_info . cbSize = sizeof(MENUITEMINFOW);
 		t_info . fMask = MIIM_DATA;
-		GetMenuItemInfoA(p_menu, t_index, TRUE, &t_info);
+		GetMenuItemInfoW(p_menu, t_index, TRUE, &t_info);
 
 		if (t_info . dwItemData != 0)
 			delete (char *)t_info . dwItemData;
@@ -185,15 +237,15 @@ static HMENU create_menu(MenuItemDescriptor *p_items)
 
 	for(MenuItemDescriptor *t_item = p_items; t_item != NULL; t_item = t_item -> next)
 	{
-		MENUITEMINFOA t_info;
-		char t_text[256];
+		MENUITEMINFOW t_info;
+		MCAutoStringRefAsWString t_text_wstr, t_tag_wstr;
 
-		t_info . cbSize = sizeof(MENUITEMINFO);
+		t_info . cbSize = sizeof(MENUITEMINFOW);
 		t_info . fMask = MIIM_DATA | MIIM_ID | MIIM_SUBMENU | MIIM_TYPE | MIIM_STATE;
 		t_info . fState = MFS_ENABLED;
 		t_info . wID = t_item -> id;
 
-		if (t_item -> name_length == 1 && t_item -> name[0] == '-')
+		if (MCStringGetLength(t_item->m_name) == 1 && MCStringGetCharAtIndex(t_item->m_name, 0) == '-')
 		{
 			t_info . fType = MFT_SEPARATOR;
 			t_info . dwTypeData = NULL;
@@ -201,39 +253,32 @@ static HMENU create_menu(MenuItemDescriptor *p_items)
 		}
 		else
 		{
-			strncpy(t_text, t_item -> name, MCU_min(t_item -> name_length, 256U));
-			t_text[t_item -> name_length] = '\0';
-
+			/* UNCHECKED */ t_text_wstr.Lock(t_item -> m_name);
 			t_info . fType = MFT_STRING;
-			t_info . dwTypeData = t_text;
-			t_info . cch = t_item -> name_length;
+			t_info . dwTypeData = *t_text_wstr;
+			t_info . cch = MCStringGetLength(t_item -> m_name);
 		}
 
-		char *t_tag;
-		if (t_item -> tag_length > 0)
+		if (!MCStringIsEmpty(t_item -> m_tag))
 		{
-			t_tag = new char[t_item -> tag_length + 1];
-			strncpy(t_tag, t_item -> tag, t_item -> tag_length);
-			t_tag[t_item -> tag_length] = '\0';
+			/* UNCHECKED */ t_tag_wstr.Lock(t_item -> m_tag);
 		}
 		else
 		{
-			t_tag = new char[t_item -> name_length + 1];
-			strncpy(t_tag, t_item -> name, t_item -> name_length);
-			t_tag[t_item -> name_length] = '\0';
+			/* UNCHECKED */ t_tag_wstr.Lock(t_item -> m_name);
 		}
 
 		if (t_item -> disabled)
 			t_info . fState |= MFS_DISABLED;
 		
-		t_info . dwItemData = (DWORD)t_tag;
+		t_info . dwItemData = (DWORD)*t_tag_wstr;
 		
 		if (t_item -> submenu != NULL)
 			t_info . hSubMenu = create_menu(t_item -> submenu);
 		else
 			t_info . hSubMenu = NULL;
 
-		InsertMenuItemA(t_menu, t_index, TRUE, &t_info);
+		InsertMenuItemW(t_menu, t_index, TRUE, &t_info);
 
 		t_index += 1;
 	}
@@ -267,8 +312,12 @@ static void flatten_menu(MenuItemDescriptor *p_menu)
 	}
 }
 
-static HMENU create_icon_menu(const char *p_menu)
+static HMENU create_icon_menu(MCStringRef p_menu)
 {
+	// Do nothing if there is no menu
+	if (p_menu == nil)
+		return NULL;
+	
 	MenuItemDescriptor *t_items, *t_current_item;
 	uint4 t_id;
 	
@@ -276,69 +325,60 @@ static HMENU create_icon_menu(const char *p_menu)
 	t_current_item = NULL;
 	t_id = 1;
 	
-	if (p_menu != NULL)
-		while(*p_menu != '\0')
+	uindex_t t_offset, t_length;
+	t_offset = 0;
+	t_length = MCStringGetLength(p_menu);
+
+	while(t_offset < t_length)
+	{
+		// Scan for the next newline to determine the end of the item
+		uindex_t t_item_end;
+		if (MCStringFirstIndexOfChar(p_menu, '\n', t_offset, kMCStringOptionCompareExact, t_item_end))
+			t_item_end = t_length;
+
+		// Scan for the tag separator
+		uindex_t t_tag_sep;
+		if (!MCStringFirstIndexOfChar(p_menu, '|', t_offset, kMCStringOptionCompareExact, t_tag_sep))
+			t_tag_sep = t_item_end;
+		if (t_tag_sep > t_item_end)
+			t_tag_sep = t_item_end;
+
+		// Skip any tab characters at the beginning of the item
+		uindex_t t_item_start;
+		t_item_start = t_offset;
+		while (MCStringGetCharAtIndex(p_menu, t_item_start) == '\t')
+			t_item_start++;
+
+		MenuItemDescriptor *t_item;
+		t_item = new MenuItemDescriptor;
+	
+		if (t_current_item == NULL)
+			t_items = t_item, t_current_item = t_items;
+		else
+			t_current_item -> next = t_item, t_current_item = t_item;
+		
+		if (MCStringGetCharAtIndex(p_menu, t_item_start) == '(')
 		{
-			const char *t_item_start, *t_item_end, *t_item_middle;
-			t_item_start = p_menu;
-			t_item_end = strchr(t_item_start, '\n');
-			if (t_item_end == NULL)
-				t_item_end = strchr(t_item_start, '\0');
-			
-			t_item_middle = strchr(t_item_start, '|');
-			if (t_item_middle > t_item_end)
-				t_item_middle = NULL;
-			
-			for(; *t_item_start == '\t'; ++t_item_start)
-				;
-			
-			MenuItemDescriptor *t_item;
-			t_item = new MenuItemDescriptor;
-			if (t_item == NULL)
-				break;
-				
-			if (t_current_item == NULL)
-				t_items = t_item, t_current_item = t_items;
-			else
-				t_current_item -> next = t_item, t_current_item = t_item;
-			
-			t_item -> next = NULL;
-			
-			if (*t_item_start == '(')
-			{
-				if (t_item_start[1] != '(')
-					t_item -> disabled = true;
-				else
-					t_item -> disabled = false;
-				t_item_start++;
-				p_menu++;
-			}
-			else
-				t_item -> disabled = false;
-				
-			t_item -> name = t_item_start;
-			if (t_item_middle == NULL)
-			{
-				t_item -> name_length = t_item_end - t_item_start;
-				t_item -> tag = NULL;
-				t_item -> tag_length = 0;
-			}
-			else
-			{
-				t_item -> name_length = t_item_middle - t_item_start;
-				t_item -> tag = t_item_middle + 1;
-				t_item -> tag_length = t_item_end - t_item_middle - 1;
-			}
-			
-			t_item -> depth = t_item_start - p_menu;
-			t_item -> submenu = NULL;
-			t_item -> id = t_id++;
-			
-			if (*t_item_end == '\0')
-				p_menu = t_item_end;
-			else
-				p_menu = t_item_end + 1;
+			// Indicates item is disabled unless escaped as "(("
+			if (MCStringGetCharAtIndex(p_menu, t_item_start + 1) != '(')
+				t_item -> disabled = true;
 		}
+
+		MCValueRelease(t_item->m_name);
+		/* UNCHECKED */ MCStringCopySubstring(p_menu, MCRangeMake(t_item_start, t_tag_sep - t_item_start), t_item->m_name);
+
+		if (t_tag_sep != t_item_end)
+		{
+			MCValueRelease(t_item->m_tag);
+			/* UNCHECKED */ MCStringCopySubstring(p_menu, MCRangeMake(t_tag_sep + 1, t_item_end - t_tag_sep - 1), t_item->m_tag);
+		}
+
+		t_item -> depth = t_item_start - t_offset;
+		t_item -> submenu = NULL;
+		t_item -> id = t_id++;
+		
+		t_offset = t_item_end;
+	}
 	
 	if (t_items != NULL)
 		flatten_menu(t_items);
@@ -361,9 +401,9 @@ static void destroy_icon_menu(HMENU p_menu)
 
 void MCScreenDC::configurestatusicon(uint32_t p_icon_id, MCStringRef p_menu, MCStringRef p_tooltip)
 {
-	NOTIFYICONDATAA t_nidata;
-	memset(&t_nidata, 0, sizeof(NOTIFYICONDATAA));
-	t_nidata . cbSize = sizeof(NOTIFYICONDATAA);
+	NOTIFYICONDATAW t_nidata;
+	memset(&t_nidata, 0, sizeof(NOTIFYICONDATAW));
+	t_nidata . cbSize = sizeof(NOTIFYICONDATAW);
 	t_nidata . hWnd = invisiblehwnd;
 	t_nidata . uID = 1;
 
@@ -381,7 +421,7 @@ void MCScreenDC::configurestatusicon(uint32_t p_icon_id, MCStringRef p_menu, MCS
 
 	if (t_icon == nil)
 	{
-		Shell_NotifyIconA(NIM_DELETE, &t_nidata);
+		Shell_NotifyIconW(NIM_DELETE, &t_nidata);
 		f_has_icon = false;
 		return;
 	}
@@ -389,48 +429,51 @@ void MCScreenDC::configurestatusicon(uint32_t p_icon_id, MCStringRef p_menu, MCS
 	t_nidata . uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
 	t_nidata . uCallbackMessage = CWM_TASKBAR_NOTIFICATION;
 	t_nidata . hIcon = t_icon;
-	if (p_tooltip != nil)
-		strncpy(t_nidata . szTip, MCStringGetCString(p_tooltip), 63);
+
+	MCAutoStringRefAsWString t_tooltip_wstr;
+	/* UNCHECKED */ t_tooltip_wstr.Lock(p_tooltip);
+
+	if (p_tooltip != nil && !MCStringIsEmpty(p_tooltip))
+		/* UNCHECKED */ StringCchCopy(t_nidata.szTip, 128, *t_tooltip_wstr);
 	else
 		t_nidata . szTip[0] = '\0';
 
-	Shell_NotifyIconA(f_has_icon ? NIM_MODIFY : NIM_ADD, &t_nidata);
+	Shell_NotifyIconW(f_has_icon ? NIM_MODIFY : NIM_ADD, &t_nidata);
 
-	if (p_menu != nil)
-		f_icon_menu = create_icon_menu(MCStringGetCString(p_menu));
+	if (p_menu != nil && !MCStringIsEmpty(p_menu))
+		f_icon_menu = create_icon_menu(p_menu);
 
 	f_has_icon = true;
 }
 
-bool build_pick_string(MCExecPoint& p_result, HMENU p_menu, UINT32 p_command)
+bool build_pick_string(HMENU p_menu, UINT32 p_command, MCStringRef x_mutable)
 {
 	for(int4 t_index = 0; t_index < GetMenuItemCount(p_menu); t_index++)
 	{
 		bool t_success;
 		t_success = false;
 	
-		MENUITEMINFOA t_info;
-		memset(&t_info, 0, sizeof(MENUITEMINFOA));
-		t_info . cbSize = sizeof(MENUITEMINFOA);
+		MENUITEMINFOW t_info;
+		memset(&t_info, 0, sizeof(MENUITEMINFOW));
+		t_info . cbSize = sizeof(MENUITEMINFOW);
 		t_info . fMask = MIIM_DATA | MIIM_ID | MIIM_SUBMENU;
-		GetMenuItemInfoA(p_menu, t_index, TRUE, &t_info);
+		GetMenuItemInfoW(p_menu, t_index, TRUE, &t_info);
 
 		if (t_info . wID == p_command)
 			t_success = true;
 				
 		if (!t_success)
 		{
-			if (t_info . hSubMenu != NULL && build_pick_string(p_result, t_info . hSubMenu, p_command))
+			if (t_info . hSubMenu != NULL && build_pick_string(t_info . hSubMenu, p_command, x_mutable))
 			{
-				p_result . insert("|", 0, 0);
+				/* UNCHECKED */ MCStringAppendChar(x_mutable, '|');
 				t_success = true;
 			}
 		}
 		
 		if (t_success)
 		{
-			p_result . insert((char *)t_info . dwItemData, 0, 0);
-			
+			/* UNCHECKED */ MCStringAppendChars(x_mutable, t_info . dwTypeData, lstrlenW(t_info . dwTypeData));
 			return true;
 		}
 	}
@@ -460,15 +503,16 @@ void MCScreenDC::processtaskbarnotify(HWND hwnd, WPARAM wparam, LPARAM lparam)
 				POINT t_point;
 				GetCursorPos(&t_point);
 				SetForegroundWindow(hwnd);
-				PostMessageA(hwnd, WM_NULL, 0, 0);
+				PostMessageW(hwnd, WM_NULL, 0, 0);
 				t_command = TrackPopupMenu(f_icon_menu, TPM_RIGHTBUTTON | TPM_NONOTIFY | TPM_RETURNCMD, t_point . x, t_point . y, 0, hwnd, NULL);
 
 				if (t_command != 0)
 				{
-					MCExecPoint ep;
-					build_pick_string(ep, t_menu, t_command);
+					MCAutoStringRef t_pick;
+					/* UNCHECKED */ MCStringCreateMutable(0, &t_pick);
+					build_pick_string(t_menu, t_command, *t_pick);
 					if (MCdefaultstackptr != NULL)
-						MCdefaultstackptr -> getcurcard() -> message_with_valueref_args(MCM_status_icon_menu_pick, ep . getvalueref());
+						MCdefaultstackptr -> getcurcard() -> message_with_valueref_args(MCM_status_icon_menu_pick, *t_pick);
 				}
 			}
 		}

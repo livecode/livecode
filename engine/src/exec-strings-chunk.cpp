@@ -182,6 +182,7 @@ void MCStringsGetExtentsByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_type, 
             break;
         default:
             fprintf(stderr, "MCChunk: ERROR bad extents\n");
+            abort();
 	}
     
     if (r_first < 0)

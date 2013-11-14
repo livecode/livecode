@@ -19,6 +19,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef __LINUX__
+extern const char *__MCSysCharset;
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Flags word:
 //   31...28 : typecode
 //
@@ -308,6 +314,7 @@ bool __MCSetImmutableCopy(__MCSet *set, bool release, __MCSet*& r_immutable_valu
 
 bool __MCDataInitialize(void);
 void __MCDataFinalize(void);
+void __MCDataDestroy(__MCData *data);
 
 ////////////////////////////////////////////////////////////////////////////////
 

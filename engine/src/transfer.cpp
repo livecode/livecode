@@ -147,6 +147,7 @@ bool MCLocalPasteboard::Store(MCTransferType p_type, MCDataRef p_data)
 
 		MCDataRef *t_new_datas;
 		t_new_datas = (MCDataRef *)realloc(m_datas, sizeof(MCDataRef) * (m_count + 1));
+
 		if (t_new_datas == NULL)
 		{
 			m_types = t_new_types;
@@ -756,54 +757,6 @@ bool MCDragData::Set(MCPasteboard *p_pasteboard)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-
-bool MCFormatImageIsJPEG(MCDataRef p_input)
-{
-	const byte_t *t_data;
-	t_data = MCDataGetBytePtr(p_input);
-
-	uint4 t_length;
-	t_length = MCDataGetLength(p_input);
-
-	if (t_length < 9)
-		return false;
-
-	if (t_data[0] != 0xFF || t_data[1] != 0xE0)
-		return false;
-
-	if (memcmp(t_data + 4, "JFIF", 5) != 0)
-		return false;
-
-	return true;
-}
-
-bool MCFormatImageIsPNG(MCDataRef p_input)
-{
-	const byte_t *t_data;
-	t_data = MCDataGetBytePtr(p_input);
-	
-	uint4 t_length;
-	t_length = MCDataGetLength(p_input);
-
-	if (t_length < 8)
-		return false;
-
-	return memcmp(t_data, "\x89PNG\x0d\x0a\x1a\x0a", 8) == 0;
-}
-
-bool MCFormatImageIsGIF(MCDataRef p_input)
-{
-	const byte_t *t_data;
-	t_data = MCDataGetBytePtr(p_input);
-	
-	uint4 t_length;
-	t_length = MCDataGetLength(p_input);
-
-	if (t_length < 6)
-		return false;
-
-	return memcmp(t_data, "GIF87a", 6) == 0 || memcmp(t_data, "GIF89a", 6) == 0;
-}
 
 bool MCFormatStyledTextIsUnicode(MCDataRef p_input)
 {

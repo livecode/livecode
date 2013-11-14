@@ -300,6 +300,8 @@ public:
 	static Field_translations trans_lookup(Keytranslations table[], KeySym key, uint2 modifiers);
 	static Field_translations lookup_mac_keybinding(KeySym key, uint32_t modifiers);
 	
+    void do_recompute(bool p_force_layout);
+    
 	void redrawcheck(MCRectangle &drect);
 	void resetparagraphs();
 
@@ -321,6 +323,7 @@ public:
 	int32_t getcontenty(void) const;
 	int32_t gettexty(void) const;
 	int32_t getfirstindent(void) const;
+	int32_t getfixedheight(void) const { return fixedheight; }
 
 	bool getshowlines(void) const;
 
@@ -481,7 +484,7 @@ public:
 	Exec_stat getparagraphmacstyles(MCExecPoint &ep, MCParagraph *start, MCParagraph *end, Boolean isunicode);
 	Exec_stat getparagraphmacunicodestyles(MCParagraph *p_start, MCParagraph *p_finish, MCDataRef& r_data);
 	MCParagraph *macstyletexttoparagraphs(const MCString &textdata, const MCString &styledata, Boolean isunicode);
-	MCParagraph *macunicodestyletexttoparagraphs(const MCString& p_text, const MCString& p_styles);
+	MCParagraph *macunicodestyletexttoparagraphs(MCDataRef p_text, MCDataRef p_styles);
 	static bool macmatchfontname(const char *p_font_name, char p_derived_font_name[]);
 #endif
 

@@ -101,6 +101,7 @@ MCStringRef MCSensorTypeToStringRef(MCSensorType p_sensor)
         default:
 			return MCSTR("unknown");
     }
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -236,7 +237,7 @@ public:
 				}
                 break;
             }                
-            case kMCSensorTypeAcceleration:
+           case kMCSensorTypeAcceleration:
             {
                 MCSensorAccelerationReading t_reading;
                 if (MCSystemGetAccelerationReading(t_reading, false))

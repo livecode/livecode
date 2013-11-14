@@ -114,7 +114,9 @@ public:
 				}
 				else
 				{
-					int32_t t_diff = m_match_index - m_table[m_match_index];
+					// MDW-2013-04-15: [[ x64 ]] m_match_frontier is unsigned
+					// so making t_diff unsigned to avoid compiler warning.
+					uint32_t t_diff = m_match_index - m_table[m_match_index];
 					if (m_match_frontier != t_diff)
 					{
 						uint32_t t_out = MCMin(t_diff - m_match_frontier, p_buffer_size - r_bytes_read);

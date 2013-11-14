@@ -524,7 +524,9 @@ Bool CXMLElement::GoChild(char *ename, bool p_inc_text) //go to next child
 	return False;
 }
 
-/*GoParent - Navigate to parent element*/
+/*GoParent - Navigate to parent element
+ * Return True if succeeded, False on error.
+ */
 Bool CXMLElement::GoParent()
 {
 	if (!isinited()) return False;
@@ -662,19 +664,20 @@ int CXMLElement::ChildCount(char *childname, int maxdepth)
 /*AttributeCount - returns total count of attributes.
 attributename - filter by attributename. NULL to count any attribute.
 */
+// MDW-2013-07-09: [[ RevXmlXPath ]]
 int CXMLElement::AttributeCount(char *attributename)
 {
 	if (!isinited()) return 0;
 	CXMLAttribute tattribute;
+	int attributecount = 0;
 	if (GetFirstAttribute(&tattribute)){
-		int attributecount = 1;
 		do {
 			if (!attributename || 
 				util_strnicmp(tattribute.GetName(),attributename,strlen(attributename)) == 0)
 				attributecount++;
 		} while (tattribute.GoNext());
 	}
-	return 0;
+	return attributecount;
 }
 
 

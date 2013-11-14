@@ -1,9 +1,18 @@
 ###############################################################################
 # Linux Shared Library Makefile Template
 
+# Make sure the environment makefile has been included.
+ifeq ($(ARCH),)
+	$(error Environment Makefile not included!)
+endif
+
 TYPE_DEFINES=
 TYPE_INCLUDES=
 TYPE_CCFLAGS=
+
+ifeq ($(ARCH),x86_64)
+	TYPE_CCFLAGS=-fPIC
+endif
 
 include $(shell pwd)/$(dir $(lastword $(MAKEFILE_LIST)))/common.linux.makefile
 
@@ -14,13 +23,19 @@ LIBS=$(CUSTOM_LIBS)
 STATIC_LIBS=$(CUSTOM_STATIC_LIBS)
 DYNAMIC_LIBS=$(CUSTOM_DYNAMIC_LIBS)
 
+ifeq ($(ARCH),x86_64)
+	DYNAMIC_LIBS+=stdc++
+else
+	STATIC_LIBS+=stdc++
+endif
+
 LDFLAGS=$(CUSTOM_LDFLAGS) -shared $(addprefix -Xlinker --exclude-libs -Xlinker ,$(addsuffix .a,$(addprefix lib,$(STATIC_LIBS)))) -Xlinker -no-undefined -static-libgcc
 
 TARGET_PATH=$(BUILD_DIR)/$(NAME).so
 
 $(TARGET_PATH): $(OBJECTS) $(DEPS)
 	mkdir -p $(dir $(TARGET_PATH))
-	gcc -fvisibility=hidden -o$(TARGET_PATH) $(LDFLAGS) $(OBJECTS) $(addsuffix .a,$(addprefix $(PRODUCT_DIR)/lib,$(LIBS))) -Wl,-Bstatic $(addprefix -l,$(STATIC_LIBS)) -Wl,-Bdynamic $(addprefix -l,$(DYNAMIC_LIBS))
+	gcc -m32 -fvisibility=hidden -o$(TARGET_PATH) $(LDFLAGS) $(OBJECTS) $(addsuffix .a,$(addprefix $(PRODUCT_DIR)/lib,$(LIBS))) -Wl,-Bstatic $(addprefix -l,$(STATIC_LIBS)) -Wl,-Bdynamic $(addprefix -l,$(DYNAMIC_LIBS))
 	cd $(BUILD_DIR) && \
 		objcopy --only-keep-debug "$(NAME).so" "$(NAME).so.dbg" && \
 		strip --strip-debug --strip-unneeded "$(NAME).so" && \

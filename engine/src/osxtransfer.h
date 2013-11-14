@@ -232,5 +232,6 @@ bool MCConvertMacTIFFToImage(MCDataRef p_input, MCDataRef& r_output);
 
 bool MCConvertFilesToMacHFS(MCDataRef p_input, MCDataRef& r_output);
 bool MCConvertMacHFSToFiles(MCDataRef p_input, MCDataRef& r_output);
+bool MCConvertMacHTMLToStyledText(MCDataRef p_input, MCDataRef& r_output);
 
 #endif

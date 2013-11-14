@@ -44,7 +44,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "scriptpt.h"
 #include "mcerror.h"
 #include "chunk.h"
-#include "pxmaplst.h"
 #include "util.h"
 #include "sellst.h"
 #include "redraw.h"
@@ -162,6 +161,8 @@ static PropList groupprops[] =
         {"patterns", P_PATTERNS},
         {"radioBehavior", P_RADIO_BEHAVIOR},
         {"rect", P_RECTANGLE},
+		// MERG-2013-06-24: [[ RevisedPropsProp ]] Include 'selectGroupedControls' in the group prop-list.
+        {"selectGroupedControls", P_SELECT_GROUPED_CONTROLS},
         {"scrollbarWidth", P_SCROLLBAR_WIDTH},
         {"showBorder", P_SHOW_BORDER},
         {"showName", P_SHOW_NAME},
@@ -1238,7 +1239,7 @@ void MCObject::GetLayer(MCExecContext& ctxt, uint32_t part, MCInterfaceLayer& r_
 	// previous fix for crash when attempting to get the layer of an object outside
 	// the group being edited in edit group mode.
 	
-	uint2 num;
+	uint2 num = 0;
 	if (parent != nil)
 	{
 		MCCard *t_card;
@@ -1329,6 +1330,8 @@ void MCObject::SetScript(MCExecContext& ctxt, MCStringRef new_script)
 		MCAutoStringRef t_old_script;
 		t_old_script = _script;
 		
+        bool t_old_script_encrypted = m_script_encrypted;
+        
 		MCAutoStringRef t_new_script;
 		if (MCStringGetNativeCharAtIndex(new_script, length - 1) != '\n')
 		{
@@ -1345,6 +1348,8 @@ void MCObject::SetScript(MCExecContext& ctxt, MCStringRef new_script)
 		
 		MCValueAssign(_script, *t_new_script);
 
+        // IM-2013-05-29: [[ BZ 10916 ]] flag new script as unencrypted
+		m_script_encrypted = false;
 		getstack() -> securescript(this);
 		
 		if (t_success)
@@ -1358,6 +1363,7 @@ void MCObject::SetScript(MCExecContext& ctxt, MCStringRef new_script)
 					delete hlist;
 					hlist = NULL;
 					MCValueAssign(_script, *t_old_script);
+                    m_script_encrypted = t_old_script_encrypted;
 					MCperror->add(PE_OBJECT_NOTLICENSED, 0, 0);
 				}
 				if (!MCperror->isempty())
@@ -1443,10 +1449,33 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 	if (t_success)
 		t_success =	t_object -> gettype() == CT_BUTTON;
 
-	// MW-2009-01-28: [[ Bug ]] Make sure we aren't setting the parentScript of
-	//   an object to itself.
+	// MW-2013-07-18: [[ Bug 11037 ]] Make sure the object isn't in the hierarchy
+	//   of the parentScript.
+	bool t_is_cyclic;
+	t_is_cyclic = false;
 	if (t_success)
-		t_success = t_object != this;
+	{
+		MCObject *t_parent_object;
+		t_parent_object = t_object;
+		while(t_parent_object != nil)
+		{
+			if (t_parent_object == this)
+			{
+				t_is_cyclic = true;
+				break;
+			}
+			
+			MCParentScript *t_super_parent_script;
+			t_super_parent_script = t_parent_object -> getparentscript();
+			if (t_super_parent_script != nil)
+				t_parent_object = t_super_parent_script -> GetObject();
+			else
+				t_parent_object = nil;
+		}
+		
+		if (t_is_cyclic)
+			t_success = false;
+	}
 
 	if (t_success)
 	{
@@ -1472,20 +1501,16 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 			t_use = MCParentScript::Acquire(this, t_id, t_stack);
 			t_success = t_use != nil;
 
-			// MW-2009-01-28: [[ Inherited parentScripts ]]
-			// Next we have to ensure the inheritence hierarchy is in place (The
-			// inherit call will create super-uses, and will return false if there
-				// is not enough memory).
-#ifdef FEATURE_INHERITED_PARENTSCRIPTS
+            // MW-2013-05-30: [[ InheritedPscripts ]] Make sure we resolve the the
+			//   parent script as pointing to the object (so Inherit works correctly).
+            if (t_success)
+                t_use -> GetParent() -> Resolve(t_object);
+            
+            // MW-2013-05-30: [[ InheritedPscripts ]] Next we have to ensure the
+			//   inheritence hierarchy is in place (The inherit call will create
+			//   super-uses, and will return false if there is not enough memory).
 			if (t_success)
 				t_success = t_use -> Inherit();
-
-			// TODO: Update all the Uses of this object, if it is currently
-			// being used as a parentScript, because we have now changed the
-			// inheritence hierarchy dynamically, and the various uses need
-			// their super_use chains updated.
-			// 
-#endif
 
 			// We have succeeded in creating a new use of an object as a parent
 			// script, so now release the old parent script this object points
@@ -1495,15 +1520,27 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 
 			parent_script = t_use;
 
-			// Finally resolve the parent script as pointing to the object.
-			parent_script -> GetParent() -> Resolve(t_object);
+			// MW-2013-05-30: [[ InheritedPscripts ]] Make sure we update all the
+			//   uses of this object if it is being used as a parentScript. This
+			//   is because the inheritence hierarchy has been updated and so the
+			//   super_use chains need to be remade.
+			MCParentScript *t_this_parent;
+			if (getstate(CS_IS_PARENTSCRIPT))
+			{
+				t_this_parent = MCParentScript::Lookup(this);
+				if (t_success && t_this_parent != nil)
+					t_success = t_this_parent -> Reinherit();
+			}
 		}
 	}
 	else
 	{
-		ctxt . LegacyThrow(EE_PARENTSCRIPT_BADOBJECT);
-		delete t_chunk;
-		return;
+		// MW-2013-07-18: [[ Bug 11037 ]] Report an appropriate error if the hierarchy
+		//   is cyclic.
+		if (!t_is_cyclic)
+			ctxt . LegacyThrow(EE_PARENTSCRIPT_BADOBJECT);
+		else
+			ctxt . LegacyThrow(EE_PARENTSCRIPT_CYCLICOBJECT);
 	}
 
 	// Delete our temporary chunk object.
@@ -1763,7 +1800,7 @@ void MCObject::SetColor(MCExecContext& ctxt, int index, const MCInterfaceNamedCo
 		if (getpindex(index, j))
 		{
 			if (opened)
-				MCpatterns->freepat(pixmaps[j]);
+				MCpatternlist->freepat(patterns[j].pattern);
 			destroypindex(index, j);
 		}
 		if (opened)
@@ -2015,7 +2052,7 @@ void MCObject::SetColors(MCExecContext& ctxt, MCStringRef p_input)
 				if (getpindex(index, j))
 				{
 					if (opened)
-						MCpatterns->freepat(pixmaps[j]);
+						MCpatternlist->freepat(patterns[j].pattern);
 					destroypindex(index, j);
 				}
 				if (!getcindex(index, i))
@@ -2077,13 +2114,14 @@ void MCObject::GetEffectiveColors(MCExecContext& ctxt, MCStringRef& r_colors)
 
 bool MCObject::GetPattern(MCExecContext& ctxt, Properties which, bool effective, uint4& r_pattern)
 {
+
 	uint2 i;
 	if (getpindex(which - P_FORE_PATTERN, i))
 	{
-		if (pixmapids[i] < PI_END && pixmapids[i] > PI_PATTERNS)
-			r_pattern = pixmapids[i] - PI_PATTERNS;
+		if (patterns[i].id < PI_END && patterns[i].id > PI_PATTERNS)
+			r_pattern = patterns[i].id - PI_PATTERNS;
 		else
-			r_pattern = pixmapids[i];
+			r_pattern = patterns[i].id;
 		return true;
 	}
 	else
@@ -2105,7 +2143,7 @@ void MCObject::SetPattern(MCExecContext& ctxt, uint2 p_new_pixmap, uint4* p_new_
 		if (getpindex(p_new_pixmap, i))
 		{
 			if (t_isopened)
-				MCpatterns->freepat(pixmaps[i]);
+				MCpatternlist->freepat(patterns[i].pattern);
 			destroypindex(p_new_pixmap, i);
 		}
 	}
@@ -2115,12 +2153,12 @@ void MCObject::SetPattern(MCExecContext& ctxt, uint2 p_new_pixmap, uint4* p_new_
 			i = createpindex(p_new_pixmap);
 		else
 			if (t_isopened)
-				MCpatterns->freepat(pixmaps[i]);
+				MCpatternlist->freepat(patterns[i].pattern);
 		if (*p_new_id < PI_PATTERNS)
 			*p_new_id += PI_PATTERNS;
-		pixmapids[i] = *p_new_id;
+		patterns[i].id = *p_new_id;
 		if (t_isopened)
-			pixmaps[i] = MCpatterns->allocpat(pixmapids[i], this);
+			patterns[i].pattern = MCpatternlist->allocpat(patterns[i].id, this);
 		if (getcindex(p_new_pixmap, i))
 			destroycindex(p_new_pixmap, i);
 	}
@@ -2888,6 +2926,19 @@ void MCObject::SetVisible(MCExecContext& ctxt, uint32_t part, bool setting)
 	SetVisibility(ctxt, part, setting, true);
 }
 
+void MCObject::GetEffectiveVisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)
+{
+    bool t_vis;
+    t_vis = getflag(F_VISIBLE);
+    
+    // if visible and effective and parent is a
+    // group then keep searching parent properties
+    if (t_vis && parent != NULL && parent->gettype() == CT_GROUP)
+        parent->GetEffectiveVisible(ctxt, part, t_vis);
+    
+    r_setting = t_vis;
+}
+
 void MCObject::GetInvisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)
 {
 	r_setting = (flags & F_VISIBLE) != True;
@@ -2896,6 +2947,13 @@ void MCObject::GetInvisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)
 void MCObject::SetInvisible(MCExecContext& ctxt, uint32_t part, bool setting)
 {
 	SetVisibility(ctxt, part, setting, false);
+}
+
+void MCObject::GetEffectiveInvisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)
+{
+	bool t_setting;
+    GetEffectiveVisible(ctxt, part, t_setting);
+    r_setting = !t_setting;
 }
 
 void MCObject::GetEnabled(MCExecContext& ctxt, uint32_t part, bool& r_setting)
@@ -2993,7 +3051,7 @@ void MCObject::GetLongOwner(MCExecContext& ctxt, MCStringRef& r_owner)
 		parent -> GetLongName(ctxt, r_owner);
 }
 
-void MCObject::GetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_props)
+void MCObject::DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effective, MCArrayRef& r_props)
 {
 	PropList *table;
 	uint2 tablesize;
@@ -3063,11 +3121,61 @@ void MCObject::GetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_p
 		t_success = MCArrayCreateMutable(&t_array);
 	if (t_success)
 	{
+        MCExecPoint& ep = ctxt . GetEP();
 		MCerrorlock++;
 		while (tablesize--)
 		{
-			getprop(part, (Properties)table[tablesize].value, ctxt . GetEP(), False);
-			ctxt . GetEP() . storearrayelement_cstring(*t_array, table[tablesize].token);
+            const char* t_token = table[tablesize].token;
+            
+            if ((Properties)table[tablesize].value > P_FIRST_ARRAY_PROP)
+                getarrayprop(part, (Properties)table[tablesize].value, ep, kMCEmptyName, p_effective);
+            else
+            {
+                MCAutoStringRef t_unicode_prop;
+                // MERG-2013-05-07: [[ RevisedPropsProp ]] Special-case the props that could
+                //   be either Unicode or native (ensure minimal encoding is used).
+                // MERG-2013-06-24: [[ RevisedPropsProp ]] Treat the short name specially to ensure
+                //   round-tripping. If the name is empty, then return empty for 'name'.
+                switch ((Properties)table[tablesize].value) {
+                    case P_SHORT_NAME:
+                        if (isunnamed())
+                            ep.clear();
+                        else
+                            getprop(part, P_SHORT_NAME, ep, p_effective);
+                        break;
+                    case P_LABEL:
+                        getstringprop(ctxt, part, P_UNICODE_LABEL, p_effective, &t_unicode_prop);
+                        if (!MCStringIsNative(*t_unicode_prop))
+                        {
+                            if (gettype() == CT_STACK)
+                                t_token = "unicodeTitle";
+                            else
+                                t_token = "unicodeLabel";
+                        }
+                        ep . setvalueref(*t_unicode_prop);
+                        break;
+                    case P_TOOL_TIP:
+                        getstringprop(ctxt, part, P_UNICODE_TOOL_TIP, p_effective, &t_unicode_prop);
+                        if (!MCStringIsNative(*t_unicode_prop))
+                            t_token = "unicodeToolTip";
+                        ep . setvalueref(*t_unicode_prop);
+                        break;
+                    case P_TEXT:
+                        if (gettype() == CT_BUTTON)
+                        {
+                            getstringprop(ctxt, part, P_UNICODE_TEXT, p_effective, &t_unicode_prop);
+                            if (!MCStringIsNative(*t_unicode_prop))
+                                t_token = "unicodeText";
+                            ep . setvalueref(*t_unicode_prop);
+                            break;
+                        }
+                    default:
+                        getprop(part, (Properties)table[tablesize].value, ep, p_effective);
+                        break;
+                }
+            }
+            
+            ctxt . GetEP() . storearrayelement_cstring(*t_array, table[tablesize].token);
 		}
 		MCerrorlock--;
 		t_success = MCArrayCopy(*t_array, r_props);
@@ -3077,6 +3185,11 @@ void MCObject::GetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_p
 		return;
 
 	ctxt . Throw();
+}
+
+void MCObject::GetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_props)
+{
+    DoGetProperties(ctxt, part, false, r_props);
 }
 
 void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef props)
@@ -3102,6 +3215,11 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
 	}	
 	MCerrorlock--;
 	MCRedrawUnlockScreen();
+}
+
+void MCObject::GetEffectiveProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_props)
+{
+    DoGetProperties(ctxt, part, true, r_props);
 }
 
 void MCObject::GetCustomPropertySet(MCExecContext& ctxt, MCStringRef& r_propset)
@@ -3161,7 +3279,7 @@ void MCObject::GetCustomPropertySets(MCExecContext& ctxt, uindex_t& r_count, MCS
 	while (t_success && p != NULL)
 	{
 		if (!p -> hasname(kMCEmptyName))
-			t_success = t_list . Push(MCNameGetString(p -> getname()));
+			t_success = t_list . Push(MCValueRetain(MCNameGetString(p -> getname())));
 		p = p -> getnext();
 	}
 
@@ -3833,4 +3951,56 @@ void MCObject::GetCustomKeys(MCExecContext& ctxt, MCStringRef& r_string)
 void MCObject::SetCustomKeys(MCExecContext& ctxt, MCStringRef p_string)
 {
     SetCustomKeysElement(ctxt, kMCEmptyName, p_string);
+}
+
+void MCObject::GetCardIds(MCExecContext& ctxt, MCCard *p_cards, bool p_all, uint32_t p_id, uindex_t& r_count, uinteger_t*& r_ids)
+{
+	MCAutoArray<uinteger_t> t_ids;
+    bool t_success;
+    
+    t_success = true;
+    if (p_cards != nil)
+	{
+		MCCard *cptr = p_cards;
+		do
+		{
+            if (p_all || cptr -> countme(p_id, False))
+            {
+                uint32_t t_id;
+                t_id = cptr -> getid();
+                t_success = t_ids . Push(t_id);
+                cptr = cptr -> next();
+            }
+		}
+		while (cptr != p_cards && t_success);
+	}
+    
+    t_ids . Take(r_ids, r_count);
+}
+
+void MCObject::GetCardNames(MCExecContext& ctxt, MCCard *p_cards, bool p_all, uint32_t p_id, uindex_t& r_count, MCStringRef*& r_names)
+{
+	MCAutoArray<MCStringRef> t_names;
+    bool t_success;
+    
+    t_success = true;
+    if (p_cards != nil)
+	{
+		MCCard *cptr = p_cards;
+		do
+		{
+            if (p_all || cptr -> countme(p_id, False))
+            {
+                MCStringRef t_name;
+                cptr -> GetShortName(ctxt, t_name);
+                t_success = !ctxt . HasError();
+                if (t_success)
+                    t_success = t_names . Push(t_name);
+                cptr = cptr -> next();
+            }
+		}
+		while (cptr != p_cards && t_success);
+	}
+    
+    t_names . Take(r_names, r_count);
 }

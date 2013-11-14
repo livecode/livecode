@@ -1,0 +1,50 @@
+<doc>
+  <legacy_id>1999</legacy_id>
+  <name>long</name>
+  <type>keyword</type>
+  <syntax>
+  </syntax>
+  <library></library>
+  <objects>
+  </objects>
+  <synonyms>
+    <synonym>detailed</synonym>
+  </synonyms>
+  <classification>
+    <category>Math, Logic, &amp; Dates</category>
+    <category>Files, Folders, &amp; Resources</category>
+  </classification>
+  <references>
+    <function tag="dateFormat">dateFormat Function</function>
+    <command tag="libURLSetLogField">libURLSetLogField Command</command>
+    <command tag="convert">convert Command</command>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+    <changed version="2.0"></changed>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary>Specifies a <function tag="format">format</function> for the <function tag="date">date</function>, <function tag="time">time</function>, <function tag="files">files</function>, and <function tag="folders">folders</function> <glossary tag="function">functions</glossary>, the <command tag="convert">convert</command> <glossary tag="command">command</glossary>, and the <property tag="name">name</property>, <property tag="ID">ID</property>, and <property tag="owner">owner</property> <property tag="properties">properties</property>.</summary>
+  <examples>
+    <example>put the long ID of this card after cardsList</example>
+    <example>if field "Last Modified" is the long date then put true into itsToday</example>
+    <example>put getSizes(the detailed files) into field "Sizes"</example>
+  </examples>
+  <description>
+    <p>Use the <b>long</b> <glossary tag="keyword">keyword</glossary> to obtain a date, time, name, ID, or list of <function tag="files">files</function> or <function tag="folders">folders</function> with the greatest amount of available detail.</p><p/><p><b>Comments:</b></p><p>In general, a <b>long</b> form is longer than either the <keyword tag="short">short</keyword> form or the <keyword tag="abbreviated">abbreviated</keyword> form.</p><p/><p>If the <b>useSystemDate</b> <glossary tag="property">property</glossary> is set to false, a long <function tag="date">date</function> looks like this:</p><p><code>  Thursday, June 22, 2000</code></p><p>If the <b>useSystemDate</b> is true, the long <function tag="date">date</function> is formatted according to the system settings.</p><p/><p>If the <b>useSystemDate</b> <glossary tag="property">property</glossary> is set to false, a long <function tag="time">time</function> looks like this:</p><p><code>  11:22:47 AM</code></p><p>If the <b>useSystemDate</b> is true, the long <function tag="time">time</function> is formatted according to the system settings.</p><p/><p>A long object <b>name</b> consists of the <glossary tag="object type">object type</glossary>, followed by the name in quotes, for the <glossary tag="object">object</glossary> and its <property tag="owner">owner</property> (and the <property tag="owner">owner</property> of that <glossary tag="object">object</glossary>, and so on). For example, a long <keyword tag="card">card</keyword> name looks like this:</p><p><code>  card "My Card" of stack "/Drive/Folder/Stack.rev"</code></p><p/><p>A long object <b>ID</b> looks like this:</p><p><code>  field ID 2238 of stack "/Drive/Folder/Stack.rev"</code></p><p/><p><code/><b>Note:</b><code/> The <b>long</b> <glossary tag="keyword">keyword</glossary> is implemented internally as a <glossary tag="property">property</glossary> and <control_st tag="function">function</control_st>, and appears in the <function tag="propertyNames">propertyNames</function> and the <function tag="functionNames">functionNames</function>. However, it cannot be used as a <glossary tag="property">property</glossary> in an <glossary tag="expression">expression</glossary>, nor with the <command tag="set">set</command> <glossary tag="command">command</glossary>.</p><p/><p><b>Changes:</b></p><p>The forms<code> the detailed files </code>and<code> the detailed folders </code>were introduced in version 1.1. In previous versions, the <b>files</b> and <function tag="folders">folders</function> <glossary tag="function">functions</glossary> supported only a simple list of <keyword tag="file">file</keyword> or <property tag="defaultFolder">folder</property> names.</p><p/><p>The<code> detailed </code>synonym was introduced in version 1.1.</p><p/><p>The form<code> the long owner </code>was introduced in version 2.0. In previous versions, the form of the <b>owner</b> <glossary tag="property">property</glossary> could not be specified and reported only the abbreviated <property tag="owner">owner</property>.</p>
+  </description>
+</doc>

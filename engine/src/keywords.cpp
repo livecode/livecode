@@ -105,24 +105,30 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 		MCAutoNameRef t_token_name;
 		/* UNCHECKED */ t_token_name . Clone(sp . gettoken_nameref());
 
-		MCExpression *e = NULL;
-		MCVarref *v = NULL;
-		if (sp.gethandler() == NULL)
-			if (constant)
-				sp.gethlist()->findconstant(t_token_name, &e);
-			else
-				sp.gethlist()->findvar(t_token_name, false, &v);
-		else
-			if (constant)
-				sp.gethandler()->findconstant(t_token_name, &e);
-			else
-				sp.gethandler()->findvar(t_token_name, &v);
-		if (e != NULL || v != NULL)
+		// MW-2013-11-08: [[ RefactorIt ]] The 'it' variable is always present now,
+		//   so there's no need to 'local it'. However, scripts do contain this so
+		//   don't do a check for an existing var in this case.
+		if (!MCNameIsEqualTo(t_token_name, MCN_it, kMCCompareCaseless))
 		{
-			MCperror->add(PE_LOCAL_SHADOW, sp);
-			delete v;
-			delete e;
-			return PS_ERROR;
+			MCExpression *e = NULL;
+			MCVarref *v = NULL;
+			if (sp.gethandler() == NULL)
+				if (constant)
+					sp.gethlist()->findconstant(t_token_name, &e);
+				else
+					sp.gethlist()->findvar(t_token_name, false, &v);
+			else
+				if (constant)
+					sp.gethandler()->findconstant(t_token_name, &e);
+				else
+					sp.gethandler()->findvar(t_token_name, &v);
+			if (e != NULL || v != NULL)
+			{
+				MCperror->add(PE_LOCAL_SHADOW, sp);
+				delete v;
+				delete e;
+				return PS_ERROR;
+			}
 		}
 
 		MCVariable *tmp;

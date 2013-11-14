@@ -143,7 +143,7 @@ public:
 	void setprintmode(void);
 
 	void setclip(const MCRectangle& rect);
-	const MCRectangle& getclip(void) const;
+	MCRectangle getclip(void) const;
 	void clearclip(void);
 	
 	void setorigin(int2 x, int2 y);
@@ -157,24 +157,27 @@ public:
 	void setforeground(const MCColor& c);
 	void setbackground(const MCColor& c);
 	void setdashes(uint2 offset, const uint1 *dashes, uint2 ndashes);
-	void setfillstyle(uint2 style, Pixmap p, int2 x, int2 y);
-	void getfillstyle(uint2& style, Pixmap& p, int2& x, int2& y);
+	void setfillstyle(uint2 style, MCPatternRef p_pattern, int2 x, int2 y);
+	void getfillstyle(uint2& style, MCPatternRef& r_pattern, int2& x, int2& y);
 	void setlineatts(uint2 linesize, uint2 linestyle, uint2 capstyle, uint2 joinstyle);
+	void getlineatts(uint2& linesize, uint2& linestyle, uint2& capstyle, uint2& joinstyle);
 	void setmiterlimit(real8 p_limit);
+	void getmiterlimit(real8 &r_limit);
 	void setgradient(MCGradientFill *p_gradient);
 
 	void drawline(int2 x1, int2 y1, int2 x2, int2 y2);
 	void drawlines(MCPoint *points, uint2 npoints, bool p_closed = false);
 	void drawsegments(MCSegment *segments, uint2 nsegs);
-	void drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontStruct *f, Boolean image, bool p_unicode_override = false);
-	void drawrect(const MCRectangle& rect);
+	void drawtext(int2 x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image);
+    void drawtext_substring(int2 x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean image);
+	void drawrect(const MCRectangle& rect, bool inside);
 	void fillrect(const MCRectangle& rect);
 	void fillrects(MCRectangle *rects, uint2 nrects);
 	void fillpolygon(MCPoint *points, uint2 npoints);
-	void drawroundrect(const MCRectangle& rect, uint2 radius);
+	void drawroundrect(const MCRectangle& rect, uint2 radius, bool inside);
 	void fillroundrect(const MCRectangle& rect, uint2 radius);
-	void drawarc(const MCRectangle& rect, uint2 start, uint2 angle);
-	void drawsegment(const MCRectangle& rect, uint2 start, uint2 angle);
+	void drawarc(const MCRectangle& rect, uint2 start, uint2 angle, bool inside);
+	void drawsegment(const MCRectangle& rect, uint2 start, uint2 angle, bool inside);
 	void fillarc(const MCRectangle& rect, uint2 start, uint2 angle);
 
 	void drawpath(MCPath *path);
@@ -186,19 +189,12 @@ public:
 
 	void drawlink(MCStringRef link, const MCRectangle& region);
 
-	int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
-
 	void applywindowshape(MCWindowShape *p_mask, unsigned int p_update_width, unsigned int p_update_height);
 
 	void drawtheme(MCThemeDrawType type, MCThemeDrawInfo* p_parameters);
-	void copyarea(Drawable p_src, uint4 p_dx, uint4 p_dy, uint4 p_sx, uint4 p_sy, uint4 p_sw, uint4 p_sh);
-	void combine(Pixmap p_src, int4 p_dx, int4 p_dy, int4 p_sx, int4 p_sy, uint4 p_sw, uint4 p_sh);
 
 	void clear(const MCRectangle *rect);
 	MCRegionRef computemaskregion(void);
-	
-	MCBitmap *lock(void);
-	void unlock(MCBitmap *);
 	
 	uint2 getdepth(void) const;
 	const MCColor& getblack(void) const;
@@ -222,11 +218,11 @@ protected:
 
 	// Begin rendering into an offscreen buffer for a drawing operation not
 	// supported by the target device.
-	virtual MCContext *begincomposite(const MCRectangle& p_region) = 0;
+	virtual bool begincomposite(const MCRectangle &p_region, MCGContextRef &r_context) = 0;
 
 	// Render the offscreen buffer to the target device using the passed
 	// clip region.
-	virtual void endcomposite(MCContext *p_context, MCRegionRef p_clip_region) = 0;
+	virtual void endcomposite(MCRegionRef p_clip_region) = 0;
 
 private:
 	uint1 f_quality;
@@ -251,10 +247,10 @@ private:
 	void new_fill_background(void);
 	void new_stroke(void);
 	
-	void rectangle_mark(bool p_stroke, bool p_fill, const MCRectangle& rect);
-	void round_rectangle_mark(bool p_stroke, bool p_fill, const MCRectangle& rect, uint2 radius);
+	void rectangle_mark(bool p_stroke, bool p_fill, const MCRectangle& rect, bool inside);
+	void round_rectangle_mark(bool p_stroke, bool p_fill, const MCRectangle& rect, uint2 radius, bool inside);
 	void polygon_mark(bool p_stroke, bool p_fill, MCPoint *p_vertices, uint2 p_arity, bool p_closed);
-	void arc_mark(bool p_stroke, bool p_fill, const MCRectangle& p_bounds, uint2 p_start, uint2 p_angle, bool p_complete);
+	void arc_mark(bool p_stroke, bool p_fill, const MCRectangle& p_bounds, uint2 p_start, uint2 p_angle, bool p_complete, bool inside);
 	void path_mark(bool stroke, bool fill, MCPath *path, bool evenodd);
 };
 
@@ -293,19 +289,22 @@ struct MCMarkPolygon
 struct MCMarkRectangle
 {
 	MCRectangle bounds;
+	bool inside : 1;
 };
 
 struct MCMarkRoundRectangle
 {
 	MCRectangle bounds;
 	uint2 radius;
+	bool inside : 1;
 };
 
 struct MCMarkArc
 {
 	MCRectangle bounds;
 	uint2 start, angle;
-	bool complete;
+	bool complete : 1;
+	bool inside : 1;
 };
 
 struct MCMarkImage
@@ -334,7 +333,7 @@ struct MCMarkMetafile
 struct MCMarkText
 {
 	MCMarkFill *background;
-	MCFontStruct *font;
+    MCFontRef font;
 	MCPoint position;
 	void *data;
 	uint2 length;
@@ -344,7 +343,7 @@ struct MCMarkText
 struct MCMarkTheme
 {
 	MCThemeDrawType type;
-	uint8_t info[64];
+	uint8_t info[0];
 };
 
 // MW-2009-06-14: [[ Bitmap Effects ]] Added reference to any effects that may
@@ -378,9 +377,11 @@ struct MCMarkFill
 {
 	uint2 style;
 	MCColor colour;
-	Pixmap pattern;
+	MCPatternRef pattern;
 	MCPoint origin;
 	MCGradientFill *gradient;
+
+	MCMarkFill *previous;
 };
 
 struct MCMarkLink

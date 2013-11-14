@@ -628,7 +628,7 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, findex_t& r_break_index, bool& r_break
 	}
 
 	// Fetch the first character of the next block
-	int4 t_next_block_char;
+	codepoint_t t_next_block_char;
 	MCBlock *t_next_block;
 	t_next_block = next();
 	if (t_next_block != parent -> getblocks())
@@ -641,53 +641,13 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, findex_t& r_break_index, bool& r_break
 	else
 		t_next_block_char = -1;
 
-	// If this is a text block and we fit inside maxwidth fully then check
-	// for a break point at the end.
-	if (getwidth(NULL, x) <= maxwidth)
-	{
-		findex_t t_last_char, t_break_index;
-		t_last_char = parent->GetCodepointAtIndex(m_index + m_size - 1);
-		t_break_index = m_index + m_size - 1;
-		
-		// If this is the last block, or we can break between this and the
-		// next block, return the end point.
-		if (t_next_block_char != -2)
-		{
-			if (t_next_block_char == -1 || MCUnicodeCanBreakBetween(t_last_char, t_next_block_char))
-			{
-				r_break_index = m_index + m_size;
-				r_break_fits = true;
-				return true;
-			}
-		}
-			
-		// Compute the last possible break position in the block by looping
-		// back over the characters;
-		if (t_break_index > m_index)
-		{
-			do
-			{
-				uint2 i;
-				i = t_break_index;
-				
-				// TODO: this doesn't handle surrogate pairs
-				uint2 t_prev_char;
-				t_prev_char = parent->GetCodepointAtIndex(--i);
-				
-				if (MCUnicodeCanBreakBetween(t_prev_char, t_last_char))
-					break;
-				
-				t_break_index = i;
-				
-				t_last_char = t_prev_char;
-			}
-			while(t_break_index > m_index);
-		}
-		
-		r_break_index = t_break_index;
-		r_break_fits = true;
-		return true;
-	}
+    // FG-2013-10-21 [[ Field speedups ]]
+    // Previously, we used to calculate the length of the entire block here in order
+    // to determine if splitting was required. Unfortunately, this tends to bypass
+    // the text layout cache resulting in very slow laying out now that the "proper"
+    // Unicode text layout APIs are in use.
+    //
+    // Now, all text is laid out word-at-a-time.
 	
 	// We don't completely fit within maxwidth, so compute the last break point in
 	// the block by measuring
@@ -713,31 +673,49 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, findex_t& r_break_index, bool& r_break
 	bool t_can_fit;
 	t_can_fit = false;
 	
+	// MW-2013-08-01: [[ Bug 10932 ]] Optimized loop only measuring between potential break
+	//   points, rather than char by char.
+    bool t_whole_block;
+    t_whole_block = false;
 	while(i < m_index + m_size)
 	{
-		codepoint_t t_this_char;
-		t_this_char = t_next_char;
-
-		if (i + 1 < m_index + m_size)
-			t_next_char = parent->GetCodepointAtIndex(i + 1);
-		else
-			t_next_char = t_next_block_char;
+		findex_t initial_i;
+		initial_i = i;
 		
 		bool t_can_break;
 		t_can_break = false;
-
-		findex_t next_i;
-		next_i = parent->IncrementIndex(i);
+		
+		codepoint_t t_this_char;
+        bool t_end_of_block;
+        t_end_of_block = false;
+		while(i < m_index + m_size)
+		{
+			t_this_char = t_next_char;
+			
+			i = parent->IncrementIndex(i);
+		
+			if (i < m_index + m_size)
+				t_next_char = parent->GetCodepointAtIndex(i);
+			else
+            {
+                t_next_char = t_next_block_char;
+                t_end_of_block = true;
+            }
+			
+			if (t_this_char == '\t' ||
+				t_next_char == -1 ||
+				MCUnicodeCanBreakBetween(t_this_char, t_next_char))
+			{
+				t_can_break = true;
+				break;
+			}
+		}
 
 		if (t_this_char == '\t')
 		{
-			twidth += gettabwidth(x + twidth, i);
-
+			twidth += gettabwidth(x + twidth, initial_i);
 			t_last_break_width = twidth;
-			t_last_break_i = next_i;
-			
-			// We can always break after a tab
-			t_can_break = true;
+			t_last_break_i = i;
 		}
 		else
 		{
@@ -752,39 +730,35 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, findex_t& r_break_index, bool& r_break
 			// MW-2009-04-23: [[ Bug ]] For printing, we measure complete runs of text otherwise we get
 			//   positioning issues.
 			if (MCFontHasPrinterMetrics(m_font))
-			{
-				MCRange t_range;
-				t_range = MCRangeMake(t_last_break_i, next_i - t_last_break_i);
-				twidth = t_last_break_width + MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range);
-			}
+            {
+                MCRange t_range;
+                t_range = MCRangeMake(t_last_break_i, i - t_last_break_i);
+                twidth = t_last_break_width + MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range);
+            }
 			else
 #endif
 			{
-				MCRange t_range;
-				t_range = MCRangeMake(i, next_i - i);
-				twidth += MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range);
-			}
+                MCRange t_range;
+                t_range = MCRangeMake(initial_i, i - initial_i);
+                twidth += MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range);
+            }
 #endif
-			
-			if (t_next_char == -1 || MCUnicodeCanBreakBetween(t_this_char, t_next_char))
-				t_can_break = true;
 		}
-
-		i = next_i;
 
 		if (t_can_fit && twidth > maxwidth)
 			break;
 
 		if (t_can_break)
-		{
 			t_break_index = i;
 
-			if (twidth <= maxwidth)
-				t_can_fit = true;
+        if (twidth <= maxwidth)
+        {
+            t_can_fit = true;
+            t_whole_block = t_end_of_block;
+        }
 
-			if (twidth >= maxwidth)
-				break;
-		}
+		if (twidth >= maxwidth)
+			break;
 	}
 
 	// We now have a suitable break point in t_break_index. This could be index if
@@ -792,11 +766,12 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, findex_t& r_break_index, bool& r_break
 	// any suitable run of spaces.
 	while(t_break_index < m_index + m_size && parent->TextIsWordBreak(parent->GetCodepointAtIndex(t_break_index)))
 		t_break_index = parent->IncrementIndex(t_break_index);
-		
+
 	r_break_fits = t_can_fit;
 	r_break_index = t_break_index;
 	
-	return false;
+    // If we found a break, was it before the end of the block?
+    return t_whole_block;
 }
 
 void MCBlock::split(findex_t p_index)
@@ -990,7 +965,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 
 			t_cell_clip = MCU_intersect_rect(t_cell_clip, t_old_clip);
 			dc -> setclip(t_cell_clip);
-			MCFontDrawTextSubstring(m_font, parent->GetInternalStringRef(), t_range, dc, x, y, image == True);
+            dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True);
 
 			// Only draw the various boxes/lines if there is any content.
 			if (t_next_index - t_index > 0)
@@ -1065,7 +1040,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 				twidth = MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range);
 				twidth += gettabwidth(cx + twidth, eptr);
 
-				MCFontDrawTextSubstring(m_font, parent->GetInternalStringRef(), t_range, dc, x, y, image == True);
+                dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True);
 
 				cx += twidth;
 				x += twidth;
@@ -1077,9 +1052,10 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 				size -= l;
 			}
 		}
+
 		MCRange t_range;
 		t_range = MCRangeMake(sptr, size);
-		MCFontDrawTextSubstring(m_font, parent->GetInternalStringRef(), t_range, dc, x, y, image == True);
+        dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True);
 
 		// Apply strike/underline.
 		if ((style & FA_UNDERLINE) != 0)
@@ -1215,11 +1191,11 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, findex_t si, findex_t ei, 
 		{
 			if (IsMacLF() && !f->isautoarm())
 			{
-				Pixmap p;
+				MCPatternRef t_pattern;
 				int2 x, y;
 				MCColor fc, hc;
-				f->getforecolor(DI_FORE, False, True, fc, p, x, y, dc, f);
-				f->getforecolor(DI_HILITE, False, True, hc, p, x, y, dc, f);
+				f->getforecolor(DI_FORE, False, True, fc, t_pattern, x, y, dc, f);
+				f->getforecolor(DI_HILITE, False, True, hc, t_pattern, x, y, dc, f);
 				if (hc.pixel == fc.pixel)
 					f->setforeground(dc, DI_BACK, False, True);
 			}
@@ -1728,7 +1704,9 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l)
 
 		// MW-2012-08-29: [[ Bug 10325 ]] Use 32-bit int to compute the width, then clamp
 		//   to 65535 - this means that we force wrapping when the line is too long.
-		uint4 twidth = 0;
+		// MW-2013-08-08: [[ Bug 10654 ]] Make sure we use a signed integer here, otherwise
+		//   we get incorrect clamping when converted to unsigned.
+		int4 twidth = 0;
 		if (flags & F_HAS_TAB)
 		{
 			uindex_t eptr;
@@ -1754,7 +1732,7 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l)
 		}
 		MCRange t_range;
 		t_range = MCRangeMake(sptr, l);
-		return MCU_min(65535U, twidth + MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range));
+		return MCU_min(65535, twidth + MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range));
 	}
 }
 

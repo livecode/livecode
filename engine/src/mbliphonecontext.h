@@ -45,7 +45,7 @@ public:
 	bool changeopaque(bool p_new_value);
 
 	void setclip(const MCRectangle& rect);
-	const MCRectangle& getclip(void) const;
+	const MCRectangle getclip(void) const;
 	void clearclip(void);
 
 	void setorigin(int2 x, int2 y);
