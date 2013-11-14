@@ -1305,11 +1305,7 @@ extern MCStringRef kMCFalseString;
 // the c-string must be a C static string.
 MCStringRef MCSTR(const char *string);
 
-bool MCStringCreateWithCString(const char *cstring, MCStringRef& r_string);
-bool MCStringCreateWithCStringAndRelease(char_t * cstring, MCStringRef& r_string);
-
 const char *MCStringGetCString(MCStringRef p_string);
-
 bool MCStringIsEqualToCString(MCStringRef string, const char *cstring, MCStringOptions options);
 
 // Create an immutable string from the given bytes, interpreting them using
@@ -1330,7 +1326,7 @@ bool MCStringCreateWithNativeChars(const char_t *chars, uindex_t char_count, MCS
 bool MCStringCreateWithNativeCharsAndRelease(char_t *chars, uindex_t char_count, MCStringRef& r_string);
 
 // Create an immutable string from the given (native) c-string.
-bool MCStringCreateWithCString(const char_t *cstring, MCStringRef& r_string);
+bool MCStringCreateWithCString(const char *cstring, MCStringRef& r_string);
 bool MCStringCreateWithCStringAndRelease(char_t *cstring, MCStringRef& r_string);
 
 #ifdef __HAS_CORE_FOUNDATION__

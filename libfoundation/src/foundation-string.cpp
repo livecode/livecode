@@ -78,6 +78,34 @@ MCStringRef MCSTR(const char *p_cstring)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCStringCreateWithCString(const char* p_cstring, MCStringRef& r_string)
+{
+	return MCStringCreateWithNativeChars((const char_t*)p_cstring, p_cstring == nil ? 0 : strlen(p_cstring), r_string);
+}
+
+bool MCStringCreateWithCStringAndRelease(char_t* p_cstring, MCStringRef& r_string)
+{
+	return MCStringCreateWithNativeCharsAndRelease(p_cstring, p_cstring == nil ? 0 : strlen((const char*)p_cstring), r_string);
+}
+
+const char *MCStringGetCString(MCStringRef p_string)
+{
+    if (p_string == nil)
+        return nil;
+    
+	const char *t_cstring;
+	t_cstring = (const char *)MCStringGetNativeCharPtr(p_string);
+	
+	MCAssert(t_cstring != nil);
+    
+	return t_cstring;
+}
+
+bool MCStringIsEqualToCString(MCStringRef p_string, const char *p_cstring, MCStringOptions p_options)
+{
+	return MCStringIsEqualToNativeChars(p_string, (const char_t *)p_cstring, strlen(p_cstring), p_options);
+}
+
 // Create an immutable string from the given bytes, interpreting them using
 // the specified encoding.
 bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef& r_string)
