@@ -8197,7 +8197,7 @@ Parse_stat MCValue::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCValue::eval(MCExecPoint &ep)
+void MCValue::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCValue */ LEGACY_EXEC
 	if (source == NULL)
@@ -8264,43 +8264,30 @@ Exec_stat MCValue::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCValue */
 
-
-	MCExecContext ctxt(ep);
 	MCAutoStringRef t_source;
 	MCAutoValueRef t_result;
 	
-	if (source != nil)
-	{
-		if (source->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_VALUE_BADSOURCE, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep.copyasstringref(&t_source);
-	}
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(source, EE_VALUE_BADSOURCE, &t_source))
+        return;
 
 	if (*t_source != nil && object != nil)
 	{
 		MCObjectPtr t_object;
 
-		if (object->getobj(ep, t_object, True) != ES_NORMAL)
+		if (!object->getobj(ctxt, t_object, True))
 		{
-			MCeerror->add(EE_VALUE_NOOBJ, line, pos);
-			return ES_ERROR;
+			ctxt . LegacyThrow(EE_VALUE_NOOBJ);
+			return;
 		}
 
-		MCEngineEvalValueWithObject(ctxt, *t_source, t_object, &t_result);
+		MCEngineEvalValueWithObject(ctxt, *t_source, t_object, r_value . valueref_value);
+        r_value .type = kMCExecValueTypeValueRef;
 	}
 	else
-		MCEngineEvalValue(ctxt, *t_source, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
+    {
+		MCEngineEvalValue(ctxt, *t_source, r_value . valueref_value);
+        r_value .type = kMCExecValueTypeValueRef;
+    }
 }
 
 void MCValue::compile(MCSyntaxFactoryRef ctxt)
