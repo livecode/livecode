@@ -414,7 +414,7 @@ Parse_stat MCBaseConvert::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCBaseConvert::eval(MCExecPoint &ep)
+void MCBaseConvert::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
 #ifdef /* MCBaseConvert */ LEGACY_EXEC
 	if (destbase->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL
@@ -513,39 +513,20 @@ Exec_stat MCBaseConvert::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCBaseConvert */
 
-
-	if (destbase->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_BASECONVERT_BADDESTBASE, line, pos);
-		return ES_ERROR;
-	}
-	uint2 dbase = ep.getuint2();
-	if (sourcebase->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_BASECONVERT_BADSOURCEBASE, line, pos);
-		return ES_ERROR;
-	}
-	uint2 sbase = ep.getuint2();
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_BASECONVERT_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
-
-	MCAutoStringRef t_result;
-	MCMathEvalBaseConvert(ctxt, *t_source, sbase, dbase, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
+    uinteger_t dbase;
+    if (!ctxt . EvalExprAsUInt(destbase, EE_BASECONVERT_BADDESTBASE, dbase))
+        return;
+    
+    uinteger_t sbase;
+    if (!ctxt . EvalExprAsUInt(sourcebase, EE_BASECONVERT_BADSOURCEBASE, sbase))
+        return;
+    
+    MCAutoStringRef t_source;
+    if (!ctxt . EvalExprAsStringRef(source, EE_BASECONVERT_BADSOURCE, &t_source))
+        return;
+    
+	MCMathEvalBaseConvert(ctxt, *t_source, sbase, dbase, r_value . stringref_value);
+    r_value . type = kMCExecValueTypeStringRef;
 }
 
 void MCBaseConvert::compile(MCSyntaxFactoryRef ctxt)
@@ -593,7 +574,7 @@ Parse_stat MCBinaryDecode::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCBinaryDecode::eval(MCExecPoint &ep)
+void MCBinaryDecode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCBinaryDecode */ LEGACY_EXEC
 	if (params->eval(ep) != ES_NORMAL)
@@ -934,59 +915,53 @@ Exec_stat MCBinaryDecode::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCBinaryDecode */
 
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_format;
-	MCAutoDataRef t_data;
+    MCAutoStringRef t_format;
+    MCAutoValueRef t_format_valueref;
 	MCParameter *t_params = nil;
-
-	if (params->eval(ep) != ES_NORMAL)
+    
+    if (!params->eval(ctxt, &t_format_valueref) || ctxt . ConvertToString(*t_format_valueref, &t_format))
 	{
-		MCeerror->add(EE_BINARYD_BADSOURCE, line, pos);
-		return ES_ERROR;
+		ctxt . LegacyThrow(EE_BINARYD_BADSOURCE);
+		return;
 	}
-	/* UNCHECKED */ ep.copyasstringref(&t_format);
-
-	if (params->getnext() != nil)
+    
+    MCAutoValueRef t_data_valueref;
+    MCAutoDataRef t_data;
+    if (params->getnext() != nil)
 	{
-		if (params->getnext()->eval(ep) != ES_NORMAL)
+		if (!params->getnext()->eval(ctxt, &t_data_valueref) || ctxt .ConvertToData(*t_data_valueref, &t_data))
 		{
-			MCeerror->add(EE_BINARYD_BADPARAM, line, pos);
-			return ES_ERROR;
+			ctxt . LegacyThrow(EE_BINARYD_BADPARAM);
+			return;
 		}
-		/* UNCHECKED */ ep.copyasdataref(&t_data);
 		t_params = params->getnext()->getnext();
 	}
-
-	uinteger_t t_result_count = 0;
-
+    uinteger_t t_result_count = 0;
+    
 	for (MCParameter *p = t_params; p != nil; p = p->getnext())
 		t_result_count++;
-
+    
 	MCAutoValueRefArray t_results;
 	/* UNCHECKED */ t_results.New(t_result_count);
+    
+    MCFiltersEvalBinaryDecode(ctxt, *t_format, *t_data, *t_results, t_result_count, r_value . int_value);
+    r_value . type = kMCExecValueTypeInt;
 
-	integer_t t_result;
-	MCFiltersEvalBinaryDecode(ctxt, *t_format, *t_data, *t_results, t_result_count, t_result);
-
-	if (!ctxt.HasError())
+    if (!ctxt.HasError())
     {
         for (uindex_t i = 0; i < t_result_count; i++)
         {
-            MCVariable *t_var = t_params->evalvar(ep);
+            MCVariable *t_var = t_params->evalvar(ctxt);
             if (t_var == nil)
             {
-				MCeerror->add(EE_BINARYD_BADDEST, line, pos);
-                return ES_ERROR;
+				ctxt . LegacyThrow(EE_BINARYD_BADDEST);
+                return;
             }
 			if (t_results[i] != nil)
 	            /* UNCHECKED */ t_var->setvalueref(t_results[i]);
             t_params = t_params->getnext();
         }
-        ep.setnvalue(t_result);
-		return ES_NORMAL;
     }
-    
-	return ctxt.Catch(line, pos);
 }
 
 void MCBinaryDecode::compile(MCSyntaxFactoryRef ctxt)
@@ -1041,7 +1016,7 @@ Parse_stat MCBinaryEncode::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCBinaryEncode::eval(MCExecPoint &ep)
+void MCBinaryEncode::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
 #ifdef /* MCBinaryEncode */ LEGACY_EXEC
 	if (params->eval(ep) != ES_NORMAL)
@@ -1361,46 +1336,33 @@ Exec_stat MCBinaryEncode::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCBinaryEncode */
 
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_format;
+    MCAutoValueRef t_format_valueref;
+    MCAutoStringRef t_format;
 	MCAutoValueRefArray t_values;
 	uindex_t t_value_count = 0;
-
-	if (params->eval(ep) != ES_NORMAL)
+    if (!params->eval(ctxt, &t_format_valueref) || ctxt . ConvertToString(*t_format_valueref, &t_format))
 	{
-		MCeerror->add(EE_BINARYE_BADSOURCE, line, pos);
-		return ES_ERROR;
+		ctxt . LegacyThrow(EE_BINARYE_BADSOURCE);
+		return;
 	}
-	/* UNCHECKED */ ep.copyasstringref(&t_format);
-
-	MCParameter *t_params = params->getnext();
+    MCParameter *t_params = params->getnext();
 	for (MCParameter *p = t_params; p != nil; p = p->getnext())
 		t_value_count++;
-
+    
 	/* UNCHECKED */ t_values.New(t_value_count);
 	for (uindex_t i = 0; i < t_value_count; i++)
 	{
-		if (t_params->eval(ep) != ES_NORMAL)
+		if (!t_params->eval(ctxt, t_values[i]))
 		{
-			MCeerror->add(EE_BINARYE_BADPARAM, line, pos);
-			return ES_ERROR;
+			ctxt . LegacyThrow(EE_BINARYE_BADPARAM);
+			return;
 		}
-
-		/* UNCHECKED */ ep.copyasvalueref(t_values[i]);
+        
 		t_params = t_params->getnext();
 	}
 
-	MCAutoDataRef t_result;
-	MCFiltersEvalBinaryEncode(ctxt, *t_format, *t_values, t_value_count, &t_result);
-
-	if (!ctxt.HasError())
-    {
-        /* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-    }
-    
-	return ctxt.Catch(line, pos);
+    MCFiltersEvalBinaryEncode(ctxt, *t_format, *t_values, t_value_count, r_value . dataref_value);
+    r_value . type = kMCExecValueTypeDataRef;
 }
 
 void MCBinaryEncode::compile(MCSyntaxFactoryRef ctxt)
