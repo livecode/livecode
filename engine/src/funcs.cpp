@@ -7155,88 +7155,29 @@ Parse_stat MCVariables::parse(MCScriptPoint &sp, Boolean the)
 	return MCFunction::parse(sp, the);
 }
 
-Exec_stat MCVariables::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCVariables */ LEGACY_EXEC
 	return h->getvarnames(ep, True);
 #endif /* MCVariables */
 
-	MCExecContext ctxt(ep);
 
-	MCAutoStringRef t_result;
-	MCEngineEvalVariableNames(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCVersion::eval(MCExecPoint &ep)
-{
 #ifdef /* MCVersion */ LEGACY_EXEC
 	ep.setstaticcstring(MCversionstring);
 	return ES_NORMAL;
 #endif /* MCVersion */
 
-	MCExecContext ctxt(ep);
-	MCNewAutoNameRef t_result;
 
-	MCEngineEvalVersion(ctxt, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-Exec_stat MCWeekDayNames::eval(MCExecPoint &ep)
-{
 #ifdef /* MCWeekDayNames */ LEGACY_EXEC
 	MCD_weekdaynames(P_UNDEFINED, ep);
 	return ES_NORMAL;
 #endif /* MCWeekDayNames */
 
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_result;
 
-	MCDateTimeEvalWeekDayNames(ctxt, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-Exec_stat MCWaitDepth::eval(MCExecPoint &ep)
-{
 #ifdef /* MCWaitDepth */ LEGACY_EXEC
 	ep.setnvalue(MCwaitdepth);
 	return ES_NORMAL;
 #endif /* MCWaitDepth */
 
-	MCExecContext ctxt(ep);
-	integer_t t_result;
-
-	MCInterfaceEvalWaitDepth(ctxt, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 MCWithin::~MCWithin()
 {
@@ -8583,8 +8524,7 @@ Exec_stat MCAliasReference::eval(MCExecPoint &ep)
 	return ctxt.Catch(line, pos);
 }
 
-Exec_stat MCAlternateLanguages::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCAlternateLanguages */ LEGACY_EXEC
 	// If we don't have 'do alternate' privileges, this function should just 
 	// return empty.
@@ -8599,41 +8539,11 @@ Exec_stat MCAlternateLanguages::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCAlternateLanguages */
 
-	
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_result;
-	
-	MCScriptingEvalAlternateLanguages(ctxt, &t_result);
-	
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-	
-	return ctxt.Catch(line, pos);
-}
 
-Exec_stat MCCipherNames::eval(MCExecPoint &ep)
-{
 #ifdef /* MCCipherNames */ LEGACY_EXEC
 	SSL_ciphernames(ep);
 	return ES_NORMAL;
 #endif /* MCCipherNames */
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_result;
-	
-	MCSecurityEvalCipherNames(ctxt, &t_result);
-	
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-	
-	return ctxt.Catch(line, pos);
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 

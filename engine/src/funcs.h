@@ -1885,33 +1885,33 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCVariables : public MCConstantFunction
+class MCVariables : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalVariableNames>
 {
 	MCHandler *h;
 public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalVariableNamesMethodInfo; }
 };
 
-class MCVersion : public MCConstantFunction
+class MCVersion : public MCConstantFunctionCtxt<MCNameRef, MCEngineEvalVersion>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalVersionMethodInfo; }
 };
 
-class MCWaitDepth : public MCConstantFunction
+class MCWaitDepth : public MCConstantFunctionCtxt<integer_t, MCInterfaceEvalWaitDepth>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalWaitDepthMethodInfo; }
 };
 
-class MCWeekDayNames : public MCConstantFunction
+class MCWeekDayNames : public MCConstantFunctionCtxt<MCStringRef, MCDateTimeEvalWeekDayNames>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCDateTimeEvalWeekDayNamesMethodInfo; }
 };
 
@@ -2144,10 +2144,10 @@ public:
 	virtual MCExpression *getmethodarg(void) const { return type; }
 };
 
-class MCAlternateLanguages : public MCConstantFunction
+class MCAlternateLanguages : public MCConstantFunctionCtxt<MCStringRef, MCScriptingEvalAlternateLanguages>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCScriptingEvalAlternateLanguagesMethodInfo; }
 };
 
@@ -2167,10 +2167,10 @@ public:
 	virtual MCExpression *getmethodarg(void) const { return type; }
 };
 
-class MCCipherNames : public MCConstantFunction
+class MCCipherNames : public MCConstantFunctionCtxt<MCStringRef, MCSecurityEvalCipherNames>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCSecurityEvalCipherNamesMethodInfo; }
 };
 
