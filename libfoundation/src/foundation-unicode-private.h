@@ -27,6 +27,9 @@
 // Given a LocaleRef, returns the underlying ICU locale object
 const icu::Locale& MCLocaleGetICULocale(MCLocaleRef);
 
+// Converts from an ICU string to a StringRef
+bool MCStringCreateWithICUString(icu::UnicodeString&, MCStringRef &r_string);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif  // ifndef __MC_FOUNDATION_UNICODE_PRIVATE__

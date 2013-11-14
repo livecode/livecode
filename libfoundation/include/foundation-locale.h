@@ -27,16 +27,19 @@
 // Locale text layouts
 enum MCLocaleTextLayout
 {
-    kMCLocaleTextLayoutLTR,     // Left to right
-    kMCLocaleTextLayoutRTL,     // Right to left
-    kMCLocaleTextLayoutTTB,     // Top to bottom
-    kMCLocaleTextLayoutBTT,     // Bottom to top
+    kMCLocaleTextLayoutLTR = 0,     // Left to right
+    kMCLocaleTextLayoutRTL = 1,     // Right to left
+    kMCLocaleTextLayoutTTB = 2,     // Top to bottom
+    kMCLocaleTextLayoutBTT = 3,     // Bottom to top
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Opaque pointer type to a locale
 typedef struct __MCLocale* MCLocaleRef;
+
+// Gets a reference to the locale that the system is using
+bool    MCLocaleCreateDefault(MCLocaleRef &r_locale);
 
 // Gets a reference to the named locale or returns false
 bool    MCLocaleCreateWithName(MCStringRef p_locale_name, MCLocaleRef &r_locale);
@@ -49,26 +52,50 @@ void    MCLocaleRelease(MCLocaleRef p_locale);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Well-known locales
-extern MCLocaleRef MCLlivecode;     // The default engine locale
-extern MCLocaleRef MCLcurrent;      // The current engine locale
+// Well-known locales. Do not change these directly!
+extern MCLocaleRef MCLbasic;        // Compatible with older LiveCode versions
+extern MCLocaleRef MCLdefault;      // Locale in use by the system
+extern MCLocaleRef MCLcurrent;      // Current locale (if different from default)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// For the non-localised variants, the technical, non-display name is returned.
+// The stringref belongs to the locale and should not be released.
+// For example, the British English locale would return "en" for the language
+// and "GB" for the country, corresponding to locale ID "en_GB".
+//
+// The localised variants return a name suitable for display to the user and
+// are in the specified language. The stringref belongs to the caller and needs
+// to be released after use. For example, the locale ID "fr_FR" formatted for
+// display in "en_GB" would return language "French" and country "France".
+
 // Returns the identifying name of the given locale
 MCStringRef MCLocaleGetName(MCLocaleRef p_locale);
+bool MCLocaleGetNameLocalised(MCLocaleRef p_locale,
+                              MCLocaleRef p_in_language,
+                              MCStringRef &r_string);
 
 // Returns the language code of the locale
 MCStringRef MCLocaleGetLanguage(MCLocaleRef);
+bool MCLocaleGetLanguageLocalised(MCLocaleRef p_locale,
+                                  MCLocaleRef p_in_language,
+                                  MCStringRef &r_string);
 
 // Returns the country code of the locale
 MCStringRef MCLocaleGetCountry(MCLocaleRef);
+bool MCLocaleGetCountryLocalised(MCLocaleRef p_locale,
+                                 MCLocaleRef p_in_language,
+                                 MCStringRef &r_string);
 
 // Returns the writing script used by the locale
 MCStringRef MCLocaleGetScript(MCLocaleRef);
+bool MCLocaleGetScriptLocalised(MCLocaleRef p_locale,
+                                 MCLocaleRef p_in_language,
+                                 MCStringRef &r_string);
 
-// Returns the text orientation of the locale
-MCLocaleTextLayout MCLocaleGetTextDirection(MCLocaleRef);
+// Returns the line and character orientation of the locale
+MCLocaleTextLayout MCLocaleGetLineDirection(MCLocaleRef);
+MCLocaleTextLayout MCLocaleGetCharacterDirection(MCLocaleRef);
 
 
 ////////////////////////////////////////////////////////////////////////////////
