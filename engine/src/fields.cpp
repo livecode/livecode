@@ -701,7 +701,7 @@ Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringR
 	pgptr->setparent(this);
 	pgptr->setselectionindex(si, si, False, False);
 
-	// MW-2012-02-13: [[ Block Unicode ]] Use the new finsert method in native mode.
+    // MW-2012-02-13: [[ Block Unicode ]] Use the new finsert method in native mode.
 	// MW-2012-02-23: [[ PutUnicode ]] Pass through the encoding to finsertnew.
 	if (!MCStringIsEmpty(p_text))
 	{
@@ -709,7 +709,7 @@ Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringR
 		//   paragraphs were created, so we've affected many.
 		if (pgptr->finsertnew(p_text))
 			t_affect_many = true;
-	}
+    }
 
 	if (opened && fptr == fdata)
 	{

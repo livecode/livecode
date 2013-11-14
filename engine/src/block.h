@@ -295,7 +295,39 @@ public:
 	}
 
     //////////
-    
-    void GetTextSize(MCExecContext& ctxt, uinteger_t*& r_value);
+
+    void GetLinkText(MCExecContext& ctxt, MCStringRef& r_linktext);
+    void SetLinktext(MCExecContext& ctxt, MCStringRef p_linktext);
+    void GetMetadata(MCExecContext& ctxt, MCStringRef& r_metadata);
+    void SetMetadata(MCExecContext& ctxt, MCStringRef p_metadata);
+    void GetImageSource(MCExecContext& ctxt, MCStringRef &r_image_source);
+    void SetImageSource(MCExecContext& ctxt, MCStringRef p_image_source);
+    void GetVisited(MCExecContext& ctxt, bool& r_value);
+    void GetFlagged(MCExecContext& ctxt, bool &r_value);
+    void SetFlagged(MCExecContext& ctxt, bool p_value);
+
+    void GetTextFont(MCExecContext& ctxt, MCStringRef &r_fontname);
+    void GetEffectiveTextFont(MCExecContext &ctxt, MCStringRef &r_fontname);
+    void SetTextFont(MCExecContext& ctxt, MCStringRef p_fontname);
+    void GetTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle &r_style);
+    void GetEffectiveTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& r_style);
+    void SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style);
+    void GetTextSize(MCExecContext& ctxt, uinteger_t*& r_size);
+    void GetEffectiveTextSize(MCExecContext& ctxt, uinteger_t& r_size);
+    void SetTextSize(MCExecContext& ctxt, uinteger_t* p_size);
+    void GetTextShift(MCExecContext& ctxt, integer_t*& r_shift);
+    void GetEffectiveTextShift(MCExecContext& ctxt, integer_t& r_shift);
+    void SetTextShift(MCExecContext& ctxt, integer_t* p_shift);
+
+    void GetForeColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
+    void GetEffectiveForeColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
+    void SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor &p_color);
+    void GetBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
+    void GetEffectiveBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
+    void SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor &p_color);
+
+
+
+    //////////
 };
 #endif

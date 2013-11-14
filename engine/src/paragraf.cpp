@@ -346,7 +346,7 @@ IO_stat MCParagraph::load(IO_handle stream, const char *version, bool is_ext)
 						newblock->SetRange(MCStringGetLength(*t_text), t_len);
 						
 						// Append to the paragraph text
-						if (!MCStringAppendChars(*t_text, dptr - t_len, t_len))
+						if (!MCStringAppendChars(*t_text, (const unichar_t*)dptr - t_len, t_len))
 							return IO_ERROR;
 					}
 				}
@@ -441,7 +441,7 @@ IO_stat MCParagraph::save(IO_handle stream, uint4 p_part)
 		memcpy(t_swapped_data, t_data, t_data_len);
 		for (uindex_t i = 0; i < MCStringGetLength(m_text); i++)
 		{
-			swap_uint2(&t_swapped_data[i]);
+			swap_uint2((uint2*)&t_swapped_data[i]);
 		}
 		t_data = (char *)t_swapped_data;
 	}
@@ -1691,13 +1691,42 @@ void MCParagraph::join()
 	needs_layout = true;
 }
 
+void MCParagraph::replacetextwithparagraphs(findex_t p_start, findex_t p_finish, MCParagraph *p_pglist)
+{
+    // Remove characters to replace
+    deletestring(p_start, p_finish);
+
+    // Split the paragraph
+    split(p_start);
+
+    // p_pglist must be inserted between this and next()
+    // t_last_paragraph is meant to point to the last
+    // paragraph of p_pglist
+    MCParagraph *t_last_paragraph = p_pglist;
+    for (; t_last_paragraph -> next() != t_last_paragraph; t_last_paragraph = t_last_paragraph -> next())
+        ;
+
+    // Append the right part of the split to the end
+    // of p_pglist if it exists
+    if (next() != this)
+        t_last_paragraph -> append(next());
+
+    // Append p_pglist to this
+    append(p_pglist);
+}
+
 void MCParagraph::split() //split paragraphs on return
 {
-	MCBlock *bptr = indextoblock(focusedindex, False);
+    split(focusedindex);
+}
+
+void MCParagraph::split(findex_t p_position)
+{
+    MCBlock *bptr = indextoblock(p_position, False);
 	findex_t skip = 0;
 	
-	if (focusedindex < MCStringGetLength(m_text) && TextIsLineBreak(GetCodepointAtIndex(focusedindex)))
-		skip = IncrementIndex(focusedindex) - focusedindex;
+    if (p_position < MCStringGetLength(m_text) && TextIsLineBreak(GetCodepointAtIndex(p_position)))
+        skip = IncrementIndex(p_position) - p_position;
 	
 	MCParagraph *pgptr = new MCParagraph;
 	pgptr->parent = parent;
@@ -1710,18 +1739,18 @@ void MCParagraph::split() //split paragraphs on return
 
 	if (!MCStringIsEmpty(m_text))
 	{
-		MCRange t_range = MCRangeMake(focusedindex, MCStringGetLength(m_text) - focusedindex);
+        MCRange t_range = MCRangeMake(p_position, MCStringGetLength(m_text) - p_position);
 		/* UNCHECKED */ MCStringMutableCopySubstring(m_text, t_range, pgptr->m_text);
-		/* UNCHECKED */ MCStringSubstring(m_text, MCRangeMake(0, focusedindex));
+        /* UNCHECKED */ MCStringSubstring(m_text, MCRangeMake(0, p_position));
 	}
 	else
 		/* UNCHECKED */ MCStringCreateMutable(0, pgptr->m_text);
 
 	// Trim the block containing the split so that it ends at the split point
-	bptr = indextoblock(focusedindex, False);
+    bptr = indextoblock(p_position, False);
 	findex_t i, l;
 	bptr->GetRange(i, l);
-	bptr->MoveRange(0, focusedindex - (i + l));
+    bptr->MoveRange(0, p_position - (i + l));
 	
 	// Create a new block to cover the range from the split point to the end
 	// of the original block.
@@ -1730,7 +1759,7 @@ void MCParagraph::split() //split paragraphs on return
 	blocks->splitat(tbptr);
 	pgptr->blocks = tbptr;
 	tbptr->setparent(pgptr);
-	tbptr->SetRange(0, (i + l) - focusedindex - skip);
+    tbptr->SetRange(0, (i + l) - p_position - skip);
 	tbptr = tbptr->next();
 	
 	// Adjust the blocks after the split as they now belong to the new
@@ -1738,10 +1767,17 @@ void MCParagraph::split() //split paragraphs on return
 	while (tbptr != pgptr->blocks)
 	{
 		tbptr->setparent(pgptr);
-		tbptr->MoveRange(-(focusedindex + skip), 0);
+        tbptr->MoveRange(-(p_position + skip), 0);
 		tbptr->setparent(pgptr);
 		tbptr = tbptr->next();
 	}
+
+    // Set the focusedindex at the right position
+    if (focusedindex >= MCStringGetLength(m_text))
+    {
+        pgptr -> focusedindex = focusedindex - MCStringGetLength(m_text);
+        focusedindex = 0;
+    }
 	
 	// MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
 	//   fontref so it can compute its.
@@ -1907,7 +1943,6 @@ MCParagraph *MCParagraph::copyselection()
 //   text contains no line-breaks.
 void MCParagraph::finsertnobreak(MCStringRef p_string, MCRange t_range)
 {
-
 	// If the byte length exceeds the space we have, truncate it.
 	uindex_t t_new_length, t_cur_length;
 	t_new_length = t_range.length;
@@ -1960,10 +1995,10 @@ Boolean MCParagraph::finsertnew(MCStringRef p_string)
 		findex_t t_nextpara;
 		if (TextFindNextParagraph(p_string, t_index, t_nextpara))
 		{
-			// We found a line-break, so insert it into the current paragraph and then split at
+            // We found a line-break, so insert it into the current paragraph and then split at
 			// the end.
 			MCRange t_range = MCRangeMake(t_index, t_nextpara - t_index - 1);
-			t_paragraph -> finsertnobreak(p_string, t_range);
+            t_paragraph -> finsertnobreak(p_string, t_range);
 			t_paragraph -> split();
 			t_paragraph = t_paragraph -> next();
 

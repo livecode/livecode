@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "dllst.h"
 #include "field.h"
+#include "exec.h"
 
 #ifndef __MC_FONT__
 #include "font.h"
@@ -116,7 +117,7 @@ struct MCParagraphAttrs
 	uint16_t list_index;
 	uint32_t background_color;
 	uint32_t border_color;
-	MCNameRef metadata;
+    MCStringRef metadata;
 
 	MCParagraphAttrs(void)
 	{
@@ -143,7 +144,7 @@ class MCParagraph : public MCDLlist
 	// MW-2012-01-25: [[ ParaStyles ]] This paragraphs collection of attrs.
 	MCParagraphAttrs *attrs;
 
-	static uint2 cursorwidth;
+    static uint2 cursorwidth;
 
 public:
 	MCParagraph();
@@ -305,7 +306,16 @@ public:
 	//   MCField::insertparagraph
 	//   
 	void join();
-	void split();
+    void split();
+    void split(findex_t p_position);
+
+    // Replace the text from p_start to p_finish
+    // with the paragraphs list provided.
+    // Called by:
+    //   MCField::SetRtfTextOfCharChunk
+    //   MCField::SetHtmlTextOfCharChunk
+    //   MCField::SetStyledTextOfCharChunk
+    void replacetextwithparagraphs(findex_t p_start, findex_t p_finish, MCParagraph *p_pglist);
 
 	// Delete the text from si to ei in the paragraph.
 	// Called by:
@@ -330,9 +340,9 @@ public:
 	MCParagraph *copyselection();
 
 	// Insert the given string into the paragraph at the focusedindex.
-	// Called by any client that does text insertion.
+    // Called by any client that does text insertion.
 	void finsertnobreak(MCStringRef p_string, MCRange p_range);
-	Boolean finsertnew(MCStringRef p_string);
+    Boolean finsertnew(MCStringRef p_string);
 
 	// Delete the specified chunk at the focusedindex and return the deleted
 	// string in undopgptr.
@@ -570,7 +580,7 @@ public:
 	// Get the (effective) listStyle.
 	uint32_t getliststyle(void) const;
 	// Set the liststyle property directly.
-	void setliststyle(uint32_t new_list_style);
+    void setliststyle(uint32_t new_list_style);
 
 	// Returns true if the paragraph has listIndex set.
 	bool haslistindex(void) const;
@@ -619,9 +629,9 @@ public:
 	int32_t gettablewidth(void) const;
 
 	// Returns the metadata for the current paragraph.
-	MCNameRef getmetadata(void) const;
+    MCStringRef getmetadata(void) const;
 	// Set the metadata property for the current paragraph.
-	void setmetadata(MCNameRef metadata);
+    void setmetadata(MCStringRef metadata);
 
 	// Returns true if the top border will be elided due to hGrid
 	bool elidetopborder(void) const;
@@ -789,17 +799,102 @@ public:
 	static void formatliststyleindex(uint32_t p_list_style, uint32_t p_index, char r_index_buffer[PG_MAX_INDEX_SIZE], const char*& r_string, uint32_t& r_length);
 
 	bool imagechanged(MCImage *p_image, bool p_deleting);
-	
-	// Returns true if the given block is part of a link, in which case si is
-	// the start index of the link.
-	MCBlock* extendup(MCBlock *bptr, findex_t &si);
-	
-	// Returns true if the given block is part of a link, in which case ei is
-	// the end index of the link.
-	MCBlock* extenddown(MCBlock *bptr, findex_t &ei);
+
+    MCBlock* extendup(MCBlock *bptr, findex_t &si);
+    MCBlock* extenddown(MCBlock *bptr, findex_t &ei);
+
+    // Set the flag Lines not synched
+    void setDirty() { state |= PS_LINES_NOT_SYNCHED; }
+
+    //////////
+
+    void GetEncoding(MCExecContext &ctxt, intenum_t& r_encoding);
 
     void GetTextAlign(MCExecContext& ctxt, intenum_t*& r_value);
     void GetEffectiveTextAlign(MCExecContext& ctxt, intenum_t& r_value);
+    void SetTextAlign(MCExecContext& ctxt, intenum_t *p_value);
+
+    void GetListStyle(MCExecContext& ctxt, intenum_t &r_style);
+    void SetListStyle(MCExecContext& ctxt, intenum_t p_style);
+
+    void GetListDepth(MCExecContext& ctxt, uinteger_t*& r_depth);
+    void GetEffectiveListDepth(MCExecContext& ctxt, uinteger_t& r_depth);
+    void SetListDepth(MCExecContext &ctxt, uinteger_t *p_depth);
+
+    void GetListIndent(MCExecContext& ctxt, integer_t *&r_indent);
+    void GetEffectiveListIndent(MCExecContext& ctxt, integer_t& r_indent);
+    void SetListIndent(MCExecContext& ctxt, integer_t *p_indent);
+
+    void GetListIndex(MCExecContext& ctxt, uinteger_t*& r_list_index);
+    void GetEffectiveListIndex(MCExecContext& ctxt, uinteger_t& r_list_index);
+    void SetListIndex(MCExecContext& ctxt, uinteger_t *p_list_index);
+
+    void GetFirstIndent(MCExecContext& ctxt, integer_t*& r_indent);
+    void GetEffectiveFirstIndent(MCExecContext& ctxt, integer_t& r_indent);
+    void SetFirstIndent(MCExecContext& ctxt, integer_t *p_indent);
+
+    void GetLeftIndent(MCExecContext& ctxt, integer_t*& r_indent);
+    void GetEffectiveLeftIndent(MCExecContext& ctxt, integer_t& r_indent);
+    void SetLeftIndent(MCExecContext& ctxt, integer_t *p_indent);
+
+    void GetRightIndent(MCExecContext& ctxt, integer_t*& r_indent);
+    void GetEffectiveRightIndent(MCExecContext& ctxt, integer_t& r_indent);
+    void SetRightIndent(MCExecContext& ctxt, integer_t *p_indent);
+
+    void GetSpaceAbove(MCExecContext& ctxt, uinteger_t *&r_space);
+    void GetEffectiveSpaceAbove(MCExecContext& ctxt, uinteger_t& r_space);
+    void SetSpaceAbove(MCExecContext& ctxt, uinteger_t *p_space);
+
+    void GetSpaceBelow(MCExecContext& ctxt, uinteger_t*& r_space);
+    void GetEffectiveSpaceBelow(MCExecContext& ctxt, uinteger_t& r_space);
+    void SetSpaceBelow(MCExecContext& ctxt, uinteger_t *p_space);
+
+    void DoSetTabStops(MCExecContext &ctxt, bool p_is_relative, const vector_t<uinteger_t> &p_tabs);
+    void DoGetTabStops(MCExecContext &ctxt, bool p_is_relative, vector_t<uinteger_t> &r_tabs);
+
+    void GetTabWidths(MCExecContext& ctxt, vector_t<uinteger_t> &r_tabs);
+    void GetEffectiveTabWidths(MCExecContext& ctxt, vector_t<uinteger_t> &r_tabs);
+    void SetTabWidths(MCExecContext& ctxt, const vector_t<uinteger_t> &p_tabs);
+
+    void GetTabStops(MCExecContext& ctxt, vector_t<uinteger_t> &r_tabs);
+    void GetEffectiveTabStops(MCExecContext& ctxt, vector_t<uinteger_t> &r_tabs);
+    void SetTabStops(MCExecContext& ctxt, const vector_t<uinteger_t>& p_tabs);
+
+    void GetBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
+    void GetEffectiveBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
+    void SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor &p_color);
+
+    void GetBorderColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+    void GetEffectiveBorderColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
+    void SetBorderColor(MCExecContext& ctxt, const MCInterfaceNamedColor &p_color);
+
+    void GetBorderWidth(MCExecContext& ctxt, uinteger_t*& r_width);
+    void GetEffectiveBorderWidth(MCExecContext& ctxt, uinteger_t& r_width);
+    void SetBorderWidth(MCExecContext& ctxt, uinteger_t *p_width);
+
+    void GetPadding(MCExecContext& ctxt, uinteger_t*& r_padding);
+    void GetEffectivePadding(MCExecContext& ctxt, uinteger_t& r_padding);
+    void SetPadding(MCExecContext& ctxt, uinteger_t *p_padding);
+
+    void GetHGrid(MCExecContext& ctxt, bool*& r_has_hgrid);
+    void GetEffectiveHGrid(MCExecContext& ctxt, bool& r_has_hgrid);
+    void SetHGrid(MCExecContext& ctxt, bool *p_has_hgrid);
+
+    void GetVGrid(MCExecContext& ctxt, bool*& r_has_vgrid);
+    void GetEffectiveVGrid(MCExecContext& ctxt, bool& r_has_vgrid);
+    void SetVGrid(MCExecContext& ctxt, bool *p_has_vrid);
+
+    void GetDontWrap(MCExecContext& ctxt, bool*& r_dont_wrap);
+    void GetEffectiveDontWrap(MCExecContext& ctxt, bool& r_dont_wrap);
+    void SetDontWrap(MCExecContext& ctxt, bool *p_dont_wrap);
+
+    void GetInvisible(MCExecContext& ctxt, bool *&r_invisible);
+    void GetEffectiveInvisible(MCExecContext& ctxt, bool &r_invisible);
+    void SetInvisible(MCExecContext& ctxt, bool p_invisible);
+
+    void GetMetadata(MCExecContext& ctxt, MCStringRef &r_metadata);
+    void GetEffectiveMetadata(MCExecContext& ctxt, MCStringRef &r_metadata);
+    void SetMetadata(MCExecContext& ctxt, MCStringRef p_metadata);
 
 private:
 	// Flow the paragraph using the given parent font. This is called

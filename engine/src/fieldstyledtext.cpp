@@ -429,7 +429,7 @@ MCParagraph *MCField::styledtexttoparagraphs(MCArrayRef p_array)
 	return t_paragraphs;
 }
 
-MCParagraph *MCField::parsestyledtextappendparagraph(MCArrayRef p_style, MCNameRef p_metadata, bool p_split, MCParagraph*& x_paragraphs)
+MCParagraph *MCField::parsestyledtextappendparagraph(MCArrayRef p_style, MCStringRef p_metadata, bool p_split, MCParagraph*& x_paragraphs)
 {
 	MCParagraph *t_new_paragraph;
 	t_new_paragraph = new MCParagraph;
@@ -715,7 +715,7 @@ void MCField::parsestyledtextarray(MCArrayRef p_styled_text, bool p_paragraph_br
 			t_style_entry = nil;
 
 		// MW-2012-11-13: [[ ParaMetadata ]] Fetch the metadata (if any)
-		MCNewAutoNameRef t_metadata;
+        MCAutoStringRef t_metadata;
 		MCValueRef t_metadata_val = nil;
 		if (!MCArrayFetchValue((MCArrayRef)t_entry, false, MCN_metadata, t_metadata_val))
 			t_metadata_val = nil;
@@ -723,7 +723,7 @@ void MCField::parsestyledtextarray(MCArrayRef p_styled_text, bool p_paragraph_br
 		{
 			MCExecPoint ep;
 			ep.setvalueref(t_metadata_val);
-			/* UNCHECKED */ ep.copyasnameref(&t_metadata);
+            /* UNCHECKED */ ep.copyasstringref(&t_metadata);
 		}
 
 		// If the array looks like a paragraph array, then treat it as such.

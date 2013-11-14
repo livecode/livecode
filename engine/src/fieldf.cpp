@@ -1683,8 +1683,8 @@ void MCField::finsertnew(Field_translations function, MCStringRef p_string, KeyS
 	findex_t si,ei;
 	selectedmark(False, si, ei, False, False);
 
-	// Defer to the paragraph method to insert the text.
-	focusedparagraph -> finsertnew(p_string);
+    // Defer to the paragraph method to insert the text.
+    focusedparagraph -> finsertnew(p_string);
 
 	// Compute the end of the selection.
 	findex_t ti;
@@ -2288,14 +2288,14 @@ void MCField::typetext(MCStringRef newtext)
 		MCStringCopyAndRelease(t_remaining, newtext);
 	}
 	findex_t oldfocused;
-	focusedparagraph->getselectionindex(oldfocused, oldfocused);
-	state |= CS_CHANGED;
+    focusedparagraph->getselectionindex(oldfocused, oldfocused);
+    state |= CS_CHANGED;
 
-	if (!MCStringIsEmpty(newtext) && focusedparagraph->finsertnew(newtext))
+    if (!MCStringIsEmpty(newtext) && focusedparagraph->finsertnew(newtext))
 	{
 		recompute();
-		findex_t endindex = oldfocused + MCStringGetLength(newtext);
-		findex_t junk;
+        findex_t endindex = oldfocused + MCStringGetLength(newtext);
+        findex_t junk;
 		MCParagraph *newfocused = indextoparagraph(focusedparagraph, endindex, junk);
 		while (focusedparagraph != newfocused)
 		{

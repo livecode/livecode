@@ -1458,6 +1458,7 @@ void MCBlock::setatts(Properties which, void *value)
 		// MW-2012-02-17: [[ SplitTextAttrs ]] Update the appropriate text attr.
 		switch(which)
 		{
+#ifdef OLD_EXEC
 		case P_TEXT_FONT:
 			if (value == nil || strlen((const char *)value) == 0)
 			{
@@ -1473,8 +1474,7 @@ void MCBlock::setatts(Properties which, void *value)
 				flags |= F_HAS_FNAME;
 				/* UNCHECKED */ MCNameCreateWithCString((const char *)value, atts -> fontname);
 			}
-			break;
-
+            break;
 		case P_TEXT_SIZE:
 			if (value == nil)
 				flags &= ~F_HAS_FSIZE;
@@ -1495,6 +1495,7 @@ void MCBlock::setatts(Properties which, void *value)
 			}
 			break;
 
+#endif
 		// MW-2011-11-23: [[ Array TextStyle ]] These pseudo-properties are used when
 		//   adding or removing a specific textstyle.
 		case P_TEXT_STYLE_ADD:
@@ -1637,7 +1638,7 @@ findex_t MCBlock::GetCursorIndex(int2 x, int2 cx, Boolean chunk, Boolean last)
 		t_new_i = parent->IncrementIndex(i);
 		
 		int32_t t_new_width;
-		t_new_width = getcursorx(x, t_new_i);
+		t_new_width = GetCursorX(x, t_new_i);
 		
 		int32_t t_pos;
 		if (chunk)
@@ -2048,7 +2049,7 @@ void MCBlock::importattrs(const MCFieldCharacterStyle& p_style)
 		setshift(p_style . text_shift);
 }
 
-static uint32_t measure_stringref(MCStringRef p_string)
+uint32_t measure_stringref(MCStringRef p_string)
 {
 	if (MCStringIsNative(p_string))
         return 2 + MCU_min(MCStringGetLength(p_string) + 1, MAXUINT2);
@@ -2167,3 +2168,4 @@ codepoint_t MCBlock::GetCodepointAtIndex(findex_t p_index) const
 {
 	return parent->GetCodepointAtIndex(m_index + p_index);
 }
+
