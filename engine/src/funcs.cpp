@@ -6240,69 +6240,23 @@ if (source->eval(ep) != ES_NORMAL)
 #endif /* MCStacks */
 
 
-Exec_stat MCStackSpace::eval(MCExecPoint &ep)
-{
 #ifdef /* MCStackSpace */ LEGACY_EXEC
 	ep.setstaticcstring(STACK_SPACE);
 	return ES_NORMAL;
 #endif /* MCStackSpace */
 
 
-	MCExecContext ctxt(ep);
-	integer_t t_result;
-
-	MCLegacyEvalStackSpace(ctxt, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-Exec_stat MCSysError::eval(MCExecPoint &ep)
-{
 #ifdef /* MCSysError */ LEGACY_EXEC
 	ep.setnvalue(MCS_getsyserror());
 	return ES_NORMAL;
 #endif /* MCSysError */
 
-	MCExecContext ctxt(ep);
-	uinteger_t t_result;
 
-	MCEngineEvalSysError(ctxt, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-Exec_stat MCSystemVersion::eval(MCExecPoint &ep)
-{
 #ifdef /* MCSystemVersion */ LEGACY_EXEC
 	ep.setstaticcstring(MCS_getsystemversion());
 	return ES_NORMAL;
 #endif /* MCSystemVersion */
 
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_result;
-
-	MCEngineEvalSystemVersion(ctxt, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 Parse_stat MCTarget::parse(MCScriptPoint &sp, Boolean the)
 {
@@ -6409,27 +6363,11 @@ void MCOwner::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndExpression(ctxt);
 }
 
-Exec_stat MCTempName::eval(MCExecPoint &ep)
-{
 #ifdef /* MCTempName */ LEGACY_EXEC
 	ep.setcstring(MCS_tmpnam());
 	return ES_NORMAL;
 #endif /* MCTempName */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_result;
-
-	MCFilesEvalTempName(ctxt, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 MCTextHeightSum::~MCTextHeightSum()
 {
@@ -6487,48 +6425,18 @@ void MCTextHeightSum::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndExpression(ctxt);
 }
 
-Exec_stat MCTicks::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCTicks */ LEGACY_EXEC
 	ep.setnvalue(floor(MCS_time() * 60.0));
 	return ES_NORMAL;
 #endif /* MCTicks */
 
 
-	MCExecContext ctxt(ep);
-	real64_t t_result;
-
-	MCDateTimeEvalTicks(ctxt, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-Exec_stat MCTheTime::eval(MCExecPoint &ep)
-{
 #ifdef /* MCTheTime */ LEGACY_EXEC
 	MCD_time(P_UNDEFINED, ep);
 	return ES_NORMAL;
 #endif /* MCTheTime */
 
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_result;
-
-	MCDateTimeEvalTime(ctxt, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 MCToLower::~MCToLower()
 {
