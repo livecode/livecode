@@ -1975,7 +1975,7 @@ static MCExternalError MCExternalInterfaceQuery(MCExternalInterfaceQueryTag op, 
 #if defined(TARGET_SUBPLATFORM_IPHONE)
 	switch(op)
 	{
-		case kMCExternalInterfaceQueryView:
+		case kMCExternalInterfaceQueryViewScale:
 			// MERG-2013-11-07: [[ DeviceScale ]] Return the resolution scale on platforms where the view is measured in points
             *(double *)r_value = MCIPhoneGetResolutionScale();
 			break;
