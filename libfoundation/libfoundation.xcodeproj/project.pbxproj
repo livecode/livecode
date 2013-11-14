@@ -70,6 +70,7 @@
 		721CAAA71834D10D00858545 /* foundation-unicode.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-unicode.cpp"; path = "src/foundation-unicode.cpp"; sourceTree = "<group>"; };
 		721CAAAA1834D13300858545 /* foundation-locale.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-locale.h"; path = "include/foundation-locale.h"; sourceTree = "<group>"; };
 		721CAAAB1834D13300858545 /* foundation-unicode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-unicode.h"; path = "include/foundation-unicode.h"; sourceTree = "<group>"; };
+		721CAAAC18350B0E00858545 /* foundation-unicode-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-unicode-private.h"; path = "src/foundation-unicode-private.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -147,6 +148,7 @@
 				4D5837A21806A024006DE6A2 /* foundation-objc.mm */,
 				721CAAA61834D10D00858545 /* foundation-locale.cpp */,
 				721CAAA71834D10D00858545 /* foundation-unicode.cpp */,
+				721CAAAC18350B0E00858545 /* foundation-unicode-private.h */,
 			);
 			name = Source;
 			sourceTree = "<group>";

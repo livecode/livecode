@@ -225,7 +225,7 @@ enum MCUnicodePropertyType
     kMCUnicodePropertyTypeFloat,        // float
     kMCUnicodePropertyTypeDouble,       // double
     kMCUnicodePropertyTypeCharacter,    // unichar_t
-    kMCunicodePropertyTypeString        // unichar_t[] (null-terminated)
+    kMCUnicodePropertyTypeString        // unichar_t[] (null-terminated)
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -233,11 +233,11 @@ enum MCUnicodePropertyType
 // Retrieves a character's property of the specified type. If the type does not
 // match the property's actual type, the result is undefined. For string
 // properties, the pointer is internal and should not be modified nor freed.
-bool        MCUnicodeGetBinaryProperty(codepoint_t p_codepoint, MCUnicodeProperty);
-int32_t     MCUnicodeGetIntegerProperty(codepoint_t p_codepoint, MCUnicodeProperty);
-double      MCUnicodeGetFloatProperty(codepoint_t p_codepoint, MCUnicodeProperty);
-codepoint_t MCUnicodeGetCharacterProperty(codepoint_t p_codepoint, MCUnicodeProperty);
-unichar_t*  MCUnicodeGetStringProperty(codepoint_t p_codepoint, MCUnicodeProperty);
+bool                MCUnicodeGetBinaryProperty(codepoint_t p_codepoint, MCUnicodeProperty);
+int32_t             MCUnicodeGetIntegerProperty(codepoint_t p_codepoint, MCUnicodeProperty);
+double              MCUnicodeGetFloatProperty(codepoint_t p_codepoint, MCUnicodeProperty);
+codepoint_t         MCUnicodeGetCharacterProperty(codepoint_t p_codepoint, MCUnicodeProperty);
+const unichar_t*    MCUnicodeGetStringProperty(codepoint_t p_codepoint, MCUnicodeProperty);
 
 // Batch retrieval of character properties. For characters that are surrogates,
 // both positions in the output array receive the same properties. If the type
@@ -262,6 +262,10 @@ bool    MCUnicodeIsBlank(codepoint_t);
 bool    MCUnicodeIsControl(codepoint_t);
 bool    MCUnicodeIsGraphic(codepoint_t);
 bool    MCUnicodeIsPrinting(codepoint_t);
+
+// Shortcuts for identifier name properties
+bool    MCUnicodeIsIdentifierInitial(codepoint_t);      // Can begin an identifier
+bool    MCUnicodeIsIdentifierContinue(codepoint_t);     // Can continue an identifier
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -288,19 +292,19 @@ bool    MCUnicodeIsNormalisedNFKD(const unichar_t *p_string, uindex_t p_length);
 ////////////////////////////////////////////////////////////////////////////////
 
 
-// Upper- and lower-casing are independent of locale
-bool    MCUnicodeLowercase(const unichar_t *p_in, uindex_t p_in_length,
+// Casing options are locale-dependent
+bool    MCUnicodeLowercase(MCLocaleRef,
+                           const unichar_t *p_in, uindex_t p_in_length,
                            unichar_t* &r_out, uindex_t &r_out_length);
-bool    MCUnicodeUppercase(const unichar_t *p_in, uindex_t p_in_length,
+bool    MCUnicodeUppercase(MCLocaleRef,
+                           const unichar_t *p_in, uindex_t p_in_length,
                            unichar_t* &r_out, uindex_t &r_out_length);
-
-// Title-casing requires a locale to be specified
-bool    MCUnicodeStringToTitlecase(MCLocaleRef,
+bool    MCUnicodeTitlecase(MCLocaleRef,
                                    const unichar_t *p_in, uindex_t p_in_length,
                                    unichar_t* &r_out, uindex_t &r_out_length);
 
-// Case folding is locale-independent
-bool    MCUnicodeStringCaseFold(const unichar_t *p_in, uindex_t p_in_length,
+// Case folding does not depend on locale
+bool    MCUnicodeCaseFold(const unichar_t *p_in, uindex_t p_in_length,
                                 unichar_t* &r_out, uindex_t &r_out_length);
 
 
@@ -347,13 +351,13 @@ enum MCUnicodeCollateOption
     kMCUnicodeCollateOptionStrengthSecondary    = 2,
     kMCUnicodeCollateOptionStrengthTertiary     = 3,
     kMCUnicodeCollateOptionStrengthQuaternary   = 4,
-    kMCUnicodeCollateOptionStrengthIdentical    = 5,
+    kMCUnicodeCollateOptionStrengthIdentical    = 15,
     
-    kMCUnicodeCollateOptionStrengthMask         = 0x07,
+    kMCUnicodeCollateOptionStrengthMask         = 0x0F,
     
-    kMCUnicodeCollateOptionAutoNormalise        = 0x08,
-    kMCUnicodeCollateOptionNumeric              = 0x10,
-    kMCUnicodeCollateOptionIgnorePunctuation    = 0x20
+    kMCUnicodeCollateOptionAutoNormalise        = 0x10,
+    kMCUnicodeCollateOptionNumeric              = 0x20,
+    kMCUnicodeCollateOptionIgnorePunctuation    = 0x40
 };
 
 ////////////////////////////////////////////////////////////////////////////////
