@@ -919,7 +919,7 @@ void MCBinaryDecode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     MCAutoValueRef t_format_valueref;
 	MCParameter *t_params = nil;
     
-    if (!params->eval(ctxt, &t_format_valueref) || ctxt . ConvertToString(*t_format_valueref, &t_format))
+    if (!params->eval(ctxt, &t_format_valueref) || !ctxt . ConvertToString(*t_format_valueref, &t_format))
 	{
 		ctxt . LegacyThrow(EE_BINARYD_BADSOURCE);
 		return;
@@ -1340,7 +1340,7 @@ void MCBinaryEncode::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
     MCAutoStringRef t_format;
 	MCAutoValueRefArray t_values;
 	uindex_t t_value_count = 0;
-    if (!params->eval(ctxt, &t_format_valueref) || ctxt . ConvertToString(*t_format_valueref, &t_format))
+    if (!params->eval(ctxt, &t_format_valueref) || !ctxt . ConvertToString(*t_format_valueref, &t_format))
 	{
 		ctxt . LegacyThrow(EE_BINARYE_BADSOURCE);
 		return;
@@ -3208,7 +3208,7 @@ Parse_stat MCFormat::parse(MCScriptPoint &sp, Boolean the)
 #define PTR_VALUE 1
 #define DOUBLE_VALUE 2
 
-Exec_stat MCFormat::eval(MCExecPoint &ep)
+void MCFormat::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCFormat */ LEGACY_EXEC
 	MCExecPoint ep2(ep);
@@ -3459,19 +3459,15 @@ fmtError:
 	return ES_ERROR;
 #endif /* MCFormat */
 
-
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_format;
+    MCAutoValueRef t_format_valueref;
+    MCAutoStringRef t_format;
 	MCAutoValueRefArray t_values;
 	uindex_t t_value_count = 0;
-
-	if (params->eval(ep) != ES_NORMAL)
+    if (!params->eval(ctxt, &t_format_valueref) || !ctxt . ConvertToString(*t_format_valueref, &t_format))
 	{
-		MCeerror->add(EE_FORMAT_BADSOURCE, line, pos);
-		return ES_ERROR;
+		ctxt . LegacyThrow(EE_FORMAT_BADSOURCE);
+		return;
 	}
-	/* UNCHECKED */ ep.copyasstringref(&t_format);
 
 	MCParameter *t_params = params->getnext();
 	for (MCParameter *p = t_params; p != nil; p = p->getnext())
@@ -3480,26 +3476,17 @@ fmtError:
 	/* UNCHECKED */ t_values.New(t_value_count);
 	for (uindex_t i = 0; i < t_value_count; i++)
 	{
-		if (t_params->eval(ep) != ES_NORMAL)
+		if (!t_params->eval(ctxt, t_values[i]))
 		{
-			MCeerror->add(EE_FORMAT_BADSOURCE, line, pos);
-			return ES_ERROR;
+			ctxt . LegacyThrow(EE_FORMAT_BADSOURCE);
+			return;
 		}
 
-		/* UNCHECKED */ ep.copyasvalueref(t_values[i]);
 		t_params = t_params->getnext();
 	}
 
-	MCAutoStringRef t_result;
-	MCStringsEvalFormat(ctxt, *t_format, *t_values, t_value_count, &t_result);
-
-	if (!ctxt.HasError())
-    {
-        /* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-    }
-    
-	return ctxt.Catch(line, pos);
+	MCStringsEvalFormat(ctxt, *t_format, *t_values, t_value_count, r_value . stringref_value);
+    r_value . type = kMCExecValueTypeStringRef;
 }
 
 void MCFormat::compile(MCSyntaxFactoryRef ctxt)
