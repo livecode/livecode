@@ -698,6 +698,78 @@ bool MCHandlerlist::enumerate(MCExecPoint& ep, bool p_first)
 	return p_first;
 }
 
+static const char *s_handler_types[] =
+{
+    "M",
+    "F",
+    "G",
+    "S",
+	// MW-2012-09-07: [[ BeforeAfter ]] Make sure before/after appear in the handlerlist.
+    "B",
+    "A",
+};
+
+static bool enumerate_handlers(MCExecContext& ctxt, MCStringRef p_type, MCHandlerArray& p_handlers, uindex_t& r_count, MCStringRef*& r_handlers, bool p_first = false, MCObject *p_object = nil)
+{
+    MCAutoArray<MCStringRef> t_handlers;
+    MCAutoStringRef t_long_id;
+	for(uint32_t j = 0; j < p_handlers . count(); ++j)
+	{
+		MCHandler *t_handler;
+		t_handler = p_handlers . get()[j];
+        
+		MCStringRef t_string;
+        const char *t_format;
+        
+        // OK-2008-07-23 : Add the object long id to the first handler from each object. This will
+		// allow the script editor to look up handlers faster.
+		if (p_first && p_object != nil)
+        {
+            t_format = "%s%@ %@ %d %d %@";
+            p_object -> GetLongId(ctxt, &t_long_id);
+        }
+        else
+            t_format = "%s%@ %@ %d %d";
+        
+        /* UNCHECKED */ MCStringFormat(t_string,
+                                       t_format,
+                                       t_handler->isprivate() ? "P" : "",
+                                       p_type,
+                                       t_handler->getname(),
+                                       t_handler->getstartline(),
+                                       t_handler->getendline(),
+                                       *t_long_id);
+		
+		t_handlers . Push(t_string);
+		p_first = false;
+	}
+	
+    t_handlers . Take(r_handlers, r_count);
+	return p_first;
+}
+
+bool MCHandlerlist::enumerate(MCExecContext& ctxt, bool p_first, uindex_t& r_count, MCStringRef*& r_handlers)
+{
+	// OK-2008-07-23 : Added parent object reference for script editor.
+	MCObject *t_object;
+	t_object = getparent();
+    
+    MCAutoArray<MCStringRef> t_handlers;
+    
+    MCStringRef *t_handler_array;
+    uindex_t t_count;
+    
+    for (uindex_t i = 0; i < 6; i++)
+    {
+        p_first = enumerate_handlers(ctxt, MCSTR(s_handler_types[i]), handlers[i], t_count, t_handler_array, p_first, t_object);
+        for (uindex_t j = 0; j < t_count; j++)
+            t_handlers . Push(t_handler_array[j]);
+    }
+	
+    t_handlers . Take(r_handlers, r_count);
+	return p_first;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCHandlerlist::compile(MCSyntaxFactoryRef ctxt)

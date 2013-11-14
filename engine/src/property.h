@@ -24,6 +24,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 class MCChunk;
 
+struct MCPropertyTable
+{
+	uindex_t size;
+	MCPropertyInfo *table;
+};
+
 class MCProperty : public MCExpression
 {
 	Chunk_term tocount;
@@ -45,6 +51,8 @@ public:
     virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     virtual void set(MCExecContext& ctxt, MCExecValue p_value);
 	MCObject *getobj(MCExecPoint &ep);
+    
+    const MCPropertyTable *getmodepropertytable(void) const { return &kModePropertyTable; }
 
 private:
 #ifdef LEGACY_EXEC
@@ -72,7 +80,10 @@ private:
 	Exec_stat resolveprop(MCExecPoint& ep, Properties& r_prop, MCNameRef& r_prop_name, MCNameRef& r_index_name);
     bool resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef& r_prop_name, MCNameRef& r_index_name);
 
-	Exec_stat mode_set(MCExecPoint& ep);
+    static MCPropertyInfo kModeProperties[];
+	static MCPropertyTable kModePropertyTable;
+    
+    Exec_stat mode_set(MCExecPoint& ep);
 	Exec_stat mode_eval(MCExecPoint& ep);
 };
 #endif

@@ -111,6 +111,43 @@ const char *MCexecutionerrors = "";
 
 ////////////////////////////////////////////////////////////////////////////////
 //
+//  Property tables specific to STANDALONE mode
+//
+
+MCPropertyInfo MCObject::kModeProperties[] =
+{
+};
+
+MCObjectPropertyTable MCObject::kModePropertyTable =
+{
+	nil,
+	0,
+	nil,
+};
+
+MCPropertyInfo MCStack::kModeProperties[] =
+{
+};
+
+MCObjectPropertyTable MCStack::kModePropertyTable =
+{
+	nil,
+	0,
+	nil,
+};
+
+MCPropertyInfo MCProperty::kModeProperties[] =
+{
+};
+
+MCPropertyTable MCProperty::kModePropertyTable =
+{
+	0,
+	nil,
+};
+
+////////////////////////////////////////////////////////////////////////////////
+//
 //  Implementation of MCDispatch::startup method for STANDALONE mode.
 //
 

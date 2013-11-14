@@ -5597,7 +5597,10 @@ bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
         
         t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, false);
         
-        if (t_info != nil && t_info -> getter == nil)
+        if (t_info == nil)
+            t_info = lookup_object_property(t_obj_chunk . object -> getmodepropertytable(), which, effective == True, t_is_array_prop, false);
+        
+        if (t_info == nil || t_info -> getter == nil)
         {
             MCeerror -> add(EE_OBJECT_GETNOPROP, line, pos);
             return false;
@@ -5605,45 +5608,20 @@ bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
         
         if (t_is_array_prop)
         {
-            if (t_info != nil)
-            {
-                MCObjectIndexPtr t_object;
-                t_object . object = t_obj_chunk . object;
-                t_object . part_id = t_obj_chunk . part_id;
-                t_object . index = index;
+            MCObjectIndexPtr t_object;
+            t_object . object = t_obj_chunk . object;
+            t_object . part_id = t_obj_chunk . part_id;
+            t_object . index = index;
                 
-                MCExecFetchProperty(ctxt, t_info, &t_object, r_value);
-            }
-            else
-            {
-                Exec_stat t_stat = ES_NOT_HANDLED;
-                t_stat = t_obj_chunk . object -> getarrayprop_legacy(t_obj_chunk . part_id, which, ctxt . GetEP(), index, False);
-                if (t_stat == ES_NOT_HANDLED)
-                {
-                    MCeerror->add(EE_OBJECT_GETNOPROP, line, pos);
-                    return false;
-                }
-                ctxt . GetEP() . copyasvalueref(r_value . valueref_value);
-                r_value . type = kMCExecValueTypeValueRef;
-                return t_stat == ES_NORMAL;
-            }
+            MCExecFetchProperty(ctxt, t_info, &t_object, r_value);
         }
         else
         {
-            if (t_info != nil)
-            {
-                MCObjectPtr t_object;
-                t_object . object = t_obj_chunk . object;
-                t_object . part_id = t_obj_chunk . part_id;
-                
-                MCExecFetchProperty(ctxt, t_info, &t_object, r_value);
-            }
-            else
-            {
-                t_obj_chunk . object -> getprop_legacy(t_obj_chunk . part_id, which, ctxt . GetEP(), effective);
-                ctxt . GetEP() . copyasvalueref(r_value . valueref_value);
-                r_value . type = kMCExecValueTypeValueRef;
-            }
+            MCObjectPtr t_object;
+            t_object . object = t_obj_chunk . object;
+            t_object . part_id = t_obj_chunk . part_id;
+            
+            MCExecFetchProperty(ctxt, t_info, &t_object, r_value);
         }
     }
     else
@@ -5696,44 +5674,32 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
         
         t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, false);
         
-        if (t_info != nil && t_info -> getter == nil)
+        if (t_info == nil)
+            t_info = lookup_object_property(t_obj_chunk . object -> getmodepropertytable(), which, effective == True, t_is_array_prop, false);
+        
+        if (t_info == nil || t_info -> getter == nil)
         {
-            MCeerror -> add(EE_OBJECT_SETNOPROP, line, pos);
+            MCeerror -> add(EE_OBJECT_GETNOPROP, line, pos);
             return false;
         }
         
         if (t_is_array_prop)
         {
-            if (t_info != nil)
-            {
-                MCObjectIndexPtr t_object;
-                t_object . object = t_obj_chunk . object;
-                t_object . part_id = t_obj_chunk . part_id;
-                t_object . index = index;
+
+            MCObjectIndexPtr t_object;
+            t_object . object = t_obj_chunk . object;
+            t_object . part_id = t_obj_chunk . part_id;
+            t_object . index = index;
                 
-                MCExecStoreProperty(ctxt, t_info, &t_object, p_value);
-            }
-            else
-            {
-                MCeerror -> add(EE_OBJECT_SETNOPROP, line, pos);
-                return false;
-            }
+            MCExecStoreProperty(ctxt, t_info, &t_object, p_value);
         }
         else
         {
-            if (t_info != nil)
-            {
-                MCObjectPtr t_object;
-                t_object . object = t_obj_chunk . object;
-                t_object . part_id = t_obj_chunk . part_id;
-                
-                MCExecStoreProperty(ctxt, t_info, &t_object, p_value);
-            }
-            else
-            {
-                MCeerror -> add(EE_OBJECT_SETNOPROP, line, pos);
-                return false;
-            }
+            MCObjectPtr t_object;
+            t_object . object = t_obj_chunk . object;
+            t_object . part_id = t_obj_chunk . part_id;
+            
+            MCExecStoreProperty(ctxt, t_info, &t_object, p_value);
         }
     }
     else

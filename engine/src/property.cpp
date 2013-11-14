@@ -349,14 +349,18 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_BREAK_POINTS, String, Debugging, Breakpoints)
 	DEFINE_RW_PROPERTY(P_WATCHED_VARIABLES, String, Debugging, WatchedVariables)
 
-	DEFINE_RW_INDEXED_PROPERTY(P_CLIPBOARD_DATA, BinaryString, Pasteboard, ClipboardData)
-	DEFINE_RW_INDEXED_PROPERTY(P_DRAG_DATA, BinaryString, Pasteboard, DragData)
+	DEFINE_RW_ARRAY_PROPERTY(P_CLIPBOARD_DATA, BinaryString, Pasteboard, ClipboardData)
+	DEFINE_RW_ARRAY_PROPERTY(P_DRAG_DATA, BinaryString, Pasteboard, DragData)
+	DEFINE_RW_PROPERTY(P_CLIPBOARD_DATA, BinaryString, Pasteboard, ClipboardTextData)
+	DEFINE_RW_PROPERTY(P_DRAG_DATA, BinaryString, Pasteboard, DragTextData)
+    
 };
 
-static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, const MCPropertyInfo*& r_info)
+static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, const MCPropertyInfo*& r_info, bool p_is_array_prop)
 {
 	for(uindex_t i = 0; i < sizeof(kMCPropertyInfoTable) / sizeof(MCPropertyInfo); i++)
-		if (kMCPropertyInfoTable[i] . property == p_which && kMCPropertyInfoTable[i] . effective == p_effective)
+		if (kMCPropertyInfoTable[i] . property == p_which && kMCPropertyInfoTable[i] . effective == p_effective &&
+            kMCPropertyInfoTable[i] . is_array_prop == p_is_array_prop)
 		{
 			r_info = &kMCPropertyInfoTable[i];
 			return true;
@@ -4910,6 +4914,16 @@ Exec_stat MCProperty::eval_count(MCExecPoint& ep)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCPropertyInfo *lookup_mode_property(const MCPropertyTable *p_table, Properties p_which, bool p_effective, bool p_is_array_prop)
+{
+	for(uindex_t i = 0; i < p_table -> size; i++)
+		if (p_table -> table[i] . property == p_which && p_table -> table[i] . effective == p_effective &&
+            p_table -> table[i] . is_array_prop == p_is_array_prop)
+			return &p_table -> table[i];
+	
+	return nil;
+}
+
 void MCProperty::eval_variable_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
 	destvar -> eval(ctxt, r_value . valueref_value);
@@ -5056,42 +5070,25 @@ void MCProperty::eval_function_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 
 void MCProperty::eval_global_property_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
+    bool t_is_array_prop;
+    MCNewAutoNameRef t_index;
+    
+    if (customindex != nil)
+        ctxt . EvalExprAsNameRef(customindex, EE_PROPERTY_BADEXPRESSION, &t_index);
+    
+    t_is_array_prop = (*t_index != nil && !MCNameIsEmpty(*t_index));
+    
 	const MCPropertyInfo *t_info;
-	if (MCPropertyInfoTableLookup(which, effective, t_info))
-	{
-        if (t_info -> custom_index)
-        {
-            MCNewAutoNameRef t_type;
-            
-            if (customindex != nil)
-                ctxt . EvalExprAsNameRef(customindex, EE_PROPERTY_BADEXPRESSION, &t_type);
-            
-            MCExecFetchProperty(ctxt, t_info, *t_type, r_value);
-        }
-        else
-            MCExecFetchProperty(ctxt, t_info, nil, r_value);
+	if (!MCPropertyInfoTableLookup(which, effective, t_info, t_is_array_prop))
+        t_info = lookup_mode_property(getmodepropertytable(), which, effective, t_is_array_prop);
         
+    if (t_info != nil)
+    {
+        MCExecFetchProperty(ctxt, t_info, *t_index, r_value);
         return;
 	}
-    
-	Exec_stat t_stat;
-	t_stat = ES_NORMAL;
-	
-	if (customindex != nil)
-		t_stat = customindex -> eval(ctxt . GetEP());
-	else
-		ctxt . GetEP() . clear();
-	
-	if (t_stat == ES_NORMAL)
-		t_stat = mode_eval(ctxt . GetEP());
-	if (t_stat != ES_NORMAL)
-	{
-		MCeerror->add(EE_PROPERTY_NOPROP, line, pos);
-		return;
-	}
-    
-    ctxt . GetEP() . copyasvalueref(r_value . valueref_value);
-    r_value . type = kMCExecValueTypeValueRef;
+
+    MCeerror->add(EE_PROPERTY_NOPROP, line, pos);
 }
 
 void MCProperty::eval_object_property_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
@@ -5175,34 +5172,25 @@ void MCProperty::set_variable(MCExecContext& ctxt, MCExecValue p_value)
 
 void MCProperty::set_global_property(MCExecContext& ctxt, MCExecValue p_value)
 {
+    bool t_is_array_prop;
+    MCNewAutoNameRef t_index;
+    
+    if (customindex != nil)
+        ctxt . EvalExprAsNameRef(customindex, EE_PROPERTY_BADEXPRESSION, &t_index);
+    
+    t_is_array_prop = (*t_index != nil && !MCNameIsEmpty(*t_index));
+    
 	const MCPropertyInfo *t_info;
-	if (MCPropertyInfoTableLookup(which, effective, t_info))
-	{
-        if (t_info -> custom_index)
-        {
-            MCNewAutoNameRef t_type;
-            if (customindex != nil)
-            {
-                if (!ctxt . EvalExprAsNameRef(customindex, EE_PROPERTY_BADEXPRESSION, &t_type))
-                    return;
-            }
-            MCExecStoreProperty(ctxt, t_info, *t_type, p_value);
-        }
-        else
-            MCExecStoreProperty(ctxt, t_info, nil, p_value);
-        
+	if (!MCPropertyInfoTableLookup(which, effective, t_info, t_is_array_prop))
+        t_info = lookup_mode_property(getmodepropertytable(), which, effective, t_is_array_prop);
+    
+    if (t_info != nil)
+    {
+        MCExecStoreProperty(ctxt, t_info, *t_index, p_value);
         return;
 	}
     
-    MCAutoValueRef t_value;
-    MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeValueRef, &(&t_value));
-    ctxt . GetEP() . setvalueref(*t_value);
-    
-	Exec_stat t_stat;
-	t_stat = mode_set(ctxt . GetEP());
-    
-	if (t_stat != ES_NORMAL)
-		MCeerror->add(EE_PROPERTY_CANTSET, line, pos);
+    MCeerror->add(EE_PROPERTY_CANTSET, line, pos);
 }
 
 void MCProperty::set_object_property(MCExecContext& ctxt, MCExecValue p_value)

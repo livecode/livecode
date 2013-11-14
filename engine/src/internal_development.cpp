@@ -664,6 +664,56 @@ void MCInternalObjectListenerListListeners(MCExecPoint &ep)
 	}
 }
 
+void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_listeners, uindex_t& r_count)
+{
+	MCObjectHandle *t_current_object;
+	t_current_object = ctxt . GetObject() -> gethandle();
+	
+	MCObjectListener *t_prev_listener;
+	t_prev_listener = nil;
+	
+	MCObjectListener *t_listener;
+	t_listener = s_object_listeners;
+    
+    MCAutoArray<MCStringRef> t_listeners;
+	while(t_listener != nil)
+	{
+        MCStringRef t_string;
+		if (!t_listener -> object -> Exists())
+			remove_object_listener_from_list(t_listener, t_prev_listener);
+		else
+		{
+			MCObjectListenerTarget *t_target;
+			t_target = nil;
+			MCObjectListenerTarget *t_prev_target;
+			t_prev_target = nil;
+            
+            MCAutoValueRef t_long_id;
+			t_listener -> object -> Get() -> names(P_LONG_ID, &t_long_id);
+            
+			for (t_target = t_listener -> targets; t_target != nil; t_target = t_target -> next)
+			{
+				if (!t_target -> target -> Exists())
+					remove_object_listener_target_from_list(t_target, t_prev_target, t_listener, t_prev_listener);
+				else if (t_target -> target ==  t_current_object)
+                {
+                    ctxt . ConvertToString(*t_long_id, t_string);
+                    t_listeners . Push(t_string);
+                }
+			}
+			
+			t_prev_listener = t_listener;
+		}
+		
+		if (t_listener != nil)
+			t_listener = t_listener -> next;
+		else
+			t_listener = s_object_listeners;
+	}
+    t_listeners . Take(r_listeners, r_count);
+}
+
+
 class MCInternalObjectListen: public MCStatement
 {
 public:

@@ -231,7 +231,6 @@ struct MCPropertyInfo
 	void *setter;
 	bool has_effective;
     bool is_array_prop;
-    bool custom_index;
     bool is_chunk_prop;
 };
 
@@ -295,7 +294,7 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, u
 	(static_cast<O *>(obj -> object) ->* Method)(ctxt, obj -> part_id, t_si, t_ei, mixed, arg);
 }
 
-template<typename A, void Method(MCExecContext&, MCNameRef, A)> inline void MCPropertyIndexedThunk(MCExecContext& ctxt, MCNameRef index, A arg)
+template<typename A, void Method(MCExecContext&, MCNameRef, A)> inline void MCPropertyArrayThunk(MCExecContext& ctxt, MCNameRef index, A arg)
 {
     Method(ctxt, index, arg);
 }
@@ -311,11 +310,12 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 }
 
 #define MCPropertyThunkImp(mth,typ) (void(*)(MCExecContext&, void *,typ))MCPropertyThunk<typ,mth>
-#define MCPropertyIndexedThunkImp(mth,index,typ) (void(*)(MCExecContext&, MCNameRef, typ))MCPropertyIndexedThunk<typ,mth>
+#define MCPropertyArrayThunkImp(mth,index,typ) (void(*)(MCExecContext&, MCNameRef, typ))MCPropertyArrayThunk<typ,mth>
 #define MCPropertyListThunkImp(mth,count,typ) (void(*)(MCExecContext&,void *,count,typ))MCPropertyListThunk<typ,count,mth>
 
-#define MCPropertyThunkIndexedGetBinaryString(mth) MCPropertyIndexedThunkImp(mth, MCNameRef, MCDataRef&)
-#define MCPropertyThunkIndexedSetBinaryString(mth) MCPropertyIndexedThunkImp(mth, MCNameRef, MCDataRef)
+#define MCPropertyThunkArrayGetBinaryString(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCDataRef&)
+#define MCPropertyThunkArraySetBinaryString(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCDataRef)
+#define MCPropertyThunkArrayGetString(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCStringRef&)
 
 #define MCPropertyThunkGetAny(mth) MCPropertyThunkImp(mth, MCValueRef&)
 #define MCPropertyThunkGetBool(mth) MCPropertyThunkImp(mth, bool&)
@@ -345,6 +345,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyThunkGetArray(mth) MCPropertyThunkImp(mth, MCArrayRef&)
 #define MCPropertyThunkGetName(mth) MCPropertyThunkImp(mth, MCNameRef&)
 #define MCPropertyThunkGetItemsOfUInt(mth) MCPropertyListThunkImp(mth,uindex_t&,uinteger_t*&)
+#define MCPropertyThunkGetLinesOfString(mth) MCPropertyListThunkImp(mth,uindex_t&,MCStringRef*&)
 
 #define MCPropertyThunkSetAny(mth) MCPropertyThunkImp(mth, MCValueRef)
 #define MCPropertyThunkSetBool(mth) MCPropertyThunkImp(mth, bool)
@@ -519,8 +520,8 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define DEFINE_RW_CUSTOM_PROPERTY(prop, type, module, tag) \
 { prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyThunkGetCustomType(MC##module##Get##tag, MC##type), (void *)MCPropertyThunkSetCustomType(MC##module##Set##tag, MC##type) },
 
-#define DEFINE_RW_INDEXED_PROPERTY(prop, type, module, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyThunkIndexedGet##type(MC##module##Get##tag), (void *)MCPropertyThunkIndexedSet##type(MC##module##Set##tag), false, false, true },
+#define DEFINE_RW_ARRAY_PROPERTY(prop, type, module, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyThunkArrayGet##type(MC##module##Get##tag), (void *)MCPropertyThunkArraySet##type(MC##module##Set##tag), false, true, false },
 
 #define DEFINE_RO_PROPERTY(prop, type, module, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MCPropertyThunkGet##type(MC##module##Get##tag), nil },
@@ -536,6 +537,12 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 
 #define DEFINE_RO_EFFECTIVE_PROPERTY(prop, type, module, tag) \
 { prop, true, kMCPropertyType##type, nil, (void *)MCPropertyThunkGet##type(MC##module##Get##tag), nil },
+
+#define DEFINE_RO_ARRAY_PROPERTY(prop, type, module, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyThunkArrayGet##type(MC##module##Get##tag), nil, false, true, false },
+
+#define DEFINE_RO_LIST_PROPERTY(prop, type, module, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyListThunkGet##type(MC##module##Get##tag), nil },
 
 
 #define DEFINE_RW_OBJ_PROPERTY(prop, type, obj, tag) \
@@ -628,20 +635,29 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define DEFINE_RW_OBJ_ARRAY_PROPERTY(prop, type, obj, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectArrayThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectArrayThunkSet##type(obj, Set##tag), false, true, false },
 
+#define DEFINE_RO_OBJ_ARRAY_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectArrayThunkGet##type(obj, Get##tag), nil, false, true, false },
+
 #define DEFINE_RW_OBJ_LIST_PROPERTY(prop, type, obj, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectListThunkSet##type(obj, Set##tag), false, false, false },
 
 #define DEFINE_RO_OBJ_LIST_PROPERTY(prop, type, obj, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), nil, false, false, false },
 
+#define DEFINE_RO_OBJ_NON_EFFECTIVE_LIST_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), nil, true, false, false },
+
+#define DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(prop, type, obj, tag) \
+{ prop, true, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), nil, true, false, false },
+
 #define DEFINE_WO_OBJ_CHUNK_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyType##type, nil, nil, (void *)MCPropertyObjectChunkThunkSet##type(obj, Set##tag##OfCharChunk), false, false, false, true },
+{ prop, false, kMCPropertyType##type, nil, nil, (void *)MCPropertyObjectChunkThunkSet##type(obj, Set##tag##OfCharChunk), false, false, true },
 
 #define DEFINE_RW_OBJ_NON_EFFECTIVE_MIXED_CHUNK_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedThunkGetOptional##type(obj, Get##tag##OfCharChunk), (void *)MCPropertyObjectChunkMixedThunkSetOptional##type(obj, Set##tag##OfCharChunk), true, false, false, true },
+{ prop, false, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedThunkGetOptional##type(obj, Get##tag##OfCharChunk), (void *)MCPropertyObjectChunkMixedThunkSetOptional##type(obj, Set##tag##OfCharChunk), true, false, true },
 
 #define DEFINE_RO_OBJ_EFFECTIVE_MIXED_CHUNK_PROPERTY(prop, type, obj, tag) \
-{ prop, true, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedThunkGetOptional##type(obj, GetEffective##tag##OfCharChunk), nil, true, false, false, true },
+{ prop, true, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedThunkGetOptional##type(obj, GetEffective##tag##OfCharChunk), nil, true, false, true },
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2854,6 +2870,10 @@ void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCData
 void MCPasteboardSetClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef p_data);
 void MCPasteboardGetDragData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef& r_data);
 void MCPasteboardSetDragData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef p_data);
+void MCPasteboardGetClipboardTextData(MCExecContext& ctxt, MCDataRef& r_data);
+void MCPasteboardSetClipboardTextData(MCExecContext& ctxt, MCDataRef p_data);
+void MCPasteboardGetDragTextData(MCExecContext& ctxt, MCDataRef& r_data);
+void MCPasteboardSetDragTextData(MCExecContext& ctxt, MCDataRef p_data);
 
 ///////////
 

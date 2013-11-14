@@ -136,6 +136,43 @@ const char *MCexecutionerrors = "";
 
 ////////////////////////////////////////////////////////////////////////////////
 //
+//  Property tables specific to INSTALLER mode
+//
+
+MCPropertyInfo MCObject::kModeProperties[] =
+{
+};
+
+MCObjectPropertyTable MCObject::kModePropertyTable =
+{
+	nil,
+	0,
+	nil,
+};
+
+MCPropertyInfo MCStack::kModeProperties[] =
+{
+};
+
+MCObjectPropertyTable MCStack::kModePropertyTable =
+{
+	nil,
+	0,
+	nil,
+};
+
+MCPropertyInfo MCProperty::kModeProperties[] =
+{
+};
+
+MCPropertyTable MCProperty::kModePropertyTable =
+{
+	0,
+	nil,
+};
+
+////////////////////////////////////////////////////////////////////////////////
+//
 //  Implementation of internal payload commands
 //
 
@@ -1927,4 +1964,3 @@ static void *MCExecutableFindSection(const char *p_name)
 	return t_address;
 }
 #endif
-

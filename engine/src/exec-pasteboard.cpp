@@ -660,6 +660,26 @@ void MCPasteboardSetDragData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef p
 	MCPasteboardSetClipboardOrDragData(ctxt, p_index, false, p_data);
 }
 
+void MCPasteboardGetClipboardTextData(MCExecContext& ctxt, MCDataRef& r_data)
+{
+	MCPasteboardGetClipboardOrDragData(ctxt, nil, true, r_data);
+}
+
+void MCPasteboardSetClipboardTextData(MCExecContext& ctxt, MCDataRef p_data)
+{
+	MCPasteboardSetClipboardOrDragData(ctxt, nil, true, p_data);
+}
+
+void MCPasteboardGetDragTextData(MCExecContext& ctxt, MCDataRef& r_data)
+{
+	MCPasteboardGetClipboardOrDragData(ctxt, nil, false, r_data);
+}
+
+void MCPasteboardSetDragTextData(MCExecContext& ctxt, MCDataRef p_data)
+{
+	MCPasteboardSetClipboardOrDragData(ctxt, nil, false, p_data);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCPasteboardEvalDragSourceAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)

@@ -167,6 +167,9 @@ protected:
 
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
+    
+    static MCPropertyInfo kModeProperties[];
+	static MCObjectPropertyTable kModePropertyTable;
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	MCStackIdCache *m_id_cache;
@@ -190,6 +193,7 @@ public:
 	virtual const char *gettypestring();
 
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCObjectPropertyTable *getmodepropertytable(void) const { return &kModePropertyTable; }
 	
 	virtual bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor);
 	
@@ -868,6 +872,13 @@ public:
     virtual void SetTextFont(MCExecContext& ctxt, MCStringRef font);
     virtual void SetTextSize(MCExecContext& ctxt, uinteger_t* size);
     virtual void SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style);
+    
+#ifdef MODE_DEVELOPMENT
+    void GetReferringStack(MCExecContext& ctxt, MCStringRef& r_id);
+    void GetUnplacedGroupIds(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_ids);
+    void GetIdeOverride(MCExecContext& ctxt, bool& r_value);
+    void SetIdeOverride(MCExecContext& ctxt, bool p_value);
+#endif
     
 private:
 	void loadexternals(void);

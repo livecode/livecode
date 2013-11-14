@@ -266,6 +266,8 @@ protected:
 
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
+    static MCPropertyInfo kModeProperties[];
+	static MCObjectPropertyTable kModePropertyTable;
 public:
 	MCObject();
 	MCObject(const MCObject &oref);
@@ -274,6 +276,7 @@ public:
 	virtual const char *gettypestring();
 
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCObjectPropertyTable *getmodepropertytable(void) const { return &kModePropertyTable; }
 	
 	virtual bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor);
 
@@ -1041,6 +1044,14 @@ public:
     void GetCustomProperties(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_array);
     void SetCustomKeysElement(MCExecContext& ctxt, MCNameRef p_index, MCStringRef p_string);
     void SetCustomProperties(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_array);
+    
+    ////////// MODE SPECIFIC PROPS
+    
+#ifdef MODE_DEVELOPMENT    
+    void GetRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers);
+    void GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers);
+    void GetRevAvailableVariables(MCExecContext& ctxt, MCNameRef p_key, MCStringRef& r_variables);
+#endif
     
 //////////
 				
