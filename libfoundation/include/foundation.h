@@ -1305,6 +1305,13 @@ extern MCStringRef kMCFalseString;
 // the c-string must be a C static string.
 MCStringRef MCSTR(const char *string);
 
+bool MCStringCreateWithCString(const char *cstring, MCStringRef& r_string);
+bool MCStringCreateWithCStringAndRelease(char_t * cstring, MCStringRef& r_string);
+
+const char *MCStringGetCString(MCStringRef p_string);
+
+bool MCStringIsEqualToCString(MCStringRef string, const char *cstring, MCStringOptions options);
+
 // Create an immutable string from the given bytes, interpreting them using
 // the specified encoding.
 bool MCStringCreateWithBytes(const byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);

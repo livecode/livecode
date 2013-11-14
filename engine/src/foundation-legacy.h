@@ -23,11 +23,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-enum MCCompareOptions
-{
-	kMCCompareExact = kMCStringOptionCompareExact,
-	kMCCompareCaseless = kMCStringOptionCompareCaseless
-};
+typedef MCStringOptions     MCCompareOptions;
+#define kMCCompareExact     kMCStringOptionCompareExact
+#define kMCCompareCaseless  kMCStringOptionCompareCaseless
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -37,14 +35,8 @@ bool MCValueConvertToStringForSave(MCValueRef value, MCStringRef& r_string);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCStringCreateWithCString(const char *cstring, MCStringRef& r_string);
-bool MCStringCreateWithOldString(const MCString& string, MCStringRef& r_string);
-bool MCStringCreateWithCStringAndRelease(char_t * cstring, MCStringRef& r_string);
-
-const char *MCStringGetCString(MCStringRef p_string);
+bool MCStringCreateWithOldString(const MCString&, MCStringRef &r_string);
 MCString MCStringGetOldString(MCStringRef p_string);
-
-bool MCStringIsEqualToCString(MCStringRef string, const char *cstring, MCCompareOptions options);
 bool MCStringIsEqualToOldString(MCStringRef string, const MCString& oldstring, MCCompareOptions options);
 
 // Attempt to interpret the given string as a base-10 integer. It returns false
