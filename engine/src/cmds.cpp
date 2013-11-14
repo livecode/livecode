@@ -2025,22 +2025,8 @@ Parse_stat MCAssertCmd::parse(MCScriptPoint& sp)
 {
 	initpoint(sp);
 	
-	// Handle the 'assert <expr>' case by looking ahead.
+	// See if there is a type token
 	MCScriptPoint temp_sp(sp);
-	if (sp.parseexp(False, True, &m_expr) == PS_NORMAL)
-	{
-		// If we lookahead and are not at EOL, then we can't be this form.
-		MCScriptPoint lookahead_sp(sp);
-		Symbol_type t_type;
-		if (lookahead_sp . next(t_type) == PS_EOL)
-		{
-			m_type = TYPE_NONE;
-			return PS_NORMAL;
-		}
-	}
-	sp = temp_sp;
-	
-	// Now handle the other cases.
 	if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_TRUE) == PS_NORMAL)
 		m_type = TYPE_TRUE;
 	else if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_FALSE) == PS_NORMAL)
@@ -2050,17 +2036,31 @@ Parse_stat MCAssertCmd::parse(MCScriptPoint& sp)
 	else if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_FAILURE) == PS_NORMAL)
 		m_type = TYPE_FAILURE;
 	else
+		m_type = TYPE_NONE;
+	
+	// Now try to parse an expression
+	if (sp.parseexp(False, True, &m_expr) == PS_NORMAL)
+		return PS_NORMAL;
+
+	// Now if we are not of NONE type, then backup and try for just an
+	// expression (TYPE_NONE).
+	if (m_type != TYPE_NONE)
 	{
-		MCperror -> add(PE_ASSERT_BADTYPE, sp);
-		return PS_ERROR;
+		MCperror -> clear();
+		sp = temp_sp;
 	}
 	
-	// All the 'type' forms end in an expression.
-	if (sp.parseexp(False, True, &m_expr) != PS_NORMAL)
+	// Parse the expression again (if not NONE, otherwise we already have
+	// a badexpr error to report).
+	if (m_type == TYPE_NONE ||
+		sp.parseexp(False, True, &m_expr) != PS_NORMAL)
 	{
 		MCperror -> add(PE_ASSERT_BADEXPR, sp);
 		return PS_ERROR;
 	}
+	
+	// We must be of type none.
+	m_type = TYPE_NONE;
 	
 	return PS_NORMAL;
 }
