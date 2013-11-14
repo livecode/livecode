@@ -1182,7 +1182,7 @@ public:
 	}
 	virtual ~MCMouse();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -1294,7 +1294,7 @@ public:
 	}
 	virtual ~MCNumToChar();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalNumToCharMethodInfo; }
 	virtual MCExpression *getmethodarg(void) const { return source; }
@@ -1310,7 +1310,7 @@ public:
 	}
 	virtual ~MCNumToByte(void);
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalNumToByteMethodInfo; }
 	virtual MCExpression *getmethodarg(void) const { return source; }
@@ -1490,7 +1490,7 @@ public:
 	}
 	virtual ~MCReplaceText();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
