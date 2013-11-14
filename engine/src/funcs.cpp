@@ -8224,9 +8224,9 @@ Exec_stat MCUniDecode::eval(MCExecPoint &ep)
 #endif /* MCUniDecode */
 
 	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
+	MCAutoDataRef t_source;
 	MCNewAutoNameRef t_language;
-	MCAutoStringRef t_result;
+	MCAutoValueRef t_result;
 
 	if (language)
 	{
@@ -8246,9 +8246,24 @@ Exec_stat MCUniDecode::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 
-	/* UNCHECKED */ ep.copyasstringref(&t_source);
-
-	MCFiltersEvalUniDecode(ctxt, *t_source, *t_language, &t_result);
+	/* UNCHECKED */ ep.copyasdataref(&t_source);
+	
+	if (language)
+	{
+		// Explicit language, destination is a dataref
+		MCAutoDataRef t_data;
+		
+		MCFiltersEvalUniDecodeToEncoding(ctxt, *t_source, *t_language, &t_data);
+		t_result = *t_data;
+	}
+	else
+	{
+		// No language, destination encoding is native
+		MCAutoStringRef t_string;
+		
+		MCFiltersEvalUniDecodeToNative(ctxt, *t_source, &t_string);
+		t_result = *t_string;
+	}
 
 	if (!ctxt.HasError())
 	{
@@ -8327,9 +8342,8 @@ Exec_stat MCUniEncode::eval(MCExecPoint &ep)
 #endif /* MCUniEncode */
 
 	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
 	MCNewAutoNameRef t_language;
-	MCAutoStringRef t_result;
+	MCAutoDataRef t_result;
 
 	if (language)
 	{
@@ -8349,9 +8363,22 @@ Exec_stat MCUniEncode::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 
-	/* UNCHECKED */ ep.copyasstringref(&t_source);
-
-	MCFiltersEvalUniEncode(ctxt, *t_source, *t_language, &t_result);
+	if (language)
+	{
+		// Explicit language, source is a data ref
+		MCAutoDataRef t_source;
+		/* UNCHECKED */ ep.copyasdataref(&t_source);
+		
+		MCFiltersEvalUniEncodeFromEncoding(ctxt, *t_source, *t_language, &t_result);
+	}
+	else
+	{
+		// No language, source encoding is native
+		MCAutoStringRef t_source;
+		/* UNCHECKED */ ep.copyasstringref(&t_source);
+		
+		MCFiltersEvalUniEncodeFromNative(ctxt, *t_source, &t_result);
+	}
 
 	if (!ctxt.HasError())
 	{

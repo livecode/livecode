@@ -63,14 +63,14 @@ int2 MCField::narrowmargin = 8;
 MCRectangle MCField::linkrect;
 MCBlock *MCField::linkstart;
 MCBlock *MCField::linkend;
-int4 MCField::linksi;
-int4 MCField::linkei;
-int4 MCField::composeoffset = 0;
-uint2 MCField::composelength = 0;
-uint1 MCField::composeconvertingsi = 0;
-uint1 MCField::composeconvertingei = 0;
+findex_t MCField::linksi;
+findex_t MCField::linkei;
+findex_t MCField::composeoffset = 0;
+findex_t MCField::composelength = 0;
+findex_t MCField::composeconvertingsi = 0;
+findex_t MCField::composeconvertingei = 0;
 Boolean MCField::composing = False;
-uint2 MCField::composecursorindex = 0;
+findex_t MCField::composecursorindex = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -461,7 +461,7 @@ void MCField::kfocus()
 		{
 			if (!(flags & F_TOGGLE_HILITE))
 				if (!focusedparagraph->isselection()
-				        && focusedparagraph->gettextsize()
+				        && !focusedparagraph->IsEmpty()
 				        || focusedparagraph->next() != focusedparagraph)
 				{
 					focusedparagraph->sethilite(True);
@@ -580,6 +580,7 @@ Boolean MCField::kdown(MCStringRef p_string, KeySym key)
 	case XK_Right:
 		if (!MCtextarrows)
 			return MCObject::kdown(p_string, key);
+		// Fall through...
 	default:
 		if (MCObject::kdown(p_string, key))
 			return True;
@@ -936,7 +937,7 @@ Boolean MCField::mdown(uint2 which)
 					if (!(state & CS_MOUSEDOWN))
 						return True;
 				}
-				if ((paragraphs != paragraphs->next() || paragraphs->gettextsize())
+				if ((paragraphs != paragraphs->next() || !paragraphs->IsEmpty())
 				        && !(flags & F_LIST_BEHAVIOR
 				             && (my - rect.y > (int4)(textheight + topmargin - texty))))
 				{
@@ -1008,8 +1009,8 @@ Boolean MCField::mup(uint2 which)
 		if (flags & F_F_AUTO_ARM && flags & F_LOCK_TEXT
 		        && flags & F_LIST_BEHAVIOR)
 		{
-			int4 index = ytooffset(texty);
-			int4 ei = index;
+			findex_t index = ytooffset(texty);
+			findex_t ei = index;
 			focusedparagraph = indextoparagraph(paragraphs, index, ei)->next();
 			focusedy = paragraphtoy(focusedparagraph);
 		}
@@ -1046,8 +1047,8 @@ Boolean MCField::mup(uint2 which)
 					if (MCU_point_in_rect(rect, mx, my))
 						if (flags & F_LIST_BEHAVIOR
 						        && (my - rect.y > (int4)(textheight + topmargin - texty)
-						            || paragraphs == paragraphs->next()
-						            && !paragraphs->gettextsize()))
+						            || (paragraphs == paragraphs->next()
+						            && paragraphs->IsEmpty())))
 							message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
 						else
 						{
@@ -2056,7 +2057,7 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 
 void MCField::undo(Ustruct *us)
 {
-	int4 si, ei;
+	findex_t si, ei;
 	MCParagraph *pgptr = NULL;
 
 	// MW-2005-02-20: Fix Bug 2537 by assuming if the field is closed then
@@ -2083,7 +2084,7 @@ void MCField::undo(Ustruct *us)
 
 		seltext(ei - us->ud.text.newchars, ei, False);
 		pgptr = cloneselection();
-		settextindex(0, ei - us->ud.text.newchars, ei, MCnullmcstring, True);
+		settextindex_oldstring(0, ei - us->ud.text.newchars, ei, MCnullmcstring, True);
 		ei -= us->ud.text.newchars;
 		us->ud.text.newchars = 0;
 		if (us->ud.text.data != NULL)
@@ -2091,7 +2092,7 @@ void MCField::undo(Ustruct *us)
 			MCParagraph *tpgptr = us->ud.text.data;
 			do
 			{
-				us->ud.text.newchars += tpgptr->gettextsizecr();
+				us->ud.text.newchars += tpgptr->gettextlengthcr();
 				tpgptr = tpgptr->next();
 			}
 			while (tpgptr != us->ud.text.data);
@@ -2122,7 +2123,7 @@ void MCField::undo(Ustruct *us)
 		ei = si + us -> ud . text . newchars;
 		seltext(si, ei, False);
 		pgptr = cloneselection();
-		settextindex(0, si, ei, MCnullmcstring, True);
+		settextindex(0, si, ei, kMCEmptyString, True);
 
 		us->ud.text.newchars = 0;
 		if (us -> ud . text . data != NULL)
@@ -2130,7 +2131,7 @@ void MCField::undo(Ustruct *us)
 			MCParagraph *tpgptr = us->ud.text.data;
 			do
 			{
-				us->ud.text.newchars += tpgptr->gettextsizecr();
+				us->ud.text.newchars += tpgptr->gettextlengthcr();
 				tpgptr = tpgptr->next();
 			}
 			while (tpgptr != us->ud.text.data);
@@ -2179,7 +2180,7 @@ void MCField::undo(Ustruct *us)
 				if (us->ud.text.newline)
 				{
 					pgptr->split();
-					pgptr->setselectionindex(MAXUINT2, MAXUINT2, False, False);
+					pgptr->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 					pgptr = pgptr->next();
 					pgptr->setselectionindex(0, 0, False, False);
 					flags &= ~F_VISIBLE;
@@ -2196,11 +2197,11 @@ void MCField::undo(Ustruct *us)
 			MCParagraph *pgptr = us->ud.text.data;
 			do
 			{
-				ei += pgptr->gettextsizecr();
+				ei += pgptr->gettextlengthcr();
 				pgptr = pgptr->next();
 			}
 			while (pgptr != us->ud.text.data);
-			settextindex(0, si, ei - 1, MCnullmcstring, True);
+			settextindex(0, si, ei - 1, kMCEmptyString, True);
 			us->type = UT_DELETE_TEXT;
 		}
 		updateparagraph(True, True);
@@ -2742,181 +2743,25 @@ bool MCField::recomputefonts(MCFontRef p_parent_font)
 
 // MW-2012-02-23: [[ FieldChars ]] Count the number of characters between si and
 //   ei in the paragraphs corresponding to part_id.
-int32_t MCField::countchars(uint32_t p_part_id, int32_t si, int32_t ei)
+findex_t MCField::countchars(uint32_t p_part_id, findex_t si, findex_t ei)
 {
-	// Get the correct paragraphs.
-	MCParagraph *t_paragraphs;
-	t_paragraphs = resolveparagraphs(p_part_id);
-	
-	// Get the paragraph containing si.
-	MCParagraph *t_paragraph;
-	t_paragraph = indextoparagraph(t_paragraphs, si, ei);
-	
-	// Accumulate the number of characters.
-	int32_t t_count;
-	t_count = 0;
-	do
-	{
-		// Get the blocks from the paragraphs.
-		MCBlock *t_blocks;
-		t_blocks = t_paragraph -> getblocks();
-		if (t_blocks == nil)
-		{
-			t_paragraph -> inittext();
-			t_blocks = t_paragraph -> getblocks();
-		}
-		
-		// Find the block containing si.
-		MCBlock *t_block;
-		for(t_block = t_blocks; t_block -> getindex() + t_block -> getsize() < si; t_block = t_block -> next())
-			;
-		
-		// Loop through all the blocks until we reach ei.
-		for(;;)
-		{
-			// Compute the start and end index in the block.
-			int32_t t_block_si, t_block_ei;
-			t_block_si = MCMax(t_block -> getindex(), si);
-			t_block_ei = MCMin(t_block -> getindex() + t_block -> getsize(), ei);
-			
-			// If the block has unicode, then adjust for two bytes per char.
-			if (t_block -> hasunicode())
-				t_count += (t_block_ei - t_block_si) / 2;
-			else
-				t_count += t_block_ei - t_block_si;
-			
-			// Advance to the next block.
-			t_block = t_block -> next();
-			
-			// If it starts beyond (or at) ei, we are done. If it is
-			// the first block (i.e. we've looped back round, we are
-			// also done).
-			if (t_block -> getindex() >= ei || t_block == t_blocks)
-				break;
-		}
-		
-		// Adjust indices for the next paragraph.
-		si = 0;
-		ei -= t_paragraph -> gettextsizecr();
-		
-		// If the ei is still non-negative then adjust for a newline.
-		if (ei >= 0)
-			t_count += 1;
-
-		// Move to the next paragraph.
-		t_paragraph = t_paragraph -> next();
-	}
-	while(ei > 0);
-	
-	// Return the count of chars.
-	return t_count;
-}
-
-// This method resolves the field index of p_offset characters past si. Here
-// si should be the starting index in p_paragraph. It returns the offset from
-// si that the wanted char is at.
-static int32_t resolvechar(MCParagraph*& p_paragraph, int32_t& si, int32_t& ei, int32_t p_offset)
-{
-	int32_t t_offset;
-	t_offset = 0;
-	do
-	{
-		// Make sure we have blocks to process.
-		MCBlock *t_blocks;
-		t_blocks = p_paragraph -> getblocks();
-		if (t_blocks == nil)
-		{
-			p_paragraph -> inittext();
-			t_blocks = p_paragraph -> getblocks();
-		}
-		
-		// Skip ahead until we get to the block containing si.
-		MCBlock *t_block;
-		for(t_block = t_blocks; t_block -> getindex() + t_block -> getsize() < si; t_block = t_block -> next())
-			;
-		
-		// Loop until we either reach the end of the blocks, offset chars, or
-		// ei.
-		for(;;)
-		{
-			int32_t t_block_si, t_block_ei;
-			t_block_si = MCMax(t_block -> getindex(), si);
-			t_block_ei = MCMin(t_block -> getindex() + t_block -> getsize(), ei);
-			
-			int32_t t_char_count, t_byte_count;
-			if (t_block -> hasunicode())
-			{
-				t_char_count = MCMin(p_offset, (t_block_ei - t_block_si) / 2);
-				t_byte_count = t_char_count * 2;
-			}
-			else
-			{
-				t_char_count = MCMin(p_offset, t_block_ei - t_block_si);
-				t_byte_count = t_char_count;
-			}
-			
-			t_offset += t_byte_count;
-			p_offset -= t_char_count;
-			
-			t_block = t_block -> next();
-			
-			if (p_offset == 0 || t_block -> getindex() >= ei || t_block == t_blocks)
-			{
-				si = t_block_si + t_byte_count;
-				break;
-			}
-		}
-		
-		if (p_offset > 0)
-			t_offset += 1, p_offset -= 1;
-		else
-			break;
-		
-		si = 0;
-		ei -= p_paragraph -> gettextsizecr();
-		
-		p_paragraph = p_paragraph -> next();
-	}
-	while(ei > 0);
-	
-	return t_offset;
+	// Now that character offsets are being used, this is trivial...
+	return ei-si;
 }
 
 // MW-2012-02-23: [[ FieldChars ]] Adjust field indices (si, ei) to cover the start chars
 //   in, ending count chars later.
-void MCField::resolvechars(uint32_t p_part_id, int32_t& x_si, int32_t& x_ei, int32_t p_start, int32_t p_count)
+void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, findex_t p_start, findex_t p_count)
 {
-	// Fetch the correct paragraphs.
-	MCParagraph *t_paragraphs;
-	t_paragraphs = resolveparagraphs(p_part_id);
-	
-	int32_t si, ei;
-	si = x_si;
-	ei = x_ei;
-	
-	// Compute the paragraph containing si.
-	MCParagraph *t_paragraph;
-	t_paragraph = indextoparagraph(t_paragraphs, si, ei);
-	
-	// Advance the original si by p_start characters.
-	x_si += resolvechar(t_paragraph, si, ei, p_start);
-	
-	// The end index is si adjusted by p_count characters.
-	x_ei = x_si + resolvechar(t_paragraph, si, ei, p_count);
+	x_si += p_start;
+	x_ei = x_si + p_count;
 }
 
 // MW-2012-02-23: [[ FieldChars ]] Convert field indices (si, ei) back to char indices.
-void MCField::unresolvechars(uint32_t p_part_id, int32_t& x_si, int32_t& x_ei)
+void MCField::unresolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei)
 {
-	int32_t si, ei;
-	si = x_si;
-	ei = x_ei;
-	x_si = countchars(p_part_id, 0, si);
-	if (si != ei)
-		x_ei = x_si + countchars(p_part_id, si, ei);
-	else
-		x_ei = x_si;
-
+	// Char and field indices are identical
+	return;
 }
 
 //-----------------------------------------------------------------------------

@@ -283,7 +283,10 @@ static bool export_styled_text(void *p_context, MCFieldExportEventType p_event_t
 
 		// Set the block's 'text' or 'unicodeText' entry in the block's run array.
 		// Depending on whether its unicode or not.
-		ctxt . ep . setstaticmcstring(MCString((char *)p_event_data . bytes, p_event_data . byte_count));
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ MCStringCopySubstring(p_event_data.m_text, p_event_data.m_range, &t_string);
+		ctxt.ep.setvalueref(*t_string);
+	
 		/* UNCHECKED */ ctxt . ep . storearrayelement_cstring(ctxt . last_run, p_event_type == kMCFieldExportEventUnicodeRun ? "unicodeText" : "text");
 
 		// Set the block's 'metadata' entry in the block's run array.
@@ -430,12 +433,8 @@ MCParagraph *MCField::parsestyledtextappendparagraph(MCArrayRef p_style, MCNameR
 {
 	MCParagraph *t_new_paragraph;
 	t_new_paragraph = new MCParagraph;
-	t_new_paragraph -> state |= PS_LINES_NOT_SYNCHED;
 	t_new_paragraph -> setparent(this);
-	t_new_paragraph -> blocks = new MCBlock;
-	t_new_paragraph -> blocks -> setparent(t_new_paragraph);
-	t_new_paragraph -> blocks -> index = 0;
-	t_new_paragraph -> blocks -> size = 0;
+	t_new_paragraph -> inittext();
 	
 	if (p_style != nil || p_metadata != nil)
 	{
@@ -487,67 +486,25 @@ static bool copy_element_as_color_if_non_empty(MCExecContext& ctxt, MCArrayRef a
 
 void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_style, const char *p_initial, const char *p_final, MCStringRef p_metadata, bool p_is_unicode)
 {
+	// Do nothing if there is no text to add
+	findex_t t_length = p_final - p_initial;
+	if (t_length == 0)
+        return;
+
 	MCExecPoint ep(NULL, NULL, NULL);
 	MCExecContext ctxt(ep);
-	// Make sure we don't try and append any more than 64K worth of bytes.
-	uint32_t t_text_length;
 	
-	// MW-2013-05-03: [[ x64 ]] Make sure both sides are unsigned to ensure
-	//   correct template can be selected (through auto promotion).
-	t_text_length = MCMin((unsigned)(p_final - p_initial), (unsigned)(65534 - p_paragraph -> textsize));
-
-	// If we are unicode and the text length is odd, chop off the last char.
-	if (p_is_unicode && (t_text_length & 1) != 0)
-		t_text_length -= 1;
-	
-	// If there is not text to fill, do nothing.
-	if (t_text_length == 0)
-		return;
-	
-	// If the buffer is not big enough, then extend it.
-	if (p_paragraph -> textsize + t_text_length > p_paragraph -> buffersize)
-	{
-		p_paragraph -> buffersize = MCU_min(65534U, (p_paragraph -> textsize + t_text_length + 64) & ~63);
-		p_paragraph -> text = (char *)realloc(p_paragraph -> text, p_paragraph -> buffersize);
-	}
-	
-	// Get the block we will work on, creating one if it has already been
-	// populated.
-	MCBlock *t_block;
-	t_block = p_paragraph -> blocks -> prev();
-	if (t_block -> size != 0)
-	{
-		MCBlock *t_new_block;
-		t_new_block = new MCBlock;
-		t_new_block -> parent = p_paragraph;
-		t_block -> append(t_new_block);
-		t_block = t_new_block;
-	}
-	
-	// The start of the block is the end of the text.
-	t_block -> index = p_paragraph -> textsize;
-	
-	// The size of the block is the text length.
-	t_block -> size = t_text_length;
-	
-	// Copy across the bytes of the text.
-	memcpy(p_paragraph -> text + t_block -> index, p_initial, t_block -> size);
-	p_paragraph -> textsize += t_block -> size;
-	
+	// Create a block for the text we wish to append
+	MCAutoStringRef t_text;
+	/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)p_initial, p_final-p_initial, p_is_unicode?kMCStringEncodingUTF16:kMCStringEncodingNative, false, &t_text);
+	MCBlock *t_block = p_paragraph->AppendText(*t_text);
+		
 	// Now set the block styles.
 	
 	// Set metadata
 	if (p_metadata != nil)
 		t_block -> setatts(P_METADATA, (void *)p_metadata);
 
-	// Make sure the unicode flag is set.
-	if (p_is_unicode)
-		t_block -> flags |= F_HAS_UNICODE;
-	
-	// Make sure the tab flag is updated.
-	if (t_block -> textstrchr(p_paragraph -> text + t_block -> index, t_block -> size, '\t'))
-		t_block -> flags |= F_HAS_TAB;
-	
 	if (p_style == nil)
 		return;
 

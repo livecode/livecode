@@ -1690,5 +1690,9 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
 
 void MCExecResolveCharsOfField(MCField *p_field, uint32_t p_part, int32_t& x_start, int32_t& x_finish, uint32_t p_start, uint32_t p_count)
 {
-    p_field -> resolvechars(p_part, x_start, x_finish, p_start, p_count);
+    findex_t t_start = x_start;
+    findex_t t_finish = x_finish;
+    p_field -> resolvechars(p_part, t_start, t_finish, p_start, p_count);
+    x_start = t_start;
+    x_finish = t_finish;
 }

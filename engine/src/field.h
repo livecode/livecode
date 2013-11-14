@@ -25,6 +25,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define SCROLL_RATE 100
 #define MAX_PASTE_MESSAGES 32
 
+
+// Type used to index into fields, paragraphs, blocks, etc
+typedef int32_t findex_t;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // MW-2012-02-20: [[ FieldExport ]] Structure representing a (flattened) para-
@@ -145,8 +149,8 @@ struct MCFieldExportEventData
 	bool has_character_style;
 	MCFieldCharacterStyle character_style;
 	// The bytes comprising the current run (if a run event).
-	const void *bytes;
-	uint32_t byte_count;
+	MCStringRef m_text;
+	MCRange m_range;
 	// Whether this event is occuring on the first or last paragraph (or both).
 	bool is_first_paragraph, is_last_paragraph;
 	// The number of the paragraph (if requested).
@@ -179,7 +183,7 @@ class MCField : public MCControl
 	uint2 fixeda;
 	uint2 fixedd;
 	uint2 fixedheight;
-	uint2 foundlength;
+	findex_t foundlength;
 	uint2 scrollbarwidth;
 	uint2 ntabs;
 	uint2 *tabs;
@@ -190,7 +194,7 @@ class MCField : public MCControl
 	MCParagraph *firstparagraph;
 	int4 firsty;
 	MCParagraph *lastparagraph;
-	int4 foundoffset;
+	findex_t foundoffset;
 	MCScrollbar *vscrollbar;
 	MCScrollbar *hscrollbar;
 	MCStringRef label;
@@ -214,14 +218,14 @@ class MCField : public MCControl
 	static MCRectangle linkrect;
 	static MCBlock *linkstart;
 	static MCBlock *linkend;
-	static int4 linksi;
-	static int4 linkei;
-	static int4 composeoffset;
-	static uint2 composelength;
+	static findex_t linksi;
+	static findex_t linkei;
+	static findex_t composeoffset;
+	static findex_t composelength;
 	static Boolean composing;
-	static uint2 composecursorindex;
-	static uint1 composeconvertingsi;
-	static uint1 composeconvertingei;
+	static findex_t composecursorindex;
+	static findex_t composeconvertingsi;
+	static findex_t composeconvertingei;
 
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
@@ -356,16 +360,16 @@ public:
 	void typetext(MCStringRef newtext);
 	void startcomposition();
 	void stopcomposition(Boolean del, Boolean force);
-	void setcompositioncursoroffset(uint2 coffset);
-	void setcompositionconvertingrange(uint1 si,uint1 ei);
+	void setcompositioncursoroffset(findex_t coffset);
+	void setcompositionconvertingrange(findex_t si, findex_t ei);
 	void deletecomposition();
-	Boolean getcompositionrect(MCRectangle &r, int2 offset);
+	Boolean getcompositionrect(MCRectangle &r, findex_t offset);
 	void syncfonttokeyboard();
-	void verifyindex(MCParagraph *top, int4 &si, bool p_is_end);
+	void verifyindex(MCParagraph *top, findex_t &si, bool p_is_end);
 	
-	MCParagraph *verifyindices(MCParagraph *top, int4& si, int4& ei);
+	MCParagraph *verifyindices(MCParagraph *top, findex_t& si, findex_t& ei);
 	
-	void indextorect(MCParagraph *top, int4 si, int4 ei, MCRectangle &r);
+	void indextorect(MCParagraph *top, findex_t si, findex_t ei, MCRectangle &r);
 	void insertparagraph(MCParagraph *newtext);
 	// MCField selection functions in fields.cc
 	Boolean find(MCExecContext &ctxt, uint4 cardid,
@@ -374,11 +378,11 @@ public:
 	               Sort_type dir, Sort_type form, MCExpression *by);
 	// MW-2012-02-08: [[ Field Indices ]] The 'index' parameter, if non-nil, will contain
 	//   the 1-based index of the returned paragraph (i.e. the one si resides in).
-	MCParagraph *indextoparagraph(MCParagraph *top, int4 &si, int4 &ei, int* index = nil);
-	void indextocharacter(int4 &si);
-	uint4 ytooffset(int4 y);
+	MCParagraph *indextoparagraph(MCParagraph *top, findex_t &si, findex_t &ei, findex_t* index = nil);
+	//void indextocharacter(int4 &findex_t);
+	findex_t ytooffset(int4 y);
 	int4 paragraphtoy(MCParagraph *target);
-	uint4 getpgsize(MCParagraph *pgptr);
+	findex_t getpgsize(MCParagraph *pgptr);
 
 	// MW-2011-02-03: This method returns the 'correct' set of paragraphs for the field given
 	//   the specified 'parid'.
@@ -388,23 +392,23 @@ public:
 	Exec_stat settext(uint4 parid, MCStringRef p_text, Boolean p_formatted);
 	Exec_stat settext_oldstring(uint4 parid, const MCString &newtext, Boolean formatted, Boolean asunicode = False);
 	// MW-2012-02-23: [[ PutUnicode ]] Added parameter to specify whether 'is' is unicode or native.
-	Exec_stat settextindex(uint4 parid, int4 si, int4 ei, const MCString &s, Boolean undoing, bool asunicode = false);
-	Exec_stat settextindex_stringref(uint4 parid, int4 si, int4 ei, MCStringRef s, Boolean undoing);
+	Exec_stat settextindex_oldstring(uint4 parid, findex_t si, findex_t ei, const MCString &s, Boolean undoing, bool asunicode = false);
+	Exec_stat settextindex(uint4 parid, findex_t si, findex_t ei, MCStringRef s, Boolean undoing);
 	void getlinkdata(MCRectangle &r, MCBlock *&sb, MCBlock *&eb);
 
 	// MW-2011-11-23: [[ Array TextStyle ]] Setting/getting text attributes can be indexed by
 	//   specific style if which == P_TEXT_STYLE.
 	// MW-2012-01-25: [[ ParaStyles ]] Add a line chunk parameter for disambiguating things
 	//   like backColor.
-	Exec_stat gettextatts(uint4 parid, Properties which, MCExecPoint &, MCNameRef index, Boolean effective, int4 si, int4 ei, bool is_line);
+	Exec_stat gettextatts(uint4 parid, Properties which, MCExecPoint &, MCNameRef index, Boolean effective, findex_t si, findex_t ei, bool is_line);
 	// MW-2011-12-08: [[ StyledText ]] Change to pass in an ep so that styledText can fetch
 	//   the array.
 	// MW-2012-01-25: [[ ParaStyles ]] Add a line chunk parameter for disambiguating things
 	//   like backColor.
 	// MW-2013-08-01: [[ Bug 10932 ]] Added dont_layout property which stops layout of paragraphs and
 	//   added P_UNDEFINED support, which just causes a full reflow of the field.
-	Exec_stat settextatts(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef index, int4 si, int4 ei, bool is_line, bool dont_layout = false);
-	Exec_stat seltext(int4 si, int4 ei, Boolean focus, Boolean update = False);
+	Exec_stat settextatts(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef index, findex_t si, findex_t ei, bool is_line, bool dont_layout = false);
+	Exec_stat seltext(findex_t si, findex_t ei, Boolean focus, Boolean update = False);
 	uint2 hilitedline();
 	void hilitedlines(MCExecPoint &ep);
 	Exec_stat sethilitedlines(const uint32_t *p_lines, uint32_t p_line_count, Boolean forcescroll = True);
@@ -417,43 +421,43 @@ public:
 	bool locline(Boolean click, MCStringRef& r_string);
 	bool loctext(Boolean click, MCStringRef& r_string);
 	Boolean locmark(Boolean wholeline, Boolean wholeword,
-	                Boolean click, Boolean chunk, Boolean inc_cr, int4 &si, int4 &ei);
+	                Boolean click, Boolean chunk, Boolean inc_cr, findex_t &si, findex_t &ei);
 
 	bool foundchunk(MCStringRef& r_string);
 	bool foundline(MCStringRef& r_string);
 	bool foundloc(MCStringRef& r_string);
 	bool foundtext(MCStringRef& r_string);
-	Boolean foundmark(Boolean wholeline, Boolean inc_cr, int4 &si, int4 &ei);
+	Boolean foundmark(Boolean wholeline, Boolean inc_cr, findex_t &si, findex_t &ei);
 
 	bool selectedchunk(MCStringRef& r_string);
 	bool selectedline(MCStringRef& r_string);
 	bool selectedloc(MCStringRef& r_string);
 	void selectedtext(MCExecPoint &ep);
 	bool selectedtext(MCStringRef& r_string);
-	Boolean selectedmark(Boolean wholeline, int4 &si, int4 &ei,
+	Boolean selectedmark(Boolean wholeline, findex_t &si, findex_t &ei,
 	                     Boolean force, Boolean inc_cr);
 
-	bool returnchunk(int4 si, int4 ei, MCStringRef& r_string);
-	bool returnline(int4 si, int4 ei, MCStringRef& r_string);
-	bool returnloc(int4 si, MCStringRef& r_string);
+	bool returnchunk(findex_t si, findex_t ei, MCStringRef& r_string);
+	bool returnline(findex_t si, findex_t ei, MCStringRef& r_string);
+	bool returnloc(findex_t si, MCStringRef& r_string);
 
-	void returntext(MCExecPoint &ep, int4 si, int4 ei);
-	bool returntext(int4 si, int4 ei, MCStringRef& r_string);
+	void returntext(MCExecPoint &ep, findex_t si, findex_t ei);
+	bool returntext(findex_t si, findex_t ei, MCStringRef& r_string);
 
-	void charstoparagraphs(int4 si, int4 ei, MCParagraph*& sp, MCParagraph*& ep, uint4& sl, uint4& el);
-	void linestoparagraphs(int4 si, int4 ei, MCParagraph*& sp, MCParagraph*& ep);
+	void charstoparagraphs(findex_t si, findex_t ei, MCParagraph*& sp, MCParagraph*& ep, uint4& sl, uint4& el);
+	void linestoparagraphs(findex_t si, findex_t ei, MCParagraph*& sp, MCParagraph*& ep);
 
 	MCParagraph *cloneselection();
 	bool pickleselection(MCDataRef& r_string);
 
 	void cuttext();
 	void copytext();
-	void cuttextindex(uint4 parid, int4 si, int4 ei);
-	void copytextindex(uint4 parid, int4 si, int4 ei);
+	void cuttextindex(uint4 parid, findex_t si, findex_t ei);
+	void copytextindex(uint4 parid, findex_t si, findex_t ei);
 	void pastetext(MCParagraph *newtext, Boolean dodel);
-	void movetext(MCParagraph *p_new_text, int4 p_index);
-	void deletetext(int4 si, int4 ei);
-	MCParagraph *clonetext(int4 si, int4 ei);
+	void movetext(MCParagraph *p_new_text, findex_t p_index);
+	void deletetext(findex_t si, findex_t ei);
+	MCParagraph *clonetext(findex_t si, findex_t ei);
 
 	Boolean isautoarm()
 	{
@@ -554,12 +558,12 @@ public:
 	
 	// MW-2012-02-22: [[ FieldChars ]] Count the number of characters (not bytes) between
 	//   start and end in the given field.
-	int32_t countchars(uint32_t parid, int32_t si, int32_t ei);
+	findex_t countchars(uint32_t parid, findex_t si, findex_t ei);
 	// MW-2012-02-22: [[ FieldChars ]] Resolve the indices of the char range [start,start + count)
 	//   within the given range.
-	void resolvechars(uint32_t parid, int32_t& si, int32_t& ei, int32_t start, int32_t count);
+	void resolvechars(uint32_t parid, findex_t& si, findex_t& ei, findex_t start, findex_t count);
 	// MW-2012-02-22: [[ FieldChars ]] Convert the field indices to char indices.
-	void unresolvechars(uint32_t parid, int32_t& si, int32_t& ei);
+	void unresolvechars(uint32_t parid, findex_t& si, findex_t& ei);
 	
 	// MW-2012-09-04: [[ Bug 9759 ]] This method adjusts the pixmap offsets so that patterns
 	//   scroll with the text.

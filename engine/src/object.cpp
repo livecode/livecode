@@ -747,9 +747,7 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 		Exec_stat stat = message(mptr, params, True, True);
 		if (stat == ES_NOT_HANDLED && !handler.getpass())
 		{
-			MCAutoStringRef tptr;
-			MCAutoStringRef t_mptr_string;
-            
+            MCAutoStringRef t_mptr_string;
             t_mptr_string = MCNameGetString(mptr);
             
 			if (params != nil)
@@ -760,7 +758,7 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 				ep . copyasstringref(&t_value);
 				MCStringFormat(&t_mptr_string, "%@ %@", mptr, *t_value);
 			}
-			
+
 			MCHandler *t_handler;
 			t_handler = findhandler(HT_MESSAGE, mptr);
 			if (t_handler == NULL || !t_handler -> isprivate())

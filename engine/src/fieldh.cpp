@@ -34,7 +34,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "unicode.h"
 #include "text.h"
 #include "osspec.h"
-#include "textbuffer.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -138,7 +137,7 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 
 	// The first and last boundaries of the export.
 	MCParagraph *t_first_paragraph;
-	int32_t t_first_offset, t_last_offset;
+	findex_t t_first_offset, t_last_offset;
 	t_first_offset = p_start_index;
 	t_last_offset = p_finish_index;
 
@@ -184,8 +183,8 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 
 	// Initialize the event data.
 	MCFieldExportEventData t_data;
-	t_data . bytes = nil;
-	t_data . byte_count = 0;
+	t_data . m_text = nil;
+	t_data . m_range = MCRangeMake(0, 0);
 	t_data . paragraph_number = 0;
 	t_data . is_first_paragraph = true;
 	t_data . is_last_paragraph = false;
@@ -210,7 +209,7 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 	t_paragraph = t_first_paragraph;
 	for(;;)
 	{
-		t_data . is_last_paragraph = t_last_offset <= t_paragraph -> gettextsize() || t_paragraph -> next() == t_paragraphs;
+		t_data . is_last_paragraph = t_last_offset <= t_paragraph -> gettextlength() || t_paragraph -> next() == t_paragraphs;
 
 		// Compute the numbering (if required).
 		if ((p_flags & kMCFieldExportNumbering) != 0 && t_first_offset == 0)
@@ -278,7 +277,7 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 
 						// If the last index in the block is after first offset, then this
 						// must be the line.
-						if (t_last -> getindex() + t_last -> getsize() > t_first_offset)
+						if (t_last -> GetOffset() + t_last -> GetLength() > t_first_offset)
 							break;
 							
 						// MW-2013-09-02: [[ Bug 11144 ]] Make sure we advance to the next line,
@@ -290,7 +289,7 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 
 		// If the paragraph has text, then we must process its blocks.
 		bool t_last_block;
-		if ((p_flags & kMCFieldExportRuns) && t_paragraph -> gettextsize() != 0)
+		if ((p_flags & kMCFieldExportRuns) && !t_paragraph -> IsEmpty())
 		{
 			// Fetch the paragraph's blocks - if there are none, make sure we initialize
 			// the paragraph using inittext().
@@ -302,14 +301,10 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 				t_blocks = t_paragraph -> getblocks();
 			}
 			
-			// Fetch the text of the paragraph.
-			const char *t_text;
-			t_text = t_paragraph -> gettext();
-			
 			// Find the block containing the first index.
 			MCBlock *t_block;
 			t_block = t_blocks;
-			while(t_first_offset > t_block -> getindex() + t_block -> getsize())
+			while(t_first_offset > t_block -> GetOffset() + t_block -> GetLength())
 				t_block = t_block -> next();
 
 			// Now loop through all the blocks, until we reach one containing
@@ -319,17 +314,17 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 			for(;;)
 			{
 				// Skip any null blocks (as long as we are not on the last one).
-				while(t_block -> next() != t_blocks && t_block -> getsize() == 0)
+				while(t_block -> next() != t_blocks && t_block -> GetLength() == 0)
 					t_block = t_block -> next();
 
 				// Work out how far the 'virtual' block (a sequence of blocks with the
 				// same attrs - depending on export type).
 				int32_t t_start, t_count;
-				t_start = MCMax(t_first_offset, t_block -> getindex());
-				t_count = t_block -> getindex() + t_block -> getsize() - t_start;
+				t_start = MCMax(t_first_offset, t_block -> GetOffset());
+				t_count = t_block -> GetOffset() + t_block -> GetLength() - t_start;
 	
 				// If we want run styles, then update the array.
-				if (t_block -> getsize() != 0 && (p_flags & kMCFieldExportCharacterStyles) != 0)
+				if (t_block -> GetLength() != 0 && (p_flags & kMCFieldExportCharacterStyles) != 0)
 				{
 					t_data . has_character_style = false;
 
@@ -359,12 +354,12 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 					// Compute the next (non empty) block.
 					MCBlock *t_next_block;
 					t_next_block = t_block -> next();
-					while(t_next_block != t_blocks && t_next_block -> getsize() == 0)
+					while(t_next_block != t_blocks && t_next_block -> GetLength() == 0)
 						t_next_block = t_next_block -> next();
 
 					// Check to see if we are the last block: either the block
 					// containing last_offset, or the block at the end of the list.
-					if (t_last_offset <= t_block -> getindex() + t_block -> getsize())
+					if (t_last_offset <= t_block -> GetOffset() + t_block -> GetLength())
 						t_last_block = true;
 					else if (t_next_block == t_blocks)
 						t_last_block = true;
@@ -394,13 +389,8 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 						break;
 
 					// If the block is not of zero size, then compare its style.
-					if (t_block -> getsize() != 0)
+					if (t_block -> GetLength() != 0)
 					{
-						// If this block has different encoding to the next we must
-						// break as they are treated as different events.
-						if (t_block -> hasunicode() != t_next_block -> hasunicode())
-							break;
-
 						// If we are processing with styles, then we need to compare all
 						// the attrs; otherwise we just need check the unicode flag.
 						if ((p_flags & kMCFieldExportCharacterStyles) != 0)
@@ -421,7 +411,7 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 						}
 						
 						// The length of the run goes up to the end of the next block.
-						t_count += t_next_block -> getsize();
+						t_count += t_next_block -> GetLength();
 					}
 					
 					// Advance to the next (non-empty) block.
@@ -432,8 +422,8 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 				t_count = MCMin(t_last_offset - t_start, t_count);
 			
 				// Emit the block.
-				t_data . bytes = t_text + t_start;
-				t_data . byte_count = t_count;
+				t_data . m_text = t_paragraph->GetInternalStringRef();
+				t_data . m_range = MCRangeMake(t_start, t_count);
 				
 				// If we are the last block on the line, trim any VTAB
 				bool t_explicit_line_break;
@@ -441,19 +431,12 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 				if (t_last_block_on_line && t_count > 0)
 				{
 					// MW-2012-03-16: [[ Bug ]] Only trim the end if we have an explicit line break.
-					if (t_block -> hasunicode())
-					{
-						if (t_block -> textcomparechar(t_text + t_start + t_count - 2, 11) == True)
-							t_explicit_line_break = true, t_data . byte_count -= 2;
-					}
-					else
-					{
-						if (t_text[t_start + t_count - 1] == 11)
-							t_explicit_line_break = true, t_data . byte_count -= 1;
-					}
+					// TODO: TextIsExplicitLineBreak
+					if (t_paragraph -> GetCodepointAtIndex(t_start + t_count - 1) == '\v')
+						t_explicit_line_break = true, t_data . m_range . length -= 1;
 				}
 				
-				if (!p_callback(p_context, t_block -> hasunicode() ? kMCFieldExportEventUnicodeRun : kMCFieldExportEventNativeRun, t_data))
+				if (!p_callback(p_context, kMCFieldExportEventUnicodeRun, t_data))
 					return false;
 
 				// If we just processed the last block on the line then emit a line break.
@@ -492,7 +475,7 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 
 		// Update the first / last indices we want.
 		t_first_offset = 0;
-		t_last_offset -= t_paragraph -> gettextsizecr();
+		t_last_offset -= t_paragraph -> gettextlength();
 
 		// Advance to the next paragraph.
 		t_paragraph = t_paragraph -> next();
@@ -509,10 +492,9 @@ static bool estimate_char_count(void *p_context, MCFieldExportEventType p_event_
 {
 	uint32_t& t_count = *(uint32_t *)p_context;
 	
-	if (p_event_type == kMCFieldExportEventUnicodeRun)
-		t_count += p_event_data . byte_count / 2;
-	else if (p_event_type == kMCFieldExportEventNativeRun)
-		t_count += p_event_data . byte_count;
+	// TODO: the kMCFieldExportEvent{Unicode,Native}Run constants should be merged
+	if (p_event_type == kMCFieldExportEventUnicodeRun || p_event_type == kMCFieldExportEventNativeRun)
+		t_count += p_event_data . m_range . length;
 	else if (p_event_type == kMCFieldExportEventEndParagraph && !p_event_data . is_last_paragraph)
 		t_count += 1;
 		
@@ -522,39 +504,32 @@ static bool estimate_char_count(void *p_context, MCFieldExportEventType p_event_
 // This method extracts the text content of the field.
 static bool export_text(void *p_context, MCFieldExportEventType p_event_type, const MCFieldExportEventData& p_event_data)
 {
-	text_buffer_t& t_buffer = *(text_buffer_t *)p_context;
+	MCStringRef t_buffer = (MCStringRef)p_context;
 	
 	if (p_event_type == kMCFieldExportEventUnicodeRun || p_event_type == kMCFieldExportEventNativeRun)
-		t_buffer . appendtext(p_event_data . bytes, p_event_data . byte_count, p_event_type == kMCFieldExportEventUnicodeRun);
+		/* UNCHECKED */ MCStringAppendSubstring(t_buffer, p_event_data.m_text, p_event_data.m_range);
 	else if (p_event_type == kMCFieldExportEventEndParagraph && !p_event_data . is_last_paragraph)
-		t_buffer . appendtext("\n", 1, false);
+		/* UNCHECKED */ MCStringAppendChar(t_buffer, '\n');
 
 	return true;
 }
 
 // This method appends a list label to the buffer.
-static void append_list_label(text_buffer_t& p_buffer, uint32_t p_list_depth, uint32_t p_list_style, uint32_t p_paragraph_number)
+static void append_list_label(MCStringRef p_buffer, uint32_t p_list_depth, uint32_t p_list_style, uint32_t p_paragraph_number)
 {
 	static const char s_tabs[16] = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
 
-	p_buffer . appendtext(s_tabs, p_list_depth, false);
+	/* UNCHECKED */ MCStringAppendFormat(p_buffer, "%.*s", p_list_depth, s_tabs);
 
 	switch(p_list_style)
 	{
 	case kMCParagraphListStyleDisc:
 	case kMCParagraphListStyleCircle:
 	case kMCParagraphListStyleSquare:
-		if (p_buffer . isunicode())
 		{
 			uint16_t t_bullet;
 			t_bullet = MCParagraph::getliststylebullet(p_list_style, true);
-			p_buffer . appendtext(&t_bullet, 2, true);
-		}
-		else
-		{
-			char t_bullet;
-			t_bullet = MCParagraph::getliststylebullet(p_list_style, false);
-			p_buffer . appendtext(&t_bullet, 1, false);
+			/* UNCHECKED */ MCStringAppendChar(p_buffer, t_bullet);
 		}
 		break;
 
@@ -568,7 +543,7 @@ static void append_list_label(text_buffer_t& p_buffer, uint32_t p_list_depth, ui
 		const char *t_label_string;
 		uint32_t t_label_length;
 		MCParagraph::formatliststyleindex(p_list_style, p_paragraph_number, t_label_buffer, t_label_string, t_label_length);
-		p_buffer . appendtext(t_label_string, t_label_length, false);
+		/* UNCHECKED */ MCStringAppendFormat(p_buffer, "%.*s", t_label_length, t_label_buffer);
 	}
 	break;
 
@@ -576,41 +551,41 @@ static void append_list_label(text_buffer_t& p_buffer, uint32_t p_list_depth, ui
 		break;
 	}
 
-	p_buffer . appendtext(s_tabs, 1, false);
+	/* UNCHECKED */ MCStringAppendChar(p_buffer, '\t');
 }
 
 // This method extracts the text content of the field including lists.
 static bool export_plain_text(void *p_context, MCFieldExportEventType p_event_type, const MCFieldExportEventData& p_event_data)
 {
-	text_buffer_t& t_buffer = *(text_buffer_t *)p_context;
+	MCStringRef t_buffer = (MCStringRef)p_context;
 
 	if (p_event_type == kMCFieldExportEventBeginParagraph && p_event_data . paragraph_style . list_style != kMCParagraphListStyleNone)
 		append_list_label(t_buffer, p_event_data . paragraph_style . list_depth, p_event_data . paragraph_style . list_style, p_event_data . paragraph_number);
 	else if (p_event_type == kMCFieldExportEventUnicodeRun || p_event_type == kMCFieldExportEventNativeRun)
-		t_buffer . appendtext(p_event_data . bytes, p_event_data . byte_count, p_event_type == kMCFieldExportEventUnicodeRun);
+		/* UNCHECKED */ MCStringAppendSubstring(t_buffer, p_event_data.m_text, p_event_data.m_range);
 	else if (p_event_type == kMCFieldExportEventEndParagraph && !p_event_data . is_last_paragraph)
-		t_buffer . appendtext("\n", 1, false);
+		/* UNCHECKED */ MCStringAppendChar(t_buffer, '\n');
 
 	return true;
 }
 
 static bool export_formatted_text(void *p_context, MCFieldExportEventType p_event_type, const MCFieldExportEventData& p_event_data)
 {
-	text_buffer_t& t_buffer = *(text_buffer_t *)p_context;
+	MCStringRef t_buffer = (MCStringRef)p_context;
 
 	if (p_event_type == kMCFieldExportEventBeginParagraph && p_event_data . paragraph_style . list_style != kMCParagraphListStyleNone)
 		append_list_label(t_buffer, p_event_data . paragraph_style . list_depth, p_event_data . paragraph_style . list_style, p_event_data . paragraph_number);
 	else if (p_event_type == kMCFieldExportEventUnicodeRun || p_event_type == kMCFieldExportEventNativeRun)
-		t_buffer . appendtext(p_event_data . bytes, p_event_data . byte_count, p_event_type == kMCFieldExportEventUnicodeRun);
+		/* UNCHECKED */ MCStringAppendSubstring(t_buffer, p_event_data.m_text, p_event_data.m_range);
 	else if (p_event_type == kMCFieldExportEventLineBreak)
 	{
 		static const char s_tabs[17] = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
-		t_buffer . appendtext("\n", 1, false);
+		/* UNCHECKED */ MCStringAppendChar(t_buffer, '\n');
 		if (p_event_data . paragraph_style . list_style != kMCParagraphListStyleNone)
-			t_buffer . appendtext(s_tabs, p_event_data . paragraph_style . list_depth + 1, false);
+			/* UNCHECKED */ MCStringAppendFormat(t_buffer, "%.*s", p_event_data.paragraph_style.list_depth+1, s_tabs);
 	}
 	else if (p_event_type == kMCFieldExportEventEndParagraph && !p_event_data . is_last_paragraph)
-		t_buffer . appendtext("\n", 1, false);
+		/* UNCHECKED */ MCStringAppendChar(t_buffer, '\n');
 
 	return true;
 }
@@ -643,12 +618,13 @@ void MCField::exportastext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_
 	t_char_count = 0;
 	doexport(kMCFieldExportParagraphs | kMCFieldExportRuns, p_part_id, p_start_index, p_finish_index, estimate_char_count, &t_char_count);
 
-	text_buffer_t t_buffer;
-	t_buffer . setasunicode(true);
-	if (t_buffer . ensure(t_char_count * 2))
-		doexport(kMCFieldExportParagraphs | kMCFieldExportRuns, p_part_id, p_start_index, p_finish_index, export_text, &t_buffer);
+	MCStringRef t_buffer;
+	/* UNCHECKED */ MCStringCreateMutable(0, t_buffer);
+
+	doexport(kMCFieldExportParagraphs | kMCFieldExportRuns, p_part_id, p_start_index, p_finish_index, export_text, t_buffer);
 	
-	return t_buffer . takeasstringref(r_string);
+	/* UNCHECKED */ MCStringCopyAndRelease(t_buffer, r_string);
+	return true;
 }
 
 // MW-2012-02-20: [[ FieldExport ]] This method exports the content of the
@@ -683,12 +659,13 @@ bool MCField::exportasplaintext(MCParagraph *p_paragraphs, int32_t p_start_index
 	t_char_count = 0;
 	doexport(kMCFieldExportParagraphs | kMCFieldExportRuns, p_paragraphs, p_start_index, p_finish_index, estimate_char_count, &t_char_count);
 
-	text_buffer_t t_buffer;
-	t_buffer . setasunicode(true);
-	if (t_buffer . ensure(t_char_count * 2))
-		doexport(kMCFieldExportParagraphs | kMCFieldExportRuns | kMCFieldExportParagraphStyles | kMCFieldExportNumbering, p_paragraphs, p_start_index, p_finish_index, export_plain_text, &t_buffer);
+	MCStringRef t_buffer;
+	/* UNCHECKED */ MCStringCreateMutable(0, t_buffer);
 
-	return t_buffer . takeasstringref(r_string);
+	doexport(kMCFieldExportParagraphs | kMCFieldExportRuns | kMCFieldExportParagraphStyles | kMCFieldExportNumbering, p_paragraphs, p_start_index, p_finish_index, export_plain_text, t_buffer);
+
+	/* UNCHECKED */ MCStringCopyAndRelease(t_buffer, r_string);
+	return true;
 }
 
 bool MCField::exportasplaintext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string)
@@ -724,12 +701,13 @@ bool MCField::exportasformattedtext(uint32_t p_part_id, int32_t p_start_index, i
 	t_char_count = 0;
 	doexport(kMCFieldExportParagraphs | kMCFieldExportRuns, p_part_id, p_start_index, p_finish_index, estimate_char_count, &t_char_count);
 
-	text_buffer_t t_buffer;
-	t_buffer . setasunicode(true);
-	if (t_buffer . ensure(t_char_count * 2))
-		doexport(kMCFieldExportParagraphs | kMCFieldExportLines | kMCFieldExportRuns | kMCFieldExportParagraphStyles | kMCFieldExportNumbering, p_part_id, p_start_index, p_finish_index, export_formatted_text, &t_buffer);
+	MCStringRef t_buffer;
+	/* UNCHECKED */ MCStringCreateMutable(0, t_buffer);
 
-	return t_buffer . takeasstringref(r_string);
+	doexport(kMCFieldExportParagraphs | kMCFieldExportLines | kMCFieldExportRuns | kMCFieldExportParagraphStyles | kMCFieldExportNumbering, p_part_id, p_start_index, p_finish_index, export_formatted_text, t_buffer);
+
+	/* UNCHECKED */ MCStringCopyAndRelease(t_buffer, r_string);
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -740,15 +718,10 @@ bool MCField::importparagraph(MCParagraph*& x_paragraphs, const MCFieldParagraph
 {
 	MCParagraph *t_new_paragraph;
 	t_new_paragraph = new MCParagraph;
-	t_new_paragraph -> state |= PS_LINES_NOT_SYNCHED;
-	t_new_paragraph -> setparent(this);
-	t_new_paragraph -> blocks = new MCBlock;
-	t_new_paragraph -> blocks -> setparent(t_new_paragraph);
-	t_new_paragraph -> blocks -> index = 0;
-	t_new_paragraph -> blocks -> size = 0;
-	if (p_style != nil)
-		t_new_paragraph -> importattrs(*p_style);
 	
+	if (p_style != nil)
+		t_new_paragraph->importattrs(*p_style);
+
 	if (x_paragraphs != nil)
 		x_paragraphs -> prev() -> append(t_new_paragraph);
 	else
@@ -761,58 +734,17 @@ bool MCField::importparagraph(MCParagraph*& x_paragraphs, const MCFieldParagraph
 //   applying the specified style to it.
 bool MCField::importblock(MCParagraph *p_paragraph, const MCFieldCharacterStyle& p_style, const void *p_bytes, uint32_t p_byte_count, bool p_is_unicode)
 {
-	// Make sure we don't try and append any more than 64K worth of bytes.
-	uint32_t t_text_length;
-	t_text_length = MCMin(p_byte_count, 65534U - p_paragraph -> textsize);
-	
-	// If we are unicode and the text length is odd, chop off the last char.
-	if (p_is_unicode && (p_byte_count & 1) != 0)
-		t_text_length -= 1;
-	
-	// If there is not text to fill, do nothing.
-	if (t_text_length == 0)
+	// Do nothing if there is nothing to import
+	if (p_byte_count == 0)
 		return true;
-
-	// If the buffer is not big enough, then extend it.
-	if (p_paragraph -> textsize + t_text_length > p_paragraph -> buffersize)
-	{
-		p_paragraph -> buffersize = MCU_min(65534U, (p_paragraph -> textsize + t_text_length + 64) & ~63);
-		p_paragraph -> text = (char *)realloc(p_paragraph -> text, p_paragraph -> buffersize);
-	}
 	
-	// Get the block we will work on, creating one if it has already been
-	// populated.
-	MCBlock *t_block;
-	t_block = p_paragraph -> blocks -> prev();
-	if (t_block -> size != 0)
-	{
-		MCBlock *t_new_block;
-		t_new_block = new MCBlock;
-		t_new_block -> parent = p_paragraph;
-		t_block -> append(t_new_block);
-		t_block = t_new_block;
-	}
-	
-	// The start of the block is the end of the text.
-	t_block -> index = p_paragraph -> textsize;
-	
-	// The size of the block is the text length.
-	t_block -> size = t_text_length;
-	
-	// MW-2012-03-10: [[ Bug ]] Make sure we set the block's unicode flag (if necessary)
-	if (p_is_unicode)
-		t_block -> sethasunicode(p_is_unicode);
-	
-	// Copy across the bytes of the text.
-	memcpy(p_paragraph -> text + t_block -> index, p_bytes, t_block -> size);
-	p_paragraph -> textsize += t_block -> size;
+	// Give the text to the paragraph to create a new block
+	MCAutoStringRef t_text;
+	/* UNCHECKED */ MCStringCreateWithBytes((const char_t*)p_bytes, p_byte_count, p_is_unicode?kMCStringEncodingUTF16:kMCStringEncodingNative, false, &t_text);
+	MCBlock *t_block = p_paragraph->AppendText(*t_text);
 	
 	// Import the block attributes.
 	t_block -> importattrs(p_style);
-
-	// Make sure the tab flag is updated.
-	if (t_block -> textstrchr(p_paragraph -> text + t_block -> index, t_block -> size, '\t'))
-		t_block -> flags |= F_HAS_TAB;
 	
 	return true;
 }
@@ -879,12 +811,8 @@ MCParagraph *MCField::texttoparagraphs(const MCString& p_text, Boolean p_unicode
 {
 	MCParagraph *t_paragraphs;
 	t_paragraphs = new MCParagraph;
-	t_paragraphs -> state |= PS_LINES_NOT_SYNCHED;
 	t_paragraphs -> setparent(this);
-	t_paragraphs -> blocks = new MCBlock;
-	t_paragraphs -> blocks -> setparent(t_paragraphs);
-	t_paragraphs -> blocks -> index = 0;
-	t_paragraphs -> blocks -> size = 0;
+	t_paragraphs -> inittext();
 
 	const char *t_native_text;
 	t_native_text = p_text . getstring();
@@ -965,18 +893,12 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 	if (p_block == NULL)
 	{
 		// Start a new paragraph
-		t_paragraph -> text = (char *)realloc(t_paragraph -> text, t_paragraph -> textsize);
-		t_paragraph -> buffersize = t_paragraph -> textsize;
 		t_paragraph -> defrag();
 
 		MCParagraph *t_new_paragraph;
 		t_new_paragraph = new MCParagraph;
-		t_new_paragraph -> state |= PS_LINES_NOT_SYNCHED;
 		t_new_paragraph -> setparent(t_paragraph -> getparent());
-		t_new_paragraph -> blocks = new MCBlock;
-		t_new_paragraph -> blocks -> setparent(t_new_paragraph);
-		t_new_paragraph -> blocks -> index = 0;
-		t_new_paragraph -> blocks -> size = 0;
+		t_new_paragraph -> inittext();
 
 		// MW-2012-03-14: [[ FieldImport ]] Apply the paragraph style to the new paragraph
 		//   if present.
@@ -1025,161 +947,68 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 
 		t_paragraph -> append(t_new_paragraph);
 	}
-	else if (t_paragraph -> textsize < 65535 && p_block -> string_length > 0)
+	else if (t_paragraph -> gettextlength() < PARAGRAPH_MAX_LEN && p_block -> string_length > 0)
 	{
 		// Append the block to the current paragraph
+		MCAutoStringRef t_text;
+		/* UNCHECKED */ MCStringCreateWithBytes((const char_t*)p_block->string_buffer, p_block->string_length, 
+												p_block->string_native?kMCStringEncodingNative:kMCStringEncodingUTF16,
+												false, &t_text);
+		MCBlock *t_block = t_paragraph->AppendText(*t_text);
 
-		// If there isn't enough room for the string as unicode, then extend the
-		// capacity of the text buffer appropriately.
-		uint4 t_string_byte_length;
-		if (p_block -> string_native)
-			t_string_byte_length = p_block -> string_length;
-		else
-			t_string_byte_length = p_block -> string_length * 2;
-
-		if (t_paragraph -> textsize + t_string_byte_length > t_paragraph -> buffersize)
+		// MW-2008-06-12: [[ Bug 6397 ]] Pasting styled text munges the color.
+		if (p_block -> foreground_color != 0xffffffff)
 		{
-			t_paragraph -> buffersize = MCU_min(65534U, (t_paragraph -> textsize + t_string_byte_length + 64) & ~63);
-			t_paragraph -> text = (char *)realloc(t_paragraph -> text, t_paragraph -> buffersize);
+			MCColor t_color;
+			t_color . pixel = 0;
+			t_color . red = ((p_block -> foreground_color & 0xff) << 8) | (p_block -> foreground_color & 0xff);
+			t_color . green = (p_block -> foreground_color & 0xff00) | ((p_block -> foreground_color & 0xff00) >> 8);
+			t_color . blue = ((p_block -> foreground_color & 0xff0000) >> 8) | ((p_block -> foreground_color & 0xff0000) >> 16);
+			t_color . flags = 0xff;
+			t_color . pad = 0;
+			t_block -> setcolor(&t_color);
 		}
 
-		if (t_paragraph -> text != NULL)
+		if (p_block -> background_color != 0xffffffff)
 		{
-			MCBlock *t_block;
-			t_block = t_paragraph -> blocks -> prev();
+			MCColor t_color;
+			t_color . pixel = 0;
+			t_color . red = ((p_block -> background_color & 0xff) << 8) | (p_block -> background_color & 0xff);
+			t_color . green = (p_block -> background_color & 0xff00) | ((p_block -> background_color & 0xff00) >> 8);
+			t_color . blue = ((p_block -> background_color & 0xff0000) >> 8) | ((p_block -> background_color & 0xff0000) >> 16);
+			t_color . flags = 0xff;
+			t_color . pad = 0;
+			t_block -> setbackcolor(&t_color);
+		}
 
-			// If the previous block is not empty then create a new one.
-			if (t_block -> size != 0)
-			{
-				MCBlock *t_new_block;
-				t_new_block = new MCBlock;
-				t_new_block -> parent = t_paragraph;
-				t_block -> append(t_new_block);
-				t_block = t_new_block;
-			}
+		if (p_block -> text_shift != 0)
+			t_block -> setshift(p_block -> text_shift);
 
-			// MW-2008-06-12: [[ Bug 6397 ]] Pasting styled text munges the color.
-			if (p_block -> foreground_color != 0xffffffff)
-			{
-				MCColor t_color;
-				t_color . pixel = 0;
-				t_color . red = ((p_block -> foreground_color & 0xff) << 8) | (p_block -> foreground_color & 0xff);
-				t_color . green = (p_block -> foreground_color & 0xff00) | ((p_block -> foreground_color & 0xff00) >> 8);
-				t_color . blue = ((p_block -> foreground_color & 0xff0000) >> 8) | ((p_block -> foreground_color & 0xff0000) >> 16);
-				t_color . flags = 0xff;
-				t_color . pad = 0;
-				t_block -> setcolor(&t_color);
-			}
+		if (p_block -> text_link != nil)
+			t_block -> setatts(P_LINK_TEXT, (void *)MCNameGetCString(p_block -> text_link));
 
-			if (p_block -> background_color != 0xffffffff)
-			{
-				MCColor t_color;
-				t_color . pixel = 0;
-				t_color . red = ((p_block -> background_color & 0xff) << 8) | (p_block -> background_color & 0xff);
-				t_color . green = (p_block -> background_color & 0xff00) | ((p_block -> background_color & 0xff00) >> 8);
-				t_color . blue = ((p_block -> background_color & 0xff0000) >> 8) | ((p_block -> background_color & 0xff0000) >> 16);
-				t_color . flags = 0xff;
-				t_color . pad = 0;
-				t_block -> setbackcolor(&t_color);
-			}
+		if (p_block -> text_metadata != nil)
+			t_block -> setatts(P_METADATA, (void *)MCNameGetCString(p_block -> text_metadata));
 
-			if (p_block -> text_shift != 0)
-				t_block -> setshift(p_block -> text_shift);
-
-			if (p_block -> text_link != nil)
-				t_block -> setatts(P_LINK_TEXT, (void *)MCNameGetCString(p_block -> text_link));
-
-			if (p_block -> text_metadata != nil)
-				t_block -> setatts(P_METADATA, (void *)MCNameGetCString(p_block -> text_metadata));
-
-			const uint2 *t_input_text;
-			t_input_text = p_block -> string_buffer;
-
-			uint4 t_input_length;
-			t_input_length = p_block -> string_length;
-
-			const char *t_font_name;
-			t_font_name = p_block -> font_name == NULL ? "" : p_block -> font_name;
+		const char *t_font_name;
+		t_font_name = p_block -> font_name == NULL ? "" : p_block -> font_name;
 
 #ifdef _MACOSX
-			// MW-2011-03-13: [[ Bug ]] Try different variants of font searching to ensure we don't
-			//   get strange choices. (e.g. Helvetica -> Helvetica Light Oblique).
-			char t_derived_font_name[256];
-			if (macmatchfontname(t_font_name, t_derived_font_name))
-				t_font_name = t_derived_font_name;
+		// MW-2011-03-13: [[ Bug ]] Try different variants of font searching to ensure we don't
+		//   get strange choices. (e.g. Helvetica -> Helvetica Light Oblique).
+		char t_derived_font_name[256];
+		if (macmatchfontname(t_font_name, t_derived_font_name))
+			t_font_name = t_derived_font_name;
 #endif
-
-			while(t_input_length > 0 && t_paragraph -> textsize < 65534)
-			{
-				uint4 t_made, t_used;
-				
-				// MW-2008-08-21: [[ Bug 6969 ]] Make sure we bound the size of the input passed to MCTextRunnify to be
-				//   the maximum we could accept in the output buffer. Otherwise we get a crash...
-				if (p_block -> string_native)
-				{
-					memcpy(t_paragraph -> text + t_paragraph -> textsize, t_input_text, t_input_length);
-					t_used = t_input_length;
-					t_made = t_input_length;
-				}
-				else
-					MCTextRunnify(t_input_text, MCU_min(t_input_length, (uint4)t_paragraph -> buffersize - t_paragraph -> textsize), (uint1 *)t_paragraph -> text + t_paragraph -> textsize, t_used, t_made);
-				
-				bool t_is_unicode;
-				t_is_unicode = t_made == 0;
-
-				MCBlock *t_block;
-				t_block = t_paragraph -> blocks -> prev();
-				if (t_block -> size != 0 && t_block -> hasunicode() != t_is_unicode)
-				{
-					MCBlock *t_new_block;
-					t_new_block = new MCBlock(*t_block);
-					t_new_block -> size = 0;
-					t_block -> append(t_new_block);
-					t_block = t_new_block;
-				}
-
-				t_block -> index = t_paragraph -> textsize;
-
-				// MW-2012-02-13: [[ Block Unicode ]] Create the appropriate type of block based
-				//   on whether the text is unicode or not.
-				if (t_made == 0)
-				{
-					// Unicode run
-					if (t_paragraph -> textsize + t_used * 2 > 65534)
-						t_used = MCU_min(t_used, (uint4)(65535 - t_paragraph -> textsize) / 2);
-						
-					memcpy(t_paragraph -> text + t_paragraph -> textsize, t_input_text, t_used * 2);
-					t_paragraph -> textsize += t_used * 2;
-
-					t_block -> size += t_used * 2;
-					t_block -> flags |= F_HAS_UNICODE;
-				}
-				else
-				{
-					// Native run
-					if (t_paragraph -> textsize + t_made > 65534)
-						t_made = MCU_min(t_made, 65535U - t_paragraph -> textsize);
-						
-					t_paragraph -> textsize += t_made;
-
-					t_block -> size += t_made;
-					t_block -> flags &= ~F_HAS_UNICODE;
-				}
-
-				t_block -> setatts(P_TEXT_FONT, (void *)t_font_name);
-				if (t_block -> textstrchr(t_paragraph -> text + t_block -> index, t_block -> size, '\t'))
-					t_block -> flags |= F_HAS_TAB;
-
-				if (p_block -> font_size != 0)
-					t_block -> setatts(P_TEXT_SIZE, (void *)p_block -> font_size);
-
-				if (p_block -> font_style != 0)
-					t_block -> setatts(P_TEXT_STYLE, (void *)p_block -> font_style);
-
-				t_input_text += t_used;
-				t_input_length -= t_used;
-			}
-		}
+		
+		t_block -> setatts(P_TEXT_FONT, (void *)t_font_name);
+		
+		if (p_block -> font_size != 0)
+			t_block -> setatts(P_TEXT_SIZE, (void *)p_block -> font_size);
+		
+		if (p_block -> font_style != 0)
+			t_block -> setatts(P_TEXT_STYLE, (void *)p_block -> font_style);
+		
 	}
 
 	return true;
@@ -1191,12 +1020,8 @@ MCParagraph *MCField::rtftoparagraphs(const MCString& p_data)
 {
 	MCParagraph *t_paragraphs;
 	t_paragraphs = new MCParagraph;
-	t_paragraphs -> state |= PS_LINES_NOT_SYNCHED;
 	t_paragraphs -> setparent(this);
-	t_paragraphs -> blocks = new MCBlock;
-	t_paragraphs -> blocks -> setparent(t_paragraphs);
-	t_paragraphs -> blocks -> index = 0;
-	t_paragraphs -> blocks -> size = 0;
+	t_paragraphs -> inittext();
 
 	RTFRead(p_data . getstring(), p_data . getlength(), converttoparagraphs, t_paragraphs);
 	

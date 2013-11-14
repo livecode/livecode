@@ -203,23 +203,15 @@ extern MCNameRef MCU_charsettolanguage(uint1 charset);
 /* LEGACY */ extern uint1 MCU_languagetocharset(MCStringRef langname);
 extern uint1 MCU_wincharsettocharset(uint2 wincharset);
 extern uint1 MCU_charsettowincharset(uint1 charset);
-extern bool MCU_multibytetounicode(MCDataRef p_input, MCDataRef &r_output);
-extern bool MCU_unicodetomultibyte(MCDataRef p_input, MCDataRef& r_output);
-extern bool MCU_multibytetounicode(MCStringRef p_src, uinteger_t p_charset, MCStringRef& r_unicode);
-extern bool MCU_unicodetomultibyte(MCStringRef p_src, uinteger_t p_charset, MCStringRef& r_multibyte);
-extern bool MCU_multibytetounicode(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_unicode);
-extern bool MCU_unicodetomultibyte(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_multibyte);
+
+extern bool MCU_multibytetounicode(MCDataRef p_input, uinteger_t p_charset, MCDataRef &r_output);
+extern bool MCU_unicodetomultibyte(MCDataRef p_input, uinteger_t p_charset, MCDataRef &r_output);
 extern void MCU_multibytetounicode(const char *s, uint4 len, char *d,
 	                                   uint4 destbufferlength, uint4 &destlen,
 	                                   uint1 charset);
 extern void MCU_unicodetomultibyte(const char *s, uint4 len, char *d,
 	                                   uint4 destbufferlength, uint4 &destlen,
 	                                   uint1 charset);
-
-extern bool MCU_nativetoutf8(MCStringRef p_native, MCStringRef& r_utf8);
-extern bool MCU_utf8tonative(MCStringRef p_utf8, MCStringRef& r_native);
-
-extern bool MCU_mapunicode(const MCString& p_src, bool is_unicode, bool to_unicode, MCStringRef& r_string);
 
 extern bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char *p_b, bool p_b_isunicode);
 extern double MCU_squared_distance_from_line(int4 sx, int4 sy, int4 ex, int4 ey, int4 x, int4 y);

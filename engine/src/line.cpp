@@ -77,7 +77,7 @@ MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_wi
 	MCBlock *t_break_block;
 	t_break_block = NULL;
 
-	uint2 t_break_index;
+	findex_t t_break_index;
 	t_break_index = 0;
 
 	do
@@ -87,14 +87,14 @@ MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_wi
 		// MW-2008-07-08: [[ Bug 6475 ]] Breaking works incorrectly on lines with tabs and multiple blocks.
 		//   This is due to the tab computations within the block being incorrect as t_frontier_width was
 		//   not being passed (width == 0 was being passed instead).
-		uint2 t_new_break_index;
+		findex_t t_new_break_index;
 		bool t_break_fits, t_block_fits;
 		t_block_fits = t_block -> fit(t_frontier_width, p_max_width < t_frontier_width ? 0 : p_max_width - t_frontier_width, t_new_break_index, t_break_fits);
 
 		bool t_continue;
 		if (t_block_fits)
 		{
-			if (t_new_break_index > t_block -> getindex() || (t_block -> getsize() == 0 && t_break_fits))
+			if (t_new_break_index > t_block -> GetOffset() || (t_block -> GetLength() == 0 && t_break_fits))
 			{
 				// The whole block fits, so record the break position
 				t_break_block = t_block;
@@ -110,7 +110,7 @@ MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_wi
 		}
 		else
 		{
-			if (t_new_break_index > t_block -> getindex())
+			if (t_new_break_index > t_block -> GetOffset())
 			{
 				// We have a break position but the whole block doesn't fit
 				
@@ -164,7 +164,7 @@ MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_wi
 	if (t_break_block == NULL)
 	{
 		t_break_block = t_block -> prev();
-		t_break_index = t_break_block -> getindex() + t_break_block -> getsize();
+		t_break_index = t_break_block -> GetOffset() + t_break_block -> GetLength();
 	}
 	
 	// MW-2012-02-21: [[ LineBreak ]] Check to see if there is a vtab char before the
@@ -174,8 +174,8 @@ MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_wi
 	t_block = p_first;
 	do
 	{
-		uint2 t_line_break_index;
-		if (t_block -> getfirstlinebreak(t_line_break_index))
+		findex_t t_line_break_index;
+		if (t_block -> GetFirstLineBreak(t_line_break_index))
 		{
 			// If the explicit line break is the same as the break, then make sure we
 			// mark it as explicit so that line breaks at ends of lines work.
@@ -194,8 +194,8 @@ MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_wi
 	// If the break index is before the end of the block *or* if we are explicit and it
 	// is at the end of the block, split the block. [ The latter rule means there is an
 	// empty block to have as a line ].
-	if (t_break_index < t_break_block -> getindex() + t_break_block -> getsize() ||
-		t_is_explicit_line_break && t_break_index == t_break_block -> getindex() + t_break_block -> getsize())
+	if (t_break_index < t_break_block -> GetOffset() + t_break_block -> GetLength() ||
+		(t_is_explicit_line_break && t_break_index == t_break_block -> GetOffset() + t_break_block -> GetLength()))
 		t_break_block -> split(t_break_index);
 		
 	firstblock = p_first;
@@ -233,7 +233,7 @@ void MCLine::appendall(MCBlock *bptr)
 	dirtywidth = MCU_max(width, oldwidth);
 }
 
-void MCLine::draw(MCDC *dc, int2 x, int2 y, uint2 si, uint2 ei, const char *tptr, uint2 pstyle)
+void MCLine::draw(MCDC *dc, int2 x, int2 y, findex_t si, findex_t ei, MCStringRef p_string, uint2 pstyle)
 {
 	int2 cx = 0;
 	MCBlock *bptr = (MCBlock *)firstblock->prev();
@@ -297,7 +297,7 @@ void MCLine::draw(MCDC *dc, int2 x, int2 y, uint2 si, uint2 ei, const char *tptr
 		}
 		
 		// Pass the computed flags to the block to draw.
-		bptr->draw(dc, x, cx, y, si, ei, tptr, pstyle, t_flags);
+		bptr->draw(dc, x, cx, y, si, ei, p_string, pstyle, t_flags);
 		
 		uint2 twidth;
 		twidth = bptr->getwidth(dc, cx);
@@ -362,30 +362,30 @@ void MCLine::makedirty()
 	dirtywidth = MCU_max(width, 1);
 }
 
-void MCLine::getindex(uint2 &i, uint2 &l)
+void MCLine::GetRange(findex_t &i, findex_t &l)
 {
-	firstblock->getindex(i, l);
-	uint2 j;
-	lastblock->getindex(j, l);
+	firstblock->GetRange(i, l);
+	findex_t j;
+	lastblock->GetRange(j, l);
 	l = j + l - i;
 }
 
-uint2 MCLine::getcursorx(uint2 fi)
+uint2 MCLine::GetCursorX(findex_t fi)
 {
 	uint2 x = 0;
 	MCBlock *bptr = (MCBlock *)firstblock;
-	uint2 i, l;
-	bptr->getindex(i, l);
+	findex_t i, l;
+	bptr->GetRange(i, l);
 	while (fi > i + l && bptr != lastblock)
 	{
 		x += bptr->getwidth(NULL, x);
 		bptr = (MCBlock *)bptr->next();
-		bptr->getindex(i, l);
+		bptr->GetRange(i, l);
 	}
-	return x + bptr->getcursorx(x, fi);
+	return x + bptr->GetCursorX(x, fi);
 }
 
-uint2 MCLine::getcursorindex(int2 cx, Boolean chunk)
+findex_t MCLine::GetCursorIndex(int2 cx, Boolean chunk)
 {
 	uint2 x = 0;
 	MCBlock *bptr = firstblock;
@@ -397,7 +397,8 @@ uint2 MCLine::getcursorindex(int2 cx, Boolean chunk)
 		bptr = (MCBlock *)bptr->next();
 		bwidth = bptr->getwidth(NULL, x);
 	}
-	return bptr->getcursorindex(x, cx, chunk, bptr == lastblock);
+
+	return bptr->GetCursorIndex(x, cx, chunk, bptr == lastblock);
 }
 
 uint2 MCLine::getwidth()
