@@ -1772,6 +1772,12 @@ enum Sugar_constants {
 	
 	// MERG-2013-06-24: [[ IsAnAsciiString ]] Tag for 'string'.
     SG_STRING,
+	
+	// MW-2013-11-14: [[ AssertCmd ]] Tags for sugar used in assert command.
+	SG_TRUE,
+	SG_FALSE,
+	SG_SUCCESS,
+	SG_FAILURE,
 };
 
 enum Statements {
@@ -1780,6 +1786,8 @@ enum Statements {
     S_ADD,
     S_ANSWER,
     S_ASK,
+	// MW-2013-11-14: [[ AssertCmd ]] 'assert' command tag.
+	S_ASSERT,
     S_BEEP,
     S_BREAK,
     S_BREAKPOINT,

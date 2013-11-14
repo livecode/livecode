@@ -215,6 +215,7 @@ LT command_table[] =
         {"add", TT_STATEMENT, S_ADD},
         {"answer", TT_STATEMENT, S_ANSWER},
         {"ask", TT_STATEMENT, S_ASK},
+		{"assert", TT_STATEMENT, S_ASSERT},
         {"beep", TT_STATEMENT, S_BEEP},
         {"break", TT_STATEMENT, S_BREAK},
         {"breakpoint", TT_STATEMENT, S_BREAKPOINT},
@@ -1931,6 +1932,10 @@ static LT sugar_table[] =
 		{"effects", TT_UNDEFINED, SG_EFFECTS},
 		{"elevated", TT_UNDEFINED, SG_ELEVATED},
         {"empty", TT_CHUNK, CT_UNDEFINED},
+		// MW-2013-11-14: [[ AssertCmd ]] Token for 'failure'
+		{"failure", TT_UNDEFINED, SG_FAILURE},
+		// MW-2013-11-14: [[ AssertCmd ]] Token for 'false'
+		{"false", TT_UNDEFINED, SG_FALSE},
 		{"initially", TT_UNDEFINED, SG_INITIALLY},
         {"keyword", TT_CHUNK, CT_UNDEFINED},
 		{"level", TT_UNDEFINED, SG_LEVEL},
@@ -1948,6 +1953,10 @@ static LT sugar_table[] =
 		{"standard", TT_UNDEFINED, SG_STANDARD},
 		// MERG-2013-06-24: [[ IsAnAsciiString ]] Token for 'string'.
         {"string", TT_UNDEFINED, SG_STRING},
+		// MW-2013-11-14: [[ AssertCmd ]] Token for 'success'
+		{"success", TT_UNDEFINED, SG_SUCCESS},
+		// MW-2013-11-14: [[ AssertCmd ]] Token for 'true'
+		{"true", TT_UNDEFINED, SG_TRUE},
 		{"unicode", TT_UNDEFINED, SG_UNICODE},
 		{"url", TT_UNDEFINED, SG_URL},
 		{"without", TT_PREP, PT_WITHOUT},

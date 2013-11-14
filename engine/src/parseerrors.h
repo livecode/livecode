@@ -1618,6 +1618,12 @@ enum Parse_errors
 
 	// {PE-0530} variance: bad parameters
 	PE_VARIANCE_BADPARAM,
+	
+	// MW-2013-11-14: [[ AssertCmd ]] Parsing errors for assert command.
+	// {PE-0531} assert: bad type
+	PE_ASSERT_BADTYPE,
+	// {PE-0532} assert: bad expression
+	PE_ASSERT_BADEXPR,
 };
 
 extern const char *MCparsingerrors;

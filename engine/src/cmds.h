@@ -24,6 +24,33 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 // general commands in cmds.cc
 
+// MW-2013-11-14: [[ AssertCmd ]] 'assert' command definition.
+class MCAssertCmd: public MCStatement
+{
+	enum Type
+	{
+		TYPE_NONE,
+		TYPE_TRUE,
+		TYPE_FALSE,
+		TYPE_SUCCESS,
+		TYPE_FAILURE,
+	};
+	
+	Type m_type;
+	MCExpression *m_expr;
+	
+public:
+	MCAssertCmd(void)
+	{
+		m_type = TYPE_NONE;
+		m_expr = nil;
+	}
+	
+	virtual ~MCAssertCmd(void);
+	virtual Parse_stat parse(MCScriptPoint& sp);
+	virtual Exec_stat exec(MCExecPoint& ep);
+};
+
 class MCChoose : public MCStatement
 {
 	Tool littool;

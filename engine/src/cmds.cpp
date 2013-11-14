@@ -2005,3 +2005,124 @@ Exec_stat MCEcho::exec(MCExecPoint& ep)
 
 	return ES_NORMAL;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  MW-2013-11-14: [[ AssertCmd ]] Implementation of 'assert' command.
+//
+
+MCAssertCmd::~MCAssertCmd(void)
+{
+	delete m_expr;
+}
+
+// assert <expr>
+// assert true <expr>
+// assert false <expr>
+// assert success <expr>
+// assert failure <expr>
+Parse_stat MCAssertCmd::parse(MCScriptPoint& sp)
+{
+	initpoint(sp);
+	
+	// Handle the 'assert <expr>' case by looking ahead.
+	MCScriptPoint temp_sp(sp);
+	if (sp.parseexp(False, True, &m_expr) == PS_NORMAL)
+	{
+		// If we lookahead and are not at EOL, then we can't be this form.
+		MCScriptPoint lookahead_sp(sp);
+		Symbol_type t_type;
+		if (lookahead_sp . next(t_type) == PS_EOL)
+		{
+			m_type = TYPE_NONE;
+			return PS_NORMAL;
+		}
+	}
+	sp = temp_sp;
+	
+	// Now handle the other cases.
+	if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_TRUE) == PS_NORMAL)
+		m_type = TYPE_TRUE;
+	else if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_FALSE) == PS_NORMAL)
+		m_type = TYPE_FALSE;
+	else if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_SUCCESS) == PS_NORMAL)
+		m_type = TYPE_SUCCESS;
+	else if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_FAILURE) == PS_NORMAL)
+		m_type = TYPE_FAILURE;
+	else
+	{
+		MCperror -> add(PE_ASSERT_BADTYPE, sp);
+		return PS_ERROR;
+	}
+	
+	// All the 'type' forms end in an expression.
+	if (sp.parseexp(False, True, &m_expr) != PS_NORMAL)
+	{
+		MCperror -> add(PE_ASSERT_BADEXPR, sp);
+		return PS_ERROR;
+	}
+	
+	return PS_NORMAL;
+}
+
+Exec_stat MCAssertCmd::exec(MCExecPoint& ep)
+{
+	Exec_stat t_stat;
+	t_stat = ES_NORMAL;
+	
+	t_stat = m_expr -> eval(ep);
+	
+	switch(m_type)
+	{
+		case TYPE_NONE:
+		case TYPE_TRUE:
+			// If the expression threw an error, then just throw.
+			if (t_stat != ES_NORMAL)
+				return ES_ERROR;
+			
+			// If the expression is true, we are done.
+			if (ep.getsvalue() == MCtruemcstring)
+				return ES_NORMAL;
+		break;
+		
+		case TYPE_FALSE:
+			// If the expression threw an error, then just throw.
+			if (t_stat != ES_NORMAL)
+				return ES_ERROR;
+			
+			// If the expression is not true, we are done. (this uses the same logic as if).
+			if (ep.getsvalue() != MCtruemcstring)
+				return ES_NORMAL;
+		break;
+		
+		case TYPE_SUCCESS:
+			if (t_stat == ES_NORMAL)
+				return ES_NORMAL;
+			break;
+		
+		case TYPE_FAILURE:
+			if (t_stat == ES_ERROR)
+				return ES_NORMAL;
+			break;
+			
+		default:
+			assert(false);
+			break;
+	}
+	
+	// Clear the execution error.
+	MCeerror -> clear();
+	
+	// Dispatch 'assertError <handler>, <line>, <pos>, <object>'
+	MCParameter t_handler, t_line, t_pos, t_object;
+	t_handler.setnameref_unsafe_argument(ep.gethandler()->getname());
+	t_handler.setnext(&t_line);
+	t_line.setn_argument((real8)line);
+	t_line.setnext(&t_pos);
+	t_pos.setn_argument((real8)pos);
+	t_pos.setnext(&t_object);
+	ep.getobj()->getprop(0, P_LONG_ID, ep, False);
+	t_object.sets_argument(ep.getsvalue());
+	
+	return ep.getobj() -> message(MCM_assert_error, &t_handler);
+}
