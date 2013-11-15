@@ -677,13 +677,14 @@ void MCInterfaceEvalMouseV(MCExecContext& ctxt, integer_t& r_value)
     r_value = t_mouseloc . y;
 }
 
-void MCInterfaceEvalMouseLoc(MCExecContext& ctxt, MCPoint& r_loc)
+void MCInterfaceEvalMouseLoc(MCExecContext& ctxt, MCStringRef& r_string)
 {
 	int16_t x, y;
 	MCscreen->querymouse(x, y);
-    
-	// IM-2013-10-10: [[ FullscreenMode ]] Update to use stack coord conversion methods
-	r_loc = MCdefaultstackptr->globaltostackloc(MCPointMake(x, y));
+    MCRectangle t_rect = MCdefaultstackptr -> getrect();
+    if (MCStringFormat(r_string, "%d,%d", x - t_rect . x, y - t_rect . y))
+        return;
+    ctxt . Throw();
 }
 
 //////////

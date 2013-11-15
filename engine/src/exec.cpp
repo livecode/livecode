@@ -3810,3 +3810,104 @@ void MCExecResolveCharsOfField(MCField *p_field, uint32_t p_part, int32_t& x_sta
     x_finish = t_finish;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+static void MCExecTypeConvertToValueRefAndReleaseAlways(MCExecContext& ctxt, MCExecValueType p_from_type, void *p_from_value, MCValueRef& r_value)
+{
+	switch(p_from_type)
+	{
+		case kMCExecValueTypeValueRef:
+        case kMCExecValueTypeArrayRef:
+        case kMCExecValueTypeDataRef:
+        case kMCExecValueTypeStringRef:
+        case kMCExecValueTypeNameRef:
+        case kMCExecValueTypeBooleanRef:
+        case kMCExecValueTypeNumberRef:
+			r_value = *(MCValueRef *)p_from_value;
+			break;
+			
+        case kMCExecValueTypeUInt:
+			if (!MCNumberCreateWithUnsignedInteger(*(uinteger_t *)p_from_value, (MCNumberRef&)r_value))
+				ctxt . Throw();
+			break;
+			
+		case kMCExecValueTypeInt:
+			if (!MCNumberCreateWithInteger(*(integer_t *)p_from_value, (MCNumberRef&)r_value))
+					ctxt . Throw();
+			break;
+            
+        case kMCExecValueTypeDouble:
+			if (!MCNumberCreateWithReal(*(double *)p_from_value, (MCNumberRef&)r_value))
+				ctxt . Throw();
+			break;
+            
+        case kMCExecValueTypeColor:
+            if(!MCStringFormat((MCStringRef&)r_value, "%u,%u,%u", (((MCColor *)p_from_type) -> red >> 8) & 0xff, (((MCColor *)p_from_type) -> green >> 8) & 0xff, (((MCColor *)p_from_type) -> blue >> 8) & 0xff))
+                ctxt . Throw();
+			break;
+            
+        case kMCExecValueTypePoint:
+            if(!MCStringFormat((MCStringRef&)r_value, "%d,%d", ((MCPoint *)p_from_type) -> x, ((MCPoint *)p_from_type) -> y))
+                ctxt . Throw();
+			break;
+            			
+		default:
+			ctxt . Unimplemented();
+			break;
+	}
+}
+
+static void MCExecTypeConvertFromValueRefAndReleaseAlways(MCExecContext& ctxt, MCValueRef p_from_value, MCExecValueType p_to_type, void *p_to_value)
+{
+	switch(p_to_type)
+	{
+		case kMCExecValueTypeValueRef:
+			*(MCValueRef *)p_to_value = p_from_value;
+			return;
+		case kMCExecValueTypeArrayRef:
+			ctxt . ConvertToArray(p_from_value, *(MCArrayRef *)p_to_value);
+			break;
+		case kMCExecValueTypeDataRef:
+			ctxt . ConvertToData(p_from_value, *(MCDataRef *)p_to_value);
+			break;
+		case kMCExecValueTypeStringRef:
+			ctxt . ConvertToString(p_from_value, *(MCStringRef *)p_to_value);
+			break;
+		case kMCExecValueTypeNameRef:
+			ctxt . ConvertToName(p_from_value, *(MCNameRef *)p_to_value);
+			break;
+		case kMCExecValueTypeNumberRef:
+			ctxt . ConvertToNumber(p_from_value, *(MCNumberRef *)p_to_value);
+			break;
+		case kMCExecValueTypeBooleanRef:
+			ctxt . ConvertToBoolean(p_from_value, *(MCBooleanRef *)p_to_value);
+			break;
+		case kMCExecValueTypeUInt:
+			ctxt . ConvertToUnsignedInteger(p_from_value, *(uinteger_t *)p_to_value);
+			break;
+		case kMCExecValueTypeInt:
+			ctxt . ConvertToInteger(p_from_value, *(integer_t *)p_to_value);
+			break;
+		case kMCExecValueTypeBool:
+			ctxt . ConvertToBool(p_from_value, *(bool *)p_to_value);
+			break;
+		case kMCExecValueTypeDouble:
+			ctxt . ConvertToReal(p_from_value, *(double *)p_to_value);
+			break;
+		default:
+			ctxt . Unimplemented();
+			break;
+	}
+	
+	MCValueRelease(p_from_value);
+}
+
+void MCExecTypeConvertAndReleaseAlways(MCExecContext& ctxt, MCExecValueType p_from_type, void *p_from_value, MCExecValueType p_to_type, void *p_to_value)
+{
+	MCValueRef t_pivot;
+	MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, p_from_type, p_from_value, t_pivot);
+	if (ctxt . HasError())
+		return;
+	MCExecTypeConvertFromValueRefAndReleaseAlways(ctxt, t_pivot, p_to_type, p_to_value);
+}
+
