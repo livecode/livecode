@@ -3022,23 +3022,6 @@ void MCIntersect::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndExpression(ctxt);
 }
 
-MCIsNumber::~MCIsNumber()
-{
-	delete source;
-}
-
-Parse_stat MCIsNumber::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_ISNUMBER_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCIsNumber::eval(MCExecPoint &ep)
-{
 #ifdef /* MCIsNumber */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
@@ -3050,47 +3033,6 @@ Exec_stat MCIsNumber::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCIsNumber */
 
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_ISNUMBER_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_string;
-
-	/* UNCHECKED */ ep.copyasstringref(&t_string);
-
-	bool t_result;
-	MCLegacyEvalIsNumber(ctxt, *t_string, t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-MCIsoToMac::~MCIsoToMac()
-{
-	delete source;
-}
-
-Parse_stat MCIsoToMac::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_ISOTOMAC_BADPARAM, sp);
-		return PS_ERROR;
-	}
-
-	return PS_NORMAL;
-}
-
-Exec_stat MCIsoToMac::eval(MCExecPoint &ep)
-{
 #ifdef /* MCIsoToMac */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
@@ -3102,28 +3044,6 @@ Exec_stat MCIsoToMac::eval(MCExecPoint &ep)
 	IO_iso_to_mac(ep.getbuffer(0), ep.getsvalue().getlength());
 	return ES_NORMAL;
 #endif /* MCIsoToMac */
-
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_ISOTOMAC_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	MCAutoDataRef t_source;
-	/* UNCHECKED */ ep . copyasdataref(&t_source);
-
-	MCAutoDataRef t_result;
-	MCFiltersEvalIsoToMac(ctxt, *t_source, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 MCKeys::~MCKeys()
 {

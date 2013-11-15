@@ -835,36 +835,18 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCIsoToMac : public MCUnaryFunction
+class MCIsoToMac : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, &MCExecContext::EvalExprAsDataRef, MCFiltersEvalIsoToMac, EE_ISOTOMAC_BADSOURCE, PE_ISOTOMAC_BADPARAM, kMCFiltersEvalIsoToMacMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCIsoToMac()
-	{
-		source = NULL;
-	}
-	virtual ~MCIsoToMac();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalIsoToMacMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCIsoToMac(){}
+    virtual ~MCIsoToMac(){}
 };
 
-class MCIsNumber : public MCUnaryFunction
+class MCIsNumber : public MCUnaryFunctionCtxt<MCStringRef, bool, &MCExecContext::EvalExprAsStringRef, MCLegacyEvalIsNumber, EE_ISNUMBER_BADSOURCE, PE_ISNUMBER_BADPARAM, kMCLegacyEvalIsNumberMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCIsNumber()
-	{
-		source = NULL;
-	}
-	virtual ~MCIsNumber();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCLegacyEvalIsNumberMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCIsNumber(){}
+    virtual ~MCIsNumber(){}
 };
 
 class MCKeys : public MCFunction
