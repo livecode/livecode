@@ -135,8 +135,8 @@ public:
 	bool enumerate(MCExecPoint& ep, bool p_first = true);
 
 	// MW-2013-11-15: [[ Bug 11277 ]] Methods for eval/exec in handlerlist context.
-	Exec_stat eval(MCExecPoint& ep);
-	Exec_stat doscript(MCExecPoint& ep, uint2 line, uint2 pos);
+	void eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &r_value);
+	void doscript(MCExecContext& ctxt, MCStringRef p_string, uinteger_t p_line = 0, uinteger_t p_pos = 0);
 	
 	uint2 getnvars(void)
 	{

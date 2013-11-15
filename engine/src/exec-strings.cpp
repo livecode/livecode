@@ -24,6 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 #include "handler.h"
+#include "hndlrlst.h"
 
 #include "scriptpt.h"
 #include "util.h"
@@ -719,11 +720,17 @@ bool MCStringsMerge(MCExecContext& ctxt, MCStringRef p_format, MCStringRef& r_st
 				MCerrorlock++;
 				if (t_is_expression)
 				{
-					ctxt.GetHandler()->eval(t_ctxt, *t_expression, &t_value);
+					if (ctxt . GetHandler() != nil)
+						ctxt.GetHandler()->eval(t_ctxt, *t_expression, &t_value);
+					else
+						ctxt.GetHandlerList()->eval(t_ctxt, *t_expression, &t_value);
 				}
 				else
 				{
-					ctxt.GetHandler()->doscript(t_ctxt, *t_expression);
+					if (ctxt . GetHandler() != nil)
+						ctxt.GetHandler()->doscript(t_ctxt, *t_expression);
+					else
+						ctxt.GetHandlerList()->doscript(t_ctxt, *t_expression);
 					t_value = MCresult->getvalueref();
 				}
 				t_valid = !t_ctxt.HasError();

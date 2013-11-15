@@ -646,7 +646,10 @@ void MCEngineEvalValue(MCExecContext& ctxt, MCStringRef p_script, MCValueRef& r_
 		return;
 	}
 
-	ctxt.GetHandler()->eval(ctxt, p_script, r_value);
+	if (ctxt.GetHandler() != nil)
+		ctxt.GetHandler()->eval(ctxt, p_script, r_value);
+	else
+		ctxt.GetHandlerList()->eval(ctxt, p_script, r_value);
 	if (ctxt.HasError())
 		ctxt.LegacyThrow(EE_VALUE_ERROR, p_script);
 }
@@ -778,7 +781,10 @@ void MCEngineExecDo(MCExecContext& ctxt, MCStringRef p_script, int p_line, int p
 		added = True;
 	}
 
-	ctxt.GetHandler() -> doscript(ctxt, p_script, p_line, p_pos);
+	if (ctxt.GetHandler() != nil)
+		ctxt.GetHandler() -> doscript(ctxt, p_script, p_line, p_pos);
+	else
+		ctxt.GetHandlerList() -> doscript(ctxt, p_script, p_line, p_pos);
 
 	if (added)
 		MCnexecutioncontexts--;

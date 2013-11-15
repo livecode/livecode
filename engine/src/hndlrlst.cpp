@@ -697,16 +697,16 @@ bool MCHandlerlist::enumerate(MCExecPoint& ep, bool p_first)
 	return p_first;
 }
 
-Exec_stat MCHandlerlist::eval(MCExecPoint& ep)
+void MCHandlerlist::eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &r_value)
 {
 	// TODO: Implement execution outside of a handler.
-	return ES_ERROR;
+	ctxt. Unimplemented();
 }
 
-Exec_stat MCHandlerlist::doscript(MCExecPoint& ep, uint2 line, uint2 pos)
+void MCHandlerlist::doscript(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos)
 {
 	// TODO: Implement execution outside of a handler.
-	return ES_ERROR;
+	ctxt. Unimplemented();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
