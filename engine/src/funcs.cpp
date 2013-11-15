@@ -4038,15 +4038,15 @@ void MCKeys::compile(MCSyntaxFactoryRef ctxt)
 
 
 
-Parse_stat MCLength::parse(MCScriptPoint &sp, Boolean the)
-{
-    if (get1param(sp, &m_expression, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_LENGTH_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
+//Parse_stat MCLength::parse(MCScriptPoint &sp, Boolean the)
+//{
+//    if (get1param(sp, &m_expression, the) != PS_NORMAL)
+//	{
+//		MCperror->add(PE_LENGTH_BADPARAM, sp);
+//		return PS_ERROR;
+//	}
+//	return PS_NORMAL;
+//}
 
 //void MCLength::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 //{

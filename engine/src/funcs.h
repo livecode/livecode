@@ -22,6 +22,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "express.h"
 #include "executionerrors.h"
+#include "parseerrors.h"
+#include "mcerror.h"
 
 #include "exec.h"
 
@@ -70,6 +72,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 // Helper class that simplifies evaluation of functions not taking any arguments.
+extern MCError *MCperror;
 
 template<typename ReturnType, void (*EvalFunction)(MCExecContext&, typename MCExecValueTraits<ReturnType>::out_type)> class MCConstantFunctionCtxt: public MCConstantFunction
 {
@@ -83,19 +86,30 @@ public:
 	}
 };
 
-template<typename ParamType, typename ReturnType, bool (MCExecContext::*p_evalfunc)(MCExpression*, Exec_errors, typename MCExecValueTraits<ParamType>::out_type), void (*EvalFunction)(MCExecContext&, typename MCExecValueTraits<ParamType>::in_type, typename MCExecValueTraits<ReturnType>::out_type)> class MCUnaryFunctionCtxt: public MCUnaryFunction
+template<typename ParamType, typename ReturnType, bool (MCExecContext::*EvalExpression)(MCExpression*, Exec_errors, typename MCExecValueTraits<ParamType>::out_type), void (*EvalFunction)(MCExecContext&, typename MCExecValueTraits<ParamType>::in_type, typename MCExecValueTraits<ReturnType>::out_type), Exec_errors EvalError, Parse_errors ParseError> class MCUnaryFunctionCtxt: public MCUnaryFunction
 {
 public:
     MCUnaryFunctionCtxt() { m_expression = nil; }
 
     virtual ~MCUnaryFunctionCtxt() { delete m_expression; }
 
+    virtual Parse_stat parse(MCScriptPoint &sp, Boolean the)
+    {
+        if (get1param(sp, &m_expression, the) != PS_NORMAL)
+        {
+            MCperror -> add(ParseError, sp);
+            return PS_ERROR;
+        }
+
+        return PS_NORMAL;
+    }
+
     void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
     {
         ReturnType t_result;
         ParamType t_param;
 
-        if (!(ctxt .* p_evalfunc)(m_expression, m_error, t_param))
+        if (!(ctxt .* EvalExpression)(m_expression, EvalError, t_param))
             return;
 
         EvalFunction(ctxt, t_param, t_result);
@@ -107,7 +121,6 @@ public:
     }
 
 protected:
-    Exec_errors m_error;
     MCExpression *m_expression;
 };
 
@@ -1023,17 +1036,14 @@ public:
 
 };
 
-class MCLength : public MCUnaryFunctionCtxt<MCStringRef, integer_t, &MCExecContext::EvalExprAsStringRef, MCStringsEvalLength>
+class MCLength : public MCUnaryFunctionCtxt<MCStringRef, integer_t, &MCExecContext::EvalExprAsStringRef, MCStringsEvalLength, EE_LENGTH_BADSOURCE, PE_LENGTH_BADPARAM>
 {
 public:
-    MCLength()
-    {
-        m_error = EE_LENGTH_BADSOURCE;
-	}
+    MCLength(){}
 
     virtual ~MCLength(){}
     
-    virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+//    virtual Parse_stat parse(MCScriptPoint &, Boolean the);
     
 //	virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
 
