@@ -252,7 +252,7 @@ Parse_stat MCAnnuity::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCAnnuity::eval(MCExecPoint &ep)
+void MCAnnuity::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCAnnuity */ LEGACY_EXEC
 	if (rate->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
@@ -271,33 +271,17 @@ Exec_stat MCAnnuity::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCAnnuity */
 
-	MCExecContext ctxt(ep);
-	real64_t t_rate, t_periods;
-	real64_t t_result;
+    real64_t t_rate;
+    if (!ctxt . EvalExprAsDouble(rate, EE_ANNUITY_BADRATE, t_rate))
+        return;
+        
+	real64_t t_periods;
+    if (!ctxt . EvalExprAsDouble(periods, EE_ANNUITY_BADPERIODS, t_periods))
+        return;
+	
 
-	if (rate->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_ANNUITY_BADRATE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_rate);
-
-	if (periods->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_ANNUITY_BADPERIODS, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_periods);
-
-	MCMathEvalAnnuity(ctxt, t_rate, t_periods, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
+	MCMathEvalAnnuity(ctxt, t_rate, t_periods, r_value . double_value);
+    r_value .type = kMCExecValueTypeDouble;
 }
 
 void MCAnnuity::compile(MCSyntaxFactoryRef ctxt)
@@ -495,7 +479,7 @@ Parse_stat MCAtan2::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCAtan2::eval(MCExecPoint &ep)
+void MCAtan2::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCAtan2 */ LEGACY_EXEC
 	if (s1->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
@@ -522,33 +506,17 @@ Exec_stat MCAtan2::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCAtan2 */
 
-	MCExecContext ctxt(ep);
-	real64_t t_y, t_x;
-	real64_t t_result;
+    real64_t t_y;
+    if (!ctxt . EvalExprAsDouble(s1, EE_ATAN2_BADS1, t_y))
+        return;
+	
 
-	if (s1->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_ATAN2_BADS1, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_y);
-
-	if (s2->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_ATAN2_BADS2, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_x);
-
-	MCMathEvalAtan2(ctxt, t_y, t_x, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
+    real64_t t_x;
+    if (!ctxt . EvalExprAsDouble(s2, EE_ATAN2_BADS2, t_x))
+        return;
+	
+	MCMathEvalAtan2(ctxt, t_y, t_x, r_value . double_value);
+    r_value . type = kMCExecValueTypeDouble;
 }
 
 void MCAtan2::compile(MCSyntaxFactoryRef ctxt)
@@ -630,7 +598,7 @@ Parse_stat MCCompound::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCCompound::eval(MCExecPoint &ep)
+void MCCompound::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCCompound */ LEGACY_EXEC
 	if (rate->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
@@ -649,33 +617,17 @@ Exec_stat MCCompound::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCCompound */
 
-	MCExecContext ctxt(ep);
-	real64_t t_rate, t_periods;
-	real64_t t_result;
+    real64_t t_rate;
+    if (!ctxt . EvalExprAsDouble(rate, EE_COMPOUND_BADRATE, t_rate))
+        return;
+	
+    real64_t t_periods;
+    if (!ctxt . EvalExprAsDouble(periods, EE_COMPOUND_BADRATE, t_periods))
+        return;
+	
 
-	if (rate->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_COMPOUND_BADRATE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_rate);
-
-	if (periods->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_COMPOUND_BADPERIODS, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_periods);
-
-	MCMathEvalCompound(ctxt, t_rate, t_periods, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
+	MCMathEvalCompound(ctxt, t_rate, t_periods, r_value . double_value);
+    r_value . type = kMCExecValueTypeDouble;
 }
 
 void MCCompound::compile(MCSyntaxFactoryRef ctxt)
@@ -1338,7 +1290,7 @@ Parse_stat MCMatrixMultiply::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCMatrixMultiply::eval(MCExecPoint &ep)
+void MCMatrixMultiply::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCMatrixMultiply */ LEGACY_EXEC
 	if (dest -> eval(ep) != ES_NORMAL)
@@ -1389,35 +1341,17 @@ Exec_stat MCMatrixMultiply::eval(MCExecPoint &ep)
     
 	return ES_NORMAL;
 #endif /* MCMatrixMultiply */
-	MCExecContext ctxt(ep);
+	
+    MCAutoArrayRef t_src_array;
+    if (!ctxt . EvalExprAsArrayRef(dest, EE_MATRIXMULT_BADSOURCE, &t_src_array))
+        return;
+	
+    MCAutoArrayRef t_dst_array;
+    if (!ctxt . EvalExprAsArrayRef(source, EE_MATRIXMULT_BADSOURCE, &t_dst_array))
+        return;
 
-	if (dest -> eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_MATRIXMULT_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCAutoArrayRef t_src_array;
-	/* UNCHECKED */ ep . copyasarrayref(&t_src_array);
-
-	if (source -> eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_MATRIXMULT_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCAutoArrayRef t_dst_array;
-	/* UNCHECKED */ ep . copyasarrayref(&t_dst_array);
-
-	MCAutoArrayRef t_result;
-	MCArraysEvalMatrixMultiply(ctxt, *t_src_array, *t_dst_array, &t_result);
-	if (!ctxt . HasError())
-	{
-		ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ES_ERROR;
+    MCArraysEvalMatrixMultiply(ctxt, *t_src_array, *t_dst_array, r_value . arrayref_value);
+    r_value . type = kMCExecValueTypeArrayRef;
 }
 
 void MCMatrixMultiply::compile(MCSyntaxFactoryRef ctxt)
@@ -1896,7 +1830,7 @@ Parse_stat MCRound::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCRound::eval(MCExecPoint &ep)
+void MCRound::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCRound */ LEGACY_EXEC
 	real8 factor = 1.0;
@@ -1926,36 +1860,19 @@ Exec_stat MCRound::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCRound */
 
-	MCExecContext ctxt(ep);
-	real64_t t_source, t_digit;
-	real64_t t_result;
+    real64_t t_source;
+    if (!ctxt . EvalExprAsDouble(source, EE_RANDOM_BADSOURCE, t_source))
+        return;
 
-	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_RANDOM_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_source);
-
-	if (digit != nil && (digit->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL))
-	{
-		MCeerror->add(EE_RANDOM_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_digit);
+    real64_t t_digit;
+    if (!ctxt . EvalOptionalExprAsDouble(digit, nil, EE_RANDOM_BADSOURCE, t_digit))
+        return;
 
 	if (digit != nil)
-		MCMathEvalRoundToPrecision(ctxt, t_source, t_digit, t_result);
+		MCMathEvalRoundToPrecision(ctxt, t_source, t_digit, r_value . double_value);
 	else
-		MCMathEvalRound(ctxt, t_source, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
+		MCMathEvalRound(ctxt, t_source, r_value . double_value);
+    r_value . type = kMCExecValueTypeDouble;
 }
 
 void MCRound::compile(MCSyntaxFactoryRef ctxt)
@@ -2212,7 +2129,7 @@ Parse_stat MCStatRound::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCStatRound::eval(MCExecPoint &ep)
+void MCStatRound::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCStatRound */ LEGACY_EXEC
 	real8 factor = 1.0;
@@ -2251,36 +2168,20 @@ Exec_stat MCStatRound::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCStatRound */
 
-	MCExecContext ctxt(ep);
-	real64_t t_source, t_digit;
-	real64_t t_result;
+    real64_t t_source;
+    if (!ctxt . EvalExprAsDouble(source, EE_RANDOM_BADSOURCE, t_source))
+        return;
+	
 
-	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_RANDOM_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_source);
-
-	if (digit != nil && (digit->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL))
-	{
-		MCeerror->add(EE_RANDOM_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_digit);
-
-	if (digit != nil)
-		MCMathEvalStatRoundToPrecision(ctxt, t_source, t_digit, t_result);
+    real64_t t_digit;
+    if (!ctxt . EvalOptionalExprAsDouble(digit, nil, EE_RANDOM_BADSOURCE, t_digit))
+        return;
+    
+    if (digit != nil)
+		MCMathEvalStatRoundToPrecision(ctxt, t_source, t_digit, r_value . double_value);
 	else
-		MCMathEvalStatRound(ctxt, t_source, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
+		MCMathEvalStatRound(ctxt, t_source, r_value . double_value);
+    r_value . type = kMCExecValueTypeDouble;
 }
 
 void MCStatRound::compile(MCSyntaxFactoryRef ctxt)

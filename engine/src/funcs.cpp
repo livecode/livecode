@@ -9673,7 +9673,7 @@ Parse_stat MCHTTPProxyForURL::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCHTTPProxyForURL::eval(MCExecPoint& ep)
+void MCHTTPProxyForURL::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCHTTPProxyForURL */ LEGACY_EXEC
 	Exec_stat t_result;
@@ -9765,36 +9765,23 @@ Exec_stat MCHTTPProxyForURL::eval(MCExecPoint& ep)
 	return t_result;
 #endif /* MCHTTPProxyForURL */
 
-
-	MCExecContext ctxt(ep);
-
 	MCAutoStringRef t_url;
-	if (url -> eval(ep) != ES_NORMAL)
-		return ES_ERROR;
-	/* UNCHECKED */ ep . copyasstringref(&t_url);
+    if (!ctxt . EvalExprAsStringRef(url, EE_UNDEFINED, &t_url))
+        return;
 
 	MCAutoStringRef t_host;
-	if (host -> eval(ep) != ES_NORMAL)
-		return ES_ERROR;
-	/* UNCHECKED */ ep . copyasstringref(&t_host);
-
+    if (!ctxt . EvalExprAsStringRef(host, EE_UNDEFINED, &t_host))
+        return;
+    
 	MCAutoStringRef t_pac;
-	if (pac != nil && pac -> eval(ep) != ES_NORMAL)
-		return ES_ERROR;
-
-	MCAutoStringRef t_proxy;
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(pac, EE_UNDEFINED, &t_pac))
+        return;
+    
 	if (pac == nil)
-		MCNetworkEvalHTTPProxyForURL(ctxt, *t_url, *t_host, &t_proxy);
+		MCNetworkEvalHTTPProxyForURL(ctxt, *t_url, *t_host, r_value . stringref_value);
 	else
-		MCNetworkEvalHTTPProxyForURLWithPAC(ctxt, *t_url, *t_host, *t_pac, &t_proxy);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_proxy);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
+		MCNetworkEvalHTTPProxyForURLWithPAC(ctxt, *t_url, *t_host, *t_pac, r_value . stringref_value);
+    r_value . type = kMCExecValueTypeStringRef;
 }
 
 void MCHTTPProxyForURL::compile(MCSyntaxFactoryRef ctxt)

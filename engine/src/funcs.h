@@ -2247,7 +2247,7 @@ public:
 	}
 	virtual ~MCAnnuity();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -2308,7 +2308,7 @@ public:
 	}
 	virtual ~MCAtan2();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -2340,7 +2340,7 @@ public:
 	}
 	virtual ~MCCompound();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -2528,7 +2528,7 @@ public:
 	}
 	virtual ~MCMatrixMultiply();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -2639,7 +2639,7 @@ public:
 	}
 	virtual ~MCRound();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -2714,7 +2714,7 @@ public:
 	}
 	virtual ~MCStatRound();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -2831,7 +2831,7 @@ public:
 	virtual ~MCHTTPProxyForURL(void);
 
 	virtual Parse_stat parse(MCScriptPoint& sp, Boolean the);
-	virtual Exec_stat eval(MCExecPoint& ep);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 
 private:
