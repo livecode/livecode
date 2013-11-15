@@ -5837,7 +5837,7 @@ Parse_stat MCTextHeightSum::parse(MCScriptPoint &sp, Boolean the)
 	return parsetarget(sp, the, True, object);
 }
 
-Exec_stat MCTextHeightSum::eval(MCExecPoint &ep)
+void MCTextHeightSum::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCTextHeightSum */ LEGACY_EXEC
 	MCObject *optr;
@@ -5850,26 +5850,17 @@ Exec_stat MCTextHeightSum::eval(MCExecPoint &ep)
 	return optr->getprop(0, P_FORMATTED_HEIGHT, ep, False);
 #endif /* MCTextHeightSum */
 
-
-	MCExecContext ctxt(ep);
 	integer_t t_result;
 
 	MCObjectPtr t_object;
-	if (object->getobj(ep, t_object, True) != ES_NORMAL)
+	if (!object->getobj(ctxt, t_object, True))
 	{
-		MCeerror->add(EE_TEXT_HEIGHT_SUM_NOOBJECT, line, pos);
-		return ES_ERROR;
+		ctxt . LegacyThrow(EE_TEXT_HEIGHT_SUM_NOOBJECT);
+		return;
 	}
 
-	MCLegacyEvalTextHeightSum(ctxt, t_object, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
+	MCLegacyEvalTextHeightSum(ctxt, t_object, r_value . int_value);
+    r_value . type = kMCExecValueTypeInt;
 }
 
 void MCTextHeightSum::compile(MCSyntaxFactoryRef ctxt)
