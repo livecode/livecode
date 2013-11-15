@@ -349,6 +349,12 @@ bool MCJavaStringToNative(JNIEnv *env, jstring p_java_string, char *&r_native)
 
 bool MCJavaStringFromStringRef(JNIEnv *env, MCStringRef p_string, jstring &r_java_string)
 {
+    if (p_string == nil)
+    {
+        r_java_string = nil;
+        return true;
+    }
+    
     char *t_native;
     bool t_success;
     
@@ -1189,11 +1195,8 @@ bool MCJavaConvertParameters(JNIEnv *env, const char *p_signature, va_list p_arg
                     break;
 				case kMCJavaTypeMCStringRef:
 				{
-					MCAutoStringRef t_string;
-					t_success = MCStringCopy(va_arg(p_args, MCStringRef), &t_string);
-
 					if (t_success)
-						t_success = MCJavaStringFromStringRef(env, *t_string, t_java_string);
+						t_success = MCJavaStringFromStringRef(env, va_arg(p_args, MCStringRef), t_java_string);
                     if (t_success)
                         t_value . l = t_java_string;
                     

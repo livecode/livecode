@@ -2190,12 +2190,12 @@ void MCInterfaceExecDeleteObjectChunks(MCExecContext& ctxt, MCObjectChunkPtr *p_
         {
             MCField *t_field;
             t_field = static_cast<MCField *>(p_chunks[i] . object);
-            integer_t t_si, t_ei;
+            findex_t t_si, t_ei;
             t_si = 0;
             t_ei = INT32_MAX;
             t_field -> resolvechars(p_chunks[i] . part_id, t_si, t_ei, p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start);
             
-			t_field -> settextindex_stringref(p_chunks[i] . part_id, t_si, t_ei, kMCEmptyString, False);
+			t_field -> settextindex(p_chunks[i] . part_id, t_si, t_ei, kMCEmptyString, False);
         }
 	}
 }
@@ -2346,7 +2346,7 @@ void MCInterfaceExecSelectTextOfField(MCExecContext& ctxt, Preposition_type p_ty
     
     MCField *t_field;
     t_field = static_cast<MCField *>(p_target . object);
-    integer_t t_si, t_ei;
+    findex_t t_si, t_ei;
     t_si = 0;
     t_ei = INT32_MAX;
     t_field -> resolvechars(p_target . part_id, t_si, t_ei, t_start, t_finish - t_start);
@@ -3049,7 +3049,7 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 {
 	MCStack *odefaultstackptr = MCdefaultstackptr;
 
-	MCObject *t_object;
+	MCObject *t_object = nil;
 	switch (p_target->gettype())
 	{
 	case CT_STACK:
@@ -3165,11 +3165,11 @@ void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef p_string, int 
 			t_start = t_finish = p_chunk . mark . finish;
 		else /* PT_BEFORE */
 			t_start = t_finish = p_chunk . mark . start;
-		integer_t t_si, t_ei;
+		findex_t t_si, t_ei;
         t_si = 0;
         t_ei = INT32_MAX;
         t_field -> resolvechars(p_chunk . part_id, t_si, t_ei, t_start, t_finish - t_start);
-		if (t_field -> settextindex_stringref(p_chunk . part_id, t_si, t_ei, p_string, False) != ES_NORMAL)
+		if (t_field -> settextindex(p_chunk . part_id, t_si, t_ei, p_string, False) != ES_NORMAL)
 		{
 			ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
 			return;

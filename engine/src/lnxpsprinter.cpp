@@ -640,8 +640,12 @@ void MCPSPrinter::DoFinalize(void)
 
 bool MCPSPrinter::DoReset(MCStringRef p_name)
 {
-	if (!MCStringIsEmpty(p_name)) 
-		m_printersettings . printername = strdup(MCStringGetCString(p_name));
+    if (!MCStringIsEmpty(p_name))
+    {
+        MCAutoStringRefAsSysString t_name;
+        /* UNCHECKED */ t_name.Lock(p_name);
+        m_printersettings . printername = strdup(*t_name);
+    }
 	
 	FlushSettings();
 	
@@ -733,14 +737,19 @@ MCPrinterResult MCPSPrinter::DoBeginPrint(MCStringRef p_document, MCPrinterDevic
         t_output_file = C_FNAME;
 
     MCAutoStringRef t_path;
-    /* UNCHECKED */ MCStringCreateWithCString(t_output_file, &t_path);
+    /* UNCHECKED */ MCStringCreateWithSysString(t_output_file, &t_path);
 
     stream = MCS_open(*t_path, kMCSOpenFileModeWrite, False, False, 0);
 
-	PSwrite("%!PS-Adobe-3.0\n");
+    // PostScript + Unicode = complicated...
+    //
+    // PS has no concept of Unicode internally and it depends on both the font
+    // and the PostScript engine. General support for Unicode text in PS
+    // documents isn't easy and is not implemented here. :-(
+    PSwrite("%!PS-Adobe-3.0\n");
 	sprintf(buffer, "%%%%Creator: Revolution %s\n", MCNameGetCString(MCN_version_string)); PSwrite(buffer);
 	PSwrite("%%DocumentData: Clean8Bit\n");
-	sprintf(buffer, "%%%%Title: %s\n", MCStringGetCString(p_document) ) ; PSwrite(buffer ) ;
+    sprintf(buffer, "%%%%Title: %s\n", MCStringGetNativeCharPtr(p_document) ) ; PSwrite(buffer ) ;
 	PSwrite("%%MCOrientation Portrait\n");
 	PSwrite("%%EndComments\n");
 	
@@ -798,7 +807,7 @@ MCPrinterResult MCPSPrinter::DoEndPrint(MCPrinterDevice* p_device)
 			sprintf(buffer, GetDeviceCommand(), C_FNAME ) ;
 		
 		//fprintf(stderr, "Print command : [%s]\n", buffer ) ;
-		exec_command ( buffer ) ; 
+        exec_command ( buffer ) ;
 	}
 	
 	if ( p_device != NULL)
@@ -821,7 +830,7 @@ void MCPSPrinter::FlushSettings ( void )
     if ( m_printersettings . outputfilename != NULL )
     {
         MCAutoStringRef t_string;
-        /* UNCHECKED */ MCStringCreateWithCString(m_printersettings.outputfilename, &t_string);
+        /* UNCHECKED */ MCStringCreateWithSysString(m_printersettings.outputfilename, &t_string);
         SetDeviceOutput( m_printersettings . printertype, *t_string);
     }
 	
@@ -1532,7 +1541,7 @@ void exec_command ( char * command )
 {
     MCAutoStringRef t_command;
     MCAutoStringRef t_output;
-    /* UNCHECKED */ MCStringCreateWithCString(command, &t_command);
+    /* UNCHECKED */ MCStringCreateWithSysString(command, &t_command);
 
     if (MCS_runcmd(*t_command, &t_output) != IO_NORMAL)
 	{

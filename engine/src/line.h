@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define	LINE_H
 
 #include "dllst.h"
+#include "field.h"
 
 class MCParagraph;
 class MCBlock;
@@ -40,14 +41,11 @@ public:
 	void takebreaks(MCLine *lptr);
 	MCBlock *fitblocks(MCBlock *p_first, MCBlock *p_sentinal, uint2 maxwidth);
 	void appendall(MCBlock *bptr);
-	void draw(MCDC *dc, int2 x, int2 y, uint2 si, uint2 ei, const char *tptr, uint2 pstyle);
+	void draw(MCDC *dc, int2 x, int2 y, findex_t si, findex_t ei, MCStringRef p_text, uint2 pstyle);
 	void setscents(MCBlock *bptr);
 	uint2 getdirtywidth();
 	void makedirty();
 	void clean();
-	void getindex(uint2 &i, uint2 &l);
-	uint2 getcursorindex(int2 x, Boolean chunk);
-	uint2 getcursorx(uint2 i);
 	uint2 getwidth();
 	uint2 getheight();
 	uint2 getascent();
@@ -61,6 +59,16 @@ public:
 		r_first = firstblock;
 		r_last = lastblock;
 	}
+	
+	//////////
+	
+	void GetRange(findex_t &r_index, findex_t &r_length);
+	findex_t GetOffset();
+	findex_t GetLength();
+	findex_t GetCursorIndex(int2 x, Boolean chunk);
+	uint2 GetCursorX(findex_t i);
+	
+	//////////
 	
 	MCLine *next()
 	{

@@ -80,7 +80,10 @@ static void DisplayStartupErrorAndExit(void)
 	MCAutoStringRef mcap;
 	MCAutoStringRef mtext;
 	MCModeGetStartupErrorMessage(&mcap, &mtext);
-	MessageBoxA(HWND_DESKTOP, MCStringGetCString(*mtext), MCStringGetCString(*mcap), MB_APPLMODAL | MB_OK);
+	MCAutoStringRefAsWString t_cap_wstr, t_text_wstr;
+	/* UNCHECKED */ t_cap_wstr.Lock(*mcap);
+	/* UNCHECKED */ t_text_wstr.Lock(*mtext);
+	MessageBoxW(HWND_DESKTOP, *t_text_wstr, *t_cap_wstr, MB_APPLMODAL | MB_OK);
 	exit(-1);
 }
 
@@ -91,6 +94,8 @@ static void CALLBACK InitializeFiberRoutine(void *p_context)
 	context = (InitializeFiberContext *)p_context;
 
 	g_mainthread_errno = _errno();
+
+	_CrtSetDbgFlag(_CRTDBG_CHECK_ALWAYS_DF|_CRTDBG_DELAY_FREE_MEM_DF|_CRTDBG_CHECK_CRT_DF);
 
 	context -> success = X_init(context -> argc, context -> argv, context -> envp);
 

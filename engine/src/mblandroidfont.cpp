@@ -148,7 +148,7 @@ struct MCAndroidCustomFont {
 };
 
 static MCAndroidCustomFont *s_custom_fonts = nil;
-static MCStringRef s_font_folder = MCSTR("fonts/");
+static MCStringRef s_font_folder = nil;
 
 static MCAndroidCustomFont* look_up_custom_font_by_name(MCStringRef p_name);
 static MCAndroidCustomFont* look_up_custom_font_by_family_and_style(MCStringRef p_family, bool p_bold, bool p_italic);
@@ -158,7 +158,8 @@ static void delete_custom_font(MCAndroidCustomFont *p_font);
 
 void MCAndroidCustomFontsInitialize()
 {
-    s_custom_fonts = nil;   
+    s_custom_fonts = nil;
+    s_font_folder = MCSTR("fonts/");
 }
 
 void MCAndroidCustomFontsFinalize()
@@ -294,7 +295,6 @@ static MCAndroidFontStyle MCAndroidCustomFontsGetStyle(MCStringRef p_name)
 static MCAndroidCustomFont* look_up_custom_font(MCStringRef p_name, bool p_bold, bool p_italic)
 {
     MCAutoStringRef t_styled_name;
-    t_styled_name = nil;    
     if (!MCStringMutableCopy(p_name, &t_styled_name))
         return nil;    
     if (p_bold && !MCStringAppend(*t_styled_name, MCSTR(" Bold")))

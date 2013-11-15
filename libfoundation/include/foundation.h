@@ -768,7 +768,16 @@ void MCErrorSetHandler(MCErrorHandler handler);
 
 #ifdef _DEBUG
 
-extern void __MCAssert(const char *file, uint32_t line, const char *message);
+// If we are using GCC or Clang, we can give the compiler the hint that the
+// assertion functions do not return. This is particularly useful for Clang's
+// static analysis feature.
+#if defined(__GNUC__) || defined (__clang__) || defined (__llvm__)
+#define ATTRIBUTE_NORETURN  __attribute__((__noreturn__))
+#else
+#define ATTRIBUTE_NORETURN
+#endif
+
+extern void __MCAssert(const char *file, uint32_t line, const char *message) ATTRIBUTE_NORETURN;
 #define MCAssert(m_expr) (void)( (!!(m_expr)) || (__MCAssert(__FILE__, __LINE__, #m_expr), 0) )
 
 extern void __MCLog(const char *file, uint32_t line, const char *format, ...);
@@ -777,7 +786,7 @@ extern void __MCLog(const char *file, uint32_t line, const char *format, ...);
 extern void __MCLogWithTrace(const char *file, uint32_t line, const char *format, ...);
 #define MCLogWithTrace(m_format, ...) __MCLogWithTrace(__FILE__, __LINE__, m_format, __VA_ARGS__)
 
-extern void __MCUnreachable(void);
+extern void __MCUnreachable(void) ATTRIBUTE_NORETURN;
 #define MCUnreachable() __MCUnreachable();
 
 #else
@@ -1335,6 +1344,11 @@ bool MCStringCreateWithCFString(CFStringRef cf_string, MCStringRef& r_string);
 bool MCStringCreateWithCFStringAndRelease(CFStringRef cf_string, MCStringRef& r_string);
 #endif
 
+#ifdef __LINUX__
+// Create a string from a C string in the system encoding
+bool MCStringCreateWithSysString(const char *sys_string, MCStringRef &r_string);
+#endif
+
 // Create a mutable string with the given initial capacity. Note that the
 // initial capacity is only treated as a hint, the string will extend itself
 // as necessary.
@@ -1481,6 +1495,10 @@ bool MCStringConvertToCFStringRef(MCStringRef string, CFStringRef& r_cfstring);
 
 #ifdef __WINDOWS__
 bool MCStringConvertToBSTR(MCStringRef string, BSTR& r_bstr);
+#endif
+
+#ifdef __LINUX__
+bool MCStringConvertToSysString(MCStringRef string, const char *&sys_string);
 #endif
 
 /////////

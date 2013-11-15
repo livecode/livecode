@@ -69,16 +69,16 @@ int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button
 	MCAutoStringRef t_ok_button, t_cancel_button, t_other_button;
 	
 	if (p_button_count == 0)
-		t_ok_button = MCSTR("OK");
+		&t_ok_button = MCSTR("OK");
 	
 	if (p_button_count >= 1)
-		t_ok_button = MCValueRetain(p_buttons[0]);
+		&t_ok_button = MCValueRetain(p_buttons[0]);
 
 	if (p_button_count >= 3)
-		t_other_button = MCValueRetain(p_buttons[1]);
+		&t_other_button = MCValueRetain(p_buttons[1]);
 
 	if (p_button_count >= 2)
-		t_cancel_button = MCValueRetain(p_buttons[p_button_count - 1]);
+		&t_cancel_button = MCValueRetain(p_buttons[p_button_count - 1]);
 
 	s_in_popup_dialog = true;
 	s_popup_dialog_action = -1;

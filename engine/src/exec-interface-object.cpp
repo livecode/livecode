@@ -970,6 +970,29 @@ MCExecEnumTypeInfo _kMCInterfaceEncodingTypeInfo =
 	_kMCInterfaceEncodingElementInfo
 };
 
+//////////
+
+MCExecEnumTypeElementInfo _kMCInterfaceListStyleElementInfo[] =
+{
+	{ "", 0, false },
+	{ "disc", 1, false },
+	{ "circle", 2, false },
+	{ "square", 3, false },
+	{ "decimal", 4, false },
+	{ "lower latin", 5, false },
+	{ "upper latin", 6, false },
+	{ "lower roman", 7, false },
+	{ "upper roman", 8, false },
+	{ "skip", 9, false },
+};
+
+MCExecEnumTypeInfo _kMCInterfaceListStyleTypeInfo =
+{
+	"Interface.ListStyle",
+	sizeof(_kMCInterfaceListStyleElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCInterfaceListStyleElementInfo
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExecCustomTypeInfo *kMCInterfaceLayerTypeInfo = &_kMCInterfaceLayerTypeInfo;
@@ -979,6 +1002,7 @@ MCExecCustomTypeInfo *kMCInterfaceTextStyleTypeInfo = &_kMCInterfaceTextStyleTyp
 MCExecEnumTypeInfo *kMCInterfaceInkNamesTypeInfo = &_kMCInterfaceInkNamesTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceEncodingTypeInfo = &_kMCInterfaceEncodingTypeInfo;
 MCExecCustomTypeInfo *kMCInterfaceTriStateTypeInfo = &_kMCInterfaceTriStateTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceListStyleTypeInfo = &_kMCInterfaceListStyleTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1215,7 +1239,7 @@ void MCObject::GetLayer(MCExecContext& ctxt, uint32_t part, MCInterfaceLayer& r_
 	// previous fix for crash when attempting to get the layer of an object outside
 	// the group being edited in edit group mode.
 	
-	uint2 num;
+	uint2 num = 0;
 	if (parent != nil)
 	{
 		MCCard *t_card;
@@ -1479,7 +1503,8 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 
             // MW-2013-05-30: [[ InheritedPscripts ]] Make sure we resolve the the
 			//   parent script as pointing to the object (so Inherit works correctly).
-			t_use -> GetParent() -> Resolve(t_object);
+            if (t_success)
+                t_use -> GetParent() -> Resolve(t_object);
             
             // MW-2013-05-30: [[ InheritedPscripts ]] Next we have to ensure the
 			//   inheritence hierarchy is in place (The inherit call will create
@@ -3254,7 +3279,7 @@ void MCObject::GetCustomPropertySets(MCExecContext& ctxt, uindex_t& r_count, MCS
 	while (t_success && p != NULL)
 	{
 		if (!p -> hasname(kMCEmptyName))
-			t_success = t_list . Push(MCNameGetString(p -> getname()));
+			t_success = t_list . Push(MCValueRetain(MCNameGetString(p -> getname())));
 		p = p -> getnext();
 	}
 

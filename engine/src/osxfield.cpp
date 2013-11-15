@@ -36,7 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "text.h"
 
-MCParagraph *MCField::macunicodestyletexttoparagraphs(const MCString& p_text, const MCString& p_style_data)
+MCParagraph *MCField::macunicodestyletexttoparagraphs(MCDataRef p_text, MCDataRef p_style_data)
 {
 	bool t_success;
 	t_success = true;
@@ -48,7 +48,7 @@ MCParagraph *MCField::macunicodestyletexttoparagraphs(const MCString& p_text, co
 	{
 		if (ATSUUnflattenStyleRunsFromStream(
 											 kATSUDataStreamUnicodeStyledText, 0,
-											 p_style_data . getlength(), p_style_data . getstring(),
+											 MCDataGetLength(p_style_data), MCDataGetBytePtr(p_style_data),
 											 0, 0, NULL, NULL,
 											 &t_run_count, &t_style_count) != noErr)
 			t_success = false;
@@ -77,7 +77,7 @@ MCParagraph *MCField::macunicodestyletexttoparagraphs(const MCString& p_text, co
 		
 		if (ATSUUnflattenStyleRunsFromStream(
 											 kATSUDataStreamUnicodeStyledText, 0,
-											 p_style_data . getlength(), p_style_data . getstring(),
+											 MCDataGetLength(p_style_data), MCDataGetBytePtr(p_style_data),
 											 t_run_count, t_style_count, t_runs, t_styles,
 											 &t_run_count, &t_style_count) != noErr)
 			t_success = false;
@@ -90,18 +90,14 @@ MCParagraph *MCField::macunicodestyletexttoparagraphs(const MCString& p_text, co
 	if (t_success)
 	{
 		t_paragraphs = new MCParagraph;
-		t_paragraphs -> state |= PS_LINES_NOT_SYNCHED;
 		t_paragraphs -> setparent(this);
-		t_paragraphs -> blocks = new MCBlock;
-		t_paragraphs -> blocks -> setparent(t_paragraphs);
-		t_paragraphs -> blocks -> index = 0;
-		t_paragraphs -> blocks -> size = 0;
+		t_paragraphs -> inittext();
 		
 		const UniChar *t_text;
-		t_text = (UniChar *)p_text . getstring();
+		t_text = (UniChar *)MCDataGetBytePtr(p_text);
 		
 		uint4 t_text_length;
-		t_text_length = p_text . getlength();
+		t_text_length = MCDataGetLength(p_text);
 		
 		int4 t_run_start;
 		t_run_start = 0;
@@ -219,12 +215,8 @@ MCParagraph *MCField::macstyletexttoparagraphs(const MCString& p_text, const MCS
 {
 	MCParagraph *t_paragraphs;
 	t_paragraphs = new MCParagraph;
-	t_paragraphs -> state |= PS_LINES_NOT_SYNCHED;
 	t_paragraphs -> setparent(this);
-	t_paragraphs -> blocks = new MCBlock;
-	t_paragraphs -> blocks -> setparent(t_paragraphs);
-	t_paragraphs -> blocks -> index = 0;
-	t_paragraphs -> blocks -> size = 0;
+	t_paragraphs -> inittext();
 	
 	StScrpRec *t_styles;
 	t_styles = (StScrpRec *)p_style_data . getstring();
@@ -611,7 +603,7 @@ Exec_stat MCField::getparagraphmacunicodestyles(MCParagraph *p_start, MCParagrap
 		t_block = t_blocks;
 		do
 		{
-			uint2 t_block_length;
+			findex_t t_block_length;
 			const char *t_font_name;
 			uint2 t_font_style;
 			uint2 t_font_size;
@@ -623,16 +615,15 @@ Exec_stat MCField::getparagraphmacunicodestyles(MCParagraph *p_start, MCParagrap
 			else
 			{
 				t_next_block = t_block -> next();
-				while(t_next_block != t_blocks && t_next_block -> getsize() == 0)
+				while(t_next_block != t_blocks && t_next_block -> GetLength() == 0)
 					t_next_block = t_next_block -> next();
 			}
 			
 			if (t_block != NULL)
 			{
-				uint2 t_block_offset;
-				t_block -> getindex(t_block_offset, t_block_length);
-				if (t_block -> hasunicode())
-					t_block_length = t_block_length / 2;
+				findex_t t_block_offset;
+				t_block -> GetRange(t_block_offset, t_block_length);
+
 				if (t_next_block == t_blocks && t_paragraph -> next() != p_end -> next())
 					t_block_length += 1;
 				

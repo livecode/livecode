@@ -139,16 +139,19 @@ MCNativeControlActionTable MCAndroidBrowserControl::kActionTable =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCStringRef MCAndroidBrowserControl::s_js_tag = MCValueRetain(kMCEmptyString);
-MCStringRef MCAndroidBrowserControl::s_js_result = MCValueRetain(kMCEmptyString);
+MCStringRef MCAndroidBrowserControl::s_js_tag = nil;
+MCStringRef MCAndroidBrowserControl::s_js_result = nil;
 
 MCAndroidBrowserControl::MCAndroidBrowserControl(void)
 {
+    s_js_tag = MCValueRetain(kMCEmptyString);
+    s_js_result = MCValueRetain(kMCEmptyString);
 }
 
 MCAndroidBrowserControl::~MCAndroidBrowserControl(void)
 {
-    
+    MCValueRelease(s_js_tag);
+    MCValueRelease(s_js_result);
 }
 
 MCNativeControlType MCAndroidBrowserControl::GetType(void)

@@ -3035,6 +3035,7 @@ Parse_stat MCResolveImage::parse(MCScriptPoint &p_sp)
 
 Exec_stat MCResolveImage::exec(MCExecPoint &p_ep)
 {
+#ifdef /* MCResolveImage */ LEGACY_EXEC
     Exec_stat t_stat;
     t_stat = ES_NORMAL;
     
@@ -3077,6 +3078,54 @@ Exec_stat MCResolveImage::exec(MCExecPoint &p_ep)
         t_stat = p_ep.getit() -> set(p_ep);
     
     return t_stat;
+#endif /* MCResolveImage */
     
+    Exec_stat t_stat;
+    t_stat = ES_NORMAL;
+    
+    uint4 t_part_id;
+    MCObject *t_relative_object;
+    if (t_stat == ES_NORMAL)
+        t_stat = m_relative_object -> getobj(p_ep, t_relative_object, t_part_id, True);
+    
+    if (t_stat == ES_NORMAL)
+        t_stat = m_id_or_name -> eval(p_ep);
+    
+    MCExecContext ctxt(p_ep);
+    
+    if (t_stat == ES_NORMAL)
+    {
+        if (m_is_id)
+        {
+            if (p_ep . ton() == ES_ERROR)
+            {
+                MCeerror -> add(EE_VARIABLE_NAN, line, pos);
+                return ES_ERROR;
+            }
+            uint4 t_id;
+            t_id = p_ep . getuint4();
+            MCInterfaceExecResolveImageById(ctxt, t_relative_object, t_id);
+        }
+        else
+        {
+            MCAutoStringRef t_name;
+            /* UNCHECKED */ p_ep . copyasstringref(&t_name);
+            MCInterfaceExecResolveImageByName(ctxt, t_relative_object, *t_name);
+        }
+    }
 }
 
+void MCResolveImage::compile(MCSyntaxFactoryRef ctxt)
+{
+    MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+    
+    m_relative_object -> compile_object_ptr(ctxt);
+    m_id_or_name -> compile(ctxt);
+    
+    if (m_is_id)
+        MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecResolveImageByIdMethodInfo);
+    else
+        MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecResolveImageByNameMethodInfo);
+    
+    MCSyntaxFactoryEndStatement(ctxt);
+}

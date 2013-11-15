@@ -825,12 +825,14 @@ void X_clear_globals(void)
 	MCmainstackschanged = False;
 
 #ifdef _ANDROID_MOBILE
+    extern void MCAndroidMediaPickInitialize();
     // MM-2012-02-22: Initialize up any static variables as Android static vars are preserved between sessions
     MCAdInitialize();
     MCNativeControlInitialize();
     MCSensorInitialize();
     MCAndroidCustomFontsInitialize();
 	MCSystemSoundInitialize();
+    MCAndroidMediaPickInitialize();
 #endif
 	
 #ifdef _IOS_MOBILE

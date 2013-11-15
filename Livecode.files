@@ -529,8 +529,6 @@ engine/src/paint.h
 engine/src/paragraf.cpp
 engine/src/paragraf.h
 engine/src/paragrafattr.cpp
-engine/src/paragraph.cpp
-engine/src/paragraph.h
 engine/src/param.cpp
 engine/src/param.h
 engine/src/parentscript.cpp

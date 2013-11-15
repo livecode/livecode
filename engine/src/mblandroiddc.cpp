@@ -1023,7 +1023,7 @@ IO_handle android_get_mainstack_stream(void)
 
 	if (!MCStringFormat(&t_asset_filename, "%@/revandroidmain.rev", MCcmd))
 		return nil;
-
+    
 	return MCS_open(*t_asset_filename, kMCSOpenFileModeRead, False, False, 0);
 }
 
@@ -1071,7 +1071,7 @@ static void *mobile_main(void *arg)
 	MCAndroidEngineCall("getPackagePath", "x", &t_args[0]);
 	t_env[0] = nil;
 
-	MCLog("args[0] = %@", t_args[0]);
+	MCLog("args[0] = %s", MCStringGetCString(t_args[0]));
 
 	// Make sure MCquit is false before we start running things
 	MCquit = False;
@@ -2091,7 +2091,7 @@ bool revandroid_loadExternalLibrary(MCStringRef p_external, MCStringRef &r_path)
 
 bool MCAndroidGetBuildInfo(MCStringRef p_key, MCStringRef& r_value)
 {
-	MCAndroidEngineCall("getBuildInfo", "xx", r_value, p_key);
+	MCAndroidEngineCall("getBuildInfo", "xx", &r_value, p_key);
 
 	if (r_value == nil)
 		return false;

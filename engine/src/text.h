@@ -67,7 +67,7 @@ struct MCTextBlock
 	int4 text_shift;
 
 	MCNameRef text_link;
-	MCNameRef text_metadata;
+    MCStringRef text_metadata;
 
 	bool string_native;
 	const uint2 *string_buffer;
@@ -94,7 +94,7 @@ struct MCTextParagraph
 	uint32_t background_color;
 	uint32_t border_color;
 	
-	MCNameRef metadata;
+    MCStringRef metadata;
 };
 
 // MW-2012-03-14: [[ RtfParaStyles ]] The convert callback now takes a 'paragraph' style record
