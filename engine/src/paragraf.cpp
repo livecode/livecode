@@ -2992,7 +2992,7 @@ void MCParagraph::setselectionindex(findex_t si, findex_t ei, Boolean front, Boo
 	marklines(startindex, endindex);
 	originalindex = startindex = si;
 	endindex = ei;
-	if (endindex != PARAGRAPH_MAX_LEN)
+	if (endindex < PARAGRAPH_MAX_LEN)
 		focusedindex = endindex;
 	if (front)
 		state |= PS_FRONT;
