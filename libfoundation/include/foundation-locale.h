@@ -47,6 +47,9 @@ bool    MCLocaleCreateWithName(MCStringRef p_locale_name, MCLocaleRef &r_locale)
 // Gets a reference to a locale using a Win32 LCID
 bool    MCLocaleCreateWithLCID(uint32_t LCID, MCLocaleRef &r_locale);
 
+// Increments the reference count for the given locale
+MCLocaleRef MCLocaleRetain(MCLocaleRef p_locale);
+
 // Releases a reference to a locale
 void    MCLocaleRelease(MCLocaleRef p_locale);
 
@@ -56,6 +59,16 @@ void    MCLocaleRelease(MCLocaleRef p_locale);
 extern MCLocaleRef MCLbasic;        // Compatible with older LiveCode versions
 extern MCLocaleRef MCLdefault;      // Locale in use by the system
 extern MCLocaleRef MCLcurrent;      // Current locale (if different from default)
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Changes the current locale to the given locale object and updates the rest of
+// the engine global variables that depend on the locale (e.g number and date
+// formatters).
+//
+// This releases the locale object held in MCLcurrent and takes ownership of the
+// given locale object.
+bool MCLocaleSetCurrentLocale(MCLocaleRef);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -118,6 +131,7 @@ enum MCNumberFormatStyle
     kMCNumberFormatStyleNumberingSystem,
     kMCNumberFormatStylePatternRulebased,
     kMCNumberFormatStylePatternISO,
+    kMCNumberFormatStyleCurrencyISO,
     kMCNumberFormatStyleCurrencyPlural
 };
 
@@ -139,17 +153,17 @@ extern MCNumberFormatterRef MCNFdecimal;    // Standard decimal number
 extern MCNumberFormatterRef MCNFcurrency;   // Currency
 extern MCNumberFormatterRef MCNFordinal;    // 1st, 2nd, 3rd, etc
 
-// Well-known number formatters using the LiveCode locale
-extern MCNumberFormatterRef MCNFgeneric;    // Decimal numbers, non-localised
+// Well-known number formatters using the "basic" locale
+extern MCNumberFormatterRef MCNFbasic;    // Decimal numbers, non-localised
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Converts from an integer or floating-point value to text
-bool    MCLocaleNumberFormatInteger(MCNumberFormatterRef, uint64_t, MCStringRef&);
+bool    MCLocaleNumberFormatInteger(MCNumberFormatterRef, int64_t, MCStringRef&);
 bool    MCLocaleNumberFormatReal(MCNumberFormatterRef, real64_t, MCStringRef&);
 
 // Converts from text to an integer or floating-point value
-bool    MCLocaleNumberParseInteger(MCNumberFormatterRef, MCStringRef, uint64_t&);
+bool    MCLocaleNumberParseInteger(MCNumberFormatterRef, MCStringRef, int64_t&);
 bool    MCLocaleNumberParseReal(MCNumberFormatterRef, MCStringRef, real64_t&);
 
 
@@ -201,20 +215,23 @@ enum MCMonth
 //  A time zone is identified using its TzData name, e.g.
 //      America/Los_Angeles
 //      Europe/London
+//
+// TODO: create an opaque Time Zone type
+typedef MCStringRef MCTimeZoneRef;
 
 // Opaque type representing a calendar
 typedef struct __MCCalendar* MCCalendarRef;
 
 // Creates a calendar object for the given locale and time zone
-bool    MCCalendarCreate(MCLocaleRef, MCStringRef p_time_zone, MCCalendarType, MCCalendarRef&);
+bool    MCCalendarCreate(MCLocaleRef, MCTimeZoneRef p_time_zone, MCCalendarType, MCCalendarRef&);
 
 // Destroys an existing calendar object
-bool    MCCalendarRelease(MCCalendarRef);
+void    MCCalendarRelease(MCCalendarRef);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern MCStringRef      MCTZdefault;    // The system time zone
-extern MCStringRef      MCTZutc;        // The UTC time zone
+extern MCTimeZoneRef    MCTZdefault;    // The system time zone
+extern MCTimeZoneRef    MCTZutc;        // The UTC time zone
 
 extern MCCalendarRef    MCCdefault;     // The system calendar
 extern MCCalendarRef    MCCutc;         // The UTC calendar
