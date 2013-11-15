@@ -4312,24 +4312,6 @@ Parse_stat MCParams::parse(MCScriptPoint &sp, Boolean the)
 	return ES_NORMAL;
 #endif /* MCParams */
 
-
-MCPeerAddress::~MCPeerAddress()
-{
-	delete socket;
-}
-
-Parse_stat MCPeerAddress::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &socket, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_PEERADDRESS_BADSOCKET, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCPeerAddress::eval(MCExecPoint &ep)
-{
 #ifdef /* MCPeerAddress */ LEGACY_EXEC
 	if (socket->eval(ep) != ES_NORMAL)
 	{
@@ -4346,30 +4328,6 @@ Exec_stat MCPeerAddress::eval(MCExecPoint &ep)
 	delete name;
 	return ES_NORMAL;
 #endif /* MCPeerAddress */
-
-	if (socket->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_HOSTADDRESS_BADSOCKET, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	MCNewAutoNameRef t_socket;
-
-	/* UNCHECKED */ ep.copyasnameref(&t_socket);
-
-	MCAutoStringRef t_result;
-	MCNetworkEvalPeerAddress(ctxt, *t_socket, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
 
 #ifdef /* MCPendingMessages */ LEGACY_EXEC
 	MCscreen->listmessages(ep);
@@ -5265,23 +5223,7 @@ void MCSelectedText::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndExpression(ctxt);
 }
 
-MCShell::~MCShell()
-{
-	delete source;
-}
 
-Parse_stat MCShell::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_SHELL_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCShell::eval(MCExecPoint &ep)
-{
 #ifdef /* MCShell */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
@@ -5300,30 +5242,6 @@ Exec_stat MCShell::eval(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCShell */
-
-	MCExecContext ctxt(ep);
-
-	if (source -> eval(ep) != ES_NORMAL)
-	{
-		MCeerror -> add(EE_SHELL_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCAutoStringRef t_command;
-	/* UNCHECKED */ ep . copyasstringref(&t_command);
-
-	MCAutoStringRef t_output;
-	MCFilesEvalShell(ctxt, *t_command, &t_output);
-
-	if (!ctxt . HasError())
-    {        
-        ep.setvalueref(*t_output);
-		return ES_NORMAL;
-    }
-
-	return ctxt . Catch(line, pos);
-}
-
 
 #ifdef /* MCShiftKey */ LEGACY_EXEC
 	ep.setstaticcstring(MCU_ktos((MCscreen->querymods() & MS_SHIFT) != 0));

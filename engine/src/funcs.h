@@ -1243,20 +1243,11 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalParamsMethodInfo; }
 };
 
-class MCPeerAddress : public MCUnaryFunction
+class MCPeerAddress : public MCUnaryFunctionCtxt<MCNameRef, MCStringRef, &MCExecContext::EvalExprAsNameRef, MCNetworkEvalPeerAddress, EE_HOSTADDRESS_BADSOCKET, PE_PEERADDRESS_BADSOCKET, kMCNetworkEvalPeerAddressMethodInfo>
 {
-	MCExpression *socket;
 public:
-	MCPeerAddress()
-	{
-		socket = NULL;
-	}
-	virtual ~MCPeerAddress();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCNetworkEvalPeerAddressMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return socket; }
+    MCPeerAddress(){}
+    virtual ~MCPeerAddress(){}
 };
 
 class MCPendingMessages : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalPendingMessages>
@@ -1519,20 +1510,11 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCShell : public MCUnaryFunction
+class MCShell : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCFilesEvalShell, EE_SHELL_BADSOURCE, PE_SHELL_BADPARAM, kMCFilesEvalShellMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCShell()
-	{
-		source = NULL;
-	}
-	virtual ~MCShell();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalShellMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCShell(){}
+    virtual ~MCShell(){}
 };
 
 class MCShiftKey : public MCConstantFunctionCtxt<MCNameRef, MCInterfaceEvalShiftKey>
