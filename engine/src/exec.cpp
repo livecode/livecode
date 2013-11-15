@@ -2409,6 +2409,13 @@ static void MCExecTypeConvertToValueRefAndReleaseAlways(MCExecContext& ctxt, MCE
         case kMCExecValueTypeNumberRef:
 			r_value = *(MCValueRef *)p_from_value;
 			break;
+
+        case kMCExecValueTypeBool:
+            if (*(bool*)p_from_value)
+                r_value = MCValueRetain((MCValueRef)kMCTrue);
+            else
+                r_value = MCValueRetain((MCValueRef)kMCFalse);
+            break;
 			
         case kMCExecValueTypeUInt:
 			if (!MCNumberCreateWithUnsignedInteger(*(uinteger_t *)p_from_value, (MCNumberRef&)r_value))
