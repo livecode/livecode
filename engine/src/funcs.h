@@ -743,36 +743,18 @@ public:
 
 };
 
-class MCHostAddress : public MCUnaryFunction
+class MCHostAddress : public MCUnaryFunctionCtxt<MCNameRef, MCStringRef, &MCExecContext::EvalExprAsNameRef, MCNetworkEvalHostAddress, EE_HOSTADDRESS_BADSOCKET, PE_HOSTADDRESS_BADSOCKET, kMCNetworkEvalHostAddressMethodInfo>
 {
-	MCExpression *socket;
 public:
-	MCHostAddress()
-	{
-		socket = NULL;
-	}
-	virtual ~MCHostAddress();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCNetworkEvalHostAddressMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return socket; }
+    MCHostAddress(){}
+    virtual ~MCHostAddress(){}
 };
 
-class MCHostAtoN : public MCUnaryFunction
+class MCHostAtoN : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCNetworkEvalHostAddressToName, EE_HOSTATON_BADADDRESS, PE_HOSTATON_BADADDRESS, kMCNetworkEvalHostAddressToNameMethodInfo>
 {
-	MCExpression *address;
 public:
-	MCHostAtoN()
-	{
-		address = NULL;
-	}
-	virtual ~MCHostAtoN();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCNetworkEvalHostAddressToNameMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return address; }
+    MCHostAtoN(){}
+    virtual ~MCHostAtoN(){}
 };
 
 class MCHostName : public MCConstantFunctionCtxt<MCStringRef, MCNetworkEvalHostName>

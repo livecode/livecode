@@ -2669,24 +2669,6 @@ void MCFormat::compile(MCSyntaxFactoryRef ctxt)
 	return ES_NORMAL;
 #endif /* MCHeapSpace */
 
-
-MCHostAddress::~MCHostAddress()
-{
-	delete socket;
-}
-
-Parse_stat MCHostAddress::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &socket, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_HOSTADDRESS_BADSOCKET, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCHostAddress::eval(MCExecPoint &ep)
-{
 #ifdef /* MCHostAddress */ LEGACY_EXEC
 	if (socket->eval(ep) != ES_NORMAL)
 	{
@@ -2703,46 +2685,6 @@ Exec_stat MCHostAddress::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCHostAddress */
 
-	if (socket->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_HOSTADDRESS_BADSOCKET, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	MCNewAutoNameRef t_socket;
-
-	/* UNCHECKED */ ep.copyasnameref(&t_socket);
-
-	MCAutoStringRef t_result;
-	MCNetworkEvalHostAddress(ctxt, *t_socket, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-MCHostAtoN::~MCHostAtoN()
-{
-	delete address;
-}
-
-Parse_stat MCHostAtoN::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &address, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_HOSTATON_BADADDRESS, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCHostAtoN::eval(MCExecPoint &ep)
-{
 #ifdef /* MCHostAtoN */ LEGACY_EXEC
 	if (address->eval(ep) != ES_NORMAL)
 	{
@@ -2761,30 +2703,6 @@ Exec_stat MCHostAtoN::eval(MCExecPoint &ep)
 
 	return ES_NORMAL;
 #endif /* MCHostAtoN */
-
-	if (address->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_HOSTATON_BADADDRESS, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_address;
-
-	/* UNCHECKED */ ep.copyasstringref(&t_address);
-
-	MCAutoStringRef t_result;
-	MCNetworkEvalHostAddressToName(ctxt, *t_address, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
 
 #ifdef /* MCHostName */ LEGACY_EXEC
 	MCS_hn(ep);
