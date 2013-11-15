@@ -210,6 +210,9 @@ enum MCMonth
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Time representation. Count of milliseconds since 1970-01-01 00:00:00
+typedef double MCDate;
+
 // NOTE ON TIME ZONES
 //
 //  A time zone is identified using its TzData name, e.g.
@@ -236,6 +239,25 @@ extern MCTimeZoneRef    MCTZutc;        // The UTC time zone
 extern MCCalendarRef    MCCdefault;     // The system calendar
 extern MCCalendarRef    MCCutc;         // The UTC calendar
 
+////////////////////////////////////////////////////////////////////////////////
+
+// Calculates the difference (in milliseconds) between two times
+MCDate  MCDateCompare(MCDate p_first, MCCalendarRef p_first_calendar, MCDate p_second, MCCalendarRef p_second_calendar);
+
+// Converts a date from one calendar to another
+MCDate  MCDateConvert(MCDate p_date, MCCalendarRef p_from, MCCalendarRef p_to);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// What is the first day of the week according to the given calendar?
+MCDay MCCalendarGetFirstDayOfWeek(MCCalendarRef);
+
+// Returns the time zone associated with the given calendar
+MCTimeZoneRef MCCalendarGetTimeZone(MCCalendarRef);
+
+// Is the calendar Gregorian or something else?
+bool MCCalendarIsGregorian(MCCalendarRef);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -260,9 +282,6 @@ enum MCLocaleDateStyle
 
 // Opaque date formatter type
 typedef struct __MCDateFormatter* MCDateFormatterRef;
-
-// Time representation. Count of milliseconds since 1970-01-01 00:00:00 UTC
-typedef double MCDate;
 
 // Creates an object for formatting dates and times using a built-in style
 bool    MCLocaleDateFormatterCreateWithStyle(MCCalendarRef p_calendar,
