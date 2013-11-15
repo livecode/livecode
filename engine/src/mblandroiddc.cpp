@@ -129,9 +129,6 @@ static jobject s_android_view_class = nil;
 // If this is false, then it means the engine broke somehow.
 static bool s_engine_running = false;
 
-// The current height of the keyboard (if visible)
-static float s_current_keyboard_height = 0.0f;
-
 int32_t g_android_keyboard_type = 1;
 
 static void android_process(void);
@@ -248,7 +245,11 @@ uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
 	// The workarea is the rect of the screen
 	// not covered by any OS furniture, the viewport the whole area of the sreen.
 
-	MCAndroidEngineCall("getWorkareaAsString", "s", &t_rect_string);
+	// IM-2013-11-15: [[ Bug 10485 ]] Use appropriate java method to get (effective) working screenrect
+	if (p_effective)
+		MCAndroidEngineCall("getEffectiveWorkareaAsString", "s", &t_rect_string);
+	else
+		MCAndroidEngineCall("getWorkareaAsString", "s", &t_rect_string);
 	MCU_stoi2x4(t_rect_string, t_left, t_top, t_right, t_bottom);
 
 	s_display.workarea.x = t_left;
@@ -263,10 +264,8 @@ uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
 	s_display.viewport.y = t_top;
 	s_display.viewport.width = t_right - t_left;
 	s_display.viewport.height = t_bottom - t_top;
-	if (p_effective)
-		s_display.viewport.height -= s_current_keyboard_height;
 
-	MCLog("getdisplays: workarea(%d,%d,%d,%d) viewport(%d,%d,%d,%d)",
+	MCLog("getdisplays(effective=%s): workarea(%d,%d,%d,%d) viewport(%d,%d,%d,%d)", p_effective?"true":"false",
 		s_display.workarea.x, s_display.workarea.y, s_display.workarea.width, s_display.workarea.height,
 		s_display.viewport.x, s_display.viewport.y, s_display.viewport.width, s_display.viewport.height);
 
@@ -1815,7 +1814,6 @@ struct MCKeyboardActivatedEvent: public MCCustomEvent
 	
 	void Dispatch(void)
 	{
-		s_current_keyboard_height = m_height;
 		MCdefaultstackptr -> getcurcard() -> message(MCM_keyboard_activated);
 	}
 	
@@ -1832,7 +1830,6 @@ struct MCKeyboardDeactivatedEvent: public MCCustomEvent
 	
 	void Dispatch(void)
 	{
-		s_current_keyboard_height = 0.0;
 		MCdefaultstackptr -> getcurcard() -> message(MCM_keyboard_deactivated);
 	}
 };
