@@ -32,6 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "debug.h"
 #include "param.h"
 #include "property.h"
+#include "hndlrlst.h"
 
 #include "stack.h"
 #include "card.h"
@@ -386,19 +387,44 @@ void MCEngineEvalGlobalNames(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCEngineEvalLocalNames(MCExecContext& ctxt, MCStringRef& r_string)
 {
+	// MW-2013-11-15: [[ Bug 11277 ]] Server mode may call this outwith a handler.
 	MCAutoListRef t_list;
-	if (ctxt.GetHandler()->getvarnames(false, &t_list) && MCListCopyAsString(*t_list, r_string))
-		return;
-
+	if (ctxt.GetHandler() != nil)
+	{
+		if (ctxt.GetHandler()->getvarnames(false, &t_list) && MCListCopyAsString(*t_list, r_string))
+			return;
+	}
+	else
+	{
+		if (ctxt.GetHandlerList()->getlocalnames(&t_list) && MCListCopyAsString(*t_list, r_string))
+			return;
+	}
+	
 	ctxt.Throw();
 }
 
 void MCEngineEvalVariableNames(MCExecContext& ctxt, MCStringRef& r_string)
 {
+	// MW-2013-11-15: [[ Bug 11277 ]] If no handler, then process the handler list
+	//   (server script scope).
 	MCAutoListRef t_list;
-	if (ctxt.GetHandler()->getvarnames(true, &t_list) && MCListCopyAsString(*t_list, r_string))
-		return;
-
+	if (ctxt.GetHandler() != nil)
+	{
+		if (ctxt.GetHandler()->getvarnames(true, &t_list) && MCListCopyAsString(*t_list, r_string))
+			return;
+	}
+	else
+	{
+		MCAutoListRef t_local_list, t_global_list;
+		if (MCListCreateMutable('\n', &t_list) &&
+			ctxt.GetHandlerList()->getlocalnames(&t_local_list) &&
+			MCListAppend(*t_list, *t_local_list) &&
+			ctxt.GetHandlerList()->getglobalnames(&t_global_list) &&
+			MCListAppend(*t_list, *t_global_list) &&
+			MCListCopyAsString(*t_list, r_string))
+			return;
+	}
+	
 	ctxt.Throw();
 }
 
@@ -414,7 +440,12 @@ void MCEngineEvalParam(MCExecContext& ctxt, integer_t p_index, MCValueRef& r_val
 
 void MCEngineEvalParamCount(MCExecContext& ctxt, integer_t& r_count)
 {
-    r_count = ctxt.GetHandler()->getnparams();
+	// MW-2013-11-15: [[ Bug 11277 ]] If we don't have a handler then 'the param'
+	//   makes no sense so just return 0.
+	if (ctxt.GetHandler() != nil)
+		r_count = ctxt.GetHandler()->getnparams();
+	else
+		r_count = 0;
 }
 
 void MCEngineEvalParams(MCExecContext& ctxt, MCStringRef& r_string)
@@ -423,6 +454,14 @@ void MCEngineEvalParams(MCExecContext& ctxt, MCStringRef& r_string)
     
     MCHandler* t_handler = ctxt.GetHandler();
     
+	// MW-2013-11-15: [[ Bug 11277 ]] If we don't have a handler then 'the params'
+	//   makes no sense so just return empty.
+	if (t_handler == nil)
+	{
+		r_string = MCValueRetain(kMCEmptyString);
+		return;
+	}
+	
     unichar_t t_space_char, t_quote_char, t_comma_char, t_open_bracket_char, t_close_bracket_char;
     t_space_char = ' ';
     t_quote_char = '\"';
