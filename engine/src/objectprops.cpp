@@ -2427,6 +2427,7 @@ static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_tab
 
 Exec_stat MCObject::getarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective)
 {
+#ifdef REMOVE_THIS_FUNCTION
     if (MCNameIsEmpty(p_index))
         return getprop(p_part_id, p_which, ep, p_effective);
     
@@ -2468,10 +2469,13 @@ Exec_stat MCObject::getarrayprop(uint32_t p_part_id, Properties p_which, MCExecP
         return ES_ERROR;
     }
     return t_stat;
+#endif
+    return ES_ERROR;
 }
 
 Exec_stat MCObject::setarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective)
 {
+#ifdef REMOVE_THIS_FUNCTION
     if (MCNameIsEmpty(p_index))
         return setprop(p_part_id, p_which, ep, p_effective);
     
@@ -2514,6 +2518,8 @@ Exec_stat MCObject::setarrayprop(uint32_t p_part_id, Properties p_which, MCExecP
         return ES_ERROR;
     }
     return t_stat;
+#endif
+    return ES_ERROR;
 }
 
 Exec_stat MCObject::getprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, Boolean p_effective)

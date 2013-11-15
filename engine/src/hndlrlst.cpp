@@ -670,7 +670,7 @@ static bool enumerate_handlers(MCExecPoint& ep, MCStringRef p_type, MCHandlerArr
 			MCExecPoint t_ep;
 			MCExecContext t_ctxt(t_ep);
 			MCAutoStringRef t_long_id;
-			p_object -> getstringprop(t_ctxt, 0, P_LONG_ID, False, &t_long_id);
+			p_object -> GetLongId(t_ctxt, &t_long_id);
 			ep.concatstringref(*t_long_id, EC_SPACE, false);
 		}	
 

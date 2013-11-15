@@ -3677,8 +3677,8 @@ bool MCButton::selectedchunk(MCStringRef& r_string)
 {
 	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
-	integer_t t_number;
-	/* UNCHECKED */ getintprop(ctxt, 0, P_NUMBER, False, t_number);
+	uinteger_t t_number;
+	GetNumber(ctxt, 0, t_number);
 	
 	MCRange t_range;
 	t_range = getmenurange();
@@ -3689,8 +3689,8 @@ bool MCButton::selectedline(MCStringRef& r_string)
 {
 	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
-	integer_t t_number;
-	/* UNCHECKED */ getintprop(ctxt, 0, P_NUMBER, False, t_number);
+	uinteger_t t_number;
+	GetNumber(ctxt, 0, t_number);
 	
 	return MCStringFormat(r_string, "line %d of button %d", menuhistory, t_number);
 }

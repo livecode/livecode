@@ -333,9 +333,11 @@ public:
     
     void DoGetBitmapEffectArray(MCExecContext& ctxt, Properties which, MCArrayRef& r_array);
     void DoSetBitmapEffectArray(MCExecContext& ctxt, Properties which, MCArrayRef p_array);
-    void DoGetBitmapEffectElement(MCExecContext& ctxt, Properties which, MCNameRef p_prop, MCValueRef& r_value);
-    void DoSetBitmapEffectElement(MCExecContext& ctxt, Properties which, MCNameRef p_prop, MCValueRef p_value);
+    //void DoGetBitmapEffectElement(MCExecContext& ctxt, Properties which, MCNameRef p_prop, MCValueRef& r_value);
+    //void DoSetBitmapEffectElement(MCExecContext& ctxt, Properties which, MCNameRef p_prop, MCValueRef p_value);
 
+    void EffectRedraw(MCRectangle p_old_rect);
+    
 	////////// PROPERTY ACCESSORS
 
 	void GetLeftMargin(MCExecContext& ctxt, integer_t& r_margin);
@@ -364,24 +366,30 @@ public:
     
     void GetDropShadow(MCExecContext& ctxt, MCArrayRef& r_array);
     void SetDropShadow(MCExecContext& ctxt, MCArrayRef p_array);
-    void GetDropShadowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value);
-    void SetDropShadowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value);
     void GetInnerShadow(MCExecContext& ctxt, MCArrayRef& r_array);
     void SetInnerShadow(MCExecContext& ctxt, MCArrayRef p_array);
-    void GetInnerShadowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value);
-    void SetInnerShadowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value);
     void GetOuterGlow(MCExecContext& ctxt, MCArrayRef& r_array);
     void SetOuterGlow(MCExecContext& ctxt, MCArrayRef p_array);
-    void GetOuterGlowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value);
-    void SetOuterGlowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value);
     void GetInnerGlow(MCExecContext& ctxt, MCArrayRef& r_array);
     void SetInnerGlow(MCExecContext& ctxt, MCArrayRef p_array);
-    void GetInnerGlowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value);
-    void SetInnerGlowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value);
     void GetColorOverlay(MCExecContext& ctxt, MCArrayRef& r_array);
     void SetColorOverlay(MCExecContext& ctxt, MCArrayRef p_array);
-    void GetColorOverlayElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value);
-    void SetColorOverlayElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value);
-
+    
+    void GetBitmapEffectDropShadowColor(MCExecContext& ctxt, MCNameRef index, MCColor*& r_color);
+    void SetBitmapEffectDropShadowColor(MCExecContext& ctxt, MCNameRef index, MCColor* p_color);
+    void GetBitmapEffectDropShadowBlendMode(MCExecContext& ctxt, MCNameRef index, intenum_t*& r_value);
+    void SetBitmapEffectDropShadowBlendMode(MCExecContext& ctxt, MCNameRef index, intenum_t* p_value);
+    void GetBitmapEffectDropShadowOpacity(MCExecContext& ctxt, MCNameRef index, uinteger_t*& r_value);
+    void SetBitmapEffectDropShadowOpacity(MCExecContext& ctxt, MCNameRef index, uinteger_t* p_value);
+    void GetBitmapEffectDropShadowFilter(MCExecContext& ctxt, MCNameRef index, intenum_t*& r_value);
+    void SetBitmapEffectDropShadowFilter(MCExecContext& ctxt, MCNameRef index, intenum_t* p_value);
+    void GetBitmapEffectDropShadowSize(MCExecContext& ctxt, MCNameRef index, uinteger_t*& r_value);
+    void SetBitmapEffectDropShadowSize(MCExecContext& ctxt, MCNameRef index, uinteger_t* p_value);
+    void GetBitmapEffectDropShadowSpread(MCExecContext& ctxt, MCNameRef index, uinteger_t*& r_value);
+    void SetBitmapEffectDropShadowSpread(MCExecContext& ctxt, MCNameRef index, uinteger_t* p_value);
+    void GetBitmapEffectDropShadowDistance(MCExecContext& ctxt, MCNameRef index, uinteger_t*& r_value);
+    void SetBitmapEffectDropShadowDistance(MCExecContext& ctxt, MCNameRef index, uinteger_t* p_value);
+    void GetBitmapEffectDropShadowAngle(MCExecContext& ctxt, MCNameRef index, uinteger_t*& r_value);
+    void SetBitmapEffectDropShadowAngle(MCExecContext& ctxt, MCNameRef index, uinteger_t* p_value);
 };
 #endif

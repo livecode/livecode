@@ -39,6 +39,14 @@ bool MCBitmapEffectsSetProperties(MCBitmapEffectsRef& self, Properties which_typ
 bool MCBitmapEffectsGetPropertyElement(MCBitmapEffectsRef& self, Properties which_type, MCNameRef p_prop, MCValueRef& r_setting);
 bool MCBitmapEffectsGetProperties(MCBitmapEffectsRef& self, Properties which_type, MCArrayRef& r_props);
 
+bool MCBitmapEffectsGetColorProperty(MCBitmapEffectsRef& self, MCNameRef p_index, Properties which, MCColor*& r_color);
+bool MCBitmapEffectsGetEnumProperty(MCBitmapEffectsRef& self, MCNameRef p_index, Properties which, intenum_t*& r_value);
+bool MCBitmapEffectsGetUIntProperty(MCBitmapEffectsRef& self, MCNameRef p_index, Properties which, uinteger_t*& r_value);
+
+bool MCBitmapEffectsSetColorProperty(MCBitmapEffectsRef& self, MCNameRef p_index, Properties which, MCColor p_color, bool& r_dirty);
+bool MCBitmapEffectsSetEnumProperty(MCBitmapEffectsRef& self, MCNameRef p_index, Properties which, intenum_t p_value, bool& r_dirty);
+bool MCBitmapEffectsSetUIntProperty(MCBitmapEffectsRef& self, MCNameRef p_index, Properties which, uinteger_t p_value, bool& r_dirty);
+
 uint32_t MCBitmapEffectsWeigh(MCBitmapEffectsRef self);
 IO_stat MCBitmapEffectsPickle(MCBitmapEffectsRef self, MCObjectOutputStream& p_stream);
 IO_stat MCBitmapEffectsUnpickle(MCBitmapEffectsRef& self, MCObjectInputStream& p_stream);
