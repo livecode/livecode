@@ -1274,24 +1274,6 @@ void MCBinaryEncode::compile(MCSyntaxFactoryRef ctxt)
 #endif /* MCCapsLockKey */
 
 
-MCCharToNum::~MCCharToNum()
-{
-	delete source;
-}
-
-Parse_stat MCCharToNum::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add
-		(PE_CHARTONUM_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCCharToNum::eval(MCExecPoint &ep)
-{
 #ifdef /* MCCharToNum */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
@@ -1324,47 +1306,6 @@ Exec_stat MCCharToNum::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCCharToNum */
 
-
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_CHARTONUM_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
-
-	MCAutoValueRef t_result;
-	MCStringsEvalCharToNum(ctxt, *t_source, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-MCByteToNum::~MCByteToNum()
-{
-	delete source;
-}
-
-Parse_stat MCByteToNum::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_BYTETONUM_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCByteToNum::eval(MCExecPoint &ep)
-{
 #ifdef /* MCByteToNum */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep . getsvalue() . getlength() != 1)
 	{
@@ -1375,29 +1316,6 @@ Exec_stat MCByteToNum::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCByteToNum */
 
-
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_BYTETONUM_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
-
-	integer_t t_result;
-	MCStringsEvalByteToNum(ctxt, *t_source, t_result);
-
-	if (!ctxt . HasError())
-	{
-		ep . setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 MCChunkOffset::~MCChunkOffset()
 {

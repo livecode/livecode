@@ -169,7 +169,7 @@ class MCBaseConvert : public MCFunction
 {
 	MCExpression *source;
 	MCExpression *sourcebase;
-	MCExpression *destbase;
+    MCExpression *destbase;
 public:
 	MCBaseConvert()
 	{
@@ -230,36 +230,18 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalCapsLockKeyMethodInfo; }
 };
 
-class MCCharToNum : public MCUnaryFunction
+class MCCharToNum : public MCUnaryFunctionCtxt<MCStringRef, MCValueRef, &MCExecContext::EvalExprAsStringRef, MCStringsEvalCharToNum, EE_CHARTONUM_BADSOURCE, PE_CHARTONUM_BADPARAM, kMCStringsEvalCharToNumMethodInfo>
 {
-    MCExpression *source;
 public:
-	MCCharToNum()
-    {
-        source = NULL;
-	}
-	virtual ~MCCharToNum();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-    virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalCharToNumMethodInfo; }
-    virtual MCExpression *getmethodarg(void) const { return source; }
+    MCCharToNum(){}
+    virtual ~MCCharToNum(){}
 };
 
-class MCByteToNum : public MCUnaryFunction
+class MCByteToNum : public MCUnaryFunctionCtxt<MCStringRef, integer_t, &MCExecContext::EvalExprAsStringRef, MCStringsEvalByteToNum, EE_BYTETONUM_BADSOURCE, PE_BYTETONUM_BADPARAM, kMCStringsEvalByteToNumMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCByteToNum()
-	{
-		source = NULL;
-	}
-	virtual ~MCByteToNum();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalByteToNumMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCByteToNum(){}
+    virtual ~MCByteToNum(){}
 };
 
 class MCChunkOffset : public MCFunction
