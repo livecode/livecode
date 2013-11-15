@@ -2436,36 +2436,18 @@ public:
 	virtual MCParameter *getmethodarg(void) const { return params; }
 };
 
-class MCMD5Digest : public MCUnaryFunction
+class MCMD5Digest : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, &MCExecContext::EvalExprAsDataRef, MCFiltersEvalMD5Digest, EE_MD5DIGEST_BADSOURCE, PE_MD5DIGEST_BADPARAM, kMCFiltersEvalMD5DigestMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCMD5Digest()
-	{
-		source = NULL;
-	}
-	virtual ~MCMD5Digest();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalMD5DigestMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCMD5Digest(){}
+	virtual ~MCMD5Digest(){}
 };
 
-class MCSHA1Digest : public MCUnaryFunction
+class MCSHA1Digest : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, &MCExecContext::EvalExprAsDataRef, MCFiltersEvalSHA1Digest, EE_SHA1DIGEST_BADSOURCE, PE_SHA1DIGEST_BADPARAM, kMCFiltersEvalSHA1DigestMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCSHA1Digest()
-	{
-		source = NULL;
-	}
-	virtual ~MCSHA1Digest();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalSHA1DigestMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCSHA1Digest(){}
+	virtual ~MCSHA1Digest(){}
 };
 
 class MCMinFunction : public MCParamFunction

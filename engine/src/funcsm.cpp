@@ -1015,25 +1015,7 @@ Exec_stat MCMedian::eval(MCExecPoint &ep)
 	return ctxt.Catch(line, pos);
 }
 
-MCMD5Digest::~MCMD5Digest()
-{
-	delete source;
-}
 
-Parse_stat MCMD5Digest::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_MD5DIGEST_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCMD5Digest::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMD5Digest */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
@@ -1049,47 +1031,7 @@ Exec_stat MCMD5Digest::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCMD5Digest */
 
-	MCExecContext ctxt(ep);
-	MCAutoDataRef t_source;
-	MCAutoDataRef t_result;
 
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_MD5DIGEST_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdataref(&t_source);
-
-	MCFiltersEvalMD5Digest(ctxt, *t_source, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-MCSHA1Digest::~MCSHA1Digest()
-{
-	delete source;
-}
-
-Parse_stat MCSHA1Digest::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_SHA1DIGEST_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCSHA1Digest::eval(MCExecPoint &ep)
-{
 #ifdef /* MCSHA1Digest */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
@@ -1105,27 +1047,6 @@ Exec_stat MCSHA1Digest::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCSHA1Digest */
 
-	MCExecContext ctxt(ep);
-	MCAutoDataRef t_source;
-	MCAutoDataRef t_result;
-
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_MD5DIGEST_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdataref(&t_source);
-
-	MCFiltersEvalSHA1Digest(ctxt, *t_source, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 MCMinFunction::~MCMinFunction()
 {
