@@ -1231,7 +1231,7 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCFiltersEvalUniDecode(MCExecContext& ctxt, MCStringRef p_src, MCNameRef p_lang, MCStringRef& r_dest)
+void MCFiltersEvalUniDecodeToEncoding(MCExecContext& ctxt, MCDataRef p_src, MCNameRef p_lang, MCDataRef& r_dest)
 {
 	uinteger_t t_dest_charset = MCU_languagetocharset(MCNameGetString(p_lang));
 
@@ -1241,13 +1241,29 @@ void MCFiltersEvalUniDecode(MCExecContext& ctxt, MCStringRef p_src, MCNameRef p_
 	ctxt.Throw();
 }
 
-void MCFiltersEvalUniEncode(MCExecContext& ctxt, MCStringRef p_src, MCNameRef p_lang, MCStringRef& r_dest)
+void MCFiltersEvalUniDecodeToNative(MCExecContext& ctxt, MCDataRef p_input, MCStringRef &r_output)
+{
+	if (MCStringDecode(p_input, kMCStringEncodingUTF16, false, r_output))
+		return;
+	
+	ctxt.Throw();
+}
+
+void MCFiltersEvalUniEncodeFromEncoding(MCExecContext& ctxt, MCDataRef p_src, MCNameRef p_lang, MCDataRef& r_dest)
 {
 	uinteger_t t_dest_charset = MCU_languagetocharset(MCNameGetString(p_lang));
 
 	if (MCU_multibytetounicode(p_src, t_dest_charset, r_dest))
 		return;
 
+	ctxt.Throw();
+}
+
+void MCFiltersEvalUniEncodeFromNative(MCExecContext& ctxt, MCStringRef p_input, MCDataRef &r_output)
+{
+	if (MCStringEncode(p_input, kMCStringEncodingUTF16, false, r_output))
+		return;
+	
 	ctxt.Throw();
 }
 

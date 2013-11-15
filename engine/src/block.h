@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define	BLOCK_H
 
 #include "dllst.h"
+#include "field.h"
 
 class MCParagraph;
 class MCField;
@@ -54,14 +55,12 @@ Blockatts;
 
 class MCBlock : public MCDLlist
 {
-	friend class MCField;
-	friend class MCParagraph;
 
 protected:
 	MCParagraph *parent;
 	uint4 flags;
 	Blockatts *atts;
-	uint2 index, size;
+	findex_t m_index, m_size;
 	uint2 width;
 	uint2 opened;
 
@@ -99,16 +98,15 @@ public:
 	// MW-2012-02-06: The 'persistent_only' param determines whether things like
 	//   'flagged' are excluded from the sameness check (used by styledText).
 	Boolean sameatts(MCBlock *bptr, bool p_persistent_only);
-	Boolean breakat(int2 x, uint2 width, Boolean first,
-	                MCFontStruct *pfont, Boolean &broken);
-	bool fit(int2 x, uint2 width, uint2& r_break_index, bool& r_break_fits);
-	void split(uint2 p_index);
-	int2 gettabwidth(int2 x, const char *text, uint2 index);
-	void drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 length, Boolean image, uint32_t style);
+
+	bool fit(int2 x, uint2 width, findex_t& r_break_index, bool& r_break_fits);
+	void split(findex_t p_index);
+	int2 gettabwidth(int2 x, findex_t index);
+	void drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, findex_t length, Boolean image, uint32_t style);
 	
 	// MW-2012-02-27: [[ Bug 2939 ]] The 'flags' parameter indicates whether the left and/or
 	//   right edge of any box or 3d-box should be rendered.
-	void draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const char *tptr, uint2 pstyle, uint32_t flags);
+	void draw(MCDC *dc, int2 x, int2 cx, int2 y, findex_t si, findex_t ei, MCStringRef p_text, uint2 pstyle, uint32_t flags);
 
 	// MW-2012-02-17: [[ SplitTextAttrs ]] Returns the effective font attrs of the block.
 	//   If 'base_attrs' is non-nil, it uses that to derive the attrs.
@@ -156,14 +154,10 @@ public:
 	{
 		parent = pgptr;
 	}
-	void setindex(const char *sptr, uint2 i, uint2 l);
-	void moveindex(const char *sptr, int2 ioffset, int2 loffset);
-	uint2 getcursorx(int2 x, uint2 fi);
-	uint2 getcursorindex(int2 x, int2 cx, Boolean chunk, Boolean last);
-	uint2 getsubwidth(MCDC *dc, int2 x, uint2 i, uint2 l);
+
+	uint2 getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l);
 	uint2 getwidth(MCDC *dc, int2 x);
 	void reset();
-	void getindex(uint2 &i, uint2 &l);
 	uint2 getascent(void);
 	uint2 getdescent(void);
 	void freeatts();
@@ -178,8 +172,6 @@ public:
 	MCStringRef getmetadata(void);
 
 	void sethilite(Boolean on);
-	
-	bool getfirstlinebreak(uint2& index);
 	
 	// MW-2012-01-26: [[ FlaggedField ]] Returns whether the given block has the
 	//   'flagged' status set.
@@ -204,10 +196,7 @@ public:
 	{
 		flags &= ~F_VISITED;
 	}
-	bool hasunicode() const
-	{
-		return (flags & F_HAS_UNICODE) != 0;
-	}
+
 	Boolean islink() const
 	{
 		// MW-2012-02-17: [[ SplitTextAttrs ]] We are a link if we have a font
@@ -226,14 +215,6 @@ public:
 	bool getflag(unsigned int f) const
 	{
 		return (flags & f) != 0;
-	}
-
-	void sethasunicode(bool p_has_unicode)
-	{
-		if (p_has_unicode)
-			flags |= F_HAS_UNICODE;
-		else
-			flags &= ~F_HAS_UNICODE;
 	}
 
 	MCBlock *next()
@@ -264,38 +245,89 @@ public:
 	{
 		MCDLlist::splitat((MCDLlist *)node) ;
 	}
-	uint2 indexdecrement(uint2 index);
-	uint2 indexincrement(uint2 index);
-	Boolean textcomparechar(const char *textptr,char whichchar);
-	char *textstrchr(const char *sptr,  uint2 l, char target);
-	Boolean textisspace(const char *textptr);
-	Boolean textispunct(const char *textptr);
-	uint2 getcharsize();
-	uint2 getlength();
-	uint2 indextocharacter(uint2 si);
-	uint2 verifyindex(uint2 si, bool p_is_end);
 	MCBlock *remove(MCBlock *&list)
 	{
 		return (MCBlock *)MCDLlist::remove((MCDLlist *&)list);
 	}
 
-	uint2 getindex(void) const
-	{
-		return index;
-	}
-	
-	uint2 getsize(void) const
-	{
-		return size;
-	}
-
-	
-	uint4 getcharatindex(int4 p_index);
-	MCBlock *retreatindex(uint2& p_index);
-	MCBlock *advanceindex(uint2& p_index);
-
 	bool imagechanged(MCImage *p_image, bool p_deleting);
+	
+	////////////////////
+	
+	// Returns only the "index" component of the range
+	findex_t GetOffset();
+	
+	// Returns only the "length" component of the range
+	findex_t GetLength();
+	
+	// Returns the range of text covered by the block
+	void GetRange(findex_t &r_index, findex_t &r_length);
+	
+	// Sets the indices correctly using the parent paragraph's stringref
+	void SetRange(findex_t t_index, findex_t t_length);
+	
+	// Moves the index by the specified number of character positions
+	void MoveRange(findex_t t_index_offset, findex_t t_length_offset); 
+	
+	// Translates from a pixel position to a cursor index
+	findex_t GetCursorIndex(int2 x, int2 cx, Boolean chunk, Boolean last);
+	
+	// Returns the x coordinate of the cursor
+	uint2 GetCursorX(int2 x, findex_t fi);
+	
+	// Moves the index forwards by one codepoint, possibly changing block
+	MCBlock *AdvanceIndex(findex_t &x_index);
+	
+	// Moves the index backwards by one codepoint, possibly changing block
+	MCBlock *RetreatIndex(findex_t &x_index);
+	
+	// Returns the codepoint at the given index into the block
+	codepoint_t GetCodepointAtIndex(findex_t p_index) const;
+	
+	// Finds the first linebreak character in the block
+	bool GetFirstLineBreak(findex_t &r_index);
+	
+	// Returns true if the block's text was stored in Unicode format (required
+	// when reading the existing (non-Unicode) stack file format)
+	bool IsSavedAsUnicode() const
+	{
+		return flags & F_HAS_UNICODE;
+	}
 
-    void GetTextSize(MCExecContext& ctxt, uinteger_t*& r_value);
+    //////////
+
+    void GetLinkText(MCExecContext& ctxt, MCStringRef& r_linktext);
+    void SetLinktext(MCExecContext& ctxt, MCStringRef p_linktext);
+    void GetMetadata(MCExecContext& ctxt, MCStringRef& r_metadata);
+    void SetMetadata(MCExecContext& ctxt, MCStringRef p_metadata);
+    void GetImageSource(MCExecContext& ctxt, MCStringRef &r_image_source);
+    void SetImageSource(MCExecContext& ctxt, MCStringRef p_image_source);
+    void GetVisited(MCExecContext& ctxt, bool& r_value);
+    void GetFlagged(MCExecContext& ctxt, bool &r_value);
+    void SetFlagged(MCExecContext& ctxt, bool p_value);
+
+    void GetTextFont(MCExecContext& ctxt, MCStringRef &r_fontname);
+    void GetEffectiveTextFont(MCExecContext &ctxt, MCStringRef &r_fontname);
+    void SetTextFont(MCExecContext& ctxt, MCStringRef p_fontname);
+    void GetTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle &r_style);
+    void GetEffectiveTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& r_style);
+    void SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style);
+    void GetTextSize(MCExecContext& ctxt, uinteger_t*& r_size);
+    void GetEffectiveTextSize(MCExecContext& ctxt, uinteger_t& r_size);
+    void SetTextSize(MCExecContext& ctxt, uinteger_t* p_size);
+    void GetTextShift(MCExecContext& ctxt, integer_t*& r_shift);
+    void GetEffectiveTextShift(MCExecContext& ctxt, integer_t& r_shift);
+    void SetTextShift(MCExecContext& ctxt, integer_t* p_shift);
+
+    void GetForeColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
+    void GetEffectiveForeColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
+    void SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor &p_color);
+    void GetBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
+    void GetEffectiveBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
+    void SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor &p_color);
+
+
+
+    //////////
 };
 #endif

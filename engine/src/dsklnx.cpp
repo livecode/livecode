@@ -181,7 +181,9 @@ static void configureSerialPort(int sRefNum)
     cfsetispeed(&theTermios,  B9600);
     theTermios.c_cflag = CS8;
 
-    char *controlptr = strclone(MCStringGetCString(MCserialcontrolsettings));
+    MCAutoStringRefAsSysString t_serial_settings;
+    /* UNCHECKED */ t_serial_settings.Lock(MCserialcontrolsettings);
+    char *controlptr = strclone(*t_serial_settings);
     char *str = controlptr;
     char *each = NULL;
     while ((each = strchr(str, ' ')) != NULL)
@@ -255,8 +257,10 @@ bool MCS_lnx_is_link(MCStringRef p_path)
     struct stat64 buf;
     return (lstat64(MCStringGetCString(p_path), &buf) == 0 && S_ISLNK(buf.st_mode));
 #endif /* MCS_is_link_dsk_lnx */
+    MCAutoStringRefAsSysString t_path;
+    /* UNCHECKED */ t_path.Lock(p_path);
     struct stat64 buf;
-    return (lstat64(MCStringGetCString(p_path), &buf) == 0 && S_ISLNK(buf.st_mode));
+    return (lstat64(*t_path, &buf) == 0 && S_ISLNK(buf.st_mode));
 }
 
 bool MCS_lnx_readlink(MCStringRef p_path, MCStringRef& r_link)
@@ -276,15 +280,20 @@ bool MCS_lnx_readlink(MCStringRef p_path, MCStringRef& r_link)
 #endif /* MCS_readlink_dsk_lnx */
     struct stat64 t_stat;
     ssize_t t_size;
-    MCAutoNativeCharArray t_buffer;
+    MCAutoArray<char> t_buffer;
 
-    if (lstat64(MCStringGetCString(p_path), &t_stat) == -1 ||
+    MCAutoStringRefAsSysString t_path;
+    /* UNCHECKED */ t_path.Lock(p_path);
+    if (lstat64(*t_path, &t_stat) == -1 ||
         !t_buffer.New(t_stat.st_size))
         return false;
 
-    t_size = readlink(MCStringGetCString(p_path), (char*)t_buffer.Chars(), t_stat.st_size);
+    t_size = readlink(*t_path, (char*)t_buffer.Ptr(), t_stat.st_size);
 
-    return (t_size == t_stat.st_size) && t_buffer.CreateStringAndRelease(r_link);
+    if (t_size != t_stat.st_size)
+        return false;
+
+    return MCStringCreateWithSysString(t_buffer.Ptr(), r_link);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -408,9 +417,13 @@ static void handle_signal(int sig)
     case SIGILL:
     case SIGBUS:
     case SIGSEGV:
-        fprintf(stderr, "%s exiting on signal %d\n", MCStringGetCString(MCcmd), sig);
+    {
+        MCAutoStringRefAsSysString t_cmd;
+        /* UNCHECKED */ t_cmd.Lock(MCcmd);
+        fprintf(stderr, "%s exiting on signal %d\n", *t_cmd, sig);
         MCS_killall();
         exit(-1);
+    }
     case SIGHUP:
     case SIGINT:
     case SIGQUIT:
@@ -1005,7 +1018,10 @@ public:
 #endif /* MCS_getsystemversion_dsk_lnx */
         struct utsname u;
         uname(&u);
-        return MCStringFormat(r_string, "%s %s", u.sysname, u.release);
+        MCAutoStringRef t_sysname, t_release;
+        /* UNCHECKED */ MCStringCreateWithSysString(u.sysname, &t_sysname);
+        /* UNCHECKED */ MCStringCreateWithSysString(u.release, &t_release);
+        return MCStringFormat(r_string, "%@ %@", *t_sysname, *t_release);
     }
 
     virtual bool GetMachine(MCStringRef& r_string)
@@ -1040,7 +1056,9 @@ public:
 #endif /* MCS_getaddress_dsk_lnx */
         struct utsname u;
         uname(&u);
-        return MCStringFormat(r_address, "%s:%s", u.nodename, MCStringGetCString(MCcmd));
+        MCAutoStringRef t_nodename;
+        /* UNCHECKED */ MCStringCreateWithSysString(u.nodename, &t_nodename);
+        return MCStringFormat(r_address, "%@:%@", *t_nodename, MCcmd);
     }
 
     virtual uint32_t GetProcessId(void)
@@ -1159,8 +1177,10 @@ public:
         sprintf(dptr, "%s=%s", p_name, p_value);
         putenv(dptr);
 #else
-
-        setenv(MCStringGetCString(p_name), MCStringGetCString(p_value), True);
+        MCAutoStringRefAsSysString t_name, t_value;
+        /* UNCHECKED */ t_name.Lock(p_name);
+        /* UNCHECKED */ t_value.Lock(p_value);
+        setenv(*t_name, *t_value, True);
 #endif
     }
 
@@ -1169,7 +1189,9 @@ public:
 #ifdef /* MCS_getenv_dsk_lnx */ LEGACY_SYSTEM
         return getenv(name);
 #endif /* MCS_getenv_dsk_lnx */
-        return MCStringCreateWithCString(getenv(MCStringGetCString(p_name)), r_value);
+        MCAutoStringRefAsSysString t_name;
+        /* UNCHECKED */ t_name.Lock(p_name);
+        return MCStringCreateWithSysString(getenv(*t_name), r_value);
     }
 
     virtual Boolean CreateFolder(MCStringRef p_path)
@@ -1181,9 +1203,13 @@ public:
 
         return false;
 #endif /* MCS_mkdir_dsk_lnx */
+        MCAutoStringRefAsSysString t_path;
         MCAutoStringRef t_resolved_path_string;
         if (MCS_resolvepath(p_path, &t_resolved_path_string))
-            return mkdir(MCStringGetCString(p_path), 0777) == 0;
+        {
+            /* UNCHECKED */ t_path.Lock(*t_resolved_path_string);
+            return mkdir(*t_path, 0777) == 0;
+        }
 
         return false;
     }
@@ -1197,9 +1223,13 @@ public:
 
         return false;
 #endif /* MCS_rmdir_dsk_lnx */
+        MCAutoStringRefAsSysString t_path;
         MCAutoStringRef t_resolved_path_string;
         if (MCS_resolvepath(p_path, &t_resolved_path_string))
-            return rmdir(MCStringGetCString(*t_resolved_path_string)) == 0;
+        {
+            /* UNCHECKED */ t_path.Lock(*t_resolved_path_string);
+            return rmdir(*t_path) == 0;
+        }
 
         return false;
     }
@@ -1212,9 +1242,11 @@ public:
         Boolean done = unlink(MCStringGetCString(*t_resolved_path)) == 0;
         return done;
 #endif /* MCS_unlink_dsk_lnx */
+        MCAutoStringRefAsSysString t_path;
         MCAutoStringRef t_resolved_path;
         MCS_resolvepath(p_path, &t_resolved_path);
-        Boolean done = unlink(MCStringGetCString(*t_resolved_path)) == 0;
+        /* UNCHECKED */ t_path.Lock(*t_resolved_path);
+        Boolean done = unlink(*t_path) == 0;
         return done;
     }
 
@@ -1248,17 +1280,22 @@ public:
 
         Boolean done;
     #ifndef NORENAME
-
-        done = rename(MCStringGetCString(*t_old_resolved_path), MCStringGetCString(*t_new_resolved_path)) == 0;
+        MCAutoStringRefAsSysString t_from, t_to;
+        /* UNCHECKED */ t_from.Lock(*t_old_resolved_path);
+        /* UNCHECKED */ t_to.Lock(*t_new_resolved_path);
+        done = rename(*t_from, *t_to) == 0;
     #else
         // doesn't work on directories
+        MCAutoStringRefAsSysString t_from, t_to;
+        /* UNCHECKED */ t_from.Lock(*t_old_resovled_path);
+        /* UNCHECKED */ t_to.Lock(*t_new_resolved_path);
         done = True;
-        if (link(MCStringGetCString(*t_old_resolved_path), MCStringGetCString(*t_new_resolved_path)) != 0)
+        if (link(*t_from, *t_to) != 0)
             done = False;
         else
-            if (unlink(MCStringGetCString(*t_old_resolved_path)) != 0)
+            if (unlink(*t_from) != 0)
             {
-                unlink(MCStringGetCString(*t_new_resolved_path));
+                unlink(*t_to);
                 done = False;
             }
     #endif
@@ -1296,7 +1333,10 @@ public:
         MCAutoStringRef t_alias;
         /* UNCHECKED */ MCS_resolvepath(p_target, &t_target);
         /* UNCHECKED */ MCS_resolvepath(p_alias, &t_alias);
-        return symlink(MCStringGetCString(*t_target),MCStringGetCString(*t_alias)) == 0;
+        MCAutoStringRefAsSysString t_target_sys, t_alias_sys;
+        /* UNCHECKED */ t_target_sys.Lock(*t_target);
+        /* UNCHECKED */ t_alias_sys.Lock(*t_alias);
+        return symlink(*t_target_sys, *t_alias_sys) == 0;
     }
 
     // NOTE: 'ResolveAlias' returns a standard (not native) path.
@@ -1319,13 +1359,12 @@ public:
         t_buffer.Shrink(MCCStringLength((const char*)t_buffer.Chars()));
         return t_buffer.CreateStringAndRelease(r_path);
 #endif /* MCS_getcurdir_dsk_lnx */
-        MCAutoNativeCharArray t_buffer;
+        MCAutoArray<char> t_buffer;
         if (!t_buffer.New(PATH_MAX + 1))
             return false;
-        if (NULL == getcwd((char*)t_buffer.Chars(), PATH_MAX + 1))
+        if (NULL == getcwd((char*)t_buffer.Ptr(), PATH_MAX + 1))
             return false;
-        t_buffer.Shrink(MCCStringLength((const char*)t_buffer.Chars()));
-        return t_buffer.CreateStringAndRelease(r_path);
+        return MCStringCreateWithSysString(t_buffer.Ptr(), r_path);
     }
 
     ///* LEGACY */ char *GetCurrentFolder(void);
@@ -1340,7 +1379,11 @@ public:
 #endif /* MCS_setcurdir_dsk_lnx */
         MCAutoStringRef t_new_path;
         if (MCS_resolvepath(p_path, &t_new_path))
-            return chdir(MCStringGetCString(*t_new_path)) == 0;
+        {
+            MCAutoStringRefAsSysString t_path_sys;
+            /* UNCHECKED */ t_path_sys.Lock(*t_new_path);
+            return chdir(*t_path_sys) == 0;
+        }
 
         return false;
     }
@@ -1370,7 +1413,7 @@ public:
             return false;
 
         if (MCNameIsEqualTo(p_type, MCN_desktop, kMCCompareCaseless))
-            return MCStringFormat(r_folder, "%s/Desktop", MCStringGetCString(*t_home));
+            return MCStringFormat(r_folder, "%@/Desktop", *t_home);
         else if (MCNameIsEqualTo(p_type, MCN_home, kMCCompareCaseless))
             return MCStringCopy(*t_home, r_folder);
         else if (MCNameIsEqualTo(p_type, MCN_temporary, kMCCompareCaseless))
@@ -1430,13 +1473,16 @@ public:
         if (MCStringGetLength(p_path) == 0)
             return false;
 
+        MCAutoStringRefAsSysString t_path_sys;
+        /* UNCHECKED */ t_path_sys.Lock(p_path);
+
         bool t_found;
         struct stat64 buf;
         // MM-2011-08-24: [[ Bug 9691 ]] Updated to use stat64 so no longer fails on files larger than 2GB
-        t_found = stat64(MCStringGetCString(p_path), &buf) == 0;
+        t_found = stat64(*t_path_sys, &buf) == 0;
 
         if (t_found)
-            t_found = (buf.st_mode & S_IFDIR) == 0;
+            t_found = ((buf.st_mode & S_IFMT) == S_IFREG);
 
         return t_found ? True : False;
     }
@@ -1450,13 +1496,16 @@ public:
         if (!MCS_resolvepath(p_path, &t_resolved))
             return false;
 
+        MCAutoStringRefAsSysString t_path_sys;
+        /* UNCHECKED */ t_path_sys.Lock(*t_resolved);
+
         bool t_found;
         struct stat64 buf;
         // MM-2011-08-24: [[ Bug 9691 ]] Updated to use stat64 so no longer fails on files larger than 2GB
-        t_found = stat64(MCStringGetCString(*t_resolved), &buf) == 0;
+        t_found = stat64(*t_path_sys, &buf) == 0;
 
         if (t_found)
-            t_found = (buf.st_mode & S_IFDIR) != 0;
+            t_found = ((buf.st_mode & S_IFMT) == S_IFDIR);
 
         return t_found;
     }
@@ -1473,8 +1522,10 @@ public:
             return True;
         return False;
 #endif /* MCS_noperm_dsk_lnx */
+        MCAutoStringRefAsSysString t_path_sys;
+        /* UNCHECKED */ t_path_sys.Lock(p_path);
         struct stat64 buf;
-        if (stat64(MCStringGetCString(p_path), &buf))
+        if (stat64(*t_path_sys, &buf))
             return False;
         if (buf.st_mode & S_IFDIR)
             return True;
@@ -1490,7 +1541,9 @@ public:
             return IO_ERROR;
         return IO_NORMAL;
 #endif /* MCS_chmod_dsk_lnx */
-        if (chmod(MCStringGetCString(p_path), p_mask) != 0)
+        MCAutoStringRefAsSysString t_path_sys;
+        /* UNCHECKED */ t_path_sys.Lock(p_path);
+        if (chmod(*t_path_sys, p_mask) != 0)
             return IO_ERROR;
         return IO_NORMAL;
     }
@@ -1570,9 +1623,12 @@ public:
         IO_handle t_handle;
         t_handle = NULL;
 
+        MCAutoStringRefAsSysString t_path_sys;
+        /* UNCHECKED */ t_path_sys.Lock(p_path);
+
         if (p_map && MCmmap && p_mode == kMCSOpenFileModeRead)
         {
-            int t_fd = open(MCStringGetCString(p_path), O_RDONLY);
+            int t_fd = open(*t_path_sys, O_RDONLY);
             struct stat64 t_buf;
             if (t_fd != -1 && !fstat64(t_fd, &t_buf))
             {
@@ -1603,10 +1659,10 @@ public:
         else if (p_mode == kMCSOpenFileModeAppend)
             t_mode = IO_APPEND_MODE;
 
-        FILE *t_fptr = fopen(MCStringGetCString(p_path), t_mode);
+        FILE *t_fptr = fopen(*t_path_sys, t_mode);
 
         if (t_fptr == NULL && p_mode != kMCSOpenFileModeRead)
-            t_fptr = fopen(MCStringGetCString(p_path), IO_CREATE_MODE);
+            t_fptr = fopen(*t_path_sys, IO_CREATE_MODE);
 
         if (t_fptr != NULL)
         {
@@ -1648,18 +1704,20 @@ public:
         IO_handle t_handle = NULL;
         FILE *t_fptr = NULL;
 
-        const char *t_mode;
+        MCAutoStringRefAsSysString t_path_sys;
+        /* UNCHECKED */ t_path_sys.Lock(p_path);
+
         if (p_mode == kMCSOpenFileModeRead)
-            t_fptr = fopen(MCStringGetCString(p_path), IO_READ_MODE);
+            t_fptr = fopen(*t_path_sys, IO_READ_MODE);
         else if (p_mode == kMCSOpenFileModeWrite)
-            t_fptr = fopen(MCStringGetCString(p_path), IO_WRITE_MODE);
+            t_fptr = fopen(*t_path_sys, IO_WRITE_MODE);
         else if (p_mode == kMCSOpenFileModeUpdate)
-            t_fptr = fopen(MCStringGetCString(p_path), IO_UPDATE_MODE);
+            t_fptr = fopen(*t_path_sys, IO_UPDATE_MODE);
         else if (p_mode == kMCSOpenFileModeAppend)
-            t_fptr = fopen(MCStringGetCString(p_path), IO_APPEND_MODE);
+            t_fptr = fopen(*t_path_sys, IO_APPEND_MODE);
 
         if (t_fptr == NULL && p_mode != kMCSOpenFileModeRead)
-            t_fptr = fopen(MCStringGetCString(p_path), IO_CREATE_MODE);
+            t_fptr = fopen(*t_path_sys, IO_CREATE_MODE);
 
         configureSerialPort((short)fileno(t_fptr));
 
@@ -1675,7 +1733,7 @@ public:
 #ifdef /* MCS_tmpnam_dsk_lnx */ LEGACY_SYSTEM
         return MCStringCreateWithCString(tmpnam(NULL), r_path);
 #endif /* MCS_tmpnam_dsk_lnx */
-        return MCStringCreateWithCString(tmpnam(NULL), r_tmp_name);
+        return MCStringCreateWithSysString(tmpnam(NULL), r_tmp_name);
     }
 
     virtual MCSysModuleHandle LoadModule(MCStringRef p_path)
@@ -1698,22 +1756,19 @@ public:
     return ( (MCSysModuleHandle)dlopen ( p_filename , (RTLD_NOW | RTLD_LOCAL) ));
 #endif
 #endif /* MCS_loadmodule_dsk_lnx */
-#ifdef _DEBUG
+
         // dlopen loads whole 4-byte words when accessing the filename. This causes valgrind to make
         // spurious noise - so in DEBUG mode we make sure we allocate a 4-byte aligned block of memory.
         //
-        char *t_aligned_filename;
-        t_aligned_filename = new char[(MCStringGetLength(p_path) + 4) & ~3];
-        strcpy(t_aligned_filename, MCStringGetCString(p_path));
+        // Because converting to a sys string allocates memory, this alignment will always be satisfied.
+        // (malloc/new always return alignment >= int/pointer alignment)
+        MCAutoStringRefAsSysString t_filename_sys;
+        /* UNCHECKED */ t_filename_sys.Lock(p_path);
 
         MCSysModuleHandle t_result;
-        t_result = (MCSysModuleHandle)dlopen(t_aligned_filename, (RTLD_NOW | RTLD_LOCAL));
+        t_result = (MCSysModuleHandle)dlopen(*t_filename_sys, (RTLD_NOW | RTLD_LOCAL));
 
-        delete t_aligned_filename;
         return t_result ;
-#else
-        return (MCSysModuleHandle)dlopen(MCStringGetCString(p_filename), (RTLD_NOW | RTLD_LOCAL));
-#endif
     }
 
     virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
@@ -1721,7 +1776,9 @@ public:
 #ifdef /* MCS_resolvemodulesymbol_dsk_lnx */ LEGACY_SYSTEM
         return ( dlsym ( p_module, p_symbol ) ) ;
 #endif /* MCS_resolvemodulesymbol_dsk_lnx */
-        return (MCSysModuleHandle)(dlsym(p_module, MCStringGetCString(p_symbol)));
+        MCAutoStringRefAsSysString t_symbol_sys;
+        /* UNCHECKED */ t_symbol_sys.Lock(p_symbol);
+        return (MCSysModuleHandle)(dlsym(p_module, *t_symbol_sys));
     }
 
     virtual void UnloadModule(MCSysModuleHandle p_module)
@@ -1928,13 +1985,19 @@ public:
                 if (!MCStringCopySubstring(p_path, MCRangeMake(1, t_user_end), &t_username))
                     return false;
 
-                t_password = getpwnam(MCStringGetCString(*t_username));
+                MCAutoStringRefAsSysString t_username_sys;
+                /* UNCHECKED */ t_username_sys.Lock(*t_username);
+
+                t_password = getpwnam(*t_username_sys);
             }
 
             if (t_password != NULL)
             {
+                MCAutoStringRef t_pw_dir;
+                /* UNCHECKED */ MCStringCreateWithSysString(t_password->pw_dir, &t_pw_dir);
+
                 if (!MCStringCreateMutable(0, &t_tilde_path) ||
-                    !MCStringAppendNativeChars(*t_tilde_path, (const char_t *)t_password->pw_dir, MCCStringLength(t_password->pw_dir)) ||
+                    !MCStringAppend(*t_tilde_path, *t_pw_dir) ||
                     !MCStringAppendSubstring(*t_tilde_path, p_path, MCRangeMake(t_user_end, MCStringGetLength(p_path) - t_user_end)))
                     return false;
             }
@@ -2134,13 +2197,20 @@ public:
                     close(2);
                     dup(toparent[1]);
                     close(toparent[1]);
-                    execl(MCStringGetCString(MCshellcmd), MCStringGetCString(MCshellcmd), "-s", NULL);
+
+                    MCAutoStringRefAsSysString t_shellcmd_sys;
+                    /* UNCHECKED */ t_shellcmd_sys.Lock(MCshellcmd);
+
+                    execl(*t_shellcmd_sys, *t_shellcmd_sys, "-s", NULL);
                     _exit(-1);
                 }
                 CheckProcesses();
                 close(tochild[0]);
-                write(tochild[1], MCStringGetCString(p_filename),
-                      MCStringGetLength(p_filename));
+
+                MCAutoStringRefAsSysString t_filename_sys;
+                /* UNCHECKED */ t_filename_sys.Lock(p_filename);
+
+                write(tochild[1], *t_filename_sys, strlen(*t_filename_sys));
                 write(tochild[1], "\n", 1);
                 close(tochild[1]);
                 close(toparent[1]);
@@ -2596,8 +2666,11 @@ public:
             {
                 if ((MCprocesses[MCnprocesses++].pid = fork()) == 0)
                 {
+                    MCAutoStringRefAsSysString t_name_sys;
+                    /* UNCHECKED */ t_name_sys.Lock(MCNameGetString(p_name));
+
                     char **argv = NULL;
-                    char *t_name_copy = strclone(MCNameGetCString(p_name));
+                    char *t_name_copy = strclone(*t_name_sys);
                     uint2 argc = 0;
                     if (p_doc == NULL || MCStringGetNativeCharAtIndex(p_doc, 0) == '\0')
                     {
@@ -2625,9 +2698,12 @@ public:
                     }
                     else
                     {
+                        MCAutoStringRefAsSysString t_doc_sys;
+                        /* UNCHECKED */ t_doc_sys.Lock(p_doc);
+
                         argv = new char *[3];
                         argv[0] = t_name_copy;
-                        argv[1] = (char *)MCStringGetCString(p_doc);
+                        argv[1] = (char *)*t_doc_sys;
                         argc = 2;
                     }
                     argv[argc] = NULL;
@@ -3016,13 +3092,13 @@ public:
         {
             int commandsize;
             ioctl(MCinputfd, FIONREAD, (char *)&commandsize);
-            MCAutoNativeCharArray t_commands;
+            MCAutoArray<char> t_commands;
             MCAutoStringRef t_cmd_string;
 
             t_commands.New(commandsize + 1);
-            read(MCinputfd, t_commands.Chars(), commandsize);
-            t_commands.Chars()[commandsize] = '\0';
-            /* UNCHECKED */ t_commands.CreateString(&t_cmd_string);
+            read(MCinputfd, t_commands.Ptr(), commandsize);
+            t_commands.Ptr()[commandsize] = '\0';
+            /* UNCHECKED */ MCStringCreateWithSysString(t_commands.Ptr(), &t_cmd_string);
             MCdefaultstackptr->getcurcard()->domess(*t_cmd_string);
         }
         if (wasalarm)
@@ -3093,11 +3169,14 @@ public:
         {
             if (gnome_vfs_initialized())
             {
-                p_mime_type = gnome_vfs_get_mime_type_for_name(MCStringGetCString(p_document));
-                p_gvfs = gnome_vfs_mime_get_default_application_for_uri(MCStringGetCString(p_document), p_mime_type);
+                MCAutoStringRefAsSysString t_document_sys;
+                /* UNCHECKED */ t_document_sys.Lock(p_document);
+
+                p_mime_type = gnome_vfs_get_mime_type_for_name(*t_document_sys);
+                p_gvfs = gnome_vfs_mime_get_default_application_for_uri(*t_document_sys, p_mime_type);
                 if (p_gvfs != NULL)
                 {
-                    p_args = g_list_append(p_args, (char *)MCStringGetCString(p_document));
+                    p_args = g_list_append(p_args, (gpointer)*t_document_sys);
                     gnome_vfs_mime_application_launch(p_gvfs, p_args);
                     g_list_free(p_args);
                 }
@@ -3133,7 +3212,9 @@ public:
         GError *err = NULL;
         if (MCuselibgnome)
         {
-            if (!gnome_url_show(MCStringGetCString(p_document), &err))
+            MCAutoStringRefAsSysString t_document_sys;
+            /* UNCHECKED */ t_document_sys.Lock(p_document);
+            if (!gnome_url_show(*t_document_sys, &err))
                 MCresult -> sets(err->message);
         }
         else

@@ -286,9 +286,9 @@ MCPropertyInfo MCButton::kProperties[] =
     DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(P_HILITE, InterfaceTriState, MCButton, Hilite)
     DEFINE_RW_OBJ_ENUM_PROPERTY(P_MENU_MODE, InterfaceButtonMenuMode, MCButton, MenuMode)
     
-    DEFINE_WO_OBJ_CHUNK_PROPERTY(P_HILITE, Bool, MCButton, Hilite)
-    DEFINE_WO_OBJ_CHUNK_PROPERTY(P_DISABLED, Bool, MCButton, Disabled)
-    DEFINE_WO_OBJ_CHUNK_PROPERTY(P_ENABLED, Bool, MCButton, Enabled)
+    DEFINE_WO_OBJ_CHAR_CHUNK_PROPERTY(P_HILITE, Bool, MCButton, Hilite)
+    DEFINE_WO_OBJ_CHAR_CHUNK_PROPERTY(P_DISABLED, Bool, MCButton, Disabled)
+    DEFINE_WO_OBJ_CHAR_CHUNK_PROPERTY(P_ENABLED, Bool, MCButton, Enabled)
     
 };
 

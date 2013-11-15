@@ -217,7 +217,7 @@ RTFReader::RTFReader(void)
 RTFReader::~RTFReader(void)
 {
 	MCNameDelete(m_attributes . text_link);
-	MCNameDelete(m_attributes . text_metadata);
+    MCValueRelease(m_attributes . text_metadata);
 
 	if (m_font_name != NULL)
 		free(m_font_name);
@@ -303,7 +303,7 @@ RTFStatus RTFReader::Parse(void)
 
 			// MW-2012-08-29: [[ Bug 10324 ]] If list properties change when popping the
 			//   group, make sure we emit.
-			if (m_state . HasListChanged() || m_state . GetParagraphMetadata() != kMCEmptyName)
+            if (m_state . HasListChanged() || m_state . GetParagraphMetadata() != kMCEmptyString)
 				Flush(true);
 
 			t_status = m_state . Restore();
@@ -1162,9 +1162,11 @@ void RTFReader::ProcessField(void)
 	{
 		MCNameRef t_name;
 		/* UNCHECKED */ MCNameCreateWithCString(t_data, t_name);
+        MCAutoStringRef t_string;
+        /* UNCHECKED */ MCStringCreateWithCString(t_data, &t_string);
 		if (MCU_strcasecmp(t_type, "HYPERLINK") == 0)
 		{
-			m_state . SetHyperlink(t_name);
+            m_state . SetHyperlink(t_name);
 			m_state . SetFontStyle(m_state . GetFontStyle() | kRTFFontStyleLink);
 		}
 		else if (MCU_strcasecmp(t_type, "LCANCHOR") == 0)
@@ -1172,16 +1174,12 @@ void RTFReader::ProcessField(void)
 			m_state . SetHyperlink(t_name);
 		}
 		else if (MCU_strcasecmp(t_type, "LCMETADATA") == 0)
-		{
-			MCNameRef t_name;
-			/* UNCHECKED */ MCNameCreateWithCString(t_data, t_name);
-			m_state . SetMetadata(t_name);
+        {
+            m_state . SetMetadata(*t_string);
 		}
 		else if (MCU_strcasecmp(t_type, "LCLINEMETADATA") == 0)
-		{
-			MCNameRef t_name;
-			/* UNCHECKED */ MCNameCreateWithCString(t_data, t_name);
-			m_state . SetParagraphMetadata(t_name);
+        {
+            m_state . SetParagraphMetadata(*t_string);
 		}
 		MCNameDelete(t_name);
 	}
@@ -1564,8 +1562,8 @@ RTFStatus RTFReader::Flush(bool p_force)
 		else
 			t_block . text_link = nil;
 
-		if (m_state . GetMetadata() != kMCEmptyName)
-			MCNameClone(m_state . GetMetadata(), t_block . text_metadata);
+        if (m_state . GetMetadata() != kMCEmptyString)
+            /* UNCHECKED */ MCStringCopy(m_state . GetMetadata(), t_block . text_metadata);
 		else
 			t_block . text_metadata = nil;
 
@@ -1609,8 +1607,8 @@ RTFStatus RTFReader::Flush(bool p_force)
 
 	if (t_changed)
 	{
-		MCNameDelete(m_attributes . text_metadata);
-		MCNameDelete(m_attributes . text_link);
+        MCValueRelease(m_attributes . text_metadata);
+        MCNameDelete(m_attributes . text_link);
 		memcpy(&m_attributes, &t_block, sizeof(MCTextBlock));
 		m_attributes_changed = false;
 	}
