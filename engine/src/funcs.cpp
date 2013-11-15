@@ -1928,23 +1928,6 @@ Parse_stat MCDrives::parse(MCScriptPoint &sp, Boolean the)
 #endif /* MCRecordLoudness */
 
 
-MCEncrypt::~MCEncrypt()
-{
-	delete source;
-}
-
-Parse_stat MCEncrypt::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_ENCRYPT_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCEncrypt::eval(MCExecPoint &ep)
-{
 #ifdef /* MCEncrypt */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
@@ -1962,31 +1945,6 @@ Exec_stat MCEncrypt::eval(MCExecPoint &ep)
 
 	return ES_NORMAL;
 #endif /* MCEncrypt */
-
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
-	MCAutoStringRef t_result;
-
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_ENCRYPT_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	/* UNCHECKED */ ep.copyasstringref(&t_source);
-
-	MCSecurityEvalEncrypt(ctxt, *t_source, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
 
 #ifdef /* MCEnvironment */ LEGACY_EXEC
 	ep . setstaticcstring(MCModeGetEnvironment());
@@ -2041,23 +1999,6 @@ void MCExists::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndExpression(ctxt);
 }
 
-MCExtents::~MCExtents()
-{
-	delete source;
-}
-
-Parse_stat MCExtents::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_EXTENTS_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCExtents::eval(MCExecPoint &ep)
-{
 #ifdef /* MCExtents */ LEGACY_EXEC
 	if (source -> eval(ep) != ES_NORMAL)
 	{
@@ -2081,33 +2022,6 @@ Exec_stat MCExtents::eval(MCExecPoint &ep)
 	
 	return ES_NORMAL;
 #endif /* MCExtents */
-
-	MCExecContext ctxt(ep);
-
-	MCAutoArrayRef t_array;
-	MCAutoStringRef t_result;
-
-	if (source -> eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_EXTENTS_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	if (!ep . copyasarrayref(&t_array))
-		return ES_ERROR;
-
-	MCArraysEvalExtents(ctxt, *t_array, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-
 
 #ifdef /* MCTheFiles */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)

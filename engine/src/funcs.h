@@ -553,20 +553,11 @@ public:
 
 };
 
-class MCEncrypt : public MCUnaryFunction
+class MCEncrypt : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCSecurityEvalEncrypt, EE_ENCRYPT_BADSOURCE, PE_ENCRYPT_BADPARAM, kMCSecurityEvalEncryptMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCEncrypt()
-	{
-		source = NULL;
-	}
-	virtual ~MCEncrypt();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCSecurityEvalEncryptMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCEncrypt(){}
+    virtual ~MCEncrypt(){}
 };
 
 class MCExists : public MCFunction
@@ -584,20 +575,11 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCExtents : public MCUnaryFunction
+class MCExtents : public MCUnaryFunctionCtxt<MCArrayRef, MCStringRef, &MCExecContext::EvalExprAsArrayRef, MCArraysEvalExtents, EE_EXTENTS_BADSOURCE, PE_EXTENTS_BADPARAM, kMCArraysEvalExtentsMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCExtents()
-	{
-		source = NULL;
-	}
-	virtual ~MCExtents();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCArraysEvalExtentsMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCExtents(){}
+    virtual ~MCExtents(){}
 };
 
 class MCTheFiles : public MCConstantFunctionCtxt<MCStringRef, MCFilesEvalFiles>
