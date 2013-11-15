@@ -988,23 +988,11 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCLegacyEvalMenusMethodInfo; }
 };
 
-class MCMerge : public MCUnaryFunction
+class MCMerge : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCStringsEvalMerge, EE_MERGE_BADSOURCE, PE_MERGE_BADPARAM, kMCStringsEvalMergeMethodInfo>
 {
 public:
-	MCExpression *source;
-public:
-	MCMerge()
-	{
-		source = NULL;
-	}
-	virtual ~MCMerge();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	Exec_stat doscript(MCExecPoint &);
-	void deletestatements(MCStatement *statements);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalMergeMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCMerge(){}
+    virtual ~MCMerge(){}
 };
 
 class MCMillisecs : public MCConstantFunctionCtxt<double, MCDateTimeEvalMilliseconds>
@@ -1133,36 +1121,18 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMovingControlsMethodInfo; }
 };
 
-class MCNumToChar: public MCFunction
+class MCNumToChar: public MCUnaryFunctionCtxt<integer_t, MCStringRef, &MCExecContext::EvalExprAsInt, MCStringsEvalNumToChar, EE_NUMTOCHAR_BADSOURCE, PE_NUMTOCHAR_BADPARAM, kMCStringsEvalNumToCharMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCNumToChar()
-	{
-		source = NULL;
-	}
-	virtual ~MCNumToChar();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalNumToCharMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCNumToChar(){}
+    virtual ~MCNumToChar(){}
 };
 
-class MCNumToByte: public MCFunction
+class MCNumToByte: public MCUnaryFunctionCtxt<integer_t, MCStringRef, &MCExecContext::EvalExprAsInt, MCStringsEvalNumToByte, EE_NUMTOBYTE_BADSOURCE, PE_NUMTOBYTE_BADPARAM, kMCStringsEvalNumToByteMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCNumToByte(void)
-	{
-		source = NULL;
-	}
-	virtual ~MCNumToByte(void);
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalNumToByteMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCNumToByte(void){}
+    virtual ~MCNumToByte(){}
 };
 
 class MCOpenFiles : public MCConstantFunctionCtxt<MCStringRef, MCFilesEvalOpenFiles>

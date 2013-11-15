@@ -3257,20 +3257,6 @@ void MCKeys::compile(MCSyntaxFactoryRef ctxt)
 	return ES_NORMAL;
 #endif /* MCKeysDown */
 
-
-
-//Parse_stat MCLength::parse(MCScriptPoint &sp, Boolean the)
-//{
-//    if (get1param(sp, &m_expression, the) != PS_NORMAL)
-//	{
-//		MCperror->add(PE_LENGTH_BADPARAM, sp);
-//		return PS_ERROR;
-//	}
-//	return PS_NORMAL;
-//}
-
-//void MCLength::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
-//{
 #ifdef /* MCLength */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
@@ -3280,14 +3266,6 @@ void MCKeys::compile(MCSyntaxFactoryRef ctxt)
 	ep.setnvalue(ep.getsvalue().getlength());
 	return ES_NORMAL;
 #endif /* MCLength */
-    
-//    MCAutoStringRef t_string;
-//    if (!ctxt . EvalExprAsStringRef(source, EE_LENGTH_BADSOURCE, &t_string))
-//        return;
-    
-//    MCStringsEvalLength(ctxt, *t_string, r_value . int_value);
-//	r_value . type = kMCExecValueTypeInt;
-//}
 
 MCLicensed::~MCLicensed()
 {
@@ -3624,24 +3602,6 @@ Parse_stat MCMe::parse(MCScriptPoint &sp, Boolean the)
 	return ES_NORMAL;
 #endif /* MCMenus */
 
-
-MCMerge::~MCMerge()
-{
-	delete source;
-}
-
-Parse_stat MCMerge::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_MERGE_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCMerge::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMerge */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
@@ -3739,31 +3699,6 @@ Exec_stat MCMerge::eval(MCExecPoint &ep)
 	delete tstring;
 	return ES_NORMAL;
 #endif /* MCMerge */
-
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
-	MCAutoStringRef t_result;
-
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_MERGE_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	/* UNCHECKED */ ep.copyasstringref(&t_source);
-
-	MCStringsEvalMerge(ctxt, *t_source, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
 
 #ifdef /* MCMillisecs */ LEGACY_EXEC
 	ep.setnvalue(floor(MCS_time() * 1000.0));
@@ -4071,24 +4006,6 @@ void MCMouse::compile(MCSyntaxFactoryRef ctxt)
 	return ES_NORMAL;
 #endif /* MCMovingControls */
 
-
-MCNumToChar::~MCNumToChar()
-{
-	delete source;
-}
-
-Parse_stat MCNumToChar::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_NUMTOCHAR_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCNumToChar::eval(MCExecPoint &ep)
-{
 #ifdef /* MCNumToChar */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -4108,44 +4025,6 @@ Exec_stat MCNumToChar::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCNumToChar */
 
-
-	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_NUMTOCHAR_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCStringsEvalNumToChar(ctxt, ep . getint4(), &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-MCNumToByte::~MCNumToByte()
-{
-	delete source;
-}
-
-Parse_stat MCNumToByte::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_NUMTOBYTE_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCNumToByte::eval(MCExecPoint &ep)
-{
 #ifdef /* MCNumToByte */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -4157,28 +4036,6 @@ Exec_stat MCNumToByte::eval(MCExecPoint &ep)
 	ep . copysvalue((const char *)&d, 1);
 	return ES_NORMAL;
 #endif /* MCNumToByte */
-
-
-	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_NUMTOBYTE_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-	MCStringsEvalNumToByte(ctxt, ep . getint4(), &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
 
 #ifdef /* MCOpenFiles */ LEGACY_EXEC
 	ep.clear();
