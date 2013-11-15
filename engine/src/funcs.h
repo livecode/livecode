@@ -713,20 +713,11 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalFunctionNamesMethodInfo; }
 };
 
-class MCGlobalLoc : public MCUnaryFunction
+class MCGlobalLoc : public MCUnaryFunctionCtxt<MCPoint, MCPoint, &MCExecContext::EvalExprAsPoint, MCInterfaceEvalGlobalLoc, EE_GLOBALLOC_NAP, PE_GLOBALLOC_BADPOINT, kMCInterfaceEvalGlobalLocMethodInfo>
 {
-	MCExpression *point;
 public:
-	MCGlobalLoc()
-	{
-		point = NULL;
-	}
-	virtual ~MCGlobalLoc();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalGlobalLocMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return point; }
+    MCGlobalLoc(){}
+    virtual ~MCGlobalLoc(){}
 };
 
 class MCGlobals : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalGlobalNames>
@@ -737,20 +728,11 @@ public:
 
 };
 
-class MCHasMemory : public MCUnaryFunction
+class MCHasMemory : public MCUnaryFunctionCtxt<uinteger_t, bool, &MCExecContext::EvalExprAsUInt, MCLegacyEvalHasMemory, EE_HASMEMORY_BADAMOUNT, PE_HASMEMORY_BADPARAM, kMCLegacyEvalHasMemoryMethodInfo>
 {
-	MCExpression *amount;
 public:
-	MCHasMemory()
-	{
-		amount = NULL;
-	}
-	virtual ~MCHasMemory();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCLegacyEvalHasMemoryMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return amount; }
+    MCHasMemory(){}
+    virtual ~MCHasMemory(){}
 };
 
 class MCHeapSpace : public MCConstantFunctionCtxt<integer_t, MCLegacyEvalHeapSpace>

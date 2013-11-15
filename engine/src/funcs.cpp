@@ -2621,24 +2621,6 @@ void MCFormat::compile(MCSyntaxFactoryRef ctxt)
 	return sp.getfactors(ep, TT_FUNCTION);
 #endif /* MCFunctionNames */
 
-
-MCGlobalLoc::~MCGlobalLoc()
-{
-	delete point;
-}
-
-Parse_stat MCGlobalLoc::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &point, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_GLOBALLOC_BADPOINT, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCGlobalLoc::eval(MCExecPoint &ep)
-{
 #ifdef /* MCGlobalLoc */ LEGACY_EXEC
 	int2 x, y;
 	if (point->eval(ep) != ES_NORMAL || !MCU_stoi2x2(ep.getsvalue(), x, y))
@@ -2657,28 +2639,6 @@ Exec_stat MCGlobalLoc::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCGlobalLoc */
 
-
-	MCPoint t_point;
-	if (point->eval(ep) != ES_NORMAL ||
-		!ep . copyaslegacypoint(t_point))
-	{
-		MCeerror->add(EE_GLOBALLOC_NAP, line, pos, ep.getsvalue());
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	MCPoint t_result;
-	MCInterfaceEvalGlobalLoc(ctxt, t_point, t_result);
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setpoint(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-
 #ifdef /* MCGlobals */ LEGACY_EXEC
 	ep.clear();
 	MCVariable *tmp;
@@ -2689,24 +2649,6 @@ Exec_stat MCGlobalLoc::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCGlobals */
 
-
-MCHasMemory::~MCHasMemory()
-{
-	delete amount;
-}
-
-Parse_stat MCHasMemory::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &amount, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_HASMEMORY_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCHasMemory::eval(MCExecPoint &ep)
-{
 #ifdef /* MCHasMemory */ LEGACY_EXEC
 	if (amount->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -2721,29 +2663,6 @@ Exec_stat MCHasMemory::eval(MCExecPoint &ep)
 
 	return ES_NORMAL;
 #endif /* MCHasMemory */
-
-	if (amount->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_HASMEMORY_BADAMOUNT, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	uinteger_t t_bytes;
-	/* UNCHECKED */ ep.copyasuint(t_bytes);
-
-	bool t_result;
-	MCLegacyEvalHasMemory(ctxt, t_bytes, t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
 
 #ifdef /* MCHeapSpace */ LEGACY_EXEC
 	ep.setstaticcstring(HEAP_SPACE);
