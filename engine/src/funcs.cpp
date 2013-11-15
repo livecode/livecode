@@ -4023,7 +4023,7 @@ void MCHostNtoA::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndExpression(ctxt);
 }
 
-Exec_stat MCInsertScripts::eval(MCExecPoint &ep)
+void MCInsertScripts::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCInsertScripts */ LEGACY_EXEC
 	ep.clear();
@@ -4048,21 +4048,12 @@ Exec_stat MCInsertScripts::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCInsertScripts */
 
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
 	if (front)
-		MCEngineEvalFrontScripts(ctxt, &t_result);
+		MCEngineEvalFrontScripts(ctxt, r_value .stringref_value);
 	else
-		MCEngineEvalBackScripts(ctxt, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
+		MCEngineEvalBackScripts(ctxt, r_value . stringref_value);
+    
+    r_value . type = kMCExecValueTypeStringRef;
 }
 
 Exec_stat MCInterrupt::eval(MCExecPoint &ep)
@@ -7473,7 +7464,7 @@ Parse_stat MCTarget::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCTarget::eval(MCExecPoint &ep)
+void MCTarget::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCTarget */ LEGACY_EXEC
 	if (MCtargetptr == NULL)
@@ -7486,22 +7477,12 @@ Exec_stat MCTarget::eval(MCExecPoint &ep)
 	return MCtargetptr->getprop(0, P_TEXT, ep, False);
 #endif /* MCTarget */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_result;
-
 	if (contents)
-		MCEngineEvalTargetContents(ctxt, &t_result);
+		MCEngineEvalTargetContents(ctxt, r_value . stringref_value);
 	else
-		MCEngineEvalTarget(ctxt, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
+		MCEngineEvalTarget(ctxt, r_value . stringref_value);
+    
+    r_value . type = kMCExecValueTypeStringRef;
 }
 
 // MW-2008-11-05: [[ Owner Reference ]] This is the 'owner' function syntax class.

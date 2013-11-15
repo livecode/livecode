@@ -889,7 +889,7 @@ class MCInsertScripts : public MCConstantFunction
 protected:
 	Boolean front;
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return front == True ? kMCEngineEvalFrontScriptsMethodInfo : kMCEngineEvalBackScriptsMethodInfo; }
 };
 
@@ -1730,7 +1730,7 @@ class MCTarget : public MCConstantFunction
 	Boolean contents;
 public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return contents == True ? kMCEngineEvalTargetContentsMethodInfo : kMCEngineEvalTargetMethodInfo; }
 };
 
