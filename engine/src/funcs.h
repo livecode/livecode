@@ -1604,36 +1604,18 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCDateTimeEvalTimeMethodInfo; }
 };
 
-class MCToLower : public MCUnaryFunction
+class MCToLower : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCStringsEvalToLower, EE_TOLOWER_BADSOURCE, PE_TOLOWER_BADPARAM, kMCStringsEvalToLowerMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCToLower()
-	{
-		source = NULL;
-	}
-	virtual ~MCToLower();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalToLowerMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCToLower(){}
+    virtual ~MCToLower(){}
 };
 
-class MCToUpper : public MCUnaryFunction
+class MCToUpper : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCStringsEvalToUpper, EE_TOUPPER_BADSOURCE, PE_TOUPPER_BADPARAM, kMCStringsEvalToUpperMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCToUpper()
-	{
-		source = NULL;
-	}
-	virtual ~MCToUpper();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalToUpperMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCToUpper(){}
+    virtual ~MCToUpper(){}
 };
 
 class MCTopStack : public MCFunction

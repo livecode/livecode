@@ -5474,24 +5474,6 @@ void MCTextHeightSum::compile(MCSyntaxFactoryRef ctxt)
 	return ES_NORMAL;
 #endif /* MCTheTime */
 
-
-MCToLower::~MCToLower()
-{
-	delete source;
-}
-
-Parse_stat MCToLower::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_TOLOWER_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCToLower::eval(MCExecPoint &ep)
-{
 #ifdef /* MCToLower */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
@@ -5502,47 +5484,6 @@ Exec_stat MCToLower::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCToLower */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
-	MCAutoStringRef t_result;
-
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_TOLOWER_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	/* UNCHECKED */ ep.copyasstringref(&t_source);
-
-	MCStringsEvalToLower(ctxt, *t_source, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-MCToUpper::~MCToUpper()
-{
-	delete source;
-}
-
-Parse_stat MCToUpper::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_TOUPPER_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCToUpper::eval(MCExecPoint &ep)
-{
 #ifdef /* MCToUpper */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
@@ -5552,30 +5493,6 @@ Exec_stat MCToUpper::eval(MCExecPoint &ep)
 	ep.upper();
 	return ES_NORMAL;
 #endif /* MCToUpper */
-
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
-	MCAutoStringRef t_result;
-
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_TOUPPER_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	/* UNCHECKED */ ep.copyasstringref(&t_source);
-
-	MCStringsEvalToUpper(ctxt, *t_source, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 MCTopStack::~MCTopStack()
 {
