@@ -2033,25 +2033,6 @@ void MCExists::compile(MCSyntaxFactoryRef ctxt)
 	return ES_NORMAL;
 #endif /* MCTheFiles */
 
-
-MCFlushEvents::~MCFlushEvents()
-{
-	delete type;
-}
-
-Parse_stat MCFlushEvents::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-	if (sp.parseexp(False, True, &type) != PS_NORMAL)
-	{
-		MCperror->add(PE_FLUSHEVENTS_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCFlushEvents::eval(MCExecPoint &ep)
-{
 #ifdef /* MCFlushEvents */ LEGACY_EXEC
 	static const char *enames[FE_LAST] =
 	    { "all", "mousedown", "mouseup",
@@ -2071,29 +2052,6 @@ Exec_stat MCFlushEvents::eval(MCExecPoint &ep)
 	ep.clear();
 	return ES_NORMAL;
 #endif /* MCFlushEvents */
-
-	if (type->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_FLUSHEVENTS_BADTYPE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	MCNewAutoNameRef t_type;
-	/* UNCHECKED */ ep.copyasnameref(&t_type);
-
-	MCAutoStringRef t_result;
-	MCInterfaceEvalFlushEvents(ctxt, *t_type, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
 
 #ifdef /* MCFocusedObject */ LEGACY_EXEC
 	if (MCfocusedstackptr != NULL)
@@ -2172,25 +2130,6 @@ Exec_stat MCFontNames::eval(MCExecPoint &ep)
 	return ctxt . Catch(line, pos);
 }
 
-
-MCFontLanguage::~MCFontLanguage()
-{
-	delete fontname;
-}
-
-Parse_stat MCFontLanguage::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &fontname, the) != PS_NORMAL)
-	{
-		MCperror->add
-		(PE_FONTSIZES_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCFontLanguage::eval(MCExecPoint &ep)
-{
 #ifdef /* MCFontLanguage */ LEGACY_EXEC
 	if (fontname->eval(ep) != ES_NORMAL)
 	{
@@ -2204,44 +2143,6 @@ Exec_stat MCFontLanguage::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCFontLanguage */
 
-	if (fontname->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_FONTSIZES_BADFONTNAME, line, pos);
-		return ES_ERROR;
-	}
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_font;
-	/* UNCHECKED */ ep.copyasstringref(&t_font);
-
-	MCNewAutoNameRef t_result;
-	MCTextEvalFontLanguage(ctxt, *t_font, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-MCFontSizes::~MCFontSizes()
-{
-	delete fontname;
-}
-
-Parse_stat MCFontSizes::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &fontname, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_FONTSIZES_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCFontSizes::eval(MCExecPoint &ep)
-{
 #ifdef /* MCFontSizes */ LEGACY_EXEC
 	if (fontname->eval(ep) != ES_NORMAL)
 	{
@@ -2253,28 +2154,6 @@ Exec_stat MCFontSizes::eval(MCExecPoint &ep)
 	delete fname;
 	return ES_NORMAL;
 #endif /* MCFontSizes */
-
-	if (fontname->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_FONTSIZES_BADFONTNAME, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_font;
-	/* UNCHECKED */ ep.copyasstringref(&t_font);
-
-	MCAutoStringRef t_result;
-	MCTextEvalFontSizes(ctxt, *t_font, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 MCFontStyles::~MCFontStyles()
 {

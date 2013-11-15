@@ -590,20 +590,11 @@ public:
 
 };
 
-class MCFlushEvents : public MCUnaryFunction
+class MCFlushEvents : public MCUnaryFunctionCtxt<MCNameRef, MCStringRef, &MCExecContext::EvalExprAsNameRef, MCInterfaceEvalFlushEvents, EE_FLUSHEVENTS_BADTYPE, PE_FLUSHEVENTS_BADPARAM, kMCInterfaceEvalFlushEventsMethodInfo>
 {
-	MCExpression *type;
 public:
-	MCFlushEvents()
-	{
-		type = NULL;
-	}
-	virtual ~MCFlushEvents();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalFlushEventsMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return type; }
+    MCFlushEvents(){}
+    virtual ~MCFlushEvents(){}
 };
 
 class MCFocusedObject : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalFocusedObject>
@@ -630,37 +621,19 @@ public:
 	virtual MCExpression *getmethodarg(void) const { return type; }
 };
 
-class MCFontLanguage : public MCUnaryFunction
+class MCFontLanguage : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCTextEvalFontNames, EE_FONTNAMES_BADTYPE, PE_FONTNAMES_BADPARAM, kMCTextEvalFontLanguageMethodInfo>
 {
-	MCExpression *fontname;
 public:
-	MCFontLanguage()
-	{
-		fontname = NULL;
-	}
-	virtual ~MCFontLanguage();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCTextEvalFontLanguageMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return fontname; }
+    MCFontLanguage(){}
+    virtual ~MCFontLanguage(){}
 };
 
 
-class MCFontSizes : public MCUnaryFunction
+class MCFontSizes : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCTextEvalFontSizes, EE_FONTSIZES_BADFONTNAME, PE_FONTSIZES_BADPARAM, kMCTextEvalFontSizesMethodInfo>
 {
-	MCExpression *fontname;
 public:
-	MCFontSizes()
-	{
-		fontname = NULL;
-	}
-	virtual ~MCFontSizes();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCTextEvalFontSizesMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return fontname; }
+    MCFontSizes(){}
+    virtual ~MCFontSizes(){}
 };
 
 class MCFontStyles : public MCFunction
