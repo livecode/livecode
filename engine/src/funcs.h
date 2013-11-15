@@ -2186,36 +2186,18 @@ public:
 
 // Math functions in funcsm.cpp
 
-class MCAbsFunction : public MCUnaryFunction
+class MCAbsFunction : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalAbs, EE_ABS_BADSOURCE, PE_ABS_BADPARAM, kMCMathEvalAbsMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCAbsFunction()
-	{
-		source = NULL;
-	}
-	virtual ~MCAbsFunction();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalAbsMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCAbsFunction(){}
+    virtual ~MCAbsFunction(){}
 };
 
-class MCAcos : public MCUnaryFunction
+class MCAcos : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalAcos, EE_ACOS_BADSOURCE, PE_ACOS_BADPARAM, kMCMathEvalAcosMethodInfo>
 {
-	MCExpression *source;
-public:
-	MCAcos()
-	{
-		source = NULL;
-	}
-	virtual ~MCAcos();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalAcosMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	public:
+	MCAcos(){}	
+	virtual ~MCAcos(){}
 };
 
 class MCAnnuity : public MCFunction
@@ -2247,36 +2229,18 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
-class MCAsin : public MCUnaryFunction
+class MCAsin : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalAsin, EE_ASIN_BADSOURCE, PE_ASIN_BADPARAM, kMCMathEvalAsinMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCAsin()
-	{
-		source = NULL;
-	}
-	virtual ~MCAsin();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalAsinMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCAsin(){}
+	virtual ~MCAsin(){}
 };
 
-class MCAtan : public MCUnaryFunction
+class MCAtan : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalAtan, EE_ATAN_BADSOURCE, PE_ATAN_BADPARAM, kMCMathEvalAtanMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCAtan()
-	{
-		source = NULL;
-	}
-	virtual ~MCAtan();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalAtanMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCAtan(){}
+	virtual ~MCAtan(){}
 };
 
 class MCAtan2 : public MCFunction
@@ -2326,84 +2290,39 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCCos : public MCUnaryFunction
+class MCCos : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalCos, EE_COS_BADSOURCE, PE_COS_BADPARAM, kMCMathEvalCosMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCCos()
-	{
-		source = NULL;
-	}
-	virtual ~MCCos();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalCosMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCCos(){}
+	virtual ~MCCos(){}
 };
 
-class MCExp : public MCUnaryFunction
+class MCExp : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalExp, EE_EXP_BADSOURCE, PE_EXP_BADPARAM, kMCMathEvalExpMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCExp()
-	{
-		source = NULL;
-	}
-	virtual ~MCExp();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalExpMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCExp(){}
+	virtual ~MCExp(){}
 };
 
-class MCExp1 : public MCUnaryFunction
+class MCExp1 : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalExp1, EE_EXP1_BADSOURCE, PE_EXP1_BADPARAM, kMCMathEvalExp1MethodInfo>
 {
-	MCExpression *source;
 public:
-	MCExp1()
-	{
-		source = NULL;
-	}
-	virtual ~MCExp1();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalExp1MethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCExp1(){}
+	virtual ~MCExp1(){}
 };
 
-class MCExp2 : public MCUnaryFunction
+class MCExp2 : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalExp2, EE_EXP2_BADSOURCE, PE_EXP2_BADPARAM, kMCMathEvalExp2MethodInfo>
 {
-	MCExpression *source;
 public:
-	MCExp2()
-	{
-		source = NULL;
-	}
-	virtual ~MCExp2();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalExp2MethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCExp2(){}
+	virtual ~MCExp2(){}
 };
 
-class MCExp10 : public MCUnaryFunction
+class MCExp10 : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalExp10, EE_EXP10_BADSOURCE, PE_EXP10_BADPARAM, kMCMathEvalExp10MethodInfo>
 {
-	MCExpression *source;
 public:
-	MCExp10()
-	{
-		source = NULL;
-	}
-	virtual ~MCExp10();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalExp10MethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCExp10(){}
+	virtual ~MCExp10(){}
 };
 
 // JS-2013-06-19: [[ StatsFunctions ]] Definition of geometricMean
@@ -2434,68 +2353,32 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
-class MCLn : public MCUnaryFunction
+class MCLn : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalLn, EE_LN_BADSOURCE, PE_LN_BADPARAM, kMCMathEvalLnMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCLn()
-	{
-		source = NULL;
-	}
-	virtual ~MCLn();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalLnMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCLn(){}
+	virtual ~MCLn(){}
 };
 
-class MCLn1 : public MCUnaryFunction
+class MCLn1 : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalLn1, EE_LN1_BADSOURCE, PE_LN1_BADPARAM, kMCMathEvalLn1MethodInfo>
 {
-	MCExpression *source;
 public:
-	MCLn1()
-	{
-		source = NULL;
-	}
-	virtual ~MCLn1();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalLn1MethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCLn1(){}
+	virtual ~MCLn1(){}
 };
 
-class MCLog2 : public MCUnaryFunction
+class MCLog2 : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalLog2, EE_LOG2_BADSOURCE, PE_LOG2_BADPARAM, kMCMathEvalLog2MethodInfo>
 {
-	MCExpression *source;
 public:
-	MCLog2()
-	{
-		source = NULL;
-	}
-	virtual ~MCLog2();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalLog2MethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCLog2(){}
+	virtual ~MCLog2(){}
 };
 
-class MCLog10 : public MCUnaryFunction
+class MCLog10 : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalLog10, EE_LOG10_BADSOURCE, PE_LOG10_BADPARAM, kMCMathEvalLog10MethodInfo>
 {
-	MCExpression *source;
 public:
-	MCLog10()
-	{
-		source = NULL;
-	}
-	virtual ~MCLog10();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalLog10MethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCLog10(){}
+	virtual ~MCLog10(){}
 };
 
 class MCMatrixMultiply : public MCFunction
@@ -2546,36 +2429,18 @@ public:
 	virtual MCParameter *getmethodarg(void) const { return params; }
 };
 
-class MCMD5Digest : public MCUnaryFunction
+class MCMD5Digest : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, &MCExecContext::EvalExprAsDataRef, MCFiltersEvalMD5Digest, EE_MD5DIGEST_BADSOURCE, PE_MD5DIGEST_BADPARAM, kMCFiltersEvalMD5DigestMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCMD5Digest()
-	{
-		source = NULL;
-	}
-	virtual ~MCMD5Digest();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalMD5DigestMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCMD5Digest(){}
+	virtual ~MCMD5Digest(){}
 };
 
-class MCSHA1Digest : public MCUnaryFunction
+class MCSHA1Digest : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, &MCExecContext::EvalExprAsDataRef, MCFiltersEvalSHA1Digest, EE_SHA1DIGEST_BADSOURCE, PE_SHA1DIGEST_BADPARAM, kMCFiltersEvalSHA1DigestMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCSHA1Digest()
-	{
-		source = NULL;
-	}
-	virtual ~MCSHA1Digest();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalSHA1DigestMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCSHA1Digest(){}
+	virtual ~MCSHA1Digest(){}
 };
 
 class MCMinFunction : public MCParamFunction
@@ -2594,20 +2459,11 @@ public:
 	virtual MCParameter *getmethodarg(void) const { return params; }
 };
 
-class MCRandom : public MCUnaryFunction
+class MCRandom : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalRandom, EE_RANDOM_BADSOURCE, PE_RANDOM_BADPARAM, kMCMathEvalRandomMethodInfo>
 {
-	MCExpression *limit;
 public:
-	MCRandom()
-	{
-		limit = NULL;
-	}
-	virtual ~MCRandom();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalRandomMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return limit; }
+	MCRandom(){}
+	virtual ~MCRandom(){}
 };
 
 class MCRound : public MCFunction
@@ -2625,20 +2481,11 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCSin : public MCUnaryFunction
+class MCSin : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalSin, EE_SIN_BADSOURCE, PE_SIN_BADPARAM, kMCMathEvalSinMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCSin()
-	{
-		source = NULL;
-	}
-	virtual ~MCSin();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalSinMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCSin(){}
+	virtual ~MCSin(){}
 };
 
 // JS-2013-06-19: [[ StatsFunctions ]] Definition of sampleStdDev (was stdDev)
@@ -2669,20 +2516,11 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
-class MCSqrt : public MCUnaryFunction
+class MCSqrt : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalSqrt, EE_SQRT_BADSOURCE, PE_SQRT_BADPARAM, kMCMathEvalSqrtMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCSqrt()
-	{
-		source = NULL;
-	}
-	virtual ~MCSqrt();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalSqrtMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCSqrt(){}
+	virtual ~MCSqrt(){}
 };
 
 class MCStatRound : public MCFunction
@@ -2732,20 +2570,11 @@ public:
 	virtual MCParameter *getmethodarg(void) const { return params; }
 };
 
-class MCTan : public MCUnaryFunction
+class MCTan : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalTan, EE_TAN_BADSOURCE, PE_TAN_BADPARAM, kMCMathEvalTanMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCTan()
-	{
-		source = NULL;
-	}
-	virtual ~MCTan();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalTanMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCTan(){}
+	virtual ~MCTan(){}
 };
 
 class MCTextHeightSum : public MCFunction
@@ -2762,20 +2591,11 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCTranspose : public MCUnaryFunction
+class MCTranspose : public MCUnaryFunctionCtxt<MCArrayRef, MCArrayRef, &MCExecContext::EvalExprAsArrayRef, MCArraysEvalTransposeMatrix, EE_TRANSPOSE_BADSOURCE, PE_TRANSPOSE_BADPARAM, kMCArraysEvalTransposeMatrixMethodInfo>
 {
-    MCExpression *source;
 public:
-	MCTranspose()
-	{
-		source = NULL;
-	}
-	virtual ~MCTranspose();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCArraysEvalTransposeMatrixMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCTranspose(){}
+	virtual ~MCTranspose(){}
 };
 
 class MCTrunc : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalTrunc, EE_TRUNC_BADSOURCE, PE_TRUNC_BADPARAM, kMCMathEvalTruncMethodInfo>
