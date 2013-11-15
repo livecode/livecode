@@ -179,7 +179,7 @@ IO_stat MCParagraph::loadattrs(IO_handle stream)
 		}
 
 		if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_METADATA) != 0)
-			t_stat = IO_read_nameref(attrs -> metadata, stream);
+            t_stat = IO_read_stringref(attrs -> metadata, stream);
 
 		if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_LIST_INDEX) != 0)
 			t_stat = IO_read_uint2(&attrs -> list_index, stream);
@@ -251,7 +251,7 @@ IO_stat MCParagraph::saveattrs(IO_handle stream)
 
 	// MW-2012-11-13: [[ ParaMetadata ]] Write out the metadata, if any.
 	if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_METADATA) != 0)
-		t_stat = IO_write_nameref(attrs -> metadata, stream);
+        t_stat = IO_write_stringref(attrs -> metadata, stream);
 
 	// MW-2012-11-13: [[ ParaListIndex ]] Write out the list index, if any.
 	if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_LIST_INDEX) != 0)
@@ -311,9 +311,9 @@ uint32_t MCParagraph::measureattrs(void)
 		t_size += 2;
 	
 	// MW-2012-11-13: [[ ParaMetadata ]] If the paragraph has metadata then add that on.
-	extern uint32_t measure_nameref(MCNameRef name);
+    extern uint32_t measure_stringref(MCStringRef string);
 	if ((attrs -> flags & PA_HAS_METADATA) != 0)
-		t_size += measure_nameref(attrs -> metadata);
+        t_size += measure_stringref(attrs -> metadata);
 
 	// MW-2012-11-13: [[ ParaListIndex ]] If the paragraph has a list index, then add that on.
 	if ((attrs -> flags & PA_HAS_LIST_INDEX) != 0)
@@ -424,6 +424,7 @@ Exec_stat MCParagraph::setparagraphattr(Properties which, MCExecPoint& ep)
 {
 	switch(which)
 	{
+#ifdef OLD_EXEC
 	case P_TEXT_ALIGN:
 		{
 			if (ep . isempty())
@@ -638,6 +639,7 @@ Exec_stat MCParagraph::setparagraphattr(Properties which, MCExecPoint& ep)
 		MCNameDelete(attrs -> metadata);
 		/* UNCHECKED */ ep . copyasnameref(attrs -> metadata);
 		break;
+#endif
 	}
 
 	if (attrs != nil && attrs -> flags == 0)
@@ -856,6 +858,7 @@ void MCParagraph::copysingleattr(Properties which, MCParagraph *other)
 {
 	switch(which)
 	{
+#ifdef OLD_EXEC
 	case P_TEXT_ALIGN:
 		if (other -> attrs == nil || (other -> attrs -> flags & PA_HAS_TEXT_ALIGN) == 0)
 		{
@@ -1044,6 +1047,7 @@ void MCParagraph::copysingleattr(Properties which, MCParagraph *other)
 			attrs -> flags |= PA_HAS_METADATA;
 		}
 		break;
+#endif
 	}
 
 	if (attrs == nil)
@@ -1077,7 +1081,7 @@ void MCParagraph::copyattrs(const MCParagraph& other)
 
 	// MW-2012-12-04: [[ Bug 10577 ]] If the struct has metadata, then copy it properly.
 	if ((other . attrs -> flags & PA_HAS_METADATA) != 0)
-		MCNameClone(other . attrs -> metadata, attrs -> metadata);
+        /* UNCHECKED */ MCStringCopy(other . attrs -> metadata, attrs -> metadata);
 }
 
 void MCParagraph::clearattrs(void)
@@ -1092,7 +1096,7 @@ void MCParagraph::clearattrs(void)
 
 	// MW-2012-11-13: [[ ParaMetadata ]] If we have metadata, delete it.
 	if ((attrs -> flags & PA_HAS_METADATA) != 0)
-		MCNameDelete(attrs -> metadata);
+        MCValueRelease(attrs -> metadata);
 
 	// Delete the structure.
 	delete attrs;
@@ -1308,7 +1312,7 @@ void MCParagraph::importattrs(const MCFieldParagraphStyle& p_style)
 	if (p_style . has_metadata)
 	{
 		attrs -> flags |= PA_HAS_METADATA;
-		MCNameClone(p_style . metadata, attrs -> metadata);
+        /* UNCHECKED */ MCStringCopy(p_style . metadata, attrs -> metadata);
 	}
 	// MW-2012-11-13: [[ ParaListIndex ]] Import the listIndex setting.
 	if (p_style . has_list_index)
@@ -1348,22 +1352,22 @@ void MCParagraph::setliststyle(uint32_t p_new_list_style)
 	}
 }
 
-void MCParagraph::setmetadata(MCNameRef p_metadata)
+void MCParagraph::setmetadata(MCStringRef p_metadata)
 {
 	if (attrs != nil && (attrs -> flags & PA_HAS_METADATA) != 0)
 	{
 		attrs -> flags &= ~PA_HAS_METADATA;
-		MCNameDelete(attrs -> metadata);
+        MCValueRelease(attrs -> metadata);
 		attrs -> metadata = nil;
 	}
 
-	if (p_metadata == nil || p_metadata == kMCEmptyName)
+    if (p_metadata == nil || MCStringIsEmpty(p_metadata))
 		return;
 
 	if (attrs == nil)
 		attrs = new MCParagraphAttrs;
-	attrs -> flags |= PA_HAS_METADATA;
-	/* UNCHECKED */ MCNameClone(p_metadata, attrs -> metadata);
+    attrs -> flags |= PA_HAS_METADATA;
+    /* UNCHECKED */ MCValueInter(p_metadata, attrs -> metadata);
 }
 
 void MCParagraph::setlistindex(uint32_t p_new_list_index)
@@ -1568,11 +1572,11 @@ int32_t MCParagraph::gettablewidth(void) const
 	return 0;
 }
 
-MCNameRef MCParagraph::getmetadata(void) const
+MCStringRef MCParagraph::getmetadata(void) const
 {
 	if (attrs != nil && (attrs -> flags & PA_HAS_METADATA))
 		return attrs -> metadata;
-	return kMCEmptyName;
+    return kMCEmptyString;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -444,10 +444,13 @@ bool relaunch_startup(MCStringRef p_stack_name)
 	{
 		for(unsigned int t_instance = 0; t_instance < t_existing_instance_count; ++t_instance)
 		{
+			MCAutoStringRefAsWString t_cmdline_wstr;
+			/* UNCHECKED */ t_cmdline_wstr.Lock(MCcmdline);
+			
 			message_t t_message;
 			t_message . window = t_existing_instances[t_instance] . message_window;
 			t_message . id = CWM_RELAUNCH;
-			t_message . data = (void*)MCStringGetCharPtr(MCcmdline);
+			t_message . data = *t_cmdline_wstr;
 			t_message . data_length = MCStringGetLength(MCcmdline);
 			t_message . timeout = 1 << 30;
 

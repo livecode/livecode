@@ -204,7 +204,9 @@ MCParagraph *MCCdata::getparagraphs()
 			uint2 l = strlen(eptr) + 1;
 			char *sptr = new char[l];
 			memcpy(sptr, eptr, l);
-			tpgptr->settext(sptr, l, false);
+			MCAutoStringRef t_string;
+			/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)sptr, l, &t_string);
+			tpgptr->settext(*t_string);
 			eptr = NULL;
 		}
 		delete (char *)data;

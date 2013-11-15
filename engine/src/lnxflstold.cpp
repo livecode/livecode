@@ -491,7 +491,7 @@ void MCOldFontnode::buildtable()
 		if ((sptr = MCU_strtok(NULL, "-")) == NULL)
 			continue;
 		MCAutoStringRef t_node;
-		/* UNCHECKED */ MCStringCreateWithCString(sptr, &t_node);
+        /* UNCHECKED */ MCStringCreateWithSysString(sptr, &t_node);
 		MCOldFonttablenode *fnptr = findtablenode(*t_node);
 		if (fnptr == NULL)
 		{
