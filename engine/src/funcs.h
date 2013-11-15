@@ -269,20 +269,11 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCPasteboardEvalClipboardMethodInfo; }
 };
 
-class MCCompress : public MCUnaryFunction
+class MCCompress : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, &MCExecContext::EvalExprAsDataRef, MCFiltersEvalCompress, EE_COMPRESS_BADSOURCE, PE_COMPRESS_BADPARAM, kMCFiltersEvalCompressMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCCompress()
-	{
-		source = NULL;
-	}
-	virtual ~MCCompress();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalCompressMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCCompress(){}
+    virtual ~MCCompress(){}
 };
 
 class MCConstantNames : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalConstantNames>
@@ -445,22 +436,11 @@ public:
 
 };
 
-class MCDecompress : public MCUnaryFunction
+class MCDecompress : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, &MCExecContext::EvalExprAsDataRef, MCFiltersEvalDecompress, EE_DECOMPRESS_BADSOURCE, PE_DECOMPRESS_BADPARAM, kMCFiltersEvalDecompressMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCDecompress()
-	{
-		source = NULL;
-	}
-	virtual ~MCDecompress();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	static Exec_stat do_decompress(MCExecPoint& ep, uint2, uint2);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalDecompressMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCDecompress(){}
+    virtual ~MCDecompress(){}
 };
 
 class MCDirectories : public MCConstantFunctionCtxt<MCStringRef, MCFilesEvalDirectories>

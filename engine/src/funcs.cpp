@@ -1609,24 +1609,6 @@ void MCChunkOffset::compile(MCSyntaxFactoryRef ctxt)
 #endif /* MCCommandKey */
 
 
-MCCompress::~MCCompress()
-{
-	delete source;
-}
-
-Parse_stat MCCompress::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add
-		(PE_COMPRESS_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCCompress::eval(MCExecPoint &ep)
-{
 #ifdef /* MCCompress */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
@@ -1672,28 +1654,6 @@ Exec_stat MCCompress::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCCompress */
 
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_COMPRESS_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	MCAutoDataRef t_source;
-	/* UNCHECKED */ ep . copyasdataref(&t_source);
-
-	MCAutoDataRef t_result;
-	MCFiltersEvalCompress(ctxt, *t_source, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
 #ifdef /* MCControlKey */ LEGACY_EXEC
 	ep.setstaticcstring(MCU_ktos((MCscreen->querymods() & MS_MAC_CONTROL) != 0));
 	return ES_NORMAL;
@@ -1732,24 +1692,6 @@ Exec_stat MCCompress::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCDateFormat */
 
-MCDecompress::~MCDecompress()
-{
-	delete source;
-}
-
-Parse_stat MCDecompress::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add
-		(PE_DECOMPRESS_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCDecompress::eval(MCExecPoint &ep)
-{
 #ifdef /* MCDecompress */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
@@ -1758,27 +1700,6 @@ Exec_stat MCDecompress::eval(MCExecPoint &ep)
 	}
 	return do_decompress(ep, line, pos);
 #endif /* MCDecompress */
-
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_DECOMPRESS_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	MCExecContext ctxt(ep);
-	MCAutoDataRef t_source;
-	/* UNCHECKED */ ep . copyasdataref(&t_source);
-
-	MCAutoDataRef t_result;
-	MCFiltersEvalDecompress(ctxt, *t_source, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 #ifdef /* MCDecompress::do_decompress */ LEGACY_EXEC
 Exec_stat MCDecompress::do_decompress(MCExecPoint& ep, uint2 line, uint2 pos)
