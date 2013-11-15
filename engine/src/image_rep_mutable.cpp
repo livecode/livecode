@@ -854,7 +854,7 @@ void MCMutableImageRep::battson(MCContext *p_context, uint2 depth)
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCMutableImageRep::put_brush(int2 x, int2 y, MCBrush *bmptr)
-{
+{	
 	uint32_t bwidth = MCGImageGetWidth(bmptr->image);
 	uint32_t bheight = MCGImageGetHeight(bmptr->image);
 
@@ -873,7 +873,9 @@ MCRectangle MCMutableImageRep::drawbrush(Tool which)
 	MCBrush *bmptr = NULL;
 
 	bmptr = MCImage::getbrush(which);
-
+	if (bmptr -> image == nil)
+		return MCU_make_rect(0, 0, 0, 0);
+	
 	if (which == T_SPRAY)
 	{
 		newrect = MCU_compute_rect(mx, my, mx, my);
