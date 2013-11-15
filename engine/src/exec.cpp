@@ -2426,12 +2426,12 @@ static void MCExecTypeConvertToValueRefAndReleaseAlways(MCExecContext& ctxt, MCE
 			break;
             
         case kMCExecValueTypeColor:
-            if(!MCStringFormat((MCStringRef&)r_value, "%u,%u,%u", (((MCColor *)p_from_type) -> red >> 8) & 0xff, (((MCColor *)p_from_type) -> green >> 8) & 0xff, (((MCColor *)p_from_type) -> blue >> 8) & 0xff))
+            if(!MCStringFormat((MCStringRef&)r_value, "%u,%u,%u", (((MCColor *)p_from_value) -> red >> 8) & 0xff, (((MCColor *)p_from_value) -> green >> 8) & 0xff, (((MCColor *)p_from_value) -> blue >> 8) & 0xff))
                 ctxt . Throw();
 			break;
             
         case kMCExecValueTypePoint:
-            if(!MCStringFormat((MCStringRef&)r_value, "%d,%d", ((MCPoint *)p_from_type) -> x, ((MCPoint *)p_from_type) -> y))
+            if(!MCStringFormat((MCStringRef&)r_value, "%d,%d", ((MCPoint *)p_from_value) -> x, ((MCPoint *)p_from_value) -> y))
                 ctxt . Throw();
 			break;
             			
@@ -2478,6 +2478,15 @@ static void MCExecTypeConvertFromValueRefAndReleaseAlways(MCExecContext& ctxt, M
 		case kMCExecValueTypeDouble:
 			ctxt . ConvertToReal(p_from_value, *(double *)p_to_value);
 			break;
+        case kMCExecValueTypePoint:
+            ctxt . ConvertToLegacyPoint(p_from_value, *(MCPoint*)p_to_value);
+            break;
+        case kMCExecValueTypeColor:
+            ctxt . ConvertToLegacyColor(p_from_value, *(MCColor*)p_to_value);
+            break;
+        case kMCExecValueTypeRectangle:
+            ctxt . ConvertToLegacyRectangle(p_from_value, *(MCRectangle*)p_to_value);
+            break;
 		default:
 			ctxt . Unimplemented();
 			break;
