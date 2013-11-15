@@ -2516,14 +2516,14 @@ Exec_stat MCTranspose::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCTranspose */
 
-	MCExecContext ctxt(ep);
+    MCExecContext ctxt(ep);
 
-	// ARRAYEVAL
-	if (source -> eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_TRANSPOSE_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
+    // ARRAYEVAL
+    if (source -> eval(ep) != ES_NORMAL)
+    {
+        MCeerror->add(EE_TRANSPOSE_BADSOURCE, line, pos);
+        return ES_ERROR;
+    }
 
 	if (!ep . isarray())
 	{
@@ -2531,7 +2531,7 @@ Exec_stat MCTranspose::eval(MCExecPoint &ep)
 		return ES_NORMAL;
 	}
 
-	MCAutoArrayRef t_array;
+    MCAutoArrayRef t_array;
 	/* UNCHECKED */ ep . copyasarrayref(&t_array);
 
 	MCAutoArrayRef t_result;
@@ -2545,25 +2545,6 @@ Exec_stat MCTranspose::eval(MCExecPoint &ep)
 	return ES_ERROR;
 }
 
-MCTrunc::~MCTrunc()
-{
-	delete source;
-}
-
-Parse_stat MCTrunc::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_TRUNC_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCTrunc::eval(MCExecPoint &ep)
-{
 #ifdef /* MCTrunc */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -2576,25 +2557,3 @@ Exec_stat MCTrunc::eval(MCExecPoint &ep)
 		ep.setnvalue(floor(ep.getnvalue()));
 	return ES_NORMAL;
 #endif /* MCTrunc */
-
-	MCExecContext ctxt(ep);
-	real64_t t_source;
-	real64_t t_result;
-
-	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_RANDOM_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_source);
-
-	MCMathEvalTrunc(ctxt, t_source, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}

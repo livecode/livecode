@@ -2771,7 +2771,7 @@ public:
 
 class MCTranspose : public MCUnaryFunction
 {
-	MCExpression *source;
+    MCExpression *source;
 public:
 	MCTranspose()
 	{
@@ -2785,20 +2785,11 @@ public:
 	virtual MCExpression *getmethodarg(void) const { return source; }
 };
 
-class MCTrunc : public MCUnaryFunction
+class MCTrunc : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalTrunc, EE_TRUNC_BADSOURCE, PE_TRUNC_BADPARAM, kMCMathEvalTruncMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCTrunc()
-	{
-		source = NULL;
-	}
-	virtual ~MCTrunc();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalTruncMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCTrunc(){}
+    virtual ~MCTrunc(){}
 };
 
 class MCHTTPProxyForURL: public MCFunction
