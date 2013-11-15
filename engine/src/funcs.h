@@ -2193,36 +2193,18 @@ public:
 
 // Math functions in funcsm.cpp
 
-class MCAbsFunction : public MCUnaryFunction
+class MCAbsFunction : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalAbs, EE_ABS_BADSOURCE, PE_ABS_BADPARAM, kMCMathEvalAbsMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCAbsFunction()
-	{
-		source = NULL;
-	}
-	virtual ~MCAbsFunction();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalAbsMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCAbsFunction(){}
+    virtual ~MCAbsFunction(){}
 };
 
-class MCAcos : public MCUnaryFunction
+class MCAcos : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalAcos, EE_ACOS_BADSOURCE, PE_ACOS_BADPARAM, kMCMathEvalAcosMethodInfo>
 {
-	MCExpression *source;
-public:
-	MCAcos()
-	{
-		source = NULL;
-	}
-	virtual ~MCAcos();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalAcosMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	public:
+	MCAcos(){}	
+	virtual ~MCAcos(){}
 };
 
 class MCAnnuity : public MCFunction
@@ -2254,20 +2236,11 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
-class MCAsin : public MCUnaryFunction
+class MCAsin : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalAsin, EE_ASIN_BADSOURCE, PE_ASIN_BADPARAM, kMCMathEvalAsinMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCAsin()
-	{
-		source = NULL;
-	}
-	virtual ~MCAsin();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalAsinMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCAsin(){}
+	virtual ~MCAsin(){}
 };
 
 class MCAtan : public MCUnaryFunction
