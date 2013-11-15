@@ -86,7 +86,14 @@ public:
 	}
 };
 
-template<typename ParamType, typename ReturnType, bool (MCExecContext::*EvalExpression)(MCExpression*, Exec_errors, typename MCExecValueTraits<ParamType>::out_type), void (*EvalFunction)(MCExecContext&, typename MCExecValueTraits<ParamType>::in_type, typename MCExecValueTraits<ReturnType>::out_type), Exec_errors EvalError, Parse_errors ParseError> class MCUnaryFunctionCtxt: public MCUnaryFunction
+template<typename ParamType,
+         typename ReturnType,
+         bool (MCExecContext::*EvalExpression)(MCExpression*, Exec_errors, typename MCExecValueTraits<ParamType>::out_type),
+         void (*EvalFunction)(MCExecContext&, typename MCExecValueTraits<ParamType>::in_type, typename MCExecValueTraits<ReturnType>::out_type),
+         Exec_errors EvalError,
+         Parse_errors ParseError,
+         MCExecMethodInfo*& MethodInfo>
+class MCUnaryFunctionCtxt: public MCUnaryFunction
 {
 public:
     MCUnaryFunctionCtxt() { m_expression = nil; }
@@ -120,42 +127,27 @@ public:
             MCExecValueTraits<ReturnType>::set(r_value, t_result);
     }
 
+    virtual MCExecMethodInfo *getmethodinfo(void) const { return MethodInfo; }
+    virtual MCExpression *getmethodarg(void) const { return m_expression; }
+
 protected:
     MCExpression *m_expression;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCArrayDecode: public MCUnaryFunction
+class MCArrayDecode: public MCUnaryFunctionCtxt<MCStringRef, MCArrayRef, &MCExecContext::EvalExprAsStringRef, MCArraysEvalArrayDecode, EE_ARRAYDECODE_BADSOURCE, PE_ARRAYDECODE_BADPARAM, kMCArraysEvalArrayDecodeMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCArrayDecode()
-	{
-		source = NULL;
-	}
-	virtual ~MCArrayDecode();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCArraysEvalArrayDecodeMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCArrayDecode(){}
+    virtual ~MCArrayDecode(){}
 };
 
-class MCArrayEncode: public MCUnaryFunction
+class MCArrayEncode: public MCUnaryFunctionCtxt<MCArrayRef, MCStringRef, &MCExecContext::EvalExprAsArrayRef, MCArraysEvalArrayEncode, EE_ARRAYENCODE_BADSOURCE, PE_ARRAYENCODE_BADPARAM, kMCArraysEvalArrayEncodeMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCArrayEncode()
-	{
-		source = NULL;
-	}
-	virtual ~MCArrayEncode();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCArraysEvalArrayEncodeMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCArrayEncode(){}
+    virtual ~MCArrayEncode(){}
 };
 
 class MCBase64Decode : public MCUnaryFunction
@@ -1036,19 +1028,11 @@ public:
 
 };
 
-class MCLength : public MCUnaryFunctionCtxt<MCStringRef, integer_t, &MCExecContext::EvalExprAsStringRef, MCStringsEvalLength, EE_LENGTH_BADSOURCE, PE_LENGTH_BADPARAM>
+class MCLength : public MCUnaryFunctionCtxt<MCStringRef, integer_t, &MCExecContext::EvalExprAsStringRef, MCStringsEvalLength, EE_LENGTH_BADSOURCE, PE_LENGTH_BADPARAM, kMCStringsEvalLengthMethodInfo>
 {
 public:
     MCLength(){}
-
     virtual ~MCLength(){}
-    
-//    virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-    
-//	virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalLengthMethodInfo; }
-    virtual MCExpression *getmethodarg(void) const { return m_expression; }
 };
 
 class MCLicensed : public MCConstantFunctionCtxt<bool, MCLegacyEvalLicensed>

@@ -93,6 +93,11 @@ template<> struct MCExecValueTraits<MCValueRef>
 		self . type = kMCExecValueTypeValueRef;
 		self . valueref_value = p_value;
     }
+
+    inline static void free(out_type self)
+    {
+        MCValueRelease(self);
+    }
 };
 
 template<> struct MCExecValueTraits<MCBooleanRef>
@@ -105,6 +110,11 @@ template<> struct MCExecValueTraits<MCBooleanRef>
 		self . type = kMCExecValueTypeBooleanRef;
 		self . booleanref_value = p_value;
 	}
+
+    inline static void free(out_type self)
+    {
+        MCValueRelease(self);
+    }
 };
 
 template<> struct MCExecValueTraits<MCNameRef>
@@ -117,6 +127,11 @@ template<> struct MCExecValueTraits<MCNameRef>
 		self . type = kMCExecValueTypeNameRef;
 		self . nameref_value = p_value;
 	}
+
+    inline static void free(out_type self)
+    {
+        MCNameDelete(self);
+    }
 };
 
 template<> struct MCExecValueTraits<MCDataRef>
@@ -129,6 +144,11 @@ template<> struct MCExecValueTraits<MCDataRef>
 		self . type = kMCExecValueTypeDataRef;
 		self . dataref_value = p_value;
 	}
+
+    inline static void free(out_type self)
+    {
+        MCValueRelease(self);
+    }
 };
 
 template<> struct MCExecValueTraits<MCArrayRef>
@@ -141,6 +161,11 @@ template<> struct MCExecValueTraits<MCArrayRef>
 		self . type = kMCExecValueTypeArrayRef;
 		self . arrayref_value = p_value;
 	}
+
+    inline static void free(out_type self)
+    {
+        MCValueRelease(self);
+    }
 };
 
 template<> struct MCExecValueTraits<MCNumberRef>
@@ -153,6 +178,11 @@ template<> struct MCExecValueTraits<MCNumberRef>
 		self . type = kMCExecValueTypeNumberRef;
 		self . numberref_value = p_value;
 	}
+
+    inline static void free(out_type self)
+    {
+        MCValueRelease(self);
+    }
 };
 
 template<> struct MCExecValueTraits<MCStringRef>
@@ -183,7 +213,7 @@ template<> struct MCExecValueTraits<integer_t>
 		self . int_value = p_value;
 	}
 
-    inline static void free(in_type){}
+    inline static void free(out_type){}
 };
 
 template<> struct MCExecValueTraits<uinteger_t>
@@ -196,6 +226,8 @@ template<> struct MCExecValueTraits<uinteger_t>
 		self . type = kMCExecValueTypeUInt;
 		self . uint_value = p_value;
 	}
+
+    inline static void free(out_type){}
 };
 
 template<> struct MCExecValueTraits<bool>
@@ -208,6 +240,8 @@ template<> struct MCExecValueTraits<bool>
 		self . type = kMCExecValueTypeBool;
 		self . bool_value = p_value;
 	}
+
+    inline static void free(out_type){}
 };
 
 template<> struct MCExecValueTraits<double>
@@ -220,6 +254,8 @@ template<> struct MCExecValueTraits<double>
 		self . type = kMCExecValueTypeDouble;
 		self . double_value = p_value;
 	}
+
+    inline static void free(out_type){}
 };
 
 template<> struct MCExecValueTraits<char_t>
@@ -232,6 +268,8 @@ template<> struct MCExecValueTraits<char_t>
 		self . type = kMCExecValueTypeChar;
 		self . char_value = p_value;
 	}
+
+    inline static void free(out_type){}
 };
 
 template<> struct MCExecValueTraits<MCPoint>
@@ -244,6 +282,8 @@ template<> struct MCExecValueTraits<MCPoint>
 		self . type = kMCExecValueTypePoint;
 		self . point_value = p_value;
 	}
+
+    inline static void free(out_type){}
 };
 
 template<> struct MCExecValueTraits<MCColor>
@@ -256,6 +296,8 @@ template<> struct MCExecValueTraits<MCColor>
 		self . type = kMCExecValueTypeColor;
 		self . color_value = p_value;
 	}
+
+    inline static void free(out_type){}
 };
 
 template<> struct MCExecValueTraits<MCRectangle>
@@ -268,6 +310,8 @@ template<> struct MCExecValueTraits<MCRectangle>
 		self . type = kMCExecValueTypeRectangle;
 		self . rectangle_value = p_value;
 	}
+
+    inline static void free(out_type){}
 };
 
 template<> struct MCExecValueTraits<float>
@@ -280,6 +324,8 @@ template<> struct MCExecValueTraits<float>
 		self . type = kMCExecValueTypeFloat;
 		self . float_value = p_value;
 	}
+
+    inline static void free(out_type){}
 };
 
 // Convert the slot from_value of type from_type, to the slot to_type at
