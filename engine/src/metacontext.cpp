@@ -398,8 +398,15 @@ void MCMetaContext::drawsegments(MCSegment *segments, uint2 nsegs)
 
 void MCMetaContext::drawtext(int2 x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image)
 {
+    MCRange t_range;
+    t_range = MCRangeMake(0, MCStringGetLength(p_string));
+    drawtext_substring(x, y, p_string, t_range, p_font, image);
+}
+
+void MCMetaContext::drawtext_substring(int2 x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean image)
+{
 	// MW-2009-12-22: Make sure we don't generate 0 length text mark records
-	if (MCStringIsEmpty(p_string))
+	if (MCStringIsEmpty(p_string) || p_range.length == 0)
 		return;
 	
 	MCMark *t_mark;
@@ -419,42 +426,23 @@ void MCMetaContext::drawtext(int2 x, int2 y, MCStringRef p_string, MCFontRef p_f
 		else
 			t_mark -> text . background = NULL;
         
-        uindex_t t_length = MCStringGetLength(p_string);
-		t_mark -> text . data = new_array<char>(t_length);
-		t_mark -> text . length = t_length;
-		if (t_mark -> text . data != NULL)
-			memcpy(t_mark -> text . data, MCStringGetCString(p_string), t_length);
-		t_mark -> text . unicode_override = MCStringGetNativeCharPtr(p_string) == nil;
-	}
-}
-
-void MCMetaContext::drawtext_legacy(int2 x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_unicode_override)
-{
-	// MW-2009-12-22: Make sure we don't generate 0 length text mark records
-	if (length == 0)
-		return;
-	
-	MCMark *t_mark;
-	t_mark = new_mark(MARK_TYPE_TEXT, false, true);
-	if (t_mark != NULL)
-	{
-		// MW-2012-02-28: [[ Bug ]] Use the fontstruct from the parameter as 'setfont()' is no
-		//   longer used.
-		t_mark -> text . font = p_font;
-		t_mark -> text . position . x = x;
-		t_mark -> text . position . y = y;
-		if (image && f_fill_background != NULL)
-		{
-			t_mark -> text . background = f_fill_background;
-			f_fill_background_used = true;
-		}
-		else
-			t_mark -> text . background = NULL;
-		t_mark -> text . data = new_array<char>(length);
-		t_mark -> text . length = length;
-		if (t_mark -> text . data != NULL)
-			memcpy(t_mark -> text . data, s, length);
-		t_mark -> text . unicode_override = p_unicode_override;
+        uindex_t t_length = p_range.length;
+        if (MCStringIsNative(p_string))
+        {
+            t_mark -> text . data = new_array<char>(t_length);
+            t_mark -> text . length = t_length;
+            if (t_mark -> text . data != NULL)
+                memcpy(t_mark -> text . data, MCStringGetNativeCharPtr(p_string) + p_range.offset , t_length);
+            t_mark -> text . unicode_override = false;
+        }
+        else
+        {
+            t_mark -> text . data = new_array<unichar_t>(t_length);
+            t_mark -> text . length = t_length;
+            if (t_mark -> text . data != NULL)
+                memcpy(t_mark -> text . data, MCStringGetCharPtr(p_string) + p_range.offset, t_length);
+            t_mark -> text . unicode_override = true;
+        }
 	}
 }
 
@@ -742,10 +730,20 @@ static bool mark_indirect(MCContext *p_context, MCMark *p_mark, MCMark *p_upto_m
 			break;
 			
 			case MARK_TYPE_TEXT:
+            {
 				if (p_mark -> text . background != NULL)
 					p_context -> setbackground(p_mark -> text . background -> colour);
-				p_context -> drawtext_legacy(p_mark -> text . position . x, p_mark -> text . position . y, (const char *)p_mark -> text . data, p_mark -> text . length, p_mark -> text . font, p_mark -> text . background != NULL, p_mark -> text . unicode_override);
-			break;
+                
+                MCAutoStringRef t_string;
+                if (p_mark -> text . unicode_override)
+                    /* UNCHECKED */ MCStringCreateWithChars((const unichar_t*)p_mark -> text . data, p_mark -> text . length, &t_string);
+                else
+                    /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)p_mark -> text . data, p_mark -> text . length, &t_string);
+                
+                p_context -> drawtext(p_mark -> text . position . x, p_mark -> text . position . y, *t_string, p_mark -> text . font, p_mark -> text . background != NULL);
+
+                break;
+            }
 			
 			case MARK_TYPE_RECTANGLE:
 				if (p_mark -> stroke != NULL)

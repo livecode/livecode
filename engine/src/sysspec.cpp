@@ -288,7 +288,7 @@ uint32_t MCS_getpid(void)
 // the default 'dummy' functions here.
 
 // Fixed by using MCServiceInterface
-bool MCS_query_registry(MCStringRef p_key, MCStringRef& r_value, MCStringRef& r_type, MCStringRef& r_error)
+bool MCS_query_registry(MCStringRef p_key, MCValueRef& r_value, MCStringRef& r_type, MCStringRef& r_error)
 {
     MCWindowsSystemServiceInterface *t_service;
     t_service = (MCWindowsSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeWindowsSystem);
@@ -304,7 +304,8 @@ void MCS_query_registry(MCExecPoint &dest)
 {
 	MCAutoStringRef t_key;
 	/* UNCHECKED */ dest.copyasstringref(&t_key);
-	MCAutoStringRef t_value, t_type, t_error;
+	MCAutoStringRef t_type, t_error;
+	MCAutoValueRef t_value;
 	/* UNCHECKED */ MCS_query_registry(*t_key, &t_value, &t_type, &t_error);
 	if (*t_error != nil)
 	{
@@ -318,12 +319,12 @@ void MCS_query_registry(MCExecPoint &dest)
 	}
 }
 
-bool MCS_set_registry(MCStringRef p_key, MCStringRef p_value, MCStringRef p_type, MCStringRef& r_error)
+bool MCS_set_registry(MCStringRef p_key, MCValueRef p_value, MCSRegistryValueType p_type, MCStringRef& r_error)
 {
     MCWindowsSystemServiceInterface *t_service;
     t_service = (MCWindowsSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeWindowsSystem);
     
-    if (t_service != nil)
+if (t_service != nil)
         return t_service -> SetRegistry(p_key, p_value, p_type, r_error);
     
 	return MCStringCreateWithCString("not supported", r_error);
@@ -356,6 +357,16 @@ bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_err
     
 	return MCStringCreateWithCString("not supported", r_error);
 }
+
+#ifndef __WINDOWS__
+
+// For Win32, this function is implemented in dskw32.cpp
+MCSRegistryValueType MCS_registry_type_from_string(MCStringRef)
+{
+	return kMCSRegistryValueTypeNone;
+}
+
+#endif
 
 void MCS_reset_time(void)
 {

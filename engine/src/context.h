@@ -159,7 +159,7 @@ public:
 	virtual void drawlines(MCPoint *points, uint2 npoints, bool p_closed = false) = 0;
 	virtual void drawsegments(MCSegment *segments, uint2 nsegs) = 0;
 	virtual void drawtext(int2 x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image) = 0;
-    virtual void drawtext_legacy(int2 x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_unicode_override) = 0;
+    virtual void drawtext_substring(int2 x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean image) = 0;
 	virtual void drawrect(const MCRectangle& rect, bool inside = false) = 0;
 	virtual void fillrect(const MCRectangle& rect) = 0;
 	virtual void fillrects(MCRectangle *rects, uint2 nrects) = 0;

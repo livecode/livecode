@@ -96,11 +96,11 @@ static bool s_in_modal = false;
 
 struct popupanswerdialog_t
 {
-	const char **buttons;
+	MCStringRef *buttons;
 	uint32_t button_count;
 	uint32_t type;
-	const char *title;
-	const char *message;
+	MCStringRef title;
+	MCStringRef message;
 	int32_t result;
 	
 	UIAlertView *alert_view;
@@ -113,9 +113,9 @@ static void dopopupanswerdialog_prewait(void *p_context)
 	ctxt = (popupanswerdialog_t *)p_context;
 	
 	NSString *t_title;
-	t_title = [NSString stringWithCString: ctxt -> title == nil ? "" : ctxt -> title encoding: NSMacOSRomanStringEncoding];
+	t_title = [NSString stringWithMCStringRef: ctxt -> title == nil ? kMCEmptyString : ctxt -> title ];
 	NSString *t_prompt;
-	t_prompt = [NSString stringWithCString: ctxt -> message == nil ? "" : ctxt -> message encoding: NSMacOSRomanStringEncoding];
+	t_prompt = [NSString stringWithMCStringRef: ctxt -> message == nil ? kMCEmptyString : ctxt -> message ];
 	
 	ctxt -> delegate = [[ModalDelegate alloc] init];
 	ctxt -> alert_view = [[UIAlertView alloc] initWithTitle:t_title message:t_prompt delegate:ctxt -> delegate cancelButtonTitle:nil otherButtonTitles:nil];
@@ -129,7 +129,7 @@ static void dopopupanswerdialog_prewait(void *p_context)
 	{
 		[ctxt -> delegate setIndex: ctxt -> button_count - 1];
 		for(uint32_t i = 0; i < ctxt -> button_count; i++)
-			[ctxt -> alert_view addButtonWithTitle: [ NSString stringWithCString: ctxt -> buttons[i] encoding: NSMacOSRomanStringEncoding ]];
+			[ctxt -> alert_view addButtonWithTitle: [ NSString stringWithMCStringRef: ctxt -> buttons[i] ]];
 	}
 	[ctxt -> alert_view show];
 	
@@ -154,13 +154,14 @@ int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button
 		return -1;
 
 	popupanswerdialog_t ctxt;
-	ctxt . buttons = (const char **) p_buttons;
+    /* UNCHECKED */ MCMemoryAllocate(p_button_count * sizeof(MCStringRef), ctxt . buttons);
+	ctxt . buttons = p_buttons;
 	for (uindex_t i = 0; i < p_button_count; i++)
-		ctxt . buttons[i] = MCStringGetCString(p_buttons[i]);
+		ctxt . buttons[i] = MCValueRetain(p_buttons[i]);
 	ctxt . button_count = p_button_count;
 	ctxt . type = p_type;
-	ctxt . title = MCStringGetCString(p_title);
-	ctxt . message = MCStringGetCString(p_message);
+	ctxt . title = MCValueRetain(p_title);
+	ctxt . message = MCValueRetain(p_message);
 	
 	MCIPhoneRunOnMainFiber(dopopupanswerdialog_prewait, &ctxt);
 	
@@ -170,6 +171,11 @@ int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button
 	
 	MCIPhoneRunOnMainFiber(dopopupanswerdialog_postwait, &ctxt);
 	
+    for (uindex_t i = 0; i < p_button_count; i++)
+		MCValueRelease(ctxt . buttons[i]);
+    /* UNCHECKED */ MCMemoryDeallocate(ctxt . buttons);
+    MCValueRelease(ctxt . title);
+    MCValueRelease(ctxt . message);
 	return ctxt . result;
 }
 
@@ -356,9 +362,9 @@ int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button
 struct popupaskdialog_t
 {
 	uint32_t type;
-	const char *title;
-	const char *message;
-	const char *initial;
+	MCStringRef title;
+	MCStringRef message;
+	MCStringRef initial;
 	bool hint;
 	char *result;
 	
@@ -374,13 +380,13 @@ static void dopopupaskdialog_prewait(void *p_context)
 	ctxt = (popupaskdialog_t *)p_context;
 	
     NSString *t_title;
-	t_title = [NSString stringWithCString: (ctxt -> title == nil ? "" : ctxt -> title) encoding: NSMacOSRomanStringEncoding];
+	t_title = [NSString stringWithMCStringRef: (ctxt -> title == nil ? kMCEmptyString : ctxt -> title) ];
 	NSString *t_message;
-	t_message = [NSString stringWithCString: (ctxt -> message == nil ? "" : ctxt -> message) encoding: NSMacOSRomanStringEncoding];
+	t_message = [NSString stringWithMCStringRef: (ctxt -> message == nil ? kMCEmptyString : ctxt -> message) ];
 	
     // MM-2012-03-14: [[ Bug 10084 ]] Intial text was being set to space by default meaning a space was prepended to anby data returned.
 	NSString *t_initial;
-	t_initial = [NSString stringWithCString: (ctxt -> initial == nil ? "" : ctxt -> initial) encoding: NSMacOSRomanStringEncoding];
+	t_initial = [NSString stringWithMCStringRef: (ctxt -> initial == nil ? kMCEmptyString : ctxt -> initial) ];
     
 	ctxt -> delegate = [[ModalDelegate alloc] init];
 		
@@ -491,9 +497,9 @@ bool MCScreenDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRe
 	
 	popupaskdialog_t ctxt;
 	ctxt . type = p_type;
-	ctxt . title = MCStringGetCString(p_title);
-	ctxt . message = MCStringGetCString(p_message);
-	ctxt . initial = MCStringGetCString(p_initial);
+	ctxt . title = MCValueRetain(p_title);
+	ctxt . message = MCValueRetain(p_message);
+	ctxt . initial = MCValueRetain(p_initial);
 	ctxt . hint = p_hint;
  
 	MCIPhoneRunOnMainFiber(dopopupaskdialog_prewait, &ctxt);
@@ -504,6 +510,9 @@ bool MCScreenDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRe
 
 	MCIPhoneRunOnMainFiber(dopopupaskdialog_postwait, &ctxt);
 	
+    MCValueRelease(ctxt . title);
+    MCValueRelease(ctxt . message);
+    MCValueRelease(ctxt . initial);
 	return MCStringCreateWithCString(ctxt . result, r_result);
 }
 

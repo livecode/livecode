@@ -78,8 +78,8 @@ RTFStatus RTFState::Save(void)
 			t_new_entry -> paragraph_background_color = m_entries -> paragraph_background_color;
 			t_new_entry -> border_color = m_entries -> border_color;
 
-			MCNameClone(m_entries -> metadata, t_new_entry -> metadata);
-			MCNameClone(m_entries -> paragraph_metadata, t_new_entry -> paragraph_metadata);
+            /* UNCHECKED */ MCStringCopy(m_entries -> metadata, t_new_entry -> metadata);
+            /* UNCHECKED */ MCStringCopy(m_entries -> paragraph_metadata, t_new_entry -> paragraph_metadata);
 			MCNameClone(m_entries -> hyperlink, t_new_entry -> hyperlink);
 		}
 		else
@@ -108,8 +108,8 @@ RTFStatus RTFState::Save(void)
 			t_new_entry -> paragraph_background_color = 0xffffffff;
 			t_new_entry -> border_color = 0xffffffff;
 
-			MCNameClone(kMCEmptyName, t_new_entry -> metadata);
-			MCNameClone(kMCEmptyName, t_new_entry -> paragraph_metadata);
+            t_new_entry -> metadata = MCValueRetain(kMCEmptyString);
+            t_new_entry -> paragraph_metadata = MCValueRetain(kMCEmptyString);
 			MCNameClone(kMCEmptyName, t_new_entry -> hyperlink);
 		}
 		
@@ -136,8 +136,8 @@ RTFStatus RTFState::Restore(void)
 		t_entry = m_entries;
 		m_entries = t_entry -> previous;
 		
-		MCNameDelete(t_entry -> metadata);
-		MCNameDelete(t_entry -> paragraph_metadata);
+        MCValueRelease(t_entry -> metadata);
+        MCValueRelease(t_entry -> paragraph_metadata);
 		MCNameDelete(t_entry -> hyperlink);
 
 		delete t_entry;

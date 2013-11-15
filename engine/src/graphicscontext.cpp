@@ -951,30 +951,19 @@ void MCGraphicsContext::drawlink(MCStringRef link, const MCRectangle& region)
 
 void MCGraphicsContext::drawtext(int2 x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image)
 {
-	// MW-2013-10-29: [[ Bug 11338 ]] If 'image' is true, then render the background
-	//   rect.
-	if (image)
-	{
-		int32_t t_width;
-		t_width = MCFontMeasureText(p_font, p_string);
-		
-		MCGContextSave(m_gcontext);
-		setforeground(m_background);
-		fillrect(MCU_make_rect(x, y - MCFontGetAscent(p_font), t_width, MCFontGetAscent(p_font) + MCFontGetDescent(p_font)));
-		MCGContextRestore(m_gcontext);
-	}
-		
-	MCFontDrawText(m_gcontext, x, y, p_string, p_font);
+    MCRange t_range;
+    t_range = MCRangeMake(0, MCStringGetLength(p_string));
+    drawtext_substring(x, y, p_string, t_range, p_font, image);
 }	
 
-void MCGraphicsContext::drawtext_legacy(int2 x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_is_unicode)
+void MCGraphicsContext::drawtext_substring(int2 x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean p_image)
 {
-	// MW-2013-10-29: [[ Bug 11338 ]] If 'image' is true, then render the background
+    // MW-2013-10-29: [[ Bug 11338 ]] If 'image' is true, then render the background
 	//   rect.
-	if (image)
+	if (p_image)
 	{
 		int32_t t_width;
-		t_width = MCFontMeasureText(p_font, s, length, p_is_unicode);
+		t_width = MCFontMeasureTextSubstring(p_font, p_string, p_range);
 		
 		MCGContextSave(m_gcontext);
 		setforeground(m_background);
@@ -982,7 +971,7 @@ void MCGraphicsContext::drawtext_legacy(int2 x, int2 y, const char *s, uint2 len
 		MCGContextRestore(m_gcontext);
 	}
     
-	MCFontDrawText(m_gcontext, x, y, s, length, p_font, p_is_unicode);
+	MCFontDrawTextSubstring(m_gcontext, x, y, p_string, p_range, p_font);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
