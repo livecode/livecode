@@ -917,7 +917,7 @@ bool MCXTransferStore::Convert_MIME_to_REV ( MCDataRef p_input, MCMIMEtype * p_M
 bool ConvertUnicodeToStyled ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output ) 
 {
     MCAutoDataRef t_unicode;
-    if (!MCU_multibytetounicode(p_input, &t_unicode))
+    if (!MCU_multibytetounicode(p_input, LCH_UTF8, &t_unicode))
 		return false;
 
 	return MCConvertUnicodeToStyledText(*t_unicode, r_output);
@@ -929,10 +929,10 @@ bool ConvertStyledToUnicode ( MCDataRef p_input, MCTransferType p_type, MCDataRe
 {
 	// Convert from Styles to UTF16
 	MCAutoDataRef t_unicode;
-	if (!MCConvertStyledTextToUnicode(p_input, &t_unicode))
+    if (!MCConvertStyledTextToUnicode(p_input, &t_unicode))
 		return false;
 
-    return MCU_unicodetomultibyte(*t_unicode, r_output);
+    return MCU_unicodetomultibyte(*t_unicode, LCH_UTF8, r_output);
 }
 
 
@@ -940,13 +940,13 @@ bool ConvertStyledToUnicode ( MCDataRef p_input, MCTransferType p_type, MCDataRe
 // Convert from UTF8 to TRANSFER_TYPE_TEXT
 bool ConvertUnicodeToText ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output )
 {
-    return MCU_multibytetounicode(p_input, r_output);
+    return MCU_multibytetounicode(p_input, LCH_UTF8, r_output);
 }
 
 // Convert from TRANSFER_TYPE_TEXT to UTF8
 bool ConvertTextToUnicode (MCDataRef p_input, MCTransferType p_type, MCDataRef& r_output)
 {
-    return MCU_unicodetomultibyte(p_input, r_output);
+    return MCU_unicodetomultibyte(p_input, LCH_UTF8, r_output);
 }
 
 bool ConvertStyled_rev_to_HTML ( MCDataRef p_input, MCTransferType p_type, MCDataRef& r_output ) 

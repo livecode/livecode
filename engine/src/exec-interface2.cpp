@@ -374,7 +374,7 @@ void MCInterfaceNamedColorFormat(MCExecContext& ctxt, const MCInterfaceNamedColo
 	ctxt . Throw();
 }
 
-static void MCInterfaceNamedColorInit(MCExecContext& ctxt, MCInterfaceNamedColor& r_output)
+void MCInterfaceNamedColorInit(MCExecContext& ctxt, MCInterfaceNamedColor& r_output)
 {
 	MCMemoryClear(&r_output, sizeof(MCInterfaceNamedColor));
 }
@@ -384,14 +384,14 @@ void MCInterfaceNamedColorFree(MCExecContext& ctxt, MCInterfaceNamedColor& p_inp
 	MCValueRelease(p_input . name);
 }
 
-static void MCInterfaceNamedColorCopy(MCExecContext& ctxt, const MCInterfaceNamedColor& p_source, MCInterfaceNamedColor& r_target)
+void MCInterfaceNamedColorCopy(MCExecContext& ctxt, const MCInterfaceNamedColor& p_source, MCInterfaceNamedColor& r_target)
 {
 	r_target . color = p_source . color;
 	if (p_source . name != nil)
 		r_target . name = (MCStringRef)MCValueRetain(p_source . name);
 }
 
-static bool MCInterfaceNamedColorIsEqualTo(const MCInterfaceNamedColor& p_left, const MCInterfaceNamedColor& p_right)
+bool MCInterfaceNamedColorIsEqualTo(const MCInterfaceNamedColor& p_left, const MCInterfaceNamedColor& p_right)
 {
 	if (p_left . name != nil && p_right . name != nil)
 		return MCStringIsEqualTo(p_left . name, p_right . name, kMCStringOptionCompareCaseless);
@@ -3347,11 +3347,10 @@ void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Function
     // MW-2012-12-13: [[ Bug 10592 ]] If wholechunk is False then we don't expand
     //   line chunks to include the CR at the end.
     
-    int4 start, end;
-    
+    findex_t start, end;
     start = r_mark . start;
     end = r_mark . finish;
-    
+
 	Boolean wholeline = True;
 	Boolean wholeword = True;
 	switch (p_function)

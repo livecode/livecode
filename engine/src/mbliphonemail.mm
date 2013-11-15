@@ -285,7 +285,9 @@ static NSString *mcstringref_to_nsstring(MCStringRef p_string, bool p_unicode)
 {
 	if (p_unicode)
 		return [NSString stringWithCharacters: MCStringGetCharPtr(p_string) length: MCStringGetLength(p_string)];
-	return [[[NSString alloc] initWithBytes: MCStringGetCString(p_string) length: MCStringGetLength(p_string) encoding: NSMacOSRomanStringEncoding] autorelease];
+    MCAutoPointer<char> t_string;
+    /* UNCHECKED */ MCStringConvertToCString(p_string, &t_string);
+	return [[[NSString alloc] initWithBytes: *t_string length: MCStringGetLength(p_string) encoding: NSMacOSRomanStringEncoding] autorelease];
 }
 
 static NSArray *mcstringref_to_nsarray(MCStringRef p_string, NSCharacterSet* p_separator_set)
@@ -295,7 +297,9 @@ static NSArray *mcstringref_to_nsarray(MCStringRef p_string, NSCharacterSet* p_s
 
 static NSData *mcstringref_to_nsdata(MCStringRef p_string)
 {
-	return [[NSData alloc] initWithBytes: MCStringGetCString(p_string) length: MCStringGetLength(p_string)];
+    MCAutoPointer<char> t_string;
+    /* UNCHECKED */ MCStringConvertToCString(p_string, &t_string);
+	return [[NSData alloc] initWithBytes: *t_string length: MCStringGetLength(p_string)];
 }
 
 #ifdef /* array_to_attachmentIphone */ LEGACY_EXEC

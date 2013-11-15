@@ -143,11 +143,6 @@ public:
 
 	bool OnBlock(MCBlock *p_block)
 	{
-		// MW-2012-02-17: [[ SplitTextAttrs ]] If the block has no font attrs and is
-		//   not unicode, there's no font to register.
-		if (!p_block -> hasfontattrs() && !p_block -> hasunicode())
-			return true;
-
 		// MW-2012-02-17: [[ SplitTextAttrs ]] Fetch each of the font attrs from the block in
 		//   turn. Falling back on the parent attrs we have if necessary.
 		MCNameRef t_textfont;
@@ -160,7 +155,7 @@ public:
 		if (!p_block -> gettextstyle(t_textstyle))
 			t_textstyle = m_current_textstyle;
 
-		MCLogicalFontTableLookupEntry(t_textfont, t_textstyle, t_textsize, p_block -> hasunicode(), true);
+		MCLogicalFontTableLookupEntry(t_textfont, t_textstyle, t_textsize, true, true);
 		
 		return true;
 	}

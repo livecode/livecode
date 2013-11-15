@@ -466,7 +466,7 @@ void MCPasteboardProcessTextToClipboard(MCExecContext &ctxt, MCObjectChunkPtr p_
     MCField *t_field;
     t_field = static_cast<MCField *>(p_target . object);
     
-    integer_t t_si, t_ei;
+    findex_t t_si, t_ei;
     t_si = 0;
     t_ei = INT32_MAX;
     t_field -> resolvechars(p_target . part_id, t_si, t_ei, p_target . mark . start, p_target . mark . finish - p_target . mark . start);

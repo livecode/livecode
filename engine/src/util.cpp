@@ -2643,108 +2643,38 @@ void MCU_unicodetomultibyte(const char *p_ucstring, uint4 p_uclength,
 
 //////////
 
-bool MCU_multibytetounicode(MCDataRef p_input, MCDataRef &r_output)
+bool MCU_multibytetounicode(MCDataRef p_input, uinteger_t p_charset, MCDataRef &r_output)
 {
-    MCAutoStringRef t_string;
-
-    if (!MCStringDecode(p_input, kMCStringEncodingUTF8, false, &t_string))
-        return false;
-
-    if (!MCStringEncode(*t_string, kMCStringEncodingUTF16, false, r_output))
-        return false;
-
-	return true;
+	MCAutoArray<byte_t> t_buffer;
+	uint4 t_mb_length, t_uc_length;
+	const char *t_mb = (const char*)MCDataGetBytePtr(p_input);
+	t_mb_length = MCDataGetLength(p_input);
+	
+	// How much storage is required for this conversion?
+	MCU_multibytetounicode(t_mb, t_mb_length, NULL, 0, t_uc_length, p_charset);
+	t_buffer.Resize(t_uc_length);
+	
+	// Convert the data
+	MCU_multibytetounicode(t_mb, t_mb_length, (char*)t_buffer.Ptr(), t_uc_length, t_uc_length, p_charset);
+	
+	return MCDataCreateWithBytes(t_buffer.Ptr(), t_uc_length, r_output);
 }
 
-bool MCU_multibytetounicode(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_unicode)
+bool MCU_unicodetomultibyte(MCDataRef p_input, uinteger_t p_charset, MCDataRef &r_output)
 {
-	const char *startptr = (const char*)p_src . getstring();
-	uint4 length = p_src . getlength();
-	uint4 dlength;
-	MCU_multibytetounicode(startptr, length, NULL, 0, dlength, p_charset);
-
-	MCAutoNativeCharArray t_buffer;
-	if (!t_buffer.New(dlength))
-		return false;
-
-	char *dptr = (char*)t_buffer.Chars();
-	MCU_multibytetounicode(startptr, length, dptr, dlength, dlength, p_charset);
-
-	return t_buffer.CreateStringAndRelease(r_unicode);
-}
-
-bool MCU_multibytetounicode(MCStringRef p_src, uinteger_t p_charset, MCStringRef& r_unicode)
-{
-	return MCU_multibytetounicode(MCStringGetOldString(p_src), p_charset, r_unicode);
-}
-
-bool MCU_unicodetomultibyte(MCDataRef p_input, MCDataRef& r_output)
-{
-    MCAutoStringRef t_string;
-
-    if (!MCStringDecode(p_input, kMCStringEncodingUTF16, false, &t_string))
-        return false;
-
-    if (!MCStringEncode(*t_string, kMCStringEncodingUTF8, false, r_output))
-        return false;
-
-	return true;
-}
-
-bool MCU_unicodetomultibyte(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_multibyte)
-{
-	const char *startptr = (const char*)p_src . getstring();
-	uint4 length = p_src . getlength();
-	uint4 dlength;
-	MCU_unicodetomultibyte(startptr, length, NULL, 0, dlength, p_charset);
-
-	MCAutoNativeCharArray t_buffer;
-	if (!t_buffer.New(dlength))
-		return false;
-
-	char *dptr = (char*)t_buffer.Chars();
-	MCU_unicodetomultibyte(startptr, length, dptr, dlength, dlength, p_charset);
-
-	return t_buffer.CreateStringAndRelease(r_multibyte);
-}
-
-bool MCU_unicodetomultibyte(MCStringRef p_src, uinteger_t p_charset, MCStringRef& r_multibyte)
-{
-	return MCU_unicodetomultibyte(MCStringGetOldString(p_src), p_charset, r_multibyte);
-}
-
-bool MCU_utf8tonative(MCStringRef p_utf8, MCStringRef& r_native)
-{
-	MCAutoStringRef t_unicode;
-	return MCU_multibytetounicode(p_utf8, LCH_UTF8, &t_unicode) && MCU_unicodetomultibyte(*t_unicode, LCH_ENGLISH, r_native);
-}
-
-bool MCU_nativetoutf8(MCStringRef p_native, MCStringRef& r_utf8)
-{
-	MCAutoStringRef t_unicode;
-	return MCU_multibytetounicode(p_native, LCH_ENGLISH, &t_unicode) && MCU_unicodetomultibyte(*t_unicode, LCH_UTF8, r_utf8);
-}
-
-
-bool MCU_mapunicode(const MCString& p_src, bool is_unicode, bool to_unicode, MCStringRef& r_string)
-{
-	if (to_unicode == is_unicode)
-	{
-		if (MCStringCreateWithNativeChars((const char_t *)p_src . getstring(), p_src . getlength(), r_string))
-			return true;
-	}
-	else if (to_unicode)
-	{
-		if (MCU_multibytetounicode(p_src, LCH_ROMAN, r_string))
-			return true;
-	}
-	else
-	{
-		if (MCU_unicodetomultibyte(p_src, LCH_ROMAN, r_string))
-			return true;
-	}
-
-	return false;
+	MCAutoArray<byte_t> t_buffer;
+	uint4 t_mb_length, t_uc_length;
+	const char *t_uc = (const char*)MCDataGetBytePtr(p_input);
+	t_uc_length = MCDataGetLength(p_input);
+	
+	// How much storage is required for this conversion?
+	MCU_unicodetomultibyte(t_uc, t_uc_length, NULL, 0, t_mb_length, p_charset);
+	t_buffer.Resize(t_mb_length);
+	
+	// Convert the data
+	MCU_unicodetomultibyte(t_uc, t_uc_length, (char*)t_buffer.Ptr(), t_mb_length, t_mb_length, p_charset);
+	
+	return MCDataCreateWithBytes(t_buffer.Ptr(), t_mb_length, r_output);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
