@@ -137,6 +137,8 @@ class MCParagraph : public MCDLlist
 	uint2 startindex, endindex, originalindex;
 	uint2 opened;
 	uint1 state;
+	// MP-2013-09-02: [[ FasterField ]] If true, it means the paragraph needs layout.
+	bool needs_layout : 1;
 	// MW-2012-01-25: [[ ParaStyles ]] This paragraphs collection of attrs.
 	MCParagraphAttrs *attrs;
 
@@ -587,7 +589,7 @@ public:
 	void adjustrectsfortable(MCRectangle& x_inner_rect, MCRectangle& x_outer_rect);
 
 	// Force the paragraph to re-flow itself depending on its setting of dontWrap.
-	void layout(void);
+	void layout(bool p_force);
 	
 	// MW-2012-01-27: [[ UnicodeChunks ]] Returns the content of the field in a native
 	//   form such that indices match that of the original content. If ASCII-only is

@@ -162,38 +162,21 @@ MCFontnode::MCFontnode(const MCString &fname, uint2 &size,
 	logfont.lfCharSet = DEFAULT_CHARSET;
 
 	//parse font and encoding
-	font->charset = 0;
-	font->unicode = False;
 	char *sptr = logfont.lfFaceName;
 	if (sptr = strchr(logfont.lfFaceName, ','))
 	{
 		*sptr = '\0';
 		sptr++;
-		MCScreenDC *pms = (MCScreenDC *)MCscreen;
-		// MW-2012-02-01: [[ Bug 7777 ]] If the charset is a unicode one, then
-		//   force it to LCH_UNICODE.
-		uint1 t_charset;
-		t_charset = MCU_languagetocharset(sptr);
-		if (t_charset > LCH_ROMAN)
-			font->charset = LCH_UNICODE;
-		else
-			font->charset = LCH_ENGLISH;
-		if (font->charset)
-			font->unicode = True;
 	}
 	HDC hdc;
-	if (printer)
-	{
-		hdc = static_cast<MCWindowsPrinter *>(MCsystemprinter) -> GetDC();
-		logfont.lfHeight = -size;
-	}
-	else
-	{
-		MCScreenDC *pms = (MCScreenDC *)MCscreen;
-		hdc = pms->getsrchdc();
-		logfont.lfHeight = MulDiv(MulDiv(size, 7, 8),
-		                          SCREEN_WIDTH_FOR_FONT_USE, 72);
-	}
+
+	// MW-2013-11-07: [[ Bug 11393 ]] 'printer' in the fontstruct now means use ideal
+	//   metrics for rendering and measuring.
+	MCScreenDC *pms = (MCScreenDC *)MCscreen;
+	hdc = pms->getsrchdc();
+	logfont.lfHeight = MulDiv(MulDiv(size, 7, 8),
+	                          SCREEN_WIDTH_FOR_FONT_USE, 72);
+
 	logfont.lfWeight = weighttable[MCF_getweightint(style)];
 	if (style & FA_ITALIC)
 		logfont.lfItalic = TRUE;
@@ -229,43 +212,10 @@ MCFontnode::MCFontnode(const MCString &fname, uint2 &size,
 	TEXTMETRICA tm;
 	GetTextMetricsA(hdc, &tm);
 	font->fid = (MCSysFontHandle)newfont;
+	font->size = size;
 	font->ascent = MulDiv(tm.tmAscent, 15, 16);
 	font->descent = tm.tmDescent;
 	font->printer = printer;
-	if (!printer)
-	{
-		INT table[256];
-		uint2 i;
-		if (GetCharWidth32A(hdc, 0, 255, table))
-		{
-			for (i = 0 ; i < 256 ; i++)
-			{
-				font->widths[i] = (uint1)table[i];
-				
-				// MW-2012-09-21: [[ Bug 3884 ]] If a single char width > 255 then mark
-				//   the font as wide.
-				if (table[i] > 255)
-					font->wide = True;
-			}
-		}
-		else
-		{// must be Window 95
-			MCScreenDC *pms = (MCScreenDC *)MCscreen;
-			for (i = 0 ; i < 256 ; i++)
-			{
-				uint2 c = i;
-				SIZE tsize;
-				GetTextExtentPoint32A(hdc, (LPCSTR)&c, (int)1, &tsize);
-				font->widths[i] = (uint1)tsize.cx;
-				
-				// MW-2012-09-21: [[ Bug 3884 ]] If a single char width > 255 then mark
-				//   the font as wide.
-				if (tsize.cx > 255)
-					font->wide = True;
-					
-			}
-		}
-	}
 }
 
 MCFontnode::~MCFontnode()
@@ -409,9 +359,12 @@ void MCFontlist::getfontnames(MCExecPoint &ep, char *type)
 	nfonts = 0;
 	MCScreenDC *pms = (MCScreenDC *)MCscreen;
 	HDC hdc;
+#ifdef _DESKTOP
+	// MM-2013-09-13:: [[ RefactorGraphics ]] Tweak to get things compiling for server.
 	if (!MCU_strncasecmp(type, "Printer", strlen(type) + 1))
 		hdc = static_cast<MCWindowsPrinter *>(MCsystemprinter) -> GetDC();
 	else
+#endif
 		hdc = pms->getsrchdc();
 	EnumFontFamiliesA(hdc, NULL, (FONTENUMPROCA)MyFontFamProc, FQ_NAMES);
 }

@@ -508,6 +508,8 @@ inline compare_t MCCompare(uint64_t a, uint64_t b) { return a < b ? -1 : (a > b 
 
 inline bool MCIsPowerOfTwo(uint32_t x) { return (x & (x - 1)) == 0; }
 
+inline float MCClamp(float value, float min, float max) {return MCMax(min, MCMin(max, value));}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 inline uint32_t MCByteSwappedToHost32(uint32_t x)

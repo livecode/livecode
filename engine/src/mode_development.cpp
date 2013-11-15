@@ -59,6 +59,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "revbuild.h"
 #include "parentscript.h"
 
+#include "resolution.h"
 #include "group.h"
 
 #if defined(_WINDOWS_DESKTOP)

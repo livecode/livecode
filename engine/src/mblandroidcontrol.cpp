@@ -39,6 +39,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblandroidutil.h"
 #include "mblandroidjava.h"
 
+#include "resolution.h"
+
 MCAndroidControl::MCAndroidControl(void)
 {
     m_view = nil;
@@ -108,6 +110,16 @@ Exec_stat MCAndroidControl::Set(MCNativeControlProperty p_property, MCExecPoint 
             int16_t i1, i2, i3, i4;
             if (MCU_stoi2x4(ep.getsvalue(), i1, i2, i3, i4))
             {
+                // MM-2013-09-30: [[ Bug 11227 ]] Make sure we take into account device scale when positioning native controls.
+                //   We take into account the scale at this point as it's most convenient. This way, we assume that the on the Java
+                //   side everything is in pixels. A better abtraction may be needed going forward (if there is to be more drawing on the java side).
+                MCGFloat t_device_scale;
+                t_device_scale = MCResGetDeviceScale();
+                i1 = (int16_t) i1 * t_device_scale;
+                i2 = (int16_t) i2 * t_device_scale;
+                i3 = (int16_t) i3 * t_device_scale;
+                i4 = (int16_t) i4 * t_device_scale;
+
                 if (m_view != nil)
                     MCAndroidObjectRemoteCall(m_view, "setRect", "viiii", nil, i1, i2, i3, i4);
             }
@@ -191,6 +203,14 @@ Exec_stat MCAndroidControl::Get(MCNativeControlProperty p_property, MCExecPoint 
             {
                 int16_t i1, i2, i3, i4;
                 GetViewRect(m_view, i1, i2, i3, i4);
+                
+                // MM-2013-09-30: [[ Bug 11227 ]] Make sure we take into account device scale when positioning native controls.
+                MCGFloat t_device_scale;
+                t_device_scale = MCResGetDeviceScale();
+                i1 = (int16_t) i1 / t_device_scale;
+                i2 = (int16_t) i2 / t_device_scale;
+                i3 = (int16_t) i3 / t_device_scale;
+                i4 = (int16_t) i4 / t_device_scale;
                 
                 MCExecPointSetRect(ep, i1, i2, i3, i4);
             }

@@ -21,6 +21,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_FONT__
 #define __MC_FONT__
 
+#include "graphics.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct MCFont *MCFontRef;
@@ -49,11 +51,16 @@ bool MCFontHasPrinterMetrics(MCFontRef font);
 int32_t MCFontGetAscent(MCFontRef font);
 int32_t MCFontGetDescent(MCFontRef font);
 
+typedef void (*MCFontBreakTextCallback)(MCFontRef font, const char *start, uindex_t length, bool is_unicode, void *ctxt);
+void MCFontBreakText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode, MCFontBreakTextCallback callback, void *callback_data);
 int32_t MCFontMeasureText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode);
-void MCFontDrawText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode, MCContext *context, int32_t x, int32_t y, bool image);
+void MCFontDrawText(MCGContextRef ctxt, int32_t x, int32_t y, const char *p_chars, uint32_t p_char_count, MCFontRef p_font, bool is_unicode);
 
 MCFontStyle MCFontStyleFromTextStyle(uint2 text_style);
 uint16_t MCFontStyleToTextStyle(MCFontStyle font_style);
+
+/* LEGACY */
+MCFontStruct* MCFontGetFontStruct(MCFontRef font);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -82,6 +89,23 @@ uint2 MCLogicalFontTableMap(MCNameRef p_textfont, uint2 p_textstyle, uint2 p_tex
 
 // Lookup the given index in the logical font table, and return its attrs.
 void MCLogicalFontTableLookup(uint2 index, MCNameRef& r_textfont, uint2& r_textstyle, uint2& r_textsize, bool& r_unicode);
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef struct MCLoadedFont *MCLoadedFontRef;
+
+// Attempt to load the given file as a font. If globally is true, the font is
+// loaded for all applications, otherwise just for the current one. If the
+// font is already loaded and the globally flag has changed an attempt is first
+// made to unload it before loading it again.
+Exec_stat MCFontLoad(MCExecPoint& ep, const char *p_path, bool p_globally);
+
+// Attempt to unload the given file as a font.
+Exec_stat MCFontUnload(MCExecPoint& ep, const char *p_path);
+
+// List all currently loaded font files (loaded via MCFontLoad).
+Exec_stat MCFontListLoaded(MCExecPoint& ep);
 
 ////////////////////////////////////////////////////////////////////////////////
 

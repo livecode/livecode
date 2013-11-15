@@ -155,6 +155,7 @@ static uint1 h2[256] =
 
 static uint1 patbytes[8] = {0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55};
 
+#ifdef LIBGRAPHICS_BROKEN
 static MCBitmap *convert_bitmap(uint1 *sptr, uint2 width, uint2 height)
 {
 	uint1 xorcode = 0x89;
@@ -365,6 +366,7 @@ static MCBitmap *convert_bitmap(uint1 *sptr, uint2 width, uint2 height)
 	}
 	return newdata;
 }
+#endif
 
 static const char *convert_font(char *sptr)
 {
@@ -1088,8 +1090,10 @@ MCControl *MCHcbutton::build(MCHcstak *hcsptr, MCStack *sptr)
 MCHcbmap::MCHcbmap()
 {
 	name = NULL;
+#ifdef LIBGRAPHICS_BROKEN
 	mask = NULL;
 	data = NULL;
+#endif
 	visible = True;
 	xhot = yhot = 1;
 }
@@ -1097,10 +1101,12 @@ MCHcbmap::MCHcbmap()
 MCHcbmap::~MCHcbmap()
 {
 	delete name;
+#ifdef LIBGRAPHICS_BROKEN
 	if (data != NULL)
 		MCscreen->destroyimage(data);
 	if (mask != NULL)
 		MCscreen->destroyimage(mask);
+#endif
 }
 
 void MCHcbmap::setvisible(Boolean newvis)
@@ -1121,9 +1127,11 @@ void MCHcbmap::icon(uint4 inid, char *inname, char *sptr)
 		icony += 32;
 	}
 	rect.width = rect.height = 32;
+#ifdef LIBGRAPHICS_BROKEN
 	data = MCscreen->createimage(1, rect.width, rect.height,
 	                             False, 0, False, False);
 	memcpy(data->data, sptr, 128);
+#endif
 }
 
 void MCHcbmap::cursor(uint4 inid, char *inname, char *sptr)
@@ -1140,6 +1148,7 @@ void MCHcbmap::cursor(uint4 inid, char *inname, char *sptr)
 	}
 	rect.width = rect.height = 16;
 	mrect = rect;
+#ifdef LIBGRAPHICS_BROKEN
 	data = MCscreen->createimage(1, rect.width, rect.height,
 	                             False, 0, False, False);
 	data->bytes_per_line = 2;
@@ -1148,6 +1157,7 @@ void MCHcbmap::cursor(uint4 inid, char *inname, char *sptr)
 	                             True, 0, False, False);
 	mask->bytes_per_line = 2;
 	memcpy(mask->data, &sptr[32], 32);
+#endif
 	xhot = get_uint2(&sptr[64]);
 	yhot = get_uint2(&sptr[66]);
 }
@@ -1186,17 +1196,20 @@ IO_stat MCHcbmap::parse(char *sptr)
 		masksize = swap_uint4(&uint4ptr[14]);
 		offset = 64;
 	}
+#ifdef LIBGRAPHICS_BROKEN
 	if (masksize != 0)
 		mask = convert_bitmap((uint1 *)&sptr[offset], mrect.width, mrect.height);
 	offset += masksize;
 	if (rect.width != 0 && rect.height != 0)
 		data = convert_bitmap((uint1 *)&sptr[offset], rect.width, rect.height);
+#endif
 	return IO_NORMAL;
 }
 
 void MCImageBitmapApplyPlane(MCImageBitmap *p_dst, uint8_t *p_src, uindex_t p_src_stride, uint32_t p_value);
 MCControl *MCHcbmap::build()
 {
+#ifdef LIBGRAPHICS_BROKEN
 	if (data == NULL)
 		return NULL;
 	MCImage *iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
@@ -1286,6 +1299,9 @@ MCControl *MCHcbmap::build()
 	iptr->xhot = xhot;
 	iptr->yhot = yhot;
 	return iptr;
+#else
+	return nil;
+#endif
 }
 
 MCHccard::MCHccard()

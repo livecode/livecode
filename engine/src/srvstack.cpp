@@ -40,6 +40,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "visual.h"
 
 #include "globals.h"
+#include "graphics_util.h"
+
+// MM-2013-03-06: [[ RefactorGraphics ]] Added to allow server engines to compile.
+MCGFloat MCResGetDeviceScale(void)
+{
+	return 1.0;
+}
 
 MCStack *MCStack::findstackd(Window w)
 {
@@ -90,12 +97,21 @@ void MCStack::realize(void)
 	start_externals();
 }
 
+void MCStack::setsizehints(void)
+{
+}
+
 void MCStack::sethints(void)
 {
 }
 
 void MCStack::destroywindowshape(void)
 {
+}
+
+MCRectangle MCStack::device_setgeom(const MCRectangle &p_rect)
+{
+	return MCRectangleMake(0,0,0,0);
 }
 
 void MCStack::setgeom(void)
@@ -126,7 +142,7 @@ void MCStack::updatemodifiedmark(void)
 {
 }
 
-void MCStack::updatewindow(MCRegionRef region)
+void MCStack::device_updatewindow(MCRegionRef region)
 {
 }
 
@@ -153,7 +169,8 @@ void MCStack::effectrect(const MCRectangle& p_rect, Boolean& r_abort)
 	}
 }
 
-MCRectangle MCStack::getwindowrect() const
+// MM-2013-03-06: [[ RefactorGraphics ]] Added to allow server engines to compile.
+MCRectangle MCStack::device_getwindowrect() const
 {
 	return rect;	
 }

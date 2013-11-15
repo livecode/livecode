@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "dispatch.h"
+#include "osspec.h"
 #include "image.h"
 #include "stack.h"
 #include "util.h"
@@ -36,6 +37,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "w32context.h"
 
 #include "mctheme.h"
+
+#include "graphicscontext.h"
+#include "graphics_util.h"
 
 MCScreenDC::MCScreenDC()
 {
@@ -123,80 +127,43 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 
 	return false;
 }
-
-MCContext *MCScreenDC::createcontext(Drawable p_drawable, MCBitmap *p_alpha)
+// TD-2013-07-01 [[ DynamicFonts ]]
+bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle)
 {
-	MCGDIContext *t_context;
-	t_context = MCGDIContext::create_with_bitmap((HBITMAP)p_drawable -> handle . pixmap, true);
-	t_context -> setexternalalpha(p_alpha);
-	return t_context;
+	bool t_success = true;
+    DWORD t_private = NULL;
+    
+    if (!p_globally)
+        t_private = FR_PRIVATE;
+    
+	if (t_success)
+		t_success = (MCS_exists(p_path, True) == True);
+	
+	if (t_success)
+		t_success = (AddFontResourceExA(p_path, t_private, 0) != 0);
+    
+	if (t_success && p_globally)
+		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+    
+	return t_success;
 }
 
-MCContext *MCScreenDC::createcontext(Drawable p_drawable, bool p_alpha, bool p_transient)
+
+bool MCScreenDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle)
 {
-	MCContext *t_context;
-
-	if (p_drawable -> type == DC_WINDOW)
-		t_context = MCGDIContext::create_with_window((HWND)p_drawable -> handle . window);
-	else
-		t_context = MCGDIContext::create_with_bitmap((HBITMAP)p_drawable -> handle . pixmap, p_transient);
-
-	return t_context;
-}
-
-MCContext *MCScreenDC::creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient)
-{
-	return MCGDIContext::create_with_parameters(p_width, p_height, p_alpha, p_transient);
-}
-
-void MCScreenDC::freecontext(MCContext *p_context)
-{
-	delete p_context;
-}
-
-int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override)
-{
-	if (len == 0)
-		return 0;
-
-	// MW-2012-09-21: [[ Bug 3884 ]] If the font is wide, measure using OS routine.
-	if (f->printer || f->unicode || f->charset || f->wide || p_unicode_override)
-	{
-		HDC hdc;
-		if (f->printer)
-			hdc = static_cast<MCWindowsPrinter *>(MCsystemprinter) -> GetDC();
-		else
-			hdc = f_src_dc;
-		HFONT oldfont = (HFONT)SelectObject(hdc, (HFONT)f->fid);
-		SIZE tsize;
-
-		if (f->unicode || p_unicode_override)
-		{
-			if ((long)s & 1)
-			{ // odd byte boundary, must be realigned
-				char *b = new char[len];
-				memcpy(b, s, len);
-				GetTextExtentPoint32W(hdc, (LPCWSTR)b,
-				                      (int)len >> 1, &tsize);
-				delete b;
-			}
-			else
-				GetTextExtentPoint32W(hdc, (LPCWSTR)s,
-				                      (int)len >> 1, &tsize);
-		}
-		else
-			GetTextExtentPoint32A(hdc, (LPCSTR)s, (int)len, &tsize);
-
-		SelectObject(hdc, oldfont);
-		return tsize.cx;
-	}
-	else
-	{
-		int4 iwidth = 0;
-		while (len--)
-			iwidth += f->widths[(uint1)*s++];
-		return iwidth;
-	}
+    bool t_success = true;
+    DWORD t_private = NULL;
+    
+    if (p_globally)
+        t_private = FR_PRIVATE;
+    
+    if (t_success)
+		t_success = (RemoveFontResourceExA(p_path, t_private, 0) != 0);
+    
+	if (t_success && p_globally)
+		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+    
+	return t_success;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -274,7 +241,7 @@ void MCScreenDC::listprinters(MCExecPoint& ep)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCStack *MCScreenDC::getstackatpoint(int32_t x, int32_t y)
+MCStack *MCScreenDC::device_getstackatpoint(int32_t x, int32_t y)
 {
 	POINT t_location;
 	t_location . x = x;
@@ -291,6 +258,14 @@ MCStack *MCScreenDC::getstackatpoint(int32_t x, int32_t y)
 	d . handle . window = (MCSysWindowHandle)t_window;
 		
 	return MCdispatcher -> findstackd(&d);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// IM-2013-08-08: [[ ResIndependence ]] Windows implementation currently returns 1.0
+MCGFloat MCResGetDeviceScale(void)
+{
+	return 1.0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

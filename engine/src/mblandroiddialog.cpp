@@ -368,7 +368,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doListPickerDone(JNIEnv *e
 {
     if (!p_done)
         s_dialog_result = kMCDialogResultCanceled;
-    else
+   else
     {
         s_selected_index = p_index;        
         s_dialog_result = kMCDialogResultOk;

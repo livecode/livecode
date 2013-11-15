@@ -20,14 +20,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	PARSEDEFS_H
 #define	PARSEDEFS_H
 
-// for regex
-#define PATTERN_CACHE_SIZE 20
-extern char *MCregexpatterns[];
-
-#define NSUBEXP  50
-typedef struct _regexp regexp;
-extern regexp *MCregexcache[];
-
 typedef struct _constant
 {
 	MCString name;
@@ -302,6 +294,7 @@ enum Export_format {
 	EX_RAW_BGRA,
 	EX_RAW_RGB,
 	EX_RAW_BGR,
+	EX_RAW_BGRX,
 	EX_RAW_GRAY,
 	EX_RAW_INDEXED,
 	EX_BMP,
@@ -628,6 +621,10 @@ enum Functions {
 	
 	// MW-2013-05-08: [[ Uuid ]] New function for generating uuids.
 	F_UUID,
+    
+    // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
+    F_MEASURE_TEXT,
+    F_MEASURE_UNICODE_TEXT,
 };
 
 enum Handler_type {
@@ -721,6 +718,13 @@ enum Mark_constants {
     MC_CARDS,
     MC_FINDING,
     MC_WHERE
+};
+
+// JS-2013-07-01: [[ EnhancedFilter ]] Tags for the type of pattern matcher to use.
+enum Match_mode {
+    MA_UNDEFINED,
+    MA_WILDCARD,
+    MA_REGEX
 };
 
 enum Move_mode {
@@ -868,7 +872,7 @@ enum Preposition_type {
 	PT_CONTENT,
 	PT_MARKUP,
 	PT_BINARY,
-	PT_COOKIE
+	PT_COOKIE,
 };
 
 enum Print_mode {
@@ -1118,6 +1122,9 @@ enum Properties {
     P_ADDRESS,
     P_STACKS_IN_USE,
 	P_NETWORK_INTERFACES,
+    
+  	// TD-2013-06-20: [[ DynamicFonts ]] global property for list of font files
+    P_FONTFILES_IN_USE,
 	
     // window properties
     P_NAME,
@@ -1215,6 +1222,8 @@ enum Properties {
 	P_REMOTEABLE, // RUNTIME only
 	P_STACK_URL, // RUNTIME only
 	P_FULLSCREEN, 
+	// IM-2013-09-23: [[ FullscreenMode ]] Property tag for the fullscreenMode
+	P_FULLSCREENMODE,
     P_FILE_NAME,
     P_SAVE_COMPRESSED,
     P_USER_LEVEL,
@@ -1581,6 +1590,9 @@ enum Properties {
     P_CONTROL_NAMES,
 	P_CHILD_CONTROL_IDS,
     P_CHILD_CONTROL_NAMES,
+
+	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
+	P_COLOR_DIALOG_COLORS,
 	
 	// ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,
@@ -1772,6 +1784,23 @@ enum Sugar_constants {
 	
 	// MERG-2013-06-24: [[ IsAnAsciiString ]] Tag for 'string'.
     SG_STRING,
+	
+	// JS-2013-07-01: [[ EnhancedFilter ]] Tag for 'pattern'.
+    SG_PATTERN,
+	// JS-2013-07-01: [[ EnhancedFilter ]] Tag for 'regex'.
+    SG_REGEX,
+	// JS-2013-07-01: [[ EnhancedFilter ]] Tag for 'wildcard'.
+    SG_WILDCARD,
+	// JS-2013-07-01: [[ EnhancedFilter ]] Tag for 'matching'.
+	SG_MATCHING,
+    
+    // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+    SG_RECURSIVELY,
+    
+    // TD-2013-06-14: [[ DynamicFonts ]] start using font theFont [globally]
+    SG_FONT,
+    SG_GLOBALLY,
+    SG_FILE
 };
 
 enum Statements {
@@ -1873,6 +1902,8 @@ enum Statements {
     S_REQUEST,
 	S_REQUIRE,
     S_RESET,
+    // MERG-2013-09-23: [[ ResolveImage ]] resolve image [id] relative to <object>
+	S_RESOLVE,
     S_RETURN,
     S_REVERT,
 	S_REV_RELICENSE, // DEVELOPMENT only

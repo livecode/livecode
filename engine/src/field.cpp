@@ -313,7 +313,7 @@ void MCField::open()
 	else
 	{
 		openparagraphs();
-		recompute();
+		do_recompute(false);
 		if (vscrollbar != NULL)
 		{
 			MCCdata *scrollptr = getcarddata(scrolls, parentid, False);
@@ -1166,18 +1166,28 @@ uint2 MCField::gettransient() const
 
 void MCField::setrect(const MCRectangle &nrect)
 {
-	rect = nrect;
+	// The contents only need to be laid out if the size changes. In particular,
+    // it is the width that is important; the height does not affect layout.
+    bool t_resized = false;
+    if (nrect.width != rect.width)
+        t_resized = true;
+    
+    rect = nrect;
 	setsbrects();
 
 	// MW-2007-07-05: [[ Bug 2435 ]] - 'Caret' doesn't move with the field when its rect changes
 	if (cursoron)
 		replacecursor(False, False);
+    
+    if (t_resized)
+        do_recompute(true);
 }
 
 Exec_stat MCField::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	switch (which)
 	{
+#ifdef /* MCField::getprop */ LEGACY_EXEC
 	case P_AUTO_TAB:
 		ep.setboolean(getflag(F_AUTO_TAB));
 		break;
@@ -1418,9 +1428,10 @@ Exec_stat MCField::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 		return gettextatts(parid, P_FLAGGED_RANGES, ep, nil, False, 0, INT32_MAX, false);
 	// MW-2012-02-22: [[ IntrinsicUnicode ]] Fetch the encoding property of the field, this is
 	//   actually the encoding of the content.
+	// MW-2013-08-27: [[ Bug 11129 ]] Use INT32_MAX as upper limit.
 	case P_ENCODING:
-		// MW-2013-08-27: [[ Bug 11129 ]] Use INT32_MAX as upper limit.
 		return gettextatts(parid, P_ENCODING, ep, nil, False, 0, INT32_MAX, false);
+#endif /* MCField::getprop */ 
 	default:
 		return MCControl::getprop(parid, which, ep, effective);
 	}
@@ -1503,6 +1514,7 @@ Exec_stat MCField::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 	MCExecPoint *oldep;
 	switch (p)
 	{
+#ifdef /* MCField::setprop */ LEGACY_EXEC
 	case P_AUTO_TAB:
 		if (!MCU_matchflags(data, flags, F_AUTO_TAB, dummy))
 		{
@@ -1955,12 +1967,13 @@ Exec_stat MCField::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 	// MW-2013-08-27: [[ Bug 11129 ]] Use INT32_MAX as upper limit.
 	case P_FLAGGED_RANGES:
 		return settextatts(parid, P_FLAGGED_RANGES, ep, nil, 0, INT32_MAX, false);
+#endif /* MCField::setprop */
 	default:
 		return MCControl::setprop(parid, p, ep, effective);
 	}
 	if (dirty && opened)
 	{
-		recompute();
+		do_recompute(reset);
 		if (reset)
 			resetparagraphs();
 		hscroll(savex - textx, False);
@@ -2102,7 +2115,7 @@ void MCField::undo(Ustruct *us)
 					pgptr = pgptr->next();
 					pgptr->setselectionindex(0, 0, False, False);
 					flags &= ~F_VISIBLE;
-					recompute();
+					do_recompute(true);
 					focusedparagraph = pgptr;
 					updateparagraph(True, False);
 					flags |= F_VISIBLE;
@@ -2242,7 +2255,7 @@ void MCField::replacedata(MCCdata *&data, uint4 newid)
 	{
 		paragraphs = fdata->getparagraphs();
 		openparagraphs();
-		recompute();
+		do_recompute(true);
 
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
@@ -2309,7 +2322,7 @@ void MCField::resetfontindex(MCStack *oldstack)
 	if (opened)
 	{
 		resetparagraphs();
-		recompute();
+		do_recompute(true);
 	}
 }
 
@@ -2563,6 +2576,11 @@ void MCField::setsbrects()
 
 void MCField::recompute()
 {
+    do_recompute(false);
+}
+
+void MCField::do_recompute(bool p_force_layout)
+{
 	if (!opened)
 		return;
 
@@ -2576,7 +2594,7 @@ void MCField::recompute()
 	{
 		// MW-2012-01-25: [[ ParaStyles ]] Whether to flow or noflow is decided on a
 		//   per-paragraph basis.
-		pgptr -> layout();
+		pgptr -> layout(p_force_layout);
 
 		uint2 ascent, descent, width;
 		pgptr->getmaxline(width, ascent, descent);
@@ -2868,12 +2886,12 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 	if (state & CS_SIZE)
 	{
 		resetparagraphs();
-		recompute();
+		do_recompute(true);
 	}
 	else if (state & CS_SELECTED && (texty != 0 || textx != 0))
 	{
 		resetparagraphs();
-		recompute();
+		do_recompute(false);
 	}
 
 	MCRectangle frect = getfrect();
@@ -3033,7 +3051,7 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 
 		if (fdata == NULL)
 			resetparagraphs();
-		recompute();
+		do_recompute(false);
 		hscroll(savex - textx, False);
 		vscroll(savey - texty, False);
 		resetscrollbars(True);
@@ -3169,7 +3187,7 @@ bool MCField::imagechanged(MCImage *p_image, bool p_deleting)
 
 	if (t_used)
 	{
-		recompute();
+		do_recompute(true);
 		layer_redrawall();
 	}
 

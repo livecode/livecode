@@ -151,6 +151,28 @@ extern pascal OSErr DragReceiveHandler(WindowPtr theWindow, void *hRefCon,
 extern uint4 MCMacGlyphToKeysym(uint2 glyph);
 extern uint2 MCMacKeysymToGlyph(uint4 key);
 
+static inline Rect MCRectToMacRect(const MCRectangle &p_rect)
+{
+	Rect t_rect;
+	t_rect.left = p_rect.x;
+	t_rect.top = p_rect.y;
+	t_rect.right = p_rect.x + p_rect.width;
+	t_rect.bottom = p_rect.y + p_rect.height;
+	
+	return t_rect;
+}
+
+static inline MCRectangle MCMacRectToMCRect(const Rect &p_rect)
+{
+	MCRectangle t_rect;
+	t_rect.x = p_rect.left;
+	t_rect.y = p_rect.top;
+	t_rect.width = p_rect.right - p_rect.left;
+	t_rect.height = p_rect.bottom - p_rect.top;
+	
+	return t_rect;
+}
+
 class MCScreenDC : public MCUIDC
 {
 	Boolean ownselection;
@@ -190,7 +212,7 @@ class MCScreenDC : public MCUIDC
 	WindowGroupRef backdrop_document_group;
 	WindowGroupRef backdrop_palette_group;
 	MCColor backdrop_colour;
-	Pixmap backdrop_pattern;
+	MCPatternRef backdrop_pattern;
 	MCImage *backdrop_badge;
 	
 	MenuRef f_icon_menu;
@@ -279,8 +301,6 @@ public:
 	
 	Boolean getmenubarhidden(void) { return menubarhidden; };
 
-	virtual int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
-
 	virtual bool hasfeature(MCPlatformFeature p_feature);
 	
 			// in macdcs.cc   Screen routines
@@ -296,12 +316,19 @@ public:
 	virtual void ungrabpointer();
 	
 	virtual const char *getdisplayname();
-	virtual uint2 getwidth(void);
-	virtual uint2 getheight(void);
 	virtual uint2 getmaxpoints(void);
 	virtual uint2 getvclass(void);
 	virtual uint2 getdepth(void);
-	virtual uint4 getdisplays(MCDisplay const *& p_displays, bool p_effective);
+	
+	// IM-2013-08-01: [[ ResIndependence ]] refactored methods that return device coordinates
+	virtual uint16_t device_getwidth(void);
+	virtual uint16_t device_getheight(void);
+	virtual bool device_getdisplays(bool p_effective, MCDisplay *& r_displays, uint32_t &r_count);
+	virtual bool device_getwindowgeometry(Window w, MCRectangle &drect);
+	virtual void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	virtual void device_querymouse(int2 &x, int2 &y);
+	virtual void device_setmouse(int2 x, int2 y);
+	virtual MCStack *device_getstackatpoint(int32_t x, int32_t y);
 	
 	virtual void openwindow(Window w, Boolean override);
 	virtual void closewindow(Window window);
@@ -317,11 +344,6 @@ public:
 	virtual void beep();
 	virtual void setinputfocus(Window window);
 
-	virtual MCContext *createcontext(Drawable p_drawable, MCBitmap *p_mask);
-	virtual MCContext *createcontext(Drawable p_drawable, bool p_alpha, bool p_transient);
-	virtual MCContext *creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient);
-	virtual void freecontext(MCContext *p_context);
-
 	virtual void freepixmap(Pixmap &pixmap);
 	virtual Pixmap createpixmap(uint2 width, uint2 height,
 	                            uint2 depth, Boolean purge);
@@ -329,50 +351,33 @@ public:
 	virtual bool lockpixmap(Pixmap p_pixmap, void*& r_data, uint4& r_stride);
 	virtual void unlockpixmap(Pixmap p_pixmap, void *p_data, uint4 p_stride);
 
-	virtual Boolean getwindowgeometry(Window w, MCRectangle &drect);
 	virtual Boolean getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d);
 	
 	virtual void setgraphicsexposures(Boolean on, MCStack *sptr);
 	virtual void copyarea(Drawable source, Drawable dest, int2 depth,
 	                      int2 sx, int2 sy, uint2 sw, uint2 sh,
 	                      int2 dx, int2 dy, uint4 rop);
-	virtual void copyplane(Drawable source, Drawable dest, int2 sx, int2 sy,
-	                       uint2 sw, uint2 sh, int2 dx, int2 dy,
-	                       uint4 rop, uint4 pixel);
-	virtual MCBitmap *createimage(uint2 depth, uint2 width, uint2 height,
-	                              Boolean set
-		                              , uint1 value,
-		                              Boolean shm, Boolean forceZ);
-																	
-	virtual void destroyimage(MCBitmap *image);
-	virtual MCBitmap *copyimage(MCBitmap *source, Boolean invert);
-	virtual void putimage(Drawable dest, MCBitmap *source, int2 sx, int2 sy,
-	                      int2 dx, int2 dy, uint2 w, uint2 h);
-	virtual MCBitmap *getimage(Drawable pm, int2 x, int2 y,
-	                           uint2 w, uint2 h, Boolean shm);
-	virtual void flipimage(MCBitmap *image, int2 byte_order, int2 bit_order);
 	
 	virtual MCColorTransformRef createcolortransform(const MCColorSpaceInfo& info);
 	virtual void destroycolortransform(MCColorTransformRef transform);
 	virtual bool transformimagecolors(MCColorTransformRef transform, MCImageBitmap *image);
 	
-	virtual MCCursorRef createcursor(MCImageBuffer *image, int2 xhot, int2 yhot);
+	virtual MCCursorRef createcursor(MCImageBitmap *image, int2 xhot, int2 yhot);
 	virtual void freecursor(MCCursorRef c);
 
 	virtual uint4 dtouint4(Drawable d);
-	virtual Boolean uint4topixmap(uint4, Pixmap &p);
 	virtual Boolean uint4towindow(uint4, Window &w);
 	virtual void getbeep(uint4 property, MCExecPoint &ep);
 	virtual void setbeep(uint4 property, int4 beep);
 	virtual void getvendorstring(MCExecPoint &ep);
 	virtual uint2 getpad();
 	virtual Window getroot();
-	virtual MCBitmap *snapshot(MCRectangle &r, uint4 window,
+	virtual MCImageBitmap *snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window,
 	                           const char *displayname);
 
 	virtual void enablebackdrop(bool p_hard);
 	virtual void disablebackdrop(bool p_hard);
-	virtual void configurebackdrop(const MCColor& p_colour, Pixmap p_pattern, MCImage *p_badge);
+	virtual void configurebackdrop(const MCColor& p_colour, MCPatternRef p_pattern, MCImage *p_badge);
 	virtual void assignbackdrop(Window_mode p_mode, Window p_window);
 	
 	virtual void hidemenu();
@@ -380,12 +385,9 @@ public:
 
 	virtual MCColor *getaccentcolors();
 
-	virtual void boundrect(MCRectangle &rect, Boolean title, Window_mode m);
 	virtual void expose();
 	virtual Boolean abortkey();
-	virtual void querymouse(int2 &x, int2 &y);
 	virtual uint2 querymods();
-	virtual void setmouse(int2 x, int2 y);
 	virtual Boolean getmouse(uint2 button, Boolean& r_abort);
 	virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
 	virtual Boolean wait(real8 duration, Boolean dispatch, Boolean anyevent);
@@ -408,6 +410,10 @@ public:
 	virtual bool ownsclipboard(void);
 	virtual bool setclipboard(MCPasteboard *p_pasteboard);
 	virtual MCPasteboard *getclipboard(void);
+    
+    // TD-2013-07-01: [[ DynamicFonts ]]
+    virtual bool loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle);
+    virtual bool unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle);
 
 	//
 
@@ -419,10 +425,6 @@ public:
 
 	//
 	
-	virtual MCStack *getstackatpoint(int32_t x, int32_t y);
-	
-	//
-
 	// in macdcmac.cc  screen routines that are specfic to MAC platform
 	void getmods();
 	void setmods(int2 modifiers);
@@ -437,8 +439,6 @@ public:
 	               Boolean &abort, Boolean &reset);
 	void waitmessage(Window w, int event_type);
 	void activatewindow(Window window);
-	void MCRect2MacRect(const MCRectangle &mc, Rect &macR);
-	void MacRect2MCRect(const Rect &macR, MCRectangle &mcR);
 	void doredraw(EventRecord &event, bool p_update_called = false);
 
 
@@ -450,7 +450,6 @@ public:
 
 	void copybits(Drawable s, Drawable d, int2 sx, int2 sy,
 	              uint2 sw, uint2 sh, int2 dx, int2 dy, uint4 rop);
-	Pixmap getbackpm(Window_mode m, Boolean active);
 	short allocateSubMenuID(Boolean issubmenu);
 	void freeMenuAndID(short menuID, MCButton *p_menubutton = NULL);
 	Boolean addMenuItemsAndSubMenu(uint2 mainMenuID, MenuHandle mainMenu, char *itemlist, uint4 itemlistlength, uint1 menumode, MCFontStruct *f);

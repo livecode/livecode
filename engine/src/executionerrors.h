@@ -2416,6 +2416,22 @@ enum Exec_errors
 	
 	// {EE-0796} group: object cannot be grouped
 	EE_GROUP_NOTGROUPABLE,
+    
+    // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
+    // {EE-0797} measureText: no object
+    EE_MEASURE_TEXT_NOOBJECT,
+
+    // TD-2013-06-24: [[ DynamicFonts ]]
+    // {EE-0798} font: couldn't find font
+	EE_FONT_BADFILEEXP,
+	
+	// MERG-2013-10-04: [[ EditScriptAt ]] edit script of object at.
+    // {EE-0799} edit script: bad at expression
+	EE_EDIT_BADAT,
+
+	// IM-2013-09-22: [[ FullscreenMode ]]
+	// {EE-0800} fullscreenmode: not a valid mode
+	EE_STACK_BADFULLSCREENMODE,
 };
 
 extern const char *MCexecutionerrors;

@@ -101,7 +101,7 @@ Exec_stat MCFunction::evalparams(Functions func, MCParameter *params,
 					MCU_skip_spaces(sptr, length);
 				}
 				if (s.getlength() == 0)
-					tn = 0.0;
+				tn = 0.0;
 				else
 					if (!MCU_stor8(s, tn))
 					{
@@ -201,6 +201,7 @@ Parse_stat MCAbsFunction::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCAbsFunction::eval(MCExecPoint &ep)
 {
+#ifdef /* MCAbsFunction */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -209,6 +210,7 @@ Exec_stat MCAbsFunction::eval(MCExecPoint &ep)
 	}
 	ep.setnvalue(fabs(ep.getnvalue()));
 	return ES_NORMAL;
+#endif /* MCAbsFunction */
 }
 
 MCAcos::~MCAcos()
@@ -231,6 +233,7 @@ Parse_stat MCAcos::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCAcos::eval(MCExecPoint &ep)
 {
+#ifdef /* MCAcos */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -247,6 +250,7 @@ Exec_stat MCAcos::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCAcos */
 }
 
 MCAnnuity::~MCAnnuity()
@@ -270,6 +274,7 @@ Parse_stat MCAnnuity::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCAnnuity::eval(MCExecPoint &ep)
 {
+#ifdef /* MCAnnuity */ LEGACY_EXEC
 	if (rate->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -286,6 +291,7 @@ Exec_stat MCAnnuity::eval(MCExecPoint &ep)
 	real8 pn = ep.getnvalue();
 	ep.setnvalue((1.0 - pow(1.0 + rn, -pn)) / rn);
 	return ES_NORMAL;
+#endif /* MCAnnuity */
 }
 
 // JS-2013-06-19: [[ StatsFunctions ]] Implementation of arithmeticMean (was average)
@@ -343,6 +349,7 @@ Parse_stat MCAsin::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCAsin::eval(MCExecPoint &ep)
 {
+#ifdef /* MCAsin */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -359,6 +366,7 @@ Exec_stat MCAsin::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCAsin */
 }
 
 MCAtan::~MCAtan()
@@ -381,6 +389,7 @@ Parse_stat MCAtan::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCAtan::eval(MCExecPoint &ep)
 {
+#ifdef /* MCAtan */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -397,6 +406,7 @@ Exec_stat MCAtan::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCAtan */
 }
 
 MCAtan2::~MCAtan2()
@@ -420,6 +430,7 @@ Parse_stat MCAtan2::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCAtan2::eval(MCExecPoint &ep)
 {
+#ifdef /* MCAtan2 */ LEGACY_EXEC
 	if (s1->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -444,6 +455,7 @@ Exec_stat MCAtan2::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCAtan2 */
 }
 
 // JS-2013-06-19: [[ StatsFunctions ]] Implementation of averageDeviation
@@ -472,6 +484,7 @@ Parse_stat MCAvgDev::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCAvgDev::eval(MCExecPoint &ep)
 {
+#ifdef /* MCAverage */ LEGACY_EXEC
 	if (evalparams(F_AVG_DEV, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -479,6 +492,7 @@ Exec_stat MCAvgDev::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCAverage */
 }
 
 MCCompound::~MCCompound()
@@ -502,6 +516,7 @@ Parse_stat MCCompound::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCCompound::eval(MCExecPoint &ep)
 {
+#ifdef /* MCCompound */ LEGACY_EXEC
 	if (rate->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -518,6 +533,7 @@ Exec_stat MCCompound::eval(MCExecPoint &ep)
 	real8 pn = ep.getnvalue();
 	ep.setnvalue(pow(1.0 + rn, pn));
 	return ES_NORMAL;
+#endif /* MCCompound */
 }
 
 MCCos::~MCCos()
@@ -540,6 +556,7 @@ Parse_stat MCCos::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCCos::eval(MCExecPoint &ep)
 {
+#ifdef /* MCCos */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -556,6 +573,7 @@ Exec_stat MCCos::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCCos */
 }
 
 MCExp::~MCExp()
@@ -578,6 +596,7 @@ Parse_stat MCExp::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCExp::eval(MCExecPoint &ep)
 {
+#ifdef /* MCExp */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -594,6 +613,7 @@ Exec_stat MCExp::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCExp */
 }
 
 MCExp1::~MCExp1()
@@ -616,6 +636,7 @@ Parse_stat MCExp1::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCExp1::eval(MCExecPoint &ep)
 {
+#ifdef /* MCExp1 */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -632,6 +653,7 @@ Exec_stat MCExp1::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCExp1 */
 }
 
 MCExp2::~MCExp2()
@@ -654,6 +676,7 @@ Parse_stat MCExp2::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCExp2::eval(MCExecPoint &ep)
 {
+#ifdef /* MCExp2 */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -670,6 +693,7 @@ Exec_stat MCExp2::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCExp2 */
 }
 
 MCExp10::~MCExp10()
@@ -692,6 +716,7 @@ Parse_stat MCExp10::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCExp10::eval(MCExecPoint &ep)
 {
+#ifdef /* MCExp10 */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -708,6 +733,7 @@ Exec_stat MCExp10::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCExp10 */
 }
 
 // JS-2013-06-19: [[ StatsFunctions ]] Implementation of geometricMean
@@ -800,6 +826,7 @@ Parse_stat MCLn::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCLn::eval(MCExecPoint &ep)
 {
+#ifdef /* MCLn */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -816,6 +843,7 @@ Exec_stat MCLn::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCLn */
 }
 
 MCLn1::~MCLn1()
@@ -838,6 +866,7 @@ Parse_stat MCLn1::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCLn1::eval(MCExecPoint &ep)
 {
+#ifdef /* MCLn1 */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -854,6 +883,7 @@ Exec_stat MCLn1::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCLn1 */
 }
 
 MCLog2::~MCLog2()
@@ -876,6 +906,7 @@ Parse_stat MCLog2::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCLog2::eval(MCExecPoint &ep)
 {
+#ifdef /* MCLog2 */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -892,6 +923,7 @@ Exec_stat MCLog2::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCLog2 */
 }
 
 MCLog10::~MCLog10()
@@ -914,6 +946,7 @@ Parse_stat MCLog10::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCLog10::eval(MCExecPoint &ep)
 {
+#ifdef /* MCLog10 */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -930,6 +963,7 @@ Exec_stat MCLog10::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCLog10 */
 }
 
 MCMatrixMultiply::~MCMatrixMultiply()
@@ -952,6 +986,7 @@ Parse_stat MCMatrixMultiply::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCMatrixMultiply::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMatrixMultiply */ LEGACY_EXEC
 	if (dest -> eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_MATRIXMULT_BADSOURCE, line, pos);
@@ -999,6 +1034,7 @@ Exec_stat MCMatrixMultiply::eval(MCExecPoint &ep)
 		delete t_src_array;
 
 	return ES_NORMAL;
+#endif /* MCMatrixMultiply */
 }
 
 MCMaxFunction::~MCMaxFunction()
@@ -1026,6 +1062,7 @@ Parse_stat MCMaxFunction::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCMaxFunction::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMaxFunction */ LEGACY_EXEC
 	if (evalparams(F_MAX, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -1033,6 +1070,7 @@ Exec_stat MCMaxFunction::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCMaxFunction */
 }
 
 MCMedian::~MCMedian()
@@ -1060,6 +1098,7 @@ Parse_stat MCMedian::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCMedian::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMedian */ LEGACY_EXEC
 	if (evalparams(F_MEDIAN, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -1067,6 +1106,7 @@ Exec_stat MCMedian::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCMedian */
 }
 
 MCMD5Digest::~MCMD5Digest()
@@ -1088,6 +1128,7 @@ Parse_stat MCMD5Digest::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCMD5Digest::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMD5Digest */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_MD5DIGEST_BADSOURCE, line, pos);
@@ -1100,6 +1141,7 @@ Exec_stat MCMD5Digest::eval(MCExecPoint &ep)
 	md5_finish(&state, digest);
 	ep.copysvalue((char *)digest, 16);
 	return ES_NORMAL;
+#endif /* MCMD5Digest */
 }
 
 MCSHA1Digest::~MCSHA1Digest()
@@ -1121,6 +1163,7 @@ Parse_stat MCSHA1Digest::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCSHA1Digest::eval(MCExecPoint &ep)
 {
+#ifdef /* MCSHA1Digest */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_SHA1DIGEST_BADSOURCE, line, pos);
@@ -1133,6 +1176,7 @@ Exec_stat MCSHA1Digest::eval(MCExecPoint &ep)
 	sha1_finish(&state, digest);
 	ep.copysvalue((char *)digest, 20);
 	return ES_NORMAL;
+#endif /* MCSHA1Digest */
 }
 
 MCMinFunction::~MCMinFunction()
@@ -1160,6 +1204,7 @@ Parse_stat MCMinFunction::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCMinFunction::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMinFunction */ LEGACY_EXEC
 	if (evalparams(F_MIN, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -1167,6 +1212,7 @@ Exec_stat MCMinFunction::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCMinFunction */
 }
 
 // JS-2013-06-19: [[ StatsFunctions ]] Implementation of populationStdDev
@@ -1260,6 +1306,7 @@ Parse_stat MCRandom::parse(MCScriptPoint &sp, Boolean the)
 //   being generated.
 Exec_stat MCRandom::eval(MCExecPoint &ep)
 {
+#ifdef /* MCRandom */ LEGACY_EXEC
 	Exec_stat t_stat;
 	t_stat = ES_NORMAL;
 
@@ -1283,6 +1330,7 @@ Exec_stat MCRandom::eval(MCExecPoint &ep)
 		MCeerror->add(EE_RANDOM_BADSOURCE, line, pos);
 
 	return t_stat;
+#endif /* MCRandom */
 }
 
 MCRound::~MCRound()
@@ -1306,6 +1354,7 @@ Parse_stat MCRound::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCRound::eval(MCExecPoint &ep)
 {
+#ifdef /* MCRound */ LEGACY_EXEC
 	real8 factor = 1.0;
 	if (digit != NULL)
 	{
@@ -1333,6 +1382,7 @@ Exec_stat MCRound::eval(MCExecPoint &ep)
 		value = floor(value + 0.5);
 	ep.setnvalue(value / factor);
 	return ES_NORMAL;
+#endif /* MCRound */
 }
 
 MCSin::~MCSin()
@@ -1355,6 +1405,7 @@ Parse_stat MCSin::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCSin::eval(MCExecPoint &ep)
 {
+#ifdef /* MCSin */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -1371,6 +1422,7 @@ Exec_stat MCSin::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCSin */
 }
 
 // JS-2013-06-19: [[ StatsFunctions ]] Implementation of sampleStdDev (was stdDev)
@@ -1399,6 +1451,7 @@ Parse_stat MCSampleStdDev::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCSampleStdDev::eval(MCExecPoint &ep)
 {
+#ifdef /* MCSampleStdDev */ LEGACY_EXEC
 	if (evalparams(F_SMP_STD_DEV, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -1406,6 +1459,7 @@ Exec_stat MCSampleStdDev::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCSampleStdDev */
 }
 
 // JS-2013-06-19: [[ StatsFunctions ]] Implementation of sampleVariance
@@ -1463,6 +1517,7 @@ Parse_stat MCSqrt::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCSqrt::eval(MCExecPoint &ep)
 {
+#ifdef /* MCSqrt */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -1479,6 +1534,7 @@ Exec_stat MCSqrt::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCSqrt */
 }
 
 MCStatRound::~MCStatRound()
@@ -1502,6 +1558,7 @@ Parse_stat MCStatRound::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCStatRound::eval(MCExecPoint &ep)
 {
+#ifdef /* MCStatRound */ LEGACY_EXEC
 	real8 factor = 1.0;
 	if (digit != NULL)
 	{
@@ -1538,6 +1595,7 @@ Exec_stat MCStatRound::eval(MCExecPoint &ep)
 	}
 	ep.setnvalue(value / factor);
 	return ES_NORMAL;
+#endif /* MCStatRound */
 }
 
 MCSum::~MCSum()
@@ -1565,6 +1623,7 @@ Parse_stat MCSum::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCSum::eval(MCExecPoint &ep)
 {
+#ifdef /* MCSum */ LEGACY_EXEC
 	if (evalparams(F_SUM, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -1572,6 +1631,7 @@ Exec_stat MCSum::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCSum */
 }
 
 MCTan::~MCTan()
@@ -1594,6 +1654,7 @@ Parse_stat MCTan::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCTan::eval(MCExecPoint &ep)
 {
+#ifdef /* MCTan */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -1610,6 +1671,7 @@ Exec_stat MCTan::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCTan */
 }
 
 MCTranspose::~MCTranspose()
@@ -1630,6 +1692,7 @@ Parse_stat MCTranspose::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCTranspose::eval(MCExecPoint &ep)
 {
+#ifdef /* MCTranspose */ LEGACY_EXEC
 	// ARRAYEVAL
 	if (source -> eval(ep) != ES_NORMAL)
 	{
@@ -1665,6 +1728,7 @@ Exec_stat MCTranspose::eval(MCExecPoint &ep)
 		delete t_array;
 
 	return ES_NORMAL;
+#endif /* MCTranspose */
 }
 
 MCTrunc::~MCTrunc()
@@ -1687,6 +1751,7 @@ Parse_stat MCTrunc::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCTrunc::eval(MCExecPoint &ep)
 {
+#ifdef /* MCTrunc */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -1698,4 +1763,5 @@ Exec_stat MCTrunc::eval(MCExecPoint &ep)
 	else
 		ep.setnvalue(floor(ep.getnvalue()));
 	return ES_NORMAL;
+#endif /* MCTrunc */
 }

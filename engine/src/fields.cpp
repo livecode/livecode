@@ -179,7 +179,7 @@ Exec_stat MCField::sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
 		{
 			paragraphs = newparagraphs;
 			resetparagraphs();
-			recompute();
+			do_recompute(true);
 
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 			layer_redrawall();
@@ -495,7 +495,7 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid)
 		paragraphs = newpgptr;
 		fptr->setparagraphs(newpgptr);
 		openparagraphs();
-		recompute();
+		do_recompute(true);
 
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
@@ -648,6 +648,20 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 	MCParagraph *pgptr;
 	pgptr = verifyindices(toppgptr, si, ei);
 	
+	// MW-2013-10-24: [[ FasterField ]] If affect_many is true then multiple
+	//   paragraphs have been affected, so we need to redraw everything below
+	//   the initial one. We also store the initial height of the paragraph
+	//   so we can see if it has changed.
+	bool t_affect_many;
+	t_affect_many = false;
+	
+	MCParagraph *t_initial_pgptr;
+	t_initial_pgptr = pgptr;
+	
+	int32_t t_initial_height;
+	if (opened && fptr == fdata)
+		t_initial_height = t_initial_pgptr -> getheight(fixedheight);
+	
 	if (si != ei)
 	{
 		int4 tei;
@@ -656,7 +670,12 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 			tei = pgptr->gettextsize();
 			ei--;
 			if (ei == tei && pgptr->next() != toppgptr)
+			{
 				pgptr->join();
+				
+				// MW-2013-10-24: [[ FasterField ]] Join affects multiple paragraphs.
+				t_affect_many = true;
+			}
 		}
 		else
 			tei = ei;
@@ -685,6 +704,9 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 					focusedy = savey;
 				}
 				delete tpgptr;
+				
+				// MW-2013-10-24: [[ FasterField ]] Removing paragraphs affects multiple paragraphs.
+				t_affect_many = true;
 			}
 			pgptr->deletestring(0, ei);
 			if (pgptr == curparagraph)
@@ -701,19 +723,25 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 			{
 				pgptr = pgptr->prev();
 				pgptr->join();
+				
+				// MW-2013-10-24: [[ FasterField ]] Join affects multiple paragraphs.
+				t_affect_many = true;
 			}
 		}
 	}
 	pgptr->setparent(this);
 	pgptr->setselectionindex(si, si, False, False);
-	
-	Boolean t_need_recompute = False;
 
 	// MW-2012-02-13: [[ Block Unicode ]] Use the new finsert method in native mode.
 	// MW-2012-02-23: [[ PutUnicode ]] Pass through the encoding to finsertnew.
 	if (s.getlength())
-		t_need_recompute = pgptr->finsertnew(s, p_as_unicode);
-
+	{
+		// MW-2013-10-24: [[ FasterField ]] If finsertnew() returns true then multiple
+		//   paragraphs were created, so we've affected many.
+		if (pgptr->finsertnew(s, p_as_unicode))
+			t_affect_many = true;
+	}
+	
 	if (opened && fptr == fdata)
 	{
 		oldsi += s.getlength();
@@ -721,11 +749,34 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 		focusedparagraph = indextoparagraph(paragraphs, oldsi, ei);
 		if (state & CS_KFOCUSED)
 			focusedparagraph->setselectionindex(ei, ei, False, False);
-
-		recompute();
+		
+		// If we haven't already affected many, then lay out the paragraph and see if the
+		// height has changed. If it has we must do a recompute and need to redraw below.
+		if (!t_affect_many)
+			t_initial_pgptr -> layout(false);
+		if (t_affect_many || t_initial_pgptr -> getheight(fixedheight) != t_initial_height)
+		{
+				do_recompute(false);
+				t_affect_many = true;
+		}
 		
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
-		layer_redrawall();
+		// MW-2013-10-24: [[ FasterField ]] Tweak to minimize redraw.
+		int32_t t_paragraph_y;
+		t_paragraph_y = getcontenty() + paragraphtoy(t_initial_pgptr);
+		MCRectangle drect;
+		drect = getfrect();
+		
+		// If affecting many, redraw everything below y of the initial pg in the
+		// field, otherwise just redraw the paragraph.
+		if (t_affect_many)
+			drect . height -= (t_paragraph_y - drect . y);
+		else
+			drect . height = t_initial_pgptr -> getheight(fixedheight);
+		
+		drect . y = t_paragraph_y;
+		
+		layer_redrawrect(drect);
 		
 		focusedy = paragraphtoy(focusedparagraph);
 	}
@@ -1389,7 +1440,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		if (opened && (parid == 0 || parid == getcard()->getid()))
 		{
 			resetparagraphs();
-			recompute();
+			do_recompute(true);
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 			layer_redrawall();
 		}
@@ -1682,7 +1733,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 			if (t_need_layout && !all)
 			{
 				// MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
-				pgptr -> layout();
+				pgptr -> layout(all);
 				drect.height += pgptr->getheight(fixedheight);
 			}
 		}
@@ -1702,7 +1753,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 	{
 		if (all)
 		{
-			recompute();
+			do_recompute(true);
 			hscroll(savex - textx, False);
 			vscroll(savey - texty, False);
 			resetscrollbars(True);
@@ -2483,7 +2534,7 @@ void MCField::cuttext()
 	
 	// MW-2012-03-16: [[ Bug 3173 ]] Make sure the width is updated and such
 	//   so that the caret repositions itself correctly.
-	recompute();
+	do_recompute(true);
 	layer_redrawall();
 	
 	replacecursor(True, True);

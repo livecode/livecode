@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "execpt.h"
 
 #include "globals.h"
+#include "osspec.h"
 #include "context.h"
 
 #include "core.h"
@@ -91,50 +92,6 @@ bool MCImageCompress(MCImageBitmap *p_bitmap, bool p_dither, MCImageCompressedBi
 	return t_success;
 }
 
-void MCImage::compress(MCBitmap *image, bool p_take_geometry, bool p_includes_alpha)
-{
-	bool t_success = true;
-
-	MCImageBitmap *t_bitmap = nil;
-
-	t_success = MCImageBitmapCreateWithOldBitmap(image, t_bitmap);
-
-	if (t_success)
-	{
-		if (p_includes_alpha)
-		{
-			// IM-2013-03-27: [[ BZ 10759 ]] if the source has alpha transparency, then we need to unpremultiply
-			MCImageBitmapUnpremultiply(t_bitmap);
-			MCImageBitmapCheckTransparency(t_bitmap);
-		}
-		else
-			MCImageBitmapSetAlphaValue(t_bitmap, 0xFF);
-	}
-
-	if (t_success)
-		t_success = setbitmap(t_bitmap);
-
-	MCImageFreeBitmap(t_bitmap);
-
-	if (t_success)
-	{
-		if (p_take_geometry)
-		{
-			if (!(flags & F_LOCK_LOCATION))
-			{
-				uindex_t t_width, t_height;
-				if (m_rep->GetGeometry(t_width, t_height))
-				{
-					rect . width = t_width;
-					rect . height = t_height;
-				}
-			}
-		}
-
-		angle = 0;
-	}
-}
-
 void MCImage::recompress()
 {
 	if (!opened || !isediting())
@@ -171,14 +128,17 @@ bool MCImageDecompress(MCImageCompressedBitmap *p_compressed, MCImageFrame *&r_f
 			break;
 
 		case F_PNG:
+			t_frames[0].density = 1.0;
 			t_success = MCImageDecodePNG(t_stream, t_frames[0].image);
 			break;
 
 		case F_JPEG:
+			t_frames[0].density = 1.0;
 			t_success = MCImageDecodeJPEG(t_stream, t_frames[0].image);
 			break;
 
 		case F_RLE:
+			t_frames[0].density = 1.0;
 			t_success = MCImageDecompressRLE(p_compressed, t_frames[0].image);
 			break;
 		}
@@ -198,75 +158,62 @@ bool MCImageDecompress(MCImageCompressedBitmap *p_compressed, MCImageFrame *&r_f
 	return t_success;
 }
 
-bool MCImageCreateBrush(MCImageBitmap *p_src, Pixmap &r_drawdata, Pixmap &r_drawmask, MCBitmap *&r_bitmap)
-{
-	bool t_success = true;
-
-	MCBitmap *t_drawimage = nil;
-	MCBitmap *t_maskimage = nil;
-	MCBitmap *t_maskimagealpha = nil;
-	Pixmap t_drawdata = nil;
-	Pixmap t_drawmask = nil;
-
-	t_success = MCImageSplitRasters(p_src, t_drawimage, t_maskimage, t_maskimagealpha);
-
-	if (t_success)
-		t_success = MCImagePixmapFromBitmap(t_drawimage, 1, t_drawdata);
-	if (t_success)
-		t_success = MCImagePixmapFromBitmap(t_maskimage, 1, t_drawmask);
-
-	if (t_success)
-	{
-		r_drawdata = t_drawdata;
-		r_drawmask = t_drawmask;
-		r_bitmap = t_maskimage;
-	}
-	else
-	{
-		MCscreen->freepixmap(t_drawdata);
-		MCscreen->freepixmap(t_drawmask);
-		if (t_maskimage != nil)
-			MCscreen->destroyimage(t_maskimage);
-	}
-
-	if (t_drawimage != nil)
-		MCscreen->destroyimage(t_drawimage);
-	if (t_maskimagealpha != nil)
-		MCscreen->destroyimage(t_maskimagealpha);
-
-	return t_success;
-}
-
-void MCImage::decompressbrush(Pixmap &r_mask, Pixmap &r_data, MCBitmap *&r_bitmap)
+bool MCImage::decompressbrush(MCGImageRef &r_brush)
 {
 	/* TODO - may be able to improve this now by rasterizing the metafile */
 	if (getcompression() == F_PICT || m_rep == nil)
 	{
-		r_mask = r_data = DNULL;
-		r_bitmap = MCscreen->createimage(1, 32, 32, False, 0x0, False, False);
-		return;
+		return false;
+		//r_mask = r_data = DNULL;
+		//r_bitmap = MCscreen->createimage(1, 32, 32, False, 0x0, False, False);
+		//return;
 	}
 
 	bool t_success = true;
 
 	MCImageFrame *t_frame = nil;
 
-	t_success = m_rep->LockImageFrame(0, t_frame);
+	// IM-2013-10-30: [[ FullscreenMode ]] REVISIT: We try here to acquire the brush
+	// bitmap at 1.0 scale, but currently ignore the set density value of the returned frame.
+	// We may have to add support for hi-res brushes OR scale the resulting bitmap appropriately.
+	t_success = m_rep->LockImageFrame(0, true, 1.0, t_frame);
 
 	if (t_success)
-		t_success = MCImageCreateBrush(t_frame->image, r_data, r_mask, r_bitmap);
+	{
+		MCGRaster t_raster;
+		t_raster.width = t_frame->image->width;
+		t_raster.height = t_frame->image->height;
+		t_raster.stride = t_frame->image->stride;
+		t_raster.format = MCImageBitmapHasTransparency(t_frame->image) ? kMCGRasterFormat_ARGB : kMCGRasterFormat_xRGB;
+		t_raster.pixels = t_frame->image->data;
+
+		t_success = MCGImageCreateWithRaster(t_raster, r_brush);
+	}
 
 	m_rep->UnlockImageFrame(0, t_frame);
+
+	return t_success;
+}
+
+void MCImagePrepareRepForDisplayAtDensity(MCImageRep *p_rep, MCGFloat p_density)
+{
+	if (p_rep != nil)
+	{
+		/* OVERHAUL - REVISIT: for the moment, prepared images are premultiplied
+		 * as we expect them to be rendered, but if not then this is actually
+		 * causing more work to be done than needed */
+		MCImageFrame *t_frame = nil;
+		p_rep->LockImageFrame(0, true, p_density, t_frame);
+		p_rep->UnlockImageFrame(0, t_frame);
+	}
 }
 
 void MCImage::prepareimage()
 {
-	if (m_rep != nil)
-	{
-		MCImageBitmap *t_bitmap = nil;
-		lockbitmap(t_bitmap);
-		unlockbitmap(t_bitmap);
-	}
+	MCStack *t_stack;
+	t_stack = getstack();
+	
+	MCImagePrepareRepForDisplayAtDensity(m_rep, getdevicescale());
 }
 
 void MCImage::openimage()
@@ -279,7 +226,7 @@ void MCImage::openimage()
 		t_width = rect . width;
 		t_height = rect . height;
 		
-		/* UNCHECKED */ m_rep->GetGeometry(t_width, t_height);
+		/* UNCHECKED */ getsourcegeometry(t_width, t_height);
 		
 		MCRectangle t_old_rect;
 		t_old_rect = rect;
@@ -323,12 +270,6 @@ void MCImage::closeimage()
 	MCscreen->cancelmessageobject(this, MCM_internal);
 
 	recompress();
-
-	if (m_transformed != nil)
-	{
-		m_transformed->Release();
-		m_transformed = nil;
-	}
 
 	m_image_opened--;
 }
@@ -453,8 +394,6 @@ void MCImage::reopen(bool p_newfile, bool p_lock_size)
 	while (opened)
 		close();
 
-	delete pixmapids;
-	delete pixmaps;
 	if (p_newfile)
 		flags &= ~(F_COMPRESSION | F_TRUE_COLOR);
 	Boolean was = (flags & F_I_ALWAYS_BUFFER) != 0;
@@ -485,3 +424,77 @@ void MCImage::reopen(bool p_newfile, bool p_lock_size)
 	if (parent != nil && !resizeparent())
 		layer_rectchanged(orect, true);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCPathIsAbsolute(const char *p_path)
+{
+	if (p_path == nil || p_path[0] == '\0')
+		return false;
+	
+	return p_path[0] == '/' || p_path[0] == ':';
+}
+
+bool MCPathIsRemoteURL(const char *p_path)
+{
+	return MCCStringBeginsWith(p_path, "http://") ||
+	MCCStringBeginsWith(p_path, "https://") ||
+	MCCStringBeginsWith(p_path, "ftp://");
+}
+
+bool MCImageGetFileRepForStackContext(const char *p_filename, MCStack *p_stack, MCImageRep *&r_rep)
+{
+	bool t_success = true;
+	
+	MCImageRep *t_rep;
+	t_rep = nil;
+	
+	// skip over any file: / binfile: url prefix
+	if (MCCStringBeginsWith(p_filename, "file:"))
+		p_filename += 5;
+	else if (MCCStringBeginsWith(p_filename, "binfile:"))
+		p_filename += 8;
+	
+	if (MCPathIsRemoteURL(p_filename))
+		t_success = MCImageRepGetReferenced(p_filename, t_rep);
+	else
+	{
+		// with local filenames, first check if absolute path
+		if (MCPathIsAbsolute(p_filename))
+			t_success = MCImageRepGetDensityMapped(p_filename, t_rep);
+		else
+		{
+			// else try to resolve from stack file location
+			char *t_path;
+			t_path = nil;
+			
+			t_success = p_stack->resolve_relative_path(p_filename, t_path);
+			if (t_success)
+				t_success = MCImageRepGetDensityMapped(t_path, t_rep);
+			
+			MCCStringFree(t_path);
+			t_path = nil;
+			
+			// else try to resolve from current folder
+			if (t_success && t_rep == nil)
+			{
+				t_success = nil != (t_path = MCS_resolvepath(p_filename));
+				if (t_success)
+					t_success = MCImageRepGetDensityMapped(t_path, t_rep);
+				
+				MCCStringFree(t_path);
+				t_path = nil;
+				
+				if (t_success)
+					t_success = t_rep != nil;
+			}
+		}
+	}
+	
+	if (t_success)
+		r_rep = t_rep;
+	
+	return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////

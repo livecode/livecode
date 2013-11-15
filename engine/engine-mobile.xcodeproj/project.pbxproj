@@ -83,7 +83,6 @@
 		4DABCDAC15ECD4700085E214 /* cmdss.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DDCE1040AC5C00CAC7EF /* cmdss.cpp */; };
 		4DABCDAD15ECD4700085E214 /* combiners.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DDCD1040AC5C00CAC7EF /* combiners.cpp */; };
 		4DABCDAE15ECD4700085E214 /* constant.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DDCC1040AC5C00CAC7EF /* constant.cpp */; };
-		4DABCDAF15ECD4700085E214 /* contextscalewrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DDC91040AC5C00CAC7EF /* contextscalewrapper.cpp */; };
 		4DABCDB015ECD4700085E214 /* control.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DDC71040AC5C00CAC7EF /* control.cpp */; };
 		4DABCDB115ECD4700085E214 /* cpalette.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DDC31040AC5C00CAC7EF /* cpalette.cpp */; };
 		4DABCDB315ECD4700085E214 /* customprinter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDD7F52134BA80E009037A0 /* customprinter.cpp */; };
@@ -153,7 +152,6 @@
 		4DABCDF715ECD4970085E214 /* mbliphonecalendar.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6DF4CA31559638600450B64 /* mbliphonecalendar.mm */; };
 		4DABCDF815ECD4970085E214 /* mbliphonecamera.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4C7D1CF714767FD000129F01 /* mbliphonecamera.mm */; };
 		4DABCDF915ECD4970085E214 /* mbliphonecontact.mm in Sources */ = {isa = PBXBuildFile; fileRef = F68B56881541960200097647 /* mbliphonecontact.mm */; };
-		4DABCDFA15ECD4970085E214 /* mbliphonecontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE9C63D113813A00059588F /* mbliphonecontext.cpp */; };
 		4DABCDFB15ECD4970085E214 /* mbliphonecontrol.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D7E389B1281527500E7F80A /* mbliphonecontrol.mm */; };
 		4DABCDFC15ECD4970085E214 /* mbliphonedc.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E1DE10411A0A00CAC7EF /* mbliphonedc.mm */; };
 		4DABCDFD15ECD4970085E214 /* mbliphonedialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D6F954B12AC157100026A72 /* mbliphonedialog.mm */; };
@@ -217,7 +215,6 @@
 		4DABCE3815ECD4B50085E214 /* player.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DEB81040ADBC00CAC7EF /* player.cpp */; };
 		4DABCE3915ECD4B50085E214 /* printer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DECD1040ADC500CAC7EF /* printer.cpp */; };
 		4DABCE3A15ECD4B50085E214 /* property.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DED61040ADCE00CAC7EF /* property.cpp */; };
-		4DABCE3B15ECD4B50085E214 /* pxmaplst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DED21040ADCE00CAC7EF /* pxmaplst.cpp */; };
 		4DABCE3C15ECD4B50085E214 /* redraw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6E5952140833FA00EE960D /* redraw.cpp */; };
 		4DABCE3D15ECD4B50085E214 /* regex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DED01040ADCE00CAC7EF /* regex.cpp */; };
 		4DABCE3E15ECD4B50085E214 /* rtf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DEDF1040ADE500CAC7EF /* rtf.cpp */; };
@@ -267,8 +264,16 @@
 		E8111F90154193AB00DB16E3 /* AddressBookUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8F154193AB00DB16E3 /* AddressBookUI.framework */; };
 		E84A254E1680BFFD00EA7ACC /* image_rep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E84A254C1680BFF600EA7ACC /* image_rep.cpp */; };
 		E85A91BF16C2B4D300C07FA9 /* stackcache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E85A91BE16C2B4D300C07FA9 /* stackcache.cpp */; };
-		E85E2C0B1697347300E5A78A /* image_rep_transformed.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E85E2C0A1697347300E5A78A /* image_rep_transformed.cpp */; };
 		E86481931439BCE100775960 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E86481921439BCE100775960 /* StoreKit.framework */; };
+		E8AB9053180E9DCD0050A249 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8AB9052180E9DCD0050A249 /* image_rep_densitymapped.cpp */; };
+		E8B6EE1417F0A1C900F77E0E /* stackview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8B6EE1317F0A1C900F77E0E /* stackview.cpp */; };
+		E8BE6E2A182966BA00D7C604 /* image_rep_resampled.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8BE6E29182966BA00D7C604 /* image_rep_resampled.cpp */; };
+		E8C22C46177B1700003785D3 /* cgimageutil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8C22C45177B1700003785D3 /* cgimageutil.cpp */; };
+		E8C22C53177B1BED003785D3 /* libgraphicsmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8C22C4C177B1B79003785D3 /* libgraphicsmobile.a */; };
+		E8C22C54177B1BED003785D3 /* libskiamobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8C22C52177B1B87003785D3 /* libskiamobile.a */; };
+		E8C22E57177B2884003785D3 /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8C22E55177B2884003785D3 /* imagelist.cpp */; };
+		E8C22E73177B2960003785D3 /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8C22E71177B2960003785D3 /* graphicscontext.cpp */; };
+		E8C22E75177B2B53003785D3 /* mbltheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8C22E74177B2B53003785D3 /* mbltheme.cpp */; };
 		F670DB6A147D462B008FEA1E /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F62512621455C7F100BDAACF /* CoreMedia.framework */; };
 		F6DF4CA615597DD000450B64 /* EventKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6DF4CA515597DD000450B64 /* EventKit.framework */; };
 		F6DF4CA815597DEB00450B64 /* EventKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6DF4CA715597DEA00450B64 /* EventKitUI.framework */; };
@@ -408,6 +413,34 @@
 			remoteGlobalIDString = 4DD3E06A1040BC4700CAC7EF;
 			remoteInfo = coremobile;
 		};
+		E8C22C4B177B1B79003785D3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8C22C47177B1B78003785D3 /* libgraphics-mobile.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DD3E06B1040BC4700CAC7EF;
+			remoteInfo = graphicsmobile;
+		};
+		E8C22C51177B1B87003785D3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8C22C4D177B1B87003785D3 /* libskia-mobile.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DD3E0181040BB5D00CAC7EF;
+			remoteInfo = skiamobile;
+		};
+		E8C22C55177B1BFB003785D3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8C22C47177B1B78003785D3 /* libgraphics-mobile.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DD3E06A1040BC4700CAC7EF;
+			remoteInfo = graphicsmobile;
+		};
+		E8C22C57177B1BFB003785D3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8C22C4D177B1B87003785D3 /* libskia-mobile.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DD3E0171040BB5D00CAC7EF;
+			remoteInfo = skiamobile;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -546,8 +579,6 @@
 		4DB9694B135E3D8300DCAE93 /* mblandroidorientation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidorientation.cpp; path = src/mblandroidorientation.cpp; sourceTree = "<group>"; };
 		4DB983C0130BB1DF008A03DC /* mblandroid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroid.cpp; path = src/mblandroid.cpp; sourceTree = "<group>"; };
 		4DB983C1130BB1DF008A03DC /* mblandroid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblandroid.h; path = src/mblandroid.h; sourceTree = "<group>"; };
-		4DB983C3130BB1DF008A03DC /* mblandroidcontext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcontext.cpp; path = src/mblandroidcontext.cpp; sourceTree = "<group>"; };
-		4DB983C4130BB1DF008A03DC /* mblandroidcontext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblandroidcontext.h; path = src/mblandroidcontext.h; sourceTree = "<group>"; };
 		4DB983C6130BB1DF008A03DC /* mblandroiddc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroiddc.cpp; path = src/mblandroiddc.cpp; sourceTree = "<group>"; };
 		4DB983C7130BB1DF008A03DC /* mblandroiddialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroiddialog.cpp; path = src/mblandroiddialog.cpp; sourceTree = "<group>"; };
 		4DB983C8130BB1DF008A03DC /* mblandroidfs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidfs.cpp; path = src/mblandroidfs.cpp; sourceTree = "<group>"; };
@@ -580,8 +611,6 @@
 		4DD3DDC31040AC5C00CAC7EF /* cpalette.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cpalette.cpp; path = src/cpalette.cpp; sourceTree = "<group>"; };
 		4DD3DDC61040AC5C00CAC7EF /* control.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = control.h; path = src/control.h; sourceTree = "<group>"; };
 		4DD3DDC71040AC5C00CAC7EF /* control.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = control.cpp; path = src/control.cpp; sourceTree = "<group>"; };
-		4DD3DDC81040AC5C00CAC7EF /* contextscalewrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = contextscalewrapper.h; path = src/contextscalewrapper.h; sourceTree = "<group>"; };
-		4DD3DDC91040AC5C00CAC7EF /* contextscalewrapper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = contextscalewrapper.cpp; path = src/contextscalewrapper.cpp; sourceTree = "<group>"; };
 		4DD3DDCA1040AC5C00CAC7EF /* context.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = context.h; path = src/context.h; sourceTree = "<group>"; };
 		4DD3DDCB1040AC5C00CAC7EF /* constant.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = constant.h; path = src/constant.h; sourceTree = "<group>"; };
 		4DD3DDCC1040AC5C00CAC7EF /* constant.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = constant.cpp; path = src/constant.cpp; sourceTree = "<group>"; };
@@ -733,8 +762,6 @@
 		4DD3DECD1040ADC500CAC7EF /* printer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = printer.cpp; path = src/printer.cpp; sourceTree = "<group>"; };
 		4DD3DECF1040ADCE00CAC7EF /* regex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = regex.h; path = src/regex.h; sourceTree = "<group>"; };
 		4DD3DED01040ADCE00CAC7EF /* regex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = regex.cpp; path = src/regex.cpp; sourceTree = "<group>"; };
-		4DD3DED11040ADCE00CAC7EF /* pxmaplst.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pxmaplst.h; path = src/pxmaplst.h; sourceTree = "<group>"; };
-		4DD3DED21040ADCE00CAC7EF /* pxmaplst.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pxmaplst.cpp; path = src/pxmaplst.cpp; sourceTree = "<group>"; };
 		4DD3DED41040ADCE00CAC7EF /* props.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = props.cpp; path = src/props.cpp; sourceTree = "<group>"; };
 		4DD3DED51040ADCE00CAC7EF /* property.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = property.h; path = src/property.h; sourceTree = "<group>"; };
 		4DD3DED61040ADCE00CAC7EF /* property.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = property.cpp; path = src/property.cpp; sourceTree = "<group>"; };
@@ -810,8 +837,6 @@
 		4DE7B8641330D6F200305469 /* mbliphonepick.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonepick.mm; path = src/mbliphonepick.mm; sourceTree = "<group>"; };
 		4DE7ED6413B33CEA002634F5 /* sysspec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysspec.cpp; path = src/sysspec.cpp; sourceTree = "<group>"; };
 		4DE9499D142762490072D9C6 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
-		4DE9C634113810030059588F /* mbliphonecontext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mbliphonecontext.h; path = src/mbliphonecontext.h; sourceTree = "<group>"; };
-		4DE9C63D113813A00059588F /* mbliphonecontext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mbliphonecontext.cpp; path = src/mbliphonecontext.cpp; sourceTree = "<group>"; };
 		4DF9A3F6142E24FD0063E6FF /* executionerrors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = executionerrors.h; path = src/executionerrors.h; sourceTree = "<group>"; };
 		4DF9A3F7142E24FD0063E6FF /* parseerrors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = parseerrors.h; path = src/parseerrors.h; sourceTree = "<group>"; };
 		4DF9A9AE142FABAB0063E6FF /* mbliphoneapp.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneapp.mm; path = src/mbliphoneapp.mm; sourceTree = "<group>"; };
@@ -850,10 +875,11 @@
 		E84BE35D170C987D00807CF6 /* sha1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sha1.h; path = src/sha1.h; sourceTree = "<group>"; };
 		E84BE35F170C98F700807CF6 /* textbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = textbuffer.h; path = src/textbuffer.h; sourceTree = "<group>"; };
 		E84BE361170C992600807CF6 /* visualeffect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = visualeffect.h; path = src/visualeffect.h; sourceTree = "<group>"; };
+		E852D71D178F103400485363 /* resolution.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = resolution.h; path = src/resolution.h; sourceTree = "<group>"; };
+		E852D71E1790290500485363 /* graphics_util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = graphics_util.h; path = src/graphics_util.h; sourceTree = "<group>"; };
 		E85A405A14D8470900AF2300 /* mblandroidbrowser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidbrowser.cpp; path = src/mblandroidbrowser.cpp; sourceTree = "<group>"; };
 		E85A91BE16C2B4D300C07FA9 /* stackcache.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stackcache.cpp; path = src/stackcache.cpp; sourceTree = "<group>"; };
 		E85D136F1461A99700219867 /* mblandroidstore.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidstore.cpp; path = src/mblandroidstore.cpp; sourceTree = "<group>"; };
-		E85E2C0A1697347300E5A78A /* image_rep_transformed.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_transformed.cpp; path = src/image_rep_transformed.cpp; sourceTree = "<group>"; };
 		E864816E1439BC9400775960 /* mblevent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblevent.h; path = src/mblevent.h; sourceTree = "<group>"; };
 		E864816F1439BC9400775960 /* mbliphonestore.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonestore.mm; path = src/mbliphonestore.mm; sourceTree = "<group>"; };
 		E86481701439BC9400775960 /* mblstore.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblstore.cpp; path = src/mblstore.cpp; sourceTree = "<group>"; };
@@ -870,7 +896,18 @@
 		E891124A148675C900B554CF /* DialogModule.java */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.java; path = DialogModule.java; sourceTree = "<group>"; };
 		E89112EB148E73EB00B554CF /* mbldialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mbldialog.cpp; path = src/mbldialog.cpp; sourceTree = "<group>"; };
 		E89A45D314EE7603007250AA /* mblnotification.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblnotification.h; path = src/mblnotification.h; sourceTree = "<group>"; };
+		E8AB9052180E9DCD0050A249 /* image_rep_densitymapped.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_densitymapped.cpp; path = src/image_rep_densitymapped.cpp; sourceTree = "<group>"; };
 		E8B4FDD8152CAF8300CBAF90 /* mbliphonefs.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonefs.mm; path = src/mbliphonefs.mm; sourceTree = "<group>"; };
+		E8B6EE1317F0A1C900F77E0E /* stackview.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stackview.cpp; path = src/stackview.cpp; sourceTree = "<group>"; };
+		E8BE6E29182966BA00D7C604 /* image_rep_resampled.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_resampled.cpp; path = src/image_rep_resampled.cpp; sourceTree = "<group>"; };
+		E8C22C45177B1700003785D3 /* cgimageutil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cgimageutil.cpp; path = src/cgimageutil.cpp; sourceTree = "<group>"; };
+		E8C22C47177B1B78003785D3 /* libgraphics-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libgraphics-mobile.xcodeproj"; path = "../libgraphics/libgraphics-mobile.xcodeproj"; sourceTree = "<group>"; };
+		E8C22C4D177B1B87003785D3 /* libskia-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libskia-mobile.xcodeproj"; path = "../thirdparty/libskia/libskia-mobile.xcodeproj"; sourceTree = "<group>"; };
+		E8C22E55177B2884003785D3 /* imagelist.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imagelist.cpp; path = src/imagelist.cpp; sourceTree = "<group>"; };
+		E8C22E56177B2884003785D3 /* imagelist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imagelist.h; path = src/imagelist.h; sourceTree = "<group>"; };
+		E8C22E71177B2960003785D3 /* graphicscontext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = graphicscontext.cpp; path = src/graphicscontext.cpp; sourceTree = "<group>"; };
+		E8C22E72177B2960003785D3 /* graphicscontext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = graphicscontext.h; path = src/graphicscontext.h; sourceTree = "<group>"; };
+		E8C22E74177B2B53003785D3 /* mbltheme.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mbltheme.cpp; path = src/mbltheme.cpp; sourceTree = "<group>"; };
 		E8C8A774147BC020003780F0 /* mblsensor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblsensor.cpp; path = src/mblsensor.cpp; sourceTree = "<group>"; };
 		E8C8A776147BCA60003780F0 /* mblsensor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblsensor.h; path = src/mblsensor.h; sourceTree = "<group>"; };
 		E8D0566B14F3DB640093E16F /* PushReceiver.java */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.java; path = PushReceiver.java; sourceTree = "<group>"; };
@@ -916,6 +953,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E8C22C53177B1BED003785D3 /* libgraphicsmobile.a in Frameworks */,
+				E8C22C54177B1BED003785D3 /* libskiamobile.a in Frameworks */,
 				4D08A0D6138EA58E0081F990 /* libcoremobile.a in Frameworks */,
 				4D7B149717141A5F006782C1 /* libpngmobile.a in Frameworks */,
 				4D7B149817141A63006782C1 /* libgifmobile.a in Frameworks */,
@@ -1016,8 +1055,6 @@
 				F6DF4CA31559638600450B64 /* mbliphonecalendar.mm */,
 				4C7D1CF714767FD000129F01 /* mbliphonecamera.mm */,
 				F68B56881541960200097647 /* mbliphonecontact.mm */,
-				4DE9C63D113813A00059588F /* mbliphonecontext.cpp */,
-				4DE9C634113810030059588F /* mbliphonecontext.h */,
 				4D7E389B1281527500E7F80A /* mbliphonecontrol.mm */,
 				4D7E38A6128152EF00E7F80A /* mbliphonecontrol.h */,
 				4DD3E1DE10411A0A00CAC7EF /* mbliphonedc.mm */,
@@ -1143,6 +1180,7 @@
 				4C9EAA0414E5900A00CCF92C /* mblsound.cpp */,
 				4C7D1CFA1476863600129F01 /* mblsyntax.h */,
 				F62D52A314DBF68300E7C1CD /* mbltextmessaging.cpp */,
+				E8C22E74177B2B53003785D3 /* mbltheme.cpp */,
 			);
 			name = Mobile;
 			sourceTree = "<group>";
@@ -1160,8 +1198,6 @@
 				F6436EA314D7F5FF00A4FF60 /* mblandroidbusyindicator.cpp */,
 				F6E610F4156B9D4B00E87FD6 /* mblandroidcalendar.cpp */,
 				F6D2312E1545B4CD003A19EE /* mblandroidcontact.cpp */,
-				4DB983C3130BB1DF008A03DC /* mblandroidcontext.cpp */,
-				4DB983C4130BB1DF008A03DC /* mblandroidcontext.h */,
 				E823E63114D2EA88001F73C4 /* mblandroidcontrol.cpp */,
 				E823E63314D2F2A1001F73C4 /* mblandroidcontrol.h */,
 				4DB983C6130BB1DF008A03DC /* mblandroiddc.cpp */,
@@ -1231,6 +1267,8 @@
 		4DD3DDAC1040ABB000CAC7EF /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				E852D71E1790290500485363 /* graphics_util.h */,
+				E852D71D178F103400485363 /* resolution.h */,
 				E81AC12D170C8CCE00315861 /* Core - Foundation */,
 				E81AC137170C8E1000315861 /* Core - Graphics */,
 				E81AC13A170C8F1200315861 /* Core - Language */,
@@ -1271,16 +1309,19 @@
 				4DD3DDB71040AC1A00CAC7EF /* bitmapeffect.h */,
 				4DD3DDB61040AC1A00CAC7EF /* bitmapeffectblur.cpp */,
 				4DD3DDB51040AC1A00CAC7EF /* bitmapeffectblur.h */,
+				E8C22C45177B1700003785D3 /* cgimageutil.cpp */,
 				4DD3DDCD1040AC5C00CAC7EF /* combiners.cpp */,
 				4DD3DDCA1040AC5C00CAC7EF /* context.h */,
-				4DD3DDC91040AC5C00CAC7EF /* contextscalewrapper.cpp */,
-				4DD3DDC81040AC5C00CAC7EF /* contextscalewrapper.h */,
 				4DDD7F52134BA80E009037A0 /* customprinter.cpp */,
 				4DD3DE271040AD0300CAC7EF /* font.cpp */,
 				4DD3DE261040AD0300CAC7EF /* font.h */,
 				4CD6214D14F639A00063C1B5 /* fonttable.cpp */,
 				4DD3DE231040AD0300CAC7EF /* gradient.cpp */,
 				4DD3DE221040AD0300CAC7EF /* gradient.h */,
+				E8C22E71177B2960003785D3 /* graphicscontext.cpp */,
+				E8C22E72177B2960003785D3 /* graphicscontext.h */,
+				E8C22E55177B2884003785D3 /* imagelist.cpp */,
+				E8C22E56177B2884003785D3 /* imagelist.h */,
 				4DD3DE8F1040AD8500CAC7EF /* mctheme.cpp */,
 				4DD3DE8E1040AD8500CAC7EF /* mctheme.h */,
 				4DD3DE871040AD8500CAC7EF /* metacontext.cpp */,
@@ -1426,7 +1467,8 @@
 				E865A51D1695BF3E00C4CBC3 /* image_rep.h */,
 				4D8C6999167A22B500D3CCE7 /* image_rep_encoded.cpp */,
 				4D8C699A167A22B500D3CCE7 /* image_rep_mutable.cpp */,
-				E85E2C0A1697347300E5A78A /* image_rep_transformed.cpp */,
+				E8AB9052180E9DCD0050A249 /* image_rep_densitymapped.cpp */,
+				E8BE6E29182966BA00D7C604 /* image_rep_resampled.cpp */,
 				4D8C699B167A22B500D3CCE7 /* imagebitmap.cpp */,
 				E865A51E1695BF3E00C4CBC3 /* imagebitmap.h */,
 				4DD3DE661040AD2800CAC7EF /* ipng.cpp */,
@@ -1473,6 +1515,7 @@
 				4DD3DEE61040ADEF00CAC7EF /* stacke.cpp */,
 				4DD3DEE51040ADEF00CAC7EF /* stacklst.cpp */,
 				4DD3DEE41040ADEF00CAC7EF /* stacklst.h */,
+				E8B6EE1317F0A1C900F77E0E /* stackview.cpp */,
 				4DD3DF061040ADFC00CAC7EF /* styledtext.cpp */,
 				4DD3DF051040ADFC00CAC7EF /* styledtext.h */,
 				4DD3DF111040ADFC00CAC7EF /* tooltip.cpp */,
@@ -1530,6 +1573,8 @@
 		E82D43BF1712CF1A00A10289 /* Projects */ = {
 			isa = PBXGroup;
 			children = (
+				E8C22C47177B1B78003785D3 /* libgraphics-mobile.xcodeproj */,
+				E8C22C4D177B1B87003785D3 /* libskia-mobile.xcodeproj */,
 				4D7B13EC1714198F006782C1 /* libpng-mobile.xcodeproj */,
 				4DA2CA1D1136CFDF00B9F27B /* libcore-mobile.xcodeproj */,
 				4D88B96415F54C13002CFBD6 /* libgif-mobile.xcodeproj */,
@@ -1588,8 +1633,6 @@
 				4DD3DEA61040AD9300CAC7EF /* opensslsocket.cpp */,
 				4DD3DEBF1040ADBC00CAC7EF /* parsedef.h */,
 				4DD3DEB61040ADBC00CAC7EF /* ports.cpp */,
-				4DD3DED21040ADCE00CAC7EF /* pxmaplst.cpp */,
-				4DD3DED11040ADCE00CAC7EF /* pxmaplst.h */,
 				4DD3DED01040ADCE00CAC7EF /* regex.cpp */,
 				4DD3DECF1040ADCE00CAC7EF /* regex.h */,
 				4DD3DEDF1040ADE500CAC7EF /* rtf.cpp */,
@@ -1650,6 +1693,22 @@
 			path = nativecontrol;
 			sourceTree = "<group>";
 		};
+		E8C22C48177B1B78003785D3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E8C22C4C177B1B79003785D3 /* libgraphicsmobile.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E8C22C4E177B1B87003785D3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E8C22C52177B1B87003785D3 /* libskiamobile.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -1679,6 +1738,8 @@
 			buildRules = (
 			);
 			dependencies = (
+				E8C22C56177B1BFB003785D3 /* PBXTargetDependency */,
+				E8C22C58177B1BFB003785D3 /* PBXTargetDependency */,
 				4DABCE6415ECD4E80085E214 /* PBXTargetDependency */,
 				4D22209A171D783800E7E557 /* PBXTargetDependency */,
 				4DE7ED5D13B33C9D002634F5 /* PBXTargetDependency */,
@@ -1737,6 +1798,9 @@
 /* Begin PBXProject section */
 		4DD3DD7D1040AA4700CAC7EF /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0420;
+			};
 			buildConfigurationList = 4DD3DD801040AA4700CAC7EF /* Build configuration list for PBXProject "engine-mobile" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -1760,6 +1824,10 @@
 					ProjectRef = 4D88B96415F54C13002CFBD6 /* libgif-mobile.xcodeproj */;
 				},
 				{
+					ProductGroup = E8C22C48177B1B78003785D3 /* Products */;
+					ProjectRef = E8C22C47177B1B78003785D3 /* libgraphics-mobile.xcodeproj */;
+				},
+				{
 					ProductGroup = 4D7B13B1171418FC006782C1 /* Products */;
 					ProjectRef = 4DD3E0E51040BC6F00CAC7EF /* libjpeg-mobile.xcodeproj */;
 				},
@@ -1770,6 +1838,10 @@
 				{
 					ProductGroup = 4D7B13ED1714198F006782C1 /* Products */;
 					ProjectRef = 4D7B13EC1714198F006782C1 /* libpng-mobile.xcodeproj */;
+				},
+				{
+					ProductGroup = E8C22C4E177B1B87003785D3 /* Products */;
+					ProjectRef = E8C22C4D177B1B87003785D3 /* libskia-mobile.xcodeproj */;
 				},
 			);
 			projectRoot = "";
@@ -1819,6 +1891,20 @@
 			remoteRef = 4DA2CA241136CFDF00B9F27B /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		E8C22C4C177B1B79003785D3 /* libgraphicsmobile.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libgraphicsmobile.a;
+			remoteRef = E8C22C4B177B1B79003785D3 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		E8C22C52177B1B87003785D3 /* libskiamobile.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libskiamobile.a;
+			remoteRef = E8C22C51177B1B87003785D3 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
@@ -1864,7 +1950,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "$PLATFORM_DEVELOPER_BIN_DIR/g++ -nodefaultlibs -Wl,-r -Wl,-x -arch ${ARCHS//\\ /\\ -arch\\ } -isysroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,\"$SRCROOT/standalone.ios\" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol\n";
+			shellScript = "if [ $CONFIGURATION = \"Debug\" ]; then\n  $PLATFORM_DEVELOPER_BIN_DIR/g++ -nodefaultlibs -Wl,-r -arch ${ARCHS//\\ /\\ -arch\\ } -isysroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,\"$SRCROOT/standalone.ios\" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol\nelse\n  $PLATFORM_DEVELOPER_BIN_DIR/g++ -nodefaultlibs -Wl,-r -Wl,-x -arch ${ARCHS//\\ /\\ -arch\\ } -isysroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,\"$SRCROOT/standalone.ios\" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -1913,7 +1999,6 @@
 				4DABCDAC15ECD4700085E214 /* cmdss.cpp in Sources */,
 				4DABCDAD15ECD4700085E214 /* combiners.cpp in Sources */,
 				4DABCDAE15ECD4700085E214 /* constant.cpp in Sources */,
-				4DABCDAF15ECD4700085E214 /* contextscalewrapper.cpp in Sources */,
 				4DABCDB015ECD4700085E214 /* control.cpp in Sources */,
 				4DABCDB115ECD4700085E214 /* cpalette.cpp in Sources */,
 				4DABCDB315ECD4700085E214 /* customprinter.cpp in Sources */,
@@ -1958,7 +2043,6 @@
 				E84A254E1680BFFD00EA7ACC /* image_rep.cpp in Sources */,
 				4D8C699C167A22B500D3CCE7 /* image_rep_encoded.cpp in Sources */,
 				4D8C699D167A22B500D3CCE7 /* image_rep_mutable.cpp in Sources */,
-				E85E2C0B1697347300E5A78A /* image_rep_transformed.cpp in Sources */,
 				4D8C699E167A22B500D3CCE7 /* imagebitmap.cpp in Sources */,
 				4DABCDDB15ECD4700085E214 /* ipng.cpp in Sources */,
 				4DABCDDC15ECD4700085E214 /* iquantization.cpp in Sources */,
@@ -1992,7 +2076,6 @@
 				4DABCDF715ECD4970085E214 /* mbliphonecalendar.mm in Sources */,
 				4DABCDF815ECD4970085E214 /* mbliphonecamera.mm in Sources */,
 				4DABCDF915ECD4970085E214 /* mbliphonecontact.mm in Sources */,
-				4DABCDFA15ECD4970085E214 /* mbliphonecontext.cpp in Sources */,
 				4DABCDFB15ECD4970085E214 /* mbliphonecontrol.mm in Sources */,
 				4DABCDFC15ECD4970085E214 /* mbliphonedc.mm in Sources */,
 				4DABCDFD15ECD4970085E214 /* mbliphonedialog.mm in Sources */,
@@ -2057,7 +2140,6 @@
 				4DABCE3815ECD4B50085E214 /* player.cpp in Sources */,
 				4DABCE3915ECD4B50085E214 /* printer.cpp in Sources */,
 				4DABCE3A15ECD4B50085E214 /* property.cpp in Sources */,
-				4DABCE3B15ECD4B50085E214 /* pxmaplst.cpp in Sources */,
 				4DABCE3C15ECD4B50085E214 /* redraw.cpp in Sources */,
 				4DABCE3D15ECD4B50085E214 /* regex.cpp in Sources */,
 				4DABCE3E15ECD4B50085E214 /* rtf.cpp in Sources */,
@@ -2096,6 +2178,13 @@
 				4DABCE5E15ECD4B50085E214 /* variablevalue.cpp in Sources */,
 				4DABCE5F15ECD4B50085E214 /* vclip.cpp in Sources */,
 				4DABCE6115ECD4B50085E214 /* visual.cpp in Sources */,
+				E8C22C46177B1700003785D3 /* cgimageutil.cpp in Sources */,
+				E8C22E57177B2884003785D3 /* imagelist.cpp in Sources */,
+				E8C22E73177B2960003785D3 /* graphicscontext.cpp in Sources */,
+				E8C22E75177B2B53003785D3 /* mbltheme.cpp in Sources */,
+				E8B6EE1417F0A1C900F77E0E /* stackview.cpp in Sources */,
+				E8AB9053180E9DCD0050A249 /* image_rep_densitymapped.cpp in Sources */,
+				E8BE6E2A182966BA00D7C604 /* image_rep_resampled.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2179,6 +2268,16 @@
 			isa = PBXTargetDependency;
 			name = coremobile;
 			targetProxy = 4DE7ED5C13B33C9D002634F5 /* PBXContainerItemProxy */;
+		};
+		E8C22C56177B1BFB003785D3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = graphicsmobile;
+			targetProxy = E8C22C55177B1BFB003785D3 /* PBXContainerItemProxy */;
+		};
+		E8C22C58177B1BFB003785D3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = skiamobile;
+			targetProxy = E8C22C57177B1BFB003785D3 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
