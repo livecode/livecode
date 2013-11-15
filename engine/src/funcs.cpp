@@ -4086,25 +4086,6 @@ void MCMouse::compile(MCSyntaxFactoryRef ctxt)
 	return ES_NORMAL;
 #endif /* MCOptionKey */
 
-
-MCParam::~MCParam()
-{
-	delete source;
-}
-
-Parse_stat MCParam::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add
-		(PE_PARAM_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCParam::eval(MCExecPoint &ep)
-{
 #ifdef /* MCParam */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -4127,30 +4108,6 @@ Exec_stat MCParam::eval(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCParam */
-
-	MCExecContext ctxt(ep);
-    
-    integer_t t_index;
-    
-	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		/* UNCHECKED */ MCeerror->add(EE_PARAM_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-    
-    t_index = ep.getint4();
-    
-	MCAutoValueRef t_result;
-	MCEngineEvalParam(ctxt, t_index, &t_result);
-    
-	if (!ctxt . HasError())
-	{
-		ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt . Catch(line, pos);
-}
 
 Parse_stat MCParamCount::parse(MCScriptPoint &sp, Boolean the)
 {
@@ -7183,23 +7140,6 @@ Exec_stat MCLongFilePath::eval(MCExecPoint &ep)
 	return ctxt.Catch(line, pos);
 }
 
-MCShortFilePath::~MCShortFilePath()
-{
-	delete type;
-}
-
-Parse_stat MCShortFilePath::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &type, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_SHORTFILEPATH_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCShortFilePath::eval(MCExecPoint &ep)
-{
 #ifdef /* MCShortFilePath */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
@@ -7221,47 +7161,6 @@ Exec_stat MCShortFilePath::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCShortFilePath */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_type;
-	MCAutoStringRef t_result;
-
-	if (type->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_SHORTFILEPATH_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	/* UNCHECKED */ ep.copyasstringref(&t_type);
-
-	MCFilesEvalShortFilePath(ctxt, *t_type, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-MCAliasReference::~MCAliasReference()
-{
-	delete type;
-}
-
-Parse_stat MCAliasReference::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &type, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_ALIASREFERENCE_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCAliasReference::eval(MCExecPoint &ep)
-{
 #ifdef /* MCAliasReference */ LEGACY_EXEC
 	if (type->eval(ep) != ES_NORMAL)
 	{
@@ -7276,30 +7175,6 @@ Exec_stat MCAliasReference::eval(MCExecPoint &ep)
 
 	return ES_NORMAL;
 #endif /* MCAliasReference */
-
-	
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
-	MCAutoStringRef t_result;
-	
-	if (type->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_ALIASREFERENCE_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	
-	/* UNCHECKED */ ep.copyasstringref(&t_source);
-	
-	MCFilesEvalAliasReference(ctxt, *t_source, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-	
-	return ctxt.Catch(line, pos);
-}
 
 
 #ifdef /* MCAlternateLanguages */ LEGACY_EXEC

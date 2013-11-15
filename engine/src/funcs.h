@@ -1177,19 +1177,11 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalOptionKeyMethodInfo; }
 };
 
-class MCParam : public MCUnaryFunction
+class MCParam : public MCUnaryFunctionCtxt<integer_t, MCValueRef, &MCExecContext::EvalExprAsInt, MCEngineEvalParam, EE_PARAM_BADINDEX, PE_PARAM_BADPARAM, kMCEngineEvalParamMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCParam()
-	{
-		source = NULL;
-	}
-	virtual ~MCParam();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalParamMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCParam(){}
+    virtual ~MCParam(){}
 };
 
 class MCParamCount : public MCConstantFunctionCtxt<integer_t, MCEngineEvalParamCount>
@@ -1892,20 +1884,11 @@ public:
 	virtual MCExpression *getmethodarg(void) const { return type; }
 };
 
-class MCShortFilePath : public MCUnaryFunction
+class MCShortFilePath : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCFilesEvalShortFilePath, EE_SHORTFILEPATH_BADSOURCE, PE_SHORTFILEPATH_BADPARAM, kMCFilesEvalShortFilePathMethodInfo>
 {
-	MCExpression *type;
 public:
-	MCShortFilePath()
-	{
-		type = NULL;
-	}
-	virtual ~MCShortFilePath();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalShortFilePathMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return type; }
+    MCShortFilePath(){}
+    virtual ~MCShortFilePath(){}
 };
 
 class MCLongFilePath : public MCUnaryFunction
@@ -1931,20 +1914,11 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCScriptingEvalAlternateLanguagesMethodInfo; }
 };
 
-class MCAliasReference: public MCUnaryFunction
+class MCAliasReference: public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCFilesEvalAliasReference, EE_ALIASREFERENCE_BADSOURCE, PE_ALIASREFERENCE_BADPARAM, kMCFilesEvalAliasReferenceMethodInfo>
 {
-	MCExpression *type;
 public:
-	MCAliasReference()
-	{
-		type = NULL;
-	}
-	virtual ~MCAliasReference();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalAliasReferenceMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return type; }
+    MCAliasReference(){}
+    virtual ~MCAliasReference(){}
 };
 
 class MCCipherNames : public MCConstantFunctionCtxt<MCStringRef, MCSecurityEvalCipherNames>
