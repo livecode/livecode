@@ -834,7 +834,6 @@ public:
 
 class MCLocals : public MCFunction
 {
-	MCHandler *h;
 public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual Exec_stat eval(MCExecPoint &);
@@ -921,7 +920,6 @@ public:
 class MCMerge : public MCFunction
 {
 public:
-	MCHandler *h;
 	MCExpression *source;
 public:
 	MCMerge()
@@ -1108,7 +1106,6 @@ public:
 
 class MCParam : public MCFunction
 {
-	MCHandler *h;
 	MCExpression *source;
 public:
 	MCParam()
@@ -1122,7 +1119,6 @@ public:
 
 class MCParamCount : public MCFunction
 {
-	MCHandler *h;
 public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual Exec_stat eval(MCExecPoint &);
@@ -1130,7 +1126,6 @@ public:
 
 class MCParams : public MCFunction
 {
-	MCHandler *h;
 public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual Exec_stat eval(MCExecPoint &);
@@ -1582,7 +1577,6 @@ public:
 
 class MCValue : public MCFunction
 {
-	MCHandler *h;
 	MCExpression *source;
 	MCChunk *object;
 public:
@@ -1598,7 +1592,6 @@ public:
 
 class MCVariables : public MCFunction
 {
-	MCHandler *h;
 public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual Exec_stat eval(MCExecPoint &);

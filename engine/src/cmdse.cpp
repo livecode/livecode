@@ -45,6 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "securemode.h"
 #include "osspec.h"
 #include "image.h"
+#include "hndlrlst.h"
 
 #include "globals.h"
 
@@ -840,7 +841,6 @@ Parse_stat MCMessage::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
 
-	h = sp.gethandler();
 	if (sp.parseexp(False, True, &message) != PS_NORMAL)
 	{
 		MCperror->add(PE_SEND_BADEXP, sp);
@@ -988,7 +988,14 @@ Exec_stat MCMessage::exec(MCExecPoint &ep)
 
 			// MW-2011-08-11: [[ Bug 9668 ]] Make sure we copy 'pdata' if we use it, since
 			//   mptr (into which it points) only lasts as long as this method call.
-			if (h->eval(ep) == ES_NORMAL)
+			// MW-2013-11-15: [[ Bug 11277 ]] If no handler, evaluate in the context of the
+			//   server script object.
+			Exec_stat t_stat;
+			if (ep.gethandler() != nil)
+				t_stat = ep . gethandler() -> eval(ep);
+			else
+				t_stat = ep . gethlist() -> eval(ep);
+			if (t_stat == ES_NORMAL)
 				newparam->set_argument(ep);
 			else
 				newparam->copysvalue_argument(pdata);
