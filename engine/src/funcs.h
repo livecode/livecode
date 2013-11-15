@@ -615,7 +615,7 @@ public:
 	}
 	virtual ~MCFontNames();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCTextEvalFontNamesMethodInfo; }
 	virtual MCExpression *getmethodarg(void) const { return type; }

@@ -2087,7 +2087,7 @@ Parse_stat MCFontNames::parse(MCScriptPoint &sp, Boolean the)
 }
 
 
-Exec_stat MCFontNames::eval(MCExecPoint &ep)
+void MCFontNames::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCFontNames */ LEGACY_EXEC
 	if (type != NULL)
@@ -2105,29 +2105,18 @@ Exec_stat MCFontNames::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCFontNames */
 
-	if (type != NULL)
-	{
-		if (type->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_FONTNAMES_BADTYPE, line, pos);
-			return ES_ERROR;
-		}
-	}
-
-	MCExecContext ctxt(ep);
 	MCAutoStringRef t_type;
-	/* UNCHECKED */ ep.copyasstringref(&t_type);
+    MCAutoStringRef t_result;
+    if (!ctxt . EvalOptionalExprAsStringRef(type, kMCEmptyString, EE_FONTNAMES_BADTYPE, &t_type))
+        return;
 
-	MCAutoStringRef t_result;
-	MCTextEvalFontNames(ctxt, *t_type, &t_result);
+    MCTextEvalFontNames(ctxt, *t_type, &t_result);
 
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
+    if (!ctxt . HasError())
+    {
+        r_value . type = kMCExecValueTypeStringRef;
+        r_value . stringref_value = MCValueRetain(*t_result);
+    }
 }
 
 #ifdef /* MCFontLanguage */ LEGACY_EXEC
