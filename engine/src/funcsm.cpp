@@ -1212,27 +1212,9 @@ Exec_stat MCPopulationVariance::eval(MCExecPoint &ep)
 	return ctxt.Catch(line, pos);
 }
 
-MCRandom::~MCRandom()
-{
-	delete limit;
-}
-
-Parse_stat MCRandom::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (get1param(sp, &limit, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_RANDOM_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
 // MW-2007-07-03: [[ Bug 4506 ]] - Large integers result in negative numbers
 //   being generated.
-Exec_stat MCRandom::eval(MCExecPoint &ep)
-{
+
 #ifdef /* MCRandom */ LEGACY_EXEC
 	Exec_stat t_stat;
 	t_stat = ES_NORMAL;
@@ -1259,27 +1241,6 @@ Exec_stat MCRandom::eval(MCExecPoint &ep)
 	return t_stat;
 #endif /* MCRandom */
 
-	MCExecContext ctxt(ep);
-	real64_t t_source;
-	real64_t t_result;
-
-	if (limit->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_RANDOM_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_source);
-
-	MCMathEvalRandom(ctxt, t_source, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 MCRound::~MCRound()
 {
@@ -1369,25 +1330,7 @@ void MCRound::compile(MCSyntaxFactoryRef ctxt)
 		compile_with_args(ctxt, kMCMathEvalRoundMethodInfo, source);
 }
 
-MCSin::~MCSin()
-{
-	delete source;
-}
 
-Parse_stat MCSin::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_SIN_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCSin::eval(MCExecPoint &ep)
-{
 #ifdef /* MCSin */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -1405,27 +1348,6 @@ Exec_stat MCSin::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCSin */
 
-	MCExecContext ctxt(ep);
-	real64_t t_source;
-	real64_t t_result;
-
-	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_SIN_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_source);
-
-	MCMathEvalSin(ctxt, t_source, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 // JS-2013-06-19: [[ StatsFunctions ]] Implementation of sampleStdDev (was stdDev)
 MCSampleStdDev::~MCSampleStdDev()
@@ -1538,25 +1460,7 @@ Exec_stat MCSampleVariance::eval(MCExecPoint &ep)
 	return ctxt.Catch(line, pos);
 }
 
-MCSqrt::~MCSqrt()
-{
-	delete source;
-}
 
-Parse_stat MCSqrt::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_SQRT_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCSqrt::eval(MCExecPoint &ep)
-{
 #ifdef /* MCSqrt */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -1574,28 +1478,6 @@ Exec_stat MCSqrt::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCSqrt */
 
-
-	MCExecContext ctxt(ep);
-	real64_t t_source;
-	real64_t t_result;
-
-	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_RANDOM_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_source);
-
-	MCMathEvalSqrt(ctxt, t_source, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 MCStatRound::~MCStatRound()
 {
@@ -1803,25 +1685,7 @@ Exec_stat MCSum::eval(MCExecPoint &ep)
 	return ctxt.Catch(line, pos);
 }
 
-MCTan::~MCTan()
-{
-	delete source;
-}
 
-Parse_stat MCTan::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_TAN_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCTan::eval(MCExecPoint &ep)
-{
 #ifdef /* MCTan */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -1841,46 +1705,6 @@ Exec_stat MCTan::eval(MCExecPoint &ep)
 #endif /* MCTan */
 
 
-	MCExecContext ctxt(ep);
-	real64_t t_source;
-	real64_t t_result;
-
-	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_TAN_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_source);
-
-	MCMathEvalTan(ctxt, t_source, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-MCTranspose::~MCTranspose()
-{
-	delete source;
-}
-
-Parse_stat MCTranspose::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_TRANSPOSE_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCTranspose::eval(MCExecPoint &ep)
-{
 #ifdef /* MCTranspose */ LEGACY_EXEC
 	// ARRAYEVAL
 	if (source -> eval(ep) != ES_NORMAL)
@@ -1919,34 +1743,6 @@ Exec_stat MCTranspose::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCTranspose */
 
-    MCExecContext ctxt(ep);
-
-    // ARRAYEVAL
-    if (source -> eval(ep) != ES_NORMAL)
-    {
-        MCeerror->add(EE_TRANSPOSE_BADSOURCE, line, pos);
-        return ES_ERROR;
-    }
-
-	if (!ep . isarray())
-	{
-		ep . clear();
-		return ES_NORMAL;
-	}
-
-    MCAutoArrayRef t_array;
-	/* UNCHECKED */ ep . copyasarrayref(&t_array);
-
-	MCAutoArrayRef t_result;
-	MCArraysEvalTransposeMatrix(ctxt, *t_array, &t_result);
-	if (!ctxt . HasError())
-	{
-		ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ES_ERROR;
-}
 
 #ifdef /* MCTrunc */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
