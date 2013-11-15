@@ -299,25 +299,6 @@ Exec_stat MCArithmeticMean::eval(MCExecPoint &ep)
 #endif /* MCAsin */
 
 
-MCAtan::~MCAtan()
-{
-	delete source;
-}
-
-Parse_stat MCAtan::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_ATAN_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCAtan::eval(MCExecPoint &ep)
-{
 #ifdef /* MCAtan */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -335,27 +316,6 @@ Exec_stat MCAtan::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCAtan */
 
-	MCExecContext ctxt(ep);
-	real64_t t_source;
-	real64_t t_result;
-
-	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_ATAN_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_source);
-
-	MCMathEvalAtan(ctxt, t_source, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 MCAtan2::~MCAtan2()
 {
@@ -563,25 +523,7 @@ void MCCompound::compile(MCSyntaxFactoryRef ctxt)
 	compile_with_args(ctxt, kMCMathEvalCompoundMethodInfo, rate, periods);
 }
 
-MCCos::~MCCos()
-{
-	delete source;
-}
 
-Parse_stat MCCos::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_COS_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCCos::eval(MCExecPoint &ep)
-{
 #ifdef /* MCCos */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -600,47 +542,6 @@ Exec_stat MCCos::eval(MCExecPoint &ep)
 #endif /* MCCos */
 
 
-	MCExecContext ctxt(ep);
-	real64_t t_source;
-	real64_t t_result;
-
-	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_COS_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_source);
-
-	MCMathEvalCos(ctxt, t_source, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-MCExp::~MCExp()
-{
-	delete source;
-}
-
-Parse_stat MCExp::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_EXP_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCExp::eval(MCExecPoint &ep)
-{
 #ifdef /* MCExp */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -658,48 +559,7 @@ Exec_stat MCExp::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCExp */
 
-	MCExecContext ctxt(ep);
-	real64_t t_source;
-	real64_t t_result;
 
-	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_EXP_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_source);
-
-	MCMathEvalExp(ctxt, t_source, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-MCExp1::~MCExp1()
-{
-	delete source;
-}
-
-Parse_stat MCExp1::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add
-		(PE_EXP1_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCExp1::eval(MCExecPoint &ep)
-{
 #ifdef /* MCExp1 */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -719,47 +579,7 @@ Exec_stat MCExp1::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCExp1 */
 
-	MCExecContext ctxt(ep);
-	real64_t t_source;
-	real64_t t_result;
 
-	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_EXP1_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_source);
-
-	MCMathEvalExp1(ctxt, t_source, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-MCExp2::~MCExp2()
-{
-	delete source;
-}
-
-Parse_stat MCExp2::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_EXP2_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCExp2::eval(MCExecPoint &ep)
-{
 #ifdef /* MCExp2 */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -778,47 +598,7 @@ Exec_stat MCExp2::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCExp2 */
 
-	MCExecContext ctxt(ep);
-	real64_t t_source;
-	real64_t t_result;
 
-	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_EXP2_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_source);
-
-	MCMathEvalExp2(ctxt, t_source, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-MCExp10::~MCExp10()
-{
-	delete source;
-}
-
-Parse_stat MCExp10::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_EXP10_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCExp10::eval(MCExecPoint &ep)
-{
 #ifdef /* MCExp10 */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -836,27 +616,6 @@ Exec_stat MCExp10::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCExp10 */
 
-	MCExecContext ctxt(ep);
-	real64_t t_source;
-	real64_t t_result;
-
-	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_EXP10_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_source);
-
-	MCMathEvalExp10(ctxt, t_source, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 // JS-2013-06-19: [[ StatsFunctions ]] Implementation of geometricMean
 MCGeometricMean::~MCGeometricMean()
