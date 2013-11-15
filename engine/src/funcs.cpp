@@ -3312,25 +3312,6 @@ Parse_stat MCLicensed::parse(MCScriptPoint &sp, Boolean the)
 	return ES_NORMAL;
 #endif /* MCLicensed */
 
-
-MCLocalLoc::~MCLocalLoc()
-{
-	delete point;
-}
-
-Parse_stat MCLocalLoc::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &point, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_LOCALLOC_BADPOINT, sp);
-		return PS_ERROR;
-
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCLocalLoc::eval(MCExecPoint &ep)
-{
 #ifdef /* MCLocalLoc */ LEGACY_EXEC
 	int2 x, y;
 	if (point->eval(ep) != ES_NORMAL || !MCU_stoi2x2(ep.getsvalue(), x, y))
@@ -3348,28 +3329,6 @@ Exec_stat MCLocalLoc::eval(MCExecPoint &ep)
 
 	return ES_NORMAL;
 #endif /* MCLocalLoc */
-
-	MCPoint t_point;
-	if (point->eval(ep) != ES_NORMAL ||
-		!ep . copyaslegacypoint(t_point))
-	{
-		MCeerror->add(EE_LOCALLOC_NAP, line, pos, ep.getsvalue());
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-
-	MCPoint t_result;
-	MCInterfaceEvalLocalLoc(ctxt, t_point, t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setpoint(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 Parse_stat MCLocals::parse(MCScriptPoint &sp, Boolean the)
 {
@@ -3389,24 +3348,6 @@ Parse_stat MCLocals::parse(MCScriptPoint &sp, Boolean the)
 	return ES_NORMAL;
 #endif /* MCMachine */
 
-
-MCMacToIso::~MCMacToIso()
-{
-	delete source;
-}
-
-Parse_stat MCMacToIso::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_MACTOISO_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCMacToIso::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMacToIso */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
@@ -3418,30 +3359,6 @@ Exec_stat MCMacToIso::eval(MCExecPoint &ep)
 	IO_mac_to_iso(ep.getbuffer(0), ep.getsvalue().getlength());
 	return ES_NORMAL;
 #endif /* MCMacToIso */
-
-
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_MACTOISO_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	MCAutoDataRef t_source;
-	/* UNCHECKED */ ep . copyasdataref(&t_source);
-
-	MCAutoDataRef t_result;
-	MCFiltersEvalMacToIso(ctxt, *t_source, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
 
 #ifdef /* MCMainStacks */ LEGACY_EXEC
 	MCdispatcher->getmainstacknames(ep);

@@ -895,20 +895,11 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCLegacyEvalLicensedMethodInfo; }
 };
 
-class MCLocalLoc : public MCUnaryFunction
+class MCLocalLoc : public MCUnaryFunctionCtxt<MCPoint, MCPoint, &MCExecContext::EvalExprAsPoint, MCInterfaceEvalLocalLoc, EE_LOCALLOC_NAP, PE_LOCALLOC_BADPOINT, kMCInterfaceEvalLocalLocMethodInfo>
 {
-	MCExpression *point;
 public:
-	MCLocalLoc()
-	{
-		point = NULL;
-	}
-	virtual ~MCLocalLoc();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalLocalLocMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return point; }
+    MCLocalLoc(){}
+    virtual ~MCLocalLoc(){}
 };
 
 class MCLocals : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalLocalNames>
@@ -927,20 +918,11 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalMachineMethodInfo; }
 };
 
-class MCMacToIso : public MCUnaryFunction
+class MCMacToIso : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, &MCExecContext::EvalExprAsDataRef, MCFiltersEvalMacToIso, EE_MACTOISO_BADSOURCE, PE_MACTOISO_BADPARAM, kMCFiltersEvalMacToIsoMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCMacToIso()
-	{
-		source = NULL;
-	}
-	virtual ~MCMacToIso();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalMacToIsoMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCMacToIso(){}
+    virtual ~MCMacToIso(){}
 };
 
 class MCMainStacks : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalMainStacks>
