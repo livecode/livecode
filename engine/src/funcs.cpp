@@ -7027,23 +7027,6 @@ void MCSetResource::compile(MCSyntaxFactoryRef ctxt)
 	compile_with_args(ctxt, kMCFilesEvalSetResourceMethodInfo, source, type, id, name, flags, value);
 }
 
-MCSpecialFolderPath::~MCSpecialFolderPath()
-{
-	delete type;
-}
-
-Parse_stat MCSpecialFolderPath::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &type, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_SPECIALFOLDERPATH_BADTYPE, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCSpecialFolderPath::eval(MCExecPoint &ep)
-{
 #ifdef /* MCSpecialFolderPath */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
@@ -7059,48 +7042,6 @@ Exec_stat MCSpecialFolderPath::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCSpecialFolderPath */
 
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_type;
-	MCAutoStringRef t_result;
-
-	if (type->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_SPECIALFOLDERPATH_BADPARAM, line, pos);
-		return ES_ERROR;
-	}
-
-	/* UNCHECKED */ ep.copyasstringref(&t_type);
-
-	MCFilesEvalSpecialFolderPath(ctxt, *t_type, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-
-MCLongFilePath::~MCLongFilePath()
-{
-	delete type;
-}
-
-Parse_stat MCLongFilePath::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &type, the) != PS_NORMAL)
-	{
-		MCperror->add
-		(PE_LONGFILEPATH_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCLongFilePath::eval(MCExecPoint &ep)
-{
 #ifdef /* MCLongFilePath */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
@@ -7115,30 +7056,6 @@ Exec_stat MCLongFilePath::eval(MCExecPoint &ep)
 	MCS_longfilepath(ep);
 	return ES_NORMAL;
 #endif /* MCLongFilePath */
-
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_type;
-	MCAutoStringRef t_result;
-
-	if (type->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_LONGFILEPATH_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	/* UNCHECKED */ ep.copyasstringref(&t_type);
-
-	MCFilesEvalLongFilePath(ctxt, *t_type, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 #ifdef /* MCShortFilePath */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)

@@ -1868,20 +1868,11 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCSpecialFolderPath : public MCUnaryFunction
+class MCSpecialFolderPath : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCFilesEvalSpecialFolderPath, EE_SPECIALFOLDERPATH_BADPARAM, PE_SPECIALFOLDERPATH_BADTYPE, kMCFilesEvalSpecialFolderPathMethodInfo>
 {
-	MCExpression *type;
 public:
-	MCSpecialFolderPath()
-	{
-		type = NULL;
-	}
-	virtual ~MCSpecialFolderPath();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalSpecialFolderPathMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return type; }
+    MCSpecialFolderPath(){}
+    virtual ~MCSpecialFolderPath(){}
 };
 
 class MCShortFilePath : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCFilesEvalShortFilePath, EE_SHORTFILEPATH_BADSOURCE, PE_SHORTFILEPATH_BADPARAM, kMCFilesEvalShortFilePathMethodInfo>
@@ -1891,20 +1882,11 @@ public:
     virtual ~MCShortFilePath(){}
 };
 
-class MCLongFilePath : public MCUnaryFunction
+class MCLongFilePath : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCFilesEvalLongFilePath, EE_LONGFILEPATH_BADSOURCE, PE_LONGFILEPATH_BADPARAM, kMCFilesEvalLongFilePathMethodInfo>
 {
-	MCExpression *type;
 public:
-	MCLongFilePath()
-	{
-		type = NULL;
-	}
-	virtual ~MCLongFilePath();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalLongFilePathMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return type; }
+    MCLongFilePath(){}
+    virtual ~MCLongFilePath(){}
 };
 
 class MCAlternateLanguages : public MCConstantFunctionCtxt<MCStringRef, MCScriptingEvalAlternateLanguages>
