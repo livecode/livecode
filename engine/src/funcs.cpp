@@ -3350,8 +3350,8 @@ void MCMatch::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
             MCVariable *t_var = t_result_params->evalvar(ctxt);
             if (t_var == nil)
             {
-                MCeerror->add(EE_MATCH_BADDEST, line, pos);
-                return ES_ERROR;
+                ctxt . LegacyThrow(EE_MATCH_BADDEST);
+                return;
             }
             /* UNCHECKED */ t_var->setvalueref(t_results[i]);
             t_result_params = t_result_params->getnext();
