@@ -6026,24 +6026,6 @@ void MCWithin::compile(MCSyntaxFactoryRef ctxt)
 }
 
 // platform specific functions
-MCMCISendString::~MCMCISendString()
-{
-	delete string;
-}
-
-Parse_stat MCMCISendString::parse(MCScriptPoint &sp, Boolean the)
-{
-    if (get1param(sp, &string, the) != PS_NORMAL)
-    {
-        MCperror->add
-                (PE_MCISENDSTRING_BADPARAM, sp);
-        return PS_ERROR;
-    }
-	return PS_NORMAL;
-}
-
-Exec_stat MCMCISendString::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMCISendString */ LEGACY_EXEC
 	if (string->eval(ep) != ES_NORMAL)
 	{
@@ -6071,47 +6053,6 @@ Exec_stat MCMCISendString::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCMCISendString */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
-	MCAutoStringRef t_result;
-
-	if (string->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add (EE_MCISENDSTRING_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	/* UNCHECKED */ ep.copyasstringref(&t_source);
-
-	MCMultimediaEvalMCISendString(ctxt, *t_source, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-MCDeleteRegistry::~MCDeleteRegistry()
-{
-	delete key;
-}
-
-Parse_stat MCDeleteRegistry::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &key, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_SHELL_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCDeleteRegistry::eval(MCExecPoint &ep)
-{
 #ifdef /* MCDeleteRegistry */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_REGISTRY_WRITE)
 	{
@@ -6129,46 +6070,6 @@ Exec_stat MCDeleteRegistry::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCDeleteRegistry */
 
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_key;
-	bool t_result;
-
-	if (key->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_SETREGISTRY_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-
-	/* UNCHECKED */ ep.copyasstringref(&t_key);
-
-	MCFilesEvalDeleteRegistry(ctxt, *t_key, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-MCListRegistry::~MCListRegistry()
-{
-	delete key;
-}
-
-Parse_stat MCListRegistry::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &key, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_SHELL_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCListRegistry::eval(MCExecPoint &ep)
-{
 #ifdef /* MCListRegistry */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_REGISTRY_READ)
 	{
@@ -6183,29 +6084,6 @@ Exec_stat MCListRegistry::eval(MCExecPoint &ep)
 	MCS_list_registry(ep);
 	return ES_NORMAL;
 #endif /* MCListRegistry */
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_key;
-	MCAutoStringRef t_result;
-
-	if (key->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_SETREGISTRY_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-
-	/* UNCHECKED */ ep.copyasstringref(&t_key);
-
-	MCFilesEvalListRegistry(ctxt, *t_key, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 MCQueryRegistry::~MCQueryRegistry()
 {

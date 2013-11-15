@@ -1705,52 +1705,25 @@ public:
 
 // platform specific functions in funcs.cpp
 
-class MCMCISendString : public MCUnaryFunction
+class MCMCISendString : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCMultimediaEvalMCISendString, EE_MCISENDSTRING_BADSOURCE, PE_MCISENDSTRING_BADPARAM, kMCMultimediaEvalMCISendStringMethodInfo>
 {
-	MCExpression *string;
 public:
-	MCMCISendString()
-	{
-		string = NULL;
-	}
-	virtual ~MCMCISendString();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMultimediaEvalMCISendStringMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return string; }
+    MCMCISendString(){}
+    virtual ~MCMCISendString(){}
 };
 
-class MCDeleteRegistry : public MCUnaryFunction
+class MCDeleteRegistry : public MCUnaryFunctionCtxt<MCStringRef, bool, &MCExecContext::EvalExprAsStringRef, MCFilesEvalDeleteRegistry, EE_SETREGISTRY_BADEXP, PE_SETREGISTRY_BADPARAM, kMCFilesEvalDeleteRegistryMethodInfo>
 {
-	MCExpression *key;
 public:
-	MCDeleteRegistry()
-	{
-		key = NULL;
-	}
-	virtual ~MCDeleteRegistry();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalDeleteRegistryMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return key; }
+    MCDeleteRegistry(){}
+    virtual ~MCDeleteRegistry(){}
 };
 
-class MCListRegistry : public MCUnaryFunction
+class MCListRegistry : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCFilesEvalListRegistry, EE_SETREGISTRY_BADEXP, PE_SETREGISTRY_BADPARAM, kMCFilesEvalListRegistryMethodInfo>
 {
-	MCExpression *key;
 public:
-	MCListRegistry()
-	{
-		key = NULL;
-	}
-	virtual ~MCListRegistry();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalListRegistryMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return key; }
+    MCListRegistry(){}
+    virtual ~MCListRegistry(){}
 };
 
 class MCQueryRegistry : public MCFunction
