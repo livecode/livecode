@@ -1755,7 +1755,9 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			Boolean t_font_is_underline;
 			Boolean t_font_is_condensed;
 			Boolean t_font_is_extended;
-			ATSLineLayoutOptions t_layout_options;
+			
+			// MW-2013-11-15: [[ Bug 11444 ]] It seems setting these makes things *less* like QuickDraw!
+			/* ATSLineLayoutOptions t_layout_options; */
 			
 			ATSUAttributeTag t_tags[] =
 			{
@@ -1776,17 +1778,17 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			ATSUAttributeTag t_layout_tags[] =
 			{
 				kATSUCGContextTag,
-				kATSULineLayoutOptionsTag,
+				/*kATSULineLayoutOptionsTag,*/
 			};
 			ByteCount t_layout_sizes[] =
 			{
 				sizeof(CGContextRef),
-				sizeof(ATSLineLayoutOptions)
+				/*sizeof(ATSLineLayoutOptions)*/
 			};
 			ATSUAttributeValuePtr t_layout_attrs[] =
 			{
 				&m_context,
-				&t_layout_options
+				/*&t_layout_options*/
 			};
 			
 			UniCharCount t_run = len / 2;
@@ -1801,7 +1803,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			t_err = ATSUCreateTextLayout(&t_layout);
 			t_err = ATSUSetTransientFontMatching(t_layout, true);
 			
-			t_layout_options = kATSLineUseDeviceMetrics | kATSLineFractDisable;
+			/*t_layout_options = kATSLineFractDisable;*/
 			
 			t_err = ATSUSetLayoutControls(t_layout, sizeof(t_layout_tags) / sizeof(ATSUAttributeTag), t_layout_tags, t_layout_sizes, t_layout_attrs);
 			

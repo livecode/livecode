@@ -182,7 +182,8 @@ bool MCTextLayout(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct 
 		&t_font_size
 	};
 	
-	ATSUAttributeTag t_layout_tags[] =
+	// MW-2013-11-15: [[ Bug 11444 ]] It seems setting these makes things *less* like QuickDraw!
+	/*ATSUAttributeTag t_layout_tags[] =
 	{
 		kATSULineLayoutOptionsTag,
 	};
@@ -193,7 +194,7 @@ bool MCTextLayout(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct 
 	ATSUAttributeValuePtr t_layout_attrs[] =
 	{
 		&t_layout_options
-	};
+	};*/
 	
 	UniCharCount t_run = p_char_count;
 	Rect t_bounds;
@@ -207,9 +208,11 @@ bool MCTextLayout(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct 
 	t_err = ATSUCreateTextLayout(&t_layout);
 	t_err = ATSUSetTransientFontMatching(t_layout, false);
 	
+	/*
 	t_layout_options = kATSLineUseDeviceMetrics | kATSLineFractDisable;
 	
 	t_err = ATSUSetLayoutControls(t_layout, sizeof(t_layout_tags) / sizeof(ATSUAttributeTag), t_layout_tags, t_layout_sizes, t_layout_attrs);
+	*/
 	
 	ATSUStyle *t_new_styles;
 	uint32_t t_new_style_count;
