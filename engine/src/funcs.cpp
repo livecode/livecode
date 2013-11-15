@@ -5772,23 +5772,6 @@ void MCUniEncode::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndExpression(ctxt);
 }
 
-MCUrlDecode::~MCUrlDecode()
-{
-	delete source;
-}
-
-Parse_stat MCUrlDecode::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_URLDECODE_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCUrlDecode::eval(MCExecPoint &ep)
-{
 #ifdef /* MCUrlDecode */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
@@ -5799,45 +5782,6 @@ Exec_stat MCUrlDecode::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCUrlDecode */
 
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_URLDECODE_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
-
-	MCAutoStringRef t_result;
-	MCFiltersEvalUrlDecode(ctxt, *t_source, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-MCUrlEncode::~MCUrlEncode()
-{
-	delete source;
-}
-
-Parse_stat MCUrlEncode::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_URLENCODE_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCUrlEncode::eval(MCExecPoint &ep)
-{
 #ifdef /* MCUrlEncode */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
@@ -5848,44 +5792,6 @@ Exec_stat MCUrlEncode::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCUrlEncode */
 
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_URLENCODE_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
-
-	MCAutoStringRef t_result;
-	MCFiltersEvalUrlEncode(ctxt, *t_source, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-MCUrlStatus::~MCUrlStatus()
-{
-	delete url;
-}
-
-Parse_stat MCUrlStatus::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &url, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_URLSTATUS_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCUrlStatus::eval(MCExecPoint &ep)
-{
 #ifdef /* MCUrlStatus */ LEGACY_EXEC
 	if (url->eval(ep) != ES_NORMAL)
 	{
@@ -5897,30 +5803,6 @@ Exec_stat MCUrlStatus::eval(MCExecPoint &ep)
 	MCresult->fetch(ep);
 	return ES_NORMAL;
 #endif /* MCUrlStatus */
-
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
-
-	if (url->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_URLSTATUS_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
-
-	MCAutoStringRef t_result;
-	MCNetworkEvalUrlStatus(ctxt, *t_source, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 MCValue::~MCValue()
 {

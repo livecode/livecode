@@ -1664,52 +1664,25 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCUrlDecode : public MCUnaryFunction
+class MCUrlDecode : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCFiltersEvalUrlDecode, EE_URLDECODE_BADSOURCE, PE_URLDECODE_BADPARAM, kMCFiltersEvalUrlDecodeMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCUrlDecode()
-	{
-		source = NULL;
-	}
-	virtual ~MCUrlDecode();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalUrlDecodeMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCUrlDecode(){}
+    virtual ~MCUrlDecode(){}
 };
 
-class MCUrlEncode : public MCUnaryFunction
+class MCUrlEncode : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCFiltersEvalUrlEncode, EE_URLENCODE_BADSOURCE, PE_URLENCODE_BADPARAM, kMCFiltersEvalUrlEncodeMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCUrlEncode()
-	{
-		source = NULL;
-	}
-	virtual ~MCUrlEncode();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalUrlEncodeMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCUrlEncode(){}
+    virtual ~MCUrlEncode(){}
 };
 
-class MCUrlStatus : public MCUnaryFunction
+class MCUrlStatus : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCNetworkEvalUrlStatus, EE_URLSTATUS_BADSOURCE, PE_URLSTATUS_BADPARAM, kMCNetworkEvalUrlStatusMethodInfo>
 {
-	MCExpression *url;
 public:
-	MCUrlStatus()
-	{
-		url = NULL;
-	}
-	virtual ~MCUrlStatus();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCNetworkEvalUrlStatusMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return url; }
+    MCUrlStatus(){}
+    virtual ~MCUrlStatus(){}
 };
 
 class MCValue : public MCFunction
