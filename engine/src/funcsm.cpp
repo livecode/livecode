@@ -727,25 +727,7 @@ Exec_stat MCHarmonicMean::eval(MCExecPoint &ep)
 	return ctxt.Catch(line, pos);
 }
 
-MCLn::~MCLn()
-{
-	delete source;
-}
 
-Parse_stat MCLn::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_LN_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCLn::eval(MCExecPoint &ep)
-{
 #ifdef /* MCLn */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -763,47 +745,8 @@ Exec_stat MCLn::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCLn */
 
-	MCExecContext ctxt(ep);
-	real64_t t_source;
-	real64_t t_result;
 
-	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_LN_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_source);
 
-	MCMathEvalLn(ctxt, t_source, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-MCLn1::~MCLn1()
-{
-	delete source;
-}
-
-Parse_stat MCLn1::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_LN1_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCLn1::eval(MCExecPoint &ep)
-{
 #ifdef /* MCLn1 */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -821,47 +764,7 @@ Exec_stat MCLn1::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCLn1 */
 
-	MCExecContext ctxt(ep);
-	real64_t t_source;
-	real64_t t_result;
 
-	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_LN1_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_source);
-
-	MCMathEvalLn1(ctxt, t_source, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-MCLog2::~MCLog2()
-{
-	delete source;
-}
-
-Parse_stat MCLog2::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_LOG2_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCLog2::eval(MCExecPoint &ep)
-{
 #ifdef /* MCLog2 */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -880,47 +783,8 @@ Exec_stat MCLog2::eval(MCExecPoint &ep)
 #endif /* MCLog2 */
 
 
-	MCExecContext ctxt(ep);
-	real64_t t_source;
-	real64_t t_result;
 
-	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_LOG2_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_source);
 
-	MCMathEvalLog2(ctxt, t_source, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-MCLog10::~MCLog10()
-{
-	delete source;
-}
-
-Parse_stat MCLog10::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_LOG10_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCLog10::eval(MCExecPoint &ep)
-{
 #ifdef /* MCLog10 */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -938,27 +802,6 @@ Exec_stat MCLog10::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCLog10 */
 
-	MCExecContext ctxt(ep);
-	real64_t t_source;
-	real64_t t_result;
-
-	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_LOG10_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_source);
-
-	MCMathEvalLog10(ctxt, t_source, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 MCMatrixMultiply::~MCMatrixMultiply()
 {
