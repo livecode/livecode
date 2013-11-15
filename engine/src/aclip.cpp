@@ -370,8 +370,10 @@ void MCAudioClip::init()
 #endif
 	if (supported)
 	{
+        uinteger_t t_loudness;
 		MCExecPoint ep;
-		getprop(0, P_PLAY_LOUDNESS, ep, False);
+        MCExecContext ctxt(ep);
+		getuintprop(ctxt, 0, P_PLAY_LOUDNESS, False, t_loudness);
 	}
 }
 

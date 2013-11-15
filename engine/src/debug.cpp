@@ -384,7 +384,7 @@ bool MCB_unparsebreaks(MCStringRef& r_value)
 
 	return t_success;
 }
-
+#ifdef LEGACY_EXEC
 void MCB_unparsebreaks(MCExecPoint& ep)
 {
 	ep.clear();
@@ -401,7 +401,7 @@ void MCB_unparsebreaks(MCExecPoint& ep)
 				ep.concatstringref(MCbreakpoints[i].info, EC_COMMA, false);
 		}
 }
-
+#endif
 static MCObject *getobj(MCExecPoint& ep)
 {
 	MCObject *objptr = NULL;

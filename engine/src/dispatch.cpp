@@ -1575,7 +1575,10 @@ check:
 			{
 				iptr = new MCImage;
 				iptr->appendto(imagecache);
-				iptr->setprop(0, P_TEXT, *epptr, False);
+                MCAutoDataRef t_text;
+                /* UNCHECKED */ ep . copyasdataref(&t_text);
+                MCExecContext ctxt(*epptr);
+				iptr->SetText(ctxt, *t_text);
 				iptr->setname(*t_image_name);
 				return iptr;
 			}

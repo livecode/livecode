@@ -632,6 +632,7 @@ void MCInternalObjectListenerMessagePendingListeners(void)
 	}
 }
 
+#ifdef LEGACY_EXEC
 void MCInternalObjectListenerListListeners(MCExecPoint &ep)
 {
 	ep . clear();
@@ -680,6 +681,7 @@ void MCInternalObjectListenerListListeners(MCExecPoint &ep)
 			t_listener = s_object_listeners;
 	}
 }
+#endif
 
 void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_listeners, uindex_t& r_count)
 {

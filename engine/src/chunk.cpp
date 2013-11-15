@@ -5682,25 +5682,13 @@ bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
 		}
         t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, false, true);
         
-        if (t_info != nil)
+        if (t_info == nil || t_info -> getter == nil)
         {
-            MCExecFetchProperty(ctxt, t_info, &t_obj_chunk, r_value);
+            MCeerror -> add(EE_OBJECT_GETNOPROP, line, pos);
+            return false;
         }
-        else
-        {
-            // MW-2011-11-23: [[ Array TextStyle ]] Pass the 'index' along to method to
-            //   handle specific styles.
-            MCField *fptr;
-            fptr = static_cast<MCField *>(t_obj_chunk . object);
-            if (fptr->gettextatts(t_obj_chunk . part_id, which, ctxt . GetEP(), index, effective, t_obj_chunk . mark . start, t_obj_chunk . mark . finish, islinechunk()) != ES_NORMAL)
-            {
-                MCeerror->add(EE_CHUNK_CANTGETATTS, line, pos);
-                return false;
-            }
-            ctxt . GetEP() . copyasvalueref(r_value . valueref_value);
-            r_value . type = kMCExecValueTypeValueRef;
-            return true;
-        }
+        
+        MCExecFetchProperty(ctxt, t_info, &t_obj_chunk, r_value);
 	}
     
     return !ctxt . HasError();
@@ -5771,16 +5759,13 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
             //   the ep.
             // MW-2012-01-25: [[ ParaStyles ]] Pass whether this was an explicit line chunk
             //   or not. This is used to disambiguate the setting of 'backColor'.
-            MCField *fptr;
-            fptr = static_cast<MCField *>(t_obj_chunk . object);
-            MCAutoValueRef t_value;
-            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeValueRef, &(&t_value));
-            ctxt . GetEP() . setvalueref(*t_value);
-            if (fptr->settextatts(t_obj_chunk . part_id, which, ctxt . GetEP(), index, t_obj_chunk . mark . start, t_obj_chunk . mark . finish, islinechunk()) != ES_NORMAL)
+            if (t_info == nil || t_info -> getter == nil)
             {
-                MCeerror->add(EE_CHUNK_CANTSETATTS, line, pos);
-                return true;
+                MCeerror -> add(EE_OBJECT_SETNOPROP, line, pos);
+                return false;
             }
+            
+            MCExecFetchProperty(ctxt, t_info, &t_obj_chunk, p_value);
         }
     }
     

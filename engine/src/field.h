@@ -402,7 +402,8 @@ public:
 	Exec_stat settextindex_oldstring(uint4 parid, findex_t si, findex_t ei, const MCString &s, Boolean undoing, bool asunicode = false);
 	Exec_stat settextindex(uint4 parid, findex_t si, findex_t ei, MCStringRef s, Boolean undoing);
 	void getlinkdata(MCRectangle &r, MCBlock *&sb, MCBlock *&eb);
-
+    
+#ifdef LEGACY_EXEC
 	// MW-2011-11-23: [[ Array TextStyle ]] Setting/getting text attributes can be indexed by
 	//   specific style if which == P_TEXT_STYLE.
 	// MW-2012-01-25: [[ ParaStyles ]] Add a line chunk parameter for disambiguating things
@@ -415,6 +416,8 @@ public:
 	// MW-2013-08-01: [[ Bug 10932 ]] Added dont_layout property which stops layout of paragraphs and
 	//   added P_UNDEFINED support, which just causes a full reflow of the field.
 	Exec_stat settextatts(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef index, findex_t si, findex_t ei, bool is_line, bool dont_layout = false);
+#endif
+    
 	Exec_stat seltext(findex_t si, findex_t ei, Boolean focus, Boolean update = False);
 	uint2 hilitedline();
 	void hilitedlines(MCExecPoint &ep);

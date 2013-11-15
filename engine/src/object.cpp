@@ -856,8 +856,10 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 		if (hptr -> getfileindex() == 0)
 		{
 			MCExecPoint ep(this, NULL, NULL);
-			getprop(0, P_LONG_ID, ep, False);
-			MCeerror->add(EE_OBJECT_NAME, 0, 0, ep.getsvalue());
+            MCExecContext ctxt(ep);
+            MCAutoStringRef t_id;
+			getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
+			MCeerror->add(EE_OBJECT_NAME, 0, 0, MCStringGetOldString(*t_id));
 		}
 		else
 		{
@@ -911,9 +913,11 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 		stat = hptr->exec(ep, params);
 	if (stat == ES_ERROR)
 	{
-		MCExecPoint ep(this, NULL, NULL);
-		parentscript -> GetParent() -> GetObject() -> getprop(0, P_LONG_ID, ep, False);
-		MCeerror->add(EE_OBJECT_NAME, 0, 0, ep.getsvalue());
+        MCExecPoint ep(this, NULL, NULL);
+        MCExecContext ctxt(ep);
+        MCAutoStringRef t_id;
+        parentscript -> GetParent() -> GetObject() -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
+        MCeerror->add(EE_OBJECT_NAME, 0, 0, MCStringGetOldString(*t_id));
 	}
 	scriptdepth--;
 	t_parentscript_object->scriptdepth--;
@@ -1202,8 +1206,10 @@ void MCObject::setstate(Boolean on, uint4 newstate)
 Exec_stat MCObject::setsprop(Properties which, MCStringRef s)
 {
 	MCExecPoint ep(this, NULL, NULL);
-	ep.setvalueref(s);
-	return setprop(0, which, ep, False);
+    MCExecContext ctxt(ep);
+    setstringprop(ctxt, 0, which, False, s);
+    
+    return ctxt . HasError() ? ES_ERROR : ES_NORMAL;
 }
 
 void MCObject::help()
@@ -2040,9 +2046,11 @@ void MCObject::senderror()
 	if (!MCperror->isempty())
 	{
 		MCExecPoint ep(this, NULL, NULL);
-		MCerrorptr->getprop(0, P_LONG_ID, ep, False);
+        MCExecContext ctxt(ep);
+        MCAutoStringRef t_id;
+		MCerrorptr->getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
 		MCperror->add
-		(PE_OBJECT_NAME, 0, 0, ep.getsvalue());
+		(PE_OBJECT_NAME, 0, 0, MCStringGetOldString(*t_id));
 		/* UNCHECKED */ MCperror->copyasstringref(&t_perror);
 		MCperror->clear();
 	}
@@ -2226,8 +2234,10 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 				if (report && parent != NULL)
 				{
 					MCExecPoint ep(this, NULL, NULL);
-					getprop(0, P_LONG_ID, ep, False);
-					MCperror->add(PE_OBJECT_NAME, 0, 0, ep.getsvalue());
+                    MCExecContext ctxt(ep);
+                    MCAutoStringRef t_id;
+					getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
+					MCperror->add(PE_OBJECT_NAME, 0, 0, MCStringGetOldString(*t_id));
 					MCAutoStringRef t_string;
 					/* UNCHECKED */ MCperror->copyasstringref(&t_string);
 					message_with_valueref_args(MCM_script_error, *t_string);

@@ -801,6 +801,7 @@ void MCField::getlinkdata(MCRectangle &lrect, MCBlock *&sb, MCBlock *&eb)
 	lrect.x += getcontentx();
 }
 
+#ifdef /* MCField::gettextatts */ LEGACY_EXEC
 // MW-2012-01-25: [[ ParaStyles ]] The 'is_line_chunk' parameter is true when a text
 //   attribute is set directly on a line (used to disambiguate backColor).
 Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, MCNameRef index, Boolean effective, findex_t si, findex_t ei, bool is_line_chunk)
@@ -1310,7 +1311,9 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 	
 	return ES_NORMAL;
 }
+#endif /* MCField::gettextatts */
 
+#ifdef /* MCField::settextatts */ LEGACY_EXEC
 // MW-2011-12-08: [[ StyledText ]] We now take the execpoint directly so that array
 //   values can be used.
 // MW-2012-01-25: [[ ParaStyles ]] The 'is_line_chunk' parameter is true if the prop
@@ -1738,6 +1741,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 	}
 	return t_stat;
 }
+#endif /* MCField::settextatts */
 
 // MW-2008-01-30: [[ Bug 5754 ]] If update is true the new selection will be
 //   updated - this is used by MCDispatch::dodrop to ensure dropped text is

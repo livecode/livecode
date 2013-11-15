@@ -92,7 +92,9 @@ bool MCFiltersDecompress(MCDataRef p_source, MCDataRef& r_result);
 // MM-2012-09-05: [[ Property Listener ]]
 #ifdef FEATURE_PROPERTY_LISTENER
 void MCInternalObjectListenerMessagePendingListeners(void);
+#ifdef LEGACY_EXEC
 void MCInternalObjectListenerListListeners(MCExecPoint &ep);
+#endif
 void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_listeners, uindex_t& r_count);
 #endif
 
