@@ -8463,23 +8463,6 @@ char *MCHTTPProxyForURL::PACmyIpAddress(const char* const* p_arguments, unsigned
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCRandomBytes::~MCRandomBytes()
-{
-	delete byte_count;
-}
-
-Parse_stat MCRandomBytes::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &byte_count, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_RANDOMBYTES_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCRandomBytes::eval(MCExecPoint &ep)
-{
 #ifdef /* MCRandomBytes */ LEGACY_EXEC
 	if (byte_count->eval(ep) != ES_NORMAL && ep.ton() != ES_NORMAL)
 	{
@@ -8512,36 +8495,11 @@ Exec_stat MCRandomBytes::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCRandomBytes */
 
-
-	MCExecContext ctxt(ep);
-
-	uinteger_t t_count;
-	MCAutoDataRef t_result;
-
-	if (byte_count->eval(ep) != ES_NORMAL && ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_RANDOMBYTES_BADCOUNT, line, pos);
-		return ES_ERROR;
-	}
-
-	/* UNCHECKED */ ep.copyasuint(t_count);
-
-	MCSecurityEvalRandomBytes(ctxt, t_count, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-	
-	return ctxt.Catch(line, pos);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 MCControlAtLoc::~MCControlAtLoc()
 {
-	delete location;
+    delete location;
 }
 
 Parse_stat MCControlAtLoc::parse(MCScriptPoint &sp, Boolean the)
@@ -8554,7 +8512,7 @@ Parse_stat MCControlAtLoc::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCControlAtLoc::eval(MCExecPoint &ep)
+void MCControlAtLoc::eval_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCControlAtLoc */ LEGACY_EXEC
 	MCPoint t_location;
@@ -8604,29 +8562,15 @@ Exec_stat MCControlAtLoc::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCControlAtLoc */
 
-	MCExecContext ctxt(ep);
-	
-	MCPoint t_location;
-	if (location -> eval(ep) != ES_NORMAL ||
-		!ep . copyaspoint(t_location))
-	{
-		MCeerror -> add(EE_CONTROLATLOC_NAP, line, pos);
-		return ES_ERROR;
-	}
+    MCPoint t_location;
+    if (!ctxt . EvalExprAsPoint(location, EE_CONTROLATLOC_NAP, t_location))
+        return;
 
 	MCAutoStringRef t_result;
 	if (!is_screen)
 		MCInterfaceEvalControlAtLoc(ctxt, t_location, &t_result);
 	else
 		MCInterfaceEvalControlAtScreenLoc(ctxt, t_location, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

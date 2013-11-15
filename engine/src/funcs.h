@@ -2828,41 +2828,32 @@ private:
 	static char *PACmyIpAddress(const char* const* p_arguments, unsigned int p_argument_count);
 };
 
-class MCRandomBytes: public MCUnaryFunction
+class MCRandomBytes: public MCUnaryFunctionCtxt<uinteger_t, MCDataRef, &MCExecContext::EvalExprAsUInt, MCSecurityEvalRandomBytes, EE_RANDOMBYTES_BADCOUNT, PE_RANDOMBYTES_BADPARAM, kMCSecurityEvalRandomBytesMethodInfo>
 {
-	MCExpression *byte_count;
 public:
-	MCRandomBytes(void)
-	{
-		byte_count = NULL;
-	}
-	virtual ~MCRandomBytes(void);
-	virtual Parse_stat parse(MCScriptPoint &sp, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &ep);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCSecurityEvalRandomBytesMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return byte_count; }
+    MCRandomBytes(void){}
+    virtual ~MCRandomBytes(void){}
 };
 
 // MW-2012-10-08: [[ HitTest ]] controlAtLoc and controlAtScreenLoc function.
 class MCControlAtLoc: public MCUnaryFunction
 {
-	MCExpression *location;
+    MCExpression *location;
 	bool is_screen : 1;
 	
 public:
-	MCControlAtLoc(bool p_is_screen)
-	{
-		location = NULL;
+    MCControlAtLoc(bool p_is_screen)
+    {
+        location = NULL;
 		is_screen = p_is_screen;
 	}
 	
-	virtual ~MCControlAtLoc(void);
-	virtual Parse_stat parse(MCScriptPoint &sp, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &ep);
+    virtual ~MCControlAtLoc();
+    Parse_stat parse(MCScriptPoint &sp, Boolean the);
+    virtual void eval_ctxt(MCExecContext &ctxt);
 	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return is_screen ? kMCInterfaceEvalControlAtScreenLocMethodInfo : kMCInterfaceEvalControlAtLocMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return location; }
+    virtual MCExecMethodInfo *getmethodinfo(void) const { return is_screen ? kMCInterfaceEvalControlAtScreenLocMethodInfo : kMCInterfaceEvalControlAtLocMethodInfo; }
+    virtual MCExpression *getmethodarg(void) const { return location; }
 };
 
 // MW-20113-05-08: [[ Uuid ]] The uuid generation function.
