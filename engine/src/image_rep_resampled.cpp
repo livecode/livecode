@@ -33,8 +33,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 MCResampledImageRep::MCResampledImageRep(MCGFloat p_h_scale, MCGFloat p_v_scale, MCImageRep *p_source)
 {
 	// IM-2013-11-07: [[ RefactorGraphics ]] If the scale values are negative we need to flip the resulting resampled image
-	m_h_scale = abs(p_h_scale);
-	m_v_scale = abs(p_v_scale);
+	m_h_scale = fabs(p_h_scale);
+	m_v_scale = fabs(p_v_scale);
 	m_h_flip = p_h_scale < 0.0;
 	m_v_flip = p_v_scale < 0.0;
 	m_source = p_source->Retain();
