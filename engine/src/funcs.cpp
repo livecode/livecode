@@ -207,76 +207,16 @@ Parse_stat MCFunction::parsetarget(MCScriptPoint &sp, Boolean the,
 		array_t array; // the array value
 */
 
-////
-
-MCBase64Decode::~MCBase64Decode()
-{
-	delete source;
-}
-
-Parse_stat MCBase64Decode::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add
-		(PE_BASE64DECODE_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCBase64Decode::eval(MCExecPoint &ep)
-{
 #ifdef /* MCBase64Decode */ LEGACY_EXEC
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_BASE64DECODE_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-	MCU_base64decode(ep);
-	return ES_NORMAL;
+    if (source->eval(ep) != ES_NORMAL)
+    {
+        MCeerror->add(EE_BASE64DECODE_BADSOURCE, line, pos);
+        return ES_ERROR;
+    }
+    MCU_base64decode(ep);
+    return ES_NORMAL;
 #endif /* MCBase64Decode */
 
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_BASE64DECODE_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
-
-	MCAutoDataRef t_result;
-	MCFiltersEvalBase64Decode(ctxt, *t_source, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-MCBase64Encode::~MCBase64Encode()
-{
-	delete source;
-}
-
-Parse_stat MCBase64Encode::parse(MCScriptPoint &sp, Boolean the)
-{
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add
-		(PE_BASE64ENCODE_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCBase64Encode::eval(MCExecPoint &ep)
-{
 #ifdef /* MCBase64Encode */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
@@ -286,28 +226,6 @@ Exec_stat MCBase64Encode::eval(MCExecPoint &ep)
 	MCU_base64encode(ep);
 	return ES_NORMAL;
 #endif /* MCBase64Encode */
-
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_BASE64ENCODE_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-	MCAutoDataRef t_source;
-	/* UNCHECKED */ ep . copyasdataref(&t_source);
-
-	MCAutoStringRef t_result;
-	MCFiltersEvalBase64Encode(ctxt, *t_source, &t_result);
-
-	if (!ctxt . HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
 
 MCBaseConvert::~MCBaseConvert()
 {

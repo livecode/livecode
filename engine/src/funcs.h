@@ -150,36 +150,19 @@ public:
     virtual ~MCArrayEncode(){}
 };
 
-class MCBase64Decode : public MCUnaryFunction
+class MCBase64Decode : public MCUnaryFunctionCtxt<MCStringRef, MCDataRef, &MCExecContext::EvalExprAsStringRef, MCFiltersEvalBase64Decode, EE_BASE64DECODE_BADSOURCE, PE_BASE64DECODE_BADPARAM, kMCFiltersEvalBase64DecodeMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCBase64Decode()
-	{
-		source = NULL;
-	}
-	virtual ~MCBase64Decode();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalBase64DecodeMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCBase64Decode() {}
+    virtual ~MCBase64Decode(){}
 };
 
-class MCBase64Encode : public MCUnaryFunction
+class MCBase64Encode : public MCUnaryFunctionCtxt<MCDataRef, MCStringRef, &MCExecContext::EvalExprAsDataRef, MCFiltersEvalBase64Encode, EE_BASE64ENCODE_BADSOURCE, PE_BASE64ENCODE_BADPARAM, kMCFiltersEvalBase64EncodeMethodInfo>
 {
 	MCExpression *source;
 public:
-	MCBase64Encode()
-	{
-		source = NULL;
-	}
-	virtual ~MCBase64Encode();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalBase64EncodeMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCBase64Encode(){}
+    virtual ~MCBase64Encode(){}
 };
 
 class MCBaseConvert : public MCFunction
