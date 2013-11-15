@@ -467,6 +467,9 @@ public:
 	//   variables if there is no handler (i.e. global server scope).
 	Parse_stat findvar(MCNameRef p_name, MCVarref** r_var);
 
+	// MW-2013-11-08: [[ RefactorIt ]] Returns the 'it' varref for the current context.
+	MCVarref *getit(void);
+	
 	//////////
 
 	void setstaticcstring(const char *string);

@@ -1,0 +1,61 @@
+<doc>
+  <legacy_id>2158</legacy_id>
+  <name>go</name>
+  <type>command</type>
+  <syntax>
+    <example>go [invisible] [to] <i>card</i> [of <i>stack</i>] [as <i>mode</i>|in [a] new window|in <i>window</i>]</example>
+    <example>go [invisible] [to] {first | prev[ious]| next | last | any} [marked] [card]</example>
+    <example>go [invisible] [to] {recent | start | finish | home} card</example>
+    <example>go [invisible] [to] {forward | forth | back[ward]} [<i>number</i>]} [card[s]]</example>
+  </syntax>
+  <library></library>
+  <objects>
+  </objects>
+  <synonyms>
+    <synonym>open</synonym>
+  </synonyms>
+  <classification>
+    <category>Navigation &amp; Hypertext</category>
+  </classification>
+  <references>
+    <command tag="unlock recent">unlock recent Command</command>
+    <command tag="push">push Command</command>
+    <command tag="show cards">show cards Command</command>
+    <command tag="modeless">modeless Command</command>
+    <command tag="drawer">drawer Command</command>
+    <keyword tag="recent">recent Keyword</keyword>
+    <keyword tag="previous">previous Keyword</keyword>
+    <keyword tag="as">as Keyword</keyword>
+    <property tag="HCImportStat">HCImportStat Property</property>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+    <changed version="2.0"></changed>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary>Navigates to another <keyword tag="card">card</keyword> or <object tag="stack">stack</object>.</summary>
+  <examples>
+    <example>go to card "Hemingway" <code><i>-- in the defaultStack</i></code></example>
+    <example>go to stack "Controls" as palette</example>
+    <example>go to next marked card</example>
+    <example>go back 7 cards</example>
+    <example>go invisible stack "Preferences"</example>
+    <example>go stack URL "http://www.example.org/data/mystack.rev" in a new window</example>
+  </examples>
+  <description>
+    <p>Use the <b>go</b> <glossary tag="command">command</glossary> to move to another <keyword tag="card">card</keyword> in the <glossary tag="current stack">current stack</glossary>, to open a <object tag="stack">stack</object> and go to a <keyword tag="card">card</keyword> within it, or to move backward and forward among <glossary tag="recent cards">recently visited cards</glossary>.</p><p/><p><b>Parameters:</b></p><p>The <i>card</i> is any <href tag="reference/object_reference.rev">card reference</href>. <glossary tag="card">Cards</glossary> can be described by their <property tag="name">name</property>, <function tag="number">number</function>, or <property tag="ID">ID</property> <property tag="properties">properties</property>.</p><p/><p>The <i>stack</i> is any <href tag="reference/object_reference.rev">stack reference</href>, or any <glossary tag="file path">file path</glossary> or <keyword tag="http">http</keyword> <keyword tag="URL">URL</keyword> reference that resolves to a <glossary tag="stack file">stack file</glossary>. If you specify a <glossary tag="file path">file path</glossary> or <keyword tag="http">http</keyword> <keyword tag="URL">URL</keyword>, the <glossary tag="command">command</glossary> opens the <glossary tag="main stack">main stack</glossary> of the specified <glossary tag="stack file">stack file</glossary>.</p><p/><p>The <i>mode</i> is one of the following:</p><p><code>topLevel</code>: editable window</p><p><code>palette</code>: palette</p><p><code>modal</code>: modal dialog box</p><p><code>modeless</code>: modeless dialog box</p><p><code>sheet</code>: sheet dialog box (appears in <b>defaultStack</b>)</p><p><code>drawer</code>: drawer (appears in <b>defaultStack</b>, centered at left side if there's room)</p><p/><p>The <i>window</i> is the <property tag="name">name</property> or <property tag="windowID">windowID</property> <glossary tag="property">property</glossary> of any open <object tag="stack">stack</object>. If a <i>window</i> is specified, the <object tag="stack">stack</object> opens in that window, replacing the <object tag="stack">stack</object> that was previously displayed in that window.</p><p/><p>The <i>number</i> is the number of <glossary tag="card">cards</glossary> to move within the <glossary tag="recent cards">recent cards list</glossary>.</p><p/><p><b>Comments:</b></p><p>If the <i>stack</i> is open, is closed but <glossary tag="loaded into memory">loaded into memory</glossary>, or is listed in the <glossary tag="current stack">current stack's</glossary> <property tag="stackFiles">stackFiles</property> <glossary tag="property">property</glossary>, you can specify it simply by name:</p><p/><p><code>  go stack "My Stack"</code></p><p/><p>Otherwise, you must include the stack's file path.</p><p/><p>When going to a previously-unopened stack, if you don't specify a <i>card</i>, the <b>go</b> <glossary tag="command">command</glossary> displays the first <keyword tag="card">card</keyword> of the <object tag="stack">stack</object>. If the <object tag="stack">stack</object> is already open, the <glossary tag="current card">current card</glossary> of the <object tag="stack">stack</object> appears and the <glossary tag="stack window">stack window</glossary> is brought to the front.</p><p/><p>If the <b>lockScreen</b> <glossary tag="property">property</glossary> is set to true, the <b>go</b> <glossary tag="command">command</glossary> does not bring an already-open <object tag="stack">stack</object> to the front until the <property tag="lockScreen">lockScreen</property> is set to false. (Remember that the <property tag="lockScreen">lockScreen</property> is automatically set to false when all pending handlers finish <glossary tag="execute">executing</glossary>.)</p><p/><p>If you specify a <i>mode</i>, the <object tag="stack">stack</object> opens in the specified mode. If you don't specify a <i>mode</i>, the <object tag="stack">stack</object> opens in whatever mode is specified by the <glossary tag="stack">stack's</glossary> <property tag="style">style</property> <glossary tag="property">property</glossary>.</p><p/><p>When going to a stack, you can specify a <i>mode</i> or a <i>window</i> for the <object tag="stack">stack</object> to appear in, but not both.</p><p/><p><code/><img src="202653"/> <b>Important!</b><code/> The <property tag="style">style</property> of the <object tag="stack">stack</object>, if it is anything other than "topLevel", overrides any <i>mode</i> you specify in a <b>go</b> <glossary tag="command">command</glossary>. For example, if you open a <object tag="stack">stack</object> using the statement<code> go stack "Some Stack" as modeless</code>, and the <b>style</b> of "Some Stack" is set to "palette", it opens as a <command tag="palette">palette</command> rather than a <glossary tag="modeless dialog box">modeless dialog box</glossary>, ignoring the <i>mode</i> you specified.</p><p/><p>The<code> go...as sheet </code>form can be used only on OS X systems. If you use this form on Mac OS, Unix, or Windows, the stack is displayed as a modal dialog box instead. If you don't specify a <i>mode</i>, the <object tag="stack">stack</object> is opened with the mode specified by its <property tag="style">style</property> <glossary tag="property">property</glossary>.</p><p/><p>If you specify a URL, the stack is downloaded from that URL and displayed. The stack must be in stack file format (that is, not compressed or archived). Stacks opened in this way are treated as unsaved stacks; the<code> long name </code>of such a stack is the same as its<code> abbreviated name</code>, until the stack is saved on a local disk. The downloaded stack is a copy: changes you make to the stack are not automatically made on the <glossary tag="server">server</glossary> the <object tag="stack">stack</object> came from. To change the <object tag="stack">stack</object> on the <glossary tag="server">server</glossary>, you must save the <glossary tag="stack file">stack file</glossary> locally and re-<glossary tag="upload">upload</glossary> it.</p><p/><p>You can go to the<code> first</code>,<code> previous</code>,<code> next</code>,<code> or last</code> card of the current stack. The form<code> go any card </code>goes to a random card in the current stack. If you include the<code> marked </code>parameter, the <b>go</b> <glossary tag="command">command</glossary> is restricted to <glossary tag="card">cards</glossary> whose <command tag="mark">mark</command> <glossary tag="property">property</glossary> is set to true.</p><p/><p>Each card the user visits while the <b>lockRecent</b> <glossary tag="property">property</glossary> is false is placed in the <glossary tag="recent cards">recent cards list</glossary>. You can use the <b>go</b> <glossary tag="command">command</glossary> to move among the previously-visited <glossary tag="card">cards</glossary>:</p><p/><p>* The<code> go recent card </code>form goes to the most recently visited card.</p><p>* The<code> go start </code>and<code> go finish </code>forms go to the first or last card in the recent cards list.</p><p>* The<code> go home </code>form goes to the first card in the application's main stack. (This form is included mainly for HyperCard compatibility; the statement<code> go home </code>does not do anything useful in the development environment.)</p><p>* The<code> go back <i>number</i> </code>form backs up <i>number</i> cards. The<code> go forward <i>number</i> </code>form moves forward in the recent cards list. "<code>forward</code>" and "<code>forth</code>" are synonyms.</p><p/><p>If you use the<code> go invisible </code>form, the window or card change does not show on the screen. (When going to a <object tag="stack">stack</object>, this form sets the <glossary tag="stack">stack's</glossary> <property tag="visible">visible</property> <glossary tag="property">property</glossary> to false.) Use this form of the <b>go</b> <glossary tag="command">command</glossary> to open a <object tag="stack">stack</object> without displaying it on screen. To display the <object tag="stack">stack</object> later, use the <command tag="show">show</command> <glossary tag="command">command</glossary> or set its <property tag="visible">visible</property> <glossary tag="property">property</glossary> to true.</p><p/><p>Any visual effects that have been queued with the <b>visual effect</b> <glossary tag="command">command</glossary> are displayed when the <b>go</b> <glossary tag="command">command</glossary> is <glossary tag="execute">executed</glossary> (unless the screen is locked).</p><p/><p>If the <i>stack</i> or <i>card</i> you specify doesn't exist, an error message is returned by the <function tag="result">result</function> <control_st tag="function">function</control_st>.</p><p/><p><code/><img src="202651"/> <b>Tip:</b><code/>  To test whether a <object tag="stack">stack</object> or <keyword tag="card">card</keyword> exists before trying to go to it, use the <operator tag="there is a">there is a</operator> <glossary tag="operator">operator</glossary>:</p><p/><p><code>  if there is a card "Index" then go card "Index"</code></p><p><code>  if there is a stack myPath then go card 2 of stack myPath</code></p><p/><p><b>Changes:</b></p><p>The<code> go...as sheet </code>form was introduced in version 2.0. Previous versions did not support sheet dialogs.</p>
+  </description>
+</doc>

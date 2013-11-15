@@ -152,7 +152,10 @@ public:
 	
 	void enableformodal(Window modalwindow, Boolean isenabled);
 	
-	void reopenforprint();
+	// MW-2013-09-11: [[ DynamicFonts ]] Purge all references to fonts so they
+	//   can be re-referenced (needed after loading new fonts or formatForPrinting
+	//   change).
+	void purgefonts(void);
 
 	void ensureinputfocus(Window window);
 };

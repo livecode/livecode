@@ -36,7 +36,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 class MCAnswer : public MCStatement
 {
 	Ask_type mode;
-	MCVarref *it;
 	MCExpression *title;
 	Boolean sheet;
 	
@@ -71,7 +70,6 @@ public:
 	MCAnswer()
 	{
 		mode = AT_UNDEFINED;
-		it = NULL;
 		sheet = False;
 		title = NULL;
 		notify . prompt = NULL;

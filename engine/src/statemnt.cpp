@@ -340,14 +340,6 @@ void MCStatement::initpoint(MCScriptPoint &sp)
 	pos = sp.getpos();
 }
 
-void MCStatement::getit(MCScriptPoint &sp, MCVarref *&it)
-{
-	// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
-	//   execution outwith a handler.
-	if (sp.findnewvar(MCN_it, kMCEmptyName, &it) != PS_NORMAL)
-		it = it; // This should handle an error.
-}
-
 void MCStatement::compile(MCSyntaxFactoryRef ctxt)
 {
 	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
@@ -436,9 +428,9 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 		resolved = true;
     }
     
-    MCExecContext ctxt(ep);
-    Exec_stat stat;
-    MCParameter *tptr = params;
+	MCExecContext ctxt(ep);
+	Exec_stat stat;
+	MCParameter *tptr = params;
 	while (tptr != NULL)
 	{
 		MCVariable* t_var;

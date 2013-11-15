@@ -320,6 +320,18 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 				break;
 			case TT_CHUNK:
 				nterm = (Chunk_term)te->which;
+				// MW-2013-08-05: [[ ThisMe ]] If 'this' is followed by 'me' we become 'this me'.
+				if (nterm == CT_THIS &&
+					sp . skip_token(SP_FACTOR, TT_FUNCTION, F_ME) == PS_NORMAL)
+				{
+					// Destination type is 'this me' handled in MCChunk::getobj()
+					desttype = DT_THIS_ME;
+					// Destination object is the script being compiled
+					destobj = sp.getobj();
+					// Nothing can come after 'this me' so return success.
+					return PS_NORMAL;
+				}
+				
 				switch (ct_class(nterm))
 				{
 				case CT_ORDINAL:
@@ -485,18 +497,17 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 						if (function == F_SELECTED_LINE || function == F_SELECTED_CHUNK)
 						{}
 					}
-					else
-						if (cline != NULL || item != NULL || word != NULL
+					else if (cline != NULL || item != NULL || word != NULL
 						        || token != NULL || character != NULL)
+					{
+						sp.backup();
+						if (sp.parseexp(True, False, &source) != PS_NORMAL)
 						{
-							sp.backup();
-							if (sp.parseexp(True, False, &source) != PS_NORMAL)
-							{
-								MCperror->add(PE_CHUNK_BADEXP, sp);
-								return PS_ERROR;
-							}
-							return PS_NORMAL;
+							MCperror->add(PE_CHUNK_BADEXP, sp);
+							return PS_ERROR;
 						}
+						return PS_NORMAL;
+					}
 					desttype = DT_FUNCTION;
 					break;
 				case F_ME:
@@ -564,6 +575,12 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 							MCperror->add(PE_CHUNK_BADEXP, sp);
 							return PS_ERROR;
 						}
+						// MW-2013-06-20: [[ Bug 10966 ]] Make sure we mark the chunk as being of
+						//   'expression' type. This means 'source' will be evaluated and then parsed
+						//   as a control reference in 'getobj()' context. This has wider implications
+						//   that just 'controlAtLoc()' - it means any function used on the rhs of
+						//   'of' for properties will now function correctly.
+						desttype = DT_EXPRESSION;
 						return PS_NORMAL;
 					}
 					else
@@ -2594,6 +2611,12 @@ Exec_stat MCChunk::getobj_legacy(MCExecPoint &ep, MCObject *&objptr,
 			else
 				objptr = ep . getobj();
 			break;
+		// MW-2013-08-05: [[ ThisMe ]] 'this me' is the object of the script
+		//   currently being executed, so it is always the object the script
+		//   was compiled into.
+		case DT_THIS_ME:
+			objptr = destobj;
+			break;
 		case DT_MENU_OBJECT:
 			objptr = MCmenuobjectptr;
 			break;
@@ -4531,7 +4554,7 @@ Exec_stat MCChunk::set(MCExecPoint& ep, Preposition_type p_type, MCValueRef p_va
 {
     MCExecContext ctxt(ep);
     
-    if (isvarchunk())
+    if (destvar != nil)
     {
         MCVariableChunkPtr t_var_chunk;
         if (evalvarchunk(ep, false, true, t_var_chunk) != ES_NORMAL)
@@ -4559,21 +4582,40 @@ Exec_stat MCChunk::set(MCExecPoint& ep, Preposition_type p_type, MCValueRef p_va
     }
     else
     {
-        MCAutoStringRef t_string;
-        if (!ctxt . ConvertToString(p_value, &t_string))
-        {
-            MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
-            return ES_ERROR;
-        }
-        
         MCObjectChunkPtr t_obj_chunk;
         if (evalobjectchunk(ep, false, true, t_obj_chunk) != ES_NORMAL)
             return ES_ERROR;
         
-        if (t_obj_chunk . object -> gettype() == CT_FIELD)
-            MCInterfaceExecPutIntoField(ctxt, *t_string, p_type, t_obj_chunk);
+        if (p_unicode)
+        {
+            if (t_obj_chunk . object -> gettype() != CT_FIELD)
+            {
+                MCeerror -> add(EE_CHUNK_CANTSETUNICODEDEST, line, pos);
+                return ES_ERROR;
+            }
+            
+            MCAutoDataRef t_data;
+            if (!ctxt . ConvertToData(p_value, &t_data))
+            {
+                MCeerror -> add(EE_CHUNK_CANTSETUNICODEDEST, line, pos);
+                return ES_ERROR;
+            }
+            MCInterfaceExecPutUnicodeIntoField(ctxt, *t_data, p_type, t_obj_chunk);
+        }
         else
-            MCInterfaceExecPutIntoObject(ctxt, *t_string, p_type, t_obj_chunk);
+        {
+            MCAutoStringRef t_string;
+            if (!ctxt . ConvertToString(p_value, &t_string))
+            {
+                MCeerror -> add(EE_CHUNK_CANTSETDEST, line, pos);
+                return ES_ERROR;
+            }
+            
+            if (t_obj_chunk . object -> gettype() == CT_FIELD)
+                MCInterfaceExecPutIntoField(ctxt, *t_string, p_type, t_obj_chunk);
+            else
+                MCInterfaceExecPutIntoObject(ctxt, *t_string, p_type, t_obj_chunk);
+        }
     }
     
     if (!ctxt . HasError())
@@ -4583,9 +4625,9 @@ Exec_stat MCChunk::set(MCExecPoint& ep, Preposition_type p_type, MCValueRef p_va
 }
 #endif 
 
-bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_value)
+bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_value, bool p_unicode)
 {
-    if (isvarchunk())
+    if (destvar != nil)
     {
         MCVariableChunkPtr t_var_chunk;
         if (!evalvarchunk(ctxt, false, true, t_var_chunk))
@@ -4613,23 +4655,46 @@ bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
     }
     else
     {
-        MCAutoStringRef t_string;
-        if (!ctxt . ConvertToString(p_value, &t_string))
-        {
-            ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
-            return false;
-        }
-
         MCObjectChunkPtr t_obj_chunk;
         if (!evalobjectchunk(ctxt, false, true, t_obj_chunk))
             return false;
 
-        if (t_obj_chunk . object -> gettype() == CT_FIELD)
-            MCInterfaceExecPutIntoField(ctxt, *t_string, p_type, t_obj_chunk);
+        if (p_unicode)
+        {
+            if (t_obj_chunk . object -> gettype() != CT_FIELD)
+            {
+                ctxt . LegacyThrow(EE_CHUNK_CANTSETUNICODEDEST);
+                return false;
+            }
+
+            MCAutoDataRef t_data;
+            if (!ctxt . ConvertToData(p_value, &t_data))
+            {
+                ctxt . LegacyThrow(EE_CHUNK_CANTSETUNICODEDEST);
+                return false;
+            }
+            MCInterfaceExecPutUnicodeIntoField(ctxt, *t_data, p_type, t_obj_chunk);
+        }
         else
-            MCInterfaceExecPutIntoObject(ctxt, *t_string, p_type, t_obj_chunk);
+        {
+            MCAutoStringRef t_string;
+            if (!ctxt . ConvertToString(p_value, &t_string))
+            {
+                ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
+                return false;
+            }
+
+            if (t_obj_chunk . object -> gettype() == CT_FIELD)
+                MCInterfaceExecPutIntoField(ctxt, *t_string, p_type, t_obj_chunk);
+            else
+                MCInterfaceExecPutIntoObject(ctxt, *t_string, p_type, t_obj_chunk);
+        }
     }
-    return true;
+
+    if (!ctxt . HasError())
+        return true;
+
+    return false;
 }
 
 #ifdef LEGACY_EXEC
@@ -5124,15 +5189,10 @@ Exec_stat MCChunk::getobjforprop(MCExecPoint& ep, MCObject*& r_object, uint4& r_
 		MCeerror->add(EE_CHUNK_CANTFINDOBJECT, line, pos);
 		return ES_ERROR;
 	}
-	Boolean tfunction = False;
-	if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
-	        && function != F_SELECTED_FIELD && function != F_FOUND_FIELD
-	        && function != F_MOUSE_CONTROL && function != F_FOCUSED_OBJECT
-	        && function != F_SELECTED_IMAGE
-			&& function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
-		tfunction = True;
-	if (!tfunction && cline == NULL && item == NULL
-	        && word == NULL && token == NULL && character == NULL)
+	
+	// MW-2013-06-20: [[ Bug 10966 ]] Use 'istextchunk()' to determine whether
+	//   the chunk can be evaluated as an object.
+	if (!istextchunk())
 	{
 		r_object = objptr;
 		r_parid = parid;
@@ -5194,15 +5254,10 @@ Exec_stat MCChunk::getprop_legacy(Properties which, MCExecPoint &ep, MCNameRef i
 		MCeerror->add(EE_CHUNK_CANTFINDOBJECT, line, pos);
 		return ES_ERROR;
 	}
-	Boolean tfunction = False;
-	if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
-        && function != F_SELECTED_FIELD && function != F_FOUND_FIELD
-        && function != F_MOUSE_CONTROL && function != F_FOCUSED_OBJECT
-        && function != F_SELECTED_IMAGE
-        && function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
-		tfunction = True;
-	if (!tfunction && cline == NULL && item == NULL
-        && word == NULL && token == NULL && character == NULL)
+	
+	// MW-2013-06-20: [[ Bug 10966 ]] Use 'istextchunk()' to determine whether
+	//   the chunk can be evaluated as an object.
+	if (!istextchunk())
 	{
 		// MW-2011-11-23: [[ Array Chunk Props ]] If index is nil, then its just a normal
 		//   prop, else its an array prop.
@@ -5261,15 +5316,10 @@ Exec_stat MCChunk::setprop_legacy(Properties which, MCExecPoint &ep, MCNameRef i
 		MCeerror->add(EE_CHUNK_CANTFINDOBJECT, line, pos);
 		return ES_ERROR;
 	}
-	Boolean tfunction = False;
-	if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
-        && function != F_SELECTED_FIELD && function != F_FOUND_FIELD
-        && function != F_MOUSE_CONTROL && function != F_FOCUSED_OBJECT
-        && function != F_SELECTED_IMAGE
-        && function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
-		tfunction = True;
-	if (!tfunction && cline == NULL && item == NULL
-        && token == NULL && word == NULL && character == NULL)
+	
+	// MW-2013-06-20: [[ Bug 10966 ]] Use 'istextchunk()' to determine whether
+	//   the chunk can be evaluated as an object.
+	if (!istextchunk())
 	{
 		// MW-2011-11-23: [[ Array Chunk Props ]] If index is nil, then its just a normal
 		//   prop, else its an array prop.
@@ -5513,7 +5563,6 @@ Exec_stat MCChunk::setprop(Properties which, MCExecPoint &ep, MCNameRef index, B
                 t_object . part_id = t_obj_chunk . part_id;
                 t_object . index = index;
                 
-                MCAutoValueRef t_value;
                 MCExecStoreProperty(ctxt, t_info, &t_object, *t_value);
             }
             else
@@ -6094,15 +6143,11 @@ Exec_stat MCChunk::select(MCExecPoint &ep, Preposition_type where, Boolean text,
 		MCeerror->add(EE_CHUNK_NOTOPEN, line, pos);
 		return ES_ERROR;
 	}
-	Boolean tfunction = False;
-	if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
-	        && function != F_SELECTED_FIELD && function != F_FOUND_FIELD
-	        && function != F_MOUSE_CONTROL && function != F_FOCUSED_OBJECT
-	        && function != F_SELECTED_IMAGE
-			&& function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
-		tfunction = True;
-	if (!text && !tfunction && where == PT_AT && cline == NULL && item == NULL
-	        && token == NULL && word == NULL && character == NULL)
+	// MW-2013-06-20: [[ Bug 10966 ]] Use 'istextchunk()' to determine whether
+	//   the chunk can be evaluated as an object.
+	// MW-2013-06-26: [[ Bug 10986 ]] Make sure we only select the object if we aren't
+	//   doing select before/after.
+	if (!text && where == PT_AT && !istextchunk())
 	{
 		if (first)
 			MCselected->clear(False);
@@ -6185,6 +6230,7 @@ Exec_stat MCChunk::select(MCExecPoint &ep, Preposition_type where, Boolean text,
 bool MCChunk::istextchunk(void) const
 {
 	Boolean tfunction;
+	
 	if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
         && function != F_SELECTED_FIELD && function != F_FOUND_FIELD
         && function != F_MOUSE_CONTROL && function != F_FOCUSED_OBJECT
@@ -6222,9 +6268,19 @@ bool MCChunk::islinechunk(void) const
 	return false;
 }
 
+// MW-2013-08-01: [[ Bug 10925 ]] Returns true if the chunk is just a var or indexed var.
 bool MCChunk::isvarchunk(void) const
 {
-	return destvar != nil;
+	if (source != nil)
+		return false;
+	
+	if (cline != nil || item != nil || token != nil || word != nil || character != nil)
+		return false;
+	
+	if (destvar != nil)
+		return true;
+	
+	return false;
 }
 
 bool MCChunk::isurlchunk(void) const
@@ -6312,15 +6368,10 @@ Exec_stat MCChunk::del(MCExecPoint &ep)
 			MCeerror->add(EE_CHUNK_CANTFINDOBJECT, line, pos);
 			return ES_ERROR;
 		}
-		Boolean tfunction = False;
-		if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
-		        && function != F_SELECTED_FIELD && function != F_FOUND_FIELD
-		        && function != F_MOUSE_CONTROL && function != F_FOCUSED_OBJECT
-		        && function != F_SELECTED_IMAGE
-				&& function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
-			tfunction = True;
-		if (!tfunction && cline == NULL && item == NULL
-		        && token == NULL && word == NULL && character == NULL)
+		
+		// MW-2013-06-20: [[ Bug 10966 ]] Use 'istextchunk()' to determine whether
+		//   the chunk can be evaluated as an object.
+		if (!istextchunk())
 		{
 			if (!objptr->del())
 			{

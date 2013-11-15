@@ -1597,7 +1597,48 @@ enum Parse_errors
 	
 	// {PE-0523} split/combine: bad form clause
 	PE_ARRAYOP_BADFORM,
+	
+	// {PE-0524} uuid: bad parameter list
+	PE_UUID_BADPARAM,
 
+	// {PE-0525} avgDev: bad parameters
+	PE_AVGDEV_BADPARAM,
+
+	// {PE-0526} geometricMean: bad parameters
+	PE_GEO_MEAN_BADPARAM,
+
+	// {PE-0527} harmonicMean: bad parameters
+	PE_HAR_MEAN_BADPARAM,
+
+	// {PE-0528} pStdDev: bad parameters
+	PE_POP_STDDEV_BADPARAM,
+
+	// {PE-0529} pVariance: bad parameters
+	PE_POP_VARIANCE_BADPARAM,
+
+	// {PE-0530} variance: bad parameters
+	PE_VARIANCE_BADPARAM,
+    
+    // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
+    // {PE-0531} measureText: no object
+    PE_MEASURE_TEXT_NOOBJECT,
+
+    // {PE-0532} measureText: bad text parameter
+    PE_MEASURE_TEXT_BADTEXT,
+
+    // {PE-0533} measureText: bad mode parameter
+    PE_MEASURE_TEXT_BADMODE,
+
+	// MERG-2013-10-04: [[ ResolveImage ]] resolve image relative to object.
+    // {PE-0534} resolve image: bad image reference
+	PE_RESOLVE_BADIMAGE,
+
+    // {PE-0535} resolve image: bad object reference
+	PE_RESOLVE_BADOBJECT,
+	
+	// MERG-2013-10-04: [[ EditScriptAt ]] edit script of object at.
+    // {EE-0536} edit script: no at expression
+	PE_EDIT_NOAT,
 };
 
 extern const char *MCparsingerrors;

@@ -139,16 +139,19 @@ MCNativeControlActionTable MCAndroidBrowserControl::kActionTable =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCStringRef MCAndroidBrowserControl::s_js_tag = MCValueRetain(kMCEmptyString);
-MCStringRef MCAndroidBrowserControl::s_js_result = MCValueRetain(kMCEmptyString);
+MCStringRef MCAndroidBrowserControl::s_js_tag = nil;
+MCStringRef MCAndroidBrowserControl::s_js_result = nil;
 
 MCAndroidBrowserControl::MCAndroidBrowserControl(void)
 {
+    s_js_tag = MCValueRetain(kMCEmptyString);
+    s_js_result = MCValueRetain(kMCEmptyString);
 }
 
 MCAndroidBrowserControl::~MCAndroidBrowserControl(void)
 {
-    
+    MCValueRelease(s_js_tag);
+    MCValueRelease(s_js_result);
 }
 
 MCNativeControlType MCAndroidBrowserControl::GetType(void)
@@ -640,9 +643,11 @@ void MCAndroidBrowserControl::HandleStartEvent(const char *p_url)
     t_target = GetOwner();
     if (t_target != nil)
     {
+        MCAutoStringRef t_url;
+        /* UNCHECKED */ MCStringCreateWithCString(p_url, &t_url);
         MCNativeControl *t_old_target;
         t_old_target = ChangeTarget(this);
-        t_target -> message_with_args(MCM_browser_started_loading, p_url);
+        t_target -> message_with_valueref_args(MCM_browser_started_loading, *t_url);
         ChangeTarget(t_old_target);
     }
 }
@@ -653,9 +658,11 @@ void MCAndroidBrowserControl::HandleFinishEvent(const char *p_url)
     t_target = GetOwner();
     if (t_target != nil)
     {
+        MCAutoStringRef t_url;
+        /* UNCHECKED */ MCStringCreateWithCString(p_url, &t_url);
         MCNativeControl *t_old_target;
         t_old_target = ChangeTarget(this);
-        t_target -> message_with_args(MCM_browser_finished_loading, p_url);
+        t_target -> message_with_valueref_args(MCM_browser_finished_loading, *t_url);
         ChangeTarget(t_old_target);
     }
 }
@@ -666,9 +673,12 @@ void MCAndroidBrowserControl::HandleLoadFailed(const char *p_url, const char *p_
 	t_target = GetOwner();
 	if (t_target != nil)
 	{
-		MCNativeControl *t_old_target;
+		MCAutoStringRef t_url, t_error;
+        /* UNCHECKED */ MCStringCreateWithCString(p_url, &t_url);
+        /* UNCHECKED */ MCStringCreateWithCString(p_error, &t_error);
+        MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
-		t_target -> message_with_args(MCM_browser_load_failed, p_url, p_error);
+		t_target -> message_with_valueref_args(MCM_browser_load_failed, *t_url, *t_error);
 		ChangeTarget(t_old_target);
 	}
 }

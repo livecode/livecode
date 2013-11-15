@@ -1,0 +1,48 @@
+<doc>
+  <legacy_id>1654</legacy_id>
+  <name>create</name>
+  <type>command</type>
+  <syntax>
+    <example>create [invisible] <i>type</i> [<i>name</i>] [in <i>group</i>]</example>
+  </syntax>
+  <library></library>
+  <objects>
+  </objects>
+  <synonyms>
+    <synonym>new</synonym>
+  </synonyms>
+  <classification>
+    <category>Objects &amp; Messages</category>
+    <category>Standalone Applications</category>
+  </classification>
+  <references>
+    <command tag="create stack">create stack Command</command>
+    <command tag="create card">create card Command</command>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary>Creates a new <glossary tag="object">object</glossary> on the <glossary tag="current card">current card</glossary>.</summary>
+  <examples>
+    <example>create button "Click Me"</example>
+    <example>create invisible field in first group</example>
+  </examples>
+  <description>
+    <p>Use the <b>create</b> <glossary tag="command">command</glossary> to make a new <keyword tag="control">control</keyword> or <glossary tag="grouped control">grouped control</glossary>.</p><p/><p><b>Parameters:</b></p><p>The <i>type</i> is any <keyword tag="control">control</keyword> that can be on a <keyword tag="card">card</keyword>:<code> field</code>,<code> button</code>,<code> image</code>,<code> scrollbar</code>, <code>graphic</code>,<code> player</code>, or<code> EPS</code>.</p><p/><p>The <i>name</i> is the name of the newly created <glossary tag="object">object</glossary>. If you don't specify a <i>name</i>, the <glossary tag="object">object</glossary> is created with a <keyword tag="default">default</keyword> name.</p><p/><p>The <i>group</i> is any <command tag="group">group</command> that's on the <glossary tag="current card">current card</glossary>. If you specify a <i>group</i>, the new <glossary tag="object">object</glossary> is a member of the <command tag="group">group</command>, and exists on each <keyword tag="card">card</keyword> that has the <command tag="group">group</command>. If you don't specify a <command tag="group">group</command>, the <glossary tag="object">object</glossary> is created on the <glossary tag="current card">current card</glossary> and appears only on that <keyword tag="card">card</keyword>.</p><p/><p><b>Comments:</b></p><p>The new object takes its properties from the corresponding template; for example, newly created buttons match the properties of the <b>templateButton</b>.</p><p/><p>If you use the<code> create invisible </code>form, the object is created with its <b>visible</b> <glossary tag="property">property</glossary> set to false, so it cannot be seen. Use this form to create a hidden <glossary tag="object">object</glossary>, change its appearance or position, then make it visible.</p><p/><p>The <b>create</b> <glossary tag="command">command</glossary> places the <property tag="ID">ID</property> <glossary tag="property">property</glossary> of the newly created <glossary tag="object">object</glossary> in the <keyword tag="it">it</keyword> <glossary tag="variable">variable</glossary>.</p><p/><p>When the new control is created, the Pointer tool is automatically chosen. If you use the <b>create</b> <glossary tag="command">command</glossary> in a <glossary tag="handler">handler</glossary>, you can use the following <glossary tag="statement">statement</glossary> after the <b>create</b> <glossary tag="command">command</glossary> to resume using the <glossary tag="Browse tool">Browse tool</glossary>:</p><p/><p><code>  send "choose browse tool" to me in 1 tick</code></p><p/><p><code/><b>Note:</b><code/> In the <glossary tag="development environment">development environment</glossary>, after an <glossary tag="object">object</glossary> is created, LiveCode automatically resets the corresponding <glossary tag="template">template</glossary> to its <keyword tag="default">default</keyword> values. This means that if you change an <glossary tag="object">object</glossary> <glossary tag="template">template</glossary> and then create several <glossary tag="object">objects</glossary> of that type, only the first <glossary tag="object">object</glossary> will reflect your settings. To prevent LiveCode from automatically setting the <glossary tag="template">template</glossary> back to its <glossary tag="default">defaults</glossary>, set the <property tag="lockMessages">lockMessages</property> property to true before creating the <glossary tag="object">objects</glossary>:</p><p/><p><code>  set the borderWidth of the templateButton to 8</code></p><p><code>  lock messages</code></p><p><code>  repeat for 5 times</code></p><p><code>    create button</code></p><p><code>  end repeat</code></p><p><code>  unlock messages</code></p><p/><p>LiveCode resets the template only when in the development environment, not in standalone applications.</p><p/><p><code/><img src="202651"/> <b>Tip:</b><code/> To create a <keyword tag="control">control</keyword> in a specific <object tag="stack">stack</object>, first set the <property tag="defaultStack">defaultStack</property> to the <object tag="stack">stack</object> where you want to create the new <keyword tag="control">control</keyword>:</p><p/><p><code>  set the defaultStack to "My Stack"</code></p><p><code>  create button "My Button"</code></p>
+  </description>
+</doc>

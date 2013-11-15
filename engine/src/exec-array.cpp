@@ -205,18 +205,30 @@ void MCArraysExecSplitAsSet(MCExecContext& ctxt, MCStringRef p_string, MCStringR
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCArraysExecUnion(MCExecContext& ctxt, MCArrayRef p_dst_array, MCArrayRef p_src_array)
+void MCArraysDoUnion(MCExecContext& ctxt, MCArrayRef p_dst_array, MCArrayRef p_src_array, bool p_recursive)
 {
 	MCNameRef t_key;
-	MCValueRef t_value;
+	MCValueRef t_src_value;
+    MCValueRef t_dst_value;
 	uintptr_t t_iterator;
 	t_iterator = 0;
-	while(MCArrayIterate(p_src_array, t_iterator, t_key, t_value))
+    
+    bool t_is_array;
+    
+	while(MCArrayIterate(p_src_array, t_iterator, t_key, t_src_value))
 	{
-		if (MCArrayFetchValue(p_dst_array, ctxt . GetCaseSensitive(), t_key, t_value))
+		if (MCArrayFetchValue(p_dst_array, ctxt . GetCaseSensitive(), t_key, t_dst_value))
+        {
+            if (p_recursive && MCValueIsArray(t_dst_value) && MCValueIsArray(t_src_value))
+            {
+                MCArraysExecUnionRecursive(ctxt, (MCArrayRef)t_dst_value, (MCArrayRef)t_src_value);
+                if (ctxt . HasError())
+                    return;
+            }
 			continue;
-
-		if (!MCArrayStoreValue(p_dst_array, ctxt . GetCaseSensitive(), t_key, t_value))
+        }
+        
+		if (!MCArrayStoreValue(p_dst_array, ctxt . GetCaseSensitive(), t_key, t_src_value))
 		{
 			ctxt . Throw();
 			return;
@@ -224,20 +236,55 @@ void MCArraysExecUnion(MCExecContext& ctxt, MCArrayRef p_dst_array, MCArrayRef p
 	}
 }
 
-void MCArraysExecIntersect(MCExecContext& ctxt, MCArrayRef p_dst_array, MCArrayRef p_src_array)
+void MCArraysDoIntersect(MCExecContext& ctxt, MCArrayRef p_dst_array, MCArrayRef p_src_array, bool p_recursive)
 {
 	MCNameRef t_key;
-	MCValueRef t_value;
+	MCValueRef t_src_value;
+    MCValueRef t_dst_value;
 	uintptr_t t_iterator;
 	t_iterator = 0;
-	while(MCArrayIterate(p_src_array, t_iterator, t_key, t_value))
+    
+    bool t_is_array;
+    
+	while(MCArrayIterate(p_src_array, t_iterator, t_key, t_src_value))
 	{
+		if (MCArrayFetchValue(p_dst_array, ctxt . GetCaseSensitive(), t_key, t_dst_value))
+        {
+            if (p_recursive && MCValueIsArray(t_dst_value) && MCValueIsArray(t_src_value))
+            {
+                MCArraysExecIntersectRecursive(ctxt, (MCArrayRef)t_dst_value, (MCArrayRef)t_src_value);
+                if (ctxt . HasError())
+                    return;
+            }
+			continue;
+        }
+        
 		if (!MCArrayRemoveValue(p_dst_array, ctxt . GetCaseSensitive(), t_key))
 		{
 			ctxt . Throw();
 			return;
 		}
 	}
+}
+
+void MCArraysExecUnion(MCExecContext& ctxt, MCArrayRef p_dst_array, MCArrayRef p_src_array)
+{
+    MCArraysDoUnion(ctxt, p_dst_array, p_src_array, false);
+}
+
+void MCArraysExecIntersect(MCExecContext& ctxt, MCArrayRef p_dst_array, MCArrayRef p_src_array)
+{
+    MCArraysDoIntersect(ctxt, p_dst_array, p_src_array, false);
+}
+
+void MCArraysExecUnionRecursive(MCExecContext& ctxt, MCArrayRef p_dst_array, MCArrayRef p_src_array)
+{
+    MCArraysDoUnion(ctxt, p_dst_array, p_src_array, true);
+}
+
+void MCArraysExecIntersectRecursive(MCExecContext& ctxt, MCArrayRef p_dst_array, MCArrayRef p_src_array)
+{
+    MCArraysDoIntersect(ctxt, p_dst_array, p_src_array, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

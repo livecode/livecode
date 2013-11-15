@@ -1,0 +1,78 @@
+<doc>
+	<legacy_id>1536</legacy_id>
+	<name>clone</name>
+	<type>command</type>
+
+	<syntax>
+		<example>clone [invisible] <i>object</i></example>
+	</syntax>
+
+	<synonyms>
+	</synonyms>
+
+	<summary>Duplicates an <glossary tag="object">object</glossary>.</summary>
+
+	<examples>
+<example>clone the selectedObject</example>
+<example>clone player &quot;Hard Day's Night&quot;</example>
+<example><p>clone this card</p></example>
+	</examples>
+
+	<history>
+		<introduced version="1.0">Added.</introduced>
+		<deprecated version=""></deprecated>
+		<removed version=""></removed>
+		
+	</history>
+
+	<objects>
+	</objects>
+
+	<platforms>
+		<mac/>
+		<windows/>
+		<linux/>
+	  <ios/>
+    <android/>
+  </platforms>
+
+	<classes>
+		<desktop/>
+		<server/>
+		<web/>
+	</classes>
+
+	<security>
+	</security>
+
+
+	<classification>
+	</classification>
+
+	<references>
+		<command tag="create stack">create stack Command</command>
+		<command tag="create card">create card Command</command>
+		<command tag="copy">copy Command</command>
+		<command tag="paste">paste Command</command>
+		<message tag="newButton">newButton Message</message>
+		<message tag="newEPS">newEPS Message</message>
+		<message tag="newPlayer">newPlayer Message</message>
+		<message tag="newField">newField Message</message>
+		<message tag="newScrollbar">newScrollbar Message</message>
+		<message tag="newGraphic">newGraphic Message</message>
+		<message tag="newImage">newImage Message</message>
+		<message tag="newCard">newCard Message</message>
+		<message tag="newGroup">newGroup Message</message>
+	</references>
+
+	<description>
+	<overview>Use the <b>clone</b> <glossary tag="command">command</glossary> to create a copy of an existing <glossary tag="object">object</glossary>.</overview>
+
+		<parameters>
+		<parameter>The <i>object</i> is any object reference.</parameter>
+		</parameters>
+
+	<value></value>
+	<comments>If the <i>object</i> is a <keyword tag="control">control</keyword>, its copy is placed on the <glossary tag="current card">current card</glossary>, 32 <property tag="pixels">pixels</property> below and to the right of the original <glossary tag="object">object</glossary>. The copy's <property tag="name">name</property> and other <property tag="properties">properties</property> are the same as those of the original. If the <i>object</i> is a <glossary tag="grouped control">grouped control</glossary>, the clone is also <glossary tag="owner">owned</glossary> by the <command tag="group">group</command>.<p></p><p></p><note>If invisible is specified the new object will have its visible property set to false.</note><p></p><p>If the <i>object</i> is a <keyword tag="card">card</keyword>, the copy becomes the <glossary tag="current card">current card</glossary>.</p><p></p><p>If the <i>object</i> is a <object tag="stack">stack</object>, the newly created <object tag="stack">stack</object> is opened. It is named &quot;Copy of&quot; and the stack's name.</p><p></p><p>The <b>clone</b> <glossary tag="command">command</glossary> places the long <property tag="ID">id</property> <glossary tag="property">property</glossary> of the newly created <glossary tag="object">object</glossary> in the <keyword tag="it">it</keyword> <glossary tag="variable">variable</glossary>.</p><p></p><p>The <b>clone</b> <glossary tag="command">command</glossary> does not affect the contents of the <function tag="clipboard">clipboard</function>.</p></comments>
+	</description>
+</doc>

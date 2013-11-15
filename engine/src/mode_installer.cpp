@@ -459,19 +459,15 @@ class MCInternalPayloadList: public MCStatement
 public:
 	MCInternalPayloadList(void)
 	{
-		m_it_var = nil;
 	}
 	
 	~MCInternalPayloadList(void)
 	{
-		delete m_it_var;
 	}
 
 	Parse_stat parse(MCScriptPoint& sp)
 	{
 		initpoint(sp);
-
-		getit(sp, m_it_var);
 
 		return PS_NORMAL;
 	}
@@ -487,7 +483,7 @@ public:
 
 		ep . clear();
 		MCMiniZipListItems(s_payload_minizip, list_items, &ep);
-		m_it_var -> set(ep, False);
+		ep.getit() -> set(ep, False);
 
 		return ES_NORMAL;
 	}
@@ -502,8 +498,6 @@ private:
 
 		return true;
 	}
-
-	MCVarref *m_it_var;
 };
 
 class MCInternalPayloadDescribe: public MCStatement
@@ -511,13 +505,11 @@ class MCInternalPayloadDescribe: public MCStatement
 public:
 	MCInternalPayloadDescribe(void)
 	{
-		m_it_var = nil;
 		m_item_expr = nil;
 	}
 
 	~MCInternalPayloadDescribe(void)
 	{
-		delete m_it_var;
 		delete m_item_expr;
 	}
 
@@ -525,7 +517,6 @@ public:
 	{
 		initpoint(sp);
 
-		getit(sp, m_it_var);
 		if (sp . parseexp(False, True, &m_item_expr) != PS_NORMAL)
 		{
 			MCperror -> add(PE_PUT_BADEXP, sp);
@@ -551,7 +542,7 @@ public:
 			if (MCMiniZipDescribeItem(s_payload_minizip, *t_name, t_info))
 			{
 				ep . setstringf(",%u,%u,,%u,", t_info . checksum, t_info . uncompressed_size, t_info . compressed_size);
-				m_it_var -> set(ep, False);
+				ep.getit() -> set(ep, False);
 			}
 			else
 				MCresult -> sets("describe failed");
@@ -563,7 +554,6 @@ public:
 	}
 
 private:
-	MCVarref *m_it_var;
 	MCExpression *m_item_expr;
 };
 
@@ -572,14 +562,12 @@ class MCInternalPayloadExtract: public MCStatement
 public:
 	MCInternalPayloadExtract(void)
 	{
-		m_it_var = nil;
 		m_item_expr = nil;
 		m_file_expr = nil;
 	}
 
 	~MCInternalPayloadExtract(void)
 	{
-		delete m_it_var;
 		delete m_item_expr;
 		delete m_file_expr;
 	}
@@ -588,7 +576,6 @@ public:
 	{
 		initpoint(sp);
 
-		getit(sp, m_it_var);
 		if (sp . parseexp(False, True, &m_item_expr) != PS_NORMAL)
 		{
 			MCperror -> add(PE_PUT_BADEXP, sp);
@@ -630,8 +617,8 @@ public:
 		{
 			ExtractContext t_context;
 			t_context . target = MCtargetptr -> gethandle();
-			t_context . name = *t_item;
-			t_context . var = m_it_var -> evalvar(ep);
+			t_context . name = t_item;
+			t_context . var = ep.getit() -> evalvar(ep);
 			t_context . stream = nil;
 
 			if (!MCStringIsEmpty(*t_file))
@@ -712,7 +699,6 @@ private:
 		return true;
 	}
 
-	MCVarref *m_it_var;
 	MCExpression *m_item_expr;
 	MCExpression *m_file_expr;
 };
@@ -1900,6 +1886,19 @@ static void *MCExecutableFindSection(const char *p_name)
 #elif defined(_LINUX)
 #include <elf.h>
 
+// MW-2013-05-03: [[ Linux64 ]] Make sure we use the correct structs for section
+//   searching.
+
+#ifdef __LP64__
+typedef Elf64_Ehdr Elf_Ehdr;
+typedef Elf64_Shdr Elf_Shdr;
+typedef Elf64_Phdr Elf_Phdr;
+#else
+typedef Elf32_Ehdr Elf_Ehdr;
+typedef Elf32_Shdr Elf_Shdr;
+typedef Elf32_Phdr Elf_Phdr;
+#endif
+
 static void *MCExecutableFindSection(const char *p_name)
 {
 	bool t_success;
@@ -1917,22 +1916,22 @@ static void *MCExecutableFindSection(const char *p_name)
 	}
 
 	// Load the header
-	Elf32_Ehdr t_header;
+	Elf_Ehdr t_header;
 	if (t_success)
-		if (fread(&t_header, sizeof(Elf32_Ehdr), 1, t_exe) != 1)
+		if (fread(&t_header, sizeof(Elf_Ehdr), 1, t_exe) != 1)
 			t_success = false;
 
 	// Allocate memory for the section table
-	Elf32_Shdr *t_sections;
+	Elf_Shdr *t_sections;
 	t_sections = nil;
 	if (t_success)
-		t_success = MCMemoryAllocate(sizeof(Elf32_Shdr) * t_header . e_shnum, t_sections);
+		t_success = MCMemoryAllocate(sizeof(Elf_Shdr) * t_header . e_shnum, t_sections);
 
 	// Now read in the sections
 	for(uint32_t i = 0; i < t_header . e_shnum && t_success; i++)
 	{
 		if (fseek(t_exe, t_header . e_shoff + i * t_header . e_shentsize, SEEK_SET) != 0 ||
-			fread(&t_sections[i], sizeof(Elf32_Shdr), 1, t_exe) != 1)
+			fread(&t_sections[i], sizeof(Elf_Shdr), 1, t_exe) != 1)
 			t_success = false;
 	}
 

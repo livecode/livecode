@@ -609,12 +609,15 @@ void MCVariable::synchronize(MCExecPoint& ep, Boolean notify)
 				eval(ep);
 				MCAutoStringRef t_string;
 				/* UNCHECKED */ ep.copyasstringref(&t_string);
-				if (*MCwatchedvars[i].expression)
+				if (MCwatchedvars[i].expression != nil && !MCStringIsEmpty(MCwatchedvars[i].expression))
 				{
 					MCExecPoint ep2(ep);
-					ep2.setsvalue(MCwatchedvars[i].expression);
-					Boolean d;
-					if (ep.gethandler()->eval(ep2) == ES_NORMAL && MCU_stob(ep2.getsvalue(), d) && d)
+					MCExecContext ctxt(ep2);
+					MCAutoValueRef t_val;
+					ctxt.GetHandler()->eval(ctxt, MCwatchedvars[i].expression, &t_val);
+					
+					MCAutoBooleanRef t_bool;
+					if (!ctxt.HasError() && ctxt.ConvertToBoolean(*t_val, &t_bool) && *t_bool == kMCTrue)
 						MCB_setvar(ctxt, *t_string, name);
 				}
 				else
@@ -665,18 +668,14 @@ void MCVariable::synchronize(MCExecContext& ctxt, bool p_notify)
 					!is_global)
 					continue;
 
-				if (*MCwatchedvars[i].expression)
+				if (MCwatchedvars[i].expression != nil && !MCStringIsEmpty(MCwatchedvars[i].expression))
 				{
-					MCAutoStringRef t_expression;
-                    MCStringCreateWithCString(MCwatchedvars[i].expression, &t_expression);
-                    MCAutoValueRef t_value;
-                    MCAutoBooleanRef t_bool_value;
+                    MCAutoValueRef t_val;
+					ctxt.GetHandler() -> eval(ctxt, MCwatchedvars[i].expression, &t_val);
                     
-                    ctxt . GetHandler() -> eval(ctxt, *t_expression, &t_value);
-                    if (!ctxt . HasError() &&
-                            ctxt . ConvertToBoolean(*t_value, &t_bool_value))
-                    if (!ctxt . HasError() && *t_bool_value == kMCTrue)
-                        MCB_setvar(ctxt, value, name);
+					MCAutoBooleanRef t_bool;
+					if (!ctxt.HasError() && ctxt.ConvertToBoolean(*t_val, &t_bool) && *t_bool == kMCTrue)
+						MCB_setvar(ctxt, value, name);
 				}
 				else
                     MCB_setvar(ctxt, value, name);
@@ -1303,7 +1302,7 @@ bool MCVarref::resolve(MCExecContext& ctxt, MCContainer*& r_container)
                 ctxt . LegacyThrow(EE_VARIABLE_BADINDEX);
 		}
 	}
-    
+
     if (!ctxt . HasError())
     {
         /* UNCHECKED */ MCContainer::createwithpath(t_var, t_path, t_path_length, r_container);
@@ -1313,7 +1312,7 @@ bool MCVarref::resolve(MCExecContext& ctxt, MCContainer*& r_container)
 	{
 		for(uindex_t i = 0; i < t_path_length; i++)
 			MCValueRelease(t_path[i]);
-		MCMemoryDeleteArray(t_path);
+        MCMemoryDeleteArray(t_path);
 
         return false;
     }

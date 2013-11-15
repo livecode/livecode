@@ -1,0 +1,50 @@
+<doc>
+  <legacy_id>1104</legacy_id>
+  <name>open printing</name>
+  <type>command</type>
+  <syntax>
+    <example>open printing [with dialog [as sheet]]</example>
+  </syntax>
+  <library></library>
+  <objects>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Printing</category>
+  </classification>
+  <references>
+    <command tag="answer printer">answer printer Command</command>
+    <command tag="close printing">close printing Command</command>
+    <command tag="revBrowserPrint">revBrowserPrint Command</command>
+    <command tag="answer page setup">answer page setup Command</command>
+    <command tag="cancel printing">cancel printing Command</command>
+    <property tag="printRowsFirst">printRowsFirst Property</property>
+    <property tag="printTitle">printTitle Property</property>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+    <changed version="2.0"></changed>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <web/>
+  </classes>
+  <security>
+    <printing/>
+  </security>
+  <summary>Begins a batch <glossary tag="print job">print job</glossary>, which allows more than one <keyword tag="card">card</keyword> to be printed on a page.</summary>
+  <examples>
+    <example>open printing</example>
+    <example>open printing with dialog</example>
+    <example>open printing with dialog as sheet</example>
+  </examples>
+  <description>
+    <p>Use the <b>open printing</b> <glossary tag="command">command</glossary> to print multiple <glossary tag="card">cards</glossary>.</p><p/><p><b>Comments:</b></p><p>Normally, the <b>print</b> <glossary tag="command">command</glossary> prints each <keyword tag="card">card</keyword> on a separate page. If you use the <b>open printing</b> <glossary tag="command">command</glossary> before issuing the <command tag="print">print</command> <glossary tag="command">commands</glossary> for the <glossary tag="card">cards</glossary> you want to print, the printing is delayed until all the <glossary tag="card">cards</glossary> have been specified. This causes the <glossary tag="card">cards</glossary> to be printed as one batch.</p><p/><p>The open printing with dialog form opens the print dialog box on Mac OS systems. On Unix or Windows systems, this form acts like the open printing form, and no dialog box appears. If the as sheet form is used, the dialog box appears as a sheet on OS X systems.</p><p/><p>If the open printing with dialog form is used, and the user cancels the print dialog box, the <b>result</b> is set to "Cancel".</p><p/><p>The following handler prints cards that have been collected in a global variable:</p><p/><p>  on printSomeCards</p><p>    global cardsToPrint</p><p>    open printing with dialog</p><p>    if the result is "Cancel" then exit printSomeCards</p><p>    repeat with x = 1 to the number of lines of cardsToPrint</p><p>      print card (line x of cardsToPrint)</p><p>    end repeat</p><p>    close printing <i>-- send group of cards to printer</i></p><p>  end printSomeCards</p><p/><p><b>Changes:</b></p><p>The open printing with dialog as sheet form was introduced in version 2.0.</p><p/><p><img src="202653"/> <b>Important!</b> Any printing options, such as setting print spacing and margins, must be set before the <b>open printing</b> statement.  Any options which are set after it will be ignored. </p>
+  </description>
+</doc>

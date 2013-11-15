@@ -42,6 +42,10 @@ class MCGroup : public MCControl
 	MCRectangle minrect;
 	uint2 number;
 	Boolean mgrabbed;
+	
+	// MERG-2013-06-02: [[ GrpLckUpdates ]] True if updates to bounding rect and
+	//   parents locked.
+    bool m_updates_locked : 1;
 
 	static uint2 labeloffset;
 	static MCPropertyInfo kProperties[];
@@ -167,7 +171,7 @@ public:
 	// MW-2011-08-08: [[ Groups ]] Returns 'true' if the group is a background.
 	bool isbackground(void) const { return getflag(F_GROUP_ONLY) == False; }
 	// MW-2011-08-09: [[ Groups ]] Returns 'true' if the group is on/can be on multiple cards.
-	bool isshared(void) const { return getflag(F_GROUP_SHARED) == True; }
+	bool isshared(void) const { return getflag(F_GROUP_SHARED); }
 
 	// MW-2011-08-09: Ensure that all children of the group have non-zero id.
 	void ensureids(void);
@@ -178,6 +182,10 @@ public:
 	// MW-2012-03-01: [[ Bug 10045 ]] Clear the mfocus setting of the group without
 	//   dispatching any messages.
 	void clearmfocus(void);
+	
+	// MERG-2013-06-02: [[ GrpLckUpdates ]] Returns the update locking state of the
+	//   group.
+    bool islocked(void) { return m_updates_locked; }
 
 	MCGroup *next()
 	{
@@ -216,6 +224,8 @@ public:
 	////////// PROPERTY SUPPORT METHODS
 
 	void SetChildDisabled(MCExecContext& ctxt, uint32_t part, bool setting);
+    void GetCardProps(MCExecContext& ctxt, Properties which, uindex_t& r_count, MCStringRef*& r_list);
+    void GetPropList(MCExecContext& ctxt, Properties which, uint32_t part_id, MCStringRef& r_props);
     
     void UpdateMargins(void);
 
@@ -273,6 +283,13 @@ public:
 	void GetSelectGroupedControls(MCExecContext& ctxt, bool& r_setting);
 	void SetSelectGroupedControls(MCExecContext& ctxt, bool setting);
     void GetCardNames(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_list);
+    void GetCardIds(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_list);
+    void GetControlNames(MCExecContext& ctxt, uint32_t part_id, MCStringRef& r_names);
+    void GetControlIds(MCExecContext& ctxt, uint32_t part_id, MCStringRef& r_ids);
+    void GetChildControlNames(MCExecContext& ctxt, MCStringRef& r_names);
+    void GetChildControlIds(MCExecContext& ctxt, MCStringRef& r_ids);
+    void GetLockUpdates(MCExecContext& ctxt, bool& r_locked);
+    void SetLockUpdates(MCExecContext& ctxt, bool p_locked);
     
 	virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
 	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);

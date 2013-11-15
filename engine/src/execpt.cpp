@@ -33,6 +33,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxprefix-legacy.h"
 
+#ifdef MODE_SERVER
+#include "srvscript.h"
+#endif
+
 //////////
 
 bool MCExecPoint::isempty(void) const
@@ -741,6 +745,25 @@ Parse_stat MCExecPoint::findvar(MCNameRef p_name, MCVarref** r_var)
 	}
 	
 	return t_stat;
+}
+
+// MW-2013-11-08: [[ RefactorIt ]] Returns the it var for the current context.
+MCVarref *MCExecPoint::getit(void)
+{
+	// If we have a handler, then get it from there.
+	if (curhandler != nil)
+		return curhandler -> getit();
+	
+#ifdef MODE_SERVER
+	// If we are here it means we must be in global scope, executing in a
+	// MCServerScript object.
+	return static_cast<MCServerScript *>(curobj) -> getit();
+#else
+	// We should never get here as execution only occurs within handlers unless
+	// in server mode.
+	assert(false);
+	return nil;
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1620,6 +1643,7 @@ bool MCExecPoint::copyaslegacycolor(MCColor& r_color)
 ////////////////////////////////////////////////////////////////////////////////
 
 #if 0
+
 void MCExecPoint::clear()
 {
 	format = VF_STRING;

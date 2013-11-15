@@ -49,6 +49,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "context.h"
 #include "osspec.h"
+#include "regex.h"
 
 #include "socket.h"
 #include "mcssl.h"
@@ -58,6 +59,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "variable.h"
 
 #include "exec-interface.h"
+
+#include "resolution.h"
+#include "regex.h"
 
 MCClose::~MCClose()
 {
@@ -115,7 +119,7 @@ Parse_stat MCClose::parse(MCScriptPoint &sp)
 void MCClose::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCClose */ LEGACY_EXEC
-char *name;
+	char *name;
 	uint2 index;
 
 	switch (arg)
@@ -295,7 +299,6 @@ MCEncryptionOp::~MCEncryptionOp()
 	delete source;
 	delete keystr;
 	delete keylen;
-	delete it;
 	delete salt;
 	delete iv;
 
@@ -451,10 +454,10 @@ Parse_stat MCEncryptionOp::parse(MCScriptPoint &sp)
 			}
 		}
 	}
-	getit(sp, it);
 	return PS_NORMAL;
 
 }
+
 #ifdef /* MCEncryptionOp::exec_rsa */ LEGACY_EXEC
 Exec_stat MCEncryptionOp::exec_rsa(MCExecPoint &ep)
 {
@@ -516,7 +519,7 @@ Exec_stat MCEncryptionOp::exec_rsa(MCExecPoint &ep)
 			t_rsa_key, t_rsa_keylength, t_rsa_passphrase, t_rsa_out, t_rsa_out_length, t_result, t_error))
 		{
 			MCVariable *t_var;
-			t_var = it -> evalvar(ep);
+			t_var = ep.getit() -> evalvar(ep);
 			if (t_var != NULL)
 				t_var -> grab(t_rsa_out, t_rsa_out_length);
 			else
@@ -545,7 +548,7 @@ Exec_stat MCEncryptionOp::exec_rsa(MCExecPoint &ep)
 void MCEncryptionOp::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCEncryptionOp */ LEGACY_EXEC
-MCresult->clear(False);
+	MCresult->clear(False);
 
 	if (is_rsa)
 		return exec_rsa(ep);
@@ -643,7 +646,7 @@ MCresult->clear(False);
 	else
 	{
 		MCVariable *t_var;
-		t_var = it -> evalvar(ep);
+		t_var = ep.getit() -> evalvar(ep);
 		if (t_var != NULL)
 			t_var -> grab(outstr, outlen);
 		else
@@ -658,7 +661,6 @@ MCresult->clear(False);
 #endif /* MCEncryptionOp */
 
     ctxt . SetTheResultToEmpty();
-    ctxt . SetIt(it);
 
 	if (is_rsa)
 	{
@@ -1031,7 +1033,7 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 void MCExport::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCExport */ LEGACY_EXEC
-	MCBitmap *t_img = nil;
+	MCImageBitmap *t_bitmap = nil;
 	MCObject *optr = NULL;
 
 	Exec_stat t_status = ES_NORMAL;
@@ -1047,7 +1049,12 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 			return ES_ERROR;
 		}
 	}
-
+	
+	// MW-2013-05-20: [[ Bug 10897 ]] Object snapshot returns a premultipled
+	//   bitmap, which needs to be processed before compression. This flag
+	//   indicates to do this processing later on in the method.
+	bool t_needs_unpremultiply;
+	t_needs_unpremultiply = false;
 	if (sformat == EX_SNAPSHOT)
 	{
 		char *srect = NULL;
@@ -1135,21 +1142,25 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 
 		if (optr != NULL)
 		{
-			/* UNCHECKED */ t_img = optr -> snapshot(exsrect == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, with_effects);
+			/* UNCHECKED */ t_bitmap = optr -> snapshot(exsrect == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, 1.0, with_effects);
 			// OK-2007-04-24: Bug found in ticket 2006072410002591, when exporting a snapshot of an object
 			// while the object is being moved in the IDE, it is possible for the snapshot rect not to intersect with
 			// the rect of the object, causing optr -> snapshot() to return NULL, and a crash.
-			if (t_img == nil)
+			if (t_bitmap == nil)
 			{
 				delete sdisp;
 				MCeerror -> add(EE_EXPORT_EMPTYRECT, line, pos);
 				return ES_ERROR;
 			}
+			
+			// MW-2013-05-20: [[ Bug 10897 ]] The 'snapshot' command produces a premultiplied bitmap
+			//   so mark it to be unpremultiplied for later on.
+			t_needs_unpremultiply = true;
 		}
 		else
 		{
-			t_img = MCscreen->snapshot(r, w, sdisp);
-			if (t_img == nil)
+			t_bitmap = MCscreen->snapshot(r, 1.0, w, sdisp);
+			if (t_bitmap == nil)
 			{
 				delete sdisp;
 				MCeerror->add(EE_EXPORT_NOSELECTED, line, pos);
@@ -1223,20 +1234,31 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 		delete mfile;
 	}
 
-	MCImageBitmap *t_bitmap = nil;
 	bool t_dither = false;
 	bool t_image_locked = false;
-	if (t_img == nil)
+	if (t_bitmap == nil)
 	{
-		/* UNCHECKED */ static_cast<MCImage*>(optr)->lockbitmap(t_bitmap);
-		t_image_locked = true;
-		t_dither = !optr->getflag(F_DONT_DITHER);
+		MCImage *t_img = static_cast<MCImage*>(optr);
+		
+		// IM-2013-07-26: [[ ResIndependence ]] the exported image needs to be unscaled,
+		// so if the image has a scale factor we need to get a 1:1 copy
+		if (t_img->getscalefactor() == 1.0)
+		{
+			/* UNCHECKED */ t_img->lockbitmap(t_bitmap, false);
+			t_image_locked = true;
+		}
+		else
+		{
+			/* UNCHECKED */ t_img->copybitmap(1.0, false, t_bitmap);
+		}
+		t_dither = !t_img->getflag(F_DONT_DITHER);
 	}
 	else
 	{
-		/* UNCHECKED */ MCImageBitmapCreateWithOldBitmap(t_img, t_bitmap);
+		// MW-2013-05-20: [[ Bug 10897 ]] Make sure we unpremultiply if needed.
+		if (t_needs_unpremultiply)
+			MCImageBitmapUnpremultiply(t_bitmap);
 		MCImageBitmapCheckTransparency(t_bitmap);
-		MCscreen->destroyimage(t_img);
 		t_dither = !MCtemplateimage->getflag(F_DONT_DITHER);
 	}
 
@@ -1334,7 +1356,7 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 	return t_status;
 #endif /* MCExport */
 
-	MCAutoStringRef t_return_data;
+    MCAutoDataRef t_return_data;
     MCAutoStringRef t_filename;
     if (!ctxt . EvalOptionalExprAsNullableStringRef(fname, EE_EXPORT_BADNAME, &t_filename))
         return;
@@ -1358,29 +1380,30 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 	MCInterfaceImagePaletteSettings t_settings;
 	MCInterfaceImagePaletteSettings *t_settings_ptr = nil;
 
-	switch (palette_type)
-	{
-	case kMCImagePaletteTypeCustom:
-		{
-		MCColor *t_colors;
-		uindex_t t_count;
-		MCAutoStringRef t_input;
+    switch (palette_type)
+    {
+    case kMCImagePaletteTypeCustom:
+        {
+        MCColor *t_colors;
+        uindex_t t_count;
+        MCAutoStringRef t_input;
         if (!ctxt . EvalExprAsStringRef(palette_color_list, EE_EXPORT_BADPALETTE, &t_input))
             return;
 
-        if (!MCImageParseColourList(*t_input, t_count, t_colors))
+        if (MCStringIsEmpty(*t_input)
+                || !MCImageParseColourList(*t_input, t_count, t_colors))
         {
             ctxt . LegacyThrow(EE_EXPORT_BADPALETTE);
             return;
         }
 
-		MCInterfaceMakeCustomImagePaletteSettings(ctxt, t_colors, t_count, t_settings);
-		t_settings_ptr = &t_settings;
-		}
-		break;
-	case kMCImagePaletteTypeOptimal:
-		{
-		integer_t *t_count_ptr = nil;
+        MCInterfaceMakeCustomImagePaletteSettings(ctxt, t_colors, t_count, t_settings);
+        t_settings_ptr = &t_settings;
+        }
+        break;
+    case kMCImagePaletteTypeOptimal:
+        {
+        integer_t *t_count_ptr = nil;
         integer_t t_count;
         if (!ctxt . EvalOptionalExprAsInt(palette_color_count, 0, EE_EXPORT_BADPALETTESIZE, t_count))
             return;
@@ -1388,19 +1411,19 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
         if (t_count != 0)
             t_count_ptr = &t_count;
 
-		MCInterfaceMakeOptimalImagePaletteSettings(ctxt, t_count_ptr, t_settings);
-		t_settings_ptr = &t_settings;
-		}
-		break;
-	case kMCImagePaletteTypeWebSafe:
-		MCInterfaceMakeWebSafeImagePaletteSettings(ctxt, t_settings);
-		t_settings_ptr = &t_settings;
-		break;
-	case kMCImagePaletteTypeEmpty:
-		break;
+        MCInterfaceMakeOptimalImagePaletteSettings(ctxt, t_count_ptr, t_settings);
+        t_settings_ptr = &t_settings;
+        }
+        break;
+    case kMCImagePaletteTypeWebSafe:
+        MCInterfaceMakeWebSafeImagePaletteSettings(ctxt, t_settings);
+        t_settings_ptr = &t_settings;
+        break;
+    case kMCImagePaletteTypeEmpty:
+        break;
     }
 
-	if (sformat == EX_SNAPSHOT)
+    if (sformat == EX_SNAPSHOT)
     {
         MCRectangle *t_rect_ptr;
         MCRectangle t_rect;
@@ -1409,8 +1432,8 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 
         if (ctxt . EvalOptionalExprAsRectangle(exsrect, nil, EE_IMPORT_BADNAME, t_rect_ptr)
                 && exsstack != NULL)
-		{
-			MCAutoStringRef t_stack_name;
+        {
+            MCAutoStringRef t_stack_name;
 
             if (ctxt . EvalExprAsStringRef(exsstack, EE_EXPORT_NOSELECTED, &t_stack_name))
             {
@@ -1427,7 +1450,7 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 		else if (optr != NULL)
 		{            
             MCPoint t_size;
-			MCPoint *t_size_ptr = nil;
+            MCPoint *t_size_ptr = nil;
 
             t_size_ptr = &t_size;
 
@@ -1444,18 +1467,18 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 			if (*t_filename == nil)
 				MCInterfaceExecExportSnapshotOfScreen(ctxt, t_rect_ptr, format, t_settings_ptr, &t_return_data);
 			else
-				MCInterfaceExecExportSnapshotOfScreenToFile(ctxt, t_rect_ptr, format, t_settings_ptr, *t_filename, *t_mask_filename);		
+				MCInterfaceExecExportSnapshotOfScreenToFile(ctxt, t_rect_ptr, format, t_settings_ptr, *t_filename, *t_mask_filename);
 		}
 	}
-	else 
+	else
 	{
 		if (*t_filename == nil)
 			MCInterfaceExecExportImage(ctxt, (MCImage *)optr, format, t_settings_ptr, &t_return_data);
 		else
 			MCInterfaceExecExportImageToFile(ctxt, (MCImage *)optr, format, t_settings_ptr, *t_filename, *t_mask_filename);
 	}
-
-	MCInterfaceImagePaletteSettingsFree(ctxt, t_settings);
+    
+    MCInterfaceImagePaletteSettingsFree(ctxt, t_settings);
 
     if (ctxt . HasError())
         return;
@@ -1468,7 +1491,7 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 		{
             ctxt . LegacyThrow(EE_EXPORT_CANTWRITE);
             return;
-		}
+        }
     }
 }
 
@@ -1487,17 +1510,17 @@ void MCExport::compile(MCSyntaxFactoryRef ctxt)
 		}
 		else if (image != nil)
 			image -> compile_object_ptr(ctxt);
-
+        
 		if (exsrect != nil)
 			exsrect -> compile(ctxt);
 		else
 			MCSyntaxFactoryEvalConstantNil(ctxt);
-
+        
 		if (image != nil)
 		{
 			MCSyntaxFactoryEvalConstantBool(ctxt, with_effects);
-
-			if (size != nil) 
+            
+			if (size != nil)
 				size -> compile(ctxt);
 			else
 				MCSyntaxFactoryEvalConstantNil(ctxt);
@@ -1505,38 +1528,38 @@ void MCExport::compile(MCSyntaxFactoryRef ctxt)
 	}
 	else
 		image -> compile_object_ptr(ctxt);
-
+    
 	MCSyntaxFactoryEvalConstantInt(ctxt, format);
-
+    
 	switch (palette_type)
 	{
-	case kMCImagePaletteTypeCustom:
-		MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-		palette_color_list -> compile(ctxt);
-		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceMakeCustomImagePaletteSettingsMethodInfo);
-		MCSyntaxFactoryEndExpression(ctxt);
-		break;
-
-	case kMCImagePaletteTypeOptimal:
-		MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-		if (palette_color_count != nil)
-			palette_color_count -> compile(ctxt);
-		else
-			MCSyntaxFactoryEvalConstantNil(ctxt);
-		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceMakeOptimalImagePaletteSettingsMethodInfo);
-		MCSyntaxFactoryEndExpression(ctxt);
-		break;
-
-	case kMCImagePaletteTypeWebSafe:
-		MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceMakeWebSafeImagePaletteSettingsMethodInfo);
-		MCSyntaxFactoryEndExpression(ctxt);
-		break;
-
-	default:
-		MCSyntaxFactoryEvalConstantNil(ctxt);
+        case kMCImagePaletteTypeCustom:
+            MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+            palette_color_list -> compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceMakeCustomImagePaletteSettingsMethodInfo);
+            MCSyntaxFactoryEndExpression(ctxt);
+            break;
+            
+        case kMCImagePaletteTypeOptimal:
+            MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+            if (palette_color_count != nil)
+                palette_color_count -> compile(ctxt);
+            else
+                MCSyntaxFactoryEvalConstantNil(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceMakeOptimalImagePaletteSettingsMethodInfo);
+            MCSyntaxFactoryEndExpression(ctxt);
+            break;
+            
+        case kMCImagePaletteTypeWebSafe:
+            MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceMakeWebSafeImagePaletteSettingsMethodInfo);
+            MCSyntaxFactoryEndExpression(ctxt);
+            break;
+            
+        default:
+            MCSyntaxFactoryEvalConstantNil(ctxt);
 	}
-
+    
 	if (fname != nil)
 	{
 		fname -> compile(ctxt);
@@ -1573,19 +1596,16 @@ void MCExport::compile(MCSyntaxFactoryRef ctxt)
 	}
 }
 
-MCFilter::~MCFilter()
-{
-	delete container;
-	delete pattern;
-}
+////////////////////////////////////////////////////////////////////////////////
 
 #define OPEN_BRACKET '['
 #define CLOSE_BRACKET ']'
 
-Boolean MCFilter::match(char *s, char *p, Boolean casesensitive)
+#ifdef /* MCWildcardMatcher::match */ LEGACY_EXEC
+/* static */ Boolean MCWildcardMatcher::match(const char *s, const char *p, Boolean casesensitive)
 {
 	uint1 scc, c;
-
+    
 	while (*s)
 	{
 		scc = *s++;
@@ -1641,50 +1661,69 @@ Boolean MCFilter::match(char *s, char *p, Boolean casesensitive)
 						}
 				}
 			}
-			return False;
-		case '?':
-			break;
-		case '*':
-			while (*p == '*')
-				p++;
-			if (*p == 0)
-				return True;
-			--s;
-			c = *p;
-			while (*s)
-				if ((casesensitive ? c != *s : MCS_tolower(c) != MCS_tolower(*s))
+                return False;
+            case '?':
+                break;
+            case '*':
+                while (*p == '*')
+                    p++;
+                if (*p == 0)
+                    return True;
+                --s;
+                c = *p;
+                while (*s)
+                    if ((casesensitive ? c != *s : MCS_tolower(c) != MCS_tolower(*s))
 				        && *p != '?' && *p != OPEN_BRACKET)
-					s++;
-				else
-					if (match(s++, p, casesensitive))
-						return True;
-			return False;
-		case 0:
-			return scc == 0;
-		default:
-			if (casesensitive)
-			{
-				if (c != scc)
-					return False;
-			}
-			else
-				if (MCS_tolower(c) != MCS_tolower(scc))
-					return False;
-			break;
+                        s++;
+                    else
+                        if (match(s++, p, casesensitive))
+                            return True;
+                return False;
+            case 0:
+                return scc == 0;
+            default:
+                if (casesensitive)
+                {
+                    if (c != scc)
+                        return False;
+                }
+                else
+                    if (MCS_tolower(c) != MCS_tolower(scc))
+                        return False;
+                break;
 		}
 	}
 	while (*p == '*')
 		p++;
 	return *p == 0;
 }
+#endif /* MCWildcardMatcher::match */
 
-char *MCFilter::filterlines(char *sstring, char *pstring,
-                            Boolean casesensitive)
+MCFilter::~MCFilter()
 {
-	uint4 offset = 0;
-	char *dstring = new char[strlen(sstring) + 1];
-	char *line;
+	delete container;
+	delete target;
+	delete source;
+	delete pattern;
+}
 
+#ifdef /* MCFilter::filterdelimited */ LEGACY_EXEC
+// JS-2013-07-01: [[ EnhancedFilter ]] Replacement for filterlines which takes a delimiter and
+//   pattern matching class.
+char *MCFilter::filterdelimited(char *sstring, char delimiter, MCPatternMatcher *matcher)
+{
+	bool t_success;
+	t_success = true;
+	
+	uint32_t t_length;
+	t_length = MCCStringLength(sstring);
+	
+	uint4 offset = 0;
+	char *dstring;
+	dstring = nil;
+	if (t_success)
+		t_success = MCMemoryAllocate(t_length + 1, dstring);
+	
 	// OK-2010-01-11: Bug 7649 - Filter command was incorrectly removing empty lines.
 	// Now does:
 	// 1. Remove terminal delimiter from list
@@ -1693,16 +1732,26 @@ char *MCFilter::filterlines(char *sstring, char *pstring,
 
 	// Duplicate input string because the algorithm needs to change it.
 	char *t_string;
-	t_string = strdup(sstring);
+	t_string = nil;
+	
+	if (t_success)
+		t_success = MCCStringClone(sstring, t_string);
 
+	if (!t_success)
+	{
+		// IM-2013-07-26: [[ Bug 10774 ]] return nil if memory allocation fails
+		MCMemoryDeallocate(dstring);
+		MCCStringFree(t_string);
+		
+		return nil;
+	}
+	
 	// Keep a copy of the original pointer so it can be freed
 	char *t_original_string;
 	t_original_string = t_string;
 
 	// MW-2010-10-05: [[ Bug 9034 ]] If t_string is of zero length, then the next couple
 	//   of lines will cause problems so return empty in this case.
-	uint32_t t_length;
-	t_length = strlen(t_string);
 	if (t_length == 0)
 	{
 		free(t_original_string);
@@ -1713,27 +1762,28 @@ char *MCFilter::filterlines(char *sstring, char *pstring,
 	// Record whether or not the string was terminated with a trailing delimiter,
 	// if it was, then remove this trailing delimiter.
 	bool t_was_terminated;
-	t_was_terminated = (t_string[t_length - 1] == '\n');
+	t_was_terminated = (t_string[t_length - 1] == delimiter);
 	if (t_was_terminated)
 		t_string[t_length - 1] = '\0';
 
 	for(;;)
 	{
 		char *t_return;
-		t_return = strchr(t_string, '\n');
+		t_return = strchr(t_string, delimiter);
 
 		if (t_return != nil)
 			*t_return = '\0';
 
-		line = t_string;
-		if (match(line, pstring, casesensitive) != out)
+		char *chunk;
+		chunk = t_string;
+		if (matcher->match(chunk) != discardmatches)
 		{
 			if (offset)
-				dstring[offset++] = '\n';
+				dstring[offset++] = delimiter;
 
 			// MW-2010-10-18: [[ Bug 7864 ]] This should be a 32-bit integer - removing 65535 char limit.
-			uint32_t length = strlen(line);
-			memcpy(&dstring[offset], line, length);
+			uint32_t length = strlen(chunk);
+			memcpy(&dstring[offset], chunk, length);
 			offset += length;
 		}
 
@@ -1744,7 +1794,7 @@ char *MCFilter::filterlines(char *sstring, char *pstring,
 	}
 
 	if (offset != 0 && t_was_terminated)
-		dstring[offset++] = '\n';
+		dstring[offset++] = delimiter;
 
 
 	free(t_original_string);
@@ -1752,84 +1802,243 @@ char *MCFilter::filterlines(char *sstring, char *pstring,
 	dstring[offset] = '\0';
 	return dstring;
 }
+#endif /* MCFilter::filterdelimited */
 
+// JS-2013-07-01: [[ EnhancedFilter ]] Rewritten to support new filter syntax.
 Parse_stat MCFilter::parse(MCScriptPoint &sp)
 {
+	// Syntax :
+	//   filter [ ( lines | items ) of ] <container_or_exp>
+	//          ( with | without | [ not ] matching )
+	//          [ { wildcard | regex } [ pattern ] ] <pattern>
+	//          [ into <container> ]
+	//
+	Parse_errors t_error;
+	t_error = PE_UNDEFINED;
+    
 	initpoint(sp);
-	container = new MCChunk(True);
-	if (container->parse(sp, False) != PS_NORMAL)
+
+	// Parse the chunk type (if present)
+	if (t_error == PE_UNDEFINED)
 	{
-		MCperror->add
-		(PE_FILTER_BADDEST, sp);
+		// First check for 'lines' or 'items'.
+		if (sp.skip_token(SP_FACTOR, TT_CLASS, CT_LINE) == PS_NORMAL)
+			chunktype = CT_LINE;
+		else if (sp.skip_token(SP_FACTOR, TT_CLASS, CT_ITEM) == PS_NORMAL)
+			chunktype = CT_ITEM;
+		// If we parsed a chunk then ensure there's an 'of'
+		if (chunktype != CT_UNDEFINED && sp.skip_token(SP_FACTOR, TT_OF) != PS_NORMAL)
+			t_error = PE_FILTER_BADDEST;
+	}
+
+	// If there was no error and no chunk type then default to line
+	if (t_error == PE_UNDEFINED && chunktype == CT_UNDEFINED)
+		chunktype = CT_LINE;
+
+	// Next parse the source container or expression
+	if (t_error == PE_UNDEFINED)
+	{
+		MCerrorlock++;
+		MCScriptPoint tsp(sp);
+		container = new MCChunk(True);
+		if (container->parse(sp, False) != PS_NORMAL)
+		{
+			sp = tsp;
+			MCerrorlock--;
+			delete container;
+			container = NULL;
+			if (sp.parseexp(True, True, &source) != PS_NORMAL)
+			{
+				t_error = PE_FILTER_BADDEST;
+			}
+		}
+		else
+			MCerrorlock--;
+	}
+
+	// Now look for the filter mode
+	if (t_error == PE_UNDEFINED)
+	{
+		if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+			discardmatches = False;
+		else if (sp.skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
+			discardmatches = True;
+		else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_MATCHING) == PS_NORMAL)
+			discardmatches = False;
+		else if (sp.skip_token(SP_FACTOR, TT_UNOP, O_NOT) == PS_NORMAL
+				 && sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_MATCHING) == PS_NORMAL)
+			discardmatches = True;
+		else
+			t_error = PE_FILTER_NOWITH;
+	}
+
+	// Now look for the optional pattern match mode
+	if (t_error == PE_UNDEFINED)
+	{
+		if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_REGEX) == PS_NORMAL)
+			matchmode = MA_REGEX;
+		else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_WILDCARD) == PS_NORMAL)
+			matchmode = MA_WILDCARD;
+		// Skip the optional pattern keyword
+		sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_PATTERN);
+	}
+
+	// Now parse the pattern expression
+	if (t_error == PE_UNDEFINED && sp.parseexp(False, True, &pattern) != PS_NORMAL)
+		t_error = PE_FILTER_BADEXP;
+
+	// Finally check for the (optional) 'into' clause
+	if (t_error == PE_UNDEFINED)
+	{
+		if (sp.skip_token(SP_FACTOR, TT_PREP, PT_INTO) == PS_NORMAL)
+		{
+			target = new MCChunk(True);
+			if (target->parse(sp, False) != PS_NORMAL)
+				t_error = PE_FILTER_BADDEST;
+        }
+	}
+
+	// If we encountered an error, add it to the parse error stack and fail.
+	if (t_error != PE_UNDEFINED)
+	{
+		MCperror->add(t_error, sp);
 		return PS_ERROR;
 	}
-	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_ERROR)
-	{
-		MCperror->add
-		(PE_FILTER_NOWITH, sp);
-		return PS_ERROR;
-	}
-	Parse_stat stat = sp.skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT);
-	if (stat == PS_ERROR)
-	{
-		MCperror->add
-		(PE_FILTER_NOWITH, sp);
-		return PS_ERROR;
-	}
-	else
-		if (stat == PS_NORMAL)
-			out = True;
-	if (sp.parseexp(False, True, &pattern) != PS_NORMAL)
-	{
-		MCperror->add
-		(PE_FILTER_BADEXP, sp);
-		return PS_ERROR;
-	}
+
+	// Success!
 	return PS_NORMAL;
 }
 
+// JS-2013-07-01: [[ EnhancedFilter ]] Rewritten to support new syntax.
 void MCFilter::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCFilter */ LEGACY_EXEC
-	if (container->eval(ep) != ES_NORMAL)
+	Exec_stat stat;
+
+	// Evaluate the container or source expression
+	if (container != NULL)
+		stat = container->eval(ep);
+	else
+		stat = source->eval(ep);
+	if (stat != ES_NORMAL)
 	{
 		MCeerror->add(EE_FILTER_CANTGET, line, pos);
 		return ES_ERROR;
 	}
 	char *sptr = ep.getsvalue().clone();
+
+	// Evaluate the pattern expression
 	if (pattern->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_FILTER_CANTGETPATTERN, line, pos);
 		delete sptr;
 		return ES_ERROR;
 	}
-	char *pptr = ep.getsvalue().clone();
-	char *dptr = filterlines(sptr, pptr, ep.getcasesensitive());
+	
+	// MW-2013-07-01: [[ EnhancedFilter ]] Use the ep directly as the matcher
+	//   classes copy the pattern string.
+	// Create the pattern matcher
+	MCPatternMatcher *matcher;
+	if (matchmode == MA_REGEX)
+        matcher = new MCRegexMatcher(ep.getcstring(), ep.getcasesensitive());
+    else
+		matcher = new MCWildcardMatcher(ep.getcstring(), ep.getcasesensitive());
+	stat = matcher->compile(line, pos);
+	if (stat != ES_NORMAL)
+	{
+		delete sptr;
+		delete matcher;
+		return stat;
+	}
+
+	// Determine the delimiter
+	char delimiter;
+	if (chunktype == CT_LINE)
+		delimiter = ep.getlinedel();
+	else
+		delimiter = ep.getitemdel();
+
+	// Filter the data
+	char *dptr = filterdelimited(sptr, delimiter, matcher);
 	delete sptr;
-	delete pptr;
+	delete matcher;
+	
+	// IM-2013-07-26: [[ Bug 10774 ]] if filterlines returns nil throw a "no memory" error
+	if (dptr == nil)
+	{
+		MCeerror->add(EE_NO_MEMORY, line, pos);
+		return ES_ERROR;
+	}
+
 	ep.copysvalue(dptr, strlen(dptr));
 	delete dptr;
-	if (container->set(ep, PT_INTO) != ES_NORMAL)
+
+	// Now put the filtered data into the correct container
+	if (container == NULL && target == NULL)
+		stat = ep.getit()->set(ep);
+	else if (target != NULL)
+		stat = target->set(ep, PT_INTO);
+	else
+		stat = container->set(ep, PT_INTO);
+	if (stat != ES_NORMAL)
 	{
 		MCeerror->add(EE_FILTER_CANTSET, line, pos);
 		return ES_ERROR;
 	}
+
+	// Success!
 	return ES_NORMAL;
 #endif /* MCFilter */
 
-	MCAutoStringRef t_source;
+    MCAutoStringRef t_source;
     MCAutoStringRef t_pattern;
     MCAutoStringRef t_output;
-
-    if (!ctxt . EvalExprAsStringRef(container, EE_FILTER_CANTGET, &t_source))
-        return;
+    bool stat;
+    
+	// Evaluate the container or source expression
+	if (container != NULL)
+    {
+        if (!ctxt . EvalExprAsStringRef(container, EE_FILTER_CANTGET, &t_source))
+            return;
+    }
+	else
+    {
+        if (!ctxt . EvalExprAsStringRef(source, EE_FILTER_CANTGET, &t_source))
+            return;
+    }
 
     if (!ctxt . EvalExprAsStringRef(pattern, EE_FILTER_CANTGETPATTERN, &t_pattern))
         return;
-
-	MCStringsExecFilter(ctxt, *t_source, *t_pattern, out == True, &t_output);
-
-    container -> set(ctxt, PT_INTO, *t_output);
+    
+    if (container == nil && target == nil)
+    {
+        if (matchmode == MA_REGEX)
+            MCStringsExecFilterRegexIntoIt(ctxt, *t_source, *t_pattern, discardmatches == True, chunktype == CT_LINE);
+        else
+            MCStringsExecFilterWildcardIntoIt(ctxt, *t_source, *t_pattern, discardmatches == True, chunktype == CT_LINE);
+    }
+    else
+    {
+        if (matchmode == MA_REGEX)
+            MCStringsExecFilterRegex(ctxt, *t_source, *t_pattern, discardmatches == True, chunktype == CT_LINE, &t_output);
+        else
+            MCStringsExecFilterWildcard(ctxt, *t_source, *t_pattern, discardmatches == True, chunktype == CT_LINE, &t_output);
+    }
+    
+    
+    if ((target != nil || container != nil) && *t_output != nil)
+    {
+        if (target != nil)
+            stat = target -> set(ctxt, PT_INTO, *t_output);
+        else
+            stat = container -> set(ctxt, PT_INTO, *t_output);
+        
+        if (!stat)
+        {
+            ctxt . LegacyThrow(EE_FILTER_CANTSET);
+            return;
+        }
+    }
 
     if (ctxt . HasError())
         ctxt . LegacyThrow(EE_FILTER_CANTSET);
@@ -1839,14 +2048,47 @@ void MCFilter::compile(MCSyntaxFactoryRef ctxt)
 {
 	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
 
-	container -> compile_inout(ctxt);
+    if (container != nil)
+    {
+        if (target != nil)
+            container -> compile_in(ctxt);
+        else
+            container -> compile_inout(ctxt);
+    }
+    else
+        source -> compile(ctxt);
+    
 	pattern -> compile(ctxt);
-	MCSyntaxFactoryEvalConstantBool(ctxt, out == True);
-
-	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCStringsExecFilterMethodInfo, 0, 1, 2, 0);
-
+	MCSyntaxFactoryEvalConstantBool(ctxt, discardmatches);
+    MCSyntaxFactoryEvalConstantBool(ctxt, chunktype == CT_LINE);
+    
+    if (container == nil && target == nil)
+    {
+        if (matchmode == MA_REGEX)
+            MCSyntaxFactoryExecMethod(ctxt, kMCStringsExecFilterRegexIntoItMethodInfo);
+        else
+            MCSyntaxFactoryExecMethod(ctxt, kMCStringsExecFilterWildcardIntoItMethodInfo);
+    }
+    else
+    {
+        if (target != nil)
+            target -> compile_out(ctxt);
+        
+        if (matchmode == MA_REGEX)
+        {
+            MCSyntaxFactoryExecMethod(ctxt, kMCStringsExecFilterRegexMethodInfo);
+            MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCStringsExecFilterRegexMethodInfo, 0, 1, 2, 0);
+        }
+        else
+        {
+            MCSyntaxFactoryExecMethod(ctxt, kMCStringsExecFilterWildcardMethodInfo);
+            MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCStringsExecFilterWildcardMethodInfo, 0, 1, 2, 0);
+        }
+    }
 	MCSyntaxFactoryEndStatement(ctxt);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCImport::~MCImport()
 {
@@ -1929,7 +2171,7 @@ Parse_stat MCImport::parse(MCScriptPoint &sp)
 					bool t_need_effects;
 					if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
 						t_need_effects = true, with_effects = true;
-					else if (sp . skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
+				else if (sp . skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
 						t_need_effects = true, with_effects = false;
 					else
 						t_need_effects = false;
@@ -2042,8 +2284,18 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 		}
 		mfile = ep.getsvalue().clone();
 	}
+
+	// MW-2013-05-20: [[ Bug 10897 ]] Object snapshot returns a premultipled
+	//   bitmap, which needs to be processed before compression. This flag
+	//   indicates to do this processing later on in the method.
+	bool t_needs_unpremultiply;
+	t_needs_unpremultiply = false;
 	if (format == EX_SNAPSHOT)
 	{
+		// IM-2013-08-01: [[ ResIndependence ]] Resolution scale for snapshots - unless specified should produce point-scale image
+		MCGFloat t_image_scale;
+		t_image_scale = 1.0;
+		
 		char *disp = NULL;
 		if (dname != NULL)
 		{
@@ -2104,7 +2356,7 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 			}
 		}
 		
-		MCBitmap *t_bitmap = nil;
+		MCImageBitmap *t_bitmap = nil;
 		if (container != NULL)
 		{
 			MCObject *parent = NULL;
@@ -2115,7 +2367,7 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 				return ES_ERROR;
 			}
 		
-			t_bitmap = parent -> snapshot(fname == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, with_effects);
+			t_bitmap = parent -> snapshot(fname == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, t_image_scale, with_effects);
 			// OK-2007-04-24: If the import rect doesn't intersect with the object, MCobject::snapshot
 			// may return null. In this case, return an error.
 			if (t_bitmap == NULL)
@@ -2123,10 +2375,14 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 				MCeerror ->add(EE_IMPORT_EMPTYRECT, line, pos);
 				return ES_ERROR;
 			}
+			
+			// MW-2013-05-20: [[ Bug 10897 ]] The 'snapshot' command produces a premultiplied bitmap
+			//   so mark it to be unpremultiplied for later on.
+			t_needs_unpremultiply = true;
 		}
 		else
 		{
-			t_bitmap = MCscreen->snapshot(r, w, disp);
+			t_bitmap = MCscreen->snapshot(r, t_image_scale, w, disp);
 
 			delete disp;
 		}
@@ -2134,9 +2390,16 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 		MCImage *iptr = nil;
 		if (t_bitmap != nil)
 		{
+			// MW-2013-05-20: [[ Bug 10897 ]] Make sure we unpremultiply if needed.
+			if (t_needs_unpremultiply)
+				MCImageBitmapUnpremultiply(t_bitmap);
+			MCImageBitmapCheckTransparency(t_bitmap);
+
 			/* UNCHECKED */ iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
-			iptr -> compress(t_bitmap, true, true);
-			MCscreen->destroyimage(t_bitmap);
+			// IM-2013-08-01: [[ ResIndependence ]] pass image scale when setting bitmap
+			if (t_bitmap != nil)
+				iptr->setbitmap(t_bitmap, t_image_scale, true);
+			MCImageFreeBitmap(t_bitmap);
 		}
 	
 		if (iptr != NULL)
@@ -2297,9 +2560,9 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 
 			MCInterfaceExecImportSnapshotOfObject(ctxt, t_parent, t_rect_ptr, with_effects, t_size_ptr);
 		}
-		else if (mname != NULL)
-		{
-			MCAutoStringRef t_stack;
+        else if (mname != NULL)
+        {
+            MCAutoStringRef t_stack;
             if (!ctxt . EvalExprAsStringRef(mname, EE_IMPORT_BADNAME, &t_stack))
                 return;
 
@@ -2320,24 +2583,24 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 
 		switch (format)
 		{
-		case EX_AUDIO_CLIP:
-			MCInterfaceExecImportAudioClip(ctxt, *t_filename);	
-			break;
-		case EX_VIDEO_CLIP:
-			MCInterfaceExecImportVideoClip(ctxt, *t_filename);
-			break;
-		case EX_EPS:
-			MCLegacyExecImportEps(ctxt, *t_filename);
-			break;
-		case EX_STACK:
-			MCLegacyExecImportHypercardStack(ctxt, *t_filename);
-			break;
-		default:
+            case EX_AUDIO_CLIP:
+                MCInterfaceExecImportAudioClip(ctxt, *t_filename);
+                break;
+            case EX_VIDEO_CLIP:
+                MCInterfaceExecImportVideoClip(ctxt, *t_filename);
+                break;
+            case EX_EPS:
+                MCLegacyExecImportEps(ctxt, *t_filename);
+                break;
+            case EX_STACK:
+                MCLegacyExecImportHypercardStack(ctxt, *t_filename);
+                break;
+            default:
 			{
 				MCObject *parent = NULL;
 				if (container != NULL)
 				{
-					uint4 parid;
+                    uint4 parid;
                     if (!container->getobj(ctxt, parent, parid, True)
                             || (parent->gettype() != CT_GROUP && parent->gettype() != CT_CARD))
 					{
@@ -2352,33 +2615,33 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 
 				MCInterfaceExecImportImage(ctxt, *t_filename, *t_mask_filename, parent);
 			}
-			break;
+                break;
 		}
-	}
+    }
 }
 
 void MCImport::compile(MCSyntaxFactoryRef ctxt)
 {
 	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
+    
 	if (format == EX_SNAPSHOT)
 	{
 		if (container != NULL)
 		{
 			container -> compile_object_ptr(ctxt);
-
+            
 			if (fname != nil)
 				fname -> compile(ctxt);
 			else
 				MCSyntaxFactoryEvalConstantNil(ctxt);
-
+            
 			MCSyntaxFactoryEvalConstantBool(ctxt, with_effects);
-
+            
 			if (size != nil)
 				size -> compile(ctxt);
 			else
 				MCSyntaxFactoryEvalConstantNil(ctxt);
-
+            
 			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecImportSnapshotOfObjectMethodInfo);
 		}
 		else if (mname != NULL)
@@ -2389,12 +2652,12 @@ void MCImport::compile(MCSyntaxFactoryRef ctxt)
 				dname -> compile(ctxt);
 			else
 				MCSyntaxFactoryEvalConstantNil(ctxt);
-
+            
 			if (fname != nil)
 				fname -> compile(ctxt);
 			else
 				MCSyntaxFactoryEvalConstantNil(ctxt);
-
+            
 			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecImportSnapshotOfStackMethodInfo);
 		}
 		else
@@ -2403,7 +2666,7 @@ void MCImport::compile(MCSyntaxFactoryRef ctxt)
 				fname -> compile(ctxt);
 			else
 				MCSyntaxFactoryEvalConstantNil(ctxt);
-
+            
 			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecImportSnapshotOfScreenMethodInfo);
 		}
 	}
@@ -2413,41 +2676,41 @@ void MCImport::compile(MCSyntaxFactoryRef ctxt)
 			fname -> compile(ctxt);
 		else
 			MCSyntaxFactoryEvalConstantNil(ctxt);
-
+        
 		switch (format)
 		{
-		case EX_AUDIO_CLIP:
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecImportAudioClipMethodInfo);	
-			break;
-		
-		case EX_VIDEO_CLIP:
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecImportVideoClipMethodInfo);	
-			break;
-
-		case EX_EPS:
-			MCSyntaxFactoryExecMethod(ctxt, kMCLegacyExecImportEpsMethodInfo);
-			break;
-
-		case EX_STACK:
-			MCSyntaxFactoryExecMethod(ctxt, kMCLegacyExecImportHypercardStackMethodInfo);
-			break;
-
-		default:
-			if (mname != nil)
-				mname -> compile(ctxt);
-			else
-				MCSyntaxFactoryEvalConstantNil(ctxt);
-
-			if (container != nil)
-				container -> compile_object_ptr(ctxt);
-			else
-				MCSyntaxFactoryEvalConstantNil(ctxt);
-
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecImportImageMethodInfo);
-			break;
+            case EX_AUDIO_CLIP:
+                MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecImportAudioClipMethodInfo);
+                break;
+                
+            case EX_VIDEO_CLIP:
+                MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecImportVideoClipMethodInfo);
+                break;
+                
+            case EX_EPS:
+                MCSyntaxFactoryExecMethod(ctxt, kMCLegacyExecImportEpsMethodInfo);
+                break;
+                
+            case EX_STACK:
+                MCSyntaxFactoryExecMethod(ctxt, kMCLegacyExecImportHypercardStackMethodInfo);
+                break;
+                
+            default:
+                if (mname != nil)
+                    mname -> compile(ctxt);
+                else
+                    MCSyntaxFactoryEvalConstantNil(ctxt);
+                
+                if (container != nil)
+                    container -> compile_object_ptr(ctxt);
+                else
+                    MCSyntaxFactoryEvalConstantNil(ctxt);
+                
+                MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecImportImageMethodInfo);
+                break;
 		}
 	}
-
+    
 	MCSyntaxFactoryEndStatement(ctxt);
 }
 
@@ -2765,7 +3028,7 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 void MCOpen::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCOpen */ LEGACY_EXEC
-if (go != NULL)
+	if (go != NULL)
 		return go->exec(ep);
 
 	MCresult->clear(False);
@@ -3111,7 +3374,6 @@ MCRead::~MCRead()
 	delete fname;
 	delete maxwait;
 	delete stop;
-	delete it;
 	delete at;
 }
 
@@ -3206,7 +3468,7 @@ MCRead::~MCRead()
 	switch (unit)
 	{
 	case FU_INT1:
-		{
+	{
 			int1 *i1ptr = (int1 *)dptr;
 			for (uint4 i = 0 ; i < count ; i++)
 				ep.concatint(i1ptr[i], EC_COMMA, i == 0);
@@ -3598,7 +3860,6 @@ Parse_stat MCRead::parse(MCScriptPoint &sp)
 			(PE_READ_BADMESS, sp);
 			return PS_ERROR;
 		}
-	getit(sp, it);
 	return PS_NORMAL;
 }
 
@@ -3639,7 +3900,7 @@ void MCRead::exec_ctxt(MCExecContext& ctxt)
 		if (!MCnoui && MCS_isatty(0))
 		{
 			MCresult->sets("eof");
-			it->clear();
+			ep.getit()->clear();
 			return ES_NORMAL;
 		}
 		else
@@ -3777,7 +4038,7 @@ void MCRead::exec_ctxt(MCExecContext& ctxt)
 					MCS_read_socket(MCsockets[index], ep, 0, sptr, t_message_name);
 				}
 				if (t_message_name == NULL)
-					it->set(ep);
+					ep.getit()->set(ep);
 			}
 			else
 				MCresult->sets("socket is not open");
@@ -3879,7 +4140,7 @@ void MCRead::exec_ctxt(MCExecContext& ctxt)
 	}
 	if (textmode)
 		ep.texttobinary();
-	it->set(ep);
+	ep.getit()->set(ep);
 
 #if !defined _WIN32 && !defined _MACOSX
 	if (arg == OA_FILE || arg == OA_DRIVER)
@@ -3889,14 +4150,13 @@ void MCRead::exec_ctxt(MCExecContext& ctxt)
 	return ES_NORMAL;
 #endif /* MCRead */
 
-    ctxt . SetIt(it);
     real8 t_max_wait;
     if (!ctxt . EvalOptionalExprAsDouble(maxwait, MAXUINT4, EE_READ_BADEXP, t_max_wait))
         return;
 
     ctxt . SetTheResultToEmpty();
     MCNewAutoNameRef t_message;
-	MCNewAutoNameRef t_source;
+    MCNewAutoNameRef t_source;
 	bool t_is_end = false;
 	int64_t t_at = 0;
     

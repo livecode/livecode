@@ -33,13 +33,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblcontact.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-
 /*
-
-ASK_ALI
 bool MCContactAddPropertyWithLabel(MCExecPoint& ep, MCVariableValue *p_contact, MCNameRef p_property, MCNameRef p_label, MCVariableValue *p_value)
 {
-/*	MCVariableValue *t_element;
+	MCVariableValue *t_element;
 	MCVariableValue *t_array;
 	if (p_contact->lookup_element(ep, MCNameGetOldString(p_property), t_array) != ES_NORMAL ||
 		t_array->lookup_element(ep, MCNameGetOldString(p_label), t_array) != ES_NORMAL)
@@ -57,7 +54,7 @@ bool MCContactAddPropertyWithLabel(MCExecPoint& ep, MCVariableValue *p_contact, 
 
 bool MCContactAddPropertyWithLabel(MCExecPoint& ep, MCVariableValue *p_contact, MCNameRef p_property, MCNameRef p_label, MCString p_value)
 {
-/*	bool t_success = true;
+	bool t_success = true;
 	MCVariableValue *t_element;
 	t_element = new MCVariableValue();
 	
@@ -101,3 +98,6 @@ bool MCContactAddPropertyWithLabel(MCArrayRef p_contact, MCNameRef p_property, M
     
     return false;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+

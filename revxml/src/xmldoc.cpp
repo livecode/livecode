@@ -337,9 +337,16 @@ void CXMLDocument::Write(char **data,int *tlength,Bool isformatted)
 /*Free - frees xml document*/
 void CXMLDocument::Free()
 {
-if (!isinited()) return;
-xmlFreeDoc(doc);
-doc = NULL;
+	if (!isinited()) return;
+	xmlFreeDoc(doc);
+	doc = NULL;
+	if (NULL != xpathContext)
+		xmlXPathFreeContext(xpathContext);
+	xpathContext = NULL;
+	// MDW-2013-09-04: [[ RevXmlXslt ]]
+	if (NULL != xsltID)
+		xsltFreeStylesheet(xsltID);
+	xsltID = NULL;
 }
 
 /*CopyDocument - copies xml tree of other CXMLDocument
