@@ -8710,7 +8710,7 @@ Parse_stat MCQueryRegistry::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCQueryRegistry::eval(MCExecPoint &ep)
+void MCQueryRegistry::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCQueryRegistry */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_REGISTRY_READ)
@@ -8752,41 +8752,34 @@ Exec_stat MCQueryRegistry::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCQueryRegistry */
 
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_key;
-	MCAutoStringRef t_result;
-	MCAutoStringRef t_type;
-
-	if (key->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_QUERYREGISTRY_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-
-	/* UNCHECKED */ ep.copyasstringref(&t_key);
+    MCAutoStringRef t_key;
+    if (!ctxt . EvalExprAsStringRef(key, EE_QUERYREGISTRY_BADEXP, &t_key))
+        return;
 
 	MCAutoPointer<MCContainer> t_container;
+    MCAutoStringRef t_type;
 	if (type != NULL)
 	{
-		if (type -> evalcontainer(ep, &t_container) != ES_NORMAL)
+		if (!type -> evalcontainer(ctxt, &t_container))
 		{
-			MCeerror -> add(EE_QUERYREGISTRY_BADDEST, line, pos);
-			return ES_ERROR;
+			ctxt . LegacyThrow(EE_QUERYREGISTRY_BADDEST);
+			return;
 		}
-		MCFilesEvalQueryRegistryWithType(ctxt, *t_key, &t_type, &t_result);
+		MCFilesEvalQueryRegistryWithType(ctxt, *t_key, &t_type, r_value . stringref_value);
+        r_value . type = kMCExecValueTypeStringRef;
 	}
 	else
-		MCFilesEvalQueryRegistry(ctxt, *t_key, &t_result);
+    {
+		MCFilesEvalQueryRegistry(ctxt, *t_key, r_value . stringref_value);
+        r_value . type = kMCExecValueTypeStringRef;
+    }
+    
 
 	if (!ctxt.HasError())
 	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
 		if (*t_container != nil)
 			/* UNCHECKED */ t_container->set_valueref(*t_type);
-		return ES_NORMAL;
 	}
-
-	return ctxt.Catch(line, pos);
 }
 
 void MCQueryRegistry::compile(MCSyntaxFactoryRef ctxt)
@@ -8823,7 +8816,7 @@ Parse_stat MCSetRegistry::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCSetRegistry::eval(MCExecPoint &ep)
+void MCSetRegistry::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCSetRegistry */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_REGISTRY_WRITE)
@@ -8864,49 +8857,28 @@ Exec_stat MCSetRegistry::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCSetRegistry */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_key, t_value, t_type;
-	bool t_result;
-
-	if (key->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_SETREGISTRY_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-
-	/* UNCHECKED */ ep.copyasstringref(&t_key);
-
-	if (value->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_SETREGISTRY_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-
-	/* UNCHECKED */ ep.copyasstringref(&t_value);
-
+	MCAutoStringRef t_key;
+    if (!ctxt . EvalExprAsStringRef(key, EE_SETREGISTRY_BADEXP, &t_key))
+        return;
+	
+    MCAutoStringRef t_value;
+    if (!ctxt . EvalExprAsStringRef(value, EE_SETREGISTRY_BADEXP, &t_value))
+        return;
+	
 	if (type != NULL)
 	{
-		if (type->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_SETREGISTRY_BADEXP, line, pos);
-			return ES_ERROR;
-		}
+        MCAutoStringRef t_type;
+        if (!ctxt . EvalExprAsStringRef(type, EE_SETREGISTRY_BADEXP, &t_type))
+            return;
 
-		/* UNCHECKED */ ep.copyasstringref(&t_type);
-
-		MCFilesEvalSetRegistryWithType(ctxt, *t_key, *t_value, *t_type, t_result);
+		MCFilesEvalSetRegistryWithType(ctxt, *t_key, *t_value, *t_type, r_value . bool_value);
+        r_value . type = kMCExecValueTypeBool;
 	}
 	else
-		MCFilesEvalSetRegistry(ctxt, *t_key, *t_value, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
+    {
+		MCFilesEvalSetRegistry(ctxt, *t_key, *t_value, r_value . bool_value);
+        r_value . type = kMCExecValueTypeBool;
+    }
 }
 
 void MCSetRegistry::compile(MCSyntaxFactoryRef ctxt)
@@ -8936,7 +8908,7 @@ Parse_stat MCCopyResource::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCCopyResource::eval(MCExecPoint &ep)
+void MCCopyResource::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCCopyResource */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
@@ -8997,58 +8969,32 @@ Exec_stat MCCopyResource::eval(MCExecPoint &ep)
 #endif /* MCCopyResource */
 
 	
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source, t_dest, t_type, t_name, t_newid, t_result;
-	
-	bool t_success = true;
-	t_success = (source->eval(ep) == ES_NORMAL);
-	if (t_success)
-	{
-		/* UNCHECKED */ ep.copyasstringref(&t_source);
-		t_success = (dest->eval(ep) == ES_NORMAL);
-	}
-	
-	if (t_success)
-	{
-		/* UNCHECKED */ ep.copyasstringref(&t_dest);
-		t_success = (type->eval(ep) == ES_NORMAL);
-	}
-
-	if (t_success)
-	{
-		/* UNCHECKED */ ep.copyasstringref(&t_type);
-		t_success = (name->eval(ep) == ES_NORMAL);
-	}
-
-	if (t_success)
-	{
-		/* UNCHECKED */ ep.copyasstringref(&t_name);
-		if (newid != nil)
-		{
-			t_success = (newid->eval(ep) == ES_NORMAL);
-			if (t_success)
-				/* UNCHECKED */ ep.copyasstringref(&t_newid);
-		}
-	}
-
-	if (!t_success)
-	{
-		MCeerror->add(EE_RESOURCES_BADPARAM, line, pos);
-		return ES_ERROR;
-	}
-
+	MCAutoStringRef t_source,t_result;
+    if (!ctxt . EvalExprAsStringRef(source, EE_RESOURCES_BADPARAM, &t_source))
+        return;
+    
+    MCAutoStringRef t_dest;
+	if (!ctxt . EvalExprAsStringRef(dest, EE_RESOURCES_BADPARAM, &t_dest))
+        return;
+    
+    MCAutoStringRef t_type;
+	if (!ctxt . EvalExprAsStringRef(type, EE_RESOURCES_BADPARAM, &t_type))
+        return;
+    
+    MCAutoStringRef t_name;
+	if (!ctxt . EvalExprAsStringRef(name, EE_RESOURCES_BADPARAM, &t_name))
+        return;
+    
+    MCAutoStringRef t_newid;
+	if (!ctxt . EvalOptionalExprAsNullableStringRef(newid, EE_RESOURCES_BADPARAM, &t_newid))
+        return;
+    
 	if (newid != nil)
-		MCFilesEvalCopyResourceWithNewId(ctxt, *t_source, *t_dest, *t_type, *t_name, *t_newid, &t_result);
+		MCFilesEvalCopyResourceWithNewId(ctxt, *t_source, *t_dest, *t_type, *t_name, *t_newid, r_value . stringref_value);
 	else
-		MCFilesEvalCopyResource(ctxt, *t_source, *t_dest, *t_type, *t_name, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-	
-	return ctxt.Catch(line, pos);
+		MCFilesEvalCopyResource(ctxt, *t_source, *t_dest, *t_type, *t_name, r_value . stringref_value);
+    
+    r_value . type = kMCExecValueTypeStringRef;
 }
 
 void MCCopyResource::compile(MCSyntaxFactoryRef ctxt)
@@ -9076,7 +9022,7 @@ Parse_stat MCDeleteResource::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCDeleteResource::eval(MCExecPoint &ep)
+void MCDeleteResource::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCDeleteResource */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
@@ -9119,44 +9065,20 @@ Exec_stat MCDeleteResource::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCDeleteResource */
 
+	MCAutoStringRef t_source;
+    if (!ctxt . EvalExprAsStringRef(source, EE_RESOURCES_BADPARAM, &t_source))
+        return;
 	
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source, t_type, t_name, t_result;
+    MCAutoStringRef t_type;
+    if (!ctxt . EvalExprAsStringRef(type, EE_RESOURCES_BADPARAM, &t_type))
+        return;
+    
+    MCAutoStringRef t_name;
+    if (!ctxt . EvalExprAsStringRef(name, EE_RESOURCES_BADPARAM, &t_name))
+        return;
 	
-	bool t_success = true;
-	t_success = (source->eval(ep) == ES_NORMAL);
-	if (t_success)
-	{
-		/* UNCHECKED */ ep.copyasstringref(&t_source);
-		t_success = (type->eval(ep) == ES_NORMAL);
-	}
-	
-	if (t_success)
-	{
-		/* UNCHECKED */ ep.copyasstringref(&t_type);
-		t_success = (name->eval(ep) == ES_NORMAL);
-	}
-	
-	if (t_success)
-	{
-		/* UNCHECKED */ ep.copyasstringref(&t_name);
-	}
-	
-	if (!t_success)
-	{
-		MCeerror->add(EE_RESOURCES_BADPARAM, line, pos);
-		return ES_ERROR;
-	}
-	
-	MCFilesEvalDeleteResource(ctxt, *t_source, *t_type, *t_name, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-	
-	return ctxt.Catch(line, pos);
+	MCFilesEvalDeleteResource(ctxt, *t_source, *t_type, *t_name, r_value . stringref_value);
+    r_value . type = kMCExecValueTypeStringRef;
 }
 
 void MCDeleteResource::compile(MCSyntaxFactoryRef ctxt)
@@ -9181,7 +9103,7 @@ Parse_stat MCGetResource::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCGetResource::eval(MCExecPoint &ep)
+void MCGetResource::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCGetResource */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
@@ -9224,46 +9146,21 @@ Exec_stat MCGetResource::eval(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCGetResource */
-
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source, t_type, t_name;
-	MCAutoStringRef t_result;
 	
-	bool t_success = true;
-	t_success = (source->eval(ep) == ES_NORMAL);
-	if (t_success)
-	{
-		/* UNCHECKED */ ep.copyasstringref(&t_source);
-		t_success = (type->eval(ep) == ES_NORMAL);
-	}
+    MCAutoStringRef t_source;
+    if (!ctxt . EvalExprAsStringRef(source, EE_RESOURCES_BADPARAM, &t_source))
+        return;
+    
+    MCAutoStringRef t_type;
+    if (!ctxt . EvalExprAsStringRef(type, EE_RESOURCES_BADPARAM, &t_type))
+        return;
+    
+    MCAutoStringRef t_name;
+    if (!ctxt . EvalExprAsStringRef(name, EE_RESOURCES_BADPARAM, &t_name))
+        return;
 	
-	if (t_success)
-	{
-		/* UNCHECKED */ ep.copyasstringref(&t_type);
-		t_success = (name->eval(ep) == ES_NORMAL);
-	}
-	
-	if (t_success)
-	{
-		/* UNCHECKED */ ep.copyasstringref(&t_name);
-	}
-	
-	if (!t_success)
-	{
-		MCeerror->add(EE_RESOURCES_BADPARAM, line, pos);
-		return ES_ERROR;
-	}
-	
-	MCFilesEvalGetResource(ctxt, *t_source, *t_type, *t_name, &t_result);
-	
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-	
-	return ctxt.Catch(line, pos);
+	MCFilesEvalGetResource(ctxt, *t_source, *t_type, *t_name, r_value . stringref_value);
+    r_value . type = kMCExecValueTypeStringRef;
 }
 
 void MCGetResource::compile(MCSyntaxFactoryRef ctxt)
@@ -9287,7 +9184,7 @@ Parse_stat MCGetResources::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCGetResources::eval(MCExecPoint &ep)
+void MCGetResources::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCGetResources */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
@@ -9328,42 +9225,20 @@ Exec_stat MCGetResources::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCGetResources */
 
-	
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source, t_type;
-	MCAutoStringRef t_result;
-	
-	bool t_success = true;
-	t_success = (source->eval(ep) == ES_NORMAL);
-	if (t_success)
-	{
-		/* UNCHECKED */ ep.copyasstringref(&t_source);
-		if (type != nil)
-		{
-			t_success = (type->eval(ep) == ES_NORMAL);
-			if (t_success)
-			/* UNCHECKED */ ep.copyasstringref(&t_type);
-		}
-	}
-	
-	if (!t_success)
-	{
-		MCeerror->add(EE_RESOURCES_BADPARAM, line, pos);
-		return ES_ERROR;
-	}
+	MCAutoStringRef t_source;
+    if (!ctxt . EvalExprAsStringRef(source, EE_RESOURCES_BADPARAM, &t_source))
+        return;
+    
+    MCAutoStringRef t_type;
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(type, EE_RESOURCES_BADPARAM, &t_type))
+        return;
 	
 	if (type != nil)
-		MCFilesEvalGetResourcesWithType(ctxt, *t_source, *t_type, &t_result);
+		MCFilesEvalGetResourcesWithType(ctxt, *t_source, *t_type, r_value . stringref_value);
 	else
-		MCFilesEvalGetResources(ctxt, *t_source, &t_result);
-	
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-	
-	return ctxt.Catch(line, pos);
+		MCFilesEvalGetResources(ctxt, *t_source, r_value . stringref_value);
+    
+    r_value . type = kMCExecValueTypeStringRef;
 }
 
 void MCGetResources::compile(MCSyntaxFactoryRef ctxt)
@@ -9394,7 +9269,7 @@ Parse_stat MCSetResource::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCSetResource::eval(MCExecPoint &ep)
+void MCSetResource::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCSetResource */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
@@ -9454,59 +9329,39 @@ Exec_stat MCSetResource::eval(MCExecPoint &ep)
 	ep.clear();
 	return ES_NORMAL;
 #endif /* MCSetResource */
-
 	
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source, t_type, t_id, t_name, t_flags, t_value, t_result;
+    MCAutoStringRef t_source;
+    if (!ctxt . EvalExprAsStringRef(source, EE_RESOURCES_BADPARAM, &t_source))
+        return;
+    
+    MCAutoStringRef t_type;
+    if (!ctxt . EvalExprAsStringRef(type, EE_RESOURCES_BADPARAM, &t_type))
+        return;
+    
+    MCAutoStringRef t_id;
+    if (!ctxt . EvalExprAsStringRef(id, EE_RESOURCES_BADPARAM, &t_id))
+        return;
+    
+    MCAutoStringRef t_name;
+    if (!ctxt . EvalExprAsStringRef(name, EE_RESOURCES_BADPARAM, &t_name))
+        return;
+    
+    MCAutoStringRef t_flags;
+    if (!ctxt . EvalExprAsStringRef(flags, EE_RESOURCES_BADPARAM, &t_flags))
+        return;
+    
+    MCAutoStringRef t_value;
+    if (!ctxt . EvalExprAsStringRef(value, EE_RESOURCES_BADPARAM, &t_value))
+        return;
+    
+    if (!MCStringGetLength(*t_id) > 0 && !MCStringGetLength(*t_name) > 0)
+    {
+        ctxt . LegacyThrow(EE_RESOURCES_BADPARAM);
+        return;
+    }
 	
-	bool t_success = true;
-	t_success = source->eval(ep) == ES_NORMAL;
-	if (t_success)
-	{
-		/* UNCHECKED */ ep.copyasstringref(&t_source);
-		t_success = type->eval(ep) == ES_NORMAL;
-	}
-	if (t_success)
-	{
-		/* UNCHECKED */ ep.copyasstringref(&t_type);
-		t_success = id->eval(ep) == ES_NORMAL;
-	}
-	if (t_success)
-	{
-		/* UNCHECKED */ ep.copyasstringref(&t_id);
-		t_success = name->eval(ep) == ES_NORMAL;
-	}
-	if (t_success)
-	{
-		/* UNCHECKED */ ep.copyasstringref(&t_name);
-		t_success = flags->eval(ep) == ES_NORMAL;
-	}
-	if (t_success)
-	{
-		/* UNCHECKED */ ep.copyasstringref(&t_flags);
-		t_success = value->eval(ep) == ES_NORMAL;
-	}
-	if (t_success)
-		/* UNCHECKED */ ep.copyasstringref(&t_value);
-	
-	if (t_success)
-		t_success = MCStringGetLength(*t_id) > 0 || MCStringGetLength(*t_name) > 0;
-	
-	if (!t_success)
-	{
-		MCeerror->add(EE_RESOURCES_BADPARAM, line, pos);
-		return ES_ERROR;
-	}
-	
-	MCFilesEvalSetResource(ctxt, *t_source, *t_type, *t_id, *t_name, *t_flags, *t_value, &t_result);
-	
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep . setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-	
-	return ctxt.Catch(line, pos);
+	MCFilesEvalSetResource(ctxt, *t_source, *t_type, *t_id, *t_name, *t_flags, *t_value, r_value . stringref_value);
+    r_value . type = kMCExecValueTypeStringRef;
 }
 
 void MCSetResource::compile(MCSyntaxFactoryRef ctxt)
