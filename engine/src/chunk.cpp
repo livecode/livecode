@@ -5714,9 +5714,9 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
         if (t_info == nil)
             t_info = lookup_object_property(t_obj_chunk . object -> getmodepropertytable(), which, effective == True, t_is_array_prop, false);
         
-        if (t_info == nil || t_info -> getter == nil)
+        if (t_info == nil || t_info -> setter == nil)
         {
-            MCeerror -> add(EE_OBJECT_GETNOPROP, line, pos);
+            MCeerror -> add(EE_OBJECT_SETNOPROP, line, pos);
             return false;
         }
         
@@ -5741,32 +5741,25 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
     }
     else
     {
+        if (t_obj_chunk . object -> gettype() != CT_FIELD)
+        {
+            MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
+            return ES_ERROR;
+        }
+    
         t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, false, true);
-        if (t_info != nil)
+        
+        if (t_info == nil || t_info -> getter == nil)
         {
-            MCExecStoreProperty(ctxt, t_info, &t_obj_chunk, p_value);
+            MCeerror -> add(EE_OBJECT_SETNOPROP, line, pos);
+            return false;
         }
-        else
-        {
-            if (t_obj_chunk . object -> gettype() != CT_FIELD)
-            {
-                MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
-                return ES_ERROR;
-            }
-            // MW-2011-11-23: [[ Array TextStyle ]] Pass the 'index' along to method to
-            //   handle specific styles.
-            // MW-2011-12-08: [[ StyledText ]] Pass the ep, rather than the svalue of
-            //   the ep.
-            // MW-2012-01-25: [[ ParaStyles ]] Pass whether this was an explicit line chunk
-            //   or not. This is used to disambiguate the setting of 'backColor'.
-            if (t_info == nil || t_info -> getter == nil)
-            {
-                MCeerror -> add(EE_OBJECT_SETNOPROP, line, pos);
-                return false;
-            }
-            
-            MCExecFetchProperty(ctxt, t_info, &t_obj_chunk, p_value);
-        }
+        // MW-2011-11-23: [[ Array TextStyle ]] Pass the 'index' along to method to
+        //   handle specific styles.
+        // MW-2012-01-25: [[ ParaStyles ]] Pass whether this was an explicit line chunk
+        //   or not. This is used to disambiguate the setting of 'backColor'.
+        
+        MCExecStoreProperty(ctxt, t_info, &t_obj_chunk, p_value);
     }
     
     if (!ctxt . HasError())
