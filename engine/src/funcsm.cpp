@@ -53,12 +53,12 @@ bool MCFunction::params_to_doubles(MCExecContext& ctxt, MCParameter *p_params, r
 			return false;
 		}
         MCAutoArrayRef t_array;
-		if (ctxt . ConvertToArray(*t_value_valueref, &t_array))
-		{
-			MCNameRef t_key;
+        if (MCValueIsArray(*t_value_valueref))
+        {
+            MCNameRef t_key;
 			MCValueRef t_value;
 			uintptr_t t_index = 0;
-			while (MCArrayIterate(*t_array, t_index, t_key, t_value))
+			while (MCArrayIterate((MCArrayRef)*t_value_valueref, t_index, t_key, t_value))
 			{
                 if (!ctxt . ConvertToReal(t_value, t_number))
 				{
@@ -86,13 +86,13 @@ bool MCFunction::params_to_doubles(MCExecContext& ctxt, MCParameter *p_params, r
                 t_start = 0;
                 while (MCStringGetNativeCharAtIndex(t_arraystring, t_start) == ' ')
                     t_start++;
-                /* UNCHECKED */ MCStringMutableCopyAndRelease(t_arraystring, t_arraystring);
-                /* UNCHECKED */ MCStringRemove(t_arraystring, MCRangeMake(0, t_start));
-                if (MCStringIsEmpty(t_arraystring))
+                MCAutoStringRef t_string_no_spaces;
+                /* UNCHECKED */ MCStringCopySubstring(t_arraystring, MCRangeMake(0, t_start), &t_string_no_spaces);
+                if (MCStringIsEmpty(*t_string_no_spaces))
                     t_number = 0.0;
                 else
                 {
-                    if (!MCStringToDouble(t_arraystring, t_number))
+                    if (!MCStringToDouble(*t_string_no_spaces, t_number))
                     {
                         ctxt . LegacyThrow(EE_FUNCTION_NAN);
                         return false;
