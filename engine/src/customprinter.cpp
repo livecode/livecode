@@ -1533,7 +1533,9 @@ bool MCCustomPrinter::DoResetSettings(MCDataRef p_settings)
 
 const char *MCCustomPrinter::DoFetchName(void)
 {
-	return MCStringGetCString(m_device_name);
+    char *t_device_name;
+    /* UNCHECKED */ MCStringConvertToCString(m_device_name, t_device_name);
+    return t_device_name;
 }
 
 void MCCustomPrinter::DoResync(void)
@@ -1571,7 +1573,11 @@ MCPrinterResult MCCustomPrinter::DoBeginPrint(MCStringRef p_document, MCPrinterD
 	}
 	
 	if (t_result == PRINTER_RESULT_SUCCESS)
-		t_result = t_printer_device -> Start(MCStringGetCString(p_document), m_device_options);
+    {
+        MCAutoPointer<char> t_doc;
+        /* UNCHECKED */ MCStringConvertToCString(p_document, &t_doc);
+        t_result = t_printer_device -> Start(*t_doc, m_device_options);
+    }
 
 	if (t_result == PRINTER_RESULT_SUCCESS)
 		r_device = t_printer_device;
@@ -2024,13 +2030,13 @@ Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filenam
 #elif defined(_MACOSX)
             MCAutoStringRef t_module_path_str1;
 
-			/* UNCHECKED */ MCStringFormat(&t_module_path_str1, "%s/../revpdfprinter.bundle", MCStringGetCString(MCcmd));
+			/* UNCHECKED */ MCStringFormat(&t_module_path_str1, "%@/../revpdfprinter.bundle", MCcmd);
 			t_module = MCS_loadmodule(*t_module_path_str1);
 			
 			if (t_module == nil)
 			{
                 MCAutoStringRef t_module_path_str2;
-				/* UNCHECKED */ MCStringFormat(&t_module_path_str2, "%s/../../../../revpdfprinter.bundle", MCStringGetCString(MCcmd));
+				/* UNCHECKED */ MCStringFormat(&t_module_path_str2, "%@/../../../../revpdfprinter.bundle", MCcmd);
 				t_module = MCS_loadmodule(*t_module_path_str2);
 			}
 #elif defined(_LINUX)
