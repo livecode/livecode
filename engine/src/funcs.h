@@ -117,7 +117,7 @@ public:
         return PS_NORMAL;
     }
 
-    void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+    virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
     {
         ReturnType t_result;
         ParamType t_param;
@@ -174,7 +174,7 @@ public:
         return PS_NORMAL;
     }
 
-    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
+    void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
     {
         MCAutoArray<real64_t> t_values;
         real64_t t_result;
@@ -1751,7 +1751,7 @@ public:
 	}
 	virtual ~MCWithin();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -2366,7 +2366,7 @@ public:
     
     virtual ~MCMeasureText(void);
 	virtual Parse_stat parse(MCScriptPoint &sp, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &ep);
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 };
 
 #endif

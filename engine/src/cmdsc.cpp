@@ -1734,28 +1734,27 @@ Parse_stat MCChangeProp::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCChangeProp::exec(MCExecPoint &ep)
+void MCChangeProp::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCChangeProp */ LEGACY_EXEC
     return targets->changeprop(ep, prop, value);
 #endif /* MCChangeProp */
 
-	MCExecContext ctxt(ep);
 	if (targets != NULL)
 	{
 		if (targets -> istextchunk())
 		{
 			MCObjectChunkPtr t_obj_chunk;
-			if (targets -> evalobjectchunk(ep, false, true, t_obj_chunk) != ES_NORMAL)
+            if (!targets -> evalobjectchunk(ctxt, false, true, t_obj_chunk))
 			{
-				MCeerror->add(EE_DISABLE_NOOBJ, line, pos);
-				return ES_ERROR;
+                ctxt . LegacyThrow(EE_DISABLE_NOOBJ);
+                return;
 			}
 				
 			if (t_obj_chunk . object -> gettype() != CT_BUTTON)
 			{
-				MCeerror->add(EE_DISABLE_NOOBJ, line, pos);
-				return ES_ERROR;
+                ctxt . LegacyThrow(EE_DISABLE_NOOBJ);
+                return;
 			}
 				
 			switch (prop) {
@@ -1778,10 +1777,10 @@ Exec_stat MCChangeProp::exec(MCExecPoint &ep)
 		else
 		{
 			MCObjectPtr t_obj;
-			if (targets -> getobj(ep, t_obj, True) != ES_NORMAL)
+            if (!targets -> getobj(ctxt, t_obj, True))
 			{
-				MCeerror->add(EE_DISABLE_NOOBJ, line, pos);
-				return ES_ERROR;
+                ctxt . LegacyThrow(EE_DISABLE_NOOBJ);
+                return;
 			}
 			
 			switch (prop) {
@@ -1801,11 +1800,7 @@ Exec_stat MCChangeProp::exec(MCExecPoint &ep)
 				break;
 			}
 		}
-	}
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+    }
 }
 
 void MCChangeProp::compile(MCSyntaxFactoryRef ctxt)
@@ -3970,7 +3965,7 @@ Parse_stat MCRelayer::parse(MCScriptPoint& sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCRelayer::exec(MCExecPoint& ep)
+void MCRelayer::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCRelayer */ LEGACY_EXEC
 	// Fetch the source object.
@@ -4195,38 +4190,27 @@ Exec_stat MCRelayer::exec(MCExecPoint& ep)
     
     // Fetch the source object.
 	MCObjectPtr t_source;
-	if (control -> getobj(ep, t_source, True) != ES_NORMAL)
+    if (!control -> getobj(ctxt, t_source, True))
 	{
-		MCeerror -> add(EE_RELAYER_NOSOURCE, line, pos);
-		return ES_ERROR;
+        ctxt . LegacyThrow(EE_RELAYER_NOSOURCE);
+        return;
 	}
-    
-    MCExecContext ctxt(ep);
-    
+
 	switch(form)
 	{
         case kMCRelayerFormRelativeToLayer:
             uint4 t_layer;
-            if (layer -> eval(ep) != ES_NORMAL)
-            {
-                MCeerror -> add(EE_RELAYER_BADLAYER, line, pos);
-                return ES_ERROR;
-            }
-            if (ep . ton() != ES_NORMAL)
-            {
-                MCeerror -> add(EE_RELAYER_LAYERNAN, line, pos);
-                return ES_ERROR;
-            }
-            t_layer = ep . getuint4();
+            if (!ctxt . EvalExprAsUInt(layer, EE_RELAYER_BADLAYER, t_layer))
+                return;
             
             MCInterfaceExecRelayer(ctxt, relation, t_source, t_layer);
             break;
         case kMCRelayerFormRelativeToControl:
             MCObjectPtr t_target;
-            if (target -> getobj(ep, t_target, True) != ES_NORMAL)
+            if (!target -> getobj(ctxt, t_target, True))
             {
-                MCeerror -> add(EE_RELAYER_NOTARGET, line, pos);
-                return ES_ERROR;
+                ctxt . LegacyThrow(EE_RELAYER_NOTARGET);
+                return;
             }
             MCInterfaceExecRelayerRelativeToControl(ctxt, relation, t_source, t_target);
             break;
@@ -4235,12 +4219,7 @@ Exec_stat MCRelayer::exec(MCExecPoint& ep)
             break;
         default:
             break;
-	}
-    
-    if (!ctxt . HasError())
-        return ES_NORMAL;
-    
-    return ctxt . Catch(line, pos);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

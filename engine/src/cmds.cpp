@@ -2823,7 +2823,7 @@ Parse_stat MCResolveImage::parse(MCScriptPoint &p_sp)
     return t_stat;
 }
 
-Exec_stat MCResolveImage::exec(MCExecPoint &p_ep)
+void MCResolveImage::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCResolveImage */ LEGACY_EXEC
     Exec_stat t_stat;
@@ -2870,38 +2870,32 @@ Exec_stat MCResolveImage::exec(MCExecPoint &p_ep)
     return t_stat;
 #endif /* MCResolveImage */
     
-    Exec_stat t_stat;
-    t_stat = ES_NORMAL;
-    
     uint4 t_part_id;
     MCObject *t_relative_object;
-    if (t_stat == ES_NORMAL)
-        t_stat = m_relative_object -> getobj(p_ep, t_relative_object, t_part_id, True);
-    
-    if (t_stat == ES_NORMAL)
-        t_stat = m_id_or_name -> eval(p_ep);
-    
-    MCExecContext ctxt(p_ep);
-    
-    if (t_stat == ES_NORMAL)
+
+
+    if (!m_relative_object -> getobj(ctxt, t_relative_object, t_part_id, True))
     {
-        if (m_is_id)
-        {
-            if (p_ep . ton() == ES_ERROR)
-            {
-                MCeerror -> add(EE_VARIABLE_NAN, line, pos);
-                return ES_ERROR;
-            }
-            uint4 t_id;
-            t_id = p_ep . getuint4();
-            MCInterfaceExecResolveImageById(ctxt, t_relative_object, t_id);
-        }
-        else
-        {
-            MCAutoStringRef t_name;
-            /* UNCHECKED */ p_ep . copyasstringref(&t_name);
-            MCInterfaceExecResolveImageByName(ctxt, t_relative_object, *t_name);
-        }
+            ctxt . Throw();
+            return;
+    }
+
+    if (m_is_id)
+    {
+        uinteger_t t_id;
+        if (!ctxt . EvalExprAsUInt(m_id_or_name, EE_RESOLVE_IMG_BADEXP, t_id))
+        return;
+
+        MCInterfaceExecResolveImageById(ctxt, t_relative_object, t_id);
+    }
+    else
+    {
+        MCAutoStringRef t_name;
+
+        if (!ctxt . EvalExprAsStringRef(m_id_or_name, EE_RESOLVE_IMG_BADEXP, &t_name))
+        return;
+
+        MCInterfaceExecResolveImageByName(ctxt, t_relative_object, *t_name);
     }
 }
 

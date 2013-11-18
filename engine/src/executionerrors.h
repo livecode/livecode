@@ -2468,6 +2468,9 @@ enum Exec_errors
 
     // {EE-0801} Import: no image selected, or image not open
     EE_IMPORT_NOSELECTED,
+
+    // {EE-802} Resolve image: error in source expression
+    EE_RESOLVE_IMG_BADEXP,
 };
 
 extern const char *MCexecutionerrors;

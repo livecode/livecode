@@ -5581,7 +5581,7 @@ Parse_stat MCWithin::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCWithin::eval(MCExecPoint &ep)
+void MCWithin::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCWithin */ LEGACY_EXEC
 	MCObject *optr;
@@ -5609,35 +5609,25 @@ Exec_stat MCWithin::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCWithin */
 
-
-	MCExecContext ctxt(ep);
-
 	MCObjectPtr t_object;
+    bool t_result;
 
-	bool t_result;
-
-	if (object->getobj(ep, t_object, True) != ES_NORMAL)
+    if (!object->getobj(ctxt, t_object, True))
 	{
-		MCeerror->add(EE_WITHIN_NOCONTROL, line, pos);
-		return ES_ERROR;
+        ctxt . LegacyThrow(EE_WITHIN_NOCONTROL);
+        return;
 	}
 
 	MCPoint t_point;
-	if (point->eval(ep) != ES_NORMAL || !ep . copyaslegacypoint(t_point))
-	{
-		MCeerror->add(EE_WITHIN_NAP, line, pos, ep.getsvalue());
-		return ES_ERROR;
-	}
+    if (!ctxt . EvalExprAsPoint(point, EE_WITHIN_NAP, t_point))
 
-	MCInterfaceEvalWithin(ctxt, t_object, t_point, t_result);
+    MCInterfaceEvalWithin(ctxt, t_object, t_point, t_result);
 
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
+    if (!ctxt . HasError())
+    {
+        r_value . type = kMCExecValueTypeBool;
+        r_value . bool_value = t_result;
+    }
 }
 
 void MCWithin::compile(MCSyntaxFactoryRef ctxt)
@@ -7080,7 +7070,7 @@ Parse_stat MCMeasureText::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCMeasureText::eval(MCExecPoint &ep)
+void MCMeasureText::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCMeasureText */ LEGACY_EXEC
     MCObject *t_object_ptr;
@@ -7127,40 +7117,26 @@ Exec_stat MCMeasureText::eval(MCExecPoint &ep)
     
     MCObject *t_object_ptr;
 	uint4 parid;
-	if (m_object->getobj(ep, t_object_ptr, parid, True) != ES_NORMAL)
+    if (!m_object->getobj(ctxt, t_object_ptr, parid, True))
 	{
-		MCeerror->add(EE_MEASURE_TEXT_NOOBJECT, line, pos);
-		return ES_ERROR;
+        ctxt . LegacyThrow(EE_MEASURE_TEXT_NOOBJECT);
+        return;
 	}
     
     MCAutoStringRef t_text;
-    if (m_text -> eval(ep) != ES_NORMAL)
-    {
-        MCeerror -> add(EE_CHUNK_BADTEXT, line, pos);
-        return ES_ERROR;
-    }
-    /* UNCHECKED */ ep . copyasstringref(&t_text);
+    if (!ctxt . EvalExprAsStringRef(m_text, EE_CHUNK_BADTEXT, &t_text))
+        return;
     
     MCAutoStringRef t_result;
     MCAutoStringRef t_mode;
-    if (m_mode)
-    {
-        if (m_mode -> eval(ep) != ES_NORMAL)
-        {
-            MCeerror -> add(EE_CHUNK_BADTEXT, line, pos);
-            return ES_ERROR;
-        }
-        /* UNCHECKED */ ep . copyasstringref(&t_mode);
-    }
-    
-    MCExecContext ctxt(ep);
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(m_mode, EE_CHUNK_BADTEXT, &t_mode))
+        return;
+
     MCTextEvalMeasureText(ctxt, t_object_ptr, *t_text, *t_mode, m_is_unicode, &t_result);
 
     if (!ctxt . HasError())
     {
-        ep . setvalueref(*t_result);
-        return ES_NORMAL;
+        r_value . stringref_value = MCValueRetain(*t_result);
+        r_value . type = kMCExecValueTypeStringRef;
     }
-	
-	return ctxt . Catch(line, pos);
 }
