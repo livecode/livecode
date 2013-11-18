@@ -988,7 +988,11 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 			t_block -> setatts(P_LINK_TEXT, (void *)MCNameGetCString(p_block -> text_link));
 
 		if (p_block -> text_metadata != nil)
-            t_block -> setatts(P_METADATA, (void *)MCStringGetCString(p_block -> text_metadata));
+        {
+            MCAutoPointer<char> t_metadata;
+            /* UNCHECKED */ MCStringConvertToCString(p_block -> text_metadata, &t_metadata);
+            t_block -> setatts(P_METADATA, (void *)*t_metadata);
+        }
 
 		const char *t_font_name;
 		t_font_name = p_block -> font_name == NULL ? "" : p_block -> font_name;
@@ -1018,7 +1022,9 @@ extern bool RTFRead(const char *p_rtf, uint4 p_length, MCTextConvertCallback p_w
 
 MCParagraph *MCField::rtftoparagraphs(MCStringRef p_data)
 {
-    return rtftoparagraphs(MCString(MCStringGetCString(p_data), MCStringGetLength(p_data)));
+    MCAutoPointer<char> t_data;
+    /* UNCHECKED */ MCStringConvertToCString(p_data, &t_data);
+    return rtftoparagraphs(MCString(*t_data, MCStringGetLength(p_data)));
 }
 
 MCParagraph *MCField::rtftoparagraphs(const MCString& p_data)

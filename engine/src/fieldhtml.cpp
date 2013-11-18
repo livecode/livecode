@@ -1920,7 +1920,9 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 
 MCParagraph *MCField::importhtmltext(MCStringRef p_data)
 {
-    return importhtmltext(MCString(MCStringGetCString(p_data), MCStringGetLength(p_data)));
+    MCAutoPointer<char> t_data;
+    /* UNCHECKED */ MCStringConvertToCString(p_data, &t_data);
+    return importhtmltext(MCString(*t_data, MCStringGetLength(p_data)));
 }
 
 MCParagraph *MCField::importhtmltext(const MCString& p_data)
