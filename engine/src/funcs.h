@@ -35,7 +35,7 @@ public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	Parse_stat parsetarget(MCScriptPoint &spt, Boolean the,
 	                       Boolean needone, MCChunk *&chunk);
-	Exec_stat params_to_doubles(MCExecPoint& ep, MCParameter *p_params, real64_t*& r_doubles, uindex_t& r_count);
+	bool params_to_doubles(MCExecContext& ctxt, MCParameter *p_params, real64_t*& r_doubles, uindex_t& r_count);
 	
 	// General method for compiling a function that maps to a single method.
 	// The variadic argument list should be the MCExpression's the function
