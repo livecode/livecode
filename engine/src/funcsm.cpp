@@ -87,7 +87,7 @@ bool MCFunction::params_to_doubles(MCExecContext& ctxt, MCParameter *p_params, r
                 while (MCStringGetNativeCharAtIndex(t_arraystring, t_start) == ' ')
                     t_start++;
                 MCAutoStringRef t_string_no_spaces;
-                /* UNCHECKED */ MCStringCopySubstring(t_arraystring, MCRangeMake(0, t_start), &t_string_no_spaces);
+                /* UNCHECKED */ MCStringCopySubstring(t_arraystring, MCRangeMake(t_start, MCStringGetLength(t_arraystring) - t_start), &t_string_no_spaces);
                 if (MCStringIsEmpty(*t_string_no_spaces))
                     t_number = 0.0;
                 else
