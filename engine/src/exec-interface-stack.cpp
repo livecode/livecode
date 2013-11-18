@@ -130,65 +130,65 @@ static void MCInterfaceDecorationParse(MCExecContext& ctxt, MCStringRef p_input,
             decorations = i1 | WD_WDEF;
         else
         {
-            uint4 l = MCStringGetLength(p_input);
-            const char *sptr = MCStringGetCString(p_input);
-            MCU_skip_spaces(sptr, l);
             if (decorations & WD_WDEF)
                 decorations |= ~WD_WDEF;
             else
             {
-                while (l != 0)
+                uindex_t t_start_pos, t_end_pos;
+                t_end_pos = 0;
+                while (t_end_pos != MCStringGetLength(p_input))
                 {
-                    const char *startptr = sptr;
-                    if (!MCU_strchr(sptr, l, ','))
-                    {
-                        sptr += l;
-                        l = 0;
-                    }
-                    MCString tdata(startptr, sptr - startptr);
-                    MCU_skip_char(sptr, l);
-                    MCU_skip_spaces(sptr, l);
-                    if (tdata == MCtitlestring)
+                    t_start_pos = t_end_pos;
+                    // skip spaces at the beginning or after a comma (if any)
+                    MCU_skip_spaces(p_input, t_start_pos);
+                    
+                    uindex_t t_comma;
+                    if (!MCStringFirstIndexOfChar(p_input, ',', t_start_pos, kMCCompareExact, t_comma))
+                        t_end_pos = MCStringGetLength(p_input);
+                    else
+                        t_end_pos = t_comma;
+                    
+                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), MCSTR(MCtitlestring), kMCCompareCaseless))
                     {
                         decorations |= WD_TITLE;
                         continue;
                     }
-                    if (tdata == MCmenustring)
+                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), MCSTR(MCmenustring), kMCCompareCaseless))
                     {
                         decorations |= WD_MENU | WD_TITLE;
                         continue;
                     }
-                    if (tdata == MCminimizestring)
+                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), MCSTR(MCminimizestring), kMCCompareCaseless))
                     {
                         decorations |= WD_MINIMIZE | WD_TITLE;
                         continue;
                     }
-                    if (tdata == MCmaximizestring)
+                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), MCSTR(MCmaximizestring), kMCCompareCaseless))
                     {
                         decorations |= WD_MAXIMIZE | WD_TITLE;
                         continue;
                     }
-                    if (tdata == MCclosestring)
+                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), MCSTR(MCclosestring), kMCCompareCaseless))
                     {
                         decorations |= WD_CLOSE | WD_TITLE;
                         continue;
                     }
-                    if (tdata == MCmetalstring)
+                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), MCSTR(MCmetalstring), kMCCompareCaseless))
                     {
                         decorations |= WD_METAL; //metal can not have title
                         continue;
                     }
-                    if (tdata == MCutilitystring)
+                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), MCSTR(MCutilitystring), kMCCompareCaseless))
                     {
                         decorations |= WD_UTILITY;
                         continue;
                     }
-                    if (tdata == MCnoshadowstring)
+                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), MCSTR(MCnoshadowstring), kMCCompareCaseless))
                     {
                         decorations |= WD_NOSHADOW;
                         continue;
                     }
-                    if (tdata == MCforcetaskbarstring)
+                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), MCSTR(MCforcetaskbarstring), kMCCompareCaseless))
                     {
                         decorations |= WD_FORCETASKBAR;
                         continue;
@@ -1452,7 +1452,7 @@ void MCStack::GetStackFiles(MCExecContext& ctxt, MCStringRef& r_files)
 		MCAutoStringRef t_filename;
 
 		if (t_success)
-			t_success = MCStringFormat(&t_filename, "%s,%s", MCStringGetCString(stackfiles[i].stackname), MCStringGetCString(stackfiles[i].filename));
+			t_success = MCStringFormat(&t_filename, "%@,%@", stackfiles[i].stackname, stackfiles[i].filename);
 
 		if (t_success)
 			t_success = MCListAppend(*t_file_list, *t_filename);

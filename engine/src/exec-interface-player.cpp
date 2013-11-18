@@ -66,7 +66,7 @@ static MCExecCustomTypeInfo _kMCMultimediaQTVRConstraintsTypeInfo =
 
 static void MCMultimediaTrackFormat(MCExecContext& ctxt, const MCMultimediaTrack& p_input, MCStringRef& r_output)
 {
-	if (MCStringFormat(r_output, "%d,%s,%d,%d", p_input . id, MCStringGetCString(p_input . name),
+	if (MCStringFormat(r_output, "%d,%@,%d,%d", p_input . id, p_input . name,
 									  p_input . offset, p_input . duration))
 		return;
 
