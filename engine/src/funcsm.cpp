@@ -39,90 +39,92 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "exec.h"
 
-Exec_stat MCFunction::params_to_doubles(MCExecPoint& ep, MCParameter *p_params, real64_t*& r_doubles, uindex_t& r_count)
+bool MCFunction::params_to_doubles(MCExecContext& ctxt, MCParameter *p_params, real64_t*& r_doubles, uindex_t& r_count)
 {
 	MCAutoArray<real64_t> t_list;
 	real64_t t_number;
 
 	if (p_params != NULL && p_params->getnext() == NULL)
 	{
-		if (p_params->eval(ep) != ES_NORMAL)
+        MCAutoValueRef t_value_valueref;
+		if (!p_params->eval(ctxt, &t_value_valueref))
 		{
-			MCeerror->add(EE_FUNCTION_BADSOURCE, line, pos);
-			return ES_ERROR;
+			ctxt . LegacyThrow(EE_FUNCTION_BADSOURCE);
+			return false;
 		}
-		if (ep.isarray())
-		{
-			MCNameRef t_key;
+        MCAutoArrayRef t_array;
+        if (MCValueIsArray(*t_value_valueref))
+        {
+            MCNameRef t_key;
 			MCValueRef t_value;
 			uintptr_t t_index = 0;
-			while (MCArrayIterate(ep.getarrayref(), t_index, t_key, t_value))
+			while (MCArrayIterate((MCArrayRef)*t_value_valueref, t_index, t_key, t_value))
 			{
-				if (!ep.convertvaluereftoreal(t_value, t_number))
+                if (!ctxt . ConvertToReal(t_value, t_number))
 				{
-					MCeerror->add(EE_FUNCTION_BADSOURCE, line, pos);
-					return ES_ERROR;
+					ctxt . LegacyThrow(EE_FUNCTION_BADSOURCE);
+					return false;
 				}
 				if (!t_list.Push(t_number))
-					return ES_ERROR;
+					return false;
 			}
 		}
 		else
 		{
-			MCString s(ep.getsvalue());
-			uint4 length = s.getlength();
-			const char *sptr = s.getstring();
-			MCU_skip_spaces(sptr, length);
-			while (length != 0)
-			{
-				s.setstring(sptr);
-				if (!MCU_strchr(sptr, length, ','))
-				{
-					s.setlength(length);
-					length = 0;
-				}
-				else
-				{
-					s.setlength(sptr - s.getstring());
-					MCU_skip_char(sptr, length);
-					MCU_skip_spaces(sptr, length);
-				}
-				if (s.getlength() == 0)
-					t_number = 0.0;
-  				else
-				{
-					if (!MCU_stor8(s, t_number))
-					{
-						MCeerror->add(EE_FUNCTION_NAN, 0, 0, s);
-						return ES_ERROR;
-					}
-				}
-				
-				if (!t_list.Push(t_number))
-					return ES_ERROR;
-			}
-		}
+            MCAutoStringRef t_string;
+            /* UNCHECKED */ ctxt . ConvertToString(*t_value_valueref, &t_string);
+            /* UNCHECKED */ MCStringSplit(*t_string, MCSTR(","), nil, kMCCompareExact, &t_array);
+            uindex_t t_count = MCArrayGetCount(*t_array);
+            
+            for (int i = 0 ; i < t_count ; i++)
+            {
+                // Note: 't_array' is an array of strings
+                MCValueRef t_arrayval;
+                /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_array, i, t_arrayval);
+                MCStringRef t_arraystring = (MCStringRef)t_arrayval;
+                uindex_t t_start;
+                t_start = 0;
+                while (MCStringGetNativeCharAtIndex(t_arraystring, t_start) == ' ')
+                    t_start++;
+                MCAutoStringRef t_string_no_spaces;
+                /* UNCHECKED */ MCStringCopySubstring(t_arraystring, MCRangeMake(t_start, MCStringGetLength(t_arraystring) - t_start), &t_string_no_spaces);
+                if (MCStringIsEmpty(*t_string_no_spaces))
+                    t_number = 0.0;
+                else
+                {
+                    if (!MCStringToDouble(*t_string_no_spaces, t_number))
+                    {
+                        ctxt . LegacyThrow(EE_FUNCTION_NAN);
+                        return false;
+                    }
+                }
+                if (!t_list.Push(t_number))
+					return false;
+            }
+        }
 	}
 	else
 	{
 		MCParameter *t_param = p_params;
 		while (t_param != NULL)
 		{
-			if (t_param->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            MCAutoValueRef t_param_value;
+            double t_param_number;
+			if (!t_param->eval(ctxt, &t_param_value) && ctxt . ConvertToReal(*t_param_value, t_param_number))
 			{
-				MCeerror->add(EE_FUNCTION_BADSOURCE, line, pos);
-				return ES_ERROR;
+				ctxt . LegacyThrow(EE_FUNCTION_BADSOURCE);
+				return false;
 			}
             
-			if (!t_list.Push(ep.getnvalue()))
-				return ES_ERROR;
+			if (!t_list.Push(t_param_number))
+				return false;
             
 			t_param = t_param->getnext();
 		}
 	}
     
 	t_list.Take(r_doubles, r_count);
- 	return ES_NORMAL;   
+ 	return true;
 }
 
 
@@ -247,7 +249,7 @@ Exec_stat MCArithmeticMean::eval(MCExecPoint &ep)
 	MCAutoArray<real64_t> t_values;
 	real64_t t_result;
     
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
+	if (!params_to_doubles(ctxt, params, t_values.PtrRef(), t_values.SizeRef()))
 	{
 		MCeerror->add(EE_AVERAGE_BADSOURCE, line, pos);
 		return ES_ERROR;
@@ -403,7 +405,7 @@ Exec_stat MCAvgDev::eval(MCExecPoint &ep)
 	MCAutoArray<real64_t> t_values;
 	real64_t t_result;
 
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
+	if (!params_to_doubles(ctxt, params, t_values.PtrRef(), t_values.SizeRef()))
 	{
 		MCeerror->add(EE_AVERAGE_BADSOURCE, line, pos);
 		return ES_ERROR;
@@ -607,7 +609,7 @@ Exec_stat MCGeometricMean::eval(MCExecPoint &ep)
 	MCAutoArray<real64_t> t_values;
 	real64_t t_result;
     
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
+	if (!params_to_doubles(ctxt, params, t_values.PtrRef(), t_values.SizeRef()))
 	{
 		MCeerror->add(EE_GEO_MEAN_BADSOURCE, line, pos);
 		return ES_ERROR;
@@ -662,7 +664,7 @@ Exec_stat MCHarmonicMean::eval(MCExecPoint &ep)
 	MCAutoArray<real64_t> t_values;
 	real64_t t_result;
     
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
+	if (!params_to_doubles(ctxt, params, t_values.PtrRef(), t_values.SizeRef()))
 	{
 		MCeerror->add(EE_STDDEV_BADSOURCE, line, pos);
 		return ES_ERROR;
@@ -878,7 +880,7 @@ Exec_stat MCMaxFunction::eval(MCExecPoint &ep)
 	MCAutoArray<real64_t> t_values;
 	real64_t t_result;
 
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
+	if (!params_to_doubles(ctxt, params, t_values.PtrRef(), t_values.SizeRef()))
 	{
 		MCeerror->add(EE_MAX_BADSOURCE, line, pos);
 		return ES_ERROR;
@@ -932,7 +934,7 @@ Exec_stat MCMedian::eval(MCExecPoint &ep)
 	MCAutoArray<real64_t> t_values;
 	real64_t t_result;
 
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
+	if (!params_to_doubles(ctxt, params, t_values.PtrRef(), t_values.SizeRef()))
 	{
 		MCeerror->add(EE_MEDIAN_BADSOURCE, line, pos);
 		return ES_ERROR;
@@ -1019,7 +1021,7 @@ Exec_stat MCMinFunction::eval(MCExecPoint &ep)
 	MCAutoArray<real64_t> t_values;
 	real64_t t_result;
 
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
+	if (!params_to_doubles(ctxt, params, t_values.PtrRef(), t_values.SizeRef()))
 	{
 		MCeerror->add(EE_MIN_BADSOURCE, line, pos);
 		return ES_ERROR;
@@ -1074,7 +1076,7 @@ Exec_stat MCPopulationStdDev::eval(MCExecPoint &ep)
 	MCAutoArray<real64_t> t_values;
 	real64_t t_result;
     
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
+	if (!params_to_doubles(ctxt, params, t_values.PtrRef(), t_values.SizeRef()))
 	{
 		MCeerror->add(EE_POP_VARIANCE_BADSOURCE, line, pos);
 		return ES_ERROR;
@@ -1129,7 +1131,7 @@ Exec_stat MCPopulationVariance::eval(MCExecPoint &ep)
 	MCAutoArray<real64_t> t_values;
 	real64_t t_result;
     
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
+	if (!params_to_doubles(ctxt, params, t_values.PtrRef(), t_values.SizeRef()))
 	{
 		MCeerror->add(EE_POP_VARIANCE_BADSOURCE, line, pos);
 		return ES_ERROR;
@@ -1305,7 +1307,7 @@ Exec_stat MCSampleStdDev::eval(MCExecPoint &ep)
 	MCAutoArray<real64_t> t_values;
 	real64_t t_result;
     
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
+	if (!params_to_doubles(ctxt, params, t_values.PtrRef(), t_values.SizeRef()))
 	{
 		MCeerror->add(EE_STDDEV_BADSOURCE, line, pos);
 		return ES_ERROR;
@@ -1360,7 +1362,7 @@ Exec_stat MCSampleVariance::eval(MCExecPoint &ep)
 	MCAutoArray<real64_t> t_values;
 	real64_t t_result;
     
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
+	if (!params_to_doubles(ctxt, params, t_values.PtrRef(), t_values.SizeRef()))
 	{
 		MCeerror->add(EE_VARIANCE_BADSOURCE, line, pos);
 		return ES_ERROR;
@@ -1515,7 +1517,7 @@ Exec_stat MCStdDev::eval(MCExecPoint &ep)
 	MCAutoArray<real64_t> t_values;
 	real64_t t_result;
 
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
+	if (!params_to_doubles(ctxt, params, t_values.PtrRef(), t_values.SizeRef()))
 	{
 		MCeerror->add(EE_STDDEV_BADSOURCE, line, pos);
 		return ES_ERROR;
@@ -1569,7 +1571,7 @@ Exec_stat MCSum::eval(MCExecPoint &ep)
 	MCAutoArray<real64_t> t_values;
 	real64_t t_result;
 
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
+	if (!params_to_doubles(ctxt, params, t_values.PtrRef(), t_values.SizeRef()))
 	{
 		MCeerror->add(EE_STDDEV_BADSOURCE, line, pos);
 		return ES_ERROR;
