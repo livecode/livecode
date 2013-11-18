@@ -307,7 +307,7 @@ public:
 	}
 	virtual ~MCReturn();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 	virtual uint4 linecount();
 	virtual void compile(MCSyntaxFactoryRef);
 };

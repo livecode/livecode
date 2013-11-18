@@ -1897,7 +1897,7 @@ Parse_stat MCReturn::parse(MCScriptPoint &sp)
 // MW-2007-07-03: [[ Bug 4570 ]] - Using the return command now causes a
 //   RETURN_HANDLER status rather than EXIT_HANDLER. This is used to not
 //   clear the result in this case. (see MCHandler::exec).
-Exec_stat MCReturn::exec(MCExecPoint &ep)
+void MCReturn::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCReturn */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
@@ -1929,26 +1929,17 @@ Exec_stat MCReturn::exec(MCExecPoint &ep)
 
 	return ES_RETURN_HANDLER;
 #endif /* MCReturn */
-
-	MCExecContext ctxt(ep);
-	
 	MCAutoValueRef t_result;
-	if (source -> eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_RETURN_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep . copyasvalueref(&t_result);
+
+    if (!ctxt . EvalExprAsValueRef(source, EE_RETURN_BADEXP, &t_result))
+        return;
 	
 	if (url != nil)
 	{
 		MCAutoValueRef t_url_result;
-		if (url -> eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_RETURN_BADEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasvalueref(&t_url_result);
+        if (!ctxt . EvalExprAsValueRef(url, EE_RETURN_BADEXP, &t_url_result))
+            return;
+
 		MCNetworkExecReturnValueAndUrlResult(ctxt, *t_result, *t_url_result);
 	}
 	else if (var != nil)
@@ -1961,9 +1952,7 @@ Exec_stat MCReturn::exec(MCExecPoint &ep)
 	}
 	
 	if (!ctxt . HasError())
-		return ES_RETURN_HANDLER;
-	
-	return ctxt . Catch(line, pos);
+        ctxt . SetIsReturnHandler();
 }
 
 uint4 MCReturn::linecount()

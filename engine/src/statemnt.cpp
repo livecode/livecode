@@ -61,7 +61,7 @@ Exec_stat MCStatement::exec(MCExecPoint &ep)
 	MCExecContext ctxt(ep);
 	exec_ctxt(ctxt);
 	if (!ctxt . HasError())
-		return ES_NORMAL;
+        return ctxt . GetExecStat();
 	return ctxt . Catch(line, pos);
 }
 

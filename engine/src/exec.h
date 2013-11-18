@@ -1336,7 +1336,7 @@ public:
 
 	bool HasError(void)
 	{
-		return m_stat != ES_NORMAL;
+        return m_stat != ES_NORMAL && m_stat != ES_RETURN_HANDLER;
 	}
 
 	void Throw(void)
@@ -1348,6 +1348,11 @@ public:
 	{
 		m_stat = ES_NORMAL;
 	}
+
+    void SetIsReturnHandler()
+    {
+        m_stat = ES_RETURN_HANDLER;
+    }
 
 	Exec_stat Catch(uint2 line, uint2 pos);
 
