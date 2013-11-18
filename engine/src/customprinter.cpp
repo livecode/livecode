@@ -2040,16 +2040,17 @@ Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filenam
 				t_module = MCS_loadmodule(*t_module_path_str2);
 			}
 #elif defined(_LINUX)
-			const char *t_engine_dir_end;
-			t_engine_dir_end = strrchr(MCStringGetCString(MCcmd), '/');
+            
+			uindex_t t_engine_dir_end;
+            /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', 0, kMCCompareExact, t_engine_dir_end);
 			MCAutoStringRef t_module_path;
-			/* UNCHECKED */ MCStringFormat(&t_module_path, "%.*s/revpdfprinter.so", t_engine_dir_end - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd));
+			/* UNCHECKED */ MCStringFormat(&t_module_path, "%.*@/revpdfprinter.so", MCRangeMake(0, t_engine_dir_end), MCcmd);
 			t_module = MCS_loadmodule(*t_module_path);
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
-			const char *t_engine_dir_end;
-			t_engine_dir_end = strrchr(MCStringGetCString(MCcmd), '/');
+			uindex_t t_engine_dir_end;
+            /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', 0, kMCCompareExact, t_engine_dir_end);
 			MCAutoStringRef t_module_path;            
-			MCStringFormat(&t_module_path, "%.*s/revpdfprinter.dylib", t_engine_dir_end - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd));
+			MCStringFormat(&t_module_path, "%.*@/revpdfprinter.dylib", MCRangeMake(0, t_engine_dir_end), MCcmd);
 			t_module = MCS_loadmodule(*t_module_path);
 #elif defined(_SERVER)
 			
