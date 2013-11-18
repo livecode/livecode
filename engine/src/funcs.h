@@ -26,6 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 
 #include "exec.h"
+#include "param.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -35,7 +36,7 @@ public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	Parse_stat parsetarget(MCScriptPoint &spt, Boolean the,
 	                       Boolean needone, MCChunk *&chunk);
-	Exec_stat params_to_doubles(MCExecPoint& ep, MCParameter *p_params, real64_t*& r_doubles, uindex_t& r_count);
+    bool params_to_doubles(MCExecContext& ctxt, MCParameter *p_params, real64_t*& r_doubles, uindex_t& r_count);
 	
 	// General method for compiling a function that maps to a single method.
 	// The variadic argument list should be the MCExpression's the function
@@ -67,6 +68,11 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const = 0;
 	virtual MCParameter *getmethodarg(void) const = 0;
 	virtual void compile(MCSyntaxFactoryRef ctxt);
+
+    bool params_to_doubles(MCExecContext &ctxt, real64_t *&r_doubles, uindex_t &r_count);
+
+protected:
+    MCParameter* params;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,7 +80,8 @@ public:
 // Helper class that simplifies evaluation of functions not taking any arguments.
 extern MCError *MCperror;
 
-template<typename ReturnType, void (*EvalFunction)(MCExecContext&, typename MCExecValueTraits<ReturnType>::out_type)> class MCConstantFunctionCtxt: public MCConstantFunction
+template<typename ReturnType, void (*EvalFunction)(MCExecContext&, typename MCExecValueTraits<ReturnType>::out_type)>
+class MCConstantFunctionCtxt: public MCConstantFunction
 {
 public:
 	void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
@@ -88,7 +95,6 @@ public:
 
 template<typename ParamType,
          typename ReturnType,
-         bool (MCExecContext::*EvalExpression)(MCExpression*, Exec_errors, typename MCExecValueTraits<ParamType>::out_type),
          void (*EvalFunction)(MCExecContext&, typename MCExecValueTraits<ParamType>::in_type, typename MCExecValueTraits<ReturnType>::out_type),
          Exec_errors EvalError,
          Parse_errors ParseError,
@@ -116,7 +122,7 @@ public:
         ReturnType t_result;
         ParamType t_param;
 
-        if (!(ctxt .* EvalExpression)(m_expression, EvalError, t_param))
+        if (!MCExecValueTraits<ParamType>::eval(ctxt, m_expression, EvalError, t_param))
             return;
 
         EvalFunction(ctxt, t_param, t_result);
@@ -134,30 +140,88 @@ protected:
     MCExpression *m_expression;
 };
 
+template<void (*EvalExprMethod)(MCExecContext &, real64_t*, uindex_t, real64_t&),
+         Exec_errors EvalError,
+         Parse_errors ParseError,
+         MCExecMethodInfo*& MethodInfo>
+class MCParamFunctionCtxt: public MCParamFunction
+{
+public:
+    MCParamFunctionCtxt()
+    {
+        params = nil;
+    }
+
+    virtual ~MCParamFunctionCtxt()
+    {
+        while (params != nil)
+        {
+            MCParameter *tparams = params;
+            params = params->getnext();
+            delete tparams;
+        }
+    }
+
+    virtual Parse_stat parse(MCScriptPoint &sp, Boolean the)
+    {
+        initpoint(sp);
+
+        if (getparams(sp, &params) != PS_NORMAL)
+        {
+            MCperror->add(ParseError, line, pos);
+            return PS_ERROR;
+        }
+        return PS_NORMAL;
+    }
+
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
+    {
+        MCAutoArray<real64_t> t_values;
+        real64_t t_result;
+
+        if (!params_to_doubles(ctxt, t_values.PtrRef(), t_values.SizeRef()))
+        {
+            ctxt . LegacyThrow(EvalError);
+            return;
+        }
+
+        EvalExprMethod(ctxt, t_values.Ptr(), t_values.Size(), t_result);
+
+        if (!ctxt . HasError())
+        {
+            r_value . double_value = t_result;
+            r_value . type = kMCExecValueTypeDouble;
+        }
+    }
+
+    virtual MCExecMethodInfo *getmethodinfo(void) const { return MethodInfo; }
+    virtual MCParameter *getmethodarg(void) const { return params; }
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCArrayDecode: public MCUnaryFunctionCtxt<MCStringRef, MCArrayRef, &MCExecContext::EvalExprAsStringRef, MCArraysEvalArrayDecode, EE_ARRAYDECODE_BADSOURCE, PE_ARRAYDECODE_BADPARAM, kMCArraysEvalArrayDecodeMethodInfo>
+class MCArrayDecode: public MCUnaryFunctionCtxt<MCStringRef, MCArrayRef, MCArraysEvalArrayDecode, EE_ARRAYDECODE_BADSOURCE, PE_ARRAYDECODE_BADPARAM, kMCArraysEvalArrayDecodeMethodInfo>
 {
 public:
     MCArrayDecode(){}
     virtual ~MCArrayDecode(){}
 };
 
-class MCArrayEncode: public MCUnaryFunctionCtxt<MCArrayRef, MCStringRef, &MCExecContext::EvalExprAsArrayRef, MCArraysEvalArrayEncode, EE_ARRAYENCODE_BADSOURCE, PE_ARRAYENCODE_BADPARAM, kMCArraysEvalArrayEncodeMethodInfo>
+class MCArrayEncode: public MCUnaryFunctionCtxt<MCArrayRef, MCStringRef, MCArraysEvalArrayEncode, EE_ARRAYENCODE_BADSOURCE, PE_ARRAYENCODE_BADPARAM, kMCArraysEvalArrayEncodeMethodInfo>
 {
 public:
     MCArrayEncode(){}
     virtual ~MCArrayEncode(){}
 };
 
-class MCBase64Decode : public MCUnaryFunctionCtxt<MCStringRef, MCDataRef, &MCExecContext::EvalExprAsStringRef, MCFiltersEvalBase64Decode, EE_BASE64DECODE_BADSOURCE, PE_BASE64DECODE_BADPARAM, kMCFiltersEvalBase64DecodeMethodInfo>
+class MCBase64Decode : public MCUnaryFunctionCtxt<MCStringRef, MCDataRef, MCFiltersEvalBase64Decode, EE_BASE64DECODE_BADSOURCE, PE_BASE64DECODE_BADPARAM, kMCFiltersEvalBase64DecodeMethodInfo>
 {
 public:
     MCBase64Decode() {}
     virtual ~MCBase64Decode(){}
 };
 
-class MCBase64Encode : public MCUnaryFunctionCtxt<MCDataRef, MCStringRef, &MCExecContext::EvalExprAsDataRef, MCFiltersEvalBase64Encode, EE_BASE64ENCODE_BADSOURCE, PE_BASE64ENCODE_BADPARAM, kMCFiltersEvalBase64EncodeMethodInfo>
+class MCBase64Encode : public MCUnaryFunctionCtxt<MCDataRef, MCStringRef, MCFiltersEvalBase64Encode, EE_BASE64ENCODE_BADSOURCE, PE_BASE64ENCODE_BADPARAM, kMCFiltersEvalBase64EncodeMethodInfo>
 {
 	MCExpression *source;
 public:
@@ -230,14 +294,14 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalCapsLockKeyMethodInfo; }
 };
 
-class MCCharToNum : public MCUnaryFunctionCtxt<MCStringRef, MCValueRef, &MCExecContext::EvalExprAsStringRef, MCStringsEvalCharToNum, EE_CHARTONUM_BADSOURCE, PE_CHARTONUM_BADPARAM, kMCStringsEvalCharToNumMethodInfo>
+class MCCharToNum : public MCUnaryFunctionCtxt<MCStringRef, MCValueRef, MCStringsEvalCharToNum, EE_CHARTONUM_BADSOURCE, PE_CHARTONUM_BADPARAM, kMCStringsEvalCharToNumMethodInfo>
 {
 public:
     MCCharToNum(){}
     virtual ~MCCharToNum(){}
 };
 
-class MCByteToNum : public MCUnaryFunctionCtxt<MCStringRef, integer_t, &MCExecContext::EvalExprAsStringRef, MCStringsEvalByteToNum, EE_BYTETONUM_BADSOURCE, PE_BYTETONUM_BADPARAM, kMCStringsEvalByteToNumMethodInfo>
+class MCByteToNum : public MCUnaryFunctionCtxt<MCStringRef, integer_t, MCStringsEvalByteToNum, EE_BYTETONUM_BADSOURCE, PE_BYTETONUM_BADPARAM, kMCStringsEvalByteToNumMethodInfo>
 {
 public:
     MCByteToNum(){}
@@ -269,7 +333,7 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCPasteboardEvalClipboardMethodInfo; }
 };
 
-class MCCompress : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, &MCExecContext::EvalExprAsDataRef, MCFiltersEvalCompress, EE_COMPRESS_BADSOURCE, PE_COMPRESS_BADPARAM, kMCFiltersEvalCompressMethodInfo>
+class MCCompress : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, MCFiltersEvalCompress, EE_COMPRESS_BADSOURCE, PE_COMPRESS_BADPARAM, kMCFiltersEvalCompressMethodInfo>
 {
 public:
     MCCompress(){}
@@ -436,7 +500,7 @@ public:
 
 };
 
-class MCDecompress : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, &MCExecContext::EvalExprAsDataRef, MCFiltersEvalDecompress, EE_DECOMPRESS_BADSOURCE, PE_DECOMPRESS_BADPARAM, kMCFiltersEvalDecompressMethodInfo>
+class MCDecompress : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, MCFiltersEvalDecompress, EE_DECOMPRESS_BADSOURCE, PE_DECOMPRESS_BADPARAM, kMCFiltersEvalDecompressMethodInfo>
 {
 public:
     MCDecompress(){}
@@ -553,7 +617,7 @@ public:
 
 };
 
-class MCEncrypt : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCSecurityEvalEncrypt, EE_ENCRYPT_BADSOURCE, PE_ENCRYPT_BADPARAM, kMCSecurityEvalEncryptMethodInfo>
+class MCEncrypt : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCSecurityEvalEncrypt, EE_ENCRYPT_BADSOURCE, PE_ENCRYPT_BADPARAM, kMCSecurityEvalEncryptMethodInfo>
 {
 public:
     MCEncrypt(){}
@@ -575,7 +639,7 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCExtents : public MCUnaryFunctionCtxt<MCArrayRef, MCStringRef, &MCExecContext::EvalExprAsArrayRef, MCArraysEvalExtents, EE_EXTENTS_BADSOURCE, PE_EXTENTS_BADPARAM, kMCArraysEvalExtentsMethodInfo>
+class MCExtents : public MCUnaryFunctionCtxt<MCArrayRef, MCStringRef, MCArraysEvalExtents, EE_EXTENTS_BADSOURCE, PE_EXTENTS_BADPARAM, kMCArraysEvalExtentsMethodInfo>
 {
 public:
     MCExtents(){}
@@ -590,7 +654,7 @@ public:
 
 };
 
-class MCFlushEvents : public MCUnaryFunctionCtxt<MCNameRef, MCStringRef, &MCExecContext::EvalExprAsNameRef, MCInterfaceEvalFlushEvents, EE_FLUSHEVENTS_BADTYPE, PE_FLUSHEVENTS_BADPARAM, kMCInterfaceEvalFlushEventsMethodInfo>
+class MCFlushEvents : public MCUnaryFunctionCtxt<MCNameRef, MCStringRef, MCInterfaceEvalFlushEvents, EE_FLUSHEVENTS_BADTYPE, PE_FLUSHEVENTS_BADPARAM, kMCInterfaceEvalFlushEventsMethodInfo>
 {
 public:
     MCFlushEvents(){}
@@ -621,7 +685,7 @@ public:
 	virtual MCExpression *getmethodarg(void) const { return type; }
 };
 
-class MCFontLanguage : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCTextEvalFontNames, EE_FONTNAMES_BADTYPE, PE_FONTNAMES_BADPARAM, kMCTextEvalFontLanguageMethodInfo>
+class MCFontLanguage : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCTextEvalFontNames, EE_FONTNAMES_BADTYPE, PE_FONTNAMES_BADPARAM, kMCTextEvalFontLanguageMethodInfo>
 {
 public:
     MCFontLanguage(){}
@@ -629,7 +693,7 @@ public:
 };
 
 
-class MCFontSizes : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCTextEvalFontSizes, EE_FONTSIZES_BADFONTNAME, PE_FONTSIZES_BADPARAM, kMCTextEvalFontSizesMethodInfo>
+class MCFontSizes : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCTextEvalFontSizes, EE_FONTSIZES_BADFONTNAME, PE_FONTSIZES_BADPARAM, kMCTextEvalFontSizesMethodInfo>
 {
 public:
     MCFontSizes(){}
@@ -713,7 +777,7 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalFunctionNamesMethodInfo; }
 };
 
-class MCGlobalLoc : public MCUnaryFunctionCtxt<MCPoint, MCPoint, &MCExecContext::EvalExprAsPoint, MCInterfaceEvalGlobalLoc, EE_GLOBALLOC_NAP, PE_GLOBALLOC_BADPOINT, kMCInterfaceEvalGlobalLocMethodInfo>
+class MCGlobalLoc : public MCUnaryFunctionCtxt<MCPoint, MCPoint, MCInterfaceEvalGlobalLoc, EE_GLOBALLOC_NAP, PE_GLOBALLOC_BADPOINT, kMCInterfaceEvalGlobalLocMethodInfo>
 {
 public:
     MCGlobalLoc(){}
@@ -728,7 +792,7 @@ public:
 
 };
 
-class MCHasMemory : public MCUnaryFunctionCtxt<uinteger_t, bool, &MCExecContext::EvalExprAsUInt, MCLegacyEvalHasMemory, EE_HASMEMORY_BADAMOUNT, PE_HASMEMORY_BADPARAM, kMCLegacyEvalHasMemoryMethodInfo>
+class MCHasMemory : public MCUnaryFunctionCtxt<uinteger_t, bool, MCLegacyEvalHasMemory, EE_HASMEMORY_BADAMOUNT, PE_HASMEMORY_BADPARAM, kMCLegacyEvalHasMemoryMethodInfo>
 {
 public:
     MCHasMemory(){}
@@ -743,14 +807,14 @@ public:
 
 };
 
-class MCHostAddress : public MCUnaryFunctionCtxt<MCNameRef, MCStringRef, &MCExecContext::EvalExprAsNameRef, MCNetworkEvalHostAddress, EE_HOSTADDRESS_BADSOCKET, PE_HOSTADDRESS_BADSOCKET, kMCNetworkEvalHostAddressMethodInfo>
+class MCHostAddress : public MCUnaryFunctionCtxt<MCNameRef, MCStringRef, MCNetworkEvalHostAddress, EE_HOSTADDRESS_BADSOCKET, PE_HOSTADDRESS_BADSOCKET, kMCNetworkEvalHostAddressMethodInfo>
 {
 public:
     MCHostAddress(){}
     virtual ~MCHostAddress(){}
 };
 
-class MCHostAtoN : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCNetworkEvalHostAddressToName, EE_HOSTATON_BADADDRESS, PE_HOSTATON_BADADDRESS, kMCNetworkEvalHostAddressToNameMethodInfo>
+class MCHostAtoN : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCNetworkEvalHostAddressToName, EE_HOSTATON_BADADDRESS, PE_HOSTATON_BADADDRESS, kMCNetworkEvalHostAddressToNameMethodInfo>
 {
 public:
     MCHostAtoN(){}
@@ -835,14 +899,14 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCIsoToMac : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, &MCExecContext::EvalExprAsDataRef, MCFiltersEvalIsoToMac, EE_ISOTOMAC_BADSOURCE, PE_ISOTOMAC_BADPARAM, kMCFiltersEvalIsoToMacMethodInfo>
+class MCIsoToMac : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, MCFiltersEvalIsoToMac, EE_ISOTOMAC_BADSOURCE, PE_ISOTOMAC_BADPARAM, kMCFiltersEvalIsoToMacMethodInfo>
 {
 public:
     MCIsoToMac(){}
     virtual ~MCIsoToMac(){}
 };
 
-class MCIsNumber : public MCUnaryFunctionCtxt<MCStringRef, bool, &MCExecContext::EvalExprAsStringRef, MCLegacyEvalIsNumber, EE_ISNUMBER_BADSOURCE, PE_ISNUMBER_BADPARAM, kMCLegacyEvalIsNumberMethodInfo>
+class MCIsNumber : public MCUnaryFunctionCtxt<MCStringRef, bool, MCLegacyEvalIsNumber, EE_ISNUMBER_BADSOURCE, PE_ISNUMBER_BADPARAM, kMCLegacyEvalIsNumberMethodInfo>
 {
 public:
     MCIsNumber(){}
@@ -874,7 +938,7 @@ public:
 
 };
 
-class MCLength : public MCUnaryFunctionCtxt<MCStringRef, integer_t, &MCExecContext::EvalExprAsStringRef, MCStringsEvalLength, EE_LENGTH_BADSOURCE, PE_LENGTH_BADPARAM, kMCStringsEvalLengthMethodInfo>
+class MCLength : public MCUnaryFunctionCtxt<MCStringRef, integer_t, MCStringsEvalLength, EE_LENGTH_BADSOURCE, PE_LENGTH_BADPARAM, kMCStringsEvalLengthMethodInfo>
 {
 public:
     MCLength(){}
@@ -895,7 +959,7 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCLegacyEvalLicensedMethodInfo; }
 };
 
-class MCLocalLoc : public MCUnaryFunctionCtxt<MCPoint, MCPoint, &MCExecContext::EvalExprAsPoint, MCInterfaceEvalLocalLoc, EE_LOCALLOC_NAP, PE_LOCALLOC_BADPOINT, kMCInterfaceEvalLocalLocMethodInfo>
+class MCLocalLoc : public MCUnaryFunctionCtxt<MCPoint, MCPoint, MCInterfaceEvalLocalLoc, EE_LOCALLOC_NAP, PE_LOCALLOC_BADPOINT, kMCInterfaceEvalLocalLocMethodInfo>
 {
 public:
     MCLocalLoc(){}
@@ -917,7 +981,7 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalMachineMethodInfo; }
 };
 
-class MCMacToIso : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, &MCExecContext::EvalExprAsDataRef, MCFiltersEvalMacToIso, EE_MACTOISO_BADSOURCE, PE_MACTOISO_BADPARAM, kMCFiltersEvalMacToIsoMethodInfo>
+class MCMacToIso : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, MCFiltersEvalMacToIso, EE_MACTOISO_BADSOURCE, PE_MACTOISO_BADPARAM, kMCFiltersEvalMacToIsoMethodInfo>
 {
 public:
     MCMacToIso(){}
@@ -988,7 +1052,7 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCLegacyEvalMenusMethodInfo; }
 };
 
-class MCMerge : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCStringsEvalMerge, EE_MERGE_BADSOURCE, PE_MERGE_BADPARAM, kMCStringsEvalMergeMethodInfo>
+class MCMerge : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCStringsEvalMerge, EE_MERGE_BADSOURCE, PE_MERGE_BADPARAM, kMCStringsEvalMergeMethodInfo>
 {
 public:
     MCMerge(){}
@@ -1121,14 +1185,14 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMovingControlsMethodInfo; }
 };
 
-class MCNumToChar: public MCUnaryFunctionCtxt<integer_t, MCStringRef, &MCExecContext::EvalExprAsInt, MCStringsEvalNumToChar, EE_NUMTOCHAR_BADSOURCE, PE_NUMTOCHAR_BADPARAM, kMCStringsEvalNumToCharMethodInfo>
+class MCNumToChar: public MCUnaryFunctionCtxt<integer_t, MCStringRef, MCStringsEvalNumToChar, EE_NUMTOCHAR_BADSOURCE, PE_NUMTOCHAR_BADPARAM, kMCStringsEvalNumToCharMethodInfo>
 {
 public:
     MCNumToChar(){}
     virtual ~MCNumToChar(){}
 };
 
-class MCNumToByte: public MCUnaryFunctionCtxt<integer_t, MCStringRef, &MCExecContext::EvalExprAsInt, MCStringsEvalNumToByte, EE_NUMTOBYTE_BADSOURCE, PE_NUMTOBYTE_BADPARAM, kMCStringsEvalNumToByteMethodInfo>
+class MCNumToByte: public MCUnaryFunctionCtxt<integer_t, MCStringRef, MCStringsEvalNumToByte, EE_NUMTOBYTE_BADSOURCE, PE_NUMTOBYTE_BADPARAM, kMCStringsEvalNumToByteMethodInfo>
 {
 public:
     MCNumToByte(void){}
@@ -1177,7 +1241,7 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalOptionKeyMethodInfo; }
 };
 
-class MCParam : public MCUnaryFunctionCtxt<integer_t, MCValueRef, &MCExecContext::EvalExprAsInt, MCEngineEvalParam, EE_PARAM_BADINDEX, PE_PARAM_BADPARAM, kMCEngineEvalParamMethodInfo>
+class MCParam : public MCUnaryFunctionCtxt<integer_t, MCValueRef, MCEngineEvalParam, EE_PARAM_BADINDEX, PE_PARAM_BADPARAM, kMCEngineEvalParamMethodInfo>
 {
 public:
     MCParam(){}
@@ -1200,7 +1264,7 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalParamsMethodInfo; }
 };
 
-class MCPeerAddress : public MCUnaryFunctionCtxt<MCNameRef, MCStringRef, &MCExecContext::EvalExprAsNameRef, MCNetworkEvalPeerAddress, EE_HOSTADDRESS_BADSOCKET, PE_PEERADDRESS_BADSOCKET, kMCNetworkEvalPeerAddressMethodInfo>
+class MCPeerAddress : public MCUnaryFunctionCtxt<MCNameRef, MCStringRef, MCNetworkEvalPeerAddress, EE_HOSTADDRESS_BADSOCKET, PE_PEERADDRESS_BADSOCKET, kMCNetworkEvalPeerAddressMethodInfo>
 {
 public:
     MCPeerAddress(){}
@@ -1230,31 +1294,19 @@ public:
 
 
 // JS-2013-06-19: [[ StatsFunctions ]] Definition of populationStdDev
-class MCPopulationStdDev : public MCFunction
+class MCPopulationStdDev : public MCParamFunctionCtxt<MCMathEvalPopulationStdDev, EE_POP_STDDEV_BADSOURCE, PE_POP_STDDEV_BADPARAM, kMCMathEvalPopulationStdDevMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCPopulationStdDev()
-	{
-		params = NULL;
-	}
-	virtual ~MCPopulationStdDev();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    MCPopulationStdDev(){}
+    virtual ~MCPopulationStdDev(){}
 };
 
 // JS-2013-06-19: [[ StatsFunctions ]] Definition of populationVariance
-class MCPopulationVariance : public MCFunction
+class MCPopulationVariance : public MCParamFunctionCtxt<MCMathEvalPopulationVariance, EE_POP_VARIANCE_BADSOURCE, PE_POP_VARIANCE_BADPARAM, kMCMathEvalPopulationVarianceMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCPopulationVariance()
-	{
-		params = NULL;
-	}
-	virtual ~MCPopulationVariance();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    MCPopulationVariance(){}
+    virtual ~MCPopulationVariance(){}
 };
 
 class MCProcessor : public MCConstantFunction
@@ -1467,7 +1519,7 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCShell : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCFilesEvalShell, EE_SHELL_BADSOURCE, PE_SHELL_BADPARAM, kMCFilesEvalShellMethodInfo>
+class MCShell : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCFilesEvalShell, EE_SHELL_BADSOURCE, PE_SHELL_BADPARAM, kMCFilesEvalShellMethodInfo>
 {
 public:
     MCShell(){}
@@ -1561,14 +1613,14 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCDateTimeEvalTimeMethodInfo; }
 };
 
-class MCToLower : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCStringsEvalToLower, EE_TOLOWER_BADSOURCE, PE_TOLOWER_BADPARAM, kMCStringsEvalToLowerMethodInfo>
+class MCToLower : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCStringsEvalToLower, EE_TOLOWER_BADSOURCE, PE_TOLOWER_BADPARAM, kMCStringsEvalToLowerMethodInfo>
 {
 public:
     MCToLower(){}
     virtual ~MCToLower(){}
 };
 
-class MCToUpper : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCStringsEvalToUpper, EE_TOUPPER_BADSOURCE, PE_TOUPPER_BADPARAM, kMCStringsEvalToUpperMethodInfo>
+class MCToUpper : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCStringsEvalToUpper, EE_TOUPPER_BADSOURCE, PE_TOUPPER_BADPARAM, kMCStringsEvalToUpperMethodInfo>
 {
 public:
     MCToUpper(){}
@@ -1621,21 +1673,21 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCUrlDecode : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCFiltersEvalUrlDecode, EE_URLDECODE_BADSOURCE, PE_URLDECODE_BADPARAM, kMCFiltersEvalUrlDecodeMethodInfo>
+class MCUrlDecode : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCFiltersEvalUrlDecode, EE_URLDECODE_BADSOURCE, PE_URLDECODE_BADPARAM, kMCFiltersEvalUrlDecodeMethodInfo>
 {
 public:
     MCUrlDecode(){}
     virtual ~MCUrlDecode(){}
 };
 
-class MCUrlEncode : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCFiltersEvalUrlEncode, EE_URLENCODE_BADSOURCE, PE_URLENCODE_BADPARAM, kMCFiltersEvalUrlEncodeMethodInfo>
+class MCUrlEncode : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCFiltersEvalUrlEncode, EE_URLENCODE_BADSOURCE, PE_URLENCODE_BADPARAM, kMCFiltersEvalUrlEncodeMethodInfo>
 {
 public:
     MCUrlEncode(){}
     virtual ~MCUrlEncode(){}
 };
 
-class MCUrlStatus : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCNetworkEvalUrlStatus, EE_URLSTATUS_BADSOURCE, PE_URLSTATUS_BADPARAM, kMCNetworkEvalUrlStatusMethodInfo>
+class MCUrlStatus : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCNetworkEvalUrlStatus, EE_URLSTATUS_BADSOURCE, PE_URLSTATUS_BADPARAM, kMCNetworkEvalUrlStatusMethodInfo>
 {
 public:
     MCUrlStatus(){}
@@ -1705,21 +1757,21 @@ public:
 
 // platform specific functions in funcs.cpp
 
-class MCMCISendString : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCMultimediaEvalMCISendString, EE_MCISENDSTRING_BADSOURCE, PE_MCISENDSTRING_BADPARAM, kMCMultimediaEvalMCISendStringMethodInfo>
+class MCMCISendString : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCMultimediaEvalMCISendString, EE_MCISENDSTRING_BADSOURCE, PE_MCISENDSTRING_BADPARAM, kMCMultimediaEvalMCISendStringMethodInfo>
 {
 public:
     MCMCISendString(){}
     virtual ~MCMCISendString(){}
 };
 
-class MCDeleteRegistry : public MCUnaryFunctionCtxt<MCStringRef, bool, &MCExecContext::EvalExprAsStringRef, MCFilesEvalDeleteRegistry, EE_SETREGISTRY_BADEXP, PE_SETREGISTRY_BADPARAM, kMCFilesEvalDeleteRegistryMethodInfo>
+class MCDeleteRegistry : public MCUnaryFunctionCtxt<MCStringRef, bool, MCFilesEvalDeleteRegistry, EE_SETREGISTRY_BADEXP, PE_SETREGISTRY_BADPARAM, kMCFilesEvalDeleteRegistryMethodInfo>
 {
 public:
     MCDeleteRegistry(){}
     virtual ~MCDeleteRegistry(){}
 };
 
-class MCListRegistry : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCFilesEvalListRegistry, EE_SETREGISTRY_BADEXP, PE_SETREGISTRY_BADPARAM, kMCFilesEvalListRegistryMethodInfo>
+class MCListRegistry : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCFilesEvalListRegistry, EE_SETREGISTRY_BADEXP, PE_SETREGISTRY_BADPARAM, kMCFilesEvalListRegistryMethodInfo>
 {
 public:
     MCListRegistry(){}
@@ -1841,21 +1893,21 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCSpecialFolderPath : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCFilesEvalSpecialFolderPath, EE_SPECIALFOLDERPATH_BADPARAM, PE_SPECIALFOLDERPATH_BADTYPE, kMCFilesEvalSpecialFolderPathMethodInfo>
+class MCSpecialFolderPath : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCFilesEvalSpecialFolderPath, EE_SPECIALFOLDERPATH_BADPARAM, PE_SPECIALFOLDERPATH_BADTYPE, kMCFilesEvalSpecialFolderPathMethodInfo>
 {
 public:
     MCSpecialFolderPath(){}
     virtual ~MCSpecialFolderPath(){}
 };
 
-class MCShortFilePath : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCFilesEvalShortFilePath, EE_SHORTFILEPATH_BADSOURCE, PE_SHORTFILEPATH_BADPARAM, kMCFilesEvalShortFilePathMethodInfo>
+class MCShortFilePath : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCFilesEvalShortFilePath, EE_SHORTFILEPATH_BADSOURCE, PE_SHORTFILEPATH_BADPARAM, kMCFilesEvalShortFilePathMethodInfo>
 {
 public:
     MCShortFilePath(){}
     virtual ~MCShortFilePath(){}
 };
 
-class MCLongFilePath : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCFilesEvalLongFilePath, EE_LONGFILEPATH_BADSOURCE, PE_LONGFILEPATH_BADPARAM, kMCFilesEvalLongFilePathMethodInfo>
+class MCLongFilePath : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCFilesEvalLongFilePath, EE_LONGFILEPATH_BADSOURCE, PE_LONGFILEPATH_BADPARAM, kMCFilesEvalLongFilePathMethodInfo>
 {
 public:
     MCLongFilePath(){}
@@ -1869,7 +1921,7 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCScriptingEvalAlternateLanguagesMethodInfo; }
 };
 
-class MCAliasReference: public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, &MCExecContext::EvalExprAsStringRef, MCFilesEvalAliasReference, EE_ALIASREFERENCE_BADSOURCE, PE_ALIASREFERENCE_BADPARAM, kMCFilesEvalAliasReferenceMethodInfo>
+class MCAliasReference: public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCFilesEvalAliasReference, EE_ALIASREFERENCE_BADSOURCE, PE_ALIASREFERENCE_BADPARAM, kMCFilesEvalAliasReferenceMethodInfo>
 {
 public:
     MCAliasReference(){}
@@ -1885,14 +1937,14 @@ public:
 
 // Math functions in funcsm.cpp
 
-class MCAbsFunction : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalAbs, EE_ABS_BADSOURCE, PE_ABS_BADPARAM, kMCMathEvalAbsMethodInfo>
+class MCAbsFunction : public MCUnaryFunctionCtxt<double, double, MCMathEvalAbs, EE_ABS_BADSOURCE, PE_ABS_BADPARAM, kMCMathEvalAbsMethodInfo>
 {
 public:
 	MCAbsFunction(){}
     virtual ~MCAbsFunction(){}
 };
 
-class MCAcos : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalAcos, EE_ACOS_BADSOURCE, PE_ACOS_BADPARAM, kMCMathEvalAcosMethodInfo>
+class MCAcos : public MCUnaryFunctionCtxt<double, double, MCMathEvalAcos, EE_ACOS_BADSOURCE, PE_ACOS_BADPARAM, kMCMathEvalAcosMethodInfo>
 {
 	public:
 	MCAcos(){}	
@@ -1915,27 +1967,21 @@ public:
 };
 
 // JS-2013-06-19: [[ StatsFunctions ]] Definition of arithmeticMean
-class MCArithmeticMean : public MCFunction
+class MCArithmeticMean : public MCParamFunctionCtxt<MCMathEvalArithmeticMean, EE_AVERAGE_BADSOURCE, PE_AVERAGE_BADPARAM, kMCMathEvalArithmeticMeanMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCArithmeticMean()
-	{
-		params = NULL;
-	}
-	virtual ~MCArithmeticMean();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    MCArithmeticMean(){}
+    virtual ~MCArithmeticMean(){}
 };
 
-class MCAsin : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalAsin, EE_ASIN_BADSOURCE, PE_ASIN_BADPARAM, kMCMathEvalAsinMethodInfo>
+class MCAsin : public MCUnaryFunctionCtxt<double, double, MCMathEvalAsin, EE_ASIN_BADSOURCE, PE_ASIN_BADPARAM, kMCMathEvalAsinMethodInfo>
 {
 public:
 	MCAsin(){}
 	virtual ~MCAsin(){}
 };
 
-class MCAtan : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalAtan, EE_ATAN_BADSOURCE, PE_ATAN_BADPARAM, kMCMathEvalAtanMethodInfo>
+class MCAtan : public MCUnaryFunctionCtxt<double, double, MCMathEvalAtan, EE_ATAN_BADSOURCE, PE_ATAN_BADPARAM, kMCMathEvalAtanMethodInfo>
 {
 public:
 	MCAtan(){}
@@ -1958,20 +2004,11 @@ public:
 };
 
 // JS-2013-06-19: [[ StatsFunctions ]] Definition of averageDev (was average)
-class MCAvgDev : public MCFunction
+class MCAvgDev : public MCParamFunctionCtxt<MCMathEvalAverageDeviation, EE_AVERAGE_BADSOURCE, PE_AVERAGE_BADPARAM, kMCMathEvalAverageMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCAvgDev()
-	{
-		params = NULL;
-	}
-	virtual ~MCAvgDev();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalAverageMethodInfo; }
-	virtual MCParameter *getmethodarg(void) const { return params; }
+    MCAvgDev(){}
+    virtual ~MCAvgDev(){}
 };
 
 class MCCompound : public MCFunction
@@ -1989,35 +2026,35 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCCos : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalCos, EE_COS_BADSOURCE, PE_COS_BADPARAM, kMCMathEvalCosMethodInfo>
+class MCCos : public MCUnaryFunctionCtxt<double, double, MCMathEvalCos, EE_COS_BADSOURCE, PE_COS_BADPARAM, kMCMathEvalCosMethodInfo>
 {
 public:
 	MCCos(){}
 	virtual ~MCCos(){}
 };
 
-class MCExp : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalExp, EE_EXP_BADSOURCE, PE_EXP_BADPARAM, kMCMathEvalExpMethodInfo>
+class MCExp : public MCUnaryFunctionCtxt<double, double, MCMathEvalExp, EE_EXP_BADSOURCE, PE_EXP_BADPARAM, kMCMathEvalExpMethodInfo>
 {
 public:
 	MCExp(){}
 	virtual ~MCExp(){}
 };
 
-class MCExp1 : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalExp1, EE_EXP1_BADSOURCE, PE_EXP1_BADPARAM, kMCMathEvalExp1MethodInfo>
+class MCExp1 : public MCUnaryFunctionCtxt<double, double, MCMathEvalExp1, EE_EXP1_BADSOURCE, PE_EXP1_BADPARAM, kMCMathEvalExp1MethodInfo>
 {
 public:
 	MCExp1(){}
 	virtual ~MCExp1(){}
 };
 
-class MCExp2 : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalExp2, EE_EXP2_BADSOURCE, PE_EXP2_BADPARAM, kMCMathEvalExp2MethodInfo>
+class MCExp2 : public MCUnaryFunctionCtxt<double, double, MCMathEvalExp2, EE_EXP2_BADSOURCE, PE_EXP2_BADPARAM, kMCMathEvalExp2MethodInfo>
 {
 public:
 	MCExp2(){}
 	virtual ~MCExp2(){}
 };
 
-class MCExp10 : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalExp10, EE_EXP10_BADSOURCE, PE_EXP10_BADPARAM, kMCMathEvalExp10MethodInfo>
+class MCExp10 : public MCUnaryFunctionCtxt<double, double, MCMathEvalExp10, EE_EXP10_BADSOURCE, PE_EXP10_BADPARAM, kMCMathEvalExp10MethodInfo>
 {
 public:
 	MCExp10(){}
@@ -2025,55 +2062,43 @@ public:
 };
 
 // JS-2013-06-19: [[ StatsFunctions ]] Definition of geometricMean
-class MCGeometricMean : public MCFunction
+class MCGeometricMean : public MCParamFunctionCtxt<MCMathEvalGeometricMean, EE_GEO_MEAN_BADSOURCE, PE_GEO_MEAN_BADPARAM, kMCMathEvalGeometricMeanMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCGeometricMean()
-	{
-		params = NULL;
-	}
-	virtual ~MCGeometricMean();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    MCGeometricMean(){}
+    virtual ~MCGeometricMean(){}
 };
 
 // JS-2013-06-19: [[ StatsFunctions ]] Definition of harmonicMean
-class MCHarmonicMean : public MCFunction
+class MCHarmonicMean : public MCParamFunctionCtxt<MCMathEvalHarmonicMean, EE_HAR_MEAN_BADSOURCE, PE_HAR_MEAN_BADPARAM, kMCMathEvalHarmonicMeanMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCHarmonicMean()
-	{
-		params = NULL;
-	}
-	virtual ~MCHarmonicMean();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    MCHarmonicMean(){}
+    virtual ~MCHarmonicMean(){}
 };
 
-class MCLn : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalLn, EE_LN_BADSOURCE, PE_LN_BADPARAM, kMCMathEvalLnMethodInfo>
+class MCLn : public MCUnaryFunctionCtxt<double, double, MCMathEvalLn, EE_LN_BADSOURCE, PE_LN_BADPARAM, kMCMathEvalLnMethodInfo>
 {
 public:
 	MCLn(){}
 	virtual ~MCLn(){}
 };
 
-class MCLn1 : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalLn1, EE_LN1_BADSOURCE, PE_LN1_BADPARAM, kMCMathEvalLn1MethodInfo>
+class MCLn1 : public MCUnaryFunctionCtxt<double, double, MCMathEvalLn1, EE_LN1_BADSOURCE, PE_LN1_BADPARAM, kMCMathEvalLn1MethodInfo>
 {
 public:
 	MCLn1(){}
 	virtual ~MCLn1(){}
 };
 
-class MCLog2 : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalLog2, EE_LOG2_BADSOURCE, PE_LOG2_BADPARAM, kMCMathEvalLog2MethodInfo>
+class MCLog2 : public MCUnaryFunctionCtxt<double, double, MCMathEvalLog2, EE_LOG2_BADSOURCE, PE_LOG2_BADPARAM, kMCMathEvalLog2MethodInfo>
 {
 public:
 	MCLog2(){}
 	virtual ~MCLog2(){}
 };
 
-class MCLog10 : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalLog10, EE_LOG10_BADSOURCE, PE_LOG10_BADPARAM, kMCMathEvalLog10MethodInfo>
+class MCLog10 : public MCUnaryFunctionCtxt<double, double, MCMathEvalLog10, EE_LOG10_BADSOURCE, PE_LOG10_BADPARAM, kMCMathEvalLog10MethodInfo>
 {
 public:
 	MCLog10(){}
@@ -2096,69 +2121,42 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCMaxFunction : public MCParamFunction
+class MCMaxFunction : public MCParamFunctionCtxt<MCMathEvalMax, EE_MAX_BADSOURCE, PE_MAX_BADPARAM, kMCMathEvalMaxMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCMaxFunction()
-	{
-		params = NULL;
-	}
-	virtual ~MCMaxFunction();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalMaxMethodInfo; }
-	virtual MCParameter *getmethodarg(void) const { return params; }
+    MCMaxFunction(){}
+    virtual ~MCMaxFunction(){}
 };
 
-class MCMedian : public MCParamFunction
+class MCMedian : public MCParamFunctionCtxt<MCMathEvalMedian, EE_MEDIAN_BADSOURCE, PE_MEDIAN_BADPARAM, kMCMathEvalMedianMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCMedian()
-	{
-		params = NULL;
-	}
-	virtual ~MCMedian();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalMedianMethodInfo; }
-	virtual MCParameter *getmethodarg(void) const { return params; }
+    MCMedian(){}
+    virtual ~MCMedian(){}
 };
 
-class MCMD5Digest : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, &MCExecContext::EvalExprAsDataRef, MCFiltersEvalMD5Digest, EE_MD5DIGEST_BADSOURCE, PE_MD5DIGEST_BADPARAM, kMCFiltersEvalMD5DigestMethodInfo>
+class MCMD5Digest : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, MCFiltersEvalMD5Digest, EE_MD5DIGEST_BADSOURCE, PE_MD5DIGEST_BADPARAM, kMCFiltersEvalMD5DigestMethodInfo>
 {
 public:
 	MCMD5Digest(){}
 	virtual ~MCMD5Digest(){}
 };
 
-class MCSHA1Digest : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, &MCExecContext::EvalExprAsDataRef, MCFiltersEvalSHA1Digest, EE_SHA1DIGEST_BADSOURCE, PE_SHA1DIGEST_BADPARAM, kMCFiltersEvalSHA1DigestMethodInfo>
+class MCSHA1Digest : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, MCFiltersEvalSHA1Digest, EE_SHA1DIGEST_BADSOURCE, PE_SHA1DIGEST_BADPARAM, kMCFiltersEvalSHA1DigestMethodInfo>
 {
 public:
 	MCSHA1Digest(){}
 	virtual ~MCSHA1Digest(){}
 };
 
-class MCMinFunction : public MCParamFunction
+class MCMinFunction : public MCParamFunctionCtxt<MCMathEvalMin, EE_MIN_BADSOURCE, PE_MIN_BADPARAM, kMCMathEvalMinMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCMinFunction()
-	{
-		params = NULL;
-	}
-	virtual ~MCMinFunction();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalMinMethodInfo; }
-	virtual MCParameter *getmethodarg(void) const { return params; }
+    MCMinFunction(){}
+    virtual ~MCMinFunction(){}
 };
 
-class MCRandom : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalRandom, EE_RANDOM_BADSOURCE, PE_RANDOM_BADPARAM, kMCMathEvalRandomMethodInfo>
+class MCRandom : public MCUnaryFunctionCtxt<double, double, MCMathEvalRandom, EE_RANDOM_BADSOURCE, PE_RANDOM_BADPARAM, kMCMathEvalRandomMethodInfo>
 {
 public:
 	MCRandom(){}
@@ -2180,7 +2178,7 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCSin : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalSin, EE_SIN_BADSOURCE, PE_SIN_BADPARAM, kMCMathEvalSinMethodInfo>
+class MCSin : public MCUnaryFunctionCtxt<double, double, MCMathEvalSin, EE_SIN_BADSOURCE, PE_SIN_BADPARAM, kMCMathEvalSinMethodInfo>
 {
 public:
 	MCSin(){}
@@ -2188,34 +2186,22 @@ public:
 };
 
 // JS-2013-06-19: [[ StatsFunctions ]] Definition of sampleStdDev (was stdDev)
-class MCSampleStdDev : public MCFunction
+class MCSampleStdDev : public MCParamFunctionCtxt<MCMathEvalSampleStdDev, EE_STDDEV_BADSOURCE, PE_STDDEV_BADPARAM, kMCMathEvalSampleStdDevMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCSampleStdDev()
-	{
-		params = NULL;
-	}
-	virtual ~MCSampleStdDev();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    MCSampleStdDev(){}
+    virtual ~MCSampleStdDev(){}
 };
 
 // JS-2013-06-19: [[ StatsFunctions ]] Definition of sampleVariance
-class MCSampleVariance : public MCFunction
+class MCSampleVariance : public MCParamFunctionCtxt<MCMathEvalPopulationVariance, EE_VARIANCE_BADSOURCE, PE_VARIANCE_BADPARAM, kMCMathEvalPopulationVarianceMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCSampleVariance()
-	{
-		params = NULL;
-	}
-	virtual ~MCSampleVariance();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    MCSampleVariance(){}
+    virtual ~MCSampleVariance(){}
 };
 
-class MCSqrt : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalSqrt, EE_SQRT_BADSOURCE, PE_SQRT_BADPARAM, kMCMathEvalSqrtMethodInfo>
+class MCSqrt : public MCUnaryFunctionCtxt<double, double, MCMathEvalSqrt, EE_SQRT_BADSOURCE, PE_SQRT_BADPARAM, kMCMathEvalSqrtMethodInfo>
 {
 public:
 	MCSqrt(){}
@@ -2237,39 +2223,21 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCStdDev : public MCParamFunction
+class MCStdDev : public MCParamFunctionCtxt<MCMathEvalSampleStdDev, EE_STDDEV_BADSOURCE, PE_STDDEV_BADPARAM, kMCMathEvalSampleStdDevMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCStdDev()
-	{
-		params = NULL;
-	}
-	virtual ~MCStdDev();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalMinMethodInfo; }
-	virtual MCParameter *getmethodarg(void) const { return params; }
+    MCStdDev(){}
+    virtual ~MCStdDev(){}
 };
 
-class MCSum : public MCParamFunction
+class MCSum : public MCParamFunctionCtxt<MCMathEvalSum, EE_SUM_BADSOURCE, PE_SUM_BADPARAM, kMCMathEvalSumMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCSum()
-	{
-		params = NULL;
-	}
-	virtual ~MCSum();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalSumMethodInfo; }
-	virtual MCParameter *getmethodarg(void) const { return params; }
+    MCSum(){}
+    virtual ~MCSum(){}
 };
 
-class MCTan : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalTan, EE_TAN_BADSOURCE, PE_TAN_BADPARAM, kMCMathEvalTanMethodInfo>
+class MCTan : public MCUnaryFunctionCtxt<double, double, MCMathEvalTan, EE_TAN_BADSOURCE, PE_TAN_BADPARAM, kMCMathEvalTanMethodInfo>
 {
 public:
 	MCTan(){}
@@ -2290,14 +2258,14 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCTranspose : public MCUnaryFunctionCtxt<MCArrayRef, MCArrayRef, &MCExecContext::EvalExprAsArrayRef, MCArraysEvalTransposeMatrix, EE_TRANSPOSE_BADSOURCE, PE_TRANSPOSE_BADPARAM, kMCArraysEvalTransposeMatrixMethodInfo>
+class MCTranspose : public MCUnaryFunctionCtxt<MCArrayRef, MCArrayRef, MCArraysEvalTransposeMatrix, EE_TRANSPOSE_BADSOURCE, PE_TRANSPOSE_BADPARAM, kMCArraysEvalTransposeMatrixMethodInfo>
 {
 public:
 	MCTranspose(){}
 	virtual ~MCTranspose(){}
 };
 
-class MCTrunc : public MCUnaryFunctionCtxt<double, double, &MCExecContext::EvalExprAsDouble, MCMathEvalTrunc, EE_TRUNC_BADSOURCE, PE_TRUNC_BADPARAM, kMCMathEvalTruncMethodInfo>
+class MCTrunc : public MCUnaryFunctionCtxt<double, double, MCMathEvalTrunc, EE_TRUNC_BADSOURCE, PE_TRUNC_BADPARAM, kMCMathEvalTruncMethodInfo>
 {
 public:
     MCTrunc(){}
@@ -2331,7 +2299,7 @@ private:
 	static char *PACmyIpAddress(const char* const* p_arguments, unsigned int p_argument_count);
 };
 
-class MCRandomBytes: public MCUnaryFunctionCtxt<uinteger_t, MCDataRef, &MCExecContext::EvalExprAsUInt, MCSecurityEvalRandomBytes, EE_RANDOMBYTES_BADCOUNT, PE_RANDOMBYTES_BADPARAM, kMCSecurityEvalRandomBytesMethodInfo>
+class MCRandomBytes: public MCUnaryFunctionCtxt<uinteger_t, MCDataRef, MCSecurityEvalRandomBytes, EE_RANDOMBYTES_BADCOUNT, PE_RANDOMBYTES_BADPARAM, kMCSecurityEvalRandomBytesMethodInfo>
 {
 public:
     MCRandomBytes(void){}

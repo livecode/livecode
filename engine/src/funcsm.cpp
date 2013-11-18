@@ -39,92 +39,95 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "exec.h"
 
-Exec_stat MCFunction::params_to_doubles(MCExecPoint& ep, MCParameter *p_params, real64_t*& r_doubles, uindex_t& r_count)
+bool MCParamFunction::params_to_doubles(MCExecContext& ctxt, real64_t *&r_doubles, uindex_t &r_count)
 {
 	MCAutoArray<real64_t> t_list;
 	real64_t t_number;
 
-	if (p_params != NULL && p_params->getnext() == NULL)
+    if (params != NULL && params->getnext() == NULL)
 	{
-		if (p_params->eval(ep) != ES_NORMAL)
+        MCAutoValueRef t_paramvalue;
+        if (params->eval(ctxt, &t_paramvalue) != ES_NORMAL)
 		{
-			MCeerror->add(EE_FUNCTION_BADSOURCE, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_FUNCTION_BADSOURCE);
+            return false;
 		}
-		if (ep.isarray())
+
+        if (MCValueIsArray(*t_paramvalue))
 		{
+            MCArrayRef t_array = (MCArrayRef)*t_paramvalue;
 			MCNameRef t_key;
 			MCValueRef t_value;
 			uintptr_t t_index = 0;
-			while (MCArrayIterate(ep.getarrayref(), t_index, t_key, t_value))
+
+            while (MCArrayIterate(t_array, t_index, t_key, t_value))
 			{
-				if (!ep.convertvaluereftoreal(t_value, t_number))
+                if (ctxt . ConvertToReal(t_value, t_number))
 				{
-					MCeerror->add(EE_FUNCTION_BADSOURCE, line, pos);
-					return ES_ERROR;
+                    ctxt . LegacyThrow(EE_FUNCTION_BADSOURCE);
+                    return false;
 				}
+
 				if (!t_list.Push(t_number))
-					return ES_ERROR;
+                    return false;
 			}
 		}
-		else
+        else
 		{
-			MCString s(ep.getsvalue());
-			uint4 length = s.getlength();
-			const char *sptr = s.getstring();
-			MCU_skip_spaces(sptr, length);
-			while (length != 0)
-			{
-				s.setstring(sptr);
-				if (!MCU_strchr(sptr, length, ','))
-				{
-					s.setlength(length);
-					length = 0;
-				}
-				else
-				{
-					s.setlength(sptr - s.getstring());
-					MCU_skip_char(sptr, length);
-					MCU_skip_spaces(sptr, length);
-				}
-				if (s.getlength() == 0)
-					t_number = 0.0;
-  				else
-				{
-					if (!MCU_stor8(s, t_number))
-					{
-						MCeerror->add(EE_FUNCTION_NAN, 0, 0, s);
-						return ES_ERROR;
-					}
-				}
-				
-				if (!t_list.Push(t_number))
-					return ES_ERROR;
+            MCAutoStringRef t_string;
+            MCAutoArrayRef t_array;
+
+            if (!ctxt . ConvertToString(*t_paramvalue, &t_string)
+                    || !MCStringSplit(*t_string, MCSTR(","), nil, kMCStringOptionCompareExact, &t_array))
+            {
+                ctxt . LegacyThrow(EE_FUNCTION_BADSOURCE);
+                return false;
+            }
+
+            for (uinteger_t i = 0 ; i < MCArrayGetCount(*t_array) ; ++i)
+            {
+                MCValueRef t_value;
+                /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_array, i, t_value);
+
+                if (MCValueIsEmpty(t_value))
+                    t_number = 0.0;
+                else
+                {
+                    if (!ctxt . ConvertToReal(t_value, t_number))
+                    {
+                        ctxt . LegacyThrow(EE_FUNCTION_BADSOURCE);
+                        return false;
+                    }
+                }
+
+                if (!t_list.Push(t_number))
+                    return false;
 			}
 		}
 	}
 	else
 	{
-		MCParameter *t_param = p_params;
+        MCParameter *t_param = params;
 		while (t_param != NULL)
 		{
-			if (t_param->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            MCAutoValueRef t_value;
+            real64_t t_double;
+            if (!t_param->eval(ctxt, &t_value) || !ctxt . ConvertToReal(*t_value, t_double))
 			{
-				MCeerror->add(EE_FUNCTION_BADSOURCE, line, pos);
-				return ES_ERROR;
+                ctxt . LegacyThrow(EE_FUNCTION_BADSOURCE);
+                return false;
 			}
             
-			if (!t_list.Push(ep.getnvalue()))
-				return ES_ERROR;
+            if (!t_list.Push(t_double))
+                return false;
             
 			t_param = t_param->getnext();
 		}
 	}
     
 	t_list.Take(r_doubles, r_count);
- 	return ES_NORMAL;   
+    return true;
 }
-
 
 #ifdef /* MCAbsFunction */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
@@ -209,61 +212,14 @@ void MCAnnuity::compile(MCSyntaxFactoryRef ctxt)
 	compile_with_args(ctxt, kMCMathEvalAnnuityMethodInfo, rate, periods);
 }
 
-// JS-2013-06-19: [[ StatsFunctions ]] Implementation of arithmeticMean (was average)
-MCArithmeticMean::~MCArithmeticMean()
-{
-	while (params != NULL)
-	{
-		MCParameter *tparams = params;
-		params = params->getnext();
-		delete tparams;
-	}
-}
-
-Parse_stat MCArithmeticMean::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-	
-	if (getparams(sp, &params) != PS_NORMAL)
-	{
-		MCperror->add(PE_AVERAGE_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCArithmeticMean::eval(MCExecPoint &ep)
-{
-#ifdef LEGACY_EXEC
+#ifdef /* MCArithmeticMean */ LEGACY_EXEC
 	if (evalparams(F_ARI_MEAN, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_AVERAGE_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-#endif
-    
-	MCExecContext ctxt(ep);
-	MCAutoArray<real64_t> t_values;
-	real64_t t_result;
-    
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
-	{
-		MCeerror->add(EE_AVERAGE_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-    
-	MCMathEvalArithmeticMean(ctxt, t_values.Ptr(), t_values.Size(), t_result);
-    
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt.Catch(line, pos);
-}
-
+#endif /* MCArithmeticMean */
 
 #ifdef /* MCAsin */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
@@ -364,31 +320,6 @@ void MCAtan2::compile(MCSyntaxFactoryRef ctxt)
 	compile_with_args(ctxt, kMCMathEvalAtan2MethodInfo, s1, s2);
 }
 
-// JS-2013-06-19: [[ StatsFunctions ]] Implementation of averageDeviation
-MCAvgDev::~MCAvgDev()
-{
-	while (params != NULL)
-	{
-		MCParameter *tparams = params;
-		params = params->getnext();
-		delete tparams;
-	}
-}
-
-Parse_stat MCAvgDev::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-	
-	if (getparams(sp, &params) != PS_NORMAL)
-	{
-		MCperror->add(PE_AVERAGE_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCAvgDev::eval(MCExecPoint &ep)
-{
 #ifdef /* MCAverage */ LEGACY_EXEC
 
 	if (evalparams(F_AVG_DEV, params, ep) != ES_NORMAL)
@@ -398,27 +329,6 @@ Exec_stat MCAvgDev::eval(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCAverage */
-
-	MCExecContext ctxt(ep);
-	MCAutoArray<real64_t> t_values;
-	real64_t t_result;
-
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
-	{
-		MCeerror->add(EE_AVERAGE_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCMathEvalAverageDeviation(ctxt, t_values.Ptr(), t_values.Size(), t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 MCCompound::~MCCompound()
 {
@@ -568,117 +478,23 @@ void MCCompound::compile(MCSyntaxFactoryRef ctxt)
 	return ES_NORMAL;
 #endif /* MCExp10 */
 
-
-// JS-2013-06-19: [[ StatsFunctions ]] Implementation of geometricMean
-MCGeometricMean::~MCGeometricMean()
-{
-	while (params != NULL)
-	{
-		MCParameter *tparams = params;
-		params = params->getnext();
-		delete tparams;
-	}
-}
-
-Parse_stat MCGeometricMean::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-	
-	if (getparams(sp, &params) != PS_NORMAL)
-	{
-		MCperror->add(PE_GEO_MEAN_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCGeometricMean::eval(MCExecPoint &ep)
-{
-#ifdef LEGACY_EXEC
+#ifdef /* MCGeometricMean */ LEGACY_EXEC
 	if (evalparams(F_GEO_MEAN, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_GEO_MEAN_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-#endif
-    
-	MCExecContext ctxt(ep);
-	MCAutoArray<real64_t> t_values;
-	real64_t t_result;
-    
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
-	{
-		MCeerror->add(EE_GEO_MEAN_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-    
-	MCMathEvalGeometricMean(ctxt, t_values.Ptr(), t_values.Size(), t_result);
-    
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt.Catch(line, pos);
-}
+#endif /* MCGeometricMean */
 
-// JS-2013-06-19: [[ StatsFunctions ]] Implementation of harmonicMean
-MCHarmonicMean::~MCHarmonicMean()
-{
-	while (params != NULL)
-	{
-		MCParameter *tparams = params;
-		params = params->getnext();
-		delete tparams;
-	}
-}
-
-Parse_stat MCHarmonicMean::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-	
-	if (getparams(sp, &params) != PS_NORMAL)
-	{
-		MCperror->add(PE_HAR_MEAN_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCHarmonicMean::eval(MCExecPoint &ep)
-{
-#ifdef LEGACY_EXEC
+#ifdef /* MCHarmonicMean */ LEGACY_EXEC
 	if (evalparams(F_HAR_MEAN, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_HAR_MEAN_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-#endif
-    
-	MCExecContext ctxt(ep);
-	MCAutoArray<real64_t> t_values;
-	real64_t t_result;
-    
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
-	{
-		MCeerror->add(EE_STDDEV_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-    
-	MCMathEvalHarmonicMean(ctxt, t_values.Ptr(), t_values.Size(), t_result);
-    
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt.Catch(line, pos);
-}
-
+#endif /* MCHarmonicMean */
 
 #ifdef /* MCLn */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
@@ -841,30 +657,6 @@ void MCMatrixMultiply::compile(MCSyntaxFactoryRef ctxt)
 	compile_with_args(ctxt, kMCArraysEvalMatrixMultiplyMethodInfo, dest, source);
 }
 
-MCMaxFunction::~MCMaxFunction()
-{
-	while (params != NULL)
-	{
-		MCParameter *tparams = params;
-		params = params->getnext();
-		delete tparams;
-	}
-}
-
-Parse_stat MCMaxFunction::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (getparams(sp, &params) != PS_NORMAL)
-	{
-		MCperror->add(PE_MAX_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCMaxFunction::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMaxFunction */ LEGACY_EXEC
 	if (evalparams(F_MAX, params, ep) != ES_NORMAL)
 	{
@@ -874,51 +666,6 @@ Exec_stat MCMaxFunction::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCMaxFunction */
 
-	MCExecContext ctxt(ep);
-	MCAutoArray<real64_t> t_values;
-	real64_t t_result;
-
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
-	{
-		MCeerror->add(EE_MAX_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCMathEvalMax(ctxt, t_values.Ptr(), t_values.Size(), t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-MCMedian::~MCMedian()
-{
-	while (params != NULL)
-	{
-		MCParameter *tparams = params;
-		params = params->getnext();
-		delete tparams;
-	}
-}
-
-Parse_stat MCMedian::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (getparams(sp, &params) != PS_NORMAL)
-	{
-		MCperror->add(PE_MEDIAN_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCMedian::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMedian */ LEGACY_EXEC
 	if (evalparams(F_MEDIAN, params, ep) != ES_NORMAL)
 	{
@@ -927,28 +674,6 @@ Exec_stat MCMedian::eval(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCMedian */
-    
-	MCExecContext ctxt(ep);
-	MCAutoArray<real64_t> t_values;
-	real64_t t_result;
-
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
-	{
-		MCeerror->add(EE_MEDIAN_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCMathEvalMedian(ctxt, t_values.Ptr(), t_values.Size(), t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
 
 #ifdef /* MCMD5Digest */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
@@ -981,31 +706,6 @@ Exec_stat MCMedian::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCSHA1Digest */
 
-
-MCMinFunction::~MCMinFunction()
-{
-	while (params != NULL)
-	{
-		MCParameter *tparams = params;
-		params = params->getnext();
-		delete tparams;
-	}
-}
-
-Parse_stat MCMinFunction::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (getparams(sp, &params) != PS_NORMAL)
-	{
-		MCperror->add(PE_MIN_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCMinFunction::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMinFunction */ LEGACY_EXEC
 	if (evalparams(F_MIN, params, ep) != ES_NORMAL)
 	{
@@ -1015,136 +715,23 @@ Exec_stat MCMinFunction::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCMinFunction */
 
-	MCExecContext ctxt(ep);
-	MCAutoArray<real64_t> t_values;
-	real64_t t_result;
-
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
-	{
-		MCeerror->add(EE_MIN_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCMathEvalMin(ctxt, t_values.Ptr(), t_values.Size(), t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-// JS-2013-06-19: [[ StatsFunctions ]] Implementation of populationStdDev
-MCPopulationStdDev::~MCPopulationStdDev()
-{
-	while (params != NULL)
-	{
-		MCParameter *tparams = params;
-		params = params->getnext();
-		delete tparams;
-	}
-}
-
-Parse_stat MCPopulationStdDev::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-	
-	if (getparams(sp, &params) != PS_NORMAL)
-	{
-		MCperror->add(PE_POP_STDDEV_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCPopulationStdDev::eval(MCExecPoint &ep)
-{
-#ifdef LEGACY_EXEC
+#ifdef /* MCPopulationStdDev */ LEGACY_EXEC
 	if (evalparams(F_POP_STD_DEV, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_POP_VARIANCE_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-#endif
-    
-	MCExecContext ctxt(ep);
-	MCAutoArray<real64_t> t_values;
-	real64_t t_result;
-    
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
-	{
-		MCeerror->add(EE_POP_VARIANCE_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-    
-	MCMathEvalPopulationStdDev(ctxt, t_values.Ptr(), t_values.Size(), t_result);
-    
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt.Catch(line, pos);
-}
+#endif /* MCPopulationStdDev */
 
-// JS-2013-06-19: [[ StatsFunctions ]] Implementation of populationVariance
-MCPopulationVariance::~MCPopulationVariance()
-{
-	while (params != NULL)
-	{
-		MCParameter *tparams = params;
-		params = params->getnext();
-		delete tparams;
-	}
-}
-
-Parse_stat MCPopulationVariance::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-	
-	if (getparams(sp, &params) != PS_NORMAL)
-	{
-		MCperror->add(PE_POP_VARIANCE_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCPopulationVariance::eval(MCExecPoint &ep)
-{
-#ifdef LEGACY_EXEC
+#ifdef /* MCPopulationVariance */ LEGACY_EXEC
 	if (evalparams(F_POP_VARIANCE, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_POP_VARIANCE_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-#endif
-    
-	MCExecContext ctxt(ep);
-	MCAutoArray<real64_t> t_values;
-	real64_t t_result;
-    
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
-	{
-		MCeerror->add(EE_POP_VARIANCE_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-    
-	MCMathEvalPopulationVariance(ctxt, t_values.Ptr(), t_values.Size(), t_result);
-    
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt.Catch(line, pos);
-}
+#endif /* MCPopulationVariance */
 
 // MW-2007-07-03: [[ Bug 4506 ]] - Large integers result in negative numbers
 //   being generated.
@@ -1265,32 +852,6 @@ void MCRound::compile(MCSyntaxFactoryRef ctxt)
 	return ES_NORMAL;
 #endif /* MCSin */
 
-
-// JS-2013-06-19: [[ StatsFunctions ]] Implementation of sampleStdDev (was stdDev)
-MCSampleStdDev::~MCSampleStdDev()
-{
-	while (params != NULL)
-	{
-		MCParameter *tparams = params;
-		params = params->getnext();
-		delete tparams;
-	}
-}
-
-Parse_stat MCSampleStdDev::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-	
-	if (getparams(sp, &params) != PS_NORMAL)
-	{
-		MCperror->add(PE_STDDEV_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCSampleStdDev::eval(MCExecPoint &ep)
-{
 #ifdef /* MCSampleStdDev */ LEGACY_EXEC
 	if (evalparams(F_SMP_STD_DEV, params, ep) != ES_NORMAL)
 	{
@@ -1300,83 +861,15 @@ Exec_stat MCSampleStdDev::eval(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCSampleStdDev */
-    
-	MCExecContext ctxt(ep);
-	MCAutoArray<real64_t> t_values;
-	real64_t t_result;
-    
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
-	{
-		MCeerror->add(EE_STDDEV_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-    
-	MCMathEvalSampleStdDev(ctxt, t_values.Ptr(), t_values.Size(), t_result);
-    
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt.Catch(line, pos);
-}
 
-// JS-2013-06-19: [[ StatsFunctions ]] Implementation of sampleVariance
-MCSampleVariance::~MCSampleVariance()
-{
-	while (params != NULL)
-	{
-		MCParameter *tparams = params;
-		params = params->getnext();
-		delete tparams;
-	}
-}
-
-Parse_stat MCSampleVariance::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-	
-	if (getparams(sp, &params) != PS_NORMAL)
-	{
-		MCperror->add(PE_VARIANCE_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCSampleVariance::eval(MCExecPoint &ep)
-{
-#ifdef LEGACY_EXEC
+#ifdef /* MCSampleVariance */ LEGACY_EXEC
 	if (evalparams(F_SMP_VARIANCE, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_VARIANCE_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-#endif
-    
-	MCExecContext ctxt(ep);
-	MCAutoArray<real64_t> t_values;
-	real64_t t_result;
-    
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
-	{
-		MCeerror->add(EE_VARIANCE_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-    
-	MCMathEvalPopulationVariance(ctxt, t_values.Ptr(), t_values.Size(), t_result);
-    
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt.Catch(line, pos);
-}
-
+#endif /* MCSampleVariance */
 
 #ifdef /* MCSqrt */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
@@ -1477,30 +970,6 @@ void MCStatRound::compile(MCSyntaxFactoryRef ctxt)
 		compile_with_args(ctxt, kMCMathEvalStatRoundMethodInfo, source);
 }
 
-MCStdDev::~MCStdDev()
-{
-	while (params != NULL)
-	{
-		MCParameter *tparams = params;
-		params = params->getnext();
-		delete tparams;
-	}
-}
-
-Parse_stat MCStdDev::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (getparams(sp, &params) != PS_NORMAL)
-	{
-		MCperror->add(PE_STDDEV_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCStdDev::eval(MCExecPoint &ep)
-{
 #ifdef /* MCStdDev */ LEGACY_EXEC
 	if (evalparams(F_STD_DEV, params, ep) != ES_NORMAL)
 	{
@@ -1510,52 +979,6 @@ Exec_stat MCStdDev::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCStdDev */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoArray<real64_t> t_values;
-	real64_t t_result;
-
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
-	{
-		MCeerror->add(EE_STDDEV_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCMathEvalSampleStdDev(ctxt, t_values.Ptr(), t_values.Size(), t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-MCSum::~MCSum()
-{
-	while (params != NULL)
-	{
-		MCParameter *tparams = params;
-		params = params->getnext();
-		delete tparams;
-	}
-}
-
-Parse_stat MCSum::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (getparams(sp, &params) != PS_NORMAL)
-	{
-		MCperror->add(PE_SUM_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCSum::eval(MCExecPoint &ep)
-{
 #ifdef /* MCSum */ LEGACY_EXEC
 	if (evalparams(F_SUM, params, ep) != ES_NORMAL)
 	{
@@ -1564,28 +987,6 @@ Exec_stat MCSum::eval(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCSum */
-
-	MCExecContext ctxt(ep);
-	MCAutoArray<real64_t> t_values;
-	real64_t t_result;
-
-	if (params_to_doubles(ep, params, t_values.PtrRef(), t_values.SizeRef()) != ES_NORMAL)
-	{
-		MCeerror->add(EE_STDDEV_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
-
-	MCMathEvalSum(ctxt, t_values.Ptr(), t_values.Size(), t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
 
 #ifdef /* MCTan */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
