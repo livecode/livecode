@@ -30,6 +30,9 @@ const icu::Locale& MCLocaleGetICULocale(MCLocaleRef);
 // Converts from an ICU string to a StringRef
 bool MCStringCreateWithICUString(icu::UnicodeString&, MCStringRef &r_string);
 
+// Converts from a StringRef to an ICU string
+bool MCStringConvertToICUString(MCStringRef p_string, icu::UnicodeString&);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif  // ifndef __MC_FOUNDATION_UNICODE_PRIVATE__

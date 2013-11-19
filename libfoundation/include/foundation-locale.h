@@ -38,9 +38,6 @@ enum MCLocaleTextLayout
 // Opaque pointer type to a locale
 typedef struct __MCLocale* MCLocaleRef;
 
-// Gets a reference to the locale that the system is using
-bool    MCLocaleCreateDefault(MCLocaleRef &r_locale);
-
 // Gets a reference to the named locale or returns false
 bool    MCLocaleCreateWithName(MCStringRef p_locale_name, MCLocaleRef &r_locale);
 
@@ -56,9 +53,7 @@ void    MCLocaleRelease(MCLocaleRef p_locale);
 ////////////////////////////////////////////////////////////////////////////////
 
 // Well-known locales. Do not change these directly!
-extern MCLocaleRef MCLbasic;        // Compatible with older LiveCode versions
-extern MCLocaleRef MCLdefault;      // Locale in use by the system
-extern MCLocaleRef MCLcurrent;      // Current locale (if different from default)
+extern MCLocaleRef kMCLocaleBasic;        // Compatible with older LiveCode versions
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -84,25 +79,25 @@ bool MCLocaleSetCurrentLocale(MCLocaleRef);
 
 // Returns the identifying name of the given locale
 MCStringRef MCLocaleGetName(MCLocaleRef p_locale);
-bool MCLocaleGetNameLocalised(MCLocaleRef p_locale,
+bool MCLocaleCopyNameLocalised(MCLocaleRef p_locale,
                               MCLocaleRef p_in_language,
                               MCStringRef &r_string);
 
 // Returns the language code of the locale
 MCStringRef MCLocaleGetLanguage(MCLocaleRef);
-bool MCLocaleGetLanguageLocalised(MCLocaleRef p_locale,
+bool MCLocaleCopyLanguageLocalised(MCLocaleRef p_locale,
                                   MCLocaleRef p_in_language,
                                   MCStringRef &r_string);
 
 // Returns the country code of the locale
 MCStringRef MCLocaleGetCountry(MCLocaleRef);
-bool MCLocaleGetCountryLocalised(MCLocaleRef p_locale,
+bool MCLocaleCopyCountryLocalised(MCLocaleRef p_locale,
                                  MCLocaleRef p_in_language,
                                  MCStringRef &r_string);
 
 // Returns the writing script used by the locale
 MCStringRef MCLocaleGetScript(MCLocaleRef);
-bool MCLocaleGetScriptLocalised(MCLocaleRef p_locale,
+bool MCLocaleCopyScriptLocalised(MCLocaleRef p_locale,
                                  MCLocaleRef p_in_language,
                                  MCStringRef &r_string);
 
@@ -137,34 +132,19 @@ enum MCNumberFormatStyle
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Opaque number formatter handle
-typedef struct __MCNumberFormatter* MCNumberFormatterRef;
-
-// Creates a number formatter for the given number type in the given locale
-bool    MCNumberFormatterCreate(MCLocaleRef, MCNumberFormatStyle, MCNumberFormatterRef&);
-
-// Destroys a number formatter object
-void    MCNumberFormatterRelease(MCNumberFormatterRef);
-
-////////////////////////////////////////////////////////////////////////////////
-
-// Well-known number formatters using the current locale
-extern MCNumberFormatterRef MCNFdecimal;    // Standard decimal number
-extern MCNumberFormatterRef MCNFcurrency;   // Currency
-extern MCNumberFormatterRef MCNFordinal;    // 1st, 2nd, 3rd, etc
-
-// Well-known number formatters using the "basic" locale
-extern MCNumberFormatterRef MCNFbasic;    // Decimal numbers, non-localised
-
-////////////////////////////////////////////////////////////////////////////////
+// TODO: explain the pattern syntax for number formatting
 
 // Converts from an integer or floating-point value to text
-bool    MCLocaleNumberFormatInteger(MCNumberFormatterRef, int64_t, MCStringRef&);
-bool    MCLocaleNumberFormatReal(MCNumberFormatterRef, real64_t, MCStringRef&);
+bool    MCLocaleFormatInteger(MCLocaleRef, MCNumberFormatStyle, int64_t, MCStringRef&);
+bool    MCLocaleFormatReal(MCLocaleRef, MCNumberFormatStyle, real64_t, MCStringRef&);
+bool    MCLocaleFormatIntegerWithPattern(MCLocaleRef, MCStringRef, int64_t, MCStringRef&);
+bool    MCLocaleFormatRealWithPattern(MCLocaleRef, MCStringRef, real64_t, MCStringRef&);
 
 // Converts from text to an integer or floating-point value
-bool    MCLocaleNumberParseInteger(MCNumberFormatterRef, MCStringRef, int64_t&);
-bool    MCLocaleNumberParseReal(MCNumberFormatterRef, MCStringRef, real64_t&);
+bool    MCLocaleParseInteger(MCLocaleRef, MCNumberFormatStyle, MCStringRef, int64_t&);
+bool    MCLocaleParseReal(MCLocaleRef, MCNumberFormatStyle, MCStringRef, real64_t&);
+bool    MCLocalePatternParseInteger(MCLocaleRef, MCStringRef, MCStringRef, int64_t&);
+bool    MCLocalePatternParseReal(MCLocaleRef, MCStringRef, MCStringRef, real64_t&);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -178,7 +158,7 @@ enum MCCalendarType
     kMCCalendarTypeGregorian
 };
 
-// Symbolic names for days of the week
+// Symbolic names for days of the week. LiveCode months are 1-based
 enum MCDay
 {
     kMCDaySunday = 1,
@@ -190,10 +170,10 @@ enum MCDay
     kMCDaySaturday
 };
 
-// Symbolic names for months of the year
+// Symbolic names for months of the year. LiveCode months are 1-based
 enum MCMonth
 {
-    kMCMonthJanuary = 0,
+    kMCMonthJanuary = 1,
     kMCMonthFebruary,
     kMCMonthMarch,
     kMCMonthApril,
@@ -208,10 +188,64 @@ enum MCMonth
     kMCMonthUndecimber, // Thirteenth month; required for lunar calendars
 };
 
+// Time zone display name lengths
+enum MCTimeZoneDisplayType
+{
+    kMCTimeZoneDisplayTypeShort = 1,
+    kMCTimeZoneDisplayTypeLong,
+    kMCTimeZoneDisplayTypeShortGeneric,
+    kMCTimeZoneDisplayTimeLongGeneric,
+    kMCTimeZoneDisplayTypeShortGMT,
+    kMCTimeZoneDisplayTypeLongGMT,
+    kMCTimeZoneDisplayTypeShortCommonlyUsed,
+    kMCTimeZoneDisplayTypeGenericLocation
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
-// Time representation. Count of milliseconds since 1970-01-01 00:00:00
-typedef double MCDate;
+// Time representation. Count of milliseconds since 1970-01-01 00:00:00 UTC
+typedef double MCAbsoluteTime;
+
+// Wall-clock time. Note that some fields are redundant
+struct MCDate
+{
+    // For Gregorian calendars, the era value is always 0 and BC dates are
+    // indicated with negative year values. For non-Gregorian calendars, the
+    // era value indicates the era to which the year value is relative.
+    //
+    // The day_of_week_in_month field can be negative, this indicates "last"
+    // e.g -1 is last <day> of <month> and -2 is 2nd last <day> of <month>
+    
+    // When considering redundant fields, libfoundation uses the following
+    // preference order (use of combinations outside of this are undefined):
+    //  {month, day}
+    //  {month, day_of_week, day_of_week_in_month}
+    //  {month, week_of_month, day_of_week}
+    //  {week_of_year, day_of_week}
+    //  {day_of_year}
+    //
+    // All of these fields are 1-based so to remove a combination from
+    // contention, simply set one of the fields in that combination to 0.
+    
+    // Preferred fields
+    int32_t     m_year;         // Year of era
+    int8_t      m_era;          // Equivalent of AD/BC for non-Gregorian calendars
+    uint8_t     m_month;        // Month of year
+    uint8_t     m_day;          // Day of month
+    uint8_t     m_hour;         // Hour of day
+    uint8_t     m_minute;       // Minute of hour
+    uint8_t     m_second;       // Second of minute
+    uint16_t    m_milliseconds; // Milliseconds of second
+    
+    // Redundant fields
+    uint16_t    m_day_of_year;     // Number of days into the year
+    uint8_t     m_week_of_year;    // Number of weeks into the year
+    uint8_t     m_day_of_week;     // Number of days into the week
+    uint8_t     m_week_of_month;   // Number of weeks into the month
+    int8_t      m_day_of_week_in_month;    // The "2nd" part in "2nd Monday in April"
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 // NOTE ON TIME ZONES
 //
@@ -219,44 +253,60 @@ typedef double MCDate;
 //      America/Los_Angeles
 //      Europe/London
 //
-// TODO: create an opaque Time Zone type
-typedef MCStringRef MCTimeZoneRef;
 
-// Opaque type representing a calendar
-typedef struct __MCCalendar* MCCalendarRef;
+// Opaque type representing a time zone
+typedef struct __MCTimeZone* MCTimeZoneRef;
 
-// Creates a calendar object for the given locale and time zone
-bool    MCCalendarCreate(MCLocaleRef, MCTimeZoneRef p_time_zone, MCCalendarType, MCCalendarRef&);
+// Creates a time zone with the given identifier
+bool    MCTimeZoneCreate(MCStringRef p_name, MCTimeZoneRef &r_tz);
 
-// Destroys an existing calendar object
-void    MCCalendarRelease(MCCalendarRef);
+// Destroys an existing time zone object
+void    MCTimeZoneRelease(MCTimeZoneRef);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern MCTimeZoneRef    MCTZdefault;    // The system time zone
-extern MCTimeZoneRef    MCTZutc;        // The UTC time zone
-
-extern MCCalendarRef    MCCdefault;     // The system calendar
-extern MCCalendarRef    MCCutc;         // The UTC calendar
+extern MCTimeZoneRef    kMCTimeZoneSystem;  // The system time zone
+extern MCTimeZoneRef    kMCTimeZoneUTC;     // The UTC time zone
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Calculates the difference (in milliseconds) between two times
-MCDate  MCDateCompare(MCDate p_first, MCCalendarRef p_first_calendar, MCDate p_second, MCCalendarRef p_second_calendar);
+// Returns whether the given time zone implements daylight savings time
+bool    MCTimeZoneHasDaylightSavings(MCTimeZoneRef);
 
-// Converts a date from one calendar to another
-MCDate  MCDateConvert(MCDate p_date, MCCalendarRef p_from, MCCalendarRef p_to);
+// Returns whether the time zone was under DST at the given time
+bool    MCTimeZoneIsDateDST(MCTimeZoneRef, MCAbsoluteTime);
+
+// Returns the offset between the time zone outwith DST (in milliseconds)
+int32_t  MCTimeZoneGetRawOffset(MCTimeZoneRef);
+
+// Returns the offset from GMT at the given time (in milliseconds)
+int32_t  MCTimeZoneGetOffsetAtTime(MCTimeZoneRef, const MCDate&);
+
+// Returns the name identifying the time zone (e.g. "Europe/London")
+MCStringRef MCTimeZoneGetName(MCTimeZoneRef);
+
+// Returns the name used to describe the time zone in the given locale
+bool    MCTimeZoneCopyNameLocalised(MCTimeZoneRef, MCLocaleRef, MCTimeZoneDisplayType, bool p_in_dst, MCStringRef &r_name);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// What is the first day of the week according to the given calendar?
-MCDay MCCalendarGetFirstDayOfWeek(MCCalendarRef);
-
-// Returns the time zone associated with the given calendar
-MCTimeZoneRef MCCalendarGetTimeZone(MCCalendarRef);
+// What is the first day of the week according to the given locale?
+MCDay MCLocaleGetFirstDayOfWeel(MCLocaleRef);
 
 // Is the calendar Gregorian or something else?
-bool MCCalendarIsGregorian(MCCalendarRef);
+bool MCLocaleCalendarIsGregorian(MCLocaleRef);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// These functions take both a time zone and locale as a time zone does not
+// necessarily contain enough information for conversion (e.g. for locales that
+// use non-Gregorian calendars)
+
+// Converts from an absolute time to a local time
+bool    MCDateCreateWithAbsoluteTime(MCLocaleRef, MCTimeZoneRef, MCAbsoluteTime, MCDate&);
+
+// Converts from a local time to an absolute time
+bool    MCDateConvertToAbsolute(MCLocaleRef, MCTimeZoneRef, const MCDate&, MCAbsoluteTime&);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -264,60 +314,34 @@ bool MCCalendarIsGregorian(MCCalendarRef);
 
 
 // Date format styles
-enum MCLocaleDateStyle
+enum MCDateStyle
 {
-    kMCLocaleDateStyleDefault   = 0x00,
-    kMCLocaleDateStyleFull      = 0x01,
-    kMCLocaleDateStyleLong      = 0x02,
-    kMCLocaleDateStyleMedium    = 0x03,
-    kMCLocaleDateStyleShort     = 0x04,
-    kMCLocaleDateStyleNone      = 0x05,
+    kMCDateStyleDefault   = 0x00,
+    kMCDateStyleFull      = 0x01,
+    kMCDateStyleLong      = 0x02,
+    kMCDateStyleMedium    = 0x03,
+    kMCDateStyleShort     = 0x04,
+    kMCDateStyleNone      = 0x05,
     
     // When set with one of the above options, the date is relative to the
-    // current time (e.g. "yesterday", "today" and "tomorrow")
-    kMCLocaleDateStyleRelative  = 0x80
+    // current time (e.g. "yesterday", "today" and "tomorrow"). If a relative
+    // date is not appropriate, the other date style will be used.
+    kMCDateStyleRelative  = 0x80
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Opaque date formatter type
-typedef struct __MCDateFormatter* MCDateFormatterRef;
+// Formats a date using a locale date/time style
+bool    MCLocaleFormatDate(MCLocaleRef, MCDateStyle, MCTimeZoneRef, const MCDate&, MCStringRef&);
 
-// Creates an object for formatting dates and times using a built-in style
-bool    MCLocaleDateFormatterCreateWithStyle(MCCalendarRef p_calendar,
-                                             MCLocaleDateStyle p_date_style,
-                                             MCLocaleDateStyle p_time_style,
-                                             MCDateFormatterRef&);
+// Formats a date using a specified pattern
+bool    MCLocaleFormatDateWithPattern(MCLocaleRef, MCTimeZoneRef, MCStringRef, const MCDate&, MCStringRef&);
 
-// Creates an object for formatting dates and times using a pattern. The pattern
-// values are those specified by the CLDR for date/time formatting.
-bool    MCLocaleDateFormatterCreateWithPattern(MCCalendarRef p_calendar,
-                                               MCStringRef p_pattern,
-                                               MCDateFormatterRef&);
+// Parses a date using a locale date/time style
+bool    MCLocaleParseDate(MCLocaleRef, MCDateStyle, MCStringRef, MCDate&);
 
-// Destroys a date formatter object
-void    MCLocaleDateFormatterRelease(MCDateFormatterRef);
-
-////////////////////////////////////////////////////////////////////////////////
-
-extern MCDateFormatterRef   MCDFlocal;      // The default local style
-extern MCDateFormatterRef   MCDFinternet;   // Internet time
-extern MCDateFormatterRef   MCDFdateitems;  // LiveCode dateitems format
-
-////////////////////////////////////////////////////////////////////////////////
-
-// Returns the current time
-MCDate MCDateNow();
-
-////////////////////////////////////////////////////////////////////////////////
-
-// Formats a date into a string representation
-bool    MCLocaleDateFormat(MCDateFormatterRef, MCDate, MCStringRef&);
-
-// Attempts to parse a date from the supplied format. The parsing may be either
-// strict or lenient about formatting mis-matches.
-bool    MCLocaleDateParse(MCDateFormatterRef, MCStringRef, bool p_lenient, MCDate&);
-
+// Parses a date using a specified pattern
+bool    MCLocaleParseDateWithPattern(MCLocaleRef, MCStringRef, MCStringRef, MCDate&);
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////

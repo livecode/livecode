@@ -17,7 +17,10 @@
 #include "foundation-locale.h"
 #include "foundation-unicode-private.h"
 
+#include "unicode/brkiter.h"
 #include "unicode/calendar.h"
+#include "unicode/datefmt.h"
+#include "unicode/gregocal.h"
 #include "unicode/locid.h"
 #include "unicode/numfmt.h"
 #include "unicode/rbnf.h"
@@ -25,10 +28,58 @@
 
 #include "foundation-auto.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
+
+struct __MCTimeZone
+{
+    // The associated ICU timezone object
+    icu::TimeZone& m_icu_timezone;
+    
+    // Cached unique time zone name
+    MCStringRef m_name;
+    
+public:
+    
+    __MCTimeZone(icu::TimeZone& p_icu_timezone)
+    : m_icu_timezone(p_icu_timezone)
+    {
+        m_name = MCValueRetain(kMCEmptyString);
+    }
+    
+    ~__MCTimeZone()
+    {
+        delete &m_icu_timezone;
+        MCValueRelease(m_name);
+    }
+};
+
+
+struct __MCBreakIterator
+{
+    // The ICU brake iterator object
+    icu::BreakIterator& m_icu_iter;
+    
+public:
+    
+    __MCBreakIterator(icu::BreakIterator& p_icu_iter)
+    : m_icu_iter(p_icu_iter)
+    {
+        ;
+    }
+    
+    ~__MCBreakIterator()
+    {
+        delete &m_icu_iter;
+    }
+};
+
 
 struct __MCLocale
 {
+    // Reference count
+    uindex_t m_refcount;
+    
     // The associated ICU locale object
     icu::Locale& m_icu_locale;
     
@@ -38,13 +89,43 @@ struct __MCLocale
     MCStringRef m_country;
     MCStringRef m_script;
     
-    // Reference count
-    uindex_t m_refcount;
+    // Cached number formatter objects
+    icu::NumberFormat *m_nf_default;
+    icu::NumberFormat *m_nf_decimal;
+    icu::NumberFormat *m_nf_currency;
+    icu::NumberFormat *m_nf_percent;
+    icu::NumberFormat *m_nf_scientific;
+    icu::NumberFormat *m_nf_spellout;
+    icu::NumberFormat *m_nf_ordinal;
+    icu::NumberFormat *m_nf_duration;
+    icu::NumberFormat *m_nf_numbering_system;
+    icu::NumberFormat *m_nf_currency_iso;
+    icu::NumberFormat *m_nf_currency_plural;
+    
+    // Time zone and calendar objects
+    // TODO: ability to cache multiple if it turns out these change frequently
+    __MCTimeZone        *m_tz;
+    icu::Calendar       *m_cal;
+    
+    // TODO: maybe a smarter way of caching pattern-based formatters to allow
+    // the use of more than one of each simultaneously?
+    icu::NumberFormat   *m_nf_pattern;
+    icu::DateFormat     *m_df_pattern;
+    
+    // Date formatter object (gets updated to use the specified date/time
+    // formats whenever a format call is made)
+    icu::DateFormat     *m_df;
+
     
 public:
     
     __MCLocale(icu::Locale& p_icu_locale)
-    : m_icu_locale(p_icu_locale), m_refcount(1)
+    : m_refcount(1), m_icu_locale(p_icu_locale), m_nf_default(nil),
+        m_nf_decimal(nil), m_nf_currency(nil), m_nf_percent(nil),
+        m_nf_scientific(nil), m_nf_spellout(nil), m_nf_ordinal(nil),
+        m_nf_duration(nil), m_nf_numbering_system(nil), m_nf_currency_iso(nil),
+        m_nf_currency_plural(nil), m_tz(nil), m_cal(nil), m_nf_pattern(nil),
+        m_df_pattern(nil), m_df(nil)
     {
         m_name = MCValueRetain(kMCEmptyString);
         m_language = MCValueRetain(kMCEmptyString);
@@ -59,63 +140,34 @@ public:
         MCValueRelease(m_language);
         MCValueRelease(m_country);
         MCValueRelease(m_script);
-    }
-};
-
-struct __MCNumberFormatter
-{
-    // The associated ICU number format object
-    icu::NumberFormat& m_icu_formatter;
-    
-public:
-    
-    __MCNumberFormatter(icu::NumberFormat& p_icu_formatter)
-    : m_icu_formatter(p_icu_formatter)
-    {
-        ;
-    }
-    
-    ~__MCNumberFormatter()
-    {
-        delete &m_icu_formatter;
-    }
-};
-
-struct __MCCalendar
-{
-    // The associated ICU calendar object
-    icu::Calendar& m_icu_calendar;
-    
-public:
-    
-    __MCCalendar(icu::Calendar& p_icu_calendar)
-    : m_icu_calendar(p_icu_calendar)
-    {
-        ;
-    }
-    
-    ~__MCCalendar()
-    {
-        delete &m_icu_calendar;
+        
+        delete m_nf_default;
+        delete m_nf_decimal;
+        delete m_nf_currency;
+        delete m_nf_percent;
+        delete m_nf_scientific;
+        delete m_nf_spellout;
+        delete m_nf_ordinal;
+        delete m_nf_duration;
+        delete m_nf_numbering_system;
+        delete m_nf_currency_iso;
+        delete m_nf_currency_plural;
+        delete m_tz;
+        delete m_cal;
+        delete m_nf_pattern;
+        delete m_df_pattern;
+        delete m_df;
     }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCLocaleRef MCLbasic;
+MCLocaleRef kMCLocaleBasic;
 MCLocaleRef MCLdefault;
 MCLocaleRef MCLcurrent;
 
-MCNumberFormatterRef MCNFbasic;
-MCNumberFormatterRef MCNFdecimal;
-MCNumberFormatterRef MCNFcurrency;
-MCNumberFormatterRef MCNFordinal;
-
-MCStringRef MCTZdefault;
-MCStringRef MCTZutc;
-
-MCCalendarRef MCCdefault;
-MCCalendarRef MCCutc;
+MCTimeZoneRef kMCTimeZoneSystem;
+MCTimeZoneRef kMCTimeZoneUTC;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -128,48 +180,15 @@ bool __MCLocaleInitialize()
     u_setDataDirectory("/Users/frasergordon/Workspace/livecode/prebuilt/data/icu");
     
     // Create the well-known locales
+    // The default locale to be used needs to be determined using setlocale
     if (t_success)
-        t_success = MCLocaleCreateWithName(MCSTR("en_US"), MCLbasic);
-    if (t_success)
-        t_success = MCLocaleCreateDefault(MCLdefault);
-    if (t_success)
-        t_success = MCLocaleCreateDefault(MCLcurrent);
-    
-    // Create the well-known number formatters
-    if (t_success)
-        t_success = MCNumberFormatterCreate(MCLbasic, kMCNumberFormatStyleDecimal, MCNFbasic);
-
-    // Do the rest of the processing associated with changing locale
-    if (t_success)
-        t_success = MCLocaleSetCurrentLocale(MCLcurrent);
+        t_success = MCLocaleCreateWithName(MCSTR("en_US"), kMCLocaleBasic);
     
     // Create the well-known time zones
     if (t_success)
-    {
-        // Get the length of the name of the system's time zone
-        size_t t_length;
-        UErrorCode t_error = U_ZERO_ERROR;
-        t_length = ucal_getDefaultTimeZone(NULL, 0, &t_error);
-        t_success = U_SUCCESS(t_error) || t_error == U_BUFFER_OVERFLOW_ERROR;
-        t_error = U_ZERO_ERROR;
-        
-        // Create the time zone
-        MCAutoArray<unichar_t> t_buffer;
-        if (t_success)
-            t_success = t_buffer.New(t_length + 1);
-        
-        if (t_success)
-            ucal_getDefaultTimeZone(t_buffer.Ptr(), t_buffer.Size(), &t_error);
-        
-        if (t_success)
-            t_success = U_SUCCESS(t_error);
-        
-        if (t_success)
-            t_success = MCStringCreateWithChars(t_buffer.Ptr(), t_buffer.Size(), MCTZdefault);
-        
-        // The UTC time zone is much simpler
-        MCTZutc = MCSTR("UTC");
-    }
+        t_success = MCTimeZoneCreate(kMCEmptyString, kMCTimeZoneSystem);
+    if (t_success)
+        t_success = MCTimeZoneCreate(MCSTR("UTC"), kMCTimeZoneUTC);
     
     return t_success;
 }
@@ -177,19 +196,11 @@ bool __MCLocaleInitialize()
 void __MCLocaleFinalize()
 {
     // Destroy the well-known time zones
-    MCValueRelease(MCTZutc);
-    MCValueRelease(MCTZdefault);
-    
-    // Destroy the well-known number formatters
-    MCNumberFormatterRelease(MCNFbasic);
-    MCNumberFormatterRelease(MCNFordinal);
-    MCNumberFormatterRelease(MCNFcurrency);
-    MCNumberFormatterRelease(MCNFdecimal);
-    
+    MCValueRelease(kMCTimeZoneUTC);
+    MCValueRelease(kMCTimeZoneSystem);
+
     // Destroy the well-known locales
-    MCLocaleRelease(MCLcurrent);
-    MCLocaleRelease(MCLdefault);
-    MCLocaleRelease(MCLbasic);
+    MCLocaleRelease(kMCLocaleBasic);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -205,22 +216,13 @@ bool MCStringCreateWithICUString(icu::UnicodeString& p_string, MCStringRef &r_st
     return MCStringCreateWithChars(p_string.getBuffer(), p_string.length(), r_string);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-bool MCLocaleCreateDefault(MCLocaleRef &r_locale)
+bool MCStringConvertToICUString(MCStringRef p_string, icu::UnicodeString &r_string)
 {
-    // Create a new ICU locale
-    icu::Locale *t_icu_locale;
-    t_icu_locale = new icu::Locale();
-    
-    // Convert it to an engine locale
-    __MCLocale *t_locale;
-    t_locale = new __MCLocale(*t_icu_locale);
-    
-    // All done
-    r_locale = t_locale;
+    r_string.setTo(MCStringGetCharPtr(p_string), MCStringGetLength(p_string));
     return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 bool MCLocaleCreateWithName(MCStringRef p_name, MCLocaleRef &r_locale)
 {
@@ -275,42 +277,6 @@ void MCLocaleRelease(MCLocaleRef p_locale)
     MCAssert(p_locale != nil);
     if (--p_locale->m_refcount == 0)
         delete p_locale;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool MCLocaleSetCurrentLocale(MCLocaleRef p_locale)
-{
-    MCAssert(p_locale != nil);
-    
-    bool t_success;
-    t_success = true;
-    
-    // Make sure to retain the new locale before releasing the old in case they
-    // are the same object and we destroy it from under ourselves...
-    MCLocaleRetain(p_locale);
-    MCLocaleRelease(MCLcurrent);
-    MCLcurrent = p_locale;
-    
-    // Release the existing number formatter objects
-    if (MCNFdecimal != nil)
-        MCNumberFormatterRelease(MCNFdecimal);
-    if (MCNFcurrency != nil)
-        MCNumberFormatterRelease(MCNFcurrency);
-    if (MCNFordinal != nil)
-        MCNumberFormatterRelease(MCNFordinal);
-    
-    MCNFdecimal = MCNFcurrency = MCNFordinal = nil;
-    
-    // Create the new number formatter objects
-    if (t_success)
-        t_success = MCNumberFormatterCreate(p_locale, kMCNumberFormatStyleDecimal, MCNFdecimal);
-    if (t_success)
-        t_success = MCNumberFormatterCreate(p_locale, kMCNumberFormatStyleCurrency, MCNFcurrency);
-    if (t_success)
-        t_success = MCNumberFormatterCreate(p_locale, kMCNumberFormatStyleOrdinal, MCNFordinal);
-    
-    return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -375,7 +341,7 @@ MCStringRef MCLocaleGetScript(MCLocaleRef p_locale)
     return p_locale->m_script;
 }
 
-bool MCLocaleGetNameLocalised(MCLocaleRef p_locale, MCLocaleRef p_in_language, MCStringRef &r_string)
+bool MCLocaleCopyNameLocalised(MCLocaleRef p_locale, MCLocaleRef p_in_language, MCStringRef &r_string)
 {
     MCAssert(p_locale != nil);
     MCAssert(p_in_language != nil);
@@ -388,7 +354,7 @@ bool MCLocaleGetNameLocalised(MCLocaleRef p_locale, MCLocaleRef p_in_language, M
     return MCStringCreateWithICUString(t_name, r_string);
 }
 
-bool MCLocaleGetLanguageLocalised(MCLocaleRef p_locale, MCLocaleRef p_in_language, MCStringRef &r_string)
+bool MCLocaleCopyLanguageLocalised(MCLocaleRef p_locale, MCLocaleRef p_in_language, MCStringRef &r_string)
 {
     MCAssert(p_locale != nil);
     MCAssert(p_in_language != nil);
@@ -401,7 +367,7 @@ bool MCLocaleGetLanguageLocalised(MCLocaleRef p_locale, MCLocaleRef p_in_languag
     return MCStringCreateWithICUString(t_language, r_string);
 }
 
-bool MCLocaleGetCountryLocalised(MCLocaleRef p_locale, MCLocaleRef p_in_language, MCStringRef &r_string)
+bool MCLocaleCopyCountryLocalised(MCLocaleRef p_locale, MCLocaleRef p_in_language, MCStringRef &r_string)
 {
     MCAssert(p_locale != nil);
     MCAssert(p_in_language != nil);
@@ -414,7 +380,7 @@ bool MCLocaleGetCountryLocalised(MCLocaleRef p_locale, MCLocaleRef p_in_language
     return MCStringCreateWithICUString(t_country, r_string);
 }
 
-bool MCLocaleGetScriptLocalised(MCLocaleRef p_locale, MCLocaleRef p_in_language, MCStringRef &r_string)
+bool MCLocaleCopyScriptLocalised(MCLocaleRef p_locale, MCLocaleRef p_in_language, MCStringRef &r_string)
 {
     MCAssert(p_locale != nil);
     MCAssert(p_in_language != nil);
@@ -445,61 +411,74 @@ MCLocaleTextLayout MCLocaleGetCharacterDirection(MCLocaleRef p_locale)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCNumberFormatterCreate(MCLocaleRef p_locale, MCNumberFormatStyle p_style, MCNumberFormatterRef &r_formatter)
+// INTERNAL FUNCTION
+// Gets the number formatter for the given options, creating it if required
+static icu::NumberFormat* MCNumberFormatterGet(MCLocaleRef p_locale, MCNumberFormatStyle p_style)
 {
     MCAssert(p_locale != nil);
     
-    // Create the ICU number formatter with the given options
+    // Which number formatter are we looking for?
     UNumberFormatStyle t_style;
-    icu::NumberFormat *t_formatter;
+    icu::NumberFormat **t_formatter;
     UErrorCode t_error = U_ZERO_ERROR;
     bool t_rule_based = false;
     switch (p_style)
     {
         case kMCNumberFormatStyleDecimal:
+            t_formatter = &p_locale->m_nf_decimal;
             t_style = UNUM_DECIMAL;
             break;
             
         case kMCNumberFormatStyleCurrency:
+            t_formatter = &p_locale->m_nf_currency;
             t_style = UNUM_CURRENCY;
             break;
             
         case kMCNumberFormatStylePercent:
+            t_formatter = &p_locale->m_nf_percent;
             t_style = UNUM_PERCENT;
             break;
         
         case kMCNumberFormatStyleScientific:
+            t_formatter = &p_locale->m_nf_scientific;
             t_style = UNUM_SCIENTIFIC;
             break;
             
         case kMCNumberFormatStyleSpellout:
+            t_formatter = &p_locale->m_nf_spellout;
             t_style = UNUM_SPELLOUT;
             t_rule_based = true;
             break;
             
         case kMCNumberFormatStyleOrdinal:
+            t_formatter = &p_locale->m_nf_ordinal;
             t_style = UNUM_ORDINAL;
             t_rule_based = true;
             break;
             
         case kMCNumberFormatStyleDuration:
+            t_formatter = &p_locale->m_nf_duration;
             t_style = UNUM_DURATION;
             t_rule_based = true;
             break;
             
         case kMCNumberFormatStyleNumberingSystem:
+            t_formatter = &p_locale->m_nf_numbering_system;
             t_style = UNUM_NUMBERING_SYSTEM;
             break;
             
         case kMCNumberFormatStyleCurrencyISO:
+            t_formatter = &p_locale->m_nf_currency_iso;
             t_style = UNUM_CURRENCY_ISO;
             break;
             
         case kMCNumberFormatStyleCurrencyPlural:
+            t_formatter = &p_locale->m_nf_currency_plural;
             t_style = UNUM_CURRENCY_PLURAL;
             break;
             
         case kMCNumberFormatStyleDefault:
+            t_formatter = &p_locale->m_nf_default;
             t_style = UNUM_DEFAULT;
             break;
             
@@ -508,103 +487,556 @@ bool MCNumberFormatterCreate(MCLocaleRef p_locale, MCNumberFormatStyle p_style, 
             MCAssert(false);
     }
     
-    if (!t_rule_based)
-        t_formatter = icu::NumberFormat::createInstance(p_locale->m_icu_locale, t_style, t_error);
-    else
-        t_formatter = icu::RuleBasedNumberFormat::createInstance(p_locale->m_icu_locale, t_style, t_error);
+    // Has the requested number formatter been created yet?
+    if (*t_formatter == nil)
+    {
+        // Create the requested formatter
+        if (!t_rule_based)
+            *t_formatter = icu::NumberFormat::createInstance(p_locale->m_icu_locale, t_style, t_error);
+        else
+            *t_formatter = icu::RuleBasedNumberFormat::createInstance(p_locale->m_icu_locale, t_style, t_error);
+    }
     
-    // DIRTY HACK FOR TESTING
-    if (U_FAILURE(t_error))
-        return t_rule_based;
-    
-    // Convert the ICU formatter into a LiveCode formatter
-    r_formatter = new __MCNumberFormatter(*t_formatter);
-    return true;
+    // If the creation failed, this will return a nil pointer
+    return *t_formatter;
 }
 
-void MCNumberFormatterRelease(MCNumberFormatterRef p_formatter)
-{
-    MCAssert(p_formatter != nil);
-    delete p_formatter;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool MCLocaleNumberFormatInteger(MCNumberFormatterRef p_formatter, int64_t t_num, MCStringRef &r_string)
-{
-    MCAssert(p_formatter != nil);
-    
-    icu::UnicodeString t_string;
-    p_formatter->m_icu_formatter.format(t_num, t_string);
-    return MCStringCreateWithICUString(t_string, r_string);
-}
-
-bool MCLocaleNumberFormatReal(MCNumberFormatterRef p_formatter, real64_t t_num, MCStringRef &r_string)
-{
-    MCAssert(p_formatter != nil);
-    
-    icu::UnicodeString t_string;
-    p_formatter->m_icu_formatter.format(t_num, t_string);
-    return MCStringCreateWithICUString(t_string, r_string);
-}
-
-bool MCLocaleNumberParseInteger(MCNumberFormatterRef p_formatter, MCStringRef p_string, int64_t &r_num)
-{
-    MCAssert(p_formatter != nil);
-    
-    UErrorCode t_error = U_ZERO_ERROR;
-    icu::UnicodeString t_string(MCStringGetCharPtr(p_string), MCStringGetLength(p_string));
-    icu::Formattable t_formattable;
-    p_formatter->m_icu_formatter.parse(t_string, t_formattable, t_error);
-    if (U_FAILURE(t_error))
-        return false;
-    
-    r_num = t_formattable.getInt64();
-    return true;
-}
-
-bool MCLocaleNumberParseReal(MCNumberFormatterRef p_formatter, MCStringRef p_string, real64_t &r_num)
-{
-    MCAssert(p_formatter != nil);
-    
-    UErrorCode t_error = U_ZERO_ERROR;
-    icu::UnicodeString t_string(MCStringGetCharPtr(p_string), MCStringGetLength(p_string));
-    icu::Formattable t_formattable;
-    p_formatter->m_icu_formatter.parse(t_string, t_formattable, t_error);
-    if (U_FAILURE(t_error))
-        return false;
-    
-    r_num = t_formattable.getDouble();
-    return true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool MCCalendarCreate(MCLocaleRef p_locale, MCTimeZoneRef p_time_zone, MCCalendarType p_type, MCCalendarRef &r_calendar)
+// INTERNAL FUNCTION
+// Gets a number formatter using a pattern
+static icu::NumberFormat* MCNumberFormatterGetWithPattern(MCLocaleRef p_locale, MCStringRef p_pattern)
 {
     MCAssert(p_locale != nil);
-    MCAssert(p_time_zone != nil);
+    MCAssert(p_pattern != nil);
     
-    // Create a time zone object describing the supplied time zone
-    UErrorCode t_error = U_ZERO_ERROR;
-    icu::UnicodeString t_tz_name(MCStringGetCharPtr(p_time_zone), MCStringGetLength(p_time_zone));
-    icu::TimeZone *t_tz = icu::TimeZone::createTimeZone(t_tz_name);
-    
-    // Create the calendar. The calendar takes ownership of the time zone
-    icu::Calendar *t_calendar;
-    t_calendar = icu::Calendar::createInstance(t_tz, p_locale->m_icu_locale, t_error);
-    if (U_FAILURE(t_error))
-        return false;
-    
-    // Construct the LiveCode calendar object
-    r_calendar = new __MCCalendar(*t_calendar);
-    return true;
-}
-
-void MCCalendarRelease(MCCalendarRef p_calendar)
-{
-    MCAssert(p_calendar != nil);
-    delete p_calendar;
+    // TODO: implement
+    return nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCLocaleFormatInteger(MCLocaleRef p_locale, MCNumberFormatStyle p_style, int64_t p_int, MCStringRef &r_string)
+{
+    MCAssert(p_locale != nil);
+    
+    icu::NumberFormat *t_formatter;
+    t_formatter = MCNumberFormatterGet(p_locale, p_style);
+    if (t_formatter == nil)
+        return false;
+    
+    icu::UnicodeString t_string;
+    t_formatter->format(p_int, t_string);
+    return !t_string.isEmpty() && MCStringCreateWithICUString(t_string, r_string);
+}
+
+bool MCLocaleFormatReal(MCLocaleRef p_locale, MCNumberFormatStyle p_style, real64_t p_real, MCStringRef &r_string)
+{
+    MCAssert(p_locale != nil);
+    
+    icu::NumberFormat *t_formatter;
+    t_formatter = MCNumberFormatterGet(p_locale, p_style);
+    if (t_formatter == nil)
+        return false;
+    
+    icu::UnicodeString t_string;
+    t_formatter->format(p_real, t_string);
+    return !t_string.isEmpty() && MCStringCreateWithICUString(t_string, r_string);
+}
+
+bool MCLocaleFormatIntegerWithPattern(MCLocaleRef p_locale, MCStringRef p_pattern, int64_t p_int, MCStringRef &r_string)
+{
+    MCAssert(p_locale != nil);
+    MCAssert(p_pattern != nil);
+    
+    icu::NumberFormat *t_formatter;
+    t_formatter = MCNumberFormatterGetWithPattern(p_locale, p_pattern);
+    if (t_formatter == nil)
+        return false;
+    
+    icu::UnicodeString t_string;
+    t_formatter->format(p_int, t_string);
+    return !t_string.isEmpty() && MCStringCreateWithICUString(t_string, r_string);
+}
+
+bool MCLocaleFormatRealWithPattern(MCLocaleRef p_locale, MCStringRef p_pattern, real64_t p_real, MCStringRef &r_string)
+{
+    MCAssert(p_locale != nil);
+    MCAssert(p_pattern != nil);
+    
+    icu::NumberFormat *t_formatter;
+    t_formatter = MCNumberFormatterGetWithPattern(p_locale, p_pattern);
+    if (t_formatter == nil)
+        return false;
+    
+    icu::UnicodeString t_string;
+    t_formatter->format(p_real, t_string);
+    return !t_string.isEmpty() && MCStringCreateWithICUString(t_string, r_string);
+}
+
+bool MCLocaleParseInteger(MCLocaleRef p_locale, MCNumberFormatStyle p_style, MCStringRef p_string, int64_t &r_int)
+{
+    MCAssert(p_locale != nil);
+    MCAssert(p_string != nil);
+    
+    icu::NumberFormat *t_formatter;
+    t_formatter = MCNumberFormatterGet(p_locale, p_style);
+    if (t_formatter == nil)
+        return false;
+    
+    UErrorCode t_error = U_ZERO_ERROR;
+    icu::UnicodeString t_string;
+    if (!MCStringConvertToICUString(p_string, t_string))
+        return false;
+    
+    icu::Formattable t_formattable;
+    t_formatter->parse(t_string, t_formattable, t_error);
+    if (U_FAILURE(t_error))
+        return false;
+    
+    r_int = t_formattable.getInt64();
+    return true;
+}
+
+bool MCLocaleParseReal(MCLocaleRef p_locale, MCNumberFormatStyle p_style, MCStringRef p_string, real64_t &r_real)
+{
+    MCAssert(p_locale != nil);
+    MCAssert(p_string != nil);
+    
+    icu::NumberFormat *t_formatter;
+    t_formatter = MCNumberFormatterGet(p_locale, p_style);
+    if (t_formatter == nil)
+        return false;
+    
+    UErrorCode t_error = U_ZERO_ERROR;
+    icu::UnicodeString t_string;
+    if (!MCStringConvertToICUString(p_string, t_string))
+        return false;
+    
+    icu::Formattable t_formattable;
+    t_formatter->parse(t_string, t_formattable, t_error);
+    if (U_FAILURE(t_error))
+        return false;
+    
+    r_real = t_formattable.getDouble();
+    return true;
+}
+
+bool MCLocaleParseIntegerWithPattern(MCLocaleRef p_locale, MCStringRef p_pattern, MCStringRef p_string, int64_t &r_int)
+{
+    MCAssert(p_locale != nil);
+    MCAssert(p_pattern != nil);
+    MCAssert(p_string != nil);
+    
+    icu::NumberFormat *t_formatter;
+    t_formatter = MCNumberFormatterGetWithPattern(p_locale, p_pattern);
+    if (t_formatter == nil)
+        return false;
+    
+    UErrorCode t_error = U_ZERO_ERROR;
+    icu::UnicodeString t_string;
+    if (!MCStringConvertToICUString(p_string, t_string))
+        return false;
+    
+    icu::Formattable t_formattable;
+    t_formatter->parse(t_string, t_formattable, t_error);
+    if (U_FAILURE(t_error))
+        return false;
+    
+    r_int = t_formattable.getInt64();
+    return true;
+}
+
+bool MCLocaleParseIntegerWithDouble(MCLocaleRef p_locale, MCStringRef p_pattern, MCStringRef p_string, real64_t &r_real)
+{
+    MCAssert(p_locale != nil);
+    MCAssert(p_pattern != nil);
+    MCAssert(p_string != nil);
+    
+    icu::NumberFormat *t_formatter;
+    t_formatter = MCNumberFormatterGetWithPattern(p_locale, p_pattern);
+    if (t_formatter == nil)
+        return false;
+    
+    UErrorCode t_error = U_ZERO_ERROR;
+    icu::UnicodeString t_string;
+    if (!MCStringConvertToICUString(p_string, t_string))
+        return false;
+    
+    icu::Formattable t_formattable;
+    t_formatter->parse(t_string, t_formattable, t_error);
+    if (U_FAILURE(t_error))
+        return false;
+    
+    r_real = t_formattable.getDouble();
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCTimeZoneCreate(MCStringRef p_name, MCTimeZoneRef &r_tz)
+{
+    MCAssert(p_name != nil);
+    
+    // Create the ICU time zone object
+    icu::TimeZone *t_tz;
+    if (MCStringIsEmpty(p_name))
+        t_tz = icu::TimeZone::createDefault();
+    else
+    {
+        icu::UnicodeString t_string;
+        if (!MCStringConvertToICUString(p_name, t_string))
+            return false;
+    
+        t_tz = icu::TimeZone::createTimeZone(t_string);
+    }
+    
+    if (t_tz == nil)
+        return false;
+    
+    // Create the LiveCode time zone object
+    r_tz = new __MCTimeZone(*t_tz);
+    return true;
+}
+
+void MCTimeZoneRelease(MCTimeZoneRef p_tz)
+{
+    MCAssert(p_tz != nil);
+    delete p_tz;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// INTERNAL FUNCTION
+// Gets the appropriate calendar object for the given locale/time-zone pair
+static icu::Calendar* MCCalendarGet(MCLocaleRef p_locale, MCTimeZoneRef p_tz)
+{
+    MCAssert(p_locale != nil);
+    MCAssert(p_tz != nil);
+    
+    // Create a calendar object if it has not already been done
+    UErrorCode t_error = U_ZERO_ERROR;
+    if (p_locale->m_cal == nil)
+    {
+        p_locale->m_cal = icu::Calendar::createInstance(t_error);
+        if (U_FAILURE(t_error))
+            return nil;
+    }
+    
+    // Set up the calendar object with the appropriate settings
+    p_locale->m_cal->setTimeZone(p_tz->m_icu_timezone);
+    
+    // All done
+    return p_locale->m_cal;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCTimeZoneHasDaylightSavings(MCTimeZoneRef p_tz)
+{
+    MCAssert(p_tz != nil);
+    
+    return p_tz->m_icu_timezone.useDaylightTime();
+}
+
+bool MCTimeZoneIsDateDST(MCTimeZoneRef p_tz, MCAbsoluteTime p_abs)
+{
+    MCAssert(p_tz != nil);
+    
+    // The date needs to be converted to an absolute time for the TimeZone API
+    UErrorCode t_error = U_ZERO_ERROR;
+    return p_tz->m_icu_timezone.inDaylightTime(p_abs, t_error);
+}
+
+int32_t MCTimeZoneGetRawOffset(MCTimeZoneRef p_tz)
+{
+    MCAssert(p_tz != nil);
+    
+    return p_tz->m_icu_timezone.getRawOffset();
+}
+
+int32_t MCTimeZoneGetOffsetAtTime(MCTimeZoneRef p_tz, MCAbsoluteTime p_abs)
+{
+    MCAssert(p_tz != nil);
+    
+    // Get the offset at the specified time
+    UErrorCode t_error = U_ZERO_ERROR;
+    int32_t t_dst, t_raw;
+    p_tz->m_icu_timezone.getOffset(p_abs, false, t_raw, t_dst, t_error);
+    return t_dst;
+}
+
+MCStringRef MCTimeZoneGetName(MCTimeZoneRef p_tz)
+{
+    MCAssert(p_tz != nil);
+    
+    // Create the cached name if not already done
+    if (MCStringIsEmpty(p_tz->m_name))
+    {
+        MCAutoStringRef t_name;
+        icu::UnicodeString t_icu_name;
+        p_tz->m_icu_timezone.getID(t_icu_name);
+        /* UNCHECKED */ MCStringCreateWithICUString(t_icu_name, &t_name);
+        MCValueAssign(p_tz->m_name, *t_name);
+    }
+    
+    return p_tz->m_name;
+}
+
+bool MCTimeZoneCopyNameLocalised(MCTimeZoneRef p_tz, MCLocaleRef p_locale, MCTimeZoneDisplayType p_style, bool p_in_dst, MCStringRef &r_name)
+{
+    MCAssert(p_tz != nil);
+    MCAssert(p_locale != nil);
+    
+    // Query ICU for the localised name
+    icu::UnicodeString t_name;
+    p_tz->m_icu_timezone.getDisplayName(p_in_dst, icu::TimeZone::EDisplayType(p_style), p_locale->m_icu_locale, t_name);
+    return MCStringCreateWithICUString(t_name, r_name);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCDay MCLocaleGetFirstDayOfWeek(MCLocaleRef p_locale)
+{
+    MCAssert(p_locale != nil);
+    
+    // Grab the calendar object. If possible, don't update the time zone
+    icu::Calendar *t_cal = p_locale->m_cal;
+    if (t_cal == nil)
+        t_cal = MCCalendarGet(p_locale, kMCTimeZoneSystem);
+    
+    // Query for the first day of the week, remembering that ICU days start at 0
+    return MCDay(t_cal->getFirstDayOfWeek() - 1);
+}
+
+bool MCLocaleCalendarIsGregorian(MCLocaleRef p_locale)
+{
+    // Check by seeing if a calendar instance is a Gregorian calendar object
+    // Grab the calendar object. If possible, don't update the time zone
+    icu::Calendar *t_cal = p_locale->m_cal;
+    if (t_cal == nil)
+        t_cal = MCCalendarGet(p_locale, kMCTimeZoneSystem);
+    
+    return t_cal->getDynamicClassID() == icu::GregorianCalendar::getStaticClassID();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCDateCreateWithAbsoluteTime(MCLocaleRef p_locale, MCTimeZoneRef p_tz, MCAbsoluteTime p_abs, MCDate& r_date)
+{
+    MCAssert(p_locale != nil);
+    MCAssert(p_tz != nil);
+    
+    // Get the calendar object appropriate for this conversion
+    icu::Calendar *t_cal;
+    t_cal = MCCalendarGet(p_locale, p_tz);
+    if (t_cal == nil)
+        return false;
+    
+    // Tell the calendar object the absolute time and ask it for the various
+    // fields of the local time. All get filled in because we don't know which
+    // of the fields are desired.
+    UErrorCode t_error = U_ZERO_ERROR;
+    t_cal->setTime(p_abs, t_error);
+    if (U_FAILURE(t_error))
+        return false;
+    
+    // Get the raw values. These will be corrected later, if required
+    r_date.m_year = t_cal->get(UCAL_YEAR, t_error);
+    r_date.m_era = t_cal->get(UCAL_ERA, t_error);
+    r_date.m_month = t_cal->get(UCAL_MONTH, t_error);
+    r_date.m_day = t_cal->get(UCAL_DAY_OF_MONTH, t_error);
+    r_date.m_hour = t_cal->get(UCAL_HOUR_OF_DAY, t_error);
+    r_date.m_minute = t_cal->get(UCAL_MINUTE, t_error);
+    r_date.m_second = t_cal->get(UCAL_SECOND, t_error);
+    r_date.m_milliseconds = t_cal->get(UCAL_MILLISECOND, t_error);
+    r_date.m_day_of_year = t_cal->get(UCAL_DAY_OF_YEAR, t_error);
+    r_date.m_week_of_year = t_cal->get(UCAL_WEEK_OF_YEAR, t_error);
+    r_date.m_day_of_week = t_cal->get(UCAL_DAY_OF_WEEK, t_error);
+    r_date.m_week_of_month = t_cal->get(UCAL_WEEK_OF_MONTH, t_error);
+    r_date.m_day_of_week_in_month = t_cal->get(UCAL_DAY_OF_WEEK_IN_MONTH, t_error);
+    
+    // If any of the above failed, abort
+    if (U_FAILURE(t_error))
+        return false;
+    
+    // Correct the date values that were written. Some of the ICU fields are
+    // zero-based while the LiveCode fields are more "natural" and 1-based
+    r_date.m_month++;
+    r_date.m_day_of_week++;
+    
+    // AD/BC handling for Gregorian calendars
+    if (t_cal->getDynamicClassID() == icu::GregorianCalendar::getStaticClassID())
+    {
+        if (r_date.m_era == icu::GregorianCalendar::BC)
+        {
+            r_date.m_year = -r_date.m_year;
+        }
+    }
+    
+    // All done
+    return true;
+}
+
+bool MCDateTimeConvertToAbsoluteTime(MCLocaleRef p_locale, MCTimeZoneRef p_tz, const MCDate& p_date, MCAbsoluteTime &r_abs)
+{
+    MCAssert(p_locale != nil);
+    MCAssert(p_tz != nil);
+    
+    // Get the calendar object appropriate for the conversion
+    icu::Calendar *t_cal;
+    t_cal = MCCalendarGet(p_locale, p_tz);
+    if (t_cal == nil)
+        return false;
+    
+    // AD/BC handing for Gregorian calendars
+    if (t_cal->getDynamicClassID() == icu::GregorianCalendar::getStaticClassID()
+        && p_date.m_year < 0)
+    {
+        if (p_date.m_year > 0)
+        {
+            t_cal->set(UCAL_ERA, icu::GregorianCalendar::AD);
+            t_cal->set(UCAL_YEAR, p_date.m_year);
+        }
+        else if (p_date.m_year < 0)
+        {
+            t_cal->set(UCAL_ERA, icu::GregorianCalendar::BC);
+            t_cal->set(UCAL_YEAR, -p_date.m_year);
+        }
+        else
+        {
+            // The year 0 is not present in either AD or BC
+            return false;
+        }
+
+    }
+    else
+    {
+        t_cal->set(UCAL_ERA, p_date.m_era);
+        t_cal->set(UCAL_YEAR, p_date.m_year);
+    }
+    
+    // Some of the fields are always used
+    t_cal->set(UCAL_HOUR_OF_DAY, p_date.m_hour);
+    t_cal->set(UCAL_MINUTE, p_date.m_minute);
+    t_cal->set(UCAL_SECOND, p_date.m_second);
+    t_cal->set(UCAL_MILLISECOND, p_date.m_milliseconds);
+    
+    // Which fields to set in the calendar object depends on which are valid
+    // NOTE: month and day_of_week are 1-based in LiveCode and 0-based in ICU
+    if (p_date.m_month != 0 && p_date.m_day != 0)
+    {
+        t_cal->set(UCAL_MONTH, p_date.m_month - 1);
+        t_cal->set(UCAL_DAY_OF_MONTH, p_date.m_day);
+    }
+    else if (p_date.m_month != 0 && p_date.m_day_of_week != 0 && p_date.m_day_of_week_in_month != 0)
+    {
+        t_cal->set(UCAL_MONTH, p_date.m_month - 1);
+        t_cal->set(UCAL_DAY_OF_WEEK, p_date.m_day_of_week - 1);
+        t_cal->set(UCAL_DAY_OF_WEEK_IN_MONTH, p_date.m_day_of_week_in_month);
+    }
+    else if (p_date.m_month != 0 && p_date.m_week_of_month != 0 && p_date.m_day_of_week != 0)
+    {
+        t_cal->set(UCAL_MONTH, p_date.m_month - 1);
+        t_cal->set(UCAL_WEEK_OF_MONTH, p_date.m_week_of_month);
+        t_cal->set(UCAL_DAY_OF_WEEK, p_date.m_day_of_week - 1);
+    }
+    else if (p_date.m_week_of_year != 0 && p_date.m_day_of_week != 0)
+    {
+        t_cal->set(UCAL_WEEK_OF_YEAR, p_date.m_week_of_year);
+        t_cal->set(UCAL_DAY_OF_WEEK, p_date.m_day_of_week - 1);
+    }
+    else if (p_date.m_day_of_year != 0)
+    {
+        t_cal->set(UCAL_DAY_OF_YEAR, p_date.m_day_of_year);
+    }
+    else
+    {
+        // No valid combination of parameters was found
+        return false;
+    }
+    
+    // All the fields have been set. Extract the absolute time
+    UErrorCode t_error = U_ZERO_ERROR;
+    r_abs = t_cal->getTime(t_error);
+    return U_SUCCESS(t_error);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCLocaleBreakIteratorCreate(MCLocaleRef p_locale, MCBreakIteratorType p_type, MCBreakIteratorRef &r_iter)
+{
+    MCAssert(p_locale != nil);
+    
+    // Create the iterator with the requested type
+    icu::BreakIterator *t_iter;
+    UErrorCode t_error = U_ZERO_ERROR;
+    switch (p_type)
+    {
+        case kMCBreakIteratorTypeCharacter:
+            t_iter = icu::BreakIterator::createCharacterInstance(p_locale->m_icu_locale, t_error);
+            break;
+            
+        case kMCBreakIteratorTypeWord:
+            t_iter = icu::BreakIterator::createWordInstance(p_locale->m_icu_locale, t_error);
+            break;
+            
+        case kMCBreakIteratorTypeLine:
+            t_iter = icu::BreakIterator::createLineInstance(p_locale->m_icu_locale, t_error);
+            break;
+            
+        case kMCBreakIteratorTypeSentence:
+            t_iter = icu::BreakIterator::createSentenceInstance(p_locale->m_icu_locale, t_error);
+            break;
+            
+        case kMCBreakIteratorTypeTitle:
+            t_iter = icu::BreakIterator::createTitleInstance(p_locale->m_icu_locale, t_error);
+            break;
+            
+        default:
+            // Shouldn't get here
+            MCAssert(false);
+    }
+    
+    if (U_FAILURE(t_error))
+        return false;
+    
+    // Use the ICU break iterator object to create the engine object
+    r_iter = new __MCBreakIterator(*t_iter);
+    return true;
+}
+
+void MCLocaleBreakIteratorRelease(MCBreakIteratorRef p_iter)
+{
+    MCAssert(p_iter != nil);
+    
+    delete p_iter;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCLocaleBreakIteratorSetText(MCBreakIteratorRef p_iter, MCStringRef p_string)
+{
+    MCAssert(p_iter != nil);
+    MCAssert(p_string != nil);
+    
+    icu::UnicodeString t_string;
+    if (!MCStringConvertToICUString(p_string, t_string))
+        return false;
+    
+    p_iter->m_icu_iter.setText(t_string);
+    return true;
+}
+
+uindex_t MCLocaleBreakIteratorAdvance(MCBreakIteratorRef p_iter)
+{
+    MCAssert(p_iter != nil);
+    
+    return p_iter->m_icu_iter.next();
+}
+
+
+bool MCLocaleBreakIteratorIsBoundary(MCBreakIteratorRef p_iter, uindex_t p_index)
+{
+    MCAssert(p_iter != nil);
+    
+    return !!p_iter->m_icu_iter.isBoundary(p_index);
+}
