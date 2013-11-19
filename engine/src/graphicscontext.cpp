@@ -904,7 +904,8 @@ void MCGraphicsContext::fillarc(const MCRectangle& rect, uint2 start, uint2 angl
 	t_rect = MCGRectangleInset(t_rect, t_adjustment);	
 	
 	MCGContextBeginPath(m_gcontext);
-	add_legacy_arc(m_gcontext, MCRectangleToMCGRectangle(rect), start, angle, false);
+	// MM-2013-11-19: [[ Bug 11469 ]] Fill as a segment rather than an arc to make sure path is closed properly.
+	add_legacy_segment(m_gcontext, MCRectangleToMCGRectangle(rect), start, angle, false);
 	MCGContextFill(m_gcontext);
 }
 
