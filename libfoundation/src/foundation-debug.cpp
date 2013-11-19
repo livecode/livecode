@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
+#include <foundation-auto.h>
 
 #include "foundation-private.h"
 
@@ -45,18 +46,19 @@ void __MCAssert(const char *p_file, uint32_t p_line, const char *p_message)
 
 void __MCLog(const char *p_file, uint32_t p_line, const char *p_format, ...)
 {
-	char_t *t_string;
-	uindex_t t_size;
-	t_string = nil;
-
+	MCAutoStringRef t_string;
+	
 	va_list t_args;
 	va_start(t_args, p_format);
-	MCNativeCharsFormatV(t_string, t_size, p_format, t_args);
+	MCStringFormatV(&t_string, p_format, t_args);
 	va_end(t_args);
 
-	_CrtDbgReport(_CRT_WARN, p_file, p_line, NULL, "[%u] %.*s\n", GetCurrentProcessId(), t_size, t_string);
-
-	MCMemoryDeallocate(t_string);
+	char *t_cstring;
+	if (MCStringConvertToCString(*t_string, t_cstring))
+	{
+		_CrtDbgReport(_CRT_WARN, p_file, p_line, NULL, "[%u] %s\n", GetCurrentProcessId(), t_size, t_cstring);
+		MCMemoryDeallocate(t_cstring);
+	}
 }
 
 void __MCLogWithTrace(const char *p_file, uint32_t p_line, const char *p_format, ...)
@@ -83,19 +85,20 @@ void __MCLogWithTrace(const char *p_file, uint32_t p_line, const char *p_format,
 			s_sym_setoptions(SYMOPT_LOAD_LINES);
 		}
 	}
-
-	char_t *t_string;
-	uindex_t t_size;
-	t_string = nil;
-
+	
+	MCAutoStringRef t_string;
+	
 	va_list t_args;
 	va_start(t_args, p_format);
-	MCNativeCharsFormatV(t_string, t_size, p_format, t_args);
+	MCStringFormatV(&t_string, p_format, t_args);
 	va_end(t_args);
-
-	_CrtDbgReport(_CRT_WARN, p_file, p_line, NULL, "[%u] %.*s\n", GetCurrentProcessId(), t_size, t_string);
-
-	MCMemoryDeallocate(t_string);
+	
+	char *t_cstring;
+	if (MCStringConvertToCString(*t_string, t_cstring))
+	{
+		_CrtDbgReport(_CRT_WARN, p_file, p_line, NULL, "[%u] %s\n", GetCurrentProcessId(), t_size, t_cstring);
+		MCMemoryDeallocate(t_cstring);
+	}
 
 	if (s_sym_from_addr != nil)
 	{
@@ -146,22 +149,36 @@ void __MCAssert(const char *p_file, uint32_t p_line, const char *p_message)
 
 void __MCLog(const char *p_file, uint32_t p_line, const char *p_format, ...)
 {
-	fprintf(stderr, "[%d] ", getpid());
+	MCAutoStringRef t_string;
+	
 	va_list t_args;
 	va_start(t_args, p_format);
-	vfprintf(stderr, p_format, t_args);
+	MCStringFormatV(&t_string, p_format, t_args);
 	va_end(t_args);
-	fprintf(stderr, "\n");
+	
+	char *t_cstring;
+	if (MCStringConvertToCString(*t_string, t_cstring))
+	{
+		fprintf(stderr, "[%d] %s\n", getpid(), t_cstring);
+		MCMemoryDeallocate(t_cstring);
+	}
 }
 
 void __MCLogWithTrace(const char *p_file, uint32_t p_line, const char *p_format, ...)
 {
-	fprintf(stderr, "[%d] ", getpid());
+	MCAutoStringRef t_string;
+	
 	va_list t_args;
 	va_start(t_args, p_format);
-	vfprintf(stderr, p_format, t_args);
+	MCStringFormatV(&t_string, p_format, t_args);
 	va_end(t_args);
-	fprintf(stderr, "\n");
+	
+	char *t_cstring;
+	if (MCStringConvertToCString(*t_string, t_cstring))
+	{
+		fprintf(stderr, "[%d] %s\n", getpid(), t_cstring);
+		MCMemoryDeallocate(t_cstring);
+	}
 }
 
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
@@ -174,10 +191,19 @@ void __MCAssert(const char *p_file, uint32_t p_line, const char *p_message)
 
 void __MCLog(const char *p_file, uint32_t p_line, const char *p_format, ...)
 {
-	va_list args;
-	va_start(args, p_format);
-	__android_log_vprint(ANDROID_LOG_INFO, "revandroid", p_format, args);
-	va_end(args);
+	MCAutoStringRef t_string;
+	
+	va_list t_args;
+	va_start(t_args, p_format);
+	MCStringFormatV(&t_string, p_format, t_args);
+	va_end(t_args);
+	
+	char *t_cstring;
+	if (MCStringConvertToCString(*t_string, t_cstring))
+	{
+		__android_log_vprint(ANDROID_LOG_INFO, "revandroid", "%s", t_cstring);
+		MCMemoryDeallocate(t_cstring);
+	}
 }
 
 void __MCUnreachable(void)

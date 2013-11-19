@@ -2600,19 +2600,32 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	
 }
 
-void MCStack::getstackfiles(MCStringRef& r_stackfiles)
+
+bool MCStack::getstackfiles(MCStringRef& r_stackfiles)
 {
-	if (nstackfiles != 0)
+	bool t_success;
+	t_success = true;
+	
+	MCAutoListRef t_file_list;
+	
+	if (t_success)
+		t_success = MCListCreateMutable('\n', &t_file_list);
+	
+	for (uint2 i = 0; i < nstackfiles; i++)
 	{
-		uint2 i;
-        MCAutoListRef t_list;
-        /* UNCHECKED */ MCListCreateMutable('\n', &t_list);
-		for (i = 0 ; i < nstackfiles ; i++)
-		{
-			MCListAppendFormat(*t_list, "%@,%@", stackfiles[i].stackname, stackfiles[i].filename);
-		}
-        MCListCopyAsString(*t_list, r_stackfiles);
+		MCAutoStringRef t_filename;
+		
+		if (t_success)
+			t_success = MCStringFormat(&t_filename, "%s,%s", MCStringGetCString(stackfiles[i].stackname), MCStringGetCString(stackfiles[i].filename));
+		
+		if (t_success)
+			t_success = MCListAppend(*t_file_list, *t_filename);
 	}
+	
+	if (t_success)
+		t_success = MCListCopyAsString(*t_file_list, r_stackfiles);
+	
+	return t_success;
 }
 
 void MCStack::stringtostackfiles(MCStringRef d_strref, MCStackfile **sf, uint2 &nf)

@@ -605,10 +605,11 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 
 	if (flags & F_STACK_FILES)
 	{
-        MCAutoStringRef sf;
-        getstackfiles(&sf);
-        if ((stat = IO_write_stringref(*sf, stream)) != IO_NORMAL)
-            return stat;
+		MCAutoStringRef t_sf;
+		if (!getstackfiles(&t_sf))
+			return IO_ERROR;
+		if ((stat = IO_write_stringref(*t_sf, stream)) != IO_NORMAL)
+			return stat;
 	}
 	if (flags & F_MENU_BAR)
 		if ((stat = IO_write_nameref(_menubar, stream)) != IO_NORMAL)
