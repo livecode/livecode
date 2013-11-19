@@ -605,12 +605,10 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 
 	if (flags & F_STACK_FILES)
 	{
-		MCExecPoint ep;
-		getstackfiles(ep);
-		char *sf = ep.getsvalue().clone();
-		if ((stat = IO_write_string(sf, stream)) != IO_NORMAL)
-			return stat;
-		delete sf;
+        MCAutoStringRef sf;
+        getstackfiles(&sf);
+        if ((stat = IO_write_stringref(*sf, stream)) != IO_NORMAL)
+            return stat;
 	}
 	if (flags & F_MENU_BAR)
 		if ((stat = IO_write_nameref(_menubar, stream)) != IO_NORMAL)
@@ -1832,22 +1830,31 @@ void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uint2 &nstring
 	case FM_NORMAL:
 	case FM_CHARACTERS:
 	case FM_WORD:
-		{
-			// MW-2007-07-05: [[ Bug 110 ]] - Break string only breaks at spaces, rather than space charaters
-			const char *sptr = MCStringGetCString(source);
-			uint4 l = MCStringGetLength(source);
-			MCU_skip_spaces(sptr, l);
-			const char *startptr = sptr;
-			while(l != 0)
+        {
+			// MW-2007-07-05: [[ Bug 110 ]] - Break string only breaks at spaces, rather than space charaters 
+			uint4 l;
+            l = 0;
+            uint4 remaining_chars;
+            remaining_chars = MCStringGetLength(source);
+			MCU_skip_spaces(source, l);
+            remaining_chars -= l;
+            uindex_t t_start;
+            t_start = 0;
+            
+			while(remaining_chars != 0)
 			{
-				while(l != 0 && !isspace(*sptr))
-					sptr += 1, l -= 1;
-
+				while(!isspace(MCStringGetNativeCharAtIndex(source, t_start)))
+                {
+					t_start++;
+                    remaining_chars --;
+                }
+                
 				MCU_realloc((char **)&tdest_str, nstrings, nstrings + 1, sizeof(MCStringRef));
-                /* UNCHECKED */ MCStringCreateWithNativeChars ((const char_t *) startptr, sptr - startptr, tdest_str[nstrings]);
+                /* UNCHECKED */ MCStringCopySubstring(source, MCRangeMake(l, t_start), tdest_str[nstrings]);
 				nstrings++;
-				MCU_skip_spaces(sptr, l);
-				startptr = sptr;
+                t_start = 0;
+				MCU_skip_spaces(source, l);
+                remaining_chars -= l;
 			}
 		}
 		break;

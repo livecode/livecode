@@ -73,17 +73,19 @@ Boolean MCStack::setscript(MCStringRef newscript)
 {
 	MCValueAssign(_script, newscript);
 	parsescript(False);
+    MCAutoPointer<char> t_mccmd;
+    /* UNCHECKED */ MCStringConvertToCString(MCcmd, &t_mccmd);
 	if (hlist == NULL)
 	{
 		uint2 line, pos;
 		MCperror->geterrorloc(line, pos);
 		fprintf(stderr, "%s: Script parsing error at line %d, column %d\n",
-		        MCStringGetCString(MCcmd), line, pos);
+		        *t_mccmd, line, pos);
 		return False;
 	}
 	if (!hlist->hashandlers())
 	{
-		fprintf(stderr, "%s: Script has no handlers\n", MCStringGetCString(MCcmd));
+		fprintf(stderr, "%s: Script has no handlers\n", *t_mccmd);
 		return False;
 	}
 	return True;
@@ -2598,17 +2600,18 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	
 }
 
-void MCStack::getstackfiles(MCExecPoint &ep)
+void MCStack::getstackfiles(MCStringRef& r_stackfiles)
 {
-	ep.clear();
 	if (nstackfiles != 0)
 	{
 		uint2 i;
+        MCAutoListRef t_list;
+        /* UNCHECKED */ MCListCreateMutable('\n', &t_list);
 		for (i = 0 ; i < nstackfiles ; i++)
 		{
-			ep.concatcstring(MCStringGetCString(stackfiles[i].stackname), EC_RETURN, i == 0);
-			ep.concatcstring(MCStringGetCString(stackfiles[i].filename), EC_COMMA, false);
+			MCListAppendFormat(*t_list, "%@,%@", stackfiles[i].stackname, stackfiles[i].filename);
 		}
+        MCListCopyAsString(*t_list, r_stackfiles);
 	}
 }
 
@@ -2618,8 +2621,8 @@ void MCStack::stringtostackfiles(MCStringRef d_strref, MCStackfile **sf, uint2 &
 	uint2 nnewsf = 0;
     // This ensures the coy is freed when the method ends
     MCAutoPointer<char> d;
-    /* UNCHECKED */ d = strdup(MCStringGetCString(d_strref));
-	char *eptr = *d;
+    /* UNCHECKED */ MCStringConvertToCString(d_strref, &d);
+	char *eptr = strdup(*d);
 	while ((eptr = strtok(eptr, "\n")) != NULL)
 	{
 		char *cptr = strchr(eptr, ',');
