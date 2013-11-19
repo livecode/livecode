@@ -164,9 +164,11 @@ bool MCReferencedImageRep::GetDataStream(IO_handle &r_stream)
         MCU_geturl(ctxt, m_file_name, &t_data);
         if (ctxt.HasError() || MCStringIsEmpty(*t_data))
             return false;
+        MCAutoDataRef t_dataref;
+        /* UNCHECKED */ ctxt . ConvertToData(*t_data, &t_dataref);
         
-        /* UNCHECKED */ MCMemoryAllocateCopy(MCStringGetCString(*t_data), MCStringGetLength(*t_data), m_url_data);
-        m_url_data_size = MCStringGetLength(*t_data);
+        /* UNCHECKED */ MCMemoryAllocateCopy(MCDataGetBytePtr(*t_dataref), MCDataGetLength(*t_dataref), m_url_data);
+        m_url_data_size = MCDataGetLength(*t_dataref);
 
 		t_stream = MCS_fakeopen(MCString((const char *)m_url_data, m_url_data_size));
 	}
