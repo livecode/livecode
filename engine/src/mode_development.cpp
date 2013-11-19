@@ -141,18 +141,16 @@ static MCStringRef s_command_path = nil;
 static void restart_revolution(void)
 {
 #if defined(TARGET_PLATFORM_WINDOWS)
-	_spawnl(_P_NOWAIT, MCStringGetCString(s_command_path), MCStringGetCString(s_command_path), NULL);
-#elif defined(TARGET_PLATFORM_MACOS_X)
+    MCAutoStringRefAsUTF8String t_command_path;
+    t_command_path . Lock(s_command_path);
+	_spawnl(_P_NOWAIT, *t_command_path, *t_command_path, NULL);
+#elif defined(TARGET_PLATFORM_MACOS_X) || defined(TARGET_PLATFORM_LINUX)
 	if (fork() == 0)
 	{
+        MCAutoStringRefAsUTF8String t_mccmd;
+        t_mccmd . Lock(MCcmd);
 		usleep(250000);
-		execl(MCStringGetCString(MCcmd), MCStringGetCString(MCcmd), NULL);
-	}
-#elif defined(TARGET_PLATFORM_LINUX)
-	if (fork() == 0)
-	{
-		usleep(250000);
-		execl(MCStringGetCString(MCcmd), MCStringGetCString(MCcmd), NULL);
+		execl(*t_mccmd, *t_mccmd, NULL);
 	}
 #else
 #error restart not defined
