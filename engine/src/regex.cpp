@@ -216,7 +216,9 @@ int regcomp(regex_t *preg, MCStringRef pattern, int cflags)
 		options |= PCRE_CASELESS;
 	if ((cflags & REG_NEWLINE) != 0)
 		options |= PCRE_MULTILINE;
-	preg->re_pcre = pcre_compile(MCStringGetCString(pattern), options, &errorptr, &erroffset, NULL);
+    MCAutoPointer<char> t_pattern;
+    /* UNCHECKED */ MCStringConvertToCString(pattern, &t_pattern);
+	preg->re_pcre = pcre_compile(*t_pattern, options, &errorptr, &erroffset, NULL);
 	preg->re_erroffset = erroffset;
 
 	if (preg->re_pcre == NULL)
@@ -255,7 +257,9 @@ int regexec(regex_t *preg, MCStringRef string, int len, size_t nmatch,
 			return REG_ESPACE;
 	}
 
-	rc = pcre_exec((const pcre *)preg->re_pcre, NULL, MCStringGetCString(string), len, 0, options,
+    MCAutoPointer<char> t_string;
+    /* UNCHECKED */ MCStringConvertToCString(string, &t_string);
+	rc = pcre_exec((const pcre *)preg->re_pcre, NULL, *t_string, len, 0, options,
 	               ovector, nmatch * 3);
 
 	if (rc == 0)
