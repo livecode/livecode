@@ -87,11 +87,11 @@ static inline MCPoint MCGPointToMCPoint(const MCGPoint &p_point)
 	return MCPointMake(p_point.x, p_point.y);
 }
 
-inline MCGPoint MCPointToMCGPoint(MCPoint p_point)
+inline MCGPoint MCPointToMCGPoint(MCPoint p_point, MCGFloat p_adjustment = 0.0f)
 {
 	MCGPoint t_point;
-	t_point . x = (MCGFloat) p_point . x;
-	t_point . y = (MCGFloat) p_point . y;
+	t_point . x = (MCGFloat) p_point . x - p_adjustment;
+	t_point . y = (MCGFloat) p_point . y - p_adjustment;
 	return t_point;
 }
 
