@@ -1784,6 +1784,10 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		trect = MCU_reduce_rect(trect, borderwidth);
 	if (points == NULL && getstyleint(flags) == F_REGULAR)
 	{
+		// MM-2013-11-19: [[ Bug 11470 ]] For regular polygons, we need to inset the rect as before so we can calculate the points correctly.
+		if (linesize != 0)
+			trect = MCU_reduce_rect(trect, linesize >> 1);
+		
 		if (npoints <= nsides)
 		{
 			npoints = nsides + 1;
