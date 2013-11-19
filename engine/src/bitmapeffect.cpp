@@ -1300,65 +1300,6 @@ void MCBitmapEffectsComputeBounds(MCBitmapEffectsRef self, const MCRectangle& p_
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool MCBitmapEffectLookup(MCBitmapEffectsRef& self, MCNameRef p_prop, MCBitmapEffectType p_type, MCBitmapEffectProperty& r_prop, MCBitmapEffect*& r_effect)
-{
-	// Now fetch the bitmap effect we are processing - note that if this is
-	// NULL it means it isn't set. In this case we still carry on since we
-	// need to report a invalid key error (if applicable).
-	MCBitmapEffect *t_effect;
-	if (self != nil && (self  -> mask & (1 << p_type)) != 0)
-		r_effect = &self -> effects[p_type];
-	else
-		r_effect = nil;
-    
-    if (MCBitmapEffectLookupProperty(p_type, p_prop, r_prop) != ES_NORMAL)
-        return false;
-    
-    return true;
-}
-
-
-static bool MCBitmapEffectLookupForSet(MCBitmapEffectsRef& self, MCNameRef p_prop, MCBitmapEffectType p_type, MCBitmapEffectProperty& r_prop, MCBitmapEffect& r_effect, bool& r_dirty)
-{    
-	// Now fetch the bitmap effect we are processing - note that if this is
-	// NULL it means it isn't set. In this case we still carry on since we
-	// need to report a invalid key error (if applicable).
-	if (self != nil && (self  -> mask & (1 << p_type)) != 0)
-    {
-		r_effect = self -> effects[p_type];
-        r_dirty = false;
-    }
-	else
-	{
-		MCBitmapEffectDefault(&r_effect, p_type);
-		// If the effect doesn't yet exist, it means we will dirty the object
-		// regardless.
-		r_dirty = true;
-	}
-    
-    // Lookup the property and ensure it is appropriate for our type.
-    if (MCBitmapEffectLookupProperty(p_type, p_prop, r_prop) != ES_NORMAL)
-        return false;
-}
-
-static bool MCBitmapEffectCommitChanges(MCBitmapEffectsRef& self, MCBitmapEffectType p_type, MCBitmapEffect p_new_effect)
-{
-    // If we are currently empty, then allocate a new object
-    if (self == nil)
-    {
-        self = new MCBitmapEffects;
-        if (self == nil)
-            return false;
-        
-        // Only need to initialize the mask.
-        self -> mask = 0;
-    }
-    
-    // Now copy in the updated effect.
-    self -> mask |= (1 << p_type);
-    self -> effects[p_type] = p_new_effect;
-}
-
 static void MCBitmapEffectFetchProperty(MCExecContext& ctxt, MCBitmapEffect *effect, MCBitmapEffectProperty p_prop, MCExecValue& r_value)
 {
     if (effect == nil)
@@ -1428,9 +1369,6 @@ static void MCBitmapEffectFetchProperty(MCExecContext& ctxt, MCBitmapEffect *eff
 
 bool MCBitmapEffectsGetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, MCNameRef p_index, Properties which, MCExecValue& r_value)
 {
-    MCBitmapEffectProperty t_prop;
-    MCBitmapEffect* effect;
-    
     // First map the property type
 	MCBitmapEffectType t_type;
 	t_type = (MCBitmapEffectType)(which - P_BITMAP_EFFECT_DROP_SHADOW);
@@ -1439,45 +1377,56 @@ bool MCBitmapEffectsGetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, M
     bool t_is_array;
     t_is_array = MCNameIsEqualTo(p_index, kMCEmptyName, kMCCompareCaseless);
     
-    if (MCBitmapEffectLookup(self, p_index, t_type, t_prop, effect))
+	// Now fetch the bitmap effect we are processing - note that if this is
+	// NULL it means it isn't set. In this case we still carry on since we
+	// need to report a invalid key error (if applicable).
+	MCBitmapEffect *t_effect;
+	if (self != nil && (self  -> mask & (1 << t_type)) != 0)
+		t_effect = &self -> effects[t_type];
+	else
+		t_effect = nil;
+    
+    MCBitmapEffectProperty t_prop;
+    if (!MCNameIsEmpty(p_index) && MCBitmapEffectLookupProperty(t_type, p_index, t_prop) != ES_NORMAL)
+        return false;
+
+    if (t_is_array)
     {
-        if (t_is_array)
+        if (t_effect == nil)
         {
-            if (effect == nil)
-            {
-                r_value . arrayref_value = MCValueRetain(kMCEmptyArray);
-                r_value . type = kMCExecValueTypeArrayRef;
-                return true;
-            }
-            
-            // Otherwise we have an array get, so first create a new value
-            MCAutoArrayRef v;
-            if (MCArrayCreateMutable(&v))
-            {
-                // Now loop through all the properties, getting the ones applicable to this type.
-                for(uint32_t i = 0; i < ELEMENTS(s_bitmap_effect_properties); i++)
-                {
-                    if ((s_bitmap_effect_properties[i] . mask & (1 << t_type)) != 0)
-                    {
-                        MCExecValue t_value;
-                        MCAutoValueRef t_valueref;
-                        // Fetch the property, then store it into the array.
-                        MCBitmapEffectFetchProperty(ctxt, effect, s_bitmap_effect_properties[i] . value, t_value);
-                        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value . type + 1, kMCExecValueTypeValueRef, &(&t_valueref));
-                        MCArrayStoreValue(*v, ctxt . GetCaseSensitive(), MCNAME(s_bitmap_effect_properties[i] . token), *t_valueref);
-                    }
-                }
-                r_value . arrayref_value = MCValueRetain(*v);
-                r_value . type = kMCExecValueTypeArrayRef;
-                return true;
-            }
+            r_value . stringref_value = MCValueRetain(kMCEmptyString);
+            r_value . type = kMCExecValueTypeStringRef;
+            return true;
         }
-        else
+        
+        // Otherwise we have an array get, so first create a new value
+        MCAutoArrayRef v;
+        if (MCArrayCreateMutable(&v))
         {
-            MCBitmapEffectFetchProperty(ctxt, effect, t_prop, r_value);
+            // Now loop through all the properties, getting the ones applicable to this type.
+            for(uint32_t i = 0; i < ELEMENTS(s_bitmap_effect_properties); i++)
+            {
+                if ((s_bitmap_effect_properties[i] . mask & (1 << t_type)) != 0)
+                {
+                    MCExecValue t_value;
+                    MCAutoValueRef t_valueref;
+                    // Fetch the property, then store it into the array.
+                    MCBitmapEffectFetchProperty(ctxt, t_effect, s_bitmap_effect_properties[i] . value, t_value);
+                    MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value . type + 1, kMCExecValueTypeValueRef, &(&t_valueref));
+                    MCArrayStoreValue(*v, ctxt . GetCaseSensitive(), MCNAME(s_bitmap_effect_properties[i] . token), *t_valueref);
+                }
+            }
+            r_value . arrayref_value = MCValueRetain(*v);
+            r_value . type = kMCExecValueTypeArrayRef;
             return true;
         }
     }
+    else
+    {
+        MCBitmapEffectFetchProperty(ctxt, t_effect, t_prop, r_value);
+        return true;
+    }
+
     return false;
 }
 
@@ -1654,9 +1603,6 @@ bool MCBitmapEffectsSetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, M
     // First map the property type
 	MCBitmapEffectType t_type;
 	t_type = (MCBitmapEffectType)(which - P_BITMAP_EFFECT_DROP_SHADOW);
- 
-    MCBitmapEffectProperty t_prop;
-    MCBitmapEffect effect;
     
     // If 'p_index' is the empty name, this is a whole array op.
     bool t_is_array;
@@ -1680,48 +1626,82 @@ bool MCBitmapEffectsSetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, M
 		return true;
     }
     
+    MCBitmapEffectProperty t_prop;
+    MCBitmapEffect effect;
     bool t_dirty;
-    if (MCBitmapEffectLookupForSet(self, p_index, t_type, t_prop, effect, t_dirty))
+    
+    // Now fetch the bitmap effect we are processing - note that if this is
+    // NULL it means it isn't set. In this case we still carry on since we
+    // need to report a invalid key error (if applicable).
+    if (self != nil && (self  -> mask & (1 << t_type)) != 0)
     {
-        if (t_is_array)
-        {
-            bool t_dirty_array;
-            t_dirty_array = false;
-            MCAutoArrayRef t_array;
-            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeArrayRef, &(&t_array));
-            // Loop through all the properties in the table and apply the relevant
-            // ones.
-            for(uint32_t i = 0; i < ELEMENTS(s_bitmap_effect_properties); i++)
-                if ((s_bitmap_effect_properties[i] . mask & (1 << t_type)) != 0)
-                {
-                    MCValueRef t_prop_value;
-                    MCNewAutoNameRef t_key;
-                    
-                    /* UNCHECKED */ MCNameCreateWithCString(s_bitmap_effect_properties[i] . token, &t_key);
-                    // If we don't have the given element, then move to the next one
-                    if (!MCArrayFetchValue(*t_array, kMCCompareExact, *t_key, t_prop_value))
-                        continue;
-                    
-                    // Otherwise, fetch the keys value and attempt to set the property
-                    MCExecValue t_value;
-                    t_value . valueref_value = MCValueRetain(t_prop_value);
-                    t_value . type = kMCExecValueTypeValueRef;
-                    MCBitmapEffectStoreProperty(ctxt, effect, s_bitmap_effect_properties[i] . value, t_value, t_dirty_array);
-                }
-            if (t_dirty_array)
-                t_dirty = true;
-
-        }
-        else
-            MCBitmapEffectStoreProperty(ctxt, effect, t_prop, p_value, t_dirty);
-        
-        if (!t_dirty || MCBitmapEffectCommitChanges(self, t_type, effect))
-        {
-            r_dirty = t_dirty;
-            return true;
-        }
+        effect = self -> effects[t_type];
+        t_dirty = false;
     }
-    return false;
+    else
+    {
+        MCBitmapEffectDefault(&effect, t_type);
+        // If the effect doesn't yet exist, it means we will dirty the object
+        // regardless.
+        t_dirty = true;
+    }
+    
+    // Lookup the property and ensure it is appropriate for our type.
+    if (!MCNameIsEmpty(p_index) && MCBitmapEffectLookupProperty(t_type, p_index, t_prop) != ES_NORMAL)
+        return false;
+    
+    if (t_is_array)
+    {
+        bool t_dirty_array;
+        t_dirty_array = false;
+        MCAutoArrayRef t_array;
+        MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeArrayRef, &(&t_array));
+        // Loop through all the properties in the table and apply the relevant
+        // ones.
+        for(uint32_t i = 0; i < ELEMENTS(s_bitmap_effect_properties); i++)
+            if ((s_bitmap_effect_properties[i] . mask & (1 << t_type)) != 0)
+            {
+                MCValueRef t_prop_value;
+                MCNewAutoNameRef t_key;
+                
+                /* UNCHECKED */ MCNameCreateWithCString(s_bitmap_effect_properties[i] . token, &t_key);
+                // If we don't have the given element, then move to the next one
+                if (!MCArrayFetchValue(*t_array, kMCCompareExact, *t_key, t_prop_value))
+                    continue;
+                
+                // Otherwise, fetch the keys value and attempt to set the property
+                MCExecValue t_value;
+                t_value . valueref_value = MCValueRetain(t_prop_value);
+                t_value . type = kMCExecValueTypeValueRef;
+                MCBitmapEffectStoreProperty(ctxt, effect, s_bitmap_effect_properties[i] . value, t_value, t_dirty_array);
+            }
+        if (t_dirty_array)
+            t_dirty = true;
+        
+    }
+    else
+        MCBitmapEffectStoreProperty(ctxt, effect, t_prop, p_value, t_dirty);
+    
+    if (t_dirty)
+    {
+        // If we are currently empty, then allocate a new object
+        if (self == nil)
+        {
+            self = new MCBitmapEffects;
+            if (self == nil)
+                return false;
+            
+            // Only need to initialize the mask.
+            self -> mask = 0;
+        }
+        
+        // Now copy in the updated effect.
+        self -> mask |= (1 << t_type);
+        self -> effects[t_type] = effect;
+    }
+    
+    r_dirty = t_dirty;
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

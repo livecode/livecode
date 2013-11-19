@@ -2664,7 +2664,7 @@ void MCObject::getstringprop(MCExecContext& ctxt, uint32_t p_part_id, Properties
 void MCObject::setstringprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCStringRef p_value)
 {
     MCExecValue t_value;
-    t_value . stringref_value = p_value;
+    t_value . stringref_value = MCValueRetain(p_value);
     t_value . type = kMCExecValueTypeStringRef;
 	if (setprop(ctxt, p_part_id, p_which, p_effective, t_value))
 		return;
@@ -2693,7 +2693,7 @@ void MCObject::getvariantprop(MCExecContext& ctxt, uint32_t p_part_id, Propertie
 void MCObject::setvariantprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCValueRef p_value)
 {
     MCExecValue t_value;
-    t_value . valueref_value = p_value;
+    t_value . valueref_value = MCValueRetain(p_value);
     t_value . type = kMCExecValueTypeValueRef;
     if (setprop(ctxt, p_part_id, p_which, p_effective, t_value))
         return;

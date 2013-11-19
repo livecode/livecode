@@ -928,19 +928,26 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 
 ////
 
-template<typename O, typename A, void (O::*Method)(MCExecContext&, MCNameRef, A)> inline void MCPropertyObjectRecordThunk(MCExecContext& ctxt, MCObjectIndexPtr *obj, A arg)
+template<typename O, typename A, void (O::*Method)(MCExecContext&, MCNameRef, A)> inline void MCPropertyObjectRecordPropThunk(MCExecContext& ctxt, MCObjectIndexPtr *obj, A arg)
 {
     if (obj -> index == nil)
         (static_cast<O *>(obj -> object) ->*Method)(ctxt, kMCEmptyName, arg);
     else
         (static_cast<O *>(obj -> object) ->*Method)(ctxt, obj -> index, arg);
 }
-     
-#define MCPropertyObjectGetRecordThunkImp(obj, mth) (void(*)(MCExecContext&,MCObjectIndexPtr*,MCExecValue&))MCPropertyObjectRecordThunk<obj,MCExecValue&, &obj::mth>
-#define MCPropertyObjectSetRecordThunkImp(obj,mth) (void(*)(MCExecContext&,MCObjectIndexPtr*,MCExecValue))MCPropertyObjectRecordThunk<obj,MCExecValue, &obj::mth>
+
+template<typename O, typename A, void (O::*Method)(MCExecContext&, MCNameRef, A)> inline void MCPropertyObjectRecordThunk(MCExecContext& ctxt, MCObjectPtr *obj, A arg)
+{
+    (static_cast<O *>(obj -> object) ->*Method)(ctxt, kMCEmptyName, arg);
+}
+
+#define MCPropertyObjectGetRecordPropThunkImp(obj, mth) (void(*)(MCExecContext&,MCObjectIndexPtr*,MCExecValue&))MCPropertyObjectRecordPropThunk<obj,MCExecValue&, &obj::mth>
+#define MCPropertyObjectSetRecordPropThunkImp(obj,mth) (void(*)(MCExecContext&,MCObjectIndexPtr*,MCExecValue))MCPropertyObjectRecordPropThunk<obj,MCExecValue, &obj::mth>
+#define MCPropertyObjectGetRecordThunkImp(obj, mth) (void(*)(MCExecContext&,MCObjectPtr*,MCExecValue&))MCPropertyObjectRecordThunk<obj,MCExecValue&, &obj::mth>
+#define MCPropertyObjectSetRecordThunkImp(obj,mth) (void(*)(MCExecContext&,MCObjectPtr*,MCExecValue))MCPropertyObjectRecordThunk<obj,MCExecValue, &obj::mth>
 
 #define DEFINE_RW_OBJ_RECORD_PROPERTY(prop, obj, tag) \
-{ prop, false, kMCPropertyTypeRecord, nil, (void *)MCPropertyObjectGetRecordThunkImp(obj, Get##tag##Property), (void *)MCPropertyObjectSetRecordThunkImp(obj, Set##tag##Property), false, true, false, kMCPropertyInfoChunkTypeNone }, { prop, false, kMCPropertyTypeRecord, nil, (void *)MCPropertyObjectGetRecordThunkImp(obj, Get##tag##Property), (void *)MCPropertyObjectSetRecordThunkImp(obj, Set##tag##Property), false, false, false, kMCPropertyInfoChunkTypeNone },
+{ prop, false, kMCPropertyTypeRecord, nil, (void *)MCPropertyObjectGetRecordPropThunkImp(obj, Get##tag##Property), (void *)MCPropertyObjectSetRecordPropThunkImp(obj, Set##tag##Property), false, true, false, kMCPropertyInfoChunkTypeNone }, { prop, false, kMCPropertyTypeRecord, nil, (void *)MCPropertyObjectGetRecordThunkImp(obj, Get##tag##Property), (void *)MCPropertyObjectSetRecordThunkImp(obj, Set##tag##Property), false, false, false, kMCPropertyInfoChunkTypeNone },
 
 ////////////////////////////////////////////////////////////////////////////////
 

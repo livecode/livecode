@@ -2177,3 +2177,10 @@ void MCStack::SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_st
     MCObject::SetTextStyle(ctxt, p_style);
     MCRedrawDirtyScreen();
 }
+
+void MCStack::GetKey(MCExecContext& ctxt, bool& r_value)
+{
+    // OK-2010-02-11: [[Bug 8610]] - Passkey property more useful if it returns
+    //   whether or not the script is available.
+    r_value = iskeyed();
+}

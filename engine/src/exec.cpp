@@ -1326,7 +1326,14 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
         case kMCPropertyTypeString:
         {
-            ((void(*)(MCExecContext&, void *, MCStringRef&))prop -> getter)(ctxt, mark, r_value . stringref_value);
+            MCAutoStringRef t_string;
+            ((void(*)(MCExecContext&, void *, MCStringRef&))prop -> getter)(ctxt, mark, &t_string);
+            if (*t_string == nil)
+            {
+                MCAutoStringRef t_new;
+                ((void(*)(MCExecContext&, void *, MCStringRef&))prop -> getter)(ctxt, mark, &t_new);
+            }
+            r_value . stringref_value = MCValueRetain(*t_string);
             if (!ctxt . HasError())
             {
                 r_value . type = kMCExecValueTypeStringRef;
@@ -1923,8 +1930,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         
         case kMCPropertyTypeRecord:
         {
-            MCObjectIndexPtr* t_index = (MCObjectIndexPtr *)mark;
-            ((void(*)(MCExecContext&, MCObjectIndexPtr *, MCExecValue&))prop -> getter)(ctxt, t_index, r_value);
+            ((void(*)(MCExecContext&, void *, MCExecValue&))prop -> getter)(ctxt, mark, r_value);
         }
             break;
             
@@ -2381,8 +2387,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
         case kMCPropertyTypeRecord:
         {
-            MCObjectIndexPtr* t_index = (MCObjectIndexPtr *)mark;
-            ((void(*)(MCExecContext&, MCObjectIndexPtr *, MCExecValue))prop -> setter)(ctxt, t_index, p_value);
+            ((void(*)(MCExecContext&, void *, MCExecValue))prop -> setter)(ctxt, mark, p_value);
         }
             break;
             

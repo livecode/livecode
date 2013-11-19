@@ -1025,6 +1025,8 @@ public:
 	void GetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t*& p_size);
 	void SetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t* p_size);
 
+    void GetKey(MCExecContext& ctxt, bool& r_value);
+    
     virtual void SetForePixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetBackPixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetHilitePixel(MCExecContext& ctxt, uinteger_t* pixel);

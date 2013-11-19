@@ -182,6 +182,8 @@ MCPropertyInfo MCStack::kProperties[] =
     
    	// IM-2013-09-23: [[ FullscreenMode ]] Add stack fullscreenMode property
     DEFINE_RW_OBJ_ENUM_PROPERTY(P_FULLSCREENMODE, InterfaceStackFullscreenMode, MCStack, FullscreenMode)
+    
+    DEFINE_RO_OBJ_PROPERTY(P_KEY, Bool, MCStack, Key)
 };
 
 MCObjectPropertyTable MCStack::kPropertyTable =
