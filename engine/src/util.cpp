@@ -1346,7 +1346,7 @@ Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
 			match = True;
 		
 		if (!match)
-			MCLog("[[ Bug 11068 ]] match name '%s' to '%.*s' attempted and failed due to better checking", MCNameGetCString(name), test . getlength(), test . getstring());
+			MCLog("[[ Bug 11068 ]] match name '%@' to '%.*s' attempted and failed due to better checking", MCNameGetString(name), test . getlength(), test . getstring());
 	}
 
 	return match;

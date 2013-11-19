@@ -1392,8 +1392,8 @@ void MCObject::GetParentScript(MCExecContext& ctxt, MCStringRef& r_parent_script
 		MCParentScript *t_parent;
 		t_parent = parent_script -> GetParent();
 		
-		if (MCStringFormat(r_parent_script, "button id %d of stack \"%s\"", t_parent -> GetObjectId(),
-							MCNameGetCString(t_parent -> GetObjectStack())))
+		if (MCStringFormat(r_parent_script, "button id %d of stack \"%@\"", t_parent -> GetObjectId(),
+							MCNameGetString(t_parent -> GetObjectStack())))
 			return;
 
 		ctxt . Throw();

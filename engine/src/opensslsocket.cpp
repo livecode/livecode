@@ -2199,16 +2199,18 @@ Boolean MCSocket::sslconnect()
 	{
 		if (sslverify)
 		{
-			char *t_hostname;
-			t_hostname = strdup(MCNameGetCString(name));
-			if (strchr(t_hostname, ':') != NULL)
-				strchr(t_hostname, ':')[0] = '\0';
-			else if (strchr(t_hostname, '|') != NULL)
-				strchr(t_hostname, '|')[0] = '\0';
-
-			rc = post_connection_check(_ssl_conn, t_hostname);
-
-			free(t_hostname);
+			MCAutoStringRef t_hostname;
+            /* UNCHECKED */ MCStringMutableCopy(MCNameGetString(name), &t_hostname);
+            uindex_t t_pos;
+            if (MCStringFirstIndexOfChar(*t_hostname, ':', 0, kMCCompareExact, t_pos))
+            /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
+            else if (MCStringFirstIndexOfChar(*t_hostname, '|', 0, kMCCompareExact, t_pos))
+            /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
+			
+            MCAutoPointer<char> t_host;
+            /* UNCHECKED */ MCStringConvertToCString(*t_hostname, &t_host);
+			
+            rc = post_connection_check(_ssl_conn, *t_host);
 
 			if (rc != X509_V_OK)
 			{
@@ -2380,16 +2382,18 @@ Boolean MCSocket::sslaccept()
 	{
 		if (sslverify)
 		{
-			char *t_hostname;
-			t_hostname = strdup(MCNameGetCString(name));
-			if (strchr(t_hostname, ':') != NULL)
-				strchr(t_hostname, ':')[0] = '\0';
-			else if (strchr(t_hostname, '|') != NULL)
-				strchr(t_hostname, '|')[0] = '\0';
+			MCAutoStringRef t_hostname;
+            /* UNCHECKED */ MCStringMutableCopy(MCNameGetString(name), &t_hostname);
+            uindex_t t_pos;
+            if (MCStringFirstIndexOfChar(*t_hostname, ':', 0, kMCCompareExact, t_pos))
+                /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
+            else if (MCStringFirstIndexOfChar(*t_hostname, '|', 0, kMCCompareExact, t_pos))
+                /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
+			
+            MCAutoPointer<char> t_host;
+            /* UNCHECKED */ MCStringConvertToCString(*t_hostname, &t_host);
+			rc = post_connection_check(_ssl_conn, *t_host);
 
-			rc = post_connection_check(_ssl_conn, t_hostname);
-
-			free(t_hostname);
 			if (rc != X509_V_OK)
 				return False;
 		}
