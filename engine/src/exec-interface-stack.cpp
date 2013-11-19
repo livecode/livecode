@@ -1439,29 +1439,7 @@ void MCStack::SetLockScreen(MCExecContext& ctxt, bool lock)
 
 void MCStack::GetStackFiles(MCExecContext& ctxt, MCStringRef& r_files)
 {
-	bool t_success;
-	t_success = true;
-	
-	MCAutoListRef t_file_list;
-
-	if (t_success)
-		t_success = MCListCreateMutable('\n', &t_file_list);
-
-	for (uint2 i = 0; i < nstackfiles; i++)
-	{
-		MCAutoStringRef t_filename;
-
-		if (t_success)
-			t_success = MCStringFormat(&t_filename, "%s,%s", MCStringGetCString(stackfiles[i].stackname), MCStringGetCString(stackfiles[i].filename));
-
-		if (t_success)
-			t_success = MCListAppend(*t_file_list, *t_filename);
-	}
-
-	if (t_success)
-		t_success = MCListCopyAsString(*t_file_list, r_files);
-
-	if (t_success)
+	if (getstackfiles(r_files))
 		return;
 
 	ctxt . Throw();
