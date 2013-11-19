@@ -1460,12 +1460,15 @@ static void MCBitmapEffectsSetEnumProperty(MCExecContext& ctxt, MCBitmapEffect& 
         case kMCBitmapEffectPropertyBlendMode:
         {
             MCExecParseEnum(ctxt, kMCInterfaceBitmapEffectBlendModeTypeInfo, p_value, t_value);
-            MCBitmapEffectBlendMode t_new_mode;
-            t_new_mode = (MCBitmapEffectBlendMode)t_value;
-            if (t_new_mode != x_effect . layer . blend_mode)
+            if (!ctxt . HasError())
             {
-                x_effect . layer . blend_mode = t_new_mode;
-                x_dirty = true;
+                MCBitmapEffectBlendMode t_new_mode;
+                t_new_mode = (MCBitmapEffectBlendMode)t_value;
+                if (t_new_mode != x_effect . layer . blend_mode)
+                {
+                    x_effect . layer . blend_mode = t_new_mode;
+                    x_dirty = true;
+                }
             }
         }
             break;
@@ -1473,12 +1476,15 @@ static void MCBitmapEffectsSetEnumProperty(MCExecContext& ctxt, MCBitmapEffect& 
         case kMCBitmapEffectPropertyFilter:
         {
             MCExecParseEnum(ctxt, kMCInterfaceBitmapEffectFilterTypeInfo, p_value, t_value);
-            MCBitmapEffectFilter t_new_filter;
-            t_new_filter = (MCBitmapEffectFilter)t_value;
-            if (t_new_filter != x_effect . blur . filter)
+            if (!ctxt . HasError())
             {
-                x_effect . blur . filter = t_new_filter;
-                x_dirty = true;
+                MCBitmapEffectFilter t_new_filter;
+                t_new_filter = (MCBitmapEffectFilter)t_value;
+                if (t_new_filter != x_effect . blur . filter)
+                {
+                    x_effect . blur . filter = t_new_filter;
+                    x_dirty = true;
+                }
             }
         }
             break;
@@ -1486,12 +1492,15 @@ static void MCBitmapEffectsSetEnumProperty(MCExecContext& ctxt, MCBitmapEffect& 
         case kMCBitmapEffectPropertySource:
         {
             MCExecParseEnum(ctxt, kMCInterfaceBitmapEffectSourceTypeInfo, p_value, t_value);
-            MCBitmapEffectSource t_new_source;
-            t_new_source = (MCBitmapEffectSource)t_value;
-            if (t_new_source != x_effect . glow . source)
+            if (!ctxt . HasError())
             {
-                x_effect . glow . source = t_new_source;
-                x_dirty = true;
+                MCBitmapEffectSource t_new_source;
+                t_new_source = (MCBitmapEffectSource)t_value;
+                if (t_new_source != x_effect . glow . source)
+                {
+                    x_effect . glow . source = t_new_source;
+                    x_dirty = true;
+                }
             }
         }
             break;

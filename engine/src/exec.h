@@ -3085,6 +3085,9 @@ extern MCExecEnumTypeInfo *kMCInterfaceGraphicCapStyleTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceGraphicJoinStyleTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceGraphicStyleTypeInfo;
 
+extern MCExecEnumTypeInfo *kMCInterfaceGradientFillKindTypeInfo;
+extern MCExecEnumTypeInfo *kMCInterfaceGradientFillQualityTypeInfo;
+
 ///////////
 
 extern MCExecEnumTypeInfo *kMCInterfaceImageResizeQualityTypeInfo;

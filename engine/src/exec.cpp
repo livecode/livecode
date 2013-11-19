@@ -2374,7 +2374,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             MCPoint *t_value;
             uindex_t t_count;
             
-            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypePoint, &(&t_input));
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeStringRef, &(&t_input));
             if (!MCPropertyParsePointList(*t_input, '\n', t_count, t_value))
                 ctxt . LegacyThrow(EE_PROPERTY_NAS);
             
