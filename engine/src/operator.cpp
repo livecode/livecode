@@ -1184,8 +1184,6 @@ void MCPlus::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) con
 
 // MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
 //   Here the left or right can be an array or number so we use 'tona'.
-Exec_stat MCTimes::eval(MCExecPoint &ep)
-{
 #ifdef /* MCTimes */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
@@ -1230,68 +1228,62 @@ Exec_stat MCTimes::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCTimes */
 
+#if 0
+    MCExecContext ctxt(ep);
+    MCAutoValueRef t_left, t_right;
+    MCAutoValueRef t_result;
 
-	MCExecContext ctxt(ep);
-	MCAutoValueRef t_left, t_right;
-	MCAutoValueRef t_result;
+    if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
+    {
+        MCeerror->add(EE_TIMES_BADLEFT, line, pos);
+        return ES_ERROR;
+    }
+    /* UNCHECKED */ ep.copyasvalueref(&t_left);
 
-	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_TIMES_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_left);
+    if (right->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
+    {
+        MCeerror->add(EE_TIMES_BADRIGHT, line, pos);
+        return ES_ERROR;
+    }
+    /* UNCHECKED */ ep.copyasvalueref(&t_right);
 
-	if (right->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_TIMES_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_right);
+    if (MCValueGetTypeCode(*t_left) == kMCValueTypeCodeArray)
+    {
+        if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
+            MCMathEvalMultiplyArrayByArray(ctxt, (MCArrayRef)*t_left, (MCArrayRef)*t_right, (MCArrayRef&)t_result);
+        else
+        {
+            real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
+            MCMathEvalMultiplyArrayByNumber(ctxt, (MCArrayRef)*t_left, t_real, (MCArrayRef&)t_result);
+        }
+    }
+    else
+    {
+        if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
+        {
+            real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
+            MCMathEvalMultiplyArrayByNumber(ctxt, (MCArrayRef)*t_right, t_real, (MCArrayRef&)t_result);
+        }
+        else
+        {
+            real64_t t_real_result = 0.0;
+            real64_t t_left_real, t_right_real;
+            t_left_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
+            t_right_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
+            MCMathEvalMultiply(ctxt, t_left_real, t_right_real, t_real_result);
+            /* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
+        }
+    }
 
-	if (MCValueGetTypeCode(*t_left) == kMCValueTypeCodeArray)
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-			MCMathEvalMultiplyArrayByArray(ctxt, (MCArrayRef)*t_left, (MCArrayRef)*t_right, (MCArrayRef&)t_result);
-		else
-		{
-			real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalMultiplyArrayByNumber(ctxt, (MCArrayRef)*t_left, t_real, (MCArrayRef&)t_result);
-		}
-	}
-	else
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-		{
-			real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
-			MCMathEvalMultiplyArrayByNumber(ctxt, (MCArrayRef)*t_right, t_real, (MCArrayRef&)t_result);
-		}
-		else
-		{
-			real64_t t_real_result = 0.0;
-			real64_t t_left_real, t_right_real;
-			t_left_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
-			t_right_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalMultiply(ctxt, t_left_real, t_right_real, t_real_result);
-			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
-		}
-	}
+    if (!ctxt.HasError())
+    {
+        /* UNCHECKED */ ep.setvalueref(*t_result);
+        return ES_NORMAL;
+    }
 
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
+    return ctxt.Catch(line, pos);
 }
-
-void MCTimes::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const
-{
-	static MCExecMethodInfo *s_methods[] = { kMCMathEvalMultiplyMethodInfo, kMCMathEvalMultiplyArrayByNumberMethodInfo, kMCMathEvalMultiplyArrayByArrayMethodInfo };
-	r_methods = s_methods;
-	r_count = 3;
-}
+#endif
 
 #ifdef /* MCPow */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)

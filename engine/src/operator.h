@@ -125,6 +125,91 @@ public:
     virtual MCExecMethodInfo *getmethodinfo() const { return MethodInfo; }
 };
 
+template<void (*Eval)(MCExecContext&, real64_t, real64_t, real64_t&),
+         void (*EvalArrayByArray)(MCExecContext&, MCArrayRef, MCArrayRef, MCArrayRef&),
+         void (*EvalArrayByNumber)(MCExecContext&, MCArrayRef, real64_t, MCArrayRef&),
+         Exec_errors EvalLeftError,
+         Exec_errors EvalRightError,
+         bool CanBeUnary,
+         Factor_rank Rank,
+         MCExecMethodInfo *&EvalNumberMethodInfo,
+         MCExecMethodInfo *&EvalArrayByArrayMethodInfo,
+         MCExecMethodInfo *&EvalArrayByNumberMethodInfo>
+class MCMultiBinaryOperatorCtxt: public MCMultiBinaryOperator
+{
+public:
+    MCMultiBinaryOperatorCtxt() { rank = Rank; }
+
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
+    {
+        MCExecValue t_left, t_right;
+
+        left -> eval_ctxt(ctxt, t_left);
+        if (ctxt . HasError())
+        {
+            ctxt . LegacyThrow(EvalLeftError);
+            return;
+        }
+
+        right -> eval_ctxt(ctxt, t_right);
+        if (ctxt . HasError())
+        {
+            ctxt . LegacyThrow(EvalRightError);
+            MCValueRelease(t_left . valueref_value);
+            return;
+        }
+
+        if (MCValueGetTypeCode(t_left. valueref_value) == kMCExecValueTypeArrayRef)
+        {
+            MCAutoArrayRef t_result;
+
+            if (MCValueGetTypeCode(t_right . valueref_value) == kMCExecValueTypeArrayRef)
+                EvalArrayByArray(ctxt, t_left . arrayref_value, t_right . arrayref_value, &t_result);
+            else
+            {
+                real64_t t_real;
+                if (ctxt . ConvertToReal(t_right . valueref_value, t_real))
+                    EvalArrayByNumber(ctxt, t_left . arrayref_value, t_real, &t_result);
+            }
+
+            if (!ctxt . HasError())
+                MCExecValueTraits<MCArrayRef>::set(r_value, *t_result);
+        }
+        else
+        {
+            if (MCValueGetTypeCode(t_right . valueref_value) == kMCExecValueTypeArrayRef)
+            {
+                ctxt . LegacyThrow(EE_DIV_MISMATCH);
+            }
+            else
+            {
+                real64_t t_real_result = 0.0;
+                real64_t t_left_real, t_right_real;
+
+                if (ctxt . ConvertToReal(t_left . valueref_value, t_left_real)
+                        && ctxt . ConvertToReal(t_right . valueref_value, t_right_real))
+                    Eval(ctxt, t_left_real, t_right_real, t_real_result);
+
+                if (!ctxt . HasError())
+                    MCExecValueTraits<double>::set(r_value, (double)t_real_result);
+            }
+        }
+        MCValueRelease(t_left . valueref_value);
+        MCValueRelease(t_right . valueref_value);
+    }
+
+    virtual bool canbeunary() const { return CanBeUnary; }
+
+    virtual void getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const
+    {
+        static MCExecMethodInfo *s_methods[] = { EvalNumberMethodInfo, EvalArrayByNumberMethodInfo, EvalArrayByArrayMethodInfo };
+        r_methods = s_methods;
+        r_count = 3;
+    }
+};
+
+
+
 //////////
 
 class MCAnd : public MCExpression
@@ -329,16 +414,20 @@ public:
 	virtual void compile(MCSyntaxFactoryRef factory);
 };
 
-class MCTimes : public MCMultiBinaryOperator
+class MCTimes : public MCMultiBinaryOperatorCtxt<
+        MCMathEvalMultiply,
+        MCMathEvalMultiplyArrayByArray,
+        MCMathEvalMultiplyArrayByNumber,
+        EE_TIMES_BADLEFT,
+        EE_TIMES_BADRIGHT,
+        false,
+        FR_MULDIV,
+        kMCMathEvalAddMethodInfo,
+        kMCMathEvalAddNumberToArrayMethodInfo,
+        kMCMathEvalAddArrayToArrayMethodInfo>
 {
 public:
-	MCTimes()
-	{
-		rank = FR_MULDIV;
-	}
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual void getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const;
+    MCTimes(){}
 };
 
 class MCXorBits : public MCBinaryOperatorCtxt<uinteger_t, uinteger_t, MCMathEvalBitwiseXor, EE_XORBITS_BADLEFT, EE_XORBITS_BADRIGHT, FR_XOR_BITS, kMCMathEvalBitwiseXorMethodInfo>
