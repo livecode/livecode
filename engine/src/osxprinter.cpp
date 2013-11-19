@@ -1882,8 +1882,6 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 		
 		case MARK_TYPE_IMAGE:
 		{
-			MCImageBitmap *t_src_bitmap = nil;
-			
 			int32_t t_dst_x, t_dst_y;
 			uint32_t t_dst_width, t_dst_height;
 
@@ -1901,7 +1899,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			
 			// MW-2013-10-01: [[ ImprovedPrint ]] If we didn't manage to use the input data, use the bitmap instead.
 			if (t_image == nil)
-				/* UNCHECKED */ MCImageBitmapToCGImage(t_src_bitmap, false, false, t_image);
+				/* UNCHECKED */ MCImageBitmapToCGImage(p_mark -> image .descriptor . bitmap, false, false, t_image);
 
 			CGContextClipToRect(m_context, CGRectMake(p_mark -> image . dx, p_mark -> image . dy, p_mark -> image . sw, p_mark -> image . sh));
 			
