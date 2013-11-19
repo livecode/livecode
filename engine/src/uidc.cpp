@@ -1433,7 +1433,9 @@ Boolean MCUIDC::parsecolor(MCStringRef s, MCColor& color, MCStringRef *cname)
 	
 	int2 i1, i2, i3;
 	Boolean done;
-	const char *sptr = MCStringGetCString(s);
+    char *temp;
+    /* UNCHECKED */ MCStringConvertToCString(s, temp);
+	const char *sptr = temp;
 	uint4 l = MCStringGetLength(s);
 	
 	// check for numeric first argument
