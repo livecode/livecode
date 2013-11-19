@@ -1782,10 +1782,11 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (stat != IO_NORMAL)
 		return stat;
 
-
+	
 	if (flags & F_HAS_FILENAME)
 	{
-		if ((stat = IO_write_stringref(filename, stream, false)) != IO_NORMAL)
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+		if ((stat = IO_write_stringref_new(filename, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
 	}
 	else
@@ -1896,8 +1897,9 @@ IO_stat MCImage::load(IO_handle stream, uint32_t version)
 	
 	if (flags & F_HAS_FILENAME)
 	{
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		MCAutoStringRef t_filename;
-		if ((stat = IO_read_stringref(&t_filename, stream, false)) != IO_NORMAL)
+		if ((stat = IO_read_stringref_new(&t_filename, stream, version >= 7000)) != IO_NORMAL)
 			return stat;
 
 		/* UNCHECKED */ setfilename(*t_filename);

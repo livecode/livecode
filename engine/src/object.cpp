@@ -2801,9 +2801,10 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 
 	if ((stat = IO_read_uint4(&obj_id, stream)) != IO_NORMAL)
 		return stat;
-
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	MCNameRef t_name;
-	if ((stat = IO_read_nameref(t_name, stream)) != IO_NORMAL)
+	if ((stat = IO_read_nameref_new(t_name, stream, version >= 7000)) != IO_NORMAL)
 		return stat;
 	MCNameDelete(_name);
 	_name = t_name;
@@ -2842,7 +2843,9 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 		{
 			char *fontname;
 			uint2 fontsize, fontstyle;
-			if ((stat = IO_read_string(fontname, stream)) != IO_NORMAL)
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] This codepath is only hit on sfv <= 1300,
+			//   so will never be unicode.
+			if ((stat = IO_read_string_legacy(fontname, stream)) != IO_NORMAL)
 				return stat;
 			if ((stat = IO_read_uint2(&fontheight, stream)) != IO_NORMAL)
 				return stat;
@@ -2858,10 +2861,11 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 	}
 	else if (parent != nil && (parent -> m_font_flags & FF_HAS_UNICODE_TAG) != 0)
 		m_font_flags |= FF_HAS_UNICODE_TAG;
-
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if (flags & F_SCRIPT)
 	{
-		if ((stat = IO_read_stringref(_script, stream, false)) != IO_NORMAL)
+		if ((stat = IO_read_stringref_new(_script, stream, version >= 7000)) != IO_NORMAL)
 			return stat;
 		
 		getstack() -> securescript(this);
@@ -2879,7 +2883,8 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 		{
 			if ((stat = IO_read_mccolor(colors[i], stream)) != IO_NORMAL)
 				break;
-			if ((stat = IO_read_stringref(colornames[i], stream)) != IO_NORMAL)
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+			if ((stat = IO_read_stringref_new(colornames[i], stream, version >= 7000)) != IO_NORMAL)
 				break;
 			if (MCStringIsEmpty(colornames[i]))
 			{
@@ -2932,14 +2937,24 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 		//   then convert native to utf-8.
 		if (version < 5500)
 		{
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] This code path is only hit if sfv < 5500
+			//   so leave as legacy.
 			// Read the tooltip, as encoded in its native format
-			if ((stat = IO_read_stringref(tooltip, stream, false)) != IO_NORMAL)
+			if ((stat = IO_read_stringref_legacy(tooltip, stream, false)) != IO_NORMAL)
+				return stat;
+		}
+		else if (version < 7000)
+		{
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] Special-case 5.5 format, read in as UTF-8
+			//   formatted.
+			// The tooltip should be written out encoded in UTF-8 (not UTF-16)
+			if ((stat = IO_read_stringref_utf8(tooltip, stream)) != IO_NORMAL)
 				return stat;
 		}
 		else
 		{
-			// The tooltip should be written out encoded in UTF-8 (not UTF-16)
-			if ((stat = IO_read_stringref_utf8(tooltip, stream)) != IO_NORMAL)
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] sfv >= 7000 so unicode.
+			if ((stat = IO_read_stringref_new(tooltip, stream, true)) != IO_NORMAL)
 				return stat;
 		}
 	}
@@ -3010,7 +3025,8 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 	else if (addflags & AF_LONG_SCRIPT)
 	{
 		MCAutoStringRef t_script_string;
-		if ((stat = IO_read_stringref(&t_script_string, stream, false, 4)) != IO_NORMAL)
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+		if ((stat = IO_read_stringref_new(&t_script_string, stream, version >= 7000, 4)) != IO_NORMAL)
 			return stat;
 		
 		setscript(*t_script_string);
@@ -3099,7 +3115,9 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	//
 	if ((stat = IO_write_uint4(t_written_id, stream)) != IO_NORMAL)
 		return stat;
-	if ((stat = IO_write_nameref(_name, stream)) != IO_NORMAL)
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+	if ((stat = IO_write_nameref_new(_name, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 		return stat;
 
 	if (!MCStringIsEmpty(_script))
@@ -3140,14 +3158,17 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_uint2(fontheight, stream)) != IO_NORMAL)
 			return stat;
 	}
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if (flags & F_SCRIPT && !(addflags & AF_LONG_SCRIPT))
 	{
 		getstack() -> unsecurescript(this);
-		stat = IO_write_stringref(_script, stream, false);
+		stat = IO_write_stringref_new(_script, stream, MCstackfileversion >= 7000);
 		getstack() -> securescript(this);
 		if (stat != IO_NORMAL)
 			return stat;
 	}
+	
 	if ((stat = IO_write_uint2(dflags, stream)) != IO_NORMAL)
 		return stat;
 	if ((stat = IO_write_uint2(ncolors, stream)) != IO_NORMAL)
@@ -3156,7 +3177,8 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	{
 		if ((stat = IO_write_mccolor(colors[i], stream)) != IO_NORMAL)
 			return stat;
-		if ((stat = IO_write_stringref(colornames[i] != nil ? colornames[i] : kMCEmptyString, stream)) != IO_NORMAL)
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+		if ((stat = IO_write_stringref_new(colornames[i] != nil ? colornames[i] : kMCEmptyString, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
 	}
 	if (props != NULL)
@@ -3219,14 +3241,22 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		//   then convert utf-8 to native before saving.
 		if (MCstackfileversion < 5500)
 		{
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] sfv < 5500, so native output.
 			// Tooltip is encoded in the native format
-			if ((stat = IO_write_stringref(tooltip, stream, false)) != IO_NORMAL)
+			if ((stat = IO_write_stringref_legacy(tooltip, stream, false)) != IO_NORMAL)
+				return stat;
+		}
+		else if (MCstackfileversion < 7000)
+		{
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] Special-case 5.5 format - uses UTF-8.
+			// Tooltip is encoded as UTF-8
+			if ((stat = IO_write_stringref_utf8(tooltip, stream)) != IO_NORMAL)
 				return stat;
 		}
 		else
 		{
-			// Tooltip is encoded as UTF-8
-			if ((stat = IO_write_stringref_utf8(tooltip, stream)) != IO_NORMAL)
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] sfv >= 7000, so use unicode.
+			if ((stat = IO_write_stringref_new(tooltip, stream, true)) != IO_NORMAL)
 				return stat;
 		}
 	}
@@ -3286,8 +3316,9 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	}
 	else if (addflags & AF_LONG_SCRIPT)
 	{
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		getstack() -> unsecurescript(this);
-		stat = IO_write_string(MCStringGetCString(_script), stream, false, 4);
+		stat = IO_write_stringref_new(_script, stream, MCstackfileversion >= 7000, 4);
 		getstack() -> securescript(this);
 		if (stat != IO_NORMAL)
 			return stat;

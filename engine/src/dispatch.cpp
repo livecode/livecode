@@ -76,8 +76,9 @@ static char header[HEADERSIZE] = "#!/bin/sh\n# MetaCard 2.4 stack\n# The followi
 #define NEWHEADERSIZE 8
 static const char *newheader = "REVO2700";
 static const char *newheader5500 = "REVO5500";
+static const char *newheader7000 = "REVO7000";
 
-#define MAX_STACKFILE_VERSION 5500
+#define MAX_STACKFILE_VERSION 7000
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -485,7 +486,8 @@ IO_stat readheader(IO_handle& stream, uint32_t& r_version)
 	{
 		// MW-2012-03-04: [[ StackFile5500 ]] Check for either the 2.7 or 5.5 header.
 		if (strncmp(tnewheader, newheader, NEWHEADERSIZE) == 0 ||
-			strncmp(tnewheader, newheader5500, NEWHEADERSIZE) == 0)
+			strncmp(tnewheader, newheader5500, NEWHEADERSIZE) == 0 ||
+			strncmp(tnewheader, newheader7000, NEWHEADERSIZE) == 0)
 		{
 			r_version = (tnewheader[4] - '0') * 1000;
 			r_version += (tnewheader[5] - '0') * 100;

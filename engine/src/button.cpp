@@ -4231,9 +4231,21 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			if ((stat = IO_write_uint4(icons->iconids[i], stream)) != IO_NORMAL)
 				return stat;
 	}
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
+	//   legacy unicode output.
 	if (flags & F_LABEL)
-		if ((stat = IO_write_stringref(label, stream, hasunicode())) != IO_NORMAL)
-			return stat;
+	{
+		if (MCstackfileversion < 7000)
+		{
+			if ((stat = IO_write_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
+				return stat;
+		}
+		else
+		{
+			if ((stat = IO_write_stringref_new(label, stream, true)) != IO_NORMAL)
+				return stat;
+		}
+	}
 	if (flags & F_LABEL_WIDTH)
 		if ((stat = IO_write_uint2(labelwidth, stream)) != IO_NORMAL)
 			return stat;
@@ -4248,11 +4260,24 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_int2(bottommargin, stream)) != IO_NORMAL)
 			return stat;
 	}
-	if ((stat = IO_write_nameref(menuname, stream)) != IO_NORMAL)
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+	if ((stat = IO_write_nameref_new(menuname, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 		return stat;
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
+	//   legacy unicode output.
 	if (flags & F_MENU_STRING)
-		if ((stat = IO_write_stringref(menustring, stream, hasunicode())) != IO_NORMAL)
-			return stat;
+	{
+		if (MCstackfileversion < 7000)
+		{
+			if ((stat = IO_write_stringref_legacy(menustring, stream, hasunicode())) != IO_NORMAL)
+				return stat;
+		}
+		else
+		{
+			if ((stat = IO_write_stringref_new(menustring, stream, true)) != IO_NORMAL)
+				return stat;
+		}
+	}
 	menubutton |= family << 4;
 	if ((stat = IO_write_uint1(menubutton, stream)) != IO_NORMAL)
 		return stat;
@@ -4268,10 +4293,20 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (flags & F_MENU_LINES)
 		if ((stat = IO_write_uint2(menulines, stream)) != IO_NORMAL)
 			return stat;
-
-	if ((stat = IO_write_stringref(acceltext, stream, hasunicode())) != IO_NORMAL)
-		return stat;
-
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
+	//   legacy unicode output.
+	if (MCstackfileversion < 7000)
+	{
+		if ((stat = IO_write_stringref_legacy(acceltext, stream, hasunicode())) != IO_NORMAL)
+			return stat;
+	}
+	else
+	{
+		if ((stat = IO_write_stringref_new(menustring, stream, true)) != IO_NORMAL)
+			return stat;
+	}
+	
 	if ((stat = IO_write_uint2(accelkey, stream)) != IO_NORMAL)
 		return stat;
 	if ((stat = IO_write_uint1(accelmods, stream)) != IO_NORMAL)
@@ -4345,11 +4380,21 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 				if ((stat = IO_read_uint4(&icons->iconids[i], stream)) != IO_NORMAL)
 					return stat;
 		}
-
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
+	//   legacy unicode output.
 	if (flags & F_LABEL)
 	{
-		if ((stat = IO_read_stringref(label, stream, hasunicode())) != IO_NORMAL)
-			return stat;
+		if (version < 7000)
+		{
+			if ((stat = IO_read_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
+				return stat;
+		}
+		else
+		{
+			if ((stat = IO_read_stringref_new(label, stream, true)) != IO_NORMAL)
+				return stat;
+		}
 	}
 
 	if (flags & F_LABEL_WIDTH)
@@ -4372,12 +4417,25 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 		        && leftmargin == bottommargin)
 			flags |= F_NO_MARGINS;
 	}
-	if ((stat = IO_read_nameref(menuname, stream)) != IO_NORMAL)
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+	if ((stat = IO_read_nameref_new(menuname, stream, version >= 7000)) != IO_NORMAL)
 		return stat;
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
+	//   legacy unicode output.
 	if (flags &  F_MENU_STRING)
 	{
-		if ((stat = IO_read_stringref(menustring, stream, hasunicode())) != IO_NORMAL)
-			return stat;
+		if (version < 7000)
+		{
+			if ((stat = IO_read_stringref_legacy(menustring, stream, hasunicode())) != IO_NORMAL)
+				return stat;
+		}
+		else
+		{
+			if ((stat = IO_read_stringref_new(menustring, stream, true)) != IO_NORMAL)
+				return stat;
+		}
 	}
 
 	if ((stat = IO_read_uint1(&menubutton, stream)) != IO_NORMAL)
@@ -4398,9 +4456,20 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 	if (flags & F_MENU_LINES)
 		if ((stat = IO_read_uint2(&menulines, stream)) != IO_NORMAL)
 			return stat;
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
+	//   legacy unicode output.
+	if (version < 7000)
+	{
+		if ((stat = IO_read_stringref_legacy(acceltext, stream, hasunicode())) != IO_NORMAL)
+			return stat;
+	}
+	else
+	{
+		if ((stat = IO_read_stringref_new(acceltext, stream, true)) != IO_NORMAL)
+			return stat;
+	}
 
-	if ((stat = IO_read_stringref(acceltext, stream, hasunicode())) != IO_NORMAL)
-		return stat;
 	uint4 tacceltextsize;
 
 	if ((stat = IO_read_uint2(&accelkey, stream)) != IO_NORMAL)
