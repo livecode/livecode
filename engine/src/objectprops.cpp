@@ -2524,11 +2524,6 @@ Exec_stat MCObject::setarrayprop(uint32_t p_part_id, Properties p_which, MCExecP
 
 bool MCObject::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCExecValue& r_value)
 {
-    if (getstack() != nil && getstack() -> getname_oldstring() == "revMenuBar")
-    {
-        bool t_true = true;
-    }
-    
 	MCPropertyInfo *t_info;
 	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, false, false);
 	
@@ -2551,11 +2546,6 @@ bool MCObject::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 
 bool MCObject::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCExecValue p_value)
 {    
-    if (getstack() != nil && getstack() -> getname_oldstring() == "revMenuBar")
-    {
-        bool t_true = true;
-    }
-    
 	MCPropertyInfo *t_info;
 	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, false, false);
 	
