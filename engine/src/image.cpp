@@ -1599,7 +1599,7 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return t_stat;
 }
 
-IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
+IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_remaining)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -1866,7 +1866,7 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return savepropsets(stream);
 }
 
-IO_stat MCImage::load(IO_handle stream, const char *version)
+IO_stat MCImage::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 
@@ -1888,7 +1888,7 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 		return stat;
 
 //---- Conversion from pre-2.7 behaviour to new behaviour
-	if (ink & 0x80 && strncmp(version, "2.7", 3) < 0)
+	if ((ink & 0x80) != 0 && version < 2700)
 	{
 		blendlevel = 100 - (ink & 0x7F);
 		ink = GXblendSrcOver;
@@ -1921,7 +1921,7 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 				/* UNCHECKED */ MCMemoryAllocate(t_compressed->size, t_compressed->data);
 				if (IO_read(t_compressed->data, t_compressed->size, stream) != IO_NORMAL)
 					return IO_ERROR;
-				if (strncmp(version, "1.4", 3) == 0)
+				if (version == 1400)
 				{
 					if ((ncolors == 16 || ncolors == 256) && noblack())
 						flags |= F_NEED_FIXING;

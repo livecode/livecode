@@ -237,7 +237,7 @@ IO_stat MCVideoClip::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return defaultextendedsave(p_stream, p_part);
 }
 
-IO_stat MCVideoClip::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length)
+IO_stat MCVideoClip::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_length)
 {
 	return defaultextendedload(p_stream, p_version, p_length);
 }
@@ -263,7 +263,7 @@ IO_stat MCVideoClip::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return savepropsets(stream);
 }
 
-IO_stat MCVideoClip::load(IO_handle stream, const char *version)
+IO_stat MCVideoClip::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 

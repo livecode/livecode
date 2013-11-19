@@ -65,7 +65,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define STACK_EXTRA_ORIGININFO (1U << 0)
 
-IO_stat MCStack::load_substacks(IO_handle stream, const char *version)
+IO_stat MCStack::load_substacks(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 
@@ -102,7 +102,7 @@ IO_stat MCStack::load_substacks(IO_handle stream, const char *version)
 	return IO_NORMAL;
 }
 
-IO_stat MCStack::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
+IO_stat MCStack::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_remaining)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -134,7 +134,7 @@ IO_stat MCStack::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 	return t_stat;
 }
 
-IO_stat MCStack::load(IO_handle stream, const char *version, uint1 type)
+IO_stat MCStack::load(IO_handle stream, uint32_t version, uint1 type)
 {
 	IO_stat stat;
 	
@@ -159,13 +159,13 @@ IO_stat MCStack::load(IO_handle stream, const char *version, uint1 type)
 	return stat;
 }
 
-IO_stat MCStack::load_stack(IO_handle stream, const char *version)
+IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 	
 //---- 2.7+:
 //  . F_OPAQUE now valid - default true
-	if (strncmp(version, "2.7", 3) < 0)
+	if (version < 2700)
 	{
 		flags |= F_OPAQUE;
 	}
@@ -175,13 +175,13 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 		state |= CS_TRANSLATED;
 	if ((stat = IO_read_uint4(&iconid, stream)) != IO_NORMAL)
 		return stat;
-	if (strncmp(version, "1.0", 3) > 0)
+	if (version > 1000)
 	{
 		if (flags & F_TITLE)
 		{
 			// MW-2012-03-04: [[ StackFile5500 ]] If the version is 5.5 or above, then the
 			//   stack title will be UTF-8 already.
-			if (strncmp(version, "5.5", 3) >= 0)
+			if (version >= 5500)
 			{
 				if ((stat = IO_read_stringref_utf8(title, stream)) != IO_NORMAL)
 					return stat;
@@ -203,7 +203,7 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 	}
 	else
 		flags &= ~(F_TITLE | F_DECORATIONS);
-	if (strncmp(version, "2.3", 3) < 0)
+	if (version < 2300)
 		flags &= ~(F_SHOW_BORDER | F_3D | F_OPAQUE | F_FORMAT_FOR_PRINTING);
 	if (flags & F_RESIZABLE)
 	{
@@ -220,7 +220,7 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 	}
 	if ((stat = IO_read_stringref(externalfiles, stream, false)) != IO_NORMAL)
 		return stat;
-	if (strncmp(version, "1.3", 3) > 0)
+	if (version > 1300)
 	{
 		if ((stat = MCLogicalFontTableLoad(stream)) != IO_NORMAL)
 			return stat;

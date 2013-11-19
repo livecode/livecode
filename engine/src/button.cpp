@@ -4170,7 +4170,7 @@ IO_stat MCButton::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return t_stat;
 }
 
-IO_stat MCButton::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
+IO_stat MCButton::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_remaining)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -4296,7 +4296,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return IO_NORMAL;
 }
 
-IO_stat MCButton::load(IO_handle stream, const char *version)
+IO_stat MCButton::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 
@@ -4307,7 +4307,7 @@ IO_stat MCButton::load(IO_handle stream, const char *version)
 	if ((m_font_flags & FF_HAS_UNICODE_TAG) != 0)
 		m_font_flags |= FF_HAS_UNICODE;
 
-	if (strncmp(version, "2.3", 3) <= 0)
+	if (version <= 2300)
 	{
 		uint4 iconid;
 		uint4 hiliteiconid = 0;
@@ -4416,7 +4416,7 @@ IO_stat MCButton::load(IO_handle stream, const char *version)
 		return stat;
 	if ((stat = IO_read_uint1(&mnemonic, stream)) != IO_NORMAL)
 		return stat;
-	if (strncmp(version, "2.0", 3) <= 0)
+	if (version <= 2000)
 	{
 		if (flags & F_DEFAULT)
 			rect = MCU_reduce_rect(rect, MOTIF_DEFAULT_WIDTH);

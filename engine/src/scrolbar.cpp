@@ -1268,7 +1268,7 @@ IO_stat MCScrollbar::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return defaultextendedsave(p_stream, p_part);
 }
 
-IO_stat MCScrollbar::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length)
+IO_stat MCScrollbar::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_length)
 {
 	return defaultextendedload(p_stream, p_version, p_length);
 }
@@ -1316,7 +1316,7 @@ IO_stat MCScrollbar::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return savepropsets(stream);
 }
 
-IO_stat MCScrollbar::load(IO_handle stream, const char *version)
+IO_stat MCScrollbar::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 
@@ -1364,7 +1364,7 @@ IO_stat MCScrollbar::load(IO_handle stream, const char *version)
 				return stat;
 		}
 	}
-	if (strncmp(version, "2.0", 3) <= 0)
+	if (version <= 2000)
 	{
 		if (flags & F_TRAVERSAL_ON)
 			rect = MCU_reduce_rect(rect, MCfocuswidth);

@@ -747,9 +747,7 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 		Exec_stat stat = message(mptr, params, True, True);
 		if (stat == ES_NOT_HANDLED && !handler.getpass())
 		{
-            MCAutoStringRef t_mptr_string;
-            t_mptr_string = MCNameGetString(mptr);
-            
+			MCAutoStringRef t_mptr_string;
 			if (params != nil)
 			{
 				MCExecPoint ep(this, NULL, NULL);
@@ -758,6 +756,8 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 				ep . copyasstringref(&t_value);
 				MCStringFormat(&t_mptr_string, "%@ %@", mptr, *t_value);
 			}
+			else
+				t_mptr_string = MCNameGetString(mptr);
 
 			MCHandler *t_handler;
 			t_handler = findhandler(HT_MESSAGE, mptr);
@@ -2794,7 +2794,7 @@ bool MCObject::isselectable(bool p_only_object) const
 //  SAVING AND LOADING
 //
 
-IO_stat MCObject::load(IO_handle stream, const char *version)
+IO_stat MCObject::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 	uint2 i;
@@ -2827,7 +2827,7 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 	t_has_font_index = false;
 	if (flags & F_FONT)
 	{
-		if (strncmp(version, "1.3", 3) > 0)
+		if (version > 1300)
 		{
 			if ((stat = IO_read_uint2(&t_font_index, stream)) != IO_NORMAL)
 				return stat;
@@ -2930,7 +2930,7 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 		//   is older.
 		// MW-2012-03-13: [[ UnicodeToolTip ]] If the file format is older than 5.5
 		//   then convert native to utf-8.
-		if (strncmp(version, "5.5", 3) < 0)
+		if (version < 5500)
 		{
 			// Read the tooltip, as encoded in its native format
 			if ((stat = IO_read_stringref(tooltip, stream, false)) != IO_NORMAL)
@@ -3024,7 +3024,7 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 
 	// MW-2013-03-28: The restrictions byte is no longer relevant due to new
 	//   licensing.
-	if (strcmp(version, "2.7") >= 0)
+	if (version >= 2700)
 	{
 		uint1 t_restrictions;
 		if ((stat = IO_read_uint1(&t_restrictions, stream)) != IO_NORMAL)
@@ -3322,7 +3322,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return IO_NORMAL;
 }
 
-IO_stat MCObject::defaultextendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
+IO_stat MCObject::defaultextendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_remaining)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -3462,7 +3462,7 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return IO_NORMAL;
 }
 
-IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length)
+IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length)
 {
 	if (p_length == 0)
 		return IO_NORMAL;
