@@ -5385,16 +5385,16 @@ Exec_stat MCChunk::setprop_legacy(Properties which, MCExecPoint &ep, MCNameRef i
 }
 #endif
 
-static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_table, Properties p_which, bool p_effective, bool p_array_prop, bool p_chunk_prop)
+static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_table, Properties p_which, bool p_effective, bool p_array_prop, MCPropertyInfoChunkType p_chunk_type)
 {
 	for(uindex_t i = 0; i < p_table -> size; i++)
 		if (p_table -> table[i] . property == p_which && (!p_table -> table[i] . has_effective || p_table -> table[i] . effective == p_effective) &&
             (p_array_prop == p_table -> table[i] . is_array_prop) &&
-            (p_chunk_prop == p_table -> table[i] . is_chunk_prop))
+            (p_chunk_type == p_table -> table[i] . chunk_type))
 			return &p_table -> table[i];
 	
 	if (p_table -> parent != nil)
-		return lookup_object_property(p_table -> parent, p_which, p_effective, p_array_prop, p_chunk_prop);
+		return lookup_object_property(p_table -> parent, p_which, p_effective, p_array_prop, p_chunk_type);
 	
 	return nil;
 }
@@ -5644,10 +5644,10 @@ bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
 		//   prop, else its an array prop.
 		t_is_array_prop = (index != nil && !MCNameIsEmpty(index));
         
-        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, false);
+        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeNone);
         
         if (t_info == nil)
-            t_info = lookup_object_property(t_obj_chunk . object -> getmodepropertytable(), which, effective == True, t_is_array_prop, false);
+            t_info = lookup_object_property(t_obj_chunk . object -> getmodepropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeNone);
         
         if (t_info == nil || t_info -> getter == nil)
         {
@@ -5680,7 +5680,7 @@ bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
 			MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
 			return false;
 		}
-        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, false, true);
+        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, false, islinechunk() ? kMCPropertyInfoChunkTypeLine : kMCPropertyInfoChunkTypeChar);
         
         if (t_info == nil || t_info -> getter == nil)
         {
@@ -5709,10 +5709,10 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
 		//   prop, else its an array prop.
 		t_is_array_prop = (index != nil && !MCNameIsEmpty(index));
         
-        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, false);
+        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeNone);
         
         if (t_info == nil)
-            t_info = lookup_object_property(t_obj_chunk . object -> getmodepropertytable(), which, effective == True, t_is_array_prop, false);
+            t_info = lookup_object_property(t_obj_chunk . object -> getmodepropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeNone);
         
         if (t_info == nil || t_info -> setter == nil)
         {
@@ -5747,7 +5747,7 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
             return ES_ERROR;
         }
     
-        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, false, true);
+        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, false, islinechunk() ? kMCPropertyInfoChunkTypeLine : kMCPropertyInfoChunkTypeChar);
         
         if (t_info == nil || t_info -> getter == nil)
         {

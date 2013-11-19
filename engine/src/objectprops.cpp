@@ -2411,16 +2411,16 @@ static bool MCPropertyParsePointList(MCStringRef p_input, char_t p_delimiter, ui
 	return t_success;
 }
 
-static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_table, Properties p_which, bool p_effective, bool p_array_prop, bool p_chunk_prop)
+static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_table, Properties p_which, bool p_effective, bool p_array_prop, MCPropertyInfoChunkType p_chunk_type)
 {
 	for(uindex_t i = 0; i < p_table -> size; i++)
 		if (p_table -> table[i] . property == p_which && (!p_table -> table[i] . has_effective || p_table -> table[i] . effective == p_effective) &&
             (p_array_prop == p_table -> table[i] . is_array_prop) &&
-            (p_chunk_prop == p_table -> table[i] . is_chunk_prop))
+            (p_chunk_type == p_table -> table[i] . chunk_type))
 			return &p_table -> table[i];
 	
 	if (p_table -> parent != nil)
-		return lookup_object_property(p_table -> parent, p_which, p_effective, p_array_prop, p_chunk_prop);
+		return lookup_object_property(p_table -> parent, p_which, p_effective, p_array_prop, p_chunk_type);
 	
 	return nil;
 }
@@ -2525,7 +2525,7 @@ Exec_stat MCObject::setarrayprop(uint32_t p_part_id, Properties p_which, MCExecP
 bool MCObject::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCExecValue& r_value)
 {
 	MCPropertyInfo *t_info;
-	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, false, false);
+	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, false, kMCPropertyInfoChunkTypeNone);
 	
 	if (t_info == nil || (t_info != nil && t_info -> getter == nil))
 	{
@@ -2547,7 +2547,7 @@ bool MCObject::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 bool MCObject::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCExecValue p_value)
 {    
 	MCPropertyInfo *t_info;
-	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, false, false);
+	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, false, kMCPropertyInfoChunkTypeNone);
 	
 	if (t_info == nil || (t_info != nil && t_info -> getter == nil))
 	{

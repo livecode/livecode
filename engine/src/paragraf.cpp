@@ -1975,6 +1975,7 @@ void MCParagraph::finsertnobreak(MCStringRef p_string, MCRange t_range)
 		// Move the focusedindex to the end of the insert.
 		focusedindex += t_new_length;
 	}
+    needs_layout = true;
 }
 
 // MW-2012-02-13: [[ Block Unicode ]] New implementation of finsert which understands unicodeness.
