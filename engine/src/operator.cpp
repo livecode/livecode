@@ -252,8 +252,6 @@ Exec_stat MCOr::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCNotBits */
 
-Exec_stat MCOrBits::eval(MCExecPoint &ep)
-{
 #ifdef /* MCOrBits */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -271,38 +269,6 @@ Exec_stat MCOrBits::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCOrBits */
 
-
-	MCExecContext ctxt(ep);
-	uinteger_t t_result;
-	uinteger_t t_left, t_right;
-
-	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_ORBITS_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasuint(t_left);
-
-	if (right->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_ORBITS_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasuint(t_right);
-
-	MCMathEvalBitwiseOr(ctxt, t_left, t_right, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-Exec_stat MCXorBits::eval(MCExecPoint &ep)
-{
 #ifdef /* MCXorBits */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -319,36 +285,6 @@ Exec_stat MCXorBits::eval(MCExecPoint &ep)
 	ep.setnvalue(ro ^ lo);
 	return ES_NORMAL;
 #endif /* MCXorBits */
-
-
-	MCExecContext ctxt(ep);
-	uinteger_t t_result;
-	uinteger_t t_left, t_right;
-
-	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_XORBITS_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasuint(t_left);
-
-	if (right->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_XORBITS_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasuint(t_right);
-
-	MCMathEvalBitwiseXor(ctxt, t_left, t_right, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -389,8 +325,6 @@ Exec_stat MCXorBits::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCConcatSpace */
 
-Exec_stat MCItem::eval(MCExecPoint &ep)
-{
 #ifdef /* MCItem */ LEGACY_EXEC
 	if (left->eval(ep1) != ES_NORMAL)
 	{
@@ -413,43 +347,6 @@ Exec_stat MCItem::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCItem */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_left, t_right;
-	MCAutoStringRef t_result;
-
-	if (left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_CONCAT_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_left);
-
-	if (right != nil)
-	{
-		if (right->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_CONCAT_BADRIGHT, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep.copyasstringref(&t_right);
-	}
-	else
-		t_right = kMCEmptyString;
-
-	MCStringsEvalConcatenateWithComma(ctxt, *t_left, *t_right, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-Exec_stat MCContains::eval(MCExecPoint &ep)
-{
 #ifdef /* MCContains */ LEGACY_EXEC
 	MCExecPoint ep2(ep1);
 	if (right->eval(ep1) != ES_NORMAL)
@@ -468,50 +365,20 @@ Exec_stat MCContains::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCContains */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_left, t_right;
-	bool t_result;
-
-	if (left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_CONCAT_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_left);
-
-	if (right->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_CONCAT_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_right);
-
-	MCStringsEvalContains(ctxt, *t_left, *t_right, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
 Parse_stat MCBeginsEndsWith::parse(MCScriptPoint& sp, Boolean the)
 {
-	initpoint(sp);
+    initpoint(sp);
 
-	if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) != PS_NORMAL)
-	{
-		MCperror -> add(PE_BEGINSENDS_NOWITH, sp);
-		return PS_ERROR;
-	}
+    if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) != PS_NORMAL)
+    {
+        MCperror -> add(PE_BEGINSENDS_NOWITH, sp);
+        return PS_ERROR;
+    }
 
-	return PS_NORMAL;
+    return PS_NORMAL;
 }
 
-Exec_stat MCBeginsWith::eval(MCExecPoint& ep)
+void MCBeginsWith::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCBeginsWith */ LEGACY_EXEC
 	MCExecPoint ep2(ep1);
@@ -546,41 +413,23 @@ Exec_stat MCBeginsWith::eval(MCExecPoint& ep)
 	return ES_NORMAL;
 #endif /* MCBeginsWith */
 
+    MCAutoStringRef t_left, t_right;
+    bool t_result;
 
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_left, t_right;
-	bool t_result;
+    if (!ctxt . EvalExprAsStringRef(left, EE_BEGINSENDS_BADLEFT, &t_left)
+            || !ctxt . EvalExprAsStringRef(right, EE_BEGINSENDS_BADRIGHT, &t_right))
+        return;
 
-	if (left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_BEGINSENDS_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_left);
-    
-	if (right->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_BEGINSENDS_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_right);
-    
-	MCStringsEvalBeginsWith(ctxt, *t_left, *t_right, t_result);
-    
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setboolean(t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt.Catch(line, pos);
+    MCStringsEvalBeginsWith(ctxt, *t_left, *t_right, t_result);
+
+    MCExecValueTraits<bool>::set(r_value, t_result);
 }
 
-Exec_stat MCEndsWith::eval(MCExecPoint& ep)
+void MCEndsWith::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCEndsWith */ LEGACY_EXEC
-	MCExecPoint ep2(ep1);
-	if (right->eval(ep1) != ES_NORMAL)
+    MCExecPoint ep2(ep1);
+    if (right->eval(ep1) != ES_NORMAL)
 	{
 		MCeerror->add(EE_BEGINSENDS_BADRIGHT, line, pos);
 		return ES_ERROR;
@@ -611,34 +460,16 @@ Exec_stat MCEndsWith::eval(MCExecPoint& ep)
 	return ES_NORMAL;
 #endif /* MCEndsWith */
 
+    MCAutoStringRef t_left, t_right;
+    bool t_result;
 
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_left, t_right;
-	bool t_result;
+    if (!ctxt . EvalExprAsStringRef(left, EE_BEGINSENDS_BADLEFT, &t_left)
+            || !ctxt . EvalExprAsStringRef(right, EE_BEGINSENDS_BADRIGHT, &t_right))
+        return;
 
-	if (left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_BEGINSENDS_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_left);
+    MCStringsEvalEndsWith(ctxt, *t_left, *t_right, t_result);
 
-	if (right->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_BEGINSENDS_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_right);
-
-	MCStringsEvalEndsWith(ctxt, *t_left, *t_right, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
+    MCExecValueTraits<bool>::set(r_value, t_result);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1462,8 +1293,6 @@ void MCTimes::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) co
 	r_count = 3;
 }
 
-Exec_stat MCPow::eval(MCExecPoint &ep)
-{
 #ifdef /* MCPow */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -1488,35 +1317,6 @@ Exec_stat MCPow::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCPow */
 
-	MCExecContext ctxt(ep);
-	real64_t t_left, t_right;
-	real64_t t_result;
-
-	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_POW_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_left);
-
-	if (right->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_POW_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_right);
-
-	MCMathEvalPower(ctxt, t_left, t_right, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Comparison operators
@@ -1524,143 +1324,113 @@ Exec_stat MCPow::eval(MCExecPoint &ep)
 
 static bool eval_comparison_factors(MCExecPoint& ep, MCExpression *p_left, MCExpression *p_right, MCValueRef& r_left, MCValueRef& r_right)
 {
-	MCValueRef t_left, t_right;
-	if (p_left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_FACTOR_BADLEFT, 0, 0);
-		return false;
-	}
+    MCValueRef t_left, t_right;
+    if (p_left->eval(ep) != ES_NORMAL)
+    {
+        MCeerror->add(EE_FACTOR_BADLEFT, 0, 0);
+        return false;
+    }
 
-	/* UNCHECKED */ ep . copyasvalueref(t_left);
+    /* UNCHECKED */ ep . copyasvalueref(t_left);
 
-	if (p_right->eval(ep) != ES_NORMAL)
-	{
-		MCValueRelease(t_left);
-		MCeerror->add(EE_FACTOR_BADRIGHT, 0, 0);
-		return false;
-	}
+    if (p_right->eval(ep) != ES_NORMAL)
+    {
+        MCValueRelease(t_left);
+        MCeerror->add(EE_FACTOR_BADRIGHT, 0, 0);
+        return false;
+    }
 
-	/* UNCHECKED */ ep . copyasvalueref(t_right);
+    /* UNCHECKED */ ep . copyasvalueref(t_right);
 
-	r_left = t_left;
-	r_right = t_right;
+    r_left = t_left;
+    r_right = t_right;
 
-	return true;
+    return true;
 }
 
-Exec_stat MCEqual::eval(MCExecPoint &ep)
-{
-	MCAutoValueRef t_left, t_right;
-	if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
-		return ES_ERROR;
-
-	MCExecContext ctxt(ep);
-
-	bool t_result;
-	MCLogicEvalIsEqualTo(ctxt, *t_left, *t_right, t_result);
-	if (!ctxt . HasError())
-	{
-		ep . setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCGreaterThan::eval(MCExecPoint &ep)
-{
-	MCAutoValueRef t_left, t_right;
-	if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
-		return ES_ERROR;
-
-	MCExecContext ctxt(ep);
-
-	bool t_result;
-	MCLogicEvalIsGreaterThan(ctxt, *t_left, *t_right, t_result);
-	if (!ctxt . HasError())
-	{
-		ep . setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
+#ifdef /* MCGreaterThanEqual */ LEGACY_EXEC
 Exec_stat MCGreaterThanEqual::eval(MCExecPoint &ep)
 {
-	MCAutoValueRef t_left, t_right;
-	if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
-		return ES_ERROR;
+    MCAutoValueRef t_left, t_right;
+    if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
+        return ES_ERROR;
 
-	MCExecContext ctxt(ep);
+    MCExecContext ctxt(ep);
 
-	bool t_result;
-	MCLogicEvalIsGreaterThanOrEqualTo(ctxt, *t_left, *t_right, t_result);
-	if (!ctxt . HasError())
-	{
-		ep . setboolean(t_result);
-		return ES_NORMAL;
-	}
+    bool t_result;
+    MCLogicEvalIsGreaterThanOrEqualTo(ctxt, *t_left, *t_right, t_result);
+    if (!ctxt . HasError())
+    {
+        ep . setboolean(t_result);
+        return ES_NORMAL;
+    }
 
-	return ctxt . Catch(line, pos);
+    return ctxt . Catch(line, pos);
 }
+#endif /* MCGreaterThanEqual */
 
+#ifdef /* MCLessThan */ LEGACY_EXEC
 Exec_stat MCLessThan::eval(MCExecPoint &ep)
 {
-	MCAutoValueRef t_left, t_right;
-	if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
-		return ES_ERROR;
+    MCAutoValueRef t_left, t_right;
+    if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
+        return ES_ERROR;
 
-	MCExecContext ctxt(ep);
+    MCExecContext ctxt(ep);
 
-	bool t_result;
-	MCLogicEvalIsLessThan(ctxt, *t_left, *t_right, t_result);
-	if (!ctxt . HasError())
-	{
-		ep . setboolean(t_result);
-		return ES_NORMAL;
-	}
+    bool t_result;
+    MCLogicEvalIsLessThan(ctxt, *t_left, *t_right, t_result);
+    if (!ctxt . HasError())
+    {
+        ep . setboolean(t_result);
+        return ES_NORMAL;
+    }
 
-	return ctxt . Catch(line, pos);
+    return ctxt . Catch(line, pos);
 }
+#endif /* MCLessThan */
 
+#ifdef /* MCLessThanEqual */ LEGACY_EXEC
 Exec_stat MCLessThanEqual::eval(MCExecPoint &ep)
 {
-	MCAutoValueRef t_left, t_right;
-	if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
-		return ES_ERROR;
+    MCAutoValueRef t_left, t_right;
+    if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
+        return ES_ERROR;
 
-	MCExecContext ctxt(ep);
+    MCExecContext ctxt(ep);
 
-	bool t_result;
-	MCLogicEvalIsLessThanOrEqualTo(ctxt, *t_left, *t_right, t_result);
-	if (!ctxt . HasError())
-	{
-		ep . setboolean(t_result);
-		return ES_NORMAL;
-	}
+    bool t_result;
+    MCLogicEvalIsLessThanOrEqualTo(ctxt, *t_left, *t_right, t_result);
+    if (!ctxt . HasError())
+    {
+        ep . setboolean(t_result);
+        return ES_NORMAL;
+    }
 
-	return ctxt . Catch(line, pos);
+    return ctxt . Catch(line, pos);
 }
+#endif /* MCLessThanEqual */
 
+#ifdef /* MCNotEqual */ LEGACY_EXEC
 Exec_stat MCNotEqual::eval(MCExecPoint &ep)
 {
-	MCAutoValueRef t_left, t_right;
-	if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
-		return ES_ERROR;
+    MCAutoValueRef t_left, t_right;
+    if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
+        return ES_ERROR;
 
-	MCExecContext ctxt(ep);
+    MCExecContext ctxt(ep);
 
-	bool t_result;
-	MCLogicEvalIsNotEqualTo(ctxt, *t_left, *t_right, t_result);
-	if (!ctxt . HasError())
-	{
-		ep . setboolean(t_result);
-		return ES_NORMAL;
-	}
+    bool t_result;
+    MCLogicEvalIsNotEqualTo(ctxt, *t_left, *t_right, t_result);
+    if (!ctxt . HasError())
+    {
+        ep . setboolean(t_result);
+        return ES_NORMAL;
+    }
 
-	return ctxt . Catch(line, pos);
+    return ctxt . Catch(line, pos);
 }
+#endif /* MCNotEqual */
 
 ///////////////////////////////////////////////////////////////////////////////
 //
