@@ -69,7 +69,6 @@ public:
 
 class MCDo : public MCStatement
 {
-	MCHandler *h;
 	MCExpression *source;
 	MCExpression *alternatelang;
 protected:
@@ -308,7 +307,7 @@ public:
 	}
 	virtual ~MCReturn();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 	virtual uint4 linecount();
 	virtual void compile(MCSyntaxFactoryRef);
 };
@@ -343,7 +342,7 @@ public:
 	virtual ~MCRelayer(void);
 
 	virtual Parse_stat parse(MCScriptPoint& sp);
-	virtual Exec_stat exec(MCExecPoint& ep);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 };
 
 class MCScriptError : public MCStatement
@@ -566,7 +565,7 @@ public:
 	}
 	virtual ~MCChangeProp();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -1034,7 +1033,6 @@ public:
 
 class MCMessage : public MCStatement
 {
-	MCHandler *h;
 	MCExpression *message;
 	MCExpression *eventtype;
 	MCChunk *target;
@@ -2100,7 +2098,7 @@ public:
     
     virtual Parse_stat parse(MCScriptPoint &p_sp);
     
-    virtual Exec_stat exec(MCExecPoint &p_ep);
+    virtual void exec_ctxt(MCExecContext &ctxt);
     virtual void compile(MCSyntaxFactoryRef);
     
 private:

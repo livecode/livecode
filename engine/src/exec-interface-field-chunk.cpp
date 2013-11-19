@@ -44,6 +44,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "scrolbar.h"
 #include "paragraf.h"
 #include "block.h"
+#include "variable.h"
 
 #include <stddef.h> // offsetof
 

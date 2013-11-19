@@ -54,6 +54,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "cmds.h"
 #include "mode.h"
 #include "osspec.h"
+#include "hndlrlst.h"
 
 #include "securemode.h"
 #include "syntax.h"
@@ -375,7 +376,6 @@ MCDo::~MCDo()
 Parse_stat MCDo::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
-	h = sp.gethandler();
 	if (sp.parseexp(False, True, &source) != PS_NORMAL)
 	{
 		MCperror->add(PE_DO_BADEXP, sp);
@@ -484,7 +484,13 @@ void MCDo::exec_ctxt(MCExecContext& ctxt)
 		MCeerror->add(EE_DO_BADEXP, line, pos);
 		return ES_ERROR;
 	}
-	Exec_stat stat = h->doscript(*epptr, line, pos);
+	// MW-2013-11-15: [[ Bug 11277 ]] If no handler, then evaluate in context of the
+	//   server script object.
+	Exec_stat stat;
+	if (ep . gethandler() != nil)
+		stat = ep.gethandler()->doscript(*epptr, line, pos);
+	else
+		stat = ep.gethlist()->doscript(*epptr, line, pos);
 	if (added)
 		MCnexecutioncontexts--;
 	return stat;
@@ -1889,7 +1895,7 @@ Parse_stat MCReturn::parse(MCScriptPoint &sp)
 // MW-2007-07-03: [[ Bug 4570 ]] - Using the return command now causes a
 //   RETURN_HANDLER status rather than EXIT_HANDLER. This is used to not
 //   clear the result in this case. (see MCHandler::exec).
-Exec_stat MCReturn::exec(MCExecPoint &ep)
+void MCReturn::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCReturn */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
@@ -1921,26 +1927,17 @@ Exec_stat MCReturn::exec(MCExecPoint &ep)
 
 	return ES_RETURN_HANDLER;
 #endif /* MCReturn */
-
-	MCExecContext ctxt(ep);
-	
 	MCAutoValueRef t_result;
-	if (source -> eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_RETURN_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep . copyasvalueref(&t_result);
+
+    if (!ctxt . EvalExprAsValueRef(source, EE_RETURN_BADEXP, &t_result))
+        return;
 	
 	if (url != nil)
 	{
 		MCAutoValueRef t_url_result;
-		if (url -> eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_RETURN_BADEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasvalueref(&t_url_result);
+        if (!ctxt . EvalExprAsValueRef(url, EE_RETURN_BADEXP, &t_url_result))
+            return;
+
 		MCNetworkExecReturnValueAndUrlResult(ctxt, *t_result, *t_url_result);
 	}
 	else if (var != nil)
@@ -1953,9 +1950,7 @@ Exec_stat MCReturn::exec(MCExecPoint &ep)
 	}
 	
 	if (!ctxt . HasError())
-		return ES_RETURN_HANDLER;
-	
-	return ctxt . Catch(line, pos);
+        ctxt . SetIsReturnHandler();
 }
 
 uint4 MCReturn::linecount()
@@ -2823,7 +2818,7 @@ Parse_stat MCResolveImage::parse(MCScriptPoint &p_sp)
     return t_stat;
 }
 
-Exec_stat MCResolveImage::exec(MCExecPoint &p_ep)
+void MCResolveImage::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCResolveImage */ LEGACY_EXEC
     Exec_stat t_stat;
@@ -2870,38 +2865,32 @@ Exec_stat MCResolveImage::exec(MCExecPoint &p_ep)
     return t_stat;
 #endif /* MCResolveImage */
     
-    Exec_stat t_stat;
-    t_stat = ES_NORMAL;
-    
     uint4 t_part_id;
     MCObject *t_relative_object;
-    if (t_stat == ES_NORMAL)
-        t_stat = m_relative_object -> getobj(p_ep, t_relative_object, t_part_id, True);
-    
-    if (t_stat == ES_NORMAL)
-        t_stat = m_id_or_name -> eval(p_ep);
-    
-    MCExecContext ctxt(p_ep);
-    
-    if (t_stat == ES_NORMAL)
+
+
+    if (!m_relative_object -> getobj(ctxt, t_relative_object, t_part_id, True))
     {
-        if (m_is_id)
-        {
-            if (p_ep . ton() == ES_ERROR)
-            {
-                MCeerror -> add(EE_VARIABLE_NAN, line, pos);
-                return ES_ERROR;
-            }
-            uint4 t_id;
-            t_id = p_ep . getuint4();
-            MCInterfaceExecResolveImageById(ctxt, t_relative_object, t_id);
-        }
-        else
-        {
-            MCAutoStringRef t_name;
-            /* UNCHECKED */ p_ep . copyasstringref(&t_name);
-            MCInterfaceExecResolveImageByName(ctxt, t_relative_object, *t_name);
-        }
+            ctxt . Throw();
+            return;
+    }
+
+    if (m_is_id)
+    {
+        uinteger_t t_id;
+        if (!ctxt . EvalExprAsUInt(m_id_or_name, EE_RESOLVE_IMG_BADEXP, t_id))
+        return;
+
+        MCInterfaceExecResolveImageById(ctxt, t_relative_object, t_id);
+    }
+    else
+    {
+        MCAutoStringRef t_name;
+
+        if (!ctxt . EvalExprAsStringRef(m_id_or_name, EE_RESOLVE_IMG_BADEXP, &t_name))
+        return;
+
+        MCInterfaceExecResolveImageByName(ctxt, t_relative_object, *t_name);
     }
 }
 
