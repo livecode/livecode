@@ -658,7 +658,7 @@ void MCExpression::eval_arrayref(MCExecContext& ctxt, MCArrayRef& r_value)
 
 void MCExpression::eval_bool(MCExecContext& ctxt, bool& r_value)
 {
-	eval_typed(ctxt, kMCExecValueTypeNumberRef, &r_value);
+    eval_typed(ctxt, kMCExecValueTypeBool, &r_value);
 }
 
 void MCExpression::eval_uint(MCExecContext& ctxt, uinteger_t& r_value)

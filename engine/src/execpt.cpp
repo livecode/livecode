@@ -1310,7 +1310,7 @@ bool MCExecPoint::convertvaluereftobool(MCValueRef p_value, bool& r_bool)
 	MCAutoBooleanRef t_boolean;
 	if (!convertvaluereftoboolean(p_value, &t_boolean))
 		return false;
-	r_bool = (t_boolean == kMCTrue);
+    r_bool = (*t_boolean == kMCTrue);
     return true;
 }
 

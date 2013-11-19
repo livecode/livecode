@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define	OPERATORS_H
 
 #include "exec.h"
+#include "executionerrors.h"
 
 #include "express.h"
 
@@ -55,51 +56,102 @@ public:
 
 //////////
 
+template <typename ParamType,
+          void (*EvalMethod)(MCExecContext&, typename MCExecValueTraits<ParamType>::in_type, typename MCExecValueTraits<ParamType>::out_type),
+          Exec_errors EvalError,
+          Factor_rank Rank,
+          MCExecMethodInfo *&MethodInfo>
+class MCUnaryOperatorCtxt: public MCUnaryOperator
+{
+public:
+    MCUnaryOperatorCtxt()
+    {
+        rank = Rank;
+    }
+
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
+    {
+        ParamType t_right;
+        ParamType t_result;
+
+        if (!MCExecValueTraits<ParamType>::eval(ctxt, right, EvalError, t_right))
+            return;
+
+        EvalMethod(ctxt, t_right, t_result);
+
+        MCExecValueTraits<ParamType>::free(t_right);
+
+        if (!ctxt . HasError())
+            MCExecValueTraits<ParamType>::set(r_value, t_result);
+    }
+
+   virtual MCExecMethodInfo *getmethodinfo(void) const { return MethodInfo; }
+};
+
+template<typename ParamType,
+         void (*EvalMethod)(MCExecContext&, typename MCExecValueTraits<ParamType>::in_type, typename MCExecValueTraits<ParamType>::in_type, typename MCExecValueTraits<ParamType>::out_type),
+         Exec_errors EvalLeftError,
+         Exec_errors EvalRightError,
+         Factor_rank Rank,
+         MCExecMethodInfo *&MethodInfo>
+class MCBinaryOperatorCtxt: public MCBinaryOperator
+{
+public:
+    MCBinaryOperatorCtxt()
+    {
+        rank = Rank;
+    }
+
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
+    {
+        ParamType t_right;
+        ParamType t_left;
+        ParamType t_result;
+
+        if (!MCExecValueTraits<ParamType>::eval(ctxt, left, EvalLeftError, t_left)
+                || !MCExecValueTraits<ParamType>::eval(ctxt, right, EvalRightError, t_right))
+            return;
+
+        EvalMethod(ctxt, t_left, t_right, t_result);
+
+        MCExecValueTraits<ParamType>::free(t_left);
+        MCExecValueTraits<ParamType>::free(t_right);
+
+        if (!ctxt . HasError())
+            MCExecValueTraits<ParamType>::set(r_value, t_result);
+    }
+
+    virtual MCExecMethodInfo *getmethodinfo() const { return MethodInfo; }
+};
+
+//////////
+
 class MCAnd : public MCExpression
 {
 public:
-	MCAnd()
-	{
-		rank = FR_AND;
-	}
+    MCAnd()
+    {
+        rank = FR_AND;
+    }
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
-class MCAndBits : public MCBinaryOperator
+class MCAndBits : public MCBinaryOperatorCtxt<uinteger_t, MCMathEvalBitwiseAnd, EE_ANDBITS_BADLEFT, EE_ANDBITS_BADRIGHT, FR_AND_BITS, kMCMathEvalBitwiseAndMethodInfo>
 {
 public:
-	MCAndBits()
-	{
-		rank = FR_AND_BITS;
-	}
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCMathEvalBitwiseAndMethodInfo;}
+    MCAndBits(){}
 };
 
-class MCConcat : public MCBinaryOperator
+class MCConcat : public MCBinaryOperatorCtxt<MCStringRef, MCStringsEvalConcatenate, EE_CONCAT_BADLEFT, EE_CONCAT_BADRIGHT, FR_CONCAT, kMCStringsEvalConcatenateMethodInfo>
 {
 public:
-	MCConcat()
-	{
-		rank = FR_CONCAT;
-	}
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCStringsEvalConcatenateMethodInfo;}
+    MCConcat(){}
 };
 
-class MCConcatSpace : public MCBinaryOperator
+class MCConcatSpace : public MCBinaryOperatorCtxt<MCStringRef, MCStringsEvalConcatenateWithSpace, EE_CONCATSPACE_BADLEFT, EE_CONCATSPACE_BADRIGHT, FR_CONCAT, kMCStringsEvalConcatenateWithSpaceMethodInfo>
 {
 public:
-	MCConcatSpace()
-	{
-		rank = FR_CONCAT;
-	}
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCStringsEvalConcatenateWithSpaceMethodInfo;}
-
+    MCConcatSpace(){}
 };
 
 class MCContains : public MCBinaryOperator
@@ -264,28 +316,16 @@ public:
 	virtual void getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const;
 };
 
-class MCNot : public MCUnaryOperator
+class MCNot : public MCUnaryOperatorCtxt<bool, MCLogicEvalNot, EE_NOT_BADRIGHT, FR_UNARY, kMCLogicEvalNotMethodInfo>
 {
 public:
-	MCNot()
-	{
-		rank = FR_UNARY;
-	}
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCLogicEvalNotMethodInfo;}
+    MCNot(){}
 };
 
-class MCNotBits : public MCUnaryOperator
+class MCNotBits : public MCUnaryOperatorCtxt<uinteger_t, MCMathEvalBitwiseNot, EE_NOTBITS_BADRIGHT, FR_UNARY, kMCMathEvalBitwiseNotMethodInfo>
 {
 public:
-	MCNotBits()
-	{
-		rank = FR_UNARY;
-	}
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCMathEvalBitwiseNotMethodInfo;}
+    MCNotBits(){}
 };
 
 class MCNotEqual : public MCBinaryOperator
