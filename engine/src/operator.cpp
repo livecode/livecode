@@ -209,8 +209,6 @@ Exec_stat MCOr::eval(MCExecPoint &ep)
 	return ctxt.Catch(line, pos);
 }
 
-Exec_stat MCNot::eval(MCExecPoint &ep)
-{
 #ifdef /* MCNot */ LEGACY_EXEC
 	if (right->eval(ep) != ES_NORMAL)
 	{
@@ -222,37 +220,11 @@ Exec_stat MCNot::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCNot */
 
-
-	MCExecContext ctxt(ep);
-	bool t_result;
-	bool t_right;
-
-	if (right->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_NOT_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-
-	if (!ep.copyasbool(t_right))
-		t_right = false;
-	
-	MCLogicEvalNot(ctxt, t_right, t_result);
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Bitwise operators
 //
 
-Exec_stat MCAndBits::eval(MCExecPoint &ep)
-{
 #ifdef /* MCAndBits */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL )
 	{
@@ -270,38 +242,6 @@ Exec_stat MCAndBits::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCAndBits */
 
-
-	MCExecContext ctxt(ep);
-	uinteger_t t_result;
-	uinteger_t t_left, t_right;
-
-	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_ANDBITS_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasuint(t_left);
-
-	if (right->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_ANDBITS_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasuint(t_right);
-
-	MCMathEvalBitwiseAnd(ctxt, t_left, t_right, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-Exec_stat MCNotBits::eval(MCExecPoint &ep)
-{
 #ifdef /* MCNotBits */ LEGACY_EXEC
 	if (right->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -311,29 +251,6 @@ Exec_stat MCNotBits::eval(MCExecPoint &ep)
 	ep.setnvalue(~ep.getuint4());
 	return ES_NORMAL;
 #endif /* MCNotBits */
-
-
-	MCExecContext ctxt(ep);
-	uinteger_t t_result;
-	uinteger_t t_right;
-
-	if (right->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_NOTBITS_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasuint(t_right);
-
-	MCMathEvalBitwiseNot(ctxt, t_right, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 Exec_stat MCOrBits::eval(MCExecPoint &ep)
 {
@@ -438,8 +355,6 @@ Exec_stat MCXorBits::eval(MCExecPoint &ep)
 //  String operators
 //
 
-Exec_stat MCConcat::eval(MCExecPoint &ep)
-{
 #ifdef /* MCConcat */ LEGACY_EXEC
 	MCExecPoint ep2(ep1);
 	if (left->eval(ep1) != ES_NORMAL)
@@ -457,38 +372,6 @@ Exec_stat MCConcat::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCConcat */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_left, t_right;
-	MCAutoStringRef t_result;
-
-	if (left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_CONCAT_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_left);
-
-	if (right->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_CONCAT_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_right);
-
-	MCStringsEvalConcatenate(ctxt, *t_left, *t_right, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-Exec_stat MCConcatSpace::eval(MCExecPoint &ep)
-{
 #ifdef /* MCConcatSpace */ LEGACY_EXEC
 	MCExecPoint ep2(ep1);
 	if (left->eval(ep1) != ES_NORMAL)
@@ -505,36 +388,6 @@ Exec_stat MCConcatSpace::eval(MCExecPoint &ep)
 	ep1.concatmcstring(ep2.getsvalue(), EC_SPACE, false);
 	return ES_NORMAL;
 #endif /* MCConcatSpace */
-
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_left, t_right;
-	MCAutoStringRef t_result;
-
-	if (left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_CONCAT_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_left);
-
-	if (right->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_CONCAT_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_right);
-
-	MCStringsEvalConcatenateWithSpace(ctxt, *t_left, *t_right, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
 
 Exec_stat MCItem::eval(MCExecPoint &ep)
 {
