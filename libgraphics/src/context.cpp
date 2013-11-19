@@ -2132,7 +2132,8 @@ static bool MCGContextApplyPaintSettingsToSkPaint(MCGContextRef self, MCGColor p
 	{
 		if (p_gradient != NULL)
 		{
-			t_filter = p_gradient -> filter;
+			// MM-2013-11-19: [[ Bug 11471 ]] We're now using legacy gradient code for all gradients which manages quality directly.
+			//  No need to set the image filter here.
 			t_success = MCGGradientToSkShader(p_gradient, MCGContextGetClipBounds(self), t_shader);
 		}
 		else if (p_pattern != NULL)
