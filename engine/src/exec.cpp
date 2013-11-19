@@ -1444,24 +1444,9 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             ((void(*)(MCExecContext&, void *, int&))prop -> getter)(ctxt, mark, t_value);
             if (!ctxt . HasError())
             {
-                bool t_found = false;
                 MCExecEnumTypeInfo *t_enum_info;
                 t_enum_info = (MCExecEnumTypeInfo *)(prop -> type_info);
-                for(uindex_t i = 0; i < t_enum_info -> count; i++)
-                    if (t_enum_info -> elements[i] . value == t_value)
-                    {
-                        MCStringCreateWithCString(t_enum_info -> elements[i] . tag, r_value . stringref_value);
-                        r_value . type = kMCExecValueTypeStringRef;
-                        t_found = true;
-                        break;
-                    }
-                
-                if (!t_found)
-                {
-                    // THIS MEANS A METHOD HAS RETURNED AN ILLEGAL VALUE
-                    MCAssert(false);
-                    return;
-                }
+                MCExecFormatEnum(ctxt, t_enum_info, t_value, r_value);
             }
         }
             break;
@@ -1481,24 +1466,9 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 }
                 else
                 {
-                    bool t_found = false;
                     MCExecEnumTypeInfo *t_enum_info;
                     t_enum_info = (MCExecEnumTypeInfo *)(prop -> type_info);
-                    for(uindex_t i = 0; i < t_enum_info -> count; i++)
-                        if (t_enum_info -> elements[i] . value == t_value)
-                        {
-                            MCStringCreateWithCString(t_enum_info -> elements[i] . tag, r_value . stringref_value);
-                            r_value . type = kMCExecValueTypeStringRef;
-                            t_found = true;
-                            break;
-                        }
-                    
-                    if (!t_found)
-                    {
-                        // THIS MEANS A METHOD HAS RETURNED AN ILLEGAL VALUE
-                        MCAssert(false);
-                        return;
-                    }
+                    MCExecFormatEnum(ctxt, t_enum_info, t_value, r_value);
                 }
             }
         }
@@ -1512,14 +1482,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             {
                 MCExecSetTypeInfo *t_seprop;
                 t_seprop = (MCExecSetTypeInfo *)(prop -> type_info);
-                
-                MCAutoListRef t_list;
-                MCListCreateMutable(',', &t_list);
-                for(uindex_t i = 0; i < t_seprop -> count; i++)
-                    if (((1 << t_seprop -> elements[i] . bit) & t_value) != 0)
-                        MCListAppendCString(*t_list, t_seprop -> elements[i] . tag);
-                if (MCListCopyAsString(*t_list, r_value . stringref_value))
-                    r_value . type = kMCExecValueTypeStringRef;
+                MCExecFormatSet(ctxt, t_seprop, t_value, r_value);
             }
         }
             break;
@@ -1923,23 +1886,9 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 }
                 else
                 {
-                    bool t_found = false;
                     MCExecEnumTypeInfo *t_enum_info;
                     t_enum_info = (MCExecEnumTypeInfo *)(prop -> type_info);
-                    for(uindex_t i = 0; i < t_enum_info -> count; i++)
-                        if (t_enum_info -> elements[i] . value == t_value)
-                        {
-                            MCStringCreateWithCString(t_enum_info -> elements[i] . tag, r_value . stringref_value);
-                            r_value . type = kMCExecValueTypeStringRef;
-                            t_found = true;
-                            break;
-                        }
-                    if (!t_found)
-                    {
-                        // THIS MEANS A METHOD HAS RETURNED AN ILLEGAL VALUE
-                        MCAssert(false);
-                        return;
-                    }
+                    MCExecFormatEnum(ctxt, t_enum_info, t_value, r_value);
                 }
             }
         }
@@ -1974,32 +1923,8 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         
         case kMCPropertyTypeRecord:
         {
-            MCExecRecordTypeInfo *t_record_info;
-            t_record_info = (MCExecRecordTypeInfo *)prop -> type_info;
-            
             MCObjectIndexPtr* t_index = (MCObjectIndexPtr *)mark;
-            
-            if (t_index -> index == nil || MCNameIsEmpty(t_index -> index))
-            {
-                ((void(*)(MCExecContext&, void *, MCArrayRef&))prop -> getter)(ctxt, mark, r_value . arrayref_value);
-                if (!ctxt . HasError())
-                    r_value . type = kMCExecValueTypeArrayRef;
-
-            }
-            else
-            {
-                bool t_found;
-                t_found = false;
-                for(uindex_t i = 0; i < t_record_info -> count; i++)
-                    if (MCStringIsEqualTo(MCNameGetString(t_index -> index), MCSTR(t_record_info -> elements[i] . tag), kMCStringOptionCompareCaseless))
-                    {
-                        t_found = true;
-                        MCExecFetchProperty(ctxt, &t_record_info -> elements[i] . prop, mark, r_value);
-                    }
-                
-                if (!t_found)
-                    ctxt . LegacyThrow(EE_PROPERTY_BADENUMVALUE);
-            }
+            ((void(*)(MCExecContext&, MCObjectIndexPtr *, MCExecValue&))prop -> getter)(ctxt, t_index, r_value);
         }
             break;
             
@@ -2215,22 +2140,9 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             MCExecEnumTypeInfo *t_enum_info;
             t_enum_info = (MCExecEnumTypeInfo *)prop -> type_info;
             
-            MCAutoStringRef t_string;
-            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeStringRef, &(&t_string));
-            
-            bool t_found;
-            t_found = false;
             intenum_t t_value;
-            for(uindex_t i = 0; i < t_enum_info -> count; i++)
-                if (!t_enum_info -> elements[i] . read_only &&
-                    MCStringIsEqualTo(*t_string, MCSTR(t_enum_info -> elements[i] . tag), kMCStringOptionCompareCaseless))
-                {
-                    t_found = true;
-                    t_value = t_enum_info -> elements[i] . value;
-                }
+            MCExecParseEnum(ctxt, t_enum_info, p_value, t_value);
             
-            if (!t_found)
-                ctxt . LegacyThrow(EE_PROPERTY_BADENUMVALUE);
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, int))prop -> setter)(ctxt, mark, t_value);
         }
@@ -2252,19 +2164,9 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             else
             {
                 t_value_ptr = &t_value;
-                bool t_found;
-                t_found = false;
-                for(uindex_t i = 0; i < t_enum_info -> count; i++)
-                    if (!t_enum_info -> elements[i] . read_only &&
-                    MCStringIsEqualTo(*t_string, MCSTR(t_enum_info -> elements[i] . tag), kMCStringOptionCompareCaseless))
-                    {
-                        t_found = true;
-                        t_value = t_enum_info -> elements[i] . value;
-                    }
-				
-                if (!t_found)
-                    ctxt . LegacyThrow(EE_PROPERTY_BADENUMVALUE);
+                MCExecParseEnum(ctxt, t_enum_info, p_value, t_value);
             }
+            
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, int*))prop -> setter)(ctxt, mark, t_value_ptr);
         }
@@ -2274,28 +2176,8 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             MCExecSetTypeInfo *t_seprop;
             t_seprop = (MCExecSetTypeInfo *)(prop -> type_info);
-            
-            MCAutoStringRef t_string;
-            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeStringRef, &(&t_string));
-            
-            intset_t t_value = 0;
-            char **t_elements;
-            uindex_t t_element_count;
-            MCCStringSplit(MCStringGetCString(*t_string), ',', t_elements, t_element_count);
-            
-            for (uindex_t i = 0; i < t_element_count; i++)
-            {
-                for (uindex_t j = 0; j < t_seprop -> count; j++)
-                {
-                    if (MCU_strcasecmp(t_elements[i], t_seprop -> elements[j] . tag) == 0)
-                    {
-                        t_value |= 1 << t_seprop -> elements[j] . bit;
-                        break;
-                    }
-                }
-            }
-            
-            MCCStringArrayFree(t_elements, t_element_count);
+            intset_t t_value;
+            MCExecParseSet(ctxt, t_seprop, p_value, t_value);
             ((void(*)(MCExecContext&, void *, unsigned int))prop -> setter)(ctxt, mark, t_value);
         }
             break;
@@ -2499,32 +2381,8 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
         case kMCPropertyTypeRecord:
         {
-            MCExecRecordTypeInfo *t_record_info;
-            t_record_info = (MCExecRecordTypeInfo *)prop -> type_info;
-            
             MCObjectIndexPtr* t_index = (MCObjectIndexPtr *)mark;
-            
-            if (t_index -> index == nil || MCNameIsEmpty(t_index -> index))
-            {
-                MCAutoArrayRef t_input;
-                MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeArrayRef, &(&t_input));
-                if (!ctxt . HasError())
-                    ((void(*)(MCExecContext&, void *, MCArrayRef))prop -> setter)(ctxt, mark, *t_input);
-            }
-            else
-            {
-                bool t_found;
-                t_found = false;
-                for(uindex_t i = 0; i < t_record_info -> count; i++)
-                    if (MCStringIsEqualTo(MCNameGetString(t_index -> index), MCSTR(t_record_info -> elements[i] . tag), kMCStringOptionCompareCaseless))
-                    {
-                        t_found = true;
-                        MCExecStoreProperty(ctxt, &t_record_info -> elements[i] . prop, mark, p_value);
-                    }
-                
-                if (!t_found)
-                    ctxt . LegacyThrow(EE_PROPERTY_BADENUMVALUE);
-            }
+            ((void(*)(MCExecContext&, MCObjectIndexPtr *, MCExecValue))prop -> setter)(ctxt, t_index, p_value);
         }
             break;
             
@@ -2588,7 +2446,7 @@ static void MCExecTypeConvertToValueRefAndReleaseAlways(MCExecContext& ctxt, MCE
             if (!MCStringCreateWithNativeChars((const char_t *)p_from_value, 1, (MCStringRef&)r_value))
                 ctxt . Throw();
             break;
-            
+
 		default:
 			ctxt . Unimplemented();
 			break;
@@ -2668,6 +2526,86 @@ void MCExecResolveCharsOfField(MCField *p_field, uint32_t p_part, int32_t& x_sta
     p_field -> resolvechars(p_part, t_start, t_finish, p_start, p_count);
     x_start = t_start;
     x_finish = t_finish;
+}
+
+void MCExecParseSet(MCExecContext& ctxt, MCExecSetTypeInfo *p_info, MCExecValue p_value, intset_t& r_value)
+{
+    MCAutoStringRef t_string;
+    MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeStringRef, &(&t_string));
+    
+    intset_t t_value = 0;
+    char **t_elements;
+    uindex_t t_element_count;
+    MCCStringSplit(MCStringGetCString(*t_string), ',', t_elements, t_element_count);
+    
+    for (uindex_t i = 0; i < t_element_count; i++)
+    {
+        for (uindex_t j = 0; j < p_info -> count; j++)
+        {
+            if (MCU_strcasecmp(t_elements[i], p_info -> elements[j] . tag) == 0)
+            {
+                t_value |= 1 << p_info -> elements[j] . bit;
+                break;
+            }
+        }
+    }
+    
+    MCCStringArrayFree(t_elements, t_element_count);
+    r_value = t_value;
+}
+
+void MCExecParseEnum(MCExecContext& ctxt, MCExecEnumTypeInfo *p_info, MCExecValue p_value, intenum_t& r_value)
+{
+    MCAutoStringRef t_string;
+    MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeStringRef, &(&t_string));
+    if (!ctxt . HasError())
+    {    
+        bool t_found;
+        t_found = false;
+        for(uindex_t i = 0; i < p_info -> count; i++)
+            if (!p_info -> elements[i] . read_only &&
+                MCStringIsEqualTo(*t_string, MCSTR(p_info -> elements[i] . tag), kMCStringOptionCompareCaseless))
+            {
+                t_found = true;
+                r_value = p_info -> elements[i] . value;
+            }
+        
+        if (!t_found)
+            ctxt . LegacyThrow(EE_PROPERTY_BADENUMVALUE);
+    }
+}
+
+void MCExecFormatSet(MCExecContext& ctxt, MCExecSetTypeInfo *p_info, intset_t t_value, MCExecValue& r_value)
+{
+    MCAutoListRef t_list;
+    MCListCreateMutable(',', &t_list);
+    for(uindex_t i = 0; i < p_info -> count; i++)
+        if (((1 << p_info -> elements[i] . bit) & t_value) != 0)
+            MCListAppendCString(*t_list, p_info -> elements[i] . tag);
+    if (MCListCopyAsString(*t_list, r_value . stringref_value))
+        r_value . type = kMCExecValueTypeStringRef;
+    else
+        ctxt . Throw();
+}
+
+void MCExecFormatEnum(MCExecContext& ctxt, MCExecEnumTypeInfo *p_info, intenum_t p_value, MCExecValue& r_value)
+{
+    bool t_found = false;
+    for(uindex_t i = 0; i < p_info -> count; i++)
+        if (p_info -> elements[i] . value == p_value)
+        {
+            MCStringCreateWithCString(p_info -> elements[i] . tag, r_value . stringref_value);
+            r_value . type = kMCExecValueTypeStringRef;
+            t_found = true;
+            break;
+        }
+    if (!t_found)
+    {
+        // THIS MEANS A METHOD HAS RETURNED AN ILLEGAL VALUE
+        MCAssert(false);
+        return;
+    }
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////

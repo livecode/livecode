@@ -33,6 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "bitmapeffect.h"
 #include "bitmapeffectblur.h"
+#include "exec.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -402,52 +403,6 @@ bool MCBitmapEffectsGetPropertyElement(MCBitmapEffectsRef& self, Properties whic
     }
     
     return false;
-}
-
-bool MCBitmapEffectsGetProperties(MCBitmapEffectsRef& self, Properties which_type, MCArrayRef& r_props)
-{
-    MCExecPoint ep(nil, nil, nil);
-    
-	// First map the property type
-	MCBitmapEffectType t_type;
-	t_type = (MCBitmapEffectType)(which_type - P_BITMAP_EFFECT_DROP_SHADOW);
-    
-	// Now fetch the bitmap effect we are processing - note that if this is
-	// NULL it means it isn't set. In this case we still carry on since we
-	// need to report a invalid key error (if applicable).
-	MCBitmapEffect *t_effect;
-	if (self != nil && (self -> mask & (1 << t_type)) != 0)
-		t_effect = &self -> effects[t_type];
-	else
-		t_effect = nil;
-    
-	// If there is no effect set for this type, then we are done.
-	if (t_effect == nil)
-		return true;
-    
-	// Otherwise we have an array get, so first create a new value
-	MCAutoArrayRef v;
-	if (!MCArrayCreateMutable(&v))
-		return false;
-    
-	// Now loop through all the properties, getting the ones applicable to this type.
-	for(uint32_t i = 0; i < ELEMENTS(s_bitmap_effect_properties); i++)
-		if ((s_bitmap_effect_properties[i] . mask & (1 << t_type)) != 0)
-		{
-            MCValueRef t_prop_value;
-            MCNewAutoNameRef t_key;
-            
-            /* UNCHECKED */ MCNameCreateWithCString(s_bitmap_effect_properties[i] . token, &t_key);
-			// Attempt to fetch the property, then store it into the array.
-			if (MCBitmapEffectGetProperty(t_effect, s_bitmap_effect_properties[i] . value, ep) != ES_NORMAL)
-				return false;
-            
-            /* UNCHECKED */ ep . copyasvalueref(t_prop_value);
-            MCArrayStoreValue(*v, kMCCompareExact, *t_key, t_prop_value);
-		}
-    
-	// Give the array to the ep
-    r_props = MCValueRetain(*v);
 }
 
 // Set the given effect to default values for its type.
@@ -1345,50 +1300,44 @@ void MCBitmapEffectsComputeBounds(MCBitmapEffectsRef self, const MCRectangle& p_
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool MCBitmapEffectLookup(MCBitmapEffectsRef& self, MCNameRef p_prop, Properties which, MCBitmapEffectProperty& r_prop, MCBitmapEffect*& r_effect)
+static bool MCBitmapEffectLookup(MCBitmapEffectsRef& self, MCNameRef p_prop, MCBitmapEffectType p_type, MCBitmapEffectProperty& r_prop, MCBitmapEffect*& r_effect)
 {
-	// First map the property type
-	MCBitmapEffectType t_type;
-	t_type = (MCBitmapEffectType)(which - P_BITMAP_EFFECT_DROP_SHADOW);
-    
 	// Now fetch the bitmap effect we are processing - note that if this is
 	// NULL it means it isn't set. In this case we still carry on since we
 	// need to report a invalid key error (if applicable).
 	MCBitmapEffect *t_effect;
-	if (self != nil && (self  -> mask & (1 << t_type)) != 0)
-		r_effect = &self -> effects[t_type];
+	if (self != nil && (self  -> mask & (1 << p_type)) != 0)
+		r_effect = &self -> effects[p_type];
 	else
 		r_effect = nil;
     
-    if (MCBitmapEffectLookupProperty(t_type, p_prop, r_prop) != ES_NORMAL)
+    if (MCBitmapEffectLookupProperty(p_type, p_prop, r_prop) != ES_NORMAL)
         return false;
     
     return true;
 }
 
 
-static bool MCBitmapEffectLookupForSet(MCBitmapEffectsRef& self, MCNameRef p_prop, Properties which, MCBitmapEffectProperty& r_prop, MCBitmapEffect& r_effect, MCBitmapEffectType& r_type, bool& r_dirty)
-{
-	r_type = (MCBitmapEffectType)(which - P_BITMAP_EFFECT_DROP_SHADOW);
-    
+static bool MCBitmapEffectLookupForSet(MCBitmapEffectsRef& self, MCNameRef p_prop, MCBitmapEffectType p_type, MCBitmapEffectProperty& r_prop, MCBitmapEffect& r_effect, bool& r_dirty)
+{    
 	// Now fetch the bitmap effect we are processing - note that if this is
 	// NULL it means it isn't set. In this case we still carry on since we
 	// need to report a invalid key error (if applicable).
-	if (self != nil && (self  -> mask & (1 << r_type)) != 0)
+	if (self != nil && (self  -> mask & (1 << p_type)) != 0)
     {
-		r_effect = self -> effects[r_type];
+		r_effect = self -> effects[p_type];
         r_dirty = false;
     }
 	else
 	{
-		MCBitmapEffectDefault(&r_effect, r_type);
+		MCBitmapEffectDefault(&r_effect, p_type);
 		// If the effect doesn't yet exist, it means we will dirty the object
 		// regardless.
 		r_dirty = true;
 	}
     
     // Lookup the property and ensure it is appropriate for our type.
-    if (MCBitmapEffectLookupProperty(r_type, p_prop, r_prop) != ES_NORMAL)
+    if (MCBitmapEffectLookupProperty(p_type, p_prop, r_prop) != ES_NORMAL)
         return false;
 }
 
@@ -1410,293 +1359,361 @@ static bool MCBitmapEffectCommitChanges(MCBitmapEffectsRef& self, MCBitmapEffect
     self -> effects[p_type] = p_new_effect;
 }
 
-bool MCBitmapEffectsGetColorProperty(MCBitmapEffectsRef& self, MCNameRef p_index, Properties which, MCColor*& r_color)
+static void MCBitmapEffectFetchProperty(MCExecContext& ctxt, MCBitmapEffect *effect, MCBitmapEffectProperty p_prop, MCExecValue& r_value)
+{
+    if (effect == nil)
+    {
+        r_value . stringref_value = MCValueRetain(kMCEmptyString);
+        r_value . type = kMCExecValueTypeStringRef;
+        return;
+    }
+    switch(p_prop)
+    {
+        case kMCBitmapEffectPropertyColor:
+            MCBitmapEffectColorToMCColor(effect->layer.color, r_value . color_value);
+            r_value . type = kMCExecValueTypeColor;
+            break;
+            
+        case kMCBitmapEffectPropertyBlendMode:
+            MCExecFormatEnum(ctxt, kMCInterfaceBitmapEffectBlendModeTypeInfo, (intenum_t)effect->layer.blend_mode, r_value);
+            break;
+            
+        case kMCBitmapEffectPropertyFilter:
+            MCExecFormatEnum(ctxt, kMCInterfaceBitmapEffectFilterTypeInfo, (intenum_t)effect->blur.filter, r_value);
+            break;
+            
+        case kMCBitmapEffectPropertySource:
+            MCExecFormatEnum(ctxt, kMCInterfaceBitmapEffectSourceTypeInfo, (intenum_t)effect -> glow . source, r_value);
+            break;
+            
+        case kMCBitmapEffectPropertyOpacity:
+            r_value . uint_value = MCGPixelGetNativeAlpha(effect -> layer . color);
+            r_value . type = kMCExecValueTypeUInt;
+            break;
+            
+        case kMCBitmapEffectPropertySize:
+            r_value . uint_value = effect -> blur . size;
+            r_value . type = kMCExecValueTypeUInt;
+            break;
+            
+        case kMCBitmapEffectPropertySpread:
+            r_value . uint_value = effect -> blur . spread;
+            r_value . type = kMCExecValueTypeUInt;
+            break;
+            
+        case kMCBitmapEffectPropertyDistance:
+            r_value . uint_value = effect -> shadow . distance;
+            r_value . type = kMCExecValueTypeUInt;
+            break;
+            
+        case kMCBitmapEffectPropertyAngle:
+            r_value . uint_value = effect -> shadow . angle;
+            r_value . type = kMCExecValueTypeUInt;
+            break;
+            
+        case kMCBitmapEffectPropertyRange:
+            r_value . uint_value = effect -> glow . range;
+            r_value . type = kMCExecValueTypeUInt;
+            break;
+            
+        case kMCBitmapEffectPropertyKnockOut:
+            r_value . bool_value = effect -> shadow . knockout;
+            r_value . type = kMCExecValueTypeBool;
+            break;
+            
+        default:
+            break;
+    }
+}
+
+bool MCBitmapEffectsGetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, MCNameRef p_index, Properties which, MCExecValue& r_value)
 {
     MCBitmapEffectProperty t_prop;
     MCBitmapEffect* effect;
-    if (MCBitmapEffectLookup(self, p_index, which, t_prop, effect))
+    
+    // First map the property type
+	MCBitmapEffectType t_type;
+	t_type = (MCBitmapEffectType)(which - P_BITMAP_EFFECT_DROP_SHADOW);
+    
+    // If 'p_index' is the empty name, this is a whole array op.
+    bool t_is_array;
+    t_is_array = MCNameIsEqualTo(p_index, kMCEmptyName, kMCCompareCaseless);
+    
+    if (MCBitmapEffectLookup(self, p_index, t_type, t_prop, effect))
     {
-        if (effect == nil)
+        if (t_is_array)
         {
-            r_color = nil;
+            if (effect == nil)
+            {
+                r_value . arrayref_value = MCValueRetain(kMCEmptyArray);
+                r_value . type = kMCExecValueTypeArrayRef;
+                return true;
+            }
+            
+            // Otherwise we have an array get, so first create a new value
+            MCAutoArrayRef v;
+            if (MCArrayCreateMutable(&v))
+            {
+                // Now loop through all the properties, getting the ones applicable to this type.
+                for(uint32_t i = 0; i < ELEMENTS(s_bitmap_effect_properties); i++)
+                {
+                    if ((s_bitmap_effect_properties[i] . mask & (1 << t_type)) != 0)
+                    {
+                        MCExecValue t_value;
+                        MCAutoValueRef t_valueref;
+                        // Fetch the property, then store it into the array.
+                        MCBitmapEffectFetchProperty(ctxt, effect, s_bitmap_effect_properties[i] . value, t_value);
+                        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value . type + 1, kMCExecValueTypeValueRef, &(&t_valueref));
+                        MCArrayStoreValue(*v, ctxt . GetCaseSensitive(), MCNAME(s_bitmap_effect_properties[i] . token), *t_valueref);
+                    }
+                }
+                r_value . arrayref_value = MCValueRetain(*v);
+                r_value . type = kMCExecValueTypeArrayRef;
+                return true;
+            }
+        }
+        else
+        {
+            MCBitmapEffectFetchProperty(ctxt, effect, t_prop, r_value);
             return true;
         }
-        
-        MCColor t_color;
-        switch(t_prop)
-        {
-            case kMCBitmapEffectPropertyColor:
-                MCBitmapEffectColorToMCColor(effect->layer.color, *r_color);
-                break;
-                
-            default:
-                break;
-        }
-        return true;
     }
     return false;
 }
 
-bool MCBitmapEffectsGetEnumProperty(MCBitmapEffectsRef& self, MCNameRef p_index, Properties which, intenum_t*& r_value)
+static void MCBitmapEffectsSetColorProperty(MCBitmapEffect& x_effect, MCBitmapEffectProperty p_prop, MCColor p_color, bool& x_dirty)
 {
-    MCBitmapEffectProperty t_prop;
-    MCBitmapEffect* effect;
-    if (MCBitmapEffectLookup(self, p_index, which, t_prop, effect))
+    switch (p_prop)
     {
-        if (effect == nil)
+        case kMCBitmapEffectPropertyColor:
         {
-            r_value = nil;
-            return true;
+            uint4 t_new_color;
+            t_new_color = MCGPixelPackNative(p_color.red >> 8, p_color.green >> 8, p_color.blue >> 8, MCGPixelGetNativeAlpha(x_effect . layer . color));
+            
+            if (t_new_color != x_effect . layer . color)
+            {
+                x_effect . layer . color = t_new_color;
+                x_dirty = true;
+            }
         }
-        
-        switch(t_prop)
-        {
-            case kMCBitmapEffectPropertyBlendMode:
-                *r_value = (intenum_t)effect->layer.blend_mode;
-                break;
-
-            case kMCBitmapEffectPropertyFilter:
-                *r_value = (intenum_t)effect->blur.filter;
-                break;
-                
-            case kMCBitmapEffectPropertySource:
-                *r_value = effect -> glow . source;
-                break;
-                
-            default:
-                break;
-        }
-        return true;
+            break;
+            
+        default:
+            break;
     }
-    return false;
 }
 
-bool MCBitmapEffectsGetUIntProperty(MCBitmapEffectsRef& self, MCNameRef p_index, Properties which, uinteger_t*& r_uint)
+static void MCBitmapEffectsSetEnumProperty(MCExecContext& ctxt, MCBitmapEffect& x_effect, MCBitmapEffectProperty p_prop, MCExecValue p_value, bool& x_dirty)
 {
-    MCBitmapEffectProperty t_prop;
-    MCBitmapEffect* effect;
-    if (MCBitmapEffectLookup(self, p_index, which, t_prop, effect))
+    intenum_t t_value;
+    switch (p_prop)
     {
-        if (effect == nil)
+        case kMCBitmapEffectPropertyBlendMode:
         {
-            r_uint = nil;
-            return true;
+            MCExecParseEnum(ctxt, kMCInterfaceBitmapEffectBlendModeTypeInfo, p_value, t_value);
+            MCBitmapEffectBlendMode t_new_mode;
+            t_new_mode = (MCBitmapEffectBlendMode)t_value;
+            if (t_new_mode != x_effect . layer . blend_mode)
+            {
+                x_effect . layer . blend_mode = t_new_mode;
+                x_dirty = true;
+            }
         }
-        
-        switch(t_prop)
+            break;
+            
+        case kMCBitmapEffectPropertyFilter:
         {
-            case kMCBitmapEffectPropertyOpacity:
-                *r_uint = MCGPixelGetNativeAlpha(effect -> layer . color);
-                break;
+            MCExecParseEnum(ctxt, kMCInterfaceBitmapEffectFilterTypeInfo, p_value, t_value);
+            MCBitmapEffectFilter t_new_filter;
+            t_new_filter = (MCBitmapEffectFilter)t_value;
+            if (t_new_filter != x_effect . blur . filter)
+            {
+                x_effect . blur . filter = t_new_filter;
+                x_dirty = true;
+            }
+        }
+            break;
+            
+        case kMCBitmapEffectPropertySource:
+        {
+            MCExecParseEnum(ctxt, kMCInterfaceBitmapEffectSourceTypeInfo, p_value, t_value);
+            MCBitmapEffectSource t_new_source;
+            t_new_source = (MCBitmapEffectSource)t_value;
+            if (t_new_source != x_effect . glow . source)
+            {
+                x_effect . glow . source = t_new_source;
+                x_dirty = true;
+            }
+        }
+            break;
+            
+        default:
+            break;
+    }
+}
+
+static void MCBitmapEffectsSetUIntProperty(MCBitmapEffect& x_effect, MCBitmapEffectProperty p_prop, uinteger_t p_uint, bool& x_dirty)
+{
+    switch (p_prop)
+    {
+        case kMCBitmapEffectPropertyOpacity:
+        {
+            p_uint = MCU_min(p_uint, (uint4)255);
+            if (p_uint != MCGPixelGetNativeAlpha(x_effect . layer . color))
+            {
+                uint8_t r, g, b, a;
+                MCGPixelUnpackNative(x_effect . layer . color, r, g, b, a);
                 
-            case kMCBitmapEffectPropertySize:
-                *r_uint = effect -> blur . size;
-                break;
-                
-            case kMCBitmapEffectPropertySpread:
-                *r_uint = effect -> blur . spread;
-                break;
-                
-            case kMCBitmapEffectPropertyDistance:
-                *r_uint = effect -> shadow . distance;
-                break;
-                
-            case kMCBitmapEffectPropertyAngle:
-                *r_uint = effect -> shadow . angle;
-                break;
+                x_effect . layer . color = MCGPixelPackNative(r, g, b, p_uint);
+                x_dirty = true;
+            }
+        }
+            break;
+            
+        case kMCBitmapEffectPropertySize:
+        {
+            p_uint = MCU_min(p_uint, (uint4)255);
+            if (p_uint != x_effect . blur . size)
+            {
+                x_effect . blur . size = p_uint;
+                x_dirty = true;
+            }
+        }
+            break;
+            
+        case kMCBitmapEffectPropertySpread:
+        {
+            p_uint = MCU_min(p_uint, (uint4)255);
+            if (p_uint != x_effect . blur . spread)
+            {
+                x_effect . blur . spread = p_uint;
+                x_dirty = true;
+            }
+        }
+            break;
+            
+        case kMCBitmapEffectPropertyDistance:
+        {
+            p_uint = MCU_min(p_uint, (uint4)32767);
+            if (p_uint != x_effect . shadow . distance)
+            {
+                x_effect . shadow . distance = p_uint;
+                x_dirty = true;
+            }
+        }
+            break;
+            
+        case kMCBitmapEffectPropertyAngle:
+        {
+            p_uint %= 360;
+            if (p_uint != x_effect . shadow . angle)
+            {
+                x_effect . shadow . angle = p_uint;
+                x_dirty = true;
+            }
+        }
+            break;
+    }
+}
+
+static void MCBitmapEffectStoreProperty(MCExecContext& ctxt, MCBitmapEffect& x_effect, MCBitmapEffectProperty p_prop, MCExecValue p_value, bool& r_dirty)
+{
+    switch (p_prop)
+    {
+        case kMCBitmapEffectPropertyColor:
+        {
+            MCColor t_color;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeColor, &t_color);
+            MCBitmapEffectsSetColorProperty(x_effect, p_prop, t_color, r_dirty);
+        }
+            break;
+        case kMCBitmapEffectPropertyBlendMode:
+        case kMCBitmapEffectPropertyFilter:
+        case kMCBitmapEffectPropertySource:
+            MCBitmapEffectsSetEnumProperty(ctxt, x_effect, p_prop, p_value, r_dirty);
+            break;
+        case kMCBitmapEffectPropertyOpacity:
+        case kMCBitmapEffectPropertySize:
+        case kMCBitmapEffectPropertySpread:
+        case kMCBitmapEffectPropertyDistance:
+        case kMCBitmapEffectPropertyAngle:
+        {
+            uinteger_t t_value;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeUInt, &t_value);
+            MCBitmapEffectsSetUIntProperty(x_effect, p_prop, p_value . uint_value, r_dirty);
+        }
+            break;
+            
+        default:
+            break;
+    }
+}
+
+bool MCBitmapEffectsSetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, MCNameRef p_index, Properties which, MCExecValue p_value, bool& r_dirty)
+{
+    // First map the property type
+	MCBitmapEffectType t_type;
+	t_type = (MCBitmapEffectType)(which - P_BITMAP_EFFECT_DROP_SHADOW);
  
-            case kMCBitmapEffectPropertyRange:
-                *r_uint = effect -> glow . range;
-                break;
-
-            default:
-                break;
-        }
-        return true;
-    }
-    return false;
-}
-
-bool MCBitmapEffectsGetBoolProperty(MCBitmapEffectsRef& self, MCNameRef p_index, Properties which, bool*& r_bool)
-{
-    MCBitmapEffectProperty t_prop;
-    MCBitmapEffect* effect;
-    if (MCBitmapEffectLookup(self, p_index, which, t_prop, effect))
-    {
-        if (effect == nil)
-        {
-            r_bool = nil;
-            return true;
-        }
-        
-        switch(t_prop)
-        {
-            case kMCBitmapEffectPropertyKnockOut:
-                *r_bool = effect -> shadow . knockout;
-                break;
-                
-            default:
-                break;
-        }
-        return true;
-    }
-    return false;
-}
-
-bool MCBitmapEffectsSetColorProperty(MCBitmapEffectsRef& self, MCNameRef p_index, Properties which, MCColor p_color, bool& r_dirty)
-{
-    MCBitmapEffectProperty t_prop;
-    MCBitmapEffect t_effect;
-    MCBitmapEffectType t_type;
-    bool t_dirty;
-    if (MCBitmapEffectLookupForSet(self, p_index, which, t_prop, t_effect, t_type, t_dirty))
-    {
-        switch (t_prop)
-        {
-            case kMCBitmapEffectPropertyColor:
-            {
-                uint4 t_new_color;
-                t_new_color = MCGPixelPackNative(p_color.red >> 8, p_color.green >> 8, p_color.blue >> 8, MCGPixelGetNativeAlpha(t_effect . layer . color));
-                
-                if (t_new_color != t_effect . layer . color)
-                {
-                    t_effect . layer . color = t_new_color;
-                    t_dirty = true;
-                }
-            }
-                break;
-                
-            default:
-                break;
-        }
-        
-        if (!t_dirty || MCBitmapEffectCommitChanges(self, t_type, t_effect))
-        {
-            r_dirty = t_dirty;
-            return true;
-        }
-    }
-    return false;
-}
-
-bool MCBitmapEffectsSetEnumProperty(MCBitmapEffectsRef& self, MCNameRef p_index, Properties which, intenum_t p_value, bool& r_dirty)
-{
     MCBitmapEffectProperty t_prop;
     MCBitmapEffect effect;
-    MCBitmapEffectType t_type;
-    bool t_dirty;
-    if (MCBitmapEffectLookupForSet(self, p_index, which, t_prop, effect, t_type, t_dirty))
-    {
-        switch (t_prop)
-        {
-            case kMCBitmapEffectPropertyBlendMode:
-            {
-                MCBitmapEffectBlendMode t_new_mode;
-                t_new_mode = (MCBitmapEffectBlendMode)p_value;
-                if (t_new_mode != effect . layer . blend_mode)
-                {
-                    effect . layer . blend_mode = t_new_mode;
-                    t_dirty = true;
-                }
-            }
-                break;
-                
-            case kMCBitmapEffectPropertyFilter:
-            {
-                MCBitmapEffectFilter t_new_filter;
-                t_new_filter = (MCBitmapEffectFilter)p_value;
-                if (t_new_filter != effect . blur . filter)
-                {
-                    effect . blur . filter = t_new_filter;
-                    t_dirty = true;
-                }
-            }
-                break;
-                
-            default:
-                break;
-        }
-        
-        if (!t_dirty || MCBitmapEffectCommitChanges(self, t_type, effect))
-        {
-            r_dirty = t_dirty;
-            return true;
-        }
-    }
-    return false;
-}
+    
+    // If 'p_index' is the empty name, this is a whole array op.
+    bool t_is_array;
+    t_is_array = MCNameIsEqualTo(p_index, kMCEmptyName, kMCCompareCaseless);
 
-bool MCBitmapEffectsSetUIntProperty(MCBitmapEffectsRef& self, MCNameRef p_index, Properties which, uinteger_t p_uint, bool& r_dirty)
-{
-    MCBitmapEffectProperty t_prop;
-    MCBitmapEffect effect;
-    MCBitmapEffectType t_type;
-    bool t_dirty;
-    if (MCBitmapEffectLookupForSet(self, p_index, which, t_prop, effect, t_type, t_dirty))
+    if (t_is_array && p_value . type == kMCExecValueTypeStringRef && MCStringIsEmpty(p_value . stringref_value))
     {
-        switch (t_prop)
+        if (self == nil || (self -> mask & (1 << t_type)) == 0)
+			return true;
+        
+		// We are set, so just unset our bit in the mask
+		self -> mask &= ~(1 << t_type);
+        
+		// If we are now empty, then clear.
+		if (self -> mask == 0)
+			MCBitmapEffectsClear(self);
+		
+		// Mark the object as dirty
+		r_dirty = true;
+        
+		return true;
+    }
+    
+    bool t_dirty;
+    if (MCBitmapEffectLookupForSet(self, p_index, t_type, t_prop, effect, t_dirty))
+    {
+        if (t_is_array)
         {
-            case kMCBitmapEffectPropertyOpacity:
-            {
-                p_uint = MCU_min(p_uint, (uint4)255);
-                if (p_uint != MCGPixelGetNativeAlpha(effect . layer . color))
+            bool t_dirty_array;
+            t_dirty_array = false;
+            MCAutoArrayRef t_array;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeArrayRef, &(&t_array));
+            // Loop through all the properties in the table and apply the relevant
+            // ones.
+            for(uint32_t i = 0; i < ELEMENTS(s_bitmap_effect_properties); i++)
+                if ((s_bitmap_effect_properties[i] . mask & (1 << t_type)) != 0)
                 {
-                    uint8_t r, g, b, a;
-                    MCGPixelUnpackNative(effect . layer . color, r, g, b, a);
+                    MCValueRef t_prop_value;
+                    MCNewAutoNameRef t_key;
                     
-                    effect . layer . color = MCGPixelPackNative(r, g, b, p_uint);
-                    t_dirty = true;
-                }                
-            }
-                break;
-                
-            case kMCBitmapEffectPropertySize:
-            {
-                p_uint = MCU_min(p_uint, (uint4)255);
-                if (p_uint != effect . blur . size)
-                {
-                    effect . blur . size = p_uint;
-                    t_dirty = true;
+                    /* UNCHECKED */ MCNameCreateWithCString(s_bitmap_effect_properties[i] . token, &t_key);
+                    // If we don't have the given element, then move to the next one
+                    if (!MCArrayFetchValue(*t_array, kMCCompareExact, *t_key, t_prop_value))
+                        continue;
+                    
+                    // Otherwise, fetch the keys value and attempt to set the property
+                    MCExecValue t_value;
+                    t_value . valueref_value = MCValueRetain(t_prop_value);
+                    t_value . type = kMCExecValueTypeValueRef;
+                    MCBitmapEffectStoreProperty(ctxt, effect, s_bitmap_effect_properties[i] . value, t_value, t_dirty_array);
                 }
-            }
-                break;
-                
-            case kMCBitmapEffectPropertySpread:
-            {
-                p_uint = MCU_min(p_uint, (uint4)255);
-                if (p_uint != effect . blur . spread)
-                {
-                    effect . blur . spread = p_uint;
-                    t_dirty = true;
-                }
-            }
-                break;
-                
-            case kMCBitmapEffectPropertyDistance:
-            {
-                p_uint = MCU_min(p_uint, (uint4)32767);
-                if (p_uint != effect . shadow . distance)
-                {
-                    effect . shadow . distance = p_uint;
-                    t_dirty = true;
-                }
-            }
-                break;
-                
-            case kMCBitmapEffectPropertyAngle:
-            {
-                p_uint %= 360;
-                if (p_uint != effect . shadow . angle)
-                {
-                    effect . shadow . angle = p_uint;
-                    t_dirty = true;
-                }
-            }
-                break;
-                
-            default:
-                return false;
+            if (t_dirty_array)
+                t_dirty = true;
+
         }
+        else
+            MCBitmapEffectStoreProperty(ctxt, effect, t_prop, p_value, t_dirty);
         
         if (!t_dirty || MCBitmapEffectCommitChanges(self, t_type, effect))
         {

@@ -52,6 +52,9 @@ enum MCExecValueType
     kMCExecValueTypePoint,
     kMCExecValueTypeColor,
     kMCExecValueTypeRectangle,
+    
+    kMCExecValueTypeEnum,
+    kMCExecValueTypeSet,
 };
 
 struct MCExecValue
@@ -76,6 +79,7 @@ struct MCExecValue
 		MCPoint point_value;
 		MCColor color_value;
 		MCRectangle rectangle_value;
+        intenum_t enum_value;
 	};
 };
 
@@ -398,6 +402,11 @@ struct MCExecEnumTypeInfo
 	MCExecEnumTypeElementInfo *elements;
 };
 
+void MCExecParseSet(MCExecContext& ctxt, MCExecSetTypeInfo *p_info, MCExecValue p_value, intset_t& r_value);
+void MCExecParseEnum(MCExecContext& ctxt, MCExecEnumTypeInfo *p_info, MCExecValue p_value, intenum_t& r_value);
+void MCExecFormatSet(MCExecContext& ctxt, MCExecSetTypeInfo *p_info, intset_t t_value, MCExecValue& r_value);
+void MCExecFormatEnum(MCExecContext& ctxt, MCExecEnumTypeInfo *p_info, intenum_t p_value, MCExecValue& r_value);
+
 typedef void (*MCExecCustomTypeParseProc)(MCExecContext& ctxt, MCStringRef input, void *r_output);
 typedef void (*MCExecCustomTypeFormatProc)(MCExecContext& ctxt, const void *input, MCStringRef& r_output);
 typedef void (*MCExecCustomTypeFreeProc)(MCExecContext& ctxt, void *input);
@@ -521,19 +530,6 @@ struct MCPropertyInfo
     MCPropertyInfoChunkType chunk_type;
 };
 
-struct MCExecRecordTypeElementInfo
-{
-    const char* tag;
-    MCPropertyInfo prop;
-};
-
-struct MCExecRecordTypeInfo
-{
-    const char *name;
-    uindex_t count;
-    MCExecRecordTypeElementInfo *elements;
-};
-
 void MCExecResolveCharsOfField(MCField *p_field, uint32_t p_part, int32_t& x_start, int32_t& x_finish, uint32_t p_start, uint32_t p_count);
 
 template<typename O, typename A, void (O::*Method)(MCExecContext&, A)> inline void MCPropertyObjectThunk(MCExecContext& ctxt, MCObjectPtr *obj, A arg)
@@ -631,7 +627,6 @@ template<typename O, typename A, typename B, typename C, void (O::*Method)(MCExe
     
 	(static_cast<O *>(obj -> object) ->* Method)(ctxt, obj -> part_id, t_si, t_ei, mixed, count, arg);
 }
-
 
 template<typename A, void Method(MCExecContext&, MCNameRef, A)> inline void MCPropertyArrayThunk(MCExecContext& ctxt, MCNameRef index, A arg)
 {
@@ -1182,8 +1177,19 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 
 ////
 
-#define DEFINE_RW_OBJ_RECORD_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyTypeRecord, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetArray(obj, Get##tag), (void *)MCPropertyObjectThunkSetArray(obj, Set##tag), false, true, false },
+template<typename O, typename A, void (O::*Method)(MCExecContext&, MCNameRef, A)> inline void MCPropertyObjectRecordThunk(MCExecContext& ctxt, MCObjectIndexPtr *obj, A arg)
+{
+    if (obj -> index == nil)
+        (static_cast<O *>(obj -> object) ->*Method)(ctxt, kMCEmptyName, arg);
+    else
+        (static_cast<O *>(obj -> object) ->*Method)(ctxt, obj -> index, arg);
+}
+     
+#define MCPropertyObjectGetRecordThunkImp(obj, mth) (void(*)(MCExecContext&,MCObjectIndexPtr*,MCExecValue&))MCPropertyObjectRecordThunk<obj,MCExecValue&, &obj::mth>
+#define MCPropertyObjectSetRecordThunkImp(obj,mth) (void(*)(MCExecContext&,MCObjectIndexPtr*,MCExecValue))MCPropertyObjectRecordThunk<obj,MCExecValue, &obj::mth>
+
+#define DEFINE_RW_OBJ_RECORD_PROPERTY(prop, obj, tag) \
+{ prop, false, kMCPropertyTypeRecord, nil, (void *)MCPropertyObjectGetRecordThunkImp(obj, Get##tag##Property), (void *)MCPropertyObjectSetRecordThunkImp(obj, Set##tag##Property), false, true, false, kMCPropertyInfoChunkTypeNone }, { prop, false, kMCPropertyTypeRecord, nil, (void *)MCPropertyObjectGetRecordThunkImp(obj, Get##tag##Property), (void *)MCPropertyObjectSetRecordThunkImp(obj, Set##tag##Property), false, false, false, kMCPropertyInfoChunkTypeNone },
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1303,14 +1309,6 @@ template<typename C, void (C::*Method)(MCExecContext&)> inline void MCExecNative
 
 #define DEFINE_CTRL_EXEC_TERNARY_METHOD(act, ctrl, param1, param2, param3, tag) \
 { kMCNativeControlAction##act, (void *)MCExecNativeControlThunkExec##param1##param2##param3(ctrl, Exec##tag) },
-
-////////////////////////////////////////////////////////////////////////////////
-
-#define DEFINE_OBJ_RECORD(type, obj, tag) \
-{ P_UNDEFINED, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectArrayThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectArrayThunkSet##type(obj, Set##tag), false, false, false },
-
-#define DEFINE_OBJ_OPTIONAL_ENUM_RECORD(type, obj, tag) \
-{ P_UNDEFINED, false, kMCPropertyTypeOptionalEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectArrayThunkGetOptionalEnum(obj, Get##tag), (void *)MCPropertyObjectArrayThunkSetOptionalEnum(obj, Set##tag), false, false, false },
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3294,7 +3292,7 @@ extern MCExecCustomTypeInfo *kMCInterfaceDecorationTypeInfo;
 
 extern MCExecCustomTypeInfo *kMCInterfaceMarginsTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceLayerModeTypeInfo;
-extern MCExecRecordTypeInfo *kMCInterfaceBitmapEffectDropShadowTypeInfo;
+extern MCExecEnumTypeInfo *kMCInterfaceBitmapEffectSourceTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceBitmapEffectBlendModeTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceBitmapEffectFilterTypeInfo;
 
