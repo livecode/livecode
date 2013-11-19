@@ -195,126 +195,16 @@ bool MCGGradientToSkShader(MCGGradientRef self, MCGRectangle p_clip, SkShader*& 
 	bool t_success;
 	t_success = true;	
 	
-	if (self -> function < kMCGLegacyGradientDiamond)
-	{	
-		uint32_t t_total_ramp_length;
-		t_total_ramp_length = self -> ramp_length * self -> repeats;
-		
-		SkScalar *t_stops;
-		t_stops = NULL;
-		if (t_success)
-			t_success = MCMemoryNewArray(t_total_ramp_length, t_stops);
-		
-		SkColor *t_colors;
-		t_colors = NULL;
-		if (t_success)
-			t_success = MCMemoryNewArray(t_total_ramp_length, t_colors);
-		
-		SkShader::TileMode t_tile_mode;
-		if (t_success)
-		{
-			// for repeating gradients, we incorporate the repeats into the ramp (color/stop pairs) we pass to skia
-			// adjusting the offset appropriately so everything is still between 0 and 1
-			// and making sure every second set of colors is reversed if we are to mirror the repeats
-			uint32_t t_index;
-			t_index = 0;
-			MCGFloat t_offset_scale;
-			t_offset_scale = (MCGFloat) 1.0f / self -> repeats;
-			for (uint32_t j = 0; j < self -> repeats; j++)
-			{
-				for (uint32_t i = 0; i < self -> ramp_length; i++)
-				{
-					t_stops[t_index] = MCGFloatToSkScalar(self -> stops[i] * t_offset_scale + j * t_offset_scale);
-					t_colors[t_index] = (self -> mirror && j % 2) ? MCGColorToSkColor(self -> colors[self -> ramp_length - 1 - i]) : MCGColorToSkColor(self -> colors[i]);
-					t_index++;
-				}
-			}
-			
-			if (!self -> wrap)
-				t_tile_mode = SkShader::kClamp_TileMode;
-			else if (!self -> mirror)
-				t_tile_mode = SkShader::kRepeat_TileMode;
-			else
-				t_tile_mode = SkShader::kMirror_TileMode;
-		}
-		
-		SkShader *t_gradient_shader;
-		t_gradient_shader = NULL;
-		switch (self -> function)
-		{
-			case kMCGGradientFunctionLinear:
-			{
-				if (t_success)
-				{
-					SkPoint t_points[2];
-					t_points[0] = SkPoint::Make(SkIntToScalar(0), SkIntToScalar(0));
-					t_points[1] = SkPoint::Make(SkIntToScalar(1), SkIntToScalar(0));
-					t_gradient_shader = SkGradientShader::CreateLinear(t_points, t_colors, t_stops, t_total_ramp_length, t_tile_mode, NULL);
-					t_success = t_gradient_shader != NULL;
-				}
-				break;
-			}
-				
-			case kMCGGradientFunctionRadial:
-			{
-				if (t_success)
-				{
-					SkPoint t_center;
-					t_center = SkPoint::Make(SkIntToScalar(0), SkIntToScalar(0));
-					t_gradient_shader = SkGradientShader::CreateRadial(t_center, SkIntToScalar(1), t_colors, t_stops, t_total_ramp_length, t_tile_mode, NULL);
-					t_success = t_gradient_shader != NULL;
-				}			
-				break;
-			}
-				
-			case kMCGGradientFunctionSweep:
-			{
-				t_gradient_shader = SkGradientShader::CreateSweep(SkIntToScalar(0), SkIntToScalar(0), t_colors, t_stops, t_total_ramp_length, NULL);
-				t_success = t_gradient_shader != NULL;
-				break;
-			}	
-				
-				
-				// TODO: Handle other gradient types.
-				
-				/*case kMCGGradientFunctionConical:
-				 {
-				 SkPoint t_start;
-				 t_start = SkPoint::Make(SkIntToScalar(0), SkIntToScalar(0));
-				 SkPoint t_end;
-				 t_end = SkPoint::Make(SkIntToScalar(1), SkIntToScalar(0));
-				 t_gradient_shader = SkGradientShader::CreateTwoPointConical(t_start, SkIntToScalar(1), t_end, SkIntToScalar(1), t_colors, t_stops, t_total_ramp_length, t_tile_mode, NULL);
-				 break;
-				 }*/
-				
-				
-		}
-		
-		if (t_success)
-		{
-			SkMatrix t_transform;
-			MCGAffineTransformToSkMatrix(self -> transform, t_transform);
-			t_gradient_shader -> setLocalMatrix(t_transform);		
-			r_shader = t_gradient_shader;
-		}
-		else if (t_gradient_shader != NULL)
-			t_gradient_shader -> unref();
-		
-		MCMemoryDeleteArray(t_stops);
-		MCMemoryDeleteArray(t_colors);
-	}
-	else
-	{
-		SkShader *t_gradient_shader;
-		t_gradient_shader = new MCGLegacyGradientShader(self, p_clip);
-		t_success = t_gradient_shader != NULL;
-		
-		if (t_success)
-			r_shader = t_gradient_shader;
-		else if (t_gradient_shader != NULL)
-			t_gradient_shader -> unref();		
-	}
+	// MM-2013-11-19: [[ Bug 11471 ]] Move to legacy gradient code for all gradient kinds - there was a loss of quality using Skia.
+	SkShader *t_gradient_shader;
+	t_gradient_shader = new MCGLegacyGradientShader(self, p_clip);
+	t_success = t_gradient_shader != NULL;
 	
+	if (t_success)
+		r_shader = t_gradient_shader;
+	else if (t_gradient_shader != NULL)
+		t_gradient_shader -> unref();		
+
 	return t_success;
 }
 
