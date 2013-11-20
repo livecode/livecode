@@ -3315,7 +3315,7 @@ void MCMatch::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     
     MCAutoValueRef t_source_valueref;
     MCAutoStringRef t_source;
-    if (params->eval(ctxt, &t_source_valueref) || !ctxt . ConvertToString(*t_source_valueref, &t_source))
+    if (!params->eval(ctxt, &t_source_valueref) || !ctxt . ConvertToString(*t_source_valueref, &t_source))
 	{
 		ctxt . LegacyThrow(EE_MATCH_BADSOURCE);
 		return;
@@ -3323,7 +3323,7 @@ void MCMatch::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 
     MCAutoValueRef t_pattern_valueref;
     MCAutoStringRef t_pattern;
-	if (params->getnext()->eval(ctxt, &t_pattern_valueref) || !ctxt . ConvertToString(*t_pattern_valueref, &t_pattern))
+	if (!params->getnext()->eval(ctxt, &t_pattern_valueref) || !ctxt . ConvertToString(*t_pattern_valueref, &t_pattern))
 	{
 		ctxt . LegacyThrow(EE_MATCH_BADPATTERN);
 		return;
