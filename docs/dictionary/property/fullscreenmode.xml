@@ -4,7 +4,7 @@
 	<type>property</type>
 
 	<syntax>
-		<example>set the fullscreenmode of <i>stack</i> to {empty|"exactFit"|"letterbox"|"showAll"|"noBorder"|"noScale"}</example>
+		<example>set the fullscreenmode of <i>stack</i> to {empty|"exactFit"|"letterbox"|"noBorder"|"noScale"}</example>
 	</syntax>
 
 	<synonyms>
