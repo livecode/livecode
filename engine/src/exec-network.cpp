@@ -747,7 +747,7 @@ void MCNetworkSetDefaultNetworkInterface(MCExecContext& ctxt, MCStringRef p_valu
 			delete MCdefaultnetworkinterface;
             MCAutoPointer<char> t_value;
             /* UNCHECKED */ MCStringConvertToCString(p_value, &t_value);
-			MCdefaultnetworkinterface = strclone(*t_value);
+			MCdefaultnetworkinterface = *t_value;
 		}
 		else
 			ctxt . LegacyThrow(EE_PROPERTY_BADNETWORKINTERFACE);

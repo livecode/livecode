@@ -44,7 +44,7 @@ inline char *MCU_empty()
 
 inline void MCU_skip_spaces(MCStringRef p_input, uindex_t& x_offset)
 {
-    while (MCStringGetNativeCharAtIndex(p_input, x_offset) == ' ')
+    while (isspace(MCStringGetNativeCharAtIndex(p_input, x_offset)))
         x_offset++;
 }
 

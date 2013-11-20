@@ -2253,10 +2253,8 @@ static MCStack *MCInterfaceTryToEvalBinaryStack(MCStringRef p_data, bool& r_bina
     
     t_stack = nil;
     t_binary_fail = false;
-    MCAutoPointer<char> t_data;
-    /* UNCHECKED */ MCStringConvertToCString(p_data, &t_data);
     
-    if (MCU_offset(SIGNATURE, *t_data, offset) && (MCStringGetLength(p_data) > 8 && strncmp(*t_data, "REVO", 4) == 0))
+    if (MCStringFirstIndexOf(p_data, MCSTR(SIGNATURE), 0, kMCCompareExact, offset) && (MCStringGetLength(p_data) > 8 && MCStringBeginsWithCString(p_data, (const char_t *)"REVO", kMCCompareExact)))
     {
         IO_handle stream = MCS_fakeopen(MCStringGetOldString(p_data));
         /* UNCHECKED */ MCdispatcher->readfile(NULL, NULL, stream, t_stack);
@@ -2329,9 +2327,8 @@ void MCInterfaceEvalStackOfStackById(MCExecContext& ctxt, MCObjectPtr p_parent, 
 void MCInterfaceEvalStackByValue(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_stack)
 {
     uint4 offset;
-    MCAutoPointer<char> t_value;
-    /* UNCHECKED */ MCStringConvertToCString((MCStringRef)p_value, &t_value);
-    if (MCU_offset(SIGNATURE, *t_value, offset) && (MCStringGetLength((MCStringRef)p_value) > 8 && strncmp(*t_value, "REVO", 4) == 0))
+   
+    if (MCStringFirstIndexOf((MCStringRef)p_value, MCSTR(SIGNATURE), 0, kMCCompareExact, offset) && MCStringGetLength((MCStringRef)p_value) > 8 && MCStringBeginsWithCString((MCStringRef)p_value, (const char_t *)"REVO", kMCCompareExact))
     {
         MCInterfaceEvalBinaryStackAsObject(ctxt, (MCStringRef)p_value, r_stack);
         return;
