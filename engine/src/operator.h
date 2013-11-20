@@ -376,12 +376,8 @@ public:
 		valid = IV_UNDEFINED;
 		delimiter = CT_UNDEFINED;
 	}
-	Parse_stat parse(MCScriptPoint &, Boolean the);
-#if 0
-	virtual Exec_stat eval(MCExecPoint &);
-#else
+    Parse_stat parse(MCScriptPoint &, Boolean the);
     virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
-#endif
 	virtual void compile(MCSyntaxFactoryRef ctxt);
 };
 
@@ -452,7 +448,11 @@ public:
 	{
 		rank = FR_OR;
 	}
+#if 1
 	virtual Exec_stat eval(MCExecPoint &);
+#else
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
+#endif
 };
 
 class MCOrBits : public MCBinaryOperatorCtxt<uinteger_t, uinteger_t, MCMathEvalBitwiseOr, EE_ORBITS_BADLEFT, EE_ORBITS_BADRIGHT, FR_OR_BITS, kMCMathEvalBitwiseOrMethodInfo>
@@ -502,7 +502,7 @@ public:
 	}
 	virtual ~MCThere();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 	
 	virtual void compile(MCSyntaxFactoryRef factory);
 };
