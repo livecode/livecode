@@ -368,20 +368,21 @@ bool MCS_name_to_sockaddr(MCStringRef p_name_in, struct sockaddr_in *r_addr, MCH
 	if (!MCS_init_sockets())
 		return false;
     
-	MCAutoStringRef t_substring, t_name, t_port;
+	MCAutoStringRef t_name_in, t_name, t_port;
     uindex_t t_or, t_colon;
     
     // support multiple opens to same host:port
     if (MCStringFirstIndexOfChar(p_name_in, '|', 0, kMCCompareExact, t_or))
     {
-        /* UNCHECKED */ MCStringCopySubstring(p_name_in, MCRangeMake(0, t_or), &t_substring);
-        MCValueAssign(p_name_in, *t_substring);
+        /* UNCHECKED */ MCStringCopySubstring(p_name_in, MCRangeMake(0, t_or), &t_name_in);
     }
+    else
+        t_name_in = MCValueRetain(p_name_in);
     
     uinteger_t port = 80;
-    if (MCStringFirstIndexOfChar(p_name_in, ':', 0, kMCCompareExact, t_colon))
+    if (MCStringFirstIndexOfChar(*t_name_in, ':', 0, kMCCompareExact, t_colon))
     {
-        /* UNCHECKED */ MCStringDivideAtIndex(p_name_in, t_colon, &t_name, &t_port);
+        /* UNCHECKED */ MCStringDivideAtIndex(*t_name_in, t_colon, &t_name, &t_port);
         MCAutoNumberRef t_port_number;
         if (!MCNumberParse(*t_port, &t_port_number))
 		{
@@ -405,7 +406,7 @@ bool MCS_name_to_sockaddr(MCStringRef p_name_in, struct sockaddr_in *r_addr, MCH
             port = MCNumberFetchAsInteger(*t_port_number);
     }
     else
-        t_name = MCValueRetain(p_name_in);
+        t_name = MCValueRetain(*t_name_in);
     
 	bool t_success = true;
     
