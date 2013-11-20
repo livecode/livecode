@@ -1350,6 +1350,51 @@ Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
 	}
 
 	return match;
+#if 0
+    Boolean MCU_matchname(MCStringRef test, Chunk_term type, MCNameRef name)
+    {
+        
+        if (name == nil || MCNameIsEmpty(name) ||test == nil)
+            return False;
+        
+        if (MCStringIsEqualTo(MCNameGetString(name), test, kMCCompareCaseless))
+            return True;
+        
+        Boolean match = False;
+        
+        static const char *nametable[] =
+        {
+            MCstackstring, MCaudiostring,
+            MCvideostring, MCbackgroundstring,
+            MCcardstring, MCnullstring,
+            MCgroupstring, MCnullstring,
+            MCbuttonstring, MCnullstring,
+            MCnullstring, MCscrollbarstring,
+            MCimagestring, MCgraphicstring,
+            MCepsstring, MCmagnifierstring,
+            MCcolorstring, MCfieldstring
+        };
+        
+        
+        // MW-2013-07-29: [[ Bug 11068 ]] Make sure that we only match a reference
+        //   of the form 'field "..."', and throw an error if not.
+        
+        MCAutoStringRef t_pattern;
+        
+        MCStringFormat(&t_pattern, "%@ \"%@\"", MCSTR(nametable[type - CT_STACK]), MCNameGetString(name));
+        
+        if (MCStringContains(test, *t_pattern, kMCCompareCaseless))
+        {
+            match = True;
+            MCLog("Great success!! %s", "!!");
+        }
+        else
+            MCLog("[[ Bug 11068 ]] match name '%s' to '%@' attempted and failed due to better checking", MCNameGetCString(name), test);
+        
+        return match;
+        
+    }
+#endif
 }
 
 void MCU_snap(int2 &p)
