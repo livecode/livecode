@@ -110,6 +110,54 @@ bool MCExecContext::ConvertToMutableString(MCValueRef p_value, MCStringRef& r_st
     return MCStringMutableCopy(*t_string, r_string);
 }
 
+bool MCExecContext::ConvertToNumberOrArray(MCExecValue x_value)
+{
+    switch(x_value . type)
+    {
+    case kMCExecValueTypeNone:
+        return false;
+
+    case kMCExecValueTypeValueRef:
+    case kMCExecValueTypeBooleanRef:
+    case kMCExecValueTypeStringRef:
+    case kMCExecValueTypeNameRef:
+    case kMCExecValueTypeDataRef:
+    case kMCExecValueTypeNumberRef:
+    {
+        double t_real;
+        if (!ConvertToReal(x_value . valueref_value, t_real))
+            return false;
+
+        MCValueRelease(x_value . valueref_value);
+        MCExecValueTraits<double>::set(x_value, t_real);
+        return true;
+    }
+
+    case kMCExecValueTypeUInt:
+        MCExecValueTraits<double>::set(x_value, (double)x_value . uint_value);
+        return true;
+
+    case kMCExecValueTypeInt:
+        MCExecValueTraits<double>::set(x_value, (double)x_value . int_value);
+        return true;
+
+    case kMCExecValueTypeFloat:
+        MCExecValueTraits<double>::set(x_value, (double)x_value . float_value);
+        return true;
+
+    case kMCExecValueTypeArrayRef:
+    case kMCExecValueTypeDouble:
+        return true;
+
+    case kMCExecValueTypeBool:
+    case kMCExecValueTypeChar:
+    case kMCExecValueTypePoint:
+    case kMCExecValueTypeColor:
+    case kMCExecValueTypeRectangle:
+        return false;
+    }
+}
+
 bool MCExecContext::ConvertToData(MCValueRef p_value, MCDataRef& r_data)
 {
     MCAutoStringRef t_string;
