@@ -454,8 +454,10 @@ IO_stat MCObjectOutputStream::WriteStringRef(MCStringRef p_value)
     // nulls without creating a corrupt file.
 	IO_stat t_stat;
 	uint32_t t_length;
-	t_length = strlen(MCStringGetCString(p_value));
-	t_stat = Write(MCStringGetCString(p_value), t_length + 1);
+	t_length = MCStringGetLength(p_value);
+    MCAutoPointer<char> t_value;
+    /* UNCHECKED */ MCStringConvertToCString(p_value, &t_value);
+	t_stat = Write(*t_value, t_length + 1);
 	return t_stat;
 }
 

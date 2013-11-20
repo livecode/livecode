@@ -49,7 +49,9 @@ MC_EXEC_DEFINE_GET_METHOD(Ad, Ads, 1)
 
 static void MCAdTopLeftParse(MCExecContext& ctxt, MCStringRef p_input, MCAdTopLeft& r_output)
 {
-    if (sscanf(MCStringGetCString(p_input), "%u,%u", &r_output.x, &r_output.y))
+    MCAutoStringRefAsUTF8String t_input_utf8;
+    /* UNCHECKED */ t_input_utf8 . Lock(p_input);
+    if (sscanf(*t_input_utf8, "%u,%u", &r_output.x, &r_output.y))
         return;
     
     ctxt . Throw();
@@ -173,7 +175,7 @@ void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_typ
     {
         uint32_t t_timeout;
         MCAdType t_type;
-        t_type = MCAdTypeFromCString(MCStringGetCString(p_type));
+        t_type = MCAdTypeFromString(p_type);
         
         if (t_success)
         {

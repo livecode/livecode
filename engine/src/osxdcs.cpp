@@ -680,7 +680,7 @@ void MCScreenDC::setname(Window w, MCStringRef newname)
 	//   UTF-8 it must be malformed. In theory this shouldn't happen, so as a
 	//   fallback, just create a CFString as if the string were MacRoman.
 	CFStringRef t_title;
-    t_title = CFStringCreateWithCString(kCFAllocatorDefault, MCStringGetCString(newname), kCFStringEncodingMacRoman);
+    MCStringConvertToCFStringRef(newname, t_title);
 	if (t_title != nil)
 	{
 		SetWindowTitleWithCFString((WindowPtr)w -> handle . window, t_title);

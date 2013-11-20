@@ -42,8 +42,9 @@ char *MCSystemLowercaseInternational(const MCString& p_string)
 int MCSystemCompareInternational(MCStringRef p_left, MCStringRef p_right)
 {
 	CFStringRef t_left_ref, t_right_ref;
-	t_left_ref = CFStringCreateWithCStringNoCopy(NULL, MCStringGetCString(p_left), kCFStringEncodingMacRoman, kCFAllocatorNull);
-	t_right_ref = CFStringCreateWithCStringNoCopy(NULL, MCStringGetCString(p_right), kCFStringEncodingMacRoman, kCFAllocatorNull);
+    /* UNCHECKED */ MCStringConvertToCFStringRef(p_left, t_left_ref);
+    /* UNCHECKED */ MCStringConvertToCFStringRef(p_right, t_right_ref);
+
 	
 	// MW-2013-03-12: [[ Bug 10445 ]] Make sure we compare the string 'localized'.
 	int t_result;
