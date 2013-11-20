@@ -819,12 +819,12 @@ void MCGraphicsContext::drawline(int2 x1, int2 y1, int2 x2, int2 y2)
 {
 	// MM-2013-11-14: [[ Bug 11457 ]] Adjust lines and polygons to make sure antialiased lines don't draw across pixels.
 	MCGPoint t_start;
-	t_start . x = (MCGFloat) x1 - 0.5f;
-	t_start . y = (MCGFloat) y1 - 0.5f;
+	t_start . x = (MCGFloat) x1 + 0.5f;
+	t_start . y = (MCGFloat) y1 + 0.5f;
 	
 	MCGPoint t_finish;
-	t_finish . x = (MCGFloat) x2 - 0.5f;
-	t_finish . y = (MCGFloat) y2 - 0.5f;
+	t_finish . x = (MCGFloat) x2 + 0.5f;
+	t_finish . y = (MCGFloat) y2 + 0.5f;
 	
 	MCGContextBeginPath(m_gcontext);
 	MCGContextAddLine(m_gcontext, t_start, t_finish);	
