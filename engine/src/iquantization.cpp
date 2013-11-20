@@ -365,18 +365,14 @@ bool MCImageParseColourList(MCStringRef p_input, uint32_t &r_ncolours, MCColor *
 
 	MCColor *t_colours = NULL;
 	uint32_t t_ncolours = 0;
+	
 	if (t_success)
-	{
-		// count lines
-		t_ncolours = 1 + MCStringCountChar(p_input, MCRangeMake(0, MCStringGetLength(p_input)), '\n', kMCCompareExact);
-        t_success = MCMemoryNewArray<MCColor>(t_ncolours, t_colours);
-	}
-	if (t_success && t_ncolours > 0)
 	{
 		MCAutoArrayRef t_lines;
         uindex_t t_nlines = 0;
         /* UNCHECKED */ MCStringSplit(p_input, MCSTR("\n"), nil, kMCStringOptionCompareExact, &t_lines);
         t_nlines = MCArrayGetCount(*t_lines);
+        t_success = MCMemoryNewArray<MCColor>(t_nlines, t_colours);
         
         for (uindex_t i = 0; i < t_nlines; i++)
         {

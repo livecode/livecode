@@ -2027,9 +2027,7 @@ Exec_stat MCObject::setprops(uint32_t p_parid, MCExecPoint& ep)
 	MCValueRef t_value;
 	while(MCArrayIterate(*t_array, t_iterator, t_key, t_value))
 	{
-        MCAutoPointer<char> t_key_cstring;
-        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(t_key), &t_key_cstring);
-		MCScriptPoint sp(*t_key_cstring);
+        MCScriptPoint sp(MCStringGetCString(MCNameGetString(t_key)));
 		Symbol_type type;
 		const LT *te;
 		if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL

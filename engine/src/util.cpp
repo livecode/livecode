@@ -1223,7 +1223,8 @@ static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean
 #else
 				int result = strcoll(s1, s2);
 #endif
-				
+				delete t1;
+                delete t2;
 				first = reverse ? result >= 0 : result <= 0;
 				break;
 			}
@@ -1243,7 +1244,9 @@ static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean
 				// for strings. It will not, however, do the right thing with
 				// UTF-16LE strings (the encoding used on x86 and ARM)...
 				int result = strcmp(s1, s2);
-				
+                
+				delete t1;
+                delete t2;
 				first = reverse ? result >= 0 : result <= 0;
 				break;
 			}

@@ -751,7 +751,7 @@ bool MCField::importblock(MCParagraph *p_paragraph, const MCFieldCharacterStyle&
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Exec_stat MCField::sethtml(uint4 parid, const MCString &data)
+Exec_stat MCField::sethtml(uint4 parid, MCStringRef data)
 {
 	if (state & CS_NO_FILE)
 	{
@@ -766,7 +766,7 @@ Exec_stat MCField::sethtml(uint4 parid, const MCString &data)
 	return ES_NORMAL;
 }
 
-Exec_stat MCField::setrtf(uint4 parid, const MCString &data)
+Exec_stat MCField::setrtf(uint4 parid, MCStringRef data)
 {
 	state |= CS_NO_FILE; // prevent interactions while downloading images
 	MCParagraph *htmlpgptr = rtftoparagraphs(data);
@@ -1020,21 +1020,17 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 
 extern bool RTFRead(const char *p_rtf, uint4 p_length, MCTextConvertCallback p_writer, void *p_writer_context);
 
-MCParagraph *MCField::rtftoparagraphs(MCStringRef p_data)
-{
-    MCAutoPointer<char> t_data;
-    /* UNCHECKED */ MCStringConvertToCString(p_data, &t_data);
-    return rtftoparagraphs(MCString(*t_data, MCStringGetLength(p_data)));
-}
 
-MCParagraph *MCField::rtftoparagraphs(const MCString& p_data)
+MCParagraph *MCField::rtftoparagraphs(MCStringRef p_data)
 {
 	MCParagraph *t_paragraphs;
 	t_paragraphs = new MCParagraph;
 	t_paragraphs -> setparent(this);
 	t_paragraphs -> inittext();
 
-	RTFRead(p_data . getstring(), p_data . getlength(), converttoparagraphs, t_paragraphs);
+    MCAutoPointer<char> t_data;
+    /* UNCHECKED */ MCStringConvertToCString(p_data, &t_data);
+	RTFRead(*t_data, MCStringGetLength(p_data), converttoparagraphs, t_paragraphs);
 	
 	// MW-2012-03-13: [[ RtfParaStyles ]] Delete the first paragraph which is only
 	//   needed as an initial starting point.

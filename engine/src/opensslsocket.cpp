@@ -1020,13 +1020,8 @@ MCSocketwrite::MCSocketwrite(MCStringRef d, MCObject *o, MCNameRef m)
 {
     char *temp_d;
     /* UNCHECKED */ MCStringConvertToCString(d, temp_d);
-	if (m != NULL)
-    {
-		buffer = strdup(temp_d);
-        delete temp_d;
-    }
-	else
-		buffer = temp_d;
+	
+    buffer = temp_d;
 	size = MCStringGetLength(d);
 	timeout = curtime + MCsockettimeout;
 	optr = o;

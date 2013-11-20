@@ -1839,23 +1839,29 @@ void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uint2 &nstring
             remaining_chars = MCStringGetLength(source);
 			MCU_skip_spaces(source, l);
             remaining_chars -= l;
-            uindex_t t_start;
-            t_start = 0;
+            uindex_t t_word_start;
+            t_word_start = l;
             
 			while(remaining_chars != 0)
 			{
-				while(!isspace(MCStringGetNativeCharAtIndex(source, t_start)))
+				while(!isspace(MCStringGetNativeCharAtIndex(source, l)))
                 {
-					t_start++;
+					l++;
                     remaining_chars --;
                 }
                 
 				MCU_realloc((char **)&tdest_str, nstrings, nstrings + 1, sizeof(MCStringRef));
-                /* UNCHECKED */ MCStringCopySubstring(source, MCRangeMake(l, t_start), tdest_str[nstrings]);
+                uindex_t t_word_length;
+                t_word_length = l - t_word_start;
+                /* UNCHECKED */ MCStringCopySubstring(source, MCRangeMake(t_word_start, t_word_length), tdest_str[nstrings]);
 				nstrings++;
-                t_start = 0;
+        
+                uindex_t t_space_start, t_spaces_length;
+                t_space_start = l;
 				MCU_skip_spaces(source, l);
-                remaining_chars -= l;
+                t_word_start = l;
+                t_spaces_length = t_word_start - t_space_start;
+                remaining_chars -= t_spaces_length;
 			}
 		}
 		break;

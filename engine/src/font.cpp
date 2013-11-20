@@ -665,7 +665,7 @@ Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
                 uindex_t t_start_pos, t_end_pos;
                 t_end_pos = 0;
                 
-                while (t_end_pos!= MCStringGetLength(data))
+                while (t_end_pos < MCStringGetLength(data))
                 {
                     t_start_pos = t_end_pos;
                     // skip spaces at the beginning or after a comma (if any)
@@ -679,6 +679,7 @@ Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
                     
                     MCAutoStringRef tdata;
                     /* UNCHECKED */ MCStringCopySubstring(data, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), &tdata);
+                    t_end_pos++;
                     if (MCF_setweightstring(style, *tdata))
 						continue;
 					if (MCF_setexpandstring(style, *tdata))

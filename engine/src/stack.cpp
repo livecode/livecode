@@ -2976,8 +2976,7 @@ bool MCStack::resolve_relative_path(MCStringRef p_path, MCStringRef& r_resolved)
             
             if (MCS_exists(*t_new_filename, True))
             {
-                r_resolved = MCValueRetain(*t_new_filename);
-                return true;
+                return MCStringCopy(*t_new_filename, r_resolved);
             }
 		}
 		r_resolved = MCValueRetain(t_stack_filename);

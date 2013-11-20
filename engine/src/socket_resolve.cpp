@@ -359,64 +359,71 @@ bool hostname_resolve_first_sockaddr_callback(void *p_context, bool p_resolved, 
 
 bool MCS_name_to_sockaddr(MCStringRef p_name_in, struct sockaddr_in *r_addr, MCHostNameResolveCallback p_callback, void *p_context)
 {
-	// get port & id if set
+    // get port & id if set
 	// if callback provided then start name resolve thread with that callback
 	// else start name resolve thread with our own callback and wait for thread to finish
-
-	MCAutoPointer<char> t_name_in;
-    /* UNCHECKED */ MCStringConvertToCString(p_name_in, &t_name_in);
+    
+	
+    
 	if (!MCS_init_sockets())
 		return false;
-
-	char *t_name;
-	t_name = strclone(*t_name_in);
-
-	char *idstring = strchr(t_name, '|');
-
-	if (idstring != NULL)
-		*idstring = '\0'; // support multiple opens to same host:port
-
-	char *portstring = strchr(t_name, ':');
-	int2 port = 80;
-	if (portstring != NULL)
-	{
-		*portstring++ = '\0';
-		if (!MCU_stoi2(portstring, port))
+    
+	MCAutoStringRef t_substring, t_name, t_port;
+    uindex_t t_or, t_colon;
+    
+    // support multiple opens to same host:port
+    if (MCStringFirstIndexOfChar(p_name_in, '|', 0, kMCCompareExact, t_or))
+    {
+        /* UNCHECKED */ MCStringCopySubstring(p_name_in, MCRangeMake(0, t_or), &t_substring);
+        MCValueAssign(p_name_in, *t_substring);
+    }
+    
+    uinteger_t port = 80;
+    if (MCStringFirstIndexOfChar(p_name_in, ':', 0, kMCCompareExact, t_colon))
+    {
+        /* UNCHECKED */ MCStringDivideAtIndex(p_name_in, t_colon, &t_name, &t_port);
+        MCAutoNumberRef t_port_number;
+        if (!MCNumberParse(*t_port, &t_port_number))
 		{
 			uint2 i;
 			for (i = 0 ; i < ELEMENTS(port_table) ; i++)
 			{
-				if (strequal(portstring, port_table[i].name))
+                if (MCStringIsEqualToCString(*t_port, port_table[i].name, kMCCompareExact))
 				{
 					port = port_table[i].port;
 					break;
 				}
 			}
-
+            
 			if (i == ELEMENTS(port_table))
 			{
 				MCresult->sets("not a valid port");
 				return false;
 			}
 		}
-	}
-
+        else
+            port = MCNumberFetchAsInteger(*t_port_number);
+    }
+    else
+        t_name = MCValueRetain(p_name_in);
+    
 	bool t_success = true;
-
+    
 	memset((char *)r_addr, 0, sizeof(struct sockaddr_in));
 	r_addr->sin_family = AF_INET;
 	r_addr->sin_port = MCSwapInt16HostToNetwork(port);
-
+    
+    MCAutoPointer<char> t_name_cstring;
+    /* UNCHECKED */ MCStringConvertToCString(*t_name, &t_name_cstring);
 	if (p_callback == NULL)
 	{
-		t_success = MCSocketHostNameResolve(t_name, NULL, SOCK_STREAM, true,
-			hostname_resolve_first_sockaddr_callback, r_addr);
+		t_success = MCSocketHostNameResolve(*t_name_cstring, NULL, SOCK_STREAM, true,
+                                            hostname_resolve_first_sockaddr_callback, r_addr);
 	}
 	else
-		t_success = MCSocketHostNameResolve(t_name, NULL, SOCK_STREAM, false,
-		p_callback, p_context);
-	delete t_name;
-
+		t_success = MCSocketHostNameResolve(*t_name_cstring, NULL, SOCK_STREAM, false,
+                                            p_callback, p_context);
+    
 	return t_success;
 }
 

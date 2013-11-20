@@ -4457,12 +4457,14 @@ static SampleDescriptionHandle scanSoundTracks(Movie tmovie)
 	return aDesc;
 }
 
-static bool path_to_dataref(const char *p_path, DataReferenceRecord& r_rec)
+static bool path_to_dataref(MCStringRef p_path, DataReferenceRecord& r_rec)
 {
 	bool t_success = true;
 	CFStringRef t_cf_path = NULL;
-	t_cf_path = CFStringCreateWithCString(NULL, p_path, kCFStringEncodingWindowsLatin1);
-	t_success = (t_cf_path != NULL);
+    MCAutoStringRefAsCFString t_path;
+    /* UNCHECKED */ t_path . Lock(p_path);
+    t_cf_path = *t_path;
+    t_success = (t_cf_path != NULL);
 	if (t_success)
 	{
 		OSErr t_error;
@@ -4494,10 +4496,7 @@ static void exportToSoundFile(const char *sourcefile, const char *destfile)
 	
 	if (t_success)
 	{
-		MCAutoPointer<char> t_src_res, t_dst_res;
-        /* UNCHECKED */ MCStringConvertToCString(*t_src_resolved_str, &t_src_res);
-        /* UNCHECKED */ MCStringConvertToCString(*t_dst_resolved_str, &t_dst_res);
-        t_success = path_to_dataref(*t_src_res, t_src_rec) && path_to_dataref(*t_dst_res, t_dst_rec);
+        t_success = path_to_dataref(*t_src_resolved_str, t_src_rec) && path_to_dataref(*t_dst_resolved_str, t_dst_rec);
 	}
 
 	Boolean isActive = true;
@@ -4593,10 +4592,10 @@ void MCPlayer::stoprecording()
 #ifdef _WINDOWS
 		if (MCrecordformat == EX_MOVIE)
         {
-            MCAutoStringRefAsUTF8String t_recordtempfile, t_recordexportfile;
+            MCAutoStringRefAsWString t_recordtempfile, t_recordexportfile;
             /* UNCHECKED */ t_recordtempfile . Lock(recordtempfile);
             /* UNCHECKED */ t_recordexportfile . Lock(recordexportfile);
-			CopyFileA(*t_recordtempfile, *t_recordexportfile, False);
+			CopyFileW(*t_recordtempfile, *t_recordexportfile, False);
         }
 		else
 #endif
