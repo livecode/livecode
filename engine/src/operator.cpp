@@ -95,6 +95,7 @@ void MCMultiBinaryOperator::compile(MCSyntaxFactoryRef ctxt)
 //  Logical operators
 //
 
+#if 1
 Exec_stat MCAnd::eval(MCExecPoint &ep)
 {
 #ifdef /* MCAnd */ LEGACY_EXEC
@@ -121,35 +122,89 @@ Exec_stat MCAnd::eval(MCExecPoint &ep)
 #endif /* MCAnd */
 
     MCExecContext ctxt(ep);
-	bool t_result;
-	bool t_left, t_right;
+        bool t_result;
+        bool t_left, t_right;
 
-	if (left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_AND_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	if (!ep.copyasbool(t_left))
-		t_left = false;
+    if (left->eval(ep) != ES_NORMAL)
+    {
+        MCeerror->add(EE_AND_BADLEFT, line, pos);
+        return ES_ERROR;
+    }
+    if (!ep.copyasbool(t_left))
+        t_left = false;
 
-	/* CONDITIONAL EVALUATION */
-	if (t_left && right->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_AND_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	if (!ep.copyasbool(t_right))
-		t_right = false;
+    /* CONDITIONAL EVALUATION */
+    if (t_left)
+    {
+        if (right->eval(ep) != ES_NORMAL)
+        {
+            MCeerror->add(EE_AND_BADRIGHT, line, pos);
+            return ES_ERROR;
+        }
 
-	MCLogicEvalAnd(ctxt, t_left, t_right, t_result);
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setboolean(t_result);
-		return ES_NORMAL;
-	}
+        if (!ep.copyasbool(t_right))
+            t_right = false;
 
-	return ctxt.Catch(line, pos);
+        MCLogicEvalAnd(ctxt, t_left, t_right, t_result);
+    }
+    else
+        t_result = false;
+
+    if (!ctxt.HasError())
+    {
+        /* UNCHECKED */ ep.setboolean(t_result);
+        return ES_NORMAL;
+    }
+
+    return ctxt.Catch(line, pos);
 }
+#else
+void MCAnd::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
+{
+#ifdef /* MCAnd */ LEGACY_EXEC
+    Boolean state1;
+    Boolean state2 = False;
+
+    if (left->eval(ep) != ES_NORMAL)
+    {
+        MCeerror->add(EE_AND_BADLEFT, line, pos);
+        return ES_ERROR;
+    }
+    state1 = ep.getsvalue() == MCtruemcstring;
+    if (state1)
+    {
+        if (right->eval(ep) != ES_NORMAL)
+        {
+            MCeerror->add(EE_AND_BADRIGHT, line, pos);
+            return ES_ERROR;
+        }
+        state2 = ep.getsvalue() == MCtruemcstring;
+    }
+    ep.setboolean(state1 && state2);
+    return ES_NORMAL;
+#endif /* MCAnd */
+
+    bool t_result;
+    bool t_left, t_right;
+
+    if (!ctxt . EvalExprAsBool(left, EE_AND_BADLEFT, t_left))
+        return;
+
+    /* CONDITIONAL EVALUATION */
+    if(t_left)
+    {
+        if (!ctxt . EvalExprAsBool(right, EE_AND_BADRIGHT, t_right))
+            return;
+
+        MCLogicEvalAnd(ctxt, t_left, t_right, t_result);
+    }
+    else
+        t_result = false;
+
+    if (!ctxt . HasError())
+        MCExecValueTraits<bool>::set(r_value, t_result);
+}
+#endif
 
 Exec_stat MCOr::eval(MCExecPoint &ep)
 {
@@ -1039,16 +1094,18 @@ Exec_stat MCNotEqual::eval(MCExecPoint &ep)
 //  Miscellaneous operators
 //
 
-Exec_stat MCGrouping::eval(MCExecPoint &ep)
+void MCGrouping::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
-	if (right != NULL)
-		return right->eval(ep);
-	else
-	{
-		MCeerror->add
-		(EE_GROUPING_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
+    if (right != NULL)
+    {
+        MCAutoValueRef t_value;
+        if (!ctxt . EvalExprAsValueRef(right, EE_GROUPING_BADRIGHT, &t_value))
+            return;
+
+        MCExecValueTraits<MCValueRef>::set(r_value, *t_value);
+    }
+    else
+        ctxt . LegacyThrow(EE_GROUPING_BADRIGHT);
 }
 
 void MCGrouping::compile(MCSyntaxFactoryRef ctxt)
@@ -1204,6 +1261,7 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
+#if 0
 Exec_stat MCIs::eval(MCExecPoint &ep)
 {
 #ifdef /* MCIs */ LEGACY_EXEC
@@ -1718,6 +1776,226 @@ Exec_stat MCIs::eval(MCExecPoint &ep)
 
 	return ctxt . Catch(line, pos);
 }
+#else
+
+void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
+{
+    bool t_result;
+
+    // Implementation of 'is a <type>'
+    if (valid != IV_UNDEFINED)
+    {
+        MCAutoValueRef t_value;
+
+        if (!ctxt . EvalExprAsValueRef(right, EE_IS_BADLEFT, &t_value))
+            return;
+
+        switch (valid)
+        {
+        case IV_ARRAY:
+            if (form == IT_NORMAL)
+                MCArraysEvalIsAnArray(ctxt, *t_value, t_result);
+            else
+                MCArraysEvalIsNotAnArray(ctxt, *t_value, t_result);
+            break;
+        case IV_COLOR:
+            if (form == IT_NORMAL)
+                MCGraphicsEvalIsAColor(ctxt, *t_value, t_result);
+            else
+                MCGraphicsEvalIsNotAColor(ctxt, *t_value, t_result);
+            break;
+        case IV_DATE:
+            if (form == IT_NORMAL)
+                MCDateTimeEvalIsADate(ctxt, *t_value, t_result);
+            else
+                MCDateTimeEvalIsNotADate(ctxt, *t_value, t_result);
+            break;
+        case IV_INTEGER:
+            if (form == IT_NORMAL)
+                MCMathEvalIsAnInteger(ctxt, *t_value, t_result);
+            else
+                MCMathEvalIsNotAnInteger(ctxt, *t_value, t_result);
+            break;
+        case IV_NUMBER:
+            if (form == IT_NORMAL)
+                MCMathEvalIsANumber(ctxt, *t_value, t_result);
+            else
+                MCMathEvalIsNotANumber(ctxt, *t_value, t_result);
+            break;
+        case IV_LOGICAL:
+            if (form == IT_NORMAL)
+                MCLogicEvalIsABoolean(ctxt, *t_value, t_result);
+            else
+                MCLogicEvalIsNotABoolean(ctxt, *t_value, t_result);
+            break;
+        case IV_POINT:
+            if (form == IT_NORMAL)
+                MCGraphicsEvalIsAPoint(ctxt, *t_value, t_result);
+            else
+                MCGraphicsEvalIsNotAPoint(ctxt, *t_value, t_result);
+            break;
+        case IV_RECT:
+            if (form == IT_NORMAL)
+                MCGraphicsEvalIsARectangle(ctxt, *t_value, t_result);
+            else
+                MCGraphicsEvalIsNotARectangle(ctxt, *t_value, t_result);
+            break;
+        // MERG-2013-06-24: [[ IsAnAsciiString ]] Implementation for ascii string
+        //   check.
+        case IV_ASCII:
+            if (form == IT_NORMAL)
+                MCStringsEvalIsAscii(ctxt, *t_value, t_result);
+            else
+                MCStringsEvalIsNotAscii(ctxt, *t_value, t_result);
+            break;
+        }
+
+        if (!ctxt . HasError())
+            MCExecValueTraits<bool>::set(r_value, t_result);
+
+        return;
+    }
+
+    // Implementation of 'is'
+    if (form == IT_NORMAL || form == IT_NOT)
+    {
+        MCAutoValueRef t_left, t_right;
+
+        if (!ctxt . EvalExprAsValueRef(left, EE_FACTOR_BADLEFT, &t_left)
+                || !ctxt . EvalExprAsValueRef(right, EE_FACTOR_BADRIGHT, &t_right))
+            return;
+
+        if (form == IT_NORMAL)
+            MCLogicEvalIsEqualTo(ctxt, *t_left, *t_right, t_result);
+        else
+            MCLogicEvalIsNotEqualTo(ctxt, *t_left, *t_right, t_result);
+    }
+
+
+    // The rest
+    switch (form)
+    {
+    case IT_AMONG:
+    case IT_NOT_AMONG:
+        if (delimiter == CT_KEY)
+        {
+            MCAutoArrayRef t_array;
+            MCNewAutoNameRef t_name;
+
+            if (!ctxt . EvalExprAsNameRef(left, EE_IS_BADLEFT, &t_name))
+                return;
+
+            if (!ctxt . EvalExprAsArrayRef(right, EE_IS_BADRIGHT, &t_array))
+                return;
+
+            if (form == IT_AMONG)
+                MCArraysEvalIsAmongTheKeysOf(ctxt, *t_name, *t_array, t_result);
+            else
+                MCArraysEvalIsNotAmongTheKeysOf(ctxt, *t_name, *t_array, t_result);
+        }
+        else
+        {
+            MCAutoStringRef t_left, t_right;
+
+            if (!ctxt . EvalExprAsStringRef(left, EE_IS_BADLEFT, &t_left))
+                return;
+
+            if (!ctxt . EvalExprAsStringRef(right, EE_IS_BADRIGHT, &t_right))
+                return;
+
+            switch (delimiter)
+            {
+            case CT_TOKEN:
+                if (form == IT_AMONG)
+                    MCStringsEvalIsAmongTheTokensOf(ctxt, *t_left, *t_right, t_result);
+                else
+                    MCStringsEvalIsNotAmongTheTokensOf(ctxt, *t_left, *t_right, t_result);
+                break;
+            case CT_WORD:
+                if (form == IT_AMONG)
+                    MCStringsEvalIsAmongTheWordsOf(ctxt, *t_left, *t_right, t_result);
+                else
+                    MCStringsEvalIsNotAmongTheWordsOf(ctxt, *t_left, *t_right, t_result);
+                break;
+            case CT_LINE:
+                if (form == IT_AMONG)
+                    MCStringsEvalIsAmongTheLinesOf(ctxt, *t_left, *t_right, t_result);
+                else
+                    MCStringsEvalIsNotAmongTheLinesOf(ctxt, *t_left, *t_right, t_result);
+                break;
+            case CT_ITEM:
+                if (form == IT_AMONG)
+                    MCStringsEvalIsAmongTheItemsOf(ctxt, *t_left, *t_right, t_result);
+                else
+                    MCStringsEvalIsNotAmongTheItemsOf(ctxt, *t_left, *t_right, t_result);
+                break;
+            }
+        }
+        break;
+    case IT_AMONG_THE_CLIPBOARD_DATA:
+    case IT_NOT_AMONG_THE_CLIPBOARD_DATA:
+    case IT_AMONG_THE_DRAG_DATA:
+    case IT_NOT_AMONG_THE_DRAG_DATA:
+        {
+            MCNewAutoNameRef t_right;
+
+            if (!ctxt . EvalExprAsNameRef(right, EE_IS_BADLEFT, &t_right))
+                return;
+
+            if (form == IT_AMONG_THE_CLIPBOARD_DATA)
+                MCPasteboardEvalIsAmongTheKeysOfTheClipboardData(ctxt, *t_right, t_result);
+            else if (form == IT_NOT_AMONG_THE_CLIPBOARD_DATA)
+                MCPasteboardEvalIsNotAmongTheKeysOfTheClipboardData(ctxt, *t_right, t_result);
+            else if (form == IT_AMONG_THE_DRAG_DATA)
+                MCPasteboardEvalIsAmongTheKeysOfTheDragData(ctxt, *t_right, t_result);
+            else if (form == IT_NOT_AMONG_THE_DRAG_DATA)
+                MCPasteboardEvalIsNotAmongTheKeysOfTheDragData(ctxt, *t_right, t_result);
+        }
+        break;
+    case IT_IN:
+    case IT_NOT_IN:
+        {
+            MCAutoStringRef t_left, t_right;
+
+            if (!ctxt . EvalExprAsStringRef(left, EE_IS_BADLEFT, &t_left))
+                return;
+
+            if (!ctxt . EvalExprAsStringRef(right, EE_IS_BADRIGHT, &t_right))
+                return;
+
+            if (form == IT_IN)
+                MCStringsEvalContains(ctxt, *t_right, *t_left, t_result);
+            else
+                MCStringsEvalDoesNotContain(ctxt, *t_right, *t_left,t_result);
+        }
+        break;
+    case IT_WITHIN:
+    case IT_NOT_WITHIN:
+        {
+            MCPoint t_point;
+            MCRectangle t_rectangle;
+
+            if (!ctxt . EvalExprAsPoint(left, EE_IS_BADLEFT, t_point))
+                return;
+
+            if (!ctxt . EvalExprAsRectangle(right, EE_IS_BADRIGHT, t_rectangle))
+                return;
+
+            if (form == IT_WITHIN)
+                MCGraphicsEvalIsWithin(ctxt, t_point, t_rectangle, t_result);
+            else
+                MCGraphicsEvalIsNotWithin(ctxt, t_point, t_rectangle, t_result);
+        }
+        break;
+    default:
+        break;
+    }
+
+    if (!ctxt . HasError())
+        MCExecValueTraits<bool>::set(r_value, t_result);
+}
+
+#endif
 
 void MCIs::compile(MCSyntaxFactoryRef ctxt)
 {

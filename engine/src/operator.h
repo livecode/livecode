@@ -223,10 +223,10 @@ template<void (*Eval)(MCExecContext&, real64_t, real64_t, real64_t&),
          MCExecMethodInfo *&EvalNumberMethodInfo,
          MCExecMethodInfo *&EvalArrayByNumberMethodInfo,
          MCExecMethodInfo *&EvalArrayByArrayMethodInfo>
-class MCMultiBinaryCommutiveOperatorCtxt: public MCMultiBinaryOperator
+class MCMultiBinaryCommutativeOperatorCtxt: public MCMultiBinaryOperator
 {
 public:
-    MCMultiBinaryCommutiveOperatorCtxt()
+    MCMultiBinaryCommutativeOperatorCtxt()
     {
         rank = Rank;
     }
@@ -310,7 +310,11 @@ public:
     {
         rank = FR_AND;
     }
-	virtual Exec_stat eval(MCExecPoint &);
+#if 1
+    virtual Exec_stat eval(MCExecPoint &ep);
+#else
+    virtual void eval_ctxt(MCExecContext &, MCExecValue &r_value);
+#endif
 };
 
 class MCAndBits : public MCBinaryOperatorCtxt<uinteger_t, uinteger_t, MCMathEvalBitwiseAnd, EE_ANDBITS_BADLEFT, EE_ANDBITS_BADRIGHT, FR_AND_BITS, kMCMathEvalBitwiseAndMethodInfo>
@@ -354,8 +358,8 @@ public:
 	MCGrouping()
 	{
 		rank = FR_GROUPING;
-	}
-	virtual Exec_stat eval(MCExecPoint &);
+    }
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 	virtual void compile(MCSyntaxFactoryRef ctxt);
 };
 
@@ -373,7 +377,11 @@ public:
 		delimiter = CT_UNDEFINED;
 	}
 	Parse_stat parse(MCScriptPoint &, Boolean the);
+#if 0
 	virtual Exec_stat eval(MCExecPoint &);
+#else
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
+#endif
 	virtual void compile(MCSyntaxFactoryRef ctxt);
 };
 
@@ -464,7 +472,7 @@ class MCOver : public MCMultiBinaryOperatorCtxt<
         kMCMathEvalOverArrayByArrayMethodInfo>
 {};
 
-class MCPlus : public MCMultiBinaryCommutiveOperatorCtxt<
+class MCPlus : public MCMultiBinaryCommutativeOperatorCtxt<
         MCMathEvalAdd,
         MCMathEvalAddNumberToArray,
         MCMathEvalAddArrayToArray,
@@ -499,7 +507,7 @@ public:
 	virtual void compile(MCSyntaxFactoryRef factory);
 };
 
-class MCTimes : public MCMultiBinaryCommutiveOperatorCtxt<
+class MCTimes : public MCMultiBinaryCommutativeOperatorCtxt<
         MCMathEvalMultiply,
         MCMathEvalMultiplyArrayByNumber,
         MCMathEvalMultiplyArrayByArray,
