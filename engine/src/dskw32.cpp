@@ -4096,7 +4096,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 	{
 		MCAutoStringRef t_cmdline;
 		if (doc != nil && *doc != '\0')
-			/* UNCHECKED */ MCStringFormat(&t_cmdline, "%s \"%s\"", MCNameGetCString(p_name), doc);
+			/* UNCHECKED */ MCStringFormat(&t_cmdline, "%@ \"%s\"", MCNameGetString(p_name), doc);
 		else
 			t_cmdline = MCNameGetString(p_name);
 		

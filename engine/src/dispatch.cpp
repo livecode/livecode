@@ -1535,10 +1535,6 @@ MCObject *MCDispatch::getobjname(Chunk_term type, MCNameRef p_name)
 
 	if (type == CT_IMAGE)
 	{
-        
-		//const char *sptr = MCNameGetCString(p_name);
-		uint4 l = MCStringGetLength(MCNameGetString(p_name));
-
 		MCNewAutoNameRef t_image_name;
         uindex_t t_colon;
         t_colon = 0;
