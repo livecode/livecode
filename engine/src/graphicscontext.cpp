@@ -817,13 +817,14 @@ static void add_legacy_segment(MCGContextRef p_gcontext, const MCGRectangle& p_r
 
 void MCGraphicsContext::drawline(int2 x1, int2 y1, int2 x2, int2 y2)
 {
+	// MM-2013-11-14: [[ Bug 11457 ]] Adjust lines and polygons to make sure antialiased lines don't draw across pixels.
 	MCGPoint t_start;
-	t_start . x = (MCGFloat) x1;
-	t_start . y = (MCGFloat) y1;
+	t_start . x = (MCGFloat) x1 - 0.5f;
+	t_start . y = (MCGFloat) y1 - 0.5f;
 	
 	MCGPoint t_finish;
-	t_finish . x = (MCGFloat) x2;
-	t_finish . y = (MCGFloat) y2;
+	t_finish . x = (MCGFloat) x2 - 0.5f;
+	t_finish . y = (MCGFloat) y2 - 0.5f;
 	
 	MCGContextBeginPath(m_gcontext);
 	MCGContextAddLine(m_gcontext, t_start, t_finish);	
@@ -832,11 +833,12 @@ void MCGraphicsContext::drawline(int2 x1, int2 y1, int2 x2, int2 y2)
 
 void MCGraphicsContext::drawlines(MCPoint *points, uint2 npoints, bool p_closed)
 {
+	// MM-2013-11-14: [[ Bug 11457 ]] Adjust lines and polygons to make sure antialiased lines don't draw across pixels.	
 	MCGPoint *t_points;
 	/* UNCHECKED */ MCMemoryNewArray(npoints, t_points);
 	for (uint32_t i = 0; i < npoints; i++)
-		t_points[i] = MCPointToMCGPoint(points[i]);
-
+		t_points[i] = MCPointToMCGPoint(points[i], 0.5f);
+	
 	MCGContextBeginPath(m_gcontext);
 	if (p_closed)
 		MCGContextAddPolygon(m_gcontext, t_points, npoints);
@@ -849,10 +851,11 @@ void MCGraphicsContext::drawlines(MCPoint *points, uint2 npoints, bool p_closed)
 
 void MCGraphicsContext::fillpolygon(MCPoint *points, uint2 npoints)
 {
+	// MM-2013-11-14: [[ Bug 11457 ]] Adjust lines and polygons to make sure antialiased lines don't draw across pixels.
 	MCGPoint *t_points;
 	/* UNCHECKED */ MCMemoryNewArray(npoints, t_points);
 	for (uint32_t i = 0; i < npoints; i++)
-		t_points[i] = MCPointToMCGPoint(points[i]);
+		t_points[i] = MCPointToMCGPoint(points[i], 0.5f);
 	
 	MCGContextBeginPath(m_gcontext);
 	MCGContextAddPolygon(m_gcontext, t_points, npoints);	
@@ -901,7 +904,8 @@ void MCGraphicsContext::fillarc(const MCRectangle& rect, uint2 start, uint2 angl
 	t_rect = MCGRectangleInset(t_rect, t_adjustment);	
 	
 	MCGContextBeginPath(m_gcontext);
-	add_legacy_arc(m_gcontext, MCRectangleToMCGRectangle(rect), start, angle, false);
+	// MM-2013-11-19: [[ Bug 11469 ]] Fill as a segment rather than an arc to make sure path is closed properly.
+	add_legacy_segment(m_gcontext, MCRectangleToMCGRectangle(rect), start, angle, false);
 	MCGContextFill(m_gcontext);
 }
 
