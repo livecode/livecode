@@ -998,9 +998,12 @@ Boolean MCGradientFillRampParse(MCGradientFillStop* &r_stops, uint1 &r_stop_coun
 	Boolean allvalid = True;
 	bool ordered = true;
 	uint4 t_nstops = 0;
-	uint4 l = MCStringGetLength(p_data);
-	const char *sptr = MCStringGetCString(p_data);
-	// avoid overflow in the case of extremely long ramps
+    uint4 l = MCStringGetLength(p_data);
+
+	MCAutoPointer<char>t_data;
+    /* UNCHECKED */ MCStringConvertToCString(p_data, &t_data);
+    const char *sptr = *t_data;
+    // avoid overflow in the case of extremely long ramps
 	while(t_nstops < 255 && (l != 0))
 	{
 		Boolean done1, done2;

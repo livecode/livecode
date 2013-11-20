@@ -114,6 +114,6 @@ MCAd* MCAdGetStaticAdsPtr();
 void MCAdSetStaticAdsPtr(MCAd* p_ads_ptr);
 
 void MCAdPostMessage(MCAd *, MCAdEventType);
-MCAdType MCAdTypeFromCString(const char *p_string);
+MCAdType MCAdTypeFromString(MCStringRef p_string);
 
 #endif //__MC_MOBILE_AD__

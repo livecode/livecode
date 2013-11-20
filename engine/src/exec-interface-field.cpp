@@ -694,7 +694,7 @@ void MCField::GetHtmlText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_tex
 
 void MCField::SetHtmlText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text)
 {
-	sethtml(part, MCStringGetOldString(p_text));
+	sethtml(part, p_text);
 }
 
 void MCField::GetEffectiveHtmlText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text)
@@ -715,7 +715,7 @@ void MCField::GetRtfText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text
 
 void MCField::SetRtfText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text)
 {
-	setrtf(part, MCStringGetOldString(p_text));
+	setrtf(part, p_text);
 }
 
 void MCField::GetStyledText(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_array)

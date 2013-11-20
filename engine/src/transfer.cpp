@@ -795,7 +795,9 @@ bool MCConvertHTMLToStyledText(MCDataRef p_input, MCDataRef& r_output)
 {
 	MCParagraph *t_paragraphs;
 	// MW-2012-03-08: [[ FieldImport ]] Use the new htmlText importer.
-	t_paragraphs = MCtemplatefield -> importhtmltext(MCDataGetOldString(p_input));
+    MCAutoStringRef t_input;
+    /* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingNative, false, &t_input);
+	t_paragraphs = MCtemplatefield -> importhtmltext(*t_input);
 
 	MCStyledText t_styled_text;
 	t_styled_text . setparent(MCtemplatefield -> getparent());
@@ -809,7 +811,9 @@ bool MCConvertHTMLToStyledText(MCDataRef p_input, MCDataRef& r_output)
 bool MCConvertRTFToStyledText(MCDataRef p_input, MCDataRef& r_output)
 {
 	MCParagraph *t_paragraphs;
-	t_paragraphs = MCtemplatefield -> rtftoparagraphs(MCDataGetOldString(p_input));
+    MCAutoStringRef t_input;
+    /* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingNative, false, &t_input);
+	t_paragraphs = MCtemplatefield -> rtftoparagraphs(*t_input);
 
 	MCStyledText t_styled_text;
 	t_styled_text . setparent(MCdefaultstackptr);

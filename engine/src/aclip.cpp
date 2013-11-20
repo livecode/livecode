@@ -608,13 +608,18 @@ Boolean MCAudioClip::import(MCStringRef fname, IO_handle stream)
 				rate = 11000;
 			}
 	}
-	const char *tname = strrchr(MCStringGetCString(fname), PATH_SEPARATOR);
-	if (tname != NULL)
-		tname += 1;
-	else
-		tname = MCStringGetCString(fname);
-	setname_cstring(tname);
-	return True;
+    uindex_t t_sep;
+    MCStringRef t_fname;
+    if (MCStringLastIndexOfChar(fname, PATH_SEPARATOR, 0, kMCCompareExact, t_sep))
+        /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMake(t_sep + 1, MCStringGetLength(fname) - (t_sep + 1)), t_fname);
+    else
+        t_fname = MCValueRetain(fname);
+    
+    MCNewAutoNameRef t_name;
+    if (!MCNameCreateAndRelease(t_fname, &t_name))
+        return False;
+    setname(*t_name);
+    return True;
 }
 
 #if defined _WINDOWS

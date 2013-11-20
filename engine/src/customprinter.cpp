@@ -1127,8 +1127,8 @@ const char *MCCustomPrinterDevice::Error(void) const
 struct convert_options_array_t
 {
 	uindex_t index;
-	MCStringRef *option_keys;
-	MCStringRef *option_values;
+	char **option_keys;
+	char **option_values;
 };
 
 static bool convert_options_array(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
@@ -1136,13 +1136,13 @@ static bool convert_options_array(void *p_context, MCArrayRef p_array, MCNameRef
 	convert_options_array_t *ctxt;
 	ctxt = (convert_options_array_t *)p_context;
 
-	if (!MCStringCopy(MCNameGetString(p_key), ctxt -> option_keys[ctxt -> index]))
+	if (!MCStringConvertToCString(MCNameGetString(p_key), ctxt -> option_keys[ctxt -> index]))
 		return false;
 	
     if (MCValueGetTypeCode(p_value) != kMCValueTypeCodeString)
 		return false;
 	
-	if (!MCStringCopy((MCStringRef)p_value, ctxt -> option_values[ctxt -> index]))
+	if (!MCStringConvertToCString((MCStringRef)p_value, ctxt -> option_values[ctxt -> index]))
 		return false;
 	
 	ctxt -> index += 1;
@@ -1164,7 +1164,7 @@ MCPrinterResult MCCustomPrinterDevice::Start(const char *p_title, MCArrayRef p_o
 	t_document . filename = MCprinter -> GetDeviceOutputLocation();
 
 	// Extract the option strings
-	MCStringRef *t_option_keys, *t_option_values;
+	char **t_option_keys, **t_option_values;
 	uint32_t t_option_count;
 	t_option_keys = t_option_values = nil;
 	t_option_count = 0;
@@ -1198,8 +1198,8 @@ MCPrinterResult MCCustomPrinterDevice::Start(const char *p_title, MCArrayRef p_o
 	if (t_option_values != nil)
 		for(uint32_t i = 0; i < t_document . option_count; i++)
 		{
-			MCValueRelease(t_option_keys[i]);
-			MCValueRelease(t_option_values[i]);
+			delete(t_option_keys[i]);
+			delete(t_option_values[i]);
 		}
 
 	MCMemoryDeleteArray(t_option_values);
@@ -1533,7 +1533,9 @@ bool MCCustomPrinter::DoResetSettings(MCDataRef p_settings)
 
 const char *MCCustomPrinter::DoFetchName(void)
 {
-	return MCStringGetCString(m_device_name);
+    char *t_device_name;
+    /* UNCHECKED */ MCStringConvertToCString(m_device_name, t_device_name);
+    return t_device_name;
 }
 
 void MCCustomPrinter::DoResync(void)
@@ -1571,7 +1573,11 @@ MCPrinterResult MCCustomPrinter::DoBeginPrint(MCStringRef p_document, MCPrinterD
 	}
 	
 	if (t_result == PRINTER_RESULT_SUCCESS)
-		t_result = t_printer_device -> Start(MCStringGetCString(p_document), m_device_options);
+    {
+        MCAutoPointer<char> t_doc;
+        /* UNCHECKED */ MCStringConvertToCString(p_document, &t_doc);
+        t_result = t_printer_device -> Start(*t_doc, m_device_options);
+    }
 
 	if (t_result == PRINTER_RESULT_SUCCESS)
 		r_device = t_printer_device;
@@ -2024,26 +2030,27 @@ Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filenam
 #elif defined(_MACOSX)
             MCAutoStringRef t_module_path_str1;
 
-			/* UNCHECKED */ MCStringFormat(&t_module_path_str1, "%s/../revpdfprinter.bundle", MCStringGetCString(MCcmd));
+			/* UNCHECKED */ MCStringFormat(&t_module_path_str1, "%@/../revpdfprinter.bundle", MCcmd);
 			t_module = MCS_loadmodule(*t_module_path_str1);
 			
 			if (t_module == nil)
 			{
                 MCAutoStringRef t_module_path_str2;
-				/* UNCHECKED */ MCStringFormat(&t_module_path_str2, "%s/../../../../revpdfprinter.bundle", MCStringGetCString(MCcmd));
+				/* UNCHECKED */ MCStringFormat(&t_module_path_str2, "%@/../../../../revpdfprinter.bundle", MCcmd);
 				t_module = MCS_loadmodule(*t_module_path_str2);
 			}
 #elif defined(_LINUX)
-			const char *t_engine_dir_end;
-			t_engine_dir_end = strrchr(MCStringGetCString(MCcmd), '/');
+            
+			uindex_t t_engine_dir_end;
+            /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', 0, kMCCompareExact, t_engine_dir_end);
 			MCAutoStringRef t_module_path;
-			/* UNCHECKED */ MCStringFormat(&t_module_path, "%.*s/revpdfprinter.so", t_engine_dir_end - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd));
+			/* UNCHECKED */ MCStringFormat(&t_module_path, "%.*@/revpdfprinter.so", MCRangeMake(0, t_engine_dir_end), MCcmd);
 			t_module = MCS_loadmodule(*t_module_path);
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
-			const char *t_engine_dir_end;
-			t_engine_dir_end = strrchr(MCStringGetCString(MCcmd), '/');
+			uindex_t t_engine_dir_end;
+            /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', 0, kMCCompareExact, t_engine_dir_end);
 			MCAutoStringRef t_module_path;            
-			MCStringFormat(&t_module_path, "%.*s/revpdfprinter.dylib", t_engine_dir_end - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd));
+			MCStringFormat(&t_module_path, "%.*@/revpdfprinter.dylib", MCRangeMake(0, t_engine_dir_end), MCcmd);
 			t_module = MCS_loadmodule(*t_module_path);
 #elif defined(_SERVER)
 			
