@@ -51,7 +51,7 @@ bool MCEncodedImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_fra
 	MCImageBitmap *t_bitmap = nil;
 
 	MCPoint t_hotspot = {1, 1};
-	char *t_name = nil;
+	MCStringRef t_name = nil;
 
 	t_success = GetDataStream(t_stream) &&
 		MCImageImport(t_stream, t_mask_stream, t_hotspot, t_name, t_compressed, t_bitmap);
@@ -88,7 +88,7 @@ bool MCEncodedImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_fra
 		m_have_geometry = true;
 	}
 
-	MCCStringFree(t_name);
+	MCValueRelease(t_name);
 	
 	MCImageFreeBitmap(t_bitmap);
 	MCImageFreeCompressedBitmap(t_compressed);
