@@ -1271,7 +1271,7 @@ public:
 	bool ConvertToLegacyColor(MCValueRef value, MCColor& r_color);
     
     bool ConvertToMutableString(MCValueRef p_value, MCStringRef &r_string);
-    bool ConvertToNumberOrArray(MCExecValue x_value);
+    bool ConvertToNumberOrArray(MCExecValue &x_value);
     
 	// These attempt to convert the given value as specified. If conversion
 	// was successful then 'r_converted' is set to true, else 'false'. If

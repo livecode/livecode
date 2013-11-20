@@ -110,7 +110,7 @@ bool MCExecContext::ConvertToMutableString(MCValueRef p_value, MCStringRef& r_st
     return MCStringMutableCopy(*t_string, r_string);
 }
 
-bool MCExecContext::ConvertToNumberOrArray(MCExecValue x_value)
+bool MCExecContext::ConvertToNumberOrArray(MCExecValue& x_value)
 {
     switch(x_value . type)
     {

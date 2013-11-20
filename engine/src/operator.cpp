@@ -120,8 +120,7 @@ Exec_stat MCAnd::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCAnd */
 
-
-	MCExecContext ctxt(ep);
+    MCExecContext ctxt(ep);
 	bool t_result;
 	bool t_left, t_right;
 
@@ -479,8 +478,6 @@ void MCEndsWith::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 
 // MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
 //   Here the left or right can be an array or number so we use 'tona'.
-Exec_stat MCDiv::eval(MCExecPoint &ep)
-{
 #ifdef /* MCDiv */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
@@ -534,72 +531,9 @@ Exec_stat MCDiv::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCDiv */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoValueRef t_left, t_right;
-	MCAutoValueRef t_result;
-
-	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_DIV_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_left);
-
-	if (right->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_DIV_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_right);
-
-	if (MCValueGetTypeCode(*t_left) == kMCValueTypeCodeArray)
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-			MCMathEvalDivArrayByArray(ctxt, (MCArrayRef)*t_left, (MCArrayRef)*t_right, (MCArrayRef&)t_result);
-		else
-		{
-			real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalDivArrayByNumber(ctxt, (MCArrayRef)*t_left, t_real, (MCArrayRef&)t_result);
-		}
-	}
-	else
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-		{
-			MCeerror->add(EE_DIV_MISMATCH, line, pos);
-			return ES_ERROR;
-		}
-		else
-		{
-			real64_t t_real_result = 0.0;
-			real64_t t_left_real, t_right_real;
-			t_left_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
-			t_right_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalDiv(ctxt, t_left_real, t_right_real, t_real_result);
-			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)&t_result);
-		}
-	}
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-void MCDiv::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const
-{
-	static MCExecMethodInfo *s_methods[] = { kMCMathEvalDivMethodInfo, kMCMathEvalDivArrayByNumberMethodInfo, kMCMathEvalDivArrayByArrayMethodInfo };
-	r_methods = s_methods;
-	r_count = 3;
-}
-
 // MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
 //   Here the left or right can be an array or number so we use 'tona'.
-Exec_stat MCMinus::eval(MCExecPoint &ep)
+void MCMinus::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCMinus */ LEGACY_EXEC
 	if (left == NULL)
@@ -646,77 +580,72 @@ Exec_stat MCMinus::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCMinus */
 
+    MCExecValue t_left, t_right;
 
-	MCExecContext ctxt(ep);
-	MCAutoValueRef t_left, t_right;
-	MCAutoValueRef t_result;
+    if (left == nil)
+    {
+        MCExecValueTraits<double>::set(t_left, 0.0);
+    }
+    else if (left -> eval_ctxt(ctxt, t_left), ctxt . HasError()
+             || !ctxt . ConvertToNumberOrArray(t_left))
+    {
+        ctxt . LegacyThrow(EE_MINUS_BADLEFT);
+        return;
+    }
 
-	if (left == nil)
-	{
-		/* UNCHECKED */ ep.setnvalue(0);
-	}
-	else if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_MINUS_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_left);
+    if (right -> eval_ctxt(ctxt, t_right), ctxt . HasError()
+            || !ctxt . ConvertToNumberOrArray(t_right))
+    {
+        ctxt . LegacyThrow(EE_MINUS_BADRIGHT);
+        MCValueRelease(t_left . valueref_value);
+        return;
+    }
 
-	if (right->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_MINUS_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_right);
+    if (t_left. type == kMCExecValueTypeArrayRef)
+    {
+        MCArrayRef t_result;
 
-	if (MCValueGetTypeCode(*t_left) == kMCValueTypeCodeArray)
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-			MCMathEvalSubtractArrayFromArray(ctxt, (MCArrayRef)*t_left, (MCArrayRef)*t_right, (MCArrayRef&)t_result);
-		else
-		{
-			real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalSubtractNumberFromArray(ctxt, (MCArrayRef)*t_left, t_real, (MCArrayRef&)t_result);
-		}
-	}
-	else
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-		{
-			MCeerror->add(EE_MINUS_MISMATCH, line, pos);
-			return ES_ERROR;
-		}
-		else
-		{
-			real64_t t_real_result = 0.0;
-			real64_t t_left_real, t_right_real;
-			t_left_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
-			t_right_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalSubtract(ctxt, t_left_real, t_right_real, t_real_result);
-			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
-		}
-	}
+        if (t_right . type == kMCExecValueTypeArrayRef)
+            MCMathEvalSubtractArrayFromArray(ctxt, t_left . arrayref_value, t_right . arrayref_value, t_result);
+        else
+            MCMathEvalSubtractNumberFromArray(ctxt, t_left . arrayref_value, t_right . double_value, t_result);
 
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
+        if (!ctxt . HasError())
+            MCExecValueTraits<MCArrayRef>::set(r_value, t_result);
+    }
+    else
+    {
+        if (t_right . type == kMCExecValueTypeArrayRef)
+            ctxt . LegacyThrow(EE_MINUS_MISMATCH);
+        else
+        {
+            real64_t t_real_result = 0.0;
+            MCMathEvalSubtract(ctxt, t_left . double_value, t_right . double_value, t_real_result);
 
-	return ctxt.Catch(line, pos);
+            if (!ctxt . HasError())
+                MCExecValueTraits<double>::set(r_value, (double)t_real_result);
+        }
+    }
+
+    if (ctxt . HasError())
+        return;
+
+    if (t_left . type == kMCValueTypeCodeArray)
+        MCValueRelease(t_left . valueref_value);
+    if (t_right . type == kMCValueTypeCodeArray)
+        MCValueRelease(t_right . valueref_value);
 }
 
 void MCMinus::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const
 {
-	static MCExecMethodInfo *s_methods[] = { kMCMathEvalSubtractMethodInfo, kMCMathEvalSubtractNumberFromArrayMethodInfo, kMCMathEvalSubtractArrayFromArrayMethodInfo };
-	r_methods = s_methods;
-	r_count = 3;
+    static MCExecMethodInfo *s_methods[] = { kMCMathEvalSubtractMethodInfo, kMCMathEvalSubtractNumberFromArrayMethodInfo, kMCMathEvalSubtractArrayFromArrayMethodInfo };
+    r_methods = s_methods;
+    r_count = 3;
 }
+
 
 // MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
 //   Here the left or right can be an array or number so we use 'tona'.
-Exec_stat MCMod::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMod */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
@@ -767,73 +696,8 @@ Exec_stat MCMod::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCMod */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoValueRef t_left, t_right;
-	MCAutoValueRef t_result;
-
-	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_MOD_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_left);
-
-	if (right->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_MOD_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_right);
-
-	if (MCValueGetTypeCode(*t_left) == kMCValueTypeCodeArray)
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-			MCMathEvalModArrayByArray(ctxt, (MCArrayRef)*t_left, (MCArrayRef)*t_right, (MCArrayRef&)t_result);
-		else
-		{
-			real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalModArrayByNumber(ctxt, (MCArrayRef)*t_left, t_real, (MCArrayRef&)t_result);
-		}
-	}
-	else
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-		{
-			MCeerror->add(EE_MOD_MISMATCH, line, pos);
-			return ES_ERROR;
-		}
-		else
-		{
-			real64_t t_real_result = 0.0;
-			real64_t t_left_real, t_right_real;
-			t_left_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
-			t_right_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalMod(ctxt, t_left_real, t_right_real, t_real_result);
-			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
-		}
-	}
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-void MCMod::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const
-{
-	static MCExecMethodInfo *s_methods[] = { kMCMathEvalModMethodInfo, kMCMathEvalModArrayByNumberMethodInfo, kMCMathEvalModArrayByArrayMethodInfo };
-	r_methods = s_methods;
-	r_count = 3;
-}
-
 // MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
 //   Here the left or right can be an array or number so we use 'tona'.
-Exec_stat MCWrap::eval(MCExecPoint &ep)
-{
 #ifdef /* MCWrap */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
@@ -886,73 +750,8 @@ Exec_stat MCWrap::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCWrap */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoValueRef t_left, t_right;
-	MCAutoValueRef t_result;
-
-	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_WRAP_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_left);
-
-	if (right->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_WRAP_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_right);
-
-	if (MCValueGetTypeCode(*t_left) == kMCValueTypeCodeArray)
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-			MCMathEvalWrapArrayByArray(ctxt, (MCArrayRef)*t_left, (MCArrayRef)*t_right, (MCArrayRef&)t_result);
-		else
-		{
-			real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalWrapArrayByNumber(ctxt, (MCArrayRef)*t_left, t_real, (MCArrayRef&)t_result);
-		}
-	}
-	else
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-		{
-			MCeerror->add(EE_WRAP_MISMATCH, line, pos);
-			return ES_ERROR;
-		}
-		else
-		{
-			real64_t t_real_result = 0.0;
-			real64_t t_left_real, t_right_real;
-			t_left_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
-			t_right_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalWrap(ctxt, t_left_real, t_right_real, t_real_result);
-			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
-		}
-	}
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-void MCWrap::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const
-{
-	static MCExecMethodInfo *s_methods[] = { kMCMathEvalWrapMethodInfo, kMCMathEvalWrapArrayByNumberMethodInfo, kMCMathEvalWrapArrayByArrayMethodInfo };
-	r_methods = s_methods;
-	r_count = 3;
-}
-
 // MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
 //   Here the left or right can be an array or number so we use 'tona'.
-Exec_stat MCOver::eval(MCExecPoint &ep)
-{
 #ifdef /* MCOver */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
@@ -1003,73 +802,8 @@ Exec_stat MCOver::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCOver */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoValueRef t_left, t_right;
-	MCAutoValueRef t_result;
-
-	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_OVER_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_left);
-
-	if (right->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_OVER_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_right);
-
-	if (MCValueGetTypeCode(*t_left) == kMCValueTypeCodeArray)
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-			MCMathEvalOverArrayByArray(ctxt, (MCArrayRef)*t_left, (MCArrayRef)*t_right, (MCArrayRef&)t_result);
-		else
-		{
-			real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalOverArrayByNumber(ctxt, (MCArrayRef)*t_left, t_real, (MCArrayRef&)t_result);
-		}
-	}
-	else
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-		{
-			MCeerror->add(EE_OVER_MISMATCH, line, pos);
-			return ES_ERROR;
-		}
-		else
-		{
-			real64_t t_real_result = 0.0;
-			real64_t t_left_real, t_right_real;
-			t_left_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
-			t_right_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalOver(ctxt, t_left_real, t_right_real, t_real_result);
-			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)&t_result);
-		}
-	}
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-void MCOver::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const
-{
-	static MCExecMethodInfo *s_methods[] = { kMCMathEvalOverMethodInfo, kMCMathEvalOverArrayByNumberMethodInfo, kMCMathEvalOverArrayByArrayMethodInfo };
-	r_methods = s_methods;
-	r_count = 3;
-}
-
 // MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
 //   Here the left or right can be an array or number so we use 'tona'.
-Exec_stat MCPlus::eval(MCExecPoint &ep)
-{
 #ifdef /* MCPlus */ LEGACY_EXEC
 	if (left == NULL)
 		ep.setnvalue(0);
@@ -1114,73 +848,6 @@ Exec_stat MCPlus::eval(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCPlus */
-
-
-	MCExecContext ctxt(ep);
-	MCAutoValueRef t_left, t_right;
-	MCAutoValueRef t_result;
-
-	if (left == nil)
-    {
-		/* UNCHECKED */ ep.setnvalue(0);
-	}
-	else if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_PLUS_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_left);
-    
-	if (right->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_PLUS_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_right);
-    
-	if (MCValueGetTypeCode(*t_left) == kMCValueTypeCodeArray)
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-			MCMathEvalAddArrayToArray(ctxt, (MCArrayRef)*t_left, (MCArrayRef)*t_right, (MCArrayRef&)&t_result);
-		else
-		{
-			real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalAddNumberToArray(ctxt, (MCArrayRef)*t_left, t_real, (MCArrayRef&)&t_result);
-		}
-	}
-	else
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-		{
-			real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
-			MCMathEvalAddNumberToArray(ctxt, (MCArrayRef)*t_right, t_real, (MCArrayRef&)&t_result);
-		}
-		else
-		{
-			real64_t t_real_result = 0.0;
-			real64_t t_left_real, t_right_real;
-			t_left_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
-			t_right_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalAdd(ctxt, t_left_real, t_right_real, t_real_result);
-			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
-		}
-	}
-    
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt.Catch(line, pos);
-}
-
-void MCPlus::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const
-{
-	static MCExecMethodInfo *s_methods[] = { kMCMathEvalAddMethodInfo, kMCMathEvalAddNumberToArrayMethodInfo, kMCMathEvalAddArrayToArrayMethodInfo };
-	r_methods = s_methods;
-	r_count = 3;
-}
 
 // MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
 //   Here the left or right can be an array or number so we use 'tona'.
@@ -1227,63 +894,6 @@ void MCPlus::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) con
 	}
 	return ES_NORMAL;
 #endif /* MCTimes */
-
-#if 0
-    MCExecContext ctxt(ep);
-    MCAutoValueRef t_left, t_right;
-    MCAutoValueRef t_result;
-
-    if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-    {
-        MCeerror->add(EE_TIMES_BADLEFT, line, pos);
-        return ES_ERROR;
-    }
-    /* UNCHECKED */ ep.copyasvalueref(&t_left);
-
-    if (right->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-    {
-        MCeerror->add(EE_TIMES_BADRIGHT, line, pos);
-        return ES_ERROR;
-    }
-    /* UNCHECKED */ ep.copyasvalueref(&t_right);
-
-    if (MCValueGetTypeCode(*t_left) == kMCValueTypeCodeArray)
-    {
-        if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-            MCMathEvalMultiplyArrayByArray(ctxt, (MCArrayRef)*t_left, (MCArrayRef)*t_right, (MCArrayRef&)t_result);
-        else
-        {
-            real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-            MCMathEvalMultiplyArrayByNumber(ctxt, (MCArrayRef)*t_left, t_real, (MCArrayRef&)t_result);
-        }
-    }
-    else
-    {
-        if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-        {
-            real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
-            MCMathEvalMultiplyArrayByNumber(ctxt, (MCArrayRef)*t_right, t_real, (MCArrayRef&)t_result);
-        }
-        else
-        {
-            real64_t t_real_result = 0.0;
-            real64_t t_left_real, t_right_real;
-            t_left_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
-            t_right_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-            MCMathEvalMultiply(ctxt, t_left_real, t_right_real, t_real_result);
-            /* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
-        }
-    }
-
-    if (!ctxt.HasError())
-    {
-        /* UNCHECKED */ ep.setvalueref(*t_result);
-        return ES_NORMAL;
-    }
-
-    return ctxt.Catch(line, pos);
-}
-#endif
 
 #ifdef /* MCPow */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
