@@ -1535,11 +1535,14 @@ MCObject *MCDispatch::getobjname(Chunk_term type, MCNameRef p_name)
 
 	if (type == CT_IMAGE)
 	{
-		const char *sptr = MCNameGetCString(p_name);
-		uint4 l = MCStringGetLength(MCNameGetString((p_name)));
+        
+		//const char *sptr = MCNameGetCString(p_name);
+		uint4 l = MCStringGetLength(MCNameGetString(p_name));
 
 		MCNewAutoNameRef t_image_name;
-		if (MCU_strchr(sptr, l, ':'))
+        uindex_t t_colon;
+        t_colon = 0;
+        if (MCStringFirstIndexOfChar(MCNameGetString(p_name), ':', 0, kMCCompareExact, t_colon))
 			/* UNCHECKED */ t_image_name = MCValueRetain(p_name);
 		
 		MCImage *iptr = imagecache;
@@ -1564,7 +1567,8 @@ check:
 			while (iptr != imagecache);
 		}
 
-		if (MCU_strchr(sptr, l, ':'))
+        uindex_t t_second_colon;
+        if (MCStringFirstIndexOfChar(MCNameGetString(p_name), ':', t_colon, kMCCompareExact, t_second_colon))
 		{
 			MCresult->clear(False);
 			MCExecPoint ep(MCdefaultstackptr, NULL, NULL);
