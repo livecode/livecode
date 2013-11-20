@@ -17,6 +17,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef OSSPEC_H
 #define OSSPEC_H
 
+#include "foundation-locale.h"
+
 ///////////////////////////////////////////////////////////////////////////////
 
 // Types for values stored in the Win32 registry
@@ -151,7 +153,8 @@ extern bool MCS_datetimetouniversal(MCDateTime& x_datetime);
 extern bool MCS_datetimetolocal(MCDateTime& x_datetime);
 extern bool MCS_datetimetoseconds(const MCDateTime& p_datetime, double& r_seconds);
 extern bool MCS_secondstodatetime(double p_seconds, MCDateTime& r_datetime);
-extern const MCDateTimeLocale *MCS_getdatetimelocale(void);
+extern const MCDateTimeLocale *MCS_getdatetimelocale(void);     // REMOVE ME
+extern MCLocaleRef MCS_getsystemlocale();
 
 extern bool MCS_dnsresolve(MCStringRef p_hostname, MCStringRef& r_dns);
 extern bool MCS_hostaddress(MCStringRef& r_host_address);

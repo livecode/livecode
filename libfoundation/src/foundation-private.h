@@ -111,6 +111,7 @@ typedef char_t strchar_t;
 #define MCStrCharsUppercase(x, y) MCNativeCharsUppercase(x, y)
 #else
 typedef unichar_t strchar_t;
+// Does not yet use foundation unicode
 #define MCStrCharFold(x) MCUnicodeCharFold(x)
 #define MCStrCharLowercase(x) MCUnicodeCharLowercase(x)
 #define MCStrCharUppercase(x) MCUnicodeCharUppercase(x)
@@ -121,16 +122,37 @@ typedef unichar_t strchar_t;
 #define MCStrCharsMapFromNative(x, y, z) MCUnicodeCharsMapFromNative(y, z, x)
 #define MCStrCharsHashExact(x, y) MCUnicodeCharsHashExact(x, y)
 #define MCStrCharsHashCaseless(x, y) MCUnicodeCharsHashCaseless(x, y)
-#define MCStrCharsEqualExact(x, y, z, w) MCUnicodeCharsEqualExact(x, y, z, w)
-#define MCStrCharsEqualCaseless(x, y, z, w) MCUnicodeCharsEqualCaseless(x, y, z, w)
-#define MCStrCharsCompareExact(x, y, z, w) MCUnicodeCharsCompareExact(x, y, z, w)
-#define MCStrCharsCompareCaseless(x, y, z, w) MCUnicodeCharsCompareCaseless(x, y, z, w)
+
+// These will probably go away
 #define MCStrCharsSharedPrefixExact(x, y, z, w) MCUnicodeCharsSharedPrefixExact(x, y, z, w)
 #define MCStrCharsSharedPrefixCaseless(x, y, z, w) MCUnicodeCharsSharedPrefixCaseless(x, y, z, w)
 #define MCStrCharsSharedSuffixExact(x, y, z, w) MCUnicodeCharsSharedSuffixExact(x, y, z, w)
 #define MCStrCharsSharedSuffixCaseless(x, y, z, w) MCUnicodeCharsSharedSuffixCaseless(x, y, z, w)
 #define MCStrCharsLowercase(x, y) MCUnicodeCharsLowercase(x, y)
 #define MCStrCharsUppercase(x, y) MCUnicodeCharsUppercase(x, y)
+
+// Modified to use foundation-unicode
+#define MCStrCharsEqualExact(x, y, z, w) (MCUnicodeCompare(x, y, z, w, kMCUnicodeCompareOptionExact) == 0)
+#define MCStrCharsEqualCaseless(x, y, z, w) (MCUnicodeCompare(x, y, z, w, kMCUnicodeCompareOptionCaseless) == 0)
+#define MCStrCharsEqualNonliteral(x, y, z, w) (MCUnicodeCompare(x, y, z, w, kMCUnicodeCompareOptionNormalised) == 0)
+#define MCStrCharsCompareExact(x, y, z, w) MCUnicodeCompare(x, y, z, w, kMCUnicodeCompareOptionExact)
+#define MCStrCharsCompareCaseless(x, y, z, w) MCUnicodeCompare(x, y, z, w, kMCUnicodeCompareOptionCaseless)
+#define MCStrCharsCompareNonliteral(x, y, z, w) MCUnicodeCompare(x, y, z, w, kMCUnicodeCompareOptionNormalised)
+#define MCStrCharsBeginsWithExact(x, y, z, w) MCUnicodeBeginsWith(x, y, z, w, kMCUnicodeCompareOptionExact)
+#define MCStrCharsBeginsWithCaseless(x, y, z, w) MCUnicodeBeginsWith(x, y, z, w, kMCUnicodeCompareOptionCaseless)
+#define MCStrCharsBeginsWithNonliteral(x, y, z, w) MCUnicodeBeginsWith(x, y, z, w, kMCUnicodeCompareOptionNormalised)
+#define MCStrCharsEndsWithExact(x, y, z, w) MCUnicodeEndsWith(x, y, z, w, kMCUnicodeCompareOptionExact)
+#define MCStrCharsEndsWithCaseless(x, y, z, w) MCUnicodeEndsWith(x, y, z, w, kMCUnicodeCompareOptionCaseless)
+#define MCStrCharsEndsWithNonliteral(x, y, z, w) MCUnicodeEndsWith(x, y, z, w, kMCUnicodeCompareOptionNormalised)
+#define MCStrCharsContainsExact(x, y, z, w) MCUnicodeContains(x, y, z, w, kMCUnicodeCompareOptionExact)
+#define MCStrCharsContainsCaseless(x, y, z, w) MCUnicodeContains(x, y, z, w, kMCUnicodeCompareOptionCaseless)
+#define MCStrCharsContainsNonliteral(x, y, z, w) MCUnicodeContains(x, y, z, w, kMCUnicodeCompareOptionNormalised)
+#define MCStrCharsFirstIndexOfExact(x, y, z, w, r) MCUnicodeFirstIndexOf(x, y, z, w, kMCUnicodeCompareOptionExact, r)
+#define MCStrCharsFirstIndexOfCaseless(x, y, z, w, r) MCUnicodeFirstIndexOf(x, y, z, w, kMCUnicodeCompareOptionCaseless, r)
+#define MCStrCharsFirstIndexOfNonliteral(x, y, z, w, r) MCUnicodeFirstIndexOf(x, y, z, w, kMCUnicodeCompareOptionNormalised, r)
+#define MCStrCharsLastIndexOfExact(x, y, z, w, r) MCUnicodeLastIndexOf(x, y, z, w, kMCUnicodeCompareOptionExact, r)
+#define MCStrCharsLastIndexOfCaseless(x, y, z, w, r) MCUnicodeLastIndexOf(x, y, z, w, kMCUnicodeCompareOptionCaseless, r)
+#define MCStrCharsLastIndexOfNonliteral(x, y, z, w, r) MCUnicodeLastIndexOf(x, y, z, w, kMCUnicodeCompareOptionNormalised, r)
 #endif
 
 #ifdef NATIVE_STRING

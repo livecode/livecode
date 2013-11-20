@@ -483,6 +483,9 @@ Boolean MCallowdatagrambroadcasts = False;
 
 char *MCsysencoding = nil;
 
+MCLocaleRef kMCBasicLocale = nil;
+MCLocaleRef kMCSystemLocale = nil;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCUIDC *MCCreateScreenDC(void);
@@ -1014,6 +1017,13 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 
 	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
 	MCGraphicsInitialize();
+    
+    // Create the basic locale and the system locale
+    if (!MCLocaleCreateWithName(MCSTR("en_US"), kMCBasicLocale))
+        return false;
+    kMCSystemLocale = MCS_getsystemlocale();
+    if (kMCSystemLocale == nil)
+        return false;
 	
 	// MW-2009-07-02: Clear the result as a startup failure will be indicated
 	//   there.
@@ -1239,6 +1249,11 @@ int X_close(void)
 	if (MCsysencoding != nil)
 		MCMemoryDelete(MCsysencoding);
 
+    if (kMCSystemLocale != nil)
+        MCLocaleRelease(kMCSystemLocale);
+    if (kMCBasicLocale != nil)
+        MCLocaleRelease(kMCBasicLocale);
+    
 	return MCretcode;
 }
 

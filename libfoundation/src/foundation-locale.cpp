@@ -820,7 +820,7 @@ bool MCLocaleCalendarIsGregorian(MCLocaleRef p_locale)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCDateCreateWithAbsoluteTime(MCLocaleRef p_locale, MCTimeZoneRef p_tz, MCAbsoluteTime p_abs, MCDate& r_date)
+bool MCDateCreateWithAbsoluteTime(MCLocaleRef p_locale, MCTimeZoneRef p_tz, MCAbsoluteTime p_abs, MCShinyNewDate& r_date)
 {
     MCAssert(p_locale != nil);
     MCAssert(p_tz != nil);
@@ -876,7 +876,7 @@ bool MCDateCreateWithAbsoluteTime(MCLocaleRef p_locale, MCTimeZoneRef p_tz, MCAb
     return true;
 }
 
-bool MCDateTimeConvertToAbsoluteTime(MCLocaleRef p_locale, MCTimeZoneRef p_tz, const MCDate& p_date, MCAbsoluteTime &r_abs)
+bool MCDateTimeConvertToAbsoluteTime(MCLocaleRef p_locale, MCTimeZoneRef p_tz, const MCShinyNewDate& p_date, MCAbsoluteTime &r_abs)
 {
     MCAssert(p_locale != nil);
     MCAssert(p_tz != nil);

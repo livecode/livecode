@@ -23,6 +23,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcstring.h"
 #include "imagelist.h"
 
+#include "foundation-locale.h"
+
 typedef struct _Streamnode Streamnode;
 typedef struct _Linkatts Linkatts;
 
@@ -405,6 +407,10 @@ extern Boolean MCallowdatagrambroadcasts;
 
 // Character encoding used by the system
 extern char *MCsysencoding;
+
+// Locales
+extern MCLocaleRef kMCBasicLocale;
+extern MCLocaleRef kMCSystemLocale;
 
 ///////////////////////////////////////////////////////////////////////////////
 

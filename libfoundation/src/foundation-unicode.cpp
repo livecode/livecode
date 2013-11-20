@@ -741,33 +741,176 @@ bool MCUnicodeCaseFold(const unichar_t *p_in, uindex_t p_in_length,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int32_t MCUnicodeCompareExact(const unichar_t *p_first, uindex_t p_first_length,
-                              const unichar_t *p_second, uindex_t p_second_length)
+int32_t MCUnicodeCompare(const unichar_t *p_first, uindex_t p_first_length,
+                         const unichar_t *p_second, uindex_t p_second_length,
+                         MCUnicodeCompareOption p_option)
 {
-    // Last parameter instructs ICU to sort in codepoint order so the comparison
-    // doesn't depend on the UTF-16 encoding that the string happens to use.
-    return u_strCompare(p_first, p_first_length, p_second, p_second_length, TRUE);
-}
-
-int32_t MCUnicodeCompareFolded(const unichar_t *p_first, uindex_t p_first_length,
-                               const unichar_t *p_second, uindex_t p_second_length)
-{
-    // As with exact comparison, do the comparison in codepoint order
     UErrorCode t_error = U_ZERO_ERROR;
-    int32_t t_result;
-    t_result = u_strCaseCompare(p_first, p_first_length, p_second, p_second_length,
-                            U_COMPARE_CODE_POINT_ORDER, &t_error);
-    
-    // The error code is ignored (we have no way to indicate failure)
-    return t_result;
+    if (p_option == kMCUnicodeCompareOptionExact)
+        return u_strCompare(p_first, p_first_length, p_second, p_second_length, TRUE);
+    else if (p_option == kMCUnicodeCompareOptionNormalised)
+        MCAssert(false);    // TODO
+    else
+        return u_strCaseCompare(p_first, p_first_length, p_second, p_second_length,
+                                U_COMPARE_CODE_POINT_ORDER, &t_error);
 }
 
-int32_t MCUnicodeCompareNormalised(const unichar_t *p_first, uindex_t p_first_length,
-                                   const unichar_t *p_second, uindex_t p_second_length)
+bool MCUnicodeBeginsWith(const unichar_t *p_first, uindex_t p_first_length,
+                         const unichar_t *p_second, uindex_t p_second_length,
+                         MCUnicodeCompareOption p_option)
 {
-    // Unlike the other two comparisons, normalisation is more complicated and
-    // requires a full-blown collator.
-    // TODO implement
+    // This is a bit more complicated than a plain comparison and requires the
+    // construction of UnicodeString objects.
+    UErrorCode t_error = U_ZERO_ERROR;
+    icu::UnicodeString t_first(p_first, p_first_length);
+    icu::UnicodeString t_second(p_second, p_second_length);
+    
+    // Normalise, if required
+    if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionNormalised)
+    {
+        // Construct the normaliser
+        const icu::Normalizer2 *t_nfc = icu::Normalizer2::getNFCInstance(t_error);
+        t_first = t_nfc->normalize(t_first, t_error);
+        t_second = t_nfc->normalize(t_second, t_error);
+    }
+    
+    // Case-fold, if required
+    if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionFolded)
+    {
+        t_first.foldCase();
+        t_second.foldCase();
+    }
+    
+    // Perform the comparison
+    return t_first.startsWith(t_second);
+}
+
+bool MCUnicodeEndsWith(const unichar_t *p_first, uindex_t p_first_length,
+                         const unichar_t *p_second, uindex_t p_second_length,
+                         MCUnicodeCompareOption p_option)
+{
+    // This is a bit more complicated than a plain comparison and requires the
+    // construction of UnicodeString objects.
+    UErrorCode t_error = U_ZERO_ERROR;
+    icu::UnicodeString t_first(p_first, p_first_length);
+    icu::UnicodeString t_second(p_second, p_second_length);
+    
+    // Normalise, if required
+    if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionNormalised)
+    {
+        // Construct the normaliser
+        const icu::Normalizer2 *t_nfc = icu::Normalizer2::getNFCInstance(t_error);
+        t_first = t_nfc->normalize(t_first, t_error);
+        t_second = t_nfc->normalize(t_second, t_error);
+    }
+    
+    // Case-fold, if required
+    if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionFolded)
+    {
+        t_first.foldCase();
+        t_second.foldCase();
+    }
+    
+    // Perform the comparison
+    return t_first.endsWith(t_second);
+}
+
+bool MCUnicodeContains(const unichar_t *p_string, uindex_t p_string_length,
+                       const unichar_t *p_needle, uindex_t p_needle_length,
+                       MCUnicodeCompareOption p_option)
+{
+    // This is a bit more complicated than a plain comparison and requires the
+    // construction of UnicodeString objects.
+    UErrorCode t_error = U_ZERO_ERROR;
+    icu::UnicodeString t_string(p_string, p_string_length);
+    icu::UnicodeString t_needle(p_needle, p_needle_length);
+    
+    // Normalise, if required
+    if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionNormalised)
+    {
+        // Construct the normaliser
+        const icu::Normalizer2 *t_nfc = icu::Normalizer2::getNFCInstance(t_error);
+        t_string = t_nfc->normalize(t_string, t_error);
+        t_needle = t_nfc->normalize(t_needle, t_error);
+    }
+    
+    // Case-fold, if required
+    if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionFolded)
+    {
+        t_string.foldCase();
+        t_needle.foldCase();
+    }
+    
+    // Perform the comparison
+    return t_string.indexOf(t_needle) >= 0;
+}
+
+bool MCUnicodeFirstIndexOf(const unichar_t *p_string, uindex_t p_string_length,
+                           const unichar_t *p_needle, uindex_t p_needle_length,
+                           MCUnicodeCompareOption p_option, uindex_t &r_index)
+{
+    // This is a bit more complicated than a plain comparison and requires the
+    // construction of UnicodeString objects.
+    UErrorCode t_error = U_ZERO_ERROR;
+    icu::UnicodeString t_string(p_string, p_string_length);
+    icu::UnicodeString t_needle(p_needle, p_needle_length);
+    
+    // Normalise, if required
+    if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionNormalised)
+    {
+        // Construct the normaliser
+        const icu::Normalizer2 *t_nfc = icu::Normalizer2::getNFCInstance(t_error);
+        t_string = t_nfc->normalize(t_string, t_error);
+        t_needle = t_nfc->normalize(t_needle, t_error);
+    }
+    
+    // Case-fold, if required
+    if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionFolded)
+    {
+        t_string.foldCase();
+        t_needle.foldCase();
+    }
+    
+    // Perform the comparison
+    int32_t t_index = t_string.indexOf(t_needle);
+    if (t_index < 0)
+        return false;
+    r_index = t_index;
+    return true;
+}
+
+bool MCUnicodeLastIndexOf(const unichar_t *p_string, uindex_t p_string_length,
+                          const unichar_t *p_needle, uindex_t p_needle_length,
+                          MCUnicodeCompareOption p_option, uindex_t &r_index)
+{
+    // This is a bit more complicated than a plain comparison and requires the
+    // construction of UnicodeString objects.
+    UErrorCode t_error = U_ZERO_ERROR;
+    icu::UnicodeString t_string(p_string, p_string_length);
+    icu::UnicodeString t_needle(p_needle, p_needle_length);
+    
+    // Normalise, if required
+    if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionNormalised)
+    {
+        // Construct the normaliser
+        const icu::Normalizer2 *t_nfc = icu::Normalizer2::getNFCInstance(t_error);
+        t_string = t_nfc->normalize(t_string, t_error);
+        t_needle = t_nfc->normalize(t_needle, t_error);
+    }
+    
+    // Case-fold, if required
+    if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionFolded)
+    {
+        t_string.foldCase();
+        t_needle.foldCase();
+    }
+    
+    // Perform the comparison
+    int32_t t_index = t_string.lastIndexOf(t_needle);
+    if (t_index < 0)
+        return false;
+    r_index = t_index;
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

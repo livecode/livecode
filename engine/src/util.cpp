@@ -1221,17 +1221,10 @@ static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean
 
 		case ST_TEXT:
 			{
-				const char *s1, *s2;
-				s1 = MCStringGetCString(b1->svalue);
-				s2 = MCStringGetCString(b2->svalue);
-				
-				// WARNING:
-				//
-				// This provides codepoint order sorting (not lexical sorting)
-				// for strings. It will not, however, do the right thing with
-				// UTF-16LE strings (the encoding used on x86 and ARM)...
-				int result = strcmp(s1, s2);
-				
+				// This mode performs the comparison in a locale-independent,
+                // case-sensitive manner. The strings are sorted by order of
+                // codepoint values rather than any lexical sorting order.
+                compare_t result = MCStringCompareTo(b1->svalue, b2->svalue, kMCStringOptionCompareExact);
 				first = reverse ? result >= 0 : result <= 0;
 				break;
 			}

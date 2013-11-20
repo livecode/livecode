@@ -207,7 +207,7 @@ enum MCTimeZoneDisplayType
 typedef double MCAbsoluteTime;
 
 // Wall-clock time. Note that some fields are redundant
-struct MCDate
+struct MCShinyNewDate
 {
     // For Gregorian calendars, the era value is always 0 and BC dates are
     // indicated with negative year values. For non-Gregorian calendars, the
@@ -280,7 +280,7 @@ bool    MCTimeZoneIsDateDST(MCTimeZoneRef, MCAbsoluteTime);
 int32_t  MCTimeZoneGetRawOffset(MCTimeZoneRef);
 
 // Returns the offset from GMT at the given time (in milliseconds)
-int32_t  MCTimeZoneGetOffsetAtTime(MCTimeZoneRef, const MCDate&);
+int32_t  MCTimeZoneGetOffsetAtTime(MCTimeZoneRef, const MCShinyNewDate&);
 
 // Returns the name identifying the time zone (e.g. "Europe/London")
 MCStringRef MCTimeZoneGetName(MCTimeZoneRef);
@@ -303,10 +303,10 @@ bool MCLocaleCalendarIsGregorian(MCLocaleRef);
 // use non-Gregorian calendars)
 
 // Converts from an absolute time to a local time
-bool    MCDateCreateWithAbsoluteTime(MCLocaleRef, MCTimeZoneRef, MCAbsoluteTime, MCDate&);
+bool    MCDateCreateWithAbsoluteTime(MCLocaleRef, MCTimeZoneRef, MCAbsoluteTime, MCShinyNewDate&);
 
 // Converts from a local time to an absolute time
-bool    MCDateConvertToAbsolute(MCLocaleRef, MCTimeZoneRef, const MCDate&, MCAbsoluteTime&);
+bool    MCDateConvertToAbsolute(MCLocaleRef, MCTimeZoneRef, const MCShinyNewDate&, MCAbsoluteTime&);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -332,16 +332,16 @@ enum MCDateStyle
 ////////////////////////////////////////////////////////////////////////////////
 
 // Formats a date using a locale date/time style
-bool    MCLocaleFormatDate(MCLocaleRef, MCDateStyle, MCTimeZoneRef, const MCDate&, MCStringRef&);
+bool    MCLocaleFormatDate(MCLocaleRef, MCDateStyle p_date, MCDateStyle p_time, MCTimeZoneRef, const MCShinyNewDate&, MCStringRef&);
 
 // Formats a date using a specified pattern
-bool    MCLocaleFormatDateWithPattern(MCLocaleRef, MCTimeZoneRef, MCStringRef, const MCDate&, MCStringRef&);
+bool    MCLocaleFormatDateWithPattern(MCLocaleRef, MCTimeZoneRef, MCStringRef, const MCShinyNewDate&, MCStringRef&);
 
 // Parses a date using a locale date/time style
-bool    MCLocaleParseDate(MCLocaleRef, MCDateStyle, MCStringRef, MCDate&);
+bool    MCLocaleParseDate(MCLocaleRef, MCDateStyle p_date, MCDateStyle p_time, MCStringRef, MCShinyNewDate&);
 
 // Parses a date using a specified pattern
-bool    MCLocaleParseDateWithPattern(MCLocaleRef, MCStringRef, MCStringRef, MCDate&);
+bool    MCLocaleParseDateWithPattern(MCLocaleRef, MCStringRef, MCStringRef, MCShinyNewDate&);
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////

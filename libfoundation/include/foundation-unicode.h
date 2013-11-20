@@ -312,13 +312,46 @@ bool    MCUnicodeCaseFold(const unichar_t *p_in, uindex_t p_in_length,
 ////////////////////////////////////////////////////////////////////////////////
 
 
+// Comparison options
+enum MCUnicodeCompareOption
+{
+    kMCUnicodeCompareOptionExact,       // Codepoint (not code unit!) equality
+    kMCUnicodeCompareOptionNormalised,  // Normalise inputs before comparison
+    kMCUnicodeCompareOptionFolded,      // Case fold inputs before comparison
+    kMCUnicodeCompareOptionCaseless     // Both normalise and case fold
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Compares two strings using the locale-independent collator
-int32_t MCUnicodeCompareExact(const unichar_t *p_first, uindex_t p_first_length,
-                              const unichar_t *p_second, uindex_t p_second_length);
-int32_t MCUnicodeCompareNormalised(const unichar_t *p_first, uindex_t p_first_length,
-                                   const unichar_t *p_second, uindex_t p_second_length);
-int32_t MCUnicodeCompareFolded(const unichar_t *p_first, uindex_t p_first_length,
-                               const unichar_t *p_second, uindex_t p_second_length);
+int32_t MCUnicodeCompare(const unichar_t *p_first, uindex_t p_first_length,
+                         const unichar_t *p_second, uindex_t p_second_length,
+                         MCUnicodeCompareOption);
+
+// Returns whether the first string begins with the second
+bool MCUnicodeBeginsWith(const unichar_t *p_first, uindex_t p_first_length,
+                         const unichar_t *p_second, uindex_t p_second_length,
+                         MCUnicodeCompareOption);
+
+// Returns whether the first string ends with the second
+bool MCUnicodeEndsWith(const unichar_t *p_first, uindex_t p_first_length,
+                       const unichar_t *p_second, uindex_t p_second_length,
+                       MCUnicodeCompareOption);
+
+// Returns whether the string contains the given substring
+bool MCUnicodeContains(const unichar_t *p_string, uindex_t p_string_length,
+                       const unichar_t *p_needle, uindex_t p_needle_length,
+                       MCUnicodeCompareOption);
+
+// Returns the index of the first occurence of the substring in the given string
+bool MCUnicodeFirstIndexOf(const unichar_t *p_string, uindex_t p_string_length,
+                           const unichar_t *p_needle, uindex_t p_needle_length,
+                           MCUnicodeCompareOption, uindex_t &r_index);
+
+// Returns the index of the last occurence of the substring in the given string
+bool MCUnicodeLastIndexOf(const unichar_t *p_string, uindex_t p_string_length,
+                          const unichar_t *p_needle, uindex_t p_needle_length,
+                          MCUnicodeCompareOption, uindex_t &r_index);
 
 
 ////////////////////////////////////////////////////////////////////////////////

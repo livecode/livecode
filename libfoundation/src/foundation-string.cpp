@@ -16,6 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
 #include <foundation-auto.h>
+#include <foundation-unicode.h>
 
 #include "foundation-private.h"
 
@@ -1099,24 +1100,12 @@ compare_t MCStringCompareTo(MCStringRef self, MCStringRef p_other, MCStringOptio
 
 bool MCStringBeginsWith(MCStringRef self, MCStringRef p_prefix, MCStringOptions p_options)
 {
-	// At first the following approach might seem slightly unusual since we are measuring
-	// the length of the common prefix and *then* checking to see if it is the same length
-	// as prefix. However, it is important to remember that the length of two equal strings
-	// might be different when compared caselessly or non-literally. In particular, the
-	// length of the prefix might exceed that of self, but still be equal. e.g.
-	//   prefix = e,<acute>
-	//   self = e-acute
-
-	// Measure the common prefix of the two strings. Note that these methods return the
-	// number of chars in prefix that match those in self (which is what we want).
-	uindex_t t_prefix_length;
-	if (p_options != kMCStringOptionCompareExact)
-		t_prefix_length = MCStrCharsSharedPrefixCaseless(self -> chars, self -> char_count, p_prefix -> chars, p_prefix -> char_count);
-	else
-		t_prefix_length = MCStrCharsSharedPrefixExact(self -> chars, self -> char_count, p_prefix -> chars, p_prefix -> char_count);
-
-	// self begins with prefix iff t_prefix_length == length(prefix).
-	return t_prefix_length == p_prefix -> char_count;
+	if (p_options == kMCStringOptionCompareExact)
+        return MCStrCharsBeginsWithExact(self -> chars, self -> char_count, p_prefix -> chars, p_prefix -> char_count);
+    else if (p_options == kMCStringOptionCompareNonliteral)
+        return MCStrCharsBeginsWithNonliteral(self -> chars, self -> char_count, p_prefix -> chars, p_prefix -> char_count);
+    else
+        return MCStrCharsBeginsWithCaseless(self -> chars, self -> char_count, p_prefix -> chars, p_prefix -> char_count);
 }
 
 #ifdef NATIVE_STRING
@@ -1142,15 +1131,12 @@ bool MCStringBeginsWithCString(MCStringRef self, const char_t *p_suffix_cstring,
 
 bool MCStringEndsWith(MCStringRef self, MCStringRef p_suffix, MCStringOptions p_options)
 {
-	// Measure the common suffix of the two strings.
-	uindex_t t_suffix_length;
-	if (p_options != kMCStringOptionCompareExact)
-		t_suffix_length = MCStrCharsSharedSuffixCaseless(self -> chars, self -> char_count, p_suffix -> chars, p_suffix -> char_count);
-	else
-		t_suffix_length = MCStrCharsSharedSuffixExact(self -> chars, self -> char_count, p_suffix -> chars, p_suffix -> char_count);
-
-	// self ends with suffix iff t_suffix_length = length(suffix).
-	return t_suffix_length == p_suffix -> char_count;
+    if (p_options == kMCStringOptionCompareExact)
+        return MCStrCharsEndsWithExact(self -> chars, self -> char_count, p_suffix -> chars, p_suffix -> char_count);
+    else if (p_options == kMCStringOptionCompareNonliteral)
+        return MCStrCharsEndsWithNonliteral(self -> chars, self -> char_count, p_suffix -> chars, p_suffix -> char_count);
+    else
+        return MCStrCharsEndsWithCaseless(self -> chars, self -> char_count, p_suffix -> chars, p_suffix -> char_count);
 }
 
 #ifdef NATIVE_STRING
@@ -1177,51 +1163,24 @@ bool MCStringEndsWithCString(MCStringRef self, const char_t *p_suffix_cstring, M
 
 bool MCStringContains(MCStringRef self, MCStringRef p_needle, MCStringOptions p_options)
 {
-	// Loop through self starting at each char in turn until we find a common prefix of
-	// sufficient length.
-	for(uindex_t t_offset = 0; t_offset < self -> char_count; t_offset += 1)
-	{
-		uindex_t t_prefix_length;
-		if (p_options != kMCStringOptionCompareExact)
-			t_prefix_length = MCStrCharsSharedPrefixCaseless(self -> chars + t_offset, self -> char_count - t_offset, p_needle -> chars, p_needle -> char_count);
-		else
-			t_prefix_length = MCStrCharsSharedPrefixExact(self -> chars + t_offset, self -> char_count - t_offset, p_needle -> chars, p_needle -> char_count);
-
-		// If the prefix length is the same as needle, we are done.
-		if (t_prefix_length == p_needle -> char_count)
-			return true;
-	}
-
-	// If we get here we've exhausted the string so are done.
-	return false;
+	if (p_options == kMCStringOptionCompareExact)
+        return MCStrCharsContainsExact(self -> chars, self -> char_count, p_needle -> chars, p_needle -> char_count);
+    else if (p_options == kMCStringOptionCompareNonliteral)
+        return MCStrCharsContainsNonliteral(self -> chars, self -> char_count, p_needle -> chars, p_needle -> char_count);
+    else
+        return MCStrCharsContainsCaseless(self -> chars, self -> char_count, p_needle -> chars, p_needle -> char_count);
 }
 
 bool MCStringSubstringContains(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStringOptions p_options)
 {
 	__MCStringClampRange(self, p_range);
 
-	if (p_needle->char_count > p_range . length)
-		return false;
-
-	// Loop through self starting at each char in turn until we find a common prefix of
-	// sufficient length.
-	uindex_t t_end = p_range . offset + p_range . length;
-	uindex_t t_max = t_end - p_needle->char_count;
-	for(uindex_t t_offset = p_range . offset; t_offset <= t_max; t_offset += 1)
-	{
-		uindex_t t_prefix_length;
-		if (p_options != kMCStringOptionCompareExact)
-			t_prefix_length = MCStrCharsSharedPrefixCaseless(self -> chars + t_offset, t_end - t_offset, p_needle -> chars, p_needle -> char_count);
-		else
-			t_prefix_length = MCStrCharsSharedPrefixExact(self -> chars + t_offset, t_end - t_offset, p_needle -> chars, p_needle -> char_count);
-
-		// If the prefix length is the same as needle, we are done.
-		if (t_prefix_length == p_needle -> char_count)
-			return true;
-	}
-
-	// If we get here we've exhausted the string so are done.
-	return false;
+    if (p_options == kMCStringOptionCompareExact)
+        return MCStrCharsContainsExact(self -> chars + p_range . offset, p_range . length, p_needle -> chars, p_needle -> char_count);
+    else if (p_options == kMCStringOptionCompareNonliteral)
+        return MCStrCharsContainsNonliteral(self -> chars + p_range . offset, p_range . length, p_needle -> chars, p_needle -> char_count);
+    else
+        return MCStrCharsContainsCaseless(self -> chars + p_range . offset, p_range . length, p_needle -> chars, p_needle -> char_count);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1231,26 +1190,12 @@ bool MCStringFirstIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_aft
 	// Make sure the after index is in range.
 	p_after = MCMin(p_after, self -> char_count);
 
-	// Similar to contains, we loop through checking for a shared prefix of the
-	// length of needle - notice that we start at 'after', though.
-	for(uindex_t t_offset = p_after; t_offset < self -> char_count; t_offset += 1)
-	{
-		uindex_t t_prefix_length;
-		if (p_options != kMCStringOptionCompareExact)
-			t_prefix_length = MCStrCharsSharedPrefixCaseless(self -> chars + t_offset, self -> char_count - t_offset, p_needle -> chars, p_needle -> char_count);
-		else
-			t_prefix_length = MCStrCharsSharedPrefixExact(self -> chars + t_offset, self -> char_count - t_offset, p_needle -> chars, p_needle -> char_count);
-
-		// If the prefix length is the same as needle, we are done.
-		if (t_prefix_length == p_needle -> char_count)
-		{
-			r_offset = t_offset;
-			return true;
-		}
-	}
-
-	// If we get here we've exhausted the string so we are done.
-	return false;
+    if (p_options == kMCStringOptionCompareExact)
+        return MCStrCharsFirstIndexOfExact(self -> chars + p_after, self -> char_count - p_after, p_needle -> chars, p_needle -> char_count, r_offset);
+    else if (p_options == kMCStringOptionCompareNonliteral)
+        return MCStrCharsFirstIndexOfNonliteral(self -> chars + p_after, self -> char_count - p_after, p_needle -> chars, p_needle -> char_count, r_offset);
+    else
+        return MCStrCharsFirstIndexOfCaseless(self -> chars + p_after, self -> char_count - p_after, p_needle -> chars, p_needle -> char_count, r_offset);
 }
 
 bool MCStringFirstIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p_after, MCStringOptions p_options, uindex_t& r_offset)
@@ -1285,33 +1230,15 @@ bool MCStringFirstIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p
 
 bool MCStringLastIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_before, MCStringOptions p_options, uindex_t& r_offset)
 {
-	// We loop backwards checking for shared prefix of the length of needle as
-	// we go. Notice that t_offset here tracks the end of char (rather than the
-	// start).
-
 	// Make sure the before index is in range.
 	p_before = MCMin(p_before, self -> char_count);
 
-	for(uindex_t t_offset = p_before; t_offset > 0; t_offset -= 1)
-	{
-		// Compute the length of the shared prefix *before* offset - this means
-		// we adjust offset down by one before comparing.
-		uindex_t t_prefix_length;
-		if (p_options != kMCStringOptionCompareExact)
-			t_prefix_length = MCStrCharsSharedPrefixCaseless(self -> chars + (t_offset - 1), self -> char_count - (t_offset - 1), p_needle -> chars, p_needle -> char_count);
-		else
-			t_prefix_length = MCStrCharsSharedPrefixExact(self -> chars + (t_offset - 1), self -> char_count - (t_offset - 1), p_needle -> chars, p_needle -> char_count);
-
-		// If the prefix length is the same as the needle then we are done.
-		if (t_prefix_length == p_needle -> char_count)
-		{
-			r_offset = t_offset - 1;
-			return true;
-		}
-	}
-
-	// If we get here we've exhausted the string so we are done.
-	return false;
+    if (p_options == kMCStringOptionCompareExact)
+        return MCStrCharsLastIndexOfExact(self -> chars, p_before, p_needle -> chars, p_needle -> char_count, r_offset);
+    else if (p_options == kMCStringOptionCompareNonliteral)
+        return MCStrCharsLastIndexOfNonliteral(self -> chars, p_before, p_needle -> chars, p_needle -> char_count, r_offset);
+    else
+        return MCStrCharsLastIndexOfCaseless(self -> chars, p_before, p_needle -> chars, p_needle -> char_count, r_offset);
 }
 
 bool MCStringLastIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p_before, MCStringOptions p_options, uindex_t& r_offset)
@@ -1544,9 +1471,16 @@ bool MCStringFold(MCStringRef self, MCStringOptions p_options)
 	if (p_options == kMCStringOptionCompareExact)
 		return true;
 
-	// Otherwise, we just lowercase all the chars in the string (when we move to
-	// unicode this gets significantly more complicated!).
-	MCStrCharsLowercase(self -> chars, self -> char_count);
+    // Case-fold the string
+    unichar_t *t_folded;
+    uindex_t t_folded_length;
+    if (!MCUnicodeCaseFold(self -> chars, self -> char_count, t_folded, t_folded_length))
+        return false;
+    
+    // Update the string
+    MCMemoryDelete(self -> chars);
+    self -> chars = t_folded;
+    self -> char_count = t_folded_length;
 
 #ifndef NATIVE_STRING
 	__MCStringChanged(self);
