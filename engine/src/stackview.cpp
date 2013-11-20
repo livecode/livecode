@@ -44,18 +44,11 @@ static MCStackFullscreenModeNames s_fullscreenmode_names[] = {
 	{"", kMCStackFullscreenResize},
 	
 	// MW-2013-10-31: [[ Bug 11336 ]] Change the modes to be camel-case.
+	// IM-2013-11-20: [[ FullscreenMode ]] Rename showAll to letterbox and remove two-word mode synonyms
 	{"exactFit", kMCStackFullscreenExactFit},
-	{"showAll", kMCStackFullscreenShowAll},
+	{"letterbox", kMCStackFullscreenShowAll},
 	{"noBorder", kMCStackFullscreenNoBorder},
 	{"noScale", kMCStackFullscreenNoScale},
-	
-	// MW-2013-10-31: [[ Bug 1136 ]] REMOVE FOR RELEASE - these are here
-	//   for continuity between dp-2 and the next build, will be removed
-	//   for release.
-	{"exact fit", kMCStackFullscreenExactFit},
-	{"show all", kMCStackFullscreenShowAll},
-	{"no border", kMCStackFullscreenNoBorder},
-	{"no scale", kMCStackFullscreenNoScale},
 
 	{nil, kMCStackFullscreenModeNone},
 };
