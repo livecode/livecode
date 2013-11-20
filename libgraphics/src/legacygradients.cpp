@@ -830,7 +830,13 @@ MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, 
 		t_ramp[i] . color = p_gradient_ref -> colors[i];
 		
 		if (i != 0)
-			t_ramp[i - 1] . difference = (uint4) (STOP_DIFF_MULT / (t_ramp[i] . offset - t_ramp[i - 1] . offset));
+		{
+			// MM-2013-11-20: [[ Bug 11479 ]] Make sure we don't divide by zero.
+			if (t_ramp[i] . offset != t_ramp[i - 1] . offset)
+				t_ramp[i - 1] . difference = (uint4) (STOP_DIFF_MULT / (t_ramp[i] . offset - t_ramp[i - 1] . offset));
+			else
+				t_ramp[i - 1] . difference = (uint4) (STOP_DIFF_MULT / STOP_INT_MAX);
+		}
 		
 #if kMCGPixelFormatNative != kMCGPixelFormatBGRA
 		uint8_t t_red, t_green, t_blue, t_alpha;
