@@ -73,11 +73,11 @@ enum MCStackFullscreenMode
 {
 	kMCStackFullscreenModeNone,
 
-	kMCStackFullscreenResize,	// ""			stack is resized to fill screen without scaling
-	kMCStackFullscreenExactFit,	// "exact fit"	stack is stretched to fill screen
-	kMCStackFullscreenShowAll,	// "show all"	whole stack is shown, scaled to take up as much screen space as possible. Both full width and height are visible
-	kMCStackFullscreenNoBorder, // "no border"	scaled to cover whole screen, top+bottom or left+right of stack may be clipped
-	kMCStackFullscreenNoScale,	// "no scale"	stack is centered on screen with no scaling
+	kMCStackFullscreenResize,		// ""			stack is resized to fill screen without scaling
+	kMCStackFullscreenExactFit,		// "exactFit"	stack is stretched to fill screen
+	kMCStackFullscreenLetterbox,	// "letterbox"	whole stack is shown, scaled to take up as much screen space as possible. Both full width and height are visible
+	kMCStackFullscreenNoBorder,		// "noBorder"	scaled to cover whole screen, top+bottom or left+right of stack may be clipped
+	kMCStackFullscreenNoScale,		// "noScale"	stack is centered on screen with no scaling
 };
 
 extern const char *MCStackFullscreenModeToString(MCStackFullscreenMode p_mode);
