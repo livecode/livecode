@@ -33,7 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osspec.h"
 
-#include "osspec.h"
+#include "debug.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -458,6 +458,53 @@ bool MCExecContext::EvaluateExpression(MCExpression *p_expr, MCValueRef& r_resul
 	return true;
 }
 
+bool MCExecContext::TryToEvaluateExpression(MCExpression *p_expr, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result)
+{
+    MCAssert(p_expr != nil);
+	
+    bool t_success;
+    t_success = false;
+    
+    do
+    {
+        p_expr -> eval_valueref(*this, r_result);
+        if (!HasError())
+            t_success = true;
+        else
+            MCB_error(*this, line, pos, p_error);
+        IgnoreLastError();
+    }
+	while (!t_success && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
+        
+	if (t_success)
+		return true;
+	
+	LegacyThrow(p_error);
+	return false;
+}
+
+bool MCExecContext::TryToSetVariable(MCVarref *p_var, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef p_value)
+{
+    bool t_success;
+    t_success = false;
+    
+    do
+    {
+        p_var -> set(*this, p_value);
+        if (!HasError())
+            t_success = true;
+        else
+            MCB_error(*this, line, pos, p_error);
+        IgnoreLastError();
+    }
+	while (!t_success && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
+    
+	if (t_success)
+		return true;
+	
+	LegacyThrow(p_error);
+	return false;
+}
 //////////
 
 bool MCExecContext::EvalExprAsStringRef(MCExpression *p_expr, Exec_errors p_error, MCStringRef& r_value)

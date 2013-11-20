@@ -2340,7 +2340,7 @@ void MCBlock::SetLinktext(MCExecContext& ctxt, MCStringRef p_linktext)
         flags &= ~F_HAS_LINK;
     else
     {
-        if (atts == NULL)
+        if (atts == nil)
             atts = new Blockatts;
 
         /* UNCHECKED */ MCValueInter(p_linktext, atts -> linktext);
@@ -2488,6 +2488,8 @@ void MCBlock::SetTextSize(MCExecContext& ctxt, uinteger_t* p_size)
         flags &= ~F_HAS_FSTYLE;
     else
     {
+        if (atts == NULL)
+            atts = new Blockatts;
         flags |= F_HAS_FSTYLE;
         atts -> fontsize = *p_size;
     }

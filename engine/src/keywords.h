@@ -106,7 +106,14 @@ public:
 	MCRepeat();
 	~MCRepeat();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	//virtual Exec_stat exec(MCExecPoint &);
+    virtual void exec_ctxt(MCExecContext&);
+    void exec_for(MCExecContext&);
+    void exec_with(MCExecContext&);
+    void exec_forever(MCExecContext&);
+    void exec_until(MCExecContext&);
+    void exec_while(MCExecContext&);
+    void execute_statements(MCExecContext& ctxt, MCValueRef p_for_exit_var, bool& r_done);
 	virtual uint4 linecount();
 };
 

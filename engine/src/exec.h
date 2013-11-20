@@ -1393,7 +1393,12 @@ public:
 	// If an error is raised during the course of evaluation, 'false' is returned.
 	// Note: This method throws any errors that occur.
 	bool EvaluateExpression(MCExpression *expr, MCValueRef& r_result);
-
+    
+    // These methods try to evaluate / set, as many times as the debug context dictates,
+    // only throwing an error if they ultimately fail.
+    bool TryToEvaluateExpression(MCExpression *p_expr, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result);
+    bool TryToSetVariable(MCVarref *p_var, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef p_value);
+    
 	//////////
 	
 	// Note: This method throws any errors that occur.
@@ -1989,6 +1994,9 @@ void MCStringsMarkTokensOfTextByRange(MCExecContext& ctxt, integer_t p_first, in
 void MCStringsMarkTokensOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedText& x_mark);
 void MCStringsMarkCharsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, MCMarkedText& x_mark);
 void MCStringsMarkCharsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedText& x_mark);
+
+void MCStringsSkipWord(MCExecContext& ctxt, MCStringRef p_string, bool p_skip_spaces, uindex_t& x_offset);
+bool MCStringsFindChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_term p_type, uindex_t p_index, MCRange& r_range);
 
 ///////////
 

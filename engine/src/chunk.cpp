@@ -5682,6 +5682,9 @@ bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
 		}
         t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, false, islinechunk() ? kMCPropertyInfoChunkTypeLine : kMCPropertyInfoChunkTypeChar);
         
+        if (islinechunk() && t_info == nil)
+            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, false, kMCPropertyInfoChunkTypeChar);
+        
         if (t_info == nil || t_info -> getter == nil)
         {
             MCeerror -> add(EE_OBJECT_GETNOPROP, line, pos);
@@ -5748,6 +5751,8 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
         }
     
         t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, false, islinechunk() ? kMCPropertyInfoChunkTypeLine : kMCPropertyInfoChunkTypeChar);
+        if (islinechunk() && t_info == nil)
+            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, false, kMCPropertyInfoChunkTypeChar);
         
         if (t_info == nil || t_info -> getter == nil)
         {
