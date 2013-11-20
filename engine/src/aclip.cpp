@@ -1025,5 +1025,5 @@ IO_stat MCAudioClip::load(IO_handle stream, uint32_t version)
 	if (flags & F_LOUDNESS)
 		if ((stat = IO_read_uint2(&loudness, stream)) != IO_NORMAL)
 			return stat;
-	return loadpropsets(stream);
+	return loadpropsets(stream, version);
 }

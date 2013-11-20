@@ -1200,8 +1200,11 @@ IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			return stat;
 		if ((stat = MCControl::save(stream, p_part, p_force_ext)) != IO_NORMAL)
 			return stat;
-		if ((stat = IO_write_stringref(filename, stream, false)) != IO_NORMAL)
+		
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+		if ((stat = IO_write_stringref_new(filename, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
+		
 		if ((stat = IO_write_uint4(starttime, stream)) != IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_uint4(endtime, stream)) != IO_NORMAL)
@@ -1209,7 +1212,9 @@ IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_int4((int4)(rate / 10.0 * MAXINT4),
 		                          stream)) != IO_NORMAL)
 			return stat;
-		if ((stat = IO_write_stringref(userCallbackStr, stream, false)) != IO_NORMAL)
+		
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+		if ((stat = IO_write_stringref_new(userCallbackStr, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
 	}
 	return savepropsets(stream);
@@ -1221,8 +1226,11 @@ IO_stat MCPlayer::load(IO_handle stream, uint32_t version)
 
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
 		return stat;
-	if ((stat = IO_read_stringref(filename, stream, false)) != IO_NORMAL)
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+	if ((stat = IO_read_stringref_new(filename, stream, version >= 7000)) != IO_NORMAL)
 		return stat;
+	
 	if ((stat = IO_read_uint4(&starttime, stream)) != IO_NORMAL)
 		return stat;
 	if ((stat = IO_read_uint4(&endtime, stream)) != IO_NORMAL)
@@ -1231,9 +1239,12 @@ IO_stat MCPlayer::load(IO_handle stream, uint32_t version)
 	if ((stat = IO_read_int4(&trate, stream)) != IO_NORMAL)
 		return stat;
 	rate = (real8)trate * 10.0 / MAXINT4;
-	if ((stat = IO_read_stringref(userCallbackStr, stream, false)) != IO_NORMAL)
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+	if ((stat = IO_read_stringref_new(userCallbackStr, stream, version >= 7000)) != IO_NORMAL)
 		return stat;
-	return loadpropsets(stream);
+	
+	return loadpropsets(stream, version);
 }
 
 // MW-2011-09-23: Ensures the buffering state is consistent with current flags

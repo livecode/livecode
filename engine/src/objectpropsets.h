@@ -102,10 +102,10 @@ public:
 
 	// Load the props from the given stream - this merges the existing array
 	// with any we find (since nested and non-nested props are stored separately).
-	IO_stat loadprops(IO_handle stream);
+	IO_stat loadprops(IO_handle stream, uint32_t version);
 	// Load the array props from the given stream - this merges the existing
 	// array with any we find.
-	IO_stat loadarrayprops(MCObjectInputStream& stream);
+	IO_stat loadarrayprops(MCObjectInputStream& stream, uint32_t version);
 
 	// Save the non-array props to the given stream.
 	IO_stat saveprops(IO_handle stream);

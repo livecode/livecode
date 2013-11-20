@@ -447,7 +447,8 @@ IO_stat MCEPS::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		return stat;
 	if ((stat = IO_write(postscript, sizeof(char), size, stream)) != IO_NORMAL)
 		return stat;
-	if ((stat = IO_write_string(prolog, stream)) != IO_NORMAL)
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] EPS is always ASCII so legacy.
+	if ((stat = IO_write_cstring_legacy(prolog, stream, 2)) != IO_NORMAL)
 		return stat;
 	if ((stat = IO_write_int4(MCU_r8toi4(xscale), stream)) != IO_NORMAL)
 		return stat;
@@ -574,7 +575,8 @@ IO_stat MCEPS::load(IO_handle stream, uint32_t version)
 	if ((stat = IO_read(postscript, size, stream)) != IO_NORMAL)
 		return stat;
 	postscript[size] = '\0';
-	if ((stat = IO_read_string(prolog, stream)) != IO_NORMAL)
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] EPS is always ASCII so legacy.
+	if ((stat = IO_read_cstring_legacy(prolog, stream, 2)) != IO_NORMAL)
 		return stat;
 	int4 i;
 	if ((stat = IO_read_int4(&i, stream)) != IO_NORMAL)
@@ -619,7 +621,7 @@ IO_stat MCEPS::load(IO_handle stream, uint32_t version)
 					return stat;
 		}
 	}
-	return loadpropsets(stream);
+	return loadpropsets(stream, version);
 }
 
 void MCEPS::setextents()

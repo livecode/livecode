@@ -3293,7 +3293,7 @@ IO_stat MCCard::load(IO_handle stream, uint32_t version)
 //---- 2.7+
 
 	rect.y = 0; // in case saved on mac with editMenus false
-	if ((stat = loadpropsets(stream)) != IO_NORMAL)
+	if ((stat = loadpropsets(stream, version)) != IO_NORMAL)
 		return stat;
 	while (True)
 	{

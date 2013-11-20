@@ -287,5 +287,5 @@ IO_stat MCVideoClip::load(IO_handle stream, uint32_t version)
 			return stat;
 		scale = MCU_i4tor8(i);
 	}
-	return loadpropsets(stream);
+	return loadpropsets(stream, version);
 }

@@ -527,10 +527,12 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 	uint32_t version;
 	uint1 charset, type;
 	char *newsf;
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] newsf is no longer used.
 	if (readheader(stream, version) != IO_NORMAL
 	        || IO_read_uint1(&charset, stream) != IO_NORMAL
 	        || IO_read_uint1(&type, stream) != IO_NORMAL
-	        || IO_read_string(newsf, stream) != IO_NORMAL)
+	        || IO_read_cstring_legacy(newsf, stream, 2) != IO_NORMAL)
 		return IO_ERROR;
 
 	// MW-2008-10-20: [[ ParentScripts ]] Set the boolean flag that tells us whether
@@ -618,12 +620,13 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 		// MW-2008-10-20: [[ ParentScripts ]] Set the boolean flag that tells us whether
 		//   parentscript resolution is required to false.
 		s_loaded_parent_script_reference = false;
-
+		
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] newsf is no longer used.
 		uint1 charset, type;
 		char *newsf;
 		if (IO_read_uint1(&charset, stream) != IO_NORMAL
 		        || IO_read_uint1(&type, stream) != IO_NORMAL
-		        || IO_read_string(newsf, stream) != IO_NORMAL)
+		        || IO_read_cstring_legacy(newsf, stream, 2) != IO_NORMAL)
 		{
 			MCresult->sets("stack is corrupted, check for ~ backup file");
 			return IO_ERROR;
@@ -641,10 +644,12 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 
 		if (MCModeCanLoadHome() && type == OT_HOME)
 		{
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] These strings are never written out, so
+			//   legacy.
 			char *lstring = NULL;
 			char *cstring = NULL;
-			IO_read_string(lstring, stream);
-			IO_read_string(cstring, stream);
+			IO_read_cstring_legacy(lstring, stream, 2);
+			IO_read_cstring_legacy(cstring, stream, 2);
 			delete lstring;
 			delete cstring;
 		}
@@ -941,9 +946,11 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 		cleanup(stream, *t_linkname, *t_backup);
 		return IO_ERROR;
 	}
-
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] Writing out for backwards-compatibility,
+	//   so legacy.
 	if (IO_write_uint1(OT_NOTHOME, stream) != IO_NORMAL
-	        || IO_write_string(NULL, stream) != IO_NORMAL)
+	        || IO_write_cstring_legacy(NULL, stream, 2) != IO_NORMAL)
 	{ // was stackfiles
 		MCresult->sets(errstring);
 		cleanup(stream, *t_linkname, *t_backup);

@@ -273,136 +273,177 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 {
 	IO_stat stat;
 	uint1 type;
-
-	// This string can contain a mixture of Unicode and native...
-	uint32_t t_length;
-	MCAutoPointer<char> t_text_data;
-	if ((stat = IO_read_string(&t_text_data, t_length, stream, 2, true, false)) != IO_NORMAL)
-		return stat;
 	
-	// The paragraph's text is accumulated into here as it can change between
-	// native and UTF-16 encodings on a block-by-block basis.
-	MCAutoStringRef t_text;
-	if (!MCStringCreateMutable(0, &t_text))
-		return IO_ERROR;
-
+	
 	// MW-2012-03-04: [[ StackFile5500 ]] If this is an extended paragraph then
 	//   load in the attribute extension record.
 	if (is_ext)
-		if ((stat = loadattrs(stream)) != IO_NORMAL)
+		if ((stat = loadattrs(stream, version)) != IO_NORMAL)
 			return IO_ERROR;
 	
-	// If the whole text isn't covered by the saved blocks, the index of the
-	// portion not covered needs to be retained so that it can be added to
-	// the paragraph text at the end of loading.
-	uindex_t t_last_added = 0;
-	
-	while (True)
+	// MW-2013-11-20: [[ UnicodeFileFormat ]] Prior to 7.0, paragraphs were mixed runs
+	//   of UTF-16 and native text. 7.0 plus they are just a stringref.
+	if (version < 7000)
 	{
-		if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
+		uint32_t t_length;
+		MCAutoPointer<char> t_text_data;
+		// This string can contain a mixture of Unicode and native...
+		if ((stat = IO_read_string_legacy_full(&t_text_data, t_length, stream, 2, true, false)) != IO_NORMAL)
 			return stat;
-		switch (type)
+		
+		// The paragraph's text is accumulated into here as it can change between
+		// native and UTF-16 encodings on a block-by-block basis.
+		MCAutoStringRef t_text;
+		if (!MCStringCreateMutable(0, &t_text))
+			return IO_ERROR;
+		
+		// If the whole text isn't covered by the saved blocks, the index of the
+		// portion not covered needs to be retained so that it can be added to
+		// the paragraph text at the end of loading.
+		uindex_t t_last_added = 0;
+		while (True)
 		{
-		// MW-2012-03-04: [[ StackFile5500 ]] Handle either a normal block, or
-		//   an extended block.
-		case OT_BLOCK:
-		case OT_BLOCK_EXT:
+			if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
+				return stat;
+			switch (type)
 			{
-				MCBlock *newblock = new MCBlock;
-				newblock->setparent(this);
-				
-				// MW-2012-03-04: [[ StackFile5500 ]] If the tag was actually an
-				//   extended block, then pass in 'true' for is_ext.
-				if ((stat = newblock->load(stream, version, type == OT_BLOCK_EXT)) != IO_NORMAL)
+				// MW-2012-03-04: [[ StackFile5500 ]] Handle either a normal block, or
+				//   an extended block.
+				case OT_BLOCK:
+				case OT_BLOCK_EXT:
 				{
-					delete newblock;
-					return stat;
-				}
-				
-				// The indices returned here are *wrong* from the point of view
-				// of the refactored Unicode paragraph - the block as loaded
-				// stores byte indices, not UTF-16 value indices. These wrong
-				// values are needed to ensure the paragraph text is loaded 
-				// using the correct encoding and get fixed up below.
-				findex_t index, len;
-				newblock->GetRange(index, len);
-				t_last_added = index+len;
-				if (newblock->IsSavedAsUnicode())
-				{
-					len >>= 1;
-					if (len && t_length > 0)
+					MCBlock *newblock = new MCBlock;
+					newblock->setparent(this);
+					
+					// MW-2012-03-04: [[ StackFile5500 ]] If the tag was actually an
+					//   extended block, then pass in 'true' for is_ext.
+					if ((stat = newblock->load(stream, version, type == OT_BLOCK_EXT)) != IO_NORMAL)
 					{
-						uint2 *dptr = (uint2*)(*t_text_data + index);
-						
-						// Byte swap, if required
-						uindex_t t_len = len;
-						while (len--)
-							swap_uint2(dptr++);
-						
-						// The indices used by the block are incorrect and need
-						// to be updated (offsets into the stored string and
-						// the string held by the paragraph will differ if any
-						// portion of the stored string was non-UTF-16)
-						newblock->SetRange(MCStringGetLength(*t_text), t_len);
-						
-						// Append to the paragraph text
-						if (!MCStringAppendChars(*t_text, (const unichar_t*)dptr - t_len, t_len))
-							return IO_ERROR;
+						delete newblock;
+						return stat;
 					}
-				}
-				else
-				{
-					if (MCtranslatechars && len && t_length > 0)
+					
+					// The indices returned here are *wrong* from the point of view
+					// of the refactored Unicode paragraph - the block as loaded
+					// stores byte indices, not UTF-16 value indices. These wrong
+					// values are needed to ensure the paragraph text is loaded 
+					// using the correct encoding and get fixed up below.
+					findex_t index, len;
+					newblock->GetRange(index, len);
+					t_last_added = index+len;
+					if (newblock->IsSavedAsUnicode())
+					{
+						len >>= 1;
+						if (len && t_length > 0)
+						{
+							uint2 *dptr = (uint2*)(*t_text_data + index);
+							
+							// Byte swap, if required
+							uindex_t t_len = len;
+							while (len--)
+								swap_uint2(dptr++);
+							
+							// The indices used by the block are incorrect and need
+							// to be updated (offsets into the stored string and
+							// the string held by the paragraph will differ if any
+							// portion of the stored string was non-UTF-16)
+							newblock->SetRange(MCStringGetLength(*t_text), t_len);
+							
+							// Append to the paragraph text
+							if (!MCStringAppendChars(*t_text, (const unichar_t*)dptr - t_len, t_len))
+								return IO_ERROR;
+						}
+					}
+					else
+					{
+						if (MCtranslatechars && len && t_length > 0)
 #ifdef __MACROMAN__
-						IO_iso_to_mac(*t_text_data + index, len);
+							IO_iso_to_mac(*t_text_data + index, len);
 #else
 						IO_mac_to_iso(*t_text_data + index, len);
 #endif
-
-					// Fix the indices used by the block
-					newblock->SetRange(MCStringGetLength(*t_text), len);
-					
-					// String is in native format. Append to paragraph text
-					if (!MCStringAppendNativeChars(*t_text, (const char_t*)(*t_text_data + index), len))
-						return IO_ERROR;
+						
+						// Fix the indices used by the block
+						newblock->SetRange(MCStringGetLength(*t_text), len);
+						
+						// String is in native format. Append to paragraph text
+						if (!MCStringAppendNativeChars(*t_text, (const char_t*)(*t_text_data + index), len))
+							return IO_ERROR;
+					}
+					newblock->appendto(blocks);
 				}
-				newblock->appendto(blocks);
-			}
-			break;
-		default:
-			if (blocks == NULL && MCtranslatechars && t_length && *t_text_data != nil)
-			{
+					break;
+				default:
+					if (blocks == NULL && MCtranslatechars && t_length && *t_text_data != nil)
+					{
 #ifdef __MACROMAN__
-				IO_iso_to_mac(*t_text_data, t_length);
+						IO_iso_to_mac(*t_text_data, t_length);
 #else
-				IO_mac_to_iso(*t_text_data, t_length);
+						IO_mac_to_iso(*t_text_data, t_length);
 #endif
+					}
+					
+					// If we have no blocks, add all the text to the paragraph. Because
+					// there were no blocks to say it was unicode, it must be native.
+					if (t_last_added == 0)
+					{
+						if (!MCStringAppendNativeChars(*t_text, (const char_t*)*t_text_data, t_length))
+							return IO_ERROR;
+						t_last_added = t_length;
+					}
+					
+					// Ensure that all the text was covered
+					if (t_last_added != t_length)
+						return IO_ERROR;
+					
+					MCS_seek_cur(stream, -1);
+					MCValueAssign(m_text, *t_text);
+					return IO_NORMAL;
 			}
-			
-			// If we have no blocks, add all the text to the paragraph. Because
-			// there were no blocks to say it was unicode, it must be native.
-			if (t_last_added == 0)
-			{
-				if (!MCStringAppendNativeChars(*t_text, (const char_t*)*t_text_data, t_length))
-					return IO_ERROR;
-				t_last_added = t_length;
-			}
-				
-			// Ensure that all the text was covered
-			if (t_last_added != t_length)
-				return IO_ERROR;
-
-			MCS_seek_cur(stream, -1);
-			MCValueAssign(m_text, *t_text);
-			return IO_NORMAL;
-		}
+		}		
 	}
-	
-	// MP-2013-09-02: [[ FasterField ]] Once loaded, the paragraph will need layout.
-	needs_layout = true;
+	else
+	{
+		// MW-2013-11-20: [[ UnicodeFileFormat ]] The text is just a stringref, so no
+		//   magical swizzling to be done.
+		if ((stat = IO_read_stringref_new(m_text, stream, true)) != IO_NORMAL)
+			return stat;
+		
+		while (True)
+		{
+			if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
+				return stat;
+			switch (type)
+			{
+					// MW-2012-03-04: [[ StackFile5500 ]] Handle either a normal block, or
+					//   an extended block.
+				case OT_BLOCK:
+				case OT_BLOCK_EXT:
+				{
+					MCBlock *newblock = new MCBlock;
+					newblock->setparent(this);
+					
+					// MW-2012-03-04: [[ StackFile5500 ]] If the tag was actually an
+					//   extended block, then pass in 'true' for is_ext.
+					if ((stat = newblock->load(stream, version, type == OT_BLOCK_EXT)) != IO_NORMAL)
+					{
+						delete newblock;
+						return stat;
+					}
+					
+					newblock->appendto(blocks);
+				}
+				break;
+				default:
+					MCS_seek_cur(stream, -1);
+					return IO_NORMAL;
+			}
+		}		
+	}
 
 	// This point shouldn't be reached
 	assert(false);
+	
 	return IO_NORMAL;
 }
 
@@ -411,40 +452,6 @@ IO_stat MCParagraph::save(IO_handle stream, uint4 p_part)
 {
 	IO_stat stat;
 	defrag();
-	
-	// The string data that will get written out. It can't be just done as a
-	// StringRef without breaking file format compatibility.
-	uindex_t t_data_len;
-	const char *t_data;
-	if (MCStringIsNative(m_text))
-	{
-		t_data_len = MCStringGetLength(m_text);
-		t_data = (const char *)MCStringGetNativeCharPtr(m_text);
-	}
-	else
-	{
-		// The paragraph is not native. If it does not contain any blocks,
-        // one will have to be created to ensure Unicodeness is preserved.
-        if (blocks == nil)
-            inittext();
-        
-        t_data_len = MCStringGetLength(m_text) * sizeof(unichar_t);
-		t_data = (const char *)MCStringGetCharPtr(m_text);
-	}
-	
-	if (!MCStringIsNative(m_text))
-	{
-		// For file format compatibility, swap_uint2 must be called on each 
-		// character in the UTF-16 string (Unicodeness is now a paragraph
-		// property, not a block property, so it is done for all the text)
-		unichar_t *t_swapped_data = new unichar_t[t_data_len/sizeof(unichar_t)];
-		memcpy(t_swapped_data, t_data, t_data_len);
-		for (uindex_t i = 0; i < MCStringGetLength(m_text); i++)
-		{
-			swap_uint2((uint2*)&t_swapped_data[i]);
-		}
-		t_data = (char *)t_swapped_data;
-	}
 	
 	// MW-2012-03-04: [[ StackFile5500 ]] If the paragraph has attributes and 5.5
 	//   stackfile format has been requested, then output an extended paragraph.
@@ -456,14 +463,58 @@ IO_stat MCParagraph::save(IO_handle stream, uint4 p_part)
 	
 	if ((stat = IO_write_uint1(t_is_ext ? OT_PARAGRAPH_EXT : OT_PARAGRAPH, stream)) != IO_NORMAL)
 		return stat;
-
-	if ((stat = IO_write_string(MCString(t_data, t_data_len), stream, 2, true)) != IO_NORMAL)
-		return stat;
-
-	// If the string had to be byte swapped, delete the allocated data
-	if (!MCStringIsNative(m_text))
-		delete[] t_data;
 	
+	if (MCstackfileversion < 7000)
+	{
+		// The string data that will get written out. It can't be just done as a
+		// StringRef without breaking file format compatibility.
+		uindex_t t_data_len;
+		const char *t_data;
+		if (MCStringIsNative(m_text))
+		{
+			t_data_len = MCStringGetLength(m_text);
+			t_data = (const char *)MCStringGetNativeCharPtr(m_text);
+		}
+		else
+		{
+			// The paragraph is not native. If it does not contain any blocks,
+			// one will have to be created to ensure Unicodeness is preserved.
+			if (blocks == nil)
+				inittext();
+			
+			t_data_len = MCStringGetLength(m_text) * sizeof(unichar_t);
+			t_data = (const char *)MCStringGetCharPtr(m_text);
+		}
+		
+		if (!MCStringIsNative(m_text))
+		{
+			// For file format compatibility, swap_uint2 must be called on each 
+			// character in the UTF-16 string (Unicodeness is now a paragraph
+			// property, not a block property, so it is done for all the text)
+			unichar_t *t_swapped_data = new unichar_t[t_data_len/sizeof(unichar_t)];
+			memcpy(t_swapped_data, t_data, t_data_len);
+			for (uindex_t i = 0; i < MCStringGetLength(m_text); i++)
+			{
+				swap_uint2((uint2*)&t_swapped_data[i]);
+			}
+			t_data = (char *)t_swapped_data;
+		}
+
+		if ((stat = IO_write_string_legacy_full(MCString(t_data, t_data_len), stream, 2, true)) != IO_NORMAL)
+			return stat;
+
+		// If the string had to be byte swapped, delete the allocated data
+		if (!MCStringIsNative(m_text))
+			delete[] t_data;
+	}
+	else
+	{
+		// MW-2013-11-20: [[ UnicodeFileFormat ]] The text is just a stringref, so no
+		//   magical swizzling to be done.
+		if ((stat = IO_write_stringref_new(m_text, stream, true)) != IO_NORMAL)
+			return stat;
+	}
+		
 	// MW-2012-03-04: [[ StackFile5500 ]] If this is an extended paragraph then
 	//   write out the attribtues.
 	if (t_is_ext)

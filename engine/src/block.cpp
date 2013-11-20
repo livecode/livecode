@@ -204,7 +204,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] The storage of this is ignored,
 			//   so is legacy,
 			char *colorname;
-			if ((stat = IO_read_string_legacy(colorname, stream)) != IO_NORMAL)
+			if ((stat = IO_read_cstring_legacy(colorname, stream, 2)) != IO_NORMAL)
 				return stat;
 			delete colorname;
 			flags &= ~F_HAS_COLOR_NAME;
@@ -222,7 +222,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] The storage of this is ignored,
 			//   so is legacy,
 			char *backcolorname;
-			if ((stat = IO_read_string_legacy(backcolorname, stream)) != IO_NORMAL)
+			if ((stat = IO_read_cstring_legacy(backcolorname, stream, 2)) != IO_NORMAL)
 				return stat;
 			delete backcolorname;
 			flags &= ~F_HAS_BACK_COLOR_NAME;

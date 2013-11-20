@@ -178,24 +178,24 @@ bool MCObjectPropertySet::isnested(void) const
 	return MCArrayIsNested(m_props);
 }
 
-IO_stat MCObjectPropertySet::loadprops(IO_handle p_stream)
+IO_stat MCObjectPropertySet::loadprops(IO_handle p_stream, uint32_t version)
 {
-	return MCArrayLoadFromHandle(m_props, p_stream);
+	return MCArrayLoadFromHandle(m_props, p_stream, version);
 }
 
-IO_stat MCObjectPropertySet::loadarrayprops(MCObjectInputStream& p_stream)
+IO_stat MCObjectPropertySet::loadarrayprops(MCObjectInputStream& p_stream, uint32_t version)
 {
-	return MCArrayLoadFromStream(m_props, p_stream);
+	return MCArrayLoadFromStream(m_props, p_stream, version);
 }
 
 IO_stat MCObjectPropertySet::saveprops(IO_handle p_stream)
 {
-	return MCArraySaveToHandle(m_props, p_stream);
+	return MCArraySaveToHandle(m_props, p_stream, MCstackfileversion);
 }
 
 IO_stat MCObjectPropertySet::savearrayprops(MCObjectOutputStream& p_stream)
 {
-	return MCArraySaveToStream(m_props, true, p_stream);
+	return MCArraySaveToStream(m_props, true, p_stream, MCstackfileversion);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -434,17 +434,17 @@ uint32_t MCObject::measurearraypropsets(void)
 	return t_prop_size;
 }
 
-IO_stat MCObject::loadunnamedpropset(IO_handle stream)
+IO_stat MCObject::loadunnamedpropset(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 	if (props == NULL)
 		/* UNCHECKED */ MCObjectPropertySet::createwithname(kMCEmptyName, props);
-	if ((stat = props->loadprops(stream)) != IO_NORMAL)
+	if ((stat = props->loadprops(stream, version)) != IO_NORMAL)
 		return stat;
 	return stat;
 }
 
-IO_stat MCObject::loadpropsets(IO_handle stream)
+IO_stat MCObject::loadpropsets(IO_handle stream, uint32_t version)
 {
 	MCObjectPropertySet *p = props;
 	IO_stat stat;
@@ -456,8 +456,9 @@ IO_stat MCObject::loadpropsets(IO_handle stream)
 			return stat;
 		if (type == OT_CUSTOM)
 		{
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 			MCNameRef pname;
-			if ((stat = IO_read_nameref(pname, stream)) != IO_NORMAL)
+			if ((stat = IO_read_nameref_new(pname, stream, version >= 7000)) != IO_NORMAL)
 				return stat;
 
 			// If there is already a next pset, then it means its had array values loaded.
@@ -475,7 +476,7 @@ IO_stat MCObject::loadpropsets(IO_handle stream)
 				p = p->getnext();
 			}
 
-			if ((stat = p->loadprops(stream)) != IO_NORMAL)
+			if ((stat = p->loadprops(stream, version)) != IO_NORMAL)
 				return stat;
 		}
 		else
@@ -487,7 +488,7 @@ IO_stat MCObject::loadpropsets(IO_handle stream)
 	return IO_NORMAL;
 }
 
-IO_stat MCObject::loadarraypropsets(MCObjectInputStream& p_stream)
+IO_stat MCObject::loadarraypropsets(MCObjectInputStream& p_stream, uint32_t p_version)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -529,7 +530,7 @@ IO_stat MCObject::loadarraypropsets(MCObjectInputStream& p_stream)
 			}
 
 			// We now have our prop to load into - so we do so :o)
-			t_stat = t_prop -> loadarrayprops(p_stream);
+			t_stat = t_prop -> loadarrayprops(p_stream, p_version);
 		}
 	}
 
@@ -554,7 +555,8 @@ IO_stat MCObject::savepropsets(IO_handle stream)
 		{
 			if ((stat = IO_write_uint1(OT_CUSTOM, stream)) != IO_NORMAL)
 				return stat;
-			if ((stat = IO_write_nameref(p->getname(), stream)) != IO_NORMAL)
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+			if ((stat = IO_write_nameref_new(p->getname(), stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 				return stat;
 			if ((stat = p->saveprops(stream)) != IO_NORMAL)
 				return stat;

@@ -3084,7 +3084,7 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 	}
 	if (flags & F_VGRID)
 		flags |= F_DONT_WRAP;
-	if ((stat = loadpropsets(stream)) != IO_NORMAL)
+	if ((stat = loadpropsets(stream, version)) != IO_NORMAL)
 		return stat;
 	while (True)
 	{

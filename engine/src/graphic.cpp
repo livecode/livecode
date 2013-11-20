@@ -2626,5 +2626,5 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 		}
 	}
 	
-	return loadpropsets(stream);
+	return loadpropsets(stream, version);
 }

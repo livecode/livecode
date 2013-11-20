@@ -3187,7 +3187,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 		if ((stat = IO_read_uint2(&minrect.height, stream)) != IO_NORMAL)
 			return stat;
 	}
-	if ((stat = loadpropsets(stream)) != IO_NORMAL)
+	if ((stat = loadpropsets(stream, version)) != IO_NORMAL)
 		return stat;
 	while (True)
 	{

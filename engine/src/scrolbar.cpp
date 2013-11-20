@@ -1301,9 +1301,11 @@ IO_stat MCScrollbar::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if (flags & F_HAS_VALUES)
 		{
 			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
-			if ((stat = IO_write_stringref(startstring, stream, false)) != IO_NORMAL)
+			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+			if ((stat = IO_write_stringref_new(startstring, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 				return stat;
-			if ((stat = IO_write_stringref(endstring, stream, false)) != IO_NORMAL)
+			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+			if ((stat = IO_write_stringref_new(endstring, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 				return stat;
 			if ((stat = IO_write_uint2(nffw, stream)) != IO_NORMAL)
 				return stat;
@@ -1340,13 +1342,15 @@ IO_stat MCScrollbar::load(IO_handle stream, uint32_t version)
 		if (flags & F_HAS_VALUES)
 		{
 			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
-			if ((stat = IO_read_stringref(startstring, stream, false)) != IO_NORMAL)
+			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+			if ((stat = IO_read_stringref_new(startstring, stream, version >= 7000)) != IO_NORMAL)
 				return stat;
 			if (!MCStringToDouble(startstring, startvalue))
 				startvalue = 0.0;
 			
 			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
-			if ((stat = IO_read_stringref(endstring, stream, false)) != IO_NORMAL)
+			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+			if ((stat = IO_read_stringref_new(endstring, stream, version >= 7000)) != IO_NORMAL)
 				return stat;
 			if (!MCStringToDouble(endstring, endvalue))
 				endvalue = 0.0;
@@ -1371,5 +1375,5 @@ IO_stat MCScrollbar::load(IO_handle stream, uint32_t version)
 		if (flags & F_SHOW_VALUE && getstyleint(flags) == F_HORIZONTAL)
 			rect = MCU_reduce_rect(rect, 4);
 	}
-	return loadpropsets(stream);
+	return loadpropsets(stream, version);
 }

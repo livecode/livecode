@@ -131,14 +131,14 @@ uint32_t MCArrayMeasureForStream(MCArrayRef array, bool nested_only);
 // Returns true if the array contains any values which are arrays.
 bool MCArrayIsNested(MCArrayRef array);
 // Loads keys from the IO_handle, adding them to the array.
-IO_stat MCArrayLoadFromHandle(MCArrayRef array, IO_handle stream);
+IO_stat MCArrayLoadFromHandle(MCArrayRef array, IO_handle stream, uint32_t version);
 // Loads keys from the InputStream, adding them to the array.
-IO_stat MCArrayLoadFromStream(MCArrayRef array, MCObjectInputStream& stream);
+IO_stat MCArrayLoadFromStream(MCArrayRef array, MCObjectInputStream& stream, uint32_t version);
 // Saves keys to the IO_handle.
-IO_stat MCArraySaveToHandle(MCArrayRef array, IO_handle stream);
+IO_stat MCArraySaveToHandle(MCArrayRef array, IO_handle stream, uint32_t version);
 // Saves keys to the outputstream. If 'nested_only' is true, only keys with
 // array values are saved.
-IO_stat MCArraySaveToStream(MCArrayRef array, bool nested_only, MCObjectOutputStream& stream);
+IO_stat MCArraySaveToStream(MCArrayRef array, bool nested_only, MCObjectOutputStream& stream, uint32_t version);
 
 ////////////////////////////////////////////////////////////////////////////////
 

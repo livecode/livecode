@@ -362,6 +362,9 @@ void IO_mac_to_iso(char *string, uint4 len)
 
 IO_stat IO_read_string_no_translate(char*& string, IO_handle stream, uint1 size)
 {
+	uint32_t t_length;
+	return IO_read_string_legacy_full(string, t_length, stream, size, true, false);
+#if 0
 	Boolean t_old_translatechars;
 	t_old_translatechars = MCtranslatechars;
 	MCtranslatechars = False;
@@ -372,9 +375,10 @@ IO_stat IO_read_string_no_translate(char*& string, IO_handle stream, uint1 size)
 	MCtranslatechars = t_old_translatechars;
 	
 	return t_stat;
+#endif
 }
 
-IO_stat IO_read_string(char *&r_string, uint32_t &r_length, IO_handle p_stream, uint8_t p_size, bool p_includes_null, bool p_translate)
+IO_stat IO_read_string_legacy_full(char *&r_string, uint32_t &r_length, IO_handle p_stream, uint8_t p_size, bool p_includes_null, bool p_translate)
 {
 	IO_stat stat;
 	
@@ -440,12 +444,13 @@ IO_stat IO_read_string(char *&r_string, uint32_t &r_length, IO_handle p_stream, 
 	return IO_NORMAL;
 }
 
-IO_stat IO_read_string(char *&r_string, IO_handle stream, uint1 size)
+IO_stat IO_read_cstring_legacy(char *&r_string, IO_handle stream, uint1 size)
 {
 	uint32_t t_length = 0;
-	return IO_read_string(r_string, t_length, stream, size, true, true);
+	return IO_read_string_legacy_full(r_string, t_length, stream, size, true, true);
 }
 
+#if 0
 IO_stat IO_read_string(char *&string, uint4 &outlen, IO_handle stream,
                        bool isunicode, uint1 size)
 {
@@ -470,8 +475,9 @@ IO_stat IO_read_string(char *&string, uint4 &outlen, IO_handle stream,
 	
 	return IO_NORMAL;
 }
+#endif
 
-IO_stat IO_write_string(const MCString &p_string, IO_handle p_stream, uint8_t p_size, bool p_write_null)
+IO_stat IO_write_string_legacy_full(const MCString &p_string, IO_handle p_stream, uint8_t p_size, bool p_write_null)
 {
 	IO_stat stat = IO_NORMAL;
 	uint32_t t_strlen = p_string.getlength();
@@ -510,11 +516,12 @@ IO_stat IO_write_string(const MCString &p_string, IO_handle p_stream, uint8_t p_
 	return stat;
 }
 
-IO_stat IO_write_string(const char *string, IO_handle stream, uint1 size)
+IO_stat IO_write_cstring_legacy(const char *string, IO_handle stream, uint1 size)
 {
-	return IO_write_string(MCString(string), stream, size);
+	return IO_write_string_legacy_full(MCString(string), stream, size, true);
 }
 
+#if 0
 IO_stat IO_write_string(const char *string, uint4 outlen, IO_handle stream,
                         Boolean isunicode, uint1 size)
 {
@@ -537,6 +544,7 @@ IO_stat IO_write_string(const char *string, uint4 outlen, IO_handle stream,
 	
 	return stat;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -630,6 +638,130 @@ IO_stat IO_write_uint2or4(uint4 dest, IO_handle stream)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MW-2013-11-20: [[ UnicodeFileFormat ]] If as_unicode is false, this reads a
+//   native string; otherwise it reads a byte-swapped UTF-16 string.
+IO_stat IO_read_stringref_legacy(MCStringRef& r_string, IO_handle p_stream, bool p_as_unicode, uint1 p_size)
+{
+	IO_stat stat = IO_NORMAL;
+	MCStringEncoding t_encoding = p_as_unicode ? kMCStringEncodingUTF16BE : kMCStringEncodingNative;
+	
+	uint4 t_length;
+	char *t_bytes;
+	if ((stat = IO_read_string_legacy_full(t_bytes, t_length, p_stream, p_size, true, !p_as_unicode)) != IO_NORMAL)
+		return stat;
+	
+	if (!MCStringCreateWithBytesAndRelease((byte_t *)t_bytes, t_length, t_encoding, false, r_string))
+	{
+		delete t_bytes;
+		return IO_ERROR;
+	}
+	
+	return IO_NORMAL;
+}
+
+// MW-2013-11-20: [[ UnicodeFileFormat ]] If 'supports_unicode' is false, then this
+//   reads the stringref as native; otherwise it expects a self-describing string.
+IO_stat IO_read_stringref_new(MCStringRef& r_string, IO_handle p_stream, bool p_supports_unicode, uint1 p_size)
+{
+	if (!p_supports_unicode)
+		return IO_read_stringref_legacy(r_string, p_stream, false, p_size);
+	
+	return IO_ERROR;
+}
+
+IO_stat IO_write_stringref_legacy(MCStringRef p_string, IO_handle p_stream, bool p_as_unicode, uint1 p_size)
+{
+	IO_stat stat = IO_NORMAL;
+	MCStringEncoding t_encoding = p_as_unicode ? kMCStringEncodingUTF16BE : kMCStringEncodingNative;
+	
+	MCDataRef t_data = nil;
+	if (!MCStringEncode(p_string, t_encoding, false, t_data))
+		return IO_ERROR;
+	
+	uindex_t t_length = MCDataGetLength(t_data);
+	const char *t_bytes = (const char *)MCDataGetBytePtr(t_data);
+	stat = IO_write_string_legacy_full(MCString(t_bytes, t_length), p_stream, p_size, true);
+	MCValueRelease(t_data);
+	return stat;
+}
+
+IO_stat IO_write_stringref_new(MCStringRef p_string, IO_handle p_stream, bool p_supports_unicode, uint1 p_size)
+{
+	if (!p_supports_unicode)
+		return IO_write_stringref_legacy(p_string, p_stream, false, p_size);
+	
+	return IO_ERROR;
+}
+
+//////////
+
+IO_stat IO_read_nameref_legacy(MCNameRef& r_name, IO_handle p_stream, bool p_as_unicode, uint1 p_size)
+{
+	IO_stat t_stat;
+	MCAutoStringRef t_string;
+	t_stat = IO_read_stringref_legacy(&t_string, p_stream, p_as_unicode, p_size);
+	if (t_stat == IO_NORMAL &&
+		!MCNameCreate(*t_string, r_name))
+		t_stat = IO_ERROR;
+	return t_stat;
+}
+
+IO_stat IO_write_nameref_legacy(MCNameRef p_name, IO_handle p_stream, bool p_as_unicode, uint1 p_size)
+{
+	return IO_write_stringref_legacy(MCNameGetString(p_name), p_stream, p_as_unicode, p_size);
+}
+
+IO_stat IO_read_nameref_new(MCNameRef& r_name, IO_handle p_stream, bool p_supports_unicode, uint1 p_size)
+{
+	IO_stat t_stat;
+	MCAutoStringRef t_string;
+	t_stat = IO_read_stringref_new(&t_string, p_stream, p_supports_unicode, p_size);
+	if (t_stat == IO_NORMAL &&
+		!MCNameCreate(*t_string, r_name))
+		t_stat = IO_ERROR;
+	return t_stat;
+}
+
+IO_stat IO_write_nameref_new(MCNameRef p_name, IO_handle p_stream, bool p_supports_unicode, uint1 p_size)
+{
+	return IO_write_stringref_new(MCNameGetString(p_name), p_stream, p_supports_unicode, p_size);
+}
+
+//////////
+
+IO_stat IO_read_stringref_legacy_utf8(MCStringRef& r_string, IO_handle stream, uint1 size)
+{
+	// Read in the UTF-8 string and create a StringRef
+	IO_stat stat = IO_NORMAL;
+	char *t_bytes = nil;
+	uint4 t_length = 0;
+	if ((stat = IO_read_string_legacy_full(t_bytes, t_length, stream, size, true, false)) != IO_NORMAL)
+		return stat;
+	if (!MCStringCreateWithBytesAndRelease((byte_t *)t_bytes, t_bytes != nil ? strlen(t_bytes) : 0, kMCStringEncodingUTF8, false, r_string))
+	{
+		delete[] t_bytes;
+		return IO_ERROR;
+	}
+	
+	return IO_NORMAL;
+}
+
+IO_stat IO_write_stringref_utf8(MCStringRef p_string, IO_handle stream, uint1 size)
+{
+	// Convert the string to UTF-8 encoding before writing it out
+	IO_stat stat;
+	char *t_bytes = nil;
+	uindex_t t_length = 0;
+	if (!MCStringConvertToUTF8(p_string, t_bytes, t_length))
+		return IO_ERROR;
+	stat = IO_write_string(t_bytes, stream, size);
+	MCMemoryDeleteArray(t_bytes);
+	return stat;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+#if 0
 IO_stat IO_read_nameref(MCNameRef& r_name, IO_handle stream, uint1 size)
 {
 	IO_stat t_stat;
@@ -694,7 +826,7 @@ IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, bool as_unico
 	
 	uint4 t_length;
 	char *t_bytes;
-	if ((stat = IO_read_string(t_bytes, t_length, stream, as_unicode, size)) != IO_NORMAL)
+	if ((stat = IO_read_string_legacy_full(t_bytes, t_length, stream, size, true, false)) != IO_NORMAL)
 		return stat;
 		
 	if (!MCStringCreateWithBytesAndRelease((byte_t *)t_bytes, t_length, t_encoding, false, r_string))
@@ -751,6 +883,7 @@ IO_stat IO_write_stringref_utf8(MCStringRef p_string, IO_handle stream, uint1 si
 	MCMemoryDeleteArray(t_bytes);
 	return stat;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

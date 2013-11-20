@@ -221,7 +221,7 @@ void MCObject::continuepickling(MCPickleContext *p_context, MCObject *p_object, 
 		MCLogicalFontTableBuild(p_object, p_part);
 
 		// Write out the font table to the stream.
-		MCLogicalFontTableSave(t_stream);
+		MCLogicalFontTableSave(t_stream, MCstackfileversion);
 	}
 
 	// Write the object
@@ -255,7 +255,7 @@ void MCObject::continuepickling(MCPickleContext *p_context, MCObject *p_object, 
 			MCLogicalFontTableBuild(p_object, p_part);
 
 			// Write out the font table to the stream.
-			MCLogicalFontTableSave(t_stream);
+			MCLogicalFontTableSave(t_stream, MCstackfileversion);
 		}
 
 		// Write the object
@@ -360,7 +360,7 @@ static bool unpickle_object_from_stream(IO_handle p_stream, uint32_t p_version, 
 	// MW-2012-02-17: [[ LogFonts ]] Load the font table for the object.
 	if (t_success)
 	{
-		if (MCLogicalFontTableLoad(p_stream) != IO_NORMAL)
+		if (MCLogicalFontTableLoad(p_stream, p_version) != IO_NORMAL)
 			t_success = false;
 	}
 

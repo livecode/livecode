@@ -562,7 +562,7 @@ public:
 	// Clears the paragraph attributes.
 	void clearattrs(void);
 	// Unserializes the paragraph attributes from stream.
-	IO_stat loadattrs(IO_handle stream);
+	IO_stat loadattrs(IO_handle stream, uint32_t version);
 	// Serializes the paragraph attributes into stream.
 	IO_stat saveattrs(IO_handle stream);
 	// MW-2012-02-21: [[ FieldExport ]] Fills in the appropriate members of the

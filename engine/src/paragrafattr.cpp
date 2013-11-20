@@ -87,7 +87,7 @@ void MCParagraph::fetchattrs(MCArrayRef src)
 	}
 }
 
-IO_stat MCParagraph::loadattrs(IO_handle stream)
+IO_stat MCParagraph::loadattrs(IO_handle stream, uint32_t version)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -177,9 +177,10 @@ IO_stat MCParagraph::loadattrs(IO_handle stream)
 			if ((attrs -> flags & PA_HAS_HIDDEN) != 0)
 				attrs -> hidden = true;
 		}
-
+		
+		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_METADATA) != 0)
-            t_stat = IO_read_stringref(attrs -> metadata, stream);
+            t_stat = IO_read_stringref_new(attrs -> metadata, stream, version >= 7000);
 
 		if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_LIST_INDEX) != 0)
 			t_stat = IO_read_uint2(&attrs -> list_index, stream);
@@ -250,8 +251,9 @@ IO_stat MCParagraph::saveattrs(IO_handle stream)
 		t_stat = IO_write_uint2(attrs -> flags >> 16, stream);
 
 	// MW-2012-11-13: [[ ParaMetadata ]] Write out the metadata, if any.
+	// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_METADATA) != 0)
-        t_stat = IO_write_stringref(attrs -> metadata, stream);
+        t_stat = IO_write_stringref_new(attrs -> metadata, stream, MCstackfileversion >= 7000);
 
 	// MW-2012-11-13: [[ ParaListIndex ]] Write out the list index, if any.
 	if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_LIST_INDEX) != 0)

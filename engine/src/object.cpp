@@ -2845,7 +2845,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 			uint2 fontsize, fontstyle;
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] This codepath is only hit on sfv <= 1300,
 			//   so will never be unicode.
-			if ((stat = IO_read_string_legacy(fontname, stream)) != IO_NORMAL)
+			if ((stat = IO_read_cstring_legacy(fontname, stream, 2)) != IO_NORMAL)
 				return stat;
 			if ((stat = IO_read_uint2(&fontheight, stream)) != IO_NORMAL)
 				return stat;
@@ -2920,7 +2920,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 	if ((stat = IO_read_uint2(&rect.height, stream)) != IO_NORMAL)
 		return stat;
 	if (addflags & AF_CUSTOM_PROPS)
-		if ((stat = loadunnamedpropset(stream)) != IO_NORMAL)
+		if ((stat = loadunnamedpropset(stream, version)) != IO_NORMAL)
 			return stat;
 	if (addflags & AF_BORDER_WIDTH)
 		if ((stat = IO_read_uint1(&borderwidth, stream)) != IO_NORMAL)
@@ -2948,7 +2948,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] Special-case 5.5 format, read in as UTF-8
 			//   formatted.
 			// The tooltip should be written out encoded in UTF-8 (not UTF-16)
-			if ((stat = IO_read_stringref_utf8(tooltip, stream)) != IO_NORMAL)
+			if ((stat = IO_read_stringref_legacy_utf8(tooltip, stream)) != IO_NORMAL)
 				return stat;
 		}
 		else
@@ -3250,7 +3250,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		{
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] Special-case 5.5 format - uses UTF-8.
 			// Tooltip is encoded as UTF-8
-			if ((stat = IO_write_stringref_utf8(tooltip, stream)) != IO_NORMAL)
+			if ((stat = IO_write_stringref_legacy_utf8(tooltip, stream)) != IO_NORMAL)
 				return stat;
 		}
 		else
@@ -3507,7 +3507,7 @@ IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, uint32_t version, 
 		t_stat = p_stream . Mark();
 
 	if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_ARRAYPROPS) != 0)
-		t_stat = loadarraypropsets(p_stream);
+		t_stat = loadarraypropsets(p_stream, version);
 
 	if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_PARENTSCRIPT) != 0)
 	{

@@ -4502,7 +4502,7 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 			flags |= F_OPAQUE | F_TRAVERSAL_ON;
 	}
 
-	if ((stat = loadpropsets(stream)) != IO_NORMAL)
+	if ((stat = loadpropsets(stream, version)) != IO_NORMAL)
 		return stat;
 
 	while (True)
