@@ -95,70 +95,6 @@ void MCMultiBinaryOperator::compile(MCSyntaxFactoryRef ctxt)
 //  Logical operators
 //
 
-#if 1
-Exec_stat MCAnd::eval(MCExecPoint &ep)
-{
-#ifdef /* MCAnd */ LEGACY_EXEC
-	Boolean state1;
-	Boolean state2 = False;
-
-	if (left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_AND_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	state1 = ep.getsvalue() == MCtruemcstring;
-	if (state1)
-	{
-		if (right->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_AND_BADRIGHT, line, pos);
-			return ES_ERROR;
-		}
-		state2 = ep.getsvalue() == MCtruemcstring;
-	}
-	ep.setboolean(state1 && state2);
-	return ES_NORMAL;
-#endif /* MCAnd */
-
-    MCExecContext ctxt(ep);
-        bool t_result;
-        bool t_left, t_right;
-
-    if (left->eval(ep) != ES_NORMAL)
-    {
-        MCeerror->add(EE_AND_BADLEFT, line, pos);
-        return ES_ERROR;
-    }
-    if (!ep.copyasbool(t_left))
-        t_left = false;
-
-    /* CONDITIONAL EVALUATION */
-    if (t_left)
-    {
-        if (right->eval(ep) != ES_NORMAL)
-        {
-            MCeerror->add(EE_AND_BADRIGHT, line, pos);
-            return ES_ERROR;
-        }
-
-        if (!ep.copyasbool(t_right))
-            t_right = false;
-
-        MCLogicEvalAnd(ctxt, t_left, t_right, t_result);
-    }
-    else
-        t_result = false;
-
-    if (!ctxt.HasError())
-    {
-        /* UNCHECKED */ ep.setboolean(t_result);
-        return ES_NORMAL;
-    }
-
-    return ctxt.Catch(line, pos);
-}
-#else
 void MCAnd::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCAnd */ LEGACY_EXEC
@@ -187,13 +123,13 @@ void MCAnd::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     bool t_result;
     bool t_left, t_right;
 
-    if (!ctxt . EvalExprAsBool(left, EE_AND_BADLEFT, t_left))
+    if (!ctxt . EvalExprAsNonStrictBool(left, EE_AND_BADLEFT, t_left))
         return;
 
     /* CONDITIONAL EVALUATION */
     if(t_left)
     {
-        if (!ctxt . EvalExprAsBool(right, EE_AND_BADRIGHT, t_right))
+        if (!ctxt . EvalExprAsNonStrictBool(right, EE_AND_BADRIGHT, t_right))
             return;
 
         MCLogicEvalAnd(ctxt, t_left, t_right, t_result);
@@ -204,73 +140,8 @@ void MCAnd::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     if (!ctxt . HasError())
         MCExecValueTraits<bool>::set(r_value, t_result);
 }
-#endif
-
-#if 1
-Exec_stat MCOr::eval(MCExecPoint &ep)
-{
-#ifdef /* MCOr */ LEGACY_EXEC
-	Boolean state1;
-	Boolean state2 = False;
-
-	if (left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_OR_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	state1 = ep.getsvalue() == MCtruemcstring;
-	if (!state1)
-	{
-		if (right->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_OR_BADRIGHT, line, pos);
-			return ES_ERROR;
-		}
-		state2 = ep.getsvalue() == MCtruemcstring;
-	}
-	ep.setboolean(state1 || state2);
-	return ES_NORMAL;
-#endif /* MCOr */
 
 
-	MCExecContext ctxt(ep);
-	bool t_result;
-	bool t_left, t_right;
-
-	if (left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_OR_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	if (!ep.copyasbool(t_left))
-		t_left = false;
-
-	/* CONDITIONAL EVALUATION */
-    if (!t_left)
-    {
-        if (right->eval(ep) != ES_NORMAL)
-        {
-            MCeerror->add(EE_OR_BADRIGHT, line, pos);
-            return ES_ERROR;
-        }
-
-        if (!ep.copyasbool(t_right))
-            t_right = false;
-
-        MCLogicEvalOr(ctxt, t_left, t_right, t_result);
-    }
-    else
-        t_result = true;
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-#else
 void MCOr::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCOr */ LEGACY_EXEC
@@ -299,12 +170,12 @@ void MCOr::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     bool t_result;
     bool t_left, t_right;
 
-    if (!ctxt . EvalExprAsBool(left, EE_OR_BADLEFT, t_left))
+    if (!ctxt . EvalExprAsNonStrictBool(left, EE_OR_BADLEFT, t_left))
         return;
 
     if (!t_left)
     {
-        if (!ctxt . EvalExprAsBool(right, EE_OR_BADRIGHT, t_right))
+        if (!ctxt . EvalExprAsNonStrictBool(right, EE_OR_BADRIGHT, t_right))
             return;
 
         MCLogicEvalOr(ctxt, t_left, t_right, t_result);
@@ -315,7 +186,6 @@ void MCOr::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     if (!ctxt.HasError())
         MCExecValueTraits<bool>::set(r_value, t_result);
 }
-#endif
 
 #ifdef /* MCNot */ LEGACY_EXEC
 	if (right->eval(ep) != ES_NORMAL)

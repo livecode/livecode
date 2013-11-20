@@ -791,6 +791,64 @@ bool MCExecContext::EvalExprAsBool(MCExpression *p_expr, Exec_errors p_error, bo
 	return false;
 }
 
+bool MCExecContext::EvalExprAsNonStrictBool(MCExpression *p_expr, Exec_errors p_error, bool& r_value)
+{
+    MCAssert(p_expr != nil);
+    MCExecValue t_value;
+
+    p_expr -> eval_ctxt(*this, t_value);
+
+    if (HasError())
+    {
+        LegacyThrow(p_error);
+        return false;
+    }
+
+    switch(t_value . type)
+    {
+    case kMCExecValueTypeBooleanRef:
+        r_value = t_value . booleanref_value == kMCTrue;
+        break;
+    case kMCExecValueTypeStringRef:
+        r_value = t_value . stringref_value == kMCTrueString;
+        break;
+    case kMCExecValueTypeNameRef:
+        r_value = MCNameGetString(t_value . nameref_value) == kMCTrueString;
+        break;
+    case kMCExecValueTypeNumberRef:
+        r_value = MCNumberFetchAsInteger(t_value . numberref_value) != 0;
+        break;
+    case kMCExecValueTypeUInt:
+        r_value = t_value . uint_value != 0;
+        break;
+    case kMCExecValueTypeInt:
+        r_value = t_value . int_value != 0;
+        break;
+    case kMCExecValueTypeFloat:
+    case kMCExecValueTypeDouble:
+        r_value = t_value . double_value != 0.0;
+        break;
+    case kMCExecValueTypeBool:
+        r_value = t_value . bool_value;
+        break;
+    case kMCExecValueTypeValueRef:
+        if (!ConvertToBool(t_value . valueref_value, r_value))
+            r_value = false;
+        break;
+    case kMCExecValueTypeNone:
+    case kMCExecValueTypeDataRef:
+    case kMCExecValueTypeArrayRef:
+    case kMCExecValueTypeChar:
+    case kMCExecValueTypePoint:
+    case kMCExecValueTypeColor:
+    case kMCExecValueTypeRectangle:
+        r_value = false;
+        break;
+    }
+
+    return true;
+}
+
 bool MCExecContext::EvalOptionalExprAsBool(MCExpression *p_expr, bool p_default, Exec_errors p_error, bool& r_value)
 {
 	if (p_expr == nil)

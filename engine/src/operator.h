@@ -310,11 +310,7 @@ public:
     {
         rank = FR_AND;
     }
-#if 1
-    virtual Exec_stat eval(MCExecPoint &ep);
-#else
     virtual void eval_ctxt(MCExecContext &, MCExecValue &r_value);
-#endif
 };
 
 class MCAndBits : public MCBinaryOperatorCtxt<uinteger_t, uinteger_t, MCMathEvalBitwiseAnd, EE_ANDBITS_BADLEFT, EE_ANDBITS_BADRIGHT, FR_AND_BITS, kMCMathEvalBitwiseAndMethodInfo>
@@ -447,12 +443,8 @@ public:
 	MCOr()
 	{
 		rank = FR_OR;
-	}
-#if 1
-	virtual Exec_stat eval(MCExecPoint &);
-#else
+    }
     virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
-#endif
 };
 
 class MCOrBits : public MCBinaryOperatorCtxt<uinteger_t, uinteger_t, MCMathEvalBitwiseOr, EE_ORBITS_BADLEFT, EE_ORBITS_BADRIGHT, FR_OR_BITS, kMCMathEvalBitwiseOrMethodInfo>
