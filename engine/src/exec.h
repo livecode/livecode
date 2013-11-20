@@ -1996,7 +1996,7 @@ void MCStringsMarkCharsOfTextByRange(MCExecContext& ctxt, integer_t p_first, int
 void MCStringsMarkCharsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedText& x_mark);
 
 void MCStringsSkipWord(MCExecContext& ctxt, MCStringRef p_string, bool p_skip_spaces, uindex_t& x_offset);
-bool MCStringsFindChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_term p_type, uindex_t p_index, MCRange& r_range);
+bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_term p_chunk_type, uindex_t t_length, MCRange& x_range, bool p_not_first, bool& r_last);
 
 ///////////
 

@@ -1314,8 +1314,8 @@ void MCRepeat::exec_for(MCExecContext& ctxt)
     MCAutoArrayRef t_array;
     MCAutoStringRef t_string;
     MCRange t_chunk_range;
-    t_chunk_range . offset = 0;
-    
+    t_chunk_range = MCRangeMake(0,0);
+    uindex_t t_length = 0;
     MCAutoValueRef t_condition;
 	MCNameRef t_key;
 	MCValueRef t_value;
@@ -1343,6 +1343,8 @@ void MCRepeat::exec_for(MCExecContext& ctxt)
         {
             if (!ctxt . ConvertToString(*t_condition, &t_string))
                 return;
+            
+             t_length = MCStringGetLength(*t_string);
         }
     }
     else
@@ -1355,13 +1357,13 @@ void MCRepeat::exec_for(MCExecContext& ctxt)
     bool done;
     done = false;
     
-    bool end;
-    end = false;
+    bool endnext;
+    endnext = false;
     
-    uindex_t t_unit_index;
-    t_unit_index = 0;
+    bool t_found;
+    t_found = false;
     
-    while (!end && !done)
+    while (!done)
     {
         MCAutoStringRef t_unit;
         if (loopvar != NULL)
@@ -1376,36 +1378,35 @@ void MCRepeat::exec_for(MCExecContext& ctxt)
                     MCNameClone(t_key, &t_key_copy);
                     loopvar -> set(ctxt, *t_key_copy);
                     if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
-                        end = true;
+                        endnext = true;
                 }
                     break;
                 case FU_ELEMENT:
                 {
                     loopvar -> set(ctxt, t_value);
                     if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
-                        end = true;
+                        endnext = true;
                 }
                     break;
                 default:
                 {
-                    bool t_found;
                     switch (each)
                     {
                         case FU_LINE:
-                            t_found = MCStringsFindChunk(ctxt, *t_string, CT_LINE, t_unit_index, t_chunk_range);
+                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_LINE, t_length, t_chunk_range, t_found, endnext);
                             break;
                         case FU_ITEM:
-                            t_found = MCStringsFindChunk(ctxt, *t_string, CT_ITEM, t_unit_index, t_chunk_range);
+                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_ITEM, t_length, t_chunk_range, t_found, endnext);
                             break;
                         case FU_WORD:
-                            t_found = MCStringsFindChunk(ctxt, *t_string, CT_WORD, t_unit_index, t_chunk_range);
+                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_WORD, t_length, t_chunk_range, t_found, endnext);
                             break;
                         case FU_TOKEN:
-                            t_found = MCStringsFindChunk(ctxt, *t_string, CT_TOKEN, t_unit_index, t_chunk_range);
+                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_TOKEN, t_length, t_chunk_range, t_found, endnext);
                             break;
                         case FU_CHARACTER:
                         default:
-                            t_found = MCStringsFindChunk(ctxt, *t_string, CT_CHARACTER, t_unit_index, t_chunk_range);
+                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_CHARACTER, t_length, t_chunk_range, t_found, endnext);
                             break;
                     }
                     if (!t_found)
@@ -1414,10 +1415,7 @@ void MCRepeat::exec_for(MCExecContext& ctxt)
                         done = true;
                     }
                     else
-                    {
-                        t_unit_index++;
                         MCStringCopySubstring(*t_string, t_chunk_range, &t_unit);
-                    }
                 }
             }
             // MW-2010-12-15: [[ Bug 9218 ]] Added KEY to the type of repeat that already
@@ -1433,6 +1431,8 @@ void MCRepeat::exec_for(MCExecContext& ctxt)
         
         if (!done)
             execute_statements(ctxt, *t_unit, done);
+        
+        done = done || endnext;
     }
 }
 

@@ -868,16 +868,18 @@ void MCStringsMarkCharsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal
     MCStringsMarkTextChunkByOrdinal(ctxt, CT_CHARACTER, p_ordinal_type, x_mark);
 }
 
-bool MCStringsFindChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_term p_chunk_type, uindex_t p_index, MCRange& x_range)
+bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_term p_chunk_type, uindex_t t_length, MCRange& x_range, bool p_not_first, bool& r_last)
 {
-    // TODO - factor out common code with MCStringsMarkTextChunk
-    uindex_t t_length = MCStringGetLength(p_string);
+    uindex_t t_end_index = t_length - 1;
+    uindex_t t_offset = x_range . offset + x_range . length;
     
-    if (t_length == 0)
+    if (p_not_first && p_chunk_type != CT_CHARACTER)
+        t_offset++;
+
+    if (t_offset >= t_length)
         return false;
     
-    uindex_t t_end_index = t_length - 1;
-    uindex_t t_offset = 0;
+    x_range . offset = t_offset;
     
     switch (p_chunk_type)
     {
@@ -889,44 +891,24 @@ bool MCStringsFindChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_term p_
             
             char_t t_delimiter = (p_chunk_type == CT_LINE) ? t_line_delimiter : t_item_delimiter;
             
-            // calculate the start of the (p_first)th line or item
-            while (p_index--)
-            {
-                if (MCStringFirstIndexOfChar(p_string, t_delimiter, t_offset, kMCCompareExact, t_offset) && t_offset < t_end_index)
-                    t_offset++;
-                else
-                    return false;
-            }
-            
-            x_range . offset = t_offset;
-            
             // calculate the length of the line / item
             if (!MCStringFirstIndexOfChar(p_string, t_delimiter, t_offset, kMCCompareExact, t_offset))
                 x_range . length = t_length - t_offset;
             else
                 x_range . length = t_offset - x_range . offset;
-
         }
             return true;
             
         case CT_WORD:
         {
             uindex_t t_space_offset;
-            
             // if there are consecutive spaces at the beginning, skip them
             while (MCStringFirstIndexOfChar(p_string, ' ', t_offset, kMCCompareExact, t_space_offset) &&
                    t_space_offset == t_offset)
                 t_offset++;
             
-            // calculate the start of the (p_first)th word
-            while (p_index-- && t_offset < t_length)
-            {
-                MCStringsSkipWord(ctxt, p_string, true, t_offset);
-                if (t_offset == t_length)
-                    return false;
-            }
-            
-            x_range . offset = t_offset;
+            if (t_offset >= t_length)
+                return false;
             
             MCStringsSkipWord(ctxt, p_string, false, t_offset);
             
@@ -936,20 +918,17 @@ bool MCStringsFindChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_term p_
             
         case CT_TOKEN:
         {
-            MCScriptPoint sp(p_string);
+            MCAutoStringRef t_string;
+            MCStringCopySubstring(p_string, MCRangeMake(x_range . offset + x_range . length, UINDEX_MAX), &t_string);
+            MCScriptPoint sp(*t_string);
             MCerrorlock++;
             
             uint2 t_pos;
             Parse_stat ps = sp.nexttoken();
+            if (ps == PS_ERROR || ps == PS_EOF)
+                return false;
             t_pos = sp . getindex();
-            
-            while (p_index--)
-            {
-                ps = sp.nexttoken();
-                t_pos += sp . getindex();
-                if (ps == PS_ERROR || ps == PS_EOF)
-                    return false;
-            }
+        
             x_range . offset = t_pos;
 
             ps = sp.nexttoken();
@@ -959,17 +938,13 @@ bool MCStringsFindChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_term p_
                 x_range . length = t_length - t_offset;
             else
                 x_range . length = MCStringGetLength(sp.gettoken_stringref());
+            
             MCerrorlock--;
         }
             return true;
             
         case CT_CHARACTER:
-        {
-            if (p_index >= MCStringGetLength(p_string))
-                return false;
-            x_range . offset = p_index;
             x_range . length = 1;
-        }
             return true;
             
         default:
