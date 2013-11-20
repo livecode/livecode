@@ -1198,8 +1198,8 @@ MCPrinterResult MCCustomPrinterDevice::Start(const char *p_title, MCArrayRef p_o
 	if (t_option_values != nil)
 		for(uint32_t i = 0; i < t_document . option_count; i++)
 		{
-			MCValueRelease(t_option_keys[i]);
-			MCValueRelease(t_option_values[i]);
+			delete(t_option_keys[i]);
+			delete(t_option_values[i]);
 		}
 
 	MCMemoryDeleteArray(t_option_values);
