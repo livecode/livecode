@@ -485,7 +485,7 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 					t_arg_count -= 1;
 				}
 					
-            free(t_string);
+            MCMemoryDeallocate(t_string);
 			free(t_format);
 		}
 		
