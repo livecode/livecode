@@ -263,6 +263,11 @@ Exec_stat MCVariable::eval(MCExecPoint& ep, MCNameRef *p_path, uindex_t p_length
     return ES_ERROR;
 }
 
+bool MCVariable::eval(MCExecContext& ctxt, MCValueRef& r_value)
+{
+    return eval(ctxt, nil, 0, r_value);
+}
+
 bool MCVariable::eval(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length, MCValueRef& r_value)
 {
     return copyasvalueref(p_path, p_length, ctxt . GetCaseSensitive(), r_value);

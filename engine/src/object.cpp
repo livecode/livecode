@@ -856,8 +856,10 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 		if (hptr -> getfileindex() == 0)
 		{
 			MCExecPoint ep(this, NULL, NULL);
-			getprop(0, P_LONG_ID, ep, False);
-			MCeerror->add(EE_OBJECT_NAME, 0, 0, ep.getsvalue());
+            MCExecContext ctxt(ep);
+            MCAutoStringRef t_id;
+			getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
+			MCeerror->add(EE_OBJECT_NAME, 0, 0, MCStringGetOldString(*t_id));
 		}
 		else
 		{
@@ -911,9 +913,11 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 		stat = hptr->exec(ep, params);
 	if (stat == ES_ERROR)
 	{
-		MCExecPoint ep(this, NULL, NULL);
-		parentscript -> GetParent() -> GetObject() -> getprop(0, P_LONG_ID, ep, False);
-		MCeerror->add(EE_OBJECT_NAME, 0, 0, ep.getsvalue());
+        MCExecPoint ep(this, NULL, NULL);
+        MCExecContext ctxt(ep);
+        MCAutoStringRef t_id;
+        parentscript -> GetParent() -> GetObject() -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
+        MCeerror->add(EE_OBJECT_NAME, 0, 0, MCStringGetOldString(*t_id));
 	}
 	scriptdepth--;
 	t_parentscript_object->scriptdepth--;
@@ -1202,8 +1206,10 @@ void MCObject::setstate(Boolean on, uint4 newstate)
 Exec_stat MCObject::setsprop(Properties which, MCStringRef s)
 {
 	MCExecPoint ep(this, NULL, NULL);
-	ep.setvalueref(s);
-	return setprop(0, which, ep, False);
+    MCExecContext ctxt(ep);
+    setstringprop(ctxt, 0, which, False, s);
+    
+    return ctxt . HasError() ? ES_ERROR : ES_NORMAL;
 }
 
 void MCObject::help()
@@ -1562,28 +1568,27 @@ Boolean MCObject::setpattern(uint2 newpixmap, MCStringRef data)
 
 Boolean MCObject::setpatterns(MCStringRef data)
 {
-	char *string = strdup(MCStringGetCString(data));
-	char *sptr = string;
 	uint2 p;
 	Boolean done = False;
+    uindex_t t_start_pos, t_end_pos;
+    t_start_pos = 0;
+    t_end_pos = t_start_pos;
 	for (p = P_FORE_PATTERN ; p <= P_FOCUS_PATTERN ; p++)
 	{
-		char *eptr;
-		if ((eptr = strchr(sptr, '\n')) != NULL)
-			*eptr++ = '\0';
-		else
-			eptr = &sptr[strlen(sptr)];
-        
-        MCAutoStringRef t_sptr;
-        /* UNCHECKED */ MCStringCreateWithCString(sptr, &t_sptr);
-		if (!setpattern(p - P_FORE_PATTERN, *t_sptr))
+		MCAutoStringRef t_substring;
+        if (!MCStringFirstIndexOfChar(data, '\n', t_start_pos, kMCCompareExact, t_end_pos))
+            MCStringCopySubstring(data, MCRangeMake(t_start_pos, MCStringGetLength(data) - t_start_pos), &t_substring);
+        else
+        {
+            MCStringCopySubstring(data, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), &t_substring);
+            t_start_pos = t_end_pos + 1;
+        }
+            
+        if (!setpattern(p - P_FORE_PATTERN, *t_substring))
 		{
-			delete string;
 			return False;
 		}
-		sptr = eptr;
 	}
-	delete string;
 	return True;
 }
 
@@ -1940,10 +1945,12 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	{
 		if (MCnoui)
 		{
+            MCAutoPointer<char> t_mccmd;
+            /* UNCHECKED */ MCStringConvertToCString(MCcmd, &t_mccmd);
 			uint2 line, pos;
 			MCeerror->geterrorloc(line, pos);
 			fprintf(stderr, "%s: Script execution error at line %d, column %d\n",
-			        MCStringGetCString(MCcmd), line, pos);
+			        *t_mccmd, line, pos);
 		}
 		else
 			if (!send)
@@ -2040,9 +2047,11 @@ void MCObject::senderror()
 	if (!MCperror->isempty())
 	{
 		MCExecPoint ep(this, NULL, NULL);
-		MCerrorptr->getprop(0, P_LONG_ID, ep, False);
+        MCExecContext ctxt(ep);
+        MCAutoStringRef t_id;
+		MCerrorptr->getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
 		MCperror->add
-		(PE_OBJECT_NAME, 0, 0, ep.getsvalue());
+		(PE_OBJECT_NAME, 0, 0, MCStringGetOldString(*t_id));
 		/* UNCHECKED */ MCperror->copyasstringref(&t_perror);
 		MCperror->clear();
 	}
@@ -2087,8 +2096,7 @@ Exec_stat MCObject::names_old(Properties which, MCExecPoint& ep, uint32_t parid)
 
 bool MCObject::names(Properties which, MCValueRef& r_name_val)
 {
-	MCStringRef &r_name = (MCStringRef&)
-	r_name_val;
+	MCStringRef &r_name = (MCStringRef&)r_name_val;
 	
 	const char *itypestring = gettypestring();
 	MCAutoPointer<char> tmptypestring;
@@ -2139,7 +2147,7 @@ bool MCObject::names(Properties which, MCValueRef& r_name_val)
 				which = P_LONG_NAME;
 			}
 			else
-				return MCStringFormat(r_name, "stack \"%s\"", MCStringGetCString(t_filename));
+				return MCStringFormat(r_name, "stack \"%@\"", t_filename);
 		}
 
 		// MW-2013-01-15: [[ Bug 2629 ]] If this control is unnamed, use the abbrev id form
@@ -2226,8 +2234,10 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 				if (report && parent != NULL)
 				{
 					MCExecPoint ep(this, NULL, NULL);
-					getprop(0, P_LONG_ID, ep, False);
-					MCperror->add(PE_OBJECT_NAME, 0, 0, ep.getsvalue());
+                    MCExecContext ctxt(ep);
+                    MCAutoStringRef t_id;
+					getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
+					MCperror->add(PE_OBJECT_NAME, 0, 0, MCStringGetOldString(*t_id));
 					MCAutoStringRef t_string;
 					/* UNCHECKED */ MCperror->copyasstringref(&t_string);
 					message_with_valueref_args(MCM_script_error, *t_string);
@@ -3287,7 +3297,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	else if (addflags & AF_LONG_SCRIPT)
 	{
 		getstack() -> unsecurescript(this);
-		stat = IO_write_string(MCStringGetCString(_script), stream, false, 4);
+		stat = IO_write_stringref(_script, stream, false, 4);
 		getstack() -> securescript(this);
 		if (stat != IO_NORMAL)
 			return stat;

@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __MC_BITMAP_EFFECT__
 
 struct MCBitmapEffects;
+struct MCExecValue;
 typedef MCBitmapEffects *MCBitmapEffectsRef;
 
 void MCBitmapEffectsInitialize(MCBitmapEffectsRef& r_dst);
@@ -38,6 +39,9 @@ bool MCBitmapEffectsSetPropertyElement(MCBitmapEffectsRef& self, Properties whic
 bool MCBitmapEffectsSetProperties(MCBitmapEffectsRef& self, Properties which_type, MCArrayRef p_setting, bool& r_dirty);
 bool MCBitmapEffectsGetPropertyElement(MCBitmapEffectsRef& self, Properties which_type, MCNameRef p_prop, MCValueRef& r_setting);
 bool MCBitmapEffectsGetProperties(MCBitmapEffectsRef& self, Properties which_type, MCArrayRef& r_props);
+
+bool MCBitmapEffectsGetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, MCNameRef p_index, Properties which, MCExecValue& r_color);
+bool MCBitmapEffectsSetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, MCNameRef p_index, Properties which, MCExecValue p_color, bool& r_dirty);
 
 uint32_t MCBitmapEffectsWeigh(MCBitmapEffectsRef self);
 IO_stat MCBitmapEffectsPickle(MCBitmapEffectsRef self, MCObjectOutputStream& p_stream);

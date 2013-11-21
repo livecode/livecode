@@ -876,7 +876,11 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	// If on Mac OS X or Linux, make the file executable
 #if defined(_MACOSX) || defined(_LINUX)
 	if (t_success)
-		chmod(MCStringGetCString(t_path), 0755);
+    {
+        MCAutoStringRefAsUTF8String t_utf8_path;
+        /* UNCHECKED */ t_utf8_path . Lock(t_path);
+        chmod(*t_utf8_path, 0755);
+        }
 #endif
 	
 	return t_success ? ES_NORMAL : ES_ERROR;

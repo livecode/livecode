@@ -1998,11 +1998,8 @@ void MCFilter::exec_ctxt(MCExecContext &ctxt)
 	// Evaluate the container or source expression
 	if (container != NULL)
     {
-        if (!container -> eval(ctxt, &t_source))
-        {
-            ctxt . LegacyThrow(EE_FILTER_CANTGET);
+        if (!ctxt . EvalExprAsStringRef(container, EE_FILTER_CANTGET, &t_source))
             return;
-        }
     }
 	else
     {

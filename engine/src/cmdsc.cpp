@@ -3280,14 +3280,9 @@ void MCReplace::exec_ctxt(MCExecContext& ctxt)
     
     
     MCStringRef t_target;
-    if (!container->eval(ctxt, t_target))
-    {
-        ctxt . LegacyThrow(EE_REPLACE_BADCONTAINER);
-        MCValueRelease(t_target);
+    if (!ctxt . EvalExprAsMutableStringRef(container, EE_REPLACE_BADCONTAINER, t_target))
         return;
-    }
-    
-    /* UNCHECKED */ MCStringMutableCopyAndRelease(t_target, t_target);
+
     MCStringsExecReplace(ctxt, *t_pattern, *t_replacement, t_target);
     
     if (ctxt . HasError())

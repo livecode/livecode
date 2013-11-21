@@ -437,10 +437,10 @@ Boolean MCDispatch::openstartup(MCStringRef sname, MCStringRef& outpath, IO_hand
 	if (enginedir == nil)
 		return False;
 
-	if (attempt_to_loadfile(stream, outpath, "%s/%s", startdir, MCStringGetCString(sname)))
+	if (attempt_to_loadfile(stream, outpath, "%s/%@", startdir, sname))
 		return True;
 
-	if (attempt_to_loadfile(stream, outpath, "%s/%s", enginedir, MCStringGetCString(sname)))
+	if (attempt_to_loadfile(stream, outpath, "%s/%@", enginedir, sname))
 		return True;
 
 	return False;
@@ -464,7 +464,7 @@ Boolean MCDispatch::openenv(MCStringRef sname, MCStringRef env,
 		MCAutoStringRef t_env_path;
 		MCStringRef t_next_rest_of_env;
 		/* UNCHECKED */ MCStringDivideAtChar(t_rest_of_env, ENV_SEPARATOR, kMCStringOptionCompareCaseless, &t_env_path, t_next_rest_of_env);
-		if (attempt_to_loadfile(stream, outpath, "%s/%s", MCStringGetCString(*t_env_path), MCStringGetCString(sname)))
+		if (attempt_to_loadfile(stream, outpath, "%@/%@", *t_env_path, sname))
 			t_found = true;
 
 		MCValueRelease(t_rest_of_env);
@@ -901,7 +901,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	MCValueAssign(MCfiletype, MCstackfiletype);
 	
 	MCAutoStringRef t_backup;
-	/* UNCHECKED */ MCStringFormat(&t_backup, "%s~", MCStringGetCString(*t_linkname)); 
+	/* UNCHECKED */ MCStringFormat(&t_backup, "%@~", *t_linkname); 
 
 	MCS_unlink(*t_backup);
 	if (MCS_exists(*t_linkname, True) && !MCS_backup(*t_linkname, *t_backup))
@@ -1575,7 +1575,10 @@ check:
 			{
 				iptr = new MCImage;
 				iptr->appendto(imagecache);
-				iptr->setprop(0, P_TEXT, *epptr, False);
+                MCAutoDataRef t_text;
+                /* UNCHECKED */ ep . copyasdataref(&t_text);
+                MCExecContext ctxt(*epptr);
+				iptr->SetText(ctxt, *t_text);
 				iptr->setname(*t_image_name);
 				return iptr;
 			}
@@ -1759,9 +1762,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 			t_image = new MCImage;
 			t_image -> open();
 			t_image -> openimage();
-			MCAutoStringRef t_string_data;
-			/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), &t_string_data);
-			t_image -> setstringprop(ctxt, 0, P_TEXT, False, *t_string_data);
+			t_image -> SetText(ctxt, *t_data);
 			MCactiveimage -> pasteimage(t_image);
 			t_image -> closeimage();
 			t_image -> close();
@@ -1796,9 +1797,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 				
 				t_objects = new MCImage(*MCtemplateimage);
 				t_objects -> open();
-				MCAutoStringRef t_string_data;
-				/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), &t_string_data);
-				t_objects -> setstringprop(ctxt, 0, P_TEXT, False, *t_string_data);
+				static_cast<MCImage *>(t_objects) -> SetText(ctxt, *t_data);
 				t_objects -> close();
 			}
 		}

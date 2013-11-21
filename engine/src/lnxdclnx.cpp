@@ -968,9 +968,11 @@ int xerror(Display *dpy, XErrorEvent *ev)
 				// SB-2013-05-30: [[ XErrorMsg ]] Added 'XGetErrorText()' for more helpful error message.
 				char msg[80];
 	 			XGetErrorText(dpy, ev->error_code, msg, 80);
+                MCAutoPointer<char> t_mccmd;
+                /* UNCHECKED */ MCStringConvertToCString(MCcmd, &t_mccmd);
 				fprintf(stderr,
 						"%s: X error major code %d minor code %d error was %d\n",
-						MCStringGetCString(MCcmd), ev->request_code, ev->minor_code, ev->error_code);
+						*t_mccmd, ev->request_code, ev->minor_code, ev->error_code);
 			}
 		}
 	}

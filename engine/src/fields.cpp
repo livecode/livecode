@@ -801,6 +801,7 @@ void MCField::getlinkdata(MCRectangle &lrect, MCBlock *&sb, MCBlock *&eb)
 	lrect.x += getcontentx();
 }
 
+#ifdef /* MCField::gettextatts */ LEGACY_EXEC
 // MW-2012-01-25: [[ ParaStyles ]] The 'is_line_chunk' parameter is true when a text
 //   attribute is set directly on a line (used to disambiguate backColor).
 Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, MCNameRef index, Boolean effective, findex_t si, findex_t ei, bool is_line_chunk)
@@ -1310,7 +1311,9 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 	
 	return ES_NORMAL;
 }
+#endif /* MCField::gettextatts */
 
+#ifdef /* MCField::settextatts */ LEGACY_EXEC
 // MW-2011-12-08: [[ StyledText ]] We now take the execpoint directly so that array
 //   values can be used.
 // MW-2012-01-25: [[ ParaStyles ]] The 'is_line_chunk' parameter is true if the prop
@@ -1357,10 +1360,10 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		switch (which)
 		{
 		case P_HTML_TEXT:
-			sethtml(parid, MCStringGetOldString(*s));
+			sethtml(parid, *s);
 			break;
 		case P_RTF_TEXT:
-			setrtf(parid, MCStringGetOldString(*s));
+			setrtf(parid, *s);
 			break;
 		// MW-2011-12-08: [[ StyledText ]] Import the styled text.
 		case P_STYLED_TEXT:
@@ -1561,7 +1564,11 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 			return ES_ERROR;
 		all = True;
 		if (which == P_TEXT_FONT)
-			t_value = (void *)MCStringGetCString(*fname);
+        {
+            MCAutoPointer<char> t_fname;
+            /* UNCHECKED */ MCStringConvertToCString(*fname, &t_fname);
+			t_value = (void *)*t_fname;
+        }
 		else if (which == P_TEXT_SIZE)
 			t_value = (void *)size;
 		else
@@ -1738,6 +1745,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 	}
 	return t_stat;
 }
+#endif /* MCField::settextatts */
 
 // MW-2008-01-30: [[ Bug 5754 ]] If update is true the new selection will be
 //   updated - this is used by MCDispatch::dodrop to ensure dropped text is
@@ -2316,8 +2324,8 @@ bool MCField::returnchunk(findex_t p_si, findex_t p_ei, MCStringRef& r_chunk)
 {
 	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
-	integer_t t_number;
-	/* UNCHECKED */ getintprop(ctxt, 0, P_NUMBER, False, t_number);
+	uinteger_t t_number;
+	GetNumber(ctxt, 0, t_number);
 
 	// MW-2012-02-23: [[ CharChunk ]] Map the internal field indices (si, ei) to
 	//   char indices.
@@ -2332,8 +2340,8 @@ bool MCField::returnline(findex_t si, findex_t ei, MCStringRef& r_string)
 {
 	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
-	integer_t t_number;
-	/* UNCHECKED */ getintprop(ctxt, 0, P_NUMBER, False, t_number);
+	uinteger_t t_number;
+	GetNumber(ctxt, 0, t_number);
 
 	uint4 line = 0;
 	int4 offset = 0;

@@ -676,8 +676,12 @@ void MCEngineEvalValueWithObject(MCExecContext& ctxt, MCStringRef p_script, MCOb
 
 void MCEngineExecSet(MCExecContext& ctxt, MCProperty *p_target, MCValueRef p_value)
 {
-	/* UNCHECKED */ ctxt . GetEP() . setvalueref(p_value);
-	if (p_target -> set(ctxt . GetEP()) != ES_NORMAL)
+    MCExecValue t_value;
+    t_value . valueref_value = MCValueRetain(p_value);
+    t_value . type = kMCExecValueTypeValueRef;
+	
+    p_target -> set(ctxt, t_value);
+    if (ctxt . HasError())
 	{
 		ctxt . LegacyThrow(EE_SET_BADSET);
 		return;
@@ -1174,7 +1178,9 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
 	MCParameter *params = NULL;
 	MCParameter *tparam = NULL;
 	
-	char *mptr = strclone(MCStringGetCString(p_script));
+	MCAutoPointer<char> t_script;
+    /* UNCHECKED */ MCStringConvertToCString(p_script, &t_script);
+    char *mptr = strclone(*t_script);
 	char *sptr = mptr;
 	while (*sptr && !isspace((uint1)*sptr))
 		sptr++;
@@ -1825,7 +1831,10 @@ void MCEngineDoEvalUuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStrin
 {
     MCUuid t_namespace, t_uuid;
     // Attempt to convert it to a uuid.
-    if (!MCUuidFromCString(MCStringGetCString(p_namespace_id), t_namespace))
+    MCAutoPointer<char> t_namespace_id;
+    /* UNCHECKED */ MCStringConvertToCString(p_namespace_id, &t_namespace_id);
+    
+    if (!MCUuidFromCString(*t_namespace_id, t_namespace))
     {
         ctxt . LegacyThrow(EE_UUID_NAMESPACENOTAUUID);
         return;

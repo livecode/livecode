@@ -43,6 +43,7 @@ enum MCLayerModeHint
 };
 
 struct MCInterfaceMargins;
+union MCBitmapEffect;
 
 class MCControl : public MCObject
 {
@@ -330,12 +331,9 @@ public:
 	void DoSetHScrollbar(MCExecContext& ctxt, MCScrollbar*& hsb, uint2& sbw);
 	void DoSetVScrollbar(MCExecContext& ctxt, MCScrollbar*& vsb, uint2& sbw);
 	void DoSetScrollbarWidth(MCExecContext& ctxt, uint2& sbw, uinteger_t p_width);
-    
-    void DoGetBitmapEffectArray(MCExecContext& ctxt, Properties which, MCArrayRef& r_array);
-    void DoSetBitmapEffectArray(MCExecContext& ctxt, Properties which, MCArrayRef p_array);
-    void DoGetBitmapEffectElement(MCExecContext& ctxt, Properties which, MCNameRef p_prop, MCValueRef& r_value);
-    void DoSetBitmapEffectElement(MCExecContext& ctxt, Properties which, MCNameRef p_prop, MCValueRef p_value);
 
+    void EffectRedraw(MCRectangle p_old_rect);
+    
 	////////// PROPERTY ACCESSORS
 
 	void GetLeftMargin(MCExecContext& ctxt, integer_t& r_margin);
@@ -361,27 +359,17 @@ public:
 	virtual void SetShowFocusBorder(MCExecContext& ctxt, bool setting);
     virtual void SetOpaque(MCExecContext& ctxt, bool setting);
 	virtual void SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow);
-    
-    void GetDropShadow(MCExecContext& ctxt, MCArrayRef& r_array);
-    void SetDropShadow(MCExecContext& ctxt, MCArrayRef p_array);
-    void GetDropShadowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value);
-    void SetDropShadowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value);
-    void GetInnerShadow(MCExecContext& ctxt, MCArrayRef& r_array);
-    void SetInnerShadow(MCExecContext& ctxt, MCArrayRef p_array);
-    void GetInnerShadowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value);
-    void SetInnerShadowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value);
-    void GetOuterGlow(MCExecContext& ctxt, MCArrayRef& r_array);
-    void SetOuterGlow(MCExecContext& ctxt, MCArrayRef p_array);
-    void GetOuterGlowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value);
-    void SetOuterGlowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value);
-    void GetInnerGlow(MCExecContext& ctxt, MCArrayRef& r_array);
-    void SetInnerGlow(MCExecContext& ctxt, MCArrayRef p_array);
-    void GetInnerGlowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value);
-    void SetInnerGlowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value);
-    void GetColorOverlay(MCExecContext& ctxt, MCArrayRef& r_array);
-    void SetColorOverlay(MCExecContext& ctxt, MCArrayRef p_array);
-    void GetColorOverlayElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value);
-    void SetColorOverlayElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value);
+
+    void GetDropShadowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue& r_value);
+    void SetDropShadowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value);
+    void GetInnerShadowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue& r_value);
+    void SetInnerShadowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value);
+    void GetInnerGlowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue& r_value);
+    void SetInnerGlowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value);
+    void GetOuterGlowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue& r_value);
+    void SetOuterGlowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value);
+    void GetColorOverlayProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue& r_value);
+    void SetColorOverlayProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value);
 
 };
 #endif

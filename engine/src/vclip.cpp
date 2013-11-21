@@ -219,12 +219,16 @@ bool MCVideoClip::getfile(MCStringRef& r_file)
 
 Boolean MCVideoClip::import(MCStringRef fname, IO_handle fstream)
 {
-	const char *tname = strrchr(MCStringGetCString(fname), PATH_SEPARATOR);
-	if (tname != NULL)
-		tname += 1;
-	else
-		tname = MCStringGetCString(fname);
-	setname_cstring(tname);
+    uindex_t t_last_slash;
+    MCStringRef t_path;
+    if (MCStringLastIndexOfChar(fname, PATH_SEPARATOR, 0, kMCCompareExact, t_last_slash))
+        /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMake(t_last_slash + 1, MCStringGetLength(fname) - t_last_slash - 1), t_path);
+    else
+        t_path = MCValueRetain(fname);
+    
+	MCNewAutoNameRef t_path_name;
+    /* UNCHECKED */ MCNameCreateAndRelease(t_path, &t_path_name);
+	setname(*t_path_name);
 	size = (uint4)MCS_fsize(fstream);
 	frames = new uint1[size];
 	if (MCS_readfixed(frames, size, fstream) != IO_NORMAL)

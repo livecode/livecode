@@ -41,6 +41,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "tooltip.h"
 #include "bitmapeffect.h"
+#include "bitmapeffectblur.h"
 
 #include "exec-interface.h"
 
@@ -407,168 +408,182 @@ void MCControl::SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCControl::DoGetBitmapEffectArray(MCExecContext& ctxt, Properties which, MCArrayRef& r_array)
+static MCExecEnumTypeElementInfo _kMCInterfaceBitmapEffectBlendModeElementInfo[] =
 {
-    if (MCBitmapEffectsGetProperties(m_bitmap_effects, which, r_array))
-        return;
+    { "normal", kMCBitmapEffectBlendModeNormal },
+    { "multiply", kMCBitmapEffectBlendModeMultiply },
+    { "colordodge", kMCBitmapEffectBlendModeColorDodge },
+};
+
+static MCExecEnumTypeInfo _kMCInterfaceBitmapEffectBlendModeTypeInfo =
+{
+	"Interface.BitmapEffectBlendMode",
+	sizeof(_kMCInterfaceBitmapEffectBlendModeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCInterfaceBitmapEffectBlendModeElementInfo
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+static MCExecEnumTypeElementInfo _kMCInterfaceBitmapEffectFilterElementInfo[] =
+{
+    { "gaussian", kMCBitmapEffectFilterFastGaussian },
+    { "box1pass", kMCBitmapEffectFilterOnePassBox },
+    { "box2pass", kMCBitmapEffectFilterTwoPassBox },
+    { "box3pass", kMCBitmapEffectFilterThreePassBox },
+};
+
+static MCExecEnumTypeInfo _kMCInterfaceBitmapEffectFilterTypeInfo =
+{
+	"Interface.BitmapEffectFilter",
+	sizeof(_kMCInterfaceBitmapEffectFilterElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCInterfaceBitmapEffectFilterElementInfo
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+static MCExecEnumTypeElementInfo _kMCInterfaceBitmapEffectSourceElementInfo[] =
+{
+    { "edge", kMCBitmapEffectSourceEdge },
+    { "center", kMCBitmapEffectSourceCenter },
+};
+
+static MCExecEnumTypeInfo _kMCInterfaceBitmapEffectSourceTypeInfo =
+{
+	"Interface.BitmapEffectSource",
+	sizeof(_kMCInterfaceBitmapEffectSourceElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCInterfaceBitmapEffectSourceElementInfo
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCExecEnumTypeInfo *kMCInterfaceBitmapEffectBlendModeTypeInfo = &_kMCInterfaceBitmapEffectBlendModeTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceBitmapEffectFilterTypeInfo = &_kMCInterfaceBitmapEffectFilterTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceBitmapEffectSourceTypeInfo = &_kMCInterfaceBitmapEffectSourceTypeInfo;
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCControl::EffectRedraw(MCRectangle p_old_rect)
+{
+    // MW-2011-09-21: [[ Layers ]] Mark the attrs as needing redrawn.
+    m_layer_attr_changed = true;
+            
+    // MW-2011-08-17: [[ Layers ]] Make sure any redraw needed due to effects
+    //   changing occur.
+    layer_effectschanged(p_old_rect);
+}
+
+void MCControl::GetDropShadowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue& r_value)
+{
+    if (MCBitmapEffectsGetProperty(ctxt, m_bitmap_effects, index, P_BITMAP_EFFECT_DROP_SHADOW, r_value))
+       return;
     
     ctxt . Throw();
 }
 
-void MCControl::DoSetBitmapEffectArray(MCExecContext& ctxt, Properties which, MCArrayRef p_array)
+void MCControl::SetDropShadowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value)
 {
     bool t_dirty;
-    t_dirty = false;
     MCRectangle t_old_effective_rect = geteffectiverect();
     
-    if (MCBitmapEffectsSetProperties(m_bitmap_effects, which, p_array, t_dirty))
+    if (MCBitmapEffectsSetProperty(ctxt, m_bitmap_effects, index, P_BITMAP_EFFECT_DROP_SHADOW, p_value, t_dirty))
     {
         if (t_dirty)
-        {
-			// MW-2011-09-21: [[ Layers ]] Mark the attrs as needing redrawn.
-			m_layer_attr_changed = true;
-            
-			// MW-2011-08-17: [[ Layers ]] Make sure any redraw needed due to effects
-			//   changing occur.
-			layer_effectschanged(t_old_effective_rect);
-        }
+            EffectRedraw(t_old_effective_rect);
         return;
     }
     
     ctxt . Throw();
 }
 
-void MCControl::DoGetBitmapEffectElement(MCExecContext& ctxt, Properties which, MCNameRef p_prop, MCValueRef& r_value)
+void MCControl::GetInnerShadowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue& r_value)
 {
-    if (MCBitmapEffectsGetPropertyElement(m_bitmap_effects, which, p_prop, r_value))
-    {
-        if (r_value == nil)
-            r_value = MCValueRetain(kMCEmptyString);
+    if (MCBitmapEffectsGetProperty(ctxt, m_bitmap_effects, index, P_BITMAP_EFFECT_INNER_SHADOW, r_value))
         return;
-    }
     
     ctxt . Throw();
 }
 
-void MCControl::DoSetBitmapEffectElement(MCExecContext& ctxt, Properties which, MCNameRef p_prop, MCValueRef p_value)
+void MCControl::SetInnerShadowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value)
 {
     bool t_dirty;
-    t_dirty = false;
     MCRectangle t_old_effective_rect = geteffectiverect();
     
-    if (MCBitmapEffectsSetPropertyElement(m_bitmap_effects, which, p_value, p_prop, t_dirty))
+    if (MCBitmapEffectsSetProperty(ctxt, m_bitmap_effects, index, P_BITMAP_EFFECT_INNER_SHADOW, p_value, t_dirty))
     {
         if (t_dirty)
-        {
-			// MW-2011-09-21: [[ Layers ]] Mark the attrs as needing redrawn.
-			m_layer_attr_changed = true;
-            
-			// MW-2011-08-17: [[ Layers ]] Make sure any redraw needed due to effects
-			//   changing occur.
-			layer_effectschanged(t_old_effective_rect);
-        }
+            EffectRedraw(t_old_effective_rect);
         return;
     }
     
     ctxt . Throw();
 }
 
-void MCControl::GetDropShadow(MCExecContext& ctxt, MCArrayRef& r_array)
+void MCControl::GetInnerGlowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue& r_value)
 {
-    DoGetBitmapEffectArray(ctxt, P_BITMAP_EFFECT_DROP_SHADOW, r_array);
+    if (MCBitmapEffectsGetProperty(ctxt, m_bitmap_effects, index, P_BITMAP_EFFECT_INNER_GLOW, r_value))
+        return;
+    
+    ctxt . Throw();
 }
 
-void MCControl::SetDropShadow(MCExecContext& ctxt, MCArrayRef p_array)
+void MCControl::SetInnerGlowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value)
 {
-    DoSetBitmapEffectArray(ctxt, P_BITMAP_EFFECT_DROP_SHADOW, p_array);
+    bool t_dirty;
+    MCRectangle t_old_effective_rect = geteffectiverect();
+    
+    if (MCBitmapEffectsSetProperty(ctxt, m_bitmap_effects, index, P_BITMAP_EFFECT_INNER_GLOW, p_value, t_dirty))
+    {
+        if (t_dirty)
+            EffectRedraw(t_old_effective_rect);
+        return;
+    }
+    
+    ctxt . Throw();
 }
 
-void MCControl::GetDropShadowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value)
+void MCControl::GetOuterGlowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue& r_value)
 {
-    DoGetBitmapEffectElement(ctxt, P_BITMAP_EFFECT_DROP_SHADOW, p_prop, r_value);
+    if (MCBitmapEffectsGetProperty(ctxt, m_bitmap_effects, index, P_BITMAP_EFFECT_OUTER_GLOW, r_value))
+        return;
+    
+    ctxt . Throw();
 }
 
-void MCControl::SetDropShadowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value)
+void MCControl::SetOuterGlowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value)
 {
-    DoSetBitmapEffectElement(ctxt, P_BITMAP_EFFECT_DROP_SHADOW, p_prop, p_value);
+    bool t_dirty;
+    MCRectangle t_old_effective_rect = geteffectiverect();
+    
+    if (MCBitmapEffectsSetProperty(ctxt, m_bitmap_effects, index, P_BITMAP_EFFECT_OUTER_GLOW, p_value, t_dirty))
+    {
+        if (t_dirty)
+            EffectRedraw(t_old_effective_rect);
+        return;
+    }
+    
+    ctxt . Throw();
 }
 
-void MCControl::GetInnerShadow(MCExecContext& ctxt, MCArrayRef& r_array)
+void MCControl::GetColorOverlayProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue& r_value)
 {
-    DoGetBitmapEffectArray(ctxt, P_BITMAP_EFFECT_INNER_SHADOW, r_array);
+    if (MCBitmapEffectsGetProperty(ctxt, m_bitmap_effects, index, P_BITMAP_EFFECT_COLOR_OVERLAY, r_value))
+        return;
+    
+    ctxt . Throw();
 }
 
-void MCControl::SetInnerShadow(MCExecContext& ctxt, MCArrayRef p_array)
+void MCControl::SetColorOverlayProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value)
 {
-    DoSetBitmapEffectArray(ctxt, P_BITMAP_EFFECT_INNER_SHADOW, p_array);
+    bool t_dirty;
+    MCRectangle t_old_effective_rect = geteffectiverect();
+    
+    if (MCBitmapEffectsSetProperty(ctxt, m_bitmap_effects, index, P_BITMAP_EFFECT_COLOR_OVERLAY, p_value, t_dirty))
+    {
+        if (t_dirty)
+            EffectRedraw(t_old_effective_rect);
+        return;
+    }
+    
+    ctxt . Throw();
 }
 
-void MCControl::GetInnerShadowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value)
-{
-    DoGetBitmapEffectElement(ctxt, P_BITMAP_EFFECT_INNER_SHADOW, p_prop, r_value);
-}
-
-void MCControl::SetInnerShadowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value)
-{
-    DoSetBitmapEffectElement(ctxt, P_BITMAP_EFFECT_INNER_SHADOW, p_prop, p_value);
-}
-
-void MCControl::GetOuterGlow(MCExecContext& ctxt, MCArrayRef& r_array)
-{
-    DoGetBitmapEffectArray(ctxt, P_BITMAP_EFFECT_OUTER_GLOW, r_array);
-}
-
-void MCControl::SetOuterGlow(MCExecContext& ctxt, MCArrayRef p_array)
-{
-    DoSetBitmapEffectArray(ctxt, P_BITMAP_EFFECT_OUTER_GLOW, p_array);
-}
-
-void MCControl::GetOuterGlowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value)
-{
-    DoGetBitmapEffectElement(ctxt, P_BITMAP_EFFECT_OUTER_GLOW, p_prop, r_value);
-}
-
-void MCControl::SetOuterGlowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value)
-{
-    DoSetBitmapEffectElement(ctxt, P_BITMAP_EFFECT_OUTER_GLOW, p_prop, p_value);
-}
-
-void MCControl::GetInnerGlow(MCExecContext& ctxt, MCArrayRef& r_array)
-{
-    DoGetBitmapEffectArray(ctxt, P_BITMAP_EFFECT_INNER_GLOW, r_array);
-}
-
-void MCControl::SetInnerGlow(MCExecContext& ctxt, MCArrayRef p_array)
-{
-    DoSetBitmapEffectArray(ctxt, P_BITMAP_EFFECT_INNER_GLOW, p_array);
-}
-
-void MCControl::GetInnerGlowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value)
-{
-    DoGetBitmapEffectElement(ctxt, P_BITMAP_EFFECT_INNER_GLOW, p_prop, r_value);
-}
-
-void MCControl::SetInnerGlowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value)
-{
-    DoSetBitmapEffectElement(ctxt, P_BITMAP_EFFECT_INNER_GLOW, p_prop, p_value);
-}
-
-void MCControl::GetColorOverlay(MCExecContext& ctxt, MCArrayRef& r_array)
-{
-    DoGetBitmapEffectArray(ctxt, P_BITMAP_EFFECT_COLOR_OVERLAY, r_array);
-}
-
-void MCControl::SetColorOverlay(MCExecContext& ctxt, MCArrayRef p_array)
-{
-    DoSetBitmapEffectArray(ctxt, P_BITMAP_EFFECT_COLOR_OVERLAY, p_array);
-}
-
-void MCControl::GetColorOverlayElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value)
-{
-    DoGetBitmapEffectElement(ctxt, P_BITMAP_EFFECT_COLOR_OVERLAY, p_prop, r_value);
-}
-
-void MCControl::SetColorOverlayElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value)
-{
-    DoSetBitmapEffectElement(ctxt, P_BITMAP_EFFECT_COLOR_OVERLAY, p_prop, p_value);
-}

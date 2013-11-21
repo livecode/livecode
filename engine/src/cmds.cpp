@@ -324,11 +324,8 @@ void MCConvert::exec_ctxt(MCExecContext& ctxt)
 	MCAutoStringRef t_output;
 	if (container != NULL)
     {
-        if (!container->eval(ctxt, &t_input))
-        {
-            ctxt . LegacyThrow(EE_CONVERT_CANTGET);
+        if (!ctxt . EvalExprAsStringRef(container, EE_CONVERT_CANTGET, &t_input))
             return;
-        }
     }
 	else
 	{
@@ -1375,6 +1372,7 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
 		return ES_NORMAL;
 	}
 #endif /* MCPut */
+
     
     MCAutoValueRef t_value;
     if (!ctxt . EvalExprAsValueRef(source, EE_PUT_BADEXP, &t_value))
@@ -2396,11 +2394,8 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
 		{
 			MCerrorlock--;
 
-            if (!of -> eval(ctxt, &t_target))
-            {
-                ctxt . LegacyThrow(EE_SORT_BADTARGET);
+            if (!ctxt . EvalExprAsStringRef(of, EE_SORT_BADTARGET, &t_target))
                 return;
-            }
 		}
 		else
         {

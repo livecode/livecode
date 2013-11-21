@@ -2587,6 +2587,7 @@ static void __MCStringChanged(MCStringRef self)
 MCStringRef kMCEmptyString;
 MCStringRef kMCTrueString;
 MCStringRef kMCFalseString;
+MCStringRef kMCMixedString;
 
 bool __MCStringInitialize(void)
 {
@@ -2597,6 +2598,9 @@ bool __MCStringInitialize(void)
 		return false;
 
 	if (!MCStringCreateWithNativeChars((const char_t *)"false", 5, kMCFalseString))
+		return false;
+    
+    if (!MCStringCreateWithNativeChars((const char_t *)"mixed", 5, kMCMixedString))
 		return false;
 
 	return true;
@@ -2610,6 +2614,8 @@ void __MCStringFinalize(void)
 	kMCTrueString = nil;
 	MCValueRelease(kMCEmptyString);
 	kMCEmptyString = nil;
+    MCValueRelease(kMCMixedString);
+    kMCMixedString = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

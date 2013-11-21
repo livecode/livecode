@@ -2352,14 +2352,11 @@ bool MCObject::GetPatterns(MCExecContext& ctxt, bool effective, MCStringRef& r_p
 		for (uint2 p = P_FORE_PATTERN; p <= P_FOCUS_PATTERN; p++)
 		{
 			uint4 t_id;
-			t_success = GetPattern(ctxt, (Properties)p, effective, t_id);
-			MCAutoStringRef t_pattern;
-			if (t_success)
-				t_success = MCStringFormat(&t_pattern, "%d", t_id);
-			if (t_success)
-				t_success = MCListAppend(*t_pattern_list, *t_pattern);
-			if (!t_success)
-				break;
+            MCAutoStringRef t_pattern;
+			if (GetPattern(ctxt, (Properties)p, effective, t_id))
+                t_success = MCStringFormat(&t_pattern, "%d", t_id) && MCListAppend(*t_pattern_list, *t_pattern);
+            else
+                t_success = MCListAppend(*t_pattern_list, kMCEmptyString);
 		}
 	}
 	
@@ -2545,20 +2542,15 @@ void MCObject::SetTextFont(MCExecContext& ctxt, MCStringRef font)
 	
 	if (font != nil)
 	{
-		char *newfontname = NULL;
-		newfontname = strclone(MCStringGetCString(font));
-			
-		// MW-2012-02-17: [[ IntrinsicUnicode ]] Strip any lang tag from the
-		//   fontname.
-		char *t_tag;
-		t_tag = strchr(newfontname, ',');
-		if (t_tag != nil)
-			t_tag[0] = '\0';
-		
-		if (t_success)
-			t_success = MCNameCreateWithCString(newfontname, &t_font_name);
-
-		delete newfontname;
+		uindex_t t_comma;
+        MCAutoStringRef t_newfont;
+        if (MCStringFirstIndexOfChar(font, ',', 0, kMCCompareExact, t_comma))
+        {
+            t_success = MCStringCopySubstring(font, MCRangeMake(0, t_comma), &t_newfont) && MCNameCreate(*t_newfont, &t_font_name);
+             
+        }
+        else
+            t_success = MCNameCreate(font, &t_font_name);
 	}
 
 	if (t_success)
@@ -3131,7 +3123,7 @@ void MCObject::DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effect
                 getarrayprop(part, (Properties)table[tablesize].value, ep, kMCEmptyName, p_effective);
             else
             {
-                MCAutoStringRef t_unicode_prop;
+                MCAutoStringRef t_prop;
                 // MERG-2013-05-07: [[ RevisedPropsProp ]] Special-case the props that could
                 //   be either Unicode or native (ensure minimal encoding is used).
                 // MERG-2013-06-24: [[ RevisedPropsProp ]] Treat the short name specially to ensure
@@ -3141,36 +3133,46 @@ void MCObject::DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effect
                         if (isunnamed())
                             ep.clear();
                         else
-                            getprop(part, P_SHORT_NAME, ep, p_effective);
+                        {
+                            getstringprop(ctxt, part, P_SHORT_NAME, p_effective, &t_prop);
+                            ep . setvalueref(*t_prop);
+                        }
                         break;
                     case P_LABEL:
-                        getstringprop(ctxt, part, P_UNICODE_LABEL, p_effective, &t_unicode_prop);
-                        if (!MCStringIsNative(*t_unicode_prop))
+                        getstringprop(ctxt, part, P_UNICODE_LABEL, p_effective, &t_prop);
+                        if (!MCStringIsNative(*t_prop))
                         {
                             if (gettype() == CT_STACK)
                                 t_token = "unicodeTitle";
                             else
                                 t_token = "unicodeLabel";
                         }
-                        ep . setvalueref(*t_unicode_prop);
+                        ep . setvalueref(*t_prop);
                         break;
                     case P_TOOL_TIP:
-                        getstringprop(ctxt, part, P_UNICODE_TOOL_TIP, p_effective, &t_unicode_prop);
-                        if (!MCStringIsNative(*t_unicode_prop))
+                        getstringprop(ctxt, part, P_UNICODE_TOOL_TIP, p_effective, &t_prop);
+                        if (!MCStringIsNative(*t_prop))
                             t_token = "unicodeToolTip";
-                        ep . setvalueref(*t_unicode_prop);
+                        ep . setvalueref(*t_prop);
                         break;
                     case P_TEXT:
                         if (gettype() == CT_BUTTON)
                         {
-                            getstringprop(ctxt, part, P_UNICODE_TEXT, p_effective, &t_unicode_prop);
-                            if (!MCStringIsNative(*t_unicode_prop))
+                            getstringprop(ctxt, part, P_UNICODE_TEXT, p_effective, &t_prop);
+                            if (!MCStringIsNative(*t_prop))
                                 t_token = "unicodeText";
-                            ep . setvalueref(*t_unicode_prop);
+                            ep . setvalueref(*t_prop);
                             break;
                         }
                     default:
-                        getprop(part, (Properties)table[tablesize].value, ep, p_effective);
+                    {
+                        MCExecValue t_value;
+                        getprop(ctxt, part, (Properties)table[tablesize].value, p_effective, t_value);
+                        MCAutoValueRef t_value_ref;
+                        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value . type + 1, kMCExecValueTypeValueRef, &(&t_value_ref));
+                        if (!ctxt . HasError())
+                            ep . setvalueref(*t_value_ref);
+                    }
                         break;
                 }
             }

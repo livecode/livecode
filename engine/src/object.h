@@ -179,6 +179,7 @@ struct MCInterfaceLayer;
 struct MCInterfaceShadow;
 struct MCInterfaceTextStyle;
 struct MCInterfaceTriState;
+struct MCExecValue;
 
 struct MCPatternInfo
 {
@@ -271,6 +272,8 @@ protected:
 
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
+    static MCPropertyInfo kModeProperties[];
+	static MCObjectPropertyTable kModePropertyTable;
 public:
 	MCObject();
 	MCObject(const MCObject &oref);
@@ -279,6 +282,7 @@ public:
 	virtual const char *gettypestring();
 
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCObjectPropertyTable *getmodepropertytable(void) const { return &kModePropertyTable; }
 	
 	virtual bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor);
 
@@ -342,9 +346,10 @@ public:
 
     Exec_stat getarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective);
     Exec_stat setarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective);
-	Exec_stat getprop(uint32_t part_id, Properties which, MCExecPoint& ep, Boolean effective);
-	Exec_stat setprop(uint32_t part_id, Properties which, MCExecPoint& ep, Boolean effective);
 	
+    bool getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCExecValue& r_value);
+	bool setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCExecValue p_value);
+    
 	// MW-2012-05-28: [[ Value Prop Accessors ]] These methods allow access to object props
 	//   via direct types. Appropriate type coercion will be performed, with errors thrown as
 	//   necessary.
@@ -388,7 +393,12 @@ public:
 	Exec_stat getcustomprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
 	Exec_stat sendsetprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
 	Exec_stat setcustomprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
-
+    
+    Exec_stat sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCValueRef& r_value);
+	bool getcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue& r_value);
+    Exec_stat sendsetprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCValueRef p_value);
+	bool setcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue p_value);
+    
 #ifdef OLD_EXEC
 	Exec_stat setprops(uint32_t parid, MCExecPoint& ep);
 	Exec_stat changeid(uint32_t new_id);
@@ -1052,6 +1062,14 @@ public:
     void GetCustomProperties(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_array);
     void SetCustomKeysElement(MCExecContext& ctxt, MCNameRef p_index, MCStringRef p_string);
     void SetCustomProperties(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_array);
+    
+    ////////// MODE SPECIFIC PROPS
+    
+#ifdef MODE_DEVELOPMENT    
+    void GetRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers);
+    void GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers);
+    void GetRevAvailableVariables(MCExecContext& ctxt, MCNameRef p_key, MCStringRef& r_variables);
+#endif
     
 //////////
 				

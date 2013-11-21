@@ -165,7 +165,7 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 						MCperror->add(PE_LOCAL_BADINIT, sp);
 					return PS_ERROR;
 				}
-				/* UNCHECKED */ MCStringFormat(&init, "-%s", MCStringGetCString(sp.gettoken_stringref()));
+				/* UNCHECKED */ MCStringFormat(&init, "-%@", sp.gettoken_stringref());
 			}
 			else
 				init = sp.gettoken_stringref();
@@ -764,6 +764,7 @@ Parse_stat MCRepeat::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#ifdef /* MCRepeat::exec */ LEGACY_EXEC
 Exec_stat MCRepeat::exec(MCExecPoint &ep)
 {
 	real8 endn = 0.0;
@@ -774,14 +775,13 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 	const char *sptr;
 	Boolean donumeric = False;
 	Exec_stat stat;
-
+	MCExecContext ctxt(ep);
 	MCAutoArrayRef t_array;
 	MCNameRef t_key;
 	MCValueRef t_value;
 	uintptr_t t_iterator;
 	uint4 l;
-	
-	MCExecContext ctxt(ep);
+
 	switch (form)
 	{
 	case RF_FOR:
@@ -1198,6 +1198,383 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 	}
 	delete sp;
 	return ES_NORMAL;
+}
+#endif /* MCRepeat::exec */
+
+void MCRepeat::execute_statements(MCExecContext& ctxt, MCValueRef p_for_exit_var, bool& r_done)
+{
+    Exec_stat stat;
+    MCStatement *tspr = statements;
+    while (tspr != NULL)
+    {
+        if (MCtrace || MCnbreakpoints)
+        {
+            MCB_trace(ctxt, tspr->getline(), tspr->getpos());
+            if (MCexitall)
+                break;
+        }
+        ctxt . GetEP() . setline(tspr->getline());
+        
+        stat = tspr->exec(ctxt . GetEP());
+        
+        // MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
+        MCRedrawUpdateScreen();
+        
+        switch(stat)
+        {
+            case ES_NORMAL:
+                if (MCexitall)
+                {
+                    // OK-2007-12-05 : Bug 5605 : If exiting loop, set the loop variable to the value it had
+                    //   in the last iteration.
+                    // MW-2011-02-08: [[ Bug ]] Make sure we don't use 's' if the repeat type is 'key' or
+                    //   'element'.
+                    if (form == RF_FOR && loopvar != NULL && each != FU_ELEMENT && each != FU_KEY)
+                        loopvar -> set(ctxt, p_for_exit_var);
+                    
+                    r_done = true;
+                    return;
+                }
+                tspr = tspr->getnext();
+                break;
+            case ES_NEXT_REPEAT:
+                tspr = NULL;
+                break;
+            case ES_EXIT_REPEAT:
+                // OK-2007-12-05 : Bug 5605 : If exiting loop, set the loop variable to the value it had
+                //   in the last iteration.
+                // MW-2011-02-08: [[ Bug ]] Make sure we don't use 's' if the repeat type is 'key' or
+                //   'element'.
+                if (form == RF_FOR && loopvar != NULL && each != FU_ELEMENT && each != FU_KEY)
+                    loopvar -> set(ctxt, p_for_exit_var);
+
+                r_done = true;
+                return;
+            case ES_ERROR:
+                if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
+                    do
+                    {
+                        ctxt . IgnoreLastError();
+                        MCB_error(ctxt, tspr->getline(), tspr->getpos(),
+                                  EE_REPEAT_BADSTATEMENT);
+                    }
+                while (MCtrace && (stat = tspr->exec(ctxt . GetEP())) != ES_NORMAL);
+                if (stat == ES_ERROR)
+                {
+                    // OK-2007-12-05 : Bug 5605 : If exiting loop, set the loop variable to the value it had
+                    //   in the last iteration.
+                    // MW-2011-02-08: [[ Bug ]] Make sure we don't use 's' if the repeat type is 'key' or
+                    //   'element'.
+                    if (form == RF_FOR && loopvar != NULL && each != FU_ELEMENT && each != FU_KEY)
+                        loopvar -> set(ctxt, p_for_exit_var);
+
+                    r_done = true;
+                    if (!MCexitall)
+                        ctxt . LegacyThrow(EE_REPEAT_BADSTATEMENT);
+                    return;
+                }
+                else
+                    tspr = tspr->getnext();
+                break;
+            default:
+                // OK-2007-12-05 : Bug 5605 : If exiting loop, set the loop variable to the value it had
+                //   in the last iteration.
+                // MW-2011-02-08: [[ Bug ]] Make sure we don't use 's' if the repeat type is 'key' or
+                //   'element'.
+                if (form == RF_FOR && loopvar != NULL && each != FU_ELEMENT && each != FU_KEY)
+                    loopvar -> set(ctxt, p_for_exit_var);
+
+                r_done = true;
+                return;
+        }
+    }
+    if (MCscreen->abortkey())
+    {
+        // OK-2007-12-05 : Bug 5605 : If exiting loop, set the loop variable to the value it had
+        //   in the last iteration.
+        // MW-2011-02-08: [[ Bug ]] Make sure we don't use 's' if the repeat type is 'key' or
+        //   'element'.
+        if (form == RF_FOR && loopvar != NULL && each != FU_ELEMENT && each != FU_KEY)
+            loopvar -> set(ctxt, p_for_exit_var);
+
+        r_done = true;
+        ctxt . LegacyThrow(EE_REPEAT_ABORT);
+        return;
+    }
+    if (MCtrace || MCnbreakpoints)
+    {
+        MCB_trace(ctxt, getline(), getpos());
+        if (MCexitall)
+            r_done = true;
+    }
+}
+
+void MCRepeat::exec_for(MCExecContext& ctxt)
+{
+    MCAutoArrayRef t_array;
+    MCAutoStringRef t_string;
+    MCRange t_chunk_range;
+    t_chunk_range = MCRangeMake(0,0);
+    uindex_t t_length = 0;
+    MCAutoValueRef t_condition;
+	MCNameRef t_key;
+	MCValueRef t_value;
+	uintptr_t t_iterator;
+    Parse_stat ps;
+    MCScriptPoint *sp = nil;
+    int4 count = 0;
+    
+    if (!ctxt . TryToEvaluateExpression(endcond, getline(), getpos(), EE_REPEAT_BADFORCOND, &t_condition))
+        return;
+    
+    if (loopvar != NULL)
+    {
+        if (each == FU_ELEMENT || each == FU_KEY)
+        {
+            if (!ctxt . ConvertToArray(*t_condition, &t_array))
+                return;
+            
+            t_iterator = 0;
+            
+            if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
+                return;
+        }
+        else
+        {
+            if (!ctxt . ConvertToString(*t_condition, &t_string))
+                return;
+            
+             t_length = MCStringGetLength(*t_string);
+        }
+    }
+    else
+    {
+        if (!ctxt . ConvertToInteger(*t_condition, count))
+            return;
+        count = MCU_max(count, 0);
+    }
+    
+    bool done;
+    done = false;
+    
+    bool endnext;
+    endnext = false;
+    
+    bool t_found;
+    t_found = false;
+    
+    while (!done)
+    {
+        MCAutoStringRef t_unit;
+        if (loopvar != NULL)
+        {
+            switch (each)
+            {
+                case FU_KEY:
+                {
+                    // MW-2010-12-15: [[ Bug 9218 ]] Make a copy of the key so that it can't be mutated
+                    //   accidentally.
+                    MCNewAutoNameRef t_key_copy;
+                    MCNameClone(t_key, &t_key_copy);
+                    loopvar -> set(ctxt, *t_key_copy);
+                    if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
+                        endnext = true;
+                }
+                    break;
+                case FU_ELEMENT:
+                {
+                    loopvar -> set(ctxt, t_value);
+                    if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
+                        endnext = true;
+                }
+                    break;
+                default:
+                {
+                    switch (each)
+                    {
+                        case FU_LINE:
+                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_LINE, t_length, t_chunk_range, t_found, endnext);
+                            break;
+                        case FU_ITEM:
+                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_ITEM, t_length, t_chunk_range, t_found, endnext);
+                            break;
+                        case FU_WORD:
+                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_WORD, t_length, t_chunk_range, t_found, endnext);
+                            break;
+                        case FU_TOKEN:
+                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_TOKEN, t_length, t_chunk_range, t_found, endnext);
+                            break;
+                        case FU_CHARACTER:
+                        default:
+                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_CHARACTER, t_length, t_chunk_range, t_found, endnext);
+                            break;
+                    }
+                    if (!t_found)
+                    {
+                        &t_unit = MCValueRetain(kMCEmptyString);
+                        done = true;
+                    }
+                    else
+                        MCStringCopySubstring(*t_string, t_chunk_range, &t_unit);
+                }
+            }
+            // MW-2010-12-15: [[ Bug 9218 ]] Added KEY to the type of repeat that already
+            //   copies the value.
+            // MW-2011-02-08: [[ Bug ]] Make sure we don't use 't_unit' if the repeat type is 'key' or
+            //   'element'.
+            // Set the loop variable to whatever the value was in the last iteration.
+            if (each != FU_ELEMENT && each != FU_KEY)
+                loopvar->set(ctxt, *t_unit);
+        }
+        else
+            done = count-- == 0;
+        
+        if (!done)
+            execute_statements(ctxt, *t_unit, done);
+        
+        done = done || endnext;
+    }
+}
+
+void MCRepeat::exec_with(MCExecContext& ctxt)
+{
+    real8 endn = 0.0;
+    MCAutoValueRef t_condition, t_step;
+    
+    if (step != NULL)
+    {
+        if (!ctxt . TryToEvaluateExpression(step, getline(), getpos(), EE_REPEAT_BADWITHSTEP, &t_step))
+            return;
+        
+        if (!ctxt . ConvertToReal(*t_condition, stepval) || stepval == 0.0)
+        {
+            ctxt . LegacyThrow(EE_REPEAT_BADWITHSTEP);
+            return;
+        }
+
+    }
+
+    if (!ctxt . TryToEvaluateExpression(startcond, getline(), getpos(), EE_REPEAT_BADWITHSTART, &t_condition))
+        return;
+    
+    real8 t_loop;
+    if (!ctxt . ConvertToReal(*t_condition, t_loop))
+    {
+        ctxt . LegacyThrow(EE_REPEAT_BADWITHSTART);
+        return;
+    }
+    
+    t_loop -= stepval;
+    
+    MCAutoNumberRef t_loop_var;
+    if (!MCNumberCreateWithReal(t_loop, &t_loop_var) || !ctxt . TryToSetVariable(loopvar, getline(), getpos(), EE_REPEAT_BADWITHVAR, *t_loop_var))
+        return;
+
+    MCAutoValueRef t_end_condition;
+    if (!ctxt . TryToEvaluateExpression(endcond, getline(), getpos(), EE_REPEAT_BADWITHSTART, &t_end_condition) ||
+        !ctxt . ConvertToReal(*t_end_condition, endn))
+        return;
+    
+    bool done;
+    done = false;
+    
+    while (!done)
+    {
+        MCAutoValueRef t_loop_pos;
+        real8 t_cur_value;
+        if (!ctxt . TryToEvaluateExpression(loopvar, getline(), getpos(), EE_REPEAT_BADWITHVAR, &t_loop_pos) ||
+            !ctxt . ConvertToReal(*t_loop_pos, t_cur_value))
+            return;
+        
+        if (stepval < 0)
+        {
+            if (t_cur_value <= endn)
+                done = true;
+        }
+        else
+            if (t_cur_value >= endn)
+                done = true;
+        
+        if (!done)
+        {
+            MCAutoNumberRef t_cur_loop;
+            if (!MCNumberCreateWithReal(t_cur_value + stepval, &t_cur_loop) || !ctxt . TryToSetVariable(loopvar, getline(), getpos(), EE_REPEAT_BADWITHVAR, *t_cur_loop))
+                return;
+            
+            execute_statements(ctxt, nil, done);
+        }
+        
+        if (done)
+            break;
+    }
+}
+
+void MCRepeat::exec_forever(MCExecContext& ctxt)
+{
+    bool done;
+    done = false;
+    while (!done)
+        execute_statements(ctxt, nil, done);
+}
+
+void MCRepeat::exec_until(MCExecContext& ctxt)
+{
+    bool done;
+    done = false;
+    
+    while (!done)
+    {
+        MCAutoValueRef t_value;
+        if (!ctxt . TryToEvaluateExpression(endcond, getline(), getpos(), EE_REPEAT_BADUNTILCOND, &t_value) ||
+            !ctxt . ConvertToBool(*t_value, done))
+            return;
+        if (!done)
+            execute_statements(ctxt, nil, done);
+    }
+}
+
+void MCRepeat::exec_while(MCExecContext& ctxt)
+{
+    bool done;
+    done = false;
+    
+    while (!done)
+    {
+        MCAutoValueRef t_value;
+        bool not_done;
+        if (!ctxt . TryToEvaluateExpression(endcond, getline(), getpos(), EE_REPEAT_BADWHILECOND, &t_value) ||
+            !ctxt . ConvertToBool(*t_value, not_done))
+            return;
+        
+        done = !not_done;
+        
+        if (not_done)
+            execute_statements(ctxt, nil, done);
+    }
+}
+
+void MCRepeat::exec_ctxt(MCExecContext& ctxt)
+{
+    switch (form)
+	{
+        case RF_FOR:
+            MCRepeat::exec_for(ctxt);
+            break;
+        case RF_WITH:
+            MCRepeat::exec_with(ctxt);
+            break;
+        case RF_FOREVER:
+            MCRepeat::exec_forever(ctxt);
+            break;
+        case RF_UNTIL:
+            MCRepeat::exec_until(ctxt);
+            break;
+        case RF_WHILE:
+            MCRepeat::exec_while(ctxt);
+            break;
+        default:
+            break;
+    }
 }
 
 uint4 MCRepeat::linecount()

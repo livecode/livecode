@@ -266,14 +266,12 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
 		}
 		else
 		{
-            dest->set(ctxt, PT_INTO, *t_result);
 
-            if (!ctxt . HasError())
-                return;
-
-            ctxt . LegacyThrow(EE_ADD_CANTSET);
+			if (dest->set(ctxt, PT_INTO, *t_result))
+				return;
+			ctxt . LegacyThrow(EE_ADD_CANTSET);
 		}
-    }
+	}
 }
 
 void MCAdd::compile(MCSyntaxFactoryRef ctxt)
@@ -503,9 +501,7 @@ void MCDivide::exec_ctxt(MCExecContext &ctxt)
 		}
 		else
 		{
-            dest->set(ctxt, PT_INTO, *t_result);
-
-            if (!ctxt . HasError())
+            if (dest->set(ctxt, PT_INTO, *t_result))
                 return;
 
 			ctxt . LegacyThrow(EE_DIVIDE_CANTSET);
@@ -738,9 +734,7 @@ void MCMultiply::exec_ctxt(MCExecContext &ctxt)
 		}
 		else
 		{
-            dest->set(ctxt, PT_INTO, *t_result);
-
-            if (!ctxt . HasError())
+			if (dest->set(ctxt, PT_INTO, *t_result))
                 return;
 
 			ctxt . LegacyThrow(EE_MULTIPLY_CANTSET);
@@ -956,9 +950,7 @@ void MCSubtract::exec_ctxt(MCExecContext &ctxt)
 		}
 		else
 		{
-            dest->set(ctxt, PT_INTO, *t_result);
-
-            if (!ctxt . HasError())
+			if (dest->set(ctxt, PT_INTO, *t_result))
                 return;
 
 			ctxt . LegacyThrow(EE_SUBTRACT_CANTSET);

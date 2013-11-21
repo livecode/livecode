@@ -188,17 +188,17 @@ void MCImage::startmag(int2 x, int2 y)
     MCExecPoint ep(this, NULL, NULL);
     MCExecContext ctxt(ep);
     
-    sptr->setintprop(ctxt, 0, P_MAX_WIDTH, False, rect.width * MCmagnification);
+    sptr->SetMaxWidth(ctxt, rect.width * MCmagnification);
 
-    sptr->setintprop(ctxt, 0, P_MAX_HEIGHT, False, rect.width * MCmagnification);
+    sptr->SetMaxHeight(ctxt, rect.height * MCmagnification);
 
 	uint2 ssize = MCU_min(32, rect.width);
 	
-    sptr->setintprop(ctxt, 0, P_WIDTH, False, ssize * MCmagnification);
+    sptr->SetWidth(ctxt, ssize * MCmagnification);
 
 	ssize = MCU_min(32, rect.height);
 
-    sptr->setintprop(ctxt, 0, P_HEIGHT, False, ssize * MCmagnification);
+    sptr->SetHeight(ctxt, ssize * MCmagnification);
 
 
 	MCRectangle drect = sptr->getrect();

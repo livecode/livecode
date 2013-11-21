@@ -1585,7 +1585,8 @@ Exec_stat MCIdeScriptTokenize::exec(MCExecPoint& ep)
 		// We have our output, so now set the chunk back to it
         MCAutoStringRef t_string;
         ep . copyasstringref(&t_string);
-		t_stat = m_script -> set(ep, PT_INTO, *t_string);
+        MCExecContext ctxt(ep);
+		t_stat = (m_script -> set(ctxt, PT_INTO, *t_string)) ? ES_NORMAL : ES_ERROR;
 	}
 
 	return t_stat;
@@ -2173,7 +2174,7 @@ struct MCIdeFilterControlsVisitor: public MCObjectVisitor
 	MCIdeFilterControlsVisitor(MCExecPoint& ep, MCIdeFilterControlsProperty p_property, MCIdeFilterControlsOperator p_operator, MCStringRef p_pattern)
 		: m_ep(ep), m_property(p_property), m_operator(p_operator)
 	{
-		m_pattern . setstaticcstring(MCStringGetCString(p_pattern));
+		m_pattern . setvalueref(p_pattern);
 	}
 	
 	virtual bool OnCard(MCCard *p_card)
@@ -2190,17 +2191,17 @@ struct MCIdeFilterControlsVisitor: public MCObjectVisitor
 		{
 			case kMCIdeFilterPropertyScriptLines:
 			{
-				const char *t_script;
 				uindex_t t_count;
-				t_script = MCStringGetCString(p_object -> _getscript());
 				t_count = 0;
-				if (t_script != nil)
+                uindex_t t_pos;
+                t_pos = 0;
+				if (p_object -> _getscript() != nil)
 				{
-					while(*t_script != '\0')
+					while(t_pos != MCStringGetLength(p_object -> _getscript()))
 					{
-						if (*t_script == '\n')
+						if (MCStringGetNativeCharAtIndex(p_object -> _getscript(), t_pos) == '\n')
 							t_count += 1;
-						t_script++;
+						t_pos++;
 					}
 				}
 				t_left_ep . setuint(t_count);

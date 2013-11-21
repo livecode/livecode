@@ -482,7 +482,7 @@ public:
 	void qt_gettracks(MCExecPoint& ep);
 	void qt_getenabledtracks(MCExecPoint& ep);
     void qt_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks);
-	Boolean qt_setenabledtracks(const MCString& s);
+	Boolean qt_setenabledtracks(MCStringRef s);
 	void qt_draw(MCDC *dc, const MCRectangle& dirty);
 	void qt_move(int2 x, int2 y);
 	void qt_click(bool p_state, uint4 p_button);
@@ -513,7 +513,7 @@ public:
 	void avi_gettracks(MCExecPoint& ep);
 	void avi_getenabledtracks(MCExecPoint& ep);
 	void avi_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks);
-	Boolean avi_setenabledtracks(const MCString& s);
+	Boolean avi_setenabledtracks(MCStringRef s);
 	void avi_draw(MCDC *dc, const MCRectangle& dirty);
 
 	bool mode_avi_closewindowonplaystop();
@@ -547,7 +547,7 @@ public:
 	void x11_gettracks(MCExecPoint& ep) {}
 	void x11_getenabledtracks(MCExecPoint& ep) {}
     void x11_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks) {}
-	Boolean x11_setenabledtracks(const MCString& s) {return False;}
+	Boolean x11_setenabledtracks(MCStringRef s) {return False;}
 	void x11_draw(MCDC *dc, const MCRectangle& dirty) {}
 	
 	pid_t getpid(void);

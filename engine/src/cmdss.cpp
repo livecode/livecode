@@ -1896,8 +1896,9 @@ void MCPop::exec_ctxt(MCExecContext &ctxt)
 		MCAutoStringRef t_element;
 		MCInterfaceExecPop(ctxt, &t_element);
 
-        if (!dest->set(ctxt, prep, *t_element))
-            ctxt . LegacyThrow(EE_POP_CANTSET);
+		if (dest->set(ctxt, prep, *t_element))
+            return;
+        ctxt . LegacyThrow(EE_POP_CANTSET);
     }
 
 }

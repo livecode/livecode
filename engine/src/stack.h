@@ -194,6 +194,9 @@ protected:
 
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
+    
+    static MCPropertyInfo kModeProperties[];
+	static MCObjectPropertyTable kModePropertyTable;
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	MCStackIdCache *m_id_cache;
@@ -241,6 +244,7 @@ public:
 	virtual const char *gettypestring();
 
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCObjectPropertyTable *getmodepropertytable(void) const { return &kModePropertyTable; }
 	
 	virtual bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor);
 	
@@ -589,7 +593,8 @@ public:
 	void reopenwindow();
 	Exec_stat openrect(const MCRectangle &rel, Window_mode wm, MCStack *parentwindow,
 	                   Window_position wpos,  Object_pos walign);
-	void getstackfiles(MCExecPoint &);
+
+	bool getstackfiles(MCStringRef& r_sf);
 	void stringtostackfiles(MCStringRef d, MCStackfile **sf, uint2 &nf);
 	void setstackfiles(MCStringRef);
 	void getstackfile(MCStringRef p_name, MCStringRef &r_name);
@@ -1021,6 +1026,8 @@ public:
 	void GetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t*& p_size);
 	void SetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t* p_size);
 
+    void GetKey(MCExecContext& ctxt, bool& r_value);
+    
     virtual void SetForePixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetBackPixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetHilitePixel(MCExecContext& ctxt, uinteger_t* pixel);
@@ -1049,6 +1056,13 @@ public:
     virtual void SetTextFont(MCExecContext& ctxt, MCStringRef font);
     virtual void SetTextSize(MCExecContext& ctxt, uinteger_t* size);
     virtual void SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style);
+    
+#ifdef MODE_DEVELOPMENT
+    void GetReferringStack(MCExecContext& ctxt, MCStringRef& r_id);
+    void GetUnplacedGroupIds(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_ids);
+    void GetIdeOverride(MCExecContext& ctxt, bool& r_value);
+    void SetIdeOverride(MCExecContext& ctxt, bool p_value);
+#endif
     
 private:
 	void loadexternals(void);

@@ -1975,6 +1975,7 @@ void MCParagraph::finsertnobreak(MCStringRef p_string, MCRange t_range)
 		// Move the focusedindex to the end of the insert.
 		focusedindex += t_new_length;
 	}
+    needs_layout = true;
 }
 
 // MW-2012-02-13: [[ Block Unicode ]] New implementation of finsert which understands unicodeness.
@@ -2992,7 +2993,7 @@ void MCParagraph::setselectionindex(findex_t si, findex_t ei, Boolean front, Boo
 	marklines(startindex, endindex);
 	originalindex = startindex = si;
 	endindex = ei;
-	if (endindex != PARAGRAPH_MAX_LEN)
+	if (endindex < PARAGRAPH_MAX_LEN)
 		focusedindex = endindex;
 	if (front)
 		state |= PS_FRONT;

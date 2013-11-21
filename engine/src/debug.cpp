@@ -116,7 +116,7 @@ void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_string)
 {
 	if (MCnoui)
 	{
-		MCS_write(MCStringGetCString(p_string), sizeof(char), MCStringGetLength(p_string), IO_stdout);
+		IO_write_stringref(p_string, IO_stdout);
 		uint4 length = MCStringGetLength(p_string);
 		if (length && MCStringGetCharAtIndex(p_string, length - 1) != '\n')
 			MCS_write("\n", sizeof(char), 1, IO_stdout);
@@ -227,7 +227,7 @@ void MCB_prepmessage(MCExecContext &ctxt, MCNameRef mess, uint2 line, uint2 pos,
 		MCeerror->add(id, line, pos);
 
 		MCAutoValueRef t_val;
-		ctxt.GetObject()->getvariantprop(ctxt, 0, P_LONG_ID, False, &t_val);
+		ctxt.GetObject()->names(P_LONG_ID, &t_val);
 		MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_val);
 		p4.sets_argument(MCeerror->getsvalue());
 	}
@@ -384,7 +384,7 @@ bool MCB_unparsebreaks(MCStringRef& r_value)
 
 	return t_success;
 }
-
+#ifdef LEGACY_EXEC
 void MCB_unparsebreaks(MCExecPoint& ep)
 {
 	ep.clear();
@@ -401,7 +401,7 @@ void MCB_unparsebreaks(MCExecPoint& ep)
 				ep.concatstringref(MCbreakpoints[i].info, EC_COMMA, false);
 		}
 }
-
+#endif
 static MCObject *getobj(MCExecPoint& ep)
 {
 	MCObject *objptr = NULL;

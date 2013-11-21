@@ -42,6 +42,12 @@ inline char *MCU_empty()
 	return strclone("");
 }
 
+inline void MCU_skip_spaces(MCStringRef p_input, uindex_t& x_offset)
+{
+    while (isspace(MCStringGetNativeCharAtIndex(p_input, x_offset)))
+        x_offset++;
+}
+
 inline void MCU_skip_spaces(const char *&sptr, uint4 &l)
 {
 	while (l && isspace((uint1)*sptr))

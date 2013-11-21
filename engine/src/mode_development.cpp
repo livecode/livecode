@@ -57,6 +57,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "revbuild.h"
 #include "parentscript.h"
+#include "chunk.h"
+#include "scriptpt.h"
 
 #include "resolution.h"
 #include "group.h"
@@ -90,7 +92,10 @@ bool MCFiltersDecompress(MCDataRef p_source, MCDataRef& r_result);
 // MM-2012-09-05: [[ Property Listener ]]
 #ifdef FEATURE_PROPERTY_LISTENER
 void MCInternalObjectListenerMessagePendingListeners(void);
+#ifdef LEGACY_EXEC
 void MCInternalObjectListenerListListeners(MCExecPoint &ep);
+#endif
+void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_listeners, uindex_t& r_count);
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,7 +122,58 @@ MCNameRef MCmessageboxlasthandler = nil;
 uint32_t MCmessageboxlastline = 0;
 
 Boolean MCcrashreportverbose = False;
-char *MCcrashreportfilename = NULL;
+MCStringRef MCcrashreportfilename = nil;
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  Property tables specific to DEVELOPMENT mode
+//
+
+MCPropertyInfo MCObject::kModeProperties[] =
+{
+	DEFINE_RO_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_REV_AVAILABLE_HANDLERS, LinesOfString, MCObject, RevAvailableHandlers)
+	DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_REV_AVAILABLE_HANDLERS, LinesOfString, MCObject, RevAvailableHandlers)
+    DEFINE_RO_OBJ_ARRAY_PROPERTY(P_REV_AVAILABLE_VARIABLES, String, MCObject, RevAvailableVariables)
+};
+
+MCObjectPropertyTable MCObject::kModePropertyTable =
+{
+	nil,
+	sizeof(kModeProperties) / sizeof(kModeProperties[0]),
+	&kModeProperties[0],
+};
+
+MCPropertyInfo MCStack::kModeProperties[] =
+{
+    DEFINE_RW_OBJ_PROPERTY(P_IDE_OVERRIDE, Bool, MCStack, IdeOverride)
+    DEFINE_RO_OBJ_PROPERTY(P_REFERRING_STACK, String, MCStack, ReferringStack)
+    DEFINE_RO_OBJ_LIST_PROPERTY(P_UNPLACED_GROUP_IDS, LinesOfUInt, MCStack, UnplacedGroupIds)
+};
+
+MCObjectPropertyTable MCStack::kModePropertyTable =
+{
+    &MCObject::kModePropertyTable,
+	sizeof(kModeProperties) / sizeof(kModeProperties[0]),
+	&kModeProperties[0],
+};
+
+MCPropertyInfo MCProperty::kModeProperties[] =
+{    
+	DEFINE_RW_PROPERTY(P_REV_CRASH_REPORT_SETTINGS, Array, Mode, RevCrashReportSettings)
+    DEFINE_RO_PROPERTY(P_REV_MESSAGE_BOX_LAST_OBJECT, String, Mode, RevMessageBoxLastObject)
+    DEFINE_RW_PROPERTY(P_REV_MESSAGE_BOX_REDIRECT, String, Mode, RevMessageBoxRedirect)
+	DEFINE_RO_ARRAY_PROPERTY(P_REV_LICENSE_INFO, String, Mode, RevLicenseInfo)
+    DEFINE_RO_PROPERTY(P_REV_LICENSE_INFO, String, Mode, RevLicenseInfo)
+    DEFINE_RW_PROPERTY(P_REV_LICENSE_LIMITS, Array, Mode, RevLicenseLimits)
+    DEFINE_RO_PROPERTY(P_REV_OBJECT_LISTENERS, LinesOfString, Mode, RevObjectListeners)
+    DEFINE_RW_PROPERTY(P_REV_PROPERTY_LISTENER_THROTTLE_TIME, UInt32, Mode, RevPropertyListenerThrottleTime)
+};
+
+MCPropertyTable MCProperty::kModePropertyTable =
+{
+	sizeof(kModeProperties) / sizeof(kModeProperties[0]),
+	&kModeProperties[0],
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -141,18 +197,16 @@ static MCStringRef s_command_path = nil;
 static void restart_revolution(void)
 {
 #if defined(TARGET_PLATFORM_WINDOWS)
-	_spawnl(_P_NOWAIT, MCStringGetCString(s_command_path), MCStringGetCString(s_command_path), NULL);
-#elif defined(TARGET_PLATFORM_MACOS_X)
+    MCAutoStringRefAsUTF8String t_command_path;
+    t_command_path . Lock(s_command_path);
+	_spawnl(_P_NOWAIT, *t_command_path, *t_command_path, NULL);
+#elif defined(TARGET_PLATFORM_MACOS_X) || defined(TARGET_PLATFORM_LINUX)
 	if (fork() == 0)
 	{
+        MCAutoStringRefAsUTF8String t_mccmd;
+        t_mccmd . Lock(MCcmd);
 		usleep(250000);
-		execl(MCStringGetCString(MCcmd), MCStringGetCString(MCcmd), NULL);
-	}
-#elif defined(TARGET_PLATFORM_LINUX)
-	if (fork() == 0)
-	{
-		usleep(250000);
-		execl(MCStringGetCString(MCcmd), MCStringGetCString(MCcmd), NULL);
+		execl(*t_mccmd, *t_mccmd, NULL);
 	}
 #else
 #error restart not defined
@@ -236,8 +290,12 @@ IO_stat MCDispatch::startup(void)
     MCAutoStringRef t_startdir;
     MCS_getcurdir(&t_startdir);
 	
-	startdir = strdup(MCStringGetCString(*t_startdir));
-	enginedir = strdup(MCStringGetCString(MCcmd));
+    char *t_startdir_cstring, *t_mccmd;
+    /* UNCHECKED */ MCStringConvertToCString(*t_startdir, t_startdir_cstring);
+    /* UNCHECKED */ MCStringConvertToCString(MCcmd, t_mccmd);
+    startdir = t_startdir_cstring;
+    enginedir = t_mccmd;
+
 
 	char *eptr;
 	eptr = strrchr(enginedir, PATH_SEPARATOR);
@@ -391,6 +449,7 @@ void MCStack::mode_destroy(void)
 
 Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
+#ifdef /* MCStack::mode_getprop */ LEGACY_EXEC
 	switch(which)
 	{
 	case P_REFERRING_STACK:
@@ -432,10 +491,13 @@ Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, 
 		return ES_NOT_HANDLED;
 	}
 	return ES_NORMAL;
+#endif /* MCStack::mode_getprop */
+    return ES_ERROR;
 }
 
 Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef cprop, MCStringRef carray, Boolean effective)
 {
+#ifdef /* MCStack::mode_setprop */ LEGACY_EXEC
 	switch(which)
 	{
 	case P_IDE_OVERRIDE:
@@ -454,6 +516,8 @@ Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, 
 	}
 
 	return ES_NORMAL;
+#endif /* MCStack::mode_setprop */
+    return ES_ERROR;
 }
 
 void MCStack::mode_load(void)
@@ -630,9 +694,9 @@ static bool enumerate_handlers_for_list(MCObjectList *p_list, MCObject *p_ignore
 //
 //  Implementation of MCObject::getmodeprop for DEVELOPMENT mode.
 //
-
 Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
+#ifdef /* MCObject::mode_getprop */ LEGACY_EXEC
 	switch(which)
 	{
 	// MW-2010-07-09: [[ Bug 8848 ]] Previously scripts were being compiled into
@@ -700,26 +764,19 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 			return ES_NORMAL;
 		}
 
-		char *t_key;
-		t_key = strdup(MCStringGetCString(carray));
-		if (t_key == NULL)
-			return ES_NORMAL;
-
-		char *t_comma;
-		t_comma = strchr(t_key, ',');
-		if (t_comma == NULL)
+		uindex_t t_comma_pos;
+        if (!MCStringFirstIndexOfChar(carray, ',', 0, kMCCompareExact, t_comma_pos))
 		{
-			free(t_key);
 			return ES_NORMAL;
 		}
 
 		// The handler name begins after the comma character
-		char *t_handler_name_cstring;
-		t_handler_name_cstring = t_comma + 1;
+		uindex_t t_handler_name_pos;
+        t_handler_name_pos = t_comma_pos + 1;
 
 		// The handler code must be the first char of the string
 		char t_handler_code;
-		t_handler_code = *t_key;
+		t_handler_code = MCStringGetNativeCharAtIndex(carray, 0);
 		t_handler_code = MCS_toupper(t_handler_code);
 
 		Handler_type t_handler_type;
@@ -743,9 +800,12 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 		default:
 			t_handler_type = HT_MESSAGE;
 		}
+        
+        MCAutoStringRef t_handler_substring;
+        MCStringCopySubstring(carray, MCRangeMake(t_handler_name_pos, MCStringGetLength(carray) - t_handler_name_pos), &t_handler_substring);
 
 		MCAutoNameRef t_handler_name;
-		/* UNCHECKED */ t_handler_name . CreateWithCString(t_handler_name_cstring);
+		MCNameCreate(*t_handler_substring, t_handler_name);
 
 		Exec_stat t_status;
 
@@ -754,14 +814,12 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 		t_status = hlist -> findhandler(t_handler_type, t_handler_name, t_handler);
 		if (t_status != ES_NORMAL)
 		{
-			free(t_key);
 			return ES_NORMAL;
 		}
 
 		if (t_handler != NULL)
 			t_handler -> getvarnames(ep, true);
 
-		free(t_key);
 		return ES_NORMAL;
 	}
 	break;
@@ -771,6 +829,8 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 	}
 
 	return ES_NORMAL;
+#endif /* MCObject::mode_getprop */
+    return ES_ERROR;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -780,6 +840,7 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 
 Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 {
+#ifdef /* MCProperty::mode_set */ LEGACY_EXEC
 	switch(which)
 	{
 	case P_REV_CRASH_REPORT_SETTINGS:
@@ -921,10 +982,13 @@ Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 	}
 
 	return ES_NORMAL;
+#endif /* MCProperty::mode_set */
+    return ES_ERROR;
 }
 
 Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 {
+#ifdef /* MCProperty::mode_eval */ LEGACY_EXEC
 	switch(which)
 	{
 	case P_REV_MESSAGE_BOX_LAST_OBJECT:
@@ -1033,6 +1097,8 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 	}
 
 	return ES_NORMAL;
+#endif /* MCProperty::mode_eval */
+    return ES_ERROR;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1368,7 +1434,7 @@ LONG WINAPI unhandled_exception_filter(struct _EXCEPTION_POINTERS *p_exception_i
 
 	char *t_path = NULL;
 	if (t_write_minidump != NULL)
-		t_path = MCS_resolvepath(MCcrashreportfilename);
+		t_path = MCS_resolvepath(MCStringGetCString(MCcrashreportfilename));
 
 	HANDLE t_file = NULL;
 	if (t_path != NULL)
@@ -1460,3 +1526,592 @@ void MCModePostSelectHook(fd_set& rfds, fd_set& wfds, fd_set& efds)
 }
 
 #endif
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  Refactored object property getters and setters for DEVELOPMENT mode.
+//
+
+void MCStack::GetReferringStack(MCExecContext& ctxt, MCStringRef& r_id)
+{
+    if (m_mode_data -> referrer != NULL)
+        m_mode_data -> referrer -> GetLongId(ctxt, r_id);
+    else
+        r_id = MCValueRetain(kMCEmptyString);
+}
+
+void MCStack::GetUnplacedGroupIds(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_ids)
+{
+    if (controls == nil)
+    {
+        r_count = 0;
+        return;
+    }
+
+    MCControl *t_control;
+    t_control = controls;
+    
+    MCAutoArray<uinteger_t> t_ids;
+    
+    do
+    {
+        if (t_control -> gettype() == CT_GROUP && t_control -> getparent() != curcard)
+            t_ids . Push(t_control -> getid());
+        
+        t_control = t_control -> next();
+    }
+    while(t_control != controls);
+    
+    t_ids . Take(r_ids, r_count);
+}
+
+void MCStack::GetIdeOverride(MCExecContext& ctxt, bool& r_value)
+{
+    r_value = getextendedstate(ECS_IDE);
+}
+
+void MCStack::SetIdeOverride(MCExecContext& ctxt, bool p_value)
+{
+    setextendedstate(p_value, ECS_IDE);
+}
+
+void MCObject::GetRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers)
+{
+    // MW-2010-07-09: [[ Bug 8848 ]] Previously scripts were being compiled into
+    //   separate hlists causing script local variable loss in the behavior
+    //   case. Instead we just use parsescript in non-reporting mode.
+    
+    parsescript(False);
+    if (hlist == nil)
+    {
+        r_count = 0;
+        return;
+    }
+    
+    hlist -> enumerate(ctxt, true, r_count, r_handlers);
+}
+
+void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers)
+{
+    bool t_first;
+    t_first = true;
+    
+    MCAutoArray<MCStringRef> t_handlers;
+    MCStringRef *t_handler_array;
+    uindex_t t_count;
+    
+    if (MCfrontscripts != NULL)
+    {
+        MCObjectList *t_object_ref;
+        t_object_ref = MCfrontscripts;
+        do
+        {
+            // OK-2008-08-22: [[Check in case the object is itself a frontscript]]
+            if (t_object_ref -> getobject() == this)
+            {
+                t_object_ref = t_object_ref -> next();
+                continue;
+            }
+            
+            t_first = true;
+            MCHandlerlist *t_handler_list;
+            
+            if (!t_object_ref -> getremoved() && t_object_ref -> getobject() -> getstack() -> iskeyed())
+                t_handler_list = t_object_ref -> getobject() -> hlist;
+            else
+                t_handler_list = NULL;
+            
+            if (t_handler_list != NULL)
+                t_first = t_handler_list -> enumerate(ctxt, t_first, t_count, t_handler_array);
+            
+            for (uindex_t i = 0; i < t_count; i++)
+                t_handlers . Push(t_handler_array[i]);
+            
+            t_object_ref = t_object_ref -> next();
+        }
+        while(t_object_ref != MCfrontscripts);
+    }
+    
+    for(MCObject *t_object = this; t_object != NULL; t_object = t_object -> parent)
+    {
+        t_first = true;
+        
+        t_object -> parsescript(False);
+        if (t_object -> hlist != NULL && t_object -> getstack() -> iskeyed())
+            t_first = t_object -> hlist -> enumerate(ctxt, t_first, t_count, t_handler_array);
+        
+        for (uindex_t i = 0; i < t_count; i++)
+            t_handlers . Push(t_handler_array[i]);
+    }
+    
+    if (MCbackscripts != NULL)
+    {
+        MCObjectList *t_object_ref;
+        t_object_ref = MCbackscripts;
+        do
+        {
+            // OK-2008-08-22: [[Check in case the object is itself a backscript]]
+            if (t_object_ref -> getobject() == this)
+            {
+                t_object_ref = t_object_ref -> next();
+                continue;
+            }
+            
+            t_first = true;
+            MCHandlerlist *t_handler_list;
+            if (!t_object_ref -> getremoved() && t_object_ref -> getobject() -> getstack() -> iskeyed())
+                t_handler_list = t_object_ref -> getobject() -> hlist;
+            else
+                t_handler_list = NULL;
+            
+            if (t_handler_list != NULL)
+                t_first = t_handler_list -> enumerate(ctxt, t_first, t_count, t_handler_array);
+            
+            for (uindex_t i = 0; i < t_count; i++)
+                t_handlers . Push(t_handler_array[i]);
+            
+            t_object_ref = t_object_ref -> next();
+        }
+        while(t_object_ref != MCbackscripts);
+    }
+    
+    t_handlers . Take(r_handlers, r_count);
+}
+
+void MCObject::GetRevAvailableVariables(MCExecContext& ctxt, MCNameRef p_key, MCStringRef& r_variables)
+{
+    // OK-2008-04-23 : Added for script editor
+    if (hlist == NULL)
+    {
+        r_variables = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    // A handler can be specified using array notation in the form <handler_type>,<handler_name>.
+    // Where handler type is a single letter using the same conventation as the revAvailableHandlers.
+    //
+    // If a handler is specified, the list of variables for that handler is returned in the same format
+    // as the variableNames property.
+    //
+    // If no handler is specified, the property returns the list of script locals for the object followed
+    // by the list of script-declared globals.
+    //
+    // At the moment, no errors are thrown, just returns empty if it doesn't like something.
+    if (p_key == nil)
+    {
+        MCAutoListRef t_list;
+        if (!MCListCreateMutable('\n', &t_list))
+            return;
+        
+        MCAutoListRef t_global_list, t_local_list;
+        
+        if (!(hlist->getlocalnames(&t_local_list) &&
+              MCListAppend(*t_list, *t_local_list)))
+        {
+            ctxt . Throw();
+            return;
+        }
+        
+        if (!(hlist->getglobalnames(&t_global_list) &&
+                MCListAppend(*t_list, *t_global_list)))
+        {
+            ctxt . Throw();
+            return;
+        }
+        MCListCopyAsString(*t_list, r_variables);
+        return;
+    }
+
+    
+    MCStringRef t_key;
+    t_key = MCNameGetString(p_key);
+    
+    // The handler name begins after the comma character
+    MCAutoStringRef t_handler_name;
+    uindex_t t_comma_offset;
+    if (!MCStringFirstIndexOfChar(t_key, ',', 0, kMCCompareExact, t_comma_offset))
+    {
+        r_variables = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    
+    if (!MCStringCopySubstring(t_key, MCRangeMake(t_comma_offset + 1, MCStringGetLength(t_key) - t_comma_offset - 1), &t_handler_name))
+    {
+        ctxt . Throw();
+        return;
+    }
+    
+    // The handler code must be the first char of the string
+    const char_t t_handler_code = MCStringGetNativeCharAtIndex(t_key, 0);
+    
+    Handler_type t_handler_type;
+    switch (t_handler_code)
+    {
+        case 'M':
+            t_handler_type = HT_MESSAGE;
+            break;
+        case 'C':
+            t_handler_type = HT_MESSAGE;
+            break;
+        case 'F':
+            t_handler_type = HT_FUNCTION;
+            break;
+        case 'G':
+            t_handler_type = HT_GETPROP;
+            break;
+        case 'S':
+            t_handler_type = HT_SETPROP;
+            break;
+        default:
+            t_handler_type = HT_MESSAGE;
+    }
+    
+    Exec_stat t_status;
+    MCNewAutoNameRef t_name;
+    MCNameCreate(*t_handler_name, &t_name);
+    // The handler list class allows us to locate the handler, just return empty if it can't be found.
+    MCHandler *t_handler;
+    t_status = hlist -> findhandler(t_handler_type, *t_name, t_handler);
+
+    if (t_handler != NULL)
+    {
+        MCAutoListRef t_list;
+        t_handler -> getvarnames(true, &t_list);
+        MCListCopyAsString(*t_list, r_variables);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  Refactored global property getters and setters for DEVELOPMENT mode.
+//
+
+void MCModeSetRevCrashReportSettings(MCExecContext& ctxt, MCArrayRef p_settings)
+{
+    bool t_case_sensitive = ctxt . GetCaseSensitive();
+    MCAutoValueRef t_verbose, t_filename;
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("verbose"), &t_verbose))
+        MCcrashreportverbose = (MCBooleanRef)*t_verbose == kMCTrue;
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("filename"), &t_filename))
+    {
+        if (MCcrashreportfilename != nil)
+            MCValueRelease(MCcrashreportfilename);
+        if (MCStringIsEmpty((MCStringRef)*t_filename))
+            MCcrashreportfilename = nil;
+        else
+            MCcrashreportfilename = MCValueRetain((MCStringRef)*t_filename);
+    }
+}
+
+void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
+{
+    if(!MCenvironmentactive)
+        return;
+    
+    bool t_case_sensitive = ctxt . GetCaseSensitive();
+    MCValueRef t_value;
+    MCStringRef t_string;
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("token"), t_value) && ctxt . ConvertToString(t_value, t_string))
+        MCCStringClone(MCStringGetCString(t_string), MClicenseparameters . license_token);
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("name"), t_value) && ctxt . ConvertToString(t_value, t_string))
+        MCCStringClone(MCStringGetCString(t_string), MClicenseparameters . license_name);
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("organization"), t_value) && ctxt . ConvertToString(t_value, t_string))
+        MCCStringClone(MCStringGetCString(t_string), MClicenseparameters . license_organization);
+    
+    MCValueRelease(t_string);
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("class"), t_value))
+    {
+        MCAutoStringRef t_class;
+        if (ctxt . ConvertToString(t_value, &t_class))
+        {
+            static struct { const char *tag; uint32_t value; } s_class_map[] =
+            {
+                { "community", kMCLicenseClassCommunity },
+                { "commercial", kMCLicenseClassCommercial },
+                { "professional", kMCLicenseClassProfessional },
+                { "", kMCLicenseClassNone }
+            };
+            
+            uint4 t_index;
+            for(t_index = 0; s_class_map[t_index] . tag != NULL; ++t_index)
+                if (MCStringIsEqualToCString(*t_class, s_class_map[t_index] . tag, kMCCompareCaseless))
+                    break;
+            
+            MClicenseparameters . license_class = s_class_map[t_index] . value;
+        }
+        else
+            MClicenseparameters . license_class = kMCLicenseClassNone;
+    }
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("multiplicity"), t_value))
+        MClicenseparameters . license_multiplicity = MCNumberFetchAsUnsignedInteger((MCNumberRef)t_value);
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("scriptlimit"), t_value))
+    {
+        integer_t t_limit;
+        t_limit = MCNumberFetchAsInteger((MCNumberRef)t_value);
+        MClicenseparameters . script_limit = t_limit <= 0 ? 0 : t_limit;
+    }
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("dolimit"), t_value))
+    {
+        integer_t t_limit;
+        t_limit = MCNumberFetchAsInteger((MCNumberRef)t_value);
+        MClicenseparameters . do_limit = t_limit <= 0 ? 0 : t_limit;
+    }
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("usinglimit"), t_value))
+    {
+        integer_t t_limit;
+        t_limit = MCNumberFetchAsInteger((MCNumberRef)t_value);
+        MClicenseparameters . using_limit = t_limit <= 0 ? 0 : t_limit;
+    }
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("insertlimit"), t_value))
+    {
+        integer_t t_limit;
+        t_limit = MCNumberFetchAsInteger((MCNumberRef)t_value);
+        MClicenseparameters . insert_limit = t_limit <= 0 ? 0 : t_limit;
+    }
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("deploy"), t_value))
+    {
+        static struct { const char *tag; uint32_t value; } s_deploy_map[] =
+        {
+            { "windows", kMCLicenseDeployToWindows },
+            { "macosx", kMCLicenseDeployToMacOSX },
+            { "linux", kMCLicenseDeployToLinux },
+            { "ios", kMCLicenseDeployToIOS },
+            { "android", kMCLicenseDeployToAndroid },
+            { "winmobile", kMCLicenseDeployToWinMobile },
+            { "meego", kMCLicenseDeployToLinuxMobile },
+            { "server", kMCLicenseDeployToServer },
+            { "ios-embedded", kMCLicenseDeployToIOSEmbedded },
+            { "android-embedded", kMCLicenseDeployToIOSEmbedded },
+        };
+        
+        MClicenseparameters . deploy_targets = 0;
+        
+        uint32_t t_target_count;
+        char **t_targets;
+        t_target_count = 0;
+        t_targets = nil;
+        if (MCCStringSplit(MCStringGetCString((MCStringRef)t_value), ',', t_targets, t_target_count))
+        {
+            for(uint32_t i = 0; i < t_target_count; i++)
+            {
+                for(uint32_t j = 0; j < sizeof(s_deploy_map) / sizeof(s_deploy_map[0]); j++)
+                    if (MCCStringEqualCaseless(s_deploy_map[j] . tag, t_targets[i]))
+                    {
+                        MClicenseparameters . deploy_targets |= s_deploy_map[j] . value;
+                        break;
+                    }
+            }
+            MCCStringArrayFree(t_targets, t_target_count);
+        }
+    }
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("addons"), t_value) && MCValueIsArray(t_value))
+    {
+        if (MClicenseparameters . addons != nil)
+            MCValueRelease(MClicenseparameters . addons);
+        MCArrayCopy((MCArrayRef)t_value, MClicenseparameters . addons);
+    }
+}
+
+static MCObject *getobj(MCExecContext& ctxt, MCStringRef p_string)
+{    
+    MCObject *objptr = NULL;
+    MCChunk *tchunk = new MCChunk(False);
+    MCerrorlock++;
+    MCScriptPoint sp(p_string);
+    if (tchunk->parse(sp, False) == PS_NORMAL)
+    {
+        uint4 parid;
+        tchunk->getobj(ctxt, objptr, parid, True);
+    }
+    MCerrorlock--;
+    delete tchunk;
+    return objptr;
+}
+
+void MCModeSetRevMessageBoxRedirect(MCExecContext& ctxt, MCStringRef p_target)
+{
+    MCObject *t_object;
+    t_object = getobj(ctxt, p_target);
+    if (t_object != NULL)
+        MCmessageboxredirect = t_object;
+    else
+        MCmessageboxredirect = NULL;
+}
+            
+void MCModeSetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t p_time)
+{
+#ifdef FEATURE_PROPERTY_LISTENER
+    // MM-2012-11-06: [[ Property Listener ]]
+    MCpropertylistenerthrottletime = p_time;
+#endif
+}
+
+void MCModeGetRevMessageBoxLastObject(MCExecContext& ctxt, MCStringRef& r_object)
+{
+    if (MCmessageboxlastobject != NULL && MCmessageboxlastobject->Exists())
+    {
+        bool t_success;
+
+        MCAutoStringRef t_obj, t_long_id;
+        MCAutoValueRef t_id_value;
+        t_success = MCStringCreateMutable(0, &t_obj);
+        
+        if (t_success)
+            t_success = MCmessageboxlastobject->Get()->names(P_LONG_ID, &t_id_value);
+        if (t_success && ctxt . ConvertToString(*t_id_value, &t_long_id))
+            t_success = MCStringAppendFormat(*t_obj, "%@,%@,%u", *t_long_id, MCNameGetString(MCmessageboxlasthandler), MCmessageboxlastline);
+
+        if (t_success && MCmessageboxlastobject->Get()->getparentscript() != nil)
+        {
+            MCAutoStringRef t_long_id;
+            MCAutoValueRef t_id_value;
+
+            t_success = MCmessageboxlastobject->Get()->getparentscript()->GetObject()->names(P_LONG_ID, &t_id_value);
+            if (t_success && ctxt . ConvertToString(*t_id_value, &t_long_id))
+                t_success = MCStringAppendFormat(*t_obj, ",%@", *t_long_id);
+        }
+        if (t_success && MCStringCopy(*t_obj, r_object))
+            return;
+    }
+    else
+    {
+        r_object = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    
+    ctxt . Throw();
+}
+
+void MCModeGetRevMessageBoxRedirect(MCExecContext& ctxt, MCStringRef& r_id)
+{
+    if (MCmessageboxredirect != NULL)
+    {
+        MCAutoValueRef t_long_id;
+        if (MCmessageboxredirect -> names(P_LONG_ID, &t_long_id) &&
+            ctxt . ConvertToString(*t_long_id, r_id))
+            return;
+    }
+    else
+    {
+        r_id = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    
+    ctxt . Throw();
+}
+
+void MCModeGetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef& r_limits)
+{
+    r_limits = MCValueRetain(kMCEmptyArray);
+}
+
+void MCModeGetRevCrashReportSettings(MCExecContext& ctxt, MCArrayRef& r_settings)
+{
+    r_settings = MCValueRetain(kMCEmptyArray);
+}
+
+void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info)
+{
+    static const char *s_class_types[] =
+    {
+        "",
+        "Community",
+        "Commercial",
+        "Professional",
+    };
+    
+    static const char *s_deploy_targets[] =
+    {
+        "Windows",
+        "Mac OS X",
+        "Linux",
+        "iOS",
+        "Android",
+        "Windows Mobile",
+        "Linux Mobile",
+        "Server",
+        "iOS Embedded",
+        "Android Embedded",
+    };
+    
+    bool t_success;
+    
+    MCAutoStringRef t_info;
+    t_success = MCStringCreateMutable(0, &t_info);
+    
+    if (t_success)
+        t_success = MCStringAppendFormat(*t_info, "%s\n%s\n%s\n%u\n", MClicenseparameters . license_name, MClicenseparameters . license_organization, s_class_types[MClicenseparameters . license_class], MClicenseparameters . license_multiplicity);
+    
+    if (MClicenseparameters . deploy_targets != 0)
+    {
+        bool t_first;
+        t_first = true;
+        for(uint32_t i = 0; t_success && i < 9; i++)
+        {
+            if ((MClicenseparameters . deploy_targets & (1 << i)) != 0)
+            {
+                t_success = MCStringAppendFormat(*t_info, t_first ? "%s" : ",%s", s_deploy_targets[i]);
+                t_first = false;
+            }
+        }
+    }
+    
+    if (t_success)
+        t_success = MCStringAppendNativeChar(*t_info, '\n');
+    
+    if (t_success && MClicenseparameters . addons != nil)
+    {
+        MCAutoStringRef t_keys;
+        t_success = (MCArrayListKeys(MClicenseparameters . addons, ',', &t_keys) &&
+                    MCStringAppendFormat(*t_info, "\n%@", *t_keys));
+    }
+    
+    if (t_success)
+        if (MCStringAppendFormat(*t_info, "\n%s", MCnullmcstring == MClicenseparameters . license_token ? "Global" : "Local") &&
+            MCStringCopy(*t_info, r_info))
+            return;
+    
+    ctxt . Throw();
+}
+
+void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCNameRef p_key, MCStringRef& r_info)
+{
+    MCAutoValueRef t_value;
+    if (MClicenseparameters . addons == nil ||
+        !MCArrayFetchValue(MClicenseparameters . addons, ctxt . GetCaseSensitive(), p_key, &t_value))
+        {
+            r_info = MCValueRetain(kMCEmptyString);
+            return;
+        }
+    
+    if (ctxt . ConvertToString(*t_value, r_info))
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCModeGetRevObjectListeners(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_listeners)
+{
+#ifdef FEATURE_PROPERTY_LISTENER
+    // MM-2012-09-05: [[ Property Listener ]]
+    MCInternalObjectListenerGetListeners(ctxt, r_listeners, r_count);
+#endif			
+    r_count = 0;
+}
+void MCModeGetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t& r_time)
+{
+#ifdef FEATURE_PROPERTY_LISTENER
+    r_time = MCpropertylistenerthrottletime;
+#endif			
+    r_time = 0;
+}

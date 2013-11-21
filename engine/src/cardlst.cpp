@@ -104,7 +104,7 @@ bool MCCardlist::GetRecent(MCExecContext& ctxt, MCStack *stack, Properties which
 
 	return t_success;
 }
-
+#ifdef LEGACY_EXEC
 void MCCardlist::getprop(Properties prop, MCStack *stack, MCExecPoint &ep)
 {
 	trim();
@@ -137,6 +137,7 @@ void MCCardlist::getlongids(MCStack *stack, MCExecPoint &ep)
 {
 	getprop(P_LONG_ID, stack, ep);
 }
+#endif
 
 void MCCardlist::addcard(MCCard *card)
 {

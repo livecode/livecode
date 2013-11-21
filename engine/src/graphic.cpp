@@ -84,10 +84,8 @@ MCPropertyInfo MCGraphic::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_FILLED, Bool, MCGraphic, Filled)
 	DEFINE_RW_OBJ_PROPERTY(P_OPAQUE, Bool, MCGraphic, Filled)
     
-    DEFINE_RW_OBJ_ARRAY_PROPERTY(P_GRADIENT_FILL, Any, MCGraphic, GradientFillElement)
-    DEFINE_RW_OBJ_PROPERTY(P_GRADIENT_FILL, Array, MCGraphic, GradientFill)
-    DEFINE_RW_OBJ_ARRAY_PROPERTY(P_GRADIENT_STROKE, Any, MCGraphic, GradientStrokeElement)
-    DEFINE_RW_OBJ_PROPERTY(P_GRADIENT_STROKE, Array, MCGraphic, GradientStroke)
+    DEFINE_RW_OBJ_RECORD_PROPERTY(P_GRADIENT_FILL, MCGraphic, GradientFill)
+    DEFINE_RW_OBJ_RECORD_PROPERTY(P_GRADIENT_STROKE, MCGraphic, GradientStroke)
     
     DEFINE_RW_OBJ_LIST_PROPERTY(P_MARKER_POINTS, LinesOfPoint, MCGraphic, MarkerPoints)
     DEFINE_RW_OBJ_LIST_PROPERTY(P_DASHES, ItemsOfUInt, MCGraphic, Dashes)
