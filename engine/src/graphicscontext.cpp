@@ -833,20 +833,30 @@ void MCGraphicsContext::drawline(int2 x1, int2 y1, int2 x2, int2 y2)
 
 void MCGraphicsContext::drawlines(MCPoint *points, uint2 npoints, bool p_closed)
 {
-	// MM-2013-11-14: [[ Bug 11457 ]] Adjust lines and polygons to make sure antialiased lines don't draw across pixels.	
-	MCGPoint *t_points;
-	/* UNCHECKED */ MCMemoryNewArray(npoints, t_points);
-	for (uint32_t i = 0; i < npoints; i++)
-		t_points[i] = MCPointToMCGPoint(points[i], 0.5f);
-	
-	MCGContextBeginPath(m_gcontext);
-	if (p_closed)
-		MCGContextAddPolygon(m_gcontext, t_points, npoints);
+	// MM-2013-11-21: [[ Bug 11395 ]] When only 1 point is passed, assume we are drawing a dot.
+	if (npoints == 1)
+	{
+		MCGContextBeginPath(m_gcontext);
+		MCGContextAddDot(m_gcontext, MCPointToMCGPoint(points[0]));
+		MCGContextStroke(m_gcontext);
+	}
 	else
-		MCGContextAddPolyline(m_gcontext, t_points, npoints);	
-	MCGContextStroke(m_gcontext);
-	
-	MCMemoryDeleteArray(t_points);
+	{	
+		// MM-2013-11-14: [[ Bug 11457 ]] Adjust lines and polygons to make sure antialiased lines don't draw across pixels.	
+		MCGPoint *t_points;
+		/* UNCHECKED */ MCMemoryNewArray(npoints, t_points);
+		for (uint32_t i = 0; i < npoints; i++)
+			t_points[i] = MCPointToMCGPoint(points[i], 0.5f);
+		
+		MCGContextBeginPath(m_gcontext);
+		if (p_closed)
+			MCGContextAddPolygon(m_gcontext, t_points, npoints);
+		else
+			MCGContextAddPolyline(m_gcontext, t_points, npoints);	
+		MCGContextStroke(m_gcontext);
+		
+		MCMemoryDeleteArray(t_points);
+	}
 }
 
 void MCGraphicsContext::fillpolygon(MCPoint *points, uint2 npoints)

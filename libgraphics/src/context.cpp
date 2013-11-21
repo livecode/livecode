@@ -2082,13 +2082,10 @@ void MCGContextAddDot(MCGContextRef self, MCGPoint p_location)
 	t_success = true;
 	
 	if (t_success)
-	{
+	{		
+		// MM-2013-11-21: [[ Bug 11395 ]] Updated dot drawing to be half pixel line.
 		MCGContextEnsurePath(self);
-		
-		MCGSize t_radii;
-		t_radii . width = 1.0f;
-		t_radii . height = 1.0f;
-		MCGPathAddEllipse(self -> path, p_location, t_radii, 0.0f);
+		MCGPathAddLine(self -> path, p_location, MCGPointMake(p_location . x + 0.5f, p_location . y + 0.5f));
 		t_success = MCGPathIsValid(self -> path);
 	}	
 	
@@ -2224,8 +2221,10 @@ static bool MCGContextSetupStrokePaint(MCGContextRef self, SkPaint &r_paint)
 		r_paint . setPathEffect(t_dash_effect);
 		
 		// MM-2013-11-08: [[ Bug 11388 ]] For 1 pixel lines, don't set the line width. Appeared to be causing issues with certain non-antialiased lines.
-		if (self -> state -> stroke_attr . width != 1.0f)
-			r_paint . setStrokeWidth(MCGFloatToSkScalar(self -> state -> stroke_attr . width));
+		//if (self -> state -> stroke_attr . width != 1.0f)
+		//	r_paint . setStrokeWidth(MCGFloatToSkScalar(self -> state -> stroke_attr . width));
+		
+		r_paint . setStrokeWidth(MCGFloatToSkScalar(1.0f));
 
 		
 		SkXfermode *t_blend_mode;

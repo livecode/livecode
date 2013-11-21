@@ -1414,20 +1414,12 @@ void MCGraphic::draw_lines(MCDC *dc, MCPoint *pts, uint2 npts)
 			if (count > 1)
 				dc->drawlines(&pts[i], count, pts[i].x == pts[i + count - 1].x && pts[i].y == pts[i + count - 1].y);
 			else
-			{
-				MCPoint t_dot[2];
-				t_dot[0] = pts[i];
-				t_dot[1] = pts[i];
-				dc -> drawlines(&t_dot[0], 2, false);
-			}
+				// MM-2013-11-21: [[ Bug 11395 ]] Pass single point to draw lines, indicating we want to draw a dot.
+				dc -> drawlines(&pts[i], 1, false);			
 		}
 		else if (getcapstyle() != CapButt)
-		{
-			MCPath *t_path;
-			t_path = MCPath::create_dot(pts[i] . x, pts[i] . y, true);
-			dc -> drawpath(t_path);
-			t_path -> release();
-		}
+			// MM-2013-11-21: [[ Bug 11395 ]] Pass single point to draw lines, indicating we want to draw a dot.
+			dc -> drawlines(&pts[i], 1, false);			
 			
 		i += count + 1;
 	}
