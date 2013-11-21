@@ -807,6 +807,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 }
 
 // MW-2012-02-29: [[ FieldExport ]] New RTF export method.
+#ifdef LEGACY_EXEC
 void MCField::exportasrtftext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index)
 {
 	MCAutoStringRef t_string;
@@ -816,11 +817,14 @@ void MCField::exportasrtftext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32_
 	else
 		ep . clear();
 }
+#endif
 
+#ifdef LEGACY_EXEC
 void MCField::exportasrtftext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index)
 {
 	exportasrtftext(ep, resolveparagraphs(p_part_id), p_start_index, p_finish_index);
 }
+#endif
 
 bool MCField::exportasrtftext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef &r_string)
 {

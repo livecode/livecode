@@ -52,6 +52,7 @@ bool MCExternalHandlerList::IsEmpty(void)
 	return m_handlers . Count() == 0;
 }
 
+#ifdef LEGACY_EXEC
 bool MCExternalHandlerList::ListExternals(MCExecPoint& ep)
 {
 	ep . clear();
@@ -59,6 +60,7 @@ bool MCExternalHandlerList::ListExternals(MCExecPoint& ep)
 		ep . concatcstring(m_externals[i] -> GetName(), EC_RETURN, i == 0);
 	return true;
 }
+#endif
 
 bool MCExternalHandlerList::ListExternals(MCStringRef& r_list)
 {
@@ -86,6 +88,7 @@ bool MCExternalHandlerList::ListExternals(MCStringRef& r_list)
 	return t_success;
 }
 
+#ifdef LEGACY_EXEC
 bool MCExternalHandlerList::ListHandlers(MCExecPoint& ep, Handler_type p_type)
 {
 	ep . clear();
@@ -94,6 +97,7 @@ bool MCExternalHandlerList::ListHandlers(MCExecPoint& ep, Handler_type p_type)
 			ep . concatnameref(m_handlers[i] . name, EC_RETURN, j++ == 0);
 	return true;
 }
+#endif
 
 bool MCExternalHandlerList::ListHandlers(Handler_type p_type, MCStringRef& r_list)
 {

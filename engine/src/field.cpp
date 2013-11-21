@@ -1141,13 +1141,16 @@ Boolean MCField::mup(uint2 which)
 									while (bptr != linkend->next());
 									// MW-2011-08-18: [[ Layers ]] Invalidate the links part of the field.
 									layer_redrawrect(linkrect);
-									MCExecPoint ep;
+                            
+                                    MCAutoStringRef t_string;
 									if (linkstart->getlinktext() == NULL)
-										returntext(ep, linksi, linkei);
+                                    {
+										returntext(linksi, linkei, &t_string);
+                                    }
 									else
-										ep.setvalueref(linkstart->getlinktext());
+										t_string = MCValueRetain(linkstart->getlinktext());
 									linkstart = linkend = NULL;
-									if (message_with_valueref_args(MCM_link_clicked, ep.getvalueref()) == ES_NORMAL)
+									if (message_with_valueref_args(MCM_link_clicked, *t_string) == ES_NORMAL)
 										return True;
 								}
 								else
@@ -1580,6 +1583,7 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 	}
 	return ES_NORMAL;
 }
+
 
 // MW-2012-01-25: [[ ParaStyles ]] Parse the given string as a list of tab-stops.
 // MW-2012-02-11: [[ TabWidths ]] The 'which' parameter determines what style of tabStops to

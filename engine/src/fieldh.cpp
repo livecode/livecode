@@ -632,6 +632,7 @@ void MCField::exportastext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_
 
 // MW-2012-02-20: [[ FieldExport ]] This method exports the content of the
 //   field as either native or unicode including any list indices.
+
 void MCField::exportasplaintext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode)
 {
 	MCAutoStringRef t_string;
