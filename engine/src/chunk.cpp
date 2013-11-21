@@ -5861,54 +5861,6 @@ bool MCChunk::evalurlchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force
     return true;
 }
 
-Exec_stat MCChunk::evalobjectchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_force, MCObjectChunkPtr& r_chunk)
-{
-	MCObjectPtr t_object;
-	if (getobj(ep, t_object, True) != ES_NORMAL)
-	{
-		MCeerror->add(EE_CHUNK_CANTFINDOBJECT, line, pos);
-		return ES_ERROR;
-    }
-    bool t_function = false;
-	if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
-        && function != F_SELECTED_FIELD && function != F_FOUND_FIELD
-        && function != F_MOUSE_CONTROL && function != F_FOCUSED_OBJECT
-        && function != F_SELECTED_IMAGE
-        && function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
-		t_function = true;
-
-    if (!t_function && cline == NULL && item == NULL
-        && token == NULL && word == NULL && character == NULL)
-    {
-        MCMarkedText t_mark;
-        t_mark . finish = INDEX_MAX;
-        t_mark . start = 0;
-        r_chunk . object = t_object.object;
-        r_chunk . part_id = t_object.part_id;
-        r_chunk . chunk = CT_UNDEFINED;
-        r_chunk . mark = t_mark;
-        return ES_NORMAL;
-    }
-    
-    MCExecContext ctxt(ep);
-    if (t_function)
-        MCInterfaceMarkFunction(ctxt, t_object, function, p_whole_chunk, r_chunk . mark);
-    else
-        MCInterfaceMarkObject(ctxt, t_object, p_whole_chunk, r_chunk . mark);
-    
-    if (mark(ep, p_force, p_whole_chunk, r_chunk . mark) != ES_NORMAL)
-    {
-        MCeerror->add(EE_CHUNK_CANTMARK, line, pos);
-        return ES_ERROR;
-    }
-    
-    r_chunk . object = t_object . object;
-    r_chunk . part_id = t_object . part_id;
-    r_chunk . chunk = !t_function ? getlastchunktype() : CT_CHARACTER;
-    
-    return ES_NORMAL;
-}
-
 bool MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force, MCObjectChunkPtr &r_chunk)
 {
     MCObjectPtr t_object;

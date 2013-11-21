@@ -75,8 +75,8 @@ public:
 	void compile_inout(MCSyntaxFactoryRef factory);	
 	void compile_object_ptr(MCSyntaxFactoryRef factory);
 
-	Chunk_term getlastchunktype(void);    
-    /* WRAPPER */ Exec_stat evalobjectchunk(MCExecPoint& ep, bool whole_chunk, bool force, MCObjectChunkPtr& r_chunk);
+	Chunk_term getlastchunktype(void);
+    
     bool evalobjectchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCObjectChunkPtr& r_chunk);
 
     bool evalvarchunk(MCExecContext& ctxt, bool whole_chunk, bool force, MCVariableChunkPtr& r_chunk);
