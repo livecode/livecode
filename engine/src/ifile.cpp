@@ -228,6 +228,7 @@ void MCImage::openimage()
 		
 		/* UNCHECKED */ getsourcegeometry(t_width, t_height);
 		
+		// On open, set the width & height to the formatted width & height
 		MCRectangle t_old_rect;
 		t_old_rect = rect;
 		if (t_width != rect.width || t_height != rect.height)
@@ -241,6 +242,9 @@ void MCImage::openimage()
 			}
 		}
 
+		// IM-2013-11-21: [[ Bug 11486 ]] Apply the transform now so the rect is adjusted for rotation.
+		apply_transform();
+		
 		// IM-2013-02-05: preload image data for buffered images
 		if (getflag(F_I_ALWAYS_BUFFER) || MCbufferimages)
 			prepareimage();
