@@ -110,6 +110,54 @@ bool MCExecContext::ConvertToMutableString(MCValueRef p_value, MCStringRef& r_st
     return MCStringMutableCopy(*t_string, r_string);
 }
 
+bool MCExecContext::ConvertToNumberOrArray(MCExecValue& x_value)
+{
+    switch(x_value . type)
+    {
+    case kMCExecValueTypeNone:
+        return false;
+
+    case kMCExecValueTypeValueRef:
+    case kMCExecValueTypeBooleanRef:
+    case kMCExecValueTypeStringRef:
+    case kMCExecValueTypeNameRef:
+    case kMCExecValueTypeDataRef:
+    case kMCExecValueTypeNumberRef:
+    {
+        double t_real;
+        if (!ConvertToReal(x_value . valueref_value, t_real))
+            return false;
+
+        MCValueRelease(x_value . valueref_value);
+        MCExecValueTraits<double>::set(x_value, t_real);
+        return true;
+    }
+
+    case kMCExecValueTypeUInt:
+        MCExecValueTraits<double>::set(x_value, (double)x_value . uint_value);
+        return true;
+
+    case kMCExecValueTypeInt:
+        MCExecValueTraits<double>::set(x_value, (double)x_value . int_value);
+        return true;
+
+    case kMCExecValueTypeFloat:
+        MCExecValueTraits<double>::set(x_value, (double)x_value . float_value);
+        return true;
+
+    case kMCExecValueTypeArrayRef:
+    case kMCExecValueTypeDouble:
+        return true;
+
+    case kMCExecValueTypeBool:
+    case kMCExecValueTypeChar:
+    case kMCExecValueTypePoint:
+    case kMCExecValueTypeColor:
+    case kMCExecValueTypeRectangle:
+        return false;
+    }
+}
+
 bool MCExecContext::ConvertToData(MCValueRef p_value, MCDataRef& r_data)
 {
     MCAutoStringRef t_string;
@@ -788,6 +836,59 @@ bool MCExecContext::EvalExprAsBool(MCExpression *p_expr, Exec_errors p_error, bo
 	LegacyThrow(p_error);
 	
 	return false;
+}
+
+bool MCExecContext::EvalExprAsNonStrictBool(MCExpression *p_expr, Exec_errors p_error, bool& r_value)
+{
+    MCAssert(p_expr != nil);
+    MCExecValue t_value;
+
+    p_expr -> eval_ctxt(*this, t_value);
+
+    if (HasError())
+    {
+        LegacyThrow(p_error);
+        return false;
+    }
+
+    switch(t_value . type)
+    {
+    case kMCExecValueTypeBool:
+        r_value = t_value . bool_value;
+        break;
+    case kMCExecValueTypeBooleanRef:
+        r_value = t_value . booleanref_value == kMCTrue;
+        break;
+    case kMCExecValueTypeStringRef:
+        r_value = t_value . stringref_value == kMCTrueString;
+        break;
+    case kMCExecValueTypeNameRef:
+        r_value = MCNameGetString(t_value . nameref_value) == kMCTrueString;
+        break;
+    case kMCExecValueTypeValueRef:
+        if (!ConvertToBool(t_value . valueref_value, r_value))
+            r_value = false;
+        break;
+    case kMCExecValueTypeNumberRef:
+    case kMCExecValueTypeUInt:
+    case kMCExecValueTypeInt:
+    case kMCExecValueTypeFloat:
+    case kMCExecValueTypeDouble:
+    case kMCExecValueTypeNone:
+    case kMCExecValueTypeDataRef:
+    case kMCExecValueTypeArrayRef:
+    case kMCExecValueTypeChar:
+    case kMCExecValueTypePoint:
+    case kMCExecValueTypeColor:
+    case kMCExecValueTypeRectangle:
+    case kMCExecValueTypeSet:
+    case kMCExecValueTypeEnum:
+    default:
+        r_value = false;
+        break;
+    }
+
+    return true;
 }
 
 bool MCExecContext::EvalOptionalExprAsBool(MCExpression *p_expr, bool p_default, Exec_errors p_error, bool& r_value)

@@ -1343,6 +1343,7 @@ public:
 	bool ConvertToLegacyColor(MCValueRef value, MCColor& r_color);
     
     bool ConvertToMutableString(MCValueRef p_value, MCStringRef &r_string);
+    bool ConvertToNumberOrArray(MCExecValue &x_value);
     
 	// These attempt to convert the given value as specified. If conversion
 	// was successful then 'r_converted' is set to true, else 'false'. If
@@ -1510,6 +1511,7 @@ public:
 	bool EvalOptionalExprAsInt(MCExpression *expr, integer_t default_value, Exec_errors error, integer_t& r_int);
     
     bool EvalExprAsBool(MCExpression *expr, Exec_errors error, bool& r_bool);
+    bool EvalExprAsNonStrictBool(MCExpression *expr, Exec_errors error, bool& r_bool);
 	bool EvalOptionalExprAsBool(MCExpression *expr, bool default_value, Exec_errors error, bool& r_bool);
     
     bool EvalExprAsDouble(MCExpression *expr, Exec_errors error, double& r_double);
@@ -5012,15 +5014,15 @@ template<> struct MCExecValueTraits<MCValueRef>
     inline static void set(MCExecValue& self, MCValueRef p_value)
     {
         self . type = kMCExecValueTypeValueRef;
-        self . valueref_value = p_value;
+        self . valueref_value = MCValueRetain(p_value);
     }
 
-    inline static void free(out_type self)
+    inline static void free(MCValueRef& self)
     {
         MCValueRelease(self);
     }
 
-    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, out_type r_value)
+    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCValueRef& r_value)
     {
         return ctxt . EvalExprAsValueRef(p_expr, p_error, r_value);
     }
@@ -5034,15 +5036,15 @@ template<> struct MCExecValueTraits<MCBooleanRef>
     inline static void set(MCExecValue& self, MCBooleanRef p_value)
     {
         self . type = kMCExecValueTypeBooleanRef;
-        self . booleanref_value = p_value;
+        self . booleanref_value = MCValueRetain(p_value);
     }
 
-    inline static void free(out_type self)
+    inline static void free(MCBooleanRef& self)
     {
         MCValueRelease(self);
     }
 
-    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, out_type r_value)
+    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCBooleanRef& r_value)
     {
         return ctxt . EvalExprAsBooleanRef(p_expr, p_error, r_value);
     }
@@ -5056,15 +5058,15 @@ template<> struct MCExecValueTraits<MCNameRef>
     inline static void set(MCExecValue& self, MCNameRef p_value)
     {
         self . type = kMCExecValueTypeNameRef;
-        self . nameref_value = p_value;
+        self . nameref_value = MCValueRetain(p_value);
     }
 
-    inline static void free(out_type self)
+    inline static void free(MCNameRef& self)
     {
         MCNameDelete(self);
     }
 
-    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, out_type r_value)
+    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCNameRef& r_value)
     {
         return ctxt . EvalExprAsNameRef(p_expr, p_error, r_value);
     }
@@ -5078,15 +5080,15 @@ template<> struct MCExecValueTraits<MCDataRef>
     inline static void set(MCExecValue& self, MCDataRef p_value)
     {
         self . type = kMCExecValueTypeDataRef;
-        self . dataref_value = p_value;
+        self . dataref_value = MCValueRetain(p_value);
     }
 
-    inline static void free(out_type self)
+    inline static void free(MCDataRef& self)
     {
         MCValueRelease(self);
     }
 
-    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, out_type r_value)
+    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCDataRef& r_value)
     {
         return ctxt . EvalExprAsDataRef(p_expr, p_error, r_value);
     }
@@ -5100,15 +5102,15 @@ template<> struct MCExecValueTraits<MCArrayRef>
     inline static void set(MCExecValue& self, MCArrayRef p_value)
     {
         self . type = kMCExecValueTypeArrayRef;
-        self . arrayref_value = p_value;
+        self . arrayref_value = MCValueRetain(p_value);
     }
 
-    inline static void free(out_type self)
+    inline static void free(MCArrayRef& self)
     {
         MCValueRelease(self);
     }
 
-    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, out_type r_value)
+    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCArrayRef& r_value)
     {
         return ctxt . EvalExprAsArrayRef(p_expr, p_error, r_value);
     }
@@ -5122,15 +5124,15 @@ template<> struct MCExecValueTraits<MCNumberRef>
     inline static void set(MCExecValue& self, MCNumberRef p_value)
     {
         self . type = kMCExecValueTypeNumberRef;
-        self . numberref_value = p_value;
+        self . numberref_value = MCValueRetain(p_value);
     }
 
-    inline static void free(out_type self)
+    inline static void free(MCNumberRef& self)
     {
         MCValueRelease(self);
     }
 
-    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, out_type r_value)
+    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCNumberRef& r_value)
     {
         return ctxt . EvalExprAsNumberRef(p_expr, p_error, r_value);
     }
@@ -5144,15 +5146,15 @@ template<> struct MCExecValueTraits<MCStringRef>
     inline static void set(MCExecValue& self, MCStringRef p_value)
     {
         self . type = kMCExecValueTypeStringRef;
-        self . stringref_value = p_value;
+        self . stringref_value = MCValueRetain(p_value);
     }
 
-    inline static void free(out_type self)
+    inline static void free(MCStringRef& self)
     {
         MCValueRelease(self);
     }
 
-    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, out_type r_value)
+    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCStringRef& r_value)
     {
         return ctxt . EvalExprAsStringRef(p_expr, p_error, r_value);
     }
@@ -5169,9 +5171,9 @@ template<> struct MCExecValueTraits<integer_t>
         self . int_value = p_value;
     }
 
-    inline static void free(out_type){}
+    inline static void free(integer_t& self){}
 
-    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, out_type r_value)
+    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, integer_t& r_value)
     {
         return ctxt . EvalExprAsInt(p_expr, p_error, r_value);
     }
@@ -5188,9 +5190,9 @@ template<> struct MCExecValueTraits<uinteger_t>
         self . uint_value = p_value;
     }
 
-    inline static void free(out_type){}
+    inline static void free(uinteger_t& self){}
 
-    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, out_type r_value)
+    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, uinteger_t& r_value)
     {
         return ctxt . EvalExprAsUInt(p_expr, p_error, r_value);
     }
@@ -5207,9 +5209,9 @@ template<> struct MCExecValueTraits<bool>
         self . bool_value = p_value;
     }
 
-    inline static void free(out_type){}
+    inline static void free(bool& self){}
 
-    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, out_type r_value)
+    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, bool& r_value)
     {
         return ctxt . EvalExprAsBool(p_expr, p_error, r_value);
     }
@@ -5226,9 +5228,9 @@ template<> struct MCExecValueTraits<double>
         self . double_value = p_value;
     }
 
-    inline static void free(out_type){}
+    inline static void free(double& self){}
 
-    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, out_type r_value)
+    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, double& r_value)
     {
         return ctxt . EvalExprAsDouble(p_expr, p_error, r_value);
     }
@@ -5245,9 +5247,9 @@ template<> struct MCExecValueTraits<char_t>
         self . char_value = p_value;
     }
 
-    inline static void free(out_type){}
+    inline static void free(char_t& self){}
 
-    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, out_type r_value)
+    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, char_t& r_value)
     {
         return ctxt . EvalExprAsChar(p_expr, p_error, r_value);
     }
@@ -5264,9 +5266,9 @@ template<> struct MCExecValueTraits<MCPoint>
         self . point_value = p_value;
     }
 
-    inline static void free(out_type){}
+    inline static void free(MCPoint& self){}
 
-    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, out_type r_value)
+    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCPoint& r_value)
     {
         return ctxt . EvalExprAsPoint(p_expr, p_error, r_value);
     }
@@ -5283,9 +5285,9 @@ template<> struct MCExecValueTraits<MCColor>
         self . color_value = p_value;
     }
 
-    inline static void free(out_type){}
+    inline static void free(MCColor& self){}
 
-    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, out_type r_value)
+    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCColor& r_value)
     {
         return ctxt . EvalExprAsColor(p_expr, p_error, r_value);
     }
@@ -5302,9 +5304,9 @@ template<> struct MCExecValueTraits<MCRectangle>
         self . rectangle_value = p_value;
     }
 
-    inline static void free(out_type){}
+    inline static void free(MCRectangle& self){}
 
-    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, out_type r_value)
+    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCRectangle& r_value)
     {
         return ctxt . EvalExprAsRectangle(p_expr, p_error, r_value);
     }
@@ -5321,9 +5323,9 @@ template<> struct MCExecValueTraits<float>
         self . float_value = p_value;
     }
 
-    inline static void free(out_type){}
+    inline static void free(float& self){}
 
-    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, out_type r_value)
+    inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, float& r_value)
     {
         double t_double;
         if (!ctxt . EvalExprAsDouble(p_expr, p_error, t_double))
