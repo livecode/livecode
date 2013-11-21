@@ -1581,6 +1581,9 @@ bool MCStringBreakIntoChunks(MCStringRef string, codepoint_t separator, MCString
 
 //////////
 
+// Forward declaration
+typedef struct __MCLocale* MCLocaleRef;
+
 // Transform the string to its folded form as specified by 'options'. The folded
 // form of a string is that which is used to perform comparisons.
 //
@@ -1590,12 +1593,12 @@ bool MCStringFold(MCStringRef string, MCStringOptions options);
 // Lowercase the string.
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
-bool MCStringLowercase(MCStringRef string);
+bool MCStringLowercase(MCStringRef string, MCLocaleRef p_in_locale);
 
 // Uppercase the string.
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
-bool MCStringUppercase(MCStringRef string);
+bool MCStringUppercase(MCStringRef string, MCLocaleRef p_in_locale);
 
 /////////
 

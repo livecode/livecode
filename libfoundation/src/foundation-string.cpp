@@ -1490,13 +1490,19 @@ bool MCStringFold(MCStringRef self, MCStringOptions p_options)
 	return true;
 }
 
-bool MCStringLowercase(MCStringRef self)
+bool MCStringLowercase(MCStringRef self, MCLocaleRef p_locale)
 {
 	MCAssert(MCStringIsMutable(self));
 
-	// Otherwise, we just lowercase all the chars in the string (when we move to
-	// unicode this gets significantly more complicated!).
-	MCStrCharsLowercase(self -> chars, self -> char_count);
+	// Case transformations can change string lengths
+    unichar_t *t_lowered;
+    uindex_t t_lowered_length;
+    if (!MCUnicodeLowercase(p_locale, self -> chars, self -> char_count, t_lowered, t_lowered_length))
+        return false;
+    
+    MCMemoryDelete(self -> chars);
+    self -> chars = t_lowered;
+    self -> char_count = t_lowered_length;
 	
 #ifndef NATIVE_STRING
 	__MCStringChanged(self);
@@ -1506,13 +1512,19 @@ bool MCStringLowercase(MCStringRef self)
 	return true;
 }
 
-bool MCStringUppercase(MCStringRef self)
+bool MCStringUppercase(MCStringRef self, MCLocaleRef p_locale)
 {
 	MCAssert(MCStringIsMutable(self));
-
-	// Otherwise, we just uppercase all the chars in the string (when we move to
-	// unicode this gets significantly more complicated!).
-	MCStrCharsUppercase(self -> chars, self -> char_count);
+    
+	// Case transformations can change string lengths
+    unichar_t *t_lowered;
+    uindex_t t_lowered_length;
+    if (!MCUnicodeUppercase(p_locale, self -> chars, self -> char_count, t_lowered, t_lowered_length))
+        return false;
+    
+    MCMemoryDelete(self -> chars);
+    self -> chars = t_lowered;
+    self -> char_count = t_lowered_length;
 	
 #ifndef NATIVE_STRING
 	__MCStringChanged(self);

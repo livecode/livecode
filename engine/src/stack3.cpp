@@ -1790,7 +1790,7 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 				{
 					MCStringRef t_mutable;
 					/* UNCHECKED */ MCStringMutableCopyAndRelease(t_string, t_mutable);
-					/* UNCHECKED */ MCStringLowercase(t_mutable);
+					/* UNCHECKED */ MCStringLowercase(t_mutable, kMCSystemLocale);
 					/* UNCHECKED */ MCStringCopyAndRelease(t_mutable, items[nitems].svalue);
 				}
 			}

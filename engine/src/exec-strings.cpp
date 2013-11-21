@@ -108,7 +108,7 @@ void MCStringsEvalToLower(MCExecContext& ctxt, MCStringRef p_string, MCStringRef
 {
 	MCAutoStringRef t_string;
 	if (MCStringMutableCopy(p_string, &t_string) &&
-		MCStringLowercase(*t_string) &&
+		MCStringLowercase(*t_string, kMCSystemLocale) &&
 		MCStringCopy(*t_string, r_lower))
 		return;
 
@@ -119,7 +119,7 @@ void MCStringsEvalToUpper(MCExecContext& ctxt, MCStringRef p_string, MCStringRef
 {
 	MCAutoStringRef t_string;
 	if (MCStringMutableCopy(p_string, &t_string) &&
-		MCStringUppercase(*t_string) &&
+		MCStringUppercase(*t_string, kMCSystemLocale) &&
 		MCStringCopy(*t_string, r_upper))
 		return;
 

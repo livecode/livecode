@@ -3867,7 +3867,7 @@ void MCInterfaceExecSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &n
 			MCStringRef t_fixed, t_mutable;
 			/* UNCHECKED */ ctxt.ConvertToString(*t_output, t_fixed);
 			/* UNCHECKED */ MCStringMutableCopyAndRelease(t_fixed, t_mutable);
-			/* UNCHECKED */ MCStringLowercase(t_mutable);
+			/* UNCHECKED */ MCStringLowercase(t_mutable, kMCSystemLocale);
 			/* UNCHECKED */ MCStringCopyAndRelease(t_mutable, items[nitems].svalue);
 		}
 			

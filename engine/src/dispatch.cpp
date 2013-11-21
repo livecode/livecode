@@ -1403,7 +1403,7 @@ MCStack *MCDispatch::findstackname(MCNameRef p_name)
 	{
 		MCAutoStringRef t_name;
 		/* UNCHECKED */ MCStringMutableCopy(MCNameGetString(p_name), &t_name);
-		/* UNCHECKED */ MCStringLowercase(*t_name);
+		/* UNCHECKED */ MCStringLowercase(*t_name, kMCBasicLocale);
 		
 		// Remove all special characters from the input string
 		// TODO: what about other 'special' chars added by unicode?
