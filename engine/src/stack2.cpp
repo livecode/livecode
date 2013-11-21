@@ -1340,7 +1340,9 @@ MCCard *MCStack::getchild(Chunk_term etype, MCStringRef p_expression, Chunk_term
 		{
 			do
 			{
-				found = cptr->findname(otype, MCStringGetOldString(p_expression));
+                MCNewAutoNameRef t_expression;
+                /* UNCHECKED */ MCNameCreate(p_expression, &t_expression);
+				found = cptr->findname(otype, *t_expression);
 				if (found != NULL
 				        && found->countme(backgroundid, (state & CS_MARKED) != 0))
 					break;
@@ -1643,7 +1645,7 @@ MCCard *MCStack::getchildbyname(MCNameRef p_name)
     MCCard *found = nil;
     do
     {
-        found = cptr->findname(CT_CARD, MCNameGetOldString(p_name));
+        found = cptr->findname(CT_CARD, p_name);
         if (found != nil && found->countme(backgroundid, (state & CS_MARKED) != 0))
             break;
         cptr = cptr->next();

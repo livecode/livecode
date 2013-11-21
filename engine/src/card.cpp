@@ -1889,11 +1889,11 @@ Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
 	return ES_NORMAL;
 }
 
-MCCard *MCCard::findname(Chunk_term type, const MCString &inname)
+MCCard *MCCard::findname(Chunk_term type, MCNameRef inname)
 {
-    MCNewAutoNameRef t_name;
-    /* UNCHECKED */ MCNameCreateWithOldString(inname, &t_name);
-	if (type == CT_CARD && MCU_matchname(*t_name, CT_CARD, getname()))
+   // MCNewAutoNameRef t_name;
+   // /* UNCHECKED */ MCNameCreateWithOldString(inname, &t_name);
+	if (type == CT_CARD && MCU_matchname(inname, CT_CARD, getname()))
 		return this;
 	else
 		return NULL;
