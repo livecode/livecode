@@ -2324,8 +2324,8 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
                         if (state != TS_TRY)
                         {
                             MCtrylock--;
-                            MCeerror->add(EE_TRY_BADSTATEMENT, line, pos);
-                            return ES_ERROR;
+                            ctxt . LegacyThrow(EE_TRY_BADSTATEMENT);
+                            return;
                         }
                         else
                         {

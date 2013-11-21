@@ -87,6 +87,7 @@ struct MCExecValue
 // to_type. This method releases the from_type even if a type conversion
 // error occurs.
 void MCExecTypeConvertAndReleaseAlways(MCExecContext& ctxt, MCExecValueType from_type, void *from_value, MCExecValueType to_type, void *to_value);
+void MCExecTypeRelease(MCExecValue &self);
 
 // Defined for convenience in exec-interface-field-chunk.cpp
 // where the template system needs only one parameter

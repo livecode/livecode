@@ -428,8 +428,18 @@ class MCWrap : public MCMultiBinaryOperatorCtxt<
         kMCMathEvalWrapArrayByArrayMethodInfo>
 {};
 
-class MCNot : public MCUnaryOperatorCtxt<bool, MCLogicEvalNot, EE_NOT_BADRIGHT, FR_UNARY, kMCLogicEvalNotMethodInfo>
-{};
+class MCNot : public MCUnaryOperator
+{
+public:
+    MCNot()
+    {
+        rank = FR_UNARY;
+    }
+
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
+
+    virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCLogicEvalNotMethodInfo; }
+};
 
 class MCNotBits : public MCUnaryOperatorCtxt<uinteger_t, MCMathEvalBitwiseNot, EE_NOTBITS_BADRIGHT, FR_UNARY, kMCMathEvalBitwiseNotMethodInfo>
 {};

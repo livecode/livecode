@@ -187,6 +187,8 @@ void MCOr::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         MCExecValueTraits<bool>::set(r_value, t_result);
 }
 
+void MCNot::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
+{
 #ifdef /* MCNot */ LEGACY_EXEC
 	if (right->eval(ep) != ES_NORMAL)
 	{
@@ -197,6 +199,17 @@ void MCOr::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	ep.setboolean(!state);
 	return ES_NORMAL;
 #endif /* MCNot */
+    bool t_right;
+    bool t_result;
+
+    if (!ctxt . EvalExprAsNonStrictBool(right, EE_NOT_BADRIGHT, t_right))
+        return;
+
+    MCLogicEvalNot(ctxt, t_right, t_result);
+
+    if (!ctxt . HasError())
+        MCExecValueTraits<bool>::set(r_value, t_result);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //
