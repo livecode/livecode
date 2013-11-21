@@ -5970,6 +5970,46 @@ Exec_stat MCMovingControls::eval(MCExecPoint &ep)
 	return ctxt . Catch(line, pos);
 }
 
+MCNativeCharToNum::~MCNativeCharToNum()
+{
+    delete source;
+}
+
+Parse_stat MCNativeCharToNum::parse(MCScriptPoint& sp, Boolean the)
+{
+    if (get1param(sp, &source, the) != PS_NORMAL)
+    {
+        MCperror->add(PE_CHARTONUM_BADPARAM, sp);
+        return PS_ERROR;
+    }
+    return PS_NORMAL;
+}
+
+Exec_stat MCNativeCharToNum::eval(MCExecPoint &ep)
+{
+    if (source->eval(ep) != ES_NORMAL)
+    {
+        MCeerror->add(EE_CHARTONUM_BADSOURCE, line, pos);
+        return ES_ERROR;
+    }
+    
+    MCExecContext ctxt(ep);
+    
+    MCAutoStringRef t_source;
+    /* UNCHECKED */ ep.copyasstringref(&t_source);
+    
+    MCAutoValueRef t_result;
+    MCStringsEvalNativeCharToNum(ctxt, *t_source, &t_result);
+    
+    if (!ctxt.HasError())
+    {
+        /* UNCHECKED */ ep.setvalueref(*t_result);
+        return ES_NORMAL;
+    }
+    
+    return ctxt.Catch(line, pos);
+}
+
 MCNumToChar::~MCNumToChar()
 {
 	delete source;
@@ -6025,6 +6065,80 @@ Exec_stat MCNumToChar::eval(MCExecPoint &ep)
 	}
 
 	return ctxt . Catch(line, pos);
+}
+
+MCNumToNativeChar::~MCNumToNativeChar()
+{
+    delete source;
+}
+
+Parse_stat MCNumToNativeChar::parse(MCScriptPoint &sp, Boolean the)
+{
+    if (get1param(sp, &source, the) != PS_NORMAL)
+    {
+        MCperror->add(PE_NUMTOCHAR_BADPARAM, sp);
+        return PS_ERROR;
+    }
+    return PS_NORMAL;
+}
+
+Exec_stat MCNumToNativeChar::eval(MCExecPoint &ep)
+{
+    if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+    {
+        MCeerror->add(EE_NUMTOCHAR_BADSOURCE, line, pos);
+        return ES_ERROR;
+    }
+    
+    MCExecContext ctxt(ep);
+    
+    MCAutoStringRef t_result;
+    MCStringsEvalNumToNativeChar(ctxt, ep.getint4(), &t_result);
+    
+    if (!ctxt.HasError())
+    {
+        /* UNCHECKED */ ep.setvalueref(*t_result);
+        return ES_NORMAL;
+    }
+    
+    return ctxt.Catch(line, pos);
+}
+
+MCNumToUnicodeChar::~MCNumToUnicodeChar()
+{
+    delete source;
+}
+
+Parse_stat MCNumToUnicodeChar::parse(MCScriptPoint &sp, Boolean the)
+{
+    if (get1param(sp, &source, the) != PS_NORMAL)
+    {
+        MCperror->add(PE_NUMTOCHAR_BADPARAM, sp);
+        return PS_ERROR;
+    }
+    return PS_NORMAL;
+}
+
+Exec_stat MCNumToUnicodeChar::eval(MCExecPoint &ep)
+{
+    if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+    {
+        MCeerror->add(EE_NUMTOCHAR_BADSOURCE, line, pos);
+        return ES_ERROR;
+    }
+    
+    MCExecContext ctxt(ep);
+    
+    MCAutoStringRef t_result;
+    MCStringsEvalNumToUnicodeChar(ctxt, ep.getint4(), &t_result);
+    
+    if (!ctxt.HasError())
+    {
+        /* UNCHECKED */ ep.setvalueref(*t_result);
+        return ES_NORMAL;
+    }
+    
+    return ctxt.Catch(line, pos);
 }
 
 MCNumToByte::~MCNumToByte()
@@ -8170,6 +8284,47 @@ void MCTopStack::compile(MCSyntaxFactoryRef ctxt)
 		compile_with_args(ctxt, kMCInterfaceEvalTopStackOfMethodInfo, which);
 	else
 		compile_with_args(ctxt, kMCInterfaceEvalTopStackMethodInfo);
+}
+
+MCUnicodeCharToNum::~MCUnicodeCharToNum()
+{
+    delete source;
+}
+
+Parse_stat MCUnicodeCharToNum::parse(MCScriptPoint& sp, Boolean the)
+{
+    if (get1param(sp, &source, the) != PS_NORMAL)
+    {
+        MCperror->add(PE_CHARTONUM_BADPARAM, sp);
+        return PS_ERROR;
+    }
+    
+    return PS_NORMAL;
+}
+
+Exec_stat MCUnicodeCharToNum::eval(MCExecPoint &ep)
+{
+    if (source->eval(ep) != ES_NORMAL)
+    {
+        MCeerror->add(EE_CHARTONUM_BADSOURCE, line, pos);
+        return ES_ERROR;
+    }
+    
+    MCExecContext ctxt(ep);
+    
+    MCAutoStringRef t_source;
+    /* UNCHECKED */ ep.copyasstringref(&t_source);
+    
+    MCAutoValueRef t_result;
+    MCStringsEvalUnicodeCharToNum(ctxt, *t_source, &t_result);
+    
+    if (!ctxt.HasError())
+    {
+        /* UNCHECKED */ ep.setvalueref(*t_result);
+        return ES_NORMAL;
+    }
+    
+    return ctxt.Catch(line, pos);
 }
 
 MCUniDecode::~MCUniDecode()

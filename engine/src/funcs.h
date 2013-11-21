@@ -1265,6 +1265,22 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMovingControlsMethodInfo; }
 };
 
+class MCNativeCharToNum : public MCUnaryFunction
+{
+    MCExpression *source;
+public:
+    MCNativeCharToNum()
+    {
+        source = NULL;
+    }
+    virtual ~MCNativeCharToNum();
+    virtual Parse_stat parse(MCScriptPoint&, Boolean the);
+    virtual Exec_stat eval(MCExecPoint &);
+    
+    virtual MCExecMethodInfo *getmethodinfo() const { return kMCStringsEvalCharToNumMethodInfo; } // FIXME
+    virtual MCExpression *getmethodarg() const { return source; }
+};
+
 class MCNumToChar: public MCFunction
 {
 	MCExpression *source;
@@ -1279,6 +1295,38 @@ public:
 
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalNumToCharMethodInfo; }
 	virtual MCExpression *getmethodarg(void) const { return source; }
+};
+
+class MCNumToNativeChar : public MCFunction
+{
+    MCExpression *source;
+public:
+    MCNumToNativeChar()
+    {
+        source = NULL;
+    }
+    virtual ~MCNumToNativeChar();
+    virtual Parse_stat parse(MCScriptPoint&, Boolean the);
+    virtual Exec_stat eval(MCExecPoint &);
+    
+    virtual MCExecMethodInfo *getmethodinfo() const { return kMCStringsEvalNumToCharMethodInfo; } // FIXME
+    virtual MCExpression *getmethodarg() const { return source; }
+};
+
+class MCNumToUnicodeChar : public MCFunction
+{
+    MCExpression *source;
+public:
+    MCNumToUnicodeChar()
+    {
+        source = NULL;
+    }
+    virtual ~MCNumToUnicodeChar();
+    virtual Parse_stat parse(MCScriptPoint&, Boolean the);
+    virtual Exec_stat eval(MCExecPoint &);
+    
+    virtual MCExecMethodInfo *getmethodinfo() const { return kMCStringsEvalNumToCharMethodInfo; } // FIXME
+    virtual MCExpression *getmethodarg() const { return source; }
 };
 
 class MCNumToByte: public MCFunction
@@ -1795,6 +1843,22 @@ public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual Exec_stat eval(MCExecPoint &);
 	virtual void compile(MCSyntaxFactoryRef);
+};
+
+class MCUnicodeCharToNum : public MCUnaryFunction
+{
+    MCExpression *source;
+public:
+    MCUnicodeCharToNum()
+    {
+        source = NULL;
+    }
+    virtual ~MCUnicodeCharToNum();
+    virtual Parse_stat parse(MCScriptPoint&, Boolean the);
+    virtual Exec_stat eval(MCExecPoint &);
+    
+    virtual MCExecMethodInfo *getmethodinfo() const { return kMCStringsEvalCharToNumMethodInfo; } // FIXME
+    virtual MCExpression *getmethodarg() const { return source; }
 };
 
 class MCUniDecode : public MCFunction
