@@ -5811,33 +5811,6 @@ bool MCChunk::evalvarchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force
     return true;
 }
 
-Exec_stat MCChunk::evalurlchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_force, MCUrlChunkPtr& r_chunk)
-{
-	if (url->startpos->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_CHUNK_BADEXPRESSION, line, pos);
-		return ES_ERROR;
-	}
-	
-	MCAutoStringRef t_url;
-    MCAutoStringRef t_string;
-	/* UNCHECKED */ ep . copyasstringref(&t_url);
-	
-    MCExecContext ctxt(ep);
-    MCNetworkMarkUrl(ctxt, *t_url, r_chunk . mark);
-    
-	if (mark(ep, p_force, p_whole_chunk, r_chunk . mark) != ES_NORMAL)
-	{
-		MCeerror->add(EE_CHUNK_CANTMARK, line, pos);
-		return ES_ERROR;
-	}
-	
-	r_chunk . url = MCValueRetain(*t_url);
-	r_chunk . chunk = getlastchunktype();
-	
-    return ES_NORMAL;
-}
-
 bool MCChunk::evalurlchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force, MCUrlChunkPtr &r_chunk)
 {
     MCAutoStringRef t_url;
@@ -5860,6 +5833,7 @@ bool MCChunk::evalurlchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force
 
     return true;
 }
+
 
 bool MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force, MCObjectChunkPtr &r_chunk)
 {
