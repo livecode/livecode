@@ -83,12 +83,6 @@ private:
 	Parse_errors parse_question(MCScriptPoint& sp);
 	Parse_errors parse_password(MCScriptPoint& sp);
 	Parse_errors parse_file(MCScriptPoint& sp);
-
-	Exec_errors exec_question(MCExecPoint& ep, const char *p_title);
-	Exec_errors exec_password(MCExecPoint& ep, const char *p_title);
-	Exec_errors exec_file(MCExecPoint& ep, const char *p_title);
-
-	Exec_errors exec_custom(MCExecPoint& sp, bool& p_cancelled, const MCString& p_name, const char *p_type, unsigned int t_count, ...);
 };
 
 #endif

@@ -240,20 +240,6 @@ Parse_errors MCAsk::parse_file(MCScriptPoint& sp)
 	return t_error;
 }
 
-static bool evaluate_stringref(MCExecPoint &ep, MCExpression *p_expr, uint16_t p_err, int p_line, int p_pos, MCStringRef &r_value)
-{
-	if (p_expr != nil)
-	{
-		if (p_expr->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(p_err, p_line, p_pos);
-			return false;
-		}
-		/* UNCHECKED */ ep.copyasstringref(r_value);
-	}
-	return true;
-}
-
 void MCAsk::exec_ctxt(class MCExecContext& ctxt)
 {
     
