@@ -2507,6 +2507,8 @@ void MCBlock::SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_st
         flags &= ~F_HAS_FSTYLE;
     else
     {
+        if (atts == NULL)
+            atts = new Blockatts;
         flags |= F_HAS_FSTYLE;
         atts -> fontstyle = p_style . style;
     }
