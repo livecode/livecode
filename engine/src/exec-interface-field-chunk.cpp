@@ -2326,6 +2326,8 @@ void MCBlock::GetLinkText(MCExecContext& ctxt, MCStringRef& r_linktext)
 {
     if (getlinktext())
         r_linktext = MCValueRetain(getlinktext());
+    else
+        r_linktext = MCValueRetain(kMCEmptyString);
 }
 
 void MCBlock::SetLinktext(MCExecContext& ctxt, MCStringRef p_linktext)
