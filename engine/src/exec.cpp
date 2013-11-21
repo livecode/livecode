@@ -853,6 +853,9 @@ bool MCExecContext::EvalExprAsNonStrictBool(MCExpression *p_expr, Exec_errors p_
 
     switch(t_value . type)
     {
+    case kMCExecValueTypeBool:
+        r_value = t_value . bool_value;
+        break;
     case kMCExecValueTypeBooleanRef:
         r_value = t_value . booleanref_value == kMCTrue;
         break;
@@ -862,26 +865,15 @@ bool MCExecContext::EvalExprAsNonStrictBool(MCExpression *p_expr, Exec_errors p_
     case kMCExecValueTypeNameRef:
         r_value = MCNameGetString(t_value . nameref_value) == kMCTrueString;
         break;
-    case kMCExecValueTypeNumberRef:
-        r_value = MCNumberFetchAsInteger(t_value . numberref_value) != 0;
-        break;
-    case kMCExecValueTypeUInt:
-        r_value = t_value . uint_value != 0;
-        break;
-    case kMCExecValueTypeInt:
-        r_value = t_value . int_value != 0;
-        break;
-    case kMCExecValueTypeFloat:
-    case kMCExecValueTypeDouble:
-        r_value = t_value . double_value != 0.0;
-        break;
-    case kMCExecValueTypeBool:
-        r_value = t_value . bool_value;
-        break;
     case kMCExecValueTypeValueRef:
         if (!ConvertToBool(t_value . valueref_value, r_value))
             r_value = false;
         break;
+    case kMCExecValueTypeNumberRef:
+    case kMCExecValueTypeUInt:
+    case kMCExecValueTypeInt:
+    case kMCExecValueTypeFloat:
+    case kMCExecValueTypeDouble:
     case kMCExecValueTypeNone:
     case kMCExecValueTypeDataRef:
     case kMCExecValueTypeArrayRef:
@@ -889,6 +881,9 @@ bool MCExecContext::EvalExprAsNonStrictBool(MCExpression *p_expr, Exec_errors p_
     case kMCExecValueTypePoint:
     case kMCExecValueTypeColor:
     case kMCExecValueTypeRectangle:
+    case kMCExecValueTypeSet:
+    case kMCExecValueTypeEnum:
+    default:
         r_value = false;
         break;
     }
