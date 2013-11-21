@@ -579,7 +579,7 @@ void MCClipboardCmd::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndStatement(ctxt);
 }
 
-#ifdef /* MCClipboardCmd::processtocontainer */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCClipboardCmd::processtocontainer(MCExecPoint& ep, MCObjectRef *p_objects, uint4 p_object_count, MCObject *p_dst)
 {
 	bool t_cut;
@@ -706,9 +706,9 @@ Exec_errors MCClipboardCmd::processtocontainer(MCExecPoint& ep, MCObjectRef *p_o
 
 	return EE_UNDEFINED;
 }
-#endif /* MCClipboardCmd::processtocontainer */
+#endif
 
-#ifdef /* MCClipboardCmd::processtoclipboard */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCClipboardCmd::processtoclipboard(MCExecPoint& ep, MCObjectRef *p_objects, uint4 p_object_count)
 {
 	// Pickle the list of objects. The only reason this could fail is due to lack of
@@ -784,7 +784,7 @@ Exec_errors MCClipboardCmd::processtoclipboard(MCExecPoint& ep, MCObjectRef *p_o
 
 	return EE_UNDEFINED;
 }
-#endif /* MCClipboardCmd::processtoclipboard */
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 //

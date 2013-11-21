@@ -1640,6 +1640,7 @@ void MCButton::setrect(const MCRectangle &nrect)
 	}
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCButton::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	uint2 fheight;
@@ -2537,6 +2538,7 @@ Exec_stat MCButton::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 	}
 	return ES_NORMAL;
 }
+#endif
 
 void MCButton::closemenu(Boolean kfocus, Boolean disarm)
 {	

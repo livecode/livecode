@@ -79,8 +79,8 @@ public:
 	
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective) { MCAssert(false); }
+    virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective) { MCAssert(false); }
 
 
 	virtual Boolean del();

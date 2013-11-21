@@ -855,6 +855,7 @@ bool MCCapsuleProcess(MCCapsuleRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef LEGACY_EXEC
 typedef bool (*MCRecordFieldEncodeCallback)(void *state, MCExecPoint& ep, void* r_encoded_value);
 typedef bool (*MCRecordFieldDecodeCallback)(void *state, MCExecPoint& ep, void* encoded_value);
 
@@ -1200,5 +1201,6 @@ static bool MCCapsuleEnvironmentVersionDecode(void *state, MCExecPoint& ep, void
 	ep . copysvalue(t_buffer);
 	return true;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
