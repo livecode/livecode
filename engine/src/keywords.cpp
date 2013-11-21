@@ -419,7 +419,7 @@ Parse_stat MCIf::parse(MCScriptPoint &sp)
 	}
 	return PS_NORMAL;
 }
-
+/*
 Exec_stat MCIf::exec(MCExecPoint &ep)
 {
 	MCExecContext ctxt(ep);
@@ -486,6 +486,32 @@ Exec_stat MCIf::exec(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
+}
+*/
+
+void MCIf::exec_ctxt(MCExecContext &ctxt)
+{
+	MCExecPoint &ep = ctxt . GetEP();
+	Exec_stat stat;
+	while ((stat = cond->eval(ep)) != ES_NORMAL && (MCtrace || MCnbreakpoints)
+           && !MCtrylock && !MClockerrors)
+		MCB_error(ctxt, getline(), getpos(), EE_IF_BADCOND);
+	if (stat != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_IF_BADCOND, line, pos);
+		return;
+	}
+	Boolean then = ep.getsvalue() == MCtruemcstring;
+
+	MCStatement *tspr;
+	if (then)
+		tspr = thenstatements;
+	else
+		tspr = elsestatements;
+    
+    stat = MCKeywordExecuteStatements(ctxt, tspr, EE_IF_BADSTATEMENT);
+    ctxt . SetExecStat(stat);
 }
 
 uint4 MCIf::linecount()
@@ -1201,102 +1227,16 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 }
 #endif /* MCRepeat::exec */
 
-void MCRepeat::execute_statements(MCExecContext& ctxt, MCValueRef p_for_exit_var, bool& r_done)
+void MCRepeat::execute_statements(MCExecContext& ctxt, bool& r_done)
 {
-    Exec_stat stat;
-    MCStatement *tspr = statements;
-    while (tspr != NULL)
+    Exec_stat stat = MCKeywordExecuteStatements(ctxt, statements, EE_REPEAT_BADSTATEMENT);
+    if ((stat == ES_NORMAL && MCexitall) || (stat != ES_NEXT_REPEAT && stat != ES_NORMAL))
     {
-        if (MCtrace || MCnbreakpoints)
-        {
-            MCB_trace(ctxt, tspr->getline(), tspr->getpos());
-            if (MCexitall)
-                break;
-        }
-        ctxt . GetEP() . setline(tspr->getline());
-        
-        stat = tspr->exec(ctxt . GetEP());
-        
-        // MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
-        MCRedrawUpdateScreen();
-        
-        switch(stat)
-        {
-            case ES_NORMAL:
-                if (MCexitall)
-                {
-                    // OK-2007-12-05 : Bug 5605 : If exiting loop, set the loop variable to the value it had
-                    //   in the last iteration.
-                    // MW-2011-02-08: [[ Bug ]] Make sure we don't use 's' if the repeat type is 'key' or
-                    //   'element'.
-                    if (form == RF_FOR && loopvar != NULL && each != FU_ELEMENT && each != FU_KEY)
-                        loopvar -> set(ctxt, p_for_exit_var);
-                    
-                    r_done = true;
-                    return;
-                }
-                tspr = tspr->getnext();
-                break;
-            case ES_NEXT_REPEAT:
-                tspr = NULL;
-                break;
-            case ES_EXIT_REPEAT:
-                // OK-2007-12-05 : Bug 5605 : If exiting loop, set the loop variable to the value it had
-                //   in the last iteration.
-                // MW-2011-02-08: [[ Bug ]] Make sure we don't use 's' if the repeat type is 'key' or
-                //   'element'.
-                if (form == RF_FOR && loopvar != NULL && each != FU_ELEMENT && each != FU_KEY)
-                    loopvar -> set(ctxt, p_for_exit_var);
-
-                r_done = true;
-                return;
-            case ES_ERROR:
-                if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-                    do
-                    {
-                        ctxt . IgnoreLastError();
-                        MCB_error(ctxt, tspr->getline(), tspr->getpos(),
-                                  EE_REPEAT_BADSTATEMENT);
-                    }
-                while (MCtrace && (stat = tspr->exec(ctxt . GetEP())) != ES_NORMAL);
-                if (stat == ES_ERROR)
-                {
-                    // OK-2007-12-05 : Bug 5605 : If exiting loop, set the loop variable to the value it had
-                    //   in the last iteration.
-                    // MW-2011-02-08: [[ Bug ]] Make sure we don't use 's' if the repeat type is 'key' or
-                    //   'element'.
-                    if (form == RF_FOR && loopvar != NULL && each != FU_ELEMENT && each != FU_KEY)
-                        loopvar -> set(ctxt, p_for_exit_var);
-
-                    r_done = true;
-                    if (!MCexitall)
-                        ctxt . LegacyThrow(EE_REPEAT_BADSTATEMENT);
-                    return;
-                }
-                else
-                    tspr = tspr->getnext();
-                break;
-            default:
-                // OK-2007-12-05 : Bug 5605 : If exiting loop, set the loop variable to the value it had
-                //   in the last iteration.
-                // MW-2011-02-08: [[ Bug ]] Make sure we don't use 's' if the repeat type is 'key' or
-                //   'element'.
-                if (form == RF_FOR && loopvar != NULL && each != FU_ELEMENT && each != FU_KEY)
-                    loopvar -> set(ctxt, p_for_exit_var);
-
-                r_done = true;
-                return;
-        }
+        r_done = true;
+        return;
     }
     if (MCscreen->abortkey())
     {
-        // OK-2007-12-05 : Bug 5605 : If exiting loop, set the loop variable to the value it had
-        //   in the last iteration.
-        // MW-2011-02-08: [[ Bug ]] Make sure we don't use 's' if the repeat type is 'key' or
-        //   'element'.
-        if (form == RF_FOR && loopvar != NULL && each != FU_ELEMENT && each != FU_KEY)
-            loopvar -> set(ctxt, p_for_exit_var);
-
         r_done = true;
         ctxt . LegacyThrow(EE_REPEAT_ABORT);
         return;
@@ -1430,7 +1370,18 @@ void MCRepeat::exec_for(MCExecContext& ctxt)
             done = count-- == 0;
         
         if (!done)
-            execute_statements(ctxt, *t_unit, done);
+            execute_statements(ctxt, done);
+        
+        if (done)
+        {
+            if (*t_unit == nil)
+            {
+                bool t_true = true;
+            }
+            // Reset the loop variable to whatever the value was in the last iteration.
+            if (loopvar != nil && each != FU_ELEMENT && each != FU_KEY)
+                loopvar->set(ctxt, *t_unit);
+        }
         
         done = done || endnext;
     }
@@ -1501,7 +1452,7 @@ void MCRepeat::exec_with(MCExecContext& ctxt)
             if (!MCNumberCreateWithReal(t_cur_value + stepval, &t_cur_loop) || !ctxt . TryToSetVariable(loopvar, getline(), getpos(), EE_REPEAT_BADWITHVAR, *t_cur_loop))
                 return;
             
-            execute_statements(ctxt, nil, done);
+            execute_statements(ctxt, done);
         }
         
         if (done)
@@ -1514,7 +1465,7 @@ void MCRepeat::exec_forever(MCExecContext& ctxt)
     bool done;
     done = false;
     while (!done)
-        execute_statements(ctxt, nil, done);
+        execute_statements(ctxt, done);
 }
 
 void MCRepeat::exec_until(MCExecContext& ctxt)
@@ -1529,7 +1480,7 @@ void MCRepeat::exec_until(MCExecContext& ctxt)
             !ctxt . ConvertToBool(*t_value, done))
             return;
         if (!done)
-            execute_statements(ctxt, nil, done);
+            execute_statements(ctxt, done);
     }
 }
 
@@ -1549,7 +1500,7 @@ void MCRepeat::exec_while(MCExecContext& ctxt)
         done = !not_done;
         
         if (not_done)
-            execute_statements(ctxt, nil, done);
+            execute_statements(ctxt, done);
     }
 }
 
@@ -1851,7 +1802,7 @@ Parse_stat MCSwitch::parse(MCScriptPoint &sp)
 	}
 	return PS_NORMAL;
 }
-
+/*
 Exec_stat MCSwitch::exec(MCExecPoint &ep)
 {
 	MCExecPoint ep2(ep);
@@ -1954,6 +1905,11 @@ Exec_stat MCSwitch::exec(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
+}
+*/
+void MCSwitch::exec_ctxt(MCExecContext& ctxt)
+{
+    MCKeywordsExecSwitch(ctxt, cond, cases, ncases, defaultcase, caseoffsets, statements, getline(), getpos());
 }
 
 uint4 MCSwitch::linecount()
@@ -2253,4 +2209,57 @@ uint4 MCTry::linecount()
 {
 	return countlines(trystatements) + countlines(catchstatements)
 	       + countlines(finallystatements);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCKeywordsExecSwitch(MCExecContext& ctxt, MCExpression *condition, MCExpression **cases, uindex_t case_count, int2 default_case, uint2 *case_offsets, MCStatement *statements, uint2 line, uint2 pos)
+{
+    MCAutoValueRef t_value;
+    MCAutoStringRef t_cond;
+	if (condition != NULL)
+	{
+        if (!ctxt . TryToEvaluateExpression(condition, line, pos, EE_SWITCH_BADCOND, &t_value))
+            return;
+        
+        if (!ctxt . ConvertToString(*t_value, &t_cond))
+        {
+            ctxt . LegacyThrow(EE_SWITCH_BADCOND);
+            return;
+        }
+	}
+    else
+        &t_cond = MCValueRetain(kMCTrueString);
+    
+	int2 match = default_case;
+	uint2 i;
+	for (i = 0 ; i < case_count ; i++)
+	{
+        MCAutoValueRef t_case;
+        MCAutoStringRef t_case_string;
+        
+        if (!ctxt . TryToEvaluateExpression(cases[i], line, pos, EE_SWITCH_BADCASE, &t_case))
+            return;
+        
+        if (!ctxt . ConvertToString(*t_case, &t_case_string))
+        {
+            ctxt . LegacyThrow(EE_SWITCH_BADCASE);
+            return;
+        }
+        
+		if (MCStringIsEqualTo(*t_cond, *t_case_string, ctxt . GetCaseSensitive() ? kMCStringOptionCompareExact : kMCStringOptionCompareCaseless))
+        {
+            match = case_offsets[i];
+            break;
+        }
+	}
+    
+	if (match >= 0)
+	{
+		MCStatement *tspr = statements;
+		while (match--)
+			tspr = tspr->getnext();
+        
+        ctxt . SetExecStat(MCKeywordExecuteStatements(ctxt, tspr, EE_SWITCH_BADSTATEMENT));
+    }
 }

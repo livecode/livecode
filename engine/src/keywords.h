@@ -88,7 +88,8 @@ public:
 	}
 	~MCIf();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+//	virtual Exec_stat exec(MCExecPoint &);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 	virtual uint4 linecount();
 };
 
@@ -113,7 +114,7 @@ public:
     void exec_forever(MCExecContext&);
     void exec_until(MCExecContext&);
     void exec_while(MCExecContext&);
-    void execute_statements(MCExecContext& ctxt, MCValueRef p_for_exit_var, bool& r_done);
+    void execute_statements(MCExecContext& ctxt, bool& r_done);
 	virtual uint4 linecount();
 };
 
@@ -174,7 +175,8 @@ public:
 	}
 	~MCSwitch();
 	virtual Parse_stat parse(MCScriptPoint &sp);
-	virtual Exec_stat exec(MCExecPoint &);
+//	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual uint4 linecount();
 };
 
@@ -209,4 +211,9 @@ public:
 	virtual Exec_stat exec(MCExecPoint &);
 	virtual uint4 linecount();
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCKeywordsExecSwitch(MCExecContext& ctxt, MCExpression *condition, MCExpression **cases, uindex_t case_count, int2 default_case, uint2 *case_offsets, MCStatement *statements, uint2 line, uint2 pos);
+
 #endif

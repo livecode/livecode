@@ -1150,11 +1150,16 @@ public:
 		return m_stat;
 	}
 
+    void SetExecStat(Exec_stat p_stat)
+    {
+        m_stat = p_stat;
+    }
+    
 	///////////
 
 	bool HasError(void)
 	{
-        return m_stat != ES_NORMAL && m_stat != ES_RETURN_HANDLER;
+        return (m_stat == ES_ERROR || m_stat == ES_NOT_FOUND || m_stat == ES_NOT_HANDLED);
 	}
 
 	void Throw(void)

@@ -84,4 +84,6 @@ public:
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual Exec_stat exec(MCExecPoint &);
 };
+
+Exec_stat MCKeywordExecuteStatements(MCExecContext& ctxt, MCStatement *p_statements, Exec_errors p_error);
 #endif

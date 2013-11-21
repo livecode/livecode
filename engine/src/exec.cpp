@@ -1375,11 +1375,6 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             MCAutoStringRef t_string;
             ((void(*)(MCExecContext&, void *, MCStringRef&))prop -> getter)(ctxt, mark, &t_string);
-            if (*t_string == nil)
-            {
-                MCAutoStringRef t_new;
-                ((void(*)(MCExecContext&, void *, MCStringRef&))prop -> getter)(ctxt, mark, &t_new);
-            }
             r_value . stringref_value = MCValueRetain(*t_string);
             if (!ctxt . HasError())
             {
