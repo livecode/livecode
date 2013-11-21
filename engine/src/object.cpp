@@ -748,7 +748,8 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 		if (stat == ES_NOT_HANDLED && !handler.getpass())
 		{
             MCAutoStringRef t_mptr_string;
-            t_mptr_string = MCNameGetString(mptr);
+            MCStringRef t_mptr_name;
+            t_mptr_name = MCNameGetString(mptr);
             
 			if (params != nil)
 			{
@@ -756,7 +757,7 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 				params->eval(ep);
                 MCAutoStringRef t_value;
 				ep . copyasstringref(&t_value);
-				MCStringFormat(&t_mptr_string, "%@ %@", mptr, *t_value);
+                MCStringFormat(&t_mptr_string, "%@ %@", t_mptr_name, *t_value);
 			}
 
 			MCHandler *t_handler;
