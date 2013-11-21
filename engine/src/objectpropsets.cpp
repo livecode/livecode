@@ -149,31 +149,10 @@ bool MCObjectPropertySet::storeelement(MCExecContext& ctxt, MCNameRef p_name, MC
 	return MCArrayStoreValue(m_props, ctxt . GetCaseSensitive(), p_name, p_value);
 }
 
-bool MCObjectPropertySet::restrict(MCExecPoint& ep)
+bool MCObjectPropertySet::restrict(MCStringRef p_string)
 {
-	if (ep.getsvalue().getstring()[ep.getsvalue().getlength() - 1] != '\n')
-		ep.appendnewline();
-	char *string = ep.getsvalue().clone();
-	char *eptr = string;
-	MCArrayRef t_new_props;
-	/* UNCHECKED */ MCArrayCreateMutable(t_new_props);
-	while ((eptr = strtok(eptr, "\n")) != NULL)
-	{
-		/* UNCHECKED */ ep . fetcharrayelement_cstring(m_props, eptr);
-		/* UNCHECKED */ ep . storearrayelement_cstring(t_new_props, eptr);
-		eptr = NULL;
-	}
-	delete string;
-	MCValueRelease(m_props);
-	m_props = t_new_props;
-	return true;
-}
-
-/* WRAPPER */ bool MCObjectPropertySet::restrict(MCStringRef p_string)
-{
-    MCExecPoint ep(nil,nil,nil);
-    ep . setvalueref(p_string);
-    return restrict(ep);
+    MCValueRelease(m_props);
+    return MCStringSplit(p_string, MCSTR("\n"), nil, kMCCompareExact, m_props);
 }
 
 //////////

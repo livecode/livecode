@@ -130,7 +130,7 @@ public:
 	// MW-2012-02-23: [[ PutUnicode ]] Set the chunk to the UTF-16 encoded text in ep.
 	Exec_stat setunicode(MCExecPoint& ep, Preposition_type ptype);
 #endif
-    /* WRAPPER */ Exec_stat count(Chunk_term tocount, Chunk_term ptype, MCExecPoint &);
+   
     void count(MCExecContext &ctxt, Chunk_term tocount, Chunk_term ptype, uinteger_t &r_count);
 #ifdef LEGACY_EXEC	
 	Exec_stat fmark(MCField *fptr, int4 &start, int4 &end, Boolean wholechunk);
