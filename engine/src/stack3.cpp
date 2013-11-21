@@ -2003,38 +2003,6 @@ void MCStack::markfind(MCExecContext &ctxt, Find_mode fmode,
 		MCfoundfield->clearfound();
 }
 
-void MCStack::mark(MCExecPoint &ep, MCExpression *where, Boolean mark)
-{
-	if (where == NULL)
-	{
-		MCCard *cptr = cards;
-		do
-		{
-			cptr->setmark(mark);
-			cptr = (MCCard *)cptr->next();
-		}
-		while (cptr != cards);
-	}
-	else
-	{
-		MCCard *oldcard = curcard;
-		curcard = cards;
-		MCerrorlock++;
-		do
-		{
-			if (where->eval(ep) == ES_NORMAL)
-			{
-				if (ep.getsvalue() == MCtruemcstring)
-					curcard->setmark(mark);
-			}
-			curcard = (MCCard *)curcard->next();
-		}
-		while (curcard != cards);
-		curcard = oldcard;
-		MCerrorlock--;
-	}
-}
-
 void MCStack::mark(MCExecContext& ctxt, MCExpression *p_where, bool p_mark)
 {
 	if (p_where == nil)
