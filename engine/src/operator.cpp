@@ -1022,11 +1022,11 @@ void MCGrouping::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
     if (right != NULL)
     {
-        MCAutoValueRef t_value;
-        if (!ctxt . EvalExprAsValueRef(right, EE_GROUPING_BADRIGHT, &t_value))
+        MCValueRef t_value;
+        if (!ctxt . EvalExprAsValueRef(right, EE_GROUPING_BADRIGHT, t_value))
             return;
 
-        MCExecValueTraits<MCValueRef>::set(r_value, *t_value);
+        MCExecValueTraits<MCValueRef>::set(r_value, t_value);
     }
     else
         ctxt . LegacyThrow(EE_GROUPING_BADRIGHT);
