@@ -532,7 +532,7 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Exec_stat MCKeywordExecuteStatements(MCExecContext& ctxt, MCStatement *p_statements, Exec_errors p_error)
+Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p_statements, Exec_errors p_error, bool p_is_try)
 {
     Exec_stat stat = ES_NORMAL;
     MCStatement *tspr = p_statements;
@@ -577,9 +577,9 @@ Exec_stat MCKeywordExecuteStatements(MCExecContext& ctxt, MCStatement *p_stateme
                 if (stat == ES_ERROR)
                 {
                     if (MCexitall)  
-                        stat = ES_NORMAL;
-                    else
-                        ctxt . LegacyThrow(p_error);
+                        return p_is_try ? ES_NORMAL : ES_ERROR;
+                    
+                    ctxt . LegacyThrow(p_error);
                     return stat;
                 }
                 else

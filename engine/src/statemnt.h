@@ -85,5 +85,5 @@ public:
 	virtual Exec_stat exec(MCExecPoint &);
 };
 
-Exec_stat MCKeywordExecuteStatements(MCExecContext& ctxt, MCStatement *p_statements, Exec_errors p_error);
+Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p_statements, Exec_errors p_error, bool p_is_try = false);
 #endif
