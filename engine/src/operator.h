@@ -173,15 +173,15 @@ public:
 
         if (t_left . type == kMCExecValueTypeArrayRef)
         {
-            MCAutoArrayRef t_result;
+            MCArrayRef t_result;
 
             if (t_right . type == kMCExecValueTypeArrayRef)
-                EvalArrayByArray(ctxt, t_left . arrayref_value, t_right . arrayref_value, &t_result);
+                EvalArrayByArray(ctxt, t_left . arrayref_value, t_right . arrayref_value, t_result);
             else
-                EvalArrayByNumber(ctxt, t_left . arrayref_value, t_right . double_value, &t_result);
+                EvalArrayByNumber(ctxt, t_left . arrayref_value, t_right . double_value, t_result);
 
             if (!ctxt . HasError())
-                MCExecValueTraits<MCArrayRef>::set(r_value, *t_result);
+                MCExecValueTraits<MCArrayRef>::set(r_value, t_result);
         }
         else
         {
@@ -253,25 +253,25 @@ public:
 
         if (t_left . type == kMCExecValueTypeArrayRef)
         {
-            MCAutoArrayRef t_result;
+            MCArrayRef t_result;
 
             if (t_right . type == kMCExecValueTypeArrayRef)
-                EvalArrayByArray(ctxt, t_left . arrayref_value, t_right . arrayref_value, &t_result);
+                EvalArrayByArray(ctxt, t_left . arrayref_value, t_right . arrayref_value, t_result);
             else
-                EvalArrayByNumber(ctxt, t_left . arrayref_value, t_right . double_value, &t_result);
+                EvalArrayByNumber(ctxt, t_left . arrayref_value, t_right . double_value, t_result);
 
             if (!ctxt . HasError())
-                MCExecValueTraits<MCArrayRef>::set(r_value, *t_result);
+                MCExecValueTraits<MCArrayRef>::set(r_value, t_result);
         }
         else
         {
             if (t_right . type == kMCExecValueTypeArrayRef)
             {
-                MCAutoArrayRef t_result;
-                EvalArrayByNumber(ctxt, t_right . arrayref_value, t_left . double_value, &t_result);
+                MCArrayRef t_result;
+                EvalArrayByNumber(ctxt, t_right . arrayref_value, t_left . double_value, t_result);
 
                 if (!ctxt . HasError())
-                    MCExecValueTraits<MCArrayRef>::set(r_value, *t_result);
+                    MCExecValueTraits<MCArrayRef>::set(r_value, t_result);
             }
             else
             {

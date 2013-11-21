@@ -1803,6 +1803,8 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 {
                     r_value . type = kMCExecValueTypeStringRef;
                 }
+                for (int i = 0; i < t_count; ++i)
+                    MCValueRelease(t_value[i]);
             }
         }
             break;
