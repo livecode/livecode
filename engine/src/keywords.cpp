@@ -1977,18 +1977,9 @@ void MCKeywordsExecSwitch(MCExecContext& ctxt, MCExpression *condition, MCExpres
 
 void MCKeywordsExecIf(MCExecContext& ctxt, MCExpression *condition, MCStatement *thenstatements, MCStatement *elsestatements, uint2 line, uint2 pos)
 {
-    MCExecPoint &ep = ctxt . GetEP();
-	Exec_stat stat;
-	while ((stat = condition->eval(ep)) != ES_NORMAL && (MCtrace || MCnbreakpoints)
-           && !MCtrylock && !MClockerrors)
-		MCB_error(ctxt, line, pos, EE_IF_BADCOND);
-	if (stat != ES_NORMAL)
-	{
-		MCeerror->add
-		(EE_IF_BADCOND, line, pos);
-		return;
-	}
-	Boolean then = ep.getsvalue() == MCtruemcstring;
+    bool then;
+    if (!ctxt . TryToEvaluateExpressionAsNonStrictBool(condition, line, pos, EE_IF_BADCOND, then))
+        return;
     
 	MCStatement *tspr;
 	if (then)
@@ -1996,8 +1987,7 @@ void MCKeywordsExecIf(MCExecContext& ctxt, MCExpression *condition, MCStatement 
 	else
 		tspr = elsestatements;
     
-    stat = MCKeywordsExecuteStatements(ctxt, tspr, EE_IF_BADSTATEMENT);
-    ctxt . SetExecStat(stat);
+    ctxt . SetExecStat(MCKeywordsExecuteStatements(ctxt, tspr, EE_IF_BADSTATEMENT));
 }
 
 void MCKeywordsExecuteRepeatStatements(MCExecContext& ctxt, MCStatement *statements, uint2 line, uint2 pos, bool& r_done)
@@ -2249,10 +2239,7 @@ void MCKeywordsExecRepeatUntil(MCExecContext& ctxt, MCStatement *statements, MCE
     
     while (!done)
     {
-        MCAutoValueRef t_value;
-        if (!ctxt . TryToEvaluateExpression(endcond, line, pos, EE_REPEAT_BADUNTILCOND, &t_value) ||
-            !ctxt . ConvertToBool(*t_value, done))
-            return;
+        if (!ctxt . TryToEvaluateExpressionAsNonStrictBool(endcond, line, pos, EE_REPEAT_BADUNTILCOND, done))            return;
         if (!done)
             MCKeywordsExecuteRepeatStatements(ctxt, statements, line, pos, done);
     }
@@ -2267,8 +2254,7 @@ void MCKeywordsExecRepeatWhile(MCExecContext& ctxt, MCStatement *statements, MCE
     {
         MCAutoValueRef t_value;
         bool not_done;
-        if (!ctxt . TryToEvaluateExpression(endcond, line, pos, EE_REPEAT_BADWHILECOND, &t_value) ||
-            !ctxt . ConvertToBool(*t_value, not_done))
+        if (!ctxt . TryToEvaluateExpressionAsNonStrictBool(endcond, line, pos, EE_REPEAT_BADUNTILCOND, not_done))
             return;
         
         done = !not_done;

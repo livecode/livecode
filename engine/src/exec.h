@@ -1403,6 +1403,7 @@ public:
     // These methods try to evaluate / set, as many times as the debug context dictates,
     // only throwing an error if they ultimately fail.
     bool TryToEvaluateExpression(MCExpression *p_expr, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result);
+    bool TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr, uint2 line, uint2 pos, Exec_errors p_error, bool& r_result);
     bool TryToSetVariable(MCVarref *p_var, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef p_value);
     
 	//////////
@@ -1511,7 +1512,7 @@ public:
 	bool EvalOptionalExprAsInt(MCExpression *expr, integer_t default_value, Exec_errors error, integer_t& r_int);
     
     bool EvalExprAsBool(MCExpression *expr, Exec_errors error, bool& r_bool);
-    bool EvalExprAsNonStrictBool(MCExpression *expr, Exec_errors error, bool& r_bool);
+    bool EvalExprAsNonStrictBool(MCExpression *expr, Exec_errors error, bool& r_bool, bool p_throw = true);
 	bool EvalOptionalExprAsBool(MCExpression *expr, bool default_value, Exec_errors error, bool& r_bool);
     
     bool EvalExprAsDouble(MCExpression *expr, Exec_errors error, double& r_double);

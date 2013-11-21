@@ -531,6 +531,32 @@ bool MCExecContext::TryToEvaluateExpression(MCExpression *p_expr, uint2 line, ui
 	return false;
 }
 
+bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr, uint2 line, uint2 pos, Exec_errors p_error, bool& r_value)
+{
+    MCAssert(p_expr != nil);
+    MCExecValue t_value;
+    
+    bool t_success;
+    t_success = false;
+    
+    do
+    {
+        if (EvalExprAsNonStrictBool(p_expr, p_error, r_value, false))
+            t_success = true;
+        else
+            MCB_error(*this, line, pos, p_error);
+        IgnoreLastError();
+    }
+	while (!t_success && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
+    
+    if (t_success)
+		return true;
+	
+	LegacyThrow(p_error);
+	return false;
+    
+    return true;
+}
 bool MCExecContext::TryToSetVariable(MCVarref *p_var, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef p_value)
 {
     bool t_success;
@@ -838,7 +864,7 @@ bool MCExecContext::EvalExprAsBool(MCExpression *p_expr, Exec_errors p_error, bo
 	return false;
 }
 
-bool MCExecContext::EvalExprAsNonStrictBool(MCExpression *p_expr, Exec_errors p_error, bool& r_value)
+bool MCExecContext::EvalExprAsNonStrictBool(MCExpression *p_expr, Exec_errors p_error, bool& r_value, bool p_throw)
 {
     MCAssert(p_expr != nil);
     MCExecValue t_value;
@@ -847,7 +873,8 @@ bool MCExecContext::EvalExprAsNonStrictBool(MCExpression *p_expr, Exec_errors p_
 
     if (HasError())
     {
-        LegacyThrow(p_error);
+        if (p_throw)
+            LegacyThrow(p_error);
         return false;
     }
 
