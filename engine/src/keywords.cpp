@@ -419,7 +419,7 @@ Parse_stat MCIf::parse(MCScriptPoint &sp)
 	}
 	return PS_NORMAL;
 }
-#ifdef /* MCIf::exec */ LEGACY_EXEC
+
 Exec_stat MCIf::exec(MCExecPoint &ep)
 {
 	MCExecContext ctxt(ep);
@@ -487,13 +487,13 @@ Exec_stat MCIf::exec(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 }
-#endif /* MCIf::exec */
 
+/*
 void MCIf::exec_ctxt(MCExecContext &ctxt)
 {
     MCKeywordsExecIf(ctxt, cond, thenstatements, elsestatements, line, pos);
 }
-
+*/
 uint4 MCIf::linecount()
 {
 	return countlines(thenstatements) + countlines(elsestatements);
@@ -770,7 +770,6 @@ Parse_stat MCRepeat::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-#ifdef /* MCRepeat::exec */ LEGACY_EXEC
 Exec_stat MCRepeat::exec(MCExecPoint &ep)
 {
 	real8 endn = 0.0;
@@ -1205,8 +1204,8 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 	delete sp;
 	return ES_NORMAL;
 }
-#endif /* MCRepeat::exec */
 
+/*
 void MCRepeat::exec_ctxt(MCExecContext& ctxt)
 {
     switch (form)
@@ -1230,6 +1229,7 @@ void MCRepeat::exec_ctxt(MCExecContext& ctxt)
             break;
     }
 }
+*/
 
 uint4 MCRepeat::linecount()
 {
@@ -1292,7 +1292,12 @@ Exec_stat MCExit::exec(MCExecPoint &ep)
 	}
 	return exit;
 }
-
+/*
+void MCExit::exec_ctxt(MCExecContext& ctxt)
+{
+    MCKeywordsExecExit(ctxt, exit);
+}
+*/
 uint4 MCExit::linecount()
 {
 	return 0;
@@ -1319,11 +1324,17 @@ Parse_stat MCNext::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+
 Exec_stat MCNext::exec(MCExecPoint &ep)
 {
 	return ES_NEXT_REPEAT;
 }
-
+/*
+void MCNext::exec_ctxt(MCExecContext& ctxt)
+{
+    MCKeywordsExecNext(ctxt);
+}
+*/
 uint4 MCNext::linecount()
 {
 	return 0;
@@ -1374,7 +1385,12 @@ Exec_stat MCBreak::exec(MCExecPoint &ep)
 {
 	return ES_EXIT_SWITCH;
 }
-
+/*
+void MCBreak::exec_ctxt(MCExecContext& ctxt)
+{
+    MCKeywordsExecBreak(ctxt);
+}
+*/
 uint4 MCBreak::linecount()
 {
 	return 0;
@@ -1505,7 +1521,7 @@ Parse_stat MCSwitch::parse(MCScriptPoint &sp)
 	}
 	return PS_NORMAL;
 }
-#ifdef /* MCSwitch::exec */ LEGACY_EXEC
+
 Exec_stat MCSwitch::exec(MCExecPoint &ep)
 {
 	MCExecPoint ep2(ep);
@@ -1609,13 +1625,13 @@ Exec_stat MCSwitch::exec(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 }
-#endif /* MCSwitch::exec */
 
+/*
 void MCSwitch::exec_ctxt(MCExecContext& ctxt)
 {
     MCKeywordsExecSwitch(ctxt, cond, cases, ncases, defaultcase, caseoffsets, statements, getline(), getpos());
 }
-
+*/
 uint4 MCSwitch::linecount()
 {
 	return countlines(statements);
@@ -1785,7 +1801,6 @@ Parse_stat MCTry::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-#ifdef /* MCTry::exec */ LEGACY_EXEC
 Exec_stat MCTry::exec(MCExecPoint &ep)
 {
 	MCExecContext ctxt(ep);
@@ -1909,12 +1924,13 @@ Exec_stat MCTry::exec(MCExecPoint &ep)
 	MCtrylock--;
 	return retcode;
 }
-#endif /* MCTry::exec */
 
+/*
 void MCTry::exec_ctxt(MCExecContext& ctxt)
 {
     MCKeywordsExecTry(ctxt, trystatements, catchstatements, finallystatements, errorvar, line, pos);
 }
+*/
 
 uint4 MCTry::linecount()
 {
@@ -2390,4 +2406,24 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
 		MCeerror->clear();
 	MCtrylock--;
 	ctxt . SetExecStat(retcode);
+}
+
+void MCKeywordsExecExit(MCExecContext& ctxt, Exec_stat stat)
+{
+    if (stat == ES_EXIT_ALL)
+	{
+		MCexitall = True;
+		ctxt . SetExecStat(ES_NORMAL);
+	}
+	ctxt . SetExecStat(stat);
+}
+
+void MCKeywordsExecBreak(MCExecContext& ctxt)
+{
+    ctxt . SetExecStat(ES_EXIT_SWITCH);
+}
+
+void MCKeywordsExecNext(MCExecContext& ctxt)
+{
+    ctxt . SetExecStat(ES_NEXT_REPEAT);
 }

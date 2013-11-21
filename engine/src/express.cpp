@@ -36,6 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 
 #include "syntax.h"
+#include "statemnt.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -899,7 +900,7 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 		if (added)
 			MCnexecutioncontexts--;
 	}
-	
+     
 	// MW-2007-08-09: [[ Bug 5705 ]] Throws inside private functions don't trigger an
 	//   exception.
 	if (stat != ES_NORMAL && stat != ES_PASS && stat != ES_EXIT_HANDLER)
@@ -909,8 +910,37 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 	}
 
 	MCresult->eval(ep);
-
+    
 	return ES_NORMAL;
 }
+/*
+void MCFuncref::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+    MCKeywordsExecCommand(ctxt, resolved, handler, params, name, line, pos, platform_message, true);
+    
+    Exec_stat stat = ctxt . GetExecStat();
+    
+   	// MW-2007-08-09: [[ Bug 5705 ]] Throws inside private functions don't trigger an
+	//   exception.
+	if (stat != ES_NORMAL && stat != ES_PASS && stat != ES_EXIT_HANDLER)
+	{
+		ctxt . LegacyThrow(EE_FUNCTION_BADFUNCTION, name);
+		return;
+	}
 
+	if (MCresult->eval(ctxt, r_value . valueref_value))
+    {
+        MCAutoStringRef t_desc;
+        MCValueCopyDescription(r_value . valueref_value, &t_desc);
+        MCLog("%s - %s", MCStringGetCString(MCNameGetString(name)), MCStringGetCString(*t_desc));
+        r_value . type = kMCExecValueTypeValueRef;
+    }
+    else
+    {
+        r_value . stringref_value = MCValueRetain(kMCEmptyString);
+        r_value . type = kMCExecValueTypeStringRef;
+    }
+    
+    ctxt . SetExecStat(ES_NORMAL);
+} */
 ////////////////////////////////////////////////////////////////////////////////

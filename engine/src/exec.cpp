@@ -34,6 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 
 #include "debug.h"
+#include "param.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -524,6 +525,30 @@ bool MCExecContext::TryToEvaluateExpression(MCExpression *p_expr, uint2 line, ui
     }
 	while (!t_success && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
         
+	if (t_success)
+		return true;
+	
+	LegacyThrow(p_error);
+	return false;
+}
+
+bool MCExecContext::TryToEvaluateParameter(MCParameter *p_param, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result)
+{
+    MCAssert(p_param != nil);
+	
+    bool t_success;
+    t_success = false;
+    
+    do
+    {
+        if (p_param -> eval(*this, r_result))
+            t_success = true;
+        else
+            MCB_error(*this, line, pos, p_error);
+        IgnoreLastError();
+    }
+	while (!t_success && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
+    
 	if (t_success)
 		return true;
 	

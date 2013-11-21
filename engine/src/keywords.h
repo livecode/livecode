@@ -88,8 +88,8 @@ public:
 	}
 	~MCIf();
 	virtual Parse_stat parse(MCScriptPoint &);
-//	virtual Exec_stat exec(MCExecPoint &);
-    virtual void exec_ctxt(MCExecContext &ctxt);
+	virtual Exec_stat exec(MCExecPoint &);
+    //virtual void exec_ctxt(MCExecContext &ctxt);
 	virtual uint4 linecount();
 };
 
@@ -107,8 +107,8 @@ public:
 	MCRepeat();
 	~MCRepeat();
 	virtual Parse_stat parse(MCScriptPoint &);
-	//virtual Exec_stat exec(MCExecPoint &);
-    virtual void exec_ctxt(MCExecContext&);
+	virtual Exec_stat exec(MCExecPoint &);
+    //virtual void exec_ctxt(MCExecContext&);
     void exec_for(MCExecContext&);
     void exec_with(MCExecContext&);
     void exec_forever(MCExecContext&);
@@ -124,6 +124,7 @@ class MCExit : public MCStatement
 public:
 	virtual Parse_stat parse(MCScriptPoint &sp);
 	virtual Exec_stat exec(MCExecPoint &);
+   // virtual void exec_ctxt(MCExecContext&);
 	virtual uint4 linecount();
 };
 
@@ -132,6 +133,7 @@ class MCNext : public MCStatement
 public:
 	virtual Parse_stat parse(MCScriptPoint &sp);
 	virtual Exec_stat exec(MCExecPoint &);
+   // virtual void exec_ctxt(MCExecContext&);
 	virtual uint4 linecount();
 };
 
@@ -145,6 +147,7 @@ public:
 	}
 	virtual Parse_stat parse(MCScriptPoint &sp);
 	virtual Exec_stat exec(MCExecPoint &);
+    //virtual void exec_ctxt(MCExecContext&);
 	virtual uint4 linecount();
 };
 
@@ -152,6 +155,7 @@ class MCBreak : public MCStatement
 {
 public:
 	virtual Exec_stat exec(MCExecPoint &);
+    //virtual void exec_ctxt(MCExecContext&);
 	virtual uint4 linecount();
 };
 
@@ -175,8 +179,8 @@ public:
 	}
 	~MCSwitch();
 	virtual Parse_stat parse(MCScriptPoint &sp);
-//	virtual Exec_stat exec(MCExecPoint &);
-	virtual void exec_ctxt(MCExecContext &);
+	virtual Exec_stat exec(MCExecPoint &);
+//	virtual void exec_ctxt(MCExecContext &);
 	virtual uint4 linecount();
 };
 
@@ -208,8 +212,8 @@ public:
 	}
 	~MCTry();
 	virtual Parse_stat parse(MCScriptPoint &);
-	//virtual Exec_stat exec(MCExecPoint &);
-    virtual void exec_ctxt(MCExecContext&);
+	virtual Exec_stat exec(MCExecPoint &);
+    //virtual void exec_ctxt(MCExecContext&);
 	virtual uint4 linecount();
 };
 
@@ -223,5 +227,8 @@ void MCKeywordsExecRepeatForever(MCExecContext& ctxt, MCStatement *statements, u
 void MCKeywordsExecRepeatUntil(MCExecContext& ctxt, MCStatement *statements, MCExpression *endcond, uint2 line, uint2 pos);
 void MCKeywordsExecRepeatWhile(MCExecContext& ctxt, MCStatement *statements, MCExpression *endcond, uint2 line, uint2 pos);
 void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatement *catchstatements, MCStatement *finallystatements, MCVarref *errorvar, uint2 line, uint2 pos);
+void MCKeywordsExecExit(MCExecContext& ctxt, Exec_stat stat);
+void MCKeywordsExecBreak(MCExecContext& ctxt);
+void MCKeywordsExecNext(MCExecContext& ctxt);
 
 #endif

@@ -83,7 +83,9 @@ public:
 	virtual ~MCComref();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual Exec_stat exec(MCExecPoint &);
+//    virtual void exec_ctxt(MCExecContext&);
 };
 
 Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p_statements, Exec_errors p_error, bool p_is_try = false);
+void MCKeywordsExecCommand(MCExecContext& ctxt, bool resolved, MCHandler *handler, MCParameter *params, MCNameRef name, uint2 line, uint2 pos, bool platform_message, bool is_function);
 #endif

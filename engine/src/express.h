@@ -177,5 +177,6 @@ public:
 	virtual ~MCFuncref();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual Exec_stat eval(MCExecPoint &ep);
+    //void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
 };
 #endif
