@@ -2962,26 +2962,26 @@ bool MCStack::resolve_relative_path(MCStringRef p_path, MCStringRef& r_resolved)
 
 	if (!MCStringIsEmpty(t_stack_filename))
 	{
-		char *t_filename;
-		t_filename = nil;
-		const char *t_last_separator;
-		t_last_separator = strrchr(MCStringGetCString(t_stack_filename), '/');
-		if (t_last_separator != NULL)
-		{
-			t_filename = new char[MCStringGetLength(t_stack_filename) + MCStringGetLength(p_path) + 2];
-			strcpy(t_filename, MCStringGetCString(t_stack_filename));
-            
-			// If the relative path begins with "./" or ".\", we must remove this, otherwise
+		uindex_t t_slash;
+        if (MCStringLastIndexOfChar(t_stack_filename, '/', 0, kMCCompareExact, t_slash))
+        {
+            MCAutoStringRef t_new_filename;
+            MCStringCreateMutable(0, &t_new_filename);
+            /* UNCHECKED */ MCStringAppendSubstring(*t_new_filename, t_stack_filename, MCRangeMake(0, t_slash + 1));
+                
+            // If the relative path begins with "./" or ".\", we must remove this, otherwise
 			// certain system calls will get confused by the path.
-			const char *t_leaf;
-			if (MCStringGetNativeCharAtIndex(p_path, 0) == '.' && (MCStringGetNativeCharAtIndex(p_path, 1) == '/' || MCStringGetNativeCharAtIndex(p_path, 1) == '\\'))
-				t_leaf = MCStringGetCString(p_path) + 2;
+			if (MCStringBeginsWith(p_path, MCSTR("./"), kMCCompareExact) || MCStringBeginsWith(p_path, MCSTR(".\\"), kMCCompareExact))
+				/* UNCHECKED */ MCStringAppendSubstring(*t_new_filename, filename, MCRangeMake(2, MCStringGetLength(filename) - 2));
 			else
-				t_leaf = MCStringGetCString(p_path);
+				/* UNCHECKED */ MCStringAppend(*t_new_filename, filename);
             
-			strcpy(t_filename + (t_last_separator - MCStringGetCString(t_stack_filename) + 1), t_leaf);
+            if (MCS_exists(*t_new_filename, True))
+            {
+                return MCStringCopy(*t_new_filename, r_resolved);
+            }
 		}
-		MCStringCreateWithCString(t_filename, r_resolved);
+		r_resolved = MCValueRetain(t_stack_filename);
 		return true;
 	}
     

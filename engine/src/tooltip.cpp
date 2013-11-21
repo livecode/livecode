@@ -156,7 +156,7 @@ void MCTooltip::opentip()
 	// MW-2012-02-17: [[ LogFonts ]] Convert the tooltip font string to
 	//   a name and create the font.
 	MCAutoNameRef t_tt_font;
-	t_tt_font . CreateWithCString(MCStringGetCString(MCttfont));
+    /* UNCHECKED */ MCNameCreate(MCttfont, t_tt_font);
 	/* UNCHECKED */ MCFontCreate(t_tt_font, MCFontStyleFromTextStyle(FA_DEFAULT_STYLE), MCttsize, m_font);
 
 	rect.width = 0;

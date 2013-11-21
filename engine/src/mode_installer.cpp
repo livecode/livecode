@@ -253,12 +253,14 @@ public:
 #ifdef _MACOSX		
 			// On Mac OS X, the payload is in a separate file.
 			// MM-2011-03-23: Refactored code to use method call.
-			char *t_payload_file;
-			t_payload_file = nil;
-			/* FRAGILE */ if (MCCStringFormat(t_payload_file, "%.*s/payload", strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd)))
+			MCAutoStringRef t_payload_file;
+            uindex_t t_last_slash;
+            /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', 0, kMCCompareExact, t_last_slash);
+            /* FRAGILE */ if (MCStringFormat(&t_payload_file, "%.*@/payload", MCRangeMake(0, t_last_slash), MCcmd))
 			{
-				mmap_payload_from_file(t_payload_file, t_payload_data, t_payload_size);
-				MCCStringFree(t_payload_file);
+				MCAutoStringRefAsUTF8String t_utf8_payload_file;
+                /* UNCHECKED */ t_utf8_payload_file . Lock(*t_payload_file);
+                mmap_payload_from_file(*t_utf8_payload_file, t_payload_data, t_payload_size);
 				if(t_payload_data == nil)
 				{
 					MCresult -> sets("could not find payload");
@@ -1257,14 +1259,16 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 
 IO_stat MCDispatch::startup(void)
 {
+    char *t_mccmd;
+    /* UNCHECKED */ MCStringConvertToCString(MCcmd, t_mccmd);
 	startdir = MCS_getcurdir();
-	enginedir = strdup(MCStringGetCString(MCcmd));
+	enginedir = t_mccmd;
 	char *eptr = strrchr(enginedir, PATH_SEPARATOR);
 	if (eptr != NULL)
 		*eptr = '\0';
 	else
 		*enginedir = '\0';
-	char *openpath = strdup(MCStringGetCString(MCcmd)); //point to MCcmd string
+	char *openpath = t_mccmd; //point to MCcmd string
 
 	// set up image cache before the first stack is opened
 	MCCachedImageRep::init();
@@ -1910,7 +1914,9 @@ static void *MCExecutableFindSection(const char *p_name)
 	t_exe = NULL;
 	if (t_success)
 	{
-		t_exe = fopen(MCStringGetCString(MCcmd), "rb");
+        MCAutoStringRefAsUTF8String t_mccmd_utf8;
+        t_mccmd_utf8 . Lock(MCcmd);
+		t_exe = fopen(*t_mccmd_utf8, "rb");
 		if (t_exe == NULL)
 			t_success = false;
 	}

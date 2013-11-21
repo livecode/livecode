@@ -358,7 +358,7 @@ void MCImage::SetText(MCExecContext& ctxt, MCDataRef p_text)
 	MCImageBitmap *t_bitmap = nil;
 	MCImageCompressedBitmap *t_compressed = nil;
 	MCPoint t_hotspot;
-	char *t_name = nil;
+	MCStringRef t_name = nil;
 	IO_handle t_stream = nil;
     MCAutoDataRef t_data;
 	
@@ -390,7 +390,7 @@ void MCImage::SetText(MCExecContext& ctxt, MCDataRef p_text)
 		
 		MCImageFreeBitmap(t_bitmap);
 		MCImageFreeCompressedBitmap(t_compressed);
-		MCCStringFree(t_name);
+		MCValueRelease(t_name);
 		if (t_stream != nil)
 			MCS_close(t_stream);
 	}

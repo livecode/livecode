@@ -730,12 +730,17 @@ Boolean MCEPS::import(MCStringRef fname, IO_handle stream)
 	if (IO_read(postscript, size, stream) != IO_NORMAL)
 		return False;
 	postscript[size] = '\0';
-	const char *tname = strrchr(MCStringGetCString(fname), PATH_SEPARATOR);
-	if (tname != NULL)
-		tname += 1;
-	else
-		tname = MCStringGetCString(fname);
-	setname_cstring(tname);
+	uindex_t t_sep;
+    MCStringRef t_fname;
+    if (MCStringLastIndexOfChar(fname, PATH_SEPARATOR, 0, kMCCompareExact, t_sep))
+        /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMake(t_sep + 1, MCStringGetLength(fname) - (t_sep + 1)), t_fname);
+    else
+        t_fname = MCValueRetain(fname);
+    
+    MCNewAutoNameRef t_name;
+    if (!MCNameCreateAndRelease(t_fname, &t_name))
+        return False;
+    setname(*t_name);
 	setextents();
 	rect.width = (uint2)(ex * xscale / xf);
 	rect.height = (uint2)(ey * yscale / yf);

@@ -177,7 +177,7 @@ static void MCPrintingPrintDeviceOutputFormat(MCExecContext& ctxt, const MCPrint
 				return;
 			break;
 		case PRINTER_OUTPUT_FILE:
-			if (MCStringFormat(r_output, "file:%s", MCStringGetCString(p_input -> location)))
+			if (MCStringFormat(r_output, "file:%@", p_input -> location))
 				return;
 			break;
 		default:

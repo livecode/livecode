@@ -392,15 +392,17 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 		// Initialize CoreImage of QTEffects if needed.
 		if (t_effects -> type != VE_PLAIN)
 		{
+            MCAutoPointer<char> t_name;
+            /* UNCHECKED */ MCStringConvertToCString(t_effects -> name, &t_name);
 #ifdef _MAC_DESKTOP
 			// IM-2013-08-29: [[ ResIndependence ]] use scaled effect rect for CI effects
-			if (t_effects -> type == VE_UNDEFINED && MCCoreImageEffectBegin(MCStringGetCString(t_effects -> name), t_initial_image, t_final_image, t_device_rect, t_device_height, t_effects -> arguments))
+			if (t_effects -> type == VE_UNDEFINED && MCCoreImageEffectBegin(*t_name, t_initial_image, t_final_image, t_device_rect, t_device_height, t_effects -> arguments))
 				t_effects -> type = VE_CIEFFECT;
 			else
 #endif
 #ifdef FEATURE_QUICKTIME
 				// IM-2013-08-29: [[ ResIndependence ]] use scaled effect rect for QT effects
-				if (t_effects -> type == VE_UNDEFINED && MCQTEffectBegin(t_effects -> type, MCStringGetCString(t_effects -> name), t_effects -> direction, t_initial_image, t_final_image, t_device_rect))
+				if (t_effects -> type == VE_UNDEFINED && MCQTEffectBegin(t_effects -> type, *t_name, t_effects -> direction, t_initial_image, t_final_image, t_device_rect))
 					t_effects -> type = VE_QTEFFECT;
 #endif
 		}

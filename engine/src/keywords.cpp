@@ -165,7 +165,7 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 						MCperror->add(PE_LOCAL_BADINIT, sp);
 					return PS_ERROR;
 				}
-				/* UNCHECKED */ MCStringFormat(&init, "-%s", MCStringGetCString(sp.gettoken_stringref()));
+				/* UNCHECKED */ MCStringFormat(&init, "-%@", sp.gettoken_stringref());
 			}
 			else
 				init = sp.gettoken_stringref();

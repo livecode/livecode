@@ -312,14 +312,16 @@ extern void MCAndroidEngineRemoteCall(const char *, const char *, void *, ...);
 
 IO_stat MCDispatch::startup(void)
 {
+    char *t_mccmd;
+    /* UNCHECKED */ MCStringConvertToCString(MCcmd, t_mccmd);
 	startdir = MCS_getcurdir();
-	enginedir = strdup(MCStringGetCString(MCcmd));
+	enginedir = t_mccmd;
 	char *eptr = strrchr(enginedir, PATH_SEPARATOR);
 	if (eptr != NULL)
 		*eptr = '\0';
 	else
 		*enginedir = '\0';
-	char *openpath = strdup(MCStringGetCString(MCcmd)); //point to MCcmd string
+	char *openpath = t_mccmd; //point to MCcmd string
 
 	// set up image cache before the first stack is opened
 	MCCachedImageRep::init();
@@ -337,7 +339,9 @@ IO_stat MCDispatch::startup(void)
         t_stream = android_get_mainstack_stream();
 #else
         MCAutoStringRef t_path;
-        MCStringFormat(&t_path, "%.*s/iphone_test.livecode", strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd));
+        uindex_t t_last_slash;
+        /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', 0, kMCCompareExact, t_last_slash);
+        /* UNCHECKED */ MCStringFormat(&t_path, "%.*@/iphone_test.livecode", MCRangeMake(0, t_last_slash), MCcmd);
         t_stream = MCS_open(*t_path, kMCSOpenFileModeRead, False, False, 0);
 #endif
 		
@@ -449,14 +453,16 @@ IO_stat MCDispatch::startup(void)
 
 IO_stat MCDispatch::startup(void)
 {
+    char *t_mccmd;
+    /* UNCHECKED */ MCStringConvertToCString(MCcmd, t_mccmd);
 	startdir = MCS_getcurdir();
-	enginedir = strdup(MCStringGetCString(MCcmd));
+	enginedir = t_mccmd;
 	char *eptr = strrchr(enginedir, PATH_SEPARATOR);
 	if (eptr != NULL)
 		*eptr = '\0';
 	else
 		*enginedir = '\0';
-	char *openpath = strdup(MCStringGetCString(MCcmd)); //point to MCcmd string
+	char *openpath = t_mccmd; //point to MCcmd string
 
 #ifdef _DEBUG
 	// MW-2013-06-13: [[ CloneAndRun ]] When compiling in DEBUG mode, first check

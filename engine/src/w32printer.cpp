@@ -1312,7 +1312,9 @@ bool MCWindowsPrinter::DoResetSettings(MCDataRef p_settings)
 
 const char *MCWindowsPrinter::DoFetchName(void)
 {
-	return MCStringGetCString(m_name);
+    char *t_name;
+    /* UNCHECKED */ MCStringConvertToCString(m_name, t_name);
+	return t_name;
 }
 
 void MCWindowsPrinter::DoFetchSettings(void*& r_buffer, uint4& r_length)
@@ -1621,8 +1623,9 @@ MCPrinterResult MCWindowsPrinter::DoBeginPrint(MCStringRef p_document_name, MCPr
 	t_device = new MCWindowsPrinterDevice;
 
 	MCPrinterResult t_result;
-	t_result = t_device -> Start(t_dc, MCStringGetCString(p_document_name), GetDeviceOutputLocation());
-
+    MCAutoPointer<char> t_doc_name;
+    /* UNCHECKED */ MCStringConvertToCString(p_document_name, &t_doc_name);
+	t_result = t_device -> Start(t_dc, *t_doc_name, GetDeviceOutputLocation());
 
 	r_device = t_device;
 

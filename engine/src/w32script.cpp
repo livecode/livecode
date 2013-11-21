@@ -773,8 +773,10 @@ char *MCWindowsActiveScriptEnvironment::Call(const char *p_method, const char **
 
 MCScriptEnvironment *MCScreenDC::createscriptenvironment(MCStringRef p_language)
 {
+    MCAutoStringRefAsUTF8String t_language;
+    /* UNCHECKED */ t_language . Lock(p_language);
 	LPOLESTR t_ole_language;
-	t_ole_language = ConvertUTF8ToOLESTR(MCStringGetCString(p_language));
+	t_ole_language = ConvertUTF8ToOLESTR(*t_language);
 
 	MCWindowsActiveScriptEnvironment *t_environment;
 	t_environment = new MCWindowsActiveScriptEnvironment;

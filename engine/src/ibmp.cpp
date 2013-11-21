@@ -1587,7 +1587,7 @@ bool c_get_string_content_bounds(const char *p_line, uindex_t &r_content_start, 
 }
 
 #define XBM_MAX_LINE 128
-bool MCImageDecodeXBM(IO_handle p_stream, MCPoint &r_hotspot, char *&r_name, MCImageBitmap *&r_bitmap)
+bool MCImageDecodeXBM(IO_handle p_stream, MCPoint &r_hotspot, MCStringRef &r_name, MCImageBitmap *&r_bitmap)
 {
 	bool t_success = true;
 
@@ -1729,7 +1729,7 @@ bool MCImageDecodeXBM(IO_handle p_stream, MCPoint &r_hotspot, char *&r_name, MCI
 	if (t_success)
 	{
 		r_bitmap = t_bitmap;
-		r_name = t_name;
+        t_success = MCStringCreateWithCString(t_name, r_name);
 		r_hotspot = t_hotspot;
 	}
 	else

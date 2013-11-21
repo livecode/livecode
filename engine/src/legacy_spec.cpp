@@ -31,7 +31,7 @@ char *MCS_getcurdir(void)
 	char *t_cstring;
     MCS_getcurdir(&t_current);
 	if (MCStringGetLength(*t_current) &&
-        MCCStringClone(MCStringGetCString(*t_current), t_cstring))
+        MCStringConvertToCString(*t_current, t_cstring))
 		return t_cstring;
 	return NULL;
 }
@@ -42,9 +42,7 @@ char *MCS_resolvepath(const char* p_path)
 	MCAutoStringRef t_resolved;
 	char *t_cstring;
 
-	if (MCStringCreateWithCString(p_path, &t_path) &&
-		MCS_resolvepath(*t_path, &t_resolved) &&
-		MCCStringClone(MCStringGetCString(*t_resolved), t_cstring))
+	if (MCStringCreateWithCString(p_path, &t_path) && MCS_resolvepath(*t_path, &t_resolved) && MCStringConvertToCString(*t_resolved, t_cstring))
 		return t_cstring;
 
 	return NULL;
@@ -63,7 +61,7 @@ const char *MCS_tmpnam()
 
 	MCAutoStringRef t_tmpname;
 	MCS_tmpnam(&t_tmpname);
-    fname = strclone(MCStringGetCString(*t_tmpname));
+    /* UNCHECKED */ MCStringConvertToCString(*t_tmpname, fname);
 
 	return fname;
 }

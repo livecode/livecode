@@ -4252,7 +4252,7 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
         {
             MCAutoStringRef t_target;
             if (!ctxt . EvalExprAsStringRef(url -> startpos, EE_CHUNK_CANTGETDEST, &t_target))
-                return false;
+                return;
 
             MCU_geturl(ctxt, *t_target, &t_url_output);
         }

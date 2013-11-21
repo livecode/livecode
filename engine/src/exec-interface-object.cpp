@@ -2542,20 +2542,15 @@ void MCObject::SetTextFont(MCExecContext& ctxt, MCStringRef font)
 	
 	if (font != nil)
 	{
-		char *newfontname = NULL;
-		newfontname = strclone(MCStringGetCString(font));
-			
-		// MW-2012-02-17: [[ IntrinsicUnicode ]] Strip any lang tag from the
-		//   fontname.
-		char *t_tag;
-		t_tag = strchr(newfontname, ',');
-		if (t_tag != nil)
-			t_tag[0] = '\0';
-		
-		if (t_success)
-			t_success = MCNameCreateWithCString(newfontname, &t_font_name);
-
-		delete newfontname;
+		uindex_t t_comma;
+        MCAutoStringRef t_newfont;
+        if (MCStringFirstIndexOfChar(font, ',', 0, kMCCompareExact, t_comma))
+        {
+            t_success = MCStringCopySubstring(font, MCRangeMake(0, t_comma), &t_newfont) && MCNameCreate(*t_newfont, &t_font_name);
+             
+        }
+        else
+            t_success = MCNameCreate(font, &t_font_name);
 	}
 
 	if (t_success)
