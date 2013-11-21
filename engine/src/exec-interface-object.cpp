@@ -2352,14 +2352,11 @@ bool MCObject::GetPatterns(MCExecContext& ctxt, bool effective, MCStringRef& r_p
 		for (uint2 p = P_FORE_PATTERN; p <= P_FOCUS_PATTERN; p++)
 		{
 			uint4 t_id;
-			t_success = GetPattern(ctxt, (Properties)p, effective, t_id);
-			MCAutoStringRef t_pattern;
-			if (t_success)
-				t_success = MCStringFormat(&t_pattern, "%d", t_id);
-			if (t_success)
-				t_success = MCListAppend(*t_pattern_list, *t_pattern);
-			if (!t_success)
-				break;
+            MCAutoStringRef t_pattern;
+			if (GetPattern(ctxt, (Properties)p, effective, t_id))
+                t_success = MCStringFormat(&t_pattern, "%d", t_id) && MCListAppend(*t_pattern_list, *t_pattern);
+            else
+                t_success = MCListAppend(*t_pattern_list, kMCEmptyString);
 		}
 	}
 	
