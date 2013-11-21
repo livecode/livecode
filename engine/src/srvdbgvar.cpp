@@ -673,8 +673,10 @@ bool MCServerDebugListVariables(uint32_t p_start, uint32_t p_count, MCServerDebu
 			else
 			{
 				t_value = &t_owner -> variable -> getvalue();
-				t_name_ptr = MCNameGetOldString(t_owner -> variable -> getname()) . getstring();
-				t_name_length = MCNameGetOldString(t_owner -> variable -> getname()) . getlength();
+                MCAutoPointer<char> temp_name;
+                /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(t_owner -> variable -> getname()), &temp_name);
+				t_name_ptr = *temp_name;
+				t_name_length = MCStringGetLength(MCNameGetString(t_owner -> variable -> getname());
 			}
 		}
 		else
