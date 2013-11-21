@@ -5793,24 +5793,6 @@ Chunk_term MCChunk::getlastchunktype(void)
 	return CT_UNDEFINED;
 }
 
-/* WRAPPER */
-Exec_stat MCChunk::evalvarchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_force, MCVariableChunkPtr& r_chunk)
-{
-    MCExecContext ctxt(ep);
-    MCEngineMarkVariable(ctxt, destvar, r_chunk . mark);
-
-    if (mark(ep, p_force, p_whole_chunk, r_chunk . mark) != ES_NORMAL)
-    {
-        MCeerror->add(EE_CHUNK_CANTMARK, line, pos);
-        return ES_ERROR;
-    }
-
-    r_chunk . variable = destvar;
-    r_chunk . chunk = getlastchunktype();
-
-    return ES_NORMAL;
-}
-
 bool MCChunk::evalvarchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCVariableChunkPtr& r_chunk)
 {
     MCEngineMarkVariable(ctxt, destvar, r_chunk . mark);
