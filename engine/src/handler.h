@@ -82,7 +82,9 @@ public:
 	
 	const char *getname_cstring(void)
 	{
-		return MCNameGetCString(name);
+        char *t_name;
+        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(name), t_name);
+		return t_name;
 	}
 	
 	bool hasname(MCNameRef other_name)

@@ -356,7 +356,9 @@ bool MCCrypt_rsa_op(bool p_encrypt, bool p_is_public, MCStringRef p_message_in, 
 #ifdef MCSSL
 	uint4 t_outlen;
 	char *t_ssl_encode;
-	t_ssl_encode = SSL_encode(p_is_decrypt, MCNameGetCString(p_cipher), MCStringGetCString(p_data), MCStringGetLength(p_data), 
+    MCAutoPointer<char> t_cipher;
+    /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(p_cipher), &t_cipher);
+	t_ssl_encode = SSL_encode(p_is_decrypt, *t_cipher, MCStringGetCString(p_data), MCStringGetLength(p_data),
 								t_outlen, MCStringGetCString(p_key), MCStringGetLength(p_key), p_is_password, p_bit_rate,
 								p_salt != nil ? MCStringGetCString(p_salt) : nil, p_salt != nil ? MCStringGetLength(p_salt) : 0, 
 								p_iv != nil ? MCStringGetCString(p_iv) : nil, p_iv != nil ? MCStringGetLength(p_iv) : 0);

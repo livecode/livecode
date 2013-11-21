@@ -719,8 +719,8 @@ void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRe
 		if (s->shared)
 		{
             char *t_name_copy;
+            /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(s->name), t_name_copy);
             
-            t_name_copy = strclone(MCNameGetCString(s->name));
 			char *portptr = strchr(t_name_copy, ':');
 			*portptr = '\0';
 			struct sockaddr_in to;

@@ -252,6 +252,10 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 		if (MCStringIsEqualToCString(argv[i], "-h", kMCCompareExact)
 			&& MCglobals == NULL)
 		{
+            MCAutoPointer<char> t_MCN_version;
+            MCAutoPointer<char> t_MCcmd;
+            /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(MCN_version_string), &t_MCN_version);
+            /* UNCHECKED */ MCStringConvertToCString(MCcmd, &t_MCcmd);
 			fprintf(stderr, "Revolution %s Copyright 2003-2008 Runtime Revolution Ltd\n\
 			        Usage: %s [-d[isplay] displayname] \n\
 			        [-f[iles] (disable access to files and processes)\n\
@@ -265,7 +269,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 			        [-u[i]] (don't create graphical user interface)\n\
 			        [-v[isualid] n] (use visual id n as listed from xdpyinfo)\n\
 			        [-w[indowid] n] (watch window id n for commands)\n\
-			        [stackname(s) | argument(s)]\n", MCNameGetCString(MCN_version_string), MCStringGetCString(MCcmd));
+			        [stackname(s) | argument(s)]\n", *t_MCN_version, *t_MCcmd);
 			return False;
 		}
 		

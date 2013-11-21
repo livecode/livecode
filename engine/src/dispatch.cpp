@@ -608,7 +608,9 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 
 	if (readheader(stream, version) == IO_NORMAL)
 	{
-		if (strcmp(version, MCNameGetCString(MCN_version_string)) > 0)
+        MCAutoPointer<char> t_MCN_version;
+        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(MCN_version_string), &t_MCN_version);
+		if (strcmp(version, *t_MCN_version) > 0)
 		{
 			MCresult->sets("stack was produced by a newer version");
 			return IO_ERROR;
