@@ -136,7 +136,6 @@ extern void MCU_sort(MCSortnode *items, uint4 nitems,
 extern void MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize);
 #endif
 extern bool MCU_matchname(MCNameRef p_name, Chunk_term type, MCNameRef name);
-extern Boolean MCU_matchname(const MCString &, Chunk_term type, MCNameRef name);
 extern void MCU_snap(int2 &p);
 extern void MCU_roundrect(MCPoint *&, uint2 &npoints,
 	                          const MCRectangle &, uint2 radius);

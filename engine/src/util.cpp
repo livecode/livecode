@@ -1301,10 +1301,10 @@ void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize, const 
 	*data = ndata;
 }
 #endif
-
+#if 0
 /* WRAPPER */ bool MCU_matchname(MCNameRef p_name, Chunk_term type, MCNameRef name)
 {
-    return MCU_matchname(MCNameGetOldString(p_name), type, name) == True;
+    return MCU_matchname(MCNameGetString(p_name), type, name) == True;
 }
 
 Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
@@ -1343,59 +1343,64 @@ Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
 	                            strlen(nametable[type - CT_STACK])))
 	{
 		if (l == tname.getlength() + 2)
+        {
+            MCLog("SUCCESS : match name '%s' to '%s' attempted and succeeded", MCNameGetCString(name), test . getstring());
+
 			match = True;
+        }
 		
 		if (!match)
 			MCLog("[[ Bug 11068 ]] match name '%s' to '%.*s' attempted and failed due to better checking", MCNameGetCString(name), test . getlength(), test . getstring());
 	}
 
 	return match;
-#if 0
-    Boolean MCU_matchname(MCStringRef test, Chunk_term type, MCNameRef name)
-    {
-        
-        if (name == nil || MCNameIsEmpty(name) ||test == nil)
-            return False;
-        
-        if (MCStringIsEqualTo(MCNameGetString(name), test, kMCCompareCaseless))
-            return True;
-        
-        Boolean match = False;
-        
-        static const char *nametable[] =
-        {
-            MCstackstring, MCaudiostring,
-            MCvideostring, MCbackgroundstring,
-            MCcardstring, MCnullstring,
-            MCgroupstring, MCnullstring,
-            MCbuttonstring, MCnullstring,
-            MCnullstring, MCscrollbarstring,
-            MCimagestring, MCgraphicstring,
-            MCepsstring, MCmagnifierstring,
-            MCcolorstring, MCfieldstring
-        };
-        
-        
-        // MW-2013-07-29: [[ Bug 11068 ]] Make sure that we only match a reference
-        //   of the form 'field "..."', and throw an error if not.
-        
-        MCAutoStringRef t_pattern;
-        
-        MCStringFormat(&t_pattern, "%@ \"%@\"", MCSTR(nametable[type - CT_STACK]), MCNameGetString(name));
-        
-        if (MCStringContains(test, *t_pattern, kMCCompareCaseless))
-        {
-            match = True;
-            MCLog("Great success!! %s", "!!");
-        }
-        else
-            MCLog("[[ Bug 11068 ]] match name '%s' to '%@' attempted and failed due to better checking", MCNameGetCString(name), test);
-        
-        return match;
-        
-    }
-#endif
 }
+#endif
+
+bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
+{
+    
+    if (name == nil || MCNameIsEmpty(name) ||test == nil)
+        return false;
+    
+    if (MCNameIsEqualTo(name, test, kMCCompareCaseless))
+        return true;
+    
+    Boolean match = false;
+    
+    static const char *nametable[] =
+    {
+        MCstackstring, MCaudiostring,
+        MCvideostring, MCbackgroundstring,
+        MCcardstring, MCnullstring,
+        MCgroupstring, MCnullstring,
+        MCbuttonstring, MCnullstring,
+        MCnullstring, MCscrollbarstring,
+        MCimagestring, MCgraphicstring,
+        MCepsstring, MCmagnifierstring,
+        MCcolorstring, MCfieldstring
+    };
+    
+    
+    // MW-2013-07-29: [[ Bug 11068 ]] Make sure that we only match a reference
+    //   of the form 'field "..."', and throw an error if not.
+    
+    MCAutoStringRef t_pattern;
+    
+    MCStringFormat(&t_pattern, "%@ \"%@\"", MCSTR(nametable[type - CT_STACK]), MCNameGetString(name));
+    
+    if (MCStringContains(MCNameGetString(test), *t_pattern, kMCCompareCaseless))
+    {
+        uindex_t t_quotes;
+        /* UNCHECKED */ MCStringFirstIndexOfChar(MCNameGetString(test), '"', 0, kMCCompareExact, t_quotes);
+        if (MCStringGetLength(MCNameGetString(test)) - t_quotes == MCStringGetLength(MCNameGetString(name)) + 2)
+            match = true;
+        if (!match)
+            MCLog("[[ Bug 11068 ]] match name '%s' to '%@' attempted and failed due to better checking", MCNameGetCString(name), test);
+    }
+    return match;
+}
+
 
 void MCU_snap(int2 &p)
 {
