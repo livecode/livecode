@@ -1301,61 +1301,6 @@ void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize, const 
 	*data = ndata;
 }
 #endif
-#if 0
-/* WRAPPER */ bool MCU_matchname(MCNameRef p_name, Chunk_term type, MCNameRef name)
-{
-    return MCU_matchname(MCNameGetString(p_name), type, name) == True;
-}
-
-Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
-{
-	if (name == nil || MCNameIsEmpty(name) || test == MCnullmcstring)
-		return False;
-
-	if (MCNameIsEqualToOldString(name, test, kMCCompareCaseless))
-		return True;
-
-	Boolean match = False;
-	MCString tname = MCNameGetOldString(name);
-	static const char *nametable[] =
-	    {
-	        MCstackstring, MCaudiostring,
-	        MCvideostring, MCbackgroundstring,
-	        MCcardstring, MCnullstring,
-	        MCgroupstring, MCnullstring,
-	        MCbuttonstring, MCnullstring,
-	        MCnullstring, MCscrollbarstring,
-	        MCimagestring, MCgraphicstring,
-	        MCepsstring, MCmagnifierstring,
-	        MCcolorstring, MCfieldstring
-	    };
-	
-	// MW-2013-07-29: [[ Bug 11068 ]] Make sure that we only match a reference
-	//   of the form 'field "..."', and throw an error if not.
-	const char *sptr = test.getstring();
-	uint4 l = test.getlength();
-	if (MCU_strchr(sptr, l, '"')
-			&& l > tname.getlength() + 1
-	        && sptr[tname.getlength() + 1] == '"'
-	        && !MCU_strncasecmp(sptr + 1, tname.getstring(), tname.getlength())
-	        && sptr - test.getstring() >= (int)strlen(nametable[type - CT_STACK])
-	        && !MCU_strncasecmp(test.getstring(), nametable[type - CT_STACK],
-	                            strlen(nametable[type - CT_STACK])))
-	{
-		if (l == tname.getlength() + 2)
-        {
-            MCLog("SUCCESS : match name '%s' to '%s' attempted and succeeded", MCNameGetCString(name), test . getstring());
-
-			match = True;
-        }
-		
-		if (!match)
-			MCLog("[[ Bug 11068 ]] match name '%s' to '%.*s' attempted and failed due to better checking", MCNameGetCString(name), test . getlength(), test . getstring());
-	}
-
-	return match;
-}
-#endif
 
 bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
 {
