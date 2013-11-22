@@ -188,6 +188,7 @@ void MCEPS::setrect(const MCRectangle &nrect)
 		rect = nrect;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCEPS::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	switch (which)
@@ -248,7 +249,9 @@ Exec_stat MCEPS::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, 
 	}
 	return ES_NORMAL;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 Exec_stat MCEPS::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = True;
@@ -424,6 +427,7 @@ Exec_stat MCEPS::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bool
 	}
 	return ES_NORMAL;
 }
+#endif
 
 IO_stat MCEPS::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 {
