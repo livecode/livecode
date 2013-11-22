@@ -76,6 +76,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <libgnomevfs/gnome-vfs-mime.h>
 #include <libgnomevfs/gnome-vfs-mime-handlers.h>
 
+#ifdef LEGACY_EXEC
+
 // This is in here so we do not need GLIBC2.4
 extern "C" void __attribute__ ((noreturn)) __stack_chk_fail (void)
 {
@@ -727,6 +729,7 @@ Boolean MCS_setcurdir(const char *path)
 
 #define ENTRIES_CHUNK 4096
 
+#ifdef LEGACY_EXEC
 void MCS_getentries(char **dptr, bool files, bool islong)
 {
 	uint4 flag = files ? S_IFREG : S_IFDIR;
@@ -786,7 +789,9 @@ void MCS_getentries(char **dptr, bool files, bool islong)
 	closedir(dirptr);
 	*dptr = tptr;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 void MCS_getentries(MCExecPoint& p_exec, bool p_files, bool p_islong)
 {
 	char *t_buffer;
@@ -794,11 +799,13 @@ void MCS_getentries(MCExecPoint& p_exec, bool p_files, bool p_islong)
 	p_exec . copysvalue(t_buffer, strlen(t_buffer));
 	delete t_buffer;
 }
+#endif
 
 #define DNS_SCRIPT "repeat for each line l in url \"binfile:/etc/resolv.conf\";\
 if word 1 of l is \"nameserver\" then put word 2 of l & cr after it; end repeat;\
 delete last char of it; return it"
 
+#ifdef LEGACY_EXEC
 void MCS_getDNSservers(MCExecPoint &ep)
 {
 	ep . clear();
@@ -818,6 +825,7 @@ Boolean MCS_getdrives(MCExecPoint &ep)
 	ep.clear();
 	return True;
 }
+#endif
 
 Boolean MCS_noperm(const char *path)
 {
@@ -2159,3 +2167,4 @@ bool MCS_generate_uuid(char p_buffer[128])
 
 	return false;
 }
+#endif

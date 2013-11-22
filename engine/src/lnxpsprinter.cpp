@@ -600,10 +600,18 @@ MCPrinterResult MCPSPrinterDevice::Bookmark(const char *title, double x, double 
 
 char * getdefaultprinter(void)
 {
-	MCExecPoint ep ( NULL, NULL, NULL ) ;
+    MCAutoValueRef t_value;
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    MCAutoStringRef t_string;
+    char *t_cstring;
+
 	MCdefaultstackptr->domess(MCSTR(DEFAULT_PRINTER_SCRIPT));
-	MCresult->eval(ep);
-	return strdup(ep.getcstring());
+
+    /* UNCHECKED */ MCresult->eval(ctxt, &t_value);
+    /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
+    /* UNCHECKED */  MCStringConvertToCString(*t_string, t_cstring);
+    return t_cstring;
 }
 
 void MCPSPrinter::DoInitialize(void)
