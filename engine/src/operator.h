@@ -173,15 +173,15 @@ public:
 
         if (t_left . type == kMCExecValueTypeArrayRef)
         {
-            MCAutoArrayRef t_result;
+            MCArrayRef t_result;
 
             if (t_right . type == kMCExecValueTypeArrayRef)
-                EvalArrayByArray(ctxt, t_left . arrayref_value, t_right . arrayref_value, &t_result);
+                EvalArrayByArray(ctxt, t_left . arrayref_value, t_right . arrayref_value, t_result);
             else
-                EvalArrayByNumber(ctxt, t_left . arrayref_value, t_right . double_value, &t_result);
+                EvalArrayByNumber(ctxt, t_left . arrayref_value, t_right . double_value, t_result);
 
             if (!ctxt . HasError())
-                MCExecValueTraits<MCArrayRef>::set(r_value, *t_result);
+                MCExecValueTraits<MCArrayRef>::set(r_value, t_result);
         }
         else
         {
@@ -253,25 +253,25 @@ public:
 
         if (t_left . type == kMCExecValueTypeArrayRef)
         {
-            MCAutoArrayRef t_result;
+            MCArrayRef t_result;
 
             if (t_right . type == kMCExecValueTypeArrayRef)
-                EvalArrayByArray(ctxt, t_left . arrayref_value, t_right . arrayref_value, &t_result);
+                EvalArrayByArray(ctxt, t_left . arrayref_value, t_right . arrayref_value, t_result);
             else
-                EvalArrayByNumber(ctxt, t_left . arrayref_value, t_right . double_value, &t_result);
+                EvalArrayByNumber(ctxt, t_left . arrayref_value, t_right . double_value, t_result);
 
             if (!ctxt . HasError())
-                MCExecValueTraits<MCArrayRef>::set(r_value, *t_result);
+                MCExecValueTraits<MCArrayRef>::set(r_value, t_result);
         }
         else
         {
             if (t_right . type == kMCExecValueTypeArrayRef)
             {
-                MCAutoArrayRef t_result;
-                EvalArrayByNumber(ctxt, t_right . arrayref_value, t_left . double_value, &t_result);
+                MCArrayRef t_result;
+                EvalArrayByNumber(ctxt, t_right . arrayref_value, t_left . double_value, t_result);
 
                 if (!ctxt . HasError())
-                    MCExecValueTraits<MCArrayRef>::set(r_value, *t_result);
+                    MCExecValueTraits<MCArrayRef>::set(r_value, t_result);
             }
             else
             {
@@ -428,8 +428,18 @@ class MCWrap : public MCMultiBinaryOperatorCtxt<
         kMCMathEvalWrapArrayByArrayMethodInfo>
 {};
 
-class MCNot : public MCUnaryOperatorCtxt<bool, MCLogicEvalNot, EE_NOT_BADRIGHT, FR_UNARY, kMCLogicEvalNotMethodInfo>
-{};
+class MCNot : public MCUnaryOperator
+{
+public:
+    MCNot()
+    {
+        rank = FR_UNARY;
+    }
+
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
+
+    virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCLogicEvalNotMethodInfo; }
+};
 
 class MCNotBits : public MCUnaryOperatorCtxt<uinteger_t, MCMathEvalBitwiseNot, EE_NOTBITS_BADRIGHT, FR_UNARY, kMCMathEvalBitwiseNotMethodInfo>
 {};

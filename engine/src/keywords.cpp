@@ -2369,7 +2369,6 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
                         if (state != TS_TRY)
                         {
                             MCtrylock--;
-							ctxt . LegacyThrow(EE_TRY_BADSTATEMENT);
                             return;
                         }
                         else
