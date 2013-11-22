@@ -151,8 +151,27 @@ bool MCObjectPropertySet::storeelement(MCExecContext& ctxt, MCNameRef p_name, MC
 
 bool MCObjectPropertySet::restrict(MCStringRef p_string)
 {
+    bool t_success;
+    t_success = true;
+    MCArrayRef t_new_props;
+    if (!MCStringSplit(p_string, MCSTR("\n"), nil, kMCCompareExact, t_new_props))
+        return false;
+    uint t_size;
+    t_size = MCArrayGetCount(t_new_props);
+    for (index_t i = 0; i < t_size && t_success; i++)
+    {
+        MCValueRef t_key_valueref;
+        if (t_success)
+            t_success = MCArrayFetchValueAtIndex(t_new_props, i, t_key_valueref);
+        MCValueRef t_value;
+        if (t_success)
+            t_success = MCArrayFetchValue(m_props, false, (MCNameRef)t_key_valueref, t_value);
+        if (t_success)
+            t_success = MCArrayStoreValue(t_new_props, false, (MCNameRef)t_key_valueref, t_value);
+    }
     MCValueRelease(m_props);
-    return MCStringSplit(p_string, MCSTR("\n"), nil, kMCCompareExact, m_props);
+    m_props = t_new_props;
+    return t_success;
 }
 
 //////////
