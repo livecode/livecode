@@ -128,16 +128,25 @@ void MCStringsEvalToUpper(MCExecContext& ctxt, MCStringRef p_string, MCStringRef
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCStringsEvalNumToChar(MCExecContext &ctxt, integer_t p_codepoint, MCStringRef& r_character)
+void MCStringsEvalNumToChar(MCExecContext &ctxt, uinteger_t p_codepoint, MCValueRef& r_character)
 {
     // Choose the correct type based on the Unicode setting of the context
     if (ctxt.GetUseUnicode())
-        MCStringsEvalNumToUnicodeChar(ctxt, p_codepoint, r_character);
+    {
+        // For compatibility, ignore the upper 16 bits
+        uint16_t t_val;
+        t_val = p_codepoint;
+        
+        // To maintain backwards compatibility, this needs to return a dataref
+        MCAutoDataRef t_data;
+        /* UNCHECKED */ MCDataCreateWithBytes((byte_t*)&t_val, 2, &t_data);
+        r_character = MCValueRetain(*t_data);
+    }
     else
-        MCStringsEvalNumToNativeChar(ctxt, p_codepoint, r_character);
+        MCStringsEvalNumToNativeChar(ctxt, p_codepoint, (MCStringRef&)r_character);
 }
 
-void MCStringsEvalNumToNativeChar(MCExecContext& ctxt, integer_t p_codepoint, MCStringRef& r_character)
+void MCStringsEvalNumToNativeChar(MCExecContext& ctxt, uinteger_t p_codepoint, MCStringRef& r_character)
 {
     // Is the supplied codepoint valid for a native char?
     if (p_codepoint < 256)
@@ -157,7 +166,7 @@ void MCStringsEvalNumToNativeChar(MCExecContext& ctxt, integer_t p_codepoint, MC
 	ctxt . Throw();
 }
 
-void MCStringsEvalNumToUnicodeChar(MCExecContext &ctxt, integer_t p_codepoint, MCStringRef& r_character)
+void MCStringsEvalNumToUnicodeChar(MCExecContext &ctxt, uinteger_t p_codepoint, MCStringRef& r_character)
 {
     // Check that the codepoint is within the encodable range for UTF-16 (values
     // outside this range may be representable in other encodings but are not
@@ -197,44 +206,65 @@ void MCStringsEvalNumToUnicodeChar(MCExecContext &ctxt, integer_t p_codepoint, M
     ctxt . Throw();
 }
 
-void MCStringsEvalCharToNum(MCExecContext& ctxt, MCStringRef p_character, MCValueRef& r_codepoint)
+void MCStringsEvalCharToNum(MCExecContext& ctxt, MCValueRef p_character, uinteger_t& r_codepoint)
 {
-	if (ctxt.GetUseUnicode())
-        MCStringsEvalUnicodeCharToNum(ctxt, p_character, r_codepoint);
+	// This function has to be backwards compatible and do the broken stuff...
+    MCAutoDataRef t_data;
+    ctxt.ConvertToData(p_character, &t_data);
+    if (ctxt.GetUseUnicode())
+    {
+        if (MCDataGetLength(*t_data) >= 2)
+        {
+            const uint16_t *t_val;
+            t_val = (const uint16_t*)MCDataGetBytePtr(*t_data);
+            r_codepoint = *t_val;
+            return;
+        }
+    }
     else
-        MCStringsEvalNativeCharToNum(ctxt, p_character, r_codepoint);
+    {
+        r_codepoint = MCDataGetByteAtIndex(*t_data, 0);
+        return;
+    }
+    
+    r_codepoint = ~0;
 }
 
-void MCStringsEvalNativeCharToNum(MCExecContext& ctxt, MCStringRef p_character, MCValueRef& r_codepoint)
+void MCStringsEvalNativeCharToNum(MCExecContext& ctxt, MCStringRef p_character, uinteger_t& r_codepoint)
 {
-    char_t t_char;
-    t_char = MCStringGetNativeCharAtIndex(p_character, 0);
-    
-    MCNumberRef t_codepoint_as_number;
-    if (MCNumberCreateWithInteger(t_char, t_codepoint_as_number))
+    // Only accept strings containing a single character
+    if (MCStringGetLength(p_character) == 1)
     {
-        r_codepoint = t_codepoint_as_number;
+        r_codepoint = MCStringGetNativeCharAtIndex(p_character, 0);
+    }
+    
+    ctxt.Throw();
+}
+
+void MCStringsEvalUnicodeCharToNum(MCExecContext& ctxt, MCStringRef p_character, uinteger_t& r_codepoint)
+{
+    // If the string has two characters, it must consist of surrogates
+    if (MCStringGetLength(p_character) == 2)
+    {
+        // Check for a valid surrogate pair
+        unichar_t t_lead, t_trail;
+        t_lead = MCStringGetCharAtIndex(p_character, 0);
+        t_trail = MCStringGetCharAtIndex(p_character, 1);
+        if (0xD800 <= t_lead && t_lead <= 0xDBFF && 0xDC00 <= t_trail && t_trail <= 0xDFFF)
+        {
+            // Valid surrogate pair
+            r_codepoint = 0x10000 + ((t_lead - 0xD800) << 10) + (t_trail - 0xDC00);
+            return;
+        }
+    }
+    else if (MCStringGetLength(p_character) == 1)
+    {
+        // Just take the value in the string
+        r_codepoint = MCStringGetCodepointAtIndex(p_character, 0);
         return;
     }
     
     ctxt.Throw();
-    r_codepoint = MCValueRetain(kMCEmptyString);
-}
-
-void MCStringsEvalUnicodeCharToNum(MCExecContext& ctxt, MCStringRef p_character, MCValueRef& r_codepoint)
-{
-    codepoint_t t_codepoint;
-    t_codepoint = MCStringGetCodepointAtIndex(p_character, 0);
-    
-    MCNumberRef t_codepoint_as_number;
-    if (MCNumberCreateWithInteger(t_codepoint, t_codepoint_as_number))
-    {
-        r_codepoint = t_codepoint_as_number;
-        return;
-    }
-    
-    ctxt.Throw();
-    r_codepoint = MCValueRetain(kMCEmptyString);
 }
 
 void MCStringsEvalNumToByte(MCExecContext& ctxt, integer_t p_byte, MCStringRef& r_byte)

@@ -1550,12 +1550,15 @@ Exec_stat MCCharToNum::eval(MCExecPoint &ep)
 	MCAutoStringRef t_source;
 	/* UNCHECKED */ ep . copyasstringref(&t_source);
 
-	MCAutoValueRef t_result;
-	MCStringsEvalCharToNum(ctxt, *t_source, &t_result);
+	codepoint_t t_codepoint;
+	MCStringsEvalCharToNum(ctxt, *t_source, t_codepoint);
 
 	if (!ctxt . HasError())
 	{
-		ep . setvalueref(*t_result);
+		if (t_codepoint != ~0)
+            ep . setnvalue(t_codepoint);
+        else
+            ep . clear();
 		return ES_NORMAL;
 	}
 
@@ -5998,12 +6001,12 @@ Exec_stat MCNativeCharToNum::eval(MCExecPoint &ep)
     MCAutoStringRef t_source;
     /* UNCHECKED */ ep.copyasstringref(&t_source);
     
-    MCAutoValueRef t_result;
-    MCStringsEvalNativeCharToNum(ctxt, *t_source, &t_result);
+    codepoint_t t_codepoint;
+    MCStringsEvalNativeCharToNum(ctxt, *t_source, t_codepoint);
     
     if (!ctxt.HasError())
     {
-        /* UNCHECKED */ ep.setvalueref(*t_result);
+        /* UNCHECKED */ ep.setnvalue(t_codepoint);
         return ES_NORMAL;
     }
     
@@ -6055,7 +6058,7 @@ Exec_stat MCNumToChar::eval(MCExecPoint &ep)
 
 	MCExecContext ctxt(ep);
 
-	MCAutoStringRef t_result;
+	MCAutoValueRef t_result;
 	MCStringsEvalNumToChar(ctxt, ep . getint4(), &t_result);
 
 	if (!ctxt . HasError())
@@ -8315,12 +8318,12 @@ Exec_stat MCUnicodeCharToNum::eval(MCExecPoint &ep)
     MCAutoStringRef t_source;
     /* UNCHECKED */ ep.copyasstringref(&t_source);
     
-    MCAutoValueRef t_result;
-    MCStringsEvalUnicodeCharToNum(ctxt, *t_source, &t_result);
+    codepoint_t t_codepoint;
+    MCStringsEvalUnicodeCharToNum(ctxt, *t_source, t_codepoint);
     
     if (!ctxt.HasError())
     {
-        /* UNCHECKED */ ep.setvalueref(*t_result);
+        /* UNCHECKED */ ep.setnvalue(t_codepoint);
         return ES_NORMAL;
     }
     

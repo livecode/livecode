@@ -1678,12 +1678,12 @@ extern MCExecMethodInfo *kMCStringsEvalCharsOfTextByOrdinalMethodInfo;
 void MCStringsEvalToLower(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_lower);
 void MCStringsEvalToUpper(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_lower);
 
-void MCStringsEvalNumToChar(MCExecContext& ctxt, integer_t codepoint, MCStringRef& r_character);
-void MCStringsEvalNumToNativeChar(MCExecContext& ctxt, integer_t codepoint, MCStringRef& r_character);
-void MCStringsEvalNumToUnicodeChar(MCExecContext& ctxt, integer_t codepoint, MCStringRef& r_character);
-void MCStringsEvalCharToNum(MCExecContext& ctxt, MCStringRef character, MCValueRef& r_codepoint);
-void MCStringsEvalNativeCharToNum(MCExecContext& ctxt, MCStringRef character, MCValueRef& r_codepoint);
-void MCStringsEvalUnicodeCharToNum(MCExecContext& ctxt, MCStringRef character, MCValueRef& r_codepoint);
+void MCStringsEvalNumToChar(MCExecContext& ctxt, uinteger_t codepoint, MCValueRef& r_character);
+void MCStringsEvalNumToNativeChar(MCExecContext& ctxt, uinteger_t codepoint, MCStringRef& r_character);
+void MCStringsEvalNumToUnicodeChar(MCExecContext& ctxt, uinteger_t codepoint, MCStringRef& r_character);
+void MCStringsEvalCharToNum(MCExecContext& ctxt, MCValueRef character, uinteger_t& r_codepoint);
+void MCStringsEvalNativeCharToNum(MCExecContext& ctxt, MCStringRef character, uinteger_t& r_codepoint);
+void MCStringsEvalUnicodeCharToNum(MCExecContext& ctxt, MCStringRef character, uinteger_t& r_codepoint);
 void MCStringsEvalNumToByte(MCExecContext& ctxt, integer_t codepoint, MCStringRef& r_byte);
 void MCStringsEvalByteToNum(MCExecContext& ctxt, MCStringRef byte, integer_t& r_codepoint);
 
