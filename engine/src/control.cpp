@@ -415,6 +415,7 @@ uint2 MCControl::gettransient() const
 	return 0;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCControl::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	switch (which)
@@ -693,6 +694,7 @@ Exec_stat MCControl::setarrayprop_legacy(uint4 parid, Properties which, MCExecPo
 	}
 	return MCObject::setarrayprop_legacy(parid, which, ep, key, effective);
 }
+#endif
 
 void MCControl::select()
 {

@@ -25,13 +25,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "syntax.h"
 
-Exec_stat MCConstant::eval(MCExecPoint &ep)
+void MCConstant::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 	if (nvalue == BAD_NUMERIC)
-		ep.setvalueref(svalue);
+        MCExecValueTraits<MCStringRef>::set(r_value, MCValueRetain(svalue));
 	else
-		ep.setnvalue(nvalue);
-	return ES_NORMAL;
+        MCExecValueTraits<double>::set(r_value, nvalue);
 }
 
 void MCConstant::compile(MCSyntaxFactoryRef ctxt)

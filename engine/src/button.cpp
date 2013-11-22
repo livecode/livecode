@@ -2966,12 +2966,10 @@ void MCButton::resethilite(uint4 parid, Boolean hilite)
 
 void MCButton::getentrytext()
 {
-	// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
-	MCExecPoint ep;
-	entry->exportasplaintext(0, ep, 0, INT32_MAX, hasunicode());
-	MCAutoStringRef t_label;
-	/* UNCHECKED */ MCStringCreateWithOldString(ep.getsvalue(), &t_label);
-	MCValueAssign(label, *t_label);
+    // MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
+    MCAutoStringRef t_label;
+    if (entry -> exportasplaintext((uinteger_t)0, 0, INT32_MAX, &t_label))
+        MCValueAssign(label, *t_label);
 }
 
 void MCButton::createentry()

@@ -35,7 +35,7 @@ public:
 		MCValueRelease(svalue);	
 	}
 	
-	virtual Exec_stat eval(MCExecPoint &ep);
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 	
 	virtual void compile(MCSyntaxFactoryRef ctxt);
 };
