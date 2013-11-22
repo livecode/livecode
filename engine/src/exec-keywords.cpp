@@ -72,7 +72,7 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
             case ES_EXIT_REPEAT:
                 return stat;
             case ES_EXIT_SWITCH:
-                return stat;
+                return ES_NORMAL;
             case ES_ERROR:
                 if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
                     do
@@ -171,14 +171,13 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 		added = True;
 	}
     
-#ifdef _MOBILE
     if (platform_message)
     {
+#ifdef _MOBILE
         stat = MCHandlePlatformMessage(name, params);
-    }
 #endif
-    
-	if (handler != nil)
+    }
+	else if (handler != nil)
 	{
         // MW-2008-10-28: [[ ParentScripts ]] If we are in the context of a
         //   parent, then use a special method.
@@ -266,7 +265,7 @@ void MCKeywordsExecSwitch(MCExecContext& ctxt, MCExpression *condition, MCExpres
         }
 	}
     else
-        &t_cond = MCValueRetain(kMCTrueString);
+        t_cond = MCValueRetain(kMCTrueString);
     
 	int2 match = default_case;
 	uint2 i;
