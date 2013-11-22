@@ -918,7 +918,7 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 
 void MCFuncref::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
-    MCKeywordsExecCommand(ctxt, resolved, handler, params, name, line, pos, platform_message, true);
+    MCKeywordsExecCommandOrFunction(ctxt, resolved, handler, params, name, line, pos, platform_message, true);
     
     Exec_stat stat = ctxt . GetExecStat();
     
