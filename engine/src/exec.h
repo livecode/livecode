@@ -1513,8 +1513,9 @@ public:
 	bool EvalOptionalExprAsInt(MCExpression *expr, integer_t default_value, Exec_errors error, integer_t& r_int);
     
     bool EvalExprAsBool(MCExpression *expr, Exec_errors error, bool& r_bool);
-    bool EvalExprAsNonStrictBool(MCExpression *expr, Exec_errors error, bool& r_bool, bool p_throw = true);
 	bool EvalOptionalExprAsBool(MCExpression *expr, bool default_value, Exec_errors error, bool& r_bool);
+	
+    bool EvalExprAsNonStrictBool(MCExpression *expr, Exec_errors error, bool& r_bool);
     
     bool EvalExprAsDouble(MCExpression *expr, Exec_errors error, double& r_double);
 	bool EvalOptionalExprAsDouble(MCExpression *expr, double default_value, Exec_errors error, double& r_double);

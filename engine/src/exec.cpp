@@ -542,7 +542,7 @@ bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr
     
     do
     {
-        if (EvalExprAsNonStrictBool(p_expr, p_error, r_value, false))
+        if (EvalExprAsNonStrictBool(p_expr, p_error, r_value))
             t_success = true;
         else
             MCB_error(*this, line, pos, p_error);
@@ -555,9 +555,8 @@ bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr
 	
 	LegacyThrow(p_error);
 	return false;
-    
-    return true;
 }
+
 bool MCExecContext::TryToSetVariable(MCVarref *p_var, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef p_value)
 {
     bool t_success;
@@ -865,69 +864,22 @@ bool MCExecContext::EvalExprAsBool(MCExpression *p_expr, Exec_errors p_error, bo
 	return false;
 }
 
-bool MCExecContext::EvalExprAsNonStrictBool(MCExpression *p_expr, Exec_errors p_error, bool& r_value, bool p_throw)
+bool MCExecContext::EvalExprAsNonStrictBool(MCExpression *p_expr, Exec_errors p_error, bool& r_value)
 {
     MCAssert(p_expr != nil);
-    MCExecValue t_value;
+	
+	MCAutoStringRef t_value;
+    p_expr -> eval_stringref(*this, &t_value);
 
-    p_expr -> eval_ctxt(*this, t_value);
-
-    if (HasError())
-    {
-        if (p_throw)
-            LegacyThrow(p_error);
-
-        MCExecTypeRelease(t_value);
-        return false;
-    }
-
-    switch(t_value . type)
-    {
-    case kMCExecValueTypeBool:
-        r_value = t_value . bool_value;
-        break;
-    case kMCExecValueTypeBooleanRef:
-        r_value = t_value . booleanref_value == kMCTrue;
-        break;
-    case kMCExecValueTypeStringRef:
-        r_value = MCStringIsEqualTo(t_value . stringref_value, kMCTrueString, kMCStringOptionCompareCaseless);
-        break;
-    case kMCExecValueTypeNameRef:
-        r_value = MCStringIsEqualTo(MCNameGetString(t_value . nameref_value), kMCTrueString, kMCStringOptionCompareCaseless);
-        break;
-    case kMCExecValueTypeValueRef:
-        if (!ConvertToBool(t_value . valueref_value, r_value))
-            r_value = false;
-        break;
-    case kMCExecValueTypeDataRef:
-    {
-        MCAutoStringRef t_string;
-        if (!MCStringDecode(t_value . dataref_value, kMCStringEncodingNative, false, &t_string))
-            r_value = false;
-        else
-            r_value = MCStringIsEqualTo(*t_string, kMCTrueString, kMCStringOptionCompareCaseless);
-    }
-        break;
-    case kMCExecValueTypeNumberRef:
-    case kMCExecValueTypeUInt:
-    case kMCExecValueTypeInt:
-    case kMCExecValueTypeFloat:
-    case kMCExecValueTypeDouble:
-    case kMCExecValueTypeNone:
-    case kMCExecValueTypeArrayRef:
-    case kMCExecValueTypeChar:
-    case kMCExecValueTypePoint:
-    case kMCExecValueTypeColor:
-    case kMCExecValueTypeRectangle:
-    case kMCExecValueTypeSet:
-    case kMCExecValueTypeEnum:
-    default:
-        r_value = false;
-        break;
-    }
-
-    MCExecTypeRelease(t_value);
-    return true;
+    if (!HasError())
+	{
+		r_value = MCStringIsEqualTo(*t_value, kMCTrueString, kMCStringOptionCompareCaseless);
+		return true;
+	}
+	
+	LegacyThrow(p_error);
+	
+	return false;
 }
 
 bool MCExecContext::EvalOptionalExprAsBool(MCExpression *p_expr, bool p_default, Exec_errors p_error, bool& r_value)
@@ -1513,9 +1465,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
         case kMCPropertyTypeString:
         {
-            MCAutoStringRef t_string;
-            ((void(*)(MCExecContext&, void *, MCStringRef&))prop -> getter)(ctxt, mark, &t_string);
-            r_value . stringref_value = MCValueRetain(*t_string);
+            ((void(*)(MCExecContext&, void *, MCStringRef&))prop -> getter)(ctxt, mark, r_value . stringref_value);
             if (!ctxt . HasError())
             {
                 r_value . type = kMCExecValueTypeStringRef;
