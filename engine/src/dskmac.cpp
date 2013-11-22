@@ -476,18 +476,21 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 				char *sptr = new char[rSize + 1];
 				sptr[rSize] = '\0';
 				AEGetParamPtr(aePtr, keyDirectObject, typeChar, &rType, sptr, rSize, &rSize);
-				MCExecPoint ep(MCdefaultstackptr->getcard(), NULL, NULL);
+                MCExecPoint ep(MCdefaultstackptr->getcard(), NULL, NULL);
+                MCExecContext ctxt(ep);
                 MCAutoStringRef t_sptr;
                 /* UNCHECKED */ MCStringCreateWithCString(sptr, &t_sptr);
 				if (aeid == kAEDoScript)
 				{
-					MCdefaultstackptr->getcard()->domess(*t_sptr);
-					MCresult->eval(ep);
-					AEPutParamPtr(reply, '----', typeChar, ep.getsvalue().getstring(), ep.getsvalue().getlength());
+                    MCdefaultstackptr->getcard()->domess(*t_sptr);
+                    MCAutoValueRef t_value;
+                    MCAutoDataRef t_data;
+                    /* UNCHECKED */ MCresult->eval(ctxt, &t_value);
+                    /* UNCHECKED */ ctxt . ConvertToData(*t_value, &t_data);
+                    AEPutParamPtr(reply, '----', typeChar, MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data));
 				}
 				else
-				{
-					MCExecContext ctxt(ep);
+                {
 					MCAutoValueRef t_val;
 					MCAutoStringRef t_string;
 					MCdefaultstackptr->getcard()->eval(ctxt, *t_sptr, &t_val);
@@ -5987,8 +5990,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         kFSCatInfoDataSizes |
         kFSCatInfoRsrcSizes |
         kFSCatInfoNodeFlags;
-        
-        MCExecPoint t_tmp_context(NULL, NULL, NULL);
+
         OSErr t_oserror;
         do
         {
