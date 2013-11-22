@@ -2471,6 +2471,18 @@ enum Exec_errors
 
     // {EE-802} Resolve image: error in source expression
     EE_RESOLVE_IMG_BADEXP,
+
+    // {EE-803} Internal BSDiff: error in old file expression
+    EE_INTERNAL_BSDIFF_BADOLD,
+
+    // {EE-804} Internal BSDiff: error in new file expression
+    EE_INTERNAL_BSDIFF_BADNEW,
+
+    // {EE-805} Internal BSDiff: error in patch filename expression
+    EE_INTERNAL_BSDIFF_BADPATCH,
+
+    // {EE-806} Interan Bootstrap: error in stack file
+    EE_INTERNAL_BOOTSTRAP_BADSTACK,
 };
 
 extern const char *MCexecutionerrors;
