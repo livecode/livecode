@@ -83,10 +83,12 @@ bool MCObjectPropertySet::createwithname(MCNameRef p_name, MCObjectPropertySet*&
 
 //////////
 
+#ifdef LEGACY_EXEC
 bool MCObjectPropertySet::list(MCExecPoint& ep)
 {
 	return ep . listarraykeys(m_props, '\n');
 }
+#endif
 
 bool MCObjectPropertySet::list(MCStringRef& r_keys)
 {

@@ -509,6 +509,7 @@ void MCGraphic::setgradientrect(MCGradientFill *p_gradient, const MCRectangle &n
 	}
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	uint2 i;
@@ -716,7 +717,10 @@ Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& 
 	}
 	return ES_NORMAL;
 }
+#endif 
 
+
+#ifdef LEGACY_EXEC
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCGraphic::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
@@ -735,7 +739,10 @@ Exec_stat MCGraphic::getarrayprop_legacy(uint4 parid, Properties which, MCExecPo
 	}
 	return ES_NORMAL;
 }
+#endif
 
+
+#ifdef LEGACY_EXEC
 Exec_stat MCGraphic::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = True;
@@ -1244,8 +1251,11 @@ Exec_stat MCGraphic::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, 
 	}
 	return ES_NORMAL;
 }
+#endif
+
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
+#ifdef LEGACY_EXEC
 Exec_stat MCGraphic::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
 #ifdef /* MCGraphic::setarrayprop */ LEGACY_EXEC
@@ -1293,7 +1303,7 @@ Exec_stat MCGraphic::setarrayprop_legacy(uint4 parid, Properties which, MCExecPo
 #endif /* MCGraphic::setarrayprop */
 	return ES_NORMAL;
 }
-
+#endif
 
 MCControl *MCGraphic::clone(Boolean attach, Object_pos p, bool invisible)
 {

@@ -354,6 +354,7 @@ Exec_stat MCObject::getrectprop(Properties p_which, MCExecPoint& ep, Boolean p_e
 }
 #endif /* MCObject::getrectprop */
 
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::sendgetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef p_prop_name)
 {
 	// If the set name is nil, then we send a 'getProp <propname>' otherwise we
@@ -399,7 +400,9 @@ Exec_stat MCObject::sendgetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef
 
 	return t_stat;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::getcustomprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef p_prop_name)
 {
 	assert(p_set_name != nil);
@@ -420,6 +423,7 @@ Exec_stat MCObject::getcustomprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameR
 
 	return t_stat;
 }
+#endif
 
 Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCValueRef& r_value)
 {
@@ -495,6 +499,7 @@ bool MCObject::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
     return false;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 #ifdef /* MCObject::getprop */ LEGACY_EXEC
@@ -852,6 +857,7 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 	}
 	return t_stat;
 }
+#endif
 
 static bool string_contains_item(const char *p_string, const char *p_item)
 { 
@@ -871,6 +877,7 @@ static bool string_contains_item(const char *p_string, const char *p_item)
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
 	switch(which)
@@ -927,6 +934,7 @@ Exec_stat MCObject::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 	}
 	return ES_NORMAL;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1446,6 +1454,7 @@ Exec_stat MCObject::setvisibleprop(uint4 parid, Properties which, MCExecPoint& e
 }
 #endif /* MCObject::setvisibleprop */
 
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::sendsetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef p_prop_name)
 {
 	// If the set name is nil, then we send a 'setProp <propname> <value>'
@@ -1497,7 +1506,9 @@ Exec_stat MCObject::sendsetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef
 
 	return t_stat;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::setcustomprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef p_prop_name)
 {
 	Exec_stat t_stat;
@@ -1514,6 +1525,7 @@ Exec_stat MCObject::setcustomprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameR
 
 	return t_stat;
 }
+#endif
 
 Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCValueRef p_value)
 {
@@ -1583,6 +1595,7 @@ bool MCObject::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
 	return t_stat == ES_NORMAL;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 #ifdef /* MCObject::setprop */ LEGACY_EXEC
@@ -2041,7 +2054,10 @@ Exec_stat MCObject::setprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 	MCeerror->add(EE_OBJECT_SETNOPROP, 0, 0);
 	return ES_ERROR;
 }
+#endif
 
+
+#ifdef LEGACY_EXEC
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCObject::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
@@ -2151,6 +2167,7 @@ Exec_stat MCObject::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
     }
     return t_stat;
 }
+#endif
 
 #ifdef OLD_EXEC
 Exec_stat MCObject::setprops(uint32_t p_parid, MCExecPoint& ep)
@@ -2424,6 +2441,7 @@ static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_tab
 	
 	return nil;
 }
+
 
 Exec_stat MCObject::getarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective)
 {

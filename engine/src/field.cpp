@@ -1328,6 +1328,7 @@ void MCField::setrect(const MCRectangle &nrect)
         do_recompute(true);
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	switch (which)
@@ -1583,7 +1584,7 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 	}
 	return ES_NORMAL;
 }
-
+#endif
 
 // MW-2012-01-25: [[ ParaStyles ]] Parse the given string as a list of tab-stops.
 // MW-2012-02-11: [[ TabWidths ]] The 'which' parameter determines what style of tabStops to
@@ -1650,6 +1651,7 @@ void MCField::formattabstops(Properties which, MCExecPoint& ep, uint16_t *tabs, 
 	}
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = False;
@@ -2136,6 +2138,7 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 	}
 	return ES_NORMAL;
 }
+#endif
 
 void MCField::undo(Ustruct *us)
 {

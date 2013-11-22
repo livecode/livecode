@@ -529,13 +529,15 @@ void MCStack::mode_load(void)
 		MCAutoNameRef t_ide_override_name;
 		/* UNCHECKED */ t_ide_override_name . CreateWithCString("ideOverride");
 
-		MCExecPoint ep;
 		MClockmessages++;
-		getcustomprop(ep, kMCEmptyName, t_ide_override_name);
+        MCExecValue t_value;
+        MCExecPoint ep;
+        MCExecContext ctxt(ep);
+        getcustomprop(ctxt, kMCEmptyName, t_ide_override_name, t_value);
 		MClockmessages--;
 
-		Boolean t_treat_as_ide;
-		if (MCU_stob(ep . getsvalue(), t_treat_as_ide) && t_treat_as_ide)
+		bool t_treat_as_ide;
+		if (MCU_stob(t_value . stringref_value, t_treat_as_ide) && t_treat_as_ide)
 			setextendedstate(true, ECS_IDE);
 	}
 }

@@ -717,6 +717,7 @@ bool MCHandler::getvarnames(bool p_all, MCListRef& r_list)
 	return MCListCopy(*t_list, r_list);
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCHandler::getvarnames(MCExecPoint& ep, Boolean all)
 {
 	MCAutoListRef t_list;
@@ -726,6 +727,7 @@ Exec_stat MCHandler::getvarnames(MCExecPoint& ep, Boolean all)
 	/* UNCHECKED */ ep.setvalueref(*t_string);
 	return ES_NORMAL;
 }
+#endif
 
 void MCHandler::eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &r_value)
 {

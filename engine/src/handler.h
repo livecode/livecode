@@ -109,7 +109,9 @@ public:
 	bool getvariablenames(MCListRef& r_list);
 	bool getglobalnames(MCListRef& r_list);
 	bool getvarnames(bool p_all, MCListRef& r_list);
+#ifdef LEGACY_EXEC
 	Exec_stat getvarnames(MCExecPoint &, Boolean all);
+#endif
 	Exec_stat eval_ctxt(MCExecContext& ctxt, MCValueRef& r_value);
 	void eval(MCExecContext& ctxt, MCStringRef p_expression, MCValueRef& r_value);
 	//Exec_stat eval(MCExecPoint &);
