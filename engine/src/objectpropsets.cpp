@@ -162,12 +162,15 @@ bool MCObjectPropertySet::restrict(MCStringRef p_string)
     {
         MCValueRef t_key_valueref;
         if (t_success)
-            t_success = MCArrayFetchValueAtIndex(t_new_props, i, t_key_valueref);
+            t_success = MCArrayFetchValueAtIndex(t_new_props, i + 1, t_key_valueref);
+        MCNewAutoNameRef t_key_name;
+        if (t_success)
+            t_success = MCNameCreate((MCStringRef)t_key_valueref, &t_key_name);
         MCValueRef t_value;
         if (t_success)
-            t_success = MCArrayFetchValue(m_props, false, (MCNameRef)t_key_valueref, t_value);
+            t_success = MCArrayFetchValue(m_props, false, *t_key_name, t_value);
         if (t_success)
-            t_success = MCArrayStoreValue(t_new_props, false, (MCNameRef)t_key_valueref, t_value);
+            t_success = MCArrayStoreValue(t_new_props, false, *t_key_name, t_value);
     }
     MCValueRelease(m_props);
     m_props = t_new_props;
