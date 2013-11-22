@@ -442,7 +442,9 @@ public:
 	bool selectedchunk(MCStringRef& r_string);
 	bool selectedline(MCStringRef& r_string);
 	bool selectedloc(MCStringRef& r_string);
+#ifdef LEGACY_EXEC
 	void selectedtext(MCExecPoint &ep);
+#endif
 	bool selectedtext(MCStringRef& r_string);
 	Boolean selectedmark(Boolean wholeline, findex_t &si, findex_t &ei,
 	                     Boolean force, Boolean inc_cr);

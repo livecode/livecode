@@ -2182,6 +2182,7 @@ bool MCField::selectedloc(MCStringRef& r_string)
 	return true;
 }
 
+#ifdef LEGACY_EXEC
 void MCField::selectedtext(MCExecPoint& ep)
 {
 	MCAutoStringRef t_string;
@@ -2190,6 +2191,7 @@ void MCField::selectedtext(MCExecPoint& ep)
 	else
 		ep.clear();
 }
+#endif
 
 bool MCField::selectedtext(MCStringRef& r_string)
 {

@@ -1412,11 +1412,11 @@ void MCField::endselection()
 		}
 		if (MCscreen -> hasfeature(PLATFORM_FEATURE_TRANSIENT_SELECTION))
 		{
-			MCExecPoint ep;
-			selectedtext(ep);
+			MCAutoStringRef t_string;
+			selectedtext(&t_string);
 			
 			MCAutoDataRef t_data;
-			/* UNCHECKED */ ep . copyasdataref(&t_data);
+            MCStringEncode(*t_string, kMCStringEncodingNative, false, &t_data);
 			if (*t_data != nil)
 			{
 				if (MCselectiondata -> Store(TRANSFER_TYPE_TEXT, *t_data))
