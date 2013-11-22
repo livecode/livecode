@@ -160,7 +160,6 @@ bool MCReferencedImageRep::GetDataStream(IO_handle &r_stream)
         MCExecPoint ep(MCdefaultstackptr, nil, nil);
         MCExecContext ctxt(ep);
         MCAutoStringRef t_data;
-        ep.setvalueref(m_file_name);
         MCU_geturl(ctxt, m_file_name, &t_data);
         if (ctxt.HasError() || MCStringIsEmpty(*t_data))
             return false;

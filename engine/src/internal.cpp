@@ -122,9 +122,9 @@ Parse_stat MCInternal::parse(MCScriptPoint& sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCInternal::exec(MCExecPoint& ep)
+void MCInternal::exec_ctxt(MCExecContext &ctxt)
 {
-	return f_statement -> exec(ep);
+    f_statement -> exec_ctxt(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

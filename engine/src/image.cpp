@@ -618,6 +618,7 @@ void MCImageSetMask(MCImageBitmap *p_bitmap, uint8_t *p_mask_data, uindex_t p_ma
 	MCImageBitmapCheckTransparency(p_bitmap);
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCImage::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	uint2 i;
@@ -878,7 +879,9 @@ Exec_stat MCImage::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 	}
 	return ES_NORMAL;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = False;
@@ -1282,6 +1285,7 @@ Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 	}
 	return ES_NORMAL;
 }
+#endif
 
 void MCImage::select()
 {
