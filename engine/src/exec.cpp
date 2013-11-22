@@ -194,7 +194,8 @@ bool MCExecContext::ConvertToLegacyColor(MCValueRef p_value, MCColor& r_color)
 
 bool MCExecContext::ConvertToBool(MCValueRef p_value, bool& r_bool)
 {
-    return m_ep . convertvaluereftobool(p_value, r_bool);
+    bool t = m_ep . convertvaluereftobool(p_value, r_bool);
+    return t;
 }
 
 bool MCExecContext::ConvertToLegacyPoint(MCValueRef p_value, MCPoint& r_point)
@@ -531,6 +532,31 @@ bool MCExecContext::TryToEvaluateExpression(MCExpression *p_expr, uint2 line, ui
 	return false;
 }
 
+bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr, uint2 line, uint2 pos, Exec_errors p_error, bool& r_value)
+{
+    MCAssert(p_expr != nil);
+    MCExecValue t_value;
+    
+    bool t_success;
+    t_success = false;
+    
+    do
+    {
+        if (EvalExprAsNonStrictBool(p_expr, p_error, r_value))
+            t_success = true;
+        else
+            MCB_error(*this, line, pos, p_error);
+        IgnoreLastError();
+    }
+	while (!t_success && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
+    
+    if (t_success)
+		return true;
+	
+	LegacyThrow(p_error);
+	return false;
+}
+
 bool MCExecContext::TryToSetVariable(MCVarref *p_var, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef p_value)
 {
     bool t_success;
@@ -841,54 +867,19 @@ bool MCExecContext::EvalExprAsBool(MCExpression *p_expr, Exec_errors p_error, bo
 bool MCExecContext::EvalExprAsNonStrictBool(MCExpression *p_expr, Exec_errors p_error, bool& r_value)
 {
     MCAssert(p_expr != nil);
-    MCExecValue t_value;
+	
+	MCAutoStringRef t_value;
+    p_expr -> eval_stringref(*this, &t_value);
 
-    p_expr -> eval_ctxt(*this, t_value);
-
-    if (HasError())
-    {
-        LegacyThrow(p_error);
-        return false;
-    }
-
-    switch(t_value . type)
-    {
-    case kMCExecValueTypeBool:
-        r_value = t_value . bool_value;
-        break;
-    case kMCExecValueTypeBooleanRef:
-        r_value = t_value . booleanref_value == kMCTrue;
-        break;
-    case kMCExecValueTypeStringRef:
-        r_value = t_value . stringref_value == kMCTrueString;
-        break;
-    case kMCExecValueTypeNameRef:
-        r_value = MCNameGetString(t_value . nameref_value) == kMCTrueString;
-        break;
-    case kMCExecValueTypeValueRef:
-        if (!ConvertToBool(t_value . valueref_value, r_value))
-            r_value = false;
-        break;
-    case kMCExecValueTypeNumberRef:
-    case kMCExecValueTypeUInt:
-    case kMCExecValueTypeInt:
-    case kMCExecValueTypeFloat:
-    case kMCExecValueTypeDouble:
-    case kMCExecValueTypeNone:
-    case kMCExecValueTypeDataRef:
-    case kMCExecValueTypeArrayRef:
-    case kMCExecValueTypeChar:
-    case kMCExecValueTypePoint:
-    case kMCExecValueTypeColor:
-    case kMCExecValueTypeRectangle:
-    case kMCExecValueTypeSet:
-    case kMCExecValueTypeEnum:
-    default:
-        r_value = false;
-        break;
-    }
-
-    return true;
+    if (!HasError())
+	{
+		r_value = MCStringIsEqualTo(*t_value, kMCTrueString, kMCStringOptionCompareCaseless);
+		return true;
+	}
+	
+	LegacyThrow(p_error);
+	
+	return false;
 }
 
 bool MCExecContext::EvalOptionalExprAsBool(MCExpression *p_expr, bool p_default, Exec_errors p_error, bool& r_value)
@@ -1474,14 +1465,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
         case kMCPropertyTypeString:
         {
-            MCAutoStringRef t_string;
-            ((void(*)(MCExecContext&, void *, MCStringRef&))prop -> getter)(ctxt, mark, &t_string);
-            if (*t_string == nil)
-            {
-                MCAutoStringRef t_new;
-                ((void(*)(MCExecContext&, void *, MCStringRef&))prop -> getter)(ctxt, mark, &t_new);
-            }
-            r_value . stringref_value = MCValueRetain(*t_string);
+            ((void(*)(MCExecContext&, void *, MCStringRef&))prop -> getter)(ctxt, mark, r_value . stringref_value);
             if (!ctxt . HasError())
             {
                 r_value . type = kMCExecValueTypeStringRef;
@@ -1803,6 +1787,8 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 {
                     r_value . type = kMCExecValueTypeStringRef;
                 }
+                for (int i = 0; i < t_count; ++i)
+                    MCValueRelease(t_value[i]);
             }
         }
             break;
@@ -2608,52 +2594,54 @@ static void MCExecTypeConvertToValueRefAndReleaseAlways(MCExecContext& ctxt, MCE
 
 static void MCExecTypeConvertFromValueRefAndReleaseAlways(MCExecContext& ctxt, MCValueRef p_from_value, MCExecValueType p_to_type, void *p_to_value)
 {
+    bool t_success = true;
+
 	switch(p_to_type)
 	{
 		case kMCExecValueTypeValueRef:
 			*(MCValueRef *)p_to_value = p_from_value;
 			return;
 		case kMCExecValueTypeArrayRef:
-			ctxt . ConvertToArray(p_from_value, *(MCArrayRef *)p_to_value);
+            t_success = ctxt . ConvertToArray(p_from_value, *(MCArrayRef *)p_to_value);
 			break;
 		case kMCExecValueTypeDataRef:
-			ctxt . ConvertToData(p_from_value, *(MCDataRef *)p_to_value);
+            t_success = ctxt . ConvertToData(p_from_value, *(MCDataRef *)p_to_value);
 			break;
 		case kMCExecValueTypeStringRef:
-			ctxt . ConvertToString(p_from_value, *(MCStringRef *)p_to_value);
+            t_success = ctxt . ConvertToString(p_from_value, *(MCStringRef *)p_to_value);
 			break;
 		case kMCExecValueTypeNameRef:
-			ctxt . ConvertToName(p_from_value, *(MCNameRef *)p_to_value);
+            t_success = ctxt . ConvertToName(p_from_value, *(MCNameRef *)p_to_value);
 			break;
 		case kMCExecValueTypeNumberRef:
-			ctxt . ConvertToNumber(p_from_value, *(MCNumberRef *)p_to_value);
+            t_success = ctxt . ConvertToNumber(p_from_value, *(MCNumberRef *)p_to_value);
 			break;
 		case kMCExecValueTypeBooleanRef:
-			ctxt . ConvertToBoolean(p_from_value, *(MCBooleanRef *)p_to_value);
+            t_success = ctxt . ConvertToBoolean(p_from_value, *(MCBooleanRef *)p_to_value);
 			break;
 		case kMCExecValueTypeUInt:
-			ctxt . ConvertToUnsignedInteger(p_from_value, *(uinteger_t *)p_to_value);
+            t_success = ctxt . ConvertToUnsignedInteger(p_from_value, *(uinteger_t *)p_to_value);
 			break;
 		case kMCExecValueTypeInt:
-			ctxt . ConvertToInteger(p_from_value, *(integer_t *)p_to_value);
+            t_success = ctxt . ConvertToInteger(p_from_value, *(integer_t *)p_to_value);
 			break;
 		case kMCExecValueTypeBool:
-			ctxt . ConvertToBool(p_from_value, *(bool *)p_to_value);
+            t_success = ctxt . ConvertToBool(p_from_value, *(bool *)p_to_value);
 			break;
 		case kMCExecValueTypeDouble:
-			ctxt . ConvertToReal(p_from_value, *(double *)p_to_value);
+            t_success = ctxt . ConvertToReal(p_from_value, *(double *)p_to_value);
 			break;
 		case kMCExecValueTypePoint:
-			ctxt . ConvertToLegacyPoint(p_from_value, *(MCPoint *)p_to_value);
+            t_success = ctxt . ConvertToLegacyPoint(p_from_value, *(MCPoint *)p_to_value);
 			break;
 		case kMCExecValueTypeRectangle:
-			ctxt . ConvertToLegacyRectangle(p_from_value, *(MCRectangle *)p_to_value);
+            t_success = ctxt . ConvertToLegacyRectangle(p_from_value, *(MCRectangle *)p_to_value);
 			break;
 		case kMCExecValueTypeChar:
-			ctxt . ConvertToChar(p_from_value, *(char_t *)p_to_value);
+            t_success = ctxt . ConvertToChar(p_from_value, *(char_t *)p_to_value);
 			break;
         case kMCExecValueTypeColor:
-			ctxt . ConvertToLegacyColor(p_from_value, *(MCColor *)p_to_value);
+            t_success = ctxt . ConvertToLegacyColor(p_from_value, *(MCColor *)p_to_value);
 			break;
 		default:
 			ctxt . Unimplemented();
@@ -2661,6 +2649,8 @@ static void MCExecTypeConvertFromValueRefAndReleaseAlways(MCExecContext& ctxt, M
 	}
 	
 	MCValueRelease(p_from_value);
+    if (!t_success)
+        ctxt . Throw();
 }
 
 void MCExecTypeConvertAndReleaseAlways(MCExecContext& ctxt, MCExecValueType p_from_type, void *p_from_value, MCExecValueType p_to_type, void *p_to_value)
@@ -2670,6 +2660,35 @@ void MCExecTypeConvertAndReleaseAlways(MCExecContext& ctxt, MCExecValueType p_fr
 	if (ctxt . HasError())
 		return;
 	MCExecTypeConvertFromValueRefAndReleaseAlways(ctxt, t_pivot, p_to_type, p_to_value);
+}
+
+void MCExecTypeRelease(MCExecValue &self)
+{
+    switch (self . type)
+    {
+    case kMCExecValueTypeValueRef:
+    case kMCExecValueTypeBooleanRef:
+    case kMCExecValueTypeStringRef:
+    case kMCExecValueTypeNameRef:
+    case kMCExecValueTypeDataRef:
+    case kMCExecValueTypeArrayRef:
+    case kMCExecValueTypeNumberRef:
+        MCValueRelease(self . valueref_value);
+        break;
+    case kMCExecValueTypeUInt:
+    case kMCExecValueTypeInt:
+    case kMCExecValueTypeBool:
+    case kMCExecValueTypeDouble:
+    case kMCExecValueTypeFloat:
+    case kMCExecValueTypeChar:
+    case kMCExecValueTypePoint:
+    case kMCExecValueTypeColor:
+    case kMCExecValueTypeRectangle:
+    case kMCExecValueTypeEnum:
+    case kMCExecValueTypeSet:
+    case kMCExecValueTypeNone:
+        break;
+    }
 }
 
 void MCExecResolveCharsOfField(MCField *p_field, uint32_t p_part, int32_t& x_start, int32_t& x_finish, uint32_t p_start, uint32_t p_count)

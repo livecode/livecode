@@ -38,6 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 
 #include "syntax.h"
+#include "redraw.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -530,3 +531,63 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p_statements, Exec_errors p_error, bool p_is_try)
+{
+    Exec_stat stat = ES_NORMAL;
+    MCStatement *tspr = p_statements;
+    while (tspr != NULL)
+    {
+        if (MCtrace || MCnbreakpoints)
+        {
+            MCB_trace(ctxt, tspr->getline(), tspr->getpos());
+            if (MCexitall)
+                break;
+        }
+        ctxt . GetEP() . setline(tspr->getline());
+        
+        stat = tspr->exec(ctxt . GetEP());
+        
+        // MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
+        MCRedrawUpdateScreen();
+        
+        switch(stat)
+        {
+            case ES_NORMAL:
+                if (MCexitall)
+                    return ES_NORMAL;
+                tspr = tspr->getnext();
+                break;
+            case ES_NEXT_REPEAT:
+                tspr = NULL;
+                break;
+            case ES_EXIT_REPEAT:
+                return stat;
+            case ES_EXIT_SWITCH:
+                return ES_NORMAL;
+            case ES_ERROR:
+                if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
+                    do
+                    {
+                        ctxt . IgnoreLastError();
+                        MCB_error(ctxt, tspr->getline(), tspr->getpos(),
+                                  EE_REPEAT_BADSTATEMENT);
+                    }
+                while (MCtrace && (stat = tspr->exec(ctxt . GetEP())) != ES_NORMAL);
+                if (stat == ES_ERROR)
+                {
+                    if (MCexitall)  
+                        return p_is_try ? ES_NORMAL : ES_ERROR;
+                    
+                    ctxt . LegacyThrow(p_error);
+                    return stat;
+                }
+                else
+                    tspr = tspr->getnext();
+                break;
+            default:
+                return stat;
+        }
+    }
+    return stat;
+}

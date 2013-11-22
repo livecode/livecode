@@ -87,6 +87,7 @@ struct MCExecValue
 // to_type. This method releases the from_type even if a type conversion
 // error occurs.
 void MCExecTypeConvertAndReleaseAlways(MCExecContext& ctxt, MCExecValueType from_type, void *from_value, MCExecValueType to_type, void *to_value);
+void MCExecTypeRelease(MCExecValue &self);
 
 // Defined for convenience in exec-interface-field-chunk.cpp
 // where the template system needs only one parameter
@@ -1150,11 +1151,16 @@ public:
 		return m_stat;
 	}
 
+    void SetExecStat(Exec_stat p_stat)
+    {
+        m_stat = p_stat;
+    }
+    
 	///////////
 
 	bool HasError(void)
 	{
-        return m_stat != ES_NORMAL && m_stat != ES_RETURN_HANDLER;
+        return (m_stat == ES_ERROR || m_stat == ES_NOT_FOUND || m_stat == ES_NOT_HANDLED);
 	}
 
 	void Throw(void)
@@ -1398,6 +1404,7 @@ public:
     // These methods try to evaluate / set, as many times as the debug context dictates,
     // only throwing an error if they ultimately fail.
     bool TryToEvaluateExpression(MCExpression *p_expr, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result);
+    bool TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr, uint2 line, uint2 pos, Exec_errors p_error, bool& r_result);
     bool TryToSetVariable(MCVarref *p_var, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef p_value);
     
 	//////////
@@ -1506,8 +1513,9 @@ public:
 	bool EvalOptionalExprAsInt(MCExpression *expr, integer_t default_value, Exec_errors error, integer_t& r_int);
     
     bool EvalExprAsBool(MCExpression *expr, Exec_errors error, bool& r_bool);
-    bool EvalExprAsNonStrictBool(MCExpression *expr, Exec_errors error, bool& r_bool);
 	bool EvalOptionalExprAsBool(MCExpression *expr, bool default_value, Exec_errors error, bool& r_bool);
+	
+    bool EvalExprAsNonStrictBool(MCExpression *expr, Exec_errors error, bool& r_bool);
     
     bool EvalExprAsDouble(MCExpression *expr, Exec_errors error, double& r_double);
 	bool EvalOptionalExprAsDouble(MCExpression *expr, double default_value, Exec_errors error, double& r_double);
@@ -5009,7 +5017,7 @@ template<> struct MCExecValueTraits<MCValueRef>
     inline static void set(MCExecValue& self, MCValueRef p_value)
     {
         self . type = kMCExecValueTypeValueRef;
-        self . valueref_value = MCValueRetain(p_value);
+        self . valueref_value = p_value;
     }
 
     inline static void free(MCValueRef& self)
@@ -5031,7 +5039,7 @@ template<> struct MCExecValueTraits<MCBooleanRef>
     inline static void set(MCExecValue& self, MCBooleanRef p_value)
     {
         self . type = kMCExecValueTypeBooleanRef;
-        self . booleanref_value = MCValueRetain(p_value);
+        self . booleanref_value = p_value;
     }
 
     inline static void free(MCBooleanRef& self)
@@ -5053,7 +5061,7 @@ template<> struct MCExecValueTraits<MCNameRef>
     inline static void set(MCExecValue& self, MCNameRef p_value)
     {
         self . type = kMCExecValueTypeNameRef;
-        self . nameref_value = MCValueRetain(p_value);
+        self . nameref_value = p_value;
     }
 
     inline static void free(MCNameRef& self)
@@ -5075,7 +5083,7 @@ template<> struct MCExecValueTraits<MCDataRef>
     inline static void set(MCExecValue& self, MCDataRef p_value)
     {
         self . type = kMCExecValueTypeDataRef;
-        self . dataref_value = MCValueRetain(p_value);
+        self . dataref_value = p_value;
     }
 
     inline static void free(MCDataRef& self)
@@ -5097,7 +5105,7 @@ template<> struct MCExecValueTraits<MCArrayRef>
     inline static void set(MCExecValue& self, MCArrayRef p_value)
     {
         self . type = kMCExecValueTypeArrayRef;
-        self . arrayref_value = MCValueRetain(p_value);
+        self . arrayref_value = p_value;
     }
 
     inline static void free(MCArrayRef& self)
@@ -5119,7 +5127,7 @@ template<> struct MCExecValueTraits<MCNumberRef>
     inline static void set(MCExecValue& self, MCNumberRef p_value)
     {
         self . type = kMCExecValueTypeNumberRef;
-        self . numberref_value = MCValueRetain(p_value);
+        self . numberref_value = p_value;
     }
 
     inline static void free(MCNumberRef& self)
@@ -5141,7 +5149,7 @@ template<> struct MCExecValueTraits<MCStringRef>
     inline static void set(MCExecValue& self, MCStringRef p_value)
     {
         self . type = kMCExecValueTypeStringRef;
-        self . stringref_value = MCValueRetain(p_value);
+        self . stringref_value = p_value;
     }
 
     inline static void free(MCStringRef& self)
