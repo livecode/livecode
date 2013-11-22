@@ -32,10 +32,9 @@ Parse_stat MCLiteral::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCLiteral::eval(MCExecPoint &ep)
+void MCLiteral::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
-	ep.setvalueref(value);
-	return ES_NORMAL;
+    MCExecValueTraits<MCNameRef>::set(r_value, value);
 }
 
 void MCLiteral::compile(MCSyntaxFactoryRef ctxt)
@@ -52,7 +51,7 @@ Parse_stat MCLiteralNumber::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCLiteralNumber::eval(MCExecPoint &ep)
+void MCLiteralNumber::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 	// IM-2013-05-02: *TODO* the bugfix here cannot be applied to the syntax
 	// refactor branch as MCExecPoint::setboth() does not exist there
@@ -63,8 +62,9 @@ Exec_stat MCLiteralNumber::eval(MCExecPoint &ep)
 		ep.setvalueref_nullable(value);
 	else
 		ep.setboth(MCNameGetOldString(value), nvalue);
-#else
-	ep.setvalueref_nullable(value);
 #endif
-	return ES_NORMAL;
+    if (value != nil)
+        MCExecValueTraits<MCNameRef>::set(r_value, value);
+    else
+        MCExecValueTraits<MCStringRef>::set(r_value, kMCEmptyString);
 }

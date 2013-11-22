@@ -373,13 +373,15 @@ bool MCNewFontlist::ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_co
 				t_running_x += (double)t_run -> glyphs -> glyphs[i] . geometry . width / PANGO_SCALE;
 			}
 
-		MCExecPoint ep;
+        MCAutoStringRef t_utf_string;
+        MCAutoDataRef t_utf16_data;
+
 		if (t_success)
-		{
-			ep . setsvalue(MCString(pango_layout_get_text(m_layout) + t_run -> item -> offset, t_run -> item -> length));
-			ep . utf8toutf16();
+        {
+            MCStringCreateWithNativeChars((char_t*)pango_layout_get_text(m_layout) + t_run -> item -> offset, t_run -> item -> length, &t_utf_string);
+            MCStringEncode(*t_utf_string, kMCStringEncodingUTF16, false, &t_utf16_data);
 			fprintf(stderr, "\nUTF-8 text: %d/%d - %s\n", t_run -> item -> offset, t_run -> item -> length, pango_layout_get_text(m_layout) + t_run -> item -> offset);
-			fprintf(stderr, "UTF-16 length in bytes = %d\n", ep . getsvalue() . getlength());
+            fprintf(stderr, "UTF-16 length in bytes = %d\n", MCDataGetLength(*t_utf16_data));
 		}
 		
 		// We must now compute the cluster information. Pango gives this to us
@@ -393,14 +395,14 @@ bool MCNewFontlist::ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_co
 		if (t_success)
 			t_success =
 				MCMemoryNewArray(t_run -> item -> length, t_char_map) &&
-				MCMemoryNewArray(ep . getsvalue() . getlength() / 2, t_clusters);
+                MCMemoryNewArray(MCDataGetLength(*t_utf16_data) / 2, t_clusters);
 		
 		if (t_success)
 		{
 			const unichar_t *t_chars;
 			uint32_t t_char_count;
-			t_chars = (const unichar_t *)ep . getsvalue() . getstring();
-			t_char_count = ep . getsvalue() . getlength() / 2;
+            t_chars = (const unichar_t *)MCDataGetBytePtr(*t_utf16_data);
+            t_char_count = MCDataGetLength(*t_utf16_data) / 2;
 			
 			const uint8_t *t_bytes;
 			uint32_t t_byte_count;
