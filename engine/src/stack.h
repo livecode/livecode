@@ -657,7 +657,9 @@ public:
 	void find(MCExecContext &ctxt, Find_mode mode, MCStringRef, MCChunk *field);
 	void markfind(MCExecContext &ctxt, Find_mode mode, MCStringRef,
 	              MCChunk *, Boolean mark);
-	
+#ifdef LEGACY_EXEC
+	void mark(MCExecPoint &ep, MCExpression *where, Boolean mark);
+#endif
     void mark(MCExecContext& ctxt, MCExpression *p_where, bool p_mark);
 	Linkatts *getlinkatts();
 	Boolean cantabort()
