@@ -5620,6 +5620,7 @@ void MCWithin::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 
 	MCPoint t_point;
     if (!ctxt . EvalExprAsPoint(point, EE_WITHIN_NAP, t_point))
+        return;
 
     MCInterfaceEvalWithin(ctxt, t_object, t_point, t_result);
 
