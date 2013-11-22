@@ -1181,6 +1181,7 @@ public:
 
 	void LegacyThrow(Exec_errors error, MCValueRef hint = nil);
 	void LegacyThrow(Exec_errors error, uint32_t hint);
+	void UserThrow(MCStringRef string);
 
 	void Unimplemented(void)
 	{

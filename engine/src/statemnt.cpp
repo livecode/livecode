@@ -600,8 +600,8 @@ void MCKeywordsExecCommand(MCExecContext& ctxt, bool resolved, MCHandler *handle
 {
 	if (MCscreen->abortkey())
 	{
-		MCeerror->add(EE_HANDLER_ABORT, line, pos);
-		return ES_ERROR;
+		ctxt . LegacyThrow(EE_HANDLER_ABORT);
+		return;
 	}
     
 	if (!resolved)

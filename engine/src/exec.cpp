@@ -1178,6 +1178,12 @@ void MCExecContext::LegacyThrow(Exec_errors p_error, uint32_t p_hint)
 	m_stat = ES_ERROR;
 }
 
+void MCExecContext::UserThrow(MCStringRef p_error)
+{
+	MCeerror -> copystringref(p_error, True);
+	m_stat = ES_ERROR;
+}
+
 MCObjectHandle *MCExecContext::GetObjectHandle(void)
 {
     extern MCExecContext *MCECptr;

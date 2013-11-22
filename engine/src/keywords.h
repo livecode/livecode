@@ -88,8 +88,7 @@ public:
 	}
 	~MCIf();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
-    //virtual void exec_ctxt(MCExecContext &ctxt);
+	virtual void exec_ctxt(MCExecContext &ctxt);
 	virtual uint4 linecount();
 };
 
@@ -107,14 +106,7 @@ public:
 	MCRepeat();
 	~MCRepeat();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
-    //virtual void exec_ctxt(MCExecContext&);
-    void exec_for(MCExecContext&);
-    void exec_with(MCExecContext&);
-    void exec_forever(MCExecContext&);
-    void exec_until(MCExecContext&);
-    void exec_while(MCExecContext&);
-    void execute_statements(MCExecContext& ctxt, bool& r_done);
+	virtual void exec_ctxt(MCExecContext&);
 	virtual uint4 linecount();
 };
 
@@ -123,8 +115,7 @@ class MCExit : public MCStatement
 	Exec_stat exit;
 public:
 	virtual Parse_stat parse(MCScriptPoint &sp);
-	virtual Exec_stat exec(MCExecPoint &);
-   // virtual void exec_ctxt(MCExecContext&);
+	virtual void exec_ctxt(MCExecContext&);
 	virtual uint4 linecount();
 };
 
@@ -132,8 +123,7 @@ class MCNext : public MCStatement
 {
 public:
 	virtual Parse_stat parse(MCScriptPoint &sp);
-	virtual Exec_stat exec(MCExecPoint &);
-   // virtual void exec_ctxt(MCExecContext&);
+	virtual void exec_ctxt(MCExecContext&);
 	virtual uint4 linecount();
 };
 
@@ -146,16 +136,14 @@ public:
 		all = False;
 	}
 	virtual Parse_stat parse(MCScriptPoint &sp);
-	virtual Exec_stat exec(MCExecPoint &);
-    //virtual void exec_ctxt(MCExecContext&);
+	virtual void exec_ctxt(MCExecContext&);
 	virtual uint4 linecount();
 };
 
 class MCBreak : public MCStatement
 {
 public:
-	virtual Exec_stat exec(MCExecPoint &);
-    //virtual void exec_ctxt(MCExecContext&);
+	virtual void exec_ctxt(MCExecContext&);
 	virtual uint4 linecount();
 };
 
@@ -179,8 +167,7 @@ public:
 	}
 	~MCSwitch();
 	virtual Parse_stat parse(MCScriptPoint &sp);
-	virtual Exec_stat exec(MCExecPoint &);
-//	virtual void exec_ctxt(MCExecContext &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual uint4 linecount();
 };
 
@@ -194,7 +181,7 @@ public:
 	}
 	~MCThrowKeyword();
 	virtual Parse_stat parse(MCScriptPoint &sp);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual uint4 linecount();
 };
 
@@ -212,8 +199,7 @@ public:
 	}
 	~MCTry();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
-    //virtual void exec_ctxt(MCExecContext&);
+	virtual void exec_ctxt(MCExecContext&);
 	virtual uint4 linecount();
 };
 
@@ -230,5 +216,10 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
 void MCKeywordsExecExit(MCExecContext& ctxt, Exec_stat stat);
 void MCKeywordsExecBreak(MCExecContext& ctxt);
 void MCKeywordsExecNext(MCExecContext& ctxt);
+void MCKeywordsExecPass(MCExecContext& ctxt);
+void MCKeywordsExecPassAll(MCExecContext& ctxt);
+void MCKeywordsExecThrow(MCExecContext& ctxt, MCStringRef string);
+
+////////////////////////////////////////////////////////////////////////////////
 
 #endif
