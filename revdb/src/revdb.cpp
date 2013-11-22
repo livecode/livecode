@@ -997,7 +997,8 @@ void REVDB_ConnectionErr(char *args[], int nargs, char **retstring, Bool *pass, 
 		DBConnection *theconnection = (DBConnection *)connectionlist.find(connectionid);
 
 		if (theconnection)
-			result = istrdup(theconnection->getErrorMessage());
+            // AL-2013-11-08 [[ Bug 11149 ]] Make sure most recent error string is available to revDatabaseConnectResult
+			result = istrdup(theconnection->getErrorMessage(True));
 		else
 		{
 			result = istrdup(errors[REVDBERR_BADCONNECTION]);
