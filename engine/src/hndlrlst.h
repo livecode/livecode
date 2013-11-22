@@ -134,6 +134,10 @@ public:
 	MCVariable *getglobal(uint2 p_index);
 	bool enumerate(MCExecPoint& ep, bool p_first = true);
 
+	// MW-2013-11-15: [[ Bug 11277 ]] Methods for eval/exec in handlerlist context.
+	void eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &r_value);
+	void doscript(MCExecContext& ctxt, MCStringRef p_string, uinteger_t p_line = 0, uinteger_t p_pos = 0);
+	
 	uint2 getnvars(void)
 	{
 		return nvars;

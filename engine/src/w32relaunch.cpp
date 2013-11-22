@@ -258,7 +258,9 @@ bool relaunch_get_current_instance(instance_t& r_instance, MCStringRef p_id)
 		t_file_id[t_file_id_length++] = 0;
 
 	unsigned int t_stack_id[4];
-	md5_compute(MCStringGetCString(p_id), MCStringGetLength(p_id), t_stack_id);
+    MCAutoPointer<char> t_id;
+    /* UNCHECKED */ MCStringConvertToCString(p_id, &t_id);
+	md5_compute(*t_id, MCStringGetLength(p_id), t_stack_id);
 
 	unsigned int t_process_id;
 	t_process_id = GetCurrentProcessId();

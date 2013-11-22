@@ -375,7 +375,7 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 			if (!MCS_exists(p_filename, True))
 			{
 				MCU_geturl(ctxt, p_filename, &t_file);
-				if (MCStringGetLength(*t_file) == 0)
+				if (MCStringIsEmpty(*t_file))
 				{
 					ctxt . SetTheResultToStaticCString("no data in videoClip");
 					return;
@@ -396,7 +396,7 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 				ctxt . SetTheResultToStaticCString("error opening temp file");
 				return;
 			}
-			IO_stat stat = IO_write(MCStringGetCString(*t_file), sizeof(int1), MCStringGetLength(*t_file), t_stream);
+			IO_stat stat = IO_write_stringref_utf8(*t_file, t_stream);
 			MCS_close(t_stream);
 			if (stat != IO_NORMAL)
 			{
@@ -612,7 +612,9 @@ void MCMultimediaGetRecordCompression(MCExecContext& ctxt, MCStringRef& r_value)
 
 void MCMultimediaSetRecordCompression(MCExecContext& ctxt, MCStringRef p_value)
 {
-	memcpy(MCrecordcompression, MCStringGetCString(p_value), 4);
+    MCAutoPointer<char> t_value;
+    /* UNCHECKED */ MCStringConvertToCString(p_value, &t_value);
+	memcpy(MCrecordcompression, *t_value, 4);
 }
 
 void MCMultimediaGetRecordInput(MCExecContext& ctxt, MCStringRef& r_value)
@@ -625,7 +627,9 @@ void MCMultimediaGetRecordInput(MCExecContext& ctxt, MCStringRef& r_value)
 
 void MCMultimediaSetRecordInput(MCExecContext& ctxt, MCStringRef p_value)
 {
-	memcpy(MCrecordinput, MCStringGetCString(p_value), 4);
+    MCAutoPointer<char> t_value;
+    /* UNCHECKED */ MCStringConvertToCString(p_value, &t_value);
+	memcpy(MCrecordinput, *t_value, 4);
 }
 
 void MCMultimediaGetRecordSampleSize(MCExecContext& ctxt, uinteger_t& r_value)

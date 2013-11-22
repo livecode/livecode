@@ -1075,7 +1075,9 @@ static void MCWindowsVersionInfoDestroy(MCWindowsVersionInfo *self)
 static uint64_t MCWindowsVersionInfoParseVersion(MCStringRef p_string)
 {
 	uint32_t a, b, c, d;
-	if (sscanf(MCStringGetCString(p_string), "%u.%u.%u.%u", &a, &b, &c, &d) != 4)
+    MCAutoStringRefAsUTF8String t_string_utf8;
+    /* UNCHECKED */ t_string_utf8 . Lock(p_string);
+	if (sscanf(*t_string_utf8, "%u.%u.%u.%u", &a, &b, &c, &d) != 4)
 		return 0;
 	return 0ULL | ((uint64_t)a << 48) | ((uint64_t)b << 32) | (c << 16) | d;
 }
@@ -1100,7 +1102,7 @@ static bool add_version_info_entry(void *p_context, MCArrayRef p_array, MCNameRe
 		t_bytes[t_byte_count - 2] = '\0';
 		t_bytes[t_byte_count - 1] = '\0';	 
 	}
-	return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, MCStringGetCString(MCNameGetString(p_key)), true, t_bytes, t_byte_count, t_string);
+	return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, MCNameGetCString(p_key), true, t_bytes, t_byte_count, t_string);
 }
 
 static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCArrayRef p_info)

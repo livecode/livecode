@@ -550,7 +550,9 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	{
 		MCAutoStringRef t_string;
 		/* UNCHECKED */ ctxt . ConvertToString(t_valueref, &t_string);
-		t_block -> setatts(P_TEXT_FONT, (void *)MCStringGetCString(*t_string));
+        MCAutoPointer<char> temp;
+        /* UNCHECKED */ MCStringConvertToCString(*t_string, &temp);
+		t_block -> setatts(P_TEXT_FONT, (void *)*temp);
 	}
 	
 	// Set textsize
@@ -651,7 +653,9 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 	
 	MCAutoStringRef t_temp;
 	/* UNCHECKED */ ctxt . ConvertToString(t_valueref, &t_temp);
-	t_text_ptr = MCStringGetCString(*t_temp);
+    MCAutoPointer<char> t_temp_cstr;
+    /* UNCHECKED */ MCStringConvertToCString(*t_temp, &t_temp_cstr);
+	t_text_ptr = *t_temp_cstr;
 	t_text_length = MCStringGetLength(*t_temp);
 	while(t_text_length != 0)
 	{

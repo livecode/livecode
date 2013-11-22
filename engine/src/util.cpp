@@ -263,7 +263,9 @@ void MCU_setnumberformat(MCStringRef d, uint2 &fw,
                          uint2 &trailing, uint2 &force)
 {
 	fw = MCStringGetLength(d);
-	const char *sptr = MCStringGetCString(d);
+    char *temp_d;
+    /* UNCHECKED */ MCStringConvertToCString(d, temp_d);
+	const char *sptr = temp_d;
 	const char *eptr = sptr;
 	while (eptr - sptr < fw && *eptr != '.')
 		eptr++;
@@ -414,7 +416,9 @@ char *MCU_strtok(char *s, const char *delim)
 {
 	Boolean t_converted;
 	uint4 l = MCStringGetLength(p_string);
-	const char *sptr = MCStringGetCString(p_string);
+    char *t_string;
+    /* UNCHECKED */ MCStringConvertToCString(p_string, t_string);
+	const char *sptr = t_string;
 	r_l = MCU_strtol(sptr, l, '\0', t_converted);
 	return True == t_converted;
 }
@@ -868,7 +872,9 @@ Boolean MCU_stoui4(const MCString &s, uint4 &d)
 
 bool MCU_stoui4x2(MCStringRef p_string, uint4 &r_d1, uint4 &r_d2)
 {
-    const char *sptr = MCStringGetCString(p_string);
+    char *t_string;
+    /* UNCHECKED */ MCStringConvertToCString(p_string, t_string);
+    const char *sptr = t_string;
 	uint4 l = MCStringGetLength(p_string);
 	Boolean done;
 	r_d1 = MCU_strtol(sptr, l, ',', done, True, False);
@@ -1198,9 +1204,12 @@ static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean
 		{
 		case ST_INTERNATIONAL:
 			{
+                char *t1, *t2;
+                /* UNCHECKED */ MCStringConvertToCString(b1->svalue, t1);
+                /* UNCHECKED */ MCStringConvertToCString(b2->svalue, t2);
 				const char *s1, *s2;
-				s1 = MCStringGetCString(b1->svalue);
-				s2 = MCStringGetCString(b2->svalue);
+				s1 = t1;
+				s2 = t2;
 				
 				// WARNING: this will *not* work properly on anything other
 				// than OSX, iOS or Android: the LC_COLLATE locale facet is set to the
@@ -1214,7 +1223,8 @@ static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean
 #else
 				int result = strcoll(s1, s2);
 #endif
-				
+				delete t1;
+                delete t2;
 				first = reverse ? result >= 0 : result <= 0;
 				break;
 			}
@@ -1225,6 +1235,7 @@ static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean
                 // case-sensitive manner. The strings are sorted by order of
                 // codepoint values rather than any lexical sorting order.
                 compare_t result = MCStringCompareTo(b1->svalue, b2->svalue, kMCStringOptionCompareExact);
+
 				first = reverse ? result >= 0 : result <= 0;
 				break;
 			}
@@ -1441,7 +1452,9 @@ Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data
 	Boolean allvalid = True;
 	uint2 npoints = 0;
 	uint4 l = MCStringGetLength(data);
-	const char *sptr = MCStringGetCString(data);
+    char *t_data;
+    /* UNCHECKED */ MCStringConvertToCString(data, t_data);
+	const char *sptr = t_data;
 	while (l)
 	{
 		Boolean done1, done2;
@@ -1478,7 +1491,9 @@ Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data
 
 Boolean MCU_parsepoint(MCPoint &point, MCStringRef data)
 {
-	const char *sptr = MCStringGetCString(data);
+    char *t_data;
+    /* UNCHECKED */ MCStringConvertToCString(data, t_data);
+	const char *sptr = t_data;
 	uint4 l = MCStringGetLength(data);
 	Boolean done1, done2;
 	// MDW-2013-06-09: [[ Bug 11041 ]] Round non-integer values to nearest.
@@ -1916,8 +1931,8 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 		}
 		uint2 i;
 		for (i = 0 ; i <= T_TEXT ; i++)
-			if (strncmp(MCStringGetCString(*t_tool_name), MCtoolnames[i], 3) == 0)
-			{
+            if (MCStringIsEqualToCString(*t_tool_name, MCtoolnames[i], kMCCompareExact))
+            {
 				t_new_tool = (Tool)i;
 				break;
 			}
@@ -2157,7 +2172,9 @@ inline void strmove(char *p_dest, const char *p_src)
 // MW-2004-11-26: Replace strcpy with strmov - overalapping regions (VG)
 void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 {
-	char *cstr = strdup(MCStringGetCString(in));
+    char *t_in;
+    /* UNCHECKED */ MCStringConvertToCString(in, t_in);
+	char *cstr = t_in;
 
 	char *fptr = cstr; //pointer to search forward in curdir
 	while (*fptr)

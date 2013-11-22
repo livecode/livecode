@@ -69,7 +69,6 @@ public:
 
 class MCDo : public MCStatement
 {
-	MCHandler *h;
 	MCExpression *source;
 	MCExpression *alternatelang;
 protected:
@@ -1033,7 +1032,6 @@ public:
 
 class MCMessage : public MCStatement
 {
-	MCHandler *h;
 	MCExpression *message;
 	MCExpression *eventtype;
 	MCChunk *target;

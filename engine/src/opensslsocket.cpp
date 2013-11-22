@@ -384,10 +384,12 @@ bool MCS_ntoa(MCStringRef p_hostname, MCObject *p_target, MCNameRef p_message, M
 		return false;
 
 	bool t_success = true;
+    MCAutoPointer<char> t_host_cstring;
+    /* UNCHECKED */ MCStringConvertToCString(*t_host, &t_host_cstring);
 
 	if (MCNameIsEqualTo(p_message, kMCEmptyName))
 	{
-		t_success = MCSocketHostNameResolve(MCStringGetCString(*t_host), NULL, SOCK_STREAM, true, ntoa_callback, *t_list);
+		t_success = MCSocketHostNameResolve(*t_host_cstring, NULL, SOCK_STREAM, true, ntoa_callback, *t_list);
 	}
 	else
 	{
@@ -404,7 +406,7 @@ bool MCS_ntoa(MCStringRef p_hostname, MCObject *p_target, MCNameRef p_message, M
 		if (t_success)
 		{
 			t_info->target = p_target->gethandle();
-			t_success = MCSocketHostNameResolve(MCStringGetCString(*t_host), NULL, SOCK_STREAM, false, ntoa_message_callback, t_info);
+			t_success = MCSocketHostNameResolve(*t_host_cstring, NULL, SOCK_STREAM, false, ntoa_message_callback, t_info);
 		}
 		
 		if (!t_success)
@@ -716,6 +718,8 @@ void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRe
 		t_broadcast = MCallowdatagrambroadcasts ? 1 : 0;
 		setsockopt(s -> fd, SOL_SOCKET, SO_BROADCAST, (const char *)&t_broadcast, sizeof(t_broadcast));
 	
+        MCAutoPointer<char> temp_d;
+        /* UNCHECKED */ MCStringConvertToCString(d, &temp_d);
 		if (s->shared)
 		{
             char *t_name_copy;
@@ -729,7 +733,7 @@ void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRe
 			uint2 port = atoi(portptr + 1);
 			to.sin_port = MCSwapInt16HostToNetwork(port);
 			if (!inet_aton(t_name_copy, (in_addr *)&to.sin_addr.s_addr)
-				|| sendto(s->fd, MCStringGetCString(d), MCStringGetLength(d), 0,
+				|| sendto(s->fd, *temp_d, MCStringGetLength(d), 0,
 						  (sockaddr *)&to, sizeof(to)) < 0)
 			{
 				mptr = NULL;
@@ -738,7 +742,7 @@ void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRe
             
             delete[] t_name_copy;
 		}
-		else if (send(s->fd, MCStringGetCString(d), MCStringGetLength(d), 0) < 0)
+		else if (send(s->fd, *temp_d, MCStringGetLength(d), 0) < 0)
 		{
 			mptr = NULL;
 			MCresult->sets("error sending datagram");
@@ -1014,10 +1018,10 @@ MCSocketread::~MCSocketread()
 
 MCSocketwrite::MCSocketwrite(MCStringRef d, MCObject *o, MCNameRef m)
 {
-	if (m != NULL)
-		buffer = strdup(MCStringGetCString(d));
-	else
-		buffer = (char *)MCStringGetCString(d);
+    char *temp_d;
+    /* UNCHECKED */ MCStringConvertToCString(d, temp_d);
+	
+    buffer = temp_d;
 	size = MCStringGetLength(d);
 	timeout = curtime + MCsockettimeout;
 	optr = o;
@@ -1736,7 +1740,9 @@ char *MCSocket::sslgraberror()
 		return strclone("cannot load SSL library");
 	if (sslerror != nil)
 	{
-		terror = strdup(MCStringGetCString(sslerror));
+		char *t_sslerror;
+        /* UNCHECKED */ MCStringConvertToCString(sslerror, t_sslerror);
+        terror = t_sslerror;
 		sslerror = NULL;
 	}
 	else
@@ -1822,7 +1828,7 @@ Boolean MCSocket::initsslcontext()
                         t_success = (MCS_exists(*t_certpath, True) && load_ssl_ctx_certs_from_file(_ssl_context, *t_certpath_utf8)) ||
                                     (MCS_exists(*t_certpath, False) && load_ssl_ctx_certs_from_folder(_ssl_context, *t_certpath_utf8));
 					if (!t_success)
-						MCStringFormat(sslerror, "Error loading CA file and/or directory %s", MCStringGetCString(*t_certpath));
+						MCStringFormat(sslerror, "Error loading CA file and/or directory %@", *t_certpath);
 				}
 			}
 			if (certs != NULL)

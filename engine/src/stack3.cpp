@@ -605,12 +605,11 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 
 	if (flags & F_STACK_FILES)
 	{
-		MCExecPoint ep;
-		getstackfiles(ep);
-		char *sf = ep.getsvalue().clone();
-		if ((stat = IO_write_string(sf, stream)) != IO_NORMAL)
+		MCAutoStringRef t_sf;
+		if (!getstackfiles(&t_sf))
+			return IO_ERROR;
+		if ((stat = IO_write_stringref(*t_sf, stream)) != IO_NORMAL)
 			return stat;
-		delete sf;
 	}
 	if (flags & F_MENU_BAR)
 		if ((stat = IO_write_nameref(_menubar, stream)) != IO_NORMAL)
@@ -1832,22 +1831,37 @@ void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uint2 &nstring
 	case FM_NORMAL:
 	case FM_CHARACTERS:
 	case FM_WORD:
-		{
-			// MW-2007-07-05: [[ Bug 110 ]] - Break string only breaks at spaces, rather than space charaters
-			const char *sptr = MCStringGetCString(source);
-			uint4 l = MCStringGetLength(source);
-			MCU_skip_spaces(sptr, l);
-			const char *startptr = sptr;
-			while(l != 0)
+        {
+			// MW-2007-07-05: [[ Bug 110 ]] - Break string only breaks at spaces, rather than space charaters 
+			uint4 l;
+            l = 0;
+            uint4 remaining_chars;
+            remaining_chars = MCStringGetLength(source);
+			MCU_skip_spaces(source, l);
+            remaining_chars -= l;
+            uindex_t t_word_start;
+            t_word_start = l;
+            
+			while(remaining_chars > 0)
 			{
-				while(l != 0 && !isspace(*sptr))
-					sptr += 1, l -= 1;
-
+				while(!isspace(MCStringGetNativeCharAtIndex(source, l)))
+                {
+					l++;
+                    remaining_chars --;
+                }
+                
 				MCU_realloc((char **)&tdest_str, nstrings, nstrings + 1, sizeof(MCStringRef));
-                /* UNCHECKED */ MCStringCreateWithNativeChars ((const char_t *) startptr, sptr - startptr, tdest_str[nstrings]);
+                uindex_t t_word_length;
+                t_word_length = l - t_word_start;
+                /* UNCHECKED */ MCStringCopySubstring(source, MCRangeMake(t_word_start, t_word_length), tdest_str[nstrings]);
 				nstrings++;
-				MCU_skip_spaces(sptr, l);
-				startptr = sptr;
+        
+                uindex_t t_space_start, t_spaces_length;
+                t_space_start = l;
+				MCU_skip_spaces(source, l);
+                t_word_start = l;
+                t_spaces_length = t_word_start - t_space_start;
+                remaining_chars -= t_spaces_length;
 			}
 		}
 		break;

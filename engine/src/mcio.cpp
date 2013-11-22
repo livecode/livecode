@@ -684,7 +684,9 @@ IO_stat IO_write_stringref(MCStringRef p_string, IO_handle stream, uint1 size)
 	// If the string is empty, then we out a nil string (matches MCNameRef behavior).
 	uindex_t t_length;
 	t_length = MCStringGetLength(p_string);
-	return IO_write_string(t_length != nil ? MCStringGetCString(p_string) : nil, t_length, stream, size);
+	MCAutoPointer<char> t_string;
+    /* UNCHECKED */ MCStringConvertToCString(p_string, &t_string);
+    return IO_write_string(t_length != nil ? *t_string : nil, t_length, stream, size);
 }
 
 IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, bool as_unicode, uint1 size)

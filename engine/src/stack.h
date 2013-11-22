@@ -589,7 +589,8 @@ public:
 	void reopenwindow();
 	Exec_stat openrect(const MCRectangle &rel, Window_mode wm, MCStack *parentwindow,
 	                   Window_position wpos,  Object_pos walign);
-	void getstackfiles(MCExecPoint &);
+
+	bool getstackfiles(MCStringRef& r_sf);
 	void stringtostackfiles(MCStringRef d, MCStackfile **sf, uint2 &nf);
 	void setstackfiles(MCStringRef);
 	void getstackfile(MCStringRef p_name, MCStringRef &r_name);
