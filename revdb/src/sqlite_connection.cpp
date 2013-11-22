@@ -227,13 +227,19 @@ Bool DBConnection_SQLITE::IsError()
 }
 
 /*getErrorMessage- return error string*/
-char *DBConnection_SQLITE::getErrorMessage()
+char *DBConnection_SQLITE::getErrorMessage(Bool p_last)
 {
-	if(mIsError && mErrorStr != 0) {
-		mIsError = false;
-		return mErrorStr;
-	} else
-		return (char*)DBNullValue;
+    // AL-2013-11-08 [[ Bug 11149 ]] Make sure most recent error string is available to revDatabaseConnectResult
+	if(p_last || mIsError)
+    {
+        if (mErrorStr != 0)
+        {
+            mIsError = false;
+            return mErrorStr;
+        }
+    }
+    
+    return (char*)DBNullValue;
 }
 
 char *replaceString(char *p_string, char *p_find, char *p_replace)
