@@ -104,16 +104,19 @@ bool MCObjectPropertySet::clear(void)
 	return MCArrayCreateMutable(m_props);
 }
 
+#ifdef LEGACY_EXEC
 bool MCObjectPropertySet::fetch(MCExecPoint& ep)
 {
 	return ep . setvalueref(m_props);
 }
+#endif
 
 bool MCObjectPropertySet::fetch(MCArrayRef& r_array)
 {
     return MCArrayCopy(m_props, r_array);
 }
 
+#ifdef LEGACY_EXEC
 bool MCObjectPropertySet::store(MCExecPoint& ep)
 {
 	MCArrayRef t_new_props;
@@ -123,6 +126,7 @@ bool MCObjectPropertySet::store(MCExecPoint& ep)
 	m_props = t_new_props;
 	return true;
 }
+#endif
 
 bool MCObjectPropertySet::store(MCArrayRef p_array)
 {
@@ -131,15 +135,19 @@ bool MCObjectPropertySet::store(MCArrayRef p_array)
 	return true;
 }
 
+#ifdef LEGACY_EXEC
 bool MCObjectPropertySet::fetchelement(MCExecPoint& ep, MCNameRef p_name)
 {
 	return ep . fetcharrayelement(m_props, p_name);
 }
+#endif
 
+#ifdef LEGACY_EXEC
 bool MCObjectPropertySet::storeelement(MCExecPoint& ep, MCNameRef p_name)
 {
 	return ep . storearrayelement(m_props, p_name);
 }
+#endif
 
 bool MCObjectPropertySet::fetchelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef& r_value)
 {

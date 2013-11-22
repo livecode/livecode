@@ -92,6 +92,7 @@ const char *MCVideoClip::gettypestring()
 	return MCvideostring;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCVideoClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	switch (which)
@@ -124,7 +125,9 @@ Exec_stat MCVideoClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint
 	}
 	return ES_NORMAL;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 Exec_stat MCVideoClip::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	MCString data = ep.getsvalue();
@@ -176,6 +179,7 @@ Exec_stat MCVideoClip::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep
 	}
 	return MCObject::setprop_legacy(parid, p, ep, effective);
 }
+#endif
 
 Boolean MCVideoClip::del()
 {

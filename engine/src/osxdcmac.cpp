@@ -1664,7 +1664,6 @@ public:
 			/* UNCHECKED */ MCStringCreateMutable(0, t_newname);
 			uint2 submenutitlelen = 0;
 
-			MCExecPoint ep;
 			for (int i = 0; i <= curMenuLevel; i++)
 			{
 				if (!MCStringIsEmpty(curMenuStruct[i].tag))

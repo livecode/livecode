@@ -903,6 +903,7 @@ void MCMinus::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) co
 //  Comparison operators
 //
 
+#ifdef LEGACY_EXEC
 static bool eval_comparison_factors(MCExecPoint& ep, MCExpression *p_left, MCExpression *p_right, MCValueRef& r_left, MCValueRef& r_right)
 {
     MCValueRef t_left, t_right;
@@ -928,6 +929,7 @@ static bool eval_comparison_factors(MCExecPoint& ep, MCExpression *p_left, MCExp
 
     return true;
 }
+#endif
 
 #ifdef /* MCGreaterThanEqual */ LEGACY_EXEC
 Exec_stat MCGreaterThanEqual::eval(MCExecPoint &ep)
