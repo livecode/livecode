@@ -764,6 +764,7 @@ Parse_stat MCFuncref::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
+#if /* MCFuncref::eval */ LEGACY_EXEC
 Exec_stat MCFuncref::eval(MCExecPoint &ep)
 {
 	MCExecContext ctxt(ep);
@@ -913,7 +914,8 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
     
 	return ES_NORMAL;
 }
-/*
+#endif
+
 void MCFuncref::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
     MCKeywordsExecCommand(ctxt, resolved, handler, params, name, line, pos, platform_message, true);
@@ -929,18 +931,12 @@ void MCFuncref::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 	}
 
 	if (MCresult->eval(ctxt, r_value . valueref_value))
-    {
-        MCAutoStringRef t_desc;
-        MCValueCopyDescription(r_value . valueref_value, &t_desc);
-        MCLog("%s - %s", MCStringGetCString(MCNameGetString(name)), MCStringGetCString(*t_desc));
+	{
         r_value . type = kMCExecValueTypeValueRef;
-    }
-    else
-    {
-        r_value . stringref_value = MCValueRetain(kMCEmptyString);
-        r_value . type = kMCExecValueTypeStringRef;
+		return;
     }
     
-    ctxt . SetExecStat(ES_NORMAL);
-} */
+    ctxt . Throw();
+}
+
 ////////////////////////////////////////////////////////////////////////////////

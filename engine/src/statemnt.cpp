@@ -395,6 +395,7 @@ Parse_stat MCComref::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#if /* MCComref::exec */ LEGACY_EXEC
 Exec_stat MCComref::exec(MCExecPoint &ep)
 {
 	if (MCscreen->abortkey())
@@ -528,12 +529,13 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 		MCnexecutioncontexts--;
 	return stat;
 }
-/*
+#endif
+
 void MCComref::exec_ctxt(MCExecContext& ctxt)
 {
     MCKeywordsExecCommand(ctxt, resolved, handler, params, name, line, pos, platform_message, false);
 }
-*/
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p_statements, Exec_errors p_error, bool p_is_try)
