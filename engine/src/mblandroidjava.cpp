@@ -817,8 +817,7 @@ bool MCJavaMapToArray(JNIEnv *p_env, MCExecPoint &p_ep, jobject p_map, MCVariabl
 
 typedef struct
 {
-	MCArrayRef array;
-	MCExecPoint *ep;
+    MCArrayRef array;
 } map_to_array_context_t;
 
 static bool s_map_to_array_callback(JNIEnv *p_env, const char *p_key, jobject p_value, void *p_context)

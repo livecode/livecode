@@ -112,6 +112,7 @@ UIView *MCiOSControl::GetView(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef LEGACY_EXEC
 #define MCColorComponentToFloat(c) ((c) / 65535.0)
 #define MCFloatToColorComponent(f) ((f) * 65535)
 
@@ -255,6 +256,7 @@ bool MCiOSControl::FormatRange(MCExecPoint &ep, NSRange r_range)
 {
     return MCNativeControl::FormatRange(ep, r_range.location + 1, r_range.length);
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

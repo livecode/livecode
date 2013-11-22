@@ -408,6 +408,7 @@ bool MCScrollViewIsDragging(jobject p_view, bool &r_dragging)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef LEGACY_EXEC
 Exec_stat scroller_set_property(jobject p_view, MCRectangle32 &x_content_rect, MCNativeControlProperty p_property, MCExecPoint&ep)
 {
 	Boolean t_bool;
@@ -473,6 +474,7 @@ Exec_stat scroller_set_property(jobject p_view, MCRectangle32 &x_content_rect, M
 	}
 	return ES_NOT_HANDLED;
 }
+#endif
 
 #ifdef /* MCAndroidScrollerControl::Set */ LEGACY_EXEC
 Exec_stat MCAndroidScrollerControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
@@ -491,6 +493,7 @@ Exec_stat MCAndroidScrollerControl::Set(MCNativeControlProperty p_property, MCEx
 }
 #endif /* MCAndroidScrollerControl::Set */
 
+#ifdef LEGACY_EXEC
 Exec_stat scroller_get_property(jobject p_view, const MCRectangle32 &p_content_rect, MCNativeControlProperty p_property, MCExecPoint &ep)
 {
 	switch (p_property)
@@ -576,6 +579,7 @@ Exec_stat scroller_get_property(jobject p_view, const MCRectangle32 &p_content_r
 	}
 	return ES_NOT_HANDLED;
 }
+#endif
 
 #ifdef /* MCAndroidScrollerControl::Get */ LEGACY_EXEC
 Exec_stat MCAndroidScrollerControl::Get(MCNativeControlProperty p_property, MCExecPoint &ep)
