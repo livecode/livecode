@@ -420,7 +420,7 @@ public:
     
 	Exec_stat seltext(findex_t si, findex_t ei, Boolean focus, Boolean update = False);
 	uint2 hilitedline();
-	void hilitedlines(MCExecPoint &ep);
+	void hilitedlines(MCStringRef& r_string);
 	Exec_stat sethilitedlines(const uint32_t *p_lines, uint32_t p_line_count, Boolean forcescroll = True);
 	Exec_stat sethilitedlines(const MCString &,Boolean forcescroll = True);
 	void hiliteline(int2 x, int2 y);

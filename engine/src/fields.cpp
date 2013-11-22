@@ -1834,25 +1834,28 @@ uint2 MCField::hilitedline()
 	return line;
 }
 
-void MCField::hilitedlines(MCExecPoint &ep)
+void MCField::hilitedlines(MCStringRef& r_string)
 {
-	ep.clear();
+    if (r_string != nil)
+        MCValueRelease(r_string);
 	if (!opened || !(flags & F_LIST_BEHAVIOR))
 		return;
-	uint4 line = 0;
+	integer_t line = 0;
+    MCAutoListRef t_list;
+   /* UNCHECKED */ MCListCreateMutable(',', &t_list);
 	MCParagraph *pgptr = paragraphs;
-	bool first = true;
 	do
 	{
 		line++;
 		if (pgptr->gethilite())
 		{
-			ep.concatuint(line, EC_COMMA, first);
-			first = false;
+            /* UNCHECKED */ MCListAppendInteger(*t_list, line);
 		}
 		pgptr = pgptr->next();
 	}
 	while (pgptr != paragraphs);
+    
+    MCListCopyAsString(*t_list, r_string);
 }
 
 Exec_stat MCField::sethilitedlines(const MCString &s, Boolean forcescroll)

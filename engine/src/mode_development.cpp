@@ -615,6 +615,7 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef LEGACY_EXEC
 static bool enumerate_handlers_for_object(MCObject *p_object, MCExecPoint &ep, bool p_first)
 {
 	if (p_object == NULL)
@@ -669,7 +670,9 @@ static bool enumerate_handlers_for_object(MCObject *p_object, MCExecPoint &ep, b
 	
 	return p_first;
 }
+#endif
 
+#ifdef LECACY_EXEC
 static bool enumerate_handlers_for_list(MCObjectList *p_list, MCObject *p_ignore, MCExecPoint &ep, bool p_first)
 {
 	if (p_list == NULL)
@@ -689,6 +692,7 @@ static bool enumerate_handlers_for_list(MCObjectList *p_list, MCObject *p_ignore
 	
 	return p_first;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
