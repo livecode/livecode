@@ -25,6 +25,8 @@
 
 #include "foundation-auto.h"
 
+#include <limits>
+
 
 // This array converts from the MCUnicodeProperty enumeration to the corresponding
 // UProperty value used by the ICU library.
@@ -161,7 +163,7 @@ int32_t MCUnicodeGetIntegerProperty(codepoint_t p_codepoint, MCUnicodeProperty p
 double MCUnicodeGetFloatProperty(codepoint_t p_codepoint, MCUnicodeProperty p_property)
 {
     if (p_property != kMCUnicodePropertyNumericValue)
-        return NAN;
+		return std::numeric_limits<double>::quiet_NaN();
     return u_getNumericValue(p_codepoint);
 }
 
@@ -197,6 +199,7 @@ const unichar_t* MCUnicodeGetStringProperty(codepoint_t p_codepoint, MCUnicodePr
 {
     // Not currently supported
     MCAssert(false);
+	return nil;
 }
 
 bool MCUnicodeGetProperty(const unichar_t *p_chars, uindex_t p_char_count, MCUnicodeProperty p_property,
