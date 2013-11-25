@@ -76,8 +76,9 @@ private:
 	void set_global_property(MCExecContext& ctxt, MCExecValue p_value);
 	void set_object_property(MCExecContext& ctxt, MCExecValue p_value);
 
-	
+#ifdef LEGACY_EXEC
 	Exec_stat resolveprop(MCExecPoint& ep, Properties& r_prop, MCNameRef& r_prop_name, MCNameRef& r_index_name);
+#endif
     bool resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef& r_prop_name, MCNameRef& r_index_name);
 
     static MCPropertyInfo kModeProperties[];

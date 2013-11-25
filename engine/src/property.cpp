@@ -1069,6 +1069,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 //   the pVar of me
 // where pVar is a variable.
 //
+#ifdef LEGACY_EXEC
 Exec_stat MCProperty::resolveprop(MCExecPoint& ep, Properties& r_which, MCNameRef& r_prop_name, MCNameRef& r_index_name)
 {
 	MCNameRef t_prop_name, t_index_name;
@@ -1141,6 +1142,7 @@ Exec_stat MCProperty::resolveprop(MCExecPoint& ep, Properties& r_which, MCNameRe
 
 	return ES_NORMAL;
 }
+#endif
 
 bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef& r_prop_name, MCNameRef& r_index_name)
 {
