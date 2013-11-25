@@ -107,7 +107,7 @@ void MCSyntaxFactoryDefineLocal(MCSyntaxFactoryRef self, MCNameRef p_name, MCVal
 	{
 		MCAutoStringRef t_value;
 		MCValueCopyDescription(p_value, &t_value);
-		_log(self, "local %@ = \"%s\"", MCNameGetString(p_name), MCStringGetCString(*t_value));
+		_log(self, "local %@ = \"%@\"", MCNameGetString(p_name), *t_value);
 	}
 }
 
@@ -115,7 +115,8 @@ void MCSyntaxFactoryDefineConstant(MCSyntaxFactoryRef self, MCNameRef p_name, MC
 {
 	MCAutoStringRef t_value;
 	MCValueCopyDescription(p_value, &t_value);
-	_log(self, "local %@ = \"%s\"", MCNameGetString(p_name), MCStringGetCString(*t_value));
+	_log(self, "local %@ = \"%@\"", MCNameGetString(p_name), *t_value);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -155,7 +156,7 @@ void MCSyntaxFactoryEvalConstant(MCSyntaxFactoryRef self, MCValueRef p_value)
 {
 	MCAutoStringRef t_value_string;
 	/* UNCHECKED */ MCValueCopyDescription(p_value, &t_value_string);
-	_log(self, "%d: push value(%s)", self -> operand_count, MCStringGetCString(*t_value_string));
+	_log(self, "%d: push value(%@)", self -> operand_count, *t_value_string);
 	MCSyntaxFactoryPushOperand(self);
 }
 
@@ -272,7 +273,7 @@ void MCSyntaxFactoryExecMethod(MCSyntaxFactoryRef self, const MCExecMethodInfo *
 	
 	MCAutoStringRef t_list_string;
 	MCListCopyAsString(*t_list, &t_list_string);
-	_log(self, "-: exec %s(%s)", p_method -> name, MCStringGetCString(*t_list_string));
+	_log(self, "-: exec %s(%@)", p_method -> name, *t_list_string);
 }
 
 void MCSyntaxFactoryExecMethodWithArgs(MCSyntaxFactoryRef self, const MCExecMethodInfo *p_method, ...)
@@ -289,7 +290,7 @@ void MCSyntaxFactoryExecMethodWithArgs(MCSyntaxFactoryRef self, const MCExecMeth
 	
 	MCAutoStringRef t_list_string;
 	MCListCopyAsString(*t_list, &t_list_string);
-	_log(self, "-: exec %s(%s)", p_method -> name, MCStringGetCString(*t_list_string));
+	_log(self, "-: exec %s(%@)", p_method -> name, *t_list_string);
 }
 
 void MCSyntaxFactoryEvalUnimplemented(MCSyntaxFactoryRef self)
@@ -307,7 +308,7 @@ void MCSyntaxFactoryEvalMethod(MCSyntaxFactoryRef self, const MCExecMethodInfo *
 	
 	MCAutoStringRef t_list_string;
 	MCListCopyAsString(*t_list, &t_list_string);
-	_log(self, "%d: eval %s(%s)", self -> operand_stack[self -> method_stack[self -> method_index - 1] . operand_start - 1], p_method -> name, MCStringGetCString(*t_list_string));
+	_log(self, "%d: eval %s(%@)", self -> operand_stack[self -> method_stack[self -> method_index - 1] . operand_start - 1], p_method -> name, *t_list_string);
 }
 
 void MCSyntaxFactoryEvalMethodWithArgs(MCSyntaxFactoryRef self, const MCExecMethodInfo *p_method, ...)
@@ -324,7 +325,7 @@ void MCSyntaxFactoryEvalMethodWithArgs(MCSyntaxFactoryRef self, const MCExecMeth
 	
 	MCAutoStringRef t_list_string;
 	MCListCopyAsString(*t_list, &t_list_string);
-	_log(self, "%d: eval %s(%s)", self -> operand_stack[self -> method_stack[self -> method_index - 1] . operand_start - 1], p_method -> name, MCStringGetCString(*t_list_string));
+	_log(self, "%d: eval %s(%@)", self -> operand_stack[self -> method_stack[self -> method_index - 1] . operand_start - 1], p_method -> name, *t_list_string);
 }
 
 void MCSyntaxFactoryEvalList(MCSyntaxFactoryRef self, uindex_t p_count)
@@ -336,7 +337,7 @@ void MCSyntaxFactoryEvalList(MCSyntaxFactoryRef self, uindex_t p_count)
 	
 	MCAutoStringRef t_list_string;
 	MCListCopyAsString(*t_list, &t_list_string);
-	_log(self, "%d: push list(%s)", self -> operand_count, MCStringGetCString(*t_list_string));
+	_log(self, "%d: push list(%@)", self -> operand_count, *t_list_string);
 	
 }
 
@@ -357,7 +358,7 @@ static void _log_begin(MCSyntaxFactoryRef self, const char *p_format, ...)
 	MCStringFormatV(&t_formatted_string, p_format, t_args);
 	va_end(t_args);
 
-	_log(self, "%s", MCStringGetCString(*t_formatted_string));
+	_log(self, "%@", *t_formatted_string);
 	_log_indent += 2;
 }
 
@@ -370,7 +371,7 @@ static void _log_end(MCSyntaxFactoryRef self, const char *p_format, ...)
 	va_end(t_args);
 	
 	_log_indent -= 2;
-	_log(self, "%s", MCStringGetCString(*t_formatted_string));
+	_log(self, "%@", *t_formatted_string);
 }
 
 static void _log(MCSyntaxFactoryRef self, const char *p_format, ...)

@@ -51,7 +51,7 @@ bool MCEncodedImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_fra
 	MCImageBitmap *t_bitmap = nil;
 
 	MCPoint t_hotspot = {1, 1};
-	char *t_name = nil;
+	MCStringRef t_name = nil;
 
 	t_success = GetDataStream(t_stream) &&
 		MCImageImport(t_stream, t_mask_stream, t_hotspot, t_name, t_compressed, t_bitmap);
@@ -88,7 +88,7 @@ bool MCEncodedImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_fra
 		m_have_geometry = true;
 	}
 
-	MCCStringFree(t_name);
+	MCValueRelease(t_name);
 	
 	MCImageFreeBitmap(t_bitmap);
 	MCImageFreeCompressedBitmap(t_compressed);
@@ -164,9 +164,11 @@ bool MCReferencedImageRep::GetDataStream(IO_handle &r_stream)
         MCU_geturl(ctxt, m_file_name, &t_data);
         if (ctxt.HasError() || MCStringIsEmpty(*t_data))
             return false;
+        MCAutoDataRef t_dataref;
+        /* UNCHECKED */ ctxt . ConvertToData(*t_data, &t_dataref);
         
-        /* UNCHECKED */ MCMemoryAllocateCopy(MCStringGetCString(*t_data), MCStringGetLength(*t_data), m_url_data);
-        m_url_data_size = MCStringGetLength(*t_data);
+        /* UNCHECKED */ MCMemoryAllocateCopy(MCDataGetBytePtr(*t_dataref), MCDataGetLength(*t_dataref), m_url_data);
+        m_url_data_size = MCDataGetLength(*t_dataref);
 
 		t_stream = MCS_fakeopen(MCString((const char *)m_url_data, m_url_data_size));
 	}

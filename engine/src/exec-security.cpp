@@ -185,7 +185,9 @@ void MCSecurityGetSslCertificates(MCExecContext& ctxt, MCStringRef& r_value)
 void MCSecuritySetSslCertificates(MCExecContext& ctxt, MCStringRef p_value)
 {
 	delete MCsslcertificates;
-	MCsslcertificates = strclone(MCStringGetCString(p_value));	
+    char* t_value;
+    /* UNCHECKED */ MCStringConvertToCString(p_value, t_value);
+	MCsslcertificates = t_value;
 }
 
 #else

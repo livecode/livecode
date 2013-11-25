@@ -1995,11 +1995,9 @@ Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters)
     t_type = kMCAdTypeUnknown;
     if (t_success)
     {
-        char *t_type_string;
-        t_type_string = nil;
-        if (MCParseParameters(p_parameters, "s", &t_type_string))
-            t_type = MCAdTypeFromCString(t_type_string);
-        MCCStringFree(t_type_string);
+        MCAutoStringRef t_type_string;
+        if (MCParseParameters(p_parameters, "x", &(&t_type_string)))
+            t_type = MCAdTypeFromString(*t_type_string);
     }
     
     MCAdTopLeft t_top_left = {0,0};

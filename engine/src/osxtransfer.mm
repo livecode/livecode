@@ -1070,7 +1070,9 @@ bool MCConvertMacHTMLToStyledText(MCDataRef p_input, MCDataRef& r_output)
     [t_html_string release];
     
     MCParagraph *t_paragraphs;
-	t_paragraphs = MCtemplatefield -> rtftoparagraphs(MCString((const char *)[t_rtf_data bytes], [t_rtf_data length]));
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringCreateWithCString((const char *)[t_rtf_data bytes], &t_string);
+	t_paragraphs = MCtemplatefield -> rtftoparagraphs(*t_string);
     
 	MCStyledText t_styled_text;
 	t_styled_text . setparent(MCdefaultstackptr);

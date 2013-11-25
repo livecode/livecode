@@ -1359,10 +1359,10 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		switch (which)
 		{
 		case P_HTML_TEXT:
-			sethtml(parid, MCStringGetOldString(*s));
+			sethtml(parid, *s);
 			break;
 		case P_RTF_TEXT:
-			setrtf(parid, MCStringGetOldString(*s));
+			setrtf(parid, *s);
 			break;
 		// MW-2011-12-08: [[ StyledText ]] Import the styled text.
 		case P_STYLED_TEXT:
@@ -1563,7 +1563,11 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 			return ES_ERROR;
 		all = True;
 		if (which == P_TEXT_FONT)
-			t_value = (void *)MCStringGetCString(*fname);
+        {
+            MCAutoPointer<char> t_fname;
+            /* UNCHECKED */ MCStringConvertToCString(*fname, &t_fname);
+			t_value = (void *)*t_fname;
+        }
 		else if (which == P_TEXT_SIZE)
 			t_value = (void *)size;
 		else

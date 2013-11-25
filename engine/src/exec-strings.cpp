@@ -619,7 +619,9 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 					return;
 				}
 
-				t_success = MCStringAppendFormat(*t_result, newFormat, MCStringGetCString(*t_string));
+                MCAutoPointer<char> temp;
+                    /* UNCHECKED */ MCStringConvertToCString(*t_string, &temp);
+				t_success = MCStringAppendFormat(*t_result, newFormat, *temp);
 				break;
 			}
 		}
@@ -1280,7 +1282,10 @@ bool MCStringsWildcardMatch(const char *s, uindex_t s_length, const char *p, uin
 
 bool MCStringsExecWildcardMatch(MCStringRef p_source, MCStringRef p_pattern, bool casesensitive)
 {
-	return MCStringsWildcardMatch(MCStringGetCString(p_source), MCStringGetLength(p_source), MCStringGetCString(p_pattern), MCStringGetLength(p_pattern), casesensitive);
+    MCAutoPointer<char> t_source, t_pattern;
+    /* UNCHECKED */ MCStringConvertToCString(p_source, &t_source);
+    /* UNCHECKED */ MCStringConvertToCString(p_pattern, &t_pattern);
+	return MCStringsWildcardMatch(*t_source, MCStringGetLength(p_source), *t_pattern, MCStringGetLength(p_pattern), casesensitive);
 }
 
 bool MCWildcardMatcher::match(MCStringRef s)
@@ -1393,9 +1398,10 @@ void MCStringsEvalIsAscii(MCExecContext& ctxt, MCValueRef p_value, bool& r_resul
         r_result = false;
         return;
     }
-    
+    MCAutoPointer<char> temp;
+    /* UNCHECKED */ MCStringConvertToCString(*t_string, &temp);
     const char *t_cstring;
-    t_cstring = MCStringGetCString(*t_string);
+    t_cstring = *temp;
     
     if (!MCStringIsEqualToCString(*t_string, t_cstring, kMCCompareExact))
     {
@@ -1406,7 +1412,7 @@ void MCStringsEvalIsAscii(MCExecContext& ctxt, MCValueRef p_value, bool& r_resul
     bool t_is_ascii;
     t_is_ascii = true;
     
-    const uint1* t_chars = (const uint1 *) MCStringGetCString(*t_string);
+    const uint1* t_chars = (const uint1 *) *temp;
     int t_length = MCStringGetLength(*t_string);
     for (int i=0; i < t_length ;i++)
         if (t_chars[i] > 127)

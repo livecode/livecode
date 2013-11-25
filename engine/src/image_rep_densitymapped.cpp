@@ -515,8 +515,10 @@ bool MCImageRepGetDensityMapped(MCStringRef p_filename, MCImageRep *&r_rep)
 	MCGFloat t_density;
 	
 	bool t_has_tag;
+    MCAutoPointer<char> t_filename;
+    /* UNCHECKED */ MCStringConvertToCString(p_filename, &t_filename);
 	
-	t_success = MCImageSplitScaledFilename(MCStringGetCString(p_filename), t_base, t_extension, t_has_tag, t_density);
+	t_success = MCImageSplitScaledFilename(*t_filename, t_base, t_extension, t_has_tag, t_density);
 	
 	if (!t_success)
 		return false;

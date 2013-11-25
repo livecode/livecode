@@ -437,10 +437,10 @@ Boolean MCDispatch::openstartup(MCStringRef sname, MCStringRef& outpath, IO_hand
 	if (enginedir == nil)
 		return False;
 
-	if (attempt_to_loadfile(stream, outpath, "%s/%s", startdir, MCStringGetCString(sname)))
+	if (attempt_to_loadfile(stream, outpath, "%s/%@", startdir, sname))
 		return True;
 
-	if (attempt_to_loadfile(stream, outpath, "%s/%s", enginedir, MCStringGetCString(sname)))
+	if (attempt_to_loadfile(stream, outpath, "%s/%@", enginedir, sname))
 		return True;
 
 	return False;
@@ -464,7 +464,7 @@ Boolean MCDispatch::openenv(MCStringRef sname, MCStringRef env,
 		MCAutoStringRef t_env_path;
 		MCStringRef t_next_rest_of_env;
 		/* UNCHECKED */ MCStringDivideAtChar(t_rest_of_env, ENV_SEPARATOR, kMCStringOptionCompareCaseless, &t_env_path, t_next_rest_of_env);
-		if (attempt_to_loadfile(stream, outpath, "%s/%s", MCStringGetCString(*t_env_path), MCStringGetCString(sname)))
+		if (attempt_to_loadfile(stream, outpath, "%@/%@", *t_env_path, sname))
 			t_found = true;
 
 		MCValueRelease(t_rest_of_env);
@@ -903,7 +903,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	MCValueAssign(MCfiletype, MCstackfiletype);
 	
 	MCAutoStringRef t_backup;
-	/* UNCHECKED */ MCStringFormat(&t_backup, "%s~", MCStringGetCString(*t_linkname)); 
+	/* UNCHECKED */ MCStringFormat(&t_backup, "%@~", *t_linkname); 
 
 	MCS_unlink(*t_backup);
 	if (MCS_exists(*t_linkname, True) && !MCS_backup(*t_linkname, *t_backup))

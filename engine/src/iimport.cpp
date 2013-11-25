@@ -158,7 +158,7 @@ bool MCImageDecode(IO_handle p_stream, MCImageFrame *&r_frames, uindex_t &r_fram
 	MCImageCompressedBitmap *t_compressed = nil;
 
 	MCPoint t_hotspot;
-	char *t_name = nil;
+	MCStringRef t_name = nil;
 
 	if (t_success)
 		t_success = MCImageImport(p_stream, nil, t_hotspot, t_name, t_compressed, t_bitmap);
@@ -181,7 +181,7 @@ bool MCImageDecode(IO_handle p_stream, MCImageFrame *&r_frames, uindex_t &r_fram
 
 	MCImageFreeCompressedBitmap(t_compressed);
 	MCImageFreeBitmap(t_bitmap);
-	MCCStringFree(t_name);
+	MCValueRelease(t_name);
 
 	return t_success;
 }
@@ -206,7 +206,7 @@ bool MCImageDecode(const uint8_t *p_data, uindex_t p_size, MCImageFrame *&r_fram
 }
 
 // if the image is in a directly supported format return the raw data otherwise decode & return the bitmap
-bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotspot, char *&r_name, MCImageCompressedBitmap *&r_compressed, MCImageBitmap *&r_bitmap)
+bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotspot, MCStringRef&r_name, MCImageCompressedBitmap *&r_compressed, MCImageBitmap *&r_bitmap)
 {
 	bool t_success = true;
 
@@ -272,7 +272,10 @@ bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotsp
                 MCAutoStringRef t_name;
 				t_success = MCImageDecodeXWD(p_stream, &t_name, t_bitmap);
 				if (t_success)
-					r_name = strdup(MCStringGetCString(*t_name));
+                {
+                    r_name = MCValueRetain(*t_name);
+                }
+                
             }
 
 			if (t_success)
@@ -291,7 +294,7 @@ IO_stat MCImage::import(const char *newname, IO_handle stream, IO_handle mstream
 
 	MCImageCompressedBitmap *t_compressed = nil;
 	MCImageBitmap *t_bitmap = nil;
-	char *t_name = nil;
+	MCStringRef t_name = nil;
 	MCPoint t_hotspot = {1, 1};
 
 	t_success = MCImageImport(stream, mstream, t_hotspot, t_name, t_compressed, t_bitmap);
@@ -333,7 +336,11 @@ IO_stat MCImage::import(const char *newname, IO_handle stream, IO_handle mstream
 		}
 
 		if (isunnamed() && t_name != nil)
-			setname_cstring(t_name);
+        {
+            MCNewAutoNameRef t_name_nameref;
+            /* UNCHECKED */ MCNameCreate(t_name, &t_name_nameref);
+			setname(*t_name_nameref);
+        }
 		if (isunnamed() && newname != nil)
 		{
 			const char *tname = strrchr(newname, PATH_SEPARATOR);
@@ -346,7 +353,7 @@ IO_stat MCImage::import(const char *newname, IO_handle stream, IO_handle mstream
 
 	}
 
-	MCCStringFree(t_name);
+	MCValueRelease(t_name);
 
 	return t_success ? IO_NORMAL : IO_ERROR;
 }
