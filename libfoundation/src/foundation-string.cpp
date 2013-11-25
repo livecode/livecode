@@ -2090,74 +2090,62 @@ bool MCStringAppendFormatV(MCStringRef self, const char *p_format, va_list p_arg
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void split_find_end_of_element_exact(const strchar_t *sptr, const strchar_t *eptr, strchar_t del, const strchar_t*& r_end_ptr)
+static void split_find_end_of_element_exact(const strchar_t *sptr, const strchar_t *eptr, codepoint_t del, const strchar_t*& r_end_ptr)
 {
-	while(sptr < eptr)
-	{
-		if (*sptr == del)
-		{
-			r_end_ptr = sptr;
-			return;
-		}
-
-		sptr += 1;
-	}
-	r_end_ptr = eptr;
+	uindex_t t_index;
+    if (!MCUnicodeFirstIndexOfChar(sptr, eptr-sptr, del, kMCUnicodeCompareOptionExact, t_index))
+        t_index = eptr-sptr;
+    
+    r_end_ptr = sptr + t_index;
 }
 
-static void split_find_end_of_element_caseless(const strchar_t *sptr, const strchar_t *eptr, strchar_t del, const strchar_t*& r_end_ptr)
+static void split_find_end_of_element_caseless(const strchar_t *sptr, const strchar_t *eptr, codepoint_t del, const strchar_t*& r_end_ptr)
 {
-	while(sptr < eptr)
-	{
-		if (MCStrCharFold(*sptr) == MCStrCharFold(del))
-		{
-			r_end_ptr = sptr;
-			return;
-		}
-
-		sptr += 1;
-	}
-	r_end_ptr = eptr;
+    uindex_t t_index;
+    if (!MCUnicodeFirstIndexOfChar(sptr, eptr-sptr, del, kMCUnicodeCompareOptionCaseless, t_index))
+        t_index = eptr-sptr;
+    
+    r_end_ptr = sptr + t_index;
 }
 
 static void split_find_end_of_element_and_key_exact(const strchar_t *sptr, const strchar_t *eptr, strchar_t del, strchar_t key, const strchar_t*& r_key_ptr, const strchar_t *& r_end_ptr)
 {
-	while(sptr < eptr)
-	{
-		if (*sptr == key)
-			break;
-        
-		if (*sptr == del)
-		{
-			r_key_ptr = r_end_ptr = sptr;
-			return;
-		}
-
-		sptr += 1;
-	}
-
-    r_key_ptr = sptr;
+	// Not as fast as it could be...
+    uindex_t t_key_idx, t_del_idx;
+    if (!MCUnicodeFirstIndexOfChar(sptr, eptr-sptr, key, kMCUnicodeCompareOptionExact, t_key_idx))
+        t_key_idx = eptr-sptr;
+    if (!MCUnicodeFirstIndexOfChar(sptr, eptr-sptr, del, kMCUnicodeCompareOptionExact, t_del_idx))
+        t_del_idx = eptr-sptr;
+    
+    if (t_key_idx > t_del_idx)
+    {
+        // Delimiter came before the key
+        r_key_ptr = r_end_ptr = sptr + t_del_idx;
+        return;
+    }
+    
+    r_key_ptr = sptr + t_key_idx;
     split_find_end_of_element_exact(sptr, eptr, del, r_end_ptr);
 }
 
 static void split_find_end_of_element_and_key_caseless(const strchar_t *sptr, const strchar_t *eptr, strchar_t del, strchar_t key, const strchar_t*& r_key_ptr, const strchar_t *& r_end_ptr)
 {
-	while(sptr < eptr)
-	{
-		if (MCStrCharFold(*sptr) == MCStrCharFold(key))
-			break;
-        
-		if (MCStrCharFold(*sptr) == MCStrCharFold(del))
-		{
-			r_key_ptr = r_end_ptr = sptr;
-			return;
-		}
-
-		sptr += 1;
-	}
-
-    r_key_ptr = sptr;
-    split_find_end_of_element_caseless(sptr, eptr, del, r_end_ptr);
+	// Not as fast as it could be...
+    uindex_t t_key_idx, t_del_idx;
+    if (!MCUnicodeFirstIndexOfChar(sptr, eptr-sptr, key, kMCUnicodeCompareOptionCaseless, t_key_idx))
+        t_key_idx = eptr-sptr;
+    if (!MCUnicodeFirstIndexOfChar(sptr, eptr-sptr, del, kMCUnicodeCompareOptionCaseless, t_del_idx))
+        t_del_idx = eptr-sptr;
+    
+    if (t_key_idx > t_del_idx)
+    {
+        // Delimiter came before the key
+        r_key_ptr = r_end_ptr = sptr + t_del_idx;
+        return;
+    }
+    
+    r_key_ptr = sptr + t_key_idx;
+    split_find_end_of_element_exact(sptr, eptr, del, r_end_ptr);
 }
 
 bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_del, MCStringOptions p_options, MCArrayRef& r_array)

@@ -121,7 +121,7 @@ typedef unichar_t strchar_t;
 #define MCStrCharsHashCaseless(x, y) MCUnicodeCharsHashCaseless(x, y)
 
 // These will probably go away
-#define MCStrCharFold(x) MCStrCharFoldSimple(x)
+//#define MCStrCharFold(x) MCStrCharFoldSimple(x)
 //#define MCStrCharLowercase(x) MCUnicodeCharLowercase(x)
 //#define MCStrCharUppercase(x) MCUnicodeCharUppercase(x)
 #define MCStrCharsSharedPrefixExact(x, y, z, w) MCUnicodeCharsSharedPrefixExact(x, y, z, w)
