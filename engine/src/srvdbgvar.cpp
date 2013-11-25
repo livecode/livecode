@@ -660,6 +660,7 @@ bool MCServerDebugListVariables(uint32_t p_start, uint32_t p_count, MCServerDebu
 		MCVariableViewLookupEntry(s_variable_view, i, t_owner, t_element);
 		
 		const char *t_name_ptr;
+        MCAutoPointer<char> temp_name;
 		uint32_t t_name_length;
 		MCVariableValue *t_value;
 		if (t_element == NULL)
@@ -673,7 +674,6 @@ bool MCServerDebugListVariables(uint32_t p_start, uint32_t p_count, MCServerDebu
 			else
 			{
 				t_value = &t_owner -> variable -> getvalue();
-                MCAutoPointer<char> temp_name;
                 /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(t_owner -> variable -> getname()), &temp_name);
 				t_name_ptr = *temp_name;
 				t_name_length = MCStringGetLength(MCNameGetString(t_owner -> variable -> getname());
