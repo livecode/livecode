@@ -115,8 +115,8 @@ LOCAL_CFLAGS := -DGL_GLEXT_PROTOTYPES=1
 
 LOCAL_STATIC_LIBRARIES := librevandroid-kernel libfoundation libgraphics libjpeg libpcre libpng libgif libskia libfreetype libexpat_static
 
-LOCAL_LDLIBS += -lz -lm -llog -ljnigraphics -lGLESv1_CM
+LOCAL_LDLIBS += -lz -lm -llog -ljnigraphics -lGLESv1_CM -licudata -licui18n -licuio -licule -liculx -licuuc
 
-LOCAL_LDFLAGS := -Wl,--script=$(LOCAL_PATH)/standalone-android.link
+LOCAL_LDFLAGS := -Wl,--script=$(LOCAL_PATH)/standalone-android.link -L$(LOCAL_PATH)/../prebuilt/android/armv6
 
 include $(BUILD_SHARED_LIBRARY)

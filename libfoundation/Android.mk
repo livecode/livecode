@@ -10,9 +10,10 @@ LOCAL_SRC_FILES := src/foundation-array.cpp src/foundation-core.cpp src/foundati
 	src/foundation-list.cpp src/foundation-name.cpp src/foundation-nativechars.cpp \
 	src/foundation-number.cpp src/foundation-set.cpp src/foundation-stream.cpp \
 	src/foundation-data.cpp src/foundation-string.cpp src/foundation-unicodechars.cpp src/foundation-value.cpp \
-	src/foundation-error.cpp
+	src/foundation-error.cpp src/foundation-unicode.cpp src/foundation-locale.cpp
 
 LOCAL_C_INCLUDES := \
-	$(LOCAL_PATH)/include
+	$(LOCAL_PATH)/include \
+	$(LOCAL_PATH)/../prebuilt/include
 
 include $(BUILD_STATIC_LIBRARY)
