@@ -2481,8 +2481,20 @@ enum Exec_errors
     // {EE-805} Internal BSDiff: error in patch filename expression
     EE_INTERNAL_BSDIFF_BADPATCH,
 
-    // {EE-806} Interan Bootstrap: error in stack file
+    // {EE-806} Internal Bootstrap: error in stack file
     EE_INTERNAL_BOOTSTRAP_BADSTACK,
+
+    // {EE-807} IDE script configure: error in settings expression
+    EE_IDE_BADARRAY,
+
+    // {EE-808} IDE script replace: error in text expression
+    EE_IDE_BADTEXT,
+
+    // {EE-809} IDE script classify: error in script expression
+    EE_IDE_BADSCRIPT,
+
+    // {EE-810} IDE filter control: error in pattern expression
+    EE_IDE_BADPATTERN,
 };
 
 extern const char *MCexecutionerrors;

@@ -37,8 +37,8 @@ public:
 	Parse_stat parse_target(MCScriptPoint& p_script, MCChunk*& r_target);
 	Parse_stat parse_target_range(MCScriptPoint& p_script, Chunk_term& r_type, MCExpression*& r_start, MCExpression*& r_end, MCChunk*& r_target);
 
-	Exec_stat eval_target(MCExecPoint& p_exec, MCChunk *p_target, MCField*& r_field);
-	Exec_stat eval_target_range(MCExecPoint& p_exec, MCExpression *p_start, MCExpression *p_end, MCChunk *p_target, int4& r_start, int4& r_end, MCField*& r_target);
+    bool eval_target(MCExecContext &ctxt, MCChunk *p_target, MCField*& r_field);
+    bool eval_target_range(MCExecContext &ctxt, MCExpression *p_start, MCExpression *p_end, MCChunk *p_target, int4& r_start, int4& r_end, MCField*& r_target);
 };
 
 class MCIdeScriptFlush : public MCIdeScriptAction
@@ -48,7 +48,7 @@ public:
 	virtual ~MCIdeScriptFlush(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 
 private:
 	MCChunk *f_target;
@@ -61,7 +61,7 @@ public:
 	virtual ~MCIdeScriptColourize(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 
 private:
 	Chunk_term f_type;
@@ -77,7 +77,7 @@ public:
 	virtual ~MCIdeScriptReplace(void);
 	
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 	
 private:
 	Chunk_term f_type;
@@ -94,7 +94,7 @@ public:
 	virtual ~MCIdeScriptConfigure(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 
 private:
 	enum
@@ -116,7 +116,7 @@ public:
 	virtual ~MCIdeScriptDescribe(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 
 private:
 	enum
@@ -141,7 +141,7 @@ public:
 	virtual ~MCIdeScriptStrip(void);
 	
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 
 private:
 	Chunk_term f_type;
@@ -161,7 +161,7 @@ public:
 	virtual ~MCIdeScriptTokenize(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 
 private:
 	MCChunk *m_script;
@@ -175,7 +175,7 @@ public:
 	virtual ~MCIdeScriptClassify(void);
 	
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 
 private:
 	MCExpression *m_script;
@@ -212,7 +212,7 @@ public:
 	virtual ~MCIdeFilterControls(void);
 	
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 
 private:
 	MCIdeFilterControlsProperty m_property;
@@ -345,7 +345,7 @@ public:
 	virtual ~MCIdeSyntaxTokenize(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 
 private:
 	MCChunk *m_script;
@@ -358,7 +358,7 @@ public:
 	virtual ~MCIdeSyntaxRecognize(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 
 private:
 	MCExpression *m_script;
@@ -372,7 +372,7 @@ public:
 	virtual ~MCIdeSyntaxCompile(void);
 	
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 	
 private:
 	MCChunk *m_target;
