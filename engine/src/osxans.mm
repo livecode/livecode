@@ -546,11 +546,7 @@ static int display_modal_dialog(NSSavePanel *p_panel, MCStringRef p_initial_fold
 	}
 	else
 		// MM-2012-03-16: [[ Bug ]] Use runModalForDirectory:file: rather than setting directory and file - methods only introduced in 10.6
-//		return [p_panel runModalForDirectory: t_initial_folder file: t_initial_file];
-    {
-        [p_panel setDirectoryURL: [NSURL URLWithString: t_initial_folder]];
-        return [p_panel runModal];
-    }
+		return [p_panel runModalForDirectory: t_initial_folder file: t_initial_file];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -621,8 +617,9 @@ int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p
 		}
 		else
 			[t_panel setTitle: [NSString stringWithMCStringRef: p_prompt]];
-		
-		if (p_type_count > 1)
+		[t_panel setDelegate: (id<NSOpenSavePanelDelegate>)t_accessory];
+
+		if (p_type_count > 1)	
 		{
 			[t_accessory setLabel: @"Format:"];
 			[t_panel setAccessoryView: t_accessory];

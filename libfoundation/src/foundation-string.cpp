@@ -2429,7 +2429,7 @@ void __MCStringDestroy(__MCString *self)
 
 bool __MCStringCopyDescription(__MCString *self, MCStringRef& r_desc)
 {
-	return MCStringFormat(r_desc, "\"%s\"", self -> chars);
+	return MCStringFormat(r_desc, "\"%@\"", self);
 }
 
 hash_t __MCStringHash(__MCString *self)

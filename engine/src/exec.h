@@ -1182,6 +1182,7 @@ public:
 
 	void LegacyThrow(Exec_errors error, MCValueRef hint = nil);
 	void LegacyThrow(Exec_errors error, uint32_t hint);
+	void UserThrow(MCStringRef string);
 
 	void Unimplemented(void)
 	{
@@ -1404,6 +1405,7 @@ public:
     // These methods try to evaluate / set, as many times as the debug context dictates,
     // only throwing an error if they ultimately fail.
     bool TryToEvaluateExpression(MCExpression *p_expr, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result);
+    bool TryToEvaluateParameter(MCParameter *p_param, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result);
     bool TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr, uint2 line, uint2 pos, Exec_errors p_error, bool& r_result);
     bool TryToSetVariable(MCVarref *p_var, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef p_value);
     
@@ -1537,6 +1539,24 @@ private:
 	MCExecPoint& m_ep;
 	Exec_stat m_stat;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCKeywordsExecSwitch(MCExecContext& ctxt, MCExpression *condition, MCExpression **cases, uindex_t case_count, int2 default_case, uint2 *case_offsets, MCStatement *statements, uint2 line, uint2 pos);
+void MCKeywordsExecIf(MCExecContext& ctxt, MCExpression *condition, MCStatement *thenstatements, MCStatement *elsestatements, uint2 line, uint2 pos);
+void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExpression *endcond, MCVarref *loopvar, File_unit each, uint2 line, uint2 pos);
+void MCKeywordsExecRepeatWith(MCExecContext& ctxt, MCStatement *statements, MCExpression *step, MCExpression *startcond, MCExpression *endcond, MCVarref *loopvar, real8 stepval, uint2 line, uint2 pos);
+void MCKeywordsExecRepeatForever(MCExecContext& ctxt, MCStatement *statements, uint2 line, uint2 pos);
+void MCKeywordsExecRepeatUntil(MCExecContext& ctxt, MCStatement *statements, MCExpression *endcond, uint2 line, uint2 pos);
+void MCKeywordsExecRepeatWhile(MCExecContext& ctxt, MCStatement *statements, MCExpression *endcond, uint2 line, uint2 pos);
+void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatement *catchstatements, MCStatement *finallystatements, MCVarref *errorvar, uint2 line, uint2 pos);
+void MCKeywordsExecExit(MCExecContext& ctxt, Exec_stat stat);
+void MCKeywordsExecBreak(MCExecContext& ctxt);
+void MCKeywordsExecNext(MCExecContext& ctxt);
+void MCKeywordsExecPass(MCExecContext& ctxt);
+void MCKeywordsExecPassAll(MCExecContext& ctxt);
+void MCKeywordsExecThrow(MCExecContext& ctxt, MCStringRef string);
+void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandler *handler, MCParameter *params, MCNameRef name, uint2 line, uint2 pos, bool platform_message, bool is_function);
 
 ////////////////////////////////////////////////////////////////////////////////
 

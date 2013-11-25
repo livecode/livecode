@@ -1169,7 +1169,7 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
 	ep.getit()->set(ep);
 	return ES_NORMAL;
 #endif /* MCCreate */
-\
+
     if (directory)
 	{
         MCAutoStringRef t_filename;

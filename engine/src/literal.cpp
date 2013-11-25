@@ -32,9 +32,17 @@ Parse_stat MCLiteral::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-void MCLiteral::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
+#ifdef /* MCLiteral::eval */ LEGACY_EXEC
+Exec_stat MCLiteral::eval(MCExecPoint &ep)
 {
     MCExecValueTraits<MCNameRef>::set(r_value, value);
+}
+#endif
+
+void MCLiteral::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+	r_value . type = kMCExecValueTypeNameRef;
+	r_value . nameref_value = MCValueRetain(value);
 }
 
 void MCLiteral::compile(MCSyntaxFactoryRef ctxt)
@@ -61,10 +69,10 @@ void MCLiteralNumber::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	if (nvalue == BAD_NUMERIC)
 		ep.setvalueref_nullable(value);
 	else
-		ep.setboth(MCNameGetOldString(value), nvalue);
+        ep.setboth(MCNameGetOldString(value), nvalue);
+	return ES_NORMAL;
+#else
+	r_value . type = kMCExecValueTypeNameRef;
+	r_value . nameref_value = MCValueRetain(value);
 #endif
-    if (value != nil)
-        MCExecValueTraits<MCNameRef>::set(r_value, value);
-    else
-        MCExecValueTraits<MCStringRef>::set(r_value, kMCEmptyString);
 }
