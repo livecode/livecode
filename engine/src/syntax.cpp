@@ -129,7 +129,7 @@ void MCSyntaxFactoryBeginHandler(MCSyntaxFactoryRef self, MCSyntaxHandlerType p_
 	};
 	self -> operand_count = 0;
 	self -> operand_index = 0;
-	_log_begin(self, "begin %s handler %@", s_handler_types[p_type], MCNameGetString(p_name));
+	_log_begin(self, "begin %s handler %@", s_handler_types[p_type], p_name);
 }
 
 void MCSyntaxFactoryEndHandler(MCSyntaxFactoryRef self)
@@ -139,7 +139,7 @@ void MCSyntaxFactoryEndHandler(MCSyntaxFactoryRef self)
 
 void MCSyntaxFactoryDefineParameter(MCSyntaxFactoryRef self, MCNameRef p_name, bool p_is_ref)
 {
-	_log(self, "%sparam %@", p_is_ref ? "ref " : "", MCNameGetString(p_name));
+	_log(self, "%sparam %@", p_is_ref ? "ref " : "", p_name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
