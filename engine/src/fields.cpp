@@ -76,9 +76,12 @@ Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
 		if (ep.getitemdel() == '\0')
 			return ES_NORMAL; //can't sort field by null bytes
 		// MW-2012-02-21: [[ FieldExport ]] Use the new text export method.
-		exportastext(parid, ep, 0, INT32_MAX, false);
-		itemsize = ep.getsvalue().getlength();
-		itemtext = ep.getsvalue().clone();
+        MCAutoStringRef t_text_string;
+		exportastext(parid, 0, INT32_MAX, &t_text_string);
+		itemsize = MCStringGetLength(*t_text_string);
+        char* temp;
+        /* UNCHECKED */ MCStringConvertToCString(*t_text_string, temp);
+		itemtext = temp;
 		char *sptr = itemtext;
 		char *eptr;
 		while ((eptr = strchr(sptr, ep.getitemdel())) != NULL)
@@ -2400,11 +2403,13 @@ bool MCField::returnloc(findex_t si, MCStringRef& r_string)
 	return MCStringFormat(r_string, "%d,%d", x + getcontentx(), y + paragraphtoy(pgptr) + getcontenty());
 }
 
+#ifdef LEGACY_EXEC
 void MCField::returntext(MCExecPoint &ep, findex_t si, findex_t ei)
 {
 	// MW-2012-02-21: [[ FieldExport ]] Use the new text export method.
 	exportastext(0, ep, si, ei, false);
 }
+#endif
 
 bool MCField::returntext(findex_t p_si, findex_t p_ei, MCStringRef& r_string)
 {

@@ -598,6 +598,7 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 	return true;
 }
 
+#ifdef LEGACY_EXEC
 void MCField::exportashtmltext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_effective)
 {
 	MCAutoStringRef t_string;
@@ -612,6 +613,7 @@ void MCField::exportashtmltext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_st
 {
 	exportashtmltext(ep, resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_effective);
 }
+#endif
 
 bool MCField::exportashtmltext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCStringRef& r_string)
 {

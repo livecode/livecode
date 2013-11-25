@@ -596,6 +596,8 @@ static bool export_formatted_text(void *p_context, MCFieldExportEventType p_even
 
 // MW-2012-02-20: [[ FieldExport ]] This method exports the content of the
 //   field as either native or unicode.
+
+#ifdef LEGACY_EXEC
 void MCField::exportastext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode)
 {
 	MCAutoStringRef t_string;
@@ -614,6 +616,7 @@ void MCField::exportastext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_
 	else
 		ep . clear();
 }
+#endif
 
 /* UNSAFE */ bool MCField::exportastext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string)
 {
@@ -633,6 +636,7 @@ void MCField::exportastext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_
 // MW-2012-02-20: [[ FieldExport ]] This method exports the content of the
 //   field as either native or unicode including any list indices.
 
+#ifdef LEGACY_EXEC
 void MCField::exportasplaintext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode)
 {
 	MCAutoStringRef t_string;
@@ -656,6 +660,7 @@ void MCField::exportasplaintext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_s
 {
 	exportasplaintext(ep, resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_as_unicode);
 }
+#endif
 
 bool MCField::exportasplaintext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string)
 {
@@ -680,6 +685,7 @@ bool MCField::exportasplaintext(uint32_t p_part_id, int32_t p_start_index, int32
 // MW-2012-02-21: [[ FieldExport ]] This method exports the content of the
 //   field as either native or unicode, including any list indices and implicit
 //   line breaks.
+#ifdef LEGACY_EXEC
 void MCField::exportasformattedtext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode)
 {
 	MCAutoStringRef t_string;
@@ -698,6 +704,7 @@ void MCField::exportasformattedtext(uint32_t p_part_id, MCExecPoint& ep, int32_t
 	else
 		ep . clear();
 }
+#endif
 
 bool MCField::exportasformattedtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string)
 {
@@ -779,6 +786,7 @@ Exec_stat MCField::setrtf(uint4 parid, MCStringRef data)
 	return ES_NORMAL;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCField::setstyledtext(uint4 parid, MCExecPoint &ep)
 {
 	state |= CS_NO_FILE; // prevent interactions while downloading images
@@ -790,6 +798,7 @@ Exec_stat MCField::setstyledtext(uint4 parid, MCExecPoint &ep)
 	state &= ~CS_NO_FILE;
 	return ES_NORMAL;
 }
+#endif
 
 void MCField::setstyledtext(uint32_t part_id, MCArrayRef p_text)
 {

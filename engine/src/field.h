@@ -452,8 +452,9 @@ public:
 	bool returnchunk(findex_t si, findex_t ei, MCStringRef& r_string);
 	bool returnline(findex_t si, findex_t ei, MCStringRef& r_string);
 	bool returnloc(findex_t si, MCStringRef& r_string);
-
+#ifdef LEGACY_EXEC
 	void returntext(MCExecPoint &ep, findex_t si, findex_t ei);
+#endif
 	bool returntext(findex_t si, findex_t ei, MCStringRef& r_string);
 
 	void charstoparagraphs(findex_t si, findex_t ei, MCParagraph*& sp, MCParagraph*& ep, uint4& sl, uint4& el);
@@ -479,7 +480,9 @@ public:
 	// MCField HTML functions in fieldh.cc
 	Exec_stat sethtml(uint4 parid, MCStringRef data);
 	Exec_stat setrtf(uint4 parid, MCStringRef data);
+#ifdef LEGACY_EXEC
 	Exec_stat setstyledtext(uint4 parid, MCExecPoint& ep);
+#endif
 	void setstyledtext(uint32_t part_id, MCArrayRef p_text);
 	Exec_stat setpartialtext(uint4 parid, const MCString &data, bool unicode);
 	Exec_stat gethtml(uint4 parid, MCExecPoint &ep);
@@ -518,30 +521,40 @@ public:
 	bool doexport(MCFieldExportFlags flags, MCParagraph *p_paragraphs, int32_t start_index, int32_t end_index, MCFieldExportCallback callback, void *context);
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to text, either as unicode
 	//   or native encoding.
+#ifdef LEGACY_EXEC
 	void exportastext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool as_unicode);
+#endif
 	bool exportastext(uint32_t p_part_id, int32_t start_index, int32_t finish_index, MCStringRef& r_string);
 
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to text, including any list
 	//   indices. The output is encoded in either unicode or native.
+#ifdef LEGACY_EXEC
 	void exportasplaintext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool as_unicode);
 	void exportasplaintext(MCExecPoint& ep, MCParagraph *paragraphs, int32_t start_index, int32_t finish_index, bool as_unicode);
+#endif
 	bool exportasplaintext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string);
 	bool exportasplaintext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string);
 
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to text, including any list
 	//   indices and line breaks.
+#ifdef LEGACY_EXEC
 	void exportasformattedtext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool as_unicode);
+#endif
 	bool exportasformattedtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string);
 
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to rtf.
+#ifdef LEGACY_EXEC
 	void exportasrtftext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index);
 	void exportasrtftext(MCExecPoint& ep, MCParagraph *paragraphs, int32_t start_index, int32_t finish_index);
+#endif
 	bool exportasrtftext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string);
 	bool exportasrtftext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string);
 
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to (livecode) html.
+#ifdef LEGACY_EXEC
 	void exportashtmltext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool p_effective);
 	void exportashtmltext(MCExecPoint& ep, MCParagraph *paragraphs, int32_t start_index, int32_t finish_index, bool p_effective);
+#endif 
 	bool exportashtmltext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCStringRef& r_string);
 	bool exportashtmltext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCStringRef& r_string);
 

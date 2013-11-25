@@ -316,9 +316,11 @@ static char *getfield(MCField *fptr, int *retval)
 	}
 	*retval = xresSucc;
 	// MW-2012-02-21: [[ FieldExport ]] Use the new text export method.
-	MCExecPoint ep;
-	fptr->exportastext(0, ep, 0, INT32_MAX, false);
-	return ep.getsvalue().clone();
+	MCAutoStringRef t_string;;
+	fptr->exportastext(0, 0, INT32_MAX, &t_string);
+    char *t_result;
+    /* UNCHECKED */ MCStringConvertToCString(*t_string, t_result);
+	return t_result;
 }
 
 static char *set_idle_func(const char *arg1, const char *arg2,
