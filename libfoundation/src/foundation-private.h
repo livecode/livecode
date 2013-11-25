@@ -81,35 +81,11 @@ enum
 	kMCStringFlagIsUnicode = 1 << 0,
 	// If set then the string is mutable.
 	kMCStringFlagIsMutable = 1 << 1,
-#ifndef NATIVE_STRING
 	// If set then the native and unicode strings are equivalent
 	kMCStringFlagIsNative = 1 << 2,
-#endif
 };
 
-#ifdef NATIVE_STRING
-typedef char_t strchar_t;
-#define MCStrCharFold(x) MCNativeCharFold(x)
-#define MCStrCharLowercase(x) MCNativeCharLowercase(x)
-#define MCStrCharUppercase(x) MCNativeCharUppercase(x)
-#define MCStrCharMapToNative(x) (x)
-#define MCStrCharMapFromNative(x) (x)
-#define MCStrCharMapToUnicode(x) MCNativeCharMapToUnicode(x)
-#define MCStrCharsMapFromUnicode(x, y, z, w) MCUnicodeCharsMapToNative(x, y, z, w, '?')
-#define MCStrCharsMapFromNative(x, y, z) MCMemoryCopy(x, y, z * sizeof(strchar_t))
-#define MCStrCharsHashExact(x, y) MCNativeCharsHashExact(x, y)
-#define MCStrCharsHashCaseless(x, y) MCNativeCharsHashCaseless(x, y)
-#define MCStrCharsEqualExact(x, y, z, w) MCNativeCharsEqualExact(x, y, z, w)
-#define MCStrCharsEqualCaseless(x, y, z, w) MCNativeCharsEqualCaseless(x, y, z, w)
-#define MCStrCharsCompareExact(x, y, z, w) MCNativeCharsCompareExact(x, y, z, w)
-#define MCStrCharsCompareCaseless(x, y, z, w) MCNativeCharsCompareCaseless(x, y, z, w)
-#define MCStrCharsSharedPrefixExact(x, y, z, w) MCNativeCharsSharedPrefixExact(x, y, z, w)
-#define MCStrCharsSharedPrefixCaseless(x, y, z, w) MCNativeCharsSharedPrefixCaseless(x, y, z, w)
-#define MCStrCharsSharedSuffixExact(x, y, z, w) MCNativeCharsSharedSuffixExact(x, y, z, w)
-#define MCStrCharsSharedSuffixCaseless(x, y, z, w) MCNativeCharsSharedSuffixCaseless(x, y, z, w)
-#define MCStrCharsLowercase(x, y) MCNativeCharsLowercase(x, y)
-#define MCStrCharsUppercase(x, y) MCNativeCharsUppercase(x, y)
-#else
+
 typedef unichar_t strchar_t;
 // Does not yet use foundation unicode
 #define MCStrCharMapToNative(x) MCUnicodeCharMapToNativeLossy(x)
@@ -160,16 +136,7 @@ typedef unichar_t strchar_t;
 #define MCStrCharsLastIndexOfCharExact(x, y, z, r) MCUnicodeLastIndexOfChar(x, y, z, kMCUnicodeCompareOptionExact, r)
 #define MCStrCharsLastIndexOfCharCaseless(x, y, z, r) MCUnicodeLastIndexOfChar(x, y, z, kMCUnicodeCompareOptionCaseless, r)
 #define MCStrCharsLastIndexOfCharNonliteral(x, y, z, r) MCUnicodeLastIndexOfChar(x, y, z, kMCUnicodeCompareOptionNormalised, r)
-#endif
 
-#ifdef NATIVE_STRING
-struct __MCString: public __MCValue
-{
-	uindex_t char_count;
-	strchar_t *chars;
-	uindex_t capacity;
-};
-#else
 struct __MCString: public __MCValue
 {
 	uindex_t char_count;
@@ -177,7 +144,6 @@ struct __MCString: public __MCValue
 	char_t *native_chars;
 	uindex_t capacity;
 };
-#endif
 
 //////////
 
