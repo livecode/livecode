@@ -419,6 +419,7 @@ Parse_stat MCIf::parse(MCScriptPoint &sp)
 	}
 	return PS_NORMAL;
 }
+
 #ifdef /* MCIf::exec */ LEGACY_EXEC
 Exec_stat MCIf::exec(MCExecPoint &ep)
 {
@@ -1283,6 +1284,7 @@ Parse_stat MCExit::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#ifdef /* MCExit::exec */ LEGACY_EXEC
 Exec_stat MCExit::exec(MCExecPoint &ep)
 {
 	if (exit == ES_EXIT_ALL)
@@ -1291,6 +1293,12 @@ Exec_stat MCExit::exec(MCExecPoint &ep)
 		return ES_NORMAL;
 	}
 	return exit;
+}
+#endif /* MCExit::exec */
+
+void MCExit::exec_ctxt(MCExecContext& ctxt)
+{
+    MCKeywordsExecExit(ctxt, exit);
 }
 
 uint4 MCExit::linecount()
@@ -1319,9 +1327,17 @@ Parse_stat MCNext::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+
+#ifdef /* MCNext::exec */ LEGACY_EXEC
 Exec_stat MCNext::exec(MCExecPoint &ep)
 {
 	return ES_NEXT_REPEAT;
+}
+#endif /* MCNext::exec */
+
+void MCNext::exec_ctxt(MCExecContext& ctxt)
+{
+    MCKeywordsExecNext(ctxt);
 }
 
 uint4 MCNext::linecount()
@@ -1357,6 +1373,7 @@ Parse_stat MCPass::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#ifdef /* MCPass::exec */ LEGACY_EXEC
 Exec_stat MCPass::exec(MCExecPoint &ep)
 {
 	if (all)
@@ -1364,15 +1381,31 @@ Exec_stat MCPass::exec(MCExecPoint &ep)
 	else
 		return ES_PASS;
 }
+#endif
 
 uint4 MCPass::linecount()
 {
 	return 0;
 }
 
+void MCPass::exec_ctxt(MCExecContext& ctxt)
+{
+	if (all)
+		MCKeywordsExecPassAll(ctxt);
+	else
+		MCKeywordsExecPass(ctxt);
+}
+
+#if /* MCBreak::exec */ LEGACY_EXEC
 Exec_stat MCBreak::exec(MCExecPoint &ep)
 {
 	return ES_EXIT_SWITCH;
+}
+#endif /* MCBreak::exec */
+
+void MCBreak::exec_ctxt(MCExecContext& ctxt)
+{
+    MCKeywordsExecBreak(ctxt);
 }
 
 uint4 MCBreak::linecount()
@@ -1505,7 +1538,8 @@ Parse_stat MCSwitch::parse(MCScriptPoint &sp)
 	}
 	return PS_NORMAL;
 }
-#ifdef /* MCSwitch::exec */ LEGACY_EXEC
+
+#if /* MCSwitch::exec */ LEGACY_EXEC
 Exec_stat MCSwitch::exec(MCExecPoint &ep)
 {
 	MCExecPoint ep2(ep);
@@ -1638,6 +1672,7 @@ Parse_stat MCThrowKeyword::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#if /* MCThrowKeyword::exec */ LEGACY_EXEC
 Exec_stat MCThrowKeyword::exec(MCExecPoint &ep)
 {
 	if (error->eval(ep) != ES_NORMAL)
@@ -1650,6 +1685,16 @@ Exec_stat MCThrowKeyword::exec(MCExecPoint &ep)
 		MCeerror->copystringref(*t_value, True);
     }
 	return ES_ERROR;
+}
+#endif /* MCThrowKeyword::exec */
+
+void MCThrowKeyword::exec_ctxt(MCExecContext& ctxt)
+{
+	MCAutoStringRef t_error;
+	if (!ctxt . EvalExprAsStringRef(error, EE_THROW_BADERROR, &t_error))
+		return;
+	
+	MCKeywordsExecThrow(ctxt, *t_error);
 }
 
 uint4 MCThrowKeyword::linecount()
@@ -1909,7 +1954,7 @@ Exec_stat MCTry::exec(MCExecPoint &ep)
 	MCtrylock--;
 	return retcode;
 }
-#endif /* MCTry::exec */
+#endif /* MCTry::exec */ 
 
 void MCTry::exec_ctxt(MCExecContext& ctxt)
 {
@@ -1923,471 +1968,3 @@ uint4 MCTry::linecount()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void MCKeywordsExecSwitch(MCExecContext& ctxt, MCExpression *condition, MCExpression **cases, uindex_t case_count, int2 default_case, uint2 *case_offsets, MCStatement *statements, uint2 line, uint2 pos)
-{
-    MCAutoValueRef t_value;
-    MCAutoStringRef t_cond;
-	if (condition != NULL)
-	{
-        if (!ctxt . TryToEvaluateExpression(condition, line, pos, EE_SWITCH_BADCOND, &t_value))
-            return;
-        
-        if (!ctxt . ConvertToString(*t_value, &t_cond))
-        {
-            ctxt . LegacyThrow(EE_SWITCH_BADCOND);
-            return;
-        }
-	}
-    else
-        &t_cond = MCValueRetain(kMCTrueString);
-    
-	int2 match = default_case;
-	uint2 i;
-	for (i = 0 ; i < case_count ; i++)
-	{
-        MCAutoValueRef t_case;
-        MCAutoStringRef t_case_string;
-        
-        if (!ctxt . TryToEvaluateExpression(cases[i], line, pos, EE_SWITCH_BADCASE, &t_case))
-            return;
-        
-        if (!ctxt . ConvertToString(*t_case, &t_case_string))
-        {
-            ctxt . LegacyThrow(EE_SWITCH_BADCASE);
-            return;
-        }
-        
-		if (MCStringIsEqualTo(*t_cond, *t_case_string, ctxt . GetCaseSensitive() ? kMCStringOptionCompareExact : kMCStringOptionCompareCaseless))
-        {
-            match = case_offsets[i];
-            break;
-        }
-	}
-    
-	if (match >= 0)
-	{
-		MCStatement *tspr = statements;
-		while (match--)
-			tspr = tspr->getnext();
-        
-        ctxt . SetExecStat(MCKeywordsExecuteStatements(ctxt, tspr, EE_SWITCH_BADSTATEMENT));
-    }
-}
-
-void MCKeywordsExecIf(MCExecContext& ctxt, MCExpression *condition, MCStatement *thenstatements, MCStatement *elsestatements, uint2 line, uint2 pos)
-{
-    bool then;
-    if (!ctxt . TryToEvaluateExpressionAsNonStrictBool(condition, line, pos, EE_IF_BADCOND, then))
-        return;
-    
-	MCStatement *tspr;
-	if (then)
-		tspr = thenstatements;
-	else
-		tspr = elsestatements;
-    
-    ctxt . SetExecStat(MCKeywordsExecuteStatements(ctxt, tspr, EE_IF_BADSTATEMENT));
-}
-
-void MCKeywordsExecuteRepeatStatements(MCExecContext& ctxt, MCStatement *statements, uint2 line, uint2 pos, bool& r_done)
-{
-    Exec_stat stat = MCKeywordsExecuteStatements(ctxt, statements, EE_REPEAT_BADSTATEMENT);
-    if ((stat == ES_NORMAL && MCexitall) || (stat != ES_NEXT_REPEAT && stat != ES_NORMAL))
-    {
-        r_done = true;
-        return;
-    }
-    if (MCscreen->abortkey())
-    {
-        r_done = true;
-        ctxt . LegacyThrow(EE_REPEAT_ABORT);
-        return;
-    }
-    if (MCtrace || MCnbreakpoints)
-    {
-        MCB_trace(ctxt, line, pos);
-        if (MCexitall)
-            r_done = true;
-    }
-}
-
-void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExpression *endcond, MCVarref *loopvar, File_unit each, uint2 line, uint2 pos)
-{
-    MCAutoArrayRef t_array;
-    MCAutoStringRef t_string;
-    MCRange t_chunk_range;
-    t_chunk_range = MCRangeMake(0,0);
-    uindex_t t_length = 0;
-    MCAutoValueRef t_condition;
-	MCNameRef t_key;
-	MCValueRef t_value;
-	uintptr_t t_iterator;
-    Parse_stat ps;
-    MCScriptPoint *sp = nil;
-    int4 count = 0;
-    
-    if (!ctxt . TryToEvaluateExpression(endcond, line, pos, EE_REPEAT_BADFORCOND, &t_condition))
-        return;
-    
-    if (loopvar != NULL)
-    {
-        if (each == FU_ELEMENT || each == FU_KEY)
-        {
-            if (!ctxt . ConvertToArray(*t_condition, &t_array))
-                return;
-            
-            t_iterator = 0;
-            
-            if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
-                return;
-        }
-        else
-        {
-            if (!ctxt . ConvertToString(*t_condition, &t_string))
-                return;
-            
-            t_length = MCStringGetLength(*t_string);
-        }
-    }
-    else
-    {
-        if (!ctxt . ConvertToInteger(*t_condition, count))
-            return;
-        count = MCU_max(count, 0);
-    }
-    
-    bool done;
-    done = false;
-    
-    bool endnext;
-    endnext = false;
-    
-    bool t_found;
-    t_found = false;
-    
-    while (!done)
-    {
-        MCAutoStringRef t_unit;
-        if (loopvar != NULL)
-        {
-            switch (each)
-            {
-                case FU_KEY:
-                {
-                    // MW-2010-12-15: [[ Bug 9218 ]] Make a copy of the key so that it can't be mutated
-                    //   accidentally.
-                    MCNewAutoNameRef t_key_copy;
-                    MCNameClone(t_key, &t_key_copy);
-                    loopvar -> set(ctxt, *t_key_copy);
-                    if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
-                        endnext = true;
-                }
-                    break;
-                case FU_ELEMENT:
-                {
-                    loopvar -> set(ctxt, t_value);
-                    if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
-                        endnext = true;
-                }
-                    break;
-                default:
-                {
-                    switch (each)
-                    {
-                        case FU_LINE:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_LINE, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_ITEM:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_ITEM, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_WORD:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_WORD, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_TOKEN:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_TOKEN, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_CHARACTER:
-                        default:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_CHARACTER, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                    }
-                    if (!t_found)
-                    {
-                        &t_unit = MCValueRetain(kMCEmptyString);
-                        done = true;
-                    }
-                    else
-                        MCStringCopySubstring(*t_string, t_chunk_range, &t_unit);
-                }
-            }
-            // MW-2010-12-15: [[ Bug 9218 ]] Added KEY to the type of repeat that already
-            //   copies the value.
-            // MW-2011-02-08: [[ Bug ]] Make sure we don't use 't_unit' if the repeat type is 'key' or
-            //   'element'.
-            // Set the loop variable to whatever the value was in the last iteration.
-            if (each != FU_ELEMENT && each != FU_KEY)
-                loopvar->set(ctxt, *t_unit);
-        }
-        else
-            done = count-- == 0;
-        
-        if (!done)
-            MCKeywordsExecuteRepeatStatements(ctxt, statements, line, pos, done);
-        
-        if (done)
-        {
-            if (*t_unit == nil)
-            {
-                bool t_true = true;
-            }
-            // Reset the loop variable to whatever the value was in the last iteration.
-            if (loopvar != nil && each != FU_ELEMENT && each != FU_KEY)
-                loopvar->set(ctxt, *t_unit);
-        }
-        
-        done = done || endnext;
-    }
-}
-
-void MCKeywordsExecRepeatWith(MCExecContext& ctxt, MCStatement *statements, MCExpression *step, MCExpression *startcond, MCExpression *endcond, MCVarref *loopvar, real8 stepval, uint2 line, uint2 pos)
-{
-    real8 endn = 0.0;
-    MCAutoValueRef t_condition, t_step;
-    
-    if (step != NULL)
-    {
-        if (!ctxt . TryToEvaluateExpression(step, line, pos, EE_REPEAT_BADWITHSTEP, &t_step))
-            return;
-        
-        if (!ctxt . ConvertToReal(*t_condition, stepval) || stepval == 0.0)
-        {
-            ctxt . LegacyThrow(EE_REPEAT_BADWITHSTEP);
-            return;
-        }
-        
-    }
-    
-    if (!ctxt . TryToEvaluateExpression(startcond, line, pos, EE_REPEAT_BADWITHSTART, &t_condition))
-        return;
-    
-    real8 t_loop;
-    if (!ctxt . ConvertToReal(*t_condition, t_loop))
-    {
-        ctxt . LegacyThrow(EE_REPEAT_BADWITHSTART);
-        return;
-    }
-    
-    t_loop -= stepval;
-    
-    MCAutoNumberRef t_loop_var;
-    if (!MCNumberCreateWithReal(t_loop, &t_loop_var) || !ctxt . TryToSetVariable(loopvar, line, pos, EE_REPEAT_BADWITHVAR, *t_loop_var))
-        return;
-    
-    MCAutoValueRef t_end_condition;
-    if (!ctxt . TryToEvaluateExpression(endcond, line, pos, EE_REPEAT_BADWITHSTART, &t_end_condition) ||
-        !ctxt . ConvertToReal(*t_end_condition, endn))
-        return;
-    
-    bool done;
-    done = false;
-    
-    while (!done)
-    {
-        MCAutoValueRef t_loop_pos;
-        real8 t_cur_value;
-        if (!ctxt . TryToEvaluateExpression(loopvar, line, pos, EE_REPEAT_BADWITHVAR, &t_loop_pos) ||
-            !ctxt . ConvertToReal(*t_loop_pos, t_cur_value))
-            return;
-        
-        if (stepval < 0)
-        {
-            if (t_cur_value <= endn)
-                done = true;
-        }
-        else
-            if (t_cur_value >= endn)
-                done = true;
-        
-        if (!done)
-        {
-            MCAutoNumberRef t_cur_loop;
-            if (!MCNumberCreateWithReal(t_cur_value + stepval, &t_cur_loop) || !ctxt . TryToSetVariable(loopvar, line, pos, EE_REPEAT_BADWITHVAR, *t_cur_loop))
-                return;
-            
-            MCKeywordsExecuteRepeatStatements(ctxt, statements, line, pos, done);
-        }
-        
-        if (done)
-            break;
-    }
-    
-}
-
-void MCKeywordsExecRepeatForever(MCExecContext& ctxt, MCStatement *statements, uint2 line, uint2 pos)
-{
-    bool done;
-    done = false;
-    while (!done)
-        MCKeywordsExecuteRepeatStatements(ctxt, statements, line, pos, done);
-}
-
-void MCKeywordsExecRepeatUntil(MCExecContext& ctxt, MCStatement *statements, MCExpression *endcond, uint2 line, uint2 pos)
-{
-    bool done;
-    done = false;
-    
-    while (!done)
-    {
-        if (!ctxt . TryToEvaluateExpressionAsNonStrictBool(endcond, line, pos, EE_REPEAT_BADUNTILCOND, done))            return;
-        if (!done)
-            MCKeywordsExecuteRepeatStatements(ctxt, statements, line, pos, done);
-    }
-}
-
-void MCKeywordsExecRepeatWhile(MCExecContext& ctxt, MCStatement *statements, MCExpression *endcond, uint2 line, uint2 pos)
-{
-    bool done;
-    done = false;
-    
-    while (!done)
-    {
-        MCAutoValueRef t_value;
-        bool not_done;
-        if (!ctxt . TryToEvaluateExpressionAsNonStrictBool(endcond, line, pos, EE_REPEAT_BADUNTILCOND, not_done))
-            return;
-        
-        done = !not_done;
-        
-        if (not_done)
-            MCKeywordsExecuteRepeatStatements(ctxt, statements, line, pos, done);
-    }
-}
-
-void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatement *catchstatements, MCStatement *finallystatements, MCVarref *errorvar, uint2 line, uint2 pos)
-{
-	Try_state state = TS_TRY;
-	MCStatement *tspr = trystatements;
-	Exec_stat stat;
-	Exec_stat retcode = ES_NORMAL;
-	MCtrylock++;
-	while (tspr != NULL)
-	{
-		if (MCtrace || MCnbreakpoints)
-		{
-			MCB_trace(ctxt, tspr->getline(), tspr->getpos());
-			if (MCexitall)
-				break;
-		}
-		ctxt . GetEP() . setline(tspr->getline());
-        
-		stat = tspr->exec(ctxt . GetEP());
-        
-		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
-		MCRedrawUpdateScreen();
-        
-		switch(stat)
-		{
-            case ES_NORMAL:
-                tspr = tspr->getnext();
-                if (MCexitall)
-                {
-                    retcode = ES_NORMAL;
-                    tspr = NULL;
-                }
-                
-                if (tspr == NULL && state != TS_FINALLY)
-                {
-                    if (state == TS_CATCH)
-                        MCeerror->clear();
-                    
-                    tspr = finallystatements;
-                    state = TS_FINALLY;
-                }
-                break;
-            case ES_ERROR:
-                if ((MCtrace || MCnbreakpoints) && state != TS_TRY)
-                    do
-                    {
-                        MCB_error(ctxt, tspr->getline(), tspr->getpos(), EE_TRY_BADSTATEMENT);
-                    }
-				while(MCtrace && (stat = tspr->exec(ctxt . GetEP())) != ES_NORMAL);
-                
-                if (stat == ES_ERROR)
-                {
-                    if (MCexitall)
-                    {
-                        retcode = ES_NORMAL;
-                        tspr = NULL;
-                    }
-                    else
-                        if (state != TS_TRY)
-                        {
-                            MCtrylock--;
-                            ctxt . LegacyThrow(EE_TRY_BADSTATEMENT);
-                            return;
-                        }
-                        else
-                        {
-                            if (errorvar != NULL)
-                            {
-                                MCAutoStringRef t_error;
-                                MCeerror -> copyasstringref(&t_error);
-                                errorvar->evalvar(ctxt)->setvalueref(*t_error);
-                            }
-                            
-                            // MW-2007-09-04: At this point we need to clear the execution error
-                            //   stack so that errors inside the catch statements are reported
-                            //   correctly.
-                            MCeerror->clear();
-                            MCperror->clear();
-                            
-                            
-                            tspr = catchstatements;
-                            state = TS_CATCH;
-                            
-                            // MW-2007-07-03: [[ Bug 3029 ]] - If there is no catch clause
-                            //   we end up skipping the finally as the loop terminates
-                            //   before a state transition is made, thus we force it here.
-                            if (catchstatements == NULL)
-                            {
-                                MCeerror -> clear();
-                                tspr = finallystatements;
-                                state = TS_FINALLY;
-                            }
-                        }
-                }
-                else
-                    tspr = tspr->getnext();
-                break;
-            case ES_PASS:
-                if (state == TS_CATCH)
-                {
-                    MCAutoStringRef t_string;
-                    if (ctxt . ConvertToString(errorvar->evalvar(ctxt)->getvalueref(), &t_string))
-                    {
-                        MCeerror->copystringref(*t_string, False);
-                        MCeerror->add(EE_TRY_BADSTATEMENT, line, pos);
-                        stat = ES_ERROR;
-                    }
-                }
-            default:
-                if (state == TS_FINALLY)
-                {
-                    MCeerror->clear();
-                    retcode = ES_NORMAL;
-                    tspr = NULL;
-                }
-                else
-                {
-                    retcode = stat;
-                    tspr = finallystatements;
-                    state = TS_FINALLY;
-                }
-		}
-	}
-	if (state == TS_CATCH)
-		MCeerror->clear();
-	MCtrylock--;
-	ctxt . SetExecStat(retcode);
-}
