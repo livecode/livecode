@@ -804,19 +804,19 @@ int2 MCBlock::gettabwidth(int2 x, findex_t i)
 	// but who can really say!
 	if (fixed)
 	{
-		uint2 ctab = 0;
-		uint2 cindex = 0;
+		findex_t ctab = 0;
+		findex_t cindex = 0;
 
 		// Count the number of preceeding tabs in the paragraph.
 		MCBlock *t_block;
 		t_block = parent -> getblocks();
-		uint2 j;
+		findex_t j;
 		j = 0;
 		while(j < i)
 		{
 			if (t_block -> getflag(F_HAS_TAB))
 			{
-				uint2 k;
+				findex_t k;
 				k = t_block -> GetOffset() + t_block -> GetLength();
 				while(j < k && j < i)
 				{
@@ -929,7 +929,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 		int32_t t_delta;
 		t_delta = cx - x;
 
-		uint2 t_index;
+		findex_t t_index;
 		t_index = start;
 		while(t_index < start + length)
 		{
@@ -993,7 +993,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 
 			x += t_width;
 
-			if (t_next_tab != nil)
+			if (t_next_tab != -1)
 			{
 				x = t_cell_right;
 				t_next_index = parent->IncrementIndex(t_next_index);
@@ -1031,7 +1031,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 			{
 				// If beyond this block, ignore
 				findex_t l = eptr - sptr;
-				if (l > size)
+				if (l >= size)
 					break;
 				
 				uint2 twidth;
@@ -1055,7 +1055,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 		}
 
 		MCRange t_range;
-		t_range = MCRangeMake(sptr, size);
+		t_range = MCRangeMake(sptr, size - sptr);
         dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True);
 
 		// Apply strike/underline.
