@@ -1392,8 +1392,9 @@ public:
 
 	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
-
+#ifdef LEGACY_EXEC
 	static void evaluate(MCExecPoint&, bool working, bool plural, bool effective);
+#endif
 };
 
 class MCScreenType : public MCConstantFunctionCtxt<MCNameRef, MCLegacyEvalScreenType>
@@ -2344,7 +2345,7 @@ public:
 	
 	virtual ~MCUuidFunc(void);
 	virtual Parse_stat parse(MCScriptPoint &sp, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &ep);
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 };
 
 // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object

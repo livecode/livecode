@@ -203,16 +203,24 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
 		int nargs = 0;
 		char **args = NULL;
 		MCExecPoint ep(p_context, NULL, NULL);
+        MCExecContext ctxt(ep);
 
 		while (p_parameters != NULL)
 		{
 			// MW-2013-06-20: [[ Bug 10961 ]] Make sure we evaluate the parameter as an
 			//   argument. This takes the value from the variable (by-ref), or built-in
 			//   value (by-value).
-			if (p_parameters->eval_argument(ep) != ES_NORMAL)
+            MCAutoValueRef t_value;
+            MCAutoStringRef t_string;
+
+            if (!p_parameters->eval_argument(ctxt, &t_value))
 				return ES_ERROR;
 			MCU_realloc((char **)&args, nargs, nargs + 1, sizeof(char *));
-			args[nargs++] = ep.getsvalue().clone();
+
+            if (!ctxt . ConvertToString(*t_value, &t_string))
+                return ES_ERROR;
+
+            MCStringConvertToCString(*t_string, args[nargs++]);
 			p_parameters = p_parameters -> getnext();
 		}
 
@@ -226,11 +234,10 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
 			m_free(retval);
 		}
 		else if (retval == NULL)
-			MCresult->clear(False);
+            MCresult->clear(False);
 		else
 		{
-			ep.setsvalue(retval);
-			MCresult->set(ep);
+            ctxt . SetTheResultToCString(retval);
 			m_free(retval);
 		}
 
