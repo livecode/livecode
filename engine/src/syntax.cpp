@@ -96,18 +96,18 @@ void MCSyntaxFactoryEndHandlerList(MCSyntaxFactoryRef self)
 
 void MCSyntaxFactoryDefineGlobal(MCSyntaxFactoryRef self, MCNameRef p_name)
 {
-	_log(self, "global %@", MCNameGetString(p_name));
+	_log(self, "global %@", p_name);
 }
 
 void MCSyntaxFactoryDefineLocal(MCSyntaxFactoryRef self, MCNameRef p_name, MCValueRef p_value)
 {
 	if (p_value == nil)
-		_log(self, "local %@", MCNameGetString(p_name));
+		_log(self, "local %@", p_name);
 	else
 	{
 		MCAutoStringRef t_value;
 		MCValueCopyDescription(p_value, &t_value);
-		_log(self, "local %@ = \"%@\"", MCNameGetString(p_name), *t_value);
+		_log(self, "local %@ = \"%@\"", p_name, *t_value);
 	}
 }
 
@@ -115,7 +115,7 @@ void MCSyntaxFactoryDefineConstant(MCSyntaxFactoryRef self, MCNameRef p_name, MC
 {
 	MCAutoStringRef t_value;
 	MCValueCopyDescription(p_value, &t_value);
-	_log(self, "local %@ = \"%@\"", MCNameGetString(p_name), *t_value);
+	_log(self, "local %@ = \"%@\"", p_name, *t_value);
 
 }
 
