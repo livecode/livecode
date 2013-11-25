@@ -754,9 +754,11 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 			if (params != nil)
 			{
 				MCExecPoint ep(this, NULL, NULL);
-				params->eval(ep);
+                MCExecContext ctxt(ep);
+                MCAutoValueRef t_value_valueref;
+				/* UNCHECKED */ params->eval(ctxt, &t_value_valueref);
                 MCAutoStringRef t_value;
-				ep . copyasstringref(&t_value);
+                /* UNCHECKED */ ctxt . ConvertToString(*t_value_valueref, &t_value);
                 MCStringFormat(&t_mptr_string, "%@ %@", t_mptr_name, *t_value);
 			}
 
@@ -2073,14 +2075,16 @@ void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)
 	    };
 	MCmessagemessages = False;
 	MCExecPoint ep(this, NULL, NULL);
-	MCresult->eval(ep);
+    MCExecContext ctxt(ep);
+    MCAutoValueRef t_value;
+	MCresult->eval(ctxt, &t_value);
 
 	if (h)
 		message_with_valueref_args(MCM_message_handled, MCSTR(htypes[htype]), m);
 	else
 		message_with_valueref_args(MCM_message_not_handled, MCSTR(htypes[htype]), m);
 
-	MCresult->set(ep);
+	MCresult->set(ctxt, *t_value);
 
 	MCmessagemessages = True;
 }

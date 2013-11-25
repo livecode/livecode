@@ -661,6 +661,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 	MCControl::timer(mptr, params);
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCPlayer::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	uint2 i = 0;
@@ -836,7 +837,10 @@ Exec_stat MCPlayer::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 	}
 	return ES_NORMAL;
 }
+#endif
 
+
+#ifdef LEGACY_EXEC
 Exec_stat MCPlayer::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = False;
@@ -1156,6 +1160,7 @@ Exec_stat MCPlayer::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 	}
 	return ES_NORMAL;
 }
+#endif
 
 // MW-2011-09-23: Make sure we sync the buffer state at this point, rather than
 //   during drawing.
@@ -1764,6 +1769,7 @@ void MCPlayer::setloudness()
 #endif
 }
 
+#ifdef LEGACY_EXEC
 void MCPlayer::gettracks(MCExecPoint &ep)
 {
 	ep . clear();
@@ -1782,7 +1788,9 @@ void MCPlayer::gettracks(MCExecPoint &ep)
 	0 == 0;
 #endif
 }
+#endif
 
+#ifdef LEGACY_EXEC
 void MCPlayer::getenabledtracks(MCExecPoint &ep)
 {
 	ep.clear();
@@ -1801,6 +1809,7 @@ void MCPlayer::getenabledtracks(MCExecPoint &ep)
 		0 == 0;
 #endif
 }
+#endif
 
 Boolean MCPlayer::setenabledtracks(MCStringRef s)
 {
@@ -1821,6 +1830,7 @@ Boolean MCPlayer::setenabledtracks(MCStringRef s)
 	return True;
 }
 
+#ifdef LEGACY_EXEC
 void MCPlayer::getnodes(MCExecPoint &ep)
 {
 	ep.clear();
@@ -1851,7 +1861,9 @@ void MCPlayer::getnodes(MCExecPoint &ep)
 	}
 #endif
 }
+#endif
 
+#ifdef LEGACY_EXEC
 void MCPlayer::gethotspots(MCExecPoint &ep)
 {
 	ep.clear();
@@ -1896,6 +1908,7 @@ void MCPlayer::gethotspots(MCExecPoint &ep)
 	}
 #endif
 }
+#endif
 
 #ifdef _WINDOWS
 void MCPlayer::changewindow(MCSysWindowHandle p_old_window)
@@ -3145,6 +3158,7 @@ void MCPlayer::qt_setloudness(uint2 loudn)
 	MCDoAction((MovieController)theMC, mcActionSetVolume, (void *)vol);
 }
 
+#ifdef LEGACY_EXEC
 void MCPlayer::qt_gettracks(MCExecPoint& ep)
 {
 	uint2 trackcount = (uint2)GetMovieTrackCount((Movie)theMovie);
@@ -3168,7 +3182,9 @@ void MCPlayer::qt_gettracks(MCExecPoint& ep)
 		ep.concatuint((uint4)GetTrackDuration(trak), EC_COMMA, false);//end
 	}
 }
+#endif
 
+#ifdef LEGACY_EXEC
 void MCPlayer::qt_getenabledtracks(MCExecPoint& ep)
 {
 	uint2 trackcount = (uint2)GetMovieTrackCount((Movie)theMovie);
@@ -3187,6 +3203,7 @@ void MCPlayer::qt_getenabledtracks(MCExecPoint& ep)
 		}
 	}
 }
+#endif
 
 void MCPlayer::qt_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks)
 {
