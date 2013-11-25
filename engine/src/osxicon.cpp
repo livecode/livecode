@@ -253,8 +253,6 @@ void MCScreenDC::seticonmenu(MCStringRef p_menu)
 
 static bool build_pick_string(MenuRef p_menu, UInt32 p_command, MCStringRef& x_string)
 {
-    if (!MCStringMutableCopyAndRelease(x_string, x_string))
-        return false;
 	for(uint4 t_index = 1; t_index <= CountMenuItems(p_menu); t_index++)
 	{
 		bool t_success;
@@ -331,6 +329,7 @@ OSStatus MCScreenDC::handleiconmenuevent(EventHandlerCallRef p_ref, EventRef p_e
 		t_menu = ((MCScreenDC *)MCscreen) -> f_icon_menu;
 		
 		MCStringRef t_result;
+        MCStringCreateMutable(0, t_result);
 		if (build_pick_string(t_menu, t_command . commandID, t_result))
 		{
 			if (MCdefaultstackptr != NULL)
