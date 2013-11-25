@@ -1220,32 +1220,22 @@ bool MCStringFirstIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_aft
 
 bool MCStringFirstIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p_after, MCStringOptions p_options, uindex_t& r_offset)
 {
-	// We only support ASCII for now.
-	MCAssert(p_needle < 128);
-
 	// Make sure the after index is in range.
 	p_after = MCMin(p_after, self -> char_count);
 
-	strchar_t t_char;
-	t_char = (char_t)p_needle;
-	if (p_options != kMCStringOptionCompareExact)
-		t_char = MCStrCharFold(t_char);
-
-	for(uindex_t t_offset = p_after; t_offset < self -> char_count; t_offset += 1)
-	{
-		strchar_t t_other_char;
-		t_other_char = self -> chars[t_offset];
-		if (p_options != kMCStringOptionCompareExact)
-			t_other_char = MCStrCharFold(t_other_char);
-	
-		if (t_other_char == t_char)
-		{
-			r_offset = t_offset;
-			return true;
-		}
-	}
-
-	return false;
+    bool t_result;
+    if (p_options == kMCStringOptionCompareExact)
+        t_result = MCStrCharsFirstIndexOfCharExact(self -> chars + p_after, self -> char_count - p_after, p_needle, r_offset);
+    else if (p_options == kMCStringOptionCompareNonliteral)
+        t_result = MCStrCharsFirstIndexOfCharNonliteral(self -> chars + p_after, self -> char_count - p_after, p_needle, r_offset);
+    else
+        t_result = MCStrCharsFirstIndexOfCharCaseless(self -> chars + p_after, self -> char_count - p_after, p_needle, r_offset);
+    
+    // Correct the output index
+    if (t_result == true)
+        r_offset += p_after;
+    
+    return t_result;
 }
 
 bool MCStringLastIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_before, MCStringOptions p_options, uindex_t& r_offset)
@@ -1253,42 +1243,31 @@ bool MCStringLastIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_befo
 	// Make sure the before index is in range.
 	p_before = MCMin(p_before, self -> char_count);
 
+    bool t_result;
     if (p_options == kMCStringOptionCompareExact)
-        return MCStrCharsLastIndexOfExact(self -> chars, p_before, p_needle -> chars, p_needle -> char_count, r_offset);
+        t_result = MCStrCharsLastIndexOfExact(self -> chars, p_before, p_needle -> chars, p_needle -> char_count, r_offset);
     else if (p_options == kMCStringOptionCompareNonliteral)
-        return MCStrCharsLastIndexOfNonliteral(self -> chars, p_before, p_needle -> chars, p_needle -> char_count, r_offset);
+        t_result = MCStrCharsLastIndexOfNonliteral(self -> chars, p_before, p_needle -> chars, p_needle -> char_count, r_offset);
     else
-        return MCStrCharsLastIndexOfCaseless(self -> chars, p_before, p_needle -> chars, p_needle -> char_count, r_offset);
+        t_result = MCStrCharsLastIndexOfCaseless(self -> chars, p_before, p_needle -> chars, p_needle -> char_count, r_offset);
+    
+    return t_result;
 }
 
 bool MCStringLastIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p_before, MCStringOptions p_options, uindex_t& r_offset)
 {
-	// We only support ASCII for now.
-	MCAssert(p_needle < 128);
-
-	// Make sure the before index is in range.
+	// Make sure the after index is in range.
 	p_before = MCMin(p_before, self -> char_count);
+    
+    bool t_result;
+    if (p_options == kMCStringOptionCompareExact)
+        t_result = MCStrCharsLastIndexOfCharExact(self -> chars, self -> char_count - p_before, p_needle, r_offset);
+    else if (p_options == kMCStringOptionCompareNonliteral)
+        t_result = MCStrCharsLastIndexOfCharNonliteral(self -> chars, self -> char_count - p_before, p_needle, r_offset);
+    else
+        t_result = MCStrCharsLastIndexOfCharCaseless(self -> chars, self -> char_count - p_before, p_needle, r_offset);
 
-	strchar_t t_char;
-	t_char = (strchar_t)p_needle;
-	if (p_options != kMCStringOptionCompareExact)
-		t_char = MCStrCharFold(t_char);
-
-	for(uindex_t t_offset = p_before; t_offset > 0; t_offset -= 1)
-	{
-		strchar_t t_other_char;
-		t_other_char = self -> chars[t_offset - 1];
-		if (p_options != kMCStringOptionCompareExact)
-			t_other_char = MCStrCharFold(t_other_char);
-	
-		if (t_other_char == t_char)
-		{
-			r_offset = t_offset - 1;
-			return true;
-		}
-	}
-
-	return false;
+    return t_result;
 }
 
 bool MCStringFind(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStringOptions p_options, MCRange *r_result)

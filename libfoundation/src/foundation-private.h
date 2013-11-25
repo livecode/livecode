@@ -154,6 +154,12 @@ typedef unichar_t strchar_t;
 #define MCStrCharsLastIndexOfExact(x, y, z, w, r) MCUnicodeLastIndexOf(x, y, z, w, kMCUnicodeCompareOptionExact, r)
 #define MCStrCharsLastIndexOfCaseless(x, y, z, w, r) MCUnicodeLastIndexOf(x, y, z, w, kMCUnicodeCompareOptionCaseless, r)
 #define MCStrCharsLastIndexOfNonliteral(x, y, z, w, r) MCUnicodeLastIndexOf(x, y, z, w, kMCUnicodeCompareOptionNormalised, r)
+#define MCStrCharsFirstIndexOfCharExact(x, y, z, r) MCUnicodeFirstIndexOfChar(x, y, z, kMCUnicodeCompareOptionExact, r)
+#define MCStrCharsFirstIndexOfCharCaseless(x, y, z, r) MCUnicodeFirstIndexOfChar(x, y, z, kMCUnicodeCompareOptionCaseless, r)
+#define MCStrCharsFirstIndexOfCharNonliteral(x, y, z, r) MCUnicodeFirstIndexOfChar(x, y, z, kMCUnicodeCompareOptionNormalised, r)
+#define MCStrCharsLastIndexOfCharExact(x, y, z, r) MCUnicodeLastIndexOfChar(x, y, z, kMCUnicodeCompareOptionExact, r)
+#define MCStrCharsLastIndexOfCharCaseless(x, y, z, r) MCUnicodeLastIndexOfChar(x, y, z, kMCUnicodeCompareOptionCaseless, r)
+#define MCStrCharsLastIndexOfCharNonliteral(x, y, z, r) MCUnicodeLastIndexOfChar(x, y, z, kMCUnicodeCompareOptionNormalised, r)
 #endif
 
 #ifdef NATIVE_STRING

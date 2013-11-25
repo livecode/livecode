@@ -353,6 +353,14 @@ bool MCUnicodeLastIndexOf(const unichar_t *p_string, uindex_t p_string_length,
                           const unichar_t *p_needle, uindex_t p_needle_length,
                           MCUnicodeCompareOption, uindex_t &r_index);
 
+// Returns the index of the first occurence of the codepoint in the given string
+bool MCUnicodeFirstIndexOfChar(const unichar_t *p_string, uindex_t p_string_length,
+                               codepoint_t p_needle, MCUnicodeCompareOption, uindex_t &r_index);
+
+// Returns the index of the last occurence of the codepoint in the given string
+bool MCUnicodeLastIndexOfChar(const unichar_t *p_string, uindex_t p_string_length,
+                              codepoint_t p_needle, MCUnicodeCompareOption, uindex_t &r_index);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////

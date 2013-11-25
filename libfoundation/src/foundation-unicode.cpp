@@ -913,6 +913,74 @@ bool MCUnicodeLastIndexOf(const unichar_t *p_string, uindex_t p_string_length,
     return true;
 }
 
+bool MCUnicodeFirstIndexOfChar(const unichar_t *p_string, uindex_t p_string_length,
+                               codepoint_t p_needle, MCUnicodeCompareOption p_option,
+                               uindex_t &r_index)
+{
+    // Use the simple case, if possible
+    if (p_option == kMCUnicodeCompareOptionExact)
+    {
+        unichar_t *t_found;
+        t_found = u_memchr32(p_string, p_needle, p_string_length);
+        if (t_found == NULL)
+            return false;
+        r_index = t_found - p_string;
+        return true;
+    }
+    
+    // Not simple; do the full comparison
+    unichar_t t_buffer[2];
+    uindex_t t_length;
+    if (p_needle <= 0xFFFF)
+    {
+        t_buffer[0] = p_needle;
+        t_length = 1;
+    }
+    else
+    {
+        p_needle -= 0x10000;
+        t_buffer[0] = (p_needle >> 10) + 0xD800;
+        t_buffer[1] = (p_needle & 0x3FF) + 0xDC00;
+        t_length = 2;
+    }
+    
+    return MCUnicodeFirstIndexOf(p_string, p_string_length, t_buffer, t_length, p_option, r_index);
+}
+
+bool MCUnicodeLastIndexOfChar(const unichar_t *p_string, uindex_t p_string_length,
+                               codepoint_t p_needle, MCUnicodeCompareOption p_option,
+                               uindex_t &r_index)
+{
+    // Use the simple case, if possible
+    if (p_option == kMCUnicodeCompareOptionExact)
+    {
+        unichar_t *t_found;
+        t_found = u_memrchr32(p_string, p_needle, p_string_length);
+        if (t_found == NULL)
+            return false;
+        r_index = t_found - p_string;
+        return true;
+    }
+    
+    // Not simple; do the full comparison
+    unichar_t t_buffer[2];
+    uindex_t t_length;
+    if (p_needle <= 0xFFFF)
+    {
+        t_buffer[0] = p_needle;
+        t_length = 1;
+    }
+    else
+    {
+        p_needle -= 0x10000;
+        t_buffer[0] = (p_needle >> 10) + 0xD800;
+        t_buffer[1] = (p_needle & 0x3FF) + 0xDC00;
+        t_length = 2;
+    }
+    
+    return MCUnicodeLastIndexOf(p_string, p_string_length, t_buffer, t_length, p_option, r_index);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 int32_t MCUnicodeCollate(MCLocaleRef p_locale, MCUnicodeCollateOption p_options,
