@@ -556,6 +556,13 @@
 		721CAACB18351E7400858545 /* libiculx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC518351E7400858545 /* libiculx.a */; };
 		721CAACC18351E7400858545 /* libicutu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC618351E7400858545 /* libicutu.a */; };
 		721CAACD18351E7400858545 /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC718351E7400858545 /* libicuuc.a */; };
+		7278F63A1843A2B100E35A65 /* libicudata.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC218351E7400858545 /* libicudata.a */; };
+		7278F63B1843A2B100E35A65 /* libicui18n.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC018351E1800858545 /* libicui18n.a */; };
+		7278F63C1843A2B100E35A65 /* libicuio.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC318351E7400858545 /* libicuio.a */; };
+		7278F63D1843A2B100E35A65 /* libicule.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC418351E7400858545 /* libicule.a */; };
+		7278F63E1843A2B100E35A65 /* libiculx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC518351E7400858545 /* libiculx.a */; };
+		7278F63F1843A2B100E35A65 /* libicutu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC618351E7400858545 /* libicutu.a */; };
+		7278F6401843A2B100E35A65 /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC718351E7400858545 /* libicuuc.a */; };
 		7635171D182A8D3D00C31FA2 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */; };
 		7635171E182A8D3D00C31FA2 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */; };
 		766E3298180EE4ED00CF7FCF /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766E3293180EE4E000CF7FCF /* graphicscontext.cpp */; };
@@ -1729,6 +1736,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7278F63A1843A2B100E35A65 /* libicudata.a in Frameworks */,
+				7278F63B1843A2B100E35A65 /* libicui18n.a in Frameworks */,
+				7278F63C1843A2B100E35A65 /* libicuio.a in Frameworks */,
+				7278F63D1843A2B100E35A65 /* libicule.a in Frameworks */,
+				7278F63E1843A2B100E35A65 /* libiculx.a in Frameworks */,
+				7278F63F1843A2B100E35A65 /* libicutu.a in Frameworks */,
+				7278F6401843A2B100E35A65 /* libicuuc.a in Frameworks */,
 				76EF3194181E74F600FAC195 /* libskia.a in Frameworks */,
 				76EF3163181E6BD900FAC195 /* libgraphics.a in Frameworks */,
 				4D6C28B61647DC4F007C96B7 /* libfoundation.a in Frameworks */,
@@ -4243,6 +4257,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "rsrc/Standalone-Info.plist";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../prebuilt/lib/mac\"",
+				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Standalone-Community";
 			};
@@ -4252,6 +4270,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "rsrc/Standalone-Info.plist";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../prebuilt/lib/mac\"",
+				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Standalone-Community";
 			};
