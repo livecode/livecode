@@ -1456,6 +1456,12 @@ uindex_t MCStringGetChars(MCStringRef string, MCRange range, unichar_t *chars);
 // that would be generated is returned. Any unmappable chars get generated as '?'.
 uindex_t MCStringGetNativeChars(MCStringRef string, MCRange range, char_t *chars);
 
+// Maps from a codepoint (character) range to a code unit (StringRef) range
+bool MCStringMapCodepointIndices(MCStringRef, MCRange p_codepoint_range, MCRange& r_string_range);
+
+// Maps from a code unit (StringRef) range to a codepoint (character) range
+bool MCStringUnmapCodepointIndices(MCStringRef, MCRange p_string_range, MCRange &r_codepoint_range);
+
 
 /////////
 

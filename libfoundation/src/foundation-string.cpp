@@ -759,8 +759,21 @@ char_t MCStringGetNativeCharAtIndex(MCStringRef self, uindex_t p_index)
 
 codepoint_t MCStringGetCodepointAtIndex(MCStringRef self, uindex_t p_index)
 {
-	// Stop-gap until support for UTF-16 with surrogate pairs is added
-	return MCStringGetCharAtIndex(self, p_index);
+	// Calculate the code unit index for the given codepoint
+	MCRange t_codepoint_idx, t_codeunit_idx;
+    t_codepoint_idx = MCRangeMake(p_index, 1);
+    if (!MCStringMapCodepointIndices(self, t_codepoint_idx, t_codeunit_idx))
+        return 0;
+    
+    // Get the codepoint at this index
+    unichar_t t_lead, t_trail;
+    t_lead = self -> chars[t_codeunit_idx.offset];
+    if (t_codeunit_idx.length == 1)
+        return t_lead;
+    
+    // We have a surrogate pair
+    t_trail = self -> chars[t_codeunit_idx.offset + 1];
+    return __MCStringSurrogatesToCodepoint(t_lead, t_trail);
 }
 
 uindex_t MCStringGetChars(MCStringRef self, MCRange p_range, unichar_t *p_chars)
@@ -803,6 +816,75 @@ bool MCStringIsNative(MCStringRef self)
 {
 	__MCStringNativize(self);
 	return (self -> flags & kMCStringFlagIsNative) != 0;
+}
+
+bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &r_out_range)
+{
+    MCAssert(self != nil);
+    
+    // Scan through the string, counting the number of codepoints
+    uindex_t t_counter = 0;
+    MCRange t_units = MCRangeMake(0, 0);
+    while (t_counter < p_in_range.offset + p_in_range.length)
+    {
+        // Is this a single code unit or a valid surrogate pair?
+        uindex_t t_length;
+        if (__MCStringIsValidSurrogatePair(self, t_counter))
+            t_length = 2;
+        else
+            t_length = 1;
+        
+        // Update the appropriate field of the output
+        if (t_counter < p_in_range.offset)
+            t_units.offset += t_length;
+        else
+            t_units.length += t_length;
+        
+        // Make sure we haven't exceeded the length of the string
+        if (t_units.offset >= self -> char_count)
+            return false;
+        if (t_units.length >= self -> char_count)
+            return false;
+        
+        t_counter++;
+    }
+    
+    // All done
+    r_out_range = t_units;
+    return true;
+}
+
+bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &r_out_range)
+{
+    MCAssert(self != nil);
+    
+    // Check that the input indices are valid
+    if (p_in_range.offset + p_in_range.length > self -> char_count)
+        return false;
+    
+    // Scan through the string, counting the number of code points
+    uindex_t t_counter = 0;
+    MCRange t_codepoints = MCRangeMake(0, 0);
+    while (t_counter < p_in_range.offset + p_in_range.length)
+    {
+        // Is this a single code unit or a valid surrogate pair?
+        uindex_t t_length;
+        if (__MCStringIsValidSurrogatePair(self, t_counter))
+            t_length = 2;
+        else
+            t_length = 1;
+        
+        // Increment the counters
+        if (t_counter < p_in_range.offset)
+            t_codepoints.offset++;
+        else
+            t_codepoints.length++;
+        t_counter += t_length;
+    }
+    
+    // All done
+    r_out_range = p_in_range;
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
