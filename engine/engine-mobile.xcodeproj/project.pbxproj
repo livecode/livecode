@@ -2574,6 +2574,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4DD3DF4A1040B13E00CAC7EF /* Release Mobile.xcconfig */;
 			buildSettings = {
+				LIBRARY_SEARCH_PATHS = "$(SOLUTION_DIR)/prebuilt/lib/ios/$(SDK_NAME)";
 			};
 			name = Release;
 		};
@@ -2590,6 +2591,12 @@
 					"-ObjC",
 					"-force_load",
 					"${BUILT_PRODUCTS_DIR}/libfoundationmobile.a",
+					"-licudata",
+					"-licui18n",
+					"-licuio",
+					"-licule",
+					"-liculx",
+					"-licuuc",
 				);
 				PRODUCT_NAME = "standalone-mobile-community";
 				PROVISIONING_PROFILE = "";
@@ -2614,6 +2621,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4DD3DF461040B04D00CAC7EF /* Debug Mobile.xcconfig */;
 			buildSettings = {
+				LIBRARY_SEARCH_PATHS = "$(SOLUTION_DIR)/prebuilt/lib/ios/$(SDK_NAME)";
 			};
 			name = Debug;
 		};
@@ -2626,6 +2634,12 @@
 					"-ObjC",
 					"-force_load",
 					"${BUILT_PRODUCTS_DIR}/libfoundationmobile.a",
+					"-licudata",
+					"-licui18n",
+					"-licuio",
+					"-licule",
+					"-liculx",
+					"-licuuc",
 				);
 				PRODUCT_NAME = "standalone-mobile-community";
 				PROVISIONING_PROFILE = "";

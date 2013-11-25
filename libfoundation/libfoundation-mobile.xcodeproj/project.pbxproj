@@ -8,6 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		4D5837B41806A0C6006DE6A2 /* foundation-objc.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D5837B31806A0C6006DE6A2 /* foundation-objc.mm */; };
+		729903A918438B3900A93FA8 /* foundation-locale.h in Headers */ = {isa = PBXBuildFile; fileRef = 729903A718438B3900A93FA8 /* foundation-locale.h */; };
+		729903AA18438B3900A93FA8 /* foundation-unicode.h in Headers */ = {isa = PBXBuildFile; fileRef = 729903A818438B3900A93FA8 /* foundation-unicode.h */; };
+		729903AE18438B5300A93FA8 /* foundation-locale.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 729903AB18438B5300A93FA8 /* foundation-locale.cpp */; };
+		729903AF18438B5300A93FA8 /* foundation-unicode-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 729903AC18438B5300A93FA8 /* foundation-unicode-private.h */; };
+		729903B018438B5300A93FA8 /* foundation-unicode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 729903AD18438B5300A93FA8 /* foundation-unicode.cpp */; };
 		BE096E18175CD6F900F92F90 /* foundation-array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE096E09175CD6F900F92F90 /* foundation-array.cpp */; };
 		BE096E19175CD6F900F92F90 /* foundation-core.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE096E0A175CD6F900F92F90 /* foundation-core.cpp */; };
 		BE096E1A175CD6F900F92F90 /* foundation-debug.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE096E0B175CD6F900F92F90 /* foundation-debug.cpp */; };
@@ -37,6 +42,11 @@
 		4DD3DF461040B04D00CAC7EF /* Debug Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Debug Mobile.xcconfig"; path = "../rules/Debug Mobile.xcconfig"; sourceTree = SOURCE_ROOT; };
 		4DD3DF4A1040B13E00CAC7EF /* Release Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Release Mobile.xcconfig"; path = "../rules/Release Mobile.xcconfig"; sourceTree = SOURCE_ROOT; };
 		4DD3E06B1040BC4700CAC7EF /* libfoundationmobile.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libfoundationmobile.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		729903A718438B3900A93FA8 /* foundation-locale.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-locale.h"; path = "include/foundation-locale.h"; sourceTree = "<group>"; };
+		729903A818438B3900A93FA8 /* foundation-unicode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-unicode.h"; path = "include/foundation-unicode.h"; sourceTree = "<group>"; };
+		729903AB18438B5300A93FA8 /* foundation-locale.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-locale.cpp"; path = "src/foundation-locale.cpp"; sourceTree = "<group>"; };
+		729903AC18438B5300A93FA8 /* foundation-unicode-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-unicode-private.h"; path = "src/foundation-unicode-private.h"; sourceTree = "<group>"; };
+		729903AD18438B5300A93FA8 /* foundation-unicode.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-unicode.cpp"; path = "src/foundation-unicode.cpp"; sourceTree = "<group>"; };
 		BE096E09175CD6F900F92F90 /* foundation-array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-array.cpp"; path = "src/foundation-array.cpp"; sourceTree = "<group>"; };
 		BE096E0A175CD6F900F92F90 /* foundation-core.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-core.cpp"; path = "src/foundation-core.cpp"; sourceTree = "<group>"; };
 		BE096E0B175CD6F900F92F90 /* foundation-debug.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-debug.cpp"; path = "src/foundation-debug.cpp"; sourceTree = "<group>"; };
@@ -73,6 +83,8 @@
 		4D5837B11806A0A9006DE6A2 /* Headers */ = {
 			isa = PBXGroup;
 			children = (
+				729903A718438B3900A93FA8 /* foundation-locale.h */,
+				729903A818438B3900A93FA8 /* foundation-unicode.h */,
 				BE096E27175CD70A00F92F90 /* foundation-auto.h */,
 				BE096E28175CD70A00F92F90 /* foundation-inline.h */,
 				BE096E29175CD70A00F92F90 /* foundation-stdlib.h */,
@@ -103,6 +115,9 @@
 		4DD3DDAC1040ABB000CAC7EF /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				729903AB18438B5300A93FA8 /* foundation-locale.cpp */,
+				729903AC18438B5300A93FA8 /* foundation-unicode-private.h */,
+				729903AD18438B5300A93FA8 /* foundation-unicode.cpp */,
 				BE096E09175CD6F900F92F90 /* foundation-array.cpp */,
 				BE096E0A175CD6F900F92F90 /* foundation-core.cpp */,
 				BE096E0B175CD6F900F92F90 /* foundation-debug.cpp */,
@@ -146,6 +161,9 @@
 				BE096E2C175CD70A00F92F90 /* foundation-inline.h in Headers */,
 				BE096E2D175CD70A00F92F90 /* foundation-stdlib.h in Headers */,
 				BE096E2E175CD70A00F92F90 /* foundation.h in Headers */,
+				729903A918438B3900A93FA8 /* foundation-locale.h in Headers */,
+				729903AA18438B3900A93FA8 /* foundation-unicode.h in Headers */,
+				729903AF18438B5300A93FA8 /* foundation-unicode-private.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -218,6 +236,8 @@
 				BE096E26175CD6F900F92F90 /* foundation-value.cpp in Sources */,
 				BE9AE948179EECAE00206A6D /* foundation-data.cpp in Sources */,
 				4D5837B41806A0C6006DE6A2 /* foundation-objc.mm in Sources */,
+				729903AE18438B5300A93FA8 /* foundation-locale.cpp in Sources */,
+				729903B018438B5300A93FA8 /* foundation-unicode.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -234,6 +254,32 @@
 		4D75E65D113C0D3E000A129F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"\"$(SOLUTION_DIR)/libfoundation/include\"",
+					"\"$(SOLUTION_DIR)/libgraphics/include\"",
+					"\"$(SOLUTION_DIR)/libexternal/include\"",
+					"\"$(SOLUTION_DIR)/libexternalv1/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libz/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpng/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libjpeg/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpcre/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxml/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxslt/include\"",
+					"\"$(SOLUTION_DIR)/engine/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libcairo/src\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libsqlite/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libmysql/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libgif/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libzip/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/config\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/core\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/effects\"",
+					"$(SOLUTION_DIR)/prebuilt/include",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(SOLUTION_DIR)/prebuilt/lib/ios/$(SDK_NAME)",
+					"\"$(SRCROOT)/../prebuilt/lib/ios/iPhoneSimulator6.1\"",
+				);
 				PRODUCT_NAME = coremobile;
 			};
 			name = Release;
@@ -248,6 +294,32 @@
 		4D8F6FD0113EC98D0056ED41 /* ReleaseDeviceForShark */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"\"$(SOLUTION_DIR)/libfoundation/include\"",
+					"\"$(SOLUTION_DIR)/libgraphics/include\"",
+					"\"$(SOLUTION_DIR)/libexternal/include\"",
+					"\"$(SOLUTION_DIR)/libexternalv1/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libz/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpng/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libjpeg/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpcre/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxml/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxslt/include\"",
+					"\"$(SOLUTION_DIR)/engine/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libcairo/src\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libsqlite/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libmysql/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libgif/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libzip/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/config\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/core\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/effects\"",
+					"$(SOLUTION_DIR)/prebuilt/include",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(SOLUTION_DIR)/prebuilt/lib/ios/$(SDK_NAME)",
+					"\"$(SRCROOT)/../prebuilt/lib/ios/iPhoneSimulator6.1\"",
+				);
 				PRODUCT_NAME = coremobile;
 			};
 			name = ReleaseDeviceForShark;
@@ -262,6 +334,32 @@
 		4DD3E06C1040BC4700CAC7EF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"\"$(SOLUTION_DIR)/libfoundation/include\"",
+					"\"$(SOLUTION_DIR)/libgraphics/include\"",
+					"\"$(SOLUTION_DIR)/libexternal/include\"",
+					"\"$(SOLUTION_DIR)/libexternalv1/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libz/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpng/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libjpeg/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpcre/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxml/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxslt/include\"",
+					"\"$(SOLUTION_DIR)/engine/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libcairo/src\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libsqlite/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libmysql/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libgif/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libzip/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/config\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/core\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/effects\"",
+					"$(SOLUTION_DIR)/prebuilt/include",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(SOLUTION_DIR)/prebuilt/lib/ios/$(SDK_NAME)",
+					"\"$(SRCROOT)/../prebuilt/lib/ios/iPhoneSimulator6.1\"",
+				);
 				PRODUCT_NAME = foundationmobile;
 			};
 			name = Debug;
