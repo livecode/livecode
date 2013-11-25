@@ -228,7 +228,7 @@ public:
 	virtual ~MCIdeDeploy(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+	virtual void exec_ctxt(MCExecContext& p_ctxt);
 
 private:
 	enum
@@ -259,7 +259,7 @@ public:
 	virtual ~MCIdeSign(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+	virtual void exec_ctxt(MCExecContext& p_ctxt);
 
 private:
 	enum
@@ -280,7 +280,7 @@ public:
 	virtual ~MCIdeDiet(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+	virtual void exec_ctxt(MCExecContext& p_ctxt);
 
 private:
 	enum
@@ -301,7 +301,7 @@ public:
 	virtual ~MCIdeDmgDump(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+	virtual void exec_ctxt(MCExecContext& p_ctxt);
 
 private:
 	MCExpression *m_filename;
@@ -314,7 +314,7 @@ public:
 	virtual ~MCIdeDmgBuild(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+	virtual void exec_ctxt(MCExecContext& p_ctxt);
 
 private:
 	MCExpression *m_items;
@@ -328,7 +328,7 @@ public:
 	virtual ~MCIdeExtract(void);
 	
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+	virtual void exec_ctxt(MCExecContext& p_ctxt);
 	
 private:
 	MCExpression *m_filename;
