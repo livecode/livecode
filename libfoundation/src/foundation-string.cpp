@@ -66,6 +66,19 @@ static void __MCStringNativize(MCStringRef string);
 static void __MCStringChanged(MCStringRef string);
 #endif
 
+// Converts two surrogate pair code units into a codepoint
+static codepoint_t __MCStringSurrogatesToCodepoint(unichar_t p_lead, unichar_t p_trail);
+
+// Converts a codepoint to UTF-16 code units and returns the number of units
+static unsigned int __MCStringCodepointToSurrogates(codepoint_t, unichar_t (&r_units)[2]);
+
+// Returns true if the code unit at the given index and the next code unit form
+// a valid surrogate pair. Lone lead or trail code units are not valid pairs.
+static bool __MCStringIsValidSurrogatePair(MCStringRef, uindex_t);
+
+// Creates a string
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // This method creates a 'constant' MCStringRef from the given c-string. At some
@@ -1190,12 +1203,19 @@ bool MCStringFirstIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_aft
 	// Make sure the after index is in range.
 	p_after = MCMin(p_after, self -> char_count);
 
+    bool t_result;
     if (p_options == kMCStringOptionCompareExact)
-        return MCStrCharsFirstIndexOfExact(self -> chars + p_after, self -> char_count - p_after, p_needle -> chars, p_needle -> char_count, r_offset);
+        t_result = MCStrCharsFirstIndexOfExact(self -> chars + p_after, self -> char_count - p_after, p_needle -> chars, p_needle -> char_count, r_offset);
     else if (p_options == kMCStringOptionCompareNonliteral)
-        return MCStrCharsFirstIndexOfNonliteral(self -> chars + p_after, self -> char_count - p_after, p_needle -> chars, p_needle -> char_count, r_offset);
+        t_result = MCStrCharsFirstIndexOfNonliteral(self -> chars + p_after, self -> char_count - p_after, p_needle -> chars, p_needle -> char_count, r_offset);
     else
-        return MCStrCharsFirstIndexOfCaseless(self -> chars + p_after, self -> char_count - p_after, p_needle -> chars, p_needle -> char_count, r_offset);
+        t_result =  MCStrCharsFirstIndexOfCaseless(self -> chars + p_after, self -> char_count - p_after, p_needle -> chars, p_needle -> char_count, r_offset);
+   
+    // Correct the output index
+    if (t_result == true)
+        r_offset += p_after;
+    
+    return t_result;
 }
 
 bool MCStringFirstIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p_after, MCStringOptions p_options, uindex_t& r_offset)
@@ -2269,41 +2289,98 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
 
 bool MCStringFindAndReplaceChar(MCStringRef self, codepoint_t p_pattern, codepoint_t p_replacement, MCStringOptions p_options)
 {
-	strchar_t t_pattern, t_replacement;
-#ifdef NATIVE_STRING
-	if (!MCUnicodeCharMapToNative(p_pattern, t_pattern))
-		t_pattern = '?';
-	if (!MCUnicodeCharMapToNative(p_replacement, t_replacement))
-		t_replacement = '?';
-#else
-	t_pattern = p_pattern;
-	t_replacement = p_replacement;
-#endif
-	
-	if (p_options == kMCStringOptionCompareExact)
-	{
-		// Simplest case, just substitute pattern for replacement.
-		for(uindex_t i = 0; i < self -> char_count; i++)
-			if (self -> chars[i] == t_pattern)
-				self -> chars[i] = t_replacement;
-	}
-	else if (p_options == kMCStringOptionCompareCaseless)
-	{
-		strchar_t t_from;
-		t_from = MCStrCharFold(p_pattern);
-
-		// Now substitute pattern for replacement, taking making sure its a caseless compare.
-		for(uindex_t i = 0; i < self -> char_count; i++)
-			if (MCStrCharFold(self -> chars[i]) == t_from)
-				self -> chars[i] = p_replacement;
-	}
-	else
-	{
-		MCAssert(false);
-		return false;
-	}
-
-	return true;
+	// Can the replacement be done in-place? Reasons it might not be possible:
+    //
+    //  (x) The UTF-16 encoding of the codepoints are different lengths
+    //  (x) Normalisation is required and one or both codepoints are composed
+    //  (x) Case folding is required and the case mapping is not simple
+    //
+    //This can only be true if both
+    // codepoints have the same length when encoded. It also isn't possible if
+    // normalisation is required and one or both codepoints are composed. Another
+    if
+    (
+        /*// One is BMP and one is non-BMP
+        ((!(p_pattern & 0x1F0000)) ^ (!(p_replacement & 0x1F0000)))
+     
+        // Normalisation has been requested and either the pattern or replacement
+        // will potentially change under normalisation
+        || ((p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareNonliteral)
+            && (MCUnicodeIsComposed(p_pattern) || MCUnicodeIsComposed(p_replacement)))
+     
+        // Case folding changes the length of either the pattern or replacement
+        || ((p_options == kMCStringOptionCompareCaseless)
+            && (MCUnicodeGetBinaryProperty(p_pattern, kMCUni)
+                || !MCUnicodeGetBinaryProperty(p_replacement, kMCUnicodePropertyChangesWhenCaseFolded)))
+        */
+     
+        // Don't bother doing it the slow way yet; do it fast + wrong instead...
+        false
+    )
+    {
+        // Do it via the slow-path full string replacement
+        MCAutoStringRef t_pattern, t_replacement;
+        unichar_t t_buffer[2];
+        /* UNCHECKED */ MCStringCreateWithChars(t_buffer, __MCStringCodepointToSurrogates(p_pattern, t_buffer), &t_pattern);
+        /* UNCHECKED */ MCStringCreateWithChars(t_buffer, __MCStringCodepointToSurrogates(p_replacement, t_buffer), &t_replacement);
+        return MCStringFindAndReplace(self, *t_pattern, *t_replacement, p_options);
+    }
+    
+    // Are we dealing with a surrogate pair?
+    unichar_t t_pattern_units[2];
+    unichar_t t_replacement_units[2];
+    bool t_pair;
+    t_pair = __MCStringCodepointToSurrogates(p_pattern, t_pattern_units) == 2;
+    __MCStringCodepointToSurrogates(p_replacement, t_replacement_units);
+    
+    // Which type of comparison are we using?
+    if (p_options == kMCStringOptionCompareExact)
+    {
+        for (uindex_t i = 0; i < self -> char_count; i++)
+        {
+            if (self -> chars[i] == t_pattern_units[0]
+                && (!t_pair ||
+                    (i + 1 < self -> char_count && self -> chars[i + 1] == t_pattern_units[1])))
+            {
+                // Found a match
+                self -> chars[i] = t_replacement_units[0];
+                if (t_pair)
+                    self -> chars[++i] = t_replacement_units[1];
+            }
+        }
+    }
+    else if (p_options == kMCStringOptionCompareCaseless)
+    {
+        for (uindex_t i = 0; i < self -> char_count; i++)
+        {
+            codepoint_t t_char;
+            if (__MCStringIsValidSurrogatePair(self, i))
+                t_char = __MCStringSurrogatesToCodepoint(self -> chars[i], self -> chars[i + 1]);
+            else
+                t_char = self -> chars[i];
+            
+            if (MCUnicodeGetCharacterProperty(t_char, kMCUnicodePropertySimpleCaseFolding)
+                == MCUnicodeGetCharacterProperty(p_pattern, kMCUnicodePropertySimpleCaseFolding))
+            {
+                // Found a match
+                self -> chars[i] = t_replacement_units[0];
+                if (t_pair)
+                    self -> chars[++i] = t_replacement_units[1];
+            }
+        }
+    }
+    else if (p_options == kMCStringOptionCompareNonliteral)
+    {
+        MCAssert(false);
+        return false;
+    }
+    else
+    {
+        MCAssert(false);
+        return false;
+    }
+    
+    return true;
 }
 
 bool MCStringFindAndReplace(MCStringRef self, MCStringRef p_pattern, MCStringRef p_replacement, MCStringOptions p_options)
@@ -2555,6 +2632,48 @@ static void __MCStringChanged(MCStringRef self)
 	self -> native_chars = nil;
 }
 #endif
+
+static codepoint_t __MCStringSurrogatesToCodepoint(unichar_t p_lead, unichar_t p_trail)
+{
+    return 0x10000 + ((p_lead & 0x3FF) << 10) + (p_trail & 0x3FF);
+}
+
+static unsigned int __MCStringCodepointToSurrogates(codepoint_t p_codepoint, unichar_t (&r_units)[2])
+{
+    if (p_codepoint > 0xFFFF)
+    {
+        p_codepoint -= 0x10000;
+        r_units[0] = 0xD800 + (p_codepoint >> 10);
+        r_units[1] = 0xDC00 + (p_codepoint & 0x3FF);
+        return 2;
+    }
+    else
+    {
+        r_units[0] = p_codepoint;
+        return 1;
+    }
+}
+
+static bool __MCStringIsValidSurrogatePair(MCStringRef self, uindex_t p_index)
+{
+    // Check that the string is long enough
+    if ((p_index + 1) >= self -> char_count)
+        return false;
+    
+    // Check for a valid leading surrogate
+    unichar_t t_char;
+    t_char = self -> chars[p_index];
+    if (t_char < 0xD800 || t_char > 0xDBFF)
+        return false;
+    
+    // Check for a valid trailing surrogate
+    t_char = self -> chars[p_index + 1];
+    if (t_char < 0xDC00 || t_char > 0xDFFF)
+        return false;
+    
+    // All the checks passed
+    return true;
+}
 	
 ////////////////////////////////////////////////////////////////////////////////
 

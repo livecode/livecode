@@ -112,9 +112,6 @@ typedef char_t strchar_t;
 #else
 typedef unichar_t strchar_t;
 // Does not yet use foundation unicode
-#define MCStrCharFold(x) MCUnicodeCharFold(x)
-#define MCStrCharLowercase(x) MCUnicodeCharLowercase(x)
-#define MCStrCharUppercase(x) MCUnicodeCharUppercase(x)
 #define MCStrCharMapToNative(x) MCUnicodeCharMapToNativeLossy(x)
 #define MCStrCharMapFromNative(x) MCUnicodeCharMapFromNative(x)
 #define MCStrCharMapToUnicode(x) (x)
@@ -124,14 +121,18 @@ typedef unichar_t strchar_t;
 #define MCStrCharsHashCaseless(x, y) MCUnicodeCharsHashCaseless(x, y)
 
 // These will probably go away
+#define MCStrCharFold(x) MCStrCharFoldSimple(x)
+//#define MCStrCharLowercase(x) MCUnicodeCharLowercase(x)
+//#define MCStrCharUppercase(x) MCUnicodeCharUppercase(x)
 #define MCStrCharsSharedPrefixExact(x, y, z, w) MCUnicodeCharsSharedPrefixExact(x, y, z, w)
 #define MCStrCharsSharedPrefixCaseless(x, y, z, w) MCUnicodeCharsSharedPrefixCaseless(x, y, z, w)
 #define MCStrCharsSharedSuffixExact(x, y, z, w) MCUnicodeCharsSharedSuffixExact(x, y, z, w)
 #define MCStrCharsSharedSuffixCaseless(x, y, z, w) MCUnicodeCharsSharedSuffixCaseless(x, y, z, w)
-#define MCStrCharsLowercase(x, y) MCUnicodeCharsLowercase(x, y)
-#define MCStrCharsUppercase(x, y) MCUnicodeCharsUppercase(x, y)
+//#define MCStrCharsLowercase(x, y) MCUnicodeCharsLowercase(x, y)
+//#define MCStrCharsUppercase(x, y) MCUnicodeCharsUppercase(x, y)
 
 // Modified to use foundation-unicode
+#define MCStrCharFoldSimple(x) MCUnicodeGetCharacterProperty(x, kMCUnicodePropertySimpleCaseFolding)
 #define MCStrCharsEqualExact(x, y, z, w) (MCUnicodeCompare(x, y, z, w, kMCUnicodeCompareOptionExact) == 0)
 #define MCStrCharsEqualCaseless(x, y, z, w) (MCUnicodeCompare(x, y, z, w, kMCUnicodeCompareOptionCaseless) == 0)
 #define MCStrCharsEqualNonliteral(x, y, z, w) (MCUnicodeCompare(x, y, z, w, kMCUnicodeCompareOptionNormalised) == 0)
