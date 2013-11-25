@@ -509,7 +509,7 @@ bool MCImageRepGetDensityMapped(MCStringRef p_filename, MCImageRep *&r_rep)
 	
 	MCImageRep *t_rep = nil;
 	
-	char *t_base, *t_extension;
+    MCAutoPointer<char>t_base, t_extension;
 	t_base =t_extension = nil;
 	
 	MCGFloat t_density;
@@ -518,14 +518,14 @@ bool MCImageRepGetDensityMapped(MCStringRef p_filename, MCImageRep *&r_rep)
     MCAutoPointer<char> t_filename;
     /* UNCHECKED */ MCStringConvertToCString(p_filename, &t_filename);
 	
-	t_success = MCImageSplitScaledFilename(*t_filename, t_base, t_extension, t_has_tag, t_density);
+    t_success = MCImageSplitScaledFilename(*t_filename, &t_base, &t_extension, t_has_tag, t_density);
 	
 	if (!t_success)
 		return false;
 	
 	// check filename for density tag
 	if (t_has_tag)
-		t_success = MCImageRepGetReferencedWithScale(t_base, t_extension, t_density, t_rep);
+        t_success = MCImageRepGetReferencedWithScale(*t_base, *t_extension, t_density, t_rep);
 	else
 	{
 		MCCachedImageRep *t_cached_rep;
@@ -544,7 +544,7 @@ bool MCImageRepGetDensityMapped(MCStringRef p_filename, MCImageRep *&r_rep)
 			uint32_t t_count;
 			t_count = 0;
 			
-			t_success = MCImageGetScaledFiles(t_base, t_extension, t_list, t_count);
+            t_success = MCImageGetScaledFiles(*t_base, *t_extension, t_list, t_count);
 			if (t_success && t_count > 0)
 				t_success = MCImageRepCreateDensityMapped(p_filename, t_list, t_count, t_rep);
 			

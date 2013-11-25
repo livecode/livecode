@@ -485,6 +485,7 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 					t_arg_count -= 1;
 				}
 					
+            MCMemoryDeallocate(t_string);
 			free(t_format);
 		}
 		
@@ -2428,7 +2429,7 @@ void __MCStringDestroy(__MCString *self)
 
 bool __MCStringCopyDescription(__MCString *self, MCStringRef& r_desc)
 {
-	return MCStringFormat(r_desc, "\"%s\"", self -> chars);
+	return MCStringFormat(r_desc, "\"%@\"", self);
 }
 
 hash_t __MCStringHash(__MCString *self)

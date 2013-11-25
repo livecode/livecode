@@ -36,6 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 
 #include "syntax.h"
+#include "statemnt.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -763,6 +764,7 @@ Parse_stat MCFuncref::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
+#if /* MCFuncref::eval */ LEGACY_EXEC
 Exec_stat MCFuncref::eval(MCExecPoint &ep)
 {
 	MCExecContext ctxt(ep);
@@ -899,7 +901,7 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 		if (added)
 			MCnexecutioncontexts--;
 	}
-	
+     
 	// MW-2007-08-09: [[ Bug 5705 ]] Throws inside private functions don't trigger an
 	//   exception.
 	if (stat != ES_NORMAL && stat != ES_PASS && stat != ES_EXIT_HANDLER)
@@ -909,8 +911,32 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 	}
 
 	MCresult->eval(ep);
-
+    
 	return ES_NORMAL;
+}
+#endif
+
+void MCFuncref::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+    MCKeywordsExecCommandOrFunction(ctxt, resolved, handler, params, name, line, pos, platform_message, true);
+    
+    Exec_stat stat = ctxt . GetExecStat();
+    
+   	// MW-2007-08-09: [[ Bug 5705 ]] Throws inside private functions don't trigger an
+	//   exception.
+	if (stat != ES_NORMAL && stat != ES_PASS && stat != ES_EXIT_HANDLER)
+	{
+		ctxt . LegacyThrow(EE_FUNCTION_BADFUNCTION, name);
+		return;
+	}
+
+	if (MCresult->eval(ctxt, r_value . valueref_value))
+	{
+        r_value . type = kMCExecValueTypeValueRef;
+		return;
+    }
+    
+    ctxt . Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
