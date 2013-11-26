@@ -995,31 +995,31 @@ template<typename C, typename A, void (C::*Method)(MCExecContext&, A)> inline vo
 #define MCPropertyNativeControlThunkSetSetType(ctrl, mth, typ) MCPropertyNativeControlThunkImp(ctrl, mth, typ)
 
 #define DEFINE_RW_CTRL_PROPERTY(prop, type, ctrl, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyNativeControlThunkGet##type(ctrl, Get##tag), (void *)MCPropertyNativeControlThunkSet##type(ctrl, Set##tag), false, false, kMCPropertyInfoChunkTypeNone, false },
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyNativeControlThunkGet##type(ctrl, Get##tag), (void *)MCPropertyNativeControlThunkSet##type(ctrl, Set##tag), false, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RO_CTRL_PROPERTY(prop, type, ctrl, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyNativeControlThunkGet##type(ctrl, Get##tag), nil, false, false, kMCPropertyInfoChunkTypeNone, false },
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyNativeControlThunkGet##type(ctrl, Get##tag), nil, false, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RW_CTRL_CUSTOM_PROPERTY(prop, type, ctrl, tag) \
-{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetCustomType(ctrl, Get##tag, MC##type), (void *)MCPropertyNativeControlThunkSetCustomType(ctrl, Set##tag, MC##type), false, false, kMCPropertyInfoChunkTypeNone, false },
+{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetCustomType(ctrl, Get##tag, MC##type), (void *)MCPropertyNativeControlThunkSetCustomType(ctrl, Set##tag, MC##type), false, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RO_CTRL_CUSTOM_PROPERTY(prop, type, ctrl, tag) \
-{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetCustomType(ctrl, Get##tag, MC##type), nil, false, false, kMCPropertyInfoChunkTypeNone, false },
+{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetCustomType(ctrl, Get##tag, MC##type), nil, false, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RO_CTRL_ENUM_PROPERTY(prop, type, ctrl, tag) \
-{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetEnumType(ctrl, Get##tag, MC##type), nil, false, false, kMCPropertyInfoChunkTypeNone, false },
+{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetEnumType(ctrl, Get##tag, MC##type), nil, false, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RW_CTRL_ENUM_PROPERTY(prop, type, ctrl, tag) \
-{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetEnumType(ctrl, Get##tag, MC##type), (void *)MCPropertyNativeControlThunkSetEnumType(ctrl, Set##tag, MC##type), false, false, kMCPropertyInfoChunkTypeNone, false },
+{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetEnumType(ctrl, Get##tag, MC##type), (void *)MCPropertyNativeControlThunkSetEnumType(ctrl, Set##tag, MC##type), false, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_UNAVAILABLE_CTRL_PROPERTY(prop) \
-{ prop, false, kMCPropertyTypeAny, nil, nil, nil, false, false, kMCPropertyInfoChunkTypeNone, false },
+{ prop, false, kMCPropertyTypeAny, nil, nil, nil, false, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RW_CTRL_SET_PROPERTY(prop, type, ctrl, tag) \
-{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetSetType(ctrl, Get##tag, MC##type), (void *)MCPropertyNativeControlThunkSetSetType(ctrl, Set##tag, MC##type), false, false, kMCPropertyInfoChunkTypeNone, false },
+{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetSetType(ctrl, Get##tag, MC##type), (void *)MCPropertyNativeControlThunkSetSetType(ctrl, Set##tag, MC##type), false, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RO_CTRL_SET_PROPERTY(prop, type, ctrl, tag) \
-{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetSetType(ctrl, Get##tag, MC##type), nil, false, false, kMCPropertyInfoChunkTypeNone, false },
+{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetSetType(ctrl, Get##tag, MC##type), nil, false, false, kMCPropertyInfoChunkTypeNone },
 
 ////////////////////////////////////////////////////////////////////////////////
 
