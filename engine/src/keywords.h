@@ -23,16 +23,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "statemnt.h"
 
 class MCScriptPoint;
-class MCExecPoint;
 class MCExpression;
 
 class MCGlobal : public MCStatement
 {
 public:
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &)
-	{
-		return ES_NORMAL;
+    virtual void exec_ctxt(MCExecContext &ctxt)
+    {
 	}
 	virtual uint4 linecount()
 	{
@@ -46,9 +44,8 @@ protected:
 	Boolean constant;
 public:
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &)
-	{
-		return ES_NORMAL;
+    virtual void exec_ctxt(MCExecContext &ctxt)
+    {
 	}
 	virtual uint4 linecount()
 	{

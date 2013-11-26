@@ -3435,6 +3435,7 @@ bool MCParagraph::getflagstate(uint32_t flag, findex_t si, findex_t ei, bool& r_
 // This method accumulates the ranges of the paragraph that have 'flagged' set
 // to true. The output is placed in ep as a return-delimited list, with indices
 // adjusted by the 'delta'.
+#ifdef LEGACY_EXEC
 void MCParagraph::getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, findex_t si, findex_t ei, int32_t p_delta)
 {
 	// If the paragraph is empty, there is nothing to do.
@@ -3502,6 +3503,7 @@ void MCParagraph::getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, findex_t
 		bptr -> GetRange(i, l);
 	}
 }
+#endif
 
 // This method accumulates the ranges of the paragraph that have 'flagged' set
 // to true. The output is placed in the uinteger_t array, with indices
