@@ -1637,7 +1637,7 @@ void MCIdeScriptStrip::exec_ctxt(MCExecContext& ctxt)
     t_success = eval_target_range(ctxt, f_start, f_end, f_target, t_start, t_end, t_target);
 
     if (t_success)
-        t_success = MCIdeState::Find(t_target);
+        t_state = MCIdeState::Find(t_target);
 
     if (t_success && t_target -> getparagraphs() != NULL)
         TokenizeField(t_target, t_state, f_type, t_start, t_end, strip_paragraph, false);

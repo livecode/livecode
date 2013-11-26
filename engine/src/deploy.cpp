@@ -853,7 +853,7 @@ Exec_stat MCIdeDmgBuild::exec(MCExecPoint& ep)
 			if (t_stat == ES_NORMAL)
 			{
 				MCAutoStringRef t_type;
-				if (ctxt.CopyElementAsString(*t_item_array, false, MCNAME("type"), &t_type))
+				if (ctxt.CopyElementAsString(*t_item_array, MCNAME("type"), false, &t_type))
 				{
 					if (MCStringIsEqualToCString(*t_type, "folder", kMCCompareCaseless))
 						t_items[i].is_folder = true;

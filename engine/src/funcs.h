@@ -127,7 +127,7 @@ public:
 
         EvalFunction(ctxt, t_param, t_result);
 
-        MCExecValueTraits<ParamType>::free(t_param);
+        MCExecValueTraits<ParamType>::release(t_param);
 
         if (!ctxt . HasError())
             MCExecValueTraits<ReturnType>::set(r_value, t_result);

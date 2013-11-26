@@ -6370,6 +6370,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\exec-keywords.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\exec-legacy.cpp"
 				>
 			</File>
