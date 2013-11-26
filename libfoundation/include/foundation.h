@@ -536,6 +536,9 @@ typedef struct __MCList *MCListRef;
 typedef struct __MCSet *MCSetRef;
 typedef struct __MCStream *MCStreamRef;
 
+// Forward declaration
+typedef struct __MCLocale* MCLocaleRef;
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1462,6 +1465,12 @@ bool MCStringMapCodepointIndices(MCStringRef, MCRange p_codepoint_range, MCRange
 // Maps from a code unit (StringRef) range to a codepoint (character) range
 bool MCStringUnmapCodepointIndices(MCStringRef, MCRange p_string_range, MCRange &r_codepoint_range);
 
+// Maps from a grapheme (visual character) range to a code unit (StringRef) range
+bool MCStringMapGraphemeIndices(MCStringRef, MCLocaleRef, MCRange p_grapheme_range, MCRange& r_string_range);
+
+// Maps from a code unit (StringRef) range to a grapheme (visual character) range
+bool MCStringUnmapGraphemeIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange& r_grapheme_range);
+
 
 /////////
 
@@ -1586,9 +1595,6 @@ bool MCStringDivideAtIndex(MCStringRef self, uindex_t p_offset, MCStringRef& r_h
 bool MCStringBreakIntoChunks(MCStringRef string, codepoint_t separator, MCStringOptions options, MCRange*& r_ranges, uindex_t& r_range_count);
 
 //////////
-
-// Forward declaration
-typedef struct __MCLocale* MCLocaleRef;
 
 // Transform the string to its folded form as specified by 'options'. The folded
 // form of a string is that which is used to perform comparisons.

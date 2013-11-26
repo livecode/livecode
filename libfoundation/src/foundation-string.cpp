@@ -887,6 +887,112 @@ bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange
     return true;
 }
 
+bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
+{
+    MCAssert(self != nil);
+    MCAssert(p_locale != nil);
+    
+    // Create a grapheme break iterator
+    MCBreakIteratorRef t_iter;
+    if (!MCLocaleBreakIteratorCreate(p_locale, kMCBreakIteratorTypeCharacter, t_iter))
+        return false;
+    
+    // Set the iterator's text
+    if (!MCLocaleBreakIteratorSetText(t_iter, self))
+    {
+        MCLocaleBreakIteratorRelease(t_iter);
+        return false;
+    }
+    
+    // Move through the string until the indices have been resolved
+    uindex_t t_counter = 0;
+    MCRange t_units = MCRangeMake(0, 0);
+    bool t_done = false;
+    uindex_t t_boundary = 0;
+    while (!t_done)
+    {
+        // Have we found the start of the requested grapheme range?
+        if (t_counter == p_in_range.offset)
+            t_units.offset = t_boundary;
+        
+        // Find the next boundary
+        t_boundary = MCLocaleBreakIteratorAdvance(t_iter);
+        if (t_boundary == 0)
+        {
+            // Something went wrong
+            MCLocaleBreakIteratorRelease(t_iter);
+            return false;
+        }
+        
+        // Have we found the end of the requested grapheme range?
+        if (t_counter == p_in_range.offset + p_in_range.length)
+        {
+            t_units.length = t_boundary;
+            t_done = true;
+        }
+        
+        t_counter++;
+    }
+    
+    // All done
+    MCLocaleBreakIteratorRelease(t_iter);
+    r_out_range = t_units;
+    return true;
+}
+
+bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
+{
+    MCAssert(self != nil);
+    MCAssert(p_locale != nil);
+    
+    // Check that the input range is valid
+    if (p_in_range.offset + p_in_range.length > self -> char_count)
+        return false;
+    
+    // Create a grapheme break iterator
+    MCBreakIteratorRef t_iter;
+    if (!MCLocaleBreakIteratorCreate(p_locale, kMCBreakIteratorTypeCharacter, t_iter))
+        return false;
+    
+    // Set the iterator's text
+    if (!MCLocaleBreakIteratorSetText(t_iter, self))
+    {
+        MCLocaleBreakIteratorRelease(t_iter);
+        return false;
+    }
+    
+    // Move through the string until the indices have been resolved
+    MCRange t_graphemes = MCRangeMake(0, 0);
+    bool t_done = false;
+    uindex_t t_boundaries, t_units;
+    t_boundaries = 0;
+    t_units = 0;
+    while (!t_done)
+    {
+        // Have we found the start of the requested code unit range?
+        if (t_units == p_in_range.offset)
+            t_graphemes.offset = t_boundaries;
+        
+        // Have we found the end of the requested code unit range?
+        if (t_units == p_in_range.offset + p_in_range.length)
+        {
+            t_graphemes.length = t_units - t_graphemes.offset;
+            t_done = true;
+        }
+        
+        // If this is a boundary, increment the boundary counter
+        if (MCLocaleBreakIteratorIsBoundary(t_iter, t_units))
+            t_boundaries++;
+        
+        t_units++;
+    }
+    
+    // All done
+    MCLocaleBreakIteratorRelease(t_iter);
+    r_out_range = t_graphemes;
+    return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool p_is_external_rep, byte_t*& r_bytes, uindex_t& r_byte_count)

@@ -376,7 +376,7 @@ void    MCLocaleBreakIteratorRelease(MCBreakIteratorRef);
 // Sets the text associated with a break iterator
 bool    MCLocaleBreakIteratorSetText(MCBreakIteratorRef, MCStringRef);
 
-// Returns the index of the next break point
+// Returns the index of the next break point or zero if not possible
 uindex_t MCLocaleBreakIteratorAdvance(MCBreakIteratorRef);
 
 // Returns whether the given index into the iterator's text is a boundary
