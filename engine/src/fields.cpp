@@ -1830,6 +1830,8 @@ void MCField::hilitedlines(vector_t<uint32_t> &r_lines)
 {
     if (r_lines.elements != nil)
         delete r_lines.elements;
+    if (r_lines.count != 0)
+        r_lines.count = 0;;
 	if (!opened || !(flags & F_LIST_BEHAVIOR))
 		return;
 	uinteger_t line = 0;
