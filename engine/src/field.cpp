@@ -1038,7 +1038,7 @@ Boolean MCField::mdown(uint2 which)
 				unselect(True, True);
 			else
 				if (flags & F_LIST_BEHAVIOR)
-					sethilitedlines(MCnullmcstring);
+					sethilitedlines(NULL, 0);
 			start(True);
 			break;
 		case T_HELP:

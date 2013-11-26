@@ -542,7 +542,8 @@ void MCStack::mode_load(void)
 		MClockmessages--;
 
 		bool t_treat_as_ide;
-		if (MCU_stob(t_value . stringref_value, t_treat_as_ide) && t_treat_as_ide)
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value . type + 1, kMCExecValueTypeBool, &t_treat_as_ide);
+		if (t_treat_as_ide)
 			setextendedstate(true, ECS_IDE);
 	}
 }

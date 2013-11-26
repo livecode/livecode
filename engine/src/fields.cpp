@@ -1779,7 +1779,7 @@ Exec_stat MCField::seltext(findex_t si, findex_t ei, Boolean focus, Boolean upda
 	drect.width = frect.width;
 	if (flags & F_LIST_BEHAVIOR)
 	{
-		sethilitedlines(MCnullmcstring);
+		sethilitedlines(NULL, 0);
 		drect = rect;
 	}
 	uint2 l;
@@ -1826,30 +1826,31 @@ uint2 MCField::hilitedline()
 	return line;
 }
 
-void MCField::hilitedlines(MCStringRef& r_string)
+void MCField::hilitedlines(vector_t<uint32_t> &r_lines)
 {
-    if (r_string != nil)
-        MCValueRelease(r_string);
+    if (r_lines.elements != nil)
+        delete r_lines.elements;
 	if (!opened || !(flags & F_LIST_BEHAVIOR))
 		return;
-	integer_t line = 0;
-    MCAutoListRef t_list;
-   /* UNCHECKED */ MCListCreateMutable(',', &t_list);
+	uinteger_t line = 0;
+    MCAutoArray<uint32_t> t_lines;
+
 	MCParagraph *pgptr = paragraphs;
 	do
 	{
 		line++;
 		if (pgptr->gethilite())
 		{
-            /* UNCHECKED */ MCListAppendInteger(*t_list, line);
+            /* UNCHECKED */ t_lines . Push(line);
 		}
 		pgptr = pgptr->next();
 	}
 	while (pgptr != paragraphs);
     
-    MCListCopyAsString(*t_list, r_string);
+    t_lines . Take(r_lines . elements, r_lines . count);
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCField::sethilitedlines(const MCString &s, Boolean forcescroll)
 {
 	Exec_stat t_status = ES_NORMAL;
@@ -1880,6 +1881,7 @@ Exec_stat MCField::sethilitedlines(const MCString &s, Boolean forcescroll)
 	}
 	return t_status;
 }
+#endif
 
 Exec_stat MCField::sethilitedlines(const uint32_t *p_lines, uint32_t p_line_count, Boolean forcescroll)
 {

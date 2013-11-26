@@ -430,6 +430,8 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 {
 	bool t_soft_error;
 	t_soft_error = false;
+    bool t_has_error;
+    t_has_error = false;
     
     // Clear the result as we return an error there
 	MCresult -> clear();
@@ -443,11 +445,11 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 	
 	// If platform is iOS and we are not Mac then error
 #ifndef _MACOSX
-	if (m_platform == PLATFORM_IOS || m_platform == PLATFORM_IOS_EMBEDDED)
+	if (!t_error && (m_platform == PLATFORM_IOS || m_platform == PLATFORM_IOS_EMBEDDED))
 	{
 		MCresult -> sets("ios deployment not supported on this platform");
 		t_soft_error = true;
-		ctxt . Throw();
+        t_error = true;
 	}
 #endif
 
@@ -473,10 +475,10 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 	{
 		MCresult -> sets("not licensed to deploy to target platform");
 		t_soft_error = true;
-		ctxt . Throw();
+		t_has_error = true;
 	}
 
-	if (!ctxt . HasError())
+	if (!t_has_error)
 	{
 		if (m_platform == PLATFORM_WINDOWS)
 			MCDeployToWindows(t_params);
@@ -498,6 +500,10 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 		else
 			MCresult -> clear();
 	}
+    
+    if (!t_has_error && t_soft_error)
+        ctxt . Throw();
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -925,10 +931,10 @@ void MCIdeExtract::exec_ctxt(MCExecContext& ctxt)
 	{
         MCAutoStringRef t_string;
         /* UNCHECKED */ MCStringCreateWithCString((char *)t_data, &t_string);
-		ctxt . GetEP() . getit() -> set(ctxt, *t_string);
+        ctxt . SetItToValue(*t_string);
 	}
 	else
-		ctxt . GetEP() . getit() -> clear();
+		ctxt . SetItToEmpty();
 	
 	return ES_NORMAL;
 }

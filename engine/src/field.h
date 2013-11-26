@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define	FIELD_H
 
 #include "control.h"
+#include "exec.h"
 
 #define SCROLL_RATE 100
 #define MAX_PASTE_MESSAGES 32
@@ -420,9 +421,11 @@ public:
     
 	Exec_stat seltext(findex_t si, findex_t ei, Boolean focus, Boolean update = False);
 	uint2 hilitedline();
-	void hilitedlines(MCStringRef& r_string);
+	void hilitedlines(vector_t<uint32_t> &r_lines);
 	Exec_stat sethilitedlines(const uint32_t *p_lines, uint32_t p_line_count, Boolean forcescroll = True);
+#ifdef LEGACY_EXEC
 	Exec_stat sethilitedlines(const MCString &,Boolean forcescroll = True);
+#endif
 	void hiliteline(int2 x, int2 y);
 
 	bool locchar(Boolean click, MCStringRef& r_string);
