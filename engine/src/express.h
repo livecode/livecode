@@ -58,11 +58,13 @@ public:
 	
 	// Evaluate the expression as a container, and place the reference to
 	// the container's value in r_ref.
+#ifdef LEGACY_EXEC
 	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
 
 	// Return the variable to which this expression refers in the context of
 	// ep, or NULL if it is not just a variable expression.
 	virtual MCVariable *evalvar(MCExecPoint& ep);
+#endif
 
     // EP-less version of evaluation functions
     virtual bool evalcontainer(MCExecContext& ctxt, MCContainer*& r_container);

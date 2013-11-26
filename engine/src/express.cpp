@@ -60,20 +60,24 @@ MCVarref *MCExpression::getrootvarref(void)
 	return NULL;
 }
 
+#ifdef LEGACY_EXEC
 MCVariable *MCExpression::evalvar(MCExecPoint& ep)
 {
 	return NULL;
 }
+#endif
 
 MCVariable *MCExpression::evalvar(MCExecContext& ctxt)
 {
     return NULL;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCExpression::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
 {
 	return ES_ERROR;
 }
+#endif
 
 bool MCExpression::evalcontainer(MCExecContext& ctxt, MCContainer*& r_container)
 {

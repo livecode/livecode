@@ -77,6 +77,7 @@ void MCParameter::clear_argument(void)
 
 ////////
 
+#ifdef LEGACY_EXEC
 MCVariable *MCParameter::evalvar(MCExecPoint& ep)
 {
 	if (exp == NULL)
@@ -84,6 +85,7 @@ MCVariable *MCParameter::evalvar(MCExecPoint& ep)
 
     return exp -> evalvar(ep);
 }
+#endif
 
 MCVariable *MCParameter::evalvar(MCExecContext &ctxt)
 {
@@ -119,6 +121,7 @@ bool MCParameter::eval(MCExecContext &ctxt, MCValueRef &r_value)
     }
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCParameter::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
 {
 	if (exp == NULL)
@@ -126,6 +129,7 @@ Exec_stat MCParameter::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
 
 	return exp -> evalcontainer(ep, r_container);
 }
+#endif
 
 bool MCParameter::evalcontainer(MCExecContext &ctxt, MCContainer *&r_container)
 {

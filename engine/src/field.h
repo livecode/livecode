@@ -490,8 +490,10 @@ public:
 #endif
 	void setstyledtext(uint32_t part_id, MCArrayRef p_text);
 	Exec_stat setpartialtext(uint4 parid, const MCString &data, bool unicode);
+#ifdef LEGACY_EXEC
 	Exec_stat gethtml(uint4 parid, MCExecPoint &ep);
 	Exec_stat getparagraphhtml(MCExecPoint &ep, MCParagraph *start, MCParagraph *end);
+#endif
 
 #ifdef _MACOSX
 	Exec_stat getparagraphmacstyles(MCExecPoint &ep, MCParagraph *start, MCParagraph *end, Boolean isunicode);

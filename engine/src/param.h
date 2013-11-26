@@ -77,8 +77,10 @@ public:
 	// Evaluate the value of the given parameter in the context of
 	// <ep>.
 	Exec_stat eval(MCExecPoint& ep);
+#ifdef LEGACY_EXEC
 	Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
 	MCVariable *evalvar(MCExecPoint& ep);
+#endif
 
     bool eval(MCExecContext& ctxt, MCValueRef &r_value);
     bool evalcontainer(MCExecContext& ctxt, MCContainer*& r_container);
