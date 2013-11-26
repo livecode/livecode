@@ -1402,6 +1402,7 @@ void MCStack::mode_destroy(void)
 {
 }
 
+
 Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;

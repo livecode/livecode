@@ -228,7 +228,7 @@ bool MCU_getnumberformat(uint2 fw, uint2 trail, uint2 force, MCStringRef& r_stri
 	return false;
 }
 
-
+#ifdef LEGACY_EXEC
 void MCU_getnumberformat(MCExecPoint &ep, uint2 fw, uint2 trail, uint2 force)
 {
 #ifdef OLD_EXEC
@@ -257,6 +257,7 @@ void MCU_getnumberformat(MCExecPoint &ep, uint2 fw, uint2 trail, uint2 force)
 		ep . clear();
 #endif
 }
+#endif
 
 
 void MCU_setnumberformat(MCStringRef d, uint2 &fw,
@@ -988,6 +989,7 @@ Boolean MCU_offset(const MCString &part, const MCString &whole,
 	return False;
 }
 
+#ifdef LEGACY_EXEC
 void MCU_chunk_offset(MCExecPoint &ep, MCString &w,
                       Boolean whole, Chunk_term delimiter)
 {
@@ -1094,6 +1096,7 @@ void MCU_chunk_offset(MCExecPoint &ep, MCString &w,
 	}
 	ep.setnvalue(count);
 }
+#endif
 
 void MCU_additem(char *&dptr, const char *sptr, Boolean first)
 {
@@ -1439,6 +1442,7 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 	points[i] = points[0];
 }
 
+#ifdef LEGACY_EXEC
 void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &ep)
 {
 	uint2 i;
@@ -1456,7 +1460,7 @@ void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &ep)
 			ep.concatcstring(MCnullstring, EC_RETURN, i == 0);
 	}
 }
-
+#endif
 
 Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data)
 {
@@ -1978,6 +1982,7 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 	ctxt . GetObject()->message_with_valueref_args(MCM_new_tool, *t_tool_name);
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool, uint2 line, uint2 pos)
 {
 	Tool t_new_tool;
@@ -2033,6 +2038,7 @@ Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool, uint2 line, uint2 pos)
 	ep.getobj()->message_with_valueref_args(MCM_new_tool, ep.getvalueref());
 	return ES_NORMAL;
 }
+#endif
 
 Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef mess, MCParameter *params)
 {
@@ -2286,6 +2292,7 @@ void MCU_cleaninserted()
 		;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCU_change_color(MCColor &c, MCStringRef &n, MCExecPoint &ep,
                            uint2 line, uint2 pos)
 {
@@ -2311,11 +2318,14 @@ Exec_stat MCU_change_color(MCColor &c, MCStringRef &n, MCExecPoint &ep,
 		n = nil;
 	return ES_NORMAL;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 void MCU_get_color(MCExecPoint& ep, MCStringRef name, MCColor& c)
 {
 	ep.setcolor(c, name != nil ? MCStringGetCString(name) : nil);
 }
+#endif
 
 void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
                 real8 tn, real8 oldn, MCSortnode *titems)

@@ -447,6 +447,7 @@ void MCStack::mode_destroy(void)
 	delete m_mode_data;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 #ifdef /* MCStack::mode_getprop */ LEGACY_EXEC
@@ -494,7 +495,10 @@ Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, 
 #endif /* MCStack::mode_getprop */
     return ES_ERROR;
 }
+#endif
 
+
+#ifdef LEGACY_EXEC
 Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef cprop, MCStringRef carray, Boolean effective)
 {
 #ifdef /* MCStack::mode_setprop */ LEGACY_EXEC
@@ -519,6 +523,7 @@ Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, 
 #endif /* MCStack::mode_setprop */
     return ES_ERROR;
 }
+#endif
 
 void MCStack::mode_load(void)
 {
@@ -700,6 +705,7 @@ static bool enumerate_handlers_for_list(MCObjectList *p_list, MCObject *p_ignore
 //
 //  Implementation of MCObject::getmodeprop for DEVELOPMENT mode.
 //
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 #ifdef /* MCObject::mode_getprop */ LEGACY_EXEC
@@ -838,12 +844,14 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 #endif /* MCObject::mode_getprop */
     return ES_ERROR;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of MCProperty::mode_eval/mode_set for DEVELOPMENT mode.
 //
 
+#ifdef LEGACY_EXEC
 Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 {
 #ifdef /* MCProperty::mode_set */ LEGACY_EXEC
@@ -991,7 +999,10 @@ Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 #endif /* MCProperty::mode_set */
     return ES_ERROR;
 }
+#endif
 
+
+#ifdef LEGACY_EXEC
 Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 {
 #ifdef /* MCProperty::mode_eval */ LEGACY_EXEC
@@ -1106,6 +1117,7 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 #endif /* MCProperty::mode_eval */
     return ES_ERROR;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //

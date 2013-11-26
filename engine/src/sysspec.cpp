@@ -1216,10 +1216,7 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
     
     // Need to convert the string to a binary string
     MCAutoDataRef t_data;
-    MCExecPoint ep(nil, nil, nil);
-    /* UNCHECKED */ ep . setvalueref(p_string);
-    ep . binarytotext();
-    /* UNCHECKED */ ep . copyasdataref(&t_data);
+    /* UNCHECKED */ MCStringEncode(p_string, kMCStringEncodingNative, false, &t_data);
     
 	if (!t_file -> Write(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data)))
 		MCresult -> sets("error writing file");

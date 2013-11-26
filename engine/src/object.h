@@ -618,8 +618,10 @@ public:
 	// New method for returning the various 'names' of an object. This should really
 	// return an 'MCValueRef' at some point, but as it stands that causes issues.
 	bool names(Properties which, MCValueRef& r_name);
+#ifdef LEGACY_EXEC
 	// Wrapper for 'names()' working in the old way (for convenience).
 	Exec_stat names_old(Properties which, MCExecPoint& ep, uint32_t parid);
+#endif
 
 	Boolean parsescript(Boolean report, Boolean force = False);
 	void drawshadow(MCDC *dc, const MCRectangle &drect, int2 soffset);
@@ -1147,8 +1149,10 @@ private:
 
 	// MW-2013-03-06: [[ Bug 10695 ]] New method used by resolveimage* - if name is nil, then id search.
 	MCImage *resolveimage(MCStringRef name, uint4 image_id);
-	
+
+#ifdef LEGACY_EXEC
 	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, MCStringRef carray, Boolean effective);
+#endif
 
 	// MW-2012-02-14: [[ FontRefs ]] Called by open/close to map/unmap the concrete font.
 	// MW-2013-08-23: [[ MeasureText ]] Made private as external uses of them can be

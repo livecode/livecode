@@ -2089,6 +2089,7 @@ void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)
 	MCmessagemessages = True;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::names_old(Properties which, MCExecPoint& ep, uint32_t parid)
 {
 	MCAutoValueRef t_name;
@@ -2098,6 +2099,7 @@ Exec_stat MCObject::names_old(Properties which, MCExecPoint& ep, uint32_t parid)
 	/* CHECK MCERROR */
 	return ES_ERROR;
 }
+#endif
 
 bool MCObject::names(Properties which, MCValueRef& r_name_val)
 {

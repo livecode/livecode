@@ -50,7 +50,10 @@ public:
 	//virtual Exec_stat eval(MCExecPoint &);
     virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     virtual void set(MCExecContext& ctxt, MCExecValue p_value);
+#ifdef LEGACY_EXEC
 	MCObject *getobj(MCExecPoint &ep);
+#endif
+    MCObject *getobj(MCExecContext &ctxt);
     
     const MCPropertyTable *getmodepropertytable(void) const { return &kModePropertyTable; }
 
@@ -83,8 +86,9 @@ private:
 
     static MCPropertyInfo kModeProperties[];
 	static MCPropertyTable kModePropertyTable;
-    
+#ifdef LEGACY_EXEC
     Exec_stat mode_set(MCExecPoint& ep);
 	Exec_stat mode_eval(MCExecPoint& ep);
+#endif
 };
 #endif

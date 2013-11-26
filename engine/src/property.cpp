@@ -397,6 +397,23 @@ MCProperty::~MCProperty()
 	MCNameDelete(customprop);
 }
 
+MCObject *MCProperty::getobj(MCExecContext &ctxt)
+{
+	MCObject *objptr = NULL;
+	MCChunk *tchunk = new MCChunk(False);
+	MCerrorlock++;
+	MCScriptPoint sp(ctxt);
+	if (tchunk->parse(sp, False) == PS_NORMAL)
+	{
+		uint4 parid;
+		tchunk->getobj(ctxt, objptr, parid, True);
+	}
+	MCerrorlock--;
+	delete tchunk;
+	return objptr;
+}
+
+#ifdef LEGACY_EXEC
 MCObject *MCProperty::getobj(MCExecPoint &ep)
 {
 	MCObject *objptr = NULL;
@@ -412,6 +429,7 @@ MCObject *MCProperty::getobj(MCExecPoint &ep)
 	delete tchunk;
 	return objptr;
 }
+#endif
 
 Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 {
