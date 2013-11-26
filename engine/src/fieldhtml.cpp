@@ -1470,16 +1470,17 @@ static void import_html_append_utf8_chars(import_html_t& ctxt, const char *p_cha
 		// Append the UTF8 chars as unicode (if any).
 		if (t_next_ptr - p_chars > 0)
 		{
-			// Convert UTF8 to UTF16.
-			MCExecPoint ep;
-			ep . setsvalue(MCString(p_chars, t_next_ptr - p_chars));
-			ep . utf8toutf16();
+            // Convert UTF8 to UTF16.
+            MCAutoStringRef t_utf8_string;
+            MCAutoDataRef t_utf16_data;
+            /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)p_chars,  t_next_ptr - p_chars, &t_utf8_string);
+            /* UNCHECKED */ MCStringEncode(*t_utf8_string, kMCStringEncodingUTF16, false, &t_utf16_data);
 			
 			// Append the chars one by one.
 			const uint16_t *t_unicode_chars;
 			uint32_t t_unicode_char_count;
-			t_unicode_chars = (const uint16_t *)ep . getsvalue() . getstring();
-			t_unicode_char_count = ep . getsvalue() . getlength() / 2;
+			t_unicode_chars = (const uint16_t *)MCDataGetBytePtr(*t_utf16_data);
+			t_unicode_char_count = MCDataGetLength(*t_utf16_data) / 2;
 			for(uindex_t i = 0; i < t_unicode_char_count; i++)
 				import_html_append_unicode_char(ctxt, t_unicode_chars[i]);
 		}
