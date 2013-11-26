@@ -189,7 +189,7 @@ public:
 	
 	virtual ~MCRevRelicense();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 };
 
 static MCStringRef s_command_path = nil;
@@ -224,7 +224,7 @@ Parse_stat MCRevRelicense::parse(MCScriptPoint& sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
+void MCRevRelicense::exec_ctxt(MCExecContext& ctxt)
 {
 	switch(MCdefaultstackptr -> getcard() -> message(MCM_shut_down_request))
 	{

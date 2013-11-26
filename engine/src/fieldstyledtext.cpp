@@ -352,6 +352,7 @@ static bool export_styled_text(void *p_context, MCFieldExportEventType p_event_t
 // block. If the block has no non-default styles then the style key is not
 // present.
 //
+#ifdef LEGACY_EXEC
 void MCField::exportasstyledtext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective)
 {
 	MCAutoArrayRef t_array;
@@ -361,6 +362,7 @@ void MCField::exportasstyledtext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_
 	else
 		ep . clear();
 }
+#endif
 
 bool MCField::exportasstyledtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective, MCArrayRef &r_array)
 {
@@ -406,6 +408,7 @@ bool MCField::exportasstyledtext(uint32_t p_part_id, int32_t p_start_index, int3
 //			else if tEntry is an array then
 //				append tEntry["text"] with style tEntry["style"]
 //
+#ifdef LEGACY_EXEC
 MCParagraph *MCField::styledtexttoparagraphs(MCExecPoint& ep)
 {	
 	// Get the array itself, and if it is not a sequence, do nothing.
@@ -416,6 +419,7 @@ MCParagraph *MCField::styledtexttoparagraphs(MCExecPoint& ep)
 	else
 		return styledtexttoparagraphs(*t_array);
 }
+#endif
 
 MCParagraph *MCField::styledtexttoparagraphs(MCArrayRef p_array)
 {	
