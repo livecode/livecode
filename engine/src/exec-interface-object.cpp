@@ -3971,8 +3971,8 @@ void MCObject::GetCardIds(MCExecContext& ctxt, MCCard *p_cards, bool p_all, uint
                 uint32_t t_id;
                 t_id = cptr -> getid();
                 t_success = t_ids . Push(t_id);
-                cptr = cptr -> next();
             }
+            cptr = cptr -> next();
 		}
 		while (cptr != p_cards && t_success);
 	}
@@ -3998,8 +3998,8 @@ void MCObject::GetCardNames(MCExecContext& ctxt, MCCard *p_cards, bool p_all, ui
                 t_success = !ctxt . HasError();
                 if (t_success)
                     t_success = t_names . Push(t_name);
-                cptr = cptr -> next();
             }
+            cptr = cptr -> next();
 		}
 		while (cptr != p_cards && t_success);
 	}
