@@ -1277,6 +1277,8 @@ struct MCObjectPtr
 	uint32_t part_id;
 };
 
+// NOTE: the indices in this structure are *codepoint* indices and not UTF-16
+// code unit indices. As such, they need mapping before being used on StringRefs
 struct MCMarkedText
 {
     MCStringRef text;

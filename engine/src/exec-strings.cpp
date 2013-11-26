@@ -293,7 +293,12 @@ void MCStringsEvalByteToNum(MCExecContext& ctxt, MCStringRef p_byte, integer_t& 
 
 void MCStringsEvalLength(MCExecContext& ctxt, MCStringRef p_string, integer_t& r_length)
 {
-	r_length = MCStringGetLength(p_string);
+	// Ensure that the returned length is in codepoints
+    MCRange t_cp_range, t_cu_range;
+    t_cu_range = MCRangeMake(0, MCStringGetLength(p_string));
+    /* UNCHECKED */ MCStringUnmapCodepointIndices(p_string, t_cu_range, t_cp_range);
+    
+    r_length = t_cp_range.length;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

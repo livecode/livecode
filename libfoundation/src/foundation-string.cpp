@@ -829,7 +829,7 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
     {
         // Is this a single code unit or a valid surrogate pair?
         uindex_t t_length;
-        if (__MCStringIsValidSurrogatePair(self, t_counter))
+        if (__MCStringIsValidSurrogatePair(self, t_units.offset + t_units.length))
             t_length = 2;
         else
             t_length = 1;
@@ -841,10 +841,16 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
             t_units.length += t_length;
         
         // Make sure we haven't exceeded the length of the string
-        if (t_units.offset >= self -> char_count)
-            return false;
-        if (t_units.length >= self -> char_count)
-            return false;
+        if (t_units.offset > self -> char_count)
+        {
+            t_units = MCRangeMake(self -> char_count, 0);
+            break;
+        }
+        if ((t_units.offset + t_units.length) > self -> char_count)
+        {
+            t_units.length = self -> char_count - t_units.offset;
+            break;
+        }
         
         t_counter++;
     }
@@ -883,7 +889,7 @@ bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange
     }
     
     // All done
-    r_out_range = p_in_range;
+    r_out_range = t_codepoints;
     return true;
 }
 
@@ -2594,7 +2600,7 @@ static bool __MCStringIsValidSurrogatePair(MCStringRef self, uindex_t p_index)
     if (t_char < 0xD800 || t_char > 0xDBFF)
         return false;
     
-    // Check for a valid trailing surrogate
+    // Check for a valid trailFing surrogate
     t_char = self -> chars[p_index + 1];
     if (t_char < 0xDC00 || t_char > 0xDFFF)
         return false;
