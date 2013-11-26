@@ -2819,27 +2819,137 @@ bool MCField::recomputefonts(MCFontRef p_parent_font)
 	return t_changed;
 }
 
+
 // MW-2012-02-23: [[ FieldChars ]] Count the number of characters between si and
 //   ei in the paragraphs corresponding to part_id.
 findex_t MCField::countchars(uint32_t p_part_id, findex_t si, findex_t ei)
 {
-	// Now that character offsets are being used, this is trivial...
-	return ei-si;
+	// Get the first paragraph for this instance of the field
+    MCParagraph *t_pg;
+    t_pg = resolveparagraphs(p_part_id);
+    
+    // Loop through the paragraphs until we've gone si code units in
+    while (t_pg->gettextlength() < si)
+    {
+        // Move on to the next paragraph
+        si -= t_pg->gettextlength();
+        ei -= t_pg->gettextlength();
+        t_pg = t_pg->next();
+    }
+    
+    // Loop until we reach the end index, counting codepoints as we go
+    uindex_t t_count;
+    t_count = 0;
+    while (t_pg->gettextlength() < ei)
+    {
+        // Count the number of codepoints in this paragraph. The only paragraph
+        // with a non-zero si valus is the first paragraph.
+        MCRange t_cp_range, t_cu_range;
+        t_cu_range = MCRangeMake(si, t_pg->gettextlength() - si);
+        si = 0;
+        /* UNCHECKED */ MCStringUnmapCodepointIndices(t_pg->GetInternalStringRef(), t_cu_range, t_cp_range);
+        t_count += t_cp_range.length;
+        
+        // Move on to the next paragraph
+        ei -= t_pg->gettextlength();
+        t_pg = t_pg->next();
+    }
+    
+    // Count the number of codepoints in the final paragraph
+    MCRange t_cp_range, t_cu_range;
+    t_cu_range = MCRangeMake(si, ei - si);
+    /* UNCHECKED */ MCStringUnmapCodepointIndices(t_pg->GetInternalStringRef(), t_cu_range, t_cp_range);
+    t_count += t_cp_range.length;
+    
+    // Return the number of codepoints that we encountered
+    return t_count;
 }
 
 // MW-2012-02-23: [[ FieldChars ]] Adjust field indices (si, ei) to cover the start chars
 //   in, ending count chars later.
 void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, findex_t p_start, findex_t p_count)
 {
-	x_si += p_start;
-	x_ei = x_si + p_count;
+    // Get the first paragraph for this instance of the field
+    MCParagraph *t_pg;
+    t_pg = resolveparagraphs(p_part_id);
+    
+    // Loop through the paragraphs until we've gone x_si code units in
+    uindex_t t_index = 0;
+    while ((t_index + t_pg->gettextlength()) < x_si)
+    {
+        t_index += t_pg->gettextlength();
+        t_pg = t_pg->next();
+    }
+    
+    // We now need to calculate how many codepoints into the paragraph we are
+    MCRange t_cp_range, t_cu_range;
+    t_cu_range = MCRangeMake(0, x_si - t_index);
+    /* UNCHECKED */ MCStringUnmapCodepointIndices(t_pg->GetInternalStringRef(), t_cu_range, t_cp_range);
+    
+    // Because we measure codepoints from the beginning of the paragraph,
+    // increase the number of codepoints we want to skip to account for this.
+    p_start += t_cp_range.length;
+    
+    // Loop until we get to the starting paragraph
+    MCRange t_pg_cp;
+    /* UNCHECKED */ MCStringUnmapCodepointIndices(t_pg->GetInternalStringRef(), MCRangeMake(0, t_pg->gettextlength()), t_pg_cp);
+    while (t_pg_cp.length < p_start)
+    {
+        // Move to the next paragraph
+        p_start -= t_pg_cp.length;
+        x_si += t_pg->gettextlength();
+        t_pg = t_pg->next();
+        
+        // Count the number of codepoints in the next paragraph
+        /* UNCHECKED */ MCStringUnmapCodepointIndices(t_pg->GetInternalStringRef(), MCRangeMake(0, t_pg->gettextlength()), t_pg_cp);
+    }
+    
+    // We know the codepoint offset into the paragraph and need to convert
+    // this back into a code unit offset.
+    t_cp_range = MCRangeMake(0, p_start);
+    /* UNCHECKED */ MCStringMapCodepointIndices(t_pg->GetInternalStringRef(), t_cp_range, t_cu_range);
+    x_si += t_cu_range.length;
+    
+    // Now we need to do it again but measuring ahead p_count codepoints. Again,
+    // start at the beginning of the current paragraph.
+    p_count += p_start;
+    x_ei = x_si - t_cu_range.length;
+    
+    // Loop until we get to the final paragraph
+    // Note that t_pg_cp already contains the measurement for the current pg
+    while (t_pg_cp.length < p_count)
+    {
+        // Move to the next paragraph
+        p_count -= t_pg_cp.length;
+        x_ei += t_pg->gettextlength();
+        t_pg = t_pg->next();
+        
+        // Count the number of codepoints in the next paragraph
+        /* UNCHECKED */ MCStringUnmapCodepointIndices(t_pg->GetInternalStringRef(), MCRangeMake(0, t_pg->gettextlength()), t_pg_cp);
+    }
+    
+    // We know the codepoint offset into the paragraph and need to convert this
+    // back into a code unit offset.
+    t_cp_range = MCRangeMake(0, p_count);
+    /* UNCHECKED */ MCStringMapCodepointIndices(t_pg->GetInternalStringRef(), t_cp_range, t_cu_range);
+    x_ei += t_cu_range.length;
+    
+    //x_si += p_start;
+	//x_ei = x_si + p_count;
 }
 
 // MW-2012-02-23: [[ FieldChars ]] Convert field indices (si, ei) back to char indices.
 void MCField::unresolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei)
 {
-	// Char and field indices are identical
-	return;
+	// Count the number of codepoints from the beginning of the field to the
+    // starting index, giving us x_si
+    uindex_t t_si = countchars(p_part_id, 0, x_si);
+    
+    // Count the number of codepoints from x_si to x_ei
+    uindex_t t_count = countchars(p_part_id, x_si, x_ei);
+    
+    x_si = t_si;
+    x_ei = t_count + t_si;
 }
 
 //-----------------------------------------------------------------------------
