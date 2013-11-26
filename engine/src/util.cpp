@@ -3001,6 +3001,7 @@ uint32_t MCDictionary::Checksum(const void *p_data, uint32_t p_length)
 	return (((t_b % 65521) << 16) | (t_a % 65521));
 }
 
+#ifdef LEGACY_EXEC
 bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char *p_b, bool p_b_isunicode)
 {
 	MCExecPoint *t_convert_a = new MCExecPoint();
@@ -3025,6 +3026,7 @@ bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char 
 
 	return t_compval;
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
