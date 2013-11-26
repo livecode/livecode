@@ -501,7 +501,7 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 			MCresult -> clear();
 	}
     
-    if (!t_has_error && t_soft_error)
+    if (t_has_error && !t_soft_error)
         ctxt . Throw();
     
 }
