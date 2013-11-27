@@ -434,7 +434,7 @@ static LCError LCValueArrayToObjcArray(MCVariableRef src, NSArray*& r_dst)
 	
 	uint32_t t_count;
 	t_count = 0;
-	if (t_error = kLCErrorNone)
+	if (t_error == kLCErrorNone)
 		t_count = s_interface -> variable_count_keys(src, &t_count);
 	
 	id *t_objects;
@@ -513,7 +513,7 @@ static LCError LCValueArrayToObjcDictionary(MCVariableRef src, NSDictionary*& r_
 	
 	uint32_t t_count;
 	t_count = 0;
-	if (t_error = kLCErrorNone)
+	if (t_error == kLCErrorNone)
 		t_count = s_interface -> variable_count_keys(src, &t_count);
 	
 	id *t_keys, *t_values;
