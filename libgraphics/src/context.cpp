@@ -1499,11 +1499,24 @@ void MCGContextClipToRect(MCGContextRef self, MCGRectangle p_rect)
 
 MCGRectangle MCGContextGetClipBounds(MCGContextRef self)
 {	
-	SkRect t_clip;
-	self -> layer -> canvas -> getClipBounds(&t_clip);
-	// Skia outsets the clip returned by 1 pixel to take account of anti-aliasing (it appears)
-	t_clip . inset(1, 1);
-	return MCGRectangleMake(t_clip . x(), t_clip . y(), t_clip . width(), t_clip . height());
+	// MM-2013-11-25: [[ Bug 11496 ]] When using getClipBounds, Skia outsets the clip by 1 pixel to take account of antialiasing.
+	//  This is worked out by get the device clip, outsetting and revesing the transform on the canvas, meanining if there is a scale factor, the outset is scaled.
+	//  Instead, we just fetch the device clip and reverse the transform ourselves.
+	SkIRect t_dev_i_clip;
+	self -> layer -> canvas -> getClipDeviceBounds(&t_dev_i_clip);	
+	SkRect t_dev_clip;
+	t_dev_clip = SkRect::MakeLTRB(SkIntToScalar(t_dev_i_clip . left()), SkIntToScalar(t_dev_i_clip . top()), SkIntToScalar(t_dev_i_clip . right()), SkIntToScalar(t_dev_i_clip . bottom()));
+	
+	const SkMatrix t_transfom = self -> layer -> canvas -> getTotalMatrix();
+	SkMatrix t_inverse_transform;
+	if (t_transfom . invert(&t_inverse_transform))
+	{
+		SkRect t_clip;
+		t_inverse_transform . mapRect(&t_clip, t_dev_clip);
+		return MCGRectangleMake(t_clip . x(), t_clip . y(), t_clip . width(), t_clip . height());
+	}
+	else
+		return MCGRectangleMake(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 MCGRectangle MCGContextGetDeviceClipBounds(MCGContextRef self)
