@@ -976,3 +976,63 @@ Exec_stat MCHandleControlList(void *context, MCParameter *p_parameters)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// MM-2013-11-26: [[ Bug 11485 ]] Added functions for converting between user and device space.
+
+MCGRectangle MCNativeControlUserRectToDeviceRect(const MCGRectangle &p_user_rect)
+{
+    MCGAffineTransform t_transform;
+    t_transform = MCNativeControlUserToDeviceTransform();
+    return MCGRectangleApplyAffineTransform(p_user_rect, t_transform);
+}
+
+MCGRectangle MCNativeControlUserRectFromDeviceRect(const MCGRectangle &p_device_rect)
+{
+    MCGAffineTransform t_transform;
+    t_transform = MCNativeControlUserFromDeviceTransform();
+    return MCGRectangleApplyAffineTransform(p_device_rect, t_transform);
+}
+
+MCGPoint MCNativeControlUserPointToDevicePoint(const MCGPoint &p_user_point)
+{
+    MCGAffineTransform t_transform;
+    t_transform = MCNativeControlUserToDeviceTransform();
+    return MCGPointApplyAffineTransform(p_user_point, t_transform);
+}
+
+MCGPoint MCNativeControlUserPointFromDevicePoint(const MCGPoint &p_device_point)
+{
+    MCGAffineTransform t_transform;
+    t_transform = MCNativeControlUserFromDeviceTransform();
+    return MCGPointApplyAffineTransform(p_device_point, t_transform);
+}
+
+int32_t MCNativeControlUserXLocToDeviceXLoc(int32_t p_user_x_loc)
+{
+    MCGPoint t_loc;
+    t_loc = MCNativeControlUserPointToDevicePoint(MCGPointMake((MCGFloat) p_user_x_loc, 0.0f));
+    return (int32_t) t_loc . x;
+}
+
+int32_t MCNativeControlUserXLocFromDeviceXLoc(int32_t p_device_x_loc)
+{
+    MCGPoint t_loc;
+    t_loc = MCNativeControlUserPointFromDevicePoint(MCGPointMake((MCGFloat) p_device_x_loc, 0.0f));
+    return (int32_t) t_loc . x;
+}
+
+int32_t MCNativeControlUserYLocToDeviceYLoc(int32_t p_user_y_loc)
+{
+    MCGPoint t_loc;
+    t_loc = MCNativeControlUserPointToDevicePoint(MCGPointMake(0.0f, (MCGFloat) p_user_y_loc));
+    return (int32_t) t_loc . y;
+}
+
+int32_t MCNativeControlUserYLocFromDeviceYLoc(int32_t p_device_y_loc)
+{
+    MCGPoint t_loc;
+    t_loc = MCNativeControlUserPointFromDevicePoint(MCGPointMake(0.0f, (MCGFloat) p_device_y_loc));
+    return (int32_t) t_loc . y;
+}
+
+////////////////////////////////////////////////////////////////////////////////
