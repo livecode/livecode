@@ -2242,24 +2242,34 @@ bool MCImage::setfilename(const char *p_filename)
 	t_success = MCCStringClone(p_filename, t_filename);
 	
 	if (t_success)
-		t_success = MCImageGetFileRepForStackContext(p_filename, getstack(), t_rep);
-	
-	if (t_success)
 	{
-		setrep(t_rep);
-		if (t_rep != nil)
-			t_rep->Release();
+		t_success = MCImageGetFileRepForStackContext(p_filename, getstack(), t_rep);
 		
-		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
-		flags |= F_HAS_FILENAME;
-
-		MCCStringFree(filename);
-		filename = t_filename;
+		// MM-2013-11-27: [[ Bug 11522 ]] If we can't get the image rep, make sure we still store the filename.
+		if (t_success)
+		{
+			setrep(t_rep);
+			if (t_rep != nil)
+				t_rep->Release();
+			
+			flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
+			flags |= F_HAS_FILENAME;
+			
+			MCCStringFree(filename);
+			filename = t_filename;
+		}
+		else
+		{
+			setrep(nil);
+			flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
+			flags |= F_HAS_FILENAME;
+			
+			MCCStringFree(filename);
+			filename = t_filename;
+		}		
 	}
-	else
-		MCCStringFree(t_filename);
 
-	return t_success;
+	return t_success;	
 }
 
 /* Special case used by set_gif() */
