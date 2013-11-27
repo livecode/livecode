@@ -174,6 +174,7 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
     if (platform_message)
     {
 #ifdef _MOBILE
+        extern Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters);
         stat = MCHandlePlatformMessage(name, params);
 #endif
     }
