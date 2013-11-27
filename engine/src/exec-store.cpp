@@ -186,7 +186,9 @@ void MCStoreExecGet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
     
 	if (t_info != nil)
 	{
-        MCExecFetchProperty(ctxt, t_info, t_purchase, r_value);
+        MCExecValue t_value;
+        MCExecFetchProperty(ctxt, t_info, t_purchase, t_value);
+        r_value = t_value . valueref_value;
         return;
     }
     
@@ -206,7 +208,10 @@ void MCStoreExecSet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
 	
 	if (t_info != nil)
 	{
-        MCExecStoreProperty(ctxt, t_info, t_purchase, p_value);
+        MCExecValue t_value;
+        t_value . type = kMCExecValueTypeValueRef;
+        t_value . valueref_value = p_value;
+        MCExecStoreProperty(ctxt, t_info, t_purchase, t_value);
         return;
 	}
     
