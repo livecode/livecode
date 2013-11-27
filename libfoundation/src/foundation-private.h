@@ -83,6 +83,8 @@ enum
 	kMCStringFlagIsMutable = 1 << 1,
 	// If set then the native and unicode strings are equivalent
 	kMCStringFlagIsNative = 1 << 2,
+    // If set, the string contains no non-BMP characters
+    kMCStringFlagIsSimple = 1 << 3,
 };
 
 

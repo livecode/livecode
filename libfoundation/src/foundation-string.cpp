@@ -818,9 +818,21 @@ bool MCStringIsNative(MCStringRef self)
 	return (self -> flags & kMCStringFlagIsNative) != 0;
 }
 
+bool MCStringIsSimple(MCStringRef self)
+{
+    return (self -> flags & kMCStringFlagIsSimple) != 0;
+}
+
 bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &r_out_range)
 {
     MCAssert(self != nil);
+    
+    // Shortcut for strings containing only BMP characters
+    if (MCStringIsSimple(self))
+    {
+        r_out_range = p_in_range;
+        return true;
+    }
     
     // Scan through the string, counting the number of codepoints
     uindex_t t_counter = 0;
@@ -863,6 +875,13 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
 bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &r_out_range)
 {
     MCAssert(self != nil);
+    
+    // Shortcut for strings containing only BMP characters
+    if (MCStringIsSimple(self))
+    {
+        r_out_range = p_in_range;
+        return true;
+    }
     
     // Check that the input indices are valid
     if (p_in_range.offset + p_in_range.length > self -> char_count)
