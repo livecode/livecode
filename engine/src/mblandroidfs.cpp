@@ -407,7 +407,7 @@ Boolean MCAndroidSystem::GetStandardFolder(MCNameRef p_folder, MCStringRef &r_fo
 	else
 		MCAndroidEngineCall("getSpecialFolderPath", "xx", &(&t_stdfolder), MCNameGetString(p_folder));
 
-	MCLog("GetStandardFolder(\"%@\") -> \"%s\"", MCNameGetString(p_folder), *t_stdfolder == nil ? "" : MCStringGetCString(*t_stdfolder));
+    MCLog("GetStandardFolder(\"%@\") -> \"%@\"", p_folder, *t_stdfolder == nil ? kMCEmptyString : *t_stdfolder);
     
 	return MCStringCopy(*t_stdfolder, r_folder);
 }
