@@ -785,7 +785,7 @@ Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameter
         {
             // Note: 't_orientations_array' is an array of strings
 			MCValueRef t_orien_value = nil;
-			/* UNCHECKED */ MCArrayFetchValueAtIndex(*t_orientations_array, i, t_orien_value);
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_orientations_array, i + 1, t_orien_value);
 			MCStringRef t_orientation = (MCStringRef)(t_orien_value);
             if (MCStringIsEqualToCString(t_orientation, "portrait", kMCCompareCaseless))
                 t_orientations_set |= ORIENTATION_PORTRAIT_BIT;

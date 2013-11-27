@@ -233,7 +233,7 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 		for(uint32_t i = 0; i < MCArrayGetCount(p_params.redirects) && t_success; i++)
 		{
 			MCValueRef t_val;
-			/* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.redirects, i, t_val);
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.redirects, i + 1, t_val);
 			t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeRedirect, (MCStringRef)t_val);
 		}
 			
@@ -250,7 +250,7 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 		for(uint32_t i = 0; i < MCArrayGetCount(p_params.auxillary_stackfiles) && t_success; i++)
 		{
 			MCValueRef t_val;
-			/* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.auxillary_stackfiles, i, t_val);
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.auxillary_stackfiles, i + 1, t_val);
 			if (t_success && !MCDeployFileOpen((MCStringRef)t_val, kMCSOpenFileModeRead, t_aux_stackfiles[i]))
 				t_success = MCDeployThrow(kMCDeployErrorNoAuxStackfile);
 			if (t_success)
@@ -262,7 +262,7 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 		for(uint32_t i = 0; i < MCArrayGetCount(p_params.externals) && t_success; i++)
 		{
 			MCValueRef t_val;
-			/* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.externals, i, t_val);
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.externals, i + 1, t_val);
 			t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeExternal, (MCStringRef)t_val);
 		}
 			

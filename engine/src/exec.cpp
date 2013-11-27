@@ -299,14 +299,14 @@ bool MCExecContext::CopyElementAsFilepathArray(MCArrayRef p_array, MCNameRef p_k
 	for (uindex_t i = 0; i < MCArrayGetCount(*t_array); i++)
 	{
 		MCValueRef t_val;
-		if (!MCArrayFetchValueAtIndex(*t_array, i, t_val))
+        if (!MCArrayFetchValueAtIndex(*t_array, i + 1, t_val))
 			return false;
 		
 		MCAutoStringRef t_path;
 		if (!MCS_resolvepath((MCStringRef)t_val, &t_path))
 			return false;
 		
-		if (!MCArrayStoreValueAtIndex(*t_path_array, i, *t_path))
+        if (!MCArrayStoreValueAtIndex(*t_path_array, i + 1, *t_path))
 			return false;
 	}
 	
