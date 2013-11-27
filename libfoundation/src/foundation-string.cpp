@@ -835,6 +835,7 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
     }
     
     // Scan through the string, counting the number of codepoints
+    bool t_is_simple = true;
     uindex_t t_counter = 0;
     MCRange t_units = MCRangeMake(0, 0);
     while (t_counter < p_in_range.offset + p_in_range.length)
@@ -842,7 +843,7 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
         // Is this a single code unit or a valid surrogate pair?
         uindex_t t_length;
         if (__MCStringIsValidSurrogatePair(self, t_units.offset + t_units.length))
-            t_length = 2;
+            t_length = 2, t_is_simple = false;
         else
             t_length = 1;
         
@@ -867,6 +868,10 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
         t_counter++;
     }
     
+    // If no surrogates were found, mark the string as simple
+    if (t_is_simple && t_units.offset + t_units.length == self -> char_count)
+        self -> flags |= kMCStringFlagIsSimple;
+    
     // All done
     r_out_range = t_units;
     return true;
@@ -888,6 +893,7 @@ bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange
         return false;
     
     // Scan through the string, counting the number of code points
+    bool t_is_simple = true;
     uindex_t t_counter = 0;
     MCRange t_codepoints = MCRangeMake(0, 0);
     while (t_counter < p_in_range.offset + p_in_range.length)
@@ -895,7 +901,7 @@ bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange
         // Is this a single code unit or a valid surrogate pair?
         uindex_t t_length;
         if (__MCStringIsValidSurrogatePair(self, t_counter))
-            t_length = 2;
+            t_length = 2, t_is_simple = false;
         else
             t_length = 1;
         
@@ -906,6 +912,10 @@ bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange
             t_codepoints.length++;
         t_counter += t_length;
     }
+    
+    // If no surrogates were found, mark the string as simple
+    if (t_is_simple && p_in_range.offset + p_in_range.length >= self -> char_count)
+        self -> flags |= kMCStringFlagIsSimple;
     
     // All done
     r_out_range = t_codepoints;
@@ -2582,7 +2592,10 @@ static void __MCStringNativize(MCStringRef self)
 
 static void __MCStringChanged(MCStringRef self)
 {
-	MCMemoryDeleteArray(self -> native_chars);
+	// String changed to assume that it is no longer simple
+    self -> flags &= ~kMCStringFlagIsSimple;
+    
+    MCMemoryDeleteArray(self -> native_chars);
 	self -> native_chars = nil;
 }
 
