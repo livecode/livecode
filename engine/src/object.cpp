@@ -2328,7 +2328,8 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 		{
 			MCPoint t_points[6];
 
-			gen_3d_top_points(t_points, lx, ty, rx, by, 1);
+			// MM-2013-11-26: [[ Bug 11523 ]] Tweak the positioning of top points.
+			gen_3d_top_points(t_points, lx + 1, ty + 1, rx, by, 1);
 			if (style == ETCH_RAISED_SMALL || style == ETCH_SUNKEN_BUTTON)
 				if (reversed)
 					dc->setforeground(dc->getblack());
@@ -2341,7 +2342,7 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 				setforeground(dc, DI_TOP, reversed);
 			dc->fillpolygon(t_points, 6);
 
-			gen_3d_top_points(t_points, lx + 1, ty + 1, rx - 1, by - 1, 1);
+			gen_3d_top_points(t_points, lx + 2, ty + 2, rx - 1, by - 1, 1);
 			if (style == ETCH_RAISED_SMALL || style == ETCH_SUNKEN_BUTTON)
 				setforeground(dc, DI_TOP, reversed);
 			else
