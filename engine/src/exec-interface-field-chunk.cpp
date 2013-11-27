@@ -71,6 +71,11 @@ template<typename T> struct PodFieldPropType
         (sptr ->* p_setter)(ctxt, p_value);
     }
 
+    static void init(T& self)
+    {
+        self = (T)0;
+    }
+
     static void input(T p_value, T& r_value)
     {
         r_value = p_value;
@@ -108,6 +113,11 @@ struct PodFieldPropType<MCInterfaceNamedColor>
     template<typename X> static void setter(MCExecContext &ctxt, X *sptr, void (X::*p_setter)(MCExecContext& ctxt, arg_type), arg_type p_value)
     {
         (sptr ->* p_setter)(ctxt, p_value);
+    }
+
+    static void init(MCInterfaceNamedColor& self)
+    {
+        self . name = nil;
     }
 
     static void input(MCInterfaceNamedColor p_value, MCInterfaceNamedColor& r_value)
@@ -162,6 +172,11 @@ struct PodFieldPropType<MCInterfaceTextStyle>
         (sptr ->* p_setter)(ctxt, p_value);
     }
 
+    static void init(MCInterfaceTextStyle& self)
+    {
+        self . style = 0;
+    }
+
     static void input(value_type p_value, stack_type& r_value)
     {
         r_value . style = p_value . style;
@@ -207,6 +222,12 @@ template<typename T> struct VectorFieldPropType
     template <typename X> static void setter(MCExecContext ctxt, X *sptr, void (X::*p_setter)(MCExecContext& ctxt, arg_type), arg_type p_value)
     {
         (sptr ->* p_setter)(ctxt, p_value);
+    }
+
+    static void init(stack_type& r_value)
+    {
+        r_value . list . count = 0;
+        r_value . list . elements = nil;
     }
 
     static void input(const value_type& p_value, stack_type& r_value)
@@ -265,6 +286,11 @@ template<typename T> struct OptionalFieldPropType
         T::assign(r_value . value, p_value);
     }
 
+    static void init(stack_type& self)
+    {
+        self . value_ptr = nil;
+    }
+
     static bool equal(stack_type& a, stack_type& b)
     {
         if (a . value_ptr == nil && b . value_ptr == nil)
@@ -292,6 +318,8 @@ template<typename T> void GetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
     MCParagraph *sptr = p_field -> indextoparagraph(t_paragraph, si, ei, &t_line_index);
 
     typename T::stack_type t_value;
+
+    T::init(t_value);
     T::getter(ctxt, sptr, p_getter, t_value);
     if (ctxt . HasError())
         return;
@@ -335,7 +363,10 @@ template<typename T> void GetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
         t_first = false;
     }
     else
+    {
         t_first = true;
+        T::init(t_value);
+    }
 
     do
     {
@@ -545,25 +576,26 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
                         t_blocks_changed = true;
                     }
 
-                    //                    case P_IMAGE_SOURCE:
-                    //                        {
-                    //                            bptr->setatts(p, value);
+//                  TODO: what to do with the image source property, as there is a need for p_from_html?
+//                                case P_IMAGE_SOURCE:
+//                    {
+//                                bptr->setatts(p, value);
 
-                    //                            // MW-2008-04-03: [[ Bug ]] Only add an extra block if this is coming from
-                    //                            //   html parsing.
-                    //                            if (p_from_html)
-                    //                            {
-                    //                                MCBlock *tbptr = new MCBlock(*bptr); // need a new empty block
-                    //                                tbptr->freerefs();                   // for HTML continuation
-                    //                                // MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
-                    //                                //   fontref so it can compute its.
-                    //                                if (opened)
-                    //                                    tbptr->open(parent -> getfontref());
-                    //                                bptr->append(tbptr);
-                    //                                tbptr->SetRange(ei, 0);
-                    //                                t_blocks_changed = true;
-                    //                            }
-                    //                        }
+//                    // MW-2008-04-03: [[ Bug ]] Only add an extra block if this is coming from
+//                    //   html parsing.
+//                    if (p_from_html)
+//                    {
+//                        MCBlock *tbptr = new MCBlock(*bptr); // need a new empty block
+//                        tbptr->freerefs();                   // for HTML continuation
+//                        // MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
+//                        //   fontref so it can compute its.
+//                        if (opened)
+//                            tbptr->open(parent -> getfontref());
+//                        bptr->append(tbptr);
+//                        tbptr->SetRange(ei, 0);
+//                        t_blocks_changed = true;
+//                    }
+//                }
 
                     T::setter(ctxt, bptr, p_setter, p_value);
 
