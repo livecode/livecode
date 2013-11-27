@@ -3402,7 +3402,7 @@ Boolean MCPlayer::avi_prepare(void)
 
     MCAutoPointer<char> t_resolved_filename_cstring;
     /* UNCHECKED */ MCStringConvertToCString(*t_resolved_filename, &t_resolved_filename_cstring);
-	mciOpen.lpstrElementName = strclone(t_resolved_filename_cstring);
+	mciOpen.lpstrElementName = strclone(*t_resolved_filename_cstring);
 	mciOpen.dwStyle = WS_CHILD;
 	mciOpen.hWndParent = (HWND)getstack()->getrealwindow();
 	//if lpstrDeviceType is NULL, then MCI_OPEN_TYPE should not be
@@ -4462,10 +4462,12 @@ static bool path_to_dataref(MCStringRef p_path, DataReferenceRecord& r_rec)
 {
 	bool t_success = true;
 	CFStringRef t_cf_path = NULL;
-    MCAutoStringRefAsCFString t_path;
-    /* UNCHECKED */ t_path . Lock(p_path);
-    t_cf_path = *t_path;
-    t_success = (t_cf_path != NULL);
+	char *t_cstring_path;
+
+	/* UNCHECKED */ MCStringConvertToCString(p_path, t_cstring_path);
+	t_cf_path = CFStringCreateWithCStringNoCopy(NULL, t_cstring_path, kCFStringEncodingWindowsLatin1, kCFAllocatorNull);
+	t_success = (t_cf_path != NULL);
+
 	if (t_success)
 	{
 		OSErr t_error;
