@@ -394,7 +394,9 @@ public:
 	// Return the text as HTML formatted string.
 	// Called by:
 	//   MCField::gethtmltext
+#ifdef LEGACY_EXEC
 	void gethtmltext(MCExecPoint &ep);
+#endif
 
 	// Clear everything in the current paragraph and set the text to the
 	// given string.
@@ -529,7 +531,9 @@ public:
 	//   field indices to char indices.
     // MW-2013-07-31: [[ Bug 10957 ]] Pass in the start of the paragraph as a byte
 	//   offset so that the correct char offset can be calculated.
+#ifdef LEGACY_EXEC
 	void getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, findex_t si, findex_t ei, int32_t p_delta);
+#endif
     void getflaggedranges(uint32_t p_part_id, findex_t si, findex_t ei, int32_t p_delta, MCInterfaceFlaggedRanges& r_ranges);
     
 	// Return true if the paragraph completely fits in theight. Otherwise, return
@@ -548,17 +552,23 @@ public:
 	// Returns true if any of the paragraph attributes are non-default.
 	bool hasattrs(void);
 	// Sets the given paragraph attribute to the value in ep.
+#ifdef LEGACY_EXEC
 	Exec_stat setparagraphattr(Properties which, MCExecPoint& ep);
+#endif
 	// Gets the given paragraph attribute into the given ep.
+#ifdef LEGACY_EXEC
     Exec_stat getparagraphattr(Properties which, MCExecPoint& ep, Boolean effective);
+#endif
 	// Copies the given attribute from the given paragraph.
 	void copysingleattr(Properties which, MCParagraph *other);
 	// Copies all the attributes from the given paragraph.
 	void copyattrs(const MCParagraph& other);
+#ifdef LEGACY_EXEC
 	// Stores the paragraph attributes into the dst array.
 	void storeattrs(MCArrayRef dst);
+#endif
 	// Fetches the paragraph attributes from the src array.
-	void fetchattrs(MCArrayRef src);
+    void fetchattrs(MCArrayRef src);
 	// Clears the paragraph attributes.
 	void clearattrs(void);
 	// Unserializes the paragraph attributes from stream.

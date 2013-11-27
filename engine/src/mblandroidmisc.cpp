@@ -130,7 +130,7 @@ protected:
 
 bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 {
-	MCExecPoint ep(nil, nil, nil);
+    MCExecPoint ep(nil, nil, nil);
 	
 	bool t_success;
 	t_success = true;
@@ -161,7 +161,7 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 		{
 			case 'b':
 				if (t_success)
-					*(va_arg(t_args, bool *)) = ep . getsvalue() == MCtruemcstring;
+                    *(va_arg(t_args, bool *)) = ep . getsvalue() == MCtruemcstring;
 				break;
 				
 			case 's':

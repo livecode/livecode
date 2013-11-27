@@ -33,11 +33,7 @@ bool MCBitmapEffectsIsInteriorOnly(MCBitmapEffectsRef effects);
 
 bool MCBitmapEffectsScale(MCBitmapEffectsRef& x_dst, int32_t scale);
 
-Exec_stat MCBitmapEffectsSetProperties(MCBitmapEffectsRef& self, Properties which_type, MCExecPoint& ep, MCNameRef prop, Boolean& r_dirty);
-Exec_stat MCBitmapEffectsGetProperties(MCBitmapEffectsRef& self, Properties which_type, MCExecPoint& ep, MCNameRef prop);
-bool MCBitmapEffectsSetPropertyElement(MCBitmapEffectsRef& self, Properties which_type, MCValueRef p_setting, MCNameRef p_prop, bool& r_dirty);
 bool MCBitmapEffectsSetProperties(MCBitmapEffectsRef& self, Properties which_type, MCArrayRef p_setting, bool& r_dirty);
-bool MCBitmapEffectsGetPropertyElement(MCBitmapEffectsRef& self, Properties which_type, MCNameRef p_prop, MCValueRef& r_setting);
 bool MCBitmapEffectsGetProperties(MCBitmapEffectsRef& self, Properties which_type, MCArrayRef& r_props);
 
 bool MCBitmapEffectsGetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, MCNameRef p_index, Properties which, MCExecValue& r_color);

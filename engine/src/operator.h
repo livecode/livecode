@@ -79,7 +79,7 @@ public:
 
         EvalMethod(ctxt, t_right, t_result);
 
-        MCExecValueTraits<ParamType>::free(t_right);
+        MCExecValueTraits<ParamType>::release(t_right);
 
         if (!ctxt . HasError())
             MCExecValueTraits<ParamType>::set(r_value, t_result);
@@ -114,14 +114,14 @@ public:
 
         if (!MCExecValueTraits<ParamType>::eval(ctxt, right, EvalRightError, t_right))
         {
-            MCExecValueTraits<ParamType>::free(t_left);
+            MCExecValueTraits<ParamType>::release(t_left);
             return;
         }
 
         EvalMethod(ctxt, t_left, t_right, t_result);
 
-        MCExecValueTraits<ParamType>::free(t_left);
-        MCExecValueTraits<ParamType>::free(t_right);
+        MCExecValueTraits<ParamType>::release(t_left);
+        MCExecValueTraits<ParamType>::release(t_right);
 
         if (!ctxt . HasError())
             MCExecValueTraits<ReturnType>::set(r_value, t_result);

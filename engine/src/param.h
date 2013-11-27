@@ -66,9 +66,11 @@ public:
 	void clear_argument(void);
 
 	// Evaluate the value *stored* in the parameter - i.e. Used by
-	// the callee in a function/command invocation.
-	Exec_stat eval_argument(MCExecPoint& ep);
-	MCVariable *eval_argument_var(void);
+    // the callee in a function/command invocation.
+    Exec_stat eval_argument(MCExecPoint& ep);
+    MCVariable *eval_argument_var(void);
+
+    bool eval_argument(MCExecContext& ctxt, MCValueRef &r_value);
 
 	// Set the value of the parameter to be used by the callee.
 	void set_argument(MCExecPoint& ep);

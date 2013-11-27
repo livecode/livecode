@@ -812,7 +812,7 @@ void MCIdeDmgBuild::exec_ctxt(MCExecContext& ctxt)
 			if (!ctxt . HasError())
 			{
 				MCAutoStringRef t_type;
-				if (ctxt.CopyElementAsString(*t_item_array, false, MCNAME("type"), &t_type))
+				if (ctxt.CopyElementAsString(*t_item_array, MCNAME("type"), false, &t_type))
 				{
 					if (MCStringIsEqualToCString(*t_type, "folder", kMCCompareCaseless))
 						t_items[i].is_folder = true;

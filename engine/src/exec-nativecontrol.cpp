@@ -710,9 +710,10 @@ void MCNativeControlExecGet(MCExecContext& ctxt, MCStringRef p_control_name, MCS
     {
         MCNativeControlPtr t_control;
         t_control . control = t_native_control;
-        MCExecValue t_result;
-        MCExecFetchProperty(ctxt, t_info, &t_control, t_result);
-        r_result = t_result . valueref_value;
+
+		MCExecValue t_value;
+        MCExecFetchProperty(ctxt, t_info, &t_control, t_value);
+		MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, t_value . type, &t_value . type + 1, r_result);
     }
 }
 
@@ -739,10 +740,10 @@ void MCNativeControlExecSet(MCExecContext& ctxt, MCStringRef p_control_name, MCS
 	{
 		MCNativeControlPtr t_control;
 		t_control . control = t_native_control;
-        
-        MCExecValue t_value;
-        t_value . type = kMCExecValueTypeValueRef;
-        t_value . valueref_value = p_value;
+
+		MCExecValue t_value;   
+		MCExecValueTraits<MCValueRef>::set(t_value, p_value);
+
         MCExecStoreProperty(ctxt, t_info, &t_control, t_value);
     }		
 }

@@ -114,9 +114,7 @@ Exec_stat MCHandleComposeTextMessage(void *p_context, MCParameter *p_parameters)
          ctxt . SetTheResultToValue(kMCFalse);
         return ES_NORMAL;
     }
-	t_success = MCParseParameters(p_parameters, "x", &(&t_body));
-    
-    ep . clear();
+    t_success = MCParseParameters(p_parameters, "x", &(&t_body));
   
     
     if (t_success)
@@ -464,9 +462,7 @@ Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters)
 	
 	if (!ctxt . HasError())
     {
-        MCAutoStringRef t_string;
-        /* UNCHECKED */ ep . copyasstringref(&t_string);
-		ctxt . SetTheResultToValue(*t_string);
+        ctxt . SetTheResultToValue(*t_value);
         return ES_NORMAL;
     }
     

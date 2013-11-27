@@ -289,20 +289,6 @@ Parse_errors MCAnswer::parse_notify(MCScriptPoint& sp)
 	return t_error;
 }
 
-static bool evaluate_stringref(MCExecPoint &ep, MCExpression *p_expr, uint16_t p_err, int p_line, int p_pos, MCStringRef &r_value)
-{
-	if (p_expr != nil)
-	{
-		if (p_expr->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(p_err, p_line, p_pos);
-			return false;
-		}
-		/* UNCHECKED */ ep.copyasstringref(r_value);
-	}
-	return true;
-}
-
 void MCAnswer::exec_ctxt(MCExecContext& ctxt)
 {
 	MCAutoStringRef t_title;
@@ -402,7 +388,7 @@ void MCAnswer::exec_ctxt(MCExecContext& ctxt)
 	}
 }
 
-#ifdef /* MCAnswer::exec */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_stat MCAnswer::exec(MCExecPoint& ep)
 {
 	Exec_errors t_error = EE_UNDEFINED;
@@ -454,9 +440,9 @@ Exec_stat MCAnswer::exec(MCExecPoint& ep)
 
 	return t_error ? ES_ERROR : ES_NORMAL;
 }
-#endif /* MCAnswer::exec */
+#endif
 
-#ifdef /* MCAnswer::exec_pagesetup */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAnswer::exec_pagesetup(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error;
@@ -479,9 +465,9 @@ Exec_errors MCAnswer::exec_pagesetup(MCExecPoint& ep, const char *p_title)
 
 	return t_error;
 }
-#endif /* MCAnswer::exec_pagesetup */
+#endif
 
-#ifdef /* MCAnswer::exec_printer */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAnswer::exec_printer(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error;
@@ -504,27 +490,27 @@ Exec_errors MCAnswer::exec_printer(MCExecPoint& ep, const char *p_title)
 
 	return t_error;
 }
-#endif /* MCAnswer::exec_printer */
+#endif
 
-#ifdef /* MCAnswer::exec_effect */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAnswer::exec_effect(MCExecPoint& ep, const char *p_title)
 {
 	MCresult -> clear(False);
 	MCtemplateplayer -> stdeffectdlg(ep, p_title, sheet);
 	return EE_UNDEFINED;
 }
-#endif /* MCAnswer::exec_effect */
+#endif
 
-#ifdef /* MCAnswer::exec_record */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAnswer::exec_record(MCExecPoint& ep, const char *p_title)
 {
 	MCresult -> clear(False);
 	MCtemplateplayer -> stdrecorddlg(ep, p_title, sheet);
 	return EE_UNDEFINED;
 }
-#endif /* MCAnswer::exec_record */
+#endif
 
-#ifdef /* MCAnswer::exec_colour */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAnswer::exec_colour(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error = EE_UNDEFINED;
@@ -547,9 +533,9 @@ Exec_errors MCAnswer::exec_colour(MCExecPoint& ep, const char *p_title)
 
 	return t_error;
 }
-#endif /* MCAnswer::exec_colour */
+#endif
 
-#ifdef /* MCAnswer::exec_file */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAnswer::exec_file(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error = EE_UNDEFINED;
@@ -620,9 +606,9 @@ Exec_errors MCAnswer::exec_file(MCExecPoint& ep, const char *p_title)
 
 	return t_error;
 }
-#endif /* MCAnswer::exec_file */
+#endif
 
-#ifdef /* MCAnswer::exec_folder */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAnswer::exec_folder(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error = EE_UNDEFINED;
@@ -658,9 +644,9 @@ Exec_errors MCAnswer::exec_folder(MCExecPoint& ep, const char *p_title)
 
 	return t_error;
 }
-#endif /* MCAnswer::exec_folder */
+#endif
 
-#ifdef /* MCAnswer::exec_notify */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAnswer::exec_notify(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error = EE_UNDEFINED;
@@ -739,9 +725,9 @@ Exec_errors MCAnswer::exec_notify(MCExecPoint& ep, const char *p_title)
 
 	return t_error;
 }
-#endif /* MCAnswer::exec_notify */
+#endif
 
-#ifdef /* MCAnswer::exec_custom */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAnswer::exec_custom(MCExecPoint& ep, const MCString& p_stack, const char *p_type, unsigned int p_count, ...)
 {
 	ep . setstringf("answer %s", p_type);
@@ -775,7 +761,7 @@ Exec_errors MCAnswer::exec_custom(MCExecPoint& ep, const MCString& p_stack, cons
 
 	return EE_UNDEFINED;
 }
-#endif /* MCAnswer::exec_custom */
+#endif
 
 void MCAnswer::compile(MCSyntaxFactoryRef ctxt)
 {

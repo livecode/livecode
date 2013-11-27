@@ -982,6 +982,7 @@ void MCCard::timer(MCNameRef mptr, MCParameter *params)
 		MCObject::timer(mptr, params);
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCCard::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	MCRectangle minrect;
@@ -1245,6 +1246,7 @@ Exec_stat MCCard::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep,
 	}
 	return ES_NORMAL;
 }
+#endif
 
 Boolean MCCard::del()
 {

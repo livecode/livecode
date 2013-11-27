@@ -3221,9 +3221,7 @@ public:
         {
             MCAutoStringRef t_handler;
             /* UNCHECKED */ MCStringFormat(&t_handler, LAUNCH_URL_SCRIPT, p_document);
-            MCExecPoint ep (NULL, NULL, NULL) ;
             MCdefaultstackptr->domess(*t_handler);
-            MCresult->eval(ep);
         }
     }
 

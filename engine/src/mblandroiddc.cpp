@@ -2613,7 +2613,6 @@ extern "C" JNIEXPORT jstring JNICALL Java_com_runrev_android_Engine_doGetCustomP
 JNIEXPORT jstring JNICALL Java_com_runrev_android_Engine_doGetCustomPropertyValue(JNIEnv *env, jobject object, jstring set, jstring property)
 {
     bool t_success = true;
-    MCExecPoint ep;
 
     jstring t_js = nil;
 
@@ -2629,15 +2628,14 @@ JNIEXPORT jstring JNICALL Java_com_runrev_android_Engine_doGetCustomPropertyValu
         t_prop_name.CreateWithCString(t_property);
     }
 
-    const char *t_value = NULL;
-
-    Exec_stat t_stat = MCdefaultstackptr->getcustomprop(ep, t_set_name, t_prop_name);
-    t_success = t_stat == ES_NORMAL;
-    if (t_success)
+    MCExecValue t_value;
+    if (!MCdefaultstackptr -> getcustomprop(ctxt, *t_set_name, *t_prop_name, t_value))
     {
-        t_value = ep.getcstring();
-        MCString t_mcstring(t_value);
-        t_success = MCJavaStringFromNative(env, &t_mcstring, t_js);
+        MCAutoStringRef t_string_value;
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, (void*)t_value . type + 1, kMCExecValueTypeStringRef, &t_string_value);
+
+        if (!ctxt . HasError())
+            t_success = MCJavaStringFromStringRef(env, *t_string_value, t_js);
     }
 
     MCCStringFree(t_set);

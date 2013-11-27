@@ -174,6 +174,7 @@ Boolean MCColors::mup(uint2 which)
 	return True;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCColors::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	switch (which)
@@ -227,6 +228,7 @@ Exec_stat MCColors::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 	}
 	return ES_NORMAL;
 }
+#endif
 
 Boolean MCColors::count(Chunk_term type, MCObject *stop, uint2 &num)
 {

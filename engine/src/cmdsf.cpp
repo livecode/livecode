@@ -3377,7 +3377,8 @@ MCRead::~MCRead()
 	delete at;
 }
 
-/*IO_stat MCRead::readfor(IO_handle stream, int4 pindex, File_unit unit,
+#ifdef LEGACY_EXEC
+IO_stat MCRead::readfor(IO_handle stream, int4 pindex, File_unit unit,
                         uint4 count, MCExecPoint &ep, real8 duration)
 {
 	uint4 size;
@@ -3757,7 +3758,8 @@ IO_stat MCRead::readuntil_binary(IO_handle stream, int4 pindex, uint4 count, con
 	 UNCHECKED  t_buffer.CreateStringAndRelease(&t_string);
 	 UNCHECKED  ep.setvalueref(*t_string);
 	return stat;
-}*/
+}
+#endif
 
 Parse_stat MCRead::parse(MCScriptPoint &sp)
 {

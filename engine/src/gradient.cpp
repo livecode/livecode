@@ -181,6 +181,7 @@ MCGradientFill *MCGradientFillCopy(const MCGradientFill *p_gradient)
 	return t_gradient;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCGradientFillGetProperty(MCGradientFill* p_gradient, MCGradientFillProperty which, MCExecPoint &ep)
 {
 #ifdef /* MCGradientFillGetProperty */ LEGACY_EXEC
@@ -290,7 +291,9 @@ Exec_stat MCGradientFillGetProperty(MCGradientFill* p_gradient, MCGradientFillPr
 #endif /* MCGradientFillGetProperty */
     return ES_ERROR;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 Exec_stat MCGradientFillGetProperty(MCGradientFill* p_gradient, MCExecPoint &ep, MCNameRef prop)
 {
 	if (p_gradient == NULL)
@@ -325,6 +328,7 @@ Exec_stat MCGradientFillGetProperty(MCGradientFill* p_gradient, MCExecPoint &ep,
 	}
 	return ES_NORMAL;
 }
+#endif
 
 static void MCGradientFillFetchProperty(MCExecContext& ctxt, MCGradientFill* p_gradient, MCGradientFillProperty p_property, MCExecValue& r_value)
 {
@@ -456,6 +460,7 @@ bool MCGradientFillGetProperties(MCExecContext& ctxt, MCGradientFill* p_gradient
     return false;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCGradientFillProperty which, MCExecPoint &ep, Boolean &dirty, MCRectangle rect)
 {
 #ifdef /* MCGradientFillSetProperty */ LEGACY_EXEC
@@ -648,7 +653,9 @@ Exec_stat MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCGradientFillP
 #endif /* MCGradientFillSetProperty */
     return ES_ERROR;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 Exec_stat MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCExecPoint &ep, MCNameRef prop, Boolean &dirty, MCRectangle rect)
 {
 	MCGradientFill *t_gradient = NULL;
@@ -724,6 +731,7 @@ Exec_stat MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCExecPoint &ep
 	}
 	return t_stat;
 }
+#endif
 
 static void MCGradientFillSetEnumProperty(MCExecContext& ctxt, MCGradientFill*& p_gradient, MCGradientFillProperty which, MCExecValue p_value, bool& x_dirty)
 {

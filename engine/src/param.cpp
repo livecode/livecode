@@ -139,6 +139,22 @@ bool MCParameter::evalcontainer(MCExecContext &ctxt, MCContainer *&r_container)
     return exp -> evalcontainer(ctxt, r_container);
 }
 
+bool MCParameter::eval_argument(MCExecContext &ctxt, MCValueRef &r_value)
+{
+    if (var != NULL)
+        return var -> eval(ctxt, r_value);
+
+    if (value == nil)
+        return r_value = MCValueRetain(kMCEmptyString), true;
+
+    MCValueRef t_value;
+    if (!MCValueCopy(value, t_value))
+        return false;
+
+    r_value = t_value;
+    return true;
+}
+
 Exec_stat MCParameter::eval_argument(MCExecPoint& ep)
 {
 	if (var != NULL)

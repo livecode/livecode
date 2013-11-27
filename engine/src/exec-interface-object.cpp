@@ -1438,12 +1438,11 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 	MCerrorlock--;
 
 	// Now attempt to evaluate the object reference - this will only succeed
-	// if the object exists.
-	MCExecPoint ep2(ctxt . GetEP());
+    // if the object exists.
 	MCObject *t_object;
 	uint32_t t_part_id;
 	if (t_success)
-		t_success = (t_chunk -> getobj(ep2, t_object, t_part_id, False) == ES_NORMAL);
+        t_success = t_chunk -> getobj(ctxt, t_object, t_part_id, False);
 
 	// Check that the object is a button
 	if (t_success)
@@ -3112,18 +3111,22 @@ void MCObject::DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effect
 	if (t_success)
 		t_success = MCArrayCreateMutable(&t_array);
 	if (t_success)
-	{
-        MCExecPoint& ep = ctxt . GetEP();
+    {
 		MCerrorlock++;
 		while (tablesize--)
-		{
+        {
+            MCAutoValueRef t_value;
             const char* t_token = table[tablesize].token;
-            
+
             if ((Properties)table[tablesize].value > P_FIRST_ARRAY_PROP)
-                getarrayprop(part, (Properties)table[tablesize].value, ep, kMCEmptyName, p_effective);
+            {
+                MCAutoArrayRef t_array;
+                getarrayprop(ctxt, part, (Properties)table[tablesize].value, p_effective, &t_array);
+                t_value = (MCValueRef)*t_array;
+            }
             else
             {
-                MCAutoStringRef t_prop;
+                MCAutoStringRef t_string_prop;
                 // MERG-2013-05-07: [[ RevisedPropsProp ]] Special-case the props that could
                 //   be either Unicode or native (ensure minimal encoding is used).
                 // MERG-2013-06-24: [[ RevisedPropsProp ]] Treat the short name specially to ensure
@@ -3131,53 +3134,49 @@ void MCObject::DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effect
                 switch ((Properties)table[tablesize].value) {
                     case P_SHORT_NAME:
                         if (isunnamed())
-                            ep.clear();
+                            t_string_prop = kMCEmptyString;
                         else
-                        {
-                            getstringprop(ctxt, part, P_SHORT_NAME, p_effective, &t_prop);
-                            ep . setvalueref(*t_prop);
-                        }
+                            getstringprop(ctxt, part, P_SHORT_NAME, p_effective, &t_string_prop);
+
+                        t_value = (MCValueRef)*t_string_prop;
                         break;
                     case P_LABEL:
-                        getstringprop(ctxt, part, P_UNICODE_LABEL, p_effective, &t_prop);
-                        if (!MCStringIsNative(*t_prop))
+                        getstringprop(ctxt, part, P_UNICODE_LABEL, p_effective, &t_string_prop);
+                        if (!MCStringIsNative(*t_string_prop))
                         {
                             if (gettype() == CT_STACK)
                                 t_token = "unicodeTitle";
                             else
                                 t_token = "unicodeLabel";
                         }
-                        ep . setvalueref(*t_prop);
+                        t_value = *t_string_prop;
                         break;
                     case P_TOOL_TIP:
-                        getstringprop(ctxt, part, P_UNICODE_TOOL_TIP, p_effective, &t_prop);
-                        if (!MCStringIsNative(*t_prop))
+                        getstringprop(ctxt, part, P_UNICODE_TOOL_TIP, p_effective, &t_string_prop);
+                        if (!MCStringIsNative(*t_string_prop))
                             t_token = "unicodeToolTip";
-                        ep . setvalueref(*t_prop);
+                        t_value = (MCValueRef)*t_string_prop;
                         break;
                     case P_TEXT:
                         if (gettype() == CT_BUTTON)
                         {
-                            getstringprop(ctxt, part, P_UNICODE_TEXT, p_effective, &t_prop);
-                            if (!MCStringIsNative(*t_prop))
+                            getstringprop(ctxt, part, P_UNICODE_TEXT, p_effective, &t_string_prop);
+                            if (!MCStringIsNative(*t_string_prop))
                                 t_token = "unicodeText";
-                            ep . setvalueref(*t_prop);
+
+                            t_value = (MCValueRef)*t_string_prop;
                             break;
                         }
                     default:
                     {
-                        MCExecValue t_value;
-                        getprop(ctxt, part, (Properties)table[tablesize].value, p_effective, t_value);
-                        MCAutoValueRef t_value_ref;
-                        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value . type + 1, kMCExecValueTypeValueRef, &(&t_value_ref));
-                        if (!ctxt . HasError())
-                            ep . setvalueref(*t_value_ref);
+                        getvariantprop(ctxt, part, (Properties)table[tablesize].value, p_effective, &t_value);
                     }
                         break;
                 }
             }
-            
-            ctxt . GetEP() . storearrayelement_cstring(*t_array, table[tablesize].token);
+
+            if (!ctxt . HasError())
+                MCArrayStoreValue(*t_array, false, MCNAME(t_token), *t_value);
 		}
 		MCerrorlock--;
 		t_success = MCArrayCopy(*t_array, r_props);
