@@ -1332,7 +1332,7 @@ bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
     
     MCAutoStringRef t_pattern;
     
-    MCStringFormat(&t_pattern, "%@ \"%@\"", MCSTR(nametable[type - CT_STACK]), MCNameGetString(name));
+    MCStringFormat(&t_pattern, "%@ \"%@\"", MCSTR(nametable[type - CT_STACK]), name);
     
     if (MCStringContains(MCNameGetString(test), *t_pattern, kMCCompareCaseless))
     {
@@ -1341,7 +1341,7 @@ bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
         if (MCStringGetLength(MCNameGetString(test)) - t_quotes == MCStringGetLength(MCNameGetString(name)) + 2)
             match = true;
         if (!match)
-            MCLog("[[ Bug 11068 ]] match name '%s' to '%@' attempted and failed due to better checking", MCNameGetCString(name), test);
+            MCLog("[[ Bug 11068 ]] match name '%@' to '%@' attempted and failed due to better checking", name, test);
     }
     return match;
 }
