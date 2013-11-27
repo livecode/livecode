@@ -343,19 +343,27 @@ IO_stat MCDispatch::startup(void)
 	if (!MCquit)
 	{
 		MCExecPoint ep;
-		MCresult -> eval(ep);
-		ep . appendchar('\0');
-		if (ep . getsvalue() . getlength() == 1)
+        MCExecContext ctxt(ep);
+        MCValueRef t_valueref;
+		MCresult -> eval(ctxt, t_valueref);
+		
+		if (MCValueIsEmpty(t_valueref))
 		{
 			sptr -> open();
 			MCImage::init();
 			
 			X_main_loop();
-
-			MCresult -> eval(ep);
-			ep . appendchar('\0');
-			if (ep . getsvalue() . getlength() == 1)
+            MCValueRef t_valueref2;
+			MCresult -> eval(ctxt, t_valueref2);
+			if (MCValueIsEmpty(t_valueref2))
+            {
+                MCValueRelease(t_valueref);
+                MCValueRelease(t_valueref2);
 				return IO_NORMAL;
+            }
+            else
+                MCValueAssign(t_valueref, t_valueref2);
+                
 		}
 
 		// TODO: Script Wiping
@@ -368,10 +376,11 @@ IO_stat MCDispatch::startup(void)
 		MCenvironmentactive = False;
 
 		send_relaunch();
+        MCNewAutoNameRef t_name;
+        ctxt . ConvertToName(t_valueref, &t_name);
 
-		MCNewAutoNameRef t_name;
-		/* UNCHECKED */ ep.copyasnameref(&t_name);
 		sptr = findstackname(*t_name);
+        MCValueRelease(t_valueref);
 
 		if (sptr == NULL && (stat = loadfile(MCNameGetString(*t_name), sptr)) != IO_NORMAL)
 			return stat;

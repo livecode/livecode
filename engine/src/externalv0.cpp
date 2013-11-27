@@ -536,9 +536,10 @@ static char *show_image_by_id(const char *arg1, const char *arg2,
 		if (t_chunk -> parse(sp, False) == PS_NORMAL && sp.next(t_next_type) == PS_EOF)
 		{
 			MCExecPoint ep2(nil, nil, nil);
+            MCExecContext ctxt(ep2);
 			MCObject *t_object;
 			uint32_t t_part_id;
-			if (t_chunk -> getobj(ep2, t_object, t_part_id, False) == ES_NORMAL &&
+			if (t_chunk -> getobj(ctxt, t_object, t_part_id, False)  &&
 				t_object -> gettype() == CT_IMAGE)
 				iptr = static_cast<MCImage *>(t_object);
 		}

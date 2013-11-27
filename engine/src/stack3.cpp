@@ -1891,7 +1891,7 @@ Boolean MCStack::findone(MCExecContext &ctxt, Find_mode fmode,
 		MCObject *optr;
 		uint4 parid;
 		MCerrorlock++;
-		if (field->getobj(ctxt.GetEP(), optr, parid, True) == ES_NORMAL)
+		if (field->getobj(ctxt, optr, parid, True))
 		{
 			if (optr->gettype() == CT_FIELD)
 			{

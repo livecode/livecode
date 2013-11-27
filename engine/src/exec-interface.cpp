@@ -375,7 +375,7 @@ bool MCInterfaceTryToResolveObject(MCExecContext& ctxt, MCStringRef long_id, MCO
 	MCScriptPoint sp(ctxt);
 	if (tchunk->parse(sp, False) == PS_NORMAL)
 	{
-		if (tchunk->getobj(ctxt.GetEP(), r_object, True) == ES_NORMAL)
+		if (tchunk->getobj(ctxt, r_object, True))
 			t_found = true;
 	}
 	MCerrorlock--;

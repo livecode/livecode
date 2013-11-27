@@ -112,10 +112,10 @@ UIView *MCiOSControl::GetView(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef LEGACY_EXEC
+
 #define MCColorComponentToFloat(c) ((c) / 65535.0)
 #define MCFloatToColorComponent(f) ((f) * 65535)
-
+#ifdef LEGACY_EXEC
 Exec_stat MCiOSControl::ParseColor(MCExecPoint& ep, UIColor*& r_color)
 {
 	float t_red, t_green, t_blue, t_alpha;
@@ -139,6 +139,7 @@ Exec_stat MCiOSControl::ParseColor(MCExecPoint& ep, UIColor*& r_color)
 	
 	return ES_NORMAL;
 }
+#endif
 
 bool MCiOSControl::ParseColor(const MCNativeControlColor& p_color, UIColor*& r_color)
 {
@@ -154,6 +155,7 @@ bool MCiOSControl::ParseColor(const MCNativeControlColor& p_color, UIColor*& r_c
 	return true;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCiOSControl::FormatColor(MCExecPoint& ep, UIColor *p_color)
 {
 	CGColorRef t_bgcolor;
@@ -178,6 +180,7 @@ Exec_stat MCiOSControl::FormatColor(MCExecPoint& ep, UIColor *p_color)
 	
 	return ES_NORMAL;
 }
+#endif
 
 bool MCiOSControl::FormatColor(const UIColor* p_color, MCNativeControlColor& r_color)
 {
@@ -197,6 +200,7 @@ bool MCiOSControl::FormatColor(const UIColor* p_color, MCNativeControlColor& r_c
 	return true;
 }
 
+#ifdef LEGACY_EXEC
 bool MCiOSControl::ParseString(MCExecPoint& ep, NSString*& r_string)
 {
 	r_string = [NSString stringWithCString: ep . getcstring() encoding: NSMacOSRomanStringEncoding];
