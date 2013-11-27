@@ -268,7 +268,10 @@ public:
 	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
 	
+
+#ifdef LEGACY_EXEC
 	Exec_stat exec_cookie(MCExecPoint &);
+#endif
 };
 
 class MCQuit : public MCStatement
@@ -384,8 +387,7 @@ public:
 	}
 	virtual ~MCSort();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual void exec_ctxt(MCExecContext &);
-	static Exec_stat sort_container(MCExecPoint &p_exec_point, Chunk_term p_type, Sort_type p_direction, Sort_type p_form, MCExpression *p_by);
+    virtual void exec_ctxt(MCExecContext &);
 	static void additem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, Sort_type form, MCValueRef p_value, MCExpression *by);
 	virtual void compile(MCSyntaxFactoryRef);
 };
@@ -450,8 +452,10 @@ protected:
 	virtual bool iscut(void) const = 0;
 
 private:
+#ifdef LEGACY_EXEC
 	Exec_errors processtocontainer(MCExecPoint& ep, MCObjectRef *p_objects, uint4 p_object_count, MCObject *p_dst);
 	Exec_errors processtoclipboard(MCExecPoint& ep, MCObjectRef *p_objects, uint4 p_object_count);
+#endif
 };
 
 class MCCopyCmd: public MCClipboardCmd
@@ -508,7 +512,7 @@ public:
 	}
 	virtual ~MCCustomProp();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+    virtual void exec_ctxt(MCExecContext &);
 };
 
 class MCDefine : public MCCustomProp
@@ -761,7 +765,7 @@ public:
 class MCRedo : public MCStatement
 {
 public:
-	virtual Exec_stat exec(MCExecPoint &);
+    virtual void exec_ctxt(MCExecContext &);
 };
 
 class MCRemove : public MCStatement
@@ -1509,12 +1513,14 @@ public:
 		at = NULL;
 	}
 	virtual ~MCRead();
+#ifdef LEGACY_EXEC
 	IO_stat readfor(IO_handle stream, int4 pindex, File_unit unit,
 	                uint4 bytes, MCExecPoint &ep, real8 duration);
 	IO_stat readuntil(IO_handle stream, int4 pindex, uint4 count,
 	                  const char *sptr, MCExecPoint &ep, Boolean words,
 	                  real8 duration);
 	IO_stat readuntil_binary(IO_handle stream, int4 pindex, uint4 count, const MCString &sptr, MCExecPoint &ep,Boolean words, real8 duration);
+#endif
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);

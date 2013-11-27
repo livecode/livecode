@@ -155,6 +155,7 @@ bool MCExecContext::ConvertToNumberOrArray(MCExecValue& x_value)
     case kMCExecValueTypePoint:
     case kMCExecValueTypeColor:
     case kMCExecValueTypeRectangle:
+	default:
         return false;
     }
 }
@@ -1059,7 +1060,7 @@ bool MCExecContext::EvalExprAsMutableStringRef(MCExpression *p_expr, Exec_errors
     if (!EvalExprAsStringRef(p_expr, p_error, &t_string))
         return false;
     
-    MCStringMutableCopy(*t_string, r_mutable_string);
+    return MCStringMutableCopy(*t_string, r_mutable_string);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2564,7 +2565,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void MCExecTypeConvertToValueRefAndReleaseAlways(MCExecContext& ctxt, MCExecValueType p_from_type, void *p_from_value, MCValueRef& r_value)
+void MCExecTypeConvertToValueRefAndReleaseAlways(MCExecContext& ctxt, MCExecValueType p_from_type, void *p_from_value, MCValueRef& r_value)
 {
 	switch(p_from_type)
 	{
@@ -2623,7 +2624,7 @@ static void MCExecTypeConvertToValueRefAndReleaseAlways(MCExecContext& ctxt, MCE
 	}
 }
 
-static void MCExecTypeConvertFromValueRefAndReleaseAlways(MCExecContext& ctxt, MCValueRef p_from_value, MCExecValueType p_to_type, void *p_to_value)
+void MCExecTypeConvertFromValueRefAndReleaseAlways(MCExecContext& ctxt, MCValueRef p_from_value, MCExecValueType p_to_type, void *p_to_value)
 {
     bool t_success = true;
 

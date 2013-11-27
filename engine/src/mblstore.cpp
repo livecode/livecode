@@ -309,6 +309,7 @@ void MCPurchaseNotifyUpdate(MCPurchase *p_purchase)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef LEGACY_EXEC
 static bool list_purchases(void *context, MCPurchase* p_purchase)
 {
 	MCExecPoint *ep;
@@ -318,3 +319,4 @@ static bool list_purchases(void *context, MCPurchase* p_purchase)
 	
 	return true;
 }
+#endif

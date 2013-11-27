@@ -1619,26 +1619,28 @@ void MCEngineGetStacksInUse(MCExecContext& ctxt, MCStringRef &r_value)
 bool MCEngineEvalValueAsObject(MCValueRef p_value, bool p_strict, MCObjectPtr& r_object, bool& r_parse_error)
 {
     MCExecPoint ep(nil,nil,nil);
-    ep . setvalueref(p_value);
-    MCScriptPoint sp(ep);
+    MCExecContext ctxt(ep);
+    MCAutoStringRef t_string;
+    ctxt . ConvertToString(p_value, &t_string);
+    MCScriptPoint sp(*t_string);
+
     MCChunk *tchunk = new MCChunk(False);
     MCerrorlock++;
     Symbol_type type;
     Exec_stat stat;
     
     bool t_parse_error;
+    bool t_success;
     t_parse_error = tchunk->parse(sp, False) == PS_NORMAL;
-    if (!t_parse_error && (!p_strict || sp.next(type) == PS_EOF))
-        stat = ES_NORMAL;
-    else
-        stat = ES_ERROR;
+    t_success = (!t_parse_error && (!p_strict || sp.next(type) == PS_EOF));
+
     MCerrorlock--;
-    if (stat == ES_NORMAL)
-        stat = tchunk->getobj(ep, r_object, False);
+    if (t_success)
+        t_success = tchunk->getobj(ctxt, r_object, False);
     delete tchunk;
     
     r_parse_error = t_parse_error;
-    return stat == ES_NORMAL;
+    return t_success;
 }
 
 void MCEngineEvalValueAsObject(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_object)

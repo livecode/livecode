@@ -560,7 +560,9 @@ public:
 	                    char *cnames[], uint2 ncolors);
 	void alloccolor(MCColor &color);
 	void querycolor(MCColor &color);
+#ifdef LEGACY_EXEC
 	Boolean getcolors(MCExecPoint &);
+#endif
 	Boolean setcolors(const MCString &);
 	bool getcolornames(MCStringRef&);
 	void getpaletteentry(uint4 n, MCColor &c);

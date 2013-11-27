@@ -1528,11 +1528,13 @@ Boolean MCUIDC::parsecolors(const MCString &s, MCColor *colors,
 }
 #endif
 
+#ifdef LEGACY_EXEC
 Boolean MCUIDC::getcolors(MCExecPoint &ep)
 {
 		ep.setstaticcstring("fixed");
 		return True;
 }
+#endif
 
 #ifdef LEGACY_EXEC
 Boolean MCUIDC::setcolors(const MCString &values)

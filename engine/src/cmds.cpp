@@ -1538,7 +1538,7 @@ void MCPut::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndStatement(ctxt);
 }
 
-#ifdef /* MCPut::exec_cookie */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 #if defined(_SERVER)
 bool MCServerSetCookie(const MCString &p_name, const MCString &p_value, uint32_t p_expires, const MCString &p_path, const MCString &p_domain, bool p_secure, bool p_http_only);
 Exec_stat MCPut::exec_cookie(MCExecPoint &ep)
@@ -1616,7 +1616,7 @@ Exec_stat MCPut::exec_cookie(MCExecPoint &ep)
 	return ES_ERROR;
 }
 #endif
-#endif /* MCPut::exec_cookie */
+#endif
 
 MCQuit::~MCQuit()
 {
@@ -1634,7 +1634,7 @@ Parse_stat MCQuit::parse(MCScriptPoint &sp)
 
 void MCQuit::exec_ctxt(MCExecContext& ctxt)
 {
-#ifdef /* MCQuit */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 // MW-2011-06-22: [[ SERVER ]] Don't send messages in server-mode.
 #ifndef _SERVER
 	switch(MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
@@ -1660,7 +1660,7 @@ void MCQuit::exec_ctxt(MCExecContext& ctxt)
 	MCtraceabort = True;
 	MCtracereturn = True;
 	return ES_NORMAL;
-#endif /* MCQuit */
+#endif
 
     integer_t t_retcode;
     if (!ctxt . EvalOptionalExprAsInt(retcode, 0, EE_UNDEFINED, t_retcode))
@@ -2149,7 +2149,7 @@ Parse_stat MCSort::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-#ifdef /* MCSort::sort_container */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_stat MCSort::sort_container(MCExecPoint &p_exec_point, Chunk_term p_type, Sort_type p_direction, Sort_type p_form, MCExpression *p_by)
 {
 	MCSortnode *t_items;
@@ -2259,7 +2259,7 @@ Exec_stat MCSort::sort_container(MCExecPoint &p_exec_point, Chunk_term p_type, S
 	delete t_items;
 	return ES_NORMAL;
 }
-#endif /* MCSort::sort_container */
+#endif
 
 void MCSort::additem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, Sort_type form, MCValueRef p_value, MCExpression *by)
 {

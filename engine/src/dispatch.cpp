@@ -178,6 +178,7 @@ bool MCDispatch::isdragtarget(void)
 	return m_drag_target;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCDispatch::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	switch (which)
@@ -240,7 +241,9 @@ Exec_stat MCDispatch::getprop_legacy(uint4 parid, Properties which, MCExecPoint 
 		return ES_ERROR;
 	}
 }
+#endif
 
+#ifdef LEGACY_EXEC
 Exec_stat MCDispatch::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 #ifdef /* MCDispatch::setprop */ LEGACY_EXEC
@@ -248,6 +251,7 @@ Exec_stat MCDispatch::setprop_legacy(uint4 parid, Properties which, MCExecPoint 
 #endif /* MCDispatch::setprop */
     return ES_NORMAL;
 }
+#endif
 
 // bogus "cut" call actually checks license
 Boolean MCDispatch::cut(Boolean home)
@@ -256,7 +260,6 @@ Boolean MCDispatch::cut(Boolean home)
 		return True;
 	return MCnoui || (flags & F_WAS_LICENSED) != 0;
 }
-
 
 //extern Exec_stat MCHandlePlatformMessage(Handler_type htype, const MCString& mess, MCParameter *params);
 Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *params, MCObject *pass_from)
@@ -1566,19 +1569,31 @@ check:
 
 		if (MCU_strchr(sptr, l, ':'))
 		{
-			MCresult->clear(False);
-			MCExecPoint ep(MCdefaultstackptr, NULL, NULL);
-			MCExecPoint *epptr = MCECptr == NULL ? &ep : &MCECptr->GetEP();
-			epptr->setvalueref(p_name);
-			MCU_geturl(*epptr);
+            MCresult->clear(False);
+            MCExecPoint ep(MCdefaultstackptr, NULL, NULL);
+            MCExecContext default_ctxt(ep);
+            MCExecContext *ctxt = MCECptr == NULL ? &default_ctxt : MCECptr;
+
+            MCAutoStringRef t_output;
+            MCU_geturl(*ctxt, MCNameGetString(p_name), &t_output);
 			if (MCresult->isempty())
-			{
+            {
+                MCAutoDataRef t_data;
+
+                if (MCStringIsNative(*t_output))
+                {
+                    const char_t *t_bytes = MCStringGetNativeCharPtr(*t_output);
+                    MCDataCreateWithBytes((byte_t*)t_bytes, MCStringGetLength(*t_output), &t_data);
+                }
+                else
+                {
+                    const unichar_t *t_bytes = MCStringGetCharPtr(*t_output);
+                    MCDataCreateWithBytes((byte_t*)t_bytes, MCStringGetLength(*t_output) * 2, &t_data);
+                }
+
 				iptr = new MCImage;
-				iptr->appendto(imagecache);
-                MCAutoDataRef t_text;
-                /* UNCHECKED */ ep . copyasdataref(&t_text);
-                MCExecContext ctxt(*epptr);
-				iptr->SetText(ctxt, *t_text);
+                iptr->appendto(imagecache);
+                iptr->SetText(*ctxt, *t_data);
 				iptr->setname(*t_image_name);
 				return iptr;
 			}

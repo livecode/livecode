@@ -778,13 +778,7 @@ void MCNetworkSetAllowDatagramBroadcasts(MCExecContext& ctxt, bool p_value)
 
 void MCNetworkExecSetUrl(MCExecContext& ctxt, MCStringRef p_value, MCStringRef p_url)
 {
-    MCExecPoint ep(nil, nil, nil);
-    MCExecPoint ep2(nil, nil, nil);
-    
-    ep . setvalueref(p_url);
-    ep2 . setvalueref(p_value);
-    
-	MCU_puturl(ep, ep2);
+    MCU_puturl(ctxt, p_url, p_value);
 }
 
 void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCStringRef p_value, int p_where, MCStringRef p_url)

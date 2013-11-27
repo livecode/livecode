@@ -85,12 +85,18 @@ int main(int argc, char *argv[], char *envp[])
 		exit(-1);
 	
 	if (!X_init(argc, t_argv, t_envp))
-	{
-		MCExecPoint ep;
+    {
+        MCExecPoint ep;
 		if (MCresult != nil)
-		{
-			MCresult -> eval(ep);
-			fprintf(stderr, "Startup error - %s\n", ep . getcstring());
+        {
+            MCExecContext ctxt(ep);
+            MCAutoValueRef t_result;
+            MCAutoStringRef t_string;
+            MCresult -> eval(ctxt, &t_result);
+            ctxt . ConvertToString(*t_result, &t_string);
+            MCAutoStringRefAsSysString t_autostring;
+            t_autostring . Lock(*t_string);
+            fprintf(stderr, "Startup error - %s\n", *t_autostring);
 		}
 		exit(-1);
 	}

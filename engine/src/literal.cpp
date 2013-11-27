@@ -35,8 +35,7 @@ Parse_stat MCLiteral::parse(MCScriptPoint &sp, Boolean the)
 #ifdef /* MCLiteral::eval */ LEGACY_EXEC
 Exec_stat MCLiteral::eval(MCExecPoint &ep)
 {
-	ep.setvalueref(value);
-	return ES_NORMAL;
+    MCExecValueTraits<MCNameRef>::set(r_value, value);
 }
 #endif
 
@@ -60,7 +59,7 @@ Parse_stat MCLiteralNumber::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-void MCLiteralNumber::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+void MCLiteralNumber::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 	// IM-2013-05-02: *TODO* the bugfix here cannot be applied to the syntax
 	// refactor branch as MCExecPoint::setboth() does not exist there
@@ -70,7 +69,7 @@ void MCLiteralNumber::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 	if (nvalue == BAD_NUMERIC)
 		ep.setvalueref_nullable(value);
 	else
-		ep.setboth(MCNameGetOldString(value), nvalue);
+        ep.setboth(MCNameGetOldString(value), nvalue);
 	return ES_NORMAL;
 #else
 	r_value . type = kMCExecValueTypeNameRef;
