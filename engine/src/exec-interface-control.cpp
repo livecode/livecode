@@ -129,7 +129,7 @@ void MCControl::DoSetHScroll(MCExecContext& ctxt, int4 tx, integer_t scroll)
 {
 	if (opened)
 	{
-		if (hscroll(scroll - tx, True) != ES_NORMAL)
+		if (hscroll(scroll - tx, True) == ES_ERROR)
 			ctxt . Throw();
 		resetscrollbars(True);
 	}
@@ -139,7 +139,7 @@ void MCControl::DoSetVScroll(MCExecContext& ctxt, int4 ty, integer_t scroll)
 {
 	if (opened)
 	{
-		if (vscroll(scroll - ty, True) != ES_NORMAL)
+		if (vscroll(scroll - ty, True) == ES_ERROR)
 			ctxt . Throw();
 		resetscrollbars(True);
 	}	
