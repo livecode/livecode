@@ -96,18 +96,18 @@ void MCSyntaxFactoryEndHandlerList(MCSyntaxFactoryRef self)
 
 void MCSyntaxFactoryDefineGlobal(MCSyntaxFactoryRef self, MCNameRef p_name)
 {
-	_log(self, "global %s", MCNameGetCString(p_name));
+	_log(self, "global %@", p_name);
 }
 
 void MCSyntaxFactoryDefineLocal(MCSyntaxFactoryRef self, MCNameRef p_name, MCValueRef p_value)
 {
 	if (p_value == nil)
-		_log(self, "local %s", MCNameGetCString(p_name));
+		_log(self, "local %@", p_name);
 	else
 	{
 		MCAutoStringRef t_value;
 		MCValueCopyDescription(p_value, &t_value);
-		_log(self, "local %@ = \"%@\"", MCNameGetString(p_name), *t_value);
+		_log(self, "local %@ = \"%@\"", p_name, *t_value);
 	}
 }
 
@@ -115,7 +115,8 @@ void MCSyntaxFactoryDefineConstant(MCSyntaxFactoryRef self, MCNameRef p_name, MC
 {
 	MCAutoStringRef t_value;
 	MCValueCopyDescription(p_value, &t_value);
-	_log(self, "local %@ = \"%@\"", MCNameGetString(p_name), *t_value);
+	_log(self, "local %@ = \"%@\"", p_name, *t_value);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,7 +129,7 @@ void MCSyntaxFactoryBeginHandler(MCSyntaxFactoryRef self, MCSyntaxHandlerType p_
 	};
 	self -> operand_count = 0;
 	self -> operand_index = 0;
-	_log_begin(self, "begin %s handler %s", s_handler_types[p_type], MCNameGetCString(p_name));
+	_log_begin(self, "begin %s handler %@", s_handler_types[p_type], p_name);
 }
 
 void MCSyntaxFactoryEndHandler(MCSyntaxFactoryRef self)
@@ -138,7 +139,7 @@ void MCSyntaxFactoryEndHandler(MCSyntaxFactoryRef self)
 
 void MCSyntaxFactoryDefineParameter(MCSyntaxFactoryRef self, MCNameRef p_name, bool p_is_ref)
 {
-	_log(self, "%sparam %s", p_is_ref ? "ref " : "", MCNameGetCString(p_name));
+	_log(self, "%sparam %@", p_is_ref ? "ref " : "", p_name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

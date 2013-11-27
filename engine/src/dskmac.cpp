@@ -8928,7 +8928,7 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 			if ((MCprocesses[MCnprocesses++].pid = fork()) == 0)
 			{
 				char *t_name_dup;
-				t_name_dup = strdup(MCNameGetCString(name));
+                /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(name), t_name_dup);
 				
 				// The pid is 0, so here we are in the child process.
 				// Construct the argument string to pass to the process..

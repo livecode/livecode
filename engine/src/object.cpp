@@ -3388,7 +3388,7 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 		//     uint32 id
 		//     cstring stack
 		//     cstring mainstack
-		t_size += 1 + 1 + 4 + strlen(MCNameGetCString(parent_script -> GetParent() -> GetObjectStack())) + 1;
+		t_size += 1 + 1 + 4 + MCStringGetLength(MCNameGetString(parent_script -> GetParent() -> GetObjectStack())) + 1;
 		t_size += 1; // was mainstack reference
 	}
 

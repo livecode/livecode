@@ -740,6 +740,8 @@ MCPrinterResult MCPSPrinter::DoBeginPrint(MCStringRef p_document, MCPrinterDevic
     /* UNCHECKED */ MCStringCreateWithSysString(t_output_file, &t_path);
 
     stream = MCS_open(*t_path, kMCSOpenFileModeWrite, False, False, 0);
+    MCAutoPointer<char> t_MCN_version;
+    /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(MCN_version_string), &t_MCN_version);
 
     // PostScript + Unicode = complicated...
     //
@@ -747,7 +749,7 @@ MCPrinterResult MCPSPrinter::DoBeginPrint(MCStringRef p_document, MCPrinterDevic
     // and the PostScript engine. General support for Unicode text in PS
     // documents isn't easy and is not implemented here. :-(
     PSwrite("%!PS-Adobe-3.0\n");
-	sprintf(buffer, "%%%%Creator: Revolution %s\n", MCNameGetCString(MCN_version_string)); PSwrite(buffer);
+	sprintf(buffer, "%%%%Creator: Revolution %s\n", *t_MCN_version); PSwrite(buffer);
 	PSwrite("%%DocumentData: Clean8Bit\n");
     sprintf(buffer, "%%%%Title: %s\n", MCStringGetNativeCharPtr(p_document) ) ; PSwrite(buffer ) ;
 	PSwrite("%%MCOrientation Portrait\n");
