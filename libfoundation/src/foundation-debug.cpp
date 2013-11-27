@@ -201,7 +201,7 @@ void __MCLog(const char *p_file, uint32_t p_line, const char *p_format, ...)
 	char *t_cstring;
 	if (MCStringConvertToCString(*t_string, t_cstring))
 	{
-		__android_log_vprint(ANDROID_LOG_INFO, "revandroid", "%s", t_cstring);
+		__android_log_print(ANDROID_LOG_INFO, "revandroid", "%s", t_cstring);
 		MCMemoryDeallocate(t_cstring);
 	}
 }
