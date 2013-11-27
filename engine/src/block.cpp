@@ -723,7 +723,7 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, findex_t& r_break_index, bool& r_break
 			// MW-2012-02-01: [[ Bug 9982 ]] iOS uses sub-pixel positioning, so make sure we measure
 			//   complete runs.
 			MCRange t_range;
-			t_range = MCRangeMake(t_last_break_i, next_i - t_last_break_i);
+			t_range = MCRangeMake(t_last_break_i, i - t_last_break_i);
 			twidth = t_last_break_width + MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range);
 #else
 #ifdef TARGET_PLATFORM_WINDOWS
