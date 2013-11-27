@@ -869,11 +869,12 @@ void MCGraphicsContext::drawlines(MCPoint *points, uint2 npoints, bool p_closed)
 
 void MCGraphicsContext::fillpolygon(MCPoint *points, uint2 npoints)
 {
-	// MM-2013-11-14: [[ Bug 11457 ]] Adjust lines and polygons to make sure antialiased lines don't draw across pixels.
+	// MM-2013-11-26: [[ Bug 11501 ]] Adjust lines and polygons to make sure antialiased lines don't draw across pixels.
+	//  Here the adjust is 0.25 - not the same path as draw lines but appears to solve the issue where the fill interfers with the stroke.
 	MCGPoint *t_points;
 	/* UNCHECKED */ MCMemoryNewArray(npoints, t_points);
 	for (uint32_t i = 0; i < npoints; i++)
-		t_points[i] = MCPointToMCGPoint(points[i], 0.5f);
+		t_points[i] = MCPointToMCGPoint(points[i], 0.25f);
 	
 	MCGContextBeginPath(m_gcontext);
 	MCGContextAddPolygon(m_gcontext, t_points, npoints);	
