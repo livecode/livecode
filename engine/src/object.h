@@ -424,10 +424,12 @@ public:
 		return MCNameGetCString(_name);
 	}
 
+    /*
 	MCString getname_oldstring(void) const
 	{
 		return MCNameGetOldString(_name);
 	}
+    */
 
 	// Tests to see if the object has the given name, interpreting unnamed as
 	// the empty string.
