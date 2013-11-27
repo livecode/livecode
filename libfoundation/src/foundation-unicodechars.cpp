@@ -22,7 +22,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 uindex_t MCUnicodeCharsSharedPrefixExact(const unichar_t *p_string, uindex_t p_string_length, const unichar_t *p_prefix, uindex_t p_prefix_length)
 {
-	uindex_t t_count;
+	// TODO: use ICU
+    // Unfortunately, this is less than trivial as ICU doesn't provide a
+    // mechanism for returning the index where the strings became unequal.
+    
+    uindex_t t_count;
 	t_count = 0;
 	for(;;)
 	{
@@ -45,7 +49,11 @@ uindex_t MCUnicodeCharsSharedPrefixExact(const unichar_t *p_string, uindex_t p_s
 
 uindex_t MCUnicodeCharsSharedPrefixCaseless(const unichar_t *p_string, uindex_t p_string_length, const unichar_t *p_prefix, uindex_t p_prefix_length)
 {
-	uindex_t t_count;
+    // TODO: use ICU
+    // Unfortunately, this is less than trivial as ICU doesn't provide a
+    // mechanism for returning the index where the strings became unequal.
+    
+    uindex_t t_count;
 	t_count = 0;
 	for(;;)
 	{
@@ -68,7 +76,11 @@ uindex_t MCUnicodeCharsSharedPrefixCaseless(const unichar_t *p_string, uindex_t 
 
 uindex_t MCUnicodeCharsSharedSuffixExact(const unichar_t *p_string, uindex_t p_string_length, const unichar_t *p_suffix, uindex_t p_suffix_length)
 {
-	p_string += p_string_length;
+    // TODO: use ICU
+    // Unfortunately, this is less than trivial as ICU doesn't provide a
+    // mechanism for returning the index where the strings became unequal.
+    
+    p_string += p_string_length;
 	p_suffix += p_suffix_length;
 	
 	uindex_t t_count;
@@ -94,7 +106,11 @@ uindex_t MCUnicodeCharsSharedSuffixExact(const unichar_t *p_string, uindex_t p_s
 
 uindex_t MCUnicodeCharsSharedSuffixCaseless(const unichar_t *p_string, uindex_t p_string_length, const unichar_t *p_suffix, uindex_t p_suffix_length)
 {
-	p_string += p_string_length;
+    // TODO: use ICU
+    // Unfortunately, this is less than trivial as ICU doesn't provide a
+    // mechanism for returning the index where the strings became unequal.
+    
+    p_string += p_string_length;
 	p_suffix += p_suffix_length;
 	
 	uindex_t t_count;

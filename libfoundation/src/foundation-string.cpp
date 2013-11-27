@@ -1427,7 +1427,11 @@ bool MCStringLastIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p_
 
 bool MCStringFind(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStringOptions p_options, MCRange *r_result)
 {
-	// Similar to contains, this searches for needle but only with range of self.
+    // TODO: use ICU
+    // Unfortunately, this is less than trivial as ICU doesn't provide a
+    // mechanism for returning the length of the range that was matched.
+    
+    // Similar to contains, this searches for needle but only with range of self.
 	// It also returns the the range in self that needle occupies (but only if
 	// r_result is non-nil).
 
