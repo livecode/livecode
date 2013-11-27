@@ -421,7 +421,9 @@ public:
 
 	const char *getname_cstring(void) const
 	{
-		return MCNameGetCString(_name);
+        char *t_name;
+        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(_name), t_name);
+		return t_name;
 	}
 
 	MCString getname_oldstring(void) const
