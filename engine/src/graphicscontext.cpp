@@ -836,9 +836,17 @@ void MCGraphicsContext::drawlines(MCPoint *points, uint2 npoints, bool p_closed)
 	// MM-2013-11-21: [[ Bug 11395 ]] When only 1 point is passed, assume we are drawing a dot.
 	if (npoints == 1)
 	{
+		// MM-2013-11-25: [[ Bug 11395 ]] For consitency with previous versions, make sure the dot has square edges.
+		MCGContextSave(m_gcontext);		
+		MCGContextSetStrokeJoinStyle(m_gcontext, kMCGJoinStyleMiter);
+		MCGContextSetStrokeCapStyle(m_gcontext, kMCGCapStyleButt);
+		MCGContextSetStrokeMiterLimit(m_gcontext, 4.0f);
+		
 		MCGContextBeginPath(m_gcontext);
-		MCGContextAddDot(m_gcontext, MCPointToMCGPoint(points[0]));
+		MCGContextAddDot(m_gcontext, MCPointToMCGPoint(points[0], 0.5f));
 		MCGContextStroke(m_gcontext);
+		
+		MCGContextRestore(m_gcontext);
 	}
 	else
 	{	

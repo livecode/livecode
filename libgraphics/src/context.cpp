@@ -2083,9 +2083,9 @@ void MCGContextAddDot(MCGContextRef self, MCGPoint p_location)
 	
 	if (t_success)
 	{		
-		// MM-2013-11-21: [[ Bug 11395 ]] Updated dot drawing to be half pixel line.
+		// MM-2013-11-25: [[ Bug 11395 ]] Updated dot drawing to be half pixel rectangle.
 		MCGContextEnsurePath(self);
-		MCGPathAddLine(self -> path, p_location, MCGPointMake(p_location . x + 0.5f, p_location . y + 0.5f));
+		MCGPathAddRectangle(self -> path, MCGRectangleMake(p_location . x, p_location. y, 0.25f, 0.25f));
 		t_success = MCGPathIsValid(self -> path);
 	}	
 	
