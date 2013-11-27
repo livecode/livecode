@@ -1919,7 +1919,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                     r_value . stringref_value = MCSTR(MCmixedstring);
                     r_value . type = kMCExecValueTypeStringRef;
                 }
-                else if (*t_value_ptr != nil)
+                else if (t_value_ptr != nil)
                 {
                     r_value . bool_value = t_value;
                     r_value . type = kMCExecValueTypeBool;
@@ -1948,7 +1948,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                     r_value . stringref_value = MCSTR(MCmixedstring);
                     r_value . type = kMCExecValueTypeStringRef;
                 }
-                else if (*t_value_ptr != nil)
+                else if (t_value_ptr != nil)
                 {
                     r_value . int_value = t_value;
                     r_value . type = kMCExecValueTypeInt;
@@ -1978,7 +1978,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                     r_value . stringref_value = MCSTR(MCmixedstring);
                     r_value . type = kMCExecValueTypeStringRef;
                 }
-                else if (*t_value_ptr != nil)
+                else if (t_value_ptr != nil)
                 {
                     r_value . uint_value = t_value;
                     r_value . type = kMCExecValueTypeUInt;
