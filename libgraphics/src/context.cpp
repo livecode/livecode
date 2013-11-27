@@ -2220,9 +2220,9 @@ static bool MCGContextSetupStrokePaint(MCGContextRef self, SkPaint &r_paint)
 		r_paint . setStrokeCap(MCGCapStyleToSkCapStyle(self -> state -> stroke_attr . cap_style));	
 		r_paint . setPathEffect(t_dash_effect);
 		
-		// MM-2013-11-08: [[ Bug 11388 ]] For 1 pixel lines, don't set the line width. Appeared to be causing issues with certain non-antialiased lines.
-		if (self -> state -> stroke_attr . width != 1.0f)
-			r_paint . setStrokeWidth(MCGFloatToSkScalar(self -> state -> stroke_attr . width));
+		// MM-2013-11-26: [[ Bug 11512 ]] Don't draw 1 pixel lines as hairlines, as these don't scale.
+		//  There also appear to be a few issues with non-antialiased harline paths (11514, 11497).
+		r_paint . setStrokeWidth(MCGFloatToSkScalar(self -> state -> stroke_attr . width));
 		
 		SkXfermode *t_blend_mode;
 		t_blend_mode = MCGBlendModeToSkXfermode(self -> state -> blend_mode);
