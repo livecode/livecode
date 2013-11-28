@@ -206,9 +206,13 @@ extern void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 // MW-2013-07-01: [[ Bug 10975 ]] This method returns true if the given string could be a url
 //   (as used by MCU_geturl, to determine whether to try and fetch via libUrl).
 extern bool MCU_couldbeurl(const MCString& potential_url);
+#ifdef LEGACY_EXEC
 extern void MCU_geturl(MCExecPoint &ep);
+#endif
 extern void MCU_puturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef p_data);
+#ifdef LEGACY_EXEC
 extern void MCU_puturl(MCExecPoint &ep, MCExecPoint &data);
+#endif
 extern uint1 MCU_unicodetocharset(uint2 uchar);
 extern uint1 MCU_languagetocharset(MCNameRef langname);
 extern MCNameRef MCU_charsettolanguage(uint1 charset);

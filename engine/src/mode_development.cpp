@@ -345,6 +345,7 @@ IO_stat MCDispatch::startup(void)
 		MCExecPoint ep;
         MCExecContext ctxt(ep);
         MCValueRef t_valueref;
+        MCValueRef t_valueref2;
 		MCresult -> eval(ctxt, t_valueref);
 		
 		if (MCValueIsEmpty(t_valueref))
@@ -353,7 +354,6 @@ IO_stat MCDispatch::startup(void)
 			MCImage::init();
 			
 			X_main_loop();
-            MCValueRef t_valueref2;
 			MCresult -> eval(ctxt, t_valueref2);
 			if (MCValueIsEmpty(t_valueref2))
             {
@@ -381,6 +381,7 @@ IO_stat MCDispatch::startup(void)
 
 		sptr = findstackname(*t_name);
         MCValueRelease(t_valueref);
+        MCValueRelease(t_valueref2);
 
 		if (sptr == NULL && (stat = loadfile(MCNameGetString(*t_name), sptr)) != IO_NORMAL)
 			return stat;

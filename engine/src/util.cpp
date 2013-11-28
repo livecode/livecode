@@ -2471,6 +2471,7 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output
 	//ctxt.Throw();
 }
 
+#ifdef LEGACY_EXEC
 void MCU_geturl(MCExecPoint &ep)
 {
     MCAutoStringRef t_filename, t_output;
@@ -2482,6 +2483,7 @@ void MCU_geturl(MCExecPoint &ep)
     
     ep.setvalueref(*t_output);
 }
+#endif
 
 void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCStringRef p_data)
 {
@@ -2515,6 +2517,7 @@ void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCStringRef p_data)
 	}
 }
 
+#ifdef LEGACY_EXEC
 void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
 {
 	MCAutoStringRef t_url;
@@ -2525,6 +2528,7 @@ void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
 	MCExecContext ctxt(data);
 	MCU_puturl(ctxt, *t_url, *t_data);
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

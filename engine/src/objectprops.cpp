@@ -2442,7 +2442,7 @@ static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_tab
 	return nil;
 }
 
-
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::getarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective)
 {
 #ifdef REMOVE_THIS_FUNCTION
@@ -2539,6 +2539,7 @@ Exec_stat MCObject::setarrayprop(uint32_t p_part_id, Properties p_which, MCExecP
 #endif
     return ES_ERROR;
 }
+#endif
 
 bool MCObject::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCExecValue& r_value)
 {
