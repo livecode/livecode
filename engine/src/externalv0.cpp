@@ -280,7 +280,7 @@ static int trans_stat(Exec_stat stat)
 	return xresNotImp;
 }
 
-static Exec_stat getvarptr(MCExecPoint& ep, const MCString &vname,MCVariable **tvar)
+static Exec_stat getvarptr(MCExecContext& ctxt, const MCString &vname,MCVariable **tvar)
 {
 	MCAutoNameRef t_name;
 	/* UNCHECKED */ t_name . CreateWithOldString(vname);
@@ -289,7 +289,7 @@ static Exec_stat getvarptr(MCExecPoint& ep, const MCString &vname,MCVariable **t
 	if (MCECptr->GetEP().findvar(t_name, &newvar) != PS_NORMAL)
 		return ES_ERROR;
 	
-	if ((*tvar = newvar->evalvar(ep)) == NULL)
+	if ((*tvar = newvar->evalvar(ctxt)) == NULL)
 	{
 		delete newvar;
 		return ES_ERROR;
@@ -398,8 +398,14 @@ static char *get_global(const char *arg1, const char *arg2,
 	{
 		*retval = xresSucc;
 		MCExecPoint ep;
-		tmp->eval(ep);
-		return ep.getsvalue().clone();
+        MCExecContext ctxt(ep);
+        MCAutoValueRef t_value;
+		tmp->eval(ctxt, &t_value);
+        MCAutoStringRef t_string;
+        /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
+        char *t_result;
+        /* UNCHECKED */ MCStringConvertToCString(*t_string, t_result);
+		return t_result;
 	}
 	*retval = xresFail;
 	return NULL;
@@ -417,9 +423,12 @@ static char *set_global(const char *arg1, const char *arg2,
 		return NULL;
 	}
 	MCExecPoint ep;
+    MCExecContext ctxt(ep);
 	*retval = xresSucc;
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringCreateWithCString(arg2, &t_string);
 	ep.setsvalue(arg2);
-	tmp->set(ep);
+	tmp->set(ctxt, *t_string);
 	return NULL;
 }
 
@@ -566,7 +575,7 @@ static char *get_variable(const char *arg1, const char *arg2,
 		*retval = xresFail;
 		return NULL;
 	}
-	*retval = trans_stat(getvarptr(MCECptr->GetEP(), arg1, &var));
+	*retval = trans_stat(getvarptr(*MCECptr, arg1, &var));
 	if (var == NULL)
 		return NULL;
 	var -> eval(MCECptr->GetEP());
@@ -582,7 +591,7 @@ static char *set_variable(const char *arg1, const char *arg2,
 		*retval = xresFail;
 		return NULL;
 	}
-	*retval = trans_stat(getvarptr(MCECptr->GetEP(), arg1,&var));
+	*retval = trans_stat(getvarptr(*MCECptr, arg1,&var));
 	if (var == NULL)
 		return NULL;
 	MCECptr->GetEP().setsvalue(arg2);
@@ -601,7 +610,7 @@ static char *get_variable_ex(const char *arg1, const char *arg2,
 		*retval = xresFail;
 		return NULL;
 	}
-	*retval = trans_stat(getvarptr(MCECptr->GetEP(), arg1, &var));
+	*retval = trans_stat(getvarptr(*MCECptr, arg1, &var));
 	if (var == NULL)
 		return NULL;
 
@@ -629,7 +638,7 @@ static char *set_variable_ex(const char *arg1, const char *arg2,
 		*retval = xresFail;
 		return NULL;
 	}
-	*retval = trans_stat(getvarptr(MCECptr->GetEP(), arg1,&var));
+	*retval = trans_stat(getvarptr(*MCECptr, arg1,&var));
 	if (var == NULL)
 		return NULL;
 	MCECptr->GetEP().setsvalue(*value);
@@ -683,7 +692,7 @@ static char *get_array(const char *arg1, const char *arg2,
 		*retval = xresFail;
 		return NULL;
 	}
-	*retval = trans_stat(getvarptr(MCECptr->GetEP(), arg1,&var));
+	*retval = trans_stat(getvarptr(*MCECptr, arg1,&var));
 	if (var == NULL)
 		return NULL;
 
@@ -762,7 +771,7 @@ static char *set_array(const char *arg1, const char *arg2,
 		*retval = xresFail;
 		return NULL;
 	}
-	*retval = trans_stat(getvarptr(MCECptr->GetEP(), arg1,&var));
+	*retval = trans_stat(getvarptr(*MCECptr, arg1,&var));
 	if (var == NULL)
 		return NULL;
 	var->remove(MCECptr->GetEP(),nil, 0);//clear variable
