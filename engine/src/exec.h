@@ -52,14 +52,10 @@ enum MCExecValueType
     kMCExecValueTypePoint,
     kMCExecValueTypeColor,
     kMCExecValueTypeRectangle,
-    
-    kMCExecValueTypeEnum,
-    kMCExecValueTypeSet,
 };
 
 struct MCExecValue
 {
-	MCExecValueType type;
 	union
 	{
 		MCValueRef valueref_value;
@@ -81,6 +77,7 @@ struct MCExecValue
 		MCRectangle rectangle_value;
         intenum_t enum_value;
 	};
+	MCExecValueType type;
 };
 
 // Convert the slot from_value of type from_type, to the slot to_type at

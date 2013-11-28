@@ -1567,7 +1567,7 @@ Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 bool MCObject::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue p_value)
 {
     MCValueRef t_value;
-    MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeValueRef, &t_value);
+    MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeValueRef, &t_value);
     
 	Exec_stat t_stat;
 	t_stat = sendsetprop(ctxt, p_set_name, p_prop_name, t_value);
@@ -2573,7 +2573,7 @@ void MCObject::getboolprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p
 {
     MCExecValue t_value;
 	if (getprop(ctxt, p_part_id, p_which, p_effective, t_value))
-        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value . type + 1, kMCExecValueTypeBool, &r_value);
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeBool, &r_value);
 }
 
 void MCObject::setboolprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, bool p_value)
@@ -2593,7 +2593,7 @@ void MCObject::getintprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_
 {
     MCExecValue t_value;
 	if (getprop(ctxt, p_part_id, p_which, p_effective, t_value))
-        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value . type + 1, kMCExecValueTypeInt, &r_value);
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeInt, &r_value);
 }
 
 //////////
@@ -2602,7 +2602,7 @@ void MCObject::getuintprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p
 {
     MCExecValue t_value;
 	if (getprop(ctxt, p_part_id, p_which, p_effective, t_value))
-        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value . type + 1, kMCExecValueTypeUInt, &r_value);
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeUInt, &r_value);
 }
 
 void MCObject::setuintprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, uinteger_t p_value)
@@ -2632,14 +2632,14 @@ void MCObject::getdoubleprop(MCExecContext& ctxt, uint32_t p_part_id, Properties
 {
     MCExecValue t_value;
 	if (getprop(ctxt, p_part_id, p_which, p_effective, t_value))
-        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value . type + 1, kMCExecValueTypeDouble, &r_value);
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeDouble, &r_value);
 }
 
 void MCObject::getnumberprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCNumberRef& r_value)
 {
     MCExecValue t_value;
 	if (getprop(ctxt, p_part_id, p_which, p_effective, t_value))
-        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value . type + 1, kMCExecValueTypeNumberRef, &r_value);
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeNumberRef, &r_value);
 }
 
 /////////
@@ -2648,7 +2648,7 @@ void MCObject::getstringprop(MCExecContext& ctxt, uint32_t p_part_id, Properties
 {
     MCExecValue t_value;
 	if (getprop(ctxt, p_part_id, p_which, p_effective, t_value))
-        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value . type + 1, kMCExecValueTypeStringRef, &r_value);
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeStringRef, &r_value);
 }
 
 void MCObject::setstringprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCStringRef p_value)
@@ -2668,7 +2668,7 @@ void MCObject::getarrayprop(MCExecContext& ctxt, uint32_t p_part_id, Properties 
 {
     MCExecValue t_value;
 	if (getprop(ctxt, p_part_id, p_which, p_effective, t_value))
-        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value . type + 1, kMCExecValueTypeArrayRef, &r_value);
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeArrayRef, &r_value);
 }
 
 /////////
@@ -2677,7 +2677,7 @@ void MCObject::getvariantprop(MCExecContext& ctxt, uint32_t p_part_id, Propertie
 {
     MCExecValue t_value;
 	if (getprop(ctxt, p_part_id, p_which, p_effective, t_value))
-        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value . type + 1, kMCExecValueTypeValueRef, &r_value);
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeValueRef, &r_value);
 }
 
 void MCObject::setvariantprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCValueRef p_value)
@@ -2710,7 +2710,7 @@ void MCObject::getpointprop(MCExecContext& ctxt, uint32_t p_part_id, Properties 
 {
     MCExecValue t_value;
 	if (getprop(ctxt, p_part_id, p_which, p_effective, t_value))
-        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value . type + 1, kMCExecValueTypePoint, &r_point);
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypePoint, &r_point);
 }
 
 void MCObject::setpointprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, const MCPoint &p_point)

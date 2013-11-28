@@ -595,8 +595,8 @@ void MCField::GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width)
 {
 	if (opened)
 	{
-		r_width = textwidth + rect.width - getfwidth()
-		          + leftmargin + rightmargin
+		uint2 fwidth = getfwidth();
+		r_width = textwidth + rect.width - fwidth + leftmargin + rightmargin
 		          + (flags & F_VSCROLLBAR ? (flags & F_DONT_WRAP ? 0 : -vscrollbar->getrect().width) : 0);
 	}
 	else

@@ -737,7 +737,7 @@ bool MCBitmapEffectsGetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, M
                     MCAutoValueRef t_valueref;
                     // Fetch the property, then store it into the array.
                     MCBitmapEffectFetchProperty(ctxt, t_effect, s_bitmap_effect_properties[i] . value, t_value);
-                    MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value . type + 1, kMCExecValueTypeValueRef, &(&t_valueref));
+                    MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeValueRef, &(&t_valueref));
                     MCArrayStoreValue(*v, ctxt . GetCaseSensitive(), MCNAME(s_bitmap_effect_properties[i] . token), *t_valueref);
                 }
             }
@@ -906,7 +906,7 @@ static void MCBitmapEffectStoreProperty(MCExecContext& ctxt, MCBitmapEffect& x_e
         case kMCBitmapEffectPropertyColor:
         {
             MCColor t_color;
-            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeColor, &t_color);
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeColor, &t_color);
             MCBitmapEffectsSetColorProperty(x_effect, p_prop, t_color, r_dirty);
         }
             break;
@@ -922,7 +922,7 @@ static void MCBitmapEffectStoreProperty(MCExecContext& ctxt, MCBitmapEffect& x_e
         case kMCBitmapEffectPropertyAngle:
         {
             uinteger_t t_value;
-            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeUInt, &t_value);
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeUInt, &t_value);
             MCBitmapEffectsSetUIntProperty(x_effect, p_prop, p_value . uint_value, r_dirty);
         }
             break;
@@ -989,7 +989,7 @@ bool MCBitmapEffectsSetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, M
         bool t_dirty_array;
         t_dirty_array = false;
         MCAutoArrayRef t_array;
-        MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeArrayRef, &(&t_array));
+        MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeArrayRef, &(&t_array));
         // Loop through all the properties in the table and apply the relevant
         // ones.
         for(uint32_t i = 0; i < ELEMENTS(s_bitmap_effect_properties); i++)

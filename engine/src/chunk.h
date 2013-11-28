@@ -97,7 +97,7 @@ public:
     // Added for MCChunk::count:
     //  in some cases there is no object to return but no error either
     //  and caller might want to default to something else
-    void getoptionalobj(MCExecContext& ctxt, MCObject *&r_object, uint4 r_parid, Boolean p_recurse);
+    void getoptionalobj(MCExecContext& ctxt, MCObject *&r_object, uint4& r_parid, Boolean p_recurse);
     void getoptionalobj(MCExecContext &ctxt, MCObjectPtr &r_object, Boolean p_recurse);
 
 #ifdef LEGACY_EXEC    

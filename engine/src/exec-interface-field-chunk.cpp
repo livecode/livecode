@@ -1062,10 +1062,10 @@ void MCField::GetFormattedRectOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
         while (ei > 0 && sptr != pgptr);
 
         // MW-2012-01-25: [[ FieldMetrics ]] Make sure the rect we return is in card coords.
-        r_value . height = y - (maxy - y);
+        r_value . height = (maxy - 2*y);
         r_value . width = maxx - minx;
         r_value . x = minx + getcontentx();
-        r_value . y = (maxy - y) + yoffset;
+        r_value . y = y + yoffset;
     }
     else
         memset(&r_value, 0, sizeof(MCRectangle));

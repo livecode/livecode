@@ -641,7 +641,7 @@ const char *MCDoMenu::lookup(MCStringRef s)
 {
 	uint2 size = ELEMENTS(domenu_table);
 	while(size--)
-		if (MCStringIsEqualToCString(s, domenu_table[size].token, kMCCompareCaseless));
+		if (MCStringIsEqualToCString(s, domenu_table[size].token, kMCCompareCaseless))
 			return domenu_table[size].command;
 	return NULL;
 }
