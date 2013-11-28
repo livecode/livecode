@@ -1870,7 +1870,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				/* UNCHECKED */ ctxt . ConvertToStringRef(*t_value2, &t_http_proxy);
 				MCValueAssign(MChttpproxy, *t_http_proxy);
 			}
-            MCValueRelease(t_key2);
 		}
 		else
 		{
@@ -1894,12 +1893,9 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				MCAutoStringRef t_http_proxy;
                 /* UNCHECKED */ MCStringFormat(&t_http_proxy, "%@:%@", *t_host, *t_port);
 				MCValueAssign(MChttpproxy, *t_http_proxy);
-                MCValueRelease(t_key4);
             }
-            MCValueRelease(t_key3);
 		}
         
-        MCValueRelease(t_key);
 
 		// On NT systems 'cmd.exe' is the command processor
 		MCValueAssign(MCshellcmd, MCSTR("cmd.exe"));

@@ -380,8 +380,10 @@ IO_stat MCDispatch::startup(void)
         ctxt . ConvertToName(t_valueref, &t_name);
 
 		sptr = findstackname(*t_name);
-        MCValueRelease(t_valueref);
-        MCValueRelease(t_valueref2);
+        if (t_valueref != nil)
+            MCValueRelease(t_valueref);
+        if (t_valueref2 != nil)
+            MCValueRelease(t_valueref2);
 
 		if (sptr == NULL && (stat = loadfile(MCNameGetString(*t_name), sptr)) != IO_NORMAL)
 			return stat;
