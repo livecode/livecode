@@ -47,6 +47,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "card.h"
 
+#include "exec-interface.h"
+
 #include "globals.h"
 
 #include "syntax.h"
@@ -815,10 +817,19 @@ static void colourize_paragraph(void *p_context, MCColourizeClass p_class, uint4
 		t_style = &s_script_styles[s_script_class_styles[p_class]];
 
 	if (t_style != NULL)
-	{
-		t_paragraph -> setatts(t_start, t_end, P_FORE_COLOR, &t_style -> colour);
-		t_paragraph -> setatts(t_start, t_end, P_TEXT_STYLE, (void *)t_style -> attributes);
-	}
+    {
+        MCExecPoint ep(nil, nil, nil);
+        MCExecContext ctxt(ep);
+
+        MCInterfaceNamedColor t_color;
+        MCInterfaceTextStyle t_textstyle;
+
+        get_interface_color(t_style -> colour, nil, t_color);
+        t_textstyle . style = t_style -> attributes;
+
+        t_paragraph -> SetForeColorOfCharChunk(ctxt, t_start, t_end, t_color);
+        t_paragraph -> SetTextStyleOfCharChunk(ctxt, t_start, t_end, t_textstyle);
+    }
 }
 
 // Both of the following are control characters that see no use in modern systems
@@ -1181,7 +1192,7 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 			}
 		}
 
-		p_callback(p_context, t_class, t_class_index, t_start, t_end);
+        p_callback(p_context, t_class, t_class_index, t_start, t_end);
 	}
 
 	r_out_nesting = t_nesting;
