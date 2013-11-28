@@ -2322,7 +2322,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
 			// Set the working directory to the leading components of the path
 			uindex_t t_index;
-			if (MCStringLastIndexOfChar(p_target, '\\', 0, kMCStringOptionCompareExact, t_index))
+			if (MCStringLastIndexOfChar(p_target, '\\', UINDEX_MAX, kMCStringOptionCompareExact, t_index))
 			{
 				MCAutoStringRef t_working_dir;
 				MCAutoStringRefAsWString t_working_dir_wstr;

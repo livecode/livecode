@@ -255,7 +255,7 @@ public:
 			// MM-2011-03-23: Refactored code to use method call.
 			MCAutoStringRef t_payload_file;
             uindex_t t_last_slash;
-            /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', 0, kMCCompareExact, t_last_slash);
+            /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCCompareExact, t_last_slash);
             /* FRAGILE */ if (MCStringFormat(&t_payload_file, "%.*@/payload", MCRangeMake(0, t_last_slash), MCcmd))
 			{
 				MCAutoStringRefAsUTF8String t_utf8_payload_file;

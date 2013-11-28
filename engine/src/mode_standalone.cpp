@@ -340,7 +340,7 @@ IO_stat MCDispatch::startup(void)
 #else
         MCAutoStringRef t_path;
         uindex_t t_last_slash;
-        /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', 0, kMCCompareExact, t_last_slash);
+        /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCCompareExact, t_last_slash);
         /* UNCHECKED */ MCStringFormat(&t_path, "%.*@/iphone_test.livecode", MCRangeMake(0, t_last_slash), MCcmd);
         t_stream = MCS_open(*t_path, kMCSOpenFileModeRead, False, False, 0);
 #endif

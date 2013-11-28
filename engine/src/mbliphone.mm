@@ -691,7 +691,7 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
 		extern MCStringRef MCcmd;
         uindex_t t_index;
         t_index = MCStringGetLength(MCcmd);
-        /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', 0, kMCCompareExact, t_index);
+        /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', t_index, kMCCompareExact, t_index);
         /* UNCHECKED */ MCStringCopySubstring(MCcmd, MCRangeMake(0, t_index), &t_path);
                     
 	}
