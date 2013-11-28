@@ -39,6 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // Context for styled text export.
 struct export_styled_text_t
 {
+    //MCExecContext ctxt;
 	// Whether a request was made for effective styles.
 	bool effective;
 	// Whether a request was made for formatted form.
@@ -435,11 +436,15 @@ static bool export_styled_text(void *p_context, MCFieldExportEventType p_event_t
 			t_vtab = 11;
             MCAutoStringRef t_string;
             /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)&t_vtab, 2, &t_string);
-            MCArrayStoreValue(ctxt . last_run, true, MCNAME("unicodeText"), *t_string);
+            MCValueRef t_value;
+            MCArrayFetchValue(ctxt . last_run, true, MCNAME("unicodeText"), t_value);
 		}
 		else
 		{
-            /* UNCHECKED */ MCArrayStoreValue(ctxt . last_run, true, MCNAME("text"), MCSTR("\x0b"));
+            MCStringRef t_string;
+            t_string = MCSTR("\x0b");
+            MCValueRef t_value;
+            /* UNCHECKED */ MCArrayStoreValue(ctxt . last_run, true, MCNAME("text"), t_value);
 		}
 	}
 
