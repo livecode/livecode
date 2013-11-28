@@ -1902,6 +1902,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
     }
 }
 
+
 Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recurse)
 {
     MCExecPoint ep2(ep);
@@ -1929,7 +1930,8 @@ Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recu
                 }
                 else
                 {
-                    if (destvar->eval(ep2) != ES_NORMAL)
+                    MCAutoValueRef t_value;
+                    if (!destvar->eval(ctxt, &t_value) )
                     {
                         MCeerror->add(EE_CHUNK_BADOBJECTEXP, line, pos);
                         return ES_ERROR;

@@ -335,13 +335,15 @@ Exec_stat MCHandler::exec(MCExecPoint &ep, MCParameter *plist)
 			}
 			else
 			{
-				if (plist->eval_argument(ep) != ES_NORMAL)
+                MCExecContext ctxt(ep);
+                MCAutoValueRef t_value;
+				if (!plist->eval_argument(ctxt, &t_value))
 				{
 					err = True;
 					break;
 				}
 				/* UNCHECKED */ MCVariable::createwithname(i < npnames ? pinfo[i] . name : kMCEmptyName, newparams[i]);
-				newparams[i]->set(ep);
+				newparams[i]->set(ctxt, *t_value);
 			}
 			plist = plist->getnext();
 		}

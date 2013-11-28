@@ -95,6 +95,7 @@ MCVariable *MCParameter::evalvar(MCExecContext &ctxt)
     return exp -> evalvar(ctxt);
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCParameter::eval(MCExecPoint& ep)
 {
 	if (value != nil || exp == nil)
@@ -107,6 +108,7 @@ Exec_stat MCParameter::eval(MCExecPoint& ep)
 
 	return ES_NORMAL;
 }
+#endif
 
 bool MCParameter::eval(MCExecContext &ctxt, MCValueRef &r_value)
 {
@@ -155,6 +157,7 @@ bool MCParameter::eval_argument(MCExecContext &ctxt, MCValueRef &r_value)
     return true;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCParameter::eval_argument(MCExecPoint& ep)
 {
 	if (var != NULL)
@@ -165,6 +168,7 @@ Exec_stat MCParameter::eval_argument(MCExecPoint& ep)
 
 	return ES_ERROR;
 }
+#endif
 
 MCVariable *MCParameter::eval_argument_var(void)
 {
@@ -173,6 +177,16 @@ MCVariable *MCParameter::eval_argument_var(void)
 
 /////////
 
+void MCParameter::set_argument(MCExecContext& ctxt, MCValueRef p_value)
+{
+	MCValueRef t_old_value;
+	t_old_value = value;
+    value = MCValueRetain(p_value);
+	MCValueRelease(t_old_value);
+	var = NULL;
+}
+
+#ifdef LEGACY_EXEC
 void MCParameter::set_argument(MCExecPoint& ep)
 {
 	MCValueRef t_old_value;
@@ -181,6 +195,7 @@ void MCParameter::set_argument(MCExecPoint& ep)
 	MCValueRelease(t_old_value);
 	var = NULL;
 }
+#endif
 
 void MCParameter::set_argument_var(MCVariable* p_var)
 {

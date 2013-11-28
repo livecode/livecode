@@ -578,8 +578,13 @@ static char *get_variable(const char *arg1, const char *arg2,
 	*retval = trans_stat(getvarptr(*MCECptr, arg1, &var));
 	if (var == NULL)
 		return NULL;
-	var -> eval(MCECptr->GetEP());
-	return MCECptr->GetEP().getsvalue().clone();
+    MCAutoValueRef t_value;
+	var -> eval(*MCECptr, &t_value);
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCECptr -> ConvertToString(*t_value, &t_string);
+    char *t_result;
+    /* UNCHECKED */ MCStringConvertToCString(*t_string, t_result);
+	return t_result;
 }
 
 static char *set_variable(const char *arg1, const char *arg2,
@@ -602,7 +607,7 @@ static char *set_variable(const char *arg1, const char *arg2,
 static char *get_variable_ex(const char *arg1, const char *arg2,
                              const char *arg3, int *retval)
 {
-	MCString *value = (MCString *)arg3;
+	char *value = (char *)arg3;
 	Boolean array = False;
 	MCVariable *var = NULL;
 	if (MCECptr == NULL)
@@ -613,18 +618,25 @@ static char *get_variable_ex(const char *arg1, const char *arg2,
 	*retval = trans_stat(getvarptr(*MCECptr, arg1, &var));
 	if (var == NULL)
 		return NULL;
+    
+    MCAutoValueRef t_value;
 
 	if (arg2 != NULL && strlen(arg2) != 0)
 	{
 		MCNameRef t_key;
 		/* UNCHECKED */ MCNameCreateWithCString(arg2, t_key);
-		var -> eval(MCECptr->GetEP(), &t_key, 1);
+		var -> eval(*MCECptr, &t_key, 1, &t_value);
 		MCValueRelease(t_key);
 	}
 	else
-		var -> eval(MCECptr->GetEP());
-
-	*value = MCECptr->GetEP().getsvalue();
+		var -> eval(*MCECptr, &t_value);
+    
+    
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCECptr -> ConvertToString(*t_value, &t_string);
+    char *t_result;
+    /* UNCHECKED */ MCStringConvertToCString(*t_string, t_result);
+	value = t_result;
 	return NULL;
 }
 

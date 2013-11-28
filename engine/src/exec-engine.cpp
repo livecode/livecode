@@ -1271,10 +1271,11 @@ static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObje
 
 			if (t_params != NULL)
 			{
-				t_params->eval(ctxt . GetEP());
-                MCAutoStringRef t_value;
-				ctxt . GetEP() . copyasstringref(&t_value);
-                MCStringFormat(&tptr, "%@ %@", *t_message, *t_value);
+                MCAutoValueRef t_value;
+				/* UNCHECKED */ t_params->eval(ctxt, &t_value);
+                MCAutoStringRef t_value_string;
+				ctxt . ConvertToString(*t_value, &t_value_string);
+                MCStringFormat(&tptr, "%@ %@", *t_message, *t_value_string);
 				
 			}
             else
