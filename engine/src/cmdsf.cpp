@@ -693,6 +693,10 @@ Exec_stat MCEncryptionOp::exec(MCExecPoint &ep)
 			}
 			/* UNCHECKED */  ep . copyasstringref(&t_passphrase);
 		}
+        else
+        {
+            t_passphrase = kMCEmptyString;
+        }
 		
 		if (source->eval(ep) != ES_NORMAL)
 		{
@@ -747,6 +751,10 @@ Exec_stat MCEncryptionOp::exec(MCExecPoint &ep)
 			}
 		/* UNCHECKED */  ep . copyasstringref(&t_salt);
 		}
+        else
+        {
+            t_salt = kMCEmptyString;
+        }
 		if (iv)
 		{
 			if (iv->eval(ep) != ES_NORMAL)
@@ -756,6 +764,10 @@ Exec_stat MCEncryptionOp::exec(MCExecPoint &ep)
 			}
 		/* UNCHECKED */  ep . copyasstringref(&t_iv);
 		}
+        else
+        {
+            t_iv = kMCEmptyString;
+        }
 
 		if (source->eval(ep) != ES_NORMAL)
 		{

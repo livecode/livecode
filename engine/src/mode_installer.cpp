@@ -582,7 +582,7 @@ public:
 		{
 			ExtractContext t_context;
 			t_context . target = MCtargetptr -> gethandle();
-			t_context . name = t_item;
+			t_context . name = *t_item;
 			t_context . var = ep.getit() -> evalvar(ep);
 			t_context . stream = nil;
 
@@ -637,11 +637,11 @@ private:
 			MCAutoStringRef t_data;
 			/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)p_data, p_data_length, kMCStringEncodingNative, false, &t_data);
 			MCStringRef t_value; 
-			/* UNCHECKED */ ctxt . ConvertToString(context -> var -> value, t_value);
+			/* UNCHECKED */ ctxt . ConvertToString(context -> var -> getvalueref(), t_value);
 			/* UNCHECHED */ MCStringMutableCopyAndRelease(t_value, t_value);
 			if (!MCStringAppend(t_value, *t_data))
 				return false;
-			MCValueAssign(context -> var -> value, t_value);
+            context -> var -> setvalueref(t_value);
 			MCValueRelease(t_value);
 		}
 
@@ -1550,7 +1550,7 @@ bool MCModeShouldCheckCantStandalone(void)
 }
 
 // The standalone mode doesn't have a message box redirect feature
-bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt)
+bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef)
 {
 	return false;
 }
