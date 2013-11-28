@@ -34,6 +34,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
+#include "exec-interface.h"
+
 #include <stddef.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,7 +59,7 @@ static struct {const char *name; Properties prop; } kMCParagraphAttrsProps[] =
 	{"vGrid", P_VGRID},
 	{"dontWrap", P_DONT_WRAP},
 	{"padding", P_PADDING},
-	{"listIndex", P_LIST_INDEX},
+    {"listIndex", P_LIST_INDEX},
 	{nil},
 };
 
@@ -66,6 +68,7 @@ bool MCParagraph::hasattrs(void)
 	return attrs != nil;
 }
 
+#ifdef LEGACY_EXEC
 void MCParagraph::storeattrs(MCArrayRef dst)
 {
 	MCExecPoint ep(nil, nil, nil);
@@ -76,15 +79,147 @@ void MCParagraph::storeattrs(MCArrayRef dst)
 			/* UNCHECKED */ ep . storearrayelement_cstring(dst, kMCParagraphAttrsProps[i] . name);
 	}
 }
+#endif
 
 void MCParagraph::fetchattrs(MCArrayRef src)
 {
-	MCExecPoint ep(nil, nil, nil);
-	for(uint32_t i = 0; kMCParagraphAttrsProps[i] . name != nil; i++)
-	{
-		/* UNCHECKED */ ep . fetcharrayelement_cstring(src, kMCParagraphAttrsProps[i] . name);
-		setparagraphattr(kMCParagraphAttrsProps[i] . prop, ep);
-	}
+    intenum_t t_intenum_value;
+    uinteger_t t_uint_value;
+    integer_t t_integer_value;
+    MCStringRef t_stringref_value;
+    MCBooleanRef t_boolean_value;
+    MCInterfaceNamedColor t_color;
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+
+    if (ctxt . CopyElementAsInteger(src, MCNAME("textAlign"), false, t_intenum_value))
+        SetTextAlign(ctxt, &t_intenum_value);
+    else
+        SetTextAlign(ctxt, nil);
+
+    if (ctxt . CopyElementAsInteger(src, MCNAME("listStyle"), false, t_intenum_value))
+        SetListStyle(ctxt, t_intenum_value);
+
+    if (ctxt . CopyElementAsUnsignedInteger(src, MCNAME("listDepth"), false, t_uint_value))
+        SetListDepth(ctxt, &t_uint_value);
+    else
+        SetListDepth(ctxt, nil);
+
+    if (ctxt . CopyElementAsInteger(src, MCNAME("listIndent"), false, t_integer_value))
+        SetListIndent(ctxt, &t_integer_value);
+    else
+        SetListIndent(ctxt, nil);
+
+    if (ctxt . CopyElementAsInteger(src, MCNAME("firstIndent"), false, t_integer_value))
+        SetFirstIndent(ctxt, &t_integer_value);
+    else
+        SetFirstIndent(ctxt, nil);
+
+    if (ctxt . CopyElementAsInteger(src, MCNAME("leftIndent"), false, t_integer_value))
+        SetLeftIndent(ctxt, &t_integer_value);
+    else
+        SetLeftIndent(ctxt, nil);
+
+    if (ctxt . CopyElementAsInteger(src, MCNAME("rightIndent"), false, t_integer_value))
+        SetRightIndent(ctxt, &t_integer_value);
+    else
+        SetRightIndent(ctxt, nil);
+
+    if (ctxt . CopyElementAsUnsignedInteger(src, MCNAME("spaceAbove"), false, t_uint_value))
+        SetSpaceAbove(ctxt, &t_uint_value);
+    else
+        SetSpaceAbove(ctxt, nil);
+
+    if (ctxt . CopyElementAsUnsignedInteger(src, MCNAME("spaceBelow"), false, t_uint_value))
+        SetSpaceBelow(ctxt, &t_uint_value);
+    else
+        SetSpaceBelow(ctxt, nil);
+
+    if (ctxt . CopyElementAsString(src, MCNAME("tabStops"), false, t_stringref_value))
+    {
+        uint16_t t_count;
+        vector_t<uinteger_t> t_tabstops;
+        uint16_t *t_uint16_tabs;
+
+        if (MCField::parsetabstops(P_TAB_STOPS, t_stringref_value, t_uint16_tabs, t_count))
+        {
+            /* UNCHECKED */ MCMemoryAllocate(t_count, t_tabstops . elements);
+            for (uint16_t i = 0; i < t_count; ++i)
+                t_tabstops . elements[i] = t_uint16_tabs[i];
+
+            SetTabStops(ctxt, t_tabstops);
+            MCMemoryDeallocate(t_tabstops . elements);
+            MCMemoryDeallocate(t_uint16_tabs);
+        }
+
+        MCValueRelease(t_stringref_value);
+    }
+
+    if (ctxt . CopyElementAsString(src, MCNAME("backgroundColor"), false, t_stringref_value))
+    {
+        if (MCscreen -> parsecolor(t_stringref_value, t_color . color, nil))
+        {
+            MCscreen -> alloccolor(t_color . color);
+            SetBackColor(ctxt, t_color);
+        }
+        MCValueRelease(t_stringref_value);
+    }
+
+    if (ctxt . CopyElementAsUnsignedInteger(src, MCNAME("borderWidth"), false, t_uint_value))
+        SetBorderWidth(ctxt, &t_uint_value);
+    else
+        SetBorderWidth(ctxt, nil);
+
+
+    if (ctxt . CopyElementAsString(src, MCNAME("borderColor"), false, t_stringref_value))
+    {
+        MCInterfaceNamedColor t_color;
+        if (MCscreen -> parsecolor(t_stringref_value, t_color . color, nil))
+        {
+            MCscreen -> alloccolor(t_color . color);
+            SetBorderColor(ctxt, t_color);
+        }
+        MCValueRelease(t_stringref_value);
+    }
+
+    if (ctxt . CopyElementAsBoolean(src, MCNAME("hGrid"), false, t_boolean_value))
+    {
+        bool t_bool;
+        t_bool = t_boolean_value == kMCTrue;
+        SetHGrid(ctxt, &t_bool);
+        MCValueRelease(t_boolean_value);
+    }
+    else
+        SetHGrid(ctxt, nil);
+
+    if (ctxt . CopyElementAsBoolean(src, MCNAME("vGrid"), false, t_boolean_value))
+    {
+        bool t_bool;
+        t_bool = t_boolean_value == kMCTrue;
+        SetVGrid(ctxt, &t_bool);
+        MCValueRelease(t_boolean_value);
+    }
+    else
+        SetVGrid(ctxt, nil);
+
+    if (ctxt . CopyElementAsBoolean(src, MCNAME("dontWrap"), false, t_boolean_value))
+    {
+        bool t_bool;
+        t_bool = t_boolean_value == kMCTrue;
+        SetDontWrap(ctxt, &t_bool);
+    }
+    else
+        SetDontWrap(ctxt, nil);
+
+    if (ctxt . CopyElementAsUnsignedInteger(src, MCNAME("padding"), false, t_uint_value))
+        SetPadding(ctxt, &t_uint_value);
+    else
+        SetPadding(ctxt, nil);
+
+    if (ctxt . CopyElementAsInteger(src, MCNAME("listIndex"), false, t_integer_value))
+        SetListIndent(ctxt, &t_integer_value);
+    else
+        SetListIndent(ctxt, nil);
 }
 
 IO_stat MCParagraph::loadattrs(IO_handle stream)
@@ -420,6 +555,7 @@ static bool setparagraphattr_bool(MCExecPoint& ep, MCParagraphAttrs*& attrs, uin
 	return true;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCParagraph::setparagraphattr(Properties which, MCExecPoint& ep)
 {
 	switch(which)
@@ -647,7 +783,9 @@ Exec_stat MCParagraph::setparagraphattr(Properties which, MCExecPoint& ep)
 
 	return ES_NORMAL;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 Exec_stat MCParagraph::getparagraphattr(Properties which, MCExecPoint& ep, Boolean effective)
 {
 	ep . clear();
@@ -797,6 +935,7 @@ Exec_stat MCParagraph::getparagraphattr(Properties which, MCExecPoint& ep, Boole
 
 	return ES_NORMAL;
 }
+#endif
 
 template<typename T> static void copysingleattr_int(MCParagraphAttrs *other_attrs, MCParagraphAttrs*& attrs, uint32_t p_flag, size_t p_field_offset)
 {
