@@ -1631,13 +1631,16 @@ bool MCField::parsetabstops(Properties which, MCStringRef data, uint16_t*& r_tab
 
 // MW-2012-02-11: [[ TabWidths ]] This method formats the tabStops in either stops or
 //   widths style depending on the value of which.
-void MCField::formattabstops(Properties which, MCExecPoint& ep, uint16_t *tabs, uint16_t tab_count)
+void MCField::formattabstops(Properties which, uint16_t *tabs, uint16_t tab_count, MCStringRef &r_result)
 {
-	ep.clear();
+	if (r_result != nil)
+        MCValueRelease(r_result);
+    MCAutoListRef t_list;
+    /* UNCHECKED */ MCListCreateMutable(EC_COMMA, &t_list);
 	if (which == P_TAB_STOPS)
 	{
 		for(uint32_t i = 0 ; i < tab_count ; i++)
-			ep.concatuint(tabs[i], EC_COMMA, i == 0);
+            MCListAppendInteger(*t_list, tabs[i]);
 	}
 	else
 	{
@@ -1645,10 +1648,11 @@ void MCField::formattabstops(Properties which, MCExecPoint& ep, uint16_t *tabs, 
 		t_previous_tab = 0;
 		for(uint32_t i = 0; i < tab_count; i++)
 		{
-			ep.concatuint(tabs[i] - t_previous_tab, EC_COMMA, i == 0);
+            MCListAppendInteger(*t_list, tabs[i]- t_previous_tab);
 			t_previous_tab = tabs[i];
 		}
 	}
+    /* UNCHECKED */ MCListCopyAsString(*t_list, r_result);
 }
 
 #ifdef LEGACY_EXEC

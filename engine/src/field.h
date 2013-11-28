@@ -592,7 +592,7 @@ public:
 	// MW-2012-02-11: [[ TabWidths ]] The 'which' parameter allows the parsing/formatting
 	//   routine to do both stops and widths.
 	static bool parsetabstops(Properties which, MCStringRef data, uint16_t*& r_tabs, uint16_t& r_tab_count);
-	static void formattabstops(Properties which, MCExecPoint& ep, uint16_t *tabs, uint16_t tab_count);
+	static void formattabstops(Properties which, uint16_t *tabs, uint16_t tab_count, MCStringRef& r_result);
 	
 	// MW-2012-02-22: [[ FieldChars ]] Count the number of characters (not bytes) between
 	//   start and end in the given field.
