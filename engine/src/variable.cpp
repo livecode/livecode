@@ -872,6 +872,7 @@ MCVariable *MCVarref::fetchvar(MCExecContext& ctxt)
 	return t_parentscript -> GetVariable(index);
 }
 
+#ifdef LEGACY_EXEC
 MCVariable *MCVarref::evalvar(MCExecPoint& ep)
 {
 	if (dimensions != 0)
@@ -879,6 +880,7 @@ MCVariable *MCVarref::evalvar(MCExecPoint& ep)
 
 	return fetchvar(ep);
 }
+#endif
 
 MCVariable *MCVarref::evalvar(MCExecContext& ctxt)
 {
@@ -928,6 +930,7 @@ bool MCVarref::eval(MCExecContext& ctxt, MCValueRef& r_value)
     return true;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCVarref::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
 {
 	if (dimensions == 0)
@@ -938,6 +941,7 @@ Exec_stat MCVarref::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
 
 	return resolve(ep, r_container);
 }
+#endif
 
 bool MCVarref::evalcontainer(MCExecContext& ctxt, MCContainer*& r_container)
 {
@@ -1165,7 +1169,6 @@ bool MCVarref::dofree(MCExecContext& ctxt)
 }
 
 //
-
 Exec_stat MCVarref::resolve(MCExecPoint& ep, MCContainer*& r_container)
 {
 	MCVariable *t_var;
