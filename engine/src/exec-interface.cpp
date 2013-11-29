@@ -1406,7 +1406,9 @@ void MCInterfaceEvalThereIsAnObject(MCExecContext& ctxt, MCChunk *p_object, bool
 	MCObject *optr;
 	uint4 parid;
 	MCerrorlock++;
-	r_exists = p_object->getobj(ctxt . GetEP(), optr, parid, True) == ES_NORMAL;
+    r_exists = p_object->getobj(ctxt . GetEP(), optr, parid, True) == ES_NORMAL;
+    //p_object->getoptionalobj(ctxt, optr, parid, True);
+    //r_exists = (optr == nil ? false : true);
 	MCerrorlock--;
 }
 
