@@ -280,7 +280,7 @@
 					"$(SOLUTION_DIR)/prebuilt/lib/ios/$(SDK_NAME)",
 					"\"$(SRCROOT)/../prebuilt/lib/ios/iPhoneSimulator6.1\"",
 				);
-				PRODUCT_NAME = coremobile;
+				PRODUCT_NAME = foundationmobile;
 			};
 			name = Release;
 		};
@@ -320,7 +320,7 @@
 					"$(SOLUTION_DIR)/prebuilt/lib/ios/$(SDK_NAME)",
 					"\"$(SRCROOT)/../prebuilt/lib/ios/iPhoneSimulator6.1\"",
 				);
-				PRODUCT_NAME = coremobile;
+				PRODUCT_NAME = foundationmobile;
 			};
 			name = ReleaseDeviceForShark;
 		};

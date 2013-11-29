@@ -43,7 +43,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "scrolbar.h"
 #include "paragraf.h"
-#include "block.h"
+#include "MCBlock.h"
 
 #include <stddef.h> // offsetof
 

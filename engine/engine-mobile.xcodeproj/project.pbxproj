@@ -21,7 +21,6 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		1D87BDCD18324DF800B5A1E5 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8AB9052180E9DCD0050A249 /* image_rep_densitymapped.cpp */; };
 		3CC6F42812AD0A6100852B3B /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3CC6F42712AD0A6100852B3B /* CFNetwork.framework */; };
 		4CD038F316C8FE1700EBCCBA /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 4CD038F216C8FE1700EBCCBA /* Default-568h@2x.png */; };
 		4D08A0D0138EA51D0081F990 /* libstandalone-mobile-lib-community.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D2D91891386E2610057811A /* libstandalone-mobile-lib-community.a */; };
@@ -45,16 +44,16 @@
 		4D7E39581281625500E7F80A /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7E39571281625500E7F80A /* MessageUI.framework */; };
 		4D7E39601281626600E7F80A /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7E395F1281626600E7F80A /* AudioToolbox.framework */; };
 		4D7E3A591281835D00E7F80A /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 4D7E3A581281835D00E7F80A /* Default.png */; };
-		4D82FCDB171485DF00C48403 /* Default-568h@2x.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4CD038F216C8FE1700EBCCBA /* Default-568h@2x.png */; };
-		4D82FCDC171485E200C48403 /* mobile-template.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4D82FCD8171485CA00C48403 /* mobile-template.plist */; };
-		4D82FCDD171485E400C48403 /* mobile-remote-notification-template.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4D82FCD9171485D000C48403 /* mobile-remote-notification-template.plist */; };
-		4D82FCDE171485E600C48403 /* mobile-url-scheme-template.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4D82FCDA171485D600C48403 /* mobile-url-scheme-template.plist */; };
-		4D82FCEC1714876C00C48403 /* template-entitlements.xcent in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4D82FCE41714862D00C48403 /* template-entitlements.xcent */; };
-		4D82FCED1714876C00C48403 /* template-remote-notification-entitlements.xcent in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4D82FCE51714863800C48403 /* template-remote-notification-entitlements.xcent */; };
-		4D82FCEE1714876C00C48403 /* template-remote-notification-store-entitlements.xcent in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4D82FCE61714864100C48403 /* template-remote-notification-store-entitlements.xcent */; };
-		4D82FCEF1714876F00C48403 /* template-ResourceRules.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4D82FCE71714864F00C48403 /* template-ResourceRules.plist */; };
-		4D82FCF01714877A00C48403 /* mobile-device-template.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4D82FCE81714866500C48403 /* mobile-device-template.plist */; };
-		4D82FD00171487AE00C48403 /* template-store-entitlements.xcent in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4D82FCFF171487A400C48403 /* template-store-entitlements.xcent */; };
+		4D82FCDB171485DF00C48403 /* Default-568h@2x.png in Copy Files */ = {isa = PBXBuildFile; fileRef = 4CD038F216C8FE1700EBCCBA /* Default-568h@2x.png */; };
+		4D82FCDC171485E200C48403 /* mobile-template.plist in Copy Files */ = {isa = PBXBuildFile; fileRef = 4D82FCD8171485CA00C48403 /* mobile-template.plist */; };
+		4D82FCDD171485E400C48403 /* mobile-remote-notification-template.plist in Copy Files */ = {isa = PBXBuildFile; fileRef = 4D82FCD9171485D000C48403 /* mobile-remote-notification-template.plist */; };
+		4D82FCDE171485E600C48403 /* mobile-url-scheme-template.plist in Copy Files */ = {isa = PBXBuildFile; fileRef = 4D82FCDA171485D600C48403 /* mobile-url-scheme-template.plist */; };
+		4D82FCEC1714876C00C48403 /* template-entitlements.xcent in Copy Files */ = {isa = PBXBuildFile; fileRef = 4D82FCE41714862D00C48403 /* template-entitlements.xcent */; };
+		4D82FCED1714876C00C48403 /* template-remote-notification-entitlements.xcent in Copy Files */ = {isa = PBXBuildFile; fileRef = 4D82FCE51714863800C48403 /* template-remote-notification-entitlements.xcent */; };
+		4D82FCEE1714876C00C48403 /* template-remote-notification-store-entitlements.xcent in Copy Files */ = {isa = PBXBuildFile; fileRef = 4D82FCE61714864100C48403 /* template-remote-notification-store-entitlements.xcent */; };
+		4D82FCEF1714876F00C48403 /* template-ResourceRules.plist in Copy Files */ = {isa = PBXBuildFile; fileRef = 4D82FCE71714864F00C48403 /* template-ResourceRules.plist */; };
+		4D82FCF01714877A00C48403 /* mobile-device-template.plist in Copy Files */ = {isa = PBXBuildFile; fileRef = 4D82FCE81714866500C48403 /* mobile-device-template.plist */; };
+		4D82FD00171487AE00C48403 /* template-store-entitlements.xcent in Copy Files */ = {isa = PBXBuildFile; fileRef = 4D82FCFF171487A400C48403 /* template-store-entitlements.xcent */; };
 		4D8C699C167A22B500D3CCE7 /* image_rep_encoded.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D8C6999167A22B500D3CCE7 /* image_rep_encoded.cpp */; };
 		4D8C699D167A22B500D3CCE7 /* image_rep_mutable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D8C699A167A22B500D3CCE7 /* image_rep_mutable.cpp */; };
 		4D8C699E167A22B500D3CCE7 /* imagebitmap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D8C699B167A22B500D3CCE7 /* imagebitmap.cpp */; };
@@ -248,6 +247,15 @@
 		4DD3E17B1040BDAF00CAC7EF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD3E17A1040BDAF00CAC7EF /* libz.dylib */; };
 		4DE5E7EB174BBE89001AB76D /* uuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE5E7E6174BBE64001AB76D /* uuid.cpp */; };
 		4DE9499E142762490072D9C6 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE9499D142762490072D9C6 /* CoreText.framework */; };
+		7268ED8E1848C1F400D10598 /* exec-misc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94594A17621812008408DE /* exec-misc.cpp */; };
+		7268ED8F1848C30200D10598 /* exec-ad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE940439175F74D2003EAB87 /* exec-ad.cpp */; };
+		7268ED901848C30200D10598 /* exec-busyindicator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE93A9091760D32200791270 /* exec-busyindicator.cpp */; };
+		7268ED911848C30200D10598 /* exec-calendar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94043E175F9D8B003EAB87 /* exec-calendar.cpp */; };
+		7268ED921848C30200D10598 /* exec-idletimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE7506E1175DE05E00A339DA /* exec-idletimer.cpp */; };
+		7268ED931848C30200D10598 /* exec-notification.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE93A90517608B4500791270 /* exec-notification.cpp */; };
+		7268ED941848C30200D10598 /* exec-sound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE9459481761E219008408DE /* exec-sound.cpp */; };
+		7268ED951848C30200D10598 /* exec-textmessaging.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449997175D02AE00346B49 /* exec-textmessaging.cpp */; };
+		7268ED961848C37D00D10598 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8AB9052180E9DCD0050A249 /* image_rep_densitymapped.cpp */; };
 		7607CF321768D26700ADB512 /* mbliphoneorientation.mm in Sources */ = {isa = PBXBuildFile; fileRef = BE940436175F659F003EAB87 /* mbliphoneorientation.mm */; };
 		7607CF701769BB4D00ADB512 /* exec-interface-aclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7607CF601769BB4C00ADB512 /* exec-interface-aclip.cpp */; };
 		7607CF711769BB4D00ADB512 /* exec-interface-button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7607CF611769BB4C00ADB512 /* exec-interface-button.cpp */; };
@@ -265,9 +273,7 @@
 		7607CF7D1769BB4D00ADB512 /* exec-interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7607CF6D1769BB4D00ADB512 /* exec-interface.cpp */; };
 		7607CF7E1769BB4D00ADB512 /* exec-interface2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7607CF6F1769BB4D00ADB512 /* exec-interface2.cpp */; };
 		768D66C217622FE200F203A3 /* exec-nativecontrol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */; };
-		768D66C317622FE200F203A3 /* exec-nativecontrol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */; };
 		768D66C51765E11300F203A3 /* exec-pick.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C41765E11300F203A3 /* exec-pick.cpp */; };
-		768D66C61765E11300F203A3 /* exec-pick.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C41765E11300F203A3 /* exec-pick.cpp */; };
 		7695688A1822771000779255 /* libgraphicsmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 76EF329318217FC600FAC195 /* libgraphicsmobile.a */; };
 		769568911822776B00779255 /* libskiamobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 769568901822775200779255 /* libskiamobile.a */; };
 		76956893182277B200779255 /* cgimageutil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76956892182277AE00779255 /* cgimageutil.cpp */; };
@@ -306,25 +312,13 @@
 		BE449505175CE13900346B49 /* legacy_spec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449504175CE13900346B49 /* legacy_spec.cpp */; };
 		BE44950A175CE8AC00346B49 /* syntax.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449508175CE8AC00346B49 /* syntax.cpp */; };
 		BE44950B175CEEF300346B49 /* exec-security.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494D8175CDE7400346B49 /* exec-security.cpp */; };
-		BE449998175D02AE00346B49 /* exec-textmessaging.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449997175D02AE00346B49 /* exec-textmessaging.cpp */; };
 		BE7506E3175DE36000A339DA /* mblhandlers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449995175D029600346B49 /* mblhandlers.cpp */; };
-		BE7506E6175DEB7700A339DA /* exec-idletimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE7506E1175DE05E00A339DA /* exec-idletimer.cpp */; };
 		BE7506EC175DEDB400A339DA /* mbliphoneidletimer.mm in Sources */ = {isa = PBXBuildFile; fileRef = BE7506EB175DEDB400A339DA /* mbliphoneidletimer.mm */; };
 		BE7506F0175E0BD200A339DA /* exec-store.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE7506EF175E0BD200A339DA /* exec-store.cpp */; };
-		BE93A9061760912100791270 /* exec-notification.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE93A90517608B4500791270 /* exec-notification.cpp */; };
-		BE93A90A1760D32300791270 /* exec-busyindicator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE93A9091760D32200791270 /* exec-busyindicator.cpp */; };
 		BE94042E175F6308003EAB87 /* exec-addressbook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042A175F6307003EAB87 /* exec-addressbook.cpp */; };
 		BE94042F175F6308003EAB87 /* exec-mail.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042B175F6308003EAB87 /* exec-mail.cpp */; };
 		BE940430175F6308003EAB87 /* exec-orientation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042C175F6308003EAB87 /* exec-orientation.cpp */; };
 		BE940431175F6308003EAB87 /* exec-sensor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042D175F6308003EAB87 /* exec-sensor.cpp */; };
-		BE940432175F6418003EAB87 /* exec-addressbook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042A175F6307003EAB87 /* exec-addressbook.cpp */; };
-		BE940433175F6418003EAB87 /* exec-mail.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042B175F6308003EAB87 /* exec-mail.cpp */; };
-		BE940434175F6418003EAB87 /* exec-orientation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042C175F6308003EAB87 /* exec-orientation.cpp */; };
-		BE940435175F6418003EAB87 /* exec-sensor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042D175F6308003EAB87 /* exec-sensor.cpp */; };
-		BE94043B175F74D2003EAB87 /* exec-ad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE940439175F74D2003EAB87 /* exec-ad.cpp */; };
-		BE94043F175F9D8C003EAB87 /* exec-calendar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94043E175F9D8B003EAB87 /* exec-calendar.cpp */; };
-		BE9459491761E250008408DE /* exec-sound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE9459481761E219008408DE /* exec-sound.cpp */; };
-		BE94594B17621812008408DE /* exec-misc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94594A17621812008408DE /* exec-misc.cpp */; };
 		E8111F8C1541938E00DB16E3 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8B1541938E00DB16E3 /* CoreMotion.framework */; };
 		E8111F8E154193A500DB16E3 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8D154193A500DB16E3 /* AddressBook.framework */; };
 		E8111F90154193AB00DB16E3 /* AddressBookUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8F154193AB00DB16E3 /* AddressBookUI.framework */; };
@@ -449,6 +443,13 @@
 			remoteGlobalIDString = 4DABCD8915ECD40F0085E214;
 			remoteInfo = "standalone-mobile-kernel";
 		};
+		7238DF4F1848B920007EA049 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7695688B1822775100779255 /* libskia-mobile.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DD3E0171040BB5D00CAC7EF;
+			remoteInfo = skiamobile;
+		};
 		7695688F1822775200779255 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 7695688B1822775100779255 /* libskia-mobile.xcodeproj */;
@@ -494,23 +495,24 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		F670DB65147D45A5008FEA1E /* CopyFiles */ = {
+		F670DB65147D45A5008FEA1E /* Copy Files */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 16;
 			files = (
-				4D82FCDB171485DF00C48403 /* Default-568h@2x.png in CopyFiles */,
-				4D82FCF01714877A00C48403 /* mobile-device-template.plist in CopyFiles */,
-				4D82FCDC171485E200C48403 /* mobile-template.plist in CopyFiles */,
-				4D82FCDD171485E400C48403 /* mobile-remote-notification-template.plist in CopyFiles */,
-				4D82FCDE171485E600C48403 /* mobile-url-scheme-template.plist in CopyFiles */,
-				4D82FD00171487AE00C48403 /* template-store-entitlements.xcent in CopyFiles */,
-				4D82FCEC1714876C00C48403 /* template-entitlements.xcent in CopyFiles */,
-				4D82FCED1714876C00C48403 /* template-remote-notification-entitlements.xcent in CopyFiles */,
-				4D82FCEE1714876C00C48403 /* template-remote-notification-store-entitlements.xcent in CopyFiles */,
-				4D82FCEF1714876F00C48403 /* template-ResourceRules.plist in CopyFiles */,
+				4D82FCDB171485DF00C48403 /* Default-568h@2x.png in Copy Files */,
+				4D82FCF01714877A00C48403 /* mobile-device-template.plist in Copy Files */,
+				4D82FCDC171485E200C48403 /* mobile-template.plist in Copy Files */,
+				4D82FCDD171485E400C48403 /* mobile-remote-notification-template.plist in Copy Files */,
+				4D82FCDE171485E600C48403 /* mobile-url-scheme-template.plist in Copy Files */,
+				4D82FD00171487AE00C48403 /* template-store-entitlements.xcent in Copy Files */,
+				4D82FCEC1714876C00C48403 /* template-entitlements.xcent in Copy Files */,
+				4D82FCED1714876C00C48403 /* template-remote-notification-entitlements.xcent in Copy Files */,
+				4D82FCEE1714876C00C48403 /* template-remote-notification-store-entitlements.xcent in Copy Files */,
+				4D82FCEF1714876F00C48403 /* template-ResourceRules.plist in Copy Files */,
 			);
+			name = "Copy Files";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -644,7 +646,7 @@
 		4DD3DD9C1040AA9A00CAC7EF /* standalone-mobile-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "standalone-mobile-Info.plist"; path = "rsrc/standalone-mobile-Info.plist"; sourceTree = "<group>"; };
 		4DD3DDAD1040AC1A00CAC7EF /* bitmapeffect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bitmapeffect.cpp; path = src/bitmapeffect.cpp; sourceTree = "<group>"; };
 		4DD3DDAE1040AC1A00CAC7EF /* ask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ask.h; path = src/ask.h; sourceTree = "<group>"; };
-		4DD3DDAF1040AC1A00CAC7EF /* block.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = block.h; path = src/block.h; sourceTree = "<group>"; };
+		4DD3DDAF1040AC1A00CAC7EF /* MCBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MCBlock.h; path = src/MCBlock.h; sourceTree = "<group>"; };
 		4DD3DDB01040AC1A00CAC7EF /* block.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = block.cpp; path = src/block.cpp; sourceTree = "<group>"; };
 		4DD3DDB11040AC1A00CAC7EF /* aclip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = aclip.h; path = src/aclip.h; sourceTree = "<group>"; };
 		4DD3DDB21040AC1A00CAC7EF /* aclip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = aclip.cpp; path = src/aclip.cpp; sourceTree = "<group>"; };
@@ -1634,7 +1636,7 @@
 				4DD3DDB21040AC1A00CAC7EF /* aclip.cpp */,
 				4DD3DDB11040AC1A00CAC7EF /* aclip.h */,
 				4DD3DDB01040AC1A00CAC7EF /* block.cpp */,
-				4DD3DDAF1040AC1A00CAC7EF /* block.h */,
+				4DD3DDAF1040AC1A00CAC7EF /* MCBlock.h */,
 				4DD3DDDA1040AC5C00CAC7EF /* button.cpp */,
 				4DD3DDDF1040AC5C00CAC7EF /* button.h */,
 				4DD3DDDE1040AC5C00CAC7EF /* buttondraw.cpp */,
@@ -1936,6 +1938,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				7238DF501848B920007EA049 /* PBXTargetDependency */,
 				76EF32E21822743500FAC195 /* PBXTargetDependency */,
 				4DABCE6415ECD4E80085E214 /* PBXTargetDependency */,
 				4D22209A171D783800E7E557 /* PBXTargetDependency */,
@@ -1978,7 +1981,7 @@
 				4DD3DD951040AA9A00CAC7EF /* Resources */,
 				4DD3DD961040AA9A00CAC7EF /* Sources */,
 				4DD3DD971040AA9A00CAC7EF /* Frameworks */,
-				F670DB65147D45A5008FEA1E /* CopyFiles */,
+				F670DB65147D45A5008FEA1E /* Copy Files */,
 			);
 			buildRules = (
 			);
@@ -2144,7 +2147,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "$PLATFORM_DEVELOPER_BIN_DIR/g++ -nodefaultlibs -Wl,-r -Wl,-x -arch ${ARCHS//\\ /\\ -arch\\ } -isysroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,\"$SRCROOT/standalone.ios\" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol\n";
+			shellScript = "$PLATFORM_DEVELOPER_BIN_DIR/g++ -nodefaultlibs -Wl,-r -Wl,-x -arch ${ARCHS//\\ /\\ -arch\\ } -isysroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,\"$SOLUTION_DIR/engine//standalone.ios\" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -2235,6 +2238,7 @@
 				4DABCDD915ECD4700085E214 /* ijpg.cpp in Sources */,
 				4DABCDDA15ECD4700085E214 /* image.cpp in Sources */,
 				E84A254E1680BFFD00EA7ACC /* image_rep.cpp in Sources */,
+				7268ED961848C37D00D10598 /* image_rep_densitymapped.cpp in Sources */,
 				4D8C699C167A22B500D3CCE7 /* image_rep_encoded.cpp in Sources */,
 				4D8C699D167A22B500D3CCE7 /* image_rep_mutable.cpp in Sources */,
 				4D8C699E167A22B500D3CCE7 /* imagebitmap.cpp in Sources */,
@@ -2362,39 +2366,10 @@
 				4DABCE5C15ECD4B50085E214 /* variable.cpp in Sources */,
 				4DABCE5F15ECD4B50085E214 /* vclip.cpp in Sources */,
 				4DABCE6115ECD4B50085E214 /* visual.cpp in Sources */,
-				BE4494DD175CDE7400346B49 /* exec-array.cpp in Sources */,
-				BE4494DE175CDE7400346B49 /* exec-datetime.cpp in Sources */,
-				BE4494DF175CDE7400346B49 /* exec-debugging.cpp in Sources */,
-				BE4494E0175CDE7400346B49 /* exec-dialog.cpp in Sources */,
-				BE4494E1175CDE7400346B49 /* exec-engine.cpp in Sources */,
-				BE4494E2175CDE7400346B49 /* exec-files.cpp in Sources */,
-				BE4494E3175CDE7400346B49 /* exec-filters.cpp in Sources */,
-				BE4494E4175CDE7400346B49 /* exec-graphics.cpp in Sources */,
-				BE4494E5175CDE7400346B49 /* exec-ide.cpp in Sources */,
-				BE4494F5175CDE7400346B49 /* exec-legacy.cpp in Sources */,
-				BE4494F6175CDE7400346B49 /* exec-logic.cpp in Sources */,
-				BE4494F7175CDE7400346B49 /* exec-math.cpp in Sources */,
-				BE4494F8175CDE7400346B49 /* exec-multimedia.cpp in Sources */,
-				BE4494F9175CDE7400346B49 /* exec-network.cpp in Sources */,
-				BE4494FA175CDE7400346B49 /* exec-pasteboard.cpp in Sources */,
-				BE4494FB175CDE7400346B49 /* exec-printing.cpp in Sources */,
-				BE4494FC175CDE7400346B49 /* exec-scripting.cpp in Sources */,
-				BE4494FE175CDE7400346B49 /* exec-server.cpp in Sources */,
-				BE4494FF175CDE7400346B49 /* exec-strings.cpp in Sources */,
-				BE449500175CDE7400346B49 /* exec-text.cpp in Sources */,
-				BE449501175CDE7400346B49 /* exec.cpp in Sources */,
 				BE449505175CE13900346B49 /* legacy_spec.cpp in Sources */,
 				BE44950A175CE8AC00346B49 /* syntax.cpp in Sources */,
-				BE44950B175CEEF300346B49 /* exec-security.cpp in Sources */,
 				BE7506E3175DE36000A339DA /* mblhandlers.cpp in Sources */,
 				BE7506EC175DEDB400A339DA /* mbliphoneidletimer.mm in Sources */,
-				BE7506F0175E0BD200A339DA /* exec-store.cpp in Sources */,
-				BE94042E175F6308003EAB87 /* exec-addressbook.cpp in Sources */,
-				BE94042F175F6308003EAB87 /* exec-mail.cpp in Sources */,
-				BE940430175F6308003EAB87 /* exec-orientation.cpp in Sources */,
-				BE940431175F6308003EAB87 /* exec-sensor.cpp in Sources */,
-				768D66C217622FE200F203A3 /* exec-nativecontrol.cpp in Sources */,
-				768D66C51765E11300F203A3 /* exec-pick.cpp in Sources */,
 				7607CF321768D26700ADB512 /* mbliphoneorientation.mm in Sources */,
 				7607CF701769BB4D00ADB512 /* exec-interface-aclip.cpp in Sources */,
 				7607CF711769BB4D00ADB512 /* exec-interface-button.cpp in Sources */,
@@ -2412,7 +2387,6 @@
 				7607CF7D1769BB4D00ADB512 /* exec-interface.cpp in Sources */,
 				7607CF7E1769BB4D00ADB512 /* exec-interface2.cpp in Sources */,
 				BE0A3CD417E1FD2500C2361B /* mblnetwork.cpp in Sources */,
-				BE02B4FB17FEC652001BAFF0 /* exec-strings-chunk.cpp in Sources */,
 				76B298B2180448AF0053EC38 /* exec-interface-field-chunk.cpp in Sources */,
 				76EF32BA182263E000FAC195 /* foundation-legacy.cpp in Sources */,
 				76EF32D918226C7300FAC195 /* sysunxrandom.cpp in Sources */,
@@ -2421,6 +2395,44 @@
 				76EF32E61822757A00FAC195 /* stackview.cpp in Sources */,
 				76EF32E9182275D500FAC195 /* imagelist.cpp in Sources */,
 				76956893182277B200779255 /* cgimageutil.cpp in Sources */,
+				7268ED8F1848C30200D10598 /* exec-ad.cpp in Sources */,
+				BE94042E175F6308003EAB87 /* exec-addressbook.cpp in Sources */,
+				BE4494DD175CDE7400346B49 /* exec-array.cpp in Sources */,
+				7268ED901848C30200D10598 /* exec-busyindicator.cpp in Sources */,
+				7268ED911848C30200D10598 /* exec-calendar.cpp in Sources */,
+				BE4494DE175CDE7400346B49 /* exec-datetime.cpp in Sources */,
+				BE4494DF175CDE7400346B49 /* exec-debugging.cpp in Sources */,
+				BE4494E0175CDE7400346B49 /* exec-dialog.cpp in Sources */,
+				BE4494E1175CDE7400346B49 /* exec-engine.cpp in Sources */,
+				BE4494E2175CDE7400346B49 /* exec-files.cpp in Sources */,
+				BE4494E3175CDE7400346B49 /* exec-filters.cpp in Sources */,
+				BE4494E4175CDE7400346B49 /* exec-graphics.cpp in Sources */,
+				BE4494E5175CDE7400346B49 /* exec-ide.cpp in Sources */,
+				7268ED921848C30200D10598 /* exec-idletimer.cpp in Sources */,
+				BE4494F5175CDE7400346B49 /* exec-legacy.cpp in Sources */,
+				BE4494F6175CDE7400346B49 /* exec-logic.cpp in Sources */,
+				BE94042F175F6308003EAB87 /* exec-mail.cpp in Sources */,
+				BE4494F7175CDE7400346B49 /* exec-math.cpp in Sources */,
+				7268ED8E1848C1F400D10598 /* exec-misc.cpp in Sources */,
+				BE4494F8175CDE7400346B49 /* exec-multimedia.cpp in Sources */,
+				768D66C217622FE200F203A3 /* exec-nativecontrol.cpp in Sources */,
+				BE4494F9175CDE7400346B49 /* exec-network.cpp in Sources */,
+				7268ED931848C30200D10598 /* exec-notification.cpp in Sources */,
+				BE940430175F6308003EAB87 /* exec-orientation.cpp in Sources */,
+				BE4494FA175CDE7400346B49 /* exec-pasteboard.cpp in Sources */,
+				768D66C51765E11300F203A3 /* exec-pick.cpp in Sources */,
+				BE4494FB175CDE7400346B49 /* exec-printing.cpp in Sources */,
+				BE4494FC175CDE7400346B49 /* exec-scripting.cpp in Sources */,
+				BE44950B175CEEF300346B49 /* exec-security.cpp in Sources */,
+				BE940431175F6308003EAB87 /* exec-sensor.cpp in Sources */,
+				BE4494FE175CDE7400346B49 /* exec-server.cpp in Sources */,
+				7268ED941848C30200D10598 /* exec-sound.cpp in Sources */,
+				BE7506F0175E0BD200A339DA /* exec-store.cpp in Sources */,
+				BE02B4FB17FEC652001BAFF0 /* exec-strings-chunk.cpp in Sources */,
+				BE4494FF175CDE7400346B49 /* exec-strings.cpp in Sources */,
+				BE449500175CDE7400346B49 /* exec-text.cpp in Sources */,
+				7268ED951848C30200D10598 /* exec-textmessaging.cpp in Sources */,
+				BE449501175CDE7400346B49 /* exec.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2428,22 +2440,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1D87BDCD18324DF800B5A1E5 /* image_rep_densitymapped.cpp in Sources */,
 				4D08A113138EA7C60081F990 /* dummy.cpp in Sources */,
-				BE449998175D02AE00346B49 /* exec-textmessaging.cpp in Sources */,
-				BE7506E6175DEB7700A339DA /* exec-idletimer.cpp in Sources */,
-				BE940432175F6418003EAB87 /* exec-addressbook.cpp in Sources */,
-				BE940433175F6418003EAB87 /* exec-mail.cpp in Sources */,
-				BE940434175F6418003EAB87 /* exec-orientation.cpp in Sources */,
-				BE940435175F6418003EAB87 /* exec-sensor.cpp in Sources */,
-				BE94043B175F74D2003EAB87 /* exec-ad.cpp in Sources */,
-				768D66C317622FE200F203A3 /* exec-nativecontrol.cpp in Sources */,
-				768D66C61765E11300F203A3 /* exec-pick.cpp in Sources */,
-				BE94043F175F9D8C003EAB87 /* exec-calendar.cpp in Sources */,
-				BE93A9061760912100791270 /* exec-notification.cpp in Sources */,
-				BE93A90A1760D32300791270 /* exec-busyindicator.cpp in Sources */,
-				BE9459491761E250008408DE /* exec-sound.cpp in Sources */,
-				BE94594B17621812008408DE /* exec-misc.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2510,6 +2507,11 @@
 			target = 4DABCD8915ECD40F0085E214 /* standalone-mobile-kernel */;
 			targetProxy = 4DABCE6315ECD4E80085E214 /* PBXContainerItemProxy */;
 		};
+		7238DF501848B920007EA049 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = skiamobile;
+			targetProxy = 7238DF4F1848B920007EA049 /* PBXContainerItemProxy */;
+		};
 		76EF32E21822743500FAC195 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = graphicsmobile;
@@ -2575,6 +2577,8 @@
 			baseConfigurationReference = 4DD3DF4A1040B13E00CAC7EF /* Release Mobile.xcconfig */;
 			buildSettings = {
 				LIBRARY_SEARCH_PATHS = "$(SOLUTION_DIR)/prebuilt/lib/ios/$(SDK_NAME)";
+				OTHER_CFLAGS = "";
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 			};
 			name = Release;
 		};
@@ -2622,6 +2626,8 @@
 			baseConfigurationReference = 4DD3DF461040B04D00CAC7EF /* Debug Mobile.xcconfig */;
 			buildSettings = {
 				LIBRARY_SEARCH_PATHS = "$(SOLUTION_DIR)/prebuilt/lib/ios/$(SDK_NAME)";
+				OTHER_CFLAGS = "";
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 			};
 			name = Debug;
 		};

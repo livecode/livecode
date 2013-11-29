@@ -45,6 +45,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbldc.h"
 #include "mblstore.h"
 
+#include "osspec.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern int32_t g_android_keyboard_type;
@@ -1596,3 +1598,11 @@ bool MCSystemSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+MCLocaleRef MCS_getsystemlocale()
+{
+    // TODO: doing this properly requires a JNI call
+    MCLocaleRef t_locale;
+    /* UNCHECKED */ MCLocaleCreateWithName(MCSTR("en_US"), t_locale);
+    return t_locale;
+}
