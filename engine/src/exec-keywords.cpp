@@ -38,6 +38,11 @@
 
 #include "globals.h"
 
+#ifdef _MOBILE
+extern bool MCIsPlatformMessage(MCNameRef handler_name);
+extern Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters);
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p_statements, Exec_errors p_error)

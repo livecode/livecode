@@ -1575,6 +1575,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             break;
             
         case kMCPropertyTypeInt16X4:
+        case kMCPropertyTypeInt32X4:
         {
             integer_t t_value[4];
             ((void(*)(MCExecContext&, void *, integer_t[4]))prop -> getter)(ctxt, mark, t_value);

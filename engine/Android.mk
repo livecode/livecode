@@ -71,7 +71,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	exec-interface-aclip.cpp exec-interface-button.cpp exec-interface-card.cpp exec-interface-control.cpp \
 	exec-interface-field.cpp exec-interface-field-chunk.cpp exec-interface-graphic.cpp exec-interface-group.cpp exec-interface-image.cpp \
 	exec-interface-object.cpp exec-interface-player.cpp exec-interface-scrollbar.cpp exec-interface-stack.cpp \
-	exec-interface-vclip.cpp exec-legacy.cpp exec-dialog.cpp \
+	exec-interface-vclip.cpp exec-legacy.cpp exec-dialog.cpp exec-keywords.cpp \
 	syntax.cpp \
 	foundation-legacy.cpp legacy_spec.cpp )
 

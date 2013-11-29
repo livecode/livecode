@@ -160,8 +160,9 @@ int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button
 		ctxt . buttons[i] = MCValueRetain(p_buttons[i]);
 	ctxt . button_count = p_button_count;
 	ctxt . type = p_type;
-	ctxt . title = MCValueRetain(p_title);
-	ctxt . message = MCValueRetain(p_message);
+    // may be nil
+	ctxt . title = p_title;
+	ctxt . message = p_message;
 	
 	MCIPhoneRunOnMainFiber(dopopupanswerdialog_prewait, &ctxt);
 	
@@ -174,8 +175,10 @@ int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button
     for (uindex_t i = 0; i < p_button_count; i++)
 		MCValueRelease(ctxt . buttons[i]);
     /* UNCHECKED */ MCMemoryDeallocate(ctxt . buttons);
-    MCValueRelease(ctxt . title);
-    MCValueRelease(ctxt . message);
+    
+    // dont release, owned by the caller
+    //MCValueRelease(ctxt . title);
+    //MCValueRelease(ctxt . message);
 	return ctxt . result;
 }
 

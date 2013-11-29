@@ -341,7 +341,10 @@ IO_stat MCDispatch::startup(void)
         MCAutoStringRef t_path;
         uindex_t t_last_slash;
         /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCCompareExact, t_last_slash);
-        /* UNCHECKED */ MCStringFormat(&t_path, "%.*@/iphone_test.livecode", MCRangeMake(0, t_last_slash), MCcmd);
+        // temporary fix until ranged formats for stringrefs is working
+        MCAutoStringRef t_dir;
+        /* UNCHECKED */ MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), &t_dir);
+        /* UNCHECKED */ MCStringFormat(&t_path, "%@/iphone_test.livecode", *t_dir);
         t_stream = MCS_open(*t_path, kMCSOpenFileModeRead, False, False, 0);
 #endif
 		
