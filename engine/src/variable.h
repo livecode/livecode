@@ -686,10 +686,13 @@ public:
 	// transiently.
 	void grab(char *p_buffer, uint4 p_length);
 
+
     Exec_stat eval(MCExecPoint& ep);
     Exec_stat eval(MCExecPoint& ep, MCNameRef *path, uindex_t length);
+#ifdef LEGACY_EXEC
     Exec_stat set(MCExecPoint& ep);
     Exec_stat set(MCExecPoint& ep, MCNameRef *path, uindex_t length);
+#endif
     Exec_stat append(MCExecPoint& ep);
     Exec_stat append(MCExecPoint& ep, MCNameRef *path, uindex_t length);
     Exec_stat remove(MCExecPoint& ep);

@@ -599,8 +599,10 @@ static char *set_variable(const char *arg1, const char *arg2,
 	*retval = trans_stat(getvarptr(*MCECptr, arg1,&var));
 	if (var == NULL)
 		return NULL;
-	MCECptr->GetEP().setsvalue(arg2);
-	var->set(MCECptr->GetEP());
+	//MCECptr->GetEP().setsvalue(arg2);
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringCreateWithCString(arg2, &t_string);
+	var->set(*MCECptr, *t_string);
 	return NULL;
 }
 
@@ -643,7 +645,6 @@ static char *get_variable_ex(const char *arg1, const char *arg2,
 static char *set_variable_ex(const char *arg1, const char *arg2,
                              const char *arg3, int *retval)
 {
-	MCString *value = (MCString *)arg3;
 	MCVariable *var = NULL;
 	if (MCECptr == NULL)
 	{
@@ -653,16 +654,17 @@ static char *set_variable_ex(const char *arg1, const char *arg2,
 	*retval = trans_stat(getvarptr(*MCECptr, arg1,&var));
 	if (var == NULL)
 		return NULL;
-	MCECptr->GetEP().setsvalue(*value);
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringCreateWithCString(arg3, &t_string);
 	if (arg2 != NULL && strlen(arg2) > 0)
 	{
 		MCNameRef t_key;
 		/* UNCHECKED */ MCNameCreateWithCString(arg2, t_key);
-		var->set(MCECptr->GetEP(), &t_key, 1);
+		var->set(*MCECptr, *t_string, &t_key, 1);
 		MCValueRelease(t_key);
 	}
 	else
-		var->set(MCECptr->GetEP());
+		var->set(*MCECptr, *t_string);
 
 	return NULL;
 }
@@ -791,8 +793,9 @@ static char *set_array(const char *arg1, const char *arg2,
 	for (unsigned int i = 0; i <value->nelements; i++)
 	{
 		MCString *s = (MCString *)&value->strings[i];
-		MCECptr->GetEP().setsvalue(*s);
-		MCNameRef t_key;
+        MCAutoStringRef t_string;
+        /* UNCHECKED */ MCStringCreateWithOldString(*s, &t_string);
+        MCNameRef t_key;
 		if (value->keys == NULL ||  value->keys[i] == NULL)
 		{
 			sprintf(tbuf,"%d",i+1);
@@ -800,7 +803,7 @@ static char *set_array(const char *arg1, const char *arg2,
 		}
 		else
 			/* UNCHECKED */ MCNameCreateWithCString(value -> keys[i], t_key);
-		var->set(MCECptr->GetEP(), &t_key, 1);
+		var->set(*MCECptr, *t_string, &t_key, 1);
 	}
 	return NULL;
 }

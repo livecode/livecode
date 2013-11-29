@@ -3834,8 +3834,8 @@ void MCInterfaceExecSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &n
 	if (by != NULL)
 	{
 		MCerrorlock++;
-		ctxt . GetEP() . setvalueref(p_input);
-		MCeach->set(ctxt . GetEP());
+		//ctxt . GetEP() . setvalueref(p_input);
+		MCeach->set(ctxt, p_input); 
 		if (by->eval(ctxt . GetEP()) == ES_NORMAL)
 			t_output = MCValueRetain(ctxt.GetEP().getvalueref());
 		else
