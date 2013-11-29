@@ -763,7 +763,7 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 			MCHandler *t_handler;
 			t_handler = findhandler(HT_MESSAGE, mptr);
 			if (t_handler == NULL || !t_handler -> isprivate())
-				domess(*t_mptr_string);
+				domess(*t_mptr_string != nil ? *t_mptr_string : t_mptr_name);
 
 		}
 		if (stat == ES_ERROR && !MCNameIsEqualTo(mptr, MCM_error_dialog, kMCCompareCaseless))
