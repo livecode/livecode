@@ -763,8 +763,9 @@ Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameter
 	
 	if (p_parameters != nil)
 	{
-		p_parameters -> eval_argument(ep);
-		ep . copyasstringref(&t_orientations);
+        MCAutoValueRef t_value;
+		p_parameters -> eval_argument(ctxt, &t_value);
+        ctxt . ConvertToString(*t_value, &t_orientations);
 	}
 
     bool t_success = true;
@@ -868,36 +869,39 @@ Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 	MCAutoStringRef t_address, t_cc_address, t_subject, t_message_body;
 
 	MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
 	
 	if (p_parameters != nil)
 	{
-		p_parameters -> eval_argument(ep);
-		/* UNCHECKED */ ep . copyasstringref(&t_address);
+        MCAutoValueRef t_value;
+		p_parameters -> eval_argument(ctxt, &t_value);
+        ctxt . ConvertToString(*t_value, &t_address);
 		p_parameters = p_parameters -> getnext();
 	}
 	
 	if (p_parameters != nil)
 	{
-		p_parameters -> eval_argument(ep);
-		/* UNCHECKED */ ep . copyasstringref(&t_cc_address);
+        MCAutoValueRef t_value;
+		p_parameters -> eval_argument(ctxt, &t_value);
+        ctxt . ConvertToString(*t_value, &t_cc_address);
+        p_parameters = p_parameters -> getnext();
+	}
+	
+	if (p_parameters != nil)
+	{
+        MCAutoValueRef t_value;
+		p_parameters -> eval_argument(ctxt, &t_value);
+        ctxt . ConvertToString(*t_value, &t_subject);
 		p_parameters = p_parameters -> getnext();
 	}
 	
 	if (p_parameters != nil)
 	{
-		p_parameters -> eval_argument(ep);
-		/* UNCHECKED */ ep . copyasstringref(&t_subject);
+        MCAutoValueRef t_value;
+		p_parameters -> eval_argument(ctxt, &t_value);
+        ctxt . ConvertToString(*t_value, &t_message_body);
 		p_parameters = p_parameters -> getnext();
 	}
-	
-	if (p_parameters != nil)
-	{
-		p_parameters -> eval_argument(ep);
-		/* UNCHECKED */ ep . copyasstringref(&t_message_body);
-		p_parameters = p_parameters -> getnext();
-	}
-	
-	MCExecContext ctxt(ep);
 
 	MCMailExecSendEmail(ctxt, *t_address, *t_cc_address, *t_subject, *t_message_body);
 	
@@ -1048,24 +1052,28 @@ Exec_stat MCHandleStartTrackingSensor(void *p_context, MCParameter *p_parameters
     return t_ctxt.GetStat();
 #endif /* MCHandleStartTrackingSensor */
     MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
     
     MCSensorType t_sensor = kMCSensorTypeUnknown;
     bool t_loosely = false;
     
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        t_sensor = MCSensorTypeFromCString(ep.getcstring());
+        MCAutoValueRef t_value;
+        MCAutoStringRef t_string;
+        p_parameters->eval(ctxt, &t_value);
+        /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
+        t_sensor = MCSensorTypeFromString(*t_string);
         p_parameters = p_parameters->getnext();
     }
     
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        t_loosely = ep . getsvalue() == MCtruemcstring;
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_loosely = MCValueIsEqualTo(*t_value, kMCTrue);
     }
     
-    MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
     
     if (t_sensor != kMCSensorTypeUnknown)
@@ -1104,17 +1112,20 @@ Exec_stat MCHandleStopTrackingSensor(void *p_context, MCParameter *p_parameters)
     return t_ctxt.GetStat();
 #endif /* MCHandleStopTrackingSensor */
     MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
     
     MCSensorType t_sensor = kMCSensorTypeUnknown;
     
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        t_sensor = MCSensorTypeFromCString(ep.getcstring());
+        MCAutoValueRef t_value;
+        MCAutoStringRef t_string;
+        p_parameters->eval(ctxt, &t_value);
+        /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
+        t_sensor = MCSensorTypeFromString(*t_string);
         p_parameters = p_parameters->getnext();
     }
-    
-    MCExecContext ctxt(ep);
+
 	ctxt . SetTheResultToEmpty();
 
     if (t_sensor != kMCSensorTypeUnknown)
@@ -1294,25 +1305,29 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
     return t_ctxt.GetStat();
 #endif /* MCHandleSensorReading */
     MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
     
     MCSensorType t_sensor = kMCSensorTypeUnknown;
     bool t_detailed = false;
     
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        t_sensor = MCSensorTypeFromCString(ep.getcstring());
+        MCAutoValueRef t_value;
+        MCAutoStringRef t_string;
+        p_parameters->eval(ctxt, &t_value);
+        /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
+        t_sensor = MCSensorTypeFromString(*t_string);
         p_parameters = p_parameters->getnext();
     }
     
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        t_detailed = ep . getsvalue() == MCtruemcstring;
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_detailed = MCValueIsEqualTo(*t_value, kMCTrue);
     }
     
-    MCExecContext ctxt(ep);
-	ctxt . SetTheResultToEmpty();
+    ctxt . SetTheResultToEmpty();
     
     MCAutoArrayRef t_detailed_reading;
     MCAutoStringRef t_reading;
@@ -1466,9 +1481,13 @@ Exec_stat MCHandleSetHeadingCalibrationTimeout(void *p_context, MCParameter *p_p
     int t_timeout;
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        t_timeout = atoi(ep.getcstring());
+        MCAutoValueRef t_value;
+        MCAutoNumberRef t_number;
+        p_parameters->eval(ctxt, &t_value);
+        /* UNCHECKED */ ctxt . ConvertToNumber(*t_value, &t_number);
+        t_timeout = MCNumberFetchAsInteger(*t_number);
     }
+    
     MCSensorSetLocationCalibrationTimeout(ctxt, t_timeout);
     
 	if (!ctxt . HasError())
@@ -1537,8 +1556,11 @@ Exec_stat MCHandleSensorAvailable(void *p_context, MCParameter *p_parameters)
     t_sensor = kMCSensorTypeUnknown;    
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        t_sensor = MCSensorTypeFromCString(ep.getcstring());
+        MCAutoValueRef t_value;
+        MCAutoStringRef t_string;
+        p_parameters->eval(ctxt, &t_value);
+        /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
+        t_sensor = MCSensorTypeFromString(*t_string);
         p_parameters = p_parameters->getnext();
     }    
     
@@ -1698,14 +1720,16 @@ Exec_stat MCHandleShowContact(void *context, MCParameter *p_parameters) // ABPer
     int32_t t_contact_id = 0;
     int32_t r_result;
     MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
 
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        t_contact_id = atoi (ep.getsvalue().getstring());
+        MCAutoValueRef t_value;
+        MCAutoNumberRef t_number;
+        p_parameters->eval(ctxt, &t_value);
+        /* UNCHECKED */ ctxt . ConvertToNumber(*t_value, &t_number);
+        t_contact_id = MCNumberFetchAsInteger(*t_number);
     }
-
-    MCExecContext ctxt(ep);
 
     MCAddressBookExecShowContact(ctxt, t_contact_id);
 
@@ -1792,16 +1816,18 @@ Exec_stat MCHandleGetContactData(void *context, MCParameter *p_parameters)
 	return t_ctxt.GetStat();
 #endif /* MCHandleGetContactData */
     MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
 
     int32_t t_contact_id = 0;
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        t_contact_id = atoi (ep.getsvalue().getstring());
+        MCAutoValueRef t_value;
+        MCAutoNumberRef t_number;
+        p_parameters->eval(ctxt, &t_value);
+        /* UNCHECKED */ ctxt . ConvertToNumber(*t_value, &t_number);
+        t_contact_id = MCNumberFetchAsInteger(*t_number);
     }
-
-    MCExecContext ctxt(ep);
-
+    
 	MCAutoArrayRef t_contact_data;
 	MCAddressBookGetContactData(ctxt, t_contact_id, &t_contact_data);
 
@@ -1836,15 +1862,17 @@ Exec_stat MCHandleRemoveContact(void *context, MCParameter *p_parameters)
     return t_ctxt.GetStat();
 #endif /* MCHandleRemoveContact */
     MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
 
     int32_t t_contact_id = 0;
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        t_contact_id = atoi (ep.getsvalue().getstring());
+        MCAutoValueRef t_value;
+        MCAutoNumberRef t_number;
+        p_parameters->eval(ctxt, &t_value);
+        /* UNCHECKED */ ctxt . ConvertToNumber(*t_value, &t_number);
+        t_contact_id = MCNumberFetchAsInteger(*t_number);
     }
-
-    MCExecContext ctxt(ep);
     
 	MCAddressBookExecRemoveContact(ctxt, t_contact_id);
 
@@ -1907,14 +1935,14 @@ Exec_stat MCHandleFindContact(void *context, MCParameter *p_parameters)
 #endif /* MCHandleFindContact */
     MCAutoStringRef t_contact_name;
     MCExecPoint ep(nil, nil, nil);
-	ep . clear();
+    MCExecContext ctxt(ep);
     // Handle parameters.
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        /* UNCHECKED */ ep . copyasstringref(&t_contact_name);
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_contact_name);
     }
-    MCExecContext ctxt(ep);
     ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
     MCAddressBookExecFindContact(ctxt, *t_contact_name);
