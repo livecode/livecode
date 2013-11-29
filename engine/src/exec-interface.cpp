@@ -1403,13 +1403,11 @@ void MCInterfaceEvalWithin(MCExecContext& ctxt, MCObjectPtr p_object, MCPoint p_
 
 void MCInterfaceEvalThereIsAnObject(MCExecContext& ctxt, MCChunk *p_object, bool& r_exists)
 {
-	MCObject *optr;
-    uint32_t parid;
-  //  MCObjectPtr t_object;
+    MCObjectPtr t_object;
 	MCerrorlock++;
-    r_exists = p_object->getobj(ctxt . GetEP(), optr, parid, True) == ES_NORMAL;
-  //  p_object->getoptionalobj(ctxt, t_object, True);
-  //  r_exists = (t_object . object == nil ? false : true);
+    p_object->getoptionalobj(ctxt, t_object, True);
+    r_exists = (t_object . object == nil ? false : true);
+    ctxt . IgnoreLastError();
 	MCerrorlock--;
 }
 

@@ -2664,19 +2664,21 @@ Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters)
     // Handle parameters.
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        if (!ep.isempty())
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        if (!MCValueIsEmpty(*t_value))
         {
-			t_success = MCD_convert_to_datetime(ctxt, ep.getvalueref(), CF_UNDEFINED, CF_UNDEFINED, t_start_date);
+			t_success = MCD_convert_to_datetime(ctxt, *t_value, CF_UNDEFINED, CF_UNDEFINED, t_start_date);
         }
         p_parameters = p_parameters->getnext();
     }
     if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        if (!ep.isempty())
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        if (!MCValueIsEmpty(*t_value))
         {
-			t_success = MCD_convert_to_datetime(ctxt, ep.getvalueref(), CF_UNDEFINED, CF_UNDEFINED, t_end_date);
+			t_success = MCD_convert_to_datetime(ctxt, *t_value, CF_UNDEFINED, CF_UNDEFINED, t_end_date);
         }
     }
 
