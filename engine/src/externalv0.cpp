@@ -788,7 +788,7 @@ static char *set_array(const char *arg1, const char *arg2,
 	*retval = trans_stat(getvarptr(*MCECptr, arg1,&var));
 	if (var == NULL)
 		return NULL;
-	var->remove(MCECptr->GetEP(),nil, 0);//clear variable
+	var->remove(*MCECptr, nil, 0);//clear variable
 	char tbuf[U4L];
 	for (unsigned int i = 0; i <value->nelements; i++)
 	{

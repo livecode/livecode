@@ -692,11 +692,13 @@ public:
 #ifdef LEGACY_EXEC
     Exec_stat set(MCExecPoint& ep);
     Exec_stat set(MCExecPoint& ep, MCNameRef *path, uindex_t length);
-#endif
+
     Exec_stat append(MCExecPoint& ep);
     Exec_stat append(MCExecPoint& ep, MCNameRef *path, uindex_t length);
+
     Exec_stat remove(MCExecPoint& ep);
     Exec_stat remove(MCExecPoint& ep, MCNameRef *path, uindex_t length);
+#endif
 
 	// Apply any changes to the value to the 'special' part of the var.
 	// i.e. if it is an environment variable or the msg variable

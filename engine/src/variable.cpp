@@ -312,6 +312,7 @@ bool MCVariable::set(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path,
     return false;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCVariable::append(MCExecPoint& ep)
 {
     return append(ep, nil, 0);
@@ -329,6 +330,7 @@ Exec_stat MCVariable::append(MCExecPoint& ep, MCNameRef *p_path, uindex_t p_leng
 
     return ES_ERROR;
 }
+#endif
 
 bool MCVariable::append(MCExecContext& ctxt, MCValueRef p_value)
 {
@@ -373,6 +375,7 @@ bool MCVariable::append(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_pa
 	return false;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCVariable::remove(MCExecPoint& ep)
 {
     return remove(ep, nil, 0);
@@ -386,6 +389,7 @@ Exec_stat MCVariable::remove(MCExecPoint& ep, MCNameRef *p_path, uindex_t p_leng
 
     return ES_ERROR;
 }
+#endif
 
 bool MCVariable::remove(MCExecContext& ctxt)
 {
