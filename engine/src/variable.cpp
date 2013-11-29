@@ -722,11 +722,12 @@ MCContainer::~MCContainer(void)
 	MCMemoryDeleteArray(m_path);
 }
 
+
 Exec_stat MCContainer::eval(MCExecPoint& ep)
 {
 	return m_variable -> eval(ep, m_path, m_length);
 }
-
+#ifdef LEGACY_EXEC
 Exec_stat MCContainer::set(MCExecPoint& ep)
 {
 	return m_variable -> set(ep, m_path, m_length);
@@ -741,6 +742,7 @@ Exec_stat MCContainer::remove(MCExecPoint& ep)
 {
 	return m_variable -> remove(ep, m_path, m_length);
 }
+#endif
 
 bool MCContainer::eval(MCExecContext& ctxt, MCValueRef& r_value)
 {
@@ -897,6 +899,7 @@ Exec_stat MCVarref::eval(MCExecPoint& ep)
 	return t_container -> eval(ep);
 }
 
+
 bool MCVarref::eval(MCExecContext& ctxt, MCValueRef& r_value)
 {
 	if (dimensions == 0)
@@ -981,6 +984,7 @@ bool MCVarref::rootmatches(MCVarref *p_other) const
 	return handler == p_other -> handler && index == p_other -> index && isparam == p_other -> isparam;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCVarref::set(MCExecPoint &ep, Boolean append)
 {
 	if (dimensions == 0)
@@ -1004,6 +1008,7 @@ Exec_stat MCVarref::set(MCExecPoint &ep, Boolean append)
 
 	return t_container -> append(ep);
 }
+#endif
 
 bool MCVarref::set(MCExecContext& ctxt, MCValueRef p_value, bool p_append)
 {
@@ -1114,6 +1119,7 @@ void MCVarref::clearuql()
 }
 
 // MW-2008-08-18: [[ Bug 6945 ]] Cannot delete a nested array key.
+#ifdef LEGACY_EXEC
 Exec_stat MCVarref::dofree(MCExecPoint &ep)
 {
 	if (dimensions == 0)
@@ -1131,6 +1137,7 @@ Exec_stat MCVarref::dofree(MCExecPoint &ep)
 
 	return t_container -> remove(ep);
 }
+#endif
 
 bool MCVarref::dofree(MCExecContext& ctxt)
 {
@@ -1467,6 +1474,7 @@ Exec_stat MCDeferredVariable::compute(void)
 	return ES_NORMAL;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCDeferredVarref::eval(MCExecPoint& ep)
 {
 	Exec_stat t_stat;
@@ -1480,6 +1488,7 @@ Exec_stat MCDeferredVarref::eval(MCExecPoint& ep)
 
 	return t_stat;
 }
+#endif
 
 bool MCDeferredVarref::eval(MCExecContext& ctxt, MCValueRef &r_value)
 {
@@ -1493,6 +1502,7 @@ bool MCDeferredVarref::eval(MCExecContext& ctxt, MCValueRef &r_value)
     return t_error;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCDeferredVarref::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
 {
 	Exec_stat t_stat;
@@ -1506,6 +1516,7 @@ Exec_stat MCDeferredVarref::evalcontainer(MCExecPoint& ep, MCContainer*& r_conta
 
 	return t_stat;
 }
+#endif
 
 bool MCDeferredVarref::evalcontainer(MCExecContext &ctxt, MCContainer *&r_container)
 {
@@ -1519,6 +1530,7 @@ bool MCDeferredVarref::evalcontainer(MCExecContext &ctxt, MCContainer *&r_contai
     return t_error;
 }
 
+#ifdef LEGACY_EXEC
 MCVariable *MCDeferredVarref::evalvar(MCExecPoint& ep)
 {
 	if (ref -> isdeferred())
@@ -1526,6 +1538,7 @@ MCVariable *MCDeferredVarref::evalvar(MCExecPoint& ep)
 
 	return MCVarref::evalvar(ep);
 }
+#endif
 
 MCVariable *MCDeferredVarref::evalvar(MCExecContext &ctxt)
 {

@@ -42,14 +42,17 @@ public:
 	
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 
+
 	// Evaluate the expression as a value, and place its value into ep.
 	virtual Exec_stat eval(MCExecPoint &ep);
+
 	
 	// Evaluate the expression as its natural type basic type (note that
 	// execvalue's cannot be set/enum/custom, they should all be resolved
 	// to the appropriate basic type first!). This form should be used for
 	// descendents of MCExpression which are an umbrella for many syntax forms
 	// and thus have variant return type (such as MCProperty).
+
 	virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
 	
 	// Compile the syntax into the (new) tree for use by the new evaluator.

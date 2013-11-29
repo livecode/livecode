@@ -591,6 +591,7 @@ Parse_stat MCExpression::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
+
 Exec_stat MCExpression::eval(MCExecPoint &ep)
 {
 	MCExecContext ctxt(ep);
@@ -606,6 +607,7 @@ Exec_stat MCExpression::eval(MCExecPoint &ep)
 	return ctxt . Catch(line, pos);
 }
 
+
 void MCExpression::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
 	if (eval(ctxt . GetEP()) == ES_NORMAL &&
@@ -617,6 +619,7 @@ void MCExpression::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 	
 	ctxt . Throw();
 }
+
 
 void MCExpression::eval_typed(MCExecContext& ctxt, MCExecValueType p_type, void *r_value)
 {

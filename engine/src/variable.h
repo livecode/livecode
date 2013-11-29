@@ -765,10 +765,13 @@ public:
 
 	//
 
+
 	Exec_stat eval(MCExecPoint& ep);
+#ifdef LEGACY_EXEC
 	Exec_stat set(MCExecPoint& ep);
 	Exec_stat append(MCExecPoint& ep);
 	Exec_stat remove(MCExecPoint& ep);
+#endif
     
     bool eval(MCExecContext& ctxt, MCValueRef& r_value);
 	bool remove(MCExecContext& ctxt);
@@ -857,8 +860,9 @@ public:
 		isplain = true;
 	}
 	virtual ~MCVarref();
-	
+
 	virtual Exec_stat eval(MCExecPoint &);
+    
     bool eval(MCExecContext& ctxt, MCValueRef& r_value);
 	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
     bool evalcontainer(MCExecContext &ctxt, MCContainer*& r_container);
@@ -879,13 +883,17 @@ public:
 
 	Boolean getisscriptlocal() { return isscriptlocal; };
 
+#ifdef LEGACY_EXEC
 	Exec_stat set(MCExecPoint &, Boolean append = False);
+#endif
     bool set(MCExecContext& ctxt, MCValueRef p_value, bool p_append = false);
 	Parse_stat parsearray(MCScriptPoint &);
 	Exec_stat sets(const MCString &s);
 	void clear();
 	void clearuql();
+#ifdef LEGACY_EXEC
 	Exec_stat dofree(MCExecPoint &);
+#endif
     bool dofree(MCExecContext& ctxt);
     
 	bool getisplain(void) const { return isplain; }
@@ -929,10 +937,11 @@ public:
 	// Override all methods that require the value of the variable. These
 	// just ensure 'compute' is called on the MCDeferredVar before the
 	// super-class methods with the same name are invoked.
+#ifdef LEGACY_EXEC
 	virtual Exec_stat eval(MCExecPoint&);
 	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
 	virtual MCVariable *evalvar(MCExecPoint& ep);
-
+#endif
     virtual bool eval(MCExecContext& ctxt, MCValueRef &r_value);
     virtual bool evalcontainer(MCExecContext& ctxt, MCContainer*& r_container);
     virtual MCVariable *evalvar(MCExecContext& ctxt);
