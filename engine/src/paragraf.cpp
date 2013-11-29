@@ -1259,6 +1259,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 	}
 }
 
+#ifdef LEGACY_EXEC
 Boolean MCParagraph::getatts(findex_t si, findex_t ei, Font_textstyle textstyle, const char *&fname,
                              uint2 &size, uint2 &fstyle, const MCColor *&color,
                              const MCColor *&backcolor, int2 &shift, bool& specstyle,
@@ -1411,7 +1412,9 @@ Boolean MCParagraph::getatts(findex_t si, findex_t ei, Font_textstyle textstyle,
 	
 	return ahas || chas || bchas || shas;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 void MCParagraph::setatts(findex_t si, findex_t ei, Properties p, void *value, bool p_from_html)
 {
 	bool t_blocks_changed;
@@ -1514,6 +1517,7 @@ void MCParagraph::setatts(findex_t si, findex_t ei, Properties p, void *value, b
 		needs_layout = true;
 	}
 }
+#endif
 
 // MW-2008-03-27: [[ Bug 5093 ]] Rewritten to more correctly insert blocks around
 //   imagesource characters.
