@@ -216,20 +216,24 @@ public:
 		return PS_NORMAL;
 	}
 
-	Exec_stat exec(MCExecPoint& ep)
+	void exec_ctxt(MCExecContext& ctxt)
 	{
 		// Do nothing if its already open
 		if (s_payload_minizip != nil)
-			return ES_NORMAL;
+			return;
 		
 		// MM-2011-03-23: Added optional paramater, allowing the payload to be specified by file path.
+        MCAutoStringRef t_string;
 		const char *t_filename;
 		t_filename = nil;
 		if (m_filename != nil)
 		{
-			if (m_filename -> eval(ep) != ES_NORMAL)
-				return ES_ERROR;
-			t_filename = ep . getcstring();
+            if (!ctxt . EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string))
+                return;
+
+            char *temp;
+            /* UNCHECKED */ MCStringConvertToCString(*t_string, temp);
+			t_filename = temp;
 		}
 
 		const void *t_payload_data;
@@ -243,7 +247,7 @@ public:
 			if (t_payload_data == nil)
 			{
 				MCresult -> sets("could not load paylod from file");
-				return ES_ERROR;
+				return;
 			}
 		}
 
@@ -264,7 +268,7 @@ public:
 				if(t_payload_data == nil)
 				{
 					MCresult -> sets("could not find payload");
-					return ES_NORMAL;
+					return;
 				}			
 			}			
 #else
@@ -288,13 +292,13 @@ public:
 				if (MCDataGetLength(*t_payload_dataref) == 0)
 				{
 					MCresult -> sets("could not load payload");
-					return ES_NORMAL;
+					return;
 				}
 
 				if (!MCMemoryAllocate(MCDataGetLength(*t_payload_dataref), s_payload_data))
 				{
 					MCresult -> sets("out of memory while loading payload");
-					return ES_NORMAL;
+					return;
 				}
 
 				MCMemoryCopy(s_payload_data, (void*)MCDataGetBytePtr(*t_payload_dataref), MCDataGetLength(*t_payload_dataref));
@@ -303,7 +307,7 @@ public:
 				t_payload_size = MCDataGetLength(*t_payload_dataref);
 #else
 				MCresult -> sets("could not find payload");
-				return ES_NORMAL;
+				return;
 #endif
 			}
 #endif
@@ -314,13 +318,13 @@ public:
 		if (!MCMiniZipOpen(t_payload_data, t_payload_size, s_payload_minizip))
 		{
 			MCresult -> sets("could not open payload");
-			return ES_NORMAL;
+			return;
 		}
 
 		// Empty result means success
 		MCresult -> clear();
 
-		return ES_NORMAL;
+		return;
 	}
 
 private:
@@ -419,11 +423,11 @@ public:
 	MCInternalPayloadClose(void) {}
 	~MCInternalPayloadClose(void) {}
 
-	Exec_stat exec(MCExecPoint& ep)
+	void exec_ctxt(MCExecContext& ctxt)
 	{
 		// Don't do anything if the payload isn't open
 		if (s_payload_minizip == nil)
-			return ES_NORMAL;
+			return;
 
 		// Close the payload
 		MCMiniZipClose(s_payload_minizip);
@@ -452,7 +456,7 @@ public:
 		
 #endif
 
-		return ES_NORMAL;
+		return;
 	}
 };
 
@@ -474,20 +478,19 @@ public:
 		return PS_NORMAL;
 	}
 
-	Exec_stat exec(MCExecPoint& ep)
+	void exec_ctxt(MCExecContext& ctxt)
 	{
 		// Don't do anything if the payload isn't open
 		if (s_payload_minizip == nil)
 		{
 			MCresult -> sets("payload not open");
-			return ES_NORMAL;
+			return;
 		}
 
-		ep . clear();
-		MCMiniZipListItems(s_payload_minizip, list_items, &ep);
-		ep.getit() -> set(ep, False);
+		MCMiniZipListItems(s_payload_minizip, list_items, &ctxt);
+        ctxt . GetEP() . getit() -> set(ctxt . GetEP(), False);
 
-		return ES_NORMAL;
+		return;
 	}
 
 private:
@@ -528,23 +531,20 @@ public:
 		return PS_NORMAL;
 	}
 
-	Exec_stat exec(MCExecPoint& ep)
+	void exec_ctxt(MCExecContext& ctxt)
 	{
-		if (m_item_expr -> eval(ep) != ES_NORMAL)
-		{
-			MCeerror -> add(EE_PUT_BADEXP, line, pos);
-			return ES_ERROR;
-		}
+        MCAutoStringRef t_name;
+        if (!ctxt . EvalExprAsStringRef(m_item_expr, EE_PUT_BADEXP, &t_name));
+            return;
 
 		if (s_payload_minizip != nil)
 		{
-			MCAutoStringRef t_name;
 			MCMiniZipItemInfo t_info;
-			/* UNCHECKED */ ep.copyasstring(&t_name);
 			if (MCMiniZipDescribeItem(s_payload_minizip, *t_name, t_info))
 			{
-				ep . setstringf(",%u,%u,,%u,", t_info . checksum, t_info . uncompressed_size, t_info . compressed_size);
-				ep.getit() -> set(ep, False);
+                MCAutoStringRef t_string;
+				MCStringFormat(&t_string, ",%u,%u,,%u,", t_info . checksum, t_info . uncompressed_size, t_info . compressed_size);
+				ctxt . GetEP() .getit() -> set(ctxt, *t_string, False);
 			}
 			else
 				MCresult -> sets("describe failed");
@@ -552,7 +552,7 @@ public:
 		else
 			MCresult -> sets("payload not open");
 
-		return ES_NORMAL;
+		return;
 	}
 
 private:
@@ -594,33 +594,23 @@ public:
 		return PS_NORMAL;
 	}
 
-	Exec_stat exec(MCExecPoint& ep)
+	void exec_ctxt(MCExecContext& ctxt)
 	{
 		MCAutoStringRef t_item;
-		if (m_item_expr -> eval(ep) != ES_NORMAL)
-		{
-			MCeerror -> add(EE_PUT_BADEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep.copyasstring(&t_item);
-		
+        if (!ctxt . EvalExprAsStringRef(m_item_expr, EE_PUT_BADEXP, &t_item))
+            return;
+				
 		MCAutoStringRef t_file;
-		if (m_file_expr != nil)
-		{
-			if (m_file_expr -> eval(ep) != ES_NORMAL)
-			{
-				MCeerror -> add(EE_PUT_BADEXP, line, pos);
-				return ES_ERROR;
-			}
-			/* UNCHECKED */ ep.copyasstring(&t_item);
-		}
+        if (!ctxt . EvalOptionalExprAsNullableStringRef(m_file_expr, EE_PUT_BADEXP, &t_file))
+            return;
+		
 
 		if (s_payload_minizip != nil)
 		{
 			ExtractContext t_context;
 			t_context . target = MCtargetptr -> gethandle();
 			t_context . name = t_item;
-			t_context . var = ep.getit() -> evalvar(ep);
+			t_context . var = ctxt . GetEP().getit() -> evalvar(ctxt);
 			t_context . stream = nil;
 
 			if (!MCStringIsEmpty(*t_file))
@@ -740,25 +730,26 @@ public:
 		return PS_NORMAL;
 	}
 
-	Exec_stat exec(MCExecPoint& ep)
+	void exec_ctxt(MCExecContext& ctxt)
 	{
 		bool t_success;
 		t_success = true;
 
 		MCAutoStringRef t_patch_item;
-		if (t_success && m_patch_item_expr -> eval(ep) == ES_NORMAL)
+        if (t_success && ctxt . EvalExprAsStringRef(m_patch_item_expr, EE_UNDEFINED, &t_patch_item))
 			t_success = ep.copyasstring(&t_patch_item);
 		else
 			t_success = false;
 
 		MCAutoStringRef t_base_item;
-		if (t_success && m_base_item_expr -> eval(ep) == ES_NORMAL)
+
+		if (t_success && ctxt . EvalExprAsStringRef(m_base_item_expr, EE_UNDEFINED, &t_base_item))
 			t_success = ep.copyasstring(&t_base_item);
 		else
 			t_success = false;
 
 		MCAutoStringRef t_output_filename;
-		if (t_success && m_output_file_expr -> eval(ep) == ES_NORMAL)
+		if (t_success && ctxt . EvalExprAsStringRef(m_output_file_expr, EE_UNDEFINED, &t_output_filename))
 			t_success = ep.copyasstring(&t_output_filename);
 		else
 			t_success = false;
@@ -812,7 +803,7 @@ public:
 		else
 			MCresult -> sets("payload not open");
 
-		return ES_NORMAL;
+		return;
 	}
 
 private:
@@ -1002,19 +993,20 @@ public:
 		return PS_NORMAL;
 	}
 
-	Exec_stat exec(MCExecPoint& ep)
+	void exec_ctxt(MCExecContext& ctxt)
 	{
 		bool t_success;
 		t_success = true;
 
-		if (m_key -> eval(ep) != ES_NORMAL)
-			return ES_ERROR;
+        MCAutoStringRef t_string;
+        if (!ctxt . EvalExprAsStringRef(m_key, EE_UNDEFINED, &t_string))
+            return;
+        MCAutoPointer<char> temp;
+        /* UNCHECKED */ MCStringConvertToCString(*t_string, &temp);
+        
+        MCResult -> setvalueref(MCSystemCanDeleteKey(*temp) == true ? kMCTrue : kMCFalse);
 
-		ep . setboolean(MCSystemCanDeleteKey(ep . getcstring()));
-
-		MCresult -> set(ep);
-
-		return ES_NORMAL;
+		return;
 	}
 
 private:
@@ -1044,19 +1036,21 @@ public:
 		return PS_NORMAL;
 	}
 
-	Exec_stat exec(MCExecPoint& ep)
+    
+    void exec_ctxt(MCExecContext& ctxt)
 	{
 		bool t_success;
 		t_success = true;
-
-		if (m_file -> eval(ep) != ES_NORMAL)
-			return ES_ERROR;
-
-		ep . setboolean(MCSystemCanDeleteFile(ep . getcstring()));
-
-		MCresult -> set(ep);
-
-		return ES_NORMAL;
+        
+        MCAutoStringRef t_string;
+        if (!ctxt . EvalExprAsStringRef(m_file, EE_UNDEFINED, &t_string))
+            return;
+        MCAutoPointer<char> temp;
+        /* UNCHECKED */ MCStringConvertToCString(*t_string, &temp);
+        
+        MCResult -> setvalueref(MCSystemCanDeleteFile(*temp) == true ? kMCTrue : kMCFalse);
+        
+		return;
 	}
 
 private:
@@ -1077,10 +1071,10 @@ public:
 		return PS_NORMAL;
 	}
 	
-	Exec_stat exec(MCExecPoint& ep)
+	void exec_ctxt(MCExecContext& ctxt)
 	{
 		MCSystemRequestUserAttention();
-		return ES_NORMAL;
+		return;
 	}	
 };
 
@@ -1092,10 +1086,10 @@ public:
 		return PS_NORMAL;
 	}
 	
-	Exec_stat exec(MCExecPoint& ep)
+	void exec_ctxt(MCExecContext& ctxt)
 	{
 		MCSystemCancelRequestUserAttention();
-		return ES_NORMAL;
+		return;
 	}	
 };
 
@@ -1128,29 +1122,35 @@ public:
 		return PS_NORMAL;
 	}
 	
-	Exec_stat exec(MCExecPoint& ep)
+	void exec_ctxt(MCExecContext& ctxt)
 	{
 		const char *t_title;
 		t_title = nil;
 		if (m_title != nil)
 		{
-			if (m_title -> eval(ep) != ES_NORMAL)
-				return ES_ERROR;
-			t_title = ep . getsvalue() . clone();
+            MCAutoStringRef t_string;
+            if (!ctxt . EvalExprAsStringRef(m_title, EE_UNDEFINED, &t_string))
+                return;
+			char *temp;
+            /* UNCHECKED */ MCStringConvertToCString(*t_string, temp);
+			t_title = temp;
 		}
 		const char *t_message;
 		t_message = nil;
 		if (m_message != nil)
 		{
-			if (m_message -> eval(ep) != ES_NORMAL)
-				return ES_ERROR;
-			t_message = ep . getcstring();
-			t_message = ep . getsvalue() . clone();
+            MCAutoStringRef t_mess;
+            if (!ctxt . EvalExprAsStringRef(m_message, EE_UNDEFINED, &t_mess))
+                return;
+			char *temp;
+            /* UNCHECKED */ MCStringConvertToCString(*t_mess, temp);
+			
+			t_message = temp;
 		}
 		MCSystemBalloonNotification(t_title, t_message);
 		delete t_title;
 		delete t_message;
-		return ES_NORMAL;
+		return ;
 	}
 
 private:
@@ -1402,7 +1402,7 @@ void MCStack::mode_destroy(void)
 {
 }
 
-
+#ifdef LEGACY_EXEC
 Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
@@ -1412,6 +1412,7 @@ Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, 
 {
 	return ES_NOT_HANDLED;
 }
+#endif
 
 void MCStack::mode_load(void)
 {
@@ -1491,6 +1492,7 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 }
 #endif
 
+#ifdef LEGACY_EXEC
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of MCObject::mode_get/setprop for STANDALONE mode.
@@ -1515,6 +1517,7 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 {
 	return ES_NOT_HANDLED;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
