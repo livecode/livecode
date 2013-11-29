@@ -452,6 +452,7 @@ bool MCVariable::converttoarrayofstrings(MCExecPoint& ep)
 	return false;
 }
 
+#ifdef LEGACY_EXEC
 bool MCVariable::converttomutablestring(MCExecPoint& ep)
 {
 	if (MCValueGetTypeCode(value) != kMCValueTypeCodeString)
@@ -482,6 +483,7 @@ bool MCVariable::converttomutablestring(MCExecPoint& ep)
 	}
 	return false;
 }
+#endif
 
 bool MCVariable::converttomutablestring(MCExecContext& ctxt)
 {

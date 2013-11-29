@@ -75,7 +75,7 @@ public:
 	uint32_t getnfilled(void) const;
 
 	//
-
+#ifdef LEGACY_EXEC
 	// Perform an iterated function on the keys of the value.
 	// PRECONDITION: this is initialized
 	Exec_stat dofunc(MCExecPoint& ep, Functions func, uint4 &nparams, real8 &n, real8 oldn, void *titems);
@@ -84,6 +84,7 @@ public:
 	//    this = this op <ep>
 	// PRECONDITION: this is initialized
 	Exec_stat factorarray(MCExecPoint &ep, Operators op);
+#endif
 
 	// Copy any keys from v not present in this
 	// PRECONDITION: this is initialized
@@ -95,11 +96,12 @@ public:
 	// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
     Exec_stat intersectarray(MCVariableArray& v, bool p_recursive);
 
+#ifdef LEGACY_EXEC
 	// Set the value of the variable to the result of va * vb, considered as
 	// matrices.
 	// PRECONDITION: this is uninitialized
 	Exec_stat matrixmultiply(MCExecPoint& ep, MCVariableArray& va, MCVariableArray& vb);
-	
+#endif
 	// Set the value of the variable to the transpose of the value contained in v.
 	// PRECONDITION: this is uninitialized
 	Exec_stat transpose(MCVariableArray& v);
@@ -135,14 +137,17 @@ public:
 	// PRECONDITION: this is uninitialized
 	bool copytable(const MCVariableArray &v);
 
+#ifdef LEGACY_EXEC
 	// Return the list of extents of the array into ep
 	// PRECONDITION: this is initialized
 	void getextents(MCExecPoint& ep);
+#endif
 
 	// Return a list of keys of the array (used by xcommands)
 	// PRECONDITION: this is initialized
 	void getkeys(char **keylist, uint4 kcount);
 
+#ifdef LEGACY_EXEC
 	// Return a list of keys into ep
 	// PRECONDITION: this is initialized
 	void getkeys(MCExecPoint& ep);
@@ -150,6 +155,8 @@ public:
 	// Iterate over the hash elements in the array
 	// PRECONDITION: this is initialized
 	MCHashentry *getnextelement(uint4 &l, MCHashentry *e, Boolean donumeric, MCExecPoint &ep);
+#endif
+
 
 	// Iterate over the keys in the array
 	// PRECONDITION: this is initialized
@@ -160,25 +167,31 @@ public:
 	// PRECONDITION: this is initialized
 	MCHashentry *getnextkey(MCHashentry *e) const;
 
+#ifdef LEGACY_EXEC
 	// Combine the elements of the array and return a string
 	// PRECONDITION: this is initialized
 	void combine(MCExecPoint& ep, char e, char k, char*& r_buffer, uint32_t& r_length);
+#endif
 
 	// Set the array to the result of splitting the given value.
 	// PRECONDITION: this is uninitialized
 	void split(const MCString& s, char e, char k);
 
+#ifdef LEGACY_EXEC
 	// Combine the elements of the array column-wise and return a string.
 	// PRECONDITION: this is initialized
 	void combine_column(MCExecPoint& ep, char r, char c, char*& r_buffer, uint32_t& r_length);
+#endif
 
 	// Set the array to the result of splitting the given value column-wise
 	// PRECONDITION: this is uninitialized
 	void split_column(const MCString& s, char r, char c);
 
+#ifdef LEGACY_EXEC
 	// Combine the elements of the array as a set and return a string
 	// PRECONDITION: this is initialized
 	void combine_as_set(MCExecPoint& ep, char e, char*& r_buffer, uint32_t& r_length);
+#endif
 
 	// Set the array to the result of splitting the given value as a set.
 	// PRECONDITION: this is uninitialized
@@ -624,7 +637,9 @@ public:
 	bool converttoarrayofnumbers(MCExecPoint& ep);
 
 	// Converts the value to a (mutable) string.
+#ifdef LEGACY_EXEC
 	bool converttomutablestring(MCExecPoint& ep);
+#endif
     bool converttomutablestring(MCExecContext& ctxt);
 	// Converts the value to a (mutable) array.
 	bool converttomutablearray(void);
