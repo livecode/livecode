@@ -638,9 +638,12 @@ Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringR
 		{
 			tei = pgptr->gettextlength();
 			ei--;
-			if (ei == tei && pgptr->next() != toppgptr)
-			{
+			if (ei >= tei && pgptr->next() != toppgptr)
+			{                    
 				pgptr->join();
+                
+                // SN-2013-11-29: [[ RefactorSyntax ]] Make sure we delete the characters appended to the new paragraph 
+                tei = MCU_min(ei, tei + pgptr -> next() -> gettextlength());
 				
 				// MW-2013-10-24: [[ FasterField ]] Join affects multiple paragraphs.
 				t_affect_many = true;
@@ -648,12 +651,15 @@ Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringR
 		}
 		else
 			tei = ei;
+        
 		ei -= tei;
+        
 		MCParagraph *saveparagraph = pgptr;
 		int4 savey = 0;
 		if (opened && pgptr == paragraphs)
 			savey = paragraphtoy(saveparagraph);
 		pgptr->deletestring(si, tei);
+        
 		if (ei > 0)
 		{
 			pgptr = pgptr->next();
