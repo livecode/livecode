@@ -713,7 +713,7 @@ static char *get_array(const char *arg1, const char *arg2,
 	if (!var -> isarray())
 		return NULL;
 
-	if (!var -> converttoarrayofstrings(MCECptr->GetEP()))
+	if (!var -> converttoarrayofstrings(*MCECptr))
 		return NULL;
 
 	MCArrayRef t_array;

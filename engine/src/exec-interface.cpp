@@ -3836,10 +3836,11 @@ void MCInterfaceExecSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &n
 	{
 		MCerrorlock++;
 		//ctxt . GetEP() . setvalueref(p_input);
-		MCeach->set(ctxt, p_input); 
-		if (by->eval(ctxt . GetEP()) == ES_NORMAL)
-			t_output = MCValueRetain(ctxt.GetEP().getvalueref());
-		else
+		MCeach->set(ctxt, p_input);
+        bool t_success;
+        t_success = false;
+        t_success = ctxt . EvalExprAsValueRef(by, EE_UNDEFINED, &t_output);
+        if (!t_success)
 			t_output = MCValueRetain(kMCEmptyString);
 		MCerrorlock--;
 	}

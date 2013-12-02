@@ -632,7 +632,10 @@ public:
     bool remove(MCExecContext& ctxt);
     
 	// Converts the value in the variable to an array of strings.
+    bool converttoarrayofstrings(MCExecContext& ctxt);
+#ifdef LEGACY_EXEC
 	bool converttoarrayofstrings(MCExecPoint& ep);
+#endif
 #ifdef LEGACY_EXEC
 	// Converts the value in the variable to an array of numbers.
 	bool converttoarrayofnumbers(MCExecPoint& ep);
@@ -703,10 +706,10 @@ public:
 	// transiently.
 	void grab(char *p_buffer, uint4 p_length);
 
-
+#ifdef LEGACY_EXEC
     Exec_stat eval(MCExecPoint& ep);
     Exec_stat eval(MCExecPoint& ep, MCNameRef *path, uindex_t length);
-#ifdef LEGACY_EXEC
+
     Exec_stat set(MCExecPoint& ep);
     Exec_stat set(MCExecPoint& ep, MCNameRef *path, uindex_t length);
 
@@ -787,9 +790,8 @@ public:
 
 	//
 
-
-	Exec_stat eval(MCExecPoint& ep);
 #ifdef LEGACY_EXEC
+	Exec_stat eval(MCExecPoint& ep);
 	Exec_stat set(MCExecPoint& ep);
 	Exec_stat append(MCExecPoint& ep);
 	Exec_stat remove(MCExecPoint& ep);
@@ -925,10 +927,14 @@ public:
 	bool getisplain(void) const { return isplain; }
 	
 private:
+#ifdef LEGACY_EXEC
 	MCVariable *fetchvar(MCExecPoint& ep);
+#endif
     MCVariable *fetchvar(MCExecContext& ctxt);
 
+#ifdef LEGACY_EXEC
 	Exec_stat resolve(MCExecPoint& ep, MCContainer*& r_container);
+#endif
     bool resolve(MCExecContext& ctxt, MCContainer*& r_container);
 };
 

@@ -246,10 +246,12 @@ bool MCVariable::copyasvalueref(MCNameRef *p_path, uindex_t p_length, bool p_cas
     return MCValueCopy(getvalueref(p_path, p_length, p_case_sensitive), r_value);
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCVariable::eval(MCExecPoint& ep)
 {
     return eval(ep, nil, 0);
 }
+
 
 Exec_stat MCVariable::eval(MCExecPoint& ep, MCNameRef *p_path, uindex_t p_length)
 {
@@ -262,6 +264,7 @@ Exec_stat MCVariable::eval(MCExecPoint& ep, MCNameRef *p_path, uindex_t p_length
 
     return ES_ERROR;
 }
+#endif
 
 bool MCVariable::eval(MCExecContext& ctxt, MCValueRef& r_value)
 {
@@ -447,10 +450,17 @@ bool MCVariable::converttomutablearray(void)
 	return true;
 }
 
+bool MCVariable::converttoarrayofstrings(MCExecContext& ctxt)
+{
+	return false;
+}
+
+#ifdef LEGACY_EXEC
 bool MCVariable::converttoarrayofstrings(MCExecPoint& ep)
 {
 	return false;
 }
+#endif
 
 #ifdef LEGACY_EXEC
 bool MCVariable::converttomutablestring(MCExecPoint& ep)
@@ -729,12 +739,12 @@ MCContainer::~MCContainer(void)
 	MCMemoryDeleteArray(m_path);
 }
 
-
+#ifdef LEGACY_EXEC
 Exec_stat MCContainer::eval(MCExecPoint& ep)
 {
 	return m_variable -> eval(ep, m_path, m_length);
 }
-#ifdef LEGACY_EXEC
+
 Exec_stat MCContainer::set(MCExecPoint& ep)
 {
 	return m_variable -> set(ep, m_path, m_length);
@@ -836,6 +846,7 @@ MCVarref::~MCVarref()
 	}
 }
 
+#ifdef LEGACY_EXEC
 MCVariable *MCVarref::fetchvar(MCExecPoint& ep)
 {
 	// MW-2009-01-28: [[ Inherited parentScripts ]]
@@ -853,6 +864,7 @@ MCVariable *MCVarref::fetchvar(MCExecPoint& ep)
 	
 	return t_parentscript -> GetVariable(index);
 }
+#endif
 
 MCVariable *MCVarref::fetchvar(MCExecContext& ctxt)
 {
@@ -892,20 +904,32 @@ MCVariable *MCVarref::evalvar(MCExecContext& ctxt)
 
 Exec_stat MCVarref::eval(MCExecPoint& ep)
 {
+    MCExecContext ctxt(ep);
+    MCAutoValueRef t_value;
 	if (dimensions == 0)
 	{
 		MCVariable *t_resolved_ref;
 		
-		t_resolved_ref = fetchvar(ep);
+		t_resolved_ref = fetchvar(ctxt);
 
-		return t_resolved_ref -> eval(ep);
+		if (t_resolved_ref -> eval(ctxt, &t_value))
+        {
+            ep . setvalueref(*t_value);
+            return ES_NORMAL;
+        }
+        return ES_ERROR;
 	}
 
 	MCAutoPointer<MCContainer> t_container;
-	if (resolve(ep, &t_container) != ES_NORMAL)
+	if (!resolve(ctxt, &t_container))
 		return ES_ERROR;
 
-	return t_container -> eval(ep);
+    if (t_container -> eval(ctxt, &t_value))
+    {
+        ep . setvalueref(*t_value);
+        return ES_NORMAL;
+    }
+	return ES_ERROR;
 }
 
 
@@ -1169,6 +1193,7 @@ bool MCVarref::dofree(MCExecContext& ctxt)
 }
 
 //
+#ifdef LEGACY_EXEC
 Exec_stat MCVarref::resolve(MCExecPoint& ep, MCContainer*& r_container)
 {
 	MCVariable *t_var;
@@ -1257,6 +1282,7 @@ Exec_stat MCVarref::resolve(MCExecPoint& ep, MCContainer*& r_container)
 
 	return t_stat;
 }
+#endif
 
 bool MCVarref::resolve(MCExecContext& ctxt, MCContainer*& r_container)
 {

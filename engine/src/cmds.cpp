@@ -2268,9 +2268,11 @@ void MCSort::additem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, Sort
 	{
         MCerrorlock++;
         MCeach -> setvalueref(p_value);
-		if (by->eval(ctxt.GetEP()) == ES_NORMAL)
-			t_value = ctxt.GetEP().getvalueref();
-		else
+        bool t_success;
+        t_success = false;
+        t_success = ctxt . EvalExprAsValueRef(by, EE_UNDEFINED, &t_value);
+        
+		if (!t_success);
 			t_value = MCValueRetain(kMCEmptyString);
 		MCerrorlock--;
 	}

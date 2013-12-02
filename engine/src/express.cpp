@@ -620,7 +620,6 @@ void MCExpression::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 	ctxt . Throw();
 }
 
-
 void MCExpression::eval_typed(MCExecContext& ctxt, MCExecValueType p_type, void *r_value)
 {
 	MCExecValue t_value;

@@ -94,10 +94,14 @@ public:
 	void take_components(MCChunk *tchunk);
 
     // getobj calls getoptionalobj and throws in case nothing is returned.
+#ifdef LEGACY_EXEC
     /* WRAPPER */ Exec_stat getobj(MCExecPoint &, MCObject *&, uint4 &parid, Boolean recurse);
+#endif
     bool getobj(MCExecContext &ctxt, MCObject *& objptr, uint4 &parid, Boolean recurse);
 
+#ifdef LEGACY_EXEC
     /* WRAPPER */ Exec_stat getobj(MCExecPoint&, MCObjectPtr&, Boolean recurse);
+#endif
     bool getobj(MCExecContext &ctxt,MCObjectPtr&, Boolean recurse);
 
     // Added for MCChunk::count:

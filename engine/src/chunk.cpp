@@ -1902,7 +1902,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
     }
 }
 
-
+#ifdef LEGACY_EXEC
 Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recurse)
 {
     MCExecPoint ep2(ep);
@@ -2510,6 +2510,7 @@ Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recu
     
     return ES_ERROR;
 }
+#endif
 
 bool MCChunk::getobj(MCExecContext &ctxt, MCObject *&objptr, uint4 &parid, Boolean recurse)
 {
@@ -2527,6 +2528,7 @@ bool MCChunk::getobj(MCExecContext &ctxt, MCObject *&objptr, uint4 &parid, Boole
     return true;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr, uint4 &parid, Boolean recurse)
 {
     objptr = nil;
@@ -2543,6 +2545,7 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr, uint4 &parid, Bool
 
     return ES_ERROR;
 }
+#endif
 
 #ifdef LEGACY_EXEC
 Exec_stat MCChunk::getobj_legacy(MCExecPoint &ep, MCObject *&objptr,
