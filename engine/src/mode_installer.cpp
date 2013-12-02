@@ -488,7 +488,7 @@ public:
 		}
 
 		MCMiniZipListItems(s_payload_minizip, list_items, &ctxt);
-        ctxt . GetEP() . getit() -> set(ctxt . GetEP(), False);
+        ctxt . SetItToValue(kMCFalse);
 
 		return;
 	}
