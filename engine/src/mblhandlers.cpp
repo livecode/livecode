@@ -2747,10 +2747,11 @@ Exec_stat MCHandleCreateLocalNotification (void *context, MCParameter *p_paramet
 		t_success = MCParseParameters (p_parameters, "xxx", &(&t_notification_body), &(&t_notification_action), &(&t_notification_user_info));
 	if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        if (!ep.isempty())
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        if (!MCValueIsEmpty(*t_value))
         {
-            t_success = MCD_convert_to_datetime(ctxt, ep.getvalueref(), CF_UNDEFINED, CF_UNDEFINED, t_date);
+            t_success = MCD_convert_to_datetime(ctxt, *t_value, CF_UNDEFINED, CF_UNDEFINED, t_date);
         }
         p_parameters = p_parameters->getnext();
     }
@@ -5585,6 +5586,7 @@ Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
 	return t_ctxt.GetStat();
 #endif /* MCHandlePickDate */
     MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
     
 	bool t_success;
 	t_success = true;
@@ -5603,22 +5605,25 @@ Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
     
 	if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        t_success = ep . copyasstringref(&t_current);
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_success = ctxt . ConvertToString(*t_value, &t_current);
         p_parameters = p_parameters->getnext();
     }
 	
 	if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        t_success = ep . copyasstringref(&t_start);
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_success = ctxt . ConvertToString(*t_value, &t_start);
         p_parameters = p_parameters->getnext();
     }
 	
 	if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        t_success = ep . copyasstringref(&t_end);
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_success = ctxt . ConvertToString(*t_value, &t_end);
         p_parameters = p_parameters->getnext();
     }
 	
@@ -5645,8 +5650,6 @@ Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
         }
         MCCStringFree(t_button);
     }
-    
-    MCExecContext ctxt(ep);
      
 	if (t_success)
     {
@@ -5763,6 +5766,7 @@ Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
 	return t_ctxt.GetStat();
 #endif /* MCHandlePickTime */
     MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
     
 	bool t_success, t_use_done, t_use_cancel;
 	t_success = true;
@@ -5777,22 +5781,25 @@ Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
     
 	if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        t_success = ep . copyasstringref(&t_current);
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_success = ctxt . ConvertToString(*t_value, &t_current);
         p_parameters = p_parameters->getnext();
     }
 	
 	if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        t_success = ep . copyasstringref(&t_start);
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_success = ctxt . ConvertToString(*t_value, &t_start);
         p_parameters = p_parameters->getnext();
     }
 	
 	if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        t_success = ep . copyasstringref(&t_end);
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_success = ctxt . ConvertToString(*t_value, &t_end);
         p_parameters = p_parameters->getnext();
     }
 	
@@ -5822,7 +5829,6 @@ Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
             t_button_type = kMCPickButtonDone;           
     }
 
-    MCExecContext ctxt(ep);
     ctxt.SetTheResultToEmpty();
     
 	if (t_success)
@@ -5927,6 +5933,7 @@ Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
 	return t_ctxt.GetStat();
 #endif /* MCHandlePickDateAndTime */
     MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
     
 	bool t_success, t_use_done, t_use_cancel;
 	t_success = true;
@@ -5941,22 +5948,25 @@ Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
     
 	if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        t_success = ep . copyasstringref(&t_current);
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_success = ctxt . ConvertToString(*t_value, &t_current);
         p_parameters = p_parameters->getnext();
     }
 	
 	if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        t_success = ep . copyasstringref(&t_start);
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_success = ctxt . ConvertToString(*t_value, &t_start);
         p_parameters = p_parameters->getnext();
     }
 	
 	if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        t_success = ep . copyasstringref(&t_end);
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_success = ctxt . ConvertToString(*t_value, &t_end);
         p_parameters = p_parameters->getnext();
     }
 	
@@ -5986,7 +5996,6 @@ Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
             t_button_type = kMCPickButtonDone;
     }
     
-    MCExecContext ctxt(ep);
     ctxt.SetTheResultToEmpty();
        
 	if (t_success)
@@ -6040,18 +6049,20 @@ Exec_stat MCHandleSpecificCameraFeatures(void *p_context, MCParameter *p_paramet
 	return ES_NORMAL;
 #endif /* MCHandleSpecificCameraFeatures */
 	MCExecPoint ep(nil, nil, nil);
-	ep . clear();
+    MCExecContext ctxt(ep);
 	
 	MCCameraSourceType t_source;
-	p_parameters -> eval_argument(ep);
-	if (MCU_strcasecmp(ep . getcstring(), "front"))
+    MCAutoValueRef t_value;
+    MCAutoStringRef t_string;
+	p_parameters -> eval_argument(ctxt, &t_value);
+    /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
+    if (MCStringIsEqualToCString(*t_string, "front", kMCCompareCaseless))
 		t_source = kMCCameraSourceTypeFront;
-	else if (MCU_strcasecmp(ep . getcstring(), "rear"))
+	else if (MCStringIsEqualToCString(*t_string, "rear", kMCCompareCaseless))
 		t_source = kMCCameraSourceTypeRear;
 	else
 		return ES_NORMAL;
 	
-    MCExecContext ctxt(ep);
     intset_t t_result;
     
     MCPickGetSpecificCameraFeatures(ctxt, (intenum_t)t_source, t_result);
@@ -6111,7 +6122,7 @@ Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
 Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
 {
 	MCExecPoint ep(nil, nil, nil);
-	ep . clear();
+	MCExecContext ctxt(ep);
 	
 	MCParameter *t_source_param, *t_width_param, *t_height_param;
 	t_source_param = p_parameters;
@@ -6123,41 +6134,41 @@ Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
 	if (t_width_param != nil)
 	{
 		// MW-2013-07-01: [[ Bug 10989 ]] Make sure we force conversion to a number.
-		if (t_width_param -> eval_argument(ep) == ES_NORMAL &&
-			ep . ton() == ES_NORMAL)
-			t_width = ep . getint4();
+        MCAutoValueRef t_value;
+        if (t_width_param -> eval_argument(ctxt, &t_value))
+            /* UNCHECKED */ ctxt . ConvertToInteger(*t_value, t_width);
 	}
 	if (t_height_param != nil)
 	{
 		// MW-2013-07-01: [[ Bug 10989 ]] Make sure we force conversion to a number.
-		if (t_height_param -> eval_argument(ep) == ES_NORMAL &&
-			ep . ton() == ES_NORMAL)
-			t_height = ep . getint4();
+        MCAutoValueRef t_value;
+        if (t_height_param -> eval_argument(ctxt, &t_value))
+            /* UNCHECKED */ ctxt . ConvertToInteger(*t_value, t_height);
 	}
     
     MCLog("%d, %d", t_width, t_height);
     
-	const char *t_source;
-	t_source = nil;
+	MCAutoStringRef t_source;
 	if (p_parameters != nil)
 	{
-		p_parameters -> eval_argument(ep);
-		t_source = ep . getcstring();
+        MCAutoValueRef t_value;
+		p_parameters -> eval_argument(ctxt, &t_value);
+        /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_source);
 	}
 	
 	MCPhotoSourceType t_photo_source;
 	bool t_is_take;
 	t_is_take = false;
 	
-	if (MCU_strcasecmp(t_source, "library") == 0)
+	if (MCStringIsEqualToCString(*t_source, "library", kMCCompareCaseless))
 		t_photo_source = kMCPhotoSourceTypeLibrary;
-	else if (MCU_strcasecmp(t_source, "album") == 0)
+	else if (MCStringIsEqualToCString(*t_source, "album", kMCCompareCaseless))
 		t_photo_source = kMCPhotoSourceTypeAlbum;
-	else if (MCU_strcasecmp(t_source, "camera") == 0)
+	else if (MCStringIsEqualToCString(*t_source, "camera", kMCCompareCaseless))
         t_photo_source = kMCPhotoSourceTypeCamera;
-    else if (MCU_strcasecmp(t_source, "rear camera") == 0)
+    else if (MCStringIsEqualToCString(*t_source, "rear camera", kMCCompareCaseless))
 		t_photo_source = kMCPhotoSourceTypeRearCamera;
-	else if (MCU_strcasecmp(t_source, "front camera") == 0)
+	else if (MCStringIsEqualToCString(*t_source, "front camera", kMCCompareCaseless))
 		t_photo_source = kMCPhotoSourceTypeFrontCamera;
 	else
 	{
@@ -6167,7 +6178,6 @@ Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
 	
 	/////
 	
-	MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
 	
 	if (t_width != 0 && t_height != 0)
@@ -6265,12 +6275,9 @@ Exec_stat MCHandleControlSet(void *context, MCParameter *p_parameters)
     if (t_success)
 		t_success = MCParseParameters(p_parameters, "xx", &(&t_control_name), &(&t_property));
 
-    if (t_success && p_parameters != nil)
-        t_success = p_parameters -> eval(ep);
-    
     MCAutoValueRef t_value;
-    if (t_success)
-        ep . copyasvalueref(&t_value);
+    if (t_success && p_parameters != nil)
+        t_success = p_parameters -> eval(ctxt, &t_value);
     
     if (t_success)
         MCNativeControlExecSet(ctxt, *t_control_name, *t_property, *t_value);
@@ -6390,8 +6397,7 @@ Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
     MCValueRef t_value;
     while (t_success && p_parameters != nil)
     {
-        p_parameters -> eval(ep);
-        ep . copyasvalueref(t_value);
+        p_parameters -> eval(ctxt, t_value);
         t_success = t_params . Push(t_value);
     }
 
