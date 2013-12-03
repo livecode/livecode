@@ -38,6 +38,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "hndlrlst.h"
 #include "hc.h"
 
+#include "exec-interface.h"
+
 #include "globals.h"
 
 static uint4 maxid;
@@ -666,6 +668,10 @@ MCCdata *MCHctext::buildf(MCHcstak *hcsptr, MCField *parent)
 	uint2 aindex = 2;
 	uint2 aoffset = 0;
 	uint2 alength = 0;
+
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+
 	if (atts != NULL)
 	{
 		hcsptr->getatts(atts[1], tname, tsize, tstyle);
@@ -689,12 +695,24 @@ MCCdata *MCHctext::buildf(MCHcstak *hcsptr, MCField *parent)
 			uint2 cindex = 0;
 			do
 			{
-				if (tname != NULL)
-					pgptr->setatts(cindex, MCU_min(length, cindex + alength),P_TEXT_FONT, (void *)tname);
+                if (tname != NULL)
+                {
+                    MCAutoStringRef t_fontname;
+                    MCStringCreateWithCString(tname, &t_fontname);
+                    pgptr -> SetTextFontOfCharChunk(ctxt, (integer_t)cindex, (integer_t)MCU_min(length, cindex + alength), *t_fontname);
+                }
 				if (tsize != 0xFFFF)
-					pgptr->setatts(cindex, MCU_min(length, cindex + alength),P_TEXT_SIZE, (void *)tsize);
+                {
+                    uinteger_t t_size;
+                    t_size = tsize;
+                    pgptr -> SetTextSizeOfCharChunk(ctxt, (integer_t)cindex, (integer_t)MCU_min(length, cindex + alength), &t_size);
+                }
 				if (tstyle != FA_DEFAULT_STYLE)
-					pgptr->setatts(cindex,MCU_min(length, cindex + alength),P_TEXT_STYLE, (void *)tstyle);
+                {
+                    MCInterfaceTextStyle t_style;
+                    t_style . style = tstyle;
+                    pgptr -> SetTextStyleOfCharChunk(ctxt, (integer_t)cindex, (integer_t)MCU_min(length, cindex + alength), t_style);
+                }
 				uint2 tlength = alength;
 				if (alength <= length - cindex && eptr != NULL)
 				{

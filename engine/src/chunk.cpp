@@ -1325,7 +1325,7 @@ bool MCChunk::getobj(MCExecContext& ctxt, MCObjectPtr& r_object, Boolean p_recur
     return true;
 }
 
-void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObject *&r_object, uint4 r_parid, Boolean p_recurse)
+void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObject *&r_object, uint4& r_parid, Boolean p_recurse)
 {
     MCObjectPtr t_obj_ptr;
 

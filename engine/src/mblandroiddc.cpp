@@ -2616,30 +2616,28 @@ JNIEXPORT jstring JNICALL Java_com_runrev_android_Engine_doGetCustomPropertyValu
 
     jstring t_js = nil;
 
-    char *t_set = nil;
-    char *t_property = nil;
+    MCAutoStringRef t_property, t_set;
 
-    t_success = MCJavaStringToNative(env, set, t_set) && MCJavaStringToNative(env, property, t_property);
+    t_success = MCJavaStringToStringRef(env, set, &t_set) && MCJavaStringToStringRef(env, property, &t_property);
 
-    MCAutoNameRef t_set_name, t_prop_name;
+    MCNewAutoNameRef t_set_name, t_prop_name;
     if (t_success)
     {
-        t_set_name.CreateWithCString(t_set);
-        t_prop_name.CreateWithCString(t_property);
+        MCNameCreate(*t_set, &t_set_name);
+        MCNameCreate(*t_property, &t_prop_name);
     }
 
     MCExecValue t_value;
+    MCExecPoint ep;
+    MCExecContext ctxt(ep);
     if (!MCdefaultstackptr -> getcustomprop(ctxt, *t_set_name, *t_prop_name, t_value))
     {
         MCAutoStringRef t_string_value;
-        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, (void*)t_value . type + 1, kMCExecValueTypeStringRef, &t_string_value);
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeStringRef, &t_string_value);
 
         if (!ctxt . HasError())
             t_success = MCJavaStringFromStringRef(env, *t_string_value, t_js);
     }
-
-    MCCStringFree(t_set);
-    MCCStringFree(t_property);
 
     return t_js;
 }

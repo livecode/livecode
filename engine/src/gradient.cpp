@@ -441,7 +441,7 @@ bool MCGradientFillGetProperties(MCExecContext& ctxt, MCGradientFill* p_gradient
         {
             MCExecValue t_value;
             MCGradientFillFetchProperty(ctxt, p_gradient, gradientprops[tablesize].value, t_value);
-            MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value . type + 1, kMCExecValueTypeValueRef, &t_prop_value);
+            MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeValueRef, &t_prop_value);
             t_success = !ctxt . HasError();
         }
         if (t_success)
@@ -863,7 +863,7 @@ static bool MCGradientFillStoreProperty(MCExecContext& ctxt, MCGradientFill*& p_
         case P_GRADIENT_FILL_RAMP:
         {
             MCAutoStringRef t_data;
-            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeStringRef, &(&t_data));
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeStringRef, &(&t_data));
             if (!MCGradientFillRampParse(t_gradient->ramp, t_gradient->ramp_length, *t_data))
             {
                 ctxt . LegacyThrow(EE_GRAPHIC_BADGRADIENTRAMP);
@@ -877,7 +877,7 @@ static bool MCGradientFillStoreProperty(MCExecContext& ctxt, MCGradientFill*& p_
         case P_GRADIENT_FILL_SECONDARY_POINT:
         {
             MCPoint t_value;
-            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypePoint, &t_value);
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypePoint, &t_value);
             if (!ctxt . HasError())
                 MCGradientFillSetPointProperty(t_gradient, which, t_value, dirty);
             else
@@ -892,14 +892,14 @@ static bool MCGradientFillStoreProperty(MCExecContext& ctxt, MCGradientFill*& p_
         case P_GRADIENT_FILL_WRAP:
         {
             bool t_value;
-            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeBool, &t_value);
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeBool, &t_value);
             MCGradientFillSetBoolProperty(t_gradient, which, t_value, dirty);
         }
             break;
         case P_GRADIENT_FILL_REPEAT:
         {
             uinteger_t t_value;
-            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeUInt, &t_value);
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeUInt, &t_value);
             MCGradientFillSetUIntProperty(t_gradient, which, t_value, dirty);
         }
             break;
@@ -960,7 +960,7 @@ bool MCGradientFillSetProperties(MCExecContext& ctxt, MCGradientFill*& x_gradien
     else
     {
         MCAutoArrayRef t_array;
-        MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value . type + 1, kMCExecValueTypeArrayRef, &(&t_array));
+        MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeArrayRef, &(&t_array));
         MCerrorlock++;
         while (tablesize--)
         {

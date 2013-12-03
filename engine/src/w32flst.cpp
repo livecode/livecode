@@ -462,8 +462,8 @@ bool MCFontlist::getfontsizes(MCStringRef p_fname, MCListRef& r_sizes)
 }
 
 #ifdef FOR_TRUE_TYPE_ONLY
-static MCExecPoint *epptr;
 static uint2 nfonts;
+static MCListRef s_style_list;
 enum FontQueryType {
     FQ_NAMES,
     FQ_SIZES,
@@ -480,16 +480,19 @@ int CALLBACK MyFontFamProc(ENUMLOGFONTA FAR* lpelf,
 		{
 			if (!(FontType & TRUETYPE_FONTTYPE))
 			{ //not true-type font
-				epptr->setstaticcstring("plain\nbold\nitalic\nbold-italic");
+				/* UNCHECKED */ MCListAppend(s_style_list, MCN_plain) &&
+					MCListAppend(s_style_list, MCN_bold) &&
+					MCListAppend(s_style_list, MCN_italic) &&
+					MCListAppend(s_style_list, MCN_bold_italic);
 				return False;  //stop right here, do not continue looping through callback
 			}
 			char *style = (char *)lpelf->elfStyle;
 			if (strequal(style, "Regular"))
-				epptr->concatcstring("plain", EC_RETURN, nfonts++ == 0);
+				/* UNCHECKED */ MCListAppend(s_style_list, MCN_plain);
 			else if (strequal(style, "Bold Italic"))
-				epptr->concatcstring("bold-italic", EC_RETURN, nfonts++ == 0);
+				/* UNCHECKED */ MCListAppend(s_style_list, MCN_bold_italic)
 			else
-				epptr->concatcstring((char*)lpelf->elfStyle, EC_RETURN, nfonts++ == 0);
+				/* UNCHECKED */ MCListAppendCString(s_style_list, (char*)lpelf->elfStyle);
 			break;
 		}
 	default:
@@ -512,23 +515,22 @@ bool MCFontlist::getfontstyles(MCStringRef p_fname, uint2 fsize, MCListRef& r_st
 		return false;
 
 	bool t_success = true;
-	t_success = MCListAppend(*t_list, MCN_plain) &&
-		MCListAppend(*t_list, MCN_bold) &&
-		MCListAppend(*t_list, MCN_italic) &&
-		MCListAppend(*t_list, MCN_bold_italic);
-	return t_success && MCListCopy(*t_list, r_styles);
-
 #ifdef FOR_TRUE_TYPE_ONLY
-
-	epptr = &ep;
+	s_style_list = *t_list;
 	nfonts = 0;
 	char mappedName[LF_FACESIZE];
 	mapfacename(mappedName, fname);
 	MCScreenDC *pms = (MCScreenDC *)MCscreen;
 	HDC hdc = pms->getmemsrchdc();
 	EnumFontFamiliesA(hdc, mappedName, (FONTENUMPROC)MyFontFamProc, FQ_STYLES);
-	ep.lower();
+#else
+	t_success = MCListAppend(*t_list, MCN_plain) &&
+		MCListAppend(*t_list, MCN_bold) &&
+		MCListAppend(*t_list, MCN_italic) &&
+		MCListAppend(*t_list, MCN_bold_italic);
 #endif
+
+	return t_success && MCListCopy(*t_list, r_styles);
 }
 
 bool MCFontlist::getfontstructinfo(MCNameRef& r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font)

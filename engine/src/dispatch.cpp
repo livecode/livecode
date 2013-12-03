@@ -1695,7 +1695,7 @@ bool MCDispatch::loadexternal(MCStringRef p_external)
 	else
 	{
 		uindex_t t_separator;
-		MCStringLastIndexOfChar(MCcmd, '/', 0, kMCStringOptionCompareExact, t_separator);
+		MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_separator);
 		if (!MCStringMutableCopySubstring(MCcmd, MCRangeMake(0, t_separator), t_filename))
 			return false;
 		if (!MCStringAppendFormat(t_filename, "/%@", p_external))

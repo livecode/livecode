@@ -625,7 +625,7 @@ void MCExpression::eval_typed(MCExecContext& ctxt, MCExecValueType p_type, void 
 	MCExecValue t_value;
 	eval_ctxt(ctxt, t_value);
 	if (!ctxt . HasError())
-		MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value . type + 1, p_type, r_value);
+		MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , p_type, r_value);
 }
 
 void MCExpression::eval_valueref(MCExecContext& ctxt, MCValueRef& r_value)

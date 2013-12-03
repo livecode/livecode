@@ -265,6 +265,7 @@
 		7607CF7C1769BB4D00ADB512 /* exec-interface-vclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7607CF6C1769BB4D00ADB512 /* exec-interface-vclip.cpp */; };
 		7607CF7D1769BB4D00ADB512 /* exec-interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7607CF6D1769BB4D00ADB512 /* exec-interface.cpp */; };
 		7607CF7E1769BB4D00ADB512 /* exec-interface2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7607CF6F1769BB4D00ADB512 /* exec-interface2.cpp */; };
+		766D6B541848B1990041D058 /* exec-keywords.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766D6B521848B18F0041D058 /* exec-keywords.cpp */; };
 		768D66C217622FE200F203A3 /* exec-nativecontrol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */; };
 		768D66C317622FE200F203A3 /* exec-nativecontrol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */; };
 		768D66C51765E11300F203A3 /* exec-pick.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C41765E11300F203A3 /* exec-pick.cpp */; };
@@ -908,6 +909,8 @@
 		7607CF6E1769BB4D00ADB512 /* exec-interface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "exec-interface.h"; path = "src/exec-interface.h"; sourceTree = "<group>"; };
 		7607CF6F1769BB4D00ADB512 /* exec-interface2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface2.cpp"; path = "src/exec-interface2.cpp"; sourceTree = "<group>"; };
 		7607CFD5176B232E00ADB512 /* mblandroidmediapick.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidmediapick.cpp; path = src/mblandroidmediapick.cpp; sourceTree = "<group>"; };
+		766D6B521848B18F0041D058 /* exec-keywords.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-keywords.cpp"; path = "src/exec-keywords.cpp"; sourceTree = "<group>"; };
+		766D6B561848B4570041D058 /* iphone_test.livecode */ = {isa = PBXFileReference; lastKnownFileType = file; name = iphone_test.livecode; path = ../iphone_test.livecode; sourceTree = "<group>"; };
 		768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-nativecontrol.cpp"; path = "src/exec-nativecontrol.cpp"; sourceTree = "<group>"; };
 		768D66C41765E11300F203A3 /* exec-pick.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-pick.cpp"; path = "src/exec-pick.cpp"; sourceTree = "<group>"; };
 		7695688B1822775100779255 /* libskia-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libskia-mobile.xcodeproj"; path = "../thirdparty/libskia/libskia-mobile.xcodeproj"; sourceTree = "<group>"; };
@@ -1345,6 +1348,7 @@
 				4DD3DD9C1040AA9A00CAC7EF /* standalone-mobile-Info.plist */,
 				4D82FCFF171487A400C48403 /* template-store-entitlements.xcent */,
 				4D08A36D138FF3250081F990 /* standalone.ios */,
+				766D6B561848B4570041D058 /* iphone_test.livecode */,
 				4D82FCE81714866500C48403 /* mobile-device-template.plist */,
 				4D82FCE41714862D00C48403 /* template-entitlements.xcent */,
 				4D82FCE51714863800C48403 /* template-remote-notification-entitlements.xcent */,
@@ -1449,6 +1453,7 @@
 		BE4494B6175CDE4E00346B49 /* Exec */ = {
 			isa = PBXGroup;
 			children = (
+				766D6B521848B18F0041D058 /* exec-keywords.cpp */,
 				76EF321F182124AA00FAC195 /* exec-strings.h */,
 				BE940439175F74D2003EAB87 /* exec-ad.cpp */,
 				BE94042A175F6307003EAB87 /* exec-addressbook.cpp */,
@@ -2424,6 +2429,7 @@
 				76EF32E61822757A00FAC195 /* stackview.cpp in Sources */,
 				76EF32E9182275D500FAC195 /* imagelist.cpp in Sources */,
 				76956893182277B200779255 /* cgimageutil.cpp in Sources */,
+				766D6B541848B1990041D058 /* exec-keywords.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

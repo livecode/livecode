@@ -713,7 +713,7 @@ void MCNativeControlExecGet(MCExecContext& ctxt, MCStringRef p_control_name, MCS
 
 		MCExecValue t_value;
         MCExecFetchProperty(ctxt, t_info, &t_control, t_value);
-		MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, t_value . type, &t_value . type + 1, r_result);
+		MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, t_value . type, &t_value, r_result);
     }
 }
 
@@ -738,6 +738,7 @@ void MCNativeControlExecSet(MCExecContext& ctxt, MCStringRef p_control_name, MCS
     
     if (t_info != nil)
 	{
+        MCValueRetain(p_value);
 		MCNativeControlPtr t_control;
 		t_control . control = t_native_control;
 

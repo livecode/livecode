@@ -743,9 +743,11 @@ public:
 	// Called by:
 	//   MCField::finsert (for charset purposes)
 	//   MCField::gettextatts
+#ifdef LEGACY_EXEC
 	Boolean getatts(findex_t si, findex_t ei, Font_textstyle spec_style, const char *&fname, uint2 &size,
 	                uint2 &style, const MCColor *&color,
 	                const MCColor *&backcolor, int2 &shift, bool& specstyle, uint2 &mixed);
+#endif
 
 	// Set the attributes on the given range.
 	// Called by:
@@ -754,7 +756,9 @@ public:
 	//   MCField::htmltoparagraphs
 	//   MCField::settextatts
 	//   MCHcfield::buildf
+#ifdef LEGACY_EXEC
 	void setatts(findex_t si, findex_t ei, Properties which, void *value, bool from_html = false);
+#endif
 
 	uint2 getopened()
 	{
@@ -905,6 +909,15 @@ public:
     void GetMetadata(MCExecContext& ctxt, MCStringRef &r_metadata);
     void GetEffectiveMetadata(MCExecContext& ctxt, MCStringRef &r_metadata);
     void SetMetadata(MCExecContext& ctxt, MCStringRef p_metadata);
+
+
+    //////////////////////////////////////////////////
+    // IDE-related functions
+
+    void SetForeColorOfCharChunk(MCExecContext &ctxt, findex_t si, findex_t ei, const MCInterfaceNamedColor &p_color);
+    void SetTextStyleOfCharChunk(MCExecContext &ctxt, findex_t si, findex_t ei, const MCInterfaceTextStyle &p_text);
+    void SetTextFontOfCharChunk(MCExecContext &ctxt, findex_t si, findex_t ei, MCStringRef p_fontname);
+    void SetTextSizeOfCharChunk(MCExecContext &ctxt, findex_t si, findex_t ei, uinteger_t *p_size);
 
 private:
 	// Flow the paragraph using the given parent font. This is called

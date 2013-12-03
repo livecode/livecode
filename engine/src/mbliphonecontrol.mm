@@ -115,6 +115,7 @@ UIView *MCiOSControl::GetView(void)
 
 #define MCColorComponentToFloat(c) ((c) / 65535.0)
 #define MCFloatToColorComponent(f) ((f) * 65535)
+
 #ifdef LEGACY_EXEC
 Exec_stat MCiOSControl::ParseColor(MCExecPoint& ep, UIColor*& r_color)
 {
@@ -261,6 +262,10 @@ bool MCiOSControl::FormatRange(MCExecPoint &ep, NSRange r_range)
     return MCNativeControl::FormatRange(ep, r_range.location + 1, r_range.length);
 }
 #endif
+
+#define MCColorComponentToFloat(c) ((c) / 65535.0)
+#define MCFloatToColorComponent(f) ((f) * 65535)
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

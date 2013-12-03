@@ -2967,7 +2967,7 @@ bool MCStack::resolve_relative_path(MCStringRef p_path, MCStringRef& r_resolved)
 	if (!MCStringIsEmpty(t_stack_filename))
 	{
 		uindex_t t_slash;
-        if (MCStringLastIndexOfChar(t_stack_filename, '/', 0, kMCCompareExact, t_slash))
+        if (MCStringLastIndexOfChar(t_stack_filename, '/', UINDEX_MAX, kMCCompareExact, t_slash))
         {
             MCAutoStringRef t_new_filename;
             MCStringCreateMutable(0, &t_new_filename);
@@ -2980,13 +2980,9 @@ bool MCStack::resolve_relative_path(MCStringRef p_path, MCStringRef& r_resolved)
 			else
 				/* UNCHECKED */ MCStringAppend(*t_new_filename, filename);
             
-            if (MCS_exists(*t_new_filename, True))
-            {
-                return MCStringCopy(*t_new_filename, r_resolved);
-            }
+			r_resolved = MCValueRetain(*t_new_filename);
+			return true;
 		}
-		r_resolved = MCValueRetain(t_stack_filename);
-		return true;
 	}
     
     return false;

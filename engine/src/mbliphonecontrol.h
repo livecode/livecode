@@ -56,6 +56,7 @@ public:
     
 	// Get the native view of the instance.
 	UIView *GetView(void);
+
 	
 	// Various helper functions
 #ifdef LEGACY_EXEC
@@ -70,11 +71,10 @@ public:
 	static bool FormatString(MCExecPoint& ep, NSString *string);
 	static bool ParseUnicodeString(MCExecPoint& ep, NSString*& r_string);
 	static bool FormatUnicodeString(MCExecPoint& ep, NSString *string);
-    
     static bool ParseRange(MCExecPoint &ep, NSRange &r_range);
     static bool FormatRange(MCExecPoint &ep, NSRange r_range);
 #endif
-	
+
 protected:
 	// Called by the base-class when it needs the view created
 	virtual UIView *CreateView(void) = 0;

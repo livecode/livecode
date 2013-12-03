@@ -385,7 +385,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 		s_server_home = MCValueRetain(MCcmd);
 
 		uindex_t t_last_separator;
-		MCStringLastIndexOfChar(s_server_home, PATH_SEPARATOR, 0, kMCStringOptionCompareExact, t_last_separator);
+		MCStringLastIndexOfChar(s_server_home, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareExact, t_last_separator);
 
 		MCAutoStringRef tmp_s_server_home;
 		/* UNCHECKED */ MCStringCopySubstring(s_server_home, MCRangeMake(0, t_last_separator - 1), &tmp_s_server_home);

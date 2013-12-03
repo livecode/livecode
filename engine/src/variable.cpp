@@ -206,11 +206,11 @@ bool MCVariable::setvalueref(MCNameRef *p_path, uindex_t p_length, bool p_case_s
 	if (!converttomutablearray())
 		return false;
 
-	MCAutoValueRef t_copied_value;
-	if (!MCValueCopy(p_value, &t_copied_value))
+	MCValueRef t_copied_value;
+	if (!MCValueCopy(p_value, t_copied_value))
 		return false;
 
-	if (MCArrayStoreValueOnPath((MCArrayRef)value, p_case_sensitive, p_path, p_length, *t_copied_value))
+	if (MCArrayStoreValueOnPath((MCArrayRef)value, p_case_sensitive, p_path, p_length, t_copied_value))
 		return true;
 
 	return false;
