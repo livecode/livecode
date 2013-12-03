@@ -496,10 +496,14 @@ public:
 private:
 	static bool list_items(void *p_context, MCStringRef p_item)
 	{
-		MCExecPoint *ep;
-		ep = (MCExecPoint *)p_context;
+		MCStringRef *t_string;
+		t_string = (MCStringRef *)p_context;
+        
+        MCAutoListRef t_list;
+        /* UNCHECKED */ MCListCreateMutable(EC_RETURN, &t_list);
+        /* UNCHECKED */ MCListAppend(*t_list, p_item);
 
-		ep -> concatcstring(MCStringGetCString(p_item), EC_RETURN, ep -> getsvalue() . getlength() == 0);
+        /* UNCHECKED */ MCListCopyAsString(*t_list, *t_string);
 
 		return true;
 	}
@@ -609,7 +613,7 @@ public:
 		{
 			ExtractContext t_context;
 			t_context . target = MCtargetptr -> gethandle();
-			t_context . name = t_item;
+			t_context . name = *t_item;
 			t_context . var = ctxt . GetEP().getit() -> evalvar(ctxt);
 			t_context . stream = nil;
 
@@ -663,12 +667,14 @@ private:
 			MCExecContext ctxt(ep);
 			MCAutoStringRef t_data;
 			/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)p_data, p_data_length, kMCStringEncodingNative, false, &t_data);
-			MCStringRef t_value; 
-			/* UNCHECKED */ ctxt . ConvertToString(context -> var -> value, t_value);
+			MCStringRef t_value;
+            MCAutoValueRef t_valueref;
+            context -> var -> copyasvalueref(&t_valueref);
+			/* UNCHECKED */ ctxt . ConvertToString(*t_valueref, t_value);
 			/* UNCHECHED */ MCStringMutableCopyAndRelease(t_value, t_value);
 			if (!MCStringAppend(t_value, *t_data))
 				return false;
-			MCValueAssign(context -> var -> value, t_value);
+            context -> var ->setvalueref(t_value);
 			MCValueRelease(t_value);
 		}
 
@@ -737,20 +743,20 @@ public:
 
 		MCAutoStringRef t_patch_item;
         if (t_success && ctxt . EvalExprAsStringRef(m_patch_item_expr, EE_UNDEFINED, &t_patch_item))
-			t_success = ep.copyasstring(&t_patch_item);
+			t_success = true;
 		else
 			t_success = false;
 
 		MCAutoStringRef t_base_item;
 
 		if (t_success && ctxt . EvalExprAsStringRef(m_base_item_expr, EE_UNDEFINED, &t_base_item))
-			t_success = ep.copyasstring(&t_base_item);
+			t_success = true;
 		else
 			t_success = false;
 
 		MCAutoStringRef t_output_filename;
 		if (t_success && ctxt . EvalExprAsStringRef(m_output_file_expr, EE_UNDEFINED, &t_output_filename))
-			t_success = ep.copyasstring(&t_output_filename);
+			t_success = true;
 		else
 			t_success = false;
 
@@ -900,6 +906,7 @@ public:
 		return PS_NORMAL;
 	}
     
+#ifdef LEGACY_EXEC
 	Exec_stat exec(MCExecPoint& ep)
 	{
 		bool t_success;
@@ -925,14 +932,15 @@ public:
 
 		return ES_NORMAL;
 	}
-
+#endif
+    
 private:
 	MCExpression *m_module;
 
 	struct State
 	{
 		char *module;
-		MCExecPoint *ep;
+		MCStringRef string;
 		bool found;
 		bool first;
 	};
@@ -955,10 +963,14 @@ private:
 		MCSystemListProcessModules(p_id, ListProcessModulesCallback, state);
 		if (state -> found)
 		{
+            /* UNCHECKED */ MCStringMutableCopyAndRelease(state->string, state->string);
 			if (!state -> first)
-				state -> ep -> appendnewline();
-			state -> ep -> appendstringf("%s,%s", p_path, p_desc);
-			state -> first = false;
+            {
+                /* UNCHECKED */ MCStringAppendChar(state -> string, '\n');
+            }
+			
+            MCStringAppendFormat(state -> string, "%s,%s", p_path, p_desc);
+            state -> first = false;
 		}
 
 		return true;
@@ -1004,7 +1016,7 @@ public:
         MCAutoPointer<char> temp;
         /* UNCHECKED */ MCStringConvertToCString(*t_string, &temp);
         
-        MCResult -> setvalueref(MCSystemCanDeleteKey(*temp) == true ? kMCTrue : kMCFalse);
+        MCresult -> setvalueref(MCSystemCanDeleteKey(*temp) == true ? kMCTrue : kMCFalse);
 
 		return;
 	}
@@ -1048,7 +1060,7 @@ public:
         MCAutoPointer<char> temp;
         /* UNCHECKED */ MCStringConvertToCString(*t_string, &temp);
         
-        MCResult -> setvalueref(MCSystemCanDeleteFile(*temp) == true ? kMCTrue : kMCFalse);
+        MCresult -> setvalueref(MCSystemCanDeleteFile(*temp) == true ? kMCTrue : kMCFalse);
         
 		return;
 	}
