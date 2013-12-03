@@ -441,7 +441,7 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
         return;
 
 	MCDeployParameters t_params;
-	t_params.InitWithArray(ctxt, *t_array);
+    t_has_error = !t_params.InitWithArray(ctxt, *t_array);
 	
 	// If platform is iOS and we are not Mac then error
 #ifndef _MACOSX
@@ -496,9 +496,9 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 		MCDeployError t_error;
 		t_error = MCDeployCatch();
 		if (t_error != kMCDeployErrorNone)
-			MCresult -> sets(MCDeployErrorToString(t_error));
+            ctxt . SetTheResultToCString(MCDeployErrorToString(t_error));
 		else
-			MCresult -> clear();
+            ctxt . SetTheResultToEmpty();
 	}
     
     if (t_has_error && !t_soft_error)
@@ -737,7 +737,7 @@ void MCIdeDmgDump::exec_ctxt(MCExecContext &ctxt)
 		t_output = fopen("C:\\Users\\Mark\\Desktop\\dmg.txt", "w");
 		MCDeployDmgDump(*temp, stdfile_log, t_output);
 		fclose(t_output);
-	}
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -908,15 +908,15 @@ void MCIdeExtract::exec_ctxt(MCExecContext& ctxt)
 {
 	
 	MCAutoStringRef t_segment;
-    if (!ctxt . EvalExprAsStringRef(m_segment_name, EE_UNDEFINED, &t_segment))
+    if (!ctxt . EvalExprAsStringRef(m_segment_name, EE_IDE_EXTRACT_BADSEGMENT, &t_segment))
         return;
 	
 	MCAutoStringRef t_section;
-    if (!ctxt . EvalExprAsStringRef(m_section_name, EE_UNDEFINED, &t_section))
+    if (!ctxt . EvalExprAsStringRef(m_section_name, EE_IDE_EXTRACT_BADSECTION, &t_section))
         return;
 	
 	MCAutoStringRef t_filename;
-    if (!ctxt . EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_filename))
+    if (!ctxt . EvalExprAsStringRef(m_filename, EE_IDE_EXTRACT_BADFILENAME, &t_filename))
         return;
 		
 	void *t_data;
@@ -932,9 +932,7 @@ void MCIdeExtract::exec_ctxt(MCExecContext& ctxt)
         ctxt . SetItToValue(*t_string);
 	}
 	else
-		ctxt . SetItToEmpty();
-	
-	return ES_NORMAL;
+        ctxt . SetItToEmpty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

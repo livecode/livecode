@@ -4243,13 +4243,8 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
     }
     else if (destvar != NULL)
     {
-        MCAutoValueRef t_value;
-        if (!destvar -> eval(ctxt, &t_value)
-                || !ctxt . ConvertToString(*t_value, &t_text))
-        {
-            ctxt . LegacyThrow(EE_CHUNK_CANTGETDEST);
+        if (!ctxt . EvalExprAsStringRef(destvar, EE_CHUNK_CANTGETDEST, &t_text))
             return;
-        }
     }
     else
     {
