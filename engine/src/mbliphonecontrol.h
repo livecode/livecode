@@ -56,14 +56,15 @@ public:
     
 	// Get the native view of the instance.
 	UIView *GetView(void);
-	
+
     static bool ParseColor(const MCNativeControlColor& p_color, UIColor*& r_color);
 	static bool FormatColor(const UIColor* p_color, MCNativeControlColor& r_color);
     
+
 #ifdef LEGACY_EXEC
 	// Various helper functions
 	static Exec_stat ParseColor(MCExecPoint& ep, UIColor*& r_color);
-	static Exec_stat FormatColor(MCExecPoint& ep, UIColor *color);
+    static Exec_stat FormatColor(MCExecPoint& ep, UIColor *color);
 	static bool ParseString(MCExecPoint& ep, NSString*& r_string);
 	static bool FormatString(MCExecPoint& ep, NSString *string);
 	static bool ParseUnicodeString(MCExecPoint& ep, NSString*& r_string);
