@@ -6008,7 +6008,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 char* t_native_name;
                 uint4 t_native_length;
                 t_native_length = 0;
-                MCS_utf16tonative((const unsigned short *)t_names[t_i] . unicode, t_names[t_i] . length, t_native_name, t_native_length);
+                MCS_utf16tonative((const unsigned short *)t_names[t_i] . unicode, t_names[t_i] . length * 2, t_native_name, t_native_length);
                 // MCS_utf16tonative return a non nul-terminated string
                 t_native_name[t_native_length] = '\0';
                 
