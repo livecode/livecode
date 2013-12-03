@@ -902,6 +902,7 @@ MCVariable *MCVarref::evalvar(MCExecContext& ctxt)
     return fetchvar(ctxt);
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCVarref::eval(MCExecPoint& ep)
 {
     MCExecContext ctxt(ep);
@@ -931,6 +932,7 @@ Exec_stat MCVarref::eval(MCExecPoint& ep)
     }
 	return ES_ERROR;
 }
+#endif
 
 void MCVarref::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
