@@ -21,7 +21,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define	STATEMENT_H
 
 class MCScriptPoint;
-class MCExecPoint;
 class MCParameter;
 class MCChunk;
 class MCExpression;
@@ -39,7 +38,9 @@ public:
 	
 	virtual ~MCStatement();
 	virtual Parse_stat parse(MCScriptPoint &);
+#ifdef LEGACY_EXEC
 	virtual Exec_stat exec(MCExecPoint &);
+#endif
 	virtual void exec_ctxt(MCExecContext&);
 	virtual void compile(MCSyntaxFactoryRef factory);
 	

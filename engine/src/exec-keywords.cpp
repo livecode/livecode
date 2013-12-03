@@ -58,8 +58,11 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
                 break;
         }
         ctxt . SetLine(tspr->getline());
-        stat = tspr->exec(ctxt . GetEP());
         
+       // stat = tspr->exec(ctxt . GetEP());
+        tspr->exec_ctxt(ctxt);
+        stat = ctxt . GetExecStat();
+        ctxt . IgnoreLastError();
         // MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
         MCRedrawUpdateScreen();
         
@@ -84,8 +87,9 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
                         ctxt . IgnoreLastError();
                         MCB_error(ctxt, tspr->getline(), tspr->getpos(),
                                   EE_REPEAT_BADSTATEMENT);
+                        tspr->exec_ctxt(ctxt);
                     }
-                while (MCtrace && (stat = tspr->exec(ctxt . GetEP())) != ES_NORMAL);
+                while (MCtrace && (stat = ctxt . GetExecStat()) != ES_NORMAL);
                 if (stat == ES_ERROR)
                 {
                     if (MCexitall)  
@@ -611,7 +615,10 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
 		}
 		ctxt . SetLine(tspr->getline());
         
-		stat = tspr->exec(ctxt . GetEP());
+		//stat = tspr->exec(ctxt . GetEP());
+        tspr->exec_ctxt(ctxt);
+        stat = ctxt . GetExecStat();
+        ctxt . IgnoreLastError();
         
 		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
 		MCRedrawUpdateScreen();
@@ -640,8 +647,9 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
                     do
                     {
                         MCB_error(ctxt, tspr->getline(), tspr->getpos(), EE_TRY_BADSTATEMENT);
+                        tspr->exec_ctxt(ctxt);
                     }
-				while(MCtrace && (stat = tspr->exec(ctxt . GetEP())) != ES_NORMAL);
+				while(MCtrace && (stat = ctxt . GetExecStat()) != ES_NORMAL);
                 
                 if (stat == ES_ERROR)
                 {
