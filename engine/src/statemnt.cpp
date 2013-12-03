@@ -57,6 +57,7 @@ Parse_stat MCStatement::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+//#ifdef LEGACY_EXEC
 Exec_stat MCStatement::exec(MCExecPoint &ep)
 {
 	MCExecContext ctxt(ep);
@@ -65,6 +66,7 @@ Exec_stat MCStatement::exec(MCExecPoint &ep)
         return ctxt . GetExecStat();
 	return ctxt . Catch(line, pos);
 }
+//#endif
 
 void MCStatement::exec_ctxt(MCExecContext&)
 {

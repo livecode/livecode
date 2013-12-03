@@ -445,11 +445,11 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 	
 	// If platform is iOS and we are not Mac then error
 #ifndef _MACOSX
-	if (!t_error && (m_platform == PLATFORM_IOS || m_platform == PLATFORM_IOS_EMBEDDED))
+	if (!t_has_error && (m_platform == PLATFORM_IOS || m_platform == PLATFORM_IOS_EMBEDDED))
 	{
 		MCresult -> sets("ios deployment not supported on this platform");
 		t_soft_error = true;
-        t_error = true;
+        t_has_error = true;
 	}
 #endif
 
@@ -738,8 +738,6 @@ void MCIdeDmgDump::exec_ctxt(MCExecContext &ctxt)
 		MCDeployDmgDump(*temp, stdfile_log, t_output);
 		fclose(t_output);
 	}
-
-	return ES_NORMAL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

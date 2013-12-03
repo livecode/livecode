@@ -233,23 +233,22 @@ void MCRevRelicense::exec_ctxt(MCExecContext& ctxt)
 		break;
 		
 	default:
-		MCresult -> sets("cancelled");
-		
-		return ES_NORMAL;
+        ctxt . SetTheResultToCString("cancelled");
+        return;
 	}
 	
 	if (MClicenseparameters . license_token == NULL || strlen(MClicenseparameters . license_token) == 0)
 	{
-		MCresult -> sets("no token");
-		return ES_NORMAL;
+		ctxt . SetTheResultToCString("no token");
+		return;
 	}
 	
 	MCAutoStringRef license_token_string;
 	/* UNCHECKED */ MCStringCreateWithCString(MClicenseparameters . license_token, &license_token_string);
 	if (!MCS_unlink(*license_token_string))
 	{
-		MCresult -> sets("token deletion failed");
-		return ES_NORMAL;
+		ctxt . SetTheResultToCString("token deletion failed");
+		return;
 	}
 
 	MCretcode = 0;
@@ -265,8 +264,6 @@ void MCRevRelicense::exec_ctxt(MCExecContext& ctxt)
 	s_command_path = MCValueRetain(*t_command_path);
 
 	atexit(restart_revolution);
-	
-	return ES_NORMAL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -345,7 +342,9 @@ IO_stat MCDispatch::startup(void)
 		MCExecPoint ep;
         MCExecContext ctxt(ep);
         MCValueRef t_valueref;
+        t_valueref = nil;
         MCValueRef t_valueref2;
+        t_valueref2 = nil;
 		MCresult -> eval(ctxt, t_valueref);
 		
 		if (MCValueIsEmpty(t_valueref))

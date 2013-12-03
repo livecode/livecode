@@ -58,7 +58,6 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
                 break;
         }
         ctxt . SetLine(tspr->getline());
-        
         stat = tspr->exec(ctxt . GetEP());
         
         // MW-2011-08-17: [[ Redraw ]] Flush any screen updates.

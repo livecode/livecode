@@ -627,6 +627,7 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 		return;
 
 	MCValueRef t_valueref;
+    t_valueref = nil;
 
 	// Set foreground
 	{
@@ -731,6 +732,7 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 	}
 	
 	MCValueRef t_valueref;
+    t_valueref = nil;
 	MCAutoArrayRef t_style_entry;   
 
 	// Set foreground
