@@ -326,6 +326,8 @@ void MCKeywordsExecuteRepeatStatements(MCExecContext& ctxt, MCStatement *stateme
     if ((stat == ES_NORMAL && MCexitall) || (stat != ES_NEXT_REPEAT && stat != ES_NORMAL))
     {
         r_done = true;
+        if (stat != ES_EXIT_REPEAT)
+            ctxt . SetExecStat(stat);
         return;
     }
     if (MCscreen->abortkey())
@@ -467,10 +469,6 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
         
         if (done)
         {
-            if (*t_unit == nil)
-            {
-                bool t_true = true;
-            }
             // Reset the loop variable to whatever the value was in the last iteration.
             if (loopvar != nil && each != FU_ELEMENT && each != FU_KEY)
                 loopvar->set(ctxt, *t_unit);
