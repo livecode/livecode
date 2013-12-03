@@ -420,7 +420,8 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 		}
 		ctxt.SetLine(tspr->getline());
         
-		stat = tspr->exec(ctxt . GetEP());
+        tspr->exec_ctxt(ctxt);
+		stat = ctxt . GetExecStat();
         
 		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
 		MCRedrawUpdateScreen();
@@ -440,8 +441,9 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
                     do
                     {
                         MCB_error(ctxt, tspr->getline(), tspr->getpos(), EE_HANDLER_BADSTATEMENT);
+                        tspr->exec_ctxt(ctxt);
                     }
-				while (MCtrace && (stat = tspr->exec(ctxt . GetEP())) != ES_NORMAL);
+				while (MCtrace && (stat = ctxt . GetExecStat()) != ES_NORMAL);
                 if (stat != ES_NORMAL)
                 {
                     MCeerror->add(EE_HANDLER_BADSTATEMENT, tspr->getline(), tspr->getpos(), name);

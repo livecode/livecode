@@ -57,7 +57,7 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
             if (MCexitall)
                 break;
         }
-        ctxt . GetEP() . setline(tspr->getline());
+        ctxt . SetLine(tspr->getline());
         
         stat = tspr->exec(ctxt . GetEP());
         

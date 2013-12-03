@@ -2554,7 +2554,7 @@ void MCInterfaceExecHideObjectWithEffect(MCExecContext& ctxt, MCObjectPtr p_targ
 	if (MCRedrawIsScreenLocked())
 		MCInterfaceExecHideObject(ctxt, p_target);
 	else
-	{	
+	{
 		if (p_effect->exec(ctxt . GetEP()) != ES_NORMAL)
 		{
 			ctxt . LegacyThrow(EE_HIDE_BADEFFECT);
