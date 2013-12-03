@@ -219,7 +219,6 @@ Boolean MCScreenDC::open()
 	MCAutoValueRef t_value2;
     MCAutoStringRef t_type2, t_error2;
     /* UNCHECKED */ MCS_query_registry(t_key2, &t_value2, &t_type2, &t_error2);
-    MCValueRelease(t_key2);
 
 	if (!MCValueIsEmpty(*t_value2))
 	{
