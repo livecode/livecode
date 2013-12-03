@@ -246,7 +246,7 @@ public:
 			mmap_payload_from_file(t_filename, t_payload_data, t_payload_size);
 			if (t_payload_data == nil)
 			{
-				MCresult -> sets("could not load paylod from file");
+				ctxt . SetTheResultToCString("could not load paylod from file");
 				return;
 			}
 		}
@@ -267,7 +267,7 @@ public:
                 mmap_payload_from_file(*t_utf8_payload_file, t_payload_data, t_payload_size);
 				if(t_payload_data == nil)
 				{
-					MCresult -> sets("could not find payload");
+					ctxt . SetTheResultToCString("could not find payload");
 					return;
 				}			
 			}			
@@ -317,7 +317,7 @@ public:
 		// Open the payload as a minizip
 		if (!MCMiniZipOpen(t_payload_data, t_payload_size, s_payload_minizip))
 		{
-			MCresult -> sets("could not open payload");
+			ctxt . SetTheResultToCString("could not open payload");
 			return;
 		}
 
@@ -483,7 +483,7 @@ public:
 		// Don't do anything if the payload isn't open
 		if (s_payload_minizip == nil)
 		{
-			MCresult -> sets("payload not open");
+			ctxt . SetTheResultToCString("payload not open");
 			return;
 		}
 
@@ -551,10 +551,10 @@ public:
 				ctxt . GetEP() .getit() -> set(ctxt, *t_string, False);
 			}
 			else
-				MCresult -> sets("describe failed");
+				ctxt . SetTheResultToCString("describe failed");
 		}
 		else
-			MCresult -> sets("payload not open");
+			ctxt . SetTheResultToCString("payload not open");
 
 		return;
 	}
@@ -626,10 +626,10 @@ public:
 				if (MCMiniZipExtractItem(s_payload_minizip, t_context . name, extract_item, &t_context))
 					MCresult -> clear();
 				else
-					MCresult -> sets("extract failed");
+					ctxt . SetTheResultToCString("extract failed");
 			}
 			else
-				MCresult -> sets("could not open file");
+				ctxt . SetTheResultToCString("could not open file");
 			
 			if (t_context . stream != nil)
 				MCS_close(t_context . stream);
@@ -637,7 +637,7 @@ public:
 			t_context . target -> Release();
 		}
 		else
-			MCresult -> sets("payload not open");
+			ctxt . SetTheResultToCString("payload not open");
 
 		return ES_NORMAL;
 	}
@@ -798,7 +798,7 @@ public:
 			}
 
 			if (!t_success)
-				MCresult -> sets("patch failed");
+				ctxt . SetTheResultToCString("patch failed");
 
 			if (t_output_handle != nil)
 				MCS_close(t_output_handle);
@@ -807,7 +807,7 @@ public:
 			MCMemoryDeallocate(t_patch_data);
 		}
 		else
-			MCresult -> sets("payload not open");
+			ctxt . SetTheResultToCString("payload not open");
 
 		return;
 	}

@@ -447,7 +447,7 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 #ifndef _MACOSX
 	if (!t_has_error && (m_platform == PLATFORM_IOS || m_platform == PLATFORM_IOS_EMBEDDED))
 	{
-		MCresult -> sets("ios deployment not supported on this platform");
+		ctxt . SetTheResultToCString("ios deployment not supported on this platform");
 		t_soft_error = true;
         t_has_error = true;
 	}
@@ -473,7 +473,7 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 
 	if (!t_is_licensed)
 	{
-		MCresult -> sets("not licensed to deploy to target platform");
+		ctxt . SetTheResultToCString("not licensed to deploy to target platform");
 		t_soft_error = true;
 		t_has_error = true;
 	}
@@ -589,7 +589,7 @@ void MCIdeSign::exec_ctxt(MCExecContext &ctxt)
 	t_can_sign = true;
 	if (!ctxt . HasError() && !InitSSLCrypt())
 	{
-		MCresult -> sets("could not initialize SSL");
+		ctxt . SetTheResultToCString("could not initialize SSL");
 		t_can_sign = false;
 	}
 
@@ -601,7 +601,7 @@ void MCIdeSign::exec_ctxt(MCExecContext &ctxt)
 		MCDeployError t_error;
 		t_error = MCDeployCatch();
 		if (t_error != kMCDeployErrorNone)
-			MCresult -> sets(MCDeployErrorToString(t_error));
+			ctxt . SetTheResultToCString(MCDeployErrorToString(t_error));
 	}
 
 	return;
@@ -685,7 +685,7 @@ void MCIdeDiet::exec_ctxt(MCExecContext& ctxt)
 		MCDeployError t_error;
 		t_error = MCDeployCatch();
 		if (t_error != kMCDeployErrorNone)
-			MCresult -> sets(MCDeployErrorToString(t_error));
+			ctxt . SetTheResultToCString(MCDeployErrorToString(t_error));
 	}
 }
 
