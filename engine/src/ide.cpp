@@ -1467,7 +1467,7 @@ void MCIdeScriptReplace::exec_ctxt(MCExecContext & ctxt)
     si = 0;
     ei = INT32_MAX;
     t_target -> resolvechars(0, si, ei, t_start_index, t_end_index - t_start_index);
-    t_target -> settextindex(0, si, ei, *t_text, False);
+    t_target -> settextindex(0, MCU_max(si, 0), ei, *t_text, False);
 
     TokenizeField(t_target, t_state, CT_CHARACTER, t_start, t_start + MCStringGetLength(*t_text) - 1, colourize_paragraph);
 
