@@ -847,8 +847,10 @@ static bool s_map_to_array_callback(JNIEnv *p_env, const char *p_key, jobject p_
 		{
             MCAutoArrayRef t_array;
 			map_to_array_context_t t_new_context;
-			t_new_context.array = &t_array;
-			t_success = MCJavaIterateMap(p_env, p_value, s_map_to_array_callback, &t_new_context);
+            t_success = MCArrayCreateMutable(&t_array);
+			t_new_context.array = *t_array;
+            if (t_success)
+                t_success = MCJavaIterateMap(p_env, p_value, s_map_to_array_callback, &t_new_context);
 		}
 		else
 			t_success = false;
@@ -865,9 +867,10 @@ bool MCJavaMapToArray(JNIEnv *p_env, jobject p_map, MCArrayRef &r_array)
 	bool t_success = true;
 	
 	MCAutoArrayRef t_array;
-	
+	t_success = MCArrayCreateMutable(&t_array);
+    
 	map_to_array_context_t t_context;
-	t_context.array = &t_array;
+	t_context.array = *t_array;
 	
 	if (t_success)
 		t_success = MCJavaIterateMap(p_env, p_map, s_map_to_array_callback, &t_context);
