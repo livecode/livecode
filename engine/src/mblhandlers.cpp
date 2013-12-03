@@ -6090,8 +6090,6 @@ Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
 		return MCHandleSpecificCameraFeatures(context, p_parameters);
     
     MCExecPoint ep(nil, nil, nil);
-	ep.clear();
-    
     MCExecContext ctxt(ep);
     
     intset_t t_features;
@@ -6101,21 +6099,24 @@ Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
     MCCamerasFeaturesType t_features_set;
     t_features_set = (MCCamerasFeaturesType)t_features;
     
+    MCAutoListRef t_list;
+    /* UNCHECKED */ MCListCreateMutable(EC_COMMA, &t_list);
+    
 	if ((t_features_set & kMCCamerasFeatureFrontPhoto) != 0)
-		ctxt . GetEP() . concatcstring("front photo", EC_COMMA, ctxt . GetEP() . isempty());
+        /* UNCHECKED */ MCListAppendCString(*t_list, "front photo");
 	if ((t_features_set & kMCCamerasFeatureFrontVideo) != 0)
-		ctxt . GetEP() . concatcstring("front video", EC_COMMA, ctxt . GetEP() . isempty());
+        /* UNCHECKED */ MCListAppendCString(*t_list, "front video");
 	if ((t_features_set & kMCCamerasFeatureFrontFlash) != 0)
-		ctxt . GetEP() . concatcstring("front flash", EC_COMMA, ctxt . GetEP() . isempty());
+        /* UNCHECKED */ MCListAppendCString(*t_list, "front flash");
    	if ((t_features_set & kMCCamerasFeatureRearPhoto) != 0)
-		ctxt . GetEP() . concatcstring("rear photo", EC_COMMA, ctxt . GetEP() . isempty());
+        /* UNCHECKED */ MCListAppendCString(*t_list, "rear photo");
 	if ((t_features_set & kMCCamerasFeatureRearVideo) != 0)
-		ctxt . GetEP() . concatcstring("rear video", EC_COMMA, ctxt . GetEP() . isempty());
+        /* UNCHECKED */ MCListAppendCString(*t_list, "rear video");
 	if ((t_features_set & kMCCamerasFeatureRearFlash) != 0)
-		ctxt . GetEP() . concatcstring("rear flash", EC_COMMA, ctxt . GetEP() . isempty());
+        /* UNCHECKED */ MCListAppendCString(*t_list, "rear flash");
     
     MCAutoStringRef t_features_string;
-    /* UNCHECKED */ ep . copyasstringref(&t_features_string);
+    /* UNCHECKED */ MCListCopyAsString(*t_list, &t_features_string);
     ctxt . SetTheResultToValue(*t_features_string);
 }
 
