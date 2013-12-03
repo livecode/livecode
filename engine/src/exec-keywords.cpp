@@ -171,7 +171,7 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
-		ctxt . GetEP() . setline(line);
+		ctxt . SetLine(line);
 		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
@@ -610,7 +610,7 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
 			if (MCexitall)
 				break;
 		}
-		ctxt . GetEP() . setline(tspr->getline());
+		ctxt . SetLine(tspr->getline());
         
 		stat = tspr->exec(ctxt . GetEP());
         

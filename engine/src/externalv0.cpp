@@ -286,6 +286,7 @@ static Exec_stat getvarptr(MCExecContext& ctxt, const MCString &vname,MCVariable
 	/* UNCHECKED */ t_name . CreateWithOldString(vname);
 
 	MCVarref *newvar;
+    
 	if (MCECptr->GetEP().findvar(t_name, &newvar) != PS_NORMAL)
 		return ES_ERROR;
 	

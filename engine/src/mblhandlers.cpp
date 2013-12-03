@@ -6069,17 +6069,19 @@ Exec_stat MCHandleSpecificCameraFeatures(void *p_context, MCParameter *p_paramet
 	
 	MCCameraFeaturesType t_features_set;
     t_features_set = (MCCameraFeaturesType)t_result;
+    MCAutoListRef t_list;
+    /* UNCHECKED */ MCListCreateMutable(EC_COMMA, &t_list);
     
 	if ((t_features_set & kMCCameraFeaturePhoto) != 0)
-		ctxt . GetEP() . concatcstring("photo", EC_COMMA, ctxt . GetEP() . isempty());
+        /* UNCHECKED */ MCListAppendCString(*t_list, "photo");
 	if ((t_features_set & kMCCameraFeatureVideo) != 0)
-		ctxt . GetEP() . concatcstring("video", EC_COMMA, ctxt . GetEP() . isempty());
+        /* UNCHECKED */ MCListAppendCString(*t_list, "video");
 	if ((t_features_set & kMCCameraFeatureFlash) != 0)
-		ctxt . GetEP() . concatcstring("flash", EC_COMMA, ctxt . GetEP() . isempty());
+        /* UNCHECKED */ MCListAppendCString(*t_list, "flash");
 	
     MCAutoStringRef t_features;
-    /* UNCHECKED */ ep . copyasstringref(&t_features);
-    ctxt . SetTheResultToValue(&t_result);
+    /* UNCHECKED */ MCListCopyAsString(*t_list, &t_features);
+    ctxt . SetTheResultToValue(*t_features);
     
 	return ES_NORMAL;
 }

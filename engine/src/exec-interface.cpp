@@ -365,14 +365,12 @@ MCExecEnumTypeInfo *kMCInterfaceWindowAlignmentTypeInfo = &_kMCInterfaceWindowAl
 
 bool MCInterfaceTryToResolveObject(MCExecContext& ctxt, MCStringRef long_id, MCObjectPtr& r_object)
 {
-	ctxt.GetEP().setvalueref(long_id);
-	
 	bool t_found;
 	t_found = false;
 	
 	MCChunk *tchunk = new MCChunk(False);
 	MCerrorlock++;
-	MCScriptPoint sp(ctxt);
+	MCScriptPoint sp(long_id);
 	if (tchunk->parse(sp, False) == PS_NORMAL)
 	{
 		if (tchunk->getobj(ctxt, r_object, True))
