@@ -446,7 +446,7 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
                     }
                     if (!t_found)
                     {
-                        &t_unit = MCValueRetain(kMCEmptyString);
+                        t_unit = kMCEmptyString;
                         done = true;
                     }
                     else
