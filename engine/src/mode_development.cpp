@@ -553,8 +553,8 @@ void MCStack::mode_load(void)
 		MClockmessages--;
 
 		bool t_treat_as_ide;
-        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value . type + 1, kMCExecValueTypeBool, &t_treat_as_ide);
-		if (t_treat_as_ide)
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeBool, &t_treat_as_ide);
+        if (!ctxt . HasError() && t_treat_as_ide)
 			setextendedstate(true, ECS_IDE);
 	}
 }

@@ -2495,6 +2495,22 @@ enum Exec_errors
 
     // {EE-810} IDE filter control: error in pattern expression
     EE_IDE_BADPATTERN,
+
+    // {EE-811} Engine PutInto: error in variable expression
+    EE_ENGINE_PUT_BADVARIABLE,
+
+    // {EE-812} Engine DeleteVariableChunk: error in expression
+    EE_ENGINE_DELETE_BADVARCHUNK,
+
+    // {EE-813} IDE Extract: error in segment expression
+    EE_IDE_EXTRACT_BADSEGMENT,
+
+    // {EE-814} IDE Extract: error in section name expression
+    EE_IDE_EXTRACT_BADSECTION,
+
+    // {EE-815} IDE Extract: error in filename expression
+    EE_IDE_EXTRACT_BADFILENAME
+
 };
 
 extern const char *MCexecutionerrors;
