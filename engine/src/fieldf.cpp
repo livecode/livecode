@@ -312,6 +312,8 @@ void MCField::resetparagraphs()
 	findex_t ei = 0;
 
     vector_t<uint32_t> t_lines;
+    t_lines . elements = nil;
+    t_lines . count = 0;
 	// MW-2005-05-13: [[Fix bug 2766]] We always need to retrieve the hilitedLines
 	//   to prevent phantom selections w.r.t. focused paragraph.
 	if (flags & F_LIST_BEHAVIOR)
