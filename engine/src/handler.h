@@ -91,7 +91,10 @@ public:
 	}
 
 	Parse_stat parse(MCScriptPoint &sp, Boolean isprop);
+#ifdef LEGACY_EXEC
 	Exec_stat exec(MCExecPoint &, MCParameter *);
+#endif
+    Exec_stat exec(MCExecContext &, MCParameter *);
 	void compile(MCSyntaxFactoryRef factory);
 	
 	MCVariable *getvar(uint2 index, Boolean isparam)

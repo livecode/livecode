@@ -842,7 +842,7 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 		Boolean oldtrace = MCtrace;
 		if (MCtracestackptr == getstack())
 			MCtrace = True;
-		stat = hptr->exec(ep, params);
+		stat = hptr->exec(ctxt, params);
 		if (MCtrace && !oldtrace)
 		{
 			MCB_done(ctxt);
@@ -850,7 +850,7 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 		}
 	}
 	else
-		stat = hptr->exec(ep, params);
+		stat = hptr->exec(ctxt, params);
 	if (stat == ES_ERROR)
 	{
 		// MW-2011-06-23: [[ SERVER ]] If the handler has a file index, it
@@ -899,13 +899,13 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 
 	MCExecPoint ep(this, t_parentscript_object -> hlist, hptr);
 	MCExecContext ctxt(ep);
-	ep.setparentscript(parentscript);
+	ctxt.SetParentScript(parentscript);
 	if (MCtracestackptr != NULL && MCtracereturn)
 	{
 		Boolean oldtrace = MCtrace;
 		if (MCtracestackptr == getstack())
 			MCtrace = True;
-		stat = hptr->exec(ep, params);
+		stat = hptr->exec(ctxt, params);
 		if (MCtrace && !oldtrace)
 		{
 			MCB_done(ctxt);
@@ -913,7 +913,7 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 		}
 	}
 	else
-		stat = hptr->exec(ep, params);
+		stat = hptr->exec(ctxt, params);
 	if (stat == ES_ERROR)
 	{
         MCExecPoint ep(this, NULL, NULL);
@@ -2564,9 +2564,10 @@ Exec_stat MCObject::domess(MCStringRef sptr)
 	MCHandler *hptr;
 	handlist->findhandler(HT_MESSAGE, MCM_message, hptr);
 	MCExecPoint ep(this, handlist, hptr);
+    MCExecContext ctxt(ep);
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
-	Exec_stat stat = hptr->exec(ep, NULL);
+	Exec_stat stat = hptr->exec(ctxt, NULL);
 	MClockerrors = oldlock;
 	delete handlist;
 	MCtargetptr = oldtargetptr;
@@ -2603,7 +2604,7 @@ void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_val
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
 	
-	if (hptr->exec(ctxt.GetEP(), NULL) != ES_NORMAL)
+	if (hptr->exec(ctxt, NULL) != ES_NORMAL)
 	{
 		r_value = MCSTR("Error parsing expression\n");
 		ctxt.Throw();
