@@ -1432,11 +1432,11 @@ Boolean MCUIDC::parsecolor(MCStringRef s, MCColor& color, MCStringRef *cname)
 	}
 	
 	int2 i1, i2, i3;
-	Boolean done;
-    char *temp;
-    /* UNCHECKED */ MCStringConvertToCString(s, temp);
-	const char *sptr = temp;
-	uint4 l = strlen(sptr);
+    Boolean done;
+    MCAutoPointer<char> temp;
+    /* UNCHECKED */ MCStringConvertToCString(s, &temp);
+    const char *sptr = *temp;
+    uint4 l = strlen(sptr);
 	
 	// check for numeric first argument
 	i1 = MCU_strtol(sptr, l, ',', done);
