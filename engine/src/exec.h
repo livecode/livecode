@@ -1169,6 +1169,7 @@ public:
         m_nffw = 8;
         m_nftrailing = 6;
         m_cutoff = 35;
+        m_stat = ES_NORMAL;
     }
 
 	//////////
@@ -1460,7 +1461,13 @@ public:
 	void SetItToEmpty(void);
 	void SetItToValue(MCValueRef p_value);
 	
-	//////////
+	//////////    
+
+    // MW-2011-06-22: [[ SERVER ]] Provides augmented functionality for finding
+    //   variables if there is no handler (i.e. global server scope).
+    Parse_stat FindVar(MCNameRef p_name, MCVarref** r_var);
+
+    //////////
 
     MCHandler *GetHandler(void) const
     {

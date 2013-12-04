@@ -338,9 +338,8 @@ IO_stat MCDispatch::startup(void)
 	}
 	
 	if (!MCquit)
-	{
-		MCExecPoint ep;
-        MCExecContext ctxt(ep);
+    {
+        MCExecContext ctxt(nil, nil, nil);
         MCValueRef t_valueref;
         t_valueref = nil;
         MCValueRef t_valueref2;
@@ -547,8 +546,7 @@ void MCStack::mode_load(void)
 
 		MClockmessages++;
         MCExecValue t_value;
-        MCExecPoint ep;
-        MCExecContext ctxt(ep);
+        MCExecContext ctxt(nil, nil, nil);
         getcustomprop(ctxt, kMCEmptyName, t_ide_override_name, t_value);
 		MClockmessages--;
 
@@ -1232,7 +1230,7 @@ bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string)
 		MCmessageboxlasthandler = nil;
 		MCNameClone(ctxt.GetHandler()->getname(), MCmessageboxlasthandler);
 		
-		MCmessageboxlastline = ctxt.GetEP().getline();
+        MCmessageboxlastline = ctxt . GetLine();
 	}
 	
 	if (MCmessageboxredirect != NULL)

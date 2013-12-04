@@ -609,9 +609,8 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	if (t_length == 0)
         return;
 
-	MCExecPoint ep(NULL, NULL, NULL);
-	MCExecContext ctxt(ep);
-	
+    MCExecContext ctxt(nil, nil, nil);
+
 	// Create a block for the text we wish to append
 	MCAutoStringRef t_text;
 	/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)p_initial, p_final-p_initial, p_is_unicode?kMCStringEncodingUTF16:kMCStringEncodingNative, false, &t_text);
@@ -712,9 +711,8 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 }
 
 void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& x_paragraphs)
-{	
-	MCExecPoint ep(NULL, NULL, NULL);
-	MCExecContext ctxt(ep);
+{
+    MCExecContext ctxt(nil, nil, nil);
 	// If the value is a sequence, recurse for each element.
 	if (MCArrayIsSequence(p_block_value))
 	{
@@ -844,9 +842,8 @@ void MCField::parsestyledtextarray(MCArrayRef p_styled_text, bool p_paragraph_br
 		if (!MCArrayFetchValue((MCArrayRef)t_entry, false, MCN_metadata, t_metadata_val))
 			t_metadata_val = nil;
 		if (t_metadata_val != nil)
-		{
-			MCExecPoint ep;
-            MCExecContext ctxt(ep);
+        {
+            MCExecContext ctxt(nil, nil, nil);
             /* UNCHECKED */ ctxt . ConvertToString(t_metadata_val, &t_metadata);
 		}
 

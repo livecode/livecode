@@ -1084,9 +1084,8 @@ static uint64_t MCWindowsVersionInfoParseVersion(MCStringRef p_string)
 
 static bool add_version_info_entry(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
 {
-	MCWindowsVersionInfo *t_string;
-	MCExecPoint ep(NULL, NULL, NULL);
-	MCExecContext ctxt(ep);
+    MCWindowsVersionInfo *t_string;
+    MCExecContext ctxt(nil, nil, nil);
 	MCAutoStringRef t_value;
 	/* UNCHECKED */ ctxt . ConvertToString(p_value, &t_value);
 	byte_t *t_bytes;
@@ -1107,8 +1106,7 @@ static bool add_version_info_entry(void *p_context, MCArrayRef p_array, MCNameRe
 
 static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCArrayRef p_info)
 {
-	MCExecPoint ep(NULL, NULL, NULL);
-	MCExecContext ctxt(ep);
+    MCExecContext ctxt(nil, nil, nil);
 
 	bool t_success;
 	t_success = true;

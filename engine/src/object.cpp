@@ -752,9 +752,8 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
             t_mptr_name = MCNameGetString(mptr);
             
 			if (params != nil)
-			{
-				MCExecPoint ep(this, NULL, NULL);
-                MCExecContext ctxt(ep);
+            {
+                MCExecContext ctxt(this, nil, nil);
                 MCAutoValueRef t_value_valueref;
 				/* UNCHECKED */ params->eval(ctxt, &t_value_valueref);
                 MCAutoStringRef t_value;
@@ -834,9 +833,8 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 	
 	scriptdepth++;
 	if (scriptdepth == 255)
-		MCfreescripts = False; // prevent recursion wrap
-	MCExecPoint ep(this, hlist, hptr);
-	MCExecContext ctxt(ep);
+        MCfreescripts = False; // prevent recursion wrap
+    MCExecContext ctxt(this, hlist, hptr);
 	if (MCtracestackptr != NULL && MCtracereturn)
 	{
 		Boolean oldtrace = MCtrace;
@@ -857,9 +855,8 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 		//   isn't attached to an object. So record the error slightly
 		//   differently.
 		if (hptr -> getfileindex() == 0)
-		{
-			MCExecPoint ep(this, NULL, NULL);
-            MCExecContext ctxt(ep);
+        {
+            MCExecContext ctxt(this, nil, nil);
             MCAutoStringRef t_id;
 			getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
 			MCeerror->add(EE_OBJECT_NAME, 0, 0, MCStringGetOldString(*t_id));
@@ -897,8 +894,7 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 	if (t_parentscript_object->scriptdepth == 255)
 		MCfreescripts = False; // prevent recursion wrap
 
-	MCExecPoint ep(this, t_parentscript_object -> hlist, hptr);
-	MCExecContext ctxt(ep);
+    MCExecContext ctxt(this, t_parentscript_object -> hlist, hptr);
 	ctxt.SetParentScript(parentscript);
 	if (MCtracestackptr != NULL && MCtracereturn)
 	{
@@ -915,9 +911,8 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 	else
 		stat = hptr->exec(ctxt, params);
 	if (stat == ES_ERROR)
-	{
-        MCExecPoint ep(this, NULL, NULL);
-        MCExecContext ctxt(ep);
+    {
+        MCExecContext ctxt(this, nil, nil);
         MCAutoStringRef t_id;
         parentscript -> GetParent() -> GetObject() -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
         MCeerror->add(EE_OBJECT_NAME, 0, 0, MCStringGetOldString(*t_id));
@@ -1208,8 +1203,7 @@ void MCObject::setstate(Boolean on, uint4 newstate)
 
 Exec_stat MCObject::setsprop(Properties which, MCStringRef s)
 {
-	MCExecPoint ep(this, NULL, NULL);
-    MCExecContext ctxt(ep);
+    MCExecContext ctxt(this, nil, nil);
     setstringprop(ctxt, 0, which, False, s);
     
     return ctxt . HasError() ? ES_ERROR : ES_NORMAL;
@@ -2048,9 +2042,8 @@ void MCObject::senderror()
 {
 	MCAutoStringRef t_perror;
 	if (!MCperror->isempty())
-	{
-		MCExecPoint ep(this, NULL, NULL);
-        MCExecContext ctxt(ep);
+    {
+        MCExecContext ctxt(this, nil, nil);
         MCAutoStringRef t_id;
 		MCerrorptr->getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
 		MCperror->add
@@ -2073,9 +2066,9 @@ void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)
 	    {
 	        "undefined", "message", "function", "getprop", "setprop"
 	    };
-	MCmessagemessages = False;
-	MCExecPoint ep(this, NULL, NULL);
-    MCExecContext ctxt(ep);
+    MCmessagemessages = False;
+
+    MCExecContext ctxt(this, nil, nil);
     MCAutoValueRef t_value;
 	MCresult->eval(ctxt, &t_value);
 
@@ -2239,9 +2232,8 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 			{
 				hashandlers |= HH_DEAD_SCRIPT;
 				if (report && parent != NULL)
-				{
-					MCExecPoint ep(this, NULL, NULL);
-                    MCExecContext ctxt(ep);
+                {
+                    MCExecContext ctxt(this, nil, nil);
                     MCAutoStringRef t_id;
 					getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
 					MCperror->add(PE_OBJECT_NAME, 0, 0, MCStringGetOldString(*t_id));
@@ -2562,9 +2554,9 @@ Exec_stat MCObject::domess(MCStringRef sptr)
 	MCObject *oldtargetptr = MCtargetptr;
 	MCtargetptr = this;
 	MCHandler *hptr;
-	handlist->findhandler(HT_MESSAGE, MCM_message, hptr);
-	MCExecPoint ep(this, handlist, hptr);
-    MCExecContext ctxt(ep);
+    handlist->findhandler(HT_MESSAGE, MCM_message, hptr);
+
+    MCExecContext ctxt(this, handlist, hptr);
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
 	Exec_stat stat = hptr->exec(ctxt, NULL);

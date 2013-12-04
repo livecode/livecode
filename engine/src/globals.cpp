@@ -962,9 +962,8 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 		MCscreen->alloccolor(MClinkatts.hilitecolor);
 		MCscreen->alloccolor(MClinkatts.visitedcolor);
 	}
-	
-	MCExecPoint ep;
-	MCExecContext ctxt(ep);
+
+    MCExecContext ctxt(nil, nil, nil);
 	MCInterfaceInitialize(ctxt);
 	
 	// MW-2013-08-07: [[ Bug 10995 ]] Configure fonts based on platform.
@@ -1036,8 +1035,7 @@ int X_close(void)
 		MCscreen -> disablebackdrop(true);
 	}
 
-	MCExecPoint ep;
-	MCExecContext ctxt(ep);
+    MCExecContext ctxt(nil, nil, nil);
 	MCInterfaceFinalize(ctxt);
 
 	MCstacks->closeall();

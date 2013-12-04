@@ -669,9 +669,7 @@ MCCdata *MCHctext::buildf(MCHcstak *hcsptr, MCField *parent)
 	uint2 aoffset = 0;
 	uint2 alength = 0;
 
-    MCExecPoint ep(nil, nil, nil);
-    MCExecContext ctxt(ep);
-
+    MCExecContext ctxt(nil, nil, nil);
 	if (atts != NULL)
 	{
 		hcsptr->getatts(atts[1], tname, tsize, tstyle);

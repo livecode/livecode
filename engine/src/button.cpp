@@ -3675,8 +3675,7 @@ void MCButton::setupmenu()
 
 bool MCButton::selectedchunk(MCStringRef& r_string)
 {
-	MCExecPoint ep(nil, nil, nil);
-	MCExecContext ctxt(ep);
+    MCExecContext ctxt(nil, nil, nil);
 	uinteger_t t_number;
 	GetNumber(ctxt, 0, t_number);
 	
@@ -3687,8 +3686,7 @@ bool MCButton::selectedchunk(MCStringRef& r_string)
 
 bool MCButton::selectedline(MCStringRef& r_string)
 {
-	MCExecPoint ep(nil, nil, nil);
-	MCExecContext ctxt(ep);
+    MCExecContext ctxt(nil, nil, nil);
 	uinteger_t t_number;
 	GetNumber(ctxt, 0, t_number);
 	

@@ -2527,8 +2527,10 @@ enum Exec_errors
     EE_INTERNAL_DELETE_BADFILENAME,
     
     // {EE-819} MCInternalCanDeleteKey: error in key expression
-    EE_INTERNAL_DELETE_BADKEY
+    EE_INTERNAL_DELETE_BADKEY,
 
+    // {EE-820} MCHandler: error in expression
+    EE_HANDLER_BADEXP
 };
 
 extern const char *MCexecutionerrors;

@@ -156,9 +156,8 @@ bool MCReferencedImageRep::GetDataStream(IO_handle &r_stream)
 	{
 		// MW-2013-09-25: [[ Bug 10983 ]] Mark the rep has having attempted url load.
 		m_url_load_attempted = true;
-		
-        MCExecPoint ep(MCdefaultstackptr, nil, nil);
-        MCExecContext ctxt(ep);
+
+        MCExecContext ctxt(MCdefaultstackptr, nil, nil);
         MCAutoStringRef t_data;
         MCU_geturl(ctxt, m_file_name, &t_data);
         if (ctxt.HasError() || MCStringIsEmpty(*t_data))

@@ -30,6 +30,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "field.h"
 #include "variable.h"
+#include "handler.h"
+#include "hndlrlst.h"
 
 #include "osspec.h"
 
@@ -79,7 +81,7 @@ bool MCExecContext::ConvertToString(MCValueRef p_value, MCStringRef& r_string)
         t_buffer_size = 0;
 
         uint32_t t_length;
-        t_length = MCU_r8tos(t_buffer, t_buffer_size, MCNumberFetchAsReal((MCNumberRef)p_value), nffw, nftrailing, nfforce);
+        t_length = MCU_r8tos(t_buffer, t_buffer_size, MCNumberFetchAsReal((MCNumberRef)p_value), m_nffw, m_nftrailing, m_nfforce);
 
         bool t_success;
         t_success = MCStringCreateWithNativeCharsAndRelease((char_t *)t_buffer, t_length, r_string);
@@ -109,7 +111,7 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
             double t_number;
             t_number = 0.0;
             if (MCStringGetLength(MCNameGetString((MCNameRef)p_value)) != 0)
-                if (!MCU_stor8(MCStringGetOldString(MCNameGetString((MCNameRef)p_value)), t_number, convertoctals))
+                if (!MCU_stor8(MCStringGetOldString(MCNameGetString((MCNameRef)p_value)), t_number, m_convertoctals))
                     break;
             return MCNumberCreateWithReal(t_number, r_number);
         }
@@ -118,7 +120,7 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
             double t_number;
             t_number = 0.0;
             if (MCStringGetLength((MCStringRef)p_value) != 0)
-                if (!MCU_stor8(MCStringGetOldString((MCStringRef)p_value), t_number, convertoctals))
+                if (!MCU_stor8(MCStringGetOldString((MCStringRef)p_value), t_number, m_convertoctals))
                     break;
             return MCNumberCreateWithReal(t_number, r_number);
         }
@@ -171,7 +173,7 @@ bool MCExecContext::ConvertToBoolean(MCValueRef p_value, MCBooleanRef &r_boolean
     switch(MCValueGetTypeCode(p_value))
     {
     case kMCValueTypeCodeBoolean:
-        r_boolean = MCValueRetain((MCBooleanRef)value);
+        r_boolean = MCValueRetain((MCBooleanRef)p_value);
         return true;
     case kMCValueTypeCodeNull:
     case kMCValueTypeCodeArray:
@@ -302,8 +304,20 @@ bool MCExecContext::ConvertToLegacyColor(MCValueRef p_value, MCColor& r_color)
 
 bool MCExecContext::ConvertToBool(MCValueRef p_value, bool& r_bool)
 {
-    bool t = ConvertToBool(p_value, r_bool);
-    return t;
+    if ((MCBooleanRef)p_value == kMCTrue)
+    {
+        r_bool = true;
+        return true;
+    }
+
+    MCAutoBooleanRef t_boolean;
+    if (ConvertToBoolean(p_value, &t_boolean))
+    {
+        r_bool = *t_boolean == kMCTrue;
+        return true;
+    }
+
+    return false;
 }
 
 bool MCExecContext::ConvertToLegacyPoint(MCValueRef p_value, MCPoint& r_point)
@@ -615,6 +629,7 @@ bool MCExecContext::EvaluateExpression(MCExpression *p_expr, MCValueRef& r_resul
 
 	return true;
 }
+#endif
 
 bool MCExecContext::TryToEvaluateExpression(MCExpression *p_expr, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result)
 {
@@ -640,7 +655,6 @@ bool MCExecContext::TryToEvaluateExpression(MCExpression *p_expr, uint2 line, ui
 	LegacyThrow(p_error);
 	return false;
 }
-#endif
 
 bool MCExecContext::TryToEvaluateParameter(MCParameter *p_param, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result)
 {
@@ -1225,7 +1239,8 @@ bool MCExecContext::EnsurePrivacyIsAllowed(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCExecContext::GetIt() const
+// MW-2013-11-08: [[ RefactorIt ]] Returns the it var for the current context.
+MCVarref* MCExecContext::GetIt() const
 {
     // If we have a handler, then get it from there.
     if (m_curhandler != nil)
@@ -1253,6 +1268,26 @@ void MCExecContext::SetItToValue(MCValueRef p_value)
 void MCExecContext::SetItToEmpty(void)
 {
 	SetItToValue(kMCEmptyString);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// MW-2011-06-22: [[ SERVER ]] Provides augmented functionality for finding
+//   variables if there is no handler (i.e. global server scope).
+Parse_stat MCExecContext::FindVar(MCNameRef p_name, MCVarref **r_var)
+{
+    Parse_stat t_stat;
+    t_stat = PS_ERROR;
+
+    if (m_curhandler != NULL)
+        t_stat = m_curhandler -> findvar(p_name, r_var);
+    else if (m_hlist != NULL)
+    {
+        // MW-2011-08-23: [[ UQL ]] We are searching in global context, so do include UQLs.
+        t_stat = m_hlist -> findvar(p_name, false, r_var);
+    }
+
+    return t_stat;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

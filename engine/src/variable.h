@@ -883,7 +883,7 @@ public:
 		isscriptlocal = False;
 		isplain = true;
 	}
-	virtual ~MCVarref();
+    virtual ~MCVarref();
 #ifdef LEGACY_EXEC
 	virtual Exec_stat eval(MCExecPoint &);
 #endif

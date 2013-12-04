@@ -946,18 +946,14 @@ void MCHandler::eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &
 	MCScriptPoint sp(p_expression);
 	sp.sethandler(this);
 	MCExpression *exp = NULL;
-	Symbol_type type;
-	Exec_stat stat = ES_ERROR;
+    Symbol_type type;
+
 	if (sp.parseexp(False, True, &exp) == PS_NORMAL && sp.next(type) == PS_EOF)
-		stat = exp->eval(ctxt.GetEP());
+        ctxt . EvalExprAsValueRef(exp, EE_HANDLER_BADEXP, r_value);
+    else
+        ctxt . Throw();
 
-	delete exp;
-	/* UNCHECKED */ ctxt.GetEP().copyasvalueref(r_value);
-
-	if (stat != ES_ERROR)
-		return;
-	
-	ctxt.Throw();
+    delete exp;
 }
 
 uint4 MCHandler::linecount()
@@ -984,8 +980,7 @@ void MCHandler::deletestatements(MCStatement *statements)
 
 void MCHandler::doscript(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos)
 {
-	ctxt.GetEP().setvalueref(p_script);
-	MCScriptPoint sp(ctxt);
+    MCScriptPoint sp(ctxt, p_script);
 	MCStatement *curstatement = NULL;
 	MCStatement *statements = NULL;
 	MCStatement *newstatement = NULL;

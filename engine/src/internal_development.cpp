@@ -569,9 +569,8 @@ void MCInternalObjectListenerMessagePendingListeners(void)
 				uint8_t t_properties_changed;
 				t_properties_changed = t_listener -> object -> Get() -> propertieschanged();
 				if (t_properties_changed != kMCPropertyChangedMessageTypeNone)
-				{			
-					MCExecPoint ep(nil, nil, nil);
-                    MCExecContext ctxt(ep);
+                {
+                    MCExecContext ctxt(nil, nil, nil);
 					MCAutoStringRef t_string;
 					t_listener -> object -> Get() -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_string);			
 					MCObjectListenerTarget *t_target;

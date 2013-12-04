@@ -201,9 +201,8 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
 		char *retval;
 		Bool Xpass, Xerr;
 		int nargs = 0;
-		char **args = NULL;
-		MCExecPoint ep(p_context, NULL, NULL);
-        MCExecContext ctxt(ep);
+        char **args = NULL;
+        MCExecContext ctxt(p_context, nil, nil);
 
 		while (p_parameters != NULL)
 		{
@@ -287,7 +286,7 @@ static Exec_stat getvarptr(MCExecContext& ctxt, const MCString &vname,MCVariable
 
 	MCVarref *newvar;
     
-	if (MCECptr->GetEP().findvar(t_name, &newvar) != PS_NORMAL)
+    if (MCECptr -> FindVar(t_name, &newvar) != PS_NORMAL)
 		return ES_ERROR;
 	
 	if ((*tvar = newvar->evalvar(ctxt)) == NULL)
@@ -397,9 +396,8 @@ static char *get_global(const char *arg1, const char *arg2,
 	tmp = MCVariable::lookupglobal_cstring(arg1);
 	if (tmp != nil)
 	{
-		*retval = xresSucc;
-		MCExecPoint ep;
-        MCExecContext ctxt(ep);
+        *retval = xresSucc;
+        MCExecContext ctxt(nil, nil, nil);
         MCAutoValueRef t_value;
 		tmp->eval(ctxt, &t_value);
         MCAutoStringRef t_string;
@@ -422,13 +420,12 @@ static char *set_global(const char *arg1, const char *arg2,
 	{
 		*retval = xresFail;
 		return NULL;
-	}
-	MCExecPoint ep;
-    MCExecContext ctxt(ep);
+    }
+
+    MCExecContext ctxt(nil, nil, nil);
 	*retval = xresSucc;
     MCAutoStringRef t_string;
     /* UNCHECKED */ MCStringCreateWithCString(arg2, &t_string);
-	ep.setsvalue(arg2);
 	tmp->set(ctxt, *t_string);
 	return NULL;
 }
@@ -544,9 +541,8 @@ static char *show_image_by_id(const char *arg1, const char *arg2,
 		Symbol_type t_next_type;
 		MCerrorlock++;
 		if (t_chunk -> parse(sp, False) == PS_NORMAL && sp.next(t_next_type) == PS_EOF)
-		{
-			MCExecPoint ep2(nil, nil, nil);
-            MCExecContext ctxt(ep2);
+        {
+            MCExecContext ctxt(nil, nil, nil);
 			MCObject *t_object;
 			uint32_t t_part_id;
 			if (t_chunk -> getobj(ctxt, t_object, t_part_id, False)  &&

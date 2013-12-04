@@ -594,7 +594,7 @@ Parse_stat MCExpression::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCExpression::eval(MCExecPoint &ep)
 {
-	MCExecContext ctxt(ep);
+    MCExecContext ctxt(ep . GetEC());
 	
 	MCAutoValueRef t_value;
 	eval_valueref(ctxt, &t_value);
@@ -610,8 +610,9 @@ Exec_stat MCExpression::eval(MCExecPoint &ep)
 
 void MCExpression::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
-	if (eval(ctxt . GetEP()) == ES_NORMAL &&
-		ctxt . GetEP() . copyasvalueref(r_value . valueref_value))
+    MCExecPoint ep(ctxt);
+    if (eval(ep) == ES_NORMAL &&
+        ep . copyasvalueref(r_value . valueref_value))
 	{
 		r_value . type = kMCExecValueTypeValueRef;
 		return;

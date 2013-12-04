@@ -1570,8 +1570,7 @@ check:
 		if (MCU_strchr(sptr, l, ':'))
 		{
             MCresult->clear(False);
-            MCExecPoint ep(MCdefaultstackptr, NULL, NULL);
-            MCExecContext default_ctxt(ep);
+            MCExecContext default_ctxt(MCdefaultstackptr, nil, nil);
             MCExecContext *ctxt = MCECptr == NULL ? &default_ctxt : MCECptr;
 
             MCAutoStringRef t_output;
@@ -1769,9 +1768,8 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 	{
 		MCAutoDataRef t_data;
 		if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
-		{
-			MCExecPoint ep(NULL, NULL, NULL);
-			MCExecContext ctxt(ep);
+        {
+            MCExecContext ctxt(nil, nil, nil);
 
 			MCImage *t_image;
 			t_image = new MCImage;
@@ -1806,9 +1804,8 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 		{
 			MCAutoDataRef t_data;
 			if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
-			{
-				MCExecPoint ep(NULL, NULL, NULL);
-				MCExecContext ctxt(ep);
+            {
+                MCExecContext ctxt(nil, nil, nil);
 				
 				t_objects = new MCImage(*MCtemplateimage);
 				t_objects -> open();

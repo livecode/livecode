@@ -54,30 +54,39 @@ class MCExecPoint
     char linedel;
     char rowdel;
 
-    MCValueRef value;
 #endif
     MCExecContext m_ec;
+    MCValueRef value;
 
 public:
     MCExecPoint(MCExecContext ctxt):
         m_ec(ctxt)
     {
+        value = MCValueRetain(kMCEmptyString);
 	}
 
     MCExecPoint(const MCExecPoint &ep):
         m_ec(ep . m_ec)
 	{
         *this = ep;
+        value = MCValueRetain(ep . value);
 	}
 
     MCExecPoint(MCObject *object, MCHandlerlist *hlist, MCHandler *handler):
         m_ec(object, hlist, handler)
     {
+        value = MCValueRetain(kMCEmptyString);
     }
 
 	~MCExecPoint()
     {
+        MCValueRelease(value);
 	}
+
+    MCExecContext GetEC() const
+    {
+        return m_ec;
+    }
 
 	void sethlist(MCHandlerlist *hl)
 	{
@@ -536,6 +545,7 @@ public:
 	bool copyaspoint(MCPoint& r_value);
 	bool copyasrect(MCRectangle& r_value);
 
+#endif
 	// Variant methods.
 
 	// Set the ep to the contents of value.
@@ -547,7 +557,7 @@ public:
 	// Make a copy of the contents of the ep as a value.
 	bool copyasvalueref(MCValueRef& r_value);
 
-	
+#ifdef LEGACY_EXEC
 	// These two methods attempt to convert the given value to a string and return
 	// false if this fails. Note that failure to be the given type and exception
 	// failure are both returned as false (hence these are slightly sloppy).

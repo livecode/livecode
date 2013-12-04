@@ -601,8 +601,7 @@ MCPrinterResult MCPSPrinterDevice::Bookmark(const char *title, double x, double 
 char * getdefaultprinter(void)
 {
     MCAutoValueRef t_value;
-    MCExecPoint ep(nil, nil, nil);
-    MCExecContext ctxt(ep);
+    MCExecContext ctxt(nil, nil, nil);
     MCAutoStringRef t_string;
     char *t_cstring;
 

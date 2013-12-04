@@ -374,8 +374,7 @@ void MCAudioClip::init()
 	if (supported)
 	{
         uinteger_t t_loudness;
-		MCExecPoint ep;
-        MCExecContext ctxt(ep);
+        MCExecContext ctxt(nil, nil, nil);
 		getuintprop(ctxt, 0, P_PLAY_LOUDNESS, False, t_loudness);
 	}
 }

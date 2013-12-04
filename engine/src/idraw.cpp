@@ -185,8 +185,7 @@ void MCImage::startmag(int2 x, int2 y)
 	MCmagimage = this;
 	state |= CS_MAGNIFY;
 
-    MCExecPoint ep(this, NULL, NULL);
-    MCExecContext ctxt(ep);
+    MCExecContext ctxt(this, nil, nil);
     
     sptr->SetMaxWidth(ctxt, rect.width * MCmagnification);
 

@@ -86,10 +86,9 @@ int main(int argc, char *argv[], char *envp[])
 	
 	if (!X_init(argc, t_argv, t_envp))
     {
-        MCExecPoint ep;
 		if (MCresult != nil)
         {
-            MCExecContext ctxt(ep);
+            MCExecContext ctxt(nil, nil, nil);
             MCAutoValueRef t_result;
             MCAutoStringRef t_string;
             MCresult -> eval(ctxt, &t_result);

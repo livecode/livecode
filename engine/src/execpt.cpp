@@ -1198,6 +1198,7 @@ bool MCExecPoint::copyasdataref(MCDataRef& r_data)
     
 	return MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_string), MCStringGetLength(*t_string), r_data);
 }
+#endif
 
 MCValueRef MCExecPoint::getvalueref(void)
 {
@@ -1217,8 +1218,8 @@ bool MCExecPoint::setvalueref(MCValueRef p_value)
 bool MCExecPoint::setvalueref_nullable(MCValueRef p_value)
 {
 	if (p_value == nil)
-	{
-		clear();
+    {
+        setvalueref(kMCEmptyString);
 		return true;
 	}
 	return setvalueref(p_value);
@@ -1229,6 +1230,7 @@ bool MCExecPoint::copyasvalueref(MCValueRef& r_value)
 	return MCValueCopy(value, r_value);
 }
 
+#ifdef LEGACY_EXEC
 bool MCExecPoint::convertvaluereftostring(MCValueRef p_value, MCStringRef& r_string)
 {
     return m_ec . ConvertToString(p_value, r_string);

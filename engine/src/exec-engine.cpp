@@ -1597,16 +1597,14 @@ void MCEngineGetStacksInUse(MCExecContext& ctxt, MCStringRef &r_value)
 
 bool MCEngineEvalValueAsObject(MCValueRef p_value, bool p_strict, MCObjectPtr& r_object, bool& r_parse_error)
 {
-    MCExecPoint ep(nil,nil,nil);
-    MCExecContext ctxt(ep);
+    MCExecContext ctxt(nil, nil, nil);
     MCAutoStringRef t_string;
     ctxt . ConvertToString(p_value, &t_string);
-    MCScriptPoint sp(*t_string);
+    MCScriptPoint sp(ctxt, *t_string);
 
     MCChunk *tchunk = new MCChunk(False);
     MCerrorlock++;
     Symbol_type type;
-    Exec_stat stat;
     
     bool t_parse_error;
     bool t_success;

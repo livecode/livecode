@@ -2329,8 +2329,7 @@ Boolean MCField::selectedmark(Boolean whole, findex_t &si, findex_t &ei,
 
 bool MCField::returnchunk(findex_t p_si, findex_t p_ei, MCStringRef& r_chunk)
 {
-	MCExecPoint ep(nil, nil, nil);
-	MCExecContext ctxt(ep);
+    MCExecContext ctxt(nil, nil, nil);
 	uinteger_t t_number;
 	GetNumber(ctxt, 0, t_number);
 
@@ -2345,8 +2344,7 @@ bool MCField::returnchunk(findex_t p_si, findex_t p_ei, MCStringRef& r_chunk)
 
 bool MCField::returnline(findex_t si, findex_t ei, MCStringRef& r_string)
 {
-	MCExecPoint ep(nil, nil, nil);
-	MCExecContext ctxt(ep);
+    MCExecContext ctxt(nil, nil, nil);
 	uinteger_t t_number;
 	GetNumber(ctxt, 0, t_number);
 

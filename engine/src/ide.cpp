@@ -818,8 +818,7 @@ static void colourize_paragraph(void *p_context, MCColourizeClass p_class, uint4
 
 	if (t_style != NULL)
     {
-        MCExecPoint ep(nil, nil, nil);
-        MCExecContext ctxt(ep);
+        MCExecContext ctxt(nil, nil, nil);
 
         MCInterfaceNamedColor t_color;
         MCInterfaceTextStyle t_textstyle;

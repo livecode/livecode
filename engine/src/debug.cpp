@@ -304,7 +304,7 @@ void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name)
 	}
 
 	MCParameter p1, p2, p3;
-	p1.setn_argument(ctxt.GetEP().getline());
+    p1.setn_argument(ctxt . GetLine());
 	p1.setnext(&p2);
 	p2.setvalueref_argument(name);
 	p2.setnext(&p3);
