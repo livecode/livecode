@@ -498,9 +498,9 @@ public:
 	}
 
 private:
-	static bool list_items(MCListRef& r_list, MCStringRef p_item)
+	static bool list_items(void *r_list, MCStringRef p_item)
 	{
-        return MCListAppend(r_list, p_item);
+        return MCListAppend((MCListRef&)r_list, p_item);
 	}
 };
 
