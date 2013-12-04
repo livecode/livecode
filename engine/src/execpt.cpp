@@ -39,6 +39,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 //////////
 
+#ifdef LEGACY_EXEC
+
 bool MCExecPoint::isempty(void) const
 {
 	if (value == kMCEmptyName)
@@ -467,6 +469,7 @@ Exec_stat MCExecPoint::ston(void)
 		return ES_ERROR;
 	return ES_NORMAL;
 }
+
 
 // MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
 Exec_stat MCExecPoint::setitemdel(uint2 l, uint2 p)
@@ -1228,81 +1231,12 @@ bool MCExecPoint::copyasvalueref(MCValueRef& r_value)
 
 bool MCExecPoint::convertvaluereftostring(MCValueRef p_value, MCStringRef& r_string)
 {
-	switch(MCValueGetTypeCode(p_value))
-	{
-	case kMCValueTypeCodeNull:
-	case kMCValueTypeCodeArray:
-		r_string = MCValueRetain(kMCEmptyString);
-		return true;
-	case kMCValueTypeCodeBoolean:
-		r_string = MCValueRetain(p_value == kMCTrue ? kMCTrueString : kMCFalseString);
-		return true;
-	case kMCValueTypeCodeName:
-		r_string = MCValueRetain(MCNameGetString((MCNameRef)p_value));
-		return true;
-	case kMCValueTypeCodeString:
-		return MCStringCopy((MCStringRef)p_value, r_string);
-    case kMCValueTypeCodeData:
-            return MCStringCreateWithNativeChars((const char_t *)MCDataGetBytePtr((MCDataRef)p_value), MCDataGetLength((MCDataRef)p_value), r_string);
-	case kMCValueTypeCodeNumber:
-	{
-		if (MCNumberIsInteger((MCNumberRef)p_value))
-			return MCStringFormat(r_string, "%d", MCNumberFetchAsInteger((MCNumberRef)p_value));
-
-		char *t_buffer;
-		uint32_t t_buffer_size;
-		t_buffer = nil;
-		t_buffer_size = 0;
-
-		uint32_t t_length;
-		t_length = MCU_r8tos(t_buffer, t_buffer_size, MCNumberFetchAsReal((MCNumberRef)p_value), nffw, nftrailing, nfforce);
-
-		bool t_success;
-		t_success = MCStringCreateWithNativeCharsAndRelease((char_t *)t_buffer, t_length, r_string);
-
-		return t_success;
-	}
-	break;
-	default:
-		break;
-	}
-	return false;
+    return m_ec . ConvertToString(p_value, r_string);
 }
 
 bool MCExecPoint::convertvaluereftonumber(MCValueRef p_value, MCNumberRef& r_number)
 {
-	switch(MCValueGetTypeCode(p_value))
-	{
-	case kMCValueTypeCodeNull:
-		return MCNumberCreateWithInteger(0, r_number);
-	case kMCValueTypeCodeBoolean:
-	case kMCValueTypeCodeArray:
-		break;
-	case kMCValueTypeCodeNumber:
-		return MCValueCopy(p_value, (MCValueRef&)r_number);
-	case kMCValueTypeCodeName:
-		{
-			double t_number;
-			t_number = 0.0;
-			if (MCStringGetLength(MCNameGetString((MCNameRef)p_value)) != 0)
-				if (!MCU_stor8(MCStringGetOldString(MCNameGetString((MCNameRef)p_value)), t_number, convertoctals))
-					break;
-			return MCNumberCreateWithReal(t_number, r_number);
-		}
-	case kMCValueTypeCodeString:
-		{
-			double t_number;
-			t_number = 0.0;
-			if (MCStringGetLength((MCStringRef)p_value) != 0)
-				if (!MCU_stor8(MCStringGetOldString((MCStringRef)p_value), t_number, convertoctals))
-					break;
-			return MCNumberCreateWithReal(t_number, r_number);
-		}
-	default:
-		break;
-	}
-
-	return false;
+    return m_ec . ConvertToNumber(p_value, r_number);
 }
 
 bool MCExecPoint::convertvaluereftobool(MCValueRef p_value, bool& r_bool)
@@ -1391,44 +1325,7 @@ bool MCExecPoint::convertvaluereftoreal(MCValueRef p_value, real64_t& r_real)
 
 bool MCExecPoint::convertvaluereftoboolean(MCValueRef p_value, MCBooleanRef& r_boolean)
 {
-	switch(MCValueGetTypeCode(p_value))
-	{
-	case kMCValueTypeCodeBoolean:
-		r_boolean = MCValueRetain((MCBooleanRef)value);
-		return true;
-	case kMCValueTypeCodeNull:
-	case kMCValueTypeCodeArray:
-	case kMCValueTypeCodeNumber:
-		break;
-	case kMCValueTypeCodeName:
-		if (MCStringIsEqualTo(MCNameGetString((MCNameRef)p_value), kMCTrueString, kMCStringOptionCompareCaseless))
-		{
-			r_boolean = MCValueRetain(kMCTrue);
-			return true;
-		}
-
-		if (MCStringIsEqualTo(MCNameGetString((MCNameRef)p_value), kMCFalseString, kMCStringOptionCompareCaseless))
-		{
-			r_boolean = MCValueRetain(kMCFalse);
-			return true;
-		}
-		break;
-	case kMCValueTypeCodeString:
-		if (MCStringIsEqualTo((MCStringRef)p_value, kMCTrueString, kMCStringOptionCompareCaseless))
-		{
-			r_boolean = MCValueRetain(kMCTrue);
-			return true;
-		}
-
-		if (MCStringIsEqualTo((MCStringRef)p_value, kMCFalseString, kMCStringOptionCompareCaseless))
-		{
-			r_boolean = MCValueRetain(kMCFalse);
-			return true;
-		}
-		break;
-	}
-
-	return false;
+    return m_ec . ConvertToBoolean(p_value, r_boolean);
 }
 
 //////////
@@ -1453,6 +1350,7 @@ bool MCExecPoint::copyasmutablearrayref(MCArrayRef& r_array)
 
 	return MCArrayMutableCopy((MCArrayRef)value, r_array);
 }
+
 
 bool MCExecPoint::listarraykeys(MCArrayRef p_array, char p_delimiter)
 {
@@ -2623,6 +2521,8 @@ bool MCExecPoint::copyasstringref(MCStringRef& r_string)
 {
 	return MCStringCreateWithNativeChars(getsvalue() . getstring(), getsvalue() . getlength(), r_string);
 }
+
+#endif
 
 /////////
 

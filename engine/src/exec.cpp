@@ -40,30 +40,99 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 bool MCExecContext::ForceToString(MCValueRef p_value, MCStringRef& r_string)
 {
-	return m_ep . convertvaluereftostring(p_value, r_string);
+    return ConvertToString(p_value, r_string);
 }
 
 bool MCExecContext::ForceToBoolean(MCValueRef p_value, MCBooleanRef& r_boolean)
 {
-	return m_ep . convertvaluereftoboolean(p_value, r_boolean);
+    return ConvertToBoolean(p_value, r_boolean);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCExecContext::ConvertToString(MCValueRef p_value, MCStringRef& r_string)
 {
-	return m_ep . convertvaluereftostring(p_value, r_string);
+    switch(MCValueGetTypeCode(p_value))
+    {
+    case kMCValueTypeCodeNull:
+    case kMCValueTypeCodeArray:
+        r_string = MCValueRetain(kMCEmptyString);
+        return true;
+    case kMCValueTypeCodeBoolean:
+        r_string = MCValueRetain(p_value == kMCTrue ? kMCTrueString : kMCFalseString);
+        return true;
+    case kMCValueTypeCodeName:
+        r_string = MCValueRetain(MCNameGetString((MCNameRef)p_value));
+        return true;
+    case kMCValueTypeCodeString:
+        return MCStringCopy((MCStringRef)p_value, r_string);
+    case kMCValueTypeCodeData:
+            return MCStringCreateWithNativeChars((const char_t *)MCDataGetBytePtr((MCDataRef)p_value), MCDataGetLength((MCDataRef)p_value), r_string);
+    case kMCValueTypeCodeNumber:
+    {
+        if (MCNumberIsInteger((MCNumberRef)p_value))
+            return MCStringFormat(r_string, "%d", MCNumberFetchAsInteger((MCNumberRef)p_value));
+
+        char *t_buffer;
+        uint32_t t_buffer_size;
+        t_buffer = nil;
+        t_buffer_size = 0;
+
+        uint32_t t_length;
+        t_length = MCU_r8tos(t_buffer, t_buffer_size, MCNumberFetchAsReal((MCNumberRef)p_value), nffw, nftrailing, nfforce);
+
+        bool t_success;
+        t_success = MCStringCreateWithNativeCharsAndRelease((char_t *)t_buffer, t_length, r_string);
+
+        return t_success;
+    }
+    break;
+    default:
+        break;
+    }
+    return false;
 }
 
 bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
 {
-	return m_ep . convertvaluereftonumber(p_value, r_number);
+    switch(MCValueGetTypeCode(p_value))
+    {
+    case kMCValueTypeCodeNull:
+        return MCNumberCreateWithInteger(0, r_number);
+    case kMCValueTypeCodeBoolean:
+    case kMCValueTypeCodeArray:
+        break;
+    case kMCValueTypeCodeNumber:
+        return MCValueCopy(p_value, (MCValueRef&)r_number);
+    case kMCValueTypeCodeName:
+        {
+            double t_number;
+            t_number = 0.0;
+            if (MCStringGetLength(MCNameGetString((MCNameRef)p_value)) != 0)
+                if (!MCU_stor8(MCStringGetOldString(MCNameGetString((MCNameRef)p_value)), t_number, convertoctals))
+                    break;
+            return MCNumberCreateWithReal(t_number, r_number);
+        }
+    case kMCValueTypeCodeString:
+        {
+            double t_number;
+            t_number = 0.0;
+            if (MCStringGetLength((MCStringRef)p_value) != 0)
+                if (!MCU_stor8(MCStringGetOldString((MCStringRef)p_value), t_number, convertoctals))
+                    break;
+            return MCNumberCreateWithReal(t_number, r_number);
+        }
+    default:
+        break;
+    }
+
+    return false;
 }
 
 bool MCExecContext::ConvertToReal(MCValueRef p_value, real64_t& r_double)
 {
 	MCAutoNumberRef t_number;
-	if (!m_ep . convertvaluereftonumber(p_value, &t_number))
+    if (!ConvertToNumber(p_value, &t_number))
 		return false;
 	r_double = MCNumberFetchAsReal(*t_number);
 	return true;
@@ -82,7 +151,7 @@ bool MCExecContext::ConvertToArray(MCValueRef p_value, MCArrayRef &r_array)
 bool MCExecContext::ConvertToInteger(MCValueRef p_value, integer_t& r_integer)
 {
 	MCAutoNumberRef t_number;
-	if (!m_ep . convertvaluereftonumber(p_value, &t_number))
+    if (!ConvertToNumber(p_value, &t_number))
 		return false;
 	r_integer = MCNumberFetchAsInteger(*t_number);
 	return true;
@@ -91,7 +160,7 @@ bool MCExecContext::ConvertToInteger(MCValueRef p_value, integer_t& r_integer)
 bool MCExecContext::ConvertToUnsignedInteger(MCValueRef p_value, uinteger_t& r_integer)
 {
 	MCAutoNumberRef t_number;
-	if (!m_ep . convertvaluereftonumber(p_value, &t_number))
+    if (!ConvertToNumber(p_value, &t_number))
 		return false;
 	r_integer = MCNumberFetchAsUnsignedInteger(*t_number);
 	return true;
@@ -99,7 +168,44 @@ bool MCExecContext::ConvertToUnsignedInteger(MCValueRef p_value, uinteger_t& r_i
 
 bool MCExecContext::ConvertToBoolean(MCValueRef p_value, MCBooleanRef &r_boolean)
 {
-	return m_ep . convertvaluereftoboolean(p_value, r_boolean);
+    switch(MCValueGetTypeCode(p_value))
+    {
+    case kMCValueTypeCodeBoolean:
+        r_boolean = MCValueRetain((MCBooleanRef)value);
+        return true;
+    case kMCValueTypeCodeNull:
+    case kMCValueTypeCodeArray:
+    case kMCValueTypeCodeNumber:
+        break;
+    case kMCValueTypeCodeName:
+        if (MCStringIsEqualTo(MCNameGetString((MCNameRef)p_value), kMCTrueString, kMCStringOptionCompareCaseless))
+        {
+            r_boolean = MCValueRetain(kMCTrue);
+            return true;
+        }
+
+        if (MCStringIsEqualTo(MCNameGetString((MCNameRef)p_value), kMCFalseString, kMCStringOptionCompareCaseless))
+        {
+            r_boolean = MCValueRetain(kMCFalse);
+            return true;
+        }
+        break;
+    case kMCValueTypeCodeString:
+        if (MCStringIsEqualTo((MCStringRef)p_value, kMCTrueString, kMCStringOptionCompareCaseless))
+        {
+            r_boolean = MCValueRetain(kMCTrue);
+            return true;
+        }
+
+        if (MCStringIsEqualTo((MCStringRef)p_value, kMCFalseString, kMCStringOptionCompareCaseless))
+        {
+            r_boolean = MCValueRetain(kMCFalse);
+            return true;
+        }
+        break;
+    }
+
+    return false;
 }
 
 bool MCExecContext::ConvertToMutableString(MCValueRef p_value, MCStringRef& r_string)
@@ -196,7 +302,7 @@ bool MCExecContext::ConvertToLegacyColor(MCValueRef p_value, MCColor& r_color)
 
 bool MCExecContext::ConvertToBool(MCValueRef p_value, bool& r_bool)
 {
-    bool t = m_ep . convertvaluereftobool(p_value, r_bool);
+    bool t = ConvertToBool(p_value, r_bool);
     return t;
 }
 
@@ -245,20 +351,20 @@ bool MCExecContext::FormatLegacyColor(MCColor p_color, MCStringRef& r_value)
 
 bool MCExecContext::TryToConvertToUnsignedInteger(MCValueRef p_value, bool& r_converted, uinteger_t &r_integer)
 {
-	r_converted = m_ep . convertvaluereftouint(p_value, r_integer);
+    r_converted = ConvertToUnsignedInteger(p_value, r_integer);
 	return true;
 }
 
 bool MCExecContext::TryToConvertToReal(MCValueRef p_value, bool& r_converted, real64_t& r_real)
 {
-	r_converted = m_ep . convertvaluereftoreal(p_value, r_real);
+    r_converted = ConvertToReal(p_value, r_real);
 	return true;
 }
 
 bool MCExecContext::TryToConvertToLegacyColor(MCValueRef p_value, bool& r_converted, MCColor& r_color)
 {
 	MCAutoStringRef t_string;
-	if (m_ep . convertvaluereftostring(p_value, &t_string) &&
+    if (ConvertToString(p_value, &t_string) &&
 		MCscreen -> parsecolor(*t_string, r_color))
 	{
 		r_converted = true;
@@ -273,7 +379,7 @@ bool MCExecContext::TryToConvertToLegacyColor(MCValueRef p_value, bool& r_conver
 bool MCExecContext::TryToConvertToLegacyPoint(MCValueRef p_value, bool& r_converted, MCPoint& r_point)
 {
 	MCAutoStringRef t_string;
-	if (m_ep . convertvaluereftostring(p_value, &t_string) &&
+    if (ConvertToString(p_value, &t_string) &&
 		MCU_stoi2x2(MCStringGetOldString(*t_string), r_point . x, r_point . y))
 	{
 		r_converted = true;
@@ -289,7 +395,7 @@ bool MCExecContext::TryToConvertToLegacyRectangle(MCValueRef p_value, bool& r_co
 {
 	MCAutoStringRef t_string;
 	int16_t t_left, t_top, t_right, t_bottom;
-	if (m_ep . convertvaluereftostring(p_value, &t_string) &&
+    if (ConvertToString(p_value, &t_string) &&
 		MCU_stoi2x4(MCStringGetOldString(*t_string), t_left, t_top, t_right, t_bottom))
 	{
 		r_rect . x = t_left;
@@ -492,6 +598,7 @@ bool FormatUnsignedInteger(uinteger_t p_integer, MCStringRef& r_output)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef LEGACY_EXEC
 bool MCExecContext::EvaluateExpression(MCExpression *p_expr, MCValueRef& r_result)
 {
 	if (p_expr -> eval(m_ep) != ES_NORMAL)
@@ -533,6 +640,7 @@ bool MCExecContext::TryToEvaluateExpression(MCExpression *p_expr, uint2 line, ui
 	LegacyThrow(p_error);
 	return false;
 }
+#endif
 
 bool MCExecContext::TryToEvaluateParameter(MCParameter *p_param, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result)
 {
@@ -1117,10 +1225,28 @@ bool MCExecContext::EnsurePrivacyIsAllowed(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCExecContext::GetIt() const
+{
+    // If we have a handler, then get it from there.
+    if (m_curhandler != nil)
+        return m_curhandler -> getit();
+
+#ifdef MODE_SERVER
+    // If we are here it means we must be in global scope, executing in a
+    // MCServerScript object.
+    return static_cast<MCServerScript *>(m_curobj) -> getit();
+#else
+    // We should never get here as execution only occurs within handlers unless
+    // in server mode.
+    assert(false);
+    return nil;
+#endif
+}
+
 void MCExecContext::SetItToValue(MCValueRef p_value)
 {
-	MCVariable *t_var;
-	t_var = m_ep.getit() -> evalvar(*this);
+    MCVariable *t_var;
+    t_var = GetIt() -> evalvar(*this);
 	t_var -> setvalueref(p_value);
 }
 
@@ -1149,7 +1275,7 @@ void MCExecContext::UserThrow(MCStringRef p_error)
 	m_stat = ES_ERROR;
 }
 
-MCObjectHandle *MCExecContext::GetObjectHandle(void)
+MCObjectHandle *MCExecContext::GetObjectHandle(void) const
 {
     extern MCExecContext *MCECptr;
 	return MCECptr->GetObject()->gethandle();

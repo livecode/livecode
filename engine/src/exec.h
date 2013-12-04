@@ -17,8 +17,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_EXEC__
 #define __MC_EXEC__
 
+#ifdef LEGACY_EXEC
 #ifndef __MC_EXECPT__
 #include "execpt.h"
+#endif
 #endif
 
 #ifndef OBJDEFS_H
@@ -1128,22 +1130,55 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
 class MCExecContext
 {
 public:
-	MCExecContext(MCExecPoint& ep)
-		: m_ep(ep), m_stat(ES_NORMAL)
-	{
-	}
+    MCExecContext()
+    {
+        memset(this, 0, sizeof(MCExecContext));
+        m_itemdel = ',';
+        m_columndel = '\t';
+        m_linedel = '\n';
+        m_rowdel = '\n';
+        m_nffw = 8;
+        m_nftrailing = 6;
+        m_cutoff = 35;
+        m_stat = ES_NORMAL;
+    }
+
+#ifdef LEGACY_EXEC
+    MCExecContext(MCExecPoint& ep)
+        : m_ep(ep), m_stat(ES_NORMAL)
+    {
+    }
+#endif
 	
-	MCExecContext(MCExecContext& p_ctxt)
-		: m_ep(p_ctxt.GetEP()), m_stat(ES_NORMAL)
+    MCExecContext(const MCExecContext& p_ctxt)
+        : m_stat(ES_NORMAL)
 	{
+        *this = p_ctxt;
 	}
+
+    MCExecContext(MCObject *object, MCHandlerlist *hlist, MCHandler *handler)
+    {
+        memset(this, 0, sizeof(MCExecContext));
+        m_object = object;
+        m_hlist = hlist;
+        m_curhandler = handler;
+        m_itemdel = ',';
+        m_columndel = '\t';
+        m_linedel = '\n';
+        m_rowdel = '\n';
+        m_nffw = 8;
+        m_nftrailing = 6;
+        m_cutoff = 35;
+    }
 
 	//////////
 
+#ifdef LEGACY_EXEC
 	MCExecPoint& GetEP(void)
 	{
 		return m_ep;
 	}
+#endif
 	
 	Exec_stat GetExecStat(void)
 	{
@@ -1192,124 +1227,126 @@ public:
 
 	bool GetCaseSensitive(void) const
 	{
-		return m_ep . getcasesensitive() == True;
+        return m_casesensitive == True;
 	}
 
 	bool GetConvertOctals(void) const
 	{
-		return m_ep . getconvertoctals() == True;
+        return m_convertoctals == True;
 	}
 
 	bool GetWholeMatches(void) const
 	{
-		return m_ep . getwholematches() == True;
+        return m_wholematches == True;
 	}
 
 	bool GetUseUnicode(void) const
 	{
-		return m_ep . getuseunicode() == True;
+        return m_useunicode == True;
 	}
 
 	bool GetUseSystemDate(void) const
 	{
-		return m_ep . getusesystemdate() == True;
+        return m_usesystemdate == True;
 	}
 
 	char_t GetLineDelimiter(void) const
 	{
-		return m_ep . getlinedel();
+        return m_linedel;
 	}
 
 	char_t GetItemDelimiter(void) const
 	{
-		return m_ep . getitemdel();
+        return m_itemdel;
 	}
 
 	char_t GetColumnDelimiter(void) const
 	{
-		return m_ep . getcolumndel();
+        return m_columndel;
 	}
 
 	char_t GetRowDelimiter(void) const
 	{
-		return m_ep . getrowdel();
+        return (char_t)m_rowdel;
 	}
 
 	uint2 GetCutOff(void) const
 	{
-		return m_ep . getcutoff();
+        return m_cutoff;
 	}
 
 	uinteger_t GetNumberFormatWidth() const
 	{
-		return m_ep.getnffw();
+        return m_nffw;
 	}
 	
 	uinteger_t GetNumberFormatTrailing() const
 	{
-		return m_ep.getnftrailing();	
+        return m_nftrailing;
 	}
 	
 	uinteger_t GetNumberFormatForce() const
 	{
-		return m_ep.getnfforce();
+        return m_nfforce;
 	}
 	
 	//////////
 
 	void SetNumberFormat(uint2 p_fw, uint2 p_trailing, uint2 p_force)
     {
-        m_ep . setnumberformat(p_fw, p_trailing, p_force);
+        m_nffw = p_fw;
+        m_nftrailing = p_trailing;
+        m_nfforce = p_force;
     }
 
 	void SetCaseSensitive(bool p_value)
 	{
-		m_ep . setcasesensitive(p_value);
+        m_casesensitive = p_value;
 	}
 
 	void SetConvertOctals(bool p_value)
 	{
-		m_ep . setconvertoctals(p_value);
+        m_convertoctals = p_value;
 	}
 	
 	void SetWholeMatches(bool p_value)
 	{
-		m_ep . setwholematches(p_value);
+        m_wholematches = p_value;
 	}
 	
 	void SetUseUnicode(bool p_value)
 	{
-		m_ep . setuseunicode(p_value);
+        m_useunicode = p_value;
 	}
 
 	void SetUseSystemDate(bool p_value)
 	{
-		m_ep . setusesystemdate(p_value);
+        m_usesystemdate = p_value;
 	}
 
 	void SetCutOff(uint2 p_value)
 	{
-		m_ep . setcutoff(p_value);
+        m_cutoff = p_value;
 	}
 
 	void SetLineDelimiter(char_t p_value)
 	{
-		m_ep . setlinedel(p_value);
+        m_linedel = p_value;
 	}
 
 	void SetItemDelimiter(char_t p_value)
 	{
-		m_ep . setitemdel(p_value);
+        m_itemdel = p_value;
 	}
 
 	void SetColumnDelimiter(char_t p_value)
 	{
-		m_ep . setcolumndel(p_value);
+        m_columndel = p_value;
 	}
 
 	void SetRowDelimiter(char_t p_value)
 	{
-        m_ep . setrowdel(p_value);
+        m_rowdel = p_value;
     }
 
     //////////
@@ -1419,58 +1456,64 @@ public:
 
 	//////////
 	
+    MCVarref *GetIt() const;
 	void SetItToEmpty(void);
 	void SetItToValue(MCValueRef p_value);
 	
 	//////////
 
-    MCHandler *GetHandler(void)
+    MCHandler *GetHandler(void) const
     {
-        return m_ep . gethandler();
+        return m_curhandler;
     }
 	
 	void SetHandler(MCHandler *p_handler)
 	{
-		m_ep.sethandler(p_handler);
+        m_curhandler = p_handler;
 	}
 	
-	MCHandlerlist *GetHandlerList()
+    MCHandlerlist *GetHandlerList() const
 	{
-		return m_ep.gethlist();
+        return m_hlist;
 	}
 	
 	void SetHandlerList(MCHandlerlist *p_list)
 	{
-		m_ep.sethlist(p_list);
+        m_hlist = p_list;
 	}
     
-	MCObject *GetObject(void)
+    MCObject *GetObject(void) const
 	{
-		return m_ep . getobj();
+        return m_object;
 	}
 
 	void SetObject(MCObject *p_object)
 	{
-		m_ep.setobj(p_object);
+        m_object = p_object;
+    }
+
+    uint2 GetLine() const
+    {
+        return m_line;
     }
 
     void SetLine(uint2 p_line)
     {
-        m_ep . setline(p_line);
+        m_line = p_line;
     }
     
 	void SetParentScript(MCParentScriptUse *p_parentscript)
 	{
-		m_ep.setparentscript(p_parentscript);
+        m_parentscript = p_parentscript;
 	}
 
-    MCParentScriptUse *GetParentScript(void)
+    MCParentScriptUse *GetParentScript(void) const
 	{
-		return m_ep.getparentscript();
+        return m_parentscript;
 	}
     
     // MM-2011-02-16: Added ability to get handle of current object
-    MCObjectHandle *GetObjectHandle(void);
+    MCObjectHandle *GetObjectHandle(void) const;
 	void SetTheResultToEmpty(void);
 	void SetTheResultToValue(MCValueRef p_value);
 	void SetTheResultToStaticCString(const char *p_cstring);
@@ -1535,8 +1578,36 @@ public:
     
 	
 private:
-	MCExecPoint& m_ep;
+#ifdef LEGACY_EXEC
+    MCExecPoint& m_ep;
+#endif
 	Exec_stat m_stat;
+
+    MCObject *m_object;
+
+    // MW-2009-01-30: [[ Inherited parentScripts ]]
+    // We store a reference to the parentScript use which is the current context
+    // so we can retrieve the correct script locals. If this is NULL, then we
+    // are not in parentScript context.
+    MCParentScriptUse *m_parentscript;
+
+    MCHandlerlist *m_hlist;
+    MCHandler *m_curhandler;
+    uint2 m_nffw;
+    uint2 m_nftrailing;
+    uint2 m_nfforce;
+    uint2 m_cutoff;
+    uint2 m_line;
+    Boolean m_convertoctals;
+    Boolean m_casesensitive;
+    Boolean m_wholematches;
+    Boolean m_usesystemdate;
+    Boolean m_useunicode;
+    Boolean m_deletearray;
+    char m_itemdel;
+    char m_columndel;
+    char m_linedel;
+    char m_rowdel;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

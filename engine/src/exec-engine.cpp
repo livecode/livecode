@@ -915,21 +915,14 @@ void MCEngineExecWaitUntil(MCExecContext& ctxt, MCExpression *p_condition, bool 
 {
 	while(True)
 	{
-		MCAutoValueRef t_evaluated;
-		MCAutoBooleanRef t_evaluated_as_boolean;
+        bool t_stop;
 		
 		MCU_play();
-		
-		if (!ctxt . EvaluateExpression(p_condition, &t_evaluated))
-			return;
-		
-		if (!ctxt . ForceToBoolean(*t_evaluated, &t_evaluated_as_boolean))
-		{
-			ctxt . Throw();
-			return;
-		}
 
-		if (*t_evaluated_as_boolean == kMCTrue)
+        if (!ctxt . EvalExprAsBool(p_condition, EE_WAIT_BADEXP, t_stop))
+            return;
+
+        if (t_stop == true)
 			return;
 
 		if (MCscreen->wait(WAIT_INTERVAL, p_messages, True))
@@ -944,21 +937,14 @@ void MCEngineExecWaitWhile(MCExecContext& ctxt, MCExpression *p_condition, bool 
 {
 	while(True)
 	{
-		MCAutoValueRef t_evaluated;
-		MCAutoBooleanRef t_evaluated_as_boolean;
+        bool t_continue;
 		
 		MCU_play();
 		
-		if (!ctxt . EvaluateExpression(p_condition, &t_evaluated))
-			return;
-		
-		if (!ctxt . ForceToBoolean(*t_evaluated, &t_evaluated_as_boolean))
-		{
-			ctxt . Throw();
-			return;
-		}
+        if (!ctxt . EvalExprAsBool(p_condition, EE_WAIT_BADEXP, t_continue))
+            return;
 
-		if (*t_evaluated_as_boolean == kMCFalse)
+        if (t_continue == false)
 			return;
 
 		if (MCscreen->wait(WAIT_INTERVAL, p_messages, True))

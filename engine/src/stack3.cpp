@@ -1762,7 +1762,7 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 		case ST_DATETIME:
         {
             MCAutoValueRef t_value;
-            if (!marked || curcard->getmark() && ctxt . EvaluateExpression(by, &t_value))
+            if (!marked || curcard->getmark() && ctxt . EvalExprAsValueRef(by, EE_SORT_BADTARGET, &t_value))
 			{
 				MCAutoStringRef t_out;
 				if (MCD_convert(ctxt, *t_value, CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_out))
@@ -1777,7 +1777,7 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
         {
             MCAutoValueRef t_value;
 			if ((!marked || curcard->getmark())
-			        && ctxt . EvaluateExpression(by, &t_value) 
+                    && ctxt . EvalExprAsValueRef(by, EE_SORT_BADTARGET, &t_value)
 					&& ctxt.ConvertToNumber(*t_value, items[nitems].nvalue))
 				break;
 
@@ -1787,17 +1787,15 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 		case ST_INTERNATIONAL:
 		case ST_TEXT:
         {
-            MCAutoValueRef t_value;
-			if ((!marked || curcard->getmark()) && ctxt . EvaluateExpression(by, &t_value))
-			{
-				MCStringRef t_string;
-				/* UNCHECKED */ ctxt.ConvertToString(*t_value, t_string);
+            MCAutoStringRef t_string;
+            if ((!marked || curcard->getmark()) && ctxt . EvalExprAsStringRef(by, EE_SORT_BADTARGET, &t_string))
+            {
 				if (ctxt.GetCaseSensitive())
-					items[nitems].svalue = t_string;
+                    items[nitems].svalue = MCValueRetain(*t_string);
 				else
 				{
 					MCStringRef t_mutable;
-					/* UNCHECKED */ MCStringMutableCopyAndRelease(t_string, t_mutable);
+                    /* UNCHECKED */ MCStringMutableCopyAndRelease(*t_string, t_mutable);
 					/* UNCHECKED */ MCStringLowercase(t_mutable);
 					/* UNCHECKED */ MCStringCopyAndRelease(t_mutable, items[nitems].svalue);
 				}
@@ -2065,10 +2063,10 @@ void MCStack::mark(MCExecContext& ctxt, MCExpression *p_where, bool p_mark)
 		MCerrorlock++;
 		do
 		{
-            MCAutoValueRef t_condition;
-			if (ctxt . EvaluateExpression(p_where, &t_condition))
+            MCAutoBooleanRef t_condition;
+            if (ctxt . EvalExprAsBooleanRef(p_where, EE_MARK_BADSTRING, &t_condition))
 			{
-				if ((MCBooleanRef)*t_condition == kMCTrue)
+                if (*t_condition == kMCTrue)
 					curcard->setmark(p_mark);
 			}
 			curcard = (MCCard *)curcard->next();
