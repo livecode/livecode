@@ -280,10 +280,10 @@ void MCMiniZipClose(MCMiniZipRef self)
 
 //////////
 
-bool MCMiniZipListItems(MCMiniZipRef self, MCMiniZipListItemsCallback p_callback, MCListRef &p_context)
+bool MCMiniZipListItems(MCMiniZipRef self, MCMiniZipListItemsCallback p_callback, void *p_context)
 {
 	for(uint32_t i = 0; i < self -> item_count; i++)
-		if (!p_callback(p_context, self -> items[i] . name))
+		if (!p_callback((MCListRef&)p_context, self -> items[i] . name))
 			return false;
 
 	return true;
