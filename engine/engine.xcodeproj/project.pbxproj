@@ -1009,7 +1009,6 @@
 		4D587E250B8096E600200116 /* sellst.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = sellst.h; path = src/sellst.h; sourceTree = "<group>"; };
 		4D587E260B8096E600200116 /* group.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = group.h; path = src/group.h; sourceTree = "<group>"; };
 		4D587E270B8096E600200116 /* mcio.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = mcio.h; path = src/mcio.h; sourceTree = "<group>"; };
-		4D587E280B8096E600200116 /* block.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = block.h; path = src/block.h; sourceTree = "<group>"; };
 		4D587E290B8096E600200116 /* eps.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = eps.h; path = src/eps.h; sourceTree = "<group>"; };
 		4D587E2A0B8096E600200116 /* hc.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = hc.h; path = src/hc.h; sourceTree = "<group>"; };
 		4D587E2C0B8096E600200116 /* prefix.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = prefix.h; path = src/prefix.h; sourceTree = "<group>"; };
@@ -2639,7 +2638,6 @@
 				4D587E870B8096FD00200116 /* aclip.cpp */,
 				4D587DDB0B8096E600200116 /* aclip.h */,
 				4D587E6B0B8096FD00200116 /* block.cpp */,
-				4D587E280B8096E600200116 /* block.h */,
 				4D587E3F0B8096FD00200116 /* button.cpp */,
 				4D587E160B8096E600200116 /* button.h */,
 				4D587E520B8096FD00200116 /* buttondraw.cpp */,
