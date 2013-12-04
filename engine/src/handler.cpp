@@ -949,10 +949,12 @@ void MCHandler::eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &
 	Symbol_type type;
 	Exec_stat stat = ES_ERROR;
 	if (sp.parseexp(False, True, &exp) == PS_NORMAL && sp.next(type) == PS_EOF)
-		stat = exp->eval(ctxt.GetEP());
+    {
+        ctxt . EvalExprAsValueRef(exp, EE_EXPR_EVALERROR, r_value);
+		stat = ctxt . GetExecStat();
+    }
 
 	delete exp;
-	/* UNCHECKED */ ctxt.GetEP().copyasvalueref(r_value);
 
 	if (stat != ES_ERROR)
 		return;

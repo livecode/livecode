@@ -42,7 +42,6 @@ public:
 	
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 
-
 	// Evaluate the expression as a value, and place its value into ep.
 	virtual Exec_stat eval(MCExecPoint &ep);
 
