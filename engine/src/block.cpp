@@ -1050,12 +1050,12 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 				findex_t sl = eptr - sptr;
 				
 				sptr += sl;
-				l -= sl;
+				size -= sl;
 			}
 		}
 
 		MCRange t_range;
-		t_range = MCRangeMake(sptr, size - sptr);
+		t_range = MCRangeMake(sptr, size);
         dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True);
 
 		// Apply strike/underline.
