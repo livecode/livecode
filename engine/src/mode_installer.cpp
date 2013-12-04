@@ -487,23 +487,18 @@ public:
 			return;
 		}
 
-		MCMiniZipListItems(s_payload_minizip, list_items, &ctxt);
-        ctxt . SetItToValue(kMCFalse);
+        MCAutoListRef t_list;
+		MCMiniZipListItems(s_payload_minizip, list_items, &t_list);
+        ctxt . SetItToValue(*t_list);
 
 		return;
 	}
 
 private:
-	static bool list_items(void *p_context, MCStringRef p_item)
+	static bool list_items(MCListRef& r_list, MCStringRef p_item)
 	{
-		MCStringRef *t_string;
-		t_string = (MCStringRef *)p_context;
-        
-        MCAutoListRef t_list;
-        /* UNCHECKED */ MCListCreateMutable(EC_RETURN, &t_list);
-        /* UNCHECKED */ MCListAppend(*t_list, p_item);
-
-        /* UNCHECKED */ MCListCopyAsString(*t_list, *t_string);
+        /* UNCHECKED */ MCListCreateMutable(EC_RETURN, r_list);
+        /* UNCHECKED */ MCListAppend(r_list, p_item);
 
 		return true;
 	}
@@ -548,7 +543,7 @@ public:
 			{
                 MCAutoStringRef t_string;
 				MCStringFormat(&t_string, ",%u,%u,,%u,", t_info . checksum, t_info . uncompressed_size, t_info . compressed_size);
-				ctxt . GetEP() .getit() -> set(ctxt, *t_string, False);
+                ctxt . SetItToValue(*t_string);
 			}
 			else
 				ctxt . SetTheResultToCString("describe failed");
@@ -605,7 +600,7 @@ public:
             return;
 				
 		MCAutoStringRef t_file;
-        if (!ctxt . EvalOptionalExprAsNullableStringRef(m_file_expr, EE_PUT_BADEXP, &t_file))
+        if (!ctxt . EvalOptionalExprAsStringRef(m_file_expr, kMCEmptyString, EE_PUT_BADEXP, &t_file))
             return;
 		
 
@@ -742,20 +737,20 @@ public:
 		t_success = true;
 
 		MCAutoStringRef t_patch_item;
-        if (t_success && ctxt . EvalExprAsStringRef(m_patch_item_expr, EE_UNDEFINED, &t_patch_item))
+        if (t_success && ctxt . EvalExprAsStringRef(m_patch_item_expr, EE_INTERNAL_PATCH_BADITEM, &t_patch_item))
 			t_success = true;
 		else
 			t_success = false;
 
 		MCAutoStringRef t_base_item;
 
-		if (t_success && ctxt . EvalExprAsStringRef(m_base_item_expr, EE_UNDEFINED, &t_base_item))
+		if (t_success && ctxt . EvalExprAsStringRef(m_base_item_expr, EE_INTERNAL_BASE_BADITEM, &t_base_item))
 			t_success = true;
 		else
 			t_success = false;
 
 		MCAutoStringRef t_output_filename;
-		if (t_success && ctxt . EvalExprAsStringRef(m_output_file_expr, EE_UNDEFINED, &t_output_filename))
+		if (t_success && ctxt . EvalExprAsStringRef(m_output_file_expr, EE_OUTPUT_BADFILENAME, &t_output_filename))
 			t_success = true;
 		else
 			t_success = false;
@@ -934,15 +929,37 @@ public:
 	}
 #endif
     
+    void exec_ctxt(MCExecContext& ctxt)
+	{
+		bool t_success;
+		t_success = true;
+        
+        MCAutoStringRef t_module_str;
+        if (!ctxt . EvalExprAsStringRef(m_module, EE_INTERNAL_TASKS_BADMODULE, &t_module_str))
+            return;
+        
+		char *t_module;
+        /* UNCHECKED */ MCStringConvertToCString(*t_module_str, t_module);
+        
+		State t_state;
+		t_state . module = t_module;
+		/* UNCHECKED */ MCListCreateMutable('\n', t_state.list);
+    
+		MCSystemListProcesses(ListProcessCallback, &t_state);
+        
+		MCresult -> set(ctxt, &t_module_str);
+        
+		delete t_module;
+	}
+    
 private:
 	MCExpression *m_module;
 
 	struct State
 	{
 		char *module;
-		MCStringRef string;
+		MCListRef list;
 		bool found;
-		bool first;
 	};
 
 	static bool ListProcessModulesCallback(void *p_state, const char *p_module)
@@ -963,15 +980,8 @@ private:
 		MCSystemListProcessModules(p_id, ListProcessModulesCallback, state);
 		if (state -> found)
 		{
-            /* UNCHECKED */ MCStringMutableCopyAndRelease(state->string, state->string);
-			if (!state -> first)
-            {
-                /* UNCHECKED */ MCStringAppendChar(state -> string, '\n');
-            }
-			
-            MCStringAppendFormat(state -> string, "%s,%s", p_path, p_desc);
-            state -> first = false;
-		}
+            MCListAppendFormat(state ->list, "%s,%s", p_path, p_desc);
+        }
 
 		return true;
 	}
@@ -1011,7 +1021,7 @@ public:
 		t_success = true;
 
         MCAutoStringRef t_string;
-        if (!ctxt . EvalExprAsStringRef(m_key, EE_UNDEFINED, &t_string))
+        if (!ctxt . EvalExprAsStringRef(m_key, EE_INTERNAL_DELETE_BADKEY, &t_string))
             return;
         MCAutoPointer<char> temp;
         /* UNCHECKED */ MCStringConvertToCString(*t_string, &temp);
@@ -1055,7 +1065,7 @@ public:
 		t_success = true;
         
         MCAutoStringRef t_string;
-        if (!ctxt . EvalExprAsStringRef(m_file, EE_UNDEFINED, &t_string))
+        if (!ctxt . EvalExprAsStringRef(m_file, EE_INTERNAL_DELETE_BADFILENAME, &t_string))
             return;
         MCAutoPointer<char> temp;
         /* UNCHECKED */ MCStringConvertToCString(*t_string, &temp);
@@ -1107,7 +1117,7 @@ public:
 
 // MM-2011-03-24: Added internal verb showBalloon. Takes two params, a title and a message.
 // On Windows, this displays a balloon above the taskbar icon (if there is one). Not yet implemented on OS X and Linux.
-void MCSystemBalloonNotification(const char*, const char*);
+void MCSystemBalloonNotification(MCStringRef , MCStringRef);
 
 class MCInternalBalloonNotification: public MCStatement
 {
@@ -1136,32 +1146,15 @@ public:
 	
 	void exec_ctxt(MCExecContext& ctxt)
 	{
-		const char *t_title;
-		t_title = nil;
-		if (m_title != nil)
-		{
-            MCAutoStringRef t_string;
-            if (!ctxt . EvalExprAsStringRef(m_title, EE_UNDEFINED, &t_string))
-                return;
-			char *temp;
-            /* UNCHECKED */ MCStringConvertToCString(*t_string, temp);
-			t_title = temp;
-		}
-		const char *t_message;
-		t_message = nil;
-		if (m_message != nil)
-		{
-            MCAutoStringRef t_mess;
-            if (!ctxt . EvalExprAsStringRef(m_message, EE_UNDEFINED, &t_mess))
-                return;
-			char *temp;
-            /* UNCHECKED */ MCStringConvertToCString(*t_mess, temp);
-			
-			t_message = temp;
-		}
-		MCSystemBalloonNotification(t_title, t_message);
-		delete t_title;
-		delete t_message;
+        MCAutoStringRef t_title;
+        if (!ctxt . EvalOptionalExprAsNullableStringRef(m_title, EE_UNDEFINED, &t_title))
+            return;
+    
+        MCAutoStringRef t_message;
+        if (!ctxt . EvalOptionalExprAsNullableStringRef(m_message, EE_UNDEFINED, &t_message))
+            return;
+		
+		MCSystemBalloonNotification(*t_title, *t_message);
 		return ;
 	}
 

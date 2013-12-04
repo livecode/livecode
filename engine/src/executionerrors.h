@@ -2509,7 +2509,25 @@ enum Exec_errors
     EE_IDE_EXTRACT_BADSECTION,
 
     // {EE-815} IDE Extract: error in filename expression
-    EE_IDE_EXTRACT_BADFILENAME
+    EE_IDE_EXTRACT_BADFILENAME,
+    
+    // {EE-816} MCInternalPayloadPatch: error in patch item expression
+    EE_INTERNAL_PATCH_BADITEM,
+    
+    // {EE-817} MCInternalPayloadPatch: error in base item expression
+    EE_INTERNAL_BASE_BADITEM,
+    
+    // {EE-816} MCInternalPayloadPatch: error in output filename expression
+    EE_OUTPUT_BADFILENAME,
+    
+    // {EE-817} MCInternalListTasksWithModule: error in module expression
+    EE_INTERNAL_TASKS_BADMODULE,
+    
+    // {EE-818} MCInternalCanDeleteFile: error in filename expression
+    EE_INTERNAL_DELETE_BADFILENAME,
+    
+    // {EE-819} MCInternalCanDeleteKey: error in key expression
+    EE_INTERNAL_DELETE_BADKEY
 
 };
 
