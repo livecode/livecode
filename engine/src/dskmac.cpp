@@ -22,7 +22,7 @@
 #include "globdefs.h"
 #include "objdefs.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "exec.h"
 #include "globals.h"
 #include "system.h"

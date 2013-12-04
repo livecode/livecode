@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "scriptpt.h"
 #include "dispatch.h"
 #include "stack.h"
@@ -487,20 +487,20 @@ public:
 			return;
 		}
 
-        MCAutoListRef t_list;
-		MCMiniZipListItems(s_payload_minizip, list_items, &t_list);
-        ctxt . SetItToValue(*t_list);
+        MCListRef t_list;
+        /* UNCHECKED */ MCListCreateMutable(EC_RETURN, t_list);
+		MCMiniZipListItems(s_payload_minizip, list_items, t_list);
+        MCAutoStringRef t_string;
+        /* UNCHECKED */ MCListCopyAsStringAndRelease(t_list, &t_string);
+        ctxt . SetItToValue(*t_string);
 
 		return;
 	}
 
 private:
-	static bool list_items(MCListRef& r_list, MCStringRef p_item)
+	static bool list_items(void *r_list, MCStringRef p_item)
 	{
-        /* UNCHECKED */ MCListCreateMutable(EC_RETURN, r_list);
-        /* UNCHECKED */ MCListAppend(r_list, p_item);
-
-		return true;
+        return MCListAppend((MCListRef&)r_list, p_item);
 	}
 };
 

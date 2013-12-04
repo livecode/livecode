@@ -611,6 +611,12 @@ bool FormatUnsignedInteger(uinteger_t p_integer, MCStringRef& r_output)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+bool MCExecContext::EvaluateExpression(MCExpression *p_expr, MCValueRef& r_result)
+{
+    if (!EvalExprAsValueRef(p_expr, EE_EXPR_EVALERROR, r_result))
+        return false;
+    return true;
+}
 
 #ifdef LEGACY_EXEC
 bool MCExecContext::EvaluateExpression(MCExpression *p_expr, MCValueRef& r_result)

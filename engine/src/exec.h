@@ -19,7 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #ifdef LEGACY_EXEC
 #ifndef __MC_EXECPT__
-#include "execpt.h"
+//#include "execpt.h"
 #endif
 #endif
 

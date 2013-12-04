@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "scriptpt.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "debug.h"
 #include "hndlrlst.h"
 #include "handler.h"
@@ -945,7 +945,7 @@ void MCHandler::eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &
 {
 	MCScriptPoint sp(p_expression);
 	sp.sethandler(this);
-	MCExpression *exp = NULL;
+    MCExpression *exp = NULL;
     Symbol_type type;
 
 	if (sp.parseexp(False, True, &exp) == PS_NORMAL && sp.next(type) == PS_EOF)

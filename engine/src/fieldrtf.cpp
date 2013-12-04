@@ -26,7 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "unicode.h"
 #include "text.h"
 #include "osspec.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "mcstring.h"
 
 ////////////////////////////////////////////////////////////////////////////////

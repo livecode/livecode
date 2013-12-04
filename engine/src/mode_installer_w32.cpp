@@ -329,16 +329,20 @@ void MCSystemBalloonNotification(MCStringRef p_title, MCStringRef p_message)
 	t_nidata . dwInfoFlags = NIIF_INFO;
 
     MCAutoStringRefAsWString t_title, t_message;
-    t_title . Lock(p_title);
-    t_message . Lock(r_message);
     
 	// We can specify the title (appears in bold next to the icon) and the body of the balloon.
 	if (p_title != nil)
-		MCMemoryCopy(t_nidata . szInfoTitle, *t_title, 63);
+    {
+        t_title . Lock(p_title)
+		MCMemoryCopy(t_nidata . szInfoTitle, *t_title, 63 * sizeof(WCHAR));
+    }
 	else
 		t_nidata . szInfoTitle[0] = '\0';
 	if (p_message != nil)
-		MCMemoryCopy(t_nidata . szInfo, *t_message, 255);
+    {
+        t_message . Lock(p_message);
+		MCMemoryCopy(t_nidata . szInfo, *t_message, 255 * sizeof(WCHAR));
+    }
 	else
 		t_nidata . szInfo[0] = '\0';
 

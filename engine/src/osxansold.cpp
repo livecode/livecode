@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globdefs.h"
 #include "parsedef.h"
 #include "filedefs.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "exec.h"
 #include "mcerror.h"
 #include "util.h"

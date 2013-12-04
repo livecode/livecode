@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "date.h"
 #include "param.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "player.h"
 #include "group.h"
 #include "button.h"

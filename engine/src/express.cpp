@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "uidc.h"
 #include "scriptpt.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "mcerror.h"
 #include "param.h"
 #include "object.h"
@@ -591,9 +591,10 @@ Parse_stat MCExpression::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-
+#ifdef LEGACY_EXEC
 Exec_stat MCExpression::eval(MCExecPoint &ep)
 {
+    MCAssert(false);
     MCExecContext ctxt(ep . GetEC());
 	
 	MCAutoValueRef t_value;
@@ -606,19 +607,11 @@ Exec_stat MCExpression::eval(MCExecPoint &ep)
 	
 	return ctxt . Catch(line, pos);
 }
-
+#endif
 
 void MCExpression::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
-    MCExecPoint ep(ctxt);
-    if (eval(ep) == ES_NORMAL &&
-        ep . copyasvalueref(r_value . valueref_value))
-	{
-		r_value . type = kMCExecValueTypeValueRef;
-		return;
-	}
-	
-	ctxt . Throw();
+    fprintf(stderr, "ERROR: eval method for expression not implemented properly\n");
 }
 
 void MCExpression::eval_typed(MCExecContext& ctxt, MCExecValueType p_type, void *r_value)

@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 
 #include "mblandroidjava.h"
 

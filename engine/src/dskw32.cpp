@@ -30,7 +30,7 @@
 #include "mcio.h"
 #include "system.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "exec.h"
 #include "globals.h"
 #include "system.h"

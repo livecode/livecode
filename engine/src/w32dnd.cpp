@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 #include "transfer.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "image.h"
 #include "globals.h"
 #include "dispatch.h"

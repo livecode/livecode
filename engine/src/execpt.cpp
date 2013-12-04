@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 
 #include "object.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "mcerror.h"
 #include "util.h"
 #include "globals.h"
