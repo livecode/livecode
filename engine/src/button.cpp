@@ -3493,7 +3493,7 @@ void MCButton::openmenu(Boolean grab)
             uindex_t t_new_offset = 0;
 			for (uindex_t i = 0; i < t_chosen_option; i++)
             {
-                if (i != 1)
+                if (i != 0)
                     t_offset = t_new_offset + 1;
 				/* UNCHECKED */ MCStringFirstIndexOfChar(t_menustring, '\n', t_offset, kMCStringOptionCompareExact, t_new_offset);
             }

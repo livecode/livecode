@@ -581,12 +581,13 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uin
 	MCScreenDCDoSnapshotEnv env;
 	env . r = r;
 	env . window = window;
-	env . displayname = MCValueRetain(displayname);
+	env . displayname = displayname == nil ? nil : MCValueRetain(displayname);
 	env . scale_factor = p_scale_factor;
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 	/* REMOTE */ MCFiberCall(s_main_fiber, MCScreenDCDoSnapshot, &env);
 
-    MCValueRelease(env . displayname);
+    if (env . displayname != nil)
+        MCValueRelease(env . displayname);
 	return env . result;
 }
 

@@ -1358,17 +1358,14 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
     if (t_detailed)
     {
         if (*t_detailed_reading != nil)
-            ep.setvalueref(*t_detailed_reading);
+            ctxt . SetTheResultToValue(*t_detailed_reading);
     }
     else
     {
         if (*t_reading != nil)
-            ep.setvalueref(*t_reading);
+            ctxt . SetTheResultToValue(*t_reading);
     }
     
-	MCAutoStringRef t_result;
-	ep . copyasstringref(&t_result);
-    ctxt . SetTheResultToValue(*t_result);
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
@@ -1398,11 +1395,7 @@ Exec_stat MCHandleCurrentLocation(void *p_context, MCParameter *p_parameters)
     MCAutoArrayRef t_detailed_reading;
     MCSensorGetDetailedLocationOfDevice(ctxt, &t_detailed_reading);
     if (*t_detailed_reading != nil)
-        ep.setvalueref(*t_detailed_reading);
-    
-	MCAutoStringRef t_result;
-	ep . copyasstringref(&t_result);
-    ctxt . SetTheResultToValue(*t_result);
+        ctxt . SetTheResultToValue(*t_detailed_reading);
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
@@ -1431,13 +1424,7 @@ Exec_stat MCHandleCurrentHeading(void *p_context, MCParameter *p_parameters)
     MCAutoArrayRef t_detailed_reading;
     MCSensorGetDetailedHeadingOfDevice(ctxt, &t_detailed_reading);
     if (*t_detailed_reading != nil)
-        ep.setvalueref(*t_detailed_reading);
-    
-	MCAutoStringRef t_result;
-	ep . copyasstringref(&t_result);
-    ctxt . SetTheResultToValue(*t_result);
-	if (!ctxt . HasError())
-		return ES_NORMAL;
+        ctxt . SetTheResultToValue(*t_detailed_reading);
 
 	return ES_ERROR;
 }
@@ -2031,10 +2018,14 @@ Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters)
 	if (t_success)
 		t_success = MCParseParameters(p_parameters, "xx", &(&t_ad), &(&t_type));
     
-   MCAdTopLeft t_topleft;
-
+    MCAdTopLeft t_topleft = {0,0};
+    MCAutoStringRef t_topleft_string;
+    
     if (t_success)
-        t_success = MCParseParameters(p_parameters, "uu", &t_topleft.x, &t_topleft.y);
+    {
+        if (MCParseParameters(p_parameters, "x", &(&t_topleft_string)))
+            /* UNCHECKED */ sscanf(MCStringGetCString(*t_topleft_string), "%u,%u", &t_topleft.x, &t_topleft.y);
+    }
     
     MCAutoArrayRef t_metadata;
     
@@ -3188,12 +3179,10 @@ Exec_stat MCHandleStartActivityIndicator(void *p_context, MCParameter *p_paramet
     if (t_success)
     {
         if (MCStringIsEqualToCString(*t_style_string, "whitelarge", kMCCompareCaseless))
-            t_success = MCStringCreateWithCString("large white", &t_style_string);
+            t_style = MCActivityIndicatorTypeFromString(MCSTR("large white"));
+        else
+            t_style = MCActivityIndicatorTypeFromString(*t_style_string);
     }
-    
-    if (t_success)
-        t_style = MCActivityIndicatorTypeFromString(*t_style_string);
-        
     
     bool t_location_param = false;
     integer_t* t_location_x_ptr = nil;
@@ -6034,7 +6023,7 @@ Exec_stat MCHandleSpecificCameraFeatures(void *p_context, MCParameter *p_paramet
 	
     MCAutoStringRef t_features;
     /* UNCHECKED */ ep . copyasstringref(&t_features);
-    ctxt . SetTheResultToValue(&t_result);
+    ctxt . SetTheResultToValue(*t_features);
     
 	return ES_NORMAL;
 }
