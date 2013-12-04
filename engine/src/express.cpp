@@ -591,6 +591,7 @@ Parse_stat MCExpression::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCExpression::eval(MCExecPoint &ep)
 {
     MCAssert(false);
@@ -619,6 +620,11 @@ void MCExpression::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 	}
 	
 	ctxt . Throw();
+}
+#endif
+
+void MCExpression::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
 }
 
 void MCExpression::eval_typed(MCExecContext& ctxt, MCExecValueType p_type, void *r_value)

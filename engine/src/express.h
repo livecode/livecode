@@ -42,9 +42,10 @@ public:
 	
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 
+#ifdef LEGACY_EXEC
 	// Evaluate the expression as a value, and place its value into ep.
 	virtual Exec_stat eval(MCExecPoint &ep);
-
+#endif
 	
 	// Evaluate the expression as its natural type basic type (note that
 	// execvalue's cannot be set/enum/custom, they should all be resolved
