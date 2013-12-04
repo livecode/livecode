@@ -952,11 +952,15 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
         
         // Find the next boundary
         t_boundary = MCLocaleBreakIteratorAdvance(t_iter);
-        if (t_boundary == 0)
+        if (t_boundary == kMCLocaleBreakIteratorDone)
         {
-            // Something went wrong
+            // Ran out of string to process
             MCLocaleBreakIteratorRelease(t_iter);
-            return false;
+            if (t_counter < p_in_range.offset)
+                t_units = MCRangeMake(self -> char_count, 0);
+            else
+                t_units.length = self -> char_count - t_units.offset;
+            break;
         }
         
         // Have we found the end of the requested grapheme range?
