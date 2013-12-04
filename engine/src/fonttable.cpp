@@ -321,7 +321,7 @@ IO_stat MCLogicalFontTableSave(IO_handle p_stream)
 			{
 				if (t_is_unicode)
 				{
-					if (!MCStringFormat(&t_unicode_textfont, "%@,unicode", MCNameGetString(t_textfont)))
+                    if (!MCStringFormat(&t_unicode_textfont, "%@,unicode", t_textfont))
 						t_stat = IO_ERROR;
 				}
 				else
