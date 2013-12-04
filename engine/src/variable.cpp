@@ -902,6 +902,7 @@ MCVariable *MCVarref::evalvar(MCExecContext& ctxt)
     return fetchvar(ctxt);
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCVarref::eval(MCExecPoint& ep)
 {
     MCExecContext ctxt(ep);
@@ -931,27 +932,33 @@ Exec_stat MCVarref::eval(MCExecPoint& ep)
     }
 	return ES_ERROR;
 }
+#endif
 
-
-bool MCVarref::eval(MCExecContext& ctxt, MCValueRef& r_value)
+void MCVarref::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
+    MCValueRef t_value;
 	if (dimensions == 0)
 	{
-		MCVariable *t_resolved_ref;
+        MCVariable *t_resolved_ref;
 		
 		t_resolved_ref = fetchvar(ctxt);
         
-        return t_resolved_ref -> copyasvalueref(r_value);
+        if (!t_resolved_ref -> copyasvalueref(t_value))
+            ctxt . Throw();
+        else
+            MCExecValueTraits<MCValueRef>::set(r_value, t_value);
+
+        return;
 	}
-    
-	MCAutoPointer<MCContainer> t_container;
-	if (!resolve(ctxt, &t_container))
-		return false;
-    
-    if (!t_container -> eval(ctxt, r_value))
-        return false;
-    
-    return true;
+    else
+    {
+        MCAutoPointer<MCContainer> t_container;
+        if (!resolve(ctxt, &t_container)
+                || !t_container -> eval(ctxt, t_value))
+            ctxt . Throw();
+        else
+            MCExecValueTraits<MCValueRef>::set(r_value, t_value);
+    }
 }
 
 #ifdef LEGACY_EXEC
@@ -1526,16 +1533,18 @@ Exec_stat MCDeferredVarref::eval(MCExecPoint& ep)
 }
 #endif
 
-bool MCDeferredVarref::eval(MCExecContext& ctxt, MCValueRef &r_value)
+void MCDeferredVarref::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
     bool t_error;
     if (ref -> isdeferred())
         t_error = static_cast<MCDeferredVariable *>(ref) -> compute() != ES_NORMAL;
+    else
+        t_error = false;
 
     if (!t_error)
-        t_error = MCVarref::eval(ctxt, r_value);
-
-    return t_error;
+        MCVarref::eval_ctxt(ctxt, r_value);
+    else
+        ctxt . Throw();
 }
 
 #ifdef LEGACY_EXEC

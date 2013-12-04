@@ -884,10 +884,11 @@ public:
 		isplain = true;
 	}
 	virtual ~MCVarref();
-
+#ifdef LEGACY_EXEC
 	virtual Exec_stat eval(MCExecPoint &);
+#endif
     
-    bool eval(MCExecContext& ctxt, MCValueRef& r_value);
+    void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 #ifdef LEGACY_EXEC
 	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
 #endif
@@ -974,7 +975,7 @@ public:
 	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
 	virtual MCVariable *evalvar(MCExecPoint& ep);
 #endif
-    virtual bool eval(MCExecContext& ctxt, MCValueRef &r_value);
+    virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     virtual bool evalcontainer(MCExecContext& ctxt, MCContainer*& r_container);
     virtual MCVariable *evalvar(MCExecContext& ctxt);
 };

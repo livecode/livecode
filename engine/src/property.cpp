@@ -1182,13 +1182,11 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 	// props, although this needs to be done sympathetically to the current behavior...
 	if (which == P_CUSTOM_VAR)
 	{
-        MCAutoValueRef t_dest;
-		if (!destvar -> eval(ctxt, &t_dest))
-            return false;
         MCAutoStringRef t_string;
-        if (!ctxt . ConvertToString(*t_dest, &t_string))
+        if (!ctxt . EvalExprAsStringRef(destvar, EE_PROPERTY_BADEXPRESSION, &t_string))
             return false;
-		MCScriptPoint sp(*t_string);
+
+        MCScriptPoint sp(*t_string);
 		Symbol_type type;
 		const LT *te;
 		if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL && te->type == TT_PROPERTY && sp.next(type) == PS_EOF)
@@ -1205,7 +1203,7 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 			// MW-2011-09-02: [[ Bug 9698 ]] Always create a name for the property, otherwise
 			//   if the var contains empty, this function returns a nil name which causes
 			//   customprop to be used incorrectly.
-			/* UNCHECKED */ MCNameCreate(*t_string, t_prop_name);
+            /* UNCHECKED */ MCNameCreate(*t_string, t_prop_name);
             
 			if (*t_icarray != nil)
             /* UNCHECKED */ MCNameCreate(*t_icarray, t_index_name);
@@ -4970,8 +4968,7 @@ static MCPropertyInfo *lookup_mode_property(const MCPropertyTable *p_table, Prop
 
 void MCProperty::eval_variable_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
-	destvar -> eval(ctxt, r_value . valueref_value);
-    r_value . type = kMCExecValueTypeValueRef;
+    destvar -> eval_ctxt(ctxt, r_value);
 }
 
 void MCProperty::eval_function_ctxt(MCExecContext& ctxt, MCExecValue& r_value)

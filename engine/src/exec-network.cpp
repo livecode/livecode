@@ -634,11 +634,8 @@ void MCNetworkExecReturnValueAndUrlResult(MCExecContext& ctxt, MCValueRef p_resu
 void MCNetworkExecReturnValueAndUrlResultFromVar(MCExecContext& ctxt, MCValueRef p_result, MCVarref *p_variable)
 {
     MCAutoValueRef t_value;
-	if (!p_variable -> eval(ctxt, &t_value))
-	{
-		ctxt . LegacyThrow(EE_RETURN_BADEXP);
-		return;
-	}
+    if (!ctxt . EvalExprAsValueRef(p_variable, EE_RETURN_BADEXP, &t_value))
+        return;
 	
 	ctxt . SetTheResultToValue(p_result);
 	MCurlresult -> set(ctxt, *t_value);
