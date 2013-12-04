@@ -41,7 +41,7 @@ bool MCSystemCreateLocalNotification (const char *p_alert_body, const char *p_al
 {
     int64_t t_id = -1;
     int32_t t_seconds;
-    MCExecPoint ep(nil, nil, nil);
+   MCExecPoint ep(nil, nil, nil);
     
     MCD_convert_from_datetime(ep, CF_SECONDS, CF_UNDEFINED, p_date);
     t_seconds = ep.getint4();

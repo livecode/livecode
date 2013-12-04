@@ -17,6 +17,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 package com.runrev.android;
 
 import java.net.*;
+import javax.net.ssl.*;
+import java.security.*;
+import java.security.cert.*;
 import java.io.*;
 
 import android.util.*;
@@ -45,6 +48,7 @@ abstract class URLLoader implements Runnable
 	
 	public URLLoader(int p_id, String p_url) throws URISyntaxException, MalformedURLException, IOException
 	{
+		Log.i("revandroid", "URLLoader " + p_url);
 		m_id = p_id;
 		
 		URI t_uri = new URI(p_url);
@@ -74,6 +78,52 @@ abstract class URLLoader implements Runnable
 	{
 		m_connection.setConnectTimeout(p_timeout);
 		m_connection.setReadTimeout(p_timeout);
+	}
+	
+	// MW-2013-10-02: [[ MobileSSLVerify ]] Configure whether to verify SSL connections.
+	public void setSSLVerification(boolean p_verify_ssl)
+	{
+		// If we aren't HTTP do nothing.
+		if (!m_is_http)
+			return;
+		
+		// If we aren't HTTPS do nothing.
+		if (!(m_connection instanceof HttpsURLConnection))
+			return;
+		
+		// If we are to verify SSL leave things as they are.
+		if (p_verify_ssl)
+			return;
+		
+		// Install a dummy TrustManager which accepts all certs.
+		try
+		{
+			SSLContext t_context;
+			t_context = SSLContext.getInstance("TLS");
+			t_context . init(null,
+							 new X509TrustManager[] {
+								 new X509TrustManager() {
+									 public X509Certificate[] getAcceptedIssuers() { return null; }
+									 public void checkClientTrusted(X509Certificate[] certs, String auth) {}
+									 public void checkServerTrusted(X509Certificate[] certs, String auth) {} }
+							 },
+							 null);
+			((HttpsURLConnection)m_connection) . setSSLSocketFactory(t_context . getSocketFactory());
+		}
+		catch(NoSuchAlgorithmException e)
+		{
+		}
+		catch(KeyManagementException e)
+		{
+		}
+		
+		// Install a dummy hostname verified which accepts all hosts.
+		((HttpsURLConnection)m_connection) . setHostnameVerifier(new HostnameVerifier() {
+			public boolean verify(String hostname, SSLSession session)
+			{
+				return true;
+			}
+		});
 	}
 	
 	public void setMethod(String p_method)

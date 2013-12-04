@@ -90,7 +90,9 @@ struct MCObjectShape
 		struct
 		{
 			MCPoint origin;
-			MCImageBitmap *bits;
+			MCImageBitmap *bits;			
+			// MM-2012-10-03: [[ ResIndependence ]] The scale of the mask. Used when computing intersect of images with a scale factor.
+			MCGFloat scale;
 		} mask;
 	};
 };
@@ -164,6 +166,12 @@ struct MCObjectFontAttrs
 	uint2 size;
 };
 
+struct MCPatternInfo
+{
+	uint32_t id;
+	MCPatternRef pattern;
+};
+
 class MCObject : public MCDLlist
 {
 protected:
@@ -174,8 +182,7 @@ protected:
 	MCRectangle rect;
 	MCColor *colors;
 	char **colornames;
-	uint4 *pixmapids;
-	Pixmap *pixmaps;
+	MCPatternInfo *patterns;
 	char *script;
 	MCHandlerlist *hlist;
 	MCObjectPropertySet *props;
@@ -183,7 +190,7 @@ protected:
 	uint2 fontheight;
 	uint2 dflags;
 	uint2 ncolors;
-	uint2 npixmaps;
+	uint2 npatterns;
 	uint2 altid;
 	uint1 hashandlers;
 	uint1 scriptdepth;
@@ -237,7 +244,6 @@ protected:
 	static uint1 menudepth;
 	static MCStack *attachedmenu;
 	static MCColor maccolors[MAC_NCOLORS];
-	static Pixmap pattern;
 
 	// MW-2012-02-17: [[ LogFonts ]] We store the last loaded font index for
 	//   the object being serialized. This is because the fonttable comes
@@ -477,7 +483,7 @@ public:
 	Boolean isvisible();
 	Boolean resizeparent();
 	Boolean getforecolor(uint2 di, Boolean reversed, Boolean hilite, MCColor &c,
-	                     Pixmap &pix, int2 &x, int2 &y, MCDC *dc, MCObject *o);
+	                     MCPatternRef &r_pattern, int2 &x, int2 &y, MCDC *dc, MCObject *o);
 	void setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite = False);
 	Boolean setcolor(uint2 index, const MCString &eptr);
 	Boolean setcolors(const MCString &data);
@@ -548,7 +554,8 @@ public:
 	void positionrel(const MCRectangle &dptr, Object_pos xpos, Object_pos ypos);
 	Exec_stat domess(const char *sptr);
 	Exec_stat eval(const char *sptr, MCExecPoint &ep);
-	void editscript();
+	// MERG 2013-9-13: [[ EditScriptChunk ]] Added at expression that's passed through as a second parameter to editScript
+    void editscript(MCString p_at = NULL);
 	void removefrom(MCObjectList *l);
 	Boolean attachmenu(MCStack *sptr);
 	void alloccolors();
@@ -573,7 +580,8 @@ public:
 	//   type.
 	Exec_stat handleparent(Handler_type type, MCNameRef message, MCParameter* parameters);
 
-	MCBitmap *snapshot(const MCRectangle *rect, const MCPoint *size, bool with_effects);
+	// IM-2013-07-24: [[ ResIndependence ]] Add scale factor to allow taking high-res snapshots
+	MCImageBitmap *snapshot(const MCRectangle *rect, const MCPoint *size, MCGFloat p_scale_factor, bool with_effects);
 
 	// MW-2011-01-14: [[ Bug 9288 ]] Added 'parid' to make sure 'the properties of card id ...' returns
 	//   the correct result.
@@ -695,6 +703,8 @@ public:
 	{
 		return false;
 	}
+    
+    MCRectangle measuretext(const MCString& p_text, bool p_is_unicode);
 
 protected:
 	IO_stat defaultextendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
@@ -707,10 +717,6 @@ protected:
 	//   This method is protected as MCStack needs to call it to resolve its
 	//   font attrs after the font table loads.
 	void loadfontattrs(uint2 index);
-	
-	// MW-2012-02-14: [[ FontRefs ]] Called by open/close to map/unmap the concrete font.
-	void mapfont(void);
-	void unmapfont(void);
 	
 private:
 	Exec_stat getrectprop(Properties which, MCExecPoint& ep, Boolean effective);
@@ -762,6 +768,12 @@ private:
 
 	// MW-2013-03-06: [[ Bug 10695 ]] New method used by resolveimage* - if name is nil, then id search.
 	MCImage *resolveimage(const MCString& name, uint4 image_id);
+	
+	// MW-2012-02-14: [[ FontRefs ]] Called by open/close to map/unmap the concrete font.
+	// MW-2013-08-23: [[ MeasureText ]] Made private as external uses of them can be
+	//   done via measuretext() in a safe way.
+	void mapfont(void);
+	void unmapfont(void);
 	
 	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, const MCString &carray, Boolean effective);
 

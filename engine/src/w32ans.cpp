@@ -845,6 +845,9 @@ int MCA_folder(MCExecPoint &ep, const char *p_title, const char *p_prompt, const
 	return 0;
 }
 
+// MERG-2013-08-18: Updated to allow script access to colorDialogColors
+static COLORREF s_colordialogcolors[16];
+
 // MW-2005-05-15: Updated for new answer command restructuring
 int MCA_color(MCExecPoint &ep, const char *p_title, const char *p_initial, Boolean sheet)
 {
@@ -871,10 +874,10 @@ int MCA_color(MCExecPoint &ep, const char *p_title, const char *p_initial, Boole
 	}
 
 	CHOOSECOLORA chooseclr ;
-	static COLORREF custclr[16]; //save custom colors
+
 	memset(&chooseclr, 0, sizeof(CHOOSECOLORA));
 	chooseclr.lStructSize = sizeof (CHOOSECOLORA);
-	chooseclr.lpCustColors = (LPDWORD)custclr;
+	chooseclr.lpCustColors = (LPDWORD)s_colordialogcolors;
 
 	Window t_parent_window;
 	t_parent_window = MCModeGetParentWindow();
@@ -897,12 +900,61 @@ int MCA_color(MCExecPoint &ep, const char *p_title, const char *p_initial, Boole
 		ep.clear();
 	}
 	else
+	{
 		ep.setcolor(GetRValue(chooseclr.rgbResult), GetGValue(chooseclr.rgbResult), GetBValue(chooseclr.rgbResult));
+		
+	} 
 
 	//  SMR 1880 clear shift and button state
 	waitonbutton();
 
 	return 0;
+}
+
+void MCA_setcolordialogcolors(MCExecPoint& p_ep)
+{
+	const char * t_color_list;
+	t_color_list = p_ep.getcstring();
+		
+	if (t_color_list != NULL)
+	{
+		MCColor t_colors[16];
+		char *t_colornames[16];
+		int i;
+        
+		for (i = 0 ; i < 16 ; i++)
+			t_colornames[i] = NULL;
+        
+		MCscreen->parsecolors(t_color_list, t_colors, t_colornames, 16);
+        
+		for(i=0;i < 16;i++)
+		{
+			if (t_colors[i] . flags != 0)
+				s_colordialogcolors[i] = RGB(t_colors[i].red >> 8, t_colors[i].green >> 8,
+	                          t_colors[i].blue >> 8);
+			else
+				s_colordialogcolors[i] = NULL;
+            
+            delete t_colornames[i];
+		}
+
+	}
+}
+
+void MCA_getcolordialogcolors(MCExecPoint& p_ep)
+{
+	p_ep.clear();
+	MCExecPoint t_ep(p_ep);
+
+	for(int i=0;i < 16;i++)
+	{
+		if (s_colordialogcolors[i] != 0)
+			t_ep.setcolor(GetRValue(s_colordialogcolors[i]), GetGValue(s_colordialogcolors[i]), GetBValue(s_colordialogcolors[i]));
+		else
+			t_ep.clear();
+
+		p_ep.concatmcstring(t_ep.getsvalue(), EC_RETURN, i==0);
+	}
 }
 
 int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options)

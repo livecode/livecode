@@ -155,6 +155,9 @@ extern Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep,
 extern void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c);
 extern void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 	                       real8 tn, real8 oldn, MCSortnode *titems);
+// MW-2013-07-01: [[ Bug 10975 ]] This method returns true if the given string could be a url
+//   (as used by MCU_geturl, to determine whether to try and fetch via libUrl).
+extern bool MCU_couldbeurl(const MCString& potential_url);
 extern void MCU_geturl(MCExecPoint &ep);
 extern void MCU_puturl(MCExecPoint &ep, MCExecPoint &data);
 extern uint1 MCU_unicodetocharset(uint2 uchar);

@@ -1,0 +1,1 @@
+# Text size element of styled text array is not converted to numeric format

@@ -27,7 +27,7 @@ typedef enum
 	kMCImageRepVector,
 	kMCImageRepCompressed,
 	
-	kMCImageRepTransformed,
+	kMCImageRepResampled,
 } MCImageRepType;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,11 +40,15 @@ public:
 	virtual ~MCImageRep();
 
 	virtual MCImageRepType GetType() = 0;
+	virtual uint32_t GetDataCompression() = 0;
+	
 	virtual uindex_t GetFrameCount() = 0;
-	virtual bool LockImageFrame(uindex_t p_index, MCImageFrame *&r_frame) = 0;
+	virtual bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame) = 0;
 	virtual void UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame) = 0;
 	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height) = 0;
 
+	virtual MCGFloat GetDensity() { return 1.0; };
+	
 	//////////
 
 	MCImageRep *Retain();
@@ -60,72 +64,89 @@ private:
 class MCCachedImageRep : public MCImageRep
 {
 public:
-	MCCachedImageRep();
 	virtual ~MCCachedImageRep();
-
-	virtual MCImageRepType GetType() = 0;
-
-	virtual uindex_t GetFrameCount();
-	virtual bool LockImageFrame(uindex_t p_index, MCImageFrame *&r_frame);
-	virtual void UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame);
-
-	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
-
-	//////////
-
-	uint32_t GetFrameByteCount();
-	void ReleaseFrames();
-
-	//////////
 
 	static void init();
 	static void AddRep(MCCachedImageRep *p_rep);
 	static void RemoveRep(MCCachedImageRep *p_rep);
 	static void MoveRepToHead(MCCachedImageRep *p_rep);
 
-	static bool FindReferencedWithFilename(const char *p_filename, MCCachedImageRep *&r_rep);
-
-	static void FlushCache();
-	static void FlushCacheToLimit();
+	virtual const char *GetSearchKey() { return nil; };
+	
+	//////////
+	
+	virtual uint32_t GetFrameByteCount() = 0;
+	virtual void ReleaseFrames() = 0;
+	
+	//////////
+	
+	static bool FindWithKey(const char *p_key, MCCachedImageRep *&r_rep);
 	
 	static uint32_t GetCacheUsage() { return s_cache_size; }
 	static void SetCacheLimit(uint32_t p_limit)	{ s_cache_limit = p_limit; }
 	static uint32_t GetCacheLimit() { return s_cache_limit; }
-	
 
+	static void FlushCache();
+	static void FlushCacheToLimit();
+	
+protected:
+	MCCachedImageRep *m_next;
+	MCCachedImageRep *m_prev;
+	
+	static MCCachedImageRep *s_head;
+	static MCCachedImageRep *s_tail;
+
+	//////////
+	
+	static uint32_t s_cache_size;
+	static uint32_t s_cache_limit;
+};
+
+// Base CachedImageRep class for loadable image sources
+class MCLoadableImageRep : public MCCachedImageRep
+{
+public:
+	MCLoadableImageRep();
+	virtual ~MCLoadableImageRep();
+
+	virtual uindex_t GetFrameCount();
+	virtual bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame);
+	virtual void UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame);
+
+	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
+
+	//////////
+
+	virtual uint32_t GetFrameByteCount();
+	virtual void ReleaseFrames();
+	
 protected:
 	virtual bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height) = 0;
-	virtual bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count) = 0;
+	// IM-2013-11-05: [[ RefactorGraphics ]] Add return parameter to indicate whether or not
+	// returned frames are premultiplied
+	virtual bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied) = 0;
 
 	bool m_have_geometry;
 	uindex_t m_width, m_height;
 
+	bool m_premultiplied;
+
 private:
-	bool EnsureImageFrames();
+	bool EnsureImageFrames(bool p_premultiplied);
+	void PremultiplyFrames();
+	void UnpremultiplyFrames();
 	
 	uindex_t m_lock_count;
 
 	MCImageFrame *m_frames;
 	uindex_t m_frame_count;
-
-	//////////
-
-	MCCachedImageRep *m_next;
-	MCCachedImageRep *m_prev;
-
-	static MCCachedImageRep *s_head;
-	static MCCachedImageRep *s_tail;
-
-	//////////
-
-	static uint32_t s_cache_size;
-	static uint32_t s_cache_limit;
+	bool m_frames_premultiplied;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 // Encoded image representation
 
-class MCEncodedImageRep : public MCCachedImageRep
+class MCEncodedImageRep : public MCLoadableImageRep
 {
 public:
 	MCEncodedImageRep()
@@ -139,7 +160,7 @@ public:
 
 protected:
 	// returns the image frames as decoded from the input stream
-	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count);
+	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
 	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
 
 	//////////
@@ -157,16 +178,16 @@ protected:
 class MCReferencedImageRep : public MCEncodedImageRep
 {
 public:
-	MCReferencedImageRep(const char *p_filename);
+	MCReferencedImageRep(const char *p_filename, const char *p_searchkey);
 	~MCReferencedImageRep();
 
 	MCImageRepType GetType() { return kMCImageRepReferenced; }
 
 	//////////
 
-	const char *GetFilename()
+	const char *GetSearchKey()
 	{
-		return m_file_name;
+		return m_search_key;
 	}
 
 	//////////
@@ -176,6 +197,7 @@ protected:
 	bool GetDataStream(IO_handle &r_stream);
 
 	char *m_file_name;
+	char *m_search_key;
 
 	// hold data from remote image
 	void *m_url_data;
@@ -214,13 +236,14 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCVectorImageRep : public MCCachedImageRep
+class MCVectorImageRep : public MCLoadableImageRep
 {
 public:
 	MCVectorImageRep(const void *p_data, uindex_t p_size);
 	~MCVectorImageRep();
 
 	MCImageRepType GetType() { return kMCImageRepVector; }
+	uint32_t GetDataCompression();
 
 	uindex_t GetFrameCount() { return 1; }
 
@@ -234,7 +257,7 @@ public:
 	bool Render(MCDC *p_context, bool p_embed, MCRectangle &p_image_rect, MCRectangle &p_clip_rect);
 
 protected:
-	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count);
+	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
 	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
 
 	//////////
@@ -245,13 +268,14 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCCompressedImageRep : public MCCachedImageRep
+class MCCompressedImageRep : public MCLoadableImageRep
 {
 public:
 	MCCompressedImageRep(MCImageCompressedBitmap *p_bitmap);
 	~MCCompressedImageRep();
 
 	MCImageRepType GetType() { return kMCImageRepCompressed; }
+	uint32_t GetDataCompression();
 
 	uindex_t GetFrameCount() { return 1; }
 
@@ -263,7 +287,7 @@ public:
 	}
 
 protected:
-	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count);
+	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
 	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
 
 	//////////
@@ -272,52 +296,94 @@ protected:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+// Image representation that will return the given source at the specified scale using
+// bicubic filter
 
-class MCTransformedImageRep : public MCCachedImageRep
+class MCResampledImageRep : public MCLoadableImageRep
 {
 public:
-	// MW-2013-10-25: [[ Bug 11300 ]] Update to take the flipped parameters.
-	MCTransformedImageRep(uindex_t p_width, uindex_t p_height, int32_t p_angle, bool p_lock_rect, uint32_t p_quality, bool p_flip_x, bool p_flip_y, MCImageRep *p_source);
-	~MCTransformedImageRep();
+	MCResampledImageRep(MCGFloat p_h_scale, MCGFloat p_v_scale, MCImageRep *p_source);
+	~MCResampledImageRep();
 	
-	MCImageRepType GetType() { return kMCImageRepTransformed; }
+	MCImageRepType GetType() { return kMCImageRepResampled; }
 	uindex_t GetFrameCount() { return m_source->GetFrameCount(); }
+	uint32_t GetDataCompression() { return m_source->GetDataCompression(); }
 	
 	//////////
 	
-	int32_t GetAngle() { return m_angle; }
-	uindex_t GetWidth() { return m_width; }
-	uindex_t GetHeight() { return m_height; }
-	MCImageRep *GetSource() { return m_source; }
-	
-	//////////
-	
-	// MW-2013-10-25: [[ Bug 11300 ]] Update to take the flipped parameters.
-	bool Matches(uint32_t p_width, uint32_t p_height, int32_t p_angle, bool p_lock_rect, uint32_t p_quality, bool p_flip_x, bool p_flip_y, MCImageRep *p_source);
+	bool Matches(MCGFloat p_h_scale, MCGFloat p_v_scale, const MCImageRep *p_source);
 	
 protected:
-	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count);
+	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
 	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
 	
 	//////////
 	
+	MCGFloat m_h_scale, m_v_scale;
+	bool m_h_flip, m_v_flip;
 	MCImageRep *m_source;
-	uindex_t m_width, m_height;
-	int32_t m_angle;
-	uint32_t m_quality;
-	bool m_lock_rect : 1;
-	// MW-2013-10-25: [[ Bug 11300 ]] These indicate whether the rep is flipped.
-	bool m_flip_x : 1;
-	bool m_flip_y : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+// Image representation that can return different images for specific density values
+
+class MCDensityMappedImageRep : public MCCachedImageRep
+{
+public:
+	MCDensityMappedImageRep(const char *p_filename);
+	~MCDensityMappedImageRep();
+	
+	MCImageRepType GetType() { return kMCImageRepReferenced; }
+	uint32_t GetDataCompression();
+	
+	uindex_t GetFrameCount();
+	bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame);
+	void UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame);
+	bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
+	
+	MCGFloat GetDensity();
+	
+	//////////
+
+	const char *GetSearchKey() { return m_filename; }
+	
+	uint32_t GetFrameByteCount() { return 0; }
+	void ReleaseFrames() {};
+	
+	//////////
+	
+	bool AddImageSourceWithDensity(MCReferencedImageRep *p_source, MCGFloat p_density);
+	
+	//////////
+	
+protected:
+	
+	bool GetBestMatch(MCGFloat p_density, uindex_t &r_match);
+	
+	//////////
+	
+	MCReferencedImageRep **m_sources;
+	MCGFloat *m_source_densities;
+	uindex_t m_source_count;
+	
+	MCGFloat m_last_density;
+	bool m_locked;
+	uint32_t m_locked_source;
+	
+	char *m_filename;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCImageRepCreateReferencedWithSearchKey(const char *p_filename, const char *p_searchkey, MCImageRep *&r_rep);
 
 bool MCImageRepGetReferenced(const char *p_filename, MCImageRep *&r_rep);
 bool MCImageRepGetResident(void *p_data, uindex_t p_size, MCImageRep *&r_rep);
 bool MCImageRepGetVector(void *p_data, uindex_t p_size, MCImageRep *&r_rep);
 bool MCImageRepGetCompressed(MCImageCompressedBitmap *p_compressed, MCImageRep *&r_rep);
-bool MCImageRepGetTranformed(uindex_t p_width, uindex_t p_height, int32_t p_angle, bool p_lock_rect, uint32_t p_quality, bool p_flip_x, bool p_flip_y, MCImageRep *p_source, MCImageRep *&r_rep);
+bool MCImageRepGetDensityMapped(const char *p_filename, MCImageRep *&r_rep);
+
+bool MCImageRepGetResampled(MCGFloat p_h_scale, MCGFloat p_v_scale, MCImageRep *p_source, MCImageRep *&r_rep);
 
 ////////////////////////////////////////////////////////////////////////////////
 

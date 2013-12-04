@@ -50,6 +50,7 @@ void MCVibrateExec (MCExecContext& ctxt, int32_t p_number_of_times)
 
 Exec_stat MCHandleBeep(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleBeep */ LEGACY_EXEC
     int32_t t_number_of_times = 1;
     MCExecPoint ep(nil, nil, nil);
 	ep . clear();
@@ -60,10 +61,12 @@ Exec_stat MCHandleBeep(void *p_context, MCParameter *p_parameters)
     }
     MCSystemBeep(t_number_of_times);
   	return ES_NORMAL;
+#endif /* MCHandleBeep */
 }
 
 Exec_stat MCHandleVibrate(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleVibrate */ LEGACY_EXEC
     int32_t t_number_of_times = 1;
     MCExecPoint ep(nil, nil, nil);
 	ep . clear();
@@ -74,4 +77,5 @@ Exec_stat MCHandleVibrate(void *p_context, MCParameter *p_parameters)
     }
     MCSystemVibrate(t_number_of_times);
 	return ES_NORMAL;
+#endif /* MCHandleVibrate */
 }

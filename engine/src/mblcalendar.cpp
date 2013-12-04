@@ -34,6 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 void MCShowEventExec(MCExecContext& p_ctxt, const char* p_event_id)
 {
+#ifdef /* MCShowEventExec */ LEGACY_EXEC
     char *t_result;
     t_result = nil;
     MCSystemShowEvent(p_event_id, t_result);
@@ -42,10 +43,12 @@ void MCShowEventExec(MCExecContext& p_ctxt, const char* p_event_id)
     else
         p_ctxt.SetTheResultToEmpty();
     MCCStringFree(t_result);
+#endif /* MCShowEventExec */
 }
 
 void MCCreateEventExec(MCExecContext& p_ctxt)
 {
+#ifdef /* MCCreateEventExec */ LEGACY_EXEC
     char *t_result;
     t_result = nil;
     MCSystemCreateEvent(t_result);
@@ -54,10 +57,12 @@ void MCCreateEventExec(MCExecContext& p_ctxt)
     else
         p_ctxt.SetTheResultToEmpty();
     MCCStringFree(t_result);
+#endif /* MCCreateEventExec */
 }
 
 void MCUpdateEventExec(MCExecContext& p_ctxt, const char* p_event_id)
 {
+#ifdef /* MCUpdateEventExec */ LEGACY_EXEC
     char *t_result;
     t_result = nil;
     MCSystemUpdateEvent(p_event_id, t_result);
@@ -66,20 +71,24 @@ void MCUpdateEventExec(MCExecContext& p_ctxt, const char* p_event_id)
     else
         p_ctxt.SetTheResultToEmpty();
     MCCStringFree(t_result);
+#endif /* MCUpdateEventExec */
 }
 
 void MCGetEventDataExec(MCExecContext& p_ctxt, const char* p_event_id)
 {
+#ifdef /* MCGetEventDataExec */ LEGACY_EXEC
     MCVariableValue *r_event_data = nil;
     MCSystemGetEventData(p_ctxt, p_event_id, r_event_data);
     if (r_event_data == nil)
         p_ctxt.SetTheResultToEmpty();
     else
         p_ctxt.GetEP().setarray(r_event_data, True);
+#endif /* MCGetEventDataExec */
 }
 
 void MCRemoveEventExec(MCExecContext& p_ctxt, bool p_reocurring, const char* p_event_id)
 {    
+#ifdef /* MCRemoveEventExec */ LEGACY_EXEC
     char  *t_event_id_deleted;
     t_event_id_deleted = nil;
     MCSystemRemoveEvent (p_event_id, p_reocurring, t_event_id_deleted);
@@ -88,10 +97,12 @@ void MCRemoveEventExec(MCExecContext& p_ctxt, bool p_reocurring, const char* p_e
     else
         p_ctxt.SetTheResultToEmpty();
     MCCStringFree(t_event_id_deleted);
+#endif /* MCRemoveEventExec */
 }
 
 void MCAddEventExec(MCExecContext& p_ctxt, MCCalendar p_new_event_data)
 {
+#ifdef /* MCAddEventExec */ LEGACY_EXEC
     char *t_result;
     t_result = nil;
     MCSystemAddEvent(p_new_event_data, t_result);
@@ -100,10 +111,12 @@ void MCAddEventExec(MCExecContext& p_ctxt, MCCalendar p_new_event_data)
     else
         p_ctxt.SetTheResultToEmpty();
     MCCStringFree(t_result);
+#endif /* MCAddEventExec */
 }
 
 void MCGetCalendarsEventExec(MCExecContext& p_ctxt)
 {
+#ifdef /* MCGetCalendarsEventExec */ LEGACY_EXEC
     char *t_result;
     t_result = nil;
     MCSystemGetCalendarsEvent(t_result);
@@ -112,10 +125,12 @@ void MCGetCalendarsEventExec(MCExecContext& p_ctxt)
     else
         p_ctxt.SetTheResultToEmpty();
     MCCStringFree(t_result);
+#endif /* MCGetCalendarsEventExec */
 }
 
 void MCFindEventExec(MCExecContext& p_ctxt, MCDateTime p_start_date, MCDateTime p_end_date)
 {
+#ifdef /* MCFindEventExec */ LEGACY_EXEC
     char *t_result;
     t_result = nil;
     MCSystemFindEvent(p_start_date, p_end_date, t_result);
@@ -124,10 +139,11 @@ void MCFindEventExec(MCExecContext& p_ctxt, MCDateTime p_start_date, MCDateTime 
     else
         p_ctxt.SetTheResultToEmpty();
     MCCStringFree(t_result);
+#endif /* MCFindEventExec */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+#ifdef /* MCParameterDataToCalendar */ LEGACY_EXEC
 MCCalendar MCParameterDataToCalendar (MCParameter *p_parameters, MCCalendar p_result)
 {
   	MCExecPoint ep(nil, nil, nil);
@@ -232,9 +248,11 @@ MCCalendar MCParameterDataToCalendar (MCParameter *p_parameters, MCCalendar p_re
     }
     return p_result;
 }
+#endif /* MCParameterDataToCalendar */
 
 void MCCalendarToArrayData (MCExecContext &r_ctxt, MCCalendar p_calendar, MCVariableValue *&r_result)
 {
+#ifdef /* MCCalendarToArrayData */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
     MCVariableValue *t_entry = nil;
     r_result = new MCVariableValue ();
@@ -298,12 +316,14 @@ void MCCalendarToArrayData (MCExecContext &r_ctxt, MCCalendar p_calendar, MCVari
             t_entry->assign_string(t_secs_string);
         }
     }
+#endif /* MCCalendarToArrayData */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Exec_stat MCHandleShowEvent(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleShowEvent */ LEGACY_EXEC
     const char* t_event_id = NULL;
     int32_t r_result;
     MCExecPoint ep(nil, nil, nil);
@@ -320,10 +340,12 @@ Exec_stat MCHandleShowEvent(void *context, MCParameter *p_parameters)
     MCShowEventExec(t_ctxt, t_event_id);
     // Set return value
 	return t_ctxt.GetStat();
+#endif /* MCHandleShowEvent */
 }
 
 Exec_stat MCHandleUpdateEvent(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleUpdateEvent */ LEGACY_EXEC
     const char* t_event_id = NULL;
     int32_t r_result;
     MCExecPoint ep(nil, nil, nil);
@@ -340,10 +362,12 @@ Exec_stat MCHandleUpdateEvent(void *context, MCParameter *p_parameters)
     MCUpdateEventExec(t_ctxt, t_event_id);
     // Set return value
 	return t_ctxt.GetStat();
+#endif /* MCHandleUpdateEvent */
 }
 
 Exec_stat MCHandleCreateEvent(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleCreateEvent */ LEGACY_EXEC
     int32_t r_result;
     MCExecPoint ep(nil, nil, nil);
     MCExecContext t_ctxt(ep);
@@ -352,10 +376,12 @@ Exec_stat MCHandleCreateEvent(void *context, MCParameter *p_parameters)
     MCCreateEventExec(t_ctxt);
     // Set return value
 	return t_ctxt.GetStat();
+#endif /* MCHandleCreateEvent */
 }
 
 Exec_stat MCHandleGetEventData(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleGetEventData */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
 	ep . clear();
     const char* t_event_id = NULL;
@@ -372,10 +398,12 @@ Exec_stat MCHandleGetEventData(void *context, MCParameter *p_parameters)
     if (MCresult->isempty())
         MCresult->store(ep, True);
 	return t_ctxt.GetStat();
+#endif /* MCHandleGetEventData */
 }
 
 Exec_stat MCHandleRemoveEvent(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleRemoveEvent */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
 	ep . clear();
     const char* t_event_id = NULL;
@@ -394,10 +422,12 @@ Exec_stat MCHandleRemoveEvent(void *context, MCParameter *p_parameters)
     MCRemoveEventExec(t_ctxt, t_reocurring, t_event_id);
     // Set return value
     return t_ctxt.GetStat();
+#endif /* MCHandleRemoveEvent */
 }
 
 Exec_stat MCHandleAddEvent(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleAddEvent */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
     // Handle parameters. We are doing that in a dedicated call
     MCCalendar t_new_event_data;
@@ -408,10 +438,12 @@ Exec_stat MCHandleAddEvent(void *context, MCParameter *p_parameters)
     MCAddEventExec(t_ctxt, t_new_event_data);
     // Set return value
     return t_ctxt.GetStat();
+#endif /* MCHandleAddEvent */
 }
 
 Exec_stat MCHandleGetCalendarsEvent(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleGetCalendarsEvent */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
     MCExecContext t_ctxt(ep);
     t_ctxt.SetTheResultToEmpty();
@@ -419,10 +451,12 @@ Exec_stat MCHandleGetCalendarsEvent(void *context, MCParameter *p_parameters)
     MCGetCalendarsEventExec(t_ctxt);
     // Set return value
     return t_ctxt.GetStat();
+#endif /* MCHandleGetCalendarsEvent */
 }
 
 Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleFindEvent */ LEGACY_EXEC
     MCDateTime t_start_date;
     MCDateTime t_end_date;
     bool t_success = true;
@@ -453,4 +487,5 @@ Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters)
     MCFindEventExec(t_ctxt, t_start_date, t_end_date);
     // Set return value
     return t_ctxt.GetStat();
+#endif /* MCHandleFindEvent */
 }
