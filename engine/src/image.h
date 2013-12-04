@@ -523,8 +523,9 @@ public:
 
 	void set_gif(uint1 *data, uint4 length);
 
-	MCString getrawdata(void);
-	
+	//MCString getrawdata(void);
+	void getrawdata(MCDataRef& r_data);
+    
 	MCImage *next()
 	{
 		return (MCImage *)MCDLlist::next();

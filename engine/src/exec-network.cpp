@@ -242,12 +242,10 @@ void MCNetworkEvalHostNameToAddress(MCExecContext& ctxt, MCStringRef p_hostname,
 
 void MCNetworkEvalHostName(MCExecContext& ctxt, MCStringRef& r_string)
 {
-#ifndef _MOBILE
 	if (MCS_hn(r_string))
 		return;
 
 	ctxt.Throw();
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

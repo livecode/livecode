@@ -1162,7 +1162,7 @@ Exec_stat MCExecContext::Catch(uint2 p_line, uint2 p_pos)
 
 void MCExecContext::SetTheResultToEmpty(void)
 {
-	MCresult -> clear();
+	MCresult -> setvalueref(kMCEmptyString);
 }
 
 void MCExecContext::SetTheResultToValue(MCValueRef p_value)

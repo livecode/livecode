@@ -2600,6 +2600,7 @@ uint32_t MCImage::getcompression()
 	return t_compression;
 }
 
+#ifdef LEGACY_EXEC
 MCString MCImage::getrawdata()
 {
 	if (m_rep == nil || m_rep->GetType() != kMCImageRepResident)
@@ -2610,6 +2611,21 @@ MCString MCImage::getrawdata()
 	static_cast<MCResidentImageRep*>(m_rep)->GetData(t_data, t_size);
 	
 	return MCString((char*)t_data, t_size);
+}
+#endif 
+
+void MCImage::getrawdata(MCDataRef& r_data)
+{
+ 	if (m_rep == nil || m_rep->GetType() != kMCImageRepResident)
+    {
+        r_data = MCValueRetain(kMCEmptyData);
+    }
+	
+	void *t_data;
+	uindex_t t_size;
+	static_cast<MCResidentImageRep*>(m_rep)->GetData(t_data, t_size);
+	
+	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t*)t_data, t_size, r_data);
 }
 
 bool MCImage::getsourcegeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)

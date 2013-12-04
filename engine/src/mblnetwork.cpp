@@ -162,6 +162,8 @@ bool MCS_hn(MCStringRef& r_string)
     t_hostname.New(256);
 	if (gethostname((char*)t_hostname.Chars(), 256) != 0)
         return false;
+   
+    t_hostname.Shrink(MCCStringLength((char*)t_hostname.Chars()));
     
 	return t_hostname.CreateStringAndRelease(r_string);
 }

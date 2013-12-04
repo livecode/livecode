@@ -751,9 +751,12 @@ bool MCSystemSetKeyboardReturnKey(intenum_t p_type)
     return false;
 }
 
-bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCStringRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension)
+bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension)
 {
-    MCAndroidEngineCall("exportImageToAlbum", "xdxx", r_save_result, p_raw_data, p_file_name, p_file_extension);
+    const byte_t *t_data;
+    t_data = MCDataGetBytePtr(p_raw_data);
+    
+    MCAndroidEngineCall("exportImageToAlbum", "xdxx", &r_save_result, t_data, p_file_name, p_file_extension);
     
     return true;
 }

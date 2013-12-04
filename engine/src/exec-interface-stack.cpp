@@ -310,7 +310,7 @@ static MCExecEnumTypeElementInfo _kMCInterfaceStackFullscreenModeElementInfo[] =
 	{"noborder", kMCStackFullscreenNoBorder},
 	{"noscale", kMCStackFullscreenNoScale},
     
-	{nil, kMCStackFullscreenModeNone},
+	{"", kMCStackFullscreenModeNone, true},
 };
 
 static MCExecEnumTypeInfo _kMCInterfaceStackFullscreenModeTypeInfo =

@@ -460,7 +460,7 @@ bool MCSystemGetIdentifierForVendor(MCStringRef& r_identifier);
 bool MCSystemSetReachabilityTarget(MCStringRef p_hostname);
 bool MCSystemGetReachabilityTarget(MCStringRef& r_hostname);
 
-bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCStringRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension);
+bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension);
 
 bool MCSystemSetRedrawInterval(int32_t p_interval);
 bool MCSystemSetAnimateAutorotation(bool p_enabled);
