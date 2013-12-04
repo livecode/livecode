@@ -365,17 +365,15 @@ MCExecEnumTypeInfo *kMCInterfaceWindowAlignmentTypeInfo = &_kMCInterfaceWindowAl
 
 bool MCInterfaceTryToResolveObject(MCExecContext& ctxt, MCStringRef long_id, MCObjectPtr& r_object)
 {
-	ctxt.GetEP().setvalueref(long_id);
-	
 	bool t_found;
 	t_found = false;
 	
 	MCChunk *tchunk = new MCChunk(False);
 	MCerrorlock++;
-	MCScriptPoint sp(ctxt);
+	MCScriptPoint sp(long_id);
 	if (tchunk->parse(sp, False) == PS_NORMAL)
 	{
-		if (tchunk->getobj(ctxt.GetEP(), r_object, True) == ES_NORMAL)
+		if (tchunk->getobj(ctxt, r_object, True))
 			t_found = true;
 	}
 	MCerrorlock--;
@@ -1403,10 +1401,11 @@ void MCInterfaceEvalWithin(MCExecContext& ctxt, MCObjectPtr p_object, MCPoint p_
 
 void MCInterfaceEvalThereIsAnObject(MCExecContext& ctxt, MCChunk *p_object, bool& r_exists)
 {
-	MCObject *optr;
-	uint4 parid;
+    MCObjectPtr t_object;
 	MCerrorlock++;
-	r_exists = p_object->getobj(ctxt . GetEP(), optr, parid, True) == ES_NORMAL;
+    p_object->getoptionalobj(ctxt, t_object, True);
+    r_exists = (t_object . object == nil ? false : true);
+    ctxt . IgnoreLastError();
 	MCerrorlock--;
 }
 
@@ -2553,8 +2552,9 @@ void MCInterfaceExecHideObjectWithEffect(MCExecContext& ctxt, MCObjectPtr p_targ
 	if (MCRedrawIsScreenLocked())
 		MCInterfaceExecHideObject(ctxt, p_target);
 	else
-	{	
-		if (p_effect->exec(ctxt . GetEP()) != ES_NORMAL)
+	{
+        p_effect->exec_ctxt(ctxt);
+		if (ctxt . GetExecStat() != ES_NORMAL)
 		{
 			ctxt . LegacyThrow(EE_HIDE_BADEFFECT);
 			return;
@@ -2660,7 +2660,8 @@ void MCInterfaceExecShowObjectWithEffect(MCExecContext& ctxt, MCObjectPtr p_targ
 	if (ctxt.HasError())
 		return;
 
-	if (p_effect->exec(ctxt . GetEP()) != ES_NORMAL)
+    p_effect->exec_ctxt(ctxt);
+	if (ctxt . GetExecStat() != ES_NORMAL)
 	{
 		ctxt . LegacyThrow(EE_SHOW_BADEFFECT);
 		return;
@@ -3313,7 +3314,8 @@ void MCInterfaceExecUnlockScreen(MCExecContext& ctxt)
 void MCInterfaceExecUnlockScreenWithEffect(MCExecContext& ctxt, MCVisualEffect *p_effect)
 {
 	// MW-2011-08-18: [[ Redraw ]] Update to use redraw.
-	if (p_effect -> exec(ctxt . GetEP()) != ES_NORMAL)
+    p_effect -> exec_ctxt(ctxt);
+	if (ctxt . GetExecStat() != ES_NORMAL)
 	{
 		ctxt . LegacyThrow(EE_UNLOCK_BADEFFECT);
 		return;
@@ -3834,11 +3836,12 @@ void MCInterfaceExecSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &n
 	if (by != NULL)
 	{
 		MCerrorlock++;
-		ctxt . GetEP() . setvalueref(p_input);
-		MCeach->set(ctxt . GetEP());
-		if (by->eval(ctxt . GetEP()) == ES_NORMAL)
-			t_output = MCValueRetain(ctxt.GetEP().getvalueref());
-		else
+		//ctxt . GetEP() . setvalueref(p_input);
+		MCeach->set(ctxt, p_input);
+        bool t_success;
+        t_success = false;
+        t_success = ctxt . EvalExprAsValueRef(by, EE_UNDEFINED, &t_output);
+        if (!t_success)
 			t_output = MCValueRetain(kMCEmptyString);
 		MCerrorlock--;
 	}

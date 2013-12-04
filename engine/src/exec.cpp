@@ -1120,7 +1120,7 @@ bool MCExecContext::EnsurePrivacyIsAllowed(void)
 void MCExecContext::SetItToValue(MCValueRef p_value)
 {
 	MCVariable *t_var;
-	t_var = m_ep.getit() -> evalvar(m_ep);
+	t_var = m_ep.getit() -> evalvar(*this);
 	t_var -> setvalueref(p_value);
 }
 

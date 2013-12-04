@@ -60,20 +60,24 @@ MCVarref *MCExpression::getrootvarref(void)
 	return NULL;
 }
 
+#ifdef LEGACY_EXEC
 MCVariable *MCExpression::evalvar(MCExecPoint& ep)
 {
 	return NULL;
 }
+#endif
 
 MCVariable *MCExpression::evalvar(MCExecContext& ctxt)
 {
     return NULL;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCExpression::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
 {
 	return ES_ERROR;
 }
+#endif
 
 bool MCExpression::evalcontainer(MCExecContext& ctxt, MCContainer*& r_container)
 {
@@ -587,6 +591,7 @@ Parse_stat MCExpression::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
+
 Exec_stat MCExpression::eval(MCExecPoint &ep)
 {
 	MCExecContext ctxt(ep);
@@ -601,6 +606,7 @@ Exec_stat MCExpression::eval(MCExecPoint &ep)
 	
 	return ctxt . Catch(line, pos);
 }
+
 
 void MCExpression::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {

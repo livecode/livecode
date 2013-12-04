@@ -838,6 +838,7 @@ void MCGroup::setrect(const MCRectangle &nrect)
 	}
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCGroup::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	switch (which)
@@ -1018,7 +1019,9 @@ Exec_stat MCGroup::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 	}
 	return ES_NORMAL;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 Exec_stat MCGroup::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = False;
@@ -1386,6 +1389,7 @@ Exec_stat MCGroup::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 	}
 	return ES_NORMAL;
 }
+#endif
 
 Boolean MCGroup::del()
 {

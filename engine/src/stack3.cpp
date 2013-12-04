@@ -1760,30 +1760,38 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 		switch (form)
 		{
 		case ST_DATETIME:
-			if (!marked || curcard->getmark() && by->eval(ctxt.GetEP()) == ES_NORMAL)
+        {
+            MCAutoValueRef t_value;
+            if (!marked || curcard->getmark() && ctxt . EvaluateExpression(by, &t_value))
 			{
 				MCAutoStringRef t_out;
-				if (MCD_convert(ctxt, ctxt.GetEP().getvalueref(), CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_out))
+				if (MCD_convert(ctxt, *t_value, CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_out))
 					if (ctxt.ConvertToNumber(*t_out, items[nitems].nvalue))
 						break;
 			}
 
 			/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
 			break;
+        }
 		case ST_NUMERIC:
+        {
+            MCAutoValueRef t_value;
 			if ((!marked || curcard->getmark())
-			        && by->eval(ctxt.GetEP()) == ES_NORMAL 
-					&& ctxt.ConvertToNumber(ctxt.GetEP().getvalueref(), items[nitems].nvalue))
+			        && ctxt . EvaluateExpression(by, &t_value) 
+					&& ctxt.ConvertToNumber(*t_value, items[nitems].nvalue))
 				break;
 
 			/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
 			break;
+        }
 		case ST_INTERNATIONAL:
 		case ST_TEXT:
-			if ((!marked || curcard->getmark()) && by->eval(ctxt.GetEP()) == ES_NORMAL)
+        {
+            MCAutoValueRef t_value;
+			if ((!marked || curcard->getmark()) && ctxt . EvaluateExpression(by, &t_value))
 			{
 				MCStringRef t_string;
-				/* UNCHECKED */ ctxt.ConvertToString(ctxt.GetEP().getvalueref(), t_string);
+				/* UNCHECKED */ ctxt.ConvertToString(*t_value, t_string);
 				if (ctxt.GetCaseSensitive())
 					items[nitems].svalue = t_string;
 				else
@@ -1797,6 +1805,7 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 			else
 				items[nitems].svalue = MCValueRetain(kMCEmptyString);
 			break;
+        }
 		default:
 			break;
 		}
@@ -1891,7 +1900,7 @@ Boolean MCStack::findone(MCExecContext &ctxt, Find_mode fmode,
 		MCObject *optr;
 		uint4 parid;
 		MCerrorlock++;
-		if (field->getobj(ctxt.GetEP(), optr, parid, True) == ES_NORMAL)
+		if (field->getobj(ctxt, optr, parid, True))
 		{
 			if (optr->gettype() == CT_FIELD)
 			{
@@ -2003,6 +2012,7 @@ void MCStack::markfind(MCExecContext &ctxt, Find_mode fmode,
 		MCfoundfield->clearfound();
 }
 
+#ifdef LEGACY_EXEC
 void MCStack::mark(MCExecPoint &ep, MCExpression *where, Boolean mark)
 {
 	if (where == NULL)
@@ -2034,6 +2044,7 @@ void MCStack::mark(MCExecPoint &ep, MCExpression *where, Boolean mark)
 		MCerrorlock--;
 	}
 }
+#endif
 
 void MCStack::mark(MCExecContext& ctxt, MCExpression *p_where, bool p_mark)
 {

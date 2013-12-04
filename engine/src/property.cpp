@@ -397,6 +397,23 @@ MCProperty::~MCProperty()
 	MCNameDelete(customprop);
 }
 
+MCObject *MCProperty::getobj(MCExecContext &ctxt)
+{
+	MCObject *objptr = NULL;
+	MCChunk *tchunk = new MCChunk(False);
+	MCerrorlock++;
+	MCScriptPoint sp(ctxt);
+	if (tchunk->parse(sp, False) == PS_NORMAL)
+	{
+		uint4 parid;
+		tchunk->getobj(ctxt, objptr, parid, True);
+	}
+	MCerrorlock--;
+	delete tchunk;
+	return objptr;
+}
+
+#ifdef LEGACY_EXEC
 MCObject *MCProperty::getobj(MCExecPoint &ep)
 {
 	MCObject *objptr = NULL;
@@ -412,6 +429,7 @@ MCObject *MCProperty::getobj(MCExecPoint &ep)
 	delete tchunk;
 	return objptr;
 }
+#endif
 
 Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 {
@@ -1069,6 +1087,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 //   the pVar of me
 // where pVar is a variable.
 //
+#ifdef LEGACY_EXEC
 Exec_stat MCProperty::resolveprop(MCExecPoint& ep, Properties& r_which, MCNameRef& r_prop_name, MCNameRef& r_index_name)
 {
 	MCNameRef t_prop_name, t_index_name;
@@ -1141,6 +1160,7 @@ Exec_stat MCProperty::resolveprop(MCExecPoint& ep, Properties& r_which, MCNameRe
 
 	return ES_NORMAL;
 }
+#endif
 
 bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef& r_prop_name, MCNameRef& r_index_name)
 {
@@ -1162,13 +1182,11 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 	// props, although this needs to be done sympathetically to the current behavior...
 	if (which == P_CUSTOM_VAR)
 	{
-        MCAutoValueRef t_dest;
-		if (!destvar -> eval(ctxt, &t_dest))
-            return false;
         MCAutoStringRef t_string;
-        if (!ctxt . ConvertToString(*t_dest, &t_string))
+        if (!ctxt . EvalExprAsStringRef(destvar, EE_PROPERTY_BADEXPRESSION, &t_string))
             return false;
-		MCScriptPoint sp(*t_string);
+
+        MCScriptPoint sp(*t_string);
 		Symbol_type type;
 		const LT *te;
 		if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL && te->type == TT_PROPERTY && sp.next(type) == PS_EOF)
@@ -1185,7 +1203,7 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 			// MW-2011-09-02: [[ Bug 9698 ]] Always create a name for the property, otherwise
 			//   if the var contains empty, this function returns a nil name which causes
 			//   customprop to be used incorrectly.
-			/* UNCHECKED */ MCNameCreate(*t_string, t_prop_name);
+            /* UNCHECKED */ MCNameCreate(*t_string, t_prop_name);
             
 			if (*t_icarray != nil)
             /* UNCHECKED */ MCNameCreate(*t_icarray, t_index_name);
@@ -4950,8 +4968,7 @@ static MCPropertyInfo *lookup_mode_property(const MCPropertyTable *p_table, Prop
 
 void MCProperty::eval_variable_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
-	destvar -> eval(ctxt, r_value . valueref_value);
-    r_value . type = kMCExecValueTypeValueRef;
+    destvar -> eval_ctxt(ctxt, r_value);
 }
 
 void MCProperty::eval_function_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
@@ -5170,7 +5187,7 @@ void MCProperty::eval_count_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 
 void MCProperty::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
-	ctxt . GetEP() . setline(line);
+	ctxt . SetLine(line);
     
 	if (destvar != nil && which != P_CUSTOM_VAR)
 		return eval_variable_ctxt(ctxt, r_value);

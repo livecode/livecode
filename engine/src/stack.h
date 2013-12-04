@@ -266,8 +266,10 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 	virtual void setrect(const MCRectangle &nrect);
+#ifdef LEGACY_EXEC
 	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+#endif
 
 	virtual Boolean del();
 	virtual void paste(void);
@@ -653,11 +655,15 @@ public:
 	                 Find_mode fmode);
 	Boolean findone(MCExecContext &ctxt, Find_mode mode, MCStringRef *strings,
 	                uint2 nstrings, MCChunk *field, Boolean firstcard);
+#ifdef LEGACY_EXEC
 	void find(MCExecPoint &ep, int p_mode, MCStringRef p_needle, MCChunk *p_target);
+#endif
 	void find(MCExecContext &ctxt, Find_mode mode, MCStringRef, MCChunk *field);
 	void markfind(MCExecContext &ctxt, Find_mode mode, MCStringRef,
 	              MCChunk *, Boolean mark);
+#ifdef LEGACY_EXEC
 	void mark(MCExecPoint &ep, MCExpression *where, Boolean mark);
+#endif
     void mark(MCExecContext& ctxt, MCExpression *p_where, bool p_mark);
 	Linkatts *getlinkatts();
 	Boolean cantabort()
@@ -1077,8 +1083,10 @@ private:
 
 	void mode_load(void);
 
+#ifdef LEGACY_EXEC
 	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, MCStringRef carray, Boolean effective);
 	Exec_stat mode_setprop(uint4 parid, Properties which, MCExecPoint &, MCStringRef cprop, MCStringRef carray, Boolean effective);
+#endif
 
 	void mode_getrealrect(MCRectangle& r_rect);
 	void mode_takewindow(MCStack *other);

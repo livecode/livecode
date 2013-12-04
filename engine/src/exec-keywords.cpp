@@ -57,10 +57,12 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
             if (MCexitall)
                 break;
         }
-        ctxt . GetEP() . setline(tspr->getline());
+        ctxt . SetLine(tspr->getline());
         
-        stat = tspr->exec(ctxt . GetEP());
-        
+       // stat = tspr->exec(ctxt . GetEP());
+        tspr->exec_ctxt(ctxt);
+        stat = ctxt . GetExecStat();
+        ctxt . IgnoreLastError();
         // MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
         MCRedrawUpdateScreen();
         
@@ -85,8 +87,9 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
                         ctxt . IgnoreLastError();
                         MCB_error(ctxt, tspr->getline(), tspr->getpos(),
                                   EE_REPEAT_BADSTATEMENT);
+                        tspr->exec_ctxt(ctxt);
                     }
-                while (MCtrace && (stat = tspr->exec(ctxt . GetEP())) != ES_NORMAL);
+                while (MCtrace && (stat = ctxt . GetExecStat()) != ES_NORMAL);
                 if (stat == ES_ERROR)
                 {
                     if (MCexitall)  
@@ -171,7 +174,7 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
-		ctxt . GetEP() . setline(line);
+		ctxt . SetLine(line);
 		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
@@ -179,6 +182,7 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
     if (platform_message)
     {
 #ifdef _MOBILE
+        extern Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters);
         stat = MCHandlePlatformMessage(name, params);
 #endif
     }
@@ -607,9 +611,12 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
 			if (MCexitall)
 				break;
 		}
-		ctxt . GetEP() . setline(tspr->getline());
+		ctxt . SetLine(tspr->getline());
         
-		stat = tspr->exec(ctxt . GetEP());
+		//stat = tspr->exec(ctxt . GetEP());
+        tspr->exec_ctxt(ctxt);
+        stat = ctxt . GetExecStat();
+        ctxt . IgnoreLastError();
         
 		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
 		MCRedrawUpdateScreen();
@@ -638,8 +645,9 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
                     do
                     {
                         MCB_error(ctxt, tspr->getline(), tspr->getpos(), EE_TRY_BADSTATEMENT);
+                        tspr->exec_ctxt(ctxt);
                     }
-				while(MCtrace && (stat = tspr->exec(ctxt . GetEP())) != ES_NORMAL);
+				while(MCtrace && (stat = ctxt . GetExecStat()) != ES_NORMAL);
                 
                 if (stat == ES_ERROR)
                 {

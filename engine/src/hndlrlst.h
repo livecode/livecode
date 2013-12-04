@@ -119,8 +119,8 @@ public:
 	Parse_stat newconstant(MCNameRef name, MCNameRef value);
 	bool getlocalnames(MCListRef& r_list);
 	bool getglobalnames(MCListRef& r_list);
-	void appendlocalnames(MCExecPoint &ep);
-	void appendglobalnames(MCExecPoint &ep, bool first);
+	void appendlocalnames(MCStringRef& r_string);
+	void appendglobalnames(MCStringRef& r_string, bool first);
 	void newglobal(MCNameRef name);
 	
 	Parse_stat parse(MCObject *, MCStringRef);
@@ -132,7 +132,9 @@ public:
 
 	uint2 getnglobals(void);
 	MCVariable *getglobal(uint2 p_index);
+#ifdef LEGACY_EXEC
 	bool enumerate(MCExecPoint& ep, bool p_first = true);
+#endif
     bool enumerate(MCExecContext& ctxt, bool p_first, uindex_t& r_count, MCStringRef*& r_handlers);
 
 	// MW-2013-11-15: [[ Bug 11277 ]] Methods for eval/exec in handlerlist context.

@@ -251,7 +251,7 @@ void MCScreenDC::seticonmenu(MCStringRef p_menu)
 	create_menu(f_icon_menu, t_items);
 }
 
-static bool build_pick_string(MCExecPoint& p_result, MenuRef p_menu, UInt32 p_command)
+static bool build_pick_string(MenuRef p_menu, UInt32 p_command, MCStringRef& x_string)
 {
 	for(uint4 t_index = 1; t_index <= CountMenuItems(p_menu); t_index++)
 	{
@@ -267,9 +267,9 @@ static bool build_pick_string(MCExecPoint& p_result, MenuRef p_menu, UInt32 p_co
 		{
 			MenuRef t_current_menu;
 			GetMenuItemHierarchicalMenu(p_menu, t_index, &t_current_menu);
-			if (t_current_menu != NULL && build_pick_string(p_result, t_current_menu, p_command))
+			if (t_current_menu != NULL && build_pick_string(t_current_menu, p_command, x_string))
 			{
-				p_result . insert("|", 0, 0);
+                /* UNCHECKED */ MCStringPrependChar(x_string, '|');
 				t_success = true;
 			}
 		}
@@ -293,9 +293,8 @@ static bool build_pick_string(MCExecPoint& p_result, MenuRef p_menu, UInt32 p_co
 			CFStringGetCString(t_text, t_text_data, 256, kCFStringEncodingMacRoman);
 			CFRelease(t_text);
 			
-			p_result . insert(t_text_data, 0, 0);
+            return MCStringPrependNativeChars(x_string, (const char_t*)t_text_data, strlen(t_text_data));
 			
-			return true;
 		}
 	}
 	
@@ -329,15 +328,17 @@ OSStatus MCScreenDC::handleiconmenuevent(EventHandlerCallRef p_ref, EventRef p_e
 		MenuRef t_menu;
 		t_menu = ((MCScreenDC *)MCscreen) -> f_icon_menu;
 		
-		MCExecPoint t_result;
-		t_result . clear();
-		if (build_pick_string(t_result, t_menu, t_command . commandID))
+		MCStringRef t_result;
+        MCStringCreateMutable(0, t_result);
+		if (build_pick_string(t_menu, t_command . commandID, t_result))
 		{
 			if (MCdefaultstackptr != NULL)
-				MCdefaultstackptr -> getcard() -> message_with_valueref_args(MCM_icon_menu_pick, t_result . getvalueref());
-			
+				MCdefaultstackptr -> getcard() -> message_with_valueref_args(MCM_icon_menu_pick, t_result);
+            
+			MCValueRelease(t_result);
 			return noErr;
 		}
+        MCValueRelease(t_result);
 	}
 	
 	return CallNextEventHandler(p_ref, p_event);

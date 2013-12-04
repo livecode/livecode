@@ -413,7 +413,7 @@ void MCMiscExecExportImageToAlbum(MCExecContext& ctxt, MCStringRef p_raw_data, M
 		MCerrorlock++;
 		MCScriptPoint sp(ctxt.GetEP());
 		Parse_stat stat = tchunk->parse(sp, False);
-		if (stat != PS_NORMAL || tchunk->getobj(ctxt.GetEP(), objptr, parid, True) != ES_NORMAL)
+		if (stat != PS_NORMAL || !tchunk->getobj(ctxt, objptr, parid, True))
 		{
             MCLog("could not find image", nil);
 			ctxt.SetTheResultToStaticCString("could not find image");

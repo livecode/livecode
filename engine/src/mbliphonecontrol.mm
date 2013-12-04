@@ -112,6 +112,10 @@ UIView *MCiOSControl::GetView(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
+#define MCColorComponentToFloat(c) ((c) / 65535.0)
+#define MCFloatToColorComponent(f) ((f) * 65535)
+
 #ifdef LEGACY_EXEC
 Exec_stat MCiOSControl::ParseColor(MCExecPoint& ep, UIColor*& r_color)
 {
@@ -136,7 +140,23 @@ Exec_stat MCiOSControl::ParseColor(MCExecPoint& ep, UIColor*& r_color)
 	
 	return ES_NORMAL;
 }
+#endif
 
+bool MCiOSControl::ParseColor(const MCNativeControlColor& p_color, UIColor*& r_color)
+{
+	float t_red, t_green, t_blue, t_alpha;
+    
+    t_red = MCColorComponentToFloat(p_color . r);
+    t_green = MCColorComponentToFloat(p_color . g);
+    t_blue = MCColorComponentToFloat(p_color . b);
+    t_alpha = MCColorComponentToFloat(p_color . a);
+	
+	r_color = [UIColor colorWithRed:t_red green:t_green blue:t_blue alpha:t_alpha];
+	
+	return true;
+}
+
+#ifdef LEGACY_EXEC
 Exec_stat MCiOSControl::FormatColor(MCExecPoint& ep, UIColor *p_color)
 {
 	CGColorRef t_bgcolor;
@@ -161,7 +181,27 @@ Exec_stat MCiOSControl::FormatColor(MCExecPoint& ep, UIColor *p_color)
 	
 	return ES_NORMAL;
 }
+#endif
 
+bool MCiOSControl::FormatColor(const UIColor* p_color, MCNativeControlColor& r_color)
+{
+	CGColorRef t_bgcolor;
+	t_bgcolor = [p_color CGColor];
+	const CGFloat *t_components;
+    
+	if (t_bgcolor != nil && CGColorSpaceGetModel(CGColorGetColorSpace(t_bgcolor)) == kCGColorSpaceModelRGB)
+	{
+		t_components = CGColorGetComponents(t_bgcolor);
+		r_color . r = MCFloatToColorComponent(t_components[0]);
+		r_color . g = MCFloatToColorComponent(t_components[1]);
+		r_color . b = MCFloatToColorComponent(t_components[2]);
+		r_color . a = MCFloatToColorComponent(t_components[3]);
+	}
+	
+	return true;
+}
+
+#ifdef LEGACY_EXEC
 bool MCiOSControl::ParseString(MCExecPoint& ep, NSString*& r_string)
 {
 	r_string = [NSString stringWithCString: ep . getcstring() encoding: NSMacOSRomanStringEncoding];
@@ -226,37 +266,6 @@ bool MCiOSControl::FormatRange(MCExecPoint &ep, NSRange r_range)
 #define MCColorComponentToFloat(c) ((c) / 65535.0)
 #define MCFloatToColorComponent(f) ((f) * 65535)
 
-bool MCiOSControl::ParseColor(const MCNativeControlColor& p_color, UIColor*& r_color)
-{
-	float t_red, t_green, t_blue, t_alpha;
-    
-    t_red = MCColorComponentToFloat(p_color . r);
-    t_green = MCColorComponentToFloat(p_color . g);
-    t_blue = MCColorComponentToFloat(p_color . b);
-    t_alpha = MCColorComponentToFloat(p_color . a);
-	
-	r_color = [UIColor colorWithRed:t_red green:t_green blue:t_blue alpha:t_alpha];
-	
-	return true;
-}
-
-bool MCiOSControl::FormatColor(const UIColor* p_color, MCNativeControlColor& r_color)
-{
-	CGColorRef t_bgcolor;
-	t_bgcolor = [p_color CGColor];
-	const CGFloat *t_components;
-    
-	if (t_bgcolor != nil && CGColorSpaceGetModel(CGColorGetColorSpace(t_bgcolor)) == kCGColorSpaceModelRGB)
-	{
-		t_components = CGColorGetComponents(t_bgcolor);
-		r_color . r = MCFloatToColorComponent(t_components[0]);
-		r_color . g = MCFloatToColorComponent(t_components[1]);
-		r_color . b = MCFloatToColorComponent(t_components[2]);
-		r_color . a = MCFloatToColorComponent(t_components[3]);
-	}
-	
-	return true;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

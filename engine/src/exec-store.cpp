@@ -186,6 +186,7 @@ void MCStoreExecGet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
     
 	if (t_info != nil)
 	{
+
 		MCExecValue t_value;
         MCExecFetchProperty(ctxt, t_info, t_purchase, t_value);
 		MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, t_value . type, &t_value, r_value);

@@ -763,8 +763,9 @@ Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameter
 	
 	if (p_parameters != nil)
 	{
-		p_parameters -> eval_argument(ep);
-		ep . copyasstringref(&t_orientations);
+        MCAutoValueRef t_value;
+		p_parameters -> eval_argument(ctxt, &t_value);
+        ctxt . ConvertToString(*t_value, &t_orientations);
 	}
 
     bool t_success = true;
@@ -868,36 +869,39 @@ Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 	MCAutoStringRef t_address, t_cc_address, t_subject, t_message_body;
 
 	MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
 	
 	if (p_parameters != nil)
 	{
-		p_parameters -> eval_argument(ep);
-		/* UNCHECKED */ ep . copyasstringref(&t_address);
+        MCAutoValueRef t_value;
+		p_parameters -> eval_argument(ctxt, &t_value);
+        ctxt . ConvertToString(*t_value, &t_address);
 		p_parameters = p_parameters -> getnext();
 	}
 	
 	if (p_parameters != nil)
 	{
-		p_parameters -> eval_argument(ep);
-		/* UNCHECKED */ ep . copyasstringref(&t_cc_address);
+        MCAutoValueRef t_value;
+		p_parameters -> eval_argument(ctxt, &t_value);
+        ctxt . ConvertToString(*t_value, &t_cc_address);
+        p_parameters = p_parameters -> getnext();
+	}
+	
+	if (p_parameters != nil)
+	{
+        MCAutoValueRef t_value;
+		p_parameters -> eval_argument(ctxt, &t_value);
+        ctxt . ConvertToString(*t_value, &t_subject);
 		p_parameters = p_parameters -> getnext();
 	}
 	
 	if (p_parameters != nil)
 	{
-		p_parameters -> eval_argument(ep);
-		/* UNCHECKED */ ep . copyasstringref(&t_subject);
+        MCAutoValueRef t_value;
+		p_parameters -> eval_argument(ctxt, &t_value);
+        ctxt . ConvertToString(*t_value, &t_message_body);
 		p_parameters = p_parameters -> getnext();
 	}
-	
-	if (p_parameters != nil)
-	{
-		p_parameters -> eval_argument(ep);
-		/* UNCHECKED */ ep . copyasstringref(&t_message_body);
-		p_parameters = p_parameters -> getnext();
-	}
-	
-	MCExecContext ctxt(ep);
 
 	MCMailExecSendEmail(ctxt, *t_address, *t_cc_address, *t_subject, *t_message_body);
 	
@@ -1048,24 +1052,28 @@ Exec_stat MCHandleStartTrackingSensor(void *p_context, MCParameter *p_parameters
     return t_ctxt.GetStat();
 #endif /* MCHandleStartTrackingSensor */
     MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
     
     MCSensorType t_sensor = kMCSensorTypeUnknown;
     bool t_loosely = false;
     
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        t_sensor = MCSensorTypeFromCString(ep.getcstring());
+        MCAutoValueRef t_value;
+        MCAutoStringRef t_string;
+        p_parameters->eval(ctxt, &t_value);
+        /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
+        t_sensor = MCSensorTypeFromString(*t_string);
         p_parameters = p_parameters->getnext();
     }
     
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        t_loosely = ep . getsvalue() == MCtruemcstring;
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_loosely = MCValueIsEqualTo(*t_value, kMCTrue);
     }
     
-    MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
     
     if (t_sensor != kMCSensorTypeUnknown)
@@ -1104,17 +1112,20 @@ Exec_stat MCHandleStopTrackingSensor(void *p_context, MCParameter *p_parameters)
     return t_ctxt.GetStat();
 #endif /* MCHandleStopTrackingSensor */
     MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
     
     MCSensorType t_sensor = kMCSensorTypeUnknown;
     
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        t_sensor = MCSensorTypeFromCString(ep.getcstring());
+        MCAutoValueRef t_value;
+        MCAutoStringRef t_string;
+        p_parameters->eval(ctxt, &t_value);
+        /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
+        t_sensor = MCSensorTypeFromString(*t_string);
         p_parameters = p_parameters->getnext();
     }
-    
-    MCExecContext ctxt(ep);
+
 	ctxt . SetTheResultToEmpty();
 
     if (t_sensor != kMCSensorTypeUnknown)
@@ -1294,25 +1305,29 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
     return t_ctxt.GetStat();
 #endif /* MCHandleSensorReading */
     MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
     
     MCSensorType t_sensor = kMCSensorTypeUnknown;
     bool t_detailed = false;
     
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        t_sensor = MCSensorTypeFromCString(ep.getcstring());
+        MCAutoValueRef t_value;
+        MCAutoStringRef t_string;
+        p_parameters->eval(ctxt, &t_value);
+        /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
+        t_sensor = MCSensorTypeFromString(*t_string);
         p_parameters = p_parameters->getnext();
     }
     
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        t_detailed = ep . getsvalue() == MCtruemcstring;
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_detailed = MCValueIsEqualTo(*t_value, kMCTrue);
     }
     
-    MCExecContext ctxt(ep);
-	ctxt . SetTheResultToEmpty();
+    ctxt . SetTheResultToEmpty();
     
     MCAutoArrayRef t_detailed_reading;
     MCAutoStringRef t_reading;
@@ -1466,9 +1481,13 @@ Exec_stat MCHandleSetHeadingCalibrationTimeout(void *p_context, MCParameter *p_p
     int t_timeout;
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        t_timeout = atoi(ep.getcstring());
+        MCAutoValueRef t_value;
+        MCAutoNumberRef t_number;
+        p_parameters->eval(ctxt, &t_value);
+        /* UNCHECKED */ ctxt . ConvertToNumber(*t_value, &t_number);
+        t_timeout = MCNumberFetchAsInteger(*t_number);
     }
+    
     MCSensorSetLocationCalibrationTimeout(ctxt, t_timeout);
     
 	if (!ctxt . HasError())
@@ -1537,8 +1556,11 @@ Exec_stat MCHandleSensorAvailable(void *p_context, MCParameter *p_parameters)
     t_sensor = kMCSensorTypeUnknown;    
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        t_sensor = MCSensorTypeFromCString(ep.getcstring());
+        MCAutoValueRef t_value;
+        MCAutoStringRef t_string;
+        p_parameters->eval(ctxt, &t_value);
+        /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
+        t_sensor = MCSensorTypeFromString(*t_string);
         p_parameters = p_parameters->getnext();
     }    
     
@@ -1698,14 +1720,16 @@ Exec_stat MCHandleShowContact(void *context, MCParameter *p_parameters) // ABPer
     int32_t t_contact_id = 0;
     int32_t r_result;
     MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
 
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        t_contact_id = atoi (ep.getsvalue().getstring());
+        MCAutoValueRef t_value;
+        MCAutoNumberRef t_number;
+        p_parameters->eval(ctxt, &t_value);
+        /* UNCHECKED */ ctxt . ConvertToNumber(*t_value, &t_number);
+        t_contact_id = MCNumberFetchAsInteger(*t_number);
     }
-
-    MCExecContext ctxt(ep);
 
     MCAddressBookExecShowContact(ctxt, t_contact_id);
 
@@ -1792,16 +1816,18 @@ Exec_stat MCHandleGetContactData(void *context, MCParameter *p_parameters)
 	return t_ctxt.GetStat();
 #endif /* MCHandleGetContactData */
     MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
 
     int32_t t_contact_id = 0;
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        t_contact_id = atoi (ep.getsvalue().getstring());
+        MCAutoValueRef t_value;
+        MCAutoNumberRef t_number;
+        p_parameters->eval(ctxt, &t_value);
+        /* UNCHECKED */ ctxt . ConvertToNumber(*t_value, &t_number);
+        t_contact_id = MCNumberFetchAsInteger(*t_number);
     }
-
-    MCExecContext ctxt(ep);
-
+    
 	MCAutoArrayRef t_contact_data;
 	MCAddressBookGetContactData(ctxt, t_contact_id, &t_contact_data);
 
@@ -1836,15 +1862,17 @@ Exec_stat MCHandleRemoveContact(void *context, MCParameter *p_parameters)
     return t_ctxt.GetStat();
 #endif /* MCHandleRemoveContact */
     MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
 
     int32_t t_contact_id = 0;
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        t_contact_id = atoi (ep.getsvalue().getstring());
+        MCAutoValueRef t_value;
+        MCAutoNumberRef t_number;
+        p_parameters->eval(ctxt, &t_value);
+        /* UNCHECKED */ ctxt . ConvertToNumber(*t_value, &t_number);
+        t_contact_id = MCNumberFetchAsInteger(*t_number);
     }
-
-    MCExecContext ctxt(ep);
     
 	MCAddressBookExecRemoveContact(ctxt, t_contact_id);
 
@@ -1907,14 +1935,14 @@ Exec_stat MCHandleFindContact(void *context, MCParameter *p_parameters)
 #endif /* MCHandleFindContact */
     MCAutoStringRef t_contact_name;
     MCExecPoint ep(nil, nil, nil);
-	ep . clear();
+    MCExecContext ctxt(ep);
     // Handle parameters.
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        /* UNCHECKED */ ep . copyasstringref(&t_contact_name);
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_contact_name);
     }
-    MCExecContext ctxt(ep);
     ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
     MCAddressBookExecFindContact(ctxt, *t_contact_name);
@@ -2636,19 +2664,21 @@ Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters)
     // Handle parameters.
     if (p_parameters)
     {
-        p_parameters->eval(ep);
-        if (!ep.isempty())
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        if (!MCValueIsEmpty(*t_value))
         {
-			t_success = MCD_convert_to_datetime(ctxt, ep.getvalueref(), CF_UNDEFINED, CF_UNDEFINED, t_start_date);
+			t_success = MCD_convert_to_datetime(ctxt, *t_value, CF_UNDEFINED, CF_UNDEFINED, t_start_date);
         }
         p_parameters = p_parameters->getnext();
     }
     if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        if (!ep.isempty())
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        if (!MCValueIsEmpty(*t_value))
         {
-			t_success = MCD_convert_to_datetime(ctxt, ep.getvalueref(), CF_UNDEFINED, CF_UNDEFINED, t_end_date);
+			t_success = MCD_convert_to_datetime(ctxt, *t_value, CF_UNDEFINED, CF_UNDEFINED, t_end_date);
         }
     }
 
@@ -2717,10 +2747,11 @@ Exec_stat MCHandleCreateLocalNotification (void *context, MCParameter *p_paramet
 		t_success = MCParseParameters (p_parameters, "xxx", &(&t_notification_body), &(&t_notification_action), &(&t_notification_user_info));
 	if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        if (!ep.isempty())
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        if (!MCValueIsEmpty(*t_value))
         {
-            t_success = MCD_convert_to_datetime(ctxt, ep.getvalueref(), CF_UNDEFINED, CF_UNDEFINED, t_date);
+            t_success = MCD_convert_to_datetime(ctxt, *t_value, CF_UNDEFINED, CF_UNDEFINED, t_date);
         }
         p_parameters = p_parameters->getnext();
     }
@@ -5555,6 +5586,7 @@ Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
 	return t_ctxt.GetStat();
 #endif /* MCHandlePickDate */
     MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
     
 	bool t_success;
 	t_success = true;
@@ -5573,22 +5605,25 @@ Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
     
 	if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        t_success = ep . copyasstringref(&t_current);
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_success = ctxt . ConvertToString(*t_value, &t_current);
         p_parameters = p_parameters->getnext();
     }
 	
 	if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        t_success = ep . copyasstringref(&t_start);
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_success = ctxt . ConvertToString(*t_value, &t_start);
         p_parameters = p_parameters->getnext();
     }
 	
 	if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        t_success = ep . copyasstringref(&t_end);
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_success = ctxt . ConvertToString(*t_value, &t_end);
         p_parameters = p_parameters->getnext();
     }
 	
@@ -5615,8 +5650,6 @@ Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
         }
         MCCStringFree(t_button);
     }
-    
-    MCExecContext ctxt(ep);
      
 	if (t_success)
     {
@@ -5733,6 +5766,7 @@ Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
 	return t_ctxt.GetStat();
 #endif /* MCHandlePickTime */
     MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
     
 	bool t_success, t_use_done, t_use_cancel;
 	t_success = true;
@@ -5747,22 +5781,25 @@ Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
     
 	if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        t_success = ep . copyasstringref(&t_current);
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_success = ctxt . ConvertToString(*t_value, &t_current);
         p_parameters = p_parameters->getnext();
     }
 	
 	if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        t_success = ep . copyasstringref(&t_start);
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_success = ctxt . ConvertToString(*t_value, &t_start);
         p_parameters = p_parameters->getnext();
     }
 	
 	if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        t_success = ep . copyasstringref(&t_end);
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_success = ctxt . ConvertToString(*t_value, &t_end);
         p_parameters = p_parameters->getnext();
     }
 	
@@ -5792,7 +5829,6 @@ Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
             t_button_type = kMCPickButtonDone;           
     }
 
-    MCExecContext ctxt(ep);
     ctxt.SetTheResultToEmpty();
     
 	if (t_success)
@@ -5897,6 +5933,7 @@ Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
 	return t_ctxt.GetStat();
 #endif /* MCHandlePickDateAndTime */
     MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
     
 	bool t_success, t_use_done, t_use_cancel;
 	t_success = true;
@@ -5911,22 +5948,25 @@ Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
     
 	if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        t_success = ep . copyasstringref(&t_current);
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_success = ctxt . ConvertToString(*t_value, &t_current);
         p_parameters = p_parameters->getnext();
     }
 	
 	if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        t_success = ep . copyasstringref(&t_start);
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_success = ctxt . ConvertToString(*t_value, &t_start);
         p_parameters = p_parameters->getnext();
     }
 	
 	if (t_success && p_parameters != nil)
     {
-        p_parameters->eval(ep);
-        t_success = ep . copyasstringref(&t_end);
+        MCAutoValueRef t_value;
+        p_parameters->eval(ctxt, &t_value);
+        t_success = ctxt . ConvertToString(*t_value, &t_end);
         p_parameters = p_parameters->getnext();
     }
 	
@@ -5956,7 +5996,6 @@ Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
             t_button_type = kMCPickButtonDone;
     }
     
-    MCExecContext ctxt(ep);
     ctxt.SetTheResultToEmpty();
        
 	if (t_success)
@@ -6010,35 +6049,39 @@ Exec_stat MCHandleSpecificCameraFeatures(void *p_context, MCParameter *p_paramet
 	return ES_NORMAL;
 #endif /* MCHandleSpecificCameraFeatures */
 	MCExecPoint ep(nil, nil, nil);
-	ep . clear();
+    MCExecContext ctxt(ep);
 	
 	MCCameraSourceType t_source;
-	p_parameters -> eval_argument(ep);
-	if (MCU_strcasecmp(ep . getcstring(), "front"))
+    MCAutoValueRef t_value;
+    MCAutoStringRef t_string;
+	p_parameters -> eval_argument(ctxt, &t_value);
+    /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
+    if (MCStringIsEqualToCString(*t_string, "front", kMCCompareCaseless))
 		t_source = kMCCameraSourceTypeFront;
-	else if (MCU_strcasecmp(ep . getcstring(), "rear"))
+	else if (MCStringIsEqualToCString(*t_string, "rear", kMCCompareCaseless))
 		t_source = kMCCameraSourceTypeRear;
 	else
 		return ES_NORMAL;
 	
-    MCExecContext ctxt(ep);
     intset_t t_result;
     
     MCPickGetSpecificCameraFeatures(ctxt, (intenum_t)t_source, t_result);
 	
 	MCCameraFeaturesType t_features_set;
     t_features_set = (MCCameraFeaturesType)t_result;
+    MCAutoListRef t_list;
+    /* UNCHECKED */ MCListCreateMutable(EC_COMMA, &t_list);
     
 	if ((t_features_set & kMCCameraFeaturePhoto) != 0)
-		ctxt . GetEP() . concatcstring("photo", EC_COMMA, ctxt . GetEP() . isempty());
+        /* UNCHECKED */ MCListAppendCString(*t_list, "photo");
 	if ((t_features_set & kMCCameraFeatureVideo) != 0)
-		ctxt . GetEP() . concatcstring("video", EC_COMMA, ctxt . GetEP() . isempty());
+        /* UNCHECKED */ MCListAppendCString(*t_list, "video");
 	if ((t_features_set & kMCCameraFeatureFlash) != 0)
-		ctxt . GetEP() . concatcstring("flash", EC_COMMA, ctxt . GetEP() . isempty());
+        /* UNCHECKED */ MCListAppendCString(*t_list, "flash");
 	
     MCAutoStringRef t_features;
-    /* UNCHECKED */ ep . copyasstringref(&t_features);
-    ctxt . SetTheResultToValue(&t_result);
+    /* UNCHECKED */ MCListCopyAsString(*t_list, &t_features);
+    ctxt . SetTheResultToValue(*t_features);
     
 	return ES_NORMAL;
 }
@@ -6049,8 +6092,6 @@ Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
 		return MCHandleSpecificCameraFeatures(context, p_parameters);
     
     MCExecPoint ep(nil, nil, nil);
-	ep.clear();
-    
     MCExecContext ctxt(ep);
     
     intset_t t_features;
@@ -6060,28 +6101,31 @@ Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
     MCCamerasFeaturesType t_features_set;
     t_features_set = (MCCamerasFeaturesType)t_features;
     
+    MCAutoListRef t_list;
+    /* UNCHECKED */ MCListCreateMutable(EC_COMMA, &t_list);
+    
 	if ((t_features_set & kMCCamerasFeatureFrontPhoto) != 0)
-		ctxt . GetEP() . concatcstring("front photo", EC_COMMA, ctxt . GetEP() . isempty());
+        /* UNCHECKED */ MCListAppendCString(*t_list, "front photo");
 	if ((t_features_set & kMCCamerasFeatureFrontVideo) != 0)
-		ctxt . GetEP() . concatcstring("front video", EC_COMMA, ctxt . GetEP() . isempty());
+        /* UNCHECKED */ MCListAppendCString(*t_list, "front video");
 	if ((t_features_set & kMCCamerasFeatureFrontFlash) != 0)
-		ctxt . GetEP() . concatcstring("front flash", EC_COMMA, ctxt . GetEP() . isempty());
+        /* UNCHECKED */ MCListAppendCString(*t_list, "front flash");
    	if ((t_features_set & kMCCamerasFeatureRearPhoto) != 0)
-		ctxt . GetEP() . concatcstring("rear photo", EC_COMMA, ctxt . GetEP() . isempty());
+        /* UNCHECKED */ MCListAppendCString(*t_list, "rear photo");
 	if ((t_features_set & kMCCamerasFeatureRearVideo) != 0)
-		ctxt . GetEP() . concatcstring("rear video", EC_COMMA, ctxt . GetEP() . isempty());
+        /* UNCHECKED */ MCListAppendCString(*t_list, "rear video");
 	if ((t_features_set & kMCCamerasFeatureRearFlash) != 0)
-		ctxt . GetEP() . concatcstring("rear flash", EC_COMMA, ctxt . GetEP() . isempty());
+        /* UNCHECKED */ MCListAppendCString(*t_list, "rear flash");
     
     MCAutoStringRef t_features_string;
-    /* UNCHECKED */ ep . copyasstringref(&t_features_string);
+    /* UNCHECKED */ MCListCopyAsString(*t_list, &t_features_string);
     ctxt . SetTheResultToValue(*t_features_string);
 }
 
 Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
 {
 	MCExecPoint ep(nil, nil, nil);
-	ep . clear();
+	MCExecContext ctxt(ep);
 	
 	MCParameter *t_source_param, *t_width_param, *t_height_param;
 	t_source_param = p_parameters;
@@ -6093,41 +6137,41 @@ Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
 	if (t_width_param != nil)
 	{
 		// MW-2013-07-01: [[ Bug 10989 ]] Make sure we force conversion to a number.
-		if (t_width_param -> eval_argument(ep) == ES_NORMAL &&
-			ep . ton() == ES_NORMAL)
-			t_width = ep . getint4();
+        MCAutoValueRef t_value;
+        if (t_width_param -> eval_argument(ctxt, &t_value))
+            /* UNCHECKED */ ctxt . ConvertToInteger(*t_value, t_width);
 	}
 	if (t_height_param != nil)
 	{
 		// MW-2013-07-01: [[ Bug 10989 ]] Make sure we force conversion to a number.
-		if (t_height_param -> eval_argument(ep) == ES_NORMAL &&
-			ep . ton() == ES_NORMAL)
-			t_height = ep . getint4();
+        MCAutoValueRef t_value;
+        if (t_height_param -> eval_argument(ctxt, &t_value))
+            /* UNCHECKED */ ctxt . ConvertToInteger(*t_value, t_height);
 	}
     
     MCLog("%d, %d", t_width, t_height);
     
-	const char *t_source;
-	t_source = nil;
+	MCAutoStringRef t_source;
 	if (p_parameters != nil)
 	{
-		p_parameters -> eval_argument(ep);
-		t_source = ep . getcstring();
+        MCAutoValueRef t_value;
+		p_parameters -> eval_argument(ctxt, &t_value);
+        /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_source);
 	}
 	
 	MCPhotoSourceType t_photo_source;
 	bool t_is_take;
 	t_is_take = false;
 	
-	if (MCU_strcasecmp(t_source, "library") == 0)
+	if (MCStringIsEqualToCString(*t_source, "library", kMCCompareCaseless))
 		t_photo_source = kMCPhotoSourceTypeLibrary;
-	else if (MCU_strcasecmp(t_source, "album") == 0)
+	else if (MCStringIsEqualToCString(*t_source, "album", kMCCompareCaseless))
 		t_photo_source = kMCPhotoSourceTypeAlbum;
-	else if (MCU_strcasecmp(t_source, "camera") == 0)
+	else if (MCStringIsEqualToCString(*t_source, "camera", kMCCompareCaseless))
         t_photo_source = kMCPhotoSourceTypeCamera;
-    else if (MCU_strcasecmp(t_source, "rear camera") == 0)
+    else if (MCStringIsEqualToCString(*t_source, "rear camera", kMCCompareCaseless))
 		t_photo_source = kMCPhotoSourceTypeRearCamera;
-	else if (MCU_strcasecmp(t_source, "front camera") == 0)
+	else if (MCStringIsEqualToCString(*t_source, "front camera", kMCCompareCaseless))
 		t_photo_source = kMCPhotoSourceTypeFrontCamera;
 	else
 	{
@@ -6137,7 +6181,6 @@ Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
 	
 	/////
 	
-	MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
 	
 	if (t_width != 0 && t_height != 0)
@@ -6235,12 +6278,9 @@ Exec_stat MCHandleControlSet(void *context, MCParameter *p_parameters)
     if (t_success)
 		t_success = MCParseParameters(p_parameters, "xx", &(&t_control_name), &(&t_property));
 
-    if (t_success && p_parameters != nil)
-        t_success = p_parameters -> eval(ep);
-    
     MCAutoValueRef t_value;
-    if (t_success)
-        ep . copyasvalueref(&t_value);
+    if (t_success && p_parameters != nil)
+        t_success = p_parameters -> eval(ctxt, &t_value);
     
     if (t_success)
         MCNativeControlExecSet(ctxt, *t_control_name, *t_property, *t_value);
@@ -6360,8 +6400,7 @@ Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
     MCValueRef t_value;
     while (t_success && p_parameters != nil)
     {
-        p_parameters -> eval(ep);
-        ep . copyasvalueref(t_value);
+        p_parameters -> eval(ctxt, t_value);
         t_success = t_params . Push(t_value);
     }
 

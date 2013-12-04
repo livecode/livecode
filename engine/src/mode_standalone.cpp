@@ -593,6 +593,7 @@ void MCStack::mode_destroy(void)
 {
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
@@ -602,6 +603,7 @@ Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, 
 {
 	return ES_NOT_HANDLED;
 }
+#endif
 
 void MCStack::mode_load(void)
 {
@@ -685,16 +687,17 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 //  Implementation of MCObject::mode_get/setprop for STANDALONE mode.
 //
 
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
 }
-
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of MCProperty::mode_eval/mode_set for STANDALONE mode.
 //
-
+#ifdef LEGACY_EXEC
 Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 {
 	return ES_NOT_HANDLED;
@@ -704,7 +707,7 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 {
 	return ES_NOT_HANDLED;
 }
-
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of mode hooks for STANDALONE mode.

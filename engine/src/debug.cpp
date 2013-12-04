@@ -211,7 +211,7 @@ void MCB_prepmessage(MCExecContext &ctxt, MCNameRef mess, uint2 line, uint2 pos,
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
-		ctxt.GetEP().setline(line);
+		ctxt.SetLine(line);
 		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
@@ -402,6 +402,7 @@ void MCB_unparsebreaks(MCExecPoint& ep)
 		}
 }
 #endif
+#ifdef LEGACY_EXEC
 static MCObject *getobj(MCExecPoint& ep)
 {
 	MCObject *objptr = NULL;
@@ -417,7 +418,7 @@ static MCObject *getobj(MCExecPoint& ep)
 	delete tchunk;
 	return objptr;
 }
-
+#endif
 void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input)
 {
 	MCB_clearbreaks(NULL);
@@ -503,7 +504,7 @@ void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input)
 		t_last_offset = t_return_offset + 1;
 	}
 }
-
+#ifdef LEGACY_EXEC 
 void MCB_parsebreaks(MCExecPoint& ep)
 {
 	MCB_clearbreaks(NULL);
@@ -573,7 +574,7 @@ void MCB_parsebreaks(MCExecPoint& ep)
 	}
 	delete buffer;
 }
-
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCB_clearwatches(void)

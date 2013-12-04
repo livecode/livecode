@@ -189,7 +189,7 @@ public:
 	
 	virtual ~MCRevRelicense();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 };
 
 static MCStringRef s_command_path = nil;
@@ -224,7 +224,7 @@ Parse_stat MCRevRelicense::parse(MCScriptPoint& sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
+void MCRevRelicense::exec_ctxt(MCExecContext& ctxt)
 {
 	switch(MCdefaultstackptr -> getcard() -> message(MCM_shut_down_request))
 	{
@@ -233,23 +233,22 @@ Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
 		break;
 		
 	default:
-		MCresult -> sets("cancelled");
-		
-		return ES_NORMAL;
+        ctxt . SetTheResultToCString("cancelled");
+        return;
 	}
 	
 	if (MClicenseparameters . license_token == NULL || strlen(MClicenseparameters . license_token) == 0)
 	{
-		MCresult -> sets("no token");
-		return ES_NORMAL;
+		ctxt . SetTheResultToCString("no token");
+		return;
 	}
 	
 	MCAutoStringRef license_token_string;
 	/* UNCHECKED */ MCStringCreateWithCString(MClicenseparameters . license_token, &license_token_string);
 	if (!MCS_unlink(*license_token_string))
 	{
-		MCresult -> sets("token deletion failed");
-		return ES_NORMAL;
+		ctxt . SetTheResultToCString("token deletion failed");
+		return;
 	}
 
 	MCretcode = 0;
@@ -265,8 +264,6 @@ Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
 	s_command_path = MCValueRetain(*t_command_path);
 
 	atexit(restart_revolution);
-	
-	return ES_NORMAL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -343,19 +340,29 @@ IO_stat MCDispatch::startup(void)
 	if (!MCquit)
 	{
 		MCExecPoint ep;
-		MCresult -> eval(ep);
-		ep . appendchar('\0');
-		if (ep . getsvalue() . getlength() == 1)
+        MCExecContext ctxt(ep);
+        MCValueRef t_valueref;
+        t_valueref = nil;
+        MCValueRef t_valueref2;
+        t_valueref2 = nil;
+		MCresult -> eval(ctxt, t_valueref);
+		
+		if (MCValueIsEmpty(t_valueref))
 		{
 			sptr -> open();
 			MCImage::init();
 			
 			X_main_loop();
-
-			MCresult -> eval(ep);
-			ep . appendchar('\0');
-			if (ep . getsvalue() . getlength() == 1)
+			MCresult -> eval(ctxt, t_valueref2);
+			if (MCValueIsEmpty(t_valueref2))
+            {
+                MCValueRelease(t_valueref);
+                MCValueRelease(t_valueref2);
 				return IO_NORMAL;
+            }
+            else
+                MCValueAssign(t_valueref, t_valueref2);
+                
 		}
 
 		// TODO: Script Wiping
@@ -368,10 +375,14 @@ IO_stat MCDispatch::startup(void)
 		MCenvironmentactive = False;
 
 		send_relaunch();
+        MCNewAutoNameRef t_name;
+        ctxt . ConvertToName(t_valueref, &t_name);
 
-		MCNewAutoNameRef t_name;
-		/* UNCHECKED */ ep.copyasnameref(&t_name);
 		sptr = findstackname(*t_name);
+        if (t_valueref != nil)
+            MCValueRelease(t_valueref);
+        if (t_valueref2 != nil)
+            MCValueRelease(t_valueref2);
 
 		if (sptr == NULL && (stat = loadfile(MCNameGetString(*t_name), sptr)) != IO_NORMAL)
 			return stat;
@@ -447,6 +458,7 @@ void MCStack::mode_destroy(void)
 	delete m_mode_data;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 #ifdef /* MCStack::mode_getprop */ LEGACY_EXEC
@@ -494,7 +506,10 @@ Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, 
 #endif /* MCStack::mode_getprop */
     return ES_ERROR;
 }
+#endif
 
+
+#ifdef LEGACY_EXEC
 Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef cprop, MCStringRef carray, Boolean effective)
 {
 #ifdef /* MCStack::mode_setprop */ LEGACY_EXEC
@@ -519,6 +534,7 @@ Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, 
 #endif /* MCStack::mode_setprop */
     return ES_ERROR;
 }
+#endif
 
 void MCStack::mode_load(void)
 {
@@ -529,13 +545,16 @@ void MCStack::mode_load(void)
 		MCAutoNameRef t_ide_override_name;
 		/* UNCHECKED */ t_ide_override_name . CreateWithCString("ideOverride");
 
-		MCExecPoint ep;
 		MClockmessages++;
-		getcustomprop(ep, kMCEmptyName, t_ide_override_name);
+        MCExecValue t_value;
+        MCExecPoint ep;
+        MCExecContext ctxt(ep);
+        getcustomprop(ctxt, kMCEmptyName, t_ide_override_name, t_value);
 		MClockmessages--;
 
-		Boolean t_treat_as_ide;
-		if (MCU_stob(ep . getsvalue(), t_treat_as_ide) && t_treat_as_ide)
+		bool t_treat_as_ide;
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeBool, &t_treat_as_ide);
+        if (!ctxt . HasError() && t_treat_as_ide)
 			setextendedstate(true, ECS_IDE);
 	}
 }
@@ -615,6 +634,7 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef LEGACY_EXEC
 static bool enumerate_handlers_for_object(MCObject *p_object, MCExecPoint &ep, bool p_first)
 {
 	if (p_object == NULL)
@@ -669,7 +689,9 @@ static bool enumerate_handlers_for_object(MCObject *p_object, MCExecPoint &ep, b
 	
 	return p_first;
 }
+#endif
 
+#ifdef LECACY_EXEC
 static bool enumerate_handlers_for_list(MCObjectList *p_list, MCObject *p_ignore, MCExecPoint &ep, bool p_first)
 {
 	if (p_list == NULL)
@@ -689,11 +711,13 @@ static bool enumerate_handlers_for_list(MCObjectList *p_list, MCObject *p_ignore
 	
 	return p_first;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of MCObject::getmodeprop for DEVELOPMENT mode.
 //
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 #ifdef /* MCObject::mode_getprop */ LEGACY_EXEC
@@ -832,12 +856,14 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 #endif /* MCObject::mode_getprop */
     return ES_ERROR;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of MCProperty::mode_eval/mode_set for DEVELOPMENT mode.
 //
 
+#ifdef LEGACY_EXEC
 Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 {
 #ifdef /* MCProperty::mode_set */ LEGACY_EXEC
@@ -985,7 +1011,10 @@ Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 #endif /* MCProperty::mode_set */
     return ES_ERROR;
 }
+#endif
 
+
+#ifdef LEGACY_EXEC
 Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 {
 #ifdef /* MCProperty::mode_eval */ LEGACY_EXEC
@@ -1100,6 +1129,7 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 #endif /* MCProperty::mode_eval */
     return ES_ERROR;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //

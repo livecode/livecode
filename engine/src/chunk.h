@@ -75,23 +75,33 @@ public:
 	void compile_inout(MCSyntaxFactoryRef factory);	
 	void compile_object_ptr(MCSyntaxFactoryRef factory);
 
-	Chunk_term getlastchunktype(void);    
+	Chunk_term getlastchunktype(void);
+#ifdef LEGACY_EXEC
     /* WRAPPER */ Exec_stat evalobjectchunk(MCExecPoint& ep, bool whole_chunk, bool force, MCObjectChunkPtr& r_chunk);
+#endif
     bool evalobjectchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCObjectChunkPtr& r_chunk);
 
+#ifdef LEGACY_EXEC
     /* WRAPPER */ Exec_stat evalvarchunk(MCExecPoint& ep, bool whole_chunk, bool force, MCVariableChunkPtr& r_chunk);
+#endif
     bool evalvarchunk(MCExecContext& ctxt, bool whole_chunk, bool force, MCVariableChunkPtr& r_chunk);
 
+#ifdef LEGACY_EXEC
     /* WRAPPER */ Exec_stat evalurlchunk(MCExecPoint& ep, bool whole_chunk, bool force, MCUrlChunkPtr& r_chunk);
+#endif
     bool evalurlchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCUrlChunkPtr& r_chunk);
 	
 	void take_components(MCChunk *tchunk);
 
     // getobj calls getoptionalobj and throws in case nothing is returned.
+#ifdef LEGACY_EXEC
     /* WRAPPER */ Exec_stat getobj(MCExecPoint &, MCObject *&, uint4 &parid, Boolean recurse);
+#endif
     bool getobj(MCExecContext &ctxt, MCObject *& objptr, uint4 &parid, Boolean recurse);
 
+#ifdef LEGACY_EXEC
     /* WRAPPER */ Exec_stat getobj(MCExecPoint&, MCObjectPtr&, Boolean recurse);
+#endif
     bool getobj(MCExecContext &ctxt,MCObjectPtr&, Boolean recurse);
 
     // Added for MCChunk::count:
@@ -108,7 +118,10 @@ public:
 	                  int4 (*count)(MCExecPoint &ep, const char *sptr,
 	                                const char *eptr));
 #endif
+    
+#ifdef LEGACY_EXEC
     /* WRAPPER */ Exec_stat mark(MCExecPoint &ep, Boolean force, Boolean wholechunk, MCMarkedText& r_mark, bool includechars = true);
+#endif
     void mark(MCExecContext &ctxt, Boolean force, Boolean wholechunk, MCMarkedText& x_mark, bool includechars = true);
 #ifdef LEGACY_EXEC
 	Exec_stat mark_legacy(MCExecPoint &, int4 &start, int4 &end, Boolean force, Boolean wholechunk, bool include_characters = true);
@@ -122,7 +135,9 @@ public:
 
 #endif
 
+#ifdef LEGACY_EXEC
     Exec_stat set(MCExecPoint& ep, Preposition_type p_type, MCValueRef p_text, bool p_unicode = false);
+#endif
     bool set(MCExecContext& ctxt, Preposition_type p_type, MCValueRef p_value, bool p_unicode = false);
 
 #ifdef LEGACY_EXEC 
@@ -132,7 +147,10 @@ public:
 	// MW-2012-02-23: [[ PutUnicode ]] Set the chunk to the UTF-16 encoded text in ep.
 	Exec_stat setunicode(MCExecPoint& ep, Preposition_type ptype);
 #endif
+    
+#ifdef LEGACY_EXEC
     /* WRAPPER */ Exec_stat count(Chunk_term tocount, Chunk_term ptype, MCExecPoint &);
+#endif
     void count(MCExecContext &ctxt, Chunk_term tocount, Chunk_term ptype, uinteger_t &r_count);
 #ifdef LEGACY_EXEC	
 	Exec_stat fmark(MCField *fptr, int4 &start, int4 &end, Boolean wholechunk);

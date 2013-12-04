@@ -242,9 +242,9 @@ Parse_stat MCHandlerlist::findvar(MCNameRef p_name, bool p_ignore_uql, MCVarref 
 	if (MCdebugcontext != MAXUINT2)
 	{
 		MCExecContext *ctxtptr = MCexecutioncontexts[MCdebugcontext];
-		if (ctxtptr->GetEP().gethlist() != this)
+		if (ctxtptr->GetHandlerList() != this)
 			if (ctxtptr->GetHandler()->findvar(p_name, dptr) != PS_NORMAL)
-				return ctxtptr->GetEP().gethlist()->findvar(p_name, false, dptr);
+				return ctxtptr->GetHandlerList()->findvar(p_name, false, dptr);
 			else
 				return PS_NORMAL;
 	}
@@ -356,13 +356,11 @@ bool MCHandlerlist::getlocalnames(MCListRef& r_list)
 	return MCListCopy(*t_list, r_list);
 }
 
-void MCHandlerlist::appendlocalnames(MCExecPoint &ep)
+void MCHandlerlist::appendlocalnames(MCStringRef& r_string)
 {
 	MCAutoListRef t_list;
-	MCAutoStringRef t_string;
 	/* UNCHECKED */ getlocalnames(&t_list);
-	/* UNCHECKED */ MCListCopyAsString(*t_list, &t_string);
-	/* UNCHECKED */ ep.setvalueref(*t_string);
+	/* UNCHECKED */ MCListCopyAsString(*t_list, r_string);
 }
 
 bool MCHandlerlist::getglobalnames(MCListRef& r_list)
@@ -377,13 +375,12 @@ bool MCHandlerlist::getglobalnames(MCListRef& r_list)
 	return MCListCopy(*t_list, r_list);
 }
 
-void MCHandlerlist::appendglobalnames(MCExecPoint &ep, bool first)
+void MCHandlerlist::appendglobalnames(MCStringRef& r_string, bool first)
 {
 	MCAutoListRef t_list;
-	MCAutoStringRef t_string;
 	/* UNCHECKED */ getglobalnames(&t_list);
-	/* UNCHECKED */ MCListCopyAsString(*t_list, &t_string);
-	/* UNCHECKED */ ep.setvalueref(*t_string);
+	/* UNCHECKED */ MCListCopyAsString(*t_list, r_string);
+
 }
 
 // OK-2008-06-25: <Bug where the variableNames property would return duplicate global names>
@@ -644,6 +641,7 @@ void MCHandlerlist::addhandler(Handler_type type, MCHandler *handler)
 	handlers[type - 1] . sort();
 }
 
+#ifdef LEGACY_EXEC
 static bool enumerate_handlers(MCExecPoint& ep, MCStringRef p_type, MCHandlerArray& p_handlers, bool p_first = false, MCObject *p_object = NULL)
 {
 	for(uint32_t j = 0; j < p_handlers . count(); ++j)
@@ -679,7 +677,9 @@ static bool enumerate_handlers(MCExecPoint& ep, MCStringRef p_type, MCHandlerArr
 	
 	return p_first;
 }
+#endif 
 
+#ifdef LEGACY_EXEC
 bool MCHandlerlist::enumerate(MCExecPoint& ep, bool p_first)
 {
 	// OK-2008-07-23 : Added parent object reference for script editor.
@@ -697,6 +697,7 @@ bool MCHandlerlist::enumerate(MCExecPoint& ep, bool p_first)
 	
 	return p_first;
 }
+#endif
 
 static const char *s_handler_types[] =
 {

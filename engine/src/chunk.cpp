@@ -1905,6 +1905,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
     }
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recurse)
 {
     MCExecPoint ep2(ep);
@@ -1932,7 +1933,8 @@ Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recu
                 }
                 else
                 {
-                    if (destvar->eval(ep2) != ES_NORMAL)
+                    MCAutoValueRef t_value;
+                    if (!destvar->eval(ctxt, &t_value) )
                     {
                         MCeerror->add(EE_CHUNK_BADOBJECTEXP, line, pos);
                         return ES_ERROR;
@@ -2511,6 +2513,7 @@ Exec_stat MCChunk::getobj(MCExecPoint& ep, MCObjectPtr& r_object, Boolean p_recu
     
     return ES_ERROR;
 }
+#endif
 
 bool MCChunk::getobj(MCExecContext &ctxt, MCObject *&objptr, uint4 &parid, Boolean recurse)
 {
@@ -2528,6 +2531,7 @@ bool MCChunk::getobj(MCExecContext &ctxt, MCObject *&objptr, uint4 &parid, Boole
     return true;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr, uint4 &parid, Boolean recurse)
 {
     objptr = nil;
@@ -2544,6 +2548,7 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr, uint4 &parid, Bool
 
     return ES_ERROR;
 }
+#endif
 
 #ifdef LEGACY_EXEC
 Exec_stat MCChunk::getobj_legacy(MCExecPoint &ep, MCObject *&objptr,
@@ -3389,7 +3394,7 @@ static void skip_word(const char *&sptr, const char *&eptr)
 }
 #endif
 
-
+#ifdef LEGACY_EXEC
 Exec_stat MCChunk::mark(MCExecPoint &ep, Boolean force, Boolean wholechunk, MCMarkedText& x_mark, bool includechars)
 {
     MCExecContext ctxt(ep);
@@ -3542,6 +3547,7 @@ Exec_stat MCChunk::mark(MCExecPoint &ep, Boolean force, Boolean wholechunk, MCMa
 
     return ES_NORMAL;
 }
+#endif
 
 void MCChunk::mark(MCExecContext &ctxt, Boolean force, Boolean wholechunk, MCMarkedText& x_mark, bool includechars)
 {
@@ -4240,13 +4246,8 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
     }
     else if (destvar != NULL)
     {
-        MCAutoValueRef t_value;
-        if (!destvar -> eval(ctxt, &t_value)
-                || !ctxt . ConvertToString(*t_value, &t_text))
-        {
-            ctxt . LegacyThrow(EE_CHUNK_CANTGETDEST);
+        if (!ctxt . EvalExprAsStringRef(destvar, EE_CHUNK_CANTGETDEST, &t_text))
             return;
-        }
     }
     else
     {
@@ -5796,6 +5797,7 @@ Chunk_term MCChunk::getlastchunktype(void)
 	return CT_UNDEFINED;
 }
 
+#ifdef LEGACY_EXEC
 /* WRAPPER */
 Exec_stat MCChunk::evalvarchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_force, MCVariableChunkPtr& r_chunk)
 {
@@ -5813,6 +5815,7 @@ Exec_stat MCChunk::evalvarchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_forc
 
     return ES_NORMAL;
 }
+#endif
 
 bool MCChunk::evalvarchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCVariableChunkPtr& r_chunk)
 {
@@ -5832,6 +5835,7 @@ bool MCChunk::evalvarchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force
     return true;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCChunk::evalurlchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_force, MCUrlChunkPtr& r_chunk)
 {
 	if (url->startpos->eval(ep) != ES_NORMAL)
@@ -5858,6 +5862,7 @@ Exec_stat MCChunk::evalurlchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_forc
 	
     return ES_NORMAL;
 }
+#endif
 
 bool MCChunk::evalurlchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force, MCUrlChunkPtr &r_chunk)
 {
@@ -5882,6 +5887,7 @@ bool MCChunk::evalurlchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force
     return true;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCChunk::evalobjectchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_force, MCObjectChunkPtr& r_chunk)
 {
 	MCObjectPtr t_object;
@@ -5929,6 +5935,7 @@ Exec_stat MCChunk::evalobjectchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_f
     
     return ES_NORMAL;
 }
+#endif
 
 bool MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force, MCObjectChunkPtr &r_chunk)
 {

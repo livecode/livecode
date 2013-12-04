@@ -125,7 +125,8 @@ Parse_stat MCInternal::parse(MCScriptPoint& sp)
 
 void MCInternal::exec_ctxt(MCExecContext &ctxt)
 {
-    if (f_statement -> exec(ctxt . GetEP()) != ES_NORMAL)
+    f_statement -> exec_ctxt(ctxt);
+    if (ctxt . GetExecStat() != ES_NORMAL)
         ctxt . Throw();
 }
 

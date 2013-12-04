@@ -1163,6 +1163,7 @@ void MCStack::setrect(const MCRectangle &nrect)
 		resize(oldrect . width, oldrect . height);
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	uint2 j = 0;
@@ -1671,8 +1672,9 @@ Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 	}
 	return ES_NORMAL;
 }
+#endif
 
-
+#ifdef LEGACY_EXEC
 Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty;
@@ -2731,6 +2733,8 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 	}
 	return ES_NORMAL;
 }
+#endif
+
 
 Boolean MCStack::del()
 {

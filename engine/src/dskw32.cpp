@@ -1849,40 +1849,53 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			MCS_reset_time();
 		else
 			MClowrestimers = True;
-		MCExecPoint ep;
-		ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyEnable");
-		MCS_query_registry(ep);
-		if (ep.getsvalue().getlength() && ep.getsvalue().getstring()[0])
+        MCExecPoint ep;
+        MCExecContext ctxt(ep);
+		MCStringRef t_key;
+		t_key = MCSTR("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyEnable");
+        MCAutoStringRef t_type, t_error;
+        MCAutoValueRef t_value;
+        MCS_query_registry(t_key, &t_value, &t_type, &t_error);
+		if (!MCValueIsEmpty(*t_value))
 		{
-			ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyServer");
-			/* UNCHECKED */ MCS_query_registry(ep);
-			if (ep.getsvalue().getlength())
+            MCStringRef t_key2;
+            t_key2 = MCSTR("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyServer");
+            MCAutoStringRef t_type2, t_error2;
+            MCAutoValueRef t_value2;
+            MCS_query_registry(t_key2, &t_value2, &t_type2, &t_error2);
+
+			if (!MCValueIsEmpty(*t_value2))
 			{
 				MCAutoStringRef t_http_proxy;
-				/* UNCHECKED */ ep . copyasstringref(&t_http_proxy);
+				/* UNCHECKED */ ctxt . ConvertToStringRef(*t_value2, &t_http_proxy);
 				MCValueAssign(MChttpproxy, *t_http_proxy);
 			}
 		}
 		else
 		{
-			ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_Proxy");
-			/* UNCHECKED */ MCS_query_registry(ep);
-			if (ep.getsvalue().getlength())
+            MCStringRef t_key3;
+            t_key = MCSTR("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_Proxy");
+            MCAutoStringRef t_type3, t_error3;
+            MCAutoValueRef t_value3;
+            MCS_query_registry(t_key3, &t_value3, &t_type3, &t_error3);
+            
+            if (!MCValueIsEmpty(*t_value3))
 			{
-				char *t_host;
-				int4 t_port;
-				t_host = ep.getsvalue().clone();
-				ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_ProxyPort");
-				MCS_query_registry(ep);
-				ep.ston();
-				t_port = ep.getint4();
-				ep.setstringf("%s:%d", t_host, t_port);
+				MCAutoStringRef t_host;
+                /* UNCHECKED */ ctxt . ConvertToStringRef(*t_value3, &t_host);
+                MCStringRef t_key4;
+                t_key4 = MCSTR("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_ProxyPort");
+                MCAutoStringRef t_type4, t_error4;
+                MCAutoValueRef t_value4;
+                MCS_query_registry(t_key4, &t_value4, &t_type4, &t_error4);
+				MCAutoNumberRef t_port;
+                /* UNCHECKED */ ctxt . ConvertToNumber(*t_value4, &t_port);
 				MCAutoStringRef t_http_proxy;
-				/* UNCHECKED */ ep . copyasstringref(&t_http_proxy);
+                /* UNCHECKED */ MCStringFormat(&t_http_proxy, "%@:%@", *t_host, *t_port);
 				MCValueAssign(MChttpproxy, *t_http_proxy);
-				delete t_host;
-			}
+            }
 		}
+        
 
 		// On NT systems 'cmd.exe' is the command processor
 		MCValueAssign(MCshellcmd, MCSTR("cmd.exe"));

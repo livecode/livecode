@@ -457,7 +457,7 @@ uint32_t MCParagraph::measureattrs(void)
 	return t_size;
 }
 
-#ifdef LGEACY_EXEC
+#ifdef LEGACY_EXEC
 template<typename T, int Min, int Max> static bool setparagraphattr_int(MCExecPoint& ep, MCParagraphAttrs*& attrs, uint32_t p_flag, size_t p_field_offset, Exec_errors p_error)
 {
 	if (ep . isempty())

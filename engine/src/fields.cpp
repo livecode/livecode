@@ -60,51 +60,43 @@ const char *MCliststylestrings[] =
 Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
                         Sort_type dir, Sort_type form, MCExpression *by)
 {
-	MCExecPoint &ep = ctxt.GetEP();
 	MCAutoArray<MCSortnode> items;
 	uint4 nitems = 0;
 	uint4 itemsize = 0;
-	char *itemtext = NULL;
 	MCParagraph *pgptr;
-	MCString s;
+    char *temp;
+    temp = NULL;
 
 	if (flags & F_SHARED_TEXT)
 		parid = 0;
 
 	if (type == CT_ITEM)
 	{
-		if (ep.getitemdel() == '\0')
+		if (ctxt . GetItemDelimiter() == '\0')
 			return ES_NORMAL; //can't sort field by null bytes
 		// MW-2012-02-21: [[ FieldExport ]] Use the new text export method.
-		exportastext(parid, ep, 0, INT32_MAX, false);
-		itemsize = ep.getsvalue().getlength();
-		itemtext = ep.getsvalue().clone();
-		char *sptr = itemtext;
-		char *eptr;
-		while ((eptr = strchr(sptr, ep.getitemdel())) != NULL)
-		{
-			nitems++;
-			sptr = eptr + 1;
-		}
+        MCAutoStringRef t_text_string;
+		exportastext(parid, 0, INT32_MAX, &t_text_string);
+		itemsize = MCStringGetLength(*t_text_string);
+        nitems = MCStringCountChar(*t_text_string, MCRangeMake(0, MCStringGetLength(*t_text_string)), ctxt . GetItemDelimiter(), kMCCompareExact);
 		items.Extend(nitems + 1);
 		nitems = 0;
-		sptr = itemtext;
-		do
-		{
-			if ((eptr = strchr(sptr, ep.getitemdel())) != NULL)
-			{
-				*eptr++ = '\0';
-				s.set(sptr, eptr - sptr - 1);
-			}
-			else
-				s.set(sptr, strlen(sptr));
-			MCAutoStringRef t_string;
-			/* UNCHECKED */ MCStringCreateWithOldString(s, &t_string);
-			MCSort::additem(ctxt, items.Ptr(), nitems, form, *t_string, by);
-			items[nitems - 1].data = (void *)sptr;
-			sptr = eptr;
-		}
-		while (eptr != NULL);
+        MCAutoArrayRef t_array;
+        char t_delim = ctxt . GetItemDelimiter();
+        /* UNCHECKED */ MCStringSplit(*t_text_string, MCSTR(& t_delim), nil, kMCCompareExact, &t_array);
+        uindex_t t_count;
+        t_count = MCArrayGetCount(*t_array);
+        
+        for (int i = 0; i < t_count; i++)
+        {
+            MCValueRef t_value;
+            MCArrayFetchValueAtIndex(*t_array, i+1, t_value);
+            MCStringRef t_string;
+            t_string = (MCStringRef)t_value;
+            MCSort::additem(ctxt, items.Ptr(), nitems, form, t_string, by);
+            /* UNCHECKED */ MCStringConvertToCString(t_string, temp);
+			items[nitems - 1].data = (void *)temp;
+        }
 	}
 	else
 	{
@@ -155,10 +147,9 @@ Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
 			tlength += length;
 
 			if (i < nitems - 1)
-				newtext[tlength++] = ep.getitemdel();
+				newtext[tlength++] = ctxt . GetItemDelimiter();
 			newtext[tlength] = '\0';
 		}
-		delete itemtext;
 		settext_oldstring(parid, newtext, False);
 		delete newtext;
 	}
@@ -186,7 +177,8 @@ Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
 			layer_redrawall();
 		}
 	}
-	
+	delete temp;
+    
 	return ES_NORMAL;
 }
 
@@ -1793,7 +1785,7 @@ Exec_stat MCField::seltext(findex_t si, findex_t ei, Boolean focus, Boolean upda
 	drect.width = frect.width;
 	if (flags & F_LIST_BEHAVIOR)
 	{
-		sethilitedlines(MCnullmcstring);
+		sethilitedlines(NULL, 0);
 		drect = rect;
 	}
 	uint2 l;
@@ -1840,27 +1832,33 @@ uint2 MCField::hilitedline()
 	return line;
 }
 
-void MCField::hilitedlines(MCExecPoint &ep)
+void MCField::hilitedlines(vector_t<uint32_t> &r_lines)
 {
-	ep.clear();
+    if (r_lines.elements != nil)
+        delete r_lines.elements;
+    if (r_lines.count != 0)
+        r_lines.count = 0;;
 	if (!opened || !(flags & F_LIST_BEHAVIOR))
 		return;
-	uint4 line = 0;
+	uinteger_t line = 0;
+    MCAutoArray<uint32_t> t_lines;
+
 	MCParagraph *pgptr = paragraphs;
-	bool first = true;
 	do
 	{
 		line++;
 		if (pgptr->gethilite())
 		{
-			ep.concatuint(line, EC_COMMA, first);
-			first = false;
+            /* UNCHECKED */ t_lines . Push(line);
 		}
 		pgptr = pgptr->next();
 	}
 	while (pgptr != paragraphs);
+    
+    t_lines . Take(r_lines . elements, r_lines . count);
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCField::sethilitedlines(const MCString &s, Boolean forcescroll)
 {
 	Exec_stat t_status = ES_NORMAL;
@@ -1891,6 +1889,7 @@ Exec_stat MCField::sethilitedlines(const MCString &s, Boolean forcescroll)
 	}
 	return t_status;
 }
+#endif
 
 Exec_stat MCField::sethilitedlines(const uint32_t *p_lines, uint32_t p_line_count, Boolean forcescroll)
 {
@@ -2185,6 +2184,7 @@ bool MCField::selectedloc(MCStringRef& r_string)
 	return true;
 }
 
+#ifdef LEGACY_EXEC
 void MCField::selectedtext(MCExecPoint& ep)
 {
 	MCAutoStringRef t_string;
@@ -2193,6 +2193,7 @@ void MCField::selectedtext(MCExecPoint& ep)
 	else
 		ep.clear();
 }
+#endif
 
 bool MCField::selectedtext(MCStringRef& r_string)
 {
@@ -2401,11 +2402,13 @@ bool MCField::returnloc(findex_t si, MCStringRef& r_string)
 	return MCStringFormat(r_string, "%d,%d", x + getcontentx(), y + paragraphtoy(pgptr) + getcontenty());
 }
 
+#ifdef LEGACY_EXEC
 void MCField::returntext(MCExecPoint &ep, findex_t si, findex_t ei)
 {
 	// MW-2012-02-21: [[ FieldExport ]] Use the new text export method.
 	exportastext(0, ep, si, ei, false);
 }
+#endif
 
 bool MCField::returntext(findex_t p_si, findex_t p_ei, MCStringRef& r_string)
 {

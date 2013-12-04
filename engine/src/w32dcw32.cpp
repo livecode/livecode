@@ -127,6 +127,7 @@ static uint2 shift_keysyms[] =
 		/* 0xD0 */ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
 		/* 0xD8 */ 0x0000, 0x0000, 0x0000, 0x007B, 0x007C, 0x007D, 0x0022
     };
+
 #ifdef LEGACY_EXEC
 static bool build_pick_string(MCExecPoint& p_ep, HMENU p_menu, UINT32 p_command);
 #endif
@@ -561,9 +562,13 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				else
 				{
 					MCExecPoint t_ep;
-					MCresult -> eval(t_ep);
+                    MCExecContext ctxt(t_ep);
+                    MCAutoValueRef t_value;
+					/* UNCHECKED */ MCresult -> eval(ctxt, &t_value);
+                    MCAutoStringRef t_string;
+                    /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
 					
-					if (t_ep . getsvalue() == "background")
+                    if (MCStringIsEqualToCString(*t_string, "background", kMCCompareCaseless))
 						t_result = (LRESULT)HWND_BOTTOM;
 					else
 						t_result = MCdefaultstackptr -> getwindow() == NULL ? (LRESULT)HWND_BOTTOM : (LRESULT)(MCdefaultstackptr -> getwindow() -> handle . window);

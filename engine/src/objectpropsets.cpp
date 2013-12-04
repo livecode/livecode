@@ -83,10 +83,12 @@ bool MCObjectPropertySet::createwithname(MCNameRef p_name, MCObjectPropertySet*&
 
 //////////
 
+#ifdef LEGACY_EXEC
 bool MCObjectPropertySet::list(MCExecPoint& ep)
 {
 	return ep . listarraykeys(m_props, '\n');
 }
+#endif
 
 bool MCObjectPropertySet::list(MCStringRef& r_keys)
 {
@@ -102,16 +104,19 @@ bool MCObjectPropertySet::clear(void)
 	return MCArrayCreateMutable(m_props);
 }
 
+#ifdef LEGACY_EXEC
 bool MCObjectPropertySet::fetch(MCExecPoint& ep)
 {
 	return ep . setvalueref(m_props);
 }
+#endif
 
 bool MCObjectPropertySet::fetch(MCArrayRef& r_array)
 {
     return MCArrayCopy(m_props, r_array);
 }
 
+#ifdef LEGACY_EXEC
 bool MCObjectPropertySet::store(MCExecPoint& ep)
 {
 	MCArrayRef t_new_props;
@@ -121,6 +126,7 @@ bool MCObjectPropertySet::store(MCExecPoint& ep)
 	m_props = t_new_props;
 	return true;
 }
+#endif
 
 bool MCObjectPropertySet::store(MCArrayRef p_array)
 {
@@ -129,15 +135,19 @@ bool MCObjectPropertySet::store(MCArrayRef p_array)
 	return true;
 }
 
+#ifdef LEGACY_EXEC
 bool MCObjectPropertySet::fetchelement(MCExecPoint& ep, MCNameRef p_name)
 {
 	return ep . fetcharrayelement(m_props, p_name);
 }
+#endif
 
+#ifdef LEGACY_EXEC
 bool MCObjectPropertySet::storeelement(MCExecPoint& ep, MCNameRef p_name)
 {
 	return ep . storearrayelement(m_props, p_name);
 }
+#endif
 
 bool MCObjectPropertySet::fetchelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef& r_value)
 {
@@ -149,31 +159,32 @@ bool MCObjectPropertySet::storeelement(MCExecContext& ctxt, MCNameRef p_name, MC
 	return MCArrayStoreValue(m_props, ctxt . GetCaseSensitive(), p_name, p_value);
 }
 
-bool MCObjectPropertySet::restrict(MCExecPoint& ep)
+bool MCObjectPropertySet::restrict(MCStringRef p_string)
 {
-	if (ep.getsvalue().getstring()[ep.getsvalue().getlength() - 1] != '\n')
-		ep.appendnewline();
-	char *string = ep.getsvalue().clone();
-	char *eptr = string;
-	MCArrayRef t_new_props;
-	/* UNCHECKED */ MCArrayCreateMutable(t_new_props);
-	while ((eptr = strtok(eptr, "\n")) != NULL)
-	{
-		/* UNCHECKED */ ep . fetcharrayelement_cstring(m_props, eptr);
-		/* UNCHECKED */ ep . storearrayelement_cstring(t_new_props, eptr);
-		eptr = NULL;
-	}
-	delete string;
-	MCValueRelease(m_props);
-	m_props = t_new_props;
-	return true;
-}
-
-/* WRAPPER */ bool MCObjectPropertySet::restrict(MCStringRef p_string)
-{
-    MCExecPoint ep(nil,nil,nil);
-    ep . setvalueref(p_string);
-    return restrict(ep);
+    bool t_success;
+    t_success = true;
+    MCArrayRef t_new_props;
+    if (!MCStringSplit(p_string, MCSTR("\n"), nil, kMCCompareExact, t_new_props))
+        return false;
+    uint t_size;
+    t_size = MCArrayGetCount(t_new_props);
+    for (index_t i = 0; i < t_size && t_success; i++)
+    {
+        MCValueRef t_key_valueref;
+        if (t_success)
+            t_success = MCArrayFetchValueAtIndex(t_new_props, i + 1, t_key_valueref);
+        MCNewAutoNameRef t_key_name;
+        if (t_success)
+            t_success = MCNameCreate((MCStringRef)t_key_valueref, &t_key_name);
+        MCValueRef t_value;
+        if (t_success)
+            t_success = MCArrayFetchValue(m_props, false, *t_key_name, t_value);
+        if (t_success)
+            t_success = MCArrayStoreValue(t_new_props, false, *t_key_name, t_value);
+    }
+    MCValueRelease(m_props);
+    m_props = t_new_props;
+    return t_success;
 }
 
 //////////

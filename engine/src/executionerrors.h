@@ -2495,6 +2495,40 @@ enum Exec_errors
 
     // {EE-810} IDE filter control: error in pattern expression
     EE_IDE_BADPATTERN,
+
+    // {EE-811} Engine PutInto: error in variable expression
+    EE_ENGINE_PUT_BADVARIABLE,
+
+    // {EE-812} Engine DeleteVariableChunk: error in expression
+    EE_ENGINE_DELETE_BADVARCHUNK,
+
+    // {EE-813} IDE Extract: error in segment expression
+    EE_IDE_EXTRACT_BADSEGMENT,
+
+    // {EE-814} IDE Extract: error in section name expression
+    EE_IDE_EXTRACT_BADSECTION,
+
+    // {EE-815} IDE Extract: error in filename expression
+    EE_IDE_EXTRACT_BADFILENAME,
+    
+    // {EE-816} MCInternalPayloadPatch: error in patch item expression
+    EE_INTERNAL_PATCH_BADITEM,
+    
+    // {EE-817} MCInternalPayloadPatch: error in base item expression
+    EE_INTERNAL_BASE_BADITEM,
+    
+    // {EE-816} MCInternalPayloadPatch: error in output filename expression
+    EE_OUTPUT_BADFILENAME,
+    
+    // {EE-817} MCInternalListTasksWithModule: error in module expression
+    EE_INTERNAL_TASKS_BADMODULE,
+    
+    // {EE-818} MCInternalCanDeleteFile: error in filename expression
+    EE_INTERNAL_DELETE_BADFILENAME,
+    
+    // {EE-819} MCInternalCanDeleteKey: error in key expression
+    EE_INTERNAL_DELETE_BADKEY
+
 };
 
 extern const char *MCexecutionerrors;

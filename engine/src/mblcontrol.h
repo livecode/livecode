@@ -529,6 +529,8 @@ private:
 void MCNativeControlInitialize(void);
 void MCNativeControlFinalize(void);
 
+#ifdef LEGACY_EXEC
 bool MCExecPointSetRect(MCExecPoint &ep, int2 p_left, int2 p_top, int2 p_right, int2 p_bottom);
+#endif
 
 #endif // __MC_MOBILE_CONTROL__
