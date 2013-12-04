@@ -1840,8 +1840,8 @@ void MCIdeScriptTokenize::exec_ctxt(MCExecContext& ctxt)
 
     if (!ctxt . HasError())
     {
-        // SP takes a copy of the string in ep in this form.
-        MCScriptPoint sp(ctxt . GetObject(), ctxt . GetHandlerList(), *t_script);
+        // SP is given the string and the handlers from the ctxt in this form.
+        MCScriptPoint sp(ctxt, *t_script);
         MCAutoListRef t_output_list;
 
         MCListCreateMutable('\t', &t_output_list);
@@ -2317,8 +2317,8 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
     t_call_error = nil;
     if (t_success)
     {
-        // SP takes a copy of the string in ep in this form.
-        MCScriptPoint sp(ctxt . GetObject(), ctxt . GetHandlerList(), *t_script);
+        // SP takes a copy of the string in this form.
+        MCScriptPoint sp(ctxt, *t_script);
 
         // Clear the parse errors.
         MCperror -> clear();
@@ -2364,8 +2364,8 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
     t_expr_error = nil;
     if (t_success)
     {
-        // SP takes a copy of the string in ep in this form.
-        MCScriptPoint sp(ctxt . GetObject(), ctxt . GetHandlerList(), *t_script);
+        // SP takes a copy of the string in this form.
+        MCScriptPoint sp(ctxt, *t_script);
 
         // Clear the parse errors.
         MCperror -> clear();
@@ -2391,7 +2391,7 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
     if (t_success)
     {
         // SP takes a copy of the string in ep in this form.
-        MCScriptPoint sp(ctxt . GetObject(), ctxt . GetHandlerList(), *t_script);
+        MCScriptPoint sp(ctxt, *t_script);
 
         // Clear the parse errors.
         MCperror -> clear();

@@ -1048,8 +1048,8 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 				// Adjust for the tab character.
 				l = parent->IncrementIndex(eptr);
 
-				sptr += l;
-				size -= l;
+				sptr = l;
+				size = length - l;
 			}
 		}
 

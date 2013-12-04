@@ -476,8 +476,7 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 				char *sptr = new char[rSize + 1];
 				sptr[rSize] = '\0';
 				AEGetParamPtr(aePtr, keyDirectObject, typeChar, &rType, sptr, rSize, &rSize);
-                MCExecPoint ep(MCdefaultstackptr->getcard(), NULL, NULL);
-                MCExecContext ctxt(ep);
+                MCExecContext ctxt(MCdefaultstackptr, nil, nil);
                 MCAutoStringRef t_sptr;
                 /* UNCHECKED */ MCStringCreateWithCString(sptr, &t_sptr);
 				if (aeid == kAEDoScript)
