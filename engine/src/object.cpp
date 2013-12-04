@@ -2980,10 +2980,10 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 				else
 					t_length -= MCStringGetLength(*t_script_string) + 1;
 
+                setscript(*t_script_string);
+                
 				if (!MCStringIsEmpty(*t_script_string))
 					getstack() -> securescript(this);
-				
-				setscript(*t_script_string);
 			}
 
 			if (stat == IO_NORMAL && t_length > 0)
