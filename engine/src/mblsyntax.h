@@ -360,7 +360,7 @@ enum MCMailType
 
 struct MCAttachmentData
 {
-	MCStringRef data;
+	MCDataRef data;
 	MCStringRef file;
 	MCStringRef type;
 	MCStringRef name;

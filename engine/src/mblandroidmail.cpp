@@ -338,7 +338,7 @@ void MCSystemSendMailWithAttachments(MCStringRef p_to, MCStringRef p_cc, MCStrin
 		if (p_attachments[i] . file != nil && MCStringGetLength(p_attachments[i] . file) > 0)
 			MCAndroidEngineCall("addAttachment", "vxxx", nil, p_attachments[i] . file, p_attachments[i] . type, p_attachments[i] . name);
 		else
-			MCAndroidEngineCall("addAttachment", "vxxx", nil, p_attachments[i] . data, p_attachments[i] . type, p_attachments[i] . name);
+			MCAndroidEngineCall("addAttachment", "vdxx", nil, p_attachments[i] . data, p_attachments[i] . type, p_attachments[i] . name);
 	}
 
 	MCAndroidEngineCall("sendEmail", "v", nil);

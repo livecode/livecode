@@ -4556,6 +4556,9 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
     
     t_success = MCParseParameters(p_parameters, "x", &(&t_data_or_id));
     
+    
+    MCLog(MCStringGetCString(*t_data_or_id), nil);
+    
     if (t_success)
     {
         if (!MCParseParameters(p_parameters, "x", &(&t_file_name)))
