@@ -400,8 +400,8 @@ Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 				MCbuttonstate &= ~(1L << (b - 1));
 				// IM-2013-08-08: [[ ResIndependence ]] scale device to userspace coords
 				MCPoint t_clickloc;
-				t_clickloc.x = LOWORD(tptr->lParam) / MCResGetDeviceScale();
-				t_clickloc.y = HIWORD(tptr->lParam) / MCResGetDeviceScale();
+				t_clickloc.x = LOWORD(tptr->lParam) / MCResGetPixelScale();
+				t_clickloc.y = HIWORD(tptr->lParam) / MCResGetPixelScale();
 				MCscreen->setclickloc(MCmousestackptr, t_clickloc);
 				releaseptr = tptr;
 				break;

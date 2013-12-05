@@ -400,6 +400,9 @@ public:
 	// IM-2013-10-14: [[ FullscreenMode ]] Ensure the view content is up to date
 	void view_apply_updates(void);
 	
+	// IM-2013-12-05: [[ PixelScale ]] Update view window geometry to scaled view rect
+	void view_sync_window_geometry(void);
+	
 	//////////
 	
 	// IM-2013-10-14: [[ FullscreenMode ]] Return the stack -> stack viewport coordinate transform (Currently only applies the stack vertical scroll)

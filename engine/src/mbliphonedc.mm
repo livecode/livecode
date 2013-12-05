@@ -104,7 +104,7 @@ static float s_current_keyboard_height = 0.0f;
 
 // IM-2013-07-18: [[ ResIndependence ]] if using the device resolution
 // then 1 pixel == 1 point, otherwise scale
-MCGFloat MCResGetDeviceScale()
+MCGFloat MCResGetSystemScale()
 {
 	return s_iphone_use_device_resolution ? 1.0 : s_iphone_device_scale;
 }

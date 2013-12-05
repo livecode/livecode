@@ -21,8 +21,18 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2013-12-04: [[ PixelScale ]] Return the screen pixel scale as reported by the OS
+MCGFloat MCResGetSystemScale(void);
+
 // Return the scaling factor from stack to device coordinates.
-MCGFloat MCResGetDeviceScale(void);
+MCGFloat MCResGetPixelScale(void);
+
+// IM-2013-12-04: [[ PixelScale ]] Set the screen scaling factor
+void MCResSetPixelScale(MCGFloat p_scale);
+
+// IM-2013-12-04: [[ PixelScale ]] Set whether or not to use the system pixel scale
+void MCResSetUseSystemScale(bool p_use_scale);
+bool MCResGetUseSystemScale(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -30,12 +40,12 @@ MCGFloat MCResGetDeviceScale(void);
 
 inline MCGRectangle MCGRectangleToUserSpace(const MCGRectangle p_device_rect)
 {
-	return MCGRectangleScale(p_device_rect, 1 / MCResGetDeviceScale());
+	return MCGRectangleScale(p_device_rect, 1 / MCResGetPixelScale());
 }
 
 inline MCGRectangle MCGRectangleToDeviceSpace(const MCGRectangle p_user_rect)
 {
-	return MCGRectangleScale(p_user_rect, MCResGetDeviceScale());
+	return MCGRectangleScale(p_user_rect, MCResGetPixelScale());
 }
 
 inline MCGRectangle MCResUserToDeviceRect(MCRectangle p_rect)
@@ -50,7 +60,7 @@ inline MCGRectangle MCResDeviceToUserRect(MCRectangle p_rect)
 inline MCGAffineTransform MCResGetDeviceTransform(void)
 {
 	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
+	t_scale = MCResGetPixelScale();
 	
 	return MCGAffineTransformMakeScale(t_scale, t_scale);
 }

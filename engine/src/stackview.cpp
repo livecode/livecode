@@ -323,9 +323,14 @@ void MCStack::view_setrect(const MCRectangle &p_rect)
 	m_view_rect = p_rect;
 	
 	// IM-2013-10-03: [[ FullscreenMode ]] if the view rect has changed, update the window geometry
+	view_sync_window_geometry();
+}
+
+void MCStack::view_sync_window_geometry(void)
+{
 	MCRectangle t_device_rect;
 	t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(m_view_rect));
-
+	
 	// IM-2013-10-08: [[ FullscreenMode ]] Update window size hints when setting the view geometry.
 	setsizehints();
 	device_setgeom(t_device_rect);

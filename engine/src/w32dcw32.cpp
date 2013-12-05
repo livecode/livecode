@@ -474,8 +474,8 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 
 	// IM-2013-08-08: [[ ResIndependence ]] scale mouse position from device to user space
 	MCPoint t_mouseloc;
-	t_mouseloc.x = LOWORD(lParam) / MCResGetDeviceScale();
-	t_mouseloc.y = HIWORD(lParam) / MCResGetDeviceScale();
+	t_mouseloc.x = LOWORD(lParam) / MCResGetPixelScale();
+	t_mouseloc.y = HIWORD(lParam) / MCResGetPixelScale();
 
 	// MW-2005-02-20: Seed the SSL random number generator
 #ifdef MCSSL
