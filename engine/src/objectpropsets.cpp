@@ -166,7 +166,7 @@ bool MCObjectPropertySet::restrict(MCStringRef p_string)
     MCArrayRef t_new_props;
     if (!MCStringSplit(p_string, MCSTR("\n"), nil, kMCCompareExact, t_new_props))
         return false;
-    uint t_size;
+    uinteger_t t_size;
     t_size = MCArrayGetCount(t_new_props);
     for (index_t i = 0; i < t_size && t_success; i++)
     {

@@ -561,8 +561,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					t_result = 0;
 				else
 				{
-					MCExecPoint t_ep;
-                    MCExecContext ctxt(t_ep);
+                    MCExecContext ctxt(nil, nil, nil);
                     MCAutoValueRef t_value;
 					/* UNCHECKED */ MCresult -> eval(ctxt, &t_value);
                     MCAutoStringRef t_string;

@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 //#include "execpt.h"
+#include "exec.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "image.h"
@@ -186,8 +187,7 @@ Boolean MCScreenDC::open()
 	MChilitecolor.red = MChilitecolor.green = 0x0000;
 	MChilitecolor.blue = 0x8080;
 
-	MCExecPoint ep;
-    MCExecContext ctxt(ep);
+    MCExecContext ctxt(nil, nil, nil);
     MCStringRef t_key;
     t_key = MCSTR("HKEY_CURRENT_USER\\Control Panel\\Colors\\Hilight");
     MCAutoValueRef t_value;

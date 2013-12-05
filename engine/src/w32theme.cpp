@@ -266,8 +266,7 @@ Boolean MCNativeTheme::load()
 	drawThemeBGEx = (DrawThemeBackgroundExPtr)GetProcAddress((HMODULE)mThemeDLL, "DrawThemeBackgroundEx");
 
 	uint2 i;
-    MCExecPoint ep;
-    MCExecContext ctxt(ep);
+    MCExecContext ctxt(nil, nil, nil);
 	for (i = 0; i < NMENUCOLORS; i++)
 	{
 		menucolors[i] = nil;

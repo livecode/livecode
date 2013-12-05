@@ -1849,8 +1849,8 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			MCS_reset_time();
 		else
 			MClowrestimers = True;
-        MCExecPoint ep;
-        MCExecContext ctxt(ep);
+
+        MCExecContext ctxt(nil, nil, nil);
 		MCStringRef t_key;
 		t_key = MCSTR("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyEnable");
         MCAutoStringRef t_type, t_error;
@@ -1867,7 +1867,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			if (!MCValueIsEmpty(*t_value2))
 			{
 				MCAutoStringRef t_http_proxy;
-				/* UNCHECKED */ ctxt . ConvertToStringRef(*t_value2, &t_http_proxy);
+				/* UNCHECKED */ ctxt . ConvertToString(*t_value2, &t_http_proxy);
 				MCValueAssign(MChttpproxy, *t_http_proxy);
 			}
 		}
@@ -1882,7 +1882,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
             if (!MCValueIsEmpty(*t_value3))
 			{
 				MCAutoStringRef t_host;
-                /* UNCHECKED */ ctxt . ConvertToStringRef(*t_value3, &t_host);
+                /* UNCHECKED */ ctxt . ConvertToString(*t_value3, &t_host);
                 MCStringRef t_key4;
                 t_key4 = MCSTR("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_ProxyPort");
                 MCAutoStringRef t_type4, t_error4;
@@ -3896,8 +3896,8 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
             CloseHandle(piProcInfo.hProcess);
             CloseHandle(piProcInfo.hThread);
         }
-		MCExecPoint ep(nil, nil, nil);
-		MCExecContext ctxt(ep);
+
+		MCExecContext ctxt(nil, nil, nil);
         if (MCprocesses[index].retcode)
 			ctxt.SetTheResultToNumber((real64_t)MCprocesses[index].retcode);
         else

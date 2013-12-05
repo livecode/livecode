@@ -700,14 +700,6 @@
 				>
 			</File>
 			<File
-				RelativePath="src\execpt.cpp"
-				>
-			</File>
-			<File
-				RelativePath="src\execpt.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\executionerrors.h"
 				>
 			</File>
