@@ -1592,7 +1592,9 @@ bool MCField::parsetabstops(Properties which, MCStringRef data, uint16_t*& r_tab
 	newntabs = 0;
 
 	uint4 l = MCStringGetLength(data);
-	const char *sptr = MCStringGetCString(data);
+    MCAutoPointer<char> t_data;
+    /* UNCHECKED */ MCStringConvertToCString(data, &t_data);
+	const char *sptr = *t_data;
 	while (l)
 	{
 		int32_t i1;

@@ -472,8 +472,8 @@ public:
 	}
 
 	// MCField HTML functions in fieldh.cc
-	Exec_stat sethtml(uint4 parid, const MCString &data);
-	Exec_stat setrtf(uint4 parid, const MCString &data);
+	Exec_stat sethtml(uint4 parid, MCStringRef data);
+	Exec_stat setrtf(uint4 parid, MCStringRef data);
 	Exec_stat setstyledtext(uint4 parid, MCExecPoint& ep);
 	void setstyledtext(uint32_t part_id, MCArrayRef p_text);
 	Exec_stat setpartialtext(uint4 parid, const MCString &data, bool unicode);
@@ -489,7 +489,6 @@ public:
 #endif
 
     MCParagraph *rtftoparagraphs(MCStringRef p_data);
-	MCParagraph *rtftoparagraphs(const MCString &data);
 	MCParagraph *styledtexttoparagraphs(MCExecPoint& ep);
 	MCParagraph *styledtexttoparagraphs(MCArrayRef p_array);
 	MCParagraph *texttoparagraphs(const MCString &data, Boolean isunicode);
@@ -546,7 +545,6 @@ public:
 	bool exportasstyledtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective, MCArrayRef &r_array);
 
 	// MW-2012-03-07: [[ FieldImport ]] Conver the htmlText string to a list of paragraphs.
-	MCParagraph *importhtmltext(const MCString& p_data);
     MCParagraph *importhtmltext(MCStringRef p_data);
 
 	// MW-2012-03-05: [[ FieldImport ]] Add a paragraph with the given styling to the end of the supplied

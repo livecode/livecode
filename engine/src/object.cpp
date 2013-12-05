@@ -1562,28 +1562,27 @@ Boolean MCObject::setpattern(uint2 newpixmap, MCStringRef data)
 
 Boolean MCObject::setpatterns(MCStringRef data)
 {
-	char *string = strdup(MCStringGetCString(data));
-	char *sptr = string;
 	uint2 p;
 	Boolean done = False;
+    uindex_t t_start_pos, t_end_pos;
+    t_start_pos = 0;
+    t_end_pos = t_start_pos;
 	for (p = P_FORE_PATTERN ; p <= P_FOCUS_PATTERN ; p++)
 	{
-		char *eptr;
-		if ((eptr = strchr(sptr, '\n')) != NULL)
-			*eptr++ = '\0';
-		else
-			eptr = &sptr[strlen(sptr)];
-        
-        MCAutoStringRef t_sptr;
-        /* UNCHECKED */ MCStringCreateWithCString(sptr, &t_sptr);
-		if (!setpattern(p - P_FORE_PATTERN, *t_sptr))
+		MCAutoStringRef t_substring;
+        if (!MCStringFirstIndexOfChar(data, '\n', t_start_pos, kMCCompareExact, t_end_pos))
+            MCStringCopySubstring(data, MCRangeMake(t_start_pos, MCStringGetLength(data) - t_start_pos), &t_substring);
+        else
+        {
+            MCStringCopySubstring(data, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), &t_substring);
+            t_start_pos = t_end_pos + 1;
+        }
+            
+        if (!setpattern(p - P_FORE_PATTERN, *t_substring))
 		{
-			delete string;
 			return False;
 		}
-		sptr = eptr;
 	}
-	delete string;
 	return True;
 }
 
@@ -1940,10 +1939,12 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	{
 		if (MCnoui)
 		{
+            MCAutoPointer<char> t_mccmd;
+            /* UNCHECKED */ MCStringConvertToCString(MCcmd, &t_mccmd);
 			uint2 line, pos;
 			MCeerror->geterrorloc(line, pos);
 			fprintf(stderr, "%s: Script execution error at line %d, column %d\n",
-			        MCStringGetCString(MCcmd), line, pos);
+			        *t_mccmd, line, pos);
 		}
 		else
 			if (!send)
@@ -2139,7 +2140,7 @@ bool MCObject::names(Properties which, MCValueRef& r_name_val)
 				which = P_LONG_NAME;
 			}
 			else
-				return MCStringFormat(r_name, "stack \"%s\"", MCStringGetCString(t_filename));
+				return MCStringFormat(r_name, "stack \"%@\"", t_filename);
 		}
 
 		// MW-2013-01-15: [[ Bug 2629 ]] If this control is unnamed, use the abbrev id form

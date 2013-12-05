@@ -1291,9 +1291,8 @@ void MCInterfaceSetStackFileVersion(MCExecContext& ctxt, MCStringRef p_value)
 	uint4 count;
 	// MW-2006-03-24: This should be snscanf - except it doesn't exist on BSD!!
 	char *t_version;
-	
-	t_version = strclone(MCStringGetCString(p_value));
-	count = sscanf(t_version, "%d.%d.%d", &major, &minor, &revision);
+	/* UNCHECKED */ MCStringConvertToCString(p_value, t_version);
+    count = sscanf(t_version, "%d.%d.%d", &major, &minor, &revision);
 	delete t_version;
 	
 	version = major * 1000 + minor * 100 + revision * 10;
@@ -2255,7 +2254,7 @@ static MCStack *MCInterfaceTryToEvalBinaryStack(MCStringRef p_data, bool& r_bina
     t_stack = nil;
     t_binary_fail = false;
     
-    if (MCU_offset(SIGNATURE, MCStringGetCString(p_data), offset) && (MCStringGetLength(p_data) > 8 && strncmp(MCStringGetCString(p_data), "REVO", 4) == 0))
+    if (MCStringFirstIndexOf(p_data, MCSTR(SIGNATURE), 0, kMCCompareExact, offset) && (MCStringGetLength(p_data) > 8 && MCStringBeginsWithCString(p_data, (const char_t *)"REVO", kMCCompareExact)))
     {
         IO_handle stream = MCS_fakeopen(MCStringGetOldString(p_data));
         /* UNCHECKED */ MCdispatcher->readfile(NULL, NULL, stream, t_stack);
@@ -2328,7 +2327,8 @@ void MCInterfaceEvalStackOfStackById(MCExecContext& ctxt, MCObjectPtr p_parent, 
 void MCInterfaceEvalStackByValue(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_stack)
 {
     uint4 offset;
-    if (MCU_offset(SIGNATURE, MCStringGetCString((MCStringRef)p_value), offset) && (MCStringGetLength((MCStringRef)p_value) > 8 && strncmp(MCStringGetCString((MCStringRef)p_value), "REVO", 4) == 0))
+   
+    if (MCStringFirstIndexOf((MCStringRef)p_value, MCSTR(SIGNATURE), 0, kMCCompareExact, offset) && MCStringGetLength((MCStringRef)p_value) > 8 && MCStringBeginsWithCString((MCStringRef)p_value, (const char_t *)"REVO", kMCCompareExact))
     {
         MCInterfaceEvalBinaryStackAsObject(ctxt, (MCStringRef)p_value, r_stack);
         return;
