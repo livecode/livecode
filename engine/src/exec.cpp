@@ -1853,7 +1853,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             {
                 if (MCPropertyFormatPointList(t_value, t_count, '\n', r_value . stringref_value))
                 {
-                      r_value . type = kMCExecValueTypeStringRef;
+                    r_value . type = kMCExecValueTypeStringRef;
                 }
             }
         }
@@ -2540,8 +2540,9 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             MCAutoStringRef t_input;
             MCPoint *t_value;
             uindex_t t_count;
-            
+        
             MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_input));
+            
             if (!MCPropertyParsePointList(*t_input, '\n', t_count, t_value))
                 ctxt . LegacyThrow(EE_PROPERTY_NAS);
             
