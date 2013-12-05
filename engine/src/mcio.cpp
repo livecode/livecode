@@ -666,6 +666,8 @@ IO_stat IO_read_stringref_new(MCStringRef& r_string, IO_handle p_stream, bool p_
 	if (!p_supports_unicode)
 		return IO_read_stringref_legacy(r_string, p_stream, false, p_size);
 	
+	// TODO: UnicodeFileFormat
+	
 	return IO_ERROR;
 }
 
@@ -689,6 +691,8 @@ IO_stat IO_write_stringref_new(MCStringRef p_string, IO_handle p_stream, bool p_
 {
 	if (!p_supports_unicode)
 		return IO_write_stringref_legacy(p_string, p_stream, false, p_size);
+	
+	// TODO: UnicodeFileFormat
 	
 	return IO_ERROR;
 }

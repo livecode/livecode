@@ -264,7 +264,7 @@ IO_stat MCLogicalFontTableLoad(IO_handle p_stream, uint32_t p_version)
 				}
 				else
 				{
-					t_textfont = MCValueRetain(kMCEmptyString);
+					t_textfont = *t_textfont_string;
 					t_is_unicode = false;
 				}
 
