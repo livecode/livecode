@@ -36,8 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 bool MCSystemCreateLocalNotification (MCStringRef p_alert_body, MCStringRef p_alert_action, MCStringRef p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value, int32_t &r_id)
 {
-    MCExecPoint ep(nil, nil, nil);
-	MCExecContext ctxt(ep);
+	MCExecContext ctxt(nil, nil, nil);
     int t_message_id = 1;
 	Class t_cls = NSClassFromString (@"UILocalNotification");
     if (t_cls == nil)

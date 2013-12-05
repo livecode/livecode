@@ -260,8 +260,7 @@ static void MCIPhoneImportUIImage(UIImage *p_image, int32_t p_max_width, int32_t
 	MCtemplateimage->setparent(NULL);
 	iptr -> attach(OP_CENTER, false);
 
-	MCExecPoint ep(nil, nil, nil);
-	MCExecContext ctxt(ep);
+	MCExecContext ctxt(nil, nil, nil);
 	MCAutoDataRef t_dataref;
 	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)[t_data bytes], [t_data length], &t_dataref);
 	iptr -> setdataprop(ctxt, 0, P_TEXT, false, *t_dataref);	

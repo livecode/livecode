@@ -70,8 +70,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 {
-	MCExecPoint ep(nil, nil, nil);
-    MCExecContext ctxt(ep);
+    MCExecContext ctxt(nil, nil, nil);
 	
 	bool t_success;
 	t_success = true;

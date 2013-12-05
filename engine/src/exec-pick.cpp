@@ -41,6 +41,7 @@ MC_EXEC_DEFINE_GET_METHOD(Pick, CameraFeatures, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickMedia, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickPhoto, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickPhotoAndResize, 3)
+MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickOptionByIndex, 10)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -430,7 +431,7 @@ void MCPickExecPickOptionByIndex(MCExecContext &ctxt, int p_chunk_type, MCString
         if (t_cancelled)
         {
             // HC-2012-02-15 [[ BUG 9999 ]] Picker should return 0 if cancel was selected.
-            ctxt.GetEP().setnvalue(0);
+            ctxt . SetTheResultToNumber(0);
         }
         else
         {
@@ -443,9 +444,9 @@ void MCPickExecPickOptionByIndex(MCExecContext &ctxt, int p_chunk_type, MCString
                 if (t_success)
                     t_success = MCListAppend(*t_indices, *t_index);
             }
-			MCAutoStringRef t_string;
-			MCListCopyAsString(*t_indices, &t_string);
-            ctxt . GetEP() . setvalueref(*t_string);
+            MCAutoStringRef t_string;
+			/* UNCHECKED */ MCListCopyAsString(*t_indices, &t_string);
+            ctxt . SetTheResultToValue(*t_string);
         }
     }
     

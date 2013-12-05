@@ -411,7 +411,7 @@ void MCMiscExecExportImageToAlbum(MCExecContext& ctxt, MCStringRef p_raw_data, M
 		MCObject *objptr;
 		MCChunk *tchunk = new MCChunk(False);
 		MCerrorlock++;
-		MCScriptPoint sp(ctxt.GetEP());
+		MCScriptPoint sp(ctxt);
 		Parse_stat stat = tchunk->parse(sp, False);
 		if (stat != PS_NORMAL || !tchunk->getobj(ctxt, objptr, parid, True))
 		{

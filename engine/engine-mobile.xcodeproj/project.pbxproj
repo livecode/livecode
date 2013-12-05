@@ -94,7 +94,6 @@
 		4DABCDB815ECD4700085E214 /* edittool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE0E1040ACED00CAC7EF /* edittool.cpp */; };
 		4DABCDB915ECD4700085E214 /* eps.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE361040AD0300CAC7EF /* eps.cpp */; };
 		4DABCDBA15ECD4700085E214 /* eventqueue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA2CA351136D07600B9F27B /* eventqueue.cpp */; };
-		4DABCDBB15ECD4700085E214 /* execpt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE341040AD0300CAC7EF /* execpt.cpp */; };
 		4DABCDBC15ECD4700085E214 /* express.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE181040AD0300CAC7EF /* express.cpp */; };
 		4DABCDBE15ECD4700085E214 /* external.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE2F1040AD0300CAC7EF /* external.cpp */; };
 		4DABCDBF15ECD4700085E214 /* externalv0.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA2CA381136D08700B9F27B /* externalv0.cpp */; };
@@ -725,8 +724,6 @@
 		4DD3DE301040AD0300CAC7EF /* hc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = hc.cpp; path = src/hc.cpp; sourceTree = "<group>"; };
 		4DD3DE311040AD0300CAC7EF /* handler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = handler.h; path = src/handler.h; sourceTree = "<group>"; };
 		4DD3DE321040AD0300CAC7EF /* handler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = handler.cpp; path = src/handler.cpp; sourceTree = "<group>"; };
-		4DD3DE331040AD0300CAC7EF /* execpt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = execpt.h; path = src/execpt.h; sourceTree = "<group>"; };
-		4DD3DE341040AD0300CAC7EF /* execpt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = execpt.cpp; path = src/execpt.cpp; sourceTree = "<group>"; };
 		4DD3DE351040AD0300CAC7EF /* eps.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = eps.h; path = src/eps.h; sourceTree = "<group>"; };
 		4DD3DE361040AD0300CAC7EF /* eps.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = eps.cpp; path = src/eps.cpp; sourceTree = "<group>"; };
 		4DD3DE371040AD0300CAC7EF /* fieldh.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fieldh.cpp; path = src/fieldh.cpp; sourceTree = "<group>"; };
@@ -1597,8 +1594,6 @@
 				4DD3DDCB1040AC5C00CAC7EF /* constant.h */,
 				4DD3DE091040ACE300CAC7EF /* date.cpp */,
 				4DD3DE081040ACE300CAC7EF /* date.h */,
-				4DD3DE341040AD0300CAC7EF /* execpt.cpp */,
-				4DD3DE331040AD0300CAC7EF /* execpt.h */,
 				4DF9A3F6142E24FD0063E6FF /* executionerrors.h */,
 				4DD3DE181040AD0300CAC7EF /* express.cpp */,
 				4DD3DE171040AD0300CAC7EF /* express.h */,
@@ -2211,7 +2206,6 @@
 				4DABCDB815ECD4700085E214 /* edittool.cpp in Sources */,
 				4DABCDB915ECD4700085E214 /* eps.cpp in Sources */,
 				4DABCDBA15ECD4700085E214 /* eventqueue.cpp in Sources */,
-				4DABCDBB15ECD4700085E214 /* execpt.cpp in Sources */,
 				4DABCDBC15ECD4700085E214 /* express.cpp in Sources */,
 				4DABCDBE15ECD4700085E214 /* external.cpp in Sources */,
 				4DABCDBF15ECD4700085E214 /* externalv0.cpp in Sources */,
