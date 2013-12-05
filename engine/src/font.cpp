@@ -50,7 +50,11 @@ struct MCFont
 	MCNameRef name;
 	MCFontStyle style;
 	int32_t size;
-
+	
+	// MW-2013-12-05: [[ Bug 11535 ]] If non-zero, then each glyph will have the
+	//   given fixed advance width (used for monospaced fonts).
+	int32_t fixed_advance;
+	
 	MCFontStruct *fontstruct;
 };
 
@@ -105,6 +109,33 @@ bool MCFontCreate(MCNameRef p_name, MCFontStyle p_style, int32_t p_size, MCFontR
 	t_temp_size = self -> size;
 	self -> fontstruct = MCdispatcher -> loadfont(MCNameGetCString(self -> name), t_temp_size, MCFontStyleToTextStyle(self -> style), (self -> style & kMCFontStylePrinterMetrics) != 0);
 
+	// MW-2013-12-04: [[ Bug 11535 ]] Test to see if the font is fixed-width, at least for
+	//   Roman script.
+    MCGFont t_gfont;
+	t_gfont = MCFontStructToMCGFont(self -> fontstruct);
+	t_gfont . fixed_advance = 0;
+
+	// We check the width of ' ', i, l, m and w. If they are all the same width
+	// we assume the font is monospaced and subsequently set the fixed_advance
+	// field to a suitable value.
+	MCGFloat t_last_width;
+	for(uindex_t i = 0; i < 5; i++)
+	{
+		unichar_t t_char;
+		t_char = (unichar_t)((" ilmw")[i]);
+		
+		MCGFloat t_this_width;
+		t_this_width = MCGContextMeasurePlatformText(nil, &t_char, 2, t_gfont);
+		if (t_this_width == 0.0 ||
+			(i != 0 && t_this_width != t_last_width))
+		{
+			t_last_width = 0;
+			break;
+		}
+		t_last_width = t_this_width;
+	}
+	self -> fixed_advance = floorf(t_last_width + 0.5);
+	
 	self -> next = s_fonts;
 	s_fonts = self;
 
@@ -295,6 +326,9 @@ static void MCFontMeasureTextCallback(MCFontRef p_font, const char *p_text, uint
     MCGFont t_font;
 	t_font = MCFontStructToMCGFont(p_font->fontstruct);
 	
+	// MW-2013-12-04: [[ Bug 11535 ]] Pass through the fixed advance.
+	t_font . fixed_advance = p_font -> fixed_advance;
+	
 	MCExecPoint ep;
 	ep . setsvalue(MCString(p_text, p_length));
 	if (!p_is_unicode)
@@ -323,6 +357,9 @@ static void MCFontDrawTextCallback(MCFontRef p_font, const char *p_text, uint32_
 {
     MCGFont t_font;
 	t_font = MCFontStructToMCGFont(p_font->fontstruct);
+	
+	// MW-2013-12-04: [[ Bug 11535 ]] Pass through the fixed advance.
+	t_font . fixed_advance = p_font -> fixed_advance;
 	
 	MCExecPoint ep;
 	ep . setsvalue(MCString(p_text, p_length));

@@ -2694,8 +2694,14 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
 		//   when looking up metrics.
 		// MW-2013-11-12: [[ Bug 11415 ]] Make sure we use p_font.size and not t_size if not
 		//   ideal - otherwise uninitialized values abound...
-		int16_t t_size;
-		t_size = p_font . ideal ? -p_font . size : p_font . size;
+		uint16_t t_size;
+		t_size = p_font . size & 0x3fff;
+		if (p_font . ideal)
+			t_size |= 1 << 15;
+		// MW-2013-12-05: [[ Bug 11535 ]] Set the bit to indicate its got a fixed advance
+		//   (fixed advance never varies for a given font at the moment, so this is safe).
+		if (p_font . fixed_advance != 0)
+			t_size |= 1 << 14;
 		MCMemoryCopy(t_key_ptr, &t_size, sizeof(p_font . size));
 		t_key_ptr += sizeof(p_font . size);
 
