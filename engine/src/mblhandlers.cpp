@@ -2968,18 +2968,23 @@ Exec_stat MCHandleStartBusyIndicator(void *p_context, MCParameter *p_parameters)
     MCBusyIndicatorExecStart(t_ctxt, kMCBusyIndicatorSquare, t_label, t_opacity);
     return t_ctxt.GetStat();
 #endif /* MCHandleStartBusyIndicator */
+    
     bool t_success = true;
     MCAutoStringRef t_indicator_string;
     MCAutoStringRef t_label;    
-    if (t_success)
-        t_success = MCParseParameters(p_parameters, "xx", &(&t_indicator_string), &(&t_label));
+
+    if (t_success && p_parameters)
+        t_success = MCParseParameters(p_parameters, "x", &(&t_indicator_string));
+                                      
+    if (t_success && p_parameters)
+        t_success = MCParseParameters(p_parameters, "x", &(&t_label));
     
     intenum_t t_indicator;
-    if(t_success)
+    if (t_success)
         t_success = MCBusyIndicatorTypeFromString(*t_indicator_string);
     
     int32_t t_opacity = -1;
-    if(t_success)
+    if (t_success && p_parameters)
     {
         t_success = MCParseParameters(p_parameters, "i", &t_opacity);
         if (t_opacity < 0 || t_opacity > 100)
