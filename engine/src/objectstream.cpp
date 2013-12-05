@@ -240,9 +240,21 @@ IO_stat MCObjectInputStream::ReadStringRefNew(MCStringRef &r_value, bool p_suppo
 		return IO_NORMAL;
 	}
 	
-	// TODO: UnicodeFileFormat
+	uint32_t t_length;
+	if (ReadU32(t_length) != IO_NORMAL)
+		return IO_ERROR;
 	
-	return IO_ERROR;
+	MCAutoPointer<char> t_bytes;
+	if (!MCMemoryNewArray(t_length, &t_bytes))
+		return IO_ERROR;
+	
+	if (!Read(*t_bytes, t_length))
+		return IO_ERROR;
+	
+	if (!MCStringCreateWithBytes((const uint8_t *)*t_bytes, t_length, kMCStringEncodingUTF8, false, r_value))
+		return IO_ERROR;
+	
+	return IO_NORMAL;
 }
 
 IO_stat MCObjectInputStream::ReadNameRefNew(MCNameRef& r_value, bool p_supports_unicode)
@@ -470,9 +482,18 @@ IO_stat MCObjectOutputStream::WriteStringRefNew(MCStringRef p_value, bool p_supp
 		return t_stat;
 	}
 	
-	// TODO: UnicodeFileFormat
+	MCAutoPointer<char> t_utf8_string;
+	uindex_t t_utf8_string_length;
+	if (!MCStringConvertToUTF8(p_value, &t_utf8_string, t_utf8_string_length))
+		return IO_ERROR;
 	
-	return IO_ERROR;
+	if (WriteU32(t_utf8_string_length) != IO_NORMAL)
+		return IO_ERROR;
+	
+	if (Write(*t_utf8_string, t_utf8_string_length) != IO_NORMAL)
+		return IO_ERROR;
+	
+	return IO_NORMAL;
 }
 
 IO_stat MCObjectOutputStream::WriteNameRefNew(MCNameRef p_value, bool p_supports_unicode)
