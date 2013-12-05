@@ -838,6 +838,7 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
         {
             /* RESULT */ //MCresult->sets("no key");
 			r_error = MCSTR("no key");
+			r_value = MCValueRetain(kMCNull);
 			return true;
         }
         
@@ -924,6 +925,7 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
         {
             errno = err;
             r_error = MCSTR("can't find key");
+			r_value = MCValueRetain(kMCNull);
             return true;
         }
         
@@ -1862,7 +1864,8 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
             t_key2 = MCSTR("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyServer");
             MCAutoStringRef t_type2, t_error2;
             MCAutoValueRef t_value2;
-            MCS_query_registry(t_key2, &t_value2, &t_type2, &t_error2);
+
+			MCS_query_registry(t_key2, &t_value2, &t_type2, &t_error2);
 
 			if (*t_value2 != nil && !MCValueIsEmpty(*t_value2))
 			{

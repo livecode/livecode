@@ -36,6 +36,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 
+// The header contains nothing without this define for the Win7 SDK
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x600
 #include <uxtheme.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -166,7 +169,7 @@ enum {
 	MSM_DISABLED = 2,
 };
 
-
+typedef HANDLE HPAINTBUFFER;
 
 typedef HANDLE (WINAPI*OpenThemeDataPtr)(HWND hwnd, LPCWSTR pszClassList);
 typedef HRESULT (WINAPI*CloseThemeDataPtr)(HANDLE hTheme);
