@@ -2264,7 +2264,7 @@ pascal OSErr TSMUnicodeNotFromInputHandler(const AppleEvent *theAppleEvent,
 	imetext[imetextsize] = '\0';
 
 	// Do ASCII codepoints the old-fashioned way
-	if (imetextsize == 2 && *imetext < 0x7F)
+	if (imetextsize == 2 && *(const unichar_t*)imetext < 0x7F)
 	{
 		delete[] imetext;
 		return paramErr;
