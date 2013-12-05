@@ -8,7 +8,6 @@ SOURCES=\
 	cdata.cpp chunk.cpp cmds.cpp cmdsc.cpp cmdse.cpp cmdsf.cpp \
 	cmdsm.cpp cmdsp.cpp cmdss.cpp constant.cpp control.cpp cpalette.cpp \
 	customprinter.cpp date.cpp debug.cpp dispatch.cpp dllst.cpp \
-#	execpt.cpp express.cpp field.cpp fieldf.cpp fieldh.cpp fields.cpp \
 	express.cpp field.cpp fieldf.cpp fieldh.cpp fields.cpp \
 	font.cpp funcs.cpp funcsm.cpp globals.cpp graphic.cpp \
 	graphicscontext.cpp \
