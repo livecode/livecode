@@ -1682,11 +1682,15 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	}
 	
 	uint32_t t_pixwidth, t_pixheight;
-	getgeometry(t_pixwidth, t_pixheight);
-
-	if (getcompression() == 0
-	        && (rect.width != t_pixwidth || rect.height != t_pixheight))
-		flags |= F_SAVE_SIZE;
+	t_pixwidth = t_pixheight = 0;
+	
+	// IM-2013-12-05: [[ Bug 11551 ]] We only need to get the geometry of an image rep if it's an rle-compressed image
+	if (m_rep != nil && m_rep->GetType() == kMCImageRepCompressed)
+	{
+		m_rep->GetGeometry(t_pixwidth, t_pixheight);
+		if (rect.width != t_pixwidth || rect.height != t_pixheight)
+			flags |= F_SAVE_SIZE;
+	}
 
 	uint1 t_old_ink = ink;
 
