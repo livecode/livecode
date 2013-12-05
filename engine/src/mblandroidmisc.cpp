@@ -94,7 +94,7 @@ public:
 
 	void Dispatch(void)
 	{
-        //MCLog("dispatch message \"%s\"", MCNameGetCString(m_message));
+        //MCLog("dispatch message \"%@\"", MCNameGetString(m_message));
 		MCObject *t_object;
 		t_object = m_object -> Get();
 		if (t_object != nil)

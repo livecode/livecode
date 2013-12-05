@@ -6654,8 +6654,6 @@ bool MCIsPlatformMessage(MCNameRef handler_name)
 {
     bool found = false;
     
-    const char* t_nameRef = MCNameGetCString(handler_name);
-    
     for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
     {
         const char* t_message = s_platform_messages[i].message;

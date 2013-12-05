@@ -902,14 +902,14 @@ void __MCArrayDump(MCArrayRef array)
 			
 			if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeArray)
 			{
-				MCLog("[%s]:", MCStringGetNativeCharPtr(MCNameGetString(t_key)));
+                MCLog("[%@]:", t_key);
 				__MCArrayDump((MCArrayRef)t_value);
 			}
 			else
 			{
 				MCAutoStringRef t_desc;
 				MCValueCopyDescription(t_value, &t_desc);
-				MCLog("[%s] = %s", MCStringGetNativeCharPtr(MCNameGetString(t_key)), MCStringGetNativeCharPtr(*t_desc));
+                MCLog("[%@] = %@", t_key, *t_desc);
 			}
 		}
 	}

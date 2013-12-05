@@ -386,7 +386,7 @@ void MCDialogExecCustomAnswerDialog(MCExecContext &ctxt, MCNameRef p_stack, MCNa
 
 	MCAutoStringRef t_arg_string;
 	t_success = MCStringCreateMutable(0, &t_arg_string) &&
-		MCStringAppendFormat(*t_arg_string, "answer %s", MCNameGetCString(p_type));
+		MCStringAppendFormat(*t_arg_string, "answer %@", p_type);
 
 	for (uindex_t i = 0; t_success && i < p_arg_count; i++)
 		t_success = MCStringAppendNativeChar(*t_arg_string, '\0') &&
@@ -639,7 +639,7 @@ void MCDialogExecCustomAskDialog(MCExecContext& ctxt, MCNameRef p_stack, MCNameR
 	
 	MCAutoStringRef t_arg_string;
 	t_success = MCStringCreateMutable(0, &t_arg_string) &&
-	MCStringAppendFormat(*t_arg_string, "ask %s", MCNameGetCString(p_type));
+	MCStringAppendFormat(*t_arg_string, "ask %@", p_type);
 	
 	for (uindex_t i = 0; t_success && i < p_arg_count; i++)
 		t_success = MCStringAppendNativeChar(*t_arg_string, '\0') &&

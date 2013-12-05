@@ -806,19 +806,19 @@ int2 MCBlock::gettabwidth(int2 x, findex_t i)
 	// but who can really say!
 	if (fixed)
 	{
-		uint2 ctab = 0;
-		uint2 cindex = 0;
+		findex_t ctab = 0;
+		findex_t cindex = 0;
 
 		// Count the number of preceeding tabs in the paragraph.
 		MCBlock *t_block;
 		t_block = parent -> getblocks();
-		uint2 j;
+		findex_t j;
 		j = 0;
 		while(j < i)
 		{
 			if (t_block -> getflag(F_HAS_TAB))
 			{
-				uint2 k;
+				findex_t k;
 				k = t_block -> GetOffset() + t_block -> GetLength();
 				while(j < k && j < i)
 				{
@@ -931,7 +931,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 		int32_t t_delta;
 		t_delta = cx - x;
 
-		uint2 t_index;
+		findex_t t_index;
 		t_index = start;
 		while(t_index < start + length)
 		{
@@ -995,7 +995,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 
 			x += t_width;
 
-			if (t_next_tab != nil)
+			if (t_next_tab != -1)
 			{
 				x = t_cell_right;
 				t_next_index = parent->IncrementIndex(t_next_index);
@@ -1033,7 +1033,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 			{
 				// If beyond this block, ignore
 				findex_t l = eptr - sptr;
-				if (l > size)
+				if (l >= size)
 					break;
 				
 				uint2 twidth;
@@ -1047,11 +1047,11 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 				cx += twidth;
 				x += twidth;
 
-				// Adjust for the tab character.
+                // Adjust for the tab character.
 				l = parent->IncrementIndex(eptr);
 
 				sptr = l;
-				size = length - l;
+                size = length - l;
 			}
 		}
 
@@ -1324,7 +1324,9 @@ bool MCBlock::gettextfont(const char *& r_textfont) const
 {
 	if (getflag(F_HAS_FNAME))
 	{
-		r_textfont = MCNameGetCString(atts -> fontname);
+        char *t_font;
+        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(atts -> fontname), t_font);
+		r_textfont = t_font;
 		return true;
 	}
 	return false;
@@ -2042,7 +2044,7 @@ void MCBlock::importattrs(const MCFieldCharacterStyle& p_style)
         SetImageSource(ctxt, p_style . image_source);
 	if (p_style . has_metadata)
         SetMetadata(ctxt, p_style . metadata);
-	if (p_style . has_text_font)
+    if (p_style . has_text_font)
         SetTextFont(ctxt, MCNameGetString(p_style . text_font));
 	if (p_style . has_text_style)
     {

@@ -735,7 +735,11 @@ bool MCJavaMapFromArray(JNIEnv *p_env, MCArrayRef p_array, jobject &r_object)
 				t_jobj = t_jstring;
 		}
 		if (t_success)
-			t_success = MCJavaMapPutStringToObject(p_env, t_map, MCNameGetCString(t_name), t_jobj);
+        {
+            MCAutoPointer<char> t_name_ptr;
+            /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(t_name), &t_name_ptr);
+			t_success = MCJavaMapPutStringToObject(p_env, t_map, *t_name_ptr, t_jobj);
+        }
 		if (t_jobj != nil)
 			p_env->DeleteLocalRef(t_jobj);
 	}

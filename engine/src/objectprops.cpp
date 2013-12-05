@@ -578,9 +578,9 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 			MCParentScript *t_parent;
 			t_parent = parent_script -> GetParent();
  
-			ep . setstringf("button id %d of stack \"%s\"",
+			ep . setstringf("button id %d of stack \"%@\"",
 								t_parent -> GetObjectId(),
-								MCNameGetCString(t_parent -> GetObjectStack()));
+								MCNameGetString(t_parent -> GetObjectStack()));
 		}
 	}
 	break;

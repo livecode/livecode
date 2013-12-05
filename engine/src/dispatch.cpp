@@ -611,7 +611,9 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 
 	if (readheader(stream, version) == IO_NORMAL)
 	{
-		if (strcmp(version, MCNameGetCString(MCN_version_string)) > 0)
+        MCAutoPointer<char> t_MCN_version;
+        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(MCN_version_string), &t_MCN_version);
+		if (strcmp(version, *t_MCN_version) > 0)
 		{
 			MCresult->sets("stack was produced by a newer version");
 			return IO_ERROR;
@@ -1538,11 +1540,10 @@ MCObject *MCDispatch::getobjname(Chunk_term type, MCNameRef p_name)
 
 	if (type == CT_IMAGE)
 	{
-		const char *sptr = MCNameGetCString(p_name);
-		uint4 l = MCStringGetLength(MCNameGetString((p_name)));
-
 		MCNewAutoNameRef t_image_name;
-		if (MCU_strchr(sptr, l, ':'))
+        uindex_t t_colon;
+        t_colon = 0;
+        if (MCStringFirstIndexOfChar(MCNameGetString(p_name), ':', 0, kMCCompareExact, t_colon))
 			/* UNCHECKED */ t_image_name = MCValueRetain(p_name);
 		
 		MCImage *iptr = imagecache;
@@ -1567,7 +1568,8 @@ check:
 			while (iptr != imagecache);
 		}
 
-		if (MCU_strchr(sptr, l, ':'))
+        uindex_t t_second_colon;
+        if (MCStringFirstIndexOfChar(MCNameGetString(p_name), ':', t_colon, kMCCompareExact, t_second_colon))
 		{
             MCresult->clear(False);
             MCExecContext default_ctxt(MCdefaultstackptr, nil, nil);

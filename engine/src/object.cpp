@@ -2989,10 +2989,10 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 				else
 					t_length -= MCStringGetLength(*t_script_string) + 1;
 
+                setscript(*t_script_string);
+                
 				if (!MCStringIsEmpty(*t_script_string))
 					getstack() -> securescript(this);
-				
-				setscript(*t_script_string);
 			}
 
 			if (stat == IO_NORMAL && t_length > 0)
@@ -3397,7 +3397,7 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 		//     uint32 id
 		//     cstring stack
 		//     cstring mainstack
-		t_size += 1 + 1 + 4 + strlen(MCNameGetCString(parent_script -> GetParent() -> GetObjectStack())) + 1;
+		t_size += 1 + 1 + 4 + MCStringGetLength(MCNameGetString(parent_script -> GetParent() -> GetObjectStack())) + 1;
 		t_size += 1; // was mainstack reference
 	}
 
