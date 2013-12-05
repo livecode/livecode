@@ -715,10 +715,7 @@ const char_t *MCStringGetNativeCharPtr(MCStringRef self)
 #ifdef NATIVE_STRING
 	return (const char_t *)self -> chars;
 #else
-	// MW-2013-12-05: [[ Bug ]] If the string cannot be native, then we must not
-	//   return the native char ptr.
-	if (!MCStringIsNative(self))
-		return nil;
+	__MCStringNativize(self);
 	return self -> native_chars;
 #endif
 }
