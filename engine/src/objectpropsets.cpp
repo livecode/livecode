@@ -168,6 +168,18 @@ bool MCObjectPropertySet::restrict(MCExecPoint& ep)
 
 //////////
 
+IO_stat MCObjectPropertySet::loadprops_new(IO_handle p_stream)
+{
+	return IO_write_valueref_new(m_props, p_stream);
+}
+
+IO_stat MCObjectPropertySet::saveprops_new(IO_handle p_stream)
+{
+	return IO_read_valueref_new((MCValueRef&)m_props, p_stream);
+}
+
+//////////
+
 uint32_t MCObjectPropertySet::measure_legacy(bool p_nested_only)
 {
 	return MCArrayMeasureForStreamLegacy(m_props, p_nested_only);
@@ -404,19 +416,60 @@ IO_stat MCObject::savepropsets(IO_handle stream)
 	if (MCstackfileversion < 7000)
 		return savepropsets_legacy(stream);
 	
-	// TODO: UnicodeFileFormat
-	
-	return IO_ERROR;
+	// MW-2013-12-05: [[ UnicodeFileFormat ]] Emit all the propsets in
+	//   OT_CUSTOM - name - array
+	// format.
+	IO_stat stat;
+	MCObjectPropertySet *p = props;
+	while (p != NULL)
+	{
+		if ((stat = IO_write_uint1(OT_CUSTOM, stream)) != IO_NORMAL)
+			return stat;
+		if ((stat = IO_write_nameref_new(p->getname(), stream, true)) != IO_NORMAL)
+			return stat;
+		if ((stat = p->saveprops_new(stream)) != IO_NORMAL)
+			return stat;
+		p = p->getnext();
+	}
+	return IO_NORMAL;
 }
 
 IO_stat MCObject::loadpropsets(IO_handle stream, uint32_t version)
 {
 	if (version < 7000)
 		return loadpropsets_legacy(stream);
+	MCObjectPropertySet *p = props;
+	IO_stat stat;
 	
-	// TODO: UnicodeFileFormat
-	
-	return IO_ERROR;
+	// MW-2013-12-05: [[ UnicodeFileFormat ]] Read all the propsets in
+	//   OT_CUSTOM - name - array
+	// format.
+	while (True)
+	{
+		uint1 type;
+		if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
+			return stat;
+		if (type == OT_CUSTOM)
+		{
+			MCNameRef pname;
+			if ((stat = IO_read_nameref_new(pname, stream, true)) != IO_NORMAL)
+				return stat;
+			
+			MCObjectPropertySet *v;
+			/* UNCHECKED */ MCObjectPropertySet::createwithname_nocopy(pname, v);
+			p->setnext(v);
+			p = p->getnext();
+			
+			if ((stat = p->loadprops_new(stream)) != IO_NORMAL)
+				return stat;
+		}
+		else
+		{
+			MCS_seek_cur(stream, -1);
+			break;
+		}
+	}
+	return IO_NORMAL;
 }
 
 bool MCObject::hasarraypropsets_legacy(void)

@@ -767,11 +767,13 @@ IO_stat IO_write_stringref_legacy_utf8(MCStringRef p_string, IO_handle stream, u
 
 IO_stat IO_write_valueref_new(MCValueRef p_value, IO_handle p_stream)
 {
+	// TODO: UnicodeFileFormat
 	return IO_ERROR;
 }
 
 IO_stat IO_read_valueref_new(MCValueRef& r_value, IO_handle p_stream)
 {
+	// TODO: UnicodeFileFormat
 	return IO_ERROR;
 }
 
