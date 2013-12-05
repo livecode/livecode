@@ -786,16 +786,279 @@ IO_stat IO_write_stringref_legacy_utf8(MCStringRef p_string, IO_handle stream, u
 
 //////////
 
+enum
+{
+	IO_VALUEREF_NULL,
+	IO_VALUEREF_BOOLEAN_FALSE,
+	IO_VALUEREF_BOOLEAN_TRUE,
+	IO_VALUEREF_NUMBER_INTEGER,
+	IO_VALUEREF_NUMBER_DOUBLE,
+	IO_VALUEREF_NAME_EMPTY,
+	IO_VALUEREF_NAME_ANY,
+	IO_VALUEREF_STRING_EMPTY,
+	IO_VALUEREF_STRING_ANY,
+	IO_VALUEREF_DATA_EMPTY,
+	IO_VALUEREF_DATA_ANY,
+	IO_VALUEREF_ARRAY_EMPTY,
+	IO_VALUEREF_ARRAY_SEQUENCE,
+	IO_VALUEREF_ARRAY_MAP,
+};
+
 IO_stat IO_write_valueref_new(MCValueRef p_value, IO_handle p_stream)
 {
-	// TODO: UnicodeFileFormat
-	return IO_ERROR;
+	IO_stat t_stat;
+	switch(MCValueGetTypeCode(p_value))
+	{
+		case kMCValueTypeCodeNull:
+			t_stat = IO_write_uint1(IO_VALUEREF_NULL, p_stream);
+			break;
+		case kMCValueTypeCodeBoolean:
+			t_stat = IO_write_uint1(p_value == kMCFalse ? IO_VALUEREF_BOOLEAN_FALSE : IO_VALUEREF_BOOLEAN_TRUE, p_stream);
+			break;
+		case kMCValueTypeCodeNumber:
+			if (MCNumberIsInteger((MCNumberRef)p_value))
+			{
+				t_stat = IO_write_uint1(IO_VALUEREF_NUMBER_INTEGER, p_stream);
+				if (t_stat == IO_NORMAL)
+					t_stat = IO_write_int4(MCNumberFetchAsInteger((MCNumberRef)p_value), p_stream);
+			}
+			else
+			{
+				t_stat = IO_write_uint1(IO_VALUEREF_NUMBER_DOUBLE, p_stream);
+				if (t_stat == IO_NORMAL)
+					t_stat = IO_write_real8(MCNumberFetchAsReal((MCNumberRef)p_value), p_stream);
+			}
+			break;
+		case kMCValueTypeCodeName:
+			if (MCNameIsEmpty((MCNameRef)p_value))
+				t_stat = IO_write_uint1(IO_VALUEREF_NAME_EMPTY, p_stream);
+			else
+			{
+				t_stat = IO_write_uint1(IO_VALUEREF_NAME_ANY, p_stream);
+				if (t_stat == IO_NORMAL)
+					t_stat = IO_write_nameref_new((MCNameRef)p_value, p_stream, true);
+			}
+			break;
+		case kMCValueTypeCodeString:
+			if (MCStringIsEmpty((MCStringRef)p_value))
+				t_stat = IO_write_uint1(IO_VALUEREF_STRING_EMPTY, p_stream);
+			else
+			{
+				t_stat = IO_write_uint1(IO_VALUEREF_STRING_ANY, p_stream);
+				if (t_stat == IO_NORMAL)
+					t_stat = IO_write_stringref_new((MCStringRef)p_value, p_stream, true);
+			}
+			break;
+		case kMCValueTypeCodeData:
+			if (MCDataIsEmpty((MCDataRef)p_value))
+				t_stat = IO_write_uint1(IO_VALUEREF_DATA_EMPTY, p_stream);
+			else
+			{
+				t_stat = IO_write_uint1(IO_VALUEREF_DATA_ANY, p_stream);
+				if (t_stat == IO_NORMAL)
+					t_stat = IO_write_uint4(MCDataGetLength((MCDataRef)p_value), p_stream);
+				if (t_stat == IO_NORMAL)
+					t_stat = MCStackSecurityWrite((const char *)MCDataGetBytePtr((MCDataRef)p_value), MCDataGetLength((MCDataRef)p_value), p_stream);
+			}
+			break;
+		case kMCValueTypeCodeArray:
+		{
+			if (MCArrayIsEmpty((MCArrayRef)p_value))
+				t_stat = IO_write_uint1(IO_VALUEREF_ARRAY_EMPTY, p_stream);
+			else if (MCArrayIsSequence((MCArrayRef)p_value))
+			{
+				t_stat = IO_write_uint1(IO_VALUEREF_ARRAY_SEQUENCE, p_stream);
+				if (t_stat == IO_NORMAL)
+					t_stat = IO_write_uint4(MCArrayGetCount((MCArrayRef)p_value), p_stream);
+				for(uindex_t i = 1; t_stat == IO_NORMAL && i <= MCArrayGetCount((MCArrayRef)p_value); i++)
+				{
+					MCValueRef t_element;
+					if (!MCArrayFetchValueAtIndex((MCArrayRef)p_value, i, t_element))
+						t_stat = IO_ERROR;
+					if (t_stat == IO_NORMAL)
+						t_stat = IO_write_valueref_new(t_element, p_stream);
+				}
+			}
+			else
+			{
+				t_stat = IO_write_uint1(IO_VALUEREF_ARRAY_MAP, p_stream);
+				if (t_stat == IO_NORMAL)
+					t_stat = IO_write_uint4(MCArrayGetCount((MCArrayRef)p_value), p_stream);
+					
+				uintptr_t t_iterator;
+				MCNameRef t_key;
+				MCValueRef t_value;
+				t_iterator = 0;
+				while(t_stat == IO_NORMAL &&
+					  MCArrayIterate((MCArrayRef)p_value, t_iterator, t_key, t_value))
+				{
+					t_stat = IO_write_nameref_new(t_key, p_stream, true);
+					if (t_stat == IO_NORMAL)
+						t_stat = IO_write_valueref_new(t_value, p_stream);
+				}
+			}
+		}	
+		break;
+		default:
+			return IO_ERROR;
+	}
+	return t_stat;
 }
 
 IO_stat IO_read_valueref_new(MCValueRef& r_value, IO_handle p_stream)
 {
-	// TODO: UnicodeFileFormat
-	return IO_ERROR;
+	IO_stat t_stat;
+	t_stat = IO_NORMAL;
+	
+	uint1 t_type;
+	if (t_stat == IO_NORMAL)
+		t_stat = IO_read_uint1(&t_type, p_stream);
+	
+	if (t_stat == IO_NORMAL)
+		switch(t_type)
+		{
+			case IO_VALUEREF_NULL:
+				r_value = MCValueRetain(kMCNull);
+				break;
+			case IO_VALUEREF_BOOLEAN_FALSE:
+				r_value = MCValueRetain(kMCFalse);
+				break;
+			case IO_VALUEREF_BOOLEAN_TRUE:
+				r_value = MCValueRetain(kMCTrue);
+				break;
+			case IO_VALUEREF_NUMBER_INTEGER:
+			{
+				int4 t_integer;
+				t_stat = IO_read_int4(&t_integer, p_stream);
+				if (t_stat == IO_NORMAL &&
+					!MCNumberCreateWithInteger(t_integer, (MCNumberRef&)r_value))
+					t_stat = IO_ERROR;
+			}
+			break;
+			case IO_VALUEREF_NUMBER_DOUBLE:
+			{
+				double t_double;
+				t_stat = IO_read_real8(&t_double, p_stream);
+				if (t_stat == IO_NORMAL &&
+					!MCNumberCreateWithReal(t_double, (MCNumberRef&)r_value))
+					t_stat = IO_ERROR;
+			}
+			break;
+			case IO_VALUEREF_NAME_EMPTY:
+				r_value = MCValueRetain(kMCEmptyName);
+				break;
+			case IO_VALUEREF_NAME_ANY:
+				t_stat = IO_read_nameref_new((MCNameRef&)r_value, p_stream, true);
+				break;
+			case IO_VALUEREF_STRING_EMPTY:
+				r_value = MCValueRetain(kMCEmptyString);
+				break;
+			case IO_VALUEREF_STRING_ANY:
+				t_stat = IO_read_stringref_new((MCStringRef&)r_value, p_stream, true);
+				break;
+			case IO_VALUEREF_DATA_EMPTY:
+				r_value = MCValueRetain(kMCEmptyData);
+				break;
+			case IO_VALUEREF_DATA_ANY:
+			{
+				uint4 t_length;
+				t_stat = IO_read_uint4(&t_length, p_stream);
+				
+				uint8_t *t_bytes;
+				t_bytes = nil;
+				if (t_stat == IO_NORMAL &&
+					!MCMemoryNewArray(t_length, t_bytes))
+					t_stat = IO_ERROR;
+				
+				if (t_stat == IO_NORMAL)
+					t_stat = MCStackSecurityRead((char *)t_bytes, t_length, p_stream);
+				
+				if (t_stat == IO_NORMAL &&
+					!MCDataCreateWithBytesAndRelease(t_bytes, t_length, (MCDataRef&)r_value))
+					t_stat = IO_ERROR;
+			
+				if (t_stat == IO_ERROR)
+					MCMemoryDeleteArray(t_bytes);
+			}
+			break;
+			case IO_VALUEREF_ARRAY_EMPTY:
+				r_value = MCValueRetain(kMCEmptyArray);
+				break;
+			case IO_VALUEREF_ARRAY_SEQUENCE:
+			{
+				MCArrayRef t_mutable_array;
+				t_mutable_array = nil;
+				if (!MCArrayCreateMutable(t_mutable_array))
+					t_stat = IO_ERROR;
+					
+				uint4 t_length;
+				if (t_stat == IO_NORMAL)
+					t_stat = IO_read_uint4(&t_length, p_stream);
+				for(uindex_t i = 0; t_stat == IO_NORMAL && i < t_length; i++)
+				{
+					MCValueRef t_element;
+					t_element = nil;
+					
+					t_stat = IO_read_valueref_new(t_element, p_stream);
+					if (t_stat == IO_NORMAL &&
+						!MCArrayStoreValueAtIndex(t_mutable_array, i + 1, t_element))
+						t_stat = IO_ERROR;
+					
+					if (t_element != nil)
+						MCValueRelease(t_element);
+				}
+				
+				if (t_stat == IO_NORMAL &&
+					!MCArrayCopyAndRelease(t_mutable_array, (MCArrayRef&)r_value))
+					t_stat = IO_ERROR;
+				
+				if (t_stat == IO_ERROR &&
+					t_mutable_array != nil)
+					MCValueRelease(t_mutable_array);
+			}
+			break;
+			case IO_VALUEREF_ARRAY_MAP:
+			{
+				MCArrayRef t_mutable_array;
+				t_mutable_array = nil;
+				if (!MCArrayCreateMutable(t_mutable_array))
+					t_stat = IO_ERROR;
+				
+				uint4 t_length;
+				if (t_stat == IO_NORMAL)
+					t_stat = IO_read_uint4(&t_length, p_stream);
+				for(uindex_t i = 0; t_stat == IO_NORMAL && i < t_length; i++)
+				{
+					MCNameRef t_key;
+					t_key = nil;
+					t_stat = IO_read_nameref_new(t_key, p_stream, true);
+					
+					MCValueRef t_element;
+					t_element = nil;
+					t_stat = IO_read_valueref_new(t_element, p_stream);
+					if (t_stat == IO_NORMAL &&
+						!MCArrayStoreValue(t_mutable_array, true, t_key, t_element))
+						t_stat = IO_ERROR;
+					
+					if (t_key != nil)
+						MCValueRelease(t_key);
+					
+					if (t_element != nil)
+						MCValueRelease(t_element);
+				}
+				
+				if (t_stat == IO_NORMAL &&
+					!MCArrayCopyAndRelease(t_mutable_array, (MCArrayRef&)r_value))
+					t_stat = IO_ERROR;
+				
+				if (t_stat == IO_ERROR &&
+					t_mutable_array != nil)
+					MCValueRelease(t_mutable_array);
+			}
+			break;
+		}
+	
+	return t_stat;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
