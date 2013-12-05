@@ -127,18 +127,18 @@ bool MCArrayListKeys(MCArrayRef array, char delimiter, MCStringRef& r_list);
 
 // Returns the size of the array on disk when saved to an objectstream. If
 // 'nested_only' is set, it only includes keys of the array which are arrays.
-uint32_t MCArrayMeasureForStream(MCArrayRef array, bool nested_only);
+uint32_t MCArrayMeasureForStreamLegacy(MCArrayRef array, bool nested_only);
 // Returns true if the array contains any values which are arrays.
-bool MCArrayIsNested(MCArrayRef array);
+bool MCArrayIsNestedLegacy(MCArrayRef array);
 // Loads keys from the IO_handle, adding them to the array.
-IO_stat MCArrayLoadFromHandle(MCArrayRef array, IO_handle stream, uint32_t version);
+IO_stat MCArrayLoadFromHandleLegacy(MCArrayRef array, IO_handle stream);
 // Loads keys from the InputStream, adding them to the array.
-IO_stat MCArrayLoadFromStream(MCArrayRef array, MCObjectInputStream& stream, uint32_t version);
+IO_stat MCArrayLoadFromStreamLegacy(MCArrayRef array, MCObjectInputStream& stream);
 // Saves keys to the IO_handle.
-IO_stat MCArraySaveToHandle(MCArrayRef array, IO_handle stream, uint32_t version);
+IO_stat MCArraySaveToHandleLegacy(MCArrayRef array, IO_handle stream);
 // Saves keys to the outputstream. If 'nested_only' is true, only keys with
 // array values are saved.
-IO_stat MCArraySaveToStream(MCArrayRef array, bool nested_only, MCObjectOutputStream& stream, uint32_t version);
+IO_stat MCArraySaveToStreamLegacy(MCArrayRef array, bool nested_only, MCObjectOutputStream& stream);
 
 ////////////////////////////////////////////////////////////////////////////////
 

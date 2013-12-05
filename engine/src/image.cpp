@@ -1582,8 +1582,9 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 
 		for (uint16_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
 			t_stat = p_stream . WriteColor(s_control_colors[i]);
+		// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		for (uint16_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
-			t_stat = p_stream . WriteStringRef(s_control_color_names[i] != nil ? s_control_color_names[i] : kMCEmptyString);
+			t_stat = p_stream . WriteStringRefNew(s_control_color_names[i] != nil ? s_control_color_names[i] : kMCEmptyString, MCstackfileversion >= 7000);
 		
 		if (t_stat == IO_NORMAL)
 			t_stat = p_stream . WriteU16(s_control_pixmap_count);
@@ -1638,7 +1639,8 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 				t_stat = p_stream . ReadColor(s_control_colors[i]);
 			for (uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
 			{
-				t_stat = p_stream . ReadStringRef(s_control_color_names[i]);
+				// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+				t_stat = p_stream . ReadStringRefNew(s_control_color_names[i], p_version >= 7000);
 				if (t_stat == IO_NORMAL && MCStringIsEmpty(s_control_color_names[i]))
 				{
 					MCValueRelease(s_control_color_names[i]);

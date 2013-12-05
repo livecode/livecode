@@ -315,10 +315,8 @@ void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCStringRe
 		if (t_stream -> WriteU8(kMCEncodedValueTypeArray) != IO_NORMAL)
 			t_success = false;
 	
-	// MW-2013-11-20: [[ UnicodeFileFormat ]] ArrayEncode / Decode use version 2.7
-	//   pickling.
 	if (t_success)
-		if (MCArraySaveToStream(p_array, false, *t_stream, 2700) != IO_NORMAL)
+		if (MCArraySaveToStreamLegacy(p_array, false, *t_stream) != IO_NORMAL)
 			t_success = false;
 
 	if (t_success)
@@ -379,10 +377,8 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCStringRef p_encoding, MCArra
 	if (t_success)
 		t_success = MCArrayCreateMutable(t_array);
 
-	// MW-2013-11-20: [[ UnicodeFileFormat ]] ArrayEncode / Decode use version 2.7
-	//   pickling.
 	if (t_success)
-		if (MCArrayLoadFromStream(t_array, *t_stream, 2700) != IO_NORMAL)
+		if (MCArrayLoadFromStreamLegacy(t_array, *t_stream) != IO_NORMAL)
 			t_success = false;
 
 	delete t_stream;

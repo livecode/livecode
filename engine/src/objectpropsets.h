@@ -95,22 +95,22 @@ public:
 
 	// Returns the (old-style) serialized size of the array. If 'nested_only'
 	// is true, then it only counts the size of the props containing arrays.
-	uint32_t measure(bool p_nested_only);
+	uint32_t measure_legacy(bool p_nested_only);
 
 	// Returns true if the prop set has nested arrays.
-	bool isnested(void) const;
+	bool isnested_legacy(void) const;
 
 	// Load the props from the given stream - this merges the existing array
 	// with any we find (since nested and non-nested props are stored separately).
-	IO_stat loadprops(IO_handle stream, uint32_t version);
+	IO_stat loadprops_legacy(IO_handle stream);
 	// Load the array props from the given stream - this merges the existing
 	// array with any we find.
-	IO_stat loadarrayprops(MCObjectInputStream& stream, uint32_t version);
+	IO_stat loadarrayprops_legacy(MCObjectInputStream& stream);
 
 	// Save the non-array props to the given stream.
-	IO_stat saveprops(IO_handle stream);
+	IO_stat saveprops_legacy(IO_handle stream);
 	// Save the array props to the given stream.
-	IO_stat savearrayprops(MCObjectOutputStream& stream);
+	IO_stat savearrayprops_legacy(MCObjectOutputStream& stream);
 
 private:
 	MCObjectPropertySet *m_next;
