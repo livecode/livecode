@@ -359,13 +359,15 @@ bool MCCrypt_rsa_op(bool p_encrypt, bool p_is_public, MCStringRef p_message_in, 
 #ifdef MCSSL
 	uint4 t_outlen;
 	char *t_ssl_encode;
-    MCAutoPointer<char>t_data, t_key, t_salt, t_iv;
+
+    MCAutoPointer<char>t_data, t_key, t_salt, t_iv, t_cipher;
+    /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(p_cipher), &t_cipher);
     /* UNCHECKED */ MCStringConvertToCString(p_data, &t_data);
     /* UNCHECKED */ MCStringConvertToCString(p_key, &t_key);
     /* UNCHECKED */ MCStringConvertToCString(p_salt, &t_salt);
     /* UNCHECKED */ MCStringConvertToCString(p_iv, &t_iv);
     
-    t_ssl_encode = SSL_encode(p_is_decrypt, MCNameGetCString(p_cipher), *t_data, MCStringGetLength(p_data), t_outlen, *t_key, MCStringGetLength(p_key), p_is_password, p_bit_rate, p_salt != nil ? *t_salt : nil, p_salt != nil ? MCStringGetLength(p_salt) : 0, p_iv != nil ? *t_iv : nil, p_iv != nil ? MCStringGetLength(p_iv) : 0);
+    t_ssl_encode = SSL_encode(p_is_decrypt, *t_cipher, *t_data, MCStringGetLength(p_data), t_outlen, *t_key, MCStringGetLength(p_key), p_is_password, p_bit_rate, p_salt != nil ? *t_salt : nil, p_salt != nil ? MCStringGetLength(p_salt) : 0, p_iv != nil ? *t_iv : nil, p_iv != nil ? MCStringGetLength(p_iv) : 0);
 
 	if (!t_ssl_encode)
 	{

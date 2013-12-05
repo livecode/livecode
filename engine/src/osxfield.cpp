@@ -338,7 +338,7 @@ public:
 		}
 	}
 	
-	void Append(const char *p_font, uint2 p_size, uint2 p_style, uint4 p_color, uint4 p_length)
+	void Append(MCStringRef p_font, uint2 p_size, uint2 p_style, uint4 p_color, uint4 p_length)
 	{
 		uint4 t_style_index;
 		t_style_index = FindStyle(p_font, p_size, p_style, p_color);
@@ -392,7 +392,7 @@ private:
 		uint4 color;
 	};
 	
-	uint4 FindStyle(const char *p_font, uint2 p_size, uint2 p_style, uint4 p_color)
+	uint4 FindStyle(MCStringRef p_font, uint2 p_size, uint2 p_style, uint4 p_color)
 	{
 		for(uint4 i = 0; i < m_style_count; ++i)
 		{
@@ -400,11 +400,11 @@ private:
 				p_size == m_style_infos[i] . font_size &&
 				p_color == m_style_infos[i] . color)
 			{
-				if (p_font == m_style_infos[i] . font_name)
+				if (MCStringIsEqualToCString(p_font, m_style_infos[i] . font_name, kMCCompareExact))
 					return i;
 				if (p_font == NULL || m_style_infos[i] . font_name == NULL)
 					continue;
-				if (strcasecmp(p_font, m_style_infos[i] . font_name) == 0)
+				if (MCStringIsEqualToCString(p_font, m_style_infos[i] . font_name, kMCCompareCaseless))
 					return i;
 			}
 		}
@@ -458,8 +458,9 @@ private:
 			else
 				t_font_style = NULL;
 			
-			char t_font_name[256];
-			strcpy(t_font_name, p_font);
+			char *t_font_name;
+            /* UNCHECKED */ MCStringConvertToCString(p_font, t_font_name);
+
 			if (t_font_style != NULL)
 			{
 				strcat(t_font_name, " ");
@@ -473,8 +474,8 @@ private:
 			ATSUFontID t_font_id;
 			if (ATSUFindFontFromName(t_font_name, strlen(t_font_name), kFontFullName, kFontMacintoshPlatform, kFontNoScript, kFontNoLanguage, &t_font_id) != noErr)
 			{
-				if (ATSUFindFontFromName(p_font, strlen(p_font), kFontFullName, kFontMacintoshPlatform, kFontNoScript, kFontNoLanguage, &t_font_id) != noErr)
-					if (ATSUFindFontFromName(p_font, strlen(p_font), kFontFamilyName, kFontMacintoshPlatform, kFontNoScript, kFontNoLanguage, &t_font_id) != noErr)
+				if (ATSUFindFontFromName(p_font, MCStringGetLength(p_font), kFontFullName, kFontMacintoshPlatform, kFontNoScript, kFontNoLanguage, &t_font_id) != noErr)
+					if (ATSUFindFontFromName(p_font, MCStringGetLength(p_font), kFontFamilyName, kFontMacintoshPlatform, kFontNoScript, kFontNoLanguage, &t_font_id) != noErr)
 						return 0;
 				
 				// We've failed to find font + variant, so apply QD styles instead
@@ -543,7 +544,9 @@ private:
 		
 		
 		m_styles[m_style_count] = t_style;
-		m_style_infos[m_style_count] . font_name = p_font;
+        char *temp;
+        /* UNCHECKED */ MCStringConvertToCString(p_font, temp);
+		m_style_infos[m_style_count] . font_name = temp;
 		m_style_infos[m_style_count] . font_style = p_style;
 		m_style_infos[m_style_count] . font_size = p_size;
 		m_style_infos[m_style_count] . color = p_color;
@@ -604,7 +607,7 @@ Exec_stat MCField::getparagraphmacunicodestyles(MCParagraph *p_start, MCParagrap
 		do
 		{
 			findex_t t_block_length;
-			const char *t_font_name;
+			MCNewAutoNameRef t_font_name;
 			uint2 t_font_style;
 			uint2 t_font_size;
 			uint4 t_color;
@@ -628,8 +631,8 @@ Exec_stat MCField::getparagraphmacunicodestyles(MCParagraph *p_start, MCParagrap
 					t_block_length += 1;
 				
 				// MW-2012-02-17: [[ SplitTextAttrs ]] Get any font attrs the block has.
-				if (!t_block -> gettextfont(t_font_name))
-					t_font_name = MCNameGetCString(origname);
+				if (!t_block -> gettextfont(&t_font_name))
+					t_font_name = MCValueRetain(origname);
 				if (!t_block -> gettextsize(t_font_size))
 					t_font_size = origsize;
 				if (!t_block -> gettextstyle(t_font_style))
@@ -653,7 +656,7 @@ Exec_stat MCField::getparagraphmacunicodestyles(MCParagraph *p_start, MCParagrap
 				t_color = 0xffffffff;
 			}
 			
-			t_buffer . Append(t_font_name, t_font_size, t_font_style, t_color, t_block_length);
+			t_buffer . Append(MCNameGetString(*t_font_name), t_font_size, t_font_style, t_color, t_block_length);
 			
 		}
 		while(t_block != t_blocks);

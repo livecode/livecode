@@ -204,6 +204,7 @@ MCPropertyInfo MCPlayer::kProperties[] =
 	DEFINE_RO_OBJ_PROPERTY(P_HOT_SPOTS, String, MCPlayer, HotSpots)
 	DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_CONSTRAINTS, MultimediaQTVRConstraints, MCPlayer, Constraints)
     DEFINE_RO_OBJ_LIST_PROPERTY(P_ENABLED_TRACKS, LinesOfUInt, MCPlayer, EnabledTracks)
+    DEFINE_RW_OBJ_PROPERTY(P_PLAY_LOUDNESS, UInt16, MCPlayer, PlayLoudness)
 };
 
 MCObjectPropertyTable MCPlayer::kPropertyTable =
@@ -4477,7 +4478,7 @@ static SampleDescriptionHandle scanSoundTracks(Movie tmovie)
 static bool path_to_dataref(MCStringRef p_path, DataReferenceRecord& r_rec)
 {
 	bool t_success = true;
-	CFStringRef t_cf_path = NULL;
+    CFStringRef t_cf_path = NULL;
 
 	char* t_cstring;
 	MCStringConvertToCString(p_path, t_cstring);

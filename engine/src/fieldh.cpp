@@ -37,6 +37,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 //#include "textbuffer.h"
 #include "variable.h"
+#include "exec-interface.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -994,17 +995,17 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 			t_block -> setbackcolor(&t_color);
 		}
 
+        MCExecContext ctxt(nil, nil, nil);
+
 		if (p_block -> text_shift != 0)
 			t_block -> setshift(p_block -> text_shift);
 
 		if (p_block -> text_link != nil)
-			t_block -> setatts(P_LINK_TEXT, (void *)MCNameGetCString(p_block -> text_link));
+            t_block -> SetLinktext(ctxt, MCNameGetString(p_block -> text_link));
 
 		if (p_block -> text_metadata != nil)
         {
-            MCAutoPointer<char> t_metadata;
-            /* UNCHECKED */ MCStringConvertToCString(p_block -> text_metadata, &t_metadata);
-            t_block -> setatts(P_METADATA, (void *)*t_metadata);
+            t_block -> SetMetadata(ctxt, p_block -> text_metadata);
         }
 
 		const char *t_font_name;
@@ -1018,14 +1019,23 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 			t_font_name = t_derived_font_name;
 #endif
 		
-		t_block -> setatts(P_TEXT_FONT, (void *)t_font_name);
+        MCAutoStringRef t_font_name_ref;
+        MCStringCreateWithCString(t_font_name, &t_font_name_ref);
+        t_block -> SetTextFont(ctxt, *t_font_name_ref);
 		
 		if (p_block -> font_size != 0)
-			t_block -> setatts(P_TEXT_SIZE, (void *)p_block -> font_size);
+        {
+            uinteger_t t_size;
+            t_size = p_block -> font_size;
+            t_block -> SetTextSize(ctxt, &t_size);
+        }
 		
 		if (p_block -> font_style != 0)
-			t_block -> setatts(P_TEXT_STYLE, (void *)p_block -> font_style);
-		
+        {
+            MCInterfaceTextStyle t_style;
+            t_style . style = p_block -> font_style;
+            t_block -> SetTextStyle(ctxt, t_style);
+        }
 	}
 
 	return true;

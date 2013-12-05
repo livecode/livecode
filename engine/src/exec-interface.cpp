@@ -316,7 +316,7 @@ static MCExecCustomTypeInfo _kMCInterfaceImagePaletteSettingsTypeInfo =
 
 //////////
 
-static void MCInterfaceVisualEffectArgumentCopy(MCExecContext& ctxt, MCInterfaceVisualEffectArgument p_source, MCInterfaceVisualEffectArgument& r_target)
+void MCInterfaceVisualEffectArgumentCopy(MCExecContext& ctxt, MCInterfaceVisualEffectArgument p_source, MCInterfaceVisualEffectArgument& r_target)
 {
 	r_target . key = (MCStringRef)MCValueRetain(p_source . key);
 	r_target . value = (MCStringRef)MCValueRetain(p_source . value);

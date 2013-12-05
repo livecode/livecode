@@ -36,6 +36,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "font.h"
 #include "path.h"
 
+#include "exec-interface.h"
+
 // Default MCBlock constructor - makes a block with everything initialized
 // to zero.
 MCBlock::MCBlock(void)
@@ -804,19 +806,19 @@ int2 MCBlock::gettabwidth(int2 x, findex_t i)
 	// but who can really say!
 	if (fixed)
 	{
-		uint2 ctab = 0;
-		uint2 cindex = 0;
+		findex_t ctab = 0;
+		findex_t cindex = 0;
 
 		// Count the number of preceeding tabs in the paragraph.
 		MCBlock *t_block;
 		t_block = parent -> getblocks();
-		uint2 j;
+		findex_t j;
 		j = 0;
 		while(j < i)
 		{
 			if (t_block -> getflag(F_HAS_TAB))
 			{
-				uint2 k;
+				findex_t k;
 				k = t_block -> GetOffset() + t_block -> GetLength();
 				while(j < k && j < i)
 				{
@@ -929,7 +931,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 		int32_t t_delta;
 		t_delta = cx - x;
 
-		uint2 t_index;
+		findex_t t_index;
 		t_index = start;
 		while(t_index < start + length)
 		{
@@ -993,7 +995,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 
 			x += t_width;
 
-			if (t_next_tab != nil)
+			if (t_next_tab != -1)
 			{
 				x = t_cell_right;
 				t_next_index = parent->IncrementIndex(t_next_index);
@@ -1031,7 +1033,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 			{
 				// If beyond this block, ignore
 				findex_t l = eptr - sptr;
-				if (l > size)
+				if (l >= size)
 					break;
 				
 				uint2 twidth;
@@ -1045,11 +1047,11 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 				cx += twidth;
 				x += twidth;
 
-				// Adjust for the tab character.
+                // Adjust for the tab character.
 				l = parent->IncrementIndex(eptr);
 
 				sptr = l;
-				size = length - l;
+                size = length - l;
 			}
 		}
 
@@ -1322,7 +1324,9 @@ bool MCBlock::gettextfont(const char *& r_textfont) const
 {
 	if (getflag(F_HAS_FNAME))
 	{
-		r_textfont = MCNameGetCString(atts -> fontname);
+        char *t_font;
+        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(atts -> fontname), t_font);
+		r_textfont = t_font;
 		return true;
 	}
 	return false;
@@ -1357,6 +1361,7 @@ bool MCBlock::hasfontattrs(void) const
 	return (flags & F_HAS_ALL_FATTR) != 0;
 }
 
+#ifdef LEGACY_EXEC
 void MCBlock::setatts(Properties which, void *value)
 {
 	// MW-2012-05-04: [[ Values ]] linkText / imageSource / metaData are now uniqued
@@ -1522,6 +1527,7 @@ void MCBlock::setatts(Properties which, void *value)
 		atts = nil;
 	}
 }
+#endif
 
 Boolean MCBlock::getshift(int2 &out)
 {
@@ -2017,6 +2023,7 @@ void MCBlock::exportattrs(MCFieldCharacterStyle& x_style)
 //   those described by the style struct.
 void MCBlock::importattrs(const MCFieldCharacterStyle& p_style)
 {
+    MCExecContext ctxt(nil, nil, nil);
 	if (p_style . has_text_color)
 	{
 		MCColor t_color;
@@ -2032,17 +2039,24 @@ void MCBlock::importattrs(const MCFieldCharacterStyle& p_style)
 		setbackcolor(&t_color);
 	}
 	if (p_style . has_link_text)
-		setatts(P_LINK_TEXT, (void *)p_style . link_text);
+        SetLinktext(ctxt, p_style . link_text);
 	if (p_style . has_image_source)
-		setatts(P_IMAGE_SOURCE, (void *)p_style . image_source);
+        SetImageSource(ctxt, p_style . image_source);
 	if (p_style . has_metadata)
-		setatts(P_METADATA, (void *)p_style . metadata);
-	if (p_style . has_text_font)
-		setatts(P_TEXT_FONT, (void *)MCNameGetCString(p_style . text_font));
+        SetMetadata(ctxt, p_style . metadata);
+    if (p_style . has_text_font)
+        SetTextFont(ctxt, MCNameGetString(p_style . text_font));
 	if (p_style . has_text_style)
-		setatts(P_TEXT_STYLE, (void *)p_style . text_style);
-	if (p_style . has_text_size)
-		setatts(P_TEXT_SIZE, (void *)p_style . text_size);
+    {
+        MCInterfaceTextStyle t_style;
+        t_style . style = p_style . text_style;
+        SetTextStyle(ctxt, t_style);
+    }
+    if (p_style . has_text_size)
+    {
+        uinteger_t t_size = p_style . text_size;
+        SetTextSize(ctxt, &t_size);
+    }
 	// MW-2012-05-09: [[ Bug ]] Setting the textShift of a block is done with 'setshift'
 	//   not 'setatts'.
 	if (p_style . has_text_shift)

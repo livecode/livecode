@@ -602,7 +602,7 @@ static pascal OSErr DoAppPreferences(const AppleEvent *theAppleEvent, AppleEvent
 	MCGroup *mb = MCmenubar != NULL ? MCmenubar : MCdefaultmenubar;
 	if (mb == NULL)
 		return errAEEventNotHandled;
-	MCButton *bptr = (MCButton *)mb->findname(CT_MENU, "Edit");
+    MCButton *bptr = (MCButton *)mb->findname(CT_MENU, MCNAME("Edit"));
 	if (bptr == NULL)
 		return errAEEventNotHandled;
 	if (bptr != NULL)

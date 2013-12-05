@@ -89,7 +89,7 @@ void MCAndroidShowCalendarEventDone(MCStringRef p_calendar_event_id)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
     s_calendar_event_selected = MCValueRetain(p_calendar_event_id);
-    MCLog("MCAndroidShowCalendarEventDone() called %s", MCStringGetCString(p_calendar_event_id));
+    MCLog("MCAndroidShowCalendarEventDone() called %@", p_calendar_event_id);
 	s_calendar_event_status = kMCAndroidCalendarEventDone;
 }
 
@@ -97,7 +97,7 @@ void MCAndroidShowCalendarEventCanceled(MCStringRef p_calendar_event_id)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
     s_calendar_event_selected = MCValueRetain(p_calendar_event_id);
-    MCLog("MCAndroidShowCalendarEventCanceled() called %s", MCStringGetCString(p_calendar_event_id));
+    MCLog("MCAndroidShowCalendarEventCanceled() called %@", p_calendar_event_id);
 	s_calendar_event_status = kMCAndroidCalendarEventCanceled;
 }
 
@@ -117,7 +117,7 @@ void MCAndroidCreateCalendarEventDone(MCStringRef p_calendar_event_id)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
     s_calendar_event_selected = MCValueRetain(p_calendar_event_id);
-    MCLog("MCAndroidCreateCalendarEventDone() called %s", MCStringGetCString(p_calendar_event_id));
+    MCLog("MCAndroidCreateCalendarEventDone() called %@", p_calendar_event_id);
 	s_calendar_event_status = kMCAndroidCalendarEventDone;
 }
 
@@ -125,7 +125,7 @@ void MCAndroidCreateCalendarEventCanceled(MCStringRef p_calendar_event_id)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
     s_calendar_event_selected = MCValueRetain(p_calendar_event_id);
-    MCLog("MCAndroidCreateCalendarEventCanceled() called %s", MCStringGetCString(p_calendar_event_id));
+    MCLog("MCAndroidCreateCalendarEventCanceled() called %@", p_calendar_event_id);
 	s_calendar_event_status = kMCAndroidCalendarEventCanceled;
 }
 
@@ -148,7 +148,7 @@ void MCAndroidUpdateCalendarEventDone(MCStringRef p_calendar_event_id)
 {
 // STILL TO BE IMPLEMENTED IPA LEVEL 14
     s_calendar_event_selected = MCValueRetain(p_calendar_event_id);
-    MCLog("MCAndroidUpdateCalendarEventDone() called %s", MCStringGetCString(p_calendar_event_id));
+    MCLog("MCAndroidUpdateCalendarEventDone() called %@", p_calendar_event_id);
 	s_calendar_event_status = kMCAndroidCalendarEventDone;
 }
 
@@ -156,14 +156,14 @@ void MCAndroidUpdateCalendarEventCanceled(MCStringRef p_calendar_event_id)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
     s_calendar_event_selected = MCValueRetain(p_calendar_event_id);
-    MCLog("MCAndroidUpdateCalendarEventCanceled() called %s", MCStringGetCString(p_calendar_event_id));
+    MCLog("MCAndroidUpdateCalendarEventCanceled() called %@", p_calendar_event_id);
 	s_calendar_event_status = kMCAndroidCalendarEventCanceled;
 }
 
 bool MCSystemGetEventData(MCExecContext &r_ctxt, MCStringRef p_calendar_event_id, MCArrayRef &r_calendar_event_data)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
-    MCLog("MCSystemGetEventData: %s", MCStringGetCString(p_calendar_event_id));
+    MCLog("MCSystemGetEventData: %@", p_calendar_event_id);
     MCAndroidEngineRemoteCall("getCalendarEventData", "vx", nil, p_calendar_event_id);
     MCCalendarToArrayData (r_ctxt, s_calendar_event_data, r_calendar_event_data); 
     return true;
@@ -172,7 +172,7 @@ bool MCSystemGetEventData(MCExecContext &r_ctxt, MCStringRef p_calendar_event_id
 bool MCSystemRemoveEvent(MCStringRef p_calendar_event_id, bool p_reoccurring, MCStringRef& r_calendar_event_id_deleted)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
-    MCLog("MCSystemRemoveCalendarEvent: %s", MCStringGetCString(p_calendar_event_id));
+    MCLog("MCSystemRemoveCalendarEvent: %@", p_calendar_event_id);
     MCAndroidEngineRemoteCall("removeCalendarEvent", "xx", r_calendar_event_id_deleted, p_calendar_event_id);
     
 	r_calendar_event_id_deleted = MCValueRetain(s_calendar_event_selected);
@@ -202,7 +202,7 @@ bool MCSystemFindEvent(MCDateTime p_start_date, MCDateTime p_end_date, MCStringR
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
 	r_result = MCValueRetain(s_calendar_events_selected);
-    MCLog("MCSystemFindCalendarEvent result: %s", MCStringGetCString(r_result));
+    MCLog("MCSystemFindCalendarEvent result: %@", r_result);
     return true;
 }
 

@@ -1119,7 +1119,9 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 		uint2 psize, pstyle;
 		MCNameRef pname_name;
 		getfontattsnew(pname_name, psize, pstyle);
-		pname = MCNameGetCString(pname_name);
+        MCAutoPointer<char> temp;
+        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(pname_name), &temp);
+		pname = *temp;
 
 		uint2 height;
 		height = gettextheight();

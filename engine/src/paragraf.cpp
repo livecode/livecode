@@ -1556,9 +1556,10 @@ MCBlock *MCParagraph::indextoblock(findex_t tindex, Boolean forinsert)
 					// first
 					if (t_block == blocks)
 					{
+                        MCExecContext ctxt(nil, nil, nil);
 						MCBlock *t_new_block;
 						t_new_block = new MCBlock(*t_block);
-						t_new_block -> setatts(P_IMAGE_SOURCE, (void *)kMCEmptyString);
+                        t_new_block -> SetImageSource(ctxt, kMCEmptyString);
 
 						// MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
 						//   fontref so it can compute its.
@@ -1583,9 +1584,10 @@ MCBlock *MCParagraph::indextoblock(findex_t tindex, Boolean forinsert)
 					// then we may need to insert a new block if there are no more.
 					if (t_block -> next() == blocks)
 					{
+                        MCExecContext ctxt(nil, nil, nil);
 						MCBlock *t_new_block;
 						t_new_block = new MCBlock(*t_block);
-						t_new_block -> setatts(P_IMAGE_SOURCE, (void *)kMCEmptyString);
+                        t_new_block -> SetImageSource(ctxt, kMCEmptyString);
 
 						// MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
 						//   fontref so it can compute its.
@@ -1978,7 +1980,9 @@ void MCParagraph::finsertnobreak(MCStringRef p_string, MCRange t_range)
 
 		// Move the focusedindex to the end of the insert.
 		focusedindex += t_new_length;
-	}
+    }
+    
+    // New text so a re-layout is necessary
     needs_layout = true;
 }
 

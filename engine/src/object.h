@@ -437,13 +437,17 @@ public:
 
 	const char *getname_cstring(void) const
 	{
-		return MCNameGetCString(_name);
+        char *t_name;
+        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(_name), t_name);
+		return t_name;
 	}
 
+    /*
 	MCString getname_oldstring(void) const
 	{
 		return MCNameGetOldString(_name);
 	}
+    */
 
 	// Tests to see if the object has the given name, interpreting unnamed as
 	// the empty string.

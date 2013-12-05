@@ -33,6 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 #include "unicode.h"
+#include "exec-interface.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -620,7 +621,7 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	
 	// Set metadata
 	if (p_metadata != nil)
-		t_block -> setatts(P_METADATA, (void *)p_metadata);
+        t_block -> SetMetadata(ctxt, p_metadata);
 
 	if (p_style == nil)
 		return;
@@ -667,17 +668,17 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	if (!MCValueIsEmpty(t_valueref))
 	{
 		MCAutoStringRef t_string;
-		/* UNCHECKED */ ctxt . ConvertToString(t_valueref, &t_string);
-        MCAutoPointer<char> temp;
-        /* UNCHECKED */ MCStringConvertToCString(*t_string, &temp);
-		t_block -> setatts(P_TEXT_FONT, (void *)*temp);
+        /* UNCHECKED */ ctxt . ConvertToString(t_valueref, &t_string);
+        t_block -> SetTextFont(ctxt, *t_string);
 	}
 	
 	// Set textsize
 	{
 		MCAutoNumberRef t_number;
+        uinteger_t t_size;
 		convert_array_value_to_number_if_non_empty(ctxt, p_style, MCNAME("textSize"), &t_number);
-		t_block -> setatts(P_TEXT_SIZE, (void *)MCNumberFetchAsInteger(*t_number));
+        t_size = MCNumberFetchAsUnsignedInteger(*t_number);
+        t_block -> SetTextSize(ctxt, &t_size);
 	}
 	
 	// Set textstyle
@@ -689,23 +690,29 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 		MCAutoStringRef fname;
 		uint2 height;
 		uint2 size;
-		uint2 style;
+        uint2 style;
 
 		MCF_parsetextatts(P_TEXT_STYLE, *t_string, flags, &fname, height, size, style);
 
-		t_block -> setatts(P_TEXT_STYLE, (void *)style);
+        MCInterfaceTextStyle t_style;
+        t_style . style;
+        t_block -> SetTextStyle(ctxt, t_style);
 	}
 
 	// Set linktext
 	if (MCArrayFetchValue(p_style, false, MCNAME("linkText"), t_valueref))
 	{	
-		t_block -> setatts(P_LINK_TEXT, (void *)t_valueref);
+        MCAutoStringRef t_string;
+        if (ctxt . ConvertToString(t_valueref, &t_string))
+            t_block -> SetLinktext(ctxt, *t_string);
 	}
 
 	// Set imagesource
 	if (MCArrayFetchValue(p_style, false, MCNAME("imageSource"), t_valueref))
 	{
-		t_block -> setatts(P_IMAGE_SOURCE, (void *)t_valueref);
+        MCAutoStringRef t_string;
+        if (ctxt . ConvertToString(t_valueref, &t_string))
+            t_block -> SetImageSource(ctxt, *t_string);
 	}
 
 }
