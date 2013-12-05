@@ -15,7 +15,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	cdata.cpp chunk.cpp cmds.cpp cmdsc.cpp cmdse.cpp cmdsf.cpp \
 	cmdsm.cpp cmdsp.cpp cmdss.cpp constant.cpp control.cpp cpalette.cpp \
 	date.cpp debug.cpp dispatch.cpp dllst.cpp objectprops.cpp \
-	execpt.cpp express.cpp field.cpp fieldf.cpp fieldh.cpp fields.cpp fieldstyledtext.cpp fieldhtml.cpp fieldrtf.cpp \
+	express.cpp field.cpp fieldf.cpp fieldh.cpp fields.cpp fieldstyledtext.cpp fieldhtml.cpp fieldrtf.cpp \
 	font.cpp funcs.cpp funcsm.cpp globals.cpp graphic.cpp \
 	graphicscontext.cpp \
 	group.cpp \

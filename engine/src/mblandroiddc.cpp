@@ -2628,8 +2628,7 @@ JNIEXPORT jstring JNICALL Java_com_runrev_android_Engine_doGetCustomPropertyValu
     }
 
     MCExecValue t_value;
-    MCExecPoint ep;
-    MCExecContext ctxt(ep);
+    MCExecContext ctxt(nil, nil, nil);
     if (!MCdefaultstackptr -> getcustomprop(ctxt, *t_set_name, *t_prop_name, t_value))
     {
         MCAutoStringRef t_string_value;

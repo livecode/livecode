@@ -128,9 +128,10 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
 bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 {
-    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(nil, nil, nil);
 	
 	bool t_success;
 	t_success = true;
@@ -150,8 +151,11 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 			continue;
 		}
 		
+        MCAutoValueRef t_value;
 		if (p_parameters != nil)
-			t_success = p_parameters -> eval_argument(ep) == ES_NORMAL;
+        {
+			t_success = p_parameters -> eval(ctxt, &t_value);
+        }
 		else if (t_now_optional)
 			break;
 		else
@@ -161,35 +165,68 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 		{
 			case 'b':
 				if (t_success)
-                    *(va_arg(t_args, bool *)) = ep . getsvalue() == MCtruemcstring;
+                {
+                    MCAutoStringRef t_string;
+                    /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
+					*(va_arg(t_args, bool *)) = MCStringIsEqualTo(*t_string, kMCTrueString, kMCCompareCaseless);
+                }
 				break;
 				
 			case 's':
 				if (t_success)
-					*(va_arg(t_args, char **)) = ep . getsvalue() . clone();
+                {
+                    MCAutoStringRef t_string;
+                    /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
+                    char *temp;
+                    /* UNCHECKED */ MCStringConvertToCString(*t_string, temp);
+					*(va_arg(t_args, char **)) = temp;
+                }
 				else
 					*(va_arg(t_args, char **)) = nil;
 				break;
-			
-			case 'x':
+                
+			case 'd':
 				if (t_success)
-					ep . copyasstringref(*(va_arg(t_args, MCStringRef *)));
+                {
+                    MCAutoStringRef t_string;
+                    /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
+                    char *temp;
+                    /* UNCHECKED */ MCStringConvertToCString(*t_string, temp);
+					(va_arg(t_args, MCString *)) -> set(temp, strlen(temp));
+                }
+				else
+					(va_arg(t_args, MCString *)) -> set(nil, 0);
+				break;
+                
+            case 'x':
+            {
+				if (t_success)
+                {
+                    /* UNCHECKED */ ctxt . ConvertToString(*t_value, *(va_arg(t_args, MCStringRef *)));
+                }
 				else
 					t_success = false;
 				break;
-			
+            }
+                
 			case 'a':
+            {
 				if (t_success)
-					ep . copyasarrayref(*(va_arg(t_args, MCArrayRef *)));
+                /* UNCHECKED */ ctxt . ConvertToArray(*t_value, *(va_arg(t_args, MCArrayRef *)));
 				else
 					t_success = false;
 				break;
+            }
 				
 			case 'r':
 			{
 				int2 i1, i2, i3, i4;
 				if (t_success)
-					t_success = MCU_stoi2x4(ep . getsvalue(), i1, i2, i3, i4) == True;
+                {
+                    MCAutoStringRef t_string;
+                    ctxt . ConvertToString(*t_value, &t_string);
+					t_success = MCU_stoi2x4(*t_string, i1, i2, i3, i4) == True;
+                }
 				if (t_success)
 					MCU_set_rect(*(va_arg(t_args, MCRectangle *)), i1, i2, i3 - i1, i4 - i2);
 			}
@@ -198,8 +235,9 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 			case 'i':
 				if (t_success)
 				{
-					if (ep . ston() == ES_NORMAL)
-						*(va_arg(t_args, int32_t *)) = ep . getint4();
+                    integer_t t_int;
+					if (ctxt . ConvertToInteger(*t_value, t_int))
+						*(va_arg(t_args, integer_t *)) = t_int;
 					else
 						t_success = false;
 				}
@@ -208,8 +246,9 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 			case 'u':
 				if (t_success)
 				{
-					if (ep . ston() == ES_NORMAL)
-						*(va_arg(t_args, uint32_t *)) = ep . getuint4();
+                    uinteger_t t_uint;
+					if (ctxt . ConvertToUnsignedInteger(*t_value, t_uint))
+						*(va_arg(t_args, uinteger_t *)) = t_uint;
 					else
 						t_success = false;
 				}
