@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "util.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "date.h"
 #include "globals.h"
 #include "osspec.h"
@@ -1300,9 +1300,10 @@ bool MCD_convert_from_datetime(MCExecContext &ctxt, MCDateTime p_datetime, Conve
         
 		if (p_secondary_to != CF_UNDEFINED)
 		{
+            MCAutoStringRef t_secondary_format;
 			MCStringRef t_buffer_secondary;
-			MCD_decompose_convert_format(ctxt, p_secondary_to, t_locale, &t_date_format);
-			datetime_format(t_locale, *t_date_format, p_datetime, t_buffer_secondary);
+			MCD_decompose_convert_format(ctxt, p_secondary_to, t_locale, &t_secondary_format);
+			datetime_format(t_locale, *t_secondary_format, p_datetime, t_buffer_secondary);
 			
 			MCStringRef t_new;
 			/* UNCHECKED */ MCStringFormat(t_new, "%@ %@", t_buffer, t_buffer_secondary);

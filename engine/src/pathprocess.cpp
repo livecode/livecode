@@ -20,12 +20,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
-#include "execpt.h"
+//#include "execpt.h"
 
 #include "dispatch.h"
 #include "image.h"
 #include "stack.h"
 #include "util.h"
+#include "variable.h"
 
 #include "globals.h"
 

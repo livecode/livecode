@@ -35,8 +35,8 @@ public:
 		MCNameDelete(value);
 	}
 
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 	virtual void compile(MCSyntaxFactoryRef ctxt);
 };
 
@@ -55,8 +55,8 @@ public:
 		MCNameDelete(value);
 	}
 
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 };
 
 #endif

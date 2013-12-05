@@ -72,15 +72,15 @@ void MCSensorFinalize(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCSensorType MCSensorTypeFromCString(const char *p_string)
+MCSensorType MCSensorTypeFromString(MCStringRef p_string)
 {
-    if (MCCStringEqualCaseless(p_string, "location"))
+    if (MCStringIsEqualToCString(p_string, "location", kMCCompareCaseless))
         return kMCSensorTypeLocation;
-    else if (MCCStringEqualCaseless(p_string, "heading"))
+    else if (MCStringIsEqualToCString(p_string, "heading", kMCCompareCaseless))
         return kMCSensorTypeHeading;
-    else if (MCCStringEqualCaseless(p_string, "acceleration"))
+    else if (MCStringIsEqualToCString(p_string, "acceleration", kMCCompareCaseless))
         return kMCSensorTypeAcceleration;
-    else if (MCCStringEqualCaseless(p_string, "rotation rate"))
+    else if (MCStringIsEqualToCString(p_string, "rotation rate", kMCCompareCaseless))
         return kMCSensorTypeRotationRate;
     
     return kMCSensorTypeUnknown;

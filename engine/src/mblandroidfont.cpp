@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "globals.h"
 #include "dispatch.h"
 #include "stack.h"
@@ -567,14 +567,12 @@ float android_font_measure_text(void *p_font, const char *p_text, uint32_t p_tex
 	}
 	else
 	{
-		MCExecPoint ep;
-		ep.setsvalue(MCString(p_text, p_text_length));
+        MCAutoStringRef t_string;
+        MCStringCreateWithCString(p_text, &t_string);
+        MCAutoStringRefAsUTF8String t_utf8_string;
+        /* UNCHECKED */ t_utf8_string . Lock(*t_string);
         
-		ep.nativetoutf8();
-        
-		const MCString &t_utf_string = ep.getsvalue();
-        
-		/* UNCHECKED */ MCAndroidTypefaceMeasureText(t_font->typeface, t_font->size, t_utf_string.getstring(), t_utf_string.getlength(), false, t_length);
+        /* UNCHECKED */ MCAndroidTypefaceMeasureText(t_font->typeface, t_font->size, *t_utf8_string, MCStringGetLength(*t_string), false, t_length);
 	}
 	
 	return t_length;

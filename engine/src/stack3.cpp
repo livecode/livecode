@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "exec.h"
 #include "stack.h"
 #include "aclip.h"
@@ -53,6 +53,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "redraw.h"
 #include "font.h"
+#include "variable.h"
 
 #include "globals.h"
 #include "mctheme.h"
@@ -1597,8 +1598,7 @@ void MCStack::menumup(uint2 which, MCStringRef &r_string, uint2 &selline)
 	{
 		bool t_has_tags = bptr->getmenuhastags();
 
-		MCExecPoint ep(this, NULL, NULL);
-		MCExecContext ctxt(ep);
+        MCExecContext ctxt(this, nil, nil);
 		MCAutoStringRef t_label;
 		MCStringRef t_name = nil;
 		focused->getstringprop(ctxt, 0, P_LABEL, true, &t_label);
@@ -1638,9 +1638,8 @@ void MCStack::menukdown(MCStringRef p_string, KeySym key, MCStringRef &r_string,
 		}
 		else
 		{
-			MCAutoStringRef t_string;
-			MCExecPoint ep(this, NULL, NULL);
-			MCExecContext ctxt(ep);
+            MCAutoStringRef t_string;
+            MCExecContext ctxt(this, nil, nil);
 			kfocused->getstringprop(ctxt, 0, P_LABEL, True, &t_string);
 			r_string = MCValueRetain(*t_string);
 		}
@@ -1759,36 +1758,42 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 		switch (form)
 		{
 		case ST_DATETIME:
-			if (!marked || curcard->getmark() && by->eval(ctxt.GetEP()) == ES_NORMAL)
+        {
+            MCAutoValueRef t_value;
+            if (!marked || curcard->getmark() && ctxt . EvalExprAsValueRef(by, EE_SORT_BADTARGET, &t_value))
 			{
 				MCAutoStringRef t_out;
-				if (MCD_convert(ctxt, ctxt.GetEP().getvalueref(), CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_out))
+				if (MCD_convert(ctxt, *t_value, CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_out))
 					if (ctxt.ConvertToNumber(*t_out, items[nitems].nvalue))
 						break;
 			}
 
 			/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
 			break;
+        }
 		case ST_NUMERIC:
+        {
+            MCAutoValueRef t_value;
 			if ((!marked || curcard->getmark())
-			        && by->eval(ctxt.GetEP()) == ES_NORMAL 
-					&& ctxt.ConvertToNumber(ctxt.GetEP().getvalueref(), items[nitems].nvalue))
+                    && ctxt . EvalExprAsValueRef(by, EE_SORT_BADTARGET, &t_value)
+					&& ctxt.ConvertToNumber(*t_value, items[nitems].nvalue))
 				break;
 
 			/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
 			break;
+        }
 		case ST_INTERNATIONAL:
 		case ST_TEXT:
-			if ((!marked || curcard->getmark()) && by->eval(ctxt.GetEP()) == ES_NORMAL)
-			{
-				MCStringRef t_string;
-				/* UNCHECKED */ ctxt.ConvertToString(ctxt.GetEP().getvalueref(), t_string);
+        {
+            MCAutoStringRef t_string;
+            if ((!marked || curcard->getmark()) && ctxt . EvalExprAsStringRef(by, EE_SORT_BADTARGET, &t_string))
+            {
 				if (ctxt.GetCaseSensitive())
-					items[nitems].svalue = t_string;
+                    items[nitems].svalue = MCValueRetain(*t_string);
 				else
 				{
 					MCStringRef t_mutable;
-					/* UNCHECKED */ MCStringMutableCopyAndRelease(t_string, t_mutable);
+                    /* UNCHECKED */ MCStringMutableCopyAndRelease(*t_string, t_mutable);
 					/* UNCHECKED */ MCStringLowercase(t_mutable);
 					/* UNCHECKED */ MCStringCopyAndRelease(t_mutable, items[nitems].svalue);
 				}
@@ -1796,6 +1801,7 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 			else
 				items[nitems].svalue = MCValueRetain(kMCEmptyString);
 			break;
+        }
 		default:
 			break;
 		}
@@ -1890,7 +1896,7 @@ Boolean MCStack::findone(MCExecContext &ctxt, Find_mode fmode,
 		MCObject *optr;
 		uint4 parid;
 		MCerrorlock++;
-		if (field->getobj(ctxt.GetEP(), optr, parid, True) == ES_NORMAL)
+		if (field->getobj(ctxt, optr, parid, True))
 		{
 			if (optr->gettype() == CT_FIELD)
 			{
@@ -2002,6 +2008,7 @@ void MCStack::markfind(MCExecContext &ctxt, Find_mode fmode,
 		MCfoundfield->clearfound();
 }
 
+#ifdef LEGACY_EXEC
 void MCStack::mark(MCExecPoint &ep, MCExpression *where, Boolean mark)
 {
 	if (where == NULL)
@@ -2033,6 +2040,7 @@ void MCStack::mark(MCExecPoint &ep, MCExpression *where, Boolean mark)
 		MCerrorlock--;
 	}
 }
+#endif
 
 void MCStack::mark(MCExecContext& ctxt, MCExpression *p_where, bool p_mark)
 {
@@ -2053,10 +2061,10 @@ void MCStack::mark(MCExecContext& ctxt, MCExpression *p_where, bool p_mark)
 		MCerrorlock++;
 		do
 		{
-            MCAutoValueRef t_condition;
-			if (ctxt . EvaluateExpression(p_where, &t_condition))
+            MCAutoBooleanRef t_condition;
+            if (ctxt . EvalExprAsBooleanRef(p_where, EE_MARK_BADSTRING, &t_condition))
 			{
-				if ((MCBooleanRef)*t_condition == kMCTrue)
+                if (*t_condition == kMCTrue)
 					curcard->setmark(p_mark);
 			}
 			curcard = (MCCard *)curcard->next();

@@ -629,45 +629,28 @@ void MCGraphic::SetFilled(MCExecContext& ctxt, bool setting)
 	}
 }
 
-void MCGraphic::DoGetGradientFillArray(MCExecContext& ctxt, MCGradientFill *p_fill, MCArrayRef& r_array)
+void MCGraphic::DoGetGradientFill(MCExecContext& ctxt, MCGradientFill*& p_fill, MCNameRef p_prop, MCExecValue& r_value)
 {
-    if (MCGradientFillGetProperties(p_fill, r_array))
-        ctxt . Throw();
-}
-
-void MCGraphic::DoSetGradientFillArray(MCExecContext& ctxt, MCGradientFill *p_fill, Draw_index p_di, MCArrayRef p_array)
-{
-    bool t_dirty;
-    if (MCGradientFillSetProperties(p_fill, rect, p_array, t_dirty))
-    {
-        if (p_fill != nil)
-		{
-			MCInterfaceNamedColor t_empty_color;
-            t_empty_color . name = MCValueRetain(kMCEmptyString);
-            SetColor(ctxt, p_di, t_empty_color);
-            SetPattern(ctxt, p_di, nil);
-            
-		}
-        if (t_dirty)
-            Redraw();
+    if ((p_prop == nil || MCNameIsEmpty(p_prop)) && MCGradientFillGetProperties(ctxt, p_fill, r_value))
         return;
-    }
     
-    ctxt . Throw();
-}
-
-void MCGraphic::DoGetGradientFillElement(MCExecContext& ctxt, MCGradientFill *p_fill, MCNameRef p_prop, MCValueRef& r_value)
-{
-    if (MCGradientFillGetElement(p_fill, p_prop, r_value))
+    if (MCGradientFillGetElement(ctxt, p_fill, p_prop, r_value))
         return;
     
     ctxt . Throw();
 }
 
-void MCGraphic::DoSetGradientFillElement(MCExecContext& ctxt, MCGradientFill *p_fill, Draw_index p_di, MCNameRef p_prop, MCValueRef p_value)
+void MCGraphic::DoSetGradientFill(MCExecContext& ctxt, MCGradientFill*& p_fill, Draw_index p_di, MCNameRef p_prop, MCExecValue p_value)
 {
     bool t_dirty;
-    if (MCGradientFillSetElement(p_fill, p_prop, rect, p_value, t_dirty))
+    bool t_success;
+    
+    if (p_prop == nil || MCNameIsEmpty(p_prop))
+        t_success = MCGradientFillSetProperties(ctxt, p_fill, rect, p_value, t_dirty);
+    else
+        t_success = MCGradientFillSetElement(ctxt, p_fill, p_prop, rect, p_value, t_dirty);
+    
+    if (t_success)
     {
         if (p_fill != nil)
 		{
@@ -676,52 +659,35 @@ void MCGraphic::DoSetGradientFillElement(MCExecContext& ctxt, MCGradientFill *p_
             SetColor(ctxt, p_di, t_empty_color);
             SetPattern(ctxt, p_di, nil);
 		}
-        if (t_dirty)
-            Redraw();
+        if (t_dirty && opened)
+        {
+            // MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
+            layer_redrawall();
+        }
         return;
     }
     
     ctxt . Throw();
 }
 
-void MCGraphic::GetGradientFill(MCExecContext& ctxt, MCArrayRef& r_array)
+void MCGraphic::GetGradientFillProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecValue& r_value)
 {
-    DoGetGradientFillArray(ctxt, m_fill_gradient, r_array);
+    DoGetGradientFill(ctxt, m_fill_gradient, p_prop, r_value);
 }
 
-void MCGraphic::SetGradientFill(MCExecContext& ctxt, MCArrayRef p_array)
+void MCGraphic::SetGradientFillProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecValue p_value)
 {
-    DoSetGradientFillArray(ctxt, m_fill_gradient, DI_BACK, p_array);
+    DoSetGradientFill(ctxt, m_fill_gradient, DI_BACK, p_prop, p_value);
 }
 
-void MCGraphic::GetGradientFillElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value)
+void MCGraphic::GetGradientStrokeProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecValue& r_value)
 {
-    DoGetGradientFillElement(ctxt, m_fill_gradient, p_prop, r_value);
+    DoGetGradientFill(ctxt, m_stroke_gradient, p_prop, r_value);
 }
 
-void MCGraphic::SetGradientFillElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value)
+void MCGraphic::SetGradientStrokeProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecValue p_value)
 {
-    DoSetGradientFillElement(ctxt, m_fill_gradient, DI_BACK, p_prop, p_value);
-}
-
-void MCGraphic::GetGradientStroke(MCExecContext& ctxt, MCArrayRef& r_array)
-{
-    DoGetGradientFillArray(ctxt, m_stroke_gradient, r_array);
-}
-
-void MCGraphic::SetGradientStroke(MCExecContext& ctxt, MCArrayRef p_array)
-{
-    DoSetGradientFillArray(ctxt, m_stroke_gradient, DI_FORE, p_array);
-}
-
-void MCGraphic::GetGradientStrokeElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value)
-{
-    DoGetGradientFillElement(ctxt, m_stroke_gradient, p_prop, r_value);
-}
-
-void MCGraphic::SetGradientStrokeElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value)
-{
-    DoSetGradientFillElement(ctxt, m_stroke_gradient, DI_FORE, p_prop, p_value);
+    DoSetGradientFill(ctxt, m_stroke_gradient, DI_FORE, p_prop, p_value);
 }
 
 void MCGraphic::DoCopyPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points, uindex_t& r_count, MCPoint*& r_points)
@@ -863,3 +829,88 @@ void MCGraphic::SetRelativePoints(MCExecContext& ctxt, uindex_t p_count, MCPoint
     compute_minrect();
     Redraw();
 }
+
+//////////
+
+static MCExecEnumTypeElementInfo _kMCInterfaceGradientFillKindElementInfo[] =
+{
+	{ "linear", kMCGradientKindLinear, false },
+    { "radial", kMCGradientKindRadial, false },
+	{ "conical", kMCGradientKindConical, false },
+    { "diamond", kMCGradientKindDiamond, false },
+	{ "spiral", kMCGradientKindSpiral, false },
+    { "xy", kMCGradientKindXY, false },
+	{ "sqrtxy", kMCGradientKindSqrtXY, false },
+    { "none", kMCGradientKindNone, false },
+    { "0", kMCGradientKindNone, false },
+};
+
+static MCExecEnumTypeInfo _kMCInterfaceGradientFillKindTypeInfo =
+{
+	"Interface.GradientFillKind",
+	sizeof(_kMCInterfaceGradientFillKindElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCInterfaceGradientFillKindElementInfo
+};
+
+//////////
+
+static MCExecEnumTypeElementInfo _kMCInterfaceGradientFillQualityElementInfo[] =
+{
+	{ "normal", kMCGradientQualityNormal, false },
+	{ "good", kMCGradientQualityGood, false },
+};
+
+static MCExecEnumTypeInfo _kMCInterfaceGradientFillQualityTypeInfo =
+{
+	"Interface.GradientFillQuality",
+	sizeof(_kMCInterfaceGradientFillQualityElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCInterfaceGradientFillQualityElementInfo
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCExecEnumTypeInfo *kMCInterfaceGradientFillKindTypeInfo = &_kMCInterfaceGradientFillKindTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceGradientFillQualityTypeInfo = &_kMCInterfaceGradientFillQualityTypeInfo;
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCGraphic::SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color)
+{
+    if (color . name != nil && (!MCStringIsEmpty(color . name)) && m_stroke_gradient != nil)
+    {
+        MCGradientFillFree(m_stroke_gradient);
+        m_stroke_gradient = nil;
+    }
+    return MCObject::SetForeColor(ctxt, color);
+}
+
+void MCGraphic::SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color)
+{
+    if (color . name != nil && (!MCStringIsEmpty(color . name)) && m_stroke_gradient != nil)
+    {
+        MCGradientFillFree(m_stroke_gradient);
+        m_stroke_gradient = nil;
+    }
+    return MCObject::SetBackColor(ctxt, color);
+}
+
+void MCGraphic::SetForePattern(MCExecContext& ctxt, uinteger_t* pattern)
+{
+    if (m_stroke_gradient != nil)
+    {
+        MCGradientFillFree(m_stroke_gradient);
+        m_stroke_gradient = nil;
+    }
+    return MCObject::SetBackPattern(ctxt, pattern);
+}
+
+void MCGraphic::SetBackPattern(MCExecContext& ctxt, uinteger_t* pattern)
+{
+    if (m_stroke_gradient != nil)
+    {
+        MCGradientFillFree(m_stroke_gradient);
+        m_stroke_gradient = nil;
+    }
+    return MCObject::SetBackPattern(ctxt, pattern);
+}
+

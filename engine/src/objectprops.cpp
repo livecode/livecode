@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "card.h"
@@ -354,6 +354,7 @@ Exec_stat MCObject::getrectprop(Properties p_which, MCExecPoint& ep, Boolean p_e
 }
 #endif /* MCObject::getrectprop */
 
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::sendgetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef p_prop_name)
 {
 	// If the set name is nil, then we send a 'getProp <propname>' otherwise we
@@ -399,7 +400,9 @@ Exec_stat MCObject::sendgetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef
 
 	return t_stat;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::getcustomprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef p_prop_name)
 {
 	assert(p_set_name != nil);
@@ -420,7 +423,83 @@ Exec_stat MCObject::getcustomprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameR
 
 	return t_stat;
 }
+#endif
 
+Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCValueRef& r_value)
+{
+	// If the set name is nil, then we send a 'getProp <propname>' otherwise we
+	// send a 'getProp <setname> <propname>'.
+	//
+	MCNameRef t_getprop_name;
+	MCNameRef t_param_name;
+	if (MCNameIsEqualTo(p_set_name, kMCEmptyName, kMCCompareCaseless))
+		t_getprop_name = p_prop_name, t_param_name = kMCEmptyName;
+	else
+		t_getprop_name = p_set_name, t_param_name = p_prop_name;
+    
+	Exec_stat t_stat = ES_NOT_HANDLED;
+	if (!MClockmessages && (ctxt . GetObject() != this || !ctxt . GetHandler() -> hasname(t_getprop_name)))
+	{
+		MCParameter p1;
+		p1.setvalueref_argument(t_param_name);
+        
+		MCStack *oldstackptr = MCdefaultstackptr;
+		MCdefaultstackptr = getstack();
+		MCObject *oldtargetptr = MCtargetptr;
+		MCtargetptr = this;
+		Boolean added = False;
+		if (MCnexecutioncontexts < MAX_CONTEXTS)
+		{
+			MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+			added = True;
+		}
+		t_stat = MCU_dofrontscripts(HT_GETPROP, t_getprop_name, &p1);
+		if (t_stat == ES_NOT_HANDLED || t_stat == ES_PASS)
+			t_stat = handle(HT_GETPROP, t_getprop_name, &p1, this);
+		MCdefaultstackptr = oldstackptr;
+		MCtargetptr = oldtargetptr;
+		if (added)
+			MCnexecutioncontexts--;
+	}
+    
+	if (t_stat == ES_NORMAL)
+		t_stat = MCresult -> eval(ctxt, r_value) ? ES_NORMAL : ES_ERROR;
+    
+	return t_stat;
+}
+
+bool MCObject::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue& r_value)
+{
+	assert(p_set_name != nil);
+	assert(p_prop_name != nil);
+    
+	Exec_stat t_stat;
+	t_stat = sendgetprop(ctxt, p_set_name, p_prop_name, r_value . valueref_value);
+	if (t_stat == ES_NOT_HANDLED || t_stat == ES_PASS)
+	{
+        MCValueRef t_value;
+		MCObjectPropertySet *p;
+		if (!findpropset(p_set_name, false, p) ||
+			!p -> fetchelement(ctxt, p_prop_name, t_value))
+        {
+            r_value . stringref_value = MCValueRetain(kMCEmptyString);
+            r_value . type = kMCExecValueTypeStringRef;
+            return true;
+        }
+        r_value . valueref_value = MCValueRetain(t_value);
+		t_stat = ES_NORMAL;
+	}
+    
+	if (t_stat == ES_NORMAL)
+    {
+        r_value . type = kMCExecValueTypeValueRef;
+        return true;
+    }
+    
+    return false;
+}
+
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 #ifdef /* MCObject::getprop */ LEGACY_EXEC
@@ -778,6 +857,7 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 	}
 	return t_stat;
 }
+#endif
 
 static bool string_contains_item(const char *p_string, const char *p_item)
 { 
@@ -797,6 +877,7 @@ static bool string_contains_item(const char *p_string, const char *p_item)
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
 	switch(which)
@@ -853,6 +934,7 @@ Exec_stat MCObject::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
 	}
 	return ES_NORMAL;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1372,6 +1454,7 @@ Exec_stat MCObject::setvisibleprop(uint4 parid, Properties which, MCExecPoint& e
 }
 #endif /* MCObject::setvisibleprop */
 
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::sendsetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef p_prop_name)
 {
 	// If the set name is nil, then we send a 'setProp <propname> <value>'
@@ -1423,7 +1506,9 @@ Exec_stat MCObject::sendsetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef
 
 	return t_stat;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::setcustomprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef p_prop_name)
 {
 	Exec_stat t_stat;
@@ -1440,7 +1525,77 @@ Exec_stat MCObject::setcustomprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameR
 
 	return t_stat;
 }
+#endif
 
+Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCValueRef p_value)
+{
+	// If the set name is nil, then we send a 'setProp <propname> <value>'
+	// otherwise we send a 'setProp <setname>[<propname>] <value>'.
+	MCNameRef t_setprop_name;
+	MCNameRef t_param_name;
+	if (MCNameIsEqualTo(p_set_name, kMCEmptyName, kMCCompareCaseless))
+		t_setprop_name = p_prop_name, t_param_name = kMCEmptyName;
+	else
+		t_setprop_name = p_set_name, t_param_name = p_prop_name;
+    
+	// Note that in either case (non-array or array setProp), the param list is
+	// the same:
+	//   setProp pPropName, pValue
+	// The parameter list is auto-adjusted if it is of array type in MCHandler::exec.
+    
+	Exec_stat t_stat = ES_NOT_HANDLED;
+	if (!MClockmessages && (ctxt . GetObject() != this || !ctxt . GetHandler()->hasname(t_setprop_name)))
+	{
+		MCParameter p1, p2;
+		p1.setnext(&p2);
+        
+		p1.setvalueref_argument(t_param_name);
+		p2.setvalueref_argument(p_value);
+		
+		MCStack *oldstackptr = MCdefaultstackptr;
+		MCdefaultstackptr = getstack();
+		MCObject *oldtargetptr = MCtargetptr;
+		MCtargetptr = this;
+		Boolean added = False;
+		if (MCnexecutioncontexts < MAX_CONTEXTS)
+		{
+			MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+			added = True;
+		}
+        
+		t_stat = MCU_dofrontscripts(HT_SETPROP, t_setprop_name, &p1);
+		if (t_stat == ES_NOT_HANDLED || t_stat == ES_PASS)
+			t_stat = handle(HT_SETPROP, t_setprop_name, &p1, this);
+        
+		if (added)
+			MCnexecutioncontexts--;
+		MCdefaultstackptr = oldstackptr;
+		MCtargetptr = oldtargetptr;
+	}
+    
+	return t_stat;
+}
+
+bool MCObject::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue p_value)
+{
+    MCValueRef t_value;
+    MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeValueRef, &t_value);
+    
+	Exec_stat t_stat;
+	t_stat = sendsetprop(ctxt, p_set_name, p_prop_name, t_value);
+    
+	if (t_stat == ES_PASS || t_stat == ES_NOT_HANDLED)
+	{
+		MCObjectPropertySet *p;
+		/* UNCHECKED */ ensurepropset(p_set_name, false, p);
+		if (!p -> storeelement(ctxt, p_prop_name, t_value))
+			return false;
+		return true;
+	}
+	return t_stat == ES_NORMAL;
+}
+
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 #ifdef /* MCObject::setprop */ LEGACY_EXEC
@@ -1899,7 +2054,10 @@ Exec_stat MCObject::setprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 	MCeerror->add(EE_OBJECT_SETNOPROP, 0, 0);
 	return ES_ERROR;
 }
+#endif
 
+
+#ifdef LEGACY_EXEC
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCObject::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
@@ -2009,6 +2167,7 @@ Exec_stat MCObject::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoi
     }
     return t_stat;
 }
+#endif
 
 #ifdef OLD_EXEC
 Exec_stat MCObject::setprops(uint32_t p_parid, MCExecPoint& ep)
@@ -2269,22 +2428,24 @@ static bool MCPropertyParsePointList(MCStringRef p_input, char_t p_delimiter, ui
 	return t_success;
 }
 
-static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_table, Properties p_which, bool p_effective, bool p_array_prop, bool p_chunk_prop)
+static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_table, Properties p_which, bool p_effective, bool p_array_prop, MCPropertyInfoChunkType p_chunk_type)
 {
 	for(uindex_t i = 0; i < p_table -> size; i++)
 		if (p_table -> table[i] . property == p_which && (!p_table -> table[i] . has_effective || p_table -> table[i] . effective == p_effective) &&
             (p_array_prop == p_table -> table[i] . is_array_prop) &&
-            (p_chunk_prop == p_table -> table[i] . is_chunk_prop))
+            (p_chunk_type == p_table -> table[i] . chunk_type))
 			return &p_table -> table[i];
 	
 	if (p_table -> parent != nil)
-		return lookup_object_property(p_table -> parent, p_which, p_effective, p_array_prop, p_chunk_prop);
+		return lookup_object_property(p_table -> parent, p_which, p_effective, p_array_prop, p_chunk_type);
 	
 	return nil;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::getarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective)
 {
+#ifdef REMOVE_THIS_FUNCTION
     if (MCNameIsEmpty(p_index))
         return getprop(p_part_id, p_which, ep, p_effective);
     
@@ -2326,10 +2487,13 @@ Exec_stat MCObject::getarrayprop(uint32_t p_part_id, Properties p_which, MCExecP
         return ES_ERROR;
     }
     return t_stat;
+#endif
+    return ES_ERROR;
 }
 
 Exec_stat MCObject::setarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective)
 {
+#ifdef REMOVE_THIS_FUNCTION
     if (MCNameIsEmpty(p_index))
         return setprop(p_part_id, p_which, ep, p_effective);
     
@@ -2372,91 +2536,71 @@ Exec_stat MCObject::setarrayprop(uint32_t p_part_id, Properties p_which, MCExecP
         return ES_ERROR;
     }
     return t_stat;
+#endif
+    return ES_ERROR;
 }
+#endif
 
-Exec_stat MCObject::getprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, Boolean p_effective)
+bool MCObject::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCExecValue& r_value)
 {
 	MCPropertyInfo *t_info;
-	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, false, false);
+	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, false, kMCPropertyInfoChunkTypeNone);
 	
-	if (t_info != nil && t_info -> getter == nil)
+	if (t_info == nil || (t_info != nil && t_info -> getter == nil))
 	{
 		MCeerror -> add(EE_OBJECT_GETNOPROP, 0, 0);
-		return ES_ERROR;
+		return false;
 	}
 	
 	if (t_info != nil)
 	{
-		MCExecContext ctxt(ep);
-		
+		MCObjectPtr t_object;
+		t_object . object = this;
+        t_object . part_id = p_part_id;
+
+        MCExecFetchProperty(ctxt, t_info, &t_object, r_value);
+    }
+    return (!ctxt . HasError());
+}
+
+bool MCObject::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCExecValue p_value)
+{    
+	MCPropertyInfo *t_info;
+	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, false, kMCPropertyInfoChunkTypeNone);
+	
+	if (t_info == nil || (t_info != nil && t_info -> getter == nil))
+	{
+		MCeerror -> add(EE_OBJECT_SETNOPROP, 0, 0);
+		return false;
+	}
+	
+	if (t_info != nil)
+	{
 		MCObjectPtr t_object;
 		t_object . object = this;
         t_object . part_id = p_part_id;
         
-        MCAutoValueRef t_value;
-        MCExecFetchProperty(ctxt, t_info, &t_object, &t_value);
-        
-        if (!ctxt . HasError())
-        {
-            ep . setvalueref(*t_value);
-            return ES_NORMAL;
-        }
-        return ctxt . Catch(0, 0);
+        MCExecStoreProperty(ctxt, t_info, &t_object, p_value);
     }
-
-	return getprop_legacy(p_part_id, p_which, ep, p_effective);
-}
-
-Exec_stat MCObject::setprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, Boolean p_effective)
-{
-	MCPropertyInfo *t_info;
-	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, false, false);
-
-	if (t_info != nil && t_info -> setter == nil)
-	{
-		MCeerror -> add(EE_OBJECT_SETNOPROP, 0, 0);
-		return ES_ERROR;
-	}
-
-	if (t_info != nil)
-	{
-		MCExecContext ctxt(ep);
-		
-		MCObjectPtr t_object;
-		t_object . object = this;
-		t_object . part_id = p_part_id;
-
-        MCAutoValueRef t_value;
-        ep . copyasvalueref(&t_value);
-        MCExecStoreProperty(ctxt, t_info, &t_object, *t_value);
-        
-        if (!ctxt . HasError())
-        {
-            ep . setvalueref(*t_value);
-            return ES_NORMAL;
-        }
-        
-        return ctxt . Catch(0, 0);
-	}
-	
-	return setprop_legacy(p_part_id, p_which, ep, p_effective);
+    
+    return (!ctxt . HasError());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCObject::getboolprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, bool& r_value)
 {
-	if (getprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL &&
-		ctxt . GetEP() . copyasbool(r_value))
-		return;
-
-	ctxt . Throw();
+    MCExecValue t_value;
+	if (getprop(ctxt, p_part_id, p_which, p_effective, t_value))
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeBool, &r_value);
 }
 
 void MCObject::setboolprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, bool p_value)
 {
-	ctxt . GetEP() . setbool(p_value);
-	if (setprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL)
+    MCExecValue t_value;
+    t_value . bool_value = p_value;
+    t_value . type = kMCExecValueTypeBool;
+	if (setprop(ctxt, p_part_id, p_which, p_effective, t_value))
 		return;
 	
 	ctxt . Throw();
@@ -2466,28 +2610,26 @@ void MCObject::setboolprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p
 
 void MCObject::getintprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, integer_t& r_value)
 {
-	if (getprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL &&
-		ctxt . GetEP() . copyasint(r_value))
-		return;
-
-	ctxt . Throw();
+    MCExecValue t_value;
+	if (getprop(ctxt, p_part_id, p_which, p_effective, t_value))
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeInt, &r_value);
 }
 
 //////////
 
 void MCObject::getuintprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, uinteger_t& r_value)
 {
-	if (getprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL &&
-		ctxt . GetEP() . copyasuint(r_value))
-		return;
-
-	ctxt . Throw();
+    MCExecValue t_value;
+	if (getprop(ctxt, p_part_id, p_which, p_effective, t_value))
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeUInt, &r_value);
 }
 
 void MCObject::setuintprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, uinteger_t p_value)
 {
-	ctxt . GetEP() . setuint(p_value);
-	if (setprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL)
+    MCExecValue t_value;
+    t_value . uint_value = p_value;
+    t_value . type = kMCExecValueTypeUInt;
+	if (setprop(ctxt, p_part_id, p_which, p_effective, t_value))
 		return;
 	
 	ctxt . Throw();
@@ -2495,8 +2637,10 @@ void MCObject::setuintprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p
 
 void MCObject::setintprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, integer_t p_value)
 {
-	ctxt . GetEP() . setint(p_value);
-	if (setprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL)
+    MCExecValue t_value;
+    t_value . int_value = p_value;
+    t_value . type = kMCExecValueTypeInt;
+	if (setprop(ctxt, p_part_id, p_which, p_effective, t_value))
 		return;
 	
 	ctxt . Throw();
@@ -2505,37 +2649,33 @@ void MCObject::setintprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_
 
 void MCObject::getdoubleprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, double& r_value)
 {
-	if (getprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL &&
-		ctxt . GetEP() . copyasdouble(r_value))
-		return;
-
-	ctxt . Throw();
+    MCExecValue t_value;
+	if (getprop(ctxt, p_part_id, p_which, p_effective, t_value))
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeDouble, &r_value);
 }
 
 void MCObject::getnumberprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCNumberRef& r_value)
 {
-	if (getprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL &&
-		ctxt . GetEP() . copyasnumber(r_value))
-		return;
-
-	ctxt . Throw();
+    MCExecValue t_value;
+	if (getprop(ctxt, p_part_id, p_which, p_effective, t_value))
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeNumberRef, &r_value);
 }
 
 /////////
 
 void MCObject::getstringprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCStringRef& r_value)
 {
-	if (getprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL &&
-		ctxt . GetEP() . copyasstring(r_value))
-		return;
-
-	ctxt . Throw();
+    MCExecValue t_value;
+	if (getprop(ctxt, p_part_id, p_which, p_effective, t_value))
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeStringRef, &r_value);
 }
 
 void MCObject::setstringprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCStringRef p_value)
 {
-	ctxt . GetEP() . setvalueref(p_value);
-	if (setprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL)
+    MCExecValue t_value;
+    t_value . stringref_value = MCValueRetain(p_value);
+    t_value . type = kMCExecValueTypeStringRef;
+	if (setprop(ctxt, p_part_id, p_which, p_effective, t_value))
 		return;
 	
 	ctxt . Throw();
@@ -2545,28 +2685,26 @@ void MCObject::setstringprop(MCExecContext& ctxt, uint32_t p_part_id, Properties
 
 void MCObject::getarrayprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCArrayRef& r_value)
 {
-	if (getprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL &&
-		ctxt . GetEP() . copyasarray(r_value))
-		return;
-
-	ctxt . Throw();
+    MCExecValue t_value;
+	if (getprop(ctxt, p_part_id, p_which, p_effective, t_value))
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeArrayRef, &r_value);
 }
 
 /////////
 
 void MCObject::getvariantprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCValueRef& r_value)
 {
-	if (getprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL &&
-		ctxt . GetEP() . copyasvariant(r_value))
-		return;
-
-	ctxt . Throw();
+    MCExecValue t_value;
+	if (getprop(ctxt, p_part_id, p_which, p_effective, t_value))
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeValueRef, &r_value);
 }
 
 void MCObject::setvariantprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCValueRef p_value)
 {
-    ctxt . GetEP() . setvalueref(p_value);
-    if (setprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL)
+    MCExecValue t_value;
+    t_value . valueref_value = MCValueRetain(p_value);
+    t_value . type = kMCExecValueTypeValueRef;
+    if (setprop(ctxt, p_part_id, p_which, p_effective, t_value))
         return;
     
     ctxt . Throw();
@@ -2576,8 +2714,10 @@ void MCObject::setvariantprop(MCExecContext& ctxt, uint32_t p_part_id, Propertie
 
 void MCObject::setdataprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCDataRef p_value)
 {
-	ctxt . GetEP() . setvalueref(p_value);
-	if (setprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL)
+    MCExecValue t_value;
+    t_value . dataref_value = p_value;
+    t_value . type = kMCExecValueTypeDataRef;
+	if (setprop(ctxt, p_part_id, p_which, p_effective, t_value))
 		return;
 	
     ctxt . Throw();
@@ -2587,17 +2727,20 @@ void MCObject::setdataprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p
 
 void MCObject::getpointprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCPoint &r_point)
 {
-	if (getprop(p_part_id, p_which, ctxt.GetEP(), p_effective) == ES_NORMAL
-		&& ctxt.GetEP().copyaspoint(r_point))
-		return;
-	
-	ctxt.Throw();
+    MCExecValue t_value;
+	if (getprop(ctxt, p_part_id, p_which, p_effective, t_value))
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypePoint, &r_point);
 }
 
 void MCObject::setpointprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, const MCPoint &p_point)
 {
-	ctxt.GetEP().setpoint(p_point);
-	if (setprop(p_part_id, p_which, ctxt.GetEP(), p_effective) == ES_NORMAL)
+    MCExecValue t_value;
+    MCPoint t_point;
+    t_point . x = p_point . x;
+    t_point . y = p_point . y;
+    t_value . point_value = t_point;
+    t_value . type = kMCExecValueTypePoint;
+	if (setprop(ctxt, p_part_id, p_which, p_effective, t_value))
 		return;
 	
     ctxt.Throw();

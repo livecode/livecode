@@ -300,17 +300,17 @@ typedef struct _NOTIFYICONDATA500A {
     CHAR   szTip[128];
     DWORD dwState;
     DWORD dwStateMask;
-    CHAR   szInfo[256];
+    WCHAR   szInfo[256];
     union {
         UINT  uTimeout;
         UINT  uVersion;  // used with NIM_SETVERSION, values 0, 3 and 4
     } DUMMYUNIONNAME;
-    CHAR   szInfoTitle[64];
+    WCHAR   szInfoTitle[64];
     DWORD dwInfoFlags;
 } NOTIFYICONDATA500A, *PNOTIFYICONDATA500A;
 
 // MM-2011-03-24: Added.  Displays a balloon popup above the taskbar icon containing the given message and title.
-void MCSystemBalloonNotification(const char *p_title, const char *p_message)
+void MCSystemBalloonNotification(MCStringRef p_title, MCStringRef p_message)
 {
 	// Shell_NotifyIconA uses the cbSize of the struct passed to determine what fields have been set
 	// allowing us to use the extended NOTIFYICONDATA500A struct with the extra fields for balloons.
@@ -328,18 +328,26 @@ void MCSystemBalloonNotification(const char *p_title, const char *p_message)
 	t_nidata . uFlags = NIF_INFO;
 	t_nidata . dwInfoFlags = NIIF_INFO;
 
+    MCAutoStringRefAsWString t_title, t_message;
+    
 	// We can specify the title (appears in bold next to the icon) and the body of the balloon.
 	if (p_title != nil)
-		MCMemoryCopy(t_nidata . szInfoTitle, p_title, 63);
+    {
+        t_title . Lock(p_title)
+		MCMemoryCopy(t_nidata . szInfoTitle, *t_title, 63 * sizeof(WCHAR));
+    }
 	else
 		t_nidata . szInfoTitle[0] = '\0';
 	if (p_message != nil)
-		MCMemoryCopy(t_nidata . szInfo, p_message, 255);
+    {
+        t_message . Lock(p_message);
+		MCMemoryCopy(t_nidata . szInfo, *t_message, 255 * sizeof(WCHAR));
+    }
 	else
 		t_nidata . szInfo[0] = '\0';
 
 	// Call with NIM_MODIFY to flag that we want to update an existing taskbar icon.
-	Shell_NotifyIconA(NIM_MODIFY, (PNOTIFYICONDATAA) &t_nidata);
+	Shell_NotifyIconW(NIM_MODIFY, (PNOTIFYICONDATAA) &t_nidata);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

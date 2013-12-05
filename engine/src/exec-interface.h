@@ -14,6 +14,9 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#ifndef EXEC_INTERFACE_H
+#define EXEC_INTERFACE_H
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct MCInterfaceImagePaletteSettings
@@ -43,7 +46,7 @@ struct MCInterfaceVisualEffectArgument
 	MCStringRef value;
 };
 
-static void MCInterfaceVisualEffectArgumentCopy(MCExecContext& ctxt, MCInterfaceVisualEffectArgument p_source, MCInterfaceVisualEffectArgument& r_target);
+void MCInterfaceVisualEffectArgumentCopy(MCExecContext& ctxt, MCInterfaceVisualEffectArgument p_source, MCInterfaceVisualEffectArgument& r_target);
 void MCInterfaceVisualEffectArgumentFree(MCExecContext& ctxt, MCInterfaceVisualEffectArgument& p_arg);
 
 //////////
@@ -198,5 +201,7 @@ struct MCInterfaceFlaggedRanges
     MCInterfaceFlaggedRange *ranges;
     uindex_t count;
 };
+
+#endif // EXEC_INTERFACE_H
 
 //////////

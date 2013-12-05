@@ -182,7 +182,6 @@ void __MCLogWithTrace(const char *p_file, uint32_t p_line, const char *p_format,
 }
 
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
-
 #include <android/log.h>
 
 void __MCAssert(const char *p_file, uint32_t p_line, const char *p_message)
@@ -191,19 +190,19 @@ void __MCAssert(const char *p_file, uint32_t p_line, const char *p_message)
 
 void __MCLog(const char *p_file, uint32_t p_line, const char *p_format, ...)
 {
-	MCAutoStringRef t_string;
-	
-	va_list t_args;
-	va_start(t_args, p_format);
-	MCStringFormatV(&t_string, p_format, t_args);
-	va_end(t_args);
+    MCAutoStringRef t_string;
+
+    va_list t_args;
+    va_start(t_args, p_format);
+    MCStringFormatV(&t_string, p_format, t_args);
+    va_end(t_args);
 	
 	char *t_cstring;
 	if (MCStringConvertToCString(*t_string, t_cstring))
 	{
 		__android_log_print(ANDROID_LOG_INFO, "revandroid", "%s", t_cstring);
 		MCMemoryDeallocate(t_cstring);
-	}
+    }
 }
 
 void __MCUnreachable(void)

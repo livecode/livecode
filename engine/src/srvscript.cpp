@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "exec.h"
 #include "scriptpt.h"
 #include "newobj.h"
@@ -344,7 +344,7 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 		/* UNCHECKED */ MCsystem->LongFilePath(*t_current_filename, &t_full_path);
 		
 		uindex_t t_last_separator;
-		if (MCStringLastIndexOfChar(*t_full_path, '/', 0, kMCStringOptionCompareExact, t_last_separator))
+		if (MCStringLastIndexOfChar(*t_full_path, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_separator))
 		{
 			MCAutoStringRef t_folder;
 			/* UNCHECKED */ MCStringCopySubstring(*t_full_path, MCRangeMake(0, t_last_separator), &t_folder);

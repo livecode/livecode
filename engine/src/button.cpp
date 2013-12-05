@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "sellst.h"
 #include "util.h"
 #include "font.h"
@@ -1640,6 +1640,7 @@ void MCButton::setrect(const MCRectangle &nrect)
 	}
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCButton::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	uint2 fheight;
@@ -2537,6 +2538,7 @@ Exec_stat MCButton::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 	}
 	return ES_NORMAL;
 }
+#endif
 
 void MCButton::closemenu(Boolean kfocus, Boolean disarm)
 {	
@@ -2598,15 +2600,13 @@ MCControl *MCButton::findnum(Chunk_term type, uint2 &num)
 		return NULL;
 }
 
-MCControl *MCButton::findname(Chunk_term type, const MCString &inname)
+MCControl *MCButton::findname(Chunk_term type, MCNameRef p_name)
 {
-    MCNewAutoNameRef t_name;
-    /* UNCHECKED */ MCNameCreateWithOldString(inname, &t_name);
-	if ((type == gettype() || type == CT_LAYER
-	        || (type == CT_MENU && getstyleint(flags) == F_MENU
-	            && menumode == WM_PULLDOWN))
-	        && MCU_matchname(*t_name, gettype(), getname()))
-		return this;
+    if ((type == gettype() || type == CT_LAYER
+            || (type == CT_MENU && getstyleint(flags) == F_MENU
+                && menumode == WM_PULLDOWN))
+            && MCU_matchname(p_name, gettype(), getname()))
+        return this;
 	else
 		return NULL;
 }
@@ -2966,12 +2966,10 @@ void MCButton::resethilite(uint4 parid, Boolean hilite)
 
 void MCButton::getentrytext()
 {
-	// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
-	MCExecPoint ep;
-	entry->exportasplaintext(0, ep, 0, INT32_MAX, hasunicode());
-	MCAutoStringRef t_label;
-	/* UNCHECKED */ MCStringCreateWithOldString(ep.getsvalue(), &t_label);
-	MCValueAssign(label, *t_label);
+    // MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
+    MCAutoStringRef t_label;
+    if (entry -> exportasplaintext((uinteger_t)0, 0, INT32_MAX, &t_label))
+        MCValueAssign(label, *t_label);
 }
 
 void MCButton::createentry()
@@ -3037,7 +3035,7 @@ MCRange MCButton::getmenurange()
 	}
 	while (i < menuhistory);
 		
-	return MCRangeMake(sptr, sptr - t_search.offset);
+	return MCRangeMake(sptr, t_search.offset);
 }
 
 void MCButton::makemenu(sublist *bstack, int2 &stackdepth, uint2 menuflags, MCFontRef fontref)
@@ -3492,12 +3490,17 @@ void MCButton::openmenu(Boolean grab)
 			setmenuhistoryprop(t_chosen_option);
 			
 			uindex_t t_offset = 0;
+            uindex_t t_new_offset = 0;
 			for (uindex_t i = 0; i < t_chosen_option; i++)
-				/* UNCHECKED */ MCStringFirstIndexOfChar(t_menustring, '\n', t_offset, kMCStringOptionCompareExact, t_offset);
+            {
+                if (i != 0)
+                    t_offset = t_new_offset + 1;
+				/* UNCHECKED */ MCStringFirstIndexOfChar(t_menustring, '\n', t_offset, kMCStringOptionCompareExact, t_new_offset);
+            }
 			
 			MCAutoStringRef t_label;
 			/* UNCHECKED */ MCStringCopySubstring(t_menustring, 
-												  MCRangeMake(t_offset, MCStringGetLength(t_menustring) - t_offset),
+												  MCRangeMake(t_offset, t_new_offset - t_offset),
 												  &t_label);
 			MCValueAssign(label, *t_label);
 			message_with_valueref_args(MCM_menu_pick, *t_label);
@@ -3677,10 +3680,9 @@ void MCButton::setupmenu()
 
 bool MCButton::selectedchunk(MCStringRef& r_string)
 {
-	MCExecPoint ep(nil, nil, nil);
-	MCExecContext ctxt(ep);
-	integer_t t_number;
-	/* UNCHECKED */ getintprop(ctxt, 0, P_NUMBER, False, t_number);
+    MCExecContext ctxt(nil, nil, nil);
+	uinteger_t t_number;
+	GetNumber(ctxt, 0, t_number);
 	
 	MCRange t_range;
 	t_range = getmenurange();
@@ -3689,10 +3691,9 @@ bool MCButton::selectedchunk(MCStringRef& r_string)
 
 bool MCButton::selectedline(MCStringRef& r_string)
 {
-	MCExecPoint ep(nil, nil, nil);
-	MCExecContext ctxt(ep);
-	integer_t t_number;
-	/* UNCHECKED */ getintprop(ctxt, 0, P_NUMBER, False, t_number);
+    MCExecContext ctxt(nil, nil, nil);
+	uinteger_t t_number;
+	GetNumber(ctxt, 0, t_number);
 	
 	return MCStringFormat(r_string, "line %d of button %d", menuhistory, t_number);
 }

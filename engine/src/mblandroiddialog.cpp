@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -158,8 +158,7 @@ bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
     t_use_min = p_min != nil;
     t_use_max = p_max != nil;
     
-    MCExecPoint ep(nil, nil, nil);
-	MCExecContext ctxt(ep);
+    MCExecContext ctxt(nil, nil, nil);
     
     if (p_current != nil)
     {
@@ -230,8 +229,7 @@ bool MCSystemPickTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
     
     int32_t t_hour, t_minute;
     
-    MCExecPoint ep(nil, nil, nil);
-	MCExecContext ctxt(ep);
+	MCExecContext ctxt(nil, nil, nil);
     
     MCDateTime t_current;
     if (p_current != nil)

@@ -26,7 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "paragraf.h"
 #include "cdata.h"
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "block.h"
 #include "line.h"
@@ -34,6 +34,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "unicode.h"
 #include "text.h"
 #include "osspec.h"
+
+//#include "textbuffer.h"
+#include "variable.h"
+#include "exec-interface.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -593,6 +597,8 @@ static bool export_formatted_text(void *p_context, MCFieldExportEventType p_even
 
 // MW-2012-02-20: [[ FieldExport ]] This method exports the content of the
 //   field as either native or unicode.
+
+#ifdef LEGACY_EXEC
 void MCField::exportastext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode)
 {
 	MCAutoStringRef t_string;
@@ -611,6 +617,7 @@ void MCField::exportastext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_
 	else
 		ep . clear();
 }
+#endif
 
 /* UNSAFE */ bool MCField::exportastext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string)
 {
@@ -629,6 +636,8 @@ void MCField::exportastext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_
 
 // MW-2012-02-20: [[ FieldExport ]] This method exports the content of the
 //   field as either native or unicode including any list indices.
+
+#ifdef LEGACY_EXEC
 void MCField::exportasplaintext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode)
 {
 	MCAutoStringRef t_string;
@@ -652,6 +661,7 @@ void MCField::exportasplaintext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_s
 {
 	exportasplaintext(ep, resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_as_unicode);
 }
+#endif
 
 bool MCField::exportasplaintext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string)
 {
@@ -676,6 +686,7 @@ bool MCField::exportasplaintext(uint32_t p_part_id, int32_t p_start_index, int32
 // MW-2012-02-21: [[ FieldExport ]] This method exports the content of the
 //   field as either native or unicode, including any list indices and implicit
 //   line breaks.
+#ifdef LEGACY_EXEC
 void MCField::exportasformattedtext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode)
 {
 	MCAutoStringRef t_string;
@@ -694,6 +705,7 @@ void MCField::exportasformattedtext(uint32_t p_part_id, MCExecPoint& ep, int32_t
 	else
 		ep . clear();
 }
+#endif
 
 bool MCField::exportasformattedtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string)
 {
@@ -775,6 +787,7 @@ Exec_stat MCField::setrtf(uint4 parid, MCStringRef data)
 	return ES_NORMAL;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCField::setstyledtext(uint4 parid, MCExecPoint &ep)
 {
 	state |= CS_NO_FILE; // prevent interactions while downloading images
@@ -786,6 +799,7 @@ Exec_stat MCField::setstyledtext(uint4 parid, MCExecPoint &ep)
 	state &= ~CS_NO_FILE;
 	return ES_NORMAL;
 }
+#endif
 
 void MCField::setstyledtext(uint32_t part_id, MCArrayRef p_text)
 {
@@ -981,22 +995,16 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 			t_block -> setbackcolor(&t_color);
 		}
 
+        MCExecContext ctxt(nil, nil, nil);
+
 		if (p_block -> text_shift != 0)
 			t_block -> setshift(p_block -> text_shift);
 
-		if (p_block -> text_link != nil)
-        {
-            MCAutoPointer<char> t_text_link;
-            /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(p_block -> text_link), &t_text_link);
-			t_block -> setatts(P_LINK_TEXT, (void *)*t_text_link);
-        }
+        if (p_block -> text_link != nil)
+            t_block -> SetLinktext(ctxt, MCNameGetString(p_block -> text_link));
 
-		if (p_block -> text_metadata != nil)
-        {
-            MCAutoPointer<char> t_metadata;
-            /* UNCHECKED */ MCStringConvertToCString(p_block -> text_metadata, &t_metadata);
-            t_block -> setatts(P_METADATA, (void *)*t_metadata);
-        }
+        if (p_block -> text_metadata != nil)
+            t_block -> SetMetadata(ctxt, p_block -> text_metadata);
 
 		const char *t_font_name;
 		t_font_name = p_block -> font_name == NULL ? "" : p_block -> font_name;
@@ -1009,14 +1017,23 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 			t_font_name = t_derived_font_name;
 #endif
 		
-		t_block -> setatts(P_TEXT_FONT, (void *)t_font_name);
+        MCAutoStringRef t_font_name_ref;
+        MCStringCreateWithCString(t_font_name, &t_font_name_ref);
+        t_block -> SetTextFont(ctxt, *t_font_name_ref);
 		
 		if (p_block -> font_size != 0)
-			t_block -> setatts(P_TEXT_SIZE, (void *)p_block -> font_size);
+        {
+            uinteger_t t_size;
+            t_size = p_block -> font_size;
+            t_block -> SetTextSize(ctxt, &t_size);
+        }
 		
 		if (p_block -> font_style != 0)
-			t_block -> setatts(P_TEXT_STYLE, (void *)p_block -> font_style);
-		
+        {
+            MCInterfaceTextStyle t_style;
+            t_style . style = p_block -> font_style;
+            t_block -> SetTextStyle(ctxt, t_style);
+        }
 	}
 
 	return true;

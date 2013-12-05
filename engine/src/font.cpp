@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "mcerror.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "font.h"
 #include "dispatch.h"
@@ -737,7 +737,7 @@ Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
 }
 
     
-Exec_stat MCF_unparsetextatts(Properties which, MCExecPoint &ep, uint4 flags, MCStringRef name, uint2 height, uint2 size, uint2 style)
+Exec_stat MCF_unparsetextatts(Properties which, uint4 flags, MCStringRef name, uint2 height, uint2 size, uint2 style, MCValueRef &r_result)
 {
 	switch (which)
 	{
@@ -745,56 +745,68 @@ Exec_stat MCF_unparsetextatts(Properties which, MCExecPoint &ep, uint4 flags, MC
 		switch (flags & F_ALIGNMENT)
 		{
 		case F_ALIGN_LEFT:
-			ep.setstaticcstring(MCleftstring);
-			break;
+            r_result = MCSTR(MCleftstring);
+            break;
 		case F_ALIGN_CENTER:
-			ep.setstaticcstring(MCcenterstring);
+			r_result = MCSTR(MCcenterstring);
 			break;
 		case F_ALIGN_RIGHT:
-			ep.setstaticcstring(MCrightstring);
+			r_result = MCSTR(MCrightstring);
 			break;
 		case F_ALIGN_JUSTIFY:
-			ep.setstaticcstring(MCjustifystring);
-			break;
+			r_result = MCSTR(MCjustifystring);
+            break;
 		}
 		break;
 	case P_TEXT_FONT:
-		ep.setsvalue(MCStringGetOldString(name));
+        r_result = MCValueRetain(name);
 		break;
 	case P_TEXT_HEIGHT:
-		ep.setint(height);
+        {
+        MCAutoNumberRef t_height;
+        /* UNCHECKED */ MCNumberCreateWithUnsignedInteger(height, &t_height);
+        r_result = MCValueRetain(*t_height);
 		break;
+        }
 	case P_TEXT_SIZE:
-		ep.setint(size);
+        {
+        MCAutoNumberRef t_size;
+        /* UNCHECKED */ MCNumberCreateWithUnsignedInteger(size, &t_size);
+            r_result = MCValueRetain(*t_size);
 		break;
+        }
 	case P_TEXT_STYLE:
 		{
 			if (style == FA_DEFAULT_STYLE)
 			{
-				ep.setstaticcstring(MCplainstring);
+                r_result = MCSTR(MCplainstring);
 				return ES_NORMAL;
 			}
-			
-			uint32_t j;
-			j = 0;
 
-			ep.clear();
+			if (r_result != nil)
+                MCValueRelease(r_result);
+            MCAutoListRef t_list;
+            /* UNCHECKED */ MCListCreateMutable(EC_COMMA, &t_list);
 			if (MCF_getweightint(style) != MCFW_MEDIUM)
-				ep.concatcstring(MCF_getweightstring(style), EC_COMMA, j++ == 0);
+                MCListAppendCString(*t_list, MCF_getweightstring(style));
 			if (style & FA_ITALIC || style & FA_OBLIQUE)
-				ep.concatcstring(MCF_getslantlongstring(style), EC_COMMA, j++ == 0);
+                MCListAppendCString(*t_list, MCF_getslantlongstring(style));
 			if (style & FA_BOX)
-				ep.concatcstring(MCboxstring, EC_COMMA, j++ == 0);
+                MCListAppendCString(*t_list, MCboxstring);
 			if (style & FA_3D_BOX)
-				ep.concatcstring(MCthreedboxstring, EC_COMMA, j++ == 0);
+                MCListAppendCString(*t_list, MCthreedboxstring);
 			if (style & FA_UNDERLINE)
-				ep.concatcstring(MCunderlinestring, EC_COMMA, j++ == 0);
+                MCListAppendCString(*t_list, MCunderlinestring);
 			if (style & FA_STRIKEOUT)
-				ep.concatcstring(MCstrikeoutstring, EC_COMMA, j++ == 0);
+                MCListAppendCString(*t_list, MCstrikeoutstring);
 			if (style & FA_LINK)
-				ep.concatcstring(MClinkstring, EC_COMMA, j++ == 0);
+                MCListAppendCString(*t_list, MClinkstring);
 			if (MCF_getexpandint(style) != FE_NORMAL)
-				ep.concatcstring(MCF_getexpandstring(style), EC_COMMA, j++ == 0);
+                MCListAppendCString(*t_list, MCF_getexpandstring(style));
+            
+            MCAutoStringRef t_string;
+            /* UNCHECKED */ MCListCopyAsString(*t_list, &t_string);
+            r_result = MCValueRetain(*t_string);
 		}
 		break;
 	default:

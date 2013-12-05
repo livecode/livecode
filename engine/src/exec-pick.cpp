@@ -41,6 +41,7 @@ MC_EXEC_DEFINE_GET_METHOD(Pick, CameraFeatures, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickMedia, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickPhoto, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickPhotoAndResize, 3)
+MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickOptionByIndex, 10)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -257,7 +258,7 @@ void MCPickDoPickDateTime(MCExecContext& ctxt, MCStringRef p_current, MCStringRe
         if (t_cancelled)
             ctxt.SetTheResultToStaticCString("cancel");
         else
-            ctxt . SetTheResultToValue(&t_result_string);
+            ctxt . SetTheResultToValue(*t_result_string);
         return;
     }
     
@@ -401,15 +402,15 @@ void MCPickExecPickOptionByIndex(MCExecContext &ctxt, int p_chunk_type, MCString
         MCStringRef t_option;
         MCPickList t_pick_list;
         MCAutoArray<MCStringRef> t_options;
+        t_old_offset = 0;
         while (t_success && MCStringFirstIndexOfChar(p_option_lists[i], t_delimiter, t_old_offset, kMCCompareCaseless, t_new_offset))
         {
-            t_success = MCStringCopySubstring(p_option_lists[i], MCRangeMake(t_old_offset, t_new_offset - 1), t_option);
+            t_success = MCStringCopySubstring(p_option_lists[i], MCRangeMake(t_old_offset, t_new_offset - t_old_offset), t_option);
             if (t_success)
                 t_options . Push(t_option);
-            t_old_offset = t_new_offset;
+            t_old_offset = t_new_offset + 1;
         }
-        t_pick_list . options = t_options . Ptr();
-        t_pick_list . option_count = t_options . Size();
+        t_options . Take(t_pick_list . options, t_pick_list . option_count);
         t_pick_list . initial = p_initial_indices[i];
         t_pick_lists . Push(t_pick_list);
     }
@@ -430,7 +431,7 @@ void MCPickExecPickOptionByIndex(MCExecContext &ctxt, int p_chunk_type, MCString
         if (t_cancelled)
         {
             // HC-2012-02-15 [[ BUG 9999 ]] Picker should return 0 if cancel was selected.
-            ctxt.GetEP().setnvalue(0);
+            ctxt . SetTheResultToNumber(0);
         }
         else
         {
@@ -443,9 +444,9 @@ void MCPickExecPickOptionByIndex(MCExecContext &ctxt, int p_chunk_type, MCString
                 if (t_success)
                     t_success = MCListAppend(*t_indices, *t_index);
             }
-			MCAutoStringRef t_string;
-			MCListCopyAsString(*t_indices, &t_string);
-            ctxt . GetEP() . setvalueref(*t_string);
+            MCAutoStringRef t_string;
+			/* UNCHECKED */ MCListCopyAsString(*t_indices, &t_string);
+            ctxt . SetTheResultToValue(*t_string);
         }
     }
     

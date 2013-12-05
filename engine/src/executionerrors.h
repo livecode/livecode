@@ -2403,7 +2403,7 @@ enum Exec_errors
 	EE_BACKDROP_INVALIDVALUE,
 
 	// {EE-0789} Property: value is not an array
-	EE_PROPERTY_NOTANARRAY,
+    EE_PROPERTY_NOTANARRAY,
     
     // {EE-0782} controls don't have the same owner
 	EE_GROUP_DIFFERENTPARENT,
@@ -2464,7 +2464,73 @@ enum Exec_errors
 
 	// IM-2013-09-22: [[ FullscreenMode ]]
 	// {EE-0800} fullscreenmode: not a valid mode
-	EE_STACK_BADFULLSCREENMODE,
+    EE_STACK_BADFULLSCREENMODE,
+
+    // {EE-0801} Import: no image selected, or image not open
+    EE_IMPORT_NOSELECTED,
+
+    // {EE-802} Resolve image: error in source expression
+    EE_RESOLVE_IMG_BADEXP,
+
+    // {EE-803} Internal BSDiff: error in old file expression
+    EE_INTERNAL_BSDIFF_BADOLD,
+
+    // {EE-804} Internal BSDiff: error in new file expression
+    EE_INTERNAL_BSDIFF_BADNEW,
+
+    // {EE-805} Internal BSDiff: error in patch filename expression
+    EE_INTERNAL_BSDIFF_BADPATCH,
+
+    // {EE-806} Internal Bootstrap: error in stack file
+    EE_INTERNAL_BOOTSTRAP_BADSTACK,
+
+    // {EE-807} IDE script configure: error in settings expression
+    EE_IDE_BADARRAY,
+
+    // {EE-808} IDE script replace: error in text expression
+    EE_IDE_BADTEXT,
+
+    // {EE-809} IDE script classify: error in script expression
+    EE_IDE_BADSCRIPT,
+
+    // {EE-810} IDE filter control: error in pattern expression
+    EE_IDE_BADPATTERN,
+
+    // {EE-811} Engine PutInto: error in variable expression
+    EE_ENGINE_PUT_BADVARIABLE,
+
+    // {EE-812} Engine DeleteVariableChunk: error in expression
+    EE_ENGINE_DELETE_BADVARCHUNK,
+
+    // {EE-813} IDE Extract: error in segment expression
+    EE_IDE_EXTRACT_BADSEGMENT,
+
+    // {EE-814} IDE Extract: error in section name expression
+    EE_IDE_EXTRACT_BADSECTION,
+
+    // {EE-815} IDE Extract: error in filename expression
+    EE_IDE_EXTRACT_BADFILENAME,
+    
+    // {EE-816} MCInternalPayloadPatch: error in patch item expression
+    EE_INTERNAL_PATCH_BADITEM,
+    
+    // {EE-817} MCInternalPayloadPatch: error in base item expression
+    EE_INTERNAL_BASE_BADITEM,
+    
+    // {EE-816} MCInternalPayloadPatch: error in output filename expression
+    EE_OUTPUT_BADFILENAME,
+    
+    // {EE-817} MCInternalListTasksWithModule: error in module expression
+    EE_INTERNAL_TASKS_BADMODULE,
+    
+    // {EE-818} MCInternalCanDeleteFile: error in filename expression
+    EE_INTERNAL_DELETE_BADFILENAME,
+    
+    // {EE-819} MCInternalCanDeleteKey: error in key expression
+    EE_INTERNAL_DELETE_BADKEY,
+
+    // {EE-820} MCHandler: error in expression
+    EE_HANDLER_BADEXP
 };
 
 extern const char *MCexecutionerrors;

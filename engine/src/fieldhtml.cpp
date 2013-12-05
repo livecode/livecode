@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "unicode.h"
 #include "text.h"
 #include "osspec.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "mcstring.h"
 #include "uidc.h"
 #include "globals.h"
@@ -598,6 +598,7 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 	return true;
 }
 
+#ifdef LEGACY_EXEC
 void MCField::exportashtmltext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_effective)
 {
 	MCAutoStringRef t_string;
@@ -612,6 +613,7 @@ void MCField::exportashtmltext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_st
 {
 	exportashtmltext(ep, resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_effective);
 }
+#endif
 
 bool MCField::exportashtmltext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCStringRef& r_string)
 {
@@ -1468,16 +1470,17 @@ static void import_html_append_utf8_chars(import_html_t& ctxt, const char *p_cha
 		// Append the UTF8 chars as unicode (if any).
 		if (t_next_ptr - p_chars > 0)
 		{
-			// Convert UTF8 to UTF16.
-			MCExecPoint ep;
-			ep . setsvalue(MCString(p_chars, t_next_ptr - p_chars));
-			ep . utf8toutf16();
+            // Convert UTF8 to UTF16.
+            MCAutoStringRef t_utf8_string;
+            MCAutoDataRef t_utf16_data;
+            /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)p_chars,  t_next_ptr - p_chars, &t_utf8_string);
+            /* UNCHECKED */ MCStringEncode(*t_utf8_string, kMCStringEncodingUTF16, false, &t_utf16_data);
 			
 			// Append the chars one by one.
 			const uint16_t *t_unicode_chars;
 			uint32_t t_unicode_char_count;
-			t_unicode_chars = (const uint16_t *)ep . getsvalue() . getstring();
-			t_unicode_char_count = ep . getsvalue() . getlength() / 2;
+			t_unicode_chars = (const uint16_t *)MCDataGetBytePtr(*t_utf16_data);
+			t_unicode_char_count = MCDataGetLength(*t_utf16_data) / 2;
 			for(uindex_t i = 0; i < t_unicode_char_count; i++)
 				import_html_append_unicode_char(ctxt, t_unicode_chars[i]);
 		}

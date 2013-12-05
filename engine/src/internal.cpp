@@ -44,7 +44,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "filedefs.h"
 
-#include "execpt.h"
+//#include "execpt.h"
+#include "exec.h"
 #include "scriptpt.h"
 #include "mcerror.h"
 
@@ -122,9 +123,11 @@ Parse_stat MCInternal::parse(MCScriptPoint& sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCInternal::exec(MCExecPoint& ep)
+void MCInternal::exec_ctxt(MCExecContext &ctxt)
 {
-	return f_statement -> exec(ep);
+    f_statement -> exec_ctxt(ctxt);
+    if (ctxt . GetExecStat() != ES_NORMAL)
+        ctxt . Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

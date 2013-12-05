@@ -106,6 +106,6 @@ void MCSensorInitialize(void);
 void MCSensorFinalize(void);
 
 bool MCSensorTypeToCString(MCSensorType p_sensor, char *&r_string);
-MCSensorType MCSensorTypeFromCString(const char* p_string);
+MCSensorType MCSensorTypeFromString(MCStringRef p_string);
 
 #endif

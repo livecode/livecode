@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "stacklst.h"
@@ -182,6 +182,8 @@ MCPropertyInfo MCStack::kProperties[] =
     
    	// IM-2013-09-23: [[ FullscreenMode ]] Add stack fullscreenMode property
     DEFINE_RW_OBJ_ENUM_PROPERTY(P_FULLSCREENMODE, InterfaceStackFullscreenMode, MCStack, FullscreenMode)
+    
+    DEFINE_RO_OBJ_PROPERTY(P_KEY, Bool, MCStack, Key)
 };
 
 MCObjectPropertyTable MCStack::kPropertyTable =
@@ -1161,6 +1163,7 @@ void MCStack::setrect(const MCRectangle &nrect)
 		resize(oldrect . width, oldrect . height);
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	uint2 j = 0;
@@ -1669,8 +1672,9 @@ Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 	}
 	return ES_NORMAL;
 }
+#endif
 
-
+#ifdef LEGACY_EXEC
 Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty;
@@ -2729,6 +2733,8 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 	}
 	return ES_NORMAL;
 }
+#endif
+
 
 Boolean MCStack::del()
 {
@@ -2961,7 +2967,7 @@ bool MCStack::resolve_relative_path(MCStringRef p_path, MCStringRef& r_resolved)
 	if (!MCStringIsEmpty(t_stack_filename))
 	{
 		uindex_t t_slash;
-        if (MCStringLastIndexOfChar(t_stack_filename, '/', 0, kMCCompareExact, t_slash))
+        if (MCStringLastIndexOfChar(t_stack_filename, '/', UINDEX_MAX, kMCCompareExact, t_slash))
         {
             MCAutoStringRef t_new_filename;
             MCStringCreateMutable(0, &t_new_filename);
@@ -2974,13 +2980,9 @@ bool MCStack::resolve_relative_path(MCStringRef p_path, MCStringRef& r_resolved)
 			else
 				/* UNCHECKED */ MCStringAppend(*t_new_filename, filename);
             
-            if (MCS_exists(*t_new_filename, True))
-            {
-                return MCStringCopy(*t_new_filename, r_resolved);
-            }
+			r_resolved = MCValueRetain(*t_new_filename);
+			return true;
 		}
-		r_resolved = MCValueRetain(t_stack_filename);
-		return true;
 	}
     
     return false;

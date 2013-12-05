@@ -11,7 +11,7 @@
 #include "objectstream.h"
 #include "bitmapeffect.h"
 #include "globals.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "paint.h"
 
 #include "graphicscontext.h"

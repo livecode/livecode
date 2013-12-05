@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -2613,35 +2613,30 @@ extern "C" JNIEXPORT jstring JNICALL Java_com_runrev_android_Engine_doGetCustomP
 JNIEXPORT jstring JNICALL Java_com_runrev_android_Engine_doGetCustomPropertyValue(JNIEnv *env, jobject object, jstring set, jstring property)
 {
     bool t_success = true;
-    MCExecPoint ep;
 
     jstring t_js = nil;
 
-    char *t_set = nil;
-    char *t_property = nil;
+    MCAutoStringRef t_property, t_set;
 
-    t_success = MCJavaStringToNative(env, set, t_set) && MCJavaStringToNative(env, property, t_property);
+    t_success = MCJavaStringToStringRef(env, set, &t_set) && MCJavaStringToStringRef(env, property, &t_property);
 
-    MCAutoNameRef t_set_name, t_prop_name;
+    MCNewAutoNameRef t_set_name, t_prop_name;
     if (t_success)
     {
-        t_set_name.CreateWithCString(t_set);
-        t_prop_name.CreateWithCString(t_property);
+        MCNameCreate(*t_set, &t_set_name);
+        MCNameCreate(*t_property, &t_prop_name);
     }
 
-    const char *t_value = NULL;
-
-    Exec_stat t_stat = MCdefaultstackptr->getcustomprop(ep, t_set_name, t_prop_name);
-    t_success = t_stat == ES_NORMAL;
-    if (t_success)
+    MCExecValue t_value;
+    MCExecContext ctxt(nil, nil, nil);
+    if (!MCdefaultstackptr -> getcustomprop(ctxt, *t_set_name, *t_prop_name, t_value))
     {
-        t_value = ep.getcstring();
-        MCString t_mcstring(t_value);
-        t_success = MCJavaStringFromNative(env, &t_mcstring, t_js);
-    }
+        MCAutoStringRef t_string_value;
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeStringRef, &t_string_value);
 
-    MCCStringFree(t_set);
-    MCCStringFree(t_property);
+        if (!ctxt . HasError())
+            t_success = MCJavaStringFromStringRef(env, *t_string_value, t_js);
+    }
 
     return t_js;
 }

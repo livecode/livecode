@@ -139,7 +139,9 @@ public:
 	// MW-2012-03-04: [[ StackFile5500 ]] Measure the size of the serialized attributes.
 	uint32_t measureattrs(void);
 
+#ifdef LEGACY_EXEC
 	void setatts(Properties which, void *value);
+#endif
 	Boolean getshift(int2 &out);
 	void setshift(int2 in);
 	Boolean getcolor(const MCColor *&color);
@@ -307,13 +309,10 @@ public:
     void SetFlagged(MCExecContext& ctxt, bool p_value);
 
     void GetTextFont(MCExecContext& ctxt, MCStringRef &r_fontname);
-    void GetEffectiveTextFont(MCExecContext &ctxt, MCStringRef &r_fontname);
     void SetTextFont(MCExecContext& ctxt, MCStringRef p_fontname);
     void GetTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle &r_style);
-    void GetEffectiveTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& r_style);
     void SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style);
     void GetTextSize(MCExecContext& ctxt, uinteger_t*& r_size);
-    void GetEffectiveTextSize(MCExecContext& ctxt, uinteger_t& r_size);
     void SetTextSize(MCExecContext& ctxt, uinteger_t* p_size);
     void GetTextShift(MCExecContext& ctxt, integer_t*& r_shift);
     void GetEffectiveTextShift(MCExecContext& ctxt, integer_t& r_shift);
@@ -323,7 +322,6 @@ public:
     void GetEffectiveForeColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
     void SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor &p_color);
     void GetBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
-    void GetEffectiveBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
     void SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor &p_color);
 
 

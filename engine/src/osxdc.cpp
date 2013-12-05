@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "util.h"
 #include "globals.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "notify.h"
 
 #include "osxdc.h"
@@ -84,7 +84,7 @@ MCScreenDC::MCScreenDC()
 	
 	opened = 0;
 	linesize = 0;
-	menuBarHidden = False; //menu bar is showing initially≈
+	menuBarHidden = False; //menu bar is showing initially
 	bgw = NULL;
 	dnddata = NULL;
 	bgmode = False;

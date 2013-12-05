@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "scriptpt.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "handler.h"
 #include "chunk.h"
 #include "image.h"
@@ -49,6 +49,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "securemode.h"
 #include "osspec.h"
 #include "redraw.h"
+#include "variable.h"
+
 #include "ans.h"
 #include "font.h"
 #include "mctheme.h"
@@ -350,16 +352,20 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_BREAK_POINTS, String, Debugging, Breakpoints)
 	DEFINE_RW_PROPERTY(P_WATCHED_VARIABLES, String, Debugging, WatchedVariables)
 
-	DEFINE_RW_INDEXED_PROPERTY(P_CLIPBOARD_DATA, BinaryString, Pasteboard, ClipboardData)
-	DEFINE_RW_INDEXED_PROPERTY(P_DRAG_DATA, BinaryString, Pasteboard, DragData)
+	DEFINE_RW_ARRAY_PROPERTY(P_CLIPBOARD_DATA, BinaryString, Pasteboard, ClipboardData)
+	DEFINE_RW_ARRAY_PROPERTY(P_DRAG_DATA, BinaryString, Pasteboard, DragData)
+	DEFINE_RW_PROPERTY(P_CLIPBOARD_DATA, BinaryString, Pasteboard, ClipboardTextData)
+	DEFINE_RW_PROPERTY(P_DRAG_DATA, BinaryString, Pasteboard, DragTextData)
+
 	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog    
     DEFINE_RW_PROPERTY(P_COLOR_DIALOG_COLORS, LinesOfString, Dialog, ColorDialogColors)
 };
 
-static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, const MCPropertyInfo*& r_info)
+static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, const MCPropertyInfo*& r_info, bool p_is_array_prop)
 {
 	for(uindex_t i = 0; i < sizeof(kMCPropertyInfoTable) / sizeof(MCPropertyInfo); i++)
-		if (kMCPropertyInfoTable[i] . property == p_which && kMCPropertyInfoTable[i] . effective == p_effective)
+		if (kMCPropertyInfoTable[i] . property == p_which && kMCPropertyInfoTable[i] . effective == p_effective &&
+            kMCPropertyInfoTable[i] . is_array_prop == p_is_array_prop)
 		{
 			r_info = &kMCPropertyInfoTable[i];
 			return true;
@@ -391,6 +397,23 @@ MCProperty::~MCProperty()
 	MCNameDelete(customprop);
 }
 
+MCObject *MCProperty::getobj(MCExecContext &ctxt)
+{
+	MCObject *objptr = NULL;
+	MCChunk *tchunk = new MCChunk(False);
+	MCerrorlock++;
+	MCScriptPoint sp(ctxt);
+	if (tchunk->parse(sp, False) == PS_NORMAL)
+	{
+		uint4 parid;
+		tchunk->getobj(ctxt, objptr, parid, True);
+	}
+	MCerrorlock--;
+	delete tchunk;
+	return objptr;
+}
+
+#ifdef LEGACY_EXEC
 MCObject *MCProperty::getobj(MCExecPoint &ep)
 {
 	MCObject *objptr = NULL;
@@ -406,6 +429,7 @@ MCObject *MCProperty::getobj(MCExecPoint &ep)
 	delete tchunk;
 	return objptr;
 }
+#endif
 
 Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 {
@@ -1063,6 +1087,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 //   the pVar of me
 // where pVar is a variable.
 //
+#ifdef LEGACY_EXEC
 Exec_stat MCProperty::resolveprop(MCExecPoint& ep, Properties& r_which, MCNameRef& r_prop_name, MCNameRef& r_index_name)
 {
 	MCNameRef t_prop_name, t_index_name;
@@ -1135,11 +1160,68 @@ Exec_stat MCProperty::resolveprop(MCExecPoint& ep, Properties& r_which, MCNameRe
 
 	return ES_NORMAL;
 }
+#endif
+
+bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef& r_prop_name, MCNameRef& r_index_name)
+{
+	MCNameRef t_prop_name, t_index_name;
+	Properties t_prop;
+	t_prop = which;
+	t_prop_name = nil;
+	t_index_name = nil;
+	
+	// MW-2011-09-02: If the property is already compiled as 'P_CUSTOM' it means
+	//   customprop is non-nil. Handle this case here rather than in the caller to
+	//   simplify code.
+	if (which == P_CUSTOM)
+    /* UNCHECKED */ MCNameClone(customprop, t_prop_name);
+	
+	// At present, something like the 'pVar[pIndex] of me' is evaluated as 'the pVar of me'
+	// this is because any index is extracted from the pVar variable. It might be worth
+	// considering altering this behavior slightly, to allow dynamic indices on dynamic
+	// props, although this needs to be done sympathetically to the current behavior...
+	if (which == P_CUSTOM_VAR)
+	{
+        MCAutoStringRef t_string;
+        if (!ctxt . EvalExprAsStringRef(destvar, EE_PROPERTY_BADEXPRESSION, &t_string))
+            return false;
+
+        MCScriptPoint sp(*t_string);
+		Symbol_type type;
+		const LT *te;
+		if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL && te->type == TT_PROPERTY && sp.next(type) == PS_EOF)
+			t_prop = (Properties)te -> which;
+		else
+		{
+            MCAutoStringRef t_icarray;
+			uindex_t t_offset;
+            if (MCStringFirstIndexOfChar(*t_string, '[', 0, kMCStringOptionCompareExact, t_offset))
+            {
+                MCStringCopySubstring(*t_string, MCRangeMake(t_offset + 1, MCStringGetLength(*t_string) - t_offset - 2), &t_icarray);
+            }
+            
+			// MW-2011-09-02: [[ Bug 9698 ]] Always create a name for the property, otherwise
+			//   if the var contains empty, this function returns a nil name which causes
+			//   customprop to be used incorrectly.
+            /* UNCHECKED */ MCNameCreate(*t_string, t_prop_name);
+            
+			if (*t_icarray != nil)
+            /* UNCHECKED */ MCNameCreate(*t_icarray, t_index_name);
+            
+			t_prop = P_CUSTOM;
+		}
+	}
+	else if (customindex != nil)
+        /* UNCHECKED */ ctxt . EvalExprAsNameRef(customindex, EE_PROPERTY_BADEXPRESSION, t_index_name);
+    
+	r_which = t_prop;
+	r_prop_name = t_prop_name;
+	r_index_name = t_index_name;
+    return true;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Exec_stat MCProperty::set(MCExecPoint &ep)
-{
 #ifdef /* MCProperty::set */ LEGACY_EXEC
 	MCImage *newim;
 	int2 mx, my;
@@ -3002,16 +3084,8 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCProperty::set */
-	
-	if (destvar != NULL && which != P_CUSTOM_VAR)
-		return set_variable(ep);
-	
-	if (target == nil)
-		return set_global_property(ep);
-	
-	return set_object_property(ep);
-}
 
+#ifdef LEGACY_EXEC
 Exec_stat MCProperty::set_variable(MCExecPoint& ep)
 {
 	return destvar->set(ep);
@@ -3048,279 +3122,6 @@ Exec_stat MCProperty::set_global_property(MCExecPoint& ep)
             return ES_NORMAL;
         
         return ctxt . Catch(line, pos);
-#ifdef LEGACY_EXEC
-		switch(t_info -> type)
-		{
-			case kMCPropertyTypeAny:
-			{
-				MCAutoValueRef t_value;
-				/* UNCHECKED */ ep . copyasvalueref(&t_value);
-				((void(*)(MCExecContext&, MCValueRef))t_info -> setter)(ctxt, *t_value);
-			}
-			break;
-				
-			case kMCPropertyTypeBool:
-			{
-				bool t_value;
-				if (!ep . copyasbool(t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NAB);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, bool))t_info -> setter)(ctxt, t_value);
-			}
-			break;
-				 
-			case kMCPropertyTypeInt16:
-			{
-				integer_t t_value;
-				if (!ep . copyasint(t_value) ||
-					t_value < -32768 || t_value > 32767)
-					ctxt . LegacyThrow(EE_PROPERTY_NAN);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, integer_t))t_info -> setter)(ctxt, t_value);				
-			}
-			break;
-				
-			case kMCPropertyTypeInt32:
-			{
-				integer_t t_value;
-				if (!ep . copyasint(t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NAN);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, integer_t))t_info -> setter)(ctxt, t_value);				
-			}
-			break; 
-			
-			case kMCPropertyTypeUInt16:
-			{
-				uinteger_t t_value;
-				if (!ep . copyasuint(t_value) ||
-					t_value < 0 || t_value > 65535)
-					ctxt . LegacyThrow(EE_PROPERTY_NAN);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, uinteger_t))t_info -> setter)(ctxt, t_value);				
-			}
-			break;
-				
-			case kMCPropertyTypeUInt32:
-			{
-				uinteger_t t_value;
-				if (!ep . copyasuint(t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NAN);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, uinteger_t))t_info -> setter)(ctxt, t_value);				
-			}
-			break;
-				
-			case kMCPropertyTypeDouble:
-			{
-				double t_value;
-				if (!ep . copyasdouble(t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NAN);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, double))t_info -> setter)(ctxt, t_value);	
-			}
-			break;
-			
-			case kMCPropertyTypeChar:
-			{
-				char_t t_value;
-				if (!ep . copyaschar(t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NAC);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, char_t))t_info -> setter)(ctxt, t_value);	
-			}
-			break;
-				
-			case kMCPropertyTypeString:
-			case kMCPropertyTypeBinaryString:
-			{
-				MCAutoStringRef t_value;
-				if (!ep . copyasstringref(&t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NAC);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCStringRef))t_info -> setter)(ctxt, *t_value);	
-			}
-			break;
-				
-			case kMCPropertyTypeName:
-			{
-				MCNewAutoNameRef t_value;
-				if (!ep.copyasnameref(&t_value))
-					ctxt.LegacyThrow(EE_PROPERTY_NAC);
-				if (!ctxt.HasError())
-					((void(*)(MCExecContext&, MCNameRef))t_info->setter)(ctxt, *t_value);
-			}
-			break;
-				
-			case kMCPropertyTypeColor:
-			{
-				MCColor t_value;
-				if (!ep . copyaslegacycolor(t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NOTACOLOR);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCColor))t_info -> setter)(ctxt, t_value);	
-			}
-			break;
-				
-			case kMCPropertyTypeRectangle:
-			{
-				MCRectangle t_value;
-				if (!ep . copyaslegacyrectangle(t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NOTARECT);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCRectangle))t_info -> setter)(ctxt, t_value);	
-			}
-			break;
-				
-			case kMCPropertyTypePoint:
-			{
-				MCPoint t_value;
-				if (!ep . copyaslegacypoint(t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NOTAPOINT);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCPoint))t_info -> setter)(ctxt, t_value);	
-			}
-			break;
-			
-			case kMCPropertyTypeInt16X2:
-			{
-				int2 a, b;
-				if (!MCU_stoi2x2(ep . getsvalue(), a, b))
-					ctxt . LegacyThrow(EE_PROPERTY_NOTAINTPAIR);
-				if (!ctxt . HasError())
-				{
-					integer_t t_value[2];
-					t_value[0] = a;
-					t_value[1] = b;
-					((void(*)(MCExecContext&, integer_t[2]))t_info -> setter)(ctxt, t_value);
-				}
-			}
-			break;
-			
-			case kMCPropertyTypeInt16X4:
-			{
-				int2 a, b, c, d;
-				if (!MCU_stoi2x4(ep . getsvalue(), a, b, c, d))
-					ctxt . LegacyThrow(EE_PROPERTY_NOTAINTQUAD);
-				if (!ctxt . HasError())
-				{
-					integer_t t_value[4];
-					t_value[0] = a;
-					t_value[1] = b;
-					t_value[2] = c;
-					t_value[3] = d;
-					((void(*)(MCExecContext&, integer_t[4]))t_info -> setter)(ctxt, t_value);
-				}
-			}
-			break;
-				
-			case kMCPropertyTypeEnum:
-			{
-				MCExecEnumTypeInfo *t_enum_info;
-				t_enum_info = (MCExecEnumTypeInfo *)t_info -> type_info;
-				
-				bool t_found;
-				t_found = false;
-				intenum_t t_value;
-				for(uindex_t i = 0; i < t_enum_info -> count; i++)
-					if (!t_enum_info -> elements[i] . read_only &&
-						MCU_strcasecmp(ep . getcstring(), t_enum_info -> elements[i] . tag) == 0)
-					{
-						t_found = true;
-						t_value = t_enum_info -> elements[i] . value;
-					}
-			
-				if (!t_found)
-					ctxt . LegacyThrow(EE_PROPERTY_BADENUMVALUE);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, int))t_info -> setter)(ctxt, t_value);
-			}
-			break;
-		
-			case kMCPropertyTypeSet:
-			{
-				MCExecSetTypeInfo *t_set_info;
-				t_set_info = (MCExecSetTypeInfo *)(t_info -> type_info);
-				
-				intset_t t_value = 0;
-				char **t_elements;
-				uindex_t t_element_count;
-				MCCStringSplit(ep . getcstring(), ',', t_elements, t_element_count);
-
-				for (uindex_t i = 0; i < t_element_count; i++)
-					for (uindex_t j = 0; j < t_set_info -> count; j++)
-						if (MCU_strcasecmp(t_elements[i], t_set_info -> elements[j] . tag) == 0)
-                        {
-							t_value |= 1 << t_set_info -> elements[j] . bit;
-                            break;
-                        }
-				MCCStringArrayFree(t_elements, t_element_count);
-				((void(*)(MCExecContext&, unsigned int))t_info -> setter)(ctxt, t_value);
-			}
-			break;
-				
-			case kMCPropertyTypeCustom:
-			{
-				MCExecCustomTypeInfo *t_custom_info;
-				t_custom_info = (MCExecCustomTypeInfo *)(t_info -> type_info);
-				
-				MCAssert(t_custom_info -> size <= 64);
-			
-				MCAutoStringRef t_input_value;
-				/* UNCHECKED */ ep . copyasstringref(&t_input_value);
-				
-				char t_value[64];
-				((MCExecCustomTypeParseProc)t_custom_info -> parse)(ctxt, *t_input_value, t_value);
-				if (!ctxt . HasError())
-				{
-					((void(*)(MCExecContext&, void *))t_info -> setter)(ctxt, t_value);
-					((MCExecCustomTypeFreeProc)t_custom_info -> free)(ctxt, t_value);
-				}
-			}
-			break;
-				
-			case kMCPropertyTypeOptionalUInt32:
-			{
-				uinteger_t t_value;
-				uinteger_t *t_value_ptr;
-				if (ep . isempty())
-					t_value_ptr = nil;
-				else
-				{
-					t_value_ptr = &t_value;
-					if (!ep . copyasuint(t_value))
-						ctxt . LegacyThrow(EE_PROPERTY_NAN);
-				}
-				
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, uinteger_t*))t_info -> setter)(ctxt, t_value_ptr);		
-			}
-			break;
-			
-			case kMCPropertyTypeOptionalString:
-			{
-				MCAutoStringRef t_value;
-				if (!ep . isempty())
-				{
-					if (!ep . copyasstringref(&t_value))
-						ctxt . LegacyThrow(EE_PROPERTY_NAS);
-				}
-				
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCStringRef))t_info -> setter)(ctxt, *t_value);
-			}
-			break;
-				
-			default:
-				ctxt . Unimplemented();
-				break;
-		}
-	
-		if (!ctxt . HasError())
-			return ES_NORMAL;
-		
-		return ctxt . Catch(line, pos);
-#endif
 	}
 
 	Exec_stat t_stat;
@@ -3389,11 +3190,9 @@ Exec_stat MCProperty::set_object_property(MCExecPoint& ep)
 
 	return t_stat;
 }
-
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 
-Exec_stat MCProperty::eval(MCExecPoint &ep)
-{
 #ifdef /* MCProperty::eval */ LEGACY_EXEC
 	uint2 i = 0;
 	int2 mx, my;
@@ -4820,24 +4619,9 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCProperty::eval */
-  
-	ep . setline(line);
 
-	if (destvar != nil && which != P_CUSTOM_VAR)
-		return eval_variable(ep);
-	
-	if (function != F_UNDEFINED)
-		return eval_function(ep);
-	
-	if (target == nil)
-		return eval_global_property(ep);
-	
-	if (tocount == CT_UNDEFINED)
-		return eval_object_property(ep);
-	
-	return eval_count(ep);
-}
 
+#ifdef LEGACY_EXEC
 Exec_stat MCProperty::eval_variable(MCExecPoint& ep)
 {
 	return destvar -> eval(ep);
@@ -5084,268 +4868,6 @@ Exec_stat MCProperty::eval_global_property(MCExecPoint& ep)
         }
 		
         return ctxt . Catch(line, pos);
-#ifdef LEGACY_EXEC
-		switch(t_info -> type)
-		{
-			case kMCPropertyTypeAny:
-			{
-				MCAutoValueRef t_any;
-				((void(*)(MCExecContext&, MCValueRef&))t_info -> getter)(ctxt, &t_any);
-				if (!ctxt . HasError())
-				{
-					ep . setvalueref(*t_any);
-					return ES_NORMAL;
-				}
-			}
-			break;
-				
-			case kMCPropertyTypeBool:
-			{
-				bool t_value;
-				((void(*)(MCExecContext&, bool&))t_info -> getter)(ctxt, t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setboolean(t_value ? True : False);
-					return ES_NORMAL;
-				}
-			}
-			break;
-			
-			case kMCPropertyTypeInt16:
-			case kMCPropertyTypeInt32:
-			{
-				integer_t t_value;
-				((void(*)(MCExecContext&, integer_t&))t_info -> getter)(ctxt, t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setint(t_value);
-					return ES_NORMAL;
-				}
-			}
-			break;
-			
-			case kMCPropertyTypeUInt16:
-			case kMCPropertyTypeUInt32:
-			{
-				uinteger_t t_value;
-				((void(*)(MCExecContext&, uinteger_t&))t_info -> getter)(ctxt, t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setuint(t_value);
-					return ES_NORMAL;
-				}
-			}
-			break;
-				
-			case kMCPropertyTypeDouble:
-			{
-				double t_value;
-				((void(*)(MCExecContext&, double&))t_info -> getter)(ctxt, t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setnvalue(t_value);
-					return ES_NORMAL;
-				}
-			}
-			break;
-			
-			case kMCPropertyTypeChar:
-			{
-				char_t t_value;
-				((void(*)(MCExecContext&, char_t&))t_info -> getter)(ctxt, t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setchar((char)t_value);
-					return ES_NORMAL;
-				}
-			}
-			break;
-				
-			case kMCPropertyTypeString:
-			case kMCPropertyTypeBinaryString:
-			{	
-				MCAutoStringRef t_value;
-				((void(*)(MCExecContext&, MCStringRef&))t_info -> getter)(ctxt, &t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setvalueref(*t_value);
-					return ES_NORMAL;
-				}
-			}
-			break;
-				
-			case kMCPropertyTypeColor:
-			{
-				MCColor t_value;
-				((void(*)(MCExecContext&, MCColor&))t_info -> getter)(ctxt, t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setcolor(t_value);
-					return ES_NORMAL;
-				}
-			}
-			break;
-			
-			case kMCPropertyTypeRectangle:
-			{
-				MCRectangle t_value;
-				((void(*)(MCExecContext&, MCRectangle&))t_info -> getter)(ctxt, t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setrectangle(t_value);
-					return ES_NORMAL;
-				}
-			}
-			break;
-				
-			case kMCPropertyTypePoint:
-			{
-				MCPoint t_value;
-				((void(*)(MCExecContext&, MCPoint&))t_info -> getter)(ctxt, t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setpoint(t_value);
-					return ES_NORMAL;
-				}
-			}
-			break;
-				
-			case kMCPropertyTypeInt16X2:
-			{
-				integer_t t_value[2];
-				((void(*)(MCExecContext&, integer_t[2]))t_info -> getter)(ctxt, t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setstringf("%d,%d", t_value[0], t_value[1]);
-					return ES_NORMAL;
-				}
-			}
-			break;
-				
-			case kMCPropertyTypeInt16X4:
-			{
-				integer_t t_value[4];
-				((void(*)(MCExecContext&, integer_t[4]))t_info -> getter)(ctxt, t_value);
-				if (!ctxt . HasError())
-				{
-					ep . setstringf("%d,%d,%d,%d", t_value[0], t_value[1], t_value[2], t_value[3]);
-					return ES_NORMAL;
-				}
-			}
-			break;
-				
-			case kMCPropertyTypeEnum:
-			{
-				int t_value;
-				((void(*)(MCExecContext&, int&))t_info -> getter)(ctxt, t_value);
-				if (!ctxt . HasError())
-				{
-					MCExecEnumTypeInfo *t_enum_info;
-					t_enum_info = (MCExecEnumTypeInfo *)(t_info -> type_info);
-					for(uindex_t i = 0; i < t_enum_info -> count; i++)
-						if (t_enum_info -> elements[i] . value == t_value)
-						{
-							ep . setcstring(t_enum_info -> elements[i] . tag);
-							return ES_NORMAL;
-						}
-					
-					// THIS MEANS A METHOD HAS RETURNED AN ILLEGAL VALUE
-					MCAssert(false);
-					return ES_ERROR;
-				}
-			}
-			break;
-				
-			case kMCPropertyTypeSet:
-			{
-				unsigned int t_value;
-				((void(*)(MCExecContext&, unsigned int&))t_info -> getter)(ctxt, t_value);
-				if (!ctxt . HasError())
-				{
-					MCExecSetTypeInfo *t_set_info;
-					t_set_info = (MCExecSetTypeInfo *)(t_info -> type_info);
-					
-					bool t_first;
-					t_first = true;
-					
-					ep . clear();
-					for(uindex_t i = 0; i < t_set_info -> count; i++)
-						if (((1 << t_set_info -> elements[i] . bit) & t_value) != 0)
-						{
-							ep . concatcstring(t_set_info -> elements[i] . tag, EC_COMMA, t_first);
-							t_first = false;
-						}
-					
-					return ES_NORMAL;
-				}
-			}
-			break;
-				
-			case kMCPropertyTypeCustom:
-			{
-				MCExecCustomTypeInfo *t_custom_info;
-				t_custom_info = (MCExecCustomTypeInfo *)(t_info -> type_info);
-				
-				MCAssert(t_custom_info -> size <= 64);
-				
-				char t_value[64];
-				((void(*)(MCExecContext&, void *))t_info -> getter)(ctxt, t_value);
-				if (!ctxt . HasError())
-				{
-					MCAutoStringRef t_value_ref;
-					((MCExecCustomTypeFormatProc)t_custom_info -> format)(ctxt, t_value, &t_value_ref);
-					((MCExecCustomTypeFreeProc)t_custom_info -> free)(ctxt, t_value);
-					if (!ctxt . HasError())
-					{
-						ep . setvalueref(*t_value_ref);
-						return ES_NORMAL;
-					}
-				}
-				
-			}
-			break;
-				
-			case kMCPropertyTypeOptionalUInt32:
-			{
-				uinteger_t t_value;
-				uinteger_t *t_value_ptr;
-				t_value_ptr = &t_value;
-				((void(*)(MCExecContext&, uinteger_t*&))t_info -> getter)(ctxt, t_value_ptr);
-				if (!ctxt . HasError())
-				{
-					if (t_value_ptr == nil)
-						ep . clear();
-					else
-						ep . setint(t_value);
-					return ES_NORMAL;
-				}
-			}
-			break;
-				
-			case kMCPropertyTypeOptionalString:
-			{
-				MCAutoStringRef t_value;
-				((void(*)(MCExecContext&, MCStringRef&))t_info -> getter)(ctxt, &t_value);
-				if (!ctxt . HasError())
-				{
-					if (*t_value == nil)
-						ep . clear();
-					else
-						ep . setvalueref(*t_value);
-					
-					return ES_NORMAL;
-				}
-				
-			}
-			break;
-				
-			default:
-				MCAssert(false);
-				break;
-		}
-		
-		return ctxt . Catch(line, pos); */
-#endif
 	}
 
 	Exec_stat t_stat;
@@ -5430,5 +4952,342 @@ Exec_stat MCProperty::eval_count(MCExecPoint& ep)
 	
 	return ES_NORMAL;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
+
+static MCPropertyInfo *lookup_mode_property(const MCPropertyTable *p_table, Properties p_which, bool p_effective, bool p_is_array_prop)
+{
+	for(uindex_t i = 0; i < p_table -> size; i++)
+		if (p_table -> table[i] . property == p_which && p_table -> table[i] . effective == p_effective &&
+            p_table -> table[i] . is_array_prop == p_is_array_prop)
+			return &p_table -> table[i];
+	
+	return nil;
+}
+
+void MCProperty::eval_variable_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+    destvar -> eval_ctxt(ctxt, r_value);
+}
+
+void MCProperty::eval_function_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+	switch (function)
+	{
+		case F_DATE:
+		{
+			MCDateTimeGetDate(ctxt, which, r_value . stringref_value);
+            
+			if (!ctxt . HasError())
+				r_value . type = kMCExecValueTypeStringRef;
+            
+            return;
+		}
+		case F_TIME:
+		{
+			MCDateTimeGetTime(ctxt, which, r_value . stringref_value);
+            
+			if (!ctxt . HasError())
+				r_value . type = kMCExecValueTypeStringRef;
+            
+            return;
+		}
+		case F_MILLISECS:
+		{
+			if (which == P_LONG)
+				MCDateTimeGetLongMilliseconds(ctxt, r_value . double_value);
+			else
+				MCDateTimeGetMilliseconds(ctxt, r_value . double_value);
+            
+			if (!ctxt . HasError())
+                r_value . type = kMCExecValueTypeDouble;
+            
+            return;
+		}
+		case F_SECONDS:
+		{
+			if (which == P_LONG)
+				MCDateTimeGetLongSeconds(ctxt, r_value . double_value);
+			else
+				MCDateTimeGetSeconds(ctxt, r_value . double_value);
+            
+			if (!ctxt . HasError())
+                r_value . type = kMCExecValueTypeDouble;
+            
+            return;
+		}
+		case F_TICKS:
+		{
+			if (which == P_LONG)
+				MCDateTimeGetLongTicks(ctxt, r_value . double_value);
+			else
+				MCDateTimeGetTicks(ctxt, r_value . double_value);
+            
+			if (!ctxt . HasError())
+                r_value . type = kMCExecValueTypeDouble;
+            
+            return;
+		}
+		case F_FILES:
+		{
+			if (which == P_LONG)
+				MCFilesGetDetailedFiles(ctxt, r_value . stringref_value);
+			else
+				MCFilesGetFiles(ctxt, r_value . stringref_value);
+            
+			if (!ctxt . HasError())
+				r_value . type = kMCExecValueTypeStringRef;
+            
+            return;
+		}
+		case F_DIRECTORIES:
+		{
+			if (which == P_LONG)
+				MCFilesGetDetailedFolders(ctxt, r_value . stringref_value);
+			else
+				MCFilesGetFolders(ctxt, r_value . stringref_value);
+            
+			if (!ctxt . HasError())
+				r_value . type = kMCExecValueTypeStringRef;
+            
+            return;
+		}
+		case F_MONTH_NAMES:
+		{
+			MCDateTimeGetMonthNames(ctxt, which, r_value . stringref_value);
+            
+			if (!ctxt . HasError())
+				r_value . type = kMCExecValueTypeStringRef;
+            
+            return;
+		}
+		case F_WEEK_DAY_NAMES:
+		{
+			MCDateTimeGetWeekDayNames(ctxt, which, r_value . stringref_value);
+            
+			if (!ctxt . HasError())
+				r_value . type = kMCExecValueTypeStringRef;
+            
+            return;
+		}
+		case F_DATE_FORMAT:
+		{
+			MCDateTimeGetDateFormat(ctxt, which, r_value . stringref_value);
+            
+			if (!ctxt . HasError())
+				r_value . type = kMCExecValueTypeStringRef;
+            
+            return;
+		}
+		case F_SCREEN_RECT:
+		{
+			if ((which % 1000) == P_LONG)
+			{
+				MCInterfaceGetScreenRects(ctxt, which >= 1000, effective == True, r_value . stringref_value);
+                
+                if (!ctxt . HasError())
+                    r_value . type = kMCExecValueTypeStringRef;
+                
+                return;
+			}
+			else
+			{
+				MCInterfaceGetScreenRect(ctxt, which >= 1000, effective == True, r_value . rectangle_value);
+                
+                if (!ctxt . HasError())
+                    r_value . type = kMCExecValueTypeRectangle;
+                
+                return;
+            }
+		}
+		default:
+			break;
+	}
+	
+	fprintf(stderr, "MCProperty: ERROR bad function in eval\n");
+	ctxt . Throw();
+}
+
+void MCProperty::eval_global_property_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+    bool t_is_array_prop;
+    MCNewAutoNameRef t_index;
+    
+    if (customindex != nil)
+        ctxt . EvalExprAsNameRef(customindex, EE_PROPERTY_BADEXPRESSION, &t_index);
+    
+    t_is_array_prop = (*t_index != nil && !MCNameIsEmpty(*t_index));
+    
+	const MCPropertyInfo *t_info;
+	if (!MCPropertyInfoTableLookup(which, effective, t_info, t_is_array_prop))
+        t_info = lookup_mode_property(getmodepropertytable(), which, effective, t_is_array_prop);
+        
+    if (t_info != nil)
+    {
+        MCExecFetchProperty(ctxt, t_info, *t_index, r_value);
+        return;
+	}
+
+    MCeerror->add(EE_PROPERTY_NOPROP, line, pos);
+}
+
+void MCProperty::eval_object_property_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+	Properties t_prop;
+	MCNewAutoNameRef t_prop_name, t_index_name;
+    
+    bool t_success;
+    t_success = resolveprop(ctxt, t_prop, &t_prop_name, &t_index_name);
+	
+	if (t_prop == P_CUSTOM)
+	{
+		MCObject *t_object;
+		uint4 t_parid;
+		if (t_success)
+            t_success = target -> getobjforprop(ctxt, t_object, t_parid);
+		
+		// MW-2011-09-02: Moved handling of customprop != nil case into resolveprop,
+		//   so t_prop_name is always non-nil if t_prop == P_CUSTOM.
+		// MW-2011-11-23: [[ Array Chunk Props ]] Moved handling of arrayprops into
+		//   MCChunk::setprop.
+		if (t_success)
+		{
+			if (*t_index_name == nil)
+				t_success = t_object -> getcustomprop(ctxt, t_object -> getdefaultpropsetname(), *t_prop_name, r_value);
+			else
+				t_success = t_object -> getcustomprop(ctxt, *t_prop_name, *t_index_name, r_value);
+		}
+	}
+	else
+	{
+		// MW-2011-11-23: [[ Array Chunk Props ]] If the prop is an array-prop, then
+		//   a nil index translates to the empty name (the array[empty] <=> the array).
+		MCNameRef t_derived_index_name;
+		if (t_prop < P_FIRST_ARRAY_PROP)
+			t_derived_index_name = nil;
+		else
+			t_derived_index_name = *t_index_name != nil ? *t_index_name : kMCEmptyName;
+		
+        if (t_success)
+            t_success = target -> getprop(ctxt, t_prop, t_derived_index_name, effective, r_value);
+	}
+	
+	if (!t_success)
+		MCeerror->add(EE_PROPERTY_NOPROP, line, pos);
+}
+
+void MCProperty::eval_count_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+	target->count(ctxt, tocount, ptype, r_value . uint_value);
+    
+    if (!ctxt . HasError())
+        r_value . type = kMCExecValueTypeUInt;
+}
+
+void MCProperty::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+	ctxt . SetLine(line);
+    
+	if (destvar != nil && which != P_CUSTOM_VAR)
+		return eval_variable_ctxt(ctxt, r_value);
+	
+	if (function != F_UNDEFINED)
+		return eval_function_ctxt(ctxt, r_value);
+	
+	if (target == nil)
+		return eval_global_property_ctxt(ctxt, r_value);
+	
+	if (tocount == CT_UNDEFINED)
+		return eval_object_property_ctxt(ctxt, r_value);
+	
+	return eval_count_ctxt(ctxt, r_value);
+}
+
+void MCProperty::set_variable(MCExecContext& ctxt, MCExecValue p_value)
+{
+    MCAutoValueRef t_value;
+    MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeValueRef, &(&t_value));
+    destvar -> set(ctxt, *t_value);
+}
+
+void MCProperty::set_global_property(MCExecContext& ctxt, MCExecValue p_value)
+{
+    bool t_is_array_prop;
+    MCNewAutoNameRef t_index;
+    
+    if (customindex != nil)
+        ctxt . EvalExprAsNameRef(customindex, EE_PROPERTY_BADEXPRESSION, &t_index);
+    
+    t_is_array_prop = (*t_index != nil && !MCNameIsEmpty(*t_index));
+    
+	const MCPropertyInfo *t_info;
+	if (!MCPropertyInfoTableLookup(which, effective, t_info, t_is_array_prop))
+        t_info = lookup_mode_property(getmodepropertytable(), which, effective, t_is_array_prop);
+    
+    if (t_info != nil)
+    {
+        MCExecStoreProperty(ctxt, t_info, *t_index, p_value);
+        return;
+	}
+    
+    MCeerror->add(EE_PROPERTY_CANTSET, line, pos);
+}
+
+void MCProperty::set_object_property(MCExecContext& ctxt, MCExecValue p_value)
+{
+	Properties t_prop;
+	MCNewAutoNameRef t_prop_name, t_index_name;
+	if (!resolveprop(ctxt, t_prop, &t_prop_name, &t_index_name))
+        return;
+	
+    bool t_success;
+    t_success = true;
+    
+	if (t_prop == P_CUSTOM)
+	{
+		MCObject *t_object;
+		uint4 t_parid;
+		t_success = target -> getobjforprop(ctxt, t_object, t_parid);
+		
+		// MW-2011-09-02: Moved handling of customprop != nil case into resolveprop,
+		//   so t_prop_name is always non-nil if t_prop == P_CUSTOM.
+		// MW-2011-11-23: [[ Array Chunk Props ]] Moved handling of arrayprops into
+		//   MCChunk::setprop.
+		if (t_success)
+		{
+			if (*t_index_name == nil)
+				t_success = t_object -> setcustomprop(ctxt, t_object -> getdefaultpropsetname(), *t_prop_name, p_value);
+			else
+				t_success = t_object -> setcustomprop(ctxt, *t_prop_name, *t_index_name, p_value);
+			// MM-2012-09-05: [[ Property Listener ]] Make sure setting a custom property sends propertyChanged message to listeners.
+			if (t_success)
+				t_object -> signallisteners(t_prop);
+		}
+	}
+	else
+	{   
+		// MW-2011-11-23: [[ Array Chunk Props ]] If the prop is an array-prop, then
+		//   a nil index translates to the empty name (the array[empty] <=> the array).
+		MCNameRef t_derived_index_name;
+		if (t_prop < P_FIRST_ARRAY_PROP)
+			t_derived_index_name = nil;
+		else
+			t_derived_index_name = *t_index_name != nil ? *t_index_name : kMCEmptyName;
+		
+		t_success = target -> setprop(ctxt, t_prop, t_derived_index_name, effective, p_value);
+	}
+    
+	if (!t_success)
+		MCeerror->add(EE_PROPERTY_CANTSETOBJECT, line, pos);
+}
+
+void MCProperty::set(MCExecContext& ctxt, MCExecValue p_value)
+{
+    if (destvar != NULL && which != P_CUSTOM_VAR)
+        set_variable(ctxt, p_value);
+    else if (target == nil)
+        set_global_property(ctxt, p_value);
+    else
+        set_object_property(ctxt, p_value);
+}

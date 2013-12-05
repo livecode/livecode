@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "globals.h"
 #include "stack.h"
 #include "eventqueue.h"
@@ -628,6 +628,7 @@ void MCiOSScrollerControl::GetDecelerating(MCExecContext& ctxt, bool& r_value)
         r_value = false;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat scroller_set_property(UIScrollView *p_view, MCRectangle32 &x_content_rect, MCNativeControlProperty p_property, MCExecPoint&ep)
 {
 	Boolean t_bool;
@@ -840,6 +841,7 @@ Exec_stat scroller_set_property(UIScrollView *p_view, MCRectangle32 &x_content_r
 	}
 	return ES_NOT_HANDLED;
 }
+#endif
 
 #ifdef /* MCNativeScrollerControl::Set */ LEGACY_EXEC
 Exec_stat MCiOSScrollerControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
@@ -883,6 +885,7 @@ Exec_stat MCiOSScrollerControl::Set(MCNativeControlProperty p_property, MCExecPo
 }
 #endif /* MCNativeScrollerControl::Set */
 
+#ifdef LEGACY_EXEC
 Exec_stat scroller_get_property(UIScrollView *p_view, const MCRectangle32 &p_content_rect, MCNativeControlProperty p_property, MCExecPoint &ep)
 {
 	float t_scale;
@@ -969,6 +972,7 @@ Exec_stat scroller_get_property(UIScrollView *p_view, const MCRectangle32 &p_con
 	}
 	return ES_NOT_HANDLED;
 }
+#endif
 
 #ifdef /* MCiOSScrollerControl::Get */ LEGACY_EXEC
 Exec_stat MCiOSScrollerControl::Get(MCNativeControlProperty p_property, MCExecPoint &ep)

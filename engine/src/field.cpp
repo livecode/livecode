@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "sellst.h"
 #include "stack.h"
 #include "card.h"
@@ -1038,7 +1038,7 @@ Boolean MCField::mdown(uint2 which)
 				unselect(True, True);
 			else
 				if (flags & F_LIST_BEHAVIOR)
-					sethilitedlines(MCnullmcstring);
+					sethilitedlines(NULL, 0);
 			start(True);
 			break;
 		case T_HELP:
@@ -1141,13 +1141,16 @@ Boolean MCField::mup(uint2 which)
 									while (bptr != linkend->next());
 									// MW-2011-08-18: [[ Layers ]] Invalidate the links part of the field.
 									layer_redrawrect(linkrect);
-									MCExecPoint ep;
+                            
+                                    MCAutoStringRef t_string;
 									if (linkstart->getlinktext() == NULL)
-										returntext(ep, linksi, linkei);
+                                    {
+										returntext(linksi, linkei, &t_string);
+                                    }
 									else
-										ep.setvalueref(linkstart->getlinktext());
+										t_string = MCValueRetain(linkstart->getlinktext());
 									linkstart = linkend = NULL;
-									if (message_with_valueref_args(MCM_link_clicked, ep.getvalueref()) == ES_NORMAL)
+									if (message_with_valueref_args(MCM_link_clicked, *t_string) == ES_NORMAL)
 										return True;
 								}
 								else
@@ -1325,6 +1328,7 @@ void MCField::setrect(const MCRectangle &nrect)
         do_recompute(true);
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	switch (which)
@@ -1580,6 +1584,7 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 	}
 	return ES_NORMAL;
 }
+#endif
 
 // MW-2012-01-25: [[ ParaStyles ]] Parse the given string as a list of tab-stops.
 // MW-2012-02-11: [[ TabWidths ]] The 'which' parameter determines what style of tabStops to
@@ -1626,13 +1631,16 @@ bool MCField::parsetabstops(Properties which, MCStringRef data, uint16_t*& r_tab
 
 // MW-2012-02-11: [[ TabWidths ]] This method formats the tabStops in either stops or
 //   widths style depending on the value of which.
-void MCField::formattabstops(Properties which, MCExecPoint& ep, uint16_t *tabs, uint16_t tab_count)
+void MCField::formattabstops(Properties which, uint16_t *tabs, uint16_t tab_count, MCStringRef &r_result)
 {
-	ep.clear();
+	if (r_result != nil)
+        MCValueRelease(r_result);
+    MCAutoListRef t_list;
+    /* UNCHECKED */ MCListCreateMutable(EC_COMMA, &t_list);
 	if (which == P_TAB_STOPS)
 	{
 		for(uint32_t i = 0 ; i < tab_count ; i++)
-			ep.concatuint(tabs[i], EC_COMMA, i == 0);
+            MCListAppendInteger(*t_list, tabs[i]);
 	}
 	else
 	{
@@ -1640,12 +1648,14 @@ void MCField::formattabstops(Properties which, MCExecPoint& ep, uint16_t *tabs, 
 		t_previous_tab = 0;
 		for(uint32_t i = 0; i < tab_count; i++)
 		{
-			ep.concatuint(tabs[i] - t_previous_tab, EC_COMMA, i == 0);
+            MCListAppendInteger(*t_list, tabs[i]- t_previous_tab);
 			t_previous_tab = tabs[i];
 		}
 	}
+    /* UNCHECKED */ MCListCopyAsString(*t_list, r_result);
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = False;
@@ -2132,6 +2142,7 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 	}
 	return ES_NORMAL;
 }
+#endif
 
 void MCField::undo(Ustruct *us)
 {

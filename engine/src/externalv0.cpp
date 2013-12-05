@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "exec.h"
 #include "param.h"
 #include "field.h"
@@ -201,18 +201,25 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
 		char *retval;
 		Bool Xpass, Xerr;
 		int nargs = 0;
-		char **args = NULL;
-		MCExecPoint ep(p_context, NULL, NULL);
+        char **args = NULL;
+        MCExecContext ctxt(p_context, nil, nil);
 
 		while (p_parameters != NULL)
 		{
 			// MW-2013-06-20: [[ Bug 10961 ]] Make sure we evaluate the parameter as an
 			//   argument. This takes the value from the variable (by-ref), or built-in
 			//   value (by-value).
-			if (p_parameters->eval_argument(ep) != ES_NORMAL)
+            MCAutoValueRef t_value;
+            MCAutoStringRef t_string;
+
+            if (!p_parameters->eval_argument(ctxt, &t_value))
 				return ES_ERROR;
 			MCU_realloc((char **)&args, nargs, nargs + 1, sizeof(char *));
-			args[nargs++] = ep.getsvalue().clone();
+
+            if (!ctxt . ConvertToString(*t_value, &t_string))
+                return ES_ERROR;
+
+            MCStringConvertToCString(*t_string, args[nargs++]);
 			p_parameters = p_parameters -> getnext();
 		}
 
@@ -226,11 +233,10 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
 			m_free(retval);
 		}
 		else if (retval == NULL)
-			MCresult->clear(False);
+            MCresult->clear(False);
 		else
 		{
-			ep.setsvalue(retval);
-			MCresult->set(ep);
+            ctxt . SetTheResultToCString(retval);
 			m_free(retval);
 		}
 
@@ -273,16 +279,17 @@ static int trans_stat(Exec_stat stat)
 	return xresNotImp;
 }
 
-static Exec_stat getvarptr(MCExecPoint& ep, const MCString &vname,MCVariable **tvar)
+static Exec_stat getvarptr(MCExecContext& ctxt, const MCString &vname,MCVariable **tvar)
 {
 	MCAutoNameRef t_name;
 	/* UNCHECKED */ t_name . CreateWithOldString(vname);
 
 	MCVarref *newvar;
-	if (MCECptr->GetEP().findvar(t_name, &newvar) != PS_NORMAL)
+    
+    if (MCECptr -> FindVar(t_name, &newvar) != PS_NORMAL)
 		return ES_ERROR;
 	
-	if ((*tvar = newvar->evalvar(ep)) == NULL)
+	if ((*tvar = newvar->evalvar(ctxt)) == NULL)
 	{
 		delete newvar;
 		return ES_ERROR;
@@ -316,9 +323,11 @@ static char *getfield(MCField *fptr, int *retval)
 	}
 	*retval = xresSucc;
 	// MW-2012-02-21: [[ FieldExport ]] Use the new text export method.
-	MCExecPoint ep;
-	fptr->exportastext(0, ep, 0, INT32_MAX, false);
-	return ep.getsvalue().clone();
+	MCAutoStringRef t_string;;
+	fptr->exportastext(0, 0, INT32_MAX, &t_string);
+    char *t_result;
+    /* UNCHECKED */ MCStringConvertToCString(*t_string, t_result);
+	return t_result;
 }
 
 static char *set_idle_func(const char *arg1, const char *arg2,
@@ -387,10 +396,15 @@ static char *get_global(const char *arg1, const char *arg2,
 	tmp = MCVariable::lookupglobal_cstring(arg1);
 	if (tmp != nil)
 	{
-		*retval = xresSucc;
-		MCExecPoint ep;
-		tmp->eval(ep);
-		return ep.getsvalue().clone();
+        *retval = xresSucc;
+        MCExecContext ctxt(nil, nil, nil);
+        MCAutoValueRef t_value;
+		tmp->eval(ctxt, &t_value);
+        MCAutoStringRef t_string;
+        /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
+        char *t_result;
+        /* UNCHECKED */ MCStringConvertToCString(*t_string, t_result);
+		return t_result;
 	}
 	*retval = xresFail;
 	return NULL;
@@ -406,11 +420,13 @@ static char *set_global(const char *arg1, const char *arg2,
 	{
 		*retval = xresFail;
 		return NULL;
-	}
-	MCExecPoint ep;
+    }
+
+    MCExecContext ctxt(nil, nil, nil);
 	*retval = xresSucc;
-	ep.setsvalue(arg2);
-	tmp->set(ep);
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringCreateWithCString(arg2, &t_string);
+	tmp->set(ctxt, *t_string);
 	return NULL;
 }
 
@@ -525,11 +541,11 @@ static char *show_image_by_id(const char *arg1, const char *arg2,
 		Symbol_type t_next_type;
 		MCerrorlock++;
 		if (t_chunk -> parse(sp, False) == PS_NORMAL && sp.next(t_next_type) == PS_EOF)
-		{
-			MCExecPoint ep2(nil, nil, nil);
+        {
+            MCExecContext ctxt(nil, nil, nil);
 			MCObject *t_object;
 			uint32_t t_part_id;
-			if (t_chunk -> getobj(ep2, t_object, t_part_id, False) == ES_NORMAL &&
+			if (t_chunk -> getobj(ctxt, t_object, t_part_id, False)  &&
 				t_object -> gettype() == CT_IMAGE)
 				iptr = static_cast<MCImage *>(t_object);
 		}
@@ -556,11 +572,16 @@ static char *get_variable(const char *arg1, const char *arg2,
 		*retval = xresFail;
 		return NULL;
 	}
-	*retval = trans_stat(getvarptr(MCECptr->GetEP(), arg1, &var));
+	*retval = trans_stat(getvarptr(*MCECptr, arg1, &var));
 	if (var == NULL)
 		return NULL;
-	var -> eval(MCECptr->GetEP());
-	return MCECptr->GetEP().getsvalue().clone();
+    MCAutoValueRef t_value;
+	var -> eval(*MCECptr, &t_value);
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCECptr -> ConvertToString(*t_value, &t_string);
+    char *t_result;
+    /* UNCHECKED */ MCStringConvertToCString(*t_string, t_result);
+	return t_result;
 }
 
 static char *set_variable(const char *arg1, const char *arg2,
@@ -572,18 +593,20 @@ static char *set_variable(const char *arg1, const char *arg2,
 		*retval = xresFail;
 		return NULL;
 	}
-	*retval = trans_stat(getvarptr(MCECptr->GetEP(), arg1,&var));
+	*retval = trans_stat(getvarptr(*MCECptr, arg1,&var));
 	if (var == NULL)
 		return NULL;
-	MCECptr->GetEP().setsvalue(arg2);
-	var->set(MCECptr->GetEP());
+	//MCECptr->GetEP().setsvalue(arg2);
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringCreateWithCString(arg2, &t_string);
+	var->set(*MCECptr, *t_string);
 	return NULL;
 }
 
 static char *get_variable_ex(const char *arg1, const char *arg2,
                              const char *arg3, int *retval)
 {
-	MCString *value = (MCString *)arg3;
+	char *value = (char *)arg3;
 	Boolean array = False;
 	MCVariable *var = NULL;
 	if (MCECptr == NULL)
@@ -591,47 +614,54 @@ static char *get_variable_ex(const char *arg1, const char *arg2,
 		*retval = xresFail;
 		return NULL;
 	}
-	*retval = trans_stat(getvarptr(MCECptr->GetEP(), arg1, &var));
+	*retval = trans_stat(getvarptr(*MCECptr, arg1, &var));
 	if (var == NULL)
 		return NULL;
+    
+    MCAutoValueRef t_value;
 
 	if (arg2 != NULL && strlen(arg2) != 0)
 	{
 		MCNameRef t_key;
 		/* UNCHECKED */ MCNameCreateWithCString(arg2, t_key);
-		var -> eval(MCECptr->GetEP(), &t_key, 1);
+		var -> eval(*MCECptr, &t_key, 1, &t_value);
 		MCValueRelease(t_key);
 	}
 	else
-		var -> eval(MCECptr->GetEP());
-
-	*value = MCECptr->GetEP().getsvalue();
+		var -> eval(*MCECptr, &t_value);
+    
+    
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCECptr -> ConvertToString(*t_value, &t_string);
+    char *t_result;
+    /* UNCHECKED */ MCStringConvertToCString(*t_string, t_result);
+	value = t_result;
 	return NULL;
 }
 
 static char *set_variable_ex(const char *arg1, const char *arg2,
                              const char *arg3, int *retval)
 {
-	MCString *value = (MCString *)arg3;
 	MCVariable *var = NULL;
 	if (MCECptr == NULL)
 	{
 		*retval = xresFail;
 		return NULL;
 	}
-	*retval = trans_stat(getvarptr(MCECptr->GetEP(), arg1,&var));
+	*retval = trans_stat(getvarptr(*MCECptr, arg1,&var));
 	if (var == NULL)
 		return NULL;
-	MCECptr->GetEP().setsvalue(*value);
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringCreateWithCString(arg3, &t_string);
 	if (arg2 != NULL && strlen(arg2) > 0)
 	{
 		MCNameRef t_key;
 		/* UNCHECKED */ MCNameCreateWithCString(arg2, t_key);
-		var->set(MCECptr->GetEP(), &t_key, 1);
+		var->set(*MCECptr, *t_string, &t_key, 1);
 		MCValueRelease(t_key);
 	}
 	else
-		var->set(MCECptr->GetEP());
+		var->set(*MCECptr, *t_string);
 
 	return NULL;
 }
@@ -673,14 +703,14 @@ static char *get_array(const char *arg1, const char *arg2,
 		*retval = xresFail;
 		return NULL;
 	}
-	*retval = trans_stat(getvarptr(MCECptr->GetEP(), arg1,&var));
+	*retval = trans_stat(getvarptr(*MCECptr, arg1,&var));
 	if (var == NULL)
 		return NULL;
 
 	if (!var -> isarray())
 		return NULL;
 
-	if (!var -> converttoarrayofstrings(MCECptr->GetEP()))
+	if (!var -> converttoarrayofstrings(*MCECptr))
 		return NULL;
 
 	MCArrayRef t_array;
@@ -752,16 +782,17 @@ static char *set_array(const char *arg1, const char *arg2,
 		*retval = xresFail;
 		return NULL;
 	}
-	*retval = trans_stat(getvarptr(MCECptr->GetEP(), arg1,&var));
+	*retval = trans_stat(getvarptr(*MCECptr, arg1,&var));
 	if (var == NULL)
 		return NULL;
-	var->remove(MCECptr->GetEP(),nil, 0);//clear variable
+	var->remove(*MCECptr, nil, 0);//clear variable
 	char tbuf[U4L];
 	for (unsigned int i = 0; i <value->nelements; i++)
 	{
 		MCString *s = (MCString *)&value->strings[i];
-		MCECptr->GetEP().setsvalue(*s);
-		MCNameRef t_key;
+        MCAutoStringRef t_string;
+        /* UNCHECKED */ MCStringCreateWithOldString(*s, &t_string);
+        MCNameRef t_key;
 		if (value->keys == NULL ||  value->keys[i] == NULL)
 		{
 			sprintf(tbuf,"%d",i+1);
@@ -769,7 +800,7 @@ static char *set_array(const char *arg1, const char *arg2,
 		}
 		else
 			/* UNCHECKED */ MCNameCreateWithCString(value -> keys[i], t_key);
-		var->set(MCECptr->GetEP(), &t_key, 1);
+		var->set(*MCECptr, *t_string, &t_key, 1);
 	}
 	return NULL;
 }

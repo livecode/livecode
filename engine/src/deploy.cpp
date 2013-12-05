@@ -67,7 +67,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 
 #include "exec.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "handler.h"
 #include "scriptpt.h"
 #include "variable.h"
@@ -426,39 +426,30 @@ Parse_stat MCIdeDeploy::parse(MCScriptPoint& sp)
 	return sp . parseexp(False, True, &m_params);
 }
 
-Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
+void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 {
-	Exec_stat t_stat;
-	t_stat = ES_NORMAL;
-
 	bool t_soft_error;
 	t_soft_error = false;
-
-	// Clear the result as we return an error there
+    bool t_has_error;
+    t_has_error = false;
+    
+    // Clear the result as we return an error there
 	MCresult -> clear();
-
-	if (t_stat == ES_NORMAL)
-		t_stat = m_params -> eval(ep);
-
-	MCAutoArrayRef t_array;
-	if (t_stat == ES_NORMAL)
-	{
-		if (!ep . copyasarrayref(&t_array))
-			return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
+    
+    MCAutoArrayRef t_array;
+    if (!ctxt . EvalExprAsArrayRef(m_params, EE_UNDEFINED, &t_array))
+        return;
 
 	MCDeployParameters t_params;
-	t_params.InitWithArray(ctxt, *t_array);
+    t_has_error = !t_params.InitWithArray(ctxt, *t_array);
 	
 	// If platform is iOS and we are not Mac then error
 #ifndef _MACOSX
-	if (t_stat == ES_NORMAL && (m_platform == PLATFORM_IOS || m_platform == PLATFORM_IOS_EMBEDDED))
+	if (!t_has_error && (m_platform == PLATFORM_IOS || m_platform == PLATFORM_IOS_EMBEDDED))
 	{
-		MCresult -> sets("ios deployment not supported on this platform");
+		ctxt . SetTheResultToCString("ios deployment not supported on this platform");
 		t_soft_error = true;
-		t_stat = ES_ERROR;
+        t_has_error = true;
 	}
 #endif
 
@@ -482,12 +473,12 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
 
 	if (!t_is_licensed)
 	{
-		MCresult -> sets("not licensed to deploy to target platform");
+		ctxt . SetTheResultToCString("not licensed to deploy to target platform");
 		t_soft_error = true;
-		t_stat = ES_ERROR;
+		t_has_error = true;
 	}
 
-	if (t_stat == ES_NORMAL)
+	if (!t_has_error)
 	{
 		if (m_platform == PLATFORM_WINDOWS)
 			MCDeployToWindows(t_params);
@@ -505,15 +496,14 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
 		MCDeployError t_error;
 		t_error = MCDeployCatch();
 		if (t_error != kMCDeployErrorNone)
-			MCresult -> sets(MCDeployErrorToString(t_error));
+            ctxt . SetTheResultToCString(MCDeployErrorToString(t_error));
 		else
-			MCresult -> clear();
+            ctxt . SetTheResultToEmpty();
 	}
-
-	if (t_stat == ES_ERROR && t_soft_error)
-		return ES_NORMAL;
-
-	return t_stat;
+    
+    if (t_has_error && !t_soft_error)
+        ctxt . Throw();
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -549,73 +539,61 @@ Parse_stat MCIdeSign::parse(MCScriptPoint& sp)
 	return sp . parseexp(False, True, &m_params);
 }
 
-Exec_stat MCIdeSign::exec(MCExecPoint& ep)
+void MCIdeSign::exec_ctxt(MCExecContext &ctxt)
 {
-	Exec_stat t_stat;
-	t_stat = ES_NORMAL;
-
 	// Clear the result as we return an error there
 	MCresult -> clear();
 
-	if (t_stat == ES_NORMAL)
-		t_stat = m_params -> eval(ep);
+    MCAutoArrayRef t_array;
+    if (!ctxt . EvalExprAsArrayRef(m_params, EE_UNDEFINED, &t_array))
+        return;
+    MCDeploySignParameters t_params;
 
-	MCAutoArrayRef t_array;
-	if (t_stat == ES_NORMAL)
-	{
-		if (!ep . copyasarrayref(&t_array))
-			return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
-
-	MCDeploySignParameters t_params;
-
-	if (t_stat == ES_NORMAL)
+	if (!ctxt . HasError())
 		if (!ctxt.CopyOptElementAsString(*t_array, MCNAME("passphrase"), false, t_params.passphrase))
-			t_stat = ES_ERROR;
-	if (t_stat == ES_NORMAL)
+			ctxt . Throw();
+	if (!ctxt . HasError())
 		if (!ctxt.CopyOptElementAsFilepath(*t_array, MCNAME("certificate"), false, t_params.certificate))
-			t_stat = ES_ERROR;
-	if (t_stat == ES_NORMAL)
+			ctxt . Throw();
+	if (!ctxt . HasError())
 		if (!ctxt.CopyOptElementAsFilepath(*t_array, MCNAME("privatekey"), false, t_params.privatekey))
-			t_stat = ES_ERROR;
-	if (t_stat == ES_NORMAL)
+			ctxt . Throw();
+	if (!ctxt . HasError())
 		if (!ctxt.CopyOptElementAsFilepath(*t_array, MCNAME("certstore"), false, t_params.certstore))
-			t_stat = ES_ERROR;
-	if (t_stat == ES_NORMAL)
+			ctxt . Throw();
+	if (!ctxt . HasError())
 		if (!ctxt.CopyOptElementAsString(*t_array, MCNAME("timestamper"), false, t_params.timestamper))
-			t_stat = ES_ERROR;
-	if (t_stat == ES_NORMAL)
+			ctxt . Throw();
+	if (!ctxt . HasError())
 		if (!ctxt.CopyOptElementAsString(*t_array, MCNAME("description"), false, t_params.description))
-			t_stat = ES_ERROR;
-	if (t_stat == ES_NORMAL)
+			ctxt . Throw();
+	if (!ctxt . HasError())
 		if (!ctxt.CopyOptElementAsString(*t_array, MCNAME("url"), false, t_params.url))
-			t_stat = ES_ERROR;
-	if (t_stat == ES_NORMAL)
+			ctxt . Throw();
+	if (!ctxt . HasError())
 		if (!ctxt.CopyElementAsFilepath(*t_array, MCNAME("input"), false, t_params.input))
-			t_stat = ES_ERROR;
-	if (t_stat == ES_NORMAL)
+			ctxt . Throw();
+	if (!ctxt . HasError())
 		if (!ctxt.CopyElementAsFilepath(*t_array, MCNAME("output"), false, t_params.output))
-			t_stat = ES_ERROR;
+			ctxt . Throw();
 	
-	if (t_stat == ES_NORMAL)
+	if (!ctxt . HasError())
 		if (t_params . certstore != NULL && (t_params . certificate != NULL || t_params . privatekey != NULL))
-			t_stat = ES_ERROR;
+			ctxt . Throw();
 
-	if (t_stat == ES_NORMAL)
+	if (!ctxt . HasError())
 		if (t_params . certstore == NULL && (t_params . certificate == NULL || t_params . privatekey == NULL))
-			t_stat = ES_ERROR;
+			ctxt . Throw();
 
 	bool t_can_sign;
 	t_can_sign = true;
-	if (t_stat == ES_NORMAL && !InitSSLCrypt())
+	if (!ctxt . HasError() && !InitSSLCrypt())
 	{
-		MCresult -> sets("could not initialize SSL");
+		ctxt . SetTheResultToCString("could not initialize SSL");
 		t_can_sign = false;
 	}
 
-	if (t_can_sign && t_stat == ES_NORMAL)
+	if (t_can_sign && !ctxt . HasError())
 	{
 		if (m_platform == PLATFORM_WINDOWS)
 			MCDeploySignWindows(t_params);
@@ -623,10 +601,10 @@ Exec_stat MCIdeSign::exec(MCExecPoint& ep)
 		MCDeployError t_error;
 		t_error = MCDeployCatch();
 		if (t_error != kMCDeployErrorNone)
-			MCresult -> sets(MCDeployErrorToString(t_error));
+			ctxt . SetTheResultToCString(MCDeployErrorToString(t_error));
 	}
 
-	return t_stat;
+	return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -662,56 +640,44 @@ Parse_stat MCIdeDiet::parse(MCScriptPoint& sp)
 	return sp . parseexp(False, True, &m_params);
 }
 
-Exec_stat MCIdeDiet::exec(MCExecPoint& ep)
+void MCIdeDiet::exec_ctxt(MCExecContext& ctxt)
 {
-	Exec_stat t_stat;
-	t_stat = ES_NORMAL;
-
 	// Clear the result as we return an error there
 	MCresult -> clear();
-
-	if (t_stat == ES_NORMAL)
-		t_stat = m_params -> eval(ep);
-
-	MCAutoArrayRef t_array;
-	if (t_stat == ES_NORMAL)
-	{
-		if (!ep . copyasarrayref(&t_array))
-			return ES_ERROR;
-	}
-
-	MCExecContext ctxt(ep);
+    
+    MCAutoArrayRef t_array;
+    if (!ctxt . EvalExprAsArrayRef(m_params, EE_UNDEFINED, &t_array))
+        return;
 
 	MCDeployDietParameters t_params;
 
-	if (t_stat == ES_NORMAL)
+	if (!ctxt . HasError())
 		if (!ctxt.CopyElementAsFilepath(*t_array, MCNAME("input"), false, t_params.input))
-			t_stat = ES_ERROR;
-	if (t_stat == ES_NORMAL)
+			ctxt . Throw();
+	if (!ctxt . HasError())
 		if (!ctxt.CopyElementAsFilepath(*t_array, MCNAME("output"), false, t_params.output))
-			t_stat = ES_ERROR;
-	
-	if (t_stat == ES_NORMAL)
+            ctxt . Throw();	
+	if (!ctxt . HasError())
 		if (!ctxt.CopyOptElementAsBoolean(*t_array, MCNAME("keep_x86"), false, t_params.keep_x86))
-			t_stat = ES_ERROR;
-	if (t_stat == ES_NORMAL)
+			ctxt . Throw();
+	if (!ctxt . HasError())
 		if (!ctxt.CopyOptElementAsBoolean(*t_array, MCNAME("keep_x86_64"), false, t_params.keep_x86_64))
-			t_stat = ES_ERROR;
-	if (t_stat == ES_NORMAL);
+			ctxt . Throw();
+	if (!ctxt . HasError());
 		if (!ctxt.CopyOptElementAsBoolean(*t_array, MCNAME("keep_ppc"), false, t_params.keep_ppc))
-			t_stat = ES_ERROR;
-	if (t_stat == ES_NORMAL)
+			ctxt . Throw();
+	if (!ctxt . HasError())
 		if (!ctxt.CopyOptElementAsBoolean(*t_array, MCNAME("keep_ppc64"), false, t_params.keep_ppc64))
-			t_stat = ES_ERROR;
-	if (t_stat == ES_NORMAL)
+			ctxt . Throw();
+	if (!ctxt . HasError())
 		if (!ctxt.CopyOptElementAsBoolean(*t_array, MCNAME("keep_arm"), false, t_params.keep_arm))
-			t_stat = ES_ERROR;
+			ctxt . Throw();
 
-	if (t_stat == ES_NORMAL)
+	if (!ctxt . HasError())
 		if (!ctxt.CopyOptElementAsBoolean(*t_array, MCNAME("keep_debug_symbols"), false, t_params.keep_debug_symbols))
-			t_stat = ES_ERROR;
+			ctxt . Throw();
 
-	if (t_stat == ES_NORMAL)
+	if (!ctxt . HasError())
 	{
 		if (m_platform == PLATFORM_MACOSX)
 			MCDeployDietMacOSX(t_params);
@@ -719,10 +685,8 @@ Exec_stat MCIdeDiet::exec(MCExecPoint& ep)
 		MCDeployError t_error;
 		t_error = MCDeployCatch();
 		if (t_error != kMCDeployErrorNone)
-			MCresult -> sets(MCDeployErrorToString(t_error));
+			ctxt . SetTheResultToCString(MCDeployErrorToString(t_error));
 	}
-
-	return t_stat;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -752,26 +716,28 @@ Parse_stat MCIdeDmgDump::parse(MCScriptPoint& sp)
 	return sp . parseexp(False, True, &m_filename);
 }
 
-Exec_stat MCIdeDmgDump::exec(MCExecPoint& ep)
+void MCIdeDmgDump::exec_ctxt(MCExecContext &ctxt)
 {
-	Exec_stat t_stat;
-	t_stat = ES_NORMAL;
-
 	// Clear the result as we return an error there
 	MCresult -> clear();
 
-	if (t_stat == ES_NORMAL)
-		t_stat = m_filename -> eval(ep);
-
-	if (t_stat == ES_NORMAL)
+    MCAutoStringRef t_string;
+    if (!ctxt . EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string))
+        return;
+	
+	if (!ctxt . HasError())
 	{
+        MCAutoPointer<char> temp;
+        if (!MCStringConvertToCString(*t_string, &temp))
+        {
+            ctxt . Throw();
+            return;
+        }
 		FILE *t_output;
 		t_output = fopen("C:\\Users\\Mark\\Desktop\\dmg.txt", "w");
-		MCDeployDmgDump(ep . getcstring(), stdfile_log, t_output);
+		MCDeployDmgDump(*temp, stdfile_log, t_output);
 		fclose(t_output);
-	}
-
-	return ES_NORMAL;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -799,81 +765,72 @@ Parse_stat MCIdeDmgBuild::parse(MCScriptPoint& sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCIdeDmgBuild::exec(MCExecPoint& ep)
+void MCIdeDmgBuild::exec_ctxt(MCExecContext& ctxt)
 {
-	Exec_stat t_stat;
-	t_stat = ES_NORMAL;
-
-	// Clear the result as we return an error there
+    // Clear the result as we return an error there
 	MCresult -> clear();
 
 	/////////
 
-	if (t_stat == ES_NORMAL)
-		t_stat = m_items -> eval(ep);
-		
-	if (t_stat == ES_NORMAL && !ep.isarray())
-		t_stat = ES_ERROR;
-
-	MCAutoArrayRef t_array;
-	if (t_stat == ES_NORMAL)
-	{
-		if (!ep . copyasarrayref(&t_array) ||
-			!MCArrayIsSequence(*t_array))
-			t_stat = ES_ERROR;
-	}
-
+    MCAutoArrayRef t_array;
+    if (!ctxt . EvalExprAsArrayRef(m_items, EE_UNDEFINED, &t_array))
+        return;
+    
+    if (!MCArrayIsSequence(*t_array))
+    {
+        ctxt . Throw();
+        return;
+    }
+	
 	MCDeployDmgItem *t_items;
 	uint32_t t_item_count;
 	t_items = nil;
 	t_item_count = 0;
-	if (t_stat == ES_NORMAL)
+	if (!ctxt . HasError())
 	{
 		if (MCMemoryNewArray(MCArrayGetCount(*t_array), t_items))
 			t_item_count = MCArrayGetCount(*t_array);
 		else
-			t_stat = ES_ERROR;
+			ctxt . Throw();
 	}
 
-	MCExecContext ctxt(ep);
-	
-	if (t_stat == ES_NORMAL)
-		for(uint32_t i = 0; i < t_item_count && t_stat == ES_NORMAL; i++)
+	if (!ctxt . HasError())
+		for(uint32_t i = 0; i < t_item_count && !ctxt . HasError(); i++)
 		{
 			MCValueRef t_val = nil;
 			if (!MCArrayFetchValueAtIndex(*t_array, i + 1, t_val))
-				t_stat = ES_ERROR;
+				ctxt . Throw();
 			
 			MCAutoArrayRef t_item_array;
-			if (t_stat == ES_NORMAL)
+			if (!ctxt . HasError())
 				if (!ctxt.ConvertToArray(t_val, &t_item_array))
-					t_stat = ES_ERROR;
+					ctxt . Throw();
 
 
-			if (t_stat == ES_NORMAL)
+			if (!ctxt . HasError())
 			{
 				MCAutoStringRef t_type;
-				if (ctxt.CopyElementAsString(*t_item_array, false, MCNAME("type"), &t_type))
+				if (ctxt.CopyElementAsString(*t_item_array, MCNAME("type"), false, &t_type))
 				{
 					if (MCStringIsEqualToCString(*t_type, "folder", kMCCompareCaseless))
 						t_items[i].is_folder = true;
 					else if (MCStringIsEqualToCString(*t_type, "file", kMCCompareCaseless))
 						t_items[i].is_folder = false;
 					else
-						t_stat = ES_ERROR;
+						ctxt . Throw();
 				}
 				else
-					t_stat = ES_ERROR;
+					ctxt . Throw();
 			}
 
-			if (t_stat == ES_NORMAL)
+			if (!ctxt . HasError())
 				if (!ctxt.CopyElementAsUnsignedInteger(*t_item_array, MCNAME("parent"), false, t_items[i].parent))
-					t_stat = ES_ERROR;
-			if (t_stat == ES_NORMAL)
+					ctxt . Throw();
+			if (!ctxt . HasError())
 				if (!ctxt.CopyElementAsString(*t_item_array, MCNAME("name"), false, t_items[i].name))
-					t_stat = ES_ERROR;
+					ctxt . Throw();
 
-			if (t_stat == ES_NORMAL)
+			if (!ctxt . HasError())
 			{
 				ctxt.CopyElementAsUnsignedInteger(*t_item_array, MCNAME("owner_id"), false, t_items[i].owner_id);
 				ctxt.CopyElementAsUnsignedInteger(*t_item_array, MCNAME("group_id"), false, t_items[i].group_id);
@@ -889,22 +846,31 @@ Exec_stat MCIdeDmgBuild::exec(MCExecPoint& ep)
 
 	/////////
 
-	if (t_stat == ES_NORMAL)
-		t_stat = m_filename -> eval(ep);
+    MCAutoStringRef t_string;
+	if (!ctxt . HasError())
+    {
+        /* UNCHECKED */ ctxt . EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string);
+    }
 
-	if (t_stat == ES_NORMAL)
+	if (!ctxt . HasError())
 	{
+        MCAutoPointer<char> temp;
+        if (!MCStringConvertToCString(*t_string, &temp))
+        {
+            ctxt . Throw();
+            return;
+        }
 		MCDeployDmgParameters t_params;
 		t_params . items = t_items;
 		t_params . item_count = t_item_count;
-		t_params . output = (char *)ep . getcstring();
+		t_params . output = *temp;
 		if (!MCDeployDmgBuild(t_params))
-			t_stat = ES_ERROR;
+			ctxt . Throw();
 	}
 
 	////////
 
-	return ES_NORMAL;
+	return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -938,43 +904,35 @@ Parse_stat MCIdeExtract::parse(MCScriptPoint& sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCIdeExtract::exec(MCExecPoint& ep)
+void MCIdeExtract::exec_ctxt(MCExecContext& ctxt)
 {
-	Exec_stat t_stat;
-	t_stat = ES_NORMAL;
 	
 	MCAutoStringRef t_segment;
-	if (t_stat == ES_NORMAL)
-		t_stat = m_segment_name -> eval(ep);
-	if (t_stat == ES_NORMAL)
-		/* UNCHECKED */ ep.copyasstring(&t_segment);
+    if (!ctxt . EvalExprAsStringRef(m_segment_name, EE_IDE_EXTRACT_BADSEGMENT, &t_segment))
+        return;
 	
 	MCAutoStringRef t_section;
-	if (t_stat == ES_NORMAL)
-		t_stat = m_section_name -> eval(ep);
-	if (t_stat == ES_NORMAL)
-		/* UNCHECKED */ ep.copyasstring(&t_section);
+    if (!ctxt . EvalExprAsStringRef(m_section_name, EE_IDE_EXTRACT_BADSECTION, &t_section))
+        return;
 	
 	MCAutoStringRef t_filename;
-	if (t_stat == ES_NORMAL)
-		t_stat = m_filename -> eval(ep);
-	if (t_stat == ES_NORMAL)
-		/* UNCHECKED */ ep.copyasstring(&t_filename);
-	
+    if (!ctxt . EvalExprAsStringRef(m_filename, EE_IDE_EXTRACT_BADFILENAME, &t_filename))
+        return;
+		
 	void *t_data;
 	uint32_t t_data_size;
-	if (t_stat == ES_NORMAL)
+    Exec_stat t_stat;
+	if (!ctxt . HasError())
 		t_stat = MCDeployExtractMacOSX(*t_filename, *t_segment, *t_section, t_data, t_data_size);
 	
-	if (t_stat == ES_NORMAL)
+	if (!ctxt . HasError())
 	{
-		ep . grabbuffer((char *)t_data, t_data_size);
-		ep.getit() -> set(ep);
+        MCAutoStringRef t_string;
+        /* UNCHECKED */ MCStringCreateWithCString((char *)t_data, &t_string);
+        ctxt . SetItToValue(*t_string);
 	}
 	else
-		ep.getit() -> clear();
-	
-	return ES_NORMAL;
+        ctxt . SetItToEmpty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

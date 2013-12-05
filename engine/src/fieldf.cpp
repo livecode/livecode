@@ -33,7 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "undolst.h"
 #include "util.h"
 #include "font.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "mode.h"
 #include "globals.h"
@@ -310,13 +310,14 @@ void MCField::resetparagraphs()
 {
 	findex_t si = 0;
 	findex_t ei = 0;
-	MCExecPoint oldhilitedlines;
-	oldhilitedlines . clear();
 
+    vector_t<uint32_t> t_lines;
+    t_lines . elements = nil;
+    t_lines . count = 0;
 	// MW-2005-05-13: [[Fix bug 2766]] We always need to retrieve the hilitedLines
 	//   to prevent phantom selections w.r.t. focused paragraph.
 	if (flags & F_LIST_BEHAVIOR)
-		hilitedlines(oldhilitedlines);
+		hilitedlines(t_lines);
 
 	if (MCactivefield == this && focusedparagraph != NULL)
 	{
@@ -325,10 +326,10 @@ void MCField::resetparagraphs()
 		//   B) clear current hilites line, useless now, but may actually do something
 		//      in the future
 		if (flags & F_LIST_BEHAVIOR)
-			hilitedlines(oldhilitedlines);
+			hilitedlines(t_lines);
 		selectedmark(False, si, ei, True, False);
 		if (flags & F_LIST_BEHAVIOR)
-			sethilitedlines(MCnullmcstring);
+			sethilitedlines(NULL, 0);
 		unselect(False, True);
 	}
 	curparagraph = focusedparagraph = paragraphs;
@@ -345,8 +346,10 @@ void MCField::resetparagraphs()
 	// MW-2005-01-28: Correct small integration error, != instead of ==
 	if ((flags & F_LIST_BEHAVIOR) != 0)
 	{
-		if (oldhilitedlines.getsvalue() != MCnullmcstring)
-			sethilitedlines(oldhilitedlines.getsvalue(), False);
+		if (t_lines . elements != nil)
+        {
+			sethilitedlines(t_lines . elements, t_lines . count, False);
+        }
 	}
 	else if (ei != 0)
 		seltext(si, ei, False);
@@ -1408,11 +1411,11 @@ void MCField::endselection()
 		}
 		if (MCscreen -> hasfeature(PLATFORM_FEATURE_TRANSIENT_SELECTION))
 		{
-			MCExecPoint ep;
-			selectedtext(ep);
+			MCAutoStringRef t_string;
+			selectedtext(&t_string);
 			
 			MCAutoDataRef t_data;
-			/* UNCHECKED */ ep . copyasdataref(&t_data);
+            MCStringEncode(*t_string, kMCStringEncodingNative, false, &t_data);
 			if (*t_data != nil)
 			{
 				if (MCselectiondata -> Store(TRANSFER_TYPE_TEXT, *t_data))

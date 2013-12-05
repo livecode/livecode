@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "uidc.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "globals.h"
 
 #include "date.h"
@@ -423,8 +423,7 @@ static void pickdate_postwait(void *p_context)
 
 bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, bool p_use_cancel, bool p_use_done, MCDateTime *r_result, bool &r_canceled, MCRectangle p_button_rect)
 {
-	MCExecPoint ep(nil, nil, nil);
-	MCExecContext ctxt(ep);
+	MCExecContext ctxt(nil, nil, nil);
     
     // Get the display style
     NSString *t_style;
@@ -508,8 +507,7 @@ bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
 
 bool MCSystemPickTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, int32_t p_step, bool p_use_cancel, bool p_use_done, MCDateTime *r_result, bool &r_canceled, MCRectangle p_button_rect)
 {
-	MCExecPoint ep(nil, nil, nil);
-	MCExecContext ctxt(ep);
+	MCExecContext ctxt(nil, nil, nil);
 
     NSString *t_style;
     t_style = [NSString stringWithCString: "time" encoding: NSMacOSRomanStringEncoding];
@@ -592,8 +590,7 @@ bool MCSystemPickTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
 
 bool MCSystemPickDateAndTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, int32_t p_step, bool p_use_cancel, bool p_use_done, MCDateTime *r_result, bool &r_canceled, MCRectangle p_button_rect)
 {
-	MCExecPoint ep(nil, nil, nil);
-	MCExecContext ctxt(ep);
+	MCExecContext ctxt(nil, nil, nil);
 
     NSString *t_style;
     t_style = [NSString stringWithCString: "dateTime" encoding: NSMacOSRomanStringEncoding];

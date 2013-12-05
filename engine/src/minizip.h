@@ -50,7 +50,7 @@ const char *MCMiniZipErrorToString(MCMiniZipError p_error);
 
 typedef struct MCMiniZip *MCMiniZipRef;
 
-typedef bool (*MCMiniZipListItemsCallback)(void *context, MCStringRef name);
+typedef bool (*MCMiniZipListItemsCallback)(void *r_list, MCStringRef name);
 typedef bool (*MCMiniZipExtractItemCallback)(void *context, const void *data, uint32_t data_length, uint32_t data_offset, uint32_t data_total);
 
 struct MCMiniZipItemInfo

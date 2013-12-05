@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "hndlrlst.h"
 #include "handler.h"
 #include "param.h"
@@ -211,7 +211,7 @@ void MCB_prepmessage(MCExecContext &ctxt, MCNameRef mess, uint2 line, uint2 pos,
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
-		ctxt.GetEP().setline(line);
+		ctxt.SetLine(line);
 		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
@@ -227,7 +227,7 @@ void MCB_prepmessage(MCExecContext &ctxt, MCNameRef mess, uint2 line, uint2 pos,
 		MCeerror->add(id, line, pos);
 
 		MCAutoValueRef t_val;
-		ctxt.GetObject()->getvariantprop(ctxt, 0, P_LONG_ID, False, &t_val);
+		ctxt.GetObject()->names(P_LONG_ID, &t_val);
 		MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_val);
 		p4.sets_argument(MCeerror->getsvalue());
 	}
@@ -304,7 +304,7 @@ void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name)
 	}
 
 	MCParameter p1, p2, p3;
-	p1.setn_argument(ctxt.GetEP().getline());
+    p1.setn_argument(ctxt . GetLine());
 	p1.setnext(&p2);
 	p2.setvalueref_argument(name);
 	p2.setnext(&p3);
@@ -384,7 +384,7 @@ bool MCB_unparsebreaks(MCStringRef& r_value)
 
 	return t_success;
 }
-
+#ifdef LEGACY_EXEC
 void MCB_unparsebreaks(MCExecPoint& ep)
 {
 	ep.clear();
@@ -401,7 +401,8 @@ void MCB_unparsebreaks(MCExecPoint& ep)
 				ep.concatstringref(MCbreakpoints[i].info, EC_COMMA, false);
 		}
 }
-
+#endif
+#ifdef LEGACY_EXEC
 static MCObject *getobj(MCExecPoint& ep)
 {
 	MCObject *objptr = NULL;
@@ -417,7 +418,7 @@ static MCObject *getobj(MCExecPoint& ep)
 	delete tchunk;
 	return objptr;
 }
-
+#endif
 void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input)
 {
 	MCB_clearbreaks(NULL);
@@ -503,7 +504,7 @@ void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input)
 		t_last_offset = t_return_offset + 1;
 	}
 }
-
+#ifdef LEGACY_EXEC 
 void MCB_parsebreaks(MCExecPoint& ep)
 {
 	MCB_clearbreaks(NULL);
@@ -573,7 +574,7 @@ void MCB_parsebreaks(MCExecPoint& ep)
 	}
 	delete buffer;
 }
-
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCB_clearwatches(void)

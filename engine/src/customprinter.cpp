@@ -25,7 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "uidc.h"
 #include "mcerror.h"
 #include "globals.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "exec.h"
 #include "metacontext.h"
 #include "printer.h"
@@ -2042,13 +2042,13 @@ Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filenam
 #elif defined(_LINUX)
             
 			uindex_t t_engine_dir_end;
-            /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', 0, kMCCompareExact, t_engine_dir_end);
+            /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCCompareExact, t_engine_dir_end);
 			MCAutoStringRef t_module_path;
 			/* UNCHECKED */ MCStringFormat(&t_module_path, "%.*@/revpdfprinter.so", MCRangeMake(0, t_engine_dir_end), MCcmd);
 			t_module = MCS_loadmodule(*t_module_path);
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
 			uindex_t t_engine_dir_end;
-            /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', 0, kMCCompareExact, t_engine_dir_end);
+            /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCCompareExact, t_engine_dir_end);
 			MCAutoStringRef t_module_path;            
 			MCStringFormat(&t_module_path, "%.*@/revpdfprinter.dylib", MCRangeMake(0, t_engine_dir_end), MCcmd);
 			t_module = MCS_loadmodule(*t_module_path);

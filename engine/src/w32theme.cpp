@@ -26,7 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "globals.h"
 #include "osspec.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "context.h"
 #include "button.h"
 
@@ -34,6 +34,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "w32theme.h"
 #include "w32context.h"
 
+#include "exec.h"
+
+// The header contains nothing without this define for the Win7 SDK
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x600
 #include <uxtheme.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -164,7 +169,7 @@ enum {
 	MSM_DISABLED = 2,
 };
 
-
+typedef HANDLE HPAINTBUFFER;
 
 typedef HANDLE (WINAPI*OpenThemeDataPtr)(HWND hwnd, LPCWSTR pszClassList);
 typedef HRESULT (WINAPI*CloseThemeDataPtr)(HANDLE hTheme);
@@ -211,7 +216,7 @@ static BufferedPaintClearPtr bufferedPaintClear = NULL;
 static GetBufferedPaintBitsPtr getBufferedPaintBits = NULL;
 
 #define NMENUCOLORS 4
-static char *menucolors[NMENUCOLORS];
+static MCStringRef menucolors[NMENUCOLORS];
 
 
 static char menucolorsregs[][255] = {
@@ -263,25 +268,19 @@ Boolean MCNativeTheme::load()
 
 	drawThemeBGEx = (DrawThemeBackgroundExPtr)GetProcAddress((HMODULE)mThemeDLL, "DrawThemeBackgroundEx");
 
-	MCExecPoint ep;
 	uint2 i;
+    MCExecContext ctxt(nil, nil, nil);
 	for (i = 0; i < NMENUCOLORS; i++)
 	{
-		menucolors[i] = NULL;
-		ep.setsvalue(menucolorsregs[i]);
-		MCS_query_registry(ep);
-		if (ep.getsvalue().getlength())
+		menucolors[i] = nil;
+
+        MCAutoStringRef t_type, t_error, t_string_value;
+        MCAutoValueRef t_value;
+        if (MCS_query_registry(MCSTR(menucolorsregs[i]), &t_value, &t_type, &t_error) &&
+            ctxt . ConvertToMutableString(*t_value, &t_string_value) &&
+            MCStringFindAndReplaceChar(*t_string_value, ' ', ',', kMCCompareExact))
 		{
-			char *name = NULL;
-			char *cstring = ep.getsvalue().clone();
-			char *sptr = cstring;
-			do
-			{
-				if (*sptr == ' ')
-					*sptr = ',';
-			}
-			while (*++sptr);
-			menucolors[i] = cstring;
+			/* UNCHECKED */ MCStringCopy(*t_string_value, menucolors[i]);
 		}
 	}
 	
@@ -299,10 +298,10 @@ void MCNativeTheme::unload()
 	uint2 i;
 	for (i = 0; i < NMENUCOLORS; i++)
 	{
-		if (menucolors[i] != NULL)
+		if (menucolors[i] != nil)
 		{
-			delete menucolors[i];
-			menucolors[i] = NULL;
+			MCValueRelease(menucolors[i]);
+			menucolors[i] = nil;
 		}
 	}
 	CloseData();
@@ -735,20 +734,31 @@ void MCNativeTheme::getthemecolor(const MCWidgetInfo &winfo, Widget_Color ctype,
 	{
 		switch (ctype)
 		{
-		case WCOLOR_TEXT:
-			/* UNCHECKED */ MCStringCreateWithCString(menucolors[0] != NULL? menucolors[0]: "0,0,0", r_colorbuf);
-			break;
-		case WCOLOR_HILIGHT:
-			/* UNCHECKED */ MCStringCreateWithCString(menucolors[1] != NULL? menucolors[1]: "255,0,0", r_colorbuf);
-			break;
-		case WCOLOR_BACK:
-			/* UNCHECKED */ MCStringCreateWithCString(menucolors[2] != NULL? menucolors[2]: "255,255,255", r_colorbuf);
-			break;
-		case WCOLOR_BORDER:
-			/* UNCHECKED */ MCStringCreateWithCString(menucolors[3] != NULL? menucolors[3]: "155,155,155", r_colorbuf);
-			break;
+            case WCOLOR_TEXT:
+                if (menucolors[0] != nil)
+                    r_colorbuf = MCValueRetain(menucolors[0]);
+                else
+                    /* UNCHECKED */ MCStringCreateWithCString("0,0,0", r_colorbuf);
+                break;
+            case WCOLOR_HILIGHT:
+                if (menucolors[1] != nil)
+                    r_colorbuf = MCValueRetain(menucolors[1]);
+                else
+                    /* UNCHECKED */ MCStringCreateWithCString("255,0,0", r_colorbuf);
+                break;
+            case WCOLOR_BACK:
+                if (menucolors[2] != nil)
+                    r_colorbuf = MCValueRetain(menucolors[2]);
+                else
+                    /* UNCHECKED */ MCStringCreateWithCString("255,255,0", r_colorbuf);
+                break;
+            case WCOLOR_BORDER:
+                if (menucolors[3] != nil)
+                    r_colorbuf = MCValueRetain(menucolors[3]);
+                else
+                    /* UNCHECKED */ MCStringCreateWithCString("155,155,155", r_colorbuf);
+                break;
 		}
-		
 	}
     else
         r_colorbuf = MCValueRetain(kMCEmptyString);

@@ -254,7 +254,6 @@ void MCStringsGetExtentsByExpression(MCExecContext& ctxt, Chunk_term p_chunk_typ
 
 void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_term p_chunk_type, integer_t p_first, integer_t p_count, integer_t& r_start, integer_t& r_end, bool p_whole_chunk, bool p_further_chunks, bool p_include_chars, integer_t& r_add)
 {
-    
     if (p_count == 0)
     {
         r_start = 0;
@@ -275,14 +274,14 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
     uindex_t t_offset = 0;
     r_add = 0;
     
-    char_t t_line_delimiter = ctxt . GetLineDelimiter();
-    char_t t_item_delimiter = ctxt . GetItemDelimiter();
-    
     switch (p_chunk_type)
     {
         case CT_LINE:
         case CT_ITEM:
         {
+            char_t t_line_delimiter = ctxt . GetLineDelimiter();
+            char_t t_item_delimiter = ctxt . GetItemDelimiter();
+            
             char_t t_delimiter = (p_chunk_type == CT_LINE) ? t_line_delimiter : t_item_delimiter;
             
             // calculate the start of the (p_first)th line or item
@@ -867,4 +866,89 @@ void MCStringsMarkCharsOfTextByRange(MCExecContext& ctxt, integer_t p_first, int
 void MCStringsMarkCharsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedText& x_mark)
 {
     MCStringsMarkTextChunkByOrdinal(ctxt, CT_CHARACTER, p_ordinal_type, x_mark);
+}
+
+bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_term p_chunk_type, uindex_t t_length, MCRange& x_range, bool p_not_first, bool& r_last)
+{
+    uindex_t t_end_index = t_length - 1;
+    uindex_t t_offset = x_range . offset + x_range . length;
+    
+    if (p_not_first && p_chunk_type != CT_CHARACTER)
+        t_offset++;
+
+    if (t_offset >= t_length)
+        return false;
+    
+    x_range . offset = t_offset;
+    
+    switch (p_chunk_type)
+    {
+        case CT_LINE:
+        case CT_ITEM:
+        {
+            char_t t_line_delimiter = ctxt . GetLineDelimiter();
+            char_t t_item_delimiter = ctxt . GetItemDelimiter();
+            
+            char_t t_delimiter = (p_chunk_type == CT_LINE) ? t_line_delimiter : t_item_delimiter;
+            
+            // calculate the length of the line / item
+            if (!MCStringFirstIndexOfChar(p_string, t_delimiter, t_offset, kMCCompareExact, t_offset))
+                x_range . length = t_length - t_offset;
+            else
+                x_range . length = t_offset - x_range . offset;
+        }
+            return true;
+            
+        case CT_WORD:
+        {
+            uindex_t t_space_offset;
+            // if there are consecutive spaces at the beginning, skip them
+            while (MCStringFirstIndexOfChar(p_string, ' ', t_offset, kMCCompareExact, t_space_offset) &&
+                   t_space_offset == t_offset)
+                t_offset++;
+            
+            if (t_offset >= t_length)
+                return false;
+            
+            MCStringsSkipWord(ctxt, p_string, false, t_offset);
+            
+            x_range . length = t_offset - x_range . offset;
+        }
+            return true;
+            
+        case CT_TOKEN:
+        {
+            MCAutoStringRef t_string;
+            MCStringCopySubstring(p_string, MCRangeMake(x_range . offset + x_range . length, UINDEX_MAX), &t_string);
+            MCScriptPoint sp(*t_string);
+            MCerrorlock++;
+            
+            uint2 t_pos;
+            Parse_stat ps = sp.nexttoken();
+            if (ps == PS_ERROR || ps == PS_EOF)
+                return false;
+            t_pos = sp . getindex();
+        
+            x_range . offset = t_pos;
+
+            ps = sp.nexttoken();
+            t_pos += sp . getindex();
+
+            if (ps == PS_ERROR || ps == PS_EOF)
+                x_range . length = t_length - t_offset;
+            else
+                x_range . length = MCStringGetLength(sp.gettoken_stringref());
+            
+            MCerrorlock--;
+        }
+            return true;
+            
+        case CT_CHARACTER:
+            x_range . length = 1;
+            return true;
+            
+        default:
+            MCAssert(false);
+    }
+    return false;
 }

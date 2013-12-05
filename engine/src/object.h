@@ -179,6 +179,7 @@ struct MCInterfaceLayer;
 struct MCInterfaceShadow;
 struct MCInterfaceTextStyle;
 struct MCInterfaceTriState;
+struct MCExecValue;
 
 struct MCPatternInfo
 {
@@ -271,6 +272,8 @@ protected:
 
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
+    static MCPropertyInfo kModeProperties[];
+	static MCObjectPropertyTable kModePropertyTable;
 public:
 	MCObject();
 	MCObject(const MCObject &oref);
@@ -279,6 +282,7 @@ public:
 	virtual const char *gettypestring();
 
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCObjectPropertyTable *getmodepropertytable(void) const { return &kModePropertyTable; }
 	
 	virtual bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor);
 
@@ -310,11 +314,12 @@ public:
 	virtual void setrect(const MCRectangle &nrect);
 
 	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
+#ifdef LEGACY_EXEC
 	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Exec_stat getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
 	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Exec_stat setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint&, MCNameRef key, Boolean effective);
-
+#endif
 	virtual void select();
 	virtual void deselect();
 	virtual Boolean del();
@@ -340,11 +345,14 @@ public:
 	// MW-2012-02-14: [[ FontRefs ]] Returns the current concrete fontref of the object.
 	MCFontRef getfontref(void) const { return m_font; }
 
+#ifdef LEGACY_EXEC
     Exec_stat getarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective);
     Exec_stat setarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective);
-	Exec_stat getprop(uint32_t part_id, Properties which, MCExecPoint& ep, Boolean effective);
-	Exec_stat setprop(uint32_t part_id, Properties which, MCExecPoint& ep, Boolean effective);
+#endif
 	
+    bool getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCExecValue& r_value);
+	bool setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCExecValue p_value);
+    
 	// MW-2012-05-28: [[ Value Prop Accessors ]] These methods allow access to object props
 	//   via direct types. Appropriate type coercion will be performed, with errors thrown as
 	//   necessary.
@@ -384,11 +392,19 @@ public:
 
 	MCNameRef getdefaultpropsetname(void);
 
+#ifdef LEGACY_EXEC
 	Exec_stat sendgetprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
 	Exec_stat getcustomprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
+
 	Exec_stat sendsetprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
 	Exec_stat setcustomprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
-
+#endif
+    
+    Exec_stat sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCValueRef& r_value);
+	bool getcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue& r_value);
+    Exec_stat sendsetprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCValueRef p_value);
+	bool setcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue p_value);
+    
 #ifdef OLD_EXEC
 	Exec_stat setprops(uint32_t parid, MCExecPoint& ep);
 	Exec_stat changeid(uint32_t new_id);
@@ -609,8 +625,10 @@ public:
 	// New method for returning the various 'names' of an object. This should really
 	// return an 'MCValueRef' at some point, but as it stands that causes issues.
 	bool names(Properties which, MCValueRef& r_name);
+#ifdef LEGACY_EXEC
 	// Wrapper for 'names()' working in the old way (for convenience).
 	Exec_stat names_old(Properties which, MCExecPoint& ep, uint32_t parid);
+#endif
 
 	Boolean parsescript(Boolean report, Boolean force = False);
 	void drawshadow(MCDC *dc, const MCRectangle &drect, int2 soffset);
@@ -1057,6 +1075,14 @@ public:
     void SetCustomKeysElement(MCExecContext& ctxt, MCNameRef p_index, MCStringRef p_string);
     void SetCustomProperties(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_array);
     
+    ////////// MODE SPECIFIC PROPS
+    
+#ifdef MODE_DEVELOPMENT    
+    void GetRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers);
+    void GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers);
+    void GetRevAvailableVariables(MCExecContext& ctxt, MCNameRef p_key, MCStringRef& r_variables);
+#endif
+    
 //////////
 				
 protected:
@@ -1130,8 +1156,10 @@ private:
 
 	// MW-2013-03-06: [[ Bug 10695 ]] New method used by resolveimage* - if name is nil, then id search.
 	MCImage *resolveimage(MCStringRef name, uint4 image_id);
-	
+
+#ifdef LEGACY_EXEC
 	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, MCStringRef carray, Boolean effective);
+#endif
 
 	// MW-2012-02-14: [[ FontRefs ]] Called by open/close to map/unmap the concrete font.
 	// MW-2013-08-23: [[ MeasureText ]] Made private as external uses of them can be

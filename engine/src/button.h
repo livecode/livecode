@@ -177,8 +177,10 @@ public:
 
 	virtual uint2 gettransient() const;
 	virtual void setrect(const MCRectangle &nrect);
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+#ifdef LEGACY_EXEC
+    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+    virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+#endif
 	virtual void closemenu(Boolean kfocus, Boolean disarm);
 	
 	// MW-2011-09-20: [[ Collision ]] Compute shape of button - will use mask of icon if possible.
@@ -193,7 +195,7 @@ public:
 
 	virtual MCControl *clone(Boolean attach, Object_pos p, bool invisible);
 	virtual MCControl *findnum(Chunk_term type, uint2 &num);
-	virtual MCControl *findname(Chunk_term type, const MCString &);
+    virtual MCControl *findname(Chunk_term type, MCNameRef p_name);
 	virtual Boolean count(Chunk_term type, MCObject *stop, uint2 &num);
 	virtual Boolean maskrect(const MCRectangle &srect);
 	virtual void installaccels(MCStack *stack);

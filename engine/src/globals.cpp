@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "undolst.h"
 #include "sellst.h"
 #include "stacklst.h"
@@ -50,6 +50,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "external.h"
 #include "parentscript.h"
 #include "osspec.h"
+#include "variable.h"
 
 #include "printer.h"
 
@@ -961,9 +962,8 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 		MCscreen->alloccolor(MClinkatts.hilitecolor);
 		MCscreen->alloccolor(MClinkatts.visitedcolor);
 	}
-	
-	MCExecPoint ep;
-	MCExecContext ctxt(ep);
+
+    MCExecContext ctxt(nil, nil, nil);
 	MCInterfaceInitialize(ctxt);
 	
 	// MW-2013-08-07: [[ Bug 10995 ]] Configure fonts based on platform.
@@ -1035,8 +1035,7 @@ int X_close(void)
 		MCscreen -> disablebackdrop(true);
 	}
 
-	MCExecPoint ep;
-	MCExecContext ctxt(ep);
+    MCExecContext ctxt(nil, nil, nil);
 	MCInterfaceFinalize(ctxt);
 
 	MCstacks->closeall();

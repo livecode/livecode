@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "dispatch.h"
 #include "util.h"
-#include "execpt.h"
+//#include "execpt.h"
 
 #include "globals.h"
 

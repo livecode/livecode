@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "mcerror.h"
 #include "sellst.h"
@@ -188,6 +188,7 @@ void MCEPS::setrect(const MCRectangle &nrect)
 		rect = nrect;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCEPS::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	switch (which)
@@ -248,7 +249,9 @@ Exec_stat MCEPS::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, 
 	}
 	return ES_NORMAL;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 Exec_stat MCEPS::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = True;
@@ -424,6 +427,7 @@ Exec_stat MCEPS::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bool
 	}
 	return ES_NORMAL;
 }
+#endif
 
 IO_stat MCEPS::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 {
@@ -732,7 +736,7 @@ Boolean MCEPS::import(MCStringRef fname, IO_handle stream)
 	postscript[size] = '\0';
 	uindex_t t_sep;
     MCStringRef t_fname;
-    if (MCStringLastIndexOfChar(fname, PATH_SEPARATOR, 0, kMCCompareExact, t_sep))
+    if (MCStringLastIndexOfChar(fname, PATH_SEPARATOR, UINDEX_MAX, kMCCompareExact, t_sep))
         /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMake(t_sep + 1, MCStringGetLength(fname) - (t_sep + 1)), t_fname);
     else
         t_fname = MCValueRetain(fname);
