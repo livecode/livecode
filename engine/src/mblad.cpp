@@ -93,7 +93,7 @@ MCStringRef MCAdGetInneractiveKey(void)
 
 bool MCAdInneractiveKeyIsNil(void)
 {
-    return s_inneractive_ad_key != nil && MCStringGetLength(s_inneractive_ad_key) != 0;
+    return s_inneractive_ad_key == nil || MCStringIsEmpty(s_inneractive_ad_key);
 }
 
 bool MCAdSetInneractiveKey(MCStringRef p_new_key)

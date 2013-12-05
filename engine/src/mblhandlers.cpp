@@ -1342,7 +1342,7 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
         if (*t_reading != nil)
             ctxt . SetTheResultToValue(*t_reading);
     }
-        
+
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
@@ -1373,7 +1373,7 @@ Exec_stat MCHandleCurrentLocation(void *p_context, MCParameter *p_parameters)
     
     if (*t_detailed_reading != nil)    
         ctxt . SetTheResultToValue(*t_detailed_reading);
-    
+
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
@@ -1404,7 +1404,7 @@ Exec_stat MCHandleCurrentHeading(void *p_context, MCParameter *p_parameters)
         ctxt . SetTheResultToValue(*t_detailed_reading);
     
 	if (!ctxt . HasError())
-		return ES_NORMAL;
+        return ES_NORMAL;
 
 	return ES_ERROR;
 }
@@ -1997,10 +1997,14 @@ Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters)
 	if (t_success)
 		t_success = MCParseParameters(p_parameters, "xx", &(&t_ad), &(&t_type));
     
-   MCAdTopLeft t_topleft;
-
+    MCAdTopLeft t_topleft = {0,0};
+    MCAutoStringRef t_topleft_string;
+    
     if (t_success)
-        t_success = MCParseParameters(p_parameters, "uu", &t_topleft.x, &t_topleft.y);
+    {
+        if (MCParseParameters(p_parameters, "x", &(&t_topleft_string)))
+            /* UNCHECKED */ sscanf(MCStringGetCString(*t_topleft_string), "%u,%u", &t_topleft.x, &t_topleft.y);
+    }
     
     MCAutoArrayRef t_metadata;
     
@@ -3135,12 +3139,10 @@ Exec_stat MCHandleStartActivityIndicator(void *p_context, MCParameter *p_paramet
     if (t_success)
     {
         if (MCStringIsEqualToCString(*t_style_string, "whitelarge", kMCCompareCaseless))
-            t_success = MCStringCreateWithCString("large white", &t_style_string);
+            t_style = MCActivityIndicatorTypeFromString(MCSTR("large white"));
+        else
+            t_style = MCActivityIndicatorTypeFromString(*t_style_string);
     }
-    
-    if (t_success)
-        t_style = MCActivityIndicatorTypeFromString(*t_style_string);
-        
     
     bool t_location_param = false;
     integer_t* t_location_x_ptr = nil;
@@ -4459,20 +4461,23 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
     
     bool t_file_extension_ok = false;
     
-	MCAutoStringRef t_raw_data;
+	MCAutoStringRef t_data_or_id;
     bool t_success = true;
 	MCLog("MCHandleExportImageToAlbum() called", nil);
     
     MCExecContext ctxt(nil, nil, nil);
     
-    t_success = MCParseParameters(p_parameters, "x", &(&t_raw_data));
+    t_success = MCParseParameters(p_parameters, "x", &(&t_data_or_id));
+    
+    
+    MCLog(MCStringGetCString(*t_data_or_id), nil);
     
     if (t_success)
     {
         if (!MCParseParameters(p_parameters, "x", &(&t_file_name)))
             t_file_name = kMCEmptyString;
     
-        MCMiscExecExportImageToAlbum(ctxt, *t_raw_data, *t_file_name);
+        MCMiscExecExportImageToAlbum(ctxt, *t_data_or_id, *t_file_name);
     }
     
     if (!ctxt.HasError())
@@ -5216,13 +5221,13 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
 #endif /* MCHandlePick */
     MCExecContext ctxt(nil, nil, nil);
     
-	bool t_use_cancel, t_use_done, t_use_picker, t_use_checkmark, t_more_optional, t_success;
+	bool t_use_cancel, t_use_done, t_use_picker, t_use_checkmark, t_success, t_has_buttons;
 	t_success = true;
-	t_more_optional = true;
 	t_use_checkmark = false;
 	t_use_done = false;
 	t_use_cancel = false;
 	t_use_picker = false;
+    t_has_buttons = false;
 	
     
     MCAutoArray<MCStringRef> t_option_lists;
@@ -5247,42 +5252,38 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
     }
     
     // get further options lists if they exist
-    while (t_success && t_more_optional)
+    while (t_success && p_parameters != nil)
     {
     	t_success = MCParseParameters(p_parameters, "x", &t_string_param);
         if (t_success)
         {
-            if (t_string_param != nil)
+            if (MCStringIsEqualToCString(t_string_param, "checkmark", kMCCompareCaseless) ||
+                MCStringIsEqualToCString(t_string_param, "cancel", kMCCompareCaseless) ||
+                MCStringIsEqualToCString(t_string_param, "done", kMCCompareCaseless) ||
+                MCStringIsEqualToCString(t_string_param, "cancelDone", kMCCompareCaseless) ||
+                MCStringIsEqualToCString(t_string_param, "picker", kMCCompareCaseless))
             {
-                if (MCStringIsEqualToCString(t_string_param, "checkmark", kMCCompareCaseless) ||
-                    MCStringIsEqualToCString(t_string_param, "cancel", kMCCompareCaseless) ||
-                    MCStringIsEqualToCString(t_string_param, "done", kMCCompareCaseless) ||
-                    MCStringIsEqualToCString(t_string_param, "cancelDone", kMCCompareCaseless) ||
-                    MCStringIsEqualToCString(t_string_param, "picker", kMCCompareCaseless))
-                        t_more_optional = false;
-                else
-                {
-                    t_success = MCParseParameters(p_parameters, "u", &t_initial_index);
-                    if (!t_success)
-                    {
-                        // Degrade gracefully, even if the second mandatory parameter is not supplied.
-                        t_initial_index = 0;
-                        t_success = true;
-                    }
-                    t_option_lists . Push(t_string_param);
-                    t_indices . Push(t_initial_index);
-                }
+                t_has_buttons = true;
+                break;
             }
             else
-                t_more_optional = false;
+            {
+                t_success = MCParseParameters(p_parameters, "u", &t_initial_index);
+                if (!t_success)
+                {
+                    // Degrade gracefully, even if the second mandatory parameter is not supplied.
+                    t_initial_index = 0;
+                    t_success = true;
+                }
+                t_option_lists . Push(t_string_param);
+                t_indices . Push(t_initial_index);
+            }
         }
     }
     
-    // now process any additional parameters
-    
     MCPickButtonType t_type = kMCPickButtonNone;
-    
-    while (t_success && t_string_param != nil)
+    // now process any additional parameters
+    while (t_success && t_has_buttons && p_parameters != nil)
     {
         if (MCStringIsEqualToCString(t_string_param, "checkmark", kMCCompareCaseless))
             t_use_checkmark = true;

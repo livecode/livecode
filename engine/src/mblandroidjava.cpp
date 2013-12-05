@@ -383,9 +383,9 @@ bool MCJavaStringToStringRef(JNIEnv *env, jstring p_java_string, MCStringRef &r_
 	return false;
 }
 
-bool MCJavaByteArrayFromData(JNIEnv *env, const MCString *p_data, jbyteArray &r_byte_array)
+bool MCJavaByteArrayFromDataRef(JNIEnv *env, MCDataRef p_data, jbyteArray &r_byte_array)
 {
-    if (p_data == nil || p_data->getlength() == 0)
+    if (p_data == nil || MCDataGetLength(p_data) == 0)
     {
         r_byte_array = nil;
         return true;
@@ -394,11 +394,11 @@ bool MCJavaByteArrayFromData(JNIEnv *env, const MCString *p_data, jbyteArray &r_
     bool t_success = true;
     jbyteArray t_bytes = nil;
     
-    t_success = nil != (t_bytes = env -> NewByteArray(p_data->getlength()));
+    t_success = nil != (t_bytes = env -> NewByteArray(MCDataGetLength(p_data)));
     
     if (t_success)
     {
-        env -> SetByteArrayRegion(t_bytes, 0, p_data->getlength(), (const jbyte*)p_data->getstring());
+        env -> SetByteArrayRegion(t_bytes, 0, MCDataGetLength(p_data), (const jbyte*)MCDataGetBytePtr(p_data));
     }
     
     if (t_success)
@@ -847,8 +847,10 @@ static bool s_map_to_array_callback(JNIEnv *p_env, const char *p_key, jobject p_
 		{
             MCAutoArrayRef t_array;
 			map_to_array_context_t t_new_context;
-			t_new_context.array = &t_array;
-			t_success = MCJavaIterateMap(p_env, p_value, s_map_to_array_callback, &t_new_context);
+            t_success = MCArrayCreateMutable(&t_array);
+			t_new_context.array = *t_array;
+            if (t_success)
+                t_success = MCJavaIterateMap(p_env, p_value, s_map_to_array_callback, &t_new_context);
 		}
 		else
 			t_success = false;
@@ -865,9 +867,10 @@ bool MCJavaMapToArray(JNIEnv *p_env, jobject p_map, MCArrayRef &r_array)
 	bool t_success = true;
 	
 	MCAutoArrayRef t_array;
-	
+	t_success = MCArrayCreateMutable(&t_array);
+    
 	map_to_array_context_t t_context;
-	t_context.array = &t_array;
+	t_context.array = *t_array;
 	
 	if (t_success)
 		t_success = MCJavaIterateMap(p_env, p_map, s_map_to_array_callback, &t_context);
@@ -1205,9 +1208,9 @@ bool MCJavaConvertParameters(JNIEnv *env, const char *p_signature, va_list p_arg
 					break;
                 case kMCJavaTypeByteArray:
                 {
-                    t_mcstring = va_arg(p_args, const MCString *);
+					if (t_success)
+						t_success = MCJavaByteArrayFromDataRef(env, va_arg(p_args, MCDataRef), t_byte_array);
                     
-                    t_success = MCJavaByteArrayFromData(env, t_mcstring, t_byte_array);
                     if (t_success)
                         t_value.l = t_byte_array;
                     

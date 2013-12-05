@@ -686,8 +686,6 @@ bool MCSystemPickN(NSArray *p_option_list_array, bool p_use_checkmark, bool p_us
 	MCIPhoneRunOnMainFiber(do_pickn_postwait, &ctxt);
 	
 	r_return_index = [ctxt . return_index autorelease];
-	[ctxt . option_list_array release];
-    [ctxt . initial_index_array release];
     
 	return true;
 }
@@ -843,8 +841,7 @@ bool MCSystemPickOption(MCPickList *p_pick_lists, uindex_t p_pick_list_count, ui
             t_ptr = strtok (nil, ",");
                 
         }
-        r_result = t_indices . Ptr();
-        r_result_count = t_indices . Size();
+        t_indices . Take(r_result, r_result_count);
     }
 
 	[ctxt . return_index release];

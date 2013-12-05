@@ -961,24 +961,35 @@ bool MCGradientFillSetProperties(MCExecContext& ctxt, MCGradientFill*& x_gradien
     {
         MCAutoArrayRef t_array;
         MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeArrayRef, &(&t_array));
-        MCerrorlock++;
-        while (tablesize--)
+        if (ctxt . HasError())
+            return false;
+        
+        if (MCArrayIsEmpty(*t_array))
         {
-            MCValueRef t_prop_value;
-            MCNewAutoNameRef t_key;
-            
-            if (MCNameCreateWithCString(gradientprops[tablesize].token, &t_key) &&
-                MCArrayFetchValue(*t_array, kMCCompareExact, *t_key, t_prop_value))
+            delete t_gradient;
+            t_gradient = nil;
+            x_gradient = nil;
+            r_dirty = true;
+        }
+        else
+        {
+            MCerrorlock++;
+            while (tablesize--)
+            {
+                MCValueRef t_prop_value;
+                
+                if (MCArrayFetchValue(*t_array, kMCCompareExact, MCNAME(gradientprops[tablesize].token), t_prop_value))
                 {
+                    MCLog(gradientprops[tablesize].token, nil);
                     MCExecValue t_value;
                     t_value . valueref_value = MCValueRetain(t_prop_value);
                     t_value . type = kMCExecValueTypeValueRef;
                     MCGradientFillStoreProperty(ctxt, t_gradient, gradientprops[tablesize].value, rect, t_value, r_dirty);
+                    ctxt . IgnoreLastError();
                 }
-            else
-                return false;
+            }
+            MCerrorlock--;
         }
-        MCerrorlock--;
     }
     
 	if (r_dirty)

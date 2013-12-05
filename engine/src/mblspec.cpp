@@ -278,6 +278,8 @@ void MCS_geturl(MCObject *p_target, MCStringRef p_url)
 	t_state . url = p_url;
 	t_state . status = kMCSystemUrlStatusNone;
 	t_state . object = p_target -> gethandle();
+    t_state . error = MCValueRetain(kMCEmptyString);
+    t_state . data = MCValueRetain(kMCEmptyString);
 	
 	if (!MCSystemLoadUrl(*t_processed_url, MCS_geturl_callback, &t_state))
 	{

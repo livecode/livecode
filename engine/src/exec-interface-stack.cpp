@@ -305,12 +305,12 @@ static MCExecCustomTypeInfo _kMCInterfaceStackPasswordTypeInfo =
 static MCExecEnumTypeElementInfo _kMCInterfaceStackFullscreenModeElementInfo[] =
 {
 	{"", kMCStackFullscreenResize},
-	{"exact fit", kMCStackFullscreenExactFit},
-	{"show all", kMCStackFullscreenShowAll},
-	{"no border", kMCStackFullscreenNoBorder},
-	{"no scale", kMCStackFullscreenNoScale},
+	{"exactfit", kMCStackFullscreenExactFit},
+	{"showall", kMCStackFullscreenShowAll},
+	{"noborder", kMCStackFullscreenNoBorder},
+	{"noscale", kMCStackFullscreenNoScale},
     
-	{nil, kMCStackFullscreenModeNone},
+	{"", kMCStackFullscreenModeNone, true},
 };
 
 static MCExecEnumTypeInfo _kMCInterfaceStackFullscreenModeTypeInfo =
@@ -2043,7 +2043,7 @@ void MCStack::SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_c
 
 void MCStack::SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
 {
-    MCObject::SetBackColor(ctxt, r_color);
+	MCObject::SetBackColor(ctxt, r_color);
     MCRedrawDirtyScreen();
 }
 

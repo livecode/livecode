@@ -356,11 +356,9 @@ uint32_t MCAndroidSystem::TextConvert(const void *p_string, uint32_t p_string_le
 		return UnicodeToNative((unichar_t*)p_string, p_string_length / 2, (char *)p_buffer, p_buffer_length);
 	//MCLog("text conversion %d to %d", p_from_charset, p_to_charset);
 
-	MCString t_from_string;
-	MCString t_to_string;
+	MCAutoDataRef t_from_data, t_to_data;
 
-	t_from_string.set((const char *)p_string, p_string_length);
-	t_to_string.set(NULL, 0);
+	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)p_string, p_string_length, &t_from_data);
 
 	const char *t_from_charset, *t_to_charset;
 	t_from_charset = MCCharsetToName(p_from_charset);
@@ -369,22 +367,19 @@ uint32_t MCAndroidSystem::TextConvert(const void *p_string, uint32_t p_string_le
 	if (p_buffer == NULL)
 	{
 		int32_t t_bytecount = 0;
-		MCAndroidEngineCall("conversionByteCount", "idss", &t_bytecount, &t_from_string, t_from_charset, t_to_charset);
+		MCAndroidEngineCall("conversionByteCount", "idss", &t_bytecount, *t_from_data, t_from_charset, t_to_charset);
 		//MCLog("byte count: %d", t_bytecount);
 		return t_bytecount;
 	}
 	else
 	{
-		MCAndroidEngineCall("convertCharset", "ddss", &t_to_string, &t_from_string, t_from_charset, t_to_charset);
+		MCAndroidEngineCall("convertCharset", "ddss", &(&t_to_data), *t_from_data, t_from_charset, t_to_charset);
 
-		if (t_to_string.getlength() > 0)
-		{
-			MCMemoryCopy(p_buffer, t_to_string.getstring(), t_to_string.getlength());
-			MCMemoryDeallocate((char*)t_to_string.getstring());
-		}
+		if (MCDataGetLength(*t_to_data) > 0)
+			MCMemoryCopy(p_buffer, MCDataGetBytePtr(*t_to_data), MCDataGetLength(*t_to_data));
 
 		//MCLog("converted string: %.*s", t_to_string.getlength(), t_to_string.getstring());
-		return t_to_string.getlength();
+		return MCDataGetLength(*t_to_data);
 	}
 }
 
@@ -790,9 +785,9 @@ bool MCSystemSetKeyboardReturnKey(intenum_t p_type)
     return false;
 }
 
-bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCStringRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension)
+bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension)
 {
-    MCAndroidEngineCall("exportImageToAlbum", "xdxx", r_save_result, p_raw_data, p_file_name, p_file_extension);
+    MCAndroidEngineCall("exportImageToAlbum", "xdxx", &r_save_result, p_raw_data, p_file_name, p_file_extension);
     
     return true;
 }

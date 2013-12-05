@@ -386,85 +386,93 @@ static bool is_jpeg_data(MCStringRef p_data)
 	return MCStringGetLength(p_data) > 2 && MCStringSubstringContains(p_data, MCRangeMake(0, 2), *t_format, kMCStringOptionCompareExact);
 }
 
-void MCMiscExecExportImageToAlbum(MCExecContext& ctxt, MCStringRef p_raw_data, MCStringRef p_file_name)
+void MCMiscExecExportImageToAlbum(MCExecContext& ctxt, MCStringRef p_data_or_id, MCStringRef p_file_name)
 {
-    bool t_file_extension_ok = false;
+    bool t_is_raw_data = false;
     MCAutoStringRef t_file_extension;
     
-	if (is_png_data(p_raw_data))
+    MCAutoDataRef t_raw_data, t_data;
+    MCAutoStringRef t_save_result;
+    
+    if (ctxt . ConvertToData(p_data_or_id, &t_raw_data))
     {
-        t_file_extension_ok = MCStringCreateWithCString(".png\n", &t_file_extension);
-    }
-    else if (is_gif_data(p_raw_data))
-    {
-        t_file_extension_ok = MCStringCreateWithCString(".gif\n", &t_file_extension);
-    }
-    else if (is_jpeg_data(p_raw_data))
-    {
-        t_file_extension_ok = MCStringCreateWithCString(".jpg\n", &t_file_extension);
+        if (MCImageDataIsPNG(*t_raw_data))
+        {
+            t_is_raw_data = MCStringCreateWithCString(".png\n", &t_file_extension);
+        }
+        else if (MCImageDataIsGIF(*t_raw_data))
+        {
+            t_is_raw_data = MCStringCreateWithCString(".gif\n", &t_file_extension);
+        }
+        else if (MCImageDataIsJPEG(*t_raw_data))
+        {
+            t_is_raw_data = MCStringCreateWithCString(".jpg\n", &t_file_extension);
+        }
     }
     
-    if (!t_file_extension_ok)
+    if (!t_is_raw_data)
     {
         MCLog("Type not found", nil);
 		uint4 parid;
 		MCObject *objptr;
 		MCChunk *tchunk = new MCChunk(False);
-		MCerrorlock++;
-		MCScriptPoint sp(ctxt);
+        MCerrorlock++;
+		MCScriptPoint sp(p_data_or_id);
 		Parse_stat stat = tchunk->parse(sp, False);
-		if (stat != PS_NORMAL || !tchunk->getobj(ctxt, objptr, parid, True))
+        if (stat != PS_NORMAL || !tchunk->getobj(ctxt, objptr, parid, True))
 		{
             MCLog("could not find image", nil);
 			ctxt.SetTheResultToStaticCString("could not find image");
 			MCerrorlock--;
 			delete tchunk;
-            ctxt.Throw();
+            return;
 		}
 		
 		if (objptr -> gettype() != CT_IMAGE)
 		{
             MCLog("not an image", nil);
 			ctxt.SetTheResultToStaticCString("not an image");
-            ctxt.Throw();
+            return;
 		}
 		
 		MCImage *t_image;
 		t_image = static_cast<MCImage *>(objptr);
 		if (t_image -> getcompression() == F_PNG)
         {
-            t_file_extension_ok = MCStringCreateWithCString(".png\n", &t_file_extension);
+            /* UNCHECKED */ MCStringCreateWithCString(".png\n", &t_file_extension);
         }
         else if (t_image -> getcompression() == F_JPEG)
         {
-            t_file_extension_ok = MCStringCreateWithCString(".gif\n", &t_file_extension);
+            /* UNCHECKED */ MCStringCreateWithCString(".jpg\n", &t_file_extension);
         }
         else if (t_image -> getcompression() == F_GIF)
 		{
-            t_file_extension_ok = MCStringCreateWithCString(".jpg\n", &t_file_extension);
+            /* UNCHECKED */ MCStringCreateWithCString(".gif\n", &t_file_extension);
         }
         else
         {
             MCLog("not a supported image", nil);
             ctxt.SetTheResultToStaticCString("not a supported format");
-			ctxt.Throw();
+			return;
 		}
-        MCLog("MCHandleExportImageToAlbum() converting to raw data", nil);
+        
+        t_image -> getrawdata(&t_data);
     }
     
-    // See if the user provided us with a file name
-    if (t_file_extension_ok)
+    if (t_is_raw_data)
+        MCSystemExportImageToAlbum(&t_save_result, *t_raw_data, p_file_name, *t_file_extension);
+    else
+        MCSystemExportImageToAlbum(&t_save_result, *t_data, p_file_name, *t_file_extension);
+    
+    if (!MCStringIsEmpty(p_file_name))
     {
-        MCAutoStringRef t_save_result;
-        MCSystemExportImageToAlbum(&t_save_result, p_raw_data, p_file_name, *t_file_extension);
-        
-        ctxt.SetTheResultToValue(*t_save_result);
+        if (*t_save_result != nil)
+            ctxt.SetTheResultToValue(*t_save_result);
+        else
+            ctxt.SetTheResultToStaticCString("export failed");
     }
     else
-    {
-        ctxt.SetTheResultToStaticCString("export failed");
-        ctxt.Throw();
-    }
+        ctxt . SetTheResultToEmpty();
 }
 
 void MCMiscSetRedrawInterval(MCExecContext& ctxt, int32_t p_interval)

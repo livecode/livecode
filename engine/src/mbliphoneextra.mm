@@ -368,10 +368,10 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 }
 #endif /* MCHandleExportImageToAlbumIphone */ 
 
-bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCStringRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension)
+bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension)
 {
 	export_image_t ctxt;
-    MCStringEncode(p_raw_data, kMCStringEncodingNative, false, ctxt . raw_data);
+    ctxt . raw_data = p_raw_data;
 	ctxt . delegate = [[MCExportImageToAlbumDelegate alloc] init];
 
 	MCIPhoneRunOnMainFiber(export_image, &ctxt);
@@ -1030,11 +1030,11 @@ bool MCSystemGetPreferredLanguages(MCStringRef& r_preferred_languages)
 		{
             if (t_first)
             {
-                t_success |= MCStringAppendFormat(&t_preferred_languages, "%s", [t_lang cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+                t_success |= MCStringAppendFormat(*t_preferred_languages, "%s", [t_lang cStringUsingEncoding: NSMacOSRomanStringEncoding]);
                 t_first = false;
             }
             else
-                t_success |= MCStringAppendFormat(&t_preferred_languages, "\n%s", [t_lang cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+                t_success |= MCStringAppendFormat(*t_preferred_languages, "\n%s", [t_lang cStringUsingEncoding: NSMacOSRomanStringEncoding]);
         }
 	}
     

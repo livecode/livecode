@@ -1309,7 +1309,7 @@ public:
     virtual ~MCPopulationVariance(){}
 };
 
-class MCProcessor : public MCConstantFunction
+class MCProcessor : public MCConstantFunctionCtxt<MCNameRef, MCEngineEvalProcessor>
 {
 public:
 	// virtual Exec_stat eval(MCExecPoint &);

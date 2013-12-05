@@ -3193,16 +3193,80 @@ void MCObject::GetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_p
     DoGetProperties(ctxt, part, false, r_props);
 }
 
+// MERG-2013-05-07: [[ RevisedPropsProp ]] Array of object props that must be set first
+//   to ensure other properties don't set them differently.
+static struct { Properties prop; const char *tag; } s_preprocess_props[] =
+{
+    // MERG-2013-08-30: [[ RevisedPropsProp ]] Ensure lockLocation of groups is set before rectangle
+    { P_LOCK_LOCATION, "lockLocation" },
+    { P_LOCK_LOCATION, "lockLoc" },
+    { P_RECTANGLE, "rectangle" },// gradients will be wrong if this isn't set first
+    { P_RECTANGLE, "rect" },     // synonym
+    { P_WIDTH, "width" },        // incase left,right are in the array
+    { P_HEIGHT, "height" },      // incase top,bottom are in the array
+    { P_STYLE, "style" },        // changes numerous properties including text alignment
+    { P_TEXT_SIZE, "textSize" }, // changes textHeight
+	// MERG-2013-06-24: [[ RevisedPropsProp ]] Ensure filename takes precedence over text.
+    { P_FILE_NAME, "fileName" }, // setting image filenames to empty after setting the text will clear them
+    // MERG-2013-07-20: [[ Bug 11060 ]] hilitedLines being lost.
+    { P_LIST_BEHAVIOR, "listBehavior" }, // setting hilitedLines before listBehavior will lose the hilited lines
+    { P_HTML_TEXT, "htmlText" }, // setting hilitedLines before htmlText will lose the hilited lines
+    // MERG-2013-08-30: [[ RevisedPropsProp ]] Ensure button text has precedence over label and menuHistory
+    { P_TEXT, "text" },
+    { P_MENU_HISTORY, "menuHistory" },
+    { P_FORE_PATTERN, "forePattern" },
+    { P_FORE_PATTERN, "foregroundPattern" },
+    { P_FORE_PATTERN, "textPattern" },
+    { P_FORE_PATTERN, "thumbPattern" },
+    { P_BACK_PATTERN, "backPattern" },
+    { P_BACK_PATTERN, "backgroundPattern" },
+    { P_BACK_PATTERN, "fillPat" },
+    { P_HILITE_PATTERN, "hilitePattern" },
+    { P_HILITE_PATTERN, "markerPattern" },
+    { P_HILITE_PATTERN, "thirdPattern" },
+    { P_BORDER_PATTERN, "borderPattern" },
+    { P_TOP_PATTERN, "topPattern" },
+    { P_BOTTOM_PATTERN, "bottomPattern" },
+    { P_SHADOW_PATTERN, "shadowPattern" },
+    { P_FOCUS_PATTERN, "focusPattern" },
+    { P_PATTERNS, "patterns" },
+};
+
 void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef props)
 {
 	// MW-2011-08-18: [[ Redraw ]] Update to use redraw.
 	MCRedrawLockScreen();
 	MCerrorlock++;
+    
+	MCValueRef t_value;
+    MCExecValue t_exec_value;
+    uindex_t j;
+    // MERG-2013-05-07: [[ RevisedPropsProp ]] pre-process to ensure properties
+	//   that impact others are set first.
+    uindex_t t_preprocess_size = sizeof(s_preprocess_props) / sizeof(s_preprocess_props[0]);
+    for (j=0; j<t_preprocess_size; j++)
+    {
+		// MERG-2013-06-24: [[ RevisedPropsProp ]] Make sure we do a case-insensitive search
+		//   for the property name.
+        if (!MCArrayFetchValue(props, false, MCNAME(s_preprocess_props[j].tag), t_value))
+            continue;
 
+        // MW-2013-06-24: [[ RevisedPropsProp ]] Workaround Bug 10977 - only set the
+        //   'filename' of an image if it is non-empty or the image has a filename.
+        if (s_preprocess_props[j].prop == P_FILE_NAME && gettype() == CT_IMAGE &&
+            MCValueIsEmpty(t_value) && !getflag(F_HAS_FILENAME))
+            continue;
+        
+        t_exec_value . valueref_value = t_value;
+        t_exec_value . type = kMCExecValueTypeValueRef;
+        setprop(ctxt, part, (Properties)s_preprocess_props[j].prop, False, t_exec_value);
+        
+        ctxt . IgnoreLastError();
+    }
+    
 	uintptr_t t_iterator;
 	t_iterator = 0;
-	MCNameRef t_key;
-	MCValueRef t_value;
+    MCNameRef t_key;
 	while(MCArrayIterate(props, t_iterator, t_key, t_value))
 	{
 		MCScriptPoint sp(MCNameGetString(t_key));
@@ -3211,9 +3275,37 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
 		if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL
 		        && te->type == TT_PROPERTY && te->which != P_ID)
 		{
-			setstringprop(ctxt, part, (Properties)te->which, False, (MCStringRef)t_value);
+            // MERG-2013-05-07: [[ RevisedPropsProp ]] check if the key was
+            //   in the pre-processed.
+            // MW-2013-06-24: [[ RevisedPropsProp ]] set a boolean if the prop has already been
+            //   set.
+            bool t_been_preprocessed;
+            t_been_preprocessed = false;
+            for (j=0; j<t_preprocess_size; j++)
+                if (te->which == s_preprocess_props[j].prop)
+                {
+                    t_been_preprocessed = true;
+                    break;
+                }
+            
+            // MW-2013-06-24: [[ RevisedPropsProp ]] Only attempt to set the prop if it hasn't
+            //   already been processed.
+            if (t_been_preprocessed)
+                continue;
+    
+            // MW-2013-06-24: [[ RevisedPropsProp ]] Workaround Bug 10977 - only set the
+            //   'filename' of an image if it is non-empty or the image has a filename.
+            if (s_preprocess_props[j].prop == P_FILE_NAME && gettype() == CT_IMAGE &&
+                MCValueIsEmpty(t_value) && !getflag(F_HAS_FILENAME))
+                continue;
+            
+            t_exec_value . valueref_value = t_value;
+            t_exec_value . type = kMCExecValueTypeValueRef;
+            setprop(ctxt, part, (Properties)te->which, False, t_exec_value);
+            
+            ctxt . IgnoreLastError();
 		}
-	}	
+	}
 	MCerrorlock--;
 	MCRedrawUnlockScreen();
 }

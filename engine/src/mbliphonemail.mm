@@ -485,7 +485,7 @@ static void compose_mail_prewait(void *p_context)
 			if (ctxt -> attachments[i] . file == nil && ctxt -> attachments[i] . data == nil)
 				t_data = [[NSData alloc] initWithBytes: nil length: 0];
 			else if (ctxt -> attachments[i] . data != nil)
-				t_data = mcstringref_to_nsdata(ctxt -> attachments[i] . data);
+				t_data = [NSData dataWithMCDataRef: ctxt -> attachments[i] . data];
 			else if (ctxt -> attachments[i] . file != nil)
 			{
 				MCAutoStringRef t_resolved_path;
@@ -504,7 +504,6 @@ static void compose_mail_prewait(void *p_context)
 				t_name = [NSString stringWithMCStringRef: ctxt -> attachments[i] . name];
 				
 			[ctxt -> dialog addAttachmentData: t_data mimeType: t_type fileName: t_name];
-			[t_data release];
 		}
 	}
 

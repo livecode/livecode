@@ -3490,12 +3490,17 @@ void MCButton::openmenu(Boolean grab)
 			setmenuhistoryprop(t_chosen_option);
 			
 			uindex_t t_offset = 0;
+            uindex_t t_new_offset = 0;
 			for (uindex_t i = 0; i < t_chosen_option; i++)
-				/* UNCHECKED */ MCStringFirstIndexOfChar(t_menustring, '\n', t_offset, kMCStringOptionCompareExact, t_offset);
+            {
+                if (i != 0)
+                    t_offset = t_new_offset + 1;
+				/* UNCHECKED */ MCStringFirstIndexOfChar(t_menustring, '\n', t_offset, kMCStringOptionCompareExact, t_new_offset);
+            }
 			
 			MCAutoStringRef t_label;
 			/* UNCHECKED */ MCStringCopySubstring(t_menustring, 
-												  MCRangeMake(t_offset, MCStringGetLength(t_menustring) - t_offset),
+												  MCRangeMake(t_offset, t_new_offset - t_offset),
 												  &t_label);
 			MCValueAssign(label, *t_label);
 			message_with_valueref_args(MCM_menu_pick, *t_label);

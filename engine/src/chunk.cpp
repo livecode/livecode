@@ -1330,7 +1330,10 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObject *&r_object, uint4& r_
     MCObjectPtr t_obj_ptr;
 
     getoptionalobj(ctxt, t_obj_ptr, p_recurse);
-
+    
+    // ensure that the context does not contain an error until we decide how strict chunk parsing is.
+    ctxt . IgnoreLastError();
+    
     r_object = t_obj_ptr . object;
     r_parid = t_obj_ptr . part_id;
 }
