@@ -426,6 +426,7 @@ struct MCGFont
 {
 	void		*fid;
 	uint16_t	size;
+	uint16_t	fixed_advance;
 	int32_t		ascent;
 	int32_t		descent;
 	uint8_t		style;
