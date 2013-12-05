@@ -746,7 +746,7 @@ IO_stat IO_read_stringref_legacy_utf8(MCStringRef& r_string, IO_handle stream, u
 	return IO_NORMAL;
 }
 
-IO_stat IO_write_stringref_utf8(MCStringRef p_string, IO_handle stream, uint1 size)
+IO_stat IO_write_stringref_legacy_utf8(MCStringRef p_string, IO_handle stream, uint1 size)
 {
 	// Convert the string to UTF-8 encoding before writing it out
 	IO_stat stat;
@@ -754,9 +754,21 @@ IO_stat IO_write_stringref_utf8(MCStringRef p_string, IO_handle stream, uint1 si
 	uindex_t t_length = 0;
 	if (!MCStringConvertToUTF8(p_string, t_bytes, t_length))
 		return IO_ERROR;
-	stat = IO_write_string(t_bytes, stream, size);
+	stat = IO_write_string_legacy_full(MCString(t_bytes, t_length), stream, size, true);
 	MCMemoryDeleteArray(t_bytes);
 	return stat;
+}
+
+//////////
+
+IO_stat IO_write_valueref_new(MCValueRef p_value, IO_handle p_stream)
+{
+	return IO_ERROR;
+}
+
+IO_stat IO_read_valueref_new(MCValueRef& r_value, IO_handle p_stream)
+{
+	return IO_ERROR;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
