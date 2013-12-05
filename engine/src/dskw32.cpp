@@ -1856,7 +1856,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         MCAutoStringRef t_type, t_error;
         MCAutoValueRef t_value;
         MCS_query_registry(t_key, &t_value, &t_type, &t_error);
-		if (!MCValueIsEmpty(*t_value))
+		if (*t_value != nil && !MCValueIsEmpty(*t_value))
 		{
             MCStringRef t_key2;
             t_key2 = MCSTR("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyServer");
@@ -1864,7 +1864,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
             MCAutoValueRef t_value2;
             MCS_query_registry(t_key2, &t_value2, &t_type2, &t_error2);
 
-			if (!MCValueIsEmpty(*t_value2))
+			if (*t_value2 != nil && !MCValueIsEmpty(*t_value2))
 			{
 				MCAutoStringRef t_http_proxy;
 				/* UNCHECKED */ ctxt . ConvertToString(*t_value2, &t_http_proxy);
@@ -1879,7 +1879,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
             MCAutoValueRef t_value3;
             MCS_query_registry(t_key3, &t_value3, &t_type3, &t_error3);
             
-            if (!MCValueIsEmpty(*t_value3))
+            if (*t_value3 != nil && !MCValueIsEmpty(*t_value3))
 			{
 				MCAutoStringRef t_host;
                 /* UNCHECKED */ ctxt . ConvertToString(*t_value3, &t_host);
