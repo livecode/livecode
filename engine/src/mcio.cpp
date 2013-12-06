@@ -652,7 +652,7 @@ IO_stat IO_read_nameref(MCNameRef& r_name, IO_handle stream, uint1 size)
 IO_stat IO_write_nameref(MCNameRef p_name, IO_handle stream, uint1 size)
 {
 	// MW-2011-10-21: [[ Bug 9826 ]] If the name is empty, write out nil string.
-	return IO_write_stringref(MCNameIsEmpty(p_name) ? nil : MCNameGetString(p_name), stream, size);
+	return IO_write_stringref(MCNameGetString(p_name), stream, size);
 }
 
 // MW-2012-05-03: [[ Values* ]] Read a StringRef from a stream. For now we assume
@@ -684,11 +684,10 @@ IO_stat IO_write_stringref(MCStringRef p_string, IO_handle stream, uint1 size)
     if (p_string == nil)
         return IO_write_string(nil, 0, stream, false, size);
 	// If the string is empty, then we out a nil string (matches MCNameRef behavior).
-	uindex_t t_length;
-	t_length = MCStringGetLength(p_string);
-	MCAutoPointer<char> t_string;
-    /* UNCHECKED */ MCStringConvertToCString(p_string, &t_string);
-    return IO_write_string(t_length != nil ? *t_string : nil, t_length, stream, false, size);
+    uindex_t t_length;
+	MCAutoPointer<char_t> t_string;
+    /* UNCHECKED */ MCStringConvertToNative(p_string, &t_string, t_length);
+    return IO_write_string(t_length != nil ? (char *)*t_string : nil, t_length, stream, false, size);
 }
 
 IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, bool as_unicode, uint1 size)
@@ -715,14 +714,13 @@ IO_stat IO_write_stringref(MCStringRef p_string, IO_handle stream, bool as_unico
 	IO_stat stat = IO_NORMAL;
 	MCStringEncoding t_encoding = as_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative;
 	
-	MCDataRef t_data = nil;
-	if (!MCStringEncode(p_string, t_encoding, false, t_data))
+	MCAutoDataRef t_data;
+	if (!MCStringEncode(p_string, t_encoding, false, &t_data))
 		return IO_ERROR;
 	
-	uindex_t t_length = MCDataGetLength(t_data);
-	const char *t_bytes = (const char *)MCDataGetBytePtr(t_data);
+	uindex_t t_length = MCDataGetLength(*t_data);
+	const char *t_bytes = (const char *)MCDataGetBytePtr(*t_data);
 	stat = IO_write_string(t_bytes, t_length, stream, as_unicode, size);
-	MCValueRelease(t_data);
 	return stat;
 }
 
