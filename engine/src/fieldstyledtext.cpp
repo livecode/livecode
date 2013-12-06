@@ -748,12 +748,12 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 		/* UNCHECKED */ MCArrayCopyAndRelease(t_array, &t_style_entry);	
 	}
 	// Get the metadata (if any)
-	MCStringRef t_metadata;
+	MCAutoStringRef t_metadata;
 	if (MCArrayFetchValue(p_block_value, false, MCNAME("metadata"), t_valueref) && !MCValueIsEmpty(t_valueref))
 	{
 		MCAutoStringRef t_string;
-		/* UNCHECKED */ ctxt . ConvertToString(t_valueref, &t_string);
-		t_metadata = MCValueRetain(*t_string);
+		if (ctxt . ConvertToString(t_valueref, &t_string))
+            t_metadata = *t_string;
 	}	
 	// If there are no paragraphs yet, create one.
 	MCParagraph *t_paragraph;
@@ -807,9 +807,7 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 		}
 
 		// We now add the range initial...final as a block.
-		parsestyledtextappendblock(t_paragraph, *t_style_entry, t_text_initial_ptr, t_text_final_ptr, t_metadata, t_is_unicode);
-		
-		MCValueRelease(t_metadata);
+		parsestyledtextappendblock(t_paragraph, *t_style_entry, t_text_initial_ptr, t_text_final_ptr, *t_metadata, t_is_unicode);
 
 		// And, if we need a new paragraph, add it.
 		if (t_add_paragraph)
