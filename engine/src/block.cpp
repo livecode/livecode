@@ -2169,7 +2169,8 @@ void MCBlock::SetRange(findex_t p_index, findex_t p_length)
 {
 	m_index = p_index;
 	m_size = p_length;
-	
+	width = 0;
+    
 	// Update the 'has tabs' flag
 	uindex_t t_where;
 	if (MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\t', m_index, kMCStringOptionCompareExact, t_where)
