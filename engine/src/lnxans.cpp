@@ -666,9 +666,16 @@ int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringR
             }
 
             MCAutoStringRefAsSysString t_folder_sys, t_name_sys;
-            /* UNCHECKED */ t_folder_sys.Lock(*t_folder);
+
+            if (t_folder_exists)
+            {
+                /* UNCHECKED */ t_folder_sys.Lock(*t_folder);
+                gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), *t_folder_sys);
+            }
+            else
+                gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), G_last_saved_path);
+
             /* UNCHECKED */ t_name_sys.Lock(*t_name);
-            gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), t_folder_exists ? *t_folder_sys : G_last_saved_path);
             gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog), *t_name_sys);
 		}
 	}

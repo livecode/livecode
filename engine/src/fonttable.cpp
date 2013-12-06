@@ -329,7 +329,7 @@ IO_stat MCLogicalFontTableSave(IO_handle p_stream)
 			}
 
 			if (t_stat == IO_NORMAL)
-				t_stat = IO_write_stringref(*t_unicode_textfont, p_stream, false);
+                t_stat = IO_write_stringref(*t_unicode_textfont, p_stream);
 		}
 
 	return t_stat;

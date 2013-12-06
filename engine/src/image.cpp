@@ -1789,7 +1789,7 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 
 	if (flags & F_HAS_FILENAME)
 	{
-		if ((stat = IO_write_stringref(filename, stream, false)) != IO_NORMAL)
+        if ((stat = IO_write_stringref(filename, stream)) != IO_NORMAL)
 			return stat;
 	}
 	else

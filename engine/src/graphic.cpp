@@ -2494,7 +2494,7 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 				return stat;
 	}
 	if (flags & F_G_LABEL)
-		if ((stat = IO_write_stringref(label, stream, hasunicode())) != IO_NORMAL)
+        if ((stat = IO_write_stringref(label, stream)) != IO_NORMAL)
 			return stat;
 	return savepropsets(stream);
 }

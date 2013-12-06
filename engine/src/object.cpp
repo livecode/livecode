@@ -3153,7 +3153,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (flags & F_SCRIPT && !(addflags & AF_LONG_SCRIPT))
 	{
 		getstack() -> unsecurescript(this);
-		stat = IO_write_stringref(_script, stream, false);
+        stat = IO_write_stringref(_script, stream);
 		getstack() -> securescript(this);
 		if (stat != IO_NORMAL)
 			return stat;
@@ -3230,7 +3230,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if (MCstackfileversion < 5500)
 		{
 			// Tooltip is encoded in the native format
-			if ((stat = IO_write_stringref(tooltip, stream, false)) != IO_NORMAL)
+            if ((stat = IO_write_stringref(tooltip, stream)) != IO_NORMAL)
 				return stat;
 		}
 		else
@@ -3297,7 +3297,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	else if (addflags & AF_LONG_SCRIPT)
 	{
 		getstack() -> unsecurescript(this);
-		stat = IO_write_stringref(_script, stream, false, 4);
+        stat = IO_write_stringref(_script, stream, (uint1)4);
 		getstack() -> securescript(this);
 		if (stat != IO_NORMAL)
 			return stat;
