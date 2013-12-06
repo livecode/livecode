@@ -295,10 +295,13 @@ static void MCFontMeasureTextCallback(MCFontRef p_font, const char *p_text, uint
     MCGFont t_font;
 	t_font = MCFontStructToMCGFont(p_font->fontstruct);
 	
+	// MW-2013-12-04: [[ Bug 11549 ]] Make sure unicode text is short-aligned.
 	MCExecPoint ep;
 	ep . setsvalue(MCString(p_text, p_length));
 	if (!p_is_unicode)
 		ep . nativetoutf16();
+	else if ((((uintptr_t)ep . getsvalue() . getstring()) & 1) != 0)
+		ep . grabsvalue();
 	
     ctxt -> m_width += MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
 }
@@ -324,10 +327,13 @@ static void MCFontDrawTextCallback(MCFontRef p_font, const char *p_text, uint32_
     MCGFont t_font;
 	t_font = MCFontStructToMCGFont(p_font->fontstruct);
 	
+	// MW-2013-12-04: [[ Bug 11549 ]] Make sure unicode text is short-aligned.
 	MCExecPoint ep;
 	ep . setsvalue(MCString(p_text, p_length));
 	if (!p_is_unicode)
 		ep . nativetoutf16();
+	else if ((((uintptr_t)ep . getsvalue() . getstring()) & 1) != 0)
+		ep . grabsvalue();
 	
 	MCGContextDrawPlatformText(ctxt->m_gcontext, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), MCGPointMake(ctxt->x, ctxt->y), t_font);
     
