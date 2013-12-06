@@ -2985,9 +2985,10 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 			// then verify we've read a nice NUL byte at the end.
 			MCObjectInputStream *t_stream = nil;
 			/* UNCHECKED */ MCStackSecurityCreateObjectInputStream(stream, t_length, t_stream);
-			t_length -= 1;
 			if (version < 7000)
 			{
+				t_length -= 1;
+				
 				MCAutoStringRef t_script_string;
 				stat = t_stream -> ReadTranslatedStringRef(&t_script_string);
 				if (stat == IO_NORMAL)
@@ -3345,32 +3346,35 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	}
 	else
 	{
-		uint4 t_length_offset;
-		t_length_offset = MCS_tell(stream);
-		stat = IO_write_uint4(t_length_offset, stream);
-		if (stat == IO_NORMAL)
+		if (t_extended)
 		{
-			MCObjectOutputStream *t_stream = nil;
-			/* UNCHECKED */ MCStackSecurityCreateObjectOutputStream(stream, t_stream);
+			uint4 t_length_offset;
+			t_length_offset = MCS_tell(stream);
+			stat = IO_write_uint4(t_length_offset, stream);
 			if (stat == IO_NORMAL)
-				stat = extendedsave(*t_stream, p_part);
+			{
+				MCObjectOutputStream *t_stream = nil;
+				/* UNCHECKED */ MCStackSecurityCreateObjectOutputStream(stream, t_stream);
+				if (stat == IO_NORMAL)
+					stat = extendedsave(*t_stream, p_part);
+				if (stat == IO_NORMAL)
+					stat = t_stream -> Flush(true);
+				delete t_stream;
+			}
 			if (stat == IO_NORMAL)
-				stat = t_stream -> Flush(true);
-			delete t_stream;
+			{
+				uint4 t_cur_offset;
+				
+				t_cur_offset = MCS_tell(stream);
+				
+				uint4 t_length;
+				t_length = MCSwapInt32HostToNetwork(t_cur_offset - t_length_offset - 4);
+				
+				MCS_writeat(&t_length, sizeof(uint4), t_length_offset, stream);
+			}
+			if (stat != IO_NORMAL)
+				return stat;
 		}
-		if (stat == IO_NORMAL)
-		{
-			uint4 t_cur_offset;
-			
-			t_cur_offset = MCS_tell(stream);
-			
-			uint4 t_length;
-			t_length = MCSwapInt32HostToNetwork(t_cur_offset - t_length_offset - 4);
-			
-			MCS_writeat(&t_length, sizeof(uint4), t_length_offset, stream);
-		}
-		if (stat != IO_NORMAL)
-			return stat;
 	}
 
 //---- New in 2.7
@@ -3580,13 +3584,13 @@ IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, uint32_t version, 
 		MCNameRef t_stack;
 		t_stack = NULL;
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . ReadNameRefNew(t_stack, MCstackfileversion >= 7000);
+			t_stat = p_stream . ReadNameRefNew(t_stack, version >= 7000);
 		
 		// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		// This is no longer used, but might remain in older stackfiles.
 		MCAutoStringRef t_mainstack;
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . ReadStringRefNew(&t_mainstack, MCstackfileversion >= 7000);
+			t_stat = p_stream . ReadStringRefNew(&t_mainstack, version >= 7000);
 
 		if (t_stat == IO_NORMAL)
 		{

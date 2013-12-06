@@ -793,7 +793,7 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 				MCAutoStringRef t_curpath;
 				
 				/* UNCHECKED */ MCS_getcurdir(&t_curpath);
-				/* UNCHECKED */ MCStringFormat(&t_open_path, "@s/%@", *t_curpath, p_name); 
+				/* UNCHECKED */ MCStringFormat(&t_open_path, "%@/%@", *t_curpath, p_name); 
 			}
 			else
 				t_open_path = p_name;
@@ -932,7 +932,9 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	// MW-2012-03-04: [[ StackFile5500 ]] Work out what header to emit, and the size.
 	const char *t_header;
 	uint32_t t_header_size;
-	if (MCstackfileversion >= 5500)
+	if (MCstackfileversion >= 7000)
+		t_header = newheader7000, t_header_size = 8;
+	else if (MCstackfileversion >= 5500)
 		t_header = newheader5500, t_header_size = 8;
 	else if (MCstackfileversion >= 2700)
 		t_header = newheader, t_header_size = 8;

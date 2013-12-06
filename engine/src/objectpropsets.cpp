@@ -170,12 +170,16 @@ bool MCObjectPropertySet::restrict(MCExecPoint& ep)
 
 IO_stat MCObjectPropertySet::loadprops_new(IO_handle p_stream)
 {
-	return IO_write_valueref_new(m_props, p_stream);
+	if (IO_read_valueref_new((MCValueRef&)m_props, p_stream) != IO_NORMAL)
+		return IO_ERROR;
+	if (!MCArrayMutableCopyAndRelease(m_props, m_props))
+		return IO_ERROR;
+	return IO_NORMAL;
 }
 
 IO_stat MCObjectPropertySet::saveprops_new(IO_handle p_stream)
 {
-	return IO_read_valueref_new((MCValueRef&)m_props, p_stream);
+	return IO_write_valueref_new(m_props, p_stream);
 }
 
 //////////
@@ -438,12 +442,12 @@ IO_stat MCObject::loadpropsets(IO_handle stream, uint32_t version)
 {
 	if (version < 7000)
 		return loadpropsets_legacy(stream);
-	MCObjectPropertySet *p = props;
-	IO_stat stat;
 	
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] Read all the propsets in
 	//   OT_CUSTOM - name - array
 	// format.
+	MCObjectPropertySet *p = props;
+	IO_stat stat;
 	while (True)
 	{
 		uint1 type;
@@ -457,9 +461,14 @@ IO_stat MCObject::loadpropsets(IO_handle stream, uint32_t version)
 			
 			MCObjectPropertySet *v;
 			/* UNCHECKED */ MCObjectPropertySet::createwithname_nocopy(pname, v);
-			p->setnext(v);
-			p = p->getnext();
-			
+			if (p != nil)
+			{
+				p->setnext(v);
+				p = p->getnext();
+			}
+			else
+				props = p = v;
+
 			if ((stat = p->loadprops_new(stream)) != IO_NORMAL)
 				return stat;
 		}
@@ -627,7 +636,6 @@ IO_stat MCObject::savepropsets_legacy(IO_handle stream)
 		{
 			if ((stat = IO_write_uint1(OT_CUSTOM, stream)) != IO_NORMAL)
 				return stat;
-			// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 			if ((stat = IO_write_nameref_new(p->getname(), stream, false)) != IO_NORMAL)
 				return stat;
 			if ((stat = p->saveprops_legacy(stream)) != IO_NORMAL)

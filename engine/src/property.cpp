@@ -2027,8 +2027,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 			version = major * 1000 + minor * 100 + revision * 10;
 			
 			// MW-2012-03-04: [[ StackFile5500 ]] Allow versions up to 5500 to be set.
-			// MW-2013-12-05: [[ UnicodeFileFormat ]] Allow versions up to 7000 to be set.
-			if (count < 2 || version < 2400 || version > 7000)
+			if (count < 2 || version < 2400 || version > 5500)
 			{
 				MCeerror -> add(EE_PROPERTY_STACKFILEBADVERSION, 0, 0, ep . getsvalue());
 				return ES_ERROR;
