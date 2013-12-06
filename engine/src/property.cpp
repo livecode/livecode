@@ -5130,6 +5130,7 @@ void MCProperty::eval_global_property_ctxt(MCExecContext& ctxt, MCExecValue& r_v
 	}
 
     MCeerror->add(EE_PROPERTY_NOPROP, line, pos);
+    ctxt . Throw();
 }
 
 void MCProperty::eval_object_property_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
@@ -5174,7 +5175,10 @@ void MCProperty::eval_object_property_ctxt(MCExecContext& ctxt, MCExecValue& r_v
 	}
 	
 	if (!t_success)
+    {
 		MCeerror->add(EE_PROPERTY_NOPROP, line, pos);
+        ctxt . Throw();
+    }
 }
 
 void MCProperty::eval_count_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
@@ -5232,6 +5236,7 @@ void MCProperty::set_global_property(MCExecContext& ctxt, MCExecValue p_value)
 	}
     
     MCeerror->add(EE_PROPERTY_CANTSET, line, pos);
+    ctxt . Throw();
 }
 
 void MCProperty::set_object_property(MCExecContext& ctxt, MCExecValue p_value)
@@ -5279,7 +5284,10 @@ void MCProperty::set_object_property(MCExecContext& ctxt, MCExecValue p_value)
 	}
     
 	if (!t_success)
+    {
 		MCeerror->add(EE_PROPERTY_CANTSETOBJECT, line, pos);
+        ctxt . Throw();
+    }
 }
 
 void MCProperty::set(MCExecContext& ctxt, MCExecValue p_value)

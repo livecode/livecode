@@ -950,7 +950,7 @@ bool MCGradientFillSetProperties(MCExecContext& ctxt, MCGradientFill*& x_gradien
     
 	uint4 tablesize = ELEMENTS(gradientprops);
 
-    if (p_value . type == kMCExecValueTypeStringRef && MCStringIsEmpty(p_value . stringref_value))
+    if (p_value . type == kMCExecValueTypeValueRef && MCValueIsEmpty(p_value . valueref_value))
     {
         delete t_gradient;
         t_gradient = nil;

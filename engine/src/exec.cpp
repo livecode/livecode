@@ -2548,7 +2548,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             integer_t t_value;
             integer_t *t_value_ptr;
-            if (p_value . type == kMCExecValueTypeStringRef && MCStringIsEmpty(p_value . stringref_value))
+            if (p_value . type == kMCExecValueTypeValueRef && MCValueIsEmpty(p_value . valueref_value))
                 t_value_ptr = nil;
             else
             {
@@ -2568,7 +2568,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             uinteger_t t_value;
             uinteger_t *t_value_ptr;
-            if (p_value . type == kMCExecValueTypeStringRef && MCStringIsEmpty(p_value . stringref_value))
+            if (p_value . type == kMCExecValueTypeValueRef && MCValueIsEmpty(p_value . valueref_value))
                 t_value_ptr = nil;
             else
             {
@@ -2588,7 +2588,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             uinteger_t t_value;
             uinteger_t *t_value_ptr;
-            if (p_value . type == kMCExecValueTypeStringRef && MCStringIsEmpty(p_value . stringref_value))
+            if (p_value . type == kMCExecValueTypeValueRef && MCValueIsEmpty(p_value . valueref_value))
                 t_value_ptr = nil;
             else
             {
@@ -2616,7 +2616,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             MCPoint t_value;
             MCPoint *t_value_ptr;
-            if (p_value . type == kMCExecValueTypeStringRef && MCStringIsEmpty(p_value . stringref_value))
+            if (p_value . type == kMCExecValueTypeValueRef && MCValueIsEmpty(p_value . valueref_value))
                 t_value_ptr = nil;
             else
             {
@@ -2632,7 +2632,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             MCRectangle t_value;
             MCRectangle *t_value_ptr;
-            if (p_value . type == kMCExecValueTypeStringRef && MCStringIsEmpty(p_value . stringref_value))
+            if (p_value . type == kMCExecValueTypeValueRef && MCValueIsEmpty(p_value . valueref_value))
                 t_value_ptr = nil;
             else
             {
@@ -2648,7 +2648,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             MCColor t_value;
             MCColor *t_value_ptr;
-            if (p_value . type == kMCExecValueTypeStringRef && MCStringIsEmpty(p_value . stringref_value))
+            if (p_value . type == kMCExecValueTypeValueRef && MCValueIsEmpty(p_value . valueref_value))
                 t_value_ptr = nil;
             else
             {
