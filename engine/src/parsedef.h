@@ -1594,6 +1594,10 @@ enum Properties {
 	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
 	P_COLOR_DIALOG_COLORS,
 	
+	// IM-2013-12-04: [[ PixelScale ]] Tags for the pixelScale and systemPixelScale properties
+	P_PIXEL_SCALE,
+	P_SYSTEM_PIXEL_SCALE,
+	
 	// ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,
     P_CUSTOM_KEYS = P_FIRST_ARRAY_PROP,
