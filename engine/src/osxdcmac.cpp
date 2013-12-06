@@ -396,8 +396,8 @@ void MCScreenDC::mode_globaltolocal(Point& p)
 	SetGWorld(oldport, olddevice);
 	
 	// IM-2013-08-01: [[ ResIndependence ]] apply device scale
-	p.v = p.v / MCResGetDeviceScale();
-	p.h = p.h / MCResGetDeviceScale();
+	p.v = p.v / MCResGetPixelScale();
+	p.h = p.h / MCResGetPixelScale();
 }
 
 void MCScreenDC::mfocus(EventRecord *event, Point p, Boolean dispatch, bool post_or_handle)

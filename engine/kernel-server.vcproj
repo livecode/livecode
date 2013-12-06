@@ -284,6 +284,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\resolution.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\resolution.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\round.h"
 				>
 			</File>

@@ -505,6 +505,8 @@
 		A71F80540F4F178C003012FD /* Standalone.icns in Resources */ = {isa = PBXBuildFile; fileRef = A71F80530F4F178C003012FD /* Standalone.icns */; };
 		A71F80550F4F17C1003012FD /* LiveCode.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885610B80DEAC00200116 /* LiveCode.icns */; };
 		A71F80620F4F17F9003012FD /* StandaloneDoc.icns in Resources */ = {isa = PBXBuildFile; fileRef = A71F80610F4F17F9003012FD /* StandaloneDoc.icns */; };
+		E82206E1184F810A00117D10 /* resolution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82206E0184F810A00117D10 /* resolution.cpp */; };
+		E82206E2184F810A00117D10 /* resolution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82206E0184F810A00117D10 /* resolution.cpp */; };
 		E8252264174E2BF500055329 /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AF4895174D5563000B2F9E /* libskia.a */; };
 		E85130F4180D9969004D1DB4 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E85130F3180D9969004D1DB4 /* image_rep_densitymapped.cpp */; };
 		E85130F5180D9969004D1DB4 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E85130F3180D9969004D1DB4 /* image_rep_densitymapped.cpp */; };
@@ -1405,6 +1407,7 @@
 		A04643F60BAAA63A0030A830 /* w32theme.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = w32theme.cpp; path = src/w32theme.cpp; sourceTree = "<group>"; };
 		A71F80530F4F178C003012FD /* Standalone.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = Standalone.icns; path = rsrc/Standalone.icns; sourceTree = "<group>"; };
 		A71F80610F4F17F9003012FD /* StandaloneDoc.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = StandaloneDoc.icns; path = rsrc/StandaloneDoc.icns; sourceTree = "<group>"; };
+		E82206E0184F810A00117D10 /* resolution.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = resolution.cpp; path = src/resolution.cpp; sourceTree = "<group>"; };
 		E85130F3180D9969004D1DB4 /* image_rep_densitymapped.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_densitymapped.cpp; path = src/image_rep_densitymapped.cpp; sourceTree = "<group>"; };
 		E86A04F6142A49EF005ECD82 /* srvsession.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = srvsession.cpp; path = src/srvsession.cpp; sourceTree = "<group>"; };
 		E86A04F7142A49EF005ECD82 /* srvsession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = srvsession.h; path = src/srvsession.h; sourceTree = "<group>"; };
@@ -2214,6 +2217,7 @@
 				4DDB66701413A02000E5C84C /* redraw.cpp */,
 				4DDB66711413A02000E5C84C /* redraw.h */,
 				E8A49106170F179000769C7A /* region.h */,
+				E82206E0184F810A00117D10 /* resolution.cpp */,
 				E8D7F8C21785D82F00EC051A /* resolution.h */,
 				4D587E890B8096FD00200116 /* rgb.cpp */,
 				4D4F9DFA13CDE63000B9B15D /* surface.cpp */,
@@ -3214,6 +3218,7 @@
 				4C4D3DF417E355B50012FB12 /* osxflst.cpp in Sources */,
 				E88869AC180D63FC0026BFDA /* stackview.cpp in Sources */,
 				E85130F5180D9969004D1DB4 /* image_rep_densitymapped.cpp in Sources */,
+				E82206E2184F810A00117D10 /* resolution.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3461,6 +3466,7 @@
 				E8988A8A17FDD5B700F640F4 /* stackview.cpp in Sources */,
 				4D1AA1E5181556180075FC5E /* bitmapeffect.cpp in Sources */,
 				E85130F4180D9969004D1DB4 /* image_rep_densitymapped.cpp in Sources */,
+				E82206E1184F810A00117D10 /* resolution.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
