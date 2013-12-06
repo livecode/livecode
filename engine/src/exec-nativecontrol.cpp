@@ -206,6 +206,12 @@ void MCNativeControlIndicatorInsetsParse(MCExecContext& ctxt, MCStringRef p_inpu
 
 void MCNativeControlIndicatorInsetsFormat(MCExecContext& ctxt, const MCNativeControlIndicatorInsets& p_input, MCStringRef& r_output)
 {
+    if (!p_input . has_insets)
+    {
+        r_output = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    
     if (MCStringFormat(r_output, "%d,%d,%d,%d", p_input . top, p_input . left, p_input . right, p_input . bottom))
         return;
     

@@ -132,7 +132,7 @@ public:
 	void transBegin();
 	void transCommit();
 	void transRollback();
-	char *getErrorMessage();
+	char *getErrorMessage(Bool p_last);
 	Bool IsError();
 	int getConnectionType(void) { return -1; }
 	int getVersion(void) { return 2; }

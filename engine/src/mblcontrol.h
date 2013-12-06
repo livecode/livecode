@@ -208,6 +208,7 @@ void MCNativeControlDecelerationRateFree(MCExecContext& ctxt, MCNativeControlDec
 
 struct MCNativeControlIndicatorInsets
 {
+    bool has_insets;
     int16_t top;
     int16_t left;
     int16_t right;
@@ -532,5 +533,17 @@ void MCNativeControlFinalize(void);
 #ifdef LEGACY_EXEC
 bool MCExecPointSetRect(MCExecPoint &ep, int2 p_left, int2 p_top, int2 p_right, int2 p_bottom);
 #endif
+
+// MM-2013-11-26: [[ Bug 11485 ]] Added functions for converting between user and device space.
+MCGAffineTransform MCNativeControlUserToDeviceTransform();
+MCGAffineTransform MCNativeControlUserFromDeviceTransform();
+MCGRectangle MCNativeControlUserRectToDeviceRect(const MCGRectangle &p_user_rect);
+MCGRectangle MCNativeControlUserRectFromDeviceRect(const MCGRectangle &p_device_rect);
+MCGPoint MCNativeControlUserPointToDevicePoint(const MCGPoint &p_user_point);
+MCGPoint MCNativeControlUserPointFromDevicePoint(const MCGPoint &p_device_point);
+int32_t MCNativeControlUserXLocToDeviceXLoc(int32_t p_user_x_loc);
+int32_t MCNativeControlUserXLocFromDeviceXLoc(int32_t p_device_x_loc);
+int32_t MCNativeControlUserYLocToDeviceYLoc(int32_t p_user_y_loc);
+int32_t MCNativeControlUserYLocFromDeviceYLoc(int32_t p_device_y_loc);
 
 #endif // __MC_MOBILE_CONTROL__

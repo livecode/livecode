@@ -306,7 +306,7 @@ static MCExecEnumTypeElementInfo _kMCInterfaceStackFullscreenModeElementInfo[] =
 {
 	{"", kMCStackFullscreenResize},
 	{"exactfit", kMCStackFullscreenExactFit},
-	{"showall", kMCStackFullscreenShowAll},
+	{"letterbox", kMCStackFullscreenLetterbox},
 	{"noborder", kMCStackFullscreenNoBorder},
 	{"noscale", kMCStackFullscreenNoScale},
     
@@ -362,6 +362,12 @@ void MCStack::GetFullscreenMode(MCExecContext& ctxt, intenum_t& r_mode)
 
 void MCStack::SetFullscreenMode(MCExecContext& ctxt, intenum_t p_mode)
 {
+    // MW-2013-11-07: [[ Bug 11393 ]] Whether we need to reset fonts depends
+    //   on both formatForPrinting and fullscreenmode (on Windows).
+    
+    bool t_ideal_layout;
+    t_ideal_layout = getuseideallayout();
+    
     if (p_mode != view_getfullscreenmode())
     {
         view_setfullscreenmode((MCStackFullscreenMode)p_mode);
@@ -370,6 +376,9 @@ void MCStack::SetFullscreenMode(MCExecContext& ctxt, intenum_t p_mode)
             // rather than reopening the window.
             setrect(old_rect);
     }
+    
+    if ((t_ideal_layout != getuseideallayout()) && opened)
+        purgefonts();
 }
 
 void MCStack::SetName(MCExecContext& ctxt, MCStringRef p_name)
@@ -1587,7 +1596,13 @@ void MCStack::GetFormatForPrinting(MCExecContext& ctxt, bool& r_setting)
 
 void MCStack::SetFormatForPrinting(MCExecContext& ctxt, bool setting)
 {
-	if (changeflag(setting, F_FORMAT_FOR_PRINTING) && opened)
+    // MW-2013-11-07: [[ Bug 11393 ]] Whether we need to reset fonts depends
+    //   on both formatForPrinting and fullscreenmode (on Windows).
+    
+    bool t_ideal_layout;
+    t_ideal_layout = getuseideallayout();
+    
+	if (changeflag(setting, F_FORMAT_FOR_PRINTING) && (getuseideallayout() != t_ideal_layout) && opened)
 		purgefonts();
 }
 

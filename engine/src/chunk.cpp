@@ -1314,6 +1314,8 @@ bool MCChunk::getobj(MCExecContext& ctxt, MCObjectPtr& r_object, bool p_recurse)
 
 bool MCChunk::getobj(MCExecContext& ctxt, MCObjectPtr& r_object, Boolean p_recurse)
 {
+    r_object . object = nil;
+    
     getoptionalobj(ctxt, r_object, p_recurse);
 
     if (r_object . object == nil)
@@ -1341,7 +1343,9 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObject *&r_object, uint4& r_
 void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean p_recurse)
 {
     MCObjectPtr t_object;
-
+    t_object . object = nil;
+    t_object . part_id = 0;
+    
     r_object . object = nil;
     r_object . part_id = 0;
 

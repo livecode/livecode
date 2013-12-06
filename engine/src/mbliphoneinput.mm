@@ -606,7 +606,19 @@ void MCiOSInputControl::SetFontSize(MCExecContext& ctxt, uinteger_t p_size)
 	t_field = (UITextField *)GetView();
     
     if (t_field)
-        [t_field setFont: [[t_field font] fontWithSize: p_size]];
+    {
+        // FG-2013-11-06 [[ Bugfix 11285 ]]
+        // On iOS7 devices, UITextView controls were having their font size
+        // properties ignored because [t_field font] was returning nil when
+        // no text had been added to the control yet.
+        UIFont* t_font = [t_field font];
+        if (t_font == nil)
+            t_font = [UIFont systemFontOfSize: p_size];
+        else
+            t_font = [t_font fontWithSize: p_size];
+        
+        [t_field setFont: t_font];
+    }
 }
 
 void MCiOSInputControl::SetTextAlign(MCExecContext& ctxt, MCNativeControlInputTextAlign p_align)
@@ -1128,10 +1140,23 @@ Exec_stat MCiOSInputControl::Set(MCNativeControlProperty p_property, MCExecPoint
 			return ES_NORMAL;
 			
 		case kMCNativeControlPropertyFontSize:
+        {
 			if (!ParseInteger(ep, t_integer))
 				return ES_ERROR;
-			[t_field setFont: [[t_field font] fontWithSize: t_integer]];
+            
+            // FG-2013-11-06 [[ Bugfix 11285 ]]
+            // On iOS7 devices, UITextView controls were having their font size
+            // properties ignored because [t_field font] was returning nil when
+            // no text had been added to the control yet.
+            UIFont* t_font = [t_field font];
+            if (t_font == nil)
+                t_font = [UIFont systemFontOfSize: t_integer];
+            else
+                t_font = [t_font fontWithSize: t_integer];
+            
+			[t_field setFont: t_font];
 			return ES_NORMAL;
+        }
 			
 		case kMCNativeControlPropertyTextAlign:
 			if (!ParseEnum(ep, s_textalign_enum, t_enum))
@@ -1770,16 +1795,18 @@ void MCiOSMultiLineControl::GetContentRect(MCExecContext& ctxt, integer_t r_rect
 void MCiOSMultiLineControl::SetHScroll(MCExecContext& ctxt, integer_t p_scroll)
 {
     UpdateContentRect();
-    
-    float t_scale;
-    t_scale = MCIPhoneGetNativeControlScale();
-    
+
     UIScrollView *t_view;
 	t_view = (UIScrollView*)GetView();
     
     int32_t t_x, t_y;
     if (t_view != nil && MCScrollViewGetContentOffset(t_view, t_x, t_y))
-        [t_view setContentOffset: CGPointMake((float)(p_scroll - m_content_rect.x) / t_scale, (float)t_y / t_scale)];
+    {
+        // MM-2013-11-26: [[ Bug 11485 ]] The user passes the properties of the scroller in user space, so must converted to device space before setting.
+        MCGPoint t_offset;
+        t_offset = MCNativeControlUserPointToDevicePoint(MCGPointMake((MCGFloat)p_scroll - m_content_rect . x, (MCGFloat) t_y));
+        [t_view setContentOffset: CGPointMake(t_offset . x, t_offset . y)];
+    }
 }
 
 void MCiOSMultiLineControl::GetHScroll(MCExecContext& ctxt, integer_t& r_scroll)
@@ -1789,29 +1816,27 @@ void MCiOSMultiLineControl::GetHScroll(MCExecContext& ctxt, integer_t& r_scroll)
     UIScrollView *t_view;
 	t_view = (UIScrollView*)GetView();
     
+    // MM-2013-11-26: [[ Bug 11485 ]] The user expects the properties of the scroller in user space, so must converted to device space before returning.
     if (t_view)
-    {
-        float t_scale;
-        t_scale = MCIPhoneGetNativeControlScale();
-        
-        r_scroll = m_content_rect.x + [t_view contentOffset].x * t_scale;
-    }
-    else
-        r_scroll = 0;
+        r_scroll = m_content_rect.x + MCNativeControlUserXLocFromDeviceXLoc([t_view contentOffset].x);
+        else
+            r_scroll = 0;
 }
 void MCiOSMultiLineControl::SetVScroll(MCExecContext& ctxt, integer_t p_scroll)
 {
     UpdateContentRect();
-    
-    float t_scale;
-    t_scale = MCIPhoneGetNativeControlScale();
     
     UIScrollView *t_view;
 	t_view = (UIScrollView*)GetView();
     
     int32_t t_x, t_y;
     if (t_view != nil && MCScrollViewGetContentOffset(t_view, t_x, t_y))
-        [t_view setContentOffset: CGPointMake((float)t_x / t_scale, (float)(p_scroll - m_content_rect.y) / t_scale)];
+    {
+        // MM-2013-11-26: [[ Bug 11485 ]] The user passes the properties of the scroller in user space, so must converted to device space before setting.
+        MCGPoint t_offset;
+        t_offset = MCNativeControlUserPointToDevicePoint(MCGPointMake((MCGFloat) t_x, (MCGFloat) p_scroll - m_content_rect . y));
+        [t_view setContentOffset: CGPointMake(t_offset . x, t_offset . y)];
+    }
 }
 
 void MCiOSMultiLineControl::GetVScroll(MCExecContext& ctxt, integer_t& r_scroll)
@@ -1821,15 +1846,11 @@ void MCiOSMultiLineControl::GetVScroll(MCExecContext& ctxt, integer_t& r_scroll)
     UIScrollView *t_view;
 	t_view = (UIScrollView*)GetView();
     
+    // MM-2013-11-26: [[ Bug 11485 ]] The user expects the properties of the scroller in user space, so must converted to device space before returning.
     if (t_view)
-    {
-        float t_scale;
-        t_scale = MCIPhoneGetNativeControlScale();
-        
-        r_scroll = m_content_rect.y + [t_view contentOffset].y * t_scale;
-    }
-    else
-        r_scroll = 0;
+        r_scroll = m_content_rect.y + MCNativeControlUserYLocFromDeviceYLoc([t_view contentOffset].y);
+        else
+            r_scroll = 0;
 }
 void MCiOSMultiLineControl::SetCanBounce(MCExecContext& ctxt, bool p_value)
 {
@@ -2034,30 +2055,38 @@ void MCiOSMultiLineControl::GetIndicatorStyle(MCExecContext& ctxt, MCNativeContr
 
 void MCiOSMultiLineControl::SetIndicatorInsets(MCExecContext& ctxt, const MCNativeControlIndicatorInsets& p_insets)
 {
-    float t_scale;
-    t_scale = MCIPhoneGetNativeControlScale();
-    
     UIScrollView *t_view;
 	t_view = (UIScrollView*)GetView();
     
+    // MM-2013-11-26: [[ Bug 11485 ]] The user passes the properties of the scroller in user space, so must converted to device space before setting.
+    MCGRectangle t_rect;
+    t_rect = MCNativeControlUserRectToDeviceRect(MCGRectangleMake(p_insets . left, p_insets . top, p_insets . right - p_insets . left, p_insets . bottom - p_insets . top));
+    
     if (t_view)
-        [t_view setScrollIndicatorInsets: UIEdgeInsetsMake((float)p_insets . top / t_scale, (float)p_insets . left / t_scale, (float)p_insets . bottom / t_scale, (float)p_insets . right / t_scale)];
+        [t_view setScrollIndicatorInsets: UIEdgeInsetsMake(t_rect . origin . y, t_rect . origin . x, t_rect . origin . y + t_rect . size . height, t_rect . origin . x + t_rect . size . width)];
 }
 void MCiOSMultiLineControl::GetIndicatorInsets(MCExecContext& ctxt, MCNativeControlIndicatorInsets& r_insets)
 {
-    float t_scale;
-    t_scale = MCIPhoneGetNativeControlScale();
-    
     UIScrollView *t_view;
 	t_view = (UIScrollView*)GetView();
     
-    UIEdgeInsets t_insets;
-    t_insets = [t_view scrollIndicatorInsets];
-    
-    r_insets . left = (int16_t)(t_insets.left * t_scale);
-    r_insets . top = (int16_t)(t_insets.top * t_scale);
-    r_insets . right = (int16_t)(t_insets.right * t_scale);
-    r_insets . bottom = (int16_t)(t_insets.bottom * t_scale);
+    if (t_view != nil)
+    {
+        UIEdgeInsets t_insets;
+        t_insets = [t_view scrollIndicatorInsets];
+        
+        // MM-2013-11-26: [[ Bug 11485 ]] The user expects the properties of the scroller in user space, so must converted to device space before returning.
+        MCGRectangle t_rect;
+        t_rect = MCNativeControlUserRectFromDeviceRect(MCGRectangleMake(t_insets . left, t_insets . top, t_insets . right - t_insets . left, t_insets . bottom - t_insets . top));
+        
+        r_insets . left = (int16_t)(t_rect . origin . x);
+        r_insets . top = (int16_t)(t_rect . origin . y);
+        r_insets . right = (int16_t)(t_rect . origin . x + t_rect . size . width);
+        r_insets . bottom = (int16_t)(t_rect . origin . y + t_rect . size . height);
+        r_insets . has_insets = true;
+    }
+    else
+        r_insets . has_insets = false;
 }
 
 void MCiOSMultiLineControl::SetShowHorizontalIndicator(MCExecContext& ctxt, bool p_value)

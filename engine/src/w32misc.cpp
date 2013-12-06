@@ -95,23 +95,14 @@ void MCStacklist::hidepalettes(Boolean hide)
 //  REFACTORED FROM CUSTOMPRINTER.CPP
 //
 
-int32_t MCCustomPrinterComputeFontSize(void *p_font)
+int32_t MCCustomPrinterComputeFontSize(double p_size, void *p_font)
 {
-	HDC t_dc;
-	t_dc = static_cast<MCScreenDC *>(MCscreen) -> getsrchdc();
+	// MW-2013-11-07: [[ Bug 10508 ]] We now do layout at 256px scale, so must
+	//   scale down the font sizes.
+	LOGFONTA t_logfont;
+	GetObjectA((HFONT)p_font, sizeof(t_logfont), &t_logfont);
 
-	HGDIOBJ t_old_font;
-	t_old_font = SelectObject(t_dc, p_font);
-
-	TEXTMETRICA t_metrics;
-	GetTextMetricsA(t_dc, &t_metrics);
-
-	int32_t t_font_size;
-	t_font_size = t_metrics . tmHeight - t_metrics . tmInternalLeading;
-
-	SelectObject(t_dc, t_old_font);
-
-	return t_font_size;
+	return (-t_logfont . lfHeight) * p_size / 256.0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

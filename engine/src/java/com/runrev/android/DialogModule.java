@@ -242,8 +242,9 @@ class DialogModule
                 Log.i(TAG, "clicked:" + p_which);
 				if (m_list_close_on_selection)
                 {
-                    m_engine.onListPickerDone(p_which, true);
+                    // AL-2013-11-08 [[ Bug 11278 ]] Dismiss dialog before calling onListPickerDone to prevent premature continuation of script execution
                     m_list_dialog.dismiss();
+                    m_engine.onListPickerDone(p_which, true);
                 }
                 else
                     m_list_selection = p_which;

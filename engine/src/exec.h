@@ -3449,6 +3449,7 @@ extern MCExecMethodInfo *kMCEngineGetSecureModeMethodInfo;
 extern MCExecMethodInfo *kMCEngineSetSecureModeMethodInfo;
 extern MCExecMethodInfo *kMCEngineGetSecurityCategoriesMethodInfo;
 extern MCExecMethodInfo *kMCEngineGetSecurityPermissionsMethodInfo;
+extern MCExecMethodInfo *kMCEngineSetSecurityPermissionsMethodInfo;
 extern MCExecMethodInfo *kMCEngineGetRecursionLimitMethodInfo;
 extern MCExecMethodInfo *kMCEngineSetRecursionLimitMethodInfo;
 extern MCExecMethodInfo *kMCEngineGetAddressMethodInfo;
@@ -3582,6 +3583,7 @@ void MCEngineGetSecureMode(MCExecContext& ctxt, bool& r_value);
 void MCEngineSetSecureMode(MCExecContext& ctxt, bool p_value);
 void MCEngineGetSecurityCategories(MCExecContext& ctxt, intset_t& r_value);
 void MCEngineGetSecurityPermissions(MCExecContext& ctxt, intset_t& r_value);
+void MCEngineSetSecurityPermissions(MCExecContext& ctxt, intset_t p_value);
 
 void MCEngineGetRecursionLimit(MCExecContext& ctxt, uinteger_t& r_value);
 void MCEngineSetRecursionLimit(MCExecContext& ctxt, uinteger_t p_value);

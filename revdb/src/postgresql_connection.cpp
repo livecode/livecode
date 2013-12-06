@@ -314,13 +314,17 @@ Bool DBConnection_POSTGRESQL::IsError()
 }
 
 /*getErrorMessage- return error string*/
-char *DBConnection_POSTGRESQL::getErrorMessage()
+char *DBConnection_POSTGRESQL::getErrorMessage(Bool p_last)
 {
-	// OK-2007-09-10 : Bug 5360, modified to return m_error instead
-	if (m_error != NULL)
-		return m_error;
-	else
-		return (char *)DBNullValue;
+    // AL-2013-11-08 [[ Bug 11149 ]] Make sure most recent error string is available to revDatabaseConnectResult
+    if (p_last || IsError())
+    {
+        // OK-2007-09-10 : Bug 5360, modified to return m_error instead
+        if (m_error != NULL)
+            return m_error;
+    }
+    
+    return (char *)DBNullValue;
 }
 
 

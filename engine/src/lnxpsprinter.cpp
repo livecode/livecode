@@ -748,6 +748,11 @@ MCPrinterResult MCPSPrinter::DoBeginPrint(MCStringRef p_document, MCPrinterDevic
     /* UNCHECKED */ MCStringCreateWithSysString(t_output_file, &t_path);
 
     stream = MCS_open(*t_path, kMCSOpenFileModeWrite, False, False, 0);
+    
+    // MW-2013-11-11: [[ Bug 11197 ]] Make sure we check we managed to open the file.
+	if (stream == nil)
+		return PRINTER_RESULT_FAILURE;
+    
     MCAutoPointer<char> t_MCN_version;
     /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(MCN_version_string), &t_MCN_version);
 

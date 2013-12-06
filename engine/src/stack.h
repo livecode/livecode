@@ -75,11 +75,11 @@ enum MCStackFullscreenMode
 {
 	kMCStackFullscreenModeNone,
 
-	kMCStackFullscreenResize,	// ""			stack is resized to fill screen without scaling
-	kMCStackFullscreenExactFit,	// "exact fit"	stack is stretched to fill screen
-	kMCStackFullscreenShowAll,	// "show all"	whole stack is shown, scaled to take up as much screen space as possible. Both full width and height are visible
-	kMCStackFullscreenNoBorder, // "no border"	scaled to cover whole screen, top+bottom or left+right of stack may be clipped
-	kMCStackFullscreenNoScale,	// "no scale"	stack is centered on screen with no scaling
+	kMCStackFullscreenResize,		// ""			stack is resized to fill screen without scaling
+	kMCStackFullscreenExactFit,		// "exactFit"	stack is stretched to fill screen
+	kMCStackFullscreenLetterbox,	// "letterbox"	whole stack is shown, scaled to take up as much screen space as possible. Both full width and height are visible
+	kMCStackFullscreenNoBorder,		// "noBorder"	scaled to cover whole screen, top+bottom or left+right of stack may be clipped
+	kMCStackFullscreenNoScale,		// "noScale"	stack is centered on screen with no scaling
 };
 
 extern const char *MCStackFullscreenModeToString(MCStackFullscreenMode p_mode);
@@ -766,6 +766,10 @@ public:
 	void uncacheobjectbyid(MCObject *object);
 	MCObject *findobjectbyid(uint32_t object);
 	void freeobjectidcache(void);
+
+	// MW-2013-11-07: [[ Bug 11393 ]] This returns true if the stack should use device-independent
+	//   metrics.
+	bool getuseideallayout(void);
 
 	inline bool getextendedstate(uint4 flag) const
 	{

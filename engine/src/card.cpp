@@ -1038,7 +1038,7 @@ Exec_stat MCCard::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep,
     case P_CONTROL_IDS:
     case P_CHILD_CONTROL_NAMES:
     case P_CHILD_CONTROL_IDS:
-		// MERG-2015-05-01: [[ ChildControlProps ]] Add ability to list both
+		// MERG-2013-05-01: [[ ChildControlProps ]] Add ability to list both
 		//   immediate and all descendent controls of a card.
 			
         ep.clear();
@@ -1057,6 +1057,14 @@ Exec_stat MCCard::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep,
             
             bool t_controls;
 			t_controls = which == P_CHILD_CONTROL_NAMES ||  which == P_CHILD_CONTROL_IDS || which == P_CONTROL_NAMES || which == P_CONTROL_IDS;
+            
+            // MERG-2013-11-03: [[ ChildControlProps ]] No need to assign value to t_prop in each iteration
+            Properties t_prop;
+            if (which == P_BACKGROUND_NAMES || which == P_SHARED_GROUP_NAMES || which == P_GROUP_NAMES || which == P_CONTROL_NAMES || which == P_CHILD_CONTROL_NAMES)
+                t_prop = P_SHORT_NAME;
+            else
+                t_prop = P_SHORT_ID;
+            
 			do
 			{
 				MCObject *t_object;
@@ -1075,19 +1083,16 @@ Exec_stat MCCard::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep,
                 else if (!t_controls)
 					continue;
                 
-				Properties t_prop;
-				if (which == P_BACKGROUND_NAMES || which == P_SHARED_GROUP_NAMES || which == P_GROUP_NAMES || which == P_CONTROL_NAMES || which == P_CHILD_CONTROL_NAMES)
-					t_prop = P_SHORT_NAME;
-				else
-					t_prop = P_SHORT_ID;
-
 				t_object->getprop(0, t_prop, t_other_ep, False);
 				ep.concatmcstring(t_other_ep.getsvalue(), EC_RETURN, i++ == 0);
                 
                 if (t_object->gettype() == CT_GROUP && (which == P_CONTROL_IDS || which == P_CONTROL_NAMES))
                 {
                     t_object->getprop(parid, which, t_other_ep, false);
-                    ep.concatmcstring(t_other_ep.getsvalue(), EC_RETURN, i++ == 0);
+                    
+                    // MERG-2013-11-03: [[ ChildControlProps ]] Handle empty groups
+                    if (!t_other_ep.isempty())
+                        ep.concatmcstring(t_other_ep.getsvalue(), EC_RETURN, i++ == 0);
                 }
 			}
 			while (optr != objptrs);

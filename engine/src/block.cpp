@@ -713,6 +713,9 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, findex_t& r_break_index, bool& r_break
 			}
 		}
 
+		// MW-2013-11-07: [[ Bug 11393 ]] Previous per-platform implementations all fold into the optimized
+		//   case now (previously iOS / Windows printer were measuring break by break, which is what we do
+		//   generally now).
 		if (t_this_char == '\t')
 		{
 			twidth += gettabwidth(x + twidth, initial_i);
@@ -720,32 +723,11 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, findex_t& r_break_index, bool& r_break
 			t_last_break_i = i;
 		}
 		else
-		{
-#ifdef _IOS_MOBILE
-			// MW-2012-02-01: [[ Bug 9982 ]] iOS uses sub-pixel positioning, so make sure we measure
-			//   complete runs.
-			MCRange t_range;
-			t_range = MCRangeMake(t_last_break_i, i - t_last_break_i);
-			twidth = t_last_break_width + MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range);
-#else
-#ifdef TARGET_PLATFORM_WINDOWS
-			// MW-2009-04-23: [[ Bug ]] For printing, we measure complete runs of text otherwise we get
-			//   positioning issues.
-			if (MCFontHasPrinterMetrics(m_font))
-            {
-                MCRange t_range;
-                t_range = MCRangeMake(t_last_break_i, i - t_last_break_i);
-                twidth = t_last_break_width + MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range);
-            }
-			else
-#endif
-			{
-                MCRange t_range;
-                t_range = MCRangeMake(initial_i, i - initial_i);
-                twidth += MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range);
-            }
-#endif
-		}
+        {
+            MCRange t_range;
+            t_range = MCRangeMake(initial_i, i - initial_i);
+            twidth += MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range);
+        }
 
 		if (t_can_fit && twidth > maxwidth)
 			break;
@@ -1640,9 +1622,11 @@ findex_t MCBlock::GetCursorIndex(int2 x, int2 cx, Boolean chunk, Boolean last)
 	findex_t tlen = 0;
 	uint2 twidth = 0;
 	uint2 toldwidth = 0;
-#ifdef _IOS_MOBILE
+
 	// MW-2012-02-01: [[ Bug 9982 ]] iOS uses sub-pixel positioning, so make sure we measure
 	//   complete runs.
+	// MW-2013-11-07: [[ Bug 11393 ]] We only want to measure complete runs now regardless of
+	//   platform.
 	int32_t t_last_width;
 	t_last_width = 0;
 	while(i < m_index + m_size)
@@ -1666,39 +1650,11 @@ findex_t MCBlock::GetCursorIndex(int2 x, int2 cx, Boolean chunk, Boolean last)
 		
 		i = t_new_i;
 	}
-#else
-	while (i < m_index + m_size)
-	{
-		if (parent->GetCodepointAtIndex(i) == '\t')
-			cwidth = gettabwidth(x, i);
-		else
-		{
-#if defined(_MACOSX)
-			tlen = parent->IncrementIndex(i) - m_index;
-			twidth = MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), MCRangeMake(m_index, tlen));
-			cwidth = twidth - toldwidth;
-			toldwidth = twidth;
-#else
-			cwidth = MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(),
-                                                MCRangeMake(i, parent->IncrementIndex(i) - i));
-#endif
-		}
-		if (chunk)
-		{
-			if (cx < cwidth)
-				break;
-		}
-		else
-		{
-			if (cx < cwidth >> 1)
-				break;
-		}
-		cx -= cwidth;
-		x += cwidth;
-		i = parent->IncrementIndex(i);
-	}
-#endif
-	return i;
+
+	if (i == m_index + m_size && last && (m_index + m_size != parent->gettextlength()))
+        return i - parent->DecrementIndex(i);
+	else
+		return i;
 }
 
 uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l)

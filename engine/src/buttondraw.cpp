@@ -518,10 +518,14 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 #if defined(X11) || defined(_WINDOWS)
 				dc->setforeground(dc->getblack());
 				dc->setfillstyle(FillSolid, nil, 0, 0);
-				dc->setlineatts(0, LineOnOffDash, CapButt, JoinBevel);
+				dc->setlineatts(1, LineOnOffDash, CapButt, JoinBevel);				
 				dc->setdashes(0, dotlist, 2);
 				dc->setfunction(GXinvert);
-				dc->drawrect(trect);
+
+				// MM-2013-11-05: [[ Bug 11355 ]] - Handle the insetting of the dashed border manually - was causing drawing artefacts previously.
+				trect . width -= 1; trect . height -= 1;
+				dc->drawrect(trect, false);
+
 				dc->setfunction(GXcopy);
 				dc->setlineatts(0, LineSolid, CapButt, JoinBevel);
 #else

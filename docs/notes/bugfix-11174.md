@@ -1,1 +1,1 @@
-# Conical, spiral, XY and sqrtXY gradients render incorrectly.
+# Conical spiral XY and sqrtXY gradients render incorrectly.

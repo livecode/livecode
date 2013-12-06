@@ -2392,7 +2392,8 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 		{
 			MCPoint t_points[6];
 
-			gen_3d_top_points(t_points, lx, ty, rx, by, 1);
+			// MM-2013-11-26: [[ Bug 11523 ]] Tweak the positioning of top points.
+			gen_3d_top_points(t_points, lx + 1, ty + 1, rx, by, 1);
 			if (style == ETCH_RAISED_SMALL || style == ETCH_SUNKEN_BUTTON)
 				if (reversed)
 					dc->setforeground(dc->getblack());
@@ -2405,7 +2406,7 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 				setforeground(dc, DI_TOP, reversed);
 			dc->fillpolygon(t_points, 6);
 
-			gen_3d_top_points(t_points, lx + 1, ty + 1, rx - 1, by - 1, 1);
+			gen_3d_top_points(t_points, lx + 2, ty + 2, rx - 1, by - 1, 1);
 			if (style == ETCH_RAISED_SMALL || style == ETCH_SUNKEN_BUTTON)
 				setforeground(dc, DI_TOP, reversed);
 			else
@@ -3944,7 +3945,8 @@ static void compute_objectshape_mask(MCObject *p_object, const MCObjectShape& p_
 	// IM-2013-10-17: [[ FullscreenMode ]] Simplified mask info
 	/* OVERHAUL - REVISIT: we should render at the device scale */
 	r_mask . scale = 1.0;
-	r_mask . image = p_shape . mask . bits;
+	// IM-2013-11-22: [[ Bug 11494 ]] Set the object mask to our new snapshot image
+	r_mask . image = r_mask . temp_bitmap;
 	r_mask . origin = MCPointMake(t_rect.x, t_rect.y);
 
 	return;

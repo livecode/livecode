@@ -49,14 +49,14 @@ public:
 	void drawtext(int2 x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image);
     void drawtext_substring(int2 x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean image);
 	void drawrect(const MCRectangle& rect, bool inside);
-	void fillrect(const MCRectangle& rect);
+	void fillrect(const MCRectangle& rect, bool inside);
 	void fillrects(MCRectangle *rects, uint2 nrects);
 	void fillpolygon(MCPoint *points, uint2 npoints);
 	void drawroundrect(const MCRectangle& rect, uint2 radius, bool inside);
-	void fillroundrect(const MCRectangle& rect, uint2 radius);
+	void fillroundrect(const MCRectangle& rect, uint2 radius, bool inside);
 	void drawarc(const MCRectangle& rect, uint2 start, uint2 angle, bool inside);
 	void drawsegment(const MCRectangle& rect, uint2 start, uint2 angle, bool inside);
-	void fillarc(const MCRectangle& rect, uint2 start, uint2 angle);
+	void fillarc(const MCRectangle& rect, uint2 start, uint2 angle, bool inside);
 	
 	void drawpath(MCPath *path);
 	void fillpath(MCPath *path, bool p_evenodd = true);

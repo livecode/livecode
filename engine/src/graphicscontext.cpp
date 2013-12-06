@@ -85,6 +85,8 @@ void MCGraphicsContext::init(MCGContextRef p_context)
 	m_dash_phase = 0.0;
 	m_dash_lengths = nil;
 	m_dash_count = 0;
+	
+	MCGContextSetFlatness(p_context, 1 / 16.0f);
 }
 
 MCGraphicsContext::MCGraphicsContext(MCGContextRef p_context)
@@ -646,16 +648,182 @@ void MCGraphicsContext::setgradient(MCGradientFill *p_gradient)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// MM-2013-11-06: [[ Bug 11389 ]] Add legacy drawing functions for rounded rects and arcs.
+
+static void add_legacy_move_to(MCGContextRef p_gcontext, int4 x, int4 y)
+{
+	MCGContextMoveTo(p_gcontext, MCGPointMake(x / 2.0f, y / 2.0f));
+}
+
+static void add_legacy_line_to(MCGContextRef p_gcontext, int4 x, int4 y)
+{
+	MCGContextLineTo(p_gcontext, MCGPointMake(x / 2.0f, y / 2.0f));
+}
+
+static void add_legacy_cubic_to(MCGContextRef p_gcontext, int4 ax, int4 ay, int4 bx, int4 by, int4 x, int4 y)
+{
+	MCGContextCubicTo(p_gcontext, MCGPointMake(ax / 2.0f, ay / 2.0f), MCGPointMake(bx / 2.0f, by / 2.0f), MCGPointMake(x / 2.0f, y / 2.0f));
+}
+
+static void add_legacy_arc_to(MCGContextRef p_gcontext, int4 cx, int4 cy, int4 hr, int4 vr, int4 s, int4 e, bool first)
+{
+	int4 hk, vk;
+	
+	if (e - s == 90)
+	{
+		hk = hr * 36195 / 65536;
+		vk = vr * 36195 / 65536;
+	}
+	else
+	{
+		double h = tan(M_PI * (e - s) / 720.0);
+		hk = int4(4.0 * h * hr / 3.0);
+		vk = int4(4.0 * h * vr / 3.0);
+	}
+	
+	double ca, sa;
+	double cb, sb;
+	
+	ca = cos(M_PI * s / 180);
+	sa = sin(M_PI * s / 180);
+	
+	cb = cos(M_PI * e / 180);
+	sb = sin(M_PI * e / 180);
+	
+	if (first)
+		add_legacy_move_to(p_gcontext, int4(cx + hr * ca), int4(cy - vr * sa));
+	
+	add_legacy_cubic_to(p_gcontext, int4(cx + hr * ca - hk * sa), int4(cy - vr * sa - vk * ca), int4(cx + hr * cb + hk * sb), int4(cy - vr * sb + vk * cb), int4(cx + hr * cb), int4(cy - vr * sb));	
+}
+
+static void add_legacy_rounded_rectangle(MCGContextRef p_gcontext, const MCGRectangle& p_rect, MCGFloat p_radius)
+{
+	int4 x, y;
+	x = (int4)(p_rect . origin . x * 2);
+	y = (int4)(p_rect . origin . y * 2);
+	
+	int4 aw, ah;
+	aw = (int4)(p_rect . size . width * 2);
+	ah = (int4)(p_rect . size . height * 2);
+	
+	int4 hr, vr;
+	hr = MCU_min(aw / 2, (int4)(p_radius * 2));
+	vr = MCU_min(ah / 2, (int4)(p_radius * 2));
+	
+	int4 h, v;
+	h = aw - hr * 2;
+	v = ah - vr * 2;
+	
+	int4 l, t, r, b;
+	l = x + hr;
+	t = y + vr;
+	r = x + hr + h;
+	b = y + vr + v;	
+	
+	int4 hk, vk;
+	hk = signed(hr * 36195 / 65536);
+	vk = signed(vr * 36195 / 65536);
+	
+	add_legacy_move_to(p_gcontext, r, t - vr);
+	add_legacy_cubic_to(p_gcontext, r + hk, t - vr, r + hr, t - vk, r + hr, t);
+	add_legacy_line_to(p_gcontext, r + hr, b);
+	add_legacy_cubic_to(p_gcontext, r + hr, b + vk, r + hk, b + vr, r, b + vr);
+	add_legacy_line_to(p_gcontext, l, b + vr);
+	add_legacy_cubic_to(p_gcontext, l - hk, b + vr, l - hr, b + vk, l - hr, b);
+	add_legacy_line_to(p_gcontext, l - hr, t);
+	add_legacy_cubic_to(p_gcontext, l - hr, t - vk, l - hk, t - vr, l, t - vr);
+	
+	MCGContextCloseSubpath(p_gcontext);
+}
+
+static void add_legacy_arc(MCGContextRef p_gcontext, const MCGRectangle& p_rect, uint2 p_start, uint2 p_angle, bool adjust)
+{
+	if (p_rect . size . width == 0.0f || p_rect . size . height == 0.0f)
+		return;
+	
+	if (p_angle == 0)
+		return;
+	
+	if (p_angle > 360)
+		p_angle = 360;
+	
+	bool closed = (p_angle == 360);
+	
+	p_start = p_start % 360;
+	
+	int4 cx, cy, hr, vr;
+	cx = (int4)(p_rect . origin . x * 2 + p_rect . size . width);
+	cy = (int4)(p_rect . origin . y * 2 + p_rect . size . height);
+	hr = (int4)p_rect . size . width;
+	vr = (int4)p_rect . size . height;
+	
+	if (adjust)
+		hr -= 1, vr -= 1;
+	
+	bool t_first = true;
+	int4 t_delta;
+	
+	while(p_angle > 0)
+	{
+		t_delta = MCU_min(90 - p_start % 90, p_angle);
+		p_angle -= t_delta;
+		add_legacy_arc_to(p_gcontext, cx, cy, hr, vr, p_start, p_start + t_delta, t_first);
+		p_start += t_delta;
+		t_first = false;
+	}
+	if (closed)
+		MCGContextCloseSubpath(p_gcontext);
+}
+
+static void add_legacy_segment(MCGContextRef p_gcontext, const MCGRectangle& p_rect, uint2 p_start, uint2 p_angle, bool adjust)
+{
+	if (p_rect . size . width == 0.0f || p_rect . size . height == 0.0f)
+		return;
+	
+	if (p_angle == 0)
+		return;
+		
+	if (p_angle > 360)
+		p_angle = 360;
+	
+	p_start = p_start % 360;
+	
+	int4 cx, cy, hr, vr;
+	cx = (int4)(p_rect . origin . x * 2 + p_rect . size . width);
+	cy = (int4)(p_rect . origin . y * 2 + p_rect . size . height);
+	hr = (int4)p_rect . size . width;
+	vr = (int4)p_rect . size . height;	
+	
+	if (adjust)
+		hr -= 1, vr -= 1;
+	
+	bool t_first = true;
+	int4 t_delta;
+	
+	while(p_angle > 0)
+	{
+		t_delta = MCU_min(90 - p_start % 90, p_angle);
+		p_angle -= t_delta;
+		add_legacy_arc_to(p_gcontext, cx, cy, hr, vr, p_start, p_start + t_delta, t_first);
+		p_start += t_delta;
+		t_first = false;
+	}
+	add_legacy_line_to(p_gcontext, cx, cy);
+	MCGContextCloseSubpath(p_gcontext);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void MCGraphicsContext::drawline(int2 x1, int2 y1, int2 x2, int2 y2)
 {
+	// MM-2013-11-14: [[ Bug 11457 ]] Adjust lines and polygons to make sure antialiased lines don't draw across pixels.
 	MCGPoint t_start;
-	t_start . x = (MCGFloat) x1;
-	t_start . y = (MCGFloat) y1;
+	t_start . x = (MCGFloat) x1 + 0.5f;
+	t_start . y = (MCGFloat) y1 + 0.5f;
 	
 	MCGPoint t_finish;
-	t_finish . x = (MCGFloat) x2;
-	t_finish . y = (MCGFloat) y2;
+	t_finish . x = (MCGFloat) x2 + 0.5f;
+	t_finish . y = (MCGFloat) y2 + 0.5f;
 	
 	MCGContextBeginPath(m_gcontext);
 	MCGContextAddLine(m_gcontext, t_start, t_finish);	
@@ -664,27 +832,48 @@ void MCGraphicsContext::drawline(int2 x1, int2 y1, int2 x2, int2 y2)
 
 void MCGraphicsContext::drawlines(MCPoint *points, uint2 npoints, bool p_closed)
 {
-	MCGPoint *t_points;
-	/* UNCHECKED */ MCMemoryNewArray(npoints, t_points);
-	for (uint32_t i = 0; i < npoints; i++)
-		t_points[i] = MCPointToMCGPoint(points[i]);
-
-	MCGContextBeginPath(m_gcontext);
-	if (p_closed)
-		MCGContextAddPolygon(m_gcontext, t_points, npoints);
+	// MM-2013-11-21: [[ Bug 11395 ]] When only 1 point is passed, assume we are drawing a dot.
+	if (npoints == 1)
+	{
+		// MM-2013-11-25: [[ Bug 11395 ]] For consitency with previous versions, make sure the dot has square edges.
+		MCGContextSave(m_gcontext);		
+		MCGContextSetStrokeJoinStyle(m_gcontext, kMCGJoinStyleMiter);
+		MCGContextSetStrokeCapStyle(m_gcontext, kMCGCapStyleButt);
+		MCGContextSetStrokeMiterLimit(m_gcontext, 4.0f);
+		
+		MCGContextBeginPath(m_gcontext);
+		MCGContextAddDot(m_gcontext, MCPointToMCGPoint(points[0], 0.5f));
+		MCGContextStroke(m_gcontext);
+		
+		MCGContextRestore(m_gcontext);
+	}
 	else
-		MCGContextAddPolyline(m_gcontext, t_points, npoints);	
-	MCGContextStroke(m_gcontext);
-	
-	MCMemoryDeleteArray(t_points);
+	{	
+		// MM-2013-11-14: [[ Bug 11457 ]] Adjust lines and polygons to make sure antialiased lines don't draw across pixels.	
+		MCGPoint *t_points;
+		/* UNCHECKED */ MCMemoryNewArray(npoints, t_points);
+		for (uint32_t i = 0; i < npoints; i++)
+			t_points[i] = MCPointToMCGPoint(points[i], 0.5f);
+		
+		MCGContextBeginPath(m_gcontext);
+		if (p_closed)
+			MCGContextAddPolygon(m_gcontext, t_points, npoints);
+		else
+			MCGContextAddPolyline(m_gcontext, t_points, npoints);	
+		MCGContextStroke(m_gcontext);
+		
+		MCMemoryDeleteArray(t_points);
+	}
 }
 
 void MCGraphicsContext::fillpolygon(MCPoint *points, uint2 npoints)
 {
+	// MM-2013-11-26: [[ Bug 11501 ]] Adjust lines and polygons to make sure antialiased lines don't draw across pixels.
+	//  Here the adjust is 0.25 - not the same path as draw lines but appears to solve the issue where the fill interfers with the stroke.
 	MCGPoint *t_points;
 	/* UNCHECKED */ MCMemoryNewArray(npoints, t_points);
 	for (uint32_t i = 0; i < npoints; i++)
-		t_points[i] = MCPointToMCGPoint(points[i]);
+		t_points[i] = MCPointToMCGPoint(points[i], 0.25f);
 	
 	MCGContextBeginPath(m_gcontext);
 	MCGContextAddPolygon(m_gcontext, t_points, npoints);	
@@ -693,63 +882,63 @@ void MCGraphicsContext::fillpolygon(MCPoint *points, uint2 npoints)
 	MCMemoryDeleteArray(t_points);	
 }
 
-void MCGraphicsContext::drawarc(const MCRectangle& rect, uint2 start, uint2 angle, bool inside)
+static MCGRectangle MCGRectangleInset(const MCGRectangle &p_rect, MCGFloat p_inset)
 {
+	MCGRectangle t_rect;
+	t_rect = MCGRectangleMake(p_rect.origin.x + p_inset, p_rect.origin.y + p_inset, p_rect.size.width - (p_inset * 2.0), p_rect.size.height - (p_inset * 2.0));
+	
+	if (t_rect.size.width < 0.0)
+		t_rect.size.width = 0.0;
+	if (t_rect.size.height < 0.0)
+		t_rect.size.height = 0.0;
+	
+	return t_rect;
+}
+
+void MCGraphicsContext::drawarc(const MCRectangle& rect, uint2 start, uint2 angle, bool inside)
+{	
+	MCGRectangle t_rect = MCRectangleToMCGRectangle(rect);	
 	MCGFloat t_adjustment;
 	if (m_line_width == 0.0f || inside)
-		t_adjustment = (m_line_width == 0.0f ? 1.0f : m_line_width);
+		t_adjustment = (m_line_width == 0.0f ? 0.5f : m_line_width / 2.0f);
 	else
-		t_adjustment = 0.0f;
+		t_adjustment = 0.0f;	
+	t_rect = MCGRectangleInset(t_rect, t_adjustment);
 	
-	MCGPoint t_center;
-	t_center . x = (MCGFloat) (rect . x + 0.5f * rect . width);
-	t_center . y = (MCGFloat) (rect . y + 0.5f * rect . height);
-	
-	MCGSize t_radii;
-	t_radii . width = (MCGFloat) rect . width - t_adjustment;
-	t_radii . height = (MCGFloat) rect . height - t_adjustment;
-
 	MCGContextBeginPath(m_gcontext);
-	MCGContextAddArc(m_gcontext, t_center, t_radii, 0.0f, (MCGFloat) (360 - (start + angle)), (MCGFloat) (360 - start));
+	add_legacy_arc(m_gcontext, t_rect, start, angle, false);
 	MCGContextStroke(m_gcontext);
 }
 
-void MCGraphicsContext::fillarc(const MCRectangle& rect, uint2 start, uint2 angle)
-{
-	MCGPoint t_center;
-	t_center . x = (MCGFloat) (rect . x + 0.5f * rect . width);
-	t_center . y = (MCGFloat) (rect . y + 0.5f * rect . height);
-	
-	MCGSize t_radii;
-	t_radii . width = (MCGFloat) rect . width;
-	t_radii . height = (MCGFloat) rect . height;
+void MCGraphicsContext::fillarc(const MCRectangle& rect, uint2 start, uint2 angle, bool inside)
+{	
+	// MM-2013-11-14: [[ Bug 11426 ]] Make sure we take account line width when filling arcs with a border.
+	MCGRectangle t_rect = MCRectangleToMCGRectangle(rect);	
+	MCGFloat t_adjustment;
+	if (inside)
+		t_adjustment = (m_line_width == 0.0f ? 0.5f : m_line_width / 2.0f);
+	else
+		t_adjustment = 0.0f;	
+	t_rect = MCGRectangleInset(t_rect, t_adjustment);	
 	
 	MCGContextBeginPath(m_gcontext);
-	if (angle != 0 && angle % 360 == 0)
-		MCGContextAddArc(m_gcontext, t_center, t_radii, 0.0f, (MCGFloat) (360 - (start + angle)), (MCGFloat) (360 - start));
-	else
-		MCGContextAddSegment(m_gcontext, t_center, t_radii, 0.0f, (MCGFloat) (360 - (start + angle)), (MCGFloat) (360 - start));
+	// MM-2013-11-19: [[ Bug 11469 ]] Fill as a segment rather than an arc to make sure path is closed properly.
+	add_legacy_segment(m_gcontext, MCRectangleToMCGRectangle(rect), start, angle, false);
 	MCGContextFill(m_gcontext);
 }
 
 void MCGraphicsContext::drawsegment(const MCRectangle& rect, uint2 start, uint2 angle, bool inside)
-{
+{	
+	MCGRectangle t_rect = MCRectangleToMCGRectangle(rect);	
 	MCGFloat t_adjustment;
 	if (m_line_width == 0.0f || inside)
-		t_adjustment = (m_line_width == 0.0f ? 1.0f : m_line_width);
+		t_adjustment = (m_line_width == 0.0f ? 0.5f : m_line_width / 2.0f);
 	else
-		t_adjustment = 0.0f;
-	
-	MCGPoint t_center;
-	t_center . x = (MCGFloat) (rect . x + 0.5f * rect . width);
-	t_center . y = (MCGFloat) (rect . y + 0.5f * rect . height);
-	
-	MCGSize t_radii;
-	t_radii . width = (MCGFloat) rect . width - t_adjustment;
-	t_radii . height = (MCGFloat) rect . height - t_adjustment;
+		t_adjustment = 0.0f;	
+	t_rect = MCGRectangleInset(t_rect, t_adjustment);	
 	
 	MCGContextBeginPath(m_gcontext);
-	MCGContextAddSegment(m_gcontext, t_center, t_radii, 0.0f, (MCGFloat) (360 - (start + angle)), (MCGFloat) (360 - start));
+	add_legacy_segment(m_gcontext, t_rect, start, angle, false);
 	MCGContextStroke(m_gcontext);
 }
 
@@ -769,19 +958,6 @@ void MCGraphicsContext::drawsegments(MCSegment *segments, uint2 nsegs)
 	MCGContextStroke(m_gcontext);
 }
 
-static MCGRectangle MCGRectangleInset(const MCGRectangle &p_rect, MCGFloat p_inset)
-{
-	MCGRectangle t_rect;
-	t_rect = MCGRectangleMake(p_rect.origin.x + p_inset, p_rect.origin.y + p_inset, p_rect.size.width - (p_inset * 2.0), p_rect.size.height - (p_inset * 2.0));
-
-	if (t_rect.size.width < 0.0)
-		t_rect.size.width = 0.0;
-	if (t_rect.size.height < 0.0)
-		t_rect.size.height = 0.0;
-
-	return t_rect;
-}
-
 void MCGraphicsContext::drawrect(const MCRectangle& rect, bool inside)
 {
 	MCGRectangle t_rect = MCRectangleToMCGRectangle(rect);
@@ -799,10 +975,19 @@ void MCGraphicsContext::drawrect(const MCRectangle& rect, bool inside)
 	MCGContextStroke(m_gcontext);
 }
 
-void MCGraphicsContext::fillrect(const MCRectangle& rect)
+void MCGraphicsContext::fillrect(const MCRectangle& rect, bool inside)
 {
+	// MM-2013-11-14: [[ Bug 11426 ]] Make sure we take account line width when filling rects with a border.
+	MCGRectangle t_rect = MCRectangleToMCGRectangle(rect);	
+	MCGFloat t_adjustment;
+	if (inside)
+		t_adjustment = (m_line_width == 0.0f ? 0.5f : m_line_width / 2.0f);
+	else
+		t_adjustment = 0.0f;	
+	t_rect = MCGRectangleInset(t_rect, t_adjustment);
+	
 	MCGContextBeginPath(m_gcontext);
-	MCGContextAddRectangle(m_gcontext, MCRectangleToMCGRectangle(rect));
+	MCGContextAddRectangle(m_gcontext, t_rect);
 	MCGContextFill(m_gcontext);
 }
 
@@ -818,10 +1003,6 @@ void MCGraphicsContext::drawroundrect(const MCRectangle& rect, uint2 radius, boo
 {
 	MCGRectangle t_rect = MCRectangleToMCGRectangle(rect);
 	
-	MCGSize t_corner_radii;
-	t_corner_radii . width = radius * 0.5;
-	t_corner_radii . height = radius * 0.5;
-	
 	MCGFloat t_adjustment;
 	if (m_line_width == 0.0f || inside)
 		t_adjustment = (m_line_width == 0.0f ? 0.5f : m_line_width / 2.0f);
@@ -831,18 +1012,23 @@ void MCGraphicsContext::drawroundrect(const MCRectangle& rect, uint2 radius, boo
 	t_rect = MCGRectangleInset(t_rect, t_adjustment);
 	
 	MCGContextBeginPath(m_gcontext);	
-	MCGContextAddRoundedRectangle(m_gcontext, t_rect, t_corner_radii);	
+	add_legacy_rounded_rectangle(m_gcontext, t_rect, radius * 0.5);			
 	MCGContextStroke(m_gcontext);
 }
 
-void MCGraphicsContext::fillroundrect(const MCRectangle& rect, uint2 radius)
-{
-	MCGSize t_corner_radii;
-	t_corner_radii . width = radius * 0.5;
-	t_corner_radii . height = radius * 0.5;
+void MCGraphicsContext::fillroundrect(const MCRectangle& rect, uint2 radius, bool inside)
+{		
+	// MM-2013-11-14: [[ Bug 11426 ]] Make sure we take account line width when filling rects with a border.
+	MCGRectangle t_rect = MCRectangleToMCGRectangle(rect);	
+	MCGFloat t_adjustment;
+	if (inside)
+		t_adjustment = (m_line_width == 0.0f ? 0.5f : m_line_width / 2.0f);
+	else
+		t_adjustment = 0.0f;	
+	t_rect = MCGRectangleInset(t_rect, t_adjustment);
 	
 	MCGContextBeginPath(m_gcontext);
-	MCGContextAddRoundedRectangle(m_gcontext, MCRectangleToMCGRectangle(rect), t_corner_radii);	
+	add_legacy_rounded_rectangle(m_gcontext, t_rect, radius * 0.5);
 	MCGContextFill(m_gcontext);
 }
 
@@ -967,7 +1153,7 @@ void MCGraphicsContext::drawtext_substring(int2 x, int2 y, MCStringRef p_string,
 		
 		MCGContextSave(m_gcontext);
 		setforeground(m_background);
-		fillrect(MCU_make_rect(x, y - MCFontGetAscent(p_font), t_width, MCFontGetAscent(p_font) + MCFontGetDescent(p_font)));
+		fillrect(MCU_make_rect(x, y - MCFontGetAscent(p_font), t_width, MCFontGetAscent(p_font) + MCFontGetDescent(p_font)), false);
 		MCGContextRestore(m_gcontext);
 	}
     

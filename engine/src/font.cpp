@@ -179,6 +179,7 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
     {
         int t_break_quality;
         uindex_t t_break_point, t_index;
+
         t_break_quality = 0;
         t_break_point = 0;
         t_index = 0;

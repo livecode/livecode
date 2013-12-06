@@ -451,7 +451,7 @@ void MCMetaContext::drawrect(const MCRectangle& rect, bool inside)
 	rectangle_mark(true, false, rect, inside);
 }
 	
-void MCMetaContext::fillrect(const MCRectangle& rect)
+void MCMetaContext::fillrect(const MCRectangle& rect, bool inside)
 {
 	rectangle_mark(false, true, rect, false); 
 }
@@ -472,7 +472,7 @@ void MCMetaContext::drawroundrect(const MCRectangle& rect, uint2 radius, bool in
 	round_rectangle_mark(true, false, rect, radius, inside);
 }
 
-void MCMetaContext::fillroundrect(const MCRectangle& rect, uint2 radius)
+void MCMetaContext::fillroundrect(const MCRectangle& rect, uint2 radius, bool inside)
 {
 	round_rectangle_mark(false, true, rect, radius, false);
 }
@@ -487,7 +487,7 @@ void MCMetaContext::drawsegment(const MCRectangle& rect, uint2 start, uint2 angl
 	arc_mark(true, false, rect, start, angle, true, inside);
 }
 
-void MCMetaContext::fillarc(const MCRectangle& rect, uint2 start, uint2 angle)
+void MCMetaContext::fillarc(const MCRectangle& rect, uint2 start, uint2 angle, bool inside)
 {
 	arc_mark(false, true, rect, start, angle, true, false);
 }

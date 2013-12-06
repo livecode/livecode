@@ -1420,7 +1420,8 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 						MCRectangle t_rect;
 						Rect t_mac_rect;
 						
-						t_rect = t_player -> getactiverect();
+						// IM-2013-11-12: [[ Bug 11320 ]] Transform player rect to device coords
+						t_rect = MCRectangleGetTransformedBounds(t_player->getactiverect(), t_context->stack->getdevicetransform());
 						
 						if (t_clip_rgn == NULL)
 						{

@@ -1537,6 +1537,10 @@ bool MCQuartzMetaContext::candomark(MCMark *p_mark)
 	if (p_mark -> group . function != GXcopy && p_mark -> group . function != GXblendSrcOver)
 		return false;
 	
+	// MW-2013-11-11: [[ Bug ]] If the group contains a theme record, then rasterize.
+	if (p_mark -> group . head -> type == MARK_TYPE_THEME)
+		return false;
+	
 	// Otherwise we have a group which is potentially transparent which
 	// Quartz does support.
 	return true;
@@ -1718,7 +1722,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			f = MCFontGetFontStruct(p_mark -> text . font);
 			
             bool t_is_unicode;
-			t_is_unicode = f -> unicode || p_mark -> text . unicode_override;
+			t_is_unicode = p_mark -> text . unicode_override;
             
             MCAutoStringRef t_text;
             if (p_mark -> text . unicode_override)
@@ -1760,7 +1764,9 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			Boolean t_font_is_underline;
 			Boolean t_font_is_condensed;
 			Boolean t_font_is_extended;
-			ATSLineLayoutOptions t_layout_options;
+			
+			// MW-2013-11-15: [[ Bug 11444 ]] It seems setting these makes things *less* like QuickDraw!
+			/* ATSLineLayoutOptions t_layout_options; */
 			
 			ATSUAttributeTag t_tags[] =
 			{
@@ -1781,17 +1787,17 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			ATSUAttributeTag t_layout_tags[] =
 			{
 				kATSUCGContextTag,
-				kATSULineLayoutOptionsTag,
+				/*kATSULineLayoutOptionsTag,*/
 			};
 			ByteCount t_layout_sizes[] =
 			{
 				sizeof(CGContextRef),
-				sizeof(ATSLineLayoutOptions)
+				/*sizeof(ATSLineLayoutOptions)*/
 			};
 			ATSUAttributeValuePtr t_layout_attrs[] =
 			{
 				&m_context,
-				&t_layout_options
+				/*&t_layout_options*/
 			};
 			
 			UniCharCount t_run = MCStringGetLength(*t_text);
@@ -1805,9 +1811,8 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			t_err = ATSUSetAttributes(t_style, sizeof(t_tags) / sizeof(ATSUAttributeTag), t_tags, t_sizes, t_attrs);
 			t_err = ATSUCreateTextLayout(&t_layout);
 			t_err = ATSUSetTransientFontMatching(t_layout, true);
-			
 
-            t_layout_options = kATSLineUseDeviceMetrics | kATSLineFractDisable;
+			/*t_layout_options = kATSLineFractDisable;*/
 			
 			t_err = ATSUSetLayoutControls(t_layout, sizeof(t_layout_tags) / sizeof(ATSUAttributeTag), t_layout_tags, t_layout_sizes, t_layout_attrs);
 			
@@ -1888,13 +1893,15 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 		
 		case MARK_TYPE_IMAGE:
 		{
-			MCImageBitmap *t_src_bitmap = nil;
-			
 			int32_t t_dst_x, t_dst_y;
 			uint32_t t_dst_width, t_dst_height;
 
 			t_dst_x = p_mark->image.dx - p_mark->image.sx;
 			t_dst_y = p_mark->image.dy - p_mark->image.sy;
+			
+			// MW-2013-11-11: [[ Bug ]] Make sure we get the correct size of the image.
+			t_dst_width = p_mark -> image . descriptor . bitmap -> width;
+			t_dst_height = p_mark -> image . descriptor . bitmap -> height;
 
 			// MW-2013-10-01: [[ ImprovedPrint ]] First attempt to create a CGImage with the input data (PNG etc.)
 			CGImageRef t_image = nil;
@@ -1903,7 +1910,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			
 			// MW-2013-10-01: [[ ImprovedPrint ]] If we didn't manage to use the input data, use the bitmap instead.
 			if (t_image == nil)
-				/* UNCHECKED */ MCImageBitmapToCGImage(t_src_bitmap, false, false, t_image);
+				/* UNCHECKED */ MCImageBitmapToCGImage(p_mark -> image .descriptor . bitmap, false, false, t_image);
 
 			CGContextClipToRect(m_context, CGRectMake(p_mark -> image . dx, p_mark -> image . dy, p_mark -> image . sw, p_mark -> image . sh));
 			

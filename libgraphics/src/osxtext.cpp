@@ -97,8 +97,9 @@ static bool osx_prepare_text(const void *p_text, uindex_t p_length, const MCGFon
 	if (t_err == noErr)
 		t_err = ATSUSetAttributes(s_style, sizeof(t_tags) / sizeof(ATSUAttributeTag), t_tags, t_sizes, t_attrs);
     
-	ATSLineLayoutOptions t_layout_options;
-    t_layout_options = kATSLineUseDeviceMetrics | kATSLineFractDisable;
+	// MW-2013-11-15: [[ Bug 11444 ]] It seems setting these makes things *less* like QuickDraw!
+	/*ATSLineLayoutOptions t_layout_options;
+    t_layout_options = kATSLineFractDisable;
 	ATSUAttributeTag t_layout_tags[] =
 	{
 		kATSULineLayoutOptionsTag,
@@ -110,15 +111,15 @@ static bool osx_prepare_text(const void *p_text, uindex_t p_length, const MCGFon
 	ATSUAttributeValuePtr t_layout_attrs[] =
 	{
 		&t_layout_options,
-	};
+	};*/
 	if (t_err == noErr)
 		t_err = ATSUSetTextPointerLocation(s_layout, (const UniChar *) p_text, 0, p_length / 2, p_length / 2);
 	if (t_err == noErr)
 		t_err = ATSUSetRunStyle(s_layout, s_style, 0, p_length / 2);
 	if (t_err == noErr)
 		t_err = ATSUSetTransientFontMatching(s_layout, true);
-	if (t_err == noErr)
-		t_err = ATSUSetLayoutControls(s_layout, sizeof(t_layout_tags) / sizeof(ATSUAttributeTag), t_layout_tags, t_layout_sizes, t_layout_attrs);
+	/*if (t_err == noErr)
+		t_err = ATSUSetLayoutControls(s_layout, sizeof(t_layout_tags) / sizeof(ATSUAttributeTag), t_layout_tags, t_layout_sizes, t_layout_attrs);*/
 	
 	return t_err == noErr;
 }
@@ -202,6 +203,7 @@ static bool osx_draw_text_substring_to_cgcontext_at_location(uindex_t p_length, 
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef NOT_USED
 static bool osx_draw_text_to_cgcontext_at_location(const void *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font, CGContextRef p_cgcontext, MCGIntRectangle &r_bounds)
 {	
 	OSStatus t_err;
@@ -307,6 +309,7 @@ static bool osx_draw_text_to_cgcontext_at_location(const void *p_text, uindex_t 
 	
 	return t_err == noErr;	
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -383,8 +386,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		CGContextTranslateCTM(t_cgcontext, -t_clipped_bounds . x, t_clipped_bounds . height + t_clipped_bounds . y);
 		CGContextConcatCTM(t_cgcontext, CGAffineTransformMake(t_transform . a, t_transform . b, t_transform . c, t_transform . d, t_transform . tx, t_transform . ty));
 		CGContextSetFillColorWithColor(t_cgcontext, s_colour);
-		//t_success = osx_draw_text_to_cgcontext_at_location(p_text, p_length, MCGPointMake(0.0, 0.0), p_font, t_cgcontext, t_clipped_bounds);
-        t_success = osx_draw_text_substring_to_cgcontext_at_location(p_length, t_cgcontext, MCGPointMake(0.0, 0.0));
+		t_success = osx_draw_text_substring_to_cgcontext_at_location(p_length, t_cgcontext, MCGPointMake(0.0, 0.0));
 	}
 	
 	if (t_success)
@@ -417,9 +419,6 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 
 MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
 {	
-	//if (!MCGContextIsValid(self))
-	//	return 0.0;
-	
 	bool t_success;
 	t_success = true;
 	
@@ -430,8 +429,6 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
     t_width = 0;
     if (t_success)
         t_success = osx_measure_text_substring_width(p_length, t_width);
-    
-	//self -> is_valid = t_success;
 	
     return (MCGFloat) t_width;
 }

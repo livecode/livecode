@@ -40,6 +40,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblandroidcontrol.h"
 #include "mblandroidutil.h"
 
+#include "resolution.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
@@ -295,19 +297,25 @@ void MCAndroidScrollerControl::GetDragging(MCExecContext& ctxt, bool& r_value)
 
 bool MCScrollViewGetHScroll(jobject p_view, int32_t &r_hscroll)
 {
-	if (p_view == nil)
+    if (p_view == nil)
 		return false;
-	
-	MCAndroidObjectRemoteCall(p_view, "getHScroll", "i", &r_hscroll);
+
+    // MM-2013-11-26: [[ Bug 11485 ]] The native control stores the scroll in device pixels, but the user expects in user pixels, so convert.
+    int32_t t_hscroll;
+    MCAndroidObjectRemoteCall(p_view, "getHScroll", "i", &t_hscroll);
+    r_hscroll = MCNativeControlUserXLocFromDeviceXLoc(t_hscroll);
 	return true;
 }
 
 bool MCScrollViewGetVScroll(jobject p_view, int32_t &r_vscroll)
 {
-	if (p_view == nil)
+    if (p_view == nil)
 		return false;
-	
-	MCAndroidObjectRemoteCall(p_view, "getVScroll", "i", &r_vscroll);
+
+    // MM-2013-11-26: [[ Bug 11485 ]] The native control stores the scroll in device pixels, but the user expects in user pixels, so convert.
+    int32_t t_vscroll;
+    MCAndroidObjectRemoteCall(p_view, "getVScroll", "i", &t_vscroll);
+    r_vscroll = MCNativeControlUserYLocFromDeviceYLoc(t_vscroll);
 	return true;
 }
 
@@ -316,7 +324,10 @@ bool MCScrollViewSetHScroll(jobject p_view, int32_t p_hscroll)
     if (p_view == nil)
         return false;
     
-    MCAndroidObjectRemoteCall(p_view, "setHScroll", "vi", nil, p_hscroll);
+    // MM-2013-11-26: [[ Bug 11485 ]] The native control expects the scroll in device pixels, but the user expects in user pixels, so convert.
+    int32_t t_hscroll;
+    t_hscroll = MCNativeControlUserXLocToDeviceXLoc(p_hscroll);
+    MCAndroidObjectRemoteCall(p_view, "setHScroll", "vi", nil, t_hscroll);
     return true;
 }
 
@@ -325,7 +336,10 @@ bool MCScrollViewSetVScroll(jobject p_view, int32_t p_vscroll)
     if (p_view == nil)
         return false;
     
-    MCAndroidObjectRemoteCall(p_view, "setVScroll", "vi", nil, p_vscroll);
+    // MM-2013-11-26: [[ Bug 11485 ]] The native control expects the scroll in device pixels, but the user expects in user pixels, so convert.
+    int32_t t_vscroll;
+    t_vscroll = MCNativeControlUserYLocToDeviceYLoc(p_vscroll);
+    MCAndroidObjectRemoteCall(p_view, "setVScroll", "vi", nil, t_vscroll);
     return true;
 }
 
@@ -419,8 +433,13 @@ Exec_stat scroller_set_property(jobject p_view, MCRectangle32 &x_content_rect, M
 		case kMCNativeControlPropertyContentRectangle:
 			if (!MCNativeControl::ParseRectangle32(ep, x_content_rect))
 				return ES_ERROR;
+            
+            // MM-2013-11-26: [[ Bug 11485 ]] COnvert the content rect from user to device space before setting.
+            MCGRectangle t_rect;
+            t_rect = MCNativeControlUserRectToDeviceRect(MCGRectangleMake(x_content_rect . x, x_content_rect . y, x_content_rect . width, x_content_rect . height));
+            
 			if (p_view != nil)
-                MCAndroidObjectRemoteCall(p_view, "setContentSize", "vii", nil, x_content_rect.width, x_content_rect.height);
+                MCAndroidObjectRemoteCall(p_view, "setContentSize", "vii", nil, (int32_t) t_rect . size . width, (int32_t) t_rect . size . height);
 			return ES_NORMAL;
             
         case kMCNativeControlPropertyHScroll:

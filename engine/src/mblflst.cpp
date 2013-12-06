@@ -47,7 +47,6 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
     
 #if defined(TARGET_SUBPLATFORM_IPHONE)
 	font = new MCFontStruct;
-	font -> charset = 0;
 	font -> size = size;
 	
 	uindex_t t_comma;
@@ -56,33 +55,11 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 	Boolean t_success;
 	t_success = MCStringFirstIndexOfChar(*reqname_str, ',', 0, kMCCompareExact, t_comma);
 
-	uint1 t_charset;
-	t_charset = LCH_ENGLISH;
-	if (t_success)
-    {
-        MCAutoStringRef t_after_comma;
-        /* UNCHECKED */ MCStringCopySubstring(*reqname_str, MCRangeMake(t_comma + 1, MCStringGetLength(*reqname_str) - (t_comma + 1)), &t_after_comma);
-		t_charset = MCU_languagetocharset(*t_after_comma);
-    }
-	
-	if (t_charset > LCH_ROMAN)
-	{
-		 MCAutoStringRef t_before_comma;
-        /* UNCHECKED */ MCStringCopySubstring(*reqname_str, MCRangeMake(0, t_comma - 1), &t_before_comma);
-		font -> unicode = True;
+    MCAutoStringRef t_before_comma;
+    /* UNCHECKED */ MCStringCopySubstring(*reqname_str, MCRangeMake(0, t_comma - 1), &t_before_comma);
 
-		font -> fid = (MCSysFontHandle)iphone_font_create(*t_before_comma, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
-	}
-	else
-	{
-		font -> unicode = False;
+    font -> fid = (MCSysFontHandle)iphone_font_create(*t_before_comma, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
 
-		font -> fid = (MCSysFontHandle)iphone_font_create(*reqname_str, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
-	}
-	
-	if (font -> unicode)
-		font -> charset = LCH_UNICODE;
-	
 	font -> ascent = size - 1;
 	font -> descent = size * 2 / 14 + 1;
 	
@@ -93,7 +70,6 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
     
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
 	font = new MCFontStruct;
-	font -> charset = 0;
 	font -> size = size;
 	
 	uindex_t t_comma;
@@ -102,28 +78,9 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 	Boolean t_success;
 	t_success = MCStringFirstIndexOfChar(*reqname_str, ',', 0, kMCCompareExact, t_comma);
 
-	uint1 t_charset;
-	t_charset = LCH_ENGLISH;
-	if (t_success)
-    {
-        MCAutoStringRef t_after_comma;
-        /* UNCHECKED */ MCStringCopySubstring(*reqname_str, MCRangeMake(t_comma + 1, MCStringGetLength(*reqname_str) - (t_comma + 1)), &t_after_comma);
-		t_charset = MCU_languagetocharset(*t_after_comma);
-    }
-	
-	if (t_charset > LCH_ROMAN)
-	{
-		MCAutoStringRef t_before_comma;
-        /* UNCHECKED */ MCStringCopySubstring(*reqname_str, MCRangeMake(0, t_comma - 1), &t_before_comma);
-		font -> unicode = True;
-		font -> fid = (MCSysFontHandle)android_font_create(*t_before_comma, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
-	}
-	
-	else
-	{
-		font -> unicode = False;
-		font -> fid = (MCSysFontHandle)android_font_create(*reqname_str, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
-	}
+    MCAutoStringRef t_before_comma;
+    /* UNCHECKED */ MCStringCopySubstring(*reqname_str, MCRangeMake(0, t_comma - 1), &t_before_comma);
+    font -> fid = (MCSysFontHandle)android_font_create(*t_before_comma, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
 	
 	font -> ascent = size - 1;
 	font -> descent = size * 2 / 14 + 1;

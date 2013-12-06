@@ -29,7 +29,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
-#define NATIVE_ALPHA_BEFORE ((kMCGPixelFormatNative & kMCGPixelAlphaPositionFirst) == 1)
+#define NATIVE_ALPHA_BEFORE ((kMCGPixelFormatNative & kMCGPixelAlphaPositionFirst) == kMCGPixelAlphaPositionFirst)
+
 #define NATIVE_ORDER_BGR ((kMCGPixelFormatNative & kMCGPixelOrderRGB) == 0)
 
 #if NATIVE_ALPHA_BEFORE

@@ -252,7 +252,7 @@ bool MCIdeScriptAction::eval_target(MCExecContext &ctxt, MCChunk *p_target, MCFi
 	}
 
 	return t_status;
-#endif
+#endif /* MCIdeScriptAction::eval_target */
 
     MCObject *t_object;
     uint4 t_part;

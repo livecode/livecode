@@ -683,19 +683,27 @@ bool MCStringsMerge(MCExecContext& ctxt, MCStringRef p_format, MCStringRef& r_st
 		case '[':
 			if (MCStringGetCharAtIndex(*t_merged, t_start + 1) == '[')
 			{
+                // AL-2013-10-15 [[ Bug 11274 ]] Merge function should ignore square bracket if part of inner expression
+                uint4 t_skip;
+                t_skip = 0;
 				t_expression_end = t_start + 2;
 				while (t_expression_end + 1 < t_length)
 				{
-					if (MCStringGetCharAtIndex(*t_merged, t_expression_end) == ']' &&
-						MCStringGetCharAtIndex(*t_merged, t_expression_end + 1) == ']')
-					{
-						t_expression_end += 2;
-						t_match = true;
-						t_is_expression = true;
-						break;
-					}
-					else
-						t_expression_end++;
+                    if (MCStringGetCharAtIndex(*t_merged, t_expression_end) == '[')
+                        t_skip++;
+					else if (MCStringGetCharAtIndex(*t_merged, t_expression_end) == ']')
+                    {
+                        if (t_skip > 0)
+                            t_skip--;
+						else if (MCStringGetCharAtIndex(*t_merged, t_expression_end + 1) == ']')
+                        {
+                            t_expression_end += 2;
+                            t_match = true;
+                            t_is_expression = true;
+                            break;
+                        }
+                    }
+                    t_expression_end++;
 				}
 			}
 			break;
