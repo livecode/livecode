@@ -1193,7 +1193,7 @@ static void InterfaceGenerateVariant(InterfaceRef self, CoderRef p_coder, Handle
 		if (t_parameter -> mode == kParameterTypeInOut || t_parameter -> mode == kParameterTypeOut)
 		{
 			CoderBeginIf(p_coder, "success");
-			CoderWriteStatement(p_coder, "success = verify__out_parameter(name__%s, %s);", t_parameter -> name, t_parameter -> arg_name);
+			CoderWriteStatement(p_coder, "success = verify__out_parameter(name__%s, %s);", t_parameter -> var_name, t_parameter -> arg_name);
 			CoderEndIf(p_coder);
 		}
 		
