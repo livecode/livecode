@@ -3267,7 +3267,7 @@ void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
 //  SAVING AND LOADING
 //
 
-IO_stat MCCard::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length)
+IO_stat MCCard::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_length)
 {
 	return defaultextendedload(p_stream, p_version, p_length);
 }
@@ -3277,7 +3277,7 @@ IO_stat MCCard::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return defaultextendedsave(p_stream, p_part);
 }
 
-IO_stat MCCard::load(IO_handle stream, const char *version)
+IO_stat MCCard::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 
@@ -3287,7 +3287,7 @@ IO_stat MCCard::load(IO_handle stream, const char *version)
 //---- 2.7+:
 //  . F_OPAQUE is now valid - default true
 //  . ink is now valid - default GXcopy
-	if (strncmp(version, "2.7", 3) < 0)
+	if (version < 2700)
 	{
 		flags |= F_OPAQUE;
 		ink = GXcopy;
@@ -3295,7 +3295,7 @@ IO_stat MCCard::load(IO_handle stream, const char *version)
 //---- 2.7+
 
 	rect.y = 0; // in case saved on mac with editMenus false
-	if ((stat = loadpropsets(stream)) != IO_NORMAL)
+	if ((stat = loadpropsets(stream, version)) != IO_NORMAL)
 		return stat;
 	while (True)
 	{
@@ -3322,7 +3322,7 @@ IO_stat MCCard::load(IO_handle stream, const char *version)
 	return IO_NORMAL;
 }
 
-IO_stat MCCard::loadobjects(IO_handle stream, const char *version)
+IO_stat MCCard::loadobjects(IO_handle stream, uint32_t version)
 {
 	IO_stat stat = IO_NORMAL;
 	

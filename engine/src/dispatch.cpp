@@ -76,6 +76,9 @@ static char header[HEADERSIZE] = "#!/bin/sh\n# MetaCard 2.4 stack\n# The followi
 #define NEWHEADERSIZE 8
 static const char *newheader = "REVO2700";
 static const char *newheader5500 = "REVO5500";
+static const char *newheader7000 = "REVO7000";
+
+#define MAX_STACKFILE_VERSION 7000
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -476,22 +479,20 @@ Boolean MCDispatch::openenv(MCStringRef sname, MCStringRef env,
 	return t_found;
 }
 
-IO_stat readheader(IO_handle& stream, char *version)
+IO_stat readheader(IO_handle& stream, uint32_t& r_version)
 {
 	char tnewheader[NEWHEADERSIZE];
 	if (IO_read(tnewheader, NEWHEADERSIZE, stream) == IO_NORMAL)
 	{
 		// MW-2012-03-04: [[ StackFile5500 ]] Check for either the 2.7 or 5.5 header.
 		if (strncmp(tnewheader, newheader, NEWHEADERSIZE) == 0 ||
-			strncmp(tnewheader, newheader5500, NEWHEADERSIZE) == 0)
+			strncmp(tnewheader, newheader5500, NEWHEADERSIZE) == 0 ||
+			strncmp(tnewheader, newheader7000, NEWHEADERSIZE) == 0)
 		{
-			sprintf(version, "%c.%c.%c.%c", tnewheader[4], tnewheader[5], tnewheader[6], tnewheader[7]);
-			if (tnewheader[7] == '0')
-			{
-				version[5] = '\0';
-				if (tnewheader[6] == '0')
-					version[3] = '\0';
-			}
+			r_version = (tnewheader[4] - '0') * 1000;
+			r_version += (tnewheader[5] - '0') * 100;
+			r_version += (tnewheader[6] - '0') * 10;
+			r_version += (tnewheader[7] - '0') * 1;
 		}
 		else
 		{
@@ -508,8 +509,8 @@ IO_stat readheader(IO_handle& stream, char *version)
 					return IO_ERROR;
 				}
 
-				strncpy(version, &theader[offset + VERSION_OFFSET], 3);
-				version[3] = '\0';
+				r_version = (theader[offset + VERSION_OFFSET] - '0') * 1000;
+				r_version += (theader[offset + VERSION_OFFSET + 2] - '0') * 100;
 			}
 			else
 				return IO_ERROR;
@@ -523,13 +524,15 @@ IO_stat readheader(IO_handle& stream, char *version)
 // for embedded stacks/deployed stacks/revlet stacks.
 IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 {
-	char version[8];
+	uint32_t version;
 	uint1 charset, type;
 	char *newsf;
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] newsf is no longer used.
 	if (readheader(stream, version) != IO_NORMAL
 	        || IO_read_uint1(&charset, stream) != IO_NORMAL
 	        || IO_read_uint1(&type, stream) != IO_NORMAL
-	        || IO_read_string(newsf, stream) != IO_NORMAL)
+	        || IO_read_cstring_legacy(newsf, stream, 2) != IO_NORMAL)
 		return IO_ERROR;
 
 	// MW-2008-10-20: [[ ParentScripts ]] Set the boolean flag that tells us whether
@@ -604,13 +607,11 @@ IO_stat MCDispatch::readfile(MCStringRef p_openpath, MCStringRef p_name, IO_hand
 IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_handle &stream, MCStack *&sptr)
 {
 	Boolean loadhome = False;
-	char version[8];
+	uint32_t version;
 
 	if (readheader(stream, version) == IO_NORMAL)
 	{
-        MCAutoPointer<char> t_MCN_version;
-        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(MCN_version_string), &t_MCN_version);
-		if (strcmp(version, *t_MCN_version) > 0)
+		if (version > MAX_STACKFILE_VERSION)
 		{
 			MCresult->sets("stack was produced by a newer version");
 			return IO_ERROR;
@@ -619,12 +620,13 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 		// MW-2008-10-20: [[ ParentScripts ]] Set the boolean flag that tells us whether
 		//   parentscript resolution is required to false.
 		s_loaded_parent_script_reference = false;
-
+		
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] newsf is no longer used.
 		uint1 charset, type;
 		char *newsf;
 		if (IO_read_uint1(&charset, stream) != IO_NORMAL
 		        || IO_read_uint1(&type, stream) != IO_NORMAL
-		        || IO_read_string(newsf, stream) != IO_NORMAL)
+		        || IO_read_cstring_legacy(newsf, stream, 2) != IO_NORMAL)
 		{
 			MCresult->sets("stack is corrupted, check for ~ backup file");
 			return IO_ERROR;
@@ -642,10 +644,12 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 
 		if (MCModeCanLoadHome() && type == OT_HOME)
 		{
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] These strings are never written out, so
+			//   legacy.
 			char *lstring = NULL;
 			char *cstring = NULL;
-			IO_read_string(lstring, stream);
-			IO_read_string(cstring, stream);
+			IO_read_cstring_legacy(lstring, stream, 2);
+			IO_read_cstring_legacy(cstring, stream, 2);
 			delete lstring;
 			delete cstring;
 		}
@@ -789,7 +793,7 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 				MCAutoStringRef t_curpath;
 				
 				/* UNCHECKED */ MCS_getcurdir(&t_curpath);
-				/* UNCHECKED */ MCStringFormat(&t_open_path, "@s/%@", *t_curpath, p_name); 
+				/* UNCHECKED */ MCStringFormat(&t_open_path, "%@/%@", *t_curpath, p_name); 
 			}
 			else
 				t_open_path = p_name;
@@ -928,7 +932,9 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	// MW-2012-03-04: [[ StackFile5500 ]] Work out what header to emit, and the size.
 	const char *t_header;
 	uint32_t t_header_size;
-	if (MCstackfileversion >= 5500)
+	if (MCstackfileversion >= 7000)
+		t_header = newheader7000, t_header_size = 8;
+	else if (MCstackfileversion >= 5500)
 		t_header = newheader5500, t_header_size = 8;
 	else if (MCstackfileversion >= 2700)
 		t_header = newheader, t_header_size = 8;
@@ -942,9 +948,11 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 		cleanup(stream, *t_linkname, *t_backup);
 		return IO_ERROR;
 	}
-
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] Writing out for backwards-compatibility,
+	//   so legacy.
 	if (IO_write_uint1(OT_NOTHOME, stream) != IO_NORMAL
-	        || IO_write_string(NULL, stream) != IO_NORMAL)
+	        || IO_write_cstring_legacy(NULL, stream, 2) != IO_NORMAL)
 	{ // was stackfiles
 		MCresult->sets(errstring);
 		cleanup(stream, *t_linkname, *t_backup);

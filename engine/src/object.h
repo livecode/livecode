@@ -285,8 +285,8 @@ public:
 	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
 	virtual IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
 
-	virtual IO_stat load(IO_handle stream, const char *version);
-	virtual IO_stat extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length);
+	virtual IO_stat load(IO_handle stream, uint32_t version);
+	virtual IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
 	
 	virtual void open();
 	virtual void close();
@@ -1061,11 +1061,13 @@ public:
 				
 protected:
 	IO_stat defaultextendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
-	IO_stat defaultextendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining);
-
-	IO_stat loadpropsets(IO_handle stream);
+	IO_stat defaultextendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_remaining);
+	
+	// MW-2013-12-05: [[ UnicodeFileFormat ]] These are the new propset pickle routines. If
+	//   sfv < 7000 then the legacy ones are used; otherwise new ones are.
+	IO_stat loadpropsets(IO_handle stream, uint32_t version);
 	IO_stat savepropsets(IO_handle stream);
-
+	
 	// MW-2012-02-16: [[ LogFonts ]] Load the font attrs with the given index.
 	//   This method is protected as MCStack needs to call it to resolve its
 	//   font attrs after the font table loads.
@@ -1105,12 +1107,17 @@ private:
 	// Change the available propsets to those listed in ep.
 	/* CAN FAIL */ bool changepropsets(MCExecPoint& ep);
 #endif
-	bool hasarraypropsets(void);
-	uint32_t measurearraypropsets(void);
-	IO_stat loadunnamedpropset(IO_handle stream);
-	IO_stat saveunnamedpropset(IO_handle stream);
-	IO_stat loadarraypropsets(MCObjectInputStream& stream);
-	IO_stat savearraypropsets(MCObjectOutputStream& stream);
+	
+	// MW-2013-12-05: [[ UnicodeFileFormat ]] These are all the legacy propset pickle routines.
+	//   If sfv >= 7000, then they are written out more directly.
+	bool hasarraypropsets_legacy(void);
+	uint32_t measurearraypropsets_legacy(void);
+	IO_stat loadpropsets_legacy(IO_handle stream);
+	IO_stat savepropsets_legacy(IO_handle stream);
+	IO_stat loadunnamedpropset_legacy(IO_handle stream);
+	IO_stat saveunnamedpropset_legacy(IO_handle stream);
+	IO_stat loadarraypropsets_legacy(MCObjectInputStream& stream);
+	IO_stat savearraypropsets_legacy(MCObjectOutputStream& stream);
 
 	// MW-2012-02-16: [[ LogFonts ]] Copy the font attrs from the other object.
 	void copyfontattrs(const MCObject& other);

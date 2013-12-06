@@ -194,56 +194,75 @@ IO_stat MCObjectInputStream::ReadS16(int16_t& r_value)
 
 //
 
-IO_stat MCObjectInputStream::ReadStringRef(MCStringRef &r_value)
+IO_stat MCObjectInputStream::ReadStringRefNew(MCStringRef &r_value, bool p_supports_unicode)
 {
-    MCStringRef t_string;
-	if (!MCStringCreateMutable(0, t_string))
-        return IO_ERROR;
-	
-	bool t_finished;
-	t_finished = false;
-
-	while(!t_finished)
+	if (!p_supports_unicode)
 	{
-		if (m_limit == m_frontier)
-		{
-			IO_stat t_stat;
-			t_stat = Fill();
-			if (t_stat != IO_NORMAL) 
-				return t_stat;
-		}
+		MCStringRef t_string;
+		if (!MCStringCreateMutable(0, t_string))
+			return IO_ERROR;
+		
+		bool t_finished;
+		t_finished = false;
 
-		uint32_t t_offset;
-		for(t_offset = 0; t_offset < m_limit - m_frontier; ++t_offset)
-			if (((char *)m_buffer)[m_frontier + t_offset] == '\0')
+		while(!t_finished)
+		{
+			if (m_limit == m_frontier)
 			{
-				t_finished = true;
-				break;
+				IO_stat t_stat;
+				t_stat = Fill();
+				if (t_stat != IO_NORMAL) 
+					return t_stat;
 			}
 
-		if(!MCStringAppendNativeChars(t_string, (const byte_t*)m_buffer + m_frontier, t_offset))
-            return IO_ERROR;
+			uint32_t t_offset;
+			for(t_offset = 0; t_offset < m_limit - m_frontier; ++t_offset)
+				if (((char *)m_buffer)[m_frontier + t_offset] == '\0')
+				{
+					t_finished = true;
+					break;
+				}
 
-		m_frontier += t_offset;
+			if(!MCStringAppendNativeChars(t_string, (const byte_t*)m_buffer + m_frontier, t_offset))
+				return IO_ERROR;
+
+			m_frontier += t_offset;
+		}
+		
+		m_frontier += 1;
+
+		if (!MCStringCopyAndRelease(t_string, r_value))
+		{
+			MCValueRelease(t_string);
+			return IO_ERROR;
+		}
+
+		return IO_NORMAL;
 	}
-    
-    m_frontier += 1;
-
-	if (!MCStringCopyAndRelease(t_string, r_value))
-    {
-        MCValueRelease(t_string);
-        return IO_ERROR;
-    }
-
+	
+	uint32_t t_length;
+	if (ReadU32(t_length) != IO_NORMAL)
+		return IO_ERROR;
+	
+	MCAutoPointer<char> t_bytes;
+	if (!MCMemoryNewArray(t_length, &t_bytes))
+		return IO_ERROR;
+	
+	if (!Read(*t_bytes, t_length))
+		return IO_ERROR;
+	
+	if (!MCStringCreateWithBytes((const uint8_t *)*t_bytes, t_length, kMCStringEncodingUTF8, false, r_value))
+		return IO_ERROR;
+	
 	return IO_NORMAL;
 }
 
-IO_stat MCObjectInputStream::ReadNameRef(MCNameRef& r_value)
+IO_stat MCObjectInputStream::ReadNameRefNew(MCNameRef& r_value, bool p_supports_unicode)
 {
 	MCAutoStringRef t_name_string;
 
 	IO_stat t_stat;
-	t_stat = ReadStringRef(&t_name_string);
+	t_stat = ReadStringRefNew(&t_name_string, p_supports_unicode);
 	if (t_stat == IO_NORMAL)
     {
 		if (MCNameCreate(*t_name_string, r_value))
@@ -261,7 +280,7 @@ IO_stat MCObjectInputStream::ReadTranslatedStringRef(MCStringRef &r_value)
     // for loading as a CString anymore)
     MCStringRef t_read;
     IO_stat t_stat;
-    t_stat = ReadStringRef(t_read);
+    t_stat = ReadStringRefNew(t_read, false);
     
     // Abort if the string could not be read
     if (t_stat != IO_NORMAL)
@@ -445,25 +464,41 @@ IO_stat MCObjectOutputStream::WriteU64(uint64_t p_value)
 	return Write(&p_value, 8);
 }
 
-IO_stat MCObjectOutputStream::WriteStringRef(MCStringRef p_value)
+IO_stat MCObjectOutputStream::WriteStringRefNew(MCStringRef p_value, bool p_supports_unicode)
 {
-	if (p_value == NULL || MCStringIsEmpty(p_value))
-		return WriteU8(0);
+	if (!p_supports_unicode)
+	{
+		if (p_value == NULL || MCStringIsEmpty(p_value))
+			return WriteU8(0);
 
-	// StringRefs may contain '\0' internally but we can't write internal
-    // nulls without creating a corrupt file.
-	IO_stat t_stat;
-	uint32_t t_length;
-	t_length = MCStringGetLength(p_value);
-    MCAutoPointer<char> t_value;
-    /* UNCHECKED */ MCStringConvertToCString(p_value, &t_value);
-	t_stat = Write(*t_value, t_length + 1);
-	return t_stat;
+		// StringRefs may contain '\0' internally but we can't write internal
+		// nulls without creating a corrupt file.
+		IO_stat t_stat;
+		uint32_t t_length;
+		t_length = MCStringGetLength(p_value);
+		MCAutoPointer<char> t_value;
+		/* UNCHECKED */ MCStringConvertToCString(p_value, &t_value);
+		t_stat = Write(*t_value, t_length + 1);
+		return t_stat;
+	}
+	
+	MCAutoPointer<char> t_utf8_string;
+	uindex_t t_utf8_string_length;
+	if (!MCStringConvertToUTF8(p_value, &t_utf8_string, t_utf8_string_length))
+		return IO_ERROR;
+	
+	if (WriteU32(t_utf8_string_length) != IO_NORMAL)
+		return IO_ERROR;
+	
+	if (Write(*t_utf8_string, t_utf8_string_length) != IO_NORMAL)
+		return IO_ERROR;
+	
+	return IO_NORMAL;
 }
 
-IO_stat MCObjectOutputStream::WriteNameRef(MCNameRef p_value)
+IO_stat MCObjectOutputStream::WriteNameRefNew(MCNameRef p_value, bool p_supports_unicode)
 {
-	return WriteStringRef(MCNameGetString(p_value));
+	return WriteStringRefNew(MCNameGetString(p_value), p_supports_unicode);
 }
 
 IO_stat MCObjectOutputStream::WriteColor(const MCColor &p_value)

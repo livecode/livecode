@@ -396,7 +396,8 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 				ctxt . SetTheResultToStaticCString("error opening temp file");
 				return;
 			}
-			IO_stat stat = IO_write_stringref_utf8(*t_file, t_stream);
+			// TODO: The code around here looks quite wrong - it needs to be compared to the original.
+			IO_stat stat = IO_ERROR; //IO_write_stringref_utf8(*t_file, t_stream);
 			MCS_close(t_stream);
 			if (stat != IO_NORMAL)
 			{

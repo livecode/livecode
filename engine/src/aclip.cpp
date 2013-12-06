@@ -963,7 +963,7 @@ IO_stat MCAudioClip::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return defaultextendedsave(p_stream, p_part);
 }
 
-IO_stat MCAudioClip::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length)
+IO_stat MCAudioClip::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_length)
 {
 	return defaultextendedload(p_stream, p_version, p_length);
 }
@@ -1005,7 +1005,7 @@ IO_stat MCAudioClip::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return savepropsets(stream);
 }
 
-IO_stat MCAudioClip::load(IO_handle stream, const char *version)
+IO_stat MCAudioClip::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 
@@ -1030,5 +1030,5 @@ IO_stat MCAudioClip::load(IO_handle stream, const char *version)
 	if (flags & F_LOUDNESS)
 		if ((stat = IO_read_uint2(&loudness, stream)) != IO_NORMAL)
 			return stat;
-	return loadpropsets(stream);
+	return loadpropsets(stream, version);
 }

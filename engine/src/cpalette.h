@@ -39,8 +39,8 @@ public:
 	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Boolean count(Chunk_term type, MCObject *stop, uint2 &num);
 	// virtual functions from MCControl
-	IO_stat load(IO_handle stream, const char *version);
-	IO_stat extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length);
+	IO_stat load(IO_handle stream, uint32_t version);
+	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
 	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
 	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
 

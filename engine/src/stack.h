@@ -596,10 +596,10 @@ public:
 	void getstackfile(MCStringRef p_name, MCStringRef &r_name);
 	void setfilename(MCStringRef f);
 
-	virtual IO_stat load(IO_handle stream, const char *version, uint1 type);
-	IO_stat load_stack(IO_handle stream, const char *version);
-	IO_stat extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length);
-	virtual IO_stat load_substacks(IO_handle stream, const char *version);
+	virtual IO_stat load(IO_handle stream, uint32_t version, uint1 type);
+	IO_stat load_stack(IO_handle stream, uint32_t version);
+	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
+	virtual IO_stat load_substacks(IO_handle stream, uint32_t version);
 	
 	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
 	IO_stat save_stack(IO_handle stream, uint4 p_part, bool p_force_ext);

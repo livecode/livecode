@@ -96,6 +96,37 @@ extern IO_stat IO_write_uint2or4(uint4 dest, IO_handle stream);
 extern void IO_iso_to_mac(char *sptr, uint4 len);
 extern void IO_mac_to_iso(char *sptr, uint4 len);
 
+extern IO_stat IO_read_mccolor(MCColor& r_color, IO_handle stream);
+extern IO_stat IO_write_mccolor(const MCColor& color, IO_handle stream);
+
+// These methods read/write a legacy string (as native).
+extern IO_stat IO_read_string_legacy_full(char *&r_string, uint32_t &r_length, IO_handle p_stream, uint8_t p_size, bool p_includes_null, bool p_translate);
+extern IO_stat IO_write_string_legacy_full(const MCString &string, IO_handle stream, uint1 size, bool p_write_null);
+extern IO_stat IO_read_cstring_legacy(char*& r_string, IO_handle stream, uint1 size);
+extern IO_stat IO_write_cstring_legacy(const char* string, IO_handle stream, uint1 size);
+
+// These methods are used by 5.5 -> 7.0 props which saved their value out in UTF-8.
+extern IO_stat IO_read_stringref_legacy_utf8(MCStringRef& r_string, IO_handle stream, uint1 size = 2);
+extern IO_stat IO_write_stringref_legacy_utf8(MCStringRef p_string, IO_handle stream, uint1 size = 2);
+
+// These methods read/write string values in the pre-7.0 format way.
+extern IO_stat IO_read_nameref_legacy(MCNameRef& r_name, IO_handle stream, bool as_unicode, uint1 size = 2);
+extern IO_stat IO_read_stringref_legacy(MCStringRef& r_string, IO_handle stream, bool as_unicode, uint1 size = 2);
+extern IO_stat IO_write_nameref_legacy(MCNameRef name, IO_handle stream, bool as_unicode, uint1 size = 2);
+extern IO_stat IO_write_stringref_legacy(MCStringRef string, IO_handle stream, bool as_unicode, uint1 size = 2);
+
+// These methods read/write string values in either the pre-7.0 format way (native)
+// or the new way depending on the 'support_unicode' option.
+extern IO_stat IO_read_nameref_new(MCNameRef& r_name, IO_handle stream, bool support_unicode, uint1 size = 2);
+extern IO_stat IO_read_stringref_new(MCStringRef& r_name, IO_handle stream, bool support_unicode, uint1 size = 2);
+extern IO_stat IO_write_nameref_new(MCNameRef name, IO_handle stream, bool support_unicode, uint1 size = 2);
+extern IO_stat IO_write_stringref_new(MCStringRef name, IO_handle stream, bool support_unicode, uint1 size = 2);
+
+// These methods read/write a valueref - they are only supported in 7.0+ formats.
+extern IO_stat IO_read_valueref_new(MCValueRef& r_value, IO_handle stream);
+extern IO_stat IO_write_valueref_new(MCValueRef value, IO_handle stream);
+
+#if 0
 extern IO_stat IO_read_string(char *&r_string, uint32_t &r_length, IO_handle p_stream, uint8_t p_size, bool p_includes_null, bool p_translate);
 extern IO_stat IO_read_string(char *&string, IO_handle stream, uint1 size = 2);
 extern IO_stat IO_read_string(char *&string, uint4 &outlen, IO_handle stream, bool isunicode, uint1 size = 2);
@@ -103,9 +134,6 @@ extern IO_stat IO_read_string_no_translate(char *&string, IO_handle stream, uint
 extern IO_stat IO_write_string(const MCString &string, IO_handle stream, uint1 size = 2, bool p_write_null = true);
 extern IO_stat IO_write_string(const char *string, IO_handle stream, uint1 size = 2);
 extern IO_stat IO_write_string(const char *string, uint4 outlen, IO_handle stream, Boolean isunicode, uint1 size = 2);
-
-extern IO_stat IO_read_mccolor(MCColor& r_color, IO_handle stream);
-extern IO_stat IO_write_mccolor(const MCColor& color, IO_handle stream);
 
 extern IO_stat IO_read_nameref(MCNameRef& r_name, IO_handle stream, uint1 size = 2);
 extern IO_stat IO_write_nameref(MCNameRef name, IO_handle stream, uint1 size = 2);
@@ -121,6 +149,7 @@ extern IO_stat IO_write_stringref(MCStringRef string, IO_handle stream, bool as_
 // String IO for UTF-8 formatted strings
 extern IO_stat IO_read_stringref_utf8(MCStringRef& r_string, IO_handle stream, uint1 size = 2);
 extern IO_stat IO_write_stringref_utf8(MCStringRef p_string, IO_handle stream, uint1 size = 2);
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

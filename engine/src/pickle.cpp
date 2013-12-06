@@ -221,7 +221,7 @@ void MCObject::continuepickling(MCPickleContext *p_context, MCObject *p_object, 
 		MCLogicalFontTableBuild(p_object, p_part);
 
 		// Write out the font table to the stream.
-		MCLogicalFontTableSave(t_stream);
+		MCLogicalFontTableSave(t_stream, MCstackfileversion);
 	}
 
 	// Write the object
@@ -255,7 +255,7 @@ void MCObject::continuepickling(MCPickleContext *p_context, MCObject *p_object, 
 			MCLogicalFontTableBuild(p_object, p_part);
 
 			// Write out the font table to the stream.
-			MCLogicalFontTableSave(t_stream);
+			MCLogicalFontTableSave(t_stream, MCstackfileversion);
 		}
 
 		// Write the object
@@ -342,7 +342,7 @@ struct UnpickleVisitor: public MCObjectVisitor
 
 // MW-2012-03-04: [[ StackFile5500 ]] Read in an object from the given stream - it
 //   will be prepared to be attached to the given stack.
-static bool unpickle_object_from_stream(IO_handle p_stream, const char *p_version, MCStack *p_stack, MCObject*& r_object)
+static bool unpickle_object_from_stream(IO_handle p_stream, uint32_t p_version, MCStack *p_stack, MCObject*& r_object)
 {
 	bool t_success;
 	t_success = true;
@@ -360,7 +360,7 @@ static bool unpickle_object_from_stream(IO_handle p_stream, const char *p_versio
 	// MW-2012-02-17: [[ LogFonts ]] Load the font table for the object.
 	if (t_success)
 	{
-		if (MCLogicalFontTableLoad(p_stream) != IO_NORMAL)
+		if (MCLogicalFontTableLoad(p_stream, p_version) != IO_NORMAL)
 			t_success = false;
 	}
 
@@ -545,7 +545,7 @@ MCObject *MCObject::unpickle(MCDataRef p_data, MCStack *p_stack)
 		MCObject *t_object;
 		t_object = nil;
 		if (t_success)
-			t_success = unpickle_object_from_stream(t_stream, t_5500_only ? "5.5" : "2.7", p_stack, t_object);
+			t_success = unpickle_object_from_stream(t_stream, t_5500_only ? 5500 : 2700, p_stack, t_object);
 			
 		// MW-2012-03-04: [[ StackFile5500 ]] If the header was 2.7, then there could
 		//   be a 5.5 version following it. So attempt to unpickle a second version, and
@@ -553,7 +553,7 @@ MCObject *MCObject::unpickle(MCDataRef p_data, MCStack *p_stack)
 		if (t_success && !t_5500_only)
 		{
 			MCObject *t_other_object;
-			if (unpickle_object_from_stream(t_stream, "5.5", p_stack, t_other_object))
+			if (unpickle_object_from_stream(t_stream, 5500, p_stack, t_other_object))
 			{
 				delete t_object;
 				t_object = t_other_object;

@@ -3031,7 +3031,7 @@ IO_stat MCGroup::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return defaultextendedsave(p_stream, p_part);
 }
 
-IO_stat MCGroup::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
+IO_stat MCGroup::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_remaining)
 {
 	return defaultextendedload(p_stream, p_version, p_remaining);
 }
@@ -3050,9 +3050,23 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		return stat;
 	if ((stat = MCObject::save(stream, p_part, p_force_ext)) != IO_NORMAL)
 		return stat;
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
+	//   legacy unicode output.
 	if (flags & F_LABEL)
-		if ((stat = IO_write_stringref(label, stream, hasunicode())) != IO_NORMAL)
-			return stat;
+	{
+		if (MCstackfileversion < 7000)
+		{
+			if ((stat = IO_write_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
+				return stat;
+		}
+		else
+		{
+			if ((stat = IO_write_stringref_new(label, stream, true)) != IO_NORMAL)
+				return stat;
+		}
+	}
+	
 	if (flags & F_MARGINS)
 	{
 		if ((stat = IO_write_int2(leftmargin, stream)) != IO_NORMAL)
@@ -3115,7 +3129,7 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return IO_NORMAL;
 }
 
-IO_stat MCGroup::load(IO_handle stream, const char *version)
+IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
@@ -3129,13 +3143,23 @@ IO_stat MCGroup::load(IO_handle stream, const char *version)
 	// MW-2012-02-17: [[ IntrinsicUnicode ]] If the unicode tag is set, then we are unicode.
 	if ((m_font_flags & FF_HAS_UNICODE_TAG) != 0)
 		m_font_flags |= FF_HAS_UNICODE;
-
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
+	//   legacy unicode output.
 	if (flags & F_LABEL)
 	{
-		uint4 tlabelsize;
-		if ((stat = IO_read_stringref(label, stream, hasunicode())) != IO_NORMAL)
-			return stat;
+		if (version < 7000)
+		{
+			if ((stat = IO_read_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
+				return stat;
+		}
+		else
+		{
+			if ((stat = IO_read_stringref_new(label, stream, true)) != IO_NORMAL)
+				return stat;
+		}
 	}
+	
 	if (flags & F_MARGINS)
 	{
 		if ((stat = IO_read_int2(&leftmargin, stream)) != IO_NORMAL)
@@ -3163,7 +3187,7 @@ IO_stat MCGroup::load(IO_handle stream, const char *version)
 		if ((stat = IO_read_uint2(&minrect.height, stream)) != IO_NORMAL)
 			return stat;
 	}
-	if ((stat = loadpropsets(stream)) != IO_NORMAL)
+	if ((stat = loadpropsets(stream, version)) != IO_NORMAL)
 		return stat;
 	while (True)
 	{
@@ -3316,7 +3340,7 @@ IO_stat MCGroup::load(IO_handle stream, const char *version)
 			}
 			break;
 		case OT_GROUPEND:
-			if (strncmp(version, "1.0", 3) == 0)
+			if (version == 1000)
 			{
 				computecrect();
 				if (rect.x == minrect.x && rect.y == minrect.y
