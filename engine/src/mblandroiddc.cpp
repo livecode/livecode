@@ -1071,7 +1071,7 @@ static void *mobile_main(void *arg)
 	MCAndroidEngineCall("getPackagePath", "x", &t_args[0]);
 	t_env[0] = nil;
 
-	MCLog("args[0] = %s", MCStringGetCString(t_args[0]));
+	MCLog("args[0] = %@", t_args[0]);
 
 	// Make sure MCquit is false before we start running things
 	MCquit = False;
@@ -2190,7 +2190,7 @@ bool MCAndroidSignatureMatch(const char *p_signature)
 		MCValueRef t_val;
 		/* UNCHECKED */ MCArrayFetchValueAtIndex(*t_signature_array, i, t_val);
         MCStringRef t_val_str = (MCStringRef)t_val;
-        MCLog("testing component (%s)", MCStringGetCString(t_val_str));
+        MCLog("testing component (%@)", t_val_str);
         if (!MCStringIsEqualTo(t_val_str, s_build_info[i], kMCCompareCaseless))
             return false;
     }

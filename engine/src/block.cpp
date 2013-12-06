@@ -1050,12 +1050,12 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 				findex_t sl = eptr - sptr;
 				
 				sptr += sl;
-				l -= sl;
+				size -= sl;
 			}
 		}
 
 		MCRange t_range;
-		t_range = MCRangeMake(sptr, size - sptr);
+		t_range = MCRangeMake(sptr, size);
         dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True);
 
 		// Apply strike/underline.
@@ -1323,7 +1323,9 @@ bool MCBlock::gettextfont(const char *& r_textfont) const
 {
 	if (getflag(F_HAS_FNAME))
 	{
-		r_textfont = MCNameGetCString(atts -> fontname);
+        char *t_font;
+        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(atts -> fontname), t_font);
+		r_textfont = t_font;
 		return true;
 	}
 	return false;
@@ -2039,7 +2041,12 @@ void MCBlock::importattrs(const MCFieldCharacterStyle& p_style)
 	if (p_style . has_metadata)
 		setatts(P_METADATA, (void *)p_style . metadata);
 	if (p_style . has_text_font)
-		setatts(P_TEXT_FONT, (void *)MCNameGetCString(p_style . text_font));
+    {
+        MCAutoPointer<char> t_text_font;
+        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(p_style . text_font), &t_text_font);
+		setatts(P_TEXT_FONT, (void *)*t_text_font)
+        ;
+    }
 	if (p_style . has_text_style)
 		setatts(P_TEXT_STYLE, (void *)p_style . text_style);
 	if (p_style . has_text_size)

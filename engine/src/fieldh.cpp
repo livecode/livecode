@@ -985,7 +985,11 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 			t_block -> setshift(p_block -> text_shift);
 
 		if (p_block -> text_link != nil)
-			t_block -> setatts(P_LINK_TEXT, (void *)MCNameGetCString(p_block -> text_link));
+        {
+            MCAutoPointer<char> t_text_link;
+            /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(p_block -> text_link), &t_text_link);
+			t_block -> setatts(P_LINK_TEXT, (void *)*t_text_link);
+        }
 
 		if (p_block -> text_metadata != nil)
         {
